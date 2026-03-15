@@ -3,3 +3,7 @@ __pycache__/
 *.pyc
 .DS_Store
 Thumbs.db
+.env
+scripts/
+test_ogp.png
+CLAUDE.md
