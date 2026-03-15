@@ -23,7 +23,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const resultWeaknesses = document.getElementById('resultWeaknesses');
     const compatibilityText = document.getElementById('compatibilityText');
     const resultCard = document.getElementById('resultCard');
-    const shareBtn = document.getElementById('shareBtn');
+    const shareXBtn = document.getElementById('shareXBtn');
+    const shareLINEBtn = document.getElementById('shareLINEBtn');
     const copyBtn = document.getElementById('copyBtn');
     const retryBtn = document.getElementById('retryBtn');
     const toast = document.getElementById('toast');
@@ -162,20 +163,23 @@ document.addEventListener('DOMContentLoaded', () => {
         return type;
     }
 
-    // シェア
-    shareBtn.addEventListener('click', () => {
+    // シェアテキスト生成
+    function getShareText() {
         const type = resultSection.dataset.type;
         const catchphrase = resultSection.dataset.catchphrase;
-        const text = 'AI性格診断の結果、私は【' + catchphrase + '】（' + type + '）タイプでした！\n\n' +
-            'あなたも診断してみて👇\n' +
-            'https://solodev-lab.github.io/ai-omoshiro-tools/apps/personality-diagnosis/\n\n' +
-            '#AI性格診断 #性格タイプ #MBTI';
+        return 'AI性格診断の結果、私は【' + catchphrase + '】（' + type + '）タイプでした！\n\nあなたも診断してみて👇\nhttps://solodev-lab.github.io/ai-omoshiro-tools/apps/personality-diagnosis/\n\n#AI性格診断 #性格タイプ #MBTI';
+    }
 
-        if (navigator.share) {
-            navigator.share({ title: 'AI性格タイプ診断', text: text }).catch(() => {});
-        } else {
-            window.open('https://twitter.com/intent/tweet?text=' + encodeURIComponent(text), '_blank');
-        }
+    // X（Twitter）でシェア
+    shareXBtn.addEventListener('click', () => {
+        const text = getShareText();
+        window.open('https://twitter.com/intent/tweet?text=' + encodeURIComponent(text), '_blank');
+    });
+
+    // LINEで送る
+    shareLINEBtn.addEventListener('click', () => {
+        const text = getShareText();
+        window.open('https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://solodev-lab.github.io/ai-omoshiro-tools/apps/personality-diagnosis/') + '&text=' + encodeURIComponent(text), '_blank');
     });
 
     // コピー
