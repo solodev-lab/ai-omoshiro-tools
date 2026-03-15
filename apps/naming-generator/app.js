@@ -77,7 +77,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // ボタンをローディング状態に
         generateBtn.disabled = true;
-        generateBtn.textContent = 'AIが考え中… ✨';
+        generateBtn.textContent = '考え中… ✨';
         retryBtn.disabled = true;
 
         try {
@@ -217,11 +217,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 100);
 
         tipText.textContent = '💡 ' + result.tip;
-
-        // AI生成の場合、小さなバッジ表示
-        if (result.source === 'ai') {
-            tipText.textContent = '🤖 AIが生成 ｜ 💡 ' + result.tip;
-        }
 
         resultSection.style.display = 'block';
         resultSection.style.animation = 'none';
