@@ -148,14 +148,27 @@ h1 {
     font-size: 0.8rem; color: #a0aec0; border-left: 3px solid #f2994a;
 }
 
-.action-buttons { display: flex; gap: 10px; margin-top: 16px; }
+.share-buttons { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
 
-.action-btn {
-    flex: 1; padding: 12px; border: 2px solid rgba(255,255,255,0.15);
-    background: rgba(255,255,255,0.05); color: #fff; border-radius: 12px;
-    font-size: 0.85rem; font-family: inherit; cursor: pointer; transition: all 0.2s;
+.share-buttons button {
+    flex: 1; min-width: calc(50% - 8px); padding: 12px 10px;
+    border: none; border-radius: 12px; color: #fff;
+    font-size: 0.85rem; font-weight: 700; font-family: inherit;
+    cursor: pointer; transition: all 0.2s;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
 }
-.action-btn:hover { background: rgba(255,255,255,0.12); }
+
+.btn-x { background: #000; border: 2px solid #333 !important; }
+.btn-x:hover { background: #1a1a1a; }
+
+.btn-line { background: #06C755; }
+.btn-line:hover { background: #05b34c; }
+
+.btn-copy { background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.15) !important; }
+.btn-copy:hover { background: rgba(255,255,255,0.18); }
+
+.btn-retry { background: rgba(242,153,74,0.2); border: 2px solid rgba(242,153,74,0.3) !important; color: #f2994a; }
+.btn-retry:hover { background: rgba(242,153,74,0.3); }
 
 .toast {
     position: fixed; bottom: -50px; left: 50%; transform: translateX(-50%);

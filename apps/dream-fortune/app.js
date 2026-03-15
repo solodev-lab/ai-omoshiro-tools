@@ -17,7 +17,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const luckyAction = document.getElementById('luckyAction');
     const tipText = document.getElementById('tipText');
     const copyBtn = document.getElementById('copyBtn');
-    const shareBtn = document.getElementById('shareBtn');
+    const shareXBtn = document.getElementById('shareXBtn');
+    const shareLINEBtn = document.getElementById('shareLINEBtn');
     const retryBtn = document.getElementById('retryBtn');
     const toast = document.getElementById('toast');
 
@@ -88,21 +89,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Copy
     copyBtn.addEventListener('click', () => {
-        const text = `【夢占い結果】\n夢: ${symbol}（${mood}）\n運勢: ${fortuneRank.textContent}\n\n${interpretationText.textContent}\n\nラッキーカラー: ${luckyColor.textContent}\nラッキーナンバー: ${luckyNumber.textContent}`;
+        const text = `【夢占い結果】\n夢: ${symbol}（${mood}）\n運勢: ${fortuneRank.textContent}\n\n${interpretationText.textContent}\n\nラッキーカラー: ${luckyColor.textContent}\nラッキーナンバー: ${luckyNumber.textContent}\n\nhttps://solodev-lab.github.io/ai-omoshiro-tools/apps/dream-fortune/`;
         navigator.clipboard.writeText(text).then(() => {
             showToast('コピーしました！');
         });
     });
 
-    // Share
-    shareBtn.addEventListener('click', () => {
+    // Share to X (Twitter)
+    shareXBtn.addEventListener('click', () => {
+        const appUrl = 'https://solodev-lab.github.io/ai-omoshiro-tools/apps/dream-fortune/';
         const text = `【AI夢占い】${symbol}の夢を見ました（${mood}）→ 運勢: ${fortuneRank.textContent} ${fortuneStars.textContent}`;
-        if (navigator.share) {
-            navigator.share({ title: 'AI夢占い', text: text });
-        } else {
-            const url = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(text);
-            window.open(url, '_blank');
-        }
+        const hashtags = '夢占い,AI,個人開発';
+        const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(appUrl)}&hashtags=${encodeURIComponent(hashtags)}`;
+        window.open(url, '_blank');
+    });
+
+    // Share to LINE
+    shareLINEBtn.addEventListener('click', () => {
+        const appUrl = 'https://solodev-lab.github.io/ai-omoshiro-tools/apps/dream-fortune/';
+        const text = `【AI夢占い】${symbol}の夢を見ました（${mood}）→ 運勢: ${fortuneRank.textContent} ${fortuneStars.textContent}\n${appUrl}`;
+        const url = `https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(appUrl)}&text=${encodeURIComponent(text)}`;
+        window.open(url, '_blank');
     });
 
     function showToast(message) {

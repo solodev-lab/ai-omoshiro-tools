@@ -19,7 +19,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const sincerityValue = document.getElementById('sincerityValue');
     const tipText = document.getElementById('tipText');
     const copyBtn = document.getElementById('copyBtn');
-    const shareBtn = document.getElementById('shareBtn');
+    const shareXBtn = document.getElementById('shareXBtn');
+    const shareLINEBtn = document.getElementById('shareLINEBtn');
     const retryBtn = document.getElementById('retryBtn');
     const toast = document.getElementById('toast');
 
@@ -147,15 +148,21 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Share
-    shareBtn.addEventListener('click', () => {
-        const text = `【AI謝罪文ジェネレーター】で${target}への${situation}の謝罪文を作りました（誠意レベル: ${sincerityValue.textContent}）`;
-        if (navigator.share) {
-            navigator.share({ title: 'AI謝罪文ジェネレーター', text: text });
-        } else {
-            const url = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(text);
-            window.open(url, '_blank');
-        }
+    // Share on X (Twitter)
+    shareXBtn.addEventListener('click', () => {
+        const appUrl = 'https://solodev-lab.github.io/ai-omoshiro-tools/apps/apology-generator/';
+        const text = `【AI謝罪文ジェネレーター】で${target}への${situation}の謝罪文を作りました（誠意レベル: ${sincerityValue.textContent}）\n${appUrl}`;
+        const hashtags = 'AI謝罪文,個人開発';
+        const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&hashtags=${encodeURIComponent(hashtags)}`;
+        window.open(url, '_blank');
+    });
+
+    // Share on LINE
+    shareLINEBtn.addEventListener('click', () => {
+        const appUrl = 'https://solodev-lab.github.io/ai-omoshiro-tools/apps/apology-generator/';
+        const text = `【AI謝罪文ジェネレーター】で${target}への${situation}の謝罪文を作りました（誠意レベル: ${sincerityValue.textContent}）\n${appUrl}`;
+        const url = `https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(appUrl)}&text=${encodeURIComponent(text)}`;
+        window.open(url, '_blank');
     });
 
     function showToast(message) {

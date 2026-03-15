@@ -354,10 +354,14 @@ h1 {
 }
 
 /* Actions */
-.action-buttons {
+.share-buttons {
     display: flex;
     gap: 10px;
     margin-top: 16px;
+}
+
+.retry-wrapper {
+    margin-top: 10px;
 }
 
 .action-btn {
@@ -369,12 +373,52 @@ h1 {
     border-radius: 12px;
     font-size: 0.85rem;
     font-family: inherit;
+    font-weight: 700;
     cursor: pointer;
     transition: all 0.2s;
 }
 
 .action-btn:hover {
     background: rgba(255, 255, 255, 0.12);
+}
+
+.btn-x {
+    background: rgba(0, 0, 0, 0.6);
+    border-color: rgba(255, 255, 255, 0.25);
+}
+
+.btn-x:hover {
+    background: rgba(0, 0, 0, 0.8);
+}
+
+.btn-line {
+    background: rgba(6, 199, 85, 0.2);
+    border-color: #06c755;
+    color: #06c755;
+}
+
+.btn-line:hover {
+    background: rgba(6, 199, 85, 0.35);
+}
+
+.btn-copy {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.15);
+}
+
+.btn-copy:hover {
+    background: rgba(255, 255, 255, 0.12);
+}
+
+.btn-retry {
+    width: 100%;
+    background: rgba(240, 147, 251, 0.1);
+    border-color: rgba(240, 147, 251, 0.3);
+    color: #f093fb;
+}
+
+.btn-retry:hover {
+    background: rgba(240, 147, 251, 0.2);
 }
 
 /* Toast */

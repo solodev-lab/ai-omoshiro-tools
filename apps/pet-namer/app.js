@@ -22,7 +22,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const cuteValue = document.getElementById('cuteValue');
     const tipText = document.getElementById('tipText');
     const copyBtn = document.getElementById('copyBtn');
-    const shareBtn = document.getElementById('shareBtn');
+    const shareXBtn = document.getElementById('shareXBtn');
+    const shareLINEBtn = document.getElementById('shareLINEBtn');
     const retryBtn = document.getElementById('retryBtn');
     const toast = document.getElementById('toast');
 
@@ -117,21 +118,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Copy
     copyBtn.addEventListener('click', () => {
-        const text = mainName.textContent;
+        const name = mainName.textContent;
+        const text = '【AIペット名づけ】' + pet + 'の名前を「' + name + '」に決めました！（' + vibe + ' × ' + STYLE_LABELS[style] + '）\n\nhttps://solodev-lab.github.io/ai-omoshiro-tools/apps/pet-namer/';
         navigator.clipboard.writeText(text).then(() => {
-            showToast('「' + text + '」をコピーしました！');
+            showToast('コピーしました！');
         });
     });
 
-    // Share
-    shareBtn.addEventListener('click', () => {
+    // Share on X (Twitter)
+    shareXBtn.addEventListener('click', () => {
+        const appUrl = 'https://solodev-lab.github.io/ai-omoshiro-tools/apps/pet-namer/';
         const text = '【AIペット名づけ】' + pet + 'の名前を「' + mainName.textContent + '」に決めました！（' + vibe + ' × ' + STYLE_LABELS[style] + '）';
-        if (navigator.share) {
-            navigator.share({ title: 'AIペット名づけ', text: text });
-        } else {
-            const url = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(text);
-            window.open(url, '_blank');
-        }
+        const hashtags = 'ペット名前,AI,個人開発';
+        const url = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(text) + '&url=' + encodeURIComponent(appUrl) + '&hashtags=' + encodeURIComponent(hashtags);
+        window.open(url, '_blank');
+    });
+
+    // Share on LINE
+    shareLINEBtn.addEventListener('click', () => {
+        const appUrl = 'https://solodev-lab.github.io/ai-omoshiro-tools/apps/pet-namer/';
+        const text = '【AIペット名づけ】' + pet + 'の名前を「' + mainName.textContent + '」に決めました！（' + vibe + ' × ' + STYLE_LABELS[style] + '）\n' + appUrl;
+        const url = 'https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent(appUrl) + '&text=' + encodeURIComponent(text);
+        window.open(url, '_blank');
     });
 
     function showToast(message) {

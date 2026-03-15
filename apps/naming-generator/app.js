@@ -22,7 +22,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const memoValue = document.getElementById('memoValue');
     const tipText = document.getElementById('tipText');
     const copyBtn = document.getElementById('copyBtn');
-    const shareBtn = document.getElementById('shareBtn');
+    const shareXBtn = document.getElementById('shareXBtn');
+    const shareLINEBtn = document.getElementById('shareLINEBtn');
     const retryBtn = document.getElementById('retryBtn');
     const toast = document.getElementById('toast');
 
@@ -45,6 +46,20 @@ document.addEventListener('DOMContentLoaded', () => {
         generateBtn.disabled = !(category && taste && sound);
     }
 
+    // 響きフィルター：選択された「響き」に名前が合致するか判定
+    function matchesSound(name, soundType) {
+        if (!soundType) return true;
+        const hasLatin = /[a-zA-Z]/.test(name);
+        const visibleLen = name.replace(/[\s　・（）\(\)「」『』【】]/g, '').length;
+        switch (soundType) {
+            case 'japanese': return !hasLatin;
+            case 'english': return hasLatin;
+            case 'catchy': return visibleLen <= 6;
+            case 'impact': return visibleLen >= 7;
+            default: return true;
+        }
+    }
+
     generateBtn.addEventListener('click', generate);
     retryBtn.addEventListener('click', generate);
 
@@ -57,7 +72,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const tasteData = catData[taste];
         if (!tasteData || tasteData.length === 0) return;
 
-        const entry = tasteData[Math.floor(Math.random() * tasteData.length)];
+        // 響きフィルターでエントリーを絞る
+        let filtered = tasteData.filter(e => matchesSound(e.name, sound));
+        if (filtered.length === 0) filtered = tasteData;
+
+        const entry = filtered[Math.floor(Math.random() * filtered.length)];
 
         resultCat.textContent = category;
         resultTaste.textContent = taste;
@@ -66,8 +85,33 @@ document.addEventListener('DOMContentLoaded', () => {
         mainName.textContent = entry.name;
         nameMeaning.textContent = entry.meaning;
 
+        // altsも響きフィルターで絞る
+        let filteredAlts = entry.alts.filter(a => matchesSound(a, sound));
+
+        // 候補が3つ未満なら、同テイストの他エントリーから補充
+        if (filteredAlts.length < 3) {
+            const pool = [];
+            tasteData.forEach(e => {
+                if (e.name !== entry.name) {
+                    if (matchesSound(e.name, sound)) pool.push(e.name);
+                    e.alts.forEach(a => {
+                        if (matchesSound(a, sound) && a !== entry.name) pool.push(a);
+                    });
+                }
+            });
+            pool.sort(() => Math.random() - 0.5);
+            while (filteredAlts.length < 3 && pool.length > 0) {
+                const candidate = pool.shift();
+                if (!filteredAlts.includes(candidate)) {
+                    filteredAlts.push(candidate);
+                }
+            }
+        }
+
+        if (filteredAlts.length === 0) filteredAlts = entry.alts;
+
         altList.innerHTML = '';
-        entry.alts.forEach(alt => {
+        filteredAlts.forEach(alt => {
             const chip = document.createElement('span');
             chip.className = 'alt-chip';
             chip.textContent = alt;
@@ -113,16 +157,16 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    shareBtn.addEventListener('click', () => {
+    shareXBtn.addEventListener('click', () => {
         const name = mainName.textContent;
-        const meaning = nameMeaning.textContent;
-        const text = '【AIネーミングジェネレーター】' + category + 'を考えてもらった✨\n\n「' + name + '」\n' + meaning;
-        if (navigator.share) {
-            navigator.share({ title: 'AIネーミングジェネレーター', text: text });
-        } else {
-            const url = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(text);
-            window.open(url, '_blank');
-        }
+        const text = '【AIネーミングジェネレーター】\n' + category + '×' + taste + 'で生成✨\n\n「' + name + '」\n\nあなたも最高の名前を見つけよう👇\nhttps://solodev-lab.github.io/ai-omoshiro-tools/apps/naming-generator/\n\n#AIネーミング #名前 #個人開発';
+        window.open('https://twitter.com/intent/tweet?text=' + encodeURIComponent(text), '_blank');
+    });
+
+    shareLINEBtn.addEventListener('click', () => {
+        const name = mainName.textContent;
+        const text = '【AIネーミングジェネレーター】' + category + '×' + taste + 'で生成✨「' + name + '」';
+        window.open('https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://solodev-lab.github.io/ai-omoshiro-tools/apps/naming-generator/') + '&text=' + encodeURIComponent(text), '_blank');
     });
 
     function showToast(message) {

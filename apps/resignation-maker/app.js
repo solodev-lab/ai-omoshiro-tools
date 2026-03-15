@@ -24,7 +24,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const honneValue = document.getElementById('honneValue');
     const tipText = document.getElementById('tipText');
     const copyBtn = document.getElementById('copyBtn');
-    const shareBtn = document.getElementById('shareBtn');
+    const shareXBtn = document.getElementById('shareXBtn');
+    const shareLINEBtn = document.getElementById('shareLINEBtn');
     const retryBtn = document.getElementById('retryBtn');
     const toast = document.getElementById('toast');
 
@@ -145,15 +146,20 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Share
-    shareBtn.addEventListener('click', () => {
+    // Share on X (Twitter)
+    const APP_URL = 'https://solodev-lab.github.io/ai-omoshiro-tools/apps/resignation-maker/';
+    shareXBtn.addEventListener('click', () => {
         const text = `【AI退職届メーカー】で「${reason}」が理由の退職届を作成しました（円満度: ${peacefulValue.textContent}）`;
-        if (navigator.share) {
-            navigator.share({ title: 'AI退職届メーカー', text: text });
-        } else {
-            const url = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(text);
-            window.open(url, '_blank');
-        }
+        const hashtags = '退職届,AI,個人開発';
+        const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(APP_URL)}&hashtags=${encodeURIComponent(hashtags)}`;
+        window.open(url, '_blank');
+    });
+
+    // Share on LINE
+    shareLINEBtn.addEventListener('click', () => {
+        const text = `【AI退職届メーカー】で「${reason}」が理由の退職届を作成しました（円満度: ${peacefulValue.textContent}）\n${APP_URL}`;
+        const url = `https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(APP_URL)}&text=${encodeURIComponent(text)}`;
+        window.open(url, '_blank');
     });
 
     function showToast(message) {

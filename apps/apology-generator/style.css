@@ -349,6 +349,13 @@ textarea::placeholder {
     background: rgba(255, 255, 255, 0.12);
 }
 
+.btn-x { background: rgba(0,0,0,0.4); border-color: rgba(255,255,255,0.3); }
+.btn-line { background: rgba(6,199,85,0.15); border-color: rgba(6,199,85,0.4); color: #06c755; }
+.btn-line:hover { background: rgba(6,199,85,0.25); }
+.btn-copy { background: rgba(102,126,234,0.15); border-color: rgba(102,126,234,0.3); }
+.btn-retry { width: 100%; }
+.share-buttons { margin-bottom: 8px; }
+
 /* Toast */
 .toast {
     position: fixed;

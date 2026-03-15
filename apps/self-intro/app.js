@@ -22,7 +22,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const memorableValue = document.getElementById('memorableValue');
     const tipText = document.getElementById('tipText');
     const copyBtn = document.getElementById('copyBtn');
-    const shareBtn = document.getElementById('shareBtn');
+    const shareXBtn = document.getElementById('shareXBtn');
+    const shareLINEBtn = document.getElementById('shareLINEBtn');
     const retryBtn = document.getElementById('retryBtn');
     const toast = document.getElementById('toast');
 
@@ -120,15 +121,20 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Share
-    shareBtn.addEventListener('click', () => {
+    // Share on X (Twitter)
+    shareXBtn.addEventListener('click', () => {
+        const appUrl = 'https://solodev-lab.github.io/ai-omoshiro-tools/apps/self-intro/';
         const text = '【AI自己紹介メーカー】' + scene + 'で' + chara + 'キャラの自己紹介🎤\n\n' + introText.textContent;
-        if (navigator.share) {
-            navigator.share({ title: 'AI自己紹介メーカー', text: text });
-        } else {
-            const url = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(text);
-            window.open(url, '_blank');
-        }
+        const url = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(text) + '&url=' + encodeURIComponent(appUrl) + '&hashtags=' + encodeURIComponent('自己紹介,AI,個人開発');
+        window.open(url, '_blank');
+    });
+
+    // Share on LINE
+    shareLINEBtn.addEventListener('click', () => {
+        const appUrl = 'https://solodev-lab.github.io/ai-omoshiro-tools/apps/self-intro/';
+        const text = '【AI自己紹介メーカー】' + scene + 'で' + chara + 'キャラの自己紹介🎤\n\n' + introText.textContent + '\n' + appUrl;
+        const url = 'https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent(appUrl) + '&text=' + encodeURIComponent(text);
+        window.open(url, '_blank');
     });
 
     function showToast(message) {

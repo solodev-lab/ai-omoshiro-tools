@@ -127,7 +127,9 @@ h1 {
     font-size: 0.8rem; color: #a0aec0; border-left: 3px solid #a18cd1;
 }
 
-.action-buttons { display: flex; gap: 10px; margin-top: 16px; }
+.action-buttons { margin-top: 16px; }
+
+.share-buttons { display: flex; gap: 10px; margin-bottom: 8px; }
 
 .action-btn {
     flex: 1; padding: 12px; border: 2px solid rgba(255,255,255,0.15);
@@ -135,6 +137,14 @@ h1 {
     font-size: 0.85rem; font-family: inherit; cursor: pointer; transition: all 0.2s;
 }
 .action-btn:hover { background: rgba(255,255,255,0.12); }
+
+.btn-x { background: rgba(0,0,0,0.4); border-color: rgba(255,255,255,0.3); }
+.btn-x:hover { background: rgba(0,0,0,0.55); }
+.btn-line { background: rgba(6,199,85,0.15); border-color: rgba(6,199,85,0.4); color: #06c755; }
+.btn-line:hover { background: rgba(6,199,85,0.25); }
+.btn-copy { background: rgba(161,140,209,0.15); border-color: rgba(161,140,209,0.4); color: #a18cd1; }
+.btn-copy:hover { background: rgba(161,140,209,0.25); }
+.btn-retry { width: 100%; }
 
 .toast {
     position: fixed; bottom: -50px; left: 50%; transform: translateX(-50%);

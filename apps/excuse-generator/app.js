@@ -19,7 +19,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const stealthValue = document.getElementById('stealthValue');
     const riskBadge = document.getElementById('riskBadge');
     const copyBtn = document.getElementById('copyBtn');
-    const shareBtn = document.getElementById('shareBtn');
+    const shareXBtn = document.getElementById('shareXBtn');
+    const shareLINEBtn = document.getElementById('shareLINEBtn');
     const retryBtn = document.getElementById('retryBtn');
     const historySection = document.getElementById('historySection');
     const historyList = document.getElementById('historyList');
@@ -127,16 +128,18 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Share
-    shareBtn.addEventListener('click', () => {
-        const text = `【AI言い訳ジェネレーター】\n${selectedSituation}の言い訳（${levelLabels[selectedLevel]}）\n\n「${excuseText.textContent}」\n\n説得力: ${convincingValue.textContent}\n`;
+    // Share on X (Twitter)
+    const appUrl = 'https://solodev-lab.github.io/ai-omoshiro-tools/apps/excuse-generator/';
 
-        if (navigator.share) {
-            navigator.share({ title: 'AI言い訳ジェネレーター', text: text });
-        } else {
-            const twitterUrl = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(text);
-            window.open(twitterUrl, '_blank');
-        }
+    shareXBtn.addEventListener('click', () => {
+        const text = `【AI言い訳ジェネレーター】\n${selectedSituation}の言い訳（${levelLabels[selectedLevel]}）\n\n「${excuseText.textContent}」\n\n#AI言い訳 #AIおもしろツール\n${appUrl}`;
+        window.open('https://twitter.com/intent/tweet?text=' + encodeURIComponent(text), '_blank');
+    });
+
+    // Share on LINE
+    shareLINEBtn.addEventListener('click', () => {
+        const text = `【AI言い訳ジェネレーター】\n${selectedSituation}の言い訳（${levelLabels[selectedLevel]}）\n\n「${excuseText.textContent}」`;
+        window.open('https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent(appUrl) + '&text=' + encodeURIComponent(text), '_blank');
     });
 
     // History

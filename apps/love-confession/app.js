@@ -22,7 +22,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const powerValue = document.getElementById('powerValue');
     const tipText = document.getElementById('tipText');
     const copyBtn = document.getElementById('copyBtn');
-    const shareBtn = document.getElementById('shareBtn');
+    const shareXBtn = document.getElementById('shareXBtn');
+    const shareLINEBtn = document.getElementById('shareLINEBtn');
     const retryBtn = document.getElementById('retryBtn');
     const toast = document.getElementById('toast');
 
@@ -116,14 +117,19 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    shareBtn.addEventListener('click', () => {
-        const text = '【AI告白文ジェネレーター】' + relationship + 'への' + mood + 'な告白💌\n\n' + currentText;
-        if (navigator.share) {
-            navigator.share({ title: 'AI告白文ジェネレーター', text: text });
-        } else {
-            const url = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(text);
-            window.open(url, '_blank');
-        }
+    shareXBtn.addEventListener('click', () => {
+        const appUrl = 'https://solodev-lab.github.io/ai-omoshiro-tools/apps/love-confession/';
+        const text = '【AI告白文ジェネレーター】' + relationship + 'への' + mood + 'な告白💌\n\n' + currentText + '\n\n' + appUrl;
+        const hashtags = 'AI告白文,個人開発';
+        const url = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(text) + '&hashtags=' + encodeURIComponent(hashtags);
+        window.open(url, '_blank');
+    });
+
+    shareLINEBtn.addEventListener('click', () => {
+        const appUrl = 'https://solodev-lab.github.io/ai-omoshiro-tools/apps/love-confession/';
+        const text = '【AI告白文ジェネレーター】' + relationship + 'への' + mood + 'な告白💌\n\n' + currentText + '\n\n' + appUrl;
+        const url = 'https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent(appUrl) + '&text=' + encodeURIComponent(text);
+        window.open(url, '_blank');
     });
 
     function showToast(message) {

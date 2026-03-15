@@ -22,7 +22,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const regretValue = document.getElementById('regretValue');
     const tipText = document.getElementById('tipText');
     const copyBtn = document.getElementById('copyBtn');
-    const shareBtn = document.getElementById('shareBtn');
+    const shareXBtn = document.getElementById('shareXBtn');
+    const shareLINEBtn = document.getElementById('shareLINEBtn');
     const retryBtn = document.getElementById('retryBtn');
     const toast = document.getElementById('toast');
 
@@ -114,21 +115,29 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Copy
     copyBtn.addEventListener('click', () => {
-        navigator.clipboard.writeText(adviceText.textContent).then(() => {
+        const v = verdictText.textContent;
+        const text = `【AI断捨離アドバイザー】${category}を断捨離判定した結果 → ${v}（捨て度: ${throwValue.textContent}）\nhttps://solodev-lab.github.io/ai-omoshiro-tools/apps/declutter-advisor/`;
+        navigator.clipboard.writeText(text).then(() => {
             showToast('コピーしました！');
         });
     });
 
-    // Share
-    shareBtn.addEventListener('click', () => {
+    // Share X
+    shareXBtn.addEventListener('click', () => {
         const v = verdictText.textContent;
         const text = `【AI断捨離アドバイザー】${category}を断捨離判定した結果 → ${v}（捨て度: ${throwValue.textContent}）`;
-        if (navigator.share) {
-            navigator.share({ title: 'AI断捨離アドバイザー', text: text });
-        } else {
-            const url = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(text);
-            window.open(url, '_blank');
-        }
+        const appUrl = 'https://solodev-lab.github.io/ai-omoshiro-tools/apps/declutter-advisor/';
+        const hashtags = '断捨離,AI,個人開発';
+        const xUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(appUrl)}&hashtags=${encodeURIComponent(hashtags)}`;
+        window.open(xUrl, '_blank');
+    });
+
+    // Share LINE
+    shareLINEBtn.addEventListener('click', () => {
+        const v = verdictText.textContent;
+        const text = `【AI断捨離アドバイザー】${category}を断捨離判定した結果 → ${v}（捨て度: ${throwValue.textContent}）\nhttps://solodev-lab.github.io/ai-omoshiro-tools/apps/declutter-advisor/`;
+        const lineUrl = `https://social-plugins.line.me/lineit/share?url=${encodeURIComponent('https://solodev-lab.github.io/ai-omoshiro-tools/apps/declutter-advisor/')}&text=${encodeURIComponent(text)}`;
+        window.open(lineUrl, '_blank');
     });
 
     function showToast(message) {

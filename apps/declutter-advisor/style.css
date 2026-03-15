@@ -274,26 +274,60 @@ h1 {
     border-left: 3px solid #56ab2f;
 }
 
-.action-buttons {
+.share-buttons {
     display: flex;
     gap: 10px;
     margin-top: 16px;
 }
 
-.action-btn {
+.share-btn {
     flex: 1;
     padding: 12px;
-    border: 2px solid rgba(255, 255, 255, 0.15);
-    background: rgba(255, 255, 255, 0.05);
+    border: none;
     color: #fff;
     border-radius: 12px;
     font-size: 0.85rem;
+    font-weight: 700;
     font-family: inherit;
     cursor: pointer;
     transition: all 0.2s;
 }
 
-.action-btn:hover { background: rgba(255, 255, 255, 0.12); }
+.share-btn:hover { opacity: 0.85; transform: translateY(-1px); }
+
+.btn-x {
+    background: #000;
+    border: 2px solid #333;
+}
+
+.btn-line {
+    background: #06C755;
+}
+
+.btn-copy {
+    background: rgba(255, 255, 255, 0.1);
+    border: 2px solid rgba(255, 255, 255, 0.15);
+}
+
+.retry-btn.btn-retry {
+    width: 100%;
+    margin-top: 10px;
+    padding: 14px;
+    border: 2px solid rgba(86, 171, 47, 0.4);
+    background: rgba(86, 171, 47, 0.1);
+    color: #a8e063;
+    border-radius: 12px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.retry-btn.btn-retry:hover {
+    background: rgba(86, 171, 47, 0.2);
+    transform: translateY(-1px);
+}
 
 .toast {
     position: fixed;

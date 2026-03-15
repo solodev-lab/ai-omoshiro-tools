@@ -21,7 +21,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const reactValue = document.getElementById('reactValue');
     const tipText = document.getElementById('tipText');
     const copyBtn = document.getElementById('copyBtn');
-    const shareBtn = document.getElementById('shareBtn');
+    const shareXBtn = document.getElementById('shareXBtn');
+    const shareLINEBtn = document.getElementById('shareLINEBtn');
     const retryBtn = document.getElementById('retryBtn');
     const toast = document.getElementById('toast');
 
@@ -161,20 +162,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Copy
     copyBtn.addEventListener('click', () => {
-        navigator.clipboard.writeText(mainNickname.textContent).then(() => {
+        const text = `【AIあだ名メーカー】で「${nameInput.value.trim()}」のあだ名を作りました → ${mainNickname.textContent}\nhttps://solodev-lab.github.io/ai-omoshiro-tools/apps/nickname-maker/`;
+        navigator.clipboard.writeText(text).then(() => {
             showToast('コピーしました！');
         });
     });
 
-    // Share
-    shareBtn.addEventListener('click', () => {
+    // Share on X (Twitter)
+    shareXBtn.addEventListener('click', () => {
+        const appUrl = 'https://solodev-lab.github.io/ai-omoshiro-tools/apps/nickname-maker/';
         const text = `【AIあだ名メーカー】で「${nameInput.value.trim()}」のあだ名を作りました → ${mainNickname.textContent}`;
-        if (navigator.share) {
-            navigator.share({ title: 'AIあだ名メーカー', text: text });
-        } else {
-            const url = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(text);
-            window.open(url, '_blank');
-        }
+        const hashtags = 'あだ名,AI,個人開発';
+        const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(appUrl)}&hashtags=${encodeURIComponent(hashtags)}`;
+        window.open(url, '_blank');
+    });
+
+    // Share on LINE
+    shareLINEBtn.addEventListener('click', () => {
+        const appUrl = 'https://solodev-lab.github.io/ai-omoshiro-tools/apps/nickname-maker/';
+        const text = `【AIあだ名メーカー】で「${nameInput.value.trim()}」のあだ名を作りました → ${mainNickname.textContent}\n${appUrl}`;
+        const url = `https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(appUrl)}&text=${encodeURIComponent(text)}`;
+        window.open(url, '_blank');
     });
 
     function showToast(message) {
