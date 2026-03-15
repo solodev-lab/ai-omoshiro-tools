@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AIあだ名メーカー | 名前からあだ名を自動生成</title>
+    <meta name="description" content="名前と性格を入力するだけで、ぴったりのあだ名をAIが生成。面白い系からかっこいい系まで。">
+    <meta property="og:title" content="AIあだ名メーカー">
+    <meta property="og:description" content="名前と性格から最高のあだ名を自動生成。面白い系からかっこいい系まで。">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="AIあだ名メーカー">
+    <meta name="twitter:description" content="名前と性格から最高のあだ名を自動生成。面白い系からかっこいい系まで。">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🏷️ AIあだ名メーカー</h1>
+            <p class="subtitle">名前と性格から、最高のあだ名を生成。</p>
+        </header>
+
+        <main>
+            <section class="input-section">
+                <div class="step">
+                    <h2><span class="step-num">1</span> 名前を入力</h2>
+                    <input type="text" id="nameInput" class="name-input" placeholder="例：田中太郎、たなかたろう" maxlength="20">
+                </div>
+
+                <div class="step">
+                    <h2><span class="step-num">2</span> 性格・特徴は？（複数OK）</h2>
+                    <div class="trait-grid" id="traitGrid">
+                        <button class="trait-btn" data-value="おとなしい">🐑 おとなしい</button>
+                        <button class="trait-btn" data-value="元気">⚡ 元気</button>
+                        <button class="trait-btn" data-value="天然">🌸 天然</button>
+                        <button class="trait-btn" data-value="真面目">📚 真面目</button>
+                        <button class="trait-btn" data-value="面白い">😂 面白い</button>
+                        <button class="trait-btn" data-value="優しい">🤗 優しい</button>
+                        <button class="trait-btn" data-value="ツンデレ">😤 ツンデレ</button>
+                        <button class="trait-btn" data-value="マイペース">🐢 マイペース</button>
+                        <button class="trait-btn" data-value="食いしん坊">🍖 食いしん坊</button>
+                        <button class="trait-btn" data-value="オタク">🎮 オタク</button>
+                        <button class="trait-btn" data-value="リーダー">👑 リーダー</button>
+                        <button class="trait-btn" data-value="不思議">🔮 不思議</button>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <h2><span class="step-num">3</span> あだ名のテイスト</h2>
+                    <div class="taste-buttons" id="tasteButtons">
+                        <button class="taste-btn" data-value="cute">
+                            <span class="taste-emoji">🎀</span>
+                            <span class="taste-label">かわいい系</span>
+                        </button>
+                        <button class="taste-btn" data-value="cool">
+                            <span class="taste-emoji">😎</span>
+                            <span class="taste-label">かっこいい系</span>
+                        </button>
+                        <button class="taste-btn" data-value="funny">
+                            <span class="taste-emoji">🤣</span>
+                            <span class="taste-label">おもしろ系</span>
+                        </button>
+                        <button class="taste-btn" data-value="chuuni">
+                            <span class="taste-emoji">⚔️</span>
+                            <span class="taste-label">中二病系</span>
+                        </button>
+                    </div>
+                </div>
+
+                <button class="generate-btn" id="generateBtn" disabled>
+                    あだ名を生成する 🏷️
+                </button>
+            </section>
+
+            <section class="result-section" id="resultSection" style="display: none;">
+                <div class="result-card">
+                    <div class="result-header">
+                        <div class="result-tags">
+                            <span class="tag name-tag" id="resultName"></span>
+                            <span class="tag trait-tag" id="resultTraits"></span>
+                            <span class="tag taste-tag" id="resultTaste"></span>
+                        </div>
+                    </div>
+
+                    <div class="nickname-showcase" id="nicknameShowcase">
+                        <div class="main-nickname" id="mainNickname"></div>
+                        <div class="nickname-reading" id="nicknameReading"></div>
+                    </div>
+
+                    <div class="alt-nicknames">
+                        <h3>他の候補</h3>
+                        <div class="alt-list" id="altList"></div>
+                    </div>
+
+                    <div class="nickname-stats">
+                        <div class="stat-row">
+                            <span class="stat-label">呼びやすさ</span>
+                            <div class="stat-bar"><div class="stat-fill easy-fill" id="easyFill"></div></div>
+                            <span class="stat-value" id="easyValue"></span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">定着率</span>
+                            <div class="stat-bar"><div class="stat-fill stick-fill" id="stickFill"></div></div>
+                            <span class="stat-value" id="stickValue"></span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">本人の反応</span>
+                            <div class="stat-bar"><div class="stat-fill react-fill" id="reactFill"></div></div>
+                            <span class="stat-value" id="reactValue"></span>
+                        </div>
+                    </div>
+
+                    <div class="tip" id="tipText"></div>
+                </div>
+
+                <div class="action-buttons">
+                    <button class="action-btn" id="copyBtn">📋 コピー</button>
+                    <button class="action-btn" id="shareBtn">🐦 シェア</button>
+                    <button class="action-btn" id="retryBtn">🔄 別パターン</button>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>※ あだ名は愛情を込めて使いましょう。嫌がられたらすぐやめましょう。</p>
+            <p class="copyright">© 2026 AIあだ名メーカー</p>
+        </footer>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script src="nicknames.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

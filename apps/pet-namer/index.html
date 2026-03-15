@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AIペット名づけ | ペットにぴったりの名前を生成</title>
+    <meta name="description" content="ペットの種類と性格を選ぶだけで、ぴったりの名前をAIが提案。和名・洋名・ユニーク名まで。">
+    <meta property="og:title" content="AIペット名づけ">
+    <meta property="og:description" content="ペットの種類と性格からぴったりの名前を提案。和名・洋名・食べ物系・ユニーク。">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="AIペット名づけ">
+    <meta name="twitter:description" content="ペットの種類と性格からぴったりの名前を提案。和名・洋名・食べ物系・ユニーク。">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🐾 AIペット名づけ</h1>
+            <p class="subtitle">大切な家族に、最高の名前を。</p>
+        </header>
+
+        <main>
+            <section class="input-section">
+                <div class="step">
+                    <h2><span class="step-num">1</span> ペットの種類は？</h2>
+                    <div class="pet-grid" id="petGrid">
+                        <button class="pet-btn" data-value="犬">🐕 犬</button>
+                        <button class="pet-btn" data-value="猫">🐈 猫</button>
+                        <button class="pet-btn" data-value="うさぎ">🐇 うさぎ</button>
+                        <button class="pet-btn" data-value="ハムスター">🐹 ハムスター</button>
+                        <button class="pet-btn" data-value="鳥">🐦 鳥</button>
+                        <button class="pet-btn" data-value="魚">🐟 魚</button>
+                        <button class="pet-btn" data-value="爬虫類">🦎 爬虫類</button>
+                        <button class="pet-btn" data-value="カメ">🐢 カメ</button>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <h2><span class="step-num">2</span> 性格・雰囲気は？</h2>
+                    <div class="vibe-grid" id="vibeGrid">
+                        <button class="vibe-btn" data-value="元気">⚡ 元気いっぱい</button>
+                        <button class="vibe-btn" data-value="おっとり">☁️ おっとり</button>
+                        <button class="vibe-btn" data-value="甘えん坊">💕 甘えん坊</button>
+                        <button class="vibe-btn" data-value="ツンデレ">😼 ツンデレ</button>
+                        <button class="vibe-btn" data-value="賢い">🎓 賢い</button>
+                        <button class="vibe-btn" data-value="やんちゃ">💥 やんちゃ</button>
+                        <button class="vibe-btn" data-value="おとなしい">🌙 おとなしい</button>
+                        <button class="vibe-btn" data-value="食いしん坊">🍖 食いしん坊</button>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <h2><span class="step-num">3</span> 名前のテイスト</h2>
+                    <div class="style-buttons" id="styleButtons">
+                        <button class="style-btn" data-value="japanese">
+                            <span class="style-emoji">🇯🇵</span>
+                            <span class="style-label">和名</span>
+                        </button>
+                        <button class="style-btn" data-value="western">
+                            <span class="style-emoji">🌍</span>
+                            <span class="style-label">洋名</span>
+                        </button>
+                        <button class="style-btn" data-value="food">
+                            <span class="style-emoji">🍙</span>
+                            <span class="style-label">食べ物系</span>
+                        </button>
+                        <button class="style-btn" data-value="unique">
+                            <span class="style-emoji">✨</span>
+                            <span class="style-label">ユニーク</span>
+                        </button>
+                    </div>
+                </div>
+
+                <button class="generate-btn" id="generateBtn" disabled>
+                    名前を考える 🐾
+                </button>
+            </section>
+
+            <section class="result-section" id="resultSection" style="display: none;">
+                <div class="result-card">
+                    <div class="result-tags">
+                        <span class="tag pet-tag" id="resultPet"></span>
+                        <span class="tag vibe-tag" id="resultVibe"></span>
+                        <span class="tag style-tag" id="resultStyle"></span>
+                    </div>
+
+                    <div class="name-showcase">
+                        <div class="main-name" id="mainName"></div>
+                        <div class="name-meaning" id="nameMeaning"></div>
+                    </div>
+
+                    <div class="alt-names">
+                        <h3>他の候補</h3>
+                        <div class="alt-list" id="altList"></div>
+                    </div>
+
+                    <div class="name-stats">
+                        <div class="stat-row">
+                            <span class="stat-label">呼びやすさ</span>
+                            <div class="stat-bar"><div class="stat-fill call-fill" id="callFill"></div></div>
+                            <span class="stat-value" id="callValue"></span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">覚えやすさ</span>
+                            <div class="stat-bar"><div class="stat-fill memo-fill" id="memoFill"></div></div>
+                            <span class="stat-value" id="memoValue"></span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">かわいさ</span>
+                            <div class="stat-bar"><div class="stat-fill cute-fill" id="cuteFill"></div></div>
+                            <span class="stat-value" id="cuteValue"></span>
+                        </div>
+                    </div>
+
+                    <div class="tip" id="tipText"></div>
+                </div>
+
+                <div class="action-buttons">
+                    <button class="action-btn" id="copyBtn">📋 コピー</button>
+                    <button class="action-btn" id="shareBtn">🐦 シェア</button>
+                    <button class="action-btn" id="retryBtn">🔄 別の名前</button>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>※ 名前は飼い主さんの愛情が一番大事。AIは参考程度に。</p>
+            <p class="copyright">© 2026 AIペット名づけ</p>
+        </footer>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script src="petnames.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

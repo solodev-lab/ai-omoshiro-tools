@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI断捨離アドバイザー | 捨てるべき？残すべき？AIが判定</title>
+    <meta name="description" content="捨てるか迷っているものをAIが判定。断捨離の背中を押します。">
+    <meta property="og:title" content="AI断捨離アドバイザー">
+    <meta property="og:description" content="捨てるか残すか、AIが判定。断捨離の背中を押してくれる。">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="AI断捨離アドバイザー">
+    <meta name="twitter:description" content="捨てるか残すか、AIが判定。断捨離の背中を押してくれる。">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🗑️ AI断捨離アドバイザー</h1>
+            <p class="subtitle">捨てるべきか、残すべきか。AIが判定します。</p>
+        </header>
+
+        <main>
+            <section class="input-section">
+                <div class="step">
+                    <h2><span class="step-num">1</span> 何を断捨離する？</h2>
+                    <div class="category-grid" id="categoryGrid">
+                        <button class="cat-btn" data-value="服">👕 服</button>
+                        <button class="cat-btn" data-value="本">📚 本</button>
+                        <button class="cat-btn" data-value="家電">🔌 家電</button>
+                        <button class="cat-btn" data-value="思い出の品">💝 思い出の品</button>
+                        <button class="cat-btn" data-value="食器">🍽️ 食器</button>
+                        <button class="cat-btn" data-value="雑貨">🎁 雑貨</button>
+                        <button class="cat-btn" data-value="書類">📄 書類</button>
+                        <button class="cat-btn" data-value="趣味のもの">🎯 趣味のもの</button>
+                        <button class="cat-btn" data-value="コスメ">💄 コスメ</button>
+                        <button class="cat-btn" data-value="ぬいぐるみ">🧸 ぬいぐるみ</button>
+                        <button class="cat-btn" data-value="人間関係">👤 人間関係</button>
+                        <button class="cat-btn" data-value="元カレ/元カノのもの">💔 元恋人のもの</button>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <h2><span class="step-num">2</span> 最後に使った/見たのは？</h2>
+                    <div class="time-buttons" id="timeButtons">
+                        <button class="time-btn" data-value="yesterday">昨日</button>
+                        <button class="time-btn" data-value="week">1週間以内</button>
+                        <button class="time-btn" data-value="month">1ヶ月以内</button>
+                        <button class="time-btn" data-value="halfyear">半年以内</button>
+                        <button class="time-btn" data-value="year">1年以内</button>
+                        <button class="time-btn" data-value="overyear">1年以上前</button>
+                        <button class="time-btn" data-value="unknown">覚えてない</button>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <h2><span class="step-num">3</span> 捨てられない理由は？</h2>
+                    <div class="reason-grid" id="reasonGrid">
+                        <button class="reason-btn" data-value="高かった">💰 高かったから</button>
+                        <button class="reason-btn" data-value="思い出">💭 思い出があるから</button>
+                        <button class="reason-btn" data-value="いつか使う">🔮 いつか使うかも</button>
+                        <button class="reason-btn" data-value="もったいない">😣 もったいない</button>
+                        <button class="reason-btn" data-value="もらいもの">🎁 もらいものだから</button>
+                        <button class="reason-btn" data-value="なんとなく">🤷 なんとなく</button>
+                    </div>
+                </div>
+
+                <button class="generate-btn" id="generateBtn" disabled>
+                    断捨離判定する 🗑️
+                </button>
+            </section>
+
+            <section class="result-section" id="resultSection" style="display: none;">
+                <div class="result-card">
+                    <div class="verdict-area" id="verdictArea">
+                        <div class="verdict-emoji" id="verdictEmoji"></div>
+                        <div class="verdict-text" id="verdictText"></div>
+                        <div class="verdict-subtitle" id="verdictSubtitle"></div>
+                    </div>
+
+                    <div class="result-tags">
+                        <span class="tag cat-tag" id="resultCategory"></span>
+                        <span class="tag time-tag" id="resultTime"></span>
+                        <span class="tag reason-tag" id="resultReason"></span>
+                    </div>
+
+                    <div class="advice-text" id="adviceText"></div>
+
+                    <div class="meters">
+                        <div class="meter-row">
+                            <span class="meter-label">捨て度</span>
+                            <div class="meter-bar">
+                                <div class="meter-fill throw-fill" id="throwFill"></div>
+                            </div>
+                            <span class="meter-value" id="throwValue"></span>
+                        </div>
+                        <div class="meter-row">
+                            <span class="meter-label">未練度</span>
+                            <div class="meter-bar">
+                                <div class="meter-fill regret-fill" id="regretFill"></div>
+                            </div>
+                            <span class="meter-value" id="regretValue"></span>
+                        </div>
+                    </div>
+
+                    <div class="tip" id="tipText"></div>
+                </div>
+
+                <div class="action-buttons">
+                    <button class="action-btn" id="copyBtn">📋 コピー</button>
+                    <button class="action-btn" id="shareBtn">🐦 シェア</button>
+                    <button class="action-btn" id="retryBtn">🔄 再判定</button>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>※ 最終判断はご自身で。大切なものは捨てないで。</p>
+            <p class="copyright">© 2026 AI断捨離アドバイザー</p>
+        </footer>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script src="declutter.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

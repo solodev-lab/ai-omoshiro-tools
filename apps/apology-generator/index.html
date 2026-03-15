@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI謝罪文ジェネレーター | ビジネス・プライベートの謝罪文を自動生成</title>
+    <meta name="description" content="ビジネスメール・LINEの謝罪文をAIが自動生成。シーンと相手を選ぶだけで完璧な謝罪文が完成。">
+    <meta property="og:title" content="AI謝罪文ジェネレーター">
+    <meta property="og:description" content="誠意レベル調整可能な謝罪文を自動生成。ビジネスからプライベートまで。">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="AI謝罪文ジェネレーター">
+    <meta name="twitter:description" content="誠意レベル調整可能な謝罪文を自動生成。ビジネスからプライベートまで。">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🙇 AI謝罪文ジェネレーター</h1>
+            <p class="subtitle">ビジネスもプライベートも。完璧な謝罪文をAIが生成。</p>
+        </header>
+
+        <main>
+            <section class="input-section">
+                <div class="step">
+                    <h2><span class="step-num">1</span> 誰に謝る？</h2>
+                    <div class="option-grid" id="targetGrid">
+                        <button class="option-btn" data-value="上司">👔 上司</button>
+                        <button class="option-btn" data-value="取引先">🏢 取引先</button>
+                        <button class="option-btn" data-value="同僚">🤝 同僚</button>
+                        <button class="option-btn" data-value="恋人">💕 恋人</button>
+                        <button class="option-btn" data-value="友達">👫 友達</button>
+                        <button class="option-btn" data-value="親">👨‍👩‍👦 親</button>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <h2><span class="step-num">2</span> 何をやらかした？</h2>
+                    <div class="option-grid" id="situationGrid">
+                        <button class="option-btn" data-value="遅刻">⏰ 遅刻</button>
+                        <button class="option-btn" data-value="ミス">❌ ミス・失敗</button>
+                        <button class="option-btn" data-value="忘れ">🤦 忘れていた</button>
+                        <button class="option-btn" data-value="失言">💬 失言・暴言</button>
+                        <button class="option-btn" data-value="ドタキャン">💨 ドタキャン</button>
+                        <button class="option-btn" data-value="返信遅れ">📱 返信遅れ</button>
+                        <button class="option-btn" data-value="約束破り">🤞 約束破り</button>
+                        <button class="option-btn" data-value="迷惑">😣 迷惑をかけた</button>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <h2><span class="step-num">3</span> どのくらいヤバい？</h2>
+                    <div class="severity-buttons" id="severityButtons">
+                        <button class="severity-btn" data-value="light">
+                            <span class="severity-emoji">😅</span>
+                            <span class="severity-label">軽め</span>
+                        </button>
+                        <button class="severity-btn" data-value="medium">
+                            <span class="severity-emoji">😰</span>
+                            <span class="severity-label">そこそこ</span>
+                        </button>
+                        <button class="severity-btn" data-value="heavy">
+                            <span class="severity-emoji">🙇</span>
+                            <span class="severity-label">かなりヤバい</span>
+                        </button>
+                        <button class="severity-btn" data-value="critical">
+                            <span class="severity-emoji">💀</span>
+                            <span class="severity-label">人生終了レベル</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <h2><span class="step-num">4</span> 形式</h2>
+                    <div class="format-buttons" id="formatButtons">
+                        <button class="format-btn active" data-value="business">📧 ビジネスメール</button>
+                        <button class="format-btn" data-value="line">💬 LINE・チャット</button>
+                        <button class="format-btn" data-value="letter">📝 手紙・丁寧</button>
+                    </div>
+                </div>
+
+                <div class="step detail-step">
+                    <h2><span class="step-num">5</span> 補足（任意）</h2>
+                    <textarea id="detailInput" placeholder="具体的な状況があれば書いてください（例：会議に30分遅れた、プレゼン資料を間違えた）"></textarea>
+                </div>
+
+                <button class="generate-btn" id="generateBtn" disabled>
+                    謝罪文を生成する 🙇
+                </button>
+            </section>
+
+            <section class="result-section" id="resultSection" style="display: none;">
+                <div class="result-card">
+                    <div class="result-header">
+                        <div class="result-tags">
+                            <span class="tag target-tag" id="resultTarget"></span>
+                            <span class="tag situation-tag" id="resultSituation"></span>
+                            <span class="tag severity-tag" id="resultSeverity"></span>
+                        </div>
+                        <span class="format-badge" id="resultFormat"></span>
+                    </div>
+                    <div class="apology-text" id="apologyText"></div>
+                    <div class="sincerity-meter">
+                        <span class="meter-label">誠意レベル</span>
+                        <div class="meter-bar">
+                            <div class="meter-fill" id="sincerityFill"></div>
+                        </div>
+                        <span class="meter-value" id="sincerityValue"></span>
+                    </div>
+                    <div class="tip" id="tipText"></div>
+                </div>
+
+                <div class="action-buttons">
+                    <button class="action-btn copy-btn" id="copyBtn">📋 コピー</button>
+                    <button class="action-btn share-btn" id="shareBtn">🐦 シェア</button>
+                    <button class="action-btn retry-btn" id="retryBtn">🔄 別パターン</button>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>※ AIが生成した文章です。大切な場面では自分の言葉も添えてください。</p>
+            <p class="copyright">© 2026 AI謝罪文ジェネレーター</p>
+        </footer>
+    </div>
+
+    <div class="toast" id="toast">コピーしました！</div>
+
+    <script src="apologies.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI言い訳ジェネレーター | 天才的な言い訳を瞬時に生成</title>
+    <meta name="description" content="遅刻・欠席・宿題忘れ…どんなピンチもAIが救う！天才的な言い訳を瞬時に生成する無料ツール">
+    <meta property="og:title" content="AI言い訳ジェネレーター">
+    <meta property="og:description" content="シチュエーション別に使える言い訳をAIが生成。遅刻、宿題、仕事の言い訳まで。">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="AI言い訳ジェネレーター">
+    <meta name="twitter:description" content="シチュエーション別に使える言い訳をAIが生成。遅刻、宿題、仕事の言い訳まで。">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🤥 AI言い訳ジェネレーター</h1>
+            <p class="subtitle">どんなピンチもAIが救う。天才的な言い訳を瞬時に生成。</p>
+        </header>
+
+        <main>
+            <section class="input-section">
+                <h2>シチュエーションを選んでください</h2>
+                <div class="situation-grid" id="situationGrid">
+                    <button class="situation-btn" data-situation="遅刻">😴 遅刻</button>
+                    <button class="situation-btn" data-situation="欠席">🏠 欠席</button>
+                    <button class="situation-btn" data-situation="宿題忘れ">📚 宿題忘れ</button>
+                    <button class="situation-btn" data-situation="締切遅れ">⏰ 締切遅れ</button>
+                    <button class="situation-btn" data-situation="ドタキャン">💨 ドタキャン</button>
+                    <button class="situation-btn" data-situation="既読スルー">📱 既読スルー</button>
+                    <button class="situation-btn" data-situation="寝坊">😪 寝坊</button>
+                    <button class="situation-btn" data-situation="サボり">🎮 サボり</button>
+                    <button class="situation-btn" data-situation="忘れ物">🎒 忘れ物</button>
+                    <button class="situation-btn" data-situation="遅刻(デート)">💕 デート遅刻</button>
+                    <button class="situation-btn" data-situation="飲み会断り">🍺 飲み会断り</button>
+                    <button class="situation-btn" data-situation="連絡忘れ">📞 連絡忘れ</button>
+                </div>
+
+                <div class="level-section">
+                    <h2>言い訳レベル</h2>
+                    <div class="level-buttons" id="levelButtons">
+                        <button class="level-btn active" data-level="normal">😊 普通</button>
+                        <button class="level-btn" data-level="creative">🎨 クリエイティブ</button>
+                        <button class="level-btn" data-level="genius">🧠 天才</button>
+                        <button class="level-btn" data-level="chaos">🔥 カオス</button>
+                    </div>
+                </div>
+
+                <button class="generate-btn" id="generateBtn" disabled>
+                    言い訳を生成する 🎲
+                </button>
+            </section>
+
+            <section class="result-section" id="resultSection" style="display: none;">
+                <div class="result-card" id="resultCard">
+                    <div class="result-header">
+                        <span class="result-situation" id="resultSituation"></span>
+                        <span class="result-level" id="resultLevel"></span>
+                    </div>
+                    <div class="excuse-text" id="excuseText"></div>
+                    <div class="stats">
+                        <div class="stat">
+                            <span class="stat-label">説得力</span>
+                            <div class="stat-bar">
+                                <div class="stat-fill" id="convincingBar"></div>
+                            </div>
+                            <span class="stat-value" id="convincingValue"></span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-label">創造性</span>
+                            <div class="stat-bar">
+                                <div class="stat-fill creativity" id="creativityBar"></div>
+                            </div>
+                            <span class="stat-value" id="creativityValue"></span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-label">バレにくさ</span>
+                            <div class="stat-bar">
+                                <div class="stat-fill stealth" id="stealthBar"></div>
+                            </div>
+                            <span class="stat-value" id="stealthValue"></span>
+                        </div>
+                    </div>
+                    <div class="risk-badge" id="riskBadge"></div>
+                </div>
+
+                <div class="action-buttons">
+                    <button class="action-btn copy-btn" id="copyBtn">📋 コピー</button>
+                    <button class="action-btn share-btn" id="shareBtn">🐦 シェア</button>
+                    <button class="action-btn retry-btn" id="retryBtn">🎲 もう一回</button>
+                </div>
+            </section>
+
+            <section class="history-section" id="historySection" style="display: none;">
+                <h2>📜 言い訳履歴</h2>
+                <div id="historyList"></div>
+            </section>
+        </main>
+
+        <footer>
+            <p>※ このツールはジョークです。実際の言い訳に使って起きた問題には責任を負いません 😇</p>
+            <p class="copyright">© 2026 AI言い訳ジェネレーター</p>
+        </footer>
+    </div>
+
+    <div class="toast" id="toast">コピーしました！</div>
+
+    <script src="excuses.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

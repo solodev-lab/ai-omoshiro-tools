@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI告白文ジェネレーター | 最高の告白を生成</title>
+    <meta name="description" content="相手との関係と気持ちを選ぶだけで、最高の告白文をAIが生成。面白い・感動・重め、あらゆるパターン対応。">
+    <meta property="og:title" content="AI告白文ジェネレーター">
+    <meta property="og:description" content="関係性と気持ちからぴったりの告白文を生成。直接・メッセージ・手紙対応。">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="AI告白文ジェネレーター">
+    <meta name="twitter:description" content="関係性と気持ちからぴったりの告白文を生成。直接・メッセージ・手紙対応。">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>💌 AI告白文ジェネレーター</h1>
+            <p class="subtitle">最高の告白を、AIが本気で考えます。</p>
+        </header>
+
+        <main>
+            <section class="input-section">
+                <div class="step">
+                    <h2><span class="step-num">1</span> 相手との関係は？</h2>
+                    <div class="rel-grid" id="relGrid">
+                        <button class="rel-btn" data-value="同級生">同級生</button>
+                        <button class="rel-btn" data-value="先輩">先輩</button>
+                        <button class="rel-btn" data-value="後輩">後輩</button>
+                        <button class="rel-btn" data-value="同僚">同僚</button>
+                        <button class="rel-btn" data-value="幼なじみ">幼なじみ</button>
+                        <button class="rel-btn" data-value="推し">推し</button>
+                        <button class="rel-btn" data-value="ネットの人">ネットの人</button>
+                        <button class="rel-btn" data-value="その他">その他</button>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <h2><span class="step-num">2</span> あなたの気持ちは？</h2>
+                    <div class="mood-grid" id="moodGrid">
+                        <button class="mood-btn" data-value="一途">一途💕</button>
+                        <button class="mood-btn" data-value="情熱的">情熱的🔥</button>
+                        <button class="mood-btn" data-value="シャイ">シャイ😳</button>
+                        <button class="mood-btn" data-value="ユーモア">ユーモア😂</button>
+                        <button class="mood-btn" data-value="切ない">切ない🥺</button>
+                        <button class="mood-btn" data-value="ストレート">ストレート💪</button>
+                        <button class="mood-btn" data-value="ロマンチック">ロマンチック🌹</button>
+                        <button class="mood-btn" data-value="重め">重め💀</button>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <h2><span class="step-num">3</span> シチュエーション</h2>
+                    <div class="sit-buttons" id="sitButtons">
+                        <button class="sit-btn" data-value="direct">
+                            <span class="sit-emoji">🗣️</span>
+                            <span class="sit-label">直接会って</span>
+                        </button>
+                        <button class="sit-btn" data-value="message">
+                            <span class="sit-emoji">📱</span>
+                            <span class="sit-label">LINE/メッセージ</span>
+                        </button>
+                        <button class="sit-btn" data-value="letter">
+                            <span class="sit-emoji">✉️</span>
+                            <span class="sit-label">手紙</span>
+                        </button>
+                        <button class="sit-btn" data-value="graduation">
+                            <span class="sit-emoji">🎓</span>
+                            <span class="sit-label">卒業式</span>
+                        </button>
+                    </div>
+                </div>
+
+                <button class="generate-btn" id="generateBtn" disabled>
+                    告白文を生成する 💌
+                </button>
+            </section>
+
+            <section class="result-section" id="resultSection" style="display: none;">
+                <div class="result-card">
+                    <div class="result-tags">
+                        <span class="tag rel-tag" id="resultRel"></span>
+                        <span class="tag mood-tag" id="resultMood"></span>
+                        <span class="tag sit-tag" id="resultSit"></span>
+                    </div>
+
+                    <div class="confession-showcase">
+                        <div class="confession-text" id="confessionText"></div>
+                        <div class="confession-subtitle" id="confessionSubtitle"></div>
+                    </div>
+
+                    <div class="alt-texts">
+                        <h3>別パターン</h3>
+                        <div class="alt-list" id="altList"></div>
+                    </div>
+
+                    <div class="confession-stats">
+                        <div class="stat-row">
+                            <span class="stat-label">成功確率</span>
+                            <div class="stat-bar"><div class="stat-fill success-fill" id="successFill"></div></div>
+                            <span class="stat-value" id="successValue"></span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">本気度</span>
+                            <div class="stat-bar"><div class="stat-fill serious-fill" id="seriousFill"></div></div>
+                            <span class="stat-value" id="seriousValue"></span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">破壊力</span>
+                            <div class="stat-bar"><div class="stat-fill power-fill" id="powerFill"></div></div>
+                            <span class="stat-value" id="powerValue"></span>
+                        </div>
+                    </div>
+
+                    <div class="tip" id="tipText"></div>
+                </div>
+
+                <div class="action-buttons">
+                    <button class="action-btn" id="copyBtn">📋 コピー</button>
+                    <button class="action-btn" id="shareBtn">🐦 シェア</button>
+                    <button class="action-btn" id="retryBtn">🔄 別の告白文</button>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>※ 告白の成功は文章だけじゃなく、日頃の行動が大事です。</p>
+            <p class="copyright">&copy; 2026 AI告白文ジェネレーター</p>
+        </footer>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script src="confessions.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

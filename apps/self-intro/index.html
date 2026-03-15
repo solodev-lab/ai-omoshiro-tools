@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI自己紹介メーカー | 印象に残る自己紹介を生成</title>
+    <meta name="description" content="シーンとキャラ設定を選ぶだけで、印象に残る自己紹介文をAIが生成。合コン・面接・新学期など場面別に対応。">
+    <meta property="og:title" content="AI自己紹介メーカー">
+    <meta property="og:description" content="シーンとキャラに合わせた自己紹介文を自動生成。面接から飲み会まで。">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="AI自己紹介メーカー">
+    <meta name="twitter:description" content="シーンとキャラに合わせた自己紹介文を自動生成。面接から飲み会まで。">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎤 AI自己紹介メーカー</h1>
+            <p class="subtitle">印象に残る自己紹介を、あなたに。</p>
+        </header>
+
+        <main>
+            <section class="input-section">
+                <div class="step">
+                    <h2><span class="step-num">1</span> シーンは？</h2>
+                    <div class="scene-grid" id="sceneGrid">
+                        <button class="scene-btn" data-value="新学期">🏫 新学期</button>
+                        <button class="scene-btn" data-value="合コン">🍻 合コン</button>
+                        <button class="scene-btn" data-value="転職初日">💼 転職初日</button>
+                        <button class="scene-btn" data-value="面接">🤝 面接</button>
+                        <button class="scene-btn" data-value="推し活仲間">✨ 推し活仲間</button>
+                        <button class="scene-btn" data-value="オフ会">💻 オフ会</button>
+                        <button class="scene-btn" data-value="結婚式">🎊 結婚式</button>
+                        <button class="scene-btn" data-value="町内会">🏠 町内会</button>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <h2><span class="step-num">2</span> キャラ設定</h2>
+                    <div class="chara-grid" id="charaGrid">
+                        <button class="chara-btn" data-value="真面目">😤 真面目</button>
+                        <button class="chara-btn" data-value="天然">🌸 天然</button>
+                        <button class="chara-btn" data-value="陽キャ">☀️ 陽キャ</button>
+                        <button class="chara-btn" data-value="陰キャ">🌙 陰キャ</button>
+                        <button class="chara-btn" data-value="中二病">⚔️ 中二病</button>
+                        <button class="chara-btn" data-value="おもしろ">🤣 おもしろ</button>
+                        <button class="chara-btn" data-value="ギャップ萌え">💫 ギャップ萌え</button>
+                        <button class="chara-btn" data-value="ミステリアス">🔮 ミステリアス</button>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <h2><span class="step-num">3</span> 印象づけたいのは？</h2>
+                    <div class="impression-buttons" id="impressionButtons">
+                        <button class="impression-btn" data-value="friendly">
+                            <span class="impression-emoji">😊</span>
+                            <span class="impression-label">親しみやすさ</span>
+                        </button>
+                        <button class="impression-btn" data-value="capable">
+                            <span class="impression-emoji">💪</span>
+                            <span class="impression-label">できる感</span>
+                        </button>
+                        <button class="impression-btn" data-value="funny">
+                            <span class="impression-emoji">😂</span>
+                            <span class="impression-label">おもしろさ</span>
+                        </button>
+                        <button class="impression-btn" data-value="unique">
+                            <span class="impression-emoji">✨</span>
+                            <span class="impression-label">個性的</span>
+                        </button>
+                    </div>
+                </div>
+
+                <button class="generate-btn" id="generateBtn" disabled>
+                    自己紹介を生成する 🎤
+                </button>
+            </section>
+
+            <section class="result-section" id="resultSection" style="display: none;">
+                <div class="result-card">
+                    <div class="result-tags">
+                        <span class="tag scene-tag" id="resultScene"></span>
+                        <span class="tag chara-tag" id="resultChara"></span>
+                        <span class="tag impression-tag" id="resultImpression"></span>
+                    </div>
+
+                    <div class="intro-showcase">
+                        <div class="intro-text" id="introText"></div>
+                        <div class="intro-subtitle" id="introSubtitle"></div>
+                    </div>
+
+                    <div class="alt-intros">
+                        <h3>別パターン</h3>
+                        <div class="alt-list" id="altList"></div>
+                    </div>
+
+                    <div class="intro-stats">
+                        <div class="stat-row">
+                            <span class="stat-label">インパクト度</span>
+                            <div class="stat-bar"><div class="stat-fill impact-fill" id="impactFill"></div></div>
+                            <span class="stat-value" id="impactValue"></span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">好感度</span>
+                            <div class="stat-bar"><div class="stat-fill likable-fill" id="likableFill"></div></div>
+                            <span class="stat-value" id="likableValue"></span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">記憶残り度</span>
+                            <div class="stat-bar"><div class="stat-fill memorable-fill" id="memorableFill"></div></div>
+                            <span class="stat-value" id="memorableValue"></span>
+                        </div>
+                    </div>
+
+                    <div class="tip" id="tipText"></div>
+                </div>
+
+                <div class="action-buttons">
+                    <button class="action-btn" id="copyBtn">📋 コピー</button>
+                    <button class="action-btn" id="shareBtn">🐦 シェア</button>
+                    <button class="action-btn" id="retryBtn">🔄 別の自己紹介</button>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>※ 第一印象は大事ですが、その後の行動がもっと大事です。</p>
+            <p class="copyright">&copy; 2026 AI自己紹介メーカー</p>
+        </footer>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script src="intros.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

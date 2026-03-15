@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AIネーミングジェネレーター | 最高の名前を生成</title>
+    <meta name="description" content="バンド名、お店の名前、チーム名など、何にでも使えるネーミングをAIが提案。かっこいい・かわいい・厨二病まで対応。">
+    <meta property="og:title" content="AIネーミングジェネレーター">
+    <meta property="og:description" content="サービス名・チーム名・商品名など、ぴったりの名前をAIが生成。">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="AIネーミングジェネレーター">
+    <meta name="twitter:description" content="サービス名・チーム名・商品名など、ぴったりの名前をAIが生成。">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>✨ AIネーミングジェネレーター</h1>
+            <p class="subtitle">最高の名前、見つけよう。</p>
+        </header>
+
+        <main>
+            <section class="input-section">
+                <div class="step">
+                    <h2><span class="step-num">1</span> 何の名前？</h2>
+                    <div class="cat-grid" id="catGrid">
+                        <button class="cat-btn" data-value="バンド名">🎸 バンド名</button>
+                        <button class="cat-btn" data-value="お店の名前">🏪 お店の名前</button>
+                        <button class="cat-btn" data-value="チーム名">⚽ チーム名</button>
+                        <button class="cat-btn" data-value="プロジェクト名">💻 プロジェクト名</button>
+                        <button class="cat-btn" data-value="SNSアカウント">📱 SNSアカウント</button>
+                        <button class="cat-btn" data-value="創作キャラ">🎨 創作キャラ</button>
+                        <button class="cat-btn" data-value="技の名前">⚡ 技の名前</button>
+                        <button class="cat-btn" data-value="ペンネーム">✍️ ペンネーム</button>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <h2><span class="step-num">2</span> テイストは？</h2>
+                    <div class="taste-grid" id="tasteGrid">
+                        <button class="taste-btn" data-value="かっこいい">🔥 かっこいい</button>
+                        <button class="taste-btn" data-value="かわいい">💕 かわいい</button>
+                        <button class="taste-btn" data-value="おしゃれ">✨ おしゃれ</button>
+                        <button class="taste-btn" data-value="おもしろ">😂 おもしろ</button>
+                        <button class="taste-btn" data-value="厨二病">⚔️ 厨二病</button>
+                        <button class="taste-btn" data-value="和風">🇯🇵 和風</button>
+                        <button class="taste-btn" data-value="近未来">🚀 近未来</button>
+                        <button class="taste-btn" data-value="ダーク">🌑 ダーク</button>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <h2><span class="step-num">3</span> 言葉の響き</h2>
+                    <div class="sound-buttons" id="soundButtons">
+                        <button class="sound-btn" data-value="catchy">
+                            <span class="sound-emoji">📢</span>
+                            <span class="sound-label">短くキャッチー</span>
+                        </button>
+                        <button class="sound-btn" data-value="impact">
+                            <span class="sound-emoji">💥</span>
+                            <span class="sound-label">長めでインパクト</span>
+                        </button>
+                        <button class="sound-btn" data-value="english">
+                            <span class="sound-emoji">🌍</span>
+                            <span class="sound-label">英語まじり</span>
+                        </button>
+                        <button class="sound-btn" data-value="japanese">
+                            <span class="sound-emoji">🗾</span>
+                            <span class="sound-label">日本語のみ</span>
+                        </button>
+                    </div>
+                </div>
+
+                <button class="generate-btn" id="generateBtn" disabled>
+                    ネーミングを生成する ✨
+                </button>
+            </section>
+
+            <section class="result-section" id="resultSection" style="display: none;">
+                <div class="result-card">
+                    <div class="result-tags">
+                        <span class="tag cat-tag" id="resultCat"></span>
+                        <span class="tag taste-tag" id="resultTaste"></span>
+                        <span class="tag sound-tag" id="resultSound"></span>
+                    </div>
+
+                    <div class="name-showcase">
+                        <div class="main-name" id="mainName"></div>
+                        <div class="name-meaning" id="nameMeaning"></div>
+                    </div>
+
+                    <div class="alt-names">
+                        <h3>他の候補</h3>
+                        <div class="alt-list" id="altList"></div>
+                    </div>
+
+                    <div class="name-stats">
+                        <div class="stat-row">
+                            <span class="stat-label">キャッチー度</span>
+                            <div class="stat-bar"><div class="stat-fill catchy-fill" id="catchyFill"></div></div>
+                            <span class="stat-value" id="catchyValue"></span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">インパクト度</span>
+                            <div class="stat-bar"><div class="stat-fill impact-fill" id="impactFill"></div></div>
+                            <span class="stat-value" id="impactValue"></span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">覚えやすさ</span>
+                            <div class="stat-bar"><div class="stat-fill memo-fill" id="memoFill"></div></div>
+                            <span class="stat-value" id="memoValue"></span>
+                        </div>
+                    </div>
+
+                    <div class="tip" id="tipText"></div>
+                </div>
+
+                <div class="action-buttons">
+                    <button class="action-btn" id="copyBtn">📋 コピー</button>
+                    <button class="action-btn" id="shareBtn">🐦 シェア</button>
+                    <button class="action-btn" id="retryBtn">🔄 別の名前</button>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>※ 商標登録前に必ず既存の名前と被っていないか確認しましょう。</p>
+            <p class="copyright">&copy; 2026 AIネーミングジェネレーター</p>
+        </footer>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script src="names.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

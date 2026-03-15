@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI夢占い | 夢の意味をAIが診断</title>
+    <meta name="description" content="昨晩の夢をAIが占います。夢に出てきたものと気分を選ぶだけで深層心理を診断。">
+    <meta property="og:title" content="AI夢占い">
+    <meta property="og:description" content="見た夢のシンボルと気分から運勢を占う。深層心理の解説付き。">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="AI夢占い">
+    <meta name="twitter:description" content="見た夢のシンボルと気分から運勢を占う。深層心理の解説付き。">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🌙 AI夢占い</h1>
+            <p class="subtitle">昨晩の夢、AIが解き明かします。</p>
+        </header>
+
+        <main>
+            <section class="input-section">
+                <div class="step">
+                    <h2><span class="step-num">1</span> 夢に出てきたものは？</h2>
+                    <div class="symbol-grid" id="symbolGrid">
+                        <button class="symbol-btn" data-value="空を飛ぶ">🕊️ 空を飛ぶ</button>
+                        <button class="symbol-btn" data-value="追いかけられる">🏃 追いかけられる</button>
+                        <button class="symbol-btn" data-value="落ちる">⬇️ 落ちる</button>
+                        <button class="symbol-btn" data-value="水・海">🌊 水・海</button>
+                        <button class="symbol-btn" data-value="火">🔥 火</button>
+                        <button class="symbol-btn" data-value="動物">🐾 動物</button>
+                        <button class="symbol-btn" data-value="知らない場所">🏚️ 知らない場所</button>
+                        <button class="symbol-btn" data-value="学校・職場">🏫 学校・職場</button>
+                        <button class="symbol-btn" data-value="好きな人">💕 好きな人</button>
+                        <button class="symbol-btn" data-value="亡くなった人">👻 亡くなった人</button>
+                        <button class="symbol-btn" data-value="歯が抜ける">🦷 歯が抜ける</button>
+                        <button class="symbol-btn" data-value="遅刻">⏰ 遅刻</button>
+                        <button class="symbol-btn" data-value="お金">💰 お金</button>
+                        <button class="symbol-btn" data-value="蛇">🐍 蛇</button>
+                        <button class="symbol-btn" data-value="赤ちゃん">👶 赤ちゃん</button>
+                        <button class="symbol-btn" data-value="トイレ">🚽 トイレ</button>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <h2><span class="step-num">2</span> 夢の中の気分は？</h2>
+                    <div class="mood-buttons" id="moodButtons">
+                        <button class="mood-btn" data-value="楽しい">
+                            <span class="mood-emoji">😊</span>
+                            <span class="mood-label">楽しい</span>
+                        </button>
+                        <button class="mood-btn" data-value="怖い">
+                            <span class="mood-emoji">😨</span>
+                            <span class="mood-label">怖い</span>
+                        </button>
+                        <button class="mood-btn" data-value="悲しい">
+                            <span class="mood-emoji">😢</span>
+                            <span class="mood-label">悲しい</span>
+                        </button>
+                        <button class="mood-btn" data-value="不思議">
+                            <span class="mood-emoji">🤔</span>
+                            <span class="mood-label">不思議</span>
+                        </button>
+                        <button class="mood-btn" data-value="焦り">
+                            <span class="mood-emoji">😰</span>
+                            <span class="mood-label">焦り</span>
+                        </button>
+                        <button class="mood-btn" data-value="懐かしい">
+                            <span class="mood-emoji">🥹</span>
+                            <span class="mood-label">懐かしい</span>
+                        </button>
+                    </div>
+                </div>
+
+                <button class="generate-btn" id="generateBtn" disabled>
+                    夢を占う 🔮
+                </button>
+            </section>
+
+            <section class="result-section" id="resultSection" style="display: none;">
+                <div class="result-card">
+                    <div class="fortune-header">
+                        <div class="fortune-stars" id="fortuneStars"></div>
+                        <div class="fortune-rank" id="fortuneRank"></div>
+                    </div>
+
+                    <div class="result-tags">
+                        <span class="tag symbol-tag" id="resultSymbol"></span>
+                        <span class="tag mood-tag" id="resultMood"></span>
+                    </div>
+
+                    <div class="interpretation-area">
+                        <h3>🔮 夢の解釈</h3>
+                        <div class="interpretation-text" id="interpretationText"></div>
+                    </div>
+
+                    <div class="psychology-area">
+                        <h3>🧠 深層心理</h3>
+                        <div class="psychology-text" id="psychologyText"></div>
+                    </div>
+
+                    <div class="lucky-area">
+                        <div class="lucky-item">
+                            <span class="lucky-label">ラッキーカラー</span>
+                            <span class="lucky-value" id="luckyColor"></span>
+                        </div>
+                        <div class="lucky-item">
+                            <span class="lucky-label">ラッキーナンバー</span>
+                            <span class="lucky-value" id="luckyNumber"></span>
+                        </div>
+                        <div class="lucky-item">
+                            <span class="lucky-label">ラッキーアクション</span>
+                            <span class="lucky-value" id="luckyAction"></span>
+                        </div>
+                    </div>
+
+                    <div class="tip" id="tipText"></div>
+                </div>
+
+                <div class="action-buttons">
+                    <button class="action-btn" id="copyBtn">📋 コピー</button>
+                    <button class="action-btn" id="shareBtn">🐦 シェア</button>
+                    <button class="action-btn" id="retryBtn">🔄 再占い</button>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>※ エンタメです。本気にしすぎないでね。でもちょっと当たってるかも？</p>
+            <p class="copyright">© 2026 AI夢占い</p>
+        </footer>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script src="dreams.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

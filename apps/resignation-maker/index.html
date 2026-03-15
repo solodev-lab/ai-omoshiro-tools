@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI退職届メーカー | 本音と建前の退職届を自動生成</title>
+    <meta name="description" content="退職理由を選ぶだけで、建前の退職届と本音の退職届を同時生成。円満退職をAIがサポート。">
+    <meta property="og:title" content="AI退職届メーカー">
+    <meta property="og:description" content="建前と本音の退職届を同時生成。円満度メーター付き。">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="AI退職届メーカー">
+    <meta name="twitter:description" content="建前と本音の退職届を同時生成。円満度メーター付き。">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📄 AI退職届メーカー</h1>
+            <p class="subtitle">本音と建前、両方つくります。</p>
+        </header>
+
+        <main>
+            <section class="input-section">
+                <div class="step">
+                    <h2><span class="step-num">1</span> 本当の退職理由は？</h2>
+                    <div class="option-grid" id="reasonGrid">
+                        <button class="option-btn" data-value="上司が無理">😤 上司が無理</button>
+                        <button class="option-btn" data-value="給料が安い">💸 給料が安い</button>
+                        <button class="option-btn" data-value="残業多すぎ">⏰ 残業多すぎ</button>
+                        <button class="option-btn" data-value="人間関係">😩 人間関係</button>
+                        <button class="option-btn" data-value="やりがいなし">😑 やりがいなし</button>
+                        <button class="option-btn" data-value="パワハラ">💢 パワハラ</button>
+                        <button class="option-btn" data-value="通勤がつらい">🚃 通勤がつらい</button>
+                        <button class="option-btn" data-value="社風が合わない">🏢 社風が合わない</button>
+                        <button class="option-btn" data-value="将来性がない">📉 将来性がない</button>
+                        <button class="option-btn" data-value="独立したい">🚀 独立したい</button>
+                        <button class="option-btn" data-value="もう限界">💀 もう限界</button>
+                        <button class="option-btn" data-value="なんとなく">🤷 なんとなく</button>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <h2><span class="step-num">2</span> 勤続年数は？</h2>
+                    <div class="tenure-buttons" id="tenureButtons">
+                        <button class="tenure-btn" data-value="3months">3ヶ月未満</button>
+                        <button class="tenure-btn" data-value="1year">〜1年</button>
+                        <button class="tenure-btn" data-value="3years">1〜3年</button>
+                        <button class="tenure-btn" data-value="5years">3〜5年</button>
+                        <button class="tenure-btn" data-value="10years">5〜10年</button>
+                        <button class="tenure-btn" data-value="veteran">10年以上</button>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <h2><span class="step-num">3</span> 退職のスタンス</h2>
+                    <div class="stance-buttons" id="stanceButtons">
+                        <button class="stance-btn" data-value="gentle">
+                            <span class="stance-emoji">🕊️</span>
+                            <span class="stance-label">円満退職</span>
+                            <span class="stance-desc">波風立てない</span>
+                        </button>
+                        <button class="stance-btn" data-value="normal">
+                            <span class="stance-emoji">😐</span>
+                            <span class="stance-label">普通</span>
+                            <span class="stance-desc">淡々と</span>
+                        </button>
+                        <button class="stance-btn" data-value="firm">
+                            <span class="stance-emoji">💪</span>
+                            <span class="stance-label">強気</span>
+                            <span class="stance-desc">引き止め不可</span>
+                        </button>
+                        <button class="stance-btn" data-value="explosive">
+                            <span class="stance-emoji">🔥</span>
+                            <span class="stance-label">爆発</span>
+                            <span class="stance-desc">全部言う</span>
+                        </button>
+                    </div>
+                </div>
+
+                <button class="generate-btn" id="generateBtn" disabled>
+                    退職届を生成する 📄
+                </button>
+            </section>
+
+            <section class="result-section" id="resultSection" style="display: none;">
+                <div class="tab-bar">
+                    <button class="tab active" data-tab="tatemae" id="tabTatemae">🎭 建前（提出用）</button>
+                    <button class="tab" data-tab="honne" id="tabHonne">💣 本音（非提出用）</button>
+                </div>
+
+                <div class="result-card">
+                    <div class="result-header">
+                        <div class="result-tags">
+                            <span class="tag reason-tag" id="resultReason"></span>
+                            <span class="tag tenure-tag" id="resultTenure"></span>
+                            <span class="tag stance-tag" id="resultStance"></span>
+                        </div>
+                    </div>
+
+                    <div class="document-area" id="tatemaeArea">
+                        <div class="doc-header">退 職 届</div>
+                        <div class="doc-body" id="tatemaeText"></div>
+                    </div>
+
+                    <div class="document-area" id="honneArea" style="display: none;">
+                        <div class="doc-header honne-header">本 音 退 職 届</div>
+                        <div class="doc-body honne-body" id="honneText"></div>
+                    </div>
+
+                    <div class="meters">
+                        <div class="meter-row">
+                            <span class="meter-label">円満度</span>
+                            <div class="meter-bar">
+                                <div class="meter-fill peaceful-fill" id="peacefulFill"></div>
+                            </div>
+                            <span class="meter-value" id="peacefulValue"></span>
+                        </div>
+                        <div class="meter-row">
+                            <span class="meter-label">本音度</span>
+                            <div class="meter-bar">
+                                <div class="meter-fill honne-fill" id="honneFill"></div>
+                            </div>
+                            <span class="meter-value" id="honneValue"></span>
+                        </div>
+                    </div>
+
+                    <div class="tip" id="tipText"></div>
+                </div>
+
+                <div class="action-buttons">
+                    <button class="action-btn" id="copyBtn">📋 コピー</button>
+                    <button class="action-btn" id="shareBtn">🐦 シェア</button>
+                    <button class="action-btn" id="retryBtn">🔄 別パターン</button>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>※ ジョークアプリです。実際の退職届にはご利用にならないでください。…多分。</p>
+            <p class="copyright">© 2026 AI退職届メーカー</p>
+        </footer>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script src="resignations.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
