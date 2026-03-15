@@ -1,7 +1,12 @@
+const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    ? 'http://localhost:8787'
+    : 'https://ai-omoshiro-api.kojifo369.workers.dev';
+
 document.addEventListener('DOMContentLoaded', () => {
     let scene = null;
     let chara = null;
     let impression = null;
+    let isGenerating = false;
 
     const sceneGrid = document.getElementById('sceneGrid');
     const charaGrid = document.getElementById('charaGrid');
@@ -49,9 +54,99 @@ document.addEventListener('DOMContentLoaded', () => {
     generateBtn.addEventListener('click', generate);
     retryBtn.addEventListener('click', generate);
 
-    function generate() {
+    async function generate() {
         if (!scene || !chara || !impression) return;
+        if (isGenerating) return;
+        isGenerating = true;
 
+        generateBtn.disabled = true;
+        generateBtn.textContent = '考え中… 🎤';
+
+        // Display tags
+        resultScene.textContent = scene;
+        resultChara.textContent = chara;
+        resultImpression.textContent = IMPRESSION_LABELS[impression];
+
+        try {
+            await generateWithAI();
+        } catch (e) {
+            console.log('AI generation failed, using static fallback:', e.message);
+            generateFromStatic();
+        } finally {
+            isGenerating = false;
+            generateBtn.disabled = false;
+            generateBtn.textContent = '自己紹介を生成する ✨';
+        }
+
+        // Show result
+        resultSection.style.display = 'block';
+        resultSection.style.animation = 'none';
+        resultSection.offsetHeight;
+        resultSection.style.animation = 'fadeInUp 0.5s ease';
+        resultSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    async function generateWithAI() {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 15000);
+
+        const response = await fetch(API_URL + '/api/generate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                app: 'self-intro',
+                params: { scene, chara, impression }
+            }),
+            signal: controller.signal
+        });
+
+        clearTimeout(timeoutId);
+
+        if (!response.ok) throw new Error('API error: ' + response.status);
+
+        const json = await response.json();
+        if (!json.success || !json.data) throw new Error('Invalid response');
+        const data = json.data;
+
+        // Main intro text
+        introText.textContent = data.text;
+        introSubtitle.textContent = data.subtitle;
+
+        // Alt intros
+        altList.innerHTML = '';
+        if (data.alts && data.alts.length > 0) {
+            data.alts.forEach(alt => {
+                const chip = document.createElement('span');
+                chip.className = 'alt-chip';
+                chip.textContent = alt.length > 30 ? alt.substring(0, 30) + '…' : alt;
+                chip.title = alt;
+                chip.addEventListener('click', () => {
+                    introText.textContent = alt;
+                    introSubtitle.textContent = '別パターン';
+                });
+                altList.appendChild(chip);
+            });
+        }
+
+        // Stats (clamp 20-99)
+        const impactScore = clamp(data.impact, 20, 99);
+        const likableScore = clamp(data.likable, 20, 99);
+        const memorableScore = clamp(data.memorable, 20, 99);
+
+        setTimeout(() => {
+            impactFill.style.width = impactScore + '%';
+            impactValue.textContent = impactScore + '%';
+            likableFill.style.width = likableScore + '%';
+            likableValue.textContent = likableScore + '%';
+            memorableFill.style.width = memorableScore + '%';
+            memorableValue.textContent = memorableScore + '%';
+        }, 100);
+
+        // Tip
+        tipText.textContent = '💡 ' + data.tip;
+    }
+
+    function generateFromStatic() {
         const sceneData = INTROS[scene];
         if (!sceneData) return;
 
@@ -59,11 +154,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!charaData || charaData.length === 0) return;
 
         const entry = charaData[Math.floor(Math.random() * charaData.length)];
-
-        // Display tags
-        resultScene.textContent = scene;
-        resultChara.textContent = chara;
-        resultImpression.textContent = IMPRESSION_LABELS[impression];
 
         // Main intro text
         introText.textContent = entry.text;
@@ -84,10 +174,9 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         // Stats
-        const isChara = chara;
-        const impactScore = isChara === '中二病' || isChara === 'おもしろ' ? 70 + rand(30) : 40 + rand(40);
-        const likableScore = isChara === '天然' || isChara === '陽キャ' ? 70 + rand(25) : isChara === '陰キャ' ? 30 + rand(30) : 50 + rand(35);
-        const memorableScore = isChara === '中二病' || isChara === 'ギャップ萌え' || isChara === 'ミステリアス' ? 70 + rand(30) : 40 + rand(40);
+        const impactScore = chara === '中二病' || chara === 'おもしろ' ? 70 + rand(30) : 40 + rand(40);
+        const likableScore = chara === '天然' || chara === '陽キャ' ? 70 + rand(25) : chara === '陰キャ' ? 30 + rand(30) : 50 + rand(35);
+        const memorableScore = chara === '中二病' || chara === 'ギャップ萌え' || chara === 'ミステリアス' ? 70 + rand(30) : 40 + rand(40);
 
         setTimeout(() => {
             impactFill.style.width = impactScore + '%';
@@ -100,13 +189,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Tip
         tipText.textContent = '💡 ' + TIPS[Math.floor(Math.random() * TIPS.length)];
+    }
 
-        // Show result
-        resultSection.style.display = 'block';
-        resultSection.style.animation = 'none';
-        resultSection.offsetHeight;
-        resultSection.style.animation = 'fadeInUp 0.5s ease';
-        resultSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    function clamp(value, min, max) {
+        return Math.max(min, Math.min(max, value));
     }
 
     function rand(max) {

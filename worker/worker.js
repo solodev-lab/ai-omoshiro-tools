@@ -1,0 +1,398 @@
+/**
+ * AI Omoshiro Tools - Cloudflare Worker (API Proxy)
+ *
+ * 全アプリ共通のOpenAI APIプロキシ。
+ * セキュリティ: リファラー制限 + レート制限 + CORS制御
+ */
+
+// ── レート制限（簡易版: KVなしでメモリベース）──
+const rateLimitMap = new Map();
+const RATE_LIMIT_WINDOW = 60000; // 1分
+const RATE_LIMIT_MAX = 5; // 1分あたり5回/IP
+
+function checkRateLimit(ip) {
+    const now = Date.now();
+    const record = rateLimitMap.get(ip);
+    if (!record || now - record.start > RATE_LIMIT_WINDOW) {
+        rateLimitMap.set(ip, { start: now, count: 1 });
+        return true;
+    }
+    record.count++;
+    if (record.count > RATE_LIMIT_MAX) return false;
+    return true;
+}
+
+// ── メモリ掃除（リクエスト時に古いエントリを削除）──
+function cleanupRateLimit() {
+    const now = Date.now();
+    for (const [ip, record] of rateLimitMap) {
+        if (now - record.start > RATE_LIMIT_WINDOW * 2) {
+            rateLimitMap.delete(ip);
+        }
+    }
+}
+
+// ── 許可するオリジン ──
+const ALLOWED_ORIGINS = [
+    'https://solodev-lab.github.io',
+    'http://localhost',
+    'http://127.0.0.1',
+];
+
+function isAllowedOrigin(origin) {
+    if (!origin) return false;
+    return ALLOWED_ORIGINS.some(allowed => origin.startsWith(allowed));
+}
+
+// ── アプリ別プロンプト定義 ──
+const APP_PROMPTS = {
+    'naming-generator': {
+        system: `あなたはネーミングの天才です。ユーザーの要望に合わせて、クリエイティブで印象的な名前を生成してください。
+必ず以下のJSON形式で返答してください（他のテキストは不要）:
+{
+  "name": "メインの名前",
+  "meaning": "名前の由来や意味（1文）",
+  "alts": ["候補2", "候補3", "候補4"],
+  "catchy": 75,
+  "impact": 80,
+  "memo": 70,
+  "tip": "この名前に関するワンポイントアドバイス"
+}`,
+        buildPrompt: (params) => {
+            const soundMap = {
+                catchy: '短くキャッチーな（6文字以内）',
+                impact: '長めでインパクトのある（7文字以上）',
+                english: '英語まじりの',
+                japanese: '日本語のみの（英語・フランス語など外国語は絶対に使わない）'
+            };
+            return `「${params.category}」の名前を考えてください。
+テイスト: ${params.taste}
+響き: ${soundMap[params.sound] || params.sound}
+条件: メイン1つ + 候補3つを生成。すべての名前が響きの条件を満たすこと。`;
+        }
+    },
+    'apology-generator': {
+        system: `あなたは謝罪文の達人です。状況に合わせた心のこもった謝罪文を生成してください。
+必ず以下のJSON形式で返答してください（他のテキストは不要）:
+{
+  "text": "謝罪文の本文（改行は\\nで表現）",
+  "sincerity": 75,
+  "tip": "この謝罪文を使うときのアドバイス"
+}`,
+        buildPrompt: (params) => {
+            const severityMap = { light: '軽め', medium: 'そこそこ', heavy: 'かなりヤバい', critical: '人生終了レベル' };
+            const formatMap = { business: 'ビジネスメール風', line: 'LINE（カジュアル）', letter: '手紙（フォーマル）' };
+            return `謝罪の相手: ${params.target || '相手'}
+状況: ${params.situation || '一般的な謝罪'}
+深刻度: ${severityMap[params.severity] || params.severity || '普通'}
+文体: ${formatMap[params.format] || params.format || 'ビジネスメール風'}
+条件: 100〜200文字程度。相手に誠意が伝わる文章を生成してください。`;
+        }
+    },
+    'excuse-generator': {
+        system: `あなたは言い訳の天才です。クリエイティブで思わず笑ってしまう言い訳を生成してください。
+必ず以下のJSON形式で返答してください（他のテキストは不要）:
+{
+  "excuse": "言い訳の本文",
+  "convincing": 65,
+  "creativity": 85,
+  "stealth": 70,
+  "risk": "low/medium/high/extreme",
+  "tip": "この言い訳を使うときのコツ"
+}`,
+        buildPrompt: (params) => {
+            const levelMap = { normal: '普通（信憑性重視）', creative: 'クリエイティブ（少し変わった）', genius: '天才（かなり独創的）', chaos: 'カオス（完全にネタ）' };
+            return `言い訳が必要な状況: ${params.situation || '遅刻'}
+言い訳のレベル: ${levelMap[params.level] || params.level || '普通'}
+条件: 1〜3文程度。状況に合った説得力のある言い訳を生成してください。`;
+        }
+    },
+    'love-confession': {
+        system: `あなたは告白文のプロです。相手の心に響く告白文を生成してください。
+必ず以下のJSON形式で返答してください（他のテキストは不要）:
+{
+  "text": "告白文の本文",
+  "subtitle": "この告白のスタイル名（例: 王道ストレート、文学的アプローチ等）",
+  "alts": ["別パターン1", "別パターン2"],
+  "success": 65,
+  "serious": 80,
+  "power": 75,
+  "tip": "告白を成功させるアドバイス"
+}`,
+        buildPrompt: (params) => {
+            const sitMap = { direct: '直接会って', line: 'LINEで', letter: '手紙で', phone: '電話で' };
+            return `相手との関係: ${params.relationship || '好きな人'}
+告白のムード: ${params.mood || 'ストレート'}
+シチュエーション: ${sitMap[params.situation] || params.situation || '直接'}
+条件: 50〜150文字程度。心に響く告白文を生成してください。`;
+        }
+    },
+    'pet-namer': {
+        system: `あなたはペットの名付け親です。かわいくて覚えやすいペットの名前を提案してください。
+必ず以下のJSON形式で返答してください（他のテキストは不要）:
+{
+  "name": "メインの名前",
+  "meaning": "名前の由来（1文）",
+  "alts": ["候補2", "候補3", "候補4"],
+  "call": 85,
+  "memo": 70,
+  "cute": 80,
+  "tip": "この名前にまつわるポイント"
+}`,
+        buildPrompt: (params) => {
+            const styleMap = { japanese: '和風', western: '洋風', food: '食べ物系', unique: 'ユニーク・変わり種' };
+            return `ペットの種類: ${params.pet || 'ペット'}
+雰囲気: ${params.vibe || 'かわいい'}
+名前のスタイル: ${styleMap[params.style] || params.style || '和風'}
+条件: メイン1つ + 候補3つ。呼びやすく覚えやすい名前を生成してください。`;
+        }
+    },
+    'dream-fortune': {
+        system: `あなたは夢占いの専門家です。夢の内容から運勢と心理分析を行ってください。
+必ず以下のJSON形式で返答してください（他のテキストは不要）:
+{
+  "interpretation": "夢の解釈（2〜3文）",
+  "psychology": "心理学的な分析（1〜2文）",
+  "fortune_score": 4,
+  "lucky_color": "ラッキーカラー",
+  "lucky_number": 7,
+  "lucky_action": "今日やるといいこと",
+  "tip": "夢からのメッセージ"
+}
+fortune_scoreは1〜5の整数（1=凶, 2=末吉, 3=小吉, 4=吉, 5=大吉）`,
+        buildPrompt: (params) => `夢に出てきたシンボル: ${params.symbol || '不思議なもの'}
+夢の中の気分: ${params.mood || '不思議'}
+条件: シンボルと気分から、具体的で納得感のある夢占いを行ってください。`
+    },
+    'declutter-advisor': {
+        system: `あなたは断捨離アドバイザーです。物を手放すかどうかの判断を手助けしてください。
+必ず以下のJSON形式で返答してください（他のテキストは不要）:
+{
+  "verdict": "throw/keep/maybe",
+  "verdict_title": "判定タイトル（例: 今すぐ手放そう！/大切に残そう/もう少し考えよう）",
+  "verdict_subtitle": "一言コメント",
+  "advice": "具体的なアドバイス（2〜3文）",
+  "throw_score": 70,
+  "regret_score": 30,
+  "tip": "断捨離のコツ"
+}
+throw_scoreは0〜100（捨て度）、regret_scoreは0〜100（後悔度）`,
+        buildPrompt: (params) => {
+            const timeMap = { '1month': '1ヶ月以内', '6months': '半年以内', '1year': '1年以内', '3years': '1〜3年', 'over3': '3年以上' };
+            return `断捨離するアイテムのカテゴリ: ${params.category || '物'}
+最後に使った時期: ${timeMap[params.time] || params.time || '不明'}
+捨てられない理由: ${params.reason || '特になし'}
+条件: カテゴリと使用頻度、理由を考慮して、断捨離すべきかどうか判断してください。`;
+        }
+    },
+    'nickname-maker': {
+        system: `あなたはあだ名作りの達人です。名前と特徴から楽しくて愛されるあだ名を考えてください。
+必ず以下のJSON形式で返答してください（他のテキストは不要）:
+{
+  "nickname": "メインのあだ名",
+  "reading": "元の名前 → あだ名 の変換説明",
+  "alts": ["候補2", "候補3", "候補4", "候補5"],
+  "easy": 80,
+  "stick": 75,
+  "react": 70,
+  "tip": "このあだ名のポイント"
+}
+easyは呼びやすさ、stickは定着度、reactはリアクション期待度（各0〜100）`,
+        buildPrompt: (params) => {
+            const tasteMap = { cute: 'かわいい系', cool: 'かっこいい系', funny: 'おもしろ系', unique: '個性的' };
+            return `名前: ${params.name || ''}
+性格・特徴: ${(params.traits || []).join('、') || '特になし'}
+テイスト: ${tasteMap[params.taste] || params.taste || 'かわいい系'}
+条件: メイン1つ + 候補4つ以上。名前の響きや特徴を活かしたあだ名を生成してください。`;
+        }
+    },
+    'resignation-maker': {
+        system: `あなたは退職届の文章作成アシスタントです。建前（フォーマル）と本音（カジュアル）の2パターンを生成してください。
+必ず以下のJSON形式で返答してください（他のテキストは不要）:
+{
+  "tatemae": "建前の退職届文（改行は\\nで表現）",
+  "honne": "本音バージョン（改行は\\nで表現）",
+  "peaceful": 70,
+  "honne_score": 60,
+  "tip": "退職時のアドバイス"
+}
+peacefulは円満度（0〜100）、honne_scoreは本音度（0〜100）`,
+        buildPrompt: (params) => {
+            const tenureMap = { under1: '1年未満', '1to3': '1〜3年', '3to5': '3〜5年', '5to10': '5〜10年', over10: '10年以上' };
+            const stanceMap = { gentle: '穏やか（円満退職）', normal: '普通', firm: '強め（引き止め拒否）', explosive: '爆発（もう限界）' };
+            return `退職理由: ${params.reason || '一身上の都合'}
+勤続年数: ${tenureMap[params.tenure] || params.tenure || '不明'}
+スタンス: ${stanceMap[params.stance] || params.stance || '普通'}
+条件: 建前は正式なビジネス文書、本音は率直で少しユーモアのある文章。各100〜200文字程度。`;
+        }
+    },
+    'self-intro': {
+        system: `あなたは自己紹介文の作成プロです。印象に残る自己紹介を生成してください。
+必ず以下のJSON形式で返答してください（他のテキストは不要）:
+{
+  "text": "自己紹介文の本文",
+  "subtitle": "この自己紹介のスタイル名",
+  "alts": ["別パターン1", "別パターン2"],
+  "impact": 80,
+  "likable": 75,
+  "memorable": 70,
+  "tip": "自己紹介を成功させるコツ"
+}`,
+        buildPrompt: (params) => {
+            const impressionMap = { friendly: '親しみやすい', smart: '知的', funny: 'おもしろい', mysterious: 'ミステリアス' };
+            return `場面: ${params.scene || '一般'}
+キャラ: ${params.chara || '普通'}
+与えたい印象: ${impressionMap[params.impression] || params.impression || '親しみやすい'}
+条件: 50〜150文字程度。場面とキャラに合った自然な自己紹介を生成してください。`;
+        }
+    },
+    'personality-diagnosis': {
+        system: `あなたは性格分析の専門家です。MBTI風の性格タイプと回答傾向から、パーソナライズされた分析を生成してください。
+必ず以下のJSON形式で返答してください（他のテキストは不要）:
+{
+  "catchphrase": "このタイプのユニークなキャッチコピー（10文字以内）",
+  "description": "性格の詳細説明（3〜4文）",
+  "strengths": ["強み1", "強み2", "強み3"],
+  "weaknesses": ["弱み1", "弱み2"],
+  "compatibility": "相性の良いタイプコード（例: ENFP）",
+  "compatibilityName": "相性タイプのキャッチコピー",
+  "advice": "このタイプへのアドバイス（1文）"
+}`,
+        buildPrompt: (params) => `性格タイプ: ${params.type || 'INTJ'}
+各軸のスコア: E=${params.scores?.E || 0}, I=${params.scores?.I || 0}, S=${params.scores?.S || 0}, N=${params.scores?.N || 0}, T=${params.scores?.T || 0}, F=${params.scores?.F || 0}, J=${params.scores?.J || 0}, P=${params.scores?.P || 0}
+条件: このタイプに合った独創的なキャッチコピーと詳細分析を生成してください。毎回異なるキャッチコピーにしてください。`
+    }
+};
+
+// ── メインハンドラ ──
+export default {
+    async fetch(request, env) {
+        const url = new URL(request.url);
+        const origin = request.headers.get('Origin') || '';
+
+        // CORS preflight
+        if (request.method === 'OPTIONS') {
+            return new Response(null, {
+                headers: corsHeaders(origin)
+            });
+        }
+
+        // ヘルスチェック
+        if (url.pathname === '/health') {
+            return new Response(JSON.stringify({ status: 'ok' }), {
+                headers: { 'Content-Type': 'application/json', ...corsHeaders(origin) }
+            });
+        }
+
+        // POST /api/generate のみ受付
+        if (request.method !== 'POST' || url.pathname !== '/api/generate') {
+            return new Response(JSON.stringify({ error: 'Not Found' }), {
+                status: 404,
+                headers: { 'Content-Type': 'application/json', ...corsHeaders(origin) }
+            });
+        }
+
+        // オリジンチェック
+        if (!isAllowedOrigin(origin)) {
+            return new Response(JSON.stringify({ error: 'Forbidden' }), {
+                status: 403,
+                headers: { 'Content-Type': 'application/json' }
+            });
+        }
+
+        // レート制限（古いエントリも掃除）
+        cleanupRateLimit();
+        const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
+        if (!checkRateLimit(ip)) {
+            return new Response(JSON.stringify({ error: 'Rate limit exceeded. Please wait a moment.' }), {
+                status: 429,
+                headers: { 'Content-Type': 'application/json', ...corsHeaders(origin) }
+            });
+        }
+
+        try {
+            const body = await request.json();
+            const { app, params } = body;
+
+            if (!app || !params) {
+                return new Response(JSON.stringify({ error: 'Missing app or params' }), {
+                    status: 400,
+                    headers: { 'Content-Type': 'application/json', ...corsHeaders(origin) }
+                });
+            }
+
+            const appConfig = APP_PROMPTS[app];
+            if (!appConfig) {
+                return new Response(JSON.stringify({ error: 'Unknown app' }), {
+                    status: 400,
+                    headers: { 'Content-Type': 'application/json', ...corsHeaders(origin) }
+                });
+            }
+
+            const userPrompt = appConfig.buildPrompt(params);
+
+            // OpenAI API呼び出し
+            const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${env.OPENAI_API_KEY}`
+                },
+                body: JSON.stringify({
+                    model: 'gpt-4o-mini',
+                    messages: [
+                        { role: 'system', content: appConfig.system },
+                        { role: 'user', content: userPrompt }
+                    ],
+                    max_tokens: 500,
+                    temperature: 0.9
+                })
+            });
+
+            if (!openaiResponse.ok) {
+                const errText = await openaiResponse.text();
+                console.error('OpenAI error:', errText);
+                return new Response(JSON.stringify({ error: 'AI generation failed' }), {
+                    status: 502,
+                    headers: { 'Content-Type': 'application/json', ...corsHeaders(origin) }
+                });
+            }
+
+            const openaiData = await openaiResponse.json();
+            const content = openaiData.choices[0].message.content;
+
+            // JSONパース（マークダウンコードブロック対応）
+            let parsed;
+            try {
+                const jsonStr = content.replace(/```json?\n?/g, '').replace(/```/g, '').trim();
+                parsed = JSON.parse(jsonStr);
+            } catch (e) {
+                console.error('JSON parse error:', content);
+                return new Response(JSON.stringify({ error: 'AI response parse failed', raw: content }), {
+                    status: 502,
+                    headers: { 'Content-Type': 'application/json', ...corsHeaders(origin) }
+                });
+            }
+
+            return new Response(JSON.stringify({ success: true, data: parsed }), {
+                headers: { 'Content-Type': 'application/json', ...corsHeaders(origin) }
+            });
+
+        } catch (err) {
+            console.error('Worker error:', err);
+            return new Response(JSON.stringify({ error: 'Internal error' }), {
+                status: 500,
+                headers: { 'Content-Type': 'application/json', ...corsHeaders(origin) }
+            });
+        }
+    }
+};
+
+function corsHeaders(origin) {
+    return {
+        'Access-Control-Allow-Origin': isAllowedOrigin(origin) ? origin : '',
+        'Access-Control-Allow-Methods': 'POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type',
+        'Access-Control-Max-Age': '86400'
+    };
+}

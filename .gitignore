@@ -7,3 +7,5 @@ Thumbs.db
 scripts/
 test_ogp.png
 CLAUDE.md
+.obsidian/
+worker/test-server.py

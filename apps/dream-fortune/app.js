@@ -2,6 +2,11 @@ document.addEventListener('DOMContentLoaded', () => {
     let symbol = null;
     let mood = null;
 
+    // Worker API URL
+    const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+        ? 'http://localhost:8787'
+        : 'https://ai-omoshiro-api.kojifo369.workers.dev';
+
     const symbolGrid = document.getElementById('symbolGrid');
     const moodButtons = document.getElementById('moodButtons');
     const generateBtn = document.getElementById('generateBtn');
@@ -43,10 +48,84 @@ document.addEventListener('DOMContentLoaded', () => {
     generateBtn.addEventListener('click', generate);
     retryBtn.addEventListener('click', generate);
 
-    function generate() {
-        if (!symbol || !mood) return;
+    let isGenerating = false;
 
-        // Fortune rank (random but weighted by mood)
+    async function generate() {
+        if (!symbol || !mood) return;
+        if (isGenerating) return;
+        isGenerating = true;
+
+        generateBtn.disabled = true;
+        generateBtn.textContent = '考え中… 🔮';
+        retryBtn.disabled = true;
+
+        try {
+            await generateWithAI();
+        } catch (err) {
+            console.warn('AI生成失敗、フォールバック:', err.message);
+            generateFromStatic();
+        } finally {
+            isGenerating = false;
+            generateBtn.disabled = false;
+            generateBtn.textContent = '夢を占う ✨';
+            retryBtn.disabled = false;
+        }
+    }
+
+    // ── AI生成 ──
+    async function generateWithAI() {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 15000);
+
+        try {
+            const res = await fetch(API_URL + '/api/generate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    app: 'dream-fortune',
+                    params: { symbol, mood }
+                }),
+                signal: controller.signal
+            });
+
+            clearTimeout(timeout);
+
+            if (!res.ok) {
+                const err = await res.json().catch(() => ({}));
+                throw new Error(err.error || 'API error ' + res.status);
+            }
+
+            const json = await res.json();
+            if (!json.success || !json.data) throw new Error('Invalid response');
+
+            const d = json.data;
+            const ranks = { 1: '凶', 2: '末吉', 3: '小吉', 4: '吉', 5: '大吉' };
+            const stars = Math.max(1, Math.min(5, d.fortune_score || 3));
+
+            fortuneStars.textContent = '⭐'.repeat(stars) + '☆'.repeat(5 - stars);
+            fortuneRank.textContent = ranks[stars];
+
+            resultSymbol.textContent = symbol;
+            resultMood.textContent = mood;
+
+            interpretationText.textContent = d.interpretation || 'この夢は、あなたの深層心理が変化を求めているサインです。新しいことに挑戦してみましょう。';
+            psychologyText.textContent = d.psychology || 'あなたの無意識が何かを伝えようとしています。心の声に耳を傾けてみましょう。';
+
+            luckyColor.textContent = d.lucky_color || LUCKY_COLORS[Math.floor(Math.random() * LUCKY_COLORS.length)];
+            luckyNumber.textContent = d.lucky_number || (Math.floor(Math.random() * 99) + 1);
+            luckyAction.textContent = d.lucky_action || LUCKY_ACTIONS[Math.floor(Math.random() * LUCKY_ACTIONS.length)];
+
+            tipText.textContent = '💡 ' + (d.tip || TIPS[Math.floor(Math.random() * TIPS.length)]);
+
+            showResult();
+        } catch (err) {
+            clearTimeout(timeout);
+            throw err;
+        }
+    }
+
+    // ── 静的データからのフォールバック生成 ──
+    function generateFromStatic() {
         const moodBonus = { '楽しい': 2, '不思議': 1, '懐かしい': 1, '怖い': -1, '悲しい': -1, '焦り': 0 };
         const base = Math.floor(Math.random() * 5) + 1;
         const stars = Math.max(1, Math.min(5, base + (moodBonus[mood] || 0)));
@@ -55,11 +134,9 @@ document.addEventListener('DOMContentLoaded', () => {
         fortuneStars.textContent = '⭐'.repeat(stars) + '☆'.repeat(5 - stars);
         fortuneRank.textContent = ranks[stars];
 
-        // Tags
         resultSymbol.textContent = symbol;
         resultMood.textContent = mood;
 
-        // Interpretation
         const interp = INTERPRETATIONS[symbol];
         if (interp && interp[mood]) {
             const options = interp[mood];
@@ -68,18 +145,19 @@ document.addEventListener('DOMContentLoaded', () => {
             interpretationText.textContent = 'この夢は、あなたの深層心理が変化を求めているサインです。新しいことに挑戦してみましょう。';
         }
 
-        // Psychology
         psychologyText.textContent = PSYCHOLOGY[symbol] || 'あなたの無意識が何かを伝えようとしています。心の声に耳を傾けてみましょう。';
 
-        // Lucky items
         luckyColor.textContent = LUCKY_COLORS[Math.floor(Math.random() * LUCKY_COLORS.length)];
         luckyNumber.textContent = Math.floor(Math.random() * 99) + 1;
         luckyAction.textContent = LUCKY_ACTIONS[Math.floor(Math.random() * LUCKY_ACTIONS.length)];
 
-        // Tip
         tipText.textContent = '💡 ' + TIPS[Math.floor(Math.random() * TIPS.length)];
 
-        // Show
+        showResult();
+    }
+
+    // ── 結果表示（共通） ──
+    function showResult() {
         resultSection.style.display = 'block';
         resultSection.style.animation = 'none';
         resultSection.offsetHeight;

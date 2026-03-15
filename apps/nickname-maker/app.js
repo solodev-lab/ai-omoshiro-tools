@@ -1,6 +1,11 @@
 document.addEventListener('DOMContentLoaded', () => {
+    const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+        ? 'http://localhost:8787'
+        : 'https://ai-omoshiro-api.kojifo369.workers.dev';
+
     let traits = [];
     let taste = null;
+    let isGenerating = false;
 
     const nameInput = document.getElementById('nameInput');
     const traitGrid = document.getElementById('traitGrid');
@@ -64,10 +69,97 @@ document.addEventListener('DOMContentLoaded', () => {
     generateBtn.addEventListener('click', generate);
     retryBtn.addEventListener('click', generate);
 
-    function generate() {
+    async function generate() {
         const name = nameInput.value.trim();
         if (!name || traits.length === 0 || !taste) return;
+        if (isGenerating) return;
 
+        isGenerating = true;
+        generateBtn.disabled = true;
+        generateBtn.textContent = '考え中… ✨';
+
+        try {
+            await generateWithAI();
+        } catch (err) {
+            console.warn('AI generation failed, using static fallback:', err);
+            generateFromStatic();
+        } finally {
+            isGenerating = false;
+            generateBtn.textContent = 'あだ名を生成する ✨';
+            generateBtn.disabled = !(nameInput.value.trim() && traits.length > 0 && taste);
+        }
+    }
+
+    async function generateWithAI() {
+        const name = nameInput.value.trim();
+        const res = await fetch(API_URL + '/api/generate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                app: 'nickname-maker',
+                params: { name, traits, taste }
+            })
+        });
+
+        if (!res.ok) throw new Error('API response ' + res.status);
+
+        const json = await res.json();
+        if (!json.success || !json.data) throw new Error('Invalid response');
+        const data = json.data;
+        if (!data.nickname) throw new Error('No nickname in response');
+
+        // Display input summary
+        resultName.textContent = name;
+        resultTraits.textContent = traits.join('・');
+        resultTaste.textContent = TASTE_LABELS[taste];
+
+        // Main nickname
+        mainNickname.textContent = data.nickname;
+        mainNickname.style.animation = 'none';
+        mainNickname.offsetHeight;
+        mainNickname.style.animation = 'popIn 0.5s ease';
+        nicknameReading.textContent = data.reading || (name + ' → ' + data.nickname);
+
+        // Alt nicknames
+        altList.innerHTML = '';
+        if (data.alts && Array.isArray(data.alts)) {
+            data.alts.forEach(alt => {
+                const chip = document.createElement('span');
+                chip.className = 'alt-chip';
+                chip.textContent = alt;
+                chip.addEventListener('click', () => {
+                    mainNickname.textContent = alt;
+                    mainNickname.style.animation = 'none';
+                    mainNickname.offsetHeight;
+                    mainNickname.style.animation = 'popIn 0.5s ease';
+                    nicknameReading.textContent = name + ' → ' + alt;
+                });
+                altList.appendChild(chip);
+            });
+        }
+
+        // Stats
+        const easyVal = clamp(data.easy, 20, 99);
+        const stickVal = clamp(data.stick, 20, 99);
+        const reactVal = clamp(data.react, 20, 99);
+
+        setTimeout(() => {
+            easyFill.style.width = easyVal + '%';
+            easyValue.textContent = easyVal + '%';
+            stickFill.style.width = stickVal + '%';
+            stickValue.textContent = stickVal + '%';
+            reactFill.style.width = reactVal + '%';
+            reactValue.textContent = reactVal + '%';
+        }, 100);
+
+        // Tip
+        tipText.textContent = data.tip || ('💡 ' + TIPS[Math.floor(Math.random() * TIPS.length)]);
+
+        showResult();
+    }
+
+    function generateFromStatic() {
+        const name = nameInput.value.trim();
         const nicknames = generateNicknames(name, traits, taste);
 
         // Display
@@ -80,7 +172,7 @@ document.addEventListener('DOMContentLoaded', () => {
         mainNickname.style.animation = 'none';
         mainNickname.offsetHeight;
         mainNickname.style.animation = 'popIn 0.5s ease';
-        nicknameReading.textContent = `${name} → ${nicknames[0]}`;
+        nicknameReading.textContent = name + ' → ' + nicknames[0];
 
         // Alt nicknames
         altList.innerHTML = '';
@@ -93,7 +185,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 mainNickname.style.animation = 'none';
                 mainNickname.offsetHeight;
                 mainNickname.style.animation = 'popIn 0.5s ease';
-                nicknameReading.textContent = `${name} → ${nicknames[i]}`;
+                nicknameReading.textContent = name + ' → ' + nicknames[i];
             });
             altList.appendChild(chip);
         }
@@ -115,12 +207,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Tip
         tipText.textContent = '💡 ' + TIPS[Math.floor(Math.random() * TIPS.length)];
 
-        // Show
-        resultSection.style.display = 'block';
-        resultSection.style.animation = 'none';
-        resultSection.offsetHeight;
-        resultSection.style.animation = 'fadeInUp 0.5s ease';
-        resultSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        showResult();
     }
 
     function generateNicknames(name, traits, taste) {
@@ -158,6 +245,20 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         return arr.slice(0, 6);
+    }
+
+    function showResult() {
+        resultSection.style.display = 'block';
+        resultSection.style.animation = 'none';
+        resultSection.offsetHeight;
+        resultSection.style.animation = 'fadeInUp 0.5s ease';
+        resultSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    function clamp(val, min, max) {
+        const n = parseInt(val, 10);
+        if (isNaN(n)) return min + Math.floor(Math.random() * (max - min));
+        return Math.max(min, Math.min(max, n));
     }
 
     // Copy

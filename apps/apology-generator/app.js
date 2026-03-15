@@ -4,6 +4,11 @@ document.addEventListener('DOMContentLoaded', () => {
     let severity = null;
     let format = 'business';
 
+    // Worker API URL
+    const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+        ? 'http://localhost:8787'
+        : 'https://ai-omoshiro-api.kojifo369.workers.dev';
+
     const targetGrid = document.getElementById('targetGrid');
     const situationGrid = document.getElementById('situationGrid');
     const severityButtons = document.getElementById('severityButtons');
@@ -50,30 +55,114 @@ document.addEventListener('DOMContentLoaded', () => {
     generateBtn.addEventListener('click', generate);
     retryBtn.addEventListener('click', generate);
 
-    function generate() {
+    let isGenerating = false;
+
+    async function generate() {
         if (!target || !situation || !severity) return;
+        if (isGenerating) return;
+        isGenerating = true;
 
-        let text = getApologyText();
+        // ボタンをローディング状態に
+        generateBtn.disabled = true;
+        generateBtn.textContent = '考え中… ✨';
+        retryBtn.disabled = true;
 
-        // Display
+        try {
+            // AI生成を試行
+            const result = await generateWithAI();
+            displayResult(result);
+        } catch (err) {
+            console.warn('AI生成失敗、フォールバック:', err.message);
+            // フォールバック: 静的データから生成
+            const result = generateFromStatic();
+            displayResult(result);
+        } finally {
+            isGenerating = false;
+            generateBtn.disabled = false;
+            generateBtn.textContent = '謝罪文を生成する ✨';
+            retryBtn.disabled = false;
+        }
+    }
+
+    // ── AI生成 ──
+    async function generateWithAI() {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 15000); // 15秒タイムアウト
+
+        try {
+            const res = await fetch(API_URL + '/api/generate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    app: 'apology-generator',
+                    params: { target, situation, severity, format }
+                }),
+                signal: controller.signal
+            });
+
+            clearTimeout(timeout);
+
+            if (!res.ok) {
+                const err = await res.json().catch(() => ({}));
+                throw new Error(err.error || 'API error ' + res.status);
+            }
+
+            const json = await res.json();
+            if (!json.success || !json.data) throw new Error('Invalid response');
+
+            const d = json.data;
+            return {
+                text: d.text,
+                sincerity: clamp(d.sincerity || 70, 10, 99),
+                tip: d.tip || '',
+                source: 'ai'
+            };
+        } catch (err) {
+            clearTimeout(timeout);
+            throw err;
+        }
+    }
+
+    // ── 静的データからのフォールバック生成 ──
+    function generateFromStatic() {
+        const text = getApologyText();
+
+        const sincerityMap = { light: 40, medium: 65, heavy: 85, critical: 99 };
+        const base = sincerityMap[severity];
+        const sincerity = base + Math.floor(Math.random() * 10) - 5;
+
+        const tips = TIPS[target] || TIPS["友達"];
+        const tip = tips[Math.floor(Math.random() * tips.length)];
+
+        return {
+            text: text,
+            sincerity: sincerity,
+            tip: tip,
+            source: 'static'
+        };
+    }
+
+    // ── 結果表示（共通） ──
+    function displayResult(result) {
         resultTarget.textContent = target;
         resultSituation.textContent = situation;
         resultSeverity.textContent = severityLabels[severity];
         resultFormat.textContent = formatLabels[format];
-        apologyText.textContent = text;
+        apologyText.textContent = result.text;
 
         // Sincerity meter
-        const sincerityMap = { light: 40, medium: 65, heavy: 85, critical: 99 };
-        const base = sincerityMap[severity];
-        const sincerity = base + Math.floor(Math.random() * 10) - 5;
         setTimeout(() => {
-            sincerityFill.style.width = sincerity + '%';
-            sincerityValue.textContent = sincerity + '%';
+            sincerityFill.style.width = result.sincerity + '%';
+            sincerityValue.textContent = result.sincerity + '%';
         }, 100);
 
         // Tip
-        const tips = TIPS[target] || TIPS["友達"];
-        tipText.textContent = "💡 " + tips[Math.floor(Math.random() * tips.length)];
+        if (result.tip) {
+            tipText.textContent = '💡 ' + result.tip;
+        } else {
+            const tips = TIPS[target] || TIPS["友達"];
+            tipText.textContent = '💡 ' + tips[Math.floor(Math.random() * tips.length)];
+        }
 
         // Show
         resultSection.style.display = 'block';
@@ -81,6 +170,10 @@ document.addEventListener('DOMContentLoaded', () => {
         resultSection.offsetHeight;
         resultSection.style.animation = 'fadeInUp 0.5s ease';
         resultSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    function clamp(val, min, max) {
+        return Math.min(max, Math.max(min, val));
     }
 
     function getApologyText() {

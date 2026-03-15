@@ -1,8 +1,13 @@
 document.addEventListener('DOMContentLoaded', () => {
+    const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+        ? 'http://localhost:8787'
+        : 'https://ai-omoshiro-api.kojifo369.workers.dev';
+
     let reason = null;
     let tenure = null;
     let stance = null;
     let currentTab = 'tatemae';
+    let isGenerating = false;
 
     const reasonGrid = document.getElementById('reasonGrid');
     const tenureButtons = document.getElementById('tenureButtons');
@@ -63,19 +68,87 @@ document.addEventListener('DOMContentLoaded', () => {
     generateBtn.addEventListener('click', generate);
     retryBtn.addEventListener('click', generate);
 
-    function generate() {
+    async function generate() {
         if (!reason || !tenure || !stance) return;
+        if (isGenerating) return;
 
+        isGenerating = true;
+        generateBtn.disabled = true;
+        generateBtn.textContent = '考え中… ✨';
+
+        try {
+            await generateWithAI();
+        } catch (err) {
+            console.warn('AI generation failed, using static fallback:', err);
+            generateFromStatic();
+        } finally {
+            isGenerating = false;
+            generateBtn.textContent = '退職届を生成する ✨';
+            generateBtn.disabled = !(reason && tenure && stance);
+        }
+    }
+
+    async function generateWithAI() {
+        const res = await fetch(API_URL + '/api/generate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                app: 'resignation-maker',
+                params: { reason, tenure, stance }
+            })
+        });
+
+        if (!res.ok) throw new Error('API response ' + res.status);
+
+        const json = await res.json();
+        if (!json.success || !json.data) throw new Error('Invalid response');
+        const data = json.data;
+        if (!data.tatemae || !data.honne) throw new Error('Missing tatemae/honne in response');
+
+        // Date header
+        const today = new Date();
+        const dateStr = today.getFullYear() + '年' + (today.getMonth() + 1) + '月' + today.getDate() + '日';
+
+        // Display input summary
+        resultReason.textContent = reason;
+        resultTenure.textContent = TENURE_LABELS[tenure];
+        resultStance.textContent = STANCE_LABELS[stance];
+
+        // Texts with date header
+        tatemaeText.textContent = dateStr + '\n\n' + data.tatemae;
+        honneText.textContent = dateStr + '\n\n' + data.honne;
+
+        // Meters
+        const pVal = clamp(data.peaceful, 5, 99);
+        const hVal = clamp(data.honne_score, 5, 99);
+
+        setTimeout(() => {
+            peacefulFill.style.width = pVal + '%';
+            peacefulValue.textContent = pVal + '%';
+            honneFill.style.width = hVal + '%';
+            honneValue.textContent = hVal + '%';
+        }, 100);
+
+        // Tip
+        tipText.textContent = data.tip || ('💡 ' + getRandomTip());
+
+        // Reset to tatemae tab
+        switchTab('tatemae');
+
+        showResult();
+    }
+
+    function generateFromStatic() {
         // Get texts
         const tatemae = getRandomText(TATEMAE, reason, stance);
         const honne = getRandomText(HONNE, reason, stance);
 
         // Add date formatting
         const today = new Date();
-        const dateStr = `${today.getFullYear()}年${today.getMonth() + 1}月${today.getDate()}日`;
+        const dateStr = today.getFullYear() + '年' + (today.getMonth() + 1) + '月' + today.getDate() + '日';
 
-        const tatemaeFormatted = `${dateStr}\n\n${tatemae}`;
-        const honneFormatted = `${dateStr}\n\n${honne}`;
+        const tatemaeFormatted = dateStr + '\n\n' + tatemae;
+        const honneFormatted = dateStr + '\n\n' + honne;
 
         // Display
         resultReason.textContent = reason;
@@ -98,18 +171,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 100);
 
         // Tip
-        const tips = TIPS[reason] || TIPS["なんとなく"];
-        tipText.textContent = "💡 " + tips[Math.floor(Math.random() * tips.length)];
+        tipText.textContent = '💡 ' + getRandomTip();
 
         // Reset to tatemae tab
         switchTab('tatemae');
 
-        // Show
-        resultSection.style.display = 'block';
-        resultSection.style.animation = 'none';
-        resultSection.offsetHeight;
-        resultSection.style.animation = 'fadeInUp 0.5s ease';
-        resultSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        showResult();
     }
 
     function getRandomText(data, reason, stance) {
@@ -135,6 +202,25 @@ document.addEventListener('DOMContentLoaded', () => {
             explosive: "辞めます。以上。\n\nもう限界です。さようなら。"
         };
         return defaults[stance] || defaults['normal'];
+    }
+
+    function getRandomTip() {
+        const tips = TIPS[reason] || TIPS["なんとなく"];
+        return tips[Math.floor(Math.random() * tips.length)];
+    }
+
+    function showResult() {
+        resultSection.style.display = 'block';
+        resultSection.style.animation = 'none';
+        resultSection.offsetHeight;
+        resultSection.style.animation = 'fadeInUp 0.5s ease';
+        resultSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    function clamp(val, min, max) {
+        const n = parseInt(val, 10);
+        if (isNaN(n)) return min + Math.floor(Math.random() * (max - min));
+        return Math.max(min, Math.min(max, n));
     }
 
     // Copy

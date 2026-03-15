@@ -1,3 +1,7 @@
+const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    ? 'http://localhost:8787'
+    : 'https://ai-omoshiro-api.kojifo369.workers.dev';
+
 document.addEventListener('DOMContentLoaded', () => {
     // DOM要素
     const startSection = document.getElementById('startSection');
@@ -88,12 +92,18 @@ document.addEventListener('DOMContentLoaded', () => {
         questionSection.style.display = 'none';
         analyzingSection.style.display = 'block';
 
+        const type = getType();
+
         const statuses = [
             '回答パターンを解析しています',
             '性格特性をマッピング中...',
             '16タイプと照合しています',
+            '個別分析レポートを作成中...',
             'あなたのタイプが判明しました！'
         ];
+
+        // Start AI call in parallel with animation
+        const aiPromise = analyzeWithAI(type);
 
         let i = 0;
         const interval = setInterval(() => {
@@ -103,45 +113,95 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             if (i >= statuses.length) {
                 clearInterval(interval);
-                setTimeout(showResult, 500);
+                // Wait for AI result (or fallback) before showing result
+                aiPromise.then(aiData => {
+                    setTimeout(() => showResult(type, aiData), 500);
+                }).catch(() => {
+                    setTimeout(() => showResult(type, null), 500);
+                });
             }
         }, 600);
     }
 
+    // AI分析
+    async function analyzeWithAI(type) {
+        try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 15000);
+
+            const response = await fetch(API_URL + '/api/generate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    app: 'personality-diagnosis',
+                    params: { type, scores }
+                }),
+                signal: controller.signal
+            });
+
+            clearTimeout(timeoutId);
+
+            if (!response.ok) throw new Error('API error: ' + response.status);
+
+            const json = await response.json();
+            if (!json.success || !json.data) throw new Error('Invalid response');
+            return json.data;
+        } catch (e) {
+            console.log('AI analysis failed, using static fallback:', e.message);
+            return null;
+        }
+    }
+
     // 結果表示
-    function showResult() {
+    function showResult(type, aiData) {
         analyzingSection.style.display = 'none';
         resultSection.style.display = 'block';
 
-        // タイプ判定
-        const type = getType();
+        // タイプ判定（typeは引数から受け取る、typeDataは常に必要）
         const typeData = TYPES[type];
 
-        // ランダムキャッチコピー
-        const catchphrase = typeData.catchphrases[Math.floor(Math.random() * typeData.catchphrases.length)];
+        let catchphrase, description, strengths, weaknesses, compatibility, compatibilityName;
 
-        // DOM更新
+        if (aiData) {
+            // AI結果を使用
+            catchphrase = aiData.catchphrase;
+            description = aiData.description;
+            strengths = aiData.strengths;
+            weaknesses = aiData.weaknesses;
+            compatibility = aiData.compatibility;
+            compatibilityName = aiData.compatibilityName;
+        } else {
+            // 静的データにフォールバック
+            catchphrase = typeData.catchphrases[Math.floor(Math.random() * typeData.catchphrases.length)];
+            description = typeData.description;
+            strengths = typeData.strengths;
+            weaknesses = typeData.weaknesses;
+            compatibility = typeData.compatibility;
+            compatibilityName = typeData.compatibilityName;
+        }
+
+        // DOM更新（emoji, name, colorは常にtypeDataから）
         resultEmoji.textContent = typeData.emoji;
         resultCode.textContent = typeData.name;
         resultCatchphrase.textContent = catchphrase;
         resultCatchphrase.style.color = typeData.color;
-        resultDescription.textContent = typeData.description;
+        resultDescription.textContent = description;
 
         resultStrengths.innerHTML = '';
-        typeData.strengths.forEach(s => {
+        strengths.forEach(s => {
             const li = document.createElement('li');
             li.textContent = s;
             resultStrengths.appendChild(li);
         });
 
         resultWeaknesses.innerHTML = '';
-        typeData.weaknesses.forEach(w => {
+        weaknesses.forEach(w => {
             const li = document.createElement('li');
             li.textContent = w;
             resultWeaknesses.appendChild(li);
         });
 
-        compatibilityText.textContent = typeData.compatibility + '（' + typeData.compatibilityName + '）';
+        compatibilityText.textContent = compatibility + '（' + compatibilityName + '）';
 
         // 結果カードのボーダー色
         resultCard.style.borderColor = typeData.color + '40';

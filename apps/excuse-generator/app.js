@@ -3,6 +3,11 @@ document.addEventListener('DOMContentLoaded', () => {
     let selectedLevel = 'normal';
     let history = JSON.parse(localStorage.getItem('excuseHistory') || '[]');
 
+    // Worker API URL
+    const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+        ? 'http://localhost:8787'
+        : 'https://ai-omoshiro-api.kojifo369.workers.dev';
+
     const situationGrid = document.getElementById('situationGrid');
     const levelButtons = document.getElementById('levelButtons');
     const generateBtn = document.getElementById('generateBtn');
@@ -58,34 +63,123 @@ document.addEventListener('DOMContentLoaded', () => {
     generateBtn.addEventListener('click', generateExcuse);
     retryBtn.addEventListener('click', generateExcuse);
 
-    function generateExcuse() {
-        if (!selectedSituation) return;
+    let isGenerating = false;
 
+    async function generateExcuse() {
+        if (!selectedSituation) return;
+        if (isGenerating) return;
+        isGenerating = true;
+
+        // ボタンをローディング状態に
+        generateBtn.disabled = true;
+        generateBtn.textContent = '考え中… ✨';
+        retryBtn.disabled = true;
+
+        try {
+            // AI生成を試行
+            const result = await generateWithAI();
+            displayResult(result);
+        } catch (err) {
+            console.warn('AI生成失敗、フォールバック:', err.message);
+            // フォールバック: 静的データから生成
+            const result = generateFromStatic();
+            displayResult(result);
+        } finally {
+            isGenerating = false;
+            generateBtn.disabled = false;
+            generateBtn.textContent = '言い訳を生成する ✨';
+            retryBtn.disabled = false;
+        }
+    }
+
+    // ── AI生成 ──
+    async function generateWithAI() {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 15000); // 15秒タイムアウト
+
+        try {
+            const res = await fetch(API_URL + '/api/generate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    app: 'excuse-generator',
+                    params: { situation: selectedSituation, level: selectedLevel }
+                }),
+                signal: controller.signal
+            });
+
+            clearTimeout(timeout);
+
+            if (!res.ok) {
+                const err = await res.json().catch(() => ({}));
+                throw new Error(err.error || 'API error ' + res.status);
+            }
+
+            const json = await res.json();
+            if (!json.success || !json.data) throw new Error('Invalid response');
+
+            const d = json.data;
+
+            // Risk mapping from AI response
+            const riskMap = {
+                low: { label: '🟢 バレにくい', class: 'risk-low' },
+                medium: { label: '🟡 ちょっと危険', class: 'risk-medium' },
+                high: { label: '🟠 かなり危険', class: 'risk-high' },
+                extreme: { label: '🔴 確実にバレる', class: 'risk-extreme' }
+            };
+
+            return {
+                excuse: d.excuse,
+                convincing: clamp(d.convincing || 50, 1, 99),
+                creativity: clamp(d.creativity || 50, 1, 99),
+                stealth: clamp(d.stealth || 50, 1, 99),
+                risk: riskMap[d.risk] || riskMap['medium'],
+                tip: d.tip || '',
+                source: 'ai'
+            };
+        } catch (err) {
+            clearTimeout(timeout);
+            throw err;
+        }
+    }
+
+    // ── 静的データからのフォールバック生成 ──
+    function generateFromStatic() {
         const excuses = EXCUSES[selectedSituation][selectedLevel];
         const excuse = excuses[Math.floor(Math.random() * excuses.length)];
-
-        // Generate stats based on level
         const stats = generateStats(selectedLevel);
+        const risk = RISK_LEVELS[selectedLevel];
 
-        // Display result
+        return {
+            excuse: excuse,
+            convincing: stats.convincing,
+            creativity: stats.creativity,
+            stealth: stats.stealth,
+            risk: risk,
+            tip: '',
+            source: 'static'
+        };
+    }
+
+    // ── 結果表示（共通） ──
+    function displayResult(result) {
         resultSituation.textContent = selectedSituation;
         resultLevel.textContent = levelLabels[selectedLevel];
-        excuseText.textContent = excuse;
+        excuseText.textContent = result.excuse;
 
         // Animate stats
         setTimeout(() => {
-            convincingBar.style.width = stats.convincing + '%';
-            convincingValue.textContent = stats.convincing + '%';
-            creativityBar.style.width = stats.creativity + '%';
-            creativityValue.textContent = stats.creativity + '%';
-            stealthBar.style.width = stats.stealth + '%';
-            stealthValue.textContent = stats.stealth + '%';
+            convincingBar.style.width = result.convincing + '%';
+            convincingValue.textContent = result.convincing + '%';
+            creativityBar.style.width = result.creativity + '%';
+            creativityValue.textContent = result.creativity + '%';
+            stealthBar.style.width = result.stealth + '%';
+            stealthValue.textContent = result.stealth + '%';
         }, 100);
 
         // Risk badge
-        const risk = RISK_LEVELS[selectedLevel];
-        riskBadge.textContent = risk.label;
-        riskBadge.className = 'risk-badge ' + risk.class;
+        riskBadge.textContent = result.risk.label;
+        riskBadge.className = 'risk-badge ' + result.risk.class;
 
         // Show result with animation
         resultSection.style.display = 'block';
@@ -97,7 +191,11 @@ document.addEventListener('DOMContentLoaded', () => {
         resultSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
         // Save to history
-        addToHistory(selectedSituation, selectedLevel, excuse);
+        addToHistory(selectedSituation, selectedLevel, result.excuse);
+    }
+
+    function clamp(val, min, max) {
+        return Math.min(max, Math.max(min, val));
     }
 
     function generateStats(level) {
