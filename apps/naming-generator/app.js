@@ -3,6 +3,11 @@ document.addEventListener('DOMContentLoaded', () => {
     let taste = null;
     let sound = null;
 
+    // Worker API URL
+    const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+        ? 'http://localhost:8787'
+        : 'https://ai-omoshiro-api.kojifo369.workers.dev';
+
     const catGrid = document.getElementById('catGrid');
     const tasteGrid = document.getElementById('tasteGrid');
     const soundButtons = document.getElementById('soundButtons');
@@ -46,7 +51,7 @@ document.addEventListener('DOMContentLoaded', () => {
         generateBtn.disabled = !(category && taste && sound);
     }
 
-    // 響きフィルター：選択された「響き」に名前が合致するか判定
+    // 響きフィルター（フォールバック用）
     function matchesSound(name, soundType) {
         if (!soundType) return true;
         const hasLatin = /[a-zA-Z]/.test(name);
@@ -63,32 +68,92 @@ document.addEventListener('DOMContentLoaded', () => {
     generateBtn.addEventListener('click', generate);
     retryBtn.addEventListener('click', generate);
 
-    function generate() {
-        if (!category || !taste || !sound) return;
+    let isGenerating = false;
 
+    async function generate() {
+        if (!category || !taste || !sound) return;
+        if (isGenerating) return;
+        isGenerating = true;
+
+        // ボタンをローディング状態に
+        generateBtn.disabled = true;
+        generateBtn.textContent = 'AIが考え中… ✨';
+        retryBtn.disabled = true;
+
+        try {
+            // AI生成を試行
+            const result = await generateWithAI();
+            displayResult(result);
+        } catch (err) {
+            console.warn('AI生成失敗、フォールバック:', err.message);
+            // フォールバック: 静的データから生成
+            const result = generateFromStatic();
+            if (result) displayResult(result);
+        } finally {
+            isGenerating = false;
+            generateBtn.disabled = false;
+            generateBtn.textContent = 'ネーミングを生成する ✨';
+            retryBtn.disabled = false;
+        }
+    }
+
+    // ── AI生成 ──
+    async function generateWithAI() {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 15000); // 15秒タイムアウト
+
+        try {
+            const res = await fetch(API_URL + '/api/generate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    app: 'naming-generator',
+                    params: { category, taste, sound }
+                }),
+                signal: controller.signal
+            });
+
+            clearTimeout(timeout);
+
+            if (!res.ok) {
+                const err = await res.json().catch(() => ({}));
+                throw new Error(err.error || 'API error ' + res.status);
+            }
+
+            const json = await res.json();
+            if (!json.success || !json.data) throw new Error('Invalid response');
+
+            const d = json.data;
+            return {
+                name: d.name,
+                meaning: d.meaning || '',
+                alts: d.alts || [],
+                catchyScore: clamp(d.catchy || 70, 30, 99),
+                impactScore: clamp(d.impact || 70, 30, 99),
+                memoScore: clamp(d.memo || 70, 30, 99),
+                tip: d.tip || TIPS[Math.floor(Math.random() * TIPS.length)],
+                source: 'ai'
+            };
+        } catch (err) {
+            clearTimeout(timeout);
+            throw err;
+        }
+    }
+
+    // ── 静的データからのフォールバック生成 ──
+    function generateFromStatic() {
         const catData = NAMES_DATA[category];
-        if (!catData) return;
+        if (!catData) return null;
 
         const tasteData = catData[taste];
-        if (!tasteData || tasteData.length === 0) return;
+        if (!tasteData || tasteData.length === 0) return null;
 
-        // 響きフィルターでエントリーを絞る
         let filtered = tasteData.filter(e => matchesSound(e.name, sound));
         if (filtered.length === 0) filtered = tasteData;
 
         const entry = filtered[Math.floor(Math.random() * filtered.length)];
 
-        resultCat.textContent = category;
-        resultTaste.textContent = taste;
-        resultSound.textContent = SOUND_LABELS[sound];
-
-        mainName.textContent = entry.name;
-        nameMeaning.textContent = entry.meaning;
-
-        // altsも響きフィルターで絞る
         let filteredAlts = entry.alts.filter(a => matchesSound(a, sound));
-
-        // 候補が3つ未満なら、同テイストの他エントリーから補充
         if (filteredAlts.length < 3) {
             const pool = [];
             tasteData.forEach(e => {
@@ -102,16 +167,35 @@ document.addEventListener('DOMContentLoaded', () => {
             pool.sort(() => Math.random() - 0.5);
             while (filteredAlts.length < 3 && pool.length > 0) {
                 const candidate = pool.shift();
-                if (!filteredAlts.includes(candidate)) {
-                    filteredAlts.push(candidate);
-                }
+                if (!filteredAlts.includes(candidate)) filteredAlts.push(candidate);
             }
         }
-
         if (filteredAlts.length === 0) filteredAlts = entry.alts;
 
+        const nameLen = entry.name.length;
+        return {
+            name: entry.name,
+            meaning: entry.meaning,
+            alts: filteredAlts,
+            catchyScore: nameLen <= 4 ? 85 + rand(15) : nameLen <= 7 ? 65 + rand(20) : 45 + rand(25),
+            impactScore: nameLen >= 6 ? 80 + rand(20) : nameLen >= 4 ? 60 + rand(25) : 50 + rand(20),
+            memoScore: nameLen <= 5 ? 80 + rand(20) : nameLen <= 8 ? 55 + rand(25) : 40 + rand(25),
+            tip: TIPS[Math.floor(Math.random() * TIPS.length)],
+            source: 'static'
+        };
+    }
+
+    // ── 結果表示（共通） ──
+    function displayResult(result) {
+        resultCat.textContent = category;
+        resultTaste.textContent = taste;
+        resultSound.textContent = SOUND_LABELS[sound];
+
+        mainName.textContent = result.name;
+        nameMeaning.textContent = result.meaning;
+
         altList.innerHTML = '';
-        filteredAlts.forEach(alt => {
+        result.alts.forEach(alt => {
             const chip = document.createElement('span');
             chip.className = 'alt-chip';
             chip.textContent = alt;
@@ -123,21 +207,21 @@ document.addEventListener('DOMContentLoaded', () => {
             altList.appendChild(chip);
         });
 
-        const nameLen = entry.name.length;
-        const catchyScore = nameLen <= 4 ? 85 + rand(15) : nameLen <= 7 ? 65 + rand(20) : 45 + rand(25);
-        const impactScore = nameLen >= 6 ? 80 + rand(20) : nameLen >= 4 ? 60 + rand(25) : 50 + rand(20);
-        const memoScore = nameLen <= 5 ? 80 + rand(20) : nameLen <= 8 ? 55 + rand(25) : 40 + rand(25);
-
         setTimeout(() => {
-            catchyFill.style.width = catchyScore + '%';
-            catchyValue.textContent = catchyScore + '%';
-            impactFill.style.width = impactScore + '%';
-            impactValue.textContent = impactScore + '%';
-            memoFill.style.width = memoScore + '%';
-            memoValue.textContent = memoScore + '%';
+            catchyFill.style.width = result.catchyScore + '%';
+            catchyValue.textContent = result.catchyScore + '%';
+            impactFill.style.width = result.impactScore + '%';
+            impactValue.textContent = result.impactScore + '%';
+            memoFill.style.width = result.memoScore + '%';
+            memoValue.textContent = result.memoScore + '%';
         }, 100);
 
-        tipText.textContent = '💡 ' + TIPS[Math.floor(Math.random() * TIPS.length)];
+        tipText.textContent = '💡 ' + result.tip;
+
+        // AI生成の場合、小さなバッジ表示
+        if (result.source === 'ai') {
+            tipText.textContent = '🤖 AIが生成 ｜ 💡 ' + result.tip;
+        }
 
         resultSection.style.display = 'block';
         resultSection.style.animation = 'none';
@@ -148,6 +232,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function rand(max) {
         return Math.floor(Math.random() * max);
+    }
+
+    function clamp(val, min, max) {
+        return Math.min(max, Math.max(min, val));
     }
 
     copyBtn.addEventListener('click', () => {
