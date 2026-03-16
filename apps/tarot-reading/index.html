@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AIタロット占い - 神秘のカードがあなたの運命を読み解く</title>
+
+    <!-- AdSense -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1896365115623823" crossorigin="anonymous"></script>
+
+    <!-- Google Analytics GA4 -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-JX7SCK9ECB"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-JX7SCK9ECB');
+    </script>
+
+    <!-- OGP -->
+    <meta property="og:title" content="AIタロット占い - 神秘のカードがあなたの運命を読み解く">
+    <meta property="og:description" content="78枚のタロットカードからAIが深い鑑定。1枚引き・3枚引き・5枚引きで運命を読み解こう。">
+    <meta property="og:image" content="https://solodev-lab.github.io/ai-omoshiro-tools/apps/tarot-reading/ogp.png">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://solodev-lab.com/apps/tarot-reading/">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="https://solodev-lab.github.io/ai-omoshiro-tools/apps/tarot-reading/ogp.png">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- ホームボタン -->
+        <a href="../../" class="home-btn" style="display:inline-block;margin:8px 0 0;padding:6px 16px;border-radius:20px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:#999;text-decoration:none;font-size:0.8rem;transition:all 0.2s;"
+           onmouseover="this.style.color='#9b59b6';this.style.borderColor='#9b59b6'"
+           onmouseout="this.style.color='#999';this.style.borderColor='rgba(255,255,255,0.15)'">
+            &lt; ツール一覧に戻る
+        </a>
+
+        <header>
+            <h1>🔮 AIタロット占い</h1>
+            <p class="subtitle">神秘のカードがあなたの運命を読み解く</p>
+        </header>
+
+        <main>
+            <!-- モード選択セクション -->
+            <section class="mode-section" id="modeSection">
+                <div class="mode-card">
+                    <p style="font-size:3rem;margin-bottom:12px;">🔮✨🃏</p>
+                    <p style="color:#ccc;font-size:0.9rem;margin-bottom:20px;">
+                        78枚のタロットカードから<br>AIがあなただけの鑑定を行います
+                    </p>
+                    <div class="mode-grid">
+                        <button class="mode-btn" data-mode="one-card">
+                            <div class="mode-emoji">🎴</div>
+                            <div class="mode-name">1枚引き（ワンオラクル）</div>
+                            <div class="mode-desc">今日の運勢やYes/Noをシンプルに占う</div>
+                        </button>
+                        <button class="mode-btn" data-mode="three-card">
+                            <div class="mode-emoji">🎴🎴🎴</div>
+                            <div class="mode-name">3枚引き（過去・現在・未来）</div>
+                            <div class="mode-desc">時間軸に沿って流れを読み解く</div>
+                        </button>
+                        <button class="mode-btn premium" data-mode="five-card">
+                            <div class="mode-emoji">🎴🎴🎴🎴🎴</div>
+                            <div class="mode-name">5枚引き（ケルト十字簡易版）<span class="price-tag">¥300</span></div>
+                            <div class="mode-desc">現状・障害・過去・未来・結論を徹底鑑定</div>
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- カードシャッフルセクション -->
+            <section class="shuffle-section" id="shuffleSection" style="display:none;">
+                <h2 style="font-size:1.1rem;color:#c89cf5;margin-bottom:8px;" id="shuffleTitle">カードをシャッフル中...</h2>
+                <div class="shuffle-area" id="shuffleArea"></div>
+                <p class="shuffle-instruction" id="shuffleInstruction">カードをタップして選んでください</p>
+                <p class="shuffle-status" id="shuffleStatus"></p>
+            </section>
+
+            <!-- 分析中セクション -->
+            <section class="analyzing-section" id="analyzingSection" style="display:none;">
+                <div class="crystal-ball">🔮</div>
+                <p class="analyzing-text">カードの意味を読み解いています...</p>
+                <p class="analyzing-status" id="analyzingStatus">星の配置を確認中...</p>
+                <div class="analyzing-dots">
+                    <span></span><span></span><span></span>
+                </div>
+            </section>
+
+            <!-- 結果セクション -->
+            <section class="result-section" id="resultSection" style="display:none;">
+                <div class="result-card">
+                    <div class="result-header">
+                        <div class="result-mode-label" id="resultModeLabel"></div>
+                        <div class="result-title" id="resultTitle">タロット鑑定結果</div>
+                    </div>
+
+                    <!-- 引いたカード一覧 -->
+                    <div class="drawn-cards" id="drawnCards"></div>
+
+                    <!-- AI鑑定結果 -->
+                    <div class="reading-section" id="readingSection"></div>
+
+                    <!-- 総合メッセージ -->
+                    <div class="overall-reading" id="overallReading"></div>
+
+                    <!-- アドバイス -->
+                    <div class="advice-box" id="adviceBox"></div>
+
+                    <!-- ラッキーアイテム -->
+                    <div class="lucky-items" id="luckyItems"></div>
+                </div>
+
+                <!-- シェアボタン -->
+                <div class="share-buttons">
+                    <button class="share-btn share-x" id="shareXBtn">𝕏 でシェア</button>
+                    <button class="share-btn share-line" id="shareLINEBtn">LINE</button>
+                    <button class="share-btn share-copy" id="copyBtn">📋 コピー</button>
+                </div>
+
+                <button class="retry-btn" id="retryBtn">🔮 もう一度占う</button>
+            </section>
+        </main>
+
+        <footer>
+            <p>※ エンタメ目的の占いです。重要な判断にはご自身の意思を優先してください。</p>
+            <p class="copyright">© 2026 SoloDev Lab</p>
+            <div class="footer-nav" style="margin-top:12px;font-size:0.75rem;">
+                <a href="../../index.html" style="color:#888;text-decoration:none;margin:0 6px;">トップ</a>
+                <a href="../../privacy.html" style="color:#888;text-decoration:none;margin:0 6px;">プライバシーポリシー</a>
+                <a href="../../contact.html" style="color:#888;text-decoration:none;margin:0 6px;">お問い合わせ</a>
+            </div>
+        </footer>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script src="cards.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

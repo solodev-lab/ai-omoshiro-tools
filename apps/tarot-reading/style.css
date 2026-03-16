@@ -1,0 +1,493 @@
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    font-family: 'Noto Sans JP', sans-serif;
+    background: linear-gradient(135deg, #0a0a1a, #1a0a2a, #0a0a2a);
+    color: #e0e0e0;
+    min-height: 100vh;
+    line-height: 1.7;
+}
+
+.container {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 20px 16px;
+}
+
+header { text-align: center; margin-bottom: 24px; }
+
+h1 {
+    font-size: 1.8rem;
+    font-weight: 900;
+    background: linear-gradient(90deg, #9b59b6, #f1c40f);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 8px;
+}
+
+.subtitle {
+    color: #aaa;
+    font-size: 0.9rem;
+}
+
+/* モード選択 */
+.mode-section { text-align: center; }
+
+.mode-card {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 20px;
+    padding: 32px 24px;
+    margin-bottom: 20px;
+}
+
+.mode-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-top: 20px;
+}
+
+.mode-btn {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(155, 89, 182, 0.3);
+    border-radius: 16px;
+    padding: 20px;
+    cursor: pointer;
+    transition: all 0.3s;
+    text-align: left;
+    color: #e0e0e0;
+}
+
+.mode-btn:hover {
+    background: rgba(155, 89, 182, 0.15);
+    border-color: rgba(155, 89, 182, 0.6);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(155, 89, 182, 0.2);
+}
+
+.mode-btn .mode-emoji { font-size: 2rem; margin-bottom: 8px; }
+.mode-btn .mode-name { font-size: 1.1rem; font-weight: 700; margin-bottom: 4px; }
+.mode-btn .mode-desc { font-size: 0.8rem; color: #999; }
+
+.mode-btn.premium {
+    border-color: rgba(241, 196, 15, 0.4);
+    background: linear-gradient(135deg, rgba(155, 89, 182, 0.08), rgba(241, 196, 15, 0.08));
+}
+
+.mode-btn.premium:hover {
+    border-color: rgba(241, 196, 15, 0.7);
+    box-shadow: 0 8px 24px rgba(241, 196, 15, 0.15);
+}
+
+.price-tag {
+    display: inline-block;
+    background: linear-gradient(90deg, #9b59b6, #f1c40f);
+    color: #fff;
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 2px 10px;
+    border-radius: 12px;
+    margin-left: 8px;
+}
+
+/* カードシャッフル演出 */
+.shuffle-section { text-align: center; }
+
+.shuffle-area {
+    position: relative;
+    height: 280px;
+    margin: 30px auto;
+    max-width: 400px;
+}
+
+.tarot-card-back {
+    position: absolute;
+    width: 80px;
+    height: 120px;
+    background: linear-gradient(135deg, #2c1654, #4a1a7a);
+    border: 2px solid rgba(241, 196, 15, 0.4);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+}
+
+.tarot-card-back::after {
+    content: '✦';
+    color: rgba(241, 196, 15, 0.6);
+    font-size: 2rem;
+}
+
+.tarot-card-back:hover {
+    box-shadow: 0 8px 24px rgba(155, 89, 182, 0.4);
+    border-color: rgba(241, 196, 15, 0.8);
+}
+
+.tarot-card-back.selected {
+    background: linear-gradient(135deg, #4a1a7a, #9b59b6);
+    border-color: #f1c40f;
+    box-shadow: 0 8px 24px rgba(241, 196, 15, 0.4);
+    transform: translateY(-20px) scale(1.05);
+}
+
+.shuffle-instruction {
+    color: #ccc;
+    font-size: 0.95rem;
+    margin-top: 16px;
+    animation: pulse 2s infinite;
+}
+
+.shuffle-status {
+    color: #9b59b6;
+    font-size: 0.85rem;
+    margin-top: 8px;
+}
+
+/* 分析中 */
+.analyzing-section { text-align: center; padding: 60px 20px; }
+
+.crystal-ball {
+    font-size: 5rem;
+    animation: float 3s ease-in-out infinite;
+    margin-bottom: 24px;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-15px); }
+}
+
+.analyzing-text {
+    font-size: 1.1rem;
+    color: #ccc;
+    margin-bottom: 12px;
+}
+
+.analyzing-status {
+    color: #9b59b6;
+    font-size: 0.9rem;
+    animation: pulse 1.5s infinite;
+}
+
+.analyzing-dots {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 20px;
+}
+
+.analyzing-dots span {
+    width: 10px;
+    height: 10px;
+    background: #9b59b6;
+    border-radius: 50%;
+    animation: dotBounce 1.4s ease-in-out infinite;
+}
+
+.analyzing-dots span:nth-child(2) { animation-delay: 0.2s; }
+.analyzing-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes dotBounce {
+    0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+    40% { transform: scale(1); opacity: 1; }
+}
+
+/* 結果セクション */
+.result-section { animation: fadeInUp 0.6s ease; }
+
+.result-card {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(155, 89, 182, 0.3);
+    border-radius: 20px;
+    padding: 32px 24px;
+    margin-bottom: 20px;
+}
+
+.result-header {
+    text-align: center;
+    margin-bottom: 24px;
+}
+
+.result-mode-label {
+    display: inline-block;
+    background: rgba(155, 89, 182, 0.2);
+    color: #c89cf5;
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 4px 12px;
+    border-radius: 12px;
+    margin-bottom: 12px;
+}
+
+.result-title {
+    font-size: 1.3rem;
+    font-weight: 900;
+    background: linear-gradient(90deg, #9b59b6, #f1c40f);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* 引いたカード表示 */
+.drawn-cards {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: center;
+    margin-bottom: 24px;
+}
+
+.drawn-card {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(155, 89, 182, 0.25);
+    border-radius: 14px;
+    padding: 16px 12px;
+    text-align: center;
+    min-width: 110px;
+    flex: 1;
+    max-width: 160px;
+    animation: cardReveal 0.5s ease;
+}
+
+.drawn-card .position-label {
+    font-size: 0.7rem;
+    color: #999;
+    margin-bottom: 6px;
+}
+
+.drawn-card .card-emoji {
+    font-size: 2rem;
+    margin-bottom: 6px;
+}
+
+.drawn-card .card-name {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #e0e0e0;
+    margin-bottom: 4px;
+}
+
+.drawn-card .card-direction {
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 8px;
+    display: inline-block;
+}
+
+.drawn-card .card-direction.upright {
+    background: rgba(46, 204, 113, 0.2);
+    color: #2ecc71;
+}
+
+.drawn-card .card-direction.reversed {
+    background: rgba(231, 76, 60, 0.2);
+    color: #e74c3c;
+}
+
+.drawn-card .card-meaning {
+    font-size: 0.72rem;
+    color: #999;
+    margin-top: 6px;
+    line-height: 1.4;
+}
+
+@keyframes cardReveal {
+    from { opacity: 0; transform: rotateY(90deg) scale(0.8); }
+    to { opacity: 1; transform: rotateY(0) scale(1); }
+}
+
+/* AI鑑定結果 */
+.reading-section {
+    margin-top: 24px;
+}
+
+.reading-block {
+    background: rgba(255,255,255,0.03);
+    border-left: 3px solid #9b59b6;
+    border-radius: 0 12px 12px 0;
+    padding: 16px;
+    margin-bottom: 12px;
+}
+
+.reading-block .block-title {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #c89cf5;
+    margin-bottom: 6px;
+}
+
+.reading-block .block-text {
+    font-size: 0.9rem;
+    color: #ddd;
+    line-height: 1.7;
+}
+
+.overall-reading {
+    background: linear-gradient(135deg, rgba(155, 89, 182, 0.1), rgba(241, 196, 15, 0.05));
+    border: 1px solid rgba(155, 89, 182, 0.3);
+    border-radius: 16px;
+    padding: 20px;
+    margin-top: 20px;
+    text-align: center;
+}
+
+.overall-reading .overall-title {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #f1c40f;
+    margin-bottom: 8px;
+}
+
+.overall-reading .overall-text {
+    font-size: 0.95rem;
+    color: #e0e0e0;
+    line-height: 1.8;
+}
+
+.advice-box {
+    background: rgba(241, 196, 15, 0.08);
+    border: 1px solid rgba(241, 196, 15, 0.2);
+    border-radius: 12px;
+    padding: 16px;
+    margin-top: 16px;
+    text-align: center;
+}
+
+.advice-box .advice-label {
+    font-size: 0.75rem;
+    color: #f1c40f;
+    font-weight: 700;
+    margin-bottom: 6px;
+}
+
+.advice-box .advice-text {
+    font-size: 0.9rem;
+    color: #ddd;
+}
+
+.lucky-items {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    margin-top: 16px;
+    flex-wrap: wrap;
+}
+
+.lucky-item {
+    background: rgba(255,255,255,0.04);
+    border-radius: 10px;
+    padding: 10px 16px;
+    text-align: center;
+    font-size: 0.8rem;
+}
+
+.lucky-item .lucky-label { color: #999; font-size: 0.7rem; }
+.lucky-item .lucky-value { color: #f1c40f; font-weight: 700; margin-top: 2px; }
+
+/* シェアボタン */
+.share-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 24px;
+    flex-wrap: wrap;
+}
+
+.share-btn {
+    padding: 10px 20px;
+    border-radius: 50px;
+    border: none;
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s;
+    color: #fff;
+}
+
+.share-btn:hover { transform: translateY(-2px); }
+
+.share-x { background: #000; border: 1px solid #333; }
+.share-line { background: #06C755; }
+.share-copy { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); }
+
+.retry-btn {
+    display: block;
+    width: 100%;
+    max-width: 300px;
+    margin: 20px auto 0;
+    padding: 14px;
+    background: transparent;
+    border: 2px solid rgba(155, 89, 182, 0.4);
+    border-radius: 50px;
+    color: #c89cf5;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.retry-btn:hover {
+    background: rgba(155, 89, 182, 0.15);
+    border-color: #9b59b6;
+}
+
+/* トースト */
+.toast {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: rgba(155, 89, 182, 0.9);
+    color: #fff;
+    padding: 12px 24px;
+    border-radius: 50px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    opacity: 0;
+    transition: all 0.4s;
+    z-index: 1000;
+    backdrop-filter: blur(10px);
+}
+
+.toast.show {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+}
+
+/* Footer */
+footer {
+    text-align: center;
+    padding: 30px 0 20px;
+    color: #666;
+    font-size: 0.75rem;
+}
+
+footer .copyright { margin-top: 8px; }
+
+/* アニメーション */
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+/* レスポンシブ */
+@media (max-width: 600px) {
+    .container { padding: 16px 12px; }
+    h1 { font-size: 1.4rem; }
+    .drawn-card { min-width: 90px; padding: 12px 8px; }
+    .drawn-card .card-emoji { font-size: 1.5rem; }
+    .shuffle-area { height: 240px; }
+    .tarot-card-back { width: 65px; height: 100px; }
+}
