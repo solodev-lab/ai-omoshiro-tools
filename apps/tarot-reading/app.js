@@ -286,6 +286,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const advice = aiData?.advice || getStaticAdvice();
         overallReading.innerHTML = '';
+        overallReading.style.display = 'none';
         adviceBox.innerHTML = `
             <div class="advice-label">💡 今日のアドバイス</div>
             <div class="advice-text">${advice}</div>
