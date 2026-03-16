@@ -393,7 +393,7 @@ scoreは40〜99の整数`,
 
 ■ 1枚引き(one-card)の場合、以下のJSON形式で返答:
 {
-  "overall": "カードからの総合メッセージ（2〜3文）",
+  "overall": "カードからの総合メッセージ（4〜6文）",
   "advice": "今日のアドバイス（1文）",
   "lucky_color": "ラッキーカラー",
   "lucky_number": 1〜9の整数
@@ -404,7 +404,7 @@ scoreは40〜99の整数`,
   "past": "過去の解釈（2文）",
   "present": "現在の解釈（2文）",
   "future": "未来の解釈（2文）",
-  "overall": "3枚を通した総合メッセージ（2文）",
+  "overall": "3枚を通した総合メッセージ（4文）",
   "advice": "アドバイス（1文）"
 }
 
@@ -416,7 +416,7 @@ scoreは40〜99の整数`,
   "future_potential": "未来の可能性（2文）",
   "conclusion": "最終結論（2文）",
   "obstacle_advice": "最終結論を良き結果にするために、障害をどのように扱い乗り越えるべきか（2〜3文、具体的なヒント）",
-  "overall": "総合鑑定（3〜4文、詳細で深い洞察）",
+  "overall": "総合鑑定（6〜8文、詳細で深い洞察）",
   "advice": "具体的なアクションアドバイス（2文）",
   "lucky_item": "ラッキーアイテム"
 }
@@ -571,7 +571,7 @@ export default {
                 body: JSON.stringify({
                     model: appConfig.model || 'gpt-4o-mini',
                     messages,
-                    max_tokens: 800,
+                    max_tokens: 1600,
                     temperature: appConfig.temperature ?? 0.9
                 })
             });
@@ -601,6 +601,13 @@ export default {
                 });
             }
 
+            // === 3枚引き課金機能 START (コメントアウトで無効化) ===
+            // 3枚引きの場合、overallを除去（課金後にサーバーサイドで生成するため）
+            if (app === 'tarot-reading' && params.mode === 'three-card') {
+                delete parsed.overall;
+            }
+            // === 3枚引き課金機能 END ===
+
             return new Response(JSON.stringify({ success: true, data: parsed }), {
                 headers: { 'Content-Type': 'application/json', ...corsHeaders(origin) }
             });
@@ -624,12 +631,34 @@ async function handleStripeCreateCheckout(request, env, origin) {
     }
 
     try {
-        const successUrl = origin.startsWith('http://localhost') || origin.startsWith('http://127.0.0.1')
-            ? `${origin}/apps/tarot-reading/success.html?session_id={CHECKOUT_SESSION_ID}`
-            : 'https://solodev-lab.com/apps/tarot-reading/success.html?session_id={CHECKOUT_SESSION_ID}';
-        const cancelUrl = origin.startsWith('http://localhost') || origin.startsWith('http://127.0.0.1')
-            ? `${origin}/apps/tarot-reading/`
-            : 'https://solodev-lab.com/apps/tarot-reading/';
+        const body = await request.json();
+        const { mode } = body;
+
+        // モード別設定
+        const modeConfig = {
+            'five-card': {
+                name: 'AIタロット占い 5枚引き（ケルト十字簡易版）',
+                amount: '300',
+                successPage: 'success.html'
+            },
+            'three-card': {
+                name: 'AIタロット占い 3枚引き 総合鑑定',
+                amount: '100',
+                successPage: 'success_three.html'
+            }
+        };
+
+        const config = modeConfig[mode];
+        if (!config) {
+            return new Response(JSON.stringify({ error: 'Invalid mode' }), {
+                status: 400, headers: { 'Content-Type': 'application/json', ...corsHeaders(origin) }
+            });
+        }
+
+        const isLocal = origin.startsWith('http://localhost') || origin.startsWith('http://127.0.0.1');
+        const baseUrl = isLocal ? `${origin}/apps/tarot-reading` : 'https://solodev-lab.com/apps/tarot-reading';
+        const successUrl = `${baseUrl}/${config.successPage}?session_id={CHECKOUT_SESSION_ID}`;
+        const cancelUrl = `${baseUrl}/`;
 
         const stripeResponse = await fetch('https://api.stripe.com/v1/checkout/sessions', {
             method: 'POST',
@@ -642,9 +671,10 @@ async function handleStripeCreateCheckout(request, env, origin) {
                 'success_url': successUrl,
                 'cancel_url': cancelUrl,
                 'line_items[0][price_data][currency]': 'jpy',
-                'line_items[0][price_data][product_data][name]': 'AIタロット占い 5枚引き（ケルト十字簡易版）',
-                'line_items[0][price_data][unit_amount]': '300',
-                'line_items[0][quantity]': '1'
+                'line_items[0][price_data][product_data][name]': config.name,
+                'line_items[0][price_data][unit_amount]': config.amount,
+                'line_items[0][quantity]': '1',
+                'metadata[tarot_mode]': mode
             }).toString()
         });
 
@@ -678,7 +708,7 @@ async function handleStripeVerifySession(request, env, origin) {
 
     try {
         const body = await request.json();
-        const { session_id, cards } = body;
+        const { session_id, cards, mode } = body;
 
         if (!session_id || !cards || !Array.isArray(cards)) {
             return new Response(JSON.stringify({ error: 'Missing session_id or cards' }), {
@@ -715,12 +745,33 @@ async function handleStripeVerifySession(request, env, origin) {
         // セッションを使用済みに
         usedStripeSessions.add(session_id);
 
-        // 5枚引きAI鑑定を実行
         const appConfig = APP_PROMPTS['tarot-reading'];
-        const params = { mode: 'five-card', cards };
-        sanitizeParams(params);
+        let systemPrompt, userPrompt, maxTokens;
 
-        const userPrompt = appConfig.buildPrompt(params);
+        if (mode === 'three-card') {
+            // 3枚引き: overall（総合鑑定）のみを生成
+            systemPrompt = `あなたはタロット占いの専門家です。引かれた3枚のカードの組み合わせから、総合鑑定のみを行ってください。
+カードの意味を尊重しつつ、相談者に寄り添った温かく具体的なメッセージを生成してください。
+
+以下のJSON形式で返答してください（他のテキストは不要）:
+{
+  "overall": "3枚を通した総合メッセージ（4〜6文、詳細で深い洞察）"
+}`;
+            const cardDesc = cards.map((c, i) => {
+                const posNames = ['過去', '現在', '未来'];
+                const dir = c.isReversed ? '逆位置' : '正位置';
+                return `【${posNames[i]}】 ${c.name}（${dir}）- ${c.meaning}`;
+            }).join('\n');
+            userPrompt = `3枚引き（過去・現在・未来）で引いたカード:\n${cardDesc}\n\n上記カードの総合鑑定を生成してください。`;
+            maxTokens = 400;
+        } else {
+            // 5枚引き: 全フィールドを生成（従来の処理）
+            const params = { mode: 'five-card', cards };
+            sanitizeParams(params);
+            systemPrompt = appConfig.system;
+            userPrompt = appConfig.buildPrompt(params);
+            maxTokens = 1600;
+        }
 
         const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
             method: 'POST',
@@ -731,10 +782,10 @@ async function handleStripeVerifySession(request, env, origin) {
             body: JSON.stringify({
                 model: 'gpt-4o-mini',
                 messages: [
-                    { role: 'system', content: appConfig.system },
+                    { role: 'system', content: systemPrompt },
                     { role: 'user', content: userPrompt }
                 ],
-                max_tokens: 800,
+                max_tokens: maxTokens,
                 temperature: 0.9
             })
         });

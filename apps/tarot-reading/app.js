@@ -457,11 +457,31 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
-        const overall = aiData?.overall || getStaticOverall();
+        // === 3枚引き課金機能 START (コメントアウトで無効化) ===
+        // 総合鑑定は課金で解放（overallはサーバーから除去済み）
         overallReading.innerHTML = `
             <div class="overall-title">✨ 総合メッセージ</div>
-            <div class="overall-text">${overall}</div>
+            <div class="overall-locked" style="text-align:center;padding:24px 16px;background:rgba(155,89,182,0.08);border:1px dashed rgba(155,89,182,0.3);border-radius:12px;margin:8px 0;">
+                <p style="color:#c89cf5;font-size:1rem;margin-bottom:12px;">3枚のカードを通した詳細な総合鑑定をお届けします</p>
+                <button id="unlockOverallBtn" style="background:linear-gradient(135deg,#9b59b6,#8e44ad);color:#fff;border:none;padding:14px 32px;border-radius:8px;font-size:1rem;cursor:pointer;font-weight:bold;transition:transform 0.2s,box-shadow 0.2s;box-shadow:0 4px 15px rgba(155,89,182,0.3);"
+                    onmouseover="this.style.transform='scale(1.05)';this.style.boxShadow='0 6px 20px rgba(155,89,182,0.4)'"
+                    onmouseout="this.style.transform='scale(1)';this.style.boxShadow='0 4px 15px rgba(155,89,182,0.3)'">
+                    🔮 総合鑑定を見る：100円
+                </button>
+            </div>
         `;
+        document.getElementById('unlockOverallBtn').addEventListener('click', () => {
+            startThreeCardCheckout(aiData);
+        });
+        // === 3枚引き課金機能 END ===
+
+        // === 3枚引き無料版 START (課金機能ON時はコメントアウト) ===
+        // const overall = aiData?.overall || getStaticOverall();
+        // overallReading.innerHTML = `
+        //     <div class="overall-title">✨ 総合メッセージ</div>
+        //     <div class="overall-text">${overall}</div>
+        // `;
+        // === 3枚引き無料版 END ===
 
         const advice = aiData?.advice || getStaticAdvice();
         adviceBox.innerHTML = `
@@ -470,6 +490,47 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
 
         luckyItems.innerHTML = '';
+    }
+
+    // Stripe Checkout開始（3枚引き総合鑑定）
+    async function startThreeCardCheckout(aiData) {
+        try {
+            // カード情報とaiDataをlocalStorageに保存（決済後に復元するため）
+            const saveData = {
+                cards: selectedCards.map(c => ({
+                    name: c.name,
+                    emoji: c.emoji,
+                    isReversed: c.isReversed,
+                    meaning: c.meaning
+                })),
+                aiData: {
+                    past: aiData?.past || '',
+                    present: aiData?.present || '',
+                    future: aiData?.future || '',
+                    advice: aiData?.advice || ''
+                },
+                timestamp: Date.now()
+            };
+            localStorage.setItem('tarot_three_card_data', JSON.stringify(saveData));
+
+            const response = await fetch(API_URL + '/api/stripe/create-checkout', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ app: 'tarot-reading', mode: 'three-card' })
+            });
+
+            if (!response.ok) throw new Error('Checkout creation failed');
+            const data = await response.json();
+
+            if (data.url) {
+                window.location.href = data.url;
+            } else {
+                throw new Error('No checkout URL');
+            }
+        } catch (e) {
+            console.error('Stripe error:', e);
+            showToast('決済の準備に失敗しました。もう一度お試しください。');
+        }
     }
 
     // 5枚引き結果

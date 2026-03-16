@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AIタロット占い - 3枚引き総合鑑定</title>
+
+    <!-- AdSense -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1896365115623823" crossorigin="anonymous"></script>
+
+    <!-- Google Analytics GA4 -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-JX7SCK9ECB"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-JX7SCK9ECB');
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <a href="../../" class="home-btn" style="display:inline-block;margin:8px 0 0;padding:6px 16px;border-radius:20px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:#999;text-decoration:none;font-size:0.8rem;transition:all 0.2s;"
+           onmouseover="this.style.color='#9b59b6';this.style.borderColor='#9b59b6'"
+           onmouseout="this.style.color='#999';this.style.borderColor='rgba(255,255,255,0.15)'">
+            &lt; ツール一覧に戻る
+        </a>
+
+        <header>
+            <h1>🔮 AIタロット占い</h1>
+            <p class="subtitle">3枚引き - 総合鑑定</p>
+        </header>
+
+        <main>
+            <!-- ローディングセクション -->
+            <section class="analyzing-section" id="analyzingSection">
+                <div class="crystal-ball">🔮</div>
+                <p class="analyzing-text">総合鑑定を生成中...</p>
+                <p class="analyzing-status" id="analyzingStatus">決済を確認中...</p>
+                <div class="analyzing-dots">
+                    <span></span><span></span><span></span>
+                </div>
+            </section>
+
+            <!-- 結果セクション -->
+            <section class="result-section" id="resultSection" style="display:none;">
+                <div class="result-card">
+                    <div class="result-header">
+                        <div class="result-mode-label">🎴 3枚引き（過去・現在・未来）</div>
+                        <div class="result-title">鑑定結果</div>
+                    </div>
+                    <div class="drawn-cards" id="drawnCards"></div>
+                    <div class="reading-section" id="readingSection"></div>
+                    <div class="overall-reading" id="overallReading"></div>
+                    <div class="advice-box" id="adviceBox"></div>
+                </div>
+
+                <div class="share-buttons">
+                    <button class="share-btn share-x" id="shareXBtn">𝕏 でシェア</button>
+                    <button class="share-btn share-line" id="shareLINEBtn">LINE</button>
+                    <button class="share-btn share-copy" id="copyBtn">📋 コピー</button>
+                </div>
+
+                <a href="./" class="retry-btn" style="text-decoration:none;text-align:center;display:block;">🔮 トップに戻る</a>
+            </section>
+
+            <!-- エラーセクション -->
+            <section id="errorSection" style="display:none;text-align:center;padding:40px 20px;">
+                <p style="font-size:3rem;margin-bottom:16px;">⚠️</p>
+                <p style="color:#e74c3c;font-size:1.1rem;margin-bottom:12px;" id="errorMessage">決済の検証に失敗しました</p>
+                <a href="./" style="color:#9b59b6;text-decoration:underline;">タロット占いトップに戻る</a>
+            </section>
+        </main>
+
+        <footer>
+            <p>※ エンタメ目的の占いです。重要な判断にはご自身の意思を優先してください。</p>
+            <p class="copyright">© 2026 SoloDev Lab</p>
+            <div class="footer-nav" style="margin-top:12px;font-size:0.75rem;">
+                <a href="../../index.html" style="color:#888;text-decoration:none;margin:0 6px;">トップ</a>
+                <a href="../../privacy.html" style="color:#888;text-decoration:none;margin:0 6px;">プライバシーポリシー</a>
+                <a href="../../contact.html" style="color:#888;text-decoration:none;margin:0 6px;">お問い合わせ</a>
+            </div>
+        </footer>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script src="cards.js"></script>
+    <script>
+    const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+        ? 'http://localhost:8787'
+        : 'https://ai-omoshiro-api.kojifo369.workers.dev';
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const params = new URLSearchParams(window.location.search);
+        const sessionId = params.get('session_id');
+
+        if (!sessionId) {
+            showError('セッションIDが見つかりません。');
+            return;
+        }
+
+        // localStorageからカード・鑑定データを復元
+        const savedRaw = localStorage.getItem('tarot_three_card_data');
+        if (!savedRaw) {
+            showError('カードデータが見つかりません。もう一度占いを行ってください。');
+            return;
+        }
+
+        let savedData;
+        try {
+            savedData = JSON.parse(savedRaw);
+        } catch (e) {
+            showError('データの読み込みに失敗しました。');
+            return;
+        }
+
+        // 1時間以上前のデータは無効
+        if (Date.now() - savedData.timestamp > 60 * 60 * 1000) {
+            localStorage.removeItem('tarot_three_card_data');
+            showError('データの有効期限が切れました。もう一度占いを行ってください。');
+            return;
+        }
+
+        const { cards, aiData } = savedData;
+
+        // DOM
+        const analyzingSection = document.getElementById('analyzingSection');
+        const resultSection = document.getElementById('resultSection');
+        const analyzingStatus = document.getElementById('analyzingStatus');
+        const drawnCards = document.getElementById('drawnCards');
+        const readingSection = document.getElementById('readingSection');
+        const overallReading = document.getElementById('overallReading');
+        const adviceBox = document.getElementById('adviceBox');
+        const toast = document.getElementById('toast');
+
+        // ステータス表示を更新しながらAPI呼び出し
+        const statuses = [
+            '決済を確認中...',
+            'カードの意味を深く読み解いています...',
+            '3枚のカードの関係性を分析中...',
+            '総合鑑定をまとめています...'
+        ];
+
+        const cardsPayload = cards.map(c => ({
+            name: c.name,
+            isReversed: c.isReversed,
+            meaning: c.meaning
+        }));
+
+        const aiPromise = fetch(API_URL + '/api/stripe/verify-session', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ session_id: sessionId, cards: cardsPayload, mode: 'three-card' })
+        }).then(r => {
+            if (!r.ok) throw new Error('Verification failed');
+            return r.json();
+        }).then(json => {
+            if (!json.success) throw new Error('Invalid response');
+            return json.data;
+        });
+
+        let i = 0;
+        const interval = setInterval(() => {
+            if (i < statuses.length) {
+                analyzingStatus.textContent = statuses[i];
+            }
+            if (i >= statuses.length) {
+                clearInterval(interval);
+                aiPromise.then(data => {
+                    setTimeout(() => showResult(data), 500);
+                }).catch(err => {
+                    console.error('Verify error:', err);
+                    showError('総合鑑定の生成に失敗しました。お手数ですが、お問い合わせください。');
+                });
+            }
+            i++;
+        }, 800);
+
+        function showResult(overallData) {
+            analyzingSection.style.display = 'none';
+            resultSection.style.display = 'block';
+
+            // カード表示
+            drawnCards.innerHTML = '';
+            const positions = THREE_CARD_POSITIONS;
+            cards.forEach((card, i) => {
+                const pos = positions[i];
+                const div = document.createElement('div');
+                div.className = 'drawn-card';
+                div.style.animationDelay = (i * 0.15) + 's';
+                div.innerHTML = `
+                    <div class="position-label">${pos.icon} ${pos.name}</div>
+                    <div class="card-emoji">${card.emoji}</div>
+                    <div class="card-name">${card.name}</div>
+                    <span class="card-direction ${card.isReversed ? 'reversed' : 'upright'}">
+                        ${card.isReversed ? '逆位置 ↓' : '正位置 ↑'}
+                    </span>
+                    <div class="card-meaning">${card.meaning}</div>
+                `;
+                drawnCards.appendChild(div);
+            });
+
+            // 過去・現在・未来の解釈（localStorageから復元）
+            readingSection.innerHTML = '';
+            const blocks = [
+                { title: '⏪ 過去', text: aiData.past },
+                { title: '🔵 現在', text: aiData.present },
+                { title: '⏩ 未来', text: aiData.future }
+            ];
+            blocks.forEach(b => {
+                if (b.text) {
+                    readingSection.innerHTML += `
+                        <div class="reading-block">
+                            <div class="block-title">${b.title}</div>
+                            <div class="block-text">${b.text}</div>
+                        </div>
+                    `;
+                }
+            });
+
+            // 総合鑑定（Stripe決済後にサーバーから取得）
+            const overall = overallData?.overall || '総合鑑定の取得に失敗しました。';
+            overallReading.innerHTML = `
+                <div class="overall-title">✨ 総合メッセージ</div>
+                <div class="overall-text">${overall}</div>
+            `;
+
+            // アドバイス（localStorageから復元）
+            const advice = aiData.advice || '';
+            if (advice) {
+                adviceBox.innerHTML = `
+                    <div class="advice-label">💡 アドバイス</div>
+                    <div class="advice-text">${advice}</div>
+                `;
+            }
+
+            // localStorageクリーンアップ
+            localStorage.removeItem('tarot_three_card_data');
+        }
+
+        // シェア
+        function getShareText() {
+            const card = cards[0];
+            return `🔮 AIタロット占い（3枚引き）\n${card.emoji} ${card.name}（${card.isReversed ? '逆位置' : '正位置'}）\n`;
+        }
+
+        document.getElementById('shareXBtn').addEventListener('click', () => {
+            const text = getShareText();
+            const url = encodeURIComponent(window.location.origin + '/apps/tarot-reading/');
+            window.open(`https://x.com/intent/tweet?text=${encodeURIComponent(text)}&url=${url}`, '_blank');
+        });
+
+        document.getElementById('shareLINEBtn').addEventListener('click', () => {
+            const text = getShareText();
+            const appUrl = window.location.origin + '/apps/tarot-reading/';
+            window.open(`https://line.me/R/msg/text/${encodeURIComponent(text + '\n' + appUrl)}`, '_blank');
+        });
+
+        document.getElementById('copyBtn').addEventListener('click', () => {
+            const text = getShareText() + window.location.origin + '/apps/tarot-reading/';
+            navigator.clipboard.writeText(text).then(() => showToast('コピーしました！'));
+        });
+
+        function showToast(msg) {
+            toast.textContent = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2500);
+        }
+    });
+
+    function showError(msg) {
+        document.getElementById('analyzingSection').style.display = 'none';
+        const errorSection = document.getElementById('errorSection');
+        errorSection.style.display = 'block';
+        document.getElementById('errorMessage').textContent = msg;
+    }
+    </script>
+</body>
+</html>
