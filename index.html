@@ -6,10 +6,10 @@
     <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-JX7SCK9ECB');</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AIおもしろツール集 | 暇つぶしに使えるAI風ジェネレーター</title>
-    <meta name="description" content="退職届、あだ名、告白文、夢占いなど、AIが作ったっぽいおもしろジェネレーターを10個集めました。全部無料。">
+    <title>AIおもしろツール集 | 無料AI診断・ジェネレーター20選</title>
+    <meta name="description" content="AI診断・AI文章生成・AI実用ツールなど、無料で遊べるAIツールを20個集めました。相性診断、裏性格診断、退職届メーカーなど。">
     <meta property="og:title" content="AIおもしろツール集">
-    <meta property="og:description" content="退職届、あだ名、告白文、夢占いなど、AI風おもしろジェネレーター10個。全部無料。">
+    <meta property="og:description" content="AI診断・ジェネレーター20個。全部無料で遊べます。">
     <meta property="og:type" content="website">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
@@ -21,14 +21,42 @@
             color: #fff; min-height: 100vh;
         }
         .container { max-width: 720px; margin: 0 auto; padding: 24px 16px; }
-        header { text-align: center; padding: 40px 0 32px; }
+        header { text-align: center; padding: 40px 0 24px; }
         h1 {
             font-size: 2rem; font-weight: 900;
             background: linear-gradient(90deg, #f2994a, #f2c94c, #6fcf97, #56ccf2, #bb6bd9);
             -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
         }
         .subtitle { margin-top: 10px; color: #999; font-size: 0.95rem; }
-        .app-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; margin-top: 32px; }
+
+        /* タブナビ */
+        .tab-nav {
+            display: flex; gap: 8px; justify-content: center; margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        .tab-btn {
+            padding: 8px 18px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.2);
+            background: transparent; color: #999; font-size: 0.85rem; font-weight: 700;
+            cursor: pointer; transition: all 0.2s; font-family: 'Noto Sans JP', sans-serif;
+        }
+        .tab-btn:hover { border-color: rgba(255,255,255,0.4); color: #ccc; }
+        .tab-btn.active {
+            background: rgba(255,255,255,0.12); border-color: #56ccf2;
+            color: #56ccf2;
+        }
+
+        /* セクション */
+        .section { margin-top: 32px; }
+        .section-header {
+            display: flex; align-items: center; gap: 10px;
+            margin-bottom: 16px; padding-bottom: 8px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .section-icon { font-size: 1.3rem; }
+        .section-title { font-size: 1.1rem; font-weight: 900; }
+        .section-count { font-size: 0.75rem; color: #666; margin-left: auto; }
+
+        .app-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
         .app-card {
             background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
             border-radius: 16px; padding: 20px 16px; text-decoration: none; color: #fff;
@@ -48,14 +76,22 @@
         .tag-popular { background: rgba(235,87,87,0.2); color: #eb5757; }
         .tag-new { background: rgba(111,207,151,0.2); color: #6fcf97; }
         .tag-fun { background: rgba(86,204,242,0.2); color: #56ccf2; }
+        .tag-useful { background: rgba(187,107,217,0.2); color: #bb6bd9; }
+
         footer {
             margin-top: 48px; text-align: center; color: #555;
             font-size: 0.75rem; padding-bottom: 24px;
         }
         footer a { color: #888; text-decoration: none; }
+        footer a:hover { color: #56ccf2; }
+
+        /* 非表示制御 */
+        .section.hidden { display: none; }
+
         @media (max-width: 400px) {
             h1 { font-size: 1.5rem; }
             .app-grid { grid-template-columns: 1fr; }
+            .tab-btn { padding: 6px 14px; font-size: 0.8rem; }
         }
     </style>
 </head>
@@ -63,135 +99,193 @@
     <div class="container">
         <header>
             <h1>AIおもしろツール集</h1>
-            <p class="subtitle">暇つぶしに使えるAI風ジェネレーター 20選</p>
+            <p class="subtitle">無料で遊べるAI診断・ジェネレーター 20選</p>
+
+            <nav class="tab-nav">
+                <button class="tab-btn active" data-filter="all">すべて</button>
+                <button class="tab-btn" data-filter="diagnosis">診断系</button>
+                <button class="tab-btn" data-filter="generator">生成系</button>
+                <button class="tab-btn" data-filter="utility">実用系</button>
+            </nav>
         </header>
 
-        <div class="app-grid">
-            <a class="app-card" href="apps/compatibility/">
-                <span class="app-emoji">💕</span>
-                <span class="app-name">AI相性診断</span>
-                <span class="app-desc">2人の名前を入力するだけで相性を%で診断。</span>
-                <span class="app-tag tag-popular">人気</span>
-            </a>
-            <a class="app-card" href="apps/hidden-personality/">
-                <span class="app-emoji">🎭</span>
-                <span class="app-name">AI裏性格診断</span>
-                <span class="app-desc">表の顔と裏の顔のギャップをAIが暴きます。</span>
-                <span class="app-tag tag-popular">人気</span>
-            </a>
-            <a class="app-card" href="apps/mental-age/">
-                <span class="app-emoji">🧒</span>
-                <span class="app-name">AIメンタル年齢診断</span>
-                <span class="app-desc">10問であなたの精神年齢を測定。実年齢とのギャップは？</span>
-                <span class="app-tag tag-new">NEW</span>
-            </a>
-            <a class="app-card" href="apps/animal-type/">
-                <span class="app-emoji">🐾</span>
-                <span class="app-name">AI動物タイプ診断</span>
-                <span class="app-desc">7問であなたを12種の動物に分類。性格や相性も。</span>
-                <span class="app-tag tag-new">NEW</span>
-            </a>
-            <a class="app-card" href="apps/charm-level/">
-                <span class="app-emoji">💖</span>
-                <span class="app-name">AIモテ度診断</span>
-                <span class="app-desc">8問でモテ度を100点満点でスコアリング。</span>
-                <span class="app-tag tag-new">NEW</span>
-            </a>
-            <a class="app-card" href="apps/love-type/">
-                <span class="app-emoji">💘</span>
-                <span class="app-name">AI恋愛タイプ診断</span>
-                <span class="app-desc">8問であなたの恋愛傾向を12タイプから診断。</span>
-                <span class="app-tag tag-new">NEW</span>
-            </a>
-            <a class="app-card" href="apps/past-life/">
-                <span class="app-emoji">🔮</span>
-                <span class="app-name">AI前世診断</span>
-                <span class="app-desc">5問の直感クイズで前世を占う。レア度付き。</span>
-                <span class="app-tag tag-new">NEW</span>
-            </a>
-            <a class="app-card" href="apps/talent-finder/">
-                <span class="app-emoji">✨</span>
-                <span class="app-name">AI才能診断</span>
-                <span class="app-desc">8問であなたの隠れた才能を12タイプから発見。</span>
-                <span class="app-tag tag-new">NEW</span>
-            </a>
-            <a class="app-card" href="apps/personality-diagnosis/">
-                <span class="app-emoji">🧠</span>
-                <span class="app-name">AI性格タイプ診断</span>
-                <span class="app-desc">10問でAIがあなたの性格を分析。16タイプから診断。</span>
-                <span class="app-tag tag-fun">おもしろ</span>
-            </a>
-            <a class="app-card" href="apps/business-email/">
-                <span class="app-emoji">📧</span>
-                <span class="app-name">AIビジネスメール生成</span>
-                <span class="app-desc">お礼・謝罪・依頼…シーン別に完璧なメールを瞬時作成。</span>
-                <span class="app-tag tag-fun">おもしろ</span>
-            </a>
-            <a class="app-card" href="apps/resignation-maker/">
-                <span class="app-emoji">📄</span>
-                <span class="app-name">AI退職届メーカー</span>
-                <span class="app-desc">建前と本音の退職届を同時生成。円満度メーター付き。</span>
-                <span class="app-tag tag-popular">人気</span>
-            </a>
-            <a class="app-card" href="apps/love-confession/">
-                <span class="app-emoji">💌</span>
-                <span class="app-name">AI告白文ジェネレーター</span>
-                <span class="app-desc">関係性と気持ちからぴったりの告白文を生成。</span>
-                <span class="app-tag tag-new">NEW</span>
-            </a>
-            <a class="app-card" href="apps/nickname-maker/">
-                <span class="app-emoji">🏷️</span>
-                <span class="app-name">AIあだ名メーカー</span>
-                <span class="app-desc">名前と性格から最高のあだ名を自動生成。</span>
-                <span class="app-tag tag-popular">人気</span>
-            </a>
-            <a class="app-card" href="apps/excuse-generator/">
-                <span class="app-emoji">🙏</span>
-                <span class="app-name">AI言い訳ジェネレーター</span>
-                <span class="app-desc">シチュエーション別に使える言い訳を生成。</span>
-                <span class="app-tag tag-fun">おもしろ</span>
-            </a>
-            <a class="app-card" href="apps/apology-generator/">
-                <span class="app-emoji">🙇</span>
-                <span class="app-name">AI謝罪文ジェネレーター</span>
-                <span class="app-desc">誠意レベル調整可能な謝罪文を自動生成。</span>
-                <span class="app-tag tag-fun">おもしろ</span>
-            </a>
-            <a class="app-card" href="apps/dream-fortune/">
-                <span class="app-emoji">🔮</span>
-                <span class="app-name">AI夢占い</span>
-                <span class="app-desc">夢のシンボルと気分から運勢を占う。</span>
-                <span class="app-tag tag-new">NEW</span>
-            </a>
-            <a class="app-card" href="apps/pet-namer/">
-                <span class="app-emoji">🐾</span>
-                <span class="app-name">AIペット名づけ</span>
-                <span class="app-desc">ペットの種類と性格からぴったりの名前を提案。</span>
-                <span class="app-tag tag-new">NEW</span>
-            </a>
-            <a class="app-card" href="apps/declutter-advisor/">
-                <span class="app-emoji">🗑️</span>
-                <span class="app-name">AI断捨離アドバイザー</span>
-                <span class="app-desc">捨てるか残すか、AIが判定。</span>
-                <span class="app-tag tag-fun">おもしろ</span>
-            </a>
-            <a class="app-card" href="apps/self-intro/">
-                <span class="app-emoji">👋</span>
-                <span class="app-name">AI自己紹介メーカー</span>
-                <span class="app-desc">シーンとキャラに合わせた自己紹介文を生成。</span>
-                <span class="app-tag tag-new">NEW</span>
-            </a>
-            <a class="app-card" href="apps/naming-generator/">
-                <span class="app-emoji">✨</span>
-                <span class="app-name">AIネーミングジェネレーター</span>
-                <span class="app-desc">サービス名・チーム名など、ぴったりの名前を生成。</span>
-                <span class="app-tag tag-new">NEW</span>
-            </a>
+        <!-- 診断系 -->
+        <div class="section" data-category="diagnosis">
+            <div class="section-header">
+                <span class="section-icon">🔮</span>
+                <span class="section-title">AI診断</span>
+                <span class="section-count">9個</span>
+            </div>
+            <div class="app-grid">
+                <a class="app-card" href="apps/compatibility/">
+                    <span class="app-emoji">💕</span>
+                    <span class="app-name">AI相性診断</span>
+                    <span class="app-desc">2人の名前を入力するだけで相性を%で診断。</span>
+                    <span class="app-tag tag-popular">人気</span>
+                </a>
+                <a class="app-card" href="apps/hidden-personality/">
+                    <span class="app-emoji">🎭</span>
+                    <span class="app-name">AI裏性格診断</span>
+                    <span class="app-desc">表の顔と裏の顔のギャップをAIが暴きます。</span>
+                    <span class="app-tag tag-popular">人気</span>
+                </a>
+                <a class="app-card" href="apps/mental-age/">
+                    <span class="app-emoji">🧒</span>
+                    <span class="app-name">AIメンタル年齢診断</span>
+                    <span class="app-desc">10問であなたの精神年齢を測定。実年齢とのギャップは？</span>
+                    <span class="app-tag tag-new">NEW</span>
+                </a>
+                <a class="app-card" href="apps/animal-type/">
+                    <span class="app-emoji">🐾</span>
+                    <span class="app-name">AI動物タイプ診断</span>
+                    <span class="app-desc">7問であなたを12種の動物に分類。性格や相性も。</span>
+                    <span class="app-tag tag-new">NEW</span>
+                </a>
+                <a class="app-card" href="apps/charm-level/">
+                    <span class="app-emoji">💖</span>
+                    <span class="app-name">AIモテ度診断</span>
+                    <span class="app-desc">8問でモテ度を100点満点でスコアリング。</span>
+                    <span class="app-tag tag-new">NEW</span>
+                </a>
+                <a class="app-card" href="apps/love-type/">
+                    <span class="app-emoji">💘</span>
+                    <span class="app-name">AI恋愛タイプ診断</span>
+                    <span class="app-desc">8問であなたの恋愛傾向を12タイプから診断。</span>
+                    <span class="app-tag tag-new">NEW</span>
+                </a>
+                <a class="app-card" href="apps/past-life/">
+                    <span class="app-emoji">🔮</span>
+                    <span class="app-name">AI前世診断</span>
+                    <span class="app-desc">5問の直感クイズで前世を占う。レア度付き。</span>
+                    <span class="app-tag tag-new">NEW</span>
+                </a>
+                <a class="app-card" href="apps/talent-finder/">
+                    <span class="app-emoji">✨</span>
+                    <span class="app-name">AI才能診断</span>
+                    <span class="app-desc">8問であなたの隠れた才能を12タイプから発見。</span>
+                    <span class="app-tag tag-new">NEW</span>
+                </a>
+                <a class="app-card" href="apps/personality-diagnosis/">
+                    <span class="app-emoji">🧠</span>
+                    <span class="app-name">AI性格タイプ診断</span>
+                    <span class="app-desc">10問でAIがあなたの性格を分析。16タイプから診断。</span>
+                    <span class="app-tag tag-popular">人気</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- 生成系 -->
+        <div class="section" data-category="generator">
+            <div class="section-header">
+                <span class="section-icon">✏️</span>
+                <span class="section-title">AI文章生成</span>
+                <span class="section-count">8個</span>
+            </div>
+            <div class="app-grid">
+                <a class="app-card" href="apps/resignation-maker/">
+                    <span class="app-emoji">📄</span>
+                    <span class="app-name">AI退職届メーカー</span>
+                    <span class="app-desc">建前と本音の退職届を同時生成。円満度メーター付き。</span>
+                    <span class="app-tag tag-popular">人気</span>
+                </a>
+                <a class="app-card" href="apps/love-confession/">
+                    <span class="app-emoji">💌</span>
+                    <span class="app-name">AI告白文ジェネレーター</span>
+                    <span class="app-desc">関係性と気持ちからぴったりの告白文を生成。</span>
+                    <span class="app-tag tag-fun">おもしろ</span>
+                </a>
+                <a class="app-card" href="apps/nickname-maker/">
+                    <span class="app-emoji">🏷️</span>
+                    <span class="app-name">AIあだ名メーカー</span>
+                    <span class="app-desc">名前と性格から最高のあだ名を自動生成。</span>
+                    <span class="app-tag tag-popular">人気</span>
+                </a>
+                <a class="app-card" href="apps/excuse-generator/">
+                    <span class="app-emoji">🙏</span>
+                    <span class="app-name">AI言い訳ジェネレーター</span>
+                    <span class="app-desc">シチュエーション別に使える言い訳を生成。</span>
+                    <span class="app-tag tag-fun">おもしろ</span>
+                </a>
+                <a class="app-card" href="apps/apology-generator/">
+                    <span class="app-emoji">🙇</span>
+                    <span class="app-name">AI謝罪文ジェネレーター</span>
+                    <span class="app-desc">誠意レベル調整可能な謝罪文を自動生成。</span>
+                    <span class="app-tag tag-fun">おもしろ</span>
+                </a>
+                <a class="app-card" href="apps/dream-fortune/">
+                    <span class="app-emoji">🌙</span>
+                    <span class="app-name">AI夢占い</span>
+                    <span class="app-desc">夢のシンボルと気分から運勢を占う。</span>
+                    <span class="app-tag tag-fun">おもしろ</span>
+                </a>
+                <a class="app-card" href="apps/self-intro/">
+                    <span class="app-emoji">👋</span>
+                    <span class="app-name">AI自己紹介メーカー</span>
+                    <span class="app-desc">シーンとキャラに合わせた自己紹介文を生成。</span>
+                    <span class="app-tag tag-fun">おもしろ</span>
+                </a>
+                <a class="app-card" href="apps/pet-namer/">
+                    <span class="app-emoji">🐾</span>
+                    <span class="app-name">AIペット名づけ</span>
+                    <span class="app-desc">ペットの種類と性格からぴったりの名前を提案。</span>
+                    <span class="app-tag tag-fun">おもしろ</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- 実用系 -->
+        <div class="section" data-category="utility">
+            <div class="section-header">
+                <span class="section-icon">💼</span>
+                <span class="section-title">AI実用ツール</span>
+                <span class="section-count">3個</span>
+            </div>
+            <div class="app-grid">
+                <a class="app-card" href="apps/business-email/">
+                    <span class="app-emoji">📧</span>
+                    <span class="app-name">AIビジネスメール生成</span>
+                    <span class="app-desc">お礼・謝罪・依頼…シーン別に完璧なメールを瞬時作成。</span>
+                    <span class="app-tag tag-useful">実用</span>
+                </a>
+                <a class="app-card" href="apps/naming-generator/">
+                    <span class="app-emoji">✨</span>
+                    <span class="app-name">AIネーミングジェネレーター</span>
+                    <span class="app-desc">サービス名・チーム名など、ぴったりの名前を生成。</span>
+                    <span class="app-tag tag-useful">実用</span>
+                </a>
+                <a class="app-card" href="apps/declutter-advisor/">
+                    <span class="app-emoji">🗑️</span>
+                    <span class="app-name">AI断捨離アドバイザー</span>
+                    <span class="app-desc">捨てるか残すか、AIが判定。</span>
+                    <span class="app-tag tag-useful">実用</span>
+                </a>
+            </div>
         </div>
 
         <footer>
+            <div style="margin-bottom:8px;">
+                <a href="privacy.html" style="margin:0 8px;">プライバシーポリシー</a>
+                <a href="contact.html" style="margin:0 8px;">お問い合わせ</a>
+            </div>
             <p>&copy; 2026 AIおもしろツール集</p>
         </footer>
     </div>
+
+    <script>
+        document.querySelectorAll('.tab-btn').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
+                btn.classList.add('active');
+                var filter = btn.dataset.filter;
+                document.querySelectorAll('.section').forEach(function(sec) {
+                    if (filter === 'all' || sec.dataset.category === filter) {
+                        sec.classList.remove('hidden');
+                    } else {
+                        sec.classList.add('hidden');
+                    }
+                });
+            });
+        });
+    </script>
 </body>
 </html>

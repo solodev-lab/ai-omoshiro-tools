@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-JX7SCK9ECB"></script>
+    <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-JX7SCK9ECB');</script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AIビジネスメール生成 | シーン別に完璧なメールを瞬時に作成</title>
+    <meta name="description" content="お礼・謝罪・依頼・催促…ビジネスメールに困ったらAIにおまかせ。件名と本文を瞬時に生成する無料ツール。">
+    <meta property="og:title" content="AIビジネスメール生成">
+    <meta property="og:description" content="シーン別にビジネスメールをAIが自動作成。お礼・謝罪・依頼・催促に対応。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://solodev-lab.github.io/ai-omoshiro-tools/apps/business-email/">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta property="og:image" content="https://solodev-lab.github.io/ai-omoshiro-tools/apps/business-email/ogp.png">
+    <meta name="twitter:image" content="https://solodev-lab.github.io/ai-omoshiro-tools/apps/business-email/ogp.png">
+    <meta name="twitter:title" content="AIビジネスメール生成">
+    <meta name="twitter:description" content="シーン別にビジネスメールをAIが自動作成。お礼・謝罪・依頼・催促に対応。">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <a href="../../" class="home-btn" style="display:inline-block;margin:8px 0 0;padding:6px 16px;border-radius:20px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:#999;text-decoration:none;font-size:0.8rem;transition:all 0.2s;" onmouseover="this.style.color='#56ccf2';this.style.borderColor='#56ccf2'" onmouseout="this.style.color='#999';this.style.borderColor='rgba(255,255,255,0.15)'">< ツール一覧に戻る</a>
+        <header>
+            <h1>📧 AIビジネスメール生成</h1>
+            <p class="subtitle">シーンと相手を選ぶだけ。完璧なビジネスメールを瞬時に作成。</p>
+        </header>
+
+        <main>
+            <!-- Step 1: シーン選択 -->
+            <section class="input-section">
+                <h2>① メールのシーン</h2>
+                <div class="scene-grid" id="sceneGrid">
+                    <button class="scene-btn" data-scene="お礼">🙏 お礼</button>
+                    <button class="scene-btn" data-scene="謝罪">😔 謝罪</button>
+                    <button class="scene-btn" data-scene="依頼">📋 依頼</button>
+                    <button class="scene-btn" data-scene="催促">⏰ 催促</button>
+                    <button class="scene-btn" data-scene="断り">🚫 断り</button>
+                    <button class="scene-btn" data-scene="報告">📊 報告</button>
+                    <button class="scene-btn" data-scene="挨拶">👋 挨拶</button>
+                    <button class="scene-btn" data-scene="日程調整">📅 日程調整</button>
+                </div>
+            </section>
+
+            <!-- Step 2: 相手選択 -->
+            <section class="input-section" id="targetSection" style="display:none;">
+                <h2>② メールの相手</h2>
+                <div class="target-grid" id="targetGrid">
+                    <button class="target-btn" data-target="上司">👔 上司</button>
+                    <button class="target-btn" data-target="取引先">🏢 取引先</button>
+                    <button class="target-btn" data-target="同僚">🤝 同僚</button>
+                    <button class="target-btn" data-target="部下">👥 部下</button>
+                    <button class="target-btn" data-target="顧客">💼 顧客</button>
+                    <button class="target-btn" data-target="人事">📑 人事</button>
+                </div>
+            </section>
+
+            <!-- Step 3: トーン選択 -->
+            <section class="input-section" id="toneSection" style="display:none;">
+                <h2>③ トーン</h2>
+                <div class="tone-buttons" id="toneButtons">
+                    <button class="tone-btn active" data-tone="polite">🎩 丁寧</button>
+                    <button class="tone-btn" data-tone="normal">💬 標準</button>
+                    <button class="tone-btn" data-tone="casual">😊 カジュアル</button>
+                </div>
+            </section>
+
+            <!-- Step 4: 詳細入力（任意） -->
+            <section class="input-section" id="detailSection" style="display:none;">
+                <h2>④ 詳細メモ（任意）</h2>
+                <textarea class="detail-input" id="detailInput" placeholder="例: 先日の打ち合わせのお礼、納品遅延のお詫び、来週の会議日程について…" maxlength="100"></textarea>
+                <span class="char-count" id="charCount">0/100</span>
+            </section>
+
+            <!-- 生成ボタン -->
+            <button class="generate-btn" id="generateBtn" disabled>メールを生成する ✉️</button>
+
+            <!-- 結果 -->
+            <section class="result-section" id="resultSection" style="display:none;">
+                <div class="result-card" id="resultCard">
+                    <div class="result-header">
+                        <span class="result-scene" id="resultScene"></span>
+                        <span class="result-target" id="resultTarget"></span>
+                    </div>
+
+                    <!-- 件名 -->
+                    <div class="subject-block">
+                        <label class="field-label">件名</label>
+                        <div class="subject-text" id="subjectText"></div>
+                        <button class="copy-field-btn" id="copySubjectBtn">コピー</button>
+                    </div>
+
+                    <!-- 本文 -->
+                    <div class="body-block">
+                        <label class="field-label">本文</label>
+                        <div class="body-text" id="bodyText"></div>
+                        <button class="copy-field-btn" id="copyBodyBtn">コピー</button>
+                    </div>
+
+                    <!-- 統計 -->
+                    <div class="stats">
+                        <div class="stat">
+                            <span class="stat-label">丁寧さ</span>
+                            <div class="stat-bar"><div class="stat-fill polite" id="politeBar"></div></div>
+                            <span class="stat-value" id="politeValue">0%</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-label">伝達力</span>
+                            <div class="stat-bar"><div class="stat-fill clarity" id="clarityBar"></div></div>
+                            <span class="stat-value" id="clarityValue">0%</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-label">好感度</span>
+                            <div class="stat-bar"><div class="stat-fill likable" id="likableBar"></div></div>
+                            <span class="stat-value" id="likableValue">0%</span>
+                        </div>
+                    </div>
+
+                    <!-- ワンポイントアドバイス -->
+                    <div class="tip-block" id="tipBlock" style="display:none;">
+                        <span class="tip-icon">💡</span>
+                        <span class="tip-text" id="tipText"></span>
+                    </div>
+
+                    <!-- アクションボタン -->
+                    <div class="action-buttons share-buttons">
+                        <button class="action-btn btn-x" id="shareXBtn">𝕏 でシェア</button>
+                        <button class="action-btn btn-line" id="shareLINEBtn">LINE</button>
+                        <button class="action-btn btn-copy" id="copyAllBtn">📋 全文コピー</button>
+                    </div>
+                    <button class="action-btn btn-retry" id="retryBtn">🔄 もう一度生成</button>
+                </div>
+            </section>
+
+            <!-- 履歴 -->
+            <section class="history-section" id="historySection" style="display:none;">
+                <h2>📝 生成履歴</h2>
+                <div id="historyList"></div>
+            </section>
+        </main>
+
+        <footer>
+            <p class="copyright">&copy; 2026 AIおもしろツール集</p>
+            <div class="footer-nav" style="margin-top:12px;font-size:0.75rem;">
+                <a href="../../index.html" style="color:#888;text-decoration:none;margin:0 6px;">トップ</a>
+                <a href="../../privacy.html" style="color:#888;text-decoration:none;margin:0 6px;">プライバシーポリシー</a>
+                <a href="../../contact.html" style="color:#888;text-decoration:none;margin:0 6px;">お問い合わせ</a>
+            </div>
+        </footer>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script src="emails.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
