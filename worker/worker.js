@@ -425,9 +425,15 @@ scoreは40〜99の整数`,
         buildPrompt: (params) => {
             const mode = params.mode || 'one-card';
             const cards = params.cards || [];
+            const positionNames = {
+                'three-card': ['過去', '現在', '未来'],
+                'five-card': ['現在の状況', '障害・課題', '過去の影響', '未来の可能性', '最終結論']
+            };
+            const positions = positionNames[mode] || [];
             const cardDesc = cards.map((c, i) => {
                 const dir = c.isReversed ? '逆位置' : '正位置';
-                return `${i + 1}枚目: ${c.name}（${dir}）- ${c.meaning}`;
+                const pos = positions[i] ? `【${positions[i]}】` : `${i + 1}枚目:`;
+                return `${pos} ${c.name}（${dir}）- ${c.meaning}`;
             }).join('\n');
 
             const modeMap = {
