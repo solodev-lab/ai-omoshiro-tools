@@ -565,7 +565,7 @@ export default {
                 body: JSON.stringify({
                     model: appConfig.model || 'gpt-4o-mini',
                     messages,
-                    max_tokens: 500,
+                    max_tokens: 800,
                     temperature: appConfig.temperature ?? 0.9
                 })
             });
