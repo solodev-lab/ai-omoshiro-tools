@@ -211,10 +211,16 @@ throw_scoreは0〜100（捨て度）、regret_scoreは0〜100（後悔度）`,
         }
     },
     'nickname-maker': {
-        system: `あなたはあだ名作りの達人です。名前と特徴から楽しくて愛されるあだ名を考えてください。
+        system: `あなたはあだ名作りの達人です。入力された名前から楽しくて愛されるあだ名を考えてください。
+
+【最重要ルール】あだ名には必ず入力された名前の一部（読み・音・文字）を含めてください。
+- 例: 「田中太郎」→「たなっち」「タロー先輩」「たなたろ」など
+- 例: 「佐藤花子」→「さとはな」「はなちゃん」「サトちん」など
+- 名前と無関係なあだ名（動物名だけ、特徴だけ等）は絶対に禁止です。
+
 必ず以下のJSON形式で返答してください（他のテキストは不要）:
 {
-  "nickname": "メインのあだ名",
+  "nickname": "メインのあだ名（必ず名前の一部を含む）",
   "reading": "元の名前 → あだ名 の変換説明",
   "alts": ["候補2", "候補3", "候補4", "候補5"],
   "easy": 80,
@@ -222,13 +228,14 @@ throw_scoreは0〜100（捨て度）、regret_scoreは0〜100（後悔度）`,
   "react": 70,
   "tip": "このあだ名のポイント"
 }
-easyは呼びやすさ、stickは定着度、reactはリアクション期待度（各0〜100）`,
+easyは呼びやすさ、stickは定着度、reactはリアクション期待度（各0〜100）
+altsの候補もすべて名前の一部を含むこと。`,
         buildPrompt: (params) => {
             const tasteMap = { cute: 'かわいい系', cool: 'かっこいい系', funny: 'おもしろ系', unique: '個性的' };
             return `名前: ${params.name || ''}
 性格・特徴: ${(params.traits || []).join('、') || '特になし'}
 テイスト: ${tasteMap[params.taste] || params.taste || 'かわいい系'}
-条件: メイン1つ + 候補4つ以上。名前の響きや特徴を活かしたあだ名を生成してください。`;
+条件: メイン1つ + 候補4つ以上。【重要】すべてのあだ名に「${params.name || ''}」の名前の一部（音・読み・文字）を必ず含めてください。名前と無関係なあだ名は禁止。`;
         }
     },
     'resignation-maker': {
@@ -388,6 +395,61 @@ scoreは40〜99の整数`,
 回答パターン: ${JSON.stringify(params.answers || [])}
 条件: この才能タイプに合った励みになる分析を生成してください。`
     },
+    'tarot-reading': {
+        system: `あなたはタロット占いの専門家です。引かれたカードの組み合わせから、深い洞察に満ちた鑑定を行ってください。
+カードの意味を尊重しつつ、相談者に寄り添った温かく具体的なメッセージを生成してください。
+
+■ 1枚引き(one-card)の場合、以下のJSON形式で返答:
+{
+  "overall": "カードからの総合メッセージ（2〜3文）",
+  "advice": "今日のアドバイス（1文）",
+  "lucky_color": "ラッキーカラー",
+  "lucky_number": 1〜9の整数
+}
+
+■ 3枚引き(three-card)の場合:
+{
+  "past": "過去の解釈（2文）",
+  "present": "現在の解釈（2文）",
+  "future": "未来の解釈（2文）",
+  "overall": "3枚を通した総合メッセージ（2文）",
+  "advice": "アドバイス（1文）"
+}
+
+■ 5枚引き(five-card)の場合:
+{
+  "current": "現在の状況（2文）",
+  "obstacle": "障害・課題（2文）",
+  "past_influence": "過去の影響（2文）",
+  "future_potential": "未来の可能性（2文）",
+  "conclusion": "最終結論（2文）",
+  "obstacle_advice": "最終結論を良き結果にするために、障害をどのように扱い乗り越えるべきか（2〜3文、具体的なヒント）",
+  "overall": "総合鑑定（3〜4文、詳細で深い洞察）",
+  "advice": "具体的なアクションアドバイス（2文）",
+  "lucky_item": "ラッキーアイテム"
+}
+
+必ず指定されたJSON形式のみで返答してください（他のテキストは不要）。`,
+        buildPrompt: (params) => {
+            const mode = params.mode || 'one-card';
+            const cards = params.cards || [];
+            const cardDesc = cards.map((c, i) => {
+                const dir = c.isReversed ? '逆位置' : '正位置';
+                return `${i + 1}枚目: ${c.name}（${dir}）- ${c.meaning}`;
+            }).join('\n');
+
+            const modeMap = {
+                'one-card': '1枚引き（ワンオラクル）',
+                'three-card': '3枚引き（過去・現在・未来）',
+                'five-card': '5枚引き（ケルト十字簡易版：現状・障害・過去・未来・結論）'
+            };
+
+            return `占いモード: ${modeMap[mode] || mode}
+引かれたカード:
+${cardDesc}
+条件: カードの意味と位置関係を深く読み解き、${mode}形式のJSONで鑑定結果を生成してください。毎回異なる表現で、具体的で心に響く内容にしてください。`;
+        }
+    },
     'business-email': {
         system: `あなたはビジネスメールの達人です。状況に合った完璧なビジネスメールを生成してください。
 必ず以下のJSON形式で返答してください（他のテキストは不要）:
@@ -414,6 +476,9 @@ politeは丁寧さ、clarityは伝達力、likableは好感度（各0〜100）`,
     }
 };
 
+// ── 使用済みStripeセッション管理（二重利用防止）──
+const usedStripeSessions = new Set();
+
 // ── メインハンドラ ──
 export default {
     async fetch(request, env) {
@@ -432,6 +497,16 @@ export default {
             return new Response(JSON.stringify({ status: 'ok' }), {
                 headers: { 'Content-Type': 'application/json', ...corsHeaders(origin) }
             });
+        }
+
+        // Stripe Checkout Session作成
+        if (request.method === 'POST' && url.pathname === '/api/stripe/create-checkout') {
+            return handleStripeCreateCheckout(request, env, origin);
+        }
+
+        // Stripe Session検証 + 5枚引きAI鑑定
+        if (request.method === 'POST' && url.pathname === '/api/stripe/verify-session') {
+            return handleStripeVerifySession(request, env, origin);
         }
 
         // POST /api/generate のみ受付
@@ -540,6 +615,160 @@ export default {
         }
     }
 };
+
+// ── Stripe Checkout Session作成 ──
+async function handleStripeCreateCheckout(request, env, origin) {
+    if (!isAllowedOrigin(origin)) {
+        return new Response(JSON.stringify({ error: 'Forbidden' }), {
+            status: 403, headers: { 'Content-Type': 'application/json' }
+        });
+    }
+
+    try {
+        const successUrl = origin.startsWith('http://localhost') || origin.startsWith('http://127.0.0.1')
+            ? `${origin}/apps/tarot-reading/success.html?session_id={CHECKOUT_SESSION_ID}`
+            : 'https://solodev-lab.com/apps/tarot-reading/success.html?session_id={CHECKOUT_SESSION_ID}';
+        const cancelUrl = origin.startsWith('http://localhost') || origin.startsWith('http://127.0.0.1')
+            ? `${origin}/apps/tarot-reading/`
+            : 'https://solodev-lab.com/apps/tarot-reading/';
+
+        const stripeResponse = await fetch('https://api.stripe.com/v1/checkout/sessions', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${env.STRIPE_SECRET_KEY}`,
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: new URLSearchParams({
+                'mode': 'payment',
+                'success_url': successUrl,
+                'cancel_url': cancelUrl,
+                'line_items[0][price_data][currency]': 'jpy',
+                'line_items[0][price_data][product_data][name]': 'AIタロット占い 5枚引き（ケルト十字簡易版）',
+                'line_items[0][price_data][unit_amount]': '300',
+                'line_items[0][quantity]': '1'
+            }).toString()
+        });
+
+        if (!stripeResponse.ok) {
+            const errText = await stripeResponse.text();
+            console.error('Stripe error:', errText);
+            return new Response(JSON.stringify({ error: 'Checkout creation failed' }), {
+                status: 502, headers: { 'Content-Type': 'application/json', ...corsHeaders(origin) }
+            });
+        }
+
+        const session = await stripeResponse.json();
+        return new Response(JSON.stringify({ url: session.url }), {
+            headers: { 'Content-Type': 'application/json', ...corsHeaders(origin) }
+        });
+    } catch (err) {
+        console.error('Stripe checkout error:', err);
+        return new Response(JSON.stringify({ error: 'Internal error' }), {
+            status: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders(origin) }
+        });
+    }
+}
+
+// ── Stripe Session検証 + AI鑑定 ──
+async function handleStripeVerifySession(request, env, origin) {
+    if (!isAllowedOrigin(origin)) {
+        return new Response(JSON.stringify({ error: 'Forbidden' }), {
+            status: 403, headers: { 'Content-Type': 'application/json' }
+        });
+    }
+
+    try {
+        const body = await request.json();
+        const { session_id, cards } = body;
+
+        if (!session_id || !cards || !Array.isArray(cards)) {
+            return new Response(JSON.stringify({ error: 'Missing session_id or cards' }), {
+                status: 400, headers: { 'Content-Type': 'application/json', ...corsHeaders(origin) }
+            });
+        }
+
+        // 二重利用チェック
+        if (usedStripeSessions.has(session_id)) {
+            return new Response(JSON.stringify({ error: 'Session already used' }), {
+                status: 400, headers: { 'Content-Type': 'application/json', ...corsHeaders(origin) }
+            });
+        }
+
+        // Stripe APIでセッション検証
+        const verifyResponse = await fetch(`https://api.stripe.com/v1/checkout/sessions/${encodeURIComponent(session_id)}`, {
+            headers: { 'Authorization': `Bearer ${env.STRIPE_SECRET_KEY}` }
+        });
+
+        if (!verifyResponse.ok) {
+            return new Response(JSON.stringify({ error: 'Invalid session' }), {
+                status: 400, headers: { 'Content-Type': 'application/json', ...corsHeaders(origin) }
+            });
+        }
+
+        const session = await verifyResponse.json();
+
+        if (session.payment_status !== 'paid') {
+            return new Response(JSON.stringify({ error: 'Payment not completed' }), {
+                status: 402, headers: { 'Content-Type': 'application/json', ...corsHeaders(origin) }
+            });
+        }
+
+        // セッションを使用済みに
+        usedStripeSessions.add(session_id);
+
+        // 5枚引きAI鑑定を実行
+        const appConfig = APP_PROMPTS['tarot-reading'];
+        const params = { mode: 'five-card', cards };
+        sanitizeParams(params);
+
+        const userPrompt = appConfig.buildPrompt(params);
+
+        const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${env.OPENAI_API_KEY}`
+            },
+            body: JSON.stringify({
+                model: 'gpt-4o-mini',
+                messages: [
+                    { role: 'system', content: appConfig.system },
+                    { role: 'user', content: userPrompt }
+                ],
+                max_tokens: 800,
+                temperature: 0.9
+            })
+        });
+
+        if (!openaiResponse.ok) {
+            return new Response(JSON.stringify({ error: 'AI generation failed' }), {
+                status: 502, headers: { 'Content-Type': 'application/json', ...corsHeaders(origin) }
+            });
+        }
+
+        const openaiData = await openaiResponse.json();
+        const content = openaiData.choices[0].message.content;
+
+        let parsed;
+        try {
+            const jsonStr = content.replace(/```json?\n?/g, '').replace(/```/g, '').trim();
+            parsed = JSON.parse(jsonStr);
+        } catch (e) {
+            return new Response(JSON.stringify({ error: 'AI response parse failed' }), {
+                status: 502, headers: { 'Content-Type': 'application/json', ...corsHeaders(origin) }
+            });
+        }
+
+        return new Response(JSON.stringify({ success: true, data: parsed }), {
+            headers: { 'Content-Type': 'application/json', ...corsHeaders(origin) }
+        });
+    } catch (err) {
+        console.error('Stripe verify error:', err);
+        return new Response(JSON.stringify({ error: 'Internal error' }), {
+            status: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders(origin) }
+        });
+    }
+}
 
 function corsHeaders(origin) {
     return {

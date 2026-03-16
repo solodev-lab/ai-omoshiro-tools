@@ -104,11 +104,11 @@ h1 {
 
 .tarot-card-back {
     position: absolute;
-    width: 80px;
-    height: 120px;
+    width: 70px;
+    height: 105px;
     background: linear-gradient(135deg, #2c1654, #4a1a7a);
     border: 2px solid rgba(241, 196, 15, 0.4);
-    border-radius: 10px;
+    border-radius: 8px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -134,6 +134,90 @@ h1 {
     border-color: #f1c40f;
     box-shadow: 0 8px 24px rgba(241, 196, 15, 0.4);
     transform: translateY(-20px) scale(1.05);
+}
+
+/* カード置き場（3枚引き用） */
+.card-slots {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    margin: 20px auto 0;
+    max-width: 400px;
+}
+
+.card-slot {
+    text-align: center;
+    flex: 1;
+}
+
+.slot-label {
+    font-size: 0.8rem;
+    color: #c89cf5;
+    margin-bottom: 8px;
+    font-weight: 700;
+}
+
+.slot-card {
+    width: 80px;
+    min-width: 80px;
+    height: 120px;
+    min-height: 120px;
+    margin: 0 auto;
+    border: 2px dashed rgba(155, 89, 182, 0.4);
+    border-radius: 10px;
+    display: flex !important;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.03);
+    transition: all 0.4s ease;
+}
+
+.slot-card.filled {
+    border: 2px solid rgba(241, 196, 15, 0.6);
+    background: linear-gradient(135deg, #2c1654, #4a1a7a);
+    box-shadow: 0 4px 16px rgba(155, 89, 182, 0.3);
+    animation: slotFillIn 0.5s ease;
+}
+
+.slot-card .slot-emoji {
+    font-size: 1.5rem;
+    margin-bottom: 4px;
+}
+
+.slot-card .slot-name {
+    font-size: 0.6rem;
+    color: #e0e0e0;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.slot-card .slot-direction {
+    font-size: 0.55rem;
+    margin-top: 2px;
+    padding: 1px 6px;
+    border-radius: 8px;
+}
+
+.slot-direction.upright {
+    color: #6fcf97;
+    background: rgba(111, 207, 151, 0.15);
+}
+
+.slot-direction.reversed {
+    color: #e74c3c;
+    background: rgba(231, 76, 60, 0.15);
+}
+
+@keyframes slotFillIn {
+    0% { transform: scale(0.5); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+.tarot-card-back.fade-out {
+    opacity: 0 !important;
+    transform: scale(0.8) !important;
+    pointer-events: none;
 }
 
 .shuffle-instruction {
@@ -489,5 +573,9 @@ footer .copyright { margin-top: 8px; }
     .drawn-card { min-width: 90px; padding: 12px 8px; }
     .drawn-card .card-emoji { font-size: 1.5rem; }
     .shuffle-area { height: 240px; }
-    .tarot-card-back { width: 65px; height: 100px; }
+    .tarot-card-back { width: 55px; height: 85px; }
+    .card-slots { gap: 10px; }
+    .slot-card { width: 65px; height: 100px; }
+    .slot-card .slot-emoji { font-size: 1.2rem; }
+    .slot-card .slot-name { font-size: 0.55rem; }
 }

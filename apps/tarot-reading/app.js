@@ -126,19 +126,19 @@ document.addEventListener('DOMContentLoaded', () => {
     // シャッフルエリアにカードを配置
     function renderShuffleCards() {
         shuffleArea.innerHTML = '';
-        const totalCards = 10;
+        const totalCards = 20;
         const areaWidth = shuffleArea.offsetWidth || 360;
         const areaHeight = shuffleArea.offsetHeight || 240;
-        const cardW = window.innerWidth <= 600 ? 65 : 80;
-        const cardH = window.innerWidth <= 600 ? 100 : 120;
+        const cardW = window.innerWidth <= 600 ? 55 : 70;
+        const cardH = window.innerWidth <= 600 ? 85 : 105;
 
         for (let i = 0; i < totalCards; i++) {
             const card = document.createElement('div');
             card.className = 'tarot-card-back';
             card.dataset.index = i;
 
-            // 扇状に配置
-            const angle = (i - totalCards / 2) * 12;
+            // 扇状に配置（20枚対応: 角度を狭めて重なりを増やす）
+            const angle = (i - totalCards / 2) * 7;
             const centerX = areaWidth / 2 - cardW / 2;
             const centerY = areaHeight / 2 - cardH / 2 + 20;
             const radius = 120;
@@ -487,6 +487,16 @@ document.addEventListener('DOMContentLoaded', () => {
                     `;
                 }
             });
+
+            // 障害の扱い方アドバイス
+            if (aiData.obstacle_advice) {
+                readingSection.innerHTML += `
+                    <div class="reading-block" style="border-left:3px solid #f1c40f;background:linear-gradient(135deg,rgba(241,196,15,0.08),rgba(155,89,182,0.08));">
+                        <div class="block-title">🔑 最終結論を良き結果にするために</div>
+                        <div class="block-text">${aiData.obstacle_advice}</div>
+                    </div>
+                `;
+            }
         }
 
         const overall = aiData?.overall || getStaticOverall();
