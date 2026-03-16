@@ -173,7 +173,9 @@ document.addEventListener('DOMContentLoaded', () => {
         // ランダムにカードを割り当て + 正逆位置
         const deckIndex = index % shuffledDeck.length;
         const cardData = shuffledDeck[deckIndex];
-        const isReversed = Math.random() < 0.4; // 40%の確率で逆位置
+        // 5枚引きの2枚目（障害）は常に正位置
+        const isFiveCardObstacle = currentMode === 'five-card' && selectedCards.length === 1;
+        const isReversed = isFiveCardObstacle ? false : Math.random() < 0.4;
 
         const cardInfo = {
             ...cardData,
@@ -231,12 +233,14 @@ document.addEventListener('DOMContentLoaded', () => {
             const isObstacle = slotIndex === 1;
             setTimeout(() => {
                 cardEl.style.display = 'none';
+                const directionHtml = isObstacle ? '' : `
+                    <span style="font-size:0.55rem;font-weight:700;padding:1px 5px;border-radius:8px;color:${cardInfo.isReversed ? '#e74c3c' : '#2ecc71'};background:${cardInfo.isReversed ? 'rgba(231,76,60,0.15)' : 'rgba(46,204,113,0.15)'};">
+                        ${cardInfo.isReversed ? '逆位置' : '正位置'}
+                    </span>`;
                 slot.innerHTML = `
                     <div style="font-size:${isObstacle ? '1.2rem' : '1.5rem'};">${cardInfo.emoji}</div>
                     <div style="font-size:0.6rem;font-weight:700;color:#e0d0f0;margin:2px 0 1px;">${cardInfo.name}</div>
-                    <span style="font-size:0.55rem;font-weight:700;padding:1px 5px;border-radius:8px;color:${cardInfo.isReversed ? '#e74c3c' : '#2ecc71'};background:${cardInfo.isReversed ? 'rgba(231,76,60,0.15)' : 'rgba(46,204,113,0.15)'};">
-                        ${cardInfo.isReversed ? '逆位置' : '正位置'}
-                    </span>
+                    ${directionHtml}
                 `;
                 slot.style.border = slotIndex === 4 ? '2px solid rgba(241,196,15,0.7)' : '2px solid rgba(241,196,15,0.5)';
                 slot.style.background = 'linear-gradient(135deg, #2c1654, #4a1a7a)';
