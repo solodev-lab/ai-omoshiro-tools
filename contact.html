@@ -26,30 +26,6 @@
         .back-link:hover { text-decoration: underline; }
         .content { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 32px 24px; line-height: 1.8; }
         p { margin-bottom: 16px; font-size: 0.9rem; color: #bbb; }
-        .form-group { margin-bottom: 20px; }
-        label { display: block; font-size: 0.85rem; font-weight: 700; color: #fff; margin-bottom: 6px; }
-        input, textarea, select {
-            width: 100%; padding: 12px; border: 1px solid rgba(255,255,255,0.2);
-            border-radius: 8px; background: rgba(255,255,255,0.08); color: #fff;
-            font-family: 'Noto Sans JP', sans-serif; font-size: 0.9rem;
-        }
-        input:focus, textarea:focus, select:focus { outline: none; border-color: #56ccf2; }
-        textarea { resize: vertical; min-height: 120px; }
-        select option { background: #1a1a2e; color: #fff; }
-        .submit-btn {
-            display: block; width: 100%; padding: 14px; border: none; border-radius: 12px;
-            background: linear-gradient(135deg, #56ccf2, #6fcf97); color: #0a0a1a;
-            font-family: 'Noto Sans JP', sans-serif; font-size: 1rem; font-weight: 700;
-            cursor: pointer; transition: opacity 0.2s;
-        }
-        .submit-btn:hover { opacity: 0.9; }
-        .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-        .success-msg {
-            display: none; text-align: center; padding: 24px;
-            background: rgba(111,207,151,0.1); border: 1px solid rgba(111,207,151,0.3);
-            border-radius: 12px; margin-top: 16px;
-        }
-        .success-msg p { color: #6fcf97; font-weight: 700; }
         footer { margin-top: 48px; text-align: center; color: #555; font-size: 0.75rem; padding-bottom: 24px; }
         footer a { color: #888; text-decoration: none; }
         footer a:hover { color: #56ccf2; }
@@ -67,31 +43,11 @@
         <div class="content">
             <p>「AIおもしろツール集」に関するご意見・ご質問・不具合報告などは、以下のフォームからお気軽にお送りください。</p>
 
-            <form id="contactForm" action="https://formspree.io/f/placeholder" method="POST">
-                <div class="form-group">
-                    <label for="category">お問い合わせ種別</label>
-                    <select id="category" name="category" required>
-                        <option value="">選択してください</option>
-                        <option value="bug">不具合報告</option>
-                        <option value="feature">機能リクエスト</option>
-                        <option value="question">ご質問</option>
-                        <option value="other">その他</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="email">メールアドレス（任意）</label>
-                    <input type="email" id="email" name="email" placeholder="返信が必要な場合はご記入ください">
-                </div>
-                <div class="form-group">
-                    <label for="message">お問い合わせ内容</label>
-                    <textarea id="message" name="message" placeholder="内容をご記入ください" required></textarea>
-                </div>
-                <button type="submit" class="submit-btn">送信する</button>
-            </form>
-
-            <div class="success-msg" id="successMsg">
-                <p>お問い合わせを送信しました。ありがとうございます。</p>
-            </div>
+            <iframe src="https://docs.google.com/forms/d/e/1FAIpQLSenUtksnwPNbCtJgT7eY73cKgR3siHC_xDJaZJAXJhAuYNiHw/viewform?embedded=true"
+                width="100%" height="800" frameborder="0" marginheight="0" marginwidth="0"
+                style="border-radius: 12px; background: rgba(255,255,255,0.05);">
+                読み込み中…
+            </iframe>
         </div>
 
         <footer>
@@ -104,30 +60,5 @@
         </footer>
     </div>
 
-    <script>
-        document.getElementById('contactForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            var btn = this.querySelector('.submit-btn');
-            btn.disabled = true;
-            btn.textContent = '送信中...';
-            var data = new FormData(this);
-            fetch(this.action, { method: 'POST', body: data, headers: { 'Accept': 'application/json' } })
-                .then(function(res) {
-                    if (res.ok) {
-                        document.getElementById('contactForm').style.display = 'none';
-                        document.getElementById('successMsg').style.display = 'block';
-                    } else {
-                        btn.disabled = false;
-                        btn.textContent = '送信する';
-                        alert('送信に失敗しました。時間を置いてお試しください。');
-                    }
-                })
-                .catch(function() {
-                    btn.disabled = false;
-                    btn.textContent = '送信する';
-                    alert('送信に失敗しました。時間を置いてお試しください。');
-                });
-        });
-    </script>
 </body>
 </html>
