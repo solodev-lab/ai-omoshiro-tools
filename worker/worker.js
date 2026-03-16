@@ -44,6 +44,31 @@ function isAllowedOrigin(origin) {
     return ALLOWED_ORIGINS.some(allowed => origin.startsWith(allowed));
 }
 
+// ── 入力サニタイズ（プロンプトインジェクション対策）──
+const MAX_STRING_LENGTH = 100;
+const INJECTION_PATTERNS = /ignore|forget|disregard|override|system\s*prompt|api\s*key|secret|password|token|instructions|pretend|roleplay|you\s*are\s*now/i;
+
+function sanitizeParams(params) {
+    for (const key of Object.keys(params)) {
+        const val = params[key];
+        if (typeof val === 'string') {
+            // 長さ制限
+            params[key] = val.slice(0, MAX_STRING_LENGTH);
+            // 危険な制御文字を除去
+            params[key] = params[key].replace(/[\x00-\x1f\x7f]/g, '');
+            // プロンプトインジェクション的なパターンを無害化
+            if (INJECTION_PATTERNS.test(params[key])) {
+                params[key] = params[key].replace(INJECTION_PATTERNS, '***');
+            }
+        } else if (Array.isArray(val)) {
+            // 配列（例: traits）は各要素をサニタイズ + 最大5要素
+            params[key] = val.slice(0, 5).map(v =>
+                typeof v === 'string' ? v.slice(0, MAX_STRING_LENGTH).replace(/[\x00-\x1f\x7f]/g, '') : v
+            );
+        }
+    }
+}
+
 // ── アプリ別プロンプト定義 ──
 const APP_PROMPTS = {
     'naming-generator': {
@@ -328,6 +353,9 @@ export default {
                     headers: { 'Content-Type': 'application/json', ...corsHeaders(origin) }
                 });
             }
+
+            // ── 入力サニタイズ ──
+            sanitizeParams(params);
 
             const userPrompt = appConfig.buildPrompt(params);
 
