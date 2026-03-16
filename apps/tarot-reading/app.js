@@ -83,7 +83,11 @@ document.addEventListener('DOMContentLoaded', () => {
         shuffledDeck = [...ALL_CARDS].sort(() => Math.random() - 0.5);
 
         const modeNames = { 'one-card': '1枚引き', 'three-card': '3枚引き', 'five-card': '5枚引き' };
-        shuffleTitle.textContent = `${modeNames[currentMode]} - カードを選んでください`;
+        if (currentMode === 'five-card') {
+            shuffleTitle.textContent = '5枚引き - 占いたいことを思い浮かべてください。そしてカードを選んでください';
+        } else {
+            shuffleTitle.textContent = `${modeNames[currentMode]} - カードを選んでください`;
+        }
 
         // カード置き場の表示切替
         cardSlots.style.display = 'none';
