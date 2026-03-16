@@ -241,7 +241,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 slot.style.border = slotIndex === 4 ? '2px solid rgba(241,196,15,0.7)' : '2px solid rgba(241,196,15,0.5)';
                 slot.style.background = 'linear-gradient(135deg, #2c1654, #4a1a7a)';
                 slot.style.boxShadow = '0 4px 12px rgba(155,89,182,0.3)';
-                const baseTransform = isObstacle ? 'rotate(12deg)' : '';
+                const baseTransform = isObstacle ? 'rotate(-12deg)' : '';
                 slot.style.transform = baseTransform + ' scale(0.5)';
                 slot.style.opacity = '0';
                 requestAnimationFrame(() => {
