@@ -35,6 +35,7 @@ function cleanupRateLimit() {
 // ── 許可するオリジン ──
 const ALLOWED_ORIGINS = [
     'https://solodev-lab.github.io',
+    'https://solodev-lab.com',
     'http://localhost',
     'http://127.0.0.1',
 ];
@@ -211,31 +212,22 @@ throw_scoreは0〜100（捨て度）、regret_scoreは0〜100（後悔度）`,
         }
     },
     'nickname-maker': {
-        system: `あなたはあだ名作りの達人です。入力された名前から楽しくて愛されるあだ名を考えてください。
+        temperature: 0.7,
+        model: 'gpt-4o',
+        system: `あなたは日本語のあだ名を作る専門家です。人の名前を短縮・変形してあだ名にします。
 
-【最重要ルール】あだ名には必ず入力された名前の一部（読み・音・文字）を含めてください。
-- 例: 「田中太郎」→「たなっち」「タロー先輩」「たなたろ」など
-- 例: 「佐藤花子」→「さとはな」「はなちゃん」「サトちん」など
-- 名前と無関係なあだ名（動物名だけ、特徴だけ等）は絶対に禁止です。
+重要なルール:
+- あだ名には必ず入力された名前（名字or名前）の読みの一部を含めること
+- 名前と無関係な単語だけのあだ名は禁止
 
-必ず以下のJSON形式で返答してください（他のテキストは不要）:
-{
-  "nickname": "メインのあだ名（必ず名前の一部を含む）",
-  "reading": "元の名前 → あだ名 の変換説明",
-  "alts": ["候補2", "候補3", "候補4", "候補5"],
-  "easy": 80,
-  "stick": 75,
-  "react": 70,
-  "tip": "このあだ名のポイント"
-}
-easyは呼びやすさ、stickは定着度、reactはリアクション期待度（各0〜100）
-altsの候補もすべて名前の一部を含むこと。`,
+JSON形式のみで返答:
+{"nickname":"メインあだ名","reading":"元の名前 → あだ名","alts":["候補2","候補3","候補4","候補5"],"easy":80,"stick":75,"react":70,"tip":"ポイント"}`,
         buildPrompt: (params) => {
-            const tasteMap = { cute: 'かわいい系', cool: 'かっこいい系', funny: 'おもしろ系', unique: '個性的' };
-            return `名前: ${params.name || ''}
-性格・特徴: ${(params.traits || []).join('、') || '特になし'}
-テイスト: ${tasteMap[params.taste] || params.taste || 'かわいい系'}
-条件: メイン1つ + 候補4つ以上。【重要】すべてのあだ名に「${params.name || ''}」の名前の一部（音・読み・文字）を必ず含めてください。名前と無関係なあだ名は禁止。`;
+            const tasteLabel = { cute: '可愛く', cool: 'かっこよく', funny: '面白く', unique: '個性的に' };
+            const name = params.name || '';
+            const taste = tasteLabel[params.taste] || '可愛く';
+            const traits = (params.traits || []).join('、');
+            return `「${name}」のあだ名を${taste}アレンジして5つ作ってください。${traits ? '性格は' + traits + '。' : ''}すべてのあだ名に「${name}」の名字または名前の読みの一部を必ず含めてください。`;
         }
     },
     'resignation-maker': {
@@ -558,6 +550,10 @@ export default {
             sanitizeParams(params);
 
             const userPrompt = appConfig.buildPrompt(params);
+            const messages = [
+                { role: 'system', content: appConfig.system },
+                { role: 'user', content: userPrompt }
+            ];
 
             // OpenAI API呼び出し
             const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -567,13 +563,10 @@ export default {
                     'Authorization': `Bearer ${env.OPENAI_API_KEY}`
                 },
                 body: JSON.stringify({
-                    model: 'gpt-4o-mini',
-                    messages: [
-                        { role: 'system', content: appConfig.system },
-                        { role: 'user', content: userPrompt }
-                    ],
+                    model: appConfig.model || 'gpt-4o-mini',
+                    messages,
                     max_tokens: 500,
-                    temperature: 0.9
+                    temperature: appConfig.temperature ?? 0.9
                 })
             });
 
