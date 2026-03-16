@@ -276,14 +276,13 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderOneCardResult(aiData) {
         readingSection.innerHTML = '';
 
-        if (aiData && aiData.overall) {
-            readingSection.innerHTML = `
-                <div class="reading-block">
-                    <div class="block-title">🔮 カードからのメッセージ</div>
-                    <div class="block-text">${aiData.overall}</div>
-                </div>
-            `;
-        }
+        const overallMsg = aiData?.overall || getStaticOverall();
+        readingSection.innerHTML = `
+            <div class="reading-block">
+                <div class="block-title">🔮 カードからのメッセージ</div>
+                <div class="block-text">${overallMsg}</div>
+            </div>
+        `;
 
         const advice = aiData?.advice || getStaticAdvice();
         overallReading.innerHTML = '';
