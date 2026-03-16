@@ -380,13 +380,17 @@ document.addEventListener('DOMContentLoaded', () => {
             const div = document.createElement('div');
             div.className = 'drawn-card';
             div.style.animationDelay = (i * 0.15) + 's';
+            // 5枚引きの2枚目（障害）は正逆表示を非表示
+            const isFiveCardObstacle = currentMode === 'five-card' && i === 1;
+            const directionHtml = isFiveCardObstacle ? '' : `
+                <span class="card-direction ${card.isReversed ? 'reversed' : 'upright'}">
+                    ${card.isReversed ? '逆位置 ↓' : '正位置 ↑'}
+                </span>`;
             div.innerHTML = `
                 <div class="position-label">${positions[i].icon} ${positions[i].name}</div>
                 <div class="card-emoji">${card.emoji}</div>
                 <div class="card-name">${card.name}</div>
-                <span class="card-direction ${card.isReversed ? 'reversed' : 'upright'}">
-                    ${card.isReversed ? '逆位置 ↓' : '正位置 ↑'}
-                </span>
+                ${directionHtml}
                 <div class="card-meaning">${card.meaning}</div>
             `;
             drawnCards.appendChild(div);
