@@ -25,6 +25,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const copyBtn = document.getElementById('copyBtn');
     const retryBtn = document.getElementById('retryBtn');
     const toast = document.getElementById('toast');
+    const cardSlots = document.getElementById('cardSlots');
+    const fiveCardSlots = document.getElementById('fiveCardSlots');
 
     // 状態
     let currentMode = '';
@@ -37,12 +39,13 @@ document.addEventListener('DOMContentLoaded', () => {
         btn.addEventListener('click', () => {
             currentMode = btn.dataset.mode;
 
-            if (currentMode === 'five-card') {
-                startStripeCheckout();
-                return;
-            }
+            // TODO: 本番では5枚引きはStripe決済後に開始
+            // if (currentMode === 'five-card') {
+            //     startStripeCheckout();
+            //     return;
+            // }
 
-            requiredCards = currentMode === 'one-card' ? 1 : 3;
+            requiredCards = currentMode === 'one-card' ? 1 : (currentMode === 'three-card' ? 3 : 5);
             selectedCards = [];
             startShuffle();
         });
@@ -79,9 +82,43 @@ document.addEventListener('DOMContentLoaded', () => {
         // デッキをシャッフル
         shuffledDeck = [...ALL_CARDS].sort(() => Math.random() - 0.5);
 
-        const modeNames = { 'one-card': '1枚引き', 'three-card': '3枚引き' };
+        const modeNames = { 'one-card': '1枚引き', 'three-card': '3枚引き', 'five-card': '5枚引き' };
         shuffleTitle.textContent = `${modeNames[currentMode]} - カードを選んでください`;
-        shuffleStatus.textContent = `あと${requiredCards}枚選んでください`;
+
+        // カード置き場の表示切替
+        cardSlots.style.display = 'none';
+        fiveCardSlots.style.display = 'none';
+
+        if (currentMode === 'three-card') {
+            cardSlots.style.display = 'flex';
+            for (let i = 0; i < 3; i++) {
+                const slot = document.getElementById('slotCard' + i);
+                slot.innerHTML = '';
+                slot.style.border = '2px dashed rgba(155,89,182,0.4)';
+                slot.style.background = 'rgba(255,255,255,0.03)';
+                slot.style.boxShadow = 'none';
+                slot.style.transform = '';
+                slot.style.opacity = '';
+                slot.style.transition = '';
+            }
+            shuffleStatus.textContent = '「過去」のカードを選んでください';
+        } else if (currentMode === 'five-card') {
+            fiveCardSlots.style.display = 'block';
+            for (let i = 0; i < 5; i++) {
+                const slot = document.getElementById('slotFive' + i);
+                slot.innerHTML = '';
+                slot.style.border = i === 1 ? '2px dashed rgba(231,76,60,0.4)' : (i === 4 ? '2px dashed rgba(241,196,15,0.3)' : '2px dashed rgba(155,89,182,0.4)');
+                slot.style.background = 'rgba(255,255,255,0.03)';
+                slot.style.boxShadow = 'none';
+                if (i !== 1) { slot.style.transform = ''; }
+                slot.style.opacity = '';
+                slot.style.transition = '';
+            }
+            const posNames5 = FIVE_CARD_POSITIONS;
+            shuffleStatus.textContent = `「${posNames5[0].name}」のカードを選んでください`;
+        } else {
+            shuffleStatus.textContent = `あと${requiredCards}枚選んでください`;
+        }
 
         renderShuffleCards();
     }
@@ -138,19 +175,99 @@ document.addEventListener('DOMContentLoaded', () => {
         const cardData = shuffledDeck[deckIndex];
         const isReversed = Math.random() < 0.4; // 40%の確率で逆位置
 
-        selectedCards.push({
+        const cardInfo = {
             ...cardData,
             isReversed,
             meaning: isReversed ? cardData.reversed : cardData.upright
-        });
+        };
+        selectedCards.push(cardInfo);
 
-        shuffleStatus.textContent = selectedCards.length < requiredCards
-            ? `あと${requiredCards - selectedCards.length}枚選んでください`
-            : '全てのカードが選ばれました！';
+        // 3枚引き: カードを一覧から消して置き場に移動
+        if (currentMode === 'three-card') {
+            // カードをフェードアウト
+            cardEl.style.opacity = '0';
+            cardEl.style.transform = 'scale(0.8)';
+            cardEl.style.pointerEvents = 'none';
+
+            const slotIndex = selectedCards.length - 1;
+            const slot = document.getElementById('slotCard' + slotIndex);
+            setTimeout(() => {
+                cardEl.style.display = 'none';
+                // スロットにカード情報を表示
+                slot.innerHTML = `
+                    <div style="font-size:1.8rem;">${cardInfo.emoji}</div>
+                    <div style="font-size:0.65rem;font-weight:700;color:#e0d0f0;margin:4px 0 2px;">${cardInfo.name}</div>
+                    <span style="font-size:0.6rem;font-weight:700;padding:2px 6px;border-radius:8px;color:${cardInfo.isReversed ? '#e74c3c' : '#2ecc71'};background:${cardInfo.isReversed ? 'rgba(231,76,60,0.15)' : 'rgba(46,204,113,0.15)'};">
+                        ${cardInfo.isReversed ? '逆位置' : '正位置'}
+                    </span>
+                `;
+                slot.style.border = '2px solid rgba(241,196,15,0.6)';
+                slot.style.background = 'linear-gradient(135deg, #2c1654, #4a1a7a)';
+                slot.style.boxShadow = '0 4px 16px rgba(155,89,182,0.3)';
+                slot.style.transform = 'scale(0.5)';
+                slot.style.opacity = '0';
+                // アニメーション開始
+                requestAnimationFrame(() => {
+                    slot.style.transition = 'transform 0.4s ease, opacity 0.4s ease';
+                    slot.style.transform = 'scale(1)';
+                    slot.style.opacity = '1';
+                });
+            }, 300);
+
+            const posNames = ['過去', '現在', '未来'];
+            if (selectedCards.length < requiredCards) {
+                shuffleStatus.textContent = `「${posNames[selectedCards.length]}」のカードを選んでください`;
+            } else {
+                shuffleStatus.textContent = '全てのカードが選ばれました！';
+            }
+        } else if (currentMode === 'five-card') {
+            // 5枚引き: カードを一覧から消して置き場に移動
+            cardEl.style.opacity = '0';
+            cardEl.style.transform = 'scale(0.8)';
+            cardEl.style.pointerEvents = 'none';
+
+            const slotIndex = selectedCards.length - 1;
+            const slot = document.getElementById('slotFive' + slotIndex);
+            const isObstacle = slotIndex === 1;
+            setTimeout(() => {
+                cardEl.style.display = 'none';
+                slot.innerHTML = `
+                    <div style="font-size:${isObstacle ? '1.2rem' : '1.5rem'};">${cardInfo.emoji}</div>
+                    <div style="font-size:0.6rem;font-weight:700;color:#e0d0f0;margin:2px 0 1px;">${cardInfo.name}</div>
+                    <span style="font-size:0.55rem;font-weight:700;padding:1px 5px;border-radius:8px;color:${cardInfo.isReversed ? '#e74c3c' : '#2ecc71'};background:${cardInfo.isReversed ? 'rgba(231,76,60,0.15)' : 'rgba(46,204,113,0.15)'};">
+                        ${cardInfo.isReversed ? '逆位置' : '正位置'}
+                    </span>
+                `;
+                slot.style.border = slotIndex === 4 ? '2px solid rgba(241,196,15,0.7)' : '2px solid rgba(241,196,15,0.5)';
+                slot.style.background = 'linear-gradient(135deg, #2c1654, #4a1a7a)';
+                slot.style.boxShadow = '0 4px 12px rgba(155,89,182,0.3)';
+                const baseTransform = isObstacle ? 'rotate(12deg)' : '';
+                slot.style.transform = baseTransform + ' scale(0.5)';
+                slot.style.opacity = '0';
+                requestAnimationFrame(() => {
+                    slot.style.transition = 'transform 0.4s ease, opacity 0.4s ease';
+                    slot.style.transform = baseTransform + ' scale(1)';
+                    slot.style.opacity = '1';
+                });
+            }, 300);
+
+            if (selectedCards.length < requiredCards) {
+                const posName = FIVE_CARD_POSITIONS[selectedCards.length].name;
+                shuffleStatus.textContent = `「${posName}」のカードを選んでください`;
+            } else {
+                shuffleStatus.textContent = '全てのカードが選ばれました！';
+            }
+        } else {
+            shuffleStatus.textContent = selectedCards.length < requiredCards
+                ? `あと${requiredCards - selectedCards.length}枚選んでください`
+                : '全てのカードが選ばれました！';
+        }
 
         if (selectedCards.length >= requiredCards) {
             shuffleInstruction.textContent = '鑑定を開始します...';
-            setTimeout(() => startAnalyzing(), 800);
+            // 3枚引き・5枚引き: スロットアニメーション完了後に間を置く
+            const delay = (currentMode === 'three-card' || currentMode === 'five-card') ? 1800 : 800;
+            setTimeout(() => startAnalyzing(), delay);
         }
     }
 
