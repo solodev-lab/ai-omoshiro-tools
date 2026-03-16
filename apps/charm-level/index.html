@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AIモテ度診断 | 8問でわかるあなたのモテ度</title>
+    <meta name="description" content="たった8問の質問にAIが分析。あなたのモテ度を100点満点で診断します。">
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-JX7SCK9ECB"></script>
+    <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-JX7SCK9ECB');</script>
+    <!-- OGP -->
+    <meta property="og:title" content="AIモテ度診断 | あなたのモテ度は何点？">
+    <meta property="og:description" content="8問の質問でAIがあなたのモテ度を100点満点で診断。結果をシェアしよう！">
+    <meta property="og:image" content="https://solodev-lab.github.io/ai-omoshiro-tools/apps/charm-level/ogp.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="https://solodev-lab.github.io/ai-omoshiro-tools/apps/charm-level/ogp.png">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>💖 AIモテ度診断</h1>
+            <p class="subtitle">8問の質問で、あなたのモテ度を100点満点で診断します。</p>
+        </header>
+
+        <main>
+            <!-- スタート画面 -->
+            <section class="start-section" id="startSection">
+                <div class="start-card">
+                    <p class="start-desc">AIがあなたの回答パターンを分析し、<br>モテ度を100点満点でスコアリングします。</p>
+                    <div class="start-icons">
+                        <span>💖</span><span>✨</span><span>💕</span><span>🔥</span>
+                        <span>💫</span><span>😍</span><span>💘</span><span>🌹</span>
+                    </div>
+                    <button class="start-btn" id="startBtn">診断スタート 🚀</button>
+                    <p class="start-note">※ 所要時間：約1分</p>
+                </div>
+            </section>
+
+            <!-- 質問セクション -->
+            <section class="question-section" id="questionSection" style="display: none;">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <p class="progress-text" id="progressText">1 / 8</p>
+
+                <div class="question-card" id="questionCard">
+                    <p class="question-text" id="questionText"></p>
+                    <div class="choices" id="choicesContainer"></div>
+                </div>
+            </section>
+
+            <!-- 分析中セクション -->
+            <section class="analyzing-section" id="analyzingSection" style="display: none;">
+                <div class="analyzing-card">
+                    <div class="heart-animation">💖</div>
+                    <p class="analyzing-text">AIがモテ度を分析中...</p>
+                    <div class="analyzing-dots">
+                        <span></span><span></span><span></span>
+                    </div>
+                    <p class="analyzing-sub" id="analyzingStatus">回答パターンを解析しています</p>
+                </div>
+            </section>
+
+            <!-- 結果セクション -->
+            <section class="result-section" id="resultSection" style="display: none;">
+                <div class="result-card" id="resultCard">
+                    <p class="result-label">あなたのモテ度は…</p>
+                    <div class="score-display">
+                        <span class="score-number" id="scoreNumber">0</span>
+                        <span class="score-unit">点</span>
+                    </div>
+                    <div class="rank-badge" id="rankBadge">
+                        <span class="rank-grade" id="rankGrade"></span>
+                        <span class="rank-label" id="rankLabel"></span>
+                    </div>
+                    <p class="result-description" id="resultDescription"></p>
+
+                    <div class="charm-points-box">
+                        <h3>💪 あなたのモテポイント</h3>
+                        <ul id="charmPointsList"></ul>
+                    </div>
+
+                    <div class="advice-box">
+                        <h3>💡 モテ度アップのアドバイス</h3>
+                        <p id="adviceText"></p>
+                    </div>
+                </div>
+
+                <div class="action-buttons share-buttons">
+                    <button class="action-btn btn-x" id="shareXBtn">𝕏 でシェア</button>
+                    <button class="action-btn btn-line" id="shareLINEBtn">LINE で送る</button>
+                    <button class="action-btn btn-copy" id="copyBtn">📋 コピー</button>
+                </div>
+                <div class="action-buttons">
+                    <button class="action-btn btn-retry" id="retryBtn">🔄 もう一度診断</button>
+                </div>
+
+                <!-- 履歴セクション -->
+                <div class="history-section" id="historySection" style="display: none;">
+                    <h3 class="history-title">📊 過去の診断履歴</h3>
+                    <div class="history-list" id="historyList"></div>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>※ エンタメ目的の診断です。科学的根拠はありません。</p>
+            <p class="copyright">© 2026 AIおもしろツール集</p>
+        </footer>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script src="questions.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

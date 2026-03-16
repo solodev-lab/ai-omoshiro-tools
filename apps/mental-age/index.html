@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AIメンタル年齢診断 | あなたの心の年齢は？</title>
+    <meta name="description" content="10問の質問にAIが分析。あなたの精神年齢を診断します。実年齢とは違う心の年齢を発見しよう！">
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-JX7SCK9ECB"></script>
+    <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-JX7SCK9ECB');</script>
+    <!-- OGP -->
+    <meta property="og:title" content="AIメンタル年齢診断 | あなたの心の年齢は？">
+    <meta property="og:description" content="10問の質問でAIがあなたの精神年齢を診断。実年齢とは違う心の年齢を発見しよう！">
+    <meta property="og:image" content="https://solodev-lab.github.io/ai-omoshiro-tools/apps/mental-age/ogp.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="https://solodev-lab.github.io/ai-omoshiro-tools/apps/mental-age/ogp.png">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🧠 AIメンタル年齢診断</h1>
+            <p class="subtitle">10問の質問で、あなたの心の年齢を診断します。</p>
+        </header>
+
+        <main>
+            <!-- スタート画面 -->
+            <section class="start-section" id="startSection">
+                <div class="start-card">
+                    <p class="start-desc">AIがあなたの回答パターンを分析し、<br>精神年齢を割り出します。<br>実年齢とは違う「心の年齢」を発見しよう！</p>
+                    <div class="start-icons">
+                        <span>🧒</span><span>👦</span><span>👩</span><span>🧓</span>
+                        <span>🧒</span><span>👦</span><span>👩</span><span>🧓</span>
+                    </div>
+                    <button class="start-btn" id="startBtn">診断スタート 🚀</button>
+                    <p class="start-note">※ 所要時間：約1〜2分</p>
+                </div>
+            </section>
+
+            <!-- 質問セクション -->
+            <section class="question-section" id="questionSection" style="display: none;">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <p class="progress-text" id="progressText">1 / 10</p>
+
+                <div class="question-card" id="questionCard">
+                    <p class="question-text" id="questionText"></p>
+                    <div class="choices" id="choicesContainer"></div>
+                </div>
+            </section>
+
+            <!-- 分析中セクション -->
+            <section class="analyzing-section" id="analyzingSection" style="display: none;">
+                <div class="analyzing-card">
+                    <div class="brain-animation">🧠</div>
+                    <p class="analyzing-text">AIがメンタル年齢を分析中...</p>
+                    <div class="analyzing-dots">
+                        <span></span><span></span><span></span>
+                    </div>
+                    <p class="analyzing-sub" id="analyzingStatus">回答パターンを解析しています</p>
+                </div>
+            </section>
+
+            <!-- 結果セクション -->
+            <section class="result-section" id="resultSection" style="display: none;">
+                <div class="result-card" id="resultCard">
+                    <p class="result-label" id="resultLabel">あなたの精神年齢は…</p>
+                    <div class="age-display">
+                        <span class="age-number" id="ageNumber">0</span>
+                        <span class="age-unit">歳</span>
+                    </div>
+                    <div class="age-badge" id="ageBadge">
+                        <span class="age-emoji" id="ageEmoji"></span>
+                        <span class="age-type-label" id="ageTypeLabel"></span>
+                    </div>
+                    <p class="result-description" id="resultDescription"></p>
+
+                    <div class="traits-box">
+                        <h3>🔍 あなたの特徴</h3>
+                        <ul id="resultTraits"></ul>
+                    </div>
+
+                    <div class="advice-box">
+                        <h3>💡 アドバイス</h3>
+                        <p id="resultAdvice"></p>
+                    </div>
+                </div>
+
+                <div class="action-buttons share-buttons">
+                    <button class="action-btn btn-x" id="shareXBtn">𝕏 でシェア</button>
+                    <button class="action-btn btn-line" id="shareLINEBtn">LINE で送る</button>
+                    <button class="action-btn btn-copy" id="copyBtn">📋 コピー</button>
+                </div>
+                <div class="action-buttons">
+                    <button class="action-btn btn-retry" id="retryBtn">🔄 もう一度診断</button>
+                </div>
+
+                <!-- 履歴セクション -->
+                <div class="history-section" id="historySection" style="display: none;">
+                    <h3 class="history-title">📊 過去の診断履歴</h3>
+                    <div class="history-list" id="historyList"></div>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>※ エンタメ目的の診断です。科学的根拠はありません。</p>
+            <p class="copyright">&copy; 2026 AIおもしろツール集</p>
+        </footer>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script src="questions.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

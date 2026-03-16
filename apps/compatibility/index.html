@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI相性診断 | 2人の名前で相性チェック</title>
+    <meta name="description" content="2人の名前を入力するだけ！AIが相性を診断します。相性パーセント・ランク・アドバイスをチェック！">
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-JX7SCK9ECB"></script>
+    <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-JX7SCK9ECB');</script>
+    <!-- OGP -->
+    <meta property="og:title" content="AI相性診断 | 2人の名前で相性チェック">
+    <meta property="og:description" content="2人の名前を入力するだけでAIが相性を診断！相性パーセント・アドバイスをチェック！">
+    <meta property="og:image" content="https://solodev-lab.github.io/ai-omoshiro-tools/apps/compatibility/ogp.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="https://solodev-lab.github.io/ai-omoshiro-tools/apps/compatibility/ogp.png">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>AI相性診断</h1>
+            <p class="subtitle">2人の名前を入力して、相性をチェックしよう</p>
+        </header>
+
+        <main>
+            <!-- 入力セクション -->
+            <section class="input-section" id="inputSection">
+                <div class="input-card">
+                    <div class="input-group">
+                        <label for="name1">1人目の名前</label>
+                        <input type="text" id="name1" placeholder="例：太郎" maxlength="20" autocomplete="off">
+                    </div>
+                    <div class="heart-divider">
+                        <span>&#10084;</span>
+                    </div>
+                    <div class="input-group">
+                        <label for="name2">2人目の名前</label>
+                        <input type="text" id="name2" placeholder="例：花子" maxlength="20" autocomplete="off">
+                    </div>
+                    <button class="diagnose-btn" id="diagnoseBtn">相性を診断する</button>
+                    <p class="input-note">※ エンタメ目的の診断です。</p>
+                </div>
+            </section>
+
+            <!-- 分析中セクション -->
+            <section class="analyzing-section" id="analyzingSection" style="display: none;">
+                <div class="analyzing-card">
+                    <div class="heart-animation">&#10084;</div>
+                    <p class="analyzing-text">AIが相性を分析中...</p>
+                    <div class="analyzing-dots">
+                        <span></span><span></span><span></span>
+                    </div>
+                    <p class="analyzing-sub" id="analyzingStatus">2人の相性を解析しています</p>
+                </div>
+            </section>
+
+            <!-- 結果セクション -->
+            <section class="result-section" id="resultSection" style="display: none;">
+                <div class="result-card">
+                    <p class="result-names" id="resultNames"></p>
+                    <div class="circle-gauge" id="circleGauge">
+                        <svg viewBox="0 0 200 200">
+                            <circle class="gauge-bg" cx="100" cy="100" r="85"></circle>
+                            <circle class="gauge-fill" id="gaugeFill" cx="100" cy="100" r="85"></circle>
+                        </svg>
+                        <div class="gauge-text">
+                            <span class="gauge-number" id="gaugeNumber">0</span>
+                            <span class="gauge-percent">%</span>
+                        </div>
+                    </div>
+                    <h2 class="result-rank" id="resultRank"></h2>
+                    <p class="result-analysis" id="resultAnalysis"></p>
+                    <div class="result-advice-box">
+                        <h3>&#128161; アドバイス</h3>
+                        <p id="resultAdvice"></p>
+                    </div>
+                </div>
+
+                <div class="action-buttons share-buttons">
+                    <button class="action-btn btn-x" id="shareXBtn">&#120143; でシェア</button>
+                    <button class="action-btn btn-line" id="shareLINEBtn">LINE で送る</button>
+                    <button class="action-btn btn-copy" id="copyBtn">&#128203; コピー</button>
+                </div>
+                <div class="action-buttons">
+                    <button class="action-btn btn-retry" id="retryBtn">&#128260; もう一度診断</button>
+                </div>
+            </section>
+
+            <!-- 履歴セクション -->
+            <section class="history-section" id="historySection" style="display: none;">
+                <h3 class="history-title">&#128338; 診断履歴</h3>
+                <div class="history-list" id="historyList"></div>
+            </section>
+        </main>
+
+        <footer>
+            <p>※ エンタメ目的の診断です。科学的根拠はありません。</p>
+            <p class="copyright">&copy; 2026 AIおもしろツール集</p>
+        </footer>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script src="app.js"></script>
+</body>
+</html>

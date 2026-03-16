@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI才能診断 | あなたの隠れた才能を発見</title>
+    <meta name="description" content="8つの質問に答えるだけで、あなたの隠れた才能タイプをAIが診断します。12タイプからあなたの才能を発見！">
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-JX7SCK9ECB"></script>
+    <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-JX7SCK9ECB');</script>
+    <!-- OGP -->
+    <meta property="og:title" content="AI才能診断 | あなたの隠れた才能を発見">
+    <meta property="og:description" content="8つの質問であなたの隠れた才能タイプを診断。意外な才能が見つかるかも？">
+    <meta property="og:image" content="https://solodev-lab.github.io/ai-omoshiro-tools/apps/talent-finder/ogp.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="https://solodev-lab.github.io/ai-omoshiro-tools/apps/talent-finder/ogp.png">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>✨ AI才能診断</h1>
+            <p class="subtitle">8つの質問で、あなたの隠れた才能を発見します。</p>
+        </header>
+
+        <main>
+            <!-- スタート画面 -->
+            <section class="start-section" id="startSection">
+                <div class="start-card">
+                    <p class="start-desc">あなたの中に眠っている<br>まだ見ぬ才能——<br>AIが診断して見つけ出します。</p>
+                    <div class="start-emojis">
+                        <span>✨</span><span>🎨</span><span>🎵</span><span>💡</span>
+                        <span>🔬</span><span>👑</span><span>✍️</span><span>🔮</span>
+                    </div>
+                    <button class="start-btn" id="startBtn">診断スタート ✨</button>
+                    <p class="start-note">※ 所要時間：約1分</p>
+                </div>
+            </section>
+
+            <!-- 質問セクション -->
+            <section class="question-section" id="questionSection" style="display: none;">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <p class="progress-text" id="progressText">1 / 8</p>
+
+                <div class="question-card" id="questionCard">
+                    <p class="question-number" id="questionNumber">Q1</p>
+                    <p class="question-text" id="questionText"></p>
+                    <div class="choices" id="choicesContainer"></div>
+                </div>
+            </section>
+
+            <!-- 分析中セクション -->
+            <section class="analyzing-section" id="analyzingSection" style="display: none;">
+                <div class="analyzing-card">
+                    <div class="sparkle-animation">✨</div>
+                    <p class="analyzing-text">AIが才能を分析中...</p>
+                    <div class="analyzing-dots">
+                        <span></span><span></span><span></span>
+                    </div>
+                    <p class="analyzing-sub" id="analyzingStatus">回答データを収集しています</p>
+                </div>
+            </section>
+
+            <!-- 結果セクション -->
+            <section class="result-section" id="resultSection" style="display: none;">
+                <div class="result-card" id="resultCard">
+                    <p class="result-label">あなたの隠れた才能</p>
+                    <span class="result-emoji" id="resultEmoji"></span>
+                    <h2 class="result-name" id="resultName"></h2>
+                    <p class="result-subtitle" id="resultSubtitle"></p>
+                    <p class="result-description" id="resultDescription"></p>
+
+                    <div class="result-traits-box">
+                        <h3>🌟 特徴</h3>
+                        <ul class="result-traits" id="resultTraits"></ul>
+                    </div>
+
+                    <div class="result-advice-box">
+                        <h3>💡 アドバイス</h3>
+                        <p id="resultAdvice"></p>
+                    </div>
+
+                    <div class="result-compatibility-box">
+                        <h3>🤝 相性の良いタイプ</h3>
+                        <p id="resultCompatibility"></p>
+                    </div>
+                </div>
+
+                <!-- AI深層分析 -->
+                <div class="ai-analysis-box" id="aiAnalysisBox" style="display: none;">
+                    <h3>🤖 AI深層分析</h3>
+                    <p id="aiAnalysisText"></p>
+                </div>
+
+                <div class="action-buttons share-buttons">
+                    <button class="action-btn btn-x" id="shareXBtn">&#x1D54F; でシェア</button>
+                    <button class="action-btn btn-line" id="shareLINEBtn">LINE で送る</button>
+                    <button class="action-btn btn-copy" id="copyBtn">&#x1F4CB; コピー</button>
+                </div>
+                <div class="action-buttons">
+                    <button class="action-btn btn-retry" id="retryBtn">&#x1F504; もう一度診断</button>
+                </div>
+            </section>
+
+            <!-- 履歴セクション -->
+            <section class="history-section" id="historySection" style="display: none;">
+                <h3 class="history-title">📜 診断履歴</h3>
+                <div class="history-list" id="historyList"></div>
+            </section>
+        </main>
+
+        <footer>
+            <p>※ エンタメ目的の診断です。科学的根拠はありません。</p>
+            <p class="copyright">&copy; 2026 AIおもしろツール集</p>
+        </footer>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script src="questions.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

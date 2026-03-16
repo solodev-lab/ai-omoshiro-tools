@@ -1,0 +1,461 @@
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    font-family: 'Noto Sans JP', sans-serif;
+    background: linear-gradient(135deg, #1a0a1e, #2d1233, #1a0f28);
+    color: #e0e0e0;
+    min-height: 100vh;
+    line-height: 1.7;
+}
+
+.container {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 20px 16px;
+}
+
+/* ===== ヘッダー ===== */
+header { text-align: center; padding: 24px 0 16px; }
+
+h1 {
+    font-size: 1.8rem;
+    font-weight: 900;
+    background: linear-gradient(90deg, #ff6b9d, #c44569);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 8px;
+}
+
+.subtitle {
+    font-size: 0.9rem;
+    color: #aaa;
+}
+
+/* ===== 入力カード ===== */
+.input-card {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 20px;
+    padding: 32px 24px;
+    text-align: center;
+}
+
+.input-group {
+    text-align: left;
+    margin-bottom: 8px;
+}
+
+.input-group label {
+    display: block;
+    font-size: 0.85rem;
+    color: #ccc;
+    margin-bottom: 6px;
+    font-weight: 700;
+}
+
+.input-group input {
+    width: 100%;
+    background: rgba(255,255,255,0.08);
+    border: 2px solid rgba(255,255,255,0.15);
+    border-radius: 12px;
+    padding: 14px 16px;
+    color: #e0e0e0;
+    font-size: 1rem;
+    font-family: 'Noto Sans JP', sans-serif;
+    outline: none;
+    transition: border-color 0.3s;
+}
+
+.input-group input:focus {
+    border-color: #ff6b9d;
+}
+
+.input-group input::placeholder {
+    color: #666;
+}
+
+.heart-divider {
+    text-align: center;
+    font-size: 1.8rem;
+    color: #ff6b9d;
+    margin: 12px 0;
+    animation: heartbeat 1.5s ease-in-out infinite;
+}
+
+@keyframes heartbeat {
+    0%, 100% { transform: scale(1); }
+    15% { transform: scale(1.15); }
+    30% { transform: scale(1); }
+    45% { transform: scale(1.1); }
+}
+
+.diagnose-btn {
+    background: linear-gradient(90deg, #ff6b9d, #c44569);
+    color: #fff;
+    border: none;
+    padding: 16px 48px;
+    border-radius: 50px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-family: 'Noto Sans JP', sans-serif;
+    margin-top: 20px;
+    width: 100%;
+}
+
+.diagnose-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(255, 107, 157, 0.4);
+}
+
+.diagnose-btn:active {
+    transform: scale(0.98);
+}
+
+.diagnose-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.input-note {
+    font-size: 0.75rem;
+    color: #888;
+    margin-top: 12px;
+}
+
+/* ===== 分析中アニメーション ===== */
+.analyzing-card {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 20px;
+    padding: 48px 24px;
+    text-align: center;
+}
+
+.heart-animation {
+    font-size: 4rem;
+    color: #ff6b9d;
+    animation: pulse 1.5s ease-in-out infinite;
+    margin-bottom: 20px;
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.2); opacity: 0.7; }
+}
+
+.analyzing-text {
+    font-size: 1.2rem;
+    font-weight: 700;
+    background: linear-gradient(90deg, #ff6b9d, #c44569);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 16px;
+}
+
+.analyzing-dots {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.analyzing-dots span {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #ff6b9d;
+    animation: dotBounce 1.4s ease-in-out infinite;
+}
+
+.analyzing-dots span:nth-child(2) { animation-delay: 0.2s; }
+.analyzing-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes dotBounce {
+    0%, 80%, 100% { transform: scale(0.6); opacity: 0.3; }
+    40% { transform: scale(1); opacity: 1; }
+}
+
+.analyzing-sub {
+    font-size: 0.85rem;
+    color: #888;
+}
+
+/* ===== 結果セクション ===== */
+.result-section {
+    animation: fadeInUp 0.5s ease;
+}
+
+.result-card {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255, 107, 157, 0.2);
+    border-radius: 20px;
+    padding: 32px 24px;
+    text-align: center;
+}
+
+.result-names {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #ff6b9d;
+    margin-bottom: 24px;
+}
+
+/* ===== 円形ゲージ ===== */
+.circle-gauge {
+    position: relative;
+    width: 200px;
+    height: 200px;
+    margin: 0 auto 24px;
+}
+
+.circle-gauge svg {
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
+}
+
+.gauge-bg {
+    fill: none;
+    stroke: rgba(255,255,255,0.08);
+    stroke-width: 12;
+}
+
+.gauge-fill {
+    fill: none;
+    stroke: url(#gaugeGradient);
+    stroke-width: 12;
+    stroke-linecap: round;
+    stroke-dasharray: 534;
+    stroke-dashoffset: 534;
+    transition: stroke-dashoffset 1.5s ease-out;
+}
+
+.gauge-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    align-items: baseline;
+    gap: 2px;
+}
+
+.gauge-number {
+    font-size: 3.5rem;
+    font-weight: 900;
+    background: linear-gradient(180deg, #ff6b9d, #c44569);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    line-height: 1;
+}
+
+.gauge-percent {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #c44569;
+}
+
+.result-rank {
+    font-size: 1.5rem;
+    font-weight: 900;
+    margin-bottom: 20px;
+    line-height: 1.5;
+}
+
+.result-analysis {
+    font-size: 0.95rem;
+    color: #ccc;
+    line-height: 1.8;
+    margin-bottom: 24px;
+    text-align: left;
+}
+
+/* アドバイスボックス */
+.result-advice-box {
+    background: rgba(255, 107, 157, 0.08);
+    border: 1px solid rgba(255, 107, 157, 0.2);
+    border-radius: 12px;
+    padding: 16px;
+    text-align: left;
+}
+
+.result-advice-box h3 {
+    font-size: 0.85rem;
+    margin-bottom: 8px;
+    color: #ff6b9d;
+}
+
+.result-advice-box p {
+    font-size: 0.9rem;
+    color: #ccc;
+    line-height: 1.7;
+}
+
+/* ===== アクションボタン ===== */
+.action-buttons {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-top: 16px;
+}
+
+.action-btn {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 12px;
+    padding: 12px 8px;
+    color: #e0e0e0;
+    font-size: 0.8rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'Noto Sans JP', sans-serif;
+}
+
+.action-btn:hover {
+    background: rgba(255,255,255,0.15);
+    transform: translateY(-1px);
+}
+
+.btn-x {
+    background: rgba(0, 0, 0, 0.4);
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.btn-line {
+    background: rgba(6, 199, 85, 0.15);
+    border-color: rgba(6, 199, 85, 0.4);
+    color: #06c755;
+}
+
+.btn-line:hover {
+    background: rgba(6, 199, 85, 0.25);
+}
+
+.btn-copy {
+    background: rgba(255, 107, 157, 0.15);
+    border-color: rgba(255, 107, 157, 0.3);
+}
+
+.btn-retry {
+    width: 100%;
+}
+
+.share-buttons {
+    margin-bottom: 8px;
+}
+
+/* ===== 履歴セクション ===== */
+.history-section {
+    margin-top: 32px;
+}
+
+.history-title {
+    font-size: 1rem;
+    font-weight: 700;
+    margin-bottom: 12px;
+    color: #ccc;
+}
+
+.history-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.history-item {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 12px;
+    padding: 12px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.history-item:hover {
+    background: rgba(255,255,255,0.1);
+    border-color: rgba(255, 107, 157, 0.3);
+}
+
+.history-names {
+    font-size: 0.9rem;
+    font-weight: 700;
+}
+
+.history-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.history-score {
+    font-size: 1.1rem;
+    font-weight: 900;
+    background: linear-gradient(90deg, #ff6b9d, #c44569);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.history-rank {
+    font-size: 0.75rem;
+    color: #aaa;
+}
+
+/* ===== トースト ===== */
+.toast {
+    position: fixed;
+    bottom: -60px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(255, 107, 157, 0.95);
+    color: #fff;
+    padding: 12px 24px;
+    border-radius: 25px;
+    font-size: 0.85rem;
+    transition: bottom 0.3s ease;
+    z-index: 100;
+    white-space: nowrap;
+}
+
+.toast.show {
+    bottom: 30px;
+}
+
+/* ===== フッター ===== */
+footer {
+    text-align: center;
+    padding: 24px 0;
+    font-size: 0.75rem;
+    color: #666;
+}
+
+.copyright {
+    margin-top: 4px;
+}
+
+/* ===== アニメーション ===== */
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes countUp {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* ===== レスポンシブ ===== */
+@media (max-width: 400px) {
+    h1 { font-size: 1.5rem; }
+    .action-buttons { grid-template-columns: 1fr; }
+    .circle-gauge { width: 160px; height: 160px; }
+    .gauge-number { font-size: 2.8rem; }
+    .gauge-percent { font-size: 1.2rem; }
+}

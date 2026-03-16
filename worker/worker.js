@@ -286,6 +286,131 @@ peacefulは円満度（0〜100）、honne_scoreは本音度（0〜100）`,
         buildPrompt: (params) => `性格タイプ: ${params.type || 'INTJ'}
 各軸のスコア: E=${params.scores?.E || 0}, I=${params.scores?.I || 0}, S=${params.scores?.S || 0}, N=${params.scores?.N || 0}, T=${params.scores?.T || 0}, F=${params.scores?.F || 0}, J=${params.scores?.J || 0}, P=${params.scores?.P || 0}
 条件: このタイプに合った独創的なキャッチコピーと詳細分析を生成してください。毎回異なるキャッチコピーにしてください。`
+    },
+    'compatibility': {
+        system: `あなたはAI相性診断の専門家です。2人の名前から相性を分析してください。
+必ず以下のJSON形式で返答してください（他のテキストは不要）:
+{
+  "score": 75,
+  "rank": "良い相性",
+  "analysis": "2人の相性分析（2〜3文）",
+  "advice": "2人へのアドバイス（1〜2文）"
+}
+scoreは40〜99の整数`,
+        buildPrompt: (params) => `1人目の名前: ${params.name1 || '名前1'}
+2人目の名前: ${params.name2 || '名前2'}
+条件: 名前の響きやイメージから相性を分析してください。楽しくポジティブな内容にしてください。`
+    },
+    'past-life': {
+        system: `あなたはAI前世診断の専門家です。回答傾向と前世タイプから、パーソナライズされた前世分析を生成してください。
+必ず以下のJSON形式で返答してください（他のテキストは不要）:
+{
+  "description": "前世の詳細説明（3〜4文）",
+  "traits": ["特徴1", "特徴2", "特徴3"],
+  "luckyItem": "ラッキーアイテム"
+}`,
+        buildPrompt: (params) => `前世タイプID: ${params.typeId || 'unknown'}
+回答パターン: ${JSON.stringify(params.answers || [])}
+条件: このタイプに合った独創的で神秘的な前世の説明を生成してください。毎回異なる内容にしてください。`
+    },
+    'animal-type': {
+        system: `あなたはAI動物タイプ診断の専門家です。回答傾向と動物タイプから、パーソナライズされた分析を生成してください。
+必ず以下のJSON形式で返答してください（他のテキストは不要）:
+{
+  "description": "この動物タイプの詳細説明（3〜4文）",
+  "traits": ["特徴1", "特徴2", "特徴3"],
+  "compatibility": "相性の良い動物タイプ（1文）",
+  "advice": "この動物タイプへのアドバイス（1文）"
+}`,
+        buildPrompt: (params) => `動物タイプID: ${params.animalId || 'unknown'}
+回答パターン: ${JSON.stringify(params.answers || [])}
+条件: この動物タイプに合った楽しい分析を生成してください。毎回異なる内容にしてください。`
+    },
+    'charm-level': {
+        system: `あなたはAIモテ度診断の専門家です。回答傾向とスコアから、パーソナライズされたモテ度分析を生成してください。
+必ず以下のJSON形式で返答してください（他のテキストは不要）:
+{
+  "description": "モテ度の詳細分析（3〜4文）",
+  "charmPoints": ["モテポイント1", "モテポイント2", "モテポイント3"],
+  "advice": "モテ度アップのアドバイス（1〜2文）"
+}`,
+        buildPrompt: (params) => `モテ度スコア: ${params.score || 50}点
+ランク: ${params.rank || 'B'}
+回答パターン: ${JSON.stringify(params.answers || [])}
+条件: スコアとランクに合った具体的で励みになるモテ度分析を生成してください。`
+    },
+    'hidden-personality': {
+        system: `あなたはAI裏性格診断の専門家です。表の顔と裏の顔のギャップを分析してください。
+必ず以下のJSON形式で返答してください（他のテキストは不要）:
+{
+  "analysis": "表と裏のギャップ分析（3〜4文。面白くて共感できる内容に）",
+  "advice": "このギャップを持つ人へのアドバイス（1〜2文）"
+}`,
+        buildPrompt: (params) => `性格タイプID: ${params.typeId || 'unknown'}
+回答パターン: ${JSON.stringify(params.answers || [])}
+条件: 表の顔と裏の顔のギャップを面白く分析してください。共感できる内容にしてください。`
+    },
+    'love-type': {
+        system: `あなたはAI恋愛タイプ診断の専門家です。回答傾向と恋愛タイプから、パーソナライズされた分析を生成してください。
+必ず以下のJSON形式で返答してください（他のテキストは不要）:
+{
+  "description": "恋愛タイプの詳細説明（3〜4文）",
+  "traits": ["恋愛傾向1", "恋愛傾向2", "恋愛傾向3"],
+  "compatibility": "相性の良い恋愛タイプ（1文）",
+  "advice": "恋愛アドバイス（1〜2文）"
+}`,
+        buildPrompt: (params) => `恋愛タイプID: ${params.typeId || 'unknown'}
+回答パターン: ${JSON.stringify(params.answers || [])}
+条件: この恋愛タイプに合った楽しくて共感できる分析を生成してください。`
+    },
+    'mental-age': {
+        system: `あなたはAIメンタル年齢診断の専門家です。回答傾向と精神年齢から、パーソナライズされた分析を生成してください。
+必ず以下のJSON形式で返答してください（他のテキストは不要）:
+{
+  "description": "精神年齢の詳細分析（3〜4文。面白くて共感できる内容に）",
+  "traits": ["特徴1", "特徴2", "特徴3"],
+  "advice": "この精神年齢の人へのアドバイス（1〜2文）"
+}`,
+        buildPrompt: (params) => `精神年齢: ${params.mentalAge || 25}歳
+回答パターン: ${JSON.stringify(params.answers || [])}
+条件: この精神年齢に合った面白くて納得感のある分析を生成してください。`
+    },
+    'talent-finder': {
+        system: `あなたはAI才能診断の専門家です。回答傾向と才能タイプから、パーソナライズされた分析を生成してください。
+必ず以下のJSON形式で返答してください（他のテキストは不要）:
+{
+  "description": "才能の詳細説明（3〜4文）",
+  "traits": ["才能の特徴1", "才能の特徴2", "才能の特徴3"],
+  "compatibility": "この才能と相性の良い才能（1文）",
+  "advice": "才能を活かすアドバイス（1〜2文）"
+}`,
+        buildPrompt: (params) => `才能タイプID: ${params.talentId || 'unknown'}
+回答パターン: ${JSON.stringify(params.answers || [])}
+条件: この才能タイプに合った励みになる分析を生成してください。`
+    },
+    'business-email': {
+        system: `あなたはビジネスメールの達人です。状況に合った完璧なビジネスメールを生成してください。
+必ず以下のJSON形式で返答してください（他のテキストは不要）:
+{
+  "subject": "メールの件名",
+  "body": "メール本文（改行は\\nで表現。宛名・挨拶・本文・締めを含む）",
+  "polite": 85,
+  "clarity": 80,
+  "likable": 75,
+  "tip": "このメールを送る際のワンポイントアドバイス"
+}
+politeは丁寧さ、clarityは伝達力、likableは好感度（各0〜100）`,
+        buildPrompt: (params) => {
+            const toneMap = { polite: '非常に丁寧（敬語・謙譲語をしっかり使う）', normal: '標準的なビジネス文体', casual: 'やや親しみのあるカジュアルなビジネス文体' };
+            let prompt = `メールのシーン: ${params.scene || 'お礼'}
+送信相手: ${params.target || '上司'}
+トーン: ${toneMap[params.tone] || toneMap.polite}`;
+            if (params.detail) {
+                prompt += `\n詳細・背景: ${params.detail}`;
+            }
+            prompt += `\n条件: 宛名は「○○」のままプレースホルダーで。件名は具体的に。本文は150〜300文字程度。実用的で、そのままコピペして使えるメールを生成してください。`;
+            return prompt;
+        }
     }
 };
 
