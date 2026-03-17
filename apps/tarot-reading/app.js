@@ -28,6 +28,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const cardSlots = document.getElementById('cardSlots');
     const fiveCardSlots = document.getElementById('fiveCardSlots');
 
+    // PWA（スタンドアロン）モード検出
+    const isPWA = window.matchMedia('(display-mode: standalone)').matches
+        || window.navigator.standalone === true;
+
+    // PWAモードでは5枚引きボタンを非表示
+    if (isPWA) {
+        const fiveCardBtn = document.querySelector('.mode-btn[data-mode="five-card"]');
+        if (fiveCardBtn) fiveCardBtn.style.display = 'none';
+    }
+
     // 状態
     let currentMode = '';
     let requiredCards = 0;
@@ -401,6 +411,22 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // AdSense広告枠を生成
+    function createAdSlot() {
+        const div = document.createElement('div');
+        div.className = 'ad-slot';
+        div.innerHTML = `
+            <ins class="adsbygoogle"
+                 style="display:block"
+                 data-ad-client="ca-pub-1896365115623823"
+                 data-ad-slot="auto"
+                 data-ad-format="auto"
+                 data-full-width-responsive="true"></ins>
+        `;
+        try { (window.adsbygoogle = window.adsbygoogle || []).push({}); } catch(e) {}
+        return div;
+    }
+
     // 1枚引き結果
     function renderOneCardResult(aiData) {
         readingSection.innerHTML = '';
@@ -432,6 +458,9 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             luckyItems.innerHTML = html;
         }
+
+        // 広告枠: 結果下部に1枠
+        adviceBox.after(createAdSlot());
     }
 
     // 3枚引き結果
@@ -490,6 +519,10 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
 
         luckyItems.innerHTML = '';
+
+        // 広告枠: 鑑定結果の後に1枠 + アドバイス後に1枠
+        readingSection.after(createAdSlot());
+        adviceBox.after(createAdSlot());
     }
 
     // Stripe Checkout開始（3枚引き総合鑑定）

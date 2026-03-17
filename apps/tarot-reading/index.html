@@ -26,9 +26,14 @@
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:image" content="https://solodev-lab.github.io/ai-omoshiro-tools/apps/tarot-reading/ogp.png">
 
+    <!-- PWA -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0a0a1a">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=20260316">
+    <link rel="stylesheet" href="style.css?v=20260317">
 </head>
 <body>
     <div class="container">
@@ -167,7 +172,7 @@
         </main>
 
         <footer>
-            <p>※ エンタメ目的の占いです。重要な判断にはご自身の意思を優先してください。</p>
+            <p>※ 占い結果を保証することはできません。重要な判断にはご自身の意思を優先してください。</p>
             <p class="copyright">© 2026 SoloDev Lab</p>
             <div class="footer-nav" style="margin-top:12px;font-size:0.75rem;">
                 <a href="../../index.html" style="color:#888;text-decoration:none;margin:0 6px;">トップ</a>
@@ -181,5 +186,10 @@
 
     <script src="cards.js?v=20260316"></script>
     <script src="app.js?v=20260317"></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('./sw.js');
+        }
+    </script>
 </body>
 </html>
