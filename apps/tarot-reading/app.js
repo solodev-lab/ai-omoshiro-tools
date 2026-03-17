@@ -32,10 +32,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const isPWA = window.matchMedia('(display-mode: standalone)').matches
         || window.navigator.standalone === true;
 
-    // PWAモードでは5枚引きボタンを非表示
+    // PWAモードでは5枚引きボタン・ホームボタンを非表示
     if (isPWA) {
         const fiveCardBtn = document.querySelector('.mode-btn[data-mode="five-card"]');
         if (fiveCardBtn) fiveCardBtn.style.display = 'none';
+        const homeBtn = document.querySelector('.home-btn');
+        if (homeBtn) homeBtn.style.display = 'none';
     }
 
     // 状態
@@ -486,31 +488,30 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
-        // === 3枚引き課金機能 START (コメントアウトで無効化) ===
-        // 総合鑑定は課金で解放（overallはサーバーから除去済み）
-        overallReading.innerHTML = `
-            <div class="overall-title">✨ 総合メッセージ</div>
-            <div class="overall-locked" style="text-align:center;padding:24px 16px;background:rgba(155,89,182,0.08);border:1px dashed rgba(155,89,182,0.3);border-radius:12px;margin:8px 0;">
-                <p style="color:#c89cf5;font-size:1rem;margin-bottom:12px;">3枚のカードを通した詳細な総合鑑定をお届けします</p>
-                <button id="unlockOverallBtn" style="background:linear-gradient(135deg,#9b59b6,#8e44ad);color:#fff;border:none;padding:14px 32px;border-radius:8px;font-size:1rem;cursor:pointer;font-weight:bold;transition:transform 0.2s,box-shadow 0.2s;box-shadow:0 4px 15px rgba(155,89,182,0.3);"
-                    onmouseover="this.style.transform='scale(1.05)';this.style.boxShadow='0 6px 20px rgba(155,89,182,0.4)'"
-                    onmouseout="this.style.transform='scale(1)';this.style.boxShadow='0 4px 15px rgba(155,89,182,0.3)'">
-                    🔮 総合鑑定を見る：100円
-                </button>
-            </div>
-        `;
-        document.getElementById('unlockOverallBtn').addEventListener('click', () => {
-            startThreeCardCheckout(aiData);
-        });
-        // === 3枚引き課金機能 END ===
-
-        // === 3枚引き無料版 START (課金機能ON時はコメントアウト) ===
-        // const overall = aiData?.overall || getStaticOverall();
-        // overallReading.innerHTML = `
-        //     <div class="overall-title">✨ 総合メッセージ</div>
-        //     <div class="overall-text">${overall}</div>
-        // `;
-        // === 3枚引き無料版 END ===
+        // PWAモード: 無料で総合メッセージ表示 / Web版: 100円課金
+        if (isPWA) {
+            const overall = aiData?.overall || getStaticOverall();
+            overallReading.innerHTML = `
+                <div class="overall-title">✨ 総合メッセージ</div>
+                <div class="overall-text">${overall}</div>
+            `;
+        } else {
+            // === 3枚引き課金機能（Web版のみ） ===
+            overallReading.innerHTML = `
+                <div class="overall-title">✨ 総合メッセージ</div>
+                <div class="overall-locked" style="text-align:center;padding:24px 16px;background:rgba(155,89,182,0.08);border:1px dashed rgba(155,89,182,0.3);border-radius:12px;margin:8px 0;">
+                    <p style="color:#c89cf5;font-size:1rem;margin-bottom:12px;">3枚のカードを通した詳細な総合鑑定をお届けします</p>
+                    <button id="unlockOverallBtn" style="background:linear-gradient(135deg,#9b59b6,#8e44ad);color:#fff;border:none;padding:14px 32px;border-radius:8px;font-size:1rem;cursor:pointer;font-weight:bold;transition:transform 0.2s,box-shadow 0.2s;box-shadow:0 4px 15px rgba(155,89,182,0.3);"
+                        onmouseover="this.style.transform='scale(1.05)';this.style.boxShadow='0 6px 20px rgba(155,89,182,0.4)'"
+                        onmouseout="this.style.transform='scale(1)';this.style.boxShadow='0 4px 15px rgba(155,89,182,0.3)'">
+                        🔮 総合鑑定を見る：100円
+                    </button>
+                </div>
+            `;
+            document.getElementById('unlockOverallBtn').addEventListener('click', () => {
+                startThreeCardCheckout(aiData);
+            });
+        }
 
         const advice = aiData?.advice || getStaticAdvice();
         adviceBox.innerHTML = `
