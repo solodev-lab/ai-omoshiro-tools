@@ -670,9 +670,33 @@ document.addEventListener('DOMContentLoaded', () => {
         window.open(`https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(text)}`, '_blank');
     });
 
-    copyBtn.addEventListener('click', () => {
-        const text = getShareText() + window.location.href;
-        navigator.clipboard.writeText(text).then(() => showToast('コピーしました！'));
+    copyBtn.addEventListener('click', async () => {
+        try {
+            copyBtn.textContent = '📸 保存中...';
+            copyBtn.disabled = true;
+            const resultCard = document.querySelector('.result-card');
+            const canvas = await html2canvas(resultCard, {
+                backgroundColor: '#0a0a1a',
+                scale: 2,
+                useCORS: true
+            });
+            canvas.toBlob(blob => {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'tarot-result.png';
+                a.click();
+                URL.revokeObjectURL(url);
+                showToast('画像を保存しました！');
+                copyBtn.textContent = '📸 保存';
+                copyBtn.disabled = false;
+            }, 'image/png');
+        } catch (e) {
+            console.error('Screenshot failed:', e);
+            showToast('保存に失敗しました');
+            copyBtn.textContent = '📸 保存';
+            copyBtn.disabled = false;
+        }
     });
 
     // もう一度占う
