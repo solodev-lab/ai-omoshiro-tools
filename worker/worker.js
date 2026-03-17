@@ -601,12 +601,8 @@ export default {
                 });
             }
 
-            // === 3枚引き課金機能 START (コメントアウトで無効化) ===
-            // 3枚引きの場合、overallを除去（課金後にサーバーサイドで生成するため）
-            if (app === 'tarot-reading' && params.mode === 'three-card') {
-                delete parsed.overall;
-            }
-            // === 3枚引き課金機能 END ===
+            // 3枚引き課金制御はクライアント側で実施（Web版のみ100円、PWA版は無料）
+            // サーバーはoverallを含めて返す
 
             return new Response(JSON.stringify({ success: true, data: parsed }), {
                 headers: { 'Content-Type': 'application/json', ...corsHeaders(origin) }

@@ -547,8 +547,8 @@ h1 {
 
 /* 広告枠 */
 .ad-slot {
-    margin: 20px 0;
-    min-height: 100px;
+    margin: 12px 0;
+    min-height: 50px;
     text-align: center;
     overflow: hidden;
 }

@@ -375,6 +375,12 @@ document.addEventListener('DOMContentLoaded', () => {
         // カード表示
         renderDrawnCards();
 
+        // カード一覧の下に広告枠
+        const existingAdAfterCards = drawnCards.nextElementSibling;
+        if (!existingAdAfterCards || !existingAdAfterCards.classList.contains('ad-slot')) {
+            drawnCards.after(createAdSlot());
+        }
+
         // AI鑑定結果表示
         if (currentMode === 'one-card') {
             renderOneCardResult(aiData);
@@ -658,7 +664,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     shareLINEBtn.addEventListener('click', () => {
         const text = getShareText();
-        window.open(`https://line.me/R/msg/text/${encodeURIComponent(text + '\n' + window.location.href)}`, '_blank');
+        const shareUrl = window.location.href;
+        window.open(`https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(text)}`, '_blank');
     });
 
     copyBtn.addEventListener('click', () => {
