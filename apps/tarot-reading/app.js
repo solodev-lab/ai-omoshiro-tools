@@ -32,12 +32,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const isPWA = window.matchMedia('(display-mode: standalone)').matches
         || window.navigator.standalone === true;
 
-    // PWAモードでは5枚引きボタン・ホームボタンを非表示
+    // PWAモードでは不要な要素を非表示
     if (isPWA) {
         const fiveCardBtn = document.querySelector('.mode-btn[data-mode="five-card"]');
         if (fiveCardBtn) fiveCardBtn.style.display = 'none';
         const homeBtn = document.querySelector('.home-btn');
         if (homeBtn) homeBtn.style.display = 'none';
+        const footerNav = document.querySelector('.footer-nav');
+        if (footerNav) footerNav.style.display = 'none';
     }
 
     // 状態
