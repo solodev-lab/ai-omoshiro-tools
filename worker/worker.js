@@ -666,7 +666,7 @@ async function handleStripeCreateCheckout(request, env, origin) {
             'five-card': {
                 name: 'AIタロット占い 5枚引き（ケルト十字簡易版）',
                 amount: '300',
-                successPage: 'success.html'
+                successPage: 'index.html'
             },
             'three-card': {
                 name: 'AIタロット占い 3枚引き 総合鑑定',

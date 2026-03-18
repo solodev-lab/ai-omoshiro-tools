@@ -53,7 +53,23 @@ document.addEventListener('DOMContentLoaded', () => {
         const params = new URLSearchParams(window.location.search);
         const sessionId = params.get('session_id');
         const mode = params.get('mode');
-        if (!sessionId || mode !== 'three-card') return;
+        if (!sessionId) return;
+
+        // 5枚引き: 決済後にシャッフル画面を表示
+        if (mode === 'five-card') {
+            window.history.replaceState({}, '', window.location.pathname);
+            currentMode = 'five-card';
+            requiredCards = 5;
+            selectedCards = [];
+
+            // session_idをグローバルに保持（verify-session用）
+            window._stripeSessionId = sessionId;
+
+            startShuffle();
+            return;
+        }
+
+        if (mode !== 'three-card') return;
 
         // localStorageからカード・鑑定データを復元
         const savedRaw = localStorage.getItem('tarot_three_card_data');
@@ -164,11 +180,10 @@ document.addEventListener('DOMContentLoaded', () => {
         btn.addEventListener('click', () => {
             currentMode = btn.dataset.mode;
 
-            // TODO: 本番では5枚引きはStripe決済後に開始
-            // if (currentMode === 'five-card') {
-            //     startStripeCheckout();
-            //     return;
-            // }
+            if (currentMode === 'five-card' && !isPWA) {
+                startStripeCheckout();
+                return;
+            }
 
             requiredCards = currentMode === 'one-card' ? 1 : (currentMode === 'three-card' ? 3 : 5);
             selectedCards = [];
@@ -441,13 +456,32 @@ document.addEventListener('DOMContentLoaded', () => {
     async function callAI() {
         try {
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 20000);
+            const timeoutId = setTimeout(() => controller.abort(), 30000);
 
             const cardsPayload = selectedCards.map(c => ({
                 name: c.name,
                 isReversed: c.isReversed,
                 meaning: c.meaning
             }));
+
+            // 5枚引き決済済み: verify-sessionで鑑定生成
+            if (currentMode === 'five-card' && window._stripeSessionId) {
+                const response = await fetch(API_URL + '/api/stripe/verify-session', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        session_id: window._stripeSessionId,
+                        cards: cardsPayload
+                    }),
+                    signal: controller.signal
+                });
+                clearTimeout(timeoutId);
+                if (!response.ok) throw new Error('Verification failed');
+                const json = await response.json();
+                if (!json.success) throw new Error('Invalid response');
+                window._stripeSessionId = null; // 使用済み
+                return json.data;
+            }
 
             const response = await fetch(API_URL + '/api/generate', {
                 method: 'POST',
