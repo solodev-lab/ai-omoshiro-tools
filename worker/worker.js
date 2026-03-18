@@ -390,6 +390,7 @@ scoreは40〜99の整数`,
     'tarot-reading': {
         system: `あなたはタロット占いの専門家です。引かれたカードの組み合わせから、深い洞察に満ちた鑑定を行ってください。
 カードの意味を尊重しつつ、相談者に寄り添った温かく具体的なメッセージを生成してください。
+相談内容が提供された場合は、その文脈に合わせた具体的な鑑定を行ってください。
 
 ■ 1枚引き(one-card)の場合、以下のJSON形式で返答:
 {
@@ -421,13 +422,24 @@ scoreは40〜99の整数`,
   "lucky_item": "ラッキーアイテム"
 }
 
+■ 2者択一(two-choice)の場合:
+{
+  "current": "現在の状況（2文）",
+  "choice_a": "選択肢Aを選んだ場合の展望（3文）",
+  "choice_b": "選択肢Bを選んだ場合の展望（3文）",
+  "recommendation": "どちらが有利か、その理由（2文）",
+  "overall": "総合メッセージ（3〜4文）",
+  "advice": "アドバイス（1文）"
+}
+
 必ず指定されたJSON形式のみで返答してください（他のテキストは不要）。`,
         buildPrompt: (params) => {
             const mode = params.mode || 'one-card';
             const cards = params.cards || [];
             const positionNames = {
                 'three-card': ['過去', '現在', '未来'],
-                'five-card': ['現在の状況', '障害・課題', '過去の影響', '未来の可能性', '最終結論']
+                'five-card': ['現在の状況', '障害・課題', '過去の影響', '未来の可能性', '最終結論'],
+                'two-choice': ['現在', 'A 近未来', 'B 近未来', 'A 最終結果', 'B 最終結果', 'アドバイス']
             };
             const positions = positionNames[mode] || [];
             const cardDesc = cards.map((c, i) => {
@@ -439,13 +451,32 @@ scoreは40〜99の整数`,
             const modeMap = {
                 'one-card': '1枚引き（ワンオラクル）',
                 'three-card': '3枚引き（過去・現在・未来）',
-                'five-card': '5枚引き（ケルト十字簡易版：現状・障害・過去・未来・結論）'
+                'five-card': '5枚引き（ケルト十字簡易版：現状・障害・過去・未来・結論）',
+                'two-choice': '2者択一（6枚V字配置：現在・A近未来・B近未来・A最終結果・B最終結果・アドバイス）'
             };
 
-            return `占いモード: ${modeMap[mode] || mode}
-引かれたカード:
-${cardDesc}
-条件: カードの意味と位置関係を深く読み解き、${mode}形式のJSONで鑑定結果を生成してください。毎回異なる表現で、具体的で心に響く内容にしてください。`;
+            let prompt = `占いモード: ${modeMap[mode] || mode}\n`;
+
+            // 相談内容
+            const consultation = params.consultation;
+            if (consultation && consultation.category) {
+                prompt += `相談内容: ${consultation.category}`;
+                if (consultation.situation) prompt += ` > ${consultation.situation}`;
+                if (consultation.question) prompt += ` > ${consultation.question}`;
+                prompt += '\n';
+                if (consultation.note) prompt += `補足: ${consultation.note}\n`;
+            }
+
+            // 2者択一の選択肢
+            if (mode === 'two-choice') {
+                if (params.choiceA) prompt += `選択肢A: ${params.choiceA}\n`;
+                if (params.choiceB) prompt += `選択肢B: ${params.choiceB}\n`;
+            }
+
+            prompt += `引かれたカード:\n${cardDesc}\n`;
+            prompt += `条件: カードの意味と位置関係を深く読み解き、${mode}形式のJSONで鑑定結果を生成してください。毎回異なる表現で、具体的で心に響く内容にしてください。`;
+
+            return prompt;
         }
     },
     'business-email': {
@@ -640,7 +671,7 @@ async function handleStripeCreateCheckout(request, env, origin) {
             'three-card': {
                 name: 'AIタロット占い 3枚引き 総合鑑定',
                 amount: '100',
-                successPage: 'success_three.html'
+                successPage: 'index.html'
             }
         };
 
@@ -653,7 +684,7 @@ async function handleStripeCreateCheckout(request, env, origin) {
 
         const isLocal = origin.startsWith('http://localhost') || origin.startsWith('http://127.0.0.1');
         const baseUrl = isLocal ? `${origin}/apps/tarot-reading` : 'https://solodev-lab.com/apps/tarot-reading';
-        const successUrl = `${baseUrl}/${config.successPage}?session_id={CHECKOUT_SESSION_ID}`;
+        const successUrl = `${baseUrl}/${config.successPage}?session_id={CHECKOUT_SESSION_ID}&mode=${mode}`;
         const cancelUrl = `${baseUrl}/`;
 
         const stripeResponse = await fetch('https://api.stripe.com/v1/checkout/sessions', {
@@ -677,7 +708,7 @@ async function handleStripeCreateCheckout(request, env, origin) {
         if (!stripeResponse.ok) {
             const errText = await stripeResponse.text();
             console.error('Stripe error:', errText);
-            return new Response(JSON.stringify({ error: 'Checkout creation failed' }), {
+            return new Response(JSON.stringify({ error: 'Checkout creation failed', detail: errText }), {
                 status: 502, headers: { 'Content-Type': 'application/json', ...corsHeaders(origin) }
             });
         }

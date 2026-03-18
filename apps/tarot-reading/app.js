@@ -48,6 +48,117 @@ document.addEventListener('DOMContentLoaded', () => {
     let selectedCards = [];
     let shuffledDeck = [];
 
+    // ── Stripe決済後の復帰処理 ──
+    (function handleStripeReturn() {
+        const params = new URLSearchParams(window.location.search);
+        const sessionId = params.get('session_id');
+        const mode = params.get('mode');
+        if (!sessionId || mode !== 'three-card') return;
+
+        // localStorageからカード・鑑定データを復元
+        const savedRaw = localStorage.getItem('tarot_three_card_data');
+        if (!savedRaw) return; // データなければ通常フローへ
+
+        let savedData;
+        try { savedData = JSON.parse(savedRaw); } catch (e) { return; }
+
+        // 1時間以上前のデータは無効
+        if (Date.now() - savedData.timestamp > 60 * 60 * 1000) {
+            localStorage.removeItem('tarot_three_card_data');
+            return;
+        }
+
+        // URLパラメータをクリア（リロード時の二重処理防止）
+        window.history.replaceState({}, '', window.location.pathname);
+
+        // 状態を復元
+        currentMode = 'three-card';
+        selectedCards = savedData.cards;
+        const restoredAiData = savedData.aiData;
+
+        // 結果画面を直接表示
+        modeSection.style.display = 'none';
+        analyzingSection.style.display = 'none';
+        resultSection.style.display = 'block';
+
+        resultModeLabel.textContent = '🎴 3枚引き（過去・現在・未来）';
+        resultTitle.textContent = 'タロット鑑定結果';
+
+        // カード表示
+        renderDrawnCards();
+
+        // 過去・現在・未来の解釈（localStorage復元データ）
+        readingSection.innerHTML = '';
+        const blocks = [
+            { title: '⏪ 過去', text: restoredAiData.past },
+            { title: '🔵 現在', text: restoredAiData.present },
+            { title: '⏩ 未来', text: restoredAiData.future }
+        ];
+        blocks.forEach(b => {
+            if (b.text) {
+                readingSection.innerHTML += `
+                    <div class="reading-block">
+                        <div class="block-title">${b.title}</div>
+                        <div class="block-text">${b.text}</div>
+                    </div>
+                `;
+            }
+        });
+
+        // アドバイス（localStorage復元データ）
+        const advice = restoredAiData.advice || '';
+        if (advice) {
+            adviceBox.innerHTML = `
+                <div class="advice-label">💡 アドバイス</div>
+                <div class="advice-text">${advice}</div>
+            `;
+        }
+        luckyItems.innerHTML = '';
+
+        // 総合鑑定: ローディング表示 → API取得
+        overallReading.innerHTML = `
+            <div class="overall-title">✨ 総合鑑定</div>
+            <div style="text-align:center;padding:20px;color:#c89cf5;">
+                <div style="font-size:1.5rem;margin-bottom:8px;">🔮</div>
+                <div id="overallLoadingText">総合鑑定を生成中...</div>
+            </div>
+        `;
+
+        const cardsPayload = selectedCards.map(c => ({
+            name: c.name,
+            isReversed: c.isReversed,
+            meaning: c.meaning
+        }));
+
+        fetch(API_URL + '/api/stripe/verify-session', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ session_id: sessionId, cards: cardsPayload, mode: 'three-card' })
+        })
+        .then(r => { if (!r.ok) throw new Error('Verification failed'); return r.json(); })
+        .then(json => {
+            if (!json.success) throw new Error('Invalid response');
+            const overall = json.data?.overall || '総合鑑定の取得に失敗しました。';
+            overallReading.innerHTML = `
+                <div class="overall-title">✨ 総合鑑定</div>
+                <div class="overall-text">${overall}</div>
+            `;
+            // localStorageクリーンアップ
+            localStorage.removeItem('tarot_three_card_data');
+        })
+        .catch(err => {
+            console.error('Verify error:', err);
+            overallReading.innerHTML = `
+                <div class="overall-title">✨ 総合鑑定</div>
+                <div style="text-align:center;padding:16px;color:#e74c3c;">
+                    総合鑑定の生成に失敗しました。お手数ですが、お問い合わせください。
+                </div>
+            `;
+        });
+
+        return; // 通常フローには進まない（ただしイベントリスナーは登録される）
+    })();
+
     // モード選択
     document.querySelectorAll('.mode-btn').forEach(btn => {
         btn.addEventListener('click', () => {
