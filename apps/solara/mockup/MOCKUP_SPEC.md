@@ -21,6 +21,12 @@
 - maxBounds: 緯度[-85, 85], 経度は中心±252
 - ズームコントロール・アトリビューション非表示
 
+### 現在地表示
+- GPS取得: `map.locate({ watch: false, setView: false })` — 1回だけ取得（電池消費なし）
+- 青い点で表示: `L.circleMarker` 半径6, color: '#4A90D9', fillOpacity: 0.8
+- 地図の中心は動かさない（基準地とは別）
+- オプション: `watch: true` で移動追跡（デフォルトOFF、トグルで切替）
+
 ### Canvas レイヤー（地図上にオーバーレイ）
 - `mapCanvas`: 薄い暗いグラデーションオーバーレイのみ（最小限）
 - `particleCanvas`: パーティクル・メテオ・スパークル描画用
