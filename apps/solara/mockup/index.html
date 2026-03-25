@@ -757,6 +757,7 @@ let seedMarker = null;
 let seedMarkerPulse = 0;
 let breathePhase = 0;
 let impactRings = [];
+let animLoopRunning = false;
 
 // ===== Init =====
 function init() {
@@ -804,8 +805,10 @@ function init() {
     touchZoom: true,
     minZoom: 2,
     maxZoom: 18,
-    worldCopyJump: true,
-  }).setView(mapCenter, 12);
+    worldCopyJump: false,
+    maxBounds: [[-85, mapCenter[1] - 252], [85, mapCenter[1] + 252]],
+    maxBoundsViscosity: 0.8,
+  }).setView(mapCenter, 16);
 
   // Dark base + brighter labels/roads for readability
   L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
@@ -851,127 +854,54 @@ function init() {
     window.baseOverlays.push(c);
     return c;
   }
-  makeGeoCircle(compassRadiusKm, '#ffffff', 1, null);
-  makeGeoCircle(compassRadiusKm * 0.5, '#ffffff', 0.5, '3 6');
+  // Compass circles removed (unnecessary with extended direction lines)
 
-  // Direction lines (8 directions)
+  // Direction lines (8 directions, great circle / geodesic)
+  const dirCenter = turf.point([lng, lat]);
   [0, 45, 90, 135, 180, 225, 270, 315].forEach(deg => {
-    const end = geoPoint(deg, compassRadiusKm * 1.2);
-    const line = L.polyline([mapCenter, end], {
-      color: '#6B5CE7', weight: 0.5, opacity: 0.2
+    const pts = [];
+    for (let d = 0; d <= 20000; d += 1000) {
+      const pt = turf.destination(dirCenter, d, deg, { units: 'kilometers' });
+      pts.push(L.latLng(pt.geometry.coordinates[1], normalizeLng(pt.geometry.coordinates[0], lng)));
+    }
+    const line = L.polyline(pts, {
+      color: '#C9A84C', weight: 1, opacity: 0.35, dashArray: '4 8'
     }).addTo(map);
     window.baseOverlays.push(line);
   });
 
-  // Direction labels as markers
-  const labelOffset = compassRadiusKm * 1.3;
-  const labels = [
+  // Direction labels (fixed position near center)
+  // Direction labels at multiple distances
+  const labelDistances = [2, 150, 1000];
+  const dirDefs = [
     { text: 'N', angle: 0 }, { text: 'NE', angle: 45 },
     { text: 'E', angle: 90 }, { text: 'SE', angle: 135 },
     { text: 'S', angle: 180 }, { text: 'SW', angle: 225 },
     { text: 'W', angle: 270 }, { text: 'NW', angle: 315 },
   ];
-  labels.forEach(l => {
-    const isCardinal = l.text.length === 1;
-    const pos = geoPoint(l.angle, labelOffset);
-    const marker = L.marker(pos, {
-      icon: L.divIcon({
-        className: '',
-        html: '<div style="color:rgba(255,255,255,' + (isCardinal ? '0.3' : '0.15') +
-              ');font-size:' + (isCardinal ? '10' : '8') + 'px;text-align:center;font-family:sans-serif;">' +
-              l.text + '</div>',
-        iconSize: [20, 14],
-        iconAnchor: [10, 7],
-      }),
-      interactive: false,
-    }).addTo(map);
-    window.baseOverlays.push(marker);
-  });
-
-  // Layer 1 sectors (subtle purple, geo-based)
-  const l1Defs = [
-    { start: -22.5, end: 67.5, opacity: 0.08 },
-    { start: 157.5, end: 247.5, opacity: 0.05 },
-    { start: 292.5, end: 337.5, opacity: 0.06 },
-  ];
-  l1Defs.forEach(s => {
-    const pts = [L.latLng(lat, lng)];
-    for (let a = s.start; a <= s.end; a += 2) {
-      pts.push(geoPoint(a, compassRadiusKm));
-    }
-    pts.push(geoPoint(s.end, compassRadiusKm));
-    const poly = L.polygon(pts, {
-      color: '#6B5CE7', fillColor: '#6B5CE7',
-      fillOpacity: s.opacity, weight: 0, opacity: 0,
-    }).addTo(map);
-    window.baseOverlays.push(poly);
-  });
-
-  // Planet lines (great circle, global scale)
-  const planetLinesDef = [
-    { angle: 35, color: '#6B5CE7', opacity: 0.4, symbol: '☽' },
-    { angle: 260, color: '#6B5CE7', opacity: 0.3, symbol: '♆' },
-    { angle: 150, color: '#6B5CE7', opacity: 0.25, symbol: '♇' },
-  ];
-  const planetLineDistKm = 20000;
-  const planetCenter = turf.point([lng, lat]);
-  window.planetSymbolMarkers = [];
-  planetLinesDef.forEach(pl => {
-    // Great circle line points
-    const linePoints = [];
-    for (let d = 0; d <= planetLineDistKm; d += planetLineDistKm / 60) {
-      const pt = turf.destination(planetCenter, d, pl.angle, { units: 'kilometers' });
-      linePoints.push(L.latLng(pt.geometry.coordinates[1], pt.geometry.coordinates[0]));
-    }
-    const line = L.polyline(linePoints, {
-      color: pl.color, weight: 1.5, opacity: pl.opacity, dashArray: '4 6',
-    }).addTo(map);
-    window.baseOverlays.push(line);
-
-    // Planet symbol marker (will be repositioned dynamically)
-    const symMarker = L.marker(mapCenter, {
-      icon: L.divIcon({
-        className: '',
-        html: '<div style="width:28px;height:28px;border-radius:50%;background:rgba(201,168,76,0.9);display:flex;align-items:center;justify-content:center;font-size:15px;color:#1a0a30;text-shadow:none;font-weight:bold;box-shadow:0 0 10px rgba(201,168,76,0.5),0 2px 4px rgba(0,0,0,0.4);">' + pl.symbol + '</div>',
-        iconSize: [28, 28],
-        iconAnchor: [14, 14],
-      }),
-      interactive: false,
-    }).addTo(map);
-    window.baseOverlays.push(symMarker);
-    window.planetSymbolMarkers.push({ marker: symMarker, angle: pl.angle });
-  });
-
-  // Reposition planet symbols to viewport edge on every map move
-  function updatePlanetSymbolPositions() {
-    if (!window.planetSymbolMarkers) return;
-    const bounds = map.getBounds();
-    const mapSize = map.getSize();
-    const centerPx = map.latLngToContainerPoint(mapCenter);
-
-    window.planetSymbolMarkers.forEach(ps => {
-      const rad = (ps.angle - 90) * Math.PI / 180;
-      // Cast ray from center toward angle, find where it hits viewport edge
-      const dx = Math.cos(rad);
-      const dy = Math.sin(rad);
-
-      // Distance to each edge from center pixel
-      let t = Infinity;
-      if (dx > 0) t = Math.min(t, (mapSize.x - 30 - centerPx.x) / dx);
-      if (dx < 0) t = Math.min(t, (30 - centerPx.x) / dx);
-      if (dy > 0) t = Math.min(t, (mapSize.y - 30 - centerPx.y) / dy);
-      if (dy < 0) t = Math.min(t, (30 - centerPx.y) / dy);
-
-      // Clamp and convert back to latlng
-      t = Math.max(t * 0.85, 20); // 85% toward edge, minimum 20px from center
-      const edgePx = L.point(centerPx.x + dx * t, centerPx.y + dy * t);
-      const edgeLatLng = map.containerPointToLatLng(edgePx);
-      ps.marker.setLatLng(edgeLatLng);
+  labelDistances.forEach(dist => {
+    dirDefs.forEach(l => {
+      const isCardinal = l.text.length === 1;
+      const pt = turf.destination(dirCenter, dist, l.angle, { units: 'kilometers' });
+      const pos = [pt.geometry.coordinates[1], normalizeLng(pt.geometry.coordinates[0], lng)];
+      const marker = L.marker(pos, {
+        icon: L.divIcon({
+          className: '',
+          html: '<div style="color:rgba(255,255,255,' + (isCardinal ? '0.5' : '0.3') +
+                ');font-size:' + (isCardinal ? '11' : '9') + 'px;text-align:center;font-family:sans-serif;font-weight:bold;">' +
+                l.text + '</div>',
+          iconSize: [20, 14],
+          iconAnchor: [10, 7],
+        }),
+        interactive: false,
+      }).addTo(map);
+      window.baseOverlays.push(marker);
     });
-  }
+  });
 
-  map.on('move zoom moveend zoomend', updatePlanetSymbolPositions);
-  updatePlanetSymbolPositions();
+  // Layer 1 sectors removed (unnecessary)
+
+  // Planet lines and markers are added via addBoostedPlanetLines() after card reveal
 
   // Center marker (user location)
   const centerMarker = L.circleMarker(mapCenter, {
@@ -981,7 +911,7 @@ function init() {
   window.baseOverlays.push(centerMarker);
 
   drawMap(false);
-  animate();
+  startAnimLoop();
 }
 
 // ===== Draw dark map (fake astrocartography) =====
@@ -1306,6 +1236,7 @@ function spawnImpactParticles(x, y, count) {
       color, size, life, 0.025
     ));
   }
+  startAnimLoop();
 }
 
 function spawnTrailParticle(x, y) {
@@ -1350,6 +1281,7 @@ function spawnConvergingParticles(targetX, targetY, count) {
     p.targetY = targetY;
     particles.push(p);
   }
+  startAnimLoop();
 }
 
 // ===== Meteor trail (light beam from top) =====
@@ -1365,6 +1297,7 @@ function launchMeteor(targetX, targetY) {
     speed: 0.025,
     trail: [],
   };
+  startAnimLoop();
 }
 
 function updateMeteor() {
@@ -1433,6 +1366,7 @@ function onMeteorImpact(x, y) {
 
   // Impact rings + converging particles
   impactRings.push({ x, y, progress: 0 });
+  startAnimLoop();
 
   setTimeout(() => {
     spawnConvergingParticles(centerX, centerY, 60);
@@ -1450,6 +1384,9 @@ function onMeteorImpact(x, y) {
   setTimeout(() => {
     sectorAnimating = true;
     sectorAnimProgress = 0;
+    startAnimLoop();
+    // 10秒後にキラキラ停止（電池節約）
+    setTimeout(() => { sectorAnimating = false; }, 10000);
     createGeoSectors();
     addBoostedPlanetLines();
 
@@ -1484,7 +1421,9 @@ function drawGeoSparkles(ctx) {
 
   const lat = window.mapCenter[0];
   const lng = window.mapCenter[1];
-  const radiusKm = 2000; // sparkles within 2000km range
+  // Sparkle radius adapts to zoom level (visible on screen)
+  const zoom = window.leafletMap.getZoom();
+  const radiusKm = 40075 * Math.cos(lat * Math.PI / 180) / Math.pow(2, zoom) * 0.3;
 
   const sparkleColors = [
     [255, 250, 220],  // warm white
@@ -1494,10 +1433,10 @@ function drawGeoSparkles(ctx) {
     [255, 240, 160],  // light gold
   ];
 
-  // Only sparkle in blessed sectors
+  // Sparkle in East/West blessed sectors (matching actual sector angles)
   const blessedDefs = [
-    { start: 22.5, end: 67.5 },   // NE
-    { start: 247.5, end: 292.5 },  // W
+    { start: 85, end: 95 },    // East
+    { start: 265, end: 275 },  // West
   ];
 
   blessedDefs.forEach((sector, si) => {
@@ -1560,34 +1499,88 @@ function addBoostedPlanetLines() {
   const boostDistKm = 20000;
   const center = turf.point([lng, lat]);
 
-  // Gold boosted planet lines (great circle)
+  // Planet lines (great circle, 経度正規化済み)
   const lines = [
     { angle: 35, opacity: 0.7, symbol: '☽' },
     { angle: 260, opacity: 0.5, symbol: '♆' },
+    { angle: 150, opacity: 0.4, symbol: '♇' },
   ];
+  window.planetSymbolMarkers = [];
   lines.forEach(pl => {
     const linePoints = [];
-    for (let d = 0; d <= boostDistKm; d += boostDistKm / 60) {
+    for (let d = 0; d <= boostDistKm; d += boostDistKm / 20) {
       const pt = turf.destination(center, d, pl.angle, { units: 'kilometers' });
-      linePoints.push(L.latLng(pt.geometry.coordinates[1], pt.geometry.coordinates[0]));
+      linePoints.push(L.latLng(pt.geometry.coordinates[1], normalizeLng(pt.geometry.coordinates[0], lng)));
     }
     const line = L.polyline(linePoints, {
       color: '#C9A84C', weight: 2, opacity: pl.opacity, dashArray: '4 6',
     }).addTo(window.leafletMap);
     window.boostedLines.push(line);
 
-    const symPt = turf.destination(center, 2, pl.angle, { units: 'kilometers' });
-    const symMarker = L.marker([symPt.geometry.coordinates[1], symPt.geometry.coordinates[0]], {
+    // Planet symbol marker (viewport edge tracking)
+    const symMarker = L.marker(window.mapCenter, {
       icon: L.divIcon({
         className: '',
-        html: '<div style="color:#C9A84C;font-size:13px;text-align:center;text-shadow:0 0 8px rgba(201,168,76,0.6);">' + pl.symbol + '</div>',
-        iconSize: [18, 18],
-        iconAnchor: [9, 9],
+        html: '<div style="width:28px;height:28px;border-radius:50%;background:rgba(201,168,76,0.9);display:flex;align-items:center;justify-content:center;font-size:15px;color:#1a0a30;text-shadow:none;font-weight:bold;box-shadow:0 0 10px rgba(201,168,76,0.5),0 2px 4px rgba(0,0,0,0.4);">' + pl.symbol + '</div>',
+        iconSize: [28, 28],
+        iconAnchor: [14, 14],
       }),
       interactive: false,
     }).addTo(window.leafletMap);
     window.boostedLines.push(symMarker);
+    window.planetSymbolMarkers.push({ marker: symMarker, angle: pl.angle, lineLatLngs: linePoints });
   });
+
+  // Reposition planet symbols to viewport edge (segment-crossing detection)
+  function updatePlanetSymbolPositions() {
+    if (!window.planetSymbolMarkers) return;
+    const map = window.leafletMap;
+    const mapSize = map.getSize();
+    const m = 30;
+    const xmin = m, ymin = m, xmax = mapSize.x - m, ymax = mapSize.y - m;
+    window.planetSymbolMarkers.forEach(ps => {
+      const pts = ps.lineLatLngs;
+      let bestExitPx = null;
+      let lastPx = null;
+      let anyInside = false;
+      for (let i = 0; i < pts.length; i++) {
+        const px = map.latLngToContainerPoint(pts[i]);
+        if (px.x >= xmin && px.x <= xmax && px.y >= ymin && px.y <= ymax) anyInside = true;
+        if (i > 0) {
+          const sdx = px.x - lastPx.x;
+          const sdy = px.y - lastPx.y;
+          let t0 = 0, t1 = 1;
+          const sp = [-sdx, sdx, -sdy, sdy];
+          const sq = [lastPx.x - xmin, xmax - lastPx.x, lastPx.y - ymin, ymax - lastPx.y];
+          let valid = true;
+          for (let j = 0; j < 4; j++) {
+            if (sp[j] === 0) {
+              if (sq[j] < 0) { valid = false; break; }
+            } else {
+              const t = sq[j] / sp[j];
+              if (sp[j] < 0) t0 = Math.max(t0, t);
+              else t1 = Math.min(t1, t);
+            }
+          }
+          if (valid && t0 <= t1) {
+            bestExitPx = L.point(lastPx.x + sdx * t1, lastPx.y + sdy * t1);
+          }
+        }
+        lastPx = px;
+      }
+      if (bestExitPx) {
+        ps.marker.setLatLng(map.containerPointToLatLng(bestExitPx));
+        ps.marker.setOpacity(1);
+      } else if (anyInside) {
+        ps.marker.setLatLng(pts[pts.length - 1]);
+        ps.marker.setOpacity(1);
+      } else {
+        ps.marker.setOpacity(0);
+      }
+    });
+  }
+  window.leafletMap.on('move moveend zoomend', updatePlanetSymbolPositions);
+  updatePlanetSymbolPositions();
 
   // Seed marker (geo)
   const seedGeo = L.circleMarker(window.mapCenter, {
@@ -1610,21 +1603,15 @@ function addBoostedPlanetLines() {
 }
 
 // ===== Geodesic arc helper (turf.js) =====
-// Returns array of [lat, lng] along the great-circle arc from center at given bearing/distance
-function geodesicArc(centerLat, centerLng, radiusKm, startDeg, endDeg, steps) {
-  const origin = turf.point([centerLng, centerLat]);
-  const points = [];
-  for (let s = 0; s <= steps; s++) {
-    const bearing = startDeg + (endDeg - startDeg) * (s / steps);
-    const dest = turf.destination(origin, radiusKm, bearing, { units: 'kilometers' });
-    const [dLng, dLat] = dest.geometry.coordinates;
-    points.push(L.latLng(dLat, dLng));
-  }
-  return points;
+// ===== Leaflet geo-sector creation =====
+// 経度正規化: 基準経度からの差を[-180,180]に保ち座標ジャンプを防止
+function normalizeLng(ptLng, refLng) {
+  let diff = ptLng - refLng;
+  while (diff > 180) diff -= 360;
+  while (diff < -180) diff += 360;
+  return refLng + diff;
 }
 
-// ===== Leaflet geo-sector creation =====
-// Generate arc points along a great circle at given bearing range
 function geodesicArc(lat, lng, radiusKm, startBearing, endBearing, steps) {
   const center = turf.point([lng, lat]);
   const points = [];
@@ -1632,7 +1619,7 @@ function geodesicArc(lat, lng, radiusKm, startBearing, endBearing, steps) {
     const bearing = startBearing + (endBearing - startBearing) * (i / steps);
     const dest = turf.destination(center, radiusKm, bearing, { units: 'kilometers' });
     const coords = dest.geometry.coordinates;
-    points.push(L.latLng(coords[1], coords[0]));
+    points.push(L.latLng(coords[1], normalizeLng(coords[0], lng)));
   }
   return points;
 }
@@ -1651,18 +1638,6 @@ function createGeoSectors() {
     [265, 275,  'blessed'],   // True West (narrow band)
   ];
 
-  // Draw great circle boundary lines explicitly for visual debug
-  [90, 270].forEach(bearing => {
-    const center = turf.point([lng, lat]);
-    const linePoints = [];
-    for (let d = 0; d <= 10000; d += 100) {
-      const pt = turf.destination(center, d, bearing, { units: 'kilometers' });
-      linePoints.push(L.latLng(pt.geometry.coordinates[1], pt.geometry.coordinates[0]));
-    }
-    L.polyline(linePoints, {
-      color: '#ff0000', weight: 2, opacity: 0.8, dashArray: '6 4'
-    }).addTo(window.leafletMap);
-  });
 
   const typeStyles = {
     blessed: {
@@ -1703,7 +1678,7 @@ function createGeoSectors() {
     const leftEdge = [];
     for (let d = 0; d <= radiusKm; d += radiusKm / 30) {
       const pt = turf.destination(center, d, startDeg, { units: 'kilometers' });
-      leftEdge.push(L.latLng(pt.geometry.coordinates[1], pt.geometry.coordinates[0]));
+      leftEdge.push(L.latLng(pt.geometry.coordinates[1], normalizeLng(pt.geometry.coordinates[0], lng)));
     }
     // Outer arc
     const arcPoints = geodesicArc(lat, lng, radiusKm, startDeg, endDeg, 50);
@@ -1711,7 +1686,7 @@ function createGeoSectors() {
     const rightEdge = [];
     for (let d = radiusKm; d >= 0; d -= radiusKm / 30) {
       const pt = turf.destination(center, d, endDeg, { units: 'kilometers' });
-      rightEdge.push(L.latLng(pt.geometry.coordinates[1], pt.geometry.coordinates[0]));
+      rightEdge.push(L.latLng(pt.geometry.coordinates[1], normalizeLng(pt.geometry.coordinates[0], lng)));
     }
     const points = [...leftEdge, ...arcPoints, ...rightEdge];
 
@@ -1738,26 +1713,7 @@ function createGeoSectors() {
     }, delay);
   });
 
-  // Add blessed sector extra glow (second polygon with larger radius, very faint)
-  sectorDefs.forEach((def, i) => {
-    const [startDeg, endDeg, type] = def;
-    if (type !== 'blessed') return;
-    const glowRadius = radiusKm * 1.05;
-    const arcPoints = geodesicArc(lat, lng, glowRadius, startDeg, endDeg, 24);
-    const points = [L.latLng(lat, lng), ...arcPoints];
-    const glow = L.polygon(points, {
-      color: '#50D2FF',
-      fillColor: 'transparent',
-      fillOpacity: 0,
-      weight: 1,
-      opacity: 0.3,
-      dashArray: '4 4',
-    }).addTo(window.leafletMap);
-
-    setTimeout(() => {
-      glow.setStyle({ opacity: 0.3 });
-    }, i * 120 + 600);
-  });
+  // (Glow polygons removed - caused visible cyan lines)
 
   // Duplicate sectors at ±360° longitude for seamless world wrap
   function shiftPoints(pts, lngOffset) {
@@ -1907,7 +1863,13 @@ function playEffectVideo(x, y) {
   };
 }
 
-// ===== Animation loop =====
+// ===== Animation loop (auto-stop when idle) =====
+function startAnimLoop() {
+  if (animLoopRunning) return;
+  animLoopRunning = true;
+  animate();
+}
+
 function animate() {
   try {
     const ctx = particleCtx;
@@ -1947,8 +1909,14 @@ function animate() {
   } catch(e) {
     console.error('animate error:', e);
   }
-  // Use setTimeout instead of rAF to avoid background tab throttling
-  setTimeout(animate, 16);
+
+  // Stop loop if nothing left to animate
+  const hasWork = sectorAnimating || impactRings.length > 0 || meteor || particles.length > 0;
+  if (hasWork) {
+    setTimeout(animate, 16);
+  } else {
+    animLoopRunning = false;
+  }
 }
 
 // ===== User interaction flow =====
