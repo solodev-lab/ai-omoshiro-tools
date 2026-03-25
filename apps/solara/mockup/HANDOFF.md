@@ -144,6 +144,136 @@ const tripleChart = {
 
 ---
 
+### タスク5: 78枚全カードの惑星マッピング表を作成
+
+**コンセプト名: Seed Alignment（シード・アライメント）**
+
+タロットを引くことで地図が「目覚める」。カードが引かれるまでAction画面のレイヤー2はグレーアウト（未活性）状態。引いた瞬間に色が灯り、カードが地図に刺さる。
+
+#### 連携方式（確定: 案1+案4ハイブリッド）
+
+1. **案1**: 朝タロットを引く → カードの元素/惑星対応でレイヤー2の方位重みを再計算
+2. **案4**: 地図にカードのエネルギーが着弾する演出
+3. ステラが方位+カードを統合したメッセージを生成
+
+#### レイヤー2 再計算ロジック（Seed Boost）
+
+```
+■ タロット引く前のレイヤー2（通常計算）:
+  各方位セクター = トランジット惑星の方位角 × 惑星固有の強度係数
+
+■ タロット引いた後のレイヤー2（Seed Boost適用）:
+  各方位セクター = (トランジット計算値) × (1 + SeedBoost率)
+
+  SeedBoost率 = カード対応惑星がそのセクターにあれば加算
+
+  例: 「カップの3」を引いた場合
+    → 水元素 → 月・海王星・冥王星ラインに+15%
+    → 数字3（芽吹き）→ そのまま+15%
+    → 北東に月ラインがある場合: 北東セクターが 0.65 → 0.75 に上昇
+    → 色が中間から吉に変化する可能性
+```
+
+**重要な設計判断**: Seed Boostはセクターの色を変えうるが、凶を吉にひっくり返すほどではない。あくまで「押し上げ」であり、元のトランジット計算が主。占星術の整合性を保つ。
+
+#### 大アルカナ: 各カードに固有の惑星/星座対応（Golden Dawn体系準拠）
+
+以下の表を78枚分完成させる作業が必要。
+
+```javascript
+// 大アルカナ（22枚）: 各カードに1つの天体/星座が対応
+const majorArcana = {
+  0:  { name: '愚者',   planet: 'uranus',  boost: 0.05, boostType: 'all' },      // 全方位+5%
+  1:  { name: '魔術師', planet: 'mercury', boost: 0.30, boostType: 'single' },   // 水星ライン+30%
+  2:  { name: '女教皇', planet: 'moon',    boost: 0.30, boostType: 'single' },
+  3:  { name: '女帝',   planet: 'venus',   boost: 0.30, boostType: 'single' },
+  4:  { name: '皇帝',   planet: 'mars',    boost: 0.30, boostType: 'single' },   // 牡羊座→火星
+  5:  { name: '法王',   planet: 'venus',   boost: 0.30, boostType: 'single' },   // 牡牛座→金星
+  6:  { name: '恋人',   planet: 'mercury', boost: 0.30, boostType: 'single' },   // 双子座→水星
+  7:  { name: '戦車',   planet: 'moon',    boost: 0.30, boostType: 'single' },   // 蟹座→月
+  8:  { name: '力',     planet: 'sun',     boost: 0.30, boostType: 'single' },   // 獅子座→太陽
+  9:  { name: '隠者',   planet: 'mercury', boost: 0.30, boostType: 'single' },   // 乙女座→水星
+  10: { name: '運命の輪', planet: 'jupiter', boost: 0.30, boostType: 'single' },
+  11: { name: '正義',   planet: 'venus',   boost: 0.30, boostType: 'single' },   // 天秤座→金星
+  12: { name: '吊るされた男', planet: 'neptune', boost: 0.30, boostType: 'single' },
+  13: { name: '死神',   planet: 'pluto',   boost: 0.30, boostType: 'single' },   // 蠍座→冥王星
+  14: { name: '節制',   planet: 'jupiter', boost: 0.30, boostType: 'single' },   // 射手座→木星
+  15: { name: '悪魔',   planet: 'saturn',  boost: 0.30, boostType: 'single' },   // 山羊座→土星
+  16: { name: '塔',     planet: 'mars',    boost: 0.30, boostType: 'single' },
+  17: { name: '星',     planet: 'uranus',  boost: 0.30, boostType: 'single' },   // 水瓶座→天王星
+  18: { name: '月',     planet: 'neptune', boost: 0.30, boostType: 'single' },   // 魚座→海王星
+  19: { name: '太陽',   planet: 'sun',     boost: 0.30, boostType: 'single' },
+  20: { name: '審判',   planet: 'pluto',   boost: 0.30, boostType: 'single' },
+  21: { name: '世界',   planet: 'saturn',  boost: 0.25, boostType: 'all' },      // 全方位+25%（完成）
+};
+```
+
+#### 小アルカナ: 元素→惑星群のグループマッピング（56枚）
+
+```javascript
+// スート別の対応惑星群
+const suitMapping = {
+  wands:      { element: 'fire',  planets: ['sun', 'mars', 'jupiter'] },
+  cups:       { element: 'water', planets: ['moon', 'neptune', 'pluto'] },
+  swords:     { element: 'air',   planets: ['mercury', 'uranus', 'saturn'] },
+  pentacles:  { element: 'earth', planets: ['venus', 'saturn', 'earth'] },
+};
+
+// 数字による強度補正
+const numberBoost = {
+  1:  0.25,  // Ace: 元素の純粋な力（最大ブースト）
+  2:  0.15,  // 芽吹き
+  3:  0.15,  // 芽吹き
+  4:  0.20,  // 成長期
+  5:  0.20,  // 成長期
+  6:  0.20,  // 成長期
+  7:  0.10,  // 試練/成熟（分散型、広い範囲に薄く）
+  8:  0.10,  // 試練/成熟
+  9:  0.10,  // 試練/成熟
+  10: 0.20,  // 完成/転換（次のサイクルへの橋渡し）
+};
+
+// コートカード: 追加ブースト対象
+const courtBoost = {
+  page:   { extraPlanets: ['mercury'],       boost: 0.15 },  // 学び
+  knight: { extraPlanets: ['mars'],          boost: 0.20 },  // 行動
+  queen:  { extraPlanets: ['moon', 'venus'], boost: 0.15 },  // 受容
+  king:   { extraPlanets: ['sun', 'jupiter'], boost: 0.20 }, // 統治
+};
+
+// 小アルカナのブースト計算例:
+// 「カップの3」→ cups.planets=['moon','neptune','pluto'] × numberBoost[3]=0.15
+// 各惑星ラインが存在するセクターに+15%
+//
+// 「ワンドのナイト」→ wands.planets=['sun','mars','jupiter'] + knight.extraPlanets=['mars']
+// → mars が2重でカウント（+20%×2ではなく、+20%+行動ボーナス+5%的な扱い）
+```
+
+#### 78枚マッピング表の作成手順
+
+1. 上記のデータ構造をJSONファイルとして `apps/solara/mockup/tarot_planet_map.json` に保存
+2. 大アルカナ22枚: Golden Dawn体系に基づき、惑星/星座対応を確定
+3. 小アルカナ56枚: スート×(数字14枚)の組み合わせ、上記ロジックで自動計算可能
+4. 各カードの日本語名・英語名・キーワード・ステラメッセージテンプレートも併記
+5. モックアップ（index.html）に組み込み、カード選択→Seed Boost→セクター再計算のフルフローを実装
+
+#### Seed Boost の UX フロー
+
+```
+[タロット未引き時のAction画面]
+  レイヤー1（宿命の3帯）: 常時表示
+  レイヤー2（日常の5帯）: グレーアウト
+  ステラ: 「おはよう。今日の方位はまだ眠ってるよ。Seedカードで起こして？」
+  [🌱 Seedを引く] ボタン → Rhythm画面へ
+
+[タロット引いた後のAction画面]
+  レイヤー2が色付きに変化（Seed Boost適用済み）
+  対応惑星ラインの方位に「Seedマーカー」出現
+  ステラ統合メッセージ表示
+```
+
+---
+
 ## 重要な技術的決定事項（変更不可）
 
 1. **D3.js正距方位図法は不使用** → Leaflet+turf.js大圏線で統一
