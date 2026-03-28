@@ -1,0 +1,2030 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Solara - Horoscope Chart</title>
+<script src="https://cdn.jsdelivr.net/npm/astronomy-engine@2.1.19/astronomy.browser.min.js"></script>
+<style>
+/* ============================================================
+   RESET & BASE
+   ============================================================ */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #0A0A14;
+  color: #E8E0D0;
+  font-family: 'Segoe UI', 'Helvetica Neue', sans-serif;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px 20px 90px;
+}
+
+/* ── BOTTOM NAV ── */
+.bottom-nav {
+  position: fixed; bottom: 0; left: 0; right: 0; height: 70px;
+  background: rgba(10, 10, 20, 0.95); backdrop-filter: blur(10px);
+  border-top: 1px solid rgba(255,255,255,0.05);
+  display: flex; align-items: center; justify-content: space-around;
+  padding: 0 20px 10px; z-index: 200;
+}
+.nav-item {
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  opacity: 0.4; cursor: pointer; transition: opacity 0.3s; background: none; border: none; color: #E8E0D0;
+}
+.nav-item.active { opacity: 1; }
+.nav-item.active .nav-label { color: #C9A84C; }
+.nav-icon { font-size: 20px; }
+.nav-label { font-size: 9px; letter-spacing: 1px; text-transform: uppercase; }
+
+h1 { font-size: 24px; color: #F6BD60; letter-spacing: 4px; margin-bottom: 8px; }
+
+/* ============================================================
+   ANIMATIONS (CSS-only, GPU composited)
+   ============================================================ */
+@keyframes approaching {
+  0%, 100% { opacity: 0.3; filter: blur(0px); }
+  50% { opacity: 0.8; filter: blur(1px); }
+}
+@keyframes imminent {
+  0%, 100% { opacity: 0.4; filter: blur(0px); }
+  50% { opacity: 0.9; filter: blur(1.5px); }
+}
+@keyframes active-glow {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.7; }
+}
+
+/* Pattern polygon animations */
+.anim-approaching { animation: approaching 4s ease-in-out infinite; will-change: opacity, filter; }
+.anim-imminent    { animation: imminent 2s ease-in-out infinite; will-change: opacity, filter; }
+.anim-active      { animation: active-glow 3s ease-in-out infinite; will-change: opacity; }
+
+/* F-section border animations */
+@keyframes section-approaching {
+  0%, 100% { border-color: rgba(246,189,96,0.15); box-shadow: 0 0 4px rgba(246,189,96,0.05); background-color: rgba(246,189,96,0.03); }
+  50% { border-color: rgba(246,189,96,0.7); box-shadow: 0 0 20px rgba(246,189,96,0.25); background-color: rgba(246,189,96,0.18); }
+}
+@keyframes section-imminent {
+  0%, 100% { border-color: rgba(246,189,96,0.2); box-shadow: 0 0 6px rgba(246,189,96,0.1); background-color: rgba(246,189,96,0.05); }
+  50% { border-color: rgba(232,224,208,0.9); box-shadow: 0 0 28px rgba(246,189,96,0.35); background-color: rgba(246,189,96,0.25); }
+}
+@keyframes section-active {
+  0%, 100% { border-color: rgba(246,189,96,0.4); box-shadow: 0 0 10px rgba(246,189,96,0.1); background-color: rgba(246,189,96,0.06); }
+  50% { border-color: rgba(246,189,96,0.7); box-shadow: 0 0 24px rgba(246,189,96,0.2); background-color: rgba(246,189,96,0.14); }
+}
+.section-approaching { animation: section-approaching 4s ease-in-out infinite; border: 1px solid rgba(246,189,96,0.15) !important; border-radius: 8px; padding: 8px !important; padding-bottom: 8px !important; }
+.section-imminent    { animation: section-imminent 2s ease-in-out infinite; border: 1px solid rgba(246,189,96,0.2) !important; border-radius: 8px; padding: 8px !important; padding-bottom: 8px !important; }
+.section-active      { animation: section-active 3s ease-in-out infinite; border: 1px solid rgba(246,189,96,0.4) !important; border-radius: 8px; padding: 8px !important; padding-bottom: 8px !important; }
+
+/* ============================================================
+   LAYOUT
+   ============================================================ */
+.tab-nav {
+  display: flex; gap: 4px; margin-bottom: 20px;
+  background: rgba(255,255,255,0.03); border-radius: 12px; padding: 4px;
+}
+.tab-btn {
+  padding: 10px 20px; border: none; background: transparent;
+  color: #888; font-size: 13px; cursor: pointer;
+  border-radius: 8px; transition: all 0.3s; letter-spacing: 1px;
+}
+.tab-btn.active { background: rgba(246,189,96,0.15); color: #F6BD60; }
+.tab-btn:hover:not(.active) { color: #bbb; }
+
+.user-selector { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; justify-content: center; }
+.user-btn {
+  padding: 8px 16px; border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.03); color: #aaa; font-size: 12px;
+  cursor: pointer; border-radius: 8px; transition: all 0.3s;
+}
+.user-btn.active { border-color: #F6BD60; color: #F6BD60; background: rgba(246,189,96,0.08); }
+.user-btn:hover:not(.active) { border-color: rgba(255,255,255,0.25); color: #ccc; }
+
+.main-layout { display: flex; gap: 20px; align-items: flex-start; max-width: 1400px; width: 100%; }
+.left-column { position: sticky; top: 10px; flex-shrink: 0; max-width: 600px; }
+.right-column { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 16px; }
+
+.chart-container { position: relative; }
+.chart-watermark {
+  position: absolute; top: 42%; left: 50%; transform: translate(-50%, -50%);
+  font-size: 14px; font-weight: 700; letter-spacing: 4px;
+  color: rgba(246,189,96,0.18);
+  pointer-events: none; z-index: 2; user-select: none;
+  white-space: nowrap;
+}
+.chart-container svg { position: relative; z-index: 1; filter: drop-shadow(0 0 30px rgba(107,92,231,0.1)); width: 100%; height: auto; }
+.chart-legend { display: flex; gap: 16px; justify-content: center; margin-top: 12px; font-size: 11px; color: #888; flex-wrap: wrap; }
+.legend-item { display: flex; align-items: center; gap: 6px; }
+.legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+/* ============================================================
+   PANEL CARDS
+   ============================================================ */
+.panel-card {
+  background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 16px; padding: 20px;
+}
+.panel-card h3 { font-size: 13px; color: #F6BD60; letter-spacing: 2px; margin-bottom: 12px; }
+
+/* ============================================================
+   FORMS
+   ============================================================ */
+.form-group { margin-bottom: 12px; }
+.form-group label { display: block; font-size: 11px; color: #888; margin-bottom: 4px; letter-spacing: 1px; }
+.form-group input, .form-group select {
+  width: 100%; padding: 8px 12px; background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1); border-radius: 8px;
+  color: #E8E0D0; font-size: 13px; outline: none; transition: border-color 0.3s;
+}
+.form-group input:focus, .form-group select:focus { border-color: rgba(246,189,96,0.4); }
+.form-row { display: flex; gap: 8px; }
+.form-row .form-group { flex: 1; }
+
+.btn-generate {
+  width: 100%; padding: 10px;
+  background: linear-gradient(135deg, #F6BD60, #E8A840);
+  border: none; border-radius: 10px; color: #0A0A14;
+  font-size: 13px; font-weight: 600; cursor: pointer;
+  letter-spacing: 1px; transition: opacity 0.3s; margin-top: 4px;
+}
+.btn-generate:hover { opacity: 0.85; }
+
+/* ============================================================
+   PLANET TABLE
+   ============================================================ */
+.planet-row { display: flex; align-items: center; padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
+.planet-row:last-child { border-bottom: none; }
+.planet-glyph { width: 24px; font-size: 16px; text-align: center; }
+.planet-name  { width: 60px; color: #aaa; font-size: 12px; }
+.planet-pos   { flex: 1; color: #E8E0D0; font-family: 'Courier New', monospace; font-size: 12px; }
+
+/* ============================================================
+   FILTER UI
+   ============================================================ */
+.filter-section { margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+.filter-section:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 8px; }
+.filter-section-title {
+  font-size: 10px; color: #888; letter-spacing: 1.5px; margin-bottom: 6px;
+  display: flex; align-items: center; gap: 6px;
+}
+.filter-label {
+  background: rgba(255,255,255,0.08); color: #aaa;
+  padding: 1px 6px; border-radius: 4px; font-size: 9px; font-weight: 600;
+}
+.filter-chips { display: flex; flex-wrap: wrap; gap: 4px; }
+.filter-chip {
+  padding: 4px 10px; border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.03); color: #888; font-size: 11px;
+  cursor: pointer; border-radius: 6px; transition: all 0.2s; user-select: none;
+}
+.filter-chip:hover { border-color: rgba(255,255,255,0.25); color: #ccc; }
+.filter-chip.active { border-color: var(--chip-color, #F6BD60); color: var(--chip-color, #F6BD60); background: rgba(246,189,96,0.08); }
+.filter-chip.exclusive { border-style: dashed; }
+.filter-chip.exclusive.active { border-style: solid; }
+
+.filter-reset-btn {
+  padding: 4px 12px; border: 1px solid rgba(255,255,255,0.1);
+  background: transparent; color: #666; font-size: 10px;
+  cursor: pointer; border-radius: 6px; transition: all 0.2s; margin-left: auto;
+}
+.filter-reset-btn:hover { color: #F6BD60; border-color: rgba(246,189,96,0.3); }
+
+/* ============================================================
+   PREDICTIONS
+   ============================================================ */
+.prediction-panel { margin-top: 0; }
+
+/* Collapsible analysis container */
+.analysis-container { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; overflow: hidden; }
+.analysis-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; cursor: pointer; user-select: none; }
+.analysis-header:hover { background: rgba(255,255,255,0.03); }
+.analysis-header h3 { font-size: 13px; color: #F6BD60; letter-spacing: 2px; margin: 0; }
+.analysis-toggle { color: #F6BD60; font-size: 14px; transition: transform 0.3s ease; }
+.analysis-toggle.collapsed { transform: rotate(-90deg); }
+.analysis-tabs { display: flex; gap: 0; padding: 0 16px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+.analysis-tab { flex: 1; padding: 8px 0; text-align: center; font-size: 11px; letter-spacing: 1px; color: #888; cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.2s; }
+.analysis-tab:hover { color: #ccc; }
+.analysis-tab.active { color: #F6BD60; border-bottom-color: #F6BD60; }
+.analysis-body { padding: 16px 20px; transition: max-height 0.35s ease, opacity 0.25s ease, padding 0.35s ease; max-height: 2000px; opacity: 1; overflow: hidden; }
+.analysis-body.collapsed { max-height: 0; opacity: 0; padding-top: 0; padding-bottom: 0; }
+.analysis-body .filter-section:first-child { margin-top: 0; }
+.analysis-body .panel-card { background: none; border: none; border-radius: 0; padding: 0; }
+.analysis-body .panel-card h3 { display: none; }
+.prediction-item { display: flex; align-items: center; gap: 8px; padding: 4px 0; font-size: 11px; border-bottom: 1px solid rgba(255,255,255,0.03); }
+.prediction-item:last-child { border-bottom: none; }
+.prediction-time { color: #F6BD60; font-size: 10px; margin-left: auto; white-space: nowrap; }
+.prediction-type { font-size: 10px; padding: 1px 6px; border-radius: 4px; white-space: nowrap; }
+
+/* ============================================================
+   ASPECT LIST
+   ============================================================ */
+.aspect-lists-row { display: flex; gap: 15px; margin-top: 0; }
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+/* Mobile — hidden on desktop */
+.mobile-panel-tabs { display: none; }
+.mobile-panel-overlay { display: none; }
+.desktop-only { }
+.mobile-bottom-sheet { display: none; }
+
+@media (max-width: 900px) {
+  body { padding: 10px 8px 0; }
+  h1 { font-size: 18px; margin-bottom: 4px; }
+  .subtitle { font-size: 10px; margin-bottom: 12px; }
+  .main-layout { flex-direction: column; align-items: center; }
+  .left-column { position: relative; top: auto; width: 100%; max-width: 600px; }
+  .right-column { display: none !important; }
+  .chart-container { display: flex; flex-direction: column; align-items: center; position: relative; }
+  .chart-container svg { width: 100%; max-width: 600px; height: auto; }
+  .tab-nav { flex-wrap: wrap; justify-content: center; }
+  .tab-btn { padding: 8px 12px; font-size: 11px; }
+  .desktop-only { display: none !important; }
+  .mobile-panel-tabs { display: none !important; }
+  .mobile-panel-overlay { display: none !important; }
+
+  /* Add padding so chart content isn't hidden behind bottom sheet */
+  body { padding-bottom: 380px; }
+
+  /* Bottom Sheet */
+  .mobile-bottom-sheet {
+    display: block;
+    position: fixed; left: 0; right: 0; bottom: 0;
+    z-index: 100;
+    background: rgba(12,12,22,0.97);
+    border-top: 1px solid rgba(246,189,96,0.3);
+    border-radius: 16px 16px 0 0;
+    backdrop-filter: blur(12px);
+    transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+    will-change: transform;
+    max-height: 85vh;
+    touch-action: none;
+  }
+  .bs-drag-handle {
+    display: flex; justify-content: center; align-items: center;
+    padding: 10px 0 6px; cursor: grab;
+  }
+  .bs-drag-handle::after {
+    content: ''; width: 36px; height: 4px;
+    background: rgba(246,189,96,0.4); border-radius: 2px;
+  }
+  .bs-tabs {
+    display: flex; gap: 0; padding: 0 8px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+  .bs-tab {
+    flex: 1; padding: 8px 4px; text-align: center;
+    font-size: 11px; color: #777; cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s; letter-spacing: 0.5px;
+    background: none; border-left: none; border-right: none; border-top: none;
+  }
+  .bs-tab.active { color: #F6BD60; border-bottom-color: #F6BD60; }
+  .bs-tab.hidden-tab { display: none; }
+  .bs-body {
+    overflow-y: auto; padding: 12px 14px 24px;
+    -webkit-overflow-scrolling: touch;
+  }
+  .bs-body .form-group { margin-bottom: 10px; }
+  .bs-body .form-group label { display: block; font-size: 11px; color: #888; margin-bottom: 3px; letter-spacing: 1px; }
+  .bs-body .form-group input,
+  .bs-body .form-group select {
+    width: 100%; padding: 8px 12px; background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.12); border-radius: 8px;
+    color: #E8E0D0; font-size: 13px; outline: none;
+  }
+  .bs-body .btn-generate {
+    width: 100%; padding: 10px; border: none; border-radius: 10px;
+    color: #0A0A14; font-size: 13px; font-weight: 600; cursor: pointer;
+    margin-top: 6px;
+  }
+  .bs-body h3 { font-size: 12px; color: #F6BD60; margin-bottom: 10px; letter-spacing: 1px; }
+  .bs-section { display: none; }
+  .bs-section.active { display: block; }
+}
+</style>
+</head>
+<body>
+
+
+<!-- Chart Mode Tabs -->
+<div class="tab-nav">
+  <button class="tab-btn active" onclick="setChartMode('single')">1重 NATAL</button>
+  <button class="tab-btn" onclick="setChartMode('double')">2重 NATAL+TRANSIT</button>
+  <button class="tab-btn" onclick="setChartMode('triple')">3重 N+P+T</button>
+</div>
+
+<!-- User Selector -->
+<div class="user-selector" id="userSelector"></div>
+
+<div class="main-layout">
+  <!-- Left: Chart + mobile overlay tabs -->
+  <div class="left-column">
+    <!-- Mobile accordion tabs (hidden on desktop) -->
+    <div class="mobile-panel-tabs" id="mobilePanelTabs">
+      <button class="mobile-panel-tab" data-panel="birth" onclick="toggleMobilePanel('birth')">&#9881; BIRTH <span class="tab-arrow">&#9660;</span></button>
+      <button class="mobile-panel-tab" data-panel="transit" onclick="toggleMobilePanel('transit')" id="mobileTransitTab" style="display:none">&#9790; TRANSIT <span class="tab-arrow">&#9660;</span></button>
+      <button class="mobile-panel-tab" data-panel="planets" onclick="toggleMobilePanel('planets')">&#9737; PLANETS <span class="tab-arrow">&#9660;</span></button>
+    </div>
+
+    <div class="chart-container">
+      <div class="chart-watermark">SOLARA</div>
+      <svg id="horoscopeChart" width="600" height="600" viewBox="0 0 600 600"></svg>
+      <div class="chart-legend" id="chartLegend"></div>
+    </div>
+  </div>
+
+  <!-- Right: Panels -->
+  <div class="right-column">
+
+    <!-- Birth Data -->
+    <div class="panel-card" id="birthPanel">
+      <h3 class="desktop-only">&#9881; BIRTH DATA</h3>
+      <div class="form-group">
+        <label>氏名 NAME</label>
+        <input type="text" id="inputName" placeholder="氏名を入力">
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>生年月日 DATE</label><input type="date" id="inputDate"></div>
+        <div class="form-group"><label>出生時刻 TIME</label><input type="time" id="inputTime" step="60"></div>
+      </div>
+      <div class="form-group">
+        <label>出生地 BIRTHPLACE</label>
+        <input type="text" id="inputPlace" placeholder="例: 岐阜県岐阜市">
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>緯度 LAT</label><input type="number" id="inputLat" step="0.0001" placeholder="35.4233"></div>
+        <div class="form-group"><label>経度 LNG</label><input type="number" id="inputLng" step="0.0001" placeholder="136.7607"></div>
+      </div>
+      <button class="btn-generate" onclick="generateFromInput()">ホロスコープ生成</button>
+    </div>
+
+    <!-- Transit Data -->
+    <div class="panel-card" id="transitPanel" style="display:none">
+      <h3 class="desktop-only">&#9790; TRANSIT DATA</h3>
+      <div class="form-row">
+        <div class="form-group"><label>日付 DATE</label><input type="date" id="transitDate"></div>
+        <div class="form-group"><label>時刻 TIME</label><input type="time" id="transitTime" step="60"></div>
+      </div>
+      <div class="form-group">
+        <label>場所 LOCATION</label>
+        <select id="transitLocation" onchange="onTransitLocationChange()">
+          <option value="tokyo" selected>東京 (35.66, 139.70)</option>
+          <option value="osaka">大阪 (34.69, 135.50)</option>
+          <option value="gifu">岐阜 (35.42, 136.76)</option>
+          <option value="custom">カスタム入力</option>
+        </select>
+      </div>
+      <div class="form-row" id="transitCustomLatLng" style="display:none">
+        <div class="form-group"><label>緯度 LAT</label><input type="number" id="transitLat" step="0.0001"></div>
+        <div class="form-group"><label>経度 LNG</label><input type="number" id="transitLng" step="0.0001"></div>
+      </div>
+      <button class="btn-generate" onclick="renderChart()" style="background:linear-gradient(135deg,#6BB5FF,#4A90D9)">トランジット更新</button>
+    </div>
+
+    <!-- Planet Positions -->
+    <div class="panel-card" id="planetsPanel">
+      <h3 class="desktop-only">&#9737; PLANET POSITIONS</h3>
+      <div id="planetTable"></div>
+    </div>
+
+    <!-- Analysis: Aspect Filter + Upcoming Patterns (collapsible) -->
+    <div class="analysis-container" id="analysisContainer">
+      <div class="analysis-header" onclick="toggleAnalysis()">
+        <h3>&#9881; ANALYSIS</h3>
+        <span class="analysis-toggle" id="analysisToggle">&#9660;</span>
+      </div>
+      <div class="analysis-body" id="analysisBody">
+        <div class="panel-card" id="aspectFilterPanel">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+            <span style="font-size:11px;color:#888;letter-spacing:1.5px">ASPECT FILTER</span>
+            <button class="filter-reset-btn" onclick="resetFilters()">RESET</button>
+          </div>
+
+          <!-- A: Aspect Quality -->
+          <div class="filter-section">
+            <div class="filter-section-title"><span class="filter-label">A</span> アスペクト性質</div>
+            <div class="filter-chips">
+              <div class="filter-chip active" style="--chip-color:#26D0CE" data-filter="quality" data-value="soft" onclick="toggleFilter(this)">ソフト（調和）</div>
+              <div class="filter-chip active" style="--chip-color:#FF6B6B" data-filter="quality" data-value="hard" onclick="toggleFilter(this)">ハード（緊張）</div>
+              <div class="filter-chip active" style="--chip-color:#B088FF" data-filter="quality" data-value="neutral" onclick="toggleFilter(this)">中立</div>
+            </div>
+          </div>
+
+          <!-- B: Fortune Category -->
+          <div class="filter-section">
+            <div class="filter-section-title"><span class="filter-label">B</span> 運勢カテゴリ</div>
+            <div class="filter-chips">
+              <div class="filter-chip exclusive" style="--chip-color:#26D0CE" data-filter="fortune" data-value="healing" onclick="toggleExclusive(this)">癒し</div>
+              <div class="filter-chip exclusive" style="--chip-color:#FFD370" data-filter="fortune" data-value="money" onclick="toggleExclusive(this)">金運</div>
+              <div class="filter-chip exclusive" style="--chip-color:#FF6B9D" data-filter="fortune" data-value="love" onclick="toggleExclusive(this)">恋愛運</div>
+              <div class="filter-chip exclusive" style="--chip-color:#FF8C42" data-filter="fortune" data-value="career" onclick="toggleExclusive(this)">仕事運</div>
+              <div class="filter-chip exclusive" style="--chip-color:#6BB5FF" data-filter="fortune" data-value="communication" onclick="toggleExclusive(this)">コミュニケーション</div>
+            </div>
+          </div>
+
+          <!-- C: Planet Groups -->
+          <div class="filter-section">
+            <div class="filter-section-title"><span class="filter-label">C</span> 惑星グループ</div>
+            <div class="filter-chips">
+              <div class="filter-chip active" style="--chip-color:#FFD370" data-filter="pgroup" data-value="personal" onclick="toggleFilter(this)">個人天体</div>
+              <div class="filter-chip active" style="--chip-color:#6BB5FF" data-filter="pgroup" data-value="social" onclick="toggleFilter(this)">社会天体</div>
+              <div class="filter-chip active" style="--chip-color:#B088FF" data-filter="pgroup" data-value="generational" onclick="toggleFilter(this)">世代天体</div>
+            </div>
+          </div>
+
+          <!-- D: Individual Aspects -->
+          <div class="filter-section">
+            <div class="filter-section-title"><span class="filter-label">D</span> アスペクト個別</div>
+            <div class="filter-chips" id="aspectTypeChips"></div>
+          </div>
+
+          <!-- E: Orb Strength -->
+          <div class="filter-section">
+            <div class="filter-section-title"><span class="filter-label">E</span> オーブ強度</div>
+            <div class="filter-chips">
+              <div class="filter-chip active" style="--chip-color:#FF6B6B" data-filter="orb" data-value="tight" onclick="toggleFilter(this)">タイト（2°以内）</div>
+              <div class="filter-chip active" style="--chip-color:#FFD370" data-filter="orb" data-value="standard" onclick="toggleFilter(this)">標準</div>
+            </div>
+          </div>
+
+          <!-- F: Aspect Patterns -->
+          <div class="filter-section" id="patternFilterSection">
+            <div class="filter-section-title"><span class="filter-label">F</span> アスペクトパターン</div>
+            <div class="filter-chips">
+              <div class="filter-chip exclusive" style="--chip-color:#26D0CE" data-filter="pattern" data-value="grandtrine" onclick="toggleExclusive(this)">グランドトライン</div>
+              <div class="filter-chip exclusive" style="--chip-color:#FF6B6B" data-filter="pattern" data-value="tsquare" onclick="toggleExclusive(this)">Tスクエア</div>
+              <div class="filter-chip exclusive" style="--chip-color:#B088FF" data-filter="pattern" data-value="yod" onclick="toggleExclusive(this)">ヨッド</div>
+            </div>
+          </div>
+
+          <!-- Upcoming Patterns (directly below F) -->
+          <div class="prediction-panel" id="predictionPanel" style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.05)">
+            <div id="predictionList"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Aspect Lists (collapsible) -->
+    <div class="analysis-container" id="aspectsContainer">
+      <div class="analysis-header" onclick="toggleAspects()">
+        <h3 id="aspectsContainerTitle">&#9651; ASPECTS</h3>
+        <span class="analysis-toggle" id="aspectsToggle">&#9660;</span>
+      </div>
+      <div class="analysis-tabs" id="aspectsTabs" style="display:none">
+        <div class="analysis-tab active" data-tab="nt" onclick="switchAspectsTab('nt')">N↔T Transit</div>
+        <div class="analysis-tab" data-tab="np" onclick="switchAspectsTab('np')">N↔P Progressed</div>
+      </div>
+      <div class="analysis-body" id="aspectsBody">
+        <div id="aspectsNTContent">
+          <div id="aspectPanelMain">
+            <div id="aspectInfo"></div>
+          </div>
+        </div>
+        <div id="aspectsNPContent" style="display:none">
+          <div id="aspectPanelProg">
+            <div id="aspectInfoProg"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /right-column -->
+</div><!-- /main-layout -->
+
+<!-- Mobile Bottom Sheet -->
+<div class="mobile-bottom-sheet" id="bottomSheet">
+  <div class="bs-drag-handle" id="bsDragHandle"></div>
+  <div class="bs-tabs" id="bsTabs">
+    <button class="bs-tab active" data-bs="birth" onclick="switchBSTab('birth')">&#9881; 誕生</button>
+    <button class="bs-tab hidden-tab" data-bs="transit" id="bsTransitTab" onclick="switchBSTab('transit')">&#9790; 経過</button>
+    <button class="bs-tab" data-bs="planets" onclick="switchBSTab('planets')">&#9737; 天体</button>
+    <button class="bs-tab" data-bs="filter" onclick="switchBSTab('filter')">&#9881; 絞込</button>
+    <button class="bs-tab" data-bs="aspects" onclick="switchBSTab('aspects')">&#9651; 相</button>
+  </div>
+  <div class="bs-body" id="bsBody">
+    <div class="bs-section active" id="bsBirth"></div>
+    <div class="bs-section" id="bsTransit"></div>
+    <div class="bs-section" id="bsPlanets"></div>
+    <div class="bs-section" id="bsFilter"></div>
+    <div class="bs-section" id="bsAspects"></div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+//  CONSTANTS
+// ============================================================
+var ZODIAC_SIGNS    = ['\u2648','\u2649','\u264A','\u264B','\u264C','\u264D','\u264E','\u264F','\u2650','\u2651','\u2652','\u2653'];
+var ZODIAC_NAMES_JP = ['牡羊座','牡牛座','双子座','蟹座','獅子座','乙女座','天秤座','蠍座','射手座','山羊座','水瓶座','魚座'];
+var ZODIAC_EN       = ['Ari','Tau','Gem','Can','Leo','Vir','Lib','Sco','Sag','Cap','Aqu','Pis'];
+var ZODIAC_COLORS   = ['#FF6B6B','#B49774','#C9C9C9','#1A6980','#FFD93D','#8B7355','#7F7FAF','#8B2252','#FF8C42','#5A5A5A','#4A90D9','#26D0CE'];
+
+var PLANET_GLYPHS   = ['\u2609','\u263D','\u263F','\u2640','\u2642','\u2643','\u2644','\u2645','\u2646','\u2647'];
+var PLANET_NAMES_JP = ['太陽','月','水星','金星','火星','木星','土星','天王星','海王星','冥王星'];
+
+var BODIES = [
+  Astronomy.Body.Sun, Astronomy.Body.Moon,
+  Astronomy.Body.Mercury, Astronomy.Body.Venus, Astronomy.Body.Mars,
+  Astronomy.Body.Jupiter, Astronomy.Body.Saturn,
+  Astronomy.Body.Uranus, Astronomy.Body.Neptune, Astronomy.Body.Pluto
+];
+
+var NATAL_COLOR     = '#FFD370';
+var TRANSIT_COLOR   = '#6BB5FF';
+var PROGRESSED_COLOR = '#B088FF';
+var BRAND_GOLD      = '#F6BD60';
+var BRAND_PLATINUM  = '#E8E0D0';
+
+// Aspect definitions (spec: 6 types)
+var ASPECT_TYPES = [
+  { name: 'コンジャンクション', angle: 0,   orb: 8, symbol: '\u260C', color: '#F6BD60', quality: 'neutral' },
+  { name: 'オポジション',       angle: 180, orb: 8, symbol: '\u260D', color: '#FF6B6B', quality: 'hard' },
+  { name: 'トライン',           angle: 120, orb: 8, symbol: '\u25B3', color: '#26D0CE', quality: 'soft' },
+  { name: 'スクエア',           angle: 90,  orb: 7, symbol: '\u25A1', color: '#FF6B6B', quality: 'hard' },
+  { name: 'セクスタイル',       angle: 60,  orb: 6, symbol: '\u26B9', color: '#26D0CE', quality: 'soft' },
+  { name: 'クインカンクス',     angle: 150, orb: 2, symbol: 'Qx',     color: '#8B5CF6', quality: 'neutral' }
+];
+
+// Pattern styles
+var PATTERN_STYLES = {
+  grandtrine: { fill: 'rgba(38,208,206,0.12)',  stroke: '#26D0CE', label: 'Grand Trine' },
+  tsquare:    { fill: 'rgba(255,107,107,0.12)',  stroke: '#FF6B6B', label: 'T-Square' },
+  yod:        { fill: 'rgba(176,136,255,0.12)',  stroke: '#B088FF', label: 'Yod' }
+};
+
+// Planet group indices
+var PLANET_GROUPS = {
+  personal:     [0, 1, 2, 3, 4],
+  social:       [5, 6],
+  generational: [7, 8, 9]
+};
+
+// Fortune category planet mapping
+var FORTUNE_PLANETS = {
+  healing:       [1, 8, 5],
+  money:         [3, 5, 6],
+  love:          [3, 4, 1],
+  career:        [6, 4, 0],
+  communication: [2, 1, 5]
+};
+
+// Transit location presets
+var TRANSIT_LOCATIONS = {
+  tokyo: { lat: 35.66, lng: 139.70 },
+  osaka: { lat: 34.69, lng: 135.50 },
+  gifu:  { lat: 35.4233, lng: 136.7607 }
+};
+
+// ============================================================
+//  STATE
+// ============================================================
+var users = [
+  { name: 'はやしこうじ', date: '1977-10-24', time: '06:56', place: '岐阜県岐阜市', lat: 35.4233, lng: 136.7607, tz: 9 },
+  { name: '田中 美咲',   date: '1993-07-10', time: '14:30', place: '東京都渋谷区', lat: 35.66,   lng: 139.70,   tz: 9 },
+  { name: '鈴木 大輝',   date: '1985-06-15', time: '22:15', place: '大阪府大阪市', lat: 34.69,   lng: 135.50,   tz: 9 }
+];
+
+var currentUserIndex = 0;
+var chartMode = 'single';
+var hiddenAspects = {};
+var lastAspectsFound = [];
+var lastRenderParams = null;
+
+var activeFilters = {
+  quality:     { soft: true, hard: true, neutral: true },
+  pgroup:      { personal: true, social: true, generational: true },
+  aspectTypes: {},
+  orb:         { tight: true, standard: true },
+  fortune:     null,
+  pattern:     null
+};
+
+// ============================================================
+//  MATH UTILITIES
+// ============================================================
+function toRad(d) { return d * Math.PI / 180; }
+function toDeg(r) { return r * 180 / Math.PI; }
+function normalize(deg) { deg = deg % 360; return deg < 0 ? deg + 360 : deg; }
+function angleDiff(a, b) { var d = Math.abs(a - b); return d > 180 ? 360 - d : d; }
+
+// ============================================================
+//  ASTRONOMICAL CALCULATIONS (astronomy-engine, geocentric)
+// ============================================================
+function makeUTCDate(dateStr, timeStr, tzHours) {
+  var parts = dateStr.split('-');
+  var y = parseInt(parts[0]), m = parseInt(parts[1]), d = parseInt(parts[2]);
+  var tp = timeStr.split(':');
+  var h = parseInt(tp[0]), min = parseInt(tp[1]);
+  return new Date(Date.UTC(y, m - 1, d, h - tzHours, min, 0, 0));
+}
+
+function getEclipticLongitude(body, date) {
+  if (body === Astronomy.Body.Moon) return Astronomy.EclipticGeoMoon(date).lon;
+  if (body === Astronomy.Body.Sun)  return Astronomy.SunPosition(date).elon;
+  var geo = Astronomy.GeoVector(body, date, true);
+  return Astronomy.Ecliptic(geo).elon;
+}
+
+function calcAllPlanets(date) {
+  var result = {};
+  for (var i = 0; i < BODIES.length; i++) {
+    result[i] = getEclipticLongitude(BODIES[i], date);
+  }
+  return result;
+}
+
+function calcAscendant(date, lat, lng) {
+  var gmstHours = Astronomy.SiderealTime(date);
+  var lstDeg = normalize(gmstHours * 15 + lng);
+  var lstRad = toRad(lstDeg);
+  var jd = (date.getTime() / 86400000) + 2440587.5;
+  var T = (jd - 2451545.0) / 36525.0;
+  var eps = 23.4393 - 0.013 * T;
+  var epsRad = toRad(eps);
+  var latRad = toRad(lat);
+  var y = -Math.cos(lstRad);
+  var x = Math.sin(epsRad) * Math.tan(latRad) + Math.cos(epsRad) * Math.sin(lstRad);
+  return normalize(toDeg(Math.atan2(y, x)) + 180);
+}
+
+function calcMC(date, lng) {
+  var gmstHours = Astronomy.SiderealTime(date);
+  var lstDeg = normalize(gmstHours * 15 + lng);
+  var lstRad = toRad(lstDeg);
+  var jd = (date.getTime() / 86400000) + 2440587.5;
+  var T = (jd - 2451545.0) / 36525.0;
+  var eps = 23.4393 - 0.013 * T;
+  var epsRad = toRad(eps);
+  return normalize(toDeg(Math.atan2(Math.sin(lstRad), Math.cos(lstRad) * Math.cos(epsRad))));
+}
+
+function calcHouses(asc) {
+  var houses = [];
+  for (var i = 0; i < 12; i++) houses.push(normalize(asc + i * 30));
+  return houses;
+}
+
+function calcProgressedDate(birthDate, currentDate) {
+  var msPerDay = 86400000;
+  var daysLived = (currentDate.getTime() - birthDate.getTime()) / msPerDay;
+  var progDays = daysLived / 365.25;
+  return new Date(birthDate.getTime() + progDays * msPerDay);
+}
+
+// ============================================================
+//  ASPECT DETECTION
+// ============================================================
+function collectAspects(p1, p2, isCross, label, dashStyle) {
+  var found = [];
+  for (var i = 0; i < 10; i++) {
+    var jStart = isCross ? 0 : i + 1;
+    for (var j = jStart; j < 10; j++) {
+      var diff = angleDiff(p1[i], p2[j]);
+      for (var k = 0; k < ASPECT_TYPES.length; k++) {
+        var asp = ASPECT_TYPES[k];
+        if (Math.abs(diff - asp.angle) <= asp.orb) {
+          found.push({
+            p1: i, p2: j, type: asp, diff: diff,
+            label: label, dashStyle: dashStyle,
+            lon1: p1[i], lon2: p2[j], visible: true
+          });
+        }
+      }
+    }
+  }
+  return found;
+}
+
+// ============================================================
+//  PATTERN DETECTION (Phase 1: GT, TSQ, Yod)
+// ============================================================
+function detectPatterns(aspects, natal, transit, progressed) {
+  var patterns = { grandtrine: [], tsquare: [], yod: [] };
+
+  // Build position pool
+  var pool = [];
+  for (var i = 0; i < 10; i++) pool.push({ lon: natal[i], source: 'N', idx: i });
+  if (transit)    for (var i = 0; i < 10; i++) pool.push({ lon: transit[i], source: 'T', idx: i });
+  if (progressed) for (var i = 0; i < 10; i++) pool.push({ lon: progressed[i], source: 'P', idx: i });
+
+  function countNatal(arr) {
+    var c = 0;
+    for (var x = 0; x < arr.length; x++) if (arr[x].source === 'N') c++;
+    return c;
+  }
+
+  function hasPersonal(arr) {
+    for (var x = 0; x < arr.length; x++) {
+      if (PLANET_GROUPS.personal.indexOf(arr[x].idx) >= 0) return true;
+    }
+    return false;
+  }
+
+  function isDuplicate(list, trio) {
+    var key = trio.map(function(p) { return p.source + p.idx; }).sort().join(',');
+    for (var i = 0; i < list.length; i++) {
+      var eKey = list[i].planets.map(function(p) { return p.source + p.idx; }).sort().join(',');
+      if (eKey === key) return true;
+    }
+    return false;
+  }
+
+  var len = pool.length;
+
+  // Grand Trine: 3 trines (120° ±3°)
+  for (var i = 0; i < len; i++) {
+    for (var j = i + 1; j < len; j++) {
+      if (Math.abs(angleDiff(pool[i].lon, pool[j].lon) - 120) > 3) continue;
+      for (var k = j + 1; k < len; k++) {
+        if (Math.abs(angleDiff(pool[i].lon, pool[k].lon) - 120) > 3) continue;
+        if (Math.abs(angleDiff(pool[j].lon, pool[k].lon) - 120) > 3) continue;
+        var trio = [pool[i], pool[j], pool[k]];
+        if (countNatal(trio) < 2 || !hasPersonal(trio) || isDuplicate(patterns.grandtrine, trio)) continue;
+        patterns.grandtrine.push({ planets: trio });
+      }
+    }
+  }
+
+  // T-Square: opposition (180° ±3°) + 2 squares (90° ±2.5°)
+  for (var i = 0; i < len; i++) {
+    for (var j = i + 1; j < len; j++) {
+      if (Math.abs(angleDiff(pool[i].lon, pool[j].lon) - 180) > 3) continue;
+      for (var k = 0; k < len; k++) {
+        if (k === i || k === j) continue;
+        if (Math.abs(angleDiff(pool[i].lon, pool[k].lon) - 90) > 2.5) continue;
+        if (Math.abs(angleDiff(pool[j].lon, pool[k].lon) - 90) > 2.5) continue;
+        var trio = [pool[i], pool[j], pool[k]];
+        if (countNatal(trio) < 2 || !hasPersonal(trio) || isDuplicate(patterns.tsquare, trio)) continue;
+        patterns.tsquare.push({ planets: trio, apex: pool[k] });
+      }
+    }
+  }
+
+  // Yod: sextile (60° ±2.5°) + 2 quincunxes (150° ±1.2°)
+  for (var i = 0; i < len; i++) {
+    for (var j = i + 1; j < len; j++) {
+      if (Math.abs(angleDiff(pool[i].lon, pool[j].lon) - 60) > 2.5) continue;
+      for (var k = 0; k < len; k++) {
+        if (k === i || k === j) continue;
+        if (Math.abs(angleDiff(pool[i].lon, pool[k].lon) - 150) > 1.2) continue;
+        if (Math.abs(angleDiff(pool[j].lon, pool[k].lon) - 150) > 1.2) continue;
+        var trio = [pool[i], pool[j], pool[k]];
+        if (countNatal(trio) < 2 || !hasPersonal(trio) || isDuplicate(patterns.yod, trio)) continue;
+        patterns.yod.push({ planets: trio, apex: pool[k] });
+      }
+    }
+  }
+
+  return patterns;
+}
+
+// ============================================================
+//  PATTERN COMPLETION PREDICTION (60 days)
+// ============================================================
+function predictPatternCompletions(natal, birthDate, daysAhead) {
+  daysAhead = daysAhead || 60;
+  var predictions = [];
+  var now = new Date();
+
+  function scanTransit(targetDeg, patternType, ni, nj) {
+    for (var body = 0; body < 10; body++) {
+      var prevLon = null;
+      for (var day = 0; day <= daysAhead; day++) {
+        var checkDate = new Date(now.getTime() + day * 86400000);
+        var lon = getEclipticLongitude(BODIES[body], checkDate);
+        var dist = angleDiff(lon, targetDeg);
+        if (prevLon !== null) {
+          var prevDist = angleDiff(prevLon, targetDeg);
+          if (dist <= 3 && prevDist > dist) {
+            var hoursFromNow = (day - 1) * 24 + (prevDist / (prevDist + dist)) * 24;
+            if (hoursFromNow < 0) hoursFromNow = 0;
+            predictions.push({
+              type: patternType,
+              natalPair: [ni, nj],
+              completeDegree: targetDeg,
+              transitBody: body,
+              dateEstimate: new Date(now.getTime() + hoursFromNow * 3600000),
+              hoursUntil: hoursFromNow
+            });
+            break;
+          }
+        }
+        prevLon = lon;
+      }
+    }
+  }
+
+  for (var i = 0; i < 10; i++) {
+    for (var j = i + 1; j < 10; j++) {
+      if (PLANET_GROUPS.personal.indexOf(i) < 0 && PLANET_GROUPS.personal.indexOf(j) < 0) continue;
+      var dij = angleDiff(natal[i], natal[j]);
+
+      // Grand Trine candidate
+      if (Math.abs(dij - 120) <= 3) {
+        var t1 = normalize(natal[i] + 120);
+        var t2 = normalize(natal[i] - 120);
+        if (Math.abs(angleDiff(t1, natal[j]) - 120) <= 5) scanTransit(t1, 'grandtrine', i, j);
+        if (Math.abs(angleDiff(t2, natal[j]) - 120) <= 5) scanTransit(t2, 'grandtrine', i, j);
+      }
+
+      // T-Square candidate
+      if (Math.abs(dij - 180) <= 3) {
+        var mid = normalize((natal[i] + natal[j]) / 2);
+        scanTransit(normalize(mid), 'tsquare', i, j);
+        scanTransit(normalize(mid + 180), 'tsquare', i, j);
+      }
+
+      // Yod candidate
+      if (Math.abs(dij - 60) <= 2.5) {
+        var t1 = normalize(natal[i] + 150);
+        var t2 = normalize(natal[i] - 150);
+        if (Math.abs(angleDiff(t1, natal[j]) - 150) <= 2.5) scanTransit(t1, 'yod', i, j);
+        if (Math.abs(angleDiff(t2, natal[j]) - 150) <= 2.5) scanTransit(t2, 'yod', i, j);
+      }
+    }
+  }
+
+  predictions.sort(function(a, b) { return a.hoursUntil - b.hoursUntil; });
+  return predictions;
+}
+
+// ============================================================
+//  FILTER LOGIC
+// ============================================================
+function getPlanetGroup(idx) {
+  if (PLANET_GROUPS.personal.indexOf(idx) >= 0) return 'personal';
+  if (PLANET_GROUPS.social.indexOf(idx) >= 0) return 'social';
+  return 'generational';
+}
+
+function aspectPassesFilter(a) {
+  // A: Quality
+  if (!activeFilters.quality[a.type.quality]) return false;
+  // B: Fortune (exclusive)
+  if (activeFilters.fortune) {
+    var fp = FORTUNE_PLANETS[activeFilters.fortune];
+    if (fp.indexOf(a.p1) < 0 && fp.indexOf(a.p2) < 0) return false;
+  }
+  // C: Planet groups
+  if (!activeFilters.pgroup[getPlanetGroup(a.p1)] && !activeFilters.pgroup[getPlanetGroup(a.p2)]) return false;
+  // D: Individual aspect types
+  if (!activeFilters.aspectTypes[a.type.name]) return false;
+  // E: Orb strength
+  var orbDiff = Math.abs(a.diff - a.type.angle);
+  var isTight = orbDiff <= 2;
+  if (isTight && !activeFilters.orb.tight) return false;
+  if (!isTight && !activeFilters.orb.standard) return false;
+  return true;
+}
+
+function aspectInPattern(aspect, patternType, patterns) {
+  var list = patterns[patternType] || [];
+  for (var i = 0; i < list.length; i++) {
+    var ps = list[i].planets;
+    var src1 = 'N';
+    var src2 = aspect.label === 'N-T' ? 'T' : (aspect.label === 'N-P' ? 'P' : 'N');
+    var found1 = false, found2 = false;
+    for (var p = 0; p < ps.length; p++) {
+      if (ps[p].source === src1 && ps[p].idx === aspect.p1) found1 = true;
+      if (ps[p].source === src2 && ps[p].idx === aspect.p2) found2 = true;
+    }
+    if (found1 && found2) return true;
+  }
+  return false;
+}
+
+// ============================================================
+//  FILTER UI HANDLERS
+// ============================================================
+function toggleFilter(el) {
+  el.classList.toggle('active');
+  var ft = el.getAttribute('data-filter');
+  var val = el.getAttribute('data-value');
+  if (ft === 'quality')    activeFilters.quality[val] = el.classList.contains('active');
+  else if (ft === 'pgroup') activeFilters.pgroup[val] = el.classList.contains('active');
+  else if (ft === 'orb')    activeFilters.orb[val] = el.classList.contains('active');
+  else if (ft === 'aspectType') activeFilters.aspectTypes[val] = el.classList.contains('active');
+  renderChart();
+}
+
+function toggleExclusive(el) {
+  var ft = el.getAttribute('data-filter');
+  var val = el.getAttribute('data-value');
+  var wasActive = el.classList.contains('active');
+  document.querySelectorAll('.filter-chip[data-filter="' + ft + '"]').forEach(function(c) { c.classList.remove('active'); });
+  if (!wasActive) {
+    el.classList.add('active');
+    activeFilters[ft] = val;
+  } else {
+    activeFilters[ft] = null;
+  }
+
+  // F欄パターン選択時: 全アスペクトを非表示にし、パターン内のもののみ再表示
+  if (ft === 'pattern') {
+    applyPatternHide(activeFilters.pattern);
+  }
+
+  renderChart();
+}
+
+// F欄パターン選択時の個別チェック連動
+// patternType が null なら全チェックON復帰、値があれば全OFF→パターン内のみON
+function applyPatternHide(patternType) {
+  if (!patternType) {
+    // パターン解除: 全アスペクトのチェックを復帰
+    hiddenAspects = {};
+    return;
+  }
+  // まず全アスペクトを非表示
+  lastAspectsFound.forEach(function(a) {
+    hiddenAspects[getAspectKey(a)] = true;
+  });
+  // パターン内のアスペクトのみ再表示
+  if (lastRenderParams && lastRenderParams.patterns) {
+    var pList = lastRenderParams.patterns[patternType] || [];
+    lastAspectsFound.forEach(function(a) {
+      if (aspectInPattern(a, patternType, lastRenderParams.patterns)) {
+        hiddenAspects[getAspectKey(a)] = false;
+      }
+    });
+  }
+}
+
+// ============================================================
+//  ANALYSIS PANEL (collapsible + tabs)
+// ============================================================
+function toggleAnalysis() {
+  var body = document.getElementById('analysisBody');
+  var toggle = document.getElementById('analysisToggle');
+  var tabs = document.getElementById('analysisTabs');
+  body.classList.toggle('collapsed');
+  toggle.classList.toggle('collapsed');
+  if (body.classList.contains('collapsed')) {
+    tabs.style.display = 'none';
+  } else {
+    tabs.style.display = 'flex';
+  }
+}
+
+
+// ============================================================
+//  ASPECTS PANEL (collapsible + tabs)
+// ============================================================
+function toggleAspects() {
+  var body = document.getElementById('aspectsBody');
+  var toggle = document.getElementById('aspectsToggle');
+  var tabs = document.getElementById('aspectsTabs');
+  body.classList.toggle('collapsed');
+  toggle.classList.toggle('collapsed');
+  if (body.classList.contains('collapsed')) {
+    tabs.style.display = 'none';
+  } else {
+    if (chartMode === 'triple') tabs.style.display = 'flex';
+  }
+}
+
+function switchAspectsTab(tab) {
+  var ntContent = document.getElementById('aspectsNTContent');
+  var npContent = document.getElementById('aspectsNPContent');
+  document.querySelectorAll('#aspectsTabs .analysis-tab').forEach(function(t) {
+    t.classList.toggle('active', t.getAttribute('data-tab') === tab);
+  });
+  if (tab === 'nt') {
+    ntContent.style.display = '';
+    npContent.style.display = 'none';
+  } else {
+    ntContent.style.display = 'none';
+    npContent.style.display = '';
+  }
+}
+
+function updateAspectsTabs() {
+  var tabs = document.getElementById('aspectsTabs');
+  var body = document.getElementById('aspectsBody');
+  if (chartMode === 'triple') {
+    if (!body.classList.contains('collapsed')) tabs.style.display = 'flex';
+  } else {
+    tabs.style.display = 'none';
+    document.getElementById('aspectsNTContent').style.display = '';
+    document.getElementById('aspectsNPContent').style.display = 'none';
+  }
+}
+
+function resetFilters() {
+  hiddenAspects = {};
+  activeFilters.quality = { soft: true, hard: true, neutral: true };
+  activeFilters.pgroup = { personal: true, social: true, generational: true };
+  activeFilters.orb = { tight: true, standard: true };
+  activeFilters.fortune = null;
+  activeFilters.pattern = null;
+  ASPECT_TYPES.forEach(function(a) { activeFilters.aspectTypes[a.name] = true; });
+  document.querySelectorAll('.filter-chip').forEach(function(c) {
+    var ft = c.getAttribute('data-filter');
+    if (ft === 'fortune' || ft === 'pattern') c.classList.remove('active');
+    else c.classList.add('active');
+  });
+  renderChart();
+}
+
+function initAspectTypeChips() {
+  var container = document.getElementById('aspectTypeChips');
+  var html = '';
+  ASPECT_TYPES.forEach(function(a) {
+    activeFilters.aspectTypes[a.name] = true;
+    html += '<div class="filter-chip active" style="--chip-color:' + a.color + '" data-filter="aspectType" data-value="' + a.name + '" onclick="toggleFilter(this)">' + a.symbol + ' ' + a.name + '</div>';
+  });
+  container.innerHTML = html;
+}
+
+// ============================================================
+//  SVG RENDERING — ASPECT LINES & PATTERN POLYGONS
+// ============================================================
+function buildPatternPolygons(patterns, natal, asc, cx, cy, r, predictions) {
+  var h = '';
+  var types = ['grandtrine', 'tsquare', 'yod'];
+
+  // Active patterns
+  for (var t = 0; t < types.length; t++) {
+    var type = types[t];
+    if (activeFilters.pattern && activeFilters.pattern !== type) continue;
+    var style = PATTERN_STYLES[type];
+    var list = patterns[type] || [];
+    for (var p = 0; p < list.length; p++) {
+      var planets = list[p].planets;
+      var points = [];
+      var cxP = 0, cyP = 0;
+      for (var i = 0; i < planets.length; i++) {
+        var angle = toRad(planets[i].lon - asc - 90);
+        var x = cx + r * Math.cos(angle);
+        var y = cy + r * Math.sin(angle);
+        points.push(x.toFixed(1) + ',' + y.toFixed(1));
+        cxP += cx + (r * 0.6) * Math.cos(angle);
+        cyP += cy + (r * 0.6) * Math.sin(angle);
+      }
+      cxP /= planets.length;
+      cyP /= planets.length;
+
+      h += '<polygon points="' + points.join(' ') + '" fill="' + style.fill + '" stroke="' + style.stroke + '" stroke-width="2" stroke-opacity="0.6" class="anim-active">';
+      h += '<animate attributeName="fill-opacity" values="0.15;0.3;0.15" dur="6s" repeatCount="indefinite" calcMode="spline" keySplines="0.4 0 0.6 1;0.4 0 0.6 1"/>';
+      h += '</polygon>';
+
+      var pNames = planets.map(function(pl) { return (pl.source !== 'N' ? pl.source : '') + PLANET_GLYPHS[pl.idx]; }).join('');
+      h += '<text x="' + cxP.toFixed(1) + '" y="' + (cyP - 6).toFixed(1) + '" text-anchor="middle" dominant-baseline="central" fill="' + style.stroke + '" font-size="9" opacity="0.8">' + style.label + '</text>';
+      h += '<text x="' + cxP.toFixed(1) + '" y="' + (cyP + 6).toFixed(1) + '" text-anchor="middle" dominant-baseline="central" fill="' + style.stroke + '" font-size="8" opacity="0.6">' + pNames + '</text>';
+    }
+  }
+
+  // Ghost polygons for approaching predictions (96h window)
+  var approachPreds = (predictions || []).filter(function(p) {
+    if (p.hoursUntil > 96) return false;
+    if (activeFilters.pattern && activeFilters.pattern !== p.type) return false;
+    return true;
+  });
+
+  for (var pi = 0; pi < Math.min(approachPreds.length, 3); pi++) {
+    var pred = approachPreds[pi];
+    var style = PATTERN_STYLES[pred.type];
+    if (!style) continue;
+    var lons = [natal[pred.natalPair[0]], natal[pred.natalPair[1]], pred.completeDegree];
+    var points = [];
+    var cxP = 0, cyP = 0;
+    for (var i = 0; i < 3; i++) {
+      var angle = toRad(lons[i] - asc - 90);
+      var x = cx + r * Math.cos(angle);
+      var y = cy + r * Math.sin(angle);
+      points.push(x.toFixed(1) + ',' + y.toFixed(1));
+      cxP += cx + (r * 0.45) * Math.cos(angle);
+      cyP += cy + (r * 0.45) * Math.sin(angle);
+    }
+    cxP /= 3; cyP /= 3;
+
+    var animClass = pred.hoursUntil <= 12 ? 'anim-imminent' : 'anim-approaching';
+    h += '<polygon points="' + points.join(' ') + '" class="' + animClass + '" fill="' + style.fill + '" stroke="' + style.stroke + '" stroke-width="1.5" stroke-dasharray="6,4">';
+    if (pred.hoursUntil <= 12) {
+      h += '<animate attributeName="stroke" values="' + style.stroke + ';' + BRAND_PLATINUM + ';' + style.stroke + '" dur="2s" repeatCount="indefinite" calcMode="spline" keySplines="0.4 0 0.6 1;0.4 0 0.6 1"/>';
+      h += '<animate attributeName="fill-opacity" values="0.08;0.2;0.08" dur="2s" repeatCount="indefinite" calcMode="spline" keySplines="0.4 0 0.6 1;0.4 0 0.6 1"/>';
+    } else {
+      h += '<animate attributeName="fill-opacity" values="0.03;0.12;0.03" dur="4s" repeatCount="indefinite" calcMode="spline" keySplines="0.4 0 0.6 1;0.4 0 0.6 1"/>';
+    }
+    h += '</polygon>';
+
+    var timeLabel = pred.hoursUntil < 1 ? 'まもなく' : pred.hoursUntil < 24 ? Math.round(pred.hoursUntil) + '時間後' : Math.round(pred.hoursUntil / 24) + '日後';
+    h += '<text x="' + cxP.toFixed(1) + '" y="' + (cyP - 5).toFixed(1) + '" text-anchor="middle" fill="' + style.stroke + '" font-size="8" opacity="0.5">' + style.label + '</text>';
+    h += '<text x="' + cxP.toFixed(1) + '" y="' + (cyP + 5).toFixed(1) + '" text-anchor="middle" fill="' + BRAND_GOLD + '" font-size="7" opacity="0.6">' + PLANET_GLYPHS[pred.transitBody] + ' ' + timeLabel + '</text>';
+  }
+
+  return h;
+}
+
+function buildAspectLinesHTML(aspects, asc, cx, cy, r, patterns, natal, predictions) {
+  var h = '<g id="aspectLines">';
+  if (natal && patterns) h += buildPatternPolygons(patterns, natal, asc, cx, cy, r, predictions);
+
+  for (var i = 0; i < aspects.length; i++) {
+    var a = aspects[i];
+    var key = getAspectKey(a);
+    if (hiddenAspects[key]) { a.visible = false; continue; }
+    if (!aspectPassesFilter(a)) { a.visible = false; continue; }
+    if (activeFilters.pattern && !aspectInPattern(a, activeFilters.pattern, patterns)) { a.visible = false; continue; }
+    a.visible = true;
+
+    var a1 = toRad(a.lon1 - asc - 90);
+    var a2 = toRad(a.lon2 - asc - 90);
+    var opacity = 1 - Math.abs(a.diff - a.type.angle) / a.type.orb * 0.5;
+    var dash = a.dashStyle ? ' stroke-dasharray="' + a.dashStyle + '"' : '';
+    h += '<line x1="' + (cx + r * Math.cos(a1)).toFixed(1) + '" y1="' + (cy + r * Math.sin(a1)).toFixed(1) + '" x2="' + (cx + r * Math.cos(a2)).toFixed(1) + '" y2="' + (cy + r * Math.sin(a2)).toFixed(1) + '" stroke="' + a.type.color + '" stroke-opacity="' + (opacity * 0.95).toFixed(2) + '" stroke-width="1.5"' + dash + '/>';
+  }
+  h += '</g>';
+  return h;
+}
+
+function redrawAspectLines() {
+  if (!lastRenderParams || !lastAspectsFound.length) return;
+  var p = lastRenderParams;
+  var oldG = document.getElementById('aspectLines');
+  if (!oldG) return;
+  var temp = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+  temp.innerHTML = buildAspectLinesHTML(lastAspectsFound, p.asc, p.cx, p.cy, p.aspectR, p.patterns, p.natal, p.predictions);
+  var newG = temp.querySelector('#aspectLines');
+  if (newG) oldG.parentNode.replaceChild(newG, oldG);
+}
+
+// ============================================================
+//  UI — USER SELECTOR, CHART MODE, TRANSIT
+// ============================================================
+function initUserSelector() {
+  var c = document.getElementById('userSelector');
+  c.innerHTML = users.map(function(u, i) {
+    return '<button class="user-btn ' + (i === currentUserIndex ? 'active' : '') + '" onclick="selectUser(' + i + ')">' + u.name + '</button>';
+  }).join('');
+}
+
+function selectUser(idx) {
+  currentUserIndex = idx;
+  document.querySelectorAll('.user-btn').forEach(function(btn, i) { btn.classList.toggle('active', i === idx); });
+  fillForm(users[idx]);
+  renderChart();
+}
+
+function fillForm(user) {
+  document.getElementById('inputName').value = user.name;
+  document.getElementById('inputDate').value = user.date;
+  document.getElementById('inputTime').value = user.time;
+  document.getElementById('inputPlace').value = user.place;
+  document.getElementById('inputLat').value = user.lat;
+  document.getElementById('inputLng').value = user.lng;
+}
+
+function setChartMode(mode) {
+  chartMode = mode;
+  var modes = ['single', 'double', 'triple'];
+  document.querySelectorAll('.tab-btn').forEach(function(btn, i) { btn.classList.toggle('active', modes[i] === mode); });
+  document.getElementById('transitPanel').style.display = (mode === 'single') ? 'none' : 'block';
+  // モバイル: transitタブの表示切替
+  updateBSTransitTab();
+  // 円切替時はフィルタ・個別チェックを初期状態に戻す
+  resetFilters();
+}
+
+// ============================================================
+//  MOBILE BOTTOM SHEET
+// ============================================================
+var bsState = 'half';  // 'min' | 'half' | 'full'
+var bsActiveTab = 'birth';
+var BS_MIN_H = 52;
+var BS_HALF_RATIO = 0.45;
+var BS_FULL_RATIO = 0.85;
+
+function isMobileView() {
+  return window.innerWidth <= 900;
+}
+
+function initBottomSheet() {
+  var sheet = document.getElementById('bottomSheet');
+  if (!sheet) return;
+  var handle = document.getElementById('bsDragHandle');
+  var startY = 0;
+  var startH = 0;
+  var dragging = false;
+
+  handle.addEventListener('touchstart', function(e) {
+    dragging = true;
+    startY = e.touches[0].clientY;
+    startH = sheet.offsetHeight;
+    sheet.style.transition = 'none';
+  });
+  document.addEventListener('touchmove', function(e) {
+    if (!dragging) return;
+    var dy = startY - e.touches[0].clientY;
+    var newH = Math.max(BS_MIN_H, Math.min(window.innerHeight * BS_FULL_RATIO, startH + dy));
+    sheet.style.height = newH + 'px';
+    updateBSBodyHeight();
+  });
+  document.addEventListener('touchend', function() {
+    if (!dragging) return;
+    dragging = false;
+    sheet.style.transition = '';
+    var h = sheet.offsetHeight;
+    var wh = window.innerHeight;
+    if (h < BS_MIN_H + 40) {
+      setBSState('min');
+    } else if (h > wh * 0.65) {
+      setBSState('full');
+    } else {
+      setBSState('half');
+    }
+  });
+
+  handle.addEventListener('mousedown', function(e) {
+    dragging = true;
+    startY = e.clientY;
+    startH = sheet.offsetHeight;
+    sheet.style.transition = 'none';
+    e.preventDefault();
+  });
+  document.addEventListener('mousemove', function(e) {
+    if (!dragging) return;
+    var dy = startY - e.clientY;
+    var newH = Math.max(BS_MIN_H, Math.min(window.innerHeight * BS_FULL_RATIO, startH + dy));
+    sheet.style.height = newH + 'px';
+    updateBSBodyHeight();
+  });
+  document.addEventListener('mouseup', function() {
+    if (!dragging) return;
+    dragging = false;
+    sheet.style.transition = '';
+    var h = sheet.offsetHeight;
+    var wh = window.innerHeight;
+    if (h < BS_MIN_H + 40) {
+      setBSState('min');
+    } else if (h > wh * 0.65) {
+      setBSState('full');
+    } else {
+      setBSState('half');
+    }
+  });
+
+  setBSState('half');
+  buildBSBirthContent();
+  buildBSTransitContent();
+  switchBSTab('birth');
+
+  window.addEventListener('resize', function() {
+    if (isMobileView()) {
+      setBSState(bsState);
+    }
+  });
+}
+
+function setBSState(state) {
+  bsState = state;
+  var sheet = document.getElementById('bottomSheet');
+  if (!sheet) return;
+  var wh = window.innerHeight;
+  if (state === 'min') {
+    sheet.style.height = BS_MIN_H + 'px';
+  } else if (state === 'half') {
+    sheet.style.height = Math.round(wh * BS_HALF_RATIO) + 'px';
+  } else {
+    sheet.style.height = Math.round(wh * BS_FULL_RATIO) + 'px';
+  }
+  updateBSBodyHeight();
+}
+
+function updateBSBodyHeight() {
+  var sheet = document.getElementById('bottomSheet');
+  var body = document.getElementById('bsBody');
+  var tabs = document.getElementById('bsTabs');
+  var handle = document.getElementById('bsDragHandle');
+  if (!sheet || !body) return;
+  var used = (handle ? handle.offsetHeight : 0) + (tabs ? tabs.offsetHeight : 0);
+  body.style.maxHeight = Math.max(0, sheet.offsetHeight - used - 4) + 'px';
+}
+
+function switchBSTab(tab) {
+  bsActiveTab = tab;
+  document.querySelectorAll('.bs-tab').forEach(function(t) {
+    t.classList.toggle('active', t.getAttribute('data-bs') === tab);
+  });
+  document.querySelectorAll('.bs-section').forEach(function(s) { s.classList.remove('active'); });
+  var section = document.getElementById('bs' + tab.charAt(0).toUpperCase() + tab.slice(1));
+  if (section) section.classList.add('active');
+
+  if (tab === 'birth') syncBSBirthForm();
+  if (tab === 'transit') syncBSTransitForm();
+  if (tab === 'planets') buildBSPlanetsContent();
+  if (tab === 'filter') buildBSFilterContent();
+  if (tab === 'aspects') buildBSAspectsContent();
+
+  if (bsState === 'min') setBSState('half');
+}
+
+function updateBSTransitTab() {
+  var tab = document.getElementById('bsTransitTab');
+  if (tab) tab.classList.toggle('hidden-tab', chartMode === 'single');
+}
+
+function buildBSBirthContent() {
+  var el = document.getElementById('bsBirth');
+  if (!el) return;
+  el.innerHTML = '<h3>&#9881; BIRTH DATA</h3>'
+    + '<div class="form-group"><label>氏名</label><input type="text" id="mInputName" placeholder="氏名を入力"></div>'
+    + '<div class="form-row"><div class="form-group"><label>生年月日</label><input type="date" id="mInputDate"></div>'
+    + '<div class="form-group"><label>出生時刻</label><input type="time" id="mInputTime" step="60"></div></div>'
+    + '<div class="form-group"><label>出生地</label><input type="text" id="mInputPlace" placeholder="例: 岐阜県岐阜市"></div>'
+    + '<div class="form-row"><div class="form-group"><label>緯度</label><input type="number" id="mInputLat" step="0.0001"></div>'
+    + '<div class="form-group"><label>経度</label><input type="number" id="mInputLng" step="0.0001"></div></div>'
+    + '<button class="btn-generate" style="background:linear-gradient(135deg,#F6BD60,#E8A840)" onclick="applyBSBirth()">ホロスコープ生成</button>';
+}
+
+function syncBSBirthForm() {
+  var g = function(id) { return document.getElementById(id); };
+  var m = g('mInputName'); if (!m) return;
+  m.value = g('inputName').value;
+  g('mInputDate').value = g('inputDate').value;
+  g('mInputTime').value = g('inputTime').value;
+  g('mInputPlace').value = g('inputPlace').value;
+  g('mInputLat').value = g('inputLat').value;
+  g('mInputLng').value = g('inputLng').value;
+}
+
+function applyBSBirth() {
+  var g = function(id) { return document.getElementById(id); };
+  g('inputName').value = g('mInputName').value;
+  g('inputDate').value = g('mInputDate').value;
+  g('inputTime').value = g('mInputTime').value;
+  g('inputPlace').value = g('mInputPlace').value;
+  g('inputLat').value = g('mInputLat').value;
+  g('inputLng').value = g('mInputLng').value;
+  generateFromInput();
+}
+
+function buildBSTransitContent() {
+  var el = document.getElementById('bsTransit');
+  if (!el) return;
+  var loc = document.getElementById('transitLocation');
+  var options = '';
+  for (var i = 0; i < loc.options.length; i++) {
+    var o = loc.options[i];
+    options += '<option value="' + o.value + '"' + (o.selected ? ' selected' : '') + '>' + o.text + '</option>';
+  }
+  el.innerHTML = '<h3 style="color:#6BB5FF">&#9790; TRANSIT DATA</h3>'
+    + '<div class="form-row"><div class="form-group"><label>日付</label><input type="date" id="mTransitDate"></div>'
+    + '<div class="form-group"><label>時刻</label><input type="time" id="mTransitTime" step="60"></div></div>'
+    + '<div class="form-group"><label>場所</label><select id="mTransitLocation" onchange="onMobileTransitLocChange()">' + options + '</select></div>'
+    + '<div class="form-row" id="mTransitCustom" style="display:none"><div class="form-group"><label>緯度</label><input type="number" id="mTransitLat" step="0.0001"></div>'
+    + '<div class="form-group"><label>経度</label><input type="number" id="mTransitLng" step="0.0001"></div></div>'
+    + '<button class="btn-generate" style="background:linear-gradient(135deg,#6BB5FF,#4A90D9)" onclick="applyBSTransit()">トランジット更新</button>';
+}
+
+function syncBSTransitForm() {
+  var g = function(id) { return document.getElementById(id); };
+  var m = g('mTransitDate'); if (!m) return;
+  m.value = g('transitDate').value;
+  g('mTransitTime').value = g('transitTime').value;
+  g('mTransitLocation').value = g('transitLocation').value;
+  onMobileTransitLocChange();
+}
+
+function onMobileTransitLocChange() {
+  var sel = document.getElementById('mTransitLocation');
+  var custom = document.getElementById('mTransitCustom');
+  if (sel && custom) custom.style.display = (sel.value === 'custom') ? 'flex' : 'none';
+}
+
+function applyBSTransit() {
+  var g = function(id) { return document.getElementById(id); };
+  g('transitDate').value = g('mTransitDate').value;
+  g('transitTime').value = g('mTransitTime').value;
+  g('transitLocation').value = g('mTransitLocation').value;
+  if (g('mTransitLocation').value === 'custom') {
+    g('transitLat').value = g('mTransitLat').value;
+    g('transitLng').value = g('mTransitLng').value;
+  }
+  onTransitLocationChange();
+  renderChart();
+}
+
+function buildBSPlanetsContent() {
+  var el = document.getElementById('bsPlanets');
+  if (!el) return;
+  el.innerHTML = '<h3>&#9737; PLANET POSITIONS</h3>' + document.getElementById('planetTable').innerHTML;
+}
+
+function buildBSFilterContent() {
+  var el = document.getElementById('bsFilter');
+  if (!el) return;
+  var src = document.getElementById('aspectFilterPanel');
+  if (src) {
+    el.innerHTML = '<h3>&#9881; ASPECT FILTER <button class="filter-reset-btn" onclick="resetFilters()" style="margin-left:8px">RESET</button></h3>' + src.innerHTML;
+  }
+}
+
+function buildBSAspectsContent() {
+  var el = document.getElementById('bsAspects');
+  if (!el) return;
+  var html = '';
+  var mainInfo = document.getElementById('aspectInfo');
+  var progInfo = document.getElementById('aspectInfoProg');
+  var containerTitle = document.getElementById('aspectsContainerTitle');
+  if (containerTitle) html += '<h3>' + containerTitle.innerHTML + '</h3>';
+  if (chartMode === 'triple') {
+    html += '<div style="margin-bottom:8px"><span style="color:' + TRANSIT_COLOR + ';font-size:12px;font-weight:600">Natal ↔ Transit</span></div>';
+  }
+  if (mainInfo) html += mainInfo.innerHTML;
+  if (chartMode === 'triple' && progInfo) {
+    html += '<div style="margin:12px 0 8px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.06)"><span style="color:' + PROGRESSED_COLOR + ';font-size:12px;font-weight:600">Natal ↔ Progressed</span></div>';
+    html += progInfo.innerHTML;
+  }
+  el.innerHTML = html;
+}
+
+function refreshActiveBS() {
+  if (!isMobileView()) return;
+  updateBSTransitTab();
+  var tab = bsActiveTab;
+  if (tab === 'planets') buildBSPlanetsContent();
+  if (tab === 'filter') buildBSFilterContent();
+  if (tab === 'aspects') buildBSAspectsContent();
+}
+
+// Legacy compatibility stubs
+function closeMobilePanel() {}
+function toggleMobilePanel() {}
+
+function onTransitLocationChange() {
+  var sel = document.getElementById('transitLocation').value;
+  document.getElementById('transitCustomLatLng').style.display = (sel === 'custom') ? 'flex' : 'none';
+  renderChart();
+}
+
+function getTransitDateTime() {
+  var d = document.getElementById('transitDate').value;
+  var t = document.getElementById('transitTime').value;
+  if (d && t) return makeUTCDate(d, t, 9);
+  return new Date();
+}
+
+function getTransitLocation() {
+  var sel = document.getElementById('transitLocation').value;
+  if (sel === 'custom') {
+    var lat = parseFloat(document.getElementById('transitLat').value);
+    var lng = parseFloat(document.getElementById('transitLng').value);
+    if (!isNaN(lat) && !isNaN(lng)) return { lat: lat, lng: lng };
+  }
+  if (TRANSIT_LOCATIONS[sel]) return TRANSIT_LOCATIONS[sel];
+  var user = users[currentUserIndex];
+  return { lat: user.lat, lng: user.lng };
+}
+
+function initTransitDefaults() {
+  var now = new Date();
+  document.getElementById('transitDate').value = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
+  document.getElementById('transitTime').value = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+}
+
+function generateFromInput() {
+  var name = document.getElementById('inputName').value;
+  var date = document.getElementById('inputDate').value;
+  var time = document.getElementById('inputTime').value;
+  var place = document.getElementById('inputPlace').value;
+  var lat = parseFloat(document.getElementById('inputLat').value);
+  var lng = parseFloat(document.getElementById('inputLng').value);
+  if (!name || !date || !time || isNaN(lat) || isNaN(lng)) { alert('すべての項目を入力してください'); return; }
+
+  var existing = users.findIndex(function(u) { return u.name === name; });
+  if (existing >= 0) {
+    users[existing] = { name: name, date: date, time: time, place: place, lat: lat, lng: lng, tz: 9 };
+    currentUserIndex = existing;
+  } else {
+    users.push({ name: name, date: date, time: time, place: place, lat: lat, lng: lng, tz: 9 });
+    currentUserIndex = users.length - 1;
+  }
+  initUserSelector();
+  renderChart();
+}
+
+// ============================================================
+//  FORMATTING HELPERS
+// ============================================================
+function formatDegree(lon) {
+  lon = normalize(lon);
+  var si = Math.floor(lon / 30);
+  var inSign = lon % 30;
+  var deg = Math.floor(inSign);
+  var min = Math.floor((inSign - deg) * 60);
+  return deg + '\u00B0' + String(min).padStart(2, '0') + "' " + ZODIAC_EN[si];
+}
+
+function getHouseNumber(lon, houses) {
+  for (var i = 0; i < 12; i++) {
+    var start = houses[i];
+    var end = houses[(i + 1) % 12];
+    if (end < start) { if (lon >= start || lon < end) return i + 1; }
+    else { if (lon >= start && lon < end) return i + 1; }
+  }
+  return 1;
+}
+
+function getAspectKey(a) {
+  return a.label + '_' + a.p1 + '_' + a.p2 + '_' + a.type.angle;
+}
+
+// ============================================================
+//  MAIN CHART RENDER
+// ============================================================
+function renderChart() {
+  var user = users[currentUserIndex];
+  var birthDate = makeUTCDate(user.date, user.time, user.tz);
+  var transitDate = getTransitDateTime();
+  var transitLoc = getTransitLocation();
+
+  // Calculate positions
+  var natal     = calcAllPlanets(birthDate);
+  var asc       = calcAscendant(birthDate, user.lat, user.lng);
+  var mc        = calcMC(birthDate, user.lng);
+  var houses    = calcHouses(asc);
+  var transit   = calcAllPlanets(transitDate);
+  var progDate  = calcProgressedDate(birthDate, transitDate);
+  var progressed = calcAllPlanets(progDate);
+
+  var svg = document.getElementById('horoscopeChart');
+  var cx = 300, cy = 300;
+
+  // Ring radii per mode
+  var rings;
+  if (chartMode === 'single') {
+    rings = { outer: 270, inner: 190, zodiac: 280, planetR: 160 };
+  } else if (chartMode === 'double') {
+    rings = { outer: 270, mid: 220, inner: 170, zodiac: 280, natalR: 140, transitR: 245 };
+  } else {
+    rings = { outer: 270, mid2: 230, mid1: 195, inner: 160, zodiac: 280, natalR: 130, progR: 212, transitR: 250 };
+  }
+
+  var zodiacOuter = rings.zodiac + 15;
+  var zodiacInner = rings.outer;
+  var innerR = rings.inner;
+
+  var h = '';
+
+  // SVG defs
+  h += '<defs>';
+  h += '<radialGradient id="bgGrad" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#12122a"/><stop offset="100%" stop-color="#0A0A14"/></radialGradient>';
+  h += '<filter id="glow"><feGaussianBlur stdDeviation="2" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>';
+  h += '</defs>';
+
+  // Background
+  h += '<circle cx="' + cx + '" cy="' + cy + '" r="295" fill="url(#bgGrad)" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>';
+
+  // ---- Zodiac wheel ----
+  for (var i = 0; i < 12; i++) {
+    var startAngle = i * 30 - asc;
+    var sa = toRad(startAngle - 90);
+    var ea = toRad(startAngle + 30 - 90);
+    var x1o = cx + zodiacOuter * Math.cos(sa), y1o = cy + zodiacOuter * Math.sin(sa);
+    var x2o = cx + zodiacOuter * Math.cos(ea), y2o = cy + zodiacOuter * Math.sin(ea);
+    var x1i = cx + zodiacInner * Math.cos(sa), y1i = cy + zodiacInner * Math.sin(sa);
+    var x2i = cx + zodiacInner * Math.cos(ea), y2i = cy + zodiacInner * Math.sin(ea);
+    var fc = ZODIAC_COLORS[i];
+
+    h += '<path d="M' + x1i + ',' + y1i + ' A' + zodiacInner + ',' + zodiacInner + ' 0 0,1 ' + x2i + ',' + y2i + ' L' + x2o + ',' + y2o + ' A' + zodiacOuter + ',' + zodiacOuter + ' 0 0,0 ' + x1o + ',' + y1o + ' Z" fill="' + fc + '" fill-opacity="0.12" stroke="rgba(255,255,255,0.08)" stroke-width="0.5"/>';
+
+    var midAngle = toRad(startAngle + 15 - 90);
+    var glyphR = (zodiacOuter + zodiacInner) / 2;
+    var gx = cx + glyphR * Math.cos(midAngle), gy = cy + glyphR * Math.sin(midAngle);
+    h += '<g class="zodiac-tap" onclick="showZodiacName(evt,' + i + ')" style="cursor:pointer">';
+    h += '<circle cx="' + gx + '" cy="' + gy + '" r="18" fill="transparent"/>';
+    h += '<text x="' + gx + '" y="' + gy + '" text-anchor="middle" dominant-baseline="central" fill="#B49774" fill-opacity="0.8" font-size="14">' + ZODIAC_SIGNS[i] + '</text>';
+    h += '</g>';
+    h += '<line x1="' + (cx + zodiacInner * Math.cos(sa)) + '" y1="' + (cy + zodiacInner * Math.sin(sa)) + '" x2="' + (cx + zodiacOuter * Math.cos(sa)) + '" y2="' + (cy + zodiacOuter * Math.sin(sa)) + '" stroke="rgba(255,255,255,0.15)" stroke-width="0.5"/>';
+  }
+
+  // Ring circles
+  h += '<circle cx="' + cx + '" cy="' + cy + '" r="' + zodiacOuter + '" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="0.5"/>';
+  h += '<circle cx="' + cx + '" cy="' + cy + '" r="' + zodiacInner + '" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="1"/>';
+  if (chartMode === 'double') {
+    h += '<circle cx="' + cx + '" cy="' + cy + '" r="' + rings.mid + '" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="0.8"/>';
+  } else if (chartMode === 'triple') {
+    h += '<circle cx="' + cx + '" cy="' + cy + '" r="' + rings.mid2 + '" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="0.8"/>';
+    h += '<circle cx="' + cx + '" cy="' + cy + '" r="' + rings.mid1 + '" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="0.8"/>';
+  }
+  h += '<circle cx="' + cx + '" cy="' + cy + '" r="' + innerR + '" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="0.8"/>';
+
+  // ---- House lines ----
+  for (var i = 0; i < 12; i++) {
+    var angle = toRad(houses[i] - asc - 90);
+    var isCardinal = (i === 0 || i === 3 || i === 6 || i === 9);
+    h += '<line x1="' + (cx + innerR * Math.cos(angle)) + '" y1="' + (cy + innerR * Math.sin(angle)) + '" x2="' + (cx + zodiacInner * Math.cos(angle)) + '" y2="' + (cy + zodiacInner * Math.sin(angle)) + '" stroke="' + (isCardinal ? 'rgba(255,215,112,0.5)' : 'rgba(255,255,255,0.12)') + '" stroke-width="' + (isCardinal ? 1.8 : 0.7) + '"/>';
+
+    var nextH = houses[(i + 1) % 12];
+    var midH = houses[i] + ((nextH - houses[i] + 360) % 360) / 2;
+    var hAngle = toRad(midH - asc - 90);
+    var hR = innerR + 14;
+    h += '<text x="' + (cx + hR * Math.cos(hAngle)) + '" y="' + (cy + hR * Math.sin(hAngle)) + '" text-anchor="middle" dominant-baseline="central" fill="rgba(255,255,255,0.2)" font-size="9">' + (i + 1) + '</text>';
+  }
+
+  // ASC / MC labels
+  h += '<text x="' + (cx - zodiacOuter - 12) + '" y="' + (cy + 4) + '" text-anchor="end" fill="' + NATAL_COLOR + '" font-size="11" font-weight="bold" filter="url(#glow)">ASC</text>';
+  var mcAngle = toRad(mc - asc - 90);
+  h += '<text x="' + (cx + (zodiacOuter + 14) * Math.cos(mcAngle)) + '" y="' + (cy + (zodiacOuter + 14) * Math.sin(mcAngle)) + '" text-anchor="middle" dominant-baseline="central" fill="' + NATAL_COLOR + '" font-size="10" font-weight="bold" filter="url(#glow)">MC</text>';
+
+  // ---- Aspect collection ----
+  var aspectsFound = [];
+  var aspectR = innerR - 5;
+
+  if (chartMode === 'single') {
+    aspectsFound = collectAspects(natal, natal, false, 'N-N', '');
+  } else if (chartMode === 'double') {
+    aspectsFound = collectAspects(natal, transit, true, 'N-T', '');
+  } else {
+    aspectsFound = collectAspects(natal, progressed, true, 'N-P', '4,3').concat(
+      collectAspects(natal, transit, true, 'N-T', '')
+    );
+  }
+
+  // Detect patterns
+  var tForPattern = (chartMode !== 'single') ? transit : null;
+  var pForPattern = (chartMode === 'triple') ? progressed : null;
+  var detectedPatterns = detectPatterns(aspectsFound, natal, tForPattern, pForPattern);
+
+  // Predict completions (60 days)
+  var predictions = predictPatternCompletions(natal, birthDate, 60).filter(function(p) { return p.hoursUntil > 0; });
+
+  // Store for partial redraw
+  lastRenderParams = { asc: asc, cx: cx, cy: cy, aspectR: aspectR, patterns: detectedPatterns, natal: natal, predictions: predictions };
+
+  // Aspect lines + pattern polygons
+  h += buildAspectLinesHTML(aspectsFound, asc, cx, cy, aspectR, detectedPatterns, natal, predictions);
+
+  // ---- Planet placement ----
+  function placePlanet(lon, r, color, glyph, fontSize) {
+    var angle = toRad(lon - asc - 90);
+    var x = cx + r * Math.cos(angle);
+    var y = cy + r * Math.sin(angle);
+    h += '<circle cx="' + x + '" cy="' + y + '" r="2" fill="' + color + '" filter="url(#glow)"/>';
+    h += '<text x="' + x + '" y="' + (y - 10) + '" text-anchor="middle" dominant-baseline="central" fill="' + color + '" font-size="' + fontSize + '" filter="url(#glow)">' + glyph + '</text>';
+  }
+
+  var natalR = (chartMode === 'single') ? rings.planetR : rings.natalR;
+  for (var i = 0; i < 10; i++) placePlanet(natal[i], natalR, NATAL_COLOR, PLANET_GLYPHS[i], 13);
+
+  if (chartMode === 'double' || chartMode === 'triple') {
+    for (var i = 0; i < 10; i++) placePlanet(transit[i], rings.transitR, TRANSIT_COLOR, PLANET_GLYPHS[i], 12);
+  }
+  if (chartMode === 'triple') {
+    for (var i = 0; i < 10; i++) placePlanet(progressed[i], rings.progR, PROGRESSED_COLOR, PLANET_GLYPHS[i], 12);
+  }
+
+  // ---- Center info ----
+  var centerR = (chartMode === 'single') ? 50 : 55;
+  h += '<circle cx="' + cx + '" cy="' + cy + '" r="' + centerR + '" fill="rgba(10,10,20,0.85)" stroke="rgba(255,255,255,0.08)" stroke-width="0.5"/>';
+  h += '<text x="' + cx + '" y="' + (cy - 20) + '" text-anchor="middle" fill="' + BRAND_PLATINUM + '" font-size="10">' + user.name + '</text>';
+  h += '<text x="' + cx + '" y="' + (cy - 6) + '" text-anchor="middle" fill="#888" font-size="7">' + user.date + ' ' + user.time + '</text>';
+  h += '<text x="' + cx + '" y="' + (cy + 6) + '" text-anchor="middle" fill="#666" font-size="7">ASC ' + formatDegree(asc) + '</text>';
+  if (chartMode !== 'single') {
+    var tDateStr = document.getElementById('transitDate').value || '';
+    var tTimeStr = document.getElementById('transitTime').value || '';
+    var locSel = document.getElementById('transitLocation');
+    var locName = locSel.options[locSel.selectedIndex].text.split('(')[0].trim();
+    h += '<text x="' + cx + '" y="' + (cy + 19) + '" text-anchor="middle" fill="' + TRANSIT_COLOR + '" font-size="7">T: ' + tDateStr + ' ' + tTimeStr + '</text>';
+    h += '<text x="' + cx + '" y="' + (cy + 31) + '" text-anchor="middle" fill="' + TRANSIT_COLOR + '" font-size="6">' + locName + '</text>';
+  } else {
+    h += '<text x="' + cx + '" y="' + (cy + 19) + '" text-anchor="middle" fill="#888" font-size="7">' + user.place + '</text>';
+  }
+
+  svg.innerHTML = h;
+  lastAspectsFound = aspectsFound;
+
+  // Update side panels
+  renderPlanetTable(natal, transit, progressed, asc, mc, houses);
+  renderAspectInfo(aspectsFound, detectedPatterns);
+  updatePatternChips(detectedPatterns, predictions);
+  renderPredictions(predictions, detectedPatterns);
+  renderLegend();
+  refreshActiveBS();
+}
+
+// ============================================================
+//  SIDE PANEL RENDERERS
+// ============================================================
+function renderPlanetTable(natal, transit, progressed, asc, mc, houses) {
+  var c = document.getElementById('planetTable');
+  var h = '<div class="planet-row" style="font-size:10px;color:#666;border-bottom:1px solid rgba(255,255,255,0.08)">';
+  h += '<div class="planet-glyph"></div><div class="planet-name"></div>';
+  h += '<div class="planet-pos" style="color:' + NATAL_COLOR + '">Natal</div>';
+  h += '<div style="width:30px;text-align:center;color:#666;font-size:10px">H</div>';
+  if (chartMode !== 'single') h += '<div class="planet-pos" style="color:' + TRANSIT_COLOR + '">Transit</div>';
+  if (chartMode === 'triple') h += '<div class="planet-pos" style="color:' + PROGRESSED_COLOR + '">Prog</div>';
+  h += '</div>';
+
+  for (var i = 0; i < 10; i++) {
+    h += '<div class="planet-row">';
+    h += '<div class="planet-glyph" style="color:' + NATAL_COLOR + '">' + PLANET_GLYPHS[i] + '</div>';
+    h += '<div class="planet-name">' + PLANET_NAMES_JP[i] + '</div>';
+    h += '<div class="planet-pos">' + formatDegree(natal[i]) + '</div>';
+    h += '<div style="width:30px;text-align:center;color:#666;font-size:10px">' + getHouseNumber(natal[i], houses) + '</div>';
+    if (chartMode !== 'single') h += '<div class="planet-pos" style="color:' + TRANSIT_COLOR + '">' + formatDegree(transit[i]) + '</div>';
+    if (chartMode === 'triple') h += '<div class="planet-pos" style="color:' + PROGRESSED_COLOR + '">' + formatDegree(progressed[i]) + '</div>';
+    h += '</div>';
+  }
+
+  h += '<div class="planet-row" style="border-top:1px solid rgba(255,255,255,0.08);margin-top:4px;padding-top:8px">';
+  h += '<div class="planet-glyph" style="color:' + NATAL_COLOR + ';font-size:11px">ASC</div><div class="planet-name"></div>';
+  h += '<div class="planet-pos">' + formatDegree(asc) + '</div><div style="width:30px;text-align:center;color:#666;font-size:10px">1</div></div>';
+  h += '<div class="planet-row"><div class="planet-glyph" style="color:' + NATAL_COLOR + ';font-size:11px">MC</div><div class="planet-name"></div>';
+  h += '<div class="planet-pos">' + formatDegree(mc) + '</div><div style="width:30px;text-align:center;color:#666;font-size:10px">10</div></div>';
+
+  c.innerHTML = h;
+}
+
+function toggleAspectVisibility(key) {
+  hiddenAspects[key] = !hiddenAspects[key];
+  var isHidden = hiddenAspects[key];
+
+  // Update row appearance without full re-render
+  var selector = '[data-aspect-key="' + key + '"]';
+  document.querySelectorAll(selector).forEach(function(row) {
+    row.style.opacity = isHidden ? '0.25' : '';
+    var check = row.querySelector('.aspect-check');
+    if (check) {
+      check.textContent = isHidden ? '\u2610' : '\u2611';
+      check.style.color = isHidden ? '#444' : '';
+    }
+  });
+
+  updateAspectCount();
+  redrawAspectLines();
+}
+
+function renderAspectList(container, allAspects, filteredAspects) {
+  if (allAspects.length === 0) {
+    container.innerHTML = '<div style="color:#666;font-size:11px">アスペクトなし</div>';
+    return;
+  }
+  var filteredKeys = {};
+  filteredAspects.forEach(function(a) { filteredKeys[getAspectKey(a)] = true; });
+
+  var html = '<div style="max-height:250px;overflow-y:auto">';
+  allAspects.forEach(function(a) {
+    var key = getAspectKey(a);
+    var isHidden = !!hiddenAspects[key];
+    var passesFilter = !!filteredKeys[key];
+    var dimmed = isHidden || !passesFilter;
+    var checkColor = isHidden ? '#444' : a.type.color;
+    var checkIcon = isHidden ? '\u2610' : '\u2611';
+    var filterTag = !passesFilter ? '<span style="color:#555;font-size:8px;margin-left:2px">F</span>' : '';
+
+    html += '<div data-aspect-key="' + key + '" style="display:flex;align-items:center;gap:5px;padding:3px 0;font-size:11px;border-bottom:1px solid rgba(255,255,255,0.03);cursor:pointer;' + (dimmed ? 'opacity:0.25;' : '') + '" onclick="toggleAspectVisibility(\'' + key + '\')">';
+    html += '<span class="aspect-check" style="color:' + checkColor + ';font-size:14px;width:16px;text-align:center;flex-shrink:0">' + checkIcon + '</span>';
+    html += '<span style="color:' + a.type.color + ';font-size:13px;width:18px;text-align:center">' + a.type.symbol + '</span>';
+    html += '<span style="color:#ccc">' + PLANET_GLYPHS[a.p1] + '</span>';
+    html += '<span style="color:' + a.type.color + ';font-size:10px">' + a.type.name + '</span>';
+    html += '<span style="color:#ccc">' + PLANET_GLYPHS[a.p2] + '</span>';
+    html += '<span style="color:#666;margin-left:auto;font-size:10px">' + a.diff.toFixed(1) + '\u00B0' + filterTag + '</span>';
+    html += '</div>';
+  });
+  html += '</div>';
+  container.innerHTML = html;
+}
+
+function renderAspectInfo(aspects, patterns) {
+  var mainContainer = document.getElementById('aspectInfo');
+  var progContainer = document.getElementById('aspectInfoProg');
+  var containerTitle = document.getElementById('aspectsContainerTitle');
+  var ntTab = document.querySelector('#aspectsTabs .analysis-tab[data-tab="nt"]');
+  var npTab = document.querySelector('#aspectsTabs .analysis-tab[data-tab="np"]');
+
+  var filtered = aspects.filter(function(a) {
+    if (hiddenAspects[getAspectKey(a)]) return false;
+    if (!aspectPassesFilter(a)) return false;
+    if (activeFilters.pattern && !aspectInPattern(a, activeFilters.pattern, patterns || {})) return false;
+    return true;
+  });
+
+  var countText = ' <span style="color:#666;font-size:11px">(' + filtered.length + '/' + aspects.length + ')</span>';
+
+  if (chartMode === 'single') {
+    containerTitle.innerHTML = '&#9651; ASPECTS — Natal' + countText;
+    renderAspectList(mainContainer, aspects, filtered);
+  } else if (chartMode === 'double') {
+    containerTitle.innerHTML = '&#9651; ASPECTS — <span style="color:' + TRANSIT_COLOR + '">Natal ↔ Transit</span>' + countText;
+    renderAspectList(mainContainer, aspects, filtered);
+  } else {
+    var ntAll = aspects.filter(function(a) { return a.label === 'N-T'; });
+    var npAll = aspects.filter(function(a) { return a.label === 'N-P'; });
+    var ntFiltered = filtered.filter(function(a) { return a.label === 'N-T'; });
+    var npFiltered = filtered.filter(function(a) { return a.label === 'N-P'; });
+    containerTitle.innerHTML = '&#9651; ASPECTS';
+    if (ntTab) ntTab.innerHTML = '<span style="color:' + TRANSIT_COLOR + '">N↔T</span> (' + ntFiltered.length + '/' + ntAll.length + ')';
+    if (npTab) npTab.innerHTML = '<span style="color:' + PROGRESSED_COLOR + '">N↔P</span> (' + npFiltered.length + '/' + npAll.length + ')';
+    renderAspectList(mainContainer, ntAll, ntFiltered);
+    renderAspectList(progContainer, npAll, npFiltered);
+  }
+  updateAspectsTabs();
+}
+
+function updateAspectCount() {
+  var containerTitle = document.getElementById('aspectsContainerTitle');
+  if (!lastAspectsFound.length) return;
+  var visible = lastAspectsFound.filter(function(a) {
+    if (hiddenAspects[getAspectKey(a)]) return false;
+    return aspectPassesFilter(a);
+  }).length;
+  var total = lastAspectsFound.length;
+  var countText = ' <span style="color:#666;font-size:11px">(' + visible + '/' + total + ')</span>';
+
+  if (chartMode === 'single') {
+    containerTitle.innerHTML = '&#9651; ASPECTS — Natal' + countText;
+  } else if (chartMode === 'double') {
+    containerTitle.innerHTML = '&#9651; ASPECTS — <span style="color:' + TRANSIT_COLOR + '">Natal ↔ Transit</span>' + countText;
+  } else {
+    var ntAll = lastAspectsFound.filter(function(a) { return a.label === 'N-T'; });
+    var npAll = lastAspectsFound.filter(function(a) { return a.label === 'N-P'; });
+    var ntVis = ntAll.filter(function(a) { return !hiddenAspects[getAspectKey(a)] && aspectPassesFilter(a); }).length;
+    var npVis = npAll.filter(function(a) { return !hiddenAspects[getAspectKey(a)] && aspectPassesFilter(a); }).length;
+    containerTitle.innerHTML = '&#9651; ASPECTS';
+    var ntTab = document.querySelector('#aspectsTabs .analysis-tab[data-tab="nt"]');
+    var npTab = document.querySelector('#aspectsTabs .analysis-tab[data-tab="np"]');
+    if (ntTab) ntTab.innerHTML = '<span style="color:' + TRANSIT_COLOR + '">N↔T</span> (' + ntVis + '/' + ntAll.length + ')';
+    if (npTab) npTab.innerHTML = '<span style="color:' + PROGRESSED_COLOR + '">N↔P</span> (' + npVis + '/' + npAll.length + ')';
+  }
+}
+
+function updatePatternChips(patterns, predictions) {
+  var map = { yod: 'ヨッド', grandtrine: 'グランドトライン', tsquare: 'Tスクエア' };
+
+  // Section-level animation
+  var section = document.getElementById('patternFilterSection');
+  if (section) {
+    section.className = 'filter-section';
+    var hasActive = false;
+    var types = ['grandtrine', 'tsquare', 'yod'];
+    for (var t = 0; t < types.length; t++) {
+      if ((patterns[types[t]] || []).length > 0) { hasActive = true; break; }
+    }
+    if (hasActive) {
+      section.classList.add('section-active');
+    } else {
+      var nearestHours = Infinity;
+      (predictions || []).forEach(function(p) { if (p.hoursUntil < nearestHours) nearestHours = p.hoursUntil; });
+      if (nearestHours <= 12) section.classList.add('section-imminent');
+      else if (nearestHours <= 96) section.classList.add('section-approaching');
+    }
+  }
+
+  // Chip labels: name + ✔ or ⏳
+  document.querySelectorAll('.filter-chip[data-filter="pattern"]').forEach(function(chip) {
+    var val = chip.getAttribute('data-value');
+    var list = patterns[val] || [];
+    var base = map[val] || val;
+    if (list.length > 0) {
+      chip.innerHTML = base + ' <span style="font-size:9px;opacity:0.8">\u2714</span>';
+    } else {
+      var preds = (predictions || []).filter(function(pr) { return pr.type === val; });
+      if (preds.length > 0) {
+        chip.innerHTML = base + ' <span style="font-size:9px;opacity:0.6;color:' + BRAND_GOLD + '">\u23F3</span>';
+      } else {
+        chip.textContent = base;
+      }
+    }
+  });
+}
+
+function renderPredictions(predictions, detectedPatterns) {
+  var panel = document.getElementById('predictionPanel');
+  var list = document.getElementById('predictionList');
+  var map = { yod: 'ヨッド', grandtrine: 'グランドトライン', tsquare: 'Tスクエア' };
+  var colorMap = { yod: '#B088FF', grandtrine: '#26D0CE', tsquare: '#FF6B6B' };
+  var sourceColor = { N: NATAL_COLOR, T: TRANSIT_COLOR, P: PROGRESSED_COLOR };
+  var types = ['grandtrine', 'tsquare', 'yod'];
+
+  var activeCount = 0;
+  for (var t = 0; t < types.length; t++) activeCount += (detectedPatterns[types[t]] || []).length;
+
+  if (predictions.length === 0 && activeCount === 0) {
+    panel.style.display = 'none';
+    return;
+  }
+  panel.style.display = '';
+
+  var html = '';
+
+  // Active patterns
+  for (var t = 0; t < types.length; t++) {
+    var pList = detectedPatterns[types[t]] || [];
+    for (var p = 0; p < pList.length; p++) {
+      var planets = pList[p].planets;
+      var pNames = planets.map(function(pl) {
+        return '<span style="color:' + sourceColor[pl.source] + '">' + pl.source + PLANET_GLYPHS[pl.idx] + '</span>';
+      }).join(' ');
+      html += '<div class="prediction-item">';
+      html += '<span class="prediction-type" style="background:' + colorMap[types[t]] + '22;color:' + colorMap[types[t]] + '">' + map[types[t]] + '</span>';
+      html += '<span style="color:#ccc">' + pNames + '</span>';
+      html += '<span class="prediction-time" style="color:#26D0CE">\u2714 成立中</span>';
+      html += '</div>';
+    }
+  }
+
+  // Upcoming (max 5)
+  for (var i = 0; i < Math.min(predictions.length, 5); i++) {
+    var pred = predictions[i];
+    var timeLabel = pred.hoursUntil < 1 ? 'まもなく' : pred.hoursUntil < 24 ? Math.round(pred.hoursUntil) + '時間後' : Math.round(pred.hoursUntil / 24) + '日後';
+    var dateStr = pred.dateEstimate.getFullYear() + '/' + (pred.dateEstimate.getMonth() + 1) + '/' + pred.dateEstimate.getDate();
+    var animClass = pred.hoursUntil <= 12 ? 'anim-imminent' : 'anim-approaching';
+    var dotColor = pred.hoursUntil <= 12 ? BRAND_GOLD : BRAND_GOLD + '66';
+
+    html += '<div class="prediction-item">';
+    html += '<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:' + dotColor + ';margin-right:4px" class="' + animClass + '"></span>';
+    html += '<span class="prediction-type" style="background:' + colorMap[pred.type] + '22;color:' + colorMap[pred.type] + '">' + map[pred.type] + '</span>';
+    html += '<span style="font-size:10px"><span style="color:' + NATAL_COLOR + '">N' + PLANET_GLYPHS[pred.natalPair[0]] + '-N' + PLANET_GLYPHS[pred.natalPair[1]] + '</span> + <span style="color:' + TRANSIT_COLOR + '">T' + PLANET_GLYPHS[pred.transitBody] + '</span></span>';
+    html += '<span class="prediction-time">' + timeLabel + ' <span style="color:#666;font-size:9px">' + dateStr + '</span></span>';
+    html += '</div>';
+  }
+
+  list.innerHTML = html;
+}
+
+var zodiacTooltipTimer = null;
+function showZodiacName(evt, idx) {
+  var existing = document.getElementById('zodiacTooltip');
+  if (existing) existing.remove();
+  if (zodiacTooltipTimer) clearTimeout(zodiacTooltipTimer);
+  var svg = document.getElementById('horoscopeChart');
+  var pt = svg.createSVGPoint();
+  pt.x = evt.clientX; pt.y = evt.clientY;
+  var svgP = pt.matrixTransform(svg.getScreenCTM().inverse());
+  var name = ZODIAC_NAMES_JP[idx];
+  var color = '#B49774';
+  var isUpper = svgP.y < 300;
+  var offsetY = isUpper ? 12 : -28;
+  var textOffsetY = isUpper ? 25 : -15;
+  var g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+  g.id = 'zodiacTooltip';
+  var rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+  rect.setAttribute('x', svgP.x - 30); rect.setAttribute('y', svgP.y + offsetY);
+  rect.setAttribute('width', 60); rect.setAttribute('height', 20);
+  rect.setAttribute('rx', 6); rect.setAttribute('fill', '#1a1a2e');
+  rect.setAttribute('stroke', color); rect.setAttribute('stroke-width', '1');
+  rect.setAttribute('fill-opacity', '0.95');
+  var txt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  txt.setAttribute('x', svgP.x); txt.setAttribute('y', svgP.y + textOffsetY);
+  txt.setAttribute('text-anchor', 'middle'); txt.setAttribute('dominant-baseline', 'central');
+  txt.setAttribute('fill', color); txt.setAttribute('font-size', '11');
+  txt.setAttribute('font-weight', '600');
+  txt.textContent = name;
+  g.appendChild(rect); g.appendChild(txt);
+  svg.appendChild(g);
+  zodiacTooltipTimer = setTimeout(function() {
+    var el = document.getElementById('zodiacTooltip');
+    if (el) el.remove();
+  }, 2000);
+}
+
+function renderLegend() {
+  var c = document.getElementById('chartLegend');
+  var html = '<div class="legend-item"><div class="legend-dot" style="background:' + NATAL_COLOR + '"></div>Natal</div>';
+  if (chartMode !== 'single') html += '<div class="legend-item"><div class="legend-dot" style="background:' + TRANSIT_COLOR + '"></div>Transit</div>';
+  if (chartMode === 'triple') html += '<div class="legend-item"><div class="legend-dot" style="background:' + PROGRESSED_COLOR + '"></div>Progressed</div>';
+  c.innerHTML = html;
+}
+
+// ============================================================
+//  INIT
+// ============================================================
+window.addEventListener('DOMContentLoaded', function() {
+  initUserSelector();
+  fillForm(users[0]);
+  initTransitDefaults();
+  initAspectTypeChips();
+  renderChart();
+  initBottomSheet();
+});
+</script>
+
+<div class="bottom-nav">
+  <div class="nav-item" onclick="window.location.href='index.html'">
+    <div class="nav-icon">&#x1F9ED;</div>
+    <div class="nav-label">Map</div>
+  </div>
+  <div class="nav-item active">
+    <div class="nav-icon">&#x1F300;</div>
+    <div class="nav-label">Horo</div>
+  </div>
+  <div class="nav-item" onclick="window.location.href='tarot.html'">
+    <div class="nav-icon">&#x2728;</div>
+    <div class="nav-label">Tarot</div>
+  </div>
+  <div class="nav-item">
+    <div class="nav-icon">&#x1F464;</div>
+    <div class="nav-label">Profile</div>
+  </div>
+</div>
+
+</body>
+</html>
