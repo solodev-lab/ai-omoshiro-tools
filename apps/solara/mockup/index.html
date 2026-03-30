@@ -474,6 +474,10 @@
     align-items: center;
     padding: 7px 4px;
     border-bottom: 1px solid rgba(255,255,255,0.04);
+    cursor: pointer;
+  }
+  .fortune-dir-row:active {
+    background: rgba(255,255,255,0.08);
   }
   .fortune-dir-row:last-child { border-bottom: none; }
   .fortune-dir-label {
@@ -490,6 +494,14 @@
     overflow: hidden;
     margin: 0 10px;
     position: relative;
+  }
+  .fortune-dir-tick {
+    position: absolute;
+    top: 0; bottom: 0;
+    width: 1px;
+    background: rgba(255,255,255,0.13);
+    pointer-events: none;
+    z-index: 1;
   }
   .fortune-dir-bar {
     height: 100%;
@@ -1626,18 +1638,16 @@ function init() {
     maxBoundsViscosity: 0.8,
   }).setView(mapCenter, 16);
 
-  // Dark base tiles
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-    subdomains: 'abcd',
-    maxZoom: 19,
-    opacity: 0.7,
-  }).addTo(map);
-
-  // Brighter labels overlay
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png', {
+  // Dark base (no labels) + bright Voyager labels overlay
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png', {
     subdomains: 'abcd',
     maxZoom: 19,
     opacity: 1,
+  }).addTo(map);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png', {
+    subdomains: 'abcd',
+    maxZoom: 19,
+    opacity: 0.9,
   }).addTo(map);
 
   window.leafletMap = map;
@@ -1651,10 +1661,10 @@ function init() {
   const lng = mapCenter[1];
   const dirCenter = turf.point([lng, lat]);
 
-  // 8 direction lines (great circle / geodesic)
+  // 8 direction lines (great circle — true bearing, curves naturally at distance)
   [0, 45, 90, 135, 180, 225, 270, 315].forEach(deg => {
     const pts = [];
-    for (let d = 0; d <= 20000; d += 1000) {
+    for (let d = 0; d <= 20000; d += 100) {
       const pt = turf.destination(dirCenter, d, deg, { units: 'kilometers' });
       pts.push(L.latLng(pt.geometry.coordinates[1], normalizeLng(pt.geometry.coordinates[0], lng)));
     }
@@ -2127,6 +2137,27 @@ function addBoostedPlanetLines() {
 // ===== Leaflet geo-sector creation (Mercator projection — pole-safe) =====
 // Sectors are drawn in Leaflet's pixel coordinate space, then unprojected to lat/lng.
 // This eliminates all geodesic pole-crossing issues regardless of user latitude.
+// Score-based sector styling: |score| >= 3 → strong, 2-3 → light, <2 → transparent
+// positive = gold (#C9A84C), negative = purple (#6B5CE7)
+function scoreToStyle(score) {
+  var abs = Math.abs(score);
+  var isPositive = score >= 0;
+  var color = isPositive ? '#C9A84C' : '#6B5CE7';
+  var fillColor = isPositive ? '#C9A84C' : '#2D1B4E';
+  var fillOpacity, borderOpacity, weight;
+  if (abs >= 3) {
+    fillOpacity = 0.40; borderOpacity = 0.85; weight = 3;
+  } else if (abs >= 2) {
+    fillOpacity = 0.20; borderOpacity = 0.50; weight = 2;
+  } else {
+    fillOpacity = 0; borderOpacity = 0; weight = 0;
+  }
+  return {
+    init: { color: color, fillColor: fillColor, fillOpacity: 0, weight: weight, opacity: 0 },
+    target: { color: color, fillColor: fillColor, fillOpacity: fillOpacity, opacity: borderOpacity, weight: weight }
+  };
+}
+
 function createGeoSectors() {
   // If sectors already exist, remove them first (allows re-draw after card boost)
   if (window.geoSectorsVisible && window.geoSectors) {
@@ -2144,10 +2175,8 @@ function createGeoSectors() {
   var lat = window.mapCenter[0];
   var lng = window.mapCenter[1];
 
-  // --- Mercator pixel-space approach ---
-  var refZoom = 4;
-  var centerPx = window.leafletMap.project(L.latLng(lat, lng), refZoom);
-  var pxRadius = 6000; // ~hemisphere scale at zoom 4
+  // --- Geodesic approach using turf.destination (no Mercator distortion) ---
+  var geoRadius = 20000; // km, matches compass line distance
 
   // 16 directional sectors (22.5° each)
   var dirAngles = DIR16.map(function(d, i) {
@@ -2157,40 +2186,18 @@ function createGeoSectors() {
     return { dir: d, start: start, end: end };
   });
 
-  // Determine sector types from aspect scores or seed boost
-  var sectorTypes;
-  if (seedBoostData) {
-    sectorTypes = seedBoostData.sectorTypes;
-  } else if (window.aspectData) {
-    var entries = Object.entries(window.aspectData.sectorScores).sort(function(a,b) { return b[1] - a[1]; });
-    sectorTypes = {};
-    entries.forEach(function(e, i) {
-      if (i < 4) sectorTypes[e[0]] = 'blessed';
-      else if (i < 10) sectorTypes[e[0]] = 'mid';
-      else sectorTypes[e[0]] = 'shadow';
-    });
-  } else {
-    sectorTypes = {};
-    DIR16.forEach(function(d) { sectorTypes[d] = 'mid'; });
-  }
+  var sectorScores = (window.aspectData && window.aspectData.sectorScores) || {};
 
-  var typeStyles = {
-    blessed: { color: '#C9A84C', fillColor: '#C9A84C', fillOpacity: 0, weight: 2, opacity: 0 },
-    shadow:  { color: '#6B5CE7', fillColor: '#2D1B4E', fillOpacity: 0, weight: 1, opacity: 0 },
-    mid:     { color: '#3A4A6B', fillColor: '#3A4A6B', fillOpacity: 0, weight: 1, opacity: 0 },
-  };
+  // Determine sector types for search/detectSector (still needed)
+  var sectorTypes = {};
+  DIR16.forEach(function(d) {
+    var s = sectorScores[d] || 0;
+    if (s >= 2) sectorTypes[d] = 'blessed';
+    else if (s <= -2) sectorTypes[d] = 'shadow';
+    else sectorTypes[d] = 'mid';
+  });
 
-  var targetStyles = {
-    blessed: { fillOpacity: 0.28, opacity: 0.7, weight: 2.5 },
-    shadow:  { fillOpacity: 0.18, opacity: 0.4, weight: 1.5 },
-    mid:     { fillOpacity: 0.10, opacity: 0.25, weight: 1 },
-  };
-
-  // Bearing (0=N clockwise) → pixel offset (Leaflet: x=right, y=down)
-  function bearingToPx(bearing, radius) {
-    var rad = bearing * Math.PI / 180;
-    return L.point(Math.sin(rad) * radius, -Math.cos(rad) * radius);
-  }
+  var centerPoint = turf.point([lng, lat]);
 
   dirAngles.forEach(function(d, i) {
     var type = sectorTypes[d.dir] || 'mid';
@@ -2198,31 +2205,45 @@ function createGeoSectors() {
     var endDeg = d.end;
     if (startDeg > endDeg) endDeg += 360;
 
-    // Build polygon in pixel space: center → arc points → back to center
-    var pxPoints = [centerPx];
-    var arcSteps = 20;
-    for (var s = 0; s <= arcSteps; s++) {
+    // Build polygon using great circle points (matches compass lines)
+    // Radial edge: center → outer along start bearing
+    var latLngs = [L.latLng(lat, lng)];
+    var radialSteps = 50;
+    for (var r = 1; r <= radialSteps; r++) {
+      var dist = geoRadius * (r / radialSteps);
+      var dest = turf.destination(centerPoint, dist, startDeg, { units: 'kilometers' });
+      var coords = dest.geometry.coordinates;
+      latLngs.push(L.latLng(Math.max(-85.05, Math.min(85.05, coords[1])), coords[0]));
+    }
+    // Arc: outer edge from start to end bearing
+    var arcSteps = 40;
+    for (var s = 1; s <= arcSteps; s++) {
       var bearing = startDeg + (endDeg - startDeg) * (s / arcSteps);
-      var off = bearingToPx(bearing, pxRadius);
-      pxPoints.push(L.point(centerPx.x + off.x, centerPx.y + off.y));
+      var dest = turf.destination(centerPoint, geoRadius, bearing, { units: 'kilometers' });
+      var coords = dest.geometry.coordinates;
+      latLngs.push(L.latLng(Math.max(-85.05, Math.min(85.05, coords[1])), coords[0]));
+    }
+    // Radial edge: outer → center along end bearing
+    for (var r = radialSteps - 1; r >= 0; r--) {
+      var dist = geoRadius * (r / radialSteps);
+      if (dist === 0) break;
+      var dest = turf.destination(centerPoint, dist, endDeg, { units: 'kilometers' });
+      var coords = dest.geometry.coordinates;
+      latLngs.push(L.latLng(Math.max(-85.05, Math.min(85.05, coords[1])), coords[0]));
     }
 
-    // Unproject to lat/lng (Mercator naturally clamps near ±85°)
-    var latLngs = pxPoints.map(function(px) {
-      var ll = window.leafletMap.unproject(px, refZoom);
-      return L.latLng(Math.max(-85.05, Math.min(85.05, ll.lat)), ll.lng);
-    });
-
-    var style = typeStyles[type];
-    var polygon = L.polygon(latLngs, { ...style, className: 'sector-' + type }).addTo(window.leafletMap);
+    var dirScore = sectorScores[d.dir] || 0;
+    var type = sectorTypes[d.dir] || 'mid';
+    var ss = scoreToStyle(dirScore);
+    var polygon = L.polygon(latLngs, { ...ss.init, className: 'sector-' + type }).addTo(window.leafletMap);
 
     var isBoosted = seedBoostData && seedBoostData.boostedSectors[d.dir];
-    var sectorEntry = { polygon: polygon, type: type, index: i, dir: d.dir, boosted: !!isBoosted, wrapPolygons: [] };
+    var sectorEntry = { polygon: polygon, type: type, score: dirScore, index: i, dir: d.dir, boosted: !!isBoosted, wrapPolygons: [] };
 
     // World wrap copies at ±360°
     [-360, 360].forEach(function(offset) {
       var shifted = latLngs.map(function(p) { return L.latLng(p.lat, p.lng + offset); });
-      var wp = L.polygon(shifted, { ...style, className: 'sector-' + type }).addTo(window.leafletMap);
+      var wp = L.polygon(shifted, { ...ss.init, className: 'sector-' + type }).addTo(window.leafletMap);
       sectorEntry.wrapPolygons.push(wp);
     });
 
@@ -2230,7 +2251,7 @@ function createGeoSectors() {
 
     // Fade-in with cascade delay
     var delay = i * 120;
-    var target = targetStyles[type];
+    var target = ss.target;
     setTimeout(function() {
       var step = 0;
       var maxSteps = 20;
@@ -2664,10 +2685,21 @@ function renderFortuneSheet() {
     label = FORTUNE_LABELS[fortuneSheetTab] || fortuneSheetTab;
   }
 
-  // Find max absolute value for bar scaling
   var vals = dirs.map(function(d) { return scores[d] || 0; });
-  var maxAbs = Math.max.apply(null, vals.map(function(v) { return Math.abs(v); }));
-  if (maxAbs < 0.1) maxAbs = 1;
+
+  // Bar width: 1-5 equal spacing (each = 1/6 of bar width), 5+ compressed into last 1/6
+  // Total bar = 6 equal zones: |1|2|3|4|5|5+|
+  function scoreToPct(v) {
+    var abs = Math.abs(v);
+    if (abs <= 5) return (abs / 5) * (100 * 5 / 6);           // 0-5 maps to 0-83.3%
+    return (5 / 6) * 100 + (1 / 6) * 100 * Math.min((abs - 5) / 5, 1); // 5+ compressed into last 16.7%
+  }
+
+  // Tick marks HTML (at positions 1,2,3,4,5)
+  var ticks = '';
+  for (var t = 1; t <= 5; t++) {
+    ticks += '<div class="fortune-dir-tick" style="left:' + (t / 6 * 100) + '%"></div>';
+  }
 
   // Sort by score descending
   var sorted = dirs.slice().sort(function(a, b) { return (scores[b] || 0) - (scores[a] || 0); });
@@ -2675,17 +2707,18 @@ function renderFortuneSheet() {
   var html = '';
   sorted.forEach(function(dir) {
     var score = scores[dir] || 0;
-    var pct = Math.abs(score) / maxAbs * 100;
-    var cls = score > 0.01 ? 'positive' : (score < -0.01 ? 'negative' : 'zero');
+    if (Math.abs(score) < 0.01) return; // Hide zero scores
+    var pct = scoreToPct(score);
+    var cls = score > 0.01 ? 'positive' : 'negative';
     var badge = '';
     if (fortuneSheetTab === 'all' && window.aspectData.sectorFortune) {
       var cat = window.aspectData.sectorFortune[dir];
       if (cat) badge = '<span class="fortune-dir-badge">' + (FORTUNE_LABELS[cat] || '') + '</span>';
     }
     var scoreStr = Math.abs(score).toFixed(2);
-    html += '<div class="fortune-dir-row">'
+    html += '<div class="fortune-dir-row" onclick="flashSector(\'' + dir + '\')">'
       + '<div class="fortune-dir-label">' + (DIR16_LABELS[dir] || dir) + '</div>'
-      + '<div class="fortune-dir-bar-wrap"><div class="fortune-dir-bar ' + cls + '" style="width:' + pct + '%"></div></div>'
+      + '<div class="fortune-dir-bar-wrap">' + ticks + '<div class="fortune-dir-bar ' + cls + '" style="width:' + pct + '%"></div></div>'
       + '<div class="fortune-dir-score ' + cls + '">' + scoreStr + badge + '</div>'
       + '</div>';
   });
@@ -2697,6 +2730,37 @@ function renderFortuneSheet() {
   }
 
   body.innerHTML = html;
+}
+
+function flashSector(dir) {
+  // Close the fortune sheet
+  if (fortuneSheetOpen) toggleFortuneSheet();
+
+  // Find the sector
+  var sector = window.geoSectors && window.geoSectors.find(function(s) { return s.dir === dir; });
+  if (!sector) return;
+
+  // Flash: toggle high opacity on/off for 3 seconds
+  var score = sector.score || 0;
+  var flashColor = '#26D0CE';
+  var flashFill = '#26D0CE';
+  var flashStyle = { color: flashColor, fillColor: flashFill, fillOpacity: 0.40, opacity: 0.9, weight: 3 };
+  var dimStyle = { color: flashColor, fillColor: flashFill, fillOpacity: 0, opacity: 0, weight: 0 };
+
+  var polys = [sector.polygon].concat(sector.wrapPolygons || []);
+  var count = 0;
+  var interval = setInterval(function() {
+    var on = count % 2 === 0;
+    var st = on ? flashStyle : dimStyle;
+    polys.forEach(function(p) { p.setStyle(st); });
+    count++;
+    if (count >= 6) { // 3 on + 3 off = 3 seconds at 500ms
+      clearInterval(interval);
+      // Restore to score-based style
+      var ss = scoreToStyle(score);
+      polys.forEach(function(p) { p.setStyle(ss.target); });
+    }
+  }, 500);
 }
 
 // Swipe/drag gesture for fortune sheet (touch + mouse)
@@ -2818,15 +2882,11 @@ function applyLayerVisibility() {
         newStyle = { fillOpacity: 0, opacity: 0 };
       } else if (fortuneFilter && fScores[fortuneFilter]) {
         var catScore = fScores[fortuneFilter][s.dir] || 0;
-        var matches = catScore > 0.01;
-        newStyle = {
-          fillOpacity: matches ? 0.22 : 0.02,
-          opacity:     matches ? 0.6  : 0.08,
-        };
+        var ss = scoreToStyle(catScore);
+        newStyle = ss.target;
       } else {
-        var defaults = { blessed: { fill: 0.28, op: 0.7 }, shadow: { fill: 0.18, op: 0.4 }, mid: { fill: 0.10, op: 0.25 } };
-        var d = defaults[s.type] || defaults.mid;
-        newStyle = { fillOpacity: d.fill, opacity: d.op };
+        var ss = scoreToStyle(s.score || 0);
+        newStyle = ss.target;
       }
       s.polygon.setStyle(newStyle);
       if (s.wrapPolygons) s.wrapPolygons.forEach(function(wp) { wp.setStyle(newStyle); });
