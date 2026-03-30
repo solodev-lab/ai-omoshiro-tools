@@ -378,23 +378,7 @@ h1 { font-size: 24px; color: #F6BD60; letter-spacing: 4px; margin-bottom: 8px; }
             </div>
           </div>
 
-          <!-- Aspect checkboxes (per type) -->
-          <div class="filter-section">
-            <div class="filter-section-title">アスペクト個別</div>
-            <div class="filter-chips" id="aspectTypeChips"></div>
-          </div>
-
-          <!-- Pattern filter chips -->
-          <div class="filter-section">
-            <div class="filter-section-title">パターン</div>
-            <div class="filter-chips">
-              <div class="filter-chip exclusive" style="--chip-color:#26D0CE" data-filter="pattern" data-value="grandtrine" onclick="toggleExclusive(this)">グランドトライン</div>
-              <div class="filter-chip exclusive" style="--chip-color:#FF6B6B" data-filter="pattern" data-value="tsquare" onclick="toggleExclusive(this)">Tスクエア</div>
-              <div class="filter-chip exclusive" style="--chip-color:#B088FF" data-filter="pattern" data-value="yod" onclick="toggleExclusive(this)">ヨッド</div>
-            </div>
-          </div>
-
-          <!-- Predictions (below patterns) -->
+          <!-- Predictions -->
           <div class="prediction-panel" id="predictionPanel" style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.05)">
             <div id="predictionList"></div>
           </div>
@@ -516,9 +500,7 @@ var cachedPredictions = null;
 var activeFilters = {
   quality:     { soft: true, hard: true, neutral: true },
   pgroup:      { personal: true, social: true, generational: true },
-  aspectTypes: {},
-  fortune:     null,
-  pattern:     null
+  fortune:     null
 };
 
 // ============================================================
@@ -768,23 +750,7 @@ function aspectPassesFilter(a) {
     if (fp.indexOf(a.p1) < 0 && fp.indexOf(a.p2) < 0) return false;
   }
   if (!activeFilters.pgroup[getPlanetGroup(a.p1)] && !activeFilters.pgroup[getPlanetGroup(a.p2)]) return false;
-  if (!activeFilters.aspectTypes[a.type.name]) return false;
   return true;
-}
-
-function aspectInPattern(aspect, patternType, patterns) {
-  var list = patterns[patternType] || [];
-  for (var i = 0; i < list.length; i++) {
-    var ps = list[i].planets;
-    var src2 = aspect.label === 'N-N' ? 'N' : (chartMode === 'nt' ? 'T' : 'P');
-    var found1 = false, found2 = false;
-    for (var p = 0; p < ps.length; p++) {
-      if (ps[p].source === 'N' && ps[p].idx === aspect.p1) found1 = true;
-      if (ps[p].source === src2 && ps[p].idx === aspect.p2) found2 = true;
-    }
-    if (found1 && found2) return true;
-  }
-  return false;
 }
 
 // ============================================================
@@ -796,7 +762,6 @@ function toggleFilter(el) {
   var val = el.getAttribute('data-value');
   if (ft === 'quality')    activeFilters.quality[val] = el.classList.contains('active');
   else if (ft === 'pgroup') activeFilters.pgroup[val] = el.classList.contains('active');
-  else if (ft === 'aspectType') activeFilters.aspectTypes[val] = el.classList.contains('active');
   renderChart();
 }
 
@@ -811,18 +776,7 @@ function toggleExclusive(el) {
   } else {
     activeFilters[ft] = null;
   }
-  if (ft === 'pattern') applyPatternHide(activeFilters.pattern);
   renderChart();
-}
-
-function applyPatternHide(patternType) {
-  if (!patternType) { hiddenAspects = {}; return; }
-  lastAspectsFound.forEach(function(a) { hiddenAspects[getAspectKey(a)] = true; });
-  if (cachedPatterns) {
-    lastAspectsFound.forEach(function(a) {
-      if (aspectInPattern(a, patternType, cachedPatterns)) hiddenAspects[getAspectKey(a)] = false;
-    });
-  }
 }
 
 // ============================================================
@@ -847,24 +801,12 @@ function resetFilters() {
   activeFilters.quality = { soft: true, hard: true, neutral: true };
   activeFilters.pgroup = { personal: true, social: true, generational: true };
   activeFilters.fortune = null;
-  activeFilters.pattern = null;
-  ASPECT_TYPES.forEach(function(a) { activeFilters.aspectTypes[a.name] = true; });
   document.querySelectorAll('.filter-chip').forEach(function(c) {
     var ft = c.getAttribute('data-filter');
-    if (ft === 'fortune' || ft === 'pattern') c.classList.remove('active');
+    if (ft === 'fortune') c.classList.remove('active');
     else c.classList.add('active');
   });
   renderChart();
-}
-
-function initAspectTypeChips() {
-  var container = document.getElementById('aspectTypeChips');
-  var html = '';
-  ASPECT_TYPES.forEach(function(a) {
-    activeFilters.aspectTypes[a.name] = true;
-    html += '<div class="filter-chip active" style="--chip-color:' + a.color + '" data-filter="aspectType" data-value="' + a.name + '" onclick="toggleFilter(this)">' + a.symbol + ' ' + a.name + '</div>';
-  });
-  container.innerHTML = html;
 }
 
 // ============================================================
@@ -876,7 +818,6 @@ function buildPatternPolygons(patterns, natal, asc, cx, cy, r) {
 
   for (var t = 0; t < types.length; t++) {
     var type = types[t];
-    if (activeFilters.pattern && activeFilters.pattern !== type) continue;
     var style = PATTERN_STYLES[type];
     var list = patterns[type] || [];
     for (var p = 0; p < list.length; p++) {
@@ -913,7 +854,6 @@ function buildAspectLinesHTML(aspects, asc, cx, cy, r, patterns, natal) {
     var key = getAspectKey(a);
     if (hiddenAspects[key]) { a.visible = false; continue; }
     if (!aspectPassesFilter(a)) { a.visible = false; continue; }
-    if (activeFilters.pattern && !aspectInPattern(a, activeFilters.pattern, patterns)) { a.visible = false; continue; }
     a.visible = true;
 
     var a1 = toRad(a.lon1 - asc - 90);
@@ -1207,9 +1147,18 @@ function renderChart() {
   lastAspectsFound = aspectsFound;
 
   renderPlanetTable(natal, secondary, secondaryColor, secondaryLabel, asc, mc, houses);
+
   renderAspectInfo(aspectsFound, patterns);
-  updatePatternChips(patterns, predictions);
-  renderPredictions(predictions, patterns);
+
+  // Natal mode: hide predictions (only relevant for transit/progressed)
+  var predictionPanel = document.getElementById('predictionPanel');
+  if (chartMode === 'single') {
+    predictionPanel.style.display = 'none';
+  } else {
+    predictionPanel.style.display = '';
+    renderPredictions(predictions, patterns);
+  }
+
   renderLegend(secondaryColor, secondaryLabel);
   refreshActiveBS();
 }
@@ -1297,7 +1246,6 @@ function renderAspectInfo(aspects, patterns) {
   var filtered = aspects.filter(function(a) {
     if (hiddenAspects[getAspectKey(a)]) return false;
     if (!aspectPassesFilter(a)) return false;
-    if (activeFilters.pattern && !aspectInPattern(a, activeFilters.pattern, patterns || {})) return false;
     return true;
   });
 
@@ -1313,24 +1261,6 @@ function renderAspectInfo(aspects, patterns) {
   renderAspectList(container, aspects, filtered);
 }
 
-function updatePatternChips(patterns, predictions) {
-  var map = { yod: 'ヨッド', grandtrine: 'グランドトライン', tsquare: 'Tスクエア' };
-  document.querySelectorAll('.filter-chip[data-filter="pattern"]').forEach(function(chip) {
-    var val = chip.getAttribute('data-value');
-    var list = patterns[val] || [];
-    var base = map[val] || val;
-    if (list.length > 0) {
-      chip.innerHTML = base + ' <span style="font-size:9px;opacity:0.8">\u2714</span>';
-    } else {
-      var preds = (predictions || []).filter(function(pr) { return pr.type === val; });
-      if (preds.length > 0) {
-        chip.innerHTML = base + ' <span style="font-size:9px;opacity:0.6;color:' + BRAND_GOLD + '">\u23F3</span>';
-      } else {
-        chip.textContent = base;
-      }
-    }
-  });
-}
 
 function renderPredictions(predictions, detectedPatterns) {
   var panel = document.getElementById('predictionPanel');
@@ -1656,7 +1586,6 @@ function refreshActiveBS() {
 window.addEventListener('DOMContentLoaded', function() {
   fillForm(defaultUser);
   initTransitDefaults();
-  initAspectTypeChips();
   generateFromInput();
   initBottomSheet();
 });
