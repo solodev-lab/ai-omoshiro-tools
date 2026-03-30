@@ -7,6 +7,7 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/@turf/turf@7/turf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/astronomy-engine@2.1.19/astronomy.browser.min.js"></script>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -84,7 +85,7 @@
     position: absolute;
     top: 55px;
     left: 16px;
-    right: 16px;
+    right: 56px;
     z-index: 110;
     display: none;
   }
@@ -412,6 +413,126 @@
     color: #C9A84C;
   }
 
+  /* ===== Fortune Bottom Sheet ===== */
+  .fortune-sheet {
+    position: absolute;
+    left: 0; right: 0;
+    bottom: 80px; /* above bottom-nav */
+    z-index: 85;
+    background: rgba(10, 10, 25, 0.95);
+    border-top: 1px solid rgba(201, 168, 76, 0.25);
+    border-radius: 16px 16px 0 0;
+    transform: translateY(100%);
+    transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    max-height: 55vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  .fortune-sheet.open {
+    transform: translateY(0);
+  }
+  .fortune-sheet-handle {
+    width: 36px; height: 4px;
+    background: rgba(255,255,255,0.25);
+    border-radius: 2px;
+    margin: 10px auto 6px;
+    cursor: grab;
+  }
+  .fortune-sheet-tabs {
+    display: flex;
+    gap: 0;
+    padding: 0 8px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .fortune-sheet-tabs::-webkit-scrollbar { display: none; }
+  .fortune-sheet-tab {
+    flex: 0 0 auto;
+    padding: 8px 12px;
+    font-size: 11px;
+    color: #666;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    white-space: nowrap;
+    transition: color 0.2s, border-color 0.2s;
+  }
+  .fortune-sheet-tab.active {
+    color: #C9A84C;
+    border-bottom-color: #C9A84C;
+  }
+  .fortune-sheet-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 10px 14px 14px;
+    scrollbar-width: thin;
+  }
+  .fortune-dir-row {
+    display: flex;
+    align-items: center;
+    padding: 7px 4px;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+  }
+  .fortune-dir-row:last-child { border-bottom: none; }
+  .fortune-dir-label {
+    width: 36px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #B49774;
+  }
+  .fortune-dir-bar-wrap {
+    flex: 1;
+    height: 14px;
+    background: rgba(255,255,255,0.04);
+    border-radius: 7px;
+    overflow: hidden;
+    margin: 0 10px;
+    position: relative;
+  }
+  .fortune-dir-bar {
+    height: 100%;
+    border-radius: 7px;
+    transition: width 0.4s ease-out;
+    min-width: 2px;
+  }
+  .fortune-dir-bar.positive { background: linear-gradient(90deg, #C9A84C, #F6BD60); }
+  .fortune-dir-bar.negative { background: linear-gradient(90deg, #6B5CE7, #4A3AAA); }
+  .fortune-dir-bar.zero     { background: rgba(255,255,255,0.08); width: 2px !important; }
+  .fortune-dir-score {
+    width: 48px;
+    text-align: right;
+    font-size: 11px;
+    font-family: monospace;
+  }
+  .fortune-dir-score.positive { color: #F6BD60; }
+  .fortune-dir-score.negative { color: #8B7BE7; }
+  .fortune-dir-score.zero     { color: #555; }
+  .fortune-dir-badge {
+    font-size: 10px;
+    margin-left: 4px;
+    width: 20px;
+  }
+  .fortune-sheet-pull {
+    position: absolute;
+    bottom: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 86;
+    background: rgba(10, 10, 25, 0.8);
+    border: 1px solid rgba(201, 168, 76, 0.2);
+    border-radius: 12px 12px 0 0;
+    border-bottom: none;
+    padding: 4px 18px 2px;
+    cursor: pointer;
+    font-size: 10px;
+    color: #888;
+    letter-spacing: 0.5px;
+    transition: color 0.2s;
+  }
+  .fortune-sheet-pull:active { color: #C9A84C; }
+
   /* ===== CTA Button ===== */
   .cta-button {
     position: absolute;
@@ -442,33 +563,183 @@
     transform: translateX(-50%) translateY(20px);
   }
 
-  /* ===== Layer indicator ===== */
-  .layer-indicator {
+  /* ===== Layer control button ===== */
+  .layer-btn {
     position: absolute;
-    bottom: 90px;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 70;
+    top: 56px;
+    right: 12px;
+    z-index: 80;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: rgba(15, 15, 30, 0.7);
+    border: 1px solid rgba(201, 168, 76, 0.2);
     display: flex;
-    gap: 8px;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    cursor: pointer;
     opacity: 0;
-    transition: opacity 0.5s;
+    transition: opacity 0.5s, border-color 0.3s;
   }
 
-  .layer-indicator.visible {
+  .layer-btn.visible { opacity: 1; }
+  .layer-btn.active { border-color: rgba(201, 168, 76, 0.5); }
+
+  .layer-btn-bar {
+    width: 16px;
+    height: 2px;
+    border-radius: 1px;
+  }
+  .layer-btn-bar:nth-child(1) { background: #E8E0D0; }
+  .layer-btn-bar:nth-child(2) { background: #C9A84C; }
+  .layer-btn-bar:nth-child(3) { background: #00D4FF; }
+
+  /* ===== Layer panel ===== */
+  .layer-panel {
+    position: absolute;
+    top: 56px;
+    right: 12px;
+    z-index: 85;
+    width: 180px;
+    background: rgba(12, 12, 26, 0.92);
+    border: 1px solid rgba(201, 168, 76, 0.2);
+    border-radius: 14px;
+    padding: 14px;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateX(10px);
+    transition: opacity 0.25s, transform 0.25s;
+  }
+
+  .layer-panel.open {
     opacity: 1;
+    pointer-events: auto;
+    transform: translateX(0);
   }
 
-  .layer-dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.2);
+  .layer-panel-title {
+    font-size: 9px;
+    color: #666;
+    letter-spacing: 1.5px;
+    margin-bottom: 10px;
   }
 
-  .layer-dot.l1 { background: rgba(107, 92, 231, 0.6); }
-  .layer-dot.l2 { background: rgba(201, 168, 76, 0.6); }
-  .layer-dot.seed { background: rgba(245, 215, 110, 0.8); }
+  .layer-panel-section {
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  }
+  .layer-panel-section:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+
+  .layer-panel-label {
+    font-size: 8px;
+    color: #555;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+  }
+
+  .layer-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 0;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .layer-toggle-check {
+    width: 14px;
+    height: 14px;
+    border-radius: 3px;
+    border: 1.5px solid rgba(255, 255, 255, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 9px;
+    color: transparent;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+
+  .layer-toggle.on .layer-toggle-check {
+    border-color: var(--toggle-color, #C9A84C);
+    color: var(--toggle-color, #C9A84C);
+    background: rgba(201, 168, 76, 0.1);
+  }
+
+  .layer-toggle-text {
+    font-size: 11px;
+    color: #666;
+    transition: color 0.2s;
+  }
+
+  /* ===== Fortune filter pills ===== */
+  .fortune-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 4px;
+  }
+
+  .fortune-pill {
+    padding: 3px 8px;
+    border-radius: 10px;
+    font-size: 10px;
+    cursor: pointer;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: #555;
+    background: transparent;
+    user-select: none;
+    transition: all 0.2s;
+    white-space: nowrap;
+    letter-spacing: 0.3px;
+  }
+
+  .fortune-pill.active {
+    border-color: var(--pill-color, #C9A84C);
+    color: var(--pill-color, #C9A84C);
+    background: rgba(201, 168, 76, 0.1);
+  }
+
+  .fortune-rest-overlay {
+    display: none;
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    z-index: 800;
+    cursor: pointer;
+    justify-content: center;
+    align-items: center;
+  }
+  .fortune-rest-overlay.visible {
+    display: flex;
+  }
+  .fortune-rest-inner {
+    background: rgba(15, 15, 30, 0.85);
+    border: 1px solid rgba(201, 168, 76, 0.3);
+    border-radius: 16px;
+    padding: 20px 28px;
+    text-align: center;
+    max-width: 260px;
+    animation: fortuneRestFadeIn 0.4s ease-out;
+  }
+  .fortune-rest-icon {
+    font-size: 28px;
+    margin-bottom: 8px;
+  }
+  .fortune-rest-text {
+    font-size: 13px;
+    line-height: 1.7;
+    color: #C9A84C;
+    white-space: pre-line;
+  }
+  @keyframes fortuneRestFadeIn {
+    from { opacity: 0; transform: scale(0.95); }
+    to   { opacity: 1; transform: scale(1); }
+  }
+
+  .layer-toggle.on .layer-toggle-text { color: #bbb; }
 
   /* ===== Screen flash ===== */
   .screen-flash {
@@ -486,12 +757,12 @@
     top: 0; left: 0; right: 0; bottom: 0;
     background: rgba(10, 10, 20, 0.5);
     z-index: 5;
-    transition: opacity 1s ease;
+    transition: opacity 0.8s ease;
+    pointer-events: none;
   }
 
   .gray-veil.lifted {
     opacity: 0;
-    pointer-events: none;
   }
 
   /* ===== Effect video overlay ===== */
@@ -526,7 +797,27 @@
     transform: translate(-50%, -50%);
     z-index: 30;
     text-align: center;
-    transition: opacity 0.5s;
+    pointer-events: none;
+    transition: all 0.6s ease;
+  }
+
+  .preseed-prompt.bottom {
+    top: auto;
+    bottom: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    opacity: 0.7;
+  }
+
+  .preseed-prompt.bottom .preseed-icon {
+    font-size: 20px;
+    margin-bottom: 6px;
+    animation: none;
+  }
+
+  .preseed-prompt.bottom .preseed-text {
+    font-size: 10px;
+    line-height: 1.5;
   }
 
   .preseed-prompt.hidden {
@@ -623,56 +914,122 @@
     <video class="effect-video" id="effectVideo" muted playsinline preload="auto"
            src="effect_impact.mp4"></video>
 
+    <!-- Fortune rest advice overlay -->
+    <div class="fortune-rest-overlay" id="fortuneRestOverlay" onclick="dismissFortuneAdvice()">
+      <div class="fortune-rest-inner">
+        <div class="fortune-rest-icon">&#x1F319;</div>
+        <div class="fortune-rest-text" id="fortuneRestText"></div>
+      </div>
+    </div>
+
     <!-- Pre-seed prompt -->
     <div class="preseed-prompt" id="preseedPrompt">
       <div class="preseed-icon">&#x1F331;</div>
       <div class="preseed-text">
-        &#x4ECA;&#x65E5;&#x306E;&#x65B9;&#x4F4D;&#x306F;&#x307E;&#x3060;&#x7720;&#x3063;&#x3066;&#x3044;&#x308B;&#x3088;<br>
-        Seed&#x30AB;&#x30FC;&#x30C9;&#x3067;&#x8D77;&#x3053;&#x3057;&#x3066;&#xFF1F;
+        今日の方位はまだ眠っているよ<br>
+        Tarotタブでカードを引いてね
       </div>
     </div>
   </div>
 
-  <!-- CTA Button -->
-  <button class="cta-button" id="ctaButton" onclick="startCardDraw()">
-    &#x1F331; DRAW SEED CARD
-  </button>
-
-  <!-- Layer indicator -->
-  <div class="layer-indicator" id="layerIndicator">
-    <div class="layer-dot l1"></div>
-    <div class="layer-dot l2"></div>
-    <div class="layer-dot seed"></div>
+  <!-- Layer control button -->
+  <div class="layer-btn" id="layerBtn" onclick="toggleLayerPanel()">
+    <div class="layer-btn-bar"></div>
+    <div class="layer-btn-bar"></div>
+    <div class="layer-btn-bar"></div>
   </div>
 
-  <!-- Card overlay -->
-  <div class="card-overlay" id="cardOverlay">
-    <div class="card-prompt">TAP TO REVEAL</div>
-    <div class="tarot-card" id="tarotCard" onclick="flipCard()">
-      <div class="card-back">
-        <div class="card-back-pattern">&#x2726;</div>
+  <!-- Layer filter panel -->
+  <div class="layer-panel" id="layerPanel">
+    <div class="layer-panel-title">LAYERS</div>
+
+    <div class="layer-panel-section">
+      <div class="layer-panel-label">CHART</div>
+      <div class="layer-toggle on" data-layer="natal" onclick="toggleLayerItem(this)" style="--toggle-color:#E8E0D0">
+        <div class="layer-toggle-check">&#x2713;</div>
+        <div class="layer-toggle-text">Natal</div>
       </div>
-      <div class="card-front">
-        <div class="card-element" id="cardEmoji">🌊</div>
-        <div class="card-name" id="cardName">CUP III</div>
-        <div class="card-subtitle" id="cardSubtitle">再会の喜び</div>
+      <div class="layer-toggle on" data-layer="progressed" onclick="toggleLayerItem(this)" style="--toggle-color:#C9A84C">
+        <div class="layer-toggle-check">&#x2713;</div>
+        <div class="layer-toggle-text">Progressed</div>
+      </div>
+      <div class="layer-toggle on" data-layer="transit" onclick="toggleLayerItem(this)" style="--toggle-color:#00D4FF">
+        <div class="layer-toggle-check">&#x2713;</div>
+        <div class="layer-toggle-text">Transit</div>
       </div>
     </div>
+
+    <div class="layer-panel-section">
+      <div class="layer-panel-label">PLANET GROUP</div>
+      <div class="layer-toggle on" data-group="personal" onclick="toggleGroupItem(this)" style="--toggle-color:#FFD370">
+        <div class="layer-toggle-check">&#x2713;</div>
+        <div class="layer-toggle-text">個人天体</div>
+      </div>
+      <div class="layer-toggle on" data-group="social" onclick="toggleGroupItem(this)" style="--toggle-color:#6BB5FF">
+        <div class="layer-toggle-check">&#x2713;</div>
+        <div class="layer-toggle-text">社会天体</div>
+      </div>
+      <div class="layer-toggle on" data-group="generational" onclick="toggleGroupItem(this)" style="--toggle-color:#B088FF">
+        <div class="layer-toggle-check">&#x2713;</div>
+        <div class="layer-toggle-text">世代天体</div>
+      </div>
+    </div>
+
+    <div class="layer-panel-section">
+      <div class="layer-panel-label">MAP</div>
+      <div class="layer-toggle on" data-layer="sectors" onclick="toggleLayerItem(this)" style="--toggle-color:#C9A84C">
+        <div class="layer-toggle-check">&#x2713;</div>
+        <div class="layer-toggle-text">吉凶方位</div>
+      </div>
+      <div class="layer-toggle on" data-layer="compass" onclick="toggleLayerItem(this)" style="--toggle-color:#E8E0D0">
+        <div class="layer-toggle-check">&#x2713;</div>
+        <div class="layer-toggle-text">コンパス</div>
+      </div>
+    </div>
+
+    <div class="layer-panel-section">
+      <div class="layer-panel-label">FORTUNE</div>
+      <div class="fortune-pills">
+        <div class="fortune-pill active" data-fortune="all"           style="--pill-color:#E8E0D0" onclick="setFortuneFilter('all')">総合</div>
+        <div class="fortune-pill" data-fortune="healing"       style="--pill-color:#64C8B4" onclick="setFortuneFilter('healing')">癒し</div>
+        <div class="fortune-pill" data-fortune="money"         style="--pill-color:#C9A84C" onclick="setFortuneFilter('money')">金運</div>
+        <div class="fortune-pill" data-fortune="love"          style="--pill-color:#FF88B4" onclick="setFortuneFilter('love')">恋愛</div>
+        <div class="fortune-pill" data-fortune="work"          style="--pill-color:#6BB5FF" onclick="setFortuneFilter('work')">仕事</div>
+        <div class="fortune-pill" data-fortune="communication" style="--pill-color:#B088FF" onclick="setFortuneFilter('communication')">話す</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Fortune pull tab -->
+  <div class="fortune-sheet-pull" id="fortuneSheetPull" onclick="toggleFortuneSheet()">▲ 運勢方位</div>
+
+  <!-- Fortune bottom sheet -->
+  <div class="fortune-sheet" id="fortuneSheet">
+    <div class="fortune-sheet-handle" id="fortuneSheetHandle" onclick="if(fortuneSheetOpen)toggleFortuneSheet()"></div>
+    <div class="fortune-sheet-tabs" id="fortuneSheetTabs">
+      <div class="fortune-sheet-tab active" data-ftab="all" onclick="switchFortuneTab('all')">総合</div>
+      <div class="fortune-sheet-tab" data-ftab="healing" onclick="switchFortuneTab('healing')">癒し</div>
+      <div class="fortune-sheet-tab" data-ftab="money" onclick="switchFortuneTab('money')">金運</div>
+      <div class="fortune-sheet-tab" data-ftab="love" onclick="switchFortuneTab('love')">恋愛</div>
+      <div class="fortune-sheet-tab" data-ftab="work" onclick="switchFortuneTab('work')">仕事</div>
+      <div class="fortune-sheet-tab" data-ftab="communication" onclick="switchFortuneTab('communication')">話す</div>
+    </div>
+    <div class="fortune-sheet-body" id="fortuneSheetBody"></div>
   </div>
 
   <!-- Bottom nav -->
   <div class="bottom-nav">
     <div class="nav-item active">
       <div class="nav-icon">&#x1F9ED;</div>
-      <div class="nav-label">Action</div>
+      <div class="nav-label">Map</div>
     </div>
-    <div class="nav-item">
+    <div class="nav-item" onclick="window.location.href='horoscope.html'">
       <div class="nav-icon">&#x1F300;</div>
-      <div class="nav-label">Rhythm</div>
+      <div class="nav-label">Horo</div>
     </div>
-    <div class="nav-item">
+    <div class="nav-item" onclick="window.location.href='tarot.html'">
       <div class="nav-icon">&#x2728;</div>
-      <div class="nav-label">Intentions</div>
+      <div class="nav-label">Tarot</div>
     </div>
     <div class="nav-item">
       <div class="nav-icon">&#x1F464;</div>
@@ -811,6 +1168,266 @@ const TAROT_DATA = {
   },
 };
 
+// ===== Astronomy-engine calculation =====
+const ASTRO_BODIES = [
+  { key: 'sun',     body: Astronomy.Body.Sun },
+  { key: 'moon',    body: Astronomy.Body.Moon },
+  { key: 'mercury', body: Astronomy.Body.Mercury },
+  { key: 'venus',   body: Astronomy.Body.Venus },
+  { key: 'mars',    body: Astronomy.Body.Mars },
+  { key: 'jupiter', body: Astronomy.Body.Jupiter },
+  { key: 'saturn',  body: Astronomy.Body.Saturn },
+  { key: 'uranus',  body: Astronomy.Body.Uranus },
+  { key: 'neptune', body: Astronomy.Body.Neptune },
+  { key: 'pluto',   body: Astronomy.Body.Pluto },
+];
+
+// Default birth data (はやしこうじ 1977-10-24 06:56 岐阜)
+const BIRTH_DATA = {
+  date: new Date(1977, 9, 24, 6, 56, 0),  // month is 0-indexed
+  lat: 35.4233,
+  lng: 136.7607,
+};
+
+function astroNormalize(deg) { return ((deg % 360) + 360) % 360; }
+
+function getEclipticLongitude(body, date) {
+  if (body === Astronomy.Body.Moon) return Astronomy.EclipticGeoMoon(date).lon;
+  if (body === Astronomy.Body.Sun)  return Astronomy.SunPosition(date).elon;
+  var geo = Astronomy.GeoVector(body, date, true);
+  return Astronomy.Ecliptic(geo).elon;
+}
+
+function calcAllPlanets(date) {
+  var result = {};
+  ASTRO_BODIES.forEach(function(b) {
+    result[b.key] = { angle: Math.round(astroNormalize(getEclipticLongitude(b.body, date)) * 100) / 100 };
+  });
+  return result;
+}
+
+function calcProgressedDate(birthDate, currentDate) {
+  var msPerDay = 86400000;
+  var daysLived = (currentDate.getTime() - birthDate.getTime()) / msPerDay;
+  var progDays = daysLived / 365.25;
+  return new Date(birthDate.getTime() + progDays * msPerDay);
+}
+
+function computeTripleChart() {
+  var now = new Date();
+  var natal = calcAllPlanets(BIRTH_DATA.date);
+  var progDate = calcProgressedDate(BIRTH_DATA.date, now);
+  var progressed = calcAllPlanets(progDate);
+  var transit = calcAllPlanets(now);
+  return { natal: natal, progressed: progressed, transit: transit };
+}
+
+// ===== Triple Chart: Natal / Progressed / Transit planet angles =====
+// Computed from astronomy-engine (real ephemeris data)
+var TRIPLE_CHART = computeTripleChart();
+
+// Sync planetSymbols angles with computed natal positions
+Object.keys(TRIPLE_CHART.natal).forEach(function(key) {
+  if (TAROT_DATA.planetSymbols[key]) {
+    TAROT_DATA.planetSymbols[key].angle = TRIPLE_CHART.natal[key].angle;
+  }
+});
+
+const CHART_LAYERS = {
+  natal:      { label: 'Natal',      color: '#E8E0D0', dash: null,    weight: 2,   opacity: 0.5, markerBg: 'rgba(232,224,208,0.85)', markerFg: '#1a0a30' },
+  progressed: { label: 'Progressed', color: '#C9A84C', dash: '8 6',   weight: 1.8, opacity: 0.45, markerBg: 'rgba(201,168,76,0.85)',  markerFg: '#1a0a30' },
+  transit:    { label: 'Transit',    color: '#00D4FF', dash: '3 6',   weight: 1.8, opacity: 0.45, markerBg: 'rgba(0,212,255,0.85)',   markerFg: '#1a0a30' },
+};
+
+// ===== Aspect definitions (for sector quality scoring) =====
+const ASPECT_DEFS = [
+  { name: 'conjunction', angle:   0, orb: 8, quality: 'neutral', weight:  0.6 },
+  { name: 'sextile',     angle:  60, orb: 4, quality: 'soft',    weight:  0.8 },
+  { name: 'square',      angle:  90, orb: 5, quality: 'hard',    weight: -1.0 },
+  { name: 'trine',       angle: 120, orb: 5, quality: 'soft',    weight:  1.0 },
+  { name: 'quincunx',    angle: 150, orb: 3, quality: 'tense',   weight: -0.4 },
+  { name: 'opposition',  angle: 180, orb: 6, quality: 'hard',    weight: -0.8 },
+];
+
+// Fortune Category B: planet pairs → life area (maps to horoscope B-filter)
+const FORTUNE_PAIRS = {
+  healing:       [['moon','neptune'],['moon','venus'],['sun','neptune']],
+  money:         [['jupiter','venus'],['jupiter','sun'],['venus','sun']],
+  love:          [['venus','mars'],['venus','moon'],['sun','venus']],
+  work:          [['saturn','sun'],['mars','saturn'],['jupiter','saturn']],
+  communication: [['mercury','sun'],['mercury','venus'],['mercury','jupiter']],
+};
+const FORTUNE_LABELS = {
+  healing:'癒し', money:'金運', love:'恋愛', work:'仕事', communication:'コミュニケーション',
+};
+const FORTUNE_REST_ADVICE = {
+  healing:       '今日は癒しの星が静か。\n無理にリフレッシュを求めず、\nいつもの日常を丁寧に過ごして。',
+  money:         '今日は金運の星が動いていない日。\n大きな出費や投資の決断は明日以降に。\n静かに情報収集する日に。',
+  love:          '今日は恋愛の星がお休み中。\n焦らず、自分の時間を楽しんで。\n次の波は近いうちに来る。',
+  work:          '今日は仕事運の星が穏やか。\n新しいプロジェクト開始より、\n既存タスクの整理に向いている日。',
+  communication: '今日は伝達の星が控えめ。\n大事な連絡や交渉は\n明日以降がベター。',
+};
+
+// ===== Compute aspects from angle map { planetName: degrees } =====
+function computeAspects(angleMap) {
+  const planets = Object.keys(angleMap);
+  const result = [];
+  for (let i = 0; i < planets.length; i++) {
+    for (let j = i + 1; j < planets.length; j++) {
+      const p1 = planets[i], p2 = planets[j];
+      let diff = Math.abs(angleMap[p1] - angleMap[p2]);
+      if (diff > 180) diff = 360 - diff;
+      for (const asp of ASPECT_DEFS) {
+        if (Math.abs(diff - asp.angle) <= asp.orb) {
+          result.push({ p1, p2, type: asp.name, quality: asp.quality, weight: asp.weight });
+          break;
+        }
+      }
+    }
+  }
+  return result;
+}
+
+// ===== 16-direction continuous scoring =====
+// Planet influence spreads via cosine falloff — no hard sector boundaries.
+// 16 compass directions are sampling points of a continuous field.
+var DIR16 = ['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'];
+var DIR16_ANGLE = {};
+DIR16.forEach(function(d, i) { DIR16_ANGLE[d] = i * 22.5; });
+
+// Angular distance (0–180°)
+function angleDist(a, b) {
+  var d = Math.abs(((a % 360 + 360) % 360) - ((b % 360 + 360) % 360));
+  return d > 180 ? 360 - d : d;
+}
+
+// Cosine falloff: full at 0°, zero at ±spread
+function cosFalloff(dist, spread) {
+  if (dist >= spread) return 0;
+  return (1 + Math.cos(Math.PI * dist / spread)) / 2;
+}
+
+var INFLUENCE_SPREAD = 30; // degrees — planet influence reaches ±30° from its position
+
+function scoreSectorsByAspects() {
+  // Transit angles
+  var transitAngles = {};
+  Object.entries(TRIPLE_CHART.transit).forEach(function(e) { transitAngles[e[0]] = e[1].angle; });
+  // Natal angles
+  var natalAngles = {};
+  Object.entries(TRIPLE_CHART.natal).forEach(function(e) { natalAngles[e[0]] = e[1].angle; });
+
+  // Nearest 16-dir for each transit planet (for display labels)
+  var planetDir = {};
+  Object.entries(transitAngles).forEach(function(e) {
+    var p = e[0], a = e[1];
+    var best = 'N', bestDist = 999;
+    DIR16.forEach(function(d) {
+      var dist = angleDist(a, DIR16_ANGLE[d]);
+      if (dist < bestDist) { bestDist = dist; best = d; }
+    });
+    planetDir[p] = best;
+  });
+
+  // Transit-transit aspects
+  var transitAspects = computeAspects(transitAngles);
+  // Natal-transit cross aspects
+  var crossAspects = [];
+  Object.entries(transitAngles).forEach(function(te) {
+    var tp = te[0], ta = te[1];
+    Object.entries(natalAngles).forEach(function(ne) {
+      var np = ne[0], na = ne[1];
+      if (tp === np) return;
+      var diff = angleDist(ta, na);
+      for (var i = 0; i < ASPECT_DEFS.length; i++) {
+        var asp = ASPECT_DEFS[i];
+        if (Math.abs(diff - asp.angle) <= asp.orb) {
+          crossAspects.push({ p1: tp, p2: 'N:' + np, type: asp.name, quality: asp.quality, weight: asp.weight * 0.6 });
+          break;
+        }
+      }
+    });
+  });
+
+  // Per-planet aspect score (same as before)
+  var planetScore = {};
+  Object.keys(transitAngles).forEach(function(p) { planetScore[p] = 0; });
+  transitAspects.forEach(function(asp) {
+    planetScore[asp.p1] += asp.weight;
+    planetScore[asp.p2] += asp.weight;
+  });
+  crossAspects.forEach(function(asp) {
+    if (planetScore[asp.p1] !== undefined) planetScore[asp.p1] += asp.weight;
+  });
+
+  // === Continuous scoring: spread each planet's score across 16 directions ===
+  var sectorScores = {};
+  DIR16.forEach(function(d) { sectorScores[d] = 0; });
+
+  Object.entries(transitAngles).forEach(function(e) {
+    var planet = e[0], pAngle = e[1], pScore = planetScore[planet] || 0;
+    DIR16.forEach(function(d) {
+      var dist = angleDist(pAngle, DIR16_ANGLE[d]);
+      sectorScores[d] += pScore * cosFalloff(dist, INFLUENCE_SPREAD);
+    });
+  });
+
+  // === Per-category continuous scoring ===
+  var fortuneScores = {};
+  Object.keys(FORTUNE_PAIRS).forEach(function(cat) {
+    fortuneScores[cat] = {};
+    DIR16.forEach(function(d) { fortuneScores[cat][d] = 0; });
+
+    var catPlanets = [];
+    FORTUNE_PAIRS[cat].forEach(function(pair) {
+      if (catPlanets.indexOf(pair[0]) === -1) catPlanets.push(pair[0]);
+      if (catPlanets.indexOf(pair[1]) === -1) catPlanets.push(pair[1]);
+    });
+
+    // Per-planet category score from aspects
+    var catPlanetScore = {};
+    catPlanets.forEach(function(p) { catPlanetScore[p] = 0; });
+
+    transitAspects.forEach(function(asp) {
+      var inv1 = catPlanets.indexOf(asp.p1) !== -1;
+      var inv2 = catPlanets.indexOf(asp.p2) !== -1;
+      if (!inv1 && !inv2) return;
+      var pairMatch = FORTUNE_PAIRS[cat].some(function(pair) {
+        return (asp.p1===pair[0] && asp.p2===pair[1]) || (asp.p1===pair[1] && asp.p2===pair[0]);
+      });
+      var w = pairMatch ? asp.weight * 2 : asp.weight * 0.5;
+      if (inv1) catPlanetScore[asp.p1] += w;
+      if (inv2) catPlanetScore[asp.p2] += w;
+    });
+    crossAspects.forEach(function(asp) {
+      if (catPlanets.indexOf(asp.p1) === -1) return;
+      catPlanetScore[asp.p1] += asp.weight * 0.5;
+    });
+
+    // Spread category planet scores across directions
+    catPlanets.forEach(function(p) {
+      var pAngle = transitAngles[p];
+      if (pAngle === undefined) return;
+      DIR16.forEach(function(d) {
+        var dist = angleDist(pAngle, DIR16_ANGLE[d]);
+        fortuneScores[cat][d] += catPlanetScore[p] * cosFalloff(dist, INFLUENCE_SPREAD);
+      });
+    });
+  });
+
+  // === Dominant fortune category per direction ===
+  var sectorFortune = {};
+  DIR16.forEach(function(d) {
+    var best = null, bestVal = -Infinity;
+    Object.keys(FORTUNE_PAIRS).forEach(function(cat) {
+      if (fortuneScores[cat][d] > bestVal) { bestVal = fortuneScores[cat][d]; best = cat; }
+    });
+    sectorFortune[d] = bestVal > 0.01 ? best : null;
+  });
+
+  return { sectorScores: sectorScores, sectorFortune: sectorFortune, planetDir: planetDir, planetScore: planetScore, transitAspects: transitAspects, crossAspects: crossAspects, fortuneScores: fortuneScores };
+}
+
 // ===== Draw a random card from 78 =====
 function drawRandomCard() {
   const pool = [];
@@ -822,25 +1439,33 @@ function drawRandomCard() {
   return pool[Math.floor(Math.random() * pool.length)];
 }
 
+// ===== 16-direction labels =====
+var DIR16_LABELS = {
+  N:'北', NNE:'北北東', NE:'北東', ENE:'東北東',
+  E:'東', ESE:'東南東', SE:'南東', SSE:'南南東',
+  S:'南', SSW:'南南西', SW:'南西', WSW:'西南西',
+  W:'西', WNW:'西北西', NW:'北西', NNW:'北北西',
+};
+
+// Find nearest 16-dir for a given angle
+function angleToDir16(angle) {
+  var a = ((angle % 360) + 360) % 360;
+  var best = 'N', bestDist = 999;
+  DIR16.forEach(function(d) {
+    var dist = angleDist(a, DIR16_ANGLE[d]);
+    if (dist < bestDist) { bestDist = dist; best = d; }
+  });
+  return best;
+}
+
 // ===== Calculate Seed Boost =====
 function calculateSeedBoost(card) {
-  const planets = TAROT_DATA.planetSymbols;
-  const sectorDefs = [
-    { dir:'N',  start:337.5, end:22.5 },
-    { dir:'NE', start:22.5,  end:67.5 },
-    { dir:'E',  start:67.5,  end:112.5 },
-    { dir:'SE', start:112.5, end:157.5 },
-    { dir:'S',  start:157.5, end:202.5 },
-    { dir:'SW', start:202.5, end:247.5 },
-    { dir:'W',  start:247.5, end:292.5 },
-    { dir:'NW', start:292.5, end:337.5 },
-  ];
-  const dirLabels = { N:'北', NE:'北東', E:'東', SE:'南東', S:'南', SW:'南西', W:'西', NW:'北西' };
+  var planets = TAROT_DATA.planetSymbols;
 
   // Determine boosted planets and boost amount
-  let boostedPlanets = [];
-  let boostAmount = 0;
-  let boostType = 'element';
+  var boostedPlanets = [];
+  var boostAmount = 0;
+  var boostType = 'element';
 
   if (card.type === 'major') {
     boostType = card.boostType;
@@ -851,79 +1476,79 @@ function calculateSeedBoost(card) {
       boostedPlanets = Object.keys(planets);
     }
   } else {
-    // Minor arcana
-    const suit = TAROT_DATA.suitMapping[card.suit];
-    boostedPlanets = [...suit.planets];
+    var suit = TAROT_DATA.suitMapping[card.suit];
+    boostedPlanets = suit.planets.slice();
     if (card.court) {
-      const court = TAROT_DATA.courtBoost[card.court];
+      var court = TAROT_DATA.courtBoost[card.court];
       boostAmount = court.boost;
-      court.extraPlanets.forEach(p => {
-        if (!boostedPlanets.includes(p)) boostedPlanets.push(p);
+      court.extraPlanets.forEach(function(p) {
+        if (boostedPlanets.indexOf(p) === -1) boostedPlanets.push(p);
       });
     } else {
       boostAmount = TAROT_DATA.numberBoost[card.rank] || 0.15;
     }
   }
 
-  // Determine which sector each planet falls into
-  function angleToSector(angle) {
-    for (const s of sectorDefs) {
-      if (s.start > s.end) {
-        if (angle >= s.start || angle < s.end) return s.dir;
-      } else {
-        if (angle >= s.start && angle < s.end) return s.dir;
+  // Aspect-based sector scores (continuous 16-dir)
+  var aspectResult = scoreSectorsByAspects();
+  var rawAspect = aspectResult.sectorScores;
+  var rawVals = Object.values(rawAspect);
+  var minRaw = Math.min.apply(null, rawVals);
+  var maxRaw = Math.max.apply(null, rawVals);
+  var rawRange = maxRaw - minRaw || 1;
+
+  // Normalize to [0.15, 0.80]
+  var sectorScores = {};
+  DIR16.forEach(function(d) {
+    sectorScores[d] = 0.15 + 0.65 * ((rawAspect[d] - minRaw) / rawRange);
+  });
+
+  // Apply Seed Boost: card-boosted planets amplify nearby directions (continuous)
+  var boostedSectors = {};
+  boostedPlanets.forEach(function(pName) {
+    var transitAngle = TRIPLE_CHART.transit[pName] ? TRIPLE_CHART.transit[pName].angle
+                     : (planets[pName] ? planets[pName].angle : null);
+    if (transitAngle === null) return;
+    // Spread boost across nearby directions
+    DIR16.forEach(function(d) {
+      var dist = angleDist(transitAngle, DIR16_ANGLE[d]);
+      var falloff = cosFalloff(dist, INFLUENCE_SPREAD);
+      if (falloff > 0) {
+        if (!boostedSectors[d]) boostedSectors[d] = 0;
+        boostedSectors[d] += boostAmount * falloff;
+        sectorScores[d] *= (1 + boostAmount * falloff);
       }
-    }
-    return 'N';
-  }
-
-  // Base sector scores (from transit planets)
-  const sectorScores = {};
-  sectorDefs.forEach(s => { sectorScores[s.dir] = 0.3; });
-
-  // Each planet contributes to its sector
-  Object.entries(planets).forEach(([name, p]) => {
-    const dir = angleToSector(p.angle);
-    sectorScores[dir] += 0.15;
+    });
   });
 
-  // Apply Seed Boost
-  const boostedSectors = {};
-  boostedPlanets.forEach(pName => {
-    if (planets[pName]) {
-      const dir = angleToSector(planets[pName].angle);
-      if (!boostedSectors[dir]) boostedSectors[dir] = 0;
-      boostedSectors[dir] += boostAmount;
-      sectorScores[dir] *= (1 + boostAmount);
-    }
-  });
+  // Classify sectors: top 4 blessed, next 6 mid, bottom 6 shadow
+  var scores = Object.entries(sectorScores).map(function(e) { return { dir: e[0], score: e[1] }; });
+  scores.sort(function(a, b) { return b.score - a.score; });
 
-  // Classify sectors: blessed/mid/shadow based on scores
-  const scores = Object.entries(sectorScores).map(([dir, score]) => ({ dir, score }));
-  scores.sort((a, b) => b.score - a.score);
-
-  const sectorTypes = {};
-  scores.forEach((s, i) => {
-    if (i < 2) sectorTypes[s.dir] = 'blessed';
-    else if (i < 5) sectorTypes[s.dir] = 'mid';
+  var sectorTypes = {};
+  scores.forEach(function(s, i) {
+    if (i < 4) sectorTypes[s.dir] = 'blessed';
+    else if (i < 10) sectorTypes[s.dir] = 'mid';
     else sectorTypes[s.dir] = 'shadow';
   });
 
-  // Find the strongest boosted sector for stella message
-  let strongestDir = null;
-  let strongestBoost = 0;
-  Object.entries(boostedSectors).forEach(([dir, val]) => {
-    if (val > strongestBoost) { strongestBoost = val; strongestDir = dir; }
+  // Strongest boosted direction
+  var strongestDir = null, strongestBoost = 0;
+  Object.entries(boostedSectors).forEach(function(e) {
+    if (e[1] > strongestBoost) { strongestBoost = e[1]; strongestDir = e[0]; }
   });
+  if (!strongestDir) strongestDir = scores[0].dir;
 
   return {
-    sectorTypes,
-    sectorScores,
-    boostedPlanets,
-    boostedSectors,
-    boostAmount,
-    strongestDir,
-    strongestDirLabel: strongestDir ? dirLabels[strongestDir] : '',
+    sectorTypes: sectorTypes,
+    sectorScores: sectorScores,
+    sectorFortune: aspectResult.sectorFortune,
+    boostedPlanets: boostedPlanets,
+    boostedSectors: boostedSectors,
+    boostAmount: boostAmount,
+    strongestDir: strongestDir,
+    strongestDirLabel: DIR16_LABELS[strongestDir] || '',
+    aspectResult: aspectResult,
   };
 }
 
@@ -1075,6 +1700,19 @@ function init() {
   window.baseOverlays.push(centerMarker);
 
   drawMapOverlay();
+
+  // Pre-compute aspect data for fortune filter (before any card draw)
+  window.aspectData = scoreSectorsByAspects();
+
+  // Show triple chart planet lines immediately (before card draw)
+  addBoostedPlanetLines();
+
+  // Show aspect-based sectors immediately (no card needed)
+  createGeoSectors();
+
+  // Show search bar and layer indicator from the start
+  document.getElementById('searchBar').classList.add('visible');
+  document.getElementById('layerBtn').classList.add('visible');
 }
 
 // ===== Thin dark gradient overlay on mapCanvas =====
@@ -1240,9 +1878,10 @@ function onMeteorImpact(x, y) {
     setTimeout(() => { sectorAnimating = false; }, 10000);
     createGeoSectors();
     addBoostedPlanetLines();
+    setTimeout(applyLayerVisibility, 100); // apply any active fortune filter to new sectors
 
     document.getElementById('grayVeil').classList.add('lifted');
-    document.getElementById('layerIndicator').classList.add('visible');
+    document.getElementById('layerBtn').classList.add('visible');
     document.getElementById('searchBar').classList.add('visible');
   }, 300);
 
@@ -1285,9 +1924,11 @@ function drawGeoSparkles(ctx) {
   if (window.geoSectors) {
     window.geoSectors.forEach(s => {
       if (s.type === 'blessed') {
-        const dirAngles = { N:[347.5,12.5], NE:[32.5,57.5], E:[77.5,102.5], SE:[122.5,147.5], S:[167.5,192.5], SW:[212.5,237.5], W:[257.5,282.5], NW:[302.5,327.5] };
-        const da = dirAngles[s.dir];
-        if (da) blessedDefs.push({ start: da[0], end: da[1] });
+        var idx = DIR16.indexOf(s.dir);
+        if (idx >= 0) {
+          var center = idx * 22.5;
+          blessedDefs.push({ start: center - 11.25, end: center + 11.25 });
+        }
       }
     });
   }
@@ -1334,7 +1975,7 @@ function drawGeoSparkles(ctx) {
   ctx.fill();
 }
 
-// ===== Planet lines - all 10 planets, boosted ones highlighted =====
+// ===== Planet lines - Triple chart (Natal / Progressed / Transit) =====
 function addBoostedPlanetLines() {
   if (window.boostedLines) return;
   window.boostedLines = [];
@@ -1343,43 +1984,72 @@ function addBoostedPlanetLines() {
   const boostDistKm = 20000;
   const center = turf.point([lng, lat]);
 
-  const planets = TAROT_DATA.planetSymbols;
+  const planetMeta = TAROT_DATA.planetSymbols;
   const boosted = seedBoostData ? seedBoostData.boostedPlanets : [];
 
+  // Layer groups for future ON/OFF control
+  window.chartLayerGroups = {};
   window.planetSymbolMarkers = [];
-  Object.entries(planets).forEach(([name, p]) => {
-    const isBoosted = boosted.includes(name);
-    const lineColor = isBoosted ? (p.color || '#C9A84C') : 'rgba(100,100,120,0.4)';
-    const lineWeight = isBoosted ? 2.5 : 1;
-    const lineOpacity = isBoosted ? 0.7 : 0.2;
 
-    const linePoints = [];
-    for (let d = 0; d <= boostDistKm; d += boostDistKm / 20) {
-      const pt = turf.destination(center, d, p.angle, { units: 'kilometers' });
-      linePoints.push(L.latLng(pt.geometry.coordinates[1], normalizeLng(pt.geometry.coordinates[0], lng)));
-    }
-    const line = L.polyline(linePoints, {
-      color: lineColor, weight: lineWeight, opacity: lineOpacity, dashArray: isBoosted ? null : '4 8',
-    }).addTo(window.leafletMap);
-    window.boostedLines.push(line);
+  // Draw lines for each chart layer
+  ['natal', 'progressed', 'transit'].forEach(layerKey => {
+    const layerStyle = CHART_LAYERS[layerKey];
+    const chartData = TRIPLE_CHART[layerKey];
+    const layerGroup = L.layerGroup().addTo(window.leafletMap);
+    window.chartLayerGroups[layerKey] = layerGroup;
 
-    // Planet symbol marker (viewport edge tracking)
-    const bgColor = isBoosted ? 'rgba(201,168,76,0.9)' : 'rgba(60,60,80,0.7)';
-    const glowShadow = isBoosted ? '0 0 12px ' + p.color + ',0 2px 4px rgba(0,0,0,0.4)' : '0 2px 4px rgba(0,0,0,0.3)';
-    const symMarker = L.marker(window.mapCenter, {
-      icon: L.divIcon({
-        className: '',
-        html: '<div style="width:28px;height:28px;border-radius:50%;background:' + bgColor +
-              ';display:flex;align-items:center;justify-content:center;font-size:15px;color:' +
-              (isBoosted ? '#1a0a30' : '#aaa') + ';text-shadow:none;font-weight:bold;box-shadow:' +
-              glowShadow + ';">' + p.symbol + '</div>',
-        iconSize: [28, 28],
-        iconAnchor: [14, 14],
-      }),
-      interactive: false,
-    }).addTo(window.leafletMap);
-    window.boostedLines.push(symMarker);
-    window.planetSymbolMarkers.push({ marker: symMarker, angle: p.angle, lineLatLngs: linePoints });
+    Object.entries(chartData).forEach(([name, pd]) => {
+      const meta = planetMeta[name];
+      const isBoosted = boosted.includes(name);
+
+      // Line color: boosted planets use their own color, otherwise layer color
+      const lineColor = (layerKey === 'natal' && isBoosted) ? meta.color : layerStyle.color;
+      const lineOpacity = (layerKey === 'natal' && isBoosted) ? 0.7 : layerStyle.opacity;
+      const lineWeight = (layerKey === 'natal' && isBoosted) ? 2.5 : layerStyle.weight;
+
+      const linePoints = [];
+      for (let d = 0; d <= boostDistKm; d += boostDistKm / 20) {
+        const pt = turf.destination(center, d, pd.angle, { units: 'kilometers' });
+        linePoints.push(L.latLng(pt.geometry.coordinates[1], normalizeLng(pt.geometry.coordinates[0], lng)));
+      }
+      const line = L.polyline(linePoints, {
+        color: lineColor, weight: lineWeight, opacity: lineOpacity,
+        dashArray: layerStyle.dash,
+      });
+      line.addTo(layerGroup);
+      window.boostedLines.push(line);
+
+      // Planet symbol marker (viewport edge tracking)
+      const markerSize = layerKey === 'natal' ? 28 : 22;
+      const fontSize = layerKey === 'natal' ? 15 : 11;
+      const borderStyle = layerKey === 'natal' ? 'none' : '1.5px solid ' + layerStyle.color;
+      const bgColor = layerStyle.markerBg;
+      const fgColor = layerStyle.markerFg;
+      const glowShadow = (layerKey === 'natal' && isBoosted)
+        ? '0 0 12px ' + meta.color + ',0 2px 4px rgba(0,0,0,0.4)'
+        : '0 2px 4px rgba(0,0,0,0.3)';
+
+      const symMarker = L.marker(window.mapCenter, {
+        icon: L.divIcon({
+          className: '',
+          html: '<div style="width:' + markerSize + 'px;height:' + markerSize + 'px;border-radius:50%;' +
+                'background:' + bgColor + ';border:' + borderStyle + ';' +
+                'display:flex;align-items:center;justify-content:center;font-size:' + fontSize + 'px;' +
+                'color:' + fgColor + ';font-weight:bold;box-shadow:' + glowShadow + ';">' +
+                meta.symbol + '</div>',
+          iconSize: [markerSize, markerSize],
+          iconAnchor: [markerSize / 2, markerSize / 2],
+        }),
+        interactive: false,
+        zIndexOffset: layerKey === 'natal' ? 200 : (layerKey === 'transit' ? 100 : 50),
+      });
+      symMarker.addTo(layerGroup);
+      window.boostedLines.push(symMarker);
+      window.planetSymbolMarkers.push({
+        marker: symMarker, angle: pd.angle, lineLatLngs: linePoints, layer: layerKey,
+        planetName: name, line: line, baseOpacity: lineOpacity,
+      });
+    });
   });
 
   // Liang-Barsky viewport edge tracking
@@ -1454,132 +2124,129 @@ function addBoostedPlanetLines() {
   window.boostedLines.push(seedLabel);
 }
 
-// ===== Geodesic arc helper =====
-function geodesicArc(lat, lng, radiusKm, startBearing, endBearing, steps) {
-  const center = turf.point([lng, lat]);
-  const points = [];
-  for (let i = 0; i <= steps; i++) {
-    const bearing = startBearing + (endBearing - startBearing) * (i / steps);
-    const dest = turf.destination(center, radiusKm, bearing, { units: 'kilometers' });
-    const coords = dest.geometry.coordinates;
-    points.push(L.latLng(coords[1], normalizeLng(coords[0], lng)));
-  }
-  return points;
-}
-
-// ===== Leaflet geo-sector creation (dynamic from Seed Boost) =====
+// ===== Leaflet geo-sector creation (Mercator projection — pole-safe) =====
+// Sectors are drawn in Leaflet's pixel coordinate space, then unprojected to lat/lng.
+// This eliminates all geodesic pole-crossing issues regardless of user latitude.
 function createGeoSectors() {
-  if (window.geoSectorsVisible) return;
+  // If sectors already exist, remove them first (allows re-draw after card boost)
+  if (window.geoSectorsVisible && window.geoSectors) {
+    window.geoSectors.forEach(function(s) {
+      if (s.polygon && window.leafletMap.hasLayer(s.polygon)) window.leafletMap.removeLayer(s.polygon);
+      if (s.wrapPolygons) s.wrapPolygons.forEach(function(wp) {
+        if (window.leafletMap.hasLayer(wp)) window.leafletMap.removeLayer(wp);
+      });
+    });
+    window.geoSectors = [];
+    window.geoSectorsVisible = false;
+  }
   window.geoSectorsVisible = true;
 
-  const lat = window.mapCenter[0];
-  const lng = window.mapCenter[1];
-  const radiusKm = 20000;
+  var lat = window.mapCenter[0];
+  var lng = window.mapCenter[1];
 
-  // Build 8 full sectors from Seed Boost data
-  const dirAngles = [
-    { dir:'N',  start:337.5, end:22.5 },
-    { dir:'NE', start:22.5,  end:67.5 },
-    { dir:'E',  start:67.5,  end:112.5 },
-    { dir:'SE', start:112.5, end:157.5 },
-    { dir:'S',  start:157.5, end:202.5 },
-    { dir:'SW', start:202.5, end:247.5 },
-    { dir:'W',  start:247.5, end:292.5 },
-    { dir:'NW', start:292.5, end:337.5 },
-  ];
+  // --- Mercator pixel-space approach ---
+  var refZoom = 4;
+  var centerPx = window.leafletMap.project(L.latLng(lat, lng), refZoom);
+  var pxRadius = 6000; // ~hemisphere scale at zoom 4
 
-  // Use seedBoostData if available, otherwise fallback
-  const sectorTypes = seedBoostData ? seedBoostData.sectorTypes : {
-    N:'mid', NE:'blessed', E:'shadow', SE:'shadow', S:'mid', SW:'mid', W:'blessed', NW:'mid'
-  };
-
-  const sectorDefs = dirAngles.map(d => {
-    let startDeg = d.start;
-    let endDeg = d.end;
-    if (startDeg > endDeg) endDeg += 360;
-    return [startDeg, endDeg, sectorTypes[d.dir] || 'mid', d.dir];
+  // 16 directional sectors (22.5° each)
+  var dirAngles = DIR16.map(function(d, i) {
+    var center = i * 22.5;
+    var start = ((center - 11.25) + 360) % 360;
+    var end = (center + 11.25) % 360;
+    return { dir: d, start: start, end: end };
   });
 
-  const typeStyles = {
+  // Determine sector types from aspect scores or seed boost
+  var sectorTypes;
+  if (seedBoostData) {
+    sectorTypes = seedBoostData.sectorTypes;
+  } else if (window.aspectData) {
+    var entries = Object.entries(window.aspectData.sectorScores).sort(function(a,b) { return b[1] - a[1]; });
+    sectorTypes = {};
+    entries.forEach(function(e, i) {
+      if (i < 4) sectorTypes[e[0]] = 'blessed';
+      else if (i < 10) sectorTypes[e[0]] = 'mid';
+      else sectorTypes[e[0]] = 'shadow';
+    });
+  } else {
+    sectorTypes = {};
+    DIR16.forEach(function(d) { sectorTypes[d] = 'mid'; });
+  }
+
+  var typeStyles = {
     blessed: { color: '#C9A84C', fillColor: '#C9A84C', fillOpacity: 0, weight: 2, opacity: 0 },
     shadow:  { color: '#6B5CE7', fillColor: '#2D1B4E', fillOpacity: 0, weight: 1, opacity: 0 },
     mid:     { color: '#3A4A6B', fillColor: '#3A4A6B', fillOpacity: 0, weight: 1, opacity: 0 },
   };
 
-  const targetStyles = {
-    blessed: { fillOpacity: 0.12, opacity: 0.5, weight: 2 },
-    shadow:  { fillOpacity: 0.10, opacity: 0.25, weight: 1 },
-    mid:     { fillOpacity: 0.06, opacity: 0.2, weight: 1 },
+  var targetStyles = {
+    blessed: { fillOpacity: 0.28, opacity: 0.7, weight: 2.5 },
+    shadow:  { fillOpacity: 0.18, opacity: 0.4, weight: 1.5 },
+    mid:     { fillOpacity: 0.10, opacity: 0.25, weight: 1 },
   };
 
-  sectorDefs.forEach((def, i) => {
-    const [startDeg, endDeg, type, dir] = def;
-    const center = turf.point([lng, lat]);
-    const realStart = startDeg % 360;
-    const realEnd = endDeg % 360;
+  // Bearing (0=N clockwise) → pixel offset (Leaflet: x=right, y=down)
+  function bearingToPx(bearing, radius) {
+    var rad = bearing * Math.PI / 180;
+    return L.point(Math.sin(rad) * radius, -Math.cos(rad) * radius);
+  }
 
-    // Left edge (great circle)
-    const leftEdge = [];
-    for (let d = 0; d <= radiusKm; d += radiusKm / 30) {
-      const pt = turf.destination(center, d, realStart, { units: 'kilometers' });
-      leftEdge.push(L.latLng(pt.geometry.coordinates[1], normalizeLng(pt.geometry.coordinates[0], lng)));
+  dirAngles.forEach(function(d, i) {
+    var type = sectorTypes[d.dir] || 'mid';
+    var startDeg = d.start;
+    var endDeg = d.end;
+    if (startDeg > endDeg) endDeg += 360;
+
+    // Build polygon in pixel space: center → arc points → back to center
+    var pxPoints = [centerPx];
+    var arcSteps = 20;
+    for (var s = 0; s <= arcSteps; s++) {
+      var bearing = startDeg + (endDeg - startDeg) * (s / arcSteps);
+      var off = bearingToPx(bearing, pxRadius);
+      pxPoints.push(L.point(centerPx.x + off.x, centerPx.y + off.y));
     }
 
-    // Outer arc
-    const arcPoints = geodesicArc(lat, lng, radiusKm, startDeg, endDeg, 50);
+    // Unproject to lat/lng (Mercator naturally clamps near ±85°)
+    var latLngs = pxPoints.map(function(px) {
+      var ll = window.leafletMap.unproject(px, refZoom);
+      return L.latLng(Math.max(-85.05, Math.min(85.05, ll.lat)), ll.lng);
+    });
 
-    // Right edge (reversed)
-    const rightEdge = [];
-    for (let d = radiusKm; d >= 0; d -= radiusKm / 30) {
-      const pt = turf.destination(center, d, realEnd, { units: 'kilometers' });
-      rightEdge.push(L.latLng(pt.geometry.coordinates[1], normalizeLng(pt.geometry.coordinates[0], lng)));
-    }
+    var style = typeStyles[type];
+    var polygon = L.polygon(latLngs, { ...style, className: 'sector-' + type }).addTo(window.leafletMap);
 
-    const points = [...leftEdge, ...arcPoints, ...rightEdge];
-    const style = typeStyles[type];
-    const polygon = L.polygon(points, { ...style, className: 'sector-' + type }).addTo(window.leafletMap);
+    var isBoosted = seedBoostData && seedBoostData.boostedSectors[d.dir];
+    var sectorEntry = { polygon: polygon, type: type, index: i, dir: d.dir, boosted: !!isBoosted, wrapPolygons: [] };
 
-    // Show boost indicator on boosted sectors
-    const isBoosted = seedBoostData && seedBoostData.boostedSectors[dir];
-    window.geoSectors.push({ polygon, type, index: i, dir, boosted: !!isBoosted });
+    // World wrap copies at ±360°
+    [-360, 360].forEach(function(offset) {
+      var shifted = latLngs.map(function(p) { return L.latLng(p.lat, p.lng + offset); });
+      var wp = L.polygon(shifted, { ...style, className: 'sector-' + type }).addTo(window.leafletMap);
+      sectorEntry.wrapPolygons.push(wp);
+    });
+
+    window.geoSectors.push(sectorEntry);
 
     // Fade-in with cascade delay
-    const delay = i * 120;
-    const target = targetStyles[type];
-    setTimeout(() => {
-      let step = 0;
-      const maxSteps = 20;
-      const fadeIn = setInterval(() => {
+    var delay = i * 120;
+    var target = targetStyles[type];
+    setTimeout(function() {
+      var step = 0;
+      var maxSteps = 20;
+      var fadeIn = setInterval(function() {
         step++;
-        const t = step / maxSteps;
-        polygon.setStyle({
+        var t = step / maxSteps;
+        var animStyle = {
           fillOpacity: target.fillOpacity * t,
           opacity: target.opacity * t,
           weight: target.weight,
-        });
+        };
+        polygon.setStyle(animStyle);
+        sectorEntry.wrapPolygons.forEach(function(wp) { wp.setStyle(animStyle); });
         if (step >= maxSteps) clearInterval(fadeIn);
       }, 30);
     }, delay);
-  });
-
-  // World wrap copies at +/-360
-  function shiftPoints(pts, lngOffset) {
-    return pts.map(p => L.latLng(p.lat, p.lng + lngOffset));
-  }
-
-  window.geoSectors.forEach(s => {
-    const origPts = s.polygon.getLatLngs()[0];
-    const targetStyle = targetStyles[s.type];
-    [-360, 360].forEach(offset => {
-      const shifted = shiftPoints(origPts, offset);
-      L.polygon(shifted, {
-        ...typeStyles[s.type],
-        className: 'sector-' + s.type,
-        fillOpacity: targetStyle.fillOpacity,
-        opacity: targetStyle.opacity,
-        weight: targetStyle.weight,
-      }).addTo(window.leafletMap);
-    });
   });
 
   // Store sector types globally for search
@@ -1633,18 +2300,16 @@ function detectSector(targetLat, targetLng) {
 
   const distance = turf.distance(from, to, { units: 'kilometers' });
 
-  // Use dynamic sector types from Seed Boost
-  const st = window.currentSectorTypes || { N:'mid',NE:'blessed',E:'shadow',SE:'shadow',S:'mid',SW:'mid',W:'blessed',NW:'mid' };
-  const sectors = [
-    { start: 337.5, end: 22.5,   type: st['N']  || 'mid',     dir: 'N',  label: '北' },
-    { start: 22.5,  end: 67.5,   type: st['NE'] || 'blessed', dir: 'NE', label: '北東' },
-    { start: 67.5,  end: 112.5,  type: st['E']  || 'shadow',  dir: 'E',  label: '東' },
-    { start: 112.5, end: 157.5,  type: st['SE'] || 'shadow',  dir: 'SE', label: '南東' },
-    { start: 157.5, end: 202.5,  type: st['S']  || 'mid',     dir: 'S',  label: '南' },
-    { start: 202.5, end: 247.5,  type: st['SW'] || 'mid',     dir: 'SW', label: '南西' },
-    { start: 247.5, end: 292.5,  type: st['W']  || 'blessed', dir: 'W',  label: '西' },
-    { start: 292.5, end: 337.5,  type: st['NW'] || 'mid',     dir: 'NW', label: '北西' },
-  ];
+  // Use dynamic sector types from Seed Boost (16 directions)
+  var stDefault = {};
+  DIR16.forEach(function(d) { stDefault[d] = 'mid'; });
+  const st = window.currentSectorTypes || stDefault;
+  const sectors = DIR16.map(function(d, i) {
+    var center = i * 22.5;
+    var start = ((center - 11.25) + 360) % 360;
+    var end = (center + 11.25) % 360;
+    return { start: start, end: end, type: st[d] || 'mid', dir: d, label: DIR16_LABELS[d] || d };
+  });
 
   let matched = sectors[0];
   for (const s of sectors) {
@@ -1656,13 +2321,51 @@ function detectSector(targetLat, targetLng) {
   }
 
   const distText = distance < 1 ? Math.round(distance * 1000) + 'm' : Math.round(distance) + 'km';
+  const header = matched.label + '・' + distText;
+
+  // Dynamic fortune context from aspect-based scoring
+  const fortune = seedBoostData && seedBoostData.sectorFortune
+    ? seedBoostData.sectorFortune[matched.dir] : null;
+  const fortuneLabel = fortune ? FORTUNE_LABELS[fortune] : null;
+
+  // Find dominant aspect type for this sector's planets
+  let aspectNote = '';
+  if (seedBoostData && seedBoostData.aspectResult) {
+    const ar = seedBoostData.aspectResult;
+    const planetsHere = Object.entries(ar.planetDir)
+      .filter(([p, d]) => d === matched.dir).map(([p]) => p);
+    const relevantAsps = ar.transitAspects.filter(a =>
+      planetsHere.includes(a.p1) || planetsHere.includes(a.p2));
+    const softAsps = relevantAsps.filter(a => a.quality === 'soft');
+    const hardAsps = relevantAsps.filter(a => a.quality === 'hard');
+    if (matched.type === 'blessed' && softAsps.length > 0) {
+      const a = softAsps[0];
+      const sym1 = TAROT_DATA.planetSymbols[a.p1], sym2 = TAROT_DATA.planetSymbols[a.p2];
+      if (sym1 && sym2) aspectNote = sym1.nameJP + '×' + sym2.nameJP + 'の' + a.type + 'が吉兆。';
+    } else if (matched.type === 'shadow' && hardAsps.length > 0) {
+      const a = hardAsps[0];
+      const sym1 = TAROT_DATA.planetSymbols[a.p1], sym2 = TAROT_DATA.planetSymbols[a.p2];
+      if (sym1 && sym2) aspectNote = sym1.nameJP + '×' + sym2.nameJP + 'の' + a.type + 'に注意。';
+    }
+  }
+
+  const blessedBody = fortuneLabel
+    ? aspectNote + '【' + fortuneLabel + '】に追い風が吹いている方角。'
+    : aspectNote + 'トランジットのソフトアスペクトが集まる吉方位。';
+  const shadowBody = fortuneLabel
+    ? aspectNote + '【' + fortuneLabel + '】の課題に向き合う方角。意識的に動くと成長につながる。'
+    : aspectNote + 'ハードアスペクトが重なる方角。今日は意識して動くこと。';
+  const midBody = fortuneLabel
+    ? '【' + fortuneLabel + '】の流れが緩やかに動いている方角。気楽に楽しめる。'
+    : 'アスペクトが中立的な方角。悪くないけど、最高でもない。';
+
   const messages = {
-    blessed: '✨ 吉方位（' + matched.label + '・' + distText + '）\nこの場所は金星のエネルギーが流れている方角。今日のデートにぴったり！',
-    shadow: '🌙 要注意方位（' + matched.label + '・' + distText + '）\n今日はこの方角は控えめに。別の日なら輝くかも。',
-    mid: '💫 中間方位（' + matched.label + '・' + distText + '）\n悪くないけど、最高でもない。気楽に楽しめる方角。',
+    blessed: '✨ 吉方位（' + header + '）\n' + blessedBody,
+    shadow:  '🌙 意識方位（' + header + '）\n' + shadowBody,
+    mid:     '💫 中間方位（' + header + '）\n' + midBody,
   };
 
-  return { type: matched.type, message: messages[matched.type] };
+  return { type: matched.type, message: messages[matched.type], fortune };
 }
 
 function showSearchResult(name, message, type) {
@@ -1768,41 +2471,55 @@ function animate() {
 }
 
 // ===== User interaction flow =====
-function startCardDraw() {
-  state = 'cardOverlay';
+// ===== Apply tarot card from bridge data =====
+function applyBridgeData() {
+  var raw = localStorage.getItem('solara_tarot_bridge');
+  if (!raw) return false;
+  try {
+    var bridge = JSON.parse(raw);
+  } catch(e) { return false; }
 
-  // Draw random card from 78
-  drawnCard = drawRandomCard();
+  // Check if it's today's data
+  var today = new Date().toISOString().slice(0, 10);
+  if (bridge.date !== today) {
+    localStorage.removeItem('solara_tarot_bridge');
+    return false;
+  }
+
+  // Find the card in TAROT_DATA to get full data for calculateSeedBoost
+  var allCards = [];
+  TAROT_DATA.majorArcana.forEach(function(c) { allCards.push({ type:'major', ...c }); });
+  TAROT_DATA.minorArcana.forEach(function(c) {
+    var suit = TAROT_DATA.suitMapping[c.suit];
+    allCards.push({ type:'minor', emoji: suit.emoji, ...c });
+  });
+
+  var matchedCard = null;
+  for (var i = 0; i < allCards.length; i++) {
+    if (allCards[i].displayName === bridge.cardName) {
+      matchedCard = allCards[i];
+      break;
+    }
+  }
+
+  if (!matchedCard) return false;
+
+  drawnCard = matchedCard;
   seedBoostData = calculateSeedBoost(drawnCard);
 
-  // Update card front display
-  document.getElementById('cardEmoji').textContent = drawnCard.emoji;
-  document.getElementById('cardName').textContent = drawnCard.displayName;
-  document.getElementById('cardSubtitle').textContent = drawnCard.keyword;
-
-  // Update seed badge emoji
+  // Update seed badge
   document.getElementById('seedBadge').textContent = drawnCard.emoji;
 
-  document.getElementById('cardOverlay').classList.add('active');
-  document.getElementById('ctaButton').classList.add('hidden');
+  // Hide pre-seed prompt
   document.getElementById('preseedPrompt').classList.add('hidden');
-}
 
-function flipCard() {
-  if (state !== 'cardOverlay') return;
-  state = 'flipped';
-  document.getElementById('tarotCard').classList.add('flipped');
+  // Launch meteor effect after short delay
+  setTimeout(function() {
+    launchMeteor(centerX, centerY);
+    state = 'active';
+  }, 800);
 
-  setTimeout(() => {
-    state = 'transitioning';
-    document.getElementById('tarotCard').classList.add('shrinking');
-
-    setTimeout(() => {
-      document.getElementById('cardOverlay').classList.remove('active');
-      launchMeteor(centerX, centerY);
-      state = 'active';
-    }, 600);
-  }, 1200);
+  return true;
 }
 
 function restart() {
@@ -1815,14 +2532,12 @@ function restart() {
   sectorAnimating = false;
   sectorAnimProgress = 0;
 
-  document.getElementById('cardOverlay').classList.remove('active');
-  document.getElementById('tarotCard').classList.remove('flipped', 'shrinking');
-  document.getElementById('ctaButton').classList.remove('hidden');
   document.getElementById('preseedPrompt').classList.remove('hidden');
+  document.getElementById('preseedPrompt').classList.remove('bottom');
   document.getElementById('grayVeil').classList.remove('lifted');
   document.getElementById('stellaMsg').classList.remove('visible');
   document.getElementById('seedBadge').classList.remove('visible');
-  document.getElementById('layerIndicator').classList.remove('visible');
+  document.getElementById('layerBtn').classList.remove('visible');
   document.getElementById('searchBar').classList.remove('visible');
   document.getElementById('searchResult').classList.remove('visible');
   document.getElementById('screenFlash').style.opacity = '0';
@@ -1842,14 +2557,308 @@ function restart() {
     window.geoSectorsVisible = false;
     window.boostedLines = null;
     window.planetSymbolMarkers = null;
+    window.chartLayerGroups = null;
     window.currentSectorTypes = null;
   }
 
   drawMapOverlay();
 }
 
+// ===== Layer panel control =====
+const PLANET_GROUPS = {
+  personal:     ['sun', 'moon', 'mercury', 'venus', 'mars'],
+  social:       ['jupiter', 'saturn'],
+  generational: ['uranus', 'neptune', 'pluto'],
+};
+
+// Planets relevant to each fortune category
+const FORTUNE_PLANETS = {
+  healing:       ['moon', 'neptune', 'venus'],
+  money:         ['jupiter', 'venus', 'sun'],
+  love:          ['venus', 'mars', 'moon'],
+  work:          ['saturn', 'sun', 'mars', 'jupiter'],
+  communication: ['mercury', 'sun', 'venus'],
+};
+
+var layerVisibility = { natal: true, progressed: true, transit: true, sectors: true, compass: true };
+var groupVisibility  = { personal: true, social: true, generational: true };
+var fortuneFilter   = null; // null = show all; otherwise one of FORTUNE_PLANETS keys
+
+function setFortuneFilter(cat) {
+  // 'all' = clear filter, show default blessed/shadow/mid
+  if (cat === 'all') {
+    fortuneFilter = null;
+  } else {
+    fortuneFilter = (fortuneFilter === cat) ? null : cat;
+  }
+  document.querySelectorAll('.fortune-pill').forEach(function(el) {
+    var ft = el.getAttribute('data-fortune');
+    el.classList.toggle('active', fortuneFilter ? ft === fortuneFilter : ft === 'all');
+  });
+  applyLayerVisibility();
+
+  // Show rest advice if no sectors match the selected fortune
+  var overlay = document.getElementById('fortuneRestOverlay');
+  var textEl = document.getElementById('fortuneRestText');
+  if (!overlay) return;
+  if (fortuneFilter) {
+    var fScoresAdv = (window.aspectData && window.aspectData.fortuneScores && window.aspectData.fortuneScores[fortuneFilter]) || {};
+    var hasMatch = Object.values(fScoresAdv).some(function(v) { return v > 0.01; });
+    if (!hasMatch) {
+      textEl.textContent = FORTUNE_REST_ADVICE[fortuneFilter] || '';
+      overlay.classList.add('visible');
+    } else {
+      overlay.classList.remove('visible');
+    }
+  } else {
+    overlay.classList.remove('visible');
+  }
+}
+
+function dismissFortuneAdvice() {
+  var overlay = document.getElementById('fortuneRestOverlay');
+  if (overlay) overlay.classList.remove('visible');
+}
+
+// ===== Fortune Bottom Sheet =====
+var fortuneSheetOpen = false;
+var fortuneSheetTab = 'all';
+
+function toggleFortuneSheet() {
+  var sheet = document.getElementById('fortuneSheet');
+  var pull = document.getElementById('fortuneSheetPull');
+  fortuneSheetOpen = !fortuneSheetOpen;
+  sheet.classList.toggle('open', fortuneSheetOpen);
+  pull.innerHTML = fortuneSheetOpen ? '▼ 閉じる' : '▲ 運勢方位';
+  if (fortuneSheetOpen) renderFortuneSheet();
+}
+
+function switchFortuneTab(tab) {
+  fortuneSheetTab = tab;
+  document.querySelectorAll('.fortune-sheet-tab').forEach(function(el) {
+    el.classList.toggle('active', el.getAttribute('data-ftab') === tab);
+  });
+  renderFortuneSheet();
+  // Also sync map fortune filter (except 'all' which clears it)
+  if (tab === 'all') {
+    if (fortuneFilter) setFortuneFilter(fortuneFilter); // toggle off
+  } else if (fortuneFilter !== tab) {
+    if (fortuneFilter) setFortuneFilter(fortuneFilter); // clear old
+    setFortuneFilter(tab); // set new
+  }
+}
+
+function renderFortuneSheet() {
+  var body = document.getElementById('fortuneSheetBody');
+  if (!body || !window.aspectData) return;
+
+  var dirs = DIR16;
+  var scores;
+  var label;
+
+  if (fortuneSheetTab === 'all') {
+    scores = window.aspectData.sectorScores;
+    label = '総合';
+  } else {
+    scores = (window.aspectData.fortuneScores && window.aspectData.fortuneScores[fortuneSheetTab]) || {};
+    label = FORTUNE_LABELS[fortuneSheetTab] || fortuneSheetTab;
+  }
+
+  // Find max absolute value for bar scaling
+  var vals = dirs.map(function(d) { return scores[d] || 0; });
+  var maxAbs = Math.max.apply(null, vals.map(function(v) { return Math.abs(v); }));
+  if (maxAbs < 0.1) maxAbs = 1;
+
+  // Sort by score descending
+  var sorted = dirs.slice().sort(function(a, b) { return (scores[b] || 0) - (scores[a] || 0); });
+
+  var html = '';
+  sorted.forEach(function(dir) {
+    var score = scores[dir] || 0;
+    var pct = Math.abs(score) / maxAbs * 100;
+    var cls = score > 0.01 ? 'positive' : (score < -0.01 ? 'negative' : 'zero');
+    var badge = '';
+    if (fortuneSheetTab === 'all' && window.aspectData.sectorFortune) {
+      var cat = window.aspectData.sectorFortune[dir];
+      if (cat) badge = '<span class="fortune-dir-badge">' + (FORTUNE_LABELS[cat] || '') + '</span>';
+    }
+    var scoreStr = Math.abs(score).toFixed(2);
+    html += '<div class="fortune-dir-row">'
+      + '<div class="fortune-dir-label">' + (DIR16_LABELS[dir] || dir) + '</div>'
+      + '<div class="fortune-dir-bar-wrap"><div class="fortune-dir-bar ' + cls + '" style="width:' + pct + '%"></div></div>'
+      + '<div class="fortune-dir-score ' + cls + '">' + scoreStr + badge + '</div>'
+      + '</div>';
+  });
+
+  // If tab is a category with all zeros, show rest advice
+  if (fortuneSheetTab !== 'all' && vals.every(function(v) { return Math.abs(v) < 0.01; })) {
+    html = '<div style="text-align:center;padding:20px 10px;color:#888;font-size:12px;line-height:1.8;white-space:pre-line;">'
+      + '🌙\n' + (FORTUNE_REST_ADVICE[fortuneSheetTab] || '') + '</div>';
+  }
+
+  body.innerHTML = html;
+}
+
+// Swipe/drag gesture for fortune sheet (touch + mouse)
+(function() {
+  var sheet = document.getElementById('fortuneSheet');
+  var pull = document.getElementById('fortuneSheetPull');
+  if (!sheet) return;
+  var startY = 0, dragging = false;
+
+  function handleStart(y) { startY = y; dragging = true; }
+  function handleEnd(y) {
+    if (!dragging) return;
+    dragging = false;
+    var dy = y - startY;
+    if (dy > 40 && fortuneSheetOpen) toggleFortuneSheet();
+    if (dy < -40 && !fortuneSheetOpen) toggleFortuneSheet();
+  }
+
+  // Touch events
+  function onTouchStart(e) { handleStart(e.touches[0].clientY); }
+  function onTouchEnd(e) { handleEnd(e.changedTouches[0].clientY); }
+
+  // Mouse events
+  function onMouseDown(e) { handleStart(e.clientY); }
+  function onMouseUp(e) { handleEnd(e.clientY); }
+
+  [sheet, pull].forEach(function(el) {
+    if (!el) return;
+    el.addEventListener('touchstart', onTouchStart, { passive: true });
+    el.addEventListener('touchend', onTouchEnd, { passive: true });
+    el.addEventListener('mousedown', onMouseDown);
+    el.addEventListener('mouseup', onMouseUp);
+  });
+})();
+
+function toggleLayerPanel() {
+  var panel = document.getElementById('layerPanel');
+  var btn = document.getElementById('layerBtn');
+  var isOpen = panel.classList.contains('open');
+  panel.classList.toggle('open');
+  btn.classList.toggle('active');
+  if (!isOpen) {
+    // Close on outside click
+    setTimeout(function() {
+      document.addEventListener('pointerdown', closeLayerPanelOutside);
+    }, 0);
+  }
+}
+
+function closeLayerPanelOutside(e) {
+  var panel = document.getElementById('layerPanel');
+  var btn = document.getElementById('layerBtn');
+  var fortuneOverlay = document.getElementById('fortuneRestOverlay');
+  if (!panel.contains(e.target) && !btn.contains(e.target)
+      && !(fortuneOverlay && fortuneOverlay.contains(e.target))) {
+    panel.classList.remove('open');
+    btn.classList.remove('active');
+    document.removeEventListener('pointerdown', closeLayerPanelOutside);
+  }
+}
+
+function toggleLayerItem(el) {
+  var layer = el.getAttribute('data-layer');
+  var isOn = el.classList.toggle('on');
+  layerVisibility[layer] = isOn;
+  applyLayerVisibility();
+}
+
+function toggleGroupItem(el) {
+  var group = el.getAttribute('data-group');
+  var isOn = el.classList.toggle('on');
+  groupVisibility[group] = isOn;
+  applyLayerVisibility();
+}
+
+function applyLayerVisibility() {
+  if (!window.chartLayerGroups || !window.leafletMap) return;
+
+  // Chart layers (natal/progressed/transit)
+  ['natal', 'progressed', 'transit'].forEach(function(key) {
+    var group = window.chartLayerGroups[key];
+    if (!group) return;
+    if (layerVisibility[key]) {
+      if (!window.leafletMap.hasLayer(group)) window.leafletMap.addLayer(group);
+    } else {
+      if (window.leafletMap.hasLayer(group)) window.leafletMap.removeLayer(group);
+    }
+  });
+
+  // Planet lines: layer + group + fortune filter
+  if (window.planetSymbolMarkers) {
+    window.planetSymbolMarkers.forEach(function(ps) {
+      if (!ps.planetName) return;
+      var planetGroup = null;
+      for (var g in PLANET_GROUPS) {
+        if (PLANET_GROUPS[g].indexOf(ps.planetName) !== -1) { planetGroup = g; break; }
+      }
+      if (!planetGroup) return;
+      var layerOn  = layerVisibility[ps.layer];
+      var groupOn  = groupVisibility[planetGroup];
+      var fortuneOn = !fortuneFilter || (FORTUNE_PLANETS[fortuneFilter] || []).indexOf(ps.planetName) !== -1;
+      var fullyOn  = layerOn && groupOn && fortuneOn;
+      var dimmed   = layerOn && groupOn && !fortuneOn && !!fortuneFilter;
+      ps.marker.setOpacity(fullyOn ? 1 : (dimmed ? 0.1 : 0));
+      if (ps.line) {
+        ps.line.setStyle({ opacity: fullyOn ? ps.baseOpacity : (dimmed ? 0.05 : 0) });
+      }
+    });
+  }
+
+  // Sectors: layer visibility + fortune filter (score-based, not dominant-only)
+  if (window.geoSectors) {
+    var fScores = (window.aspectData && window.aspectData.fortuneScores) || {};
+    window.geoSectors.forEach(function(s) {
+      if (!s.polygon) return;
+      var sectorOn = layerVisibility.sectors;
+      var newStyle;
+      if (!sectorOn) {
+        newStyle = { fillOpacity: 0, opacity: 0 };
+      } else if (fortuneFilter && fScores[fortuneFilter]) {
+        var catScore = fScores[fortuneFilter][s.dir] || 0;
+        var matches = catScore > 0.01;
+        newStyle = {
+          fillOpacity: matches ? 0.22 : 0.02,
+          opacity:     matches ? 0.6  : 0.08,
+        };
+      } else {
+        var defaults = { blessed: { fill: 0.28, op: 0.7 }, shadow: { fill: 0.18, op: 0.4 }, mid: { fill: 0.10, op: 0.25 } };
+        var d = defaults[s.type] || defaults.mid;
+        newStyle = { fillOpacity: d.fill, opacity: d.op };
+      }
+      s.polygon.setStyle(newStyle);
+      if (s.wrapPolygons) s.wrapPolygons.forEach(function(wp) { wp.setStyle(newStyle); });
+    });
+  }
+
+  // Compass (base overlays)
+  if (window.baseOverlays) {
+    window.baseOverlays.forEach(function(layer) {
+      if (layer.setOpacity) layer.setOpacity(layerVisibility.compass ? 1 : 0);
+      else if (layer.setStyle) layer.setStyle({ opacity: layerVisibility.compass ? 0.35 : 0 });
+    });
+  }
+}
+
+// ===== Dismiss veil on user interaction =====
+function dismissVeil() {
+  var veil = document.getElementById('grayVeil');
+  var prompt = document.getElementById('preseedPrompt');
+  if (veil.classList.contains('lifted')) return;  // already dismissed
+  if (prompt.classList.contains('hidden')) return; // card already drawn
+  veil.classList.add('lifted');
+  prompt.classList.add('bottom');
+}
+
+document.getElementById('mapContainer').addEventListener('pointerdown', dismissVeil, { once: false });
+
 // ===== Start =====
-window.addEventListener('load', init);
+window.addEventListener('load', function() {
+  init();
+  applyBridgeData();
+});
 window.addEventListener('resize', init);
 </script>
 

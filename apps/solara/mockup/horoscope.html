@@ -350,9 +350,9 @@ h1 { font-size: 24px; color: #F6BD60; letter-spacing: 4px; margin-bottom: 8px; }
           <div class="filter-section">
             <div class="filter-section-title"><span class="filter-label">A</span> アスペクト性質</div>
             <div class="filter-chips">
-              <div class="filter-chip active" style="--chip-color:#26D0CE" data-filter="quality" data-value="soft" onclick="toggleFilter(this)">ソフト（調和）</div>
-              <div class="filter-chip active" style="--chip-color:#FF6B6B" data-filter="quality" data-value="hard" onclick="toggleFilter(this)">ハード（緊張）</div>
-              <div class="filter-chip active" style="--chip-color:#B088FF" data-filter="quality" data-value="neutral" onclick="toggleFilter(this)">中立</div>
+              <div class="filter-chip active" style="--chip-color:#C9A84C" data-filter="quality" data-value="soft" onclick="toggleFilter(this)">ソフト（調和）</div>
+              <div class="filter-chip active" style="--chip-color:#6B5CE7" data-filter="quality" data-value="hard" onclick="toggleFilter(this)">ハード（緊張）</div>
+              <div class="filter-chip active" style="--chip-color:#26D0CE" data-filter="quality" data-value="neutral" onclick="toggleFilter(this)">中立</div>
             </div>
           </div>
 
@@ -452,18 +452,18 @@ var ORB_SETTINGS = {
 };
 
 var ASPECT_TYPES = [
-  { name: 'コンジャンクション', angle: 0,   orb: ORB_SETTINGS.conjunction, symbol: '\u260C', color: '#F6BD60', quality: 'neutral' },
-  { name: 'オポジション',       angle: 180, orb: ORB_SETTINGS.opposition,  symbol: '\u260D', color: '#FF6B6B', quality: 'hard' },
-  { name: 'トライン',           angle: 120, orb: ORB_SETTINGS.trine,       symbol: '\u25B3', color: '#26D0CE', quality: 'soft' },
-  { name: 'スクエア',           angle: 90,  orb: ORB_SETTINGS.square,      symbol: '\u25A1', color: '#FF6B6B', quality: 'hard' },
-  { name: 'セクスタイル',       angle: 60,  orb: ORB_SETTINGS.sextile,     symbol: '\u26B9', color: '#26D0CE', quality: 'soft' },
-  { name: 'クインカンクス',     angle: 150, orb: ORB_SETTINGS.quincunx,    symbol: 'Qx',     color: '#8B5CF6', quality: 'neutral' }
+  { name: 'コンジャンクション', angle: 0,   orb: ORB_SETTINGS.conjunction, symbol: '\u260C', color: '#26D0CE', quality: 'neutral' },
+  { name: 'オポジション',       angle: 180, orb: ORB_SETTINGS.opposition,  symbol: '\u260D', color: '#6B5CE7', quality: 'hard' },
+  { name: 'トライン',           angle: 120, orb: ORB_SETTINGS.trine,       symbol: '\u25B3', color: '#C9A84C', quality: 'soft' },
+  { name: 'スクエア',           angle: 90,  orb: ORB_SETTINGS.square,      symbol: '\u25A1', color: '#6B5CE7', quality: 'hard' },
+  { name: 'セクスタイル',       angle: 60,  orb: ORB_SETTINGS.sextile,     symbol: '\u26B9', color: '#C9A84C', quality: 'soft' },
+  { name: 'クインカンクス',     angle: 150, orb: ORB_SETTINGS.quincunx,    symbol: 'Qx',     color: '#26D0CE', quality: 'neutral' }
 ];
 
 var PATTERN_STYLES = {
-  grandtrine: { fill: 'rgba(38,208,206,0.12)',  stroke: '#26D0CE', label: 'Grand Trine' },
-  tsquare:    { fill: 'rgba(255,107,107,0.12)',  stroke: '#FF6B6B', label: 'T-Square' },
-  yod:        { fill: 'rgba(176,136,255,0.12)',  stroke: '#B088FF', label: 'Yod' }
+  grandtrine: { fill: 'rgba(201,168,76,0.12)',  stroke: '#C9A84C', label: 'Grand Trine' },
+  tsquare:    { fill: 'rgba(107,92,231,0.12)',  stroke: '#6B5CE7', label: 'T-Square' },
+  yod:        { fill: 'rgba(38,208,206,0.12)',  stroke: '#26D0CE', label: 'Yod' }
 };
 
 var PLANET_GROUPS = {
@@ -1266,7 +1266,7 @@ function renderPredictions(predictions, detectedPatterns) {
   var panel = document.getElementById('predictionPanel');
   var list = document.getElementById('predictionList');
   var map = { yod: 'ヨッド', grandtrine: 'グランドトライン', tsquare: 'Tスクエア' };
-  var colorMap = { yod: '#B088FF', grandtrine: '#26D0CE', tsquare: '#FF6B6B' };
+  var colorMap = { yod: '#26D0CE', grandtrine: '#C9A84C', tsquare: '#6B5CE7' };
   var sourceColor = { N: NATAL_COLOR, T: TRANSIT_COLOR, P: PROGRESSED_COLOR };
   var types = ['grandtrine', 'tsquare', 'yod'];
 
@@ -1289,7 +1289,7 @@ function renderPredictions(predictions, detectedPatterns) {
       html += '<div class="prediction-item">';
       html += '<span class="prediction-type" style="background:' + colorMap[types[t]] + '22;color:' + colorMap[types[t]] + '">' + map[types[t]] + '</span>';
       html += '<span style="color:#ccc">' + pNames + '</span>';
-      html += '<span class="prediction-time" style="color:#26D0CE">\u2714 成立中</span>';
+      html += '<span class="prediction-time" style="color:#C9A84C">\u2714 成立中</span>';
       html += '</div>';
     }
   }
