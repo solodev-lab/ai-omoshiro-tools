@@ -14,7 +14,7 @@
 誰にも頼まれてないのにもう10個作った。
 
 全部無料で遊べます👇
-https://solodev-lab.github.io/ai-omoshiro-tools/
+https://solodev-lab.com/
 
 #AI #無料ツール #個人開発
 ```
@@ -30,7 +30,7 @@ https://solodev-lab.github.io/ai-omoshiro-tools/
 本音：「もう限界なんです」
 
 切り替えボタンで両方見られます。
-https://solodev-lab.github.io/ai-omoshiro-tools/apps/resignation-maker/
+https://solodev-lab.com/apps/resignation-maker/
 
 #退職 #転職 #AI退職届 #個人開発
 ```
@@ -45,7 +45,7 @@ https://solodev-lab.github.io/ai-omoshiro-tools/apps/resignation-maker/
 「甘えん坊」「食いしん坊」とか性格も選べる。
 友達の名前入れて遊ぶのが正しい使い方です。
 
-https://solodev-lab.github.io/ai-omoshiro-tools/apps/nickname-maker/
+https://solodev-lab.com/apps/nickname-maker/
 
 #あだ名 #AI #無料ツール #ネタ
 ```
@@ -61,7 +61,7 @@ https://solodev-lab.github.io/ai-omoshiro-tools/apps/nickname-maker/
 
 使う予定がなくても読むだけで胸が痛くなる。
 
-https://solodev-lab.github.io/ai-omoshiro-tools/apps/love-confession/
+https://solodev-lab.com/apps/love-confession/
 
 #告白 #AI #恋愛 #個人開発
 ```
@@ -78,7 +78,7 @@ AIが天才的な言い訳を生成してくれます。
 
 ※使って怒られても責任は取りません
 
-https://solodev-lab.github.io/ai-omoshiro-tools/apps/excuse-generator/
+https://solodev-lab.com/apps/excuse-generator/
 
 #言い訳 #AI #無料ツール #ネタ
 ```
@@ -93,7 +93,7 @@ https://solodev-lab.github.io/ai-omoshiro-tools/apps/excuse-generator/
 フォーマル度を選ぶと丁寧さが変わります。
 ビジネスメールの下書きにも使えるらしい（本来の用途ではない）
 
-https://solodev-lab.github.io/ai-omoshiro-tools/apps/apology-generator/
+https://solodev-lab.com/apps/apology-generator/
 
 #謝罪 #ビジネスメール #AI #個人開発
 ```
@@ -110,7 +110,7 @@ https://solodev-lab.github.io/ai-omoshiro-tools/apps/apology-generator/
 
 寝起きに使うのがおすすめ。
 
-https://solodev-lab.github.io/ai-omoshiro-tools/apps/dream-fortune/
+https://solodev-lab.com/apps/dream-fortune/
 
 #夢占い #占い #AI #スピリチュアル
 ```
@@ -125,7 +125,7 @@ https://solodev-lab.github.io/ai-omoshiro-tools/apps/dream-fortune/
 「3年使ってない」×「いつか使うかも」で相談したら
 「今すぐ捨てろ」って言われた。正論がつらい。
 
-https://solodev-lab.github.io/ai-omoshiro-tools/apps/declutter-advisor/
+https://solodev-lab.com/apps/declutter-advisor/
 
 #断捨離 #ミニマリスト #AI #片付け
 ```
@@ -140,7 +140,7 @@ https://solodev-lab.github.io/ai-omoshiro-tools/apps/declutter-advisor/
 犬・猫・うさぎ・ハムスター対応。
 「食べ物系」を選ぶとモチとかキナコとか出てくる。かわいい。
 
-https://solodev-lab.github.io/ai-omoshiro-tools/apps/pet-namer/
+https://solodev-lab.com/apps/pet-namer/
 
 #ペット #犬 #猫 #名前 #AI
 ```
@@ -157,7 +157,7 @@ https://solodev-lab.github.io/ai-omoshiro-tools/apps/pet-namer/
 
 新学期・新社会人シーズンにどうぞ。
 
-https://solodev-lab.github.io/ai-omoshiro-tools/apps/self-intro/
+https://solodev-lab.com/apps/self-intro/
 
 #自己紹介 #新社会人 #AI #個人開発
 ```
@@ -174,29 +174,47 @@ https://solodev-lab.github.io/ai-omoshiro-tools/apps/self-intro/
 
 副業始める人、これ使って。
 
-https://solodev-lab.github.io/ai-omoshiro-tools/apps/naming-generator/
+https://solodev-lab.com/apps/naming-generator/
 
 #ネーミング #副業 #起業 #AI #個人開発
 ```
 
 ---
 
+## 【投稿12】AIタロット占い（目玉・課金アプリ）
+
+```
+AIタロット占い、作りました🔮
+
+本格的な5枚引きスプレッドで、AIが一枚一枚丁寧に読み解いてくれる。
+恋愛・仕事・人間関係…今気になってること、聞いてみて。
+
+カードのシャッフル演出もこだわった。
+
+https://solodev-lab.com/apps/tarot-reading/
+
+#タロット #占い #AI占い #個人開発
+```
+
+---
+
 ## 投稿スケジュール（推奨）
 
-| 日 | 投稿内容 | 時間帯 |
-|----|---------|--------|
-| 1日目 | アカウント紹介 | 20:00 |
-| 2日目 | 退職届メーカー | 12:00 |
-| 3日目 | あだ名メーカー | 20:00 |
-| 4日目 | 告白文ジェネレーター | 20:00 |
-| 5日目 | 言い訳ジェネレーター | 12:00 |
-| 6日目 | 謝罪文（言い訳の続き風に） | 20:00 |
-| 7日目 | 夢占い | 8:00（朝イチ） |
-| 8日目 | 断捨離 | 12:00 |
-| 9日目 | ペット名づけ | 20:00 |
-| 10日目 | 自己紹介メーカー | 12:00 |
-| 11日目 | ネーミング | 20:00 |
-| 12日目 | **AI性格診断（バズ狙い）** | 20:00 |
+| 日付 | 投稿内容 | 時間帯 | 状態 |
+|------|---------|--------|------|
+| 3/16 | アカウント紹介 | 投稿済み | ✅ |
+| 3/17 | 退職届メーカー | 11:00頃 | ✅ |
+| 3/17 | あだ名メーカー | 10:00頃 | ✅ |
+| 3/18 | **AIタロット占い（目玉）** | 12:00 | ⬜ |
+| 3/18 | 告白文ジェネレーター | 20:00 | ⬜ |
+| 3/19 | 言い訳ジェネレーター | 12:00 | ✅ |
+| 3/19 | 謝罪文（言い訳の続き風に） | 20:00 | ⬜ |
+| 3/20 | 夢占い | 8:00（朝イチ） | ⬜ |
+| 3/20 | 断捨離 | 20:00 | ⬜ |
+| 3/21 | ペット名づけ | 12:00 | ⬜ |
+| 3/21 | 自己紹介メーカー | 20:00 | ⬜ |
+| 3/22 | ネーミング | 12:00 | ⬜ |
+| 3/22 | **AI性格診断（バズ狙い）** | 20:00 | ⬜ |
 
 > 1日1投稿ペース。反応が良いものはリポスト+引用RTで再拡散。
 
@@ -211,7 +229,7 @@ https://solodev-lab.github.io/ai-omoshiro-tools/apps/naming-generator/
 全16タイプあるから友達とやると盛り上がる。
 
 あなたは何タイプ？👇
-https://solodev-lab.github.io/ai-omoshiro-tools/apps/personality-diagnosis/
+https://solodev-lab.com/apps/personality-diagnosis/
 
 #AI性格診断 #MBTI #性格タイプ #個人開発
 ```

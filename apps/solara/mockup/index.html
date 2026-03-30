@@ -160,9 +160,9 @@
     line-height: 1.5;
   }
 
-  .search-result-sector.positive { color: #C9A84C; }
-  .search-result-sector.negative { color: #8B7AE8; }
-  .search-result-sector.neutral { color: #6B8AAB; }
+  .search-result-sector.blessed { color: #C9A84C; }
+  .search-result-sector.shadow { color: #8B7AE8; }
+  .search-result-sector.mid { color: #6B8AAB; }
 
   .search-result-close {
     position: absolute;
@@ -180,11 +180,11 @@
     display: none !important;
   }
 
-  /* Sector glow via CSS (score-based) */
-  .sector-positive {
+  /* Blessed sector glow via CSS */
+  .sector-blessed {
     filter: drop-shadow(0 0 6px rgba(201, 168, 76, 0.5)) drop-shadow(0 0 12px rgba(80, 210, 255, 0.2));
   }
-  .sector-negative {
+  .sector-shadow {
     filter: drop-shadow(0 0 4px rgba(107, 92, 231, 0.3));
   }
 
@@ -1533,17 +1533,26 @@ function calculateSeedBoost(card) {
     });
   });
 
+  // Classify sectors: top 4 blessed, next 6 mid, bottom 6 shadow
+  var scores = Object.entries(sectorScores).map(function(e) { return { dir: e[0], score: e[1] }; });
+  scores.sort(function(a, b) { return b.score - a.score; });
+
+  var sectorTypes = {};
+  scores.forEach(function(s, i) {
+    if (i < 4) sectorTypes[s.dir] = 'blessed';
+    else if (i < 10) sectorTypes[s.dir] = 'mid';
+    else sectorTypes[s.dir] = 'shadow';
+  });
+
   // Strongest boosted direction
   var strongestDir = null, strongestBoost = 0;
   Object.entries(boostedSectors).forEach(function(e) {
     if (e[1] > strongestBoost) { strongestBoost = e[1]; strongestDir = e[0]; }
   });
-  if (!strongestDir) {
-    var sorted = Object.entries(sectorScores).sort(function(a, b) { return b[1] - a[1]; });
-    strongestDir = sorted[0] ? sorted[0][0] : 'N';
-  }
+  if (!strongestDir) strongestDir = scores[0].dir;
 
   return {
+    sectorTypes: sectorTypes,
     sectorScores: sectorScores,
     sectorFortune: aspectResult.sectorFortune,
     boostedPlanets: boostedPlanets,
@@ -1920,11 +1929,11 @@ function drawGeoSparkles(ctx) {
     [255, 240, 160],
   ];
 
-  // Dynamic sparkle sectors: score >= 2 (positive/strong)
+  // Dynamic blessed sectors from Seed Boost
   const blessedDefs = [];
   if (window.geoSectors) {
     window.geoSectors.forEach(s => {
-      if (s.score >= 2) {
+      if (s.type === 'blessed') {
         var idx = DIR16.indexOf(s.dir);
         if (idx >= 0) {
           var center = idx * 22.5;
@@ -2167,8 +2176,7 @@ function createGeoSectors() {
   var lng = window.mapCenter[1];
 
   // --- Geodesic approach using turf.destination (no Mercator distortion) ---
-  var geoRadius = 20000; // matches compass line distance
-
+  var geoRadius = 20000; // km, matches compass line distance
 
   // 16 directional sectors (22.5° each)
   var dirAngles = DIR16.map(function(d, i) {
@@ -2179,50 +2187,63 @@ function createGeoSectors() {
   });
 
   var sectorScores = (window.aspectData && window.aspectData.sectorScores) || {};
+
+  // Determine sector types for search/detectSector (still needed)
+  var sectorTypes = {};
+  DIR16.forEach(function(d) {
+    var s = sectorScores[d] || 0;
+    if (s >= 2) sectorTypes[d] = 'blessed';
+    else if (s <= -2) sectorTypes[d] = 'shadow';
+    else sectorTypes[d] = 'mid';
+  });
+
   var centerPoint = turf.point([lng, lat]);
 
   dirAngles.forEach(function(d, i) {
+    var type = sectorTypes[d.dir] || 'mid';
     var startDeg = d.start;
     var endDeg = d.end;
     if (startDeg > endDeg) endDeg += 360;
 
-    // Pole distance limit: only for N and S sectors (closest to poles)
-    // All other sectors use full geoRadius
-    var northPoleKm = (90 - lat) * 111.32 - 200;
-    var southPoleKm = (90 + lat) * 111.32 - 200;
-    var sectorRadius = geoRadius;
-    if (d.dir === 'N') sectorRadius = Math.min(geoRadius, Math.max(1000, northPoleKm));
-    if (d.dir === 'S') sectorRadius = Math.min(geoRadius, Math.max(1000, southPoleKm));
-
-    // Build polygon using great circle points (100km steps)
+    // Build polygon using great circle points (matches compass lines)
+    // Radial edge: center → outer along start bearing
     var latLngs = [L.latLng(lat, lng)];
-    for (var km = 100; km <= sectorRadius; km += 100) {
-      var dest = turf.destination(centerPoint, km, startDeg, { units: 'kilometers' });
-      latLngs.push(L.latLng(dest.geometry.coordinates[1], normalizeLng(dest.geometry.coordinates[0], lng)));
+    var radialSteps = 50;
+    for (var r = 1; r <= radialSteps; r++) {
+      var dist = geoRadius * (r / radialSteps);
+      var dest = turf.destination(centerPoint, dist, startDeg, { units: 'kilometers' });
+      var coords = dest.geometry.coordinates;
+      latLngs.push(L.latLng(Math.max(-85.05, Math.min(85.05, coords[1])), coords[0]));
     }
+    // Arc: outer edge from start to end bearing
     var arcSteps = 40;
     for (var s = 1; s <= arcSteps; s++) {
       var bearing = startDeg + (endDeg - startDeg) * (s / arcSteps);
-      var dest = turf.destination(centerPoint, sectorRadius, bearing, { units: 'kilometers' });
-      latLngs.push(L.latLng(dest.geometry.coordinates[1], normalizeLng(dest.geometry.coordinates[0], lng)));
+      var dest = turf.destination(centerPoint, geoRadius, bearing, { units: 'kilometers' });
+      var coords = dest.geometry.coordinates;
+      latLngs.push(L.latLng(Math.max(-85.05, Math.min(85.05, coords[1])), coords[0]));
     }
-    for (var km = sectorRadius - 100; km > 0; km -= 100) {
-      var dest = turf.destination(centerPoint, km, endDeg, { units: 'kilometers' });
-      latLngs.push(L.latLng(dest.geometry.coordinates[1], normalizeLng(dest.geometry.coordinates[0], lng)));
+    // Radial edge: outer → center along end bearing
+    for (var r = radialSteps - 1; r >= 0; r--) {
+      var dist = geoRadius * (r / radialSteps);
+      if (dist === 0) break;
+      var dest = turf.destination(centerPoint, dist, endDeg, { units: 'kilometers' });
+      var coords = dest.geometry.coordinates;
+      latLngs.push(L.latLng(Math.max(-85.05, Math.min(85.05, coords[1])), coords[0]));
     }
 
     var dirScore = sectorScores[d.dir] || 0;
+    var type = sectorTypes[d.dir] || 'mid';
     var ss = scoreToStyle(dirScore);
-    // Only apply glow CSS when sector is visible (target fillOpacity > 0)
-    var cssClass = ss.target.fillOpacity > 0 ? (dirScore >= 0 ? 'sector-positive' : 'sector-negative') : '';
-    var polygon = L.polygon(latLngs, { ...ss.init, className: cssClass }).addTo(window.leafletMap);
+    var polygon = L.polygon(latLngs, { ...ss.init, className: 'sector-' + type }).addTo(window.leafletMap);
 
     var isBoosted = seedBoostData && seedBoostData.boostedSectors[d.dir];
-    var sectorEntry = { polygon: polygon, score: dirScore, index: i, dir: d.dir, boosted: !!isBoosted, wrapPolygons: [] };
+    var sectorEntry = { polygon: polygon, type: type, score: dirScore, index: i, dir: d.dir, boosted: !!isBoosted, wrapPolygons: [] };
 
+    // World wrap copies at ±360°
     [-360, 360].forEach(function(offset) {
       var shifted = latLngs.map(function(p) { return L.latLng(p.lat, p.lng + offset); });
-      var wp = L.polygon(shifted, { ...ss.init, className: cssClass }).addTo(window.leafletMap);
+      var wp = L.polygon(shifted, { ...ss.init, className: 'sector-' + type }).addTo(window.leafletMap);
       sectorEntry.wrapPolygons.push(wp);
     });
 
@@ -2249,8 +2270,8 @@ function createGeoSectors() {
     }, delay);
   });
 
-  // Store sector scores globally for search/detection
-  window.currentSectorScores = sectorScores;
+  // Store sector types globally for search
+  window.currentSectorTypes = sectorTypes;
 }
 
 // ===== Search & sector detection =====
@@ -2264,7 +2285,7 @@ function doSearch() {
     .then(r => r.json())
     .then(results => {
       if (!results.length) {
-        showSearchResult('見つかりませんでした', '', 'neutral');
+        showSearchResult('見つかりませんでした', '', 'mid');
         return;
       }
       const place = results[0];
@@ -2285,7 +2306,7 @@ function doSearch() {
       showSearchResult(name, sector.message, sector.type);
     })
     .catch(() => {
-      showSearchResult('検索エラー', '', 'neutral');
+      showSearchResult('検索エラー', '', 'mid');
     });
 }
 
@@ -2300,15 +2321,15 @@ function detectSector(targetLat, targetLng) {
 
   const distance = turf.distance(from, to, { units: 'kilometers' });
 
-  // Score-based sector classification (16 directions)
-  var scores = window.currentSectorScores || {};
+  // Use dynamic sector types from Seed Boost (16 directions)
+  var stDefault = {};
+  DIR16.forEach(function(d) { stDefault[d] = 'mid'; });
+  const st = window.currentSectorTypes || stDefault;
   const sectors = DIR16.map(function(d, i) {
     var center = i * 22.5;
     var start = ((center - 11.25) + 360) % 360;
     var end = (center + 11.25) % 360;
-    var s = scores[d] || 0;
-    var type = s >= 2 ? 'positive' : (s <= -2 ? 'negative' : 'neutral');
-    return { start: start, end: end, type: type, score: s, dir: d, label: DIR16_LABELS[d] || d };
+    return { start: start, end: end, type: st[d] || 'mid', dir: d, label: DIR16_LABELS[d] || d };
   });
 
   let matched = sectors[0];
@@ -2338,31 +2359,31 @@ function detectSector(targetLat, targetLng) {
       planetsHere.includes(a.p1) || planetsHere.includes(a.p2));
     const softAsps = relevantAsps.filter(a => a.quality === 'soft');
     const hardAsps = relevantAsps.filter(a => a.quality === 'hard');
-    if (matched.type === 'positive' && softAsps.length > 0) {
+    if (matched.type === 'blessed' && softAsps.length > 0) {
       const a = softAsps[0];
       const sym1 = TAROT_DATA.planetSymbols[a.p1], sym2 = TAROT_DATA.planetSymbols[a.p2];
       if (sym1 && sym2) aspectNote = sym1.nameJP + '×' + sym2.nameJP + 'の' + a.type + 'が吉兆。';
-    } else if (matched.type === 'negative' && hardAsps.length > 0) {
+    } else if (matched.type === 'shadow' && hardAsps.length > 0) {
       const a = hardAsps[0];
       const sym1 = TAROT_DATA.planetSymbols[a.p1], sym2 = TAROT_DATA.planetSymbols[a.p2];
       if (sym1 && sym2) aspectNote = sym1.nameJP + '×' + sym2.nameJP + 'の' + a.type + 'に注意。';
     }
   }
 
-  const positiveBody = fortuneLabel
+  const blessedBody = fortuneLabel
     ? aspectNote + '【' + fortuneLabel + '】に追い風が吹いている方角。'
     : aspectNote + 'トランジットのソフトアスペクトが集まる吉方位。';
-  const negativeBody = fortuneLabel
+  const shadowBody = fortuneLabel
     ? aspectNote + '【' + fortuneLabel + '】の課題に向き合う方角。意識的に動くと成長につながる。'
     : aspectNote + 'ハードアスペクトが重なる方角。今日は意識して動くこと。';
-  const neutralBody = fortuneLabel
+  const midBody = fortuneLabel
     ? '【' + fortuneLabel + '】の流れが緩やかに動いている方角。気楽に楽しめる。'
     : 'アスペクトが中立的な方角。悪くないけど、最高でもない。';
 
   const messages = {
-    positive: '✨ 吉方位（' + header + '）\n' + positiveBody,
-    negative: '🌙 意識方位（' + header + '）\n' + negativeBody,
-    neutral:  '💫 中間方位（' + header + '）\n' + neutralBody,
+    blessed: '✨ 吉方位（' + header + '）\n' + blessedBody,
+    shadow:  '🌙 意識方位（' + header + '）\n' + shadowBody,
+    mid:     '💫 中間方位（' + header + '）\n' + midBody,
   };
 
   return { type: matched.type, message: messages[matched.type], fortune };
@@ -2558,7 +2579,7 @@ function restart() {
     window.boostedLines = null;
     window.planetSymbolMarkers = null;
     window.chartLayerGroups = null;
-    window.currentSectorScores = null;
+    window.currentSectorTypes = null;
   }
 
   drawMapOverlay();

@@ -235,3 +235,112 @@
 3. 3重円アライメント検出ロジック
 4. ステラの統合メッセージ生成（カード+方位+称号の組み合わせ）
 5. Stellar Sync（3重共鳴）特別演出
+
+## 2026-03-25 セッション: Solara Action画面モックアップ クリーンリビルド
+- MOCKUP_SPEC.md に基づき index.html をゼロから書き直し（2006行 → 約850行）
+- デッドコード12個を削除: compassRadiusKm, geoPoint(), makeGeoCircle(), drawBlob(), drawPlanetLine(), drawActiveSectors(), drawSector(), trailParticles, spawnTrailParticle(), turf.js二重読み込み, D3空コメント, shockwaveCanvas
+- SECTORS_DORMANT/SECTORS_ACTIVE定数も削除（drawActiveSectors専用だった）
+- Canvas seedMarker描画削除（Leafletマーカーに統合済み）
+- インパクトリング描画をanimate()内に移動
+- 未使用CSSアニメーション(sectorBreathe, pulseGlow)削除
+- 全機能維持: Leaflet地図、8方位線、方角ラベル、Seedカードフロー、メテオ、エフェクト動画、Geoセクター、惑星ライン(Liang-Barsky追従)、検索、Stellaメッセージ、省電力アニメーションループ
+- プレビューサーバー: http://localhost:3003 で動作確認済み（エラーなし）
+- 注意: このモックアップはSolaraアプリ本体作成時の参照用として保存
+
+## 2026-03-27 セッション: ホロスコープ アスペクトパターン検出チューニング＆UI改善
+
+### 実施内容
+- パターン検出オーブを3°基準に確定（GT±3°, TSQ☍±3°/□±2.5°, Yod⚹±2.5°/⚻±1.2°）
+  - 4°: アクティブ4個+予測5件（多すぎ）
+  - 3°: アクティブ0個+予測4件（月1-2回でレア感あり）← 採用
+  - 2°: ほぼ検出なし（厳しすぎ）
+- 個人天体フィルタ追加（構成惑星に最低1つ個人天体必須）
+- F欄チップ表示をシンプル化（パターン名+✔/⏳のみ、惑星アイコン・日数削除）
+- UPCOMING PATTERNSパネルの惑星カラーをホロスコープに合わせた（N=金, T=青, P=紫）
+- 全惑星にN/T/Pプレフィックス追加
+- F欄枠の下側余白修正（:last-childのpadding-bottom:0を削除）
+- F欄枠の下線点滅修正（border !importantで:last-child上書き）
+- パターンポリゴンにF欄フィルタ適用（選択パターン以外のポリゴン非表示バグ修正）
+- 仕様書（tarot_planet_mapping_design.md）にホロスコープ画面確定仕様を追記
+
+### 確定事項
+- パターン検出オーブ: 3°基準
+- 予測期間: 60日
+- approaching閾値: 96時間
+- F欄チップ: シンプル表示
+- ポリゴン描画: F欄フィルタ連動
+
+### 未解決
+- （なし — 地心変換は修正済みだった）
+
+## 2026-03-28 セッション: ホロスコープ画面v2確定
+- アスペクトリスト（N↔T / N↔P）を折りたたみ式コンテナ+タブ切替に変更
+- モバイルUI: オーバーレイ方式を廃止 → Google Maps風ボトムシートに全面刷新
+  - ドラッグ3段階（min/half/full）、5タブ（誕生/経過/天体/絞込/相）
+  - チャートモード切替時にボトムシート内容を自動更新
+- 「powered by astronomy-engine」サブタイトル削除（MIT、UI表示義務なし）
+- 上部SOLARAロゴ削除 → チャート中央上にウォーターマーク透かし表示（14px, 透過18%）
+- ASPECT FILTER + UPCOMING PATTERNSのタブ切替を廃止、Fパターン直下に予測統合表示
+- 星座記号フォント色を#B49774（牡牛座色）に統一、枠背景は各星座固有色維持
+- 星座タップでツールチップ表示（日本語名、上部は下に/下部は上に、2秒消滅）
+- デスクトップSVGレスポンシブ対応（width:100%, height:auto）
+- 仕様書 tarot_planet_mapping_design.md をv2として全面更新・確定
+- メモリファイル project_horoscope_spec.md を最新仕様で更新
+
+## 2026-03-29 セッション: ホロスコープv3リビルド＋仕様確定
+
+### 問題発覚
+- 前セッションでリビルドした軽量版(1184行)が保存されておらず、旧版(2030行/93KB)に戻っていた
+- horoscope.htmlはgit未追跡(Untracked)だった
+
+### 実施内容
+- 旧版を `horoscope_v1_backup.html` にバックアップ
+- 仕様v3に基づいて全面リビルド実施:
+  - filter:blur / will-change / backdrop-filter:blur 全廃
+  - SVG <animate> 要素全廃（ゴーストポリゴン含む）
+  - アニメーション → CSS opacity パルスのみ
+  - 3重円モード廃止 → 2重円2種（N+T / N+P）
+  - ユーザーセレクタUI削除（デフォルト: はやしこうじ）
+  - D/Eフィルタ削除 → A/B/Cの3段に
+  - ORB_SETTINGS定数化（全アスペクト2°）
+  - パターン検出・60日予測 → 生成ボタン時1回計算、キャッシュ保持
+- 2重円デザイン修正: 中間リング削除、外側270/内側220の2円のみ（1重/2重共通）
+- 仕様メモリ(project_horoscope_spec.md)をv3に更新
+
+### 結果
+- 新版: 1688行 / 77KB（旧版2030行/93KBから17%削減）
+- 電池消費の主要因（blur/SVGアニメ/will-change）全て排除
+- プレビュー動作確認済み（エラーなし、全モード正常）
+
+### 注意点
+- horoscope.htmlはまだgit未コミット
+- 前セッションでの変更（リビルド後の微調整）は未反映（後で対応）
+
+## 2026-03-30 セッション: Solara mockup仕様確定・ローカルホスト確認
+
+### 実施内容（前セッションからの継続）
+- **tarot.html**: カード引き済み時のカード表面復元機能を実装（checkTodayDraw改修）
+- **tarot.html**: 「地図に反映する」ボタン追加（localStorage bridge経由でindex.htmlへ転送）
+- **index.html**: カードドロー機能を削除、bridge経由の効果反映に切替
+- **全3画面**: 下部ナビを統一（🧭MAP / 🌀HORO / ✨TAROT / 👤PROFILE）
+- **horoscope.html**: git commit b791d1c のv3リビルド版に復元
+- **MOCKUP_SPEC.md**: v2として全面書き直し・仕様確定
+- ローカルホスト（port 3003）で動作確認OK
+
+### 技術ポイント
+- localStorage `solara_tarot_bridge` による画面間データ連携
+- CSS 3D flipアニメーション状態のリロード時復元
+- Suit判定のregex修正（WAND/CUP/SWORD/PENTACLE対応）
+
+### 未解決・注意点
+- なし。仕様確定済み。次のステップはオーナー判断待ち。
+
+## 2026-03-30 セッション: ホロスコープ フィルターD/F削除＋ネイタル予測非表示
+- フィルター「アスペクト個別」(D)と「パターン」(F)のHTML・JS完全削除
+  - initAspectTypeChips, aspectInPattern, applyPatternHide, updatePatternChips関数削除
+  - activeFiltersからaspectTypes/pattern除去
+  - toggleFilter/toggleExclusive/resetFilters/buildPatternPolygons/buildAspectLinesHTML/renderAspectInfoから関連参照削除
+- ネイタル（1重）モードで予測パネル（〇日後）非表示に
+- アスペクト一覧パネル(ASPECTS)はネイタルでも表示維持
+- 1688行→1604行（84行削減）
+- コミット: daa3eea

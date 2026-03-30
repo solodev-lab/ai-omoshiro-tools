@@ -1,261 +1,259 @@
-# Solara Action画面 モックアップ仕様書
+# Solara モックアップ 仕様書 v2
 
-> このドキュメントは `index.html` を1から作り直すための仕様書。
-> 現行コードにはデッドコード・冗長処理があるため、クリーンに再構築する。
+> 最終更新: 2026-03-29
+> 3画面構成のモックアップ仕様。各画面は独立HTMLファイルで、共通ナビで遷移。
+
+---
 
 ## 1. 全体構成
 
+### 画面一覧
+| 画面 | ファイル | 主機能 |
+|------|---------|--------|
+| Map | index.html | アストロカートグラフィー地図（タロット効果を反映） |
+| Horo | horoscope.html | ホロスコープチャート（ネイタル/トランジット/プログレス） |
+| Tarot | tarot.html | 1日1回のタロットドロー + 履歴管理 |
+| Profile | 未実装 | ユーザー設定 |
+
+### 共通ナビゲーション（全画面共通）
+- 下部固定ナビ（高さ70-80px）
+- 4項目: 🧭 Map / 🌀 Horo / ✨ Tarot / 👤 Profile
+- 現在の画面が `active`（opacity: 1, ラベル: #C9A84C）
+- 他の画面は opacity: 0.4、クリックで遷移
+
+### デザインシステム
+- 背景: #0A0A14（ダーク）
+- アクセント（金）: #C9A84C
+- テキスト: #E8E0D0
+- 紫アクセント: #6B5CE7
+- フォント: 'Segoe UI', 'Helvetica Neue', sans-serif
+
+### 外部ライブラリ
+- **Leaflet.js** v1.9.4 — 地図（index.htmlのみ）
+- **turf.js** v7 — 地理計算（index.htmlのみ）
+- **Astronomy Engine** v2.1.19 — 天文計算（horoscope.htmlのみ）
+
+---
+
+## 2. Map画面（index.html）
+
 ### フレーム
-- スマホモックアップ（375×812px、角丸40px、ダーク背景）
+- スマホモックアップ（375×812px、角丸40px）
 - ステータスバー「SOLARA」（上部50px）
-- 下部ナビゲーション（80px）: Action / Rhythm / Intentions / Profile
-- REPLAYボタン（左上）
+- REPLAYボタン（左上）— 状態リセット用
 
 ### 地図
-- **Leaflet.js** (v1.9.4) + **turf.js** (v7)
 - タイル: CartoDB Dark Matter (`dark_all` + `dark_only_labels` overlay)
-- 初期位置: 名古屋市東区役所 [35.1815, 136.9262]
-- **初期ズーム: 16**（maxZoom 18 - 2）
+- 初期位置: 名古屋市東区役所 [35.1815, 136.9262]、ズーム16
 - minZoom: 2, maxZoom: 18
 - worldCopyJump: false
 - maxBounds: 緯度[-85, 85], 経度は中心±252
-- ズームコントロール・アトリビューション非表示
 
-### 現在地表示
-- GPS取得: `map.locate({ watch: false, setView: false })` — 1回だけ取得（電池消費なし）
-- 青い点で表示: `L.circleMarker` 半径6, color: '#4A90D9', fillOpacity: 0.8
-- 地図の中心は動かさない（基準地とは別）
-- オプション: `watch: true` で移動追跡（デフォルトOFF、トグルで切替）
+### 地図上の静的要素
+- **中心マーカー**: L.circleMarker 半径4, 白色(#E8E0D0)
+- **8方位線**: turf.destination で大圏線（0〜20,000km, 1,000km刻み）、金色ダッシュ
+- **方角ラベル**: 3距離(2km/150km/1000km) × 8方位、基本方位は大きめ(11px/0.5)、斜め小さめ(9px/0.3)
 
-### Canvas レイヤー（地図上にオーバーレイ）
-- `mapCanvas`: 薄い暗いグラデーションオーバーレイのみ（最小限）
-- `particleCanvas`: パーティクル・メテオ・スパークル描画用
-- `shockwaveCanvas`: 未使用（削除検討）
+### タロット連携フロー（カードドローはMap画面では行わない）
 
-## 2. 地図上の静的要素（Leaflet レイヤー）
-
-### 2.1 中心マーカー（ユーザー位置）
-- `L.circleMarker` 半径4, 白色 (#E8E0D0), fillOpacity 0.8
-
-### 2.2 8方位線（大圏線 / geodesic）
-- `turf.destination` で 0〜20,000km を 1,000km刻み（21ポイント）
-- 8方向: 0°, 45°, 90°, 135°, 180°, 225°, 270°, 315°
-- スタイル: `color: '#C9A84C', weight: 1, opacity: 0.35, dashArray: '4 8'`
-- 経度は `normalizeLng()` で正規化
-
-### 2.3 方角ラベル（固定位置、静的マーカー）
-- **3箇所**: 2km, 150km, 1000km
-- 8方向: N, NE, E, SE, S, SW, W, NW
-- 位置計算: `turf.destination` で geodesic
-- 基本方位(N/E/S/W): `opacity: 0.5, fontSize: 11px`
-- 斜め方位(NE/SE/SW/NW): `opacity: 0.3, fontSize: 9px`
-- `L.divIcon`, `interactive: false`
-
-### 2.4 normalizeLng() ヘルパー
-```javascript
-function normalizeLng(ptLng, refLng) {
-  let diff = ptLng - refLng;
-  while (diff > 180) diff -= 360;
-  while (diff < -180) diff += 360;
-  return refLng + diff;
-}
-```
-
-## 3. Seed カード → 地図活性化フロー
-
-### 3.1 初期状態 (idle)
+#### 2.1 初期状態（タロット未連携時）
 - グレーベール表示（半透明オーバーレイ）
-- 「🌱 Seedカードで起こして？」プロンプト表示
-- 「🌱 DRAW SEED CARD」CTAボタン
+- 「🌱 今日の方位はまだ眠っているよ / Tarotタブでカードを引いてね」プロンプト表示
 
-### 3.2 カードドロー
-- タップで全画面カードオーバーレイ表示
-- タップでカード反転（CUP III / 再会の喜び / 🌊）
-- 縮小アニメーション → メテオ発射
+#### 2.2 タロット連携時（localStorage `solara_tarot_bridge` あり）
+起動時に `applyBridgeData()` が自動実行:
+1. localStorage から `solara_tarot_bridge` を読み込み
+2. 日付検証（今日のデータでなければ無視）
+3. カードの `displayName` で78枚デッキから照合
+4. `calculateSeedBoost()` でセクター・惑星ブースト計算
+5. 0.8秒後にメテオ発射 → インパクト演出
 
-### 3.3 メテオ → インパクト
+#### 2.3 メテオ → インパクト
 - 上部から中心に向かってメテオ落下（加速）
-- t=0.6 でエフェクト動画再生開始（`effect_impact.mp4`, mix-blend-mode: screen, 3x速度）
+- t=0.6 でエフェクト動画再生（`effect_impact.mp4`, mix-blend-mode: screen, 3x速度）
 - t=1.0 でインパクト:
-  - 画面フラッシュ
-  - インパクトリング
-  - 収束パーティクル（60個、全方向から中心へ）
-  - バイブレーション
+  - 画面フラッシュ / インパクトリング / 収束パーティクル（60個）/ バイブレーション
 
-### 3.4 インパクト後の活性化
-- **グレーベール解除**
-- **検索バー表示**
-- **レイヤーインジケーター表示**
-- **Stellaメッセージ表示**（1.2秒後）
-- **Seedバッジ表示**（0.8秒後）
-- **Geoセクター作成** (`createGeoSectors`)
-- **惑星ライン追加** (`addBoostedPlanetLines`)
-- **キラキラアニメーション** 10秒間（`sectorAnimating = true` → 10秒後 false）
+#### 2.4 インパクト後の活性化
+- グレーベール解除
+- 検索バー表示
+- レイヤーインジケーター表示
+- **Stellaメッセージ表示**（1.2秒後）— カード名・キーワード・方位を含む動的テキスト
+- **Seedバッジ表示**（0.8秒後）— カードの絵文字
+- **8方位Geoセクター作成** — Seed Boostデータに基づきblessed/mid/shadow分類
+- **10惑星ライン追加** — ブースト対象は色付き太線、非対象はグレーダッシュ
+- **キラキラアニメーション** 10秒間
 
-## 4. Leaflet Geoセクター（活性化後に表示）
+### Geoセクター
+- 8方位を45°ずつ分割（N: 337.5-22.5, NE: 22.5-67.5, ...）
+- タロットカードの惑星ブーストに基づきスコア計算 → blessed(上位2)/mid(3)/shadow(下位3)に分類
+- L.polygon で描画、cascade fadeIn
 
-### 4.1 セクター定義
-- 真東 (85°〜95°): blessed（金色）
-- 真西 (265°〜275°): blessed（金色）
-- ※狭い帯で表現
-
-### 4.2 描画方法
-- 左辺: `turf.destination` で start bearing 方向に 0〜20,000km（30分割）
-- 外弧: `geodesicArc()` で start→end bearing（50ステップ）
-- 右辺: 同様に end bearing 方向（逆順）
-- `L.polygon` でフェードイン（cascade delay）
-
-### 4.3 スタイル
 | type | color | fillOpacity | opacity | weight |
 |------|-------|-------------|---------|--------|
 | blessed | #C9A84C | 0.12 | 0.5 | 2 |
 | shadow | #6B5CE7 | 0.10 | 0.25 | 1 |
 | mid | #3A4A6B | 0.06 | 0.2 | 1 |
 
-### 4.4 ワールドラップ
-- ±360°経度シフトしたコピーも追加
+### 惑星ライン（10惑星）
+| 惑星 | シンボル | 色 | 角度 |
+|------|---------|------|------|
+| 太陽 | ☉ | #FFD700 | 150° |
+| 月 | ☽ | #C0C0C0 | 30° |
+| 水星 | ☿ | #87CEEB | 165° |
+| 金星 | ♀ | #FF69B4 | 120° |
+| 火星 | ♂ | #FF4500 | 210° |
+| 木星 | ♃ | #FFA500 | 45° |
+| 土星 | ♄ | #808080 | 280° |
+| 天王星 | ♅ | #00CED1 | 310° |
+| 海王星 | ♆ | #4169E1 | 160° |
+| 冥王星 | ♇ | #8B0000 | 245° |
 
-## 5. 惑星ライン（活性化後に表示）
+- ブースト対象: 色付き太線(2.5px), 実線, opacity 0.7
+- 非対象: グレー細線(1px), ダッシュ, opacity 0.2
+- 惑星シンボルマーカー: Liang-Barskyアルゴリズムでビューポート端追従
 
-### 5.1 定義
-| 惑星 | 角度 | opacity | シンボル |
-|------|------|---------|----------|
-| 月 | 35° | 0.7 | ☽ |
-| 海王星 | 260° | 0.5 | ♆ |
-| 冥王星 | 150° | 0.4 | ♇ |
-
-### 5.2 描画
-- `turf.destination` で 0〜20,000km（20分割 = 21ポイント）
-- `L.polyline` color: '#C9A84C', weight: 2, dashArray: '4 6'
-
-### 5.3 惑星シンボルマーカー（ビューポート端追従）
-- 金色円形バッジ（28×28px）にシンボル表示
-- **Liang-Barsky セグメント交差検出**でビューポート端に配置
-- ライン全21ポイントの各セグメントをチェック
-- ビューポート内にセグメントが交差 → 出口点にマーカー配置
-- ライン全体がビューポート外 → マーカー非表示
-- イベント: `move moveend zoomend`
-
-### 5.4 Liang-Barsky アルゴリズム概要
-```
-各セグメント(lastPx → px)について:
-- ビューポート矩形(margin=30px)との交差判定
-- t0, t1 を計算し、t1 の点が「出口点」
-- 最後に見つかった出口点を採用
-```
-
-### 5.5 Seedマーカー（活性化後）
-- `L.circleMarker` 半径6, gold
-- 🌊 絵文字ラベル
-
-## 6. Canvas アニメーション
-
-### 6.1 アニメーションループ（省電力設計）
-```javascript
-let animLoopRunning = false;
-
-function startAnimLoop() {
-  if (animLoopRunning) return;
-  animLoopRunning = true;
-  animate();
-}
-
-function animate() {
-  // ... 描画処理 ...
-
-  const hasWork = sectorAnimating || impactRings.length > 0 || meteor || particles.length > 0;
-  if (hasWork) {
-    setTimeout(animate, 16); // ~60fps
-  } else {
-    animLoopRunning = false; // CPU 0% when idle
-  }
-}
-```
-- **何もアニメーションしていない時はループ停止（電池消費ゼロ）**
-- `startAnimLoop()` は各アニメーション開始時に呼ぶ
-
-### 6.2 Geoスパークル（Canvas, 活性化後10秒間）
-- 真東(85°-95°)・真西(265°-275°)セクターに5個ずつ
-- 色: warm white / gold / teal / cyan / light gold
-- ズームレベルに応じた半径自動調整
-- 中心グロウパルス
-- `turf.destination` で地理座標 → `latLngToContainerPoint` でスクリーン座標
-
-### 6.3 パーティクルシステム
-- `Particle` クラス: x, y, vx, vy, color, size, life, decay
-- インパクトパーティクル: 爆発的拡散
-- 収束パーティクル: 画面端から中心へ集まる（`converge` フラグ）
-- グロー + シャドウブラー効果
-
-### 6.4 メテオ
-- 左上から中心へ落下（ease-in 加速）
-- ヘッドグロー（放射グラデーション）+ 白色コア
-
-### 6.5 インパクトリング
-- 中心から広がるリング（alpha フェードアウト）
-
-## 7. 検索機能（活性化後に利用可能）
-
+### 検索機能
 - Nominatim (OSM) ジオコーディング
-- 検索結果の位置に `flyTo` + マーカー配置
-- `turf.bearing` + `turf.distance` でセクター判定
-- 吉方位(blessed) / 要注意方位(shadow) / 中間方位(mid) のメッセージ表示
+- 検索結果の位置に flyTo + マーカー配置
+- turf.bearing + turf.distance でセクター判定
+- blessed/shadow/mid のメッセージ表示
 
-### セクター判定定義（検索用）
-| 方角 | 角度範囲 | タイプ |
-|------|----------|--------|
-| N | 337.5-22.5 | mid |
-| NE | 22.5-67.5 | blessed |
-| E | 67.5-112.5 | shadow |
-| SE | 112.5-157.5 | shadow |
-| S | 157.5-202.5 | mid |
-| SW | 202.5-247.5 | mid |
-| W | 247.5-292.5 | blessed |
-| NW | 292.5-337.5 | mid |
-
-## 8. エフェクト動画
-- `effect_impact.mp4`
-- `mix-blend-mode: screen` で加算合成
-- 3倍速再生
-- CSS: `effectColorShift` キーフレームで色変化
-
-## 9. UI要素
-
-### Stellaメッセージ
-- ボトムシートスタイル（glass morphism）
-- 「✨ Stella」ラベル + テーマメッセージ
-
-### Seedバッジ
-- 右上の丸バッジ（🌊）
-- scale(0) → scale(1) アニメーション
-
-### レイヤーインジケーター
-- 3つのドット（L1紫、L2金、Seed黄金）
-
-## 10. 削除すべきデッドコード（現行版）
-- `compassRadiusKm` 変数
-- `geoPoint()` 関数
-- `makeGeoCircle()` 関数
-- `drawBlob()` 関数
-- `drawPlanetLine()` 関数（Canvas版）
-- `drawActiveSectors()` 関数（Canvas版セクター描画）
-- `drawSector()` 関数（drawActiveSectorsの依存）
-- `trailParticles` 配列
-- `spawnTrailParticle()` 関数
-- turf.js の2重読み込み（1つ削除）
-- D3関連の空コメント
-- `shockwaveCanvas`（未使用）
-
-## 11. 外部依存
-- Leaflet 1.9.4 (CSS + JS)
-- turf.js v7 (**1回だけ読み込む**)
-- CartoDB Dark Matter タイル
-- CartoDB Dark Only Labels タイル
-- `effect_impact.mp4`（ローカルファイル）
-
-## 12. パフォーマンス設計方針
+### Canvas アニメーション（省電力設計）
 - アニメーション無い時 → ループ停止 → CPU/電池ゼロ
-- 静的Leafletレイヤー（polyline, marker）は電池消費なし
-- 惑星マーカー追従は `move/moveend/zoomend` イベントのみ
-- 大圏線ポイントは最小限（方位線21pt、惑星線21pt）
-- `setTimeout(animate, 16)` で requestAnimationFrame 相当（タブ非表示時は停止）
+- setTimeout(animate, 16) で ~60fps
+- Geoスパークル: blessedセクターにキラキラ（ズーム対応）
+- パーティクル: 爆発拡散 + 収束型
+- メテオ: 加速落下 + ヘッドグロー
+- インパクトリング: 拡大フェードアウト
+
+---
+
+## 3. Tarot画面（tarot.html）
+
+### フレーム
+- スマホモックアップ（375×812px、角丸40px）
+- ステータスバー「SOLARA」（上部50px）
+- 内部タブ: **TAROT DRAW** / **HISTORY**
+
+### カードドロー（TAROT DRAWタブ）
+
+#### 3.1 場所選択
+- 3ボタン: 🏠 自宅 / 📍 現在地 / 🔵 指定場所
+
+#### 3.2 カードシーン
+- 3D CSS パースペクティブ（200×320px）
+- **裏面**: 紫グラデーション + 金色パターン + ✦シンボル
+- **表面**: 属性バッジ / 絵文字 / 英語名 / 日本語名 / キーワード / 惑星ライン
+- タップで反転アニメーション（0.8s cubic-bezier）
+
+#### 3.3 カードデッキ（78枚）
+- **大アルカナ 22枚**: 愚者〜世界、各カードに惑星対応・ブースト値
+- **小アルカナ 56枚**: ワンド(火)/カップ(水)/ソード(風)/ペンタクル(地) × 14枚
+  - 数札(1-10): スートの3惑星 + 数値ブースト
+  - コート(Page/Knight/Queen/King): 追加惑星 + コートブースト
+
+#### 3.4 1日1回制限
+- `getToday()` で日付チェック、引き済みなら再抽選不可
+- 引き済み時: カードを表向きで復元 + 結果パネル + Stellaメッセージ表示
+- テキスト: 「✓ 本日のカードは引き済み」
+
+#### 3.5 結果表示
+- **BOOST DIRECTION**: コンパスミニ + 方位ラベル + 説明
+- **PLANET LINES**: ブースト対象惑星バッジ一覧
+- **Stellaメッセージ**: ランダムテンプレート
+
+#### 3.6 地図に反映ボタン
+- 「🧭 地図に反映する」ボタン（シマーエフェクト付き）
+- クリックで:
+  1. 履歴データからブリッジデータ作成
+  2. localStorage `solara_tarot_bridge` に保存
+  3. index.html に遷移
+
+### 履歴（HISTORYタブ）
+- localStorage `solara_natal_history` に最大50件保存
+- カード別に属性カラーの左ボーダー（火:オレンジ / 水:青 / 風:水色 / 地:緑）
+- 展開で詳細表示（方位・惑星・メモ欄）
+- CLEARボタンで全履歴削除
+
+---
+
+## 4. Horo画面（horoscope.html）
+
+### レイアウト
+- フルページ（phone-frame無し）
+- padding-bottom: 90px（ナビ分）
+
+### 主要機能
+- **Astronomy Engine** による精密天体位置計算
+- **1重 NATAL**: ネイタルチャート
+- **2重 NATAL+TRANSIT**: ネイタル + トランジット2重円
+- **3重 N+P+T**: ネイタル + プログレス + トランジット
+
+### ユーザーセレクター
+- 複数ユーザープリセット（はやしこうじ / 田中美咲 / 鈴木大輝）
+- 選択で即座にチャート再生成
+
+### 入力パネル（ボトムシート）
+- **誕生タブ**: 氏名 / 生年月日 / 出生時刻 / 出生地 / 緯度経度
+- **天体タブ**: トランジット日時設定
+- **絞込タブ**: アスペクト種別フィルター / 天体グループフィルター
+- **相タブ**: アスペクト一覧表示
+
+### チャート描画
+- SVG ベースのホロスコープ円
+- サイン帯（12星座カラー）
+- ハウスカスプ線（12ハウス）
+- 天体シンボル配置（衝突回避）
+- アスペクトライン（色分け: コンジャンクション/オポジション/トライン/スクエア/セクスタイル等）
+- パターン検出（グランドトライン等）
+
+---
+
+## 5. データフロー
+
+```
+TAROT画面 (tarot.html)
+  │  カードを引く → localStorage['solara_natal_history'] に保存
+  │  「🧭 地図に反映する」ボタン
+  ↓
+localStorage['solara_tarot_bridge']
+  │  cardName, date, emoji, element, boost情報, 惑星情報
+  ↓
+MAP画面 (index.html)
+  │  起動時に applyBridgeData() → 日付検証
+  │  → 78枚デッキから照合 → calculateSeedBoost()
+  │  → メテオ演出 → セクター・惑星ライン表示
+  ↓
+地図が活性化（blessed/shadow/midセクター + 惑星ライン + Stellaメッセージ）
+
+HORO画面 (horoscope.html)
+  └─ 独立動作（他画面とのデータ連携なし）
+```
+
+---
+
+## 6. localStorage キー一覧
+
+| キー | 画面 | 内容 |
+|------|------|------|
+| `solara_natal_history` | tarot.html | タロット履歴（最大50件、JSON配列） |
+| `solara_tarot_bridge` | tarot.html → index.html | タロット→地図連携データ（日付で有効期限管理） |
+
+---
+
+## 7. ファイル一覧
+
+| ファイル | 用途 |
+|---------|------|
+| index.html | Map画面 |
+| horoscope.html | Horo画面（最新版、v3リビルド） |
+| tarot.html | Tarot画面 |
+| effect_impact.mp4 | メテオインパクトエフェクト動画 |
+| tarot_planet_map.json | タロット-惑星対応マップ（参考データ、コード内にインライン済み） |
+| horoscope_v1_backup.html | ホロスコープ旧版バックアップ |
+| index_stable_v1.html | Map画面旧版バックアップ |
+| MOCKUP_SPEC.md | この仕様書 |
+| TAROT_SCREEN_SPEC.md | タロット画面仕様書 |
+| HANDOFF.md | 開発ハンドオフ資料 |
+| tarot_planet_mapping_design.md | 惑星対応設計資料 |
