@@ -95,9 +95,13 @@
     gap: 6px;
   }
 
-  .search-input {
+  .search-input-wrap {
     flex: 1;
-    padding: 10px 14px;
+    position: relative;
+  }
+  .search-input {
+    width: 100%;
+    padding: 10px 36px 10px 14px;
     background: rgba(15, 15, 30, 0.85);
     backdrop-filter: blur(15px);
     border: 1px solid rgba(255, 255, 255, 0.1);
@@ -116,13 +120,85 @@
   }
 
   .search-btn {
-    padding: 10px 14px;
-    background: rgba(201, 168, 76, 0.15);
-    border: 1px solid rgba(201, 168, 76, 0.3);
-    border-radius: 10px;
-    color: #C9A84C;
-    font-size: 14px;
+    position: absolute;
+    right: 6px;
+    top: 50%;
+    transform: translateY(-50%);
+    padding: 4px 6px;
+    background: none;
+    border: none;
+    color: rgba(201, 168, 76, 0.5);
+    font-size: 16px;
     cursor: pointer;
+    line-height: 1;
+  }
+  .search-btn:active {
+    color: #C9A84C;
+  }
+
+  /* Fortune filter label + mini bars */
+  .fortune-filter-label {
+    position: absolute;
+    top: 95px;
+    left: 16px;
+    right: 16px;
+    z-index: 105;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 10px;
+    color: #C9A84C;
+    background: rgba(10, 10, 20, 0.7);
+    padding: 3px 10px;
+    border-radius: 10px;
+    border: 1px solid rgba(201, 168, 76, 0.3);
+    letter-spacing: 0.5px;
+    pointer-events: none;
+  }
+  .fortune-filter-tag {
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .fortune-mini-bars {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+  .fortune-mini-row {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 9px;
+    color: #E8E0D0;
+  }
+  .fortune-mini-dir {
+    width: 32px;
+    text-align: right;
+    flex-shrink: 0;
+    color: #888;
+    white-space: nowrap;
+  }
+  .fortune-mini-bar-wrap {
+    flex: 1;
+    height: 5px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .fortune-mini-bar {
+    height: 100%;
+    border-radius: 3px;
+    background: #C9A84C;
+  }
+  .fortune-mini-score {
+    width: 28px;
+    text-align: right;
+    flex-shrink: 0;
+    font-family: monospace;
+    font-size: 8px;
+    color: #F6BD60;
   }
 
   /* Search result popup */
@@ -424,7 +500,6 @@
     border-radius: 16px 16px 0 0;
     transform: translateY(100%);
     transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-    max-height: 55vh;
     overflow: hidden;
     display: flex;
     flex-direction: column;
@@ -464,10 +539,13 @@
     border-bottom-color: #C9A84C;
   }
   .fortune-sheet-body {
-    flex: 1;
+    height: 185px;
+    min-height: 185px;
+    max-height: 185px;
     overflow-y: auto;
     padding: 10px 14px 14px;
     scrollbar-width: thin;
+    -webkit-overflow-scrolling: touch;
   }
   .fortune-dir-row {
     display: flex;
@@ -503,24 +581,39 @@
     pointer-events: none;
     z-index: 1;
   }
-  .fortune-dir-bar {
+  .fortune-dir-bar-stack {
     height: 100%;
+    display: flex;
+    overflow: hidden;
     border-radius: 7px;
     transition: width 0.4s ease-out;
     min-width: 2px;
   }
-  .fortune-dir-bar.positive { background: linear-gradient(90deg, #C9A84C, #F6BD60); }
-  .fortune-dir-bar.negative { background: linear-gradient(90deg, #6B5CE7, #4A3AAA); }
-  .fortune-dir-bar.zero     { background: rgba(255,255,255,0.08); width: 2px !important; }
+  .fortune-bar-seg {
+    height: 100%;
+    min-width: 0;
+    transition: width 0.3s ease-out;
+  }
+  .fortune-bar-seg:first-child { border-radius: 7px 0 0 7px; }
+  .fortune-bar-seg:last-child  { border-radius: 0 7px 7px 0; }
+  .fortune-bar-seg:only-child  { border-radius: 7px; }
   .fortune-dir-score {
     width: 48px;
     text-align: right;
     font-size: 11px;
     font-family: monospace;
+    color: #F6BD60;
   }
-  .fortune-dir-score.positive { color: #F6BD60; }
-  .fortune-dir-score.negative { color: #8B7BE7; }
-  .fortune-dir-score.zero     { color: #555; }
+  .fortune-source-tabs { border-bottom: 1px solid rgba(255,255,255,0.08); }
+  .fortune-category-tabs .fortune-sheet-tab { font-size: 10px; padding: 6px 10px; }
+  .component-legend {
+    display: flex;
+    gap: 10px;
+    padding: 4px 12px;
+    font-size: 9px;
+    color: #888;
+    justify-content: center;
+  }
   .fortune-dir-badge {
     font-size: 10px;
     margin-left: 4px;
@@ -578,14 +671,16 @@
   /* ===== Layer control button ===== */
   .layer-btn {
     position: absolute;
-    top: 56px;
-    right: 12px;
-    z-index: 80;
-    width: 36px;
-    height: 36px;
-    border-radius: 10px;
-    background: rgba(15, 15, 30, 0.7);
+    top: 50%;
+    right: 0;
+    transform: translateY(-50%);
+    z-index: 86;
+    width: 24px;
+    height: 50px;
+    border-radius: 10px 0 0 10px;
+    background: rgba(10, 10, 25, 0.8);
     border: 1px solid rgba(201, 168, 76, 0.2);
+    border-right: none;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -611,10 +706,10 @@
   /* ===== Layer panel ===== */
   .layer-panel {
     position: absolute;
-    top: 56px;
+    top: 140px;
     right: 12px;
     z-index: 85;
-    width: 180px;
+    width: 100px;
     background: rgba(12, 12, 26, 0.92);
     border: 1px solid rgba(201, 168, 76, 0.2);
     border-radius: 14px;
@@ -690,8 +785,8 @@
   /* ===== Fortune filter pills ===== */
   .fortune-pills {
     display: flex;
-    flex-wrap: wrap;
-    gap: 4px;
+    flex-direction: column;
+    gap: 3px;
     margin-top: 4px;
   }
 
@@ -895,8 +990,16 @@
 
   <!-- Search bar -->
   <div class="search-bar" id="searchBar">
-    <input class="search-input" id="searchInput" type="text" placeholder="&#x1F50D; &#x5834;&#x6240;&#x3092;&#x691C;&#x7D22;..." />
-    <button class="search-btn" onclick="doSearch()">&#x2192;</button>
+    <div class="search-input-wrap">
+      <input class="search-input" id="searchInput" type="text" placeholder="&#x5834;&#x6240;&#x3092;&#x691C;&#x7D22;..." />
+      <button class="search-btn" onclick="doSearch()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="7"/><line x1="15.5" y1="15.5" x2="21" y2="21"/></svg></button>
+    </div>
+  </div>
+
+  <!-- Active fortune filter label + mini bars -->
+  <div class="fortune-filter-label" id="fortuneFilterLabel">
+    <span class="fortune-filter-tag" id="fortuneFilterTag">合計 / 総合</span>
+    <div class="fortune-mini-bars" id="fortuneMiniBars"></div>
   </div>
 
   <!-- Search result -->
@@ -956,6 +1059,18 @@
     <div class="layer-panel-title">LAYERS</div>
 
     <div class="layer-panel-section">
+      <div class="layer-panel-label">MAP</div>
+      <div class="layer-toggle on" data-layer="sectors" onclick="toggleLayerItem(this)" style="--toggle-color:#C9A84C">
+        <div class="layer-toggle-check">&#x2713;</div>
+        <div class="layer-toggle-text">方位EN</div>
+      </div>
+      <div class="layer-toggle on" data-layer="compass" onclick="toggleLayerItem(this)" style="--toggle-color:#E8E0D0">
+        <div class="layer-toggle-check">&#x2713;</div>
+        <div class="layer-toggle-text">コンパス</div>
+      </div>
+    </div>
+
+    <div class="layer-panel-section">
       <div class="layer-panel-label">CHART</div>
       <div class="layer-toggle on" data-layer="natal" onclick="toggleLayerItem(this)" style="--toggle-color:#E8E0D0">
         <div class="layer-toggle-check">&#x2713;</div>
@@ -988,18 +1103,6 @@
     </div>
 
     <div class="layer-panel-section">
-      <div class="layer-panel-label">MAP</div>
-      <div class="layer-toggle on" data-layer="sectors" onclick="toggleLayerItem(this)" style="--toggle-color:#C9A84C">
-        <div class="layer-toggle-check">&#x2713;</div>
-        <div class="layer-toggle-text">吉凶方位</div>
-      </div>
-      <div class="layer-toggle on" data-layer="compass" onclick="toggleLayerItem(this)" style="--toggle-color:#E8E0D0">
-        <div class="layer-toggle-check">&#x2713;</div>
-        <div class="layer-toggle-text">コンパス</div>
-      </div>
-    </div>
-
-    <div class="layer-panel-section">
       <div class="layer-panel-label">FORTUNE</div>
       <div class="fortune-pills">
         <div class="fortune-pill active" data-fortune="all"           style="--pill-color:#E8E0D0" onclick="setFortuneFilter('all')">総合</div>
@@ -1018,7 +1121,18 @@
   <!-- Fortune bottom sheet -->
   <div class="fortune-sheet" id="fortuneSheet">
     <div class="fortune-sheet-handle" id="fortuneSheetHandle" onclick="if(fortuneSheetOpen)toggleFortuneSheet()"></div>
-    <div class="fortune-sheet-tabs" id="fortuneSheetTabs">
+    <div class="fortune-sheet-tabs fortune-source-tabs" id="fortuneSourceTabs">
+      <div class="fortune-sheet-tab active" data-stab="combined" onclick="switchSourceTab('combined')">合計</div>
+      <div class="fortune-sheet-tab" data-stab="transit" onclick="switchSourceTab('transit')">トランジット</div>
+      <div class="fortune-sheet-tab" data-stab="progressed" onclick="switchSourceTab('progressed')">プログレス</div>
+    </div>
+    <div class="component-legend" id="componentLegend">
+      <span style="color:#C9A84C">● T柔</span>
+      <span style="color:#6B5CE7">● T剛</span>
+      <span style="color:#4CB8B0">● P柔</span>
+      <span style="color:#E74C6B">● P剛</span>
+    </div>
+    <div class="fortune-sheet-tabs fortune-category-tabs" id="fortuneCategoryTabs">
       <div class="fortune-sheet-tab active" data-ftab="all" onclick="switchFortuneTab('all')">総合</div>
       <div class="fortune-sheet-tab" data-ftab="healing" onclick="switchFortuneTab('healing')">癒し</div>
       <div class="fortune-sheet-tab" data-ftab="money" onclick="switchFortuneTab('money')">金運</div>
@@ -1255,11 +1369,21 @@ const CHART_LAYERS = {
 const ASPECT_DEFS = [
   { name: 'conjunction', angle:   0, orb: 8, quality: 'neutral', weight:  0.6 },
   { name: 'sextile',     angle:  60, orb: 4, quality: 'soft',    weight:  0.8 },
-  { name: 'square',      angle:  90, orb: 5, quality: 'hard',    weight: -1.0 },
+  { name: 'square',      angle:  90, orb: 5, quality: 'hard',    weight:  1.0 },
   { name: 'trine',       angle: 120, orb: 5, quality: 'soft',    weight:  1.0 },
-  { name: 'quincunx',    angle: 150, orb: 3, quality: 'tense',   weight: -0.4 },
-  { name: 'opposition',  angle: 180, orb: 6, quality: 'hard',    weight: -0.8 },
+  { name: 'quincunx',    angle: 150, orb: 3, quality: 'tense',   weight:  0.4 },
+  { name: 'opposition',  angle: 180, orb: 6, quality: 'hard',    weight:  0.8 },
 ];
+function qualityBucket(q) { return (q === 'hard' || q === 'tense') ? 'Hard' : 'Soft'; }
+
+const COMPONENT_COLORS = {
+  tSoft: { color: '#C9A84C', label: 'T柔' },
+  tHard: { color: '#6B5CE7', label: 'T剛' },
+  pSoft: { color: '#4CB8B0', label: 'P柔' },
+  pHard: { color: '#E74C6B', label: 'P剛' },
+};
+const COMPONENT_KEYS = ['tSoft', 'tHard', 'pSoft', 'pHard'];
+function emptyComponents() { return { tSoft: 0, tHard: 0, pSoft: 0, pHard: 0 }; }
 
 // Fortune Category B: planet pairs → life area (maps to horoscope B-filter)
 const FORTUNE_PAIRS = {
@@ -1322,12 +1446,13 @@ function cosFalloff(dist, spread) {
 var INFLUENCE_SPREAD = 30; // degrees — planet influence reaches ±30° from its position
 
 function scoreSectorsByAspects() {
-  // Transit angles
+  // Extract angles from all three charts
   var transitAngles = {};
   Object.entries(TRIPLE_CHART.transit).forEach(function(e) { transitAngles[e[0]] = e[1].angle; });
-  // Natal angles
   var natalAngles = {};
   Object.entries(TRIPLE_CHART.natal).forEach(function(e) { natalAngles[e[0]] = e[1].angle; });
+  var progressedAngles = {};
+  Object.entries(TRIPLE_CHART.progressed).forEach(function(e) { progressedAngles[e[0]] = e[1].angle; });
 
   // Nearest 16-dir for each transit planet (for display labels)
   var planetDir = {};
@@ -1341,54 +1466,112 @@ function scoreSectorsByAspects() {
     planetDir[p] = best;
   });
 
-  // Transit-transit aspects
-  var transitAspects = computeAspects(transitAngles);
-  // Natal-transit cross aspects
-  var crossAspects = [];
-  Object.entries(transitAngles).forEach(function(te) {
-    var tp = te[0], ta = te[1];
-    Object.entries(natalAngles).forEach(function(ne) {
-      var np = ne[0], na = ne[1];
-      if (tp === np) return;
-      var diff = angleDist(ta, na);
-      for (var i = 0; i < ASPECT_DEFS.length; i++) {
-        var asp = ASPECT_DEFS[i];
-        if (Math.abs(diff - asp.angle) <= asp.orb) {
-          crossAspects.push({ p1: tp, p2: 'N:' + np, type: asp.name, quality: asp.quality, weight: asp.weight * 0.6 });
-          break;
+  // Helper: compute cross-aspects between two angle maps
+  function computeCrossAspects(outerAngles, innerAngles, weightMult, prefix) {
+    var result = [];
+    Object.entries(outerAngles).forEach(function(oe) {
+      var op = oe[0], oa = oe[1];
+      Object.entries(innerAngles).forEach(function(ie) {
+        var ip = ie[0], ia = ie[1];
+        if (op === ip) return;
+        var diff = angleDist(oa, ia);
+        for (var i = 0; i < ASPECT_DEFS.length; i++) {
+          var asp = ASPECT_DEFS[i];
+          if (Math.abs(diff - asp.angle) <= asp.orb) {
+            result.push({ p1: op, p2: prefix + ip, type: asp.name, quality: asp.quality, weight: asp.weight * weightMult });
+            break;
+          }
         }
-      }
+      });
     });
-  });
+    return result;
+  }
 
-  // Per-planet aspect score (same as before)
-  var planetScore = {};
-  Object.keys(transitAngles).forEach(function(p) { planetScore[p] = 0; });
+  // 4 aspect lists
+  var transitAspects = computeAspects(transitAngles);
+  var crossAspects = computeCrossAspects(transitAngles, natalAngles, 0.6, 'N:');
+  var progNatalAspects = computeCrossAspects(progressedAngles, natalAngles, 0.5, 'N:');
+  var transitProgAspects = computeCrossAspects(transitAngles, progressedAngles, 0.4, 'P:');
+
+  // Per-planet 4-component scoring
+  var transitPlanetComp = {};
+  Object.keys(transitAngles).forEach(function(p) { transitPlanetComp[p] = emptyComponents(); });
+  var progPlanetComp = {};
+  Object.keys(progressedAngles).forEach(function(p) { progPlanetComp[p] = emptyComponents(); });
+
+  // Transit-transit: both planets get t+bucket
   transitAspects.forEach(function(asp) {
-    planetScore[asp.p1] += asp.weight;
-    planetScore[asp.p2] += asp.weight;
+    var bucket = 't' + qualityBucket(asp.quality);
+    transitPlanetComp[asp.p1][bucket] += asp.weight;
+    transitPlanetComp[asp.p2][bucket] += asp.weight;
   });
+  // Transit-natal cross: transit planet gets t+bucket
   crossAspects.forEach(function(asp) {
-    if (planetScore[asp.p1] !== undefined) planetScore[asp.p1] += asp.weight;
+    if (transitPlanetComp[asp.p1]) {
+      var bucket = 't' + qualityBucket(asp.quality);
+      transitPlanetComp[asp.p1][bucket] += asp.weight;
+    }
+  });
+  // Progressed-natal cross: progressed planet gets p+bucket
+  progNatalAspects.forEach(function(asp) {
+    if (progPlanetComp[asp.p1]) {
+      var bucket = 'p' + qualityBucket(asp.quality);
+      progPlanetComp[asp.p1][bucket] += asp.weight;
+    }
+  });
+  // Transit-progressed cross: transit planet gets t+bucket
+  transitProgAspects.forEach(function(asp) {
+    if (transitPlanetComp[asp.p1]) {
+      var bucket = 't' + qualityBucket(asp.quality);
+      transitPlanetComp[asp.p1][bucket] += asp.weight;
+    }
   });
 
-  // === Continuous scoring: spread each planet's score across 16 directions ===
-  var sectorScores = {};
-  DIR16.forEach(function(d) { sectorScores[d] = 0; });
+  // Backward-compat: aggregate planetScore
+  var planetScore = {};
+  Object.entries(transitPlanetComp).forEach(function(e) {
+    var c = e[1];
+    planetScore[e[0]] = c.tSoft + c.tHard + c.pSoft + c.pHard;
+  });
 
+  // === Spread to 16 directions with 4 components ===
+  var sectorComponents = {};
+  var sectorScores = {};
+  DIR16.forEach(function(d) { sectorComponents[d] = emptyComponents(); sectorScores[d] = 0; });
+
+  // Spread transit planet components via transit angles
   Object.entries(transitAngles).forEach(function(e) {
-    var planet = e[0], pAngle = e[1], pScore = planetScore[planet] || 0;
+    var planet = e[0], pAngle = e[1];
+    var pc = transitPlanetComp[planet];
     DIR16.forEach(function(d) {
-      var dist = angleDist(pAngle, DIR16_ANGLE[d]);
-      sectorScores[d] += pScore * cosFalloff(dist, INFLUENCE_SPREAD);
+      var f = cosFalloff(angleDist(pAngle, DIR16_ANGLE[d]), INFLUENCE_SPREAD);
+      sectorComponents[d].tSoft += pc.tSoft * f;
+      sectorComponents[d].tHard += pc.tHard * f;
     });
   });
+  // Spread progressed planet components via progressed angles
+  Object.entries(progressedAngles).forEach(function(e) {
+    var planet = e[0], pAngle = e[1];
+    var pc = progPlanetComp[planet];
+    DIR16.forEach(function(d) {
+      var f = cosFalloff(angleDist(pAngle, DIR16_ANGLE[d]), INFLUENCE_SPREAD);
+      sectorComponents[d].pSoft += pc.pSoft * f;
+      sectorComponents[d].pHard += pc.pHard * f;
+    });
+  });
+  // Sum totals
+  DIR16.forEach(function(d) {
+    var c = sectorComponents[d];
+    sectorScores[d] = c.tSoft + c.tHard + c.pSoft + c.pHard;
+  });
 
-  // === Per-category continuous scoring ===
+  // === Per-category continuous scoring with 4 components ===
   var fortuneScores = {};
+  var fortuneComponents = {};
   Object.keys(FORTUNE_PAIRS).forEach(function(cat) {
     fortuneScores[cat] = {};
-    DIR16.forEach(function(d) { fortuneScores[cat][d] = 0; });
+    fortuneComponents[cat] = {};
+    DIR16.forEach(function(d) { fortuneScores[cat][d] = 0; fortuneComponents[cat][d] = emptyComponents(); });
 
     var catPlanets = [];
     FORTUNE_PAIRS[cat].forEach(function(pair) {
@@ -1396,10 +1579,12 @@ function scoreSectorsByAspects() {
       if (catPlanets.indexOf(pair[1]) === -1) catPlanets.push(pair[1]);
     });
 
-    // Per-planet category score from aspects
-    var catPlanetScore = {};
-    catPlanets.forEach(function(p) { catPlanetScore[p] = 0; });
+    // Per-planet category component scores
+    var catTransitComp = {};
+    var catProgComp = {};
+    catPlanets.forEach(function(p) { catTransitComp[p] = emptyComponents(); catProgComp[p] = emptyComponents(); });
 
+    // Transit-transit aspects for this category
     transitAspects.forEach(function(asp) {
       var inv1 = catPlanets.indexOf(asp.p1) !== -1;
       var inv2 = catPlanets.indexOf(asp.p2) !== -1;
@@ -1407,23 +1592,55 @@ function scoreSectorsByAspects() {
       var pairMatch = FORTUNE_PAIRS[cat].some(function(pair) {
         return (asp.p1===pair[0] && asp.p2===pair[1]) || (asp.p1===pair[1] && asp.p2===pair[0]);
       });
-      var w = pairMatch ? asp.weight * 2 : asp.weight * 0.5;
-      if (inv1) catPlanetScore[asp.p1] += w;
-      if (inv2) catPlanetScore[asp.p2] += w;
+      var wMult = pairMatch ? 2 : 0.5;
+      var bucket = 't' + qualityBucket(asp.quality);
+      if (inv1) catTransitComp[asp.p1][bucket] += asp.weight * wMult;
+      if (inv2) catTransitComp[asp.p2][bucket] += asp.weight * wMult;
     });
+    // Cross aspects (transit-natal) for this category
     crossAspects.forEach(function(asp) {
       if (catPlanets.indexOf(asp.p1) === -1) return;
-      catPlanetScore[asp.p1] += asp.weight * 0.5;
+      var bucket = 't' + qualityBucket(asp.quality);
+      catTransitComp[asp.p1][bucket] += asp.weight * 0.5;
+    });
+    // Progressed-natal for this category
+    progNatalAspects.forEach(function(asp) {
+      if (catPlanets.indexOf(asp.p1) === -1) return;
+      var bucket = 'p' + qualityBucket(asp.quality);
+      if (catProgComp[asp.p1]) catProgComp[asp.p1][bucket] += asp.weight * 0.5;
+    });
+    // Transit-progressed for this category
+    transitProgAspects.forEach(function(asp) {
+      if (catPlanets.indexOf(asp.p1) === -1) return;
+      var bucket = 't' + qualityBucket(asp.quality);
+      catTransitComp[asp.p1][bucket] += asp.weight * 0.5;
     });
 
-    // Spread category planet scores across directions
+    // Spread to directions
     catPlanets.forEach(function(p) {
-      var pAngle = transitAngles[p];
-      if (pAngle === undefined) return;
-      DIR16.forEach(function(d) {
-        var dist = angleDist(pAngle, DIR16_ANGLE[d]);
-        fortuneScores[cat][d] += catPlanetScore[p] * cosFalloff(dist, INFLUENCE_SPREAD);
-      });
+      var tAngle = transitAngles[p];
+      if (tAngle !== undefined) {
+        var tc = catTransitComp[p];
+        DIR16.forEach(function(d) {
+          var f = cosFalloff(angleDist(tAngle, DIR16_ANGLE[d]), INFLUENCE_SPREAD);
+          fortuneComponents[cat][d].tSoft += tc.tSoft * f;
+          fortuneComponents[cat][d].tHard += tc.tHard * f;
+        });
+      }
+      var pAngle = progressedAngles[p];
+      if (pAngle !== undefined) {
+        var pc = catProgComp[p] || emptyComponents();
+        DIR16.forEach(function(d) {
+          var f = cosFalloff(angleDist(pAngle, DIR16_ANGLE[d]), INFLUENCE_SPREAD);
+          fortuneComponents[cat][d].pSoft += pc.pSoft * f;
+          fortuneComponents[cat][d].pHard += pc.pHard * f;
+        });
+      }
+    });
+    // Sum totals for backward compat
+    DIR16.forEach(function(d) {
+      var c = fortuneComponents[cat][d];
+      fortuneScores[cat][d] = c.tSoft + c.tHard + c.pSoft + c.pHard;
     });
   });
 
@@ -1437,7 +1654,13 @@ function scoreSectorsByAspects() {
     sectorFortune[d] = bestVal > 0.01 ? best : null;
   });
 
-  return { sectorScores: sectorScores, sectorFortune: sectorFortune, planetDir: planetDir, planetScore: planetScore, transitAspects: transitAspects, crossAspects: crossAspects, fortuneScores: fortuneScores };
+  return {
+    sectorScores: sectorScores, sectorComponents: sectorComponents,
+    sectorFortune: sectorFortune, planetDir: planetDir, planetScore: planetScore,
+    transitAspects: transitAspects, crossAspects: crossAspects,
+    progNatalAspects: progNatalAspects, transitProgAspects: transitProgAspects,
+    fortuneScores: fortuneScores, fortuneComponents: fortuneComponents
+  };
 }
 
 // ===== Draw a random card from 78 =====
@@ -1504,6 +1727,7 @@ function calculateSeedBoost(card) {
   // Aspect-based sector scores (continuous 16-dir)
   var aspectResult = scoreSectorsByAspects();
   var rawAspect = aspectResult.sectorScores;
+  var rawComponents = aspectResult.sectorComponents;
   var rawVals = Object.values(rawAspect);
   var minRaw = Math.min.apply(null, rawVals);
   var maxRaw = Math.max.apply(null, rawVals);
@@ -1511,8 +1735,12 @@ function calculateSeedBoost(card) {
 
   // Normalize to [0.15, 0.80]
   var sectorScores = {};
+  var sectorComponents = {};
   DIR16.forEach(function(d) {
+    var normFactor = (rawAspect[d] > 0) ? (0.15 + 0.65 * ((rawAspect[d] - minRaw) / rawRange)) / rawAspect[d] : 1;
     sectorScores[d] = 0.15 + 0.65 * ((rawAspect[d] - minRaw) / rawRange);
+    sectorComponents[d] = emptyComponents();
+    COMPONENT_KEYS.forEach(function(k) { sectorComponents[d][k] = (rawComponents[d][k] || 0) * normFactor; });
   });
 
   // Apply Seed Boost: card-boosted planets amplify nearby directions (continuous)
@@ -1528,7 +1756,9 @@ function calculateSeedBoost(card) {
       if (falloff > 0) {
         if (!boostedSectors[d]) boostedSectors[d] = 0;
         boostedSectors[d] += boostAmount * falloff;
-        sectorScores[d] *= (1 + boostAmount * falloff);
+        var boostFactor = 1 + boostAmount * falloff;
+        sectorScores[d] *= boostFactor;
+        COMPONENT_KEYS.forEach(function(k) { sectorComponents[d][k] *= boostFactor; });
       }
     });
   });
@@ -1554,6 +1784,7 @@ function calculateSeedBoost(card) {
   return {
     sectorTypes: sectorTypes,
     sectorScores: sectorScores,
+    sectorComponents: sectorComponents,
     sectorFortune: aspectResult.sectorFortune,
     boostedPlanets: boostedPlanets,
     boostedSectors: boostedSectors,
@@ -1623,7 +1854,7 @@ function init() {
     return;
   }
 
-  const mapCenter = [35.1815, 136.9262];
+  const mapCenter = [51.0447, -114.0719];
   const map = L.map('leafletMap', {
     zoomControl: false,
     attributionControl: false,
@@ -1723,6 +1954,7 @@ function init() {
   // Show search bar and layer indicator from the start
   document.getElementById('searchBar').classList.add('visible');
   document.getElementById('layerBtn').classList.add('visible');
+  updateFortuneFilterLabel();
 }
 
 // ===== Thin dark gradient overlay on mapCanvas =====
@@ -2018,7 +2250,7 @@ function addBoostedPlanetLines() {
       const lineWeight = (layerKey === 'natal' && isBoosted) ? 2.5 : layerStyle.weight;
 
       const linePoints = [];
-      for (let d = 0; d <= boostDistKm; d += boostDistKm / 20) {
+      for (let d = 0; d <= boostDistKm; d += boostDistKm / 100) {
         const pt = turf.destination(center, d, pd.angle, { units: 'kilometers' });
         linePoints.push(L.latLng(pt.geometry.coordinates[1], normalizeLng(pt.geometry.coordinates[0], lng)));
       }
@@ -2139,32 +2371,50 @@ function addBoostedPlanetLines() {
 // This eliminates all geodesic pole-crossing issues regardless of user latitude.
 // Score-based sector styling: |score| >= 3 → strong, 2-3 → light, <2 → transparent
 // positive = gold (#C9A84C), negative = purple (#6B5CE7)
-function scoreToStyle(score) {
-  var abs = Math.abs(score);
-  var isPositive = score >= 0;
-  var color = isPositive ? '#C9A84C' : '#6B5CE7';
-  var fillColor = isPositive ? '#C9A84C' : '#2D1B4E';
+function scoreToStyle(score, color, rank) {
+  color = color || '#C9A84C';
   var fillOpacity, borderOpacity, weight;
-  if (abs >= 3) {
+  if (rank === 'strong') {
     fillOpacity = 0.40; borderOpacity = 0.85; weight = 3;
-  } else if (abs >= 2) {
+  } else if (rank === 'weak') {
     fillOpacity = 0.20; borderOpacity = 0.50; weight = 2;
   } else {
     fillOpacity = 0; borderOpacity = 0; weight = 0;
   }
   return {
-    init: { color: color, fillColor: fillColor, fillOpacity: 0, weight: weight, opacity: 0 },
-    target: { color: color, fillColor: fillColor, fillOpacity: fillOpacity, opacity: borderOpacity, weight: weight }
+    init: { color: color, fillColor: color, fillOpacity: 0, weight: weight, opacity: 0 },
+    target: { color: color, fillColor: color, fillOpacity: fillOpacity, opacity: borderOpacity, weight: weight }
   };
 }
 
+// Compute rank map: top 2 = 'strong', next 2 = 'weak', rest = null
+function computeRanks(scoresObj) {
+  var entries = DIR16.map(function(d) { return { dir: d, score: scoresObj[d] || 0 }; });
+  entries.sort(function(a, b) { return b.score - a.score; });
+  var ranks = {};
+  entries.forEach(function(e, i) {
+    if (e.score < 0.01) ranks[e.dir] = null;
+    else if (i < 1) ranks[e.dir] = 'strong';
+    else if (i < 2) ranks[e.dir] = 'weak';
+    else ranks[e.dir] = null;
+  });
+  return ranks;
+}
+
 function createGeoSectors() {
-  // If sectors already exist, remove them first (allows re-draw after card boost)
+  // If sectors already exist, remove them first
   if (window.geoSectorsVisible && window.geoSectors) {
     window.geoSectors.forEach(function(s) {
       if (s.polygon && window.leafletMap.hasLayer(s.polygon)) window.leafletMap.removeLayer(s.polygon);
       if (s.wrapPolygons) s.wrapPolygons.forEach(function(wp) {
         if (window.leafletMap.hasLayer(wp)) window.leafletMap.removeLayer(wp);
+      });
+      // backward compat: remove old subPolygons if present
+      if (s.subPolygons) s.subPolygons.forEach(function(sp) {
+        if (sp.polygon && window.leafletMap.hasLayer(sp.polygon)) window.leafletMap.removeLayer(sp.polygon);
+        if (sp.wrapPolygons) sp.wrapPolygons.forEach(function(wp) {
+          if (window.leafletMap.hasLayer(wp)) window.leafletMap.removeLayer(wp);
+        });
       });
     });
     window.geoSectors = [];
@@ -2174,9 +2424,13 @@ function createGeoSectors() {
 
   var lat = window.mapCenter[0];
   var lng = window.mapCenter[1];
+  var geoRadius = 20000;
 
-  // --- Geodesic approach using turf.destination (no Mercator distortion) ---
-  var geoRadius = 20000; // km, matches compass line distance
+  // N/S sectors: limit radius to avoid polar crossing
+  var northPolarLimit = (90 - lat) * 111.32 - 200;
+  var southPolarLimit = (90 + lat) * 111.32 - 200;
+  if (northPolarLimit < 500) northPolarLimit = 500;
+  if (southPolarLimit < 500) southPolarLimit = 500;
 
   // 16 directional sectors (22.5° each)
   var dirAngles = DIR16.map(function(d, i) {
@@ -2187,69 +2441,82 @@ function createGeoSectors() {
   });
 
   var sectorScores = (window.aspectData && window.aspectData.sectorScores) || {};
+  var sectorComponents = (window.aspectData && window.aspectData.sectorComponents) || {};
 
-  // Determine sector types for search/detectSector (still needed)
+  // Component keys based on view mode
+  var compKeys;
+  if (sectorViewMode === 'transit') compKeys = ['tSoft', 'tHard'];
+  else if (sectorViewMode === 'progressed') compKeys = ['pSoft', 'pHard'];
+  else compKeys = COMPONENT_KEYS;
+
+
   var sectorTypes = {};
+  var sectorRanks = computeRanks(sectorScores);
   DIR16.forEach(function(d) {
-    var s = sectorScores[d] || 0;
-    if (s >= 2) sectorTypes[d] = 'blessed';
-    else if (s <= -2) sectorTypes[d] = 'shadow';
-    else sectorTypes[d] = 'mid';
+    sectorTypes[d] = sectorRanks[d] ? 'positive' : 'neutral';
   });
 
   var centerPoint = turf.point([lng, lat]);
 
+  // Helper: build single sector polygon (center to radius)
+  function buildSectorLatLngs(startBearing, endBearing, radius) {
+    var bearingRange = endBearing - startBearing;
+    var radialSteps = 50;
+    var arcSteps = 40;
+    var latLngs = [L.latLng(lat, lng)];
+    for (var r = 1; r <= radialSteps; r++) {
+      var dist = radius * (r / radialSteps);
+      var dest = turf.destination(centerPoint, dist, startBearing, { units: 'kilometers' });
+      var c = dest.geometry.coordinates;
+      latLngs.push(L.latLng(Math.max(-85.05, Math.min(85.05, c[1])), normalizeLng(c[0], lng)));
+    }
+    for (var s = 1; s <= arcSteps; s++) {
+      var bearing = startBearing + bearingRange * (s / arcSteps);
+      var dest = turf.destination(centerPoint, radius, bearing, { units: 'kilometers' });
+      var c = dest.geometry.coordinates;
+      latLngs.push(L.latLng(Math.max(-85.05, Math.min(85.05, c[1])), normalizeLng(c[0], lng)));
+    }
+    for (var r = radialSteps - 1; r >= 0; r--) {
+      var dist = radius * (r / radialSteps);
+      if (dist === 0) break;
+      var dest = turf.destination(centerPoint, dist, endBearing, { units: 'kilometers' });
+      var c = dest.geometry.coordinates;
+      latLngs.push(L.latLng(Math.max(-85.05, Math.min(85.05, c[1])), normalizeLng(c[0], lng)));
+    }
+    return latLngs;
+  }
+
   dirAngles.forEach(function(d, i) {
-    var type = sectorTypes[d.dir] || 'mid';
     var startDeg = d.start;
     var endDeg = d.end;
     if (startDeg > endDeg) endDeg += 360;
 
-    // Build polygon using great circle points (matches compass lines)
-    // Radial edge: center → outer along start bearing
-    var latLngs = [L.latLng(lat, lng)];
-    var radialSteps = 50;
-    for (var r = 1; r <= radialSteps; r++) {
-      var dist = geoRadius * (r / radialSteps);
-      var dest = turf.destination(centerPoint, dist, startDeg, { units: 'kilometers' });
-      var coords = dest.geometry.coordinates;
-      latLngs.push(L.latLng(Math.max(-85.05, Math.min(85.05, coords[1])), coords[0]));
-    }
-    // Arc: outer edge from start to end bearing
-    var arcSteps = 40;
-    for (var s = 1; s <= arcSteps; s++) {
-      var bearing = startDeg + (endDeg - startDeg) * (s / arcSteps);
-      var dest = turf.destination(centerPoint, geoRadius, bearing, { units: 'kilometers' });
-      var coords = dest.geometry.coordinates;
-      latLngs.push(L.latLng(Math.max(-85.05, Math.min(85.05, coords[1])), coords[0]));
-    }
-    // Radial edge: outer → center along end bearing
-    for (var r = radialSteps - 1; r >= 0; r--) {
-      var dist = geoRadius * (r / radialSteps);
-      if (dist === 0) break;
-      var dest = turf.destination(centerPoint, dist, endDeg, { units: 'kilometers' });
-      var coords = dest.geometry.coordinates;
-      latLngs.push(L.latLng(Math.max(-85.05, Math.min(85.05, coords[1])), coords[0]));
-    }
+    var radius = geoRadius;
+    if (d.dir === 'N') radius = Math.min(geoRadius, northPolarLimit);
+    if (d.dir === 'S') radius = Math.min(geoRadius, southPolarLimit);
 
-    var dirScore = sectorScores[d.dir] || 0;
-    var type = sectorTypes[d.dir] || 'mid';
-    var ss = scoreToStyle(dirScore);
-    var polygon = L.polygon(latLngs, { ...ss.init, className: 'sector-' + type }).addTo(window.leafletMap);
+    var comp = sectorComponents[d.dir] || emptyComponents();
+    var totalScore = sectorScores[d.dir] || 0;
 
-    var isBoosted = seedBoostData && seedBoostData.boostedSectors[d.dir];
-    var sectorEntry = { polygon: polygon, type: type, score: dirScore, index: i, dir: d.dir, boosted: !!isBoosted, wrapPolygons: [] };
+    // Always create polygon (even if invisible) so flashSector works
+    var rank = sectorRanks[d.dir];
+    var ss = scoreToStyle(totalScore, '#C9A84C', rank);
+    var latLngs = buildSectorLatLngs(startDeg, endDeg, radius);
+    var polygon = L.polygon(latLngs, { ...ss.init }).addTo(window.leafletMap);
 
-    // World wrap copies at ±360°
+    var wrapPolygons = [];
     [-360, 360].forEach(function(offset) {
       var shifted = latLngs.map(function(p) { return L.latLng(p.lat, p.lng + offset); });
-      var wp = L.polygon(shifted, { ...ss.init, className: 'sector-' + type }).addTo(window.leafletMap);
-      sectorEntry.wrapPolygons.push(wp);
+      var wp = L.polygon(shifted, { ...ss.init }).addTo(window.leafletMap);
+      wrapPolygons.push(wp);
     });
+
+    var sectorEntry = { dir: d.dir, score: totalScore, index: i, polygon: polygon, wrapPolygons: wrapPolygons,
+      subPolygons: [] };
 
     window.geoSectors.push(sectorEntry);
 
-    // Fade-in with cascade delay
+    // Fade-in animation
     var delay = i * 120;
     var target = ss.target;
     setTimeout(function() {
@@ -2258,20 +2525,16 @@ function createGeoSectors() {
       var fadeIn = setInterval(function() {
         step++;
         var t = step / maxSteps;
-        var animStyle = {
-          fillOpacity: target.fillOpacity * t,
-          opacity: target.opacity * t,
-          weight: target.weight,
-        };
+        var animStyle = { fillOpacity: target.fillOpacity * t, opacity: target.opacity * t, weight: target.weight };
         polygon.setStyle(animStyle);
-        sectorEntry.wrapPolygons.forEach(function(wp) { wp.setStyle(animStyle); });
+        wrapPolygons.forEach(function(wp) { wp.setStyle(animStyle); });
         if (step >= maxSteps) clearInterval(fadeIn);
       }, 30);
     }, delay);
   });
 
-  // Store sector types globally for search
   window.currentSectorTypes = sectorTypes;
+
 }
 
 // ===== Search & sector detection =====
@@ -2644,6 +2907,8 @@ function dismissFortuneAdvice() {
 // ===== Fortune Bottom Sheet =====
 var fortuneSheetOpen = false;
 var fortuneSheetTab = 'all';
+var fortuneSourceTab = 'combined';
+var sectorViewMode = 'combined';
 
 function toggleFortuneSheet() {
   var sheet = document.getElementById('fortuneSheet');
@@ -2654,77 +2919,188 @@ function toggleFortuneSheet() {
   if (fortuneSheetOpen) renderFortuneSheet();
 }
 
+// Compute sector scores matching current source tab + category tab
+function getActiveSectorScores() {
+  if (!window.aspectData) return {};
+  var compKeys;
+  if (fortuneSourceTab === 'transit') compKeys = ['tSoft', 'tHard'];
+  else if (fortuneSourceTab === 'progressed') compKeys = ['pSoft', 'pHard'];
+  else compKeys = COMPONENT_KEYS;
+
+  var dirComps;
+  if (fortuneSheetTab === 'all') {
+    dirComps = window.aspectData.sectorComponents || {};
+  } else {
+    dirComps = (window.aspectData.fortuneComponents && window.aspectData.fortuneComponents[fortuneSheetTab]) || {};
+  }
+
+  var scores = {};
+  DIR16.forEach(function(d) {
+    var c = dirComps[d] || emptyComponents();
+    var total = 0;
+    compKeys.forEach(function(k) { total += (c[k] || 0); });
+    scores[d] = total;
+  });
+  return scores;
+}
+
+var SOURCE_LABELS = { combined: '合計', transit: 'トランジット', progressed: 'プログレス' };
+var CATEGORY_LABELS = { all: '総合', healing: '癒し', money: '金運', love: '恋愛', work: '仕事', communication: '話す' };
+
+function updateFortuneFilterLabel() {
+  var tag = document.getElementById('fortuneFilterTag');
+  var barsEl = document.getElementById('fortuneMiniBars');
+  if (!tag || !barsEl) return;
+  tag.textContent = (SOURCE_LABELS[fortuneSourceTab] || '合計') + ' / ' + (CATEGORY_LABELS[fortuneSheetTab] || '総合');
+
+  // Build mini bars for top 3 directions
+  if (!window.aspectData) { barsEl.innerHTML = ''; return; }
+
+  var compKeys;
+  if (fortuneSourceTab === 'transit') compKeys = ['tSoft', 'tHard'];
+  else if (fortuneSourceTab === 'progressed') compKeys = ['pSoft', 'pHard'];
+  else compKeys = COMPONENT_KEYS;
+
+  var dirComps;
+  if (fortuneSheetTab === 'all') {
+    dirComps = window.aspectData.sectorComponents || {};
+  } else {
+    dirComps = (window.aspectData.fortuneComponents && window.aspectData.fortuneComponents[fortuneSheetTab]) || {};
+  }
+
+  var dirTotals = {};
+  DIR16.forEach(function(d) {
+    var c = dirComps[d] || emptyComponents();
+    var total = 0;
+    compKeys.forEach(function(k) { total += (c[k] || 0); });
+    dirTotals[d] = total;
+  });
+
+  var sorted = DIR16.slice().sort(function(a, b) { return dirTotals[b] - dirTotals[a]; });
+  var top3 = sorted.slice(0, 2).filter(function(d) { return dirTotals[d] > 0.01; });
+  var maxVal = top3.length > 0 ? dirTotals[top3[0]] : 1;
+
+  var html = '';
+  top3.forEach(function(dir) {
+    var total = dirTotals[dir];
+    var pct = Math.min(100, (total / maxVal) * 100);
+    html += '<div class="fortune-mini-row">'
+      + '<div class="fortune-mini-dir">' + (DIR16_LABELS[dir] || dir) + '</div>'
+      + '<div class="fortune-mini-bar-wrap"><div class="fortune-mini-bar" style="width:' + pct + '%"></div></div>'
+      + '<div class="fortune-mini-score">' + total.toFixed(2) + '</div>'
+      + '</div>';
+  });
+  barsEl.innerHTML = html;
+}
+
+function switchSourceTab(tab) {
+  fortuneSourceTab = tab;
+  sectorViewMode = tab;
+  document.querySelectorAll('#fortuneSourceTabs .fortune-sheet-tab').forEach(function(el) {
+    el.classList.toggle('active', el.getAttribute('data-stab') === tab);
+  });
+  // Update legend visibility
+  var legend = document.getElementById('componentLegend');
+  if (legend) {
+    if (tab === 'combined') {
+      legend.innerHTML = '<span style="color:#C9A84C">● T柔</span><span style="color:#6B5CE7">● T剛</span><span style="color:#4CB8B0">● P柔</span><span style="color:#E74C6B">● P剛</span>';
+    } else if (tab === 'transit') {
+      legend.innerHTML = '<span style="color:#C9A84C">● T柔</span><span style="color:#6B5CE7">● T剛</span>';
+    } else {
+      legend.innerHTML = '<span style="color:#4CB8B0">● P柔</span><span style="color:#E74C6B">● P剛</span>';
+    }
+  }
+  renderFortuneSheet();
+  applyLayerVisibility();
+  updateFortuneFilterLabel();
+}
+
 function switchFortuneTab(tab) {
   fortuneSheetTab = tab;
-  document.querySelectorAll('.fortune-sheet-tab').forEach(function(el) {
+  document.querySelectorAll('#fortuneCategoryTabs .fortune-sheet-tab').forEach(function(el) {
     el.classList.toggle('active', el.getAttribute('data-ftab') === tab);
   });
   renderFortuneSheet();
-  // Also sync map fortune filter (except 'all' which clears it)
-  if (tab === 'all') {
-    if (fortuneFilter) setFortuneFilter(fortuneFilter); // toggle off
-  } else if (fortuneFilter !== tab) {
-    if (fortuneFilter) setFortuneFilter(fortuneFilter); // clear old
-    setFortuneFilter(tab); // set new
-  }
+  updateFortuneFilterLabel();
+  applyLayerVisibility();
 }
 
 function renderFortuneSheet() {
   var body = document.getElementById('fortuneSheetBody');
   if (!body || !window.aspectData) return;
 
-  var dirs = DIR16;
-  var scores;
-  var label;
+  // Determine which component keys to show based on source tab
+  var compKeys;
+  if (fortuneSourceTab === 'transit') compKeys = ['tSoft', 'tHard'];
+  else if (fortuneSourceTab === 'progressed') compKeys = ['pSoft', 'pHard'];
+  else compKeys = COMPONENT_KEYS;
 
+  // Get component data for the active category
+  var dirComps;
   if (fortuneSheetTab === 'all') {
-    scores = window.aspectData.sectorScores;
-    label = '総合';
+    dirComps = window.aspectData.sectorComponents || {};
   } else {
-    scores = (window.aspectData.fortuneScores && window.aspectData.fortuneScores[fortuneSheetTab]) || {};
-    label = FORTUNE_LABELS[fortuneSheetTab] || fortuneSheetTab;
+    dirComps = (window.aspectData.fortuneComponents && window.aspectData.fortuneComponents[fortuneSheetTab]) || {};
   }
 
-  var vals = dirs.map(function(d) { return scores[d] || 0; });
+  // Compute total per direction (only active components)
+  var dirTotals = {};
+  DIR16.forEach(function(d) {
+    var c = dirComps[d] || emptyComponents();
+    var total = 0;
+    compKeys.forEach(function(k) { total += (c[k] || 0); });
+    dirTotals[d] = total;
+  });
 
-  // Bar width: 1-5 equal spacing (each = 1/6 of bar width), 5+ compressed into last 1/6
-  // Total bar = 6 equal zones: |1|2|3|4|5|5+|
+  // Bar width scaling
   function scoreToPct(v) {
-    var abs = Math.abs(v);
-    if (abs <= 5) return (abs / 5) * (100 * 5 / 6);           // 0-5 maps to 0-83.3%
-    return (5 / 6) * 100 + (1 / 6) * 100 * Math.min((abs - 5) / 5, 1); // 5+ compressed into last 16.7%
+    if (v <= 5) return (v / 5) * (100 * 5 / 6);
+    return (5 / 6) * 100 + (1 / 6) * 100 * Math.min((v - 5) / 5, 1);
   }
 
-  // Tick marks HTML (at positions 1,2,3,4,5)
+  // Tick marks HTML
   var ticks = '';
   for (var t = 1; t <= 5; t++) {
     ticks += '<div class="fortune-dir-tick" style="left:' + (t / 6 * 100) + '%"></div>';
   }
 
-  // Sort by score descending
-  var sorted = dirs.slice().sort(function(a, b) { return (scores[b] || 0) - (scores[a] || 0); });
+  // Sort by total descending
+  var sorted = DIR16.slice().sort(function(a, b) { return dirTotals[b] - dirTotals[a]; });
 
   var html = '';
   sorted.forEach(function(dir) {
-    var score = scores[dir] || 0;
-    if (Math.abs(score) < 0.01) return; // Hide zero scores
-    var pct = scoreToPct(score);
-    var cls = score > 0.01 ? 'positive' : 'negative';
+    var total = dirTotals[dir];
+    if (total < 0.01) return;
+    var c = dirComps[dir] || emptyComponents();
+    var pct = scoreToPct(total);
+
+    // Build stacked bar segments
+    var segs = '';
+    compKeys.forEach(function(k) {
+      var val = c[k] || 0;
+      if (val < 0.001) return;
+      var frac = (val / total) * 100;
+      segs += '<div class="fortune-bar-seg" style="width:' + frac + '%;background:' + COMPONENT_COLORS[k].color + '"></div>';
+    });
+
     var badge = '';
     if (fortuneSheetTab === 'all' && window.aspectData.sectorFortune) {
       var cat = window.aspectData.sectorFortune[dir];
       if (cat) badge = '<span class="fortune-dir-badge">' + (FORTUNE_LABELS[cat] || '') + '</span>';
     }
-    var scoreStr = Math.abs(score).toFixed(2);
+
     html += '<div class="fortune-dir-row" onclick="flashSector(\'' + dir + '\')">'
       + '<div class="fortune-dir-label">' + (DIR16_LABELS[dir] || dir) + '</div>'
-      + '<div class="fortune-dir-bar-wrap">' + ticks + '<div class="fortune-dir-bar ' + cls + '" style="width:' + pct + '%"></div></div>'
-      + '<div class="fortune-dir-score ' + cls + '">' + scoreStr + badge + '</div>'
+      + '<div class="fortune-dir-bar-wrap">' + ticks
+      + '<div class="fortune-dir-bar-stack" style="width:' + pct + '%">' + segs + '</div>'
+      + '</div>'
+      + '<div class="fortune-dir-score">' + total.toFixed(2) + badge + '</div>'
       + '</div>';
   });
 
-  // If tab is a category with all zeros, show rest advice
-  if (fortuneSheetTab !== 'all' && vals.every(function(v) { return Math.abs(v) < 0.01; })) {
+  // Rest advice for empty categories
+  var allZero = DIR16.every(function(d) { return dirTotals[d] < 0.01; });
+  if (fortuneSheetTab !== 'all' && allZero) {
     html = '<div style="text-align:center;padding:20px 10px;color:#888;font-size:12px;line-height:1.8;white-space:pre-line;">'
       + '🌙\n' + (FORTUNE_REST_ADVICE[fortuneSheetTab] || '') + '</div>';
   }
@@ -2733,31 +3109,28 @@ function renderFortuneSheet() {
 }
 
 function flashSector(dir) {
-  // Close the fortune sheet
   if (fortuneSheetOpen) toggleFortuneSheet();
 
-  // Find the sector
   var sector = window.geoSectors && window.geoSectors.find(function(s) { return s.dir === dir; });
-  if (!sector) return;
-
-  // Flash: toggle high opacity on/off for 3 seconds
-  var score = sector.score || 0;
-  var flashColor = '#26D0CE';
-  var flashFill = '#26D0CE';
-  var flashStyle = { color: flashColor, fillColor: flashFill, fillOpacity: 0.40, opacity: 0.9, weight: 3 };
-  var dimStyle = { color: flashColor, fillColor: flashFill, fillOpacity: 0, opacity: 0, weight: 0 };
+  if (!sector || !sector.polygon) return;
 
   var polys = [sector.polygon].concat(sector.wrapPolygons || []);
+  var flashColor = '#26D0CE';
+  var flashStyle = { color: flashColor, fillColor: flashColor, fillOpacity: 0.40, opacity: 0.9, weight: 3 };
+  var dimStyle = { color: flashColor, fillColor: flashColor, fillOpacity: 0, opacity: 0, weight: 0 };
+
   var count = 0;
   var interval = setInterval(function() {
     var on = count % 2 === 0;
     var st = on ? flashStyle : dimStyle;
     polys.forEach(function(p) { p.setStyle(st); });
     count++;
-    if (count >= 6) { // 3 on + 3 off = 3 seconds at 500ms
+    if (count >= 6) {
       clearInterval(interval);
-      // Restore to score-based style
-      var ss = scoreToStyle(score);
+      var currentScores = {};
+      window.geoSectors.forEach(function(s2) { currentScores[s2.dir] = s2.score || 0; });
+      var ranks = computeRanks(currentScores);
+      var ss = scoreToStyle(sector.score || 0, '#C9A84C', ranks[sector.dir]);
       polys.forEach(function(p) { p.setStyle(ss.target); });
     }
   }, 500);
@@ -2871,21 +3244,19 @@ function applyLayerVisibility() {
     });
   }
 
-  // Sectors: layer visibility + fortune filter (score-based, not dominant-only)
+  // Sectors: layer visibility + source/category tab aware (rank-based)
   if (window.geoSectors) {
-    var fScores = (window.aspectData && window.aspectData.fortuneScores) || {};
+    // Compute active scores matching the fortune sheet's source + category tabs
+    var activeScores = getActiveSectorScores();
+    var ranks = computeRanks(activeScores);
     window.geoSectors.forEach(function(s) {
       if (!s.polygon) return;
       var sectorOn = layerVisibility.sectors;
       var newStyle;
       if (!sectorOn) {
         newStyle = { fillOpacity: 0, opacity: 0 };
-      } else if (fortuneFilter && fScores[fortuneFilter]) {
-        var catScore = fScores[fortuneFilter][s.dir] || 0;
-        var ss = scoreToStyle(catScore);
-        newStyle = ss.target;
       } else {
-        var ss = scoreToStyle(s.score || 0);
+        var ss = scoreToStyle(activeScores[s.dir] || 0, '#C9A84C', ranks[s.dir]);
         newStyle = ss.target;
       }
       s.polygon.setStyle(newStyle);
