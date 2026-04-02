@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Solara — Sanctuary</title>
+  <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="shared/styles.css">
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      background: radial-gradient(ellipse at center, #0a1220 0%, #020408 100%);
+      display: flex; justify-content: center; align-items: center;
+      min-height: 100vh; font-family: 'Lato', sans-serif; color: #EAEAEA;
+    }
+    #bgCanvas { position:absolute; inset:0; z-index:0; width:100%; height:100%; }
+
+    .sanctuary-content {
+      flex:1; overflow-y:auto; padding:56px 20px 100px;
+      display:flex; flex-direction:column; gap:20px;
+    }
+    .sanctuary-content::-webkit-scrollbar { display:none; }
+
+    .profile-row { display:flex; align-items:center; gap:14px; }
+    .profile-orb {
+      width:56px; height:56px; border-radius:50%;
+      background:radial-gradient(circle,rgba(249,217,118,0.25) 0%,rgba(249,217,118,0.04) 70%);
+      border:1px solid rgba(249,217,118,0.25);
+      display:flex; align-items:center; justify-content:center; font-size:24px;
+    }
+    .profile-name-big { font-size:20px; font-weight:700; }
+    .profile-tier { font-size:12px; color:#ACACAC; margin-top:2px; }
+
+    .settings-group { display:flex; flex-direction:column; gap:10px; }
+    .settings-item {
+      display:flex; align-items:center; justify-content:space-between;
+      padding:14px 18px; border-radius:16px;
+    }
+    .settings-left { display:flex; align-items:center; gap:12px; }
+    .settings-icon {
+      width:36px; height:36px; background:rgba(255,255,255,0.05);
+      border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:17px;
+    }
+    .settings-txt { font-size:14px; }
+    .settings-val { font-size:13px; color:#ACACAC; }
+
+    .toggle {
+      width:44px; height:26px; border-radius:13px;
+      background:rgba(255,255,255,0.12); position:relative;
+      cursor:pointer; transition:background 0.3s;
+    }
+    .toggle.on { background:rgba(249,217,118,0.55); }
+    .toggle-thumb {
+      position:absolute; top:3px; left:3px; width:20px; height:20px;
+      border-radius:50%; background:white; transition:transform 0.3s;
+    }
+    .toggle.on .toggle-thumb { transform:translateX(18px); }
+
+    .version-txt { text-align:center; font-size:11px; color:rgba(172,172,172,0.35); padding:8px 0; }
+
+    .main-area { position:absolute; inset:0; display:flex; flex-direction:column; z-index:10; }
+  </style>
+</head>
+<body>
+<div class="phone" id="phone">
+  <canvas id="bgCanvas"></canvas>
+  <div id="starContainer" style="position:absolute;inset:0;z-index:1;pointer-events:none;overflow:hidden;"></div>
+  <div class="status-bar">
+    <span>9:41</span>
+    <span style="letter-spacing:1.5px;font-size:11px;">✦ SOLARA ✦</span>
+    <span>87%🔋</span>
+  </div>
+
+  <div class="main-area">
+    <div class="sanctuary-content">
+      <div class="profile-row">
+        <div class="profile-orb">✦</div>
+        <div>
+          <div class="profile-name-big" id="profileName">Hayashi Koji</div>
+          <div class="profile-tier">Free Tier · Cosmic Journey</div>
+        </div>
+      </div>
+
+      <div class="settings-group">
+        <div class="section-label">✦ Stellar Profile</div>
+        <div class="settings-item glass">
+          <div class="settings-left"><div class="settings-icon">🎂</div><div class="settings-txt">Birth Date</div></div>
+          <div class="settings-val">Oct 24, 1977 ›</div>
+        </div>
+        <div class="settings-item glass">
+          <div class="settings-left"><div class="settings-icon">🌍</div><div class="settings-txt">Birth City</div></div>
+          <div class="settings-val">Gifu, Japan ›</div>
+        </div>
+        <div class="settings-item glass">
+          <div class="settings-left"><div class="settings-icon">🕐</div><div class="settings-txt">Birth Time</div></div>
+          <div class="settings-val">06:56 AM ›</div>
+        </div>
+      </div>
+
+      <div class="settings-group">
+        <div class="section-label">✦ Sanctuary Sleep</div>
+        <div class="settings-item glass">
+          <div class="settings-left"><div class="settings-icon">🌙</div><div class="settings-txt">Silent Hours</div></div>
+          <div class="toggle on" onclick="this.classList.toggle('on')"><div class="toggle-thumb"></div></div>
+        </div>
+        <div class="settings-item glass">
+          <div class="settings-left"><div class="settings-icon">🔕</div><div class="settings-txt">Sleep Window</div></div>
+          <div class="settings-val">11 PM – 7 AM ›</div>
+        </div>
+      </div>
+
+      <div class="settings-group">
+        <div class="section-label">✦ Cosmic Pro</div>
+        <div class="pro-banner" style="padding:16px;gap:10px;">
+          <div class="pro-title" style="font-size:16px;">Upgrade to Cosmic Pro</div>
+          <div class="pro-sub" style="font-size:12px;">Aether shaders · Galaxy Archive · Advanced astrology</div>
+          <div style="display:flex;align-items:baseline;gap:6px;">
+            <span style="font-size:24px;font-weight:700;color:#F9D976;">$7.99</span>
+            <span style="font-size:12px;color:#ACACAC;">/month</span>
+          </div>
+          <button class="pro-btn" style="padding:10px 24px;font-size:13px;">Unlock Cosmic Pro ✦</button>
+          <div style="font-size:11px;color:rgba(172,172,172,0.45);">$59.99/year · Cancel anytime</div>
+        </div>
+      </div>
+
+      <div class="settings-group">
+        <div class="section-label">✦ App</div>
+        <div class="settings-item glass">
+          <div class="settings-left"><div class="settings-icon">🌐</div><div class="settings-txt">Language</div></div>
+          <div class="settings-val">English ›</div>
+        </div>
+        <div class="settings-item glass">
+          <div class="settings-left"><div class="settings-icon">🔔</div><div class="settings-txt">Notifications</div></div>
+          <div class="toggle on" onclick="this.classList.toggle('on')"><div class="toggle-thumb"></div></div>
+        </div>
+        <div class="settings-item glass">
+          <div class="settings-left"><div class="settings-icon">⭐</div><div class="settings-txt">Rate Solara</div></div>
+          <div class="settings-val">›</div>
+        </div>
+        <div class="settings-item glass">
+          <div class="settings-left"><div class="settings-icon">📋</div><div class="settings-txt">Terms & Privacy</div></div>
+          <div class="settings-val">›</div>
+        </div>
+      </div>
+
+      <div class="version-txt">Solara v1.0.0 · Made with ✦</div>
+    </div>
+
+    <!-- Bottom Nav -->
+    <div class="bottom-nav"></div>
+  </div>
+</div><!-- end phone -->
+
+<script src="shared/nav.js"></script>
+<script>
+/* Background */
+const bgC=document.getElementById('bgCanvas');
+const bgX=bgC.getContext('2d');
+bgC.width=390;bgC.height=844;
+let bgT=0;
+(function animBg(){
+  bgX.clearRect(0,0,390,844);
+  const g=bgX.createRadialGradient(195,422,0,195,422,500);
+  g.addColorStop(0,'#0C1D3A');g.addColorStop(1,'#080C14');
+  bgX.fillStyle=g;bgX.fillRect(0,0,390,844);
+  const n1x=195+Math.sin(bgT*0.6)*90,n1y=422+Math.cos(bgT*0.4)*130;
+  const n1=bgX.createRadialGradient(n1x,n1y,0,n1x,n1y,220);
+  n1.addColorStop(0,'rgba(249,217,118,0.05)');n1.addColorStop(1,'transparent');
+  bgX.fillStyle=n1;bgX.fillRect(0,0,390,844);
+  bgT+=0.004;requestAnimationFrame(animBg);
+})();
+
+(function makeStars(){
+  const c=document.getElementById('starContainer');
+  for(let i=0;i<45;i++){
+    const s=document.createElement('div');s.className='star';
+    const sz=Math.random()*1.8+0.5;
+    s.style.cssText=`width:${sz}px;height:${sz}px;left:${Math.random()*100}%;top:${Math.random()*100}%;--dur:${2+Math.random()*4}s;--delay:${Math.random()*5}s;--op:${0.1+Math.random()*0.35};`;
+    c.appendChild(s);
+  }
+})();
+
+renderNav('sanctuary');
+</script>
+</body>
+</html>

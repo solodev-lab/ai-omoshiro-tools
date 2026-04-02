@@ -8,6 +8,10 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/@turf/turf@7/turf.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/astronomy-engine@2.1.19/astronomy.browser.min.js"></script>
+<script src="shared/nav.js"></script>
+<script src="shared/vibe.js"></script>
+<script src="shared/stella.js"></script>
+<script src="shared/events.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{background:#0A0A14;color:#E8E0D0;font-family:'Segoe UI','Helvetica Neue',sans-serif;overflow:hidden;width:100vw;height:100vh;display:flex;align-items:center;justify-content:center}
@@ -328,13 +332,8 @@ body{background:#0A0A14;color:#E8E0D0;font-family:'Segoe UI','Helvetica Neue',sa
     <div class="fs-body" id="fsBody"></div>
   </div>
 
-  <!-- Bottom nav -->
-  <div class="bottom-nav">
-    <div class="nav-item active"><div class="nav-icon">🧭</div><div class="nav-label">Map</div></div>
-    <div class="nav-item" onclick="location.href='horoscope.html'"><div class="nav-icon">🌀</div><div class="nav-label">Horo</div></div>
-    <div class="nav-item" onclick="location.href='tarot.html'"><div class="nav-icon">✨</div><div class="nav-label">Tarot</div></div>
-    <div class="nav-item"><div class="nav-icon">👤</div><div class="nav-label">Profile</div></div>
-  </div>
+  <!-- Bottom nav (5-tab, rendered by shared/nav.js) -->
+  <div class="bottom-nav"></div>
 </div>
 
 <script>
@@ -683,6 +682,14 @@ function rebuild(nc,fly){
   buildCompass(nc);
   if(boostedLines){boostedLines.forEach(l=>{if(map.hasLayer(l))map.removeLayer(l)});boostedLines=null;planetMarkers=null;chartGroups=null}
   aspectData=scoreAll();
+  // Apply vibe_score boost to sector scores
+  if(typeof loadVibe==='function'){
+    const vibe=loadVibe();
+    if(vibe!==null&&aspectData&&aspectData.sScores){
+      const boost=vibe*2;
+      DIR16.forEach(d=>{aspectData.sScores[d]=(aspectData.sScores[d]||0)+boost});
+    }
+  }
   addPlanetLines();
   createSectors();
   updateFFLabel();
@@ -1259,7 +1266,18 @@ function dismissVeil(){
 $('mapWrap').addEventListener('pointerdown',dismissVeil);
 
 // ========== Start ==========
-window.addEventListener('load',()=>{init();applyBridge()});
+window.addEventListener('load',()=>{
+  init();
+  const bridged = applyBridge();
+  renderNav('map');
+  if (typeof checkMoonEvents === 'function') checkMoonEvents();
+  // If no tarot bridge, show vibe-based Stella message
+  if (!bridged && typeof generateStellaMessage === 'function') {
+    const vibe = loadVibe() || 0;
+    const msg = generateStellaMessage(vibe, 'jp');
+    $('stellaText').innerHTML = msg;
+  }
+});
 window.addEventListener('resize',init);
 </script>
 </body>

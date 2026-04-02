@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Solara — Galaxy</title>
+  <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="shared/styles.css">
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      background: radial-gradient(ellipse at center, #0a1220 0%, #020408 100%);
+      display: flex; justify-content: center; align-items: center;
+      min-height: 100vh; font-family: 'Lato', sans-serif; color: #EAEAEA;
+    }
+    #bgCanvas { position:absolute; inset:0; z-index:0; width:100%; height:100%; }
+
+    /* Inner tab switch: Cycle / Star Atlas */
+    .inner-tabs { display:flex; gap:0; padding:0 20px; margin-bottom:8px; }
+    .inner-tab-btn {
+      flex:1; padding:10px 0; background:none; border:none; cursor:pointer;
+      font-family:'Lato',sans-serif; font-size:12px; font-weight:700;
+      letter-spacing:1px; text-transform:uppercase; color:rgba(255,255,255,0.35);
+      border-bottom:2px solid transparent; transition:all 0.3s;
+    }
+    .inner-tab-btn.active { color:#F9D976; border-bottom-color:#F9D976; }
+
+    /* Cycle (Spiral) tab */
+    .cycle-content { flex:1; position:relative; display:flex; flex-direction:column; }
+    .day-badge {
+      position:absolute; top:8px; right:20px;
+      background:rgba(249,217,118,0.12); border:1px solid rgba(249,217,118,0.28);
+      border-radius:22px; padding:8px 14px; display:flex; flex-direction:column;
+      align-items:center; z-index:20;
+    }
+    .day-num { font-size:22px; font-weight:700; color:#F9D976; line-height:1; }
+    .day-lbl { font-size:9px; color:rgba(249,217,118,0.65); letter-spacing:1.2px; text-transform:uppercase; }
+    .spiral-area { flex:1; position:relative; }
+    #spiralCanvas { width:100%; height:100%; display:block; }
+
+    .dot-popup {
+      position:absolute; background:rgba(8,12,20,0.95); backdrop-filter:blur(20px);
+      border:1px solid rgba(255,255,255,0.15); border-radius:18px; padding:14px 16px;
+      width:190px; z-index:60; pointer-events:none; opacity:0; transition:opacity 0.2s;
+    }
+    .dot-popup.visible { opacity:1; }
+    .popup-day { font-size:10px; font-weight:700; color:#F9D976; letter-spacing:1.5px; text-transform:uppercase; margin-bottom:8px; }
+    .popup-card { display:flex; align-items:center; gap:8px; margin-bottom:8px; }
+    .popup-card-emoji { font-size:22px; }
+    .popup-card-name { font-size:12px; font-weight:700; color:#EAEAEA; }
+    .popup-vibe { font-size:12px; margin-bottom:6px; }
+    .popup-aligned { font-size:10px; }
+    .popup-quote { font-size:11px; font-weight:300; color:rgba(172,172,172,0.7); line-height:1.5; margin-top:6px; font-style:italic; }
+
+    .stella-msg { margin:0 16px 6px; padding:12px 16px 14px; border-radius:20px; position:relative; }
+    .bubble-by { font-size:10px; font-weight:700; color:#F9D976; letter-spacing:1.8px; text-transform:uppercase; margin-bottom:7px; }
+    .bubble-msg { font-size:13px; font-weight:300; color:#EAEAEA; line-height:1.6; }
+
+    /* Demo trigger buttons */
+    .demo-actions { display:flex; gap:8px; padding:0 16px 8px; }
+    .demo-btn {
+      flex:1; padding:9px 6px; border:none; border-radius:12px; cursor:pointer;
+      font-family:'Lato',sans-serif; font-size:11px; font-weight:700; letter-spacing:0.5px;
+      transition:all 0.2s;
+    }
+    .btn-nm { background:rgba(26,41,128,0.5); border:1px solid rgba(38,208,206,0.3); color:rgba(38,208,206,0.9); }
+    .btn-fm { background:rgba(249,217,118,0.1); border:1px solid rgba(249,217,118,0.3); color:rgba(249,217,118,0.9); }
+    .btn-cc { background:linear-gradient(135deg,rgba(249,217,118,0.18),rgba(246,189,96,0.1)); border:1px solid rgba(249,217,118,0.4); color:#F9D976; }
+
+    /* Star Atlas tab */
+    .atlas-content { flex:1; overflow-y:auto; padding:0 16px 100px; display:flex; flex-direction:column; gap:20px; }
+    .atlas-content::-webkit-scrollbar { display:none; }
+    .constellation-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    .const-card {
+      border-radius:20px; padding:14px; aspect-ratio:1; display:flex;
+      flex-direction:column; justify-content:space-between; cursor:pointer;
+      transition:transform 0.2s, box-shadow 0.2s;
+    }
+    .const-card:hover { transform:scale(1.03); }
+    .const-mini { flex:1; display:flex; align-items:center; justify-content:center; }
+    .const-date { font-size:10px; color:#ACACAC; }
+    .const-seed { font-size:12px; font-weight:700; color:#EAEAEA; margin-top:2px; }
+
+    /* Formation Overlay */
+    #overlayFormation { background:rgba(2,4,10,0.98); }
+    #formationCanvas { position:absolute; inset:0; width:100%; height:100%; }
+    .formation-ui {
+      position:absolute; bottom:120px; left:0; right:0;
+      display:flex; flex-direction:column; align-items:center; gap:12px; pointer-events:none;
+    }
+    .formation-stage { font-size:12px; font-weight:700; color:rgba(249,217,118,0.6); letter-spacing:2px; text-transform:uppercase; }
+    .formation-name { font-size:28px; font-weight:700; text-align:center; padding:0 24px; }
+    .formation-symbol { font-size:44px; }
+    .formation-quote { font-size:13px; font-weight:300; color:rgba(172,172,172,0.8); line-height:1.6; text-align:center; padding:0 28px; }
+    .formation-close {
+      position:absolute; bottom:48px; left:50%; transform:translateX(-50%);
+      background:linear-gradient(135deg,#F9D976,#F6BD60); border:none; border-radius:16px;
+      padding:14px 36px; font-family:'Lato',sans-serif; font-size:15px; font-weight:700;
+      color:#0C1D3A; cursor:pointer; opacity:0; pointer-events:none; transition:opacity 0.5s;
+    }
+    .formation-close.visible { opacity:1; pointer-events:auto; }
+
+    /* Replay Modal */
+    #replayModal {
+      position:absolute; inset:0; z-index:400; display:none;
+      flex-direction:column; align-items:center; justify-content:center;
+      background:rgba(2,4,10,0.96); backdrop-filter:blur(12px);
+      animation:fadeIn 0.3s ease-out;
+    }
+    #replayModal.visible { display:flex; }
+    .replay-inner { width:340px; display:flex; flex-direction:column; align-items:center; gap:20px; }
+    .replay-title { font-size:20px; font-weight:700; margin-bottom:4px; text-align:center; }
+    .replay-sub { font-size:12px; color:#ACACAC; text-align:center; }
+    #replayCanvas { border-radius:20px; border:1px solid rgba(255,255,255,0.1); background:rgba(6,10,18,0.8); }
+    .replay-symbol { font-size:22px; margin-bottom:4px; text-align:center; }
+    .replay-name { font-size:16px; font-weight:700; color:#EAEAEA; text-align:center; }
+    .replay-date { font-size:12px; color:#ACACAC; margin-top:2px; text-align:center; }
+    .replay-close {
+      background:none; border:1px solid rgba(255,255,255,0.2); border-radius:12px;
+      padding:10px 28px; font-family:'Lato',sans-serif; font-size:13px;
+      color:#ACACAC; cursor:pointer;
+    }
+
+    .main-area { flex:1; display:flex; flex-direction:column; overflow:hidden; padding-top:52px; padding-bottom:80px; }
+    .tab-panel { display:none; flex:1; flex-direction:column; overflow:hidden; }
+    .tab-panel.active { display:flex; }
+  </style>
+</head>
+<body>
+<div class="phone" id="phone">
+  <canvas id="bgCanvas"></canvas>
+  <div id="starContainer" style="position:absolute;inset:0;z-index:1;pointer-events:none;overflow:hidden;"></div>
+  <div class="status-bar">
+    <span>9:41</span>
+    <span style="letter-spacing:1.5px;font-size:11px;">✦ SOLARA ✦</span>
+    <span>87%🔋</span>
+  </div>
+
+  <div class="screen active" style="flex-direction:column;">
+    <div class="main-area">
+      <!-- Inner Tabs -->
+      <div class="inner-tabs">
+        <button class="inner-tab-btn active" onclick="switchInner('cycle')">🌀 Cycle</button>
+        <button class="inner-tab-btn" onclick="switchInner('atlas')">✦ Star Atlas</button>
+      </div>
+
+      <!-- CYCLE TAB: 3D Spiral -->
+      <div class="tab-panel active" id="panel-cycle">
+        <div class="cycle-content">
+          <div class="day-badge">
+            <div class="day-num">12</div>
+            <div class="day-lbl">of 28</div>
+          </div>
+          <div class="spiral-area">
+            <canvas id="spiralCanvas"></canvas>
+            <div class="dot-popup" id="dotPopup">
+              <div class="popup-day" id="popupDay">DAY 7</div>
+              <div class="popup-card">
+                <div class="popup-card-emoji" id="popupEmoji">⚡</div>
+                <div class="popup-card-name" id="popupCardName">The Chariot</div>
+              </div>
+              <div class="popup-vibe" id="popupVibe">Vibe: <span style="color:#F9D976;">+0.72</span></div>
+              <div class="popup-aligned" id="popupAligned">✦ Aligned</div>
+              <div class="popup-quote" id="popupQuote">"Your momentum is cosmic."</div>
+            </div>
+          </div>
+          <div class="stella-msg glass">
+            <div class="bubble-by">✦ Stella</div>
+            <div class="bubble-msg">"Your cosmic spiral grows brighter with each orbit. Day 12 — trust the momentum."</div>
+          </div>
+          <div class="demo-actions">
+            <button class="demo-btn btn-nm" onclick="showNewMoonOverlay()">🌑 New Moon</button>
+            <button class="demo-btn btn-fm" onclick="showFullMoonOverlay()">🌕 Full Moon</button>
+            <button class="demo-btn btn-cc" onclick="triggerConstellationFormation()">✨ Complete</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- STAR ATLAS TAB -->
+      <div class="tab-panel" id="panel-atlas">
+        <div class="atlas-content">
+          <div style="padding:0 4px;">
+            <div class="screen-h1">Star Atlas</div>
+            <div class="screen-h2">Your completed cosmic cycles</div>
+          </div>
+          <div class="constellation-grid" id="galaxyGrid"></div>
+          <div class="pro-banner">
+            <div style="font-size:32px;">✨</div>
+            <div class="pro-title">Cosmic Pro</div>
+            <div class="pro-sub">Unlock your full Galaxy Archive, Aether shaders, and real-time planetary transits.</div>
+            <div style="display:flex;align-items:baseline;gap:6px;">
+              <span style="font-size:28px;font-weight:700;color:#F9D976;">$7.99</span>
+              <span style="font-size:13px;color:#ACACAC;">/month</span>
+            </div>
+            <button class="pro-btn">Unlock the Galaxy ✦</button>
+            <div style="font-size:11px;color:rgba(172,172,172,0.45);">$59.99/year · Cancel anytime</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom Nav -->
+    <div class="bottom-nav"></div>
+  </div>
+
+  <!-- CONSTELLATION FORMATION OVERLAY -->
+  <div class="overlay-screen" id="overlayFormation">
+    <canvas id="formationCanvas"></canvas>
+    <div class="formation-ui" id="formationUI">
+      <div class="formation-stage" id="formationStage">CONVERGENCE</div>
+      <div class="formation-symbol" id="formationSymbol" style="opacity:0;">👑</div>
+      <div class="formation-name" id="formationName" style="opacity:0;">The Golden Crown</div>
+      <div class="formation-quote" id="formationQuote" style="opacity:0;">"Your alignment forged a crown of light."</div>
+    </div>
+    <button class="formation-close" id="formationClose" onclick="closeFormationOverlay()">View in Star Atlas ✦</button>
+  </div>
+
+  <!-- REPLAY MODAL -->
+  <div id="replayModal">
+    <div class="replay-inner">
+      <div>
+        <div class="replay-title" id="replayTitle">The Golden Crown</div>
+        <div class="replay-sub" id="replaySubtitle">Cycle Replay — 28 Days</div>
+      </div>
+      <canvas id="replayCanvas" width="300" height="300"></canvas>
+      <div>
+        <div class="replay-symbol" id="replaySymbol">👑</div>
+        <div class="replay-name" id="replayName">The Golden Crown</div>
+        <div class="replay-date" id="replayDate">Jan 3 — Jan 30, 2026</div>
+      </div>
+      <button class="replay-close" onclick="closeReplayModal()">← Back to Star Atlas</button>
+    </div>
+  </div>
+
+</div><!-- end phone -->
+
+<script src="shared/nav.js"></script>
+<script src="shared/vibe.js"></script>
+<script src="shared/stella.js"></script>
+<script src="shared/events.js"></script>
+<script>
+/* ==================== DATA ==================== */
+const TAROT = [
+  {name:"The Fool",emoji:"🌀",el:"Aether",c:0.8},{name:"The Magician",emoji:"🪄",el:"Fire",c:0.9},
+  {name:"The High Priestess",emoji:"🌙",el:"Water",c:-0.9},{name:"The Empress",emoji:"🌺",el:"Earth",c:0.5},
+  {name:"The Emperor",emoji:"👑",el:"Fire",c:0.6},{name:"The Hierophant",emoji:"📿",el:"Earth",c:-0.2},
+  {name:"The Lovers",emoji:"💫",el:"Air",c:0.7},{name:"The Chariot",emoji:"⚡",el:"Fire",c:1.0},
+  {name:"Strength",emoji:"🦁",el:"Fire",c:0.1},{name:"The Hermit",emoji:"🕯️",el:"Earth",c:-1.0},
+  {name:"Wheel of Fortune",emoji:"☸️",el:"Fire",c:0.4},{name:"Justice",emoji:"⚖️",el:"Air",c:0.0},
+  {name:"The Hanged Man",emoji:"🔮",el:"Water",c:-0.8},{name:"Death",emoji:"🦋",el:"Water",c:-0.5},
+  {name:"Temperance",emoji:"🌈",el:"Fire",c:-0.1},{name:"The Devil",emoji:"🌑",el:"Earth",c:0.3},
+  {name:"The Tower",emoji:"⚡",el:"Aether",c:0.9},{name:"The Star",emoji:"🌟",el:"Air",c:-0.3},
+  {name:"The Moon",emoji:"🌕",el:"Water",c:-0.7},{name:"The Sun",emoji:"☀️",el:"Fire",c:1.0},
+  {name:"Judgement",emoji:"📯",el:"Fire",c:0.6},{name:"The World",emoji:"🌍",el:"Aether",c:0.2},
+];
+
+const DAYS_DATA = [
+  {vibe_score:0.35,is_aligned:true,card_id:6,quote:"A new cycle stirs within you."},
+  {vibe_score:0.12,is_aligned:false,card_id:17,quote:"Quiet days hold hidden seeds."},
+  {vibe_score:0.55,is_aligned:true,card_id:7,quote:"Your momentum builds like starfire."},
+  {vibe_score:0.28,is_aligned:false,card_id:10,quote:"Fortune turns slowly — wait."},
+  {vibe_score:-0.15,is_aligned:false,card_id:9,quote:"Solitude has its own wisdom."},
+  {vibe_score:0.42,is_aligned:true,card_id:6,quote:"Love and clarity meet today."},
+  {vibe_score:0.68,is_aligned:true,card_id:7,quote:"You are unstoppable right now."},
+  {vibe_score:0.31,is_aligned:false,card_id:3,quote:"Nurture what is growing quietly."},
+  {vibe_score:-0.22,is_aligned:false,card_id:12,quote:"Still waters run deeper than seen."},
+  {vibe_score:0.15,is_aligned:true,card_id:10,quote:"The wheel turns in your favour."},
+  {vibe_score:0.72,is_aligned:true,card_id:1,quote:"You are the spark and the fire."},
+  {vibe_score:0.58,is_aligned:true,card_id:7,quote:"Peak momentum — ride it fully."},
+  {vibe_score:0.0,is_aligned:false,card_id:11,quote:"Balance is your anchor today."},
+  {vibe_score:-0.4,is_aligned:false,card_id:18,quote:"The moon dissolves what no longer serves."},
+  {vibe_score:0.2,is_aligned:false,card_id:14,quote:"Gentle bridges connect old to new."},
+  {vibe_score:0.45,is_aligned:true,card_id:15,quote:"Transform shadow into strength."},
+  {vibe_score:0.62,is_aligned:true,card_id:16,quote:"Lightning clears the path ahead."},
+  {vibe_score:-0.1,is_aligned:false,card_id:17,quote:"Even stars rest between their shine."},
+  {vibe_score:0.38,is_aligned:true,card_id:19,quote:"You radiate like the noon sun."},
+  {vibe_score:0.75,is_aligned:true,card_id:19,quote:"Your orbit blazes with purpose."},
+  {vibe_score:0.5,is_aligned:false,card_id:20,quote:"A judgement clarifies your path."},
+  {vibe_score:0.22,is_aligned:false,card_id:21,quote:"All cycles complete and begin again."},
+  {vibe_score:0.6,is_aligned:true,card_id:4,quote:"Your grounded power moves mountains."},
+  {vibe_score:0.48,is_aligned:true,card_id:6,quote:"The cosmos conspires for you."},
+  {vibe_score:-0.05,is_aligned:false,card_id:13,quote:"Transformation is never comfortable."},
+  {vibe_score:0.35,is_aligned:false,card_id:8,quote:"Your inner fire cannot be dimmed."},
+  {vibe_score:0.8,is_aligned:true,card_id:19,quote:"You have never shone this brightly."},
+  {vibe_score:0.92,is_aligned:true,card_id:7,quote:"Your cycle converges to gold."},
+];
+
+const GALAXY_CYCLES = [
+  {id:0,dateRange:"Jan 3 — Jan 30",seedCard:6,name:"The Lovers' Arc",symbol:"💫",
+   color:'rgba(249,217,118,0.9)',glowColor:'rgba(249,217,118,0.4)',borderColor:'rgba(249,217,118,0.25)',bgGrad:['rgba(249,217,118,0.12)','rgba(249,217,118,0.03)'],
+   dots:[{x:40,y:20},{x:58,y:30},{x:65,y:48},{x:58,y:65},{x:40,y:72},{x:22,y:65},{x:15,y:48},{x:22,y:30},{x:40,y:40}]},
+  {id:1,dateRange:"Feb 1 — Feb 28",seedCard:7,name:"The Chariot's Arrow",symbol:"⚡",
+   color:'rgba(255,107,107,0.9)',glowColor:'rgba(255,107,107,0.4)',borderColor:'rgba(255,107,107,0.25)',bgGrad:['rgba(255,107,107,0.12)','rgba(255,61,61,0.03)'],
+   dots:[{x:20,y:65},{x:35,y:55},{x:48,y:40},{x:55,y:28},{x:60,y:15},{x:50,y:25},{x:38,y:32},{x:62,y:20},{x:58,y:35}]},
+  {id:2,dateRange:"Mar 3 — Mar 30",seedCard:18,name:"Moon's Deep Cup",symbol:"🌙",
+   color:'rgba(38,208,206,0.9)',glowColor:'rgba(38,208,206,0.4)',borderColor:'rgba(38,208,206,0.25)',bgGrad:['rgba(38,208,206,0.12)','rgba(26,41,128,0.05)'],
+   dots:[{x:20,y:28},{x:35,y:18},{x:55,y:18},{x:68,y:30},{x:70,y:50},{x:62,y:65},{x:40,y:70},{x:18,y:58},{x:44,y:44}]},
+  {id:3,dateRange:"Apr 1 — Apr 28",seedCard:19,name:"The Sun Crown",symbol:"☀️",
+   color:'rgba(255,200,80,0.9)',glowColor:'rgba(255,180,0,0.4)',borderColor:'rgba(255,180,0,0.3)',bgGrad:['rgba(255,180,0,0.14)','rgba(255,100,0,0.04)'],
+   dots:[{x:40,y:12},{x:60,y:22},{x:68,y:44},{x:60,y:65},{x:40,y:72},{x:20,y:65},{x:12,y:44},{x:20,y:22},{x:40,y:40},{x:50,y:32},{x:30,y:32}]},
+  {id:4,dateRange:"May 2 — May 29",seedCard:0,name:"The Fool's Wing",symbol:"🌀",
+   color:'rgba(180,130,255,0.9)',glowColor:'rgba(160,100,255,0.4)',borderColor:'rgba(160,100,255,0.3)',bgGrad:['rgba(160,100,255,0.14)','rgba(80,20,180,0.04)'],
+   dots:[{x:20,y:55},{x:30,y:38},{x:25,y:22},{x:40,y:18},{x:55,y:25},{x:65,y:40},{x:62,y:58},{x:48,y:68},{x:35,y:62},{x:44,y:44}]},
+];
+
+/* ==================== BACKGROUND ==================== */
+const bgC=document.getElementById('bgCanvas');
+const bgX=bgC.getContext('2d');
+bgC.width=390; bgC.height=844;
+let bgT=0;
+(function animBg(){
+  bgX.clearRect(0,0,390,844);
+  const g=bgX.createRadialGradient(195,422,0,195,422,500);
+  g.addColorStop(0,'#0C1D3A'); g.addColorStop(1,'#080C14');
+  bgX.fillStyle=g; bgX.fillRect(0,0,390,844);
+  const n1x=195+Math.sin(bgT*0.6)*90,n1y=422+Math.cos(bgT*0.4)*130;
+  const n1=bgX.createRadialGradient(n1x,n1y,0,n1x,n1y,220);
+  n1.addColorStop(0,'rgba(38,208,206,0.07)'); n1.addColorStop(0.5,'rgba(26,41,128,0.05)'); n1.addColorStop(1,'transparent');
+  bgX.fillStyle=n1; bgX.fillRect(0,0,390,844);
+  const n2x=140+Math.cos(bgT*0.35)*70,n2y=280+Math.sin(bgT*0.5)*90;
+  const n2=bgX.createRadialGradient(n2x,n2y,0,n2x,n2y,160);
+  n2.addColorStop(0,'rgba(249,217,118,0.06)'); n2.addColorStop(1,'transparent');
+  bgX.fillStyle=n2; bgX.fillRect(0,0,390,844);
+  bgT+=0.004; requestAnimationFrame(animBg);
+})();
+
+(function makeStars(){
+  const c=document.getElementById('starContainer');
+  for(let i=0;i<65;i++){
+    const s=document.createElement('div'); s.className='star';
+    const sz=Math.random()*1.8+0.5;
+    s.style.cssText=`width:${sz}px;height:${sz}px;left:${Math.random()*100}%;top:${Math.random()*100}%;--dur:${2+Math.random()*4}s;--delay:${Math.random()*5}s;--op:${0.1+Math.random()*0.35};`;
+    c.appendChild(s);
+  }
+})();
+
+/* ==================== INNER TABS ==================== */
+function switchInner(tab) {
+  document.querySelectorAll('.inner-tab-btn').forEach((b,i)=>b.classList.toggle('active', (i===0&&tab==='cycle')||(i===1&&tab==='atlas')));
+  document.getElementById('panel-cycle').classList.toggle('active',tab==='cycle');
+  document.getElementById('panel-atlas').classList.toggle('active',tab==='atlas');
+  if(tab==='cycle'){ if(!sp.raf) startSpiral3D(); }
+  else { if(sp.raf){cancelAnimationFrame(sp.raf);sp.raf=null;} }
+}
+
+/* ==================== 3D SPIRAL ==================== */
+const sp={rotX:-0.32,rotY:0.4,zoom:1,velX:0,velY:0,drag:false,lx:0,ly:0,raf:null,inited:false,dotPositions:[]};
+
+function rot3D(x,y,z){
+  const y1=y*Math.cos(sp.rotX)-z*Math.sin(sp.rotX);
+  const z1=y*Math.sin(sp.rotX)+z*Math.cos(sp.rotX);
+  const x2=x*Math.cos(sp.rotY)+z1*Math.sin(sp.rotY);
+  const z2=-x*Math.sin(sp.rotY)+z1*Math.cos(sp.rotY);
+  return{x:x2,y:y1,z:z2};
+}
+function proj3D(x,y,z,fov,cx,cy){const s=fov/(fov+z+260);return{x:cx+x*s,y:cy+y*s,s};}
+
+const BREATH_PHASES=Array.from({length:28},(_,i)=>i*0.71+Math.sin(i*1.3)*2.2);
+const BREATH_PERIODS=Array.from({length:28},(_,i)=>2.0+Math.abs(Math.sin(i*0.9))*2.0);
+
+function renderSpiral3D(){
+  const canvas=document.getElementById('spiralCanvas');
+  if(!canvas||!canvas.offsetWidth) return;
+  const dpr=window.devicePixelRatio||1;
+  const W=canvas.offsetWidth,H=canvas.offsetHeight;
+  if(canvas.width!==W*dpr||canvas.height!==H*dpr){canvas.width=W*dpr;canvas.height=H*dpr;}
+  const ctx=canvas.getContext('2d');
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.clearRect(0,0,W,H);
+  const now=performance.now()/1000;
+  const cx=W/2,cy=H*0.44,FOV=360*sp.zoom;
+  const b=Math.min(W,H)*0.057,TOTAL=28,ACTIVE=12,ZSPAN=55;
+
+  // Ghost path
+  const pathPts=[];
+  for(let i=0;i<=500;i++){
+    const θ=(i/500)*Math.PI*4.6,r=b*θ;
+    const raw={x:r*Math.cos(θ-Math.PI/2),y:r*Math.sin(θ-Math.PI/2),z:(i/500)*ZSPAN-ZSPAN/2};
+    const rv=rot3D(raw.x,raw.y,raw.z);
+    pathPts.push(proj3D(rv.x,rv.y,rv.z,FOV,cx,cy));
+  }
+  for(let i=1;i<pathPts.length;i++){
+    const p=pathPts[i],pp=pathPts[i-1];
+    ctx.beginPath();ctx.moveTo(pp.x,pp.y);ctx.lineTo(p.x,p.y);
+    const a=Math.max(0.03,0.1*p.s);
+    ctx.strokeStyle=`rgba(255,255,255,${a.toFixed(3)})`;ctx.lineWidth=0.7*p.s;ctx.stroke();
+  }
+
+  // Day dots
+  const dots=[];
+  for(let d=1;d<=TOTAL;d++){
+    const θ=(d/TOTAL)*Math.PI*4.2,r=b*θ;
+    const raw={x:r*Math.cos(θ-Math.PI/2),y:r*Math.sin(θ-Math.PI/2),z:(d/TOTAL)*ZSPAN-ZSPAN/2};
+    const rv=rot3D(raw.x,raw.y,raw.z);
+    const p=proj3D(rv.x,rv.y,rv.z,FOV,cx,cy);
+    dots.push({...p,d,active:d<=ACTIVE,curr:d===ACTIVE,rz:rv.z});
+  }
+  dots.sort((a,b)=>a.rz-b.rz);
+  sp.dotPositions=dots.filter(p=>p.active).map(p=>({x:p.x,y:p.y,d:p.d}));
+
+  // Active connection line
+  const act=dots.filter(p=>p.active).sort((a,b)=>a.d-b.d);
+  if(act.length>1){
+    ctx.beginPath();act.forEach((p,i)=>i===0?ctx.moveTo(p.x,p.y):ctx.lineTo(p.x,p.y));
+    const lg=ctx.createLinearGradient(act[0].x,act[0].y,act[act.length-1].x,act[act.length-1].y);
+    lg.addColorStop(0,'rgba(249,217,118,0.12)');lg.addColorStop(1,'rgba(246,189,96,0.65)');
+    ctx.strokeStyle=lg;ctx.lineWidth=1.4;ctx.stroke();
+  }
+
+  // Draw dots
+  dots.forEach(p=>{
+    const sc=Math.max(0.5,p.s);
+    if(p.active){
+      const dd=DAYS_DATA[p.d-1];
+      const vibe=dd?dd.vibe_score:0;
+      const aligned=dd?dd.is_aligned:false;
+      const phase=BREATH_PHASES[p.d-1],period=BREATH_PERIODS[p.d-1];
+      const breath=0.7+0.3*Math.sin(now/period*Math.PI*2+phase);
+      const baseSize=p.curr?6.5:(4+vibe*1.5);
+      const dotR=Math.max(2.5,baseSize)*sc;
+      const col=vibeToColor(vibe,breath*sc);
+      const gR=(p.curr?18:12)*sc;
+      const gg=ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,gR);
+      gg.addColorStop(0,vibeToColor(vibe,0.35*breath*sc));gg.addColorStop(1,'transparent');
+      ctx.fillStyle=gg;ctx.beginPath();ctx.arc(p.x,p.y,gR,0,Math.PI*2);ctx.fill();
+      ctx.beginPath();ctx.arc(p.x,p.y,dotR,0,Math.PI*2);ctx.fillStyle=col;ctx.fill();
+      if(p.curr){ctx.beginPath();ctx.arc(p.x,p.y,11*sc,0,Math.PI*2);ctx.strokeStyle=`rgba(249,217,118,${0.5*sc})`;ctx.lineWidth=1.5;ctx.stroke();}
+      if(aligned){
+        const starR=dotR*2.2,shimmer=0.5+0.5*Math.sin(now*2.5+p.d);
+        ctx.strokeStyle=`rgba(249,217,118,${shimmer*sc*0.8})`;ctx.lineWidth=0.9;
+        for(let a=0;a<4;a++){
+          const ang=a*Math.PI/2+now*0.8;
+          ctx.beginPath();ctx.moveTo(p.x+Math.cos(ang)*dotR*1.1,p.y+Math.sin(ang)*dotR*1.1);
+          ctx.lineTo(p.x+Math.cos(ang)*starR,p.y+Math.sin(ang)*starR);ctx.stroke();
+        }
+      }
+    } else {
+      ctx.beginPath();ctx.arc(p.x,p.y,2.0*sc,0,Math.PI*2);
+      ctx.fillStyle=`rgba(255,255,255,${0.1*sc})`;ctx.fill();
+    }
+  });
+}
+
+function startSpiral3D(){
+  function loop(){
+    if(!sp.drag){sp.rotY+=0.0025;sp.velX*=0.90;sp.velY*=0.90;sp.rotX+=sp.velX;sp.rotY+=sp.velY;}
+    renderSpiral3D();
+    sp.raf=requestAnimationFrame(loop);
+  }
+  if(sp.raf)cancelAnimationFrame(sp.raf);
+  loop();
+}
+
+function initSpiral3D(){
+  if(sp.inited)return;sp.inited=true;
+  const canvas=document.getElementById('spiralCanvas');if(!canvas)return;
+  canvas.style.cursor='grab';
+  canvas.addEventListener('click',e=>{
+    const rect=canvas.getBoundingClientRect();
+    const mx=e.clientX-rect.left,my=e.clientY-rect.top;
+    let nearest=null,minDist=28;
+    sp.dotPositions.forEach(dp=>{const dist=Math.hypot(dp.x-mx,dp.y-my);if(dist<minDist){minDist=dist;nearest=dp;}});
+    if(nearest)showDotPopup(nearest.d,nearest.x,nearest.y,canvas);else hideDotPopup();
+  });
+  canvas.addEventListener('mousedown',e=>{sp.drag=true;sp.lx=e.clientX;sp.ly=e.clientY;sp.velX=0;sp.velY=0;canvas.style.cursor='grabbing';e.preventDefault();});
+  window.addEventListener('mousemove',e=>{if(!sp.drag)return;const dx=e.clientX-sp.lx,dy=e.clientY-sp.ly;sp.velX=dy*0.006;sp.velY=dx*0.006;sp.rotX+=sp.velX;sp.rotY+=sp.velY;sp.lx=e.clientX;sp.ly=e.clientY;});
+  window.addEventListener('mouseup',()=>{sp.drag=false;const c=document.getElementById('spiralCanvas');if(c)c.style.cursor='grab';});
+  canvas.addEventListener('wheel',e=>{sp.zoom*=e.deltaY>0?0.93:1.07;sp.zoom=Math.max(0.4,Math.min(3.5,sp.zoom));e.preventDefault();},{passive:false});
+  let ltDist=0;
+  canvas.addEventListener('touchstart',e=>{if(e.touches.length===1){sp.drag=true;sp.lx=e.touches[0].clientX;sp.ly=e.touches[0].clientY;sp.velX=0;sp.velY=0;}else if(e.touches.length===2){ltDist=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);}e.preventDefault();},{passive:false});
+  canvas.addEventListener('touchmove',e=>{if(e.touches.length===1&&sp.drag){const dx=e.touches[0].clientX-sp.lx,dy=e.touches[0].clientY-sp.ly;sp.velX=dy*0.006;sp.velY=dx*0.006;sp.rotX+=sp.velX;sp.rotY+=sp.velY;sp.lx=e.touches[0].clientX;sp.ly=e.touches[0].clientY;}else if(e.touches.length===2){const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);sp.zoom*=d/ltDist;sp.zoom=Math.max(0.4,Math.min(3.5,sp.zoom));ltDist=d;}e.preventDefault();},{passive:false});
+  canvas.addEventListener('touchend',()=>{sp.drag=false;});
+}
+
+/* ==================== DOT POPUP ==================== */
+function showDotPopup(day,px,py,canvas){
+  const popup=document.getElementById('dotPopup');
+  const dd=DAYS_DATA[day-1];if(!dd)return;
+  const card=TAROT[dd.card_id];
+  document.getElementById('popupDay').textContent=`DAY ${day}`;
+  document.getElementById('popupEmoji').textContent=card.emoji;
+  document.getElementById('popupCardName').textContent=card.name;
+  const v=dd.vibe_score;
+  document.getElementById('popupVibe').innerHTML=`Vibe: <span style="color:${v>=0.3?'#F9D976':v>=-0.3?'#26D0CE':'#1A7AE0'}">${v>=0?'+':''}${v.toFixed(2)}</span>`;
+  document.getElementById('popupAligned').textContent=dd.is_aligned?'✦ Aligned':'○ Unaligned';
+  document.getElementById('popupAligned').style.color=dd.is_aligned?'rgba(249,217,118,0.8)':'rgba(172,172,172,0.5)';
+  document.getElementById('popupQuote').textContent=`"${dd.quote}"`;
+  const cW=canvas.offsetWidth;
+  let lx=px+14,ly=py-80;
+  if(lx+200>cW)lx=px-210;if(ly<10)ly=py+14;
+  popup.style.left=lx+'px';popup.style.top=ly+'px';
+  popup.classList.add('visible');
+  clearTimeout(popup._timer);
+  popup._timer=setTimeout(()=>hideDotPopup(),3500);
+}
+function hideDotPopup(){document.getElementById('dotPopup').classList.remove('visible');}
+
+/* ==================== GALAXY CARDS ==================== */
+function catmullRom(pts){
+  const result=[];
+  for(let i=0;i<pts.length-1;i++){
+    const p0=pts[Math.max(0,i-1)],p1=pts[i],p2=pts[i+1],p3=pts[Math.min(pts.length-1,i+2)];
+    for(let s=0;s<=16;s++){
+      const t=s/16,t2=t*t,t3=t2*t;
+      result.push({
+        x:0.5*((2*p1.x)+(-p0.x+p2.x)*t+(2*p0.x-5*p1.x+4*p2.x-p3.x)*t2+(-p0.x+3*p1.x-3*p2.x+p3.x)*t3),
+        y:0.5*((2*p1.y)+(-p0.y+p2.y)*t+(2*p0.y-5*p1.y+4*p2.y-p3.y)*t2+(-p0.y+3*p1.y-3*p2.y+p3.y)*t3)
+      });
+    }
+  }
+  return result;
+}
+
+function drawCycleOnCanvas(canvas,cycle,progress,size){
+  const ctx=canvas.getContext('2d');const S=size||canvas.width;
+  ctx.clearRect(0,0,S,S);
+  const bg=ctx.createRadialGradient(S/2,S/2,0,S/2,S/2,S*0.7);
+  bg.addColorStop(0,cycle.bgGrad[0]);bg.addColorStop(1,cycle.bgGrad[1]);
+  ctx.fillStyle=bg;ctx.fillRect(0,0,S,S);
+  const scale=S/80;
+  const pts=cycle.dots.map(d=>({x:d.x*scale,y:d.y*scale}));
+  const spline=catmullRom(pts);
+  const drawCount=Math.floor(spline.length*Math.min(1,progress));
+  if(drawCount>1){
+    ctx.beginPath();ctx.moveTo(spline[0].x,spline[0].y);
+    for(let i=1;i<drawCount;i++)ctx.lineTo(spline[i].x,spline[i].y);
+    ctx.strokeStyle=cycle.color;ctx.lineWidth=1.2*scale/5;ctx.stroke();
+    ctx.beginPath();ctx.moveTo(spline[0].x,spline[0].y);
+    for(let i=1;i<drawCount;i++)ctx.lineTo(spline[i].x,spline[i].y);
+    ctx.strokeStyle=cycle.glowColor;ctx.lineWidth=3*scale/5;
+    ctx.shadowColor=cycle.glowColor;ctx.shadowBlur=8;ctx.stroke();ctx.shadowBlur=0;
+  }
+  const dotCount=Math.floor(pts.length*Math.min(1,progress+0.1));
+  pts.slice(0,dotCount).forEach((p,i)=>{
+    ctx.beginPath();ctx.arc(p.x,p.y,2.2*scale/5,0,Math.PI*2);ctx.fillStyle=cycle.color;ctx.fill();
+    if(i===dotCount-1){
+      const gg=ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,8*scale/5);
+      gg.addColorStop(0,cycle.glowColor);gg.addColorStop(1,'transparent');
+      ctx.fillStyle=gg;ctx.beginPath();ctx.arc(p.x,p.y,8*scale/5,0,Math.PI*2);ctx.fill();
+    }
+  });
+}
+
+function renderGalaxyCards(){
+  const grid=document.getElementById('galaxyGrid');if(!grid)return;
+  grid.innerHTML='';
+  GALAXY_CYCLES.forEach(cycle=>{
+    const card=document.createElement('div');
+    card.className='const-card';
+    card.style.cssText=`background:linear-gradient(135deg,${cycle.bgGrad[0]},${cycle.bgGrad[1]});border:1px solid ${cycle.borderColor};`;
+    const mini=document.createElement('div');mini.className='const-mini';
+    const canvas=document.createElement('canvas');canvas.width=80;canvas.height=80;canvas.style.borderRadius='10px';
+    mini.appendChild(canvas);
+    const meta=document.createElement('div');
+    meta.innerHTML=`<div class="const-date">${cycle.dateRange}</div><div class="const-seed">${cycle.symbol} ${TAROT[cycle.seedCard].name}</div>`;
+    card.appendChild(mini);card.appendChild(meta);grid.appendChild(card);
+    drawCycleOnCanvas(canvas,cycle,1.0,80);
+    card.onclick=()=>openReplayModal(cycle.id);
+  });
+}
+
+/* ==================== REPLAY MODAL ==================== */
+let replayRAF=null;
+function openReplayModal(cycleId){
+  const cycle=GALAXY_CYCLES[cycleId];
+  document.getElementById('replayTitle').textContent=cycle.name;
+  document.getElementById('replaySubtitle').textContent=`${cycle.dateRange} · ${cycle.dots.length} Alignments`;
+  document.getElementById('replaySymbol').textContent=cycle.symbol;
+  document.getElementById('replayName').textContent=cycle.name;
+  document.getElementById('replayDate').textContent=cycle.dateRange+', 2026';
+  document.getElementById('replayModal').classList.add('visible');
+  const canvas=document.getElementById('replayCanvas');
+  if(replayRAF)cancelAnimationFrame(replayRAF);
+  const start=performance.now();
+  function anim(){
+    const prog=Math.min(1,(performance.now()-start)/2800);
+    drawCycleOnCanvas(canvas,cycle,prog,300);
+    if(prog<1)replayRAF=requestAnimationFrame(anim);else replayRAF=null;
+  }
+  anim();
+}
+function closeReplayModal(){
+  if(replayRAF){cancelAnimationFrame(replayRAF);replayRAF=null;}
+  document.getElementById('replayModal').classList.remove('visible');
+}
+
+/* ==================== CONSTELLATION FORMATION ==================== */
+function triggerConstellationFormation(){
+  const newCycle=Object.assign({},GALAXY_CYCLES[Math.floor(Math.random()*GALAXY_CYCLES.length)]);
+  // Generate new name via mock API
+  const generatedName=generateConstellationName(newCycle.seedCard,'en');
+  newCycle.name=generatedName;
+  newCycle.id=Date.now(); // unique ID for new cycle
+  window._lastFormedCycle=newCycle;
+  const overlay=document.getElementById('overlayFormation');
+  const canvas=document.getElementById('formationCanvas');
+  canvas.width=390;canvas.height=844;
+  overlay.classList.add('visible');
+  const stageEl=document.getElementById('formationStage');
+  const symEl=document.getElementById('formationSymbol');
+  const nameEl=document.getElementById('formationName');
+  const quoteEl=document.getElementById('formationQuote');
+  const closeBtn=document.getElementById('formationClose');
+  symEl.style.opacity='0';nameEl.style.opacity='0';quoteEl.style.opacity='0';closeBtn.classList.remove('visible');
+  stageEl.textContent='CONVERGENCE';
+  const ctx=canvas.getContext('2d');
+  const W=390,H=844,cx=W/2,cy=H*0.42;
+  const b=Math.min(W,H)*0.057,TOTAL=28,ZSPAN=55;
+  let worldDots=[];
+  for(let d=1;d<=TOTAL;d++){
+    const θ=(d/TOTAL)*Math.PI*4.2,r=b*θ;
+    worldDots.push({ox:r*Math.cos(θ-Math.PI/2)+cx,oy:r*Math.sin(θ-Math.PI/2)+cy,x:0,y:0,d,tx:cx,ty:cy});
+  }
+  worldDots.forEach(wd=>{wd.x=wd.ox;wd.y=wd.oy;});
+  const scale=5.5;
+  const cDots=newCycle.dots.map(d=>({tx:cx+(d.x-40)*scale,ty:cy+(d.y-40)*scale}));
+  worldDots.forEach((wd,i)=>{const cd=cDots[i%cDots.length];wd.tx=cd.tx;wd.ty=cd.ty;});
+  const startTime=performance.now();
+  const QUOTES=['"Your 28 orbits have crystallized into light."','"The cosmos recognised your alignment."','"A new constellation was born in your name."'];
+  const quote=QUOTES[Math.floor(Math.random()*QUOTES.length)];
+  let formRAF=null;
+
+  function animFormation(){
+    const elapsed=performance.now()-startTime;
+    ctx.clearRect(0,0,W,H);
+    ctx.fillStyle='rgba(2,4,10,0.95)';ctx.fillRect(0,0,W,H);
+    const ng=ctx.createRadialGradient(cx,cy,0,cx,cy,300);
+    ng.addColorStop(0,`rgba(249,217,118,${0.04+(elapsed/8000)*0.08})`);
+    ng.addColorStop(0.5,'rgba(26,41,128,0.06)');ng.addColorStop(1,'transparent');
+    ctx.fillStyle=ng;ctx.fillRect(0,0,W,H);
+
+    if(elapsed<2000){
+      stageEl.textContent='CONVERGENCE';
+      const t=elapsed/2000,ease=t<0.5?2*t*t:1-Math.pow(-2*t+2,2)/2;
+      worldDots.forEach(wd=>{
+        wd.x=wd.ox+(cx-wd.ox)*ease*0.7;wd.y=wd.oy+(cy-wd.oy)*ease*0.7;
+        ctx.beginPath();ctx.arc(wd.x,wd.y,2.5,0,Math.PI*2);
+        ctx.fillStyle=`rgba(249,217,118,${0.3+0.4*(1-ease)})`;ctx.fill();
+      });
+    } else if(elapsed<4000){
+      stageEl.textContent='IGNITION';
+      const t=(elapsed-2000)/2000,litCount=Math.floor(t*TOTAL);
+      worldDots.forEach((wd,i)=>{
+        if(i>litCount){ctx.beginPath();ctx.arc(cx,cy,2,0,Math.PI*2);ctx.fillStyle='rgba(249,217,118,0.15)';ctx.fill();return;}
+        const tt=Math.min(1,(t*TOTAL-i)/3);
+        wd.x=cx+(wd.tx-cx)*tt;wd.y=cy+(wd.ty-cy)*tt;
+        const glow=ctx.createRadialGradient(wd.x,wd.y,0,wd.x,wd.y,14);
+        glow.addColorStop(0,'rgba(249,217,118,0.6)');glow.addColorStop(1,'transparent');
+        ctx.fillStyle=glow;ctx.beginPath();ctx.arc(wd.x,wd.y,14,0,Math.PI*2);ctx.fill();
+        ctx.beginPath();ctx.arc(wd.x,wd.y,3.5,0,Math.PI*2);ctx.fillStyle='rgba(249,217,118,0.9)';ctx.fill();
+      });
+    } else if(elapsed<6500){
+      stageEl.textContent='LINKING';
+      const t=(elapsed-4000)/2500;
+      worldDots.forEach(wd=>{wd.x=wd.tx;wd.y=wd.ty;});
+      worldDots.forEach(wd=>{ctx.beginPath();ctx.arc(wd.x,wd.y,3,0,Math.PI*2);ctx.fillStyle='rgba(249,217,118,0.8)';ctx.fill();});
+      const spline=catmullRom(cDots.map(c=>({x:c.tx,y:c.ty})));
+      const drawN=Math.floor(spline.length*t);
+      if(drawN>1){
+        ctx.shadowColor=newCycle.glowColor;ctx.shadowBlur=12;
+        ctx.beginPath();ctx.moveTo(spline[0].x,spline[0].y);
+        for(let i=1;i<drawN;i++)ctx.lineTo(spline[i].x,spline[i].y);
+        ctx.strokeStyle=newCycle.color;ctx.lineWidth=2.5;ctx.stroke();ctx.shadowBlur=0;
+      }
+      cDots.forEach(cd=>{
+        const gg=ctx.createRadialGradient(cd.tx,cd.ty,0,cd.tx,cd.ty,16);
+        gg.addColorStop(0,newCycle.glowColor);gg.addColorStop(1,'transparent');
+        ctx.fillStyle=gg;ctx.beginPath();ctx.arc(cd.tx,cd.ty,16,0,Math.PI*2);ctx.fill();
+        ctx.beginPath();ctx.arc(cd.tx,cd.ty,4,0,Math.PI*2);ctx.fillStyle=newCycle.color;ctx.fill();
+      });
+    } else {
+      stageEl.textContent='COMPLETE';
+      worldDots.forEach(wd=>{wd.x=wd.tx;wd.y=wd.ty;});
+      const spline=catmullRom(cDots.map(c=>({x:c.tx,y:c.ty})));
+      ctx.shadowColor=newCycle.glowColor;ctx.shadowBlur=16;
+      ctx.beginPath();ctx.moveTo(spline[0].x,spline[0].y);spline.forEach(p=>ctx.lineTo(p.x,p.y));
+      ctx.strokeStyle=newCycle.color;ctx.lineWidth=2.5;ctx.stroke();ctx.shadowBlur=0;
+      cDots.forEach(cd=>{
+        const gg=ctx.createRadialGradient(cd.tx,cd.ty,0,cd.tx,cd.ty,16);
+        gg.addColorStop(0,newCycle.glowColor);gg.addColorStop(1,'transparent');
+        ctx.fillStyle=gg;ctx.beginPath();ctx.arc(cd.tx,cd.ty,16,0,Math.PI*2);ctx.fill();
+        ctx.beginPath();ctx.arc(cd.tx,cd.ty,4.5,0,Math.PI*2);ctx.fillStyle=newCycle.color;ctx.fill();
+      });
+      const nt=(elapsed-6500)/1500;
+      symEl.style.opacity=Math.min(1,nt).toString();symEl.textContent=newCycle.symbol;
+      nameEl.style.opacity=Math.min(1,Math.max(0,nt-0.3)).toString();nameEl.textContent=newCycle.name;
+      quoteEl.style.opacity=Math.min(1,Math.max(0,nt-0.6)).toString();quoteEl.textContent=quote;
+      if(nt>0.8)closeBtn.classList.add('visible');
+    }
+    if(elapsed<8000)formRAF=requestAnimationFrame(animFormation);else formRAF=null;
+  }
+  if(window._formRAF)cancelAnimationFrame(window._formRAF);
+  window._formRAF=formRAF;
+  animFormation();
+}
+
+function closeFormationOverlay(){
+  if(window._formRAF){cancelAnimationFrame(window._formRAF);window._formRAF=null;}
+  document.getElementById('overlayFormation').classList.remove('visible');
+  // Save newly formed cycle to localStorage
+  if(window._lastFormedCycle){
+    const nc=window._lastFormedCycle;
+    if(!GALAXY_CYCLES.find(c=>c.id===nc.id)){
+      GALAXY_CYCLES.push(nc);
+    }
+    if(typeof saveCycles==='function') saveCycles();
+    renderGalaxyCards();
+    window._lastFormedCycle=null;
+  }
+  switchInner('atlas');
+}
+
+/* ==================== STAR ATLAS NAME GENERATION (Mock) ==================== */
+const NAME_ADJECTIVES_EN = ['Golden','Silver','Crimson','Ethereal','Radiant','Silent','Infinite','Luminous','Frozen','Mystic'];
+const NAME_NOUNS_EN = ['Crown','Arrow','Veil','Flame','Chalice','Mirror','Gate','Wing','Orbit','Sigil'];
+const NAME_ADJECTIVES_JP = ['黄金の','銀色の','深紅の','静寂の','煌めきの','無限の','光輝の','凍てつく','秘密の','永遠の'];
+const NAME_NOUNS_JP = ['冠','矢','帷','炎','聖杯','鏡','門','翼','軌道','印章'];
+
+function generateConstellationName(seedCard, lang) {
+  lang = lang || 'en';
+  // Mock Claude API: deterministic from seedCard + date
+  const today = new Date().toISOString().slice(0,10);
+  let hash = 0;
+  const seed = (seedCard ? seedCard.toString() : '0') + today;
+  for(let i=0;i<seed.length;i++) hash = ((hash<<5)-hash)+seed.charCodeAt(i);
+  hash = Math.abs(hash);
+
+  if(lang==='jp'){
+    return NAME_ADJECTIVES_JP[hash%NAME_ADJECTIVES_JP.length] + NAME_NOUNS_JP[(hash>>4)%NAME_NOUNS_JP.length];
+  }
+  return 'The ' + NAME_ADJECTIVES_EN[hash%NAME_ADJECTIVES_EN.length] + ' ' + NAME_NOUNS_EN[(hash>>4)%NAME_NOUNS_EN.length];
+}
+
+/* ==================== GALAXY LOCALSTORAGE ==================== */
+const CYCLE_KEY = 'solara_galaxy_cycles';
+const DAILY_KEY = 'solara_daily_vibes';
+
+function loadDailyVibes() {
+  try { return JSON.parse(localStorage.getItem(DAILY_KEY) || '[]'); } catch(e) { return []; }
+}
+
+function saveDailyVibe(score) {
+  const vibes = loadDailyVibes();
+  const today = new Date().toISOString().slice(0, 10);
+  const existing = vibes.find(v => v.date === today);
+  if (existing) { existing.score = score; }
+  else { vibes.push({ date: today, score: score }); }
+  // Keep only last 28 entries
+  while (vibes.length > 28) vibes.shift();
+  localStorage.setItem(DAILY_KEY, JSON.stringify(vibes));
+}
+
+function applyStoredVibesToSpiral() {
+  const vibes = loadDailyVibes();
+  if (vibes.length === 0) return;
+  // Overwrite DAYS_DATA with stored vibes (most recent first mapped to day slots)
+  vibes.forEach((v, i) => {
+    if (i < DAYS_DATA.length) {
+      DAYS_DATA[i].vibe_score = v.score;
+    }
+  });
+}
+
+function loadSavedCycles() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(CYCLE_KEY));
+    if (saved && saved.length > 0) {
+      // Merge saved cycles (append if new)
+      saved.forEach(sc => {
+        if (!GALAXY_CYCLES.find(c => c.id === sc.id)) {
+          GALAXY_CYCLES.push(sc);
+        }
+      });
+    }
+  } catch(e) {}
+}
+
+function saveCycles() {
+  localStorage.setItem(CYCLE_KEY, JSON.stringify(GALAXY_CYCLES));
+}
+
+// Save current vibe if available
+if (typeof loadVibe === 'function') {
+  const vibe = loadVibe();
+  if (vibe !== null) saveDailyVibe(vibe);
+}
+
+applyStoredVibesToSpiral();
+loadSavedCycles();
+
+/* ==================== INIT ==================== */
+renderNav('galaxy');
+renderGalaxyCards();
+initSpiral3D();
+startSpiral3D();
+
+if (typeof checkMoonEvents === 'function') checkMoonEvents();
+
+// Vibe-based Stella message
+(function() {
+  const vibe = loadVibe() || 0;
+  const msg = generateStellaMessage(vibe, 'en');
+  const el = document.querySelector('.bubble-msg');
+  if (el) el.textContent = '"' + msg + '"';
+})();
+</script>
+</body>
+</html>

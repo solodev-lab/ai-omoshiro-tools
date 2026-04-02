@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Solara - Horoscope Chart</title>
 <script src="https://cdn.jsdelivr.net/npm/astronomy-engine@2.1.19/astronomy.browser.min.js"></script>
+<script src="shared/nav.js"></script>
 <style>
 /* ============================================================
    RESET & BASE
@@ -185,6 +186,62 @@ h1 { font-size: 24px; color: #F6BD60; letter-spacing: 4px; margin-bottom: 8px; }
 .aspect-lists-row { display: flex; gap: 15px; margin-top: 0; }
 
 /* ============================================================
+   FORTUNE READING CARDS
+   ============================================================ */
+.fortune-reading { margin-bottom: 16px; }
+.fortune-reading h3 { font-size: 13px; color: #F6BD60; letter-spacing: 2px; margin-bottom: 12px; }
+.fortune-cards-wrap { position: relative; overflow: hidden; border-radius: 16px; }
+.fortune-cards-track {
+  display: flex; transition: transform 0.35s cubic-bezier(0.4,0,0.2,1);
+}
+.fortune-card {
+  min-width: 100%; padding: 20px; border-radius: 16px;
+  background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+}
+.fortune-card-header {
+  display: flex; align-items: center; gap: 10px; margin-bottom: 14px;
+}
+.fortune-card-icon {
+  width: 36px; height: 36px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center; font-size: 18px;
+}
+.fortune-card-title { font-size: 15px; font-weight: 700; }
+.fortune-card-score {
+  margin-left: auto; font-size: 20px; font-weight: 700;
+  background: linear-gradient(135deg, #F6BD60, #F9D976);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.fortune-card-body {
+  font-size: 13px; line-height: 1.8; color: rgba(232,224,208,0.85);
+}
+.fortune-card-direction {
+  margin-top: 12px; padding: 10px 14px; border-radius: 12px;
+  background: rgba(249,217,118,0.06); border: 1px solid rgba(249,217,118,0.15);
+  font-size: 12px; color: #F6BD60;
+}
+.fortune-card-direction strong { font-weight: 700; }
+.fortune-dots {
+  display: flex; justify-content: center; gap: 6px; margin-top: 12px;
+}
+.fortune-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: rgba(255,255,255,0.15); cursor: pointer; transition: all 0.3s;
+}
+.fortune-dot.active {
+  background: #F6BD60; box-shadow: 0 0 8px rgba(246,189,96,0.5);
+  width: 20px; border-radius: 4px;
+}
+.fortune-nav-row {
+  display: flex; justify-content: space-between; align-items: center; margin-top: 8px;
+}
+.fortune-nav-btn {
+  background: none; border: 1px solid rgba(255,255,255,0.12); border-radius: 8px;
+  padding: 6px 14px; font-size: 11px; color: #ACACAC; cursor: pointer;
+  font-family: inherit; transition: all 0.2s;
+}
+.fortune-nav-btn:hover { border-color: rgba(246,189,96,0.4); color: #F6BD60; }
+
+/* ============================================================
    RESPONSIVE
    ============================================================ */
 .desktop-only { }
@@ -327,6 +384,20 @@ h1 { font-size: 24px; color: #F6BD60; letter-spacing: 4px; margin-bottom: 8px; }
       <button class="btn-generate" id="transitBtn" onclick="renderChart()" style="background:linear-gradient(135deg,#6BB5FF,#4A90D9)">トランジット更新</button>
     </div>
 
+    <!-- Fortune Reading Cards -->
+    <div class="fortune-reading" id="fortuneReading">
+      <h3>✦ FORTUNE READING</h3>
+      <div class="fortune-cards-wrap">
+        <div class="fortune-cards-track" id="fortuneTrack"></div>
+      </div>
+      <div class="fortune-dots" id="fortuneDots"></div>
+      <div class="fortune-nav-row">
+        <button class="fortune-nav-btn" onclick="fortunePrev()">← 前</button>
+        <span id="fortuneLabel" style="font-size:11px;color:#888;">1 / 5</span>
+        <button class="fortune-nav-btn" onclick="fortuneNext()">次 →</button>
+      </div>
+    </div>
+
     <!-- Planet Positions -->
     <div class="panel-card" id="planetsPanel">
       <h3 class="desktop-only">&#9737; PLANET POSITIONS</h3>
@@ -408,6 +479,7 @@ h1 { font-size: 24px; color: #F6BD60; letter-spacing: 4px; margin-bottom: 8px; }
   <div class="bs-tabs" id="bsTabs">
     <button class="bs-tab active" data-bs="birth" onclick="switchBSTab('birth')">&#9881; 誕生</button>
     <button class="bs-tab hidden-tab" data-bs="transit" id="bsTransitTab" onclick="switchBSTab('transit')">&#9790; 経過</button>
+    <button class="bs-tab" data-bs="fortune" onclick="switchBSTab('fortune')">✦ 運勢</button>
     <button class="bs-tab" data-bs="planets" onclick="switchBSTab('planets')">&#9737; 天体</button>
     <button class="bs-tab" data-bs="filter" onclick="switchBSTab('filter')">&#9881; 絞込</button>
     <button class="bs-tab" data-bs="aspects" onclick="switchBSTab('aspects')">&#9651; 相</button>
@@ -415,6 +487,7 @@ h1 { font-size: 24px; color: #F6BD60; letter-spacing: 4px; margin-bottom: 8px; }
   <div class="bs-body" id="bsBody">
     <div class="bs-section active" id="bsBirth"></div>
     <div class="bs-section" id="bsTransit"></div>
+    <div class="bs-section" id="bsFortune"></div>
     <div class="bs-section" id="bsPlanets"></div>
     <div class="bs-section" id="bsFilter"></div>
     <div class="bs-section" id="bsAspects"></div>
@@ -1449,6 +1522,7 @@ function switchBSTab(tab) {
 
   if (tab === 'birth') syncBSBirthForm();
   if (tab === 'transit') syncBSTransitForm();
+  if (tab === 'fortune') buildBSFortuneContent();
   if (tab === 'planets') buildBSPlanetsContent();
   if (tab === 'filter') buildBSFilterContent();
   if (tab === 'aspects') buildBSAspectsContent();
@@ -1581,6 +1655,187 @@ function refreshActiveBS() {
 }
 
 // ============================================================
+//  FORTUNE READING CARDS
+// ============================================================
+var FORTUNE_CATEGORIES = [
+  { id:'overall', icon:'✦', label:'全体運', color:'#F6BD60',
+    bg:'rgba(246,189,96,0.08)', border:'rgba(246,189,96,0.2)' },
+  { id:'love',    icon:'💕', label:'恋愛運', color:'#FF6B9D',
+    bg:'rgba(255,107,157,0.08)', border:'rgba(255,107,157,0.2)' },
+  { id:'money',   icon:'💰', label:'金運',   color:'#FFD370',
+    bg:'rgba(255,211,112,0.08)', border:'rgba(255,211,112,0.2)' },
+  { id:'career',  icon:'💼', label:'仕事運', color:'#FF8C42',
+    bg:'rgba(255,140,66,0.08)', border:'rgba(255,140,66,0.2)' },
+  { id:'communication', icon:'💬', label:'対話運', color:'#6BB5FF',
+    bg:'rgba(107,181,255,0.08)', border:'rgba(107,181,255,0.2)' },
+];
+
+var FORTUNE_MOCK = {
+  overall: {
+    score: 82,
+    text: '今日は全体的にエネルギーが高まる一日です。太陽と木星のソフトアスペクトが活力を与え、新しいことに挑戦する勇気が湧いてきます。特に午前中は直感が冴え、重要な決断に適した時間帯。ただし、火星と土星の緊張角が午後に影響するため、焦りは禁物です。ゆっくりと確実に歩みを進めることで、夕方には充実感に包まれるでしょう。',
+    direction: '北東が吉方位。新しい出会いや発見が期待できます。'
+  },
+  love: {
+    score: 75,
+    text: '金星と月のアスペクトが感受性を高め、パートナーとの絆が深まる暗示。シングルの方は、普段行かない場所で思わぬ出会いがあるかもしれません。コミュニケーションを大切にし、自分の気持ちを素直に伝えることで、関係が一歩前進します。夜は二人だけの静かな時間を過ごすと良いでしょう。',
+    direction: '南東の方角に恋愛のエネルギーが集中しています。'
+  },
+  money: {
+    score: 68,
+    text: '木星と水星の配置が金銭面に好影響。投資やビジネスの判断力が冴える日です。ただし、衝動的な大きな買い物は避けましょう。堅実な資産管理と長期的な視点が吉。副業や新しい収入源のアイデアが浮かびやすい時期でもあります。情報収集に時間をかけて。',
+    direction: '西の方角に金運の流れがあります。'
+  },
+  career: {
+    score: 88,
+    text: '仕事運は非常に好調。太陽と火星のエネルギーがリーダーシップを強化し、周囲からの信頼も高まります。プロジェクトの推進力が増す日なので、懸案事項に積極的に取り組みましょう。チームワークを意識することで、一人では成し遂げられない成果が生まれます。会議やプレゼンでは自信を持って。',
+    direction: '北の方角が仕事運を後押しします。'
+  },
+  communication: {
+    score: 71,
+    text: '水星と金星の調和的アスペクトが対話力を高めます。言葉に説得力が増し、交渉事や相談事がスムーズに進む暗示。SNSでの発信も好反応が期待できます。ただし、海王星の影響で曖昧な表現になりがちなので、重要な話は明確に。聴く姿勢を大切にすることで、相手の本音が見えてきます。',
+    direction: '東の方角でコミュニケーションが活性化します。'
+  }
+};
+
+var fortuneIdx = 0;
+
+function renderFortuneCards() {
+  var track = document.getElementById('fortuneTrack');
+  var dots = document.getElementById('fortuneDots');
+  if (!track) return;
+
+  track.innerHTML = FORTUNE_CATEGORIES.map(function(cat) {
+    var data = FORTUNE_MOCK[cat.id];
+    return '<div class="fortune-card" style="background:' + cat.bg + ';border-color:' + cat.border + ';">'
+      + '<div class="fortune-card-header">'
+      + '<div class="fortune-card-icon" style="background:' + cat.bg + ';border:1px solid ' + cat.border + ';">' + cat.icon + '</div>'
+      + '<div class="fortune-card-title" style="color:' + cat.color + ';">' + cat.label + '</div>'
+      + '<div class="fortune-card-score">' + data.score + '</div>'
+      + '</div>'
+      + '<div class="fortune-card-body">' + data.text + '</div>'
+      + '<div class="fortune-card-direction">🧭 <strong>方位アドバイス:</strong> ' + data.direction + '</div>'
+      + '</div>';
+  }).join('');
+
+  if (dots) {
+    dots.innerHTML = FORTUNE_CATEGORIES.map(function(_, i) {
+      return '<div class="fortune-dot' + (i === 0 ? ' active' : '') + '" onclick="goFortune(' + i + ')"></div>';
+    }).join('');
+  }
+  updateFortuneUI();
+}
+
+function goFortune(idx) {
+  fortuneIdx = idx;
+  updateFortuneUI();
+}
+function fortunePrev() { goFortune(Math.max(0, fortuneIdx - 1)); }
+function fortuneNext() { goFortune(Math.min(FORTUNE_CATEGORIES.length - 1, fortuneIdx + 1)); }
+
+function updateFortuneUI() {
+  var track = document.getElementById('fortuneTrack');
+  if (track) track.style.transform = 'translateX(-' + (fortuneIdx * 100) + '%)';
+  document.querySelectorAll('.fortune-dot').forEach(function(d, i) {
+    d.classList.toggle('active', i === fortuneIdx);
+  });
+  var lbl = document.getElementById('fortuneLabel');
+  if (lbl) lbl.textContent = (fortuneIdx + 1) + ' / ' + FORTUNE_CATEGORIES.length;
+}
+
+function buildBSFortuneContent() {
+  var el = document.getElementById('bsFortune');
+  if (!el) return;
+  el.innerHTML = '<h3 style="color:#F6BD60;font-size:13px;letter-spacing:2px;margin-bottom:12px;">✦ FORTUNE READING</h3>'
+    + '<div class="fortune-cards-wrap"><div class="fortune-cards-track" id="bsFortuneTrack"></div></div>'
+    + '<div class="fortune-dots" id="bsFortuneDots"></div>'
+    + '<div class="fortune-nav-row">'
+    + '<button class="fortune-nav-btn" onclick="bsFortunePrev()">← 前</button>'
+    + '<span id="bsFortuneLabel" style="font-size:11px;color:#888;">1 / 5</span>'
+    + '<button class="fortune-nav-btn" onclick="bsFortuneNext()">次 →</button></div>';
+
+  var track = document.getElementById('bsFortuneTrack');
+  if (track) {
+    track.innerHTML = document.getElementById('fortuneTrack').innerHTML;
+    track.style.transform = 'translateX(-' + (bsFortuneIdx * 100) + '%)';
+  }
+  var dots = document.getElementById('bsFortuneDots');
+  if (dots) {
+    dots.innerHTML = FORTUNE_CATEGORIES.map(function(_, i) {
+      return '<div class="fortune-dot' + (i === bsFortuneIdx ? ' active' : '') + '" onclick="goBsFortune(' + i + ')"></div>';
+    }).join('');
+  }
+  updateBsFortuneUI();
+}
+
+var bsFortuneIdx = 0;
+function goBsFortune(idx) { bsFortuneIdx = idx; updateBsFortuneUI(); }
+function bsFortunePrev() { goBsFortune(Math.max(0, bsFortuneIdx - 1)); }
+function bsFortuneNext() { goBsFortune(Math.min(FORTUNE_CATEGORIES.length - 1, bsFortuneIdx + 1)); }
+function updateBsFortuneUI() {
+  var track = document.getElementById('bsFortuneTrack');
+  if (track) track.style.transform = 'translateX(-' + (bsFortuneIdx * 100) + '%)';
+  document.querySelectorAll('#bsFortuneDots .fortune-dot').forEach(function(d, i) {
+    d.classList.toggle('active', i === bsFortuneIdx);
+  });
+  var lbl = document.getElementById('bsFortuneLabel');
+  if (lbl) lbl.textContent = (bsFortuneIdx + 1) + ' / ' + FORTUNE_CATEGORIES.length;
+}
+
+// ============================================================
+//  FORTUNE TOUCH SWIPE
+// ============================================================
+function initFortuneSwipe() {
+  var wrap = document.querySelector('.fortune-cards-wrap');
+  if (!wrap) return;
+  var startX = 0, diffX = 0, swiping = false;
+  wrap.addEventListener('touchstart', function(e) {
+    startX = e.touches[0].clientX; diffX = 0; swiping = true;
+  }, { passive: true });
+  wrap.addEventListener('touchmove', function(e) {
+    if (!swiping) return;
+    diffX = e.touches[0].clientX - startX;
+  }, { passive: true });
+  wrap.addEventListener('touchend', function() {
+    if (!swiping) return; swiping = false;
+    if (Math.abs(diffX) > 40) {
+      if (diffX < 0) fortuneNext(); else fortunePrev();
+    }
+  });
+  // Mouse drag for desktop
+  wrap.addEventListener('mousedown', function(e) {
+    startX = e.clientX; diffX = 0; swiping = true; e.preventDefault();
+  });
+  window.addEventListener('mousemove', function(e) {
+    if (!swiping) return; diffX = e.clientX - startX;
+  });
+  window.addEventListener('mouseup', function() {
+    if (!swiping) return; swiping = false;
+    if (Math.abs(diffX) > 40) {
+      if (diffX < 0) fortuneNext(); else fortunePrev();
+    }
+  });
+}
+
+// ============================================================
+//  FORTUNE DAILY CACHE
+// ============================================================
+var FORTUNE_CACHE_KEY = 'solara_fortune_cache';
+
+function loadFortuneCacheOrGenerate() {
+  var today = new Date().toISOString().slice(0, 10);
+  try {
+    var cached = JSON.parse(localStorage.getItem(FORTUNE_CACHE_KEY));
+    if (cached && cached.date === today) {
+      FORTUNE_MOCK = cached.data;
+      return;
+    }
+  } catch(e) {}
+  // Save current mock data as today's cache
+  localStorage.setItem(FORTUNE_CACHE_KEY, JSON.stringify({ date: today, data: FORTUNE_MOCK }));
+}
+
+// ============================================================
 //  INIT
 // ============================================================
 window.addEventListener('DOMContentLoaded', function() {
@@ -1588,27 +1843,14 @@ window.addEventListener('DOMContentLoaded', function() {
   initTransitDefaults();
   generateFromInput();
   initBottomSheet();
+  loadFortuneCacheOrGenerate();
+  renderFortuneCards();
+  initFortuneSwipe();
 });
 </script>
 
-<div class="bottom-nav">
-  <div class="nav-item" onclick="window.location.href='index.html'">
-    <div class="nav-icon">&#x1F9ED;</div>
-    <div class="nav-label">Map</div>
-  </div>
-  <div class="nav-item active">
-    <div class="nav-icon">&#x1F300;</div>
-    <div class="nav-label">Horo</div>
-  </div>
-  <div class="nav-item" onclick="window.location.href='tarot.html'">
-    <div class="nav-icon">&#x2728;</div>
-    <div class="nav-label">Tarot</div>
-  </div>
-  <div class="nav-item">
-    <div class="nav-icon">&#x1F464;</div>
-    <div class="nav-label">Profile</div>
-  </div>
-</div>
+<div class="bottom-nav"></div>
+<script>renderNav('horo');</script>
 
 </body>
 </html>
