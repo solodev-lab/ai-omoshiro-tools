@@ -15,10 +15,15 @@
   --nav-height: 80px;
 }
 
-/* ===== Phone Frame ===== */
+/* ===== App Container (responsive) ===== */
 .phone {
-  width: 390px; height: 844px; background: var(--bg-deep);
-  border-radius: 50px; overflow: hidden; position: relative;
+  width: 100%; min-height: 100vh; background: var(--bg-deep);
+  overflow: hidden; position: relative;
+}
+/* Phone-frame mode for desktop preview (opt-in via .phone-frame) */
+.phone.phone-frame {
+  width: 390px; height: 844px; min-height: auto;
+  border-radius: 50px;
   border: 1.5px solid var(--glass-border);
   box-shadow: 0 0 0 8px #0a0e18, 0 0 80px rgba(249,217,118,0.07), 0 40px 120px rgba(0,0,0,0.9);
   flex-shrink: 0;
@@ -40,7 +45,7 @@
 
 /* ===== Status Bar ===== */
 .status-bar {
-  position: absolute; top: 0; left: 0; right: 0; height: 44px;
+  position: fixed; top: 0; left: 0; right: 0; height: 44px;
   display: flex; justify-content: space-between; align-items: center;
   padding: 0 28px; z-index: 200; font-size: 12px; font-weight: 700;
   color: rgba(234,234,234,0.9); pointer-events: none;
@@ -48,7 +53,7 @@
 
 /* ===== 5-Tab Bottom Nav ===== */
 .bottom-nav {
-  position: absolute; bottom: 0; left: 0; right: 0; height: var(--nav-height);
+  position: fixed; bottom: 0; left: 0; right: 0; height: var(--nav-height);
   background: rgba(6,10,18,0.92); backdrop-filter: blur(24px);
   border-top: 1px solid rgba(255,255,255,0.07);
   display: flex; justify-content: space-around; align-items: flex-start;

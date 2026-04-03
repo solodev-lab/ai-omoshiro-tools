@@ -344,3 +344,41 @@
 - アスペクト一覧パネル(ASPECTS)はネイタルでも表示維持
 - 1688行→1604行（84行削減）
 - コミット: daa3eea
+
+## 2026-04-03 セッション: Horoハウスシステム+4アングル+レスポンシブ全画面化
+
+### Horoscope画面 — Placidusハウス+4アングル
+- **Placidusハウスシステム実装**: 反復的半弧3分割法（11H/12H=上半球、2H/3H=下半球）
+- **Whole Signハウス追加**: ASCの星座0°起点で30°等分
+- localStorage `solara_house_system` でPlacidus/Whole Sign切替
+- 高緯度(|lat|>66°)はEqual Houseに自動フォールバック
+- **ASC/DSC/IC/MC 4アングル**: 十字軸ライン(opacity 0.25, 1px, zodiacOuterまで延伸) + 4ラベル
+- **アングルアスペクト**: 4アングル×10天体のアスペクト検出・描画、フィルターの惑星グループ制約を受けない
+- **天体テーブル**: DSC(7H)/IC(4H)行追加
+- **チャート標準配置**: ASC=左(9時)、MC=上(12時)、黄道反時計回り。数式 `toRad(asc - lon + 180)`
+- **ORB設定**: localStorage `solara_orb_settings` からデフォルト値を上書き
+- **House System表示**: SVG左下に「House System: Placidus」薄い白文字
+- **ボトムシート修正**: bottom:70px(ナビバー上)、mini=52px、相タブの二重スクロール解消
+
+### Sanctuary画面 — Astrology設定
+- **House System設定**: Placidus / Whole Sign切替UI
+- **Orb設定**: 6アスペクト個別スライダー(1°〜8°)、localStorage永続化
+
+### Map画面 — アングルアスペクト方位ブースト
+- ASC/MC/DSC/ICの黄経をTRIPLE.natalに追加（_asc/_mc/_dsc/_ic）
+- アングルアスペクトを持つ天体にウェイトボーナス: ASC/DSC合=×1.5、MC/IC合=×1.3
+- 惑星ライン描画からアングルキーをスキップ（`name.startsWith('_')` ガード）
+
+### 全5画面レスポンシブ化
+- **shared/styles.css**: .phoneを固定サイズ→100% + 100vh、.bottom-navをfixed化、.status-barをfixed化
+- **index.html (Map)**: body centeringを削除、.phoneを100%×100vh、.bottom-navをfixed化
+- **tarot.html**: .phone-frameを100%×100vh、.bottom-navをfixed化、.draw-panelにmax-width:500px
+- **galaxy.html**: body centeringを削除、canvasサイズをwindow.innerWidth/Height動的化、背景グラデーション座標を動的化
+- **sanctuary.html**: body centeringを削除、.main-areaをfixed化、.sanctuary-contentにmax-width:600px+margin:0 auto、canvasサイズ動的化
+
+### 仕様書更新
+- SPEC.md: Map/Horo/Sanctuary/localStorageキー一覧を更新
+- project_horoscope_spec.md: v4に更新（ハウス・アングル・配置・モバイル）
+
+### コミット
+- 未コミット

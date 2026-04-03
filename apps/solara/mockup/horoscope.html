@@ -246,9 +246,13 @@ h1 { font-size: 24px; color: #F6BD60; letter-spacing: 4px; margin-bottom: 8px; }
    ============================================================ */
 .desktop-only { }
 .mobile-bottom-sheet { display: none; }
+/* モバイルメニュー: デスクトップでは非表示 */
+.chart-menu-btn { display: none; }
+.chart-menu-panel { display: none; }
 
 @media (max-width: 900px) {
-  body { padding: 10px 8px 0; }
+  html { overflow: hidden; }
+  body { padding: 10px 8px 0; overflow: hidden; }
   h1 { font-size: 18px; margin-bottom: 4px; }
   .subtitle { font-size: 10px; margin-bottom: 12px; }
   .main-layout { flex-direction: column; align-items: center; }
@@ -256,15 +260,57 @@ h1 { font-size: 24px; color: #F6BD60; letter-spacing: 4px; margin-bottom: 8px; }
   .right-column { display: none !important; }
   .chart-container { display: flex; flex-direction: column; align-items: center; position: relative; }
   .chart-container svg { width: 100%; max-width: 600px; height: auto; }
-  .tab-nav { flex-wrap: wrap; justify-content: center; }
-  .tab-btn { padding: 8px 12px; font-size: 11px; }
+  .tab-nav { display: none !important; }
   .desktop-only { display: none !important; }
+
+  /* Mobile chart menu button */
+  .chart-menu-btn {
+    display: flex; position: fixed; top: 12px; right: 12px; z-index: 300;
+    width: 40px; height: 40px; border-radius: 10px;
+    background: rgba(12,12,26,0.92); border: 1px solid rgba(246,189,96,0.3);
+    align-items: center; justify-content: center;
+    flex-direction: column; gap: 4px; cursor: pointer;
+  }
+  .chart-menu-bar { width: 18px; height: 2px; border-radius: 1px; background: #F6BD60; }
+  .chart-menu-panel {
+    display: none; position: fixed; top: 58px; right: 12px; z-index: 299;
+    background: rgba(12,12,26,0.97); border: 1px solid rgba(246,189,96,0.2);
+    border-radius: 14px; padding: 8px; min-width: 150px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  }
+  .chart-menu-panel.open { display: block; }
+  .chart-menu-item {
+    width: 100%; padding: 10px 14px; background: none; border: none;
+    color: #ACACAC; font-size: 13px; text-align: left; cursor: pointer;
+    border-radius: 8px; transition: background 0.2s;
+  }
+  .chart-menu-item:hover { background: rgba(246,189,96,0.08); }
+  .chart-menu-item.active { color: #F6BD60; background: rgba(246,189,96,0.12); }
   body { padding-bottom: 380px; }
+
+  /* Bottom Sheet mini label */
+  .bs-mini-label {
+    display: none;
+    text-align: center;
+    padding: 2px 16px 10px;
+    font-size: 11px;
+    color: #F6BD60;
+    letter-spacing: 1.5px;
+    opacity: 0.9;
+    cursor: pointer;
+  }
+  .bs-mini-label .bs-mini-chevron {
+    display: inline-block;
+    font-size: 9px;
+    margin-right: 6px;
+    opacity: 0.7;
+    vertical-align: middle;
+  }
 
   /* Bottom Sheet */
   .mobile-bottom-sheet {
     display: block;
-    position: fixed; left: 0; right: 0; bottom: 0;
+    position: fixed; left: 0; right: 0; bottom: 70px;
     z-index: 100;
     background: rgba(12,12,22,0.97);
     border-top: 1px solid rgba(246,189,96,0.3);
@@ -319,11 +365,30 @@ h1 { font-size: 24px; color: #F6BD60; letter-spacing: 4px; margin-bottom: 8px; }
 </head>
 <body>
 
-<!-- Chart Mode Tabs: 1重/2重N+T/2重N+P -->
+<!-- Mobile Chart Menu Button (モバイルのみ表示) -->
+<div class="chart-menu-btn" id="chartMenuBtn" onclick="toggleChartMenu()">
+  <div class="chart-menu-bar"></div>
+  <div class="chart-menu-bar"></div>
+  <div class="chart-menu-bar"></div>
+</div>
+<div class="chart-menu-panel" id="chartMenuPanel">
+  <button class="chart-menu-item active" id="cmItem0" onclick="setChartModeMenu('single')">1重 NATAL</button>
+  <button class="chart-menu-item" id="cmItem1" onclick="setChartModeMenu('nt')">2重 N+T</button>
+  <button class="chart-menu-item" id="cmItem2" onclick="setChartModeMenu('np')">2重 N+P</button>
+  <button class="chart-menu-item" id="cmItem3" onclick="setChartModeMenu('astrology')">✦ 星読み</button>
+</div>
+
+<!-- Chart Mode Tabs: 1重/2重N+T/2重N+P/今日 -->
 <div class="tab-nav">
   <button class="tab-btn active" onclick="setChartMode('single')">1重 NATAL</button>
   <button class="tab-btn" onclick="setChartMode('nt')">2重 N+T</button>
   <button class="tab-btn" onclick="setChartMode('np')">2重 N+P</button>
+  <button class="tab-btn" onclick="setChartMode('astrology')" style="position:relative;z-index:200">✦ 星読み<br><span style="font-size:9px;letter-spacing:1px;opacity:0.7">Astrology</span></button>
+</div>
+
+<!-- Astrology View: 占い結果を縦に全表示 -->
+<div id="astrologyView" style="display:none;padding:16px;overflow-y:auto;height:calc(100vh - 120px);">
+  <div id="astrologyCardsAll"></div>
 </div>
 
 <div class="main-layout">
@@ -384,19 +449,6 @@ h1 { font-size: 24px; color: #F6BD60; letter-spacing: 4px; margin-bottom: 8px; }
       <button class="btn-generate" id="transitBtn" onclick="renderChart()" style="background:linear-gradient(135deg,#6BB5FF,#4A90D9)">トランジット更新</button>
     </div>
 
-    <!-- Fortune Reading Cards -->
-    <div class="fortune-reading" id="fortuneReading">
-      <h3>✦ FORTUNE READING</h3>
-      <div class="fortune-cards-wrap">
-        <div class="fortune-cards-track" id="fortuneTrack"></div>
-      </div>
-      <div class="fortune-dots" id="fortuneDots"></div>
-      <div class="fortune-nav-row">
-        <button class="fortune-nav-btn" onclick="fortunePrev()">← 前</button>
-        <span id="fortuneLabel" style="font-size:11px;color:#888;">1 / 5</span>
-        <button class="fortune-nav-btn" onclick="fortuneNext()">次 →</button>
-      </div>
-    </div>
 
     <!-- Planet Positions -->
     <div class="panel-card" id="planetsPanel">
@@ -476,10 +528,12 @@ h1 { font-size: 24px; color: #F6BD60; letter-spacing: 4px; margin-bottom: 8px; }
 <!-- Mobile Bottom Sheet (single DOM - no duplication) -->
 <div class="mobile-bottom-sheet" id="bottomSheet">
   <div class="bs-drag-handle" id="bsDragHandle"></div>
+  <div class="bs-mini-label" id="bsMiniLabel" onclick="setBSState('half')">
+    <span class="bs-mini-chevron">▲</span>ホロスコープ設定
+  </div>
   <div class="bs-tabs" id="bsTabs">
     <button class="bs-tab active" data-bs="birth" onclick="switchBSTab('birth')">&#9881; 誕生</button>
     <button class="bs-tab hidden-tab" data-bs="transit" id="bsTransitTab" onclick="switchBSTab('transit')">&#9790; 経過</button>
-    <button class="bs-tab" data-bs="fortune" onclick="switchBSTab('fortune')">✦ 運勢</button>
     <button class="bs-tab" data-bs="planets" onclick="switchBSTab('planets')">&#9737; 天体</button>
     <button class="bs-tab" data-bs="filter" onclick="switchBSTab('filter')">&#9881; 絞込</button>
     <button class="bs-tab" data-bs="aspects" onclick="switchBSTab('aspects')">&#9651; 相</button>
@@ -503,8 +557,8 @@ var ZODIAC_NAMES_JP = ['牡羊座','牡牛座','双子座','蟹座','獅子座',
 var ZODIAC_EN       = ['Ari','Tau','Gem','Can','Leo','Vir','Lib','Sco','Sag','Cap','Aqu','Pis'];
 var ZODIAC_COLORS   = ['#FF6B6B','#B49774','#C9C9C9','#1A6980','#FFD93D','#8B7355','#7F7FAF','#8B2252','#FF8C42','#5A5A5A','#4A90D9','#26D0CE'];
 
-var PLANET_GLYPHS   = ['\u2609','\u263D','\u263F','\u2640','\u2642','\u2643','\u2644','\u2645','\u2646','\u2647'];
-var PLANET_NAMES_JP = ['太陽','月','水星','金星','火星','木星','土星','天王星','海王星','冥王星'];
+var PLANET_GLYPHS   = ['\u2609','\u263D','\u263F','\u2640','\u2642','\u2643','\u2644','\u2645','\u2646','\u2647','ASC','MC','DSC','IC'];
+var PLANET_NAMES_JP = ['太陽','月','水星','金星','火星','木星','土星','天王星','海王星','冥王星','ASC','MC','DSC','IC'];
 
 var BODIES = [
   Astronomy.Body.Sun, Astronomy.Body.Moon,
@@ -519,10 +573,14 @@ var PROGRESSED_COLOR = '#B088FF';
 var BRAND_GOLD       = '#F6BD60';
 var BRAND_PLATINUM   = '#E8E0D0';
 
-// ORB_SETTINGS: single source of truth for orb values
-var ORB_SETTINGS = {
-  conjunction: 2, opposition: 2, trine: 2, square: 2, sextile: 2, quincunx: 2
-};
+// ORB_SETTINGS: single source of truth for orb values (overridable via Sanctuary settings)
+var ORB_SETTINGS = { conjunction: 2, opposition: 2, trine: 2, square: 2, sextile: 2, quincunx: 2 };
+(function() {
+  try {
+    var saved = localStorage.getItem('solara_orb_settings');
+    if (saved) { var o = JSON.parse(saved); for (var k in o) { if (ORB_SETTINGS.hasOwnProperty(k)) ORB_SETTINGS[k] = o[k]; } }
+  } catch(e) {}
+})();
 
 var ASPECT_TYPES = [
   { name: 'コンジャンクション', angle: 0,   orb: ORB_SETTINGS.conjunction, symbol: '\u260C', color: '#26D0CE', quality: 'neutral' },
@@ -635,10 +693,82 @@ function calcMC(date, lng) {
   return normalize(toDeg(Math.atan2(Math.sin(lstRad), Math.cos(lstRad) * Math.cos(epsRad))));
 }
 
-function calcHouses(asc) {
+// Placidus house cusp calculation (iterative semi-arc trisection)
+function calcHousesPlacidus(mc, asc, lat, obliquity) {
+  var epsR = toRad(obliquity);
+  var cosEps = Math.cos(epsR), sinEps = Math.sin(epsR);
+  var tanLat = Math.tan(toRad(lat));
+  var houses = new Array(12);
+  houses[0] = asc;
+  houses[9] = mc;
+  houses[6] = normalize(asc + 180);
+  houses[3] = normalize(mc + 180);
+
+  // RAMC: right ascension of MC
+  var mcR = toRad(mc);
+  var ramc = normalize(toDeg(Math.atan2(Math.sin(mcR) * cosEps, Math.cos(mcR))));
+
+  // Iterative Placidus cusp calculation
+  // Hour angle H = RAMC - RA. Each cusp is defined by its position in the diurnal circle:
+  //   11H: H = -(DSA/3)  => RA = RAMC + DSA/3     (DSA = 90+AD)
+  //   12H: H = -(2DSA/3) => RA = RAMC + 2·DSA/3
+  //   2H:  H = 180+2NSA/3 => RA = RAMC - 240 + 2AD/3  (NSA = 90-AD)
+  //   3H:  H = 180+NSA/3  => RA = RAMC - 210 + AD/3
+  function placidusCusp(house) {
+    var lon = (house <= 12) ? normalize(mc + (house - 10) * 30) : normalize(asc + (house - 1) * 30);
+    for (var iter = 0; iter < 50; iter++) {
+      var sinDecl = Math.sin(toRad(lon)) * sinEps;
+      sinDecl = Math.max(-1, Math.min(1, sinDecl));
+      var decl = Math.asin(sinDecl);
+      var adArg = Math.max(-1, Math.min(1, tanLat * Math.tan(decl)));
+      var AD = toDeg(Math.asin(adArg));
+      var targetRA;
+      if (house === 11) targetRA = ramc + (90 + AD) / 3;
+      else if (house === 12) targetRA = ramc + 2 * (90 + AD) / 3;
+      else if (house === 2) targetRA = ramc - 240 + 2 * AD / 3;
+      else targetRA = ramc - 210 + AD / 3; // house 3
+      var raR = toRad(targetRA);
+      var newLon = normalize(toDeg(Math.atan2(Math.sin(raR), Math.cos(raR) * cosEps)));
+      if (Math.abs(newLon - lon) < 0.001 || Math.abs(newLon - lon) > 359.999) break;
+      lon = newLon;
+    }
+    return lon;
+  }
+
+  houses[10] = placidusCusp(11);
+  houses[11] = placidusCusp(12);
+  houses[1] = placidusCusp(2);
+  houses[2] = placidusCusp(3);
+  // Opposite cusps
+  houses[4] = normalize(houses[10] + 180);
+  houses[5] = normalize(houses[11] + 180);
+  houses[7] = normalize(houses[1] + 180);
+  houses[8] = normalize(houses[2] + 180);
+  return houses;
+}
+
+// Whole Sign house system (ASC sign = 1st house, each sign = 1 house)
+function calcHousesWholeSigns(asc) {
+  var signStart = Math.floor(asc / 30) * 30;
+  var houses = [];
+  for (var i = 0; i < 12; i++) houses.push(normalize(signStart + i * 30));
+  return houses;
+}
+
+// Equal House (legacy fallback)
+function calcHousesEqual(asc) {
   var houses = [];
   for (var i = 0; i < 12; i++) houses.push(normalize(asc + i * 30));
   return houses;
+}
+
+// Main dispatcher - reads localStorage setting
+function calcHouses(mc, asc, lat, obliquity) {
+  var sys = localStorage.getItem('solara_house_system') || 'placidus';
+  if (sys === 'whole_sign') return calcHousesWholeSigns(asc);
+  // Placidus fails at extreme latitudes
+  if (Math.abs(lat) > 66) return calcHousesEqual(asc);
+  return calcHousesPlacidus(mc, asc, lat, obliquity);
 }
 
 function calcProgressedDate(birthDate, currentDate) {
@@ -811,6 +941,7 @@ function predictPatternCompletions(natal, birthDate, daysAhead) {
 //  FILTER LOGIC
 // ============================================================
 function getPlanetGroup(idx) {
+  if (idx >= 10) return 'angle'; // ASC/MC/DSC/IC - always visible
   if (PLANET_GROUPS.personal.indexOf(idx) >= 0) return 'personal';
   if (PLANET_GROUPS.social.indexOf(idx) >= 0) return 'social';
   return 'generational';
@@ -822,7 +953,12 @@ function aspectPassesFilter(a) {
     var fp = FORTUNE_PLANETS[activeFilters.fortune];
     if (fp.indexOf(a.p1) < 0 && fp.indexOf(a.p2) < 0) return false;
   }
-  if (!activeFilters.pgroup[getPlanetGroup(a.p1)] && !activeFilters.pgroup[getPlanetGroup(a.p2)]) return false;
+  var g1 = getPlanetGroup(a.p1), g2 = getPlanetGroup(a.p2);
+  // Angles always pass planet group filter; check the other side
+  if (g1 === 'angle' || g2 === 'angle') {
+    var other = (g1 === 'angle') ? g2 : g1;
+    if (other !== 'angle' && !activeFilters.pgroup[other]) return false;
+  } else if (!activeFilters.pgroup[g1] && !activeFilters.pgroup[g2]) return false;
   return true;
 }
 
@@ -898,7 +1034,7 @@ function buildPatternPolygons(patterns, natal, asc, cx, cy, r) {
       var points = [];
       var cxP = 0, cyP = 0;
       for (var i = 0; i < planets.length; i++) {
-        var angle = toRad(planets[i].lon - asc - 90);
+        var angle = toRad(asc - planets[i].lon + 180);
         var x = cx + r * Math.cos(angle);
         var y = cy + r * Math.sin(angle);
         points.push(x.toFixed(1) + ',' + y.toFixed(1));
@@ -929,8 +1065,8 @@ function buildAspectLinesHTML(aspects, asc, cx, cy, r, patterns, natal) {
     if (!aspectPassesFilter(a)) { a.visible = false; continue; }
     a.visible = true;
 
-    var a1 = toRad(a.lon1 - asc - 90);
-    var a2 = toRad(a.lon2 - asc - 90);
+    var a1 = toRad(asc - a.lon1 + 180);
+    var a2 = toRad(asc - a.lon2 + 180);
     var opacity = 1 - Math.abs(a.diff - a.type.angle) / a.type.orb * 0.5;
     h += '<line x1="' + (cx + r * Math.cos(a1)).toFixed(1) + '" y1="' + (cy + r * Math.sin(a1)).toFixed(1) + '" x2="' + (cx + r * Math.cos(a2)).toFixed(1) + '" y2="' + (cy + r * Math.sin(a2)).toFixed(1) + '" stroke="' + a.type.color + '" stroke-opacity="' + (opacity * 0.95).toFixed(2) + '" stroke-width="1.5"/>';
   }
@@ -961,10 +1097,54 @@ function fillForm(user) {
   document.getElementById('inputLng').value = user.lng;
 }
 
+function toggleChartMenu() {
+  var panel = document.getElementById('chartMenuPanel');
+  panel.classList.toggle('open');
+}
+
+function setChartModeMenu(mode) {
+  document.getElementById('chartMenuPanel').classList.remove('open');
+  var ids = ['cmItem0','cmItem1','cmItem2','cmItem3'];
+  var modes = ['single','nt','np','astrology'];
+  ids.forEach(function(id, i) {
+    var el = document.getElementById(id);
+    if (el) el.classList.toggle('active', modes[i] === mode);
+  });
+  setChartMode(mode);
+}
+
+// メニュー外クリックで閉じる（DOM準備後に登録）
+window.addEventListener('DOMContentLoaded', function() {
+  document.addEventListener('click', function(e) {
+    var btn = document.getElementById('chartMenuBtn');
+    var panel = document.getElementById('chartMenuPanel');
+    if (btn && panel && !btn.contains(e.target) && !panel.contains(e.target)) {
+      panel.classList.remove('open');
+    }
+  });
+});
+
 function setChartMode(mode) {
   chartMode = mode;
-  var modes = ['single', 'nt', 'np'];
+  var modes = ['single', 'nt', 'np', 'astrology'];
   document.querySelectorAll('.tab-btn').forEach(function(btn, i) { btn.classList.toggle('active', modes[i] === mode); });
+
+  var mainLayout = document.querySelector('.main-layout');
+  var astrologyView = document.getElementById('astrologyView');
+
+  var bottomSheet = document.getElementById('bottomSheet');
+  if (mode === 'astrology') {
+    mainLayout.style.display = 'none';
+    astrologyView.style.display = 'block';
+    if (bottomSheet) bottomSheet.style.display = 'none';
+    buildTodayView();
+    return;
+  }
+
+  mainLayout.style.display = '';
+  astrologyView.style.display = 'none';
+  if (bottomSheet) bottomSheet.style.display = '';
+
   var tp = document.getElementById('transitPanel');
   var title = document.getElementById('transitPanelTitle');
   var btn = document.getElementById('transitBtn');
@@ -984,6 +1164,22 @@ function setChartMode(mode) {
   }
   updateBSTransitTab();
   resetFilters();
+}
+
+function buildTodayView() {
+  var el = document.getElementById('astrologyCardsAll');
+  if (!el) return;
+  el.innerHTML = FORTUNE_CATEGORIES.map(function(cat) {
+    var data = FORTUNE_MOCK[cat.id];
+    return '<div class="fortune-card" style="background:' + cat.bg + ';border:1px solid ' + cat.border + ';border-radius:16px;padding:20px;margin-bottom:16px;">'
+      + '<div class="fortune-card-header">'
+      + '<div class="fortune-card-icon" style="background:' + cat.bg + ';border:1px solid ' + cat.border + ';width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;">' + cat.icon + '</div>'
+      + '<div class="fortune-card-title" style="color:' + cat.color + ';font-size:15px;font-weight:700;margin-left:10px;">' + cat.label + '</div>'
+      + '</div>'
+      + '<div class="fortune-card-body" style="font-size:13px;line-height:1.8;color:rgba(232,224,208,0.85);">' + data.text + '</div>'
+      + '<div class="fortune-card-direction" style="margin-top:12px;padding:10px 14px;border-radius:12px;background:rgba(249,217,118,0.06);border:1px solid rgba(249,217,118,0.15);font-size:12px;color:#F6BD60;">🧭 <strong>方位アドバイス:</strong> ' + data.direction + '</div>'
+      + '</div>';
+  }).join('');
 }
 
 function onTransitLocationChange() {
@@ -1077,7 +1273,13 @@ function renderChart() {
   var natal   = calcAllPlanets(birthDate);
   var asc     = calcAscendant(birthDate, user.lat, user.lng);
   var mc      = calcMC(birthDate, user.lng);
-  var houses  = calcHouses(asc);
+  var dsc     = normalize(asc + 180);
+  var ic      = normalize(mc + 180);
+  // Obliquity for Placidus
+  var jd = (birthDate.getTime() / 86400000) + 2440587.5;
+  var T = (jd - 2451545.0) / 36525.0;
+  var obliquity = 23.4393 - 0.013 * T;
+  var houses  = calcHouses(mc, asc, user.lat, obliquity);
 
   var secondary = null;
   var secondaryColor = TRANSIT_COLOR;
@@ -1118,18 +1320,17 @@ function renderChart() {
 
   // Zodiac wheel
   for (var i = 0; i < 12; i++) {
-    var startAngle = i * 30 - asc;
-    var sa = toRad(startAngle - 90);
-    var ea = toRad(startAngle + 30 - 90);
+    var sa = toRad(asc - i * 30 + 180);
+    var ea = toRad(asc - (i + 1) * 30 + 180);
     var x1o = cx + zodiacOuter * Math.cos(sa), y1o = cy + zodiacOuter * Math.sin(sa);
     var x2o = cx + zodiacOuter * Math.cos(ea), y2o = cy + zodiacOuter * Math.sin(ea);
     var x1i = cx + zodiacInner * Math.cos(sa), y1i = cy + zodiacInner * Math.sin(sa);
     var x2i = cx + zodiacInner * Math.cos(ea), y2i = cy + zodiacInner * Math.sin(ea);
     var fc = ZODIAC_COLORS[i];
 
-    h += '<path d="M' + x1i + ',' + y1i + ' A' + zodiacInner + ',' + zodiacInner + ' 0 0,1 ' + x2i + ',' + y2i + ' L' + x2o + ',' + y2o + ' A' + zodiacOuter + ',' + zodiacOuter + ' 0 0,0 ' + x1o + ',' + y1o + ' Z" fill="' + fc + '" fill-opacity="0.12" stroke="rgba(255,255,255,0.08)" stroke-width="0.5"/>';
+    h += '<path d="M' + x1i + ',' + y1i + ' A' + zodiacInner + ',' + zodiacInner + ' 0 0,0 ' + x2i + ',' + y2i + ' L' + x2o + ',' + y2o + ' A' + zodiacOuter + ',' + zodiacOuter + ' 0 0,1 ' + x1o + ',' + y1o + ' Z" fill="' + fc + '" fill-opacity="0.12" stroke="rgba(255,255,255,0.08)" stroke-width="0.5"/>';
 
-    var midAngle = toRad(startAngle + 15 - 90);
+    var midAngle = toRad(asc - i * 30 - 15 + 180);
     var glyphR = (zodiacOuter + zodiacInner) / 2;
     var gx = cx + glyphR * Math.cos(midAngle), gy = cy + glyphR * Math.sin(midAngle);
     h += '<g class="zodiac-tap" onclick="showZodiacName(evt,' + i + ')" style="cursor:pointer">';
@@ -1144,23 +1345,35 @@ function renderChart() {
   h += '<circle cx="' + cx + '" cy="' + cy + '" r="' + zodiacInner + '" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="1"/>';
   h += '<circle cx="' + cx + '" cy="' + cy + '" r="' + innerR + '" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="0.8"/>';
 
-  // House lines
+  // House lines (non-angular cusps)
   for (var i = 0; i < 12; i++) {
-    var angle = toRad(houses[i] - asc - 90);
-    var isCardinal = (i === 0 || i === 3 || i === 6 || i === 9);
-    h += '<line x1="' + (cx + innerR * Math.cos(angle)) + '" y1="' + (cy + innerR * Math.sin(angle)) + '" x2="' + (cx + zodiacInner * Math.cos(angle)) + '" y2="' + (cy + zodiacInner * Math.sin(angle)) + '" stroke="' + (isCardinal ? 'rgba(255,215,112,0.5)' : 'rgba(255,255,255,0.12)') + '" stroke-width="' + (isCardinal ? 1.8 : 0.7) + '"/>';
+    var angle = toRad(asc - houses[i] + 180);
+    h += '<line x1="' + (cx + innerR * Math.cos(angle)) + '" y1="' + (cy + innerR * Math.sin(angle)) + '" x2="' + (cx + zodiacInner * Math.cos(angle)) + '" y2="' + (cy + zodiacInner * Math.sin(angle)) + '" stroke="rgba(255,255,255,0.12)" stroke-width="0.7"/>';
 
     var nextH = houses[(i + 1) % 12];
     var midH = houses[i] + ((nextH - houses[i] + 360) % 360) / 2;
-    var hAngle = toRad(midH - asc - 90);
+    var hAngle = toRad(asc - midH + 180);
     var hR = innerR + 14;
     h += '<text x="' + (cx + hR * Math.cos(hAngle)) + '" y="' + (cy + hR * Math.sin(hAngle)) + '" text-anchor="middle" dominant-baseline="central" fill="rgba(255,255,255,0.2)" font-size="9">' + (i + 1) + '</text>';
   }
+  // 4 Angle axes: ASC-DSC and MC-IC (full-width lines through chart)
+  var ANGLE_COLOR = 'rgba(255,215,112,0.25)';
+  var ANGLE_WIDTH = 1;
+  // ASC-DSC axis — full span from zodiacOuter to zodiacOuter through center
+  var ascAngle = toRad(asc - asc + 180); // = 180° = left (9 o'clock)
+  var dscAngle = toRad(asc - dsc + 180);
+  h += '<line x1="' + (cx + zodiacOuter * Math.cos(ascAngle)) + '" y1="' + (cy + zodiacOuter * Math.sin(ascAngle)) + '" x2="' + (cx + zodiacOuter * Math.cos(dscAngle)) + '" y2="' + (cy + zodiacOuter * Math.sin(dscAngle)) + '" stroke="' + ANGLE_COLOR + '" stroke-width="' + ANGLE_WIDTH + '"/>';
+  // MC-IC axis
+  var mcAng = toRad(asc - mc + 180);
+  var icAng = toRad(asc - ic + 180);
+  h += '<line x1="' + (cx + zodiacOuter * Math.cos(mcAng)) + '" y1="' + (cy + zodiacOuter * Math.sin(mcAng)) + '" x2="' + (cx + zodiacOuter * Math.cos(icAng)) + '" y2="' + (cy + zodiacOuter * Math.sin(icAng)) + '" stroke="' + ANGLE_COLOR + '" stroke-width="' + ANGLE_WIDTH + '"/>';
 
-  // ASC / MC labels
-  h += '<text x="' + (cx - zodiacOuter - 12) + '" y="' + (cy + 4) + '" text-anchor="end" fill="' + NATAL_COLOR + '" font-size="11" font-weight="bold" filter="url(#glow)">ASC</text>';
-  var mcAngle = toRad(mc - asc - 90);
-  h += '<text x="' + (cx + (zodiacOuter + 14) * Math.cos(mcAngle)) + '" y="' + (cy + (zodiacOuter + 14) * Math.sin(mcAngle)) + '" text-anchor="middle" dominant-baseline="central" fill="' + NATAL_COLOR + '" font-size="10" font-weight="bold" filter="url(#glow)">MC</text>';
+  // 4 Angle labels: ASC / DSC / MC / IC (just inside inner ring of zodiac band)
+  var labelR = zodiacInner - 12;
+  h += '<text x="' + (cx + labelR * Math.cos(ascAngle)) + '" y="' + (cy + labelR * Math.sin(ascAngle)) + '" text-anchor="middle" dominant-baseline="central" fill="' + NATAL_COLOR + '" font-size="10" font-weight="bold" filter="url(#glow)">ASC</text>';
+  h += '<text x="' + (cx + labelR * Math.cos(dscAngle)) + '" y="' + (cy + labelR * Math.sin(dscAngle)) + '" text-anchor="middle" dominant-baseline="central" fill="' + NATAL_COLOR + '" font-size="10" font-weight="bold" filter="url(#glow)">DSC</text>';
+  h += '<text x="' + (cx + labelR * Math.cos(mcAng)) + '" y="' + (cy + labelR * Math.sin(mcAng)) + '" text-anchor="middle" dominant-baseline="central" fill="' + NATAL_COLOR + '" font-size="10" font-weight="bold" filter="url(#glow)">MC</text>';
+  h += '<text x="' + (cx + labelR * Math.cos(icAng)) + '" y="' + (cy + labelR * Math.sin(icAng)) + '" text-anchor="middle" dominant-baseline="central" fill="' + NATAL_COLOR + '" font-size="10" font-weight="bold" filter="url(#glow)">IC</text>';
 
   // Aspect collection
   var aspectsFound = [];
@@ -1174,18 +1387,42 @@ function renderChart() {
     aspectsFound = collectAspects(natal, secondary, true, 'N-P');
   }
 
+  // Angle aspects: ASC/MC/DSC/IC vs natal planets
+  var anglePoints = [
+    { lon: asc, idx: 10, glyph: 'ASC' },
+    { lon: mc,  idx: 11, glyph: 'MC' },
+    { lon: dsc, idx: 12, glyph: 'DSC' },
+    { lon: ic,  idx: 13, glyph: 'IC' }
+  ];
+  for (var ai = 0; ai < anglePoints.length; ai++) {
+    var ap = anglePoints[ai];
+    for (var pi = 0; pi < 10; pi++) {
+      var diff = angleDiff(ap.lon, natal[pi]);
+      for (var k = 0; k < ASPECT_TYPES.length; k++) {
+        var asp = ASPECT_TYPES[k];
+        if (Math.abs(diff - asp.angle) <= asp.orb) {
+          aspectsFound.push({
+            p1: ap.idx, p2: pi, type: asp, diff: diff,
+            label: 'N-N', lon1: ap.lon, lon2: natal[pi], visible: true,
+            isAngle: true
+          });
+        }
+      }
+    }
+  }
+
   // Use cached patterns (computed once on generate)
   var patterns = cachedPatterns || detectPatterns(aspectsFound, natal, secondary);
   var predictions = cachedPredictions || [];
 
-  lastRenderParams = { asc: asc, cx: cx, cy: cy, aspectR: aspectR, natal: natal };
+  lastRenderParams = { asc: asc, cx: cx, cy: cy, aspectR: aspectR, natal: natal, angleLons: { 10: asc, 11: mc, 12: dsc, 13: ic } };
 
   // Aspect lines + pattern polygons
   h += buildAspectLinesHTML(aspectsFound, asc, cx, cy, aspectR, patterns, natal);
 
   // Planet placement
   function placePlanet(lon, r, color, glyph, fontSize) {
-    var angle = toRad(lon - asc - 90);
+    var angle = toRad(asc - lon + 180);
     var x = cx + r * Math.cos(angle);
     var y = cy + r * Math.sin(angle);
     h += '<circle cx="' + x + '" cy="' + y + '" r="2" fill="' + color + '" filter="url(#glow)"/>';
@@ -1219,7 +1456,7 @@ function renderChart() {
   svg.innerHTML = h;
   lastAspectsFound = aspectsFound;
 
-  renderPlanetTable(natal, secondary, secondaryColor, secondaryLabel, asc, mc, houses);
+  renderPlanetTable(natal, secondary, secondaryColor, secondaryLabel, asc, mc, dsc, ic, houses);
 
   renderAspectInfo(aspectsFound, patterns);
 
@@ -1233,13 +1470,33 @@ function renderChart() {
   }
 
   renderLegend(secondaryColor, secondaryLabel);
+  updateHouseSystemLabel();
   refreshActiveBS();
+}
+
+function updateHouseSystemLabel() {
+  var sys = localStorage.getItem('solara_house_system') || 'placidus';
+  var labels = { placidus: 'Placidus', whole_sign: 'Whole Sign' };
+  var text = labels[sys] || sys;
+  // Remove old label if exists, then add to SVG bottom-left
+  var svg = document.getElementById('horoscopeChart');
+  var old = document.getElementById('svgHouseLabel');
+  if (old) old.remove();
+  var t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  t.id = 'svgHouseLabel';
+  t.setAttribute('x', '8');
+  t.setAttribute('y', '592');
+  t.setAttribute('fill', 'rgba(255,255,255,0.25)');
+  t.setAttribute('font-size', '10');
+  t.setAttribute('font-family', 'Lato, sans-serif');
+  t.textContent = 'House System: ' + text;
+  svg.appendChild(t);
 }
 
 // ============================================================
 //  SIDE PANEL RENDERERS
 // ============================================================
-function renderPlanetTable(natal, secondary, secColor, secLabel, asc, mc, houses) {
+function renderPlanetTable(natal, secondary, secColor, secLabel, asc, mc, dsc, ic, houses) {
   var c = document.getElementById('planetTable');
   var h = '<div class="planet-row" style="font-size:10px;color:#666;border-bottom:1px solid rgba(255,255,255,0.08)">';
   h += '<div class="planet-glyph"></div><div class="planet-name"></div>';
@@ -1258,11 +1515,20 @@ function renderPlanetTable(natal, secondary, secColor, secLabel, asc, mc, houses
     h += '</div>';
   }
 
+  // 4 Angles: ASC / MC / DSC / IC
+  var angleData = [
+    { glyph: 'ASC', lon: asc, house: 1 },
+    { glyph: 'MC',  lon: mc,  house: 10 },
+    { glyph: 'DSC', lon: dsc, house: 7 },
+    { glyph: 'IC',  lon: ic,  house: 4 }
+  ];
   h += '<div class="planet-row" style="border-top:1px solid rgba(255,255,255,0.08);margin-top:4px;padding-top:8px">';
-  h += '<div class="planet-glyph" style="color:' + NATAL_COLOR + ';font-size:11px">ASC</div><div class="planet-name"></div>';
-  h += '<div class="planet-pos">' + formatDegree(asc) + '</div><div style="width:30px;text-align:center;color:#666;font-size:10px">1</div></div>';
-  h += '<div class="planet-row"><div class="planet-glyph" style="color:' + NATAL_COLOR + ';font-size:11px">MC</div><div class="planet-name"></div>';
-  h += '<div class="planet-pos">' + formatDegree(mc) + '</div><div style="width:30px;text-align:center;color:#666;font-size:10px">10</div></div>';
+  h += '<div class="planet-glyph" style="color:' + NATAL_COLOR + ';font-size:11px">' + angleData[0].glyph + '</div><div class="planet-name"></div>';
+  h += '<div class="planet-pos">' + formatDegree(angleData[0].lon) + '</div><div style="width:30px;text-align:center;color:#666;font-size:10px">' + angleData[0].house + '</div></div>';
+  for (var ai = 1; ai < angleData.length; ai++) {
+    h += '<div class="planet-row"><div class="planet-glyph" style="color:' + NATAL_COLOR + ';font-size:11px">' + angleData[ai].glyph + '</div><div class="planet-name"></div>';
+    h += '<div class="planet-pos">' + formatDegree(angleData[ai].lon) + '</div><div style="width:30px;text-align:center;color:#666;font-size:10px">' + angleData[ai].house + '</div></div>';
+  }
 
   c.innerHTML = h;
 }
@@ -1432,7 +1698,8 @@ function renderLegend(secColor, secLabel) {
 // ============================================================
 var bsState = 'half';
 var bsActiveTab = 'birth';
-var BS_MIN_H = 52;
+var BS_MINI_H = 52;
+var BS_SMALL_RATIO = 0.25;
 var BS_HALF_RATIO = 0.45;
 var BS_FULL_RATIO = 0.85;
 
@@ -1451,7 +1718,7 @@ function initBottomSheet() {
   document.addEventListener('touchmove', function(e) {
     if (!dragging) return;
     var dy = startY - e.touches[0].clientY;
-    var newH = Math.max(BS_MIN_H, Math.min(window.innerHeight * BS_FULL_RATIO, startH + dy));
+    var newH = Math.max(BS_MINI_H, Math.min(window.innerHeight * BS_FULL_RATIO, startH + dy));
     sheet.style.height = newH + 'px';
     updateBSBodyHeight();
   });
@@ -1459,7 +1726,7 @@ function initBottomSheet() {
     if (!dragging) return;
     dragging = false; sheet.style.transition = '';
     var h = sheet.offsetHeight, wh = window.innerHeight;
-    setBSState(h < BS_MIN_H + 40 ? 'min' : h > wh * 0.65 ? 'full' : 'half');
+    setBSState(h > wh * 0.65 ? 'full' : h > wh * 0.35 ? 'half' : h > wh * 0.175 ? 'small' : 'mini');
   });
 
   handle.addEventListener('mousedown', function(e) {
@@ -1469,7 +1736,7 @@ function initBottomSheet() {
   document.addEventListener('mousemove', function(e) {
     if (!dragging) return;
     var dy = startY - e.clientY;
-    var newH = Math.max(BS_MIN_H, Math.min(window.innerHeight * BS_FULL_RATIO, startH + dy));
+    var newH = Math.max(BS_MINI_H, Math.min(window.innerHeight * BS_FULL_RATIO, startH + dy));
     sheet.style.height = newH + 'px';
     updateBSBodyHeight();
   });
@@ -1477,7 +1744,7 @@ function initBottomSheet() {
     if (!dragging) return;
     dragging = false; sheet.style.transition = '';
     var h = sheet.offsetHeight, wh = window.innerHeight;
-    setBSState(h < BS_MIN_H + 40 ? 'min' : h > wh * 0.65 ? 'full' : 'half');
+    setBSState(h > wh * 0.65 ? 'full' : h > wh * 0.35 ? 'half' : h > wh * 0.175 ? 'small' : 'mini');
   });
 
   setBSState('half');
@@ -1495,9 +1762,23 @@ function setBSState(state) {
   var sheet = document.getElementById('bottomSheet');
   if (!sheet) return;
   var wh = window.innerHeight;
-  if (state === 'min') sheet.style.height = BS_MIN_H + 'px';
-  else if (state === 'half') sheet.style.height = Math.round(wh * BS_HALF_RATIO) + 'px';
-  else sheet.style.height = Math.round(wh * BS_FULL_RATIO) + 'px';
+  var miniLabel = document.getElementById('bsMiniLabel');
+  var bsTabs   = document.getElementById('bsTabs');
+  var bsBody   = document.getElementById('bsBody');
+
+  if (state === 'mini') {
+    sheet.style.height = BS_MINI_H + 'px';
+    if (miniLabel) miniLabel.style.display = 'block';
+    if (bsTabs)   bsTabs.style.display   = 'none';
+    if (bsBody)   bsBody.style.display   = 'none';
+  } else {
+    if (miniLabel) miniLabel.style.display = 'none';
+    if (bsTabs)   bsTabs.style.display   = '';
+    if (bsBody)   bsBody.style.display   = '';
+    if (state === 'small') sheet.style.height = Math.round(wh * BS_SMALL_RATIO) + 'px';
+    else if (state === 'half') sheet.style.height = Math.round(wh * BS_HALF_RATIO) + 'px';
+    else sheet.style.height = Math.round(wh * BS_FULL_RATIO) + 'px';
+  }
   updateBSBodyHeight();
 }
 
@@ -1642,7 +1923,12 @@ function buildBSAspectsContent() {
   var containerTitle = document.getElementById('aspectsContainerTitle');
   var html = '';
   if (containerTitle) html += '<h3>' + containerTitle.innerHTML + '</h3>';
-  if (mainInfo) html += mainInfo.innerHTML;
+  if (mainInfo) {
+    // Remove inner scroll container (max-height) — bs-body handles scrolling
+    var content = mainInfo.innerHTML;
+    content = content.replace(/max-height:\s*250px\s*;?\s*/g, '').replace(/overflow-y:\s*auto\s*;?\s*/g, '');
+    html += content;
+  }
   el.innerHTML = html;
 }
 
@@ -1670,30 +1956,31 @@ var FORTUNE_CATEGORIES = [
     bg:'rgba(107,181,255,0.08)', border:'rgba(107,181,255,0.2)' },
 ];
 
+// ※本番: 全カテゴリ Claude Sonnet で動的生成（全体運 約400字、個別運 約200字）
 var FORTUNE_MOCK = {
   overall: {
     score: 82,
-    text: '今日は全体的にエネルギーが高まる一日です。太陽と木星のソフトアスペクトが活力を与え、新しいことに挑戦する勇気が湧いてきます。特に午前中は直感が冴え、重要な決断に適した時間帯。ただし、火星と土星の緊張角が午後に影響するため、焦りは禁物です。ゆっくりと確実に歩みを進めることで、夕方には充実感に包まれるでしょう。',
-    direction: '北東が吉方位。新しい出会いや発見が期待できます。'
+    text: '今日の星配置は、あなたの内側に眠る意志の力を呼び覚ます一日です。太陽と木星が緩やかにトラインを形成し、行動へのエネルギーと拡張の気風が自然と高まっています。午前中は特に直感が鋭く、長らく保留にしていた選択や決断に向き合う好機といえるでしょう。思い切って一歩を踏み出すことで、これまでとは異なる景色が開けていきます。一方、火星と土星のスクエアが午後にかけて影を落とすため、焦りや強引な推し進めには注意が必要です。思い通りに事が運ばない場面も出てくるかもしれませんが、それは立ち止まって状況を整える時間と受け取ってください。夕刻には月がさらに安定した位置へと移行し、穏やかな達成感と共に一日を締めくくれるでしょう。焦らず、しかし確実に。今日という日はそういう星の流れにあります。',
+    direction: '北東が吉方位。新たな出会いや気づきが訪れやすい方角です。午前中に北東方向へ出かけると、思わぬ好機が生まれるかもしれません。'
   },
   love: {
     score: 75,
-    text: '金星と月のアスペクトが感受性を高め、パートナーとの絆が深まる暗示。シングルの方は、普段行かない場所で思わぬ出会いがあるかもしれません。コミュニケーションを大切にし、自分の気持ちを素直に伝えることで、関係が一歩前進します。夜は二人だけの静かな時間を過ごすと良いでしょう。',
+    text: '金星と月のアスペクトが感受性を高め、心の距離が自然と縮まりやすい一日です。パートナーがいる方は、日常の些細なやりとりの中に深い絆を感じる瞬間があるでしょう。シングルの方は、普段とは違うルートや場所に足を運ぶことで、予期せぬ出会いが生まれる可能性があります。自分の気持ちを飾らず素直に伝えることが、今日の恋愛運を開くカギです。',
     direction: '南東の方角に恋愛のエネルギーが集中しています。'
   },
   money: {
     score: 68,
-    text: '木星と水星の配置が金銭面に好影響。投資やビジネスの判断力が冴える日です。ただし、衝動的な大きな買い物は避けましょう。堅実な資産管理と長期的な視点が吉。副業や新しい収入源のアイデアが浮かびやすい時期でもあります。情報収集に時間をかけて。',
+    text: '木星と水星の配置が金銭面の判断力を高めています。長期的な視点で資産や収入について考えるのに向いた一日です。ただし、衝動的な大きな支出は避けるべきタイミング。今日は情報収集と計画の立て直しに力を注ぐことで、後に実を結ぶ準備が整っていきます。副業や新たな収入源のアイデアが浮かんだら、メモしておくと良いでしょう。',
     direction: '西の方角に金運の流れがあります。'
   },
   career: {
     score: 88,
-    text: '仕事運は非常に好調。太陽と火星のエネルギーがリーダーシップを強化し、周囲からの信頼も高まります。プロジェクトの推進力が増す日なので、懸案事項に積極的に取り組みましょう。チームワークを意識することで、一人では成し遂げられない成果が生まれます。会議やプレゼンでは自信を持って。',
+    text: '太陽と火星のエネルギーが重なり、仕事への推進力と自信が最高潮に達する一日です。周囲からの信頼も高まっており、リーダーシップを発揮する場面で実力が際立ちます。懸案事項や先延ばしにしていたタスクに積極的に取り組むと、予想以上のスピードで前進できるでしょう。チームとの連携を意識することで、さらに大きな成果が生まれます。',
     direction: '北の方角が仕事運を後押しします。'
   },
   communication: {
     score: 71,
-    text: '水星と金星の調和的アスペクトが対話力を高めます。言葉に説得力が増し、交渉事や相談事がスムーズに進む暗示。SNSでの発信も好反応が期待できます。ただし、海王星の影響で曖昧な表現になりがちなので、重要な話は明確に。聴く姿勢を大切にすることで、相手の本音が見えてきます。',
+    text: '水星と金星の調和的なアスペクトが言葉に温かみと説得力を与えています。交渉や相談事がスムーズに進みやすく、SNSや文章での発信にも好反応が期待できます。ただし海王星の影響で言葉が曖昧になりがちなため、大切な話は具体的に伝えることを意識して。相手の言葉をじっくり聴く姿勢が、今日の対話をより豊かにしてくれます。',
     direction: '東の方角でコミュニケーションが活性化します。'
   }
 };

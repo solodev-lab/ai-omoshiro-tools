@@ -10,14 +10,15 @@
     * { margin:0; padding:0; box-sizing:border-box; }
     body {
       background: radial-gradient(ellipse at center, #0a1220 0%, #020408 100%);
-      display: flex; justify-content: center; align-items: center;
       min-height: 100vh; font-family: 'Lato', sans-serif; color: #EAEAEA;
+      margin: 0; padding: 0; overflow: hidden;
     }
     #bgCanvas { position:absolute; inset:0; z-index:0; width:100%; height:100%; }
 
     .sanctuary-content {
       flex:1; overflow-y:auto; padding:56px 20px 100px;
       display:flex; flex-direction:column; gap:20px;
+      max-width:600px; margin:0 auto; width:100%;
     }
     .sanctuary-content::-webkit-scrollbar { display:none; }
 
@@ -58,7 +59,7 @@
 
     .version-txt { text-align:center; font-size:11px; color:rgba(172,172,172,0.35); padding:8px 0; }
 
-    .main-area { position:absolute; inset:0; display:flex; flex-direction:column; z-index:10; }
+    .main-area { position:fixed; inset:0; display:flex; flex-direction:column; z-index:10; }
   </style>
 </head>
 <body>
@@ -124,6 +125,31 @@
       </div>
 
       <div class="settings-group">
+        <div class="section-label">✦ Astrology</div>
+        <div class="settings-item glass" onclick="toggleHouseSelect()" style="cursor:pointer">
+          <div class="settings-left"><div class="settings-icon">🏛️</div><div class="settings-txt">House System</div></div>
+          <div class="settings-val" id="houseSystemVal">Placidus ›</div>
+        </div>
+        <div id="houseSelectPanel" style="display:none;padding:0 8px;">
+          <div class="settings-item glass" onclick="setHouseSystem('placidus')" style="cursor:pointer;padding:10px 18px;">
+            <div class="settings-left"><div class="settings-txt">Placidus</div></div>
+            <div id="houseCheck_placidus" style="color:#F9D976;font-size:16px;">✓</div>
+          </div>
+          <div class="settings-item glass" onclick="setHouseSystem('whole_sign')" style="cursor:pointer;padding:10px 18px;margin-top:6px;">
+            <div class="settings-left"><div class="settings-txt">Whole Sign</div></div>
+            <div id="houseCheck_whole_sign" style="color:#F9D976;font-size:16px;opacity:0;">✓</div>
+          </div>
+        </div>
+        <div class="settings-item glass" onclick="toggleOrbPanel()" style="cursor:pointer">
+          <div class="settings-left"><div class="settings-icon">🔭</div><div class="settings-txt">Aspect Orbs</div></div>
+          <div class="settings-val" id="orbSummaryVal">All 2° ›</div>
+        </div>
+        <div id="orbPanel" style="display:none;padding:4px 8px;">
+          <div id="orbSliders"></div>
+        </div>
+      </div>
+
+      <div class="settings-group">
         <div class="section-label">✦ App</div>
         <div class="settings-item glass">
           <div class="settings-left"><div class="settings-icon">🌐</div><div class="settings-txt">Language</div></div>
@@ -156,17 +182,18 @@
 /* Background */
 const bgC=document.getElementById('bgCanvas');
 const bgX=bgC.getContext('2d');
-bgC.width=390;bgC.height=844;
+bgC.width=window.innerWidth;bgC.height=window.innerHeight;
 let bgT=0;
 (function animBg(){
-  bgX.clearRect(0,0,390,844);
-  const g=bgX.createRadialGradient(195,422,0,195,422,500);
+  const bw=bgC.width,bh=bgC.height,bcx=bw/2,bcy=bh/2;
+  bgX.clearRect(0,0,bw,bh);
+  const g=bgX.createRadialGradient(bcx,bcy,0,bcx,bcy,Math.max(bw,bh)*0.6);
   g.addColorStop(0,'#0C1D3A');g.addColorStop(1,'#080C14');
-  bgX.fillStyle=g;bgX.fillRect(0,0,390,844);
-  const n1x=195+Math.sin(bgT*0.6)*90,n1y=422+Math.cos(bgT*0.4)*130;
+  bgX.fillStyle=g;bgX.fillRect(0,0,bw,bh);
+  const n1x=bcx+Math.sin(bgT*0.6)*90,n1y=bcy+Math.cos(bgT*0.4)*130;
   const n1=bgX.createRadialGradient(n1x,n1y,0,n1x,n1y,220);
   n1.addColorStop(0,'rgba(249,217,118,0.05)');n1.addColorStop(1,'transparent');
-  bgX.fillStyle=n1;bgX.fillRect(0,0,390,844);
+  bgX.fillStyle=n1;bgX.fillRect(0,0,bw,bh);
   bgT+=0.004;requestAnimationFrame(animBg);
 })();
 
@@ -181,6 +208,82 @@ let bgT=0;
 })();
 
 renderNav('sanctuary');
+
+// ============================================================
+//  HOUSE SYSTEM SETTING
+// ============================================================
+var currentHouse = localStorage.getItem('solara_house_system') || 'placidus';
+var HOUSE_LABELS = { placidus: 'Placidus', whole_sign: 'Whole Sign' };
+
+function initHouseUI() {
+  document.getElementById('houseSystemVal').textContent = HOUSE_LABELS[currentHouse] + ' ›';
+  document.getElementById('houseCheck_placidus').style.opacity = currentHouse === 'placidus' ? '1' : '0';
+  document.getElementById('houseCheck_whole_sign').style.opacity = currentHouse === 'whole_sign' ? '1' : '0';
+}
+
+function toggleHouseSelect() {
+  var panel = document.getElementById('houseSelectPanel');
+  panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+}
+
+function setHouseSystem(val) {
+  currentHouse = val;
+  localStorage.setItem('solara_house_system', val);
+  initHouseUI();
+  document.getElementById('houseSelectPanel').style.display = 'none';
+}
+
+// ============================================================
+//  ORB SETTINGS
+// ============================================================
+var ORB_DEFAULTS = { conjunction: 2, opposition: 2, trine: 2, square: 2, sextile: 2, quincunx: 2 };
+var ORB_NAMES = { conjunction: 'Conjunction (0°)', opposition: 'Opposition (180°)', trine: 'Trine (120°)', square: 'Square (90°)', sextile: 'Sextile (60°)', quincunx: 'Quincunx (150°)' };
+var currentOrbs = Object.assign({}, ORB_DEFAULTS);
+try {
+  var saved = localStorage.getItem('solara_orb_settings');
+  if (saved) { var o = JSON.parse(saved); for (var k in o) { if (currentOrbs.hasOwnProperty(k)) currentOrbs[k] = o[k]; } }
+} catch(e) {}
+
+function toggleOrbPanel() {
+  var panel = document.getElementById('orbPanel');
+  if (panel.style.display === 'none') {
+    panel.style.display = 'block';
+    buildOrbSliders();
+  } else {
+    panel.style.display = 'none';
+  }
+}
+
+function buildOrbSliders() {
+  var c = document.getElementById('orbSliders');
+  var h = '';
+  var keys = ['conjunction','opposition','trine','square','sextile','quincunx'];
+  for (var i = 0; i < keys.length; i++) {
+    var k = keys[i];
+    h += '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;margin-bottom:4px;border-radius:10px;background:rgba(255,255,255,0.03)">';
+    h += '<span style="font-size:12px;color:#ACACAC;min-width:130px;">' + ORB_NAMES[k] + '</span>';
+    h += '<input type="range" min="1" max="8" step="1" value="' + currentOrbs[k] + '" oninput="updateOrb(\'' + k + '\',this.value)" style="flex:1;margin:0 10px;accent-color:#F9D976;">';
+    h += '<span id="orbVal_' + k + '" style="font-size:13px;color:#F9D976;min-width:22px;text-align:right;">' + currentOrbs[k] + '°</span>';
+    h += '</div>';
+  }
+  c.innerHTML = h;
+}
+
+function updateOrb(key, val) {
+  currentOrbs[key] = parseInt(val);
+  document.getElementById('orbVal_' + key).textContent = val + '°';
+  localStorage.setItem('solara_orb_settings', JSON.stringify(currentOrbs));
+  updateOrbSummary();
+}
+
+function updateOrbSummary() {
+  var vals = Object.values(currentOrbs);
+  var allSame = vals.every(function(v) { return v === vals[0]; });
+  document.getElementById('orbSummaryVal').textContent = allSame ? 'All ' + vals[0] + '° ›' : 'Custom ›';
+}
+
+initHouseUI();
+updateOrbSummary();
 </script>
 </body>
 </html>

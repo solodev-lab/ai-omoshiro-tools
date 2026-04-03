@@ -70,6 +70,7 @@ Solara Astrocartography + V7 Cosmic Spiral を統合した5画面モックアッ
 - 16方位セクター（大圏描画、turf.js）
 - Triple chart（Natal/Transit/Progressed）天文計算（astronomy-engine）
 - アスペクト検出 → 方位スコア（cosine falloff spread）
+- **アングルアスペクト方位ブースト**: ASC/MC/DSC/ICとアスペクトを形成するトランジット・プログレス天体のスコアにウェイトボーナスを付与。チャートの要（アングル）に関わる天体ほど、その方位のエネルギーが強く反映される
 - 運勢カテゴリ（癒し/金運/恋愛/仕事/コミュニケーション）
 - Fortune Sheet（16方位ランキング）
 - レイヤーパネル（チャート/惑星グループ/運勢フィルタ）
@@ -86,13 +87,22 @@ Solara Astrocartography + V7 Cosmic Spiral を統合した5画面モックアッ
 ### 2. Horo (`horoscope.html`)
 
 #### 既存機能
-- SVGホロスコープチャート（600×600）
+- SVGホロスコープチャート（600×600）、標準配置（ASC=左、MC=上、反時計回り）
 - 1重/2重（N+T, N+P）モード切替
-- 天体位置テーブル
+- **Placidusハウスシステム**（デフォルト）/ Whole Sign切替可（Sanctuary設定）
+  - 高緯度(|lat|>66°)はEqual Houseに自動フォールバック
+  - localStorage `solara_house_system` で永続化
+- **4アングル（ASC/DSC/IC/MC）**
+  - 十字軸ライン: zodiacOuterまで延伸、薄い金色(opacity 0.25, 1px)
+  - 4ラベル: zodiacInner内側に表示
+  - House System名: SVG左下に表示
+- **アングルアスペクト**: ASC/DSC/IC/MCと天体10個のアスペクトを検出・チャート上に描画。アングルとのアスペクトは占星術において非常に重要な意味を持ち、その人の基本的な性質や人生のテーマに深く関わる
+- 天体位置テーブル（ASC/MC/DSC/IC 4行追加）
 - アスペクトフィルター（性質/運勢/惑星グループ）
+- **オーブ設定**: localStorage `solara_orb_settings` から読み込み（Sanctuary設定で変更可）
 - パターン検出（Grand Trine/T-Square/Yod）
 - 60日先予測スキャン
-- モバイルボトムシート（ドラッグ対応）
+- モバイルボトムシート（ドラッグ4段階: mini 52px / small 25% / half 45% / full 85%、bottom: 70px でナビバー上に配置）
 
 #### V7統合で追加
 - **Fortune Reading カードUI（5カテゴリ）**
@@ -114,6 +124,10 @@ FORTUNE_CATEGORIES = [
   { id:'communication', icon:'💬', label:'対話運', color:'#6BB5FF' },
 ];
 // 本番: Claude API (Sonnet) でトランジット×ネイタルアスペクトから動的生成
+// ⚠️ 重要仕様: 鑑定文には必ず実際のアスペクト情報（惑星名・角度・性質）を含めること
+//   例: 「太陽と木星がトライン（120°）を形成し…」
+//   → astronomy-engine で検出したアスペクトリストをプロンプトに渡してSonnetに生成させる
+//   モックのテキストはアスペクト名をハードコードしているため、チャートと一致しない場合がある（モック許容）
 ```
 
 ### 3. Tarot (`tarot.html`)
@@ -192,6 +206,9 @@ FORTUNE_CATEGORIES = [
 - **Stellar Profile**: 生年月日/出生地/出生時刻
 - **Sanctuary Sleep**: Silent Hoursトグル + Sleep Window
 - **Cosmic Pro**: サブスクカード（$7.99/月、$59.99/年）— UI表示のみ
+- **Astrology設定**:
+  - House System: Placidus / Whole Sign 切替（localStorage `solara_house_system`）
+  - Aspect Orbs: 6アスペクト個別設定 1°〜8°（localStorage `solara_orb_settings`）
 - **App設定**: Language / Notifications / Rate / Terms
 
 ---
@@ -211,6 +228,8 @@ FORTUNE_CATEGORIES = [
 | `solara_intentions` | New Moon intentions | events.js |
 | `solara_moon_event_shown` | Moon発火済みフラグ | events.js |
 | `solara_daily_vibes` | 日次vibeデータ（28件） | Galaxy |
+| `solara_house_system` | ハウスシステム（placidus/whole_sign） | Sanctuary→Horo |
+| `solara_orb_settings` | アスペクトオーブ値JSON | Sanctuary→Horo |
 | `solara_galaxy_cycles` | 完了サイクル一覧 | Galaxy |
 
 ### vibe_score計算式
@@ -265,6 +284,7 @@ S = Tarot × 0.4 + Mood × 0.1 + Transit × 0.3 + Progressed × 0.2
 | モック名前生成 | Claude API (Sonnet) テンプレートルール制約付き |
 | events.js DOM注入 | Flutter Widget overlay |
 | CSS glass | Flutter BackdropFilter |
+| 日英2段表示（例: 星読み/READING） | AppLocalizations による自動多言語切替（Sanctuary言語設定と連動） |
 
 ---
 

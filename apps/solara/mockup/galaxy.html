@@ -10,8 +10,8 @@
     * { margin:0; padding:0; box-sizing:border-box; }
     body {
       background: radial-gradient(ellipse at center, #0a1220 0%, #020408 100%);
-      display: flex; justify-content: center; align-items: center;
       min-height: 100vh; font-family: 'Lato', sans-serif; color: #EAEAEA;
+      margin: 0; padding: 0; overflow: hidden;
     }
     #bgCanvas { position:absolute; inset:0; z-index:0; width:100%; height:100%; }
 
@@ -306,21 +306,22 @@ const GALAXY_CYCLES = [
 /* ==================== BACKGROUND ==================== */
 const bgC=document.getElementById('bgCanvas');
 const bgX=bgC.getContext('2d');
-bgC.width=390; bgC.height=844;
+bgC.width=window.innerWidth; bgC.height=window.innerHeight;
 let bgT=0;
 (function animBg(){
-  bgX.clearRect(0,0,390,844);
-  const g=bgX.createRadialGradient(195,422,0,195,422,500);
+  const bw=bgC.width,bh=bgC.height,bcx=bw/2,bcy=bh/2;
+  bgX.clearRect(0,0,bw,bh);
+  const g=bgX.createRadialGradient(bcx,bcy,0,bcx,bcy,Math.max(bw,bh)*0.6);
   g.addColorStop(0,'#0C1D3A'); g.addColorStop(1,'#080C14');
-  bgX.fillStyle=g; bgX.fillRect(0,0,390,844);
-  const n1x=195+Math.sin(bgT*0.6)*90,n1y=422+Math.cos(bgT*0.4)*130;
+  bgX.fillStyle=g; bgX.fillRect(0,0,bw,bh);
+  const n1x=bcx+Math.sin(bgT*0.6)*90,n1y=bcy+Math.cos(bgT*0.4)*130;
   const n1=bgX.createRadialGradient(n1x,n1y,0,n1x,n1y,220);
   n1.addColorStop(0,'rgba(38,208,206,0.07)'); n1.addColorStop(0.5,'rgba(26,41,128,0.05)'); n1.addColorStop(1,'transparent');
-  bgX.fillStyle=n1; bgX.fillRect(0,0,390,844);
-  const n2x=140+Math.cos(bgT*0.35)*70,n2y=280+Math.sin(bgT*0.5)*90;
+  bgX.fillStyle=n1; bgX.fillRect(0,0,bw,bh);
+  const n2x=bcx*0.7+Math.cos(bgT*0.35)*70,n2y=bcy*0.66+Math.sin(bgT*0.5)*90;
   const n2=bgX.createRadialGradient(n2x,n2y,0,n2x,n2y,160);
   n2.addColorStop(0,'rgba(249,217,118,0.06)'); n2.addColorStop(1,'transparent');
-  bgX.fillStyle=n2; bgX.fillRect(0,0,390,844);
+  bgX.fillStyle=n2; bgX.fillRect(0,0,bw,bh);
   bgT+=0.004; requestAnimationFrame(animBg);
 })();
 
@@ -594,7 +595,7 @@ function triggerConstellationFormation(){
   window._lastFormedCycle=newCycle;
   const overlay=document.getElementById('overlayFormation');
   const canvas=document.getElementById('formationCanvas');
-  canvas.width=390;canvas.height=844;
+  canvas.width=window.innerWidth;canvas.height=window.innerHeight;
   overlay.classList.add('visible');
   const stageEl=document.getElementById('formationStage');
   const symEl=document.getElementById('formationSymbol');
@@ -604,7 +605,7 @@ function triggerConstellationFormation(){
   symEl.style.opacity='0';nameEl.style.opacity='0';quoteEl.style.opacity='0';closeBtn.classList.remove('visible');
   stageEl.textContent='CONVERGENCE';
   const ctx=canvas.getContext('2d');
-  const W=390,H=844,cx=W/2,cy=H*0.42;
+  const W=canvas.width,H=canvas.height,cx=W/2,cy=H*0.42;
   const b=Math.min(W,H)*0.057,TOTAL=28,ZSPAN=55;
   let worldDots=[];
   for(let d=1;d<=TOTAL;d++){
