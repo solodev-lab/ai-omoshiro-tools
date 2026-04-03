@@ -60,6 +60,43 @@
     .version-txt { text-align:center; font-size:11px; color:rgba(172,172,172,0.35); padding:8px 0; }
 
     .main-area { position:fixed; inset:0; display:flex; flex-direction:column; z-index:10; }
+
+    /* Edit Overlay */
+    .edit-overlay {
+      display:none; position:fixed; inset:0; z-index:500;
+      background:rgba(4,8,16,0.92); backdrop-filter:blur(8px);
+      justify-content:center; align-items:center;
+    }
+    .edit-overlay.open { display:flex; }
+    .edit-card {
+      max-width:360px; width:90%; padding:24px;
+      background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1);
+      border-radius:20px;
+    }
+    .edit-title { font-size:14px; font-weight:700; color:#F9D976; margin-bottom:16px; letter-spacing:1px; }
+    .edit-input {
+      width:100%; padding:12px 14px; background:rgba(255,255,255,0.06);
+      border:1px solid rgba(255,255,255,0.12); border-radius:12px;
+      color:#EAEAEA; font-size:14px; outline:none; margin-bottom:10px;
+      font-family:inherit;
+    }
+    .edit-input:focus { border-color:rgba(249,217,118,0.4); }
+    .edit-actions { display:flex; justify-content:flex-end; gap:10px; margin-top:16px; }
+    .edit-btn {
+      padding:10px 20px; border-radius:10px; font-size:13px; cursor:pointer; border:none; font-family:inherit;
+    }
+    .edit-btn-cancel { background:rgba(255,255,255,0.08); color:#ACACAC; }
+    .edit-btn-save { background:linear-gradient(135deg,#F9D976,#E8A840); color:#0A0A14; font-weight:600; }
+    .edit-hint { font-size:11px; color:#888; margin-top:-4px; margin-bottom:8px; }
+    .edit-error { font-size:11px; color:#E87070; margin-top:-4px; margin-bottom:8px; display:none; }
+    .geo-btn {
+      padding:8px 14px; border:1px solid rgba(249,217,118,0.3); border-radius:10px;
+      background:none; color:#F9D976; font-size:12px; cursor:pointer; margin-bottom:10px;
+    }
+    .geo-btn:disabled { opacity:0.4; cursor:default; }
+    .geo-result { font-size:11px; color:#6CC070; margin-top:-6px; margin-bottom:8px; display:none; }
+    .edit-row { display:flex; gap:8px; }
+    .edit-row .edit-input { flex:1; }
   </style>
 </head>
 <body>
@@ -84,17 +121,25 @@
 
       <div class="settings-group">
         <div class="section-label">✦ Stellar Profile</div>
-        <div class="settings-item glass">
-          <div class="settings-left"><div class="settings-icon">🎂</div><div class="settings-txt">Birth Date</div></div>
-          <div class="settings-val">Oct 24, 1977 ›</div>
+        <div class="settings-item glass" onclick="openEdit('name')" style="cursor:pointer">
+          <div class="settings-left"><div class="settings-icon">✦</div><div class="settings-txt">氏名</div></div>
+          <div class="settings-val" id="nameVal">未設定 ›</div>
         </div>
-        <div class="settings-item glass">
-          <div class="settings-left"><div class="settings-icon">🌍</div><div class="settings-txt">Birth City</div></div>
-          <div class="settings-val">Gifu, Japan ›</div>
+        <div class="settings-item glass" onclick="openEdit('birthDate')" style="cursor:pointer">
+          <div class="settings-left"><div class="settings-icon">🎂</div><div class="settings-txt">生年月日</div></div>
+          <div class="settings-val" id="birthDateVal">未設定 ›</div>
         </div>
-        <div class="settings-item glass">
-          <div class="settings-left"><div class="settings-icon">🕐</div><div class="settings-txt">Birth Time</div></div>
-          <div class="settings-val">06:56 AM ›</div>
+        <div class="settings-item glass" onclick="openEdit('birthTime')" style="cursor:pointer">
+          <div class="settings-left"><div class="settings-icon">🕐</div><div class="settings-txt">出生時刻</div></div>
+          <div class="settings-val" id="birthTimeVal">未設定 ›</div>
+        </div>
+        <div class="settings-item glass" onclick="openEdit('birthCity')" style="cursor:pointer">
+          <div class="settings-left"><div class="settings-icon">🌍</div><div class="settings-txt">出生地</div></div>
+          <div class="settings-val" id="birthCityVal">未設定 ›</div>
+        </div>
+        <div class="settings-item glass" onclick="openEdit('home')" style="cursor:pointer">
+          <div class="settings-left"><div class="settings-icon">🏠</div><div class="settings-txt">自宅（現住所）</div></div>
+          <div class="settings-val" id="homeVal">未設定 ›</div>
         </div>
       </div>
 
@@ -175,6 +220,18 @@
     <!-- Bottom Nav -->
     <div class="bottom-nav"></div>
   </div>
+
+  <!-- Edit Overlay -->
+  <div class="edit-overlay" id="editOverlay" onclick="if(event.target===this)closeEdit()">
+    <div class="edit-card">
+      <div class="edit-title" id="editTitle"></div>
+      <div id="editBody"></div>
+      <div class="edit-actions">
+        <button class="edit-btn edit-btn-cancel" onclick="closeEdit()">キャンセル</button>
+        <button class="edit-btn edit-btn-save" onclick="saveEdit()">保存</button>
+      </div>
+    </div>
+  </div>
 </div><!-- end phone -->
 
 <script src="shared/nav.js"></script>
@@ -208,6 +265,218 @@ let bgT=0;
 })();
 
 renderNav('sanctuary');
+
+// ============================================================
+//  PROFILE MANAGEMENT
+// ============================================================
+var PROFILE_KEY = 'solara_profile';
+var editField = null;
+var geoLat = null, geoLng = null;
+
+function loadProfile() {
+  try { return JSON.parse(localStorage.getItem(PROFILE_KEY)); } catch(e) { return null; }
+}
+
+function saveProfileData(p) {
+  localStorage.setItem(PROFILE_KEY, JSON.stringify(p));
+}
+
+function renderProfileDisplay() {
+  var p = loadProfile();
+  var $ = function(id) { return document.getElementById(id); };
+
+  if (!p) {
+    $('profileName').textContent = '✦ プロフィールを設定';
+    $('nameVal').textContent = '未設定 ›';
+    $('birthDateVal').textContent = '未設定 ›';
+    $('birthTimeVal').textContent = '未設定 ›';
+    $('birthCityVal').textContent = '未設定 ›';
+    $('homeVal').textContent = '未設定 ›';
+    return;
+  }
+
+  $('profileName').textContent = p.name || '名前未設定';
+  $('nameVal').textContent = (p.name || '未設定') + ' ›';
+  $('birthDateVal').textContent = p.birthDate ? formatDate(p.birthDate) + ' ›' : '未設定 ›';
+  $('birthTimeVal').textContent = p.birthTime ? p.birthTime + ' ›' : '未設定 ›';
+  $('birthCityVal').textContent = (p.birthPlace || '未設定') + ' ›';
+  $('homeVal').textContent = (p.homeName || '未設定') + ' ›';
+}
+
+function formatDate(d) {
+  var parts = d.split('-');
+  return parts[0] + '年' + parseInt(parts[1]) + '月' + parseInt(parts[2]) + '日';
+}
+
+function openEdit(field) {
+  editField = field;
+  geoLat = null; geoLng = null;
+  var p = loadProfile() || {};
+  var title = '', body = '';
+
+  switch(field) {
+    case 'name':
+      title = '✦ 氏名';
+      body = '<input class="edit-input" id="editInput" type="text" placeholder="氏名を入力" value="' + (p.name || '') + '">';
+      break;
+    case 'birthDate':
+      title = '🎂 生年月日';
+      body = '<input class="edit-input" id="editInput" type="date" value="' + (p.birthDate || '') + '">';
+      break;
+    case 'birthTime':
+      title = '🕐 出生時刻';
+      body = '<input class="edit-input" id="editInput" type="time" step="60" value="' + (p.birthTime || '') + '">'
+        + '<div class="edit-hint">出生時刻が不明な場合は 12:00 にしてください</div>';
+      break;
+    case 'birthCity':
+      title = '🌍 出生地';
+      body = '<input class="edit-input" id="editCityInput" type="text" placeholder="例: 岐阜県岐阜市" value="' + (p.birthPlace || '') + '">'
+        + '<button class="geo-btn" id="geoBtn" onclick="doGeocode(\'editCityInput\')">📍 座標を取得</button>'
+        + '<div class="geo-result" id="geoResult"></div>'
+        + '<div class="edit-error" id="editError">座標が取得できていません</div>'
+        + '<div class="edit-hint">市区町村名まで入力してください</div>'
+        + '<div class="edit-row">'
+        + '<input class="edit-input" id="editLat" type="number" step="0.0001" placeholder="緯度" value="' + (p.birthLat || '') + '">'
+        + '<input class="edit-input" id="editLng" type="number" step="0.0001" placeholder="経度" value="' + (p.birthLng || '') + '">'
+        + '</div>';
+      if (p.birthLat) { geoLat = p.birthLat; geoLng = p.birthLng; }
+      break;
+    case 'home':
+      title = '🏠 自宅（現住所）';
+      body = '<input class="edit-input" id="editCityInput" type="text" placeholder="例: 東京都渋谷区" value="' + (p.homeName || '') + '">'
+        + '<button class="geo-btn" id="geoBtn" onclick="doGeocode(\'editCityInput\')">📍 座標を取得</button>'
+        + '<div class="geo-result" id="geoResult"></div>'
+        + '<div class="edit-error" id="editError">座標が取得できていません</div>'
+        + '<div class="edit-hint">市区町村名まで入力してください</div>'
+        + '<div class="edit-row">'
+        + '<input class="edit-input" id="editLat" type="number" step="0.0001" placeholder="緯度" value="' + (p.homeLat || '') + '">'
+        + '<input class="edit-input" id="editLng" type="number" step="0.0001" placeholder="経度" value="' + (p.homeLng || '') + '">'
+        + '</div>';
+      if (p.homeLat) { geoLat = p.homeLat; geoLng = p.homeLng; }
+      break;
+  }
+
+  document.getElementById('editTitle').textContent = title;
+  document.getElementById('editBody').innerHTML = body;
+  document.getElementById('editOverlay').classList.add('open');
+}
+
+function closeEdit() {
+  document.getElementById('editOverlay').classList.remove('open');
+  editField = null;
+}
+
+function doGeocode(inputId) {
+  var city = document.getElementById(inputId).value.trim();
+  if (!city) return;
+  var btn = document.getElementById('geoBtn');
+  var result = document.getElementById('geoResult');
+  var error = document.getElementById('editError');
+  btn.disabled = true;
+  btn.textContent = '検索中...';
+  result.style.display = 'none';
+  error.style.display = 'none';
+
+  fetch('https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(city) + '&countrycodes=jp&limit=1')
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      btn.disabled = false;
+      btn.textContent = '📍 座標を取得';
+      if (data && data.length > 0) {
+        geoLat = parseFloat(data[0].lat);
+        geoLng = parseFloat(data[0].lon);
+        document.getElementById('editLat').value = geoLat.toFixed(4);
+        document.getElementById('editLng').value = geoLng.toFixed(4);
+        result.textContent = '✓ ' + data[0].display_name.substring(0, 40);
+        result.style.display = 'block';
+      } else {
+        result.textContent = '見つかりませんでした。地名を確認してください';
+        result.style.display = 'block';
+        result.style.color = '#E87070';
+      }
+    })
+    .catch(function() {
+      btn.disabled = false;
+      btn.textContent = '📍 座標を取得';
+      result.textContent = '通信エラー。もう一度お試しください';
+      result.style.display = 'block';
+      result.style.color = '#E87070';
+    });
+}
+
+function saveEdit() {
+  var p = loadProfile() || { tz: 9 };
+  var error = document.getElementById('editError');
+
+  switch(editField) {
+    case 'name':
+      p.name = document.getElementById('editInput').value.trim();
+      break;
+    case 'birthDate':
+      var d = document.getElementById('editInput').value;
+      if (!d) { alert('生年月日を入力してください'); return; }
+      p.birthDate = d;
+      break;
+    case 'birthTime':
+      var t = document.getElementById('editInput').value;
+      if (!t) { alert('出生時刻を入力してください'); return; }
+      p.birthTime = t;
+      break;
+    case 'birthCity':
+      var city = document.getElementById('editCityInput').value.trim();
+      var lat = parseFloat(document.getElementById('editLat').value);
+      var lng = parseFloat(document.getElementById('editLng').value);
+      if (!city) { alert('出生地を入力してください'); return; }
+      if (isNaN(lat) || isNaN(lng)) {
+        if (error) { error.style.display = 'block'; }
+        return;
+      }
+      p.birthPlace = city;
+      p.birthLat = lat;
+      p.birthLng = lng;
+      break;
+    case 'home':
+      var hName = document.getElementById('editCityInput').value.trim();
+      var hLat = parseFloat(document.getElementById('editLat').value);
+      var hLng = parseFloat(document.getElementById('editLng').value);
+      if (!hName) { alert('自宅の地名を入力してください'); return; }
+      if (isNaN(hLat) || isNaN(hLng)) {
+        if (error) { error.style.display = 'block'; }
+        return;
+      }
+      p.homeName = hName;
+      p.homeLat = hLat;
+      p.homeLng = hLng;
+      // Sync home to VP slots
+      syncHomeToVP(p);
+      break;
+  }
+
+  p.tz = 9;
+  saveProfileData(p);
+  renderProfileDisplay();
+  closeEdit();
+}
+
+function syncHomeToStorage(key, profile) {
+  var slots = [];
+  try { slots = JSON.parse(localStorage.getItem(key)) || []; } catch(e) { slots = []; }
+  var homeSlot = { name: profile.homeName, lat: profile.homeLat, lng: profile.homeLng, icon: '🏠', isHome: true };
+  if (slots.length > 0 && slots[0].isHome) {
+    slots[0] = homeSlot;
+  } else {
+    slots.unshift(homeSlot);
+    if (slots.length > 5) slots = slots.slice(0, 5);
+  }
+  localStorage.setItem(key, JSON.stringify(slots));
+}
+
+function syncHomeToVP(profile) {
+  syncHomeToStorage('solara_vp_slots', profile);
+  syncHomeToStorage('solara_locations', profile);
+}
+
+renderProfileDisplay();
 
 // ============================================================
 //  HOUSE SYSTEM SETTING

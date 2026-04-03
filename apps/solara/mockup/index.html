@@ -141,6 +141,9 @@ body{background:#0A0A14;color:#E8E0D0;font-family:'Segoe UI','Helvetica Neue',sa
 .vp-panel{position:absolute;top:50%;right:12px;margin-top:28px;z-index:120;width:180px;background:rgba(12,12,26,.92);border:1px solid rgba(201,168,76,.2);border-radius:14px;padding:12px;opacity:0;pointer-events:none;transform:translateX(10px);transition:opacity .25s,transform .25s}
 .vp-panel.open{opacity:1;pointer-events:auto;transform:translateX(0)}
 .vp-title{font-size:9px;letter-spacing:1.5px;color:#C9A84C;margin-bottom:10px}
+.vp-tabs{display:flex;gap:2px;margin-bottom:10px;background:rgba(255,255,255,.03);border-radius:8px;padding:2px}
+.vp-tab{flex:1;padding:5px 4px;font-size:8px;letter-spacing:1px;text-align:center;color:#666;cursor:pointer;border-radius:6px;transition:all .2s}
+.vp-tab.active{background:rgba(201,168,76,.15);color:#C9A84C}
 .vp-row{position:relative;display:flex;align-items:center;gap:8px;padding:6px 4px;border-radius:8px;cursor:pointer;transition:background .2s}
 .vp-row:hover{background:rgba(201,168,76,.08)}
 .vp-row.active{background:rgba(201,168,76,.12)}
@@ -273,11 +276,21 @@ body{background:#0A0A14;color:#E8E0D0;font-family:'Segoe UI','Helvetica Neue',sa
   <!-- Viewpoint -->
   <div class="vp-btn" id="vpBtn" onclick="toggleVP()">📍</div>
   <div class="vp-panel" id="vpPanel">
-    <div class="vp-title">VIEWPOINT</div>
-    <div id="vpSlots"></div>
-    <div class="vp-divider"></div>
-    <div class="vp-action" onclick="vpGeo()"><span>📡</span> 現在地に移動</div>
-    <div class="vp-action" onclick="vpSave()"><span>💾</span> この地点を保存</div>
+    <div class="vp-tabs">
+      <div class="vp-tab active" data-vptab="vp" onclick="switchVPTab('vp')">📍 VIEWPOINT</div>
+      <div class="vp-tab" data-vptab="loc" onclick="switchVPTab('loc')">🌐 LOCATIONS</div>
+    </div>
+    <div id="vpContent">
+      <div id="vpSlots"></div>
+      <div class="vp-divider"></div>
+      <div class="vp-action" onclick="vpGeo()"><span>📡</span> 現在地に移動</div>
+      <div class="vp-action" onclick="vpSave()"><span>💾</span> この地点を保存</div>
+    </div>
+    <div id="locContent" style="display:none">
+      <div id="locSlots"></div>
+      <div class="vp-divider"></div>
+      <div class="vp-action" onclick="locSave()"><span>💾</span> この地点を登録</div>
+    </div>
     <div class="vp-coord" id="vpCoord"></div>
   </div>
 
@@ -431,7 +444,10 @@ const ASTRO_BODIES = [
   {key:'saturn',body:Astronomy.Body.Saturn},{key:'uranus',body:Astronomy.Body.Uranus},
   {key:'neptune',body:Astronomy.Body.Neptune},{key:'pluto',body:Astronomy.Body.Pluto},
 ];
-const BIRTH = {date:new Date(1977,9,24,6,56,0),lat:35.4233,lng:136.7607};
+const _prof=(()=>{try{return JSON.parse(localStorage.getItem('solara_profile'))}catch{return null}})();
+const BIRTH = _prof&&_prof.birthDate
+  ? {date:new Date(_prof.birthDate.replace(/-/g,'/')+ ' '+(_prof.birthTime||'00:00')),lat:_prof.birthLat||35.4233,lng:_prof.birthLng||136.7607}
+  : {date:new Date(1977,9,24,6,56,0),lat:35.4233,lng:136.7607};
 
 function norm360(d){return((d%360)+360)%360}
 function eclLon(body,date){
@@ -1229,6 +1245,15 @@ const VP_ICON_ALL=['🏠','🏢','⭐','📍','💼','🏫','🏥','☕','🍽',
 
 function vpLoadSlots(){try{return JSON.parse(localStorage.getItem(VP_KEY))||[]}catch{return[]}}
 function vpSaveSlots(s){localStorage.setItem(VP_KEY,JSON.stringify(s))}
+
+function vpSyncHome(){
+  if(!_prof||!_prof.homeName||isNaN(_prof.homeLat)||isNaN(_prof.homeLng))return;
+  const slots=vpLoadSlots();
+  const h={name:_prof.homeName,lat:_prof.homeLat,lng:_prof.homeLng,icon:'🏠',isHome:true};
+  if(slots.length>0&&slots[0].isHome){slots[0]=h}else{slots.unshift(h);if(slots.length>5)slots.length=5}
+  vpSaveSlots(slots);
+}
+vpSyncHome();
 function vpLoadLast(){try{const v=JSON.parse(localStorage.getItem(VP_LAST));return v&&v.length===2?v:null}catch{return null}}
 function vpSaveLast(c){localStorage.setItem(VP_LAST,JSON.stringify(c))}
 
@@ -1241,8 +1266,9 @@ function vpGeo(){
 }
 
 function vpSave(){
-  const slots=vpLoadSlots();if(slots.length>=4){vpMsg('保存は4件までです。\n不要な地点を削除してから追加してください。');return}
-  const c=mapCenter,dn=['自宅','職場','お気に入り','スポット'],nm=dn[slots.length]||'スポット';
+  const slots=vpLoadSlots();const maxSlots=5;
+  if(slots.length>=maxSlots){vpMsg('保存は'+(maxSlots-(slots[0]&&slots[0].isHome?1:0))+'件までです。\n不要な地点を削除してから追加してください。');return}
+  const c=mapCenter,dn=['職場','お気に入り','スポット','場所'],userIdx=slots.length-(slots[0]&&slots[0].isHome?1:0),nm=dn[userIdx]||'スポット';
   fetch('https://nominatim.openstreetmap.org/reverse?format=json&lat='+c[0]+'&lon='+c[1]+'&zoom=16')
     .then(r=>r.json()).then(d=>{const a=d.address||{};const disp=a.suburb||a.neighbourhood||a.city||a.town||a.village||nm;
       slots.push({name:disp.substring(0,8),lat:c[0],lng:c[1],icon:VP_ICONS[slots.length]||'📍'});vpSaveSlots(slots);vpRender()})
@@ -1262,9 +1288,13 @@ function vpRender(){
   slots.forEach((s,i)=>{
     const isA=Math.abs(s.lat-mapCenter[0])<.001&&Math.abs(s.lng-mapCenter[1])<.001;
     const row=document.createElement('div');row.className='vp-row'+(isA?' active':'');
-    row.innerHTML=`<span class="vp-row-icon">${s.icon}</span><span class="vp-row-label">${s.name}</span><span class="vp-row-more" onclick="event.stopPropagation();vpSub=${vpSub===i?-1:i};vpRender()">⋯</span>`;
+    if(s.isHome){
+      row.innerHTML=`<span class="vp-row-icon">${s.icon}</span><span class="vp-row-label">${s.name}</span><span style="font-size:8px;color:#F9D976;letter-spacing:1px;opacity:.6">HOME</span>`;
+    }else{
+      row.innerHTML=`<span class="vp-row-icon">${s.icon}</span><span class="vp-row-label">${s.name}</span><span class="vp-row-more" onclick="event.stopPropagation();vpSub=${vpSub===i?-1:i};vpRender()">⋯</span>`;
+    }
     row.onclick=()=>{rebuild([s.lat,s.lng],true);$('vpPanel').classList.remove('open');$('vpBtn').classList.remove('active')};
-    if(vpSub===i){
+    if(vpSub===i&&!s.isHome){
       const sub=document.createElement('div');sub.className='vp-sub';
       const up=i===0?' style="opacity:.25;pointer-events:none"':'',dn=i===slots.length-1?' style="opacity:.25;pointer-events:none"':'';
       sub.innerHTML=`<div class="vp-sub-item"${up} onclick="event.stopPropagation();vpMove(${i},-1)"><span>↑</span> 上に移動</div>`
@@ -1279,11 +1309,11 @@ function vpRender(){
   const coord=$('vpCoord');if(coord)coord.textContent=mapCenter[0].toFixed(4)+', '+mapCenter[1].toFixed(4);
 }
 
-function vpMove(i,dir){const s=vpLoadSlots(),t=i+dir;if(t<0||t>=s.length)return;[s[i],s[t]]=[s[t],s[i]];vpSaveSlots(s);vpSub=t;vpRender()}
-function vpRename(i){const s=vpLoadSlots();if(!s[i])return;const n=prompt('地点の名称を入力',s[i].name);if(n!==null&&n.trim()){s[i].name=n.trim().substring(0,12);vpSaveSlots(s)}vpSub=-1;vpRender()}
-function vpDel(i){const s=vpLoadSlots();s.splice(i,1);vpSaveSlots(s);vpSub=-1;vpRender()}
+function vpMove(i,dir){const s=vpLoadSlots(),t=i+dir;if(t<0||t>=s.length)return;if((i===0&&s[0].isHome)||(t===0&&s[0].isHome))return;[s[i],s[t]]=[s[t],s[i]];vpSaveSlots(s);vpSub=t;vpRender()}
+function vpRename(i){const s=vpLoadSlots();if(!s[i]||s[i].isHome)return;const n=prompt('地点の名称を入力',s[i].name);if(n!==null&&n.trim()){s[i].name=n.trim().substring(0,12);vpSaveSlots(s)}vpSub=-1;vpRender()}
+function vpDel(i){const s=vpLoadSlots();if(s[i]&&s[i].isHome){vpMsg('ホーム地点はSANCTUARYで変更してください');vpSub=-1;vpRender();return}s.splice(i,1);vpSaveSlots(s);vpSub=-1;vpRender()}
 function vpChIcon(i){
-  const s=vpLoadSlots();if(!s[i])return;vpSub=-1;
+  const s=vpLoadSlots();if(!s[i]||s[i].isHome)return;vpSub=-1;
   const rows=document.querySelectorAll('#vpSlots .vp-row');const row=rows[i];if(!row)return;
   const old=row.querySelector('.vp-icon-picker');if(old){old.remove();return}
   const pk=document.createElement('div');pk.className='vp-icon-picker';
@@ -1293,6 +1323,64 @@ function vpChIcon(i){
   });
   row.appendChild(pk);
 }
+
+// ========== Locations (HORO用登録地) ==========
+const LOC_KEY='solara_locations';
+let vpTab='vp',locSub=-1;
+
+function locLoadSlots(){try{return JSON.parse(localStorage.getItem(LOC_KEY))||[]}catch{return[]}}
+function locSaveSlots(s){localStorage.setItem(LOC_KEY,JSON.stringify(s))}
+
+function locSyncHome(){
+  if(!_prof||!_prof.homeName||isNaN(_prof.homeLat)||isNaN(_prof.homeLng))return;
+  const slots=locLoadSlots();
+  const h={name:_prof.homeName,lat:_prof.homeLat,lng:_prof.homeLng,icon:'🏠',isHome:true};
+  if(slots.length>0&&slots[0].isHome){slots[0]=h}else{slots.unshift(h);if(slots.length>5)slots.length=5}
+  locSaveSlots(slots);
+}
+locSyncHome();
+
+function switchVPTab(tab){
+  vpTab=tab;vpSub=-1;locSub=-1;
+  document.querySelectorAll('.vp-tab').forEach(t=>t.classList.toggle('active',t.dataset.vptab===tab));
+  $('vpContent').style.display=tab==='vp'?'':'none';
+  $('locContent').style.display=tab==='loc'?'':'none';
+  if(tab==='vp')vpRender();else locRender();
+}
+
+function locSave(){
+  const slots=locLoadSlots();const maxSlots=5;
+  if(slots.length>=maxSlots){vpMsg('登録地は'+(maxSlots-(slots[0]&&slots[0].isHome?1:0))+'件までです');return}
+  const c=mapCenter,dn=['場所1','場所2','場所3','場所4'],userIdx=slots.length-(slots[0]&&slots[0].isHome?1:0),nm=dn[userIdx]||'場所';
+  fetch('https://nominatim.openstreetmap.org/reverse?format=json&lat='+c[0]+'&lon='+c[1]+'&zoom=16')
+    .then(r=>r.json()).then(d=>{const a=d.address||{};const disp=a.suburb||a.neighbourhood||a.city||a.town||a.village||nm;
+      slots.push({name:disp.substring(0,8),lat:c[0],lng:c[1],icon:'📍'});locSaveSlots(slots);locRender()})
+    .catch(()=>{slots.push({name:nm,lat:c[0],lng:c[1],icon:'📍'});locSaveSlots(slots);locRender()});
+}
+
+function locRender(){
+  const c=$('locSlots');if(!c)return;const slots=locLoadSlots();c.innerHTML='';
+  if(!slots.length){c.innerHTML='<div style="font-size:10px;color:#555;padding:4px;text-align:center">登録地なし</div>';return}
+  slots.forEach((s,i)=>{
+    const row=document.createElement('div');row.className='vp-row';
+    if(s.isHome){
+      row.innerHTML=`<span class="vp-row-icon">${s.icon}</span><span class="vp-row-label">${s.name}</span><span style="font-size:8px;color:#F9D976;letter-spacing:1px;opacity:.6">HOME</span>`;
+    }else{
+      row.innerHTML=`<span class="vp-row-icon">${s.icon}</span><span class="vp-row-label">${s.name}</span><span class="vp-row-more" onclick="event.stopPropagation();locSub=${locSub===i?-1:i};locRender()">⋯</span>`;
+    }
+    row.onclick=()=>{map.flyTo([s.lat,s.lng],Math.max(map.getZoom(),12),{duration:.8});$('vpPanel').classList.remove('open');$('vpBtn').classList.remove('active')};
+    if(locSub===i&&!s.isHome){
+      const sub=document.createElement('div');sub.className='vp-sub';
+      sub.innerHTML=`<div class="vp-sub-item" onclick="event.stopPropagation();locRename(${i})"><span>✏️</span> 名称変更</div>`
+        +`<div class="vp-sub-item danger" onclick="event.stopPropagation();locDel(${i})"><span>🗑</span> 削除</div>`;
+      row.appendChild(sub);
+    }
+    c.appendChild(row);
+  });
+}
+
+function locRename(i){const s=locLoadSlots();if(!s[i]||s[i].isHome)return;const n=prompt('登録地の名称を入力',s[i].name);if(n!==null&&n.trim()){s[i].name=n.trim().substring(0,12);locSaveSlots(s)}locSub=-1;locRender()}
+function locDel(i){const s=locLoadSlots();if(s[i]&&s[i].isHome){vpMsg('ホーム地点はSANCTUARYで変更してください');locSub=-1;locRender();return}s.splice(i,1);locSaveSlots(s);locSub=-1;locRender()}
 
 // ========== Restart ==========
 function restart(){

@@ -106,6 +106,8 @@ h1 { font-size: 24px; color: #F6BD60; letter-spacing: 4px; margin-bottom: 8px; }
 .form-row { display: flex; gap: 8px; }
 .form-row .form-group { flex: 1; }
 
+.vp-hint { font-size: 10px; color: #888; margin-top: 4px; line-height: 1.4; }
+
 .btn-generate {
   width: 100%; padding: 10px;
   background: linear-gradient(135deg, #F6BD60, #E8A840);
@@ -391,6 +393,11 @@ h1 { font-size: 24px; color: #F6BD60; letter-spacing: 4px; margin-bottom: 8px; }
   <div id="astrologyCardsAll"></div>
 </div>
 
+<div id="noProfileBanner" style="display:none; background:rgba(249,217,118,0.08); border:1px solid rgba(249,217,118,0.25); border-radius:12px; padding:14px 18px; margin-bottom:16px; max-width:1400px; width:100%; text-align:center;">
+  <span style="font-size:13px; color:#F6BD60;">✦ SANCTUARYでプロフィールを設定すると、あなた専用のホロスコープが表示されます</span><br>
+  <a href="sanctuary.html" style="color:#F9D976; font-size:12px; text-decoration:underline; margin-top:4px; display:inline-block;">設定する →</a>
+</div>
+
 <div class="main-layout">
   <!-- Left: Chart -->
   <div class="left-column">
@@ -417,9 +424,13 @@ h1 { font-size: 24px; color: #F6BD60; letter-spacing: 4px; margin-bottom: 8px; }
       </div>
       <div class="form-group">
         <label>出生地 BIRTHPLACE</label>
-        <input type="text" id="inputPlace" placeholder="例: 岐阜県岐阜市">
+        <select id="inputPlaceSelect" onchange="onBirthPlaceChange()">
+          <option value="manual" selected>手動入力</option>
+        </select>
+        <div id="birthVpHint" class="vp-hint" style="display:none">💡 Map画面で場所を保存すると選択できます</div>
+        <input type="text" id="inputPlace" placeholder="例: 岐阜県岐阜市" style="margin-top:6px">
       </div>
-      <div class="form-row">
+      <div class="form-row" id="birthCustomLatLng">
         <div class="form-group"><label>緯度 LAT</label><input type="number" id="inputLat" step="0.0001" placeholder="35.4233"></div>
         <div class="form-group"><label>経度 LNG</label><input type="number" id="inputLng" step="0.0001" placeholder="136.7607"></div>
       </div>
@@ -436,13 +447,11 @@ h1 { font-size: 24px; color: #F6BD60; letter-spacing: 4px; margin-bottom: 8px; }
       <div class="form-group">
         <label>場所 LOCATION</label>
         <select id="transitLocation" onchange="onTransitLocationChange()">
-          <option value="tokyo" selected>東京 (35.66, 139.70)</option>
-          <option value="osaka">大阪 (34.69, 135.50)</option>
-          <option value="gifu">岐阜 (35.42, 136.76)</option>
-          <option value="custom">カスタム入力</option>
+          <option value="manual">手動入力</option>
         </select>
+        <div id="transitVpHint" class="vp-hint" style="display:none">💡 Map画面で場所を保存すると選択できます</div>
       </div>
-      <div class="form-row" id="transitCustomLatLng" style="display:none">
+      <div class="form-row" id="transitCustomLatLng">
         <div class="form-group"><label>緯度 LAT</label><input type="number" id="transitLat" step="0.0001"></div>
         <div class="form-group"><label>経度 LNG</label><input type="number" id="transitLng" step="0.0001"></div>
       </div>
@@ -611,16 +620,20 @@ var FORTUNE_PLANETS = {
   communication: [2, 1, 5]
 };
 
-var TRANSIT_LOCATIONS = {
-  tokyo: { lat: 35.66, lng: 139.70 },
-  osaka: { lat: 34.69, lng: 135.50 },
-  gifu:  { lat: 35.4233, lng: 136.7607 }
-};
+// Location integration (shared with Map screen via localStorage)
+var LOC_KEY = 'solara_locations';
+function loadLocations() { try { return JSON.parse(localStorage.getItem(LOC_KEY)) || []; } catch(e) { return []; } }
+// Backward compat alias
+function loadViewpoints() { return loadLocations(); }
 
 // ============================================================
 //  STATE
 // ============================================================
-var defaultUser = { name: 'はやしこうじ', date: '1977-10-24', time: '06:56', place: '岐阜県岐阜市', lat: 35.4233, lng: 136.7607, tz: 9 };
+var _profile = (function(){ try { return JSON.parse(localStorage.getItem('solara_profile')); } catch(e) { return null; } })();
+var profileLoaded = !!(_profile && _profile.birthDate && _profile.birthLat);
+var defaultUser = profileLoaded
+  ? { name: _profile.name || '', date: _profile.birthDate, time: _profile.birthTime || '12:00', place: _profile.birthPlace || '', lat: _profile.birthLat, lng: _profile.birthLng, tz: 9 }
+  : { name: 'はやしこうじ', date: '1977-10-24', time: '06:56', place: '岐阜県岐阜市', lat: 35.4233, lng: 136.7607, tz: 9 };
 var chartMode = 'single'; // 'single' | 'nt' | 'np'
 var hiddenAspects = {};
 var lastAspectsFound = [];
@@ -1182,9 +1195,73 @@ function buildTodayView() {
   }).join('');
 }
 
+// Build VP options as HTML string (for mobile dynamic HTML)
+function buildVPOptionsHTML() {
+  var vps = loadViewpoints();
+  var html = '<option value="manual" selected>手動入力</option>';
+  for (var i = 0; i < vps.length; i++) {
+    var vp = vps[i];
+    html += '<option value="vp_' + i + '">' + (vp.icon || '📍') + ' ' + vp.name + ' (' + vp.lat.toFixed(2) + ', ' + vp.lng.toFixed(2) + ')</option>';
+  }
+  return html;
+}
+
+// Build viewpoint options into a select element
+function populateVPSelect(selectId, hintId) {
+  var sel = document.getElementById(selectId);
+  if (!sel) return;
+  var vps = loadViewpoints();
+  // Remove old VP options (keep manual)
+  while (sel.options.length > 1) sel.remove(1);
+  // Add viewpoints
+  for (var i = 0; i < vps.length; i++) {
+    var vp = vps[i];
+    var opt = document.createElement('option');
+    opt.value = 'vp_' + i;
+    opt.textContent = (vp.icon || '📍') + ' ' + vp.name + ' (' + vp.lat.toFixed(2) + ', ' + vp.lng.toFixed(2) + ')';
+    sel.appendChild(opt);
+  }
+  // Show hint if no viewpoints
+  var hint = document.getElementById(hintId);
+  if (hint) hint.style.display = (vps.length === 0) ? 'block' : 'none';
+}
+
+function onBirthPlaceChange() {
+  var sel = document.getElementById('inputPlaceSelect');
+  var placeInput = document.getElementById('inputPlace');
+  var latLng = document.getElementById('birthCustomLatLng');
+  if (sel.value === 'manual') {
+    placeInput.style.display = '';
+    latLng.style.display = '';
+  } else {
+    var vps = loadViewpoints();
+    var idx = parseInt(sel.value.replace('vp_', ''));
+    var vp = vps[idx];
+    if (vp) {
+      placeInput.value = vp.name;
+      document.getElementById('inputLat').value = vp.lat;
+      document.getElementById('inputLng').value = vp.lng;
+    }
+    placeInput.style.display = '';
+    latLng.style.display = '';
+  }
+}
+
 function onTransitLocationChange() {
-  var sel = document.getElementById('transitLocation').value;
-  document.getElementById('transitCustomLatLng').style.display = (sel === 'custom') ? 'flex' : 'none';
+  var sel = document.getElementById('transitLocation');
+  var custom = document.getElementById('transitCustomLatLng');
+  if (sel.value === 'manual') {
+    custom.style.display = '';
+  } else {
+    var vps = loadViewpoints();
+    var idx = parseInt(sel.value.replace('vp_', ''));
+    var vp = vps[idx];
+    if (vp) {
+      document.getElementById('transitLat').value = vp.lat;
+      document.getElementById('transitLng').value = vp.lng;
+    }
+    custom.style.display = 'none';
+  }
   renderChart();
 }
 
@@ -1197,12 +1274,17 @@ function getTransitDateTime() {
 
 function getTransitLocation() {
   var sel = document.getElementById('transitLocation').value;
-  if (sel === 'custom') {
-    var lat = parseFloat(document.getElementById('transitLat').value);
-    var lng = parseFloat(document.getElementById('transitLng').value);
-    if (!isNaN(lat) && !isNaN(lng)) return { lat: lat, lng: lng };
+  if (sel.indexOf('vp_') === 0) {
+    var vps = loadViewpoints();
+    var idx = parseInt(sel.replace('vp_', ''));
+    if (vps[idx]) return { lat: vps[idx].lat, lng: vps[idx].lng };
   }
-  if (TRANSIT_LOCATIONS[sel]) return TRANSIT_LOCATIONS[sel];
+  // manual or fallback
+  var lat = parseFloat(document.getElementById('transitLat').value);
+  var lng = parseFloat(document.getElementById('transitLng').value);
+  if (!isNaN(lat) && !isNaN(lng)) return { lat: lat, lng: lng };
+  // Prefer home over birthplace for transit
+  if (_profile && !isNaN(_profile.homeLat) && !isNaN(_profile.homeLng)) return { lat: _profile.homeLat, lng: _profile.homeLng };
   return { lat: defaultUser.lat, lng: defaultUser.lng };
 }
 
@@ -1210,6 +1292,20 @@ function initTransitDefaults() {
   var now = new Date();
   document.getElementById('transitDate').value = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
   document.getElementById('transitTime').value = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+  // Populate viewpoints into selects
+  populateVPSelect('inputPlaceSelect', 'birthVpHint');
+  populateVPSelect('transitLocation', 'transitVpHint');
+  // Auto-select home for transit if available
+  var vps = loadViewpoints();
+  if (vps.length > 0 && vps[0].isHome) {
+    document.getElementById('transitLocation').value = 'vp_0';
+    onTransitLocationChange();
+  }
+  // Show no-profile banner
+  if (!profileLoaded) {
+    var banner = document.getElementById('noProfileBanner');
+    if (banner) banner.style.display = 'block';
+  }
 }
 
 function generateFromInput() {
@@ -1825,14 +1921,20 @@ function updateBSTransitTab() {
 function buildBSBirthContent() {
   var el = document.getElementById('bsBirth');
   if (!el) return;
+  var vpOptions = buildVPOptionsHTML();
   el.innerHTML = '<h3>&#9881; BIRTH DATA</h3>'
     + '<div class="form-group"><label>氏名</label><input type="text" id="mInputName" placeholder="氏名を入力"></div>'
     + '<div class="form-row"><div class="form-group"><label>生年月日</label><input type="date" id="mInputDate"></div>'
     + '<div class="form-group"><label>出生時刻</label><input type="time" id="mInputTime" step="60"></div></div>'
-    + '<div class="form-group"><label>出生地</label><input type="text" id="mInputPlace" placeholder="例: 岐阜県岐阜市"></div>'
-    + '<div class="form-row"><div class="form-group"><label>緯度</label><input type="number" id="mInputLat" step="0.0001"></div>'
+    + '<div class="form-group"><label>出生地</label><select id="mInputPlaceSelect" onchange="onMobileBirthPlaceChange()">' + vpOptions + '</select>'
+    + '<div id="mBirthVpHint" class="vp-hint" style="display:none">💡 Map画面で場所を保存すると選択できます</div>'
+    + '<input type="text" id="mInputPlace" placeholder="例: 岐阜県岐阜市" style="margin-top:6px"></div>'
+    + '<div class="form-row" id="mBirthCustomLatLng"><div class="form-group"><label>緯度</label><input type="number" id="mInputLat" step="0.0001"></div>'
     + '<div class="form-group"><label>経度</label><input type="number" id="mInputLng" step="0.0001"></div></div>'
     + '<button class="btn-generate" style="background:linear-gradient(135deg,#F6BD60,#E8A840)" onclick="applyBSBirth()">ホロスコープ生成</button>';
+  var vps = loadViewpoints();
+  var hint = document.getElementById('mBirthVpHint');
+  if (hint) hint.style.display = (vps.length === 0) ? 'block' : 'none';
 }
 
 function syncBSBirthForm() {
@@ -1860,19 +1962,24 @@ function applyBSBirth() {
 function buildBSTransitContent() {
   var el = document.getElementById('bsTransit');
   if (!el) return;
-  var loc = document.getElementById('transitLocation');
-  var options = '';
-  for (var i = 0; i < loc.options.length; i++) {
-    var o = loc.options[i];
-    options += '<option value="' + o.value + '"' + (o.selected ? ' selected' : '') + '>' + o.text + '</option>';
-  }
+  var vpOptions = buildVPOptionsHTML();
+  // Match desktop selection
+  var desktopVal = document.getElementById('transitLocation').value;
   el.innerHTML = '<h3 id="mTransitTitle" style="color:#6BB5FF">&#9790; TRANSIT DATA</h3>'
     + '<div class="form-row"><div class="form-group"><label>日付</label><input type="date" id="mTransitDate"></div>'
     + '<div class="form-group"><label>時刻</label><input type="time" id="mTransitTime" step="60"></div></div>'
-    + '<div class="form-group"><label>場所</label><select id="mTransitLocation" onchange="onMobileTransitLocChange()">' + options + '</select></div>'
-    + '<div class="form-row" id="mTransitCustom" style="display:none"><div class="form-group"><label>緯度</label><input type="number" id="mTransitLat" step="0.0001"></div>'
+    + '<div class="form-group"><label>場所</label><select id="mTransitLocation" onchange="onMobileTransitLocChange()">' + vpOptions + '</select>'
+    + '<div id="mTransitVpHint" class="vp-hint" style="display:none">💡 Map画面で場所を保存すると選択できます</div></div>'
+    + '<div class="form-row" id="mTransitCustom"><div class="form-group"><label>緯度</label><input type="number" id="mTransitLat" step="0.0001"></div>'
     + '<div class="form-group"><label>経度</label><input type="number" id="mTransitLng" step="0.0001"></div></div>'
     + '<button class="btn-generate" id="mTransitBtn" style="background:linear-gradient(135deg,#6BB5FF,#4A90D9)" onclick="applyBSTransit()">トランジット更新</button>';
+  // Sync selection & hint
+  var mSel = document.getElementById('mTransitLocation');
+  if (mSel) mSel.value = desktopVal;
+  onMobileTransitLocChange();
+  var vps = loadViewpoints();
+  var hint = document.getElementById('mTransitVpHint');
+  if (hint) hint.style.display = (vps.length === 0) ? 'block' : 'none';
 }
 
 function syncBSTransitForm() {
@@ -1884,10 +1991,37 @@ function syncBSTransitForm() {
   onMobileTransitLocChange();
 }
 
+function onMobileBirthPlaceChange() {
+  var sel = document.getElementById('mInputPlaceSelect');
+  if (!sel) return;
+  if (sel.value !== 'manual') {
+    var vps = loadViewpoints();
+    var idx = parseInt(sel.value.replace('vp_', ''));
+    var vp = vps[idx];
+    if (vp) {
+      var p = document.getElementById('mInputPlace'); if (p) p.value = vp.name;
+      var la = document.getElementById('mInputLat'); if (la) la.value = vp.lat;
+      var lo = document.getElementById('mInputLng'); if (lo) lo.value = vp.lng;
+    }
+  }
+}
+
 function onMobileTransitLocChange() {
   var sel = document.getElementById('mTransitLocation');
   var custom = document.getElementById('mTransitCustom');
-  if (sel && custom) custom.style.display = (sel.value === 'custom') ? 'flex' : 'none';
+  if (!sel || !custom) return;
+  if (sel.value === 'manual') {
+    custom.style.display = '';
+  } else {
+    var vps = loadViewpoints();
+    var idx = parseInt(sel.value.replace('vp_', ''));
+    var vp = vps[idx];
+    if (vp) {
+      document.getElementById('mTransitLat').value = vp.lat;
+      document.getElementById('mTransitLng').value = vp.lng;
+    }
+    custom.style.display = 'none';
+  }
 }
 
 function applyBSTransit() {
@@ -1895,7 +2029,7 @@ function applyBSTransit() {
   g('transitDate').value = g('mTransitDate').value;
   g('transitTime').value = g('mTransitTime').value;
   g('transitLocation').value = g('mTransitLocation').value;
-  if (g('mTransitLocation').value === 'custom') {
+  if (g('mTransitLocation').value === 'manual') {
     g('transitLat').value = g('mTransitLat').value;
     g('transitLng').value = g('mTransitLng').value;
   }

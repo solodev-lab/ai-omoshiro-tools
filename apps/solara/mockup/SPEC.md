@@ -14,7 +14,7 @@ Solara Astrocartography + V7 Cosmic Spiral を統合した5画面モックアッ
 | Horo | `horoscope.html` | ホロスコープチャート（SVG）+ Fortune Reading 5カード |
 | Tarot | `tarot.html` | ムード入力 → カード引き → 鑑定文表示 → 地図連携 |
 | Galaxy | `galaxy.html` | Cycle（3Dスパイラル）+ Star Atlas（星座アーカイブ） |
-| Sanctuary | `sanctuary.html` | プロフィール + Silent Hours + Cosmic Pro（UI表示のみ） |
+| Sanctuary | `sanctuary.html` | プロフィール編集 + Astrology設定 + Silent Hours + Cosmic Pro |
 
 ---
 
@@ -74,7 +74,10 @@ Solara Astrocartography + V7 Cosmic Spiral を統合した5画面モックアッ
 - 運勢カテゴリ（癒し/金運/恋愛/仕事/コミュニケーション）
 - Fortune Sheet（16方位ランキング）
 - レイヤーパネル（チャート/惑星グループ/運勢フィルタ）
-- ビューポイント保存（4スロット、絵文字ピッカー、ジオコーディング）
+- **ビューポイント**（`solara_vp_slots`）: 方位の原点として使う場所。タップ→rebuild()で扇・惑星ライン再計算
+- **登録地**（`solara_locations`）: Horo画面のトランジット/プログレス計算用。タップ→地図パンのみ
+- VPパネル2タブ切替: `📍 VIEWPOINT` / `🌐 LOCATIONS`
+- 自宅はプロフィール（Sanctuary）から両方に自動同期（slot[0]、isHome=true、削除不可）
 - タロットブリッジ（Tarot→Map連携）
 - パーティクルエフェクト（メテオ/衝撃波/収束）
 
@@ -89,6 +92,8 @@ Solara Astrocartography + V7 Cosmic Spiral を統合した5画面モックアッ
 #### 既存機能
 - SVGホロスコープチャート（600×600）、標準配置（ASC=左、MC=上、反時計回り）
 - 1重/2重（N+T, N+P）モード切替
+- **プロフィール連携**: `solara_profile`から出生データ自動読み込み。未設定時は案内バナー表示
+- **場所選択**: 出生地・トランジット場所に登録地（`solara_locations`）から選択可能。トランジットデフォルト=自宅
 - **Placidusハウスシステム**（デフォルト）/ Whole Sign切替可（Sanctuary設定）
   - 高緯度(|lat|>66°)はEqual Houseに自動フォールバック
   - localStorage `solara_house_system` で永続化
@@ -323,9 +328,14 @@ assets/
 
 ### 5. Sanctuary (`sanctuary.html`)
 
-#### 表示内容
-- **プロフィール**: 名前（Hayashi Koji）、Free Tier
-- **Stellar Profile**: 生年月日/出生地/出生時刻
+#### プロフィール管理（`solara_profile`）
+- **Stellar Profile**: 全項目タップ→オーバーレイ編集→localStorage保存
+  - 氏名、生年月日、出生時刻、出生地（市区町村+lat/lng）、**自宅（現住所）**（市区町村+lat/lng）
+  - 出生地/自宅: Nominatimジオコーディングで座標自動取得
+  - 自宅保存時: `solara_vp_slots`[0] と `solara_locations`[0] に自動同期（isHome=true）
+- **プロフィール未設定時**: Horo画面に案内バナー表示
+
+#### その他設定
 - **Sanctuary Sleep**: Silent Hoursトグル + Sleep Window
 - **Cosmic Pro**: サブスクカード（$7.99/月、$59.99/年）— UI表示のみ
 - **Astrology設定**:
@@ -344,7 +354,9 @@ assets/
 | `solara_mood` | ムード値 | Tarot |
 | `solara_tarot_bridge` | タロット→地図ブリッジ | Tarot→Map |
 | `solara_natal_history` | タロット履歴（50件） | Tarot |
-| `solara_vp_slots` | ビューポイント4スロット | Map |
+| `solara_profile` | ユーザープロフィール（氏名/出生データ/自宅） | Sanctuary→全画面 |
+| `solara_vp_slots` | ビューポイント（方位原点）5スロット | Map |
+| `solara_locations` | 登録地（HORO用）5スロット | Map→Horo |
 | `solara_vp_last` | 最後の地図中心座標 | Map |
 | `solara_fortune_cache` | 占い結果日キャッシュ | Horo |
 | `solara_intentions` | New Moon intentions | events.js |
