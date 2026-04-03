@@ -153,51 +153,173 @@ FORTUNE_CATEGORIES = [
   - 方位アドバイス付き
 - **vibe_score計算・保存**: `applyToMap()` 時に `calcVibeScore()` → `saveVibe()`
 
-### 4. Galaxy (`galaxy.html`)
+### 4. Galaxy (`galaxy_screen.dart`) — Flutter実装済み
+
+#### 設計思想
+「受動的に溜まるタロット履歴の可視化」。ユーザーがObserve画面でカードを引くだけで、GALAXYスパイラルに自動プロットされる。能動的なタスク管理は排除し、占い体験の副産物としてデータが蓄積される。
 
 #### 内部タブ
 | タブ | 機能 |
 |------|------|
-| 🌀 Cycle | 28日3Dスパイラル（現在のサイクル） |
-| ✦ Star Atlas | 完了サイクル星座アーカイブ |
+| 🌀 Cycle | 実月齢ベース3Dスパイラル（朔望月~29.5日） |
+| ✦ Star Atlas | 完了周期の星座アーカイブ |
 
-#### Cycle タブ
-- **3Dスパイラル**: θ = (d/28)×4.2π, r = b×θ, b = min(W,H)×0.057
-- **呼吸アニメ**: 個別sin()位相（2〜4秒周期）、opacity 0.7→1.0
-- **vibeToColor**: ドット色が vibe_score で変化（deep-blue→cyan→gold）
-- **is_aligned → 星光芒**: 4方向ライン + 回転シマー
-- **ドットタップ → ポップアップ**: カード名/vibe値/quote（3.5秒自動消去）
-- **3Dインタラクション**: ドラッグ/イナーシャ/ホイールズーム/ピンチズーム
-- **Day Badge**: 「12 of 28」
-- **Stella メッセージ**: vibe_scoreベースで動的生成
+#### Cycle タブ — 3Dスパイラル
+- **月齢ベース周期**: 固定28日ではなく実際の朔望月（29.53059日）。新月〜次の新月で1周期
+- **月齢計算**: Metonic cycle近似（基準: 2000/1/6 18:14 UTC）
+- **3Dスパイラル**: θ = (d/total)×4.2π, r = b×θ, b = min(W,H)×0.057
+- **3D回転**: X/Y軸回転、自動回転（0.0025rad/frame）、ドラッグ操作、慣性（0.90減衰）
+- **投影**: FOV=360×zoom, perspective projection: s = fov/(fov+z+260)
+- **呼吸アニメ**: `0.7 + 0.3 × sin(time/period + phase)`, 個別位相（2〜4秒周期）
+
+#### ドット描画ルール
+
+| 条件 | 半径 | 色 | グロー |
+|------|------|-----|--------|
+| 大アルカナ | 8px | 惑星色（10色） | blur 12px, alpha 0.35 |
+| 小アルカナ | 4px | エレメント色（4色） | blur 6px, alpha 0.25 |
+| 未プレイ日 | 2px | #555555 | なし |
+
+#### 惑星色マッピング（大アルカナ）
+| 惑星 | 色 | 対応カード |
+|------|-----|-----------|
+| 太陽 Sun | `#FFD700` | 力(8), 太陽(19) |
+| 月 Moon | `#C0C8E0` | 女教皇(2), 戦車(7) |
+| 水星 Mercury | `#7BE0AD` | 魔術師(1), 隠者(9), 恋人(6) |
+| 金星 Venus | `#FF8FA0` | 女帝(3), 法王(5), 正義(11) |
+| 火星 Mars | `#FF4444` | 皇帝(4), 塔(16) |
+| 木星 Jupiter | `#6B5BFF` | 運命の輪(10), 節制(14) |
+| 土星 Saturn | `#8B7355` | 悪魔(15), 世界(21) |
+| 天王星 Uranus | `#00D4FF` | 愚者(0), 星(17) |
+| 海王星 Neptune | `#9B6BFF` | 吊るされた男(12), 月(18) |
+| 冥王星 Pluto | `#2A0030` | 死神(13), 審判(20) |
+
+#### エレメント色マッピング（小アルカナ）
+| スート | 色 |
+|--------|-----|
+| ワンド（火） | `#FF6B35` |
+| カップ（水） | `#4DA8DA` |
+| ソード（風） | `#B8C4D0` |
+| ペンタクル（地） | `#C4A265` |
+
+#### 月齢特別演出
+| 月齢 | 演出 |
+|------|------|
+| 満月（phase 14-15） | サイズ1.5倍 + 白金リング(`#FFF0C0`) + 放射グロー(blur 18px) |
+| 新月（phase 0-1） | サイズ0.75倍 + 深紫コア(`#2A0030`) |
+| ランダム（5%確率） | 白金リング（満月より控えめ: alpha 0.3, glow 10px）— readingがある日のみ |
+
+#### ドットタップ → ポップアップ
+- ヒットテスト: 28px閾値で最近傍ドット検出
+- 表示: Day番号、月齢emoji、カード名(emoji+EN)、惑星/スート、キーワード
+- 3.5秒自動消去
+
+#### Day Badge / Moon Badge
+- 右上: 「Day X of Y」（周期進捗）
+- 左上: 月齢emoji + フェーズ名（例: 🌔 Waxing Gibbous）
+
+#### Stella メッセージ
+- reading数に応じた動的メッセージ（0件/1-6件/7-19件/20+件）
+
+---
+
+#### 月のインテンション機能（3ビート構造）
+
+天体イベント連動の自己内省リチュアル。**完全任意**（スキップしてもスパイラルに影響なし）。
+
+##### Beat 1: 新月 — 手放す選択
+- **トリガー**: 新月当日（phase 0-1）にGalaxy画面表示時に自動発火。1日1回のみ
+- **表示内容**:
+  - 新月のサイン（例: "New Moon in Scorpio / 蠍座の新月"）
+  - その月の天体イベント一覧（逆行・食・イングレス等）
+  - **3つの選択肢**: 月のサインと天体イベントに基づく「手放すべきこと」（日英表示）
+- **選択肢データソース**: `celestial_events_2026.json`（静的テンプレート）
+  - 将来: Claude API (Haiku) で動的生成（月1回/ユーザー、~$0.001/回）
+- **保存**: `LunarIntention` モデルとして SharedPreferences に保存
+
+##### Beat 2: 満月 — 中間チェック
+- **トリガー**: 満月当日（phase 14-15）にインテンションが設定済みかつ未チェックの場合
+- **表示内容**:
+  - 満月名（例: "Pink Moon / 桃色の月"）
+  - 新月で選んだインテンションを再表示
+  - 3段階の自己評価: 🌊まだ途中 / ✨進展あり / 🌟軽くなった
+
+##### Beat 3: 結晶化 — 新月前日の振り返り演出
+- **トリガー**: 次の新月の前日（cycleEnd - 1日）にインテンション設定済みかつ未結晶の場合
+- **表示内容**:
+  - 選んだインテンション + 満月時の中間評価バッジを表示
+  - **天体イベント連動の温かいメッセージ**（月別100字、12ヶ月分定義済み）
+  - 「この周期の軌跡が星座になります」
+  - 「✦ 星座を結晶化する」ゴールドボタン（選択肢なし、振り返りのみ）
+- **ボタン押下時の動作**:
+  - 即座にStar Atlasにサイクルデータを保存（アニメーション前に永続化）
+  - 星座形成アニメーション（8秒4ステージ: CONVERGENCE→IGNITION→LINKING→COMPLETE）
+  - 「View in Star Atlas ✦」→ Star Atlasタブに自動遷移
+- **Not nowは廃止**: 結晶化画面が出たら「✦ 星座を結晶化する」を押すのみ
+- **未結晶の救済**: 新月が来た時に前周期の未結晶インテンションを検出→結晶化オーバーレイを優先表示（アプリ閉じて見逃した場合の救済）
+
+##### 天体イベントデータ（2026年）
+- `assets/celestial_events_2026.json` に12ヶ月分を静的定義
+- 各月: 新月日/サイン、満月日/名前、天体イベントリスト、3テーマ（EN/JP）
+- 主要イベント: 水星逆行×3、金星逆行、土星逆行、冥王星逆行、日食×2、月食×2、
+  海王星牡羊座入り、土星牡羊座入り、天王星双子座入り、木星獅子座入り
+
+---
 
 #### Star Atlas タブ
 - **星座カードグリッド**: 2カラム、ミニキャンバス（Catmull-Rom スプライン描画）
-- **リプレイモーダル**: 300×300 キャンバス、2.8秒アニメーション再生
-- **Cosmic Pro バナー**: $7.99/月 UI
+- **リプレイオーバーレイ**: 300×300 キャンバス、2.8秒アニメーション再生
+- **星座形成ロジック**:
+  - 全プレイ日（大アルカナ＋小アルカナ）のドットを時系列で接続
+  - 大アルカナ = 主要ノード（大きく描画）、小アルカナ = 中継点（小さく描画）
+  - 未プレイ日はスキップ → 星座の「切れ目」に（毎日引くほど密な星座、サボるほど疎な星座）
+  - Catmull-Rom スプラインで滑らかな曲線
 
-#### 星座形成アニメーション（8秒・4ステージ）
-1. **Convergence** (0〜2s): ドットが中心に収束
-2. **Ignition** (2〜4s): Day1→28が順次フラッシュ、ターゲット位置へ移動
-3. **Linking** (4〜6.5s): Catmull-Romスプラインが描画
-4. **Naming** (6.5〜8s): シンボル名・クォートがフェードイン
+#### Star Atlas 名前生成
+- **seedCard**: 周期内で最頻出の大アルカナ（fallback: 最頻出スートのエース）
+- **テンプレート**: `The [形容詞] [名詞]`（EN）/ `[形容詞][名詞]`（JP）
+- **語彙**: 各10語（Golden/Silver/Crimson/Ethereal/Radiant/Silent/Infinite/Luminous/Frozen/Mystic × Crown/Arrow/Veil/Flame/Chalice/Mirror/Gate/Wing/Orbit/Sigil）
+- **ハッシュ**: `seedCardId + ISO日付` → 決定的生成
+- **将来**: Claude API (Sonnet) で動的生成
 
-#### Star Atlas 名前生成（モック）
-- テンプレート: `[形容詞] + [名詞]`（英語）/ `[形容詞]の + [名詞]`（日本語）
-- seedCard + 日付をシードにした決定的生成
-- 本番: Claude API (Sonnet) で動的生成
+#### データ永続化 (SharedPreferences)
+| キー | 用途 |
+|------|------|
+| `solara_current_cycle_readings` | 現在周期のDailyReadingリスト |
+| `solara_galaxy_cycles` | 完了GalaxyCycleリスト |
+| `solara_lunar_intention_{cycleId}` | 月のインテンション（cycleId = "2026-04"形式） |
+| `solara_overlay_shown_{type}_{date}` | オーバーレイ表示済みフラグ（1日1回制御） |
 
-#### デモボタン
-| ボタン | 機能 |
-|--------|------|
-| 🌑 New Moon | New Moonオーバーレイ（intention入力） |
-| 🌕 Full Moon | Full Moonオーバーレイ（Disintegrate） |
-| ✨ Complete | 星座形成アニメーション → Star Atlas保存 |
+#### Observe画面連携
+- Observeでカードを引くと `SolaraStorage.addReading()` で自動保存
+- 1日1枚制限（同日は同じカードを表示）
+- Galaxy画面表示時に `_loadData()` で読み込み → スパイラルに自動反映
 
-#### localStorage連携
-- `solara_daily_vibes` — 日次vibeスコア蓄積（最大28件）→ スパイラルに反映
-- `solara_galaxy_cycles` — 完了サイクル保存・読み込み
-- 星座形成完了 → 新サイクル自動保存 → グリッド再描画
+#### ファイル構成（Flutter実装）
+```
+lib/
+  models/
+    tarot_card.dart         — 78枚カードモデル
+    daily_reading.dart      — 日次占い記録
+    galaxy_cycle.dart       — 完了周期 + 星座ドット
+    lunar_intention.dart    — インテンション + 中間 + 結晶化
+  utils/
+    moon_phase.dart         — 月齢計算（Metonic cycle）
+    constellation_namer.dart — 星座命名（ハッシュベース）
+    tarot_data.dart         — JSONアセットローダー
+    solara_storage.dart     — SharedPreferences wrapper
+    celestial_events.dart   — 天体イベントローダー
+  widgets/
+    cycle_spiral_painter.dart     — 3Dスパイラル描画
+    constellation_painter.dart    — 星座描画（フル + ミニ）
+    moon_overlay.dart             — 新月/満月/結晶化オーバーレイ
+  screens/
+    galaxy_screen.dart      — GALAXY画面（Cycle + Star Atlas）
+    observe_screen.dart     — Observe画面（ランダムカード + 保存）
+assets/
+  tarot_planet_map.json         — 78枚カードデータ
+  celestial_events_2026.json    — 2026年天体イベント + テーマ
+```
 
 ### 5. Sanctuary (`sanctuary.html`)
 

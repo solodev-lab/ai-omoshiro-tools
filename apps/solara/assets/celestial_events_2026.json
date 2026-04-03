@@ -1,0 +1,210 @@
+{
+  "year": 2026,
+  "months": [
+    {
+      "month": 1,
+      "newMoonDate": "2026-01-18",
+      "newMoonSign": "Capricorn",
+      "newMoonSignJP": "山羊座",
+      "fullMoonDate": "2026-01-03",
+      "fullMoonName": "Wolf Moon",
+      "fullMoonNameJP": "狼の月",
+      "events": [
+        {"type": "ingress", "planet": "neptune", "desc": "Neptune enters Aries (Jan 26)", "descJP": "海王星が牡羊座へ移行（1/26）"}
+      ],
+      "themes": {
+        "en": ["over-planning without acting", "fear of starting fresh", "clinging to outdated structures"],
+        "jp": ["行動せずに計画ばかりすること", "新しい始まりへの恐れ", "古い枠組みへの執着"]
+      }
+    },
+    {
+      "month": 2,
+      "newMoonDate": "2026-02-17",
+      "newMoonSign": "Aquarius",
+      "newMoonSignJP": "水瓶座",
+      "fullMoonDate": "2026-02-01",
+      "fullMoonName": "Snow Moon",
+      "fullMoonNameJP": "雪の月",
+      "events": [
+        {"type": "ingress", "planet": "saturn", "desc": "Saturn enters Aries (Feb 13)", "descJP": "土星が牡羊座へ移行（2/13）"},
+        {"type": "conjunction", "planet": "saturn", "desc": "Saturn conjunct Neptune in Aries (Feb 20)", "descJP": "土星・海王星が牡羊座で合（2/20）"},
+        {"type": "eclipse", "planet": "sun", "desc": "Solar Eclipse in Aquarius (Feb 17)", "descJP": "水瓶座の日食（2/17）"},
+        {"type": "retrograde", "planet": "mercury", "desc": "Mercury Retrograde in Pisces (Feb 25 - Mar 20)", "descJP": "水星逆行・魚座（2/25〜3/20）"}
+      ],
+      "themes": {
+        "en": ["rigid thinking about the future", "resistance to collective change", "miscommunication from assumptions"],
+        "jp": ["未来に対する硬い考え方", "変化への抵抗感", "思い込みによる伝達ミス"]
+      }
+    },
+    {
+      "month": 3,
+      "newMoonDate": "2026-03-18",
+      "newMoonSign": "Pisces",
+      "newMoonSignJP": "魚座",
+      "fullMoonDate": "2026-03-03",
+      "fullMoonName": "Worm Moon",
+      "fullMoonNameJP": "芽吹きの月",
+      "events": [
+        {"type": "eclipse", "planet": "moon", "desc": "Lunar Eclipse in Virgo (Mar 3)", "descJP": "乙女座の月食（3/3）"},
+        {"type": "retrograde_end", "planet": "mercury", "desc": "Mercury stations direct (Mar 20)", "descJP": "水星順行へ（3/20）"}
+      ],
+      "themes": {
+        "en": ["perfectionism that blocks flow", "escaping into fantasy", "over-analyzing emotions"],
+        "jp": ["流れを止める完璧主義", "空想への逃避", "感情の過剰分析"]
+      }
+    },
+    {
+      "month": 4,
+      "newMoonDate": "2026-04-17",
+      "newMoonSign": "Aries",
+      "newMoonSignJP": "牡羊座",
+      "fullMoonDate": "2026-04-01",
+      "fullMoonName": "Pink Moon",
+      "fullMoonNameJP": "桃色の月",
+      "events": [
+        {"type": "ingress", "planet": "uranus", "desc": "Uranus enters Gemini (Apr 25)", "descJP": "天王星が双子座へ移行（4/25）"}
+      ],
+      "themes": {
+        "en": ["impatience with slow progress", "ego-driven decisions", "avoiding vulnerability"],
+        "jp": ["遅い進歩への焦り", "エゴに基づく判断", "弱さを見せることへの回避"]
+      }
+    },
+    {
+      "month": 5,
+      "newMoonDate": "2026-05-16",
+      "newMoonSign": "Taurus",
+      "newMoonSignJP": "牡牛座",
+      "fullMoonDate": "2026-05-01",
+      "fullMoonName": "Flower Moon",
+      "fullMoonNameJP": "花の月",
+      "events": [
+        {"type": "retrograde", "planet": "pluto", "desc": "Pluto Retrograde in Aquarius (May 6 - Oct 15)", "descJP": "冥王星逆行・水瓶座（5/6〜10/15）"}
+      ],
+      "themes": {
+        "en": ["attachment to material comfort", "resisting necessary transformation", "stubbornness disguised as stability"],
+        "jp": ["物質的安楽への執着", "必要な変容への抵抗", "安定を装った頑固さ"]
+      }
+    },
+    {
+      "month": 6,
+      "newMoonDate": "2026-06-15",
+      "newMoonSign": "Gemini",
+      "newMoonSignJP": "双子座",
+      "fullMoonDate": "2026-05-31",
+      "fullMoonName": "Strawberry Moon",
+      "fullMoonNameJP": "苺の月",
+      "events": [
+        {"type": "ingress", "planet": "chiron", "desc": "Chiron enters Taurus (Jun 19)", "descJP": "キロンが牡牛座へ移行（6/19）"},
+        {"type": "ingress", "planet": "jupiter", "desc": "Jupiter enters Leo (Jun 29)", "descJP": "木星が獅子座へ移行（6/29）"},
+        {"type": "retrograde", "planet": "mercury", "desc": "Mercury Retrograde in Cancer (Jun 29 - Jul 23)", "descJP": "水星逆行・蟹座（6/29〜7/23）"}
+      ],
+      "themes": {
+        "en": ["scattered energy and distraction", "superficial connections over depth", "avoiding deep wounds by staying busy"],
+        "jp": ["エネルギーの分散と気の散り", "深い繋がりより表面的な付き合い", "忙しさで深い傷から目を逸らすこと"]
+      }
+    },
+    {
+      "month": 7,
+      "newMoonDate": "2026-07-14",
+      "newMoonSign": "Cancer",
+      "newMoonSignJP": "蟹座",
+      "fullMoonDate": "2026-07-29",
+      "fullMoonName": "Buck Moon",
+      "fullMoonNameJP": "雄鹿の月",
+      "events": [
+        {"type": "retrograde_end", "planet": "mercury", "desc": "Mercury stations direct (Jul 23)", "descJP": "水星順行へ（7/23）"},
+        {"type": "retrograde", "planet": "saturn", "desc": "Saturn Retrograde begins (Jul 26)", "descJP": "土星逆行開始（7/26）"},
+        {"type": "node_shift", "planet": "moon", "desc": "North Node enters Aquarius (Jul 26)", "descJP": "ノースノードが水瓶座へ（7/26）"}
+      ],
+      "themes": {
+        "en": ["emotional walls that block intimacy", "carrying others' burdens as your own", "nostalgic clinging to the past"],
+        "jp": ["親密さを阻む感情の壁", "他人の荷物を自分のものにすること", "過去への郷愁的な執着"]
+      }
+    },
+    {
+      "month": 8,
+      "newMoonDate": "2026-08-12",
+      "newMoonSign": "Leo",
+      "newMoonSignJP": "獅子座",
+      "fullMoonDate": "2026-08-27",
+      "fullMoonName": "Sturgeon Moon",
+      "fullMoonNameJP": "チョウザメの月",
+      "events": [
+        {"type": "eclipse", "planet": "sun", "desc": "Solar Eclipse in Leo (Aug 12)", "descJP": "獅子座の日食（8/12）"},
+        {"type": "eclipse", "planet": "moon", "desc": "Lunar Eclipse in Pisces (Aug 27)", "descJP": "魚座の月食（8/27）"},
+        {"type": "retrograde", "planet": "neptune", "desc": "Neptune Retrograde in Aries (Jul 7 - Dec 12)", "descJP": "海王星逆行・牡羊座（7/7〜12/12）"}
+      ],
+      "themes": {
+        "en": ["need for external validation", "creative blocks from self-doubt", "drama as a substitute for substance"],
+        "jp": ["外部からの承認欲求", "自己疑念による創造性の停滞", "中身の代わりにドラマを求めること"]
+      }
+    },
+    {
+      "month": 9,
+      "newMoonDate": "2026-09-11",
+      "newMoonSign": "Virgo",
+      "newMoonSignJP": "乙女座",
+      "fullMoonDate": "2026-09-26",
+      "fullMoonName": "Harvest Moon",
+      "fullMoonNameJP": "収穫の月",
+      "events": [],
+      "themes": {
+        "en": ["self-criticism masked as high standards", "anxiety about imperfection", "neglecting rest for productivity"],
+        "jp": ["高い基準を装った自己批判", "不完全さへの不安", "生産性のために休息を犠牲にすること"]
+      }
+    },
+    {
+      "month": 10,
+      "newMoonDate": "2026-10-10",
+      "newMoonSign": "Libra",
+      "newMoonSignJP": "天秤座",
+      "fullMoonDate": "2026-10-25",
+      "fullMoonName": "Hunter's Moon",
+      "fullMoonNameJP": "狩人の月",
+      "events": [
+        {"type": "retrograde", "planet": "venus", "desc": "Venus Retrograde in Scorpio/Libra (Oct 3 - Nov 13)", "descJP": "金星逆行・蠍座/天秤座（10/3〜11/13）"},
+        {"type": "retrograde", "planet": "mercury", "desc": "Mercury Retrograde in Scorpio (Oct 24 - Nov 13)", "descJP": "水星逆行・蠍座（10/24〜11/13）"}
+      ],
+      "themes": {
+        "en": ["people-pleasing at your own expense", "reopening old relationship wounds", "avoiding conflict to keep false peace"],
+        "jp": ["自分を犠牲にした八方美人", "過去の関係の傷を掘り返すこと", "偽りの平和のために対立を避けること"]
+      }
+    },
+    {
+      "month": 11,
+      "newMoonDate": "2026-11-09",
+      "newMoonSign": "Scorpio",
+      "newMoonSignJP": "蠍座",
+      "fullMoonDate": "2026-11-24",
+      "fullMoonName": "Beaver Moon",
+      "fullMoonNameJP": "ビーバーの月",
+      "events": [
+        {"type": "retrograde_end", "planet": "mercury", "desc": "Mercury stations direct (Nov 13)", "descJP": "水星順行へ（11/13）"},
+        {"type": "retrograde_end", "planet": "venus", "desc": "Venus stations direct (Nov 13)", "descJP": "金星順行へ（11/13）"},
+        {"type": "retrograde", "planet": "jupiter", "desc": "Jupiter Retrograde in Leo (Dec 12 - Apr 12)", "descJP": "木星逆行・獅子座（12/12〜4/12）"}
+      ],
+      "themes": {
+        "en": ["secrets kept out of fear", "obsessive control over outcomes", "refusing to trust after betrayal"],
+        "jp": ["恐怖から守る秘密", "結果への執着的な支配", "裏切り後の信頼拒否"]
+      }
+    },
+    {
+      "month": 12,
+      "newMoonDate": "2026-12-08",
+      "newMoonSign": "Sagittarius",
+      "newMoonSignJP": "射手座",
+      "fullMoonDate": "2026-12-23",
+      "fullMoonName": "Cold Moon",
+      "fullMoonNameJP": "寒月",
+      "events": [
+        {"type": "retrograde_end", "planet": "saturn", "desc": "Saturn stations direct (Dec 10)", "descJP": "土星順行へ（12/10）"},
+        {"type": "retrograde_end", "planet": "neptune", "desc": "Neptune stations direct (Dec 12)", "descJP": "海王星順行へ（12/12）"},
+        {"type": "retrograde", "planet": "jupiter", "desc": "Jupiter Retrograde begins (Dec 12)", "descJP": "木星逆行開始（12/12）"}
+      ],
+      "themes": {
+        "en": ["restlessness disguised as ambition", "preaching wisdom you don't practice", "running from commitment"],
+        "jp": ["野心を装った落ち着きのなさ", "実践しない知恵を説くこと", "コミットメントからの逃走"]
+      }
+    }
+  ]
+}
