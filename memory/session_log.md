@@ -382,3 +382,47 @@
 
 ### コミット
 - 未コミット
+
+## 2026-04-03 セッション2: 動作確認・修正（Map/Tarot/Galaxy）
+
+### Map画面
+- 運勢方位バーの幅制限: `.ff-bw`にwidth:120px固定、`.ff-label`をinline-flex化
+- 検索結果ポップアップ改善:
+  - タロット未引き時もaspectDataスコアでblessed/shadow判定（上位2=blessed、下位2=shadow）
+  - 5カテゴリタブ（癒し/金運/恋愛/仕事/話す）追加、方位スコアに応じたアドバイス表示
+  - fortuneデータもaspectDataから取得（seedBoost不要化）
+- z-index整理: ナビバー=130、レイヤー/VP/運勢パネル=120-121、検索結果=110
+- タロットブリッジ完全削除:
+  - `seedBoost`/`calcSeedBoost()`/`drawnCard`/`applyBridge()`/`stellaMsg(card)`全削除
+  - `seedBadge`要素削除
+  - preseedメッセージ変更:「今日の方位を探索してみよう」
+  - Stella表示はvibe-basedのみ（generateStellaMessage）
+
+### Tarot画面
+- BOOST DIRECTION（コンパス+方位ラベル+説明）セクション削除
+- PLANET LINESセクション削除
+- 「地図に反映する」ボタン（applyToMap）削除
+- astronomy-engine読み込み削除（方角不要のため）
+- PLANET_SYMBOLSのangle・DIRECTIONS定義削除
+- getCardInfoから方位計算削除
+- generateStellaMsgから方位参照削除（カード名+惑星名のみ、日付シード）
+- 自宅/現在地/指定場所セレクター削除
+- 今の気分スライダー削除
+- 履歴詳細からboostDir/planets表示削除
+
+### Galaxy画面
+- スパイラル外周フェードアウト: `fade=1-Math.pow(i/len,1.5)`でopacity+lineWidth漸減
+- ズームアウト制限: 最小0.48（初期値1.0から10段階）
+- レイアウト修正:
+  - `.screen.active`をposition:fixed
+  - `.main-area`をposition:fixed、top:44px/bottom:80px
+  - STELLA+デモボタンをmain-area末尾に移動（flex-shrink:0）
+  - `.cycle-content`にoverflow:hidden
+
+### 設計変更（重要）
+- **タロットカードは方角に無関係** — カードの方位ブースト概念を完全廃止
+- Map画面の方位スコアは100%アスペクトデータのみ
+- カードはテーマ（キーワード・エレメント）のみ提供、方角は天文計算が担当
+
+### コミット
+- 未コミット

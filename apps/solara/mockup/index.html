@@ -35,12 +35,12 @@ body{background:#0A0A14;color:#E8E0D0;font-family:'Segoe UI','Helvetica Neue',sa
 .search-btn{position:absolute;right:6px;top:50%;transform:translateY(-50%);padding:4px 6px;background:none;border:none;color:rgba(201,168,76,.5);font-size:16px;cursor:pointer;line-height:1}
 
 /* Fortune filter label */
-.ff-label{position:absolute;top:95px;left:16px;right:16px;z-index:105;display:flex;align-items:center;gap:6px;font-size:10px;color:#C9A84C;background:rgba(10,10,20,.7);padding:3px 10px;border-radius:10px;border:1px solid rgba(201,168,76,.3);letter-spacing:.5px;pointer-events:none}
+.ff-label{position:absolute;top:95px;left:16px;z-index:105;display:inline-flex;align-items:center;gap:6px;font-size:10px;color:#C9A84C;background:rgba(10,10,20,.7);padding:3px 10px;border-radius:10px;border:1px solid rgba(201,168,76,.3);letter-spacing:.5px;pointer-events:none}
 .ff-tag{white-space:nowrap;flex-shrink:0}
 .ff-bars{flex:1;display:flex;flex-direction:column;gap:2px;min-width:0}
 .ff-row{display:flex;align-items:center;gap:4px;font-size:9px;color:#E8E0D0}
 .ff-dir{width:32px;text-align:right;flex-shrink:0;color:#888;white-space:nowrap}
-.ff-bw{flex:1;height:5px;background:rgba(255,255,255,.06);border-radius:3px;overflow:hidden}
+.ff-bw{width:120px;flex-shrink:0;height:5px;background:rgba(255,255,255,.06);border-radius:3px;overflow:hidden}
 .ff-b{height:100%;border-radius:3px;background:#C9A84C}
 .ff-sc{width:28px;text-align:right;flex-shrink:0;font-family:monospace;font-size:8px;color:#F6BD60}
 
@@ -50,6 +50,10 @@ body{background:#0A0A14;color:#E8E0D0;font-family:'Segoe UI','Helvetica Neue',sa
 .sr-name{font-size:13px;color:#E8E0D0;margin-bottom:6px}
 .sr-sector{font-size:12px;line-height:1.5;white-space:pre-line}
 .sr-close{position:absolute;top:8px;right:12px;background:none;border:none;color:#555;font-size:16px;cursor:pointer}
+.sr-tabs{display:flex;gap:0;margin-top:10px;border-bottom:1px solid rgba(255,255,255,.08)}
+.sr-tab{flex:1;padding:6px 0;font-size:10px;color:#666;text-align:center;cursor:pointer;border-bottom:2px solid transparent;transition:color .2s,border-color .2s}
+.sr-tab.active{color:#C9A84C;border-bottom-color:#C9A84C}
+.sr-advice{font-size:11px;line-height:1.6;color:rgba(232,224,208,.85);margin-top:8px;min-height:32px;white-space:pre-line}
 
 /* Stella */
 .stella{position:absolute;bottom:90px;left:20px;right:20px;z-index:110;background:rgba(15,15,30,.75);backdrop-filter:blur(20px);border:1px solid rgba(201,168,76,.2);border-radius:16px;padding:16px 20px;opacity:0;transform:translateY(10px);transition:opacity .8s,transform .8s;pointer-events:none}
@@ -97,7 +101,7 @@ body{background:#0A0A14;color:#E8E0D0;font-family:'Segoe UI','Helvetica Neue',sa
 @keyframes restIn{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
 
 /* Bottom nav */
-.bottom-nav{position:fixed;bottom:0;left:0;right:0;height:80px;background:rgba(10,10,20,.9);backdrop-filter:blur(10px);border-top:1px solid rgba(255,255,255,.05);display:flex;align-items:center;justify-content:space-around;padding:0 20px 15px;z-index:90}
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;height:80px;background:rgba(10,10,20,.9);backdrop-filter:blur(10px);border-top:1px solid rgba(255,255,255,.05);display:flex;align-items:center;justify-content:space-around;padding:0 20px 15px;z-index:130}
 .nav-item{display:flex;flex-direction:column;align-items:center;gap:4px;opacity:.4;cursor:pointer;transition:opacity .3s}
 .nav-item.active{opacity:1}
 .nav-icon{font-size:20px}
@@ -105,7 +109,7 @@ body{background:#0A0A14;color:#E8E0D0;font-family:'Segoe UI','Helvetica Neue',sa
 .nav-item.active .nav-label{color:#C9A84C}
 
 /* Layer button & panel */
-.layer-btn{position:absolute;top:50%;right:0;transform:translateY(-50%);z-index:86;width:24px;height:50px;border-radius:10px 0 0 10px;background:rgba(10,10,25,.8);border:1px solid rgba(201,168,76,.2);border-right:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;opacity:0;transition:opacity .5s,border-color .3s}
+.layer-btn{position:absolute;top:50%;right:0;transform:translateY(-50%);z-index:121;width:24px;height:50px;border-radius:10px 0 0 10px;background:rgba(10,10,25,.8);border:1px solid rgba(201,168,76,.2);border-right:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;opacity:0;transition:opacity .5s,border-color .3s}
 .layer-btn.vis{opacity:1}
 .layer-btn.active{border-color:rgba(201,168,76,.5)}
 .layer-btn-bar{width:16px;height:2px;border-radius:1px}
@@ -113,7 +117,7 @@ body{background:#0A0A14;color:#E8E0D0;font-family:'Segoe UI','Helvetica Neue',sa
 .layer-btn-bar:nth-child(2){background:#C9A84C}
 .layer-btn-bar:nth-child(3){background:#00D4FF}
 
-.layer-panel{position:absolute;top:140px;right:12px;z-index:85;width:100px;background:rgba(12,12,26,.92);border:1px solid rgba(201,168,76,.2);border-radius:14px;padding:14px;opacity:0;pointer-events:none;transform:translateX(10px);transition:opacity .25s,transform .25s}
+.layer-panel{position:absolute;top:140px;right:12px;z-index:120;width:100px;background:rgba(12,12,26,.92);border:1px solid rgba(201,168,76,.2);border-radius:14px;padding:14px;opacity:0;pointer-events:none;transform:translateX(10px);transition:opacity .25s,transform .25s}
 .layer-panel.open{opacity:1;pointer-events:auto;transform:translateX(0)}
 .lp-title{font-size:9px;color:#666;letter-spacing:1.5px;margin-bottom:10px}
 .lp-sec{margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid rgba(255,255,255,.06)}
@@ -131,10 +135,10 @@ body{background:#0A0A14;color:#E8E0D0;font-family:'Segoe UI','Helvetica Neue',sa
 .fp-item.active{border-color:var(--pc,#C9A84C);color:var(--pc,#C9A84C);background:rgba(201,168,76,.1)}
 
 /* Viewpoint button & panel */
-.vp-btn{position:absolute;top:50%;right:0;margin-top:32px;z-index:86;width:24px;height:32px;border-radius:10px 0 0 10px;background:rgba(10,10,25,.8);border:1px solid rgba(201,168,76,.2);border-right:none;display:none;align-items:center;justify-content:center;font-size:13px;cursor:pointer;transition:border-color .3s}
+.vp-btn{position:absolute;top:50%;right:0;margin-top:32px;z-index:121;width:24px;height:32px;border-radius:10px 0 0 10px;background:rgba(10,10,25,.8);border:1px solid rgba(201,168,76,.2);border-right:none;display:none;align-items:center;justify-content:center;font-size:13px;cursor:pointer;transition:border-color .3s}
 .vp-btn.vis{display:flex}
 .vp-btn.active{border-color:rgba(201,168,76,.5)}
-.vp-panel{position:absolute;top:50%;right:12px;margin-top:28px;z-index:85;width:180px;background:rgba(12,12,26,.92);border:1px solid rgba(201,168,76,.2);border-radius:14px;padding:12px;opacity:0;pointer-events:none;transform:translateX(10px);transition:opacity .25s,transform .25s}
+.vp-panel{position:absolute;top:50%;right:12px;margin-top:28px;z-index:120;width:180px;background:rgba(12,12,26,.92);border:1px solid rgba(201,168,76,.2);border-radius:14px;padding:12px;opacity:0;pointer-events:none;transform:translateX(10px);transition:opacity .25s,transform .25s}
 .vp-panel.open{opacity:1;pointer-events:auto;transform:translateX(0)}
 .vp-title{font-size:9px;letter-spacing:1.5px;color:#C9A84C;margin-bottom:10px}
 .vp-row{position:relative;display:flex;align-items:center;gap:8px;padding:6px 4px;border-radius:8px;cursor:pointer;transition:background .2s}
@@ -161,7 +165,7 @@ body{background:#0A0A14;color:#E8E0D0;font-family:'Segoe UI','Helvetica Neue',sa
 @keyframes msgFade{0%,70%{opacity:1}100%{opacity:0}}
 
 /* Fortune sheet */
-.fs{position:absolute;left:0;right:0;bottom:80px;z-index:85;background:rgba(10,10,25,.95);border-top:1px solid rgba(201,168,76,.25);border-radius:16px 16px 0 0;transform:translateY(100%);transition:transform .35s cubic-bezier(.4,0,.2,1);overflow:hidden;display:flex;flex-direction:column}
+.fs{position:absolute;left:0;right:0;bottom:80px;z-index:120;background:rgba(10,10,25,.95);border-top:1px solid rgba(201,168,76,.25);border-radius:16px 16px 0 0;transform:translateY(100%);transition:transform .35s cubic-bezier(.4,0,.2,1);overflow:hidden;display:flex;flex-direction:column}
 .fs.open{transform:translateY(0)}
 .fs-handle{width:36px;height:4px;background:rgba(255,255,255,.25);border-radius:2px;margin:10px auto 6px;cursor:grab}
 .fs-tabs{display:flex;gap:0;padding:0 8px;border-bottom:1px solid rgba(255,255,255,.06);overflow-x:auto;scrollbar-width:none}
@@ -185,7 +189,7 @@ body{background:#0A0A14;color:#E8E0D0;font-family:'Segoe UI','Helvetica Neue',sa
 .fs-badge{font-size:10px;margin-left:4px;width:20px}
 .fs-legend{display:flex;gap:10px;padding:4px 12px;font-size:9px;color:#888;justify-content:center}
 .fs-src{border-bottom:1px solid rgba(255,255,255,.08)}
-.fs-pull{position:absolute;bottom:80px;left:50%;transform:translateX(-50%);z-index:86;background:rgba(10,10,25,.8);border:1px solid rgba(201,168,76,.2);border-radius:12px 12px 0 0;border-bottom:none;padding:4px 18px 2px;cursor:pointer;font-size:10px;color:#888;letter-spacing:.5px;transition:color .2s}
+.fs-pull{position:absolute;bottom:80px;left:50%;transform:translateX(-50%);z-index:121;background:rgba(10,10,25,.8);border:1px solid rgba(201,168,76,.2);border-radius:12px 12px 0 0;border-bottom:none;padding:4px 18px 2px;cursor:pointer;font-size:10px;color:#888;letter-spacing:.5px;transition:color .2s}
 .fs-pull:active{color:#C9A84C}
 
 /* CTA */
@@ -217,7 +221,6 @@ body{background:#0A0A14;color:#E8E0D0;font-family:'Segoe UI','Helvetica Neue',sa
 <div class="phone" id="phone">
   <div class="status-bar">SOLARA</div>
   <button class="replay" onclick="restart()">REPLAY</button>
-  <div class="seed-badge" id="seedBadge">🌊</div>
 
   <!-- Search -->
   <div class="search-trigger" id="searchTrigger" onclick="openSearch()">
@@ -241,6 +244,8 @@ body{background:#0A0A14;color:#E8E0D0;font-family:'Segoe UI','Helvetica Neue',sa
     <button class="sr-close" onclick="closeSR()">✕</button>
     <div class="sr-name" id="srName"></div>
     <div class="sr-sector" id="srSector"></div>
+    <div class="sr-tabs" id="srTabs"></div>
+    <div class="sr-advice" id="srAdvice"></div>
   </div>
 
   <!-- Stella -->
@@ -261,7 +266,7 @@ body{background:#0A0A14;color:#E8E0D0;font-family:'Segoe UI','Helvetica Neue',sa
     </div>
     <div class="preseed" id="preseed">
       <div class="preseed-icon">🌱</div>
-      <div class="preseed-text">今日の方位はまだ眠っているよ<br>Tarotタブでカードを引いてね</div>
+      <div class="preseed-text">今日の方位を探索してみよう<br>地図をタップして始めてね</div>
     </div>
   </div>
 
@@ -578,45 +583,6 @@ function scoreAll(){
 }
 
 // ========== Seed Boost ==========
-let drawnCard=null,seedBoost=null;
-
-function calcSeedBoost(card){
-  const pm=TAROT.planets;let boosted=[],amt=0;
-  if(card.type==='major'){
-    amt=card.boost;boosted=card.btype==='single'?[card.planet]:Object.keys(pm);
-  }else{
-    const suit=TAROT.suits[card.s];boosted=suit.planets.slice();
-    if(card.c){const ct=TAROT.court[card.c];amt=ct.boost;ct.extra.forEach(p=>{if(!boosted.includes(p))boosted.push(p)})}
-    else amt=TAROT.numBoost[card.r]||.15;
-  }
-  const ar=scoreAll();let raw=ar.sScores,rawC=ar.sComp;
-  const vals=Object.values(raw),mn=Math.min(...vals),mx=Math.max(...vals),rng=mx-mn||1;
-  const sScores={},sComp={};
-  DIR16.forEach(d=>{
-    const nf=raw[d]>0?(.15+.65*((raw[d]-mn)/rng))/raw[d]:1;
-    sScores[d]=.15+.65*((raw[d]-mn)/rng);
-    sComp[d]=emptyComp();COMP_KEYS.forEach(k=>sComp[d][k]=(rawC[d][k]||0)*nf);
-  });
-  const bSectors={};
-  boosted.forEach(pn=>{
-    const ta=TRIPLE.transit[pn]?TRIPLE.transit[pn].angle:pm[pn]?pm[pn].angle:null;
-    if(ta===null)return;
-    DIR16.forEach(d=>{const f=cosFall(angDist(ta,DIR16_ANG[d]),SPREAD);if(f>0){
-      bSectors[d]=(bSectors[d]||0)+amt*f;const bf=1+amt*f;sScores[d]*=bf;COMP_KEYS.forEach(k=>sComp[d][k]*=bf)}});
-  });
-  const sorted=DIR16.map(d=>({d,s:sScores[d]})).sort((a,b)=>b.s-a.s);
-  const sTypes={};sorted.forEach((e,i)=>sTypes[e.d]=i<4?'blessed':i<10?'mid':'shadow');
-  let sDir=null,sB=0;Object.entries(bSectors).forEach(([d,v])=>{if(v>sB){sB=v;sDir=d}});
-  if(!sDir)sDir=sorted[0].d;
-  return{sTypes,sScores,sComp,sFortune:ar.sFortune,boosted,bSectors,amt,sDir,sDirJP:DIR16_JP[sDir]||'',ar};
-}
-
-// ========== Stella Message ==========
-function stellaMsg(card,boost){
-  const d=boost.sDirJP||'全方位',kw=card.kw,n=card.jp;
-  const t=[`『${n}』が今日の種。${kw}のエネルギーが${d}の風に乗って流れているよ。`,`今日のSeedは『${n}』。${d}に${kw}の光が差している。足を運んでみて。`,`『${n}』が目覚めた。${kw}の力が${d}のセクターを押し上げているよ。`];
-  return t[Math.floor(Math.random()*t.length)];
-}
 
 // ========== Longitude normalization ==========
 function normLng(ptLng,refLng){let d=ptLng-refLng;while(d>180)d-=360;while(d<-180)d+=360;return refLng+d}
@@ -811,7 +777,7 @@ function addPlanetLines(){
   if(boostedLines)return;
   boostedLines=[];chartGroups={};planetMarkers=[];
   const lat=mapCenter[0],lng=mapCenter[1],cp=turf.point([lng,lat]);
-  const pm=TAROT.planets,bst=seedBoost?seedBoost.boosted:[];
+  const pm=TAROT.planets,bst=[];
 
   ['natal','progressed','transit'].forEach(lk=>{
     const ls=CHART_STYLE[lk],cd=TRIPLE[lk],lg=L.layerGroup().addTo(map);
@@ -872,7 +838,7 @@ function addPlanetLines(){
   // Seed marker
   const sm=L.circleMarker(mapCenter,{radius:6,color:GOLD,fillColor:'#F5D76E',fillOpacity:.8,weight:2,opacity:.8}).addTo(map);
   boostedLines.push(sm);
-  const emoji=drawnCard?drawnCard.emoji:'🌱';
+  const emoji='🌱';
   const sl=L.marker(mapCenter,{icon:L.divIcon({className:'',html:`<div style="font-size:16px;text-align:center;filter:drop-shadow(0 0 6px rgba(201,168,76,.6))">${emoji}</div>`,iconSize:[20,20],iconAnchor:[10,24]}),interactive:false}).addTo(map);
   boostedLines.push(sl);
 }
@@ -984,13 +950,8 @@ function onImpact(x,y){
   },300);
 
   setTimeout(()=>{
-    if(drawnCard&&seedBoost){
-      const msg=stellaMsg(drawnCard,seedBoost);
-      $('stellaText').innerHTML=`<span class="hl">『${drawnCard.jp}』</span>`+msg.replace(`『${drawnCard.jp}』`,'');
-    }
     $('stella').classList.add('vis');
   },1200);
-  setTimeout(()=>$('seedBadge').classList.add('vis'),800);
 }
 
 function playEffect(x,y){
@@ -1015,7 +976,7 @@ function doSearch(){
       $('stella').classList.remove('vis');map.flyTo([la,ln],15,{duration:1});
       if(searchMarker)map.removeLayer(searchMarker);
       searchMarker=L.circleMarker([la,ln],{radius:8,color:'#fff',fillColor:GOLD,fillOpacity:.9,weight:2}).addTo(map);
-      const sec=detectSector(la,ln);showSR(nm,sec.msg,sec.type);
+      const sec=detectSector(la,ln);showSR(nm,sec.msg,sec.type,sec.dir);
     }).catch(()=>showSR('検索エラー','','mid'));
 }
 
@@ -1024,8 +985,15 @@ function detectSector(lat,lng){
   let bearing=turf.bearing(from,to);if(bearing<0)bearing+=360;
   const dist=turf.distance(from,to,{units:'kilometers'});
 
-  const st={};DIR16.forEach(d=>st[d]='mid');
-  if(seedBoost)DIR16.forEach(d=>st[d]=seedBoost.sTypes[d]||'mid');
+  // Determine type per direction from aspectData scores
+  const st={};
+  if(aspectData){
+    const scores=aspectData.sScores;
+    const sorted=DIR16.map(d=>({d,s:scores[d]||0})).sort((a,b)=>b.s-a.s);
+    sorted.forEach((e,i)=>{st[e.d]=e.s<.01?'mid':i<2?'blessed':i>=14?'shadow':'mid'});
+  } else {
+    DIR16.forEach(d=>st[d]='mid');
+  }
 
   let matched=null;
   DIR16.forEach((d,i)=>{
@@ -1037,7 +1005,7 @@ function detectSector(lat,lng){
 
   const dTxt=dist<1?Math.round(dist*1000)+'m':Math.round(dist)+'km';
   const hdr=matched.label+'・'+dTxt;
-  const fort=seedBoost&&seedBoost.sFortune?seedBoost.sFortune[matched.dir]:null;
+  const fort=aspectData&&aspectData.sFortune?aspectData.sFortune[matched.dir]:null;
   const fJP=fort?FORTUNE_JP[fort]:null;
 
   const msgs={
@@ -1045,10 +1013,74 @@ function detectSector(lat,lng){
     shadow:'🌙 意識方位（'+hdr+'）\n'+(fJP?'【'+fJP+'】の課題に向き合う方角。意識的に動くと成長につながる。':'ハードアスペクトが重なる方角。今日は意識して動くこと。'),
     mid:'💫 中間方位（'+hdr+'）\n'+(fJP?'【'+fJP+'】の流れが緩やかに動いている方角。':'アスペクトが中立的な方角。'),
   };
-  return{type:matched.type,msg:msgs[matched.type]};
+  return{type:matched.type,msg:msgs[matched.type],dir:matched.dir,label:matched.label};
 }
 
-function showSR(name,msg,type){$('srName').textContent=name;const s=$('srSector');s.textContent=msg;s.style.color=type==='blessed'?GOLD:type==='shadow'?'#8B7AE8':'#6B8AAB';$('srPopup').classList.add('vis')}
+// Advice templates per category × strength
+const SR_ADVICE={
+  healing:{
+    high:'この方角に足を運ぶと心がほどける。深呼吸しながら、自分を甘やかす時間を。',
+    mid:'穏やかなエネルギーが流れている。カフェや公園でひと息つくのに良い方角。',
+    low:'癒しの波は控えめ。無理せず、家でゆっくり過ごすのも選択肢。'
+  },
+  money:{
+    high:'金運の流れが強い方角。買い物や商談に動くと良い縁がつかめそう。',
+    mid:'金運は安定圏。堅実な判断をすれば着実にプラスへ向かう方角。',
+    low:'金運は静か。今日は情報収集に徹して、行動は明日以降に。'
+  },
+  love:{
+    high:'恋愛運が高まる方角。出会いや再会のチャンスが潜んでいる。',
+    mid:'人との縁がゆるやかに動いている。自然体でいると良い流れに乗れる。',
+    low:'恋愛のエネルギーは内向き。自分磨きに時間を使うと吉。'
+  },
+  work:{
+    high:'仕事運の追い風。この方角で行動すると成果が出やすい。',
+    mid:'仕事は平常運。コツコツ積み上げる作業が実を結ぶ方角。',
+    low:'仕事のペースは緩やか。企画や準備に集中する日に向いている。'
+  },
+  communication:{
+    high:'言葉が冴える方角。プレゼンや相談事はこの方角で。',
+    mid:'コミュニケーションは穏やか。聞き役に回ると信頼が深まる。',
+    low:'言葉より行動で伝わる日。メッセージは簡潔に。'
+  }
+};
+const SR_CAT_ORDER=['healing','money','love','work','communication'];
+const SR_CAT_LABEL={healing:'癒し',money:'金運',love:'恋愛',work:'仕事',communication:'話す'};
+let srDir=null;
+
+function showSR(name,msg,type,dir){
+  $('srName').textContent=name;
+  const s=$('srSector');s.textContent=msg;
+  s.style.color=type==='blessed'?GOLD:type==='shadow'?'#8B7AE8':'#6B8AAB';
+  srDir=dir;
+  // Build tabs
+  const tabs=$('srTabs');
+  tabs.innerHTML=SR_CAT_ORDER.map((c,i)=>
+    '<div class="sr-tab'+(i===0?' active':'')+'" data-cat="'+c+'" onclick="switchSRTab(this)">'+SR_CAT_LABEL[c]+'</div>'
+  ).join('');
+  // Show first tab advice
+  showSRAdvice(SR_CAT_ORDER[0]);
+  $('srPopup').classList.add('vis');
+}
+
+function switchSRTab(el){
+  document.querySelectorAll('.sr-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  showSRAdvice(el.dataset.cat);
+}
+
+const ASPECT_JP={conjunction:'合',opposition:'衝',trine:'三合',square:'矩',sextile:'六分',quincunx:'不調和'};
+
+function showSRAdvice(cat){
+  const adv=$('srAdvice'),basis=$('srBasis');if(!adv||!srDir)return;
+  const fScores=aspectData?aspectData.fScores:{};
+  const score=(fScores[cat]&&fScores[cat][srDir])||0;
+  const allScores=DIR16.map(d=>(fScores[cat]&&fScores[cat][d])||0).sort((a,b)=>b-a);
+  const rank=allScores.indexOf(score);
+  const level=rank<4?'high':rank<12?'mid':'low';
+  const tmpl=SR_ADVICE[cat]||SR_ADVICE.healing;
+  adv.textContent=tmpl[level];
+}
 function closeSR(){$('srPopup').classList.remove('vis');if(searchMarker){map.removeLayer(searchMarker);searchMarker=null}}
 
 // ========== Layer Panel ==========
@@ -1262,26 +1294,11 @@ function vpChIcon(i){
   row.appendChild(pk);
 }
 
-// ========== Bridge / Restart ==========
-function applyBridge(){
-  const raw=localStorage.getItem('solara_tarot_bridge');if(!raw)return false;
-  let bridge;try{bridge=JSON.parse(raw)}catch{return false}
-  if(bridge.date!==new Date().toISOString().slice(0,10)){localStorage.removeItem('solara_tarot_bridge');return false}
-  const all=[];
-  TAROT.major.forEach(c=>all.push({type:'major',...c}));
-  TAROT.minor.forEach(c=>all.push({type:'minor',emoji:TAROT.suits[c.s].emoji,...c}));
-  const match=all.find(c=>c.name===bridge.cardName||c.n===bridge.cardName);
-  if(!match)return false;
-  drawnCard=match;seedBoost=calcSeedBoost(drawnCard);
-  $('seedBadge').textContent=drawnCard.emoji;$('preseed').classList.add('hidden');
-  setTimeout(()=>{launchMeteor(pW/2,pH/2)},800);
-  return true;
-}
-
+// ========== Restart ==========
 function restart(){
-  particles=[];impactRings=[];meteor=null;drawnCard=null;seedBoost=null;sectorAnimating=false;sectorAnimProg=0;
+  particles=[];impactRings=[];meteor=null;sectorAnimating=false;sectorAnimProg=0;
   $('preseed').classList.remove('hidden','bottom');$('grayVeil').classList.remove('lifted');
-  $('stella').classList.remove('vis');$('seedBadge').classList.remove('vis');
+  $('stella').classList.remove('vis');
   $('layerBtn').classList.remove('vis');closeSearch();$('searchTrigger').classList.remove('vis');
   $('srPopup').classList.remove('vis');$('screenFlash').style.opacity='0';
   const v=$('effectVideo');v.pause();v.currentTime=0;v.classList.remove('playing');
@@ -1303,11 +1320,10 @@ $('mapWrap').addEventListener('pointerdown',dismissVeil);
 // ========== Start ==========
 window.addEventListener('load',()=>{
   init();
-  const bridged = applyBridge();
   renderNav('map');
   if (typeof checkMoonEvents === 'function') checkMoonEvents();
-  // If no tarot bridge, show vibe-based Stella message
-  if (!bridged && typeof generateStellaMessage === 'function') {
+  // Vibe-based Stella message
+  if (typeof generateStellaMessage === 'function') {
     const vibe = loadVibe() || 0;
     const msg = generateStellaMessage(vibe, 'jp');
     $('stellaText').innerHTML = msg;

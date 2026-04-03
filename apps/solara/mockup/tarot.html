@@ -725,39 +725,6 @@
     <!-- ===== Draw Tab ===== -->
     <div class="tab-panel active" id="drawPanel">
       <div class="draw-panel">
-        <!-- Location selector -->
-        <div class="location-selector">
-          <button class="loc-btn active" data-loc="home" onclick="selectLocation('home')">
-            <span class="loc-emoji">&#x1f3e0;</span>自宅
-          </button>
-          <button class="loc-btn" data-loc="gps" onclick="selectLocation('gps')">
-            <span class="loc-emoji">&#x1f4cd;</span>現在地
-          </button>
-          <button class="loc-btn" data-loc="custom" onclick="selectLocation('custom')">
-            <span class="loc-emoji">&#x1f50d;</span>指定場所
-          </button>
-        </div>
-
-        <div class="custom-loc-input" id="customLocWrap">
-          <input type="text" class="input-field" id="customLocInput" placeholder="場所名を入力（例: 京都駅）">
-        </div>
-
-        <!-- Mood Input -->
-        <div class="mood-input-wrap">
-          <div class="mood-input-label">✦ 今の気分</div>
-          <div class="mood-slider-row">
-            <div class="mood-emoji-left">🌑</div>
-            <div class="mood-range-wrap">
-              <input type="range" class="mood-range" id="moodSlider" min="-100" max="100" value="20" oninput="updateMoodDisplay()">
-            </div>
-            <div class="mood-emoji-right">☀️</div>
-          </div>
-          <div class="mood-val-display">
-            <span class="mood-val-num" id="moodValNum">+0.2</span>
-            <span class="mood-val-desc" id="moodValDesc">🌊 Gentle flow</span>
-          </div>
-        </div>
-
         <!-- 3D Card -->
         <div class="card-scene" id="cardScene">
           <div class="card-3d" id="card3d">
@@ -786,26 +753,6 @@
 
         <div class="drawn-msg" id="drawnMsg"></div>
 
-        <!-- Result -->
-        <div class="result-panel" id="resultPanel">
-          <div class="result-title">BOOST DIRECTION</div>
-          <div class="boost-direction">
-            <div class="compass-mini">
-              <div class="compass-needle" id="compassNeedle"></div>
-              <div class="compass-labels">
-                <span class="cl-n">N</span><span class="cl-e">E</span>
-                <span class="cl-s">S</span><span class="cl-w">W</span>
-              </div>
-            </div>
-            <div>
-              <div class="boost-label" id="boostLabel"></div>
-              <div class="boost-desc" id="boostDesc"></div>
-            </div>
-          </div>
-          <div class="result-title" style="margin-top:12px">PLANET LINES</div>
-          <div class="planet-boost-list" id="planetList"></div>
-        </div>
-
         <!-- Stella -->
         <div class="stella-msg" id="stellaMsg">
           <div class="stella-label">&#x2728; Stella</div>
@@ -822,10 +769,6 @@
           <div class="reading-advice" id="tarotReadingAdvice"></div>
         </div>
 
-        <!-- Apply to Map button -->
-        <button class="apply-map-btn" id="applyMapBtn" onclick="applyToMap()">
-          &#x1F9ED; &#x5730;&#x56F3;&#x306B;&#x53CD;&#x6620;&#x3059;&#x308B;
-        </button>
       </div>
     </div>
 
@@ -858,28 +801,17 @@ const SUIT_MAP = {
 };
 
 const PLANET_SYMBOLS = {
-  sun:{symbol:'☉',nameJP:'太陽',color:'#FFD700',angle:150},
-  moon:{symbol:'☽',nameJP:'月',color:'#C0C0C0',angle:30},
-  mercury:{symbol:'☿',nameJP:'水星',color:'#87CEEB',angle:165},
-  venus:{symbol:'♀',nameJP:'金星',color:'#FF69B4',angle:120},
-  mars:{symbol:'♂',nameJP:'火星',color:'#FF4500',angle:210},
-  jupiter:{symbol:'♃',nameJP:'木星',color:'#FFA500',angle:45},
-  saturn:{symbol:'♄',nameJP:'土星',color:'#808080',angle:280},
-  uranus:{symbol:'♅',nameJP:'天王星',color:'#00CED1',angle:310},
-  neptune:{symbol:'♆',nameJP:'海王星',color:'#4169E1',angle:160},
-  pluto:{symbol:'♇',nameJP:'冥王星',color:'#8B0000',angle:245}
+  sun:{symbol:'☉',nameJP:'太陽',color:'#FFD700'},
+  moon:{symbol:'☽',nameJP:'月',color:'#C0C0C0'},
+  mercury:{symbol:'☿',nameJP:'水星',color:'#87CEEB'},
+  venus:{symbol:'♀',nameJP:'金星',color:'#FF69B4'},
+  mars:{symbol:'♂',nameJP:'火星',color:'#FF4500'},
+  jupiter:{symbol:'♃',nameJP:'木星',color:'#FFA500'},
+  saturn:{symbol:'♄',nameJP:'土星',color:'#808080'},
+  uranus:{symbol:'♅',nameJP:'天王星',color:'#00CED1'},
+  neptune:{symbol:'♆',nameJP:'海王星',color:'#4169E1'},
+  pluto:{symbol:'♇',nameJP:'冥王星',color:'#8B0000'}
 };
-
-const DIRECTIONS = [
-  {dir:'N', label:'北',  angle:0,   start:337.5,end:22.5},
-  {dir:'NE',label:'北東',angle:45,  start:22.5, end:67.5},
-  {dir:'E', label:'東',  angle:90,  start:67.5, end:112.5},
-  {dir:'SE',label:'南東',angle:135, start:112.5,end:157.5},
-  {dir:'S', label:'南',  angle:180, start:157.5,end:202.5},
-  {dir:'SW',label:'南西',angle:225, start:202.5,end:247.5},
-  {dir:'W', label:'西',  angle:270, start:247.5,end:292.5},
-  {dir:'NW',label:'北西',angle:315, start:292.5,end:337.5}
-];
 
 const ELEMENT_COLORS = { fire:'#FF6B35', water:'#4169E1', air:'#87CEEB', earth:'#2E8B57' };
 const ELEMENT_NAMES = { fire:'火', water:'水', air:'風', earth:'地' };
@@ -971,16 +903,20 @@ const MINOR = [
 
 const ALL_CARDS = [...MAJOR, ...MINOR];
 
-const STELLA_MESSAGES = [
-  'このカードはあなたの内なるエネルギーの方向を示しています。直感を信じて、示された方角に意識を向けてみて。',
-  '今日引いたカードは、宇宙があなたに送るサイン。ブースト方位に向かう時、思わぬ出会いや発見があるかも。',
-  'カードが示す惑星のエネルギーが、あなたの行動を後押ししています。流れに身を委ねてみましょう。',
-  'このカードの力は静かだけど確実。焦らず、示された方向に一歩ずつ進んでいけば、大きな変化が訪れます。',
-  '今日のエネルギーはとても強力。ブースト方位への移動や、その方角を意識した行動が吉です。',
-  'カードが教えてくれるのは「今」のエネルギー。この瞬間を大切に、示された方角に心を開いて。',
-  '惑星ラインが活性化しています。地図上で光る方位に注目して、今日の行動計画を立ててみて。',
-  'あなたの選んだカードには特別な意味があります。キーワードを心に留めて、一日を過ごしてみてください。'
-];
+// Generate Stella message from card info + direction (not random)
+function generateStellaMsg(card, planetJP) {
+  const kw = card.keyword;
+  const name = card.nameJP;
+  const templates = [
+    '『' + name + '』が今日の種。' + kw + 'のエネルギーが' + planetJP + 'を通じてあなたに届いているよ。',
+    '今日のSeedは『' + name + '』。' + planetJP + 'が' + kw + 'の光を運んでいる。心を開いてみて。',
+    '『' + name + '』が目覚めた。' + planetJP + 'の力が' + kw + 'を引き出している。',
+    '今日は' + planetJP + 'が活性化。『' + name + '』の' + kw + 'を味方につけて。'
+  ];
+  var d = new Date();
+  var seed = d.getFullYear() * 10000 + (d.getMonth()+1) * 100 + d.getDate();
+  return templates[seed % templates.length];
+}
 
 const LOC_LABELS = { home: '🏠 自宅', gps: '📍 現在地', custom: '' };
 
@@ -1001,13 +937,8 @@ function getCardInfo(card) {
   const element = isMajor ? card.element : SUIT_MAP[card.suit].element;
   const emoji = isMajor ? card.emoji : SUIT_MAP[card.suit].emoji;
   const ps = PLANET_SYMBOLS[planet];
-  const boostAngle = ps.angle;
-  const dir = DIRECTIONS.find(d => {
-    if (d.start > d.end) return boostAngle >= d.start || boostAngle < d.end;
-    return boostAngle >= d.start && boostAngle < d.end;
-  });
   const planets = isMajor ? [planet] : SUIT_MAP[card.suit].planets;
-  return { planet, element, emoji, boostAngle, dir, planets, planetSymbol: ps };
+  return { planet, element, emoji, planets, planetSymbol: ps };
 }
 
 // ===== Location =====
@@ -1060,34 +991,16 @@ function initCardTap() {
     var frameRect = document.querySelector('.phone-frame').getBoundingClientRect();
     spawnParticles(rect.left - frameRect.left + rect.width/2, rect.top - frameRect.top + rect.height/2);
 
-    // Show results after flip animation
+    // Show Stella + reading after flip animation
     setTimeout(function() {
-      document.getElementById('compassNeedle').style.transform = 'translateX(-50%) rotate(' + info.boostAngle + 'deg)';
-      document.getElementById('boostLabel').textContent = info.dir.dir + ' — ' + info.dir.label;
-      document.getElementById('boostDesc').textContent = info.planetSymbol.nameJP + '(' + info.planetSymbol.symbol + ')のエネルギーが' + info.dir.label + '方位を活性化';
-
-      document.getElementById('planetList').innerHTML = info.planets.map(function(p) {
-        var ps = PLANET_SYMBOLS[p];
-        return '<div class="planet-badge"><span style="color:' + ps.color + '">' + ps.symbol + '</span> ' + ps.nameJP + '</div>';
-      }).join('');
-
-      var panel = document.getElementById('resultPanel');
-      panel.style.display = 'block';
-      setTimeout(function() { panel.classList.add('visible'); }, 50);
-
       var stella = document.getElementById('stellaMsg');
-      document.getElementById('stellaText').textContent = STELLA_MESSAGES[Math.floor(Math.random() * STELLA_MESSAGES.length)];
-      setTimeout(function() { stella.classList.add('visible'); }, 500);
+      document.getElementById('stellaText').textContent = generateStellaMsg(card, info.planetSymbol.nameJP);
+      setTimeout(function() { stella.classList.add('visible'); }, 200);
 
       // Show tarot reading after stella
       setTimeout(function() {
         showTarotReading(card, info);
-      }, 1000);
-
-      // Show "Apply to Map" button after reading starts
-      setTimeout(function() {
-        document.getElementById('applyMapBtn').classList.add('visible');
-      }, 1500);
+      }, 700);
 
       saveHistory(card, info);
     }, 900);
@@ -1111,9 +1024,6 @@ function saveHistory(card, info) {
     keyword: card.keyword,
     emoji: info.emoji,
     element: info.element,
-    boostDir: info.dir.dir,
-    boostLabel: info.dir.label,
-    boostAngle: info.boostAngle,
     planet: info.planetSymbol.nameJP,
     planetSymbol: info.planetSymbol.symbol,
     planetColor: info.planetSymbol.color,
@@ -1153,13 +1063,7 @@ function renderHistory() {
       '</div>' +
       '<div class="history-card-detail">' +
         '<div class="detail-boost-row">' +
-          '<div class="detail-boost-dir">' + h.boostDir + ' ' + h.boostLabel + '</div>' +
-          '<div class="detail-boost-text">' + h.planet + '(' + h.planetSymbol + ')が活性化</div>' +
-        '</div>' +
-        '<div class="detail-planets">' +
-          (h.planets || []).map(function(p) {
-            return '<div class="detail-planet-tag"><span style="color:' + p.color + '">' + p.symbol + '</span> ' + p.name + '</div>';
-          }).join('') +
+          '<div class="detail-boost-text">' + h.planet + '(' + h.planetSymbol + ')</div>' +
         '</div>' +
         '<div class="sync-section">' +
           '<div class="sync-label">&#x1f517; SYNCHRONICITY</div>' +
@@ -1236,28 +1140,10 @@ function checkTodayDraw() {
     // Flip card to show front (no animation)
     document.getElementById('card3d').classList.add('flipped');
 
-    // Show result panel
-    document.getElementById('compassNeedle').style.transform = 'translateX(-50%) rotate(' + (h.boostAngle || 0) + 'deg)';
-    document.getElementById('boostLabel').textContent = (h.boostDir || '') + ' — ' + (h.boostLabel || '');
-    document.getElementById('boostDesc').textContent = (h.planet || '') + '(' + (h.planetSymbol || '') + ')のエネルギーが' + (h.boostLabel || '') + '方位を活性化';
-
-    if (h.planets) {
-      document.getElementById('planetList').innerHTML = h.planets.map(function(p) {
-        return '<div class="planet-badge"><span style="color:' + (p.color || '#C9A84C') + '">' + (p.symbol || '') + '</span> ' + (p.name || '') + '</div>';
-      }).join('');
-    }
-
-    var panel = document.getElementById('resultPanel');
-    panel.style.display = 'block';
-    panel.classList.add('visible');
-
     if (h.stellaMsg) {
       document.getElementById('stellaText').textContent = h.stellaMsg;
       document.getElementById('stellaMsg').classList.add('visible');
     }
-
-    // Show "Apply to Map" button
-    document.getElementById('applyMapBtn').classList.add('visible');
   }
 }
 
@@ -1305,49 +1191,6 @@ function animLoop() {
 }
 
 // ===== Apply to Map =====
-function applyToMap() {
-  var hist = loadHistory();
-  if (hist.length === 0 || hist[0].date !== getToday()) return;
-  var h = hist[0];
-
-  // Save bridge data for index.html
-  var bridge = {
-    cardName: h.cardName,
-    nameJP: h.nameJP,
-    keyword: h.keyword,
-    emoji: h.emoji,
-    element: h.element,
-    boostDir: h.boostDir,
-    boostLabel: h.boostLabel,
-    boostAngle: h.boostAngle,
-    planet: h.planet,
-    planetSymbol: h.planetSymbol,
-    planetColor: h.planetColor,
-    planets: h.planets,
-    date: h.date,
-    timestamp: Date.now()
-  };
-  localStorage.setItem('solara_tarot_bridge', JSON.stringify(bridge));
-
-  // Save vibe_score (tarot component + mood)
-  if (typeof calcVibeScore === 'function') {
-    var mood = 0;
-    try { mood = JSON.parse(localStorage.getItem('solara_mood')) || 0; } catch(e) {}
-    // Use card's boost type as a rough tarot score (-1 to +1)
-    var tarotScore = 0;
-    var card = MAJOR.find(c => c.nameEN === h.cardName) || MINOR.find(c => c.nameEN === h.cardName);
-    if (card && card.planet) {
-      // Positive element = positive score
-      var elMap = { fire: 0.5, earth: 0.2, air: 0.3, water: -0.2, aether: 0.6 };
-      tarotScore = elMap[h.element] || 0;
-    }
-    var vibe = calcVibeScore({ tarot: tarotScore, mood: mood, transit: 0.2, progressed: 0.1 });
-    saveVibe(vibe);
-  }
-
-  // Navigate to map
-  window.location.href = 'index.html';
-}
 
 // ===== Tarot Reading Generator (Mock) =====
 const TAROT_READINGS = {
