@@ -351,6 +351,441 @@ assets/
 - **Cosmic Pro**: サブスクカード（$9.99/月、$49.99/年）— UI表示のみ
 - **App設定**: Language / Notifications / Terms
 
+#### 称号システム（Title System）
+
+##### 概要
+ホロスコープ（先天的本質）× タロット選択（今の感性）の二層構造で、ユーザー固有の称号を生成する。
+
+```
+称号 = [太陽星座の外面] + [接続詞] + [月星座の内面] + [クラス名]
+
+例:
+  JP: 「調子に乗って自由に表現しちゃったあとに反省会が欠かせないKnight」
+  EN: (JP確定後に作成)
+```
+
+##### メイン称号（144通り）— テンプレート合成方式
+
+太陽星座（外面の行動パターン）+ 接続詞 + 月星座（内面の裏の顔）+ クラス名で合成。
+12 × 12 = 144通り。カジュアルで共感しやすいトーン（MBTI的ミーム文化に合わせる）。
+
+**テンプレート構造**:
+```
+[太陽パーツ] + [接続詞] + [月パーツ] + [クラス名]
+例: 「調子に乗って自由に表現しちゃったあとに反省会が欠かせないKnight」
+```
+
+**接続詞パターン（ランダムまたは太陽×月の組み合わせで選択）**:
+- 「〜けど実は〜」
+- 「〜のに実は〜」
+- 「〜したあとに〜」
+- 「〜だし〜」
+
+**太陽星座 → 外面パーツ（行動パターン）**
+
+| 星座 | JP |
+|------|-----|
+| 牡羊座 | 思い立ったら即行動する猪突猛進型 |
+| 牡牛座 | 一度決めたらテコでも動かないマイペース |
+| 双子座 | 話題が3秒で変わるおしゃべり好き |
+| 蟹座 | 身内には甘いけど外には壁を作りがち |
+| 獅子座 | 調子に乗って自由に表現しちゃう |
+| 乙女座 | 細かいところが気になって仕方ない完璧主義 |
+| 天秤座 | みんなに良い顔しすぎて疲れる八方美人 |
+| 蠍座 | 好きなものへの執着がすごい一途タイプ |
+| 射手座 | 楽しそうなことに飛びつく自由人 |
+| 山羊座 | コツコツ積み上げないと気が済まない努力家 |
+| 水瓶座 | 人と同じが嫌で逆張りしがち |
+| 魚座 | 妄想が止まらないロマンチスト |
+
+**月星座 → 内面パーツ（裏の顔）**
+
+| 星座 | JP |
+|------|-----|
+| 牡羊座 | 実はすぐカッとなって後悔する |
+| 牡牛座 | 実は変化が怖くてしがみつく |
+| 双子座 | 実は考えすぎて頭の中が忙しい |
+| 蟹座 | 実はナイーブで反省会が欠かせない |
+| 獅子座 | 実は褒められないと不安になる |
+| 乙女座 | 実は自分にダメ出しが止まらない |
+| 天秤座 | 実は本音を隠すのが上手すぎる |
+| 蠍座 | 実は傷つきやすくて根に持つ |
+| 射手座 | 実は飽きっぽくて続かない |
+| 山羊座 | 実は弱みを見せるのが怖い |
+| 水瓶座 | 実は寂しがり屋なのに素直になれない |
+| 魚座 | 実は現実逃避が得意すぎる |
+
+**144文の手作り調整**: 太陽×月の全144パターンをテンプレート合成後、手動で文章を自然に整える。
+（別セッションで作業予定）
+
+**EN版**: JP確定後にトーンを合わせて作成（カジュアル英語、Z世代向け）
+
+##### サブタイトル（25クラス）— タロット診断から決定
+
+大アルカナ3択×15ラウンド + 人物札4択×4スート = 計19問の診断で決定。
+大アルカナとは無関係の独自分類。5軸×5クラス = 25種。
+
+**5軸の定義**
+
+| 軸 | 意味 |
+|------|------|
+| Power（力） | 突破力・支配・戦闘 |
+| Mind（知） | 知識・戦略・分析 |
+| Spirit（霊） | 直感・神秘・信仰 |
+| Shadow（影） | 自由・欺瞞・変革 |
+| Heart（心） | 共感・創造・調和 |
+
+**25クラス配置表**
+
+各軸内の5クラスは、人物札選択の傾向（Page/Knight/Queen/King/混合）で振り分ける。
+「混合」= 人物札4問で1つの人物タイプに偏らなかったバランス型。レア枠。
+
+***Power軸（力・突破・支配）***
+
+| 人物傾向 | クラス | Light | Shadow |
+|----------|--------|-------|--------|
+| Page | Knight | 「守る」と決めたら迷わない | 守りたいものが多すぎて忙しい |
+| Knight | Dragoon | とりあえず飛んでから考える | 飛び込みすぎて毎回びっくりされる |
+| Queen | Paladin | 困ってる人を見ると体が動く | 正義感が強すぎて頼られがち |
+| King | Overlord | 気づいたら全部仕切っている | リーダーになりすぎて休めない |
+| 混合 | Spellblade | なんでもそこそこできてしまう | 器用すぎて自分の専門が決められない |
+
+***Mind軸（知・戦略・分析）***
+
+| 人物傾向 | クラス | Light | Shadow |
+|----------|--------|-------|--------|
+| Page | Sage | 「なぜ？」が止まらない | 知りたいことが多すぎて夜更かしする |
+| Knight | Strategist | 三手先まで自然と見えている | 先が見えすぎて一人で心配する |
+| Queen | Chancellor | 誰が何を求めているか分かる | 気配り上手すぎて自分を後回しにする |
+| King | Judge | おかしいことはおかしいと言える | 筋が通らないと気になって眠れない |
+| 混合 | Wizard | 好きなことなら永遠にやれる | 没頭すると時間を忘れてご飯を忘れる |
+
+***Spirit軸（霊・直感・信仰）***
+
+| 人物傾向 | クラス | Light | Shadow |
+|----------|--------|-------|--------|
+| Page | Cleric | いるだけで周りが安心する | 優しすぎて全員の相談役になる |
+| Knight | Astrologer | 見えないつながりを見つけるのが得意 | 星が気になりすぎて空ばかり見ている |
+| Queen | Oracle | 言葉にする前に空気で分かる | 感受性が高すぎて映画で毎回泣く |
+| King | Fate Weaver | 人の才能を見抜いて背中を押せる | おせっかいが止まらない |
+| 混合 | Druid | 自然の中にいると充電できる | 一人の時間が好きすぎて誘いを忘れる |
+
+***Shadow軸（影・自由・変革）***
+
+| 人物傾向 | クラス | Light | Shadow |
+|----------|--------|-------|--------|
+| Page | Trickster | 退屈な場の空気を一瞬で変える | 面白いことを思いつくと黙っていられない |
+| Knight | Liberator | 「おかしい」と思ったら声を上げる | 自由すぎてスケジュールが守れない |
+| Queen | Phantom | 気配を消すのが天才的にうまい | 存在感を消すのが上手すぎて探される |
+| King | Rogue | 自分のやり方で結果を出す | マイペースすぎて周りがハラハラする |
+| 混合 | Alchemist | 関係なさそうなものを組み合わせて化ける | 好奇心が強すぎて余計なものまで作る |
+
+***Heart軸（心・共感・創造）***
+
+| 人物傾向 | クラス | Light | Shadow |
+|----------|--------|-------|--------|
+| Page | Bard | その場にいる人を全員笑顔にする | 共感力が高すぎてもらい泣きする |
+| Knight | Sorcerer | 感情のエネルギーがそのまま力になる | 感情豊かすぎて表情が忙しい |
+| Queen | Enchanter | 会った人がなぜか好きになる | 魅力的すぎて誤解される |
+| King | Emperor | 人が自然と集まってくる | 理想が高すぎて妥協できない |
+| 混合 | Chronomancer | 「あの瞬間」を大事にできる | 思い出を大事にしすぎてアルバムが増え続ける |
+
+**Light/Shadow（英語版）**
+
+| Class | Light (EN) | Shadow (EN) |
+|-------|------------|-------------|
+| Knight | Never hesitates when someone needs protecting | Too many people to protect, not enough hours |
+| Dragoon | Leaps first, thinks later | Keeps surprising everyone by diving in headfirst |
+| Paladin | Body moves before brain when someone's in trouble | Too reliable — everyone's go-to hero |
+| Overlord | Somehow ends up running everything | Can't stop leading long enough to rest |
+| Spellblade | Annoyingly good at everything | Too versatile to pick a specialty |
+| Sage | Can't stop asking "but why?" | Too many rabbit holes, not enough sleep |
+| Strategist | Sees three moves ahead without trying | Worries alone because they see too far |
+| Chancellor | Knows what everyone needs before they ask | So busy reading the room, forgets to read themselves |
+| Judge | Calls out what's wrong without flinching | Can't sleep when something doesn't add up |
+| Wizard | Could do one thing forever and never get bored | Forgets to eat when hyperfocused |
+| Cleric | People feel safe just being near them | Too kind — accidentally becomes everyone's therapist |
+| Astrologer | Finds invisible connections everywhere | Stares at the sky so much, forgets the ground |
+| Oracle | Reads the room before a word is spoken | So sensitive they cry at every movie |
+| Fate Weaver | Spots hidden talent and pushes people forward | Can't stop meddling |
+| Druid | Recharges in nature like a solar panel | Loves alone time so much, forgets to reply |
+| Trickster | Flips a boring room upside down in seconds | Can't keep a good idea to themselves |
+| Liberator | Speaks up the moment something feels off | Too free-spirited to keep a schedule |
+| Phantom | Disappears so well it's basically a superpower | So good at vanishing, people file missing reports |
+| Rogue | Gets results their own way, every time | So independent it makes everyone nervous |
+| Alchemist | Combines random things into something brilliant | Too curious — builds stuff nobody asked for |
+| Bard | Makes every person in the room smile | Empathy so strong they ugly-cry for others |
+| Sorcerer | Turns raw emotion into pure power | So expressive their face never sits still |
+| Enchanter | People just like them and can't explain why | Too charming — constantly misunderstood |
+| Emperor | People naturally gravitate and gather around | Standards so high they can't compromise |
+| Chronomancer | Treasures moments others let slip by | Hoards memories until the album shelf collapses |
+
+##### 診断フロー
+
+```
+[Sanctuary] 「✦ あなたの称号を受け取る」ボタン
+  ↓
+[パート1] 数札4択 × 9ラウンド（R1〜R9）→ ウォームアップ + 5軸スコア蓄積
+  ↓
+[パート2] 大アルカナ3択 × 15ラウンド（R10〜R24）→ 5軸スコア本判定
+  ↓
+[パート3] 人物札4択 × 4スート（R25〜R28）→ 軸内クラス振り分け
+  ↓
+[鍛造演出] → [開封] → [シェア]
+
+合計: 28問
+```
+
+**全パート共通: カードは絵のみ表示、説明文なし。質問文を読み、直感でカードを選ぶ。**
+
+**パート1: 数札選択（9ラウンド / R1〜R9）— ウォームアップ + 5軸スコア蓄積**
+
+Ace〜9のテーマに沿った問い → 4スート（Wands/Cups/Swords/Pentacles）の絵を提示 → 1枚選ぶ。
+スート → 軸対応: Wands=Power, Cups=Heart, Swords=Mind, Pentacles=Spirit/Shadow（質問で振り分け）
+
+| R | 数 | 質問 (JP) | 質問 (EN) | 表示カード |
+|---|---|---|---|---|
+| 1 | Ace | 新しい何かが始まるとき、あなたが最初に手に取るのは？ | When something new begins, what do you reach for first? | Ace of W/C/S/P |
+| 2 | 2 | 選択する時が来た。なにをおもう？ | The moment of choice has come. What goes through your mind? | 2 of W/C/S/P |
+| 3 | 3 | あなたは大きな決断をした。どんな気持ち？ | You've made a big decision. How does it feel? | 3 of W/C/S/P |
+| 4 | 4 | 安心を感じるのはどんなとき？ | When do you feel most at ease? | 4 of W/C/S/P |
+| 5 | 5 | 困難にぶつかったとき、あなたはどうなっている？ | When you hit a wall, what happens to you? | 5 of W/C/S/P |
+| 6 | 6 | あなたが癒されるのは？ | What heals you? | 6 of W/C/S/P |
+| 7 | 7 | 眠れない夜、頭をよぎるのは？ | What crosses your mind on sleepless nights? | 7 of W/C/S/P |
+| 8 | 8 | 前進する為に、やるべきことは | What must be done to move forward? | 8 of W/C/S/P |
+| 9 | 9 | 今の自分の姿にちかいのは？ | Which one looks most like you right now? | 9 of W/C/S/P |
+
+**パート2: 大アルカナ選択（15ラウンド / R10〜R24）— 5軸スコア本判定**
+
+3枚ずつ提示、1枚選ぶを15ラウンド繰り返す。
+- 異なる軸から1枚ずつ出す（毎回「どの軸が自分に近いか」を測る）
+- 同じカードが複数ラウンドで再登場する（組み合わせは毎回異なる）
+- 選んだカードの軸に+1点
+- 同点の場合は後半ラウンドの選択を優先
+
+**大アルカナの5軸配置**
+
+| 軸 | カード |
+|------|------|
+| Power | 皇帝(4), 戦車(7), 力(8), 塔(16) |
+| Mind | 魔術師(1), 隠者(9), 正義(11), 審判(20) |
+| Spirit | 女教皇(2), 法王(5), 星(17), 月(18) |
+| Shadow | 運命の輪(10), 吊るされた男(12), 死神(13), 悪魔(15) |
+| Heart | 女帝(3), 恋人(6), 節制(14), 太陽(19) |
+| 特別 | 愚者(0), 世界(21) — ワイルドカード（選択時、最も低い軸に+1点） |
+
+**15ラウンド提示テーブル（確定）**
+
+カードが全員「人」のラウンド → 「誰」系の問い。物/情景が混じるラウンド → 「何を」系の問い。
+
+| R | 質問 (JP) | 質問 (EN) | カードA | カードB | カードC |
+|---|---|---|---|---|---|
+| 10 | 生まれ変わるとしたら、誰になる？ | If reborn, who would you become? | 皇帝(4) P | 魔術師(1) M | 女帝(3) H |
+| 11 | 迷ったとき、頼りにしたいのは？ | When lost, what do you trust? | 女教皇(2) Sp | 運命の輪(10) Sh | 戦車(7) P |
+| 12 | 旅の仲間にするなら、誰を選ぶ？ | Who would you choose as your travel companion? | 恋人(6) H | 隠者(9) M | 死神(13) Sh |
+| 13 | あなたの師匠になるのは？ | Who would be your mentor? | 力(8) P | 法王(5) Sp | 節制(14) H |
+| 14 | 深夜、語り明かしたい相手は？ | Who would you talk with until dawn? | 悪魔(15) Sh | 正義(11) M | 星(17) Sp |
+| 15 | 壁にぶつかったとき、あなたの心は？ | When you hit a wall, where does your heart go? | 太陽(19) H | 吊るされた男(12) Sh | 塔(16) P |
+| 16 | 夜明け前、あなたを導くのは？ | Before dawn, what guides you? | 審判(20) M | 月(18) Sp | 皇帝(4) P |
+| 17 | あなたを理解してくれるのは？ | Who truly understands you? | 死神(13) Sh | 女帝(3) H | 女教皇(2) Sp |
+| 18 | 世界を変えるなら、何を手に取る？ | To change the world, what would you reach for? | 戦車(7) P | 魔術師(1) M | 運命の輪(10) Sh |
+| 19 | 帰る場所で待っていてほしいのは？ | Who do you want waiting when you come home? | 法王(5) Sp | 恋人(6) H | 隠者(9) M |
+| 20 | 未知の扉の向こうにあってほしいのは？ | What do you hope lies beyond the unknown door? | 力(8) P | 運命の輪(10) Sh | 愚者(0) ★ |
+| 21 | 大切な人に贈りたい力は？ | What power would you gift to someone you love? | 正義(11) M | 節制(14) H | 星(17) Sp |
+| 22 | 手放したとき、残るものは？ | When you let go, what remains? | 吊るされた男(12) Sh | 月(18) Sp | 世界(21) ★ |
+| 23 | あなたが一番輝ける場所は？ | Where do you shine brightest? | 太陽(19) H | 塔(16) P | 愚者(0) ★ |
+| 24 | この旅の終わりに、誰として立っていたい？ | At the end of this journey, who do you want to be? | 審判(20) M | 悪魔(15) Sh | 世界(21) ★ |
+
+軸略記: P=Power, M=Mind, Sp=Spirit, Sh=Shadow, H=Heart, ★=特別（ワイルドカード）
+※ 愚者・世界はワイルドカード: 選択時に最も低い軸に+1点（バランスを取る力）
+※ 運命の輪のみ3回登場、他は全カード2回登場
+
+**パート3: 人物札選択（4ラウンド / R25〜R28）— 軸内クラス振り分け**
+
+スートごとにPage/Knight/Queen/Kingの絵を4枚提示 → 1枚選ぶ。
+
+| R | スート | 質問 (JP) | 質問 (EN) | 表示カード |
+|---|---|---|---|---|
+| 25 | Wands/火 | あなたの情熱の形は？ | What shape does your passion take? | Page/Knight/Queen/King of Wands |
+| 26 | Cups/水 | 奇跡が目の前に降りた瞬間、あなたは？ | When a miracle descends before you? | Page/Knight/Queen/King of Cups |
+| 27 | Swords/風 | 答えが出ないときのあなたはどんな様子？ | When there's no answer, what do you look like? | Page/Knight/Queen/King of Swords |
+| 28 | Pentacles/地 | あなたが築きたいものは？ | What do you want to build? | Page/Knight/Queen/King of Pentacles |
+
+**スコアリング**
+1. 数札9問（パート1）→ スート選択傾向で5軸スコア蓄積（Wands=Power+1, Cups=Heart+1, Swords=Mind+1, Pentacles=状況によりSpirit/Shadow+1）
+2. 大アルカナ15問（パート2）→ 選んだカードの軸に+1点 → 5軸スコア本判定
+3. パート1+パート2の合算 → 最高得点の軸が確定（同点は後半ラウンド優先）
+4. 人物札4問（パート3）→ Page/Knight/Queen/King の選択傾向 → 軸内クラス確定
+   - Page 2回以上 → Page型
+   - Knight 2回以上 → Knight型
+   - Queen 2回以上 → Queen型
+   - King 2回以上 → King型
+   - 全部バラバラ → 「混合」枠（レアクラス）
+
+##### 再診断ルール
+
+| 条件 | 回数 |
+|------|------|
+| 初回 | 2回まで無料。1回目の結果後「これでいく」or「もう一度診断する」を選択。2回目で確定 |
+| 以降 | Cosmic Pro限定。月1回、新月サイクルに合わせて再診断解放（Galaxy連動） |
+
+##### 演出
+
+**パート1: 数札選択（9ラウンド）— ウォームアップ**
+- 4枚のカードが横並びで浮かび上がる
+- 選んだカードが光って中央に寄る
+- 軽快なテンポ（数札は直感的に選びやすいので短めの間）
+
+**パート2: 大アルカナ選択（15ラウンド）— メインフェーズ**
+- 暗闇から3枚のカードが浮かび上がる
+- 選んだカードが光って吸い込まれる
+- 背景に選んだ軸の色が少しずつ溜まっていく（Power=赤、Mind=青、Spirit=紫、Shadow=黒、Heart=金）
+- 進捗: 星が1つずつ灯る（15個の星座を結んでいくイメージ）
+
+**パート3: 人物札選択（4ラウンド）— 最終フェーズ**
+- スートの元素が背景に（Wands=炎、Cups=水流、Swords=風、Pentacles=大地）
+- 4人物のシルエットが並ぶ → タップで正体が明かされる
+- パート2より「自分と向き合う」静かなトーン
+
+**鍛造演出（5〜8秒）**
+- 画面中央に光の炉が出現
+- 全パートで集めた軸の色 + 元素が炉に流れ込む
+- 炉が輝き、称号の文字が浮かび上がる
+- ハプティクス（振動）フィードバック
+
+**開封（段階表示）**
+1. メイン称号がゆっくりフェードイン（2秒）
+2. 「———」ラインが引かれる（1秒）
+3. サブタイトル（クラス名）がスタンプのように押される（1秒）
+4. Light文が下から浮かぶ（1.5秒）
+5. Shadow文が最後にふわっと現れる（1.5秒）
+6. 全体が完成 → シェアボタン出現
+
+##### Stellaメッセージ連携
+
+クラスごとに3フレーズの呼びかけを用意（日替わりまたはランダムで回す）。
+Map画面のStella冒頭に表示。
+
+| クラス | フレーズ1 | フレーズ2 | フレーズ3 |
+|--------|-----------|-----------|-----------|
+| Knight | 勇敢なる騎士よ | 剣を掲げる者よ | 守るべき人を想う君へ |
+| Dragoon | 空を翔ける者よ | 恐れ知らずの突撃手よ | 風を切って進む君へ |
+| Paladin | 光をまとう聖騎士よ | 慈悲の盾を持つ者よ | 正しさを信じる君へ |
+| Overlord | 全てを統べる者よ | 玉座に座る覇者よ | 頂点を見据える君へ |
+| Spellblade | 剣と魔を束ねる者よ | 二つの力を持つ者よ | どちらも手放さない君へ |
+| Sage | 知を愛する求道者よ | 真理を追う者よ | 問い続ける君へ |
+| Strategist | 盤上を見渡す軍師よ | 三手先を読む者よ | 静かに勝利を描く君へ |
+| Chancellor | 影の立役者よ | 糸を引く知恵者よ | 誰より全体が見える君へ |
+| Judge | 公正なる裁定者よ | 真実を見抜く眼よ | 曇りなき目を持つ君へ |
+| Wizard | 探究の魔術師よ | 未知を愛する者よ | 好奇心が止まらない君へ |
+| Cleric | 癒しの祈り手よ | 静かな光を灯す者よ | そこにいるだけで安心をくれる君へ |
+| Astrologer | 星を読む旅人よ | 天空の地図を持つ者よ | 見えない線を辿る君へ |
+| Oracle | 静かなる預言者よ | 言葉になる前を知る者よ | 空気で全てを感じ取る君へ |
+| Fate Weaver | 運命を紡ぐ者よ | 糸を手繰る導き手よ | 人の才能を照らす君へ |
+| Druid | 森と語る者よ | 境界に立つ調和の番人よ | 静けさの中で充電する君へ |
+| Trickster | やあ、いたずら好きの君 | 退屈を壊す天才よ | 黙っていられない君へ |
+| Liberator | 鎖を断つ解放者よ | 声を上げる勇者よ | 自由を愛しすぎる君へ |
+| Phantom | 影に溶ける者よ | 気配を消す達人よ | 見えないのに確かにいる君へ |
+| Rogue | 我が道を行く者よ | ルールの外に立つ者よ | 自分のやり方を貫く君へ |
+| Alchemist | 禁断の錬金術師よ | 混ぜるな危険の探求者よ | 何でも試してみたい君へ |
+| Bard | 歌と物語の語り手よ | 笑顔を連れてくる者よ | 場の空気を変えられる君へ |
+| Sorcerer | 感情が魔力になる者よ | 心の炎を燃やす者よ | 喜怒哀楽が全部パワーの君へ |
+| Enchanter | 人を魅了する者よ | 世界を書き換える魔法使いよ | 会うだけで何かが変わる君へ |
+| Emperor | 人が集まる王よ | 国を築く者よ | 理想を諦めない君へ |
+| Chronomancer | 時を操る者よ | 瞬間を永遠にする者よ | 思い出を宝物にする君へ |
+
+**Stellaフレーズ（英語版）**
+
+| Class | Phrase 1 | Phrase 2 | Phrase 3 |
+|-------|----------|----------|----------|
+| Knight | Brave knight | You who raise your sword | To you who fight for those you love |
+| Dragoon | Sky rider | Fearless charger | To you who cut through the wind |
+| Paladin | Holy knight of light | You who bear the shield of mercy | To you who believe in what's right |
+| Overlord | Ruler of all | Sovereign on the throne | To you who never look away from the top |
+| Spellblade | Bearer of blade and spell | You who wield two powers | To you who refuse to choose just one |
+| Sage | Seeker of truth | You who chase wisdom | To you who never stop asking |
+| Strategist | Grand tactician | You who read three moves ahead | To you who quietly design victory |
+| Chancellor | The one behind the curtain | Master of threads | To you who see the whole picture |
+| Judge | Arbiter of truth | Eyes that pierce deception | To you whose gaze never clouds |
+| Wizard | Wizard of wonder | You who love the unknown | To you whose curiosity never sleeps |
+| Cleric | Gentle healer | You who light a quiet flame | To you whose presence is comfort enough |
+| Astrologer | Star traveler | You who hold the celestial map | To you who trace the invisible lines |
+| Oracle | Silent prophet | You who know before words are spoken | To you who feel everything in the air |
+| Fate Weaver | Weaver of destiny | You who pull the thread of fate | To you who shine a light on hidden talent |
+| Druid | Whisperer of the forest | Guardian of the boundary | To you who recharge in stillness |
+| Trickster | Hey there, troublemaker | Genius of chaos | To you who can't keep quiet |
+| Liberator | Breaker of chains | Voice of the voiceless | To you who love freedom too much |
+| Phantom | One who melts into shadow | Master of disappearing | To you who are invisible yet always there |
+| Rogue | Lone wolf | You who stand outside the rules | To you who always do it your way |
+| Alchemist | Forbidden alchemist | You who mix the unmixable | To you who want to try everything |
+| Bard | Teller of tales | You who bring the smiles | To you who change the room just by walking in |
+| Sorcerer | You whose emotions are magic | You who burn with inner fire | To you whose every feeling is power |
+| Enchanter | The one who enchants | Spellcaster who rewrites the world | To you who change something just by meeting people |
+| Emperor | The one people gather around | Builder of kingdoms | To you who never give up on the dream |
+| Chronomancer | Master of time | You who make moments eternal | To you who turn memories into treasure |
+
+##### シェア機能
+
+- フォーマット: Instagram Stories向け縦長画像（1080×1920）
+- 背景色: クラスの軸で変わる（Power=赤系、Mind=青系、Spirit=紫系、Shadow=黒系、Heart=金系）
+- 表示内容: メイン称号（日英）+ クラス名 + **Shadow面のみ**（カジュアルで共感・拡散しやすい）
+- 太陽/月星座のシンボル表示（☉ Gemini ☽ Virgo）
+- QRコード: 右下にアプリリンク
+- 日本語版/英語版を自動生成
+- 「Share Your Title」タップ → OS標準の共有シート
+
+##### UI配置
+
+**Sanctuary画面（上から順）**
+```
+├── COSMIC PROFILE
+│   ├── 名前
+│   ├── 称号表示（常時表示）
+│   │   「風を駆ける灯台 — Trickster」
+│   └── 出生データ（日付・時刻・場所）
+├── TITLE DIAGNOSIS
+│   ├── 未診断 → 「✦ あなたの称号を受け取る」ゴールドボタン
+│   └── 診断済み → 称号カード + Light/Shadow表示
+│       └── Cosmic Proなら「再診断する」ボタン（月1回）
+├── Home Location
+├── House System
+├── Aspect Orbs
+└── Cosmic Pro
+```
+
+**他画面での表示**
+
+| 画面 | 表示内容 |
+|------|----------|
+| Map | Stellaメッセージの冒頭に呼びかけフレーズ |
+| Horo | なし（チャート画面はデータに集中） |
+| Tarot | なし（カード体験に集中） |
+| Galaxy | Star Atlasのサイクルカードにクラスアイコン |
+| Sanctuary | 称号カード常時表示 + 診断導線 |
+
+**称号未設定時の誘導**
+- プロフィール登録済み & 称号未設定 → Sanctuaryプロフィール下に「✦ あなたの称号を受け取る」ゴールドボタン
+- プロフィール未設定 → まずプロフィール登録を促す（既存の導線）
+
+##### データ永続化
+
+| キー | 用途 |
+|------|------|
+| `solara_title_main` | メイン称号（太陽星座×月星座の結果） |
+| `solara_title_class` | サブタイトル（25クラス名） |
+| `solara_title_axis` | 5軸スコア（診断結果の内訳） |
+| `solara_title_court` | 人物札選択結果（4スート分） |
+| `solara_title_diagnosed_at` | 最終診断日時 |
+| `solara_title_diagnosis_count` | 無料診断の使用回数（最大2） |
+
+##### 未実装タスク（後続で詰める）
+- [x] 15ラウンドの3枚提示組み合わせテーブル — 確定済み（質問文付き）
+- [x] 愚者(0)・世界(21)の特別枠 — ワイルドカード方式（最も低い軸に+1）
+- [x] 25クラスの英語版Light/Shadow文 — 確定済み
+- [x] Stellaフレーズ75個の英語版 — 確定済み
+- [ ] シェアカードの具体的ビジュアルデザイン
+- [ ] 鍛造演出の詳細アニメーション仕様
+
 ---
 
 ## データフロー
@@ -374,6 +809,12 @@ assets/
 | `solara_orb_settings` | アスペクトオーブ値JSON | Sanctuary→Horo |
 | `solara_pattern_orb_settings` | パターン検出オーブ値JSON | Sanctuary→Horo |
 | `solara_galaxy_cycles` | 完了サイクル一覧 | Galaxy |
+| `solara_title_main` | メイン称号（太陽星座×月星座の結果） | Sanctuary→全画面 |
+| `solara_title_class` | サブタイトル（25クラス名） | Sanctuary→全画面 |
+| `solara_title_axis` | 5軸スコア（診断結果の内訳） | Sanctuary |
+| `solara_title_court` | 人物札選択結果（4スート分） | Sanctuary |
+| `solara_title_diagnosed_at` | 最終診断日時 | Sanctuary |
+| `solara_title_diagnosis_count` | 無料診断の使用回数（最大2） | Sanctuary |
 
 ### vibe_score計算式
 ```

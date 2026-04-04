@@ -213,6 +213,200 @@
       color:#0A0A14; font-size:15px; font-weight:700;
       cursor:pointer; margin-top:8px; letter-spacing:0.5px;
     }
+
+    /* ===== Title Diagnosis ===== */
+    .td-result-card {
+      padding:20px; border-radius:16px; text-align:center;
+      border-top:2px solid rgba(249,217,118,0.4);
+    }
+    .td-result-main { font-size:18px; font-weight:700; color:#F9D976; }
+    .td-result-class { font-size:14px; color:#EAEAEA; margin-top:4px; }
+    .td-result-light { font-size:12px; color:#ACACAC; margin-top:10px; line-height:1.5; }
+    .td-result-shadow { font-size:12px; color:#ACACAC; margin-top:4px; line-height:1.5; font-style:italic; }
+
+    #titleDiagOverlay {
+      position:fixed; inset:0; z-index:600;
+      background:radial-gradient(ellipse at center, #0a1220 0%, #020408 100%);
+      display:none; overflow:hidden;
+    }
+    #titleDiagOverlay.open { display:block; }
+
+    .td-screen {
+      position:absolute; inset:0;
+      display:flex; flex-direction:column; align-items:center; justify-content:center;
+      padding:40px 20px;
+    }
+    .td-intro-card {
+      max-width:340px; padding:40px 28px; border-radius:20px; text-align:center;
+    }
+
+    /* Progress */
+    .td-progress-bar {
+      position:absolute; top:0; left:0; right:0; height:3px;
+      background:rgba(255,255,255,0.08);
+    }
+    .td-progress-fill {
+      height:100%; background:linear-gradient(90deg,#F9D976,#E8A840);
+      transition:width 0.4s ease; width:0%;
+    }
+    .td-progress-text {
+      position:absolute; top:12px; right:20px;
+      font-size:11px; color:rgba(172,172,172,0.5); letter-spacing:1px;
+    }
+    .td-part-label {
+      font-size:11px; color:#F9D976; letter-spacing:2px; text-transform:uppercase;
+      margin-bottom:16px; opacity:0.7;
+    }
+    .td-question {
+      font-size:17px; font-weight:700; color:#EAEAEA; text-align:center;
+      line-height:1.5; margin-bottom:4px; max-width:320px;
+    }
+    .td-question-en {
+      font-size:12px; color:rgba(172,172,172,0.5); text-align:center;
+      margin-bottom:28px; max-width:320px;
+    }
+
+    /* Card Grid */
+    .td-cards {
+      display:flex; gap:10px; justify-content:center; align-items:center;
+      flex-wrap:nowrap; max-width:380px;
+    }
+    .td-card {
+      flex:1; max-width:100px; cursor:pointer; border-radius:10px;
+      border:2px solid transparent; transition:all 0.3s ease;
+      opacity:0; transform:scale(0.85); position:relative;
+    }
+    .td-card.appear {
+      opacity:1; transform:scale(1);
+    }
+    .td-card img {
+      width:100%; display:block; border-radius:8px;
+      pointer-events:none;
+    }
+    .td-card:hover { transform:scale(1.05); }
+    .td-card.selected {
+      border-color:#F9D976;
+      box-shadow:0 0 20px rgba(249,217,118,0.4);
+      transform:scale(1.08);
+    }
+    .td-card.dimmed {
+      opacity:0.25; transform:scale(0.92); pointer-events:none;
+    }
+    .td-card.exit {
+      opacity:0; transform:translateY(20px) scale(0.9);
+      transition:all 0.4s ease;
+    }
+
+    /* Part Transition */
+    .td-part-trans-text {
+      font-size:22px; font-weight:700; color:#F9D976;
+      letter-spacing:3px; text-transform:uppercase;
+      opacity:0; animation:tdFadeIn 1s ease forwards;
+    }
+    @keyframes tdFadeIn { to { opacity:1; } }
+
+    /* Forging */
+    .td-forge-container { text-align:center; position:relative; }
+    .td-forge-orb {
+      width:120px; height:120px; border-radius:50%; margin:0 auto 24px;
+      background:radial-gradient(circle, rgba(249,217,118,0.6) 0%, rgba(249,217,118,0.1) 60%, transparent 80%);
+      animation:tdForgeGlow 2s ease-in-out infinite;
+    }
+    @keyframes tdForgeGlow {
+      0%,100% { transform:scale(0.9); box-shadow:0 0 40px rgba(249,217,118,0.3); }
+      50% { transform:scale(1.15); box-shadow:0 0 80px rgba(249,217,118,0.6); }
+    }
+    .td-forge-text {
+      font-size:14px; color:#ACACAC; letter-spacing:2px;
+      animation:tdFadeIn 1s ease 0.5s both;
+    }
+    .td-forge-particles {
+      position:absolute; inset:-60px; pointer-events:none;
+    }
+    .td-forge-particle {
+      position:absolute; width:4px; height:4px; border-radius:50%;
+      background:#F9D976; opacity:0;
+    }
+
+    /* Reveal */
+    .td-reveal-container {
+      text-align:center; max-width:340px;
+    }
+    .td-reveal-main {
+      font-size:24px; font-weight:700; color:#F9D976;
+      opacity:0; transform:translateY(20px);
+    }
+    .td-reveal-main.show {
+      animation:tdRevealUp 1.5s ease forwards;
+    }
+    .td-reveal-main-en {
+      font-size:13px; color:rgba(249,217,118,0.5); margin-top:4px;
+      opacity:0; transform:translateY(10px);
+    }
+    .td-reveal-main-en.show {
+      animation:tdRevealUp 1.2s ease 0.3s forwards;
+    }
+    .td-reveal-line {
+      width:0; height:1px; margin:16px auto;
+      background:linear-gradient(90deg,transparent,#F9D976,transparent);
+    }
+    .td-reveal-line.show {
+      animation:tdLineExpand 1s ease 1.8s forwards;
+    }
+    .td-reveal-class {
+      font-size:20px; font-weight:700; color:#EAEAEA; letter-spacing:3px;
+      opacity:0; transform:scale(1.5);
+    }
+    .td-reveal-class.show {
+      animation:tdStamp 0.8s cubic-bezier(0.175,0.885,0.32,1.275) 2.8s forwards;
+    }
+    .td-reveal-light {
+      font-size:13px; color:#ACACAC; margin-top:20px; line-height:1.6;
+      opacity:0; transform:translateY(10px);
+    }
+    .td-reveal-light.show {
+      animation:tdRevealUp 1.2s ease 3.8s forwards;
+    }
+    .td-reveal-shadow {
+      font-size:13px; color:#ACACAC; margin-top:6px; line-height:1.6;
+      font-style:italic; opacity:0;
+    }
+    .td-reveal-shadow.show {
+      animation:tdFadeIn 1.2s ease 5s forwards;
+    }
+    .td-reveal-actions {
+      margin-top:28px; opacity:0;
+    }
+    .td-reveal-actions.show {
+      animation:tdFadeIn 0.8s ease 6.2s forwards;
+    }
+    .td-retry-btn {
+      margin-top:12px; font-size:12px; color:#ACACAC; cursor:pointer;
+      text-decoration:underline; text-underline-offset:3px;
+    }
+    .td-share-btn {
+      margin-top:16px; font-size:13px; color:#F9D976; cursor:pointer;
+      letter-spacing:1px;
+    }
+
+    @keyframes tdRevealUp {
+      to { opacity:1; transform:translateY(0); }
+    }
+    @keyframes tdLineExpand {
+      to { width:60%; }
+    }
+    @keyframes tdStamp {
+      0% { opacity:0; transform:scale(1.5); }
+      60% { opacity:1; transform:scale(0.95); }
+      100% { opacity:1; transform:scale(1); }
+    }
+
+    /* Axis background tinting */
+    .td-axis-power { background:radial-gradient(ellipse at center, rgba(255,68,68,0.08) 0%, transparent 70%) !important; }
+    .td-axis-mind { background:radial-gradient(ellipse at center, rgba(107,181,255,0.08) 0%, transparent 70%) !important; }
+    .td-axis-spirit { background:radial-gradient(ellipse at center, rgba(155,107,255,0.08) 0%, transparent 70%) !important; }
+    .td-axis-shadow { background:radial-gradient(ellipse at center, rgba(80,0,100,0.1) 0%, transparent 70%) !important; }
+    .td-axis-heart { background:radial-gradient(ellipse at center, rgba(249,217,118,0.08) 0%, transparent 70%) !important; }
   </style>
 </head>
 <body>
@@ -247,6 +441,25 @@
         </div>
       </div>
 
+      <!-- Title Diagnosis Section -->
+      <div class="settings-group" id="titleSection">
+        <div class="section-label">✦ Title Diagnosis</div>
+        <div id="titleResultCard" style="display:none;" class="glass td-result-card">
+          <div class="td-result-main" id="tdResultMain"></div>
+          <div class="td-result-class" id="tdResultClass"></div>
+          <div class="td-result-light" id="tdResultLight"></div>
+          <div class="td-result-shadow" id="tdResultShadow"></div>
+        </div>
+        <div id="titleStartBtn">
+          <button class="gold-btn" onclick="startDiagnosis()" style="width:100%;padding:14px;border-radius:14px;border:none;background:linear-gradient(135deg,#F9D976,#E8A840);color:#0A0A14;font-size:15px;font-weight:700;cursor:pointer;letter-spacing:0.5px;">✦ あなたの称号を受け取る</button>
+        </div>
+        <div id="titleNeedProfile" style="display:none;text-align:center;color:#ACACAC;font-size:13px;padding:10px;">
+          まず出生情報を設定してください
+        </div>
+        <div id="titleRediagnose" style="display:none;">
+          <button onclick="startDiagnosis()" style="width:100%;padding:12px;border-radius:14px;border:1px solid rgba(249,217,118,0.3);background:none;color:#F9D976;font-size:13px;cursor:pointer;">再診断する（Cosmic Pro）</button>
+        </div>
+      </div>
 
       <div class="settings-group">
         <div class="section-label">✦ Cosmic Pro</div>
@@ -407,6 +620,67 @@
 
       <button class="birth-save-btn" onclick="saveHomeInfo()">保存する</button>
     </div>
+  </div>
+
+  <!-- Title Diagnosis Overlay -->
+  <div class="birth-overlay" id="titleDiagOverlay">
+    <!-- Intro Screen -->
+    <div class="td-screen" id="tdScreenIntro">
+      <div class="td-intro-card glass">
+        <div style="font-size:28px;margin-bottom:12px;">✦</div>
+        <div style="font-size:20px;font-weight:700;color:#F9D976;margin-bottom:8px;">称号の儀式</div>
+        <div style="font-size:13px;color:#ACACAC;line-height:1.7;margin-bottom:24px;">
+          カードがあなたを映し出します。<br>
+          28の問いに、直感で答えてください。
+        </div>
+        <button class="birth-save-btn" onclick="beginRounds()">始める</button>
+        <div style="margin-top:12px;font-size:11px;color:rgba(172,172,172,0.5);cursor:pointer;" onclick="closeDiagnosis()">あとで</div>
+      </div>
+    </div>
+
+    <!-- Round Screen -->
+    <div class="td-screen" id="tdScreenRound" style="display:none;">
+      <div class="td-progress-bar"><div class="td-progress-fill" id="tdProgressFill"></div></div>
+      <div class="td-progress-text" id="tdProgressText">1 / 28</div>
+      <div class="td-part-label" id="tdPartLabel"></div>
+      <div class="td-question" id="tdQuestion"></div>
+      <div class="td-question-en" id="tdQuestionEN"></div>
+      <div class="td-cards" id="tdCards"></div>
+    </div>
+
+    <!-- Part Transition Screen -->
+    <div class="td-screen" id="tdScreenPartTrans" style="display:none;">
+      <div class="td-part-trans-text" id="tdPartTransText"></div>
+    </div>
+
+    <!-- Forging Screen -->
+    <div class="td-screen" id="tdScreenForging" style="display:none;">
+      <div class="td-forge-container">
+        <div class="td-forge-orb" id="tdForgeOrb"></div>
+        <div class="td-forge-text">Forging your title...</div>
+        <div class="td-forge-particles" id="tdForgeParticles"></div>
+      </div>
+    </div>
+
+    <!-- Reveal Screen -->
+    <div class="td-screen" id="tdScreenReveal" style="display:none;">
+      <div class="td-reveal-container">
+        <div class="td-reveal-main" id="tdRevealMain"></div>
+        <div class="td-reveal-main-en" id="tdRevealMainEN"></div>
+        <div class="td-reveal-line"></div>
+        <div class="td-reveal-class" id="tdRevealClass"></div>
+        <div class="td-reveal-light" id="tdRevealLight"></div>
+        <div class="td-reveal-shadow" id="tdRevealShadow"></div>
+        <div class="td-reveal-actions" id="tdRevealActions">
+          <button class="birth-save-btn" onclick="acceptTitle()">これでいく</button>
+          <div class="td-retry-btn" id="tdRetryBtn" onclick="retryDiagnosis()">もう一度診断する</div>
+          <div class="td-share-btn" onclick="shareTitle()">Share Your Title ✦</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Share Canvas (hidden) -->
+    <canvas id="tdShareCanvas" style="display:none;" width="1080" height="1920"></canvas>
   </div>
 </div><!-- end phone -->
 
@@ -1122,6 +1396,679 @@ updateOrbSummary();
     document.getElementById('houseSystemVal').textContent = '出生時刻が必要です';
   }
 })();
+
+// ============================================================
+//  TITLE DIAGNOSIS SYSTEM
+// ============================================================
+
+// --- Data Tables ---
+
+var IMG_BASE = '../card-images/';
+
+var SUN_ADJ = {
+  aries:{jp:'炎を纏う',en:'Blazing'}, taurus:{jp:'大地に根ざす',en:'Rooted'},
+  gemini:{jp:'風を駆ける',en:'Windborne'}, cancer:{jp:'潮に抱かれし',en:'Tidebound'},
+  leo:{jp:'黄金に輝く',en:'Golden'}, virgo:{jp:'星を数える',en:'Starlit'},
+  libra:{jp:'均衡を保つ',en:'Balanced'}, scorpio:{jp:'深淵を覗く',en:'Abyssal'},
+  sagittarius:{jp:'地平を射る',en:'Horizonshot'}, capricorn:{jp:'頂に立つ',en:'Crownward'},
+  aquarius:{jp:'天を覆す',en:'Skybreaker'}, pisces:{jp:'夢に漂う',en:'Dreamdrift'}
+};
+
+var MOON_NOUN = {
+  aries:{jp:'開拓者',en:'Pioneer'}, taurus:{jp:'守り手',en:'Keeper'},
+  gemini:{jp:'語り部',en:'Narrator'}, cancer:{jp:'揺り籠',en:'Cradle'},
+  leo:{jp:'玉座',en:'Throne'}, virgo:{jp:'灯台',en:'Lighthouse'},
+  libra:{jp:'天秤',en:'Scales'}, scorpio:{jp:'深淵',en:'Abyss'},
+  sagittarius:{jp:'矢',en:'Arrow'}, capricorn:{jp:'砦',en:'Citadel'},
+  aquarius:{jp:'嵐',en:'Tempest'}, pisces:{jp:'泉',en:'Spring'}
+};
+
+var TITLE_CLASSES = {
+  power:{page:'Knight',knight:'Dragoon',queen:'Paladin',king:'Overlord',mixed:'Spellblade'},
+  mind:{page:'Sage',knight:'Strategist',queen:'Chancellor',king:'Judge',mixed:'Wizard'},
+  spirit:{page:'Cleric',knight:'Astrologer',queen:'Oracle',king:'Fate Weaver',mixed:'Druid'},
+  shadow:{page:'Trickster',knight:'Liberator',queen:'Phantom',king:'Rogue',mixed:'Alchemist'},
+  heart:{page:'Bard',knight:'Sorcerer',queen:'Enchanter',king:'Emperor',mixed:'Chronomancer'}
+};
+
+var CLASS_TEXT = {
+  Knight:{lJP:'「守る」と決めたら迷わない',sJP:'守りたいものが多すぎて忙しい',lEN:'Never hesitates when someone needs protecting',sEN:'Too many people to protect, not enough hours'},
+  Dragoon:{lJP:'とりあえず飛んでから考える',sJP:'飛び込みすぎて毎回びっくりされる',lEN:'Leaps first, thinks later',sEN:'Keeps surprising everyone by diving in headfirst'},
+  Paladin:{lJP:'困ってる人を見ると体が動く',sJP:'正義感が強すぎて頼られがち',lEN:'Body moves before brain when someone\'s in trouble',sEN:'Too reliable — everyone\'s go-to hero'},
+  Overlord:{lJP:'気づいたら全部仕切っている',sJP:'リーダーになりすぎて休めない',lEN:'Somehow ends up running everything',sEN:'Can\'t stop leading long enough to rest'},
+  Spellblade:{lJP:'なんでもそこそこできてしまう',sJP:'器用すぎて自分の専門が決められない',lEN:'Annoyingly good at everything',sEN:'Too versatile to pick a specialty'},
+  Sage:{lJP:'「なぜ？」が止まらない',sJP:'知りたいことが多すぎて夜更かしする',lEN:'Can\'t stop asking "but why?"',sEN:'Too many rabbit holes, not enough sleep'},
+  Strategist:{lJP:'三手先まで自然と見えている',sJP:'先が見えすぎて一人で心配する',lEN:'Sees three moves ahead without trying',sEN:'Worries alone because they see too far'},
+  Chancellor:{lJP:'誰が何を求めているか分かる',sJP:'気配り上手すぎて自分を後回しにする',lEN:'Knows what everyone needs before they ask',sEN:'So busy reading the room, forgets to read themselves'},
+  Judge:{lJP:'おかしいことはおかしいと言える',sJP:'筋が通らないと気になって眠れない',lEN:'Calls out what\'s wrong without flinching',sEN:'Can\'t sleep when something doesn\'t add up'},
+  Wizard:{lJP:'好きなことなら永遠にやれる',sJP:'没頭すると時間を忘れてご飯を忘れる',lEN:'Could do one thing forever and never get bored',sEN:'Forgets to eat when hyperfocused'},
+  Cleric:{lJP:'いるだけで周りが安心する',sJP:'優しすぎて全員の相談役になる',lEN:'People feel safe just being near them',sEN:'Too kind — accidentally becomes everyone\'s therapist'},
+  Astrologer:{lJP:'見えないつながりを見つけるのが得意',sJP:'星が気になりすぎて空ばかり見ている',lEN:'Finds invisible connections everywhere',sEN:'Stares at the sky so much, forgets the ground'},
+  Oracle:{lJP:'言葉にする前に空気で分かる',sJP:'感受性が高すぎて映画で毎回泣く',lEN:'Reads the room before a word is spoken',sEN:'So sensitive they cry at every movie'},
+  'Fate Weaver':{lJP:'人の才能を見抜いて背中を押せる',sJP:'おせっかいが止まらない',lEN:'Spots hidden talent and pushes people forward',sEN:'Can\'t stop meddling'},
+  Druid:{lJP:'自然の中にいると充電できる',sJP:'一人の時間が好きすぎて誘いを忘れる',lEN:'Recharges in nature like a solar panel',sEN:'Loves alone time so much, forgets to reply'},
+  Trickster:{lJP:'退屈な場の空気を一瞬で変える',sJP:'面白いことを思いつくと黙っていられない',lEN:'Flips a boring room upside down in seconds',sEN:'Can\'t keep a good idea to themselves'},
+  Liberator:{lJP:'「おかしい」と思ったら声を上げる',sJP:'自由すぎてスケジュールが守れない',lEN:'Speaks up the moment something feels off',sEN:'Too free-spirited to keep a schedule'},
+  Phantom:{lJP:'気配を消すのが天才的にうまい',sJP:'存在感を消すのが上手すぎて探される',lEN:'Disappears so well it\'s basically a superpower',sEN:'So good at vanishing, people file missing reports'},
+  Rogue:{lJP:'自分のやり方で結果を出す',sJP:'マイペースすぎて周りがハラハラする',lEN:'Gets results their own way, every time',sEN:'So independent it makes everyone nervous'},
+  Alchemist:{lJP:'関係なさそうなものを組み合わせて化ける',sJP:'好奇心が強すぎて余計なものまで作る',lEN:'Combines random things into something brilliant',sEN:'Too curious — builds stuff nobody asked for'},
+  Bard:{lJP:'その場にいる人を全員笑顔にする',sJP:'共感力が高すぎてもらい泣きする',lEN:'Makes every person in the room smile',sEN:'Empathy so strong they ugly-cry for others'},
+  Sorcerer:{lJP:'感情のエネルギーがそのまま力になる',sJP:'感情豊かすぎて表情が忙しい',lEN:'Turns raw emotion into pure power',sEN:'So expressive their face never sits still'},
+  Enchanter:{lJP:'会った人がなぜか好きになる',sJP:'魅力的すぎて誤解される',lEN:'People just like them and can\'t explain why',sEN:'Too charming — constantly misunderstood'},
+  Emperor:{lJP:'人が自然と集まってくる',sJP:'理想が高すぎて妥協できない',lEN:'People naturally gravitate and gather around',sEN:'Standards so high they can\'t compromise'},
+  Chronomancer:{lJP:'「あの瞬間」を大事にできる',sJP:'思い出を大事にしすぎてアルバムが増え続ける',lEN:'Treasures moments others let slip by',sEN:'Hoards memories until the album shelf collapses'}
+};
+
+// Pentacles axis mapping per round: spirit or shadow
+var PENT_AXIS = ['spirit','shadow','spirit','spirit','shadow','spirit','shadow','shadow','spirit'];
+
+// 28 Rounds definition
+var TD_ROUNDS = [
+  // Part 1: Minor Arcana (R1-R9)
+  {part:1,qJP:'新しい何かが始まるとき、あなたが最初に手に取るのは？',qEN:'When something new begins, what do you reach for first?',
+   cards:[{img:'22_ace_of_wands.png',axis:'power'},{img:'36_ace_of_cups.png',axis:'heart'},{img:'50_ace_of_swords.png',axis:'mind'},{img:'64_ace_of_pentacles.png',axis:'spirit'}]},
+  {part:1,qJP:'選択する時が来た。なにをおもう？',qEN:'The moment of choice has come. What goes through your mind?',
+   cards:[{img:'23_two_of_wands.png',axis:'power'},{img:'37_two_of_cups.png',axis:'heart'},{img:'51_two_of_swords.png',axis:'mind'},{img:'65_two_of_pentacles.png',axis:'shadow'}]},
+  {part:1,qJP:'あなたは大きな決断をした。どんな気持ち？',qEN:'You\'ve made a big decision. How does it feel?',
+   cards:[{img:'24_three_of_wands.png',axis:'power'},{img:'38_three_of_cups.png',axis:'heart'},{img:'52_three_of_swords.png',axis:'mind'},{img:'66_three_of_pentacles.png',axis:'spirit'}]},
+  {part:1,qJP:'安心を感じるのはどんなとき？',qEN:'When do you feel most at ease?',
+   cards:[{img:'25_four_of_wands.png',axis:'power'},{img:'39_four_of_cups.png',axis:'heart'},{img:'53_four_of_swords.png',axis:'mind'},{img:'67_four_of_pentacles.png',axis:'spirit'}]},
+  {part:1,qJP:'困難にぶつかったとき、あなたはどうなっている？',qEN:'When you hit a wall, what happens to you?',
+   cards:[{img:'26_five_of_wands.png',axis:'power'},{img:'40_five_of_cups.png',axis:'heart'},{img:'54_five_of_swords.png',axis:'mind'},{img:'68_five_of_pentacles.png',axis:'shadow'}]},
+  {part:1,qJP:'あなたが癒されるのは？',qEN:'What heals you?',
+   cards:[{img:'27_six_of_wands.png',axis:'power'},{img:'41_six_of_cups.png',axis:'heart'},{img:'55_six_of_swords.png',axis:'mind'},{img:'69_six_of_pentacles.png',axis:'spirit'}]},
+  {part:1,qJP:'眠れない夜、頭をよぎるのは？',qEN:'What crosses your mind on sleepless nights?',
+   cards:[{img:'28_seven_of_wands.png',axis:'power'},{img:'42_seven_of_cups.png',axis:'heart'},{img:'56_seven_of_swords.png',axis:'mind'},{img:'70_seven_of_pentacles.png',axis:'shadow'}]},
+  {part:1,qJP:'前進する為に、やるべきことは',qEN:'What must be done to move forward?',
+   cards:[{img:'29_eight_of_wands.png',axis:'power'},{img:'43_eight_of_cups.png',axis:'heart'},{img:'57_eight_of_swords.png',axis:'mind'},{img:'71_eight_of_pentacles.png',axis:'shadow'}]},
+  {part:1,qJP:'今の自分の姿にちかいのは？',qEN:'Which one looks most like you right now?',
+   cards:[{img:'30_nine_of_wands.png',axis:'power'},{img:'44_nine_of_cups.png',axis:'heart'},{img:'58_nine_of_swords.png',axis:'mind'},{img:'72_nine_of_pentacles.png',axis:'spirit'}]},
+
+  // Part 2: Major Arcana (R10-R24)
+  {part:2,qJP:'生まれ変わるとしたら、誰になる？',qEN:'If reborn, who would you become?',
+   cards:[{img:'04_the_emperor.png',axis:'power'},{img:'01_the_magician.png',axis:'mind'},{img:'03_the_empress.png',axis:'heart'}]},
+  {part:2,qJP:'迷ったとき、頼りにしたいのは？',qEN:'When lost, what do you trust?',
+   cards:[{img:'02_the_high_priestess.png',axis:'spirit'},{img:'10_wheel_of_fortune.png',axis:'shadow'},{img:'07_the_chariot.png',axis:'power'}]},
+  {part:2,qJP:'旅の仲間にするなら、誰を選ぶ？',qEN:'Who would you choose as your travel companion?',
+   cards:[{img:'06_the_lovers.png',axis:'heart'},{img:'09_the_hermit.png',axis:'mind'},{img:'13_death.png',axis:'shadow'}]},
+  {part:2,qJP:'あなたの師匠になるのは？',qEN:'Who would be your mentor?',
+   cards:[{img:'08_strength.png',axis:'power'},{img:'05_the_hierophant.png',axis:'spirit'},{img:'14_temperance.png',axis:'heart'}]},
+  {part:2,qJP:'深夜、語り明かしたい相手は？',qEN:'Who would you talk with until dawn?',
+   cards:[{img:'15_the_devil.png',axis:'shadow'},{img:'11_justice.png',axis:'mind'},{img:'17_the_star.png',axis:'spirit'}]},
+  {part:2,qJP:'壁にぶつかったとき、あなたの心は？',qEN:'When you hit a wall, where does your heart go?',
+   cards:[{img:'19_the_sun.png',axis:'heart'},{img:'12_the_hanged_man.png',axis:'shadow'},{img:'16_the_tower.png',axis:'power'}]},
+  {part:2,qJP:'夜明け前、あなたを導くのは？',qEN:'Before dawn, what guides you?',
+   cards:[{img:'20_judgement.png',axis:'mind'},{img:'18_the_moon.png',axis:'spirit'},{img:'04_the_emperor.png',axis:'power'}]},
+  {part:2,qJP:'あなたを理解してくれるのは？',qEN:'Who truly understands you?',
+   cards:[{img:'13_death.png',axis:'shadow'},{img:'03_the_empress.png',axis:'heart'},{img:'02_the_high_priestess.png',axis:'spirit'}]},
+  {part:2,qJP:'世界を変えるなら、何を手に取る？',qEN:'To change the world, what would you reach for?',
+   cards:[{img:'07_the_chariot.png',axis:'power'},{img:'01_the_magician.png',axis:'mind'},{img:'10_wheel_of_fortune.png',axis:'shadow'}]},
+  {part:2,qJP:'帰る場所で待っていてほしいのは？',qEN:'Who do you want waiting when you come home?',
+   cards:[{img:'05_the_hierophant.png',axis:'spirit'},{img:'06_the_lovers.png',axis:'heart'},{img:'09_the_hermit.png',axis:'mind'}]},
+  {part:2,qJP:'未知の扉の向こうにあってほしいのは？',qEN:'What do you hope lies beyond the unknown door?',
+   cards:[{img:'08_strength.png',axis:'power'},{img:'10_wheel_of_fortune.png',axis:'shadow'},{img:'00_the_fool.png',axis:'wildcard'}]},
+  {part:2,qJP:'大切な人に贈りたい力は？',qEN:'What power would you gift to someone you love?',
+   cards:[{img:'11_justice.png',axis:'mind'},{img:'14_temperance.png',axis:'heart'},{img:'17_the_star.png',axis:'spirit'}]},
+  {part:2,qJP:'手放したとき、残るものは？',qEN:'When you let go, what remains?',
+   cards:[{img:'12_the_hanged_man.png',axis:'shadow'},{img:'18_the_moon.png',axis:'spirit'},{img:'21_the_world.png',axis:'wildcard'}]},
+  {part:2,qJP:'あなたが一番輝ける場所は？',qEN:'Where do you shine brightest?',
+   cards:[{img:'19_the_sun.png',axis:'heart'},{img:'16_the_tower.png',axis:'power'},{img:'00_the_fool.png',axis:'wildcard'}]},
+  {part:2,qJP:'この旅の終わりに、誰として立っていたい？',qEN:'At the end of this journey, who do you want to be?',
+   cards:[{img:'20_judgement.png',axis:'mind'},{img:'15_the_devil.png',axis:'shadow'},{img:'21_the_world.png',axis:'wildcard'}]},
+
+  // Part 3: Court Cards (R25-R28)
+  {part:3,qJP:'あなたの情熱の形は？',qEN:'What shape does your passion take?',
+   cards:[{img:'32_page_of_wands.png',court:'page'},{img:'33_knight_of_wands.png',court:'knight'},{img:'34_queen_of_wands.png',court:'queen'},{img:'35_king_of_wands.png',court:'king'}]},
+  {part:3,qJP:'奇跡が目の前に降りた瞬間、あなたは？',qEN:'When a miracle descends before you?',
+   cards:[{img:'46_page_of_cups.png',court:'page'},{img:'47_knight_of_cups.png',court:'knight'},{img:'48_queen_of_cups.png',court:'queen'},{img:'49_king_of_cups.png',court:'king'}]},
+  {part:3,qJP:'答えが出ないときのあなたはどんな様子？',qEN:'When there\'s no answer, what do you look like?',
+   cards:[{img:'60_page_of_swords.png',court:'page'},{img:'61_knight_of_swords.png',court:'knight'},{img:'62_queen_of_swords.png',court:'queen'},{img:'63_king_of_swords.png',court:'king'}]},
+  {part:3,qJP:'あなたが築きたいものは？',qEN:'What do you want to build?',
+   cards:[{img:'74_page_of_pentacles.png',court:'page'},{img:'75_knight_of_pentacles.png',court:'knight'},{img:'76_queen_of_pentacles.png',court:'queen'},{img:'77_king_of_pentacles.png',court:'king'}]}
+];
+
+var PART_NAMES = {1:'Minor Arcana',2:'Major Arcana',3:'Court Cards'};
+
+// --- Sun/Moon Sign Calculation ---
+
+var ZODIAC_DATES = [
+  {sign:'capricorn',m:1,d:1},{sign:'aquarius',m:1,d:20},{sign:'pisces',m:2,d:19},
+  {sign:'aries',m:3,d:21},{sign:'taurus',m:4,d:20},{sign:'gemini',m:5,d:21},
+  {sign:'cancer',m:6,d:22},{sign:'leo',m:7,d:23},{sign:'virgo',m:8,d:23},
+  {sign:'libra',m:9,d:23},{sign:'scorpio',m:10,d:23},{sign:'sagittarius',m:11,d:22},
+  {sign:'capricorn',m:12,d:22}
+];
+
+function getSunSign(dateStr) {
+  if (!dateStr) return 'aries';
+  var parts = dateStr.split('-');
+  var m = parseInt(parts[1]);
+  var d = parseInt(parts[2]);
+  var doy = m * 100 + d;
+  for (var i = ZODIAC_DATES.length - 1; i >= 0; i--) {
+    if (doy >= ZODIAC_DATES[i].m * 100 + ZODIAC_DATES[i].d) return ZODIAC_DATES[i].sign;
+  }
+  return 'capricorn';
+}
+
+function getMoonSign(dateStr, timeStr) {
+  // Simplified: Moon moves ~13.2 deg/day from reference
+  // Reference: Jan 1, 2000 00:00 UTC, Moon at ~28 deg Aries (28 deg)
+  if (!dateStr) return 'cancer';
+  var ref = new Date(2000, 0, 1);
+  var parts = dateStr.split('-');
+  var target = new Date(parseInt(parts[0]), parseInt(parts[1])-1, parseInt(parts[2]));
+  var hours = 12;
+  if (timeStr) {
+    var tp = timeStr.split(':');
+    hours = parseInt(tp[0]) + parseInt(tp[1])/60;
+  }
+  var days = (target - ref) / 86400000 + hours / 24;
+  var deg = (28 + days * 13.176) % 360;
+  if (deg < 0) deg += 360;
+  var signs = ['aries','taurus','gemini','cancer','leo','virgo','libra','scorpio','sagittarius','capricorn','aquarius','pisces'];
+  return signs[Math.floor(deg / 30)];
+}
+
+// --- State Machine ---
+
+var TD = {
+  state: 'idle',
+  round: 0,
+  selections: [],
+  axisScores: {power:0,mind:0,spirit:0,shadow:0,heart:0},
+  courtSelections: [],
+  resultAxis: null,
+  resultCourt: null,
+  resultClass: null,
+  mainTitle: null,
+  lastPart: 0
+};
+
+function resetTD() {
+  TD.state = 'idle';
+  TD.round = 0;
+  TD.selections = [];
+  TD.axisScores = {power:0,mind:0,spirit:0,shadow:0,heart:0};
+  TD.courtSelections = [];
+  TD.resultAxis = null;
+  TD.resultCourt = null;
+  TD.resultClass = null;
+  TD.mainTitle = null;
+  TD.lastPart = 0;
+}
+
+function showTDScreen(id) {
+  var screens = document.querySelectorAll('.td-screen');
+  for (var i = 0; i < screens.length; i++) screens[i].style.display = 'none';
+  document.getElementById(id).style.display = 'flex';
+}
+
+function startDiagnosis() {
+  var p = loadProfile();
+  if (!p || !p.birthDate) {
+    alert('まず出生情報を設定してください');
+    return;
+  }
+  var count = parseInt(localStorage.getItem('solara_title_diagnosis_count') || '0');
+  if (count >= 2) {
+    alert('再診断はCosmic Proで月1回可能です');
+    return;
+  }
+  resetTD();
+  TD.state = 'intro';
+  document.getElementById('titleDiagOverlay').classList.add('open');
+  showTDScreen('tdScreenIntro');
+}
+
+function closeDiagnosis() {
+  document.getElementById('titleDiagOverlay').classList.remove('open');
+  resetTD();
+}
+
+function beginRounds() {
+  TD.state = 'round';
+  TD.round = 0;
+  TD.lastPart = 0;
+  showTDScreen('tdScreenRound');
+  showRound(0);
+}
+
+function showRound(idx) {
+  var r = TD_ROUNDS[idx];
+  var displayNum = idx + 1;
+
+  // Part transition
+  if (r.part !== TD.lastPart) {
+    TD.lastPart = r.part;
+    if (idx > 0) {
+      showTDScreen('tdScreenPartTrans');
+      document.getElementById('tdPartTransText').textContent = PART_NAMES[r.part];
+      setTimeout(function() {
+        showTDScreen('tdScreenRound');
+        renderRound(idx, r, displayNum);
+      }, 1500);
+      return;
+    }
+  }
+  renderRound(idx, r, displayNum);
+}
+
+function renderRound(idx, r, displayNum) {
+  // Progress
+  document.getElementById('tdProgressFill').style.width = (displayNum / 28 * 100) + '%';
+  document.getElementById('tdProgressText').textContent = displayNum + ' / 28';
+  document.getElementById('tdPartLabel').textContent = PART_NAMES[r.part];
+  document.getElementById('tdQuestion').textContent = r.qJP;
+  document.getElementById('tdQuestionEN').textContent = r.qEN;
+
+  // Axis background tint (Part 2 only)
+  var roundScreen = document.getElementById('tdScreenRound');
+  roundScreen.className = 'td-screen';
+  if (r.part === 2) {
+    var leading = getLeadingAxis();
+    if (leading) roundScreen.classList.add('td-axis-' + leading);
+  }
+
+  // Render cards
+  var container = document.getElementById('tdCards');
+  container.innerHTML = '';
+  var preloaded = 0;
+  var total = r.cards.length;
+
+  for (var i = 0; i < r.cards.length; i++) {
+    (function(ci) {
+      var div = document.createElement('div');
+      div.className = 'td-card';
+      var img = new Image();
+      img.src = IMG_BASE + r.cards[ci].img;
+      img.onload = function() {
+        preloaded++;
+        if (preloaded >= total) animateCardsIn();
+      };
+      img.onerror = img.onload;
+      div.appendChild(img);
+      div.onclick = function() { selectCard(idx, ci); };
+      container.appendChild(div);
+    })(i);
+  }
+
+  // Preload next round images
+  if (idx + 1 < TD_ROUNDS.length) {
+    var nextR = TD_ROUNDS[idx + 1];
+    for (var j = 0; j < nextR.cards.length; j++) {
+      var pre = new Image();
+      pre.src = IMG_BASE + nextR.cards[j].img;
+    }
+  }
+}
+
+function animateCardsIn() {
+  var cards = document.querySelectorAll('.td-card');
+  for (var i = 0; i < cards.length; i++) {
+    (function(el, delay) {
+      setTimeout(function() { el.classList.add('appear'); }, delay);
+    })(cards[i], i * 120);
+  }
+}
+
+function selectCard(roundIdx, cardIdx) {
+  var r = TD_ROUNDS[roundIdx];
+  var card = r.cards[cardIdx];
+  TD.selections.push({round:roundIdx, card:card});
+
+  // Score
+  if (r.part === 1 || r.part === 2) {
+    if (card.axis === 'wildcard') {
+      applyWildcard();
+    } else {
+      TD.axisScores[card.axis] += 1;
+    }
+  }
+  if (r.part === 3) {
+    TD.courtSelections.push(card.court);
+  }
+
+  // Animate selection
+  var allCards = document.querySelectorAll('.td-card');
+  for (var i = 0; i < allCards.length; i++) {
+    if (i === cardIdx) {
+      allCards[i].classList.add('selected');
+    } else {
+      allCards[i].classList.add('dimmed');
+    }
+  }
+
+  setTimeout(function() {
+    for (var i = 0; i < allCards.length; i++) allCards[i].classList.add('exit');
+
+    setTimeout(function() {
+      TD.round++;
+      if (TD.round >= 28) {
+        computeResults();
+      } else {
+        showRound(TD.round);
+      }
+    }, 500);
+  }, 600);
+}
+
+function getLeadingAxis() {
+  var max = 0;
+  var leading = null;
+  var axes = ['power','mind','spirit','shadow','heart'];
+  for (var i = 0; i < axes.length; i++) {
+    if (TD.axisScores[axes[i]] > max) {
+      max = TD.axisScores[axes[i]];
+      leading = axes[i];
+    }
+  }
+  return leading;
+}
+
+// --- Scoring ---
+
+function applyWildcard() {
+  var minVal = Infinity;
+  var axes = ['power','mind','spirit','shadow','heart'];
+  for (var i = 0; i < axes.length; i++) {
+    if (TD.axisScores[axes[i]] < minVal) minVal = TD.axisScores[axes[i]];
+  }
+  for (var i = 0; i < axes.length; i++) {
+    if (TD.axisScores[axes[i]] === minVal) {
+      TD.axisScores[axes[i]] += 1;
+      break;
+    }
+  }
+}
+
+function determineFinalAxis() {
+  var axes = ['power','mind','spirit','shadow','heart'];
+  var max = 0;
+  var winners = [];
+  for (var i = 0; i < axes.length; i++) {
+    if (TD.axisScores[axes[i]] > max) {
+      max = TD.axisScores[axes[i]];
+      winners = [axes[i]];
+    } else if (TD.axisScores[axes[i]] === max) {
+      winners.push(axes[i]);
+    }
+  }
+  if (winners.length === 1) return winners[0];
+  // Tiebreak: last selected axis wins
+  for (var j = TD.selections.length - 1; j >= 0; j--) {
+    var sel = TD.selections[j];
+    if (sel.card.axis && sel.card.axis !== 'wildcard' && winners.indexOf(sel.card.axis) >= 0) {
+      return sel.card.axis;
+    }
+  }
+  return winners[0];
+}
+
+function determineCourt() {
+  var counts = {page:0,knight:0,queen:0,king:0};
+  for (var i = 0; i < TD.courtSelections.length; i++) {
+    counts[TD.courtSelections[i]]++;
+  }
+  var types = ['page','knight','queen','king'];
+  for (var i = 0; i < types.length; i++) {
+    if (counts[types[i]] >= 2) return types[i];
+  }
+  return 'mixed';
+}
+
+function computeResults() {
+  TD.resultAxis = determineFinalAxis();
+  TD.resultCourt = determineCourt();
+  TD.resultClass = TITLE_CLASSES[TD.resultAxis][TD.resultCourt];
+
+  // Generate main title
+  var p = loadProfile();
+  var sunSign = getSunSign(p.birthDate);
+  var moonSign = getMoonSign(p.birthDate, p.birthTime);
+  TD.mainTitle = {
+    jp: SUN_ADJ[sunSign].jp + MOON_NOUN[moonSign].jp,
+    en: SUN_ADJ[sunSign].en + ' ' + MOON_NOUN[moonSign].en
+  };
+
+  // Save to localStorage before animation
+  saveTitleData();
+
+  // Start forging
+  startForging();
+}
+
+// --- Persistence ---
+
+function saveTitleData() {
+  localStorage.setItem('solara_title_main', JSON.stringify(TD.mainTitle));
+  localStorage.setItem('solara_title_class', TD.resultClass);
+  localStorage.setItem('solara_title_axis', JSON.stringify(TD.axisScores));
+  localStorage.setItem('solara_title_court', JSON.stringify(TD.courtSelections));
+  localStorage.setItem('solara_title_diagnosed_at', new Date().toISOString());
+  var count = parseInt(localStorage.getItem('solara_title_diagnosis_count') || '0');
+  localStorage.setItem('solara_title_diagnosis_count', String(count + 1));
+}
+
+function loadTitleData() {
+  try {
+    var main = JSON.parse(localStorage.getItem('solara_title_main'));
+    var cls = localStorage.getItem('solara_title_class');
+    if (main && cls) return {main:main, cls:cls};
+  } catch(e) {}
+  return null;
+}
+
+// --- Forging Animation ---
+
+function startForging() {
+  showTDScreen('tdScreenForging');
+
+  // Create particles
+  var container = document.getElementById('tdForgeParticles');
+  container.innerHTML = '';
+  var axisColors = {power:'#ff4444',mind:'#6bb5ff',spirit:'#9b6bff',shadow:'#6b006b',heart:'#F9D976'};
+  var color = axisColors[TD.resultAxis] || '#F9D976';
+
+  for (var i = 0; i < 12; i++) {
+    var p = document.createElement('div');
+    p.className = 'td-forge-particle';
+    p.style.background = color;
+    var angle = (i / 12) * Math.PI * 2;
+    var radius = 80 + Math.random() * 40;
+    var cx = 120 + Math.cos(angle) * radius;
+    var cy = 120 + Math.sin(angle) * radius;
+    p.style.left = cx + 'px';
+    p.style.top = cy + 'px';
+    var dur = 1.5 + Math.random();
+    var del = Math.random() * 2;
+    p.style.animation = 'tdParticleIn ' + dur + 's ease ' + del + 's infinite';
+    container.appendChild(p);
+  }
+
+  // Add particle animation dynamically
+  if (!document.getElementById('tdParticleStyle')) {
+    var style = document.createElement('style');
+    style.id = 'tdParticleStyle';
+    style.textContent = '@keyframes tdParticleIn { 0%{opacity:0;transform:scale(0)} 30%{opacity:1;transform:scale(1.5)} 70%{opacity:0.8;transform:scale(1)} 100%{opacity:0;transform:scale(0)} }';
+    document.head.appendChild(style);
+  }
+
+  var orb = document.getElementById('tdForgeOrb');
+  orb.style.background = 'radial-gradient(circle, ' + color + '99 0%, ' + color + '22 60%, transparent 80%)';
+
+  setTimeout(function() {
+    startReveal();
+  }, 6000);
+}
+
+// --- Reveal Animation ---
+
+function startReveal() {
+  showTDScreen('tdScreenReveal');
+
+  var cls = TD.resultClass;
+  var txt = CLASS_TEXT[cls];
+
+  document.getElementById('tdRevealMain').textContent = TD.mainTitle.jp;
+  document.getElementById('tdRevealMainEN').textContent = TD.mainTitle.en;
+  document.getElementById('tdRevealClass').textContent = '— ' + cls + ' —';
+  document.getElementById('tdRevealLight').textContent = '✦ ' + txt.lJP;
+  document.getElementById('tdRevealShadow').textContent = '✦ ' + txt.sJP;
+
+  // Update retry button visibility
+  var count = parseInt(localStorage.getItem('solara_title_diagnosis_count') || '0');
+  document.getElementById('tdRetryBtn').style.display = count < 2 ? 'block' : 'none';
+
+  // Trigger animations with delays
+  setTimeout(function() { document.getElementById('tdRevealMain').classList.add('show'); }, 100);
+  setTimeout(function() { document.getElementById('tdRevealMainEN').classList.add('show'); }, 100);
+  setTimeout(function() { document.querySelector('.td-reveal-line').classList.add('show'); }, 100);
+  setTimeout(function() { document.getElementById('tdRevealClass').classList.add('show'); }, 100);
+  setTimeout(function() { document.getElementById('tdRevealLight').classList.add('show'); }, 100);
+  setTimeout(function() { document.getElementById('tdRevealShadow').classList.add('show'); }, 100);
+  setTimeout(function() { document.getElementById('tdRevealActions').classList.add('show'); }, 100);
+}
+
+function acceptTitle() {
+  closeDiagnosis();
+  renderTitleDisplay();
+}
+
+function retryDiagnosis() {
+  // Reset reveal animations
+  var els = document.querySelectorAll('.td-reveal-main,.td-reveal-main-en,.td-reveal-line,.td-reveal-class,.td-reveal-light,.td-reveal-shadow,.td-reveal-actions');
+  for (var i = 0; i < els.length; i++) els[i].classList.remove('show');
+
+  // Remove saved data for retry
+  localStorage.removeItem('solara_title_main');
+  localStorage.removeItem('solara_title_class');
+  localStorage.removeItem('solara_title_axis');
+  localStorage.removeItem('solara_title_court');
+  localStorage.removeItem('solara_title_diagnosed_at');
+  // Keep diagnosis_count incremented
+
+  resetTD();
+  TD.state = 'round';
+  TD.round = 0;
+  TD.lastPart = 0;
+  showTDScreen('tdScreenRound');
+  showRound(0);
+}
+
+// --- Share ---
+
+function shareTitle() {
+  var data = loadTitleData();
+  if (!data) return;
+  var cls = data.cls;
+  var txt = CLASS_TEXT[cls];
+  var axisColors = {power:'#441111',mind:'#112244',spirit:'#221144',shadow:'#110022',heart:'#332200'};
+  var axis = null;
+  try { var scores = JSON.parse(localStorage.getItem('solara_title_axis')); axis = determineFinalAxisFromScores(scores); } catch(e){}
+
+  var canvas = document.getElementById('tdShareCanvas');
+  var ctx = canvas.getContext('2d');
+  var w = 1080, h = 1920;
+
+  // Background
+  var bg = axisColors[axis] || '#111111';
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, w, h);
+  var grd = ctx.createRadialGradient(w/2, h/2, 0, w/2, h/2, h*0.6);
+  grd.addColorStop(0, 'rgba(249,217,118,0.08)');
+  grd.addColorStop(1, 'transparent');
+  ctx.fillStyle = grd;
+  ctx.fillRect(0, 0, w, h);
+
+  // Title
+  ctx.fillStyle = '#F9D976';
+  ctx.font = '700 64px Lato, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText(data.main.jp, w/2, h*0.35);
+  ctx.font = '300 36px Lato, sans-serif';
+  ctx.fillStyle = 'rgba(249,217,118,0.5)';
+  ctx.fillText(data.main.en, w/2, h*0.35 + 60);
+
+  // Class
+  ctx.fillStyle = '#EAEAEA';
+  ctx.font = '700 48px Lato, sans-serif';
+  ctx.fillText('— ' + cls + ' —', w/2, h*0.48);
+
+  // Shadow text
+  ctx.fillStyle = '#ACACAC';
+  ctx.font = '300 32px Lato, sans-serif';
+  ctx.fillText(txt.sJP, w/2, h*0.58);
+  ctx.font = '300 24px Lato, sans-serif';
+  ctx.fillStyle = 'rgba(172,172,172,0.6)';
+  ctx.fillText(txt.sEN, w/2, h*0.58 + 50);
+
+  // Branding
+  ctx.fillStyle = 'rgba(249,217,118,0.3)';
+  ctx.font = '300 28px Lato, sans-serif';
+  ctx.fillText('✦ SOLARA ✦', w/2, h*0.90);
+
+  // Download
+  var link = document.createElement('a');
+  link.download = 'solara-title.png';
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+}
+
+function determineFinalAxisFromScores(scores) {
+  if (!scores) return 'heart';
+  var axes = ['power','mind','spirit','shadow','heart'];
+  var max = 0;
+  var result = 'heart';
+  for (var i = 0; i < axes.length; i++) {
+    if ((scores[axes[i]] || 0) > max) {
+      max = scores[axes[i]];
+      result = axes[i];
+    }
+  }
+  return result;
+}
+
+// --- Title Display in Sanctuary ---
+
+function renderTitleDisplay() {
+  var data = loadTitleData();
+  var p = loadProfile();
+
+  // Hide all title sub-elements first
+  document.getElementById('titleResultCard').style.display = 'none';
+  document.getElementById('titleStartBtn').style.display = 'none';
+  document.getElementById('titleNeedProfile').style.display = 'none';
+  document.getElementById('titleRediagnose').style.display = 'none';
+
+  if (!p || !p.birthDate) {
+    document.getElementById('titleNeedProfile').style.display = 'block';
+    return;
+  }
+
+  if (!data) {
+    document.getElementById('titleStartBtn').style.display = 'block';
+    return;
+  }
+
+  // Show result
+  var cls = data.cls;
+  var txt = CLASS_TEXT[cls];
+  document.getElementById('tdResultMain').textContent = data.main.jp + ' — ' + cls;
+  document.getElementById('tdResultClass').textContent = data.main.en + ' — ' + cls;
+  document.getElementById('tdResultLight').textContent = '✦ ' + txt.lJP;
+  document.getElementById('tdResultShadow').textContent = '✦ ' + txt.sJP;
+  document.getElementById('titleResultCard').style.display = 'block';
+
+  // Show rediagnose if applicable
+  var count = parseInt(localStorage.getItem('solara_title_diagnosis_count') || '0');
+  if (count < 2) {
+    document.getElementById('titleStartBtn').style.display = 'block';
+  }
+}
+
+// Initialize title display on page load
+renderTitleDisplay();
 </script>
 </body>
 </html>
