@@ -583,7 +583,7 @@ var BRAND_GOLD       = '#F6BD60';
 var BRAND_PLATINUM   = '#E8E0D0';
 
 // ORB_SETTINGS: single source of truth for orb values (overridable via Sanctuary settings)
-var ORB_SETTINGS = { conjunction: 2, opposition: 2, trine: 2, square: 2, sextile: 2, quincunx: 2 };
+var ORB_SETTINGS = { conjunction: 2, opposition: 2, trine: 2, square: 2, sextile: 2, quincunx: 2, semisextile: 1, semisquare: 1 };
 (function() {
   try {
     var saved = localStorage.getItem('solara_orb_settings');
@@ -597,7 +597,9 @@ var ASPECT_TYPES = [
   { name: 'トライン',           angle: 120, orb: ORB_SETTINGS.trine,       symbol: '\u25B3', color: '#C9A84C', quality: 'soft' },
   { name: 'スクエア',           angle: 90,  orb: ORB_SETTINGS.square,      symbol: '\u25A1', color: '#6B5CE7', quality: 'hard' },
   { name: 'セクスタイル',       angle: 60,  orb: ORB_SETTINGS.sextile,     symbol: '\u26B9', color: '#C9A84C', quality: 'soft' },
-  { name: 'クインカンクス',     angle: 150, orb: ORB_SETTINGS.quincunx,    symbol: 'Qx',     color: '#26D0CE', quality: 'neutral' }
+  { name: 'クインカンクス',     angle: 150, orb: ORB_SETTINGS.quincunx,    symbol: 'Qx',     color: '#26D0CE', quality: 'neutral' },
+  { name: 'セミセクスタイル',   angle: 30,  orb: ORB_SETTINGS.semisextile, symbol: '⚺',     color: '#8BC34A', quality: 'soft',    minor: true },
+  { name: 'セミスクエア',       angle: 45,  orb: ORB_SETTINGS.semisquare,  symbol: '∠',     color: '#FF7043', quality: 'hard',    minor: true }
 ];
 
 var PATTERN_STYLES = {
@@ -631,6 +633,7 @@ function loadViewpoints() { return loadLocations(); }
 // ============================================================
 var _profile = (function(){ try { return JSON.parse(localStorage.getItem('solara_profile')); } catch(e) { return null; } })();
 var profileLoaded = !!(_profile && _profile.birthDate && _profile.birthLat);
+var birthTimeUnknown = !!(_profile && _profile.birthTimeUnknown);
 var defaultUser = profileLoaded
   ? { name: _profile.name || '', date: _profile.birthDate, time: _profile.birthTime || '12:00', place: _profile.birthPlace || '', lat: _profile.birthLat, lng: _profile.birthLng, tz: 9 }
   : { name: 'はやしこうじ', date: '1977-10-24', time: '06:56', place: '岐阜県岐阜市', lat: 35.4233, lng: 136.7607, tz: 9 };
@@ -816,8 +819,16 @@ function collectAspects(p1, p2, isCross, label) {
 }
 
 // ============================================================
-//  PATTERN DETECTION (GT, TSQ, Yod) - 3deg orb
+//  PATTERN DETECTION (GT, TSQ, Yod) - configurable orbs via localStorage
 // ============================================================
+var PATTERN_ORB_SETTINGS = { grandtrine: 3, tsquare_opp: 3, tsquare_sq: 2.5, yod_sextile: 2.5, yod_quincunx: 1.5 };
+(function() {
+  try {
+    var saved = localStorage.getItem('solara_pattern_orb_settings');
+    if (saved) { var o = JSON.parse(saved); for (var k in o) { if (PATTERN_ORB_SETTINGS.hasOwnProperty(k)) PATTERN_ORB_SETTINGS[k] = o[k]; } }
+  } catch(e) {}
+})();
+
 function detectPatterns(aspects, natal, secondary) {
   var patterns = { grandtrine: [], tsquare: [], yod: [] };
   var pool = [];
@@ -839,14 +850,15 @@ function detectPatterns(aspects, natal, secondary) {
   }
 
   var len = pool.length;
+  var po = PATTERN_ORB_SETTINGS;
 
   // Grand Trine: 120deg x3
   for (var i = 0; i < len; i++) {
     for (var j = i + 1; j < len; j++) {
-      if (Math.abs(angleDiff(pool[i].lon, pool[j].lon) - 120) > 3) continue;
+      if (Math.abs(angleDiff(pool[i].lon, pool[j].lon) - 120) > po.grandtrine) continue;
       for (var k = j + 1; k < len; k++) {
-        if (Math.abs(angleDiff(pool[i].lon, pool[k].lon) - 120) > 3) continue;
-        if (Math.abs(angleDiff(pool[j].lon, pool[k].lon) - 120) > 3) continue;
+        if (Math.abs(angleDiff(pool[i].lon, pool[k].lon) - 120) > po.grandtrine) continue;
+        if (Math.abs(angleDiff(pool[j].lon, pool[k].lon) - 120) > po.grandtrine) continue;
         var trio = [pool[i], pool[j], pool[k]];
         if (countNatal(trio) < 2 || !hasPersonal(trio) || isDuplicate(patterns.grandtrine, trio)) continue;
         patterns.grandtrine.push({ planets: trio });
@@ -857,11 +869,11 @@ function detectPatterns(aspects, natal, secondary) {
   // T-Square: 180deg + 2x90deg
   for (var i = 0; i < len; i++) {
     for (var j = i + 1; j < len; j++) {
-      if (Math.abs(angleDiff(pool[i].lon, pool[j].lon) - 180) > 3) continue;
+      if (Math.abs(angleDiff(pool[i].lon, pool[j].lon) - 180) > po.tsquare_opp) continue;
       for (var k = 0; k < len; k++) {
         if (k === i || k === j) continue;
-        if (Math.abs(angleDiff(pool[i].lon, pool[k].lon) - 90) > 2.5) continue;
-        if (Math.abs(angleDiff(pool[j].lon, pool[k].lon) - 90) > 2.5) continue;
+        if (Math.abs(angleDiff(pool[i].lon, pool[k].lon) - 90) > po.tsquare_sq) continue;
+        if (Math.abs(angleDiff(pool[j].lon, pool[k].lon) - 90) > po.tsquare_sq) continue;
         var trio = [pool[i], pool[j], pool[k]];
         if (countNatal(trio) < 2 || !hasPersonal(trio) || isDuplicate(patterns.tsquare, trio)) continue;
         patterns.tsquare.push({ planets: trio, apex: pool[k] });
@@ -872,11 +884,11 @@ function detectPatterns(aspects, natal, secondary) {
   // Yod: 60deg + 2x150deg
   for (var i = 0; i < len; i++) {
     for (var j = i + 1; j < len; j++) {
-      if (Math.abs(angleDiff(pool[i].lon, pool[j].lon) - 60) > 2.5) continue;
+      if (Math.abs(angleDiff(pool[i].lon, pool[j].lon) - 60) > po.yod_sextile) continue;
       for (var k = 0; k < len; k++) {
         if (k === i || k === j) continue;
-        if (Math.abs(angleDiff(pool[i].lon, pool[k].lon) - 150) > 1.2) continue;
-        if (Math.abs(angleDiff(pool[j].lon, pool[k].lon) - 150) > 1.2) continue;
+        if (Math.abs(angleDiff(pool[i].lon, pool[k].lon) - 150) > po.yod_quincunx) continue;
+        if (Math.abs(angleDiff(pool[j].lon, pool[k].lon) - 150) > po.yod_quincunx) continue;
         var trio = [pool[i], pool[j], pool[k]];
         if (countNatal(trio) < 2 || !hasPersonal(trio) || isDuplicate(patterns.yod, trio)) continue;
         patterns.yod.push({ planets: trio, apex: pool[k] });
@@ -1441,35 +1453,37 @@ function renderChart() {
   h += '<circle cx="' + cx + '" cy="' + cy + '" r="' + zodiacInner + '" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="1"/>';
   h += '<circle cx="' + cx + '" cy="' + cy + '" r="' + innerR + '" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="0.8"/>';
 
-  // House lines (non-angular cusps)
-  for (var i = 0; i < 12; i++) {
-    var angle = toRad(asc - houses[i] + 180);
-    h += '<line x1="' + (cx + innerR * Math.cos(angle)) + '" y1="' + (cy + innerR * Math.sin(angle)) + '" x2="' + (cx + zodiacInner * Math.cos(angle)) + '" y2="' + (cy + zodiacInner * Math.sin(angle)) + '" stroke="rgba(255,255,255,0.12)" stroke-width="0.7"/>';
+  // House lines & Angle axes (skip if birth time unknown)
+  var ascAngle, dscAngle, mcAng, icAng;
+  if (!birthTimeUnknown) {
+    // House lines (non-angular cusps)
+    for (var i = 0; i < 12; i++) {
+      var angle = toRad(asc - houses[i] + 180);
+      h += '<line x1="' + (cx + innerR * Math.cos(angle)) + '" y1="' + (cy + innerR * Math.sin(angle)) + '" x2="' + (cx + zodiacInner * Math.cos(angle)) + '" y2="' + (cy + zodiacInner * Math.sin(angle)) + '" stroke="rgba(255,255,255,0.12)" stroke-width="0.7"/>';
 
-    var nextH = houses[(i + 1) % 12];
-    var midH = houses[i] + ((nextH - houses[i] + 360) % 360) / 2;
-    var hAngle = toRad(asc - midH + 180);
-    var hR = innerR + 14;
-    h += '<text x="' + (cx + hR * Math.cos(hAngle)) + '" y="' + (cy + hR * Math.sin(hAngle)) + '" text-anchor="middle" dominant-baseline="central" fill="rgba(255,255,255,0.2)" font-size="9">' + (i + 1) + '</text>';
+      var nextH = houses[(i + 1) % 12];
+      var midH = houses[i] + ((nextH - houses[i] + 360) % 360) / 2;
+      var hAngle = toRad(asc - midH + 180);
+      var hR = innerR + 14;
+      h += '<text x="' + (cx + hR * Math.cos(hAngle)) + '" y="' + (cy + hR * Math.sin(hAngle)) + '" text-anchor="middle" dominant-baseline="central" fill="rgba(255,255,255,0.2)" font-size="9">' + (i + 1) + '</text>';
+    }
+    // 4 Angle axes: ASC-DSC and MC-IC (full-width lines through chart)
+    var ANGLE_COLOR = 'rgba(255,215,112,0.25)';
+    var ANGLE_WIDTH = 1;
+    ascAngle = toRad(asc - asc + 180);
+    dscAngle = toRad(asc - dsc + 180);
+    h += '<line x1="' + (cx + zodiacOuter * Math.cos(ascAngle)) + '" y1="' + (cy + zodiacOuter * Math.sin(ascAngle)) + '" x2="' + (cx + zodiacOuter * Math.cos(dscAngle)) + '" y2="' + (cy + zodiacOuter * Math.sin(dscAngle)) + '" stroke="' + ANGLE_COLOR + '" stroke-width="' + ANGLE_WIDTH + '"/>';
+    mcAng = toRad(asc - mc + 180);
+    icAng = toRad(asc - ic + 180);
+    h += '<line x1="' + (cx + zodiacOuter * Math.cos(mcAng)) + '" y1="' + (cy + zodiacOuter * Math.sin(mcAng)) + '" x2="' + (cx + zodiacOuter * Math.cos(icAng)) + '" y2="' + (cy + zodiacOuter * Math.sin(icAng)) + '" stroke="' + ANGLE_COLOR + '" stroke-width="' + ANGLE_WIDTH + '"/>';
+
+    // 4 Angle labels
+    var labelR = zodiacInner - 12;
+    h += '<text x="' + (cx + labelR * Math.cos(ascAngle)) + '" y="' + (cy + labelR * Math.sin(ascAngle)) + '" text-anchor="middle" dominant-baseline="central" fill="' + NATAL_COLOR + '" font-size="10" font-weight="bold" filter="url(#glow)">ASC</text>';
+    h += '<text x="' + (cx + labelR * Math.cos(dscAngle)) + '" y="' + (cy + labelR * Math.sin(dscAngle)) + '" text-anchor="middle" dominant-baseline="central" fill="' + NATAL_COLOR + '" font-size="10" font-weight="bold" filter="url(#glow)">DSC</text>';
+    h += '<text x="' + (cx + labelR * Math.cos(mcAng)) + '" y="' + (cy + labelR * Math.sin(mcAng)) + '" text-anchor="middle" dominant-baseline="central" fill="' + NATAL_COLOR + '" font-size="10" font-weight="bold" filter="url(#glow)">MC</text>';
+    h += '<text x="' + (cx + labelR * Math.cos(icAng)) + '" y="' + (cy + labelR * Math.sin(icAng)) + '" text-anchor="middle" dominant-baseline="central" fill="' + NATAL_COLOR + '" font-size="10" font-weight="bold" filter="url(#glow)">IC</text>';
   }
-  // 4 Angle axes: ASC-DSC and MC-IC (full-width lines through chart)
-  var ANGLE_COLOR = 'rgba(255,215,112,0.25)';
-  var ANGLE_WIDTH = 1;
-  // ASC-DSC axis — full span from zodiacOuter to zodiacOuter through center
-  var ascAngle = toRad(asc - asc + 180); // = 180° = left (9 o'clock)
-  var dscAngle = toRad(asc - dsc + 180);
-  h += '<line x1="' + (cx + zodiacOuter * Math.cos(ascAngle)) + '" y1="' + (cy + zodiacOuter * Math.sin(ascAngle)) + '" x2="' + (cx + zodiacOuter * Math.cos(dscAngle)) + '" y2="' + (cy + zodiacOuter * Math.sin(dscAngle)) + '" stroke="' + ANGLE_COLOR + '" stroke-width="' + ANGLE_WIDTH + '"/>';
-  // MC-IC axis
-  var mcAng = toRad(asc - mc + 180);
-  var icAng = toRad(asc - ic + 180);
-  h += '<line x1="' + (cx + zodiacOuter * Math.cos(mcAng)) + '" y1="' + (cy + zodiacOuter * Math.sin(mcAng)) + '" x2="' + (cx + zodiacOuter * Math.cos(icAng)) + '" y2="' + (cy + zodiacOuter * Math.sin(icAng)) + '" stroke="' + ANGLE_COLOR + '" stroke-width="' + ANGLE_WIDTH + '"/>';
-
-  // 4 Angle labels: ASC / DSC / MC / IC (just inside inner ring of zodiac band)
-  var labelR = zodiacInner - 12;
-  h += '<text x="' + (cx + labelR * Math.cos(ascAngle)) + '" y="' + (cy + labelR * Math.sin(ascAngle)) + '" text-anchor="middle" dominant-baseline="central" fill="' + NATAL_COLOR + '" font-size="10" font-weight="bold" filter="url(#glow)">ASC</text>';
-  h += '<text x="' + (cx + labelR * Math.cos(dscAngle)) + '" y="' + (cy + labelR * Math.sin(dscAngle)) + '" text-anchor="middle" dominant-baseline="central" fill="' + NATAL_COLOR + '" font-size="10" font-weight="bold" filter="url(#glow)">DSC</text>';
-  h += '<text x="' + (cx + labelR * Math.cos(mcAng)) + '" y="' + (cy + labelR * Math.sin(mcAng)) + '" text-anchor="middle" dominant-baseline="central" fill="' + NATAL_COLOR + '" font-size="10" font-weight="bold" filter="url(#glow)">MC</text>';
-  h += '<text x="' + (cx + labelR * Math.cos(icAng)) + '" y="' + (cy + labelR * Math.sin(icAng)) + '" text-anchor="middle" dominant-baseline="central" fill="' + NATAL_COLOR + '" font-size="10" font-weight="bold" filter="url(#glow)">IC</text>';
 
   // Aspect collection
   var aspectsFound = [];
@@ -1483,25 +1497,27 @@ function renderChart() {
     aspectsFound = collectAspects(natal, secondary, true, 'N-P');
   }
 
-  // Angle aspects: ASC/MC/DSC/IC vs natal planets
-  var anglePoints = [
-    { lon: asc, idx: 10, glyph: 'ASC' },
-    { lon: mc,  idx: 11, glyph: 'MC' },
-    { lon: dsc, idx: 12, glyph: 'DSC' },
-    { lon: ic,  idx: 13, glyph: 'IC' }
-  ];
-  for (var ai = 0; ai < anglePoints.length; ai++) {
-    var ap = anglePoints[ai];
-    for (var pi = 0; pi < 10; pi++) {
-      var diff = angleDiff(ap.lon, natal[pi]);
-      for (var k = 0; k < ASPECT_TYPES.length; k++) {
-        var asp = ASPECT_TYPES[k];
-        if (Math.abs(diff - asp.angle) <= asp.orb) {
-          aspectsFound.push({
-            p1: ap.idx, p2: pi, type: asp, diff: diff,
-            label: 'N-N', lon1: ap.lon, lon2: natal[pi], visible: true,
-            isAngle: true
-          });
+  // Angle aspects: ASC/MC/DSC/IC vs natal planets (skip if birth time unknown)
+  if (!birthTimeUnknown) {
+    var anglePoints = [
+      { lon: asc, idx: 10, glyph: 'ASC' },
+      { lon: mc,  idx: 11, glyph: 'MC' },
+      { lon: dsc, idx: 12, glyph: 'DSC' },
+      { lon: ic,  idx: 13, glyph: 'IC' }
+    ];
+    for (var ai = 0; ai < anglePoints.length; ai++) {
+      var ap = anglePoints[ai];
+      for (var pi = 0; pi < 10; pi++) {
+        var diff = angleDiff(ap.lon, natal[pi]);
+        for (var k = 0; k < ASPECT_TYPES.length; k++) {
+          var asp = ASPECT_TYPES[k];
+          if (Math.abs(diff - asp.angle) <= asp.orb) {
+            aspectsFound.push({
+              p1: ap.idx, p2: pi, type: asp, diff: diff,
+              label: 'N-N', lon1: ap.lon, lon2: natal[pi], visible: true,
+              isAngle: true
+            });
+          }
         }
       }
     }
@@ -1537,7 +1553,11 @@ function renderChart() {
   h += '<circle cx="' + cx + '" cy="' + cy + '" r="' + centerR + '" fill="rgba(10,10,20,0.85)" stroke="rgba(255,255,255,0.08)" stroke-width="0.5"/>';
   h += '<text x="' + cx + '" y="' + (cy - 20) + '" text-anchor="middle" fill="' + BRAND_PLATINUM + '" font-size="10">' + user.name + '</text>';
   h += '<text x="' + cx + '" y="' + (cy - 6) + '" text-anchor="middle" fill="#888" font-size="7">' + user.date + ' ' + user.time + '</text>';
-  h += '<text x="' + cx + '" y="' + (cy + 6) + '" text-anchor="middle" fill="#666" font-size="7">ASC ' + formatDegree(asc) + '</text>';
+  if (!birthTimeUnknown) {
+    h += '<text x="' + cx + '" y="' + (cy + 6) + '" text-anchor="middle" fill="#666" font-size="7">ASC ' + formatDegree(asc) + '</text>';
+  } else {
+    h += '<text x="' + cx + '" y="' + (cy + 6) + '" text-anchor="middle" fill="#666" font-size="7">時刻不明</text>';
+  }
   if (chartMode !== 'single') {
     var tDateStr = document.getElementById('transitDate').value || '';
     var tTimeStr = document.getElementById('transitTime').value || '';
@@ -1566,7 +1586,8 @@ function renderChart() {
   }
 
   renderLegend(secondaryColor, secondaryLabel);
-  updateHouseSystemLabel();
+  if (!birthTimeUnknown) updateHouseSystemLabel();
+  else { var oldLbl = document.getElementById('svgHouseLabel'); if (oldLbl) oldLbl.remove(); }
   refreshActiveBS();
 }
 
@@ -1594,10 +1615,11 @@ function updateHouseSystemLabel() {
 // ============================================================
 function renderPlanetTable(natal, secondary, secColor, secLabel, asc, mc, dsc, ic, houses) {
   var c = document.getElementById('planetTable');
+  var showHouse = !birthTimeUnknown;
   var h = '<div class="planet-row" style="font-size:10px;color:#666;border-bottom:1px solid rgba(255,255,255,0.08)">';
   h += '<div class="planet-glyph"></div><div class="planet-name"></div>';
   h += '<div class="planet-pos" style="color:' + NATAL_COLOR + '">Natal</div>';
-  h += '<div style="width:30px;text-align:center;color:#666;font-size:10px">H</div>';
+  if (showHouse) h += '<div style="width:30px;text-align:center;color:#666;font-size:10px">H</div>';
   if (secondary) h += '<div class="planet-pos" style="color:' + secColor + '">' + secLabel + '</div>';
   h += '</div>';
 
@@ -1606,24 +1628,26 @@ function renderPlanetTable(natal, secondary, secColor, secLabel, asc, mc, dsc, i
     h += '<div class="planet-glyph" style="color:' + NATAL_COLOR + '">' + PLANET_GLYPHS[i] + '</div>';
     h += '<div class="planet-name">' + PLANET_NAMES_JP[i] + '</div>';
     h += '<div class="planet-pos">' + formatDegree(natal[i]) + '</div>';
-    h += '<div style="width:30px;text-align:center;color:#666;font-size:10px">' + getHouseNumber(natal[i], houses) + '</div>';
+    if (showHouse) h += '<div style="width:30px;text-align:center;color:#666;font-size:10px">' + getHouseNumber(natal[i], houses) + '</div>';
     if (secondary) h += '<div class="planet-pos" style="color:' + secColor + '">' + formatDegree(secondary[i]) + '</div>';
     h += '</div>';
   }
 
-  // 4 Angles: ASC / MC / DSC / IC
-  var angleData = [
-    { glyph: 'ASC', lon: asc, house: 1 },
-    { glyph: 'MC',  lon: mc,  house: 10 },
-    { glyph: 'DSC', lon: dsc, house: 7 },
-    { glyph: 'IC',  lon: ic,  house: 4 }
-  ];
-  h += '<div class="planet-row" style="border-top:1px solid rgba(255,255,255,0.08);margin-top:4px;padding-top:8px">';
-  h += '<div class="planet-glyph" style="color:' + NATAL_COLOR + ';font-size:11px">' + angleData[0].glyph + '</div><div class="planet-name"></div>';
-  h += '<div class="planet-pos">' + formatDegree(angleData[0].lon) + '</div><div style="width:30px;text-align:center;color:#666;font-size:10px">' + angleData[0].house + '</div></div>';
-  for (var ai = 1; ai < angleData.length; ai++) {
-    h += '<div class="planet-row"><div class="planet-glyph" style="color:' + NATAL_COLOR + ';font-size:11px">' + angleData[ai].glyph + '</div><div class="planet-name"></div>';
-    h += '<div class="planet-pos">' + formatDegree(angleData[ai].lon) + '</div><div style="width:30px;text-align:center;color:#666;font-size:10px">' + angleData[ai].house + '</div></div>';
+  // 4 Angles: ASC / MC / DSC / IC (skip if birth time unknown)
+  if (showHouse) {
+    var angleData = [
+      { glyph: 'ASC', lon: asc, house: 1 },
+      { glyph: 'MC',  lon: mc,  house: 10 },
+      { glyph: 'DSC', lon: dsc, house: 7 },
+      { glyph: 'IC',  lon: ic,  house: 4 }
+    ];
+    h += '<div class="planet-row" style="border-top:1px solid rgba(255,255,255,0.08);margin-top:4px;padding-top:8px">';
+    h += '<div class="planet-glyph" style="color:' + NATAL_COLOR + ';font-size:11px">' + angleData[0].glyph + '</div><div class="planet-name"></div>';
+    h += '<div class="planet-pos">' + formatDegree(angleData[0].lon) + '</div><div style="width:30px;text-align:center;color:#666;font-size:10px">' + angleData[0].house + '</div></div>';
+    for (var ai = 1; ai < angleData.length; ai++) {
+      h += '<div class="planet-row"><div class="planet-glyph" style="color:' + NATAL_COLOR + ';font-size:11px">' + angleData[ai].glyph + '</div><div class="planet-name"></div>';
+      h += '<div class="planet-pos">' + formatDegree(angleData[ai].lon) + '</div><div style="width:30px;text-align:center;color:#666;font-size:10px">' + angleData[ai].house + '</div></div>';
+    }
   }
 
   c.innerHTML = h;

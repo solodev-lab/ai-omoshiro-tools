@@ -14,7 +14,7 @@ Solara Astrocartography + V7 Cosmic Spiral を統合した5画面モックアッ
 | Horo | `horoscope.html` | ホロスコープチャート（SVG）+ Fortune Reading 5カード |
 | Tarot | `tarot.html` | ムード入力 → カード引き → 鑑定文表示 → 地図連携 |
 | Galaxy | `galaxy.html` | Cycle（3Dスパイラル）+ Star Atlas（星座アーカイブ） |
-| Sanctuary | `sanctuary.html` | プロフィール編集 + Astrology設定 + Silent Hours + Cosmic Pro |
+| Sanctuary | `sanctuary.html` | プロフィール編集 + Astrology設定 + Cosmic Pro |
 
 ---
 
@@ -104,8 +104,10 @@ Solara Astrocartography + V7 Cosmic Spiral を統合した5画面モックアッ
 - **アングルアスペクト**: ASC/DSC/IC/MCと天体10個のアスペクトを検出・チャート上に描画。アングルとのアスペクトは占星術において非常に重要な意味を持ち、その人の基本的な性質や人生のテーマに深く関わる
 - 天体位置テーブル（ASC/MC/DSC/IC 4行追加）
 - アスペクトフィルター（性質/運勢/惑星グループ）
-- **オーブ設定**: localStorage `solara_orb_settings` から読み込み（Sanctuary設定で変更可）
-- パターン検出（Grand Trine/T-Square/Yod）
+- **オーブ設定**: localStorage `solara_orb_settings` / `solara_pattern_orb_settings` から読み込み（Sanctuary設定で変更可）
+- **アスペクト種別**: メジャー5種 + マイナー3種（セミセクスタイル30°、セミスクエア45°、クインカンクス150°）
+- パターン検出（Grand Trine/T-Square/Yod）— パターン専用オーブ設定あり
+- **出生時刻不明時**: ハウス線・ASC/MC/DSC/IC軸・ラベル・ハウス番号を非表示。アングルアスペクトも非表示。惑星同士のアスペクトは表示
 - 60日先予測スキャン
 - モバイルボトムシート（ドラッグ4段階: mini 52px / small 25% / half 45% / full 85%、bottom: 70px でナビバー上に配置）
 
@@ -329,19 +331,25 @@ assets/
 ### 5. Sanctuary (`sanctuary.html`)
 
 #### プロフィール管理（`solara_profile`）
-- **Stellar Profile**: 全項目タップ→オーバーレイ編集→localStorage保存
-  - 氏名、生年月日、出生時刻、出生地（市区町村+lat/lng）、**自宅（現住所）**（市区町村+lat/lng）
-  - 出生地/自宅: Nominatimジオコーディングで座標自動取得
-  - 自宅保存時: `solara_vp_slots`[0] と `solara_locations`[0] に自動同期（isHome=true）
+- **出生情報**: 1つのオーバーレイ画面で氏名・生年月日・出生時刻・出生地を一括入力
+  - **出生時刻不明**: チェックボックスでON → 出生時刻入力無効化、正午(12:00)で計算。ハウス・ASC・MC鑑定は省略
+  - **出生地**: テキスト検索 + Leaflet地図ピッカー（クリックで座標取得、逆ジオコーディングで住所自動入力）
+- **自宅（現住所）**: 出生地と同様の地図UIで入力。保存時 `solara_vp_slots`[0] と `solara_locations`[0] に自動同期（isHome=true）
 - **プロフィール未設定時**: Horo画面に案内バナー表示
 
+#### Astrology設定
+- **House System**: Placidus / Whole Sign 切替（localStorage `solara_house_system`）
+  - 出生時刻不明時はグレーアウト（選択不可）
+- **Aspect Orbs**: 別画面オーバーレイ、3カテゴリに分類（0.5°〜8°、0.5°刻み）
+  - **Major Aspects**: Conjunction(0°/2°), Opposition(180°/2°), Trine(120°/2°), Square(90°/2°), Sextile(60°/2°)
+  - **Minor Aspects**: Quincunx(150°/2°), Semi-Sextile(30°/1°), Semi-Square(45°/1°)
+  - **Patterns**: Grand Trine(120°/3°), T-Square Opp(180°/3°), T-Square Sq(90°/2.5°), Yod Sextile(60°/2.5°), Yod Quincunx(150°/1.5°)
+  - ±ボタン + スライダー + デフォルト位置マーク + リセットボタン
+  - localStorage: `solara_orb_settings`（アスペクト）/ `solara_pattern_orb_settings`（パターン）
+
 #### その他設定
-- **Sanctuary Sleep**: Silent Hoursトグル + Sleep Window
-- **Cosmic Pro**: サブスクカード（$7.99/月、$59.99/年）— UI表示のみ
-- **Astrology設定**:
-  - House System: Placidus / Whole Sign 切替（localStorage `solara_house_system`）
-  - Aspect Orbs: 6アスペクト個別設定 1°〜8°（localStorage `solara_orb_settings`）
-- **App設定**: Language / Notifications / Rate / Terms
+- **Cosmic Pro**: サブスクカード（$9.99/月、$49.99/年）— UI表示のみ
+- **App設定**: Language / Notifications / Terms
 
 ---
 
@@ -364,6 +372,7 @@ assets/
 | `solara_daily_vibes` | 日次vibeデータ（28件） | Galaxy |
 | `solara_house_system` | ハウスシステム（placidus/whole_sign） | Sanctuary→Horo |
 | `solara_orb_settings` | アスペクトオーブ値JSON | Sanctuary→Horo |
+| `solara_pattern_orb_settings` | パターン検出オーブ値JSON | Sanctuary→Horo |
 | `solara_galaxy_cycles` | 完了サイクル一覧 | Galaxy |
 
 ### vibe_score計算式

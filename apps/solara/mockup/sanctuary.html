@@ -6,6 +6,7 @@
   <title>Solara — Sanctuary</title>
   <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="shared/styles.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <style>
     * { margin:0; padding:0; box-sizing:border-box; }
     body {
@@ -97,6 +98,121 @@
     .geo-result { font-size:11px; color:#6CC070; margin-top:-6px; margin-bottom:8px; display:none; }
     .edit-row { display:flex; gap:8px; }
     .edit-row .edit-input { flex:1; }
+
+    /* Birth Info Overlay */
+    .birth-overlay {
+      display:none; position:fixed; inset:0; z-index:500;
+      background:rgba(4,8,16,0.95); backdrop-filter:blur(12px);
+      justify-content:center; align-items:flex-start;
+      overflow-y:auto;
+    }
+    .birth-overlay.open { display:flex; }
+    .birth-card {
+      max-width:420px; width:92%; padding:24px 20px 32px;
+      margin:40px auto;
+      background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1);
+      border-radius:24px;
+    }
+    .birth-header {
+      display:flex; justify-content:space-between; align-items:center;
+      margin-bottom:20px;
+    }
+    .birth-title { font-size:16px; font-weight:700; color:#F9D976; letter-spacing:1px; }
+    .birth-close {
+      width:32px; height:32px; border-radius:50%; border:none;
+      background:rgba(255,255,255,0.08); color:#ACACAC;
+      font-size:18px; cursor:pointer; display:flex; align-items:center; justify-content:center;
+    }
+    .birth-section { margin-bottom:18px; }
+    .birth-label {
+      font-size:12px; color:#ACACAC; margin-bottom:6px;
+      letter-spacing:0.5px; text-transform:uppercase;
+    }
+    .birth-input {
+      width:100%; padding:12px 14px; background:rgba(255,255,255,0.06);
+      border:1px solid rgba(255,255,255,0.12); border-radius:12px;
+      color:#EAEAEA; font-size:14px; outline:none; font-family:inherit;
+    }
+    .birth-input:focus { border-color:rgba(249,217,118,0.4); }
+    .birth-input:disabled {
+      opacity:0.35; cursor:not-allowed;
+    }
+
+    /* Time unknown checkbox */
+    .time-unknown-row {
+      display:flex; align-items:center; gap:8px; margin-top:8px;
+    }
+    .time-unknown-cb {
+      width:18px; height:18px; accent-color:#F9D976; cursor:pointer;
+    }
+    .time-unknown-label {
+      font-size:12px; color:#ACACAC; cursor:pointer;
+    }
+    .time-noon-hint {
+      display:none; font-size:11px; color:#F9D976;
+      margin-top:6px; padding:6px 10px;
+      background:rgba(249,217,118,0.08); border-radius:8px;
+    }
+    .time-noon-hint.show { display:block; }
+
+    /* Map picker */
+    .map-search-row {
+      display:flex; gap:8px; margin-bottom:8px;
+    }
+    .map-search-row .birth-input { flex:1; }
+    .map-search-btn {
+      padding:0 16px; border-radius:12px; border:none;
+      background:linear-gradient(135deg,#F9D976,#E8A840);
+      color:#0A0A14; font-size:13px; font-weight:600;
+      cursor:pointer; white-space:nowrap;
+    }
+    .map-search-btn:disabled { opacity:0.4; cursor:default; }
+    #birthMap {
+      width:100%; height:200px; border-radius:12px;
+      margin-top:8px; border:1px solid rgba(255,255,255,0.1);
+    }
+    .map-result-info {
+      font-size:11px; color:#6CC070; margin-top:6px;
+      display:none;
+    }
+    .map-result-info.show { display:block; }
+    .map-result-info.error { color:#E87070; }
+    .map-coords {
+      display:flex; gap:8px; margin-top:8px;
+    }
+    .map-coords .birth-input { flex:1; }
+
+    /* Orb category */
+    .orb-category { display:flex; flex-direction:column; gap:6px; }
+    .orb-row {
+      display:flex; align-items:center; padding:8px 10px;
+      border-radius:10px; background:rgba(255,255,255,0.03);
+    }
+    .orb-name { font-size:12px; color:#ACACAC; min-width:120px; }
+    .orb-slider-wrap {
+      flex:1; margin:0 4px; position:relative; height:26px;
+      display:flex; align-items:center;
+    }
+    .orb-slider-wrap input[type="range"] { width:100%; margin:0; accent-color:#F9D976; }
+    .orb-default-mark {
+      position:absolute; top:2px; bottom:2px; width:1px;
+      background:rgba(249,217,118,0.25); pointer-events:none;
+      z-index:2;
+    }
+    .orb-val { font-size:13px; color:#F9D976; min-width:36px; text-align:center; }
+    .orb-pm {
+      width:26px; height:26px; border-radius:50%; border:1px solid rgba(249,217,118,0.3);
+      background:none; color:#F9D976; font-size:16px; cursor:pointer;
+      display:flex; align-items:center; justify-content:center; flex-shrink:0;
+    }
+    .orb-pm:active { background:rgba(249,217,118,0.15); }
+
+    .birth-save-btn {
+      width:100%; padding:14px; border-radius:14px; border:none;
+      background:linear-gradient(135deg,#F9D976,#E8A840);
+      color:#0A0A14; font-size:15px; font-weight:700;
+      cursor:pointer; margin-top:8px; letter-spacing:0.5px;
+    }
   </style>
 </head>
 <body>
@@ -121,39 +237,16 @@
 
       <div class="settings-group">
         <div class="section-label">✦ Stellar Profile</div>
-        <div class="settings-item glass" onclick="openEdit('name')" style="cursor:pointer">
-          <div class="settings-left"><div class="settings-icon">✦</div><div class="settings-txt">氏名</div></div>
-          <div class="settings-val" id="nameVal">未設定 ›</div>
+        <div class="settings-item glass" onclick="openBirthInfo()" style="cursor:pointer">
+          <div class="settings-left"><div class="settings-icon">🌟</div><div class="settings-txt">出生情報</div></div>
+          <div class="settings-val" id="birthInfoVal">未設定 ›</div>
         </div>
-        <div class="settings-item glass" onclick="openEdit('birthDate')" style="cursor:pointer">
-          <div class="settings-left"><div class="settings-icon">🎂</div><div class="settings-txt">生年月日</div></div>
-          <div class="settings-val" id="birthDateVal">未設定 ›</div>
-        </div>
-        <div class="settings-item glass" onclick="openEdit('birthTime')" style="cursor:pointer">
-          <div class="settings-left"><div class="settings-icon">🕐</div><div class="settings-txt">出生時刻</div></div>
-          <div class="settings-val" id="birthTimeVal">未設定 ›</div>
-        </div>
-        <div class="settings-item glass" onclick="openEdit('birthCity')" style="cursor:pointer">
-          <div class="settings-left"><div class="settings-icon">🌍</div><div class="settings-txt">出生地</div></div>
-          <div class="settings-val" id="birthCityVal">未設定 ›</div>
-        </div>
-        <div class="settings-item glass" onclick="openEdit('home')" style="cursor:pointer">
+        <div class="settings-item glass" onclick="openHomeInfo()" style="cursor:pointer">
           <div class="settings-left"><div class="settings-icon">🏠</div><div class="settings-txt">自宅（現住所）</div></div>
           <div class="settings-val" id="homeVal">未設定 ›</div>
         </div>
       </div>
 
-      <div class="settings-group">
-        <div class="section-label">✦ Sanctuary Sleep</div>
-        <div class="settings-item glass">
-          <div class="settings-left"><div class="settings-icon">🌙</div><div class="settings-txt">Silent Hours</div></div>
-          <div class="toggle on" onclick="this.classList.toggle('on')"><div class="toggle-thumb"></div></div>
-        </div>
-        <div class="settings-item glass">
-          <div class="settings-left"><div class="settings-icon">🔕</div><div class="settings-txt">Sleep Window</div></div>
-          <div class="settings-val">11 PM – 7 AM ›</div>
-        </div>
-      </div>
 
       <div class="settings-group">
         <div class="section-label">✦ Cosmic Pro</div>
@@ -161,17 +254,17 @@
           <div class="pro-title" style="font-size:16px;">Upgrade to Cosmic Pro</div>
           <div class="pro-sub" style="font-size:12px;">Aether shaders · Galaxy Archive · Advanced astrology</div>
           <div style="display:flex;align-items:baseline;gap:6px;">
-            <span style="font-size:24px;font-weight:700;color:#F9D976;">$7.99</span>
+            <span style="font-size:24px;font-weight:700;color:#F9D976;">$9.99</span>
             <span style="font-size:12px;color:#ACACAC;">/month</span>
           </div>
           <button class="pro-btn" style="padding:10px 24px;font-size:13px;">Unlock Cosmic Pro ✦</button>
-          <div style="font-size:11px;color:rgba(172,172,172,0.45);">$59.99/year · Cancel anytime</div>
+          <div style="font-size:11px;color:rgba(172,172,172,0.45);">$49.99/year · Cancel anytime</div>
         </div>
       </div>
 
       <div class="settings-group">
         <div class="section-label">✦ Astrology</div>
-        <div class="settings-item glass" onclick="toggleHouseSelect()" style="cursor:pointer">
+        <div class="settings-item glass" id="houseSystemRow" onclick="toggleHouseSelect()" style="cursor:pointer">
           <div class="settings-left"><div class="settings-icon">🏛️</div><div class="settings-txt">House System</div></div>
           <div class="settings-val" id="houseSystemVal">Placidus ›</div>
         </div>
@@ -185,12 +278,9 @@
             <div id="houseCheck_whole_sign" style="color:#F9D976;font-size:16px;opacity:0;">✓</div>
           </div>
         </div>
-        <div class="settings-item glass" onclick="toggleOrbPanel()" style="cursor:pointer">
+        <div class="settings-item glass" onclick="openOrbOverlay()" style="cursor:pointer">
           <div class="settings-left"><div class="settings-icon">🔭</div><div class="settings-txt">Aspect Orbs</div></div>
           <div class="settings-val" id="orbSummaryVal">All 2° ›</div>
-        </div>
-        <div id="orbPanel" style="display:none;padding:4px 8px;">
-          <div id="orbSliders"></div>
         </div>
       </div>
 
@@ -205,10 +295,6 @@
           <div class="toggle on" onclick="this.classList.toggle('on')"><div class="toggle-thumb"></div></div>
         </div>
         <div class="settings-item glass">
-          <div class="settings-left"><div class="settings-icon">⭐</div><div class="settings-txt">Rate Solara</div></div>
-          <div class="settings-val">›</div>
-        </div>
-        <div class="settings-item glass">
           <div class="settings-left"><div class="settings-icon">📋</div><div class="settings-txt">Terms & Privacy</div></div>
           <div class="settings-val">›</div>
         </div>
@@ -221,19 +307,110 @@
     <div class="bottom-nav"></div>
   </div>
 
-  <!-- Edit Overlay -->
-  <div class="edit-overlay" id="editOverlay" onclick="if(event.target===this)closeEdit()">
-    <div class="edit-card">
-      <div class="edit-title" id="editTitle"></div>
-      <div id="editBody"></div>
-      <div class="edit-actions">
-        <button class="edit-btn edit-btn-cancel" onclick="closeEdit()">キャンセル</button>
-        <button class="edit-btn edit-btn-save" onclick="saveEdit()">保存</button>
+  <!-- Birth Info Overlay -->
+  <div class="birth-overlay" id="birthOverlay" onclick="if(event.target===this)closeBirthInfo()">
+    <div class="birth-card">
+      <div class="birth-header">
+        <div class="birth-title">✦ 出生情報</div>
+        <button class="birth-close" onclick="closeBirthInfo()">✕</button>
       </div>
+
+      <div class="birth-section">
+        <div class="birth-label">氏名</div>
+        <input class="birth-input" id="biName" type="text" placeholder="氏名を入力">
+      </div>
+
+      <div class="birth-section">
+        <div class="birth-label">生年月日</div>
+        <input class="birth-input" id="biBirthDate" type="date" max="9999-12-31">
+      </div>
+
+      <div class="birth-section">
+        <div class="birth-label">出生時刻</div>
+        <input class="birth-input" id="biBirthTime" type="time" step="60">
+        <div class="time-unknown-row">
+          <input type="checkbox" class="time-unknown-cb" id="biTimeUnknown" onchange="toggleTimeUnknown()">
+          <label class="time-unknown-label" for="biTimeUnknown">出生時刻が分からない</label>
+        </div>
+        <div class="time-noon-hint" id="biNoonHint">鑑定には惑星配置とアスペクト情報を使用します。ハウス・ASC・MCの鑑定は省略されます。</div>
+      </div>
+
+      <div class="birth-section">
+        <div class="birth-label">出生地</div>
+        <div class="map-search-row">
+          <input class="birth-input" id="biBirthPlace" type="text" placeholder="例: 岐阜県岐阜市">
+          <button class="map-search-btn" id="biMapSearchBtn" onclick="searchBirthPlace()">検索</button>
+        </div>
+        <div class="map-result-info" id="biMapResult"></div>
+        <div id="birthMap"></div>
+        <div class="map-coords">
+          <input class="birth-input" id="biBirthLat" type="number" step="0.0001" placeholder="緯度" readonly>
+          <input class="birth-input" id="biBirthLng" type="number" step="0.0001" placeholder="経度" readonly>
+        </div>
+      </div>
+
+      <button class="birth-save-btn" onclick="saveBirthInfo()">保存する</button>
+    </div>
+  </div>
+
+  <!-- Aspect Orbs Overlay -->
+  <div class="birth-overlay" id="orbOverlay" onclick="if(event.target===this)closeOrbOverlay()">
+    <div class="birth-card" style="max-width:440px;">
+      <div class="birth-header">
+        <div class="birth-title">🔭 Aspect Orbs</div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <button onclick="resetOrbs()" style="padding:4px 10px;border-radius:8px;border:1px solid rgba(255,255,255,0.15);background:none;color:#ACACAC;font-size:11px;cursor:pointer;">リセット</button>
+          <button class="birth-close" onclick="closeOrbOverlay()">✕</button>
+        </div>
+      </div>
+
+      <div class="birth-section">
+        <div class="birth-label">Major Aspects</div>
+        <div id="orbMajor" class="orb-category"></div>
+      </div>
+
+      <div class="birth-section">
+        <div class="birth-label">Minor Aspects</div>
+        <div id="orbMinor" class="orb-category"></div>
+      </div>
+
+      <div class="birth-section">
+        <div class="birth-label">Patterns</div>
+        <div id="orbPatterns" class="orb-category"></div>
+      </div>
+
+      <button class="birth-save-btn" onclick="saveOrbOverlay()">保存する</button>
+    </div>
+  </div>
+
+  <!-- Home Info Overlay -->
+  <div class="birth-overlay" id="homeOverlay" onclick="if(event.target===this)closeHomeInfo()">
+    <div class="birth-card">
+      <div class="birth-header">
+        <div class="birth-title">🏠 自宅（現住所）</div>
+        <button class="birth-close" onclick="closeHomeInfo()">✕</button>
+      </div>
+
+      <div class="birth-section">
+        <div class="birth-label">住所・地名</div>
+        <div class="map-search-row">
+          <input class="birth-input" id="hiHomeName" type="text" placeholder="例: 東京都渋谷区">
+          <button class="map-search-btn" id="hiMapSearchBtn" onclick="searchHomePlace()">検索</button>
+        </div>
+        <div class="map-result-info" id="hiMapResult"></div>
+        <div id="homeMap" style="width:100%;height:200px;border-radius:12px;margin-top:8px;border:1px solid rgba(255,255,255,0.1);"></div>
+        <div class="map-coords">
+          <input class="birth-input" id="hiHomeLat" type="number" step="0.0001" placeholder="緯度" readonly>
+          <input class="birth-input" id="hiHomeLng" type="number" step="0.0001" placeholder="経度" readonly>
+        </div>
+      </div>
+
+      <button class="birth-save-btn" onclick="saveHomeInfo()">保存する</button>
     </div>
   </div>
 </div><!-- end phone -->
 
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="shared/nav.js"></script>
 <script>
 /* Background */
@@ -287,19 +464,17 @@ function renderProfileDisplay() {
 
   if (!p) {
     $('profileName').textContent = '✦ プロフィールを設定';
-    $('nameVal').textContent = '未設定 ›';
-    $('birthDateVal').textContent = '未設定 ›';
-    $('birthTimeVal').textContent = '未設定 ›';
-    $('birthCityVal').textContent = '未設定 ›';
+    $('birthInfoVal').textContent = '未設定 ›';
     $('homeVal').textContent = '未設定 ›';
     return;
   }
 
   $('profileName').textContent = p.name || '名前未設定';
-  $('nameVal').textContent = (p.name || '未設定') + ' ›';
-  $('birthDateVal').textContent = p.birthDate ? formatDate(p.birthDate) + ' ›' : '未設定 ›';
-  $('birthTimeVal').textContent = p.birthTime ? p.birthTime + ' ›' : '未設定 ›';
-  $('birthCityVal').textContent = (p.birthPlace || '未設定') + ' ›';
+  // Build birth info summary
+  var infoParts = [];
+  if (p.name) infoParts.push(p.name);
+  if (p.birthDate) infoParts.push(formatDate(p.birthDate));
+  $('birthInfoVal').textContent = infoParts.length > 0 ? infoParts.join(' / ') + ' ›' : '未設定 ›';
   $('homeVal').textContent = (p.homeName || '未設定') + ' ›';
 }
 
@@ -479,6 +654,306 @@ function syncHomeToVP(profile) {
 renderProfileDisplay();
 
 // ============================================================
+//  BIRTH INFO OVERLAY
+// ============================================================
+var birthMap = null;
+var birthMarker = null;
+
+function openBirthInfo() {
+  var p = loadProfile() || {};
+  document.getElementById('biName').value = p.name || '';
+  document.getElementById('biBirthDate').value = p.birthDate || '';
+  document.getElementById('biBirthTime').value = p.birthTimeUnknown ? '' : (p.birthTime || '');
+  document.getElementById('biTimeUnknown').checked = !!p.birthTimeUnknown;
+  document.getElementById('biBirthPlace').value = p.birthPlace || '';
+  document.getElementById('biBirthLat').value = p.birthLat || '';
+  document.getElementById('biBirthLng').value = p.birthLng || '';
+
+  // Apply time unknown state
+  toggleTimeUnknown();
+
+  // Reset map result
+  var res = document.getElementById('biMapResult');
+  res.className = 'map-result-info';
+  res.textContent = '';
+
+  document.getElementById('birthOverlay').classList.add('open');
+
+  // Init map after overlay is visible
+  setTimeout(function() {
+    if (!birthMap) {
+      birthMap = L.map('birthMap', { zoomControl: true, attributionControl: false }).setView([35.68, 139.76], 5);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 18
+      }).addTo(birthMap);
+
+      // Click on map to set location
+      birthMap.on('click', function(e) {
+        setBirthMapLocation(e.latlng.lat, e.latlng.lng, true);
+      });
+    } else {
+      birthMap.invalidateSize();
+    }
+
+    // If existing coords, show marker
+    if (p.birthLat && p.birthLng) {
+      setBirthMapLocation(p.birthLat, p.birthLng, false);
+      birthMap.setView([p.birthLat, p.birthLng], 10);
+    }
+  }, 100);
+}
+
+function closeBirthInfo() {
+  document.getElementById('birthOverlay').classList.remove('open');
+}
+
+function toggleTimeUnknown() {
+  var cb = document.getElementById('biTimeUnknown');
+  var timeInput = document.getElementById('biBirthTime');
+  var hint = document.getElementById('biNoonHint');
+  if (cb.checked) {
+    timeInput.disabled = true;
+    timeInput.value = '';
+    hint.classList.add('show');
+  } else {
+    timeInput.disabled = false;
+    hint.classList.remove('show');
+  }
+}
+
+function setBirthMapLocation(lat, lng, doReverse) {
+  lat = parseFloat(lat);
+  lng = parseFloat(lng);
+  document.getElementById('biBirthLat').value = lat.toFixed(4);
+  document.getElementById('biBirthLng').value = lng.toFixed(4);
+
+  if (birthMarker) {
+    birthMarker.setLatLng([lat, lng]);
+  } else {
+    birthMarker = L.marker([lat, lng]).addTo(birthMap);
+  }
+  birthMap.setView([lat, lng], Math.max(birthMap.getZoom(), 10));
+
+  if (doReverse) {
+    // Reverse geocode to get address
+    var res = document.getElementById('biMapResult');
+    res.textContent = '住所を取得中...';
+    res.className = 'map-result-info show';
+    fetch('https://nominatim.openstreetmap.org/reverse?format=json&lat=' + lat + '&lon=' + lng + '&zoom=10&accept-language=ja')
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (data && data.address) {
+          var addr = '';
+          if (data.address.state) addr += data.address.state;
+          if (data.address.city) addr += data.address.city;
+          else if (data.address.town) addr += data.address.town;
+          else if (data.address.village) addr += data.address.village;
+          document.getElementById('biBirthPlace').value = addr;
+          res.textContent = data.display_name.substring(0, 50);
+          res.className = 'map-result-info show';
+        }
+      })
+      .catch(function() {
+        res.textContent = '住所の取得に失敗しました';
+        res.className = 'map-result-info show error';
+      });
+  }
+}
+
+function searchBirthPlace() {
+  var query = document.getElementById('biBirthPlace').value.trim();
+  if (!query) return;
+  var btn = document.getElementById('biMapSearchBtn');
+  var res = document.getElementById('biMapResult');
+  btn.disabled = true;
+  btn.textContent = '...';
+  res.className = 'map-result-info';
+
+  fetch('https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(query) + '&limit=1&accept-language=ja')
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      btn.disabled = false;
+      btn.textContent = '検索';
+      if (data && data.length > 0) {
+        var lat = parseFloat(data[0].lat);
+        var lng = parseFloat(data[0].lon);
+        setBirthMapLocation(lat, lng, false);
+        res.textContent = data[0].display_name.substring(0, 50);
+        res.className = 'map-result-info show';
+      } else {
+        res.textContent = '見つかりませんでした。地名を確認してください';
+        res.className = 'map-result-info show error';
+      }
+    })
+    .catch(function() {
+      btn.disabled = false;
+      btn.textContent = '検索';
+      res.textContent = '通信エラー。もう一度お試しください';
+      res.className = 'map-result-info show error';
+    });
+}
+
+function saveBirthInfo() {
+  var p = loadProfile() || { tz: 9 };
+  var name = document.getElementById('biName').value.trim();
+  var birthDate = document.getElementById('biBirthDate').value;
+  var timeUnknown = document.getElementById('biTimeUnknown').checked;
+  var birthTime = timeUnknown ? '12:00' : document.getElementById('biBirthTime').value;
+  var birthPlace = document.getElementById('biBirthPlace').value.trim();
+  var lat = parseFloat(document.getElementById('biBirthLat').value);
+  var lng = parseFloat(document.getElementById('biBirthLng').value);
+
+  if (!name) { alert('氏名を入力してください'); return; }
+  if (!birthDate) { alert('生年月日を入力してください'); return; }
+  if (!timeUnknown && !birthTime) { alert('出生時刻を入力するか「出生時刻が分からない」にチェックしてください'); return; }
+  if (!birthPlace || isNaN(lat) || isNaN(lng)) { alert('出生地を検索して座標を設定してください'); return; }
+
+  p.name = name;
+  p.birthDate = birthDate;
+  p.birthTime = birthTime;
+  p.birthTimeUnknown = timeUnknown;
+  p.birthPlace = birthPlace;
+  p.birthLat = lat;
+  p.birthLng = lng;
+  p.tz = 9;
+
+  saveProfileData(p);
+  renderProfileDisplay();
+  closeBirthInfo();
+}
+
+// ============================================================
+//  HOME INFO OVERLAY
+// ============================================================
+var homeMap = null;
+var homeMarker = null;
+
+function openHomeInfo() {
+  var p = loadProfile() || {};
+  document.getElementById('hiHomeName').value = p.homeName || '';
+  document.getElementById('hiHomeLat').value = p.homeLat || '';
+  document.getElementById('hiHomeLng').value = p.homeLng || '';
+
+  var res = document.getElementById('hiMapResult');
+  res.className = 'map-result-info';
+  res.textContent = '';
+
+  document.getElementById('homeOverlay').classList.add('open');
+
+  setTimeout(function() {
+    if (!homeMap) {
+      homeMap = L.map('homeMap', { zoomControl: true, attributionControl: false }).setView([35.68, 139.76], 5);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18 }).addTo(homeMap);
+      homeMap.on('click', function(e) {
+        setHomeMapLocation(e.latlng.lat, e.latlng.lng, true);
+      });
+    } else {
+      homeMap.invalidateSize();
+    }
+
+    if (p.homeLat && p.homeLng) {
+      setHomeMapLocation(p.homeLat, p.homeLng, false);
+      homeMap.setView([p.homeLat, p.homeLng], 10);
+    }
+  }, 100);
+}
+
+function closeHomeInfo() {
+  document.getElementById('homeOverlay').classList.remove('open');
+}
+
+function setHomeMapLocation(lat, lng, doReverse) {
+  lat = parseFloat(lat);
+  lng = parseFloat(lng);
+  document.getElementById('hiHomeLat').value = lat.toFixed(4);
+  document.getElementById('hiHomeLng').value = lng.toFixed(4);
+
+  if (homeMarker) {
+    homeMarker.setLatLng([lat, lng]);
+  } else {
+    homeMarker = L.marker([lat, lng]).addTo(homeMap);
+  }
+  homeMap.setView([lat, lng], Math.max(homeMap.getZoom(), 10));
+
+  if (doReverse) {
+    var res = document.getElementById('hiMapResult');
+    res.textContent = '住所を取得中...';
+    res.className = 'map-result-info show';
+    fetch('https://nominatim.openstreetmap.org/reverse?format=json&lat=' + lat + '&lon=' + lng + '&zoom=10&accept-language=ja')
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (data && data.address) {
+          var addr = '';
+          if (data.address.state) addr += data.address.state;
+          if (data.address.city) addr += data.address.city;
+          else if (data.address.town) addr += data.address.town;
+          else if (data.address.village) addr += data.address.village;
+          document.getElementById('hiHomeName').value = addr;
+          res.textContent = data.display_name.substring(0, 50);
+          res.className = 'map-result-info show';
+        }
+      })
+      .catch(function() {
+        res.textContent = '住所の取得に失敗しました';
+        res.className = 'map-result-info show error';
+      });
+  }
+}
+
+function searchHomePlace() {
+  var query = document.getElementById('hiHomeName').value.trim();
+  if (!query) return;
+  var btn = document.getElementById('hiMapSearchBtn');
+  var res = document.getElementById('hiMapResult');
+  btn.disabled = true;
+  btn.textContent = '...';
+  res.className = 'map-result-info';
+
+  fetch('https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(query) + '&limit=1&accept-language=ja')
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      btn.disabled = false;
+      btn.textContent = '検索';
+      if (data && data.length > 0) {
+        var lat = parseFloat(data[0].lat);
+        var lng = parseFloat(data[0].lon);
+        setHomeMapLocation(lat, lng, false);
+        res.textContent = data[0].display_name.substring(0, 50);
+        res.className = 'map-result-info show';
+      } else {
+        res.textContent = '見つかりませんでした。地名を確認してください';
+        res.className = 'map-result-info show error';
+      }
+    })
+    .catch(function() {
+      btn.disabled = false;
+      btn.textContent = '検索';
+      res.textContent = '通信エラー。もう一度お試しください';
+      res.className = 'map-result-info show error';
+    });
+}
+
+function saveHomeInfo() {
+  var p = loadProfile() || { tz: 9 };
+  var hName = document.getElementById('hiHomeName').value.trim();
+  var hLat = parseFloat(document.getElementById('hiHomeLat').value);
+  var hLng = parseFloat(document.getElementById('hiHomeLng').value);
+
+  if (!hName) { alert('住所・地名を入力してください'); return; }
+  if (isNaN(hLat) || isNaN(hLng)) { alert('地図で場所を選択するか検索してください'); return; }
+
+  p.homeName = hName;
+  p.homeLat = hLat;
+  p.homeLng = hLng;
+  p.tz = 9;
+
+  syncHomeToVP(p);
+  saveProfileData(p);
+  renderProfileDisplay();
+  closeHomeInfo();
+}
+
+// ============================================================
 //  HOUSE SYSTEM SETTING
 // ============================================================
 var currentHouse = localStorage.getItem('solara_house_system') || 'placidus';
@@ -503,46 +978,128 @@ function setHouseSystem(val) {
 }
 
 // ============================================================
-//  ORB SETTINGS
+//  ORB SETTINGS (Overlay)
 // ============================================================
-var ORB_DEFAULTS = { conjunction: 2, opposition: 2, trine: 2, square: 2, sextile: 2, quincunx: 2 };
-var ORB_NAMES = { conjunction: 'Conjunction (0°)', opposition: 'Opposition (180°)', trine: 'Trine (120°)', square: 'Square (90°)', sextile: 'Sextile (60°)', quincunx: 'Quincunx (150°)' };
-var currentOrbs = Object.assign({}, ORB_DEFAULTS);
-try {
-  var saved = localStorage.getItem('solara_orb_settings');
-  if (saved) { var o = JSON.parse(saved); for (var k in o) { if (currentOrbs.hasOwnProperty(k)) currentOrbs[k] = o[k]; } }
-} catch(e) {}
+var MAJOR_ASPECTS = [
+  { key: 'conjunction', name: 'Conjunction', angle: '0°', def: 2 },
+  { key: 'opposition',  name: 'Opposition',  angle: '180°', def: 2 },
+  { key: 'trine',       name: 'Trine',       angle: '120°', def: 2 },
+  { key: 'square',      name: 'Square',      angle: '90°', def: 2 },
+  { key: 'sextile',     name: 'Sextile',     angle: '60°', def: 2 }
+];
+var MINOR_ASPECTS = [
+  { key: 'quincunx',    name: 'Quincunx',      angle: '150°', def: 2 },
+  { key: 'semisextile', name: 'Semi-Sextile',   angle: '30°', def: 1 },
+  { key: 'semisquare',  name: 'Semi-Square',    angle: '45°', def: 1 }
+];
+var PATTERN_ORBS = [
+  { key: 'grandtrine',      name: 'Grand Trine',      angle: '120°', def: 3 },
+  { key: 'tsquare_opp',     name: 'T-Square (Opp)',    angle: '180°', def: 3 },
+  { key: 'tsquare_sq',      name: 'T-Square (Sq)',     angle: '90°', def: 2.5 },
+  { key: 'yod_sextile',     name: 'Yod (Sextile)',     angle: '60°', def: 2.5 },
+  { key: 'yod_quincunx',    name: 'Yod (Quincunx)',    angle: '150°', def: 1.5 }
+];
 
-function toggleOrbPanel() {
-  var panel = document.getElementById('orbPanel');
-  if (panel.style.display === 'none') {
-    panel.style.display = 'block';
-    buildOrbSliders();
-  } else {
-    panel.style.display = 'none';
-  }
-}
+var currentOrbs = {};
+var currentPatternOrbs = {};
+(function() {
+  // Init aspect orbs
+  MAJOR_ASPECTS.concat(MINOR_ASPECTS).forEach(function(a) { currentOrbs[a.key] = a.def; });
+  try {
+    var saved = JSON.parse(localStorage.getItem('solara_orb_settings'));
+    if (saved) { for (var k in saved) { if (currentOrbs.hasOwnProperty(k)) currentOrbs[k] = saved[k]; } }
+  } catch(e) {}
+  // Init pattern orbs
+  PATTERN_ORBS.forEach(function(p) { currentPatternOrbs[p.key] = p.def; });
+  try {
+    var saved2 = JSON.parse(localStorage.getItem('solara_pattern_orb_settings'));
+    if (saved2) { for (var k in saved2) { if (currentPatternOrbs.hasOwnProperty(k)) currentPatternOrbs[k] = saved2[k]; } }
+  } catch(e) {}
+})();
 
-function buildOrbSliders() {
-  var c = document.getElementById('orbSliders');
+function buildOrbRows(container, items, store, storeKey) {
   var h = '';
-  var keys = ['conjunction','opposition','trine','square','sextile','quincunx'];
-  for (var i = 0; i < keys.length; i++) {
-    var k = keys[i];
-    h += '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;margin-bottom:4px;border-radius:10px;background:rgba(255,255,255,0.03)">';
-    h += '<span style="font-size:12px;color:#ACACAC;min-width:130px;">' + ORB_NAMES[k] + '</span>';
-    h += '<input type="range" min="1" max="8" step="1" value="' + currentOrbs[k] + '" oninput="updateOrb(\'' + k + '\',this.value)" style="flex:1;margin:0 10px;accent-color:#F9D976;">';
-    h += '<span id="orbVal_' + k + '" style="font-size:13px;color:#F9D976;min-width:22px;text-align:right;">' + currentOrbs[k] + '°</span>';
+  for (var i = 0; i < items.length; i++) {
+    var a = items[i];
+    var val = store[a.key];
+    h += '<div class="orb-row">';
+    h += '<span class="orb-name">' + a.name + ' (' + a.angle + ')</span>';
+    h += '<button class="orb-pm" onclick="stepOrb(\'' + storeKey + '\',\'' + a.key + '\',-0.5)">−</button>';
+    h += '<div class="orb-slider-wrap">';
+    h += '<div class="orb-default-mark" data-def="' + a.def + '"></div>';
+    h += '<input type="range" id="orbSlider_' + a.key + '" min="0.5" max="8" step="0.5" value="' + val + '" oninput="updateOrbVal(\'' + storeKey + '\',\'' + a.key + '\',this.value)">';
+    h += '</div>';
+    h += '<button class="orb-pm" onclick="stepOrb(\'' + storeKey + '\',\'' + a.key + '\',0.5)">+</button>';
+    h += '<span class="orb-val" id="orbVal_' + a.key + '">' + formatOrbVal(val) + '</span>';
     h += '</div>';
   }
-  c.innerHTML = h;
+  document.getElementById(container).innerHTML = h;
 }
 
-function updateOrb(key, val) {
-  currentOrbs[key] = parseInt(val);
-  document.getElementById('orbVal_' + key).textContent = val + '°';
+function formatOrbVal(v) { return (v % 1 === 0) ? v + '°' : v.toFixed(1) + '°'; }
+
+function resetOrbs() {
+  MAJOR_ASPECTS.concat(MINOR_ASPECTS).forEach(function(a) { currentOrbs[a.key] = a.def; });
+  PATTERN_ORBS.forEach(function(p) { currentPatternOrbs[p.key] = p.def; });
+  buildOrbRows('orbMajor', MAJOR_ASPECTS, currentOrbs, 'aspect');
+  buildOrbRows('orbMinor', MINOR_ASPECTS, currentOrbs, 'aspect');
+  buildOrbRows('orbPatterns', PATTERN_ORBS, currentPatternOrbs, 'pattern');
+}
+
+function stepOrb(storeKey, key, delta) {
+  var store = (storeKey === 'aspect') ? currentOrbs : currentPatternOrbs;
+  var val = Math.round((store[key] + delta) * 10) / 10;
+  if (val < 0.5) val = 0.5;
+  if (val > 8) val = 8;
+  store[key] = val;
+  document.getElementById('orbSlider_' + key).value = val;
+  document.getElementById('orbVal_' + key).textContent = formatOrbVal(val);
+}
+
+function openOrbOverlay() {
+  document.getElementById('orbOverlay').classList.add('open');
+  buildOrbRows('orbMajor', MAJOR_ASPECTS, currentOrbs, 'aspect');
+  buildOrbRows('orbMinor', MINOR_ASPECTS, currentOrbs, 'aspect');
+  buildOrbRows('orbPatterns', PATTERN_ORBS, currentPatternOrbs, 'pattern');
+  setTimeout(positionDefaultMarks, 50);
+  window.addEventListener('resize', positionDefaultMarks);
+}
+
+function positionDefaultMarks() {
+  var marks = document.querySelectorAll('.orb-default-mark');
+  for (var i = 0; i < marks.length; i++) {
+    var mark = marks[i];
+    var def = parseFloat(mark.getAttribute('data-def'));
+    var slider = mark.parentElement.querySelector('input[type="range"]');
+    if (!slider) continue;
+    var w = slider.offsetWidth;
+    var thumbR = 8;
+    var ratio = (def - 0.5) / (8 - 0.5);
+    var px = thumbR + ratio * (w - thumbR * 2);
+    mark.style.left = px + 'px';
+  }
+}
+
+function closeOrbOverlay() {
+  document.getElementById('orbOverlay').classList.remove('open');
+}
+
+function updateOrbVal(storeKey, key, val) {
+  val = parseFloat(val);
+  var display = (val % 1 === 0) ? val + '°' : val.toFixed(1) + '°';
+  document.getElementById('orbVal_' + key).textContent = display;
+  if (storeKey === 'aspect') {
+    currentOrbs[key] = val;
+  } else {
+    currentPatternOrbs[key] = val;
+  }
+}
+
+function saveOrbOverlay() {
   localStorage.setItem('solara_orb_settings', JSON.stringify(currentOrbs));
+  localStorage.setItem('solara_pattern_orb_settings', JSON.stringify(currentPatternOrbs));
   updateOrbSummary();
+  closeOrbOverlay();
 }
 
 function updateOrbSummary() {
@@ -553,6 +1110,18 @@ function updateOrbSummary() {
 
 initHouseUI();
 updateOrbSummary();
+
+// Disable House System selection if birth time is unknown
+(function() {
+  var p = loadProfile();
+  if (p && p.birthTimeUnknown) {
+    var row = document.getElementById('houseSystemRow');
+    row.onclick = null;
+    row.style.cursor = 'default';
+    row.style.opacity = '0.35';
+    document.getElementById('houseSystemVal').textContent = '出生時刻が必要です';
+  }
+})();
 </script>
 </body>
 </html>
