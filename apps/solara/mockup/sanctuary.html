@@ -216,37 +216,117 @@
 
     /* ===== Title Diagnosis ===== */
     .td-result-card-wrapper {
-      perspective:800px; cursor:pointer;
+      perspective:1200px; cursor:pointer;
     }
     .td-result-card-inner {
-      position:relative; transition:transform 0.6s ease;
+      position:relative; transition:transform 0.7s ease;
       transform-style:preserve-3d;
+      height:480px;
     }
     .td-result-card-wrapper.flipped .td-result-card-inner {
       transform:rotateY(180deg);
     }
-    .td-result-face {
+    .td-result-face, .td-result-back {
       backface-visibility:hidden; -webkit-backface-visibility:hidden;
+      position:absolute; inset:0;
     }
     .td-result-back {
-      backface-visibility:hidden; -webkit-backface-visibility:hidden;
       transform:rotateY(180deg);
-      position:absolute; inset:0;
     }
     .td-flip-hint {
       font-size:10px; color:rgba(172,172,172,0.4); text-align:center; margin-top:8px;
       letter-spacing:0.5px;
     }
-    .td-result-card {
-      padding:24px 20px 28px; border-radius:16px; text-align:center;
-      border-top:2px solid rgba(249,217,118,0.4);
-      min-height:180px; display:flex; flex-direction:column; justify-content:center;
-      box-sizing:border-box;
+    /* Rich visual title card */
+    .td-vcard {
+      border-radius:16px; overflow:hidden;
+      display:flex; flex-direction:column;
+      justify-content:center; align-items:center;
+      padding:28px 20px 24px; box-sizing:border-box;
+      text-align:center;
+      border:1px solid rgba(249,217,118,0.15);
+      box-shadow:0 4px 30px rgba(0,0,0,0.5), 0 0 60px rgba(249,217,118,0.05);
     }
-    .td-result-main { font-size:18px; font-weight:700; color:#F9D976; }
-    .td-result-class { font-size:14px; color:#EAEAEA; margin-top:4px; }
-    .td-result-light { font-size:12px; color:#ACACAC; margin-top:10px; line-height:1.5; }
-    .td-result-shadow { font-size:12px; color:#ACACAC; margin-top:4px; line-height:1.5; font-style:italic; }
+    .td-vcard-bg {
+      position:absolute; inset:0; z-index:0;
+      background-size:cover; background-position:center;
+    }
+    .td-vcard-overlay {
+      position:absolute; inset:0; z-index:1;
+    }
+    .td-vcard-content {
+      position:relative; z-index:2; width:100%;
+    }
+    .td-vcard-zodiac {
+      display:flex; justify-content:center; gap:48px; margin-bottom:12px;
+    }
+    .td-vcard-zodiac-item {
+      display:flex; flex-direction:column; align-items:center;
+    }
+    .td-vcard-zodiac-item img {
+      width:72px; height:72px;
+      filter:brightness(2) drop-shadow(0 0 12px rgba(249,217,118,0.5)) drop-shadow(0 0 24px rgba(249,217,118,0.2));
+      border-radius:50%;
+      background:radial-gradient(circle, rgba(249,217,118,0.12) 0%, transparent 70%);
+      padding:6px;
+    }
+    .td-vcard-zodiac-label {
+      font-size:10px; color:rgba(234,234,234,0.7); margin-top:5px; letter-spacing:1px;
+      font-weight:300;
+    }
+    .td-vcard-line {
+      width:70%; height:1px; margin:10px auto 12px;
+      background:linear-gradient(90deg, transparent, rgba(249,217,118,0.6), transparent);
+    }
+    .td-vcard-title {
+      font-size:19px; font-weight:700; color:#F9D976; line-height:1.6;
+      text-shadow:0 0 20px rgba(249,217,118,0.4), 0 0 40px rgba(249,217,118,0.15), 0 2px 4px rgba(0,0,0,0.9);
+      margin:4px 0 10px; letter-spacing:0.5px;
+    }
+    .td-vcard-title.shadow-face {
+      color:#EAEAEA;
+      text-shadow:0 0 15px rgba(234,234,234,0.2), 0 2px 4px rgba(0,0,0,0.9);
+    }
+    .td-vcard-class-icon-frame {
+      position:relative; width:148px; height:148px; margin:8px auto 10px;
+      display:flex; align-items:center; justify-content:center;
+      /* Black circle background */
+      background:radial-gradient(circle, #0a0a14 60%, rgba(10,10,20,0.9) 75%, transparent 85%);
+      border-radius:50%;
+    }
+    /* Outer ornamental ring */
+    .td-vcard-class-icon-frame::before {
+      content:''; position:absolute; inset:-6px; border-radius:50%;
+      background:conic-gradient(from 0deg, #F9D976, #E8A840, #C8862A, #E8A840, #F9D976, #E8A840, #C8862A, #E8A840, #F9D976);
+      -webkit-mask:radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 3px));
+      mask:radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 3px));
+      filter:drop-shadow(0 0 6px rgba(249,217,118,0.4));
+    }
+    /* Inner ring + glow */
+    .td-vcard-class-icon-frame::after {
+      content:''; position:absolute; inset:2px; border-radius:50%;
+      border:1px solid rgba(249,217,118,0.25);
+      box-shadow:0 0 40px rgba(249,217,118,0.15), 0 0 80px rgba(249,217,118,0.05),
+                 inset 0 0 30px rgba(249,217,118,0.08);
+    }
+    .td-vcard-class-icon {
+      width:100px; height:100px; display:block; position:relative; z-index:1;
+      filter:brightness(2) drop-shadow(0 0 16px rgba(249,217,118,0.5)) drop-shadow(0 0 32px rgba(249,217,118,0.2));
+    }
+    .td-vcard-class-name {
+      font-size:15px; font-weight:700; color:#EAEAEA; letter-spacing:2px;
+      text-shadow:0 0 8px rgba(234,234,234,0.2), 0 2px 4px rgba(0,0,0,0.8);
+    }
+    .td-vcard-desc {
+      font-size:12px; color:rgba(234,234,234,0.75); margin-top:10px; line-height:1.7;
+      text-shadow:0 1px 3px rgba(0,0,0,0.9);
+      letter-spacing:0.3px;
+    }
+    .td-vcard-label {
+      font-size:10px; letter-spacing:3px; margin-bottom:6px;
+      text-shadow:0 0 8px rgba(249,217,118,0.2), 0 1px 2px rgba(0,0,0,0.8);
+      font-weight:300;
+    }
 
     #titleDiagOverlay {
       position:fixed; inset:0; z-index:600;
@@ -473,17 +553,33 @@
         <div class="section-label">✦ Title Diagnosis</div>
         <div id="titleResultWrapper" style="display:none;" class="td-result-card-wrapper" onclick="this.classList.toggle('flipped')">
           <div class="td-result-card-inner">
-            <div class="td-result-face glass td-result-card">
-              <div class="td-result-label" style="font-size:10px;color:rgba(249,217,118,0.5);letter-spacing:1px;margin-bottom:6px;">✦ LIGHT</div>
-              <div class="td-result-main" id="tdResultLightTitle"></div>
-              <div class="td-result-class" id="tdResultLightClass"></div>
-              <div class="td-result-light" id="tdResultLightDesc"></div>
+            <!-- LIGHT face -->
+            <div class="td-result-face td-vcard">
+              <div class="td-vcard-bg" id="vcardBgLight"></div>
+              <div class="td-vcard-overlay" id="vcardOverlayLight"></div>
+              <div class="td-vcard-content">
+                <div class="td-vcard-label" style="color:rgba(249,217,118,0.5);">✦ LIGHT ✦</div>
+                <div class="td-vcard-zodiac" id="vcardZodiacLight"></div>
+                <div class="td-vcard-line"></div>
+                <div class="td-vcard-title" id="vcardLightTitle"></div>
+                <div class="td-vcard-class-icon-frame"><img class="td-vcard-class-icon" id="vcardClassIconLight" src="" alt=""></div>
+                <div class="td-vcard-class-name" id="vcardLightClassName"></div>
+                <div class="td-vcard-desc" id="vcardLightDesc"></div>
+              </div>
             </div>
-            <div class="td-result-back glass td-result-card">
-              <div class="td-result-label" style="font-size:10px;color:rgba(172,172,172,0.5);letter-spacing:1px;margin-bottom:6px;">✦ SHADOW</div>
-              <div class="td-result-main" id="tdResultShadowTitle" style="color:#EAEAEA;"></div>
-              <div class="td-result-class" id="tdResultShadowClass"></div>
-              <div class="td-result-shadow" id="tdResultShadowDesc"></div>
+            <!-- SHADOW face -->
+            <div class="td-result-back td-vcard">
+              <div class="td-vcard-bg" id="vcardBgShadow"></div>
+              <div class="td-vcard-overlay" id="vcardOverlayShadow"></div>
+              <div class="td-vcard-content">
+                <div class="td-vcard-label" style="color:rgba(172,172,172,0.5);">✦ SHADOW ✦</div>
+                <div class="td-vcard-zodiac" id="vcardZodiacShadow"></div>
+                <div class="td-vcard-line"></div>
+                <div class="td-vcard-title shadow-face" id="vcardShadowTitle"></div>
+                <div class="td-vcard-class-icon-frame"><img class="td-vcard-class-icon" id="vcardClassIconShadow" src="" alt=""></div>
+                <div class="td-vcard-class-name" id="vcardShadowClassName"></div>
+                <div class="td-vcard-desc" style="font-style:italic;" id="vcardShadowDesc"></div>
+              </div>
             </div>
           </div>
           <div class="td-flip-hint">tap to flip</div>
@@ -2569,24 +2665,59 @@ function renderTitleDisplay() {
     return;
   }
 
-  // Show result — Light face (default)
+  // Gather data
   var cls = data.cls;
   var txt = CLASS_TEXT[cls];
   var jpName = CLASS_NAME_JP[cls] || cls;
-  var lightTitle = (data.main.lightJP || data.main.jp);
   var sunSign = localStorage.getItem('solara_title_sun') || '';
   var moonSign = localStorage.getItem('solara_title_moon') || '';
   var t144 = TITLE_144[sunSign] && TITLE_144[sunSign][moonSign];
-  if (t144) lightTitle = t144.light;
+  var lightTitle = t144 ? t144.light : (data.main.lightJP || data.main.jp);
 
-  document.getElementById('tdResultLightTitle').textContent = lightTitle + jpName;
-  document.getElementById('tdResultLightClass').textContent = '— ' + jpName + ' / ' + cls + ' —';
-  document.getElementById('tdResultLightDesc').textContent = '✦ ' + txt.lJP;
+  // Axis for glow color
+  var axis = 'heart';
+  try {
+    var scores = JSON.parse(localStorage.getItem('solara_title_axis'));
+    axis = determineFinalAxisFromScores(scores);
+  } catch(e) {}
+  var axisStyle = AXIS_COLORS[axis] || AXIS_COLORS.heart;
+
+  // Background + overlay (both faces share same background)
+  var bgUrl = SHARE_ASSETS + 'backgrounds/' + (sunSign || 'aries') + '.webp';
+  var overlayBg = 'linear-gradient(180deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.7) 100%)';
+  var glowOverlay = 'radial-gradient(ellipse at 50% 40%, ' + axisStyle.glow + ' 0%, transparent 70%)';
+  var fullOverlay = overlayBg + ', ' + glowOverlay;
+
+  document.getElementById('vcardBgLight').style.backgroundImage = 'url(' + bgUrl + ')';
+  document.getElementById('vcardBgShadow').style.backgroundImage = 'url(' + bgUrl + ')';
+  document.getElementById('vcardOverlayLight').style.background = fullOverlay;
+  document.getElementById('vcardOverlayShadow').style.background = fullOverlay;
+
+  // Zodiac symbols (both faces)
+  var sunSymSrc = SHARE_ASSETS + 'zodiac-symbols/' + (sunSign || 'aries') + '.webp';
+  var moonSymSrc = SHARE_ASSETS + 'zodiac-symbols/' + (moonSign || 'aries') + '.webp';
+  var sunJP = ZODIAC_JP[sunSign] || '';
+  var moonJP = ZODIAC_JP[moonSign] || '';
+  var zodiacHTML =
+    '<div class="td-vcard-zodiac-item"><img src="' + sunSymSrc + '" alt=""><div class="td-vcard-zodiac-label">☉ ' + sunJP + '</div></div>' +
+    '<div class="td-vcard-zodiac-item"><img src="' + moonSymSrc + '" alt=""><div class="td-vcard-zodiac-label">☽ ' + moonJP + '</div></div>';
+  document.getElementById('vcardZodiacLight').innerHTML = zodiacHTML;
+  document.getElementById('vcardZodiacShadow').innerHTML = zodiacHTML;
+
+  // Class icon (both faces)
+  var classIconSrc = SHARE_ASSETS + 'class-icons/' + CLASS_FILE[cls] + '.webp';
+  document.getElementById('vcardClassIconLight').src = classIconSrc;
+  document.getElementById('vcardClassIconShadow').src = classIconSrc;
+
+  // Light face
+  document.getElementById('vcardLightTitle').textContent = lightTitle + jpName;
+  document.getElementById('vcardLightClassName').textContent = '— ' + jpName + ' / ' + cls + ' —';
+  document.getElementById('vcardLightDesc').textContent = '✦ ' + txt.lJP;
 
   // Shadow face
-  document.getElementById('tdResultShadowTitle').textContent = data.main.jp + jpName;
-  document.getElementById('tdResultShadowClass').textContent = '— ' + jpName + ' / ' + cls + ' —';
-  document.getElementById('tdResultShadowDesc').textContent = '✦ ' + txt.sJP;
+  document.getElementById('vcardShadowTitle').textContent = data.main.jp + jpName;
+  document.getElementById('vcardShadowClassName').textContent = '— ' + jpName + ' / ' + cls + ' —';
+  document.getElementById('vcardShadowDesc').textContent = '✦ ' + txt.sJP;
 
   wrapper.style.display = 'block';
 
