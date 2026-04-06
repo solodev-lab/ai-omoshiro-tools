@@ -389,7 +389,7 @@ h1 { font-size: 24px; color: #F6BD60; letter-spacing: 4px; margin-bottom: 8px; }
 </div>
 
 <!-- Astrology View: 占い結果を縦に全表示 -->
-<div id="astrologyView" style="display:none;padding:16px;overflow-y:auto;height:calc(100vh - 120px);">
+<div id="astrologyView" style="display:none;position:absolute;top:0;left:0;right:0;bottom:70px;padding:16px 16px 20px 16px;overflow-y:auto;-webkit-overflow-scrolling:touch;">
   <div id="astrologyCardsAll"></div>
 </div>
 
@@ -1158,10 +1158,12 @@ function setChartMode(mode) {
   var astrologyView = document.getElementById('astrologyView');
 
   var bottomSheet = document.getElementById('bottomSheet');
+  var banner = document.getElementById('noProfileBanner');
   if (mode === 'astrology') {
     mainLayout.style.display = 'none';
     astrologyView.style.display = 'block';
     if (bottomSheet) bottomSheet.style.display = 'none';
+    if (banner) banner.style.display = 'none';
     buildTodayView();
     return;
   }
