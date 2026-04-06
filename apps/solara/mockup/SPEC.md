@@ -274,20 +274,73 @@ FORTUNE_CATEGORIES = [
 ---
 
 #### Star Atlas タブ
-- **星座カードグリッド**: 2カラム、ミニキャンバス（Catmull-Rom スプライン描画）
-- **リプレイオーバーレイ**: 300×300 キャンバス、2.8秒アニメーション再生
-- **星座形成ロジック**:
-  - 全プレイ日（大アルカナ＋小アルカナ）のドットを時系列で接続
-  - 大アルカナ = 主要ノード（大きく描画）、小アルカナ = 中継点（小さく描画）
-  - 未プレイ日はスキップ → 星座の「切れ目」に（毎日引くほど密な星座、サボるほど疎な星座）
-  - Catmull-Rom スプラインで滑らかな曲線
+- **星座カードグリッド**: 2カラム、ミニキャンバス描画
+- **リプレイオーバーレイ**: 300×300 キャンバス、結晶化アニメーション再生
+- **星座イラスト背景**: 名詞に対応するイラスト（白線画WebP）を15-20%不透明度でオーバーレイ
+
+#### 星座形成ロジック（v2: 3Dアナモルフィック方式）
+
+**旧方式（廃止）**: 全ドットをスパイラル上に配置 → Catmull-Romで全接続 → 斜め線にしかならない
+
+**新方式: 3D逆投影 + アンカー/フィールドスター分離**
+
+1. **3D逆投影（日々のプロット）**:
+   - 最終的な2D星座形状を先に決定（アンカー配置 → nearest-neighbor巡回）
+   - 各ドットにランダムなz座標（奥行き）を付与 → 3D空間に配置
+   - 3層構造: Layer 0（奥 z=-0.6〜-0.2）/ Layer 1（中 z=-0.2〜0.2）/ Layer 2（手前 z=0.2〜0.6）
+   - カードIDベースでlayer振り分け（決定論的）
+   - 日々の表示はカメラ角度θ=55°（斜め） → ドットがバラバラに見える
+
+2. **結晶化アニメーション（周期完了時）**:
+   - カメラ角度θを 55° → 0°（正面）へ3秒でイージング
+   - z成分が消失 → ドットが2D星座位置に収束（「星が揃う」瞬間）
+   - 投影計算: `screenX = x * cos(θ) + z * sin(θ)`, `screenY = y`
+   - 線が引かれる（1.5秒） → アンカー間を直線接続
+   - 星座イラストがフェードイン（2秒） → 名詞に対応する白線画が背景に出現
+   - 星座名 + レアリティがスタンプ表示（0.8秒）
+
+3. **アンカー/フィールドスター分離**:
+   - **アンカー（Major Arcana 6-9枚）**: 星座の骨格を形成、直線で接続
+   - **フィールドスター（Minor Arcana）**: 背景の散在星として小さく表示（接続しない）
+   - Major Arcanaが5枚未満の場合、Minor Arcanaから昇格
+   - **nearest-neighbor巡回**: アンカーを最近傍順に接続 → 線の交差を防止
+   - **直線接続**（Catmull-Romスプライン廃止） → 実際の星座図のようなクリーンな形
+
+4. **ドット配置（Golden Angle方式）**:
+   - `angle = cardId × 137.508° + baseRotation`（黄金角で全方向に均等分散）
+   - `distance = f(dayIndex, cardId)`（日数 + カード番号で距離決定）
+   - Major Arcanaは外側寄り（目立つ位置）
+   - 結果: 毎回ユニークかつ美しい形状を自動生成
+
+#### 星座イラスト背景
+- **方式**: 名詞ごとに1枚の白線画イラスト（黒背景WebP, 512×512）
+- **合成**: screenブレンドで黒が透過 → 白線画だけが星座の背景に浮かぶ
+- **不透明度**: 15-20%（うっすら表示、星座の補助的役割）
+- **色相シフト**: 形容詞に応じて色味を変更（Golden→暖色、Silver→寒色、Crimson→赤系 等）
+- **格納**: `share-assets/constellation-art/{noun}.webp`
+- **生成**: Gemini直接（gemini-3.1-flash-image-preview）、コスト$0
 
 #### Star Atlas 名前生成
 - **seedCard**: 周期内で最頻出の大アルカナ（fallback: 最頻出スートのエース）
 - **テンプレート**: `The [形容詞] [名詞]`（EN）/ `[形容詞][名詞]`（JP）
-- **語彙**: 各10語（Golden/Silver/Crimson/Ethereal/Radiant/Silent/Infinite/Luminous/Frozen/Mystic × Crown/Arrow/Veil/Flame/Chalice/Mirror/Gate/Wing/Orbit/Sigil）
+- **語彙（v2拡張）**: 形容詞10語 × 名詞35語 = 350通り
+  - 形容詞: Golden/Silver/Crimson/Ethereal/Radiant/Silent/Infinite/Luminous/Frozen/Mystic
+  - 名詞（35語）: Crown/Arrow/Veil/Flame/Chalice/Mirror/Gate/Wing/Orbit/Sigil/Serpent/Compass/Lantern/Phoenix/Anchor/Harp/Bloom/Scepter/Hourglass/Feather/Throne/Crystal/Tempest/Labyrinth/Crescent/Lotus/Raven/Bridge/Comet/Mask/Fountain/Sword/Crest/Scroll/Prism
 - **ハッシュ**: `seedCardId + ISO日付` → 決定的生成
-- **将来**: Claude API (Sonnet) で動的生成
+
+#### レアリティシステム（数学的）
+- 星座名の出現確率をハッシュ分布から算出（サーバー不要）
+- **ランク**:
+  - ★★★★★ Mythic    — 出現率 1%以下
+  - ★★★★  Legendary — 出現率 1-2%
+  - ★★★   Rare      — 出現率 2-4%
+  - ★★    Uncommon  — 出現率 4-7%
+  - ★     Common    — 出現率 7%以上
+- **表示場所**: Star Atlasカード、結晶化演出、シェアカード
+- **将来計画**: Cloudflare Worker経由でリアルユーザー集計に移行
+  - `POST /api/constellation-stats` で結晶化時に報告
+  - `GET /api/constellation-stats/{name}` で実測出現率を取得
+  - リアル集計と数学的レアリティを併記
 
 #### データ永続化 (SharedPreferences)
 | キー | 用途 |

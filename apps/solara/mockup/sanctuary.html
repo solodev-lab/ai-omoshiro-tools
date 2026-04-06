@@ -1956,59 +1956,329 @@ function retryDiagnosis() {
   showRound(0);
 }
 
-// --- Share ---
+// --- Share Card System (Image Composite) ---
+
+var SHARE_ASSETS = 'share-assets/';
+
+// Zodiac Unicode symbols for overlay
+var ZODIAC_GLYPHS = {
+  aries:'♈', taurus:'♉', gemini:'♊', cancer:'♋',
+  leo:'♌', virgo:'♍', libra:'♎', scorpio:'♏',
+  sagittarius:'♐', capricorn:'♑', aquarius:'♒', pisces:'♓'
+};
+
+// Zodiac JP names
+var ZODIAC_JP = {
+  aries:'牡羊座', taurus:'牡牛座', gemini:'双子座', cancer:'蟹座',
+  leo:'獅子座', virgo:'乙女座', libra:'天秤座', scorpio:'蠍座',
+  sagittarius:'射手座', capricorn:'山羊座', aquarius:'水瓶座', pisces:'魚座'
+};
+
+// Class filename mapping (Fate Weaver → fate_weaver)
+var CLASS_FILE = {};
+(function() {
+  var classes = ['Knight','Dragoon','Paladin','Overlord','Spellblade',
+    'Sage','Strategist','Chancellor','Judge','Wizard',
+    'Cleric','Astrologer','Oracle','Fate Weaver','Druid',
+    'Trickster','Liberator','Phantom','Rogue','Alchemist',
+    'Bard','Sorcerer','Enchanter','Emperor','Chronomancer'];
+  for (var i = 0; i < classes.length; i++) {
+    CLASS_FILE[classes[i]] = classes[i].toLowerCase().replace(' ', '_');
+  }
+})();
+
+// Axis accent colors
+var AXIS_COLORS = {
+  power:  {accent:'#ff4444', glow:'rgba(255,68,68,0.3)'},
+  mind:   {accent:'#6bb5ff', glow:'rgba(107,181,255,0.3)'},
+  spirit: {accent:'#9b6bff', glow:'rgba(155,107,255,0.3)'},
+  shadow: {accent:'#c06bff', glow:'rgba(192,107,255,0.3)'},
+  heart:  {accent:'#F9D976', glow:'rgba(249,217,118,0.3)'}
+};
+
+// Image preload cache
+var _shareImgCache = {};
+
+function loadShareImage(src) {
+  return new Promise(function(resolve, reject) {
+    if (_shareImgCache[src]) { resolve(_shareImgCache[src]); return; }
+    var img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = function() { _shareImgCache[src] = img; resolve(img); };
+    img.onerror = function() { reject(new Error('Failed to load: ' + src)); };
+    img.src = src;
+  });
+}
 
 function shareTitle() {
   var data = loadTitleData();
   if (!data) return;
   var cls = data.cls;
   var txt = CLASS_TEXT[cls];
-  var axisColors = {power:'#441111',mind:'#112244',spirit:'#221144',shadow:'#110022',heart:'#332200'};
   var axis = null;
-  try { var scores = JSON.parse(localStorage.getItem('solara_title_axis')); axis = determineFinalAxisFromScores(scores); } catch(e){}
+  try {
+    var scores = JSON.parse(localStorage.getItem('solara_title_axis'));
+    axis = determineFinalAxisFromScores(scores);
+  } catch(e) {}
+  axis = axis || 'heart';
 
+  var p = loadProfile();
+  var sunSign = getSunSign(p.birthDate);
+  var moonSign = getMoonSign(p.birthDate, p.birthTime);
+  var axisStyle = AXIS_COLORS[axis] || AXIS_COLORS.heart;
+
+  // Load all required images
+  var bgSrc = SHARE_ASSETS + 'backgrounds/' + sunSign + '.webp';
+  var classSrc = SHARE_ASSETS + 'class-icons/' + CLASS_FILE[cls] + '.webp';
+  var sunSrc = SHARE_ASSETS + 'zodiac-symbols/' + sunSign + '.webp';
+  var moonSrc = SHARE_ASSETS + 'zodiac-symbols/' + moonSign + '.webp';
+
+  // Show loading indicator
+  var shareBtn = document.querySelector('.td-share-btn');
+  if (shareBtn) shareBtn.textContent = 'Generating...';
+
+  Promise.all([
+    loadShareImage(bgSrc),
+    loadShareImage(classSrc),
+    loadShareImage(sunSrc),
+    loadShareImage(moonSrc)
+  ]).then(function(images) {
+    var bgImg = images[0];
+    var classImg = images[1];
+    var sunImg = images[2];
+    var moonImg = images[3];
+
+    renderShareCard(bgImg, classImg, sunImg, moonImg, {
+      mainTitle: data.main,
+      className: cls,
+      classText: txt,
+      sunSign: sunSign,
+      moonSign: moonSign,
+      axis: axis,
+      axisStyle: axisStyle
+    });
+
+    if (shareBtn) shareBtn.textContent = 'Share Your Title ✦';
+  }).catch(function(err) {
+    console.error('Share card image load error:', err);
+    // Fallback: render without images
+    renderShareCardFallback(data, cls, txt, axis, sunSign, moonSign, axisStyle);
+    if (shareBtn) shareBtn.textContent = 'Share Your Title ✦';
+  });
+}
+
+function renderShareCard(bgImg, classImg, sunImg, moonImg, info) {
   var canvas = document.getElementById('tdShareCanvas');
   var ctx = canvas.getContext('2d');
   var w = 1080, h = 1920;
 
-  // Background
-  var bg = axisColors[axis] || '#111111';
-  ctx.fillStyle = bg;
-  ctx.fillRect(0, 0, w, h);
-  var grd = ctx.createRadialGradient(w/2, h/2, 0, w/2, h/2, h*0.6);
-  grd.addColorStop(0, 'rgba(249,217,118,0.08)');
-  grd.addColorStop(1, 'transparent');
-  ctx.fillStyle = grd;
+  // 1. Draw background image (cover-fit)
+  drawCover(ctx, bgImg, w, h);
+
+  // 2. Dark overlay for text readability
+  ctx.fillStyle = 'rgba(0,0,0,0.45)';
   ctx.fillRect(0, 0, w, h);
 
-  // Title
-  ctx.fillStyle = '#F9D976';
-  ctx.font = '700 64px Lato, sans-serif';
+  // 3. Vignette effect
+  var vig = ctx.createRadialGradient(w/2, h*0.4, w*0.2, w/2, h*0.4, w*0.9);
+  vig.addColorStop(0, 'rgba(0,0,0,0)');
+  vig.addColorStop(1, 'rgba(0,0,0,0.5)');
+  ctx.fillStyle = vig;
+  ctx.fillRect(0, 0, w, h);
+
+  // 4. Axis-colored glow at center
+  var glow = ctx.createRadialGradient(w/2, h*0.42, 0, w/2, h*0.42, w*0.5);
+  glow.addColorStop(0, info.axisStyle.glow);
+  glow.addColorStop(1, 'transparent');
+  ctx.fillStyle = glow;
+  ctx.fillRect(0, 0, w, h);
+
+  // 5. Top section: "YOUR SOUL TITLE" label
   ctx.textAlign = 'center';
-  ctx.fillText(data.main.jp, w/2, h*0.35);
+  ctx.fillStyle = 'rgba(249,217,118,0.5)';
+  ctx.font = '300 24px Lato, sans-serif';
+  ctx.letterSpacing = '6px';
+  ctx.fillText('✦  Y O U R   S O U L   T I T L E  ✦', w/2, h*0.12);
+
+  // 6. Zodiac symbols (sun left, moon right) — screen blend removes black bg
+  var iconSize = 100;
+  ctx.globalCompositeOperation = 'screen';
+  ctx.drawImage(sunImg, w/2 - 180 - iconSize/2, h*0.16, iconSize, iconSize);
+  ctx.drawImage(moonImg, w/2 + 180 - iconSize/2, h*0.16, iconSize, iconSize);
+  ctx.globalCompositeOperation = 'source-over';
+
+  // Sun/Moon labels
+  ctx.fillStyle = 'rgba(234,234,234,0.6)';
+  ctx.font = '300 18px Lato, sans-serif';
+  ctx.fillText('☉ ' + ZODIAC_JP[info.sunSign], w/2 - 180, h*0.16 + iconSize + 24);
+  ctx.fillText('☽ ' + ZODIAC_JP[info.moonSign], w/2 + 180, h*0.16 + iconSize + 24);
+
+  // 7. Decorative line
+  var lineY = h*0.30;
+  var lineGrd = ctx.createLinearGradient(w*0.2, lineY, w*0.8, lineY);
+  lineGrd.addColorStop(0, 'transparent');
+  lineGrd.addColorStop(0.3, info.axisStyle.accent);
+  lineGrd.addColorStop(0.5, '#F9D976');
+  lineGrd.addColorStop(0.7, info.axisStyle.accent);
+  lineGrd.addColorStop(1, 'transparent');
+  ctx.strokeStyle = lineGrd;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(w*0.15, lineY);
+  ctx.lineTo(w*0.85, lineY);
+  ctx.stroke();
+
+  // 8. Main title (JP) — big, golden
+  ctx.fillStyle = '#F9D976';
+  ctx.font = '700 72px Lato, sans-serif';
+  ctx.shadowColor = 'rgba(249,217,118,0.4)';
+  ctx.shadowBlur = 20;
+  ctx.fillText(info.mainTitle.jp, w/2, h*0.37);
+  ctx.shadowBlur = 0;
+
+  // Main title (EN) — smaller, muted gold
+  ctx.font = '300 36px Lato, sans-serif';
+  ctx.fillStyle = 'rgba(249,217,118,0.55)';
+  ctx.fillText(info.mainTitle.en, w/2, h*0.37 + 60);
+
+  // 9. Class icon (centered) — screen blend removes black bg
+  var classIconSize = 160;
+  ctx.globalCompositeOperation = 'screen';
+  ctx.drawImage(classImg, w/2 - classIconSize/2, h*0.46, classIconSize, classIconSize);
+  ctx.globalCompositeOperation = 'source-over';
+
+  // 10. Class name
+  ctx.fillStyle = '#EAEAEA';
+  ctx.font = '700 52px Lato, sans-serif';
+  ctx.shadowColor = 'rgba(0,0,0,0.5)';
+  ctx.shadowBlur = 10;
+  ctx.fillText('— ' + info.className + ' —', w/2, h*0.56 + 48);
+  ctx.shadowBlur = 0;
+
+  // 11. Light text (崇高)
+  ctx.fillStyle = '#EAEAEA';
+  ctx.font = '400 30px Lato, sans-serif';
+  ctx.fillText('✦ ' + info.classText.lJP, w/2, h*0.68);
+  ctx.font = '300 22px Lato, sans-serif';
+  ctx.fillStyle = 'rgba(234,234,234,0.5)';
+  ctx.fillText(info.classText.lEN, w/2, h*0.68 + 40);
+
+  // 12. Shadow text (本音)
+  ctx.fillStyle = 'rgba(172,172,172,0.85)';
+  ctx.font = 'italic 300 28px Lato, sans-serif';
+  ctx.fillText('✦ ' + info.classText.sJP, w/2, h*0.76);
+  ctx.font = 'italic 300 20px Lato, sans-serif';
+  ctx.fillStyle = 'rgba(172,172,172,0.5)';
+  ctx.fillText(info.classText.sEN, w/2, h*0.76 + 36);
+
+  // 13. Bottom decorative line
+  var lineY2 = h*0.85;
+  ctx.strokeStyle = lineGrd;
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(w*0.25, lineY2);
+  ctx.lineTo(w*0.75, lineY2);
+  ctx.stroke();
+
+  // 14. Branding
+  ctx.fillStyle = 'rgba(249,217,118,0.4)';
+  ctx.font = '300 30px Lato, sans-serif';
+  ctx.fillText('✦ SOLARA ✦', w/2, h*0.89);
+  ctx.font = '300 18px Lato, sans-serif';
+  ctx.fillStyle = 'rgba(172,172,172,0.3)';
+  ctx.fillText('Your Cosmic Soul Title', w/2, h*0.89 + 32);
+
+  // Download
+  downloadCanvas(canvas);
+}
+
+function renderShareCardFallback(data, cls, txt, axis, sunSign, moonSign, axisStyle) {
+  var canvas = document.getElementById('tdShareCanvas');
+  var ctx = canvas.getContext('2d');
+  var w = 1080, h = 1920;
+
+  // Gradient background fallback
+  var bgGrd = ctx.createLinearGradient(0, 0, 0, h);
+  bgGrd.addColorStop(0, '#0a0a14');
+  bgGrd.addColorStop(0.5, '#0c1d3a');
+  bgGrd.addColorStop(1, '#020408');
+  ctx.fillStyle = bgGrd;
+  ctx.fillRect(0, 0, w, h);
+
+  // Glow
+  var glow = ctx.createRadialGradient(w/2, h*0.4, 0, w/2, h*0.4, w*0.5);
+  glow.addColorStop(0, axisStyle.glow);
+  glow.addColorStop(1, 'transparent');
+  ctx.fillStyle = glow;
+  ctx.fillRect(0, 0, w, h);
+
+  // Title label
+  ctx.textAlign = 'center';
+  ctx.fillStyle = 'rgba(249,217,118,0.5)';
+  ctx.font = '300 24px Lato, sans-serif';
+  ctx.fillText('✦  Y O U R   S O U L   T I T L E  ✦', w/2, h*0.15);
+
+  // Zodiac glyphs
+  ctx.font = '300 80px Lato, sans-serif';
+  ctx.fillStyle = 'rgba(249,217,118,0.35)';
+  ctx.fillText(ZODIAC_GLYPHS[sunSign] || '☉', w/2 - 160, h*0.23);
+  ctx.fillText(ZODIAC_GLYPHS[moonSign] || '☽', w/2 + 160, h*0.23);
+  ctx.font = '300 16px Lato, sans-serif';
+  ctx.fillStyle = 'rgba(234,234,234,0.5)';
+  ctx.fillText('☉ ' + ZODIAC_JP[sunSign], w/2 - 160, h*0.23 + 36);
+  ctx.fillText('☽ ' + ZODIAC_JP[moonSign], w/2 + 160, h*0.23 + 36);
+
+  // Main title
+  ctx.fillStyle = '#F9D976';
+  ctx.font = '700 68px Lato, sans-serif';
+  ctx.shadowColor = 'rgba(249,217,118,0.4)';
+  ctx.shadowBlur = 20;
+  ctx.fillText(data.main.jp, w/2, h*0.37);
+  ctx.shadowBlur = 0;
   ctx.font = '300 36px Lato, sans-serif';
   ctx.fillStyle = 'rgba(249,217,118,0.5)';
-  ctx.fillText(data.main.en, w/2, h*0.35 + 60);
+  ctx.fillText(data.main.en, w/2, h*0.37 + 56);
 
   // Class
   ctx.fillStyle = '#EAEAEA';
   ctx.font = '700 48px Lato, sans-serif';
-  ctx.fillText('— ' + cls + ' —', w/2, h*0.48);
+  ctx.fillText('— ' + cls + ' —', w/2, h*0.50);
 
-  // Shadow text
-  ctx.fillStyle = '#ACACAC';
-  ctx.font = '300 32px Lato, sans-serif';
-  ctx.fillText(txt.sJP, w/2, h*0.58);
-  ctx.font = '300 24px Lato, sans-serif';
-  ctx.fillStyle = 'rgba(172,172,172,0.6)';
-  ctx.fillText(txt.sEN, w/2, h*0.58 + 50);
+  // Light/Shadow
+  ctx.fillStyle = '#EAEAEA';
+  ctx.font = '400 28px Lato, sans-serif';
+  ctx.fillText('✦ ' + txt.lJP, w/2, h*0.62);
+  ctx.fillStyle = 'rgba(172,172,172,0.8)';
+  ctx.font = 'italic 300 26px Lato, sans-serif';
+  ctx.fillText('✦ ' + txt.sJP, w/2, h*0.68);
 
   // Branding
   ctx.fillStyle = 'rgba(249,217,118,0.3)';
   ctx.font = '300 28px Lato, sans-serif';
   ctx.fillText('✦ SOLARA ✦', w/2, h*0.90);
 
-  // Download
+  downloadCanvas(canvas);
+}
+
+function drawCover(ctx, img, w, h) {
+  var imgRatio = img.width / img.height;
+  var canvasRatio = w / h;
+  var sw, sh, sx, sy;
+  if (imgRatio > canvasRatio) {
+    sh = img.height;
+    sw = img.height * canvasRatio;
+    sx = (img.width - sw) / 2;
+    sy = 0;
+  } else {
+    sw = img.width;
+    sh = img.width / canvasRatio;
+    sx = 0;
+    sy = (img.height - sh) / 2;
+  }
+  ctx.drawImage(img, sx, sy, sw, sh, 0, 0, w, h);
+}
+
+function downloadCanvas(canvas) {
   var link = document.createElement('a');
   link.download = 'solara-title.png';
   link.href = canvas.toDataURL('image/png');

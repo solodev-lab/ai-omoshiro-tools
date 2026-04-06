@@ -528,3 +528,71 @@
 - 矛盾チェック実施: 5箇所の明確な矛盾を修正（獅子×天秤、獅子×水瓶、蠍×水瓶、魚×天秤、魚×魚）
 - メモリ更新: project_solara_title_system.md（144称号完成・次タスク更新）
 - 次のタスク: sanctuary.htmlへの144個別テキスト組み込み
+
+## 2026-04-06 セッション: 称号シェアカード画像合成システム実装
+
+### 実施内容
+- **Nanobanana2 (fal.ai) で画像アセット49枚生成**
+  - 背景画像 12枚（太陽星座別、9:16、2K）: `share-assets/backgrounds/`
+  - クラスアイコン 25枚（1:1、1K）: `share-assets/class-icons/`
+  - 星座シンボル 12枚（1:1、1K）: `share-assets/zodiac-symbols/`
+  - 生成スクリプト: `apps/solara/mockup/generate_share_assets.py`
+
+- **shareTitle() を画像合成版に書き換え**（sanctuary.html）
+  - 背景画像（太陽星座）+ クラスアイコン + 星座シンボル + テキストオーバーレイ
+  - Screen合成モードで黒背景アイコンを透過合成
+  - フォールバック（画像ロード失敗時）も実装
+  - 新規追加: ZODIAC_GLYPHS, ZODIAC_JP, CLASS_FILE, AXIS_COLORS, loadShareImage()
+
+### 技術詳細
+- Canvas 1080×1920 → PNG ダウンロード
+- `globalCompositeOperation = 'screen'` で黒背景PNG → 透過合成
+- Promise.all で4画像を並列ロード → renderShareCard() で合成
+- drawCover() で背景をcover-fit描画
+
+### アセットコスト
+- fal.ai Nanobanana2: 約$5（49枚）
+
+### 未対応
+- Sanctuary画面内の称号表示にもアイコンを使う（現在はテキストのみ）
+
+## 2026-04-06 セッション: 称号シェアカード + Star Atlas v2設計
+
+### 称号シェアカード画像合成システム
+- Nanobanana2 (fal.ai) で画像アセット49枚生成
+  - 背景12枚（太陽星座別）: share-assets/backgrounds/
+  - クラスアイコン25枚: share-assets/class-icons/
+  - 星座シンボル12枚: share-assets/zodiac-symbols/
+  - Gemini背景再生成1枚（gemini.png）
+- shareTitle() を画像合成版に書き換え（sanctuary.html）
+  - 背景 + アイコン + テキストオーバーレイをCanvas合成
+  - screenブレンドで黒背景PNG透過合成
+  - フォールバック描画も実装
+- 画像最適化: 125MB → 3MB（WebP変換 + リサイズ）
+  - 背景: 1080×1920 WebP q85
+  - アイコン/シンボル: 256×256 WebP q85
+  - 星座イラスト: 512×512 WebP q85
+
+### Star Atlas v2設計（SPEC.md反映済み）
+- **旧方式の問題発見**: スパイラル配置 + Catmull-Rom → 常に同じ斜め線
+- **新方式: 3Dアナモルフィック**:
+  - 3層構造（奥/中/手前）にドット配置
+  - カメラ55°→0°回転で星座が「揃う」結晶化演出
+  - アンカー（Major Arcana）のみ直線接続、Minor Arcanaは散在星
+  - Golden Angle配置でユニークな形状を自動生成
+- **星座イラスト背景**: 名詞ごとに白線画（Gemini直で$0生成）
+  - テスト5枚生成済み（crown/arrow/wing/flame/chalice）
+  - 星座ガイドブックの神話画オーバーレイ方式
+- **レアリティシステム**: 数学的（Phase 1）→ リアル集計（Phase 2）
+- **名前拡張**: 10形容詞 × 35名詞 = 350通り
+
+### コスト
+- fal.ai: 約$4.52（今後はGemini直で$0に移行）
+- 今後の画像生成は全てGemini直接を使用
+
+### 注意・未実装
+- constellation_painter.dart: v2（アンカー/フィールド分離 + 直線）に要書き換え
+- galaxy_screen.dart: 3D逆投影 + 結晶化カメラアニメに要書き換え
+- galaxy.html: 同様にv2に要更新
+- 残り星座イラスト30枚の生成（名詞拡張後）
+- レアリティ計算ロジックの実装
