@@ -160,7 +160,7 @@ FORTUNE_CATEGORIES = [
   - ✅ Gemini 2.5 Flash API でカード固有の鑑定文を動的生成（実装済み）
   - 450字程度、カード象徴・エレメント・支配惑星を織り込み
   - フォールバック: APIエラー時はエレメント別テンプレート表示
-  - 日キャッシュ: `tarot_ai_reading_{cardId}_{date}`
+  - 日キャッシュ: `tarot_ai_reading_{cardId}_{date}`（キャッシュ時は即表示、初回のみタイプライター演出）
 - **vibe_score計算・保存**: `applyToMap()` 時に `calcVibeScore()` → `saveVibe()`
 
 ### 4. Galaxy (`galaxy_screen.dart`) — Flutter実装済み
