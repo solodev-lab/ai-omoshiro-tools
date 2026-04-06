@@ -631,3 +631,20 @@
 - 重複なし保証を仕様に追加
 - 既存の星座イラスト5枚削除（再生成予定）
 - 将来アプデで名詞追加する拡張設計は維持
+
+## 2026-04-07 セッション: Gemini AI占い動的生成 + Map UI改善
+- Map: セクター扇色をFORTUNEカテゴリに連動（getSectorColor()追加、FORTUNE_COLORS定義）
+- Map: レイヤー/VP/検索ボタンを右端プルタブ→左側縦並び40px丸ボタンに移動
+- Map: レイヤーパネル・VPパネルをボタン右横に展開する形に変更
+- Tarot: Gemini 2.5 Flash APIでカード固有鑑定文を動的生成（api_proxy.py経由）
+- Horo星読み: lastAspectsFoundからアスペクトテキスト化→Gemini APIで5カテゴリ鑑定文生成
+- api_proxy.py新規: /api/tarot-reading + /api/fortune-reading、ポート3915
+- thinkingBudget:0 設定でFlashの思考トークン消費を防止（MAX_TOKENS問題解決）
+- SPEC.md更新（AI生成実装済みマーク、セクター色仕様、ファイル構成にapi_proxy.py追加）
+- コミット: f732316
+
+## 2026-04-07 セッション追記: スクロール修正 + キャッシュ即表示
+- Horo星読みタブ: スクロール壊れ修正（position:absolute+bottom:70px）、バナー非表示
+- Tarot: キャッシュヒット時はタイプライター省略で即表示
+- コミット: 23ac7bb (スクロール修正), 3d51e3d (タロットキャッシュ即表示)
+- api_proxy.pyの最終ポート: 3915

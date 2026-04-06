@@ -654,7 +654,7 @@ const NOUN_TEMPLATES = {
   5: [[.5,.5],[.25,.2],[.75,.2],[.85,.5],[.75,.8],[.25,.8],[.15,.5]],      // Singularity 特異点
 
   // === 神話の生き物 ===
-  6: [[.5,.15],[.4,.35],[.6,.35],[.2,.5],[.8,.5],[.15,.7],[.85,.7]],       // Phoenix フェニックス
+  6: [[.5,.8],[.4,.6],[.6,.6],[.2,.4],[.8,.4],[.15,.2],[.85,.2]],          // Phoenix フェニックス (翼上、体下)
   7: [[.7,.2],[.55,.3],[.4,.45],[.5,.55],[.65,.65],[.5,.8],[.3,.75]],      // Dragon ドラゴン (頭右上、体S字で左下へ)
   8: [[.65,.2],[.75,.35],[.6,.5],[.45,.55],[.35,.4],[.25,.6],[.3,.75]],    // Griffin グリフィン (頭右上、体左下へ)
   9: [[.65,.15],[.6,.3],[.55,.5],[.5,.65],[.45,.8],[.7,.35]],              // Unicorn ユニコーン (角右上、体左下へ)
@@ -1010,6 +1010,35 @@ const GALAXY_CYCLES = DEMO_SPECS.map((spec, i) => {
   const [nounIdx, adjIdx, seedCard] = spec;
   return forceNameDemoCycle(i, seedCard, makeDemoReadings(seedCard, 14 + (i % 6), 100 + i * 37), adjIdx, nounIdx);
 });
+
+/* ==================== CONSTELLATION ART PRELOAD ==================== */
+const NOUN_FILENAMES = [
+  'orbit','comet','meteor','nova','crescent','singularity',
+  'phoenix','dragon','griffin','unicorn','pegasus','kraken','ouroboros',
+  'serpent','trident','anchor','bow','butterfly','leviathan',
+  'arrow','sword','shield','key','lantern','excalibur',
+  'crown','chalice','throne','scepter','jewel','philosophers_stone',
+  'flame','tempest','pyramid','ember','glacier','yggdrasil',
+  'gate','tower','lighthouse','citadel','babel',
+  'emblem','mirror','hourglass','scale','mask','pandora',
+  'harp','bell','lyre','compass',
+  'wing','feather','eye','halo','third_eye',
+  'crux','prism','ring','mobius',
+];
+const ART_IMAGES = {};
+const ART_BASE = 'share-assets/constellation-art/';
+function preloadConstellationArt() {
+  NOUN_FILENAMES.forEach((name, idx) => {
+    const img = new Image();
+    img.src = ART_BASE + name + '.webp';
+    img.onload = () => { ART_IMAGES[idx] = img; };
+  });
+}
+preloadConstellationArt();
+
+const NOUN_ART_TRANSFORMS = {
+  4: {flipX: true}, // Crescent 三日月: 左右反転
+};
 
 /* ==================== BACKGROUND ==================== */
 const bgC=document.getElementById('bgCanvas');
@@ -1407,6 +1436,21 @@ function drawCycleOnCanvas(canvas, cycle, progress, size, camAngle) {
   const bg = ctx.createRadialGradient(S/2, S/2, 0, S/2, S/2, S*0.7);
   bg.addColorStop(0, cycle.bgGrad[0]); bg.addColorStop(1, cycle.bgGrad[1]);
   ctx.fillStyle = bg; ctx.fillRect(0, 0, S, S);
+
+  // Constellation illustration overlay (screen blend, 18% opacity)
+  const artImg = ART_IMAGES[cycle.nounIdx];
+  if (artImg && artImg.complete) {
+    ctx.save();
+    ctx.globalCompositeOperation = 'screen';
+    ctx.globalAlpha = 0.18 * Math.min(1, progress * 2);
+    const xf = NOUN_ART_TRANSFORMS[cycle.nounIdx];
+    if (xf) {
+      ctx.translate(xf.flipX ? S : 0, xf.flipY ? S : 0);
+      ctx.scale(xf.flipX ? -1 : 1, xf.flipY ? -1 : 1);
+    }
+    ctx.drawImage(artImg, 0, 0, S, S);
+    ctx.restore();
+  }
 
   // Separate anchors (Major) and fields (Minor)
   const anchors = [], fields = [];
