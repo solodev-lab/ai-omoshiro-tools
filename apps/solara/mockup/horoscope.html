@@ -1191,20 +1191,119 @@ function setChartMode(mode) {
   resetFilters();
 }
 
+var FORTUNE_API_URL = 'http://127.0.0.1:3915/api/fortune-reading';
+var FORTUNE_CAT_IDS = ['overall','love','money','career','communication'];
+
+function aspectsToText(aspects, filterPlanets) {
+  if (!aspects || !aspects.length) return 'アスペクトデータなし';
+  var filtered = aspects;
+  if (filterPlanets) {
+    filtered = aspects.filter(function(a) {
+      return filterPlanets.indexOf(a.p1) >= 0 || filterPlanets.indexOf(a.p2) >= 0;
+    });
+  }
+  if (!filtered.length) filtered = aspects.slice(0, 5);
+  return filtered.slice(0, 8).map(function(a) {
+    var n1 = PLANET_NAMES_JP[a.p1] || '?';
+    var n2 = PLANET_NAMES_JP[a.p2] || '?';
+    var name = a.type ? a.type.name : '?';
+    var angle = a.type ? a.type.angle : '?';
+    var q = a.type ? (a.type.quality === 'soft' ? '調和' : a.type.quality === 'hard' ? '緊張' : '中性') : '';
+    return n1 + 'と' + n2 + 'が' + name + '(' + angle + '°・' + q + ')';
+  }).join('、');
+}
+
+function patternsToText(patterns) {
+  if (!patterns) return '';
+  var parts = [];
+  if (patterns.grandtrine && patterns.grandtrine.length) parts.push('グランドトライン検出');
+  if (patterns.tsquare && patterns.tsquare.length) parts.push('Tスクエア検出');
+  if (patterns.yod && patterns.yod.length) parts.push('ヨッド検出');
+  return parts.join('、');
+}
+
+function getFortuneCache() {
+  try {
+    var c = JSON.parse(localStorage.getItem('solara_fortune_cache') || '{}');
+    var today = new Date();
+    var ds = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
+    if (c.date === ds) return c.data;
+  } catch(e) {}
+  return null;
+}
+
+function setFortuneCache(data) {
+  var today = new Date();
+  var ds = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
+  try { localStorage.setItem('solara_fortune_cache', JSON.stringify({date: ds, data: data})); } catch(e) {}
+}
+
+function renderFortuneCard(cat, text, direction) {
+  return '<div class="fortune-card" style="background:' + cat.bg + ';border:1px solid ' + cat.border + ';border-radius:16px;padding:20px;margin-bottom:16px;">'
+    + '<div class="fortune-card-header">'
+    + '<div class="fortune-card-icon" style="background:' + cat.bg + ';border:1px solid ' + cat.border + ';width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;">' + cat.icon + '</div>'
+    + '<div class="fortune-card-title" style="color:' + cat.color + ';font-size:15px;font-weight:700;margin-left:10px;">' + cat.label + '</div>'
+    + '</div>'
+    + '<div class="fortune-card-body" style="font-size:13px;line-height:1.8;color:rgba(232,224,208,0.85);">' + text + '</div>'
+    + '<div class="fortune-card-direction" style="margin-top:12px;padding:10px 14px;border-radius:12px;background:rgba(249,217,118,0.06);border:1px solid rgba(249,217,118,0.15);font-size:12px;color:#F6BD60;">' + direction + '</div>'
+    + '</div>';
+}
+
 function buildTodayView() {
   var el = document.getElementById('astrologyCardsAll');
   if (!el) return;
+
+  // キャッシュチェック
+  var cached = getFortuneCache();
+  if (cached) {
+    el.innerHTML = FORTUNE_CATEGORIES.map(function(cat) {
+      var d = cached[cat.id] || FORTUNE_MOCK[cat.id];
+      return renderFortuneCard(cat, d.text, d.direction || '');
+    }).join('');
+    return;
+  }
+
+  // ローディング表示
   el.innerHTML = FORTUNE_CATEGORIES.map(function(cat) {
-    var data = FORTUNE_MOCK[cat.id];
-    return '<div class="fortune-card" style="background:' + cat.bg + ';border:1px solid ' + cat.border + ';border-radius:16px;padding:20px;margin-bottom:16px;">'
-      + '<div class="fortune-card-header">'
-      + '<div class="fortune-card-icon" style="background:' + cat.bg + ';border:1px solid ' + cat.border + ';width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;">' + cat.icon + '</div>'
-      + '<div class="fortune-card-title" style="color:' + cat.color + ';font-size:15px;font-weight:700;margin-left:10px;">' + cat.label + '</div>'
-      + '</div>'
-      + '<div class="fortune-card-body" style="font-size:13px;line-height:1.8;color:rgba(232,224,208,0.85);">' + data.text + '</div>'
-      + '<div class="fortune-card-direction" style="margin-top:12px;padding:10px 14px;border-radius:12px;background:rgba(249,217,118,0.06);border:1px solid rgba(249,217,118,0.15);font-size:12px;color:#F6BD60;">🧭 <strong>方位アドバイス:</strong> ' + data.direction + '</div>'
-      + '</div>';
+    return renderFortuneCard(cat, '<span style="color:#888;">✦ 星を読み解いています...</span>', '');
   }).join('');
+
+  var today = new Date();
+  var dateStr = today.getFullYear() + '/' + (today.getMonth()+1) + '/' + today.getDate();
+  var patText = patternsToText(cachedPatterns);
+  var results = {};
+  var completed = 0;
+
+  FORTUNE_CATEGORIES.forEach(function(cat) {
+    var filterP = FORTUNE_PLANETS[cat.id] || null;
+    var aspText = aspectsToText(lastAspectsFound, filterP);
+
+    fetch(FORTUNE_API_URL, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({category: cat.id, aspects: aspText, patterns: patText, date: dateStr})
+    })
+    .then(function(r) { if (!r.ok) throw new Error('API ' + r.status); return r.json(); })
+    .then(function(data) {
+      if (data.error) throw new Error(data.error);
+      results[cat.id] = {text: data.reading || '', direction: data.advice || ''};
+    })
+    .catch(function(err) {
+      console.warn('Fortune API fallback (' + cat.id + '):', err.message);
+      var fb = FORTUNE_MOCK[cat.id];
+      results[cat.id] = {text: fb.text, direction: '🧭 ' + fb.direction};
+    })
+    .finally(function() {
+      completed++;
+      if (completed === FORTUNE_CATEGORIES.length) {
+        setFortuneCache(results);
+        el.innerHTML = FORTUNE_CATEGORIES.map(function(c) {
+          var d = results[c.id];
+          return renderFortuneCard(c, d.text, d.direction);
+        }).join('');
+      }
+    });
+  });
 }
 
 // Build VP options as HTML string (for mobile dynamic HTML)

@@ -1144,6 +1144,11 @@ function checkTodayDraw() {
       document.getElementById('stellaText').textContent = h.stellaMsg;
       document.getElementById('stellaMsg').classList.add('visible');
     }
+
+    // Restore tarot reading (from AI cache or fallback)
+    var cardObj = {id: h.cardId, nameJP: h.nameJP, nameEN: h.cardName, keyword: h.keyword, planet: h.planet};
+    var infoObj = {element: h.element, dir: h.dir, planetSymbol: {nameJP: h.planet}};
+    showTarotReading(cardObj, infoObj);
   }
 }
 
@@ -1218,24 +1223,75 @@ const TAROT_ADVICES = [
   '✦ {dir}方位が吉。この方角でのインスピレーションを大切に。',
 ];
 
+const TAROT_API_URL = 'http://127.0.0.1:3915/api/tarot-reading';
+
+function getTarotCacheKey(card) {
+  var d = new Date();
+  var ds = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+  var cid = card.id !== undefined ? card.id : (card.nameEN || 'unknown');
+  return 'tarot_ai_reading_' + cid + '_' + ds;
+}
+
 function showTarotReading(card, info) {
   var panel = document.getElementById('tarotReadingPanel');
   var body = document.getElementById('tarotReadingBody');
   var advice = document.getElementById('tarotReadingAdvice');
   if (!panel || !body) return;
 
-  var element = info.element || 'fire';
-  var readings = TAROT_READINGS[element] || TAROT_READINGS.fire;
-  var text = readings[Math.floor(Math.random() * readings.length)];
-  text = text.replace(/\{card\}/g, card.nameJP || card.displayName || card.nameEN);
-  text = text.replace(/\{keyword\}/g, card.keyword || '変容');
+  // キャッシュチェック
+  var cacheKey = getTarotCacheKey(card);
+  var cached = null;
+  try { cached = JSON.parse(localStorage.getItem(cacheKey)); } catch(e) {}
+  if (cached && cached.reading) {
+    typewriteReading(panel, body, advice, cached.reading, cached.advice || '');
+    return;
+  }
 
-  var dirLabel = info.dir ? info.dir.label : '北東';
-  var adviceText = TAROT_ADVICES[Math.floor(Math.random() * TAROT_ADVICES.length)];
-  adviceText = adviceText.replace(/\{dir\}/g, dirLabel);
-  adviceText = adviceText.replace(/\{keyword\}/g, card.keyword || '変容');
+  // ローディング表示
+  body.innerHTML = '<span class="reading-typing" id="readingTyping">✦ 星を読み解いています...</span>';
+  advice.textContent = '';
+  panel.classList.add('visible');
 
-  // Typewriter effect
+  // ムード値取得
+  var mood = 0;
+  try { mood = parseFloat(localStorage.getItem('solara_mood') || '0'); } catch(e) {}
+
+  var today = new Date();
+  var dateStr = today.getFullYear() + '/' + (today.getMonth()+1) + '/' + today.getDate();
+
+  var payload = {
+    nameJP: card.nameJP || card.displayName || '',
+    nameEN: card.nameEN || card.displayName || '',
+    keyword: card.keyword || '',
+    element: info.element || '',
+    planet: card.planet || '',
+    mood: mood,
+    date: dateStr,
+    reversed: false
+  };
+
+  fetch(TAROT_API_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  })
+  .then(function(r) {
+    if (!r.ok) throw new Error('API error: ' + r.status);
+    return r.json();
+  })
+  .then(function(data) {
+    if (data.error) throw new Error(data.error);
+    // キャッシュ保存
+    try { localStorage.setItem(cacheKey, JSON.stringify(data)); } catch(e) {}
+    typewriteReading(panel, body, advice, data.reading || '', data.advice || '');
+  })
+  .catch(function(err) {
+    console.warn('Tarot API fallback:', err.message);
+    showFallbackReading(card, info, panel, body, advice);
+  });
+}
+
+function typewriteReading(panel, body, advice, text, adviceText) {
   body.innerHTML = '<span class="reading-typing" id="readingTyping"></span>';
   advice.textContent = '';
   panel.classList.add('visible');
@@ -1249,10 +1305,24 @@ function showTarotReading(card, info) {
     } else {
       clearInterval(timer);
       typingEl.classList.remove('reading-typing');
-      // Show advice after typing completes
       setTimeout(function() { advice.textContent = adviceText; }, 300);
     }
   }, 25);
+}
+
+function showFallbackReading(card, info, panel, body, advice) {
+  var element = info.element || 'fire';
+  var readings = TAROT_READINGS[element] || TAROT_READINGS.fire;
+  var text = readings[Math.floor(Math.random() * readings.length)];
+  text = text.replace(/\{card\}/g, card.nameJP || card.displayName || card.nameEN);
+  text = text.replace(/\{keyword\}/g, card.keyword || '変容');
+
+  var dirLabel = info.dir ? info.dir.label : '北東';
+  var adviceText = TAROT_ADVICES[Math.floor(Math.random() * TAROT_ADVICES.length)];
+  adviceText = adviceText.replace(/\{dir\}/g, dirLabel);
+  adviceText = adviceText.replace(/\{keyword\}/g, card.keyword || '変容');
+
+  typewriteReading(panel, body, advice, text, adviceText);
 }
 
 // ===== Mood Slider =====

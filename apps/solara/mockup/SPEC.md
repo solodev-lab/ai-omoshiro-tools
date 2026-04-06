@@ -72,8 +72,9 @@ Solara Astrocartography + V7 Cosmic Spiral を統合した5画面モックアッ
 - アスペクト検出 → 方位スコア（cosine falloff spread）
 - **アングルアスペクト方位ブースト**: ASC/MC/DSC/ICとアスペクトを形成するトランジット・プログレス天体のスコアにウェイトボーナスを付与。チャートの要（アングル）に関わる天体ほど、その方位のエネルギーが強く反映される
 - 運勢カテゴリ（癒し/金運/恋愛/仕事/コミュニケーション）
+- セクター色: カテゴリ連動（総合=金#C9A84C、癒し=#64C8B4、金運=#F5D76E、恋愛=#FF88B4、仕事=#6BB5FF、話す=#B088FF）
 - Fortune Sheet（16方位ランキング）
-- レイヤーパネル（チャート/惑星グループ/運勢フィルタ）
+- レイヤーパネル・VPパネル: 左側縦並び40px丸ボタン（検索→☰→📍）、右端フリー
 - **ビューポイント**（`solara_vp_slots`）: 方位の原点として使う場所。タップ→rebuild()で扇・惑星ライン再計算
 - **登録地**（`solara_locations`）: Horo画面のトランジット/プログレス計算用。タップ→地図パンのみ
 - VPパネル2タブ切替: `📍 VIEWPOINT` / `🌐 LOCATIONS`
@@ -121,7 +122,7 @@ Solara Astrocartography + V7 Cosmic Spiral を統合した5画面モックアッ
 - **日キャッシュ**: `solara_fortune_cache` — 同日はlocalStorage利用
 - **5タブナビ統合**
 
-#### Fortune Reading データ構造（モック）
+#### Fortune Reading データ構造
 ```javascript
 FORTUNE_CATEGORIES = [
   { id:'overall', icon:'✦', label:'全体運', color:'#F6BD60' },
@@ -130,11 +131,12 @@ FORTUNE_CATEGORIES = [
   { id:'career',  icon:'💼', label:'仕事運', color:'#FF8C42' },
   { id:'communication', icon:'💬', label:'対話運', color:'#6BB5FF' },
 ];
-// 本番: Claude API (Sonnet) でトランジット×ネイタルアスペクトから動的生成
-// ⚠️ 重要仕様: 鑑定文には必ず実際のアスペクト情報（惑星名・角度・性質）を含めること
-//   例: 「太陽と木星がトライン（120°）を形成し…」
-//   → astronomy-engine で検出したアスペクトリストをプロンプトに渡してSonnetに生成させる
-//   モックのテキストはアスペクト名をハードコードしているため、チャートと一致しない場合がある（モック許容）
+// ✅ Gemini 2.5 Flash API で動的生成（実装済み）
+// - astronomy-engine で検出した lastAspectsFound をテキスト化してプロンプトに渡す
+// - 鑑定文には実際のアスペクト情報（惑星名・角度・性質）が含まれる
+// - 全体運: 450字、個別運: 250字
+// - フォールバック: APIエラー時は FORTUNE_MOCK テンプレートを表示
+// - 日キャッシュ: solara_fortune_cache（同日はlocalStorageから返却）
 ```
 
 ### 3. Tarot (`tarot.html`)
@@ -155,9 +157,10 @@ FORTUNE_CATEGORIES = [
   - localStorage保存（`solara_mood`）
 - **タロット鑑定文パネル**
   - カード引き後にタイプライター演出で表示
-  - エレメント別テンプレート（火/水/風/地）
-  - カード名・キーワード動的挿入
-  - 方位アドバイス付き
+  - ✅ Gemini 2.5 Flash API でカード固有の鑑定文を動的生成（実装済み）
+  - 450字程度、カード象徴・エレメント・支配惑星を織り込み
+  - フォールバック: APIエラー時はエレメント別テンプレート表示
+  - 日キャッシュ: `tarot_ai_reading_{cardId}_{date}`
 - **vibe_score計算・保存**: `applyToMap()` 時に `calcVibeScore()` → `saveVibe()`
 
 ### 4. Galaxy (`galaxy_screen.dart`) — Flutter実装済み
@@ -933,7 +936,7 @@ S = Tarot × 0.4 + Mood × 0.1 + Transit × 0.3 + Progressed × 0.2
 |-------------|----------------|
 | HTML + JS | Flutter CustomPaint + AnimationController |
 | localStorage | Cloudflare Worker + ローカルDB |
-| モック鑑定文 | Claude API (Sonnet) 動的生成 |
+| ~~モック鑑定文~~ Gemini Flash動的生成済み | Flutter内蔵 or サーバーサイドAPI |
 | モック名前生成 | Claude API (Sonnet) テンプレートルール制約付き |
 | events.js DOM注入 | Flutter Widget overlay |
 | CSS glass | Flutter BackdropFilter |
@@ -949,6 +952,7 @@ apps/solara/mockup/
   tarot.html          ← Tarot画面（1330行）
   galaxy.html         ← Galaxy画面（810行）
   sanctuary.html      ← Sanctuary画面（190行）
+  api_proxy.py        ← Gemini API プロキシサーバー（ポート3915）
   shared/
     styles.css        ← 共通CSS（155行）
     nav.js            ← 5タブナビ（25行）

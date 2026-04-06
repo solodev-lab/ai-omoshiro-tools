@@ -25,9 +25,9 @@ body{background:#0A0A14;color:#E8E0D0;font-family:'Segoe UI','Helvetica Neue',sa
 #particleCanvas{position:absolute;top:0;left:0;width:100%;height:100%;z-index:20;pointer-events:none}
 
 /* Search */
-.search-trigger{position:absolute;top:52px;left:16px;z-index:110;width:32px;height:32px;border-radius:50%;background:rgba(10,10,25,.8);border:1px solid rgba(255,255,255,.12);display:none;align-items:center;justify-content:center;cursor:pointer;color:rgba(201,168,76,.6);transition:border-color .3s}
+.search-trigger{position:absolute;top:82px;left:16px;z-index:110;width:40px;height:40px;border-radius:50%;background:rgba(10,10,25,.8);border:1px solid rgba(255,255,255,.12);display:none;align-items:center;justify-content:center;cursor:pointer;color:rgba(201,168,76,.6);font-size:18px;transition:border-color .3s}
 .search-trigger.vis{display:flex}
-.search-bar{position:absolute;top:52px;left:16px;right:56px;z-index:110;display:none;gap:6px}
+.search-bar{position:absolute;top:82px;left:16px;right:16px;z-index:110;display:none;gap:6px}
 .search-bar.open{display:flex}
 .search-input{width:100%;padding:10px 36px 10px 14px;background:rgba(15,15,30,.9);backdrop-filter:blur(15px);border:1px solid rgba(255,255,255,.15);border-radius:10px;color:#E8E0D0;font-size:13px;outline:none}
 .search-input:focus{border-color:rgba(201,168,76,.4)}
@@ -35,7 +35,7 @@ body{background:#0A0A14;color:#E8E0D0;font-family:'Segoe UI','Helvetica Neue',sa
 .search-btn{position:absolute;right:6px;top:50%;transform:translateY(-50%);padding:4px 6px;background:none;border:none;color:rgba(201,168,76,.5);font-size:16px;cursor:pointer;line-height:1}
 
 /* Fortune filter label */
-.ff-label{position:absolute;top:95px;left:16px;z-index:105;display:inline-flex;align-items:center;gap:6px;font-size:10px;color:#C9A84C;background:rgba(10,10,20,.7);padding:3px 10px;border-radius:10px;border:1px solid rgba(201,168,76,.3);letter-spacing:.5px;pointer-events:none}
+.ff-label{position:absolute;top:52px;left:16px;z-index:105;display:inline-flex;align-items:center;gap:6px;font-size:10px;color:#C9A84C;background:rgba(10,10,20,.7);padding:3px 10px;border-radius:10px;border:1px solid rgba(201,168,76,.3);letter-spacing:.5px;pointer-events:none}
 .ff-tag{white-space:nowrap;flex-shrink:0}
 .ff-bars{flex:1;display:flex;flex-direction:column;gap:2px;min-width:0}
 .ff-row{display:flex;align-items:center;gap:4px;font-size:9px;color:#E8E0D0}
@@ -109,16 +109,16 @@ body{background:#0A0A14;color:#E8E0D0;font-family:'Segoe UI','Helvetica Neue',sa
 .nav-item.active .nav-label{color:#C9A84C}
 
 /* Layer button & panel */
-.layer-btn{position:absolute;top:50%;right:0;transform:translateY(-50%);z-index:121;width:24px;height:50px;border-radius:10px 0 0 10px;background:rgba(10,10,25,.8);border:1px solid rgba(201,168,76,.2);border-right:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;opacity:0;transition:opacity .5s,border-color .3s}
+.layer-btn{position:absolute;top:130px;left:16px;z-index:121;width:40px;height:40px;border-radius:50%;background:rgba(10,10,25,.8);border:1px solid rgba(255,255,255,.12);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;opacity:0;transition:opacity .5s,border-color .3s}
 .layer-btn.vis{opacity:1}
 .layer-btn.active{border-color:rgba(201,168,76,.5)}
-.layer-btn-bar{width:16px;height:2px;border-radius:1px}
+.layer-btn-bar{width:18px;height:2px;border-radius:1px}
 .layer-btn-bar:nth-child(1){background:#E8E0D0}
 .layer-btn-bar:nth-child(2){background:#C9A84C}
 .layer-btn-bar:nth-child(3){background:#00D4FF}
 
-.layer-panel{position:absolute;top:140px;right:12px;z-index:120;width:100px;background:rgba(12,12,26,.92);border:1px solid rgba(201,168,76,.2);border-radius:14px;padding:14px;opacity:0;pointer-events:none;transform:translateX(10px);transition:opacity .25s,transform .25s}
-.layer-panel.open{opacity:1;pointer-events:auto;transform:translateX(0)}
+.layer-panel{position:absolute;top:175px;left:60px;z-index:120;width:100px;background:rgba(12,12,26,.92);border:1px solid rgba(201,168,76,.2);border-radius:14px;padding:14px;opacity:0;pointer-events:none;transform:translateY(-10px);transition:opacity .25s,transform .25s}
+.layer-panel.open{opacity:1;pointer-events:auto;transform:translateY(0)}
 .lp-title{font-size:9px;color:#666;letter-spacing:1.5px;margin-bottom:10px}
 .lp-sec{margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid rgba(255,255,255,.06)}
 .lp-sec:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0}
@@ -135,10 +135,10 @@ body{background:#0A0A14;color:#E8E0D0;font-family:'Segoe UI','Helvetica Neue',sa
 .fp-item.active{border-color:var(--pc,#C9A84C);color:var(--pc,#C9A84C);background:rgba(201,168,76,.1)}
 
 /* Viewpoint button & panel */
-.vp-btn{position:absolute;top:50%;right:0;margin-top:32px;z-index:121;width:24px;height:32px;border-radius:10px 0 0 10px;background:rgba(10,10,25,.8);border:1px solid rgba(201,168,76,.2);border-right:none;display:none;align-items:center;justify-content:center;font-size:13px;cursor:pointer;transition:border-color .3s}
+.vp-btn{position:absolute;top:178px;left:16px;z-index:121;width:40px;height:40px;border-radius:50%;background:rgba(10,10,25,.8);border:1px solid rgba(255,255,255,.12);display:none;align-items:center;justify-content:center;font-size:16px;cursor:pointer;transition:border-color .3s}
 .vp-btn.vis{display:flex}
 .vp-btn.active{border-color:rgba(201,168,76,.5)}
-.vp-panel{position:absolute;top:50%;right:12px;margin-top:28px;z-index:120;width:180px;background:rgba(12,12,26,.92);border:1px solid rgba(201,168,76,.2);border-radius:14px;padding:12px;opacity:0;pointer-events:none;transform:translateX(10px);transition:opacity .25s,transform .25s}
+.vp-panel{position:absolute;top:222px;left:60px;z-index:120;width:180px;background:rgba(12,12,26,.92);border:1px solid rgba(201,168,76,.2);border-radius:14px;padding:12px;opacity:0;pointer-events:none;transform:translateY(-10px);transition:opacity .25s,transform .25s}
 .vp-panel.open{opacity:1;pointer-events:auto;transform:translateX(0)}
 .vp-title{font-size:9px;letter-spacing:1.5px;color:#C9A84C;margin-bottom:10px}
 .vp-tabs{display:flex;gap:2px;margin-bottom:10px;background:rgba(255,255,255,.03);border-radius:8px;padding:2px}
@@ -322,7 +322,7 @@ body{background:#0A0A14;color:#E8E0D0;font-family:'Segoe UI','Helvetica Neue',sa
       <div class="fp">
         <div class="fp-item active" data-fortune="all" style="--pc:#E8E0D0" onclick="setFortune('all')">総合</div>
         <div class="fp-item" data-fortune="healing" style="--pc:#64C8B4" onclick="setFortune('healing')">癒し</div>
-        <div class="fp-item" data-fortune="money" style="--pc:#C9A84C" onclick="setFortune('money')">金運</div>
+        <div class="fp-item" data-fortune="money" style="--pc:#F5D76E" onclick="setFortune('money')">金運</div>
         <div class="fp-item" data-fortune="love" style="--pc:#FF88B4" onclick="setFortune('love')">恋愛</div>
         <div class="fp-item" data-fortune="work" style="--pc:#6BB5FF" onclick="setFortune('work')">仕事</div>
         <div class="fp-item" data-fortune="communication" style="--pc:#B088FF" onclick="setFortune('communication')">話す</div>
@@ -358,6 +358,7 @@ body{background:#0A0A14;color:#E8E0D0;font-family:'Segoe UI','Helvetica Neue',sa
 <script>
 // ========== Constants ==========
 const GOLD = '#C9A84C';
+const FORTUNE_COLORS = {healing:'#64C8B4',money:'#F5D76E',love:'#FF88B4',work:'#6BB5FF',communication:'#B088FF'};
 const DIR16 = ['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'];
 const DIR16_ANG = {}; DIR16.forEach((d,i) => DIR16_ANG[d] = i * 22.5);
 const DIR16_JP = {N:'北',NNE:'北北東',NE:'北東',ENE:'東北東',E:'東',ESE:'東南東',SE:'南東',SSE:'南南東',S:'南',SSW:'南南西',SW:'南西',WSW:'西南西',W:'西',WNW:'西北西',NW:'北西',NNW:'北北西'};
@@ -715,10 +716,15 @@ function rebuild(nc,fly){
 }
 
 // ========== Sectors ==========
-function scoreToStyle(score,rank){
+function getSectorColor(){
+  const cat=fortuneFilt||(fsTab!=='all'?fsTab:null);
+  return cat&&FORTUNE_COLORS[cat]||GOLD;
+}
+function scoreToStyle(score,rank,clr){
+  const c=clr||getSectorColor();
   let fo=0,bo=0,w=0;
   if(rank==='strong'){fo=.40;bo=.85;w=3}else if(rank==='weak'){fo=.20;bo=.50;w=2}
-  return{init:{color:GOLD,fillColor:GOLD,fillOpacity:0,weight:w,opacity:0},target:{color:GOLD,fillColor:GOLD,fillOpacity:fo,opacity:bo,weight:w}};
+  return{init:{color:c,fillColor:c,fillOpacity:0,weight:w,opacity:0},target:{color:c,fillColor:c,fillOpacity:fo,opacity:bo,weight:w}};
 }
 
 function computeRanks(scores){
