@@ -1,8 +1,9 @@
 import 'daily_reading.dart';
 
 class ConstellationDot {
-  final double x; // normalized 0-1
-  final double y; // normalized 0-1
+  final double x; // normalized 0-1 (final 2D position)
+  final double y; // normalized 0-1 (final 2D position)
+  final double z; // depth layer: -1.0(奥), 0.0(中), 1.0(手前)
   final int dayIndex;
   final int cardId;
   final bool isMajor;
@@ -10,6 +11,7 @@ class ConstellationDot {
   const ConstellationDot({
     required this.x,
     required this.y,
+    this.z = 0.0,
     required this.dayIndex,
     required this.cardId,
     required this.isMajor,
@@ -18,6 +20,7 @@ class ConstellationDot {
   Map<String, dynamic> toJson() => {
         'x': x,
         'y': y,
+        'z': z,
         'dayIndex': dayIndex,
         'cardId': cardId,
         'isMajor': isMajor,
@@ -27,6 +30,7 @@ class ConstellationDot {
     return ConstellationDot(
       x: (json['x'] as num).toDouble(),
       y: (json['y'] as num).toDouble(),
+      z: (json['z'] as num?)?.toDouble() ?? 0.0,
       dayIndex: json['dayIndex'] as int,
       cardId: json['cardId'] as int,
       isMajor: json['isMajor'] as bool,
@@ -43,6 +47,8 @@ class GalaxyCycle {
   final String nameEN;
   final String nameJP;
   final List<ConstellationDot> dots;
+  final int rarity; // 1-5 stars (1=Common, 5=Mythic)
+  final String rarityLabel; // "Common", "Uncommon", "Rare", "Legendary", "Mythic"
 
   const GalaxyCycle({
     required this.id,
@@ -53,6 +59,8 @@ class GalaxyCycle {
     required this.nameEN,
     required this.nameJP,
     required this.dots,
+    this.rarity = 1,
+    this.rarityLabel = 'Common',
   });
 
   String get dateRangeLabel {
@@ -78,6 +86,8 @@ class GalaxyCycle {
         'nameEN': nameEN,
         'nameJP': nameJP,
         'dots': dots.map((d) => d.toJson()).toList(),
+        'rarity': rarity,
+        'rarityLabel': rarityLabel,
       };
 
   factory GalaxyCycle.fromJson(Map<String, dynamic> json) {
@@ -94,6 +104,8 @@ class GalaxyCycle {
       dots: (json['dots'] as List)
           .map((d) => ConstellationDot.fromJson(d as Map<String, dynamic>))
           .toList(),
+      rarity: json['rarity'] as int? ?? 1,
+      rarityLabel: json['rarityLabel'] as String? ?? 'Common',
     );
   }
 }

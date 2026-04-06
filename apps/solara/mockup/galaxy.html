@@ -71,7 +71,7 @@
     .atlas-content::-webkit-scrollbar { display:none; }
     .constellation-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(160px, 1fr)); gap:12px; }
     .const-card {
-      border-radius:20px; padding:14px; aspect-ratio:1; display:flex;
+      border-radius:20px; padding:14px; aspect-ratio:0.75; display:flex;
       flex-direction:column; justify-content:space-between; cursor:pointer;
       transition:transform 0.2s, box-shadow 0.2s;
     }
@@ -413,24 +413,603 @@ function hexToRgba(hex, alpha) {
   return `rgba(${r},${g},${b},${alpha})`;
 }
 
-/* ==================== GALAXY CYCLES ==================== */
-const GALAXY_CYCLES = [
-  {id:0,dateRange:"Jan 3 — Jan 30",seedCard:6,name:"The Lovers' Arc",symbol:"💫",
-   color:'rgba(249,217,118,0.9)',glowColor:'rgba(249,217,118,0.4)',borderColor:'rgba(249,217,118,0.25)',bgGrad:['rgba(249,217,118,0.12)','rgba(249,217,118,0.03)'],
-   dots:[{x:40,y:20},{x:58,y:30},{x:65,y:48},{x:58,y:65},{x:40,y:72},{x:22,y:65},{x:15,y:48},{x:22,y:30},{x:40,y:40}]},
-  {id:1,dateRange:"Feb 1 — Feb 28",seedCard:7,name:"The Chariot's Arrow",symbol:"⚡",
-   color:'rgba(255,107,107,0.9)',glowColor:'rgba(255,107,107,0.4)',borderColor:'rgba(255,107,107,0.25)',bgGrad:['rgba(255,107,107,0.12)','rgba(255,61,61,0.03)'],
-   dots:[{x:20,y:65},{x:35,y:55},{x:48,y:40},{x:55,y:28},{x:60,y:15},{x:50,y:25},{x:38,y:32},{x:62,y:20},{x:58,y:35}]},
-  {id:2,dateRange:"Mar 3 — Mar 30",seedCard:18,name:"Moon's Deep Cup",symbol:"🌙",
-   color:'rgba(38,208,206,0.9)',glowColor:'rgba(38,208,206,0.4)',borderColor:'rgba(38,208,206,0.25)',bgGrad:['rgba(38,208,206,0.12)','rgba(26,41,128,0.05)'],
-   dots:[{x:20,y:28},{x:35,y:18},{x:55,y:18},{x:68,y:30},{x:70,y:50},{x:62,y:65},{x:40,y:70},{x:18,y:58},{x:44,y:44}]},
-  {id:3,dateRange:"Apr 1 — Apr 28",seedCard:19,name:"The Sun Crown",symbol:"☀️",
-   color:'rgba(255,200,80,0.9)',glowColor:'rgba(255,180,0,0.4)',borderColor:'rgba(255,180,0,0.3)',bgGrad:['rgba(255,180,0,0.14)','rgba(255,100,0,0.04)'],
-   dots:[{x:40,y:12},{x:60,y:22},{x:68,y:44},{x:60,y:65},{x:40,y:72},{x:20,y:65},{x:12,y:44},{x:20,y:22},{x:40,y:40},{x:50,y:32},{x:30,y:32}]},
-  {id:4,dateRange:"May 2 — May 29",seedCard:0,name:"The Fool's Wing",symbol:"🌀",
-   color:'rgba(180,130,255,0.9)',glowColor:'rgba(160,100,255,0.4)',borderColor:'rgba(160,100,255,0.3)',bgGrad:['rgba(160,100,255,0.14)','rgba(80,20,180,0.04)'],
-   dots:[{x:20,y:55},{x:30,y:38},{x:25,y:22},{x:40,y:18},{x:55,y:25},{x:65,y:40},{x:62,y:58},{x:48,y:68},{x:35,y:62},{x:44,y:44}]},
+/* ==================== STAR ATLAS NAME GENERATION v2 (20×61=1,220) ==================== */
+const NAME_ADJ_EN = [
+  'Golden','Sacred','Silver','Luminous','Crimson','Burning',
+  'Ethereal','Spectral','Mystic','Arcane','Silent','Veiled',
+  'Frozen','Abyssal','Ancient','Verdant','Infinite','Celestial',
+  'Radiant','Phantom'
 ];
+const NAME_ADJ_JP = [
+  '黄金の','聖なる','銀色の','光輝の','深紅の','燃ゆる',
+  '幽玄の','霊妙の','秘密の','秘奥の','静寂の','隠されし',
+  '凍てつく','深淵の','古の','翠の','無限の','天上の',
+  '煌めきの','幻影の'
+];
+const ADJ_TIERS = [0,1,0,0,0,0,0,1,2,2,0,1,0,1,0,0,0,0,0,2];
+
+const NAME_NOUN_EN = [
+  'Orbit','Comet','Meteor','Nova','Crescent','Singularity',
+  'Phoenix','Dragon','Griffin','Unicorn','Pegasus','Kraken','Ouroboros',
+  'Serpent','Trident','Anchor','Bow','Butterfly','Leviathan',
+  'Arrow','Sword','Shield','Key','Lantern','Excalibur',
+  'Crown','Chalice','Throne','Scepter','Jewel',"Philosopher's Stone",
+  'Flame','Tempest','Pyramid','Ember','Glacier','Yggdrasil',
+  'Gate','Tower','Lighthouse','Citadel','Babel',
+  'Emblem','Mirror','Hourglass','Scale','Mask','Pandora',
+  'Harp','Bell','Lyre','Compass',
+  'Wing','Feather','Eye','Halo','Third Eye',
+  'Crux','Prism','Ring','Möbius'
+];
+const NAME_NOUN_JP = [
+  '軌道','彗星','流星','新星','三日月','特異点',
+  'フェニックス','ドラゴン','グリフィン','ユニコーン','ペガサス','クラーケン','ウロボロス',
+  'サーペント','トライデント','アンカー','弓','蝶','レヴィアタン',
+  '矢','剣','盾','鍵','灯火','聖剣',
+  '冠','聖杯','玉座','笏杖','宝玉','賢者の石',
+  '炎','嵐','ピラミッド','残火','氷河','世界樹',
+  '門','塔','灯台','城砦','天楼',
+  '紋章','鏡','砂時計','天秤','仮面','パンドラ',
+  '竪琴','鐘','リラ','コンパス',
+  '翼','羽根','眼','光輪','第三の眼',
+  '十字架','プリズム','リング','メビウス'
+];
+const NOUN_TIERS = [
+  0,0,1,1,0,3, 0,0,1,0,1,2,3, 0,1,0,0,1,3,
+  0,0,0,1,1,3, 0,0,1,1,0,3, 0,0,1,1,2,3,
+  0,0,0,0,3, 0,0,0,1,2,3, 0,0,1,0, 0,0,1,2,3, 0,1,0,3
+];
+
+const RARITY_LABELS = ['Common','Uncommon','Rare','Legendary','Mythic'];
+const RARITY_COLORS = ['#888','#4DA8DA','#B080FF','#F9D976','#FF6B35'];
+
+function _nameHash(s) {
+  let h = 0;
+  for (let i = 0; i < s.length; i++) { h = ((h << 5) - h) + s.charCodeAt(i); h = h & 0x7FFFFFFF; }
+  return h;
+}
+
+function generateConstellationName(seedCard, date, usedNames) {
+  const dateStr = (date || new Date()).toISOString().slice(0,10);
+  const hash = _nameHash((seedCard||0).toString() + dateStr);
+  const total = NAME_ADJ_EN.length * NAME_NOUN_EN.length;
+  for (let attempt = 0; attempt < total; attempt++) {
+    const adjIdx = (hash + attempt) % NAME_ADJ_EN.length;
+    const nounIdx = ((hash >> 8) + attempt * 7) % NAME_NOUN_EN.length;
+    const nameEN = 'The ' + NAME_ADJ_EN[adjIdx] + ' ' + NAME_NOUN_EN[nounIdx];
+    if (!usedNames || !usedNames.has(nameEN)) {
+      const nameJP = NAME_ADJ_JP[adjIdx] + NAME_NOUN_JP[nounIdx];
+      const combined = ADJ_TIERS[adjIdx] + NOUN_TIERS[nounIdx];
+      const stars = Math.min(5, combined + 1);
+      return { en: nameEN, jp: nameJP, adjIdx, nounIdx, stars, label: RARITY_LABELS[stars-1] };
+    }
+  }
+  const adjIdx = hash % NAME_ADJ_EN.length;
+  const nounIdx = (hash >> 8) % NAME_NOUN_EN.length;
+  return { en: '★★ The ' + NAME_ADJ_EN[adjIdx] + ' ' + NAME_NOUN_EN[nounIdx],
+           jp: '★★ ' + NAME_ADJ_JP[adjIdx] + NAME_NOUN_JP[nounIdx],
+           adjIdx, nounIdx, stars: 1, label: 'Common' };
+}
+
+function rarityStarsHTML(stars) {
+  const color = stars >= 4 ? '#F9D976' : stars >= 3 ? '#B080FF' : '#888';
+  return `<span style="color:${color};letter-spacing:2px">${'★'.repeat(stars)}${'☆'.repeat(5-stars)}</span>`;
+}
+
+/* ==================== NOUN SHAPE TYPES ==================== */
+// 'open'=MST(branching), 'linear'=single chain, 'closed'=MST+close, 'radial'=hub+MST, 'loop'=MST+extra links
+const NOUN_SHAPES = [
+  // 天体・宇宙: Orbit,Comet,Meteor,Nova,Crescent,Singularity
+  'loop','linear','linear','radial','linear','radial',
+  // 神話の生き物: Phoenix,Dragon,Griffin,Unicorn,Pegasus,Kraken,Ouroboros
+  'open','open','open','open','open','radial','loop',
+  // 動物・鳥→混合: Serpent,Trident,Anchor,Bow,Butterfly,Leviathan
+  'linear','radial','open','linear','open','open',
+  // 武器・道具: Arrow,Sword,Shield,Key,Lantern,Excalibur
+  'linear','linear','closed','open','closed','linear',
+  // 王権・宝物: Crown,Chalice,Throne,Scepter,Jewel,Philosopher's Stone
+  'closed','closed','open','linear','closed','radial',
+  // 自然・植物→混合: Flame,Tempest,Pyramid,Ember,Glacier,Yggdrasil
+  'radial','radial','closed','radial','open','radial',
+  // 建造物・場所: Gate,Tower,Lighthouse,Citadel,Babel
+  'closed','linear','linear','closed','open',
+  // 象徴・紋章: Emblem,Mirror,Hourglass,Scale,Mask,Pandora
+  'closed','closed','linear','open','closed','closed',
+  // 楽器・芸術→混合: Harp,Bell,Lyre,Compass
+  'open','closed','closed','closed',
+  // 身体・翼: Wing,Feather,Eye,Halo,Third Eye
+  'open','linear','closed','loop','closed',
+  // 幾何・抽象: Crux,Prism,Ring,Möbius
+  'open','closed','loop','loop',
+];
+
+/* ==================== MST (Prim's algorithm) ==================== */
+function computeMST(points) {
+  // Returns array of edges [{from, to}] forming minimum spanning tree
+  const n = points.length;
+  if (n <= 1) return [];
+  if (n === 2) return [{from: 0, to: 1}];
+
+  const inTree = new Array(n).fill(false);
+  const minEdge = new Array(n).fill(Infinity);
+  const minFrom = new Array(n).fill(-1);
+  const edges = [];
+
+  minEdge[0] = 0;
+  for (let iter = 0; iter < n; iter++) {
+    // Find cheapest node not yet in tree
+    let u = -1;
+    for (let i = 0; i < n; i++) {
+      if (!inTree[i] && (u === -1 || minEdge[i] < minEdge[u])) u = i;
+    }
+    inTree[u] = true;
+    if (minFrom[u] !== -1) {
+      edges.push({from: minFrom[u], to: u});
+    }
+    // Update distances
+    for (let v = 0; v < n; v++) {
+      if (inTree[v]) continue;
+      const d = Math.hypot(points[u].x - points[v].x, points[u].y - points[v].y);
+      if (d < minEdge[v]) {
+        minEdge[v] = d;
+        minFrom[v] = u;
+      }
+    }
+  }
+  return edges;
+}
+
+/* Build edge list based on MST + shapeType */
+function buildConstellationEdges(anchorPoints, shapeType) {
+  if (anchorPoints.length <= 1) return [];
+
+  // LINEAR: single chain via nearest-neighbor (no branching)
+  if (shapeType === 'linear') {
+    const remaining = anchorPoints.map((p, i) => i);
+    const ordered = [remaining.splice(0, 1)[0]];
+    while (remaining.length > 0) {
+      const last = ordered[ordered.length - 1];
+      let nearIdx = 0, nearDist = Infinity;
+      for (let i = 0; i < remaining.length; i++) {
+        const d = Math.hypot(anchorPoints[remaining[i]].x - anchorPoints[last].x,
+                             anchorPoints[remaining[i]].y - anchorPoints[last].y);
+        if (d < nearDist) { nearDist = d; nearIdx = i; }
+      }
+      ordered.push(remaining.splice(nearIdx, 1)[0]);
+    }
+    const edges = [];
+    for (let i = 0; i < ordered.length - 1; i++) {
+      edges.push({from: ordered[i], to: ordered[i+1]});
+    }
+    return edges;
+  }
+
+  const edges = computeMST(anchorPoints);
+
+  if (shapeType === 'closed' || shapeType === 'loop') {
+    // Find the two leaf nodes (degree 1) farthest apart and connect them
+    const degree = new Array(anchorPoints.length).fill(0);
+    edges.forEach(e => { degree[e.from]++; degree[e.to]++; });
+    const leaves = [];
+    for (let i = 0; i < anchorPoints.length; i++) {
+      if (degree[i] === 1) leaves.push(i);
+    }
+    if (leaves.length >= 2) {
+      // For 'closed': connect two farthest leaves
+      let bestDist = 0, bestA = leaves[0], bestB = leaves[1];
+      for (let i = 0; i < leaves.length; i++) {
+        for (let j = i + 1; j < leaves.length; j++) {
+          const d = Math.hypot(
+            anchorPoints[leaves[i]].x - anchorPoints[leaves[j]].x,
+            anchorPoints[leaves[i]].y - anchorPoints[leaves[j]].y
+          );
+          if (d > bestDist) { bestDist = d; bestA = leaves[i]; bestB = leaves[j]; }
+        }
+      }
+      edges.push({from: bestA, to: bestB});
+      // For 'loop': add one more connection between other leaves if available
+      if (shapeType === 'loop' && leaves.length >= 4) {
+        const remaining = leaves.filter(l => l !== bestA && l !== bestB);
+        if (remaining.length >= 2) {
+          edges.push({from: remaining[0], to: remaining[1]});
+        }
+      }
+    }
+  }
+
+  if (shapeType === 'radial') {
+    // Add edges from centroid to each anchor
+    const cx = anchorPoints.reduce((s, p) => s + p.x, 0) / anchorPoints.length;
+    const cy = anchorPoints.reduce((s, p) => s + p.y, 0) / anchorPoints.length;
+    // Find anchor nearest to centroid
+    let nearestIdx = 0, nearestDist = Infinity;
+    anchorPoints.forEach((p, i) => {
+      const d = Math.hypot(p.x - cx, p.y - cy);
+      if (d < nearestDist) { nearestDist = d; nearestIdx = i; }
+    });
+    // Connect center node to all others (that aren't already connected)
+    const connected = new Set();
+    edges.forEach(e => {
+      if (e.from === nearestIdx) connected.add(e.to);
+      if (e.to === nearestIdx) connected.add(e.from);
+    });
+    anchorPoints.forEach((_, i) => {
+      if (i !== nearestIdx && !connected.has(i)) {
+        edges.push({from: nearestIdx, to: i});
+      }
+    });
+  }
+
+  return edges;
+}
+
+/* ==================== NOUN SHAPE TEMPLATES (all 61) ==================== */
+const NOUN_TEMPLATES = {
+  // === 天体・宇宙 ===
+  0: [[.5,.2],[.75,.3],[.8,.5],[.7,.7],[.45,.8],[.2,.7],[.15,.5],[.25,.3]], // Orbit 軌道
+  1: [[.7,.25],[.55,.4],[.4,.55],[.25,.7],[.75,.35],[.8,.45]],             // Comet 彗星
+  2: [[.2,.85],[.35,.65],[.5,.5],[.65,.35],[.8,.15]],                      // Meteor 流星
+  3: [[.5,.5],[.5,.15],[.8,.35],[.8,.65],[.5,.85],[.2,.65],[.2,.35]],      // Nova 新星
+  4: [[.4,.2],[.55,.35],[.6,.5],[.55,.65],[.4,.8]],                        // Crescent 三日月 (右に開く弧)
+  5: [[.5,.5],[.25,.2],[.75,.2],[.85,.5],[.75,.8],[.25,.8],[.15,.5]],      // Singularity 特異点
+
+  // === 神話の生き物 ===
+  6: [[.5,.15],[.4,.35],[.6,.35],[.2,.5],[.8,.5],[.15,.7],[.85,.7]],       // Phoenix フェニックス
+  7: [[.7,.2],[.55,.3],[.4,.45],[.5,.55],[.65,.65],[.5,.8],[.3,.75]],      // Dragon ドラゴン (頭右上、体S字で左下へ)
+  8: [[.65,.2],[.75,.35],[.6,.5],[.45,.55],[.35,.4],[.25,.6],[.3,.75]],    // Griffin グリフィン (頭右上、体左下へ)
+  9: [[.65,.15],[.6,.3],[.55,.5],[.5,.65],[.45,.8],[.7,.35]],              // Unicorn ユニコーン (角右上、体左下へ)
+  10:[[.5,.3],[.15,.2],[.85,.2],[.25,.5],[.75,.5],[.5,.7]],                // Pegasus ペガサス
+  11:[[.5,.4],[.2,.2],[.8,.2],[.15,.6],[.85,.6],[.3,.8],[.7,.8]],          // Kraken クラーケン
+  12:[[.5,.2],[.75,.3],[.8,.55],[.65,.75],[.35,.75],[.2,.55],[.25,.3]],    // Ouroboros ウロボロス
+
+  // === 動物・鳥 ===
+  13:[[.75,.2],[.6,.35],[.45,.45],[.55,.6],[.4,.75],[.3,.85]],             // Serpent サーペント (頭右上、尾左下)
+  14:[[.5,.15],[.5,.4],[.5,.7],[.5,.9],[.3,.2],[.7,.2],[.4,.2],[.6,.2]],  // Trident トライデント (縦軸+3叉)
+  15:[[.5,.15],[.4,.25],[.6,.25],[.5,.35],[.5,.6],[.35,.8],[.65,.8],[.5,.9]], // Anchor アンカー (輪+軸+フック)
+  16:[[.2,.5],[.35,.2],[.65,.2],[.8,.5],[.5,.55]],                        // Bow 弓 (弧+弦)
+  17:[[.5,.5],[.25,.3],[.15,.55],[.3,.75],[.75,.3],[.85,.55],[.7,.75]],    // Butterfly 蝶
+  18:[[.85,.3],[.7,.4],[.55,.35],[.4,.45],[.25,.55],[.15,.7]],             // Leviathan レヴィアタン (頭右上、体が左下へ弧)
+
+  // === 武器・道具 ===
+  19:[[.2,.8],[.35,.65],[.5,.5],[.65,.35],[.8,.2]],                        // Arrow 矢
+  20:[[.5,.08],[.5,.3],[.5,.5],[.5,.65],[.5,.9],[.28,.65],[.72,.65]],      // Sword 剣 (長い刃+下寄り鍔+柄)
+  21:[[.3,.2],[.7,.2],[.75,.5],[.6,.75],[.5,.85],[.4,.75],[.25,.5]],       // Shield 盾
+  22:[[.5,.2],[.4,.3],[.6,.3],[.5,.4],[.5,.6],[.5,.8],[.6,.75]],           // Key 鍵
+  23:[[.5,.15],[.5,.3],[.65,.5],[.5,.7],[.35,.5],[.5,.85]],                // Lantern 灯火
+  24:[[.5,.05],[.5,.35],[.5,.65],[.5,.9],[.2,.3],[.8,.3]],                 // Excalibur 聖剣
+
+  // === 王権・宝物 ===
+  25:[[.2,.6],[.3,.3],[.5,.55],[.5,.2],[.7,.3],[.8,.6]],                   // Crown 冠
+  26:[[.3,.25],[.7,.25],[.7,.5],[.3,.5],[.5,.6],[.5,.8],[.35,.85],[.65,.85]], // Chalice 聖杯
+  27:[[.35,.15],[.65,.15],[.65,.55],[.35,.55],[.3,.8],[.7,.8]],             // Throne 玉座
+  28:[[.5,.15],[.45,.25],[.55,.25],[.5,.4],[.5,.6],[.5,.85]],               // Scepter 笏杖
+  29:[[.5,.2],[.7,.4],[.65,.65],[.5,.8],[.35,.65],[.3,.4]],                 // Jewel 宝玉
+  30:[[.5,.15],[.25,.7],[.75,.7],[.5,.45],[.3,.45],[.7,.45]],               // Philosopher's Stone 賢者の石
+
+  // === 自然・植物 ===
+  31:[[.5,.85],[.45,.65],[.55,.5],[.4,.35],[.6,.25],[.5,.1]],               // Flame 炎
+  32:[[.5,.4],[.7,.3],[.8,.5],[.65,.7],[.4,.65],[.25,.45],[.35,.25]],       // Tempest 嵐
+  33:[[.5,.15],[.2,.8],[.8,.8],[.5,.5]],                                    // Pyramid ピラミッド (三角+中心)
+  34:[[.45,.8],[.5,.6],[.55,.45],[.4,.3],[.65,.2],[.3,.5]],                 // Ember 残火
+  35:[[.1,.55],[.3,.4],[.45,.5],[.6,.35],[.75,.45],[.9,.5]],                // Glacier 氷河
+  36:[[.5,.1],[.5,.4],[.5,.7],[.5,.9],[.25,.25],[.75,.25],[.3,.8],[.7,.8]], // Yggdrasil 世界樹
+
+  // === 建造物・場所 ===
+  37:[[.3,.8],[.3,.4],[.4,.2],[.6,.2],[.7,.4],[.7,.8]],                    // Gate 門
+  38:[[.5,.1],[.45,.3],[.55,.3],[.43,.6],[.57,.6],[.4,.85],[.6,.85]],      // Tower 塔
+  39:[[.5,.08],[.45,.25],[.55,.25],[.42,.5],[.58,.5],[.38,.8],[.62,.8],[.5,.12]],// Lighthouse 灯台 (縦長+頂上の光)
+  40:[[.2,.75],[.2,.4],[.35,.2],[.5,.35],[.65,.2],[.8,.4],[.8,.75]],       // Citadel 城砦
+  41:[[.5,.1],[.4,.3],[.6,.3],[.35,.55],[.65,.55],[.3,.8],[.7,.8]],        // Babel 天楼
+
+  // === 象徴・紋章 ===
+  42:[[.5,.15],[.73,.3],[.73,.6],[.5,.75],[.27,.6],[.27,.3]],              // Emblem 紋章
+  43:[[.5,.15],[.68,.3],[.68,.55],[.5,.65],[.32,.55],[.32,.3],[.5,.85]],   // Mirror 鏡
+  44:[[.3,.15],[.7,.15],[.5,.5],[.3,.85],[.7,.85],[.5,.15],[.5,.85]],      // Hourglass 砂時計 (上三角+下三角+くびれ)
+  45:[[.5,.2],[.5,.6],[.2,.4],[.8,.4],[.15,.55],[.85,.55]],                // Scale 天秤
+  46:[[.5,.15],[.7,.3],[.72,.55],[.6,.75],[.4,.75],[.28,.55],[.3,.3]],     // Mask 仮面
+  47:[[.25,.4],[.75,.4],[.75,.75],[.25,.75],[.3,.3],[.7,.3]],              // Pandora パンドラ
+
+  // === 楽器・芸術 ===
+  48:[[.35,.15],[.35,.85],[.65,.8],[.65,.5],[.65,.25],[.35,.5]],           // Harp 竪琴
+  49:[[.5,.15],[.5,.3],[.65,.5],[.7,.7],[.3,.7],[.35,.5]],                 // Bell 鐘
+  50:[[.35,.15],[.65,.15],[.7,.4],[.65,.7],[.35,.7],[.3,.4],[.5,.75]],     // Lyre リラ (U字フレーム)
+  51:[[.5,.12],[.5,.88],[.12,.5],[.88,.5],[.5,.5],[.35,.25],[.65,.25],[.35,.75],[.65,.75]], // Compass コンパス (円+十字+方位)
+
+  // === 身体・翼 ===
+  52:[[.2,.65],[.35,.5],[.5,.35],[.7,.2],[.85,.25],[.75,.45]],             // Wing 翼 (付け根左下、先端右上へ広がる)
+  53:[[.45,.15],[.47,.35],[.5,.55],[.53,.75],[.55,.9],[.35,.45],[.65,.45]],// Feather 羽根
+  54:[[.15,.5],[.35,.3],[.65,.3],[.85,.5],[.65,.7],[.35,.7],[.5,.5]],      // Eye 眼
+  55:[[.5,.2],[.72,.3],[.78,.5],[.72,.65],[.5,.72],[.28,.65],[.22,.5],[.28,.3]], // Halo 光輪
+  56:[[.5,.15],[.65,.4],[.5,.5],[.35,.4],[.5,.85],[.65,.6],[.35,.6]],      // Third Eye 第三の眼
+
+  // === 幾何・抽象 ===
+  57:[[.5,.1],[.5,.9],[.5,.5],[.15,.5],[.85,.5]],                          // Crux 十字架 (縦+横の交差)
+  58:[[.3,.25],[.3,.75],[.6,.5],[.75,.3],[.75,.5],[.75,.7]],               // Prism プリズム
+  59:[[.5,.18],[.73,.28],[.82,.5],[.73,.72],[.5,.82],[.27,.72],[.18,.5],[.27,.28]], // Ring リング (円環)
+  60:[[.5,.45],[.65,.25],[.8,.4],[.65,.6],[.5,.55],[.35,.7],[.2,.55],[.35,.35]], // Möbius メビウス
+};
+
+/* Get anchor positions for a noun, with jitter. numAnchors = how many to place. */
+function getTemplatePositions(nounIdx, numAnchors, seed) {
+  const template = NOUN_TEMPLATES[nounIdx];
+  if (!template) {
+    // Fallback: random spread
+    const rng = mulberry32(seed);
+    return Array.from({length: numAnchors}, () => [0.15 + rng()*0.7, 0.15 + rng()*0.7]);
+  }
+
+  const rng = mulberry32(seed);
+  const jitter = 0.04; // max random offset
+
+  if (numAnchors <= template.length) {
+    // Subsample template evenly
+    const step = template.length / numAnchors;
+    return Array.from({length: numAnchors}, (_, i) => {
+      const ti = Math.min(template.length - 1, Math.round(i * step));
+      return [
+        template[ti][0] + (rng() - 0.5) * jitter * 2,
+        template[ti][1] + (rng() - 0.5) * jitter * 2,
+      ];
+    });
+  }
+
+  // More anchors than template points: interpolate + jitter
+  const positions = [];
+  for (let i = 0; i < numAnchors; i++) {
+    const tIdx = (i / numAnchors) * template.length;
+    const lo = Math.floor(tIdx);
+    const hi = Math.min(template.length - 1, lo + 1);
+    const frac = tIdx - lo;
+    const x = template[lo][0] + frac * (template[hi][0] - template[lo][0]);
+    const y = template[lo][1] + frac * (template[hi][1] - template[lo][1]);
+    positions.push([
+      x + (rng() - 0.5) * jitter * 2,
+      y + (rng() - 0.5) * jitter * 2,
+    ]);
+  }
+  return positions;
+}
+
+/* Adjective-based color system: each adjective has a primary color */
+const ADJ_COLORS = [
+  '#F9D976', '#C4923A', // Golden, Sacred (金/暖色)
+  '#C0C8E0', '#E8ECF8', // Silver, Luminous (銀/月光)
+  '#DC143C', '#FF6B35', // Crimson, Burning (赤/炎)
+  '#7EB8DA', '#B8D8F0', // Ethereal, Spectral (青白/霊的)
+  '#9B6BFF', '#5A2D82', // Mystic, Arcane (紫/神秘)
+  '#4A4A5A', '#6A6A7A', // Silent, Veiled (暗/静寂)
+  '#68C8E8', '#1A3A5A', // Frozen, Abyssal (氷/青)
+  '#5AA050', '#3A5A2A', // Ancient, Verdant (緑/自然)
+  '#F0F0FF', '#D0D8F0', // Infinite, Celestial (白/光)
+  '#FFF4C0', '#C8A0FF', // Radiant, Phantom (虹/多色)
+];
+
+/* ==================== GALAXY CYCLES v2 (Golden Angle + anchor/field + rarity) ==================== */
+const GOLDEN_ANGLE = 137.508 * Math.PI / 180;
+
+// Generate demo cycles with v2 logic
+function generateDemoCycle(id, dateRange, seedCard, readings) {
+  const date = new Date(2026, id, 3);
+  const nameResult = generateConstellationName(seedCard, date);
+  const card = TAROT[seedCard];
+  const baseColor = ADJ_COLORS[nameResult.adjIdx] || '#F9D976';
+
+  const dots = [];
+  const rng = mulberry32(seedCard * 1000 + id * 7);
+  const majors = [], minors = [];
+  readings.forEach(r => { if (r.isMajor) majors.push(r); else minors.push(r); });
+
+  // Anchors on noun template
+  const templatePos = getTemplatePositions(nameResult.nounIdx, majors.length, seedCard * 100 + id);
+  for (let i = 0; i < majors.length; i++) {
+    const [nx, ny] = templatePos[i];
+    const zLayer = (majors[i].cardId % 3) - 1;
+    dots.push({
+      x: Math.max(5, Math.min(75, nx * 80)),
+      y: Math.max(5, Math.min(75, ny * 80)),
+      z: Math.max(-1, Math.min(1, zLayer + (rng()-0.5)*0.4)),
+      isMajor: true, cardId: majors[i].cardId
+    });
+  }
+  // Field stars scattered
+  for (let i = 0; i < minors.length; i++) {
+    const r = minors[i];
+    const angle = r.cardId * GOLDEN_ANGLE;
+    const radius = 10 + (i / minors.length) * 24;
+    dots.push({
+      x: Math.max(5, Math.min(75, 40 + radius * Math.cos(angle))),
+      y: Math.max(5, Math.min(75, 40 + radius * Math.sin(angle))),
+      z: Math.max(-1, Math.min(1, ((r.cardId%3)-1) + (rng()-0.5)*0.4)),
+      isMajor: false, cardId: r.cardId
+    });
+  }
+
+  return {
+    id, dateRange, seedCard,
+    name: nameResult.en, nameJP: nameResult.jp,
+    symbol: card.emoji,
+    nounIdx: nameResult.nounIdx,
+    stars: nameResult.stars, rarityLabel: nameResult.label,
+    color: hexToRgba(baseColor, 0.9),
+    glowColor: hexToRgba(baseColor, 0.4),
+    borderColor: hexToRgba(baseColor, 0.25),
+    bgGrad: [hexToRgba(baseColor, 0.12), hexToRgba(baseColor, 0.03)],
+    dots
+  };
+}
+
+// Simple seeded RNG
+function mulberry32(a) {
+  return function() {
+    a |= 0; a = a + 0x6D2B79F5 | 0;
+    let t = Math.imul(a ^ a >>> 15, 1 | a);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+
+// Generate demo readings — guarantee at least 5 major arcana (anchors)
+function makeDemoReadings(seedCard, count, seed) {
+  const rng = mulberry32(seed);
+  const readings = [];
+  // Force first 5 as major arcana for enough anchors
+  for (let i = 0; i < Math.min(5, count); i++) {
+    readings.push({ cardId: Math.floor(rng() * 22), isMajor: true });
+  }
+  for (let i = 6; i < count; i++) {
+    const r = rng();
+    if (r < 0.2) {
+      readings.push({ cardId: Math.floor(rng() * 22), isMajor: true });
+    } else {
+      readings.push({ cardId: 22 + Math.floor(rng() * 56), isMajor: false });
+    }
+  }
+  return readings;
+}
+
+/* Force-create demo cycle with specific adj+noun */
+function forceNameDemoCycle(id, seedCard, readings, forceAdjIdx, forceNounIdx) {
+  const card = TAROT[seedCard];
+  const nameEN = 'The ' + NAME_ADJ_EN[forceAdjIdx] + ' ' + NAME_NOUN_EN[forceNounIdx];
+  const nameJP = NAME_ADJ_JP[forceAdjIdx] + NAME_NOUN_JP[forceNounIdx];
+  const combined = ADJ_TIERS[forceAdjIdx] + NOUN_TIERS[forceNounIdx];
+  const stars = Math.min(5, combined + 1);
+  const baseColor = ADJ_COLORS[forceAdjIdx];
+
+  const dots = [];
+  const rng = mulberry32(seedCard * 1000 + id * 7);
+
+  // Separate major (anchors) and minor (field) readings
+  const majors = [], minors = [];
+  readings.forEach(r => { if (r.isMajor) majors.push(r); else minors.push(r); });
+
+  // Place anchors on noun shape template
+  const templatePos = getTemplatePositions(forceNounIdx, majors.length, seedCard * 100 + id);
+  for (let i = 0; i < majors.length; i++) {
+    const [nx, ny] = templatePos[i];
+    const zLayer = (majors[i].cardId % 3) - 1;
+    const zJitter = (rng() - 0.5) * 0.4;
+    dots.push({
+      x: Math.max(5, Math.min(75, nx * 80)),
+      y: Math.max(5, Math.min(75, ny * 80)),
+      z: Math.max(-1, Math.min(1, zLayer + zJitter)),
+      isMajor: true,
+      cardId: majors[i].cardId
+    });
+  }
+
+  // Place field stars scattered with Golden Angle
+  for (let i = 0; i < minors.length; i++) {
+    const r = minors[i];
+    const angle = r.cardId * GOLDEN_ANGLE;
+    const radius = 10 + (i / minors.length) * 24;
+    const x = 40 + radius * Math.cos(angle);
+    const y = 40 + radius * Math.sin(angle);
+    const zLayer = (r.cardId % 3) - 1;
+    const zJitter = (rng() - 0.5) * 0.4;
+    dots.push({
+      x: Math.max(5, Math.min(75, x)),
+      y: Math.max(5, Math.min(75, y)),
+      z: Math.max(-1, Math.min(1, zLayer + zJitter)),
+      isMajor: false,
+      cardId: r.cardId
+    });
+  }
+
+  return {
+    id, seedCard,
+    name: nameEN, nameJP: nameJP,
+    symbol: card.emoji,
+    nounIdx: forceNounIdx,
+    stars: stars, rarityLabel: RARITY_LABELS[stars-1],
+    color: hexToRgba(baseColor, 0.9),
+    glowColor: hexToRgba(baseColor, 0.4),
+    borderColor: hexToRgba(baseColor, 0.25),
+    bgGrad: [hexToRgba(baseColor, 0.12), hexToRgba(baseColor, 0.03)],
+    dots
+  };
+}
+
+/* All 61 nouns as demo cycles: [nounIdx, adjIdx, seedCard] */
+const DEMO_SPECS = [
+  // 天体・宇宙
+  [ 0, 16, 10], // Infinite Orbit / 無限の軌道
+  [ 1, 12,  9], // Frozen Comet / 凍てつく彗星
+  [ 2,  3, 17], // Luminous Meteor / 光輝の流星
+  [ 3,  0, 19], // Golden Nova / 黄金の新星
+  [ 4,  2, 18], // Silver Crescent / 銀色の三日月
+  [ 5, 18,  0], // Radiant Singularity / 煌めきの特異点
+  // 神話の生き物
+  [ 6,  4,  8], // Crimson Phoenix / 深紅のフェニックス
+  [ 7,  5,  7], // Burning Dragon / 燃ゆるドラゴン
+  [ 8,  0, 11], // Golden Griffin / 黄金のグリフィン
+  [ 9, 17,  5], // Celestial Unicorn / 天上のユニコーン
+  [10,  6,  2], // Ethereal Pegasus / 幽玄のペガサス
+  [11, 13, 13], // Abyssal Kraken / 深淵のクラーケン
+  [12, 10, 21], // Silent Ouroboros / 静寂のウロボロス
+  // 動物・鳥→混合
+  [13, 10, 15], // Silent Serpent / 静寂のサーペント
+  [14,  4,  7], // Crimson Trident / 深紅のトライデント
+  [15,  2, 16], // Silver Anchor / 銀色のアンカー
+  [16, 14,  3], // Ancient Bow / 古の弓
+  [17,  6,  3], // Ethereal Butterfly / 幽玄の蝶
+  [18, 13, 12], // Abyssal Leviathan / 深淵のレヴィアタン
+  // 武器・道具
+  [19,  4,  7], // Crimson Arrow / 深紅の矢
+  [20,  2, 16], // Silver Sword / 銀色の剣
+  [21,  3, 4],  // Luminous Shield / 光輝の盾
+  [22,  9, 20], // Arcane Key / 秘奥の鍵
+  [23, 15, 14], // Verdant Lantern / 翠の灯火
+  [24,  1,  5], // Sacred Excalibur / 聖なる聖剣
+  // 王権・宝物
+  [25,  0, 19], // Golden Crown / 黄金の冠
+  [26, 17,  6], // Celestial Chalice / 天上の聖杯
+  [27,  8,  4], // Mystic Throne / 秘密の玉座
+  [28,  2, 15], // Silver Scepter / 銀色の笏杖
+  [29, 18,  9], // Radiant Jewel / 煌めきの宝玉
+  [30,  9, 21], // Arcane Philosopher's Stone / 秘奥の賢者の石
+  // 自然・植物
+  [31,  4,  8], // Crimson Flame / 深紅の炎
+  [32, 13, 16], // Abyssal Tempest / 深淵の嵐
+  [33,  0, 11], // Golden Pyramid / 黄金のピラミッド
+  [34, 19, 15], // Phantom Ember / 幻影の残火
+  [35, 12,  1], // Frozen Glacier / 凍てつく氷河
+  [36, 15,  9], // Verdant Yggdrasil / 翠の世界樹
+  // 建造物・場所
+  [37, 14, 10], // Ancient Gate / 古の門
+  [38,  0, 16], // Golden Tower / 黄金の塔
+  [39,  0, 12], // Golden Lighthouse / 黄金の灯台
+  [40,  2, 20], // Silver Citadel / 銀色の城砦
+  [41,  1,  0], // Sacred Babel / 聖なる天楼
+  // 象徴・紋章
+  [42, 14,  8], // Ancient Emblem / 古の紋章
+  [43, 16, 11], // Infinite Mirror / 無限の鏡
+  [44, 10, 13], // Silent Hourglass / 静寂の砂時計
+  [45, 17,  7], // Celestial Scale / 天上の天秤
+  [46,  5, 18], // Burning Mask / 燃ゆる仮面
+  [47,  9, 20], // Arcane Pandora / 秘奥のパンドラ
+  // 楽器・芸術
+  [48,  0,  6], // Golden Harp / 黄金の竪琴
+  [49, 12, 14], // Frozen Bell / 凍てつく鐘
+  [50,  0,  6], // Golden Lyre / 黄金のリラ
+  [51,  2, 17], // Silver Compass / 銀色のコンパス
+  // 身体・翼
+  [52,  6,  3], // Ethereal Wing / 幽玄の翼
+  [53,  3, 19], // Luminous Feather / 光輝の羽根
+  [54,  8, 13], // Mystic Eye / 秘密の眼
+  [55,  1, 14], // Sacred Halo / 聖なる光輪
+  [56, 19,  0], // Phantom Third Eye / 幻影の第三の眼
+  // 幾何・抽象
+  [57, 17, 17], // Celestial Crux / 天上の十字架
+  [58, 18, 10], // Radiant Prism / 煌めきのプリズム
+  [59,  2, 13], // Silver Ring / 銀色のリング
+  [60,  8,  0], // Mystic Möbius / 秘密のメビウス
+];
+
+const GALAXY_CYCLES = DEMO_SPECS.map((spec, i) => {
+  const [nounIdx, adjIdx, seedCard] = spec;
+  return forceNameDemoCycle(i, seedCard, makeDemoReadings(seedCard, 14 + (i % 6), 100 + i * 37), adjIdx, nounIdx);
+});
 
 /* ==================== BACKGROUND ==================== */
 const bgC=document.getElementById('bgCanvas');
@@ -506,6 +1085,54 @@ const BREATH_PERIODS=Array.from({length:TOTAL},(_,i)=>2.0+Math.abs(Math.sin(i*0.
 /* Full moon position (~day 15) and new moon position (day 1) */
 const FULL_MOON_DAY = Math.round(SYNODIC / 2);
 
+/* Pre-compute Golden Angle positions + z-layers for reading dots in current cycle.
+   These are the "final" constellation positions, viewed at 55° camera to look scattered. */
+const CYCLE_GA_POSITIONS = []; // {gaX, gaY, gaZ} per day (only for days with readings)
+(function precomputeGoldenAnglePositions() {
+  let readingIdx = 0;
+  const rng = mulberry32(42);
+  for (let d = 0; d < TOTAL; d++) {
+    const dd = DAYS_DATA[d];
+    if (!dd || dd.card_id === null) {
+      CYCLE_GA_POSITIONS.push(null);
+      continue;
+    }
+    const angle = dd.card_id * GOLDEN_ANGLE;
+    const radius = 0.15 + (readingIdx / Math.max(1, ACTIVE)) * 0.28;
+    const x = 0.5 + radius * Math.cos(angle);
+    const y = 0.5 + radius * Math.sin(angle);
+    const zLayer = (dd.card_id % 3) - 1; // -1, 0, 1
+    const zJitter = (rng() - 0.5) * 0.4;
+    CYCLE_GA_POSITIONS.push({
+      gaX: Math.max(0.08, Math.min(0.92, x)),
+      gaY: Math.max(0.08, Math.min(0.92, y)),
+      gaZ: Math.max(-1, Math.min(1, zLayer + zJitter))
+    });
+    readingIdx++;
+  }
+})();
+
+/* Project a Golden Angle dot with anamorphic 3D camera (55° base) + user drag rotation.
+   camAngle: base anamorphic tilt (radians). User rotation from sp.rotX/sp.rotY is added. */
+function projectGA3D(nx, ny, nz, W, H, cx, cy, camAngle, FOV) {
+  const zWorld = nz * 80;
+  const cosA = Math.cos(camAngle), sinA = Math.sin(camAngle);
+  const xWorld = (nx - 0.5) * W * 0.85;
+  const yWorld = (ny - 0.5) * H * 0.7;
+  // Apply anamorphic tilt first
+  const yTilt = yWorld * cosA - zWorld * sinA;
+  const zTilt = yWorld * sinA + zWorld * cosA;
+  // Then apply user drag rotation (same as rot3D)
+  const rv = rot3D(xWorld, yTilt, zTilt);
+  const s = FOV / (FOV + rv.z + 260);
+  return {
+    x: cx + rv.x * s,
+    y: cy + rv.y * s,
+    s: s,
+    rz: rv.z
+  };
+}
+
 function renderSpiral3D(){
   const canvas=document.getElementById('spiralCanvas');
   if(!canvas||!canvas.offsetWidth) return;
@@ -518,8 +1145,9 @@ function renderSpiral3D(){
   const now=performance.now()/1000;
   const cx=W/2,cy=H*0.44,FOV=360*sp.zoom;
   const b=Math.min(W,H)*0.057,ZSPAN=55;
+  const CAM_55 = 55 * Math.PI / 180; // anamorphic camera angle
 
-  // Ghost path
+  // ===== Layer 1: Ghost spiral path (guide line) =====
   const pathPts=[];
   for(let i=0;i<=500;i++){
     const th=(i/500)*Math.PI*4.6,r=b*th;
@@ -532,117 +1160,143 @@ function renderSpiral3D(){
     const fade=1-Math.pow(i/pathPts.length,1.5);
     if(fade<0.01)continue;
     ctx.beginPath();ctx.moveTo(pp.x,pp.y);ctx.lineTo(p.x,p.y);
-    const a=Math.max(0.01,0.1*p.s*fade);
-    ctx.strokeStyle=`rgba(255,255,255,${a.toFixed(3)})`;ctx.lineWidth=Math.max(0.3,0.7*p.s*fade);ctx.stroke();
+    const a=Math.max(0.05,0.30*p.s*fade);
+    ctx.strokeStyle=`rgba(192,200,224,${a.toFixed(3)})`;ctx.lineWidth=Math.max(0.8,1.4*p.s*fade);ctx.stroke();
   }
 
-  // Day dots
-  const dots=[];
+  // ===== Layer 2: Spiral anchor dots (no-reading days stay on spiral) =====
+  const spiralDots=[];
   for(let d=1;d<=TOTAL;d++){
     const th=(d/TOTAL)*Math.PI*4.2,r=b*th;
     const raw={x:r*Math.cos(th-Math.PI/2),y:r*Math.sin(th-Math.PI/2),z:(d/TOTAL)*ZSPAN-ZSPAN/2};
     const rv=rot3D(raw.x,raw.y,raw.z);
     const p=proj3D(rv.x,rv.y,rv.z,FOV,cx,cy);
-    dots.push({...p,d,active:d<=ACTIVE,curr:d===ACTIVE,rz:rv.z});
-  }
-  dots.sort((a,b)=>a.rz-b.rz);
-  sp.dotPositions=dots.filter(p=>p.active).map(p=>({x:p.x,y:p.y,d:p.d}));
-
-  // Active connection line
-  const act=dots.filter(p=>p.active).sort((a,b)=>a.d-b.d);
-  if(act.length>1){
-    ctx.beginPath();act.forEach((p,i)=>i===0?ctx.moveTo(p.x,p.y):ctx.lineTo(p.x,p.y));
-    const lg=ctx.createLinearGradient(act[0].x,act[0].y,act[act.length-1].x,act[act.length-1].y);
-    lg.addColorStop(0,'rgba(249,217,118,0.12)');lg.addColorStop(1,'rgba(246,189,96,0.65)');
-    ctx.strokeStyle=lg;ctx.lineWidth=1.4;ctx.stroke();
+    spiralDots.push({...p,d,rz:rv.z});
   }
 
-  // Draw dots
-  dots.forEach(p=>{
+  // Draw empty/future day markers on spiral
+  spiralDots.forEach(p=>{
     const sc=Math.max(0.5,p.s);
-    if(p.active){
-      const dd=DAYS_DATA[p.d-1];
-      if(!dd || dd.card_id===null){
-        /* Unplayed day: dim dot */
-        ctx.beginPath();ctx.arc(p.x,p.y,2*sc,0,Math.PI*2);
-        ctx.fillStyle=`rgba(85,85,85,${0.4*sc})`;ctx.fill();
-        return;
-      }
-
-      const col=cardToColor(dd);
-      const phase=BREATH_PHASES[p.d-1]||0;
-      const period=BREATH_PERIODS[p.d-1]||3;
-      const breath=0.7+0.3*Math.sin(now/period*Math.PI*2+phase);
-
-      let baseSize, glowBlur;
-      if(dd.is_major){
-        baseSize=8; glowBlur=12;
-      } else {
-        baseSize=4; glowBlur=6;
-      }
-
-      /* Moon phase special effects */
-      const isFullMoon = (p.d === FULL_MOON_DAY || p.d === FULL_MOON_DAY+1);
-      const isNewMoon = (p.d === 1);
-
-      if(isFullMoon){
-        baseSize *= 1.5;
-      }
-      if(isNewMoon){
-        baseSize *= 0.75;
-      }
-
-      if(p.curr) baseSize = Math.max(baseSize, 6.5);
-      const dotR=Math.max(2.5,baseSize)*sc*breath;
-
-      /* Glow */
-      const gR=glowBlur*sc;
-      const gg=ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,gR);
-      gg.addColorStop(0,hexToRgba(col,0.35*breath*sc));gg.addColorStop(1,'transparent');
-      ctx.fillStyle=gg;ctx.beginPath();ctx.arc(p.x,p.y,gR,0,Math.PI*2);ctx.fill();
-
-      /* Core dot */
-      if(isNewMoon){
-        ctx.beginPath();ctx.arc(p.x,p.y,dotR,0,Math.PI*2);ctx.fillStyle='#2A0030';ctx.fill();
-        /* Subtle outline */
-        ctx.beginPath();ctx.arc(p.x,p.y,dotR+1,0,Math.PI*2);
-        ctx.strokeStyle='rgba(155,107,255,0.4)';ctx.lineWidth=0.8;ctx.stroke();
-      } else {
-        ctx.beginPath();ctx.arc(p.x,p.y,dotR,0,Math.PI*2);ctx.fillStyle=col;ctx.fill();
-      }
-
-      /* Full moon ring + radial glow */
-      if(isFullMoon){
-        ctx.save();
-        ctx.shadowColor='#FFF0C0';ctx.shadowBlur=18;
-        ctx.beginPath();ctx.arc(p.x,p.y,dotR+4*sc,0,Math.PI*2);
-        ctx.strokeStyle=`rgba(255,240,192,${0.5*sc})`;ctx.lineWidth=2;ctx.stroke();
-        ctx.restore();
-        const fmg=ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,dotR+12*sc);
-        fmg.addColorStop(0,'rgba(255,240,192,0.15)');fmg.addColorStop(1,'transparent');
-        ctx.fillStyle=fmg;ctx.beginPath();ctx.arc(p.x,p.y,dotR+12*sc,0,Math.PI*2);ctx.fill();
-      }
-
-      /* Current day ring */
-      if(p.curr){
-        ctx.beginPath();ctx.arc(p.x,p.y,11*sc,0,Math.PI*2);
-        ctx.strokeStyle=`rgba(249,217,118,${0.5*sc})`;ctx.lineWidth=1.5;ctx.stroke();
-      }
-
-      /* 5% deterministic random ring (only days with readings, not full/new moon) */
-      if(!isFullMoon && !isNewMoon && (p.d*31+TOTAL*7)%100 < 5){
-        ctx.save();
-        ctx.shadowColor=col;ctx.shadowBlur=10;
-        ctx.beginPath();ctx.arc(p.x,p.y,dotR+3*sc,0,Math.PI*2);
-        ctx.strokeStyle=hexToRgba(col,0.3*sc);ctx.lineWidth=1.2;ctx.stroke();
-        ctx.restore();
-      }
-    } else {
-      /* Future (inactive) days */
+    const dd=DAYS_DATA[p.d-1];
+    const active = p.d <= ACTIVE;
+    if(!active){
       ctx.beginPath();ctx.arc(p.x,p.y,2.0*sc,0,Math.PI*2);
       ctx.fillStyle=`rgba(255,255,255,${0.1*sc})`;ctx.fill();
+    } else if(!dd || dd.card_id===null){
+      ctx.beginPath();ctx.arc(p.x,p.y,2*sc,0,Math.PI*2);
+      ctx.fillStyle=`rgba(85,85,85,${0.4*sc})`;ctx.fill();
+    }
+    // Days with readings: small faint anchor on spiral showing origin
+    if(active && dd && dd.card_id!==null){
+      ctx.beginPath();ctx.arc(p.x,p.y,1.2*sc,0,Math.PI*2);
+      ctx.fillStyle=`rgba(255,255,255,${0.08*sc})`;ctx.fill();
     }
   });
+
+  // ===== Layer 3: Reading dots at Golden Angle positions + z-layers (anamorphic 55°) =====
+  const gaDots=[];
+  sp.dotPositions=[];
+
+  for(let d=1;d<=ACTIVE;d++){
+    const dd=DAYS_DATA[d-1];
+    if(!dd || dd.card_id===null) continue;
+    const ga=CYCLE_GA_POSITIONS[d-1];
+    if(!ga) continue;
+
+    const p=projectGA3D(ga.gaX, ga.gaY, ga.gaZ, W, H, cx, cy, CAM_55, FOV);
+    gaDots.push({...p, d, dd, ga});
+    sp.dotPositions.push({x:p.x, y:p.y, d:d});
+  }
+
+  // Sort by depth (back to front)
+  gaDots.sort((a,b)=>a.rz-b.rz);
+
+  // Draw connection threads from spiral origin to GA position (very faint)
+  gaDots.forEach(gd=>{
+    const sp2=spiralDots[gd.d-1];
+    if(!sp2) return;
+    ctx.beginPath();ctx.moveTo(sp2.x,sp2.y);ctx.lineTo(gd.x,gd.y);
+    ctx.strokeStyle='rgba(249,217,118,0.06)';ctx.lineWidth=0.5;
+    ctx.setLineDash([3,6]);ctx.stroke();ctx.setLineDash([]);
+  });
+
+  // Draw the reading dots at anamorphic positions
+  gaDots.forEach(gd=>{
+    const dd=gd.dd;
+    const col=cardToColor(dd);
+    const sc=Math.max(0.5, gd.s);
+    const phase=BREATH_PHASES[gd.d-1]||0;
+    const period=BREATH_PERIODS[gd.d-1]||3;
+    const breath=0.7+0.3*Math.sin(now/period*Math.PI*2+phase);
+
+    let baseSize, glowBlur;
+    if(dd.is_major){
+      baseSize=8; glowBlur=12;
+    } else {
+      baseSize=4; glowBlur=6;
+    }
+
+    /* Moon phase modifiers */
+    const isFullMoon = (gd.d === FULL_MOON_DAY || gd.d === FULL_MOON_DAY+1);
+    const isNewMoon = (gd.d === 1);
+    if(isFullMoon) baseSize *= 1.5;
+    if(isNewMoon) baseSize *= 0.75;
+    if(gd.d===ACTIVE) baseSize = Math.max(baseSize, 6.5);
+
+    const dotR=Math.max(2.5,baseSize)*sc*breath;
+
+    /* Glow */
+    const gR=glowBlur*sc;
+    const gg=ctx.createRadialGradient(gd.x,gd.y,0,gd.x,gd.y,gR);
+    gg.addColorStop(0,hexToRgba(col,0.35*breath*sc));gg.addColorStop(1,'transparent');
+    ctx.fillStyle=gg;ctx.beginPath();ctx.arc(gd.x,gd.y,gR,0,Math.PI*2);ctx.fill();
+
+    /* Core */
+    if(isNewMoon){
+      ctx.beginPath();ctx.arc(gd.x,gd.y,dotR,0,Math.PI*2);ctx.fillStyle='#2A0030';ctx.fill();
+      ctx.beginPath();ctx.arc(gd.x,gd.y,dotR+1,0,Math.PI*2);
+      ctx.strokeStyle='rgba(155,107,255,0.4)';ctx.lineWidth=0.8;ctx.stroke();
+    } else {
+      ctx.beginPath();ctx.arc(gd.x,gd.y,dotR,0,Math.PI*2);ctx.fillStyle=col;ctx.fill();
+    }
+
+    /* Full moon ring + radial glow */
+    if(isFullMoon){
+      ctx.save();
+      ctx.shadowColor='#FFF0C0';ctx.shadowBlur=18;
+      ctx.beginPath();ctx.arc(gd.x,gd.y,dotR+4*sc,0,Math.PI*2);
+      ctx.strokeStyle=`rgba(255,240,192,${0.5*sc})`;ctx.lineWidth=2;ctx.stroke();
+      ctx.restore();
+      const fmg=ctx.createRadialGradient(gd.x,gd.y,0,gd.x,gd.y,dotR+12*sc);
+      fmg.addColorStop(0,'rgba(255,240,192,0.15)');fmg.addColorStop(1,'transparent');
+      ctx.fillStyle=fmg;ctx.beginPath();ctx.arc(gd.x,gd.y,dotR+12*sc,0,Math.PI*2);ctx.fill();
+    }
+
+    /* Current day ring */
+    if(gd.d===ACTIVE){
+      ctx.beginPath();ctx.arc(gd.x,gd.y,11*sc,0,Math.PI*2);
+      ctx.strokeStyle=`rgba(249,217,118,${0.5*sc})`;ctx.lineWidth=1.5;ctx.stroke();
+    }
+
+    /* 5% random ring */
+    if(!isFullMoon && !isNewMoon && (gd.d*31+TOTAL*7)%100 < 5){
+      ctx.save();
+      ctx.shadowColor=col;ctx.shadowBlur=10;
+      ctx.beginPath();ctx.arc(gd.x,gd.y,dotR+3*sc,0,Math.PI*2);
+      ctx.strokeStyle=hexToRgba(col,0.3*sc);ctx.lineWidth=1.2;ctx.stroke();
+      ctx.restore();
+    }
+  });
+
+  // ===== Stella core glow =====
+  ctx.beginPath();ctx.arc(cx,cy,20,0,Math.PI*2);
+  const coreG=ctx.createRadialGradient(cx,cy,0,cx,cy,20);
+  coreG.addColorStop(0,'rgba(249,217,118,0.15)');coreG.addColorStop(1,'transparent');
+  ctx.fillStyle=coreG;ctx.fill();
+  ctx.beginPath();ctx.arc(cx,cy,6,0,Math.PI*2);
+  const coreI=ctx.createRadialGradient(cx,cy,0,cx,cy,8);
+  coreI.addColorStop(0,'rgba(249,217,118,0.6)');coreI.addColorStop(1,'transparent');
+  ctx.fillStyle=coreI;ctx.fill();
 }
 
 function startSpiral3D(){
@@ -709,49 +1363,99 @@ function showDotPopup(day,px,py,canvas){
 }
 function hideDotPopup(){document.getElementById('dotPopup').classList.remove('visible');}
 
-/* ==================== GALAXY CARDS ==================== */
-function catmullRom(pts){
-  const result=[];
-  for(let i=0;i<pts.length-1;i++){
-    const p0=pts[Math.max(0,i-1)],p1=pts[i],p2=pts[i+1],p3=pts[Math.min(pts.length-1,i+2)];
-    for(let s=0;s<=16;s++){
-      const t=s/16,t2=t*t,t3=t2*t;
-      result.push({
-        x:0.5*((2*p1.x)+(-p0.x+p2.x)*t+(2*p0.x-5*p1.x+4*p2.x-p3.x)*t2+(-p0.x+3*p1.x-3*p2.x+p3.x)*t3),
-        y:0.5*((2*p1.y)+(-p0.y+p2.y)*t+(2*p0.y-5*p1.y+4*p2.y-p3.y)*t2+(-p0.y+3*p1.y-3*p2.y+p3.y)*t3)
-      });
+/* ==================== GALAXY CARDS v2 ==================== */
+/* Nearest-neighbor ordering to prevent line crossings */
+function nearestNeighborOrder(points) {
+  if (points.length <= 2) return [...points];
+  const remaining = [...points];
+  const ordered = [remaining.splice(0, 1)[0]];
+  while (remaining.length > 0) {
+    const last = ordered[ordered.length - 1];
+    let nearestIdx = 0, nearestDist = Infinity;
+    for (let i = 0; i < remaining.length; i++) {
+      const d = Math.hypot(remaining[i].x - last.x, remaining[i].y - last.y);
+      if (d < nearestDist) { nearestDist = d; nearestIdx = i; }
     }
+    ordered.push(remaining.splice(nearestIdx, 1)[0]);
   }
-  return result;
+  return ordered;
 }
 
-function drawCycleOnCanvas(canvas,cycle,progress,size){
-  const ctx=canvas.getContext('2d');const S=size||canvas.width;
-  ctx.clearRect(0,0,S,S);
-  const bg=ctx.createRadialGradient(S/2,S/2,0,S/2,S/2,S*0.7);
-  bg.addColorStop(0,cycle.bgGrad[0]);bg.addColorStop(1,cycle.bgGrad[1]);
-  ctx.fillStyle=bg;ctx.fillRect(0,0,S,S);
-  const scale=S/80;
-  const pts=cycle.dots.map(d=>({x:d.x*scale,y:d.y*scale}));
-  const spline=catmullRom(pts);
-  const drawCount=Math.floor(spline.length*Math.min(1,progress));
-  if(drawCount>1){
-    ctx.beginPath();ctx.moveTo(spline[0].x,spline[0].y);
-    for(let i=1;i<drawCount;i++)ctx.lineTo(spline[i].x,spline[i].y);
-    ctx.strokeStyle=cycle.color;ctx.lineWidth=1.2*scale/5;ctx.stroke();
-    ctx.beginPath();ctx.moveTo(spline[0].x,spline[0].y);
-    for(let i=1;i<drawCount;i++)ctx.lineTo(spline[i].x,spline[i].y);
-    ctx.strokeStyle=cycle.glowColor;ctx.lineWidth=3*scale/5;
-    ctx.shadowColor=cycle.glowColor;ctx.shadowBlur=8;ctx.stroke();ctx.shadowBlur=0;
+/* 3D projection for constellation dots */
+function projectConstellation3D(nx, ny, nz, S, camAngle) {
+  const zWorld = (nz || 0) * 80;
+  const cosA = Math.cos(camAngle), sinA = Math.sin(camAngle);
+  const yWorld = (ny / 80 - 0.5) * S;
+  const yRot = yWorld * cosA - zWorld * sinA;
+  const zRot = yWorld * sinA + zWorld * cosA;
+  const fov = 400;
+  const scale = fov / (fov + zRot + 100);
+  return {
+    x: S * 0.5 + (nx / 80 - 0.5) * S * scale,
+    y: S * 0.5 + yRot * scale,
+    s: scale
+  };
+}
+
+function drawCycleOnCanvas(canvas, cycle, progress, size, camAngle) {
+  const ctx = canvas.getContext('2d');
+  const S = size || canvas.width;
+  const cam = camAngle || 0;
+  ctx.clearRect(0, 0, S, S);
+
+  // Background
+  const bg = ctx.createRadialGradient(S/2, S/2, 0, S/2, S/2, S*0.7);
+  bg.addColorStop(0, cycle.bgGrad[0]); bg.addColorStop(1, cycle.bgGrad[1]);
+  ctx.fillStyle = bg; ctx.fillRect(0, 0, S, S);
+
+  // Separate anchors (Major) and fields (Minor)
+  const anchors = [], fields = [];
+  cycle.dots.forEach(d => {
+    const p = projectConstellation3D(d.x, d.y, d.z, S, cam);
+    if (d.isMajor) anchors.push({...p, d});
+    else fields.push({...p, d});
+  });
+
+  // Draw field stars (small, no connections)
+  const fieldCount = Math.floor(fields.length * Math.min(1, progress));
+  fields.slice(0, fieldCount).forEach(f => {
+    const ds = Math.max(0.5, f.s || 1);
+    ctx.beginPath(); ctx.arc(f.x, f.y, 1.2 * ds, 0, Math.PI * 2);
+    ctx.fillStyle = hexToRgba(cycle.color.includes('rgba') ? '#F9D976' : '#888', 0.35);
+    ctx.fill();
+  });
+
+  // Build MST edges with shapeType
+  const shapeType = NOUN_SHAPES[cycle.nounIdx] || 'open';
+  const anchorPts = anchors.map(a => ({x: a.x, y: a.y}));
+  const edges = buildConstellationEdges(anchorPts, shapeType);
+
+  // Draw edges (MST + shape connections)
+  const connProgress = Math.min(1, progress / 0.6);
+  const drawEdgeCount = Math.max(0, Math.floor(edges.length * connProgress));
+  for (let i = 0; i < drawEdgeCount; i++) {
+    const e = edges[i];
+    const a1 = anchors[e.from], a2 = anchors[e.to];
+    if (!a1 || !a2) continue;
+    ctx.beginPath(); ctx.moveTo(a1.x, a1.y); ctx.lineTo(a2.x, a2.y);
+    // Glow
+    ctx.save();
+    ctx.shadowColor = cycle.glowColor; ctx.shadowBlur = 8;
+    ctx.strokeStyle = cycle.glowColor; ctx.lineWidth = 2.5; ctx.stroke();
+    ctx.restore();
+    // Main line
+    ctx.strokeStyle = cycle.color; ctx.lineWidth = 1.2; ctx.stroke();
   }
-  const dotCount=Math.floor(pts.length*Math.min(1,progress+0.1));
-  pts.slice(0,dotCount).forEach((p,i)=>{
-    ctx.beginPath();ctx.arc(p.x,p.y,2.2*scale/5,0,Math.PI*2);ctx.fillStyle=cycle.color;ctx.fill();
-    if(i===dotCount-1){
-      const gg=ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,8*scale/5);
-      gg.addColorStop(0,cycle.glowColor);gg.addColorStop(1,'transparent');
-      ctx.fillStyle=gg;ctx.beginPath();ctx.arc(p.x,p.y,8*scale/5,0,Math.PI*2);ctx.fill();
-    }
+
+  // Draw anchor dots (large with glow)
+  const anchorDotCount = Math.floor(anchors.length * Math.min(1, progress));
+  anchors.slice(0, anchorDotCount).forEach(a => {
+    const ds = Math.max(0.6, a.s || 1);
+    const gg = ctx.createRadialGradient(a.x, a.y, 0, a.x, a.y, 10 * ds);
+    gg.addColorStop(0, cycle.glowColor); gg.addColorStop(1, 'transparent');
+    ctx.fillStyle = gg; ctx.beginPath(); ctx.arc(a.x, a.y, 10 * ds, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(a.x, a.y, 3 * ds, 0, Math.PI * 2);
+    ctx.fillStyle = cycle.color; ctx.fill();
   });
 }
 
@@ -765,32 +1469,66 @@ function renderGalaxyCards(){
     const mini=document.createElement('div');mini.className='const-mini';
     const canvas=document.createElement('canvas');canvas.width=80;canvas.height=80;canvas.style.borderRadius='10px';
     mini.appendChild(canvas);
+    const anchors = cycle.dots.filter(d => d.isMajor).length;
     const meta=document.createElement('div');
-    meta.innerHTML=`<div class="const-date">${cycle.dateRange}</div><div class="const-seed">${cycle.symbol} ${TAROT[cycle.seedCard].name}</div>`;
+    meta.innerHTML=`
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div class="const-date">${NOUN_SHAPES[cycle.nounIdx] || 'open'}</div>
+        <div>${rarityStarsHTML(cycle.stars)}</div>
+      </div>
+      <div class="const-seed">${cycle.name}</div>
+      <div style="font-size:11px;color:#ACACAC">${cycle.nameJP || ''}</div>
+      <div style="font-size:10px;color:rgba(172,172,172,0.6);margin-top:2px">${cycle.dots.length} stars · ${anchors} anchors · ${cycle.rarityLabel}</div>`;
     card.appendChild(mini);card.appendChild(meta);grid.appendChild(card);
     drawCycleOnCanvas(canvas,cycle,1.0,80);
     card.onclick=()=>openReplayModal(cycle.id);
   });
 }
 
-/* ==================== REPLAY MODAL ==================== */
+/* ==================== REPLAY MODAL (v2: 3D camera 55°→0° + rarity) ==================== */
+const CAM_ANGLE_55 = 55 * Math.PI / 180;
 let replayRAF=null;
 function openReplayModal(cycleId){
   const cycle=GALAXY_CYCLES[cycleId];
-  document.getElementById('replayTitle').textContent=cycle.name;
-  document.getElementById('replaySubtitle').textContent=`${cycle.dateRange} \u00B7 ${cycle.dots.length} Alignments`;
+  document.getElementById('replayTitle').innerHTML = cycle.name + '<br><span style="font-size:14px;color:#F9D976;font-weight:300">' + (cycle.nameJP||'') + '</span>';
+  document.getElementById('replaySubtitle').innerHTML = `${cycle.dots.length} stars · ${cycle.dots.filter(d=>d.isMajor).length} anchors · ${NOUN_SHAPES[cycle.nounIdx]||'open'}<br>${rarityStarsHTML(cycle.stars)} <span style="font-size:11px;color:#ACACAC">${cycle.rarityLabel}</span>`;
   document.getElementById('replaySymbol').textContent=cycle.symbol;
   document.getElementById('replayName').textContent=cycle.name;
-  document.getElementById('replayDate').textContent=cycle.dateRange+', 2026';
+  document.getElementById('replayDate').textContent='Shape: ' + (NOUN_SHAPES[cycle.nounIdx]||'open');
   document.getElementById('replayModal').classList.add('visible');
   const canvas=document.getElementById('replayCanvas');
   if(replayRAF)cancelAnimationFrame(replayRAF);
   const start=performance.now();
+  const TOTAL_MS = 6500;
   function anim(){
-    const prog=Math.min(1,(performance.now()-start)/2800);
-    drawCycleOnCanvas(canvas,cycle,prog,300);
-    if(prog<1)replayRAF=requestAnimationFrame(anim);else replayRAF=null;
+    const elapsed = performance.now() - start;
+    const t = Math.min(1, elapsed / TOTAL_MS);
+
+    // Phase 1: Camera 55°→0° (0-3s = 0-0.46)
+    const cameraT = Math.min(1, t / 0.46);
+    const easedCam = cameraT < 0.5 ? 2*cameraT*cameraT : 1 - Math.pow(-2*cameraT+2,2)/2;
+    const camAngle = CAM_ANGLE_55 * (1 - easedCam);
+
+    // Phase 2: Line connections (0.46-0.69)
+    const lineT = Math.max(0, Math.min(1, (t - 0.46) / 0.23));
+
+    // Combined progress
+    const prog = cameraT * 0.4 + lineT * 0.6;
+
+    drawCycleOnCanvas(canvas, cycle, prog, 300, camAngle);
+
+    // Phase 3: Fade in name/info (0.69-1.0)
+    const fadeT = Math.max(0, Math.min(1, (t - 0.69) / 0.31));
+    document.getElementById('replaySymbol').style.opacity = fadeT;
+    document.getElementById('replayName').style.opacity = fadeT;
+    document.getElementById('replayDate').style.opacity = fadeT;
+
+    if(t<1) replayRAF=requestAnimationFrame(anim); else replayRAF=null;
   }
+  // Reset opacity
+  document.getElementById('replaySymbol').style.opacity = '0';
+  document.getElementById('replayName').style.opacity = '0';
+  document.getElementById('replayDate').style.opacity = '0';
   anim();
 }
 function closeReplayModal(){
@@ -798,115 +1536,201 @@ function closeReplayModal(){
   document.getElementById('replayModal').classList.remove('visible');
 }
 
-/* ==================== CONSTELLATION FORMATION ==================== */
+/* ==================== CONSTELLATION FORMATION v2 (3D camera anim) ==================== */
 function triggerConstellationFormation(){
-  const newCycle=Object.assign({},GALAXY_CYCLES[Math.floor(Math.random()*GALAXY_CYCLES.length)]);
-  const generatedName=generateConstellationName(newCycle.seedCard,'en');
-  newCycle.name=generatedName;
-  newCycle.id=Date.now();
-  window._lastFormedCycle=newCycle;
-  // Save immediately so data persists even if app closes mid-animation
+  const baseCycle = GALAXY_CYCLES[Math.floor(Math.random()*GALAXY_CYCLES.length)];
+  const newCycle = Object.assign({}, baseCycle, { id: Date.now() });
+  const nameResult = generateConstellationName(newCycle.seedCard, new Date());
+  newCycle.name = nameResult.en;
+  newCycle.nameJP = nameResult.jp;
+  newCycle.stars = nameResult.stars;
+  newCycle.rarityLabel = nameResult.label;
+  newCycle.nounIdx = nameResult.nounIdx;
+  // Update color to match adjective
+  const adjColor = ADJ_COLORS[nameResult.adjIdx] || '#F9D976';
+  newCycle.color = hexToRgba(adjColor, 0.9);
+  newCycle.glowColor = hexToRgba(adjColor, 0.4);
+  newCycle.borderColor = hexToRgba(adjColor, 0.25);
+  newCycle.bgGrad = [hexToRgba(adjColor, 0.12), hexToRgba(adjColor, 0.03)];
+  window._lastFormedCycle = newCycle;
   if(!GALAXY_CYCLES.find(c=>c.id===newCycle.id)){ GALAXY_CYCLES.push(newCycle); }
   if(typeof saveCycles==='function') saveCycles();
+
   const overlay=document.getElementById('overlayFormation');
   const canvas=document.getElementById('formationCanvas');
-  canvas.width=window.innerWidth;canvas.height=window.innerHeight;
+  canvas.width=window.innerWidth; canvas.height=window.innerHeight;
   overlay.classList.add('visible');
   const stageEl=document.getElementById('formationStage');
   const symEl=document.getElementById('formationSymbol');
   const nameEl=document.getElementById('formationName');
   const quoteEl=document.getElementById('formationQuote');
   const closeBtn=document.getElementById('formationClose');
-  symEl.style.opacity='0';nameEl.style.opacity='0';quoteEl.style.opacity='0';closeBtn.classList.remove('visible');
-  stageEl.textContent='CONVERGENCE';
+  symEl.style.opacity='0'; nameEl.style.opacity='0'; quoteEl.style.opacity='0';
+  closeBtn.classList.remove('visible');
+
   const ctx=canvas.getContext('2d');
-  const W=canvas.width,H=canvas.height,cx=W/2,cy=H*0.42;
-  const b=Math.min(W,H)*0.057,ZSPAN=55;
-  let worldDots=[];
-  for(let d=1;d<=TOTAL;d++){
-    const th=(d/TOTAL)*Math.PI*4.2,r=b*th;
-    worldDots.push({ox:r*Math.cos(th-Math.PI/2)+cx,oy:r*Math.sin(th-Math.PI/2)+cy,x:0,y:0,d,tx:cx,ty:cy});
+  const W=canvas.width, H=canvas.height, cx=W/2, cy=H*0.42;
+
+  // Scale dots to screen coordinates
+  const scaleF = Math.min(W, H) * 0.065;
+  const screenDots = newCycle.dots.map(d => ({
+    tx: cx + (d.x - 40) * scaleF / 10,
+    ty: cy + (d.y - 40) * scaleF / 10,
+    z: d.z || 0,
+    isMajor: d.isMajor
+  }));
+
+  // Build spiral starting positions (like current cycle view)
+  const spiralDots = [];
+  const b = Math.min(W,H)*0.057;
+  for (let i = 0; i < screenDots.length; i++) {
+    const t = (i+1) / screenDots.length;
+    const th = t * Math.PI * 4.2;
+    const r = b * th;
+    spiralDots.push({
+      x: r * Math.cos(th - Math.PI/2) + cx,
+      y: r * Math.sin(th - Math.PI/2) + cy
+    });
   }
-  worldDots.forEach(wd=>{wd.x=wd.ox;wd.y=wd.oy;});
-  const scale=5.5;
-  const cDots=newCycle.dots.map(d=>({tx:cx+(d.x-40)*scale,ty:cy+(d.y-40)*scale}));
-  worldDots.forEach((wd,i)=>{const cd=cDots[i%cDots.length];wd.tx=cd.tx;wd.ty=cd.ty;});
-  const startTime=performance.now();
-  const QUOTES=['"Your orbits have crystallized into light."','"The cosmos recognised your alignment."','"A new constellation was born in your name."'];
-  const quote=QUOTES[Math.floor(Math.random()*QUOTES.length)];
-  let formRAF=null;
+
+  const startTime = performance.now();
+  const QUOTES = ['"Your orbits have crystallized into light."','"The cosmos recognised your alignment."','"A new constellation was born in your name."'];
+  const quote = QUOTES[Math.floor(Math.random()*QUOTES.length)];
 
   function animFormation(){
-    const elapsed=performance.now()-startTime;
+    const elapsed = performance.now() - startTime;
     ctx.clearRect(0,0,W,H);
-    ctx.fillStyle='rgba(2,4,10,0.95)';ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='rgba(2,4,10,0.95)'; ctx.fillRect(0,0,W,H);
     const ng=ctx.createRadialGradient(cx,cy,0,cx,cy,300);
     ng.addColorStop(0,`rgba(249,217,118,${0.04+(elapsed/8000)*0.08})`);
-    ng.addColorStop(0.5,'rgba(26,41,128,0.06)');ng.addColorStop(1,'transparent');
-    ctx.fillStyle=ng;ctx.fillRect(0,0,W,H);
+    ng.addColorStop(0.5,'rgba(26,41,128,0.06)'); ng.addColorStop(1,'transparent');
+    ctx.fillStyle=ng; ctx.fillRect(0,0,W,H);
 
-    if(elapsed<2000){
-      stageEl.textContent='CONVERGENCE';
-      const t=elapsed/2000,ease=t<0.5?2*t*t:1-Math.pow(-2*t+2,2)/2;
-      worldDots.forEach(wd=>{
-        wd.x=wd.ox+(cx-wd.ox)*ease*0.7;wd.y=wd.oy+(cy-wd.oy)*ease*0.7;
-        ctx.beginPath();ctx.arc(wd.x,wd.y,2.5,0,Math.PI*2);
-        ctx.fillStyle=`rgba(249,217,118,${0.3+0.4*(1-ease)})`;ctx.fill();
+    if (elapsed < 2000) {
+      // Phase 1: Spiral dots converge to center
+      stageEl.textContent = 'CONVERGENCE';
+      const t = elapsed / 2000;
+      const ease = t < 0.5 ? 2*t*t : 1 - Math.pow(-2*t+2, 2)/2;
+      spiralDots.forEach((sd, i) => {
+        const x = sd.x + (cx - sd.x) * ease * 0.7;
+        const y = sd.y + (cy - sd.y) * ease * 0.7;
+        ctx.beginPath(); ctx.arc(x, y, 2.5, 0, Math.PI*2);
+        ctx.fillStyle = `rgba(249,217,118,${0.3+0.4*(1-ease)})`; ctx.fill();
       });
-    } else if(elapsed<4000){
-      stageEl.textContent='IGNITION';
-      const t=(elapsed-2000)/2000,litCount=Math.floor(t*TOTAL);
-      worldDots.forEach((wd,i)=>{
-        if(i>litCount){ctx.beginPath();ctx.arc(cx,cy,2,0,Math.PI*2);ctx.fillStyle='rgba(249,217,118,0.15)';ctx.fill();return;}
-        const tt=Math.min(1,(t*TOTAL-i)/3);
-        wd.x=cx+(wd.tx-cx)*tt;wd.y=cy+(wd.ty-cy)*tt;
-        const glow=ctx.createRadialGradient(wd.x,wd.y,0,wd.x,wd.y,14);
-        glow.addColorStop(0,'rgba(249,217,118,0.6)');glow.addColorStop(1,'transparent');
-        ctx.fillStyle=glow;ctx.beginPath();ctx.arc(wd.x,wd.y,14,0,Math.PI*2);ctx.fill();
-        ctx.beginPath();ctx.arc(wd.x,wd.y,3.5,0,Math.PI*2);ctx.fillStyle='rgba(249,217,118,0.9)';ctx.fill();
+    } else if (elapsed < 5000) {
+      // Phase 2: Camera rotation 55° → 0° (3 seconds) — dots move from scattered to aligned
+      stageEl.textContent = 'CRYSTALLIZATION';
+      const t = (elapsed - 2000) / 3000;
+      const ease = t < 0.5 ? 2*t*t : 1 - Math.pow(-2*t+2, 2)/2;
+      const camAngle = CAM_ANGLE_55 * (1 - ease);
+
+      // Project dots with current camera angle
+      screenDots.forEach((sd, i) => {
+        const zWorld = sd.z * 80;
+        const cosA = Math.cos(camAngle), sinA = Math.sin(camAngle);
+        const yOff = sd.ty - cy;
+        const yRot = yOff * cosA - zWorld * sinA;
+        const zRot = yOff * sinA + zWorld * cosA;
+        const fov = 400;
+        const scale = fov / (fov + zRot + 100);
+        const px = cx + (sd.tx - cx) * scale;
+        const py = cy + yRot * scale;
+        const ds = Math.max(0.5, scale);
+
+        if (sd.isMajor) {
+          // Anchor: large glow
+          const gg = ctx.createRadialGradient(px, py, 0, px, py, 14*ds);
+          gg.addColorStop(0, newCycle.glowColor); gg.addColorStop(1, 'transparent');
+          ctx.fillStyle = gg; ctx.beginPath(); ctx.arc(px, py, 14*ds, 0, Math.PI*2); ctx.fill();
+          ctx.beginPath(); ctx.arc(px, py, 4*ds, 0, Math.PI*2);
+          ctx.fillStyle = newCycle.color; ctx.fill();
+        } else {
+          // Field: small
+          ctx.beginPath(); ctx.arc(px, py, 1.5*ds, 0, Math.PI*2);
+          ctx.fillStyle = `rgba(249,217,118,${0.35*ds})`; ctx.fill();
+        }
       });
-    } else if(elapsed<6500){
-      stageEl.textContent='LINKING';
-      const t=(elapsed-4000)/2500;
-      worldDots.forEach(wd=>{wd.x=wd.tx;wd.y=wd.ty;});
-      worldDots.forEach(wd=>{ctx.beginPath();ctx.arc(wd.x,wd.y,3,0,Math.PI*2);ctx.fillStyle='rgba(249,217,118,0.8)';ctx.fill();});
-      const spline=catmullRom(cDots.map(c=>({x:c.tx,y:c.ty})));
-      const drawN=Math.floor(spline.length*t);
-      if(drawN>1){
-        ctx.shadowColor=newCycle.glowColor;ctx.shadowBlur=12;
-        ctx.beginPath();ctx.moveTo(spline[0].x,spline[0].y);
-        for(let i=1;i<drawN;i++)ctx.lineTo(spline[i].x,spline[i].y);
-        ctx.strokeStyle=newCycle.color;ctx.lineWidth=2.5;ctx.stroke();ctx.shadowBlur=0;
+    } else if (elapsed < 6500) {
+      // Phase 3: Draw connections between anchors (1.5s)
+      stageEl.textContent = 'LINKING';
+      const t = (elapsed - 5000) / 1500;
+
+      // All dots at final positions (camera = 0°)
+      const anchors = [], fields = [];
+      screenDots.forEach(sd => {
+        if (sd.isMajor) anchors.push({x: sd.tx, y: sd.ty});
+        else fields.push({x: sd.tx, y: sd.ty});
+      });
+
+      // Draw fields
+      fields.forEach(f => {
+        ctx.beginPath(); ctx.arc(f.x, f.y, 1.5, 0, Math.PI*2);
+        ctx.fillStyle = 'rgba(249,217,118,0.3)'; ctx.fill();
+      });
+
+      // MST edges with shapeType
+      const formShape = NOUN_SHAPES[newCycle.nounIdx] || 'open';
+      const formEdges = buildConstellationEdges(anchors, formShape);
+      const drawN = Math.floor(formEdges.length * t);
+      for (let i = 0; i < drawN; i++) {
+        const e = formEdges[i];
+        ctx.save();
+        ctx.shadowColor = newCycle.glowColor; ctx.shadowBlur = 12;
+        ctx.beginPath(); ctx.moveTo(anchors[e.from].x, anchors[e.from].y);
+        ctx.lineTo(anchors[e.to].x, anchors[e.to].y);
+        ctx.strokeStyle = newCycle.color; ctx.lineWidth = 2.5; ctx.stroke();
+        ctx.restore();
       }
-      cDots.forEach(cd=>{
-        const gg=ctx.createRadialGradient(cd.tx,cd.ty,0,cd.tx,cd.ty,16);
-        gg.addColorStop(0,newCycle.glowColor);gg.addColorStop(1,'transparent');
-        ctx.fillStyle=gg;ctx.beginPath();ctx.arc(cd.tx,cd.ty,16,0,Math.PI*2);ctx.fill();
-        ctx.beginPath();ctx.arc(cd.tx,cd.ty,4,0,Math.PI*2);ctx.fillStyle=newCycle.color;ctx.fill();
+
+      // Anchor dots
+      anchors.forEach(a => {
+        const gg = ctx.createRadialGradient(a.x, a.y, 0, a.x, a.y, 16);
+        gg.addColorStop(0, newCycle.glowColor); gg.addColorStop(1, 'transparent');
+        ctx.fillStyle = gg; ctx.beginPath(); ctx.arc(a.x, a.y, 16, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(a.x, a.y, 4, 0, Math.PI*2);
+        ctx.fillStyle = newCycle.color; ctx.fill();
       });
     } else {
-      stageEl.textContent='COMPLETE';
-      worldDots.forEach(wd=>{wd.x=wd.tx;wd.y=wd.ty;});
-      const spline=catmullRom(cDots.map(c=>({x:c.tx,y:c.ty})));
-      ctx.shadowColor=newCycle.glowColor;ctx.shadowBlur=16;
-      ctx.beginPath();ctx.moveTo(spline[0].x,spline[0].y);spline.forEach(p=>ctx.lineTo(p.x,p.y));
-      ctx.strokeStyle=newCycle.color;ctx.lineWidth=2.5;ctx.stroke();ctx.shadowBlur=0;
-      cDots.forEach(cd=>{
-        const gg=ctx.createRadialGradient(cd.tx,cd.ty,0,cd.tx,cd.ty,16);
-        gg.addColorStop(0,newCycle.glowColor);gg.addColorStop(1,'transparent');
-        ctx.fillStyle=gg;ctx.beginPath();ctx.arc(cd.tx,cd.ty,16,0,Math.PI*2);ctx.fill();
-        ctx.beginPath();ctx.arc(cd.tx,cd.ty,4.5,0,Math.PI*2);ctx.fillStyle=newCycle.color;ctx.fill();
+      // Phase 4: Complete — show name + rarity
+      stageEl.textContent = 'COMPLETE';
+      const anchors = [], fields = [];
+      screenDots.forEach(sd => {
+        if (sd.isMajor) anchors.push({x: sd.tx, y: sd.ty});
+        else fields.push({x: sd.tx, y: sd.ty});
       });
-      const nt=(elapsed-6500)/1500;
-      symEl.style.opacity=Math.min(1,nt).toString();symEl.textContent=newCycle.symbol;
-      nameEl.style.opacity=Math.min(1,Math.max(0,nt-0.3)).toString();nameEl.textContent=newCycle.name;
-      quoteEl.style.opacity=Math.min(1,Math.max(0,nt-0.6)).toString();quoteEl.textContent=quote;
-      if(nt>0.8)closeBtn.classList.add('visible');
+      fields.forEach(f => {
+        ctx.beginPath(); ctx.arc(f.x, f.y, 1.5, 0, Math.PI*2);
+        ctx.fillStyle = 'rgba(249,217,118,0.3)'; ctx.fill();
+      });
+      const compShape = NOUN_SHAPES[newCycle.nounIdx] || 'open';
+      const compEdges = buildConstellationEdges(anchors, compShape);
+      compEdges.forEach(e => {
+        ctx.save(); ctx.shadowColor = newCycle.glowColor; ctx.shadowBlur = 16;
+        ctx.beginPath(); ctx.moveTo(anchors[e.from].x, anchors[e.from].y);
+        ctx.lineTo(anchors[e.to].x, anchors[e.to].y);
+        ctx.strokeStyle = newCycle.color; ctx.lineWidth = 2.5; ctx.stroke(); ctx.restore();
+      });
+      anchors.forEach(a => {
+        const gg = ctx.createRadialGradient(a.x, a.y, 0, a.x, a.y, 16);
+        gg.addColorStop(0, newCycle.glowColor); gg.addColorStop(1, 'transparent');
+        ctx.fillStyle = gg; ctx.beginPath(); ctx.arc(a.x, a.y, 16, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(a.x, a.y, 4.5, 0, Math.PI*2);
+        ctx.fillStyle = newCycle.color; ctx.fill();
+      });
+
+      const nt = (elapsed - 6500) / 1500;
+      symEl.style.opacity = Math.min(1, nt).toString();
+      symEl.textContent = newCycle.symbol;
+      nameEl.style.opacity = Math.min(1, Math.max(0, nt-0.2)).toString();
+      nameEl.innerHTML = newCycle.name + '<br><span style="font-size:16px;color:#F9D976">' + (newCycle.nameJP||'') + '</span><br>' + rarityStarsHTML(newCycle.stars) + ' <span style="font-size:12px;color:#ACACAC">' + newCycle.rarityLabel + '</span>';
+      quoteEl.style.opacity = Math.min(1, Math.max(0, nt-0.5)).toString();
+      quoteEl.textContent = quote;
+      if (nt > 0.8) closeBtn.classList.add('visible');
     }
-    if(elapsed<8000)formRAF=requestAnimationFrame(animFormation);else formRAF=null;
+    if (elapsed < 8500) window._formRAF = requestAnimationFrame(animFormation);
+    else window._formRAF = null;
   }
-  if(window._formRAF)cancelAnimationFrame(window._formRAF);
-  window._formRAF=formRAF;
+  if(window._formRAF) cancelAnimationFrame(window._formRAF);
   animFormation();
 }
 
@@ -923,26 +1747,6 @@ function closeFormationOverlay(){
     window._lastFormedCycle=null;
   }
   switchInner('atlas');
-}
-
-/* ==================== STAR ATLAS NAME GENERATION (Mock) ==================== */
-const NAME_ADJECTIVES_EN = ['Golden','Silver','Crimson','Ethereal','Radiant','Silent','Infinite','Luminous','Frozen','Mystic'];
-const NAME_NOUNS_EN = ['Crown','Arrow','Veil','Flame','Chalice','Mirror','Gate','Wing','Orbit','Sigil'];
-const NAME_ADJECTIVES_JP = ['黄金の','銀色の','深紅の','静寂の','煌めきの','無限の','光輝の','凍てつく','秘密の','永遠の'];
-const NAME_NOUNS_JP = ['冠','矢','帷','炎','聖杯','鏡','門','翼','軌道','印章'];
-
-function generateConstellationName(seedCard, lang) {
-  lang = lang || 'en';
-  const today = new Date().toISOString().slice(0,10);
-  let hash = 0;
-  const seed = (seedCard ? seedCard.toString() : '0') + today;
-  for(let i=0;i<seed.length;i++) hash = ((hash<<5)-hash)+seed.charCodeAt(i);
-  hash = Math.abs(hash);
-
-  if(lang==='jp'){
-    return NAME_ADJECTIVES_JP[hash%NAME_ADJECTIVES_JP.length] + NAME_NOUNS_JP[(hash>>4)%NAME_NOUNS_JP.length];
-  }
-  return 'The ' + NAME_ADJECTIVES_EN[hash%NAME_ADJECTIVES_EN.length] + ' ' + NAME_NOUNS_EN[(hash>>4)%NAME_NOUNS_EN.length];
 }
 
 /* ==================== GALAXY LOCALSTORAGE ==================== */

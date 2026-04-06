@@ -211,7 +211,6 @@ class _GalaxyScreenState extends State<GalaxyScreen>
     // Find the cycle these readings belong to
     final firstDate = DateTime.parse(readings.first.date);
     final (prevStart, prevEnd) = MoonPhase.getCurrentCycleBounds(firstDate);
-    final prevTotalDays = prevEnd.difference(prevStart).inDays;
 
     // Determine seed card (most frequent major arcana)
     final majorCounts = <int, int>{};
@@ -233,46 +232,59 @@ class _GalaxyScreenState extends State<GalaxyScreen>
           .reduce((a, b) => a.value >= b.value ? a : b)
           .key;
     } else if (suitCounts.isNotEmpty) {
-      // Fallback: ace of most common suit
       final topSuit = suitCounts.entries
           .reduce((a, b) => a.value >= b.value ? a : b)
           .key;
       final suitOffset = {'wands': 0, 'cups': 14, 'swords': 28, 'pentacles': 42};
       seedCardId = 22 + (suitOffset[topSuit] ?? 0);
     } else {
-      seedCardId = 0; // The Fool
+      seedCardId = 0;
     }
 
-    // Generate name
-    final nameEN = ConstellationNamer.generate(
-        seedCardId: seedCardId, date: prevStart, lang: 'en');
-    final nameJP = ConstellationNamer.generate(
-        seedCardId: seedCardId, date: prevStart, lang: 'jp');
+    // Generate name (v2: 1,220 combos with dedup)
+    // TODO: Load usedNames from storage for deduplication
+    final nameResult = ConstellationNamer.generate(
+      seedCardId: seedCardId,
+      date: prevStart,
+    );
+    final rarity = ConstellationNamer.calculateRarity(
+      nameResult.adjIdx,
+      nameResult.nounIdx,
+    );
 
-    // Build constellation dots from spiral positions
+    // Build constellation dots using Golden Angle placement + 3D z-layers
+    // Golden Angle: each dot placed at cardId × 137.508° for uniform distribution
+    const goldenAngle = 137.508 * pi / 180;
     final dots = <ConstellationDot>[];
-    for (final r in readings) {
+    final rng = Random(seedCardId + prevStart.millisecondsSinceEpoch);
+
+    for (int i = 0; i < readings.length; i++) {
+      final r = readings[i];
       final rDate = DateTime.parse(r.date);
       final dayIdx = rDate.difference(prevStart).inDays;
-      if (dayIdx < 0 || dayIdx >= prevTotalDays) continue;
 
-      // Calculate normalized spiral position
-      final t = (dayIdx + 1) / prevTotalDays;
-      final theta = t * pi * 4.2;
-      final rSpiral = t; // normalized radius
-      final x = 0.5 + rSpiral * cos(theta - pi / 2) * 0.4;
-      final y = 0.5 + rSpiral * sin(theta - pi / 2) * 0.4;
+      // Golden Angle placement based on cardId
+      final angle = r.cardId * goldenAngle;
+      final radius = 0.15 + (i / readings.length) * 0.28;
+      final x = 0.5 + radius * cos(angle);
+      final y = 0.5 + radius * sin(angle);
+
+      // Assign z-layer: 3 layers (back/mid/front)
+      // Deterministic based on cardId
+      final zLayer = (r.cardId % 3) - 1; // -1, 0, 1
+      final zJitter = (rng.nextDouble() - 0.5) * 0.4;
+      final z = zLayer + zJitter;
 
       dots.add(ConstellationDot(
-        x: x.clamp(0.05, 0.95),
-        y: y.clamp(0.05, 0.95),
+        x: x.clamp(0.08, 0.92),
+        y: y.clamp(0.08, 0.92),
+        z: z.clamp(-1.0, 1.0),
         dayIndex: dayIdx,
         cardId: r.cardId,
         isMajor: r.isMajor,
       ));
     }
 
-    // Sort by day index
     dots.sort((a, b) => a.dayIndex.compareTo(b.dayIndex));
 
     return GalaxyCycle(
@@ -281,9 +293,11 @@ class _GalaxyScreenState extends State<GalaxyScreen>
       cycleEnd: prevEnd,
       readings: readings,
       seedCardId: seedCardId,
-      nameEN: nameEN,
-      nameJP: nameJP,
+      nameEN: nameResult.en,
+      nameJP: nameResult.jp,
       dots: dots,
+      rarity: rarity.stars,
+      rarityLabel: rarity.label,
     );
   }
 
@@ -680,6 +694,11 @@ class _GalaxyScreenState extends State<GalaxyScreen>
   }
 
   Widget _buildConstellationCard(GalaxyCycle cycle) {
+    final starColor = cycle.rarity >= 4
+        ? SolaraColors.solaraGold
+        : cycle.rarity >= 3
+            ? const Color(0xFFB080FF)
+            : SolaraColors.textSecondary;
     return GestureDetector(
       onTap: () => _openReplay(cycle),
       child: GlassPanel(
@@ -697,13 +716,25 @@ class _GalaxyScreenState extends State<GalaxyScreen>
               ),
             ),
             const SizedBox(height: 8),
-            Text(
-              cycle.dateRangeLabel,
-              style: const TextStyle(
-                color: SolaraColors.solaraGold,
-                fontSize: 11,
-                letterSpacing: 0.5,
-              ),
+            Row(
+              children: [
+                Text(
+                  cycle.dateRangeLabel,
+                  style: const TextStyle(
+                    color: SolaraColors.solaraGold,
+                    fontSize: 11,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+                const Spacer(),
+                Text(
+                  '\u2605' * cycle.rarity,
+                  style: TextStyle(
+                    color: starColor,
+                    fontSize: 10,
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 3),
             Text(
@@ -713,6 +744,7 @@ class _GalaxyScreenState extends State<GalaxyScreen>
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
               ),
+              overflow: TextOverflow.ellipsis,
             ),
             Text(
               cycle.nameJP,
@@ -723,7 +755,7 @@ class _GalaxyScreenState extends State<GalaxyScreen>
             ),
             const SizedBox(height: 2),
             Text(
-              '${cycle.dots.length} stars \u00B7 ${cycle.readings.where((r) => r.isMajor).length} major',
+              '${cycle.dots.length} stars \u00B7 ${cycle.dots.where((d) => d.isMajor).length} anchors \u00B7 ${cycle.rarityLabel}',
               style: TextStyle(
                 color: SolaraColors.textSecondary.withValues(alpha: 0.6),
                 fontSize: 10,
@@ -736,12 +768,17 @@ class _GalaxyScreenState extends State<GalaxyScreen>
   }
 
   // ====================== REPLAY OVERLAY ======================
+  // Crystallization camera animation: 55° → 0° over total 6.5s
+  // Phase 1: Camera 55°→0° (0-3s)
+  // Phase 2: Line connections (3-4.5s)
+  // Phase 3: Name + rarity fade-in (4.5-6.5s)
+  static const double _cameraAngle55 = 55 * pi / 180; // ~0.96 rad
 
   void _openReplay(GalaxyCycle cycle) {
     _replayController?.dispose();
     _replayController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 2800),
+      duration: const Duration(milliseconds: 6500),
     );
     setState(() => _replayCycle = cycle);
     _replayController!.forward();
@@ -760,77 +797,141 @@ class _GalaxyScreenState extends State<GalaxyScreen>
       child: Container(
         color: const Color(0xF0080C14),
         child: Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Constellation name
-              Text(
-                cycle.nameEN,
-                style: const TextStyle(
-                  color: SolaraColors.textPrimary,
-                  fontSize: 22,
-                  fontWeight: FontWeight.w300,
-                  letterSpacing: 2,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                cycle.nameJP,
-                style: const TextStyle(
-                  color: SolaraColors.solaraGold,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w300,
-                ),
-              ),
-              const SizedBox(height: 24),
-              // Animated constellation
-              SizedBox(
-                width: 300,
-                height: 300,
-                child: AnimatedBuilder(
-                  animation: _replayController!,
-                  builder: (context, _) {
-                    return CustomPaint(
+          child: AnimatedBuilder(
+            animation: _replayController!,
+            builder: (context, _) {
+              final t = _replayController!.value;
+              // Phase 1: Camera animation (0 - 0.46 = 3s/6.5s)
+              final cameraT = (t / 0.46).clamp(0.0, 1.0);
+              final easedCamera = Curves.easeInOutCubic.transform(cameraT);
+              final cameraAngle = _cameraAngle55 * (1.0 - easedCamera);
+
+              // Phase 2: Line connections (0.46 - 0.69 = 1.5s/6.5s)
+              final lineT = ((t - 0.46) / 0.23).clamp(0.0, 1.0);
+
+              // Phase 3: Name fade-in (0.69 - 1.0 = 2s/6.5s)
+              final fadeT = ((t - 0.69) / 0.31).clamp(0.0, 1.0);
+
+              // Combined progress for painter: dots appear with camera, lines after
+              final painterProgress = cameraT * 0.4 + lineT * 0.6;
+
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Name + rarity (fades in)
+                  Opacity(
+                    opacity: fadeT,
+                    child: Column(
+                      children: [
+                        Text(
+                          cycle.nameEN,
+                          style: const TextStyle(
+                            color: SolaraColors.textPrimary,
+                            fontSize: 22,
+                            fontWeight: FontWeight.w300,
+                            letterSpacing: 2,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          cycle.nameJP,
+                          style: const TextStyle(
+                            color: SolaraColors.solaraGold,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w300,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        // Rarity stars
+                        _buildRarityStars(cycle.rarity, cycle.rarityLabel),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  // Animated constellation with camera
+                  SizedBox(
+                    width: 300,
+                    height: 300,
+                    child: CustomPaint(
                       painter: ConstellationPainter(
                         cycle: cycle,
-                        progress: _replayController!.value,
+                        progress: painterProgress,
+                        cameraAngle: cameraAngle,
                       ),
-                    );
-                  },
-                ),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                cycle.dateRangeLabel,
-                style: const TextStyle(
-                  color: SolaraColors.textSecondary,
-                  fontSize: 13,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                '${cycle.dots.length} stars',
-                style: const TextStyle(
-                  color: SolaraColors.textSecondary,
-                  fontSize: 12,
-                ),
-              ),
-              const SizedBox(height: 24),
-              TextButton(
-                onPressed: _closeReplay,
-                child: const Text(
-                  '\u{2190} Back to Star Atlas',
-                  style: TextStyle(
-                    color: SolaraColors.solaraGold,
-                    fontSize: 14,
-                    letterSpacing: 1,
+                    ),
                   ),
-                ),
-              ),
-            ],
+                  const SizedBox(height: 16),
+                  Opacity(
+                    opacity: fadeT,
+                    child: Column(
+                      children: [
+                        Text(
+                          cycle.dateRangeLabel,
+                          style: const TextStyle(
+                            color: SolaraColors.textSecondary,
+                            fontSize: 13,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '${cycle.dots.length} stars \u00B7 ${cycle.dots.where((d) => d.isMajor).length} anchors',
+                          style: const TextStyle(
+                            color: SolaraColors.textSecondary,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  TextButton(
+                    onPressed: _closeReplay,
+                    child: const Text(
+                      '\u{2190} Back to Star Atlas',
+                      style: TextStyle(
+                        color: SolaraColors.solaraGold,
+                        fontSize: 14,
+                        letterSpacing: 1,
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            },
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildRarityStars(int stars, String label) {
+    final starColor = stars >= 4
+        ? SolaraColors.solaraGold
+        : stars >= 3
+            ? const Color(0xFFB080FF)
+            : SolaraColors.textSecondary;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          '\u2605' * stars + '\u2606' * (5 - stars),
+          style: TextStyle(
+            color: starColor,
+            fontSize: 14,
+            letterSpacing: 2,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Text(
+          label,
+          style: TextStyle(
+            color: starColor,
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+            letterSpacing: 1,
+          ),
+        ),
+      ],
     );
   }
 
