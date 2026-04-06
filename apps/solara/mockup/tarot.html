@@ -1243,7 +1243,9 @@ function showTarotReading(card, info) {
   var cached = null;
   try { cached = JSON.parse(localStorage.getItem(cacheKey)); } catch(e) {}
   if (cached && cached.reading) {
-    typewriteReading(panel, body, advice, cached.reading, cached.advice || '');
+    body.textContent = cached.reading;
+    advice.textContent = cached.advice || '';
+    panel.classList.add('visible');
     return;
   }
 
