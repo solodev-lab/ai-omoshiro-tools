@@ -323,9 +323,11 @@ FORTUNE_CATEGORIES = [
 #### Star Atlas 名前生成
 - **seedCard**: 周期内で最頻出の大アルカナ（fallback: 最頻出スートのエース）
 - **テンプレート**: `The [形容詞] [名詞]`（EN）/ `[形容詞][名詞]`（JP）
-- **語彙（v2拡張）**: 形容詞10語 × 名詞35語 = 350通り
-  - 形容詞: Golden/Silver/Crimson/Ethereal/Radiant/Silent/Infinite/Luminous/Frozen/Mystic
-  - 名詞（35語）: Crown/Arrow/Veil/Flame/Chalice/Mirror/Gate/Wing/Orbit/Sigil/Serpent/Compass/Lantern/Phoenix/Anchor/Harp/Bloom/Scepter/Hourglass/Feather/Throne/Crystal/Tempest/Labyrinth/Crescent/Lotus/Raven/Bridge/Comet/Mask/Fountain/Sword/Crest/Scroll/Prism
+- **語彙（v2拡張）**: 形容詞30語（10色系統×3明度） × 名詞220語（209通常+11レア） = 6,600通り
+  - 形容詞: 各色系統に3段階明度（例: Golden/Radiant/Sacred = 金系の中/高/低）
+  - 名詞: 11カテゴリ（天体/神話/動物/武器/王権/自然/建造物/象徴/楽器/身体/幾何）
+  - 名詞ティア: Common(89) / Uncommon(67) / Rare(53) / Legendary(11=各カテゴリ1レア)
+  - 詳細リスト: `constellation_nouns.md` 参照
 - **ハッシュ**: `seedCardId + ISO日付` → 決定的生成
 
 #### レアリティシステム（数学的）
