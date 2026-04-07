@@ -410,86 +410,86 @@ class _MapScreenState extends State<MapScreen> {
   //   padding:3px 10px; border-radius:10px; border:1px solid rgba(201,168,76,.3);
   //   letter-spacing:.5px; pointer-events:none; }
   // ══════════════════════════════════════════════
+  // HTML: .ff-label { position:absolute; top:52px; left:16px; z-index:105;
+  //   display:inline-flex; align-items:center; gap:6px;
+  //   font-size:10px; color:#C9A84C; background:rgba(10,10,20,.7);
+  //   padding:3px 10px; border-radius:10px; border:1px solid rgba(201,168,76,.3); }
+  // Screenshot: label left + 2 rows of direction bars right
   Widget _buildFortuneFilterLabel() {
     final sorted = _sectorScores.entries.toList()..sort((a, b) => b.value.compareTo(a.value));
     if (sorted.isEmpty) return const SizedBox();
 
     final srcLabels = {'combined':'合計','transit':'トランジット','progressed':'プログレス'};
     final catLabels = {'all':'総合','healing':'癒し','money':'金運','love':'恋愛','work':'仕事','communication':'話す'};
-
-    // HTML: top 2 directions
     final top2 = sorted.where((e) => e.value > 0.01).take(2).toList();
     final maxScore = top2.isNotEmpty ? top2.first.value : 1.0;
+    final catColor = _categoryColors[_activeCategory] ?? const Color(0xFFC9A84C);
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
-        color: const Color(0xB30A0A14), // rgba(10,10,20,.7)
+        color: const Color(0xB30A0A14),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: const Color(0x4DC9A84C)), // rgba(201,168,76,.3)
+        border: Border.all(color: const Color(0x4DC9A84C)),
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // HTML: .ff-tag { white-space:nowrap; flex-shrink:0; }
-          Text(
-            '${srcLabels[_activeSrc] ?? '合計'} / ${catLabels[_activeCategory] ?? '総合'}',
-            style: const TextStyle(fontSize: 10, color: Color(0xFFC9A84C), letterSpacing: 0.5),
-          ),
-          if (top2.isNotEmpty) ...[
-            const SizedBox(width: 6),
-            // HTML: .ff-bars { flex:1; display:flex; flex-direction:column; gap:2px; }
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: top2.map((e) {
+      child: IntrinsicWidth(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Row 1: label
+            Text(
+              '${srcLabels[_activeSrc] ?? '合計'} / ${catLabels[_activeCategory] ?? '総合'}',
+              style: const TextStyle(fontSize: 10, color: Color(0xFFC9A84C), letterSpacing: 0.5, fontWeight: FontWeight.w600),
+            ),
+            if (top2.isNotEmpty) ...[
+              const SizedBox(height: 4),
+              // Rows: direction bars
+              ...top2.map((e) {
                 final pct = (e.value / maxScore).clamp(0.0, 1.0);
                 return Padding(
-                  padding: const EdgeInsets.only(bottom: 2),
-                  // HTML: .ff-row { display:flex; align-items:center; gap:4px; font-size:9px; color:#E8E0D0; }
+                  padding: const EdgeInsets.only(bottom: 3),
                   child: Row(mainAxisSize: MainAxisSize.min, children: [
-                    // HTML: .ff-dir { width:32px; text-align:right; color:#888; }
-                    SizedBox(width: 32, child: Text(
+                    // dir name
+                    SizedBox(width: 36, child: Text(
                       _dir16JP[e.key] ?? e.key,
-                      style: const TextStyle(fontSize: 9, color: Color(0xFF888888)),
+                      style: const TextStyle(fontSize: 10, color: Color(0xFFE8E0D0), fontWeight: FontWeight.w500),
                       textAlign: TextAlign.right,
                     )),
-                    const SizedBox(width: 4),
-                    // HTML: .ff-bw { width:120px; height:5px; background:rgba(255,255,255,0.06); border-radius:3px; }
+                    const SizedBox(width: 6),
+                    // bar
                     SizedBox(
-                      width: 120, height: 5,
+                      width: 120, height: 6,
                       child: Container(
                         decoration: BoxDecoration(
-                          color: const Color(0x0FFFFFFF), // rgba(255,255,255,0.06)
+                          color: const Color(0x15FFFFFF),
                           borderRadius: BorderRadius.circular(3),
                         ),
                         child: FractionallySizedBox(
                           alignment: Alignment.centerLeft,
                           widthFactor: pct,
-                          // HTML: .ff-b { height:100%; border-radius:3px; background:#C9A84C; }
                           child: Container(
                             decoration: BoxDecoration(
-                              color: _categoryColors[_activeCategory] ?? const Color(0xFFC9A84C),
+                              color: catColor,
                               borderRadius: BorderRadius.circular(3),
                             ),
                           ),
                         ),
                       ),
                     ),
-                    const SizedBox(width: 4),
-                    // HTML: .ff-sc { width:28px; text-align:right; font-family:monospace; font-size:8px; color:#F6BD60; }
-                    SizedBox(width: 28, child: Text(
+                    const SizedBox(width: 6),
+                    // score
+                    SizedBox(width: 36, child: Text(
                       e.value.toStringAsFixed(2),
-                      style: const TextStyle(fontSize: 8, fontFamily: 'monospace', color: Color(0xFFF6BD60)),
+                      style: const TextStyle(fontSize: 10, fontFamily: 'monospace', color: Color(0xFFF6BD60), fontWeight: FontWeight.w600),
                       textAlign: TextAlign.right,
                     )),
                   ]),
                 );
-              }).toList(),
-            ),
+              }),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }
