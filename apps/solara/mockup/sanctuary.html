@@ -271,6 +271,7 @@
     }
     .td-vcard-class-icon {
       width:100px; height:100px; display:block; position:relative; z-index:1;
+      border-radius:50%; object-fit:cover; background:#0a0a14;
       filter:brightness(2) drop-shadow(0 0 16px rgba(249,217,118,0.5)) drop-shadow(0 0 32px rgba(249,217,118,0.2));
     }
     .td-vcard-class-name {
@@ -1627,38 +1628,38 @@ var TD_ROUNDS = [
   {part:2,qJP:'迷ったとき、頼りにしたいのは？',qEN:'When lost, what do you trust?',
    cards:[{img:'02_the_high_priestess.png',axis:'spirit'},{img:'10_wheel_of_fortune.png',axis:'shadow'},{img:'07_the_chariot.png',axis:'power'}]},
   {part:2,qJP:'旅の仲間にするなら、誰を選ぶ？',qEN:'Who would you choose as your travel companion?',
-   cards:[{img:'06_the_lovers.png',axis:'heart'},{img:'09_the_hermit.png',axis:'mind'},{img:'13_death.png',axis:'shadow'}]},
+   cards:[{img:'06_the_lovers.png',axis:'heart'},{img:'09_the_hermit.png',axis:'mind'},{img:'13_death.png',axis:'shadow'},{img:'07_the_chariot.png',axis:'power'},{img:'17_the_star.png',axis:'spirit'},{img:'00_the_fool.png',axis:'wildcard'}]},
   {part:2,qJP:'あなたの師匠になるのは？',qEN:'Who would be your mentor?',
    cards:[{img:'08_strength.png',axis:'power'},{img:'05_the_hierophant.png',axis:'spirit'},{img:'14_temperance.png',axis:'heart'}]},
-  {part:2,qJP:'深夜、語り明かしたい相手は？',qEN:'Who would you talk with until dawn?',
-   cards:[{img:'15_the_devil.png',axis:'shadow'},{img:'11_justice.png',axis:'mind'},{img:'17_the_star.png',axis:'spirit'}]},
+  {part:2,qJP:'深夜、語り明かすとしたら何を語りたい？',qEN:'If you could talk until dawn, what would you talk about?',
+   cards:[{img:'15_the_devil.png',axis:'shadow'},{img:'11_justice.png',axis:'mind'},{img:'17_the_star.png',axis:'spirit'},{img:'16_the_tower.png',axis:'power'},{img:'19_the_sun.png',axis:'heart'},{img:'21_the_world.png',axis:'wildcard'}]},
   {part:2,qJP:'壁にぶつかったとき、あなたの心は？',qEN:'When you hit a wall, where does your heart go?',
    cards:[{img:'19_the_sun.png',axis:'heart'},{img:'12_the_hanged_man.png',axis:'shadow'},{img:'16_the_tower.png',axis:'power'}]},
   {part:2,qJP:'夜明け前、あなたを導くのは？',qEN:'Before dawn, what guides you?',
    cards:[{img:'20_judgement.png',axis:'mind'},{img:'18_the_moon.png',axis:'spirit'},{img:'04_the_emperor.png',axis:'power'}]},
   {part:2,qJP:'あなたを理解してくれるのは？',qEN:'Who truly understands you?',
-   cards:[{img:'13_death.png',axis:'shadow'},{img:'03_the_empress.png',axis:'heart'},{img:'02_the_high_priestess.png',axis:'spirit'}]},
+   cards:[{img:'13_death.png',axis:'shadow'},{img:'03_the_empress.png',axis:'heart'},{img:'02_the_high_priestess.png',axis:'spirit'},{img:'08_strength.png',axis:'power'},{img:'09_the_hermit.png',axis:'mind'},{img:'00_the_fool.png',axis:'wildcard'}]},
   {part:2,qJP:'世界を変えるなら、何を手に取る？',qEN:'To change the world, what would you reach for?',
    cards:[{img:'07_the_chariot.png',axis:'power'},{img:'01_the_magician.png',axis:'mind'},{img:'10_wheel_of_fortune.png',axis:'shadow'}]},
-  {part:2,qJP:'帰る場所で待っていてほしいのは？',qEN:'Who do you want waiting when you come home?',
+  {part:2,qJP:'あなたの魂が一番安らぐのは、どんな瞬間？',qEN:'When does your soul feel most at peace?',
    cards:[{img:'05_the_hierophant.png',axis:'spirit'},{img:'06_the_lovers.png',axis:'heart'},{img:'09_the_hermit.png',axis:'mind'}]},
-  {part:2,qJP:'未知の扉の向こうにあってほしいのは？',qEN:'What do you hope lies beyond the unknown door?',
+  {part:2,qJP:'未知の扉の向こうはどんな世界？',qEN:'What kind of world lies beyond the unknown door?',
    cards:[{img:'08_strength.png',axis:'power'},{img:'10_wheel_of_fortune.png',axis:'shadow'},{img:'00_the_fool.png',axis:'wildcard'}]},
   {part:2,qJP:'大切な人に贈りたい力は？',qEN:'What power would you gift to someone you love?',
    cards:[{img:'11_justice.png',axis:'mind'},{img:'14_temperance.png',axis:'heart'},{img:'17_the_star.png',axis:'spirit'}]},
   {part:2,qJP:'手放したとき、残るものは？',qEN:'When you let go, what remains?',
-   cards:[{img:'12_the_hanged_man.png',axis:'shadow'},{img:'18_the_moon.png',axis:'spirit'},{img:'21_the_world.png',axis:'wildcard'}]},
+   cards:[{img:'12_the_hanged_man.png',axis:'shadow'},{img:'18_the_moon.png',axis:'spirit'},{img:'21_the_world.png',axis:'wildcard'},{img:'08_strength.png',axis:'power'},{img:'14_temperance.png',axis:'heart'},{img:'20_judgement.png',axis:'mind'}]},
   {part:2,qJP:'あなたが一番輝ける場所は？',qEN:'Where do you shine brightest?',
    cards:[{img:'19_the_sun.png',axis:'heart'},{img:'16_the_tower.png',axis:'power'},{img:'00_the_fool.png',axis:'wildcard'}]},
   {part:2,qJP:'この旅の終わりに、誰として立っていたい？',qEN:'At the end of this journey, who do you want to be?',
-   cards:[{img:'20_judgement.png',axis:'mind'},{img:'15_the_devil.png',axis:'shadow'},{img:'21_the_world.png',axis:'wildcard'}]},
+   cards:[{img:'20_judgement.png',axis:'mind'},{img:'15_the_devil.png',axis:'shadow'},{img:'21_the_world.png',axis:'wildcard'},{img:'04_the_emperor.png',axis:'power'},{img:'19_the_sun.png',axis:'heart'},{img:'17_the_star.png',axis:'spirit'}]},
 
   // Part 3: Court Cards (R25-R28)
   {part:3,qJP:'あなたの情熱の形は？',qEN:'What shape does your passion take?',
    cards:[{img:'32_page_of_wands.png',court:'page'},{img:'33_knight_of_wands.png',court:'knight'},{img:'34_queen_of_wands.png',court:'queen'},{img:'35_king_of_wands.png',court:'king'}]},
-  {part:3,qJP:'奇跡が目の前に降りた瞬間、あなたは？',qEN:'When a miracle descends before you?',
+  {part:3,qJP:'奇跡が目の前に降りた瞬間のあなたは誰？',qEN:'When a miracle descends before you, who are you?',
    cards:[{img:'46_page_of_cups.png',court:'page'},{img:'47_knight_of_cups.png',court:'knight'},{img:'48_queen_of_cups.png',court:'queen'},{img:'49_king_of_cups.png',court:'king'}]},
-  {part:3,qJP:'答えが出ないときのあなたはどんな様子？',qEN:'When there\'s no answer, what do you look like?',
+  {part:3,qJP:'戦いの時期が迫る。あなたはどう剣を構える？',qEN:'Battle draws near. How do you hold your sword?',
    cards:[{img:'60_page_of_swords.png',court:'page'},{img:'61_knight_of_swords.png',court:'knight'},{img:'62_queen_of_swords.png',court:'queen'},{img:'63_king_of_swords.png',court:'king'}]},
   {part:3,qJP:'あなたが築きたいものは？',qEN:'What do you want to build?',
    cards:[{img:'74_page_of_pentacles.png',court:'page'},{img:'75_knight_of_pentacles.png',court:'knight'},{img:'76_queen_of_pentacles.png',court:'queen'},{img:'77_king_of_pentacles.png',court:'king'}]}
@@ -1745,11 +1746,12 @@ function startDiagnosis() {
     alert('まず出生情報を設定してください');
     return;
   }
-  var count = parseInt(localStorage.getItem('solara_title_diagnosis_count') || '0');
-  if (count >= 2) {
-    alert('再診断はCosmic Proで月1回可能です');
-    return;
-  }
+  // DEV: count limit temporarily disabled for testing
+  // var count = parseInt(localStorage.getItem('solara_title_diagnosis_count') || '0');
+  // if (count >= 2) {
+  //   alert('再診断はCosmic Proで月1回可能です');
+  //   return;
+  // }
   resetTD();
   TD.state = 'intro';
   document.getElementById('titleDiagOverlay').classList.add('open');
