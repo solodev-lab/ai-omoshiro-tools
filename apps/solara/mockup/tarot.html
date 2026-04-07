@@ -793,14 +793,14 @@
 
 <script>
 // ===== Card Data =====
-const SUIT_MAP = {
+var SUIT_MAP = {
   wands:     { element:'fire',  planets:['sun','mars','jupiter'],     emoji:'🔥', color:'#FF6B35' },
   cups:      { element:'water', planets:['moon','neptune','pluto'],    emoji:'🌊', color:'#4169E1' },
   swords:    { element:'air',   planets:['mercury','uranus','saturn'], emoji:'💨', color:'#87CEEB' },
   pentacles: { element:'earth', planets:['venus','saturn','jupiter'],  emoji:'🌿', color:'#2E8B57' }
 };
 
-const PLANET_SYMBOLS = {
+var PLANET_SYMBOLS = {
   sun:{symbol:'☉',nameJP:'太陽',color:'#FFD700'},
   moon:{symbol:'☽',nameJP:'月',color:'#C0C0C0'},
   mercury:{symbol:'☿',nameJP:'水星',color:'#87CEEB'},
@@ -813,11 +813,11 @@ const PLANET_SYMBOLS = {
   pluto:{symbol:'♇',nameJP:'冥王星',color:'#8B0000'}
 };
 
-const ELEMENT_COLORS = { fire:'#FF6B35', water:'#4169E1', air:'#87CEEB', earth:'#2E8B57' };
-const ELEMENT_NAMES = { fire:'火', water:'水', air:'風', earth:'地' };
-const ELEMENT_EMOJI = { fire:'🔥', water:'🌊', air:'💨', earth:'🌿' };
+var ELEMENT_COLORS = { fire:'#FF6B35', water:'#4169E1', air:'#87CEEB', earth:'#2E8B57' };
+var ELEMENT_NAMES = { fire:'火', water:'水', air:'風', earth:'地' };
+var ELEMENT_EMOJI = { fire:'🔥', water:'🌊', air:'💨', earth:'🌿' };
 
-const MAJOR = [
+var MAJOR = [
   {id:0,nameEN:'The Fool',nameJP:'愚者',keyword:'自由と冒険',planet:'uranus',element:'air',boost:0.05,boostType:'all',emoji:'🌬️',displayName:'THE FOOL'},
   {id:1,nameEN:'The Magician',nameJP:'魔術師',keyword:'意志と創造',planet:'mercury',element:'air',boost:0.30,boostType:'single',emoji:'⚡',displayName:'THE MAGICIAN'},
   {id:2,nameEN:'The High Priestess',nameJP:'女教皇',keyword:'直感と神秘',planet:'moon',element:'water',boost:0.30,boostType:'single',emoji:'🌙',displayName:'HIGH PRIESTESS'},
@@ -842,7 +842,7 @@ const MAJOR = [
   {id:21,nameEN:'The World',nameJP:'世界',keyword:'完成と統合',planet:'saturn',element:'earth',boost:0.25,boostType:'all',emoji:'🌍',displayName:'THE WORLD'}
 ];
 
-const MINOR = [
+var MINOR = [
   {suit:'wands',rank:1,nameEN:'Ace of Wands',nameJP:'ワンドのエース',keyword:'情熱の始まり',displayName:'WAND ACE'},
   {suit:'wands',rank:2,nameEN:'Two of Wands',nameJP:'ワンドの2',keyword:'計画と決断',displayName:'WAND II'},
   {suit:'wands',rank:3,nameEN:'Three of Wands',nameJP:'ワンドの3',keyword:'展望と拡大',displayName:'WAND III'},
@@ -901,62 +901,65 @@ const MINOR = [
   {suit:'pentacles',rank:14,nameEN:'King of Pentacles',nameJP:'ペンタクルのキング',keyword:'物質の統率',displayName:'PENTACLE KING',court:'king'}
 ];
 
-const ALL_CARDS = [...MAJOR, ...MINOR];
+var ALL_CARDS = MAJOR.concat(MINOR);
 
-// Generate Stella message from card info + direction (not random)
+// ===== Stella Message Generator =====
 function generateStellaMsg(card, planetJP) {
-  const kw = card.keyword;
-  const name = card.nameJP;
-  const templates = [
-    '『' + name + '』が今日の種。' + kw + 'のエネルギーが' + planetJP + 'を通じてあなたに届いているよ。',
-    '今日のSeedは『' + name + '』。' + planetJP + 'が' + kw + 'の光を運んでいる。心を開いてみて。',
-    '『' + name + '』が目覚めた。' + planetJP + 'の力が' + kw + 'を引き出している。',
-    '今日は' + planetJP + 'が活性化。『' + name + '』の' + kw + 'を味方につけて。'
+  var templates = [
+    '『' + card.nameJP + '』が今日の種。' + card.keyword + 'のエネルギーが' + planetJP + 'を通じてあなたに届いているよ。',
+    '今日のSeedは『' + card.nameJP + '』。' + planetJP + 'が' + card.keyword + 'の光を運んでいる。心を開いてみて。',
+    '『' + card.nameJP + '』が目覚めた。' + planetJP + 'の力が' + card.keyword + 'を引き出している。',
+    '今日は' + planetJP + 'が活性化。『' + card.nameJP + '』の' + card.keyword + 'を味方につけて。'
   ];
   var d = new Date();
-  var seed = d.getFullYear() * 10000 + (d.getMonth()+1) * 100 + d.getDate();
+  var seed = d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
   return templates[seed % templates.length];
 }
 
-const LOC_LABELS = { home: '🏠 自宅', gps: '📍 現在地', custom: '' };
+var LOC_LABELS = { home: '🏠 自宅', gps: '📍 現在地', custom: '' };
 
 // ===== State =====
-let selectedLocation = 'home';
-let isDrawn = false;
+var selectedLocation = 'home';
+var isDrawn = false;
 
 // ===== Helpers =====
-function getToday() { return new Date().toISOString().split('T')[0]; }
+function getToday() {
+  return new Date().toISOString().split('T')[0];
+}
 
 function getNowTime() {
   return new Date().toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
 }
 
 function getCardInfo(card) {
-  const isMajor = card.id !== undefined;
-  const planet = isMajor ? card.planet : SUIT_MAP[card.suit].planets[0];
-  const element = isMajor ? card.element : SUIT_MAP[card.suit].element;
-  const emoji = isMajor ? card.emoji : SUIT_MAP[card.suit].emoji;
-  const ps = PLANET_SYMBOLS[planet];
-  const planets = isMajor ? [planet] : SUIT_MAP[card.suit].planets;
-  return { planet, element, emoji, planets, planetSymbol: ps };
+  var isMajor = card.id !== undefined;
+  var planet = isMajor ? card.planet : SUIT_MAP[card.suit].planets[0];
+  var element = isMajor ? card.element : SUIT_MAP[card.suit].element;
+  var emoji = isMajor ? card.emoji : SUIT_MAP[card.suit].emoji;
+  var planets = isMajor ? [planet] : SUIT_MAP[card.suit].planets;
+  var ps = PLANET_SYMBOLS[planet];
+  return { planet: planet, element: element, emoji: emoji, planets: planets, planetSymbol: ps };
 }
 
 // ===== Location =====
 function selectLocation(loc) {
   selectedLocation = loc;
-  document.querySelectorAll('.loc-btn').forEach(b => b.classList.toggle('active', b.dataset.loc === loc));
-  const wrap = document.getElementById('customLocWrap');
-  wrap.classList.toggle('visible', loc === 'custom');
+  document.querySelectorAll('.loc-btn').forEach(function(b) {
+    b.classList.toggle('active', b.dataset.loc === loc);
+  });
+  var wrap = document.getElementById('customLocWrap');
+  if (wrap) wrap.classList.toggle('visible', loc === 'custom');
 }
 
 function getLocationLabel() {
   if (selectedLocation === 'custom') {
-    return '📍 ' + (document.getElementById('customLocInput').value.trim() || '指定場所');
+    var input = document.getElementById('customLocInput');
+    return '📍 ' + (input && input.value.trim() ? input.value.trim() : '指定場所');
   }
   return LOC_LABELS[selectedLocation];
 }
 
-// ===== Card Draw (tap card directly) =====
+// ===== Card Draw =====
 function initCardTap() {
   var scene = document.getElementById('cardScene');
   scene.style.cursor = 'pointer';
@@ -970,13 +973,16 @@ function initCardTap() {
 
     // Populate card front
     document.getElementById('cardElement').innerHTML =
-      ELEMENT_EMOJI[info.element] + ' ' + ELEMENT_NAMES[info.element] + ' <span style="color:#555">·</span> ' + (card.id !== undefined ? 'MAJOR' : card.suit.toUpperCase());
+      ELEMENT_EMOJI[info.element] + ' ' + ELEMENT_NAMES[info.element] +
+      ' <span style="color:#555">·</span> ' +
+      (card.id !== undefined ? 'MAJOR' : card.suit.toUpperCase());
     document.getElementById('cardEmoji').textContent = info.emoji;
     document.getElementById('cardNameEn').textContent = card.displayName;
     document.getElementById('cardNameJp').textContent = card.nameJP;
     document.getElementById('cardKeyword').textContent = card.keyword;
     document.getElementById('cardPlanet').innerHTML =
-      '<span style="color:' + info.planetSymbol.color + '">' + info.planetSymbol.symbol + '</span> ' + info.planetSymbol.nameJP + ' Line';
+      '<span style="color:' + info.planetSymbol.color + '">' +
+      info.planetSymbol.symbol + '</span> ' + info.planetSymbol.nameJP + ' Line';
 
     // Set element border color on card front
     document.getElementById('cardFront').style.borderColor = ELEMENT_COLORS[info.element];
@@ -989,13 +995,17 @@ function initCardTap() {
     // Particles
     var rect = scene.getBoundingClientRect();
     var frameRect = document.querySelector('.phone-frame').getBoundingClientRect();
-    spawnParticles(rect.left - frameRect.left + rect.width/2, rect.top - frameRect.top + rect.height/2);
+    spawnParticles(
+      rect.left - frameRect.left + rect.width / 2,
+      rect.top - frameRect.top + rect.height / 2
+    );
 
     // Show Stella + reading after flip animation
     setTimeout(function() {
-      var stella = document.getElementById('stellaMsg');
       document.getElementById('stellaText').textContent = generateStellaMsg(card, info.planetSymbol.nameJP);
-      setTimeout(function() { stella.classList.add('visible'); }, 200);
+      setTimeout(function() {
+        document.getElementById('stellaMsg').classList.add('visible');
+      }, 200);
 
       // Show tarot reading after stella
       setTimeout(function() {
@@ -1008,10 +1018,11 @@ function initCardTap() {
 }
 
 // ===== History =====
-const HISTORY_KEY = 'solara_natal_history';
+var HISTORY_KEY = 'solara_natal_history';
 
 function loadHistory() {
-  try { return JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]'); } catch(e) { return []; }
+  try { return JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]'); }
+  catch(e) { return []; }
 }
 
 function saveHistory(card, info) {
@@ -1027,7 +1038,9 @@ function saveHistory(card, info) {
     planet: info.planetSymbol.nameJP,
     planetSymbol: info.planetSymbol.symbol,
     planetColor: info.planetSymbol.color,
-    planets: info.planets.map(function(p) { return { name: PLANET_SYMBOLS[p].nameJP, symbol: PLANET_SYMBOLS[p].symbol, color: PLANET_SYMBOLS[p].color }; }),
+    planets: info.planets.map(function(p) {
+      return { name: PLANET_SYMBOLS[p].nameJP, symbol: PLANET_SYMBOLS[p].symbol, color: PLANET_SYMBOLS[p].color };
+    }),
     stellaMsg: document.getElementById('stellaText').textContent,
     synchronicity: '',
     timestamp: Date.now()
@@ -1076,8 +1089,7 @@ function renderHistory() {
 }
 
 function toggleHistoryCard(i) {
-  var card = document.getElementById('hcard' + i);
-  card.classList.toggle('expanded');
+  document.getElementById('hcard' + i).classList.toggle('expanded');
 }
 
 function saveSynchronicity(index, value) {
@@ -1111,45 +1123,48 @@ document.querySelectorAll('.inner-tab-btn').forEach(function(btn) {
 // ===== Check today's draw =====
 function checkTodayDraw() {
   var hist = loadHistory();
-  if (hist.length > 0 && hist[0].date === getToday()) {
-    isDrawn = true;
-    var h = hist[0];
-    document.getElementById('tapHint').classList.add('hidden');
-    document.getElementById('drawnMsg').textContent = '✓ 本日のカードは引き済み';
-    document.getElementById('cardScene').style.cursor = 'default';
+  if (hist.length === 0 || hist[0].date !== getToday()) return;
 
-    // Restore card front from history
-    var elemKey = h.element || '';
-    var elemEmoji = ELEMENT_EMOJI[elemKey] || '';
-    var elemName = ELEMENT_NAMES[elemKey] || '';
-    var suitLabel = h.cardName && h.cardName.match(/^(WAND|CUP|SWORD|PENTACLE)/i) ? h.cardName.split(' ')[0].toUpperCase() : 'MAJOR';
-    document.getElementById('cardElement').innerHTML =
-      elemEmoji + ' ' + elemName + ' <span style="color:#555">·</span> ' + suitLabel;
-    document.getElementById('cardEmoji').textContent = h.emoji || '';
-    document.getElementById('cardNameEn').textContent = h.cardName || '';
-    document.getElementById('cardNameJp').textContent = h.nameJP || '';
-    document.getElementById('cardKeyword').textContent = h.keyword || '';
-    document.getElementById('cardPlanet').innerHTML =
-      '<span style="color:' + (h.planetColor || '#C9A84C') + '">' + (h.planetSymbol || '') + '</span> ' + (h.planet || '') + ' Line';
+  isDrawn = true;
+  var h = hist[0];
+  document.getElementById('tapHint').classList.add('hidden');
+  document.getElementById('drawnMsg').textContent = '✓ 本日のカードは引き済み';
+  document.getElementById('cardScene').style.cursor = 'default';
 
-    // Set element border color
-    if (ELEMENT_COLORS[elemKey]) {
-      document.getElementById('cardFront').style.borderColor = ELEMENT_COLORS[elemKey];
-    }
+  // Restore card front from history
+  var elemKey = h.element || '';
+  var elemEmoji = ELEMENT_EMOJI[elemKey] || '';
+  var elemName = ELEMENT_NAMES[elemKey] || '';
+  var suitLabel = (h.cardName && h.cardName.match(/^(WAND|CUP|SWORD|PENTACLE)/i))
+    ? h.cardName.split(' ')[0].toUpperCase()
+    : 'MAJOR';
 
-    // Flip card to show front (no animation)
-    document.getElementById('card3d').classList.add('flipped');
+  document.getElementById('cardElement').innerHTML =
+    elemEmoji + ' ' + elemName + ' <span style="color:#555">·</span> ' + suitLabel;
+  document.getElementById('cardEmoji').textContent = h.emoji || '';
+  document.getElementById('cardNameEn').textContent = h.cardName || '';
+  document.getElementById('cardNameJp').textContent = h.nameJP || '';
+  document.getElementById('cardKeyword').textContent = h.keyword || '';
+  document.getElementById('cardPlanet').innerHTML =
+    '<span style="color:' + (h.planetColor || '#C9A84C') + '">' +
+    (h.planetSymbol || '') + '</span> ' + (h.planet || '') + ' Line';
 
-    if (h.stellaMsg) {
-      document.getElementById('stellaText').textContent = h.stellaMsg;
-      document.getElementById('stellaMsg').classList.add('visible');
-    }
-
-    // Restore tarot reading (from AI cache or fallback)
-    var cardObj = {id: h.cardId, nameJP: h.nameJP, nameEN: h.cardName, keyword: h.keyword, planet: h.planet};
-    var infoObj = {element: h.element, dir: h.dir, planetSymbol: {nameJP: h.planet}};
-    showTarotReading(cardObj, infoObj);
+  if (ELEMENT_COLORS[elemKey]) {
+    document.getElementById('cardFront').style.borderColor = ELEMENT_COLORS[elemKey];
   }
+
+  // Flip card to show front (no animation)
+  document.getElementById('card3d').classList.add('flipped');
+
+  if (h.stellaMsg) {
+    document.getElementById('stellaText').textContent = h.stellaMsg;
+    document.getElementById('stellaMsg').classList.add('visible');
+  }
+
+  // Restore tarot reading (from AI cache or fallback)
+  var cardObj = { id: h.cardId, nameJP: h.nameJP, nameEN: h.cardName, keyword: h.keyword, planet: h.planet };
+  var infoObj = { element: h.element, dir: h.dir, planetSymbol: { nameJP: h.planet } };
+  showTarotReading(cardObj, infoObj);
 }
 
 // ===== Particle system =====
@@ -1165,15 +1180,18 @@ function resizeCanvas() {
 }
 
 function spawnParticles(cx, cy) {
-  var colors = ['#C9A84C','#FFD700','#E8E0D0','#6B5CE7','#00CED1'];
+  var colors = ['#C9A84C', '#FFD700', '#E8E0D0', '#6B5CE7', '#00CED1'];
   for (var i = 0; i < 40; i++) {
     var angle = Math.random() * Math.PI * 2;
     var speed = 1 + Math.random() * 4;
     particles.push({
-      x:cx, y:cy,
-      vx: Math.cos(angle)*speed, vy: Math.sin(angle)*speed,
-      color: colors[Math.floor(Math.random()*colors.length)],
-      size: 1+Math.random()*3, life: 1, decay: 0.015+Math.random()*0.02
+      x: cx, y: cy,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      size: 1 + Math.random() * 3,
+      life: 1,
+      decay: 0.015 + Math.random() * 0.02
     });
   }
   if (!animRunning) { animRunning = true; animLoop(); }
@@ -1183,22 +1201,26 @@ function animLoop() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   particles = particles.filter(function(p) { return p.life > 0; });
   particles.forEach(function(p) {
-    p.x += p.vx; p.y += p.vy; p.vy += 0.03; p.life -= p.decay;
+    p.x += p.vx;
+    p.y += p.vy;
+    p.vy += 0.03;
+    p.life -= p.decay;
     ctx.save();
     ctx.globalAlpha = p.life;
-    ctx.shadowBlur = 8; ctx.shadowColor = p.color;
+    ctx.shadowBlur = 8;
+    ctx.shadowColor = p.color;
     ctx.fillStyle = p.color;
-    ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+    ctx.fill();
     ctx.restore();
   });
   if (particles.length > 0) { setTimeout(animLoop, 16); }
   else { animRunning = false; }
 }
 
-// ===== Apply to Map =====
-
-// ===== Tarot Reading Generator (Mock) =====
-const TAROT_READINGS = {
+// ===== Tarot Reading =====
+var TAROT_READINGS = {
   fire: [
     '炎のエネルギーが今日のあなたを包んでいます。{card}が示すのは、内なる情熱を解放する時が来たということ。行動力と創造性が高まるこの瞬間、新しいプロジェクトや挑戦を始めるには最高のタイミングです。ただし、感情が高ぶりやすい時期でもあるので、衝動的な判断は一呼吸おいてから。あなたの{keyword}は、周囲にも良い影響を与えるでしょう。',
     '{card}の炎があなたの道を照らしています。今日は自信を持って前に進む日。リーダーシップを発揮することで、停滞していた物事が動き始めます。特に午後は創造的なエネルギーが最高潮に達するので、大切な決断や表現活動に適しています。{keyword}の力が、あなたを正しい方向に導いてくれるでしょう。',
@@ -1217,17 +1239,17 @@ const TAROT_READINGS = {
   ],
 };
 
-const TAROT_ADVICES = [
+var TAROT_ADVICES = [
   '🧭 {dir}の方角にエネルギーが集中。可能なら足を運んでみて。',
   '🌟 今日のラッキーアクション: {keyword}を意識した行動が幸運を呼びます。',
   '✦ {dir}方位が吉。この方角でのインスピレーションを大切に。',
 ];
 
-const TAROT_API_URL = 'http://127.0.0.1:3915/api/tarot-reading';
+var TAROT_API_URL = 'http://127.0.0.1:3915/api/tarot-reading';
 
 function getTarotCacheKey(card) {
   var d = new Date();
-  var ds = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+  var ds = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
   var cid = card.id !== undefined ? card.id : (card.nameEN || 'unknown');
   return 'tarot_ai_reading_' + cid + '_' + ds;
 }
@@ -1238,7 +1260,7 @@ function showTarotReading(card, info) {
   var advice = document.getElementById('tarotReadingAdvice');
   if (!panel || !body) return;
 
-  // キャッシュチェック
+  // Check cache
   var cacheKey = getTarotCacheKey(card);
   var cached = null;
   try { cached = JSON.parse(localStorage.getItem(cacheKey)); } catch(e) {}
@@ -1249,17 +1271,17 @@ function showTarotReading(card, info) {
     return;
   }
 
-  // ローディング表示
+  // Loading indicator
   body.innerHTML = '<span class="reading-typing" id="readingTyping">✦ 星を読み解いています...</span>';
   advice.textContent = '';
   panel.classList.add('visible');
 
-  // ムード値取得
+  // Get mood value
   var mood = 0;
   try { mood = parseFloat(localStorage.getItem('solara_mood') || '0'); } catch(e) {}
 
   var today = new Date();
-  var dateStr = today.getFullYear() + '/' + (today.getMonth()+1) + '/' + today.getDate();
+  var dateStr = today.getFullYear() + '/' + (today.getMonth() + 1) + '/' + today.getDate();
 
   var payload = {
     nameJP: card.nameJP || card.displayName || '',
@@ -1283,7 +1305,6 @@ function showTarotReading(card, info) {
   })
   .then(function(data) {
     if (data.error) throw new Error(data.error);
-    // キャッシュ保存
     try { localStorage.setItem(cacheKey, JSON.stringify(data)); } catch(e) {}
     typewriteReading(panel, body, advice, data.reading || '', data.advice || '');
   })
@@ -1328,33 +1349,44 @@ function showFallbackReading(card, info, panel, body, advice) {
 }
 
 // ===== Mood Slider =====
-const MOOD_DESCS = [
-  [-1.0,'Deep stillness','🌑'],[-0.6,'Heavy energy','🌫️'],[-0.3,'Quiet & low','💧'],
-  [0.0,'Neutral orbit','〰️'],[0.3,'Gentle flow','🌊'],[0.6,'Rising energy','✨'],
-  [0.9,'Full radiance','☀️'],
+var MOOD_DESCS = [
+  [-1.0, 'Deep stillness', '🌑'],
+  [-0.6, 'Heavy energy', '🌫️'],
+  [-0.3, 'Quiet & low', '💧'],
+  [0.0, 'Neutral orbit', '〰️'],
+  [0.3, 'Gentle flow', '🌊'],
+  [0.6, 'Rising energy', '✨'],
+  [0.9, 'Full radiance', '☀️'],
 ];
 
 function getMoodDesc(v) {
-  for (let i = MOOD_DESCS.length - 1; i >= 0; i--) if (v >= MOOD_DESCS[i][0]) return MOOD_DESCS[i];
+  for (var i = MOOD_DESCS.length - 1; i >= 0; i--) {
+    if (v >= MOOD_DESCS[i][0]) return MOOD_DESCS[i];
+  }
   return MOOD_DESCS[0];
 }
 
 function updateMoodDisplay() {
-  const slider = document.getElementById('moodSlider');
-  const val = parseInt(slider.value) / 100;
-  const desc = getMoodDesc(val);
-  document.getElementById('moodValNum').textContent = (val >= 0 ? '+' : '') + val.toFixed(1);
-  document.getElementById('moodValDesc').textContent = desc[2] + ' ' + desc[1];
-  // Save to localStorage for vibe_score use
+  var slider = document.getElementById('moodSlider');
+  if (!slider) return;
+  var val = parseInt(slider.value) / 100;
+  var desc = getMoodDesc(val);
+  var numEl = document.getElementById('moodValNum');
+  var descEl = document.getElementById('moodValDesc');
+  if (numEl) numEl.textContent = (val >= 0 ? '+' : '') + val.toFixed(1);
+  if (descEl) descEl.textContent = desc[2] + ' ' + desc[1];
   try { localStorage.setItem('solara_mood', JSON.stringify(val)); } catch(e) {}
 }
 
 function loadSavedMood() {
   try {
-    const saved = JSON.parse(localStorage.getItem('solara_mood'));
+    var saved = JSON.parse(localStorage.getItem('solara_mood'));
     if (saved !== null && !isNaN(saved)) {
-      document.getElementById('moodSlider').value = Math.round(saved * 100);
-      updateMoodDisplay();
+      var slider = document.getElementById('moodSlider');
+      if (slider) {
+        slider.value = Math.round(saved * 100);
+        updateMoodDisplay();
+      }
     }
   } catch(e) {}
 }

@@ -648,3 +648,28 @@
 - Tarot: キャッシュヒット時はタイプライター省略で即表示
 - コミット: 23ac7bb (スクロール修正), 3d51e3d (タロットキャッシュ即表示)
 - api_proxy.pyの最終ポート: 3915
+
+## 2026-04-07 セッション: Solaraメモリ整理 + 全5画面HTMLリファクタリング
+
+### メモリ整理
+- 9つのSolara関連メモリファイルの重複・無駄を削除
+- 方針: HTMLが仕様の正（実装と仕様が一体）、メモリには「あとでやること」「やってはいけないこと」「市場データ」のみ残す
+- 削除: project_solara_orb_settings.md, project_solara_v7_mockup.md
+- 大幅縮小: astrocarto(443→90行), horoscope_spec(107→20行), geo_sector(68→30行), galaxy_spec(78→30行), v7_integration(36→20行), tarot_cards(58→20行), title_system(65→20行)
+- 合計: 約995行 → 約230行（77%削減）
+
+### HTMLリファクタリング
+- shared/astro-math.js新規作成（105行）: 天文計算関数・惑星データを共通化
+- 5画面並列リファクタリング:
+
+| ファイル | Before | After | 削減 | 主な変更 |
+|---------|--------|-------|------|---------|
+| index.html (MAP) | 1429 | 1426 | -3 | VP/LOC統合(SlotManager), shared移行, ASPECT_JP削除 |
+| horoscope.html (HORO) | 2402 | 2348 | -54 | Fortune carousel統合, shared移行, デッドコード削除 |
+| tarot.html (TAROT) | 1375 | 1407 | +32 | null-safety追加, const→var統一, フォーマット改善 |
+| galaxy.html (GALAXY) | 1854 | 1671 | -183 | generateDemoCycle/nearestNeighborOrder削除, ヘルパー抽出 |
+| sanctuary.html (SANCTUARY) | 2735 | 2468 | -267 | 旧edit overlay CSS/JS完全削除, PENT_AXIS削��� |
+| **合計** | **10812** | **10442** | **-370** | |
+
+- 全5画面でJSエラーなし確認済み
+- デザイン・機能の変更なし

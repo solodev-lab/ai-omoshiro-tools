@@ -268,7 +268,6 @@ const TAROT = [
   {name:"The Sun",emoji:"☀️",el:"Fire",keyword:"Joy"},
   {name:"Judgement",emoji:"📯",el:"Fire",keyword:"Awakening"},
   {name:"The World",emoji:"🌍",el:"Aether",keyword:"Completion"},
-  /* Minor Arcana representatives (card_id 22-77) */
   {name:"Ace of Wands",emoji:"🔥",el:"Fire",keyword:"Spark"},
   {name:"Two of Wands",emoji:"🔥",el:"Fire",keyword:"Vision"},
   {name:"Three of Wands",emoji:"🔥",el:"Fire",keyword:"Expansion"},
@@ -327,6 +326,16 @@ const TAROT = [
   {name:"King of Pentacles",emoji:"🪙",el:"Earth",keyword:"Wealth"},
 ];
 
+/* ==================== SEEDED RNG ==================== */
+function mulberry32(a) {
+  return function() {
+    a |= 0; a = a + 0x6D2B79F5 | 0;
+    let t = Math.imul(a ^ a >>> 15, 1 | a);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+
 /* ==================== MOON CYCLE ==================== */
 const SYNODIC = 29.53059;
 const KNOWN_NEW = new Date(2000,0,6,18,14,0);
@@ -335,56 +344,48 @@ function getMoonCycleInfo() {
   const now = new Date();
   const days = (now - KNOWN_NEW) / 86400000;
   const phase = ((days % SYNODIC) + SYNODIC) % SYNODIC;
-  const currentDay = Math.floor(phase) + 1;
-  const totalDays = Math.round(SYNODIC);
-  return { currentDay, totalDays, phase };
+  return { currentDay: Math.floor(phase) + 1, totalDays: Math.round(SYNODIC), phase };
 }
 
 const moonCycle = getMoonCycleInfo();
 const TOTAL = moonCycle.totalDays;
 const ACTIVE = moonCycle.currentDay;
+const FULL_MOON_DAY = Math.round(SYNODIC / 2);
 
 /* ==================== GENERATE DAYS_DATA ==================== */
 function generateDaysData(total, active) {
   const data = [];
   const suits = ['wands','cups','swords','pentacles'];
+  const quotes_major = [
+    "The cosmos stirs in your favour.",
+    "A turning point is near.",
+    "Trust the unseen current.",
+    "Your path blazes with purpose.",
+    "The stars remember your name."
+  ];
+  const quotes_minor = [
+    "Small currents shape great rivers.",
+    "Patience is its own reward.",
+    "Ground yourself in what is real.",
+    "A quiet flame burns longest.",
+    "The thread of fate weaves on."
+  ];
   for (let d = 0; d < total; d++) {
     if (d >= active) {
       data.push({ card_id:null, is_major:false, suit:null, quote:null });
       continue;
     }
-    /* Deterministic seeded random per day */
     const seed = (d * 7919 + 1301) % 997;
-    const skip = seed % 7 === 0;
-    if (skip) {
+    if (seed % 7 === 0) {
       data.push({ card_id:null, is_major:false, suit:null, quote:null });
       continue;
     }
-    const isMajor = seed % 5 === 0;
-    if (isMajor) {
-      const cid = seed % 22;
-      const quotes = [
-        "The cosmos stirs in your favour.",
-        "A turning point is near.",
-        "Trust the unseen current.",
-        "Your path blazes with purpose.",
-        "The stars remember your name."
-      ];
-      data.push({ card_id:cid, is_major:true, suit:null, quote:quotes[seed % quotes.length] });
+    if (seed % 5 === 0) {
+      data.push({ card_id: seed % 22, is_major:true, suit:null, quote: quotes_major[seed % quotes_major.length] });
     } else {
       const suitIdx = seed % 4;
-      const suitName = suits[suitIdx];
-      const minorOffset = suitIdx * 14;
-      const cardInSuit = seed % 14;
-      const cid = 22 + minorOffset + cardInSuit;
-      const quotes = [
-        "Small currents shape great rivers.",
-        "Patience is its own reward.",
-        "Ground yourself in what is real.",
-        "A quiet flame burns longest.",
-        "The thread of fate weaves on."
-      ];
-      data.push({ card_id:cid, is_major:false, suit:suitName, quote:quotes[seed % quotes.length] });
+      const cid = 22 + suitIdx * 14 + seed % 14;
+      data.push({ card_id:cid, is_major:false, suit:suits[suitIdx], quote: quotes_minor[seed % quotes_minor.length] });
     }
   }
   return data;
@@ -413,7 +414,7 @@ function hexToRgba(hex, alpha) {
   return `rgba(${r},${g},${b},${alpha})`;
 }
 
-/* ==================== STAR ATLAS NAME GENERATION v2 (20×61=1,220) ==================== */
+/* ==================== STAR ATLAS NAME GENERATION v2 (20x61=1,220) ==================== */
 const NAME_ADJ_EN = [
   'Golden','Sacred','Silver','Luminous','Crimson','Burning',
   'Ethereal','Spectral','Mystic','Arcane','Silent','Veiled',
@@ -497,35 +498,22 @@ function rarityStarsHTML(stars) {
 }
 
 /* ==================== NOUN SHAPE TYPES ==================== */
-// 'open'=MST(branching), 'linear'=single chain, 'closed'=MST+close, 'radial'=hub+MST, 'loop'=MST+extra links
 const NOUN_SHAPES = [
-  // 天体・宇宙: Orbit,Comet,Meteor,Nova,Crescent,Singularity
   'loop','linear','linear','radial','linear','radial',
-  // 神話の生き物: Phoenix,Dragon,Griffin,Unicorn,Pegasus,Kraken,Ouroboros
   'open','open','open','open','open','radial','loop',
-  // 動物・鳥→混合: Serpent,Trident,Anchor,Bow,Butterfly,Leviathan
   'linear','radial','open','linear','open','open',
-  // 武器・道具: Arrow,Sword,Shield,Key,Lantern,Excalibur
   'linear','linear','closed','open','closed','linear',
-  // 王権・宝物: Crown,Chalice,Throne,Scepter,Jewel,Philosopher's Stone
   'closed','closed','open','linear','closed','radial',
-  // 自然・植物→混合: Flame,Tempest,Pyramid,Ember,Glacier,Yggdrasil
   'radial','radial','closed','radial','open','radial',
-  // 建造物・場所: Gate,Tower,Lighthouse,Citadel,Babel
   'closed','linear','linear','closed','open',
-  // 象徴・紋章: Emblem,Mirror,Hourglass,Scale,Mask,Pandora
   'closed','closed','linear','open','closed','closed',
-  // 楽器・芸術→混合: Harp,Bell,Lyre,Compass
   'open','closed','closed','closed',
-  // 身体・翼: Wing,Feather,Eye,Halo,Third Eye
   'open','linear','closed','loop','closed',
-  // 幾何・抽象: Crux,Prism,Ring,Möbius
   'open','closed','loop','loop',
 ];
 
 /* ==================== MST (Prim's algorithm) ==================== */
 function computeMST(points) {
-  // Returns array of edges [{from, to}] forming minimum spanning tree
   const n = points.length;
   if (n <= 1) return [];
   if (n === 2) return [{from: 0, to: 1}];
@@ -537,7 +525,6 @@ function computeMST(points) {
 
   minEdge[0] = 0;
   for (let iter = 0; iter < n; iter++) {
-    // Find cheapest node not yet in tree
     let u = -1;
     for (let i = 0; i < n; i++) {
       if (!inTree[i] && (u === -1 || minEdge[i] < minEdge[u])) u = i;
@@ -546,7 +533,6 @@ function computeMST(points) {
     if (minFrom[u] !== -1) {
       edges.push({from: minFrom[u], to: u});
     }
-    // Update distances
     for (let v = 0; v < n; v++) {
       if (inTree[v]) continue;
       const d = Math.hypot(points[u].x - points[v].x, points[u].y - points[v].y);
@@ -563,7 +549,6 @@ function computeMST(points) {
 function buildConstellationEdges(anchorPoints, shapeType) {
   if (anchorPoints.length <= 1) return [];
 
-  // LINEAR: single chain via nearest-neighbor (no branching)
   if (shapeType === 'linear') {
     const remaining = anchorPoints.map((p, i) => i);
     const ordered = [remaining.splice(0, 1)[0]];
@@ -587,7 +572,6 @@ function buildConstellationEdges(anchorPoints, shapeType) {
   const edges = computeMST(anchorPoints);
 
   if (shapeType === 'closed' || shapeType === 'loop') {
-    // Find the two leaf nodes (degree 1) farthest apart and connect them
     const degree = new Array(anchorPoints.length).fill(0);
     edges.forEach(e => { degree[e.from]++; degree[e.to]++; });
     const leaves = [];
@@ -595,7 +579,6 @@ function buildConstellationEdges(anchorPoints, shapeType) {
       if (degree[i] === 1) leaves.push(i);
     }
     if (leaves.length >= 2) {
-      // For 'closed': connect two farthest leaves
       let bestDist = 0, bestA = leaves[0], bestB = leaves[1];
       for (let i = 0; i < leaves.length; i++) {
         for (let j = i + 1; j < leaves.length; j++) {
@@ -607,7 +590,6 @@ function buildConstellationEdges(anchorPoints, shapeType) {
         }
       }
       edges.push({from: bestA, to: bestB});
-      // For 'loop': add one more connection between other leaves if available
       if (shapeType === 'loop' && leaves.length >= 4) {
         const remaining = leaves.filter(l => l !== bestA && l !== bestB);
         if (remaining.length >= 2) {
@@ -618,16 +600,13 @@ function buildConstellationEdges(anchorPoints, shapeType) {
   }
 
   if (shapeType === 'radial') {
-    // Add edges from centroid to each anchor
     const cx = anchorPoints.reduce((s, p) => s + p.x, 0) / anchorPoints.length;
     const cy = anchorPoints.reduce((s, p) => s + p.y, 0) / anchorPoints.length;
-    // Find anchor nearest to centroid
     let nearestIdx = 0, nearestDist = Infinity;
     anchorPoints.forEach((p, i) => {
       const d = Math.hypot(p.x - cx, p.y - cy);
       if (d < nearestDist) { nearestDist = d; nearestIdx = i; }
     });
-    // Connect center node to all others (that aren't already connected)
     const connected = new Set();
     edges.forEach(e => {
       if (e.from === nearestIdx) connected.add(e.to);
@@ -645,104 +624,81 @@ function buildConstellationEdges(anchorPoints, shapeType) {
 
 /* ==================== NOUN SHAPE TEMPLATES (all 61) ==================== */
 const NOUN_TEMPLATES = {
-  // === 天体・宇宙 ===
-  0: [[.5,.2],[.75,.3],[.8,.5],[.7,.7],[.45,.8],[.2,.7],[.15,.5],[.25,.3]], // Orbit 軌道
-  1: [[.7,.25],[.55,.4],[.4,.55],[.25,.7],[.75,.35],[.8,.45]],             // Comet 彗星
-  2: [[.2,.85],[.35,.65],[.5,.5],[.65,.35],[.8,.15]],                      // Meteor 流星
-  3: [[.5,.5],[.5,.15],[.8,.35],[.8,.65],[.5,.85],[.2,.65],[.2,.35]],      // Nova 新星
-  4: [[.4,.2],[.55,.35],[.6,.5],[.55,.65],[.4,.8]],                        // Crescent 三日月 (右に開く弧)
-  5: [[.5,.5],[.25,.2],[.75,.2],[.85,.5],[.75,.8],[.25,.8],[.15,.5]],      // Singularity 特異点
-
-  // === 神話の生き物 ===
-  6: [[.5,.8],[.4,.6],[.6,.6],[.2,.4],[.8,.4],[.15,.2],[.85,.2]],          // Phoenix フェニックス (翼上、体下)
-  7: [[.7,.2],[.55,.3],[.4,.45],[.5,.55],[.65,.65],[.5,.8],[.3,.75]],      // Dragon ドラゴン (頭右上、体S字で左下へ)
-  8: [[.65,.2],[.75,.35],[.6,.5],[.45,.55],[.35,.4],[.25,.6],[.3,.75]],    // Griffin グリフィン (頭右上、体左下へ)
-  9: [[.65,.15],[.6,.3],[.55,.5],[.5,.65],[.45,.8],[.7,.35]],              // Unicorn ユニコーン (角右上、体左下へ)
-  10:[[.5,.3],[.15,.2],[.85,.2],[.25,.5],[.75,.5],[.5,.7]],                // Pegasus ペガサス
-  11:[[.5,.4],[.2,.2],[.8,.2],[.15,.6],[.85,.6],[.3,.8],[.7,.8]],          // Kraken クラーケン
-  12:[[.5,.2],[.75,.3],[.8,.55],[.65,.75],[.35,.75],[.2,.55],[.25,.3]],    // Ouroboros ウロボロス
-
-  // === 動物・鳥 ===
-  13:[[.75,.2],[.6,.35],[.45,.45],[.55,.6],[.4,.75],[.3,.85]],             // Serpent サーペント (頭右上、尾左下)
-  14:[[.5,.15],[.5,.4],[.5,.7],[.5,.9],[.3,.2],[.7,.2],[.4,.2],[.6,.2]],  // Trident トライデント (縦軸+3叉)
-  15:[[.5,.15],[.4,.25],[.6,.25],[.5,.35],[.5,.6],[.35,.8],[.65,.8],[.5,.9]], // Anchor アンカー (輪+軸+フック)
-  16:[[.2,.5],[.35,.2],[.65,.2],[.8,.5],[.5,.55]],                        // Bow 弓 (弧+弦)
-  17:[[.5,.5],[.25,.3],[.15,.55],[.3,.75],[.75,.3],[.85,.55],[.7,.75]],    // Butterfly 蝶
-  18:[[.85,.3],[.7,.4],[.55,.35],[.4,.45],[.25,.55],[.15,.7]],             // Leviathan レヴィアタン (頭右上、体が左下へ弧)
-
-  // === 武器・道具 ===
-  19:[[.2,.8],[.35,.65],[.5,.5],[.65,.35],[.8,.2]],                        // Arrow 矢
-  20:[[.5,.08],[.5,.3],[.5,.5],[.5,.65],[.5,.9],[.28,.65],[.72,.65]],      // Sword 剣 (長い刃+下寄り鍔+柄)
-  21:[[.3,.2],[.7,.2],[.75,.5],[.6,.75],[.5,.85],[.4,.75],[.25,.5]],       // Shield 盾
-  22:[[.5,.2],[.4,.3],[.6,.3],[.5,.4],[.5,.6],[.5,.8],[.6,.75]],           // Key 鍵
-  23:[[.5,.15],[.5,.3],[.65,.5],[.5,.7],[.35,.5],[.5,.85]],                // Lantern 灯火
-  24:[[.5,.05],[.5,.35],[.5,.65],[.5,.9],[.2,.3],[.8,.3]],                 // Excalibur 聖剣
-
-  // === 王権・宝物 ===
-  25:[[.2,.6],[.3,.3],[.5,.55],[.5,.2],[.7,.3],[.8,.6]],                   // Crown 冠
-  26:[[.3,.25],[.7,.25],[.7,.5],[.3,.5],[.5,.6],[.5,.8],[.35,.85],[.65,.85]], // Chalice 聖杯
-  27:[[.35,.15],[.65,.15],[.65,.55],[.35,.55],[.3,.8],[.7,.8]],             // Throne 玉座
-  28:[[.5,.15],[.45,.25],[.55,.25],[.5,.4],[.5,.6],[.5,.85]],               // Scepter 笏杖
-  29:[[.5,.2],[.7,.4],[.65,.65],[.5,.8],[.35,.65],[.3,.4]],                 // Jewel 宝玉
-  30:[[.5,.15],[.25,.7],[.75,.7],[.5,.45],[.3,.45],[.7,.45]],               // Philosopher's Stone 賢者の石
-
-  // === 自然・植物 ===
-  31:[[.5,.85],[.45,.65],[.55,.5],[.4,.35],[.6,.25],[.5,.1]],               // Flame 炎
-  32:[[.5,.4],[.7,.3],[.8,.5],[.65,.7],[.4,.65],[.25,.45],[.35,.25]],       // Tempest 嵐
-  33:[[.5,.15],[.2,.8],[.8,.8],[.5,.5]],                                    // Pyramid ピラミッド (三角+中心)
-  34:[[.45,.8],[.5,.6],[.55,.45],[.4,.3],[.65,.2],[.3,.5]],                 // Ember 残火
-  35:[[.1,.55],[.3,.4],[.45,.5],[.6,.35],[.75,.45],[.9,.5]],                // Glacier 氷河
-  36:[[.5,.1],[.5,.4],[.5,.7],[.5,.9],[.25,.25],[.75,.25],[.3,.8],[.7,.8]], // Yggdrasil 世界樹
-
-  // === 建造物・場所 ===
-  37:[[.3,.8],[.3,.4],[.4,.2],[.6,.2],[.7,.4],[.7,.8]],                    // Gate 門
-  38:[[.5,.1],[.45,.3],[.55,.3],[.43,.6],[.57,.6],[.4,.85],[.6,.85]],      // Tower 塔
-  39:[[.5,.08],[.45,.25],[.55,.25],[.42,.5],[.58,.5],[.38,.8],[.62,.8],[.5,.12]],// Lighthouse 灯台 (縦長+頂上の光)
-  40:[[.2,.75],[.2,.4],[.35,.2],[.5,.35],[.65,.2],[.8,.4],[.8,.75]],       // Citadel 城砦
-  41:[[.5,.1],[.4,.3],[.6,.3],[.35,.55],[.65,.55],[.3,.8],[.7,.8]],        // Babel 天楼
-
-  // === 象徴・紋章 ===
-  42:[[.5,.15],[.73,.3],[.73,.6],[.5,.75],[.27,.6],[.27,.3]],              // Emblem 紋章
-  43:[[.5,.15],[.68,.3],[.68,.55],[.5,.65],[.32,.55],[.32,.3],[.5,.85]],   // Mirror 鏡
-  44:[[.3,.15],[.7,.15],[.5,.5],[.3,.85],[.7,.85],[.5,.15],[.5,.85]],      // Hourglass 砂時計 (上三角+下三角+くびれ)
-  45:[[.5,.2],[.5,.6],[.2,.4],[.8,.4],[.15,.55],[.85,.55]],                // Scale 天秤
-  46:[[.5,.15],[.7,.3],[.72,.55],[.6,.75],[.4,.75],[.28,.55],[.3,.3]],     // Mask 仮面
-  47:[[.25,.4],[.75,.4],[.75,.75],[.25,.75],[.3,.3],[.7,.3]],              // Pandora パンドラ
-
-  // === 楽器・芸術 ===
-  48:[[.35,.15],[.35,.85],[.65,.8],[.65,.5],[.65,.25],[.35,.5]],           // Harp 竪琴
-  49:[[.5,.15],[.5,.3],[.65,.5],[.7,.7],[.3,.7],[.35,.5]],                 // Bell 鐘
-  50:[[.35,.15],[.65,.15],[.7,.4],[.65,.7],[.35,.7],[.3,.4],[.5,.75]],     // Lyre リラ (U字フレーム)
-  51:[[.5,.12],[.5,.88],[.12,.5],[.88,.5],[.5,.5],[.35,.25],[.65,.25],[.35,.75],[.65,.75]], // Compass コンパス (円+十字+方位)
-
-  // === 身体・翼 ===
-  52:[[.2,.65],[.35,.5],[.5,.35],[.7,.2],[.85,.25],[.75,.45]],             // Wing 翼 (付け根左下、先端右上へ広がる)
-  53:[[.45,.15],[.47,.35],[.5,.55],[.53,.75],[.55,.9],[.35,.45],[.65,.45]],// Feather 羽根
-  54:[[.15,.5],[.35,.3],[.65,.3],[.85,.5],[.65,.7],[.35,.7],[.5,.5]],      // Eye 眼
-  55:[[.5,.2],[.72,.3],[.78,.5],[.72,.65],[.5,.72],[.28,.65],[.22,.5],[.28,.3]], // Halo 光輪
-  56:[[.5,.15],[.65,.4],[.5,.5],[.35,.4],[.5,.85],[.65,.6],[.35,.6]],      // Third Eye 第三の眼
-
-  // === 幾何・抽象 ===
-  57:[[.5,.1],[.5,.9],[.5,.5],[.15,.5],[.85,.5]],                          // Crux 十字架 (縦+横の交差)
-  58:[[.3,.25],[.3,.75],[.6,.5],[.75,.3],[.75,.5],[.75,.7]],               // Prism プリズム
-  59:[[.5,.18],[.73,.28],[.82,.5],[.73,.72],[.5,.82],[.27,.72],[.18,.5],[.27,.28]], // Ring リング (円環)
-  60:[[.5,.45],[.65,.25],[.8,.4],[.65,.6],[.5,.55],[.35,.7],[.2,.55],[.35,.35]], // Möbius メビウス
+  0: [[.5,.2],[.75,.3],[.8,.5],[.7,.7],[.45,.8],[.2,.7],[.15,.5],[.25,.3]],
+  1: [[.7,.25],[.55,.4],[.4,.55],[.25,.7],[.75,.35],[.8,.45]],
+  2: [[.2,.85],[.35,.65],[.5,.5],[.65,.35],[.8,.15]],
+  3: [[.5,.5],[.5,.15],[.8,.35],[.8,.65],[.5,.85],[.2,.65],[.2,.35]],
+  4: [[.4,.2],[.55,.35],[.6,.5],[.55,.65],[.4,.8]],
+  5: [[.5,.5],[.25,.2],[.75,.2],[.85,.5],[.75,.8],[.25,.8],[.15,.5]],
+  6: [[.5,.8],[.4,.6],[.6,.6],[.2,.4],[.8,.4],[.15,.2],[.85,.2]],
+  7: [[.7,.2],[.55,.3],[.4,.45],[.5,.55],[.65,.65],[.5,.8],[.3,.75]],
+  8: [[.65,.2],[.75,.35],[.6,.5],[.45,.55],[.35,.4],[.25,.6],[.3,.75]],
+  9: [[.65,.15],[.6,.3],[.55,.5],[.5,.65],[.45,.8],[.7,.35]],
+  10:[[.5,.3],[.15,.2],[.85,.2],[.25,.5],[.75,.5],[.5,.7]],
+  11:[[.5,.4],[.2,.2],[.8,.2],[.15,.6],[.85,.6],[.3,.8],[.7,.8]],
+  12:[[.5,.2],[.75,.3],[.8,.55],[.65,.75],[.35,.75],[.2,.55],[.25,.3]],
+  13:[[.75,.2],[.6,.35],[.45,.45],[.55,.6],[.4,.75],[.3,.85]],
+  14:[[.5,.15],[.5,.4],[.5,.7],[.5,.9],[.3,.2],[.7,.2],[.4,.2],[.6,.2]],
+  15:[[.5,.15],[.4,.25],[.6,.25],[.5,.35],[.5,.6],[.35,.8],[.65,.8],[.5,.9]],
+  16:[[.2,.5],[.35,.2],[.65,.2],[.8,.5],[.5,.55]],
+  17:[[.5,.5],[.25,.3],[.15,.55],[.3,.75],[.75,.3],[.85,.55],[.7,.75]],
+  18:[[.85,.3],[.7,.4],[.55,.35],[.4,.45],[.25,.55],[.15,.7]],
+  19:[[.2,.8],[.35,.65],[.5,.5],[.65,.35],[.8,.2]],
+  20:[[.5,.08],[.5,.3],[.5,.5],[.5,.65],[.5,.9],[.28,.65],[.72,.65]],
+  21:[[.3,.2],[.7,.2],[.75,.5],[.6,.75],[.5,.85],[.4,.75],[.25,.5]],
+  22:[[.5,.2],[.4,.3],[.6,.3],[.5,.4],[.5,.6],[.5,.8],[.6,.75]],
+  23:[[.5,.15],[.5,.3],[.65,.5],[.5,.7],[.35,.5],[.5,.85]],
+  24:[[.5,.05],[.5,.35],[.5,.65],[.5,.9],[.2,.3],[.8,.3]],
+  25:[[.2,.6],[.3,.3],[.5,.55],[.5,.2],[.7,.3],[.8,.6]],
+  26:[[.3,.25],[.7,.25],[.7,.5],[.3,.5],[.5,.6],[.5,.8],[.35,.85],[.65,.85]],
+  27:[[.35,.15],[.65,.15],[.65,.55],[.35,.55],[.3,.8],[.7,.8]],
+  28:[[.5,.15],[.45,.25],[.55,.25],[.5,.4],[.5,.6],[.5,.85]],
+  29:[[.5,.2],[.7,.4],[.65,.65],[.5,.8],[.35,.65],[.3,.4]],
+  30:[[.5,.15],[.25,.7],[.75,.7],[.5,.45],[.3,.45],[.7,.45]],
+  31:[[.5,.85],[.45,.65],[.55,.5],[.4,.35],[.6,.25],[.5,.1]],
+  32:[[.5,.4],[.7,.3],[.8,.5],[.65,.7],[.4,.65],[.25,.45],[.35,.25]],
+  33:[[.5,.15],[.2,.8],[.8,.8],[.5,.5]],
+  34:[[.45,.8],[.5,.6],[.55,.45],[.4,.3],[.65,.2],[.3,.5]],
+  35:[[.1,.55],[.3,.4],[.45,.5],[.6,.35],[.75,.45],[.9,.5]],
+  36:[[.5,.1],[.5,.4],[.5,.7],[.5,.9],[.25,.25],[.75,.25],[.3,.8],[.7,.8]],
+  37:[[.3,.8],[.3,.4],[.4,.2],[.6,.2],[.7,.4],[.7,.8]],
+  38:[[.5,.1],[.45,.3],[.55,.3],[.43,.6],[.57,.6],[.4,.85],[.6,.85]],
+  39:[[.5,.08],[.45,.25],[.55,.25],[.42,.5],[.58,.5],[.38,.8],[.62,.8],[.5,.12]],
+  40:[[.2,.75],[.2,.4],[.35,.2],[.5,.35],[.65,.2],[.8,.4],[.8,.75]],
+  41:[[.5,.1],[.4,.3],[.6,.3],[.35,.55],[.65,.55],[.3,.8],[.7,.8]],
+  42:[[.5,.15],[.73,.3],[.73,.6],[.5,.75],[.27,.6],[.27,.3]],
+  43:[[.5,.15],[.68,.3],[.68,.55],[.5,.65],[.32,.55],[.32,.3],[.5,.85]],
+  44:[[.3,.15],[.7,.15],[.5,.5],[.3,.85],[.7,.85],[.5,.15],[.5,.85]],
+  45:[[.5,.2],[.5,.6],[.2,.4],[.8,.4],[.15,.55],[.85,.55]],
+  46:[[.5,.15],[.7,.3],[.72,.55],[.6,.75],[.4,.75],[.28,.55],[.3,.3]],
+  47:[[.25,.4],[.75,.4],[.75,.75],[.25,.75],[.3,.3],[.7,.3]],
+  48:[[.35,.15],[.35,.85],[.65,.8],[.65,.5],[.65,.25],[.35,.5]],
+  49:[[.5,.15],[.5,.3],[.65,.5],[.7,.7],[.3,.7],[.35,.5]],
+  50:[[.35,.15],[.65,.15],[.7,.4],[.65,.7],[.35,.7],[.3,.4],[.5,.75]],
+  51:[[.5,.12],[.5,.88],[.12,.5],[.88,.5],[.5,.5],[.35,.25],[.65,.25],[.35,.75],[.65,.75]],
+  52:[[.2,.65],[.35,.5],[.5,.35],[.7,.2],[.85,.25],[.75,.45]],
+  53:[[.45,.15],[.47,.35],[.5,.55],[.53,.75],[.55,.9],[.35,.45],[.65,.45]],
+  54:[[.15,.5],[.35,.3],[.65,.3],[.85,.5],[.65,.7],[.35,.7],[.5,.5]],
+  55:[[.5,.2],[.72,.3],[.78,.5],[.72,.65],[.5,.72],[.28,.65],[.22,.5],[.28,.3]],
+  56:[[.5,.15],[.65,.4],[.5,.5],[.35,.4],[.5,.85],[.65,.6],[.35,.6]],
+  57:[[.5,.1],[.5,.9],[.5,.5],[.15,.5],[.85,.5]],
+  58:[[.3,.25],[.3,.75],[.6,.5],[.75,.3],[.75,.5],[.75,.7]],
+  59:[[.5,.18],[.73,.28],[.82,.5],[.73,.72],[.5,.82],[.27,.72],[.18,.5],[.27,.28]],
+  60:[[.5,.45],[.65,.25],[.8,.4],[.65,.6],[.5,.55],[.35,.7],[.2,.55],[.35,.35]],
 };
 
-/* Get anchor positions for a noun, with jitter. numAnchors = how many to place. */
+/* Get anchor positions for a noun, with jitter */
 function getTemplatePositions(nounIdx, numAnchors, seed) {
   const template = NOUN_TEMPLATES[nounIdx];
   if (!template) {
-    // Fallback: random spread
     const rng = mulberry32(seed);
     return Array.from({length: numAnchors}, () => [0.15 + rng()*0.7, 0.15 + rng()*0.7]);
   }
 
   const rng = mulberry32(seed);
-  const jitter = 0.04; // max random offset
+  const jitter = 0.04;
 
   if (numAnchors <= template.length) {
-    // Subsample template evenly
     const step = template.length / numAnchors;
     return Array.from({length: numAnchors}, (_, i) => {
       const ti = Math.min(template.length - 1, Math.round(i * step));
@@ -753,7 +709,6 @@ function getTemplatePositions(nounIdx, numAnchors, seed) {
     });
   }
 
-  // More anchors than template points: interpolate + jitter
   const positions = [];
   for (let i = 0; i < numAnchors; i++) {
     const tIdx = (i / numAnchors) * template.length;
@@ -772,87 +727,88 @@ function getTemplatePositions(nounIdx, numAnchors, seed) {
 
 /* Adjective-based color system: each adjective has a primary color */
 const ADJ_COLORS = [
-  '#F9D976', '#C4923A', // Golden, Sacred (金/暖色)
-  '#C0C8E0', '#E8ECF8', // Silver, Luminous (銀/月光)
-  '#DC143C', '#FF6B35', // Crimson, Burning (赤/炎)
-  '#7EB8DA', '#B8D8F0', // Ethereal, Spectral (青白/霊的)
-  '#9B6BFF', '#5A2D82', // Mystic, Arcane (紫/神秘)
-  '#4A4A5A', '#6A6A7A', // Silent, Veiled (暗/静寂)
-  '#68C8E8', '#1A3A5A', // Frozen, Abyssal (氷/青)
-  '#5AA050', '#3A5A2A', // Ancient, Verdant (緑/自然)
-  '#F0F0FF', '#D0D8F0', // Infinite, Celestial (白/光)
-  '#FFF4C0', '#C8A0FF', // Radiant, Phantom (虹/多色)
+  '#F9D976', '#C4923A',
+  '#C0C8E0', '#E8ECF8',
+  '#DC143C', '#FF6B35',
+  '#7EB8DA', '#B8D8F0',
+  '#9B6BFF', '#5A2D82',
+  '#4A4A5A', '#6A6A7A',
+  '#68C8E8', '#1A3A5A',
+  '#5AA050', '#3A5A2A',
+  '#F0F0FF', '#D0D8F0',
+  '#FFF4C0', '#C8A0FF',
 ];
 
 /* ==================== GALAXY CYCLES v2 (Golden Angle + anchor/field + rarity) ==================== */
 const GOLDEN_ANGLE = 137.508 * Math.PI / 180;
 
-// Generate demo cycles with v2 logic
-function generateDemoCycle(id, dateRange, seedCard, readings) {
-  const date = new Date(2026, id, 3);
-  const nameResult = generateConstellationName(seedCard, date);
-  const card = TAROT[seedCard];
-  const baseColor = ADJ_COLORS[nameResult.adjIdx] || '#F9D976';
-
+/* Place dots for a cycle: majors on template, minors scattered with Golden Angle */
+function placeCycleDots(majors, minors, nounIdx, seedCard, id) {
   const dots = [];
   const rng = mulberry32(seedCard * 1000 + id * 7);
-  const majors = [], minors = [];
-  readings.forEach(r => { if (r.isMajor) majors.push(r); else minors.push(r); });
 
-  // Anchors on noun template
-  const templatePos = getTemplatePositions(nameResult.nounIdx, majors.length, seedCard * 100 + id);
+  const templatePos = getTemplatePositions(nounIdx, majors.length, seedCard * 100 + id);
   for (let i = 0; i < majors.length; i++) {
     const [nx, ny] = templatePos[i];
     const zLayer = (majors[i].cardId % 3) - 1;
+    const zJitter = (rng() - 0.5) * 0.4;
     dots.push({
       x: Math.max(5, Math.min(75, nx * 80)),
       y: Math.max(5, Math.min(75, ny * 80)),
-      z: Math.max(-1, Math.min(1, zLayer + (rng()-0.5)*0.4)),
+      z: Math.max(-1, Math.min(1, zLayer + zJitter)),
       isMajor: true, cardId: majors[i].cardId
     });
   }
-  // Field stars scattered
+
   for (let i = 0; i < minors.length; i++) {
     const r = minors[i];
     const angle = r.cardId * GOLDEN_ANGLE;
     const radius = 10 + (i / minors.length) * 24;
+    const x = 40 + radius * Math.cos(angle);
+    const y = 40 + radius * Math.sin(angle);
+    const zLayer = (r.cardId % 3) - 1;
+    const zJitter = (rng() - 0.5) * 0.4;
     dots.push({
-      x: Math.max(5, Math.min(75, 40 + radius * Math.cos(angle))),
-      y: Math.max(5, Math.min(75, 40 + radius * Math.sin(angle))),
-      z: Math.max(-1, Math.min(1, ((r.cardId%3)-1) + (rng()-0.5)*0.4)),
+      x: Math.max(5, Math.min(75, x)),
+      y: Math.max(5, Math.min(75, y)),
+      z: Math.max(-1, Math.min(1, zLayer + zJitter)),
       isMajor: false, cardId: r.cardId
     });
   }
 
+  return dots;
+}
+
+/* Force-create demo cycle with specific adj+noun */
+function forceNameDemoCycle(id, seedCard, readings, forceAdjIdx, forceNounIdx) {
+  const card = TAROT[seedCard];
+  const nameEN = 'The ' + NAME_ADJ_EN[forceAdjIdx] + ' ' + NAME_NOUN_EN[forceNounIdx];
+  const nameJP = NAME_ADJ_JP[forceAdjIdx] + NAME_NOUN_JP[forceNounIdx];
+  const combined = ADJ_TIERS[forceAdjIdx] + NOUN_TIERS[forceNounIdx];
+  const stars = Math.min(5, combined + 1);
+  const baseColor = ADJ_COLORS[forceAdjIdx];
+
+  const majors = [], minors = [];
+  readings.forEach(r => { if (r.isMajor) majors.push(r); else minors.push(r); });
+
   return {
-    id, dateRange, seedCard,
-    name: nameResult.en, nameJP: nameResult.jp,
+    id, seedCard,
+    name: nameEN, nameJP: nameJP,
     symbol: card.emoji,
-    nounIdx: nameResult.nounIdx,
-    stars: nameResult.stars, rarityLabel: nameResult.label,
+    nounIdx: forceNounIdx,
+    stars, rarityLabel: RARITY_LABELS[stars-1],
     color: hexToRgba(baseColor, 0.9),
     glowColor: hexToRgba(baseColor, 0.4),
     borderColor: hexToRgba(baseColor, 0.25),
     bgGrad: [hexToRgba(baseColor, 0.12), hexToRgba(baseColor, 0.03)],
-    dots
+    dots: placeCycleDots(majors, minors, forceNounIdx, seedCard, id)
   };
 }
 
-// Simple seeded RNG
-function mulberry32(a) {
-  return function() {
-    a |= 0; a = a + 0x6D2B79F5 | 0;
-    let t = Math.imul(a ^ a >>> 15, 1 | a);
-    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
-    return ((t ^ t >>> 14) >>> 0) / 4294967296;
-  };
-}
-
-// Generate demo readings — guarantee at least 5 major arcana (anchors)
+/* Generate demo readings -- guarantee at least 5 major arcana (anchors) */
 function makeDemoReadings(seedCard, count, seed) {
   const rng = mulberry32(seed);
   const readings = [];
-  // Force first 5 as major arcana for enough anchors
   for (let i = 0; i < Math.min(5, count); i++) {
     readings.push({ cardId: Math.floor(rng() * 22), isMajor: true });
   }
@@ -867,143 +823,19 @@ function makeDemoReadings(seedCard, count, seed) {
   return readings;
 }
 
-/* Force-create demo cycle with specific adj+noun */
-function forceNameDemoCycle(id, seedCard, readings, forceAdjIdx, forceNounIdx) {
-  const card = TAROT[seedCard];
-  const nameEN = 'The ' + NAME_ADJ_EN[forceAdjIdx] + ' ' + NAME_NOUN_EN[forceNounIdx];
-  const nameJP = NAME_ADJ_JP[forceAdjIdx] + NAME_NOUN_JP[forceNounIdx];
-  const combined = ADJ_TIERS[forceAdjIdx] + NOUN_TIERS[forceNounIdx];
-  const stars = Math.min(5, combined + 1);
-  const baseColor = ADJ_COLORS[forceAdjIdx];
-
-  const dots = [];
-  const rng = mulberry32(seedCard * 1000 + id * 7);
-
-  // Separate major (anchors) and minor (field) readings
-  const majors = [], minors = [];
-  readings.forEach(r => { if (r.isMajor) majors.push(r); else minors.push(r); });
-
-  // Place anchors on noun shape template
-  const templatePos = getTemplatePositions(forceNounIdx, majors.length, seedCard * 100 + id);
-  for (let i = 0; i < majors.length; i++) {
-    const [nx, ny] = templatePos[i];
-    const zLayer = (majors[i].cardId % 3) - 1;
-    const zJitter = (rng() - 0.5) * 0.4;
-    dots.push({
-      x: Math.max(5, Math.min(75, nx * 80)),
-      y: Math.max(5, Math.min(75, ny * 80)),
-      z: Math.max(-1, Math.min(1, zLayer + zJitter)),
-      isMajor: true,
-      cardId: majors[i].cardId
-    });
-  }
-
-  // Place field stars scattered with Golden Angle
-  for (let i = 0; i < minors.length; i++) {
-    const r = minors[i];
-    const angle = r.cardId * GOLDEN_ANGLE;
-    const radius = 10 + (i / minors.length) * 24;
-    const x = 40 + radius * Math.cos(angle);
-    const y = 40 + radius * Math.sin(angle);
-    const zLayer = (r.cardId % 3) - 1;
-    const zJitter = (rng() - 0.5) * 0.4;
-    dots.push({
-      x: Math.max(5, Math.min(75, x)),
-      y: Math.max(5, Math.min(75, y)),
-      z: Math.max(-1, Math.min(1, zLayer + zJitter)),
-      isMajor: false,
-      cardId: r.cardId
-    });
-  }
-
-  return {
-    id, seedCard,
-    name: nameEN, nameJP: nameJP,
-    symbol: card.emoji,
-    nounIdx: forceNounIdx,
-    stars: stars, rarityLabel: RARITY_LABELS[stars-1],
-    color: hexToRgba(baseColor, 0.9),
-    glowColor: hexToRgba(baseColor, 0.4),
-    borderColor: hexToRgba(baseColor, 0.25),
-    bgGrad: [hexToRgba(baseColor, 0.12), hexToRgba(baseColor, 0.03)],
-    dots
-  };
-}
-
 /* All 61 nouns as demo cycles: [nounIdx, adjIdx, seedCard] */
 const DEMO_SPECS = [
-  // 天体・宇宙
-  [ 0, 16, 10], // Infinite Orbit / 無限の軌道
-  [ 1, 12,  9], // Frozen Comet / 凍てつく彗星
-  [ 2,  3, 17], // Luminous Meteor / 光輝の流星
-  [ 3,  0, 19], // Golden Nova / 黄金の新星
-  [ 4,  2, 18], // Silver Crescent / 銀色の三日月
-  [ 5, 18,  0], // Radiant Singularity / 煌めきの特異点
-  // 神話の生き物
-  [ 6,  4,  8], // Crimson Phoenix / 深紅のフェニックス
-  [ 7,  5,  7], // Burning Dragon / 燃ゆるドラゴン
-  [ 8,  0, 11], // Golden Griffin / 黄金のグリフィン
-  [ 9, 17,  5], // Celestial Unicorn / 天上のユニコーン
-  [10,  6,  2], // Ethereal Pegasus / 幽玄のペガサス
-  [11, 13, 13], // Abyssal Kraken / 深淵のクラーケン
-  [12, 10, 21], // Silent Ouroboros / 静寂のウロボロス
-  // 動物・鳥→混合
-  [13, 10, 15], // Silent Serpent / 静寂のサーペント
-  [14,  4,  7], // Crimson Trident / 深紅のトライデント
-  [15,  2, 16], // Silver Anchor / 銀色のアンカー
-  [16, 14,  3], // Ancient Bow / 古の弓
-  [17,  6,  3], // Ethereal Butterfly / 幽玄の蝶
-  [18, 13, 12], // Abyssal Leviathan / 深淵のレヴィアタン
-  // 武器・道具
-  [19,  4,  7], // Crimson Arrow / 深紅の矢
-  [20,  2, 16], // Silver Sword / 銀色の剣
-  [21,  3, 4],  // Luminous Shield / 光輝の盾
-  [22,  9, 20], // Arcane Key / 秘奥の鍵
-  [23, 15, 14], // Verdant Lantern / 翠の灯火
-  [24,  1,  5], // Sacred Excalibur / 聖なる聖剣
-  // 王権・宝物
-  [25,  0, 19], // Golden Crown / 黄金の冠
-  [26, 17,  6], // Celestial Chalice / 天上の聖杯
-  [27,  8,  4], // Mystic Throne / 秘密の玉座
-  [28,  2, 15], // Silver Scepter / 銀色の笏杖
-  [29, 18,  9], // Radiant Jewel / 煌めきの宝玉
-  [30,  9, 21], // Arcane Philosopher's Stone / 秘奥の賢者の石
-  // 自然・植物
-  [31,  4,  8], // Crimson Flame / 深紅の炎
-  [32, 13, 16], // Abyssal Tempest / 深淵の嵐
-  [33,  0, 11], // Golden Pyramid / 黄金のピラミッド
-  [34, 19, 15], // Phantom Ember / 幻影の残火
-  [35, 12,  1], // Frozen Glacier / 凍てつく氷河
-  [36, 15,  9], // Verdant Yggdrasil / 翠の世界樹
-  // 建造物・場所
-  [37, 14, 10], // Ancient Gate / 古の門
-  [38,  0, 16], // Golden Tower / 黄金の塔
-  [39,  0, 12], // Golden Lighthouse / 黄金の灯台
-  [40,  2, 20], // Silver Citadel / 銀色の城砦
-  [41,  1,  0], // Sacred Babel / 聖なる天楼
-  // 象徴・紋章
-  [42, 14,  8], // Ancient Emblem / 古の紋章
-  [43, 16, 11], // Infinite Mirror / 無限の鏡
-  [44, 10, 13], // Silent Hourglass / 静寂の砂時計
-  [45, 17,  7], // Celestial Scale / 天上の天秤
-  [46,  5, 18], // Burning Mask / 燃ゆる仮面
-  [47,  9, 20], // Arcane Pandora / 秘奥のパンドラ
-  // 楽器・芸術
-  [48,  0,  6], // Golden Harp / 黄金の竪琴
-  [49, 12, 14], // Frozen Bell / 凍てつく鐘
-  [50,  0,  6], // Golden Lyre / 黄金のリラ
-  [51,  2, 17], // Silver Compass / 銀色のコンパス
-  // 身体・翼
-  [52,  6,  3], // Ethereal Wing / 幽玄の翼
-  [53,  3, 19], // Luminous Feather / 光輝の羽根
-  [54,  8, 13], // Mystic Eye / 秘密の眼
-  [55,  1, 14], // Sacred Halo / 聖なる光輪
-  [56, 19,  0], // Phantom Third Eye / 幻影の第三の眼
-  // 幾何・抽象
-  [57, 17, 17], // Celestial Crux / 天上の十字架
-  [58, 18, 10], // Radiant Prism / 煌めきのプリズム
-  [59,  2, 13], // Silver Ring / 銀色のリング
-  [60,  8,  0], // Mystic Möbius / 秘密のメビウス
+  [ 0, 16, 10], [ 1, 12,  9], [ 2,  3, 17], [ 3,  0, 19], [ 4,  2, 18], [ 5, 18,  0],
+  [ 6,  4,  8], [ 7,  5,  7], [ 8,  0, 11], [ 9, 17,  5], [10,  6,  2], [11, 13, 13], [12, 10, 21],
+  [13, 10, 15], [14,  4,  7], [15,  2, 16], [16, 14,  3], [17,  6,  3], [18, 13, 12],
+  [19,  4,  7], [20,  2, 16], [21,  3, 4],  [22,  9, 20], [23, 15, 14], [24,  1,  5],
+  [25,  0, 19], [26, 17,  6], [27,  8,  4], [28,  2, 15], [29, 18,  9], [30,  9, 21],
+  [31,  4,  8], [32, 13, 16], [33,  0, 11], [34, 19, 15], [35, 12,  1], [36, 15,  9],
+  [37, 14, 10], [38,  0, 16], [39,  0, 12], [40,  2, 20], [41,  1,  0],
+  [42, 14,  8], [43, 16, 11], [44, 10, 13], [45, 17,  7], [46,  5, 18], [47,  9, 20],
+  [48,  0,  6], [49, 12, 14], [50,  0,  6], [51,  2, 17],
+  [52,  6,  3], [53,  3, 19], [54,  8, 13], [55,  1, 14], [56, 19,  0],
+  [57, 17, 17], [58, 18, 10], [59,  2, 13], [60,  8,  0],
 ];
 
 const GALAXY_CYCLES = DEMO_SPECS.map((spec, i) => {
@@ -1027,47 +859,49 @@ const NOUN_FILENAMES = [
 ];
 const ART_IMAGES = {};
 const ART_BASE = 'share-assets/constellation-art/';
-function preloadConstellationArt() {
+(function preloadConstellationArt() {
   NOUN_FILENAMES.forEach((name, idx) => {
     const img = new Image();
     img.src = ART_BASE + name + '.webp';
     img.onload = () => { ART_IMAGES[idx] = img; };
   });
-}
-preloadConstellationArt();
+})();
 
 const NOUN_ART_TRANSFORMS = {
-  4: {flipX: true}, // Crescent 三日月: 左右反転
+  4: {flipX: true},
 };
 
 /* ==================== BACKGROUND ==================== */
-const bgC=document.getElementById('bgCanvas');
-const bgX=bgC.getContext('2d');
-bgC.width=window.innerWidth; bgC.height=window.innerHeight;
-let bgT=0;
-(function animBg(){
-  const bw=bgC.width,bh=bgC.height,bcx=bw/2,bcy=bh/2;
-  bgX.clearRect(0,0,bw,bh);
-  const g=bgX.createRadialGradient(bcx,bcy,0,bcx,bcy,Math.max(bw,bh)*0.6);
-  g.addColorStop(0,'#0C1D3A'); g.addColorStop(1,'#080C14');
-  bgX.fillStyle=g; bgX.fillRect(0,0,bw,bh);
-  const n1x=bcx+Math.sin(bgT*0.6)*90,n1y=bcy+Math.cos(bgT*0.4)*130;
-  const n1=bgX.createRadialGradient(n1x,n1y,0,n1x,n1y,220);
-  n1.addColorStop(0,'rgba(38,208,206,0.07)'); n1.addColorStop(0.5,'rgba(26,41,128,0.05)'); n1.addColorStop(1,'transparent');
-  bgX.fillStyle=n1; bgX.fillRect(0,0,bw,bh);
-  const n2x=bcx*0.7+Math.cos(bgT*0.35)*70,n2y=bcy*0.66+Math.sin(bgT*0.5)*90;
-  const n2=bgX.createRadialGradient(n2x,n2y,0,n2x,n2y,160);
-  n2.addColorStop(0,'rgba(249,217,118,0.06)'); n2.addColorStop(1,'transparent');
-  bgX.fillStyle=n2; bgX.fillRect(0,0,bw,bh);
-  bgT+=0.004; requestAnimationFrame(animBg);
+const bgC = document.getElementById('bgCanvas');
+const bgX = bgC.getContext('2d');
+bgC.width = window.innerWidth;
+bgC.height = window.innerHeight;
+let bgT = 0;
+(function animBg() {
+  const bw = bgC.width, bh = bgC.height, bcx = bw/2, bcy = bh/2;
+  bgX.clearRect(0, 0, bw, bh);
+  const g = bgX.createRadialGradient(bcx, bcy, 0, bcx, bcy, Math.max(bw, bh) * 0.6);
+  g.addColorStop(0, '#0C1D3A'); g.addColorStop(1, '#080C14');
+  bgX.fillStyle = g; bgX.fillRect(0, 0, bw, bh);
+  const n1x = bcx + Math.sin(bgT * 0.6) * 90, n1y = bcy + Math.cos(bgT * 0.4) * 130;
+  const n1 = bgX.createRadialGradient(n1x, n1y, 0, n1x, n1y, 220);
+  n1.addColorStop(0, 'rgba(38,208,206,0.07)'); n1.addColorStop(0.5, 'rgba(26,41,128,0.05)'); n1.addColorStop(1, 'transparent');
+  bgX.fillStyle = n1; bgX.fillRect(0, 0, bw, bh);
+  const n2x = bcx * 0.7 + Math.cos(bgT * 0.35) * 70, n2y = bcy * 0.66 + Math.sin(bgT * 0.5) * 90;
+  const n2 = bgX.createRadialGradient(n2x, n2y, 0, n2x, n2y, 160);
+  n2.addColorStop(0, 'rgba(249,217,118,0.06)'); n2.addColorStop(1, 'transparent');
+  bgX.fillStyle = n2; bgX.fillRect(0, 0, bw, bh);
+  bgT += 0.004;
+  requestAnimationFrame(animBg);
 })();
 
-(function makeStars(){
-  const c=document.getElementById('starContainer');
-  for(let i=0;i<65;i++){
-    const s=document.createElement('div'); s.className='star';
-    const sz=Math.random()*1.8+0.5;
-    s.style.cssText=`width:${sz}px;height:${sz}px;left:${Math.random()*100}%;top:${Math.random()*100}%;--dur:${2+Math.random()*4}s;--delay:${Math.random()*5}s;--op:${0.1+Math.random()*0.35};`;
+(function makeStars() {
+  const c = document.getElementById('starContainer');
+  for (let i = 0; i < 65; i++) {
+    const s = document.createElement('div');
+    s.className = 'star';
+    const sz = Math.random() * 1.8 + 0.5;
+    s.style.cssText = `width:${sz}px;height:${sz}px;left:${Math.random()*100}%;top:${Math.random()*100}%;--dur:${2+Math.random()*4}s;--delay:${Math.random()*5}s;--op:${0.1+Math.random()*0.35};`;
     c.appendChild(s);
   }
 })();
@@ -1089,34 +923,35 @@ let bgT=0;
 
 /* ==================== INNER TABS ==================== */
 function switchInner(tab) {
-  document.querySelectorAll('.inner-tab-btn').forEach((b,i)=>b.classList.toggle('active', (i===0&&tab==='cycle')||(i===1&&tab==='atlas')));
-  document.getElementById('panel-cycle').classList.toggle('active',tab==='cycle');
-  document.getElementById('panel-atlas').classList.toggle('active',tab==='atlas');
-  if(tab==='cycle'){ if(!sp.raf) startSpiral3D(); }
-  else { if(sp.raf){cancelAnimationFrame(sp.raf);sp.raf=null;} }
+  document.querySelectorAll('.inner-tab-btn').forEach((b, i) => b.classList.toggle('active', (i === 0 && tab === 'cycle') || (i === 1 && tab === 'atlas')));
+  document.getElementById('panel-cycle').classList.toggle('active', tab === 'cycle');
+  document.getElementById('panel-atlas').classList.toggle('active', tab === 'atlas');
+  if (tab === 'cycle') { if (!sp.raf) startSpiral3D(); }
+  else { if (sp.raf) { cancelAnimationFrame(sp.raf); sp.raf = null; } }
 }
 
 /* ==================== 3D SPIRAL ==================== */
-const sp={rotX:-0.32,rotY:0.4,zoom:1,velX:0,velY:0,drag:false,lx:0,ly:0,raf:null,inited:false,dotPositions:[]};
+const sp = { rotX:-0.32, rotY:0.4, zoom:1, velX:0, velY:0, drag:false, lx:0, ly:0, raf:null, inited:false, dotPositions:[] };
+const CAM_ANGLE_55 = 55 * Math.PI / 180;
 
-function rot3D(x,y,z){
-  const y1=y*Math.cos(sp.rotX)-z*Math.sin(sp.rotX);
-  const z1=y*Math.sin(sp.rotX)+z*Math.cos(sp.rotX);
-  const x2=x*Math.cos(sp.rotY)+z1*Math.sin(sp.rotY);
-  const z2=-x*Math.sin(sp.rotY)+z1*Math.cos(sp.rotY);
-  return{x:x2,y:y1,z:z2};
+function rot3D(x, y, z) {
+  const y1 = y * Math.cos(sp.rotX) - z * Math.sin(sp.rotX);
+  const z1 = y * Math.sin(sp.rotX) + z * Math.cos(sp.rotX);
+  const x2 = x * Math.cos(sp.rotY) + z1 * Math.sin(sp.rotY);
+  const z2 = -x * Math.sin(sp.rotY) + z1 * Math.cos(sp.rotY);
+  return { x: x2, y: y1, z: z2 };
 }
-function proj3D(x,y,z,fov,cx,cy){const s=fov/(fov+z+260);return{x:cx+x*s,y:cy+y*s,s};}
 
-const BREATH_PHASES=Array.from({length:TOTAL},(_,i)=>i*0.71+Math.sin(i*1.3)*2.2);
-const BREATH_PERIODS=Array.from({length:TOTAL},(_,i)=>2.0+Math.abs(Math.sin(i*0.9))*2.0);
+function proj3D(x, y, z, fov, cx, cy) {
+  const s = fov / (fov + z + 260);
+  return { x: cx + x * s, y: cy + y * s, s };
+}
 
-/* Full moon position (~day 15) and new moon position (day 1) */
-const FULL_MOON_DAY = Math.round(SYNODIC / 2);
+const BREATH_PHASES = Array.from({length: TOTAL}, (_, i) => i * 0.71 + Math.sin(i * 1.3) * 2.2);
+const BREATH_PERIODS = Array.from({length: TOTAL}, (_, i) => 2.0 + Math.abs(Math.sin(i * 0.9)) * 2.0);
 
-/* Pre-compute Golden Angle positions + z-layers for reading dots in current cycle.
-   These are the "final" constellation positions, viewed at 55° camera to look scattered. */
-const CYCLE_GA_POSITIONS = []; // {gaX, gaY, gaZ} per day (only for days with readings)
+/* Pre-compute Golden Angle positions + z-layers for reading dots in current cycle */
+const CYCLE_GA_POSITIONS = [];
 (function precomputeGoldenAnglePositions() {
   let readingIdx = 0;
   const rng = mulberry32(42);
@@ -1130,7 +965,7 @@ const CYCLE_GA_POSITIONS = []; // {gaX, gaY, gaZ} per day (only for days with re
     const radius = 0.15 + (readingIdx / Math.max(1, ACTIVE)) * 0.28;
     const x = 0.5 + radius * Math.cos(angle);
     const y = 0.5 + radius * Math.sin(angle);
-    const zLayer = (dd.card_id % 3) - 1; // -1, 0, 1
+    const zLayer = (dd.card_id % 3) - 1;
     const zJitter = (rng() - 0.5) * 0.4;
     CYCLE_GA_POSITIONS.push({
       gaX: Math.max(0.08, Math.min(0.92, x)),
@@ -1141,275 +976,269 @@ const CYCLE_GA_POSITIONS = []; // {gaX, gaY, gaZ} per day (only for days with re
   }
 })();
 
-/* Project a Golden Angle dot with anamorphic 3D camera (55° base) + user drag rotation.
-   camAngle: base anamorphic tilt (radians). User rotation from sp.rotX/sp.rotY is added. */
+/* Project a Golden Angle dot with anamorphic 3D camera */
 function projectGA3D(nx, ny, nz, W, H, cx, cy, camAngle, FOV) {
   const zWorld = nz * 80;
   const cosA = Math.cos(camAngle), sinA = Math.sin(camAngle);
   const xWorld = (nx - 0.5) * W * 0.85;
   const yWorld = (ny - 0.5) * H * 0.7;
-  // Apply anamorphic tilt first
   const yTilt = yWorld * cosA - zWorld * sinA;
   const zTilt = yWorld * sinA + zWorld * cosA;
-  // Then apply user drag rotation (same as rot3D)
   const rv = rot3D(xWorld, yTilt, zTilt);
   const s = FOV / (FOV + rv.z + 260);
-  return {
-    x: cx + rv.x * s,
-    y: cy + rv.y * s,
-    s: s,
-    rz: rv.z
-  };
+  return { x: cx + rv.x * s, y: cy + rv.y * s, s, rz: rv.z };
 }
 
-function renderSpiral3D(){
-  const canvas=document.getElementById('spiralCanvas');
-  if(!canvas||!canvas.offsetWidth) return;
-  const dpr=window.devicePixelRatio||1;
-  const W=canvas.offsetWidth,H=canvas.offsetHeight;
-  if(canvas.width!==W*dpr||canvas.height!==H*dpr){canvas.width=W*dpr;canvas.height=H*dpr;}
-  const ctx=canvas.getContext('2d');
-  ctx.setTransform(dpr,0,0,dpr,0,0);
-  ctx.clearRect(0,0,W,H);
-  const now=performance.now()/1000;
-  const cx=W/2,cy=H*0.44,FOV=360*sp.zoom;
-  const b=Math.min(W,H)*0.057,ZSPAN=55;
-  const CAM_55 = 55 * Math.PI / 180; // anamorphic camera angle
+function renderSpiral3D() {
+  const canvas = document.getElementById('spiralCanvas');
+  if (!canvas || !canvas.offsetWidth) return;
+  const dpr = window.devicePixelRatio || 1;
+  const W = canvas.offsetWidth, H = canvas.offsetHeight;
+  if (canvas.width !== W * dpr || canvas.height !== H * dpr) { canvas.width = W * dpr; canvas.height = H * dpr; }
+  const ctx = canvas.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, W, H);
+  const now = performance.now() / 1000;
+  const cx = W / 2, cy = H * 0.44, FOV = 360 * sp.zoom;
+  const b = Math.min(W, H) * 0.057, ZSPAN = 55;
 
-  // ===== Layer 1: Ghost spiral path (guide line) =====
-  const pathPts=[];
-  for(let i=0;i<=500;i++){
-    const th=(i/500)*Math.PI*4.6,r=b*th;
-    const raw={x:r*Math.cos(th-Math.PI/2),y:r*Math.sin(th-Math.PI/2),z:(i/500)*ZSPAN-ZSPAN/2};
-    const rv=rot3D(raw.x,raw.y,raw.z);
-    pathPts.push(proj3D(rv.x,rv.y,rv.z,FOV,cx,cy));
+  /* Layer 1: Ghost spiral path */
+  const pathPts = [];
+  for (let i = 0; i <= 500; i++) {
+    const th = (i / 500) * Math.PI * 4.6, r = b * th;
+    const raw = { x: r * Math.cos(th - Math.PI / 2), y: r * Math.sin(th - Math.PI / 2), z: (i / 500) * ZSPAN - ZSPAN / 2 };
+    const rv = rot3D(raw.x, raw.y, raw.z);
+    pathPts.push(proj3D(rv.x, rv.y, rv.z, FOV, cx, cy));
   }
-  for(let i=1;i<pathPts.length;i++){
-    const p=pathPts[i],pp=pathPts[i-1];
-    const fade=1-Math.pow(i/pathPts.length,1.5);
-    if(fade<0.01)continue;
-    ctx.beginPath();ctx.moveTo(pp.x,pp.y);ctx.lineTo(p.x,p.y);
-    const a=Math.max(0.05,0.30*p.s*fade);
-    ctx.strokeStyle=`rgba(192,200,224,${a.toFixed(3)})`;ctx.lineWidth=Math.max(0.8,1.4*p.s*fade);ctx.stroke();
-  }
-
-  // ===== Layer 2: Spiral anchor dots (no-reading days stay on spiral) =====
-  const spiralDots=[];
-  for(let d=1;d<=TOTAL;d++){
-    const th=(d/TOTAL)*Math.PI*4.2,r=b*th;
-    const raw={x:r*Math.cos(th-Math.PI/2),y:r*Math.sin(th-Math.PI/2),z:(d/TOTAL)*ZSPAN-ZSPAN/2};
-    const rv=rot3D(raw.x,raw.y,raw.z);
-    const p=proj3D(rv.x,rv.y,rv.z,FOV,cx,cy);
-    spiralDots.push({...p,d,rz:rv.z});
+  for (let i = 1; i < pathPts.length; i++) {
+    const p = pathPts[i], pp = pathPts[i - 1];
+    const fade = 1 - Math.pow(i / pathPts.length, 1.5);
+    if (fade < 0.01) continue;
+    ctx.beginPath(); ctx.moveTo(pp.x, pp.y); ctx.lineTo(p.x, p.y);
+    const a = Math.max(0.05, 0.30 * p.s * fade);
+    ctx.strokeStyle = `rgba(192,200,224,${a.toFixed(3)})`; ctx.lineWidth = Math.max(0.8, 1.4 * p.s * fade); ctx.stroke();
   }
 
-  // Draw empty/future day markers on spiral
-  spiralDots.forEach(p=>{
-    const sc=Math.max(0.5,p.s);
-    const dd=DAYS_DATA[p.d-1];
+  /* Layer 2: Spiral anchor dots (no-reading days stay on spiral) */
+  const spiralDots = [];
+  for (let d = 1; d <= TOTAL; d++) {
+    const th = (d / TOTAL) * Math.PI * 4.2, r = b * th;
+    const raw = { x: r * Math.cos(th - Math.PI / 2), y: r * Math.sin(th - Math.PI / 2), z: (d / TOTAL) * ZSPAN - ZSPAN / 2 };
+    const rv = rot3D(raw.x, raw.y, raw.z);
+    const p = proj3D(rv.x, rv.y, rv.z, FOV, cx, cy);
+    spiralDots.push({...p, d, rz: rv.z});
+  }
+
+  spiralDots.forEach(p => {
+    const sc = Math.max(0.5, p.s);
+    const dd = DAYS_DATA[p.d - 1];
     const active = p.d <= ACTIVE;
-    if(!active){
-      ctx.beginPath();ctx.arc(p.x,p.y,2.0*sc,0,Math.PI*2);
-      ctx.fillStyle=`rgba(255,255,255,${0.1*sc})`;ctx.fill();
-    } else if(!dd || dd.card_id===null){
-      ctx.beginPath();ctx.arc(p.x,p.y,2*sc,0,Math.PI*2);
-      ctx.fillStyle=`rgba(85,85,85,${0.4*sc})`;ctx.fill();
-    }
-    // Days with readings: small faint anchor on spiral showing origin
-    if(active && dd && dd.card_id!==null){
-      ctx.beginPath();ctx.arc(p.x,p.y,1.2*sc,0,Math.PI*2);
-      ctx.fillStyle=`rgba(255,255,255,${0.08*sc})`;ctx.fill();
+    if (!active) {
+      ctx.beginPath(); ctx.arc(p.x, p.y, 2.0 * sc, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(255,255,255,${0.1 * sc})`; ctx.fill();
+    } else if (!dd || dd.card_id === null) {
+      ctx.beginPath(); ctx.arc(p.x, p.y, 2 * sc, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(85,85,85,${0.4 * sc})`; ctx.fill();
+    } else {
+      ctx.beginPath(); ctx.arc(p.x, p.y, 1.2 * sc, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(255,255,255,${0.08 * sc})`; ctx.fill();
     }
   });
 
-  // ===== Layer 3: Reading dots at Golden Angle positions + z-layers (anamorphic 55°) =====
-  const gaDots=[];
-  sp.dotPositions=[];
+  /* Layer 3: Reading dots at Golden Angle positions + z-layers (anamorphic 55 deg) */
+  const gaDots = [];
+  sp.dotPositions = [];
 
-  for(let d=1;d<=ACTIVE;d++){
-    const dd=DAYS_DATA[d-1];
-    if(!dd || dd.card_id===null) continue;
-    const ga=CYCLE_GA_POSITIONS[d-1];
-    if(!ga) continue;
-
-    const p=projectGA3D(ga.gaX, ga.gaY, ga.gaZ, W, H, cx, cy, CAM_55, FOV);
+  for (let d = 1; d <= ACTIVE; d++) {
+    const dd = DAYS_DATA[d - 1];
+    if (!dd || dd.card_id === null) continue;
+    const ga = CYCLE_GA_POSITIONS[d - 1];
+    if (!ga) continue;
+    const p = projectGA3D(ga.gaX, ga.gaY, ga.gaZ, W, H, cx, cy, CAM_ANGLE_55, FOV);
     gaDots.push({...p, d, dd, ga});
-    sp.dotPositions.push({x:p.x, y:p.y, d:d});
+    sp.dotPositions.push({x: p.x, y: p.y, d});
   }
 
-  // Sort by depth (back to front)
-  gaDots.sort((a,b)=>a.rz-b.rz);
+  gaDots.sort((a, b) => a.rz - b.rz);
 
-  // Draw connection threads from spiral origin to GA position (very faint)
-  gaDots.forEach(gd=>{
-    const sp2=spiralDots[gd.d-1];
-    if(!sp2) return;
-    ctx.beginPath();ctx.moveTo(sp2.x,sp2.y);ctx.lineTo(gd.x,gd.y);
-    ctx.strokeStyle='rgba(249,217,118,0.06)';ctx.lineWidth=0.5;
-    ctx.setLineDash([3,6]);ctx.stroke();ctx.setLineDash([]);
+  /* Connection threads from spiral origin to GA position */
+  gaDots.forEach(gd => {
+    const sp2 = spiralDots[gd.d - 1];
+    if (!sp2) return;
+    ctx.beginPath(); ctx.moveTo(sp2.x, sp2.y); ctx.lineTo(gd.x, gd.y);
+    ctx.strokeStyle = 'rgba(249,217,118,0.06)'; ctx.lineWidth = 0.5;
+    ctx.setLineDash([3, 6]); ctx.stroke(); ctx.setLineDash([]);
   });
 
-  // Draw the reading dots at anamorphic positions
-  gaDots.forEach(gd=>{
-    const dd=gd.dd;
-    const col=cardToColor(dd);
-    const sc=Math.max(0.5, gd.s);
-    const phase=BREATH_PHASES[gd.d-1]||0;
-    const period=BREATH_PERIODS[gd.d-1]||3;
-    const breath=0.7+0.3*Math.sin(now/period*Math.PI*2+phase);
+  /* Draw reading dots */
+  gaDots.forEach(gd => {
+    const dd = gd.dd;
+    const col = cardToColor(dd);
+    const sc = Math.max(0.5, gd.s);
+    const phase = BREATH_PHASES[gd.d - 1] || 0;
+    const period = BREATH_PERIODS[gd.d - 1] || 3;
+    const breath = 0.7 + 0.3 * Math.sin(now / period * Math.PI * 2 + phase);
 
-    let baseSize, glowBlur;
-    if(dd.is_major){
-      baseSize=8; glowBlur=12;
-    } else {
-      baseSize=4; glowBlur=6;
-    }
+    let baseSize = dd.is_major ? 8 : 4;
+    let glowBlur = dd.is_major ? 12 : 6;
 
-    /* Moon phase modifiers */
-    const isFullMoon = (gd.d === FULL_MOON_DAY || gd.d === FULL_MOON_DAY+1);
+    const isFullMoon = (gd.d === FULL_MOON_DAY || gd.d === FULL_MOON_DAY + 1);
     const isNewMoon = (gd.d === 1);
-    if(isFullMoon) baseSize *= 1.5;
-    if(isNewMoon) baseSize *= 0.75;
-    if(gd.d===ACTIVE) baseSize = Math.max(baseSize, 6.5);
+    if (isFullMoon) baseSize *= 1.5;
+    if (isNewMoon) baseSize *= 0.75;
+    if (gd.d === ACTIVE) baseSize = Math.max(baseSize, 6.5);
 
-    const dotR=Math.max(2.5,baseSize)*sc*breath;
+    const dotR = Math.max(2.5, baseSize) * sc * breath;
 
     /* Glow */
-    const gR=glowBlur*sc;
-    const gg=ctx.createRadialGradient(gd.x,gd.y,0,gd.x,gd.y,gR);
-    gg.addColorStop(0,hexToRgba(col,0.35*breath*sc));gg.addColorStop(1,'transparent');
-    ctx.fillStyle=gg;ctx.beginPath();ctx.arc(gd.x,gd.y,gR,0,Math.PI*2);ctx.fill();
+    const gR = glowBlur * sc;
+    const gg = ctx.createRadialGradient(gd.x, gd.y, 0, gd.x, gd.y, gR);
+    gg.addColorStop(0, hexToRgba(col, 0.35 * breath * sc)); gg.addColorStop(1, 'transparent');
+    ctx.fillStyle = gg; ctx.beginPath(); ctx.arc(gd.x, gd.y, gR, 0, Math.PI * 2); ctx.fill();
 
     /* Core */
-    if(isNewMoon){
-      ctx.beginPath();ctx.arc(gd.x,gd.y,dotR,0,Math.PI*2);ctx.fillStyle='#2A0030';ctx.fill();
-      ctx.beginPath();ctx.arc(gd.x,gd.y,dotR+1,0,Math.PI*2);
-      ctx.strokeStyle='rgba(155,107,255,0.4)';ctx.lineWidth=0.8;ctx.stroke();
+    if (isNewMoon) {
+      ctx.beginPath(); ctx.arc(gd.x, gd.y, dotR, 0, Math.PI * 2); ctx.fillStyle = '#2A0030'; ctx.fill();
+      ctx.beginPath(); ctx.arc(gd.x, gd.y, dotR + 1, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(155,107,255,0.4)'; ctx.lineWidth = 0.8; ctx.stroke();
     } else {
-      ctx.beginPath();ctx.arc(gd.x,gd.y,dotR,0,Math.PI*2);ctx.fillStyle=col;ctx.fill();
+      ctx.beginPath(); ctx.arc(gd.x, gd.y, dotR, 0, Math.PI * 2); ctx.fillStyle = col; ctx.fill();
     }
 
     /* Full moon ring + radial glow */
-    if(isFullMoon){
+    if (isFullMoon) {
       ctx.save();
-      ctx.shadowColor='#FFF0C0';ctx.shadowBlur=18;
-      ctx.beginPath();ctx.arc(gd.x,gd.y,dotR+4*sc,0,Math.PI*2);
-      ctx.strokeStyle=`rgba(255,240,192,${0.5*sc})`;ctx.lineWidth=2;ctx.stroke();
+      ctx.shadowColor = '#FFF0C0'; ctx.shadowBlur = 18;
+      ctx.beginPath(); ctx.arc(gd.x, gd.y, dotR + 4 * sc, 0, Math.PI * 2);
+      ctx.strokeStyle = `rgba(255,240,192,${0.5 * sc})`; ctx.lineWidth = 2; ctx.stroke();
       ctx.restore();
-      const fmg=ctx.createRadialGradient(gd.x,gd.y,0,gd.x,gd.y,dotR+12*sc);
-      fmg.addColorStop(0,'rgba(255,240,192,0.15)');fmg.addColorStop(1,'transparent');
-      ctx.fillStyle=fmg;ctx.beginPath();ctx.arc(gd.x,gd.y,dotR+12*sc,0,Math.PI*2);ctx.fill();
+      const fmg = ctx.createRadialGradient(gd.x, gd.y, 0, gd.x, gd.y, dotR + 12 * sc);
+      fmg.addColorStop(0, 'rgba(255,240,192,0.15)'); fmg.addColorStop(1, 'transparent');
+      ctx.fillStyle = fmg; ctx.beginPath(); ctx.arc(gd.x, gd.y, dotR + 12 * sc, 0, Math.PI * 2); ctx.fill();
     }
 
     /* Current day ring */
-    if(gd.d===ACTIVE){
-      ctx.beginPath();ctx.arc(gd.x,gd.y,11*sc,0,Math.PI*2);
-      ctx.strokeStyle=`rgba(249,217,118,${0.5*sc})`;ctx.lineWidth=1.5;ctx.stroke();
+    if (gd.d === ACTIVE) {
+      ctx.beginPath(); ctx.arc(gd.x, gd.y, 11 * sc, 0, Math.PI * 2);
+      ctx.strokeStyle = `rgba(249,217,118,${0.5 * sc})`; ctx.lineWidth = 1.5; ctx.stroke();
     }
 
     /* 5% random ring */
-    if(!isFullMoon && !isNewMoon && (gd.d*31+TOTAL*7)%100 < 5){
+    if (!isFullMoon && !isNewMoon && (gd.d * 31 + TOTAL * 7) % 100 < 5) {
       ctx.save();
-      ctx.shadowColor=col;ctx.shadowBlur=10;
-      ctx.beginPath();ctx.arc(gd.x,gd.y,dotR+3*sc,0,Math.PI*2);
-      ctx.strokeStyle=hexToRgba(col,0.3*sc);ctx.lineWidth=1.2;ctx.stroke();
+      ctx.shadowColor = col; ctx.shadowBlur = 10;
+      ctx.beginPath(); ctx.arc(gd.x, gd.y, dotR + 3 * sc, 0, Math.PI * 2);
+      ctx.strokeStyle = hexToRgba(col, 0.3 * sc); ctx.lineWidth = 1.2; ctx.stroke();
       ctx.restore();
     }
   });
 
-  // ===== Stella core glow =====
-  ctx.beginPath();ctx.arc(cx,cy,20,0,Math.PI*2);
-  const coreG=ctx.createRadialGradient(cx,cy,0,cx,cy,20);
-  coreG.addColorStop(0,'rgba(249,217,118,0.15)');coreG.addColorStop(1,'transparent');
-  ctx.fillStyle=coreG;ctx.fill();
-  ctx.beginPath();ctx.arc(cx,cy,6,0,Math.PI*2);
-  const coreI=ctx.createRadialGradient(cx,cy,0,cx,cy,8);
-  coreI.addColorStop(0,'rgba(249,217,118,0.6)');coreI.addColorStop(1,'transparent');
-  ctx.fillStyle=coreI;ctx.fill();
+  /* Stella core glow */
+  ctx.beginPath(); ctx.arc(cx, cy, 20, 0, Math.PI * 2);
+  const coreG = ctx.createRadialGradient(cx, cy, 0, cx, cy, 20);
+  coreG.addColorStop(0, 'rgba(249,217,118,0.15)'); coreG.addColorStop(1, 'transparent');
+  ctx.fillStyle = coreG; ctx.fill();
+  ctx.beginPath(); ctx.arc(cx, cy, 6, 0, Math.PI * 2);
+  const coreI = ctx.createRadialGradient(cx, cy, 0, cx, cy, 8);
+  coreI.addColorStop(0, 'rgba(249,217,118,0.6)'); coreI.addColorStop(1, 'transparent');
+  ctx.fillStyle = coreI; ctx.fill();
 }
 
-function startSpiral3D(){
-  function loop(){
-    if(!sp.drag){sp.rotY+=0.0025;sp.velX*=0.90;sp.velY*=0.90;sp.rotX+=sp.velX;sp.rotY+=sp.velY;}
+function startSpiral3D() {
+  function loop() {
+    if (!sp.drag) { sp.rotY += 0.0025; sp.velX *= 0.90; sp.velY *= 0.90; sp.rotX += sp.velX; sp.rotY += sp.velY; }
     renderSpiral3D();
-    sp.raf=requestAnimationFrame(loop);
+    sp.raf = requestAnimationFrame(loop);
   }
-  if(sp.raf)cancelAnimationFrame(sp.raf);
+  if (sp.raf) cancelAnimationFrame(sp.raf);
   loop();
 }
 
-function initSpiral3D(){
-  if(sp.inited)return;sp.inited=true;
-  const canvas=document.getElementById('spiralCanvas');if(!canvas)return;
-  canvas.style.cursor='grab';
-  canvas.addEventListener('click',e=>{
-    const rect=canvas.getBoundingClientRect();
-    const mx=e.clientX-rect.left,my=e.clientY-rect.top;
-    let nearest=null,minDist=28;
-    sp.dotPositions.forEach(dp=>{const dist=Math.hypot(dp.x-mx,dp.y-my);if(dist<minDist){minDist=dist;nearest=dp;}});
-    if(nearest)showDotPopup(nearest.d,nearest.x,nearest.y,canvas);else hideDotPopup();
+function initSpiral3D() {
+  if (sp.inited) return;
+  sp.inited = true;
+  const canvas = document.getElementById('spiralCanvas');
+  if (!canvas) return;
+  canvas.style.cursor = 'grab';
+
+  canvas.addEventListener('click', e => {
+    const rect = canvas.getBoundingClientRect();
+    const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+    let nearest = null, minDist = 28;
+    sp.dotPositions.forEach(dp => { const dist = Math.hypot(dp.x - mx, dp.y - my); if (dist < minDist) { minDist = dist; nearest = dp; } });
+    if (nearest) showDotPopup(nearest.d, nearest.x, nearest.y, canvas); else hideDotPopup();
   });
-  canvas.addEventListener('mousedown',e=>{sp.drag=true;sp.lx=e.clientX;sp.ly=e.clientY;sp.velX=0;sp.velY=0;canvas.style.cursor='grabbing';e.preventDefault();});
-  window.addEventListener('mousemove',e=>{if(!sp.drag)return;const dx=e.clientX-sp.lx,dy=e.clientY-sp.ly;sp.velX=dy*0.006;sp.velY=dx*0.006;sp.rotX+=sp.velX;sp.rotY+=sp.velY;sp.lx=e.clientX;sp.ly=e.clientY;});
-  window.addEventListener('mouseup',()=>{sp.drag=false;const c=document.getElementById('spiralCanvas');if(c)c.style.cursor='grab';});
-  canvas.addEventListener('wheel',e=>{sp.zoom*=e.deltaY>0?0.93:1.07;sp.zoom=Math.max(0.48,Math.min(3.5,sp.zoom));e.preventDefault();},{passive:false});
-  let ltDist=0;
-  canvas.addEventListener('touchstart',e=>{if(e.touches.length===1){sp.drag=true;sp.lx=e.touches[0].clientX;sp.ly=e.touches[0].clientY;sp.velX=0;sp.velY=0;}else if(e.touches.length===2){ltDist=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);}e.preventDefault();},{passive:false});
-  canvas.addEventListener('touchmove',e=>{if(e.touches.length===1&&sp.drag){const dx=e.touches[0].clientX-sp.lx,dy=e.touches[0].clientY-sp.ly;sp.velX=dy*0.006;sp.velY=dx*0.006;sp.rotX+=sp.velX;sp.rotY+=sp.velY;sp.lx=e.touches[0].clientX;sp.ly=e.touches[0].clientY;}else if(e.touches.length===2){const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);sp.zoom*=d/ltDist;sp.zoom=Math.max(0.48,Math.min(3.5,sp.zoom));ltDist=d;}e.preventDefault();},{passive:false});
-  canvas.addEventListener('touchend',()=>{sp.drag=false;});
+
+  canvas.addEventListener('mousedown', e => {
+    sp.drag = true; sp.lx = e.clientX; sp.ly = e.clientY; sp.velX = 0; sp.velY = 0; canvas.style.cursor = 'grabbing'; e.preventDefault();
+  });
+  window.addEventListener('mousemove', e => {
+    if (!sp.drag) return;
+    const dx = e.clientX - sp.lx, dy = e.clientY - sp.ly;
+    sp.velX = dy * 0.006; sp.velY = dx * 0.006; sp.rotX += sp.velX; sp.rotY += sp.velY; sp.lx = e.clientX; sp.ly = e.clientY;
+  });
+  window.addEventListener('mouseup', () => {
+    sp.drag = false; const c = document.getElementById('spiralCanvas'); if (c) c.style.cursor = 'grab';
+  });
+  canvas.addEventListener('wheel', e => {
+    sp.zoom *= e.deltaY > 0 ? 0.93 : 1.07; sp.zoom = Math.max(0.48, Math.min(3.5, sp.zoom)); e.preventDefault();
+  }, {passive: false});
+
+  let ltDist = 0;
+  canvas.addEventListener('touchstart', e => {
+    if (e.touches.length === 1) { sp.drag = true; sp.lx = e.touches[0].clientX; sp.ly = e.touches[0].clientY; sp.velX = 0; sp.velY = 0; }
+    else if (e.touches.length === 2) { ltDist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY); }
+    e.preventDefault();
+  }, {passive: false});
+  canvas.addEventListener('touchmove', e => {
+    if (e.touches.length === 1 && sp.drag) {
+      const dx = e.touches[0].clientX - sp.lx, dy = e.touches[0].clientY - sp.ly;
+      sp.velX = dy * 0.006; sp.velY = dx * 0.006; sp.rotX += sp.velX; sp.rotY += sp.velY; sp.lx = e.touches[0].clientX; sp.ly = e.touches[0].clientY;
+    } else if (e.touches.length === 2) {
+      const d = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+      sp.zoom *= d / ltDist; sp.zoom = Math.max(0.48, Math.min(3.5, sp.zoom)); ltDist = d;
+    }
+    e.preventDefault();
+  }, {passive: false});
+  canvas.addEventListener('touchend', () => { sp.drag = false; });
 }
 
 /* ==================== DOT POPUP ==================== */
-function showDotPopup(day,px,py,canvas){
-  const popup=document.getElementById('dotPopup');
-  const dd=DAYS_DATA[day-1];if(!dd||dd.card_id===null)return;
-  const card=TAROT[dd.card_id];if(!card)return;
-  document.getElementById('popupDay').textContent=`DAY ${day}`;
-  document.getElementById('popupEmoji').textContent=card.emoji;
-  document.getElementById('popupCardName').textContent=card.name;
+function showDotPopup(day, px, py, canvas) {
+  const popup = document.getElementById('dotPopup');
+  const dd = DAYS_DATA[day - 1]; if (!dd || dd.card_id === null) return;
+  const card = TAROT[dd.card_id]; if (!card) return;
+  document.getElementById('popupDay').textContent = `DAY ${day}`;
+  document.getElementById('popupEmoji').textContent = card.emoji;
+  document.getElementById('popupCardName').textContent = card.name;
 
-  if(dd.is_major){
-    const planetKey=MAJOR_PLANETS[dd.card_id];
-    const planetName=planetKey?planetKey.charAt(0).toUpperCase()+planetKey.slice(1):'Unknown';
-    document.getElementById('popupPlanet').textContent=`Planet: ${planetName}`;
+  if (dd.is_major) {
+    const planetKey = MAJOR_PLANETS[dd.card_id];
+    const planetName = planetKey ? planetKey.charAt(0).toUpperCase() + planetKey.slice(1) : 'Unknown';
+    document.getElementById('popupPlanet').textContent = `Planet: ${planetName}`;
   } else {
-    const suitName=dd.suit?dd.suit.charAt(0).toUpperCase()+dd.suit.slice(1):'';
-    const elName=SUIT_ELEMENTS[dd.suit]||'';
-    const elDisplay=elName?elName.charAt(0).toUpperCase()+elName.slice(1):'';
-    document.getElementById('popupPlanet').textContent=`${suitName} \u00B7 ${elDisplay}`;
+    const suitName = dd.suit ? dd.suit.charAt(0).toUpperCase() + dd.suit.slice(1) : '';
+    const elName = SUIT_ELEMENTS[dd.suit] || '';
+    const elDisplay = elName ? elName.charAt(0).toUpperCase() + elName.slice(1) : '';
+    document.getElementById('popupPlanet').textContent = `${suitName} \u00B7 ${elDisplay}`;
   }
 
-  document.getElementById('popupKeyword').textContent=`Keyword: ${card.keyword}`;
-  document.getElementById('popupQuote').textContent=dd.quote?`"${dd.quote}"`:'';
+  document.getElementById('popupKeyword').textContent = `Keyword: ${card.keyword}`;
+  document.getElementById('popupQuote').textContent = dd.quote ? `"${dd.quote}"` : '';
 
-  const cW=canvas.offsetWidth;
-  let lx=px+14,ly=py-80;
-  if(lx+210>cW)lx=px-220;if(ly<10)ly=py+14;
-  popup.style.left=lx+'px';popup.style.top=ly+'px';
+  const cW = canvas.offsetWidth;
+  let lx = px + 14, ly = py - 80;
+  if (lx + 210 > cW) lx = px - 220;
+  if (ly < 10) ly = py + 14;
+  popup.style.left = lx + 'px'; popup.style.top = ly + 'px';
   popup.classList.add('visible');
   clearTimeout(popup._timer);
-  popup._timer=setTimeout(()=>hideDotPopup(),3500);
+  popup._timer = setTimeout(() => hideDotPopup(), 3500);
 }
-function hideDotPopup(){document.getElementById('dotPopup').classList.remove('visible');}
+
+function hideDotPopup() { document.getElementById('dotPopup').classList.remove('visible'); }
 
 /* ==================== GALAXY CARDS v2 ==================== */
-/* Nearest-neighbor ordering to prevent line crossings */
-function nearestNeighborOrder(points) {
-  if (points.length <= 2) return [...points];
-  const remaining = [...points];
-  const ordered = [remaining.splice(0, 1)[0]];
-  while (remaining.length > 0) {
-    const last = ordered[ordered.length - 1];
-    let nearestIdx = 0, nearestDist = Infinity;
-    for (let i = 0; i < remaining.length; i++) {
-      const d = Math.hypot(remaining[i].x - last.x, remaining[i].y - last.y);
-      if (d < nearestDist) { nearestDist = d; nearestIdx = i; }
-    }
-    ordered.push(remaining.splice(nearestIdx, 1)[0]);
-  }
-  return ordered;
-}
-
 /* 3D projection for constellation dots */
 function projectConstellation3D(nx, ny, nz, S, camAngle) {
   const zWorld = (nz || 0) * 80;
@@ -1432,12 +1261,12 @@ function drawCycleOnCanvas(canvas, cycle, progress, size, camAngle) {
   const cam = camAngle || 0;
   ctx.clearRect(0, 0, S, S);
 
-  // Background
-  const bg = ctx.createRadialGradient(S/2, S/2, 0, S/2, S/2, S*0.7);
+  /* Background */
+  const bg = ctx.createRadialGradient(S/2, S/2, 0, S/2, S/2, S * 0.7);
   bg.addColorStop(0, cycle.bgGrad[0]); bg.addColorStop(1, cycle.bgGrad[1]);
   ctx.fillStyle = bg; ctx.fillRect(0, 0, S, S);
 
-  // Constellation illustration overlay (screen blend, 18% opacity)
+  /* Constellation illustration overlay (screen blend, 18% opacity) */
   const artImg = ART_IMAGES[cycle.nounIdx];
   if (artImg && artImg.complete) {
     ctx.save();
@@ -1452,7 +1281,7 @@ function drawCycleOnCanvas(canvas, cycle, progress, size, camAngle) {
     ctx.restore();
   }
 
-  // Separate anchors (Major) and fields (Minor)
+  /* Separate anchors (Major) and fields (Minor) */
   const anchors = [], fields = [];
   cycle.dots.forEach(d => {
     const p = projectConstellation3D(d.x, d.y, d.z, S, cam);
@@ -1460,7 +1289,7 @@ function drawCycleOnCanvas(canvas, cycle, progress, size, camAngle) {
     else fields.push({...p, d});
   });
 
-  // Draw field stars (small, no connections)
+  /* Field stars (small, no connections) */
   const fieldCount = Math.floor(fields.length * Math.min(1, progress));
   fields.slice(0, fieldCount).forEach(f => {
     const ds = Math.max(0.5, f.s || 1);
@@ -1469,12 +1298,11 @@ function drawCycleOnCanvas(canvas, cycle, progress, size, camAngle) {
     ctx.fill();
   });
 
-  // Build MST edges with shapeType
+  /* MST edges with shapeType */
   const shapeType = NOUN_SHAPES[cycle.nounIdx] || 'open';
   const anchorPts = anchors.map(a => ({x: a.x, y: a.y}));
   const edges = buildConstellationEdges(anchorPts, shapeType);
 
-  // Draw edges (MST + shape connections)
   const connProgress = Math.min(1, progress / 0.6);
   const drawEdgeCount = Math.max(0, Math.floor(edges.length * connProgress));
   for (let i = 0; i < drawEdgeCount; i++) {
@@ -1482,16 +1310,14 @@ function drawCycleOnCanvas(canvas, cycle, progress, size, camAngle) {
     const a1 = anchors[e.from], a2 = anchors[e.to];
     if (!a1 || !a2) continue;
     ctx.beginPath(); ctx.moveTo(a1.x, a1.y); ctx.lineTo(a2.x, a2.y);
-    // Glow
     ctx.save();
     ctx.shadowColor = cycle.glowColor; ctx.shadowBlur = 8;
     ctx.strokeStyle = cycle.glowColor; ctx.lineWidth = 2.5; ctx.stroke();
     ctx.restore();
-    // Main line
     ctx.strokeStyle = cycle.color; ctx.lineWidth = 1.2; ctx.stroke();
   }
 
-  // Draw anchor dots (large with glow)
+  /* Anchor dots (large with glow) */
   const anchorDotCount = Math.floor(anchors.length * Math.min(1, progress));
   anchors.slice(0, anchorDotCount).forEach(a => {
     const ds = Math.max(0.6, a.s || 1);
@@ -1503,86 +1329,79 @@ function drawCycleOnCanvas(canvas, cycle, progress, size, camAngle) {
   });
 }
 
-function renderGalaxyCards(){
-  const grid=document.getElementById('galaxyGrid');if(!grid)return;
-  grid.innerHTML='';
-  GALAXY_CYCLES.forEach(cycle=>{
-    const card=document.createElement('div');
-    card.className='const-card';
-    card.style.cssText=`background:linear-gradient(135deg,${cycle.bgGrad[0]},${cycle.bgGrad[1]});border:1px solid ${cycle.borderColor};`;
-    const mini=document.createElement('div');mini.className='const-mini';
-    const canvas=document.createElement('canvas');canvas.width=80;canvas.height=80;canvas.style.borderRadius='10px';
+function renderGalaxyCards() {
+  const grid = document.getElementById('galaxyGrid'); if (!grid) return;
+  grid.innerHTML = '';
+  GALAXY_CYCLES.forEach(cycle => {
+    const card = document.createElement('div');
+    card.className = 'const-card';
+    card.style.cssText = `background:linear-gradient(135deg,${cycle.bgGrad[0]},${cycle.bgGrad[1]});border:1px solid ${cycle.borderColor};`;
+    const mini = document.createElement('div'); mini.className = 'const-mini';
+    const canvas = document.createElement('canvas'); canvas.width = 80; canvas.height = 80; canvas.style.borderRadius = '10px';
     mini.appendChild(canvas);
-    const anchors = cycle.dots.filter(d => d.isMajor).length;
-    const meta=document.createElement('div');
-    meta.innerHTML=`
+    const anchorCount = cycle.dots.filter(d => d.isMajor).length;
+    const meta = document.createElement('div');
+    meta.innerHTML = `
       <div style="display:flex;justify-content:space-between;align-items:center">
         <div class="const-date">${NOUN_SHAPES[cycle.nounIdx] || 'open'}</div>
         <div>${rarityStarsHTML(cycle.stars)}</div>
       </div>
       <div class="const-seed">${cycle.name}</div>
       <div style="font-size:11px;color:#ACACAC">${cycle.nameJP || ''}</div>
-      <div style="font-size:10px;color:rgba(172,172,172,0.6);margin-top:2px">${cycle.dots.length} stars · ${anchors} anchors · ${cycle.rarityLabel}</div>`;
-    card.appendChild(mini);card.appendChild(meta);grid.appendChild(card);
-    drawCycleOnCanvas(canvas,cycle,1.0,80);
-    card.onclick=()=>openReplayModal(cycle.id);
+      <div style="font-size:10px;color:rgba(172,172,172,0.6);margin-top:2px">${cycle.dots.length} stars · ${anchorCount} anchors · ${cycle.rarityLabel}</div>`;
+    card.appendChild(mini); card.appendChild(meta); grid.appendChild(card);
+    drawCycleOnCanvas(canvas, cycle, 1.0, 80);
+    card.onclick = () => openReplayModal(cycle.id);
   });
 }
 
-/* ==================== REPLAY MODAL (v2: 3D camera 55°→0° + rarity) ==================== */
-const CAM_ANGLE_55 = 55 * Math.PI / 180;
-let replayRAF=null;
-function openReplayModal(cycleId){
-  const cycle=GALAXY_CYCLES[cycleId];
-  document.getElementById('replayTitle').innerHTML = cycle.name + '<br><span style="font-size:14px;color:#F9D976;font-weight:300">' + (cycle.nameJP||'') + '</span>';
-  document.getElementById('replaySubtitle').innerHTML = `${cycle.dots.length} stars · ${cycle.dots.filter(d=>d.isMajor).length} anchors · ${NOUN_SHAPES[cycle.nounIdx]||'open'}<br>${rarityStarsHTML(cycle.stars)} <span style="font-size:11px;color:#ACACAC">${cycle.rarityLabel}</span>`;
-  document.getElementById('replaySymbol').textContent=cycle.symbol;
-  document.getElementById('replayName').textContent=cycle.name;
-  document.getElementById('replayDate').textContent='Shape: ' + (NOUN_SHAPES[cycle.nounIdx]||'open');
+/* ==================== REPLAY MODAL (v2: 3D camera 55 deg -> 0 deg + rarity) ==================== */
+let replayRAF = null;
+
+function openReplayModal(cycleId) {
+  const cycle = GALAXY_CYCLES[cycleId];
+  document.getElementById('replayTitle').innerHTML = cycle.name + '<br><span style="font-size:14px;color:#F9D976;font-weight:300">' + (cycle.nameJP || '') + '</span>';
+  document.getElementById('replaySubtitle').innerHTML = `${cycle.dots.length} stars · ${cycle.dots.filter(d => d.isMajor).length} anchors · ${NOUN_SHAPES[cycle.nounIdx] || 'open'}<br>${rarityStarsHTML(cycle.stars)} <span style="font-size:11px;color:#ACACAC">${cycle.rarityLabel}</span>`;
+  document.getElementById('replaySymbol').textContent = cycle.symbol;
+  document.getElementById('replayName').textContent = cycle.name;
+  document.getElementById('replayDate').textContent = 'Shape: ' + (NOUN_SHAPES[cycle.nounIdx] || 'open');
   document.getElementById('replayModal').classList.add('visible');
-  const canvas=document.getElementById('replayCanvas');
-  if(replayRAF)cancelAnimationFrame(replayRAF);
-  const start=performance.now();
+  const canvas = document.getElementById('replayCanvas');
+  if (replayRAF) cancelAnimationFrame(replayRAF);
+  const start = performance.now();
   const TOTAL_MS = 6500;
-  function anim(){
+
+  /* Reset opacity */
+  document.getElementById('replaySymbol').style.opacity = '0';
+  document.getElementById('replayName').style.opacity = '0';
+  document.getElementById('replayDate').style.opacity = '0';
+
+  function anim() {
     const elapsed = performance.now() - start;
     const t = Math.min(1, elapsed / TOTAL_MS);
-
-    // Phase 1: Camera 55°→0° (0-3s = 0-0.46)
     const cameraT = Math.min(1, t / 0.46);
-    const easedCam = cameraT < 0.5 ? 2*cameraT*cameraT : 1 - Math.pow(-2*cameraT+2,2)/2;
+    const easedCam = cameraT < 0.5 ? 2 * cameraT * cameraT : 1 - Math.pow(-2 * cameraT + 2, 2) / 2;
     const camAngle = CAM_ANGLE_55 * (1 - easedCam);
-
-    // Phase 2: Line connections (0.46-0.69)
     const lineT = Math.max(0, Math.min(1, (t - 0.46) / 0.23));
-
-    // Combined progress
     const prog = cameraT * 0.4 + lineT * 0.6;
-
     drawCycleOnCanvas(canvas, cycle, prog, 300, camAngle);
-
-    // Phase 3: Fade in name/info (0.69-1.0)
     const fadeT = Math.max(0, Math.min(1, (t - 0.69) / 0.31));
     document.getElementById('replaySymbol').style.opacity = fadeT;
     document.getElementById('replayName').style.opacity = fadeT;
     document.getElementById('replayDate').style.opacity = fadeT;
-
-    if(t<1) replayRAF=requestAnimationFrame(anim); else replayRAF=null;
+    if (t < 1) replayRAF = requestAnimationFrame(anim); else replayRAF = null;
   }
-  // Reset opacity
-  document.getElementById('replaySymbol').style.opacity = '0';
-  document.getElementById('replayName').style.opacity = '0';
-  document.getElementById('replayDate').style.opacity = '0';
   anim();
 }
-function closeReplayModal(){
-  if(replayRAF){cancelAnimationFrame(replayRAF);replayRAF=null;}
+
+function closeReplayModal() {
+  if (replayRAF) { cancelAnimationFrame(replayRAF); replayRAF = null; }
   document.getElementById('replayModal').classList.remove('visible');
 }
 
 /* ==================== CONSTELLATION FORMATION v2 (3D camera anim) ==================== */
-function triggerConstellationFormation(){
-  const baseCycle = GALAXY_CYCLES[Math.floor(Math.random()*GALAXY_CYCLES.length)];
+function triggerConstellationFormation() {
+  const baseCycle = GALAXY_CYCLES[Math.floor(Math.random() * GALAXY_CYCLES.length)];
   const newCycle = Object.assign({}, baseCycle, { id: Date.now() });
   const nameResult = generateConstellationName(newCycle.seedCard, new Date());
   newCycle.name = nameResult.en;
@@ -1590,32 +1409,30 @@ function triggerConstellationFormation(){
   newCycle.stars = nameResult.stars;
   newCycle.rarityLabel = nameResult.label;
   newCycle.nounIdx = nameResult.nounIdx;
-  // Update color to match adjective
   const adjColor = ADJ_COLORS[nameResult.adjIdx] || '#F9D976';
   newCycle.color = hexToRgba(adjColor, 0.9);
   newCycle.glowColor = hexToRgba(adjColor, 0.4);
   newCycle.borderColor = hexToRgba(adjColor, 0.25);
   newCycle.bgGrad = [hexToRgba(adjColor, 0.12), hexToRgba(adjColor, 0.03)];
   window._lastFormedCycle = newCycle;
-  if(!GALAXY_CYCLES.find(c=>c.id===newCycle.id)){ GALAXY_CYCLES.push(newCycle); }
-  if(typeof saveCycles==='function') saveCycles();
+  if (!GALAXY_CYCLES.find(c => c.id === newCycle.id)) { GALAXY_CYCLES.push(newCycle); }
+  if (typeof saveCycles === 'function') saveCycles();
 
-  const overlay=document.getElementById('overlayFormation');
-  const canvas=document.getElementById('formationCanvas');
-  canvas.width=window.innerWidth; canvas.height=window.innerHeight;
+  const overlay = document.getElementById('overlayFormation');
+  const canvas = document.getElementById('formationCanvas');
+  canvas.width = window.innerWidth; canvas.height = window.innerHeight;
   overlay.classList.add('visible');
-  const stageEl=document.getElementById('formationStage');
-  const symEl=document.getElementById('formationSymbol');
-  const nameEl=document.getElementById('formationName');
-  const quoteEl=document.getElementById('formationQuote');
-  const closeBtn=document.getElementById('formationClose');
-  symEl.style.opacity='0'; nameEl.style.opacity='0'; quoteEl.style.opacity='0';
+  const stageEl = document.getElementById('formationStage');
+  const symEl = document.getElementById('formationSymbol');
+  const nameEl = document.getElementById('formationName');
+  const quoteEl = document.getElementById('formationQuote');
+  const closeBtn = document.getElementById('formationClose');
+  symEl.style.opacity = '0'; nameEl.style.opacity = '0'; quoteEl.style.opacity = '0';
   closeBtn.classList.remove('visible');
 
-  const ctx=canvas.getContext('2d');
-  const W=canvas.width, H=canvas.height, cx=W/2, cy=H*0.42;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height, cx = W / 2, cy = H * 0.42;
 
-  // Scale dots to screen coordinates
   const scaleF = Math.min(W, H) * 0.065;
   const screenDots = newCycle.dots.map(d => ({
     tx: cx + (d.x - 40) * scaleF / 10,
@@ -1624,52 +1441,99 @@ function triggerConstellationFormation(){
     isMajor: d.isMajor
   }));
 
-  // Build spiral starting positions (like current cycle view)
-  const spiralDots = [];
-  const b = Math.min(W,H)*0.057;
+  const spiralStartDots = [];
+  const bF = Math.min(W, H) * 0.057;
   for (let i = 0; i < screenDots.length; i++) {
-    const t = (i+1) / screenDots.length;
+    const t = (i + 1) / screenDots.length;
     const th = t * Math.PI * 4.2;
-    const r = b * th;
-    spiralDots.push({
-      x: r * Math.cos(th - Math.PI/2) + cx,
-      y: r * Math.sin(th - Math.PI/2) + cy
+    const r = bF * th;
+    spiralStartDots.push({
+      x: r * Math.cos(th - Math.PI / 2) + cx,
+      y: r * Math.sin(th - Math.PI / 2) + cy
     });
   }
 
   const startTime = performance.now();
-  const QUOTES = ['"Your orbits have crystallized into light."','"The cosmos recognised your alignment."','"A new constellation was born in your name."'];
-  const quote = QUOTES[Math.floor(Math.random()*QUOTES.length)];
+  const QUOTES = ['"Your orbits have crystallized into light."', '"The cosmos recognised your alignment."', '"A new constellation was born in your name."'];
+  const quote = QUOTES[Math.floor(Math.random() * QUOTES.length)];
 
-  function animFormation(){
+  function drawFormationBackground() {
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = 'rgba(2,4,10,0.95)'; ctx.fillRect(0, 0, W, H);
+  }
+
+  function drawNebula(elapsed) {
+    const ng = ctx.createRadialGradient(cx, cy, 0, cx, cy, 300);
+    ng.addColorStop(0, `rgba(249,217,118,${0.04 + (elapsed / 8000) * 0.08})`);
+    ng.addColorStop(0.5, 'rgba(26,41,128,0.06)'); ng.addColorStop(1, 'transparent');
+    ctx.fillStyle = ng; ctx.fillRect(0, 0, W, H);
+  }
+
+  function drawFieldDots(fields) {
+    fields.forEach(f => {
+      ctx.beginPath(); ctx.arc(f.x, f.y, 1.5, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(249,217,118,0.3)'; ctx.fill();
+    });
+  }
+
+  function drawAnchorDots(anchors) {
+    anchors.forEach(a => {
+      const gg = ctx.createRadialGradient(a.x, a.y, 0, a.x, a.y, 16);
+      gg.addColorStop(0, newCycle.glowColor); gg.addColorStop(1, 'transparent');
+      ctx.fillStyle = gg; ctx.beginPath(); ctx.arc(a.x, a.y, 16, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(a.x, a.y, 4, 0, Math.PI * 2);
+      ctx.fillStyle = newCycle.color; ctx.fill();
+    });
+  }
+
+  function drawFormationEdges(anchors, progress) {
+    const formShape = NOUN_SHAPES[newCycle.nounIdx] || 'open';
+    const formEdges = buildConstellationEdges(anchors, formShape);
+    const drawN = progress < 1 ? Math.floor(formEdges.length * progress) : formEdges.length;
+    for (let i = 0; i < drawN; i++) {
+      const e = formEdges[i];
+      ctx.save();
+      ctx.shadowColor = newCycle.glowColor; ctx.shadowBlur = progress < 1 ? 12 : 16;
+      ctx.beginPath(); ctx.moveTo(anchors[e.from].x, anchors[e.from].y);
+      ctx.lineTo(anchors[e.to].x, anchors[e.to].y);
+      ctx.strokeStyle = newCycle.color; ctx.lineWidth = 2.5; ctx.stroke();
+      ctx.restore();
+    }
+  }
+
+  function getFinalPositions() {
+    const anchors = [], fields = [];
+    screenDots.forEach(sd => {
+      if (sd.isMajor) anchors.push({x: sd.tx, y: sd.ty});
+      else fields.push({x: sd.tx, y: sd.ty});
+    });
+    return { anchors, fields };
+  }
+
+  function animFormation() {
     const elapsed = performance.now() - startTime;
-    ctx.clearRect(0,0,W,H);
-    ctx.fillStyle='rgba(2,4,10,0.95)'; ctx.fillRect(0,0,W,H);
-    const ng=ctx.createRadialGradient(cx,cy,0,cx,cy,300);
-    ng.addColorStop(0,`rgba(249,217,118,${0.04+(elapsed/8000)*0.08})`);
-    ng.addColorStop(0.5,'rgba(26,41,128,0.06)'); ng.addColorStop(1,'transparent');
-    ctx.fillStyle=ng; ctx.fillRect(0,0,W,H);
+    drawFormationBackground();
+    drawNebula(elapsed);
 
     if (elapsed < 2000) {
-      // Phase 1: Spiral dots converge to center
+      /* Phase 1: Spiral dots converge to center */
       stageEl.textContent = 'CONVERGENCE';
       const t = elapsed / 2000;
-      const ease = t < 0.5 ? 2*t*t : 1 - Math.pow(-2*t+2, 2)/2;
-      spiralDots.forEach((sd, i) => {
+      const ease = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+      spiralStartDots.forEach(sd => {
         const x = sd.x + (cx - sd.x) * ease * 0.7;
         const y = sd.y + (cy - sd.y) * ease * 0.7;
-        ctx.beginPath(); ctx.arc(x, y, 2.5, 0, Math.PI*2);
-        ctx.fillStyle = `rgba(249,217,118,${0.3+0.4*(1-ease)})`; ctx.fill();
+        ctx.beginPath(); ctx.arc(x, y, 2.5, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(249,217,118,${0.3 + 0.4 * (1 - ease)})`; ctx.fill();
       });
     } else if (elapsed < 5000) {
-      // Phase 2: Camera rotation 55° → 0° (3 seconds) — dots move from scattered to aligned
+      /* Phase 2: Camera rotation 55 deg -> 0 deg */
       stageEl.textContent = 'CRYSTALLIZATION';
       const t = (elapsed - 2000) / 3000;
-      const ease = t < 0.5 ? 2*t*t : 1 - Math.pow(-2*t+2, 2)/2;
+      const ease = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
       const camAngle = CAM_ANGLE_55 * (1 - ease);
 
-      // Project dots with current camera angle
-      screenDots.forEach((sd, i) => {
+      screenDots.forEach(sd => {
         const zWorld = sd.z * 80;
         const cosA = Math.cos(camAngle), sinA = Math.sin(camAngle);
         const yOff = sd.ty - cy;
@@ -1682,113 +1546,66 @@ function triggerConstellationFormation(){
         const ds = Math.max(0.5, scale);
 
         if (sd.isMajor) {
-          // Anchor: large glow
-          const gg = ctx.createRadialGradient(px, py, 0, px, py, 14*ds);
+          const gg = ctx.createRadialGradient(px, py, 0, px, py, 14 * ds);
           gg.addColorStop(0, newCycle.glowColor); gg.addColorStop(1, 'transparent');
-          ctx.fillStyle = gg; ctx.beginPath(); ctx.arc(px, py, 14*ds, 0, Math.PI*2); ctx.fill();
-          ctx.beginPath(); ctx.arc(px, py, 4*ds, 0, Math.PI*2);
+          ctx.fillStyle = gg; ctx.beginPath(); ctx.arc(px, py, 14 * ds, 0, Math.PI * 2); ctx.fill();
+          ctx.beginPath(); ctx.arc(px, py, 4 * ds, 0, Math.PI * 2);
           ctx.fillStyle = newCycle.color; ctx.fill();
         } else {
-          // Field: small
-          ctx.beginPath(); ctx.arc(px, py, 1.5*ds, 0, Math.PI*2);
-          ctx.fillStyle = `rgba(249,217,118,${0.35*ds})`; ctx.fill();
+          ctx.beginPath(); ctx.arc(px, py, 1.5 * ds, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(249,217,118,${0.35 * ds})`; ctx.fill();
         }
       });
     } else if (elapsed < 6500) {
-      // Phase 3: Draw connections between anchors (1.5s)
+      /* Phase 3: Draw connections between anchors */
       stageEl.textContent = 'LINKING';
       const t = (elapsed - 5000) / 1500;
-
-      // All dots at final positions (camera = 0°)
-      const anchors = [], fields = [];
-      screenDots.forEach(sd => {
-        if (sd.isMajor) anchors.push({x: sd.tx, y: sd.ty});
-        else fields.push({x: sd.tx, y: sd.ty});
-      });
-
-      // Draw fields
-      fields.forEach(f => {
-        ctx.beginPath(); ctx.arc(f.x, f.y, 1.5, 0, Math.PI*2);
-        ctx.fillStyle = 'rgba(249,217,118,0.3)'; ctx.fill();
-      });
-
-      // MST edges with shapeType
-      const formShape = NOUN_SHAPES[newCycle.nounIdx] || 'open';
-      const formEdges = buildConstellationEdges(anchors, formShape);
-      const drawN = Math.floor(formEdges.length * t);
-      for (let i = 0; i < drawN; i++) {
-        const e = formEdges[i];
-        ctx.save();
-        ctx.shadowColor = newCycle.glowColor; ctx.shadowBlur = 12;
-        ctx.beginPath(); ctx.moveTo(anchors[e.from].x, anchors[e.from].y);
-        ctx.lineTo(anchors[e.to].x, anchors[e.to].y);
-        ctx.strokeStyle = newCycle.color; ctx.lineWidth = 2.5; ctx.stroke();
-        ctx.restore();
-      }
-
-      // Anchor dots
-      anchors.forEach(a => {
-        const gg = ctx.createRadialGradient(a.x, a.y, 0, a.x, a.y, 16);
-        gg.addColorStop(0, newCycle.glowColor); gg.addColorStop(1, 'transparent');
-        ctx.fillStyle = gg; ctx.beginPath(); ctx.arc(a.x, a.y, 16, 0, Math.PI*2); ctx.fill();
-        ctx.beginPath(); ctx.arc(a.x, a.y, 4, 0, Math.PI*2);
-        ctx.fillStyle = newCycle.color; ctx.fill();
-      });
+      const { anchors, fields } = getFinalPositions();
+      drawFieldDots(fields);
+      drawFormationEdges(anchors, t);
+      drawAnchorDots(anchors);
     } else {
-      // Phase 4: Complete — show name + rarity
+      /* Phase 4: Complete -- show name + rarity */
       stageEl.textContent = 'COMPLETE';
-      const anchors = [], fields = [];
-      screenDots.forEach(sd => {
-        if (sd.isMajor) anchors.push({x: sd.tx, y: sd.ty});
-        else fields.push({x: sd.tx, y: sd.ty});
-      });
-      fields.forEach(f => {
-        ctx.beginPath(); ctx.arc(f.x, f.y, 1.5, 0, Math.PI*2);
-        ctx.fillStyle = 'rgba(249,217,118,0.3)'; ctx.fill();
-      });
-      const compShape = NOUN_SHAPES[newCycle.nounIdx] || 'open';
-      const compEdges = buildConstellationEdges(anchors, compShape);
-      compEdges.forEach(e => {
-        ctx.save(); ctx.shadowColor = newCycle.glowColor; ctx.shadowBlur = 16;
-        ctx.beginPath(); ctx.moveTo(anchors[e.from].x, anchors[e.from].y);
-        ctx.lineTo(anchors[e.to].x, anchors[e.to].y);
-        ctx.strokeStyle = newCycle.color; ctx.lineWidth = 2.5; ctx.stroke(); ctx.restore();
-      });
+      const { anchors, fields } = getFinalPositions();
+      drawFieldDots(fields);
+      drawFormationEdges(anchors, 1);
+      /* Larger anchor dots in complete phase */
       anchors.forEach(a => {
         const gg = ctx.createRadialGradient(a.x, a.y, 0, a.x, a.y, 16);
         gg.addColorStop(0, newCycle.glowColor); gg.addColorStop(1, 'transparent');
-        ctx.fillStyle = gg; ctx.beginPath(); ctx.arc(a.x, a.y, 16, 0, Math.PI*2); ctx.fill();
-        ctx.beginPath(); ctx.arc(a.x, a.y, 4.5, 0, Math.PI*2);
+        ctx.fillStyle = gg; ctx.beginPath(); ctx.arc(a.x, a.y, 16, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(a.x, a.y, 4.5, 0, Math.PI * 2);
         ctx.fillStyle = newCycle.color; ctx.fill();
       });
 
       const nt = (elapsed - 6500) / 1500;
       symEl.style.opacity = Math.min(1, nt).toString();
       symEl.textContent = newCycle.symbol;
-      nameEl.style.opacity = Math.min(1, Math.max(0, nt-0.2)).toString();
-      nameEl.innerHTML = newCycle.name + '<br><span style="font-size:16px;color:#F9D976">' + (newCycle.nameJP||'') + '</span><br>' + rarityStarsHTML(newCycle.stars) + ' <span style="font-size:12px;color:#ACACAC">' + newCycle.rarityLabel + '</span>';
-      quoteEl.style.opacity = Math.min(1, Math.max(0, nt-0.5)).toString();
+      nameEl.style.opacity = Math.min(1, Math.max(0, nt - 0.2)).toString();
+      nameEl.innerHTML = newCycle.name + '<br><span style="font-size:16px;color:#F9D976">' + (newCycle.nameJP || '') + '</span><br>' + rarityStarsHTML(newCycle.stars) + ' <span style="font-size:12px;color:#ACACAC">' + newCycle.rarityLabel + '</span>';
+      quoteEl.style.opacity = Math.min(1, Math.max(0, nt - 0.5)).toString();
       quoteEl.textContent = quote;
       if (nt > 0.8) closeBtn.classList.add('visible');
     }
     if (elapsed < 8500) window._formRAF = requestAnimationFrame(animFormation);
     else window._formRAF = null;
   }
-  if(window._formRAF) cancelAnimationFrame(window._formRAF);
+  if (window._formRAF) cancelAnimationFrame(window._formRAF);
   animFormation();
 }
 
-function closeFormationOverlay(){
-  if(window._formRAF){cancelAnimationFrame(window._formRAF);window._formRAF=null;}
+function closeFormationOverlay() {
+  if (window._formRAF) { cancelAnimationFrame(window._formRAF); window._formRAF = null; }
   document.getElementById('overlayFormation').classList.remove('visible');
-  if(window._lastFormedCycle){
-    const nc=window._lastFormedCycle;
-    if(!GALAXY_CYCLES.find(c=>c.id===nc.id)){
+  if (window._lastFormedCycle) {
+    const nc = window._lastFormedCycle;
+    if (!GALAXY_CYCLES.find(c => c.id === nc.id)) {
       GALAXY_CYCLES.push(nc);
     }
-    if(typeof saveCycles==='function') saveCycles();
+    if (typeof saveCycles === 'function') saveCycles();
     renderGalaxyCards();
-    window._lastFormedCycle=null;
+    window._lastFormedCycle = null;
   }
   switchInner('atlas');
 }
@@ -1806,7 +1623,7 @@ function saveDailyVibe(score) {
   const today = new Date().toISOString().slice(0, 10);
   const existing = vibes.find(v => v.date === today);
   if (existing) { existing.score = score; }
-  else { vibes.push({ date: today, score: score }); }
+  else { vibes.push({ date: today, score }); }
   while (vibes.length > TOTAL) vibes.shift();
   localStorage.setItem(DAILY_KEY, JSON.stringify(vibes));
 }
@@ -1843,7 +1660,6 @@ startSpiral3D();
 
 if (typeof checkMoonEvents === 'function') checkMoonEvents();
 
-// Vibe-based Stella message
 (function() {
   const vibe = (typeof loadVibe === 'function') ? (loadVibe() || 0) : 0;
   const msg = (typeof generateStellaMessage === 'function') ? generateStellaMessage(vibe, 'en') : 'Your cosmic spiral grows brighter with each orbit.';

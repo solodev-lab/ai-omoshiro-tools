@@ -62,43 +62,6 @@
 
     .main-area { position:fixed; inset:0; display:flex; flex-direction:column; z-index:10; }
 
-    /* Edit Overlay */
-    .edit-overlay {
-      display:none; position:fixed; inset:0; z-index:500;
-      background:rgba(4,8,16,0.92); backdrop-filter:blur(8px);
-      justify-content:center; align-items:center;
-    }
-    .edit-overlay.open { display:flex; }
-    .edit-card {
-      max-width:360px; width:90%; padding:24px;
-      background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1);
-      border-radius:20px;
-    }
-    .edit-title { font-size:14px; font-weight:700; color:#F9D976; margin-bottom:16px; letter-spacing:1px; }
-    .edit-input {
-      width:100%; padding:12px 14px; background:rgba(255,255,255,0.06);
-      border:1px solid rgba(255,255,255,0.12); border-radius:12px;
-      color:#EAEAEA; font-size:14px; outline:none; margin-bottom:10px;
-      font-family:inherit;
-    }
-    .edit-input:focus { border-color:rgba(249,217,118,0.4); }
-    .edit-actions { display:flex; justify-content:flex-end; gap:10px; margin-top:16px; }
-    .edit-btn {
-      padding:10px 20px; border-radius:10px; font-size:13px; cursor:pointer; border:none; font-family:inherit;
-    }
-    .edit-btn-cancel { background:rgba(255,255,255,0.08); color:#ACACAC; }
-    .edit-btn-save { background:linear-gradient(135deg,#F9D976,#E8A840); color:#0A0A14; font-weight:600; }
-    .edit-hint { font-size:11px; color:#888; margin-top:-4px; margin-bottom:8px; }
-    .edit-error { font-size:11px; color:#E87070; margin-top:-4px; margin-bottom:8px; display:none; }
-    .geo-btn {
-      padding:8px 14px; border:1px solid rgba(249,217,118,0.3); border-radius:10px;
-      background:none; color:#F9D976; font-size:12px; cursor:pointer; margin-bottom:10px;
-    }
-    .geo-btn:disabled { opacity:0.4; cursor:default; }
-    .geo-result { font-size:11px; color:#6CC070; margin-top:-6px; margin-bottom:8px; display:none; }
-    .edit-row { display:flex; gap:8px; }
-    .edit-row .edit-input { flex:1; }
-
     /* Birth Info Overlay */
     .birth-overlay {
       display:none; position:fixed; inset:0; z-index:500;
@@ -290,11 +253,9 @@
     .td-vcard-class-icon-frame {
       position:relative; width:148px; height:148px; margin:8px auto 10px;
       display:flex; align-items:center; justify-content:center;
-      /* Black circle background */
       background:radial-gradient(circle, #0a0a14 60%, rgba(10,10,20,0.9) 75%, transparent 85%);
       border-radius:50%;
     }
-    /* Outer ornamental ring */
     .td-vcard-class-icon-frame::before {
       content:''; position:absolute; inset:-6px; border-radius:50%;
       background:conic-gradient(from 0deg, #F9D976, #E8A840, #C8862A, #E8A840, #F9D976, #E8A840, #C8862A, #E8A840, #F9D976);
@@ -302,7 +263,6 @@
       mask:radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 3px));
       filter:drop-shadow(0 0 6px rgba(249,217,118,0.4));
     }
-    /* Inner ring + glow */
     .td-vcard-class-icon-frame::after {
       content:''; position:absolute; inset:2px; border-radius:50%;
       border:1px solid rgba(249,217,118,0.25);
@@ -821,45 +781,53 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="shared/nav.js"></script>
 <script>
-/* Background */
-const bgC=document.getElementById('bgCanvas');
-const bgX=bgC.getContext('2d');
-bgC.width=window.innerWidth;bgC.height=window.innerHeight;
-let bgT=0;
-(function animBg(){
-  const bw=bgC.width,bh=bgC.height,bcx=bw/2,bcy=bh/2;
-  bgX.clearRect(0,0,bw,bh);
-  const g=bgX.createRadialGradient(bcx,bcy,0,bcx,bcy,Math.max(bw,bh)*0.6);
-  g.addColorStop(0,'#0C1D3A');g.addColorStop(1,'#080C14');
-  bgX.fillStyle=g;bgX.fillRect(0,0,bw,bh);
-  const n1x=bcx+Math.sin(bgT*0.6)*90,n1y=bcy+Math.cos(bgT*0.4)*130;
-  const n1=bgX.createRadialGradient(n1x,n1y,0,n1x,n1y,220);
-  n1.addColorStop(0,'rgba(249,217,118,0.05)');n1.addColorStop(1,'transparent');
-  bgX.fillStyle=n1;bgX.fillRect(0,0,bw,bh);
-  bgT+=0.004;requestAnimationFrame(animBg);
+/* ============================================================
+ *  BACKGROUND CANVAS + STARS
+ * ============================================================ */
+var bgC = document.getElementById('bgCanvas');
+var bgX = bgC.getContext('2d');
+bgC.width = window.innerWidth;
+bgC.height = window.innerHeight;
+var bgT = 0;
+
+(function animBg() {
+  var bw = bgC.width, bh = bgC.height, bcx = bw / 2, bcy = bh / 2;
+  bgX.clearRect(0, 0, bw, bh);
+  var g = bgX.createRadialGradient(bcx, bcy, 0, bcx, bcy, Math.max(bw, bh) * 0.6);
+  g.addColorStop(0, '#0C1D3A');
+  g.addColorStop(1, '#080C14');
+  bgX.fillStyle = g;
+  bgX.fillRect(0, 0, bw, bh);
+  var n1x = bcx + Math.sin(bgT * 0.6) * 90, n1y = bcy + Math.cos(bgT * 0.4) * 130;
+  var n1 = bgX.createRadialGradient(n1x, n1y, 0, n1x, n1y, 220);
+  n1.addColorStop(0, 'rgba(249,217,118,0.05)');
+  n1.addColorStop(1, 'transparent');
+  bgX.fillStyle = n1;
+  bgX.fillRect(0, 0, bw, bh);
+  bgT += 0.004;
+  requestAnimationFrame(animBg);
 })();
 
-(function makeStars(){
-  const c=document.getElementById('starContainer');
-  for(let i=0;i<45;i++){
-    const s=document.createElement('div');s.className='star';
-    const sz=Math.random()*1.8+0.5;
-    s.style.cssText=`width:${sz}px;height:${sz}px;left:${Math.random()*100}%;top:${Math.random()*100}%;--dur:${2+Math.random()*4}s;--delay:${Math.random()*5}s;--op:${0.1+Math.random()*0.35};`;
+(function makeStars() {
+  var c = document.getElementById('starContainer');
+  for (var i = 0; i < 45; i++) {
+    var s = document.createElement('div');
+    s.className = 'star';
+    var sz = Math.random() * 1.8 + 0.5;
+    s.style.cssText = 'width:' + sz + 'px;height:' + sz + 'px;left:' + (Math.random() * 100) + '%;top:' + (Math.random() * 100) + '%;--dur:' + (2 + Math.random() * 4) + 's;--delay:' + (Math.random() * 5) + 's;--op:' + (0.1 + Math.random() * 0.35) + ';';
     c.appendChild(s);
   }
 })();
 
 renderNav('sanctuary');
 
-// ============================================================
-//  PROFILE MANAGEMENT
-// ============================================================
+/* ============================================================
+ *  PROFILE MANAGEMENT
+ * ============================================================ */
 var PROFILE_KEY = 'solara_profile';
-var editField = null;
-var geoLat = null, geoLng = null;
 
 function loadProfile() {
-  try { return JSON.parse(localStorage.getItem(PROFILE_KEY)); } catch(e) { return null; }
+  try { return JSON.parse(localStorage.getItem(PROFILE_KEY)); } catch (e) { return null; }
 }
 
 function saveProfileData(p) {
@@ -868,7 +836,7 @@ function saveProfileData(p) {
 
 function renderProfileDisplay() {
   var p = loadProfile();
-  var $ = function(id) { return document.getElementById(id); };
+  var $ = function (id) { return document.getElementById(id); };
 
   if (!p) {
     $('profileName').textContent = '✦ プロフィールを設定';
@@ -878,7 +846,6 @@ function renderProfileDisplay() {
   }
 
   $('profileName').textContent = p.name || '名前未設定';
-  // Build birth info summary
   var infoParts = [];
   if (p.name) infoParts.push(p.name);
   if (p.birthDate) infoParts.push(formatDate(p.birthDate));
@@ -891,159 +858,9 @@ function formatDate(d) {
   return parts[0] + '年' + parseInt(parts[1]) + '月' + parseInt(parts[2]) + '日';
 }
 
-function openEdit(field) {
-  editField = field;
-  geoLat = null; geoLng = null;
-  var p = loadProfile() || {};
-  var title = '', body = '';
-
-  switch(field) {
-    case 'name':
-      title = '✦ 氏名';
-      body = '<input class="edit-input" id="editInput" type="text" placeholder="氏名を入力" value="' + (p.name || '') + '">';
-      break;
-    case 'birthDate':
-      title = '🎂 生年月日';
-      body = '<input class="edit-input" id="editInput" type="date" value="' + (p.birthDate || '') + '">';
-      break;
-    case 'birthTime':
-      title = '🕐 出生時刻';
-      body = '<input class="edit-input" id="editInput" type="time" step="60" value="' + (p.birthTime || '') + '">'
-        + '<div class="edit-hint">出生時刻が不明な場合は 12:00 にしてください</div>';
-      break;
-    case 'birthCity':
-      title = '🌍 出生地';
-      body = '<input class="edit-input" id="editCityInput" type="text" placeholder="例: 岐阜県岐阜市" value="' + (p.birthPlace || '') + '">'
-        + '<button class="geo-btn" id="geoBtn" onclick="doGeocode(\'editCityInput\')">📍 座標を取得</button>'
-        + '<div class="geo-result" id="geoResult"></div>'
-        + '<div class="edit-error" id="editError">座標が取得できていません</div>'
-        + '<div class="edit-hint">市区町村名まで入力してください</div>'
-        + '<div class="edit-row">'
-        + '<input class="edit-input" id="editLat" type="number" step="0.0001" placeholder="緯度" value="' + (p.birthLat || '') + '">'
-        + '<input class="edit-input" id="editLng" type="number" step="0.0001" placeholder="経度" value="' + (p.birthLng || '') + '">'
-        + '</div>';
-      if (p.birthLat) { geoLat = p.birthLat; geoLng = p.birthLng; }
-      break;
-    case 'home':
-      title = '🏠 自宅（現住所）';
-      body = '<input class="edit-input" id="editCityInput" type="text" placeholder="例: 東京都渋谷区" value="' + (p.homeName || '') + '">'
-        + '<button class="geo-btn" id="geoBtn" onclick="doGeocode(\'editCityInput\')">📍 座標を取得</button>'
-        + '<div class="geo-result" id="geoResult"></div>'
-        + '<div class="edit-error" id="editError">座標が取得できていません</div>'
-        + '<div class="edit-hint">市区町村名まで入力してください</div>'
-        + '<div class="edit-row">'
-        + '<input class="edit-input" id="editLat" type="number" step="0.0001" placeholder="緯度" value="' + (p.homeLat || '') + '">'
-        + '<input class="edit-input" id="editLng" type="number" step="0.0001" placeholder="経度" value="' + (p.homeLng || '') + '">'
-        + '</div>';
-      if (p.homeLat) { geoLat = p.homeLat; geoLng = p.homeLng; }
-      break;
-  }
-
-  document.getElementById('editTitle').textContent = title;
-  document.getElementById('editBody').innerHTML = body;
-  document.getElementById('editOverlay').classList.add('open');
-}
-
-function closeEdit() {
-  document.getElementById('editOverlay').classList.remove('open');
-  editField = null;
-}
-
-function doGeocode(inputId) {
-  var city = document.getElementById(inputId).value.trim();
-  if (!city) return;
-  var btn = document.getElementById('geoBtn');
-  var result = document.getElementById('geoResult');
-  var error = document.getElementById('editError');
-  btn.disabled = true;
-  btn.textContent = '検索中...';
-  result.style.display = 'none';
-  error.style.display = 'none';
-
-  fetch('https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(city) + '&countrycodes=jp&limit=1')
-    .then(function(r) { return r.json(); })
-    .then(function(data) {
-      btn.disabled = false;
-      btn.textContent = '📍 座標を取得';
-      if (data && data.length > 0) {
-        geoLat = parseFloat(data[0].lat);
-        geoLng = parseFloat(data[0].lon);
-        document.getElementById('editLat').value = geoLat.toFixed(4);
-        document.getElementById('editLng').value = geoLng.toFixed(4);
-        result.textContent = '✓ ' + data[0].display_name.substring(0, 40);
-        result.style.display = 'block';
-      } else {
-        result.textContent = '見つかりませんでした。地名を確認してください';
-        result.style.display = 'block';
-        result.style.color = '#E87070';
-      }
-    })
-    .catch(function() {
-      btn.disabled = false;
-      btn.textContent = '📍 座標を取得';
-      result.textContent = '通信エラー。もう一度お試しください';
-      result.style.display = 'block';
-      result.style.color = '#E87070';
-    });
-}
-
-function saveEdit() {
-  var p = loadProfile() || { tz: 9 };
-  var error = document.getElementById('editError');
-
-  switch(editField) {
-    case 'name':
-      p.name = document.getElementById('editInput').value.trim();
-      break;
-    case 'birthDate':
-      var d = document.getElementById('editInput').value;
-      if (!d) { alert('生年月日を入力してください'); return; }
-      p.birthDate = d;
-      break;
-    case 'birthTime':
-      var t = document.getElementById('editInput').value;
-      if (!t) { alert('出生時刻を入力してください'); return; }
-      p.birthTime = t;
-      break;
-    case 'birthCity':
-      var city = document.getElementById('editCityInput').value.trim();
-      var lat = parseFloat(document.getElementById('editLat').value);
-      var lng = parseFloat(document.getElementById('editLng').value);
-      if (!city) { alert('出生地を入力してください'); return; }
-      if (isNaN(lat) || isNaN(lng)) {
-        if (error) { error.style.display = 'block'; }
-        return;
-      }
-      p.birthPlace = city;
-      p.birthLat = lat;
-      p.birthLng = lng;
-      break;
-    case 'home':
-      var hName = document.getElementById('editCityInput').value.trim();
-      var hLat = parseFloat(document.getElementById('editLat').value);
-      var hLng = parseFloat(document.getElementById('editLng').value);
-      if (!hName) { alert('自宅の地名を入力してください'); return; }
-      if (isNaN(hLat) || isNaN(hLng)) {
-        if (error) { error.style.display = 'block'; }
-        return;
-      }
-      p.homeName = hName;
-      p.homeLat = hLat;
-      p.homeLng = hLng;
-      // Sync home to VP slots
-      syncHomeToVP(p);
-      break;
-  }
-
-  p.tz = 9;
-  saveProfileData(p);
-  renderProfileDisplay();
-  closeEdit();
-}
-
 function syncHomeToStorage(key, profile) {
   var slots = [];
-  try { slots = JSON.parse(localStorage.getItem(key)) || []; } catch(e) { slots = []; }
+  try { slots = JSON.parse(localStorage.getItem(key)) || []; } catch (e) { slots = []; }
   var homeSlot = { name: profile.homeName, lat: profile.homeLat, lng: profile.homeLng, icon: '🏠', isHome: true };
   if (slots.length > 0 && slots[0].isHome) {
     slots[0] = homeSlot;
@@ -1061,9 +878,9 @@ function syncHomeToVP(profile) {
 
 renderProfileDisplay();
 
-// ============================================================
-//  BIRTH INFO OVERLAY
-// ============================================================
+/* ============================================================
+ *  BIRTH INFO OVERLAY
+ * ============================================================ */
 var birthMap = null;
 var birthMarker = null;
 
@@ -1077,33 +894,27 @@ function openBirthInfo() {
   document.getElementById('biBirthLat').value = p.birthLat || '';
   document.getElementById('biBirthLng').value = p.birthLng || '';
 
-  // Apply time unknown state
   toggleTimeUnknown();
 
-  // Reset map result
   var res = document.getElementById('biMapResult');
   res.className = 'map-result-info';
   res.textContent = '';
 
   document.getElementById('birthOverlay').classList.add('open');
 
-  // Init map after overlay is visible
-  setTimeout(function() {
+  setTimeout(function () {
     if (!birthMap) {
       birthMap = L.map('birthMap', { zoomControl: true, attributionControl: false }).setView([35.68, 139.76], 5);
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 18
       }).addTo(birthMap);
-
-      // Click on map to set location
-      birthMap.on('click', function(e) {
+      birthMap.on('click', function (e) {
         setBirthMapLocation(e.latlng.lat, e.latlng.lng, true);
       });
     } else {
       birthMap.invalidateSize();
     }
 
-    // If existing coords, show marker
     if (p.birthLat && p.birthLng) {
       setBirthMapLocation(p.birthLat, p.birthLng, false);
       birthMap.setView([p.birthLat, p.birthLng], 10);
@@ -1143,13 +954,12 @@ function setBirthMapLocation(lat, lng, doReverse) {
   birthMap.setView([lat, lng], Math.max(birthMap.getZoom(), 10));
 
   if (doReverse) {
-    // Reverse geocode to get address
     var res = document.getElementById('biMapResult');
     res.textContent = '住所を取得中...';
     res.className = 'map-result-info show';
     fetch('https://nominatim.openstreetmap.org/reverse?format=json&lat=' + lat + '&lon=' + lng + '&zoom=10&accept-language=ja')
-      .then(function(r) { return r.json(); })
-      .then(function(data) {
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
         if (data && data.address) {
           var addr = '';
           if (data.address.state) addr += data.address.state;
@@ -1161,7 +971,7 @@ function setBirthMapLocation(lat, lng, doReverse) {
           res.className = 'map-result-info show';
         }
       })
-      .catch(function() {
+      .catch(function () {
         res.textContent = '住所の取得に失敗しました';
         res.className = 'map-result-info show error';
       });
@@ -1178,8 +988,8 @@ function searchBirthPlace() {
   res.className = 'map-result-info';
 
   fetch('https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(query) + '&limit=1&accept-language=ja')
-    .then(function(r) { return r.json(); })
-    .then(function(data) {
+    .then(function (r) { return r.json(); })
+    .then(function (data) {
       btn.disabled = false;
       btn.textContent = '検索';
       if (data && data.length > 0) {
@@ -1193,7 +1003,7 @@ function searchBirthPlace() {
         res.className = 'map-result-info show error';
       }
     })
-    .catch(function() {
+    .catch(function () {
       btn.disabled = false;
       btn.textContent = '検索';
       res.textContent = '通信エラー。もう一度お試しください';
@@ -1251,9 +1061,9 @@ function saveBirthInfo() {
   closeBirthInfo();
 }
 
-// ============================================================
-//  HOME INFO OVERLAY
-// ============================================================
+/* ============================================================
+ *  HOME INFO OVERLAY
+ * ============================================================ */
 var homeMap = null;
 var homeMarker = null;
 
@@ -1269,11 +1079,11 @@ function openHomeInfo() {
 
   document.getElementById('homeOverlay').classList.add('open');
 
-  setTimeout(function() {
+  setTimeout(function () {
     if (!homeMap) {
       homeMap = L.map('homeMap', { zoomControl: true, attributionControl: false }).setView([35.68, 139.76], 5);
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18 }).addTo(homeMap);
-      homeMap.on('click', function(e) {
+      homeMap.on('click', function (e) {
         setHomeMapLocation(e.latlng.lat, e.latlng.lng, true);
       });
     } else {
@@ -1309,8 +1119,8 @@ function setHomeMapLocation(lat, lng, doReverse) {
     res.textContent = '住所を取得中...';
     res.className = 'map-result-info show';
     fetch('https://nominatim.openstreetmap.org/reverse?format=json&lat=' + lat + '&lon=' + lng + '&zoom=10&accept-language=ja')
-      .then(function(r) { return r.json(); })
-      .then(function(data) {
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
         if (data && data.address) {
           var addr = '';
           if (data.address.state) addr += data.address.state;
@@ -1322,7 +1132,7 @@ function setHomeMapLocation(lat, lng, doReverse) {
           res.className = 'map-result-info show';
         }
       })
-      .catch(function() {
+      .catch(function () {
         res.textContent = '住所の取得に失敗しました';
         res.className = 'map-result-info show error';
       });
@@ -1339,8 +1149,8 @@ function searchHomePlace() {
   res.className = 'map-result-info';
 
   fetch('https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(query) + '&limit=1&accept-language=ja')
-    .then(function(r) { return r.json(); })
-    .then(function(data) {
+    .then(function (r) { return r.json(); })
+    .then(function (data) {
       btn.disabled = false;
       btn.textContent = '検索';
       if (data && data.length > 0) {
@@ -1354,7 +1164,7 @@ function searchHomePlace() {
         res.className = 'map-result-info show error';
       }
     })
-    .catch(function() {
+    .catch(function () {
       btn.disabled = false;
       btn.textContent = '検索';
       res.textContent = '通信エラー。もう一度お試しください';
@@ -1382,9 +1192,9 @@ function saveHomeInfo() {
   closeHomeInfo();
 }
 
-// ============================================================
-//  HOUSE SYSTEM SETTING
-// ============================================================
+/* ============================================================
+ *  HOUSE SYSTEM SETTING
+ * ============================================================ */
 var currentHouse = localStorage.getItem('solara_house_system') || 'placidus';
 var HOUSE_LABELS = { placidus: 'Placidus', whole_sign: 'Whole Sign' };
 
@@ -1406,9 +1216,9 @@ function setHouseSystem(val) {
   document.getElementById('houseSelectPanel').style.display = 'none';
 }
 
-// ============================================================
-//  ORB SETTINGS (Overlay)
-// ============================================================
+/* ============================================================
+ *  ORB SETTINGS (Overlay)
+ * ============================================================ */
 var MAJOR_ASPECTS = [
   { key: 'conjunction', name: 'Conjunction', angle: '0°', def: 2 },
   { key: 'opposition',  name: 'Opposition',  angle: '180°', def: 2 },
@@ -1431,19 +1241,17 @@ var PATTERN_ORBS = [
 
 var currentOrbs = {};
 var currentPatternOrbs = {};
-(function() {
-  // Init aspect orbs
-  MAJOR_ASPECTS.concat(MINOR_ASPECTS).forEach(function(a) { currentOrbs[a.key] = a.def; });
+(function () {
+  MAJOR_ASPECTS.concat(MINOR_ASPECTS).forEach(function (a) { currentOrbs[a.key] = a.def; });
   try {
     var saved = JSON.parse(localStorage.getItem('solara_orb_settings'));
     if (saved) { for (var k in saved) { if (currentOrbs.hasOwnProperty(k)) currentOrbs[k] = saved[k]; } }
-  } catch(e) {}
-  // Init pattern orbs
-  PATTERN_ORBS.forEach(function(p) { currentPatternOrbs[p.key] = p.def; });
+  } catch (e) {}
+  PATTERN_ORBS.forEach(function (p) { currentPatternOrbs[p.key] = p.def; });
   try {
     var saved2 = JSON.parse(localStorage.getItem('solara_pattern_orb_settings'));
     if (saved2) { for (var k in saved2) { if (currentPatternOrbs.hasOwnProperty(k)) currentPatternOrbs[k] = saved2[k]; } }
-  } catch(e) {}
+  } catch (e) {}
 })();
 
 function buildOrbRows(container, items, store, storeKey) {
@@ -1468,8 +1276,8 @@ function buildOrbRows(container, items, store, storeKey) {
 function formatOrbVal(v) { return (v % 1 === 0) ? v + '°' : v.toFixed(1) + '°'; }
 
 function resetOrbs() {
-  MAJOR_ASPECTS.concat(MINOR_ASPECTS).forEach(function(a) { currentOrbs[a.key] = a.def; });
-  PATTERN_ORBS.forEach(function(p) { currentPatternOrbs[p.key] = p.def; });
+  MAJOR_ASPECTS.concat(MINOR_ASPECTS).forEach(function (a) { currentOrbs[a.key] = a.def; });
+  PATTERN_ORBS.forEach(function (p) { currentPatternOrbs[p.key] = p.def; });
   buildOrbRows('orbMajor', MAJOR_ASPECTS, currentOrbs, 'aspect');
   buildOrbRows('orbMinor', MINOR_ASPECTS, currentOrbs, 'aspect');
   buildOrbRows('orbPatterns', PATTERN_ORBS, currentPatternOrbs, 'pattern');
@@ -1533,7 +1341,7 @@ function saveOrbOverlay() {
 
 function updateOrbSummary() {
   var vals = Object.values(currentOrbs);
-  var allSame = vals.every(function(v) { return v === vals[0]; });
+  var allSame = vals.every(function (v) { return v === vals[0]; });
   document.getElementById('orbSummaryVal').textContent = allSame ? 'All ' + vals[0] + '° ›' : 'Custom ›';
 }
 
@@ -1541,7 +1349,7 @@ initHouseUI();
 updateOrbSummary();
 
 // Disable House System selection if birth time is unknown
-(function() {
+(function () {
   var p = loadProfile();
   if (p && p.birthTimeUnknown) {
     var row = document.getElementById('houseSystemRow');
@@ -1552,11 +1360,9 @@ updateOrbSummary();
   }
 })();
 
-// ============================================================
-//  TITLE DIAGNOSIS SYSTEM
-// ============================================================
-
-// --- Data Tables ---
+/* ============================================================
+ *  TITLE DIAGNOSIS SYSTEM
+ * ============================================================ */
 
 var IMG_BASE = '../card-images/';
 
@@ -1637,12 +1443,12 @@ var TITLE_144 = {
   },
   leo:{
     aries:{light:'燦然と輝く',shadow:'華やかに振る舞う自信家なのに、沸点が低すぎて後悔する'},
-    taurus:{light:'威風堂々たる',shadow:'注目されてナンボの表現者なのに、注目されすぎた変化が怖くてしがみつく'},
+    taurus:{light:'威風堂々���る',shadow:'注目されてナンボの表現者なのに、注目されすぎた変化が怖くてしがみつく'},
     gemini:{light:'華麗なる',shadow:'キラキラした自分で場を回すのに、ふとした瞬間"これ本当の自分かな？"ってなる'},
     cancer:{light:'仁愛の炎を灯す',shadow:'調子に乗って自由に表現しちゃったあとの一人反省会が長すぎる'},
     leo:{light:'至高の',shadow:'自分が輝いてないと機嫌が悪くなる、いつも「すごいね」を欲しがる'},
     virgo:{light:'精励なる',shadow:'全力で楽しむお祭り人間のくせに、あとで自分に全力ダメ出し'},
-    libra:{light:'高潔なる',shadow:'自由に生きたいカリスマ気取りなのに、やりすぎが気になって夜眠れない'},
+    libra:{light:'高潔なる',shadow:'自由に生きたいカリスマ気取りなのに、やりすぎが気になって夜眠���ない'},
     scorpio:{light:'灼熱の意志を秘めた',shadow:'褒められると無敵ヒーローだけど、褒められないとモブキャラになる'},
     sagittarius:{light:'天空を駆ける',shadow:'全力で楽しむお祭り人間、祭りが終わった瞬間の暗闘が深すぎる'},
     capricorn:{light:'威厳に満ちた',shadow:'本当は死にそうなのに、私に任せとけ！が口癖な'},
@@ -1651,9 +1457,9 @@ var TITLE_144 = {
   },
   virgo:{
     aries:{light:'峻烈なる',shadow:'段取りを完璧に組むのに、怒りだけはノープランで爆発する'},
-    taurus:{light:'篤実���る',shadow:'几帳面に整えた毎日を手放せない、それが執着だと気づいてない'},
+    taurus:{light:'篤実なる',shadow:'几帳面に整えた毎日を手放せない、それが執着だと気づいてない'},
     gemini:{light:'慧眼の',shadow:'何でも見抜く分析力があるのに、自分の気持ちだけ永遠に分析中'},
-    cancer:{light:'奉仕の心を持つ',shadow:'地味に全部やってくれる縁の下の力持ちだけど、"ありがとう"がないと静かに壊れる'},
+    cancer:{light:'奉仕の心を持つ',shadow:'地味に全部やってくれる縁の下の力���ちだけど、"ありがとう"がないと静かに壊れる'},
     leo:{light:'至誠の',shadow:'完璧にこなして当たり前の顔してるくせに、心の中では拍手を永遠に待っている'},
     virgo:{light:'求道の',shadow:'自分にダメ出しする天才、自分を許す以外のことは全て完璧にできる'},
     libra:{light:'思慮深き',shadow:'他人への的確なアドバイスが全部見えてるのに、指摘して嫌われるのが怖くて黙っている'},
@@ -1661,7 +1467,7 @@ var TITLE_144 = {
     sagittarius:{light:'清廉なる',shadow:'"ちゃんとしなきゃ"が口癖なのに、楽しいことを見つけると全部投げ出しちゃんとできない'},
     capricorn:{light:'克己の極みたる',shadow:'完璧を目指して走り続け、"もう十分だよ"が自分にだけ言えなくて倒れるまで走ってしまう'},
     aquarius:{light:'洞察に優れた',shadow:'誰よりも他人に気遣いができる人なのに、自分が壊れかけてることだけ気づかない'},
-    pisces:{light:'仁徳の',shadow:'ちゃんとやる力は誰にも負けないのに、心の電池が切れると音もなく消える'}
+    pisces:{light:'仁徳の',shadow:'ちゃんとやる力は誰に��負けないのに、心の電池が切れると音もなく消える'}
   },
   libra:{
     aries:{light:'正義を秘めた',shadow:'平和主義で争いを避けてきたのに、溜め込みすぎてある日突然世界滅亡を企てる'},
@@ -1715,7 +1521,7 @@ var TITLE_144 = {
     libra:{light:'堅忍の',shadow:'石橋を叩いて渡る慎重さなのに、頼まれると断れなくて結局渡らされる'},
     scorpio:{light:'静謐なる怒りの',shadow:'サボってる人を見ると静かに腹が立つ、でもその怒りは誰にも見せない'},
     sagittarius:{light:'求道者たる',shadow:'目標に向かって走り続けるストイックなのに、ときどき全部捨てて旅に出たくなる'},
-    capricorn:{light:'峻厳なる',shadow:'自分に課したルールが厳しすぎて、泣きたくても泣き方を忘れてる'},
+    capricorn:{light:'峻厳なる',shadow:'自分に課したルールが厳しすぎ���、泣きたくても泣き方を忘れてる'},
     aquarius:{light:'朴訥にして誠の',shadow:'背中で語るタイプなのに、背中じゃ伝わらないことが多すぎる'},
     pisces:{light:'黎明を待つ',shadow:'ストイックに走り続けて、限界を超えた瞬間ふっといなくなる'}
   },
@@ -1724,8 +1530,8 @@ var TITLE_144 = {
     taurus:{light:'理想を守る',shadow:'世の中を変えたい革命家なのに、自分の生活は一切変えたくない'},
     gemini:{light:'星霜を超える知の',shadow:'常識に疑問を持つ頭脳が優秀すぎて、自分自身の存在に疑問を持ち始める'},
     cancer:{light:'人を照らす',shadow:'人類を愛する理想家なのに、目の前の大事な人にだけ不器用になる'},
-    leo:{light:'天命を負う',shadow:'誰にも合わせたくないくせに、誰からも認められたい矛��の塊'},
-    virgo:{light:'先見の明を持つ',shadow:'大きな夢を描ける完璧な頭で、自分の小さな傷を数え続ける'},
+    leo:{light:'天命を負う',shadow:'誰にも合わせたくないくせに、誰からも認められたい矛盾の塊'},
+    virgo:{light:'先見の明を持つ',shadow:'大きな夢を描ける完璧な頭で、自分の小さな傷を数え続け��'},
     libra:{light:'自由を貫く',shadow:'"俺は俺だ"と思ってるくせに、既読スルーされると気になって仕方ない'},
     scorpio:{light:'深き渇望の',shadow:'"執着しない主義"なのに、好きな人のSNSだけ秒でチェックする'},
     sagittarius:{light:'未踏を拓く',shadow:'未来ばかり見てる理想家で、足元の現実はいつも見て見ぬふりする'},
@@ -1757,7 +1563,6 @@ var TITLE_CLASSES = {
   heart:{page:'Bard',knight:'Sorcerer',queen:'Enchanter',king:'Emperor',mixed:'Chronomancer'}
 };
 
-// Source: SPEC.md Stella phrases (L727-751)
 var CLASS_NAME_JP = {
   Knight:'騎士',Dragoon:'突撃手',Paladin:'聖騎士',Overlord:'覇者',Spellblade:'魔剣士',
   Sage:'求道者',Strategist:'軍師',Chancellor:'知恵者',Judge:'裁定者',Wizard:'魔術師',
@@ -1786,18 +1591,15 @@ var CLASS_TEXT = {
   Liberator:{lJP:'「おかしい」と思ったら声を上げる',sJP:'自由すぎてスケジュールが守れない',lEN:'Speaks up the moment something feels off',sEN:'Too free-spirited to keep a schedule'},
   Phantom:{lJP:'気配を消すのが天才的にうまい',sJP:'存在感を消すのが上手すぎて探される',lEN:'Disappears so well it\'s basically a superpower',sEN:'So good at vanishing, people file missing reports'},
   Rogue:{lJP:'自分のやり方で結果を出す',sJP:'マイペースすぎて周りがハラハラする',lEN:'Gets results their own way, every time',sEN:'So independent it makes everyone nervous'},
-  Alchemist:{lJP:'関係なさそうなものを組み合わせて化ける',sJP:'好奇心が強すぎて余計なものまで作る',lEN:'Combines random things into something brilliant',sEN:'Too curious — builds stuff nobody asked for'},
+  Alchemist:{lJP:'関係なさそうなものを組み合わせて化ける',sJP:'好奇心が強すぎ���余計なものまで作る',lEN:'Combines random things into something brilliant',sEN:'Too curious — builds stuff nobody asked for'},
   Bard:{lJP:'その場にいる人を全員笑顔にする',sJP:'共感力が高すぎてもらい泣きする',lEN:'Makes every person in the room smile',sEN:'Empathy so strong they ugly-cry for others'},
   Sorcerer:{lJP:'感情のエネルギーがそのまま力になる',sJP:'感情豊かすぎて表情が忙しい',lEN:'Turns raw emotion into pure power',sEN:'So expressive their face never sits still'},
-  Enchanter:{lJP:'会った人がなぜか好きになる',sJP:'魅力的すぎて誤解される',lEN:'People just like them and can\'t explain why',sEN:'Too charming — constantly misunderstood'},
+  Enchanter:{lJP:'会った人がなぜか好きになる',sJP:'魅力的���ぎて誤解される',lEN:'People just like them and can\'t explain why',sEN:'Too charming — constantly misunderstood'},
   Emperor:{lJP:'人が自然と集まってくる',sJP:'理想が高すぎて妥協できない',lEN:'People naturally gravitate and gather around',sEN:'Standards so high they can\'t compromise'},
   Chronomancer:{lJP:'「あの瞬間」を大事にできる',sJP:'思い出を大事にしすぎてアルバムが増え続ける',lEN:'Treasures moments others let slip by',sEN:'Hoards memories until the album shelf collapses'}
 };
 
-// Pentacles axis mapping per round: spirit or shadow
-var PENT_AXIS = ['spirit','shadow','spirit','spirit','shadow','spirit','shadow','shadow','spirit'];
-
-// 28 Rounds definition
+/* 28 Rounds definition: Part 1 Minor Arcana (R1-R9), Part 2 Major Arcana (R10-R24), Part 3 Court Cards (R25-R28) */
 var TD_ROUNDS = [
   // Part 1: Minor Arcana (R1-R9)
   {part:1,qJP:'新しい何かが始まるとき、あなたが最初に手に取るのは？',qEN:'When something new begins, what do you reach for first?',
@@ -1864,7 +1666,7 @@ var TD_ROUNDS = [
 
 var PART_NAMES = {1:'Minor Arcana',2:'Major Arcana',3:'Court Cards'};
 
-// --- Sun/Moon Sign Calculation ---
+/* --- Sun/Moon Sign Calculation --- */
 
 var ZODIAC_DATES = [
   {sign:'capricorn',m:1,d:1},{sign:'aquarius',m:1,d:20},{sign:'pisces',m:2,d:19},
@@ -1887,16 +1689,14 @@ function getSunSign(dateStr) {
 }
 
 function getMoonSign(dateStr, timeStr) {
-  // Simplified: Moon moves ~13.2 deg/day from reference
-  // Reference: Jan 1, 2000 00:00 UTC, Moon at ~28 deg Aries (28 deg)
   if (!dateStr) return 'cancer';
   var ref = new Date(2000, 0, 1);
   var parts = dateStr.split('-');
-  var target = new Date(parseInt(parts[0]), parseInt(parts[1])-1, parseInt(parts[2]));
+  var target = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
   var hours = 12;
   if (timeStr) {
     var tp = timeStr.split(':');
-    hours = parseInt(tp[0]) + parseInt(tp[1])/60;
+    hours = parseInt(tp[0]) + parseInt(tp[1]) / 60;
   }
   var days = (target - ref) / 86400000 + hours / 24;
   var deg = (28 + days * 13.176) % 360;
@@ -1905,7 +1705,7 @@ function getMoonSign(dateStr, timeStr) {
   return signs[Math.floor(deg / 30)];
 }
 
-// --- State Machine ---
+/* --- State Machine --- */
 
 var TD = {
   state: 'idle',
@@ -1973,13 +1773,12 @@ function showRound(idx) {
   var r = TD_ROUNDS[idx];
   var displayNum = idx + 1;
 
-  // Part transition
   if (r.part !== TD.lastPart) {
     TD.lastPart = r.part;
     if (idx > 0) {
       showTDScreen('tdScreenPartTrans');
       document.getElementById('tdPartTransText').textContent = PART_NAMES[r.part];
-      setTimeout(function() {
+      setTimeout(function () {
         showTDScreen('tdScreenRound');
         renderRound(idx, r, displayNum);
       }, 1500);
@@ -1990,14 +1789,12 @@ function showRound(idx) {
 }
 
 function renderRound(idx, r, displayNum) {
-  // Progress
   document.getElementById('tdProgressFill').style.width = (displayNum / 28 * 100) + '%';
   document.getElementById('tdProgressText').textContent = displayNum + ' / 28';
   document.getElementById('tdPartLabel').textContent = PART_NAMES[r.part];
   document.getElementById('tdQuestion').textContent = r.qJP;
   document.getElementById('tdQuestionEN').textContent = r.qEN;
 
-  // Axis background tint (Part 2 only)
   var roundScreen = document.getElementById('tdScreenRound');
   roundScreen.className = 'td-screen';
   if (r.part === 2) {
@@ -2005,25 +1802,24 @@ function renderRound(idx, r, displayNum) {
     if (leading) roundScreen.classList.add('td-axis-' + leading);
   }
 
-  // Render cards
   var container = document.getElementById('tdCards');
   container.innerHTML = '';
   var preloaded = 0;
   var total = r.cards.length;
 
   for (var i = 0; i < r.cards.length; i++) {
-    (function(ci) {
+    (function (ci) {
       var div = document.createElement('div');
       div.className = 'td-card';
       var img = new Image();
       img.src = IMG_BASE + r.cards[ci].img;
-      img.onload = function() {
+      img.onload = function () {
         preloaded++;
         if (preloaded >= total) animateCardsIn();
       };
       img.onerror = img.onload;
       div.appendChild(img);
-      div.onclick = function() { selectCard(idx, ci); };
+      div.onclick = function () { selectCard(idx, ci); };
       container.appendChild(div);
     })(i);
   }
@@ -2041,8 +1837,8 @@ function renderRound(idx, r, displayNum) {
 function animateCardsIn() {
   var cards = document.querySelectorAll('.td-card');
   for (var i = 0; i < cards.length; i++) {
-    (function(el, delay) {
-      setTimeout(function() { el.classList.add('appear'); }, delay);
+    (function (el, delay) {
+      setTimeout(function () { el.classList.add('appear'); }, delay);
     })(cards[i], i * 120);
   }
 }
@@ -2052,7 +1848,6 @@ function selectCard(roundIdx, cardIdx) {
   var card = r.cards[cardIdx];
   TD.selections.push({round:roundIdx, card:card});
 
-  // Score
   if (r.part === 1 || r.part === 2) {
     if (card.axis === 'wildcard') {
       applyWildcard();
@@ -2064,7 +1859,6 @@ function selectCard(roundIdx, cardIdx) {
     TD.courtSelections.push(card.court);
   }
 
-  // Animate selection
   var allCards = document.querySelectorAll('.td-card');
   for (var i = 0; i < allCards.length; i++) {
     if (i === cardIdx) {
@@ -2074,10 +1868,10 @@ function selectCard(roundIdx, cardIdx) {
     }
   }
 
-  setTimeout(function() {
+  setTimeout(function () {
     for (var i = 0; i < allCards.length; i++) allCards[i].classList.add('exit');
 
-    setTimeout(function() {
+    setTimeout(function () {
       TD.round++;
       if (TD.round >= 28) {
         computeResults();
@@ -2101,7 +1895,7 @@ function getLeadingAxis() {
   return leading;
 }
 
-// --- Scoring ---
+/* --- Scoring --- */
 
 function applyWildcard() {
   var minVal = Infinity;
@@ -2130,7 +1924,6 @@ function determineFinalAxis() {
     }
   }
   if (winners.length === 1) return winners[0];
-  // Tiebreak: last selected axis wins
   for (var j = TD.selections.length - 1; j >= 0; j--) {
     var sel = TD.selections[j];
     if (sel.card.axis && sel.card.axis !== 'wildcard' && winners.indexOf(sel.card.axis) >= 0) {
@@ -2157,7 +1950,6 @@ function computeResults() {
   TD.resultCourt = determineCourt();
   TD.resultClass = TITLE_CLASSES[TD.resultAxis][TD.resultCourt];
 
-  // Generate main title from birth info
   var p = loadProfile();
   var sunSign = getSunSign(p.birthDate);
   var moonSign = getMoonSign(p.birthDate, p.birthTime);
@@ -2170,14 +1962,11 @@ function computeResults() {
   TD.sunSign = sunSign;
   TD.moonSign = moonSign;
 
-  // Save to localStorage before animation
   saveTitleData();
-
-  // Start forging
   startForging();
 }
 
-// --- Persistence ---
+/* --- Persistence --- */
 
 function saveTitleData() {
   localStorage.setItem('solara_title_main', JSON.stringify(TD.mainTitle));
@@ -2196,16 +1985,15 @@ function loadTitleData() {
     var main = JSON.parse(localStorage.getItem('solara_title_main'));
     var cls = localStorage.getItem('solara_title_class');
     if (main && cls) return {main:main, cls:cls};
-  } catch(e) {}
+  } catch (e) {}
   return null;
 }
 
-// --- Forging Animation ---
+/* --- Forging Animation --- */
 
 function startForging() {
   showTDScreen('tdScreenForging');
 
-  // Create particles
   var container = document.getElementById('tdForgeParticles');
   container.innerHTML = '';
   var axisColors = {power:'#ff4444',mind:'#6bb5ff',spirit:'#9b6bff',shadow:'#6b006b',heart:'#F9D976'};
@@ -2227,7 +2015,6 @@ function startForging() {
     container.appendChild(p);
   }
 
-  // Add particle animation dynamically
   if (!document.getElementById('tdParticleStyle')) {
     var style = document.createElement('style');
     style.id = 'tdParticleStyle';
@@ -2238,12 +2025,12 @@ function startForging() {
   var orb = document.getElementById('tdForgeOrb');
   orb.style.background = 'radial-gradient(circle, ' + color + '99 0%, ' + color + '22 60%, transparent 80%)';
 
-  setTimeout(function() {
+  setTimeout(function () {
     startReveal();
   }, 6000);
 }
 
-// --- Reveal Animation ---
+/* --- Reveal Animation --- */
 
 function startReveal() {
   showTDScreen('tdScreenReveal');
@@ -2258,18 +2045,16 @@ function startReveal() {
   document.getElementById('tdRevealLight').textContent = '✦ ' + txt.lJP;
   document.getElementById('tdRevealShadow').textContent = '✦ ' + txt.sJP;
 
-  // Update retry button visibility
   var count = parseInt(localStorage.getItem('solara_title_diagnosis_count') || '0');
   document.getElementById('tdRetryBtn').style.display = count < 2 ? 'block' : 'none';
 
-  // Trigger animations with delays
-  setTimeout(function() { document.getElementById('tdRevealMain').classList.add('show'); }, 100);
-  setTimeout(function() { document.getElementById('tdRevealMainEN').classList.add('show'); }, 100);
-  setTimeout(function() { document.querySelector('.td-reveal-line').classList.add('show'); }, 100);
-  setTimeout(function() { document.getElementById('tdRevealClass').classList.add('show'); }, 100);
-  setTimeout(function() { document.getElementById('tdRevealLight').classList.add('show'); }, 100);
-  setTimeout(function() { document.getElementById('tdRevealShadow').classList.add('show'); }, 100);
-  setTimeout(function() { document.getElementById('tdRevealActions').classList.add('show'); }, 100);
+  setTimeout(function () { document.getElementById('tdRevealMain').classList.add('show'); }, 100);
+  setTimeout(function () { document.getElementById('tdRevealMainEN').classList.add('show'); }, 100);
+  setTimeout(function () { document.querySelector('.td-reveal-line').classList.add('show'); }, 100);
+  setTimeout(function () { document.getElementById('tdRevealClass').classList.add('show'); }, 100);
+  setTimeout(function () { document.getElementById('tdRevealLight').classList.add('show'); }, 100);
+  setTimeout(function () { document.getElementById('tdRevealShadow').classList.add('show'); }, 100);
+  setTimeout(function () { document.getElementById('tdRevealActions').classList.add('show'); }, 100);
 }
 
 function acceptTitle() {
@@ -2278,17 +2063,14 @@ function acceptTitle() {
 }
 
 function retryDiagnosis() {
-  // Reset reveal animations
   var els = document.querySelectorAll('.td-reveal-main,.td-reveal-main-en,.td-reveal-line,.td-reveal-class,.td-reveal-light,.td-reveal-shadow,.td-reveal-actions');
   for (var i = 0; i < els.length; i++) els[i].classList.remove('show');
 
-  // Remove saved data for retry
   localStorage.removeItem('solara_title_main');
   localStorage.removeItem('solara_title_class');
   localStorage.removeItem('solara_title_axis');
   localStorage.removeItem('solara_title_court');
   localStorage.removeItem('solara_title_diagnosed_at');
-  // Keep diagnosis_count incremented
 
   resetTD();
   TD.state = 'round';
@@ -2298,27 +2080,24 @@ function retryDiagnosis() {
   showRound(0);
 }
 
-// --- Share Card System (Image Composite) ---
+/* --- Share Card System (Image Composite) --- */
 
 var SHARE_ASSETS = 'share-assets/';
 
-// Zodiac Unicode symbols for overlay
 var ZODIAC_GLYPHS = {
   aries:'♈', taurus:'♉', gemini:'♊', cancer:'♋',
   leo:'♌', virgo:'♍', libra:'♎', scorpio:'♏',
   sagittarius:'♐', capricorn:'♑', aquarius:'♒', pisces:'♓'
 };
 
-// Zodiac JP names
 var ZODIAC_JP = {
   aries:'牡羊座', taurus:'牡牛座', gemini:'双子座', cancer:'蟹座',
   leo:'獅子座', virgo:'乙女座', libra:'天秤座', scorpio:'蠍座',
   sagittarius:'射手座', capricorn:'山羊座', aquarius:'水瓶座', pisces:'魚座'
 };
 
-// Class filename mapping (Fate Weaver → fate_weaver)
 var CLASS_FILE = {};
-(function() {
+(function () {
   var classes = ['Knight','Dragoon','Paladin','Overlord','Spellblade',
     'Sage','Strategist','Chancellor','Judge','Wizard',
     'Cleric','Astrologer','Oracle','Fate Weaver','Druid',
@@ -2329,7 +2108,6 @@ var CLASS_FILE = {};
   }
 })();
 
-// Axis accent colors
 var AXIS_COLORS = {
   power:  {accent:'#ff4444', glow:'rgba(255,68,68,0.3)'},
   mind:   {accent:'#6bb5ff', glow:'rgba(107,181,255,0.3)'},
@@ -2338,16 +2116,15 @@ var AXIS_COLORS = {
   heart:  {accent:'#F9D976', glow:'rgba(249,217,118,0.3)'}
 };
 
-// Image preload cache
 var _shareImgCache = {};
 
 function loadShareImage(src) {
-  return new Promise(function(resolve, reject) {
+  return new Promise(function (resolve, reject) {
     if (_shareImgCache[src]) { resolve(_shareImgCache[src]); return; }
     var img = new Image();
     img.crossOrigin = 'anonymous';
-    img.onload = function() { _shareImgCache[src] = img; resolve(img); };
-    img.onerror = function() { reject(new Error('Failed to load: ' + src)); };
+    img.onload = function () { _shareImgCache[src] = img; resolve(img); };
+    img.onerror = function () { reject(new Error('Failed to load: ' + src)); };
     img.src = src;
   });
 }
@@ -2361,7 +2138,7 @@ function shareTitle() {
   try {
     var scores = JSON.parse(localStorage.getItem('solara_title_axis'));
     axis = determineFinalAxisFromScores(scores);
-  } catch(e) {}
+  } catch (e) {}
   axis = axis || 'heart';
 
   var p = loadProfile();
@@ -2369,13 +2146,11 @@ function shareTitle() {
   var moonSign = getMoonSign(p.birthDate, p.birthTime);
   var axisStyle = AXIS_COLORS[axis] || AXIS_COLORS.heart;
 
-  // Load all required images
   var bgSrc = SHARE_ASSETS + 'backgrounds/' + sunSign + '.webp';
   var classSrc = SHARE_ASSETS + 'class-icons/' + CLASS_FILE[cls] + '.webp';
   var sunSrc = SHARE_ASSETS + 'zodiac-symbols/' + sunSign + '.webp';
   var moonSrc = SHARE_ASSETS + 'zodiac-symbols/' + moonSign + '.webp';
 
-  // Show loading indicator
   var shareBtn = document.querySelector('.td-share-btn');
   if (shareBtn) shareBtn.textContent = 'Generating...';
 
@@ -2384,13 +2159,8 @@ function shareTitle() {
     loadShareImage(classSrc),
     loadShareImage(sunSrc),
     loadShareImage(moonSrc)
-  ]).then(function(images) {
-    var bgImg = images[0];
-    var classImg = images[1];
-    var sunImg = images[2];
-    var moonImg = images[3];
-
-    renderShareCard(bgImg, classImg, sunImg, moonImg, {
+  ]).then(function (images) {
+    renderShareCard(images[0], images[1], images[2], images[3], {
       mainTitle: data.main,
       className: cls,
       classText: txt,
@@ -2399,11 +2169,9 @@ function shareTitle() {
       axis: axis,
       axisStyle: axisStyle
     });
-
     if (shareBtn) shareBtn.textContent = 'Share Your Title ✦';
-  }).catch(function(err) {
+  }).catch(function (err) {
     console.error('Share card image load error:', err);
-    // Fallback: render without images
     renderShareCardFallback(data, cls, txt, axis, sunSign, moonSign, axisStyle);
     if (shareBtn) shareBtn.textContent = 'Share Your Title ✦';
   });
@@ -2414,48 +2182,40 @@ function renderShareCard(bgImg, classImg, sunImg, moonImg, info) {
   var ctx = canvas.getContext('2d');
   var w = 1080, h = 1920;
 
-  // 1. Draw background image (cover-fit)
   drawCover(ctx, bgImg, w, h);
 
-  // 2. Dark overlay for text readability
   ctx.fillStyle = 'rgba(0,0,0,0.45)';
   ctx.fillRect(0, 0, w, h);
 
-  // 3. Vignette effect
   var vig = ctx.createRadialGradient(w/2, h*0.4, w*0.2, w/2, h*0.4, w*0.9);
   vig.addColorStop(0, 'rgba(0,0,0,0)');
   vig.addColorStop(1, 'rgba(0,0,0,0.5)');
   ctx.fillStyle = vig;
   ctx.fillRect(0, 0, w, h);
 
-  // 4. Axis-colored glow at center
   var glow = ctx.createRadialGradient(w/2, h*0.42, 0, w/2, h*0.42, w*0.5);
   glow.addColorStop(0, info.axisStyle.glow);
   glow.addColorStop(1, 'transparent');
   ctx.fillStyle = glow;
   ctx.fillRect(0, 0, w, h);
 
-  // 5. Top section: "YOUR SOUL TITLE" label
   ctx.textAlign = 'center';
   ctx.fillStyle = 'rgba(249,217,118,0.5)';
   ctx.font = '300 24px Lato, sans-serif';
   ctx.letterSpacing = '6px';
   ctx.fillText('✦  Y O U R   S O U L   T I T L E  ✦', w/2, h*0.12);
 
-  // 6. Zodiac symbols (sun left, moon right) — screen blend removes black bg
   var iconSize = 100;
   ctx.globalCompositeOperation = 'screen';
   ctx.drawImage(sunImg, w/2 - 180 - iconSize/2, h*0.16, iconSize, iconSize);
   ctx.drawImage(moonImg, w/2 + 180 - iconSize/2, h*0.16, iconSize, iconSize);
   ctx.globalCompositeOperation = 'source-over';
 
-  // Sun/Moon labels
   ctx.fillStyle = 'rgba(234,234,234,0.6)';
   ctx.font = '300 18px Lato, sans-serif';
   ctx.fillText('☉ ' + ZODIAC_JP[info.sunSign], w/2 - 180, h*0.16 + iconSize + 24);
   ctx.fillText('☽ ' + ZODIAC_JP[info.moonSign], w/2 + 180, h*0.16 + iconSize + 24);
 
-  // 7. Decorative line
   var lineY = h*0.30;
   var lineGrd = ctx.createLinearGradient(w*0.2, lineY, w*0.8, lineY);
   lineGrd.addColorStop(0, 'transparent');
@@ -2470,7 +2230,6 @@ function renderShareCard(bgImg, classImg, sunImg, moonImg, info) {
   ctx.lineTo(w*0.85, lineY);
   ctx.stroke();
 
-  // 8. Main title (JP) — big, golden
   ctx.fillStyle = '#F9D976';
   ctx.font = '700 72px Lato, sans-serif';
   ctx.shadowColor = 'rgba(249,217,118,0.4)';
@@ -2478,18 +2237,15 @@ function renderShareCard(bgImg, classImg, sunImg, moonImg, info) {
   ctx.fillText(info.mainTitle.jp, w/2, h*0.37);
   ctx.shadowBlur = 0;
 
-  // Main title (EN) — smaller, muted gold
   ctx.font = '300 36px Lato, sans-serif';
   ctx.fillStyle = 'rgba(249,217,118,0.55)';
   ctx.fillText(info.mainTitle.en, w/2, h*0.37 + 60);
 
-  // 9. Class icon (centered) — screen blend removes black bg
   var classIconSize = 160;
   ctx.globalCompositeOperation = 'screen';
   ctx.drawImage(classImg, w/2 - classIconSize/2, h*0.46, classIconSize, classIconSize);
   ctx.globalCompositeOperation = 'source-over';
 
-  // 10. Class name
   ctx.fillStyle = '#EAEAEA';
   ctx.font = '700 52px Lato, sans-serif';
   ctx.shadowColor = 'rgba(0,0,0,0.5)';
@@ -2497,7 +2253,6 @@ function renderShareCard(bgImg, classImg, sunImg, moonImg, info) {
   ctx.fillText('— ' + info.className + ' —', w/2, h*0.56 + 48);
   ctx.shadowBlur = 0;
 
-  // 11. Light text (崇高)
   ctx.fillStyle = '#EAEAEA';
   ctx.font = '400 30px Lato, sans-serif';
   ctx.fillText('✦ ' + info.classText.lJP, w/2, h*0.68);
@@ -2505,7 +2260,6 @@ function renderShareCard(bgImg, classImg, sunImg, moonImg, info) {
   ctx.fillStyle = 'rgba(234,234,234,0.5)';
   ctx.fillText(info.classText.lEN, w/2, h*0.68 + 40);
 
-  // 12. Shadow text (本音)
   ctx.fillStyle = 'rgba(172,172,172,0.85)';
   ctx.font = 'italic 300 28px Lato, sans-serif';
   ctx.fillText('✦ ' + info.classText.sJP, w/2, h*0.76);
@@ -2513,7 +2267,6 @@ function renderShareCard(bgImg, classImg, sunImg, moonImg, info) {
   ctx.fillStyle = 'rgba(172,172,172,0.5)';
   ctx.fillText(info.classText.sEN, w/2, h*0.76 + 36);
 
-  // 13. Bottom decorative line
   var lineY2 = h*0.85;
   ctx.strokeStyle = lineGrd;
   ctx.lineWidth = 1;
@@ -2522,7 +2275,6 @@ function renderShareCard(bgImg, classImg, sunImg, moonImg, info) {
   ctx.lineTo(w*0.75, lineY2);
   ctx.stroke();
 
-  // 14. Branding
   ctx.fillStyle = 'rgba(249,217,118,0.4)';
   ctx.font = '300 30px Lato, sans-serif';
   ctx.fillText('✦ SOLARA ✦', w/2, h*0.89);
@@ -2530,7 +2282,6 @@ function renderShareCard(bgImg, classImg, sunImg, moonImg, info) {
   ctx.fillStyle = 'rgba(172,172,172,0.3)';
   ctx.fillText('Your Cosmic Soul Title', w/2, h*0.89 + 32);
 
-  // Download
   downloadCanvas(canvas);
 }
 
@@ -2539,7 +2290,6 @@ function renderShareCardFallback(data, cls, txt, axis, sunSign, moonSign, axisSt
   var ctx = canvas.getContext('2d');
   var w = 1080, h = 1920;
 
-  // Gradient background fallback
   var bgGrd = ctx.createLinearGradient(0, 0, 0, h);
   bgGrd.addColorStop(0, '#0a0a14');
   bgGrd.addColorStop(0.5, '#0c1d3a');
@@ -2547,20 +2297,17 @@ function renderShareCardFallback(data, cls, txt, axis, sunSign, moonSign, axisSt
   ctx.fillStyle = bgGrd;
   ctx.fillRect(0, 0, w, h);
 
-  // Glow
   var glow = ctx.createRadialGradient(w/2, h*0.4, 0, w/2, h*0.4, w*0.5);
   glow.addColorStop(0, axisStyle.glow);
   glow.addColorStop(1, 'transparent');
   ctx.fillStyle = glow;
   ctx.fillRect(0, 0, w, h);
 
-  // Title label
   ctx.textAlign = 'center';
   ctx.fillStyle = 'rgba(249,217,118,0.5)';
   ctx.font = '300 24px Lato, sans-serif';
   ctx.fillText('✦  Y O U R   S O U L   T I T L E  ✦', w/2, h*0.15);
 
-  // Zodiac glyphs
   ctx.font = '300 80px Lato, sans-serif';
   ctx.fillStyle = 'rgba(249,217,118,0.35)';
   ctx.fillText(ZODIAC_GLYPHS[sunSign] || '☉', w/2 - 160, h*0.23);
@@ -2570,7 +2317,6 @@ function renderShareCardFallback(data, cls, txt, axis, sunSign, moonSign, axisSt
   ctx.fillText('☉ ' + ZODIAC_JP[sunSign], w/2 - 160, h*0.23 + 36);
   ctx.fillText('☽ ' + ZODIAC_JP[moonSign], w/2 + 160, h*0.23 + 36);
 
-  // Main title
   ctx.fillStyle = '#F9D976';
   ctx.font = '700 68px Lato, sans-serif';
   ctx.shadowColor = 'rgba(249,217,118,0.4)';
@@ -2581,12 +2327,10 @@ function renderShareCardFallback(data, cls, txt, axis, sunSign, moonSign, axisSt
   ctx.fillStyle = 'rgba(249,217,118,0.5)';
   ctx.fillText(data.main.en, w/2, h*0.37 + 56);
 
-  // Class
   ctx.fillStyle = '#EAEAEA';
   ctx.font = '700 48px Lato, sans-serif';
   ctx.fillText('— ' + cls + ' —', w/2, h*0.50);
 
-  // Light/Shadow
   ctx.fillStyle = '#EAEAEA';
   ctx.font = '400 28px Lato, sans-serif';
   ctx.fillText('✦ ' + txt.lJP, w/2, h*0.62);
@@ -2594,7 +2338,6 @@ function renderShareCardFallback(data, cls, txt, axis, sunSign, moonSign, axisSt
   ctx.font = 'italic 300 26px Lato, sans-serif';
   ctx.fillText('✦ ' + txt.sJP, w/2, h*0.68);
 
-  // Branding
   ctx.fillStyle = 'rgba(249,217,118,0.3)';
   ctx.font = '300 28px Lato, sans-serif';
   ctx.fillText('✦ SOLARA ✦', w/2, h*0.90);
@@ -2641,13 +2384,12 @@ function determineFinalAxisFromScores(scores) {
   return result;
 }
 
-// --- Title Display in Sanctuary ---
+/* --- Title Display in Sanctuary --- */
 
 function renderTitleDisplay() {
   var data = loadTitleData();
   var p = loadProfile();
 
-  // Hide all title sub-elements first
   var wrapper = document.getElementById('titleResultWrapper');
   wrapper.style.display = 'none';
   wrapper.classList.remove('flipped');
@@ -2665,7 +2407,6 @@ function renderTitleDisplay() {
     return;
   }
 
-  // Gather data
   var cls = data.cls;
   var txt = CLASS_TEXT[cls];
   var jpName = CLASS_NAME_JP[cls] || cls;
@@ -2674,15 +2415,13 @@ function renderTitleDisplay() {
   var t144 = TITLE_144[sunSign] && TITLE_144[sunSign][moonSign];
   var lightTitle = t144 ? t144.light : (data.main.lightJP || data.main.jp);
 
-  // Axis for glow color
   var axis = 'heart';
   try {
     var scores = JSON.parse(localStorage.getItem('solara_title_axis'));
     axis = determineFinalAxisFromScores(scores);
-  } catch(e) {}
+  } catch (e) {}
   var axisStyle = AXIS_COLORS[axis] || AXIS_COLORS.heart;
 
-  // Background + overlay (both faces share same background)
   var bgUrl = SHARE_ASSETS + 'backgrounds/' + (sunSign || 'aries') + '.webp';
   var overlayBg = 'linear-gradient(180deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.7) 100%)';
   var glowOverlay = 'radial-gradient(ellipse at 50% 40%, ' + axisStyle.glow + ' 0%, transparent 70%)';
@@ -2693,7 +2432,6 @@ function renderTitleDisplay() {
   document.getElementById('vcardOverlayLight').style.background = fullOverlay;
   document.getElementById('vcardOverlayShadow').style.background = fullOverlay;
 
-  // Zodiac symbols (both faces)
   var sunSymSrc = SHARE_ASSETS + 'zodiac-symbols/' + (sunSign || 'aries') + '.webp';
   var moonSymSrc = SHARE_ASSETS + 'zodiac-symbols/' + (moonSign || 'aries') + '.webp';
   var sunJP = ZODIAC_JP[sunSign] || '';
@@ -2704,31 +2442,26 @@ function renderTitleDisplay() {
   document.getElementById('vcardZodiacLight').innerHTML = zodiacHTML;
   document.getElementById('vcardZodiacShadow').innerHTML = zodiacHTML;
 
-  // Class icon (both faces)
   var classIconSrc = SHARE_ASSETS + 'class-icons/' + CLASS_FILE[cls] + '.webp';
   document.getElementById('vcardClassIconLight').src = classIconSrc;
   document.getElementById('vcardClassIconShadow').src = classIconSrc;
 
-  // Light face
   document.getElementById('vcardLightTitle').textContent = lightTitle + jpName;
   document.getElementById('vcardLightClassName').textContent = '— ' + jpName + ' / ' + cls + ' —';
   document.getElementById('vcardLightDesc').textContent = '✦ ' + txt.lJP;
 
-  // Shadow face
   document.getElementById('vcardShadowTitle').textContent = data.main.jp + jpName;
   document.getElementById('vcardShadowClassName').textContent = '— ' + jpName + ' / ' + cls + ' —';
   document.getElementById('vcardShadowDesc').textContent = '✦ ' + txt.sJP;
 
   wrapper.style.display = 'block';
 
-  // Show rediagnose if applicable
   var count = parseInt(localStorage.getItem('solara_title_diagnosis_count') || '0');
   if (count < 2) {
     document.getElementById('titleStartBtn').style.display = 'block';
   }
 }
 
-// Initialize title display on page load
 renderTitleDisplay();
 </script>
 </body>

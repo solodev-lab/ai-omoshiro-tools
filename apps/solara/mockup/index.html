@@ -8,6 +8,7 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/@turf/turf@7/turf.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/astronomy-engine@2.1.19/astronomy.browser.min.js"></script>
+<script src="shared/astro-math.js"></script>
 <script src="shared/nav.js"></script>
 <script src="shared/vibe.js"></script>
 <script src="shared/stella.js"></script>
@@ -357,26 +358,25 @@ body{background:#0A0A14;color:#E8E0D0;font-family:'Segoe UI','Helvetica Neue',sa
 
 <script>
 // ========== Constants ==========
-const GOLD = '#C9A84C';
-const FORTUNE_COLORS = {healing:'#64C8B4',money:'#F5D76E',love:'#FF88B4',work:'#6BB5FF',communication:'#B088FF'};
-const DIR16 = ['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'];
-const DIR16_ANG = {}; DIR16.forEach((d,i) => DIR16_ANG[d] = i * 22.5);
-const DIR16_JP = {N:'北',NNE:'北北東',NE:'北東',ENE:'東北東',E:'東',ESE:'東南東',SE:'南東',SSE:'南南東',S:'南',SSW:'南南西',SW:'南西',WSW:'西南西',W:'西',WNW:'西北西',NW:'北西',NNW:'北北西'};
-const COMP_COLORS = {tSoft:{color:'#C9A84C',label:'T柔'},tHard:{color:'#6B5CE7',label:'T剛'},pSoft:{color:'#4CB8B0',label:'P柔'},pHard:{color:'#E74C6B',label:'P剛'}};
-const COMP_KEYS = ['tSoft','tHard','pSoft','pHard'];
-const emptyComp = () => ({tSoft:0,tHard:0,pSoft:0,pHard:0});
+var GOLD = '#C9A84C';
+var FORTUNE_COLORS = {healing:'#64C8B4',money:'#F5D76E',love:'#FF88B4',work:'#6BB5FF',communication:'#B088FF'};
+var DIR16 = ['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'];
+var DIR16_ANG = {}; DIR16.forEach(function(d,i){ DIR16_ANG[d] = i * 22.5; });
+var DIR16_JP = {N:'北',NNE:'北北東',NE:'北東',ENE:'東北東',E:'東',ESE:'東南東',SE:'南東',SSE:'南南東',S:'南',SSW:'南南西',SW:'南西',WSW:'西南西',W:'西',WNW:'西北西',NW:'北西',NNW:'北北西'};
+var COMP_COLORS = {tSoft:{color:'#C9A84C',label:'T柔'},tHard:{color:'#6B5CE7',label:'T剛'},pSoft:{color:'#4CB8B0',label:'P柔'},pHard:{color:'#E74C6B',label:'P剛'}};
+var COMP_KEYS = ['tSoft','tHard','pSoft','pHard'];
+var emptyComp = function(){ return {tSoft:0,tHard:0,pSoft:0,pHard:0}; };
 
-const PLANET_GROUPS = {personal:['sun','moon','mercury','venus','mars'],social:['jupiter','saturn'],generational:['uranus','neptune','pluto']};
-const FORTUNE_PLANETS = {healing:['moon','neptune','venus'],money:['jupiter','venus','sun'],love:['venus','mars','moon'],work:['saturn','sun','mars','jupiter'],communication:['mercury','sun','venus']};
-const FORTUNE_PAIRS = {
+// FORTUNE_PAIRS is local to Map (not shared)
+var FORTUNE_PAIRS = {
   healing:[['moon','neptune'],['moon','venus'],['sun','neptune']],
   money:[['jupiter','venus'],['jupiter','sun'],['venus','sun']],
   love:[['venus','mars'],['venus','moon'],['sun','venus']],
   work:[['saturn','sun'],['mars','saturn'],['jupiter','saturn']],
   communication:[['mercury','sun'],['mercury','venus'],['mercury','jupiter']],
 };
-const FORTUNE_JP = {healing:'癒し',money:'金運',love:'恋愛',work:'仕事',communication:'コミュニケーション'};
-const FORTUNE_REST = {
+var FORTUNE_JP = {healing:'癒し',money:'金運',love:'恋愛',work:'仕事',communication:'コミュニケーション'};
+var FORTUNE_REST = {
   healing:'今日は癒しの星が静か。\n無理にリフレッシュを求めず、\nいつもの日常を丁寧に過ごして。',
   money:'今日は金運の星が動いていない日。\n大きな出費や投資の決断は明日以降に。\n静かに情報収集する日に。',
   love:'今日は恋愛の星がお休み中。\n焦らず、自分の時間を楽しんで。\n次の波は近いうちに来る。',
@@ -385,7 +385,7 @@ const FORTUNE_REST = {
 };
 
 // ========== Tarot Data ==========
-const TAROT = {
+var TAROT = {
   major: [
     {id:0,jp:'愚者',planet:'uranus',boost:.05,btype:'all',emoji:'🌬️',name:'THE FOOL',kw:'自由と冒険'},
     {id:1,jp:'魔術師',planet:'mercury',boost:.30,btype:'single',emoji:'⚡',name:'THE MAGICIAN',kw:'意志と創造'},
@@ -437,66 +437,34 @@ const TAROT = {
   },
 };
 
-// ========== Astronomy ==========
-const ASTRO_BODIES = [
-  {key:'sun',body:Astronomy.Body.Sun},{key:'moon',body:Astronomy.Body.Moon},
-  {key:'mercury',body:Astronomy.Body.Mercury},{key:'venus',body:Astronomy.Body.Venus},
-  {key:'mars',body:Astronomy.Body.Mars},{key:'jupiter',body:Astronomy.Body.Jupiter},
-  {key:'saturn',body:Astronomy.Body.Saturn},{key:'uranus',body:Astronomy.Body.Uranus},
-  {key:'neptune',body:Astronomy.Body.Neptune},{key:'pluto',body:Astronomy.Body.Pluto},
-];
-const _prof=(()=>{try{return JSON.parse(localStorage.getItem('solara_profile'))}catch{return null}})();
-const BIRTH = _prof&&_prof.birthDate
+// ========== Astronomy (using shared/astro-math.js) ==========
+var _prof = loadSolaraProfile();
+var BIRTH = _prof && _prof.birthDate
   ? {date:new Date(_prof.birthDate.replace(/-/g,'/')+ ' '+(_prof.birthTime||'00:00')),lat:_prof.birthLat||35.4233,lng:_prof.birthLng||136.7607}
   : {date:new Date(1977,9,24,6,56,0),lat:35.4233,lng:136.7607};
 
-function norm360(d){return((d%360)+360)%360}
-function eclLon(body,date){
-  if(body===Astronomy.Body.Moon)return Astronomy.EclipticGeoMoon(date).lon;
-  if(body===Astronomy.Body.Sun)return Astronomy.SunPosition(date).elon;
-  return Astronomy.Ecliptic(Astronomy.GeoVector(body,date,true)).elon;
-}
-function calcPlanets(date){
-  const r={};ASTRO_BODIES.forEach(b=>{r[b.key]={angle:Math.round(norm360(eclLon(b.body,date))*100)/100}});return r;
-}
-function progDate(birth,now){const d=(now-birth)/86400000;return new Date(+birth+d/365.25*86400000)}
-// ASC/MC calculation (same as horoscope.html)
-function calcAscendant(date,lat,lng){
-  const g=Astronomy.SiderealTime(date),lst=norm360(g*15+lng),lstR=lst*Math.PI/180;
-  const jd=(date.getTime()/86400000)+2440587.5,T=(jd-2451545)/36525;
-  const eps=(23.4393-.013*T)*Math.PI/180,latR=lat*Math.PI/180;
-  return norm360(Math.atan2(-Math.cos(lstR),Math.sin(eps)*Math.tan(latR)+Math.cos(eps)*Math.sin(lstR))*180/Math.PI+180);
-}
-function calcMC(date,lng){
-  const g=Astronomy.SiderealTime(date),lst=norm360(g*15+lng),lstR=lst*Math.PI/180;
-  const jd=(date.getTime()/86400000)+2440587.5,T=(jd-2451545)/36525;
-  const eps=(23.4393-.013*T)*Math.PI/180;
-  return norm360(Math.atan2(Math.sin(lstR),Math.cos(lstR)*Math.cos(eps))*180/Math.PI);
-}
-
 function tripleChart(){
-  const now=new Date();
-  const natal=calcPlanets(BIRTH.date);
-  // Add angles to natal
-  const asc=calcAscendant(BIRTH.date,BIRTH.lat,BIRTH.lng);
-  const mc=calcMC(BIRTH.date,BIRTH.lng);
+  var now=new Date();
+  var natal=calcPlanets(BIRTH.date);
+  var asc=calcAscendant(BIRTH.date,BIRTH.lat,BIRTH.lng);
+  var mc=calcMC(BIRTH.date,BIRTH.lng);
   natal._asc={angle:Math.round(asc*100)/100};
   natal._mc={angle:Math.round(mc*100)/100};
   natal._dsc={angle:Math.round(norm360(asc+180)*100)/100};
   natal._ic={angle:Math.round(norm360(mc+180)*100)/100};
-  return{natal,progressed:calcPlanets(progDate(BIRTH.date,now)),transit:calcPlanets(now)};
+  return{natal:natal,progressed:calcPlanets(progDate(BIRTH.date,now)),transit:calcPlanets(now)};
 }
-let TRIPLE=tripleChart();
-Object.keys(TRIPLE.natal).forEach(k=>{if(TAROT.planets[k])TAROT.planets[k].angle=TRIPLE.natal[k].angle});
+var TRIPLE=tripleChart();
+Object.keys(TRIPLE.natal).forEach(function(k){if(TAROT.planets[k])TAROT.planets[k].angle=TRIPLE.natal[k].angle});
 
-const CHART_STYLE = {
+var CHART_STYLE = {
   natal:{color:'#E8E0D0',dash:null,weight:2,opacity:.5,bg:'rgba(232,224,208,.85)',fg:'#1a0a30'},
   progressed:{color:'#C9A84C',dash:'8 6',weight:1.8,opacity:.45,bg:'rgba(201,168,76,.85)',fg:'#1a0a30'},
   transit:{color:'#00D4FF',dash:'3 6',weight:1.8,opacity:.45,bg:'rgba(0,212,255,.85)',fg:'#1a0a30'},
 };
 
 // ========== Aspect Scoring ==========
-const ASPECTS=[
+var ASPECTS=[
   {name:'conjunction',angle:0,orb:8,quality:'neutral',weight:.6},
   {name:'sextile',angle:60,orb:4,quality:'soft',weight:.8},
   {name:'square',angle:90,orb:5,quality:'hard',weight:1},
@@ -505,21 +473,21 @@ const ASPECTS=[
   {name:'opposition',angle:180,orb:6,quality:'hard',weight:.8},
 ];
 function qBucket(q){return(q==='hard'||q==='tense')?'Hard':'Soft'}
-function angDist(a,b){const d=Math.abs(norm360(a)-norm360(b));return d>180?360-d:d}
 function cosFall(dist,spread){return dist>=spread?0:(1+Math.cos(Math.PI*dist/spread))/2}
-const SPREAD=30;
+var SPREAD=30;
 
 function findAspects(map1,map2,wMult,prefix){
-  const r=[];const same=!prefix;
-  const k1=Object.keys(map1),k2=Object.keys(map2||map1);
-  for(let i=0;i<k1.length;i++){
-    const jStart=same?i+1:0;
-    for(let j=jStart;j<k2.length;j++){
+  var r=[],same=!prefix;
+  var k1=Object.keys(map1),k2=Object.keys(map2||map1);
+  for(var i=0;i<k1.length;i++){
+    var jStart=same?i+1:0;
+    for(var j=jStart;j<k2.length;j++){
       if(same&&i===j)continue;
-      const p1=k1[i],p2=k2[j],diff=angDist(map1[p1],same?map1[p2]:map2[p2]);
-      for(const a of ASPECTS){
+      var p1=k1[i],p2=k2[j],diff=angDist(map1[p1],same?map1[p2]:map2[p2]);
+      for(var ai=0;ai<ASPECTS.length;ai++){
+        var a=ASPECTS[ai];
         if(Math.abs(diff-a.angle)<=a.orb){
-          r.push({p1,p2:(prefix||'')+p2,type:a.name,quality:a.quality,weight:a.weight*wMult});break;
+          r.push({p1:p1,p2:(prefix||'')+p2,type:a.name,quality:a.quality,weight:a.weight*wMult});break;
         }
       }
     }
@@ -528,112 +496,111 @@ function findAspects(map1,map2,wMult,prefix){
 }
 
 function scoreAll(){
-  const tA={},nA={},pA={};
-  Object.entries(TRIPLE.transit).forEach(([k,v])=>tA[k]=v.angle);
-  Object.entries(TRIPLE.natal).forEach(([k,v])=>nA[k]=v.angle);
-  Object.entries(TRIPLE.progressed).forEach(([k,v])=>pA[k]=v.angle);
+  var tA={},nA={},pA={};
+  Object.entries(TRIPLE.transit).forEach(function(e){tA[e[0]]=e[1].angle});
+  Object.entries(TRIPLE.natal).forEach(function(e){nA[e[0]]=e[1].angle});
+  Object.entries(TRIPLE.progressed).forEach(function(e){pA[e[0]]=e[1].angle});
 
-  const tt=findAspects(tA,null,1,'');
-  const tn=findAspects(tA,nA,.6,'N:');
-  const pn=findAspects(pA,nA,.5,'N:');
-  const tp=findAspects(tA,pA,.4,'P:');
+  var tt=findAspects(tA,null,1,'');
+  var tn=findAspects(tA,nA,.6,'N:');
+  var pn=findAspects(pA,nA,.5,'N:');
+  var tp=findAspects(tA,pA,.4,'P:');
 
   // Per-planet component scores
-  const tComp={},pComp={};
-  Object.keys(tA).forEach(p=>{tComp[p]=emptyComp()});
-  Object.keys(pA).forEach(p=>{pComp[p]=emptyComp()});
+  var tComp={},pComp={};
+  Object.keys(tA).forEach(function(p){tComp[p]=emptyComp()});
+  Object.keys(pA).forEach(function(p){pComp[p]=emptyComp()});
 
-  // Angle weight bonus: planets aspecting angles get amplified
-  // ASC/DSC conjunction = strongest, MC/IC = strong, other aspects = moderate
-  const ANGLE_BONUS = {_asc:1.5,_dsc:1.5,_mc:1.3,_ic:1.3};
+  // Angle weight bonus
+  var ANGLE_BONUS = {_asc:1.5,_dsc:1.5,_mc:1.3,_ic:1.3};
   function angleBonus(p2key){
-    const ak=p2key.replace('N:','').replace('P:','');
+    var ak=p2key.replace('N:','').replace('P:','');
     return ANGLE_BONUS[ak]||1;
   }
 
-  tt.forEach(a=>{const b='t'+qBucket(a.quality);tComp[a.p1][b]+=a.weight;tComp[a.p2][b]+=a.weight});
-  tn.forEach(a=>{if(tComp[a.p1]){const ab=angleBonus(a.p2);tComp[a.p1]['t'+qBucket(a.quality)]+=a.weight*ab}});
-  pn.forEach(a=>{if(pComp[a.p1]){const ab=angleBonus(a.p2);pComp[a.p1]['p'+qBucket(a.quality)]+=a.weight*ab}});
-  tp.forEach(a=>{if(tComp[a.p1])tComp[a.p1]['t'+qBucket(a.quality)]+=a.weight});
+  tt.forEach(function(a){var b='t'+qBucket(a.quality);tComp[a.p1][b]+=a.weight;tComp[a.p2][b]+=a.weight});
+  tn.forEach(function(a){if(tComp[a.p1]){var ab=angleBonus(a.p2);tComp[a.p1]['t'+qBucket(a.quality)]+=a.weight*ab}});
+  pn.forEach(function(a){if(pComp[a.p1]){var ab=angleBonus(a.p2);pComp[a.p1]['p'+qBucket(a.quality)]+=a.weight*ab}});
+  tp.forEach(function(a){if(tComp[a.p1])tComp[a.p1]['t'+qBucket(a.quality)]+=a.weight});
 
   // Spread to 16 directions
-  const sComp={},sScores={};
-  DIR16.forEach(d=>{sComp[d]=emptyComp();sScores[d]=0});
-  const isAngleKey=k=>k.startsWith('_');
-  Object.entries(tA).forEach(([p,ang])=>{
-    const c=tComp[p];DIR16.forEach(d=>{const f=cosFall(angDist(ang,DIR16_ANG[d]),SPREAD);sComp[d].tSoft+=c.tSoft*f;sComp[d].tHard+=c.tHard*f})});
-  Object.entries(pA).forEach(([p,ang])=>{
-    if(isAngleKey(p))return;
-    const c=pComp[p];DIR16.forEach(d=>{const f=cosFall(angDist(ang,DIR16_ANG[d]),SPREAD);sComp[d].pSoft+=c.pSoft*f;sComp[d].pHard+=c.pHard*f})});
-  DIR16.forEach(d=>{const c=sComp[d];sScores[d]=c.tSoft+c.tHard+c.pSoft+c.pHard});
+  var sComp={},sScores={};
+  var isAngleKey=function(k){return k.startsWith('_')};
+  DIR16.forEach(function(d){sComp[d]=emptyComp();sScores[d]=0});
+  Object.entries(tA).forEach(function(e){
+    var p=e[0],ang=e[1],c=tComp[p];DIR16.forEach(function(d){var f=cosFall(angDist(ang,DIR16_ANG[d]),SPREAD);sComp[d].tSoft+=c.tSoft*f;sComp[d].tHard+=c.tHard*f})});
+  Object.entries(pA).forEach(function(e){
+    var p=e[0],ang=e[1];if(isAngleKey(p))return;
+    var c=pComp[p];DIR16.forEach(function(d){var f=cosFall(angDist(ang,DIR16_ANG[d]),SPREAD);sComp[d].pSoft+=c.pSoft*f;sComp[d].pHard+=c.pHard*f})});
+  DIR16.forEach(function(d){var c=sComp[d];sScores[d]=c.tSoft+c.tHard+c.pSoft+c.pHard});
 
   // Planet directions
-  const pDir={};Object.entries(tA).forEach(([p,a])=>{
-    if(isAngleKey(p))return;
-    let best='N',bd=999;DIR16.forEach(d=>{const dd=angDist(a,DIR16_ANG[d]);if(dd<bd){bd=dd;best=d}});pDir[p]=best});
+  var pDir={};Object.entries(tA).forEach(function(e){
+    var p=e[0],a=e[1];if(isAngleKey(p))return;
+    var best='N',bd=999;DIR16.forEach(function(d){var dd=angDist(a,DIR16_ANG[d]);if(dd<bd){bd=dd;best=d}});pDir[p]=best});
 
   // Fortune per category
-  const fScores={},fComp={};
-  Object.keys(FORTUNE_PAIRS).forEach(cat=>{
-    fScores[cat]={};fComp[cat]={};DIR16.forEach(d=>{fScores[cat][d]=0;fComp[cat][d]=emptyComp()});
-    const cp=[...new Set(FORTUNE_PAIRS[cat].flat())];
-    const ctc={},cpc={};cp.forEach(p=>{ctc[p]=emptyComp();cpc[p]=emptyComp()});
-    tt.forEach(a=>{
-      const i1=cp.includes(a.p1),i2=cp.includes(a.p2);if(!i1&&!i2)return;
-      const pm=FORTUNE_PAIRS[cat].some(pr=>(a.p1===pr[0]&&a.p2===pr[1])||(a.p1===pr[1]&&a.p2===pr[0]))?2:.5;
-      const b='t'+qBucket(a.quality);if(i1)ctc[a.p1][b]+=a.weight*pm;if(i2)ctc[a.p2][b]+=a.weight*pm});
-    tn.forEach(a=>{if(!cp.includes(a.p1))return;ctc[a.p1]['t'+qBucket(a.quality)]+=a.weight*.5});
-    pn.forEach(a=>{if(!cp.includes(a.p1)||!cpc[a.p1])return;cpc[a.p1]['p'+qBucket(a.quality)]+=a.weight*.5});
-    tp.forEach(a=>{if(!cp.includes(a.p1))return;ctc[a.p1]['t'+qBucket(a.quality)]+=a.weight*.5});
-    cp.forEach(p=>{
-      if(tA[p]!==undefined){const c=ctc[p];DIR16.forEach(d=>{const f=cosFall(angDist(tA[p],DIR16_ANG[d]),SPREAD);fComp[cat][d].tSoft+=c.tSoft*f;fComp[cat][d].tHard+=c.tHard*f})}
-      if(pA[p]!==undefined){const c=cpc[p]||emptyComp();DIR16.forEach(d=>{const f=cosFall(angDist(pA[p],DIR16_ANG[d]),SPREAD);fComp[cat][d].pSoft+=c.pSoft*f;fComp[cat][d].pHard+=c.pHard*f})}
+  var fScores={},fComp={};
+  Object.keys(FORTUNE_PAIRS).forEach(function(cat){
+    fScores[cat]={};fComp[cat]={};DIR16.forEach(function(d){fScores[cat][d]=0;fComp[cat][d]=emptyComp()});
+    var cp=[]; FORTUNE_PAIRS[cat].forEach(function(pr){pr.forEach(function(p){if(cp.indexOf(p)===-1)cp.push(p)})});
+    var ctc={},cpc={};cp.forEach(function(p){ctc[p]=emptyComp();cpc[p]=emptyComp()});
+    tt.forEach(function(a){
+      var i1=cp.indexOf(a.p1)>=0,i2=cp.indexOf(a.p2)>=0;if(!i1&&!i2)return;
+      var pm=FORTUNE_PAIRS[cat].some(function(pr){return(a.p1===pr[0]&&a.p2===pr[1])||(a.p1===pr[1]&&a.p2===pr[0])})?2:.5;
+      var b='t'+qBucket(a.quality);if(i1)ctc[a.p1][b]+=a.weight*pm;if(i2)ctc[a.p2][b]+=a.weight*pm});
+    tn.forEach(function(a){if(cp.indexOf(a.p1)<0)return;ctc[a.p1]['t'+qBucket(a.quality)]+=a.weight*.5});
+    pn.forEach(function(a){if(cp.indexOf(a.p1)<0||!cpc[a.p1])return;cpc[a.p1]['p'+qBucket(a.quality)]+=a.weight*.5});
+    tp.forEach(function(a){if(cp.indexOf(a.p1)<0)return;ctc[a.p1]['t'+qBucket(a.quality)]+=a.weight*.5});
+    cp.forEach(function(p){
+      if(tA[p]!==undefined){var c=ctc[p];DIR16.forEach(function(d){var f=cosFall(angDist(tA[p],DIR16_ANG[d]),SPREAD);fComp[cat][d].tSoft+=c.tSoft*f;fComp[cat][d].tHard+=c.tHard*f})}
+      if(pA[p]!==undefined){var c=cpc[p]||emptyComp();DIR16.forEach(function(d){var f=cosFall(angDist(pA[p],DIR16_ANG[d]),SPREAD);fComp[cat][d].pSoft+=c.pSoft*f;fComp[cat][d].pHard+=c.pHard*f})}
     });
-    DIR16.forEach(d=>{const c=fComp[cat][d];fScores[cat][d]=c.tSoft+c.tHard+c.pSoft+c.pHard});
+    DIR16.forEach(function(d){var c=fComp[cat][d];fScores[cat][d]=c.tSoft+c.tHard+c.pSoft+c.pHard});
   });
 
   // Dominant fortune per direction
-  const sFortune={};
-  DIR16.forEach(d=>{let best=null,bv=-1;Object.keys(FORTUNE_PAIRS).forEach(c=>{if(fScores[c][d]>bv){bv=fScores[c][d];best=c}});sFortune[d]=bv>.01?best:null});
+  var sFortune={};
+  DIR16.forEach(function(d){var best=null,bv=-1;Object.keys(FORTUNE_PAIRS).forEach(function(c){if(fScores[c][d]>bv){bv=fScores[c][d];best=c}});sFortune[d]=bv>.01?best:null});
 
-  return{sScores,sComp,sFortune,pDir,tAspects:tt,crossAspects:tn,pnAspects:pn,tpAspects:tp,fScores,fComp};
+  return{sScores:sScores,sComp:sComp,sFortune:sFortune,pDir:pDir,tAspects:tt,crossAspects:tn,pnAspects:pn,tpAspects:tp,fScores:fScores,fComp:fComp};
 }
 
 // ========== Seed Boost ==========
 
 // ========== Longitude normalization ==========
-function normLng(ptLng,refLng){let d=ptLng-refLng;while(d>180)d-=360;while(d<-180)d+=360;return refLng+d}
+function normLng(ptLng,refLng){var d=ptLng-refLng;while(d>180)d-=360;while(d<-180)d+=360;return refLng+d}
 
 // ========== State ==========
-let map,mapCenter,particles=[],impactRings=[],meteor=null;
-let breathe=0,sectorAnimProg=0,sectorAnimating=false,animRunning=false;
-let geoSectors=[],geoSectorsVis=false,baseOverlays=[];
-let boostedLines=null,planetMarkers=null,chartGroups=null;
-let layerVis={natal:false,progressed:false,transit:true,sectors:true,compass:true};
-let groupVis={personal:true,social:false,generational:false};
-let fortuneFilt=null,fsOpen=false,fsTab='all',fsSrc='combined',sectorView='combined';
-let aspectData=null,searchMarker=null,vpSub=-1;
-let pCtx,pW,pH;
+var map,mapCenter,particles=[],impactRings=[],meteor=null;
+var breathe=0,sectorAnimProg=0,sectorAnimating=false,animRunning=false;
+var geoSectors=[],geoSectorsVis=false,baseOverlays=[];
+var boostedLines=null,planetMarkers=null,chartGroups=null;
+var layerVis={natal:false,progressed:false,transit:true,sectors:true,compass:true};
+var groupVis={personal:true,social:false,generational:false};
+var fortuneFilt=null,fsOpen=false,fsTab='all',fsSrc='combined',sectorView='combined';
+var aspectData=null,searchMarker=null,vpSub=-1;
+var pCtx,pW,pH;
 
 // ========== Turf helpers (reduced points) ==========
 function turfLine(center,bearing,maxKm,steps){
-  const pts=[];for(let i=0;i<=steps;i++){
-    const d=maxKm*i/steps,pt=turf.destination(center,d,bearing,{units:'kilometers'}).geometry.coordinates;
+  var pts=[];for(var i=0;i<=steps;i++){
+    var d=maxKm*i/steps,pt=turf.destination(center,d,bearing,{units:'kilometers'}).geometry.coordinates;
     pts.push(L.latLng(Math.max(-85.05,Math.min(85.05,pt[1])),normLng(pt[0],center.geometry.coordinates[0])));
   }return pts;
 }
 
 // ========== Init ==========
 function init(){
-  const c=document.getElementById('particleCanvas'),wrap=document.getElementById('mapWrap');
-  const rect=wrap.getBoundingClientRect(),dpr=devicePixelRatio||1;
+  var c=document.getElementById('particleCanvas'),wrap=document.getElementById('mapWrap');
+  var rect=wrap.getBoundingClientRect(),dpr=devicePixelRatio||1;
   pW=rect.width;pH=rect.height;
   c.width=pW*dpr;c.height=pH*dpr;c.style.width=pW+'px';c.style.height=pH+'px';
   pCtx=c.getContext('2d');pCtx.scale(dpr,dpr);
 
   if(window._mapReady){map.invalidateSize();return}
 
-  const saved=vpLoadLast();
+  var saved=vpLoadLast();
   mapCenter=saved||[BIRTH.lat,BIRTH.lng];
   map=L.map('leafletMap',{zoomControl:false,attributionControl:false,dragging:true,scrollWheelZoom:true,doubleClickZoom:true,touchZoom:true,minZoom:2,maxZoom:18,worldCopyJump:false,maxBounds:[[-85,-432],[85,432]],maxBoundsViscosity:.8}).setView(mapCenter,14);
 
@@ -644,12 +611,12 @@ function init(){
 
   // Viewpoint pin
   window.vpPin=L.marker(mapCenter,{draggable:true,zIndexOffset:1000,icon:L.divIcon({className:'',html:'<div style="width:20px;height:20px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#FFE8A0,#C9A84C);border:2px solid #E8E0D0;box-shadow:0 0 12px rgba(201,168,76,.6),0 2px 6px rgba(0,0,0,.4)"></div>',iconSize:[20,20],iconAnchor:[10,10]})}).addTo(map);
-  window.vpPin.on('dragend',()=>{const p=window.vpPin.getLatLng();rebuild([p.lat,p.lng],false)});
+  window.vpPin.on('dragend',function(){var p=window.vpPin.getLatLng();rebuild([p.lat,p.lng],false)});
 
   // Long-press
-  let lpTimer=null;
-  map.on('mousedown',e=>{lpTimer=setTimeout(()=>{lpTimer=null;rebuild([e.latlng.lat,e.latlng.lng],true)},600)});
-  map.on('mouseup mousemove',()=>{if(lpTimer){clearTimeout(lpTimer);lpTimer=null}});
+  var lpTimer=null;
+  map.on('mousedown',function(e){lpTimer=setTimeout(function(){lpTimer=null;rebuild([e.latlng.lat,e.latlng.lng],true)},600)});
+  map.on('mouseup mousemove',function(){if(lpTimer){clearTimeout(lpTimer);lpTimer=null}});
 
   buildCompass(mapCenter);
   aspectData=scoreAll();
@@ -668,27 +635,27 @@ function $(id){return document.getElementById(id)}
 
 // ========== Compass ==========
 function buildCompass(center){
-  baseOverlays.forEach(l=>{if(map.hasLayer(l))map.removeLayer(l)});
+  baseOverlays.forEach(function(l){if(map.hasLayer(l))map.removeLayer(l)});
   baseOverlays=[];
-  const tp=turf.point([center[1],center[0]]); // turf: [lng,lat]
+  var tp=turf.point([center[1],center[0]]);
 
-  [0,45,90,135,180,225,270,315].forEach(deg=>{
-    const pts=turfLine(tp,deg,20000,60);
-    const line=L.polyline(pts,{color:GOLD,weight:1,opacity:.35,dashArray:'4 8'}).addTo(map);
+  [0,45,90,135,180,225,270,315].forEach(function(deg){
+    var pts=turfLine(tp,deg,20000,60);
+    var line=L.polyline(pts,{color:GOLD,weight:1,opacity:.35,dashArray:'4 8'}).addTo(map);
     baseOverlays.push(line);
   });
 
   // Direction labels at 3 distances
-  const defs=[{t:'N',a:0},{t:'NE',a:45},{t:'E',a:90},{t:'SE',a:135},{t:'S',a:180},{t:'SW',a:225},{t:'W',a:270},{t:'NW',a:315}];
-  [2,150,1000].forEach(dist=>{
-    defs.forEach(l=>{
-      const card=l.t.length===1;
-      const pt=turf.destination(tp,dist,l.a,{units:'kilometers'}).geometry.coordinates;
-      const m=L.marker([pt[1],normLng(pt[0],center[1])],{icon:L.divIcon({className:'',html:`<div style="color:rgba(255,255,255,${card?.5:.3});font-size:${card?11:9}px;text-align:center;font-weight:bold">${l.t}</div>`,iconSize:[20,14],iconAnchor:[10,7]}),interactive:false}).addTo(map);
+  var defs=[{t:'N',a:0},{t:'NE',a:45},{t:'E',a:90},{t:'SE',a:135},{t:'S',a:180},{t:'SW',a:225},{t:'W',a:270},{t:'NW',a:315}];
+  [2,150,1000].forEach(function(dist){
+    defs.forEach(function(l){
+      var card=l.t.length===1;
+      var pt=turf.destination(tp,dist,l.a,{units:'kilometers'}).geometry.coordinates;
+      var m=L.marker([pt[1],normLng(pt[0],center[1])],{icon:L.divIcon({className:'',html:'<div style="color:rgba(255,255,255,'+(card?.5:.3)+');font-size:'+(card?11:9)+'px;text-align:center;font-weight:bold">'+l.t+'</div>',iconSize:[20,14],iconAnchor:[10,7]}),interactive:false}).addTo(map);
       baseOverlays.push(m);
     });
   });
-  if(!layerVis.compass)baseOverlays.forEach(l=>{if(l.setOpacity)l.setOpacity(0);else if(l.setStyle)l.setStyle({opacity:0})});
+  if(!layerVis.compass)baseOverlays.forEach(function(l){if(l.setOpacity)l.setOpacity(0);else if(l.setStyle)l.setStyle({opacity:0})});
 }
 
 // ========== Rebuild from viewpoint ==========
@@ -697,14 +664,14 @@ function rebuild(nc,fly){
   if(window.vpPin)window.vpPin.setLatLng(nc);
   if(fly)map.flyTo(nc,Math.max(map.getZoom(),12),{duration:.8});
   buildCompass(nc);
-  if(boostedLines){boostedLines.forEach(l=>{if(map.hasLayer(l))map.removeLayer(l)});boostedLines=null;planetMarkers=null;chartGroups=null}
+  if(boostedLines){boostedLines.forEach(function(l){if(map.hasLayer(l))map.removeLayer(l)});boostedLines=null;planetMarkers=null;chartGroups=null}
   aspectData=scoreAll();
   // Apply vibe_score boost to sector scores
   if(typeof loadVibe==='function'){
-    const vibe=loadVibe();
+    var vibe=loadVibe();
     if(vibe!==null&&aspectData&&aspectData.sScores){
-      const boost=vibe*2;
-      DIR16.forEach(d=>{aspectData.sScores[d]=(aspectData.sScores[d]||0)+boost});
+      var boost=vibe*2;
+      DIR16.forEach(function(d){aspectData.sScores[d]=(aspectData.sScores[d]||0)+boost});
     }
   }
   addPlanetLines();
@@ -717,59 +684,59 @@ function rebuild(nc,fly){
 
 // ========== Sectors ==========
 function getSectorColor(){
-  const cat=fortuneFilt||(fsTab!=='all'?fsTab:null);
+  var cat=fortuneFilt||(fsTab!=='all'?fsTab:null);
   return cat&&FORTUNE_COLORS[cat]||GOLD;
 }
 function scoreToStyle(score,rank,clr){
-  const c=clr||getSectorColor();
-  let fo=0,bo=0,w=0;
+  var c=clr||getSectorColor();
+  var fo=0,bo=0,w=0;
   if(rank==='strong'){fo=.40;bo=.85;w=3}else if(rank==='weak'){fo=.20;bo=.50;w=2}
   return{init:{color:c,fillColor:c,fillOpacity:0,weight:w,opacity:0},target:{color:c,fillColor:c,fillOpacity:fo,opacity:bo,weight:w}};
 }
 
 function computeRanks(scores){
-  const e=DIR16.map(d=>({d,s:scores[d]||0})).sort((a,b)=>b.s-a.s);
-  const r={};e.forEach((x,i)=>{r[x.d]=x.s<.01?null:i<1?'strong':i<2?'weak':null});return r;
+  var e=DIR16.map(function(d){return{d:d,s:scores[d]||0}}).sort(function(a,b){return b.s-a.s});
+  var r={};e.forEach(function(x,i){r[x.d]=x.s<.01?null:i<1?'strong':i<2?'weak':null});return r;
 }
 
 function createSectors(){
   if(geoSectorsVis&&geoSectors.length){
-    geoSectors.forEach(s=>{
+    geoSectors.forEach(function(s){
       if(s.poly&&map.hasLayer(s.poly))map.removeLayer(s.poly);
-      if(s.wraps)s.wraps.forEach(w=>{if(map.hasLayer(w))map.removeLayer(w)});
+      if(s.wraps)s.wraps.forEach(function(w){if(map.hasLayer(w))map.removeLayer(w)});
     });
     geoSectors=[];geoSectorsVis=false;
   }
   geoSectorsVis=true;
-  const lat=mapCenter[0],lng=mapCenter[1],R=20000;
-  const nPolar=Math.max(500,(90-lat)*111.32-200);
-  const sPolar=Math.max(500,(90+lat)*111.32-200);
-  const cp=turf.point([lng,lat]);
-  const sScores=aspectData?aspectData.sScores:{};
-  const ranks=computeRanks(sScores);
+  var lat=mapCenter[0],lng=mapCenter[1],R=20000;
+  var nPolar=Math.max(500,(90-lat)*111.32-200);
+  var sPolar=Math.max(500,(90+lat)*111.32-200);
+  var cp=turf.point([lng,lat]);
+  var sScores=aspectData?aspectData.sScores:{};
+  var ranks=computeRanks(sScores);
 
-  DIR16.forEach((d,i)=>{
-    const ctr=i*22.5,start=((ctr-11.25)+360)%360;
-    let end=ctr+11.25;if(start>end)end+=360;
-    let radius=R;if(d==='N')radius=Math.min(R,nPolar);if(d==='S')radius=Math.min(R,sPolar);
+  DIR16.forEach(function(d,i){
+    var ctr=i*22.5,start=((ctr-11.25)+360)%360;
+    var end=ctr+11.25;if(start>end)end+=360;
+    var radius=R;if(d==='N')radius=Math.min(R,nPolar);if(d==='S')radius=Math.min(R,sPolar);
 
-    const ss=scoreToStyle(sScores[d]||0,ranks[d]);
-    const pts=buildSectorPts(cp,start,end,radius,lng);
-    const poly=L.polygon(pts,{...ss.init}).addTo(map);
-    const wraps=[-360,360].map(off=>{
-      const sh=pts.map(p=>L.latLng(p.lat,p.lng+off));
-      return L.polygon(sh,{...ss.init}).addTo(map);
+    var ss=scoreToStyle(sScores[d]||0,ranks[d]);
+    var pts=buildSectorPts(cp,start,end,radius,lng);
+    var poly=L.polygon(pts,Object.assign({},ss.init)).addTo(map);
+    var wraps=[-360,360].map(function(off){
+      var sh=pts.map(function(p){return L.latLng(p.lat,p.lng+off)});
+      return L.polygon(sh,Object.assign({},ss.init)).addTo(map);
     });
 
-    geoSectors.push({dir:d,score:sScores[d]||0,poly,wraps});
+    geoSectors.push({dir:d,score:sScores[d]||0,poly:poly,wraps:wraps});
 
     // Fade-in
-    const delay=i*100,tgt=ss.target;
-    setTimeout(()=>{
-      let step=0;const iv=setInterval(()=>{
-        step++;const t=step/15;
-        const st={fillOpacity:tgt.fillOpacity*t,opacity:tgt.opacity*t,weight:tgt.weight};
-        poly.setStyle(st);wraps.forEach(w=>w.setStyle(st));
+    var delay=i*100,tgt=ss.target;
+    setTimeout(function(){
+      var step=0;var iv=setInterval(function(){
+        step++;var t=step/15;
+        var st={fillOpacity:tgt.fillOpacity*t,opacity:tgt.opacity*t,weight:tgt.weight};
+        poly.setStyle(st);wraps.forEach(function(w){w.setStyle(st)});
         if(step>=15)clearInterval(iv);
       },30);
     },delay);
@@ -777,17 +744,17 @@ function createSectors(){
 }
 
 function buildSectorPts(cp,startB,endB,radius,refLng){
-  const rS=25,aS=20,pts=[L.latLng(mapCenter[0],mapCenter[1])];
-  for(let r=1;r<=rS;r++){
-    const d=radius*r/rS,pt=turf.destination(cp,d,startB,{units:'kilometers'}).geometry.coordinates;
+  var rS=25,aS=20,pts=[L.latLng(mapCenter[0],mapCenter[1])];
+  for(var r=1;r<=rS;r++){
+    var d=radius*r/rS,pt=turf.destination(cp,d,startB,{units:'kilometers'}).geometry.coordinates;
     pts.push(L.latLng(clampLat(pt[1]),normLng(pt[0],refLng)));
   }
-  for(let s=1;s<=aS;s++){
-    const b=startB+(endB-startB)*s/aS,pt=turf.destination(cp,radius,b,{units:'kilometers'}).geometry.coordinates;
+  for(var s=1;s<=aS;s++){
+    var b=startB+(endB-startB)*s/aS,pt=turf.destination(cp,radius,b,{units:'kilometers'}).geometry.coordinates;
     pts.push(L.latLng(clampLat(pt[1]),normLng(pt[0],refLng)));
   }
-  for(let r=rS-1;r>=1;r--){
-    const d=radius*r/rS,pt=turf.destination(cp,d,endB,{units:'kilometers'}).geometry.coordinates;
+  for(var r=rS-1;r>=1;r--){
+    var d=radius*r/rS,pt=turf.destination(cp,d,endB,{units:'kilometers'}).geometry.coordinates;
     pts.push(L.latLng(clampLat(pt[1]),normLng(pt[0],refLng)));
   }
   return pts;
@@ -798,53 +765,54 @@ function clampLat(l){return Math.max(-85.05,Math.min(85.05,l))}
 function addPlanetLines(){
   if(boostedLines)return;
   boostedLines=[];chartGroups={};planetMarkers=[];
-  const lat=mapCenter[0],lng=mapCenter[1],cp=turf.point([lng,lat]);
-  const pm=TAROT.planets,bst=[];
+  var lat=mapCenter[0],lng=mapCenter[1],cp=turf.point([lng,lat]);
+  var pm=TAROT.planets,bst=[];
 
-  ['natal','progressed','transit'].forEach(lk=>{
-    const ls=CHART_STYLE[lk],cd=TRIPLE[lk],lg=L.layerGroup().addTo(map);
+  ['natal','progressed','transit'].forEach(function(lk){
+    var ls=CHART_STYLE[lk],cd=TRIPLE[lk],lg=L.layerGroup().addTo(map);
     chartGroups[lk]=lg;
 
-    Object.entries(cd).forEach(([name,pd])=>{
-      if(name.startsWith('_'))return; // skip angle keys (ASC/MC/DSC/IC)
-      const meta=pm[name],isB=bst.includes(name);
-      const lc=(lk==='natal'&&isB)?meta.color:ls.color;
-      const lo=(lk==='natal'&&isB)?.7:ls.opacity;
-      const lw=(lk==='natal'&&isB)?2.5:ls.weight;
-      const pts=turfLine(cp,pd.angle,20000,50);
-      const line=L.polyline(pts,{color:lc,weight:lw,opacity:lo,dashArray:ls.dash}).addTo(lg);
+    Object.entries(cd).forEach(function(e){
+      var name=e[0],pd=e[1];
+      if(name.startsWith('_'))return;
+      var meta=pm[name],isB=bst.indexOf(name)>=0;
+      var lc=(lk==='natal'&&isB)?meta.color:ls.color;
+      var lo=(lk==='natal'&&isB)?.7:ls.opacity;
+      var lw=(lk==='natal'&&isB)?2.5:ls.weight;
+      var pts=turfLine(cp,pd.angle,20000,50);
+      var line=L.polyline(pts,{color:lc,weight:lw,opacity:lo,dashArray:ls.dash}).addTo(lg);
       boostedLines.push(line);
 
       // Symbol marker
-      const sz=lk==='natal'?28:22,fs=lk==='natal'?15:11;
-      const bdr=lk==='natal'?'none':'1.5px solid '+ls.color;
-      const glow=(lk==='natal'&&isB)?'0 0 12px '+meta.color+',0 2px 4px rgba(0,0,0,.4)':'0 2px 4px rgba(0,0,0,.3)';
-      const sm=L.marker(mapCenter,{icon:L.divIcon({className:'',html:`<div style="width:${sz}px;height:${sz}px;border-radius:50%;background:${ls.bg};border:${bdr};display:flex;align-items:center;justify-content:center;font-size:${fs}px;color:${ls.fg};font-weight:bold;box-shadow:${glow}">${meta.sym}</div>`,iconSize:[sz,sz],iconAnchor:[sz/2,sz/2]}),interactive:false,zIndexOffset:lk==='natal'?200:lk==='transit'?100:50}).addTo(lg);
+      var sz=lk==='natal'?28:22,fs=lk==='natal'?15:11;
+      var bdr=lk==='natal'?'none':'1.5px solid '+ls.color;
+      var glow=(lk==='natal'&&isB)?'0 0 12px '+meta.color+',0 2px 4px rgba(0,0,0,.4)':'0 2px 4px rgba(0,0,0,.3)';
+      var sm=L.marker(mapCenter,{icon:L.divIcon({className:'',html:'<div style="width:'+sz+'px;height:'+sz+'px;border-radius:50%;background:'+ls.bg+';border:'+bdr+';display:flex;align-items:center;justify-content:center;font-size:'+fs+'px;color:'+ls.fg+';font-weight:bold;box-shadow:'+glow+'">'+meta.sym+'</div>',iconSize:[sz,sz],iconAnchor:[sz/2,sz/2]}),interactive:false,zIndexOffset:lk==='natal'?200:lk==='transit'?100:50}).addTo(lg);
       boostedLines.push(sm);
-      planetMarkers.push({marker:sm,angle:pd.angle,pts,layer:lk,planet:name,line,baseOp:lo});
+      planetMarkers.push({marker:sm,angle:pd.angle,pts:pts,layer:lk,planet:name,line:line,baseOp:lo});
     });
   });
 
   // Edge tracking
   function updateSymPos(){
     if(!planetMarkers)return;
-    const sz=map.getSize(),m=30,xn=m,yn=m,xx=sz.x-m,yx=sz.y-m;
-    planetMarkers.forEach(ps=>{
-      let pg=null;for(const g in PLANET_GROUPS)if(PLANET_GROUPS[g].includes(ps.planet)){pg=g;break}
-      const lOn=layerVis[ps.layer],gOn=pg?groupVis[pg]:true;
-      const fOn=!fortuneFilt||(FORTUNE_PLANETS[fortuneFilt]||[]).includes(ps.planet);
+    var sz=map.getSize(),m=30,xn=m,yn=m,xx=sz.x-m,yx=sz.y-m;
+    planetMarkers.forEach(function(ps){
+      var pg=null;for(var g in PLANET_GROUPS)if(PLANET_GROUPS[g].indexOf(ps.planet)>=0){pg=g;break}
+      var lOn=layerVis[ps.layer],gOn=pg?groupVis[pg]:true;
+      var fOn=!fortuneFilt||(FORTUNE_PLANETS[fortuneFilt]||[]).indexOf(ps.planet)>=0;
       if(!lOn||!gOn){ps.marker.setOpacity(0);return}
       if(!fOn){ps.marker.setOpacity(fortuneFilt?.1:0);return}
 
-      let bestExit=null,last=null,inside=false;
-      for(let i=0;i<ps.pts.length;i++){
-        const px=map.latLngToContainerPoint(ps.pts[i]);
+      var bestExit=null,last=null,inside=false;
+      for(var i=0;i<ps.pts.length;i++){
+        var px=map.latLngToContainerPoint(ps.pts[i]);
         if(px.x>=xn&&px.x<=xx&&px.y>=yn&&px.y<=yx)inside=true;
         if(i>0){
-          const dx=px.x-last.x,dy=px.y-last.y;
-          let t0=0,t1=1;const sp=[-dx,dx,-dy,dy],sq=[last.x-xn,xx-last.x,last.y-yn,yx-last.y];
-          let ok=true;
-          for(let j=0;j<4;j++){if(sp[j]===0){if(sq[j]<0){ok=false;break}}else{const t=sq[j]/sp[j];if(sp[j]<0)t0=Math.max(t0,t);else t1=Math.min(t1,t)}}
+          var dx=px.x-last.x,dy=px.y-last.y;
+          var t0=0,t1=1;var sp=[-dx,dx,-dy,dy],sq=[last.x-xn,xx-last.x,last.y-yn,yx-last.y];
+          var ok=true;
+          for(var j=0;j<4;j++){if(sp[j]===0){if(sq[j]<0){ok=false;break}}else{var t=sq[j]/sp[j];if(sp[j]<0)t0=Math.max(t0,t);else t1=Math.min(t1,t)}}
           if(ok&&t0<=t1)bestExit=L.point(last.x+dx*t1,last.y+dy*t1);
         }
         last=px;
@@ -858,56 +826,54 @@ function addPlanetLines(){
   updateSymPos();
 
   // Seed marker
-  const sm=L.circleMarker(mapCenter,{radius:6,color:GOLD,fillColor:'#F5D76E',fillOpacity:.8,weight:2,opacity:.8}).addTo(map);
+  var sm=L.circleMarker(mapCenter,{radius:6,color:GOLD,fillColor:'#F5D76E',fillOpacity:.8,weight:2,opacity:.8}).addTo(map);
   boostedLines.push(sm);
-  const emoji='🌱';
-  const sl=L.marker(mapCenter,{icon:L.divIcon({className:'',html:`<div style="font-size:16px;text-align:center;filter:drop-shadow(0 0 6px rgba(201,168,76,.6))">${emoji}</div>`,iconSize:[20,20],iconAnchor:[10,24]}),interactive:false}).addTo(map);
+  var emoji='🌱';
+  var sl=L.marker(mapCenter,{icon:L.divIcon({className:'',html:'<div style="font-size:16px;text-align:center;filter:drop-shadow(0 0 6px rgba(201,168,76,.6))">'+emoji+'</div>',iconSize:[20,20],iconAnchor:[10,24]}),interactive:false}).addTo(map);
   boostedLines.push(sl);
 }
 
 // ========== Particles & Animation ==========
-class Particle{
-  constructor(x,y,vx,vy,color,size,life,decay){this.x=x;this.y=y;this.vx=vx;this.vy=vy;this.color=color;this.size=size;this.life=life;this.maxLife=life;this.decay=decay;this.converge=false;this.tx=0;this.ty=0}
-  update(){if(this.converge){this.vx+=(this.tx-this.x)*.003;this.vy+=(this.ty-this.y)*.003}this.x+=this.vx;this.y+=this.vy;this.vx*=.97;this.vy*=.97;this.life-=this.decay}
-  draw(ctx){if(this.life<=0)return;const a=this.life/this.maxLife;ctx.globalAlpha=a;ctx.shadowBlur=12;ctx.shadowColor=this.color;ctx.fillStyle=this.color;ctx.beginPath();ctx.arc(this.x,this.y,this.size*a,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0}
-}
+function Particle(x,y,vx,vy,color,size,life,decay){this.x=x;this.y=y;this.vx=vx;this.vy=vy;this.color=color;this.size=size;this.life=life;this.maxLife=life;this.decay=decay;this.converge=false;this.tx=0;this.ty=0}
+Particle.prototype.update=function(){if(this.converge){this.vx+=(this.tx-this.x)*.003;this.vy+=(this.ty-this.y)*.003}this.x+=this.vx;this.y+=this.vy;this.vx*=.97;this.vy*=.97;this.life-=this.decay};
+Particle.prototype.draw=function(ctx){if(this.life<=0)return;var a=this.life/this.maxLife;ctx.globalAlpha=a;ctx.shadowBlur=12;ctx.shadowColor=this.color;ctx.fillStyle=this.color;ctx.beginPath();ctx.arc(this.x,this.y,this.size*a,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0};
 
 function spawnImpact(x,y,n){
-  for(let i=0;i<n;i++){const a=Math.random()*Math.PI*2,sp=2+Math.random()*5;
+  for(var i=0;i<n;i++){var a=Math.random()*Math.PI*2,sp=2+Math.random()*5;
     particles.push(new Particle(x,y,Math.cos(a)*sp,Math.sin(a)*sp,Math.random()>.3?GOLD:'#F5D76E',1+Math.random()*2.5,.4+Math.random()*.4,.025))}
   startAnim();
 }
 function spawnConverge(tx,ty,n){
-  const cols=['#FFFBE6','#F5D76E','#FFE8A0',GOLD];
-  for(let i=0;i<n;i++){const a=Math.random()*Math.PI*2,d=150+Math.random()*250,sx=tx+Math.cos(a)*d,sy=ty+Math.sin(a)*d,sp=.012+Math.random()*.018;
-    const p=new Particle(sx,sy,(tx-sx)*sp,(ty-sy)*sp,cols[i%4],1+Math.random()*2.5,1.2+Math.random()*.8,.018);p.converge=true;p.tx=tx;p.ty=ty;particles.push(p)}
+  var cols=['#FFFBE6','#F5D76E','#FFE8A0',GOLD];
+  for(var i=0;i<n;i++){var a=Math.random()*Math.PI*2,d=150+Math.random()*250,sx=tx+Math.cos(a)*d,sy=ty+Math.sin(a)*d,sp=.012+Math.random()*.018;
+    var p=new Particle(sx,sy,(tx-sx)*sp,(ty-sy)*sp,cols[i%4],1+Math.random()*2.5,1.2+Math.random()*.8,.018);p.converge=true;p.tx=tx;p.ty=ty;particles.push(p)}
   startAnim();
 }
 
-function launchMeteor(tx,ty){meteor={x:tx-40,y:-20,tx,ty,p:0,sp:.025};startAnim()}
+function launchMeteor(tx,ty){meteor={x:tx-40,y:-20,tx:tx,ty:ty,p:0,sp:.025};startAnim()}
 
 function startAnim(){if(animRunning)return;animRunning=true;animate()}
 function animate(){
-  const ctx=pCtx;ctx.clearRect(0,0,pW,pH);breathe+=.02;
+  var ctx=pCtx;ctx.clearRect(0,0,pW,pH);breathe+=.02;
 
   // Sparkles
   if(sectorAnimating){sectorAnimProg=Math.min(1,sectorAnimProg+.012);drawSparkles(ctx)}
 
   // Impact rings
-  impactRings=impactRings.filter(r=>{
+  impactRings=impactRings.filter(function(r){
     r.p+=.015;if(r.p>=1)return false;
-    const a=(1-r.p)*.4;ctx.strokeStyle=`rgba(201,168,76,${a})`;ctx.lineWidth=2*(1-r.p);
+    var a=(1-r.p)*.4;ctx.strokeStyle='rgba(201,168,76,'+a+')';ctx.lineWidth=2*(1-r.p);
     ctx.beginPath();ctx.arc(r.x,r.y,r.p*Math.min(pW,pH)*.3,0,Math.PI*2);ctx.stroke();return true;
   });
 
   // Meteor
   if(meteor){
-    meteor.p+=meteor.sp;meteor.sp+=.002;const t=Math.min(1,meteor.p),e=t*t;
+    meteor.p+=meteor.sp;meteor.sp+=.002;var t=Math.min(1,meteor.p),e=t*t;
     meteor.x=(meteor.tx-40)+40*e;meteor.y=-20+(meteor.ty+20)*e;
     if(t>=.6&&!meteor.eff){meteor.eff=true;playEffect(meteor.tx,meteor.ty)}
     if(t>=1&&!meteor.hit){meteor.hit=true;onImpact(meteor.tx,meteor.ty)}
     if(t<1){
-      ctx.save();const g=ctx.createRadialGradient(meteor.x,meteor.y,0,meteor.x,meteor.y,12);
+      ctx.save();var g=ctx.createRadialGradient(meteor.x,meteor.y,0,meteor.x,meteor.y,12);
       g.addColorStop(0,'rgba(245,215,110,.9)');g.addColorStop(.5,'rgba(201,168,76,.4)');g.addColorStop(1,'transparent');
       ctx.fillStyle=g;ctx.beginPath();ctx.arc(meteor.x,meteor.y,12,0,Math.PI*2);ctx.fill();
       ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(meteor.x,meteor.y,2,0,Math.PI*2);ctx.fill();ctx.restore();
@@ -915,8 +881,8 @@ function animate(){
   }
 
   // Particles
-  particles=particles.filter(p=>p.life>0);
-  particles.forEach(p=>{p.update();p.draw(ctx)});
+  particles=particles.filter(function(p){return p.life>0});
+  particles.forEach(function(p){p.update();p.draw(ctx)});
   ctx.globalAlpha=1;
 
   if(sectorAnimating||impactRings.length||meteor||particles.length)setTimeout(animate,16);
@@ -925,468 +891,499 @@ function animate(){
 
 function drawSparkles(ctx){
   if(!map||!geoSectorsVis)return;
-  const lat=mapCenter[0],lng=mapCenter[1],zoom=map.getZoom();
-  const rKm=40075*Math.cos(lat*Math.PI/180)/Math.pow(2,zoom)*.3;
-  const cols=[[255,250,220],[245,200,80],[100,220,200],[80,180,255],[255,240,160]];
-  const bDefs=[];
-  geoSectors.forEach(s=>{if(s.score>0){const idx=DIR16.indexOf(s.dir);if(idx>=0){const c=idx*22.5;bDefs.push({s:c-11.25,e:c+11.25})}}});
+  var lat=mapCenter[0],lng=mapCenter[1],zoom=map.getZoom();
+  var rKm=40075*Math.cos(lat*Math.PI/180)/Math.pow(2,zoom)*.3;
+  var cols=[[255,250,220],[245,200,80],[100,220,200],[80,180,255],[255,240,160]];
+  var bDefs=[];
+  geoSectors.forEach(function(s){if(s.score>0){var idx=DIR16.indexOf(s.dir);if(idx>=0){var c=idx*22.5;bDefs.push({s:c-11.25,e:c+11.25})}}});
   if(!bDefs.length)bDefs.push({s:85,e:95},{s:265,e:275});
 
-  bDefs.slice(0,4).forEach((sec,si)=>{
-    for(let i=0;i<3;i++){
-      const ang=sec.s+(sec.e-sec.s)*((i+.5)/3);
-      const drift=Math.sin(breathe*1.5+i*1.1+si*3)*2;
-      const df=.2+.5*((Math.sin(breathe*1.8+i*1.7+si*2)+1)/2);
-      const cp=turf.point([lng,lat]);
-      const dest=turf.destination(cp,rKm*df,ang+drift,{units:'kilometers'}).geometry.coordinates;
-      const sp=map.latLngToContainerPoint([dest[1],dest[0]]);
-      const sa=.5*sectorAnimProg*(.4+Math.sin(breathe*3.5+i*2.3+si)*.6);
-      const sz=1.2+Math.sin(breathe*2.5+i+si)*.8;
-      const sc=cols[(i+si*2)%cols.length];
-      ctx.fillStyle=`rgba(${sc[0]},${sc[1]},${sc[2]},${sa})`;ctx.shadowBlur=8;ctx.shadowColor=`rgba(${sc[0]},${sc[1]},${sc[2]},.6)`;
+  bDefs.slice(0,4).forEach(function(sec,si){
+    for(var i=0;i<3;i++){
+      var ang=sec.s+(sec.e-sec.s)*((i+.5)/3);
+      var drift=Math.sin(breathe*1.5+i*1.1+si*3)*2;
+      var df=.2+.5*((Math.sin(breathe*1.8+i*1.7+si*2)+1)/2);
+      var cp=turf.point([lng,lat]);
+      var dest=turf.destination(cp,rKm*df,ang+drift,{units:'kilometers'}).geometry.coordinates;
+      var sp=map.latLngToContainerPoint([dest[1],dest[0]]);
+      var sa=.5*sectorAnimProg*(.4+Math.sin(breathe*3.5+i*2.3+si)*.6);
+      var sz=1.2+Math.sin(breathe*2.5+i+si)*.8;
+      var sc=cols[(i+si*2)%cols.length];
+      ctx.fillStyle='rgba('+sc[0]+','+sc[1]+','+sc[2]+','+sa+')';ctx.shadowBlur=8;ctx.shadowColor='rgba('+sc[0]+','+sc[1]+','+sc[2]+',.6)';
       ctx.beginPath();ctx.arc(sp.x,sp.y,sz,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;
     }
   });
   // Center glow
-  const cp=map.latLngToContainerPoint(mapCenter);
-  const gs=15+Math.sin(breathe*2)*5,ga=.15+Math.sin(breathe*2)*.1;
-  const cg=ctx.createRadialGradient(cp.x,cp.y,0,cp.x,cp.y,gs);
-  cg.addColorStop(0,`rgba(201,168,76,${ga})`);cg.addColorStop(1,'transparent');
+  var cp=map.latLngToContainerPoint(mapCenter);
+  var gs=15+Math.sin(breathe*2)*5,ga=.15+Math.sin(breathe*2)*.1;
+  var cg=ctx.createRadialGradient(cp.x,cp.y,0,cp.x,cp.y,gs);
+  cg.addColorStop(0,'rgba(201,168,76,'+ga+')');cg.addColorStop(1,'transparent');
   ctx.fillStyle=cg;ctx.beginPath();ctx.arc(cp.x,cp.y,gs,0,Math.PI*2);ctx.fill();
 }
 
 // ========== Impact ==========
 function onImpact(x,y){
-  const fl=$('screenFlash');fl.style.transition='none';fl.style.opacity='.6';
-  setTimeout(()=>{fl.style.transition='opacity .6s';fl.style.opacity='0'},50);
-  impactRings.push({x,y,p:0});startAnim();
-  setTimeout(()=>spawnConverge(pW/2,pH/2,60),300);
+  var fl=$('screenFlash');fl.style.transition='none';fl.style.opacity='.6';
+  setTimeout(function(){fl.style.transition='opacity .6s';fl.style.opacity='0'},50);
+  impactRings.push({x:x,y:y,p:0});startAnim();
+  setTimeout(function(){spawnConverge(pW/2,pH/2,60)},300);
   if(navigator.vibrate)navigator.vibrate([30,50,30]);
 
-  setTimeout(()=>{
+  setTimeout(function(){
     sectorAnimating=true;sectorAnimProg=0;startAnim();
-    setTimeout(()=>sectorAnimating=false,10000);
+    setTimeout(function(){sectorAnimating=false},10000);
     createSectors();addPlanetLines();setTimeout(applyVis,100);
     $('grayVeil').classList.add('lifted');
     $('layerBtn').classList.add('vis');$('searchTrigger').classList.add('vis');
   },300);
 
-  setTimeout(()=>{
+  setTimeout(function(){
     $('stella').classList.add('vis');
   },1200);
 }
 
 function playEffect(x,y){
-  const v=$('effectVideo'),sz=110;
+  var v=$('effectVideo'),sz=110;
   v.style.width=sz+'px';v.style.height=sz+'px';v.style.left=(x-sz/2)+'px';v.style.top=(y-sz/2)+'px';
-  v.currentTime=0;v.playbackRate=3;v.classList.add('playing');v.play().catch(()=>{});
-  v.onended=()=>v.classList.remove('playing');
+  v.currentTime=0;v.playbackRate=3;v.classList.add('playing');v.play().catch(function(){});
+  v.onended=function(){v.classList.remove('playing')};
 }
 
 // ========== Search ==========
-function openSearch(){$('searchBar').classList.add('open');$('searchTrigger').classList.remove('vis');setTimeout(()=>$('searchInput').focus(),300)}
+function openSearch(){$('searchBar').classList.add('open');$('searchTrigger').classList.remove('vis');setTimeout(function(){$('searchInput').focus()},300)}
 function closeSearch(){$('searchBar').classList.remove('open');$('searchTrigger').classList.add('vis')}
-document.addEventListener('pointerdown',e=>{const b=$('searchBar');if(b&&b.classList.contains('open')&&!b.contains(e.target))closeSearch()});
-document.addEventListener('keydown',e=>{if(e.key==='Enter'&&document.activeElement===$('searchInput'))doSearch()});
+document.addEventListener('pointerdown',function(e){var b=$('searchBar');if(b&&b.classList.contains('open')&&!b.contains(e.target))closeSearch()});
+document.addEventListener('keydown',function(e){if(e.key==='Enter'&&document.activeElement===$('searchInput'))doSearch()});
 
 function doSearch(){
-  const q=$('searchInput').value.trim();if(!q)return;closeSearch();
+  var q=$('searchInput').value.trim();if(!q)return;closeSearch();
   fetch('https://nominatim.openstreetmap.org/search?format=json&q='+encodeURIComponent(q)+'&limit=1')
-    .then(r=>r.json()).then(res=>{
+    .then(function(r){return r.json()}).then(function(res){
       if(!res.length){showSR('見つかりませんでした','','mid');return}
-      const p=res[0],la=+p.lat,ln=+p.lon,nm=p.display_name.split(',').slice(0,2).join(', ');
+      var p=res[0],la=+p.lat,ln=+p.lon,nm=p.display_name.split(',').slice(0,2).join(', ');
       $('stella').classList.remove('vis');map.flyTo([la,ln],15,{duration:1});
       if(searchMarker)map.removeLayer(searchMarker);
       searchMarker=L.circleMarker([la,ln],{radius:8,color:'#fff',fillColor:GOLD,fillOpacity:.9,weight:2}).addTo(map);
-      const sec=detectSector(la,ln);showSR(nm,sec.msg,sec.type,sec.dir);
-    }).catch(()=>showSR('検索エラー','','mid'));
+      var sec=detectSector(la,ln);showSR(nm,sec.msg,sec.type,sec.dir);
+    }).catch(function(){showSR('検索エラー','','mid')});
 }
 
 function detectSector(lat,lng){
-  const from=turf.point([mapCenter[1],mapCenter[0]]),to=turf.point([lng,lat]);
-  let bearing=turf.bearing(from,to);if(bearing<0)bearing+=360;
-  const dist=turf.distance(from,to,{units:'kilometers'});
+  var from=turf.point([mapCenter[1],mapCenter[0]]),to=turf.point([lng,lat]);
+  var bearing=turf.bearing(from,to);if(bearing<0)bearing+=360;
+  var dist=turf.distance(from,to,{units:'kilometers'});
 
-  // Determine type per direction from aspectData scores
-  const st={};
+  var st={};
   if(aspectData){
-    const scores=aspectData.sScores;
-    const sorted=DIR16.map(d=>({d,s:scores[d]||0})).sort((a,b)=>b.s-a.s);
-    sorted.forEach((e,i)=>{st[e.d]=e.s<.01?'mid':i<2?'blessed':i>=14?'shadow':'mid'});
+    var scores=aspectData.sScores;
+    var sorted=DIR16.map(function(d){return{d:d,s:scores[d]||0}}).sort(function(a,b){return b.s-a.s});
+    sorted.forEach(function(e,i){st[e.d]=e.s<.01?'mid':i<2?'blessed':i>=14?'shadow':'mid'});
   } else {
-    DIR16.forEach(d=>st[d]='mid');
+    DIR16.forEach(function(d){st[d]='mid'});
   }
 
-  let matched=null;
-  DIR16.forEach((d,i)=>{
-    const c=i*22.5,s=((c-11.25)+360)%360,e=(c+11.25)%360;
+  var matched=null;
+  DIR16.forEach(function(d,i){
+    var c=i*22.5,s=((c-11.25)+360)%360,e=(c+11.25)%360;
     if(s>e){if(bearing>=s||bearing<e)matched={type:st[d],dir:d,label:DIR16_JP[d]||d}}
     else{if(bearing>=s&&bearing<e)matched={type:st[d],dir:d,label:DIR16_JP[d]||d}}
   });
   if(!matched)matched={type:'mid',dir:'N',label:'北'};
 
-  const dTxt=dist<1?Math.round(dist*1000)+'m':Math.round(dist)+'km';
-  const hdr=matched.label+'・'+dTxt;
-  const fort=aspectData&&aspectData.sFortune?aspectData.sFortune[matched.dir]:null;
-  const fJP=fort?FORTUNE_JP[fort]:null;
+  var dTxt=dist<1?Math.round(dist*1000)+'m':Math.round(dist)+'km';
+  var hdr=matched.label+'\u30FB'+dTxt;
+  var fort=aspectData&&aspectData.sFortune?aspectData.sFortune[matched.dir]:null;
+  var fJP=fort?FORTUNE_JP[fort]:null;
 
-  const msgs={
-    blessed:'✨ 吉方位（'+hdr+'）\n'+(fJP?'【'+fJP+'】に追い風が吹いている方角。':'トランジットのソフトアスペクトが集まる吉方位。'),
-    shadow:'🌙 意識方位（'+hdr+'）\n'+(fJP?'【'+fJP+'】の課題に向き合う方角。意識的に動くと成長につながる。':'ハードアスペクトが重なる方角。今日は意識して動くこと。'),
-    mid:'💫 中間方位（'+hdr+'）\n'+(fJP?'【'+fJP+'】の流れが緩やかに動いている方角。':'アスペクトが中立的な方角。'),
+  var msgs={
+    blessed:'\u2728 \u5409\u65B9\u4F4D\uFF08'+hdr+'\uFF09\n'+(fJP?'\u3010'+fJP+'\u3011\u306B\u8FFD\u3044\u98A8\u304C\u5439\u3044\u3066\u3044\u308B\u65B9\u89D2\u3002':'\u30C8\u30E9\u30F3\u30B8\u30C3\u30C8\u306E\u30BD\u30D5\u30C8\u30A2\u30B9\u30DA\u30AF\u30C8\u304C\u96C6\u307E\u308B\u5409\u65B9\u4F4D\u3002'),
+    shadow:'\uD83C\uDF19 \u610F\u8B58\u65B9\u4F4D\uFF08'+hdr+'\uFF09\n'+(fJP?'\u3010'+fJP+'\u3011\u306E\u8AB2\u984C\u306B\u5411\u304D\u5408\u3046\u65B9\u89D2\u3002\u610F\u8B58\u7684\u306B\u52D5\u304F\u3068\u6210\u9577\u306B\u3064\u306A\u304C\u308B\u3002':'\u30CF\u30FC\u30C9\u30A2\u30B9\u30DA\u30AF\u30C8\u304C\u91CD\u306A\u308B\u65B9\u89D2\u3002\u4ECA\u65E5\u306F\u610F\u8B58\u3057\u3066\u52D5\u304F\u3053\u3068\u3002'),
+    mid:'\uD83D\uDCAB \u4E2D\u9593\u65B9\u4F4D\uFF08'+hdr+'\uFF09\n'+(fJP?'\u3010'+fJP+'\u3011\u306E\u6D41\u308C\u304C\u7DE9\u3084\u304B\u306B\u52D5\u3044\u3066\u3044\u308B\u65B9\u89D2\u3002':'\u30A2\u30B9\u30DA\u30AF\u30C8\u304C\u4E2D\u7ACB\u7684\u306A\u65B9\u89D2\u3002'),
   };
   return{type:matched.type,msg:msgs[matched.type],dir:matched.dir,label:matched.label};
 }
 
-// Advice templates per category × strength
-const SR_ADVICE={
+// Advice templates per category x strength
+var SR_ADVICE={
   healing:{
-    high:'この方角に足を運ぶと心がほどける。深呼吸しながら、自分を甘やかす時間を。',
-    mid:'穏やかなエネルギーが流れている。カフェや公園でひと息つくのに良い方角。',
-    low:'癒しの波は控えめ。無理せず、家でゆっくり過ごすのも選択肢。'
+    high:'\u3053\u306E\u65B9\u89D2\u306B\u8DB3\u3092\u904B\u3076\u3068\u5FC3\u304C\u307B\u3069\u3051\u308B\u3002\u6DF1\u547C\u5438\u3057\u306A\u304C\u3089\u3001\u81EA\u5206\u3092\u7518\u3084\u304B\u3059\u6642\u9593\u3092\u3002',
+    mid:'\u7A4F\u3084\u304B\u306A\u30A8\u30CD\u30EB\u30AE\u30FC\u304C\u6D41\u308C\u3066\u3044\u308B\u3002\u30AB\u30D5\u30A7\u3084\u516C\u5712\u3067\u3072\u3068\u606F\u3064\u304F\u306E\u306B\u826F\u3044\u65B9\u89D2\u3002',
+    low:'\u7652\u3057\u306E\u6CE2\u306F\u63A7\u3048\u3081\u3002\u7121\u7406\u305B\u305A\u3001\u5BB6\u3067\u3086\u3063\u304F\u308A\u904E\u3054\u3059\u306E\u3082\u9078\u629E\u80A2\u3002'
   },
   money:{
-    high:'金運の流れが強い方角。買い物や商談に動くと良い縁がつかめそう。',
-    mid:'金運は安定圏。堅実な判断をすれば着実にプラスへ向かう方角。',
-    low:'金運は静か。今日は情報収集に徹して、行動は明日以降に。'
+    high:'\u91D1\u904B\u306E\u6D41\u308C\u304C\u5F37\u3044\u65B9\u89D2\u3002\u8CB7\u3044\u7269\u3084\u5546\u8AC7\u306B\u52D5\u304F\u3068\u826F\u3044\u7E01\u304C\u3064\u304B\u3081\u305D\u3046\u3002',
+    mid:'\u91D1\u904B\u306F\u5B89\u5B9A\u5708\u3002\u5805\u5B9F\u306A\u5224\u65AD\u3092\u3059\u308C\u3070\u7740\u5B9F\u306B\u30D7\u30E9\u30B9\u3078\u5411\u304B\u3046\u65B9\u89D2\u3002',
+    low:'\u91D1\u904B\u306F\u9759\u304B\u3002\u4ECA\u65E5\u306F\u60C5\u5831\u53CE\u96C6\u306B\u5FB9\u3057\u3066\u3001\u884C\u52D5\u306F\u660E\u65E5\u4EE5\u964D\u306B\u3002'
   },
   love:{
-    high:'恋愛運が高まる方角。出会いや再会のチャンスが潜んでいる。',
-    mid:'人との縁がゆるやかに動いている。自然体でいると良い流れに乗れる。',
-    low:'恋愛のエネルギーは内向き。自分磨きに時間を使うと吉。'
+    high:'\u604B\u611B\u904B\u304C\u9AD8\u307E\u308B\u65B9\u89D2\u3002\u51FA\u4F1A\u3044\u3084\u518D\u4F1A\u306E\u30C1\u30E3\u30F3\u30B9\u304C\u6F5C\u3093\u3067\u3044\u308B\u3002',
+    mid:'\u4EBA\u3068\u306E\u7E01\u304C\u3086\u308B\u3084\u304B\u306B\u52D5\u3044\u3066\u3044\u308B\u3002\u81EA\u7136\u4F53\u3067\u3044\u308B\u3068\u826F\u3044\u6D41\u308C\u306B\u4E57\u308C\u308B\u3002',
+    low:'\u604B\u611B\u306E\u30A8\u30CD\u30EB\u30AE\u30FC\u306F\u5185\u5411\u304D\u3002\u81EA\u5206\u78E8\u304D\u306B\u6642\u9593\u3092\u4F7F\u3046\u3068\u5409\u3002'
   },
   work:{
-    high:'仕事運の追い風。この方角で行動すると成果が出やすい。',
-    mid:'仕事は平常運。コツコツ積み上げる作業が実を結ぶ方角。',
-    low:'仕事のペースは緩やか。企画や準備に集中する日に向いている。'
+    high:'\u4ED5\u4E8B\u904B\u306E\u8FFD\u3044\u98A8\u3002\u3053\u306E\u65B9\u89D2\u3067\u884C\u52D5\u3059\u308B\u3068\u6210\u679C\u304C\u51FA\u3084\u3059\u3044\u3002',
+    mid:'\u4ED5\u4E8B\u306F\u5E73\u5E38\u904B\u3002\u30B3\u30C4\u30B3\u30C4\u7A4D\u307F\u4E0A\u3052\u308B\u4F5C\u696D\u304C\u5B9F\u3092\u7D50\u3076\u65B9\u89D2\u3002',
+    low:'\u4ED5\u4E8B\u306E\u30DA\u30FC\u30B9\u306F\u7DE9\u3084\u304B\u3002\u4F01\u753B\u3084\u6E96\u5099\u306B\u96C6\u4E2D\u3059\u308B\u65E5\u306B\u5411\u3044\u3066\u3044\u308B\u3002'
   },
   communication:{
-    high:'言葉が冴える方角。プレゼンや相談事はこの方角で。',
-    mid:'コミュニケーションは穏やか。聞き役に回ると信頼が深まる。',
-    low:'言葉より行動で伝わる日。メッセージは簡潔に。'
+    high:'\u8A00\u8449\u304C\u51B4\u3048\u308B\u65B9\u89D2\u3002\u30D7\u30EC\u30BC\u30F3\u3084\u76F8\u8AC7\u4E8B\u306F\u3053\u306E\u65B9\u89D2\u3067\u3002',
+    mid:'\u30B3\u30DF\u30E5\u30CB\u30B1\u30FC\u30B7\u30E7\u30F3\u306F\u7A4F\u3084\u304B\u3002\u805E\u304D\u5F79\u306B\u56DE\u308B\u3068\u4FE1\u983C\u304C\u6DF1\u307E\u308B\u3002',
+    low:'\u8A00\u8449\u3088\u308A\u884C\u52D5\u3067\u4F1D\u308F\u308B\u65E5\u3002\u30E1\u30C3\u30BB\u30FC\u30B8\u306F\u7C21\u6F54\u306B\u3002'
   }
 };
-const SR_CAT_ORDER=['healing','money','love','work','communication'];
-const SR_CAT_LABEL={healing:'癒し',money:'金運',love:'恋愛',work:'仕事',communication:'話す'};
-let srDir=null;
+var SR_CAT_ORDER=['healing','money','love','work','communication'];
+var SR_CAT_LABEL={healing:'\u7652\u3057',money:'\u91D1\u904B',love:'\u604B\u611B',work:'\u4ED5\u4E8B',communication:'\u8A71\u3059'};
+var srDir=null;
 
 function showSR(name,msg,type,dir){
   $('srName').textContent=name;
-  const s=$('srSector');s.textContent=msg;
+  var s=$('srSector');s.textContent=msg;
   s.style.color=type==='blessed'?GOLD:type==='shadow'?'#8B7AE8':'#6B8AAB';
   srDir=dir;
-  // Build tabs
-  const tabs=$('srTabs');
-  tabs.innerHTML=SR_CAT_ORDER.map((c,i)=>
-    '<div class="sr-tab'+(i===0?' active':'')+'" data-cat="'+c+'" onclick="switchSRTab(this)">'+SR_CAT_LABEL[c]+'</div>'
-  ).join('');
-  // Show first tab advice
+  var tabs=$('srTabs');
+  tabs.innerHTML=SR_CAT_ORDER.map(function(c,i){
+    return '<div class="sr-tab'+(i===0?' active':'')+'" data-cat="'+c+'" onclick="switchSRTab(this)">'+SR_CAT_LABEL[c]+'</div>';
+  }).join('');
   showSRAdvice(SR_CAT_ORDER[0]);
   $('srPopup').classList.add('vis');
 }
 
 function switchSRTab(el){
-  document.querySelectorAll('.sr-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.sr-tab').forEach(function(t){t.classList.remove('active')});
   el.classList.add('active');
   showSRAdvice(el.dataset.cat);
 }
 
-const ASPECT_JP={conjunction:'合',opposition:'衝',trine:'三合',square:'矩',sextile:'六分',quincunx:'不調和'};
-
 function showSRAdvice(cat){
-  const adv=$('srAdvice'),basis=$('srBasis');if(!adv||!srDir)return;
-  const fScores=aspectData?aspectData.fScores:{};
-  const score=(fScores[cat]&&fScores[cat][srDir])||0;
-  const allScores=DIR16.map(d=>(fScores[cat]&&fScores[cat][d])||0).sort((a,b)=>b-a);
-  const rank=allScores.indexOf(score);
-  const level=rank<4?'high':rank<12?'mid':'low';
-  const tmpl=SR_ADVICE[cat]||SR_ADVICE.healing;
+  var adv=$('srAdvice');if(!adv||!srDir)return;
+  var fScores=aspectData?aspectData.fScores:{};
+  var score=(fScores[cat]&&fScores[cat][srDir])||0;
+  var allScores=DIR16.map(function(d){return(fScores[cat]&&fScores[cat][d])||0}).sort(function(a,b){return b-a});
+  var rank=allScores.indexOf(score);
+  var level=rank<4?'high':rank<12?'mid':'low';
+  var tmpl=SR_ADVICE[cat]||SR_ADVICE.healing;
   adv.textContent=tmpl[level];
 }
 function closeSR(){$('srPopup').classList.remove('vis');if(searchMarker){map.removeLayer(searchMarker);searchMarker=null}}
 
 // ========== Layer Panel ==========
-function toggleLP(){const p=$('layerPanel'),b=$('layerBtn');p.classList.toggle('open');b.classList.toggle('active');
-  if(p.classList.contains('open'))setTimeout(()=>document.addEventListener('pointerdown',closeLPOut),0)}
-function closeLPOut(e){const p=$('layerPanel'),b=$('layerBtn');if(!p.contains(e.target)&&!b.contains(e.target)){p.classList.remove('open');b.classList.remove('active');document.removeEventListener('pointerdown',closeLPOut)}}
-function toggleLT(el){const l=el.dataset.layer;el.classList.toggle('on');layerVis[l]=el.classList.contains('on');applyVis()}
-function toggleGT(el){const g=el.dataset.group;el.classList.toggle('on');groupVis[g]=el.classList.contains('on');applyVis()}
+function toggleLP(){var p=$('layerPanel'),b=$('layerBtn');p.classList.toggle('open');b.classList.toggle('active');
+  if(p.classList.contains('open'))setTimeout(function(){document.addEventListener('pointerdown',closeLPOut)},0)}
+function closeLPOut(e){var p=$('layerPanel'),b=$('layerBtn');if(!p.contains(e.target)&&!b.contains(e.target)){p.classList.remove('open');b.classList.remove('active');document.removeEventListener('pointerdown',closeLPOut)}}
+function toggleLT(el){var l=el.dataset.layer;el.classList.toggle('on');layerVis[l]=el.classList.contains('on');applyVis()}
+function toggleGT(el){var g=el.dataset.group;el.classList.toggle('on');groupVis[g]=el.classList.contains('on');applyVis()}
 
 function setFortune(cat){
   fortuneFilt=cat==='all'?null:(fortuneFilt===cat?null:cat);
-  document.querySelectorAll('.fp-item').forEach(el=>el.classList.toggle('active',fortuneFilt?el.dataset.fortune===fortuneFilt:el.dataset.fortune==='all'));
+  document.querySelectorAll('.fp-item').forEach(function(el){el.classList.toggle('active',fortuneFilt?el.dataset.fortune===fortuneFilt:el.dataset.fortune==='all')});
   applyVis();
-  const ov=$('restOverlay');
+  var ov=$('restOverlay');
   if(fortuneFilt){
-    const fs=aspectData&&aspectData.fScores&&aspectData.fScores[fortuneFilt]||{};
-    if(!Object.values(fs).some(v=>v>.01)){$('restText').textContent=FORTUNE_REST[fortuneFilt]||'';ov.classList.add('vis')}
+    var fs=aspectData&&aspectData.fScores&&aspectData.fScores[fortuneFilt]||{};
+    if(!Object.values(fs).some(function(v){return v>.01})){$('restText').textContent=FORTUNE_REST[fortuneFilt]||'';ov.classList.add('vis')}
     else ov.classList.remove('vis');
   }else ov.classList.remove('vis');
 }
 
 function applyVis(){
   if(!chartGroups||!map)return;
-  ['natal','progressed','transit'].forEach(k=>{
-    const g=chartGroups[k];if(!g)return;
+  ['natal','progressed','transit'].forEach(function(k){
+    var g=chartGroups[k];if(!g)return;
     if(layerVis[k]){if(!map.hasLayer(g))map.addLayer(g)}else{if(map.hasLayer(g))map.removeLayer(g)}
   });
-  if(planetMarkers)planetMarkers.forEach(ps=>{
-    let pg=null;for(const g in PLANET_GROUPS)if(PLANET_GROUPS[g].includes(ps.planet)){pg=g;break}
-    const lOn=layerVis[ps.layer],gOn=pg?groupVis[pg]:true;
-    const fOn=!fortuneFilt||(FORTUNE_PLANETS[fortuneFilt]||[]).includes(ps.planet);
-    const full=lOn&&gOn&&fOn,dim=lOn&&gOn&&!fOn&&!!fortuneFilt;
+  if(planetMarkers)planetMarkers.forEach(function(ps){
+    var pg=null;for(var g in PLANET_GROUPS)if(PLANET_GROUPS[g].indexOf(ps.planet)>=0){pg=g;break}
+    var lOn=layerVis[ps.layer],gOn=pg?groupVis[pg]:true;
+    var fOn=!fortuneFilt||(FORTUNE_PLANETS[fortuneFilt]||[]).indexOf(ps.planet)>=0;
+    var full=lOn&&gOn&&fOn,dim=lOn&&gOn&&!fOn&&!!fortuneFilt;
     ps.marker.setOpacity(full?1:dim?.1:0);
     if(ps.line)ps.line.setStyle({opacity:full?ps.baseOp:dim?.05:0});
   });
   if(geoSectors.length){
-    const as=getActiveScores(),ranks=computeRanks(as);
-    geoSectors.forEach(s=>{
+    var as=getActiveScores(),ranks=computeRanks(as);
+    geoSectors.forEach(function(s){
       if(!s.poly)return;
-      const st=layerVis.sectors?scoreToStyle(as[s.dir]||0,ranks[s.dir]).target:{fillOpacity:0,opacity:0};
-      s.poly.setStyle(st);if(s.wraps)s.wraps.forEach(w=>w.setStyle(st));
+      var st=layerVis.sectors?scoreToStyle(as[s.dir]||0,ranks[s.dir]).target:{fillOpacity:0,opacity:0};
+      s.poly.setStyle(st);if(s.wraps)s.wraps.forEach(function(w){w.setStyle(st)});
     });
   }
-  if(baseOverlays.length)baseOverlays.forEach(l=>{if(l.setOpacity)l.setOpacity(layerVis.compass?1:0);else if(l.setStyle)l.setStyle({opacity:layerVis.compass?.35:0})});
-  // Trigger planet symbol position update
+  if(baseOverlays.length)baseOverlays.forEach(function(l){if(l.setOpacity)l.setOpacity(layerVis.compass?1:0);else if(l.setStyle)l.setStyle({opacity:layerVis.compass?.35:0})});
   map.fire('moveend');
 }
 
 // ========== Fortune Sheet ==========
 function getActiveScores(){
   if(!aspectData)return{};
-  const ck=fsSrc==='transit'?['tSoft','tHard']:fsSrc==='progressed'?['pSoft','pHard']:COMP_KEYS;
-  const dc=fsTab==='all'?aspectData.sComp:(aspectData.fComp&&aspectData.fComp[fsTab])||{};
-  const s={};DIR16.forEach(d=>{const c=dc[d]||emptyComp();let t=0;ck.forEach(k=>t+=(c[k]||0));s[d]=t});return s;
+  var ck=fsSrc==='transit'?['tSoft','tHard']:fsSrc==='progressed'?['pSoft','pHard']:COMP_KEYS;
+  var dc=fsTab==='all'?aspectData.sComp:(aspectData.fComp&&aspectData.fComp[fsTab])||{};
+  var s={};DIR16.forEach(function(d){var c=dc[d]||emptyComp();var t=0;ck.forEach(function(k){t+=(c[k]||0)});s[d]=t});return s;
 }
 
-const SRC_JP={combined:'合計',transit:'トランジット',progressed:'プログレス'};
-const CAT_JP={all:'総合',healing:'癒し',money:'金運',love:'恋愛',work:'仕事',communication:'話す'};
+var SRC_JP={combined:'\u5408\u8A08',transit:'\u30C8\u30E9\u30F3\u30B8\u30C3\u30C8',progressed:'\u30D7\u30ED\u30B0\u30EC\u30B9'};
+var CAT_JP={all:'\u7DCF\u5408',healing:'\u7652\u3057',money:'\u91D1\u904B',love:'\u604B\u611B',work:'\u4ED5\u4E8B',communication:'\u8A71\u3059'};
 
 function toggleFS(){
   fsOpen=!fsOpen;$('fsSheet').classList.toggle('open',fsOpen);
-  $('fsPull').innerHTML=fsOpen?'▼ 運勢方位':'▲ 運勢方位';
+  $('fsPull').innerHTML=fsOpen?'\u25BC \u904B\u52E2\u65B9\u4F4D':'\u25B2 \u904B\u52E2\u65B9\u4F4D';
   if(fsOpen)renderFS();
 }
 
 function switchSrc(tab){
   fsSrc=tab;sectorView=tab;
-  document.querySelectorAll('#fsSrcTabs .fs-tab').forEach(el=>el.classList.toggle('active',el.dataset.s===tab));
-  const lg=$('fsLegend');
-  if(tab==='combined')lg.innerHTML='<span style="color:#C9A84C">● T柔</span><span style="color:#6B5CE7">● T剛</span><span style="color:#4CB8B0">● P柔</span><span style="color:#E74C6B">● P剛</span>';
-  else if(tab==='transit')lg.innerHTML='<span style="color:#C9A84C">● T柔</span><span style="color:#6B5CE7">● T剛</span>';
-  else lg.innerHTML='<span style="color:#4CB8B0">● P柔</span><span style="color:#E74C6B">● P剛</span>';
+  document.querySelectorAll('#fsSrcTabs .fs-tab').forEach(function(el){el.classList.toggle('active',el.dataset.s===tab)});
+  var lg=$('fsLegend');
+  if(tab==='combined')lg.innerHTML='<span style="color:#C9A84C">\u25CF T\u67D4</span><span style="color:#6B5CE7">\u25CF T\u525B</span><span style="color:#4CB8B0">\u25CF P\u67D4</span><span style="color:#E74C6B">\u25CF P\u525B</span>';
+  else if(tab==='transit')lg.innerHTML='<span style="color:#C9A84C">\u25CF T\u67D4</span><span style="color:#6B5CE7">\u25CF T\u525B</span>';
+  else lg.innerHTML='<span style="color:#4CB8B0">\u25CF P\u67D4</span><span style="color:#E74C6B">\u25CF P\u525B</span>';
   renderFS();applyVis();updateFFLabel();
 }
 
 function switchCat(tab){
-  fsTab=tab;document.querySelectorAll('#fsCatTabs .fs-tab').forEach(el=>el.classList.toggle('active',el.dataset.f===tab));
+  fsTab=tab;document.querySelectorAll('#fsCatTabs .fs-tab').forEach(function(el){el.classList.toggle('active',el.dataset.f===tab)});
   renderFS();updateFFLabel();applyVis();
 }
 
 function renderFS(){
-  const body=$('fsBody');if(!body||!aspectData)return;
-  const ck=fsSrc==='transit'?['tSoft','tHard']:fsSrc==='progressed'?['pSoft','pHard']:COMP_KEYS;
-  const dc=fsTab==='all'?aspectData.sComp:(aspectData.fComp&&aspectData.fComp[fsTab])||{};
-  const dt={};DIR16.forEach(d=>{const c=dc[d]||emptyComp();let t=0;ck.forEach(k=>t+=(c[k]||0));dt[d]=t});
+  var body=$('fsBody');if(!body||!aspectData)return;
+  var ck=fsSrc==='transit'?['tSoft','tHard']:fsSrc==='progressed'?['pSoft','pHard']:COMP_KEYS;
+  var dc=fsTab==='all'?aspectData.sComp:(aspectData.fComp&&aspectData.fComp[fsTab])||{};
+  var dt={};DIR16.forEach(function(d){var c=dc[d]||emptyComp();var t=0;ck.forEach(function(k){t+=(c[k]||0)});dt[d]=t});
 
   function pct(v){return v<=5?(v/5)*(100*5/6):(5/6)*100+(1/6)*100*Math.min((v-5)/5,1)}
-  let ticks='';for(let t=1;t<=5;t++)ticks+=`<div class="fs-tick" style="left:${t/6*100}%"></div>`;
-  const sorted=DIR16.slice().sort((a,b)=>dt[b]-dt[a]);
+  var ticks='';for(var t=1;t<=5;t++)ticks+='<div class="fs-tick" style="left:'+t/6*100+'%"></div>';
+  var sorted=DIR16.slice().sort(function(a,b){return dt[b]-dt[a]});
 
-  let html='';
-  sorted.forEach(dir=>{
-    const total=dt[dir];if(total<.01)return;
-    const c=dc[dir]||emptyComp(),p=pct(total);
-    let segs='';ck.forEach(k=>{const v=c[k]||0;if(v<.001)return;segs+=`<div class="fs-seg" style="width:${v/total*100}%;background:${COMP_COLORS[k].color}"></div>`});
-    let badge='';if(fsTab==='all'&&aspectData.sFortune){const cat=aspectData.sFortune[dir];if(cat)badge=`<span class="fs-badge">${FORTUNE_JP[cat]||''}</span>`}
-    html+=`<div class="fs-row" onclick="flashSec('${dir}')"><div class="fs-dir">${DIR16_JP[dir]||dir}</div><div class="fs-bar-wrap">${ticks}<div class="fs-stack" style="width:${p}%">${segs}</div></div><div class="fs-score">${total.toFixed(2)}${badge}</div></div>`;
+  var html='';
+  sorted.forEach(function(dir){
+    var total=dt[dir];if(total<.01)return;
+    var c=dc[dir]||emptyComp(),p=pct(total);
+    var segs='';ck.forEach(function(k){var v=c[k]||0;if(v<.001)return;segs+='<div class="fs-seg" style="width:'+v/total*100+'%;background:'+COMP_COLORS[k].color+'"></div>'});
+    var badge='';if(fsTab==='all'&&aspectData.sFortune){var cat=aspectData.sFortune[dir];if(cat)badge='<span class="fs-badge">'+(FORTUNE_JP[cat]||'')+'</span>'}
+    html+='<div class="fs-row" onclick="flashSec(\''+dir+'\')"><div class="fs-dir">'+(DIR16_JP[dir]||dir)+'</div><div class="fs-bar-wrap">'+ticks+'<div class="fs-stack" style="width:'+p+'%">'+segs+'</div></div><div class="fs-score">'+total.toFixed(2)+badge+'</div></div>';
   });
 
-  if(fsTab!=='all'&&DIR16.every(d=>dt[d]<.01))
-    html=`<div style="text-align:center;padding:20px 10px;color:#888;font-size:12px;line-height:1.8;white-space:pre-line">🌙\n${FORTUNE_REST[fsTab]||''}</div>`;
+  if(fsTab!=='all'&&DIR16.every(function(d){return dt[d]<.01}))
+    html='<div style="text-align:center;padding:20px 10px;color:#888;font-size:12px;line-height:1.8;white-space:pre-line">\uD83C\uDF19\n'+(FORTUNE_REST[fsTab]||'')+'</div>';
   body.innerHTML=html;
 }
 
 function flashSec(dir){
   if(fsOpen)toggleFS();
-  const sec=geoSectors.find(s=>s.dir===dir);if(!sec||!sec.poly)return;
-  const polys=[sec.poly,...(sec.wraps||[])];
-  const flashS={color:'#26D0CE',fillColor:'#26D0CE',fillOpacity:.40,opacity:.9,weight:3};
-  const dimS={color:'#26D0CE',fillColor:'#26D0CE',fillOpacity:0,opacity:0,weight:0};
-  let cnt=0;const iv=setInterval(()=>{
-    polys.forEach(p=>p.setStyle(cnt%2===0?flashS:dimS));cnt++;
-    if(cnt>=6){clearInterval(iv);const as=getActiveScores(),ranks=computeRanks(as);
-      const ss=scoreToStyle(sec.score||0,ranks[sec.dir]);polys.forEach(p=>p.setStyle(ss.target))}
+  var sec=geoSectors.find(function(s){return s.dir===dir});if(!sec||!sec.poly)return;
+  var polys=[sec.poly].concat(sec.wraps||[]);
+  var flashS={color:'#26D0CE',fillColor:'#26D0CE',fillOpacity:.40,opacity:.9,weight:3};
+  var dimS={color:'#26D0CE',fillColor:'#26D0CE',fillOpacity:0,opacity:0,weight:0};
+  var cnt=0;var iv=setInterval(function(){
+    polys.forEach(function(p){p.setStyle(cnt%2===0?flashS:dimS)});cnt++;
+    if(cnt>=6){clearInterval(iv);var as=getActiveScores(),ranks=computeRanks(as);
+      var ss=scoreToStyle(sec.score||0,ranks[sec.dir]);polys.forEach(function(p){p.setStyle(ss.target)})}
   },500);
 }
 
 function updateFFLabel(){
-  const tag=$('ffTag'),bars=$('ffBars');if(!tag||!bars)return;
-  tag.textContent=(SRC_JP[fsSrc]||'合計')+' / '+(CAT_JP[fsTab]||'総合');
+  var tag=$('ffTag'),bars=$('ffBars');if(!tag||!bars)return;
+  tag.textContent=(SRC_JP[fsSrc]||'\u5408\u8A08')+' / '+(CAT_JP[fsTab]||'\u7DCF\u5408');
   if(!aspectData){bars.innerHTML='';return}
-  const ck=fsSrc==='transit'?['tSoft','tHard']:fsSrc==='progressed'?['pSoft','pHard']:COMP_KEYS;
-  const dc=fsTab==='all'?aspectData.sComp:(aspectData.fComp&&aspectData.fComp[fsTab])||{};
-  const dt={};DIR16.forEach(d=>{const c=dc[d]||emptyComp();let t=0;ck.forEach(k=>t+=(c[k]||0));dt[d]=t});
-  const sorted=DIR16.slice().sort((a,b)=>dt[b]-dt[a]).filter(d=>dt[d]>.01).slice(0,2);
-  const mx=sorted.length?dt[sorted[0]]:1;
-  bars.innerHTML=sorted.map(d=>`<div class="ff-row"><div class="ff-dir">${DIR16_JP[d]||d}</div><div class="ff-bw"><div class="ff-b" style="width:${Math.min(100,dt[d]/mx*100)}%"></div></div><div class="ff-sc">${dt[d].toFixed(2)}</div></div>`).join('');
+  var ck=fsSrc==='transit'?['tSoft','tHard']:fsSrc==='progressed'?['pSoft','pHard']:COMP_KEYS;
+  var dc=fsTab==='all'?aspectData.sComp:(aspectData.fComp&&aspectData.fComp[fsTab])||{};
+  var dt={};DIR16.forEach(function(d){var c=dc[d]||emptyComp();var t=0;ck.forEach(function(k){t+=(c[k]||0)});dt[d]=t});
+  var sorted=DIR16.slice().sort(function(a,b){return dt[b]-dt[a]}).filter(function(d){return dt[d]>.01}).slice(0,2);
+  var mx=sorted.length?dt[sorted[0]]:1;
+  bars.innerHTML=sorted.map(function(d){return '<div class="ff-row"><div class="ff-dir">'+(DIR16_JP[d]||d)+'</div><div class="ff-bw"><div class="ff-b" style="width:'+Math.min(100,dt[d]/mx*100)+'%"></div></div><div class="ff-sc">'+dt[d].toFixed(2)+'</div></div>'}).join('');
 }
 
 // Fortune sheet swipe
 (function(){
-  const sh=$('fsSheet'),pl=$('fsPull');if(!sh)return;
-  let sy=0,dr=false;
-  function hs(y){sy=y;dr=true}function he(y){if(!dr)return;dr=false;const dy=y-sy;if(dy>40&&fsOpen)toggleFS();if(dy<-40&&!fsOpen)toggleFS()}
-  [sh,pl].forEach(el=>{if(!el)return;
-    el.addEventListener('touchstart',e=>hs(e.touches[0].clientY),{passive:true});
-    el.addEventListener('touchend',e=>he(e.changedTouches[0].clientY),{passive:true});
-    el.addEventListener('mousedown',e=>hs(e.clientY));el.addEventListener('mouseup',e=>he(e.clientY));
+  var sh=$('fsSheet'),pl=$('fsPull');if(!sh)return;
+  var sy=0,dr=false;
+  function hs(y){sy=y;dr=true}function he(y){if(!dr)return;dr=false;var dy=y-sy;if(dy>40&&fsOpen)toggleFS();if(dy<-40&&!fsOpen)toggleFS()}
+  [sh,pl].forEach(function(el){if(!el)return;
+    el.addEventListener('touchstart',function(e){hs(e.touches[0].clientY)},{passive:true});
+    el.addEventListener('touchend',function(e){he(e.changedTouches[0].clientY)},{passive:true});
+    el.addEventListener('mousedown',function(e){hs(e.clientY)});el.addEventListener('mouseup',function(e){he(e.clientY)});
   });
 })();
 
-// ========== Viewpoint Panel ==========
-const VP_KEY='solara_vp_slots',VP_LAST='solara_vp_last';
-const VP_ICONS=['🏠','🏢','⭐','📍'];
-const VP_ICON_ALL=['🏠','🏢','⭐','📍','💼','🏫','🏥','☕','🍽','🛒','🏖','💒','🎯','🚉','🌳','❤️','🐱','🐶','🐰','🦊','🐻','🐼','🐨','🦁','🐯','🐸','🐧','🦉','🦋','🐬','🐾','🦄'];
-
-function vpLoadSlots(){try{return JSON.parse(localStorage.getItem(VP_KEY))||[]}catch{return[]}}
-function vpSaveSlots(s){localStorage.setItem(VP_KEY,JSON.stringify(s))}
-
-function vpSyncHome(){
+// ========== Generic SlotManager (shared by VP and LOC) ==========
+function SlotManager(cfg){
+  this.storageKey = cfg.storageKey;
+  this.containerEl = cfg.containerEl;
+  this.maxSlots = cfg.maxSlots || 5;
+  this.defaultNames = cfg.defaultNames || [];
+  this.defaultIcon = cfg.defaultIcon || '\uD83D\uDCCD';
+  this.onSelect = cfg.onSelect || function(){};
+  this.emptyMsg = cfg.emptyMsg || '\u4FDD\u5B58\u5730\u70B9\u306A\u3057';
+  this.homeEditMsg = cfg.homeEditMsg || '\u30DB\u30FC\u30E0\u5730\u70B9\u306FSANCTUARY\u3067\u5909\u66F4\u3057\u3066\u304F\u3060\u3055\u3044';
+  this.renamePrompt = cfg.renamePrompt || '\u5730\u70B9\u306E\u540D\u79F0\u3092\u5165\u529B';
+  this.fullMsg = cfg.fullMsg || null;
+  this.showMove = cfg.showMove !== false;
+  this.showIconPicker = cfg.showIconPicker !== false;
+  this.activeSub = -1;
+}
+SlotManager.prototype.load = function(){try{return JSON.parse(localStorage.getItem(this.storageKey))||[]}catch(e){return[]}};
+SlotManager.prototype.save = function(s){localStorage.setItem(this.storageKey,JSON.stringify(s))};
+SlotManager.prototype.syncHome = function(){
   if(!_prof||!_prof.homeName||isNaN(_prof.homeLat)||isNaN(_prof.homeLng))return;
-  const slots=vpLoadSlots();
-  const h={name:_prof.homeName,lat:_prof.homeLat,lng:_prof.homeLng,icon:'🏠',isHome:true};
-  if(slots.length>0&&slots[0].isHome){slots[0]=h}else{slots.unshift(h);if(slots.length>5)slots.length=5}
-  vpSaveSlots(slots);
-}
-vpSyncHome();
-function vpLoadLast(){try{const v=JSON.parse(localStorage.getItem(VP_LAST));return v&&v.length===2?v:null}catch{return null}}
-function vpSaveLast(c){localStorage.setItem(VP_LAST,JSON.stringify(c))}
-
-function toggleVP(){const p=$('vpPanel'),b=$('vpBtn');p.classList.toggle('open');b.classList.toggle('active');if(p.classList.contains('open'))vpRender()}
-document.addEventListener('pointerdown',e=>{const p=$('vpPanel'),b=$('vpBtn');if(p&&p.classList.contains('open')&&!p.contains(e.target)&&!b.contains(e.target)){p.classList.remove('open');b.classList.remove('active');vpSub=-1}});
-
-function vpGeo(){
-  if(!navigator.geolocation)return;
-  navigator.geolocation.getCurrentPosition(p=>rebuild([p.coords.latitude,p.coords.longitude],true),()=>{},{enableHighAccuracy:true,timeout:8000});
-}
-
-function vpSave(){
-  const slots=vpLoadSlots();const maxSlots=5;
-  if(slots.length>=maxSlots){vpMsg('保存は'+(maxSlots-(slots[0]&&slots[0].isHome?1:0))+'件までです。\n不要な地点を削除してから追加してください。');return}
-  const c=mapCenter,dn=['職場','お気に入り','スポット','場所'],userIdx=slots.length-(slots[0]&&slots[0].isHome?1:0),nm=dn[userIdx]||'スポット';
-  fetch('https://nominatim.openstreetmap.org/reverse?format=json&lat='+c[0]+'&lon='+c[1]+'&zoom=16')
-    .then(r=>r.json()).then(d=>{const a=d.address||{};const disp=a.suburb||a.neighbourhood||a.city||a.town||a.village||nm;
-      slots.push({name:disp.substring(0,8),lat:c[0],lng:c[1],icon:VP_ICONS[slots.length]||'📍'});vpSaveSlots(slots);vpRender()})
-    .catch(()=>{slots.push({name:nm,lat:c[0],lng:c[1],icon:VP_ICONS[slots.length]||'📍'});vpSaveSlots(slots);vpRender()});
-}
-
-function vpMsg(txt){
-  const coord=$('vpCoord');if(!coord)return;
-  const old=coord.parentElement.querySelector('.vp-msg');if(old)old.remove();
-  const m=document.createElement('div');m.className='vp-msg';m.textContent=txt;
-  coord.parentElement.insertBefore(m,coord);setTimeout(()=>{if(m.parentElement)m.remove()},3000);
-}
-
-function vpRender(){
-  const c=$('vpSlots');if(!c)return;const slots=vpLoadSlots();c.innerHTML='';
-  if(!slots.length){c.innerHTML='<div style="font-size:10px;color:#555;padding:4px;text-align:center">保存地点なし</div>';return}
-  slots.forEach((s,i)=>{
-    const isA=Math.abs(s.lat-mapCenter[0])<.001&&Math.abs(s.lng-mapCenter[1])<.001;
-    const row=document.createElement('div');row.className='vp-row'+(isA?' active':'');
+  var slots=this.load();
+  var h={name:_prof.homeName,lat:_prof.homeLat,lng:_prof.homeLng,icon:'\uD83C\uDFE0',isHome:true};
+  if(slots.length>0&&slots[0].isHome){slots[0]=h}else{slots.unshift(h);if(slots.length>this.maxSlots)slots.length=this.maxSlots}
+  this.save(slots);
+};
+SlotManager.prototype.saveCurrentLocation = function(center){
+  var self=this;
+  var slots=this.load();
+  var homeCount=slots[0]&&slots[0].isHome?1:0;
+  if(slots.length>=this.maxSlots){
+    vpMsg(this.fullMsg||('\u4FDD\u5B58\u306F'+(this.maxSlots-homeCount)+'\u4EF6\u307E\u3067\u3067\u3059\u3002\n\u4E0D\u8981\u306A\u5730\u70B9\u3092\u524A\u9664\u3057\u3066\u304B\u3089\u8FFD\u52A0\u3057\u3066\u304F\u3060\u3055\u3044\u3002'));
+    return;
+  }
+  var userIdx=slots.length-homeCount;
+  var nm=this.defaultNames[userIdx]||'\u30B9\u30DD\u30C3\u30C8';
+  fetch('https://nominatim.openstreetmap.org/reverse?format=json&lat='+center[0]+'&lon='+center[1]+'&zoom=16')
+    .then(function(r){return r.json()}).then(function(d){
+      var a=d.address||{};var disp=a.suburb||a.neighbourhood||a.city||a.town||a.village||nm;
+      slots.push({name:disp.substring(0,8),lat:center[0],lng:center[1],icon:self.defaultIcon});self.save(slots);self.render();
+    })
+    .catch(function(){slots.push({name:nm,lat:center[0],lng:center[1],icon:self.defaultIcon});self.save(slots);self.render()});
+};
+SlotManager.prototype.render = function(){
+  var c=$(this.containerEl);if(!c)return;
+  var self=this;var slots=this.load();c.innerHTML='';
+  if(!slots.length){c.innerHTML='<div style="font-size:10px;color:#555;padding:4px;text-align:center">'+this.emptyMsg+'</div>';return}
+  slots.forEach(function(s,i){
+    var isA=Math.abs(s.lat-mapCenter[0])<.001&&Math.abs(s.lng-mapCenter[1])<.001;
+    var row=document.createElement('div');row.className='vp-row'+(isA?' active':'');
     if(s.isHome){
-      row.innerHTML=`<span class="vp-row-icon">${s.icon}</span><span class="vp-row-label">${s.name}</span><span style="font-size:8px;color:#F9D976;letter-spacing:1px;opacity:.6">HOME</span>`;
+      row.innerHTML='<span class="vp-row-icon">'+s.icon+'</span><span class="vp-row-label">'+s.name+'</span><span style="font-size:8px;color:#F9D976;letter-spacing:1px;opacity:.6">HOME</span>';
     }else{
-      row.innerHTML=`<span class="vp-row-icon">${s.icon}</span><span class="vp-row-label">${s.name}</span><span class="vp-row-more" onclick="event.stopPropagation();vpSub=${vpSub===i?-1:i};vpRender()">⋯</span>`;
+      row.innerHTML='<span class="vp-row-icon">'+s.icon+'</span><span class="vp-row-label">'+s.name+'</span><span class="vp-row-more" onclick="event.stopPropagation();'+self._ref()+'.toggleSub('+i+')">⋯</span>';
     }
-    row.onclick=()=>{rebuild([s.lat,s.lng],true);$('vpPanel').classList.remove('open');$('vpBtn').classList.remove('active')};
-    if(vpSub===i&&!s.isHome){
-      const sub=document.createElement('div');sub.className='vp-sub';
-      const up=i===0?' style="opacity:.25;pointer-events:none"':'',dn=i===slots.length-1?' style="opacity:.25;pointer-events:none"':'';
-      sub.innerHTML=`<div class="vp-sub-item"${up} onclick="event.stopPropagation();vpMove(${i},-1)"><span>↑</span> 上に移動</div>`
-        +`<div class="vp-sub-item"${dn} onclick="event.stopPropagation();vpMove(${i},1)"><span>↓</span> 下に移動</div>`
-        +`<div class="vp-sub-item" onclick="event.stopPropagation();vpChIcon(${i})"><span>🎨</span> アイコン変更</div>`
-        +`<div class="vp-sub-item" onclick="event.stopPropagation();vpRename(${i})"><span>✏️</span> 名称変更</div>`
-        +`<div class="vp-sub-item danger" onclick="event.stopPropagation();vpDel(${i})"><span>🗑</span> 削除</div>`;
+    row.onclick=function(){self.onSelect(s)};
+    if(self.activeSub===i&&!s.isHome){
+      var sub=document.createElement('div');sub.className='vp-sub';
+      var html='';
+      if(self.showMove){
+        var up=i===0?' style="opacity:.25;pointer-events:none"':'';
+        var dn=i===slots.length-1?' style="opacity:.25;pointer-events:none"':'';
+        html+='<div class="vp-sub-item"'+up+' onclick="event.stopPropagation();'+self._ref()+'.move('+i+',-1)"><span>\u2191</span> \u4E0A\u306B\u79FB\u52D5</div>';
+        html+='<div class="vp-sub-item"'+dn+' onclick="event.stopPropagation();'+self._ref()+'.move('+i+',1)"><span>\u2193</span> \u4E0B\u306B\u79FB\u52D5</div>';
+      }
+      if(self.showIconPicker){
+        html+='<div class="vp-sub-item" onclick="event.stopPropagation();'+self._ref()+'.chIcon('+i+')"><span>\uD83C\uDFA8</span> \u30A2\u30A4\u30B3\u30F3\u5909\u66F4</div>';
+      }
+      html+='<div class="vp-sub-item" onclick="event.stopPropagation();'+self._ref()+'.rename('+i+')"><span>\u270F\uFE0F</span> \u540D\u79F0\u5909\u66F4</div>';
+      html+='<div class="vp-sub-item danger" onclick="event.stopPropagation();'+self._ref()+'.del('+i+')"><span>\uD83D\uDDD1</span> \u524A\u9664</div>';
+      sub.innerHTML=html;
       row.appendChild(sub);
     }
     c.appendChild(row);
   });
-  const coord=$('vpCoord');if(coord)coord.textContent=mapCenter[0].toFixed(4)+', '+mapCenter[1].toFixed(4);
-}
-
-function vpMove(i,dir){const s=vpLoadSlots(),t=i+dir;if(t<0||t>=s.length)return;if((i===0&&s[0].isHome)||(t===0&&s[0].isHome))return;[s[i],s[t]]=[s[t],s[i]];vpSaveSlots(s);vpSub=t;vpRender()}
-function vpRename(i){const s=vpLoadSlots();if(!s[i]||s[i].isHome)return;const n=prompt('地点の名称を入力',s[i].name);if(n!==null&&n.trim()){s[i].name=n.trim().substring(0,12);vpSaveSlots(s)}vpSub=-1;vpRender()}
-function vpDel(i){const s=vpLoadSlots();if(s[i]&&s[i].isHome){vpMsg('ホーム地点はSANCTUARYで変更してください');vpSub=-1;vpRender();return}s.splice(i,1);vpSaveSlots(s);vpSub=-1;vpRender()}
-function vpChIcon(i){
-  const s=vpLoadSlots();if(!s[i]||s[i].isHome)return;vpSub=-1;
-  const rows=document.querySelectorAll('#vpSlots .vp-row');const row=rows[i];if(!row)return;
-  const old=row.querySelector('.vp-icon-picker');if(old){old.remove();return}
-  const pk=document.createElement('div');pk.className='vp-icon-picker';
-  VP_ICON_ALL.forEach(ic=>{
-    const b=document.createElement('span');b.className='vp-icon-choice'+(ic===s[i].icon?' cur':'');b.textContent=ic;
-    b.onclick=e=>{e.stopPropagation();s[i].icon=ic;vpSaveSlots(s);vpRender()};pk.appendChild(b);
+};
+SlotManager.prototype._ref = function(){return this===vpMgr?'vpMgr':'locMgr'};
+SlotManager.prototype.toggleSub = function(i){this.activeSub=this.activeSub===i?-1:i;this.render()};
+SlotManager.prototype.move = function(i,dir){
+  var s=this.load(),t=i+dir;if(t<0||t>=s.length)return;
+  if((i===0&&s[0].isHome)||(t===0&&s[0].isHome))return;
+  var tmp=s[i];s[i]=s[t];s[t]=tmp;this.save(s);this.activeSub=t;this.render();
+};
+SlotManager.prototype.rename = function(i){
+  var s=this.load();if(!s[i]||s[i].isHome)return;
+  var n=prompt(this.renamePrompt,s[i].name);
+  if(n!==null&&n.trim()){s[i].name=n.trim().substring(0,12);this.save(s)}
+  this.activeSub=-1;this.render();
+};
+SlotManager.prototype.del = function(i){
+  var s=this.load();
+  if(s[i]&&s[i].isHome){vpMsg(this.homeEditMsg);this.activeSub=-1;this.render();return}
+  s.splice(i,1);this.save(s);this.activeSub=-1;this.render();
+};
+SlotManager.prototype.chIcon = function(i){
+  var s=this.load();if(!s[i]||s[i].isHome)return;this.activeSub=-1;
+  this.render();
+  var rows=document.querySelectorAll('#'+this.containerEl+' .vp-row');var row=rows[i];if(!row)return;
+  var old=row.querySelector('.vp-icon-picker');if(old){old.remove();return}
+  var self=this;
+  var pk=document.createElement('div');pk.className='vp-icon-picker';
+  VP_ICON_ALL.forEach(function(ic){
+    var b=document.createElement('span');b.className='vp-icon-choice'+(ic===s[i].icon?' cur':'');b.textContent=ic;
+    b.onclick=function(e){e.stopPropagation();s[i].icon=ic;self.save(s);self.render()};pk.appendChild(b);
   });
   row.appendChild(pk);
+};
+
+// ========== Viewpoint Panel (VP) ==========
+var VP_KEY='solara_vp_slots',VP_LAST='solara_vp_last';
+var VP_ICONS=['\uD83C\uDFE0','\uD83C\uDFE2','\u2B50','\uD83D\uDCCD'];
+var VP_ICON_ALL=['\uD83C\uDFE0','\uD83C\uDFE2','\u2B50','\uD83D\uDCCD','\uD83D\uDCBC','\uD83C\uDFEB','\uD83C\uDFE5','\u2615','\uD83C\uDF7D','\uD83D\uDED2','\uD83C\uDFD6','\uD83D\uDC92','\uD83C\uDFAF','\uD83D\uDE89','\uD83C\uDF33','\u2764\uFE0F','\uD83D\uDC31','\uD83D\uDC36','\uD83D\uDC30','\uD83E\uDD8A','\uD83D\uDC3B','\uD83D\uDC3C','\uD83D\uDC28','\uD83E\uDD81','\uD83D\uDC2F','\uD83D\uDC38','\uD83D\uDC27','\uD83E\uDD89','\uD83E\uDD8B','\uD83D\uDC2C','\uD83D\uDC3E','\uD83E\uDD84'];
+
+var vpMgr = new SlotManager({
+  storageKey: VP_KEY,
+  containerEl: 'vpSlots',
+  maxSlots: 5,
+  defaultNames: ['\u8077\u5834','\u304A\u6C17\u306B\u5165\u308A','\u30B9\u30DD\u30C3\u30C8','\u5834\u6240'],
+  defaultIcon: '\uD83D\uDCCD',
+  onSelect: function(s){ rebuild([s.lat,s.lng],true);$('vpPanel').classList.remove('open');$('vpBtn').classList.remove('active'); },
+  emptyMsg: '\u4FDD\u5B58\u5730\u70B9\u306A\u3057',
+  homeEditMsg: '\u30DB\u30FC\u30E0\u5730\u70B9\u306FSANCTUARY\u3067\u5909\u66F4\u3057\u3066\u304F\u3060\u3055\u3044',
+  renamePrompt: '\u5730\u70B9\u306E\u540D\u79F0\u3092\u5165\u529B',
+  fullMsg: '\u4FDD\u5B58\u306F4\u4EF6\u307E\u3067\u3067\u3059\u3002\n\u4E0D\u8981\u306A\u5730\u70B9\u3092\u524A\u9664\u3057\u3066\u304B\u3089\u8FFD\u52A0\u3057\u3066\u304F\u3060\u3055\u3044\u3002',
+  showMove: true,
+  showIconPicker: true
+});
+vpMgr.syncHome();
+
+var LOC_KEY='solara_locations';
+var locMgr = new SlotManager({
+  storageKey: LOC_KEY,
+  containerEl: 'locSlots',
+  maxSlots: 5,
+  defaultNames: ['\u5834\u62401','\u5834\u62402','\u5834\u62403','\u5834\u62404'],
+  defaultIcon: '\uD83D\uDCCD',
+  onSelect: function(s){ map.flyTo([s.lat,s.lng],Math.max(map.getZoom(),12),{duration:.8});$('vpPanel').classList.remove('open');$('vpBtn').classList.remove('active'); },
+  emptyMsg: '\u767B\u9332\u5730\u306A\u3057',
+  homeEditMsg: '\u30DB\u30FC\u30E0\u5730\u70B9\u306FSANCTUARY\u3067\u5909\u66F4\u3057\u3066\u304F\u3060\u3055\u3044',
+  renamePrompt: '\u767B\u9332\u5730\u306E\u540D\u79F0\u3092\u5165\u529B',
+  showMove: false,
+  showIconPicker: false
+});
+locMgr.syncHome();
+
+var vpTab='vp';
+
+function vpLoadLast(){try{var v=JSON.parse(localStorage.getItem(VP_LAST));return v&&v.length===2?v:null}catch(e){return null}}
+function vpSaveLast(c){localStorage.setItem(VP_LAST,JSON.stringify(c))}
+
+function toggleVP(){var p=$('vpPanel'),b=$('vpBtn');p.classList.toggle('open');b.classList.toggle('active');if(p.classList.contains('open'))vpRender()}
+document.addEventListener('pointerdown',function(e){var p=$('vpPanel'),b=$('vpBtn');if(p&&p.classList.contains('open')&&!p.contains(e.target)&&!b.contains(e.target)){p.classList.remove('open');b.classList.remove('active');vpMgr.activeSub=-1;locMgr.activeSub=-1}});
+
+function vpGeo(){
+  if(!navigator.geolocation)return;
+  navigator.geolocation.getCurrentPosition(function(p){rebuild([p.coords.latitude,p.coords.longitude],true)},function(){},{enableHighAccuracy:true,timeout:8000});
 }
 
-// ========== Locations (HORO用登録地) ==========
-const LOC_KEY='solara_locations';
-let vpTab='vp',locSub=-1;
+function vpSave(){vpMgr.saveCurrentLocation(mapCenter)}
+function locSave(){locMgr.saveCurrentLocation(mapCenter)}
 
-function locLoadSlots(){try{return JSON.parse(localStorage.getItem(LOC_KEY))||[]}catch{return[]}}
-function locSaveSlots(s){localStorage.setItem(LOC_KEY,JSON.stringify(s))}
-
-function locSyncHome(){
-  if(!_prof||!_prof.homeName||isNaN(_prof.homeLat)||isNaN(_prof.homeLng))return;
-  const slots=locLoadSlots();
-  const h={name:_prof.homeName,lat:_prof.homeLat,lng:_prof.homeLng,icon:'🏠',isHome:true};
-  if(slots.length>0&&slots[0].isHome){slots[0]=h}else{slots.unshift(h);if(slots.length>5)slots.length=5}
-  locSaveSlots(slots);
+function vpMsg(txt){
+  var coord=$('vpCoord');if(!coord)return;
+  var old=coord.parentElement.querySelector('.vp-msg');if(old)old.remove();
+  var m=document.createElement('div');m.className='vp-msg';m.textContent=txt;
+  coord.parentElement.insertBefore(m,coord);setTimeout(function(){if(m.parentElement)m.remove()},3000);
 }
-locSyncHome();
+
+function vpRender(){
+  vpMgr.render();
+  var coord=$('vpCoord');if(coord)coord.textContent=mapCenter[0].toFixed(4)+', '+mapCenter[1].toFixed(4);
+}
+function locRender(){locMgr.render()}
 
 function switchVPTab(tab){
-  vpTab=tab;vpSub=-1;locSub=-1;
-  document.querySelectorAll('.vp-tab').forEach(t=>t.classList.toggle('active',t.dataset.vptab===tab));
+  vpTab=tab;vpMgr.activeSub=-1;locMgr.activeSub=-1;
+  document.querySelectorAll('.vp-tab').forEach(function(t){t.classList.toggle('active',t.dataset.vptab===tab)});
   $('vpContent').style.display=tab==='vp'?'':'none';
   $('locContent').style.display=tab==='loc'?'':'none';
   if(tab==='vp')vpRender();else locRender();
 }
-
-function locSave(){
-  const slots=locLoadSlots();const maxSlots=5;
-  if(slots.length>=maxSlots){vpMsg('登録地は'+(maxSlots-(slots[0]&&slots[0].isHome?1:0))+'件までです');return}
-  const c=mapCenter,dn=['場所1','場所2','場所3','場所4'],userIdx=slots.length-(slots[0]&&slots[0].isHome?1:0),nm=dn[userIdx]||'場所';
-  fetch('https://nominatim.openstreetmap.org/reverse?format=json&lat='+c[0]+'&lon='+c[1]+'&zoom=16')
-    .then(r=>r.json()).then(d=>{const a=d.address||{};const disp=a.suburb||a.neighbourhood||a.city||a.town||a.village||nm;
-      slots.push({name:disp.substring(0,8),lat:c[0],lng:c[1],icon:'📍'});locSaveSlots(slots);locRender()})
-    .catch(()=>{slots.push({name:nm,lat:c[0],lng:c[1],icon:'📍'});locSaveSlots(slots);locRender()});
-}
-
-function locRender(){
-  const c=$('locSlots');if(!c)return;const slots=locLoadSlots();c.innerHTML='';
-  if(!slots.length){c.innerHTML='<div style="font-size:10px;color:#555;padding:4px;text-align:center">登録地なし</div>';return}
-  slots.forEach((s,i)=>{
-    const row=document.createElement('div');row.className='vp-row';
-    if(s.isHome){
-      row.innerHTML=`<span class="vp-row-icon">${s.icon}</span><span class="vp-row-label">${s.name}</span><span style="font-size:8px;color:#F9D976;letter-spacing:1px;opacity:.6">HOME</span>`;
-    }else{
-      row.innerHTML=`<span class="vp-row-icon">${s.icon}</span><span class="vp-row-label">${s.name}</span><span class="vp-row-more" onclick="event.stopPropagation();locSub=${locSub===i?-1:i};locRender()">⋯</span>`;
-    }
-    row.onclick=()=>{map.flyTo([s.lat,s.lng],Math.max(map.getZoom(),12),{duration:.8});$('vpPanel').classList.remove('open');$('vpBtn').classList.remove('active')};
-    if(locSub===i&&!s.isHome){
-      const sub=document.createElement('div');sub.className='vp-sub';
-      sub.innerHTML=`<div class="vp-sub-item" onclick="event.stopPropagation();locRename(${i})"><span>✏️</span> 名称変更</div>`
-        +`<div class="vp-sub-item danger" onclick="event.stopPropagation();locDel(${i})"><span>🗑</span> 削除</div>`;
-      row.appendChild(sub);
-    }
-    c.appendChild(row);
-  });
-}
-
-function locRename(i){const s=locLoadSlots();if(!s[i]||s[i].isHome)return;const n=prompt('登録地の名称を入力',s[i].name);if(n!==null&&n.trim()){s[i].name=n.trim().substring(0,12);locSaveSlots(s)}locSub=-1;locRender()}
-function locDel(i){const s=locLoadSlots();if(s[i]&&s[i].isHome){vpMsg('ホーム地点はSANCTUARYで変更してください');locSub=-1;locRender();return}s.splice(i,1);locSaveSlots(s);locSub=-1;locRender()}
 
 // ========== Restart ==========
 function restart(){
@@ -1395,31 +1392,31 @@ function restart(){
   $('stella').classList.remove('vis');
   $('layerBtn').classList.remove('vis');closeSearch();$('searchTrigger').classList.remove('vis');
   $('srPopup').classList.remove('vis');$('screenFlash').style.opacity='0';
-  const v=$('effectVideo');v.pause();v.currentTime=0;v.classList.remove('playing');
+  var v=$('effectVideo');v.pause();v.currentTime=0;v.classList.remove('playing');
 
-  const baseset=new Set(baseOverlays);
-  map.eachLayer(l=>{if(!(l instanceof L.TileLayer)&&!baseset.has(l)&&l!==window.vpPin)map.removeLayer(l)});
+  var baseset=new Set(baseOverlays);
+  map.eachLayer(function(l){if(!(l instanceof L.TileLayer)&&!baseset.has(l)&&l!==window.vpPin)map.removeLayer(l)});
   geoSectors=[];geoSectorsVis=false;boostedLines=null;planetMarkers=null;chartGroups=null;
   $('vpBtn').classList.add('vis');
 }
 
 // ========== Veil dismiss ==========
 function dismissVeil(){
-  const v=$('grayVeil'),p=$('preseed');
+  var v=$('grayVeil'),p=$('preseed');
   if(v.classList.contains('lifted')||p.classList.contains('hidden'))return;
   v.classList.add('lifted');p.classList.add('bottom');
 }
 $('mapWrap').addEventListener('pointerdown',dismissVeil);
 
 // ========== Start ==========
-window.addEventListener('load',()=>{
+window.addEventListener('load',function(){
   init();
   renderNav('map');
   if (typeof checkMoonEvents === 'function') checkMoonEvents();
   // Vibe-based Stella message
   if (typeof generateStellaMessage === 'function') {
-    const vibe = loadVibe() || 0;
-    const msg = generateStellaMessage(vibe, 'jp');
+    var vibe = loadVibe() || 0;
+    var msg = generateStellaMessage(vibe, 'jp');
     $('stellaText').innerHTML = msg;
   }
 });

@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Solara - Horoscope Chart</title>
 <script src="https://cdn.jsdelivr.net/npm/astronomy-engine@2.1.19/astronomy.browser.min.js"></script>
+<script src="shared/astro-math.js"></script>
 <script src="shared/nav.js"></script>
 <style>
 /* ============================================================
@@ -377,7 +378,7 @@ h1 { font-size: 24px; color: #F6BD60; letter-spacing: 4px; margin-bottom: 8px; }
   <button class="chart-menu-item active" id="cmItem0" onclick="setChartModeMenu('single')">1重 NATAL</button>
   <button class="chart-menu-item" id="cmItem1" onclick="setChartModeMenu('nt')">2重 N+T</button>
   <button class="chart-menu-item" id="cmItem2" onclick="setChartModeMenu('np')">2重 N+P</button>
-  <button class="chart-menu-item" id="cmItem3" onclick="setChartModeMenu('astrology')">✦ 星読み</button>
+  <button class="chart-menu-item" id="cmItem3" onclick="setChartModeMenu('astrology')">&#10022; 星読み</button>
 </div>
 
 <!-- Chart Mode Tabs: 1重/2重N+T/2重N+P/今日 -->
@@ -385,7 +386,7 @@ h1 { font-size: 24px; color: #F6BD60; letter-spacing: 4px; margin-bottom: 8px; }
   <button class="tab-btn active" onclick="setChartMode('single')">1重 NATAL</button>
   <button class="tab-btn" onclick="setChartMode('nt')">2重 N+T</button>
   <button class="tab-btn" onclick="setChartMode('np')">2重 N+P</button>
-  <button class="tab-btn" onclick="setChartMode('astrology')" style="position:relative;z-index:200">✦ 星読み<br><span style="font-size:9px;letter-spacing:1px;opacity:0.7">Astrology</span></button>
+  <button class="tab-btn" onclick="setChartMode('astrology')" style="position:relative;z-index:200">&#10022; 星読み<br><span style="font-size:9px;letter-spacing:1px;opacity:0.7">Astrology</span></button>
 </div>
 
 <!-- Astrology View: 占い結果を縦に全表示 -->
@@ -394,7 +395,7 @@ h1 { font-size: 24px; color: #F6BD60; letter-spacing: 4px; margin-bottom: 8px; }
 </div>
 
 <div id="noProfileBanner" style="display:none; background:rgba(249,217,118,0.08); border:1px solid rgba(249,217,118,0.25); border-radius:12px; padding:14px 18px; margin-bottom:16px; max-width:1400px; width:100%; text-align:center;">
-  <span style="font-size:13px; color:#F6BD60;">✦ SANCTUARYでプロフィールを設定すると、あなた専用のホロスコープが表示されます</span><br>
+  <span style="font-size:13px; color:#F6BD60;">&#10022; SANCTUARYでプロフィールを設定すると、あなた専用のホロスコープが表示されます</span><br>
   <a href="sanctuary.html" style="color:#F9D976; font-size:12px; text-decoration:underline; margin-top:4px; display:inline-block;">設定する →</a>
 </div>
 
@@ -427,7 +428,7 @@ h1 { font-size: 24px; color: #F6BD60; letter-spacing: 4px; margin-bottom: 8px; }
         <select id="inputPlaceSelect" onchange="onBirthPlaceChange()">
           <option value="manual" selected>手動入力</option>
         </select>
-        <div id="birthVpHint" class="vp-hint" style="display:none">💡 Map画面で場所を保存すると選択できます</div>
+        <div id="birthVpHint" class="vp-hint" style="display:none">&#128161; Map画面で場所を保存すると選択できます</div>
         <input type="text" id="inputPlace" placeholder="例: 岐阜県岐阜市" style="margin-top:6px">
       </div>
       <div class="form-row" id="birthCustomLatLng">
@@ -449,7 +450,7 @@ h1 { font-size: 24px; color: #F6BD60; letter-spacing: 4px; margin-bottom: 8px; }
         <select id="transitLocation" onchange="onTransitLocationChange()">
           <option value="manual">手動入力</option>
         </select>
-        <div id="transitVpHint" class="vp-hint" style="display:none">💡 Map画面で場所を保存すると選択できます</div>
+        <div id="transitVpHint" class="vp-hint" style="display:none">&#128161; Map画面で場所を保存すると選択できます</div>
       </div>
       <div class="form-row" id="transitCustomLatLng">
         <div class="form-group"><label>緯度 LAT</label><input type="number" id="transitLat" step="0.0001"></div>
@@ -538,7 +539,7 @@ h1 { font-size: 24px; color: #F6BD60; letter-spacing: 4px; margin-bottom: 8px; }
 <div class="mobile-bottom-sheet" id="bottomSheet">
   <div class="bs-drag-handle" id="bsDragHandle"></div>
   <div class="bs-mini-label" id="bsMiniLabel" onclick="setBSState('half')">
-    <span class="bs-mini-chevron">▲</span>ホロスコープ設定
+    <span class="bs-mini-chevron">&#9650;</span>ホロスコープ設定
   </div>
   <div class="bs-tabs" id="bsTabs">
     <button class="bs-tab active" data-bs="birth" onclick="switchBSTab('birth')">&#9881; 誕生</button>
@@ -559,22 +560,33 @@ h1 { font-size: 24px; color: #F6BD60; letter-spacing: 4px; margin-bottom: 8px; }
 
 <script>
 // ============================================================
-//  CONSTANTS
+//  CONSTANTS (local - index-based for this file's planet math)
+//  Shared constants from astro-math.js:
+//    ZODIAC_SIGNS, ZODIAC_NAMES_JP, ZODIAC_EN, ZODIAC_COLORS,
+//    PLANET_GLYPHS, PLANET_NAMES_JP, PLANET_KEYS, PLANET_GROUPS (key-based),
+//    FORTUNE_PLANETS (key-based), ASTRO_BODIES, norm360, angDist,
+//    toRad, toDeg, calcAscendant, calcMC, loadSolaraProfile
 // ============================================================
-var ZODIAC_SIGNS    = ['\u2648','\u2649','\u264A','\u264B','\u264C','\u264D','\u264E','\u264F','\u2650','\u2651','\u2652','\u2653'];
-var ZODIAC_NAMES_JP = ['牡羊座','牡牛座','双子座','蟹座','獅子座','乙女座','天秤座','蠍座','射手座','山羊座','水瓶座','魚座'];
-var ZODIAC_EN       = ['Ari','Tau','Gem','Can','Leo','Vir','Lib','Sco','Sag','Cap','Aqu','Pis'];
-var ZODIAC_COLORS   = ['#FF6B6B','#B49774','#C9C9C9','#1A6980','#FFD93D','#8B7355','#7F7FAF','#8B2252','#FF8C42','#5A5A5A','#4A90D9','#26D0CE'];
 
-var PLANET_GLYPHS   = ['\u2609','\u263D','\u263F','\u2640','\u2642','\u2643','\u2644','\u2645','\u2646','\u2647','ASC','MC','DSC','IC'];
-var PLANET_NAMES_JP = ['太陽','月','水星','金星','火星','木星','土星','天王星','海王星','冥王星','ASC','MC','DSC','IC'];
+// Extended glyphs array: 10 planets + 4 angles (shared has only 10)
+var PLANET_GLYPHS_EXT = PLANET_GLYPHS.concat(['ASC','MC','DSC','IC']);
+var PLANET_NAMES_JP_EXT = PLANET_NAMES_JP.concat(['ASC','MC','DSC','IC']);
 
-var BODIES = [
-  Astronomy.Body.Sun, Astronomy.Body.Moon,
-  Astronomy.Body.Mercury, Astronomy.Body.Venus, Astronomy.Body.Mars,
-  Astronomy.Body.Jupiter, Astronomy.Body.Saturn,
-  Astronomy.Body.Uranus, Astronomy.Body.Neptune, Astronomy.Body.Pluto
-];
+// Index-based planet group lookup (maps planet index 0-9 to group)
+var IDX_PLANET_GROUPS = {
+  personal:     [0, 1, 2, 3, 4],
+  social:       [5, 6],
+  generational: [7, 8, 9]
+};
+
+// Index-based fortune planet lookup
+var IDX_FORTUNE_PLANETS = {
+  healing:       [1, 8, 5],
+  money:         [3, 5, 6],
+  love:          [3, 4, 1],
+  career:        [6, 4, 0],
+  communication: [2, 1, 5]
+};
 
 var NATAL_COLOR      = '#FFD370';
 var TRANSIT_COLOR    = '#6BB5FF';
@@ -598,8 +610,8 @@ var ASPECT_TYPES = [
   { name: 'スクエア',           angle: 90,  orb: ORB_SETTINGS.square,      symbol: '\u25A1', color: '#6B5CE7', quality: 'hard' },
   { name: 'セクスタイル',       angle: 60,  orb: ORB_SETTINGS.sextile,     symbol: '\u26B9', color: '#C9A84C', quality: 'soft' },
   { name: 'クインカンクス',     angle: 150, orb: ORB_SETTINGS.quincunx,    symbol: 'Qx',     color: '#26D0CE', quality: 'neutral' },
-  { name: 'セミセクスタイル',   angle: 30,  orb: ORB_SETTINGS.semisextile, symbol: '⚺',     color: '#8BC34A', quality: 'soft',    minor: true },
-  { name: 'セミスクエア',       angle: 45,  orb: ORB_SETTINGS.semisquare,  symbol: '∠',     color: '#FF7043', quality: 'hard',    minor: true }
+  { name: 'セミセクスタイル',   angle: 30,  orb: ORB_SETTINGS.semisextile, symbol: '\u26BA',  color: '#8BC34A', quality: 'soft',    minor: true },
+  { name: 'セミスクエア',       angle: 45,  orb: ORB_SETTINGS.semisquare,  symbol: '\u2220',  color: '#FF7043', quality: 'hard',    minor: true }
 ];
 
 var PATTERN_STYLES = {
@@ -608,30 +620,14 @@ var PATTERN_STYLES = {
   yod:        { fill: 'rgba(38,208,206,0.12)',  stroke: '#26D0CE', label: 'Yod' }
 };
 
-var PLANET_GROUPS = {
-  personal:     [0, 1, 2, 3, 4],
-  social:       [5, 6],
-  generational: [7, 8, 9]
-};
-
-var FORTUNE_PLANETS = {
-  healing:       [1, 8, 5],
-  money:         [3, 5, 6],
-  love:          [3, 4, 1],
-  career:        [6, 4, 0],
-  communication: [2, 1, 5]
-};
-
 // Location integration (shared with Map screen via localStorage)
 var LOC_KEY = 'solara_locations';
 function loadLocations() { try { return JSON.parse(localStorage.getItem(LOC_KEY)) || []; } catch(e) { return []; } }
-// Backward compat alias
-function loadViewpoints() { return loadLocations(); }
 
 // ============================================================
 //  STATE
 // ============================================================
-var _profile = (function(){ try { return JSON.parse(localStorage.getItem('solara_profile')); } catch(e) { return null; } })();
+var _profile = loadSolaraProfile();
 var profileLoaded = !!(_profile && _profile.birthDate && _profile.birthLat);
 var birthTimeUnknown = !!(_profile && _profile.birthTimeUnknown);
 var defaultUser = profileLoaded
@@ -649,14 +645,6 @@ var activeFilters = {
   pgroup:      { personal: true, social: true, generational: true },
   fortune:     null
 };
-
-// ============================================================
-//  MATH UTILITIES
-// ============================================================
-function toRad(d) { return d * Math.PI / 180; }
-function toDeg(r) { return r * 180 / Math.PI; }
-function normalize(deg) { deg = deg % 360; return deg < 0 ? deg + 360 : deg; }
-function angleDiff(a, b) { var d = Math.abs(a - b); return d > 180 ? 360 - d : d; }
 
 // ============================================================
 //  ASTRONOMICAL CALCULATIONS (astronomy-engine, geocentric)
@@ -678,35 +666,10 @@ function getEclipticLongitude(body, date) {
 
 function calcAllPlanets(date) {
   var result = {};
-  for (var i = 0; i < BODIES.length; i++) {
-    result[i] = getEclipticLongitude(BODIES[i], date);
+  for (var i = 0; i < ASTRO_BODIES.length; i++) {
+    result[i] = getEclipticLongitude(ASTRO_BODIES[i].body, date);
   }
   return result;
-}
-
-function calcAscendant(date, lat, lng) {
-  var gmstHours = Astronomy.SiderealTime(date);
-  var lstDeg = normalize(gmstHours * 15 + lng);
-  var lstRad = toRad(lstDeg);
-  var jd = (date.getTime() / 86400000) + 2440587.5;
-  var T = (jd - 2451545.0) / 36525.0;
-  var eps = 23.4393 - 0.013 * T;
-  var epsRad = toRad(eps);
-  var latRad = toRad(lat);
-  var y = -Math.cos(lstRad);
-  var x = Math.sin(epsRad) * Math.tan(latRad) + Math.cos(epsRad) * Math.sin(lstRad);
-  return normalize(toDeg(Math.atan2(y, x)) + 180);
-}
-
-function calcMC(date, lng) {
-  var gmstHours = Astronomy.SiderealTime(date);
-  var lstDeg = normalize(gmstHours * 15 + lng);
-  var lstRad = toRad(lstDeg);
-  var jd = (date.getTime() / 86400000) + 2440587.5;
-  var T = (jd - 2451545.0) / 36525.0;
-  var eps = 23.4393 - 0.013 * T;
-  var epsRad = toRad(eps);
-  return normalize(toDeg(Math.atan2(Math.sin(lstRad), Math.cos(lstRad) * Math.cos(epsRad))));
 }
 
 // Placidus house cusp calculation (iterative semi-arc trisection)
@@ -717,21 +680,15 @@ function calcHousesPlacidus(mc, asc, lat, obliquity) {
   var houses = new Array(12);
   houses[0] = asc;
   houses[9] = mc;
-  houses[6] = normalize(asc + 180);
-  houses[3] = normalize(mc + 180);
+  houses[6] = norm360(asc + 180);
+  houses[3] = norm360(mc + 180);
 
   // RAMC: right ascension of MC
   var mcR = toRad(mc);
-  var ramc = normalize(toDeg(Math.atan2(Math.sin(mcR) * cosEps, Math.cos(mcR))));
+  var ramc = norm360(toDeg(Math.atan2(Math.sin(mcR) * cosEps, Math.cos(mcR))));
 
-  // Iterative Placidus cusp calculation
-  // Hour angle H = RAMC - RA. Each cusp is defined by its position in the diurnal circle:
-  //   11H: H = -(DSA/3)  => RA = RAMC + DSA/3     (DSA = 90+AD)
-  //   12H: H = -(2DSA/3) => RA = RAMC + 2·DSA/3
-  //   2H:  H = 180+2NSA/3 => RA = RAMC - 240 + 2AD/3  (NSA = 90-AD)
-  //   3H:  H = 180+NSA/3  => RA = RAMC - 210 + AD/3
   function placidusCusp(house) {
-    var lon = (house <= 12) ? normalize(mc + (house - 10) * 30) : normalize(asc + (house - 1) * 30);
+    var lon = (house <= 12) ? norm360(mc + (house - 10) * 30) : norm360(asc + (house - 1) * 30);
     for (var iter = 0; iter < 50; iter++) {
       var sinDecl = Math.sin(toRad(lon)) * sinEps;
       sinDecl = Math.max(-1, Math.min(1, sinDecl));
@@ -744,7 +701,7 @@ function calcHousesPlacidus(mc, asc, lat, obliquity) {
       else if (house === 2) targetRA = ramc - 240 + 2 * AD / 3;
       else targetRA = ramc - 210 + AD / 3; // house 3
       var raR = toRad(targetRA);
-      var newLon = normalize(toDeg(Math.atan2(Math.sin(raR), Math.cos(raR) * cosEps)));
+      var newLon = norm360(toDeg(Math.atan2(Math.sin(raR), Math.cos(raR) * cosEps)));
       if (Math.abs(newLon - lon) < 0.001 || Math.abs(newLon - lon) > 359.999) break;
       lon = newLon;
     }
@@ -756,10 +713,10 @@ function calcHousesPlacidus(mc, asc, lat, obliquity) {
   houses[1] = placidusCusp(2);
   houses[2] = placidusCusp(3);
   // Opposite cusps
-  houses[4] = normalize(houses[10] + 180);
-  houses[5] = normalize(houses[11] + 180);
-  houses[7] = normalize(houses[1] + 180);
-  houses[8] = normalize(houses[2] + 180);
+  houses[4] = norm360(houses[10] + 180);
+  houses[5] = norm360(houses[11] + 180);
+  houses[7] = norm360(houses[1] + 180);
+  houses[8] = norm360(houses[2] + 180);
   return houses;
 }
 
@@ -767,14 +724,14 @@ function calcHousesPlacidus(mc, asc, lat, obliquity) {
 function calcHousesWholeSigns(asc) {
   var signStart = Math.floor(asc / 30) * 30;
   var houses = [];
-  for (var i = 0; i < 12; i++) houses.push(normalize(signStart + i * 30));
+  for (var i = 0; i < 12; i++) houses.push(norm360(signStart + i * 30));
   return houses;
 }
 
 // Equal House (legacy fallback)
 function calcHousesEqual(asc) {
   var houses = [];
-  for (var i = 0; i < 12; i++) houses.push(normalize(asc + i * 30));
+  for (var i = 0; i < 12; i++) houses.push(norm360(asc + i * 30));
   return houses;
 }
 
@@ -802,7 +759,7 @@ function collectAspects(p1, p2, isCross, label) {
   for (var i = 0; i < 10; i++) {
     var jStart = isCross ? 0 : i + 1;
     for (var j = jStart; j < 10; j++) {
-      var diff = angleDiff(p1[i], p2[j]);
+      var diff = angDist(p1[i], p2[j]);
       for (var k = 0; k < ASPECT_TYPES.length; k++) {
         var asp = ASPECT_TYPES[k];
         if (Math.abs(diff - asp.angle) <= asp.orb) {
@@ -839,7 +796,7 @@ function detectPatterns(aspects, natal, secondary) {
   }
 
   function countNatal(arr) { var c = 0; for (var x = 0; x < arr.length; x++) if (arr[x].source === 'N') c++; return c; }
-  function hasPersonal(arr) { for (var x = 0; x < arr.length; x++) { if (PLANET_GROUPS.personal.indexOf(arr[x].idx) >= 0) return true; } return false; }
+  function hasPersonal(arr) { for (var x = 0; x < arr.length; x++) { if (IDX_PLANET_GROUPS.personal.indexOf(arr[x].idx) >= 0) return true; } return false; }
   function isDuplicate(list, trio) {
     var key = trio.map(function(p) { return p.source + p.idx; }).sort().join(',');
     for (var i = 0; i < list.length; i++) {
@@ -855,10 +812,10 @@ function detectPatterns(aspects, natal, secondary) {
   // Grand Trine: 120deg x3
   for (var i = 0; i < len; i++) {
     for (var j = i + 1; j < len; j++) {
-      if (Math.abs(angleDiff(pool[i].lon, pool[j].lon) - 120) > po.grandtrine) continue;
+      if (Math.abs(angDist(pool[i].lon, pool[j].lon) - 120) > po.grandtrine) continue;
       for (var k = j + 1; k < len; k++) {
-        if (Math.abs(angleDiff(pool[i].lon, pool[k].lon) - 120) > po.grandtrine) continue;
-        if (Math.abs(angleDiff(pool[j].lon, pool[k].lon) - 120) > po.grandtrine) continue;
+        if (Math.abs(angDist(pool[i].lon, pool[k].lon) - 120) > po.grandtrine) continue;
+        if (Math.abs(angDist(pool[j].lon, pool[k].lon) - 120) > po.grandtrine) continue;
         var trio = [pool[i], pool[j], pool[k]];
         if (countNatal(trio) < 2 || !hasPersonal(trio) || isDuplicate(patterns.grandtrine, trio)) continue;
         patterns.grandtrine.push({ planets: trio });
@@ -869,11 +826,11 @@ function detectPatterns(aspects, natal, secondary) {
   // T-Square: 180deg + 2x90deg
   for (var i = 0; i < len; i++) {
     for (var j = i + 1; j < len; j++) {
-      if (Math.abs(angleDiff(pool[i].lon, pool[j].lon) - 180) > po.tsquare_opp) continue;
+      if (Math.abs(angDist(pool[i].lon, pool[j].lon) - 180) > po.tsquare_opp) continue;
       for (var k = 0; k < len; k++) {
         if (k === i || k === j) continue;
-        if (Math.abs(angleDiff(pool[i].lon, pool[k].lon) - 90) > po.tsquare_sq) continue;
-        if (Math.abs(angleDiff(pool[j].lon, pool[k].lon) - 90) > po.tsquare_sq) continue;
+        if (Math.abs(angDist(pool[i].lon, pool[k].lon) - 90) > po.tsquare_sq) continue;
+        if (Math.abs(angDist(pool[j].lon, pool[k].lon) - 90) > po.tsquare_sq) continue;
         var trio = [pool[i], pool[j], pool[k]];
         if (countNatal(trio) < 2 || !hasPersonal(trio) || isDuplicate(patterns.tsquare, trio)) continue;
         patterns.tsquare.push({ planets: trio, apex: pool[k] });
@@ -884,11 +841,11 @@ function detectPatterns(aspects, natal, secondary) {
   // Yod: 60deg + 2x150deg
   for (var i = 0; i < len; i++) {
     for (var j = i + 1; j < len; j++) {
-      if (Math.abs(angleDiff(pool[i].lon, pool[j].lon) - 60) > po.yod_sextile) continue;
+      if (Math.abs(angDist(pool[i].lon, pool[j].lon) - 60) > po.yod_sextile) continue;
       for (var k = 0; k < len; k++) {
         if (k === i || k === j) continue;
-        if (Math.abs(angleDiff(pool[i].lon, pool[k].lon) - 150) > po.yod_quincunx) continue;
-        if (Math.abs(angleDiff(pool[j].lon, pool[k].lon) - 150) > po.yod_quincunx) continue;
+        if (Math.abs(angDist(pool[i].lon, pool[k].lon) - 150) > po.yod_quincunx) continue;
+        if (Math.abs(angDist(pool[j].lon, pool[k].lon) - 150) > po.yod_quincunx) continue;
         var trio = [pool[i], pool[j], pool[k]];
         if (countNatal(trio) < 2 || !hasPersonal(trio) || isDuplicate(patterns.yod, trio)) continue;
         patterns.yod.push({ planets: trio, apex: pool[k] });
@@ -912,10 +869,10 @@ function predictPatternCompletions(natal, birthDate, daysAhead) {
       var prevLon = null;
       for (var day = 0; day <= daysAhead; day++) {
         var checkDate = new Date(now.getTime() + day * 86400000);
-        var lon = getEclipticLongitude(BODIES[body], checkDate);
-        var dist = angleDiff(lon, targetDeg);
+        var lon = getEclipticLongitude(ASTRO_BODIES[body].body, checkDate);
+        var dist = angDist(lon, targetDeg);
         if (prevLon !== null) {
-          var prevDist = angleDiff(prevLon, targetDeg);
+          var prevDist = angDist(prevLon, targetDeg);
           if (dist <= 3 && prevDist > dist) {
             var hoursFromNow = (day - 1) * 24 + (prevDist / (prevDist + dist)) * 24;
             if (hoursFromNow < 0) hoursFromNow = 0;
@@ -935,25 +892,25 @@ function predictPatternCompletions(natal, birthDate, daysAhead) {
 
   for (var i = 0; i < 10; i++) {
     for (var j = i + 1; j < 10; j++) {
-      if (PLANET_GROUPS.personal.indexOf(i) < 0 && PLANET_GROUPS.personal.indexOf(j) < 0) continue;
-      var dij = angleDiff(natal[i], natal[j]);
+      if (IDX_PLANET_GROUPS.personal.indexOf(i) < 0 && IDX_PLANET_GROUPS.personal.indexOf(j) < 0) continue;
+      var dij = angDist(natal[i], natal[j]);
 
       if (Math.abs(dij - 120) <= 3) {
-        var t1 = normalize(natal[i] + 120);
-        var t2 = normalize(natal[i] - 120);
-        if (Math.abs(angleDiff(t1, natal[j]) - 120) <= 5) scanTransit(t1, 'grandtrine', i, j);
-        if (Math.abs(angleDiff(t2, natal[j]) - 120) <= 5) scanTransit(t2, 'grandtrine', i, j);
+        var t1 = norm360(natal[i] + 120);
+        var t2 = norm360(natal[i] - 120);
+        if (Math.abs(angDist(t1, natal[j]) - 120) <= 5) scanTransit(t1, 'grandtrine', i, j);
+        if (Math.abs(angDist(t2, natal[j]) - 120) <= 5) scanTransit(t2, 'grandtrine', i, j);
       }
       if (Math.abs(dij - 180) <= 3) {
-        var mid = normalize((natal[i] + natal[j]) / 2);
-        scanTransit(normalize(mid), 'tsquare', i, j);
-        scanTransit(normalize(mid + 180), 'tsquare', i, j);
+        var mid = norm360((natal[i] + natal[j]) / 2);
+        scanTransit(norm360(mid), 'tsquare', i, j);
+        scanTransit(norm360(mid + 180), 'tsquare', i, j);
       }
       if (Math.abs(dij - 60) <= 2.5) {
-        var t1 = normalize(natal[i] + 150);
-        var t2 = normalize(natal[i] - 150);
-        if (Math.abs(angleDiff(t1, natal[j]) - 150) <= 2.5) scanTransit(t1, 'yod', i, j);
-        if (Math.abs(angleDiff(t2, natal[j]) - 150) <= 2.5) scanTransit(t2, 'yod', i, j);
+        var t1 = norm360(natal[i] + 150);
+        var t2 = norm360(natal[i] - 150);
+        if (Math.abs(angDist(t1, natal[j]) - 150) <= 2.5) scanTransit(t1, 'yod', i, j);
+        if (Math.abs(angDist(t2, natal[j]) - 150) <= 2.5) scanTransit(t2, 'yod', i, j);
       }
     }
   }
@@ -967,15 +924,15 @@ function predictPatternCompletions(natal, birthDate, daysAhead) {
 // ============================================================
 function getPlanetGroup(idx) {
   if (idx >= 10) return 'angle'; // ASC/MC/DSC/IC - always visible
-  if (PLANET_GROUPS.personal.indexOf(idx) >= 0) return 'personal';
-  if (PLANET_GROUPS.social.indexOf(idx) >= 0) return 'social';
+  if (IDX_PLANET_GROUPS.personal.indexOf(idx) >= 0) return 'personal';
+  if (IDX_PLANET_GROUPS.social.indexOf(idx) >= 0) return 'social';
   return 'generational';
 }
 
 function aspectPassesFilter(a) {
   if (!activeFilters.quality[a.type.quality]) return false;
   if (activeFilters.fortune) {
-    var fp = FORTUNE_PLANETS[activeFilters.fortune];
+    var fp = IDX_FORTUNE_PLANETS[activeFilters.fortune];
     if (fp.indexOf(a.p1) < 0 && fp.indexOf(a.p2) < 0) return false;
   }
   var g1 = getPlanetGroup(a.p1), g2 = getPlanetGroup(a.p2);
@@ -1193,7 +1150,6 @@ function setChartMode(mode) {
   resetFilters();
 }
 
-var FORTUNE_API_URL = 'http://127.0.0.1:3915/api/fortune-reading';
 var FORTUNE_CAT_IDS = ['overall','love','money','career','communication'];
 
 function aspectsToText(aspects, filterPlanets) {
@@ -1206,13 +1162,13 @@ function aspectsToText(aspects, filterPlanets) {
   }
   if (!filtered.length) filtered = aspects.slice(0, 5);
   return filtered.slice(0, 8).map(function(a) {
-    var n1 = PLANET_NAMES_JP[a.p1] || '?';
-    var n2 = PLANET_NAMES_JP[a.p2] || '?';
+    var n1 = PLANET_NAMES_JP_EXT[a.p1] || '?';
+    var n2 = PLANET_NAMES_JP_EXT[a.p2] || '?';
     var name = a.type ? a.type.name : '?';
     var angle = a.type ? a.type.angle : '?';
     var q = a.type ? (a.type.quality === 'soft' ? '調和' : a.type.quality === 'hard' ? '緊張' : '中性') : '';
-    return n1 + 'と' + n2 + 'が' + name + '(' + angle + '°・' + q + ')';
-  }).join('、');
+    return n1 + 'と' + n2 + 'が' + name + '(' + angle + '\u00B0\u30FB' + q + ')';
+  }).join('\u3001');
 }
 
 function patternsToText(patterns) {
@@ -1221,7 +1177,7 @@ function patternsToText(patterns) {
   if (patterns.grandtrine && patterns.grandtrine.length) parts.push('グランドトライン検出');
   if (patterns.tsquare && patterns.tsquare.length) parts.push('Tスクエア検出');
   if (patterns.yod && patterns.yod.length) parts.push('ヨッド検出');
-  return parts.join('、');
+  return parts.join('\u3001');
 }
 
 function getFortuneCache() {
@@ -1267,7 +1223,7 @@ function buildTodayView() {
 
   // ローディング表示
   el.innerHTML = FORTUNE_CATEGORIES.map(function(cat) {
-    return renderFortuneCard(cat, '<span style="color:#888;">✦ 星を読み解いています...</span>', '');
+    return renderFortuneCard(cat, '<span style="color:#888;">&#10022; 星を読み解いています...</span>', '');
   }).join('');
 
   var today = new Date();
@@ -1275,12 +1231,13 @@ function buildTodayView() {
   var patText = patternsToText(cachedPatterns);
   var results = {};
   var completed = 0;
+  var apiUrl = 'http://127.0.0.1:3915/api/fortune-reading';
 
   FORTUNE_CATEGORIES.forEach(function(cat) {
-    var filterP = FORTUNE_PLANETS[cat.id] || null;
+    var filterP = IDX_FORTUNE_PLANETS[cat.id] || null;
     var aspText = aspectsToText(lastAspectsFound, filterP);
 
-    fetch(FORTUNE_API_URL, {
+    fetch(apiUrl, {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({category: cat.id, aspects: aspText, patterns: patText, date: dateStr})
@@ -1293,7 +1250,7 @@ function buildTodayView() {
     .catch(function(err) {
       console.warn('Fortune API fallback (' + cat.id + '):', err.message);
       var fb = FORTUNE_MOCK[cat.id];
-      results[cat.id] = {text: fb.text, direction: '🧭 ' + fb.direction};
+      results[cat.id] = {text: fb.text, direction: '\uD83E\uDDED ' + fb.direction};
     })
     .finally(function() {
       completed++;
@@ -1310,11 +1267,11 @@ function buildTodayView() {
 
 // Build VP options as HTML string (for mobile dynamic HTML)
 function buildVPOptionsHTML() {
-  var vps = loadViewpoints();
+  var vps = loadLocations();
   var html = '<option value="manual" selected>手動入力</option>';
   for (var i = 0; i < vps.length; i++) {
     var vp = vps[i];
-    html += '<option value="vp_' + i + '">' + (vp.icon || '📍') + ' ' + vp.name + ' (' + vp.lat.toFixed(2) + ', ' + vp.lng.toFixed(2) + ')</option>';
+    html += '<option value="vp_' + i + '">' + (vp.icon || '\uD83D\uDCCD') + ' ' + vp.name + ' (' + vp.lat.toFixed(2) + ', ' + vp.lng.toFixed(2) + ')</option>';
   }
   return html;
 }
@@ -1323,7 +1280,7 @@ function buildVPOptionsHTML() {
 function populateVPSelect(selectId, hintId) {
   var sel = document.getElementById(selectId);
   if (!sel) return;
-  var vps = loadViewpoints();
+  var vps = loadLocations();
   // Remove old VP options (keep manual)
   while (sel.options.length > 1) sel.remove(1);
   // Add viewpoints
@@ -1331,7 +1288,7 @@ function populateVPSelect(selectId, hintId) {
     var vp = vps[i];
     var opt = document.createElement('option');
     opt.value = 'vp_' + i;
-    opt.textContent = (vp.icon || '📍') + ' ' + vp.name + ' (' + vp.lat.toFixed(2) + ', ' + vp.lng.toFixed(2) + ')';
+    opt.textContent = (vp.icon || '\uD83D\uDCCD') + ' ' + vp.name + ' (' + vp.lat.toFixed(2) + ', ' + vp.lng.toFixed(2) + ')';
     sel.appendChild(opt);
   }
   // Show hint if no viewpoints
@@ -1347,7 +1304,7 @@ function onBirthPlaceChange() {
     placeInput.style.display = '';
     latLng.style.display = '';
   } else {
-    var vps = loadViewpoints();
+    var vps = loadLocations();
     var idx = parseInt(sel.value.replace('vp_', ''));
     var vp = vps[idx];
     if (vp) {
@@ -1366,7 +1323,7 @@ function onTransitLocationChange() {
   if (sel.value === 'manual') {
     custom.style.display = '';
   } else {
-    var vps = loadViewpoints();
+    var vps = loadLocations();
     var idx = parseInt(sel.value.replace('vp_', ''));
     var vp = vps[idx];
     if (vp) {
@@ -1388,7 +1345,7 @@ function getTransitDateTime() {
 function getTransitLocation() {
   var sel = document.getElementById('transitLocation').value;
   if (sel.indexOf('vp_') === 0) {
-    var vps = loadViewpoints();
+    var vps = loadLocations();
     var idx = parseInt(sel.replace('vp_', ''));
     if (vps[idx]) return { lat: vps[idx].lat, lng: vps[idx].lng };
   }
@@ -1409,7 +1366,7 @@ function initTransitDefaults() {
   populateVPSelect('inputPlaceSelect', 'birthVpHint');
   populateVPSelect('transitLocation', 'transitVpHint');
   // Auto-select home for transit if available
-  var vps = loadViewpoints();
+  var vps = loadLocations();
   if (vps.length > 0 && vps[0].isHome) {
     document.getElementById('transitLocation').value = 'vp_0';
     onTransitLocationChange();
@@ -1450,7 +1407,7 @@ function generateFromInput() {
 //  FORMATTING HELPERS
 // ============================================================
 function formatDegree(lon) {
-  lon = normalize(lon);
+  lon = norm360(lon);
   var si = Math.floor(lon / 30);
   var inSign = lon % 30;
   var deg = Math.floor(inSign);
@@ -1482,8 +1439,8 @@ function renderChart() {
   var natal   = calcAllPlanets(birthDate);
   var asc     = calcAscendant(birthDate, user.lat, user.lng);
   var mc      = calcMC(birthDate, user.lng);
-  var dsc     = normalize(asc + 180);
-  var ic      = normalize(mc + 180);
+  var dsc     = norm360(asc + 180);
+  var ic      = norm360(mc + 180);
   // Obliquity for Placidus
   var jd = (birthDate.getTime() / 86400000) + 2440587.5;
   var T = (jd - 2451545.0) / 36525.0;
@@ -1609,7 +1566,7 @@ function renderChart() {
     for (var ai = 0; ai < anglePoints.length; ai++) {
       var ap = anglePoints[ai];
       for (var pi = 0; pi < 10; pi++) {
-        var diff = angleDiff(ap.lon, natal[pi]);
+        var diff = angDist(ap.lon, natal[pi]);
         for (var k = 0; k < ASPECT_TYPES.length; k++) {
           var asp = ASPECT_TYPES[k];
           if (Math.abs(diff - asp.angle) <= asp.orb) {
@@ -1789,9 +1746,9 @@ function renderAspectList(container, allAspects, filteredAspects) {
     html += '<div data-aspect-key="' + key + '" style="display:flex;align-items:center;gap:5px;padding:3px 0;font-size:11px;border-bottom:1px solid rgba(255,255,255,0.03);cursor:pointer;' + (dimmed ? 'opacity:0.25;' : '') + '" onclick="toggleAspectVisibility(\'' + key + '\')">';
     html += '<span class="aspect-check" style="color:' + checkColor + ';font-size:14px;width:16px;text-align:center;flex-shrink:0">' + checkIcon + '</span>';
     html += '<span style="color:' + a.type.color + ';font-size:13px;width:18px;text-align:center">' + a.type.symbol + '</span>';
-    html += '<span style="color:#ccc">' + PLANET_GLYPHS[a.p1] + '</span>';
+    html += '<span style="color:#ccc">' + PLANET_GLYPHS_EXT[a.p1] + '</span>';
     html += '<span style="color:' + a.type.color + ';font-size:10px">' + a.type.name + '</span>';
-    html += '<span style="color:#ccc">' + PLANET_GLYPHS[a.p2] + '</span>';
+    html += '<span style="color:#ccc">' + PLANET_GLYPHS_EXT[a.p2] + '</span>';
     html += '<span style="color:#666;margin-left:auto;font-size:10px">' + a.diff.toFixed(1) + '\u00B0' + filterTag + '</span>';
     html += '</div>';
   });
@@ -1812,11 +1769,11 @@ function renderAspectInfo(aspects, patterns) {
   var countText = ' <span style="color:#666;font-size:11px">(' + filtered.length + '/' + aspects.length + ')</span>';
 
   if (chartMode === 'single') {
-    containerTitle.innerHTML = '&#9651; ASPECTS — Natal' + countText;
+    containerTitle.innerHTML = '&#9651; ASPECTS \u2014 Natal' + countText;
   } else if (chartMode === 'nt') {
-    containerTitle.innerHTML = '&#9651; ASPECTS — <span style="color:' + TRANSIT_COLOR + '">N ↔ T</span>' + countText;
+    containerTitle.innerHTML = '&#9651; ASPECTS \u2014 <span style="color:' + TRANSIT_COLOR + '">N \u2194 T</span>' + countText;
   } else {
-    containerTitle.innerHTML = '&#9651; ASPECTS — <span style="color:' + PROGRESSED_COLOR + '">N ↔ P</span>' + countText;
+    containerTitle.innerHTML = '&#9651; ASPECTS \u2014 <span style="color:' + PROGRESSED_COLOR + '">N \u2194 P</span>' + countText;
   }
   renderAspectList(container, aspects, filtered);
 }
@@ -2052,12 +2009,12 @@ function buildBSBirthContent() {
     + '<div class="form-row"><div class="form-group"><label>生年月日</label><input type="date" id="mInputDate"></div>'
     + '<div class="form-group"><label>出生時刻</label><input type="time" id="mInputTime" step="60"></div></div>'
     + '<div class="form-group"><label>出生地</label><select id="mInputPlaceSelect" onchange="onMobileBirthPlaceChange()">' + vpOptions + '</select>'
-    + '<div id="mBirthVpHint" class="vp-hint" style="display:none">💡 Map画面で場所を保存すると選択できます</div>'
+    + '<div id="mBirthVpHint" class="vp-hint" style="display:none">\uD83D\uDCA1 Map画面で場所を保存すると選択できます</div>'
     + '<input type="text" id="mInputPlace" placeholder="例: 岐阜県岐阜市" style="margin-top:6px"></div>'
     + '<div class="form-row" id="mBirthCustomLatLng"><div class="form-group"><label>緯度</label><input type="number" id="mInputLat" step="0.0001"></div>'
     + '<div class="form-group"><label>経度</label><input type="number" id="mInputLng" step="0.0001"></div></div>'
     + '<button class="btn-generate" style="background:linear-gradient(135deg,#F6BD60,#E8A840)" onclick="applyBSBirth()">ホロスコープ生成</button>';
-  var vps = loadViewpoints();
+  var vps = loadLocations();
   var hint = document.getElementById('mBirthVpHint');
   if (hint) hint.style.display = (vps.length === 0) ? 'block' : 'none';
 }
@@ -2094,7 +2051,7 @@ function buildBSTransitContent() {
     + '<div class="form-row"><div class="form-group"><label>日付</label><input type="date" id="mTransitDate"></div>'
     + '<div class="form-group"><label>時刻</label><input type="time" id="mTransitTime" step="60"></div></div>'
     + '<div class="form-group"><label>場所</label><select id="mTransitLocation" onchange="onMobileTransitLocChange()">' + vpOptions + '</select>'
-    + '<div id="mTransitVpHint" class="vp-hint" style="display:none">💡 Map画面で場所を保存すると選択できます</div></div>'
+    + '<div id="mTransitVpHint" class="vp-hint" style="display:none">\uD83D\uDCA1 Map画面で場所を保存すると選択できます</div></div>'
     + '<div class="form-row" id="mTransitCustom"><div class="form-group"><label>緯度</label><input type="number" id="mTransitLat" step="0.0001"></div>'
     + '<div class="form-group"><label>経度</label><input type="number" id="mTransitLng" step="0.0001"></div></div>'
     + '<button class="btn-generate" id="mTransitBtn" style="background:linear-gradient(135deg,#6BB5FF,#4A90D9)" onclick="applyBSTransit()">トランジット更新</button>';
@@ -2102,7 +2059,7 @@ function buildBSTransitContent() {
   var mSel = document.getElementById('mTransitLocation');
   if (mSel) mSel.value = desktopVal;
   onMobileTransitLocChange();
-  var vps = loadViewpoints();
+  var vps = loadLocations();
   var hint = document.getElementById('mTransitVpHint');
   if (hint) hint.style.display = (vps.length === 0) ? 'block' : 'none';
 }
@@ -2120,7 +2077,7 @@ function onMobileBirthPlaceChange() {
   var sel = document.getElementById('mInputPlaceSelect');
   if (!sel) return;
   if (sel.value !== 'manual') {
-    var vps = loadViewpoints();
+    var vps = loadLocations();
     var idx = parseInt(sel.value.replace('vp_', ''));
     var vp = vps[idx];
     if (vp) {
@@ -2138,7 +2095,7 @@ function onMobileTransitLocChange() {
   if (sel.value === 'manual') {
     custom.style.display = '';
   } else {
-    var vps = loadViewpoints();
+    var vps = loadLocations();
     var idx = parseInt(sel.value.replace('vp_', ''));
     var vp = vps[idx];
     if (vp) {
@@ -2200,22 +2157,21 @@ function refreshActiveBS() {
 }
 
 // ============================================================
-//  FORTUNE READING CARDS
+//  FORTUNE READING CARDS (unified desktop/mobile carousel)
 // ============================================================
 var FORTUNE_CATEGORIES = [
-  { id:'overall', icon:'✦', label:'全体運', color:'#F6BD60',
+  { id:'overall', icon:'\u2726', label:'全体運', color:'#F6BD60',
     bg:'rgba(246,189,96,0.08)', border:'rgba(246,189,96,0.2)' },
-  { id:'love',    icon:'💕', label:'恋愛運', color:'#FF6B9D',
+  { id:'love',    icon:'\uD83D\uDC95', label:'恋愛運', color:'#FF6B9D',
     bg:'rgba(255,107,157,0.08)', border:'rgba(255,107,157,0.2)' },
-  { id:'money',   icon:'💰', label:'金運',   color:'#FFD370',
+  { id:'money',   icon:'\uD83D\uDCB0', label:'金運',   color:'#FFD370',
     bg:'rgba(255,211,112,0.08)', border:'rgba(255,211,112,0.2)' },
-  { id:'career',  icon:'💼', label:'仕事運', color:'#FF8C42',
+  { id:'career',  icon:'\uD83D\uDCBC', label:'仕事運', color:'#FF8C42',
     bg:'rgba(255,140,66,0.08)', border:'rgba(255,140,66,0.2)' },
-  { id:'communication', icon:'💬', label:'対話運', color:'#6BB5FF',
+  { id:'communication', icon:'\uD83D\uDCAC', label:'対話運', color:'#6BB5FF',
     bg:'rgba(107,181,255,0.08)', border:'rgba(107,181,255,0.2)' },
 ];
 
-// ※本番: 全カテゴリ Claude Sonnet で動的生成（全体運 約400字、個別運 約200字）
 var FORTUNE_MOCK = {
   overall: {
     score: 82,
@@ -2244,11 +2200,17 @@ var FORTUNE_MOCK = {
   }
 };
 
+// Unified fortune carousel state and functions
 var fortuneIdx = 0;
 
-function renderFortuneCards() {
-  var track = document.getElementById('fortuneTrack');
-  var dots = document.getElementById('fortuneDots');
+/**
+ * Render fortune cards into any track/dots container pair.
+ * targetTrackId: ID of the .fortune-cards-track element
+ * targetDotsId:  ID of the .fortune-dots element
+ */
+function renderFortuneCardsTo(targetTrackId, targetDotsId) {
+  var track = document.getElementById(targetTrackId);
+  var dots = document.getElementById(targetDotsId);
   if (!track) return;
 
   track.innerHTML = FORTUNE_CATEGORIES.map(function(cat) {
@@ -2260,13 +2222,13 @@ function renderFortuneCards() {
       + '<div class="fortune-card-score">' + data.score + '</div>'
       + '</div>'
       + '<div class="fortune-card-body">' + data.text + '</div>'
-      + '<div class="fortune-card-direction">🧭 <strong>方位アドバイス:</strong> ' + data.direction + '</div>'
+      + '<div class="fortune-card-direction">\uD83E\uDDED <strong>方位アドバイス:</strong> ' + data.direction + '</div>'
       + '</div>';
   }).join('');
 
   if (dots) {
     dots.innerHTML = FORTUNE_CATEGORIES.map(function(_, i) {
-      return '<div class="fortune-dot' + (i === 0 ? ' active' : '') + '" onclick="goFortune(' + i + ')"></div>';
+      return '<div class="fortune-dot' + (i === fortuneIdx ? ' active' : '') + '" onclick="goFortune(' + i + ')"></div>';
     }).join('');
   }
   updateFortuneUI();
@@ -2280,52 +2242,36 @@ function fortunePrev() { goFortune(Math.max(0, fortuneIdx - 1)); }
 function fortuneNext() { goFortune(Math.min(FORTUNE_CATEGORIES.length - 1, fortuneIdx + 1)); }
 
 function updateFortuneUI() {
-  var track = document.getElementById('fortuneTrack');
-  if (track) track.style.transform = 'translateX(-' + (fortuneIdx * 100) + '%)';
-  document.querySelectorAll('.fortune-dot').forEach(function(d, i) {
-    d.classList.toggle('active', i === fortuneIdx);
+  // Update all fortune track containers (desktop + bottom sheet)
+  var trackIds = ['fortuneTrack', 'bsFortuneTrack'];
+  trackIds.forEach(function(id) {
+    var track = document.getElementById(id);
+    if (track) track.style.transform = 'translateX(-' + (fortuneIdx * 100) + '%)';
   });
-  var lbl = document.getElementById('fortuneLabel');
-  if (lbl) lbl.textContent = (fortuneIdx + 1) + ' / ' + FORTUNE_CATEGORIES.length;
+  // Update all fortune dots
+  document.querySelectorAll('.fortune-dots .fortune-dot').forEach(function(d, i) {
+    d.classList.toggle('active', i % FORTUNE_CATEGORIES.length === fortuneIdx);
+  });
+  // Update all fortune labels
+  var labelIds = ['fortuneLabel', 'bsFortuneLabel'];
+  labelIds.forEach(function(id) {
+    var lbl = document.getElementById(id);
+    if (lbl) lbl.textContent = (fortuneIdx + 1) + ' / ' + FORTUNE_CATEGORIES.length;
+  });
 }
 
 function buildBSFortuneContent() {
   var el = document.getElementById('bsFortune');
   if (!el) return;
-  el.innerHTML = '<h3 style="color:#F6BD60;font-size:13px;letter-spacing:2px;margin-bottom:12px;">✦ FORTUNE READING</h3>'
+  el.innerHTML = '<h3 style="color:#F6BD60;font-size:13px;letter-spacing:2px;margin-bottom:12px;">\u2726 FORTUNE READING</h3>'
     + '<div class="fortune-cards-wrap"><div class="fortune-cards-track" id="bsFortuneTrack"></div></div>'
     + '<div class="fortune-dots" id="bsFortuneDots"></div>'
     + '<div class="fortune-nav-row">'
-    + '<button class="fortune-nav-btn" onclick="bsFortunePrev()">← 前</button>'
+    + '<button class="fortune-nav-btn" onclick="fortunePrev()">\u2190 前</button>'
     + '<span id="bsFortuneLabel" style="font-size:11px;color:#888;">1 / 5</span>'
-    + '<button class="fortune-nav-btn" onclick="bsFortuneNext()">次 →</button></div>';
+    + '<button class="fortune-nav-btn" onclick="fortuneNext()">次 \u2192</button></div>';
 
-  var track = document.getElementById('bsFortuneTrack');
-  if (track) {
-    track.innerHTML = document.getElementById('fortuneTrack').innerHTML;
-    track.style.transform = 'translateX(-' + (bsFortuneIdx * 100) + '%)';
-  }
-  var dots = document.getElementById('bsFortuneDots');
-  if (dots) {
-    dots.innerHTML = FORTUNE_CATEGORIES.map(function(_, i) {
-      return '<div class="fortune-dot' + (i === bsFortuneIdx ? ' active' : '') + '" onclick="goBsFortune(' + i + ')"></div>';
-    }).join('');
-  }
-  updateBsFortuneUI();
-}
-
-var bsFortuneIdx = 0;
-function goBsFortune(idx) { bsFortuneIdx = idx; updateBsFortuneUI(); }
-function bsFortunePrev() { goBsFortune(Math.max(0, bsFortuneIdx - 1)); }
-function bsFortuneNext() { goBsFortune(Math.min(FORTUNE_CATEGORIES.length - 1, bsFortuneIdx + 1)); }
-function updateBsFortuneUI() {
-  var track = document.getElementById('bsFortuneTrack');
-  if (track) track.style.transform = 'translateX(-' + (bsFortuneIdx * 100) + '%)';
-  document.querySelectorAll('#bsFortuneDots .fortune-dot').forEach(function(d, i) {
-    d.classList.toggle('active', i === bsFortuneIdx);
-  });
-  var lbl = document.getElementById('bsFortuneLabel');
-  if (lbl) lbl.textContent = (bsFortuneIdx + 1) + ' / ' + FORTUNE_CATEGORIES.length;
+  renderFortuneCardsTo('bsFortuneTrack', 'bsFortuneDots');
 }
 
 // ============================================================
@@ -2390,7 +2336,7 @@ window.addEventListener('DOMContentLoaded', function() {
   generateFromInput();
   initBottomSheet();
   loadFortuneCacheOrGenerate();
-  renderFortuneCards();
+  renderFortuneCardsTo('fortuneTrack', 'fortuneDots');
   initFortuneSwipe();
 });
 </script>
