@@ -225,38 +225,57 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
           ),
           const SizedBox(height: 10),
         ],
-        // HTML button: "✦ あなたの称号を受け取る"
-        //   background: linear-gradient(135deg, #F9D976, #E8A840)
-        //   color: #0A0A14; font-size: 15px; font-weight: 700;
-        //   padding: 14px; border-radius: 14px;
-        GestureDetector(
-          onTap: hasProfile ? _startDiagnosis : null,
-          child: Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: 14),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(14),
-              gradient: const LinearGradient(
-                begin: Alignment.topLeft, end: Alignment.bottomRight,
-                colors: [Color(0xFFF9D976), Color(0xFFE8A840)],
-              ),
-            ),
-            child: Center(
-              child: Text(
-                _titleLight != null ? '✦ もう一度診断する' : '✦ あなたの称号を受け取る',
-                style: const TextStyle(
-                  color: Color(0xFF0A0A14), fontSize: 15, fontWeight: FontWeight.w700,
-                  letterSpacing: 0.5,
+        // HTML: #titleStartBtn — gold button (shown when not yet diagnosed)
+        if (_titleLight == null) ...[
+          // HTML: .gold-btn { width:100%; background:linear-gradient(135deg,var(--gold),var(--gold-end));
+          //   border-radius:16px; padding:14px; font-size:15px; font-weight:700; color:var(--bg-mid); }
+          GestureDetector(
+            onTap: hasProfile ? _startDiagnosis : null,
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(14),
+                gradient: const LinearGradient(
+                  begin: Alignment.topLeft, end: Alignment.bottomRight,
+                  colors: [Color(0xFFF9D976), Color(0xFFE8A840)],
                 ),
+                boxShadow: const [BoxShadow(color: Color(0x40F9D976), blurRadius: 24)],
+              ),
+              child: const Center(
+                child: Text('✦ あなたの称号を受け取る',
+                  style: TextStyle(color: Color(0xFF0A0A14), fontSize: 15, fontWeight: FontWeight.w700, letterSpacing: 0.5)),
               ),
             ),
           ),
-        ),
+        ],
+        // HTML: #titleRediagnose — ghost button (shown after diagnosis)
+        if (_titleLight != null) ...[
+          // HTML: border:1px solid rgba(249,217,118,0.3); background:none; color:#F9D976; font-size:13px;
+          GestureDetector(
+            onTap: _startDiagnosis,
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: const Color(0x4DF9D976)), // rgba(249,217,118,0.3)
+              ),
+              child: const Center(
+                child: Text('再診断する（Cosmic Pro）',
+                  style: TextStyle(color: Color(0xFFF9D976), fontSize: 13)),
+              ),
+            ),
+          ),
+        ],
+        // HTML: #titleNeedProfile { display:none; text-align:center; color:#ACACAC; font-size:13px; padding:10px; }
         if (!hasProfile) ...[
-          const SizedBox(height: 8),
-          const Center(
-            child: Text('まず出生情報を設定してください',
-              style: TextStyle(fontSize: 11, color: Color(0xFFACACAC))),
+          const Padding(
+            padding: EdgeInsets.all(10),
+            child: Center(
+              child: Text('まず出生情報を設定してください',
+                style: TextStyle(fontSize: 13, color: Color(0xFFACACAC))),
+            ),
           ),
         ],
       ],
@@ -363,59 +382,69 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
     return _SettingsGroup(
       label: '✦ Cosmic Pro',
       children: [
-        // HTML: .pro-banner { padding:16px; gap:10px; }
+        // HTML: .pro-banner { padding:22px; background:linear-gradient(135deg,rgba(249,217,118,0.09),rgba(249,217,118,0.04));
+        //   border:1px solid rgba(249,217,118,0.18); border-radius:22px;
+        //   display:flex; flex-direction:column; gap:12px; align-items:center; text-align:center; }
         Container(
           width: double.infinity,
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(22),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(22),
             gradient: const LinearGradient(
               begin: Alignment.topLeft, end: Alignment.bottomRight,
-              colors: [Color(0x1AF9D976), Color(0x0D6B5CE7)],
+              colors: [Color(0x17F9D976), Color(0x0AF9D976)], // rgba(249,217,118,0.09/0.04)
             ),
-            border: Border.all(color: const Color(0x26F9D976)),
+            border: Border.all(color: const Color(0x2EF9D976)), // rgba(249,217,118,0.18)
           ),
-          child: Column(
-            children: [
-              // HTML: .pro-title { font-size:16px; }
-              const Text('Upgrade to Cosmic Pro',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Color(0xFFEAEAEA))),
-              const SizedBox(height: 6),
-              // HTML: .pro-sub { font-size:12px; }
-              const Text('Aether shaders · Galaxy Archive · Advanced astrology',
-                style: TextStyle(fontSize: 12, color: Color(0xFFACACAC)),
-                textAlign: TextAlign.center),
-              const SizedBox(height: 10),
-              // Price row
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.baseline,
-                textBaseline: TextBaseline.alphabetic,
-                children: const [
-                  Text('\$9.99', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700, color: Color(0xFFF9D976))),
-                  SizedBox(width: 6),
-                  Text('/month', style: TextStyle(fontSize: 12, color: Color(0xFFACACAC))),
-                ],
-              ),
-              const SizedBox(height: 10),
-              // HTML: .pro-btn { padding:10px 24px; font-size:13px; }
-              Container(
-                padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 24),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12),
-                  gradient: const LinearGradient(
-                    begin: Alignment.topLeft, end: Alignment.bottomRight,
-                    colors: [Color(0xFFF9D976), Color(0xFFE8A840)],
-                  ),
+          child: Column(children: [
+            // HTML: .pro-title { font-size:18px; font-weight:700; background:linear-gradient(135deg,var(--gold),var(--gold-end));
+            //   -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+            // (Flutter doesn't support background-clip text easily, use ShaderMask)
+            ShaderMask(
+              shaderCallback: (bounds) => const LinearGradient(
+                begin: Alignment.topLeft, end: Alignment.bottomRight,
+                colors: [Color(0xFFF9D976), Color(0xFFF6BD60)],
+              ).createShader(bounds),
+              child: const Text('Upgrade to Cosmic Pro',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Colors.white)),
+            ),
+            const SizedBox(height: 12),
+            // HTML: .pro-sub { font-size:13px; color:var(--text-secondary); line-height:1.55; }
+            const Text('Aether shaders · Galaxy Archive · Advanced astrology',
+              style: TextStyle(fontSize: 13, color: Color(0xFFACACAC), height: 1.55),
+              textAlign: TextAlign.center),
+            const SizedBox(height: 12),
+            // Price row (from sanctuary.html inline styles)
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.baseline,
+              textBaseline: TextBaseline.alphabetic,
+              children: const [
+                Text('\$9.99', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700, color: Color(0xFFF9D976))),
+                SizedBox(width: 6),
+                Text('/month', style: TextStyle(fontSize: 12, color: Color(0xFFACACAC))),
+              ],
+            ),
+            const SizedBox(height: 12),
+            // HTML: .pro-btn { background:linear-gradient(135deg,var(--gold),var(--gold-end)); border-radius:14px;
+            //   padding:13px 30px; font-size:14px; font-weight:700; color:var(--bg-mid); }
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: 13, horizontal: 30),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(14),
+                gradient: const LinearGradient(
+                  begin: Alignment.topLeft, end: Alignment.bottomRight,
+                  colors: [Color(0xFFF9D976), Color(0xFFF6BD60)],
                 ),
-                child: const Text('Unlock Cosmic Pro ✦',
-                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF0A0A14))),
               ),
-              const SizedBox(height: 8),
-              const Text('\$49.99/year · Cancel anytime',
-                style: TextStyle(fontSize: 11, color: Color(0x73ACACAC))), // rgba(172,172,172,0.45)
-            ],
-          ),
+              child: const Text('Unlock Cosmic Pro ✦',
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Color(0xFF0C1D3A))),
+            ),
+            const SizedBox(height: 12),
+            // HTML inline: font-size:11px; color:rgba(172,172,172,0.45)
+            const Text('\$49.99/year · Cancel anytime',
+              style: TextStyle(fontSize: 11, color: Color(0x73ACACAC))),
+          ]),
         ),
       ],
     );
@@ -555,10 +584,10 @@ class _SettingsGroup extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // HTML: .section-label
+        // HTML: .section-label { font-size:11px; font-weight:700; color:var(--gold); letter-spacing:1.8px; text-transform:uppercase; }
         Text(label, style: const TextStyle(
-          fontSize: 12, fontWeight: FontWeight.w600,
-          color: Color(0xFFF9D976), letterSpacing: 1.5,
+          fontSize: 11, fontWeight: FontWeight.w700,
+          color: Color(0xFFF9D976), letterSpacing: 1.8,
         )),
         const SizedBox(height: 10),
         ...List.generate(children.length, (i) {

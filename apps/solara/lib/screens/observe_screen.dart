@@ -28,6 +28,7 @@ class _ObserveScreenState extends State<ObserveScreen> {
 
   // History
   List<DailyReading> _history = [];
+  String? _expandedHistory; // date string of expanded card
 
   // HTML exact: TAROT_READINGS templates
   static const _readings = <String, List<String>>{

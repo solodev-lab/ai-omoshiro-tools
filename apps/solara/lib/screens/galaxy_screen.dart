@@ -4,14 +4,14 @@ import 'package:flutter/material.dart';
 import '../models/daily_reading.dart';
 import '../models/galaxy_cycle.dart';
 import '../models/lunar_intention.dart';
-import '../theme/solara_colors.dart';
+
 import '../utils/constellation_namer.dart';
 import '../utils/moon_phase.dart';
 import '../utils/solara_storage.dart';
 import '../utils/tarot_data.dart';
 import '../widgets/constellation_painter.dart';
 import '../widgets/cycle_spiral_painter.dart';
-import '../widgets/glass_panel.dart';
+
 import '../widgets/moon_overlay.dart';
 
 class GalaxyScreen extends StatefulWidget {
@@ -303,12 +303,12 @@ class _GalaxyScreenState extends State<GalaxyScreen>
 
   @override
   Widget build(BuildContext context) {
+    // HTML: background: radial-gradient(ellipse at center, #0a1220 0%, #020408 100%)
     return Container(
       decoration: const BoxDecoration(
         gradient: RadialGradient(
-          center: Alignment.center,
-          radius: 1.2,
-          colors: [SolaraColors.celestialBlueLight, SolaraColors.celestialBlueDark],
+          center: Alignment.center, radius: 1.2,
+          colors: [Color(0xFF0A1220), Color(0xFF020408)],
         ),
       ),
       child: SafeArea(
@@ -316,30 +316,17 @@ class _GalaxyScreenState extends State<GalaxyScreen>
           children: [
             Column(
               children: [
-                const SizedBox(height: 16),
-                // Header
-                Text(
-                  'GALAXY',
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        color: SolaraColors.solaraGold,
-                        letterSpacing: 3.0,
-                      ),
-                ),
-                const SizedBox(height: 12),
-                // Tab bar
+                // HTML: no "GALAXY" header — tabs are at top directly
+                // HTML: .inner-tabs { padding:0 20px; margin-bottom:8px; }
                 _buildTabBar(),
                 const SizedBox(height: 8),
-                // Content
                 Expanded(
                   child: _activeTab == 0 ? _buildCycleTab() : _buildStarAtlasTab(),
                 ),
               ],
             ),
-            // Dot popup overlay
             if (_popupDayIndex >= 0) _buildDotPopup(),
-            // Replay overlay
             if (_replayCycle != null) _buildReplayOverlay(),
-            // Moon overlays
             if (_activeOverlay != null) _buildMoonOverlay(),
           ],
         ),
@@ -347,49 +334,35 @@ class _GalaxyScreenState extends State<GalaxyScreen>
     );
   }
 
+  // HTML: .inner-tabs { display:flex; gap:0; padding:0 20px; }
   Widget _buildTabBar() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 48),
-      child: Row(
-        children: [
-          Expanded(child: _buildTab(0, '\u{1F300} Cycle')),
-          const SizedBox(width: 8),
-          Expanded(child: _buildTab(1, '\u{2726} Star Atlas')),
-        ],
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Row(children: [
+        Expanded(child: _buildTab(0, '🌀 Cycle')),
+        Expanded(child: _buildTab(1, '✦ Star Atlas')),
+      ]),
     );
   }
 
+  // HTML: .inner-tab-btn { flex:1; padding:10px 0; font-size:12px; font-weight:700;
+  //   letter-spacing:1px; text-transform:uppercase; color:rgba(255,255,255,0.35);
+  //   border-bottom:2px solid transparent; }
+  // .inner-tab-btn.active { color:#F9D976; border-bottom-color:#F9D976; }
   Widget _buildTab(int index, String label) {
     final isActive = _activeTab == index;
     return GestureDetector(
       onTap: () => setState(() => _activeTab = index),
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 8),
+        padding: const EdgeInsets.symmetric(vertical: 10),
         decoration: BoxDecoration(
-          border: Border(
-            bottom: BorderSide(
-              color: isActive
-                  ? SolaraColors.solaraGold
-                  : Colors.transparent,
-              width: 2,
-            ),
-          ),
+          border: Border(bottom: BorderSide(
+            color: isActive ? const Color(0xFFF9D976) : Colors.transparent, width: 2)),
         ),
-        child: Center(
-          child: Text(
-            label,
-            // HTML: font-size 12px, font-weight 700, letter-spacing 1px, inactive rgba(255,255,255,0.35)
-            style: TextStyle(
-              color: isActive
-                  ? SolaraColors.solaraGold
-                  : Colors.white.withAlpha(89),
-              fontSize: 12,
-              fontWeight: isActive ? FontWeight.w700 : FontWeight.w400,
-              letterSpacing: 1.0,
-            ),
-          ),
-        ),
+        child: Center(child: Text(label, style: TextStyle(
+          color: isActive ? const Color(0xFFF9D976) : const Color(0x59FFFFFF), // rgba(255,255,255,0.35)
+          fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 1,
+        ))),
       ),
     );
   }
@@ -449,39 +422,55 @@ class _GalaxyScreenState extends State<GalaxyScreen>
     );
   }
 
+  // HTML: .day-badge { position:absolute; top:8px; right:20px;
+  //   background:rgba(249,217,118,0.12); border:1px solid rgba(249,217,118,0.28);
+  //   border-radius:22px; padding:8px 14px; display:flex; flex-direction:column; align-items:center; }
   Widget _buildDayBadge() {
-    return GlassPanel(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      borderRadius: BorderRadius.circular(16),
-      child: Text(
-        'Day ${_currentDayIndex + 1} of $_totalDays',
-        style: const TextStyle(
-          color: SolaraColors.solaraGold,
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
-          letterSpacing: 1.0,
-        ),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      decoration: BoxDecoration(
+        color: const Color(0x1FF9D976), // rgba(249,217,118,0.12)
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: const Color(0x47F9D976)), // rgba(249,217,118,0.28)
       ),
+      child: Column(children: [
+        // HTML: .day-num { font-size:22px; font-weight:700; color:#F9D976; line-height:1; }
+        Text('${_currentDayIndex + 1}', style: const TextStyle(
+          fontSize: 22, fontWeight: FontWeight.w700, color: Color(0xFFF9D976), height: 1)),
+        // HTML: .day-lbl { font-size:9px; color:rgba(249,217,118,0.65); letter-spacing:1.2px; }
+        Text('of $_totalDays', style: const TextStyle(
+          fontSize: 9, color: Color(0xA6F9D976), letterSpacing: 1.2)),
+      ]),
     );
   }
 
+  // HTML: .moon-badge { position:absolute; top:8px; left:20px;
+  //   background:rgba(192,200,224,0.10); border:1px solid rgba(192,200,224,0.22);
+  //   border-radius:22px; padding:8px 14px; display:flex; flex-direction:column; align-items:center; }
   Widget _buildMoonBadge() {
     final info = MoonPhase.getPhaseInfo(DateTime.now());
-    return GlassPanel(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      borderRadius: BorderRadius.circular(16),
-      child: Text(
-        '${info.emoji} ${info.label}',
-        style: const TextStyle(
-          color: SolaraColors.textSecondary,
-          fontSize: 11,
-        ),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      decoration: BoxDecoration(
+        color: const Color(0x1AC0C8E0), // rgba(192,200,224,0.10)
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: const Color(0x38C0C8E0)), // rgba(192,200,224,0.22)
       ),
+      child: Column(children: [
+        // HTML: .moon-emoji { font-size:20px; line-height:1; }
+        Text(info.emoji, style: const TextStyle(fontSize: 20, height: 1)),
+        const SizedBox(height: 2),
+        // HTML: .moon-lbl { font-size:9px; color:rgba(192,200,224,0.65); letter-spacing:1px; }
+        Text(info.label, style: const TextStyle(
+          fontSize: 9, color: Color(0xA6C0C8E0), letterSpacing: 1)),
+      ]),
     );
   }
 
+  // HTML: .stella-msg { margin:0 16px 6px; padding:12px 16px 14px; border-radius:20px; }
+  // .bubble-by { font-size:10px; font-weight:700; color:#F9D976; letter-spacing:1.8px; }
+  // .bubble-msg { font-size:13px; font-weight:300; color:#EAEAEA; line-height:1.6; }
   Widget _buildStellaMessage() {
-    // Count readings in current cycle
     final readingCount = _cycleDays.where((d) => d != null).length;
     String msg;
     if (readingCount == 0) {
@@ -494,27 +483,21 @@ class _GalaxyScreenState extends State<GalaxyScreen>
       msg = 'A luminous cycle. Soon these stars will become a constellation.';
     }
 
-    return GlassPanel(
-      padding: const EdgeInsets.all(14),
-      borderRadius: BorderRadius.circular(16),
-      child: Row(
-        children: [
-          const Text('\u{2728}', style: TextStyle(fontSize: 18)),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              msg,
-              // HTML: font-size 13px, font-weight 300, line-height 1.6
-              style: const TextStyle(
-                color: SolaraColors.textPrimary,
-                fontSize: 13,
-                fontWeight: FontWeight.w300,
-                height: 1.6,
-              ),
-            ),
-          ),
-        ],
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
+      decoration: BoxDecoration(
+        color: const Color(0x0DFFFFFF), // glass
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0x1AFFFFFF)),
       ),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        const Text('✦ Stella', style: TextStyle(
+          fontSize: 10, fontWeight: FontWeight.w700, color: Color(0xFFF9D976),
+          letterSpacing: 1.8)),
+        const SizedBox(height: 7),
+        Text('"$msg"', style: const TextStyle(
+          fontSize: 13, fontWeight: FontWeight.w300, color: Color(0xFFEAEAEA), height: 1.6)),
+      ]),
     );
   }
 
@@ -569,6 +552,8 @@ class _GalaxyScreenState extends State<GalaxyScreen>
     }
   }
 
+  // HTML: .dot-popup { background:rgba(8,12,20,0.95); backdrop-filter:blur(20px);
+  //   border:1px solid rgba(255,255,255,0.15); border-radius:18px; padding:14px 16px; width:200px; }
   Widget _buildDotPopup() {
     if (_popupDayIndex < 0 || _popupDayIndex >= _cycleDays.length) {
       return const SizedBox.shrink();
@@ -577,195 +562,128 @@ class _GalaxyScreenState extends State<GalaxyScreen>
     if (reading == null) return const SizedBox.shrink();
 
     final card = TarotData.getCard(reading.cardId);
-    final dayDate = _cycleStart.add(Duration(days: _popupDayIndex));
-    final moonInfo = MoonPhase.getPhaseInfo(dayDate);
+    final planetNamesJP = const {'sun':'太陽','moon':'月','mercury':'水星','venus':'金星','mars':'火星',
+      'jupiter':'木星','saturn':'土星','uranus':'天王星','neptune':'海王星','pluto':'冥王星'};
 
     return Positioned(
-      left: (_popupPosition.dx - 90).clamp(8, MediaQuery.of(context).size.width - 196),
-      top: (_popupPosition.dy - 100).clamp(8, MediaQuery.of(context).size.height - 140),
-      child: GlassPanel(
-        blurRadius: 20,
-        padding: const EdgeInsets.all(14),
-        borderRadius: BorderRadius.circular(16),
-        child: SizedBox(
-          width: 180,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Day ${_popupDayIndex + 1} ${moonInfo.emoji}',
-                style: const TextStyle(
-                  color: SolaraColors.solaraGold,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                '${card.emoji} ${card.nameEN}',
-                style: const TextStyle(
-                  color: SolaraColors.textPrimary,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                card.isMajor
-                    ? '${card.planet?.toUpperCase() ?? ''} \u00B7 Major Arcana'
-                    : '${card.suit?.toUpperCase() ?? ''} \u00B7 ${card.element}',
-                style: const TextStyle(
-                  color: SolaraColors.textSecondary,
-                  fontSize: 11,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                card.keyword,
-                style: const TextStyle(
-                  color: SolaraColors.textSecondary,
-                  fontSize: 11,
-                  fontStyle: FontStyle.italic,
-                ),
-              ),
-            ],
-          ),
+      left: (_popupPosition.dx - 100).clamp(8, MediaQuery.of(context).size.width - 208),
+      top: (_popupPosition.dy - 120).clamp(8, MediaQuery.of(context).size.height - 160),
+      child: Container(
+        width: 200,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: const Color(0xF2080C14), // rgba(8,12,20,0.95)
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: const Color(0x26FFFFFF)), // rgba(255,255,255,0.15)
         ),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
+          // HTML: .popup-day { font-size:10px; font-weight:700; color:#F9D976; letter-spacing:1.5px; }
+          Text('DAY ${_popupDayIndex + 1}', style: const TextStyle(
+            fontSize: 10, fontWeight: FontWeight.w700, color: Color(0xFFF9D976), letterSpacing: 1.5)),
+          const SizedBox(height: 8),
+          // HTML: .popup-card { display:flex; align-items:center; gap:8px; }
+          Row(children: [
+            // HTML: .popup-card-emoji { font-size:22px; }
+            Text(card.emoji, style: const TextStyle(fontSize: 22)),
+            const SizedBox(width: 8),
+            // HTML: .popup-card-name { font-size:12px; font-weight:700; color:#EAEAEA; }
+            Expanded(child: Text(card.nameEN, style: const TextStyle(
+              fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFFEAEAEA)))),
+          ]),
+          const SizedBox(height: 8),
+          // HTML: .popup-planet { font-size:11px; color:rgba(172,172,172,0.8); }
+          if (card.planet != null)
+            Text('Planet: ${planetNamesJP[card.planet] ?? card.planet}', style: const TextStyle(
+              fontSize: 11, color: Color(0xCCACACAC))),
+          const SizedBox(height: 4),
+          // HTML: .popup-keyword { font-size:11px; font-weight:300; color:rgba(249,217,118,0.7); }
+          Text('Keyword: ${card.keyword}', style: const TextStyle(
+            fontSize: 11, fontWeight: FontWeight.w300, color: Color(0xB3F9D976))),
+        ]),
       ),
     );
   }
 
   // ====================== STAR ATLAS TAB ======================
 
+  // HTML: .atlas-content { flex:1; overflow-y:auto; padding:0 16px 100px; display:flex; flex-direction:column; gap:20px; }
   Widget _buildStarAtlasTab() {
     if (_completedCycles.isEmpty) {
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(32),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                '\u{2726}',
-                style: TextStyle(
-                  fontSize: 48,
-                  color: SolaraColors.solaraGold.withValues(alpha: 0.3),
-                ),
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                'Star Atlas',
-                style: TextStyle(
-                  color: SolaraColors.textPrimary,
-                  fontSize: 20,
-                  fontWeight: FontWeight.w300,
-                ),
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'Complete a lunar cycle to form\nyour first constellation.',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: SolaraColors.textSecondary,
-                  fontSize: 13,
-                  height: 1.5,
-                ),
-              ),
-            ],
-          ),
+          child: Column(mainAxisSize: MainAxisSize.min, children: [
+            Text('✦', style: TextStyle(fontSize: 48, color: const Color(0xFFF9D976).withAlpha(77))),
+            const SizedBox(height: 16),
+            const Text('Star Atlas', style: TextStyle(
+              color: Color(0xFFEAEAEA), fontSize: 20, fontWeight: FontWeight.w300)),
+            const SizedBox(height: 8),
+            const Text('Complete a lunar cycle to form\nyour first constellation.',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Color(0xFFACACAC), fontSize: 13, height: 1.5)),
+          ]),
         ),
       );
     }
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: GridView.builder(
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          crossAxisSpacing: 12,
-          mainAxisSpacing: 12,
-          childAspectRatio: 0.8,
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
+      child: Column(children: [
+        // HTML: .screen-h1 "Star Atlas" + .screen-h2 "Your completed cosmic cycles"
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: const [
+            Text('Star Atlas', style: TextStyle(
+              fontSize: 20, fontWeight: FontWeight.w300, color: Color(0xFFEAEAEA))),
+            SizedBox(height: 4),
+            Text('Your completed cosmic cycles', style: TextStyle(
+              fontSize: 13, color: Color(0xFFACACAC))),
+          ]),
         ),
-        itemCount: _completedCycles.length,
-        itemBuilder: (context, index) {
-          final cycle = _completedCycles[_completedCycles.length - 1 - index];
-          return _buildConstellationCard(cycle);
-        },
-      ),
+        const SizedBox(height: 12),
+        // HTML: .constellation-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(160px, 1fr)); gap:12px; }
+        Expanded(child: GridView.builder(
+          gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+            maxCrossAxisExtent: 200, crossAxisSpacing: 12, mainAxisSpacing: 12,
+            childAspectRatio: 0.75, // HTML: aspect-ratio:0.75
+          ),
+          itemCount: _completedCycles.length,
+          itemBuilder: (context, index) {
+            final cycle = _completedCycles[_completedCycles.length - 1 - index];
+            return _buildConstellationCard(cycle);
+          },
+        )),
+      ]),
     );
   }
 
+  // HTML: .const-card { border-radius:20px; padding:14px; aspect-ratio:0.75; }
   Widget _buildConstellationCard(GalaxyCycle cycle) {
-    final starColor = cycle.rarity >= 4
-        ? SolaraColors.solaraGold
-        : cycle.rarity >= 3
-            ? const Color(0xFFB080FF)
-            : SolaraColors.textSecondary;
     return GestureDetector(
       onTap: () => _openReplay(cycle),
-      child: GlassPanel(
+      child: Container(
         padding: const EdgeInsets.all(14),
-        borderRadius: BorderRadius.circular(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: Center(
-                child: CustomPaint(
-                  painter: MiniConstellationPainter(cycle: cycle),
-                  size: const Size(80, 80),
-                ),
-              ),
-            ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Text(
-                  cycle.dateRangeLabel,
-                  style: const TextStyle(
-                    color: SolaraColors.solaraGold,
-                    fontSize: 11,
-                    letterSpacing: 0.5,
-                  ),
-                ),
-                const Spacer(),
-                Text(
-                  '\u2605' * cycle.rarity,
-                  style: TextStyle(
-                    color: starColor,
-                    fontSize: 10,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 3),
-            Text(
-              cycle.nameEN,
-              style: const TextStyle(
-                color: SolaraColors.textPrimary,
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-              ),
-              overflow: TextOverflow.ellipsis,
-            ),
-            Text(
-              cycle.nameJP,
-              style: const TextStyle(
-                color: SolaraColors.textSecondary,
-                fontSize: 12,
-              ),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              '${cycle.dots.length} stars \u00B7 ${cycle.dots.where((d) => d.isMajor).length} anchors \u00B7 ${cycle.rarityLabel}',
-              style: TextStyle(
-                color: SolaraColors.textSecondary.withValues(alpha: 0.6),
-                fontSize: 10,
-              ),
-            ),
-          ],
+        decoration: BoxDecoration(
+          color: const Color(0x0DFFFFFF), // glass
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: const Color(0x1AFFFFFF)),
         ),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          // HTML: .const-mini { flex:1; display:flex; align-items:center; justify-content:center; }
+          Expanded(child: Center(child: CustomPaint(
+            painter: MiniConstellationPainter(cycle: cycle),
+            size: const Size(80, 80),
+          ))),
+          const SizedBox(height: 8),
+          // HTML: .const-date { font-size:10px; color:#ACACAC; }
+          Text(cycle.dateRangeLabel, style: const TextStyle(
+            fontSize: 10, color: Color(0xFFACACAC))),
+          const SizedBox(height: 2),
+          // HTML: .const-seed { font-size:12px; font-weight:700; color:#EAEAEA; }
+          Text(cycle.nameEN, style: const TextStyle(
+            fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFFEAEAEA)),
+            overflow: TextOverflow.ellipsis),
+        ]),
       ),
     );
   }
@@ -793,148 +711,87 @@ class _GalaxyScreenState extends State<GalaxyScreen>
     setState(() => _replayCycle = null);
   }
 
+  // HTML: #replayModal { background:rgba(2,4,10,0.96); backdrop-filter:blur(12px); }
+  // .replay-inner { width:340px; display:flex; flex-direction:column; align-items:center; gap:20px; }
   Widget _buildReplayOverlay() {
     final cycle = _replayCycle!;
     return GestureDetector(
       onTap: _closeReplay,
       child: Container(
-        color: const Color(0xF0080C14),
+        color: const Color(0xF5020408), // rgba(2,4,10,0.96)
         child: Center(
           child: AnimatedBuilder(
             animation: _replayController!,
             builder: (context, _) {
               final t = _replayController!.value;
-              // Phase 1: Camera animation (0 - 0.46 = 3s/6.5s)
               final cameraT = (t / 0.46).clamp(0.0, 1.0);
               final easedCamera = Curves.easeInOutCubic.transform(cameraT);
               final cameraAngle = _cameraAngle55 * (1.0 - easedCamera);
-
-              // Phase 2: Line connections (0.46 - 0.69 = 1.5s/6.5s)
               final lineT = ((t - 0.46) / 0.23).clamp(0.0, 1.0);
-
-              // Phase 3: Name fade-in (0.69 - 1.0 = 2s/6.5s)
               final fadeT = ((t - 0.69) / 0.31).clamp(0.0, 1.0);
-
-              // Combined progress for painter: dots appear with camera, lines after
               final painterProgress = cameraT * 0.4 + lineT * 0.6;
 
-              return Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Name + rarity (fades in)
-                  Opacity(
-                    opacity: fadeT,
-                    child: Column(
-                      children: [
-                        Text(
-                          cycle.nameEN,
-                          style: const TextStyle(
-                            color: SolaraColors.textPrimary,
-                            fontSize: 22,
-                            fontWeight: FontWeight.w300,
-                            letterSpacing: 2,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          cycle.nameJP,
-                          style: const TextStyle(
-                            color: SolaraColors.solaraGold,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w300,
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-                        // Rarity stars
-                        _buildRarityStars(cycle.rarity, cycle.rarityLabel),
-                      ],
+              return SizedBox(
+                width: 340,
+                child: Column(mainAxisSize: MainAxisSize.min, children: [
+                  // HTML: .replay-title { font-size:20px; font-weight:700; text-align:center; }
+                  Opacity(opacity: fadeT, child: Column(children: [
+                    Text(cycle.nameEN, style: const TextStyle(
+                      color: Color(0xFFEAEAEA), fontSize: 20, fontWeight: FontWeight.w700),
+                      textAlign: TextAlign.center),
+                    const SizedBox(height: 4),
+                    // HTML: .replay-sub { font-size:12px; color:#ACACAC; text-align:center; }
+                    Text(cycle.nameJP, style: const TextStyle(
+                      color: Color(0xFFACACAC), fontSize: 12), textAlign: TextAlign.center),
+                  ])),
+                  const SizedBox(height: 20),
+                  // HTML: #replayCanvas { border-radius:20px; border:1px solid rgba(255,255,255,0.1); background:rgba(6,10,18,0.8); }
+                  Container(
+                    width: 300, height: 300,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(20),
+                      color: const Color(0xCC060A12), // rgba(6,10,18,0.8)
+                      border: Border.all(color: const Color(0x1AFFFFFF)),
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(20),
+                      child: CustomPaint(
+                        painter: ConstellationPainter(
+                          cycle: cycle, progress: painterProgress, cameraAngle: cameraAngle),
+                      ),
                     ),
                   ),
                   const SizedBox(height: 20),
-                  // Animated constellation with camera
-                  SizedBox(
-                    width: 300,
-                    height: 300,
-                    child: CustomPaint(
-                      painter: ConstellationPainter(
-                        cycle: cycle,
-                        progress: painterProgress,
-                        cameraAngle: cameraAngle,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Opacity(
-                    opacity: fadeT,
-                    child: Column(
-                      children: [
-                        Text(
-                          cycle.dateRangeLabel,
-                          style: const TextStyle(
-                            color: SolaraColors.textSecondary,
-                            fontSize: 13,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          '${cycle.dots.length} stars \u00B7 ${cycle.dots.where((d) => d.isMajor).length} anchors',
-                          style: const TextStyle(
-                            color: SolaraColors.textSecondary,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+                  // HTML: .replay-symbol + .replay-name + .replay-date
+                  Opacity(opacity: fadeT, child: Column(children: [
+                    // HTML: .replay-date { font-size:12px; color:#ACACAC; }
+                    Text(cycle.dateRangeLabel, style: const TextStyle(
+                      fontSize: 12, color: Color(0xFFACACAC))),
+                    const SizedBox(height: 4),
+                    Text('${cycle.dots.length} stars · ${cycle.dots.where((d) => d.isMajor).length} anchors',
+                      style: const TextStyle(fontSize: 12, color: Color(0xFFACACAC))),
+                  ])),
                   const SizedBox(height: 24),
-                  TextButton(
-                    onPressed: _closeReplay,
-                    child: const Text(
-                      '\u{2190} Back to Star Atlas',
-                      style: TextStyle(
-                        color: SolaraColors.solaraGold,
-                        fontSize: 14,
-                        letterSpacing: 1,
+                  // HTML: .replay-close { background:none; border:1px solid rgba(255,255,255,0.2);
+                  //   border-radius:12px; padding:10px 28px; font-size:13px; color:#ACACAC; }
+                  GestureDetector(
+                    onTap: _closeReplay,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 10),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: const Color(0x33FFFFFF)),
                       ),
+                      child: const Text('← Back to Star Atlas', style: TextStyle(
+                        fontSize: 13, color: Color(0xFFACACAC))),
                     ),
                   ),
-                ],
+                ]),
               );
             },
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildRarityStars(int stars, String label) {
-    final starColor = stars >= 4
-        ? SolaraColors.solaraGold
-        : stars >= 3
-            ? const Color(0xFFB080FF)
-            : SolaraColors.textSecondary;
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          '\u2605' * stars + '\u2606' * (5 - stars),
-          style: TextStyle(
-            color: starColor,
-            fontSize: 14,
-            letterSpacing: 2,
-          ),
-        ),
-        const SizedBox(width: 8),
-        Text(
-          label,
-          style: TextStyle(
-            color: starColor,
-            fontSize: 12,
-            fontWeight: FontWeight.w500,
-            letterSpacing: 1,
-          ),
-        ),
-      ],
     );
   }
 
