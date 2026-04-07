@@ -4,13 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Solara — Galaxy</title>
-  <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="shared/styles.css">
   <style>
     * { margin:0; padding:0; box-sizing:border-box; }
     body {
       background: radial-gradient(ellipse at center, #0a1220 0%, #020408 100%);
-      min-height: 100vh; font-family: 'Lato', sans-serif; color: #EAEAEA;
+      min-height: 100vh; font-family: var(--font-body); color: #EAEAEA;
       margin: 0; padding: 0; overflow: hidden;
     }
     #bgCanvas { position:absolute; inset:0; z-index:0; width:100%; height:100%; }
@@ -19,7 +18,7 @@
     .inner-tabs { display:flex; gap:0; padding:0 20px; margin-bottom:8px; }
     .inner-tab-btn {
       flex:1; padding:10px 0; background:none; border:none; cursor:pointer;
-      font-family:'Lato',sans-serif; font-size:12px; font-weight:700;
+      font-family:var(--font-body); font-size:12px; font-weight:700;
       letter-spacing:1px; text-transform:uppercase; color:rgba(255,255,255,0.35);
       border-bottom:2px solid transparent; transition:all 0.3s;
     }
@@ -94,7 +93,7 @@
     .formation-close {
       position:absolute; bottom:48px; left:50%; transform:translateX(-50%);
       background:linear-gradient(135deg,#F9D976,#F6BD60); border:none; border-radius:16px;
-      padding:14px 36px; font-family:'Lato',sans-serif; font-size:15px; font-weight:700;
+      padding:14px 36px; font-family:var(--font-body); font-size:15px; font-weight:700;
       color:#0C1D3A; cursor:pointer; opacity:0; pointer-events:none; transition:opacity 0.5s;
     }
     .formation-close.visible { opacity:1; pointer-events:auto; }
@@ -116,7 +115,7 @@
     .replay-date { font-size:12px; color:#ACACAC; margin-top:2px; text-align:center; }
     .replay-close {
       background:none; border:1px solid rgba(255,255,255,0.2); border-radius:12px;
-      padding:10px 28px; font-family:'Lato',sans-serif; font-size:13px;
+      padding:10px 28px; font-family:var(--font-body); font-size:13px;
       color:#ACACAC; cursor:pointer;
     }
 
@@ -127,7 +126,7 @@
   </style>
 </head>
 <body>
-<div class="phone" id="phone">
+<div class="phone cosmic-bg" id="phone">
   <canvas id="bgCanvas"></canvas>
   <div id="starContainer" style="position:absolute;inset:0;z-index:1;pointer-events:none;overflow:hidden;"></div>
 
@@ -219,7 +218,8 @@
 
 </div><!-- end phone -->
 
-<script src="shared/nav.js"></script>
+<script src="shared/icons.js?v=2"></script>
+<script src="shared/nav.js?v=2"></script>
 <script src="shared/vibe.js"></script>
 <script src="shared/stella.js"></script>
 <script src="shared/events.js"></script>

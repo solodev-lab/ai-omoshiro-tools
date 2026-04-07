@@ -5,8 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Solara - Horoscope Chart</title>
 <script src="https://cdn.jsdelivr.net/npm/astronomy-engine@2.1.19/astronomy.browser.min.js"></script>
+<link rel="stylesheet" href="shared/styles.css">
 <script src="shared/astro-math.js"></script>
-<script src="shared/nav.js"></script>
+<script src="shared/icons.js?v=2"></script>
+<script src="shared/nav.js?v=2"></script>
 <style>
 /* ============================================================
    RESET & BASE
@@ -14,9 +16,9 @@
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
 body {
-  background: #0A0A14;
+  background: var(--bg-deep);
   color: #E8E0D0;
-  font-family: 'Segoe UI', 'Helvetica Neue', sans-serif;
+  font-family: var(--font-body);
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -24,22 +26,7 @@ body {
   padding: 20px 20px 90px;
 }
 
-/* -- BOTTOM NAV -- */
-.bottom-nav {
-  position: fixed; bottom: 0; left: 0; right: 0; height: 70px;
-  background: rgba(10, 10, 20, 0.95);
-  border-top: 1px solid rgba(255,255,255,0.05);
-  display: flex; align-items: center; justify-content: space-around;
-  padding: 0 20px 10px; z-index: 200;
-}
-.nav-item {
-  display: flex; flex-direction: column; align-items: center; gap: 3px;
-  opacity: 0.4; cursor: pointer; transition: opacity 0.3s; background: none; border: none; color: #E8E0D0;
-}
-.nav-item.active { opacity: 1; }
-.nav-item.active .nav-label { color: #C9A84C; }
-.nav-icon { font-size: 20px; }
-.nav-label { font-size: 9px; letter-spacing: 1px; text-transform: uppercase; }
+/* Bottom nav — styled by shared/styles.css */
 
 h1 { font-size: 24px; color: #F6BD60; letter-spacing: 4px; margin-bottom: 8px; }
 
@@ -366,7 +353,7 @@ h1 { font-size: 24px; color: #F6BD60; letter-spacing: 4px; margin-bottom: 8px; }
 }
 </style>
 </head>
-<body>
+<body class="cosmic-bg">
 
 <!-- Mobile Chart Menu Button (モバイルのみ表示) -->
 <div class="chart-menu-btn" id="chartMenuBtn" onclick="toggleChartMenu()">
@@ -1663,7 +1650,7 @@ function updateHouseSystemLabel() {
   t.setAttribute('y', '592');
   t.setAttribute('fill', 'rgba(255,255,255,0.25)');
   t.setAttribute('font-size', '10');
-  t.setAttribute('font-family', 'Lato, sans-serif');
+  t.setAttribute('font-family', "'DM Sans', sans-serif");
   t.textContent = 'House System: ' + text;
   svg.appendChild(t);
 }

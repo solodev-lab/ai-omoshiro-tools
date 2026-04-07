@@ -4,14 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Solara — Sanctuary</title>
-  <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="shared/styles.css">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <style>
     * { margin:0; padding:0; box-sizing:border-box; }
     body {
       background: radial-gradient(ellipse at center, #0a1220 0%, #020408 100%);
-      min-height: 100vh; font-family: 'Lato', sans-serif; color: #EAEAEA;
+      min-height: 100vh; font-family: var(--font-body); color: #EAEAEA;
       margin: 0; padding: 0; overflow: hidden;
     }
     #bgCanvas { position:absolute; inset:0; z-index:0; width:100%; height:100%; }
@@ -20,6 +19,7 @@
       flex:1; overflow-y:auto; padding:56px 20px 100px;
       display:flex; flex-direction:column; gap:20px;
       max-width:600px; margin:0 auto; width:100%;
+      position:relative; z-index:10;
     }
     .sanctuary-content::-webkit-scrollbar { display:none; }
 
@@ -42,7 +42,9 @@
     .settings-icon {
       width:36px; height:36px; background:rgba(255,255,255,0.05);
       border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:17px;
+      color:rgba(249,217,118,0.7);
     }
+    .settings-icon svg { width:20px; height:20px; }
     .settings-txt { font-size:14px; }
     .settings-val { font-size:13px; color:#ACACAC; }
 
@@ -487,7 +489,7 @@
     <span>87%🔋</span>
   </div>
 
-  <div class="main-area">
+  <div class="main-area cosmic-bg">
     <div class="sanctuary-content">
       <div class="profile-row">
         <div class="profile-orb">✦</div>
@@ -500,11 +502,11 @@
       <div class="settings-group">
         <div class="section-label">✦ Stellar Profile</div>
         <div class="settings-item glass" onclick="openBirthInfo()" style="cursor:pointer">
-          <div class="settings-left"><div class="settings-icon">🌟</div><div class="settings-txt">出生情報</div></div>
+          <div class="settings-left"><div class="settings-icon" id="si-birth"></div><div class="settings-txt">出生情報</div></div>
           <div class="settings-val" id="birthInfoVal">未設定 ›</div>
         </div>
         <div class="settings-item glass" onclick="openHomeInfo()" style="cursor:pointer">
-          <div class="settings-left"><div class="settings-icon">🏠</div><div class="settings-txt">自宅（現住所）</div></div>
+          <div class="settings-left"><div class="settings-icon" id="si-home"></div><div class="settings-txt">自宅（現住所）</div></div>
           <div class="settings-val" id="homeVal">未設定 ›</div>
         </div>
       </div>
@@ -573,7 +575,7 @@
       <div class="settings-group">
         <div class="section-label">✦ Astrology</div>
         <div class="settings-item glass" id="houseSystemRow" onclick="toggleHouseSelect()" style="cursor:pointer">
-          <div class="settings-left"><div class="settings-icon">🏛️</div><div class="settings-txt">House System</div></div>
+          <div class="settings-left"><div class="settings-icon" id="si-house"></div><div class="settings-txt">House System</div></div>
           <div class="settings-val" id="houseSystemVal">Placidus ›</div>
         </div>
         <div id="houseSelectPanel" style="display:none;padding:0 8px;">
@@ -587,7 +589,7 @@
           </div>
         </div>
         <div class="settings-item glass" onclick="openOrbOverlay()" style="cursor:pointer">
-          <div class="settings-left"><div class="settings-icon">🔭</div><div class="settings-txt">Aspect Orbs</div></div>
+          <div class="settings-left"><div class="settings-icon" id="si-telescope"></div><div class="settings-txt">Aspect Orbs</div></div>
           <div class="settings-val" id="orbSummaryVal">All 2° ›</div>
         </div>
       </div>
@@ -595,15 +597,15 @@
       <div class="settings-group">
         <div class="section-label">✦ App</div>
         <div class="settings-item glass">
-          <div class="settings-left"><div class="settings-icon">🌐</div><div class="settings-txt">Language</div></div>
+          <div class="settings-left"><div class="settings-icon" id="si-globe"></div><div class="settings-txt">Language</div></div>
           <div class="settings-val">English ›</div>
         </div>
         <div class="settings-item glass">
-          <div class="settings-left"><div class="settings-icon">🔔</div><div class="settings-txt">Notifications</div></div>
+          <div class="settings-left"><div class="settings-icon" id="si-bell"></div><div class="settings-txt">Notifications</div></div>
           <div class="toggle on" onclick="this.classList.toggle('on')"><div class="toggle-thumb"></div></div>
         </div>
         <div class="settings-item glass">
-          <div class="settings-left"><div class="settings-icon">📋</div><div class="settings-txt">Terms & Privacy</div></div>
+          <div class="settings-left"><div class="settings-icon" id="si-doc"></div><div class="settings-txt">Terms & Privacy</div></div>
           <div class="settings-val">›</div>
         </div>
       </div>
@@ -780,7 +782,8 @@
 </div><!-- end phone -->
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="shared/nav.js"></script>
+<script src="shared/icons.js?v=2"></script>
+<script src="shared/nav.js?v=2"></script>
 <script>
 /* ============================================================
  *  BACKGROUND CANVAS + STARS
@@ -821,6 +824,19 @@ var bgT = 0;
 })();
 
 renderNav('sanctuary');
+
+/* ===== Populate settings SVG icons ===== */
+(function() {
+  var I = window.SOLARA_ICONS || {};
+  var map = {
+    'si-birth': I.birth_info, 'si-home': I.home, 'si-house': I.house_system,
+    'si-telescope': I.telescope, 'si-globe': I.globe, 'si-bell': I.bell, 'si-doc': I.document
+  };
+  for (var id in map) {
+    var el = document.getElementById(id);
+    if (el && map[id]) el.innerHTML = map[id];
+  }
+})();
 
 /* ============================================================
  *  PROFILE MANAGEMENT

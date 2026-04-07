@@ -4,15 +4,17 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>Solara - Tarot Draw Mockup</title>
-<script src="shared/nav.js"></script>
+<link rel="stylesheet" href="shared/styles.css">
+<script src="shared/icons.js?v=2"></script>
+<script src="shared/nav.js?v=2"></script>
 <script src="shared/vibe.js"></script>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
   body {
-    background: #0A0A14;
+    background: var(--bg-deep);
     color: #E8E0D0;
-    font-family: 'Segoe UI', 'Helvetica Neue', sans-serif;
+    font-family: var(--font-body);
     overflow: hidden;
     width: 100vw;
     height: 100vh;
@@ -22,7 +24,7 @@
   .phone-frame {
     width: 100%;
     height: 100vh;
-    background: #0A0A14;
+    background: var(--bg-deep);
     position: relative;
     overflow: hidden;
   }
@@ -672,33 +674,7 @@
   }
   .history-clear:hover { color: #888; }
 
-  /* ===== Bottom nav ===== */
-  .bottom-nav {
-    position: fixed;
-    bottom: 0; left: 0; right: 0;
-    height: 80px;
-    background: rgba(10, 10, 20, 0.95);
-    border-top: 1px solid rgba(255, 255, 255, 0.06);
-    display: flex;
-    align-items: center;
-    justify-content: space-around;
-    padding-bottom: 16px;
-    z-index: 100;
-  }
-
-  .nav-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
-    font-size: 10px;
-    color: #555;
-    cursor: pointer;
-    transition: color 0.3s;
-  }
-
-  .nav-item.active { color: #C9A84C; }
-  .nav-icon { font-size: 20px; }
+  /* Bottom nav — styled by shared/styles.css */
 
   /* ===== Particle canvas ===== */
   #particleCanvas {
@@ -712,7 +688,7 @@
 </head>
 <body>
 
-<div class="phone-frame">
+<div class="phone-frame cosmic-bg">
   <div class="status-bar">S O L A R A</div>
 
   <!-- Inner tabs: Draw / History -->
