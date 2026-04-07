@@ -379,13 +379,14 @@ class _GalaxyScreenState extends State<GalaxyScreen>
         child: Center(
           child: Text(
             label,
+            // HTML: font-size 12px, font-weight 700, letter-spacing 1px, inactive rgba(255,255,255,0.35)
             style: TextStyle(
               color: isActive
                   ? SolaraColors.solaraGold
-                  : SolaraColors.textSecondary,
-              fontSize: 14,
-              fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
-              letterSpacing: 1.2,
+                  : Colors.white.withAlpha(89),
+              fontSize: 12,
+              fontWeight: isActive ? FontWeight.w700 : FontWeight.w400,
+              letterSpacing: 1.0,
             ),
           ),
         ),
@@ -503,10 +504,12 @@ class _GalaxyScreenState extends State<GalaxyScreen>
           Expanded(
             child: Text(
               msg,
+              // HTML: font-size 13px, font-weight 300, line-height 1.6
               style: const TextStyle(
                 color: SolaraColors.textPrimary,
                 fontSize: 13,
-                height: 1.5,
+                fontWeight: FontWeight.w300,
+                height: 1.6,
               ),
             ),
           ),

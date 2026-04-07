@@ -4,12 +4,74 @@ import '../models/daily_reading.dart';
 import '../models/galaxy_cycle.dart';
 import '../models/lunar_intention.dart';
 
-/// Persistence wrapper for Galaxy data.
+/// User profile data.
+class SolaraProfile {
+  final String name;
+  final String birthDate; // YYYY-MM-DD
+  final String birthTime; // HH:mm
+  final bool birthTimeUnknown;
+  final String birthPlace;
+  final double birthLat;
+  final double birthLng;
+  final int birthTz; // UTC offset in hours
+
+  const SolaraProfile({
+    this.name = '',
+    this.birthDate = '',
+    this.birthTime = '12:00',
+    this.birthTimeUnknown = false,
+    this.birthPlace = '',
+    this.birthLat = 0,
+    this.birthLng = 0,
+    this.birthTz = 9,
+  });
+
+  bool get isComplete => birthDate.isNotEmpty && birthPlace.isNotEmpty;
+
+  Map<String, dynamic> toJson() => {
+    'name': name,
+    'birthDate': birthDate,
+    'birthTime': birthTime,
+    'birthTimeUnknown': birthTimeUnknown,
+    'birthPlace': birthPlace,
+    'birthLat': birthLat,
+    'birthLng': birthLng,
+    'birthTz': birthTz,
+  };
+
+  factory SolaraProfile.fromJson(Map<String, dynamic> j) => SolaraProfile(
+    name: j['name'] ?? '',
+    birthDate: j['birthDate'] ?? '',
+    birthTime: j['birthTime'] ?? '12:00',
+    birthTimeUnknown: j['birthTimeUnknown'] ?? false,
+    birthPlace: j['birthPlace'] ?? '',
+    birthLat: (j['birthLat'] ?? 0).toDouble(),
+    birthLng: (j['birthLng'] ?? 0).toDouble(),
+    birthTz: j['birthTz'] ?? 9,
+  );
+}
+
+/// Persistence wrapper for Solara data.
 class SolaraStorage {
+  static const _profileKey = 'solara_profile';
   static const _currentReadingsKey = 'solara_current_cycle_readings';
   static const _completedCyclesKey = 'solara_galaxy_cycles';
   static const _intentionKey = 'solara_lunar_intention';
   static const _overlayShownKey = 'solara_overlay_shown';
+
+  // --- Profile ---
+
+  static Future<SolaraProfile?> loadProfile() async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString(_profileKey);
+    if (raw == null) return null;
+    return SolaraProfile.fromJson(json.decode(raw) as Map<String, dynamic>);
+  }
+
+  static Future<void> saveProfile(SolaraProfile profile) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_profileKey, json.encode(profile.toJson()));
+  }
 
   // --- Current cycle readings ---
 

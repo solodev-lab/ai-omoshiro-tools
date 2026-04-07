@@ -10,10 +10,13 @@ class SolaraTheme {
       brightness: Brightness.dark,
       scaffoldBackgroundColor: SolaraColors.celestialBlueDark,
       textTheme: _textTheme,
-      bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+      bottomNavigationBarTheme: BottomNavigationBarThemeData(
         backgroundColor: Colors.transparent,
-        selectedItemColor: SolaraColors.solaraGold,
-        unselectedItemColor: SolaraColors.textSecondary,
+        // HTML: active = var(--gold) #F9D976, inactive = rgba(255,255,255,0.35)
+        selectedItemColor: const Color(0xFFF9D976),
+        unselectedItemColor: Colors.white.withAlpha(89), // 0.35*255=89
+        selectedLabelStyle: const TextStyle(fontSize: 9, letterSpacing: 0.5),
+        unselectedLabelStyle: const TextStyle(fontSize: 9, letterSpacing: 0.5),
         type: BottomNavigationBarType.fixed,
         elevation: 0,
       ),
@@ -26,7 +29,8 @@ class SolaraTheme {
   }
 
   static TextTheme get _textTheme {
-    return GoogleFonts.latoTextTheme(
+    // HTML: heading = Cormorant Garamond, body = DM Sans
+    return GoogleFonts.dmSansTextTheme(
       const TextTheme(
         headlineLarge: TextStyle(
           fontSize: 32,

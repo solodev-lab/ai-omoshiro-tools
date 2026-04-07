@@ -2,15 +2,23 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'theme/solara_theme.dart';
 import 'screens/map_screen.dart';
+import 'screens/horoscope_screen.dart';
 import 'screens/observe_screen.dart';
 import 'screens/galaxy_screen.dart';
 import 'screens/sanctuary_screen.dart';
 import 'utils/celestial_events.dart';
 import 'utils/tarot_data.dart';
+import 'widgets/solara_nav_bar.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+  SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+  // Make system nav bar transparent for edge-to-edge
+  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+    systemNavigationBarColor: Colors.transparent,
+    systemNavigationBarDividerColor: Colors.transparent,
+    statusBarColor: Colors.transparent,
+  ));
   await TarotData.initialize();
   await CelestialEvents.initialize();
   runApp(const SolaraApp());
@@ -42,6 +50,7 @@ class _SolaraHomeState extends State<SolaraHome> {
 
   final _screens = [
     const MapScreen(),
+    const HoroscopeScreen(),
     const ObserveScreen(),
     const GalaxyScreen(),
     const SanctuaryScreen(),
@@ -55,39 +64,9 @@ class _SolaraHomeState extends State<SolaraHome> {
         index: _currentIndex,
         children: _screens,
       ),
-      bottomNavigationBar: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Colors.transparent,
-              Color(0xCC080C14),
-            ],
-          ),
-        ),
-        child: BottomNavigationBar(
-          currentIndex: _currentIndex,
-          onTap: (i) => setState(() => _currentIndex = i),
-          items: const [
-            BottomNavigationBarItem(
-              icon: Icon(Icons.blur_circular),
-              label: 'Map',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.visibility_outlined),
-              label: 'Observe',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.auto_awesome_outlined),
-              label: 'Galaxy',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.self_improvement),
-              label: 'Sanctuary',
-            ),
-          ],
-        ),
+      bottomNavigationBar: SolaraNavBar(
+        currentIndex: _currentIndex,
+        onTap: (i) => setState(() => _currentIndex = i),
       ),
     );
   }
