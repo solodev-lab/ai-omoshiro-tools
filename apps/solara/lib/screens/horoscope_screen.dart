@@ -5,10 +5,10 @@ import '../utils/solara_storage.dart';
 class HoroscopeScreen extends StatefulWidget {
   const HoroscopeScreen({super.key});
   @override
-  State<HoroscopeScreen> createState() => _HoroscopeScreenState();
+  State<HoroscopeScreen> createState() => HoroscopeScreenState();
 }
 
-class _HoroscopeScreenState extends State<HoroscopeScreen> {
+class HoroscopeScreenState extends State<HoroscopeScreen> {
   SolaraProfile? _profile;
   bool _loading = true;
   bool _birthTimeUnknown = false;
@@ -34,12 +34,12 @@ class _HoroscopeScreenState extends State<HoroscopeScreen> {
   String? _fortuneFilter; // null = no fortune filter
 
   @override
-  void initState() { super.initState(); _loadProfile(); }
+  void initState() { super.initState(); loadProfile(); }
 
   @override
   void dispose() { _fortunePageCtrl.dispose(); super.dispose(); }
 
-  Future<void> _loadProfile() async {
+  Future<void> loadProfile() async {
     final p = await SolaraStorage.loadProfile();
     if (p != null && p.isComplete) {
       _birthTimeUnknown = p.birthTimeUnknown;
@@ -134,46 +134,46 @@ class _HoroscopeScreenState extends State<HoroscopeScreen> {
           // HTML: .chart-menu-btn { top:12px; right:12px; width:40px; height:40px; border-radius:10px; }
           _buildChartMenuRow(),
 
-          // ── Chart ──
-          Expanded(child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Column(children: [
-              const SizedBox(height: 8),
-              // HTML: .chart-container { position:relative; }
-              // .chart-watermark { position:absolute; top:42%; left:50%; transform:translate(-50%,-50%);
-              //   font-size:14px; font-weight:700; letter-spacing:4px; color:rgba(246,189,96,0.18); }
-              Center(child: SizedBox(
-                width: 300, height: 300,
-                child: Stack(children: [
-                  // Watermark
-                  const Positioned(
-                    top: 300 * 0.42 - 8, left: 0, right: 0,
-                    child: Center(child: Text('SOLARA', style: TextStyle(
-                      fontSize: 14, fontWeight: FontWeight.w700, letterSpacing: 4,
-                      color: Color(0x2EF6BD60), // rgba(246,189,96,0.18)
-                    ))),
-                  ),
-                  // Chart
-                  CustomPaint(
-                    size: const Size(300, 300),
-                    painter: _ChartWheelPainter(
-                      planets: _natalPlanets, asc: _asc, mc: _mc,
-                      aspects: _filteredAspects(),
-                      signColors: _signColors.map((c) => Color(c)).toList(),
-                      showHouses: !_birthTimeUnknown,
-                    ),
-                  ),
-                ]),
-              )),
-              // HTML: .chart-legend
-              const SizedBox(height: 12),
-              _buildChartLegend(),
-              const SizedBox(height: 16),
-              // Fortune cards
-              _buildFortuneCards(),
-              const SizedBox(height: 100),
-            ]),
-          )),
+          // ── Chart or Astrology View ──
+          Expanded(child: _chartMode == 'astrology'
+            ? _buildAstrologyView()
+            : SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: LayoutBuilder(builder: (ctx, constraints) {
+                final chartSize = (constraints.maxWidth - 32).clamp(200.0, 400.0);
+                return Column(children: [
+                  const SizedBox(height: 8),
+                  // HTML: .chart-container with watermark + SVG
+                  Center(child: SizedBox(
+                    width: chartSize, height: chartSize,
+                    child: Stack(children: [
+                      Positioned(
+                        top: chartSize * 0.42 - 8, left: 0, right: 0,
+                        child: const Center(child: Text('SOLARA', style: TextStyle(
+                          fontSize: 14, fontWeight: FontWeight.w700, letterSpacing: 4,
+                          color: Color(0x2EF6BD60),
+                        ))),
+                      ),
+                      CustomPaint(
+                        size: Size(chartSize, chartSize),
+                        painter: _ChartWheelPainter(
+                          planets: _natalPlanets, asc: _asc, mc: _mc,
+                          aspects: _filteredAspects(),
+                          signColors: _signColors.map((c) => Color(c)).toList(),
+                          showHouses: !_birthTimeUnknown,
+                        ),
+                      ),
+                    ]),
+                  )),
+                  const SizedBox(height: 12),
+                  _buildChartLegend(),
+                  const SizedBox(height: 16),
+                  _buildFortuneCards(),
+                  const SizedBox(height: 100),
+                ]);
+              }),
+            ),
+          ),
 
           // ── Bottom Sheet ──
           _buildBottomSheet(),
@@ -432,6 +432,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen> {
       ('planets', '☉ 天体'),
       ('filter', '⚙ 絞込'),
       ('aspects', '△ 相'),
+      ('fortune', '☆ 運勢'),
     ];
 
     return Container(
@@ -470,6 +471,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen> {
       case 'planets': return _buildPlanetTable();
       case 'filter': return _buildFilterPanel();
       case 'aspects': return _buildAspectList();
+      case 'fortune': return _buildFortuneSection();
       default: return const SizedBox();
     }
   }
@@ -776,6 +778,135 @@ class _HoroscopeScreenState extends State<HoroscopeScreen> {
         Padding(padding: const EdgeInsets.only(top: 4),
           child: Text('... 他${filtered.length - 15}件',
             style: const TextStyle(color: Color(0x99888888), fontSize: 10))),
+    ]);
+  }
+
+  // ══════════════════════════════════════════════
+  // Astrology / Today View (full screen fortune cards)
+  // HTML: #astrologyView — shown when chartMode === 'astrology'
+  // ══════════════════════════════════════════════
+  Widget _buildAstrologyView() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        const Text('✦ TODAY\'S READING', style: TextStyle(
+          fontSize: 14, color: Color(0xFFF6BD60), letterSpacing: 2, fontWeight: FontWeight.w600)),
+        const SizedBox(height: 4),
+        Text(
+          '${DateTime.now().month}/${DateTime.now().day} のホロスコープ運勢',
+          style: const TextStyle(fontSize: 11, color: Color(0xFF888888)),
+        ),
+        const SizedBox(height: 16),
+        ..._fortuneCategories.map((cat) {
+          final color = Color(cat['color'] as int);
+          final rng = Random(DateTime.now().day * 7 + _fortuneCategories.indexOf(cat));
+          final score = 40 + rng.nextInt(55);
+          final messages = [
+            '星の配置が良い流れを作っている。',
+            '穏やかなエネルギーが流れている。',
+            '意識して行動すると良い結果に。',
+            '今日は自分のペースで進もう。',
+            '周囲との調和を大切に。',
+          ];
+          return Container(
+            margin: const EdgeInsets.only(bottom: 14),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: color.withAlpha(12),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: color.withAlpha(50)),
+            ),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Row(children: [
+                Text(cat['icon'] as String, style: const TextStyle(fontSize: 22)),
+                const SizedBox(width: 10),
+                Text(cat['nameJP'] as String, style: TextStyle(
+                  fontSize: 15, color: color, fontWeight: FontWeight.w600)),
+                const Spacer(),
+                Text('$score', style: TextStyle(
+                  fontSize: 20, fontWeight: FontWeight.w700, color: color)),
+              ]),
+              const SizedBox(height: 10),
+              Container(
+                height: 6,
+                decoration: BoxDecoration(
+                  color: const Color(0x0AFFFFFF),
+                  borderRadius: BorderRadius.circular(3),
+                ),
+                child: FractionallySizedBox(
+                  alignment: Alignment.centerLeft,
+                  widthFactor: score / 100,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: color,
+                      borderRadius: BorderRadius.circular(3),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+              Text(messages[_fortuneCategories.indexOf(cat) % messages.length],
+                style: const TextStyle(fontSize: 12, color: Color(0xFFCCCCCC), height: 1.6)),
+            ]),
+          );
+        }),
+      ]),
+    );
+  }
+
+  // ══════════════════════════════════════════════
+  // Fortune Section (Bottom Sheet tab)
+  // HTML: bsFortune section — shows all 5 fortune categories as cards
+  // ══════════════════════════════════════════════
+  Widget _buildFortuneSection() {
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      const Text('☆ TODAY\'S FORTUNE', style: TextStyle(
+        fontSize: 12, color: Color(0xFFF6BD60), letterSpacing: 1)),
+      const SizedBox(height: 12),
+      ..._fortuneCategories.map((cat) {
+        final color = Color(cat['color'] as int);
+        final rng = Random(DateTime.now().day * 7 + _fortuneCategories.indexOf(cat));
+        final score = 40 + rng.nextInt(55); // mock score 40-95
+        return Container(
+          margin: const EdgeInsets.only(bottom: 10),
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: const Color(0x0CFFFFFF),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: color.withAlpha(40)),
+          ),
+          child: Row(children: [
+            Text(cat['icon'] as String, style: const TextStyle(fontSize: 24)),
+            const SizedBox(width: 12),
+            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(cat['nameJP'] as String, style: TextStyle(
+                fontSize: 13, color: color, fontWeight: FontWeight.w600)),
+              const SizedBox(height: 4),
+              // Score bar
+              Container(
+                height: 6,
+                decoration: BoxDecoration(
+                  color: const Color(0x0AFFFFFF),
+                  borderRadius: BorderRadius.circular(3),
+                ),
+                child: FractionallySizedBox(
+                  alignment: Alignment.centerLeft,
+                  widthFactor: score / 100,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: color,
+                      borderRadius: BorderRadius.circular(3),
+                    ),
+                  ),
+                ),
+              ),
+            ])),
+            const SizedBox(width: 8),
+            Text('$score', style: TextStyle(
+              fontSize: 16, fontWeight: FontWeight.w700, color: color)),
+          ]),
+        );
+      }),
     ]);
   }
 

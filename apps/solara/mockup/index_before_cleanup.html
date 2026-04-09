@@ -16,1337 +16,205 @@
 <script src="shared/stella.js"></script>
 <script src="shared/events.js"></script>
 <style>
-
-/* ========================================
-   BASE — Phone frame, status bar, map
-   ======================================== */
-
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-body {
-  background: var(--bg-deep);
-  color: #E8E0D0;
-  font-family: var(--font-body);
-  overflow: hidden;
-  width: 100vw;
-  height: 100vh;
-  margin: 0;
-  padding: 0;
-}
-
-.phone {
-  width: 100%;
-  height: 100vh;
-  background: var(--bg-deep);
-  position: relative;
-  overflow: hidden;
-}
-
-.status-bar {
-  height: 50px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 11px;
-  color: #666;
-  letter-spacing: 1px;
-  z-index: 100;
-  position: relative;
-}
-
-.map-wrap {
-  position: absolute;
-  top: 50px;
-  left: 0;
-  right: 0;
-  bottom: 80px;
-  overflow: hidden;
-}
-
-#particleCanvas {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 20;
-  pointer-events: none;
-}
-
-/* ========================================
-   SEARCH — Trigger button & search bar
-   ======================================== */
-
-.search-trigger {
-  position: absolute;
-  top: 82px;
-  left: 16px;
-  z-index: 110;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: rgba(10,10,25,.8);
-  border: 1px solid rgba(255,255,255,.12);
-  display: none;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  color: rgba(201,168,76,.6);
-  font-size: 18px;
-  transition: border-color .3s;
-}
-
-.search-trigger.vis {
-  display: flex;
-}
-
-.search-bar {
-  position: absolute;
-  top: 82px;
-  left: 16px;
-  right: 16px;
-  z-index: 110;
-  display: none;
-  gap: 6px;
-}
-
-.search-bar.open {
-  display: flex;
-}
-
-.search-input {
-  width: 100%;
-  padding: 10px 36px 10px 14px;
-  background: rgba(15,15,30,.9);
-  backdrop-filter: blur(15px);
-  border: 1px solid rgba(255,255,255,.15);
-  border-radius: 10px;
-  color: #E8E0D0;
-  font-size: 13px;
-  outline: none;
-}
-
-.search-input:focus {
-  border-color: rgba(201,168,76,.4);
-}
-
-.search-input::placeholder {
-  color: #555;
-}
-
-.search-btn {
-  position: absolute;
-  right: 6px;
-  top: 50%;
-  transform: translateY(-50%);
-  padding: 4px 6px;
-  background: none;
-  border: none;
-  color: rgba(201,168,76,.5);
-  font-size: 16px;
-  cursor: pointer;
-  line-height: 1;
-}
-
-/* ========================================
-   FORTUNE FILTER LABEL — Top-left score display
-   ======================================== */
-
-.ff-label {
-  position: absolute;
-  top: 52px;
-  left: 16px;
-  z-index: 105;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 10px;
-  color: #C9A84C;
-  background: rgba(10,10,20,.7);
-  padding: 3px 10px;
-  border-radius: 10px;
-  border: 1px solid rgba(201,168,76,.3);
-  letter-spacing: .5px;
-  pointer-events: none;
-}
-
-.ff-tag {
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-
-.ff-bars {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-}
-
-.ff-row {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 9px;
-  color: #E8E0D0;
-}
-
-.ff-dir {
-  width: 32px;
-  text-align: right;
-  flex-shrink: 0;
-  color: #888;
-  white-space: nowrap;
-}
-
-.ff-bw {
-  width: 120px;
-  flex-shrink: 0;
-  height: 5px;
-  background: rgba(255,255,255,.06);
-  border-radius: 3px;
-  overflow: hidden;
-}
-
-.ff-b {
-  height: 100%;
-  border-radius: 3px;
-  background: #C9A84C;
-}
-
-.ff-sc {
-  width: 28px;
-  text-align: right;
-  flex-shrink: 0;
-  font-family: monospace;
-  font-size: 8px;
-  color: #F6BD60;
-}
-
-/* ========================================
-   SEARCH RESULT — Bottom popup with category tabs
-   ======================================== */
-
-.sr-popup {
-  position: absolute;
-  bottom: 160px;
-  left: 16px;
-  right: 16px;
-  z-index: 110;
-  background: rgba(15,15,30,.85);
-  backdrop-filter: blur(15px);
-  border: 1px solid rgba(255,255,255,.1);
-  border-radius: 12px;
-  padding: 14px 16px;
-  opacity: 0;
-  transform: translateY(10px);
-  transition: opacity .4s, transform .4s;
-  pointer-events: none;
-}
-
-.sr-popup.vis {
-  opacity: 1;
-  transform: translateY(0);
-  pointer-events: auto;
-}
-
-.sr-name {
-  font-size: 13px;
-  color: #E8E0D0;
-  margin-bottom: 6px;
-}
-
-.sr-sector {
-  font-size: 12px;
-  line-height: 1.5;
-  white-space: pre-line;
-}
-
-.sr-close {
-  position: absolute;
-  top: 8px;
-  right: 12px;
-  background: none;
-  border: none;
-  color: #555;
-  font-size: 16px;
-  cursor: pointer;
-}
-
-.sr-tabs {
-  display: flex;
-  gap: 0;
-  margin-top: 10px;
-  border-bottom: 1px solid rgba(255,255,255,.08);
-}
-
-.sr-tab {
-  flex: 1;
-  padding: 6px 0;
-  font-size: 10px;
-  color: #666;
-  text-align: center;
-  cursor: pointer;
-  border-bottom: 2px solid transparent;
-  transition: color .2s, border-color .2s;
-}
-
-.sr-tab.active {
-  color: #C9A84C;
-  border-bottom-color: #C9A84C;
-}
-
-.sr-advice {
-  font-size: 11px;
-  line-height: 1.6;
-  color: rgba(232,224,208,.85);
-  margin-top: 8px;
-  min-height: 32px;
-  white-space: pre-line;
-}
-
-/* ========================================
-   STELLA — Message box from AI guide
-   ======================================== */
-
-.stella {
-  position: absolute;
-  bottom: 90px;
-  left: 20px;
-  right: 20px;
-  z-index: 110;
-  background: rgba(15,15,30,.75);
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(201,168,76,.2);
-  border-radius: 16px;
-  padding: 16px 20px;
-  opacity: 0;
-  transform: translateY(10px);
-  transition: opacity .8s, transform .8s;
-  pointer-events: none;
-}
-
-.stella.vis {
-  opacity: 1;
-  transform: translateY(0);
-  pointer-events: auto;
-}
-
-.stella-name {
-  font-size: 10px;
-  letter-spacing: 2px;
-  color: #6B5CE7;
-  text-transform: uppercase;
-  margin-bottom: 6px;
-}
-
-.stella-text {
-  font-size: 13px;
-  line-height: 1.6;
-}
-
-.stella-text .hl {
-  color: #C9A84C;
-  font-weight: 600;
-}
-
-/* ========================================
-   SEED BADGE — Top-right seed indicator
-   ======================================== */
-
-.seed-badge {
-  position: absolute;
-  top: 56px;
-  right: 20px;
-  z-index: 110;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: rgba(201,168,76,.15);
-  border: 1px solid rgba(201,168,76,.4);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 16px;
-  opacity: 0;
-  transform: scale(0);
-  transition: opacity .5s, transform .5s cubic-bezier(.34,1.56,.64,1);
-}
-
-.seed-badge.vis {
-  opacity: 1;
-  transform: scale(1);
-}
-
-/* ========================================
-   LEAFLET OVERRIDES
-   ======================================== */
-
-.leaflet-control-zoom,
-.leaflet-control-attribution {
-  display: none !important;
-}
-
-.leaflet-tile-pane {
-  filter: brightness(1.5) contrast(1.05) saturate(0.9);
-}
-
-/* ========================================
-   MAP OVERLAYS — Gray veil, screen flash, effect video, preseed
-   ======================================== */
-
-.gray-veil {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(10,10,20,.25);
-  z-index: 5;
-  transition: opacity .8s;
-  pointer-events: none;
-}
-
-.gray-veil.lifted {
-  opacity: 0;
-}
-
-.screen-flash {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(201,168,76,.15);
-  z-index: 100;
-  opacity: 0;
-  pointer-events: none;
-}
-
-.effect-video {
-  position: absolute;
-  z-index: 18;
-  pointer-events: none;
-  mix-blend-mode: screen;
-  opacity: 0;
-  transition: opacity .3s;
-  object-fit: cover;
-}
-
-.effect-video.playing {
-  opacity: 1;
-  animation: effectShift 1.5s ease-in-out;
-}
-
-@keyframes effectShift {
-  0%   { filter: hue-rotate(0deg) brightness(1.2); }
-  25%  { filter: hue-rotate(-30deg) brightness(1.5); }
-  50%  { filter: hue-rotate(160deg) brightness(1.3); }
-  75%  { filter: hue-rotate(60deg) brightness(1.4); }
-  100% { filter: hue-rotate(0deg) brightness(1); }
-}
-
-.preseed {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%,-50%);
-  z-index: 30;
-  text-align: center;
-  pointer-events: none;
-  transition: all .6s;
-}
-
-.preseed.bottom {
-  top: auto;
-  bottom: 12px;
-  left: 50%;
-  transform: translateX(-50%);
-  opacity: .7;
-}
-
-.preseed.bottom .preseed-icon {
-  font-size: 20px;
-  margin-bottom: 6px;
-  animation: none;
-}
-
-.preseed.bottom .preseed-text {
-  font-size: 10px;
-  line-height: 1.5;
-}
-
-.preseed.hidden {
-  opacity: 0;
-  pointer-events: none;
-}
-
-.preseed-icon {
-  font-size: 32px;
-  margin-bottom: 16px;
-  opacity: .6;
-  animation: float 3s ease-in-out infinite;
-}
-
-.preseed-text {
-  font-size: 12px;
-  color: #555;
-  letter-spacing: 1px;
-  line-height: 1.8;
-}
-
-/* ========================================
-   REST OVERLAY — "Stars are quiet" modal
-   ======================================== */
-
-.rest-overlay {
-  display: none;
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 800;
-  cursor: pointer;
-  justify-content: center;
-  align-items: center;
-}
-
-.rest-overlay.vis {
-  display: flex;
-}
-
-.rest-inner {
-  background: rgba(15,15,30,.85);
-  border: 1px solid rgba(201,168,76,.3);
-  border-radius: 16px;
-  padding: 20px 28px;
-  text-align: center;
-  max-width: 260px;
-  animation: restIn .4s ease-out;
-}
-
-.rest-icon {
-  font-size: 28px;
-  margin-bottom: 8px;
-}
-
-.rest-text {
-  font-size: 13px;
-  line-height: 1.7;
-  color: #C9A84C;
-  white-space: pre-line;
-}
-
-@keyframes restIn {
-  from { opacity: 0; transform: scale(.95); }
-  to   { opacity: 1; transform: scale(1); }
-}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg-deep);color:#E8E0D0;font-family:var(--font-body);overflow:hidden;width:100vw;height:100vh;margin:0;padding:0}
+
+/* Phone frame */
+.phone{width:100%;height:100vh;background:var(--bg-deep);position:relative;overflow:hidden}
+.status-bar{height:50px;display:flex;align-items:center;justify-content:center;font-size:11px;color:#666;letter-spacing:1px;z-index:100;position:relative}
+
+/* Map */
+.map-wrap{position:absolute;top:50px;left:0;right:0;bottom:80px;overflow:hidden}
+#particleCanvas{position:absolute;top:0;left:0;width:100%;height:100%;z-index:20;pointer-events:none}
+
+/* Search */
+.search-trigger{position:absolute;top:82px;left:16px;z-index:110;width:40px;height:40px;border-radius:50%;background:rgba(10,10,25,.8);border:1px solid rgba(255,255,255,.12);display:none;align-items:center;justify-content:center;cursor:pointer;color:rgba(201,168,76,.6);font-size:18px;transition:border-color .3s}
+.search-trigger.vis{display:flex}
+.search-bar{position:absolute;top:82px;left:16px;right:16px;z-index:110;display:none;gap:6px}
+.search-bar.open{display:flex}
+.search-input{width:100%;padding:10px 36px 10px 14px;background:rgba(15,15,30,.9);backdrop-filter:blur(15px);border:1px solid rgba(255,255,255,.15);border-radius:10px;color:#E8E0D0;font-size:13px;outline:none}
+.search-input:focus{border-color:rgba(201,168,76,.4)}
+.search-input::placeholder{color:#555}
+.search-btn{position:absolute;right:6px;top:50%;transform:translateY(-50%);padding:4px 6px;background:none;border:none;color:rgba(201,168,76,.5);font-size:16px;cursor:pointer;line-height:1}
+
+/* Fortune filter label */
+.ff-label{position:absolute;top:52px;left:16px;z-index:105;display:inline-flex;align-items:center;gap:6px;font-size:10px;color:#C9A84C;background:rgba(10,10,20,.7);padding:3px 10px;border-radius:10px;border:1px solid rgba(201,168,76,.3);letter-spacing:.5px;pointer-events:none}
+.ff-tag{white-space:nowrap;flex-shrink:0}
+.ff-bars{flex:1;display:flex;flex-direction:column;gap:2px;min-width:0}
+.ff-row{display:flex;align-items:center;gap:4px;font-size:9px;color:#E8E0D0}
+.ff-dir{width:32px;text-align:right;flex-shrink:0;color:#888;white-space:nowrap}
+.ff-bw{width:120px;flex-shrink:0;height:5px;background:rgba(255,255,255,.06);border-radius:3px;overflow:hidden}
+.ff-b{height:100%;border-radius:3px;background:#C9A84C}
+.ff-sc{width:28px;text-align:right;flex-shrink:0;font-family:monospace;font-size:8px;color:#F6BD60}
+
+/* Search result */
+.sr-popup{position:absolute;bottom:160px;left:16px;right:16px;z-index:110;background:rgba(15,15,30,.85);backdrop-filter:blur(15px);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:14px 16px;opacity:0;transform:translateY(10px);transition:opacity .4s,transform .4s;pointer-events:none}
+.sr-popup.vis{opacity:1;transform:translateY(0);pointer-events:auto}
+.sr-name{font-size:13px;color:#E8E0D0;margin-bottom:6px}
+.sr-sector{font-size:12px;line-height:1.5;white-space:pre-line}
+.sr-close{position:absolute;top:8px;right:12px;background:none;border:none;color:#555;font-size:16px;cursor:pointer}
+.sr-tabs{display:flex;gap:0;margin-top:10px;border-bottom:1px solid rgba(255,255,255,.08)}
+.sr-tab{flex:1;padding:6px 0;font-size:10px;color:#666;text-align:center;cursor:pointer;border-bottom:2px solid transparent;transition:color .2s,border-color .2s}
+.sr-tab.active{color:#C9A84C;border-bottom-color:#C9A84C}
+.sr-advice{font-size:11px;line-height:1.6;color:rgba(232,224,208,.85);margin-top:8px;min-height:32px;white-space:pre-line}
+
+/* Stella */
+.stella{position:absolute;bottom:90px;left:20px;right:20px;z-index:110;background:rgba(15,15,30,.75);backdrop-filter:blur(20px);border:1px solid rgba(201,168,76,.2);border-radius:16px;padding:16px 20px;opacity:0;transform:translateY(10px);transition:opacity .8s,transform .8s;pointer-events:none}
+.stella.vis{opacity:1;transform:translateY(0);pointer-events:auto}
+.stella-name{font-size:10px;letter-spacing:2px;color:#6B5CE7;text-transform:uppercase;margin-bottom:6px}
+.stella-text{font-size:13px;line-height:1.6}
+.stella-text .hl{color:#C9A84C;font-weight:600}
+
+/* Seed badge */
+.seed-badge{position:absolute;top:56px;right:20px;z-index:110;width:36px;height:36px;border-radius:50%;background:rgba(201,168,76,.15);border:1px solid rgba(201,168,76,.4);display:flex;align-items:center;justify-content:center;font-size:16px;opacity:0;transform:scale(0);transition:opacity .5s,transform .5s cubic-bezier(.34,1.56,.64,1)}
+.seed-badge.vis{opacity:1;transform:scale(1)}
+
+/* Leaflet overrides */
+.leaflet-control-zoom,.leaflet-control-attribution{display:none!important}
+.leaflet-tile-pane{filter:brightness(1.5) contrast(1.05) saturate(0.9)}
+
+/* Gray veil */
+.gray-veil{position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(10,10,20,.25);z-index:5;transition:opacity .8s;pointer-events:none}
+.gray-veil.lifted{opacity:0}
+
+/* Screen flash */
+.screen-flash{position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(201,168,76,.15);z-index:100;opacity:0;pointer-events:none}
+
+/* Effect video */
+.effect-video{position:absolute;z-index:18;pointer-events:none;mix-blend-mode:screen;opacity:0;transition:opacity .3s;object-fit:cover}
+.effect-video.playing{opacity:1;animation:effectShift 1.5s ease-in-out}
+@keyframes effectShift{0%{filter:hue-rotate(0deg) brightness(1.2)}25%{filter:hue-rotate(-30deg) brightness(1.5)}50%{filter:hue-rotate(160deg) brightness(1.3)}75%{filter:hue-rotate(60deg) brightness(1.4)}100%{filter:hue-rotate(0deg) brightness(1)}}
+
+/* Pre-seed prompt */
+.preseed{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:30;text-align:center;pointer-events:none;transition:all .6s}
+.preseed.bottom{top:auto;bottom:12px;left:50%;transform:translateX(-50%);opacity:.7}
+.preseed.bottom .preseed-icon{font-size:20px;margin-bottom:6px;animation:none}
+.preseed.bottom .preseed-text{font-size:10px;line-height:1.5}
+.preseed.hidden{opacity:0;pointer-events:none}
+.preseed-icon{font-size:32px;margin-bottom:16px;opacity:.6;animation:float 3s ease-in-out infinite}
+.preseed-text{font-size:12px;color:#555;letter-spacing:1px;line-height:1.8}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+
+/* Fortune rest overlay */
+.rest-overlay{display:none;position:absolute;top:0;left:0;right:0;bottom:0;z-index:800;cursor:pointer;justify-content:center;align-items:center}
+.rest-overlay.vis{display:flex}
+.rest-inner{background:rgba(15,15,30,.85);border:1px solid rgba(201,168,76,.3);border-radius:16px;padding:20px 28px;text-align:center;max-width:260px;animation:restIn .4s ease-out}
+.rest-icon{font-size:28px;margin-bottom:8px}
+.rest-text{font-size:13px;line-height:1.7;color:#C9A84C;white-space:pre-line}
+@keyframes restIn{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
 
 /* Bottom nav — styled by shared/styles.css */
 
-/* ========================================
-   LAYER PANEL — Layer/group/fortune toggles
-   ======================================== */
-
-.layer-btn {
-  position: absolute;
-  top: 130px;
-  left: 16px;
-  z-index: 121;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: rgba(10,10,25,.8);
-  border: 1px solid rgba(255,255,255,.12);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 3px;
-  cursor: pointer;
-  opacity: 0;
-  transition: opacity .5s, border-color .3s;
-}
-
-.layer-btn.vis {
-  opacity: 1;
-}
-
-.layer-btn.active {
-  border-color: rgba(201,168,76,.5);
-}
-
-.layer-btn-bar {
-  width: 18px;
-  height: 2px;
-  border-radius: 1px;
-}
-
-.layer-btn-bar:nth-child(1) {
-  background: #E8E0D0;
-}
-
-.layer-btn-bar:nth-child(2) {
-  background: #C9A84C;
-}
-
-.layer-btn-bar:nth-child(3) {
-  background: #00D4FF;
-}
-
-.layer-panel {
-  position: absolute;
-  top: 175px;
-  left: 60px;
-  z-index: 120;
-  width: 100px;
-  background: rgba(12,12,26,.92);
-  border: 1px solid rgba(201,168,76,.2);
-  border-radius: 14px;
-  padding: 14px;
-  opacity: 0;
-  pointer-events: none;
-  transform: translateY(-10px);
-  transition: opacity .25s, transform .25s;
-}
-
-.layer-panel.open {
-  opacity: 1;
-  pointer-events: auto;
-  transform: translateY(0);
-}
-
-.lp-title {
-  font-size: 9px;
-  color: #666;
-  letter-spacing: 1.5px;
-  margin-bottom: 10px;
-}
-
-.lp-sec {
-  margin-bottom: 10px;
-  padding-bottom: 8px;
-  border-bottom: 1px solid rgba(255,255,255,.06);
-}
-
-.lp-sec:last-child {
-  border-bottom: none;
-  margin-bottom: 0;
-  padding-bottom: 0;
-}
-
-.lp-label {
-  font-size: 8px;
-  color: #555;
-  letter-spacing: 1px;
-  margin-bottom: 6px;
-}
-
-.lt {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 5px 0;
-  cursor: pointer;
-  user-select: none;
-}
-
-.lt-check {
-  width: 14px;
-  height: 14px;
-  border-radius: 3px;
-  border: 1.5px solid rgba(255,255,255,.2);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 9px;
-  color: transparent;
-  transition: all .2s;
-  flex-shrink: 0;
-}
-
-.lt.on .lt-check {
-  border-color: var(--tc,#C9A84C);
-  color: var(--tc,#C9A84C);
-  background: rgba(201,168,76,.1);
-}
-
-.lt-text {
-  font-size: 11px;
-  color: #666;
-  transition: color .2s;
-}
-
-.lt.on .lt-text {
-  color: #bbb;
-}
-
-.fp {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  margin-top: 4px;
-}
-
-.fp-item {
-  padding: 3px 8px;
-  border-radius: 10px;
-  font-size: 10px;
-  cursor: pointer;
-  border: 1px solid rgba(255,255,255,.12);
-  color: #555;
-  background: transparent;
-  user-select: none;
-  transition: all .2s;
-  white-space: nowrap;
-  letter-spacing: .3px;
-}
-
-.fp-item.active {
-  border-color: var(--pc,#C9A84C);
-  color: var(--pc,#C9A84C);
-  background: rgba(201,168,76,.1);
-}
-
-/* ========================================
-   VIEWPOINT PANEL — Saved locations
-   ======================================== */
-
-.vp-btn {
-  position: absolute;
-  top: 178px;
-  left: 16px;
-  z-index: 121;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: rgba(10,10,25,.8);
-  border: 1px solid rgba(255,255,255,.12);
-  display: none;
-  align-items: center;
-  justify-content: center;
-  font-size: 16px;
-  cursor: pointer;
-  transition: border-color .3s;
-}
-
-.vp-btn.vis {
-  display: flex;
-}
-
-.vp-btn.active {
-  border-color: rgba(201,168,76,.5);
-}
-
-.vp-panel {
-  position: absolute;
-  top: 222px;
-  left: 60px;
-  z-index: 120;
-  width: 180px;
-  background: rgba(12,12,26,.92);
-  border: 1px solid rgba(201,168,76,.2);
-  border-radius: 14px;
-  padding: 12px;
-  opacity: 0;
-  pointer-events: none;
-  transform: translateY(-10px);
-  transition: opacity .25s, transform .25s;
-}
-
-.vp-panel.open {
-  opacity: 1;
-  pointer-events: auto;
-  transform: translateX(0);
-}
-
-.vp-title {
-  font-size: 9px;
-  letter-spacing: 1.5px;
-  color: #C9A84C;
-  margin-bottom: 10px;
-}
-
-.vp-tabs {
-  display: flex;
-  gap: 2px;
-  margin-bottom: 10px;
-  background: rgba(255,255,255,.03);
-  border-radius: 8px;
-  padding: 2px;
-}
-
-.vp-tab {
-  flex: 1;
-  padding: 5px 4px;
-  font-size: 8px;
-  letter-spacing: 1px;
-  text-align: center;
-  color: #666;
-  cursor: pointer;
-  border-radius: 6px;
-  transition: all .2s;
-}
-
-.vp-tab.active {
-  background: rgba(201,168,76,.15);
-  color: #C9A84C;
-}
-
-.vp-row {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 4px;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: background .2s;
-}
-
-.vp-row:hover {
-  background: rgba(201,168,76,.08);
-}
-
-.vp-row.active {
-  background: rgba(201,168,76,.12);
-}
-
-.vp-row-icon {
-  font-size: 14px;
-  flex-shrink: 0;
-}
-
-.vp-row-label {
-  flex: 1;
-  font-size: 11px;
-  color: #ccc;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.vp-row.active .vp-row-label {
-  color: #C9A84C;
-}
-
-.vp-row-more {
-  font-size: 14px;
-  color: #555;
-  cursor: pointer;
-  padding: 0 4px;
-  border-radius: 4px;
-  line-height: 1;
-  transition: color .2s;
-}
-
-.vp-row-more:hover {
-  color: #C9A84C;
-}
-
-.vp-sub {
-  position: absolute;
-  top: 100%;
-  right: 0;
-  margin-top: 2px;
-  background: rgba(16,16,32,.95);
-  border: 1px solid rgba(201,168,76,.25);
-  border-radius: 8px;
-  overflow: hidden;
-  box-shadow: 0 4px 16px rgba(0,0,0,.5);
-  white-space: nowrap;
-  z-index: 90;
-}
-
-.vp-sub-item {
-  padding: 6px 10px;
-  font-size: 10px;
-  color: #aaa;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  transition: background .15s;
-}
-
-.vp-sub-item:hover {
-  background: rgba(201,168,76,.1);
-  color: #E8E0D0;
-}
-
-.vp-sub-item.danger:hover {
-  background: rgba(231,76,107,.1);
-  color: #E74C6B;
-}
-
-.vp-icon-picker {
-  position: absolute;
-  top: 100%;
-  right: 0;
-  margin-top: 2px;
-  background: rgba(16,16,32,.95);
-  border: 1px solid rgba(201,168,76,.25);
-  border-radius: 8px;
-  padding: 6px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 2px;
-  width: 160px;
-  max-height: 120px;
-  overflow-y: auto;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(201,168,76,.3) transparent;
-  box-shadow: 0 4px 16px rgba(0,0,0,.5);
-  z-index: 91;
-}
-
-.vp-icon-choice {
-  width: 28px;
-  height: 28px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 15px;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: background .15s;
-}
-
-.vp-icon-choice:hover {
-  background: rgba(201,168,76,.15);
-}
-
-.vp-icon-choice.cur {
-  background: rgba(201,168,76,.25);
-}
-
-.vp-divider {
-  height: 1px;
-  background: rgba(255,255,255,.06);
-  margin: 8px 0;
-}
-
-.vp-action {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 4px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 11px;
-  color: #888;
-  transition: background .2s, color .2s;
-}
-
-.vp-action:hover {
-  background: rgba(201,168,76,.08);
-  color: #C9A84C;
-}
-
-.vp-coord {
-  font-size: 9px;
-  color: rgba(201,168,76,.5);
-  text-align: center;
-  margin-top: 8px;
-  letter-spacing: .3px;
-}
-
-.vp-msg {
-  font-size: 10px;
-  color: #E74C6B;
-  text-align: center;
-  padding: 6px 4px;
-  line-height: 1.5;
-  white-space: pre-line;
-  animation: msgFade 3s forwards;
-}
-
-@keyframes msgFade {
-  0%, 70% { opacity: 1; }
-  100%    { opacity: 0; }
-}
-
-/* ========================================
-   FORTUNE SHEET — Bottom slide-up panel
-   ======================================== */
-
-.fs {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 80px;
-  z-index: 120;
-  background: rgba(10,10,25,.95);
-  border-top: 1px solid rgba(201,168,76,.25);
-  border-radius: 16px 16px 0 0;
-  transform: translateY(100%);
-  transition: transform .35s cubic-bezier(.4,0,.2,1);
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-}
-
-.fs.open {
-  transform: translateY(0);
-}
-
-.fs-handle {
-  width: 36px;
-  height: 4px;
-  background: rgba(255,255,255,.25);
-  border-radius: 2px;
-  margin: 10px auto 6px;
-  cursor: grab;
-}
-
-.fs-tabs {
-  display: flex;
-  gap: 0;
-  padding: 0 8px;
-  border-bottom: 1px solid rgba(255,255,255,.06);
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-
-.fs-tabs::-webkit-scrollbar {
-  display: none;
-}
-
-.fs-tab {
-  flex: 0 0 auto;
-  padding: 8px 12px;
-  font-size: 11px;
-  color: #666;
-  cursor: pointer;
-  border-bottom: 2px solid transparent;
-  white-space: nowrap;
-  transition: color .2s, border-color .2s;
-}
-
-.fs-tab.active {
-  color: #C9A84C;
-  border-bottom-color: #C9A84C;
-}
-
-.fs-cat .fs-tab {
-  font-size: 10px;
-  padding: 6px 10px;
-}
-
-.fs-body {
-  height: 185px;
-  min-height: 185px;
-  max-height: 185px;
-  overflow-y: auto;
-  padding: 10px 14px 14px;
-  scrollbar-width: thin;
-  -webkit-overflow-scrolling: touch;
-}
-
-.fs-row {
-  display: flex;
-  align-items: center;
-  padding: 7px 4px;
-  border-bottom: 1px solid rgba(255,255,255,.04);
-  cursor: pointer;
-}
-
-.fs-row:active {
-  background: rgba(255,255,255,.08);
-}
-
-.fs-row:last-child {
-  border-bottom: none;
-}
-
-.fs-dir {
-  width: 36px;
-  font-size: 12px;
-  font-weight: 600;
-  color: #B49774;
-}
-
-.fs-bar-wrap {
-  flex: 1;
-  height: 14px;
-  background: rgba(255,255,255,.04);
-  border-radius: 7px;
-  overflow: hidden;
-  margin: 0 10px;
-  position: relative;
-}
-
-.fs-tick {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 1px;
-  background: rgba(255,255,255,.13);
-  pointer-events: none;
-  z-index: 1;
-}
-
-.fs-stack {
-  height: 100%;
-  display: flex;
-  overflow: hidden;
-  border-radius: 7px;
-  transition: width .4s ease-out;
-  min-width: 2px;
-}
-
-.fs-seg {
-  height: 100%;
-  min-width: 0;
-  transition: width .3s ease-out;
-}
-
-.fs-seg:first-child {
-  border-radius: 7px 0 0 7px;
-}
-
-.fs-seg:last-child {
-  border-radius: 0 7px 7px 0;
-}
-
-.fs-seg:only-child {
-  border-radius: 7px;
-}
-
-.fs-score {
-  width: 48px;
-  text-align: right;
-  font-size: 11px;
-  font-family: monospace;
-  color: #F6BD60;
-}
-
-.fs-badge {
-  font-size: 10px;
-  margin-left: 4px;
-  width: 20px;
-}
-
-.fs-legend {
-  display: flex;
-  gap: 10px;
-  padding: 4px 12px;
-  font-size: 9px;
-  color: #888;
-  justify-content: center;
-}
-
-.fs-src {
-  border-bottom: 1px solid rgba(255,255,255,.08);
-}
-
-.fs-pull {
-  position: absolute;
-  bottom: 80px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 121;
-  background: rgba(10,10,25,.8);
-  border: 1px solid rgba(201,168,76,.2);
-  border-radius: 12px 12px 0 0;
-  border-bottom: none;
-  padding: 4px 18px 2px;
-  cursor: pointer;
-  font-size: 10px;
-  color: #888;
-  letter-spacing: .5px;
-  transition: color .2s;
-}
-
-.fs-pull:active {
-  color: #C9A84C;
-}
-
-/* ========================================
-   CTA & CARD OVERLAY — Tarot card draw
-   ======================================== */
-
-.cta {
-  position: absolute;
-  bottom: 100px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 80;
-  padding: 14px 32px;
-  background: linear-gradient(135deg,rgba(201,168,76,.2),rgba(201,168,76,.1));
-  border: 1px solid rgba(201,168,76,.4);
-  border-radius: 30px;
-  color: #C9A84C;
-  font-size: 13px;
-  letter-spacing: 2px;
-  cursor: pointer;
-  transition: all .3s;
-  backdrop-filter: blur(10px);
-}
-
-.cta.hidden {
-  opacity: 0;
-  pointer-events: none;
-  transform: translateX(-50%) translateY(20px);
-}
-
-.card-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 200;
-  background: rgba(5,5,12,.95);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity .5s;
-}
-
-.card-overlay.active {
-  opacity: 1;
-  pointer-events: all;
-}
-
-.card-prompt {
-  font-size: 14px;
-  color: #666;
-  letter-spacing: 2px;
-  margin-bottom: 40px;
-  text-transform: uppercase;
-  opacity: 0;
-  animation: fadeIn 1s .3s forwards;
-}
-
-.tarot-card {
-  width: 160px;
-  height: 260px;
-  border-radius: 12px;
-  position: relative;
-  cursor: pointer;
-  transform-style: preserve-3d;
-  transition: transform .8s cubic-bezier(.25,.46,.45,.94);
-}
-
-.card-back,
-.card-front {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  border-radius: 12px;
-  backface-visibility: hidden;
-}
-
-.card-back {
-  background: linear-gradient(135deg,#1a0a30,#0d0520);
-  border: 1px solid rgba(107,92,231,.4);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 0 30px rgba(107,92,231,.2);
-}
-
-.card-back-pat {
-  width: 80%;
-  height: 80%;
-  border: 1px solid rgba(107,92,231,.2);
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 40px;
-  background: radial-gradient(circle,rgba(107,92,231,.1),transparent);
-}
-
-.card-front {
-  background: linear-gradient(135deg,#1a1025,#0f0a18);
-  border: 1px solid rgba(201,168,76,.5);
-  transform: rotateY(180deg);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 0 40px rgba(201,168,76,.3);
-}
-
-.card-elem {
-  font-size: 48px;
-  margin-bottom: 12px;
-  filter: drop-shadow(0 0 15px rgba(201,168,76,.6));
-}
-
-.card-name {
-  font-size: 14px;
-  letter-spacing: 3px;
-  color: #C9A84C;
-  text-transform: uppercase;
-}
-
-.card-sub {
-  font-size: 11px;
-  color: #8B7A5E;
-  margin-top: 4px;
-  letter-spacing: 1px;
-}
-
-.tarot-card.flipped {
-  transform: rotateY(180deg);
-}
-
-.tarot-card.shrinking {
-  transition: all .8s cubic-bezier(.4,0,.2,1);
-  transform: rotateY(180deg) scale(.15) translate(400px,-800px);
-  opacity: 0;
-}
-
-/* ========================================
-   REPLAY BUTTON
-   ======================================== */
-
-.replay {
-  position: absolute;
-  top: 16px;
-  left: 20px;
-  z-index: 150;
-  background: rgba(255,255,255,.05);
-  border: 1px solid rgba(255,255,255,.1);
-  border-radius: 20px;
-  color: #666;
-  font-size: 10px;
-  padding: 6px 14px;
-  cursor: pointer;
-  letter-spacing: 1px;
-}
-
-.replay:hover {
-  background: rgba(255,255,255,.1);
-  color: #999;
-}
-
-/* ========================================
-   ANIMATIONS
-   ======================================== */
-
-@keyframes fadeIn {
-  to { opacity: 1; }
-}
-
-@keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50%      { transform: translateY(-8px); }
-}
-
+/* Layer button & panel */
+.layer-btn{position:absolute;top:130px;left:16px;z-index:121;width:40px;height:40px;border-radius:50%;background:rgba(10,10,25,.8);border:1px solid rgba(255,255,255,.12);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;opacity:0;transition:opacity .5s,border-color .3s}
+.layer-btn.vis{opacity:1}
+.layer-btn.active{border-color:rgba(201,168,76,.5)}
+.layer-btn-bar{width:18px;height:2px;border-radius:1px}
+.layer-btn-bar:nth-child(1){background:#E8E0D0}
+.layer-btn-bar:nth-child(2){background:#C9A84C}
+.layer-btn-bar:nth-child(3){background:#00D4FF}
+
+.layer-panel{position:absolute;top:175px;left:60px;z-index:120;width:100px;background:rgba(12,12,26,.92);border:1px solid rgba(201,168,76,.2);border-radius:14px;padding:14px;opacity:0;pointer-events:none;transform:translateY(-10px);transition:opacity .25s,transform .25s}
+.layer-panel.open{opacity:1;pointer-events:auto;transform:translateY(0)}
+.lp-title{font-size:9px;color:#666;letter-spacing:1.5px;margin-bottom:10px}
+.lp-sec{margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid rgba(255,255,255,.06)}
+.lp-sec:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0}
+.lp-label{font-size:8px;color:#555;letter-spacing:1px;margin-bottom:6px}
+.lt{display:flex;align-items:center;gap:8px;padding:5px 0;cursor:pointer;user-select:none}
+.lt-check{width:14px;height:14px;border-radius:3px;border:1.5px solid rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:9px;color:transparent;transition:all .2s;flex-shrink:0}
+.lt.on .lt-check{border-color:var(--tc,#C9A84C);color:var(--tc,#C9A84C);background:rgba(201,168,76,.1)}
+.lt-text{font-size:11px;color:#666;transition:color .2s}
+.lt.on .lt-text{color:#bbb}
+
+/* Fortune pills in layer panel */
+.fp{display:flex;flex-direction:column;gap:3px;margin-top:4px}
+.fp-item{padding:3px 8px;border-radius:10px;font-size:10px;cursor:pointer;border:1px solid rgba(255,255,255,.12);color:#555;background:transparent;user-select:none;transition:all .2s;white-space:nowrap;letter-spacing:.3px}
+.fp-item.active{border-color:var(--pc,#C9A84C);color:var(--pc,#C9A84C);background:rgba(201,168,76,.1)}
+
+/* Viewpoint button & panel */
+.vp-btn{position:absolute;top:178px;left:16px;z-index:121;width:40px;height:40px;border-radius:50%;background:rgba(10,10,25,.8);border:1px solid rgba(255,255,255,.12);display:none;align-items:center;justify-content:center;font-size:16px;cursor:pointer;transition:border-color .3s}
+.vp-btn.vis{display:flex}
+.vp-btn.active{border-color:rgba(201,168,76,.5)}
+.vp-panel{position:absolute;top:222px;left:60px;z-index:120;width:180px;background:rgba(12,12,26,.92);border:1px solid rgba(201,168,76,.2);border-radius:14px;padding:12px;opacity:0;pointer-events:none;transform:translateY(-10px);transition:opacity .25s,transform .25s}
+.vp-panel.open{opacity:1;pointer-events:auto;transform:translateX(0)}
+.vp-title{font-size:9px;letter-spacing:1.5px;color:#C9A84C;margin-bottom:10px}
+.vp-tabs{display:flex;gap:2px;margin-bottom:10px;background:rgba(255,255,255,.03);border-radius:8px;padding:2px}
+.vp-tab{flex:1;padding:5px 4px;font-size:8px;letter-spacing:1px;text-align:center;color:#666;cursor:pointer;border-radius:6px;transition:all .2s}
+.vp-tab.active{background:rgba(201,168,76,.15);color:#C9A84C}
+.vp-row{position:relative;display:flex;align-items:center;gap:8px;padding:6px 4px;border-radius:8px;cursor:pointer;transition:background .2s}
+.vp-row:hover{background:rgba(201,168,76,.08)}
+.vp-row.active{background:rgba(201,168,76,.12)}
+.vp-row-icon{font-size:14px;flex-shrink:0}
+.vp-row-label{flex:1;font-size:11px;color:#ccc;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.vp-row.active .vp-row-label{color:#C9A84C}
+.vp-row-more{font-size:14px;color:#555;cursor:pointer;padding:0 4px;border-radius:4px;line-height:1;transition:color .2s}
+.vp-row-more:hover{color:#C9A84C}
+.vp-sub{position:absolute;top:100%;right:0;margin-top:2px;background:rgba(16,16,32,.95);border:1px solid rgba(201,168,76,.25);border-radius:8px;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,.5);white-space:nowrap;z-index:90}
+.vp-sub-item{padding:6px 10px;font-size:10px;color:#aaa;cursor:pointer;display:flex;align-items:center;gap:6px;transition:background .15s}
+.vp-sub-item:hover{background:rgba(201,168,76,.1);color:#E8E0D0}
+.vp-sub-item.danger:hover{background:rgba(231,76,107,.1);color:#E74C6B}
+.vp-icon-picker{position:absolute;top:100%;right:0;margin-top:2px;background:rgba(16,16,32,.95);border:1px solid rgba(201,168,76,.25);border-radius:8px;padding:6px;display:flex;flex-wrap:wrap;gap:2px;width:160px;max-height:120px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(201,168,76,.3) transparent;box-shadow:0 4px 16px rgba(0,0,0,.5);z-index:91}
+.vp-icon-choice{width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:15px;border-radius:6px;cursor:pointer;transition:background .15s}
+.vp-icon-choice:hover{background:rgba(201,168,76,.15)}
+.vp-icon-choice.cur{background:rgba(201,168,76,.25)}
+.vp-divider{height:1px;background:rgba(255,255,255,.06);margin:8px 0}
+.vp-action{display:flex;align-items:center;gap:8px;padding:6px 4px;border-radius:8px;cursor:pointer;font-size:11px;color:#888;transition:background .2s,color .2s}
+.vp-action:hover{background:rgba(201,168,76,.08);color:#C9A84C}
+.vp-coord{font-size:9px;color:rgba(201,168,76,.5);text-align:center;margin-top:8px;letter-spacing:.3px}
+.vp-msg{font-size:10px;color:#E74C6B;text-align:center;padding:6px 4px;line-height:1.5;white-space:pre-line;animation:msgFade 3s forwards}
+@keyframes msgFade{0%,70%{opacity:1}100%{opacity:0}}
+
+/* Fortune sheet */
+.fs{position:absolute;left:0;right:0;bottom:80px;z-index:120;background:rgba(10,10,25,.95);border-top:1px solid rgba(201,168,76,.25);border-radius:16px 16px 0 0;transform:translateY(100%);transition:transform .35s cubic-bezier(.4,0,.2,1);overflow:hidden;display:flex;flex-direction:column}
+.fs.open{transform:translateY(0)}
+.fs-handle{width:36px;height:4px;background:rgba(255,255,255,.25);border-radius:2px;margin:10px auto 6px;cursor:grab}
+.fs-tabs{display:flex;gap:0;padding:0 8px;border-bottom:1px solid rgba(255,255,255,.06);overflow-x:auto;scrollbar-width:none}
+.fs-tabs::-webkit-scrollbar{display:none}
+.fs-tab{flex:0 0 auto;padding:8px 12px;font-size:11px;color:#666;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;transition:color .2s,border-color .2s}
+.fs-tab.active{color:#C9A84C;border-bottom-color:#C9A84C}
+.fs-cat .fs-tab{font-size:10px;padding:6px 10px}
+.fs-body{height:185px;min-height:185px;max-height:185px;overflow-y:auto;padding:10px 14px 14px;scrollbar-width:thin;-webkit-overflow-scrolling:touch}
+.fs-row{display:flex;align-items:center;padding:7px 4px;border-bottom:1px solid rgba(255,255,255,.04);cursor:pointer}
+.fs-row:active{background:rgba(255,255,255,.08)}
+.fs-row:last-child{border-bottom:none}
+.fs-dir{width:36px;font-size:12px;font-weight:600;color:#B49774}
+.fs-bar-wrap{flex:1;height:14px;background:rgba(255,255,255,.04);border-radius:7px;overflow:hidden;margin:0 10px;position:relative}
+.fs-tick{position:absolute;top:0;bottom:0;width:1px;background:rgba(255,255,255,.13);pointer-events:none;z-index:1}
+.fs-stack{height:100%;display:flex;overflow:hidden;border-radius:7px;transition:width .4s ease-out;min-width:2px}
+.fs-seg{height:100%;min-width:0;transition:width .3s ease-out}
+.fs-seg:first-child{border-radius:7px 0 0 7px}
+.fs-seg:last-child{border-radius:0 7px 7px 0}
+.fs-seg:only-child{border-radius:7px}
+.fs-score{width:48px;text-align:right;font-size:11px;font-family:monospace;color:#F6BD60}
+.fs-badge{font-size:10px;margin-left:4px;width:20px}
+.fs-legend{display:flex;gap:10px;padding:4px 12px;font-size:9px;color:#888;justify-content:center}
+.fs-src{border-bottom:1px solid rgba(255,255,255,.08)}
+.fs-pull{position:absolute;bottom:80px;left:50%;transform:translateX(-50%);z-index:121;background:rgba(10,10,25,.8);border:1px solid rgba(201,168,76,.2);border-radius:12px 12px 0 0;border-bottom:none;padding:4px 18px 2px;cursor:pointer;font-size:10px;color:#888;letter-spacing:.5px;transition:color .2s}
+.fs-pull:active{color:#C9A84C}
+
+/* CTA */
+.cta{position:absolute;bottom:100px;left:50%;transform:translateX(-50%);z-index:80;padding:14px 32px;background:linear-gradient(135deg,rgba(201,168,76,.2),rgba(201,168,76,.1));border:1px solid rgba(201,168,76,.4);border-radius:30px;color:#C9A84C;font-size:13px;letter-spacing:2px;cursor:pointer;transition:all .3s;backdrop-filter:blur(10px)}
+.cta.hidden{opacity:0;pointer-events:none;transform:translateX(-50%) translateY(20px)}
+
+/* Replay */
+.replay{position:absolute;top:16px;left:20px;z-index:150;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:20px;color:#666;font-size:10px;padding:6px 14px;cursor:pointer;letter-spacing:1px}
+.replay:hover{background:rgba(255,255,255,.1);color:#999}
+
+/* Card overlay */
+.card-overlay{position:absolute;top:0;left:0;right:0;bottom:0;z-index:200;background:rgba(5,5,12,.95);display:flex;flex-direction:column;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .5s}
+.card-overlay.active{opacity:1;pointer-events:all}
+.card-prompt{font-size:14px;color:#666;letter-spacing:2px;margin-bottom:40px;text-transform:uppercase;opacity:0;animation:fadeIn 1s .3s forwards}
+.tarot-card{width:160px;height:260px;border-radius:12px;position:relative;cursor:pointer;transform-style:preserve-3d;transition:transform .8s cubic-bezier(.25,.46,.45,.94)}
+.card-back,.card-front{position:absolute;top:0;left:0;width:100%;height:100%;border-radius:12px;backface-visibility:hidden}
+.card-back{background:linear-gradient(135deg,#1a0a30,#0d0520);border:1px solid rgba(107,92,231,.4);display:flex;align-items:center;justify-content:center;box-shadow:0 0 30px rgba(107,92,231,.2)}
+.card-back-pat{width:80%;height:80%;border:1px solid rgba(107,92,231,.2);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:40px;background:radial-gradient(circle,rgba(107,92,231,.1),transparent)}
+.card-front{background:linear-gradient(135deg,#1a1025,#0f0a18);border:1px solid rgba(201,168,76,.5);transform:rotateY(180deg);display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 0 40px rgba(201,168,76,.3)}
+.card-elem{font-size:48px;margin-bottom:12px;filter:drop-shadow(0 0 15px rgba(201,168,76,.6))}
+.card-name{font-size:14px;letter-spacing:3px;color:#C9A84C;text-transform:uppercase}
+.card-sub{font-size:11px;color:#8B7A5E;margin-top:4px;letter-spacing:1px}
+.tarot-card.flipped{transform:rotateY(180deg)}
+.tarot-card.shrinking{transition:all .8s cubic-bezier(.4,0,.2,1);transform:rotateY(180deg) scale(.15) translate(400px,-800px);opacity:0}
+@keyframes fadeIn{to{opacity:1}}
 </style>
 </head>
 <body>
@@ -1354,7 +222,7 @@ body {
   <div class="status-bar">SOLARA</div>
   <button class="replay" onclick="restart()">REPLAY</button>
 
-  <!-- ===== SEARCH ===== -->
+  <!-- Search -->
   <div class="search-trigger" id="searchTrigger" onclick="openSearch()">
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="7"/><line x1="15.5" y1="15.5" x2="21" y2="21"/></svg>
   </div>
@@ -1365,28 +233,28 @@ body {
     </div>
   </div>
 
-  <!-- ===== FORTUNE FILTER LABEL ===== -->
+  <!-- Fortune filter label -->
   <div class="ff-label" id="ffLabel">
     <span class="ff-tag" id="ffTag">合計 / 総合</span>
     <div class="ff-bars" id="ffBars"></div>
   </div>
 
-  <!-- ===== SEARCH RESULT ===== -->
+  <!-- Search result -->
   <div class="sr-popup" id="srPopup">
-    <button class="sr-close" onclick="closeSR()">&#x2715;</button>
+    <button class="sr-close" onclick="closeSR()">✕</button>
     <div class="sr-name" id="srName"></div>
     <div class="sr-sector" id="srSector"></div>
     <div class="sr-tabs" id="srTabs"></div>
     <div class="sr-advice" id="srAdvice"></div>
   </div>
 
-  <!-- ===== STELLA ===== -->
+  <!-- Stella -->
   <div class="stella" id="stella">
-    <div class="stella-name">&#x2728; Stella</div>
-    <div class="stella-text" id="stellaText"><span class="hl">&#x300E;&#x518D;&#x4F1A;&#x306E;&#x559C;&#x3073;&#x300F;</span>&#x304C;&#x4ECA;&#x65E5;&#x306E;&#x7A2E;&#x3002;&#x5317;&#x6771;&#x306E;&#x98A8;&#x304C;&#x3001;&#x61D0;&#x304B;&#x3057;&#x3044;&#x8AB0;&#x304B;&#x3068;&#x306E;&#x7E01;&#x3092;&#x904B;&#x3093;&#x3067;&#x304F;&#x308B;&#x3088;&#x3002;</div>
+    <div class="stella-name">✨ Stella</div>
+    <div class="stella-text" id="stellaText"><span class="hl">『再会の喜び』</span>が今日の種。北東の風が、懐かしい誰かとの縁を運んでくるよ。</div>
   </div>
 
-  <!-- ===== MAP ===== -->
+  <!-- Map -->
   <div class="map-wrap" id="mapWrap">
     <div id="leafletMap" style="position:absolute;top:0;left:0;right:0;bottom:0;z-index:1"></div>
     <div class="gray-veil" id="grayVeil"></div>
@@ -1394,36 +262,36 @@ body {
     <div class="screen-flash" id="screenFlash"></div>
     <video class="effect-video" id="effectVideo" muted playsinline preload="auto" src="effect_impact.mp4"></video>
     <div class="rest-overlay" id="restOverlay" onclick="this.classList.remove('vis')">
-      <div class="rest-inner"><div class="rest-icon">&#x1F319;</div><div class="rest-text" id="restText"></div></div>
+      <div class="rest-inner"><div class="rest-icon">🌙</div><div class="rest-text" id="restText"></div></div>
     </div>
     <div class="preseed" id="preseed">
-      <div class="preseed-icon">&#x1F331;</div>
-      <div class="preseed-text">&#x4ECA;&#x65E5;&#x306E;&#x65B9;&#x4F4D;&#x3092;&#x63A2;&#x7D22;&#x3057;&#x3066;&#x307F;&#x3088;&#x3046;<br>&#x5730;&#x56F3;&#x3092;&#x30BF;&#x30C3;&#x30D7;&#x3057;&#x3066;&#x59CB;&#x3081;&#x3066;&#x306D;</div>
+      <div class="preseed-icon">🌱</div>
+      <div class="preseed-text">今日の方位を探索してみよう<br>地図をタップして始めてね</div>
     </div>
   </div>
 
-  <!-- ===== VIEWPOINT ===== -->
-  <div class="vp-btn" id="vpBtn" onclick="toggleVP()">&#x1F4CD;</div>
+  <!-- Viewpoint -->
+  <div class="vp-btn" id="vpBtn" onclick="toggleVP()">📍</div>
   <div class="vp-panel" id="vpPanel">
     <div class="vp-tabs">
-      <div class="vp-tab active" data-vptab="vp" onclick="switchVPTab('vp')">&#x1F4CD; VIEWPOINT</div>
-      <div class="vp-tab" data-vptab="loc" onclick="switchVPTab('loc')">&#x1F310; LOCATIONS</div>
+      <div class="vp-tab active" data-vptab="vp" onclick="switchVPTab('vp')">📍 VIEWPOINT</div>
+      <div class="vp-tab" data-vptab="loc" onclick="switchVPTab('loc')">🌐 LOCATIONS</div>
     </div>
     <div id="vpContent">
       <div id="vpSlots"></div>
       <div class="vp-divider"></div>
-      <div class="vp-action" onclick="vpGeo()"><span>&#x1F4E1;</span> &#x73FE;&#x5728;&#x5730;&#x306B;&#x79FB;&#x52D5;</div>
-      <div class="vp-action" onclick="vpSave()"><span>&#x1F4BE;</span> &#x3053;&#x306E;&#x5730;&#x70B9;&#x3092;&#x4FDD;&#x5B58;</div>
+      <div class="vp-action" onclick="vpGeo()"><span>📡</span> 現在地に移動</div>
+      <div class="vp-action" onclick="vpSave()"><span>💾</span> この地点を保存</div>
     </div>
     <div id="locContent" style="display:none">
       <div id="locSlots"></div>
       <div class="vp-divider"></div>
-      <div class="vp-action" onclick="locSave()"><span>&#x1F4BE;</span> &#x3053;&#x306E;&#x5730;&#x70B9;&#x3092;&#x767B;&#x9332;</div>
+      <div class="vp-action" onclick="locSave()"><span>💾</span> この地点を登録</div>
     </div>
     <div class="vp-coord" id="vpCoord"></div>
   </div>
 
-  <!-- ===== LAYER ===== -->
+  <!-- Layer -->
   <div class="layer-btn" id="layerBtn" onclick="toggleLP()">
     <div class="layer-btn-bar"></div><div class="layer-btn-bar"></div><div class="layer-btn-bar"></div>
   </div>
@@ -1431,66 +299,61 @@ body {
     <div class="lp-title">LAYERS</div>
     <div class="lp-sec">
       <div class="lp-label">MAP</div>
-      <div class="lt on" data-layer="sectors" onclick="toggleLT(this)" style="--tc:#C9A84C"><div class="lt-check">&#x2713;</div><div class="lt-text">&#x65B9;&#x4F4D;EN</div></div>
-      <div class="lt on" data-layer="compass" onclick="toggleLT(this)" style="--tc:#E8E0D0"><div class="lt-check">&#x2713;</div><div class="lt-text">&#x30B3;&#x30F3;&#x30D1;&#x30B9;</div></div>
+      <div class="lt on" data-layer="sectors" onclick="toggleLT(this)" style="--tc:#C9A84C"><div class="lt-check">✓</div><div class="lt-text">方位EN</div></div>
+      <div class="lt on" data-layer="compass" onclick="toggleLT(this)" style="--tc:#E8E0D0"><div class="lt-check">✓</div><div class="lt-text">コンパス</div></div>
     </div>
     <div class="lp-sec">
       <div class="lp-label">CHART</div>
-      <div class="lt" data-layer="natal" onclick="toggleLT(this)" style="--tc:#E8E0D0"><div class="lt-check">&#x2713;</div><div class="lt-text">Natal</div></div>
-      <div class="lt" data-layer="progressed" onclick="toggleLT(this)" style="--tc:#C9A84C"><div class="lt-check">&#x2713;</div><div class="lt-text">Progressed</div></div>
-      <div class="lt on" data-layer="transit" onclick="toggleLT(this)" style="--tc:#00D4FF"><div class="lt-check">&#x2713;</div><div class="lt-text">Transit</div></div>
+      <div class="lt" data-layer="natal" onclick="toggleLT(this)" style="--tc:#E8E0D0"><div class="lt-check">✓</div><div class="lt-text">Natal</div></div>
+      <div class="lt" data-layer="progressed" onclick="toggleLT(this)" style="--tc:#C9A84C"><div class="lt-check">✓</div><div class="lt-text">Progressed</div></div>
+      <div class="lt on" data-layer="transit" onclick="toggleLT(this)" style="--tc:#00D4FF"><div class="lt-check">✓</div><div class="lt-text">Transit</div></div>
     </div>
     <div class="lp-sec">
       <div class="lp-label">PLANET GROUP</div>
-      <div class="lt on" data-group="personal" onclick="toggleGT(this)" style="--tc:#FFD370"><div class="lt-check">&#x2713;</div><div class="lt-text">&#x500B;&#x4EBA;&#x5929;&#x4F53;</div></div>
-      <div class="lt" data-group="social" onclick="toggleGT(this)" style="--tc:#6BB5FF"><div class="lt-check">&#x2713;</div><div class="lt-text">&#x793E;&#x4F1A;&#x5929;&#x4F53;</div></div>
-      <div class="lt" data-group="generational" onclick="toggleGT(this)" style="--tc:#B088FF"><div class="lt-check">&#x2713;</div><div class="lt-text">&#x4E16;&#x4EE3;&#x5929;&#x4F53;</div></div>
+      <div class="lt on" data-group="personal" onclick="toggleGT(this)" style="--tc:#FFD370"><div class="lt-check">✓</div><div class="lt-text">個人天体</div></div>
+      <div class="lt" data-group="social" onclick="toggleGT(this)" style="--tc:#6BB5FF"><div class="lt-check">✓</div><div class="lt-text">社会天体</div></div>
+      <div class="lt" data-group="generational" onclick="toggleGT(this)" style="--tc:#B088FF"><div class="lt-check">✓</div><div class="lt-text">世代天体</div></div>
     </div>
     <div class="lp-sec">
       <div class="lp-label">FORTUNE</div>
       <div class="fp">
-        <div class="fp-item active" data-fortune="all" style="--pc:#E8E0D0" onclick="setFortune('all')">&#x7DCF;&#x5408;</div>
-        <div class="fp-item" data-fortune="healing" style="--pc:#64C8B4" onclick="setFortune('healing')">&#x7652;&#x3057;</div>
-        <div class="fp-item" data-fortune="money" style="--pc:#F5D76E" onclick="setFortune('money')">&#x91D1;&#x904B;</div>
-        <div class="fp-item" data-fortune="love" style="--pc:#FF88B4" onclick="setFortune('love')">&#x604B;&#x611B;</div>
-        <div class="fp-item" data-fortune="work" style="--pc:#6BB5FF" onclick="setFortune('work')">&#x4ED5;&#x4E8B;</div>
-        <div class="fp-item" data-fortune="communication" style="--pc:#B088FF" onclick="setFortune('communication')">&#x8A71;&#x3059;</div>
+        <div class="fp-item active" data-fortune="all" style="--pc:#E8E0D0" onclick="setFortune('all')">総合</div>
+        <div class="fp-item" data-fortune="healing" style="--pc:#64C8B4" onclick="setFortune('healing')">癒し</div>
+        <div class="fp-item" data-fortune="money" style="--pc:#F5D76E" onclick="setFortune('money')">金運</div>
+        <div class="fp-item" data-fortune="love" style="--pc:#FF88B4" onclick="setFortune('love')">恋愛</div>
+        <div class="fp-item" data-fortune="work" style="--pc:#6BB5FF" onclick="setFortune('work')">仕事</div>
+        <div class="fp-item" data-fortune="communication" style="--pc:#B088FF" onclick="setFortune('communication')">話す</div>
       </div>
     </div>
   </div>
 
-  <!-- ===== FORTUNE SHEET ===== -->
-  <div class="fs-pull" id="fsPull" onclick="toggleFS()">&#x25B2; &#x904B;&#x52E2;&#x65B9;&#x4F4D;</div>
+  <!-- Fortune sheet -->
+  <div class="fs-pull" id="fsPull" onclick="toggleFS()">▲ 運勢方位</div>
   <div class="fs" id="fsSheet">
     <div class="fs-handle" onclick="if(fsOpen)toggleFS()"></div>
     <div class="fs-tabs fs-src" id="fsSrcTabs">
-      <div class="fs-tab active" data-s="combined" onclick="switchSrc('combined')">&#x5408;&#x8A08;</div>
-      <div class="fs-tab" data-s="transit" onclick="switchSrc('transit')">&#x30C8;&#x30E9;&#x30F3;&#x30B8;&#x30C3;&#x30C8;</div>
-      <div class="fs-tab" data-s="progressed" onclick="switchSrc('progressed')">&#x30D7;&#x30ED;&#x30B0;&#x30EC;&#x30B9;</div>
+      <div class="fs-tab active" data-s="combined" onclick="switchSrc('combined')">合計</div>
+      <div class="fs-tab" data-s="transit" onclick="switchSrc('transit')">トランジット</div>
+      <div class="fs-tab" data-s="progressed" onclick="switchSrc('progressed')">プログレス</div>
     </div>
-    <div class="fs-legend" id="fsLegend"><span style="color:#C9A84C">&#x25CF; T&#x67D4;</span><span style="color:#6B5CE7">&#x25CF; T&#x525B;</span><span style="color:#4CB8B0">&#x25CF; P&#x67D4;</span><span style="color:#E74C6B">&#x25CF; P&#x525B;</span></div>
+    <div class="fs-legend" id="fsLegend"><span style="color:#C9A84C">● T柔</span><span style="color:#6B5CE7">● T剛</span><span style="color:#4CB8B0">● P柔</span><span style="color:#E74C6B">● P剛</span></div>
     <div class="fs-tabs fs-cat" id="fsCatTabs">
-      <div class="fs-tab active" data-f="all" onclick="switchCat('all')">&#x7DCF;&#x5408;</div>
-      <div class="fs-tab" data-f="healing" onclick="switchCat('healing')">&#x7652;&#x3057;</div>
-      <div class="fs-tab" data-f="money" onclick="switchCat('money')">&#x91D1;&#x904B;</div>
-      <div class="fs-tab" data-f="love" onclick="switchCat('love')">&#x604B;&#x611B;</div>
-      <div class="fs-tab" data-f="work" onclick="switchCat('work')">&#x4ED5;&#x4E8B;</div>
-      <div class="fs-tab" data-f="communication" onclick="switchCat('communication')">&#x8A71;&#x3059;</div>
+      <div class="fs-tab active" data-f="all" onclick="switchCat('all')">総合</div>
+      <div class="fs-tab" data-f="healing" onclick="switchCat('healing')">癒し</div>
+      <div class="fs-tab" data-f="money" onclick="switchCat('money')">金運</div>
+      <div class="fs-tab" data-f="love" onclick="switchCat('love')">恋愛</div>
+      <div class="fs-tab" data-f="work" onclick="switchCat('work')">仕事</div>
+      <div class="fs-tab" data-f="communication" onclick="switchCat('communication')">話す</div>
     </div>
     <div class="fs-body" id="fsBody"></div>
   </div>
 
-  <!-- ===== BOTTOM NAV (5-tab, rendered by shared/nav.js) ===== -->
+  <!-- Bottom nav (5-tab, rendered by shared/nav.js) -->
   <div class="bottom-nav"></div>
 </div>
 
 <script>
-// ============================================================
-// 1. CONSTANTS & DATA
-//    GOLD, FORTUNE_COLORS, DIR16, COMP_COLORS, TAROT data,
-//    FORTUNE_PAIRS, FORTUNE_REST
-// ============================================================
-
+// ========== Constants ==========
 var GOLD = '#C9A84C';
 var FORTUNE_COLORS = {healing:'#64C8B4',money:'#F5D76E',love:'#FF88B4',work:'#6BB5FF',communication:'#B088FF'};
 var DIR16 = ['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'];
@@ -1570,12 +433,7 @@ var TAROT = {
   },
 };
 
-// ============================================================
-// 2. ASTRONOMY & SCORING
-//    BIRTH profile, tripleChart(), TRIPLE, CHART_STYLE,
-//    ASPECTS definitions, findAspects(), scoreAll()
-// ============================================================
-
+// ========== Astronomy (using shared/astro-math.js) ==========
 var _prof = loadSolaraProfile();
 var BIRTH = _prof && _prof.birthDate
   ? {date:new Date(_prof.birthDate.replace(/-/g,'/')+ ' '+(_prof.birthTime||'00:00')),lat:_prof.birthLat||35.4233,lng:_prof.birthLng||136.7607}
@@ -1706,11 +564,10 @@ function scoreAll(){
 
 // ========== Seed Boost ==========
 
-// ============================================================
-// 3. STATE VARIABLES
-//    map, particles, geoSectors, layerVis, groupVis, etc.
-// ============================================================
+// ========== Longitude normalization ==========
+function normLng(ptLng,refLng){var d=ptLng-refLng;while(d>180)d-=360;while(d<-180)d+=360;return refLng+d}
 
+// ========== State ==========
 var map,mapCenter,particles=[],impactRings=[],meteor=null;
 var breathe=0,sectorAnimProg=0,sectorAnimating=false,animRunning=false;
 var geoSectors=[],geoSectorsVis=false,baseOverlays=[];
@@ -1721,15 +578,7 @@ var fortuneFilt=null,fsOpen=false,fsTab='all',fsSrc='combined',sectorView='combi
 var aspectData=null,searchMarker=null,vpSub=-1;
 var pCtx,pW,pH;
 
-// ============================================================
-// 4. UTILITIES
-//    $(), normLng(), turfLine(), clampLat()
-// ============================================================
-
-function $(id){return document.getElementById(id)}
-
-function normLng(ptLng,refLng){var d=ptLng-refLng;while(d>180)d-=360;while(d<-180)d+=360;return refLng+d}
-
+// ========== Turf helpers (reduced points) ==========
 function turfLine(center,bearing,maxKm,steps){
   var pts=[];for(var i=0;i<=steps;i++){
     var d=maxKm*i/steps,pt=turf.destination(center,d,bearing,{units:'kilometers'}).geometry.coordinates;
@@ -1737,13 +586,7 @@ function turfLine(center,bearing,maxKm,steps){
   }return pts;
 }
 
-function clampLat(l){return Math.max(-85.05,Math.min(85.05,l))}
-
-// ============================================================
-// 5. INITIALIZATION
-//    init() — canvas, map, tiles, vpPin, compass, scoring
-// ============================================================
-
+// ========== Init ==========
 function init(){
   var c=document.getElementById('particleCanvas'),wrap=document.getElementById('mapWrap');
   var rect=wrap.getBoundingClientRect(),dpr=devicePixelRatio||1;
@@ -1784,11 +627,9 @@ function init(){
   vpRender();
 }
 
-// ============================================================
-// 6. MAP: COMPASS & DIRECTION LABELS
-//    buildCompass()
-// ============================================================
+function $(id){return document.getElementById(id)}
 
+// ========== Compass ==========
 function buildCompass(center){
   baseOverlays.forEach(function(l){if(map.hasLayer(l))map.removeLayer(l)});
   baseOverlays=[];
@@ -1813,11 +654,7 @@ function buildCompass(center){
   if(!layerVis.compass)baseOverlays.forEach(function(l){if(l.setOpacity)l.setOpacity(0);else if(l.setStyle)l.setStyle({opacity:0})});
 }
 
-// ============================================================
-// 7. MAP: REBUILD ON CENTER CHANGE
-//    rebuild() — recalculate + redraw all layers
-// ============================================================
-
+// ========== Rebuild from viewpoint ==========
 function rebuild(nc,fly){
   mapCenter=nc;
   if(window.vpPin)window.vpPin.setLatLng(nc);
@@ -1841,12 +678,7 @@ function rebuild(nc,fly){
   vpRender();
 }
 
-// ============================================================
-// 8. MAP: SECTORS (16-direction polygons)
-//    getSectorColor(), scoreToStyle(), computeRanks(),
-//    createSectors(), buildSectorPts()
-// ============================================================
-
+// ========== Sectors ==========
 function getSectorColor(){
   var cat=fortuneFilt||(fsTab!=='all'?fsTab:null);
   return cat&&FORTUNE_COLORS[cat]||GOLD;
@@ -1923,12 +755,9 @@ function buildSectorPts(cp,startB,endB,radius,refLng){
   }
   return pts;
 }
+function clampLat(l){return Math.max(-85.05,Math.min(85.05,l))}
 
-// ============================================================
-// 9. MAP: PLANET LINES
-//    addPlanetLines() — natal/progressed/transit + edge tracking
-// ============================================================
-
+// ========== Planet Lines ==========
 function addPlanetLines(){
   if(boostedLines)return;
   boostedLines=[];chartGroups={};planetMarkers=[];
@@ -2000,12 +829,7 @@ function addPlanetLines(){
   boostedLines.push(sl);
 }
 
-// ============================================================
-// 10. PARTICLE EFFECTS & ANIMATION
-//     Particle class, spawnImpact(), spawnConverge(),
-//     launchMeteor(), startAnim(), animate(), drawSparkles()
-// ============================================================
-
+// ========== Particles & Animation ==========
 function Particle(x,y,vx,vy,color,size,life,decay){this.x=x;this.y=y;this.vx=vx;this.vy=vy;this.color=color;this.size=size;this.life=life;this.maxLife=life;this.decay=decay;this.converge=false;this.tx=0;this.ty=0}
 Particle.prototype.update=function(){if(this.converge){this.vx+=(this.tx-this.x)*.003;this.vy+=(this.ty-this.y)*.003}this.x+=this.vx;this.y+=this.vy;this.vx*=.97;this.vy*=.97;this.life-=this.decay};
 Particle.prototype.draw=function(ctx){if(this.life<=0)return;var a=this.life/this.maxLife;ctx.globalAlpha=a;ctx.shadowBlur=12;ctx.shadowColor=this.color;ctx.fillStyle=this.color;ctx.beginPath();ctx.arc(this.x,this.y,this.size*a,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0};
@@ -2093,11 +917,7 @@ function drawSparkles(ctx){
   ctx.fillStyle=cg;ctx.beginPath();ctx.arc(cp.x,cp.y,gs,0,Math.PI*2);ctx.fill();
 }
 
-// ============================================================
-// 11. IMPACT SEQUENCE
-//     onImpact(), playEffect()
-// ============================================================
-
+// ========== Impact ==========
 function onImpact(x,y){
   var fl=$('screenFlash');fl.style.transition='none';fl.style.opacity='.6';
   setTimeout(function(){fl.style.transition='opacity .6s';fl.style.opacity='0'},50);
@@ -2125,12 +945,7 @@ function playEffect(x,y){
   v.onended=function(){v.classList.remove('playing')};
 }
 
-// ============================================================
-// 12. SEARCH & SECTOR DETECTION
-//     openSearch(), closeSearch(), doSearch(), detectSector(),
-//     showSR(), switchSRTab(), showSRAdvice(), closeSR()
-// ============================================================
-
+// ========== Search ==========
 function openSearch(){$('searchBar').classList.add('open');$('searchTrigger').classList.remove('vis');setTimeout(function(){$('searchInput').focus()},300)}
 function closeSearch(){$('searchBar').classList.remove('open');$('searchTrigger').classList.add('vis')}
 document.addEventListener('pointerdown',function(e){var b=$('searchBar');if(b&&b.classList.contains('open')&&!b.contains(e.target))closeSearch()});
@@ -2247,12 +1062,7 @@ function showSRAdvice(cat){
 }
 function closeSR(){$('srPopup').classList.remove('vis');if(searchMarker){map.removeLayer(searchMarker);searchMarker=null}}
 
-// ============================================================
-// 13. LAYER PANEL
-//     toggleLP(), closeLPOut(), toggleLT(), toggleGT(),
-//     setFortune(), applyVis()
-// ============================================================
-
+// ========== Layer Panel ==========
 function toggleLP(){var p=$('layerPanel'),b=$('layerBtn');p.classList.toggle('open');b.classList.toggle('active');
   if(p.classList.contains('open'))setTimeout(function(){document.addEventListener('pointerdown',closeLPOut)},0)}
 function closeLPOut(e){var p=$('layerPanel'),b=$('layerBtn');if(!p.contains(e.target)&&!b.contains(e.target)){p.classList.remove('open');b.classList.remove('active');document.removeEventListener('pointerdown',closeLPOut)}}
@@ -2297,12 +1107,7 @@ function applyVis(){
   map.fire('moveend');
 }
 
-// ============================================================
-// 14. FORTUNE SHEET
-//     getActiveScores(), toggleFS(), switchSrc(), switchCat(),
-//     renderFS(), flashSec(), updateFFLabel(), swipe handler
-// ============================================================
-
+// ========== Fortune Sheet ==========
 function getActiveScores(){
   if(!aspectData)return{};
   var ck=fsSrc==='transit'?['tSoft','tHard']:fsSrc==='progressed'?['pSoft','pHard']:COMP_KEYS;
@@ -2395,12 +1200,7 @@ function updateFFLabel(){
   });
 })();
 
-// ============================================================
-// 15. VIEWPOINT SYSTEM
-//     SlotManager class, vpMgr, locMgr, toggleVP(),
-//     vpGeo(), vpSave(), locSave(), switchVPTab()
-// ============================================================
-
+// ========== Generic SlotManager (shared by VP and LOC) ==========
 function SlotManager(cfg){
   this.storageKey = cfg.storageKey;
   this.containerEl = cfg.containerEl;
@@ -2452,7 +1252,7 @@ SlotManager.prototype.render = function(){
     if(s.isHome){
       row.innerHTML='<span class="vp-row-icon">'+s.icon+'</span><span class="vp-row-label">'+s.name+'</span><span style="font-size:8px;color:#F9D976;letter-spacing:1px;opacity:.6">HOME</span>';
     }else{
-      row.innerHTML='<span class="vp-row-icon">'+s.icon+'</span><span class="vp-row-label">'+s.name+'</span><span class="vp-row-more" onclick="event.stopPropagation();'+self._ref()+'.toggleSub('+i+')">&#x22EF;</span>';
+      row.innerHTML='<span class="vp-row-icon">'+s.icon+'</span><span class="vp-row-label">'+s.name+'</span><span class="vp-row-more" onclick="event.stopPropagation();'+self._ref()+'.toggleSub('+i+')">⋯</span>';
     }
     row.onclick=function(){self.onSelect(s)};
     if(self.activeSub===i&&!s.isHome){
@@ -2581,11 +1381,7 @@ function switchVPTab(tab){
   if(tab==='vp')vpRender();else locRender();
 }
 
-// ============================================================
-// 16. APP CONTROL
-//     restart(), dismissVeil(), window.onload
-// ============================================================
-
+// ========== Restart ==========
 function restart(){
   particles=[];impactRings=[];meteor=null;sectorAnimating=false;sectorAnimProg=0;
   $('preseed').classList.remove('hidden','bottom');$('grayVeil').classList.remove('lifted');
@@ -2600,6 +1396,7 @@ function restart(){
   $('vpBtn').classList.add('vis');
 }
 
+// ========== Veil dismiss ==========
 function dismissVeil(){
   var v=$('grayVeil'),p=$('preseed');
   if(v.classList.contains('lifted')||p.classList.contains('hidden'))return;

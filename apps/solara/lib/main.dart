@@ -47,14 +47,21 @@ class SolaraHome extends StatefulWidget {
 
 class _SolaraHomeState extends State<SolaraHome> {
   int _currentIndex = 0;
+  final _horoKey = GlobalKey<HoroscopeScreenState>();
 
-  final _screens = [
+  late final _screens = <Widget>[
     const MapScreen(),
-    const HoroscopeScreen(),
+    HoroscopeScreen(key: _horoKey),
     const ObserveScreen(),
     const GalaxyScreen(),
     const SanctuaryScreen(),
   ];
+
+  void _onTabTap(int i) {
+    setState(() => _currentIndex = i);
+    // Refresh profile when switching to Horo tab
+    if (i == 1) _horoKey.currentState?.loadProfile();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -66,7 +73,7 @@ class _SolaraHomeState extends State<SolaraHome> {
       ),
       bottomNavigationBar: SolaraNavBar(
         currentIndex: _currentIndex,
-        onTap: (i) => setState(() => _currentIndex = i),
+        onTap: _onTabTap,
       ),
     );
   }

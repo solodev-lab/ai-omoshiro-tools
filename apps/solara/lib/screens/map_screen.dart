@@ -12,7 +12,7 @@ class MapScreen extends StatefulWidget {
   State<MapScreen> createState() => _MapScreenState();
 }
 
-class _MapScreenState extends State<MapScreen> {
+class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   final MapController _mapCtrl = MapController();
   LatLng _center = const LatLng(35.4233, 136.7607);
 
@@ -22,7 +22,11 @@ class _MapScreenState extends State<MapScreen> {
   bool _fortuneSheetOpen = false;
   bool _vpPanelOpen = false;
   String _vpTab = 'vp'; // 'vp' or 'loc'
-  bool _seeded = false; // seed card drawn today
+  // HTML preseed states: 'center' → 'bottom' → 'hidden'
+  String _preseedState = 'center'; // 'center', 'bottom', 'hidden'
+  bool _stellaMinimized = false;
+  bool _restOverlayVisible = false;
+  String _restOverlayText = '';
   final TextEditingController _searchCtrl = TextEditingController();
 
   // Layer visibility
@@ -55,10 +59,18 @@ class _MapScreenState extends State<MapScreen> {
     'SW':'南西','WSW':'西南西','W':'西','WNW':'西北西','NW':'北西','NNW':'北北西'};
 
   final Map<String, double> _sectorScores = {};
+  // HTML: each direction has 4 component scores: tSoft, tHard, pSoft, pHard
+  final Map<String, Map<String, double>> _sectorComps = {};
 
   // Search result
   String? _searchResultName;
 
+  // HTML: COMP_COLORS
+  static const _compColors = <String, Color>{
+    'tSoft': Color(0xFFC9A84C), 'tHard': Color(0xFF6B5CE7),
+    'pSoft': Color(0xFF4CB8B0), 'pHard': Color(0xFFE74C6B),
+  };
+  static const _compKeys = ['tSoft', 'tHard', 'pSoft', 'pHard'];
 
   @override
   void initState() {
@@ -70,7 +82,12 @@ class _MapScreenState extends State<MapScreen> {
   void _generateMockScores() {
     final rng = Random(DateTime.now().day);
     for (final d in _dir16) {
-      _sectorScores[d] = rng.nextDouble() * 6;
+      final ts = rng.nextDouble() * 2.5;
+      final th = rng.nextDouble() * 1.5;
+      final ps = rng.nextDouble() * 1.2;
+      final ph = rng.nextDouble() * 0.8;
+      _sectorComps[d] = {'tSoft': ts, 'tHard': th, 'pSoft': ps, 'pHard': ph};
+      _sectorScores[d] = ts + th + ps + ph;
     }
   }
 
@@ -102,15 +119,6 @@ class _MapScreenState extends State<MapScreen> {
     } catch (_) {}
   }
 
-  // Rank: top 1 = strong, top 2 = weak, rest = null (matches HTML computeRanks)
-  String? _sectorRank(String dir) {
-    final sorted = _sectorScores.entries.toList()..sort((a, b) => b.value.compareTo(a.value));
-    final idx = sorted.indexWhere((e) => e.key == dir);
-    if (idx == 0) return 'strong';
-    if (idx == 1) return 'weak';
-    return null;
-  }
-
   // pct() from HTML: 0-5 → 0-83.3%, 5-10 → 83.3-100%
   double _pct(double v) {
     if (v <= 5) return (v / 5) * (100 * 5 / 6);
@@ -118,50 +126,107 @@ class _MapScreenState extends State<MapScreen> {
   }
 
   // ══════════════════════════════════════════════
-  // Sector polygons
+  // Sector polygons — HTML: 8 directions, blessed/mid/shadow
+  // blessed: fillOpacity=0.12, opacity=0.5, weight=2, color=#C9A84C
+  // shadow:  fillOpacity=0.10, opacity=0.25, weight=1, color=#6B5CE7, fill=#2D1B4E
+  // mid:     fillOpacity=0.06, opacity=0.2,  weight=1, color=#3A4A6B
   // ══════════════════════════════════════════════
+  static const _dir8 = ['N','NE','E','SE','S','SW','W','NW'];
+  static const _dir8Angles = <String, List<double>>{
+    'N':  [337.5, 22.5],  'NE': [22.5, 67.5],
+    'E':  [67.5, 112.5],  'SE': [112.5, 157.5],
+    'S':  [157.5, 202.5], 'SW': [202.5, 247.5],
+    'W':  [247.5, 292.5], 'NW': [292.5, 337.5],
+  };
+
+  // Default sector types (matches HTML fallback when no seedBoostData)
+  String _sectorType(String dir) {
+    // Compute from _sectorScores: top 2 = blessed, next 3 = mid, rest = shadow
+    // Map 16-dir scores to 8-dir by picking best sub-sector
+    final score8 = <String, double>{};
+    for (final d8 in _dir8) {
+      double best = 0;
+      for (final e in _sectorScores.entries) {
+        // Check if this 16-dir falls within this 8-dir
+        final idx16 = _dir16.indexOf(e.key);
+        final bearing16 = idx16 * 22.5;
+        final angles = _dir8Angles[d8]!;
+        bool inSector;
+        if (angles[0] > angles[1]) {
+          inSector = bearing16 >= angles[0] || bearing16 < angles[1];
+        } else {
+          inSector = bearing16 >= angles[0] && bearing16 < angles[1];
+        }
+        if (inSector && e.value > best) best = e.value;
+      }
+      score8[d8] = best;
+    }
+    final sorted = score8.entries.toList()..sort((a, b) => b.value.compareTo(a.value));
+    final idx = sorted.indexWhere((e) => e.key == dir);
+    if (idx < 2) return 'blessed';
+    if (idx < 5) return 'mid';
+    return 'shadow';
+  }
+
   List<Polygon> _buildSectors() {
     if (!_layers['sectors']!) return [];
     final polygons = <Polygon>[];
     const d = Distance();
+    const maxDist = 20000000.0; // 20000km in meters
+    const radialSteps = 30;
+    const arcSteps = 50;
 
-    for (int i = 0; i < 16; i++) {
-      final dir = _dir16[i];
-      final rank = _sectorRank(dir);
-      if (rank == null) continue;
+    for (final dir in _dir8) {
+      final angles = _dir8Angles[dir]!;
+      double startDeg = angles[0];
+      double endDeg = angles[1];
+      if (startDeg > endDeg) endDeg += 360;
 
-      final bearing = i * 22.5;
-      const halfWidth = 11.25;
-      const maxDist = 20000000.0;
-      const radialSteps = 25;
-      const arcSteps = 20;
+      final type = _sectorType(dir);
       final points = <LatLng>[];
 
-      points.add(_center);
-      final leftBearing = bearing - halfWidth;
-      for (int s = 1; s <= radialSteps; s++) {
+      // Left edge (great circle from center outward)
+      for (int s = 0; s <= radialSteps; s++) {
         final dist = maxDist * s / radialSteps;
-        points.add(d.offset(_center, dist, leftBearing));
+        points.add(d.offset(_center, dist, startDeg % 360));
       }
+      // Outer arc
       for (int s = 1; s <= arcSteps; s++) {
-        final a = leftBearing + (halfWidth * 2) * s / arcSteps;
-        points.add(d.offset(_center, maxDist, a));
+        final a = startDeg + (endDeg - startDeg) * s / arcSteps;
+        points.add(d.offset(_center, maxDist, a % 360));
       }
-      final rightBearing = bearing + halfWidth;
-      for (int s = radialSteps - 1; s >= 1; s--) {
+      // Right edge (reversed, from outer to center)
+      for (int s = radialSteps; s >= 0; s--) {
         final dist = maxDist * s / radialSteps;
-        points.add(d.offset(_center, dist, rightBearing));
+        points.add(d.offset(_center, dist, endDeg % 360));
       }
 
-      // HTML: strong fillOpacity=0.40 opacity=0.85 weight=3
-      //       weak   fillOpacity=0.20 opacity=0.50 weight=2
-      final isStrong = rank == 'strong';
-      final sectorColor = _categoryColors[_activeCategory] ?? const Color(0xFFC9A84C);
+      // HTML styles
+      Color fillColor;
+      Color borderColor;
+      double borderWidth;
+      switch (type) {
+        case 'blessed':
+          fillColor = const Color(0x1FC9A84C); // fillOpacity 0.12
+          borderColor = const Color(0x80C9A84C); // opacity 0.5
+          borderWidth = 2;
+          break;
+        case 'shadow':
+          fillColor = const Color(0x1A2D1B4E); // fillOpacity 0.10
+          borderColor = const Color(0x406B5CE7); // opacity 0.25
+          borderWidth = 1;
+          break;
+        default: // mid
+          fillColor = const Color(0x0F3A4A6B); // fillOpacity 0.06
+          borderColor = const Color(0x333A4A6B); // opacity 0.2
+          borderWidth = 1;
+      }
+
       polygons.add(Polygon(
         points: points,
-        color: sectorColor.withAlpha(isStrong ? 102 : 51),
-        borderColor: sectorColor.withAlpha(isStrong ? 217 : 128),
-        borderStrokeWidth: isStrong ? 3.0 : 2.0,
+        color: fillColor,
+        borderColor: borderColor,
+        borderStrokeWidth: borderWidth,
       ));
     }
     return polygons;
@@ -170,23 +235,66 @@ class _MapScreenState extends State<MapScreen> {
   // ══════════════════════════════════════════════
   // Compass lines
   // ══════════════════════════════════════════════
+  // HTML: 8 direction lines (0,45,90,135,180,225,270,315)
+  // color:'#C9A84C', weight:1, opacity:0.35, dashArray:'4 8'
   List<Polyline> _buildCompass() {
     if (!_layers['compass']!) return [];
     final lines = <Polyline>[];
     const d = Distance();
-    for (int i = 0; i < 16; i++) {
-      final bearing = i * 22.5;
+    for (int i = 0; i < 8; i++) {
+      final bearing = i * 45.0;
       final pts = <LatLng>[];
-      for (double km = 0; km <= 20000000; km += 500000) {
+      for (double km = 0; km <= 20000000; km += 1000000) {
         pts.add(d.offset(_center, km, bearing));
       }
       lines.add(Polyline(
         points: pts,
         color: const Color(0x59C9A84C), // rgba(201,168,76,0.35)
         strokeWidth: 1,
+        pattern: StrokePattern.dashed(segments: const [4.0, 8.0]),
       ));
     }
     return lines;
+  }
+
+  // ══════════════════════════════════════════════
+  // Direction labels at 3 distances
+  // HTML: labelDistances=[2,150,1000]km
+  // Cardinal(N,E,S,W): opacity 0.5, fontSize 11, bold
+  // Intercardinal(NE,SE,SW,NW): opacity 0.3, fontSize 9, bold
+  // ══════════════════════════════════════════════
+  List<Marker> _buildDirLabels() {
+    if (!_layers['compass']!) return [];
+    final markers = <Marker>[];
+    const d = Distance();
+    const dirDefs = [
+      ('N', 0.0), ('NE', 45.0), ('E', 90.0), ('SE', 135.0),
+      ('S', 180.0), ('SW', 225.0), ('W', 270.0), ('NW', 315.0),
+    ];
+    const labelDistances = [2000.0, 150000.0, 1000000.0]; // meters
+
+    for (final dist in labelDistances) {
+      for (final dir in dirDefs) {
+        final isCardinal = dir.$1.length == 1;
+        final pt = d.offset(_center, dist, dir.$2);
+        markers.add(Marker(
+          point: pt,
+          width: 24, height: 16,
+          child: Center(
+            child: Text(
+              dir.$1,
+              style: TextStyle(
+                fontSize: isCardinal ? 11.0 : 9.0,
+                fontWeight: FontWeight.bold,
+                color: Color(isCardinal ? 0x80FFFFFF : 0x4DFFFFFF),
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ),
+        ));
+      }
+    }
+    return markers;
   }
 
   // ══════════════════════════════════════════════
@@ -205,66 +313,127 @@ class _MapScreenState extends State<MapScreen> {
             backgroundColor: const Color(0xFF080C14),
           ),
           children: [
+            // HTML: dark_nolabels base + dark_only_labels overlay
+            // .leaflet-tile-pane { filter: brightness(1.5) contrast(1.05) saturate(0.9) }
             TileLayer(
-              urlTemplate: 'https://basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}.png',
-              maxZoom: 18,
+              urlTemplate: 'https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}.png',
+              subdomains: const ['a', 'b', 'c', 'd'],
+              maxZoom: 19,
+              tileBuilder: (context, tileWidget, tile) => ColorFiltered(
+                colorFilter: const ColorFilter.matrix(<double>[
+                  // brightness(1.5) * contrast(1.05) * saturate(0.9) approximation
+                  1.42, 0.08, 0.05, 0, 0.0,
+                  0.08, 1.35, 0.05, 0, 0.0,
+                  0.08, 0.08, 1.32, 0, 0.0,
+                  0,    0,    0,    1, 0,
+                ]),
+                child: tileWidget,
+              ),
+            ),
+            TileLayer(
+              urlTemplate: 'https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}.png',
+              subdomains: const ['a', 'b', 'c', 'd'],
+              maxZoom: 19,
             ),
             PolygonLayer(polygons: _buildSectors()),
             PolylineLayer(polylines: _buildCompass()),
-            // HTML: vpPin — center marker
+            // HTML: direction labels (N,NE,E etc at 3 distances)
+            MarkerLayer(markers: _buildDirLabels()),
+            // HTML: VP Pin — draggable gold circle
+            // radial-gradient(circle at 40% 35%, #FFE8A0, #C9A84C)
+            // border:2px solid #E8E0D0
+            // box-shadow: 0 0 12px rgba(201,168,76,.6), 0 2px 6px rgba(0,0,0,.4)
             MarkerLayer(markers: [
-              Marker(point: _center, width: 20, height: 20, child: Container(
-                width: 20, height: 20,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  // HTML: radial-gradient(circle at 40% 35%, #FFE8A0, #C9A84C)
-                  gradient: const RadialGradient(
-                    center: Alignment(-0.2, -0.3),
-                    colors: [Color(0xFFFFE8A0), Color(0xFFC9A84C)],
+              Marker(point: _center, width: 20, height: 20, child: GestureDetector(
+                onPanUpdate: (d) {
+                  // Drag to move center (approximate)
+                  final bounds = _mapCtrl.camera.visibleBounds;
+                  final latRange = bounds.north - bounds.south;
+                  final lngRange = bounds.east - bounds.west;
+                  final size = MediaQuery.of(context).size;
+                  setState(() {
+                    _center = LatLng(
+                      _center.latitude - d.delta.dy * latRange / size.height,
+                      _center.longitude + d.delta.dx * lngRange / size.width,
+                    );
+                  });
+                },
+                child: Container(
+                  width: 20, height: 20,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: const RadialGradient(
+                      center: Alignment(-0.2, -0.3), // circle at 40% 35%
+                      colors: [Color(0xFFFFE8A0), Color(0xFFC9A84C)],
+                    ),
+                    border: Border.all(color: const Color(0xFFE8E0D0), width: 2),
+                    boxShadow: const [
+                      BoxShadow(color: Color(0x99C9A84C), blurRadius: 12),
+                      BoxShadow(color: Color(0x66000000), blurRadius: 6, offset: Offset(0, 2)),
+                    ],
                   ),
-                  // HTML: border: 2px solid #E8E0D0
-                  border: Border.all(color: const Color(0xFFE8E0D0), width: 2),
-                  // HTML: box-shadow: 0 0 12px rgba(201,168,76,.6), 0 2px 6px rgba(0,0,0,.4)
-                  boxShadow: const [
-                    BoxShadow(color: Color(0x99C9A84C), blurRadius: 12),
-                    BoxShadow(color: Color(0x66000000), blurRadius: 6, offset: Offset(0, 2)),
-                  ],
                 ),
               )),
             ]),
           ],
         ),
 
-        // ── Search Trigger Button ──
-        // HTML: .search-trigger { top:82px; left:16px; width:40px; height:40px; border-radius:50%;
-        //   background:rgba(10,10,25,.8); border:1px solid rgba(255,255,255,.12); }
+        // ── Fortune Filter Label (top bar) ──
+        // HTML: .ff-label { top:52px; left:16px; }
+        Positioned(
+          top: MediaQuery.of(context).padding.top + 2, left: 16,
+          child: _buildFortuneFilterLabel(),
+        ),
+
+        // ── 3 Buttons (below ff-label, left column) ──
+        // ff-label height ~62px, starts at top+2 → bottom at ~top+64
+        // Buttons: search(top+76), layer(top+124), vp(top+172)
         if (!_searchOpen) Positioned(
-          top: MediaQuery.of(context).padding.top + 32, left: 16,
+          top: MediaQuery.of(context).padding.top + 76, left: 16,
           child: _MapBtn(
             child: const Icon(Icons.search, size: 18, color: Color(0x99C9A84C)),
             onTap: () => setState(() => _searchOpen = true),
           ),
         ),
 
+        Positioned(
+          top: MediaQuery.of(context).padding.top + 124, left: 16,
+          child: _MapBtn(
+            active: _layerPanelOpen,
+            onTap: () => setState(() => _layerPanelOpen = !_layerPanelOpen),
+            child: Column(mainAxisSize: MainAxisSize.min, children: [
+              Container(width: 18, height: 2, decoration: BoxDecoration(color: const Color(0xFFE8E0D0), borderRadius: BorderRadius.circular(1))),
+              const SizedBox(height: 3),
+              Container(width: 18, height: 2, decoration: BoxDecoration(color: const Color(0xFFC9A84C), borderRadius: BorderRadius.circular(1))),
+              const SizedBox(height: 3),
+              Container(width: 18, height: 2, decoration: BoxDecoration(color: const Color(0xFF00D4FF), borderRadius: BorderRadius.circular(1))),
+            ]),
+          ),
+        ),
+
+        Positioned(
+          top: MediaQuery.of(context).padding.top + 172, left: 16,
+          child: _MapBtn(
+            active: _vpPanelOpen,
+            onTap: () => setState(() => _vpPanelOpen = !_vpPanelOpen),
+            child: const Text('📍', style: TextStyle(fontSize: 16)),
+          ),
+        ),
+
         // ── Search Bar (open state) ──
-        // HTML: .search-bar { top:82px; left:16px; right:16px; }
         if (_searchOpen) Positioned(
-          top: MediaQuery.of(context).padding.top + 32, left: 16, right: 16,
+          top: MediaQuery.of(context).padding.top + 76, left: 16, right: 16,
           child: Container(
             decoration: BoxDecoration(
-              // HTML: background:rgba(15,15,30,.9); backdrop-filter:blur(15px);
               color: const Color(0xE60F0F1E),
               borderRadius: BorderRadius.circular(10),
-              // HTML: border:1px solid rgba(255,255,255,.15);
               border: Border.all(color: const Color(0x26FFFFFF)),
             ),
             child: Row(children: [
               Expanded(child: TextField(
                 controller: _searchCtrl, autofocus: true,
-                // HTML: color:#E8E0D0; font-size:13px;
                 style: const TextStyle(color: Color(0xFFE8E0D0), fontSize: 13),
                 decoration: InputDecoration(
-                  // HTML: placeholder "🔍 場所を検索..."
                   hintText: '🔍 場所を検索...',
                   hintStyle: const TextStyle(color: Color(0xFF555555)),
                   border: InputBorder.none,
@@ -272,7 +441,6 @@ class _MapScreenState extends State<MapScreen> {
                 ),
                 onSubmitted: _doSearch,
               )),
-              // Close / search button
               GestureDetector(
                 onTap: () => setState(() => _searchOpen = false),
                 child: const Padding(
@@ -284,58 +452,83 @@ class _MapScreenState extends State<MapScreen> {
           ),
         ),
 
-        // ── Layer Button ──
-        // HTML: .layer-btn { top:130px; left:16px; width:40px; height:40px; }
+        // ── Zoom Buttons (right side) ──
         Positioned(
-          top: MediaQuery.of(context).padding.top + 80, left: 16,
-          child: _MapBtn(
-            active: _layerPanelOpen,
-            onTap: () => setState(() => _layerPanelOpen = !_layerPanelOpen),
-            // HTML: 3 bars with different colors
-            child: Column(mainAxisSize: MainAxisSize.min, children: [
-              Container(width: 18, height: 2, decoration: BoxDecoration(color: const Color(0xFFE8E0D0), borderRadius: BorderRadius.circular(1))),
-              const SizedBox(height: 3),
-              Container(width: 18, height: 2, decoration: BoxDecoration(color: const Color(0xFFC9A84C), borderRadius: BorderRadius.circular(1))),
-              const SizedBox(height: 3),
-              Container(width: 18, height: 2, decoration: BoxDecoration(color: const Color(0xFF00D4FF), borderRadius: BorderRadius.circular(1))),
-            ]),
+          top: MediaQuery.of(context).padding.top + 76, right: 16,
+          child: Column(mainAxisSize: MainAxisSize.min, children: [
+            _MapBtn(
+              onTap: () => _mapCtrl.move(_mapCtrl.camera.center, _mapCtrl.camera.zoom + 1),
+              child: const Text('+', style: TextStyle(fontSize: 18, color: Color(0x99C9A84C))),
+            ),
+            const SizedBox(height: 8),
+            _MapBtn(
+              onTap: () => _mapCtrl.move(_mapCtrl.camera.center, _mapCtrl.camera.zoom - 1),
+              child: const Text('−', style: TextStyle(fontSize: 18, color: Color(0x99C9A84C))),
+            ),
+          ]),
+        ),
+
+        // ── Stella (right of buttons, minimizable) ──
+        // HTML: .stella { opacity:0; transform:translateY(10px); transition:opacity .8s, transform .8s; }
+        // .stella.vis { opacity:1; transform:translateY(0); }
+        Positioned(
+          top: MediaQuery.of(context).padding.top + 76, left: 64, right: 16,
+          child: GestureDetector(
+            onTap: () => setState(() => _stellaMinimized = !_stellaMinimized),
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 400),
+              child: _stellaMinimized
+                ? _buildStellaMinimized()
+                : _buildStella(),
+            ),
           ),
         ),
 
-        // ── Layer Panel ──
-        // HTML: .layer-panel { top:175px; left:60px; width:100px; border-radius:14px; padding:14px; }
+        // ── Seed Badge ──
+        if (_preseedState == 'hidden') Positioned(
+          top: MediaQuery.of(context).padding.top + 6, right: 20,
+          child: Container(
+            width: 36, height: 36,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: const Color(0x26C9A84C),
+              border: Border.all(color: const Color(0x66C9A84C)),
+            ),
+            child: const Center(child: Text('🌱', style: TextStyle(fontSize: 16))),
+          ),
+        ),
+
+        // ── Layer Panel (above Stella in z-order) ──
         if (_layerPanelOpen) Positioned(
-          top: MediaQuery.of(context).padding.top + 128, left: 60,
+          top: MediaQuery.of(context).padding.top + 76, left: 60,
           child: _buildLayerPanel(),
         ),
 
-        // ── Fortune Filter Label ──
-        // HTML: .ff-label { top:52px; left:16px; }
-        Positioned(
-          top: MediaQuery.of(context).padding.top + 2, left: 16,
-          child: _buildFortuneFilterLabel(),
+        // ── Viewpoint Panel (above Stella in z-order) ──
+        if (_vpPanelOpen) Positioned(
+          top: MediaQuery.of(context).padding.top + 172, left: 60,
+          child: _buildVPPanel(),
         ),
 
         // ── Fortune Pull Tab ──
-        // HTML: .fs-pull { bottom:80px; left:50%; transform:translateX(-50%); }
-        Positioned(
-          bottom: 0, left: 0, right: 0,
+        if (!_fortuneSheetOpen) Positioned(
+          bottom: 80, left: 0, right: 0,
           child: Center(
             child: GestureDetector(
-              onTap: () => setState(() => _fortuneSheetOpen = !_fortuneSheetOpen),
+              onTap: () => setState(() => _fortuneSheetOpen = true),
               child: Container(
                 padding: const EdgeInsets.fromLTRB(18, 4, 18, 2),
-                decoration: BoxDecoration(
-                  // HTML: background:rgba(10,10,25,.8); border:1px solid rgba(201,168,76,.2);
-                  color: const Color(0xCC0A0A19),
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
-                  border: Border.all(color: const Color(0x33C9A84C)),
+                decoration: const BoxDecoration(
+                  color: Color(0xCC0A0A19),
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
+                  border: Border(
+                    top: BorderSide(color: Color(0x33C9A84C)),
+                    left: BorderSide(color: Color(0x33C9A84C)),
+                    right: BorderSide(color: Color(0x33C9A84C)),
+                  ),
                 ),
-                // HTML: font-size:10px; color:#888; letter-spacing:.5px;
-                child: Text(
-                  _fortuneSheetOpen ? '▼ 運勢方位' : '▲ 運勢方位',
-                  style: const TextStyle(fontSize: 10, color: Color(0xFF888888), letterSpacing: 0.5),
-                ),
+                child: const Text('▲ 運勢方位',
+                  style: TextStyle(fontSize: 10, color: Color(0xFF888888), letterSpacing: 0.5)),
               ),
             ),
           ),
@@ -343,60 +536,81 @@ class _MapScreenState extends State<MapScreen> {
 
         // ── Fortune Sheet ──
         if (_fortuneSheetOpen) Positioned(
-          bottom: 0, left: 0, right: 0,
+          bottom: 80, left: 0, right: 0,
           child: _buildFortuneSheet(),
         ),
 
-        // ── Viewpoint Button ──
-        // HTML: .vp-btn { top:178px; left:16px; width:40px; height:40px; "📍" }
-        Positioned(
-          top: MediaQuery.of(context).padding.top + 128, left: 16,
-          child: _MapBtn(
-            active: _vpPanelOpen,
-            onTap: () => setState(() => _vpPanelOpen = !_vpPanelOpen),
-            child: const Text('📍', style: TextStyle(fontSize: 16)),
-          ),
-        ),
-
-        // ── Viewpoint Panel ──
-        // HTML: .vp-panel { top:222px; left:60px; width:180px; }
-        if (_vpPanelOpen) Positioned(
-          top: MediaQuery.of(context).padding.top + 172, left: 60,
-          child: _buildVPPanel(),
-        ),
-
-        // ── Seed Badge ──
-        // HTML: .seed-badge { top:56px; right:20px; width:36px; height:36px; }
-        if (_seeded) Positioned(
-          top: MediaQuery.of(context).padding.top + 6, right: 20,
-          child: Container(
-            width: 36, height: 36,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: const Color(0x26C9A84C), // rgba(201,168,76,.15)
-              border: Border.all(color: const Color(0x66C9A84C)), // rgba(201,168,76,.4)
+        // ── Gray veil (pre-seed state) ──
+        // HTML: .gray-veil { background:rgba(10,10,20,.25); transition:opacity .8s; }
+        // .gray-veil.lifted { opacity:0; }
+        if (_preseedState != 'hidden') Positioned.fill(
+          child: GestureDetector(
+            onTap: () {
+              // HTML: dismissVeil() → preseed center→bottom, then hidden
+              if (_preseedState == 'center') {
+                setState(() => _preseedState = 'bottom');
+              } else if (_preseedState == 'bottom') {
+                setState(() => _preseedState = 'hidden');
+              }
+            },
+            child: AnimatedOpacity(
+              opacity: _preseedState == 'center' ? 1.0 : 0.0,
+              duration: const Duration(milliseconds: 800),
+              child: Container(color: const Color(0x400A0A14)),
             ),
-            child: const Center(child: Text('🌱', style: TextStyle(fontSize: 16))),
           ),
         ),
 
-        // ── Stella ──
-        // HTML: .stella { bottom:90px; left:20px; right:20px; }
-        Positioned(
-          bottom: _fortuneSheetOpen ? 320 : 30, left: 20, right: 20,
-          child: _buildStella(),
+        // ── Preseed prompt (3 states: center → bottom → hidden) ──
+        if (_preseedState == 'center') const Center(child: _Preseed()),
+        if (_preseedState == 'bottom') Positioned(
+          bottom: 12, left: 0, right: 0,
+          child: AnimatedOpacity(
+            opacity: 0.7,
+            duration: const Duration(milliseconds: 600),
+            child: Column(mainAxisSize: MainAxisSize.min, children: const [
+              Text('🌱', style: TextStyle(fontSize: 20)),
+              SizedBox(height: 6),
+              Text('今日の方位を探索してみよう\n地図をタップして始めてね',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 10, color: Color(0xFF555555), letterSpacing: 1, height: 1.5)),
+            ]),
+          ),
         ),
-
-        // ── Preseed (shown when no scores yet) ──
-        // HTML: .preseed { top:50%; left:50%; transform:translate(-50%,-50%); z-index:30; }
-        if (_sectorScores.values.every((v) => v < 0.01))
-          const Center(child: _Preseed()),
 
         // ── Search Result Popup ──
-        // HTML: .sr-popup { bottom:160px; left:16px; right:16px; }
         if (_searchResultName != null) Positioned(
           bottom: 160, left: 16, right: 16,
           child: _buildSearchResult(),
+        ),
+
+        // ── Rest Overlay — "Stars are quiet" modal ──
+        // HTML: .rest-overlay { z-index:800; display:flex; justify-content:center; align-items:center; }
+        // .rest-inner { background:rgba(15,15,30,.85); border:1px solid rgba(201,168,76,.3);
+        //   border-radius:16px; padding:20px 28px; animation:restIn .4s ease-out; }
+        if (_restOverlayVisible) Positioned.fill(
+          child: GestureDetector(
+            onTap: () => setState(() => _restOverlayVisible = false),
+            child: Container(
+              color: Colors.transparent,
+              child: Center(child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 20),
+                constraints: const BoxConstraints(maxWidth: 260),
+                decoration: BoxDecoration(
+                  color: const Color(0xD90F0F1E),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: const Color(0x4DC9A84C)),
+                ),
+                child: Column(mainAxisSize: MainAxisSize.min, children: [
+                  const Text('🌙', style: TextStyle(fontSize: 28)),
+                  const SizedBox(height: 8),
+                  Text(_restOverlayText,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(fontSize: 13, color: Color(0xFFC9A84C), height: 1.7)),
+                ]),
+              )),
+            ),
+          ),
         ),
       ],
     );
@@ -502,7 +716,7 @@ class _MapScreenState extends State<MapScreen> {
   // HTML: .layer-panel { width:100px; }
   Widget _buildLayerPanel() {
     return Container(
-      width: 100,
+      width: 110,
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: const Color(0xEB0C0C1A), // rgba(12,12,26,.92)
@@ -579,7 +793,7 @@ class _MapScreenState extends State<MapScreen> {
             child: on ? Center(child: Text('✓', style: TextStyle(fontSize: 9, color: color))) : null,
           ),
           const SizedBox(width: 8),
-          Text(label, style: TextStyle(fontSize: 11, color: on ? const Color(0xFFBBBBBB) : const Color(0xFF666666))),
+          Flexible(child: Text(label, style: TextStyle(fontSize: 11, color: on ? const Color(0xFFBBBBBB) : const Color(0xFF666666)), overflow: TextOverflow.ellipsis)),
         ]),
       ),
     );
@@ -626,7 +840,7 @@ class _MapScreenState extends State<MapScreen> {
             child: on ? Center(child: Text('✓', style: TextStyle(fontSize: 9, color: color))) : null,
           ),
           const SizedBox(width: 8),
-          Text(label, style: TextStyle(fontSize: 11, color: on ? const Color(0xFFBBBBBB) : const Color(0xFF666666))),
+          Flexible(child: Text(label, style: TextStyle(fontSize: 11, color: on ? const Color(0xFFBBBBBB) : const Color(0xFF666666)), overflow: TextOverflow.ellipsis)),
         ]),
       ),
     );
@@ -647,7 +861,8 @@ class _MapScreenState extends State<MapScreen> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // HTML: .fs-handle { width:36px; height:4px; background:rgba(255,255,255,.25); border-radius:2px; margin:10px auto 6px; }
+          // HTML: .fs-handle { width:36px; height:4px; background:rgba(255,255,255,.25);
+          //   border-radius:2px; margin:10px auto 6px; cursor:grab; }
           GestureDetector(
             onTap: () => setState(() => _fortuneSheetOpen = false),
             child: Container(
@@ -660,10 +875,10 @@ class _MapScreenState extends State<MapScreen> {
             ),
           ),
 
-          // HTML: .fs-tabs .fs-src — Source tabs (合計/トランジット/プログレス)
+          // HTML: .fs-tabs.fs-src { padding:0 8px; border-bottom:1px solid rgba(255,255,255,.08); }
           _buildSrcTabs(),
 
-          // HTML: .fs-legend
+          // HTML: .fs-legend { display:flex; gap:10px; padding:4px 12px; font-size:9px; color:#888; }
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
             child: Row(
@@ -680,15 +895,23 @@ class _MapScreenState extends State<MapScreen> {
             ),
           ),
 
-          // HTML: .fs-tabs .fs-cat — Category tabs (総合/癒し/金運/恋愛/仕事/話す)
+          // HTML: .fs-tabs.fs-cat { padding:0 8px; border-bottom:1px solid rgba(255,255,255,.06); }
+          // .fs-cat .fs-tab { font-size:10px; padding:6px 10px; }
           _buildCatTabs(),
 
-          // HTML: .fs-body { height:185px; overflow-y:auto; padding:10px 14px 14px; }
+          // HTML: .fs-body { height:185px; min-height:185px; max-height:185px;
+          //   overflow-y:auto; padding:10px 14px 14px; scrollbar-width:thin; }
           SizedBox(
             height: 185,
-            child: ListView(
-              padding: const EdgeInsets.fromLTRB(14, 10, 14, 14),
-              children: _buildFortuneRows(),
+            child: RawScrollbar(
+              thumbColor: const Color(0x40C9A84C), // visible gold scrollbar
+              radius: const Radius.circular(2),
+              thickness: 3,
+              thumbVisibility: true,
+              child: ListView(
+                padding: const EdgeInsets.fromLTRB(14, 10, 14, 14),
+                children: _buildFortuneRows(),
+              ),
             ),
           ),
         ],
@@ -699,11 +922,17 @@ class _MapScreenState extends State<MapScreen> {
   // HTML: .fs-tabs { display:flex; gap:0; padding:0 8px; border-bottom:1px solid rgba(255,255,255,.06); }
   // .fs-tab { padding:8px 12px; font-size:11px; color:#666; border-bottom:2px solid transparent; }
   // .fs-tab.active { color:#C9A84C; border-bottom-color:#C9A84C; }
+  // HTML: .fs-tabs { display:flex; gap:0; padding:0 8px; border-bottom:1px solid rgba(255,255,255,.06); }
+  // .fs-src { border-bottom:1px solid rgba(255,255,255,.08); }
+  // .fs-tab { flex:0 0 auto; padding:8px 12px; font-size:11px; color:#666;
+  //   border-bottom:2px solid transparent; white-space:nowrap; }
+  // .fs-tab.active { color:#C9A84C; border-bottom-color:#C9A84C; }
   Widget _buildSrcTabs() {
     const srcs = [('combined', '合計'), ('transit', 'トランジット'), ('progressed', 'プログレス')];
     return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8), // HTML: padding:0 8px
       decoration: const BoxDecoration(
-        border: Border(bottom: BorderSide(color: Color(0x0FFFFFFF))),
+        border: Border(bottom: BorderSide(color: Color(0x14FFFFFF))), // rgba(255,255,255,.08)
       ),
       child: Row(
         children: srcs.map((s) {
@@ -725,76 +954,132 @@ class _MapScreenState extends State<MapScreen> {
     );
   }
 
-  // HTML: .fs-cat .fs-tab { font-size:10px; padding:6px 10px; }
+  // HTML: .fs-tabs { padding:0 8px; border-bottom:1px solid rgba(255,255,255,.06); }
+  // .fs-cat .fs-tab { font-size:10px; padding:6px 10px; }
   Widget _buildCatTabs() {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        children: _categoryColors.entries.map((e) {
-          final labels = {'all':'総合','healing':'癒し','money':'金運','love':'恋愛','work':'仕事','communication':'話す'};
-          final active = _activeCategory == e.key;
-          return GestureDetector(
-            onTap: () => setState(() => _activeCategory = e.key),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              decoration: BoxDecoration(
-                border: Border(bottom: BorderSide(
-                  color: active ? const Color(0xFFC9A84C) : Colors.transparent, width: 2)),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8), // HTML: padding:0 8px
+      decoration: const BoxDecoration(
+        border: Border(bottom: BorderSide(color: Color(0x0FFFFFFF))), // rgba(255,255,255,.06)
+      ),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: _categoryColors.entries.map((e) {
+            final labels = {'all':'総合','healing':'癒し','money':'金運','love':'恋愛','work':'仕事','communication':'話す'};
+            final active = _activeCategory == e.key;
+            return GestureDetector(
+              onTap: () => setState(() => _activeCategory = e.key),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  border: Border(bottom: BorderSide(
+                    color: active ? const Color(0xFFC9A84C) : Colors.transparent, width: 2)),
+                ),
+                child: Text(labels[e.key] ?? e.key, style: TextStyle(fontSize: 10,
+                  color: active ? const Color(0xFFC9A84C) : const Color(0xFF666666))),
               ),
-              child: Text(labels[e.key] ?? e.key, style: TextStyle(fontSize: 10,
-                color: active ? const Color(0xFFC9A84C) : const Color(0xFF666666))),
-            ),
-          );
-        }).toList(),
+            );
+          }).toList(),
+        ),
       ),
     );
   }
 
   // HTML: .fs-row { display:flex; align-items:center; padding:7px 4px; border-bottom:1px solid rgba(255,255,255,.04); }
   // .fs-dir { width:36px; font-size:12px; font-weight:600; color:#B49774; }
-  // .fs-bar-wrap { flex:1; height:14px; background:rgba(255,255,255,.04); border-radius:7px; margin:0 10px; }
-  // .fs-score { width:48px; text-align:right; font-size:11px; font-family:monospace; color:#F6BD60; }
+  // .fs-bar-wrap { flex:1; height:14px; background:rgba(255,255,255,.04); border-radius:7px; margin:0 10px; position:relative; }
+  // .fs-tick { position:absolute; width:1px; background:rgba(255,255,255,.13); }
+  // .fs-stack { height:100%; display:flex; border-radius:7px; }
+  // .fs-seg { height:100%; } — colors: tSoft=#C9A84C, tHard=#6B5CE7, pSoft=#4CB8B0, pHard=#E74C6B
+  // .fs-score { width:48px; font-size:11px; font-family:monospace; color:#F6BD60; }
+  // .fs-badge { font-size:10px; margin-left:4px; width:20px; }
   List<Widget> _buildFortuneRows() {
-    final sorted = _sectorScores.entries.toList()..sort((a, b) => b.value.compareTo(a.value));
-    return sorted.where((e) => e.value > 0.01).map((e) {
-      final pct = (_pct(e.value) / 100).clamp(0.0, 1.0);
-      final catColor = _categoryColors[_activeCategory] ?? const Color(0xFFC9A84C);
+    // Determine which comp keys to use based on source tab
+    final ck = _activeSrc == 'transit' ? ['tSoft', 'tHard']
+             : _activeSrc == 'progressed' ? ['pSoft', 'pHard']
+             : _compKeys;
+
+    // Compute totals per direction
+    final dt = <String, double>{};
+    for (final d in _dir16) {
+      final c = _sectorComps[d] ?? {};
+      double t = 0;
+      for (final k in ck) { t += (c[k] ?? 0); }
+      dt[d] = t;
+    }
+
+    final sorted = _dir16.toList()..sort((a, b) => (dt[b] ?? 0).compareTo(dt[a] ?? 0));
+
+    final visible = sorted.where((d) => (dt[d] ?? 0) > 0.01).toList();
+    return List.generate(visible.length, (i) {
+      final dir = visible[i];
+      final total = dt[dir]!;
+      final pct = (_pct(total) / 100).clamp(0.0, 1.0);
+      final comp = _sectorComps[dir] ?? {};
+      final isLast = i == visible.length - 1;
+
+      // Build segments
+      final segs = <Widget>[];
+      for (final k in ck) {
+        final v = comp[k] ?? 0;
+        if (v < 0.001) continue;
+        segs.add(Expanded(
+          flex: (v * 1000).round(),
+          child: Container(color: _compColors[k]),
+        ));
+      }
+
       return Container(
+        // HTML: .fs-row { padding:7px 4px; border-bottom:1px solid rgba(255,255,255,.04); }
+        // .fs-row:last-child { border-bottom:none; }
         padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 7),
-        decoration: const BoxDecoration(
-          border: Border(bottom: BorderSide(color: Color(0x0AFFFFFF))),
+        decoration: BoxDecoration(
+          border: isLast ? null : const Border(bottom: BorderSide(color: Color(0x0AFFFFFF))),
         ),
         child: Row(children: [
-          // HTML: .fs-dir
-          SizedBox(width: 36, child: Text(_dir16JP[e.key] ?? e.key,
+          // HTML: .fs-dir { width:36px; font-size:12px; font-weight:600; color:#B49774; }
+          SizedBox(width: 36, child: Text(_dir16JP[dir] ?? dir,
             style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFFB49774)))),
-          // HTML: .fs-bar-wrap > .fs-stack > .fs-seg
+          // HTML: .fs-bar-wrap { flex:1; height:14px; background:rgba(255,255,255,.04);
+          //   border-radius:7px; overflow:hidden; margin:0 10px; position:relative; }
           Expanded(
             child: Container(
               height: 14, margin: const EdgeInsets.symmetric(horizontal: 10),
               decoration: BoxDecoration(
-                color: const Color(0x0AFFFFFF), // rgba(255,255,255,.04)
+                color: const Color(0x0AFFFFFF),
                 borderRadius: BorderRadius.circular(7),
               ),
-              child: FractionallySizedBox(
-                alignment: Alignment.centerLeft,
-                widthFactor: pct,
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: catColor,
-                    borderRadius: BorderRadius.circular(7),
+              child: LayoutBuilder(builder: (ctx, constraints) {
+                final barW = constraints.maxWidth;
+                return Stack(children: [
+                  // HTML: .fs-tick { position:absolute; width:1px; background:rgba(255,255,255,.13); }
+                  // 5 ticks at 1/6, 2/6, 3/6, 4/6, 5/6
+                  for (int t = 1; t <= 5; t++)
+                    Positioned(
+                      left: barW * t / 6, top: 0, bottom: 0,
+                      child: Container(width: 1, color: const Color(0x21FFFFFF)),
+                    ),
+                  // HTML: .fs-stack { height:100%; display:flex; border-radius:7px; min-width:2px; }
+                  FractionallySizedBox(
+                    alignment: Alignment.centerLeft,
+                    widthFactor: pct,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(7),
+                      child: Row(children: segs.isNotEmpty ? segs : [Expanded(child: Container())]),
+                    ),
                   ),
-                ),
-              ),
+                ]);
+              }),
             ),
           ),
-          // HTML: .fs-score
-          SizedBox(width: 48, child: Text(e.value.toStringAsFixed(1),
+          // HTML: .fs-score { width:48px; text-align:right; font-size:11px; font-family:monospace; color:#F6BD60; }
+          SizedBox(width: 48, child: Text(total.toStringAsFixed(2),
             style: const TextStyle(fontSize: 11, fontFamily: 'monospace', color: Color(0xFFF6BD60)),
             textAlign: TextAlign.right)),
         ]),
       );
-    }).toList();
+    });
   }
 
   // ══════════════════════════════════════════════
@@ -807,23 +1092,44 @@ class _MapScreenState extends State<MapScreen> {
   // ══════════════════════════════════════════════
   Widget _buildStella() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
         color: const Color(0xBF0F0F1E), // rgba(15,15,30,.75)
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0x33C9A84C)), // rgba(201,168,76,.2)
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0x33C9A84C)),
       ),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        const Text('✨ Stella', style: TextStyle(
-          fontSize: 10, letterSpacing: 2, color: Color(0xFF6B5CE7))),
-        const SizedBox(height: 6),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
+        Row(children: [
+          const Text('✨ Stella', style: TextStyle(
+            fontSize: 9, letterSpacing: 2, color: Color(0xFF6B5CE7))),
+          const Spacer(),
+          // Minimize button
+          Text('▼', style: TextStyle(fontSize: 8, color: const Color(0xFF555555))),
+        ]),
+        const SizedBox(height: 4),
         RichText(text: const TextSpan(
-          style: TextStyle(fontSize: 13, color: Color(0xFFEAEAEA), height: 1.6),
+          style: TextStyle(fontSize: 11, color: Color(0xFFEAEAEA), height: 1.5),
           children: [
             TextSpan(text: '『再会の喜び』', style: TextStyle(color: Color(0xFFC9A84C), fontWeight: FontWeight.w600)),
             TextSpan(text: 'が今日の種。北東の風が、懐かしい誰かとの縁を運んでくるよ。'),
           ],
         )),
+      ]),
+    );
+  }
+
+  Widget _buildStellaMinimized() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: const Color(0xBF0F0F1E),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: const Color(0x33C9A84C)),
+      ),
+      child: const Row(mainAxisSize: MainAxisSize.min, children: [
+        Text('✨ Stella', style: TextStyle(fontSize: 9, letterSpacing: 1, color: Color(0xFF6B5CE7))),
+        SizedBox(width: 6),
+        Text('▲', style: TextStyle(fontSize: 8, color: Color(0xFF555555))),
       ]),
     );
   }
@@ -1029,18 +1335,40 @@ class _MapBtn extends StatelessWidget {
 // .preseed-text { font-size:12px; color:#555; letter-spacing:1px; line-height:1.8; }
 // ══════════════════════════════════════════════════
 
-class _Preseed extends StatelessWidget {
+class _Preseed extends StatefulWidget {
   const _Preseed();
+  @override
+  State<_Preseed> createState() => _PreseedState();
+}
+
+class _PreseedState extends State<_Preseed> with SingleTickerProviderStateMixin {
+  late AnimationController _ctrl;
+  late Animation<double> _float;
+
+  @override
+  void initState() {
+    super.initState();
+    // HTML: animation: float 3s ease-in-out infinite
+    _ctrl = AnimationController(vsync: this, duration: const Duration(seconds: 3))..repeat(reverse: true);
+    _float = Tween<double>(begin: 0, end: -8).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut));
+  }
+
+  @override
+  void dispose() { _ctrl.dispose(); super.dispose(); }
 
   @override
   Widget build(BuildContext context) {
-    return Column(mainAxisSize: MainAxisSize.min, children: const [
-      Text('🌱', style: TextStyle(fontSize: 32)),
-      SizedBox(height: 16),
-      Text('今日の方位を探索してみよう\n地図をタップして始めてね',
-        textAlign: TextAlign.center,
-        style: TextStyle(fontSize: 12, color: Color(0xFF555555), letterSpacing: 1, height: 1.8)),
-    ]);
+    return AnimatedBuilder(
+      animation: _float,
+      builder: (_, child) => Transform.translate(offset: Offset(0, _float.value), child: child),
+      child: Column(mainAxisSize: MainAxisSize.min, children: const [
+        Opacity(opacity: 0.6, child: Text('🌱', style: TextStyle(fontSize: 32))),
+        SizedBox(height: 16),
+        Text('今日の方位を探索してみよう\n地図をタップして始めてね',
+          textAlign: TextAlign.center,
+          style: TextStyle(fontSize: 12, color: Color(0xFF555555), letterSpacing: 1, height: 1.8)),
+      ]),
+    );
   }
 }
 

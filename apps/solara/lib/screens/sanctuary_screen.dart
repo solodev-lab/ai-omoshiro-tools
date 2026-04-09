@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 
 import '../utils/solara_storage.dart';
@@ -1127,16 +1128,16 @@ class _ProfileEditorPageState extends State<_ProfileEditorPage> {
                       decoration: _inputDecoration('氏名を入力'),
                     )),
 
-                    // 生年月日
+                    // 生年月日 — auto-format: 19901231 → 1990/12/31
                     _birthSection('生年月日', TextField(
                       controller: _birthDateCtrl,
-                      keyboardType: TextInputType.datetime,
+                      keyboardType: TextInputType.number,
                       style: const TextStyle(color: Color(0xFFEAEAEA), fontSize: 14),
                       decoration: _inputDecoration('YYYY/MM/DD'),
+                      inputFormatters: [_DateSlashFormatter()],
                       onChanged: (v) {
-                        final clean = v.replaceAll('-', '/');
-                        final parts = clean.split('/');
-                        if (parts.length == 3) {
+                        final parts = v.split('/');
+                        if (parts.length == 3 && parts[2].length == 2) {
                           final y = int.tryParse(parts[0]);
                           final m = int.tryParse(parts[1]);
                           final d = int.tryParse(parts[2]);
@@ -1501,6 +1502,36 @@ class _TitleDiagnosisPageState extends State<_TitleDiagnosisPage> {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Auto-inserts `/` after YYYY and MM for date input (YYYY/MM/DD format).
+/// Only allows digits; max 8 digits (10 chars with slashes).
+class _DateSlashFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    // Strip non-digits
+    final digits = newValue.text.replaceAll(RegExp(r'[^0-9]'), '');
+    if (digits.length > 8) {
+      // Max 8 digits: YYYYMMDD
+      return oldValue;
+    }
+
+    final buf = StringBuffer();
+    for (int i = 0; i < digits.length; i++) {
+      if (i == 4 || i == 6) buf.write('/');
+      buf.write(digits[i]);
+    }
+    final formatted = buf.toString();
+
+    // Cursor at end
+    return TextEditingValue(
+      text: formatted,
+      selection: TextSelection.collapsed(offset: formatted.length),
     );
   }
 }

@@ -706,3 +706,66 @@
 - **Map画面**: cosmic-bg除外（地図が主役のため不要）
 - コミット: 8237493 → GitHub push済み
 - 注意: タロット大アルカナ22枚の絵文字→SVGは未対応（テキスト混在のため後回し）
+
+## 2026-04-08 セッション: Solara全5画面HTML完全準拠 + 移植手順改善
+
+### 作業内容
+- **Sanctuary画面**: section-label(11px/700/1.8px)修正、Titleボタン分離(金色btn+枠線再診断btn)、pro-banner全値修正(22px/22px/gradient text)、needProfile 13px
+- **Map画面(初回)**: settings構造化、Fortune Sheet(2段タブ+レジェンド)、Layer Panel(lp-構造)、センターマーカーHTML準拠
+- **Map画面(4Step再修正)**: ff-bars 120px修正、layer-panel 100px修正、PLANET GROUP追加、fortune all色#E8E0D0修正、stella追加、sr-popup拡張(tabs+advice)、preseed追加、vp-btn+vp-panel追加、seed-badge追加
+- **Horoscope画面**: chart-menu 4モード、bs-tabs 5タブ、birth/transit BSセクション、chart watermark、fortune nav buttons
+- **Tarot画面**: Stella msg追加、History全面書換(element色border、expanded detail、sync section)
+- **Galaxy画面**: 背景色修正、GALAXYヘッダー削除、day/moon badge縦並び、stella bubble構造、dot-popup/Star Atlas/Replay全修正
+
+### 移植手順の改善
+- **問題**: Agent要約に頼り、body要素を精読せず、照合もせずに書いた結果、Map画面で大量の漏れ
+- **原因分析**: (1)Agent要約依存 (2)CSS先読みでbody省略 (3)書いた後の照合なし (4)複合ファイルの読み方が甘い (5)速度優先で精度犠牲
+- **対策実施**: 
+  - `feedback_html_porting_method.md` に4Step手順を記録
+  - `CLAUDE.md` に移植必須手順を追記(移植完了後に削除予定)
+  - Map画面で4Step(要素一覧ファイル→Todo→実装→照合)を厳守して再修正
+
+### 未対応(演出系・JS Canvas依存)
+- gray-veil, particleCanvas, screen-flash, effect-video, rest-overlay, replay button, cta button
+- これらはCanvas/Video APIに依存しており、Flutter側ではCustomPainter/Rive等で別途実装が必要
+
+## 2026-04-09 セッション: Map/Horo Flutter移植 + HTML整理整頓
+
+### 実施内容
+- **Map画面 Flutter修正（HTML準拠）**
+  - タイルレイヤー: dark_all+labels 2層化、ColorFilterでbrightness/contrast/saturate適用
+  - コンパスライン: 16方向→8方向、dashArray対応
+  - 方位ラベル: N,NE,E等を3距離に配置
+  - センターマーカー→VP Pin: ドラッグ可能ゴールドグラデーション丸(20px)
+  - セクター: 16方向2タイプ→8方向3タイプ(blessed/mid/shadow)
+  - Fortune Sheet: マルチセグメントバー(4色)、tick marks、RawScrollbar
+  - Preseed: 3状態遷移(center→bottom→hidden)、浮遊アニメ
+  - Stella: 上部右側に移動、最小化機能、AnimatedSwitcher
+  - Rest Overlay: 「星が静か」モーダル追加
+  - ズームボタン(+/-)追加
+  - Fortune pull tab位置修正(bottom:80)
+
+- **Horo画面 Flutter修正**
+  - Astrology/Today Viewモード追加（全5カテゴリFortuneカード表示）
+  - Bottom Sheetに「☆ 運勢」タブ追加
+  - チャートサイズをレスポンシブ化(200-400px)
+  - HoroscopeScreenState公開化→タブ切替時にプロフィール再読み込み
+
+- **Sanctuary画面修正**
+  - 生年月日の自動フォーマット(_DateSlashFormatter: 数字入力→YYYY/MM/DD自動変換)
+
+- **HTML整理整頓**
+  - Map (index.html): 1422行→2625行、CSS展開+16セクション、JS 16セクション
+  - Horo (horoscope.html): 2335行→2929行、CSS展開+12セクション、JS 16セクション
+  - バックアップ: index_before_cleanup.html, horoscope_before_cleanup.html
+
+- **main.dart修正**
+  - GlobalKeyでHoroscopeScreenのloadProfile()をタブ切替時に呼び出し
+
+### 参照HTMLの修正
+- Map画面: index_stable_v1.html(古い)→index.html(最新)に正しく切替
+
+### 未解決・次のアクション
+- Horo画面のAspect Filterボタン動作不良（元のHTMLでも同様に壊れている既存バグ）
+- パーティクル・流星エフェクト: オーナー指示により実装しない
+- 他の画面(Tarot/Galaxy/Sanctuary)のHTML整理・Flutter移植は次セッション

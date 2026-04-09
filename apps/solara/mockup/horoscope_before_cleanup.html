@@ -10,14 +10,10 @@
 <script src="shared/icons.js?v=2"></script>
 <script src="shared/nav.js?v=2"></script>
 <style>
-/* ========================================
-   RESET & BASE — body, phone frame
-   ======================================== */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
+/* ============================================================
+   RESET & BASE
+   ============================================================ */
+* { margin: 0; padding: 0; box-sizing: border-box; }
 
 body {
   background: var(--bg-deep);
@@ -32,753 +28,255 @@ body {
 
 /* Bottom nav — styled by shared/styles.css */
 
-h1 {
-  font-size: 24px;
-  color: #F6BD60;
-  letter-spacing: 4px;
-  margin-bottom: 8px;
-}
+h1 { font-size: 24px; color: #F6BD60; letter-spacing: 4px; margin-bottom: 8px; }
 
-/* ========================================
-   ANIMATIONS — fadeIn, pulseGlow, etc.
-   ======================================== */
+/* ============================================================
+   ANIMATIONS (CSS opacity only - no blur/will-change)
+   ============================================================ */
 @keyframes pattern-pulse {
-  0%, 100% {
-    opacity: 0.4;
-  }
-  50% {
-    opacity: 0.7;
-  }
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.7; }
 }
+.anim-pattern { animation: pattern-pulse 3s ease-in-out infinite; }
 
-.anim-pattern {
-  animation: pattern-pulse 3s ease-in-out infinite;
+/* ============================================================
+   LAYOUT
+   ============================================================ */
+.tab-nav {
+  display: flex; gap: 4px; margin-bottom: 20px;
+  background: rgba(255,255,255,0.03); border-radius: 12px; padding: 4px;
 }
-
-/* ========================================
-   CHART — SVG chart container, watermark, legend
-   ======================================== */
-.chart-container {
-  position: relative;
+.tab-btn {
+  padding: 10px 20px; border: none; background: transparent;
+  color: #888; font-size: 13px; cursor: pointer;
+  border-radius: 8px; transition: all 0.3s; letter-spacing: 1px;
 }
+.tab-btn.active { background: rgba(246,189,96,0.15); color: #F6BD60; }
+.tab-btn:hover:not(.active) { color: #bbb; }
 
+.main-layout { display: flex; gap: 20px; align-items: flex-start; max-width: 1400px; width: 100%; }
+.left-column { position: sticky; top: 10px; flex-shrink: 0; max-width: 600px; }
+.right-column { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 16px; }
+
+.chart-container { position: relative; }
 .chart-watermark {
-  position: absolute;
-  top: 42%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  font-size: 14px;
-  font-weight: 700;
-  letter-spacing: 4px;
+  position: absolute; top: 42%; left: 50%; transform: translate(-50%, -50%);
+  font-size: 14px; font-weight: 700; letter-spacing: 4px;
   color: rgba(246,189,96,0.18);
-  pointer-events: none;
-  z-index: 2;
-  user-select: none;
+  pointer-events: none; z-index: 2; user-select: none;
   white-space: nowrap;
 }
+.chart-container svg { position: relative; z-index: 1; width: 100%; height: auto; }
+.chart-legend { display: flex; gap: 16px; justify-content: center; margin-top: 12px; font-size: 11px; color: #888; flex-wrap: wrap; }
+.legend-item { display: flex; align-items: center; gap: 6px; }
+.legend-dot { width: 8px; height: 8px; border-radius: 50%; }
 
-.chart-container svg {
-  position: relative;
-  z-index: 1;
-  width: 100%;
-  height: auto;
-}
-
-.chart-legend {
-  display: flex;
-  gap: 16px;
-  justify-content: center;
-  margin-top: 12px;
-  font-size: 11px;
-  color: #888;
-  flex-wrap: wrap;
-}
-
-.legend-item {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.legend-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-}
-
-/* ========================================
-   LAYOUT — Main columns, form groups
-   ======================================== */
-.tab-nav {
-  display: flex;
-  gap: 4px;
-  margin-bottom: 20px;
-  background: rgba(255,255,255,0.03);
-  border-radius: 12px;
-  padding: 4px;
-}
-
-.tab-btn {
-  padding: 10px 20px;
-  border: none;
-  background: transparent;
-  color: #888;
-  font-size: 13px;
-  cursor: pointer;
-  border-radius: 8px;
-  transition: all 0.3s;
-  letter-spacing: 1px;
-}
-
-.tab-btn.active {
-  background: rgba(246,189,96,0.15);
-  color: #F6BD60;
-}
-
-.tab-btn:hover:not(.active) {
-  color: #bbb;
-}
-
-.main-layout {
-  display: flex;
-  gap: 20px;
-  align-items: flex-start;
-  max-width: 1400px;
-  width: 100%;
-}
-
-.left-column {
-  position: sticky;
-  top: 10px;
-  flex-shrink: 0;
-  max-width: 600px;
-}
-
-.right-column {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
+/* ============================================================
+   PANEL CARDS
+   ============================================================ */
 .panel-card {
-  background: rgba(255,255,255,0.03);
-  border: 1px solid rgba(255,255,255,0.06);
-  border-radius: 16px;
-  padding: 20px;
+  background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 16px; padding: 20px;
 }
+.panel-card h3 { font-size: 13px; color: #F6BD60; letter-spacing: 2px; margin-bottom: 12px; }
 
-.panel-card h3 {
-  font-size: 13px;
-  color: #F6BD60;
-  letter-spacing: 2px;
-  margin-bottom: 12px;
+/* ============================================================
+   FORMS
+   ============================================================ */
+.form-group { margin-bottom: 12px; }
+.form-group label { display: block; font-size: 11px; color: #888; margin-bottom: 4px; letter-spacing: 1px; }
+.form-group input, .form-group select {
+  width: 100%; padding: 8px 12px; background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1); border-radius: 8px;
+  color: #E8E0D0; font-size: 13px; outline: none; transition: border-color 0.3s;
 }
+.form-group input:focus, .form-group select:focus { border-color: rgba(246,189,96,0.4); }
+.form-row { display: flex; gap: 8px; }
+.form-row .form-group { flex: 1; }
 
-.form-group {
-  margin-bottom: 12px;
-}
-
-.form-group label {
-  display: block;
-  font-size: 11px;
-  color: #888;
-  margin-bottom: 4px;
-  letter-spacing: 1px;
-}
-
-.form-group input,
-.form-group select {
-  width: 100%;
-  padding: 8px 12px;
-  background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(255,255,255,0.1);
-  border-radius: 8px;
-  color: #E8E0D0;
-  font-size: 13px;
-  outline: none;
-  transition: border-color 0.3s;
-}
-
-.form-group input:focus,
-.form-group select:focus {
-  border-color: rgba(246,189,96,0.4);
-}
-
-.form-row {
-  display: flex;
-  gap: 8px;
-}
-
-.form-row .form-group {
-  flex: 1;
-}
-
-.vp-hint {
-  font-size: 10px;
-  color: #888;
-  margin-top: 4px;
-  line-height: 1.4;
-}
+.vp-hint { font-size: 10px; color: #888; margin-top: 4px; line-height: 1.4; }
 
 .btn-generate {
-  width: 100%;
-  padding: 10px;
+  width: 100%; padding: 10px;
   background: linear-gradient(135deg, #F6BD60, #E8A840);
-  border: none;
-  border-radius: 10px;
-  color: #0A0A14;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  letter-spacing: 1px;
-  transition: opacity 0.3s;
-  margin-top: 4px;
+  border: none; border-radius: 10px; color: #0A0A14;
+  font-size: 13px; font-weight: 600; cursor: pointer;
+  letter-spacing: 1px; transition: opacity 0.3s; margin-top: 4px;
 }
+.btn-generate:hover { opacity: 0.85; }
 
-.btn-generate:hover {
-  opacity: 0.85;
-}
+/* ============================================================
+   PLANET TABLE
+   ============================================================ */
+.planet-row { display: flex; align-items: center; padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
+.planet-row:last-child { border-bottom: none; }
+.planet-glyph { width: 24px; font-size: 16px; text-align: center; }
+.planet-name  { width: 60px; color: #aaa; font-size: 12px; }
+.planet-pos   { flex: 1; color: #E8E0D0; font-family: 'Courier New', monospace; font-size: 12px; }
 
-/* ========================================
-   PLANET TABLE — Planet positions display
-   ======================================== */
-.planet-row {
-  display: flex;
-  align-items: center;
-  padding: 5px 0;
-  border-bottom: 1px solid rgba(255,255,255,0.04);
-}
-
-.planet-row:last-child {
-  border-bottom: none;
-}
-
-.planet-glyph {
-  width: 24px;
-  font-size: 16px;
-  text-align: center;
-}
-
-.planet-name {
-  width: 60px;
-  color: #aaa;
-  font-size: 12px;
-}
-
-.planet-pos {
-  flex: 1;
-  color: #E8E0D0;
-  font-family: 'Courier New', monospace;
-  font-size: 12px;
-}
-
-/* ========================================
-   ASPECT FILTER — Quality/group/fortune toggles
-   ======================================== */
-.filter-section {
-  margin-bottom: 10px;
-  padding-bottom: 8px;
-  border-bottom: 1px solid rgba(255,255,255,0.05);
-}
-
-.filter-section:last-child {
-  border-bottom: none;
-  margin-bottom: 0;
-  padding-bottom: 8px;
-}
-
+/* ============================================================
+   FILTER UI
+   ============================================================ */
+.filter-section { margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+.filter-section:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 8px; }
 .filter-section-title {
-  font-size: 10px;
-  color: #888;
-  letter-spacing: 1.5px;
-  margin-bottom: 6px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
+  font-size: 10px; color: #888; letter-spacing: 1.5px; margin-bottom: 6px;
+  display: flex; align-items: center; gap: 6px;
 }
-
 .filter-label {
-  background: rgba(255,255,255,0.08);
-  color: #aaa;
-  padding: 1px 6px;
-  border-radius: 4px;
-  font-size: 9px;
-  font-weight: 600;
+  background: rgba(255,255,255,0.08); color: #aaa;
+  padding: 1px 6px; border-radius: 4px; font-size: 9px; font-weight: 600;
 }
-
-.filter-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-}
-
+.filter-chips { display: flex; flex-wrap: wrap; gap: 4px; }
 .filter-chip {
-  padding: 4px 10px;
-  border: 1px solid rgba(255,255,255,0.1);
-  background: rgba(255,255,255,0.03);
-  color: #888;
-  font-size: 11px;
-  cursor: pointer;
-  border-radius: 6px;
-  transition: all 0.2s;
-  user-select: none;
+  padding: 4px 10px; border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.03); color: #888; font-size: 11px;
+  cursor: pointer; border-radius: 6px; transition: all 0.2s; user-select: none;
 }
-
-.filter-chip:hover {
-  border-color: rgba(255,255,255,0.25);
-  color: #ccc;
-}
-
-.filter-chip.active {
-  border-color: var(--chip-color, #F6BD60);
-  color: var(--chip-color, #F6BD60);
-  background: rgba(246,189,96,0.08);
-}
-
-.filter-chip.exclusive {
-  border-style: dashed;
-}
-
-.filter-chip.exclusive.active {
-  border-style: solid;
-}
+.filter-chip:hover { border-color: rgba(255,255,255,0.25); color: #ccc; }
+.filter-chip.active { border-color: var(--chip-color, #F6BD60); color: var(--chip-color, #F6BD60); background: rgba(246,189,96,0.08); }
+.filter-chip.exclusive { border-style: dashed; }
+.filter-chip.exclusive.active { border-style: solid; }
 
 .filter-reset-btn {
-  padding: 4px 12px;
-  border: 1px solid rgba(255,255,255,0.1);
-  background: transparent;
-  color: #666;
-  font-size: 10px;
-  cursor: pointer;
-  border-radius: 6px;
-  transition: all 0.2s;
-  margin-left: auto;
+  padding: 4px 12px; border: 1px solid rgba(255,255,255,0.1);
+  background: transparent; color: #666; font-size: 10px;
+  cursor: pointer; border-radius: 6px; transition: all 0.2s; margin-left: auto;
 }
+.filter-reset-btn:hover { color: #F6BD60; border-color: rgba(246,189,96,0.3); }
 
-.filter-reset-btn:hover {
-  color: #F6BD60;
-  border-color: rgba(246,189,96,0.3);
-}
-
-/* ========================================
-   ANALYSIS & PREDICTION — Collapsible panels
-   ======================================== */
-.prediction-panel {
-  margin-top: 0;
-}
-
-.prediction-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 4px 0;
-  font-size: 11px;
-  border-bottom: 1px solid rgba(255,255,255,0.03);
-}
-
-.prediction-item:last-child {
-  border-bottom: none;
-}
-
-.prediction-time {
-  color: #F6BD60;
-  font-size: 10px;
-  margin-left: auto;
-  white-space: nowrap;
-}
-
-.prediction-type {
-  font-size: 10px;
-  padding: 1px 6px;
-  border-radius: 4px;
-  white-space: nowrap;
-}
+/* ============================================================
+   PREDICTIONS
+   ============================================================ */
+.prediction-panel { margin-top: 0; }
+.prediction-item { display: flex; align-items: center; gap: 8px; padding: 4px 0; font-size: 11px; border-bottom: 1px solid rgba(255,255,255,0.03); }
+.prediction-item:last-child { border-bottom: none; }
+.prediction-time { color: #F6BD60; font-size: 10px; margin-left: auto; white-space: nowrap; }
+.prediction-type { font-size: 10px; padding: 1px 6px; border-radius: 4px; white-space: nowrap; }
 
 /* Collapsible analysis container */
-.analysis-container {
-  background: rgba(255,255,255,0.03);
-  border: 1px solid rgba(255,255,255,0.06);
-  border-radius: 16px;
-  overflow: hidden;
-}
+.analysis-container { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; overflow: hidden; }
+.analysis-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; cursor: pointer; user-select: none; }
+.analysis-header:hover { background: rgba(255,255,255,0.03); }
+.analysis-header h3 { font-size: 13px; color: #F6BD60; letter-spacing: 2px; margin: 0; }
+.analysis-toggle { color: #F6BD60; font-size: 14px; transition: transform 0.3s ease; }
+.analysis-toggle.collapsed { transform: rotate(-90deg); }
+.analysis-tabs { display: flex; gap: 0; padding: 0 16px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+.analysis-tab { flex: 1; padding: 8px 0; text-align: center; font-size: 11px; letter-spacing: 1px; color: #888; cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.2s; }
+.analysis-tab:hover { color: #ccc; }
+.analysis-tab.active { color: #F6BD60; border-bottom-color: #F6BD60; }
+.analysis-body { padding: 16px 20px; transition: max-height 0.35s ease, opacity 0.25s ease, padding 0.35s ease; max-height: 2000px; opacity: 1; overflow: hidden; }
+.analysis-body.collapsed { max-height: 0; opacity: 0; padding-top: 0; padding-bottom: 0; }
+.analysis-body .panel-card { background: none; border: none; border-radius: 0; padding: 0; }
+.analysis-body .panel-card h3 { display: none; }
 
-.analysis-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 14px 20px;
-  cursor: pointer;
-  user-select: none;
-}
+/* ============================================================
+   ASPECT LIST
+   ============================================================ */
+.aspect-lists-row { display: flex; gap: 15px; margin-top: 0; }
 
-.analysis-header:hover {
-  background: rgba(255,255,255,0.03);
-}
-
-.analysis-header h3 {
-  font-size: 13px;
-  color: #F6BD60;
-  letter-spacing: 2px;
-  margin: 0;
-}
-
-.analysis-toggle {
-  color: #F6BD60;
-  font-size: 14px;
-  transition: transform 0.3s ease;
-}
-
-.analysis-toggle.collapsed {
-  transform: rotate(-90deg);
-}
-
-.analysis-tabs {
-  display: flex;
-  gap: 0;
-  padding: 0 16px;
-  border-bottom: 1px solid rgba(255,255,255,0.06);
-}
-
-.analysis-tab {
-  flex: 1;
-  padding: 8px 0;
-  text-align: center;
-  font-size: 11px;
-  letter-spacing: 1px;
-  color: #888;
-  cursor: pointer;
-  border-bottom: 2px solid transparent;
-  transition: all 0.2s;
-}
-
-.analysis-tab:hover {
-  color: #ccc;
-}
-
-.analysis-tab.active {
-  color: #F6BD60;
-  border-bottom-color: #F6BD60;
-}
-
-.analysis-body {
-  padding: 16px 20px;
-  transition: max-height 0.35s ease, opacity 0.25s ease, padding 0.35s ease;
-  max-height: 2000px;
-  opacity: 1;
-  overflow: hidden;
-}
-
-.analysis-body.collapsed {
-  max-height: 0;
-  opacity: 0;
-  padding-top: 0;
-  padding-bottom: 0;
-}
-
-.analysis-body .panel-card {
-  background: none;
-  border: none;
-  border-radius: 0;
-  padding: 0;
-}
-
-.analysis-body .panel-card h3 {
-  display: none;
-}
-
-/* ========================================
-   ASPECT LIST — Aspect detail rows
-   ======================================== */
-.aspect-lists-row {
-  display: flex;
-  gap: 15px;
-  margin-top: 0;
-}
-
-/* ========================================
-   FORTUNE CARDS — Carousel display
-   ======================================== */
-.fortune-reading {
-  margin-bottom: 16px;
-}
-
-.fortune-reading h3 {
-  font-size: 13px;
-  color: #F6BD60;
-  letter-spacing: 2px;
-  margin-bottom: 12px;
-}
-
-.fortune-cards-wrap {
-  position: relative;
-  overflow: hidden;
-  border-radius: 16px;
-}
-
+/* ============================================================
+   FORTUNE READING CARDS
+   ============================================================ */
+.fortune-reading { margin-bottom: 16px; }
+.fortune-reading h3 { font-size: 13px; color: #F6BD60; letter-spacing: 2px; margin-bottom: 12px; }
+.fortune-cards-wrap { position: relative; overflow: hidden; border-radius: 16px; }
 .fortune-cards-track {
-  display: flex;
-  transition: transform 0.35s cubic-bezier(0.4,0,0.2,1);
+  display: flex; transition: transform 0.35s cubic-bezier(0.4,0,0.2,1);
 }
-
 .fortune-card {
-  min-width: 100%;
-  padding: 20px;
-  border-radius: 16px;
-  background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(255,255,255,0.08);
+  min-width: 100%; padding: 20px; border-radius: 16px;
+  background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
 }
-
 .fortune-card-header {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 14px;
+  display: flex; align-items: center; gap: 10px; margin-bottom: 14px;
 }
-
 .fortune-card-icon {
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 18px;
+  width: 36px; height: 36px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center; font-size: 18px;
 }
-
-.fortune-card-title {
-  font-size: 15px;
-  font-weight: 700;
-}
-
+.fortune-card-title { font-size: 15px; font-weight: 700; }
 .fortune-card-score {
-  margin-left: auto;
-  font-size: 20px;
-  font-weight: 700;
+  margin-left: auto; font-size: 20px; font-weight: 700;
   background: linear-gradient(135deg, #F6BD60, #F9D976);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
 }
-
 .fortune-card-body {
-  font-size: 13px;
-  line-height: 1.8;
-  color: rgba(232,224,208,0.85);
+  font-size: 13px; line-height: 1.8; color: rgba(232,224,208,0.85);
 }
-
 .fortune-card-direction {
-  margin-top: 12px;
-  padding: 10px 14px;
-  border-radius: 12px;
-  background: rgba(249,217,118,0.06);
-  border: 1px solid rgba(249,217,118,0.15);
-  font-size: 12px;
-  color: #F6BD60;
+  margin-top: 12px; padding: 10px 14px; border-radius: 12px;
+  background: rgba(249,217,118,0.06); border: 1px solid rgba(249,217,118,0.15);
+  font-size: 12px; color: #F6BD60;
 }
-
-.fortune-card-direction strong {
-  font-weight: 700;
-}
-
+.fortune-card-direction strong { font-weight: 700; }
 .fortune-dots {
-  display: flex;
-  justify-content: center;
-  gap: 6px;
-  margin-top: 12px;
+  display: flex; justify-content: center; gap: 6px; margin-top: 12px;
 }
-
 .fortune-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: rgba(255,255,255,0.15);
-  cursor: pointer;
-  transition: all 0.3s;
+  width: 8px; height: 8px; border-radius: 50%;
+  background: rgba(255,255,255,0.15); cursor: pointer; transition: all 0.3s;
 }
-
 .fortune-dot.active {
-  background: #F6BD60;
-  box-shadow: 0 0 8px rgba(246,189,96,0.5);
-  width: 20px;
-  border-radius: 4px;
+  background: #F6BD60; box-shadow: 0 0 8px rgba(246,189,96,0.5);
+  width: 20px; border-radius: 4px;
 }
-
 .fortune-nav-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 8px;
+  display: flex; justify-content: space-between; align-items: center; margin-top: 8px;
 }
-
 .fortune-nav-btn {
-  background: none;
-  border: 1px solid rgba(255,255,255,0.12);
-  border-radius: 8px;
-  padding: 6px 14px;
-  font-size: 11px;
-  color: #ACACAC;
-  cursor: pointer;
-  font-family: inherit;
-  transition: all 0.2s;
+  background: none; border: 1px solid rgba(255,255,255,0.12); border-radius: 8px;
+  padding: 6px 14px; font-size: 11px; color: #ACACAC; cursor: pointer;
+  font-family: inherit; transition: all 0.2s;
 }
+.fortune-nav-btn:hover { border-color: rgba(246,189,96,0.4); color: #F6BD60; }
 
-.fortune-nav-btn:hover {
-  border-color: rgba(246,189,96,0.4);
-  color: #F6BD60;
-}
-
-/* ========================================
-   RESPONSIVE — Mobile breakpoint (max-width: 900px)
-   ======================================== */
-.desktop-only {
-}
-
-.mobile-bottom-sheet {
-  display: none;
-}
-
-/* ========================================
-   MOBILE CHART MENU — Floating mode selector
-   ======================================== */
-.chart-menu-btn {
-  display: none;
-}
-
-.chart-menu-panel {
-  display: none;
-}
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+.desktop-only { }
+.mobile-bottom-sheet { display: none; }
+/* モバイルメニュー: デスクトップでは非表示 */
+.chart-menu-btn { display: none; }
+.chart-menu-panel { display: none; }
 
 @media (max-width: 900px) {
-  html {
-    overflow: hidden;
-  }
-
-  body {
-    padding: 10px 8px 0;
-    overflow: hidden;
-  }
-
-  h1 {
-    font-size: 18px;
-    margin-bottom: 4px;
-  }
-
-  .subtitle {
-    font-size: 10px;
-    margin-bottom: 12px;
-  }
-
-  .main-layout {
-    flex-direction: column;
-    align-items: center;
-  }
-
-  .left-column {
-    position: relative;
-    top: auto;
-    width: 100%;
-    max-width: 600px;
-  }
-
-  .right-column {
-    display: none !important;
-  }
-
-  .chart-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    position: relative;
-  }
-
-  .chart-container svg {
-    width: 100%;
-    max-width: 600px;
-    height: auto;
-  }
-
-  .tab-nav {
-    display: none !important;
-  }
-
-  .desktop-only {
-    display: none !important;
-  }
+  html { overflow: hidden; }
+  body { padding: 10px 8px 0; overflow: hidden; }
+  h1 { font-size: 18px; margin-bottom: 4px; }
+  .subtitle { font-size: 10px; margin-bottom: 12px; }
+  .main-layout { flex-direction: column; align-items: center; }
+  .left-column { position: relative; top: auto; width: 100%; max-width: 600px; }
+  .right-column { display: none !important; }
+  .chart-container { display: flex; flex-direction: column; align-items: center; position: relative; }
+  .chart-container svg { width: 100%; max-width: 600px; height: auto; }
+  .tab-nav { display: none !important; }
+  .desktop-only { display: none !important; }
 
   /* Mobile chart menu button */
   .chart-menu-btn {
-    display: flex;
-    position: fixed;
-    top: 12px;
-    right: 12px;
-    z-index: 300;
-    width: 40px;
-    height: 40px;
-    border-radius: 10px;
-    background: rgba(12,12,26,0.92);
-    border: 1px solid rgba(246,189,96,0.3);
-    align-items: center;
-    justify-content: center;
-    flex-direction: column;
-    gap: 4px;
-    cursor: pointer;
+    display: flex; position: fixed; top: 12px; right: 12px; z-index: 300;
+    width: 40px; height: 40px; border-radius: 10px;
+    background: rgba(12,12,26,0.92); border: 1px solid rgba(246,189,96,0.3);
+    align-items: center; justify-content: center;
+    flex-direction: column; gap: 4px; cursor: pointer;
   }
-
-  .chart-menu-bar {
-    width: 18px;
-    height: 2px;
-    border-radius: 1px;
-    background: #F6BD60;
-  }
-
+  .chart-menu-bar { width: 18px; height: 2px; border-radius: 1px; background: #F6BD60; }
   .chart-menu-panel {
-    display: none;
-    position: fixed;
-    top: 58px;
-    right: 12px;
-    z-index: 299;
-    background: rgba(12,12,26,0.97);
-    border: 1px solid rgba(246,189,96,0.2);
-    border-radius: 14px;
-    padding: 8px;
-    min-width: 150px;
+    display: none; position: fixed; top: 58px; right: 12px; z-index: 299;
+    background: rgba(12,12,26,0.97); border: 1px solid rgba(246,189,96,0.2);
+    border-radius: 14px; padding: 8px; min-width: 150px;
     box-shadow: 0 8px 32px rgba(0,0,0,0.5);
   }
-
-  .chart-menu-panel.open {
-    display: block;
-  }
-
+  .chart-menu-panel.open { display: block; }
   .chart-menu-item {
-    width: 100%;
-    padding: 10px 14px;
-    background: none;
-    border: none;
-    color: #ACACAC;
-    font-size: 13px;
-    text-align: left;
-    cursor: pointer;
-    border-radius: 8px;
-    transition: background 0.2s;
+    width: 100%; padding: 10px 14px; background: none; border: none;
+    color: #ACACAC; font-size: 13px; text-align: left; cursor: pointer;
+    border-radius: 8px; transition: background 0.2s;
   }
-
-  .chart-menu-item:hover {
-    background: rgba(246,189,96,0.08);
-  }
-
-  .chart-menu-item.active {
-    color: #F6BD60;
-    background: rgba(246,189,96,0.12);
-  }
-
-  body {
-    padding-bottom: 380px;
-  }
-
-  /* ========================================
-     BOTTOM SHEET — Mobile draggable panel
-     ======================================== */
+  .chart-menu-item:hover { background: rgba(246,189,96,0.08); }
+  .chart-menu-item.active { color: #F6BD60; background: rgba(246,189,96,0.12); }
+  body { padding-bottom: 380px; }
 
   /* Bottom Sheet mini label */
   .bs-mini-label {
@@ -791,7 +289,6 @@ h1 {
     opacity: 0.9;
     cursor: pointer;
   }
-
   .bs-mini-label .bs-mini-chevron {
     display: inline-block;
     font-size: 9px;
@@ -803,10 +300,7 @@ h1 {
   /* Bottom Sheet */
   .mobile-bottom-sheet {
     display: block;
-    position: fixed;
-    left: 0;
-    right: 0;
-    bottom: 70px;
+    position: fixed; left: 0; right: 0; bottom: 70px;
     z-index: 100;
     background: rgba(12,12,22,0.97);
     border-top: 1px solid rgba(246,189,96,0.3);
@@ -815,117 +309,53 @@ h1 {
     max-height: 85vh;
     touch-action: none;
   }
-
   .bs-drag-handle {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 10px 0 6px;
-    cursor: grab;
+    display: flex; justify-content: center; align-items: center;
+    padding: 10px 0 6px; cursor: grab;
   }
-
   .bs-drag-handle::after {
-    content: '';
-    width: 36px;
-    height: 4px;
-    background: rgba(246,189,96,0.4);
-    border-radius: 2px;
+    content: ''; width: 36px; height: 4px;
+    background: rgba(246,189,96,0.4); border-radius: 2px;
   }
-
   .bs-tabs {
-    display: flex;
-    gap: 0;
-    padding: 0 8px;
+    display: flex; gap: 0; padding: 0 8px;
     border-bottom: 1px solid rgba(255,255,255,0.06);
   }
-
   .bs-tab {
-    flex: 1;
-    padding: 8px 4px;
-    text-align: center;
-    font-size: 11px;
-    color: #777;
-    cursor: pointer;
+    flex: 1; padding: 8px 4px; text-align: center;
+    font-size: 11px; color: #777; cursor: pointer;
     border-bottom: 2px solid transparent;
-    transition: all 0.2s;
-    letter-spacing: 0.5px;
-    background: none;
-    border-left: none;
-    border-right: none;
-    border-top: none;
+    transition: all 0.2s; letter-spacing: 0.5px;
+    background: none; border-left: none; border-right: none; border-top: none;
   }
-
-  .bs-tab.active {
-    color: #F6BD60;
-    border-bottom-color: #F6BD60;
-  }
-
-  .bs-tab.hidden-tab {
-    display: none;
-  }
-
+  .bs-tab.active { color: #F6BD60; border-bottom-color: #F6BD60; }
+  .bs-tab.hidden-tab { display: none; }
   .bs-body {
-    overflow-y: auto;
-    padding: 12px 14px 24px;
+    overflow-y: auto; padding: 12px 14px 24px;
     -webkit-overflow-scrolling: touch;
   }
-
-  .bs-body .form-group {
-    margin-bottom: 10px;
-  }
-
-  .bs-body .form-group label {
-    display: block;
-    font-size: 11px;
-    color: #888;
-    margin-bottom: 3px;
-    letter-spacing: 1px;
-  }
-
+  .bs-body .form-group { margin-bottom: 10px; }
+  .bs-body .form-group label { display: block; font-size: 11px; color: #888; margin-bottom: 3px; letter-spacing: 1px; }
   .bs-body .form-group input,
   .bs-body .form-group select {
-    width: 100%;
-    padding: 8px 12px;
-    background: rgba(255,255,255,0.06);
-    border: 1px solid rgba(255,255,255,0.12);
-    border-radius: 8px;
-    color: #E8E0D0;
-    font-size: 13px;
-    outline: none;
+    width: 100%; padding: 8px 12px; background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.12); border-radius: 8px;
+    color: #E8E0D0; font-size: 13px; outline: none;
   }
-
   .bs-body .btn-generate {
-    width: 100%;
-    padding: 10px;
-    border: none;
-    border-radius: 10px;
-    color: #0A0A14;
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
+    width: 100%; padding: 10px; border: none; border-radius: 10px;
+    color: #0A0A14; font-size: 13px; font-weight: 600; cursor: pointer;
     margin-top: 6px;
   }
-
-  .bs-body h3 {
-    font-size: 12px;
-    color: #F6BD60;
-    margin-bottom: 10px;
-    letter-spacing: 1px;
-  }
-
-  .bs-section {
-    display: none;
-  }
-
-  .bs-section.active {
-    display: block;
-  }
+  .bs-body h3 { font-size: 12px; color: #F6BD60; margin-bottom: 10px; letter-spacing: 1px; }
+  .bs-section { display: none; }
+  .bs-section.active { display: block; }
 }
 </style>
 </head>
 <body class="cosmic-bg">
 
-<!-- ===== MOBILE CHART MENU ===== -->
+<!-- Mobile Chart Menu Button (モバイルのみ表示) -->
 <div class="chart-menu-btn" id="chartMenuBtn" onclick="toggleChartMenu()">
   <div class="chart-menu-bar"></div>
   <div class="chart-menu-bar"></div>
@@ -938,7 +368,7 @@ h1 {
   <button class="chart-menu-item" id="cmItem3" onclick="setChartModeMenu('astrology')">&#10022; 星読み</button>
 </div>
 
-<!-- ===== CHART MODE TABS (Desktop) ===== -->
+<!-- Chart Mode Tabs: 1重/2重N+T/2重N+P/今日 -->
 <div class="tab-nav">
   <button class="tab-btn active" onclick="setChartMode('single')">1重 NATAL</button>
   <button class="tab-btn" onclick="setChartMode('nt')">2重 N+T</button>
@@ -946,20 +376,18 @@ h1 {
   <button class="tab-btn" onclick="setChartMode('astrology')" style="position:relative;z-index:200">&#10022; 星読み<br><span style="font-size:9px;letter-spacing:1px;opacity:0.7">Astrology</span></button>
 </div>
 
-<!-- ===== ASTROLOGY/TODAY VIEW ===== -->
+<!-- Astrology View: 占い結果を縦に全表示 -->
 <div id="astrologyView" style="display:none;position:absolute;top:0;left:0;right:0;bottom:70px;padding:16px 16px 20px 16px;overflow-y:auto;-webkit-overflow-scrolling:touch;">
   <div id="astrologyCardsAll"></div>
 </div>
 
-<!-- ===== STATUS BAR ===== -->
 <div id="noProfileBanner" style="display:none; background:rgba(249,217,118,0.08); border:1px solid rgba(249,217,118,0.25); border-radius:12px; padding:14px 18px; margin-bottom:16px; max-width:1400px; width:100%; text-align:center;">
   <span style="font-size:13px; color:#F6BD60;">&#10022; SANCTUARYでプロフィールを設定すると、あなた専用のホロスコープが表示されます</span><br>
   <a href="sanctuary.html" style="color:#F9D976; font-size:12px; text-decoration:underline; margin-top:4px; display:inline-block;">設定する →</a>
 </div>
 
-<!-- ===== MAIN LAYOUT ===== -->
 <div class="main-layout">
-  <!-- ===== LEFT COLUMN: Chart SVG ===== -->
+  <!-- Left: Chart -->
   <div class="left-column">
     <div class="chart-container">
       <div class="chart-watermark">SOLARA</div>
@@ -968,10 +396,10 @@ h1 {
     </div>
   </div>
 
-  <!-- ===== RIGHT COLUMN: Controls ===== -->
+  <!-- Right: Panels -->
   <div class="right-column">
 
-    <!-- ===== BIRTH DATA FORM ===== -->
+    <!-- Birth Data -->
     <div class="panel-card" id="birthPanel">
       <h3 class="desktop-only">&#9881; BIRTH DATA</h3>
       <div class="form-group">
@@ -997,7 +425,7 @@ h1 {
       <button class="btn-generate" onclick="generateFromInput()">ホロスコープ生成</button>
     </div>
 
-    <!-- ===== TRANSIT/PROGRESSED DATA ===== -->
+    <!-- Transit/Progressed Data -->
     <div class="panel-card" id="transitPanel" style="display:none">
       <h3 class="desktop-only" id="transitPanelTitle">&#9790; TRANSIT DATA</h3>
       <div class="form-row">
@@ -1019,13 +447,13 @@ h1 {
     </div>
 
 
-    <!-- ===== PLANET TABLE ===== -->
+    <!-- Planet Positions -->
     <div class="panel-card" id="planetsPanel">
       <h3 class="desktop-only">&#9737; PLANET POSITIONS</h3>
       <div id="planetTable"></div>
     </div>
 
-    <!-- ===== ANALYSIS (Collapsible) ===== -->
+    <!-- Analysis: Aspect Filter + Predictions (collapsible) -->
     <div class="analysis-container" id="analysisContainer">
       <div class="analysis-header" onclick="toggleAnalysis()">
         <h3>&#9881; ANALYSIS</h3>
@@ -1038,7 +466,6 @@ h1 {
             <button class="filter-reset-btn" onclick="resetFilters()">RESET</button>
           </div>
 
-          <!-- ===== ASPECT FILTER ===== -->
           <!-- A: Aspect Quality -->
           <div class="filter-section">
             <div class="filter-section-title"><span class="filter-label">A</span> アスペクト性質</div>
@@ -1071,7 +498,7 @@ h1 {
             </div>
           </div>
 
-          <!-- ===== PREDICTION ===== -->
+          <!-- Predictions -->
           <div class="prediction-panel" id="predictionPanel" style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.05)">
             <div id="predictionList"></div>
           </div>
@@ -1079,7 +506,7 @@ h1 {
       </div>
     </div>
 
-    <!-- ===== ASPECT LIST (Collapsible) ===== -->
+    <!-- Aspect Lists (collapsible) -->
     <div class="analysis-container" id="aspectsContainer">
       <div class="analysis-header" onclick="toggleAspects()">
         <h3 id="aspectsContainerTitle">&#9651; ASPECTS</h3>
@@ -1095,7 +522,7 @@ h1 {
   </div><!-- /right-column -->
 </div><!-- /main-layout -->
 
-<!-- ===== MOBILE BOTTOM SHEET ===== -->
+<!-- Mobile Bottom Sheet (single DOM - no duplication) -->
 <div class="mobile-bottom-sheet" id="bottomSheet">
   <div class="bs-drag-handle" id="bsDragHandle"></div>
   <div class="bs-mini-label" id="bsMiniLabel" onclick="setBSState('half')">
@@ -1120,8 +547,12 @@ h1 {
 
 <script>
 // ============================================================
-// 1. CONSTANTS & DATA
-//    Aspect types, pattern types, orb settings
+//  CONSTANTS (local - index-based for this file's planet math)
+//  Shared constants from astro-math.js:
+//    ZODIAC_SIGNS, ZODIAC_NAMES_JP, ZODIAC_EN, ZODIAC_COLORS,
+//    PLANET_GLYPHS, PLANET_NAMES_JP, PLANET_KEYS, PLANET_GROUPS (key-based),
+//    FORTUNE_PLANETS (key-based), ASTRO_BODIES, norm360, angDist,
+//    toRad, toDeg, calcAscendant, calcMC, loadSolaraProfile
 // ============================================================
 
 // Extended glyphs array: 10 planets + 4 angles (shared has only 10)
@@ -1181,8 +612,7 @@ var LOC_KEY = 'solara_locations';
 function loadLocations() { try { return JSON.parse(localStorage.getItem(LOC_KEY)) || []; } catch(e) { return []; } }
 
 // ============================================================
-// 2. STATE & PROFILE
-//    _profile, defaultUser, chartMode, filters, caches
+//  STATE
 // ============================================================
 var _profile = loadSolaraProfile();
 var profileLoaded = !!(_profile && _profile.birthDate && _profile.birthLat);
@@ -1204,9 +634,7 @@ var activeFilters = {
 };
 
 // ============================================================
-// 3. ASTRONOMY CALCULATIONS
-//    makeUTCDate(), getEclipticLongitude(), calcAllPlanets(),
-//    calcHouses*(), calcProgressedDate()
+//  ASTRONOMICAL CALCULATIONS (astronomy-engine, geocentric)
 // ============================================================
 function makeUTCDate(dateStr, timeStr, tzHours) {
   var parts = dateStr.split('-');
@@ -1311,9 +739,7 @@ function calcProgressedDate(birthDate, currentDate) {
 }
 
 // ============================================================
-// 4. ASPECT & PATTERN DETECTION
-//    collectAspects(), detectPatterns(),
-//    predictPatternCompletions()
+//  ASPECT DETECTION
 // ============================================================
 function collectAspects(p1, p2, isCross, label) {
   var found = [];
@@ -1336,7 +762,9 @@ function collectAspects(p1, p2, isCross, label) {
   return found;
 }
 
-// Pattern detection (GT, TSQ, Yod) - configurable orbs via localStorage
+// ============================================================
+//  PATTERN DETECTION (GT, TSQ, Yod) - configurable orbs via localStorage
+// ============================================================
 var PATTERN_ORB_SETTINGS = { grandtrine: 3, tsquare_opp: 3, tsquare_sq: 2.5, yod_sextile: 2.5, yod_quincunx: 1.5 };
 (function() {
   try {
@@ -1415,7 +843,9 @@ function detectPatterns(aspects, natal, secondary) {
   return patterns;
 }
 
-// 60-DAY PREDICTION (computed once on generate)
+// ============================================================
+//  60-DAY PREDICTION (computed once on generate)
+// ============================================================
 function predictPatternCompletions(natal, birthDate, daysAhead) {
   daysAhead = daysAhead || 60;
   var predictions = [];
@@ -1477,9 +907,7 @@ function predictPatternCompletions(natal, birthDate, daysAhead) {
 }
 
 // ============================================================
-// 5. FILTER LOGIC
-//    getPlanetGroup(), aspectPassesFilter(),
-//    toggleFilter(), toggleExclusive(), resetFilters()
+//  FILTER LOGIC
 // ============================================================
 function getPlanetGroup(idx) {
   if (idx >= 10) return 'angle'; // ASC/MC/DSC/IC - always visible
@@ -1503,6 +931,9 @@ function aspectPassesFilter(a) {
   return true;
 }
 
+// ============================================================
+//  FILTER UI HANDLERS
+// ============================================================
 function toggleFilter(el) {
   el.classList.toggle('active');
   var ft = el.getAttribute('data-filter');
@@ -1527,8 +958,7 @@ function toggleExclusive(el) {
 }
 
 // ============================================================
-// 6. COLLAPSIBLE PANELS
-//    toggleAnalysis(), toggleAspects()
+//  COLLAPSIBLE PANELS
 // ============================================================
 function toggleAnalysis() {
   var body = document.getElementById('analysisBody');
@@ -1558,9 +988,7 @@ function resetFilters() {
 }
 
 // ============================================================
-// 7. SVG RENDERING HELPERS
-//    buildPatternPolygons(), buildAspectLinesHTML(),
-//    redrawAspectLines()
+//  SVG RENDERING - PATTERN POLYGONS (no ghost, CSS opacity only)
 // ============================================================
 function buildPatternPolygons(patterns, natal, asc, cx, cy, r) {
   var h = '';
@@ -1627,9 +1055,7 @@ function redrawAspectLines() {
 }
 
 // ============================================================
-// 8. FORM & CHART MODE
-//    fillForm(), toggleChartMenu(), setChartMode*(),
-//    aspectsToText(), patternsToText()
+//  UI - CHART MODE, TRANSIT
 // ============================================================
 function fillForm(user) {
   document.getElementById('inputName').value = user.name;
@@ -1741,10 +1167,6 @@ function patternsToText(patterns) {
   return parts.join('\u3001');
 }
 
-// ============================================================
-// 9. FORTUNE CACHE & CARDS
-//    getFortuneCache(), setFortuneCache(), renderFortuneCard()
-// ============================================================
 function getFortuneCache() {
   try {
     var c = JSON.parse(localStorage.getItem('solara_fortune_cache') || '{}');
@@ -1772,10 +1194,6 @@ function renderFortuneCard(cat, text, direction) {
     + '</div>';
 }
 
-// ============================================================
-// 10. ASTROLOGY/TODAY VIEW
-//     buildTodayView(), buildVPOptionsHTML(), populateVPSelect()
-// ============================================================
 function buildTodayView() {
   var el = document.getElementById('astrologyCardsAll');
   if (!el) return;
@@ -1865,12 +1283,6 @@ function populateVPSelect(selectId, hintId) {
   if (hint) hint.style.display = (vps.length === 0) ? 'block' : 'none';
 }
 
-// ============================================================
-// 11. BIRTH/TRANSIT LOCATION HANDLING
-//     onBirthPlaceChange(), onTransitLocationChange(),
-//     getTransitDateTime(), getTransitLocation(),
-//     initTransitDefaults()
-// ============================================================
 function onBirthPlaceChange() {
   var sel = document.getElementById('inputPlaceSelect');
   var placeInput = document.getElementById('inputPlace');
@@ -1953,11 +1365,6 @@ function initTransitDefaults() {
   }
 }
 
-// ============================================================
-// 12. MAIN RENDER & FORM SUBMIT
-//     generateFromInput(), formatDegree(), getHouseNumber(),
-//     getAspectKey(), renderChart() [MAIN], updateHouseSystemLabel()
-// ============================================================
 function generateFromInput() {
   var name = document.getElementById('inputName').value;
   var date = document.getElementById('inputDate').value;
@@ -1983,6 +1390,9 @@ function generateFromInput() {
   renderChart();
 }
 
+// ============================================================
+//  FORMATTING HELPERS
+// ============================================================
 function formatDegree(lon) {
   lon = norm360(lon);
   var si = Math.floor(lon / 30);
@@ -2004,7 +1414,9 @@ function getHouseNumber(lon, houses) {
 
 function getAspectKey(a) { return a.label + '_' + a.p1 + '_' + a.p2 + '_' + a.type.angle; }
 
-// MAIN CHART RENDER (no heavy recomputation - uses cache)
+// ============================================================
+//  MAIN CHART RENDER (no heavy recomputation - uses cache)
+// ============================================================
 function renderChart() {
   var user = defaultUser;
   var birthDate = makeUTCDate(user.date, user.time, user.tz);
@@ -2244,9 +1656,7 @@ function updateHouseSystemLabel() {
 }
 
 // ============================================================
-// 13. PLANET TABLE & ASPECT LIST
-//     renderPlanetTable(), toggleAspectVisibility(),
-//     renderAspectList(), renderAspectInfo(), renderPredictions()
+//  SIDE PANEL RENDERERS
 // ============================================================
 function renderPlanetTable(natal, secondary, secColor, secLabel, asc, mc, dsc, ic, houses) {
   var c = document.getElementById('planetTable');
@@ -2405,10 +1815,6 @@ function renderPredictions(predictions, detectedPatterns) {
   list.innerHTML = html;
 }
 
-// ============================================================
-// 14. CHART INTERACTION & LEGEND
-//     showZodiacName(), renderLegend()
-// ============================================================
 var zodiacTooltipTimer = null;
 function showZodiacName(evt, idx) {
   var existing = document.getElementById('zodiacTooltip');
@@ -2453,9 +1859,7 @@ function renderLegend(secColor, secLabel) {
 }
 
 // ============================================================
-// 15. MOBILE BOTTOM SHEET
-//     isMobileView(), initBottomSheet(), setBSState(),
-//     switchBSTab(), buildBS*Content(), refreshActiveBS()
+//  MOBILE BOTTOM SHEET (single DOM, no duplication)
 // ============================================================
 var bsState = 'half';
 var bsActiveTab = 'birth';
@@ -2740,10 +2144,7 @@ function refreshActiveBS() {
 }
 
 // ============================================================
-// 16. FORTUNE CAROUSEL & INITIALIZATION
-//     FORTUNE_CATEGORIES, FORTUNE_MOCK,
-//     renderFortuneCardsTo(), goFortune(), initFortuneSwipe(),
-//     loadFortuneCacheOrGenerate(), window.onload
+//  FORTUNE READING CARDS (unified desktop/mobile carousel)
 // ============================================================
 var FORTUNE_CATEGORIES = [
   { id:'overall', icon:'\u2726', label:'全体運', color:'#F6BD60',
@@ -2860,7 +2261,9 @@ function buildBSFortuneContent() {
   renderFortuneCardsTo('bsFortuneTrack', 'bsFortuneDots');
 }
 
-// FORTUNE TOUCH SWIPE
+// ============================================================
+//  FORTUNE TOUCH SWIPE
+// ============================================================
 function initFortuneSwipe() {
   var wrap = document.querySelector('.fortune-cards-wrap');
   if (!wrap) return;
@@ -2893,7 +2296,9 @@ function initFortuneSwipe() {
   });
 }
 
-// FORTUNE DAILY CACHE
+// ============================================================
+//  FORTUNE DAILY CACHE
+// ============================================================
 var FORTUNE_CACHE_KEY = 'solara_fortune_cache';
 
 function loadFortuneCacheOrGenerate() {
@@ -2909,7 +2314,9 @@ function loadFortuneCacheOrGenerate() {
   localStorage.setItem(FORTUNE_CACHE_KEY, JSON.stringify({ date: today, data: FORTUNE_MOCK }));
 }
 
-// INIT
+// ============================================================
+//  INIT
+// ============================================================
 window.addEventListener('DOMContentLoaded', function() {
   fillForm(defaultUser);
   initTransitDefaults();
@@ -2921,7 +2328,6 @@ window.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
-<!-- ===== BOTTOM NAV ===== -->
 <div class="bottom-nav"></div>
 <script>renderNav('horo');</script>
 
