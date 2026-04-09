@@ -6,132 +6,425 @@
   <title>Solara — Galaxy</title>
   <link rel="stylesheet" href="shared/styles.css">
   <style>
-    * { margin:0; padding:0; box-sizing:border-box; }
-    body {
-      background: radial-gradient(ellipse at center, #0a1220 0%, #020408 100%);
-      min-height: 100vh; font-family: var(--font-body); color: #EAEAEA;
-      margin: 0; padding: 0; overflow: hidden;
-    }
-    #bgCanvas { position:absolute; inset:0; z-index:0; width:100%; height:100%; }
 
-    /* Inner tab switch: Cycle / Star Atlas */
-    .inner-tabs { display:flex; gap:0; padding:0 20px; margin-bottom:8px; }
-    .inner-tab-btn {
-      flex:1; padding:10px 0; background:none; border:none; cursor:pointer;
-      font-family:var(--font-body); font-size:12px; font-weight:700;
-      letter-spacing:1px; text-transform:uppercase; color:rgba(255,255,255,0.35);
-      border-bottom:2px solid transparent; transition:all 0.3s;
-    }
-    .inner-tab-btn.active { color:#F9D976; border-bottom-color:#F9D976; }
+/* ========================================
+   1. BASE — Reset, body, background canvas
+   ======================================== */
 
-    /* Cycle (Spiral) tab */
-    .cycle-content { flex:1; position:relative; display:flex; flex-direction:column; overflow:hidden; }
-    .day-badge {
-      position:absolute; top:8px; right:20px;
-      background:rgba(249,217,118,0.12); border:1px solid rgba(249,217,118,0.28);
-      border-radius:22px; padding:8px 14px; display:flex; flex-direction:column;
-      align-items:center; z-index:20;
-    }
-    .day-num { font-size:22px; font-weight:700; color:#F9D976; line-height:1; }
-    .day-lbl { font-size:9px; color:rgba(249,217,118,0.65); letter-spacing:1.2px; text-transform:uppercase; }
+* { margin: 0; padding: 0; box-sizing: border-box; }
 
-    .moon-badge {
-      position:absolute; top:8px; left:20px;
-      background:rgba(192,200,224,0.10); border:1px solid rgba(192,200,224,0.22);
-      border-radius:22px; padding:8px 14px; display:flex; flex-direction:column;
-      align-items:center; z-index:20;
-    }
-    .moon-emoji { font-size:20px; line-height:1; }
-    .moon-lbl { font-size:9px; color:rgba(192,200,224,0.65); letter-spacing:1px; text-transform:uppercase; margin-top:2px; }
+body {
+  background: radial-gradient(ellipse at center, #0a1220 0%, #020408 100%);
+  min-height: 100vh;
+  font-family: var(--font-body);
+  color: #EAEAEA;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
 
-    .spiral-area { flex:1; position:relative; }
-    #spiralCanvas { width:100%; height:100%; display:block; }
+#bgCanvas {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+}
 
-    .dot-popup {
-      position:absolute; background:rgba(8,12,20,0.95); backdrop-filter:blur(20px);
-      border:1px solid rgba(255,255,255,0.15); border-radius:18px; padding:14px 16px;
-      width:200px; z-index:60; pointer-events:none; opacity:0; transition:opacity 0.2s;
-    }
-    .dot-popup.visible { opacity:1; }
-    .popup-day { font-size:10px; font-weight:700; color:#F9D976; letter-spacing:1.5px; text-transform:uppercase; margin-bottom:8px; }
-    .popup-card { display:flex; align-items:center; gap:8px; margin-bottom:8px; }
-    .popup-card-emoji { font-size:22px; }
-    .popup-card-name { font-size:12px; font-weight:700; color:#EAEAEA; }
-    .popup-planet { font-size:11px; color:rgba(172,172,172,0.8); margin-bottom:4px; }
-    .popup-keyword { font-size:11px; font-weight:300; color:rgba(249,217,118,0.7); }
-    .popup-quote { font-size:11px; font-weight:300; color:rgba(172,172,172,0.7); line-height:1.5; margin-top:6px; font-style:italic; }
+.screen.active {
+  position: fixed;
+  inset: 0;
+  z-index: 5;
+}
 
-    .stella-msg { margin:0 16px 6px; padding:12px 16px 14px; border-radius:20px; position:relative; flex-shrink:0; }
-    .bubble-by { font-size:10px; font-weight:700; color:#F9D976; letter-spacing:1.8px; text-transform:uppercase; margin-bottom:7px; }
-    .bubble-msg { font-size:13px; font-weight:300; color:#EAEAEA; line-height:1.6; }
+.main-area {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 80px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  z-index: 10;
+}
 
-    /* Star Atlas tab */
-    .atlas-content { flex:1; overflow-y:auto; padding:0 16px 100px; display:flex; flex-direction:column; gap:20px; }
-    .atlas-content::-webkit-scrollbar { display:none; }
-    .constellation-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(160px, 1fr)); gap:12px; }
-    .const-card {
-      border-radius:20px; padding:14px; aspect-ratio:0.75; display:flex;
-      flex-direction:column; justify-content:space-between; cursor:pointer;
-      transition:transform 0.2s, box-shadow 0.2s;
-    }
-    .const-card:hover { transform:scale(1.03); }
-    .const-mini { flex:1; display:flex; align-items:center; justify-content:center; }
-    .const-date { font-size:10px; color:#ACACAC; }
-    .const-seed { font-size:12px; font-weight:700; color:#EAEAEA; margin-top:2px; }
+.tab-panel {
+  display: none;
+  flex: 1;
+  flex-direction: column;
+  overflow: hidden;
+}
+.tab-panel.active { display: flex; }
 
-    /* Formation Overlay */
-    #overlayFormation { background:rgba(2,4,10,0.98); }
-    #formationCanvas { position:absolute; inset:0; width:100%; height:100%; }
-    .formation-ui {
-      position:absolute; bottom:120px; left:0; right:0;
-      display:flex; flex-direction:column; align-items:center; gap:12px; pointer-events:none;
-    }
-    .formation-stage { font-size:12px; font-weight:700; color:rgba(249,217,118,0.6); letter-spacing:2px; text-transform:uppercase; }
-    .formation-name { font-size:28px; font-weight:700; text-align:center; padding:0 24px; }
-    .formation-symbol { font-size:44px; }
-    .formation-quote { font-size:13px; font-weight:300; color:rgba(172,172,172,0.8); line-height:1.6; text-align:center; padding:0 28px; }
-    .formation-close {
-      position:absolute; bottom:48px; left:50%; transform:translateX(-50%);
-      background:linear-gradient(135deg,#F9D976,#F6BD60); border:none; border-radius:16px;
-      padding:14px 36px; font-family:var(--font-body); font-size:15px; font-weight:700;
-      color:#0C1D3A; cursor:pointer; opacity:0; pointer-events:none; transition:opacity 0.5s;
-    }
-    .formation-close.visible { opacity:1; pointer-events:auto; }
+/* ========================================
+   2. TAB NAVIGATION — Cycle / Star Atlas
+   ======================================== */
 
-    /* Replay Modal */
-    #replayModal {
-      position:absolute; inset:0; z-index:400; display:none;
-      flex-direction:column; align-items:center; justify-content:center;
-      background:rgba(2,4,10,0.96); backdrop-filter:blur(12px);
-      animation:fadeIn 0.3s ease-out;
-    }
-    #replayModal.visible { display:flex; }
-    .replay-inner { width:340px; display:flex; flex-direction:column; align-items:center; gap:20px; }
-    .replay-title { font-size:20px; font-weight:700; margin-bottom:4px; text-align:center; }
-    .replay-sub { font-size:12px; color:#ACACAC; text-align:center; }
-    #replayCanvas { border-radius:20px; border:1px solid rgba(255,255,255,0.1); background:rgba(6,10,18,0.8); }
-    .replay-symbol { font-size:22px; margin-bottom:4px; text-align:center; }
-    .replay-name { font-size:16px; font-weight:700; color:#EAEAEA; text-align:center; }
-    .replay-date { font-size:12px; color:#ACACAC; margin-top:2px; text-align:center; }
-    .replay-close {
-      background:none; border:1px solid rgba(255,255,255,0.2); border-radius:12px;
-      padding:10px 28px; font-family:var(--font-body); font-size:13px;
-      color:#ACACAC; cursor:pointer;
-    }
+.inner-tabs {
+  display: flex;
+  gap: 0;
+  padding: 0 20px;
+  margin-bottom: 8px;
+}
 
-    .screen.active { position:fixed; inset:0; z-index:5; }
-    .main-area { position:fixed; top:0; left:0; right:0; bottom:80px; display:flex; flex-direction:column; overflow:hidden; z-index:10; }
-    .tab-panel { display:none; flex:1; flex-direction:column; overflow:hidden; }
-    .tab-panel.active { display:flex; }
+.inner-tab-btn {
+  flex: 1;
+  padding: 10px 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.35);
+  border-bottom: 2px solid transparent;
+  transition: all 0.3s;
+}
+.inner-tab-btn.active {
+  color: #F9D976;
+  border-bottom-color: #F9D976;
+}
+
+/* ========================================
+   3. CYCLE TAB — Moon badge, day badge, spiral area
+   ======================================== */
+
+.cycle-content {
+  flex: 1;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* -- Day badge (top-right) ------------------------------------ */
+
+.day-badge {
+  position: absolute;
+  top: 8px; right: 20px;
+  background: rgba(249,217,118,0.12);
+  border: 1px solid rgba(249,217,118,0.28);
+  border-radius: 22px;
+  padding: 8px 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 20;
+}
+.day-num {
+  font-size: 22px;
+  font-weight: 700;
+  color: #F9D976;
+  line-height: 1;
+}
+.day-lbl {
+  font-size: 9px;
+  color: rgba(249,217,118,0.65);
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+}
+
+/* -- Moon badge (top-left) ------------------------------------ */
+
+.moon-badge {
+  position: absolute;
+  top: 8px; left: 20px;
+  background: rgba(192,200,224,0.10);
+  border: 1px solid rgba(192,200,224,0.22);
+  border-radius: 22px;
+  padding: 8px 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 20;
+}
+.moon-emoji { font-size: 20px; line-height: 1; }
+.moon-lbl {
+  font-size: 9px;
+  color: rgba(192,200,224,0.65);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+
+/* -- Spiral canvas -------------------------------------------- */
+
+.spiral-area { flex: 1; position: relative; }
+#spiralCanvas { width: 100%; height: 100%; display: block; }
+
+/* ========================================
+   4. DOT POPUP — Hover tooltip
+   ======================================== */
+
+.dot-popup {
+  position: absolute;
+  background: rgba(8,12,20,0.95);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 18px;
+  padding: 14px 16px;
+  width: 200px;
+  z-index: 60;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.dot-popup.visible { opacity: 1; }
+
+.popup-day {
+  font-size: 10px;
+  font-weight: 700;
+  color: #F9D976;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.popup-card {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.popup-card-emoji { font-size: 22px; }
+.popup-card-name  { font-size: 12px; font-weight: 700; color: #EAEAEA; }
+.popup-planet     { font-size: 11px; color: rgba(172,172,172,0.8); margin-bottom: 4px; }
+.popup-keyword    { font-size: 11px; font-weight: 300; color: rgba(249,217,118,0.7); }
+.popup-quote {
+  font-size: 11px;
+  font-weight: 300;
+  color: rgba(172,172,172,0.7);
+  line-height: 1.5;
+  margin-top: 6px;
+  font-style: italic;
+}
+
+/* ========================================
+   5. STELLA MESSAGE
+   ======================================== */
+
+.stella-msg {
+  margin: 0 16px 6px;
+  padding: 12px 16px 14px;
+  border-radius: 20px;
+  position: relative;
+  flex-shrink: 0;
+}
+.bubble-by {
+  font-size: 10px;
+  font-weight: 700;
+  color: #F9D976;
+  letter-spacing: 1.8px;
+  text-transform: uppercase;
+  margin-bottom: 7px;
+}
+.bubble-msg {
+  font-size: 13px;
+  font-weight: 300;
+  color: #EAEAEA;
+  line-height: 1.6;
+}
+
+/* ========================================
+   6. STAR ATLAS TAB — Grid, constellation cards
+   ======================================== */
+
+.atlas-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 16px 100px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.atlas-content::-webkit-scrollbar { display: none; }
+
+.constellation-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 12px;
+}
+
+.const-card {
+  border-radius: 20px;
+  padding: 14px;
+  aspect-ratio: 0.75;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.const-card:hover { transform: scale(1.03); }
+
+.const-mini {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.const-date { font-size: 10px; color: #ACACAC; }
+.const-seed { font-size: 12px; font-weight: 700; color: #EAEAEA; margin-top: 2px; }
+
+/* ========================================
+   7. FORMATION OVERLAY
+   ======================================== */
+
+#overlayFormation {
+  background: rgba(2,4,10,0.98);
+}
+#formationCanvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.formation-ui {
+  position: absolute;
+  bottom: 120px; left: 0; right: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  pointer-events: none;
+}
+.formation-stage {
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(249,217,118,0.6);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+.formation-name {
+  font-size: 28px;
+  font-weight: 700;
+  text-align: center;
+  padding: 0 24px;
+}
+.formation-symbol { font-size: 44px; }
+.formation-quote {
+  font-size: 13px;
+  font-weight: 300;
+  color: rgba(172,172,172,0.8);
+  line-height: 1.6;
+  text-align: center;
+  padding: 0 28px;
+}
+
+.formation-close {
+  position: absolute;
+  bottom: 48px; left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, #F9D976, #F6BD60);
+  border: none;
+  border-radius: 16px;
+  padding: 14px 36px;
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 700;
+  color: #0C1D3A;
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.5s;
+}
+.formation-close.visible { opacity: 1; pointer-events: auto; }
+
+/* ========================================
+   8. REPLAY MODAL
+   ======================================== */
+
+#replayModal {
+  position: absolute;
+  inset: 0;
+  z-index: 400;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(2,4,10,0.96);
+  backdrop-filter: blur(12px);
+  animation: fadeIn 0.3s ease-out;
+}
+#replayModal.visible { display: flex; }
+
+.replay-inner {
+  width: 340px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+.replay-title  { font-size: 20px; font-weight: 700; margin-bottom: 4px; text-align: center; }
+.replay-sub    { font-size: 12px; color: #ACACAC; text-align: center; }
+#replayCanvas  { border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); background: rgba(6,10,18,0.8); }
+.replay-symbol { font-size: 22px; margin-bottom: 4px; text-align: center; }
+.replay-name   { font-size: 16px; font-weight: 700; color: #EAEAEA; text-align: center; }
+.replay-date   { font-size: 12px; color: #ACACAC; margin-top: 2px; text-align: center; }
+.replay-close {
+  background: none;
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 12px;
+  padding: 10px 28px;
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: #ACACAC;
+  cursor: pointer;
+}
+
+/* ========================================
+   9. ANIMATIONS — Keyframes
+   ======================================== */
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
   </style>
 </head>
 <body>
+
+<!-- ========================================
+     BODY STRUCTURE
+     .phone.cosmic-bg#phone
+     ├── canvas#bgCanvas (background)
+     ├── #starContainer (star field)
+     ├── .screen.active
+     │   ├── .main-area
+     │   │   ├── .inner-tabs (Cycle / Star Atlas)
+     │   │   ├── #panel-cycle.tab-panel
+     │   │   │   └── .cycle-content
+     │   │   │       ├── .moon-badge (top-left)
+     │   │   │       ├── .day-badge (top-right)
+     │   │   │       └── .spiral-area
+     │   │   │           ├── canvas#spiralCanvas
+     │   │   │           └── .dot-popup (tooltip)
+     │   │   ├── #panel-atlas.tab-panel
+     │   │   │   └── .atlas-content
+     │   │   │       ├── h1/h2 headings
+     │   │   │       └── .constellation-grid
+     │   │   └── .stella-msg.glass
+     │   └── .bottom-nav
+     ├── #overlayFormation (formation animation)
+     │   ├── canvas#formationCanvas
+     │   ├── .formation-ui (stage/symbol/name/quote)
+     │   └── button.formation-close
+     └── #replayModal (cycle replay)
+         └── .replay-inner
+             ├── title/subtitle
+             ├── canvas#replayCanvas
+             ├── symbol/name/date
+             └── button.replay-close
+     ======================================== -->
+
 <div class="phone cosmic-bg" id="phone">
   <canvas id="bgCanvas"></canvas>
   <div id="starContainer" style="position:absolute;inset:0;z-index:1;pointer-events:none;overflow:hidden;"></div>
 
   <div class="screen active" style="flex-direction:column;">
     <div class="main-area">
+
       <!-- Inner Tabs -->
       <div class="inner-tabs">
         <button class="inner-tab-btn active" onclick="switchInner('cycle')">🌀 Cycle</button>
@@ -224,7 +517,12 @@
 <script src="shared/stella.js"></script>
 <script src="shared/events.js"></script>
 <script>
-/* ==================== PLANET / ELEMENT COLOR SYSTEM ==================== */
+
+// ============================================================
+// 1. PLANET / ELEMENT COLOR SYSTEM
+//    PLANET_COLORS, ELEMENT_COLORS, MAJOR_PLANETS, SUIT_ELEMENTS
+// ============================================================
+
 const PLANET_COLORS = {
   sun:'#FFD700', moon:'#C0C8E0', mercury:'#7BE0AD', venus:'#FF8FA0',
   mars:'#FF4444', jupiter:'#6B5BFF', saturn:'#8B7355', uranus:'#00D4FF',
@@ -244,7 +542,11 @@ const SUIT_ELEMENTS = {
   wands:'fire', cups:'water', swords:'air', pentacles:'earth'
 };
 
-/* ==================== DATA ==================== */
+// ============================================================
+// 2. DATA — Tarot deck (22 Major + 56 Minor)
+//    TAROT
+// ============================================================
+
 const TAROT = [
   {name:"The Fool",emoji:"🌀",el:"Aether",keyword:"Leap of Faith"},
   {name:"The Magician",emoji:"🪄",el:"Fire",keyword:"Manifestation"},
@@ -326,7 +628,11 @@ const TAROT = [
   {name:"King of Pentacles",emoji:"🪙",el:"Earth",keyword:"Wealth"},
 ];
 
-/* ==================== SEEDED RNG ==================== */
+// ============================================================
+// 3. SEEDED RNG
+//    mulberry32
+// ============================================================
+
 function mulberry32(a) {
   return function() {
     a |= 0; a = a + 0x6D2B79F5 | 0;
@@ -336,7 +642,12 @@ function mulberry32(a) {
   };
 }
 
-/* ==================== MOON CYCLE ==================== */
+// ============================================================
+// 4. MOON CYCLE
+//    SYNODIC, KNOWN_NEW, getMoonCycleInfo, moonCycle, TOTAL,
+//    ACTIVE, FULL_MOON_DAY
+// ============================================================
+
 const SYNODIC = 29.53059;
 const KNOWN_NEW = new Date(2000,0,6,18,14,0);
 
@@ -352,7 +663,11 @@ const TOTAL = moonCycle.totalDays;
 const ACTIVE = moonCycle.currentDay;
 const FULL_MOON_DAY = Math.round(SYNODIC / 2);
 
-/* ==================== GENERATE DAYS_DATA ==================== */
+// ============================================================
+// 5. GENERATE DAYS_DATA
+//    generateDaysData, DAYS_DATA
+// ============================================================
+
 function generateDaysData(total, active) {
   const data = [];
   const suits = ['wands','cups','swords','pentacles'];
@@ -393,7 +708,11 @@ function generateDaysData(total, active) {
 
 const DAYS_DATA = generateDaysData(TOTAL, ACTIVE);
 
-/* ==================== COLOR FUNCTIONS ==================== */
+// ============================================================
+// 6. COLOR FUNCTIONS
+//    cardToColor, hexToRgba
+// ============================================================
+
 function cardToColor(dd) {
   if (!dd || dd.card_id === null) return '#555555';
   if (dd.is_major) {
@@ -414,7 +733,13 @@ function hexToRgba(hex, alpha) {
   return `rgba(${r},${g},${b},${alpha})`;
 }
 
-/* ==================== STAR ATLAS NAME GENERATION v2 (20x61=1,220) ==================== */
+// ============================================================
+// 7. STAR ATLAS NAME GENERATION v2 (20x61=1,220)
+//    NAME_ADJ_EN/JP, ADJ_TIERS, NAME_NOUN_EN/JP, NOUN_TIERS,
+//    RARITY_LABELS/COLORS, generateConstellationName,
+//    rarityStarsHTML
+// ============================================================
+
 const NAME_ADJ_EN = [
   'Golden','Sacred','Silver','Luminous','Crimson','Burning',
   'Ethereal','Spectral','Mystic','Arcane','Silent','Veiled',
@@ -497,7 +822,11 @@ function rarityStarsHTML(stars) {
   return `<span style="color:${color};letter-spacing:2px">${'★'.repeat(stars)}${'☆'.repeat(5-stars)}</span>`;
 }
 
-/* ==================== NOUN SHAPE TYPES ==================== */
+// ============================================================
+// 8. NOUN SHAPE TYPES & MST
+//    NOUN_SHAPES, computeMST, buildConstellationEdges
+// ============================================================
+
 const NOUN_SHAPES = [
   'loop','linear','linear','radial','linear','radial',
   'open','open','open','open','open','radial','loop',
@@ -512,7 +841,6 @@ const NOUN_SHAPES = [
   'loop','closed','loop','loop',
 ];
 
-/* ==================== MST (Prim's algorithm) ==================== */
 function computeMST(points) {
   const n = points.length;
   if (n <= 1) return [];
@@ -545,10 +873,10 @@ function computeMST(points) {
   return edges;
 }
 
-/* Build edge list based on MST + shapeType */
 function buildConstellationEdges(anchorPoints, shapeType) {
   if (anchorPoints.length <= 1) return [];
 
+  // -- Linear: nearest-neighbor chain
   if (shapeType === 'linear') {
     const remaining = anchorPoints.map((p, i) => i);
     const ordered = [remaining.splice(0, 1)[0]];
@@ -571,6 +899,7 @@ function buildConstellationEdges(anchorPoints, shapeType) {
 
   const edges = computeMST(anchorPoints);
 
+  // -- Closed / Loop: connect farthest leaves
   if (shapeType === 'closed' || shapeType === 'loop') {
     const degree = new Array(anchorPoints.length).fill(0);
     edges.forEach(e => { degree[e.from]++; degree[e.to]++; });
@@ -599,6 +928,7 @@ function buildConstellationEdges(anchorPoints, shapeType) {
     }
   }
 
+  // -- Radial: connect all to center
   if (shapeType === 'radial') {
     const cx = anchorPoints.reduce((s, p) => s + p.x, 0) / anchorPoints.length;
     const cy = anchorPoints.reduce((s, p) => s + p.y, 0) / anchorPoints.length;
@@ -622,7 +952,11 @@ function buildConstellationEdges(anchorPoints, shapeType) {
   return edges;
 }
 
-/* ==================== NOUN SHAPE TEMPLATES (all 61) ==================== */
+// ============================================================
+// 9. NOUN SHAPE TEMPLATES (61 patterns)
+//    NOUN_TEMPLATES, getTemplatePositions
+// ============================================================
+
 const NOUN_TEMPLATES = {
   0: [[.5,.2],[.75,.3],[.8,.5],[.7,.7],[.45,.8],[.2,.7],[.15,.5],[.25,.3]],
   1: [[.7,.25],[.55,.4],[.4,.55],[.25,.7],[.75,.35],[.8,.45]],
@@ -687,7 +1021,6 @@ const NOUN_TEMPLATES = {
   60:[[.5,.4],[.6,.3],[.7,.25],[.75,.35],[.7,.48],[.6,.5],[.5,.55],[.4,.6],[.3,.68],[.25,.58],[.3,.45],[.4,.4]],
 };
 
-/* Get anchor positions for a noun, with jitter */
 function getTemplatePositions(nounIdx, numAnchors, seed) {
   const template = NOUN_TEMPLATES[nounIdx];
   if (!template) {
@@ -725,7 +1058,11 @@ function getTemplatePositions(nounIdx, numAnchors, seed) {
   return positions;
 }
 
-/* Adjective-based color system: each adjective has a primary color */
+// ============================================================
+// 10. ADJECTIVE COLOR SYSTEM
+//     ADJ_COLORS
+// ============================================================
+
 const ADJ_COLORS = [
   '#F9D976', '#C4923A',
   '#C0C8E0', '#E8ECF8',
@@ -739,10 +1076,14 @@ const ADJ_COLORS = [
   '#FFF4C0', '#C8A0FF',
 ];
 
-/* ==================== GALAXY CYCLES v2 (Golden Angle + anchor/field + rarity) ==================== */
+// ============================================================
+// 11. GALAXY CYCLES v2 — Golden Angle + anchor/field + rarity
+//     GOLDEN_ANGLE, placeCycleDots, forceNameDemoCycle,
+//     makeDemoReadings, DEMO_SPECS, GALAXY_CYCLES
+// ============================================================
+
 const GOLDEN_ANGLE = 137.508 * Math.PI / 180;
 
-/* Place dots for a cycle: majors on template, minors scattered with Golden Angle */
 function placeCycleDots(majors, minors, nounIdx, seedCard, id) {
   const dots = [];
   const rng = mulberry32(seedCard * 1000 + id * 7);
@@ -779,7 +1120,6 @@ function placeCycleDots(majors, minors, nounIdx, seedCard, id) {
   return dots;
 }
 
-/* Force-create demo cycle with specific adj+noun */
 function forceNameDemoCycle(id, seedCard, readings, forceAdjIdx, forceNounIdx) {
   const card = TAROT[seedCard];
   const nameEN = 'The ' + NAME_ADJ_EN[forceAdjIdx] + ' ' + NAME_NOUN_EN[forceNounIdx];
@@ -805,7 +1145,6 @@ function forceNameDemoCycle(id, seedCard, readings, forceAdjIdx, forceNounIdx) {
   };
 }
 
-/* Generate demo readings -- guarantee at least minMajor major arcana (anchors) */
 function makeDemoReadings(seedCard, count, seed, minMajor) {
   minMajor = minMajor || 5;
   const rng = mulberry32(seed);
@@ -824,7 +1163,6 @@ function makeDemoReadings(seedCard, count, seed, minMajor) {
   return readings;
 }
 
-/* All 61 nouns as demo cycles: [nounIdx, adjIdx, seedCard] */
 const DEMO_SPECS = [
   [ 0, 16, 10], [ 1, 12,  9], [ 2,  3, 17], [ 3,  0, 19], [ 4,  2, 18], [ 5, 18,  0],
   [ 6,  4,  8], [ 7,  5,  7], [ 8,  0, 11], [ 9, 17,  5], [10,  6,  2], [11, 13, 13], [12, 10, 21],
@@ -839,7 +1177,6 @@ const DEMO_SPECS = [
   [57, 17, 17], [58, 18, 10], [59,  2, 13], [60,  8,  0],
 ];
 
-// Nouns that need more anchors (complex shapes)
 // Nouns with 10+ template points need more anchors
 const HIGH_ANCHOR_NOUNS = {8:1,9:1,10:1,11:1,17:1,27:1,28:1,36:1,40:1,50:1,57:1,60:1};
 
@@ -852,7 +1189,12 @@ const GALAXY_CYCLES = DEMO_SPECS.map((spec, i) => {
   return forceNameDemoCycle(i, seedCard, makeDemoReadings(seedCard, count, 100 + i * 37, minMajor), adjIdx, nounIdx);
 });
 
-/* ==================== CONSTELLATION ART PRELOAD ==================== */
+// ============================================================
+// 12. CONSTELLATION ART PRELOAD
+//     NOUN_FILENAMES, ART_IMAGES, ART_BASE,
+//     preloadConstellationArt, NOUN_ART_TRANSFORMS
+// ============================================================
+
 const NOUN_FILENAMES = [
   'orbit','comet','meteor','nova','crescent','singularity',
   'phoenix','dragon','griffin','unicorn','pegasus','kraken','ouroboros',
@@ -880,7 +1222,11 @@ const NOUN_ART_TRANSFORMS = {
   4: {flipX: true},
 };
 
-/* ==================== BACKGROUND ==================== */
+// ============================================================
+// 13. BACKGROUND — Canvas rendering + star field
+//     bgC, bgX, animBg, makeStars
+// ============================================================
+
 const bgC = document.getElementById('bgCanvas');
 const bgX = bgC.getContext('2d');
 bgC.width = window.innerWidth;
@@ -915,7 +1261,11 @@ let bgT = 0;
   }
 })();
 
-/* ==================== MOON BADGE ==================== */
+// ============================================================
+// 14. MOON BADGE
+//     updateMoonBadge
+// ============================================================
+
 (function updateMoonBadge() {
   if (typeof getMoonPhaseInfo === 'function') {
     const info = getMoonPhaseInfo();
@@ -930,7 +1280,11 @@ let bgT = 0;
   if (dayLblEl) dayLblEl.textContent = 'of ' + TOTAL;
 })();
 
-/* ==================== INNER TABS ==================== */
+// ============================================================
+// 15. INNER TABS
+//     switchInner
+// ============================================================
+
 function switchInner(tab) {
   document.querySelectorAll('.inner-tab-btn').forEach((b, i) => b.classList.toggle('active', (i === 0 && tab === 'cycle') || (i === 1 && tab === 'atlas')));
   document.getElementById('panel-cycle').classList.toggle('active', tab === 'cycle');
@@ -939,7 +1293,13 @@ function switchInner(tab) {
   else { if (sp.raf) { cancelAnimationFrame(sp.raf); sp.raf = null; } }
 }
 
-/* ==================== 3D SPIRAL ==================== */
+// ============================================================
+// 16. 3D SPIRAL — Golden Angle rendering
+//     sp, CAM_ANGLE_55, rot3D, proj3D, BREATH_PHASES/PERIODS,
+//     CYCLE_GA_POSITIONS, projectGA3D, renderSpiral3D,
+//     startSpiral3D, initSpiral3D
+// ============================================================
+
 const sp = { rotX:-0.32, rotY:0.4, zoom:1, velX:0, velY:0, drag:false, lx:0, ly:0, raf:null, inited:false, dotPositions:[] };
 const CAM_ANGLE_55 = 55 * Math.PI / 180;
 
@@ -959,7 +1319,7 @@ function proj3D(x, y, z, fov, cx, cy) {
 const BREATH_PHASES = Array.from({length: TOTAL}, (_, i) => i * 0.71 + Math.sin(i * 1.3) * 2.2);
 const BREATH_PERIODS = Array.from({length: TOTAL}, (_, i) => 2.0 + Math.abs(Math.sin(i * 0.9)) * 2.0);
 
-/* Pre-compute Golden Angle positions + z-layers for reading dots in current cycle */
+// -- Pre-compute Golden Angle positions + z-layers for current cycle
 const CYCLE_GA_POSITIONS = [];
 (function precomputeGoldenAnglePositions() {
   let readingIdx = 0;
@@ -985,7 +1345,7 @@ const CYCLE_GA_POSITIONS = [];
   }
 })();
 
-/* Project a Golden Angle dot with anamorphic 3D camera */
+// -- Anamorphic 3D camera projection
 function projectGA3D(nx, ny, nz, W, H, cx, cy, camAngle, FOV) {
   const zWorld = nz * 80;
   const cosA = Math.cos(camAngle), sinA = Math.sin(camAngle);
@@ -1011,7 +1371,7 @@ function renderSpiral3D() {
   const cx = W / 2, cy = H * 0.44, FOV = 360 * sp.zoom;
   const b = Math.min(W, H) * 0.057, ZSPAN = 55;
 
-  /* Layer 1: Ghost spiral path */
+  // -- Layer 1: Ghost spiral path
   const pathPts = [];
   for (let i = 0; i <= 500; i++) {
     const th = (i / 500) * Math.PI * 4.6, r = b * th;
@@ -1028,7 +1388,7 @@ function renderSpiral3D() {
     ctx.strokeStyle = `rgba(192,200,224,${a.toFixed(3)})`; ctx.lineWidth = Math.max(0.8, 1.4 * p.s * fade); ctx.stroke();
   }
 
-  /* Layer 2: Spiral anchor dots (no-reading days stay on spiral) */
+  // -- Layer 2: Spiral anchor dots (no-reading days stay on spiral)
   const spiralDots = [];
   for (let d = 1; d <= TOTAL; d++) {
     const th = (d / TOTAL) * Math.PI * 4.2, r = b * th;
@@ -1054,7 +1414,7 @@ function renderSpiral3D() {
     }
   });
 
-  /* Layer 3: Reading dots at Golden Angle positions + z-layers (anamorphic 55 deg) */
+  // -- Layer 3: Reading dots at Golden Angle positions + z-layers (anamorphic 55 deg)
   const gaDots = [];
   sp.dotPositions = [];
 
@@ -1070,7 +1430,7 @@ function renderSpiral3D() {
 
   gaDots.sort((a, b) => a.rz - b.rz);
 
-  /* Connection threads from spiral origin to GA position */
+  // -- Connection threads from spiral origin to GA position
   gaDots.forEach(gd => {
     const sp2 = spiralDots[gd.d - 1];
     if (!sp2) return;
@@ -1079,7 +1439,7 @@ function renderSpiral3D() {
     ctx.setLineDash([3, 6]); ctx.stroke(); ctx.setLineDash([]);
   });
 
-  /* Draw reading dots */
+  // -- Draw reading dots
   gaDots.forEach(gd => {
     const dd = gd.dd;
     const col = cardToColor(dd);
@@ -1099,13 +1459,13 @@ function renderSpiral3D() {
 
     const dotR = Math.max(2.5, baseSize) * sc * breath;
 
-    /* Glow */
+    // -- Glow
     const gR = glowBlur * sc;
     const gg = ctx.createRadialGradient(gd.x, gd.y, 0, gd.x, gd.y, gR);
     gg.addColorStop(0, hexToRgba(col, 0.35 * breath * sc)); gg.addColorStop(1, 'transparent');
     ctx.fillStyle = gg; ctx.beginPath(); ctx.arc(gd.x, gd.y, gR, 0, Math.PI * 2); ctx.fill();
 
-    /* Core */
+    // -- Core
     if (isNewMoon) {
       ctx.beginPath(); ctx.arc(gd.x, gd.y, dotR, 0, Math.PI * 2); ctx.fillStyle = '#2A0030'; ctx.fill();
       ctx.beginPath(); ctx.arc(gd.x, gd.y, dotR + 1, 0, Math.PI * 2);
@@ -1114,7 +1474,7 @@ function renderSpiral3D() {
       ctx.beginPath(); ctx.arc(gd.x, gd.y, dotR, 0, Math.PI * 2); ctx.fillStyle = col; ctx.fill();
     }
 
-    /* Full moon ring + radial glow */
+    // -- Full moon ring + radial glow
     if (isFullMoon) {
       ctx.save();
       ctx.shadowColor = '#FFF0C0'; ctx.shadowBlur = 18;
@@ -1126,13 +1486,13 @@ function renderSpiral3D() {
       ctx.fillStyle = fmg; ctx.beginPath(); ctx.arc(gd.x, gd.y, dotR + 12 * sc, 0, Math.PI * 2); ctx.fill();
     }
 
-    /* Current day ring */
+    // -- Current day ring
     if (gd.d === ACTIVE) {
       ctx.beginPath(); ctx.arc(gd.x, gd.y, 11 * sc, 0, Math.PI * 2);
       ctx.strokeStyle = `rgba(249,217,118,${0.5 * sc})`; ctx.lineWidth = 1.5; ctx.stroke();
     }
 
-    /* 5% random ring */
+    // -- 5% random ring
     if (!isFullMoon && !isNewMoon && (gd.d * 31 + TOTAL * 7) % 100 < 5) {
       ctx.save();
       ctx.shadowColor = col; ctx.shadowBlur = 10;
@@ -1142,7 +1502,7 @@ function renderSpiral3D() {
     }
   });
 
-  /* Stella core glow */
+  // -- Stella core glow
   ctx.beginPath(); ctx.arc(cx, cy, 20, 0, Math.PI * 2);
   const coreG = ctx.createRadialGradient(cx, cy, 0, cx, cy, 20);
   coreG.addColorStop(0, 'rgba(249,217,118,0.15)'); coreG.addColorStop(1, 'transparent');
@@ -1212,7 +1572,11 @@ function initSpiral3D() {
   canvas.addEventListener('touchend', () => { sp.drag = false; });
 }
 
-/* ==================== DOT POPUP ==================== */
+// ============================================================
+// 17. DOT POPUP
+//     showDotPopup, hideDotPopup
+// ============================================================
+
 function showDotPopup(day, px, py, canvas) {
   const popup = document.getElementById('dotPopup');
   const dd = DAYS_DATA[day - 1]; if (!dd || dd.card_id === null) return;
@@ -1247,8 +1611,12 @@ function showDotPopup(day, px, py, canvas) {
 
 function hideDotPopup() { document.getElementById('dotPopup').classList.remove('visible'); }
 
-/* ==================== GALAXY CARDS v2 ==================== */
-/* 3D projection for constellation dots */
+// ============================================================
+// 18. GALAXY CARDS v2 — Star Atlas grid
+//     projectConstellation3D, drawCycleOnCanvas,
+//     renderGalaxyCards
+// ============================================================
+
 function projectConstellation3D(nx, ny, nz, S, camAngle) {
   const zWorld = (nz || 0) * 80;
   const cosA = Math.cos(camAngle), sinA = Math.sin(camAngle);
@@ -1270,12 +1638,12 @@ function drawCycleOnCanvas(canvas, cycle, progress, size, camAngle) {
   const cam = camAngle || 0;
   ctx.clearRect(0, 0, S, S);
 
-  /* Background */
+  // -- Background
   const bg = ctx.createRadialGradient(S/2, S/2, 0, S/2, S/2, S * 0.7);
   bg.addColorStop(0, cycle.bgGrad[0]); bg.addColorStop(1, cycle.bgGrad[1]);
   ctx.fillStyle = bg; ctx.fillRect(0, 0, S, S);
 
-  /* Constellation illustration overlay (screen blend, 18% opacity) */
+  // -- Constellation illustration overlay (screen blend, 18% opacity)
   const artImg = ART_IMAGES[cycle.nounIdx];
   if (artImg && artImg.complete) {
     ctx.save();
@@ -1290,7 +1658,7 @@ function drawCycleOnCanvas(canvas, cycle, progress, size, camAngle) {
     ctx.restore();
   }
 
-  /* Separate anchors (Major) and fields (Minor) */
+  // -- Separate anchors (Major) and fields (Minor)
   const anchors = [], fields = [];
   cycle.dots.forEach(d => {
     const p = projectConstellation3D(d.x, d.y, d.z, S, cam);
@@ -1298,7 +1666,7 @@ function drawCycleOnCanvas(canvas, cycle, progress, size, camAngle) {
     else fields.push({...p, d});
   });
 
-  /* Field stars (small, no connections) */
+  // -- Field stars (small, no connections)
   const fieldCount = Math.floor(fields.length * Math.min(1, progress));
   fields.slice(0, fieldCount).forEach(f => {
     const ds = Math.max(0.5, f.s || 1);
@@ -1307,7 +1675,7 @@ function drawCycleOnCanvas(canvas, cycle, progress, size, camAngle) {
     ctx.fill();
   });
 
-  /* MST edges with shapeType */
+  // -- MST edges with shapeType
   const shapeType = NOUN_SHAPES[cycle.nounIdx] || 'open';
   const anchorPts = anchors.map(a => ({x: a.x, y: a.y}));
   const edges = buildConstellationEdges(anchorPts, shapeType);
@@ -1326,7 +1694,7 @@ function drawCycleOnCanvas(canvas, cycle, progress, size, camAngle) {
     ctx.strokeStyle = cycle.color; ctx.lineWidth = 1.2; ctx.stroke();
   }
 
-  /* Anchor dots (large with glow) */
+  // -- Anchor dots (large with glow)
   const anchorDotCount = Math.floor(anchors.length * Math.min(1, progress));
   anchors.slice(0, anchorDotCount).forEach(a => {
     const ds = Math.max(0.6, a.s || 1);
@@ -1364,7 +1732,11 @@ function renderGalaxyCards() {
   });
 }
 
-/* ==================== REPLAY MODAL (v2: 3D camera 55 deg -> 0 deg + rarity) ==================== */
+// ============================================================
+// 19. REPLAY MODAL
+//     openReplayModal, closeReplayModal
+// ============================================================
+
 let replayRAF = null;
 
 function openReplayModal(cycleId) {
@@ -1380,7 +1752,6 @@ function openReplayModal(cycleId) {
   const start = performance.now();
   const TOTAL_MS = 6500;
 
-  /* Reset opacity */
   document.getElementById('replaySymbol').style.opacity = '0';
   document.getElementById('replayName').style.opacity = '0';
   document.getElementById('replayDate').style.opacity = '0';
@@ -1408,7 +1779,11 @@ function closeReplayModal() {
   document.getElementById('replayModal').classList.remove('visible');
 }
 
-/* ==================== CONSTELLATION FORMATION v2 (3D camera anim) ==================== */
+// ============================================================
+// 20. CONSTELLATION FORMATION v2 — 3D camera anim
+//     triggerConstellationFormation, closeFormationOverlay
+// ============================================================
+
 function triggerConstellationFormation() {
   const baseCycle = GALAXY_CYCLES[Math.floor(Math.random() * GALAXY_CYCLES.length)];
   const newCycle = Object.assign({}, baseCycle, { id: Date.now() });
@@ -1525,7 +1900,7 @@ function triggerConstellationFormation() {
     drawNebula(elapsed);
 
     if (elapsed < 2000) {
-      /* Phase 1: Spiral dots converge to center */
+      // -- Phase 1: Spiral dots converge to center
       stageEl.textContent = 'CONVERGENCE';
       const t = elapsed / 2000;
       const ease = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
@@ -1536,7 +1911,7 @@ function triggerConstellationFormation() {
         ctx.fillStyle = `rgba(249,217,118,${0.3 + 0.4 * (1 - ease)})`; ctx.fill();
       });
     } else if (elapsed < 5000) {
-      /* Phase 2: Camera rotation 55 deg -> 0 deg */
+      // -- Phase 2: Camera rotation 55 deg -> 0 deg
       stageEl.textContent = 'CRYSTALLIZATION';
       const t = (elapsed - 2000) / 3000;
       const ease = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
@@ -1566,7 +1941,7 @@ function triggerConstellationFormation() {
         }
       });
     } else if (elapsed < 6500) {
-      /* Phase 3: Draw connections between anchors */
+      // -- Phase 3: Draw connections between anchors
       stageEl.textContent = 'LINKING';
       const t = (elapsed - 5000) / 1500;
       const { anchors, fields } = getFinalPositions();
@@ -1574,12 +1949,12 @@ function triggerConstellationFormation() {
       drawFormationEdges(anchors, t);
       drawAnchorDots(anchors);
     } else {
-      /* Phase 4: Complete -- show name + rarity */
+      // -- Phase 4: Complete — show name + rarity
       stageEl.textContent = 'COMPLETE';
       const { anchors, fields } = getFinalPositions();
       drawFieldDots(fields);
       drawFormationEdges(anchors, 1);
-      /* Larger anchor dots in complete phase */
+      // Larger anchor dots in complete phase
       anchors.forEach(a => {
         const gg = ctx.createRadialGradient(a.x, a.y, 0, a.x, a.y, 16);
         gg.addColorStop(0, newCycle.glowColor); gg.addColorStop(1, 'transparent');
@@ -1619,7 +1994,12 @@ function closeFormationOverlay() {
   switchInner('atlas');
 }
 
-/* ==================== GALAXY LOCALSTORAGE ==================== */
+// ============================================================
+// 21. LOCALSTORAGE — Load/save galaxy state
+//     CYCLE_KEY, DAILY_KEY, loadDailyVibes, saveDailyVibe,
+//     loadSavedCycles, saveCycles
+// ============================================================
+
 const CYCLE_KEY = 'solara_galaxy_cycles';
 const DAILY_KEY = 'solara_daily_vibes';
 
@@ -1663,11 +2043,14 @@ if (typeof loadVibe === 'function') {
 
 loadSavedCycles();
 
-/* ==================== INIT ==================== */
+// ============================================================
+// 22. INIT
+// ============================================================
+
 renderNav('galaxy');
 renderGalaxyCards();
 
-/* DEBUG: show last 5 cycles info */
+// DEBUG: show last 5 cycles info
 (function(){
   var info = GALAXY_CYCLES.slice(-5).map(function(c){
     return c.name + ' | anchors:' + c.dots.filter(function(d){return d.isMajor}).length + ' | ' + c.rarityLabel;

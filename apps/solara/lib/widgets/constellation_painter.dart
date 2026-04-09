@@ -1,19 +1,20 @@
 import 'dart:math';
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import '../models/galaxy_cycle.dart';
-import '../theme/solara_colors.dart';
-import '../utils/tarot_data.dart';
+import '../utils/constellation_namer.dart';
 
 /// Full-size constellation painter for replay overlay (v2: anamorphic 3D).
 ///
-/// Anchor stars (Major Arcana) are connected with straight lines.
+/// HTML exact: drawCycleOnCanvas with MST edges + shape types.
+/// Anchor stars (Major Arcana) connected via MST + NOUN_SHAPES.
 /// Field stars (Minor Arcana) float independently.
-/// [cameraAngle] controls the 3D perspective: 55° = scattered, 0° = aligned.
+/// [cameraAngle] controls 3D perspective: 55° = scattered, 0° = aligned.
 /// [progress] controls progressive drawing (0.0-1.0).
 class ConstellationPainter extends CustomPainter {
   final GalaxyCycle cycle;
-  final double progress; // 0.0 = nothing, 1.0 = fully drawn
-  final double cameraAngle; // radians, 0 = front view (aligned), ~0.96 = 55°
+  final double progress;
+  final double cameraAngle;
   final Color? overrideColor;
 
   ConstellationPainter({
@@ -27,134 +28,92 @@ class ConstellationPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     if (cycle.dots.isEmpty) return;
 
-    final color = overrideColor ?? _seedCardColor();
+    // HTML: use ADJ_COLOR for cycle color
+    final color = overrideColor ?? ConstellationNamer.adjColor(cycle.adjIdx);
+    final glowColor = color.withAlpha((0.4 * 255).round());
 
     // Separate anchors (Major) and field stars (Minor)
     final anchors = <ConstellationDot>[];
     final fields = <ConstellationDot>[];
     for (final d in cycle.dots) {
-      if (d.isMajor) {
-        anchors.add(d);
-      } else {
-        fields.add(d);
-      }
+      if (d.isMajor) anchors.add(d);
+      else fields.add(d);
     }
 
     // Project dots with 3D camera
-    List<Offset> projectDots(List<ConstellationDot> dots) {
-      return dots.map((d) {
-        final projected = _project3D(d.x, d.y, d.z, size, cameraAngle);
-        return Offset(projected.x, projected.y);
-      }).toList();
-    }
+    final anchorPositions = anchors.map((d) {
+      final p = _project3D(d.x, d.y, d.z, size, cameraAngle);
+      return Offset(p.x, p.y);
+    }).toList();
+    final fieldPositions = fields.map((d) {
+      final p = _project3D(d.x, d.y, d.z, size, cameraAngle);
+      return Offset(p.x, p.y);
+    }).toList();
 
-    final anchorPositions = projectDots(anchors);
-    final fieldPositions = projectDots(fields);
+    // HTML: draw background gradient
+    final bgGrad = ui.Gradient.radial(
+      Offset(size.width / 2, size.height / 2), size.width * 0.7,
+      [color.withAlpha((0.12 * 255).round()), color.withAlpha((0.03 * 255).round())],
+    );
+    canvas.drawRect(Offset.zero & size, Paint()..shader = bgGrad);
 
-    // Sort anchors by nearest-neighbor traversal to prevent line crossing
-    final orderedAnchors = _nearestNeighborOrder(anchorPositions);
-
-    // Draw anchor connections (straight lines)
-    if (orderedAnchors.length > 1) {
-      // Connection phase: progress 0.0-0.6
-      final connProgress = (progress / 0.6).clamp(0.0, 1.0);
-      final drawCount = (orderedAnchors.length * connProgress).round();
-
-      if (drawCount > 1) {
-        final path = Path()
-          ..moveTo(orderedAnchors[0].dx, orderedAnchors[0].dy);
-        for (int i = 1; i < drawCount; i++) {
-          path.lineTo(orderedAnchors[i].dx, orderedAnchors[i].dy);
-        }
-
-        // Shadow glow
-        canvas.drawPath(
-          path,
-          Paint()
-            ..color = color.withValues(alpha: 0.4)
-            ..strokeWidth = 3
-            ..style = PaintingStyle.stroke
-            ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 12),
-        );
-
-        // Main line
-        canvas.drawPath(
-          path,
-          Paint()
-            ..color = color.withValues(alpha: 0.8)
-            ..strokeWidth = 1.5
-            ..style = PaintingStyle.stroke
-            ..strokeCap = StrokeCap.round,
-        );
-      }
-    }
-
-    // Draw field stars (small, no connections)
-    final fieldDotProgress = progress.clamp(0.0, 1.0);
-    final visibleFields = (fields.length * fieldDotProgress).round();
-    for (int i = 0; i < visibleFields && i < fields.length; i++) {
-      final cd = fields[i];
+    // HTML: Field stars (small, no connections)
+    final fieldCount = (fields.length * progress.clamp(0.0, 1.0)).floor();
+    for (int i = 0; i < fieldCount && i < fields.length; i++) {
       final pos = fieldPositions[i];
-      final dotColor = _dotColor(cd);
-      final depthScale = _depthScale(cd.z, cameraAngle);
-
-      // Small glow
-      canvas.drawCircle(
-        pos,
-        3.0 * depthScale,
-        Paint()
-          ..color = dotColor.withValues(alpha: 0.2)
-          ..maskFilter = MaskFilter.blur(BlurStyle.normal, 4.0 * depthScale),
-      );
-      // Core
-      canvas.drawCircle(
-        pos,
-        1.5 * depthScale,
-        Paint()..color = dotColor.withValues(alpha: 0.6),
-      );
+      final ds = _depthScale(fields[i].z, cameraAngle).clamp(0.5, 1.5);
+      canvas.drawCircle(pos, 1.2 * ds,
+        Paint()..color = const Color(0x59F9D976)); // rgba(#F9D976, 0.35)
     }
 
-    // Draw anchor stars (large with strong glow)
-    final anchorDotProgress = progress.clamp(0.0, 1.0);
-    final visibleAnchors = (anchors.length * anchorDotProgress).round();
-    for (int i = 0; i < visibleAnchors && i < anchors.length; i++) {
-      final cd = anchors[i];
-      final pos = anchorPositions[i];
-      final dotColor = _dotColor(cd);
-      final depthScale = _depthScale(cd.z, cameraAngle);
+    // HTML: MST edges with shapeType (connection phase: progress 0.0-0.6)
+    final shapeType = (cycle.nounIdx >= 0 && cycle.nounIdx < ConstellationNamer.nounShapes.length)
+        ? ConstellationNamer.nounShapes[cycle.nounIdx] : 'open';
+    final edges = ConstellationNamer.buildEdges(anchorPositions, shapeType);
+    final connProgress = (progress / 0.6).clamp(0.0, 1.0);
+    final drawEdgeCount = (edges.length * connProgress).floor().clamp(0, edges.length);
 
-      // Strong glow
-      canvas.drawCircle(
-        pos,
-        8.0 * depthScale,
-        Paint()
-          ..color = dotColor.withValues(alpha: 0.35)
-          ..maskFilter = MaskFilter.blur(BlurStyle.normal, 12.0 * depthScale),
-      );
+    for (int i = 0; i < drawEdgeCount; i++) {
+      final e = edges[i];
+      if (e.from >= anchorPositions.length || e.to >= anchorPositions.length) continue;
+      final a1 = anchorPositions[e.from], a2 = anchorPositions[e.to];
+
+      // Shadow glow
+      canvas.drawLine(a1, a2, Paint()
+        ..color = glowColor
+        ..strokeWidth = 2.5
+        ..style = PaintingStyle.stroke
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8));
+      // Main line
+      canvas.drawLine(a1, a2, Paint()
+        ..color = color.withAlpha((0.8 * 255).round())
+        ..strokeWidth = 1.2
+        ..style = PaintingStyle.stroke
+        ..strokeCap = StrokeCap.round);
+    }
+
+    // HTML: Anchor dots (large with glow)
+    final anchorDotCount = (anchors.length * progress.clamp(0.0, 1.0)).floor();
+    for (int i = 0; i < anchorDotCount && i < anchors.length; i++) {
+      final pos = anchorPositions[i];
+      final ds = _depthScale(anchors[i].z, cameraAngle).clamp(0.6, 1.5);
+      // Glow
+      final gg = ui.Gradient.radial(pos, 10 * ds, [glowColor, Colors.transparent]);
+      canvas.drawCircle(pos, 10 * ds, Paint()..shader = gg);
       // Core
-      canvas.drawCircle(
-        pos,
-        4.0 * depthScale,
-        Paint()..color = dotColor.withValues(alpha: 0.9),
-      );
+      canvas.drawCircle(pos, 3 * ds, Paint()..color = color.withAlpha((0.9 * 255).round()));
     }
   }
 
-  /// 3D projection: applies camera tilt to z-offset dots.
-  /// At cameraAngle=0 (front), all dots project to their (x,y) positions.
-  /// At cameraAngle=55° (~0.96 rad), dots scatter based on z depth.
   static ({double x, double y}) _project3D(
     double nx, double ny, double nz, Size size, double camAngle,
   ) {
-    // nz ranges from -1 to 1, scale to world units
     final zWorld = nz * 80;
-    // Camera rotation around X axis
     final cosA = cos(camAngle);
     final sinA = sin(camAngle);
     final yWorld = (ny - 0.5) * size.height;
     final yRotated = yWorld * cosA - zWorld * sinA;
     final zRotated = yWorld * sinA + zWorld * cosA;
-    // Simple perspective
     final fov = 400.0;
     final scale = fov / (fov + zRotated + 100);
     return (
@@ -163,52 +122,9 @@ class ConstellationPainter extends CustomPainter {
     );
   }
 
-  /// Depth-based size scaling.
   static double _depthScale(double z, double camAngle) {
     if (camAngle.abs() < 0.01) return 1.0;
-    // Scale based on depth: closer = larger
     return (1.0 + z * 0.2 * sin(camAngle)).clamp(0.5, 1.5);
-  }
-
-  /// Nearest-neighbor ordering to minimize line crossings.
-  static List<Offset> _nearestNeighborOrder(List<Offset> points) {
-    if (points.length <= 2) return points;
-
-    final remaining = List<Offset>.from(points);
-    final ordered = <Offset>[remaining.removeAt(0)];
-
-    while (remaining.isNotEmpty) {
-      final last = ordered.last;
-      var nearestIdx = 0;
-      var nearestDist = double.infinity;
-      for (int i = 0; i < remaining.length; i++) {
-        final d = (last - remaining[i]).distance;
-        if (d < nearestDist) {
-          nearestDist = d;
-          nearestIdx = i;
-        }
-      }
-      ordered.add(remaining.removeAt(nearestIdx));
-    }
-    return ordered;
-  }
-
-  Color _seedCardColor() {
-    if (cycle.seedCardId < TarotData.allCards.length) {
-      final card = TarotData.getCard(cycle.seedCardId);
-      if (card.isMajor) return SolaraColors.planetColor(card.planet ?? 'sun');
-      return SolaraColors.elementColor(card.element);
-    }
-    return SolaraColors.solaraGold;
-  }
-
-  Color _dotColor(ConstellationDot cd) {
-    if (cd.cardId < TarotData.allCards.length) {
-      final card = TarotData.getCard(cd.cardId);
-      if (card.isMajor) return SolaraColors.planetColor(card.planet ?? 'sun');
-      return SolaraColors.elementColor(card.element);
-    }
-    return SolaraColors.solaraGold;
   }
 
   @override
@@ -221,6 +137,7 @@ class ConstellationPainter extends CustomPainter {
 
 /// Small constellation painter for Star Atlas grid cards.
 /// Always shows front view (cameraAngle = 0).
+/// HTML exact: drawCycleOnCanvas at 80x80 with progress=1.0.
 class MiniConstellationPainter extends CustomPainter {
   final GalaxyCycle cycle;
 
@@ -230,73 +147,49 @@ class MiniConstellationPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     if (cycle.dots.isEmpty) return;
 
-    final color = _seedCardColor();
+    // HTML: ADJ_COLOR for cycle color
+    final color = ConstellationNamer.adjColor(cycle.adjIdx);
+    final glowColor = color.withAlpha((0.4 * 255).round());
 
     // Separate anchors and fields
     final anchors = <Offset>[];
     final fields = <Offset>[];
     for (final d in cycle.dots) {
       final pos = Offset(d.x * size.width, d.y * size.height);
-      if (d.isMajor) {
-        anchors.add(pos);
-      } else {
-        fields.add(pos);
-      }
+      if (d.isMajor) anchors.add(pos);
+      else fields.add(pos);
     }
 
-    // Order anchors by nearest-neighbor
-    final ordered = ConstellationPainter._nearestNeighborOrder(anchors);
+    // HTML: MST edges with shapeType
+    final shapeType = (cycle.nounIdx >= 0 && cycle.nounIdx < ConstellationNamer.nounShapes.length)
+        ? ConstellationNamer.nounShapes[cycle.nounIdx] : 'open';
+    final edges = ConstellationNamer.buildEdges(anchors, shapeType);
 
-    // Draw anchor connections
-    if (ordered.length > 1) {
-      final path = Path()..moveTo(ordered[0].dx, ordered[0].dy);
-      for (int i = 1; i < ordered.length; i++) {
-        path.lineTo(ordered[i].dx, ordered[i].dy);
-      }
-
-      canvas.drawPath(
-        path,
-        Paint()
-          ..color = color.withValues(alpha: 0.3)
-          ..strokeWidth = 1.5
-          ..style = PaintingStyle.stroke
-          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6),
-      );
-      canvas.drawPath(
-        path,
-        Paint()
-          ..color = color.withValues(alpha: 0.6)
-          ..strokeWidth = 0.8
-          ..style = PaintingStyle.stroke,
-      );
+    // Draw edges
+    for (final e in edges) {
+      if (e.from >= anchors.length || e.to >= anchors.length) continue;
+      // Glow
+      canvas.drawLine(anchors[e.from], anchors[e.to], Paint()
+        ..color = glowColor
+        ..strokeWidth = 1.5
+        ..style = PaintingStyle.stroke
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6));
+      // Line
+      canvas.drawLine(anchors[e.from], anchors[e.to], Paint()
+        ..color = color.withAlpha((0.6 * 255).round())
+        ..strokeWidth = 0.8
+        ..style = PaintingStyle.stroke);
     }
 
-    // Draw field dots (tiny)
+    // Draw field dots
     for (final pos in fields) {
-      canvas.drawCircle(
-        pos,
-        1.0,
-        Paint()..color = color.withValues(alpha: 0.3),
-      );
+      canvas.drawCircle(pos, 1.0, Paint()..color = color.withAlpha((0.3 * 255).round()));
     }
 
     // Draw anchor dots
     for (final pos in anchors) {
-      canvas.drawCircle(
-        pos,
-        2.5,
-        Paint()..color = color.withValues(alpha: 0.8),
-      );
+      canvas.drawCircle(pos, 2.5, Paint()..color = color.withAlpha((0.8 * 255).round()));
     }
-  }
-
-  Color _seedCardColor() {
-    if (cycle.seedCardId < TarotData.allCards.length) {
-      final card = TarotData.getCard(cycle.seedCardId);
-      if (card.isMajor) return SolaraColors.planetColor(card.planet ?? 'sun');
-      return SolaraColors.elementColor(card.element);
-    }
-    return SolaraColors.solaraGold;
   }
 
   @override

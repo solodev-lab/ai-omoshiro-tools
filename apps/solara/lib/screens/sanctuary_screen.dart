@@ -42,9 +42,15 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
 
   Future<void> _loadProfile() async {
     final p = await SolaraStorage.loadProfile();
+    final titleData = await SolaraStorage.loadTitleData();
     setState(() {
       _profile = p;
       _loading = false;
+      if (titleData != null) {
+        _titleLight = titleData['lightJP'] as String?;
+        _titleShadow = titleData['shadowJP'] as String?;
+        _titleClassEN = titleData['classEN'] as String?;
+      }
     });
   }
 
@@ -65,11 +71,24 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
       MaterialPageRoute(builder: (_) => const _TitleDiagnosisPage()),
     );
     if (result != null) {
+      await SolaraStorage.saveTitleData(result);
       setState(() {
         _titleLight = result['lightJP'];
         _titleShadow = result['shadowJP'];
         _titleClassEN = result['classEN'];
       });
+    }
+  }
+
+  void _openHomeEditor() async {
+    final result = await Navigator.of(context).push<SolaraProfile>(
+      MaterialPageRoute(
+        builder: (_) => _HomeEditorPage(profile: _profile),
+      ),
+    );
+    if (result != null) {
+      await SolaraStorage.saveProfile(result);
+      setState(() => _profile = result);
     }
   }
 
@@ -196,10 +215,10 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
         _SettingsItem(
           icon: Icons.home_outlined,
           text: '自宅（現住所）',
-          value: '未設定 ›',
-          onTap: () {
-            // TODO: home overlay
-          },
+          value: _profile != null && _profile!.homeName.isNotEmpty
+              ? '${_profile!.homeName.length > 10 ? '${_profile!.homeName.substring(0, 10)}...' : _profile!.homeName} ›'
+              : '未設定 ›',
+          onTap: _openHomeEditor,
         ),
       ],
     );
@@ -750,6 +769,15 @@ class _OrbOverlayState extends State<_OrbOverlay> {
     ('Semi-Square (45°)', 'semisquare', 1.0),
   ];
 
+  // HTML exact: PATTERN_ORBS (5 entries)
+  static const _patternOrbs = [
+    ('Grand Trine (120°)', 'grandtrine', 3.0),
+    ('T-Square Opp (180°)', 'tsquare_opp', 3.0),
+    ('T-Square Sq (90°)', 'tsquare_sq', 2.5),
+    ('Yod Sextile (60°)', 'yod_sextile', 2.5),
+    ('Yod Quincunx (150°)', 'yod_quincunx', 1.5),
+  ];
+
   @override
   void initState() {
     super.initState();
@@ -760,6 +788,7 @@ class _OrbOverlayState extends State<_OrbOverlay> {
     setState(() {
       for (final a in _majorAspects) _vals[a.$2] = a.$3;
       for (final a in _minorAspects) _vals[a.$2] = a.$3;
+      for (final a in _patternOrbs) _vals[a.$2] = a.$3;
     });
   }
 
@@ -826,6 +855,13 @@ class _OrbOverlayState extends State<_OrbOverlay> {
             const _OrbSectionLabel('MINOR ASPECTS'),
             const SizedBox(height: 8),
             ..._minorAspects.map((a) => _orbRow(a.$1, a.$2, a.$3)),
+
+            const SizedBox(height: 16),
+
+            // HTML exact: Pattern Orbs
+            const _OrbSectionLabel('PATTERNS'),
+            const SizedBox(height: 8),
+            ..._patternOrbs.map((a) => _orbRow(a.$1, a.$2, a.$3)),
 
             const SizedBox(height: 24),
 
@@ -1371,43 +1407,106 @@ class _TitleDiagnosisPage extends StatefulWidget {
   State<_TitleDiagnosisPage> createState() => _TitleDiagnosisPageState();
 }
 
-class _TitleDiagnosisPageState extends State<_TitleDiagnosisPage> {
-  int _round = 0;
+class _TitleDiagnosisPageState extends State<_TitleDiagnosisPage>
+    with TickerProviderStateMixin {
+  // HTML exact: 28 rounds, 3 parts
+  static const _rounds = <Map<String, dynamic>>[
+    {'part':1,'q':'新しい何かが始まるとき、あなたが最初に手に取るのは？','qen':'When something new begins, what do you reach for first?',
+     'cards':[{'emoji':'🔥','name':'Ace of Wands','axis':'power'},{'emoji':'💧','name':'Ace of Cups','axis':'heart'},{'emoji':'🗡️','name':'Ace of Swords','axis':'mind'},{'emoji':'🪙','name':'Ace of Pentacles','axis':'spirit'}]},
+    {'part':1,'q':'選択する時が来た。なにをおもう？','qen':'The moment of choice has come.',
+     'cards':[{'emoji':'🔥','name':'Two of Wands','axis':'power'},{'emoji':'💧','name':'Two of Cups','axis':'heart'},{'emoji':'🗡️','name':'Two of Swords','axis':'mind'},{'emoji':'🪙','name':'Two of Pentacles','axis':'shadow'}]},
+    {'part':1,'q':'あなたは大きな決断をした。どんな気持ち？','qen':'You\'ve made a big decision.',
+     'cards':[{'emoji':'🔥','name':'Three of Wands','axis':'power'},{'emoji':'💧','name':'Three of Cups','axis':'heart'},{'emoji':'🗡️','name':'Three of Swords','axis':'mind'},{'emoji':'🪙','name':'Three of Pentacles','axis':'spirit'}]},
+    {'part':1,'q':'安心を感じるのはどんなとき？','qen':'When do you feel most at ease?',
+     'cards':[{'emoji':'🔥','name':'Four of Wands','axis':'power'},{'emoji':'💧','name':'Four of Cups','axis':'heart'},{'emoji':'🗡️','name':'Four of Swords','axis':'mind'},{'emoji':'🪙','name':'Four of Pentacles','axis':'spirit'}]},
+    {'part':1,'q':'困難にぶつかったとき、あなたはどうなっている？','qen':'When you hit a wall, what happens?',
+     'cards':[{'emoji':'🔥','name':'Five of Wands','axis':'power'},{'emoji':'💧','name':'Five of Cups','axis':'heart'},{'emoji':'🗡️','name':'Five of Swords','axis':'mind'},{'emoji':'🪙','name':'Five of Pentacles','axis':'shadow'}]},
+    {'part':1,'q':'あなたが癒されるのは？','qen':'What heals you?',
+     'cards':[{'emoji':'🔥','name':'Six of Wands','axis':'power'},{'emoji':'💧','name':'Six of Cups','axis':'heart'},{'emoji':'🗡️','name':'Six of Swords','axis':'mind'},{'emoji':'🪙','name':'Six of Pentacles','axis':'spirit'}]},
+    {'part':1,'q':'眠れない夜、頭をよぎるのは？','qen':'What crosses your mind on sleepless nights?',
+     'cards':[{'emoji':'🔥','name':'Seven of Wands','axis':'power'},{'emoji':'💧','name':'Seven of Cups','axis':'heart'},{'emoji':'🗡️','name':'Seven of Swords','axis':'mind'},{'emoji':'🪙','name':'Seven of Pentacles','axis':'shadow'}]},
+    {'part':1,'q':'前進する為に、やるべきことは','qen':'What must be done to move forward?',
+     'cards':[{'emoji':'🔥','name':'Eight of Wands','axis':'power'},{'emoji':'💧','name':'Eight of Cups','axis':'heart'},{'emoji':'🗡️','name':'Eight of Swords','axis':'mind'},{'emoji':'🪙','name':'Eight of Pentacles','axis':'shadow'}]},
+    {'part':1,'q':'今の自分の姿にちかいのは？','qen':'Which one looks most like you right now?',
+     'cards':[{'emoji':'🔥','name':'Nine of Wands','axis':'power'},{'emoji':'💧','name':'Nine of Cups','axis':'heart'},{'emoji':'🗡️','name':'Nine of Swords','axis':'mind'},{'emoji':'🪙','name':'Nine of Pentacles','axis':'spirit'}]},
+    {'part':2,'q':'生まれ変わるとしたら、誰になる？','qen':'If reborn, who would you become?',
+     'cards':[{'emoji':'👑','name':'Emperor','axis':'power'},{'emoji':'🪄','name':'Magician','axis':'mind'},{'emoji':'🌺','name':'Empress','axis':'heart'}]},
+    {'part':2,'q':'迷ったとき、頼りにしたいのは？','qen':'When lost, what do you trust?',
+     'cards':[{'emoji':'🌙','name':'High Priestess','axis':'spirit'},{'emoji':'☸️','name':'Wheel','axis':'shadow'},{'emoji':'⚡','name':'Chariot','axis':'power'}]},
+    {'part':2,'q':'旅の仲間にするなら？','qen':'Who would you travel with?',
+     'cards':[{'emoji':'💫','name':'Lovers','axis':'heart'},{'emoji':'🕯️','name':'Hermit','axis':'mind'},{'emoji':'🦋','name':'Death','axis':'shadow'},{'emoji':'⚡','name':'Chariot','axis':'power'},{'emoji':'🌟','name':'Star','axis':'spirit'}]},
+    {'part':2,'q':'あなたの師匠になるのは？','qen':'Who would be your mentor?',
+     'cards':[{'emoji':'🦁','name':'Strength','axis':'power'},{'emoji':'📿','name':'Hierophant','axis':'spirit'},{'emoji':'🌈','name':'Temperance','axis':'heart'}]},
+    {'part':2,'q':'深夜、語り明かすなら？','qen':'What would you discuss until dawn?',
+     'cards':[{'emoji':'🌑','name':'Devil','axis':'shadow'},{'emoji':'⚖️','name':'Justice','axis':'mind'},{'emoji':'🌟','name':'Star','axis':'spirit'},{'emoji':'⚡','name':'Tower','axis':'power'},{'emoji':'☀️','name':'Sun','axis':'heart'}]},
+    {'part':2,'q':'壁にぶつかったとき、心は？','qen':'When you hit a wall, where does your heart go?',
+     'cards':[{'emoji':'☀️','name':'Sun','axis':'heart'},{'emoji':'🔮','name':'Hanged Man','axis':'shadow'},{'emoji':'⚡','name':'Tower','axis':'power'}]},
+    {'part':2,'q':'夜明け前、導くのは？','qen':'Before dawn, what guides you?',
+     'cards':[{'emoji':'📯','name':'Judgement','axis':'mind'},{'emoji':'🌕','name':'Moon','axis':'spirit'},{'emoji':'👑','name':'Emperor','axis':'power'}]},
+    {'part':2,'q':'理解してくれるのは？','qen':'Who truly understands you?',
+     'cards':[{'emoji':'🦋','name':'Death','axis':'shadow'},{'emoji':'🌺','name':'Empress','axis':'heart'},{'emoji':'🌙','name':'Priestess','axis':'spirit'},{'emoji':'🦁','name':'Strength','axis':'power'},{'emoji':'🕯️','name':'Hermit','axis':'mind'}]},
+    {'part':2,'q':'最も共感するのは？','qen':'Which resonates most?',
+     'cards':[{'emoji':'🌈','name':'Temperance','axis':'heart'},{'emoji':'🌑','name':'Devil','axis':'shadow'},{'emoji':'🌙','name':'Priestess','axis':'spirit'}]},
+    {'part':2,'q':'強みが活きるのは？','qen':'Where does your strength shine?',
+     'cards':[{'emoji':'👑','name':'Emperor','axis':'power'},{'emoji':'⚖️','name':'Justice','axis':'mind'},{'emoji':'🌟','name':'Star','axis':'spirit'},{'emoji':'🔮','name':'Hanged Man','axis':'shadow'},{'emoji':'🌺','name':'Empress','axis':'heart'}]},
+    {'part':2,'q':'一人の夜、心に灯るのは？','qen':'On a solitary night, what lights within?',
+     'cards':[{'emoji':'🌟','name':'Star','axis':'spirit'},{'emoji':'☀️','name':'Sun','axis':'heart'},{'emoji':'📯','name':'Judgement','axis':'mind'}]},
+    {'part':2,'q':'旅の終わりに見える景色は？','qen':'What do you see at journey\'s end?',
+     'cards':[{'emoji':'🌍','name':'World','axis':'spirit'},{'emoji':'🌀','name':'Fool','axis':'shadow'},{'emoji':'⚡','name':'Chariot','axis':'power'}]},
+    {'part':2,'q':'人生を一枚で表すなら？','qen':'If your life were one card?',
+     'cards':[{'emoji':'☀️','name':'Sun','axis':'heart'},{'emoji':'🌟','name':'Star','axis':'spirit'},{'emoji':'🪄','name':'Magician','axis':'mind'},{'emoji':'👑','name':'Emperor','axis':'power'},{'emoji':'🌑','name':'Devil','axis':'shadow'}]},
+    {'part':2,'q':'世界に残したいものは？','qen':'What would you leave behind?',
+     'cards':[{'emoji':'🌍','name':'World','axis':'spirit'},{'emoji':'🌺','name':'Empress','axis':'heart'},{'emoji':'📯','name':'Judgement','axis':'mind'}]},
+    {'part':2,'q':'今の自分に贈りたい言葉は？','qen':'What message for yourself now?',
+     'cards':[{'emoji':'🦁','name':'Strength','axis':'power'},{'emoji':'🌈','name':'Temperance','axis':'heart'},{'emoji':'🌙','name':'Priestess','axis':'spirit'}]},
+    {'part':3,'q':'あなたの「始まりの姿」は？','qen':'Your "beginning form"?',
+     'cards':[{'emoji':'🔥','name':'Page of Wands','axis':'power'},{'emoji':'💧','name':'Page of Cups','axis':'heart'},{'emoji':'🗡️','name':'Page of Swords','axis':'mind'},{'emoji':'🪙','name':'Page of Pentacles','axis':'spirit'}]},
+    {'part':3,'q':'あなたの「行動する姿」は？','qen':'Your "action form"?',
+     'cards':[{'emoji':'🔥','name':'Knight of Wands','axis':'power'},{'emoji':'💧','name':'Knight of Cups','axis':'heart'},{'emoji':'🗡️','name':'Knight of Swords','axis':'mind'},{'emoji':'🪙','name':'Knight of Pentacles','axis':'shadow'}]},
+    {'part':3,'q':'あなたの「育む姿」は？','qen':'Your "nurturing form"?',
+     'cards':[{'emoji':'🔥','name':'Queen of Wands','axis':'power'},{'emoji':'💧','name':'Queen of Cups','axis':'heart'},{'emoji':'🗡️','name':'Queen of Swords','axis':'mind'},{'emoji':'🪙','name':'Queen of Pentacles','axis':'spirit'}]},
+    {'part':3,'q':'あなたの「完成された姿」は？','qen':'Your "complete form"?',
+     'cards':[{'emoji':'🔥','name':'King of Wands','axis':'power'},{'emoji':'💧','name':'King of Cups','axis':'heart'},{'emoji':'🗡️','name':'King of Swords','axis':'mind'},{'emoji':'🪙','name':'King of Pentacles','axis':'spirit'}]},
+  ];
+  static const _partNames = {1:'PART 1: MINOR ARCANA',2:'PART 2: MAJOR ARCANA',3:'PART 3: COURT CARDS'};
+
+  int _roundIdx = 0;
   final Map<String, int> _scores = {'power':0,'mind':0,'spirit':0,'shadow':0,'heart':0};
 
-  // 7 questions with 4-5 choices each
-  static const _questions = [
-    {'q': '困難に直面したとき、あなたはどう対処しますか？',
-     'a': [{'text':'力で突破する','axis':'power'},{'text':'分析して解決策を見つける','axis':'mind'},
-            {'text':'直感に従う','axis':'spirit'},{'text':'裏から手を回す','axis':'shadow'}]},
-    {'q': 'あなたが最も大切にしている価値は？',
-     'a': [{'text':'正義と秩序','axis':'power'},{'text':'知識と真実','axis':'mind'},
-            {'text':'愛と共感','axis':'heart'},{'text':'自由と変革','axis':'shadow'}]},
-    {'q': 'リーダーとしてのあなたのスタイルは？',
-     'a': [{'text':'前線で戦う','axis':'power'},{'text':'戦略を練る','axis':'mind'},
-            {'text':'皆を癒し導く','axis':'spirit'},{'text':'人の心を動かす','axis':'heart'}]},
-    {'q': '宇宙から一つだけ力を授かるなら？',
-     'a': [{'text':'無敵の力','axis':'power'},{'text':'全知の知恵','axis':'mind'},
-            {'text':'未来を見通す目','axis':'spirit'},{'text':'心を読む力','axis':'shadow'}]},
-    {'q': '理想の旅の目的地は？',
-     'a': [{'text':'火山の頂上','axis':'power'},{'text':'古代の図書館','axis':'mind'},
-            {'text':'星降る聖地','axis':'spirit'},{'text':'人里離れた森','axis':'shadow'}]},
-    {'q': 'あなたの隠れた才能は？',
-     'a': [{'text':'どんな逆境でも折れない心','axis':'power'},{'text':'複雑な問題を解く力','axis':'mind'},
-            {'text':'人の痛みがわかること','axis':'heart'},{'text':'場の空気を変える力','axis':'heart'}]},
-    {'q': '最後に、あなたの魂の色は？',
-     'a': [{'text':'燃える赤','axis':'power'},{'text':'深い藍','axis':'mind'},
-            {'text':'輝く金','axis':'spirit'},{'text':'神秘の紫','axis':'shadow'},
-            {'text':'温かい桃','axis':'heart'}]},
-  ];
+  String _screen = 'intro'; // intro, round, partTrans, forging, reveal
+  int? _selectedCard;
+  int _lastPart = 0;
+  late AnimationController _revealCtrl;
+  String _revealTitleJP = '', _revealTitleEN = '';
+  String _revealClassEN = '', _revealClassJP = '';
+  String _revealLightJP = '', _revealShadowJP = '', _revealAxis = '';
 
-  void _answer(String axis) {
-    _scores[axis] = (_scores[axis] ?? 0) + 1;
-    if (_round < _questions.length - 1) {
-      setState(() => _round++);
-    } else {
-      _finishDiagnosis();
-    }
+  @override
+  void initState() { super.initState(); _revealCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 7000)); }
+  @override
+  void dispose() { _revealCtrl.dispose(); super.dispose(); }
+
+  void _beginRounds() => setState(() { _screen = 'round'; _lastPart = _rounds[0]['part'] as int; });
+
+  void _selectCard(int idx, String axis) {
+    setState(() => _selectedCard = idx);
+    Future.delayed(const Duration(milliseconds: 500), () {
+      if (!mounted) return;
+      _scores[axis] = (_scores[axis] ?? 0) + 1;
+      if (_roundIdx < _rounds.length - 1) {
+        final nextPart = _rounds[_roundIdx + 1]['part'] as int;
+        final curPart = _rounds[_roundIdx]['part'] as int;
+        setState(() { _roundIdx++; _selectedCard = null; });
+        if (nextPart != curPart) {
+          setState(() => _screen = 'partTrans');
+          _lastPart = nextPart;
+          Future.delayed(const Duration(seconds: 2), () { if (mounted) setState(() => _screen = 'round'); });
+        }
+      } else {
+        setState(() => _screen = 'forging');
+        Future.delayed(const Duration(seconds: 3), () { if (mounted) _finishDiagnosis(); });
+      }
+    });
   }
 
   void _finishDiagnosis() {
@@ -1416,94 +1515,162 @@ class _TitleDiagnosisPageState extends State<_TitleDiagnosisPage> {
     for (final e in _scores.entries) {
       if (e.value > topScore) { topScore = e.value; topAxis = e.key; }
     }
-    final cls = titleData.getClassByAxisCourt(topAxis, 'page');
-    if (cls != null) {
-      Navigator.of(context).pop({
-        'lightJP': cls.lightJP,
-        'shadowJP': cls.shadowJP,
-        'classEN': cls.nameEN,
-        'classJP': cls.nameJP,
-        'axis': topAxis,
-      });
-    } else {
-      Navigator.of(context).pop(null);
-    }
+    final courtMap = {'power':'king','mind':'queen','spirit':'knight','shadow':'mixed','heart':'page'};
+    final court = courtMap[topAxis] ?? 'page';
+    final cls = titleData.getClassByAxisCourt(topAxis, court);
+    if (cls == null) { Navigator.of(context).pop(null); return; }
+    _revealTitleJP = cls.lightJP; _revealTitleEN = cls.lightEN;
+    _revealClassEN = cls.nameEN; _revealClassJP = cls.nameJP;
+    _revealLightJP = cls.lightJP; _revealShadowJP = cls.shadowJP;
+    _revealAxis = topAxis;
+    setState(() => _screen = 'reveal');
+    _revealCtrl.forward();
+  }
+
+  void _accept() {
+    Navigator.of(context).pop({
+      'lightJP': _revealLightJP, 'shadowJP': _revealShadowJP,
+      'classEN': _revealClassEN, 'classJP': _revealClassJP, 'axis': _revealAxis,
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    final q = _questions[_round];
-    final answers = q['a'] as List;
-    final progress = (_round + 1) / _questions.length;
-
-    // HTML: #titleDiagOverlay { background:radial-gradient(ellipse at center, #0a1220 0%, #020408 100%); }
     return Scaffold(
       backgroundColor: const Color(0xFF020408),
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: RadialGradient(
-            center: Alignment.center, radius: 1.2,
-            colors: [Color(0xFF0A1220), Color(0xFF020408)],
-          ),
-        ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              // HTML: .td-progress-bar { height:3px; }
-              LinearProgressIndicator(
-                value: progress,
-                backgroundColor: const Color(0x14FFFFFF),
-                valueColor: const AlwaysStoppedAnimation(Color(0xFFF9D976)),
-                minHeight: 3,
-              ),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      // HTML: .td-progress-text { font-size:14px; color:rgba(249,217,118,0.8); letter-spacing:2px; }
-                      Text('${_round + 1} / ${_questions.length}',
-                        style: const TextStyle(fontSize: 14, color: Color(0xCCF9D976), letterSpacing: 2, fontWeight: FontWeight.w600)),
-                      const SizedBox(height: 16),
-                      // HTML: .td-question { font-size:17px; font-weight:700; line-height:1.5; }
-                      Text(q['q'] as String,
-                        style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: Color(0xFFEAEAEA), height: 1.5),
-                        textAlign: TextAlign.center),
-                      const SizedBox(height: 28),
-                      ...answers.map((a) {
-                        final ans = a as Map<String, dynamic>;
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
-                          child: SizedBox(width: double.infinity, child: OutlinedButton(
-                            onPressed: () => _answer(ans['axis'] as String),
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: const Color(0xFFEAEAEA),
-                              side: const BorderSide(color: Color(0x33F9D976)),
-                              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                            ),
-                            child: Text(ans['text'] as String, style: const TextStyle(fontSize: 14)),
-                          )),
-                        );
-                      }),
-                      const SizedBox(height: 16),
-                      // Close button
-                      GestureDetector(
-                        onTap: () => Navigator.pop(context),
-                        child: const Text('あとで',
-                          style: TextStyle(fontSize: 11, color: Color(0x66ACACAC), letterSpacing: 0.5)),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
+        decoration: const BoxDecoration(gradient: RadialGradient(
+          center: Alignment.center, radius: 1.2, colors: [Color(0xFF0A1220), Color(0xFF020408)])),
+        child: SafeArea(child: switch (_screen) {
+          'round' => _buildRound(),
+          'partTrans' => _buildPartTrans(),
+          'forging' => _buildForging(),
+          'reveal' => _buildReveal(),
+          _ => _buildIntro(),
+        }),
       ),
     );
   }
+
+  Widget _buildIntro() => Center(child: Container(
+    constraints: const BoxConstraints(maxWidth: 340),
+    padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 40),
+    decoration: BoxDecoration(color: const Color(0x0DFFFFFF), borderRadius: BorderRadius.circular(20), border: Border.all(color: const Color(0x1AFFFFFF))),
+    child: Column(mainAxisSize: MainAxisSize.min, children: [
+      const Text('\u2726', style: TextStyle(fontSize: 28, color: Color(0xFFF9D976))),
+      const SizedBox(height: 12),
+      const Text('\u79f0\u53f7\u306e\u5100\u5f0f', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: Color(0xFFF9D976))),
+      const SizedBox(height: 8),
+      const Text('\u30ab\u30fc\u30c9\u304c\u3042\u306a\u305f\u3092\u6620\u3057\u51fa\u3057\u307e\u3059\u3002\n28\u306e\u554f\u3044\u306b\u3001\u76f4\u611f\u3067\u7b54\u3048\u3066\u304f\u3060\u3055\u3044\u3002', textAlign: TextAlign.center,
+        style: TextStyle(fontSize: 13, color: Color(0xFFACACAC), height: 1.7)),
+      const SizedBox(height: 24),
+      GestureDetector(onTap: _beginRounds, child: Container(
+        width: double.infinity, padding: const EdgeInsets.symmetric(vertical: 14),
+        decoration: BoxDecoration(borderRadius: BorderRadius.circular(14),
+          gradient: const LinearGradient(colors: [Color(0xFFF9D976), Color(0xFFE8A840)])),
+        child: const Center(child: Text('\u59cb\u3081\u308b', style: TextStyle(color: Color(0xFF0A0A14), fontSize: 15, fontWeight: FontWeight.w700))))),
+      const SizedBox(height: 12),
+      GestureDetector(onTap: () => Navigator.pop(context),
+        child: const Text('\u3042\u3068\u3067', style: TextStyle(fontSize: 11, color: Color(0x66ACACAC)))),
+    ]),
+  ));
+
+  Widget _buildRound() {
+    final r = _rounds[_roundIdx];
+    final cards = r['cards'] as List;
+    final progress = (_roundIdx + 1) / _rounds.length;
+    return Stack(children: [
+      Positioned(top: 0, left: 0, right: 0,
+        child: LinearProgressIndicator(value: progress, minHeight: 3,
+          backgroundColor: const Color(0x14FFFFFF), valueColor: const AlwaysStoppedAnimation(Color(0xFFF9D976)))),
+      Padding(padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+        child: Column(children: [
+          Text('${_roundIdx + 1} / ${_rounds.length}',
+            style: const TextStyle(fontSize: 14, color: Color(0xCCF9D976), letterSpacing: 2, fontWeight: FontWeight.w600)),
+          const SizedBox(height: 4),
+          Text(_partNames[r['part']] ?? '', style: const TextStyle(fontSize: 11, color: Color(0xB3F9D976), letterSpacing: 2)),
+          const SizedBox(height: 16),
+          Text(r['q'] as String, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: Color(0xFFEAEAEA), height: 1.5), textAlign: TextAlign.center),
+          const SizedBox(height: 4),
+          Text(r['qen'] as String, style: const TextStyle(fontSize: 12, color: Color(0x80ACACAC)), textAlign: TextAlign.center),
+          const SizedBox(height: 28),
+          Expanded(child: Center(child: Wrap(spacing: 12, runSpacing: 12, alignment: WrapAlignment.center,
+            children: List.generate(cards.length, (i) {
+              final c = cards[i] as Map;
+              final selected = _selectedCard == i;
+              final dimmed = _selectedCard != null && !selected;
+              return GestureDetector(
+                onTap: _selectedCard == null ? () => _selectCard(i, c['axis'] as String) : null,
+                child: AnimatedContainer(duration: const Duration(milliseconds: 300),
+                  width: cards.length <= 4 ? 140.0 : 110.0,
+                  padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
+                  decoration: BoxDecoration(borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: selected ? const Color(0xFFF9D976) : const Color(0x33FFFFFF), width: selected ? 2 : 1),
+                    color: selected ? const Color(0x1AF9D976) : const Color(0x08FFFFFF),
+                    boxShadow: selected ? [const BoxShadow(color: Color(0x66F9D976), blurRadius: 20)] : null),
+                  child: AnimatedOpacity(duration: const Duration(milliseconds: 300), opacity: dimmed ? 0.25 : 1.0,
+                    child: Column(mainAxisSize: MainAxisSize.min, children: [
+                      Text(c['emoji'] as String, style: const TextStyle(fontSize: 32)),
+                      const SizedBox(height: 8),
+                      Text(c['name'] as String, style: const TextStyle(fontSize: 11, color: Color(0xFFEAEAEA), fontWeight: FontWeight.w600), textAlign: TextAlign.center),
+                    ])),
+                ),
+              );
+            })))),
+        ])),
+    ]);
+  }
+
+  Widget _buildPartTrans() => Center(child: TweenAnimationBuilder<double>(
+    tween: Tween(begin: 0.0, end: 1.0), duration: const Duration(seconds: 1),
+    builder: (_, v, child) => Opacity(opacity: v, child: Text(_partNames[_lastPart] ?? '',
+      style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: Color(0xFFF9D976), letterSpacing: 3)))));
+
+  Widget _buildForging() => Center(child: Column(mainAxisSize: MainAxisSize.min, children: [
+    TweenAnimationBuilder<double>(tween: Tween(begin: 0.9, end: 1.15), duration: const Duration(seconds: 1), curve: Curves.easeInOut,
+      builder: (_, v, child) => Container(width: 120, height: 120,
+        decoration: BoxDecoration(shape: BoxShape.circle,
+          gradient: const RadialGradient(colors: [Color(0x99F9D976), Color(0x1AF9D976), Colors.transparent], stops: [0, 0.6, 0.8]),
+          boxShadow: [BoxShadow(color: const Color(0x4DF9D976), blurRadius: 40 + (v - 0.9) * 160)]),
+        transform: Matrix4.identity()..scale(v))),
+    const SizedBox(height: 24),
+    const Text('Forging your title...', style: TextStyle(fontSize: 14, color: Color(0xFFACACAC), letterSpacing: 2)),
+  ]));
+
+  Widget _buildReveal() => AnimatedBuilder(animation: _revealCtrl, builder: (_, child) {
+    final t = _revealCtrl.value * 7;
+    return Center(child: Padding(padding: const EdgeInsets.symmetric(horizontal: 28),
+      child: Column(mainAxisSize: MainAxisSize.min, children: [
+        Opacity(opacity: (t / 1.5).clamp(0.0, 1.0),
+          child: Transform.translate(offset: Offset(0, 20 * (1 - (t / 1.5).clamp(0.0, 1.0))),
+            child: Text(_revealTitleJP, textAlign: TextAlign.center, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w700, color: Color(0xFFF9D976))))),
+        const SizedBox(height: 4),
+        Opacity(opacity: ((t - 0.3) / 1.2).clamp(0.0, 1.0),
+          child: Text(_revealTitleEN, textAlign: TextAlign.center, style: const TextStyle(fontSize: 13, color: Color(0x80F9D976)))),
+        Container(width: 200 * ((t - 1.8) / 1.0).clamp(0.0, 1.0), height: 1, margin: const EdgeInsets.symmetric(vertical: 16),
+          decoration: const BoxDecoration(gradient: LinearGradient(colors: [Colors.transparent, Color(0xFFF9D976), Colors.transparent]))),
+        Opacity(opacity: ((t - 2.8) / 0.8).clamp(0.0, 1.0),
+          child: Transform.scale(scale: 1.0 + 0.5 * (1 - ((t - 2.8) / 0.8).clamp(0.0, 1.0)),
+            child: Text('\u2014 $_revealClassJP / $_revealClassEN \u2014', textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: Color(0xFFEAEAEA), letterSpacing: 3)))),
+        const SizedBox(height: 20),
+        Opacity(opacity: ((t - 3.8) / 1.2).clamp(0.0, 1.0),
+          child: Text('\u2726 $_revealLightJP', textAlign: TextAlign.center, style: const TextStyle(fontSize: 13, color: Color(0xFFACACAC), height: 1.6))),
+        const SizedBox(height: 6),
+        Opacity(opacity: ((t - 5.0) / 1.2).clamp(0.0, 1.0),
+          child: Text('\u2726 $_revealShadowJP', textAlign: TextAlign.center, style: const TextStyle(fontSize: 13, color: Color(0xFFACACAC), height: 1.6, fontStyle: FontStyle.italic))),
+        const SizedBox(height: 28),
+        Opacity(opacity: ((t - 6.2) / 0.8).clamp(0.0, 1.0),
+          child: Column(children: [
+            GestureDetector(onTap: _accept, child: Container(width: double.infinity, padding: const EdgeInsets.symmetric(vertical: 14),
+              decoration: BoxDecoration(borderRadius: BorderRadius.circular(14), gradient: const LinearGradient(colors: [Color(0xFFF9D976), Color(0xFFE8A840)])),
+              child: const Center(child: Text('\u3053\u308c\u3067\u3044\u304f', style: TextStyle(color: Color(0xFF0A0A14), fontSize: 15, fontWeight: FontWeight.w700))))),
+            const SizedBox(height: 12),
+            GestureDetector(onTap: () => setState(() { _roundIdx = 0; _scores.updateAll((_, v) => 0); _selectedCard = null; _screen = 'intro'; _revealCtrl.reset(); }),
+              child: const Text('\u3082\u3046\u4e00\u5ea6\u8a3a\u65ad\u3059\u308b', style: TextStyle(fontSize: 12, color: Color(0xFFACACAC), decoration: TextDecoration.underline))),
+          ])),
+      ])));
+  });
 }
 
 /// Auto-inserts `/` after YYYY and MM for date input (YYYY/MM/DD format).
@@ -1534,4 +1701,208 @@ class _DateSlashFormatter extends TextInputFormatter {
       selection: TextSelection.collapsed(offset: formatted.length),
     );
   }
+}
+
+// ══════════════════════════════════════════════════
+// ── Home Info Editor Page ──
+// HTML exact: #homeOverlay (Nominatim search + lat/lng)
+// ══════════════════════════════════════════════════
+
+class _HomeEditorPage extends StatefulWidget {
+  final SolaraProfile? profile;
+  const _HomeEditorPage({this.profile});
+
+  @override
+  State<_HomeEditorPage> createState() => _HomeEditorPageState();
+}
+
+class _HomeEditorPageState extends State<_HomeEditorPage> {
+  late final TextEditingController _nameCtrl;
+  double? _lat;
+  double? _lng;
+  String _searchResult = '';
+  bool _searching = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final p = widget.profile;
+    _nameCtrl = TextEditingController(text: p?.homeName ?? '');
+    if (p != null && p.homeLat != 0) _lat = p.homeLat;
+    if (p != null && p.homeLng != 0) _lng = p.homeLng;
+  }
+
+  @override
+  void dispose() {
+    _nameCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _search() async {
+    final query = _nameCtrl.text.trim();
+    if (query.isEmpty) return;
+    setState(() { _searching = true; _searchResult = ''; });
+    try {
+      final uri = Uri.parse(
+        'https://nominatim.openstreetmap.org/search?format=json&q=${Uri.encodeComponent(query)}&limit=1&accept-language=ja',
+      );
+      final resp = await http.get(uri, headers: {'User-Agent': 'Solara/1.0'});
+      final data = json.decode(resp.body) as List;
+      if (data.isNotEmpty) {
+        final lat = double.parse(data[0]['lat'] as String);
+        final lng = double.parse(data[0]['lon'] as String);
+        final display = (data[0]['display_name'] as String).length > 50
+            ? (data[0]['display_name'] as String).substring(0, 50)
+            : data[0]['display_name'] as String;
+        setState(() { _lat = lat; _lng = lng; _searchResult = display; _searching = false; });
+      } else {
+        setState(() { _searchResult = '見つかりませんでした'; _searching = false; });
+      }
+    } catch (_) {
+      setState(() { _searchResult = '通信エラー'; _searching = false; });
+    }
+  }
+
+  void _save() {
+    final name = _nameCtrl.text.trim();
+    if (name.isEmpty || _lat == null || _lng == null) return;
+
+    final p = widget.profile ?? const SolaraProfile();
+    final updated = SolaraProfile(
+      name: p.name,
+      birthDate: p.birthDate,
+      birthTime: p.birthTime,
+      birthTimeUnknown: p.birthTimeUnknown,
+      birthPlace: p.birthPlace,
+      birthLat: p.birthLat,
+      birthLng: p.birthLng,
+      birthTz: p.birthTz,
+      homeName: name,
+      homeLat: _lat!,
+      homeLng: _lng!,
+    );
+    Navigator.of(context).pop(updated);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFF020408),
+      body: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
+            child: Container(
+              constraints: const BoxConstraints(maxWidth: 420),
+              margin: const EdgeInsets.all(20),
+              padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
+              decoration: BoxDecoration(
+                color: const Color(0x0DFFFFFF),
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(color: const Color(0x1AFFFFFF)),
+              ),
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                // Header
+                Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+                  const Text('🏠 自宅（現住所）', style: TextStyle(
+                    fontSize: 16, fontWeight: FontWeight.w700, color: Color(0xFFF9D976), letterSpacing: 1)),
+                  GestureDetector(
+                    onTap: () => Navigator.pop(context),
+                    child: Container(
+                      width: 32, height: 32,
+                      decoration: const BoxDecoration(shape: BoxShape.circle, color: Color(0x14FFFFFF)),
+                      child: const Center(child: Text('✕', style: TextStyle(fontSize: 18, color: Color(0xFFACACAC)))),
+                    ),
+                  ),
+                ]),
+                const SizedBox(height: 20),
+
+                // Search
+                const Text('住所・地名', style: TextStyle(fontSize: 12, color: Color(0xFFACACAC), letterSpacing: 0.5)),
+                const SizedBox(height: 6),
+                Row(children: [
+                  Expanded(child: _input(_nameCtrl, '例: 東京都渋谷区')),
+                  const SizedBox(width: 8),
+                  GestureDetector(
+                    onTap: _searching ? null : _search,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12),
+                        gradient: const LinearGradient(colors: [Color(0xFFF9D976), Color(0xFFE8A840)]),
+                      ),
+                      child: Text(_searching ? '...' : '検索',
+                        style: const TextStyle(color: Color(0xFF0A0A14), fontSize: 13, fontWeight: FontWeight.w600)),
+                    ),
+                  ),
+                ]),
+                if (_searchResult.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 6),
+                    child: Text(_searchResult, style: const TextStyle(fontSize: 11, color: Color(0xFF6CC070))),
+                  ),
+                const SizedBox(height: 8),
+
+                // Lat/Lng
+                Row(children: [
+                  Expanded(child: _readonlyField('緯度', _lat?.toStringAsFixed(4) ?? '')),
+                  const SizedBox(width: 8),
+                  Expanded(child: _readonlyField('経度', _lng?.toStringAsFixed(4) ?? '')),
+                ]),
+                const SizedBox(height: 16),
+
+                // Save
+                GestureDetector(
+                  onTap: _save,
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(14),
+                      gradient: const LinearGradient(colors: [Color(0xFFF9D976), Color(0xFFE8A840)]),
+                    ),
+                    child: const Center(child: Text('保存する',
+                      style: TextStyle(color: Color(0xFF0A0A14), fontSize: 15, fontWeight: FontWeight.w700))),
+                  ),
+                ),
+              ]),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _input(TextEditingController ctrl, String hint) => TextField(
+    controller: ctrl,
+    style: const TextStyle(color: Color(0xFFEAEAEA), fontSize: 14),
+    decoration: InputDecoration(
+      hintText: hint,
+      hintStyle: const TextStyle(color: Color(0x40FFFFFF)),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      filled: true,
+      fillColor: const Color(0x0FFFFFFF),
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0x1EFFFFFF))),
+      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0x1EFFFFFF))),
+      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0x66F9D976))),
+    ),
+  );
+
+  Widget _readonlyField(String label, String value) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(label, style: const TextStyle(fontSize: 12, color: Color(0xFFACACAC))),
+      const SizedBox(height: 4),
+      Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          color: const Color(0x0FFFFFFF),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: const Color(0x1EFFFFFF)),
+        ),
+        child: Text(value.isEmpty ? '—' : value,
+          style: TextStyle(fontSize: 14, color: value.isEmpty ? const Color(0x40FFFFFF) : const Color(0xFFEAEAEA))),
+      ),
+    ],
+  );
 }

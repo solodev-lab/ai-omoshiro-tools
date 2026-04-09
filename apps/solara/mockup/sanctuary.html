@@ -7,15 +7,43 @@
   <link rel="stylesheet" href="shared/styles.css">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <style>
-    * { margin:0; padding:0; box-sizing:border-box; }
-    body {
-      background: radial-gradient(ellipse at center, #0a1220 0%, #020408 100%);
-      min-height: 100vh; font-family: var(--font-body); color: #EAEAEA;
-      margin: 0; padding: 0; overflow: hidden;
-    }
-    #bgCanvas { position:absolute; inset:0; z-index:0; width:100%; height:100%; }
 
-    .sanctuary-content {
+/* ========================================
+   1. BASE — Reset, body, phone frame, layout
+   ======================================== */
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: radial-gradient(ellipse at center, #0a1220 0%, #020408 100%);
+  min-height: 100vh;
+  font-family: var(--font-body);
+  color: #EAEAEA;
+  margin: 0; padding: 0;
+  overflow: hidden;
+}
+
+#bgCanvas {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.main-area {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  z-index: 10;
+}
+
+/* ========================================
+   2. PROFILE — Orb, name, tier
+   ======================================== */
+
+.sanctuary-content {
       flex:1; overflow-y:auto; padding:56px 20px 100px;
       display:flex; flex-direction:column; gap:20px;
       max-width:600px; margin:0 auto; width:100%;
@@ -64,7 +92,9 @@
 
     .main-area { position:fixed; inset:0; display:flex; flex-direction:column; z-index:10; }
 
-    /* Birth Info Overlay */
+/* ========================================
+   4. BIRTH INFO OVERLAY
+   ======================================== */
     .birth-overlay {
       display:none; position:fixed; inset:0; z-index:500;
       background:rgba(4,8,16,0.95); backdrop-filter:blur(12px);
@@ -103,7 +133,9 @@
       opacity:0.35; cursor:not-allowed;
     }
 
-    /* Time unknown checkbox */
+/* ========================================
+   5. TIME UNKNOWN CHECKBOX
+   ======================================== */
     .time-unknown-row {
       display:flex; align-items:center; gap:8px; margin-top:8px;
     }
@@ -120,7 +152,9 @@
     }
     .time-noon-hint.show { display:block; }
 
-    /* Map picker */
+/* ========================================
+   6. MAP PICKER — Leaflet container
+   ======================================== */
     .map-search-row {
       display:flex; gap:8px; margin-bottom:8px;
     }
@@ -147,7 +181,9 @@
     }
     .map-coords .birth-input { flex:1; }
 
-    /* Orb category */
+/* ========================================
+   7. ORB SETTINGS
+   ======================================== */
     .orb-category { display:flex; flex-direction:column; gap:6px; }
     .orb-row {
       display:flex; align-items:center; padding:8px 10px;
@@ -179,7 +215,9 @@
       cursor:pointer; margin-top:8px; letter-spacing:0.5px;
     }
 
-    /* ===== Title Diagnosis ===== */
+/* ========================================
+   8. TITLE DIAGNOSIS — Result card (3D flip)
+   ======================================== */
     .td-result-card-wrapper {
       perspective:1200px; cursor:pointer;
     }
@@ -202,7 +240,7 @@
       font-size:10px; color:rgba(172,172,172,0.4); text-align:center; margin-top:8px;
       letter-spacing:0.5px;
     }
-    /* Rich visual title card */
+/* -- Rich visual title card ----------------------------------- */
     .td-vcard {
       border-radius:16px; overflow:hidden;
       display:flex; flex-direction:column;
@@ -310,7 +348,9 @@
       max-width:340px; padding:40px 28px; border-radius:20px; text-align:center;
     }
 
-    /* Progress */
+/* ========================================
+   9. TITLE DIAGNOSIS — Progress bar
+   ======================================== */
     .td-progress-bar {
       position:absolute; top:0; left:0; right:0; height:3px;
       background:rgba(255,255,255,0.08);
@@ -336,7 +376,9 @@
       margin-bottom:28px; max-width:320px;
     }
 
-    /* Card Grid */
+/* ========================================
+   10. TITLE DIAGNOSIS — Card grid
+   ======================================== */
     .td-cards {
       display:flex; gap:12px; justify-content:center; align-items:center;
       flex-wrap:wrap; max-width:520px; width:100%; padding:0 8px;
@@ -367,24 +409,21 @@
       transition:all 0.4s ease;
     }
 
-    /* Part Transition */
+/* ========================================
+   11. TITLE DIAGNOSIS — Part transition, forging, reveal
+   ======================================== */
     .td-part-trans-text {
       font-size:22px; font-weight:700; color:#F9D976;
       letter-spacing:3px; text-transform:uppercase;
       opacity:0; animation:tdFadeIn 1s ease forwards;
     }
-    @keyframes tdFadeIn { to { opacity:1; } }
 
-    /* Forging */
+/* -- Forging -------------------------------------------------- */
     .td-forge-container { text-align:center; position:relative; }
     .td-forge-orb {
       width:120px; height:120px; border-radius:50%; margin:0 auto 24px;
       background:radial-gradient(circle, rgba(249,217,118,0.6) 0%, rgba(249,217,118,0.1) 60%, transparent 80%);
       animation:tdForgeGlow 2s ease-in-out infinite;
-    }
-    @keyframes tdForgeGlow {
-      0%,100% { transform:scale(0.9); box-shadow:0 0 40px rgba(249,217,118,0.3); }
-      50% { transform:scale(1.15); box-shadow:0 0 80px rgba(249,217,118,0.6); }
     }
     .td-forge-text {
       font-size:14px; color:#ACACAC; letter-spacing:2px;
@@ -398,7 +437,7 @@
       background:#F9D976; opacity:0;
     }
 
-    /* Reveal */
+/* -- Reveal --------------------------------------------------- */
     .td-reveal-container {
       text-align:center; max-width:340px;
     }
@@ -459,27 +498,86 @@
       letter-spacing:1px;
     }
 
-    @keyframes tdRevealUp {
-      to { opacity:1; transform:translateY(0); }
-    }
-    @keyframes tdLineExpand {
-      to { width:60%; }
-    }
-    @keyframes tdStamp {
-      0% { opacity:0; transform:scale(1.5); }
-      60% { opacity:1; transform:scale(0.95); }
-      100% { opacity:1; transform:scale(1); }
-    }
-
-    /* Axis background tinting */
+/* ========================================
+   12. AXIS BACKGROUND TINTING
+   ======================================== */
     .td-axis-power { background:radial-gradient(ellipse at center, rgba(255,68,68,0.08) 0%, transparent 70%) !important; }
     .td-axis-mind { background:radial-gradient(ellipse at center, rgba(107,181,255,0.08) 0%, transparent 70%) !important; }
     .td-axis-spirit { background:radial-gradient(ellipse at center, rgba(155,107,255,0.08) 0%, transparent 70%) !important; }
     .td-axis-shadow { background:radial-gradient(ellipse at center, rgba(80,0,100,0.1) 0%, transparent 70%) !important; }
     .td-axis-heart { background:radial-gradient(ellipse at center, rgba(249,217,118,0.08) 0%, transparent 70%) !important; }
+
+/* ========================================
+   13. ANIMATIONS — Keyframes
+   ======================================== */
+
+@keyframes tdFadeIn {
+  to { opacity: 1; }
+}
+
+@keyframes tdForgeGlow {
+  0%, 100% { transform: scale(0.9); box-shadow: 0 0 40px rgba(249,217,118,0.3); }
+  50%      { transform: scale(1.15); box-shadow: 0 0 80px rgba(249,217,118,0.6); }
+}
+
+@keyframes tdRevealUp {
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes tdLineExpand {
+  to { width: 60%; }
+}
+
+@keyframes tdStamp {
+  0%   { opacity: 0; transform: scale(1.5); }
+  60%  { opacity: 1; transform: scale(0.95); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes tdParticleIn {
+  0%   { opacity: 0; transform: scale(0); }
+  30%  { opacity: 1; transform: scale(1.5); }
+  70%  { opacity: 0.8; transform: scale(1); }
+  100% { opacity: 0; transform: scale(0); }
+}
+
   </style>
 </head>
 <body>
+
+<!-- ========================================
+     BODY STRUCTURE
+     .phone#phone
+     ├── canvas#bgCanvas (background)
+     ├── #starContainer (star field)
+     ├── .status-bar
+     ├── .main-area.cosmic-bg
+     │   ├── .sanctuary-content
+     │   │   ├── .profile-row (orb + name + tier)
+     │   │   ├── .settings-group "Stellar Profile"
+     │   │   │   ├── 出生情報 → #birthOverlay
+     │   │   │   └── 自宅 → #homeOverlay
+     │   │   ├── .settings-group "Title Diagnosis"
+     │   │   │   ├── #titleResultWrapper (3D flip card)
+     │   │   │   ├── #titleStartBtn / #titleNeedProfile / #titleRediagnose
+     │   │   ├── .settings-group "Cosmic Pro" (.pro-banner)
+     │   │   ├── .settings-group "Astrology"
+     │   │   │   ├── House System → #houseSelectPanel
+     │   │   │   └── Aspect Orbs → #orbOverlay
+     │   │   ├── .settings-group "App" (Language, Notifications, Terms)
+     │   │   └── .version-txt
+     │   └── .bottom-nav
+     ├── #birthOverlay (出生情報 modal)
+     ├── #orbOverlay (Aspect Orbs modal)
+     ├── #homeOverlay (自宅情報 modal)
+     └── #titleDiagOverlay (称号診断 full-screen)
+         ├── #tdScreenIntro
+         ├── #tdScreenRound (28問 card selection)
+         ├── #tdScreenPartTrans (Part transition)
+         ├── #tdScreenForging (Forging animation)
+         └── #tdScreenReveal (Result reveal)
+     ======================================== -->
+
 <div class="phone" id="phone">
   <canvas id="bgCanvas"></canvas>
   <div id="starContainer" style="position:absolute;inset:0;z-index:1;pointer-events:none;overflow:hidden;"></div>
@@ -785,9 +883,10 @@
 <script src="shared/icons.js?v=2"></script>
 <script src="shared/nav.js?v=2"></script>
 <script>
-/* ============================================================
- *  BACKGROUND CANVAS + STARS
- * ============================================================ */
+// ============================================================
+// 1. BACKGROUND CANVAS + STARS
+//    bgC, bgX, animBg, makeStars
+// ============================================================
 var bgC = document.getElementById('bgCanvas');
 var bgX = bgC.getContext('2d');
 bgC.width = window.innerWidth;
@@ -825,7 +924,9 @@ var bgT = 0;
 
 renderNav('sanctuary');
 
-/* ===== Populate settings SVG icons ===== */
+// ============================================================
+// 2. SETTINGS SVG ICONS
+// ============================================================
 (function() {
   var I = window.SOLARA_ICONS || {};
   var map = {
@@ -838,9 +939,12 @@ renderNav('sanctuary');
   }
 })();
 
-/* ============================================================
- *  PROFILE MANAGEMENT
- * ============================================================ */
+// ============================================================
+// 3. PROFILE MANAGEMENT
+//    PROFILE_KEY, loadProfile, saveProfileData,
+//    renderProfileDisplay, formatDate, syncHomeToStorage,
+//    syncHomeToVP
+// ============================================================
 var PROFILE_KEY = 'solara_profile';
 
 function loadProfile() {
@@ -895,9 +999,12 @@ function syncHomeToVP(profile) {
 
 renderProfileDisplay();
 
-/* ============================================================
- *  BIRTH INFO OVERLAY
- * ============================================================ */
+// ============================================================
+// 4. BIRTH INFO OVERLAY
+//    birthMap, birthMarker, openBirthInfo, closeBirthInfo,
+//    toggleTimeUnknown, setBirthMapLocation, searchBirthPlace,
+//    saveBirthInfo
+// ============================================================
 var birthMap = null;
 var birthMarker = null;
 
@@ -1078,9 +1185,11 @@ function saveBirthInfo() {
   closeBirthInfo();
 }
 
-/* ============================================================
- *  HOME INFO OVERLAY
- * ============================================================ */
+// ============================================================
+// 5. HOME INFO OVERLAY
+//    homeMap, homeMarker, openHomeInfo, closeHomeInfo,
+//    setHomeMapLocation, searchHomePlace, saveHomeInfo
+// ============================================================
 var homeMap = null;
 var homeMarker = null;
 
@@ -1209,9 +1318,11 @@ function saveHomeInfo() {
   closeHomeInfo();
 }
 
-/* ============================================================
- *  HOUSE SYSTEM SETTING
- * ============================================================ */
+// ============================================================
+// 6. HOUSE SYSTEM SETTING
+//    currentHouse, HOUSE_LABELS, initHouseUI,
+//    toggleHouseSelect, setHouseSystem
+// ============================================================
 var currentHouse = localStorage.getItem('solara_house_system') || 'placidus';
 var HOUSE_LABELS = { placidus: 'Placidus', whole_sign: 'Whole Sign' };
 
@@ -1233,9 +1344,14 @@ function setHouseSystem(val) {
   document.getElementById('houseSelectPanel').style.display = 'none';
 }
 
-/* ============================================================
- *  ORB SETTINGS (Overlay)
- * ============================================================ */
+// ============================================================
+// 7. ORB SETTINGS OVERLAY
+//    MAJOR_ASPECTS, MINOR_ASPECTS, PATTERN_ORBS,
+//    currentOrbs, currentPatternOrbs, buildOrbRows,
+//    formatOrbVal, resetOrbs, stepOrb, openOrbOverlay,
+//    positionDefaultMarks, closeOrbOverlay, updateOrbVal,
+//    saveOrbOverlay, updateOrbSummary
+// ============================================================
 var MAJOR_ASPECTS = [
   { key: 'conjunction', name: 'Conjunction', angle: '0°', def: 2 },
   { key: 'opposition',  name: 'Opposition',  angle: '180°', def: 2 },
@@ -1377,9 +1493,13 @@ updateOrbSummary();
   }
 })();
 
-/* ============================================================
- *  TITLE DIAGNOSIS SYSTEM
- * ============================================================ */
+// ============================================================
+// 8. TITLE DIAGNOSIS SYSTEM
+//    IMG_BASE, SUN_ADJ, MOON_NOUN, TITLE_144,
+//    TITLE_CLASSES, CLASS_NAME_JP, CLASS_TEXT, TD_ROUNDS,
+//    Sun/Moon sign calculation, State machine,
+//    Scoring, Persistence, Forging animation, Reveal animation
+// ============================================================
 
 var IMG_BASE = '../card-images/';
 
@@ -1616,7 +1736,7 @@ var CLASS_TEXT = {
   Chronomancer:{lJP:'「あの瞬間」を大事にできる',sJP:'思い出を大事にしすぎてアルバムが増え続ける',lEN:'Treasures moments others let slip by',sEN:'Hoards memories until the album shelf collapses'}
 };
 
-/* 28 Rounds definition: Part 1 Minor Arcana (R1-R9), Part 2 Major Arcana (R10-R24), Part 3 Court Cards (R25-R28) */
+// -- 28 Rounds: Part 1 Minor Arcana (R1-R9), Part 2 Major Arcana (R10-R24), Part 3 Court Cards (R25-R28)
 var TD_ROUNDS = [
   // Part 1: Minor Arcana (R1-R9)
   {part:1,qJP:'新しい何かが始まるとき、あなたが最初に手に取るのは？',qEN:'When something new begins, what do you reach for first?',
@@ -1683,7 +1803,7 @@ var TD_ROUNDS = [
 
 var PART_NAMES = {1:'Minor Arcana',2:'Major Arcana',3:'Court Cards'};
 
-/* --- Sun/Moon Sign Calculation --- */
+// -- Sun/Moon Sign Calculation
 
 var ZODIAC_DATES = [
   {sign:'capricorn',m:1,d:1},{sign:'aquarius',m:1,d:20},{sign:'pisces',m:2,d:19},
@@ -1722,7 +1842,7 @@ function getMoonSign(dateStr, timeStr) {
   return signs[Math.floor(deg / 30)];
 }
 
-/* --- State Machine --- */
+// -- State Machine
 
 var TD = {
   state: 'idle',
@@ -1913,7 +2033,7 @@ function getLeadingAxis() {
   return leading;
 }
 
-/* --- Scoring --- */
+// -- Scoring
 
 function applyWildcard() {
   var minVal = Infinity;
@@ -1984,7 +2104,7 @@ function computeResults() {
   startForging();
 }
 
-/* --- Persistence --- */
+// -- Persistence
 
 function saveTitleData() {
   localStorage.setItem('solara_title_main', JSON.stringify(TD.mainTitle));
@@ -2007,7 +2127,7 @@ function loadTitleData() {
   return null;
 }
 
-/* --- Forging Animation --- */
+// -- Forging Animation
 
 function startForging() {
   showTDScreen('tdScreenForging');
@@ -2033,12 +2153,7 @@ function startForging() {
     container.appendChild(p);
   }
 
-  if (!document.getElementById('tdParticleStyle')) {
-    var style = document.createElement('style');
-    style.id = 'tdParticleStyle';
-    style.textContent = '@keyframes tdParticleIn { 0%{opacity:0;transform:scale(0)} 30%{opacity:1;transform:scale(1.5)} 70%{opacity:0.8;transform:scale(1)} 100%{opacity:0;transform:scale(0)} }';
-    document.head.appendChild(style);
-  }
+  // tdParticleIn keyframe is now defined in CSS (section 13)
 
   var orb = document.getElementById('tdForgeOrb');
   orb.style.background = 'radial-gradient(circle, ' + color + '99 0%, ' + color + '22 60%, transparent 80%)';
@@ -2048,7 +2163,7 @@ function startForging() {
   }, 6000);
 }
 
-/* --- Reveal Animation --- */
+// -- Reveal Animation
 
 function startReveal() {
   showTDScreen('tdScreenReveal');
@@ -2098,7 +2213,10 @@ function retryDiagnosis() {
   showRound(0);
 }
 
-/* --- Share Card System (Image Composite) --- */
+// ============================================================
+// 9. SHARE CARD SYSTEM (Image Composite)
+//    shareTitle, generateShareImage
+// ============================================================
 
 var SHARE_ASSETS = 'share-assets/';
 
@@ -2402,7 +2520,10 @@ function determineFinalAxisFromScores(scores) {
   return result;
 }
 
-/* --- Title Display in Sanctuary --- */
+// ============================================================
+// 10. TITLE DISPLAY IN SANCTUARY
+//     renderTitleDisplay, renderVCard
+// ============================================================
 
 function renderTitleDisplay() {
   var data = loadTitleData();
@@ -2479,6 +2600,10 @@ function renderTitleDisplay() {
     document.getElementById('titleStartBtn').style.display = 'block';
   }
 }
+
+// ============================================================
+// 11. INIT
+// ============================================================
 
 renderTitleDisplay();
 </script>

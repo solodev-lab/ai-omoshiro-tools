@@ -49,6 +49,8 @@ class GalaxyCycle {
   final List<ConstellationDot> dots;
   final int rarity; // 1-5 stars (1=Common, 5=Mythic)
   final String rarityLabel; // "Common", "Uncommon", "Rare", "Legendary", "Mythic"
+  final int adjIdx; // HTML: adjective index for ADJ_COLORS
+  final int nounIdx; // HTML: noun index for NOUN_SHAPES/TEMPLATES
 
   const GalaxyCycle({
     required this.id,
@@ -61,6 +63,8 @@ class GalaxyCycle {
     required this.dots,
     this.rarity = 1,
     this.rarityLabel = 'Common',
+    this.adjIdx = 0,
+    this.nounIdx = 0,
   });
 
   String get dateRangeLabel {
@@ -88,6 +92,8 @@ class GalaxyCycle {
         'dots': dots.map((d) => d.toJson()).toList(),
         'rarity': rarity,
         'rarityLabel': rarityLabel,
+        'adjIdx': adjIdx,
+        'nounIdx': nounIdx,
       };
 
   factory GalaxyCycle.fromJson(Map<String, dynamic> json) {
@@ -106,6 +112,8 @@ class GalaxyCycle {
           .toList(),
       rarity: json['rarity'] as int? ?? 1,
       rarityLabel: json['rarityLabel'] as String? ?? 'Common',
+      adjIdx: json['adjIdx'] as int? ?? 0,
+      nounIdx: json['nounIdx'] as int? ?? 0,
     );
   }
 }

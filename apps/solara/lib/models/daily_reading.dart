@@ -3,12 +3,16 @@ class DailyReading {
   final int cardId; // 0-77
   final bool isMajor;
   final double moonPhase; // 0.0-29.53
+  final String stellaMsg; // HTML: generateStellaMsg() output
+  String synchronicity; // HTML: sync-input textarea (editable)
 
-  const DailyReading({
+  DailyReading({
     required this.date,
     required this.cardId,
     required this.isMajor,
     required this.moonPhase,
+    this.stellaMsg = '',
+    this.synchronicity = '',
   });
 
   Map<String, dynamic> toJson() => {
@@ -16,6 +20,8 @@ class DailyReading {
         'cardId': cardId,
         'isMajor': isMajor,
         'moonPhase': moonPhase,
+        'stellaMsg': stellaMsg,
+        'synchronicity': synchronicity,
       };
 
   factory DailyReading.fromJson(Map<String, dynamic> json) {
@@ -24,6 +30,8 @@ class DailyReading {
       cardId: json['cardId'] as int,
       isMajor: json['isMajor'] as bool,
       moonPhase: (json['moonPhase'] as num).toDouble(),
+      stellaMsg: json['stellaMsg'] as String? ?? '',
+      synchronicity: json['synchronicity'] as String? ?? '',
     );
   }
 }

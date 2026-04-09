@@ -252,36 +252,59 @@ class _GalaxyScreenState extends State<GalaxyScreen>
       nameResult.nounIdx,
     );
 
-    // Build constellation dots using Golden Angle placement + 3D z-layers
-    // Golden Angle: each dot placed at cardId × 137.508° for uniform distribution
+    // HTML exact: Place dots — Majors on NOUN_TEMPLATE positions, Minors via Golden Angle
     const goldenAngle = 137.508 * pi / 180;
     final dots = <ConstellationDot>[];
     final rng = Random(seedCardId + prevStart.millisecondsSinceEpoch);
 
-    for (int i = 0; i < readings.length; i++) {
-      final r = readings[i];
+    // Separate major/minor readings
+    final majorReadings = <DailyReading>[];
+    final minorReadings = <DailyReading>[];
+    for (final r in readings) {
+      if (r.isMajor) majorReadings.add(r);
+      else minorReadings.add(r);
+    }
+
+    // Place Majors on template positions (HTML: getTemplatePositions)
+    final templatePos = ConstellationNamer.getTemplatePositions(
+      nameResult.nounIdx, majorReadings.length, seedCardId * 100 + prevStart.day,
+    );
+    for (int i = 0; i < majorReadings.length; i++) {
+      final r = majorReadings[i];
       final rDate = DateTime.parse(r.date);
       final dayIdx = rDate.difference(prevStart).inDays;
+      final nx = templatePos[i][0];
+      final ny = templatePos[i][1];
+      final zLayer = (r.cardId % 3) - 1;
+      final zJitter = (rng.nextDouble() - 0.5) * 0.4;
+      dots.add(ConstellationDot(
+        x: nx.clamp(0.08, 0.92),
+        y: ny.clamp(0.08, 0.92),
+        z: (zLayer + zJitter).clamp(-1.0, 1.0),
+        dayIndex: dayIdx,
+        cardId: r.cardId,
+        isMajor: true,
+      ));
+    }
 
-      // Golden Angle placement based on cardId
+    // Place Minors via Golden Angle (HTML: placeCycleDots minors section)
+    for (int i = 0; i < minorReadings.length; i++) {
+      final r = minorReadings[i];
+      final rDate = DateTime.parse(r.date);
+      final dayIdx = rDate.difference(prevStart).inDays;
       final angle = r.cardId * goldenAngle;
-      final radius = 0.15 + (i / readings.length) * 0.28;
+      final radius = 0.15 + (i / max(1, minorReadings.length)) * 0.28;
       final x = 0.5 + radius * cos(angle);
       final y = 0.5 + radius * sin(angle);
-
-      // Assign z-layer: 3 layers (back/mid/front)
-      // Deterministic based on cardId
-      final zLayer = (r.cardId % 3) - 1; // -1, 0, 1
+      final zLayer = (r.cardId % 3) - 1;
       final zJitter = (rng.nextDouble() - 0.5) * 0.4;
-      final z = zLayer + zJitter;
-
       dots.add(ConstellationDot(
         x: x.clamp(0.08, 0.92),
         y: y.clamp(0.08, 0.92),
-        z: z.clamp(-1.0, 1.0),
+        z: (zLayer + zJitter).clamp(-1.0, 1.0),
         dayIndex: dayIdx,
         cardId: r.cardId,
-        isMajor: r.isMajor,
+        isMajor: false,
       ));
     }
 
@@ -298,6 +321,8 @@ class _GalaxyScreenState extends State<GalaxyScreen>
       dots: dots,
       rarity: rarity.stars,
       rarityLabel: rarity.label,
+      adjIdx: nameResult.adjIdx,
+      nounIdx: nameResult.nounIdx,
     );
   }
 
@@ -658,31 +683,57 @@ class _GalaxyScreenState extends State<GalaxyScreen>
   }
 
   // HTML: .const-card { border-radius:20px; padding:14px; aspect-ratio:0.75; }
+  // HTML: background:linear-gradient(135deg, adjColor@0.12, adjColor@0.03); border:1px adjColor@0.25
   Widget _buildConstellationCard(GalaxyCycle cycle) {
+    final adjColor = ConstellationNamer.adjColor(cycle.adjIdx);
+    final anchorCount = cycle.dots.where((d) => d.isMajor).length;
+    // HTML: rarity stars display
+    final starColor = cycle.rarity >= 4 ? const Color(0xFFF9D976)
+        : cycle.rarity >= 3 ? const Color(0xFFB080FF) : const Color(0xFF888888);
+    final starsText = '${'★' * cycle.rarity}${'☆' * (5 - cycle.rarity)}';
+
     return GestureDetector(
       onTap: () => _openReplay(cycle),
       child: Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: const Color(0x0DFFFFFF), // glass
+          // HTML: background:linear-gradient(135deg, adjColor@0.12, adjColor@0.03)
+          gradient: LinearGradient(
+            begin: Alignment.topLeft, end: Alignment.bottomRight,
+            colors: [adjColor.withAlpha((0.12 * 255).round()), adjColor.withAlpha((0.03 * 255).round())],
+          ),
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: const Color(0x1AFFFFFF)),
+          // HTML: border:1px solid adjColor@0.25
+          border: Border.all(color: adjColor.withAlpha((0.25 * 255).round())),
         ),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          // HTML: .const-mini { flex:1; display:flex; align-items:center; justify-content:center; }
+          // HTML: .const-mini { flex:1; center; canvas 80x80 }
           Expanded(child: Center(child: CustomPaint(
             painter: MiniConstellationPainter(cycle: cycle),
             size: const Size(80, 80),
           ))),
           const SizedBox(height: 8),
-          // HTML: .const-date { font-size:10px; color:#ACACAC; }
-          Text(cycle.dateRangeLabel, style: const TextStyle(
-            fontSize: 10, color: Color(0xFFACACAC))),
+          // HTML: shape type + ★★★☆☆ rarity stars (flex, space-between)
+          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+            // HTML: .const-date (shape type)
+            Text(cycle.dateRangeLabel, style: const TextStyle(
+              fontSize: 10, color: Color(0xFFACACAC))),
+            Text(starsText, style: TextStyle(fontSize: 10, color: starColor, letterSpacing: 2)),
+          ]),
           const SizedBox(height: 2),
-          // HTML: .const-seed { font-size:12px; font-weight:700; color:#EAEAEA; }
+          // HTML: .const-seed — nameEN
           Text(cycle.nameEN, style: const TextStyle(
             fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFFEAEAEA)),
             overflow: TextOverflow.ellipsis),
+          // HTML: nameJP
+          if (cycle.nameJP.isNotEmpty)
+            Text(cycle.nameJP, style: const TextStyle(
+              fontSize: 11, color: Color(0xFFACACAC)),
+              overflow: TextOverflow.ellipsis),
+          // HTML: meta — "N stars · M anchors · rarityLabel"
+          const SizedBox(height: 2),
+          Text('${cycle.dots.length} stars · $anchorCount anchors · ${cycle.rarityLabel}',
+            style: const TextStyle(fontSize: 10, color: Color(0x99ACACAC))),
         ]),
       ),
     );
@@ -734,15 +785,15 @@ class _GalaxyScreenState extends State<GalaxyScreen>
               return SizedBox(
                 width: 340,
                 child: Column(mainAxisSize: MainAxisSize.min, children: [
-                  // HTML: .replay-title { font-size:20px; font-weight:700; text-align:center; }
+                  // HTML: .replay-title — nameEN + nameJP
                   Opacity(opacity: fadeT, child: Column(children: [
                     Text(cycle.nameEN, style: const TextStyle(
                       color: Color(0xFFEAEAEA), fontSize: 20, fontWeight: FontWeight.w700),
                       textAlign: TextAlign.center),
                     const SizedBox(height: 4),
-                    // HTML: .replay-sub { font-size:12px; color:#ACACAC; text-align:center; }
                     Text(cycle.nameJP, style: const TextStyle(
-                      color: Color(0xFFACACAC), fontSize: 12), textAlign: TextAlign.center),
+                      color: Color(0xFFF9D976), fontSize: 14, fontWeight: FontWeight.w300),
+                      textAlign: TextAlign.center),
                   ])),
                   const SizedBox(height: 20),
                   // HTML: #replayCanvas { border-radius:20px; border:1px solid rgba(255,255,255,0.1); background:rgba(6,10,18,0.8); }
@@ -762,14 +813,25 @@ class _GalaxyScreenState extends State<GalaxyScreen>
                     ),
                   ),
                   const SizedBox(height: 20),
-                  // HTML: .replay-symbol + .replay-name + .replay-date
+                  // HTML: .replay-sub — stars/anchors/shape + rarity
                   Opacity(opacity: fadeT, child: Column(children: [
-                    // HTML: .replay-date { font-size:12px; color:#ACACAC; }
+                    Text('${cycle.dots.length} stars · ${cycle.dots.where((d) => d.isMajor).length} anchors',
+                      style: const TextStyle(fontSize: 12, color: Color(0xFFACACAC)),
+                      textAlign: TextAlign.center),
+                    const SizedBox(height: 4),
+                    // HTML: ★★★☆☆ + rarityLabel
+                    Row(mainAxisSize: MainAxisSize.min, children: [
+                      Text('${'★' * cycle.rarity}${'☆' * (5 - cycle.rarity)}',
+                        style: TextStyle(fontSize: 12, letterSpacing: 2,
+                          color: cycle.rarity >= 4 ? const Color(0xFFF9D976)
+                              : cycle.rarity >= 3 ? const Color(0xFFB080FF) : const Color(0xFF888888))),
+                      const SizedBox(width: 6),
+                      Text(cycle.rarityLabel, style: const TextStyle(
+                        fontSize: 11, color: Color(0xFFACACAC))),
+                    ]),
+                    const SizedBox(height: 4),
                     Text(cycle.dateRangeLabel, style: const TextStyle(
                       fontSize: 12, color: Color(0xFFACACAC))),
-                    const SizedBox(height: 4),
-                    Text('${cycle.dots.length} stars · ${cycle.dots.where((d) => d.isMajor).length} anchors',
-                      style: const TextStyle(fontSize: 12, color: Color(0xFFACACAC))),
                   ])),
                   const SizedBox(height: 24),
                   // HTML: .replay-close { background:none; border:1px solid rgba(255,255,255,0.2);

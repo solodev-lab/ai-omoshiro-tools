@@ -9,698 +9,872 @@
 <script src="shared/nav.js?v=2"></script>
 <script src="shared/vibe.js"></script>
 <style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-
-  body {
-    background: var(--bg-deep);
-    color: #E8E0D0;
-    font-family: var(--font-body);
-    overflow: hidden;
-    width: 100vw;
-    height: 100vh;
-    margin: 0; padding: 0;
-  }
-
-  .phone-frame {
-    width: 100%;
-    height: 100vh;
-    background: var(--bg-deep);
-    position: relative;
-    overflow: hidden;
-  }
-
-  .status-bar {
-    height: 50px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 11px;
-    color: #666;
-    letter-spacing: 1px;
-    z-index: 100;
-    background: #0A0A14;
-  }
-
-  /* ===== Inner tab: Draw / History ===== */
-  .inner-tab-nav {
-    display: flex;
-    height: 40px;
-    background: rgba(15, 15, 30, 0.9);
-    border-bottom: 1px solid rgba(201, 168, 76, 0.12);
-    z-index: 90;
-  }
-
-  .inner-tab-btn {
-    flex: 1;
-    border: none;
-    background: none;
-    color: #555;
-    font-size: 12px;
-    font-weight: 500;
-    letter-spacing: 1px;
-    cursor: pointer;
-    position: relative;
-    transition: color 0.3s;
-  }
-
-  .inner-tab-btn.active { color: #C9A84C; }
-
-  .inner-tab-btn.active::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 20%;
-    width: 60%;
-    height: 2px;
-    background: #C9A84C;
-    border-radius: 1px;
-  }
-
-  /* ===== Content area ===== */
-  .content-area {
-    position: absolute;
-    top: 90px;
-    left: 0; right: 0;
-    bottom: 80px;
-    overflow-y: auto;
-    overflow-x: hidden;
-    scrollbar-width: none;
-  }
-  .content-area::-webkit-scrollbar { display: none; }
-
-  .tab-panel { display: none; }
-  .tab-panel.active { display: block; }
-
-  /* ===== Draw panel ===== */
-  .draw-panel {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 20px 20px 30px;
-    max-width: 500px;
-    margin: 0 auto;
-    width: 100%;
-  }
-
-  /* ===== Location selector ===== */
-  .location-selector {
-    display: flex;
-    gap: 6px;
-    margin-bottom: 20px;
-    width: 100%;
-  }
-
-  .loc-btn {
-    flex: 1;
-    padding: 8px 4px;
-    border: 1px solid rgba(201, 168, 76, 0.2);
-    border-radius: 10px;
-    background: rgba(15, 15, 30, 0.5);
-    color: #777;
-    font-size: 11px;
-    cursor: pointer;
-    text-align: center;
-    transition: all 0.3s;
-    line-height: 1.3;
-  }
-
-  .loc-btn.active {
-    border-color: #C9A84C;
-    color: #C9A84C;
-    background: rgba(201, 168, 76, 0.08);
-  }
-
-  .loc-emoji { display: block; font-size: 16px; margin-bottom: 2px; }
-
-  .custom-loc-input {
-    width: 100%;
-    margin-bottom: 16px;
-    display: none;
-  }
-
-  .custom-loc-input.visible { display: block; }
-
-  .input-field {
-    width: 100%;
-    padding: 10px 14px;
-    background: rgba(15, 15, 30, 0.8);
-    border: 1px solid rgba(201, 168, 76, 0.2);
-    border-radius: 10px;
-    color: #E8E0D0;
-    font-size: 13px;
-    outline: none;
-    transition: border-color 0.3s;
-  }
-
-  .input-field:focus { border-color: rgba(201, 168, 76, 0.5); }
-
-  /* ===== Tarot Reading Result ===== */
-  .tarot-reading-panel {
-    display: none;
-    width: 100%;
-    margin-top: 16px;
-    padding: 18px 16px;
-    background: rgba(15, 15, 30, 0.6);
-    border: 1px solid rgba(201, 168, 76, 0.2);
-    border-radius: 16px;
-    animation: readingFadeIn 0.8s ease-out;
-  }
-  .tarot-reading-panel.visible { display: block; }
-  @keyframes readingFadeIn {
-    from { opacity: 0; transform: translateY(12px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-  .reading-header {
-    display: flex; align-items: center; gap: 10px; margin-bottom: 14px;
-  }
-  .reading-icon {
-    width: 36px; height: 36px; border-radius: 50%;
-    background: rgba(201, 168, 76, 0.12);
-    border: 1px solid rgba(201, 168, 76, 0.25);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 18px;
-  }
-  .reading-title { font-size: 13px; font-weight: 700; color: #C9A84C; letter-spacing: 1.5px; }
-  .reading-body {
-    font-size: 13px; line-height: 1.85; color: rgba(232, 224, 208, 0.85);
-    margin-bottom: 14px;
-  }
-  .reading-advice {
-    padding: 12px 14px; border-radius: 12px;
-    background: rgba(201, 168, 76, 0.06);
-    border: 1px solid rgba(201, 168, 76, 0.15);
-    font-size: 12px; line-height: 1.7; color: #C9A84C;
-  }
-  .reading-typing { display: inline; }
-  .reading-typing::after {
-    content: '▋'; animation: blink 0.8s step-end infinite; color: #C9A84C;
-  }
-  @keyframes blink { 50% { opacity: 0; } }
-
-  /* ===== Mood Input ===== */
-  .mood-input-wrap {
-    width: 100%;
-    margin-bottom: 16px;
-    padding: 14px 16px;
-    background: rgba(15, 15, 30, 0.5);
-    border: 1px solid rgba(201, 168, 76, 0.15);
-    border-radius: 14px;
-  }
-  .mood-input-label {
-    font-size: 10px; font-weight: 700; color: #C9A84C;
-    letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 10px;
-  }
-  .mood-slider-row {
-    display: flex; align-items: center; gap: 12px;
-  }
-  .mood-emoji-left, .mood-emoji-right { font-size: 18px; flex-shrink: 0; }
-  .mood-range-wrap { flex: 1; position: relative; }
-  .mood-range {
-    -webkit-appearance: none; width: 100%; height: 4px;
-    border-radius: 2px; outline: none; cursor: pointer;
-    background: linear-gradient(90deg, #1A2980, #26D0CE, #F9D976);
-  }
-  .mood-range::-webkit-slider-thumb {
-    -webkit-appearance: none; width: 20px; height: 20px;
-    border-radius: 50%; background: linear-gradient(135deg, #F9D976, #F6BD60);
-    box-shadow: 0 0 10px rgba(249,217,118,0.4); cursor: grab;
-  }
-  .mood-range::-moz-range-thumb {
-    width: 20px; height: 20px; border-radius: 50%; border: none;
-    background: linear-gradient(135deg, #F9D976, #F6BD60);
-    box-shadow: 0 0 10px rgba(249,217,118,0.4); cursor: grab;
-  }
-  .mood-val-display {
-    display: flex; justify-content: space-between; align-items: center; margin-top: 8px;
-  }
-  .mood-val-num { font-size: 18px; font-weight: 700; color: #E8E0D0; }
-  .mood-val-desc { font-size: 12px; color: #888; }
-
-  /* ===== 3D Card ===== */
-  .card-scene {
-    width: 200px;
-    height: 320px;
-    perspective: 800px;
-    margin-bottom: 16px;
-  }
-
-  .card-3d {
-    width: 100%;
-    height: 100%;
-    position: relative;
-    transform-style: preserve-3d;
-    transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-
-  .card-3d.flipped { transform: rotateY(180deg); }
-
-  .card-face {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    backface-visibility: hidden;
-    border-radius: 14px;
-    overflow: hidden;
-  }
-
-  /* Card back */
-  .card-back {
-    background: linear-gradient(135deg, #1a1a3e, #0d0d2b);
-    border: 2px solid #C9A84C;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .card-back-pattern {
-    width: 160px;
-    height: 260px;
-    border: 1px solid rgba(201, 168, 76, 0.3);
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-    background: radial-gradient(ellipse at center, rgba(107, 92, 231, 0.08) 0%, transparent 70%);
-  }
-
-  .card-back-symbol {
-    font-size: 48px;
-    opacity: 0.6;
-    animation: cardPulse 3s ease-in-out infinite;
-  }
-
-  .card-back-corners {
-    position: absolute;
-    inset: 8px;
-    border: 1px solid rgba(201, 168, 76, 0.15);
-    border-radius: 4px;
-  }
-
-  .card-back-star {
-    position: absolute;
-    font-size: 10px;
-    color: #C9A84C;
-    opacity: 0.3;
-  }
-  .card-back-star:nth-child(3) { top: 4px; left: 4px; }
-  .card-back-star:nth-child(4) { top: 4px; right: 4px; }
-  .card-back-star:nth-child(5) { bottom: 4px; left: 4px; }
-  .card-back-star:nth-child(6) { bottom: 4px; right: 4px; }
-
-  @keyframes cardPulse {
-    0%, 100% { opacity: 0.5; transform: scale(1); }
-    50% { opacity: 0.8; transform: scale(1.05); }
-  }
-
-  /* Card front */
-  .card-front {
-    background: linear-gradient(180deg, #1a1a3e 0%, #0d0d2b 100%);
-    border: 2px solid #C9A84C;
-    transform: rotateY(180deg);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 16px;
-  }
-
-  .card-element-badge {
-    font-size: 11px;
-    letter-spacing: 1.5px;
-    color: #aaa;
-    margin-bottom: 8px;
-    display: flex;
-    align-items: center;
-    gap: 2px;
-  }
-
-  .card-emoji { font-size: 56px; margin-bottom: 12px; filter: drop-shadow(0 0 20px rgba(201, 168, 76, 0.4)); }
-  .card-name-en { font-size: 14px; color: #C9A84C; letter-spacing: 2px; font-weight: 600; margin-bottom: 4px; text-align: center; }
-  .card-name-jp { font-size: 18px; color: #E8E0D0; font-weight: 300; margin-bottom: 8px; }
-  .card-keyword { font-size: 13px; color: #999; font-style: italic; }
-
-  .card-planet-line {
-    margin-top: 12px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 11px;
-    color: #888;
-  }
-
-  .tap-hint {
-    font-size: 11px;
-    color: #555;
-    margin-bottom: 16px;
-    transition: opacity 0.3s;
-    height: 16px;
-  }
-  .tap-hint.hidden { opacity: 0; }
-
-  .drawn-msg {
-    font-size: 13px;
-    color: #666;
-    letter-spacing: 0.5px;
-    margin-bottom: 20px;
-    text-align: center;
-    min-height: 20px;
-  }
-
-  /* ===== Result panel ===== */
-  .result-panel {
-    width: 100%;
-    background: rgba(15, 15, 30, 0.6);
-    border: 1px solid rgba(201, 168, 76, 0.15);
-    border-radius: 16px;
-    padding: 20px;
-    margin-bottom: 16px;
-    display: none;
-    opacity: 0;
-    transform: translateY(20px);
-    transition: all 0.6s ease;
-  }
-
-  .result-panel.visible { display: block; opacity: 1; transform: translateY(0); }
-
-  .result-title { font-size: 11px; color: #666; letter-spacing: 1.5px; margin-bottom: 12px; }
-
-  .boost-direction { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
-
-  .compass-mini {
-    width: 64px; height: 64px;
-    border-radius: 50%;
-    border: 1.5px solid rgba(201, 168, 76, 0.3);
-    position: relative;
-    flex-shrink: 0;
-  }
-
-  .compass-needle {
-    position: absolute;
-    width: 2px; height: 24px;
-    background: #C9A84C;
-    left: 50%; top: 8px;
-    transform-origin: bottom center;
-    border-radius: 1px;
-    box-shadow: 0 0 8px rgba(201, 168, 76, 0.5);
-  }
-
-  .compass-labels { position: absolute; inset: 0; font-size: 7px; color: #666; }
-  .compass-labels span { position: absolute; }
-  .cl-n { top: 2px; left: 50%; transform: translateX(-50%); }
-  .cl-e { right: 3px; top: 50%; transform: translateY(-50%); }
-  .cl-s { bottom: 2px; left: 50%; transform: translateX(-50%); }
-  .cl-w { left: 3px; top: 50%; transform: translateY(-50%); }
-
-  .boost-label { font-size: 20px; font-weight: 600; color: #C9A84C; margin-bottom: 4px; }
-  .boost-desc { font-size: 12px; color: #999; line-height: 1.5; }
-
-  .planet-boost-list { display: flex; flex-wrap: wrap; gap: 8px; }
-
-  .planet-badge {
-    display: flex; align-items: center; gap: 4px;
-    padding: 4px 10px; border-radius: 20px;
-    background: rgba(201, 168, 76, 0.08);
-    border: 1px solid rgba(201, 168, 76, 0.2);
-    font-size: 11px; color: #C9A84C;
-  }
-
-  /* ===== Stella message ===== */
-  .stella-msg {
-    width: 100%;
-    background: rgba(15, 15, 30, 0.5);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(201, 168, 76, 0.1);
-    border-radius: 14px;
-    padding: 16px;
-    opacity: 0;
-    transition: opacity 0.6s;
-  }
-  .stella-msg.visible { opacity: 1; }
-  .stella-label { font-size: 10px; color: #C9A84C; letter-spacing: 1px; margin-bottom: 6px; }
-  .stella-text { font-size: 13px; color: #ccc; line-height: 1.6; }
-
-  /* ===== Apply to Map button ===== */
-  .apply-map-btn {
-    display: none;
-    width: 100%;
-    margin-top: 16px;
-    padding: 14px 20px;
-    background: linear-gradient(135deg, rgba(201, 168, 76, 0.15), rgba(107, 92, 231, 0.1));
-    border: 1px solid rgba(201, 168, 76, 0.4);
-    border-radius: 30px;
-    color: #C9A84C;
-    font-size: 14px;
-    font-weight: 600;
-    letter-spacing: 1.5px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    position: relative;
-    overflow: hidden;
-  }
-  .apply-map-btn.visible { display: block; animation: applyBtnAppear 0.6s ease forwards; }
-  .apply-map-btn:hover {
-    background: linear-gradient(135deg, rgba(201, 168, 76, 0.25), rgba(107, 92, 231, 0.15));
-    box-shadow: 0 0 25px rgba(201, 168, 76, 0.3), 0 0 50px rgba(107, 92, 231, 0.1);
-    transform: translateY(-1px);
-  }
-  .apply-map-btn:active { transform: translateY(0); }
-  .apply-map-btn::before {
-    content: '';
-    position: absolute;
-    top: 0; left: -100%; width: 100%; height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(201, 168, 76, 0.15), transparent);
-    animation: shimmer 2.5s infinite;
-  }
-  @keyframes shimmer {
-    0% { left: -100%; }
-    100% { left: 100%; }
-  }
-  @keyframes applyBtnAppear {
-    from { opacity: 0; transform: translateY(15px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  /* ===== History panel ===== */
-  .history-panel { padding: 16px 16px 30px; }
-
-  .history-empty {
-    text-align: center;
-    padding: 60px 20px;
-    color: #444;
-    font-size: 13px;
-    line-height: 1.8;
-  }
-
-  .history-card {
-    border-radius: 14px;
-    margin-bottom: 12px;
-    overflow: hidden;
-    border-left: 3px solid #C9A84C;
-    background: rgba(15, 15, 30, 0.5);
-  }
-
-  .history-card[data-element="fire"]  { border-left-color: #FF6B35; }
-  .history-card[data-element="water"] { border-left-color: #4169E1; }
-  .history-card[data-element="air"]   { border-left-color: #87CEEB; }
-  .history-card[data-element="earth"] { border-left-color: #2E8B57; }
-
-  .history-card-main {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 14px 12px;
-    cursor: pointer;
-    transition: background 0.2s;
-  }
-
-  .history-card-main:hover { background: rgba(255,255,255,0.02); }
-
-  .history-card-emoji {
-    font-size: 28px;
-    width: 40px;
-    text-align: center;
-    flex-shrink: 0;
-  }
-
-  .history-card-info { flex: 1; min-width: 0; }
-
-  .history-card-name {
-    font-size: 14px;
-    color: #E8E0D0;
-    margin-bottom: 2px;
-    font-weight: 500;
-  }
-
-  .history-card-keyword {
-    font-size: 11px;
-    color: #999;
-    font-style: italic;
-    margin-bottom: 4px;
-  }
-
-  .history-card-meta {
-    font-size: 10px;
-    color: #555;
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-  }
-
-  .history-card-chevron {
-    color: #555;
-    font-size: 14px;
-    flex-shrink: 0;
-    transition: transform 0.3s;
-    width: 20px;
-    text-align: center;
-  }
-
-  .history-card.expanded .history-card-chevron { transform: rotate(180deg); }
-
-  /* Expandable detail */
-  .history-card-detail {
-    max-height: 0;
-    overflow: hidden;
-    transition: max-height 0.4s ease, padding 0.3s ease;
-    padding: 0 14px;
-    background: rgba(10, 10, 20, 0.4);
-  }
-
-  .history-card.expanded .history-card-detail {
-    max-height: 400px;
-    padding: 14px;
-  }
-
-  .detail-boost-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 12px;
-  }
-
-  .detail-boost-dir {
-    font-size: 18px;
-    font-weight: 600;
-    color: #C9A84C;
-  }
-
-  .detail-boost-text {
-    font-size: 11px;
-    color: #999;
-  }
-
-  .detail-planets {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    margin-bottom: 12px;
-  }
-
-  .detail-planet-tag {
-    padding: 3px 8px;
-    border-radius: 12px;
-    background: rgba(201, 168, 76, 0.06);
-    border: 1px solid rgba(201, 168, 76, 0.15);
-    font-size: 10px;
-    color: #C9A84C;
-  }
-
-  /* Synchronicity input */
-  .sync-section {
-    border-top: 1px solid rgba(255,255,255,0.04);
-    padding-top: 10px;
-  }
-
-  .sync-label {
-    font-size: 10px;
-    color: #666;
-    letter-spacing: 1px;
-    margin-bottom: 6px;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-  }
-
-  .sync-input {
-    width: 100%;
-    padding: 8px 10px;
-    background: rgba(15, 15, 30, 0.6);
-    border: 1px solid rgba(201, 168, 76, 0.12);
-    border-radius: 8px;
-    color: #E8E0D0;
-    font-size: 12px;
-    outline: none;
-    resize: none;
-    min-height: 50px;
-    transition: border-color 0.3s;
-    font-family: inherit;
-  }
-
-  .sync-input:focus { border-color: rgba(201, 168, 76, 0.3); }
-
-  .sync-input::placeholder { color: #444; }
-
-  .sync-saved {
-    font-size: 9px;
-    color: #C9A84C;
-    opacity: 0;
-    transition: opacity 0.3s;
-    margin-top: 4px;
-    text-align: right;
-  }
-
-  .sync-saved.show { opacity: 1; }
-
-  /* History header */
-  .history-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 14px;
-    padding: 0 2px;
-  }
-
-  .history-title { font-size: 12px; color: #666; letter-spacing: 1.5px; }
-
-  .history-clear {
-    font-size: 10px;
-    color: #444;
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 4px 8px;
-  }
-  .history-clear:hover { color: #888; }
-
-  /* Bottom nav — styled by shared/styles.css */
-
-  /* ===== Particle canvas ===== */
-  #particleCanvas {
-    position: absolute;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    z-index: 200;
-    pointer-events: none;
-  }
+
+/* ========================================
+   1. BASE — Reset, body, phone frame
+   ======================================== */
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--bg-deep);
+  color: #E8E0D0;
+  font-family: var(--font-body);
+  overflow: hidden;
+  width: 100vw;
+  height: 100vh;
+  margin: 0; padding: 0;
+}
+
+.phone-frame {
+  width: 100%;
+  height: 100vh;
+  background: var(--bg-deep);
+  position: relative;
+  overflow: hidden;
+}
+
+.status-bar {
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  color: #666;
+  letter-spacing: 1px;
+  z-index: 100;
+  background: #0A0A14;
+}
+
+/* ========================================
+   2. TAB NAVIGATION — Draw / History
+   ======================================== */
+
+.inner-tab-nav {
+  display: flex;
+  height: 40px;
+  background: rgba(15, 15, 30, 0.9);
+  border-bottom: 1px solid rgba(201, 168, 76, 0.12);
+  z-index: 90;
+}
+
+.inner-tab-btn {
+  flex: 1;
+  border: none;
+  background: none;
+  color: #555;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 1px;
+  cursor: pointer;
+  position: relative;
+  transition: color 0.3s;
+}
+
+.inner-tab-btn.active { color: #C9A84C; }
+
+.inner-tab-btn.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 20%;
+  width: 60%;
+  height: 2px;
+  background: #C9A84C;
+  border-radius: 1px;
+}
+
+/* ========================================
+   3. CONTENT AREA & DRAW PANEL
+   ======================================== */
+
+.content-area {
+  position: absolute;
+  top: 90px;
+  left: 0; right: 0;
+  bottom: 80px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: none;
+}
+.content-area::-webkit-scrollbar { display: none; }
+
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+.draw-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px 20px 30px;
+  max-width: 500px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* ========================================
+   4. LOCATION SELECTOR
+   ======================================== */
+
+.location-selector {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 20px;
+  width: 100%;
+}
+
+.loc-btn {
+  flex: 1;
+  padding: 8px 4px;
+  border: 1px solid rgba(201, 168, 76, 0.2);
+  border-radius: 10px;
+  background: rgba(15, 15, 30, 0.5);
+  color: #777;
+  font-size: 11px;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.3s;
+  line-height: 1.3;
+}
+
+.loc-btn.active {
+  border-color: #C9A84C;
+  color: #C9A84C;
+  background: rgba(201, 168, 76, 0.08);
+}
+
+.loc-emoji { display: block; font-size: 16px; margin-bottom: 2px; }
+
+.custom-loc-input {
+  width: 100%;
+  margin-bottom: 16px;
+  display: none;
+}
+.custom-loc-input.visible { display: block; }
+
+.input-field {
+  width: 100%;
+  padding: 10px 14px;
+  background: rgba(15, 15, 30, 0.8);
+  border: 1px solid rgba(201, 168, 76, 0.2);
+  border-radius: 10px;
+  color: #E8E0D0;
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.3s;
+}
+.input-field:focus { border-color: rgba(201, 168, 76, 0.5); }
+
+/* ========================================
+   5. MOOD SLIDER
+   ======================================== */
+
+.mood-input-wrap {
+  width: 100%;
+  margin-bottom: 16px;
+  padding: 14px 16px;
+  background: rgba(15, 15, 30, 0.5);
+  border: 1px solid rgba(201, 168, 76, 0.15);
+  border-radius: 14px;
+}
+
+.mood-input-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: #C9A84C;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+
+.mood-slider-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.mood-emoji-left,
+.mood-emoji-right {
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.mood-range-wrap { flex: 1; position: relative; }
+
+.mood-range {
+  -webkit-appearance: none;
+  width: 100%;
+  height: 4px;
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+  background: linear-gradient(90deg, #1A2980, #26D0CE, #F9D976);
+}
+.mood-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #F9D976, #F6BD60);
+  box-shadow: 0 0 10px rgba(249,217,118,0.4);
+  cursor: grab;
+}
+.mood-range::-moz-range-thumb {
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  border: none;
+  background: linear-gradient(135deg, #F9D976, #F6BD60);
+  box-shadow: 0 0 10px rgba(249,217,118,0.4);
+  cursor: grab;
+}
+
+.mood-val-display {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 8px;
+}
+.mood-val-num  { font-size: 18px; font-weight: 700; color: #E8E0D0; }
+.mood-val-desc { font-size: 12px; color: #888; }
+
+/* ========================================
+   6. 3D CARD — Scene, flip, faces
+   ======================================== */
+
+.card-scene {
+  width: 200px;
+  height: 320px;
+  perspective: 800px;
+  margin-bottom: 16px;
+}
+
+.card-3d {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  transform-style: preserve-3d;
+  transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.card-3d.flipped { transform: rotateY(180deg); }
+
+.card-face {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+/* -- Card back ------------------------------------------------ */
+
+.card-back {
+  background: linear-gradient(135deg, #1a1a3e, #0d0d2b);
+  border: 2px solid #C9A84C;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.card-back-pattern {
+  width: 160px;
+  height: 260px;
+  border: 1px solid rgba(201, 168, 76, 0.3);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  background: radial-gradient(ellipse at center, rgba(107, 92, 231, 0.08) 0%, transparent 70%);
+}
+
+.card-back-symbol {
+  font-size: 48px;
+  opacity: 0.6;
+  animation: cardPulse 3s ease-in-out infinite;
+}
+
+.card-back-corners {
+  position: absolute;
+  inset: 8px;
+  border: 1px solid rgba(201, 168, 76, 0.15);
+  border-radius: 4px;
+}
+
+.card-back-star {
+  position: absolute;
+  font-size: 10px;
+  color: #C9A84C;
+  opacity: 0.3;
+}
+.card-back-star:nth-child(3) { top: 4px; left: 4px; }
+.card-back-star:nth-child(4) { top: 4px; right: 4px; }
+.card-back-star:nth-child(5) { bottom: 4px; left: 4px; }
+.card-back-star:nth-child(6) { bottom: 4px; right: 4px; }
+
+/* -- Card front ----------------------------------------------- */
+
+.card-front {
+  background: linear-gradient(180deg, #1a1a3e 0%, #0d0d2b 100%);
+  border: 2px solid #C9A84C;
+  transform: rotateY(180deg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+/* ========================================
+   7. CARD DETAILS — Element, emoji, name, planet
+   ======================================== */
+
+.card-element-badge {
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  color: #aaa;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.card-emoji {
+  font-size: 56px;
+  margin-bottom: 12px;
+  filter: drop-shadow(0 0 20px rgba(201, 168, 76, 0.4));
+}
+
+.card-name-en {
+  font-size: 14px;
+  color: #C9A84C;
+  letter-spacing: 2px;
+  font-weight: 600;
+  margin-bottom: 4px;
+  text-align: center;
+}
+
+.card-name-jp {
+  font-size: 18px;
+  color: #E8E0D0;
+  font-weight: 300;
+  margin-bottom: 8px;
+}
+
+.card-keyword {
+  font-size: 13px;
+  color: #999;
+  font-style: italic;
+}
+
+.card-planet-line {
+  margin-top: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: #888;
+}
+
+/* ========================================
+   8. TAP HINT & DRAWN MESSAGE
+   ======================================== */
+
+.tap-hint {
+  font-size: 11px;
+  color: #555;
+  margin-bottom: 16px;
+  transition: opacity 0.3s;
+  height: 16px;
+}
+.tap-hint.hidden { opacity: 0; }
+
+.drawn-msg {
+  font-size: 13px;
+  color: #666;
+  letter-spacing: 0.5px;
+  margin-bottom: 20px;
+  text-align: center;
+  min-height: 20px;
+}
+
+/* ========================================
+   9. RESULT PANEL — Boost direction, compass
+   ======================================== */
+
+.result-panel {
+  width: 100%;
+  background: rgba(15, 15, 30, 0.6);
+  border: 1px solid rgba(201, 168, 76, 0.15);
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 16px;
+  display: none;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: all 0.6s ease;
+}
+.result-panel.visible { display: block; opacity: 1; transform: translateY(0); }
+
+.result-title {
+  font-size: 11px;
+  color: #666;
+  letter-spacing: 1.5px;
+  margin-bottom: 12px;
+}
+
+.boost-direction {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.compass-mini {
+  width: 64px; height: 64px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(201, 168, 76, 0.3);
+  position: relative;
+  flex-shrink: 0;
+}
+
+.compass-needle {
+  position: absolute;
+  width: 2px; height: 24px;
+  background: #C9A84C;
+  left: 50%; top: 8px;
+  transform-origin: bottom center;
+  border-radius: 1px;
+  box-shadow: 0 0 8px rgba(201, 168, 76, 0.5);
+}
+
+.compass-labels { position: absolute; inset: 0; font-size: 7px; color: #666; }
+.compass-labels span { position: absolute; }
+.cl-n { top: 2px; left: 50%; transform: translateX(-50%); }
+.cl-e { right: 3px; top: 50%; transform: translateY(-50%); }
+.cl-s { bottom: 2px; left: 50%; transform: translateX(-50%); }
+.cl-w { left: 3px; top: 50%; transform: translateY(-50%); }
+
+.boost-label { font-size: 20px; font-weight: 600; color: #C9A84C; margin-bottom: 4px; }
+.boost-desc  { font-size: 12px; color: #999; line-height: 1.5; }
+
+.planet-boost-list { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.planet-badge {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  background: rgba(201, 168, 76, 0.08);
+  border: 1px solid rgba(201, 168, 76, 0.2);
+  font-size: 11px;
+  color: #C9A84C;
+}
+
+/* ========================================
+   10. TAROT READING PANEL
+   ======================================== */
+
+.tarot-reading-panel {
+  display: none;
+  width: 100%;
+  margin-top: 16px;
+  padding: 18px 16px;
+  background: rgba(15, 15, 30, 0.6);
+  border: 1px solid rgba(201, 168, 76, 0.2);
+  border-radius: 16px;
+  animation: readingFadeIn 0.8s ease-out;
+}
+.tarot-reading-panel.visible { display: block; }
+
+.reading-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.reading-icon {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: rgba(201, 168, 76, 0.12);
+  border: 1px solid rgba(201, 168, 76, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+
+.reading-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #C9A84C;
+  letter-spacing: 1.5px;
+}
+
+.reading-body {
+  font-size: 13px;
+  line-height: 1.85;
+  color: rgba(232, 224, 208, 0.85);
+  margin-bottom: 14px;
+}
+
+.reading-advice {
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: rgba(201, 168, 76, 0.06);
+  border: 1px solid rgba(201, 168, 76, 0.15);
+  font-size: 12px;
+  line-height: 1.7;
+  color: #C9A84C;
+}
+
+.reading-typing { display: inline; }
+.reading-typing::after {
+  content: '▋';
+  animation: blink 0.8s step-end infinite;
+  color: #C9A84C;
+}
+
+/* ========================================
+   11. STELLA MESSAGE
+   ======================================== */
+
+.stella-msg {
+  width: 100%;
+  background: rgba(15, 15, 30, 0.5);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(201, 168, 76, 0.1);
+  border-radius: 14px;
+  padding: 16px;
+  opacity: 0;
+  transition: opacity 0.6s;
+}
+.stella-msg.visible { opacity: 1; }
+
+.stella-label {
+  font-size: 10px;
+  color: #C9A84C;
+  letter-spacing: 1px;
+  margin-bottom: 6px;
+}
+
+.stella-text {
+  font-size: 13px;
+  color: #ccc;
+  line-height: 1.6;
+}
+
+/* ========================================
+   12. APPLY TO MAP BUTTON
+   ======================================== */
+
+.apply-map-btn {
+  display: none;
+  width: 100%;
+  margin-top: 16px;
+  padding: 14px 20px;
+  background: linear-gradient(135deg, rgba(201, 168, 76, 0.15), rgba(107, 92, 231, 0.1));
+  border: 1px solid rgba(201, 168, 76, 0.4);
+  border-radius: 30px;
+  color: #C9A84C;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+.apply-map-btn.visible { display: block; animation: applyBtnAppear 0.6s ease forwards; }
+
+.apply-map-btn:hover {
+  background: linear-gradient(135deg, rgba(201, 168, 76, 0.25), rgba(107, 92, 231, 0.15));
+  box-shadow: 0 0 25px rgba(201, 168, 76, 0.3), 0 0 50px rgba(107, 92, 231, 0.1);
+  transform: translateY(-1px);
+}
+.apply-map-btn:active { transform: translateY(0); }
+
+.apply-map-btn::before {
+  content: '';
+  position: absolute;
+  top: 0; left: -100%;
+  width: 100%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(201, 168, 76, 0.15), transparent);
+  animation: shimmer 2.5s infinite;
+}
+
+/* ========================================
+   13. HISTORY PANEL
+   ======================================== */
+
+/* -- Header --------------------------------------------------- */
+
+.history-panel { padding: 16px 16px 30px; }
+
+.history-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  padding: 0 2px;
+}
+
+.history-title {
+  font-size: 12px;
+  color: #666;
+  letter-spacing: 1.5px;
+}
+
+.history-clear {
+  font-size: 10px;
+  color: #444;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px 8px;
+}
+.history-clear:hover { color: #888; }
+
+/* -- Empty state ---------------------------------------------- */
+
+.history-empty {
+  text-align: center;
+  padding: 60px 20px;
+  color: #444;
+  font-size: 13px;
+  line-height: 1.8;
+}
+
+/* -- Card list ------------------------------------------------ */
+
+.history-card {
+  border-radius: 14px;
+  margin-bottom: 12px;
+  overflow: hidden;
+  border-left: 3px solid #C9A84C;
+  background: rgba(15, 15, 30, 0.5);
+}
+
+.history-card[data-element="fire"]  { border-left-color: #FF6B35; }
+.history-card[data-element="water"] { border-left-color: #4169E1; }
+.history-card[data-element="air"]   { border-left-color: #87CEEB; }
+.history-card[data-element="earth"] { border-left-color: #2E8B57; }
+
+.history-card-main {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 12px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.history-card-main:hover { background: rgba(255,255,255,0.02); }
+
+.history-card-emoji {
+  font-size: 28px;
+  width: 40px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.history-card-info { flex: 1; min-width: 0; }
+
+.history-card-name {
+  font-size: 14px;
+  color: #E8E0D0;
+  margin-bottom: 2px;
+  font-weight: 500;
+}
+
+.history-card-keyword {
+  font-size: 11px;
+  color: #999;
+  font-style: italic;
+  margin-bottom: 4px;
+}
+
+.history-card-meta {
+  font-size: 10px;
+  color: #555;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.history-card-chevron {
+  color: #555;
+  font-size: 14px;
+  flex-shrink: 0;
+  transition: transform 0.3s;
+  width: 20px;
+  text-align: center;
+}
+.history-card.expanded .history-card-chevron { transform: rotate(180deg); }
+
+/* -- Expandable detail ---------------------------------------- */
+
+.history-card-detail {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.4s ease, padding 0.3s ease;
+  padding: 0 14px;
+  background: rgba(10, 10, 20, 0.4);
+}
+.history-card.expanded .history-card-detail {
+  max-height: 400px;
+  padding: 14px;
+}
+
+.detail-boost-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.detail-boost-dir {
+  font-size: 18px;
+  font-weight: 600;
+  color: #C9A84C;
+}
+
+.detail-boost-text {
+  font-size: 11px;
+  color: #999;
+}
+
+.detail-planets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.detail-planet-tag {
+  padding: 3px 8px;
+  border-radius: 12px;
+  background: rgba(201, 168, 76, 0.06);
+  border: 1px solid rgba(201, 168, 76, 0.15);
+  font-size: 10px;
+  color: #C9A84C;
+}
+
+/* -- Synchronicity input -------------------------------------- */
+
+.sync-section {
+  border-top: 1px solid rgba(255,255,255,0.04);
+  padding-top: 10px;
+}
+
+.sync-label {
+  font-size: 10px;
+  color: #666;
+  letter-spacing: 1px;
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.sync-input {
+  width: 100%;
+  padding: 8px 10px;
+  background: rgba(15, 15, 30, 0.6);
+  border: 1px solid rgba(201, 168, 76, 0.12);
+  border-radius: 8px;
+  color: #E8E0D0;
+  font-size: 12px;
+  outline: none;
+  resize: none;
+  min-height: 50px;
+  transition: border-color 0.3s;
+  font-family: inherit;
+}
+.sync-input:focus { border-color: rgba(201, 168, 76, 0.3); }
+.sync-input::placeholder { color: #444; }
+
+.sync-saved {
+  font-size: 9px;
+  color: #C9A84C;
+  opacity: 0;
+  transition: opacity 0.3s;
+  margin-top: 4px;
+  text-align: right;
+}
+.sync-saved.show { opacity: 1; }
+
+/* ========================================
+   14. PARTICLE CANVAS
+   ======================================== */
+
+#particleCanvas {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  z-index: 200;
+  pointer-events: none;
+}
+
+/* ========================================
+   15. ANIMATIONS — Keyframes
+   ======================================== */
+
+@keyframes cardPulse {
+  0%, 100% { opacity: 0.5; transform: scale(1); }
+  50%      { opacity: 0.8; transform: scale(1.05); }
+}
+
+@keyframes readingFadeIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes blink {
+  50% { opacity: 0; }
+}
+
+@keyframes shimmer {
+  0%   { left: -100%; }
+  100% { left: 100%; }
+}
+
+@keyframes applyBtnAppear {
+  from { opacity: 0; transform: translateY(15px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
 </style>
 </head>
 <body>
 
+<!-- ========================================
+     BODY STRUCTURE
+     phone-frame > status-bar
+                 > inner-tab-nav (Draw / History)
+                 > content-area
+                   > drawPanel  (card, stella, reading)
+                   > historyPanel
+                 > particleCanvas
+                 > bottom-nav
+     ======================================== -->
+
 <div class="phone-frame cosmic-bg">
   <div class="status-bar">S O L A R A</div>
 
-  <!-- Inner tabs: Draw / History -->
+  <!-- Tab navigation: Draw / History -->
   <div class="inner-tab-nav">
     <button class="inner-tab-btn active" data-tab="draw">&#x1f0cf; TAROT DRAW</button>
     <button class="inner-tab-btn" data-tab="history">&#x1f4dc; HISTORY</button>
   </div>
 
   <div class="content-area">
+
     <!-- ===== Draw Tab ===== -->
     <div class="tab-panel active" id="drawPanel">
       <div class="draw-panel">
+
         <!-- 3D Card -->
         <div class="card-scene" id="cardScene">
           <div class="card-3d" id="card3d">
@@ -726,16 +900,15 @@
         </div>
 
         <div class="tap-hint" id="tapHint">&#x1f446; タップしてカードを引く</div>
-
         <div class="drawn-msg" id="drawnMsg"></div>
 
-        <!-- Stella -->
+        <!-- Stella message -->
         <div class="stella-msg" id="stellaMsg">
           <div class="stella-label">&#x2728; Stella</div>
           <div class="stella-text" id="stellaText"></div>
         </div>
 
-        <!-- Tarot Reading Result -->
+        <!-- Tarot Reading result -->
         <div class="tarot-reading-panel" id="tarotReadingPanel">
           <div class="reading-header">
             <div class="reading-icon">🔮</div>
@@ -758,17 +931,22 @@
         <div id="historyList"></div>
       </div>
     </div>
+
   </div>
 
   <!-- Particle canvas -->
   <canvas id="particleCanvas"></canvas>
 
-  <!-- Bottom nav (5-tab, rendered by shared/nav.js) -->
+  <!-- Bottom nav (rendered by shared/nav.js) -->
   <div class="bottom-nav"></div>
 </div>
 
 <script>
-// ===== Card Data =====
+// ============================================================
+// 1. CARD DATA
+//    SUIT_MAP, PLANET_SYMBOLS, ELEMENT_*, MAJOR, MINOR, ALL_CARDS
+// ============================================================
+
 var SUIT_MAP = {
   wands:     { element:'fire',  planets:['sun','mars','jupiter'],     emoji:'🔥', color:'#FF6B35' },
   cups:      { element:'water', planets:['moon','neptune','pluto'],    emoji:'🌊', color:'#4169E1' },
@@ -777,109 +955,78 @@ var SUIT_MAP = {
 };
 
 var PLANET_SYMBOLS = {
-  sun:{symbol:'☉',nameJP:'太陽',color:'#FFD700'},
-  moon:{symbol:'☽',nameJP:'月',color:'#C0C0C0'},
-  mercury:{symbol:'☿',nameJP:'水星',color:'#87CEEB'},
-  venus:{symbol:'♀',nameJP:'金星',color:'#FF69B4'},
-  mars:{symbol:'♂',nameJP:'火星',color:'#FF4500'},
-  jupiter:{symbol:'♃',nameJP:'木星',color:'#FFA500'},
-  saturn:{symbol:'♄',nameJP:'土星',color:'#808080'},
-  uranus:{symbol:'♅',nameJP:'天王星',color:'#00CED1'},
-  neptune:{symbol:'♆',nameJP:'海王星',color:'#4169E1'},
-  pluto:{symbol:'♇',nameJP:'冥王星',color:'#8B0000'}
+  sun:     { symbol:'☉', nameJP:'太陽',   color:'#FFD700' },
+  moon:    { symbol:'☽', nameJP:'月',     color:'#C0C0C0' },
+  mercury: { symbol:'☿', nameJP:'水星',   color:'#87CEEB' },
+  venus:   { symbol:'♀', nameJP:'金星',   color:'#FF69B4' },
+  mars:    { symbol:'♂', nameJP:'火星',   color:'#FF4500' },
+  jupiter: { symbol:'♃', nameJP:'木星',   color:'#FFA500' },
+  saturn:  { symbol:'♄', nameJP:'土星',   color:'#808080' },
+  uranus:  { symbol:'♅', nameJP:'天王星', color:'#00CED1' },
+  neptune: { symbol:'♆', nameJP:'海王星', color:'#4169E1' },
+  pluto:   { symbol:'♇', nameJP:'冥王星', color:'#8B0000' }
 };
 
 var ELEMENT_COLORS = { fire:'#FF6B35', water:'#4169E1', air:'#87CEEB', earth:'#2E8B57' };
-var ELEMENT_NAMES = { fire:'火', water:'水', air:'風', earth:'地' };
-var ELEMENT_EMOJI = { fire:'🔥', water:'🌊', air:'💨', earth:'🌿' };
+var ELEMENT_NAMES  = { fire:'火', water:'水', air:'風', earth:'地' };
+var ELEMENT_EMOJI  = { fire:'🔥', water:'🌊', air:'💨', earth:'🌿' };
 
 var MAJOR = [
-  {id:0,nameEN:'The Fool',nameJP:'愚者',keyword:'自由と冒険',planet:'uranus',element:'air',boost:0.05,boostType:'all',emoji:'🌬️',displayName:'THE FOOL'},
-  {id:1,nameEN:'The Magician',nameJP:'魔術師',keyword:'意志と創造',planet:'mercury',element:'air',boost:0.30,boostType:'single',emoji:'⚡',displayName:'THE MAGICIAN'},
-  {id:2,nameEN:'The High Priestess',nameJP:'女教皇',keyword:'直感と神秘',planet:'moon',element:'water',boost:0.30,boostType:'single',emoji:'🌙',displayName:'HIGH PRIESTESS'},
-  {id:3,nameEN:'The Empress',nameJP:'女帝',keyword:'豊穣と美',planet:'venus',element:'earth',boost:0.30,boostType:'single',emoji:'🌸',displayName:'THE EMPRESS'},
-  {id:4,nameEN:'The Emperor',nameJP:'皇帝',keyword:'統率と秩序',planet:'mars',element:'fire',boost:0.30,boostType:'single',emoji:'🔥',displayName:'THE EMPEROR'},
-  {id:5,nameEN:'The Hierophant',nameJP:'法王',keyword:'伝統と教え',planet:'venus',element:'earth',boost:0.30,boostType:'single',emoji:'📿',displayName:'THE HIEROPHANT'},
-  {id:6,nameEN:'The Lovers',nameJP:'恋人',keyword:'選択と結合',planet:'mercury',element:'air',boost:0.30,boostType:'single',emoji:'💕',displayName:'THE LOVERS'},
-  {id:7,nameEN:'The Chariot',nameJP:'戦車',keyword:'勝利と前進',planet:'moon',element:'water',boost:0.30,boostType:'single',emoji:'🏆',displayName:'THE CHARIOT'},
-  {id:8,nameEN:'Strength',nameJP:'力',keyword:'内なる強さ',planet:'sun',element:'fire',boost:0.30,boostType:'single',emoji:'🦁',displayName:'STRENGTH'},
-  {id:9,nameEN:'The Hermit',nameJP:'隠者',keyword:'内省と知恵',planet:'mercury',element:'earth',boost:0.30,boostType:'single',emoji:'🏔️',displayName:'THE HERMIT'},
-  {id:10,nameEN:'Wheel of Fortune',nameJP:'運命の輪',keyword:'転機と幸運',planet:'jupiter',element:'fire',boost:0.30,boostType:'single',emoji:'🎡',displayName:'WHEEL OF FORTUNE'},
-  {id:11,nameEN:'Justice',nameJP:'正義',keyword:'均衡と真実',planet:'venus',element:'air',boost:0.30,boostType:'single',emoji:'⚖️',displayName:'JUSTICE'},
-  {id:12,nameEN:'The Hanged Man',nameJP:'吊るされた男',keyword:'手放しと悟り',planet:'neptune',element:'water',boost:0.30,boostType:'single',emoji:'🔮',displayName:'THE HANGED MAN'},
-  {id:13,nameEN:'Death',nameJP:'死神',keyword:'変容と再生',planet:'pluto',element:'water',boost:0.30,boostType:'single',emoji:'🦋',displayName:'DEATH'},
-  {id:14,nameEN:'Temperance',nameJP:'節制',keyword:'調和と統合',planet:'jupiter',element:'fire',boost:0.30,boostType:'single',emoji:'🌈',displayName:'TEMPERANCE'},
-  {id:15,nameEN:'The Devil',nameJP:'悪魔',keyword:'束縛と解放',planet:'saturn',element:'earth',boost:0.30,boostType:'single',emoji:'⛓️',displayName:'THE DEVIL'},
-  {id:16,nameEN:'The Tower',nameJP:'塔',keyword:'崩壊と覚醒',planet:'mars',element:'fire',boost:0.30,boostType:'single',emoji:'⚡',displayName:'THE TOWER'},
-  {id:17,nameEN:'The Star',nameJP:'星',keyword:'希望と導き',planet:'uranus',element:'air',boost:0.30,boostType:'single',emoji:'⭐',displayName:'THE STAR'},
-  {id:18,nameEN:'The Moon',nameJP:'月',keyword:'幻想と潜在意識',planet:'neptune',element:'water',boost:0.30,boostType:'single',emoji:'🌕',displayName:'THE MOON'},
-  {id:19,nameEN:'The Sun',nameJP:'太陽',keyword:'喜びと活力',planet:'sun',element:'fire',boost:0.30,boostType:'single',emoji:'☀️',displayName:'THE SUN'},
-  {id:20,nameEN:'Judgement',nameJP:'審判',keyword:'復活と覚醒',planet:'pluto',element:'fire',boost:0.30,boostType:'single',emoji:'🔔',displayName:'JUDGEMENT'},
-  {id:21,nameEN:'The World',nameJP:'世界',keyword:'完成と統合',planet:'saturn',element:'earth',boost:0.25,boostType:'all',emoji:'🌍',displayName:'THE WORLD'}
+  {id:0,  nameEN:'The Fool',           nameJP:'愚者',       keyword:'自由と冒険',     planet:'uranus',  element:'air',   boost:0.05, boostType:'all',    emoji:'🌬️', displayName:'THE FOOL'},
+  {id:1,  nameEN:'The Magician',       nameJP:'魔術師',     keyword:'意志と創造',     planet:'mercury', element:'air',   boost:0.30, boostType:'single', emoji:'⚡',  displayName:'THE MAGICIAN'},
+  {id:2,  nameEN:'The High Priestess', nameJP:'女教皇',     keyword:'直感と神秘',     planet:'moon',    element:'water', boost:0.30, boostType:'single', emoji:'🌙',  displayName:'HIGH PRIESTESS'},
+  {id:3,  nameEN:'The Empress',        nameJP:'女帝',       keyword:'豊穣と美',       planet:'venus',   element:'earth', boost:0.30, boostType:'single', emoji:'🌸',  displayName:'THE EMPRESS'},
+  {id:4,  nameEN:'The Emperor',        nameJP:'皇帝',       keyword:'統率と秩序',     planet:'mars',    element:'fire',  boost:0.30, boostType:'single', emoji:'🔥',  displayName:'THE EMPEROR'},
+  {id:5,  nameEN:'The Hierophant',     nameJP:'法王',       keyword:'伝統と教え',     planet:'venus',   element:'earth', boost:0.30, boostType:'single', emoji:'📿',  displayName:'THE HIEROPHANT'},
+  {id:6,  nameEN:'The Lovers',         nameJP:'恋人',       keyword:'選択と結合',     planet:'mercury', element:'air',   boost:0.30, boostType:'single', emoji:'💕',  displayName:'THE LOVERS'},
+  {id:7,  nameEN:'The Chariot',        nameJP:'戦車',       keyword:'勝利と前進',     planet:'moon',    element:'water', boost:0.30, boostType:'single', emoji:'🏆',  displayName:'THE CHARIOT'},
+  {id:8,  nameEN:'Strength',           nameJP:'力',         keyword:'内なる強さ',     planet:'sun',     element:'fire',  boost:0.30, boostType:'single', emoji:'🦁',  displayName:'STRENGTH'},
+  {id:9,  nameEN:'The Hermit',         nameJP:'隠者',       keyword:'内省と知恵',     planet:'mercury', element:'earth', boost:0.30, boostType:'single', emoji:'🏔️', displayName:'THE HERMIT'},
+  {id:10, nameEN:'Wheel of Fortune',   nameJP:'運命の輪',   keyword:'転機と幸運',     planet:'jupiter', element:'fire',  boost:0.30, boostType:'single', emoji:'🎡',  displayName:'WHEEL OF FORTUNE'},
+  {id:11, nameEN:'Justice',            nameJP:'正義',       keyword:'均衡と真実',     planet:'venus',   element:'air',   boost:0.30, boostType:'single', emoji:'⚖️', displayName:'JUSTICE'},
+  {id:12, nameEN:'The Hanged Man',     nameJP:'吊るされた男', keyword:'手放しと悟り', planet:'neptune', element:'water', boost:0.30, boostType:'single', emoji:'🔮',  displayName:'THE HANGED MAN'},
+  {id:13, nameEN:'Death',              nameJP:'死神',       keyword:'変容と再生',     planet:'pluto',   element:'water', boost:0.30, boostType:'single', emoji:'🦋',  displayName:'DEATH'},
+  {id:14, nameEN:'Temperance',         nameJP:'節制',       keyword:'調和と統合',     planet:'jupiter', element:'fire',  boost:0.30, boostType:'single', emoji:'🌈',  displayName:'TEMPERANCE'},
+  {id:15, nameEN:'The Devil',          nameJP:'悪魔',       keyword:'束縛と解放',     planet:'saturn',  element:'earth', boost:0.30, boostType:'single', emoji:'⛓️', displayName:'THE DEVIL'},
+  {id:16, nameEN:'The Tower',          nameJP:'塔',         keyword:'崩壊と覚醒',     planet:'mars',    element:'fire',  boost:0.30, boostType:'single', emoji:'⚡',  displayName:'THE TOWER'},
+  {id:17, nameEN:'The Star',           nameJP:'星',         keyword:'希望と導き',     planet:'uranus',  element:'air',   boost:0.30, boostType:'single', emoji:'⭐',  displayName:'THE STAR'},
+  {id:18, nameEN:'The Moon',           nameJP:'月',         keyword:'幻想と潜在意識', planet:'neptune', element:'water', boost:0.30, boostType:'single', emoji:'🌕',  displayName:'THE MOON'},
+  {id:19, nameEN:'The Sun',            nameJP:'太陽',       keyword:'喜びと活力',     planet:'sun',     element:'fire',  boost:0.30, boostType:'single', emoji:'☀️', displayName:'THE SUN'},
+  {id:20, nameEN:'Judgement',          nameJP:'審判',       keyword:'復活と覚醒',     planet:'pluto',   element:'fire',  boost:0.30, boostType:'single', emoji:'🔔',  displayName:'JUDGEMENT'},
+  {id:21, nameEN:'The World',          nameJP:'世界',       keyword:'完成と統合',     planet:'saturn',  element:'earth', boost:0.25, boostType:'all',    emoji:'🌍',  displayName:'THE WORLD'}
 ];
 
-var MINOR = [
-  {suit:'wands',rank:1,nameEN:'Ace of Wands',nameJP:'ワンドのエース',keyword:'情熱の始まり',displayName:'WAND ACE'},
-  {suit:'wands',rank:2,nameEN:'Two of Wands',nameJP:'ワンドの2',keyword:'計画と決断',displayName:'WAND II'},
-  {suit:'wands',rank:3,nameEN:'Three of Wands',nameJP:'ワンドの3',keyword:'展望と拡大',displayName:'WAND III'},
-  {suit:'wands',rank:4,nameEN:'Four of Wands',nameJP:'ワンドの4',keyword:'祝福と安定',displayName:'WAND IV'},
-  {suit:'wands',rank:5,nameEN:'Five of Wands',nameJP:'ワンドの5',keyword:'競争と成長',displayName:'WAND V'},
-  {suit:'wands',rank:6,nameEN:'Six of Wands',nameJP:'ワンドの6',keyword:'勝利と栄光',displayName:'WAND VI'},
-  {suit:'wands',rank:7,nameEN:'Seven of Wands',nameJP:'ワンドの7',keyword:'防衛と信念',displayName:'WAND VII'},
-  {suit:'wands',rank:8,nameEN:'Eight of Wands',nameJP:'ワンドの8',keyword:'迅速な展開',displayName:'WAND VIII'},
-  {suit:'wands',rank:9,nameEN:'Nine of Wands',nameJP:'ワンドの9',keyword:'忍耐と警戒',displayName:'WAND IX'},
-  {suit:'wands',rank:10,nameEN:'Ten of Wands',nameJP:'ワンドの10',keyword:'重荷と責任',displayName:'WAND X'},
-  {suit:'wands',rank:11,nameEN:'Page of Wands',nameJP:'ワンドのペイジ',keyword:'冒険の予感',displayName:'WAND PAGE',court:'page'},
-  {suit:'wands',rank:12,nameEN:'Knight of Wands',nameJP:'ワンドのナイト',keyword:'大胆な行動',displayName:'WAND KNIGHT',court:'knight'},
-  {suit:'wands',rank:13,nameEN:'Queen of Wands',nameJP:'ワンドのクイーン',keyword:'情熱的な魅力',displayName:'WAND QUEEN',court:'queen'},
-  {suit:'wands',rank:14,nameEN:'King of Wands',nameJP:'ワンドのキング',keyword:'ビジョンの統率',displayName:'WAND KING',court:'king'},
-  {suit:'cups',rank:1,nameEN:'Ace of Cups',nameJP:'カップのエース',keyword:'愛の始まり',displayName:'CUP ACE'},
-  {suit:'cups',rank:2,nameEN:'Two of Cups',nameJP:'カップの2',keyword:'絆と調和',displayName:'CUP II'},
-  {suit:'cups',rank:3,nameEN:'Three of Cups',nameJP:'カップの3',keyword:'再会の喜び',displayName:'CUP III'},
-  {suit:'cups',rank:4,nameEN:'Four of Cups',nameJP:'カップの4',keyword:'内省と倦怠',displayName:'CUP IV'},
-  {suit:'cups',rank:5,nameEN:'Five of Cups',nameJP:'カップの5',keyword:'喪失と学び',displayName:'CUP V'},
-  {suit:'cups',rank:6,nameEN:'Six of Cups',nameJP:'カップの6',keyword:'郷愁と純真',displayName:'CUP VI'},
-  {suit:'cups',rank:7,nameEN:'Seven of Cups',nameJP:'カップの7',keyword:'夢と選択',displayName:'CUP VII'},
-  {suit:'cups',rank:8,nameEN:'Eight of Cups',nameJP:'カップの8',keyword:'手放しと旅立ち',displayName:'CUP VIII'},
-  {suit:'cups',rank:9,nameEN:'Nine of Cups',nameJP:'カップの9',keyword:'願望成就',displayName:'CUP IX'},
-  {suit:'cups',rank:10,nameEN:'Ten of Cups',nameJP:'カップの10',keyword:'幸福な結末',displayName:'CUP X'},
-  {suit:'cups',rank:11,nameEN:'Page of Cups',nameJP:'カップのペイジ',keyword:'感性の芽生え',displayName:'CUP PAGE',court:'page'},
-  {suit:'cups',rank:12,nameEN:'Knight of Cups',nameJP:'カップのナイト',keyword:'ロマンの追求',displayName:'CUP KNIGHT',court:'knight'},
-  {suit:'cups',rank:13,nameEN:'Queen of Cups',nameJP:'カップのクイーン',keyword:'深い共感',displayName:'CUP QUEEN',court:'queen'},
-  {suit:'cups',rank:14,nameEN:'King of Cups',nameJP:'カップのキング',keyword:'感情の統率',displayName:'CUP KING',court:'king'},
-  {suit:'swords',rank:1,nameEN:'Ace of Swords',nameJP:'ソードのエース',keyword:'真実の閃き',displayName:'SWORD ACE'},
-  {suit:'swords',rank:2,nameEN:'Two of Swords',nameJP:'ソードの2',keyword:'決断の保留',displayName:'SWORD II'},
-  {suit:'swords',rank:3,nameEN:'Three of Swords',nameJP:'ソードの3',keyword:'悲しみと気づき',displayName:'SWORD III'},
-  {suit:'swords',rank:4,nameEN:'Four of Swords',nameJP:'ソードの4',keyword:'休息と回復',displayName:'SWORD IV'},
-  {suit:'swords',rank:5,nameEN:'Five of Swords',nameJP:'ソードの5',keyword:'衝突と教訓',displayName:'SWORD V'},
-  {suit:'swords',rank:6,nameEN:'Six of Swords',nameJP:'ソードの6',keyword:'移行と回復',displayName:'SWORD VI'},
-  {suit:'swords',rank:7,nameEN:'Seven of Swords',nameJP:'ソードの7',keyword:'戦略と知恵',displayName:'SWORD VII'},
-  {suit:'swords',rank:8,nameEN:'Eight of Swords',nameJP:'ソードの8',keyword:'束縛からの解放',displayName:'SWORD VIII'},
-  {suit:'swords',rank:9,nameEN:'Nine of Swords',nameJP:'ソードの9',keyword:'不安と覚醒',displayName:'SWORD IX'},
-  {suit:'swords',rank:10,nameEN:'Ten of Swords',nameJP:'ソードの10',keyword:'終焉と再出発',displayName:'SWORD X'},
-  {suit:'swords',rank:11,nameEN:'Page of Swords',nameJP:'ソードのペイジ',keyword:'鋭い観察',displayName:'SWORD PAGE',court:'page'},
-  {suit:'swords',rank:12,nameEN:'Knight of Swords',nameJP:'ソードのナイト',keyword:'果敢な突破',displayName:'SWORD KNIGHT',court:'knight'},
-  {suit:'swords',rank:13,nameEN:'Queen of Swords',nameJP:'ソードのクイーン',keyword:'明晰な判断',displayName:'SWORD QUEEN',court:'queen'},
-  {suit:'swords',rank:14,nameEN:'King of Swords',nameJP:'ソードのキング',keyword:'知性の統率',displayName:'SWORD KING',court:'king'},
-  {suit:'pentacles',rank:1,nameEN:'Ace of Pentacles',nameJP:'ペンタクルのエース',keyword:'豊かさの種',displayName:'PENTACLE ACE'},
-  {suit:'pentacles',rank:2,nameEN:'Two of Pentacles',nameJP:'ペンタクルの2',keyword:'バランスと適応',displayName:'PENTACLE II'},
-  {suit:'pentacles',rank:3,nameEN:'Three of Pentacles',nameJP:'ペンタクルの3',keyword:'技術と協力',displayName:'PENTACLE III'},
-  {suit:'pentacles',rank:4,nameEN:'Four of Pentacles',nameJP:'ペンタクルの4',keyword:'安定と保守',displayName:'PENTACLE IV'},
-  {suit:'pentacles',rank:5,nameEN:'Five of Pentacles',nameJP:'ペンタクルの5',keyword:'試練と希望',displayName:'PENTACLE V'},
-  {suit:'pentacles',rank:6,nameEN:'Six of Pentacles',nameJP:'ペンタクルの6',keyword:'分かち合い',displayName:'PENTACLE VI'},
-  {suit:'pentacles',rank:7,nameEN:'Seven of Pentacles',nameJP:'ペンタクルの7',keyword:'忍耐と収穫',displayName:'PENTACLE VII'},
-  {suit:'pentacles',rank:8,nameEN:'Eight of Pentacles',nameJP:'ペンタクルの8',keyword:'技の鍛錬',displayName:'PENTACLE VIII'},
-  {suit:'pentacles',rank:9,nameEN:'Nine of Pentacles',nameJP:'ペンタクルの9',keyword:'自立と豊穣',displayName:'PENTACLE IX'},
-  {suit:'pentacles',rank:10,nameEN:'Ten of Pentacles',nameJP:'ペンタクルの10',keyword:'遺産と完成',displayName:'PENTACLE X'},
-  {suit:'pentacles',rank:11,nameEN:'Page of Pentacles',nameJP:'ペンタクルのペイジ',keyword:'学びの始まり',displayName:'PENTACLE PAGE',court:'page'},
-  {suit:'pentacles',rank:12,nameEN:'Knight of Pentacles',nameJP:'ペンタクルのナイト',keyword:'堅実な前進',displayName:'PENTACLE KNIGHT',court:'knight'},
-  {suit:'pentacles',rank:13,nameEN:'Queen of Pentacles',nameJP:'ペンタクルのクイーン',keyword:'大地の恵み',displayName:'PENTACLE QUEEN',court:'queen'},
-  {suit:'pentacles',rank:14,nameEN:'King of Pentacles',nameJP:'ペンタクルのキング',keyword:'物質の統率',displayName:'PENTACLE KING',court:'king'}
-];
+var MINOR = (function() {
+  var suits = ['wands','cups','swords','pentacles'];
+  var ranks = [];
+  suits.forEach(function(suit) {
+    var info = SUIT_MAP[suit];
+    for (var r = 1; r <= 10; r++) {
+      ranks.push({
+        suit: suit, rank: r,
+        nameJP: info.emoji + ' ' + suit.charAt(0).toUpperCase() + suit.slice(1) + ' ' + r,
+        keyword: info.element === 'fire' ? '情熱' : info.element === 'water' ? '感情' : info.element === 'air' ? '知性' : '安定',
+        displayName: suit.toUpperCase() + ' ' + r
+      });
+    }
+    ['Page','Knight','Queen','King'].forEach(function(court) {
+      ranks.push({
+        suit: suit, rank: court,
+        nameJP: info.emoji + ' ' + court + ' of ' + suit.charAt(0).toUpperCase() + suit.slice(1),
+        keyword: court === 'Page' ? '学び' : court === 'Knight' ? '行動' : court === 'Queen' ? '育成' : '統率',
+        displayName: court.toUpperCase() + ' OF ' + suit.toUpperCase()
+      });
+    });
+  });
+  return ranks;
+})();
 
 var ALL_CARDS = MAJOR.concat(MINOR);
 
-// ===== Stella Message Generator =====
+// ============================================================
+// 2. STELLA MESSAGE GENERATOR
+// ============================================================
+
 function generateStellaMsg(card, planetJP) {
   var templates = [
     '『' + card.nameJP + '』が今日の種。' + card.keyword + 'のエネルギーが' + planetJP + 'を通じてあなたに届いているよ。',
@@ -892,13 +1039,15 @@ function generateStellaMsg(card, planetJP) {
   return templates[seed % templates.length];
 }
 
-var LOC_LABELS = { home: '🏠 自宅', gps: '📍 現在地', custom: '' };
+// ============================================================
+// 3. STATE & HELPERS
+//    selectedLocation, isDrawn, getToday, getNowTime, getCardInfo
+// ============================================================
 
-// ===== State =====
+var LOC_LABELS = { home: '🏠 自宅', gps: '📍 現在地', custom: '' };
 var selectedLocation = 'home';
 var isDrawn = false;
 
-// ===== Helpers =====
 function getToday() {
   return new Date().toISOString().split('T')[0];
 }
@@ -917,7 +1066,11 @@ function getCardInfo(card) {
   return { planet: planet, element: element, emoji: emoji, planets: planets, planetSymbol: ps };
 }
 
-// ===== Location =====
+// ============================================================
+// 4. LOCATION SELECTOR
+//    selectLocation, getLocationLabel
+// ============================================================
+
 function selectLocation(loc) {
   selectedLocation = loc;
   document.querySelectorAll('.loc-btn').forEach(function(b) {
@@ -935,7 +1088,11 @@ function getLocationLabel() {
   return LOC_LABELS[selectedLocation];
 }
 
-// ===== Card Draw =====
+// ============================================================
+// 5. CARD DRAW — Tap handler, flip, particle spawn
+//    initCardTap
+// ============================================================
+
 function initCardTap() {
   var scene = document.getElementById('cardScene');
   scene.style.cursor = 'pointer';
@@ -993,7 +1150,12 @@ function initCardTap() {
   };
 }
 
-// ===== History =====
+// ============================================================
+// 6. HISTORY — Load, save, render, toggle, clear
+//    HISTORY_KEY, loadHistory, saveHistory, renderHistory,
+//    toggleHistoryCard, saveSynchronicity, clearHistory
+// ============================================================
+
 var HISTORY_KEY = 'solara_natal_history';
 
 function loadHistory() {
@@ -1085,7 +1247,10 @@ function clearHistory() {
   renderHistory();
 }
 
-// ===== Tab switching =====
+// ============================================================
+// 7. TAB SWITCHING
+// ============================================================
+
 document.querySelectorAll('.inner-tab-btn').forEach(function(btn) {
   btn.addEventListener('click', function() {
     document.querySelectorAll('.inner-tab-btn').forEach(function(b) { b.classList.remove('active'); });
@@ -1096,7 +1261,11 @@ document.querySelectorAll('.inner-tab-btn').forEach(function(btn) {
   });
 });
 
-// ===== Check today's draw =====
+// ============================================================
+// 8. TODAY'S DRAW CHECK — Restore card from history
+//    checkTodayDraw
+// ============================================================
+
 function checkTodayDraw() {
   var hist = loadHistory();
   if (hist.length === 0 || hist[0].date !== getToday()) return;
@@ -1143,7 +1312,11 @@ function checkTodayDraw() {
   showTarotReading(cardObj, infoObj);
 }
 
-// ===== Particle system =====
+// ============================================================
+// 9. PARTICLE SYSTEM — Canvas animation
+//    resizeCanvas, spawnParticles, animLoop
+// ============================================================
+
 var canvas = document.getElementById('particleCanvas');
 var ctx = canvas.getContext('2d');
 var particles = [];
@@ -1195,7 +1368,13 @@ function animLoop() {
   else { animRunning = false; }
 }
 
-// ===== Tarot Reading =====
+// ============================================================
+// 10. TAROT READING — API call, fallback, typewriter
+//     TAROT_READINGS, TAROT_ADVICES, TAROT_API_URL,
+//     getTarotCacheKey, showTarotReading,
+//     typewriteReading, showFallbackReading
+// ============================================================
+
 var TAROT_READINGS = {
   fire: [
     '炎のエネルギーが今日のあなたを包んでいます。{card}が示すのは、内なる情熱を解放する時が来たということ。行動力と創造性が高まるこの瞬間、新しいプロジェクトや挑戦を始めるには最高のタイミングです。ただし、感情が高ぶりやすい時期でもあるので、衝動的な判断は一呼吸おいてから。あなたの{keyword}は、周囲にも良い影響を与えるでしょう。',
@@ -1324,15 +1503,19 @@ function showFallbackReading(card, info, panel, body, advice) {
   typewriteReading(panel, body, advice, text, adviceText);
 }
 
-// ===== Mood Slider =====
+// ============================================================
+// 11. MOOD SLIDER
+//     MOOD_DESCS, getMoodDesc, updateMoodDisplay, loadSavedMood
+// ============================================================
+
 var MOOD_DESCS = [
   [-1.0, 'Deep stillness', '🌑'],
-  [-0.6, 'Heavy energy', '🌫️'],
-  [-0.3, 'Quiet & low', '💧'],
-  [0.0, 'Neutral orbit', '〰️'],
-  [0.3, 'Gentle flow', '🌊'],
-  [0.6, 'Rising energy', '✨'],
-  [0.9, 'Full radiance', '☀️'],
+  [-0.6, 'Heavy energy',   '🌫️'],
+  [-0.3, 'Quiet & low',    '💧'],
+  [ 0.0, 'Neutral orbit',  '〰️'],
+  [ 0.3, 'Gentle flow',    '🌊'],
+  [ 0.6, 'Rising energy',  '✨'],
+  [ 0.9, 'Full radiance',  '☀️'],
 ];
 
 function getMoodDesc(v) {
@@ -1367,7 +1550,10 @@ function loadSavedMood() {
   } catch(e) {}
 }
 
-// ===== Init =====
+// ============================================================
+// 12. INIT
+// ============================================================
+
 function init() {
   resizeCanvas();
   renderHistory();

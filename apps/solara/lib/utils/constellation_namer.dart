@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'dart:ui';
 
 /// Constellation name generator v2.
 /// 20 adjectives × 61 nouns = 1,220 unique names.
@@ -220,5 +221,263 @@ class ConstellationNamer {
       hash = hash & 0x7FFFFFFF;
     }
     return hash;
+  }
+
+  // ============================================================
+  // NOUN_SHAPES — Connection type per noun (HTML exact: 61 entries)
+  // ============================================================
+
+  static const nounShapes = [
+    'loop','linear','linear','radial','linear','radial',
+    'open','open','open','open','open','radial','loop',
+    'linear','radial','open','open','closed','open',
+    'linear','linear','closed','open','closed','linear',
+    'closed','closed','open','loop','closed','radial',
+    'radial','closed','closed','closed','open','open',
+    'closed','linear','linear','closed','open',
+    'closed','closed','closed','open','closed','closed',
+    'open','closed','closed','closed',
+    'open','linear','closed','loop','closed',
+    'loop','closed','loop','loop',
+  ];
+
+  // ============================================================
+  // ADJ_COLORS — Primary color per adjective (HTML exact: 20 colors)
+  // ============================================================
+
+  static const adjColors = [
+    0xFFF9D976, 0xFFC4923A, // Golden, Sacred
+    0xFFC0C8E0, 0xFFE8ECF8, // Silver, Luminous
+    0xFFDC143C, 0xFFFF6B35, // Crimson, Burning
+    0xFF7EB8DA, 0xFFB8D8F0, // Ethereal, Spectral
+    0xFF9B6BFF, 0xFF5A2D82, // Mystic, Arcane
+    0xFF4A4A5A, 0xFF6A6A7A, // Silent, Veiled
+    0xFF68C8E8, 0xFF1A3A5A, // Frozen, Abyssal
+    0xFF5AA050, 0xFF3A5A2A, // Ancient, Verdant
+    0xFFF0F0FF, 0xFFD0D8F0, // Infinite, Celestial
+    0xFFFFF4C0, 0xFFC8A0FF, // Radiant, Phantom
+  ];
+
+  /// Get adjective color for a given adjective index.
+  static Color adjColor(int adjIdx) {
+    if (adjIdx >= 0 && adjIdx < adjColors.length) {
+      return Color(adjColors[adjIdx]);
+    }
+    return const Color(0xFFF9D976);
+  }
+
+  // ============================================================
+  // NOUN_TEMPLATES — Anchor coordinate templates per noun (HTML exact: 61 patterns)
+  // Each is a list of [x, y] normalized 0-1.
+  // ============================================================
+
+  static const nounTemplates = <int, List<List<double>>>{
+    0: [[.5,.2],[.75,.3],[.8,.5],[.7,.7],[.45,.8],[.2,.7],[.15,.5],[.25,.3]],
+    1: [[.7,.25],[.55,.4],[.4,.55],[.25,.7],[.75,.35],[.8,.45]],
+    2: [[.2,.85],[.35,.65],[.5,.5],[.65,.35],[.8,.15]],
+    3: [[.5,.5],[.5,.15],[.8,.35],[.8,.65],[.5,.85],[.2,.65],[.2,.35]],
+    4: [[.4,.2],[.55,.35],[.6,.5],[.55,.65],[.4,.8]],
+    5: [[.5,.5],[.25,.2],[.75,.2],[.85,.5],[.75,.8],[.25,.8],[.15,.5]],
+    6: [[.5,.8],[.4,.6],[.6,.6],[.2,.4],[.8,.4],[.15,.2],[.85,.2]],
+    7: [[.7,.2],[.55,.3],[.4,.45],[.5,.55],[.65,.65],[.5,.8],[.3,.75]],
+    8: [[.7,.15],[.75,.25],[.65,.3],[.6,.4],[.55,.5],[.7,.55],[.75,.7],[.8,.85],[.45,.7],[.4,.85],[.3,.55],[.25,.7],[.2,.85],[.35,.35]],
+    9: [[.82,.15],[.72,.2],[.62,.25],[.5,.3],[.45,.4],[.4,.5],[.5,.55],[.6,.55],[.55,.7],[.5,.85],[.65,.7],[.65,.85],[.35,.7],[.35,.85]],
+    10:[[.1,.3],[.25,.3],[.4,.3],[.5,.3],[.6,.3],[.75,.3],[.9,.3],[.5,.45],[.5,.55],[.5,.65],[.45,.8],[.55,.8],[.4,.85],[.6,.85]],
+    11:[[.5,.35],[.5,.2],[.35,.45],[.65,.45],[.2,.15],[.15,.35],[.1,.55],[.8,.15],[.85,.35],[.9,.55],[.25,.7],[.2,.85],[.75,.7],[.8,.85]],
+    12:[[.5,.2],[.75,.3],[.8,.55],[.65,.75],[.35,.75],[.2,.55],[.25,.3]],
+    13:[[.75,.2],[.6,.35],[.45,.45],[.55,.6],[.4,.75],[.3,.85]],
+    14:[[.5,.15],[.5,.4],[.5,.7],[.5,.9],[.3,.2],[.7,.2],[.4,.2],[.6,.2]],
+    15:[[.5,.15],[.4,.25],[.6,.25],[.5,.35],[.5,.6],[.35,.8],[.65,.8],[.5,.9]],
+    16:[[.3,.3],[.3,.5],[.3,.7],[.45,.35],[.55,.2],[.65,.15],[.75,.2],[.85,.35],[.55,.45]],
+    17:[[.5,.35],[.5,.55],[.5,.75],[.3,.2],[.2,.35],[.25,.55],[.35,.65],[.7,.2],[.8,.35],[.75,.55],[.65,.65]],
+    18:[[.85,.3],[.7,.4],[.55,.35],[.4,.45],[.25,.55],[.15,.7]],
+    19:[[.2,.8],[.35,.65],[.5,.5],[.65,.35],[.8,.2]],
+    20:[[.5,.08],[.5,.3],[.5,.5],[.5,.65],[.5,.9],[.28,.65],[.72,.65]],
+    21:[[.3,.2],[.7,.2],[.75,.5],[.6,.75],[.5,.85],[.4,.75],[.25,.5]],
+    22:[[.5,.2],[.4,.3],[.6,.3],[.5,.4],[.5,.6],[.5,.8],[.6,.75]],
+    23:[[.5,.15],[.5,.3],[.65,.5],[.5,.7],[.35,.5],[.5,.85]],
+    24:[[.5,.05],[.5,.35],[.5,.65],[.5,.9],[.2,.3],[.8,.3]],
+    25:[[.2,.6],[.3,.3],[.5,.55],[.5,.2],[.7,.3],[.8,.6]],
+    26:[[.3,.25],[.7,.25],[.7,.5],[.3,.5],[.5,.6],[.5,.8],[.35,.85],[.65,.85]],
+    27:[[.35,.1],[.65,.1],[.7,.15],[.7,.45],[.65,.5],[.35,.5],[.3,.45],[.3,.15],[.3,.75],[.7,.75]],
+    28:[[.45,.12],[.55,.12],[.58,.18],[.55,.24],[.45,.24],[.42,.18],[.5,.18],[.5,.35],[.5,.55],[.5,.85]],
+    29:[[.5,.2],[.7,.4],[.65,.65],[.5,.8],[.35,.65],[.3,.4]],
+    30:[[.5,.15],[.25,.7],[.75,.7],[.5,.45],[.3,.45],[.7,.45]],
+    31:[[.5,.85],[.45,.65],[.55,.5],[.4,.35],[.6,.25],[.5,.1]],
+    32:[[.5,.3],[.65,.2],[.8,.3],[.85,.5],[.75,.7],[.55,.75],[.35,.7],[.15,.5],[.2,.3]],
+    33:[[.5,.12],[.2,.82],[.8,.82],[.5,.82],[.5,.5],[.35,.47],[.65,.47]],
+    34:[[.25,.85],[.75,.85],[.8,.7],[.65,.5],[.55,.35],[.5,.2],[.45,.35],[.35,.5],[.2,.7]],
+    35:[[.1,.55],[.3,.4],[.45,.5],[.6,.35],[.75,.45],[.9,.5]],
+    36:[[.5,.5],[.5,.4],[.5,.6],[.5,.3],[.5,.7],[.5,.85],[.35,.9],[.65,.9],[.2,.95],[.8,.95],[.15,.88],[.85,.88],[.5,.18],[.5,.08],[.3,.12],[.7,.12],[.15,.06],[.85,.06],[.25,.18],[.75,.18]],
+    37:[[.3,.8],[.3,.4],[.4,.2],[.6,.2],[.7,.4],[.7,.8]],
+    38:[[.5,.1],[.45,.3],[.55,.3],[.43,.6],[.57,.6],[.4,.85],[.6,.85]],
+    39:[[.5,.08],[.45,.25],[.55,.25],[.42,.5],[.58,.5],[.38,.8],[.62,.8],[.5,.12]],
+    40:[[.2,.8],[.2,.5],[.2,.2],[.35,.15],[.5,.2],[.65,.15],[.8,.2],[.8,.5],[.8,.8],[.5,.8]],
+    41:[[.5,.1],[.4,.3],[.6,.3],[.35,.55],[.65,.55],[.3,.8],[.7,.8]],
+    42:[[.5,.15],[.73,.3],[.73,.6],[.5,.75],[.27,.6],[.27,.3]],
+    43:[[.5,.15],[.68,.3],[.68,.55],[.5,.65],[.32,.55],[.32,.3],[.5,.85]],
+    44:[[.3,.12],[.7,.12],[.5,.5],[.3,.88],[.7,.88],[.5,.12],[.5,.88]],
+    45:[[.5,.2],[.5,.6],[.2,.4],[.8,.4],[.15,.55],[.85,.55]],
+    46:[[.5,.15],[.7,.3],[.72,.55],[.6,.75],[.4,.75],[.28,.55],[.3,.3]],
+    47:[[.25,.4],[.75,.4],[.75,.75],[.25,.75],[.3,.3],[.7,.3]],
+    48:[[.35,.15],[.35,.85],[.65,.8],[.65,.5],[.65,.25],[.35,.5]],
+    49:[[.5,.15],[.5,.3],[.65,.5],[.7,.7],[.3,.7],[.35,.5]],
+    50:[[.3,.12],[.7,.12],[.75,.35],[.7,.65],[.3,.65],[.25,.35],[.5,.7],[.4,.15],[.5,.15],[.6,.15]],
+    51:[[.5,.12],[.5,.88],[.12,.5],[.88,.5],[.5,.5],[.35,.25],[.65,.25],[.35,.75],[.65,.75]],
+    52:[[.2,.65],[.35,.5],[.5,.35],[.7,.2],[.85,.25],[.75,.45]],
+    53:[[.45,.15],[.47,.35],[.5,.55],[.53,.75],[.55,.9],[.35,.45],[.65,.45]],
+    54:[[.15,.5],[.35,.3],[.65,.3],[.85,.5],[.65,.7],[.35,.7],[.5,.5]],
+    55:[[.5,.2],[.72,.3],[.78,.5],[.72,.65],[.5,.72],[.28,.65],[.22,.5],[.28,.3]],
+    56:[[.5,.15],[.65,.4],[.5,.5],[.35,.4],[.5,.85],[.65,.6],[.35,.6]],
+    57:[[.5,.1],[.65,.18],[.78,.35],[.82,.55],[.72,.72],[.55,.82],[.38,.82],[.22,.72],[.15,.52],[.2,.32],[.32,.18],[.5,.5],[.5,.25],[.5,.75],[.25,.5],[.75,.5]],
+    58:[[.3,.25],[.3,.75],[.6,.5],[.75,.3],[.75,.5],[.75,.7]],
+    59:[[.5,.18],[.73,.28],[.82,.5],[.73,.72],[.5,.82],[.27,.72],[.18,.5],[.27,.28]],
+    60:[[.5,.4],[.6,.3],[.7,.25],[.75,.35],[.7,.48],[.6,.5],[.5,.55],[.4,.6],[.3,.68],[.25,.58],[.3,.45],[.4,.4]],
+  };
+
+  /// Get template anchor positions for a noun, with jitter.
+  /// HTML exact: getTemplatePositions(nounIdx, numAnchors, seed)
+  static List<List<double>> getTemplatePositions(int nounIdx, int numAnchors, int seed) {
+    final template = nounTemplates[nounIdx];
+    if (template == null) {
+      final rng = Random(seed);
+      return List.generate(numAnchors, (_) => [0.15 + rng.nextDouble() * 0.7, 0.15 + rng.nextDouble() * 0.7]);
+    }
+
+    final rng = Random(seed);
+    const jitter = 0.04;
+
+    if (numAnchors <= template.length) {
+      final step = template.length / numAnchors;
+      return List.generate(numAnchors, (i) {
+        final ti = (i * step).round().clamp(0, template.length - 1);
+        return [
+          template[ti][0] + (rng.nextDouble() - 0.5) * jitter * 2,
+          template[ti][1] + (rng.nextDouble() - 0.5) * jitter * 2,
+        ];
+      });
+    }
+
+    return List.generate(numAnchors, (i) {
+      final tIdx = (i / numAnchors) * template.length;
+      final lo = tIdx.floor();
+      final hi = (lo + 1).clamp(0, template.length - 1);
+      final frac = tIdx - lo;
+      final x = template[lo][0] + frac * (template[hi][0] - template[lo][0]);
+      final y = template[lo][1] + frac * (template[hi][1] - template[lo][1]);
+      return [
+        x + (rng.nextDouble() - 0.5) * jitter * 2,
+        y + (rng.nextDouble() - 0.5) * jitter * 2,
+      ];
+    });
+  }
+
+  // ============================================================
+  // MST (Prim's algorithm) + buildConstellationEdges
+  // HTML exact: computeMST, buildConstellationEdges
+  // ============================================================
+
+  /// Compute Minimum Spanning Tree using Prim's algorithm.
+  static List<({int from, int to})> computeMST(List<Offset> points) {
+    final n = points.length;
+    if (n <= 1) return [];
+    if (n == 2) return [(from: 0, to: 1)];
+
+    final inTree = List.filled(n, false);
+    final minEdge = List.filled(n, double.infinity);
+    final minFrom = List.filled(n, -1);
+    final edges = <({int from, int to})>[];
+
+    minEdge[0] = 0;
+    for (int iter = 0; iter < n; iter++) {
+      int u = -1;
+      for (int i = 0; i < n; i++) {
+        if (!inTree[i] && (u == -1 || minEdge[i] < minEdge[u])) u = i;
+      }
+      inTree[u] = true;
+      if (minFrom[u] != -1) {
+        edges.add((from: minFrom[u], to: u));
+      }
+      for (int v = 0; v < n; v++) {
+        if (inTree[v]) continue;
+        final d = (points[u] - points[v]).distance;
+        if (d < minEdge[v]) {
+          minEdge[v] = d;
+          minFrom[v] = u;
+        }
+      }
+    }
+    return edges;
+  }
+
+  /// Build constellation edge list based on MST + shape type.
+  /// HTML exact: buildConstellationEdges(anchorPoints, shapeType)
+  static List<({int from, int to})> buildEdges(List<Offset> anchors, String shapeType) {
+    if (anchors.length <= 1) return [];
+
+    // -- Linear: nearest-neighbor chain
+    if (shapeType == 'linear') {
+      final remaining = List.generate(anchors.length, (i) => i);
+      final ordered = [remaining.removeAt(0)];
+      while (remaining.isNotEmpty) {
+        final last = ordered.last;
+        var nearIdx = 0;
+        var nearDist = double.infinity;
+        for (int i = 0; i < remaining.length; i++) {
+          final d = (anchors[remaining[i]] - anchors[last]).distance;
+          if (d < nearDist) { nearDist = d; nearIdx = i; }
+        }
+        ordered.add(remaining.removeAt(nearIdx));
+      }
+      return [for (int i = 0; i < ordered.length - 1; i++) (from: ordered[i], to: ordered[i + 1])];
+    }
+
+    final edges = computeMST(anchors);
+
+    // -- Closed / Loop: connect farthest leaves
+    if (shapeType == 'closed' || shapeType == 'loop') {
+      final degree = List.filled(anchors.length, 0);
+      for (final e in edges) { degree[e.from]++; degree[e.to]++; }
+      final leaves = [for (int i = 0; i < anchors.length; i++) if (degree[i] == 1) i];
+      if (leaves.length >= 2) {
+        var bestDist = 0.0;
+        var bestA = leaves[0], bestB = leaves[1];
+        for (int i = 0; i < leaves.length; i++) {
+          for (int j = i + 1; j < leaves.length; j++) {
+            final d = (anchors[leaves[i]] - anchors[leaves[j]]).distance;
+            if (d > bestDist) { bestDist = d; bestA = leaves[i]; bestB = leaves[j]; }
+          }
+        }
+        edges.add((from: bestA, to: bestB));
+        if (shapeType == 'loop' && leaves.length >= 4) {
+          final rest = leaves.where((l) => l != bestA && l != bestB).toList();
+          if (rest.length >= 2) edges.add((from: rest[0], to: rest[1]));
+        }
+      }
+    }
+
+    // -- Radial: connect all to center
+    if (shapeType == 'radial') {
+      final cx = anchors.fold(0.0, (s, p) => s + p.dx) / anchors.length;
+      final cy = anchors.fold(0.0, (s, p) => s + p.dy) / anchors.length;
+      var nearestIdx = 0;
+      var nearestDist = double.infinity;
+      for (int i = 0; i < anchors.length; i++) {
+        final d = (anchors[i] - Offset(cx, cy)).distance;
+        if (d < nearestDist) { nearestDist = d; nearestIdx = i; }
+      }
+      final connected = <int>{};
+      for (final e in edges) {
+        if (e.from == nearestIdx) connected.add(e.to);
+        if (e.to == nearestIdx) connected.add(e.from);
+      }
+      for (int i = 0; i < anchors.length; i++) {
+        if (i != nearestIdx && !connected.contains(i)) {
+          edges.add((from: nearestIdx, to: i));
+        }
+      }
+    }
+
+    return edges;
   }
 }

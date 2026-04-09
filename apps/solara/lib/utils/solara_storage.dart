@@ -14,6 +14,9 @@ class SolaraProfile {
   final double birthLat;
   final double birthLng;
   final int birthTz; // UTC offset in hours
+  final String homeName; // HTML: p.homeName
+  final double homeLat;  // HTML: p.homeLat
+  final double homeLng;  // HTML: p.homeLng
 
   const SolaraProfile({
     this.name = '',
@@ -24,6 +27,9 @@ class SolaraProfile {
     this.birthLat = 0,
     this.birthLng = 0,
     this.birthTz = 9,
+    this.homeName = '',
+    this.homeLat = 0,
+    this.homeLng = 0,
   });
 
   bool get isComplete => birthDate.isNotEmpty && birthPlace.isNotEmpty;
@@ -37,6 +43,9 @@ class SolaraProfile {
     'birthLat': birthLat,
     'birthLng': birthLng,
     'birthTz': birthTz,
+    'homeName': homeName,
+    'homeLat': homeLat,
+    'homeLng': homeLng,
   };
 
   factory SolaraProfile.fromJson(Map<String, dynamic> j) => SolaraProfile(
@@ -48,6 +57,9 @@ class SolaraProfile {
     birthLat: (j['birthLat'] ?? 0).toDouble(),
     birthLng: (j['birthLng'] ?? 0).toDouble(),
     birthTz: j['birthTz'] ?? 9,
+    homeName: j['homeName'] ?? '',
+    homeLat: (j['homeLat'] ?? 0).toDouble(),
+    homeLng: (j['homeLng'] ?? 0).toDouble(),
   );
 }
 
@@ -102,6 +114,34 @@ class SolaraStorage {
   static Future<void> clearReadings() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_currentReadingsKey);
+  }
+
+  /// Update synchronicity text for a specific reading date.
+  static Future<void> updateSynchronicity(String date, String text) async {
+    final readings = await loadCurrentReadings();
+    for (final r in readings) {
+      if (r.date == date) {
+        r.synchronicity = text;
+        break;
+      }
+    }
+    await saveCurrentReadings(readings);
+  }
+
+  // --- Title Diagnosis persistence ---
+
+  static const _titleKey = 'solara_title_data';
+
+  static Future<Map<String, dynamic>?> loadTitleData() async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString(_titleKey);
+    if (raw == null) return null;
+    return json.decode(raw) as Map<String, dynamic>;
+  }
+
+  static Future<void> saveTitleData(Map<String, dynamic> data) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_titleKey, json.encode(data));
   }
 
   static Future<DailyReading?> getTodayReading() async {
