@@ -28,7 +28,7 @@
   - 呼出元: なし
   - 操作: getById
 - **[✅ 実行中]** `setBirthMapLocation()` (L1067)
-  - 呼出元: openBirthInfo, searchBirthPlace
+  - 呼出元: searchBirthPlace, openBirthInfo
   - 操作: getById
 - **[✅ 実行中]** `saveBirthInfo()` (L1138)
   - 呼出元: なし
@@ -40,7 +40,7 @@
   - 呼出元: なし
   - 操作: getById
 - **[✅ 実行中]** `setBirthMapLocation()` (L1067)
-  - 呼出元: openBirthInfo, searchBirthPlace
+  - 呼出元: searchBirthPlace, openBirthInfo
   - 操作: getById
 - **[✅ 実行中]** `saveBirthInfo()` (L1138)
   - 呼出元: なし
@@ -52,7 +52,7 @@
   - 呼出元: なし
   - 操作: getById
 - **[✅ 実行中]** `setBirthMapLocation()` (L1067)
-  - 呼出元: openBirthInfo, searchBirthPlace
+  - 呼出元: searchBirthPlace, openBirthInfo
   - 操作: getById
 - **[✅ 実行中]** `searchBirthPlace()` (L1105)
   - 呼出元: なし
@@ -79,7 +79,7 @@
   - 呼出元: なし
   - 操作: getById
 - **[✅ 実行中]** `setBirthMapLocation()` (L1067)
-  - 呼出元: openBirthInfo, searchBirthPlace
+  - 呼出元: searchBirthPlace, openBirthInfo
   - 操作: getById
 - **[✅ 実行中]** `searchBirthPlace()` (L1105)
   - 呼出元: なし

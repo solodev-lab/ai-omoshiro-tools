@@ -234,15 +234,25 @@ class _ObserveScreenState extends State<ObserveScreen>
         setState(() => _typedChars++);
         _startTypewriter();
       } else {
-        setState(() => _typingDone = true);
+        // HTML: setTimeout(function() { advice.textContent = adviceText; }, 300)
+        Future.delayed(const Duration(milliseconds: 300), () {
+          if (mounted) setState(() => _typingDone = true);
+        });
       }
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    // HTML: .phone-frame.cosmic-bg — radial-gradient(ellipse at 50% 0%, #0f2850 0%, #080C14 55%)
     return Container(
-      color: const Color(0xFF080C14), // --bg-deep
+      decoration: const BoxDecoration(
+        gradient: RadialGradient(
+          center: Alignment(0, -1), radius: 1.1,
+          colors: [Color(0xFF0F2850), Color(0xFF080C14)],
+          stops: [0.0, 0.55],
+        ),
+      ),
       child: SafeArea(
         child: Column(children: [
           // HTML: inner-tab-nav (40px height)
@@ -312,7 +322,8 @@ class _ObserveScreenState extends State<ObserveScreen>
 
   Widget _buildDrawPanel() {
     return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+      // HTML: .draw-panel { padding:20px 20px 30px }
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 30),
       child: Column(children: [
         // HTML: .card-scene { width:200; height:320; perspective:800px }
         GestureDetector(
@@ -506,9 +517,12 @@ class _ObserveScreenState extends State<ObserveScreen>
               fontSize: 11, color: Color(0xFFAAAAAA), letterSpacing: 1.5),
         ),
         const SizedBox(height: 8),
-        // HTML: card-emoji (56px, drop-shadow)
-        Text(card.emoji, style: const TextStyle(fontSize: 56)),
-        const SizedBox(height: 12),
+        // カード画像を表示
+        ClipRRect(
+          borderRadius: BorderRadius.circular(6),
+          child: Image.asset(card.imagePath, height: 120, fit: BoxFit.contain),
+        ),
+        const SizedBox(height: 8),
         // HTML: card-name-en (14px, #C9A84C, letter-spacing:2, weight:600)
         Text(card.displayName,
             style: const TextStyle(
@@ -677,7 +691,11 @@ class _ObserveScreenState extends State<ObserveScreen>
             ),
           ],
         ),
-        const SizedBox(height: 14),
+        const SizedBox(height: 6),
+        // 履歴上限の注意書き
+        const Text('※ 履歴は50件までです。古い履歴から自動的に削除されます。',
+            style: TextStyle(fontSize: 9, color: Color(0xFF444444))),
+        const SizedBox(height: 10),
 
         if (_history.isEmpty)
           // HTML: .history-empty { text-align:center; padding:60px 20px; color:#444; font-size:13px; line-height:1.8 }

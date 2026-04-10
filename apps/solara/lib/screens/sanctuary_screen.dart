@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../utils/solara_storage.dart';
 import '../utils/title_data.dart' as titleData;
@@ -38,6 +39,23 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
   void initState() {
     super.initState();
     _loadProfile();
+    _loadSettings();
+  }
+
+  Future<void> _loadSettings() async {
+    final prefs = await SharedPreferences.getInstance();
+    // HTML: localStorage('solara_house_system')
+    final house = prefs.getString('solara_house_system');
+    if (house != null && mounted) setState(() => _houseSystem = house);
+    // HTML: localStorage('solara_orb_settings')
+    final orbRaw = prefs.getString('solara_orb_settings');
+    if (orbRaw != null) {
+      final saved = json.decode(orbRaw) as Map<String, dynamic>;
+      for (final k in saved.keys) {
+        if (_orbValues.containsKey(k)) _orbValues[k] = (saved[k] as num).toDouble();
+      }
+      if (mounted) setState(() {});
+    }
   }
 
   Future<void> _loadProfile() async {
@@ -62,13 +80,32 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
     );
     if (result != null) {
       await SolaraStorage.saveProfile(result);
+      // HTML: saveBirthInfo() — auto-update title if sun/moon sign changed
+      if (_titleLight != null && _profile != null) {
+        final oldSun = titleData.getSunSign(_profile!.birthDate);
+        final oldMoon = titleData.getMoonSign(_profile!.birthDate, _profile!.birthTime);
+        final newSun = titleData.getSunSign(result.birthDate);
+        final newMoon = titleData.getMoonSign(result.birthDate, result.birthTime);
+        if (newSun != oldSun || newMoon != oldMoon) {
+          final t144 = titleData.title144[newSun]?[newMoon];
+          final sunA = titleData.sunAdj[newSun];
+          final newLight = t144?['light'] ?? (sunA?['jp'] ?? '');
+          final newShadow = t144?['shadow'] ?? '${sunA?['jp'] ?? ''}${titleData.moonNoun[newMoon]?['jp'] ?? ''}';
+          final updated = {
+            'lightJP': newLight, 'shadowJP': newShadow,
+            'classEN': _titleClassEN ?? '', 'classJP': '',
+          };
+          await SolaraStorage.saveTitleData(updated);
+          setState(() { _titleLight = newLight; _titleShadow = newShadow; });
+        }
+      }
       setState(() => _profile = result);
     }
   }
 
   void _startDiagnosis() async {
     final result = await Navigator.of(context).push<Map<String, String>>(
-      MaterialPageRoute(builder: (_) => const _TitleDiagnosisPage()),
+      MaterialPageRoute(builder: (_) => _TitleDiagnosisPage(profile: _profile)),
     );
     if (result != null) {
       await SolaraStorage.saveTitleData(result);
@@ -89,6 +126,28 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
     if (result != null) {
       await SolaraStorage.saveProfile(result);
       setState(() => _profile = result);
+      // HTML: syncHomeToVP(p) — sync home to VP slots and locations
+      if (result.homeName.isNotEmpty) {
+        await _syncHomeToVP(result);
+      }
+    }
+  }
+
+  /// HTML: syncHomeToVP(profile) — sync home to solara_vp_slots and solara_locations
+  Future<void> _syncHomeToVP(SolaraProfile profile) async {
+    final prefs = await SharedPreferences.getInstance();
+    for (final key in ['solara_vp_slots', 'solara_locations']) {
+      List<dynamic> slots = [];
+      final raw = prefs.getString(key);
+      if (raw != null) { try { slots = json.decode(raw) as List; } catch (_) {} }
+      final homeSlot = {'name': profile.homeName, 'lat': profile.homeLat, 'lng': profile.homeLng, 'icon': '🏠', 'isHome': true};
+      if (slots.isNotEmpty && (slots[0] as Map)['isHome'] == true) {
+        slots[0] = homeSlot;
+      } else {
+        slots.insert(0, homeSlot);
+        if (slots.length > 5) slots = slots.sublist(0, 5);
+      }
+      await prefs.setString(key, json.encode(slots));
     }
   }
 
@@ -108,8 +167,8 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
       decoration: _bgDecoration,
       child: SafeArea(
         child: SingleChildScrollView(
-          // HTML: padding:56px 20px 100px — SafeArea handles top, nav handles bottom
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 100),
+          // HTML: .sanctuary-content { padding:56px 20px 100px } — SafeArea handles ~44px top
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 100),
           child: Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 600),
@@ -405,9 +464,10 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
         // HTML: .pro-banner { padding:22px; background:linear-gradient(135deg,rgba(249,217,118,0.09),rgba(249,217,118,0.04));
         //   border:1px solid rgba(249,217,118,0.18); border-radius:22px;
         //   display:flex; flex-direction:column; gap:12px; align-items:center; text-align:center; }
+        // HTML inline: style="padding:16px;gap:10px;" (overrides .pro-banner padding:22px)
         Container(
           width: double.infinity,
-          padding: const EdgeInsets.all(22),
+          padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(22),
             gradient: const LinearGradient(
@@ -483,12 +543,13 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
           value: '$houseLabel ›',
           onTap: () => setState(() => _houseSelectOpen = !_houseSelectOpen),
         ),
-        // House select panel (hidden by default)
-        if (_houseSelectOpen) ...[
-          _buildHouseOption('Placidus', 'placidus'),
-          const SizedBox(height: 6),
-          _buildHouseOption('Whole Sign', 'whole_sign'),
-        ],
+        // House select panel (hidden by default) — 1つのColumnにまとめてgap制御
+        if (_houseSelectOpen)
+          Column(children: [
+            _buildHouseOption('Placidus', 'placidus'),
+            const SizedBox(height: 6),
+            _buildHouseOption('Whole Sign', 'whole_sign'),
+          ]),
         // Aspect Orbs
         _SettingsItem(
           icon: Icons.adjust,
@@ -503,16 +564,18 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
   Widget _buildHouseOption(String label, String value) {
     final isSelected = _houseSystem == value;
     return GestureDetector(
-      onTap: () => setState(() {
-        _houseSystem = value;
-        _houseSelectOpen = false;
-      }),
+      onTap: () async {
+        setState(() { _houseSystem = value; _houseSelectOpen = false; });
+        // HTML: localStorage.setItem('solara_house_system', val)
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('solara_house_system', value);
+      },
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 8),
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
         decoration: BoxDecoration(
-          color: const Color(0x0DFFFFFF), // rgba(255,255,255,0.05)
-          borderRadius: BorderRadius.circular(16),
+          color: const Color(0x0FFFFFFF), // rgba(255,255,255,0.06)
+          borderRadius: BorderRadius.circular(20), // HTML: border-radius:20px
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -542,6 +605,9 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
     );
     if (result != null) {
       setState(() => _orbValues.addAll(result));
+      // HTML: saveOrbOverlay() → localStorage.setItem('solara_orb_settings', JSON.stringify(currentOrbs))
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('solara_orb_settings', json.encode(result));
     }
   }
 
@@ -576,10 +642,12 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
   }
 
   // HTML: background: radial-gradient(ellipse at center, #0a1220 0%, #020408 100%)
+  // HTML: .main-area.cosmic-bg — radial-gradient(ellipse at 50% 0%, #0f2850 0%, #080C14 55%)
   static const _bgDecoration = BoxDecoration(
     gradient: RadialGradient(
-      center: Alignment.center, radius: 1.2,
-      colors: [Color(0xFF0A1220), Color(0xFF020408)],
+      center: Alignment(0, -1), radius: 1.1,
+      colors: [Color(0xFF0F2850), Color(0xFF080C14)],
+      stops: [0.0, 0.55],
     ),
   );
 }
@@ -623,7 +691,7 @@ class _SettingsGroup extends StatelessWidget {
 
 // ══════════════════════════════════════════════════
 // ── Settings Item ──
-// HTML: .settings-item { padding:14px 18px; border-radius:16px; }
+// HTML: .settings-item { padding:14px 18px; border-radius:20px; }
 // .settings-icon { width:36px; height:36px; background:rgba(255,255,255,0.05); border-radius:10px; }
 // ══════════════════════════════════════════════════
 
@@ -641,8 +709,8 @@ class _SettingsItem extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
         decoration: BoxDecoration(
-          color: const Color(0x0DFFFFFF), // rgba(255,255,255,0.05) — glass
-          borderRadius: BorderRadius.circular(16),
+          color: const Color(0x0FFFFFFF), // rgba(255,255,255,0.06) — HTML .settings-item.glass
+          borderRadius: BorderRadius.circular(20), // HTML: border-radius:20px
           border: Border.all(color: const Color(0x1AFFFFFF)), // rgba(255,255,255,0.1)
         ),
         child: Row(
@@ -687,8 +755,8 @@ class _SettingsItemWithToggle extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
       decoration: BoxDecoration(
-        color: const Color(0x0DFFFFFF),
-        borderRadius: BorderRadius.circular(16),
+        color: const Color(0x0FFFFFFF), // rgba(255,255,255,0.06)
+        borderRadius: BorderRadius.circular(20), // HTML: border-radius:20px
         border: Border.all(color: const Color(0x1AFFFFFF)),
       ),
       child: Row(
@@ -909,22 +977,42 @@ class _OrbOverlayState extends State<_OrbOverlay> {
           _orbPmBtn('−', () {
             if (val > 0.5) setState(() => _vals[key] = val - 0.5);
           }),
-          // Slider
+          // Slider with default value mark
           Expanded(
-            child: SliderTheme(
-              data: SliderTheme.of(context).copyWith(
-                activeTrackColor: const Color(0xFFF9D976),
-                inactiveTrackColor: const Color(0x1AFFFFFF),
-                thumbColor: const Color(0xFFF9D976),
-                trackHeight: 2,
-                thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
-              ),
-              child: Slider(
-                value: val, min: 0.5, max: 8.0,
-                divisions: 15,
-                onChanged: (v) => setState(() => _vals[key] = (v * 2).round() / 2),
-              ),
-            ),
+            child: LayoutBuilder(builder: (ctx, constraints) {
+              // HTML: .orb-default-mark — vertical line at default value position
+              // Flutter Slider has 24px horizontal padding (overlayRadius=12 each side)
+              const sliderPadding = 24.0;
+              final trackW = constraints.maxWidth - sliderPadding;
+              final ratio = (defaultVal - 0.5) / (8.0 - 0.5);
+              final markX = sliderPadding / 2 + ratio * trackW;
+              return Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  SliderTheme(
+                    data: SliderTheme.of(context).copyWith(
+                      activeTrackColor: const Color(0xFFF9D976),
+                      inactiveTrackColor: const Color(0x1AFFFFFF),
+                      thumbColor: const Color(0xFFF9D976),
+                      trackHeight: 2,
+                      thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
+                    ),
+                    child: Slider(
+                      value: val, min: 0.5, max: 8.0,
+                      divisions: 15,
+                      onChanged: (v) => setState(() => _vals[key] = (v * 2).round() / 2),
+                    ),
+                  ),
+                  // HTML: .orb-default-mark { position:absolute; top:2px; bottom:2px; width:1px; background:rgba(249,217,118,0.25) }
+                  Positioned(
+                    left: markX, top: 8, bottom: 8,
+                    child: IgnorePointer(
+                      child: Container(width: 1, color: const Color(0x40F9D976)),
+                    ),
+                  ),
+                ],
+              );
+            }),
           ),
           // HTML: .orb-val { font-size:13px; color:#F9D976; min-width:36px; text-align:center; }
           SizedBox(width: 36,
@@ -1023,22 +1111,9 @@ class _ProfileEditorPageState extends State<_ProfileEditorPage> {
     super.dispose();
   }
 
-  Future<void> _pickTime() async {
-    final picked = await showTimePicker(
-      context: context,
-      initialTime: _birthTime ?? const TimeOfDay(hour: 12, minute: 0),
-      builder: (ctx, child) => Theme(
-        data: Theme.of(ctx).copyWith(
-          colorScheme: const ColorScheme.dark(
-            primary: Color(0xFFF9D976),
-            surface: Color(0xFF0A1220),
-          ),
-        ),
-        child: child!,
-      ),
-    );
-    if (picked != null) setState(() => _birthTime = picked);
-  }
+  // 時間(0-23)と分(0-59)の選択肢
+  static final _hourOptions = List.generate(24, (i) => i.toString().padLeft(2, '0'));
+  static final _minuteOptions = List.generate(60, (i) => i.toString().padLeft(2, '0'));
 
   Future<void> _searchPlace(String query) async {
     if (query.length < 2) return;
@@ -1184,33 +1259,56 @@ class _ProfileEditorPageState extends State<_ProfileEditorPage> {
                       },
                     )),
 
-                    // 出生時刻
+                    // 出生時刻 — 24時間表記ドロップダウン（30分刻み）
                     _birthSection('出生時刻', Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        GestureDetector(
-                          onTap: _birthTimeUnknown ? null : _pickTime,
-                          child: Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                        // 時間・分 2つのドロップダウン
+                        Row(children: [
+                          // 時間 (00-23)
+                          Expanded(child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
                             decoration: BoxDecoration(
                               color: const Color(0x0FFFFFFF),
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(color: const Color(0x1FFFFFFF)),
                             ),
-                            child: Text(
-                              _birthTimeUnknown ? '12:00（正午）'
-                                  : _birthTime != null ? '${_birthTime!.hour.toString().padLeft(2, '0')}:${_birthTime!.minute.toString().padLeft(2, '0')}'
-                                  : '選択してください',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: _birthTimeUnknown
-                                    ? const Color(0x59EAEAEA) // .birth-input:disabled opacity:0.35
-                                    : const Color(0xFFEAEAEA),
-                              ),
+                            child: DropdownButtonHideUnderline(child: DropdownButton<String>(
+                              value: _birthTimeUnknown ? null : _birthTime != null ? _birthTime!.hour.toString().padLeft(2, '0') : null,
+                              hint: Text(_birthTimeUnknown ? '12' : '時', style: TextStyle(fontSize: 14, color: _birthTimeUnknown ? const Color(0x59EAEAEA) : const Color(0x99EAEAEA))),
+                              isExpanded: true, dropdownColor: const Color(0xFF0A1220),
+                              style: const TextStyle(fontSize: 14, color: Color(0xFFEAEAEA)),
+                              icon: Icon(Icons.arrow_drop_down, color: _birthTimeUnknown ? const Color(0x59EAEAEA) : const Color(0xFFACACAC)),
+                              items: _birthTimeUnknown ? null : _hourOptions.map((h) => DropdownMenuItem(value: h, child: Text('$h 時'))).toList(),
+                              onChanged: _birthTimeUnknown ? null : (val) {
+                                if (val != null) setState(() => _birthTime = TimeOfDay(hour: int.parse(val), minute: _birthTime?.minute ?? 0));
+                              },
+                            )),
+                          )),
+                          const SizedBox(width: 8),
+                          const Text(':', style: TextStyle(fontSize: 18, color: Color(0xFFACACAC))),
+                          const SizedBox(width: 8),
+                          // 分 (00-59)
+                          Expanded(child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: const Color(0x0FFFFFFF),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: const Color(0x1FFFFFFF)),
                             ),
-                          ),
-                        ),
+                            child: DropdownButtonHideUnderline(child: DropdownButton<String>(
+                              value: _birthTimeUnknown ? null : _birthTime != null ? _birthTime!.minute.toString().padLeft(2, '0') : null,
+                              hint: Text(_birthTimeUnknown ? '00' : '分', style: TextStyle(fontSize: 14, color: _birthTimeUnknown ? const Color(0x59EAEAEA) : const Color(0x99EAEAEA))),
+                              isExpanded: true, dropdownColor: const Color(0xFF0A1220),
+                              style: const TextStyle(fontSize: 14, color: Color(0xFFEAEAEA)),
+                              icon: Icon(Icons.arrow_drop_down, color: _birthTimeUnknown ? const Color(0x59EAEAEA) : const Color(0xFFACACAC)),
+                              items: _birthTimeUnknown ? null : _minuteOptions.map((m) => DropdownMenuItem(value: m, child: Text('$m 分'))).toList(),
+                              onChanged: _birthTimeUnknown ? null : (val) {
+                                if (val != null) setState(() => _birthTime = TimeOfDay(hour: _birthTime?.hour ?? 12, minute: int.parse(val)));
+                              },
+                            )),
+                          )),
+                        ]),
                         // HTML: .time-unknown-row { display:flex; align-items:center; gap:8px; margin-top:8px; }
                         const SizedBox(height: 8),
                         Row(children: [
@@ -1402,7 +1500,8 @@ class _ProfileEditorPageState extends State<_ProfileEditorPage> {
 // ══════════════════════════════════════════════════
 
 class _TitleDiagnosisPage extends StatefulWidget {
-  const _TitleDiagnosisPage();
+  final SolaraProfile? profile;
+  const _TitleDiagnosisPage({this.profile});
   @override
   State<_TitleDiagnosisPage> createState() => _TitleDiagnosisPageState();
 }
@@ -1411,67 +1510,74 @@ class _TitleDiagnosisPageState extends State<_TitleDiagnosisPage>
     with TickerProviderStateMixin {
   // HTML exact: 28 rounds, 3 parts
   static const _rounds = <Map<String, dynamic>>[
+    // HTML: TD_ROUNDS — Part 1 Minor Arcana (img = card-images/ filename)
     {'part':1,'q':'新しい何かが始まるとき、あなたが最初に手に取るのは？','qen':'When something new begins, what do you reach for first?',
-     'cards':[{'emoji':'🔥','name':'Ace of Wands','axis':'power'},{'emoji':'💧','name':'Ace of Cups','axis':'heart'},{'emoji':'🗡️','name':'Ace of Swords','axis':'mind'},{'emoji':'🪙','name':'Ace of Pentacles','axis':'spirit'}]},
-    {'part':1,'q':'選択する時が来た。なにをおもう？','qen':'The moment of choice has come.',
-     'cards':[{'emoji':'🔥','name':'Two of Wands','axis':'power'},{'emoji':'💧','name':'Two of Cups','axis':'heart'},{'emoji':'🗡️','name':'Two of Swords','axis':'mind'},{'emoji':'🪙','name':'Two of Pentacles','axis':'shadow'}]},
-    {'part':1,'q':'あなたは大きな決断をした。どんな気持ち？','qen':'You\'ve made a big decision.',
-     'cards':[{'emoji':'🔥','name':'Three of Wands','axis':'power'},{'emoji':'💧','name':'Three of Cups','axis':'heart'},{'emoji':'🗡️','name':'Three of Swords','axis':'mind'},{'emoji':'🪙','name':'Three of Pentacles','axis':'spirit'}]},
+     'cards':[{'img':'W01.webp','axis':'power'},{'img':'C01.webp','axis':'heart'},{'img':'S01.webp','axis':'mind'},{'img':'P01.webp','axis':'spirit'}]},
+    {'part':1,'q':'選択する時が来た。なにをおもう？','qen':'The moment of choice has come. What goes through your mind?',
+     'cards':[{'img':'W02.webp','axis':'power'},{'img':'C02.webp','axis':'heart'},{'img':'S02.webp','axis':'mind'},{'img':'P02.webp','axis':'shadow'}]},
+    {'part':1,'q':'あなたは大きな決断をした。どんな気持ち？','qen':'You\'ve made a big decision. How does it feel?',
+     'cards':[{'img':'W03.webp','axis':'power'},{'img':'C03.webp','axis':'heart'},{'img':'S03.webp','axis':'mind'},{'img':'P03.webp','axis':'spirit'}]},
     {'part':1,'q':'安心を感じるのはどんなとき？','qen':'When do you feel most at ease?',
-     'cards':[{'emoji':'🔥','name':'Four of Wands','axis':'power'},{'emoji':'💧','name':'Four of Cups','axis':'heart'},{'emoji':'🗡️','name':'Four of Swords','axis':'mind'},{'emoji':'🪙','name':'Four of Pentacles','axis':'spirit'}]},
-    {'part':1,'q':'困難にぶつかったとき、あなたはどうなっている？','qen':'When you hit a wall, what happens?',
-     'cards':[{'emoji':'🔥','name':'Five of Wands','axis':'power'},{'emoji':'💧','name':'Five of Cups','axis':'heart'},{'emoji':'🗡️','name':'Five of Swords','axis':'mind'},{'emoji':'🪙','name':'Five of Pentacles','axis':'shadow'}]},
+     'cards':[{'img':'W04.webp','axis':'power'},{'img':'C04.webp','axis':'heart'},{'img':'S04.webp','axis':'mind'},{'img':'P04.webp','axis':'spirit'}]},
+    {'part':1,'q':'困難にぶつかったとき、あなたはどうなっている？','qen':'When you hit a wall, what happens to you?',
+     'cards':[{'img':'W05.webp','axis':'power'},{'img':'C05.webp','axis':'heart'},{'img':'S05.webp','axis':'mind'},{'img':'P05.webp','axis':'shadow'}]},
     {'part':1,'q':'あなたが癒されるのは？','qen':'What heals you?',
-     'cards':[{'emoji':'🔥','name':'Six of Wands','axis':'power'},{'emoji':'💧','name':'Six of Cups','axis':'heart'},{'emoji':'🗡️','name':'Six of Swords','axis':'mind'},{'emoji':'🪙','name':'Six of Pentacles','axis':'spirit'}]},
+     'cards':[{'img':'W06.webp','axis':'power'},{'img':'C06.webp','axis':'heart'},{'img':'S06.webp','axis':'mind'},{'img':'P06.webp','axis':'spirit'}]},
     {'part':1,'q':'眠れない夜、頭をよぎるのは？','qen':'What crosses your mind on sleepless nights?',
-     'cards':[{'emoji':'🔥','name':'Seven of Wands','axis':'power'},{'emoji':'💧','name':'Seven of Cups','axis':'heart'},{'emoji':'🗡️','name':'Seven of Swords','axis':'mind'},{'emoji':'🪙','name':'Seven of Pentacles','axis':'shadow'}]},
+     'cards':[{'img':'W07.webp','axis':'power'},{'img':'C07.webp','axis':'heart'},{'img':'S07.webp','axis':'mind'},{'img':'P07.webp','axis':'shadow'}]},
     {'part':1,'q':'前進する為に、やるべきことは','qen':'What must be done to move forward?',
-     'cards':[{'emoji':'🔥','name':'Eight of Wands','axis':'power'},{'emoji':'💧','name':'Eight of Cups','axis':'heart'},{'emoji':'🗡️','name':'Eight of Swords','axis':'mind'},{'emoji':'🪙','name':'Eight of Pentacles','axis':'shadow'}]},
+     'cards':[{'img':'W08.webp','axis':'power'},{'img':'C08.webp','axis':'heart'},{'img':'S08.webp','axis':'mind'},{'img':'P08.webp','axis':'shadow'}]},
     {'part':1,'q':'今の自分の姿にちかいのは？','qen':'Which one looks most like you right now?',
-     'cards':[{'emoji':'🔥','name':'Nine of Wands','axis':'power'},{'emoji':'💧','name':'Nine of Cups','axis':'heart'},{'emoji':'🗡️','name':'Nine of Swords','axis':'mind'},{'emoji':'🪙','name':'Nine of Pentacles','axis':'spirit'}]},
+     'cards':[{'img':'W09.webp','axis':'power'},{'img':'C09.webp','axis':'heart'},{'img':'S09.webp','axis':'mind'},{'img':'P09.webp','axis':'spirit'}]},
+    // HTML: TD_ROUNDS — Part 2 Major Arcana (with wildcard cards)
     {'part':2,'q':'生まれ変わるとしたら、誰になる？','qen':'If reborn, who would you become?',
-     'cards':[{'emoji':'👑','name':'Emperor','axis':'power'},{'emoji':'🪄','name':'Magician','axis':'mind'},{'emoji':'🌺','name':'Empress','axis':'heart'}]},
+     'cards':[{'img':'M04.webp','axis':'power'},{'img':'M01.webp','axis':'mind'},{'img':'M03.webp','axis':'heart'}]},
     {'part':2,'q':'迷ったとき、頼りにしたいのは？','qen':'When lost, what do you trust?',
-     'cards':[{'emoji':'🌙','name':'High Priestess','axis':'spirit'},{'emoji':'☸️','name':'Wheel','axis':'shadow'},{'emoji':'⚡','name':'Chariot','axis':'power'}]},
-    {'part':2,'q':'旅の仲間にするなら？','qen':'Who would you travel with?',
-     'cards':[{'emoji':'💫','name':'Lovers','axis':'heart'},{'emoji':'🕯️','name':'Hermit','axis':'mind'},{'emoji':'🦋','name':'Death','axis':'shadow'},{'emoji':'⚡','name':'Chariot','axis':'power'},{'emoji':'🌟','name':'Star','axis':'spirit'}]},
+     'cards':[{'img':'M02.webp','axis':'spirit'},{'img':'M10.webp','axis':'shadow'},{'img':'M07.webp','axis':'power'}]},
+    {'part':2,'q':'旅の仲間にするなら、誰を選ぶ？','qen':'Who would you choose as your travel companion?',
+     'cards':[{'img':'M06.webp','axis':'heart'},{'img':'M09.webp','axis':'mind'},{'img':'M13.webp','axis':'shadow'},{'img':'M07.webp','axis':'power'},{'img':'M17.webp','axis':'spirit'},{'img':'M00.webp','axis':'wildcard'}]},
     {'part':2,'q':'あなたの師匠になるのは？','qen':'Who would be your mentor?',
-     'cards':[{'emoji':'🦁','name':'Strength','axis':'power'},{'emoji':'📿','name':'Hierophant','axis':'spirit'},{'emoji':'🌈','name':'Temperance','axis':'heart'}]},
-    {'part':2,'q':'深夜、語り明かすなら？','qen':'What would you discuss until dawn?',
-     'cards':[{'emoji':'🌑','name':'Devil','axis':'shadow'},{'emoji':'⚖️','name':'Justice','axis':'mind'},{'emoji':'🌟','name':'Star','axis':'spirit'},{'emoji':'⚡','name':'Tower','axis':'power'},{'emoji':'☀️','name':'Sun','axis':'heart'}]},
-    {'part':2,'q':'壁にぶつかったとき、心は？','qen':'When you hit a wall, where does your heart go?',
-     'cards':[{'emoji':'☀️','name':'Sun','axis':'heart'},{'emoji':'🔮','name':'Hanged Man','axis':'shadow'},{'emoji':'⚡','name':'Tower','axis':'power'}]},
-    {'part':2,'q':'夜明け前、導くのは？','qen':'Before dawn, what guides you?',
-     'cards':[{'emoji':'📯','name':'Judgement','axis':'mind'},{'emoji':'🌕','name':'Moon','axis':'spirit'},{'emoji':'👑','name':'Emperor','axis':'power'}]},
-    {'part':2,'q':'理解してくれるのは？','qen':'Who truly understands you?',
-     'cards':[{'emoji':'🦋','name':'Death','axis':'shadow'},{'emoji':'🌺','name':'Empress','axis':'heart'},{'emoji':'🌙','name':'Priestess','axis':'spirit'},{'emoji':'🦁','name':'Strength','axis':'power'},{'emoji':'🕯️','name':'Hermit','axis':'mind'}]},
-    {'part':2,'q':'最も共感するのは？','qen':'Which resonates most?',
-     'cards':[{'emoji':'🌈','name':'Temperance','axis':'heart'},{'emoji':'🌑','name':'Devil','axis':'shadow'},{'emoji':'🌙','name':'Priestess','axis':'spirit'}]},
-    {'part':2,'q':'強みが活きるのは？','qen':'Where does your strength shine?',
-     'cards':[{'emoji':'👑','name':'Emperor','axis':'power'},{'emoji':'⚖️','name':'Justice','axis':'mind'},{'emoji':'🌟','name':'Star','axis':'spirit'},{'emoji':'🔮','name':'Hanged Man','axis':'shadow'},{'emoji':'🌺','name':'Empress','axis':'heart'}]},
-    {'part':2,'q':'一人の夜、心に灯るのは？','qen':'On a solitary night, what lights within?',
-     'cards':[{'emoji':'🌟','name':'Star','axis':'spirit'},{'emoji':'☀️','name':'Sun','axis':'heart'},{'emoji':'📯','name':'Judgement','axis':'mind'}]},
-    {'part':2,'q':'旅の終わりに見える景色は？','qen':'What do you see at journey\'s end?',
-     'cards':[{'emoji':'🌍','name':'World','axis':'spirit'},{'emoji':'🌀','name':'Fool','axis':'shadow'},{'emoji':'⚡','name':'Chariot','axis':'power'}]},
-    {'part':2,'q':'人生を一枚で表すなら？','qen':'If your life were one card?',
-     'cards':[{'emoji':'☀️','name':'Sun','axis':'heart'},{'emoji':'🌟','name':'Star','axis':'spirit'},{'emoji':'🪄','name':'Magician','axis':'mind'},{'emoji':'👑','name':'Emperor','axis':'power'},{'emoji':'🌑','name':'Devil','axis':'shadow'}]},
-    {'part':2,'q':'世界に残したいものは？','qen':'What would you leave behind?',
-     'cards':[{'emoji':'🌍','name':'World','axis':'spirit'},{'emoji':'🌺','name':'Empress','axis':'heart'},{'emoji':'📯','name':'Judgement','axis':'mind'}]},
-    {'part':2,'q':'今の自分に贈りたい言葉は？','qen':'What message for yourself now?',
-     'cards':[{'emoji':'🦁','name':'Strength','axis':'power'},{'emoji':'🌈','name':'Temperance','axis':'heart'},{'emoji':'🌙','name':'Priestess','axis':'spirit'}]},
-    {'part':3,'q':'あなたの「始まりの姿」は？','qen':'Your "beginning form"?',
-     'cards':[{'emoji':'🔥','name':'Page of Wands','axis':'power'},{'emoji':'💧','name':'Page of Cups','axis':'heart'},{'emoji':'🗡️','name':'Page of Swords','axis':'mind'},{'emoji':'🪙','name':'Page of Pentacles','axis':'spirit'}]},
-    {'part':3,'q':'あなたの「行動する姿」は？','qen':'Your "action form"?',
-     'cards':[{'emoji':'🔥','name':'Knight of Wands','axis':'power'},{'emoji':'💧','name':'Knight of Cups','axis':'heart'},{'emoji':'🗡️','name':'Knight of Swords','axis':'mind'},{'emoji':'🪙','name':'Knight of Pentacles','axis':'shadow'}]},
-    {'part':3,'q':'あなたの「育む姿」は？','qen':'Your "nurturing form"?',
-     'cards':[{'emoji':'🔥','name':'Queen of Wands','axis':'power'},{'emoji':'💧','name':'Queen of Cups','axis':'heart'},{'emoji':'🗡️','name':'Queen of Swords','axis':'mind'},{'emoji':'🪙','name':'Queen of Pentacles','axis':'spirit'}]},
-    {'part':3,'q':'あなたの「完成された姿」は？','qen':'Your "complete form"?',
-     'cards':[{'emoji':'🔥','name':'King of Wands','axis':'power'},{'emoji':'💧','name':'King of Cups','axis':'heart'},{'emoji':'🗡️','name':'King of Swords','axis':'mind'},{'emoji':'🪙','name':'King of Pentacles','axis':'spirit'}]},
+     'cards':[{'img':'M08.webp','axis':'power'},{'img':'M05.webp','axis':'spirit'},{'img':'M14.webp','axis':'heart'}]},
+    {'part':2,'q':'深夜、語り明かすとしたら何を語りたい？','qen':'If you could talk until dawn, what would you talk about?',
+     'cards':[{'img':'M15.webp','axis':'shadow'},{'img':'M11.webp','axis':'mind'},{'img':'M17.webp','axis':'spirit'},{'img':'M16.webp','axis':'power'},{'img':'M19.webp','axis':'heart'},{'img':'M21.webp','axis':'wildcard'}]},
+    {'part':2,'q':'壁にぶつかったとき、あなたの心は？','qen':'When you hit a wall, where does your heart go?',
+     'cards':[{'img':'M19.webp','axis':'heart'},{'img':'M12.webp','axis':'shadow'},{'img':'M16.webp','axis':'power'}]},
+    {'part':2,'q':'夜明け前、あなたを導くのは？','qen':'Before dawn, what guides you?',
+     'cards':[{'img':'M20.webp','axis':'mind'},{'img':'M18.webp','axis':'spirit'},{'img':'M04.webp','axis':'power'}]},
+    {'part':2,'q':'あなたを理解してくれるのは？','qen':'Who truly understands you?',
+     'cards':[{'img':'M13.webp','axis':'shadow'},{'img':'M03.webp','axis':'heart'},{'img':'M02.webp','axis':'spirit'},{'img':'M08.webp','axis':'power'},{'img':'M09.webp','axis':'mind'},{'img':'M00.webp','axis':'wildcard'}]},
+    {'part':2,'q':'世界を変えるなら、何を手に取る？','qen':'To change the world, what would you reach for?',
+     'cards':[{'img':'M07.webp','axis':'power'},{'img':'M01.webp','axis':'mind'},{'img':'M10.webp','axis':'shadow'}]},
+    {'part':2,'q':'あなたの魂が一番安らぐのは、どんな瞬間？','qen':'When does your soul feel most at peace?',
+     'cards':[{'img':'M05.webp','axis':'spirit'},{'img':'M06.webp','axis':'heart'},{'img':'M09.webp','axis':'mind'}]},
+    {'part':2,'q':'未知の扉の向こうはどんな世界？','qen':'What kind of world lies beyond the unknown door?',
+     'cards':[{'img':'M08.webp','axis':'power'},{'img':'M10.webp','axis':'shadow'},{'img':'M00.webp','axis':'wildcard'}]},
+    {'part':2,'q':'大切な人に贈りたい力は？','qen':'What power would you gift to someone you love?',
+     'cards':[{'img':'M11.webp','axis':'mind'},{'img':'M14.webp','axis':'heart'},{'img':'M17.webp','axis':'spirit'}]},
+    {'part':2,'q':'手放したとき、残るものは？','qen':'When you let go, what remains?',
+     'cards':[{'img':'M12.webp','axis':'shadow'},{'img':'M18.webp','axis':'spirit'},{'img':'M21.webp','axis':'wildcard'},{'img':'M08.webp','axis':'power'},{'img':'M14.webp','axis':'heart'},{'img':'M20.webp','axis':'mind'}]},
+    {'part':2,'q':'あなたが一番輝ける場所は？','qen':'Where do you shine brightest?',
+     'cards':[{'img':'M19.webp','axis':'heart'},{'img':'M16.webp','axis':'power'},{'img':'M00.webp','axis':'wildcard'}]},
+    {'part':2,'q':'この旅の終わりに、誰として立っていたい？','qen':'At the end of this journey, who do you want to be?',
+     'cards':[{'img':'M20.webp','axis':'mind'},{'img':'M15.webp','axis':'shadow'},{'img':'M21.webp','axis':'wildcard'},{'img':'M04.webp','axis':'power'},{'img':'M19.webp','axis':'heart'},{'img':'M17.webp','axis':'spirit'}]},
+    // HTML: Part 3 Court Cards — court 属性で集計（axisではなくcourt）
+    {'part':3,'q':'あなたの情熱の形は？','qen':'What shape does your passion take?',
+     'cards':[{'img':'W11.webp','court':'page'},{'img':'W12.webp','court':'knight'},{'img':'W13.webp','court':'queen'},{'img':'W14.webp','court':'king'}]},
+    {'part':3,'q':'奇跡が目の前に降りた瞬間のあなたは誰？','qen':'When a miracle descends before you, who are you?',
+     'cards':[{'img':'C11.webp','court':'page'},{'img':'C12.webp','court':'knight'},{'img':'C13.webp','court':'queen'},{'img':'C14.webp','court':'king'}]},
+    {'part':3,'q':'戦いの時期が迫る。あなたはどう剣を構える？','qen':'Battle draws near. How do you hold your sword?',
+     'cards':[{'img':'S11.webp','court':'page'},{'img':'S12.webp','court':'knight'},{'img':'S13.webp','court':'queen'},{'img':'S14.webp','court':'king'}]},
+    {'part':3,'q':'あなたが築きたいものは？','qen':'What do you want to build?',
+     'cards':[{'img':'P11.webp','court':'page'},{'img':'P12.webp','court':'knight'},{'img':'P13.webp','court':'queen'},{'img':'P14.webp','court':'king'}]},
   ];
   static const _partNames = {1:'PART 1: MINOR ARCANA',2:'PART 2: MAJOR ARCANA',3:'PART 3: COURT CARDS'};
 
   int _roundIdx = 0;
   final Map<String, int> _scores = {'power':0,'mind':0,'spirit':0,'shadow':0,'heart':0};
+  // HTML: TD.courtSelections — Part 3 で選ばれた court type を記録
+  final List<String> _courtSelections = [];
+  // HTML: TD.selections — tiebreak 用に全選択を記録
+  final List<Map<String, String>> _selections = [];
 
   String _screen = 'intro'; // intro, round, partTrans, forging, reveal
   int? _selectedCard;
@@ -1488,11 +1594,34 @@ class _TitleDiagnosisPageState extends State<_TitleDiagnosisPage>
 
   void _beginRounds() => setState(() { _screen = 'round'; _lastPart = _rounds[0]['part'] as int; });
 
-  void _selectCard(int idx, String axis) {
+  void _selectCard(int idx, String axisOrCourt) {
     setState(() => _selectedCard = idx);
     Future.delayed(const Duration(milliseconds: 500), () {
       if (!mounted) return;
-      _scores[axis] = (_scores[axis] ?? 0) + 1;
+      final round = _rounds[_roundIdx];
+      final part = round['part'] as int;
+      final card = (round['cards'] as List)[idx] as Map<String, dynamic>;
+
+      if (part == 1 || part == 2) {
+        final axis = card['axis'] as String? ?? axisOrCourt;
+        _selections.add({'axis': axis});
+        if (axis == 'wildcard') {
+          // HTML: applyWildcard() — boost lowest axis
+          int minVal = 999;
+          for (final v in _scores.values) { if (v < minVal) minVal = v; }
+          for (final k in ['power','mind','spirit','shadow','heart']) {
+            if (_scores[k] == minVal) { _scores[k] = _scores[k]! + 1; break; }
+          }
+        } else {
+          _scores[axis] = (_scores[axis] ?? 0) + 1;
+        }
+      } else if (part == 3) {
+        // HTML: TD.courtSelections.push(card.court)
+        final court = card['court'] as String? ?? 'page';
+        _courtSelections.add(court);
+        _selections.add({'court': court});
+      }
+
       if (_roundIdx < _rounds.length - 1) {
         final nextPart = _rounds[_roundIdx + 1]['part'] as int;
         final curPart = _rounds[_roundIdx]['part'] as int;
@@ -1510,27 +1639,74 @@ class _TitleDiagnosisPageState extends State<_TitleDiagnosisPage>
   }
 
   void _finishDiagnosis() {
-    String topAxis = 'power';
-    int topScore = 0;
-    for (final e in _scores.entries) {
-      if (e.value > topScore) { topScore = e.value; topAxis = e.key; }
+    // HTML: determineFinalAxis() — with tiebreak (last selected among tied)
+    final axes = ['power','mind','spirit','shadow','heart'];
+    int maxScore = 0;
+    final winners = <String>[];
+    for (final a in axes) {
+      if ((_scores[a] ?? 0) > maxScore) {
+        maxScore = _scores[a]!;
+        winners.clear();
+        winners.add(a);
+      } else if ((_scores[a] ?? 0) == maxScore) {
+        winners.add(a);
+      }
     }
-    final courtMap = {'power':'king','mind':'queen','spirit':'knight','shadow':'mixed','heart':'page'};
-    final court = courtMap[topAxis] ?? 'page';
+    String topAxis;
+    if (winners.length == 1) {
+      topAxis = winners[0];
+    } else {
+      // Tiebreak: last selected axis among tied
+      topAxis = winners[0];
+      for (int j = _selections.length - 1; j >= 0; j--) {
+        final sel = _selections[j];
+        if (sel['axis'] != null && sel['axis'] != 'wildcard' && winners.contains(sel['axis'])) {
+          topAxis = sel['axis']!;
+          break;
+        }
+      }
+    }
+
+    // HTML: determineCourt() — tally Part 3 courtSelections, >=2 wins, else 'mixed'
+    final courtCounts = {'page':0,'knight':0,'queen':0,'king':0};
+    for (final c in _courtSelections) {
+      courtCounts[c] = (courtCounts[c] ?? 0) + 1;
+    }
+    String court = 'mixed';
+    for (final t in ['page','knight','queen','king']) {
+      if ((courtCounts[t] ?? 0) >= 2) { court = t; break; }
+    }
+
+    // HTML: TITLE_CLASSES[axis][court]
     final cls = titleData.getClassByAxisCourt(topAxis, court);
     if (cls == null) { Navigator.of(context).pop(null); return; }
-    _revealTitleJP = cls.lightJP; _revealTitleEN = cls.lightEN;
-    _revealClassEN = cls.nameEN; _revealClassJP = cls.nameJP;
-    _revealLightJP = cls.lightJP; _revealShadowJP = cls.shadowJP;
+
+    // HTML: getSunSign/getMoonSign → TITLE_144 lookup
+    final sunSign = titleData.getSunSign(_profile?.birthDate ?? '');
+    final moonSign = titleData.getMoonSign(_profile?.birthDate ?? '', _profile?.birthTime ?? '');
+    final t144 = titleData.title144[sunSign]?[moonSign];
+
+    // HTML: mainTitle = {jp: t144.shadow, en: sunAdj.en + moonNoun.en, lightJP: t144.light}
+    final sunA = titleData.sunAdj[sunSign];
+    final moonN = titleData.moonNoun[moonSign];
+    _revealTitleJP = t144?['shadow'] ?? '${sunA?['jp'] ?? ''}${moonN?['jp'] ?? ''}';
+    _revealTitleEN = '${sunA?['en'] ?? ''} ${moonN?['en'] ?? ''}';
+    _revealLightJP = t144?['light'] ?? (sunA?['jp'] ?? '');
+    _revealShadowJP = cls.shadowJP;
+    _revealClassEN = cls.nameEN;
+    _revealClassJP = cls.nameJP;
     _revealAxis = topAxis;
     setState(() => _screen = 'reveal');
     _revealCtrl.forward();
   }
 
+  SolaraProfile? get _profile => widget.profile;
+
   void _accept() {
     Navigator.of(context).pop({
       'lightJP': _revealLightJP, 'shadowJP': _revealShadowJP,
       'classEN': _revealClassEN, 'classJP': _revealClassJP, 'axis': _revealAxis,
+      'titleJP': _revealTitleJP, 'titleEN': _revealTitleEN,
     });
   }
 
@@ -1600,7 +1776,7 @@ class _TitleDiagnosisPageState extends State<_TitleDiagnosisPage>
               final selected = _selectedCard == i;
               final dimmed = _selectedCard != null && !selected;
               return GestureDetector(
-                onTap: _selectedCard == null ? () => _selectCard(i, c['axis'] as String) : null,
+                onTap: _selectedCard == null ? () => _selectCard(i, (c['axis'] ?? c['court'] ?? 'power') as String) : null,
                 child: AnimatedContainer(duration: const Duration(milliseconds: 300),
                   width: cards.length <= 4 ? 140.0 : 110.0,
                   padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
@@ -1609,11 +1785,16 @@ class _TitleDiagnosisPageState extends State<_TitleDiagnosisPage>
                     color: selected ? const Color(0x1AF9D976) : const Color(0x08FFFFFF),
                     boxShadow: selected ? [const BoxShadow(color: Color(0x66F9D976), blurRadius: 20)] : null),
                   child: AnimatedOpacity(duration: const Duration(milliseconds: 300), opacity: dimmed ? 0.25 : 1.0,
-                    child: Column(mainAxisSize: MainAxisSize.min, children: [
-                      Text(c['emoji'] as String, style: const TextStyle(fontSize: 32)),
-                      const SizedBox(height: 8),
-                      Text(c['name'] as String, style: const TextStyle(fontSize: 11, color: Color(0xFFEAEAEA), fontWeight: FontWeight.w600), textAlign: TextAlign.center),
-                    ])),
+                    // HTML: <img src="card-images/XX.png"> — show card image
+                    child: c['img'] != null
+                      ? ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: Image.asset('assets/card-images/${c['img']}', fit: BoxFit.cover))
+                      : Column(mainAxisSize: MainAxisSize.min, children: [
+                          Text(c['emoji'] as String? ?? '', style: const TextStyle(fontSize: 32)),
+                          const SizedBox(height: 8),
+                          Text(c['name'] as String? ?? '', style: const TextStyle(fontSize: 11, color: Color(0xFFEAEAEA), fontWeight: FontWeight.w600), textAlign: TextAlign.center),
+                        ])),
                 ),
               );
             })))),

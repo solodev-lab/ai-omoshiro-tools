@@ -108,6 +108,10 @@ class SolaraStorage {
     // Replace if same date exists
     readings.removeWhere((r) => r.date == reading.date);
     readings.add(reading);
+    // HTML: if (hist.length > 50) hist.length = 50
+    if (readings.length > 50) {
+      readings.removeRange(0, readings.length - 50);
+    }
     await saveCurrentReadings(readings);
   }
 

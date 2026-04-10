@@ -19,7 +19,7 @@
   - 呼出元: renderChart
   - 操作: getById
 - **[✅ 実行中]** `buildBSAspectsContent()` (L2735)
-  - 呼出元: switchBSTab, refreshActiveBS
+  - 呼出元: refreshActiveBS, switchBSTab
   - 操作: getById
 
 ### `#aspectsContainerTitle`
@@ -28,7 +28,7 @@
   - 呼出元: renderChart
   - 操作: getById
 - **[✅ 実行中]** `buildBSAspectsContent()` (L2735)
-  - 呼出元: switchBSTab, refreshActiveBS
+  - 呼出元: refreshActiveBS, switchBSTab
   - 操作: getById
 
 ### `#bottomSheet`
@@ -43,7 +43,7 @@
   - 呼出元: initBottomSheet, switchBSTab
   - 操作: getById
 - **[✅ 実行中]** `updateBSBodyHeight()` (L2546)
-  - 呼出元: initBottomSheet, setBSState
+  - 呼出元: setBSState, initBottomSheet
   - 操作: getById
 
 ### `#bsBody`
@@ -52,7 +52,7 @@
   - 呼出元: initBottomSheet, switchBSTab
   - 操作: getById
 - **[✅ 実行中]** `updateBSBodyHeight()` (L2546)
-  - 呼出元: initBottomSheet, setBSState
+  - 呼出元: setBSState, initBottomSheet
   - 操作: getById
 
 ### `#bsDragHandle`
@@ -61,7 +61,7 @@
   - 呼出元: なし
   - 操作: getById
 - **[✅ 実行中]** `updateBSBodyHeight()` (L2546)
-  - 呼出元: initBottomSheet, setBSState
+  - 呼出元: setBSState, initBottomSheet
   - 操作: getById
 
 ### `#bsTabs`
@@ -70,7 +70,7 @@
   - 呼出元: initBottomSheet, switchBSTab
   - 操作: getById
 - **[✅ 実行中]** `updateBSBodyHeight()` (L2546)
-  - 呼出元: initBottomSheet, setBSState
+  - 呼出元: setBSState, initBottomSheet
   - 操作: getById
 
 ### `#chartMenuPanel`
@@ -85,7 +85,7 @@
 ### `#horoscopeChart`
 
 - **[✅ 実行中]** `renderChart()` (L2008)
-  - 呼出元: onTransitLocationChange, resetFilters, applyBSTransit, generateFromInput, toggleFilter, toggleExclusive
+  - 呼出元: toggleExclusive, onTransitLocationChange, resetFilters, generateFromInput, applyBSTransit, toggleFilter
   - 操作: getById
 - **[✅ 実行中]** `updateHouseSystemLabel()` (L2227)
   - 呼出元: renderChart
@@ -181,13 +181,13 @@
   - 呼出元: renderChart
   - 操作: getById
 - **[✅ 実行中]** `buildBSPlanetsContent()` (L2705)
-  - 呼出元: switchBSTab, refreshActiveBS
+  - 呼出元: refreshActiveBS, switchBSTab
   - 操作: getById
 
 ### `#predictionPanel`
 
 - **[✅ 実行中]** `renderChart()` (L2008)
-  - 呼出元: onTransitLocationChange, resetFilters, applyBSTransit, generateFromInput, toggleFilter, toggleExclusive
+  - 呼出元: toggleExclusive, onTransitLocationChange, resetFilters, generateFromInput, applyBSTransit, toggleFilter
   - 操作: getById
 - **[✅ 実行中]** `renderPredictions()` (L2359)
   - 呼出元: renderChart
@@ -196,7 +196,7 @@
 ### `#svgHouseLabel`
 
 - **[✅ 実行中]** `renderChart()` (L2008)
-  - 呼出元: onTransitLocationChange, resetFilters, applyBSTransit, generateFromInput, toggleFilter, toggleExclusive
+  - 呼出元: toggleExclusive, onTransitLocationChange, resetFilters, generateFromInput, applyBSTransit, toggleFilter
   - 操作: getById
 - **[✅ 実行中]** `updateHouseSystemLabel()` (L2227)
   - 呼出元: renderChart
@@ -211,13 +211,13 @@
   - 呼出元: なし
   - 操作: getById
 - **[✅ 実行中]** `renderChart()` (L2008)
-  - 呼出元: onTransitLocationChange, resetFilters, applyBSTransit, generateFromInput, toggleFilter, toggleExclusive
+  - 呼出元: toggleExclusive, onTransitLocationChange, resetFilters, generateFromInput, applyBSTransit, toggleFilter
   - 操作: getById
 
 ### `#transitLat`
 
 - **[✅ 実行中]** `onTransitLocationChange()` (L1895)
-  - 呼出元: initTransitDefaults, applyBSTransit
+  - 呼出元: applyBSTransit, initTransitDefaults
   - 操作: getById
 - **[✅ 実行中]** `getTransitLocation()` (L1920)
   - 呼出元: renderChart
@@ -226,7 +226,7 @@
 ### `#transitLng`
 
 - **[✅ 実行中]** `onTransitLocationChange()` (L1895)
-  - 呼出元: initTransitDefaults, applyBSTransit
+  - 呼出元: applyBSTransit, initTransitDefaults
   - 操作: getById
 - **[✅ 実行中]** `getTransitLocation()` (L1920)
   - 呼出元: renderChart
@@ -235,7 +235,7 @@
 ### `#transitLocation`
 
 - **[✅ 実行中]** `onTransitLocationChange()` (L1895)
-  - 呼出元: initTransitDefaults, applyBSTransit
+  - 呼出元: applyBSTransit, initTransitDefaults
   - 操作: getById
 - **[✅ 実行中]** `getTransitLocation()` (L1920)
   - 呼出元: renderChart
@@ -244,7 +244,7 @@
   - 呼出元: なし
   - 操作: getById
 - **[✅ 実行中]** `renderChart()` (L2008)
-  - 呼出元: onTransitLocationChange, resetFilters, applyBSTransit, generateFromInput, toggleFilter, toggleExclusive
+  - 呼出元: toggleExclusive, onTransitLocationChange, resetFilters, generateFromInput, applyBSTransit, toggleFilter
   - 操作: getById
 - **[✅ 実行中]** `buildBSTransitContent()` (L2627)
   - 呼出元: initBottomSheet
@@ -259,7 +259,7 @@
   - 呼出元: なし
   - 操作: getById
 - **[✅ 実行中]** `renderChart()` (L2008)
-  - 呼出元: onTransitLocationChange, resetFilters, applyBSTransit, generateFromInput, toggleFilter, toggleExclusive
+  - 呼出元: toggleExclusive, onTransitLocationChange, resetFilters, generateFromInput, applyBSTransit, toggleFilter
   - 操作: getById
 
 ---

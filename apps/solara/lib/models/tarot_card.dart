@@ -11,6 +11,15 @@ class TarotCard {
   final String emoji;
   final bool isMajor;
 
+  /// カード画像のアセットパス
+  /// Major: M00〜M21, Wands: W01〜W14, Cups: C01〜C14, Swords: S01〜S14, Pentacles: P01〜P14
+  String get imagePath {
+    if (isMajor) return 'assets/card-images/M${id.toString().padLeft(2, '0')}.webp';
+    final suitPrefix = {'wands':'W','cups':'C','swords':'S','pentacles':'P'}[suit] ?? 'W';
+    final rankNum = (id - 22) % 14 + 1;
+    return 'assets/card-images/$suitPrefix${rankNum.toString().padLeft(2, '0')}.webp';
+  }
+
   const TarotCard({
     required this.id,
     required this.nameEN,
@@ -44,12 +53,14 @@ class TarotCard {
     required int id,
     required String element,
     required String suitEmoji,
+    String? planet, // HTML: SUIT_MAP[suit].planets[0]
   }) {
     return TarotCard(
       id: id,
       nameEN: json['nameEN'] as String,
       nameJP: json['nameJP'] as String,
       keyword: json['keyword'] as String,
+      planet: planet,
       element: element,
       suit: json['suit'] as String,
       rank: json['rank'] as int,

@@ -26,11 +26,14 @@ class TarotData {
       final m = minors[i] as Map<String, dynamic>;
       final suitKey = m['suit'] as String;
       final suitInfo = suits[suitKey] as Map<String, dynamic>;
+      // HTML: getCardInfo() for minor → SUIT_MAP[suit].planets[0]
+      final suitPlanets = (suitInfo['planets'] as List?)?.cast<String>();
       cards.add(TarotCard.fromMinorJson(
         m,
         id: 22 + i,
         element: suitInfo['element'] as String,
         suitEmoji: suitInfo['emoji'] as String,
+        planet: suitPlanets?.isNotEmpty == true ? suitPlanets!.first : null,
       ));
     }
 

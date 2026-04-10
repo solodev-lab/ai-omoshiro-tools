@@ -54,10 +54,188 @@
       CSS: flex-direction:column
       24. `<div .left-column>`
         CSS: width:100%; max-width:600px; position:relative; top:auto
-      25. `<div .right-column>`
+        25. `<div .chart-container>`
+          CSS: position:relative; display:flex; flex-direction:column
+          26. `<div .chart-watermark>` — テキスト:「SOLARA」
+            CSS: font-size:14px; font-weight:700; color:rgba(246,189,96,0.18); position:absolute; top:42%; left:50%
+          27. `<svg #horoscopeChart>`
+          28. `<div #chartLegend>`
+            CSS: font-size:11px; color:#888; display:flex; gap:16px
+      29. `<div .right-column>`
         CSS: display:none !important
+        30. `<div #birthPanel>`
+          CSS: background:rgba(255,255,255,0.03); padding:20px; border-radius:16px
+          31. `<h3 .desktop-only>` — テキスト:「⚙ BIRTH DATA」
+            CSS: display:none !important
+          32. `<div .form-group>`
+            33. `<label>` — テキスト:「氏名 NAME」
+            34. `<input #inputName>`
+            35. `<div .form-row>`
+              CSS: display:flex; gap:8px
+              36. `<div .form-group>`
+                37. `<label>` — テキスト:「生年月日 DATE」
+                38. `<input #inputDate>`
+                39. `<div .form-group>`
+                  40. `<label>` — テキスト:「出生時刻 TIME」
+                  41. `<input #inputTime>`
+                42. `<div .form-group>`
+                  43. `<label>` — テキスト:「出生地 BIRTHPLACE」
+                  44. `<select #inputPlaceSelect>`
+                    45. `<option>` — テキスト:「手動入力」
+                  46. `<div #birthVpHint>` — テキスト:「💡 Map画面で場所を保存すると選択できます」
+                    CSS: font-size:10px; color:#888
+                  47. `<input #inputPlace>`
+                  48. `<div #birthCustomLatLng>`
+                    CSS: display:flex; gap:8px
+                    49. `<div .form-group>`
+                      50. `<label>` — テキスト:「緯度 LAT」
+                      51. `<input #inputLat>`
+                      52. `<div .form-group>`
+                        53. `<label>` — テキスト:「経度 LNG」
+                        54. `<input #inputLng>`
+                      55. `<button .btn-generate>` — テキスト:「ホロスコープ生成」
+                        CSS: width:100%; font-size:13px; font-weight:600; color:#0A0A14; background:linear-gradient(135deg, #F6BD60, #E8A840); padding:10px
+                    56. `<div #transitPanel>`
+                      CSS: background:rgba(255,255,255,0.03); padding:20px; border-radius:16px
+                      57. `<h3 #transitPanelTitle>` — テキスト:「☾ TRANSIT DATA」
+                        CSS: display:none !important
+                      58. `<div .form-row>`
+                        CSS: display:flex; gap:8px
+                        59. `<div .form-group>`
+                          60. `<label>` — テキスト:「日付 DATE」
+                          61. `<input #transitDate>`
+                          62. `<div .form-group>`
+                            63. `<label>` — テキスト:「時刻 TIME」
+                            64. `<input #transitTime>`
+                          65. `<div .form-group>`
+                            66. `<label>` — テキスト:「場所 LOCATION」
+                            67. `<select #transitLocation>`
+                              68. `<option>` — テキスト:「手動入力」
+                            69. `<div #transitVpHint>` — テキスト:「💡 Map画面で場所を保存すると選択できます」
+                              CSS: font-size:10px; color:#888
+                          70. `<div #transitCustomLatLng>`
+                            CSS: display:flex; gap:8px
+                            71. `<div .form-group>`
+                              72. `<label>` — テキスト:「緯度 LAT」
+                              73. `<input #transitLat>`
+                              74. `<div .form-group>`
+                                75. `<label>` — テキスト:「経度 LNG」
+                                76. `<input #transitLng>`
+                              77. `<button #transitBtn>` — テキスト:「トランジット更新」
+                                CSS: width:100%; font-size:13px; font-weight:600; color:#0A0A14; background:linear-gradient(135deg, #F6BD60, #E8A840); padding:10px
+                            78. `<div #planetsPanel>`
+                              CSS: background:rgba(255,255,255,0.03); padding:20px; border-radius:16px
+                              79. `<h3 .desktop-only>` — テキスト:「☉ PLANET POSITIONS」
+                                CSS: display:none !important
+                              80. `<div #planetTable>`
+                            81. `<div #analysisContainer>`
+                              CSS: background:rgba(255,255,255,0.03); border-radius:16px; overflow:hidden
+                              82. `<div .analysis-header>`
+                                CSS: padding:14px 20px; display:flex
+                                83. `<h3>` — テキスト:「⚙ ANALYSIS」
+                                84. `<span #analysisToggle>` — テキスト:「▼」
+                                  CSS: font-size:14px; color:#F6BD60
+                              85. `<div #analysisBody>`
+                                CSS: padding:16px 20px; opacity:1; overflow:hidden
+                                86. `<div #aspectFilterPanel>`
+                                  CSS: background:rgba(255,255,255,0.03); padding:20px; border-radius:16px
+                                  87. `<div>`
+                                    88. `<span>` — テキスト:「ASPECT FILTER」
+                                    89. `<button .filter-reset-btn>` — テキスト:「RESET」
+                                      CSS: font-size:10px; color:#666; background:transparent; padding:4px 12px; border-radius:6px
+                                  90. `<div .filter-section>`
+                                    91. `<div .filter-section-title>`
+                                      CSS: font-size:10px; color:#888; display:flex; gap:6px
+                                      92. `<span .filter-label>` — テキスト:「アスペクト性質」
+                                        CSS: font-size:9px; font-weight:600; color:#aaa; background:rgba(255,255,255,0.08); padding:1px 6px; border-radius:4px
+                                    93. `<div .filter-chips>`
+                                      CSS: display:flex; gap:4px
+                                      94. `<div .filter-chip>` — テキスト:「ソフト（調和）」
+                                        CSS: font-size:11px; color:#888; background:rgba(255,255,255,0.03); padding:4px 10px; border-radius:6px
+                                      95. `<div .filter-chip>` — テキスト:「ハード（緊張）」
+                                        CSS: font-size:11px; color:#888; background:rgba(255,255,255,0.03); padding:4px 10px; border-radius:6px
+                                      96. `<div .filter-chip>` — テキスト:「中立」
+                                        CSS: font-size:11px; color:#888; background:rgba(255,255,255,0.03); padding:4px 10px; border-radius:6px
+                                  97. `<div .filter-section>`
+                                    98. `<div .filter-section-title>`
+                                      CSS: font-size:10px; color:#888; display:flex; gap:6px
+                                      99. `<span .filter-label>` — テキスト:「運勢カテゴリ」
+                                        CSS: font-size:9px; font-weight:600; color:#aaa; background:rgba(255,255,255,0.08); padding:1px 6px; border-radius:4px
+                                    100. `<div .filter-chips>`
+                                      CSS: display:flex; gap:4px
+                                      101. `<div .filter-chip>` — テキスト:「癒し」
+                                        CSS: font-size:11px; color:#888; background:rgba(255,255,255,0.03); padding:4px 10px; border-radius:6px
+                                      102. `<div .filter-chip>` — テキスト:「金運」
+                                        CSS: font-size:11px; color:#888; background:rgba(255,255,255,0.03); padding:4px 10px; border-radius:6px
+                                      103. `<div .filter-chip>` — テキスト:「恋愛運」
+                                        CSS: font-size:11px; color:#888; background:rgba(255,255,255,0.03); padding:4px 10px; border-radius:6px
+                                      104. `<div .filter-chip>` — テキスト:「仕事運」
+                                        CSS: font-size:11px; color:#888; background:rgba(255,255,255,0.03); padding:4px 10px; border-radius:6px
+                                      105. `<div .filter-chip>` — テキスト:「コミュニケーション」
+                                        CSS: font-size:11px; color:#888; background:rgba(255,255,255,0.03); padding:4px 10px; border-radius:6px
+                                  106. `<div #patternFilterSection>`
+                                    107. `<div .filter-section-title>`
+                                      CSS: font-size:10px; color:#888; display:flex; gap:6px
+                                      108. `<span .filter-label>` — テキスト:「惑星グループ」
+                                        CSS: font-size:9px; font-weight:600; color:#aaa; background:rgba(255,255,255,0.08); padding:1px 6px; border-radius:4px
+                                    109. `<div .filter-chips>`
+                                      CSS: display:flex; gap:4px
+                                      110. `<div .filter-chip>` — テキスト:「個人天体」
+                                        CSS: font-size:11px; color:#888; background:rgba(255,255,255,0.03); padding:4px 10px; border-radius:6px
+                                      111. `<div .filter-chip>` — テキスト:「社会天体」
+                                        CSS: font-size:11px; color:#888; background:rgba(255,255,255,0.03); padding:4px 10px; border-radius:6px
+                                      112. `<div .filter-chip>` — テキスト:「世代天体」
+                                        CSS: font-size:11px; color:#888; background:rgba(255,255,255,0.03); padding:4px 10px; border-radius:6px
+                                  113. `<div #predictionPanel>`
+                                    114. `<div #predictionList>`
+                            115. `<div #aspectsContainer>`
+                              CSS: background:rgba(255,255,255,0.03); border-radius:16px; overflow:hidden
+                              116. `<div .analysis-header>`
+                                CSS: padding:14px 20px; display:flex
+                                117. `<h3 #aspectsContainerTitle>` — テキスト:「△ ASPECTS」
+                                118. `<span #aspectsToggle>` — テキスト:「▼」
+                                  CSS: font-size:14px; color:#F6BD60
+                              119. `<div #aspectsBody>`
+                                CSS: padding:16px 20px; opacity:1; overflow:hidden
+                                120. `<div #aspectPanelMain>`
+                                  121. `<div #aspectInfo>`
+                        122. `<div #bottomSheet>`
+                          CSS: background:rgba(12,12,22,0.97); border-radius:16px 16px 0 0; position:fixed; left:0; right:0; bottom:70px
+                          123. `<div #bsDragHandle>`
+                            CSS: padding:10px 0 6px; display:flex
+                          124. `<div #bsMiniLabel>`
+                            CSS: font-size:11px; color:#F6BD60; padding:2px 16px 10px; display:none; opacity:0.9
+                            125. `<span .bs-mini-chevron>` — テキスト:「ホロスコープ設定」
+                          126. `<div #bsTabs>`
+                            CSS: padding:0 8px; display:flex; gap:0
+                            127. `<button .bs-tab>` — テキスト:「⚙ 誕生」
+                              CSS: font-size:11px; color:#777; background:none; padding:8px 4px
+                            128. `<button #bsTransitTab>` — テキスト:「☾ 経過」
+                              CSS: font-size:11px; color:#777; background:none; padding:8px 4px
+                            129. `<button .bs-tab>` — テキスト:「☉ 天体」
+                              CSS: font-size:11px; color:#777; background:none; padding:8px 4px
+                            130. `<button .bs-tab>` — テキスト:「⚙ 絞込」
+                              CSS: font-size:11px; color:#777; background:none; padding:8px 4px
+                            131. `<button .bs-tab>` — テキスト:「△ 相」
+                              CSS: font-size:11px; color:#777; background:none; padding:8px 4px
+                          132. `<div #bsBody>`
+                            CSS: padding:12px 14px 24px
+                            133. `<div #bsBirth>`
+                              CSS: display:none
+                            134. `<div #bsTransit>`
+                              CSS: display:none
+                            135. `<div #bsFortune>`
+                              CSS: display:none
+                            136. `<div #bsPlanets>`
+                              CSS: display:none
+                            137. `<div #bsFilter>`
+                              CSS: display:none
+                            138. `<div #bsAspects>`
+                              CSS: display:none
+                        139. `<div .bottom-nav>`
+                          CSS: height:80px; background:linear-gradient(180deg, rgba(6,10,18,0.80) 0%, rgba(4,6,14,0.95) 100%); padding:10px 4px 0; position:fixed; left:0; right:0
 
-**要素総数（depth≤3）**: 25個
+**要素総数（depth≤20）**: 139個
 
 ---
 ## インタラクション一覧（イベントハンドラ）

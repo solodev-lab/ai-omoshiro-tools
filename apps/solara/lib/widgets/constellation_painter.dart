@@ -16,12 +16,16 @@ class ConstellationPainter extends CustomPainter {
   final double progress;
   final double cameraAngle;
   final Color? overrideColor;
+  final ui.Image? artImage; // HTML: ART_IMAGES[nounIdx] — constellation illustration
+  final bool flipX; // HTML: NOUN_ART_TRANSFORMS[nounIdx].flipX
 
   ConstellationPainter({
     required this.cycle,
     this.progress = 1.0,
     this.cameraAngle = 0.0,
     this.overrideColor,
+    this.artImage,
+    this.flipX = false,
   });
 
   @override
@@ -31,6 +35,26 @@ class ConstellationPainter extends CustomPainter {
     // HTML: use ADJ_COLOR for cycle color
     final color = overrideColor ?? ConstellationNamer.adjColor(cycle.adjIdx);
     final glowColor = color.withAlpha((0.4 * 255).round());
+
+    // HTML: Constellation illustration overlay (screen blend, 18% opacity)
+    if (artImage != null) {
+      canvas.save();
+      final artAlpha = 0.35 * min(1.0, progress * 2);
+      final paint = Paint()
+        ..colorFilter = const ColorFilter.mode(Colors.white, BlendMode.screen)
+        ..color = Color.fromRGBO(255, 255, 255, artAlpha);
+      if (flipX) {
+        canvas.translate(size.width, 0);
+        canvas.scale(-1, 1);
+      }
+      canvas.drawImageRect(
+        artImage!,
+        Rect.fromLTWH(0, 0, artImage!.width.toDouble(), artImage!.height.toDouble()),
+        Rect.fromLTWH(0, 0, size.width, size.height),
+        paint,
+      );
+      canvas.restore();
+    }
 
     // Separate anchors (Major) and field stars (Minor)
     final anchors = <ConstellationDot>[];
@@ -140,8 +164,10 @@ class ConstellationPainter extends CustomPainter {
 /// HTML exact: drawCycleOnCanvas at 80x80 with progress=1.0.
 class MiniConstellationPainter extends CustomPainter {
   final GalaxyCycle cycle;
+  final ui.Image? artImage;
+  final bool flipX;
 
-  MiniConstellationPainter({required this.cycle});
+  MiniConstellationPainter({required this.cycle, this.artImage, this.flipX = false});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -150,6 +176,25 @@ class MiniConstellationPainter extends CustomPainter {
     // HTML: ADJ_COLOR for cycle color
     final color = ConstellationNamer.adjColor(cycle.adjIdx);
     final glowColor = color.withAlpha((0.4 * 255).round());
+
+    // HTML: drawCycleOnCanvas also draws art on 80x80 mini canvas
+    if (artImage != null) {
+      canvas.save();
+      final paint = Paint()
+        ..colorFilter = const ColorFilter.mode(Colors.white, BlendMode.screen)
+        ..color = const Color.fromRGBO(255, 255, 255, 0.35);
+      if (flipX) {
+        canvas.translate(size.width, 0);
+        canvas.scale(-1, 1);
+      }
+      canvas.drawImageRect(
+        artImage!,
+        Rect.fromLTWH(0, 0, artImage!.width.toDouble(), artImage!.height.toDouble()),
+        Rect.fromLTWH(0, 0, size.width, size.height),
+        paint,
+      );
+      canvas.restore();
+    }
 
     // Separate anchors and fields
     final anchors = <Offset>[];

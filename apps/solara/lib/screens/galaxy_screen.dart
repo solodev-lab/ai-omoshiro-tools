@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:math';
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../models/daily_reading.dart';
 import '../models/galaxy_cycle.dart';
 import '../models/lunar_intention.dart';
@@ -65,6 +67,9 @@ class _GalaxyScreenState extends State<GalaxyScreen>
   // Moon overlay state
   String? _activeOverlay; // 'new_moon', 'full_moon', 'crystallization', null
   LunarIntention? _currentIntention;
+
+  // HTML: ART_IMAGES — pre-loaded constellation art images
+  final Map<int, ui.Image> _artImages = {};
 
   @override
   void initState() {
@@ -166,6 +171,29 @@ class _GalaxyScreenState extends State<GalaxyScreen>
 
     // Check if we should show a moon overlay
     await _checkMoonOverlay(now, cycleStart, cycleEnd, intention, cycleId);
+
+    // Pre-load constellation art for completed cycles
+    for (final c in completedCycles) {
+      _loadArtImage(c.nounIdx);
+    }
+  }
+
+  /// HTML: preloadConstellationArt — load webp image for a nounIdx
+  Future<void> _loadArtImage(int nounIdx) async {
+    if (_artImages.containsKey(nounIdx)) return;
+    final path = ConstellationNamer.artAssetPath(nounIdx);
+    if (path.isEmpty) return;
+    try {
+      final data = await rootBundle.load(path);
+      final codec = await ui.instantiateImageCodec(data.buffer.asUint8List());
+      final frame = await codec.getNextFrame();
+      if (mounted) {
+        _artImages[nounIdx] = frame.image;
+        setState(() {}); // trigger repaint
+      }
+    } catch (_) {
+      // Art image not found — skip silently
+    }
   }
 
   Future<void> _checkMoonOverlay(
@@ -328,12 +356,13 @@ class _GalaxyScreenState extends State<GalaxyScreen>
 
   @override
   Widget build(BuildContext context) {
-    // HTML: background: radial-gradient(ellipse at center, #0a1220 0%, #020408 100%)
+    // HTML: .phone cosmic-bg — radial-gradient(ellipse at 50% 0%, #0f2850 0%, #080C14 55%)
     return Container(
       decoration: const BoxDecoration(
         gradient: RadialGradient(
-          center: Alignment.center, radius: 1.2,
-          colors: [Color(0xFF0A1220), Color(0xFF020408)],
+          center: Alignment(0, -1), radius: 1.1,
+          colors: [Color(0xFF0F2850), Color(0xFF080C14)],
+          stops: [0.0, 0.55],
         ),
       ),
       child: SafeArea(
@@ -424,16 +453,16 @@ class _GalaxyScreenState extends State<GalaxyScreen>
             },
           ),
         ),
-        // Day badge
+        // HTML: .day-badge { top:8px; right:20px }
         Positioned(
           top: 8,
-          right: 16,
+          right: 20,
           child: _buildDayBadge(),
         ),
-        // Moon phase info
+        // HTML: .moon-badge { top:8px; left:20px }
         Positioned(
           top: 8,
-          left: 16,
+          left: 20,
           child: _buildMoonBadge(),
         ),
         // Stella message
@@ -624,6 +653,10 @@ class _GalaxyScreenState extends State<GalaxyScreen>
           // HTML: .popup-keyword { font-size:11px; font-weight:300; color:rgba(249,217,118,0.7); }
           Text('Keyword: ${card.keyword}', style: const TextStyle(
             fontSize: 11, fontWeight: FontWeight.w300, color: Color(0xB3F9D976))),
+          // HTML: #popupQuote { font-size:11px; font-weight:300; color:rgba(172,172,172,0.7) }
+          const SizedBox(height: 6),
+          Text('"Your momentum is cosmic."', style: const TextStyle(
+            fontSize: 11, fontWeight: FontWeight.w300, color: Color(0xB3ACACAC), fontStyle: FontStyle.italic)),
         ]),
       ),
     );
@@ -641,7 +674,7 @@ class _GalaxyScreenState extends State<GalaxyScreen>
             Text('✦', style: TextStyle(fontSize: 48, color: const Color(0xFFF9D976).withAlpha(77))),
             const SizedBox(height: 16),
             const Text('Star Atlas', style: TextStyle(
-              color: Color(0xFFEAEAEA), fontSize: 20, fontWeight: FontWeight.w300)),
+              color: Color(0xFFEAEAEA), fontSize: 24, fontWeight: FontWeight.w700)),
             const SizedBox(height: 8),
             const Text('Complete a lunar cycle to form\nyour first constellation.',
               textAlign: TextAlign.center,
@@ -658,8 +691,9 @@ class _GalaxyScreenState extends State<GalaxyScreen>
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: const [
+            // HTML: .screen-h1 { font-size:24px; font-weight:700; font-family:Cormorant Garamond }
             Text('Star Atlas', style: TextStyle(
-              fontSize: 20, fontWeight: FontWeight.w300, color: Color(0xFFEAEAEA))),
+              fontSize: 24, fontWeight: FontWeight.w700, color: Color(0xFFEAEAEA))),
             SizedBox(height: 4),
             Text('Your completed cosmic cycles', style: TextStyle(
               fontSize: 13, color: Color(0xFFACACAC))),
@@ -669,7 +703,7 @@ class _GalaxyScreenState extends State<GalaxyScreen>
         // HTML: .constellation-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(160px, 1fr)); gap:12px; }
         Expanded(child: GridView.builder(
           gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-            maxCrossAxisExtent: 200, crossAxisSpacing: 12, mainAxisSpacing: 12,
+            maxCrossAxisExtent: 160, crossAxisSpacing: 12, mainAxisSpacing: 12, // HTML: minmax(160px, 1fr)
             childAspectRatio: 0.75, // HTML: aspect-ratio:0.75
           ),
           itemCount: _completedCycles.length,
@@ -709,7 +743,11 @@ class _GalaxyScreenState extends State<GalaxyScreen>
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           // HTML: .const-mini { flex:1; center; canvas 80x80 }
           Expanded(child: Center(child: CustomPaint(
-            painter: MiniConstellationPainter(cycle: cycle),
+            painter: MiniConstellationPainter(
+              cycle: cycle,
+              artImage: _artImages[cycle.nounIdx],
+              flipX: ConstellationNamer.isFlipX(cycle.nounIdx),
+            ),
             size: const Size(80, 80),
           ))),
           const SizedBox(height: 8),
@@ -808,7 +846,9 @@ class _GalaxyScreenState extends State<GalaxyScreen>
                       borderRadius: BorderRadius.circular(20),
                       child: CustomPaint(
                         painter: ConstellationPainter(
-                          cycle: cycle, progress: painterProgress, cameraAngle: cameraAngle),
+                          cycle: cycle, progress: painterProgress, cameraAngle: cameraAngle,
+                          artImage: _artImages[cycle.nounIdx],
+                          flipX: ConstellationNamer.isFlipX(cycle.nounIdx)),
                       ),
                     ),
                   ),

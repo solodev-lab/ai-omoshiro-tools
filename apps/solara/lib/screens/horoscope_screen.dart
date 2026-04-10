@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 import '../utils/solara_storage.dart';
 
 class HoroscopeScreen extends StatefulWidget {
-  const HoroscopeScreen({super.key});
+  final VoidCallback? onNavigateToSanctuary;
+  const HoroscopeScreen({super.key, this.onNavigateToSanctuary});
   @override
   State<HoroscopeScreen> createState() => HoroscopeScreenState();
 }
@@ -15,6 +16,7 @@ class HoroscopeScreenState extends State<HoroscopeScreen> {
 
   // HTML: chartMode 'single' | 'nt' | 'np' | 'astrology'
   String _chartMode = 'single';
+  bool _chartMenuOpen = false;
 
   // Bottom sheet — HTML: bs-tab: ⚙ 誕生 / ☾ 経過(hidden unless nt/np) / ☉ 天体 / ⚙ 絞込 / △ 相
   String _bsTab = 'birth';
@@ -150,20 +152,18 @@ class HoroscopeScreenState extends State<HoroscopeScreen> {
       decoration: _bgDecoration,
       child: SafeArea(
         top: false,
-        child: Column(children: [
+        child: Stack(children: [
+          Column(children: [
           SizedBox(height: MediaQuery.of(context).padding.top + 8),
-
-          // ── Chart Menu Button (モバイル) ──
-          // HTML: .chart-menu-btn { top:12px; right:12px; width:40px; height:40px; border-radius:10px; }
-          _buildChartMenuRow(),
 
           // ── Chart or Astrology View ──
           Expanded(child: _chartMode == 'astrology'
             ? _buildAstrologyView()
             : SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 8),
               child: LayoutBuilder(builder: (ctx, constraints) {
-                final chartSize = (constraints.maxWidth - 32).clamp(200.0, 400.0);
+                // HTML: .chart-container svg { width:100%; max-width:600px } — 横幅最大活用
+                final chartSize = (constraints.maxWidth).clamp(200.0, 600.0);
                 return Column(children: [
                   const SizedBox(height: 8),
                   // HTML: .chart-container with watermark + SVG
@@ -200,6 +200,38 @@ class HoroscopeScreenState extends State<HoroscopeScreen> {
 
           // ── Bottom Sheet (HTML: hidden when astrology mode) ──
           if (_chartMode != 'astrology') _buildBottomSheet(),
+        ]),
+
+          // ── Hamburger Button (HTML: .chart-menu-btn) ──
+          Positioned(
+            top: MediaQuery.of(context).padding.top + 12,
+            right: 12,
+            child: GestureDetector(
+              onTap: () => setState(() => _chartMenuOpen = !_chartMenuOpen),
+              child: Container(
+                width: 40, height: 40,
+                decoration: BoxDecoration(
+                  color: const Color(0xEB0C0C1A), // rgba(12,12,26,0.92)
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: const Color(0x4DF6BD60)), // rgba(246,189,96,0.3)
+                ),
+                child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+                  Container(width: 18, height: 2, decoration: BoxDecoration(color: const Color(0xFFF6BD60), borderRadius: BorderRadius.circular(1))),
+                  const SizedBox(height: 4),
+                  Container(width: 18, height: 2, decoration: BoxDecoration(color: const Color(0xFFF6BD60), borderRadius: BorderRadius.circular(1))),
+                  const SizedBox(height: 4),
+                  Container(width: 18, height: 2, decoration: BoxDecoration(color: const Color(0xFFF6BD60), borderRadius: BorderRadius.circular(1))),
+                ]),
+              ),
+            ),
+          ),
+
+          // ── Dropdown Panel (HTML: .chart-menu-panel) ──
+          if (_chartMenuOpen) Positioned(
+            top: MediaQuery.of(context).padding.top + 58,
+            right: 12,
+            child: _buildChartMenuPanel(),
+          ),
         ]),
       ),
     );
@@ -247,8 +279,11 @@ class HoroscopeScreenState extends State<HoroscopeScreen> {
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 13, color: Color(0xFFF6BD60))),
             const SizedBox(height: 8),
-            const Text('設定する →', style: TextStyle(fontSize: 12, color: Color(0xFFF9D976),
-              decoration: TextDecoration.underline)),
+            GestureDetector(
+              onTap: () => widget.onNavigateToSanctuary?.call(),
+              child: const Text('設定する →', style: TextStyle(fontSize: 12, color: Color(0xFFF9D976),
+                decoration: TextDecoration.underline)),
+            ),
           ]),
         ),
       ))),
@@ -260,9 +295,9 @@ class HoroscopeScreenState extends State<HoroscopeScreen> {
   // HTML mobile: .chart-menu-btn + .chart-menu-panel
   // Items: 1重 NATAL, 2重 N+T, 2重 N+P, ✦ 星読み
   // ══════════════════════════════════════════════
-  Widget _buildChartMenuRow() {
-    // HTML: .chart-menu-item { padding:10px 14px; font-size:13px; }
-    // .chart-menu-item.active { color:#F6BD60; background:rgba(246,189,96,0.12); }
+  /// HTML: .chart-menu-panel { background:rgba(12,12,26,0.97); border:1px rgba(246,189,96,0.2);
+  ///   border-radius:14px; padding:8px; min-width:150px; }
+  Widget _buildChartMenuPanel() {
     final modes = [
       ('single', '1重 NATAL'),
       ('nt', '2重 N+T'),
@@ -270,37 +305,39 @@ class HoroscopeScreenState extends State<HoroscopeScreen> {
       ('astrology', '✦ 星読み'),
     ];
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
-      // HTML: .tab-nav { background:rgba(255,255,255,0.03); border-radius:12px; padding:4px; }
+      constraints: const BoxConstraints(minWidth: 150),
+      padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        color: const Color(0x08FFFFFF),
-        borderRadius: BorderRadius.circular(12),
+        color: const Color(0xF80C0C1A), // rgba(12,12,26,0.97)
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0x33F6BD60)), // rgba(246,189,96,0.2)
+        boxShadow: const [BoxShadow(color: Color(0x80000000), blurRadius: 32)],
       ),
-      padding: const EdgeInsets.all(4),
-      child: Row(children: modes.map((m) {
+      child: Column(mainAxisSize: MainAxisSize.min, children: modes.map((m) {
         final active = _chartMode == m.$1;
-        return Expanded(child: GestureDetector(
+        return GestureDetector(
           onTap: () => setState(() {
             _chartMode = m.$1;
-            // HTML: setChartMode() calls resetFilters() on mode change (L1711)
+            _chartMenuOpen = false;
+            // HTML: setChartMode() calls resetFilters() on mode change
             _qualityFilters.updateAll((k, v) => true);
             _pgroupFilters.updateAll((k, v) => true);
             _fortuneFilter = null;
           }),
+          // HTML: .chart-menu-item { padding:10px 14px; font-size:13px; border-radius:8px; }
           child: Container(
-            padding: const EdgeInsets.symmetric(vertical: 10),
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             decoration: BoxDecoration(
-              // HTML: .tab-btn.active { background:rgba(246,189,96,0.15); color:#F6BD60; }
-              color: active ? const Color(0x26F6BD60) : Colors.transparent,
+              color: active ? const Color(0x1FF6BD60) : Colors.transparent, // rgba(246,189,96,0.12)
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Center(child: Text(m.$2, style: TextStyle(
-              fontSize: 11, letterSpacing: 1,
-              color: active ? const Color(0xFFF6BD60) : const Color(0xFF888888),
-              fontWeight: active ? FontWeight.w600 : FontWeight.normal,
-            ))),
+            child: Text(m.$2, style: TextStyle(
+              fontSize: 13,
+              color: active ? const Color(0xFFF6BD60) : const Color(0xFFACACAC),
+            )),
           ),
-        ));
+        );
       }).toList()),
     );
   }

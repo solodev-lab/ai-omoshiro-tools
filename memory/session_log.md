@@ -769,3 +769,102 @@
 - Horo画面のAspect Filterボタン動作不良（元のHTMLでも同様に壊れている既存バグ）
 - パーティクル・流星エフェクト: オーナー指示により実装しない
 - 他の画面(Tarot/Galaxy/Sanctuary)のHTML整理・Flutter移植は次セッション
+
+## 2026-04-09 セッション: Tarot/Galaxy/Sanctuary HTML整理整頓 + Flutter移植（全3画面）
+
+### HTML整理整頓（3画面）
+- **tarot.html**: CSS 15セクション + JS 12セクション番号付き`========`ブロックに統一。プロパティ展開、keyframe集約
+- **galaxy.html**: CSS 9セクション + JS 22セクション番号付き統一。`@keyframes fadeIn`バグ修正（未定義だった）、DOM構造コメント追加
+- **sanctuary.html**: CSS 13セクション + JS 11セクション番号付き統一。`tdParticleIn`をJS動的注入→CSS定義に移動（バグ修正）、keyframe全6個集約
+
+### Flutter移植 — Tarot (observe_screen.dart)
+- AnimatedSwitcher → 真の3Dフリップ（Matrix4.rotateY + perspective 1/800）
+- カード裏: corners装飾 + ✦星4個 + cardPulseアニメーション（opacity 0.5↔0.8, scale 1↔1.05）
+- Stellaメッセージ: 固定1テンプレート → 4テンプレート+日付seed選択
+- element表示: 英語 → 日本語「🔥 火 · MAJOR」+ planet色付きシンボル + element色ボーダー
+- Synchronicity: プレースホルダ → 編集可能TextField + "saved"表示 + 自動保存
+- 履歴クリア: 即削除 → 確認AlertDialog
+- DailyReading: stellaMsg/synchronicityフィールド追加
+
+### Flutter移植 — Galaxy (galaxy_screen.dart + constellation_painter.dart)
+- constellation_namer.dart: NOUN_TEMPLATES(61座標パターン) + NOUN_SHAPES(61接続タイプ) + ADJ_COLORS(20色) + MST(Prim) + buildEdges追加
+- galaxy_cycle.dart: adjIdx/nounIdxフィールド追加
+- constellation_painter.dart: nearest-neighbor → MST+shape接続に全面改修、ADJ_COLOR色適用
+- galaxy_screen.dart: テンプレート配置(Major)、Star Atlasカード色グラデーション+★rarity+nameJP+メタ情報
+
+### Flutter移植 — Sanctuary (sanctuary_screen.dart)
+- Home Info Editor: _HomeEditorPage追加（Nominatim検索+緯度経度保存）
+- SolaraProfile: homeName/homeLat/homeLngフィールド追加
+- Pattern Orbs: OrbOverlayにPATTERNSセクション追加（Grand Trine/T-Square/Yod 計5個）
+- Title Diagnosis: 7問テキスト → 28問カードemoji選択（3パート: Minor1-9/Major10-24/Court25-28）
+- パート遷移+Forging+Reveal: トランジション画面、光球パルス、6段階アニメーション
+- 称号persistence: SharedPreferences保存・復元
+
+### コミット
+- `65d3519` main → GitHub push済み
+- 11ファイル変更、+3,283行 / -1,546行
+
+## 2026-04-10 セッション: Map Task 4/5 + 3画面照合開始
+
+### Task 4: 天体ライン描画（完了）
+- 新規: map_planet_lines.dart — natal/progressed/transit の天体ラインをPolyline描画
+  - `_geodesicLine()`: Distance().offset()で大圏線50ポイント生成（20000km）
+  - `buildPlanetLineData()`: ChartResultから3レイヤー×10天体=最大30本のライン生成
+  - `buildPlanetPolylines()`: レイヤー/惑星グループ/カテゴリフィルター連動
+  - `buildPlanetSymbols()`: 各ラインの途中にシンボルマーカー配置
+- map_constants.dart: ChartLineStyle, PlanetMeta, planetGroups, fortunePlanets 追加
+  - CHART_STYLE: natal(#E8E0D0,solid,w2,o0.5), progressed(#C9A84C,dash8 6,w1.8,o0.45), transit(#00D4FF,dash3 6,w1.8,o0.45)
+- map_screen.dart: _planetLines保持、_rebuild()で中心変更時に再構築
+
+### Task 5: VP Panelスロット管理（完了）
+- map_vp_panel.dart: フルリライト
+  - SlotManager: SharedPreferencesでVP/LOCスロット永続化（max5件）
+  - VPSlot: name/lat/lng/icon/isHome モデル
+  - syncHome(): プロフィールのホーム地点を先頭スロットに同期
+  - saveCurrentLocation(): Nominatim reverse geocodingで地名自動取得
+  - CRUD: move/rename/delete/changeIcon、アイコンピッカー32種
+  - 名称変更ダイアログ（AlertDialog）
+  - GPS現在地移動は仮実装（geolocatorパッケージ未導入）
+
+### Tarot画面照合結果
+- observe_screen.dart(976行) vs tarot.html(1561行) を全行照合
+- **結果: HTML準拠で完璧に実装済み**
+  - inner-tab-nav, card-scene, 3D flip, card-back/front, stella-msg, reading-panel, history全要素のCSS値が一致
+  - パーティクルエフェクトのみ省略（Canvas演出、機能差分なし）
+  - location-selector, mood-slider, result-panel, apply-btn → HTMLにもDOM不存在（CSS定義のみ）
+
+### 進行中
+- Galaxy画面・Sanctuary画面のHTML要素一覧をバックグラウンドで作成中
+- 次: 各画面のFlutterとの差分特定→修正
+
+### Galaxy画面修正（追加分）
+- Golden Angle二重レイヤー実装（cycle_spiral_painter.dart全面書き直し）
+  - Layer 1: Ghost path（セグメントフェード付き）
+  - Layer 2: Spiral anchor dots（全日アンカー）
+  - Layer 3: GA位置の実ドット（projectGA3D、55°アナモルフィック投影）
+  - Connection threads（spiral→GA破線接続）
+  - mulberry32 PRNG で z-jitter
+- 名詞リスト12個HTML準拠に修正（EN/JP両方）
+- Grid maxCrossAxisExtent 200→160px
+- CurrentDay金色リング追加
+- 星座アートイメージ61枚をassets/constellation-art/にコピー
+  - ConstellationPainter + MiniConstellationPainter にartImage/flipXパラメータ追加
+  - screen blend + 35% opacity で描画
+  - galaxy_screen.dart にプリロード機能追加
+
+### Sanctuary画面修正
+- TITLE_144テーブル（144エントリ）をtitle_data.dartに追加（HTMLから正確コピー）
+- SUN_ADJ（12星座外面形容詞）+ MOON_NOUN（12星座内面名詞）追加
+- getSunSign/getMoonSign関数追加（HTML準拠の星座計算）
+- TITLE_CLASSES テーブル追加（5軸×5宮廷=25クラス）
+- computeResults: determineFinalAxis（tiebreak付き）+ determineCourt（Part3 court集計）+ wildcard処理 + TITLE_144参照
+- TD_ROUNDS Part3: axis→court属性に修正、質問をHTML準拠に変更
+- Orb/House設定永続化（SharedPreferences）
+- Home→VP同期（solara_vp_slots/solara_locations先頭スロット同期）
+- saveBirthInfo時の称号自動更新（星座変更検知→TITLE_144再参照）
+
+### メモリ更新
+- feedback_html_precision.md: 「1セッション1画面」制約を「Opus 4.6 1Mでは不要」に修正
+
+### ビルド状況
+- flutter analyze: error/warningゼロ（全プロジェクト）

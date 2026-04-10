@@ -282,8 +282,8 @@ def generate_spec(screen_name, screen_info, shared_css_text, shared_variables):
     lines.append(f"## 要素一覧（HTML上から順）")
     lines.append(f"")
 
-    # 深さ2まで表示（深すぎるとノイズになる）
-    MAX_DISPLAY_DEPTH = 3
+    # 全要素を表示（移植照合に使うため深い要素も必要）
+    MAX_DISPLAY_DEPTH = 20
     elem_count = 0
     for el in elements:
         if el['depth'] > MAX_DISPLAY_DEPTH:

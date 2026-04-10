@@ -12,6 +12,7 @@ import 'map/map_vp_panel.dart';
 import 'map/map_layer_panel.dart';
 import 'map/map_widgets.dart';
 import 'map/map_astro.dart';
+import 'map/map_planet_lines.dart';
 
 class MapScreen extends StatefulWidget {
   const MapScreen({super.key});
@@ -29,7 +30,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   bool _fortuneSheetOpen = false;
   bool _vpPanelOpen = false;
   String _vpTab = 'vp';
-  String _preseedState = 'center';
+  String _preseedState = 'hidden';
   bool _stellaMinimized = false;
   bool _restOverlayVisible = false;
   final String _restOverlayText = '';
@@ -54,8 +55,9 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   final Map<String, double> _sectorScores = {};
   final Map<String, Map<String, double>> _sectorComps = {};
 
-  ChartResult? _chartResult; // ignore: unused_field — Task 4 (planet lines) で使用予定
-  SolaraProfile? _profile; // ignore: unused_field — Task 5 (VP panel) で使用予定
+  ChartResult? _chartResult;
+  List<PlanetLineData> _planetLines = [];
+  SolaraProfile? _profile;
 
   // Search result
   String? _searchResultName;
@@ -85,6 +87,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     if (chart != null) {
       _chartResult = chart;
       final result = scoreAll(chart);
+      final lines = buildPlanetLineData(center: _center, chart: chart);
       setState(() {
         _sectorScores
           ..clear()
@@ -92,6 +95,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
         _sectorComps
           ..clear()
           ..addAll(result.sComp);
+        _planetLines = lines;
       });
     }
   }
@@ -120,13 +124,24 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
 
   Color get _sectorColor => categoryColors[_activeCategory] ?? const Color(0xFFC9A84C);
 
-  /// HTML: rebuild(nc, fly) — center変更 + flyTo + セクター再計算
+  /// HTML: rebuild(nc, fly) — center変更 + flyTo + セクター再計算 + 天体ライン再構築
   void _rebuild(LatLng newCenter) {
     _mapCtrl.move(newCenter, _mapCtrl.camera.zoom.clamp(12, 18).toDouble());
-    setState(() => _center = newCenter);
-    // chartResultが既にあればscoreAllを再実行（天体位置は変わらないが中心が変わるので表示更新）
-    // スコア自体は天体位置ベースなので中心変更では値は変わらない
-    // ただしUI更新のためsetStateを呼ぶ
+    setState(() {
+      _center = newCenter;
+      // 天体ラインは中心点から描画するので再構築
+      if (_chartResult != null) {
+        _planetLines = buildPlanetLineData(center: newCenter, chart: _chartResult!);
+      }
+    });
+  }
+
+  /// HTML: vpGeo() — GPS現在地に移動（geolocatorパッケージ未導入のため仮実装）
+  void _geolocate() {
+    // TODO: geolocator パッケージ追加後に実装
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('GPS機能は今後実装予定です'), duration: Duration(seconds: 2)),
+    );
   }
 
   // ══════════════════════════════════════════════
@@ -175,6 +190,15 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
               visible: _layers['sectors']!,
             )),
             PolylineLayer(polylines: buildCompass(center: _center, visible: _layers['compass']!)),
+            // HTML: addPlanetLines() — natal/progressed/transit 天体ライン
+            if (_planetLines.isNotEmpty) PolylineLayer(polylines: buildPlanetPolylines(
+              lines: _planetLines, layers: _layers,
+              planetGroupVis: _planetGroups, activeCategory: _activeCategory,
+            )),
+            if (_planetLines.isNotEmpty) MarkerLayer(markers: buildPlanetSymbols(
+              lines: _planetLines, layers: _layers,
+              planetGroupVis: _planetGroups, activeCategory: _activeCategory,
+            )),
             MarkerLayer(markers: buildDirLabels(center: _center)),
             // HTML: searchMarker — circleMarker(radius:8, color:#fff, fillColor:GOLD, fillOpacity:.9, weight:2)
             if (_searchResultPos != null) CircleLayer(circles: [
@@ -326,6 +350,15 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
           ),
         ),
 
+        // ── 外側タップでパネルを閉じる（HTML: pointerdown outside → close）──
+        if (_layerPanelOpen || _vpPanelOpen) Positioned.fill(
+          child: GestureDetector(
+            behavior: HitTestBehavior.translucent,
+            onTap: () => setState(() { _layerPanelOpen = false; _vpPanelOpen = false; }),
+            child: const SizedBox.expand(),
+          ),
+        ),
+
         // ── Layer Panel ──
         if (_layerPanelOpen) Positioned(
           top: topPad + 76, left: 60,
@@ -345,6 +378,14 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
           child: VPPanel(
             activeTab: _vpTab,
             onTabChanged: (t) => setState(() => _vpTab = t),
+            center: _center,
+            profile: _profile,
+            onSlotSelected: (slot) {
+              // HTML: onSelect → rebuild + close panel
+              _rebuild(LatLng(slot.lat, slot.lng));
+              setState(() => _vpPanelOpen = false);
+            },
+            onGeolocate: _geolocate,
           ),
         ),
 

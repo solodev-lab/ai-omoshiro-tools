@@ -66,8 +66,9 @@ List<Polygon> buildSectors({
         borderWidth = 2;
         break;
       default:
-        fillColor = const Color(0x083A4A6B);
-        borderColor = const Color(0x1F3A4A6B);
+        // 16方位すべて見えるよう薄く表示
+        fillColor = sectorColor.withAlpha(15);
+        borderColor = sectorColor.withAlpha(40);
         borderWidth = 0.5;
     }
 

@@ -51,7 +51,7 @@ class _SolaraHomeState extends State<SolaraHome> {
 
   late final _screens = <Widget>[
     const MapScreen(),
-    HoroscopeScreen(key: _horoKey),
+    HoroscopeScreen(key: _horoKey, onNavigateToSanctuary: () => _onTabTap(4)),
     const ObserveScreen(),
     const GalaxyScreen(),
     const SanctuaryScreen(),

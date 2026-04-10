@@ -52,24 +52,24 @@ class ConstellationNamer {
     'Orbit', 'Comet', 'Meteor', 'Nova', 'Crescent', 'Singularity',
     // 神話の生き物 (6+1)
     'Phoenix', 'Dragon', 'Griffin', 'Unicorn', 'Pegasus', 'Kraken', 'Ouroboros',
-    // 動物・鳥 (5+1)
-    'Serpent', 'Raven', 'Wolf', 'Owl', 'Butterfly', 'Leviathan',
+    // 動物・鳥 (5+1) — HTML galaxy.html NAME_NOUN_EN 準拠
+    'Serpent', 'Trident', 'Anchor', 'Bow', 'Butterfly', 'Leviathan',
     // 武器・道具 (5+1)
     'Arrow', 'Sword', 'Shield', 'Key', 'Lantern', 'Excalibur',
     // 王権・宝物 (5+1)
     'Crown', 'Chalice', 'Throne', 'Scepter', 'Jewel', "Philosopher's Stone",
     // 自然・植物 (5+1)
-    'Flame', 'Tempest', 'Lotus', 'Ember', 'Glacier', 'Yggdrasil',
+    'Flame', 'Tempest', 'Pyramid', 'Ember', 'Glacier', 'Yggdrasil',
     // 建造物・場所 (4+1)
-    'Gate', 'Tower', 'Labyrinth', 'Fountain', 'Babel',
+    'Gate', 'Tower', 'Lighthouse', 'Citadel', 'Babel',
     // 象徴・紋章 (5+1)
-    'Sigil', 'Mirror', 'Hourglass', 'Scale', 'Mask', 'Akashic',
+    'Emblem', 'Mirror', 'Hourglass', 'Scale', 'Mask', 'Pandora',
     // 楽器・芸術 (3+1)
-    'Harp', 'Bell', 'Requiem', 'Orpheus',
+    'Harp', 'Bell', 'Lyre', 'Compass',
     // 身体・翼 (4+1)
     'Wing', 'Feather', 'Eye', 'Halo', 'Third Eye',
     // 幾何・抽象 (3+1)
-    'Spiral', 'Prism', 'Vortex', 'Möbius',
+    'Crux', 'Prism', 'Ring', 'Möbius',
   ]; // 61 total
 
   static const _nounsJP = [
@@ -77,24 +77,24 @@ class ConstellationNamer {
     '軌道', '彗星', '流星', '新星', '三日月', '特異点',
     // 神話の生き物
     'フェニックス', 'ドラゴン', 'グリフィン', 'ユニコーン', 'ペガサス', 'クラーケン', 'ウロボロス',
-    // 動物・鳥
-    'サーペント', 'レイヴン', '狼', 'アウル', '蝶', 'レヴィアタン',
+    // 動物・鳥 — HTML galaxy.html NAME_NOUN_JP 準拠
+    'サーペント', 'トライデント', 'アンカー', '弓', '蝶', 'レヴィアタン',
     // 武器・道具
     '矢', '剣', '盾', '鍵', '灯火', '聖剣',
     // 王権・宝物
     '冠', '聖杯', '玉座', '笏杖', '宝玉', '賢者の石',
     // 自然・植物
-    '炎', '嵐', '蓮', '残火', '氷河', '世界樹',
+    '炎', '嵐', 'ピラミッド', '残火', '氷河', '世界樹',
     // 建造物・場所
-    '門', '塔', '迷宮', '泉', '天楼',
+    '門', '塔', '灯台', '城砦', '天楼',
     // 象徴・紋章
-    '印章', '鏡', '砂時計', '天秤', '仮面', '阿頼耶',
+    '紋章', '鏡', '砂時計', '天秤', '仮面', 'パンドラ',
     // 楽器・芸術
-    '竪琴', '鐘', '鎮魂歌', '竪琴師',
+    '竪琴', '鐘', 'リラ', 'コンパス',
     // 身体・翼
     '翼', '羽根', '眼', '光輪', '第三の眼',
     // 幾何・抽象
-    '螺旋', '稜鏡', '渦', '無終環',
+    'クラクス', '稜鏡', 'リング', '無終環',
   ]; // 61 total
 
   /// Noun rarity tiers: 0=Common, 1=Uncommon, 2=Rare, 3=Legendary
@@ -479,5 +479,32 @@ class ConstellationNamer {
     }
 
     return edges;
+  }
+
+  // ============================================================
+  // HTML: NOUN_FILENAMES — asset file names for constellation art
+  // ============================================================
+
+  static const nounFilenames = [
+    'orbit','comet','meteor','nova','crescent','singularity',
+    'phoenix','dragon','griffin','unicorn','pegasus','kraken','ouroboros',
+    'serpent','trident','anchor','bow','butterfly','leviathan',
+    'arrow','sword','shield','key','lantern','excalibur',
+    'crown','chalice','throne','scepter','jewel','philosophers_stone',
+    'flame','tempest','pyramid','ember','glacier','yggdrasil',
+    'gate','tower','lighthouse','citadel','babel',
+    'emblem','mirror','hourglass','scale','mask','pandora',
+    'harp','bell','lyre','compass',
+    'wing','feather','eye','halo','third_eye',
+    'crux','prism','ring','mobius',
+  ]; // 61 total
+
+  /// HTML: NOUN_ART_TRANSFORMS — only index 4 (crescent) is flipX
+  static bool isFlipX(int nounIdx) => nounIdx == 4;
+
+  /// Get the asset path for a noun's constellation art
+  static String artAssetPath(int nounIdx) {
+    if (nounIdx < 0 || nounIdx >= nounFilenames.length) return '';
+    return 'assets/constellation-art/${nounFilenames[nounIdx]}.webp';
   }
 }

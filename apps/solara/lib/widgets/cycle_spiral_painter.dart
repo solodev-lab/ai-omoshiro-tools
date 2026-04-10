@@ -5,13 +5,15 @@ import '../theme/solara_colors.dart';
 import '../utils/moon_phase.dart';
 import '../utils/tarot_data.dart';
 
-/// 3D spiral painter for the Galaxy Cycle tab.
-/// Renders day dots with planet/element colors, moon phase sizing,
-/// and breathing animation.
+/// HTML: galaxy.html renderSpiral3D() — 3-layer spiral painter
+///   Layer 1: Ghost spiral path (faded reference line)
+///   Layer 2: Spiral anchor dots (all days on spiral)
+///   Layer 3: Reading dots at Golden Angle positions (anamorphic 55° camera)
+///   + Connection threads between Layer 2 → Layer 3
 class CycleSpiralPainter extends CustomPainter {
-  final List<DailyReading?> days; // one per day, null = no reading
-  final int currentDayIndex; // 0-based day in cycle
-  final int totalDays; // 29 or 30
+  final List<DailyReading?> days;
+  final int currentDayIndex; // 0-based
+  final int totalDays;
   final double rotX;
   final double rotY;
   final double zoom;
@@ -29,7 +31,7 @@ class CycleSpiralPainter extends CustomPainter {
     required this.cycleStart,
   });
 
-  // Breathing phases per dot (deterministic, matching mockup)
+  // HTML: BREATH_PHASES/PERIODS — deterministic per-dot
   static final List<double> _breathPhases =
       List.generate(32, (i) => i * 0.71 + sin(i * 1.3) * 2.2);
   static final List<double> _breathPeriods =
@@ -38,8 +40,10 @@ class CycleSpiralPainter extends CustomPainter {
   static const double _zSpan = 55;
   static const double _totalTurns = 4.2;
   static const double _pathTurns = 4.6;
+  static const double _goldenAngle = 137.508 * pi / 180;
+  static const double _camAngle55 = 55 * pi / 180;
 
-  /// Store last computed dot screen positions for hit-testing.
+  /// Hit-testing positions (Layer 3 GA positions for reading dots)
   List<Offset> dotScreenPositions = [];
   List<double> dotScreenScales = [];
 
@@ -49,215 +53,250 @@ class CycleSpiralPainter extends CustomPainter {
     final cy = size.height * 0.44;
     final fov = 360 * zoom;
     final b = min(size.width, size.height) * 0.057;
+    final activeDays = currentDayIndex + 1;
+    final now = breathPhase; // seconds
 
-    // Draw ghost spiral path
-    _drawGhostPath(canvas, cx, cy, fov, b);
+    // ═══ Layer 1: Ghost spiral path ═══
+    _drawGhostPath(canvas, cx, cy, fov, b, size);
 
-    // Calculate and draw dots
-    final dots = <_DotInfo>[];
-    dotScreenPositions = List.filled(totalDays, Offset.zero);
-    dotScreenScales = List.filled(totalDays, 1.0);
-
+    // ═══ Layer 2: Spiral anchor dots ═══
+    final spiralDots = <_SpiralDot>[];
     for (int d = 1; d <= totalDays; d++) {
       final t = d / totalDays;
       final theta = t * pi * _totalTurns;
       final r = b * theta;
-      final rawX = r * cos(theta - pi / 2);
-      final rawY = r * sin(theta - pi / 2);
-      final rawZ = t * _zSpan - _zSpan / 2;
-
-      final rotated = _rot3D(rawX, rawY, rawZ);
-      final projected = _proj3D(rotated.x, rotated.y, rotated.z, fov, cx, cy);
-
-      final dayIndex = d - 1;
-      dotScreenPositions[dayIndex] = Offset(projected.x, projected.y);
-      dotScreenScales[dayIndex] = projected.s;
-
-      dots.add(_DotInfo(
-        x: projected.x,
-        y: projected.y,
-        scale: projected.s,
-        dayIndex: dayIndex,
-        rz: rotated.z,
-      ));
+      final raw = _Vec3(
+        r * cos(theta - pi / 2),
+        r * sin(theta - pi / 2),
+        t * _zSpan - _zSpan / 2,
+      );
+      final rv = _rot3D(raw.x, raw.y, raw.z);
+      final p = _proj3D(rv.x, rv.y, rv.z, fov, cx, cy);
+      spiralDots.add(_SpiralDot(x: p.x, y: p.y, s: p.s, d: d, rz: rv.z));
     }
 
-    // Sort by z for proper depth ordering (back to front)
-    dots.sort((a, b) => a.rz.compareTo(b.rz));
+    // Draw spiral anchor dots (Layer 2)
+    for (final sp in spiralDots) {
+      final sc = max(0.5, sp.s);
+      final dayIdx = sp.d - 1;
+      final active = sp.d <= activeDays;
+      final reading = dayIdx < days.length ? days[dayIdx] : null;
 
-    for (final dot in dots) {
-      _drawDot(canvas, dot, size);
+      if (!active) {
+        // HTML: future day — very faint white dot
+        canvas.drawCircle(Offset(sp.x, sp.y), 2.0 * sc,
+          Paint()..color = Color.fromRGBO(255, 255, 255, 0.20 * sc));
+      } else if (reading == null) {
+        // HTML: active but no card — gray dot
+        canvas.drawCircle(Offset(sp.x, sp.y), 2 * sc,
+          Paint()..color = Color.fromRGBO(120, 120, 120, 0.60 * sc));
+      } else {
+        // HTML: has reading — tiny white anchor
+        canvas.drawCircle(Offset(sp.x, sp.y), 1.5 * sc,
+          Paint()..color = Color.fromRGBO(255, 255, 255, 0.20 * sc));
+      }
     }
 
-    // Center Stella glow
+    // ═══ Pre-compute Golden Angle positions ═══
+    final gaPositions = <int, _GAPos>{};
+    int readingIdx = 0;
+    final rng = _Mulberry32(42);
+    for (int d = 0; d < totalDays; d++) {
+      final reading = d < days.length ? days[d] : null;
+      if (reading == null) continue;
+      final angle = reading.cardId * _goldenAngle;
+      final radius = 0.15 + (readingIdx / max(1, activeDays)) * 0.28;
+      final x = 0.5 + radius * cos(angle);
+      final y = 0.5 + radius * sin(angle);
+      final zLayer = (reading.cardId % 3) - 1;
+      final zJitter = (rng.next() - 0.5) * 0.4;
+      gaPositions[d] = _GAPos(
+        gaX: x.clamp(0.08, 0.92),
+        gaY: y.clamp(0.08, 0.92),
+        gaZ: (zLayer + zJitter).clamp(-1.0, 1.0),
+      );
+      readingIdx++;
+    }
+
+    // ═══ Layer 3: Project GA positions through anamorphic 55° camera ═══
+    final gaDots = <_GADot>[];
+    dotScreenPositions = List.filled(totalDays, Offset.zero);
+    dotScreenScales = List.filled(totalDays, 1.0);
+
+    for (final entry in gaPositions.entries) {
+      final d = entry.key; // 0-based
+      if (d >= activeDays) continue;
+      final ga = entry.value;
+      final p = _projectGA3D(ga.gaX, ga.gaY, ga.gaZ, size.width, size.height, cx, cy, fov);
+      gaDots.add(_GADot(x: p.x, y: p.y, s: p.s, rz: p.rz, dayIdx: d));
+      dotScreenPositions[d] = Offset(p.x, p.y);
+      dotScreenScales[d] = p.s;
+    }
+
+    // Sort by z for depth ordering (back to front)
+    gaDots.sort((a, b) => a.rz.compareTo(b.rz));
+
+    // ═══ Connection threads: spiral anchor → GA position ═══
+    final threadPaint = Paint()
+      ..color = const Color.fromRGBO(249, 217, 118, 0.15)
+      ..strokeWidth = 0.7
+      ..style = PaintingStyle.stroke;
+
+    for (final gd in gaDots) {
+      if (gd.dayIdx >= spiralDots.length) continue;
+      final sp = spiralDots[gd.dayIdx];
+      // HTML: setLineDash([3, 6]) — approximate with path
+      canvas.drawLine(Offset(sp.x, sp.y), Offset(gd.x, gd.y), threadPaint);
+    }
+
+    // ═══ Draw reading dots at GA positions ═══
+    for (final gd in gaDots) {
+      _drawGADot(canvas, gd, now);
+    }
+
+    // ═══ Center Stella glow ═══
     _drawStellaCore(canvas, cx, cy);
   }
 
-  void _drawGhostPath(
-      Canvas canvas, double cx, double cy, double fov, double b) {
-    final path = Path();
+  // ═══ Layer 1: Ghost spiral path with fade ═══
+  void _drawGhostPath(Canvas canvas, double cx, double cy, double fov, double b, Size size) {
     const steps = 500;
+    final pts = <({double x, double y, double s})>[];
 
     for (int i = 0; i <= steps; i++) {
       final t = i / steps;
       final theta = t * pi * _pathTurns;
       final r = b * theta;
-      final rawX = r * cos(theta - pi / 2);
-      final rawY = r * sin(theta - pi / 2);
-      final rawZ = t * _zSpan - _zSpan / 2;
-
-      final rotated = _rot3D(rawX, rawY, rawZ);
-      final projected = _proj3D(rotated.x, rotated.y, rotated.z, fov, cx, cy);
-
-      if (i == 0) {
-        path.moveTo(projected.x, projected.y);
-      } else {
-        path.lineTo(projected.x, projected.y);
-      }
+      final rv = _rot3D(
+        r * cos(theta - pi / 2),
+        r * sin(theta - pi / 2),
+        t * _zSpan - _zSpan / 2,
+      );
+      pts.add(_proj3D(rv.x, rv.y, rv.z, fov, cx, cy));
     }
 
-    canvas.drawPath(
-      path,
-      Paint()
-        ..color = SolaraColors.spiralLine
-        ..strokeWidth = 0.8
-        ..style = PaintingStyle.stroke,
-    );
+    // HTML: per-segment fade = 1 - pow(i/len, 1.5)
+    for (int i = 1; i < pts.length; i++) {
+      final fade = 1 - pow(i / pts.length, 1.5).toDouble();
+      if (fade < 0.01) continue;
+      final a = max(0.10, 0.50 * pts[i].s * fade);
+      final lw = max(0.8, 1.4 * pts[i].s * fade);
+      canvas.drawLine(
+        Offset(pts[i - 1].x, pts[i - 1].y),
+        Offset(pts[i].x, pts[i].y),
+        Paint()
+          ..color = Color.fromRGBO(192, 200, 224, a)
+          ..strokeWidth = lw,
+      );
+    }
   }
 
-  void _drawDot(Canvas canvas, _DotInfo dot, Size size) {
-    final dayIndex = dot.dayIndex;
-    final reading = dayIndex < days.length ? days[dayIndex] : null;
-    final dayDate = cycleStart.add(Duration(days: dayIndex));
-    final isFullMoonDay = MoonPhase.isFullMoon(dayDate);
-    final isNewMoonDay = MoonPhase.isNewMoon(dayDate);
-    final isCurrent = dayIndex == currentDayIndex;
-    final screenScale = dot.scale.clamp(0.3, 2.0);
+  // ═══ Draw a single reading dot at its GA position ═══
+  void _drawGADot(Canvas canvas, _GADot gd, double now) {
+    final dayIdx = gd.dayIdx;
+    final reading = dayIdx < days.length ? days[dayIdx] : null;
+    if (reading == null) return;
+
+    final card = TarotData.getCard(reading.cardId);
+    final dayDate = cycleStart.add(Duration(days: dayIdx));
+    final isFullMoon = MoonPhase.isFullMoon(dayDate);
+    final isNewMoon = MoonPhase.isNewMoon(dayDate);
+    final isCurrent = dayIdx == currentDayIndex;
+    final sc = max(0.5, gd.s);
 
     // Breathing
-    final bPhase = dayIndex < _breathPhases.length
-        ? _breathPhases[dayIndex]
-        : dayIndex * 0.71;
-    final bPeriod = dayIndex < _breathPeriods.length
-        ? _breathPeriods[dayIndex]
-        : 3.0;
-    final breath = 0.7 + 0.3 * sin(breathPhase / bPeriod + bPhase);
+    final bPhase = dayIdx < _breathPhases.length ? _breathPhases[dayIdx] : dayIdx * 0.71;
+    final bPeriod = dayIdx < _breathPeriods.length ? _breathPeriods[dayIdx] : 3.0;
+    final breath = 0.7 + 0.3 * sin(now / bPeriod + bPhase);
 
-    // Determine color, size, glow
-    Color dotColor;
-    double baseRadius;
-    double glowRadius;
-    double glowAlpha;
-
-    if (reading != null) {
-      final card = TarotData.getCard(reading.cardId);
-      if (card.isMajor) {
-        dotColor = SolaraColors.planetColor(card.planet ?? 'sun');
-        baseRadius = 8.0;
-        glowRadius = 12.0;
-        glowAlpha = 0.35;
-      } else {
-        dotColor = SolaraColors.elementColor(card.element);
-        baseRadius = 4.0;
-        glowRadius = 6.0;
-        glowAlpha = 0.25;
-      }
+    // Color from card
+    final Color col;
+    if (card.isMajor) {
+      col = SolaraColors.planetColor(card.planet ?? 'sun');
     } else {
-      dotColor = SolaraColors.spiralDotDim;
-      baseRadius = 2.0;
-      glowRadius = 0;
-      glowAlpha = 0;
+      col = SolaraColors.elementColor(card.element);
     }
 
-    // Moon phase modifiers
-    double moonMultiplier = 1.0;
-    if (isFullMoonDay) {
-      moonMultiplier = 1.5;
-    } else if (isNewMoonDay) {
-      moonMultiplier = 0.75;
-      if (reading == null) dotColor = SolaraColors.newMoonCore;
-    }
+    // Size
+    double baseSize = card.isMajor ? 8.0 : 4.0;
+    double glowBlur = card.isMajor ? 12.0 : 6.0;
+    if (isFullMoon) baseSize *= 1.5;
+    if (isNewMoon) baseSize *= 0.75;
+    if (isCurrent) baseSize = max(baseSize, 6.5);
+    final dotR = max(2.5, baseSize) * sc * breath;
 
-    // Current day highlight
-    if (isCurrent && reading != null) {
-      baseRadius = max(baseRadius, 6.5);
-    }
-
-    final finalRadius = baseRadius * moonMultiplier * screenScale;
-    final finalGlowR = glowRadius * moonMultiplier * screenScale;
-
-    // Draw glow
-    if (glowAlpha > 0) {
-      final gPaint = Paint()
-        ..color = dotColor.withValues(alpha: glowAlpha * breath * screenScale)
-        ..maskFilter = MaskFilter.blur(BlurStyle.normal, finalGlowR);
-      canvas.drawCircle(Offset(dot.x, dot.y), finalGlowR, gPaint);
-    }
-
-    // Draw dot core
+    // Glow — brightened
+    final gR = glowBlur * sc;
     canvas.drawCircle(
-      Offset(dot.x, dot.y),
-      finalRadius,
-      Paint()..color = dotColor.withValues(alpha: (0.8 * breath).clamp(0, 1)),
+      Offset(gd.x, gd.y), gR,
+      Paint()
+        ..color = col.withValues(alpha: 0.55 * breath * sc)
+        ..maskFilter = MaskFilter.blur(BlurStyle.normal, gR),
     );
 
-    // Ring effect: full moon always, others 5% deterministic random
-    final hasRandomRing = !isFullMoonDay &&
-        !isNewMoonDay &&
-        reading != null &&
-        Random(dayIndex * 31 + totalDays * 7).nextDouble() < 0.05;
-
-    if (isFullMoonDay || hasRandomRing) {
-      final ringAlpha = isFullMoonDay ? 0.5 : 0.3;
-      final ringGlowAlpha = isFullMoonDay ? 0.15 : 0.08;
-      final ringGlowSize = isFullMoonDay ? 18.0 : 10.0;
-
-      canvas.drawCircle(
-        Offset(dot.x, dot.y),
-        finalRadius + 3 * screenScale,
+    // Core — brightened
+    if (isNewMoon) {
+      // HTML: dark core + purple stroke ring
+      canvas.drawCircle(Offset(gd.x, gd.y), dotR,
+        Paint()..color = const Color(0xFF2A0030));
+      canvas.drawCircle(Offset(gd.x, gd.y), dotR + 1,
         Paint()
-          ..color = SolaraColors.fullMoonRing.withValues(alpha: ringAlpha * breath)
+          ..color = const Color(0x669B6BFF) // rgba(155,107,255,0.4)
           ..style = PaintingStyle.stroke
-          ..strokeWidth = 1.2 * screenScale,
-      );
-      // Radial glow
-      final rgPaint = Paint()
-        ..color = SolaraColors.fullMoonRing.withValues(alpha: ringGlowAlpha * breath)
-        ..maskFilter =
-            MaskFilter.blur(BlurStyle.normal, ringGlowSize * screenScale);
-      canvas.drawCircle(Offset(dot.x, dot.y), finalRadius * 1.8, rgPaint);
+          ..strokeWidth = 0.8);
+    } else {
+      canvas.drawCircle(Offset(gd.x, gd.y), dotR,
+        Paint()..color = col.withValues(alpha: 1.0));
     }
 
-    // New moon core
-    if (isNewMoonDay) {
-      canvas.drawCircle(
-        Offset(dot.x, dot.y),
-        finalRadius * 0.5,
-        Paint()..color = SolaraColors.newMoonCore.withValues(alpha: 0.8),
-      );
+    // Full moon ring + radial glow
+    if (isFullMoon) {
+      // HTML: dotR + 4*sc, strokeStyle rgba(255,240,192, 0.5*sc), lineWidth 2
+      canvas.drawCircle(Offset(gd.x, gd.y), dotR + 4 * sc,
+        Paint()
+          ..color = Color.fromRGBO(255, 240, 192, 0.5 * sc)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 2);
+      // Radial glow
+      canvas.drawCircle(Offset(gd.x, gd.y), dotR + 12 * sc,
+        Paint()
+          ..color = const Color.fromRGBO(255, 240, 192, 0.15)
+          ..maskFilter = MaskFilter.blur(BlurStyle.normal, 18 * sc));
+    }
+
+    // Current day ring
+    if (isCurrent) {
+      // HTML: 11*sc radius, rgba(249,217,118, 0.5*sc), lineWidth 1.5
+      canvas.drawCircle(Offset(gd.x, gd.y), 11 * sc,
+        Paint()
+          ..color = Color.fromRGBO(249, 217, 118, 0.5 * sc)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1.5);
+    }
+
+    // 5% random ring
+    if (!isFullMoon && !isNewMoon && ((dayIdx + 1) * 31 + totalDays * 7) % 100 < 5) {
+      canvas.drawCircle(Offset(gd.x, gd.y), dotR + 3 * sc,
+        Paint()
+          ..color = col.withValues(alpha: 0.3 * sc)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1.2);
     }
   }
 
   void _drawStellaCore(Canvas canvas, double cx, double cy) {
-    // Outer glow
-    canvas.drawCircle(
-      Offset(cx, cy),
-      20,
+    // Stella core — brightened
+    canvas.drawCircle(Offset(cx, cy), 24,
       Paint()
-        ..color = SolaraColors.solaraGold.withValues(alpha: 0.15)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 24),
-    );
-    // Inner core
-    canvas.drawCircle(
-      Offset(cx, cy),
-      6,
+        ..color = SolaraColors.solaraGold.withValues(alpha: 0.25)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 28));
+    canvas.drawCircle(Offset(cx, cy), 8,
       Paint()
-        ..color = SolaraColors.solaraGold.withValues(alpha: 0.6)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8),
-    );
+        ..color = SolaraColors.solaraGold.withValues(alpha: 0.8)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 10));
   }
 
-  // --- 3D math (ported from galaxy.html) ---
+  // ═══ 3D math (HTML: rot3D, proj3D, projectGA3D) ═══
 
   ({double x, double y, double z}) _rot3D(double x, double y, double z) {
     final y1 = y * cos(rotX) - z * sin(rotX);
@@ -273,7 +312,23 @@ class CycleSpiralPainter extends CustomPainter {
     return (x: cx + x * s, y: cy + y * s, s: s);
   }
 
-  /// Find nearest dot to a tap point. Returns dayIndex or -1.
+  /// HTML: projectGA3D — anamorphic 55° camera projection for Golden Angle positions
+  ({double x, double y, double s, double rz}) _projectGA3D(
+      double nx, double ny, double nz,
+      double w, double h, double cx, double cy, double fov) {
+    final zWorld = nz * 80;
+    final cosA = cos(_camAngle55);
+    final sinA = sin(_camAngle55);
+    final xWorld = (nx - 0.5) * w * 0.85;
+    final yWorld = (ny - 0.5) * h * 0.7;
+    final yTilt = yWorld * cosA - zWorld * sinA;
+    final zTilt = yWorld * sinA + zWorld * cosA;
+    final rv = _rot3D(xWorld, yTilt, zTilt);
+    final s = fov / (fov + rv.z + 260);
+    return (x: cx + rv.x * s, y: cy + rv.y * s, s: s, rz: rv.z);
+  }
+
+  /// Hit-test for tap on GA dots. Returns dayIndex or -1.
   int hitTestDot(Offset tapPoint, {double threshold = 28}) {
     int nearest = -1;
     double nearestDist = threshold;
@@ -298,14 +353,39 @@ class CycleSpiralPainter extends CustomPainter {
   }
 }
 
-class _DotInfo {
-  final double x, y, scale, rz;
-  final int dayIndex;
-  const _DotInfo({
-    required this.x,
-    required this.y,
-    required this.scale,
-    required this.dayIndex,
-    required this.rz,
-  });
+// ═══ Helper types ═══
+
+class _Vec3 {
+  final double x, y, z;
+  const _Vec3(this.x, this.y, this.z);
+}
+
+class _SpiralDot {
+  final double x, y, s, rz;
+  final int d; // 1-based day
+  const _SpiralDot({required this.x, required this.y, required this.s, required this.d, required this.rz});
+}
+
+class _GAPos {
+  final double gaX, gaY, gaZ;
+  const _GAPos({required this.gaX, required this.gaY, required this.gaZ});
+}
+
+class _GADot {
+  final double x, y, s, rz;
+  final int dayIdx; // 0-based
+  const _GADot({required this.x, required this.y, required this.s, required this.rz, required this.dayIdx});
+}
+
+/// HTML: mulberry32 PRNG — deterministic seeded random for z-jitter
+class _Mulberry32 {
+  int _state;
+  _Mulberry32(this._state);
+  double next() {
+    _state += 0x6D2B79F5;
+    int t = _state;
+    t = (t ^ (t >> 15)) * (t | 1);
+    t ^= t + (t ^ (t >> 7)) * (t | 61);
+    return ((t ^ (t >> 14)) & 0x7FFFFFFF) / 0x7FFFFFFF;
+  }
 }
