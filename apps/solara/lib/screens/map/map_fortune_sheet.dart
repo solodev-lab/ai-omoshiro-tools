@@ -1,0 +1,308 @@
+import 'package:flutter/material.dart';
+import 'map_constants.dart';
+import 'map_widgets.dart';
+
+/// pct() from HTML: 0-5 → 0-83.3%, 5-10 → 83.3-100%
+double pctValue(double v) {
+  if (v <= 5) return (v / 5) * (100 * 5 / 6);
+  return (5 / 6) * 100 + (1 / 6) * 100 * ((v - 5) / 5).clamp(0, 1);
+}
+
+/// HTML: .ff-label { top:52px; left:16px; inline-flex row: ff-tag + ff-bars }
+class FortuneFilterLabel extends StatelessWidget {
+  final Map<String, double> sectorScores;
+  final String activeSrc;
+  final String activeCategory;
+
+  const FortuneFilterLabel({
+    super.key,
+    required this.sectorScores,
+    required this.activeSrc,
+    required this.activeCategory,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final sorted = sectorScores.entries.toList()..sort((a, b) => b.value.compareTo(a.value));
+    if (sorted.isEmpty) return const SizedBox();
+
+    final top2 = sorted.where((e) => e.value > 0.01).take(2).toList();
+    final maxScore = top2.isNotEmpty ? top2.first.value : 1.0;
+    final catColor = categoryColors[activeCategory] ?? const Color(0xFFC9A84C);
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+      decoration: BoxDecoration(
+        color: const Color(0xB30A0A14),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: const Color(0x4DC9A84C)),
+      ),
+      child: IntrinsicWidth(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              '${srcLabels[activeSrc] ?? '合計'} / ${categoryLabels[activeCategory] ?? '総合'}',
+              style: const TextStyle(fontSize: 10, color: Color(0xFFC9A84C), letterSpacing: 0.5, fontWeight: FontWeight.w600),
+            ),
+            if (top2.isNotEmpty) ...[
+              const SizedBox(width: 6),
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                children: top2.map((e) {
+                  final pct = (e.value / maxScore).clamp(0.0, 1.0);
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 2),
+                    child: Row(mainAxisSize: MainAxisSize.min, children: [
+                      SizedBox(width: 32, child: Text(
+                        dir16JP[e.key] ?? e.key,
+                        style: const TextStyle(fontSize: 10, color: Color(0xFF888888), fontWeight: FontWeight.w500),
+                        textAlign: TextAlign.right,
+                      )),
+                      const SizedBox(width: 4),
+                      SizedBox(
+                        width: 120, height: 5,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: const Color(0x15FFFFFF),
+                            borderRadius: BorderRadius.circular(3),
+                          ),
+                          child: FractionallySizedBox(
+                            alignment: Alignment.centerLeft,
+                            widthFactor: pct,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: catColor,
+                                borderRadius: BorderRadius.circular(3),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      SizedBox(width: 28, child: Text(
+                        e.value.toStringAsFixed(2),
+                        style: const TextStyle(fontSize: 8, fontFamily: 'monospace', color: Color(0xFFF6BD60), fontWeight: FontWeight.w600),
+                        textAlign: TextAlign.right,
+                      )),
+                    ]),
+                  );
+                }).toList(),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Fortune Sheet — HTML: .fs { bottom:80px; border-radius:16px 16px 0 0; }
+class FortuneSheet extends StatelessWidget {
+  final String activeSrc;
+  final String activeCategory;
+  final Map<String, Map<String, double>> sectorComps;
+  final ValueChanged<String> onSrcChanged;
+  final ValueChanged<String> onCatChanged;
+  final VoidCallback onClose;
+
+  const FortuneSheet({
+    super.key,
+    required this.activeSrc,
+    required this.activeCategory,
+    required this.sectorComps,
+    required this.onSrcChanged,
+    required this.onCatChanged,
+    required this.onClose,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        color: Color(0xF20A0A19),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+        border: Border(top: BorderSide(color: Color(0x40C9A84C))),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          GestureDetector(
+            onTap: onClose,
+            child: Container(
+              width: 36, height: 4,
+              margin: const EdgeInsets.only(top: 10, bottom: 6),
+              decoration: BoxDecoration(
+                color: const Color(0x40FFFFFF),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+          _buildSrcTabs(),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: const [
+                LegendDot(color: Color(0xFFC9A84C), label: 'T柔'),
+                SizedBox(width: 10),
+                LegendDot(color: Color(0xFF6B5CE7), label: 'T剛'),
+                SizedBox(width: 10),
+                LegendDot(color: Color(0xFF4CB8B0), label: 'P柔'),
+                SizedBox(width: 10),
+                LegendDot(color: Color(0xFFE74C6B), label: 'P剛'),
+              ],
+            ),
+          ),
+          _buildCatTabs(),
+          SizedBox(
+            height: 185,
+            child: RawScrollbar(
+              thumbColor: const Color(0x40C9A84C),
+              radius: const Radius.circular(2),
+              thickness: 3,
+              thumbVisibility: true,
+              child: ListView(
+                padding: const EdgeInsets.fromLTRB(14, 10, 14, 14),
+                children: _buildFortuneRows(),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSrcTabs() {
+    const srcs = [('combined', '合計'), ('transit', 'トランジット'), ('progressed', 'プログレス')];
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      decoration: const BoxDecoration(
+        border: Border(bottom: BorderSide(color: Color(0x14FFFFFF))),
+      ),
+      child: Row(
+        children: srcs.map((s) {
+          final active = activeSrc == s.$1;
+          return GestureDetector(
+            onTap: () => onSrcChanged(s.$1),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                border: Border(bottom: BorderSide(
+                  color: active ? const Color(0xFFC9A84C) : Colors.transparent, width: 2)),
+              ),
+              child: Text(s.$2, style: TextStyle(fontSize: 11,
+                color: active ? const Color(0xFFC9A84C) : const Color(0xFF666666))),
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  Widget _buildCatTabs() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      decoration: const BoxDecoration(
+        border: Border(bottom: BorderSide(color: Color(0x0FFFFFFF))),
+      ),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: categoryColors.entries.map((e) {
+            final active = activeCategory == e.key;
+            return GestureDetector(
+              onTap: () => onCatChanged(e.key),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  border: Border(bottom: BorderSide(
+                    color: active ? const Color(0xFFC9A84C) : Colors.transparent, width: 2)),
+                ),
+                child: Text(categoryLabels[e.key] ?? e.key, style: TextStyle(fontSize: 10,
+                  color: active ? const Color(0xFFC9A84C) : const Color(0xFF666666))),
+              ),
+            );
+          }).toList(),
+        ),
+      ),
+    );
+  }
+
+  List<Widget> _buildFortuneRows() {
+    final ck = activeSrc == 'transit' ? ['tSoft', 'tHard']
+             : activeSrc == 'progressed' ? ['pSoft', 'pHard']
+             : compKeys;
+
+    final dt = <String, double>{};
+    for (final d in dir16) {
+      final c = sectorComps[d] ?? {};
+      double t = 0;
+      for (final k in ck) { t += (c[k] ?? 0); }
+      dt[d] = t;
+    }
+
+    final sorted = dir16.toList()..sort((a, b) => (dt[b] ?? 0).compareTo(dt[a] ?? 0));
+    final visible = sorted.where((d) => (dt[d] ?? 0) > 0.01).toList();
+
+    return List.generate(visible.length, (i) {
+      final dir = visible[i];
+      final total = dt[dir]!;
+      final pct = (pctValue(total) / 100).clamp(0.0, 1.0);
+      final comp = sectorComps[dir] ?? {};
+      final isLast = i == visible.length - 1;
+
+      final segs = <Widget>[];
+      for (final k in ck) {
+        final v = comp[k] ?? 0;
+        if (v < 0.001) continue;
+        segs.add(Expanded(
+          flex: (v * 1000).round(),
+          child: Container(color: compColors[k]),
+        ));
+      }
+
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 7),
+        decoration: BoxDecoration(
+          border: isLast ? null : const Border(bottom: BorderSide(color: Color(0x0AFFFFFF))),
+        ),
+        child: Row(children: [
+          SizedBox(width: 36, child: Text(dir16JP[dir] ?? dir,
+            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFFB49774)))),
+          Expanded(
+            child: Container(
+              height: 14, margin: const EdgeInsets.symmetric(horizontal: 10),
+              decoration: BoxDecoration(
+                color: const Color(0x0AFFFFFF),
+                borderRadius: BorderRadius.circular(7),
+              ),
+              child: LayoutBuilder(builder: (ctx, constraints) {
+                final barW = constraints.maxWidth;
+                return Stack(children: [
+                  for (int t = 1; t <= 5; t++)
+                    Positioned(
+                      left: barW * t / 6, top: 0, bottom: 0,
+                      child: Container(width: 1, color: const Color(0x21FFFFFF)),
+                    ),
+                  FractionallySizedBox(
+                    alignment: Alignment.centerLeft,
+                    widthFactor: pct,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(7),
+                      child: Row(children: segs.isNotEmpty ? segs : [Expanded(child: Container())]),
+                    ),
+                  ),
+                ]);
+              }),
+            ),
+          ),
+          SizedBox(width: 48, child: Text(total.toStringAsFixed(2),
+            style: const TextStyle(fontSize: 11, fontFamily: 'monospace', color: Color(0xFFF6BD60)),
+            textAlign: TextAlign.right)),
+        ]),
+      );
+    });
+  }
+}

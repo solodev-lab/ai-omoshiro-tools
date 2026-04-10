@@ -2713,6 +2713,23 @@ function buildBSFilterContent() {
   if (!el) return;
   var src = document.getElementById('aspectFilterPanel');
   if (src) el.innerHTML = '<h3>&#9881; ASPECT FILTER <button class="filter-reset-btn" onclick="resetFilters()" style="margin-left:8px">RESET</button></h3>' + src.innerHTML;
+  // Sync chip active state with current activeFilters
+  syncFilterChips(el);
+}
+
+function syncFilterChips(container) {
+  if (!container) container = document;
+  container.querySelectorAll('.filter-chip').forEach(function(c) {
+    var ft = c.getAttribute('data-filter');
+    var val = c.getAttribute('data-value');
+    if (ft === 'quality') {
+      c.classList.toggle('active', !!activeFilters.quality[val]);
+    } else if (ft === 'pgroup') {
+      c.classList.toggle('active', !!activeFilters.pgroup[val]);
+    } else if (ft === 'fortune') {
+      c.classList.toggle('active', activeFilters.fortune === val);
+    }
+  });
 }
 
 function buildBSAspectsContent() {

@@ -1,0 +1,321 @@
+import 'dart:convert';
+import 'dart:math';
+import 'package:http/http.dart' as http;
+import 'map_constants.dart';
+
+/// ============================================================
+/// Solara Astro — CF Worker API 経由の天体計算
+/// Worker: /astro/chart (POST)
+/// 方針: project_flutter_native.md 2026-04-07確定
+///   サーバーサイド計算（CF Worker + astronomy-engine.js）
+/// ============================================================
+
+// TODO: デプロイ後に実URLに差し替え
+const _astroApiUrl = 'https://solara-api.solodev-lab.workers.dev/astro/chart';
+
+/// CF Worker /astro/chart のレスポンス
+class ChartResult {
+  final Map<String, double> natal;      // 10天体の黄経
+  final Map<String, double>? transit;   // トランジット天体
+  final Map<String, double>? progressed;// プログレス天体
+  final double asc, mc, dsc, ic;
+  final List<double> houses;
+  final List<Map<String, dynamic>> aspects;
+  final Map<String, List<dynamic>> patterns;
+
+  ChartResult({
+    required this.natal, this.transit, this.progressed,
+    required this.asc, required this.mc, required this.dsc, required this.ic,
+    required this.houses, required this.aspects, required this.patterns,
+  });
+
+  factory ChartResult.fromJson(Map<String, dynamic> json) {
+    return ChartResult(
+      natal: (json['natal'] as Map<String, dynamic>).map((k, v) => MapEntry(k, (v as num).toDouble())),
+      transit: json['transit'] != null
+        ? (json['transit'] as Map<String, dynamic>).map((k, v) => MapEntry(k, (v as num).toDouble()))
+        : null,
+      progressed: json['progressed'] != null
+        ? (json['progressed'] as Map<String, dynamic>).map((k, v) => MapEntry(k, (v as num).toDouble()))
+        : null,
+      asc: (json['asc'] as num).toDouble(),
+      mc: (json['mc'] as num).toDouble(),
+      dsc: (json['dsc'] as num).toDouble(),
+      ic: (json['ic'] as num).toDouble(),
+      houses: (json['houses'] as List).map((h) => (h as num).toDouble()).toList(),
+      aspects: (json['aspects'] as List).map((a) => a as Map<String, dynamic>).toList(),
+      patterns: (json['patterns'] as Map<String, dynamic>).map(
+        (k, v) => MapEntry(k, v as List<dynamic>)),
+    );
+  }
+}
+
+/// CF Worker にチャートを要求
+Future<ChartResult?> fetchChart({
+  required String birthDate,
+  required String birthTime,
+  required double birthLat,
+  required double birthLng,
+  int birthTz = 9,
+  String mode = 'transit', // 'natal' | 'transit' | 'progressed'
+  String houseSystem = 'placidus',
+}) async {
+  try {
+    final body = {
+      'birthDate': birthDate,
+      'birthTime': birthTime,
+      'birthTz': birthTz,
+      'birthLat': birthLat,
+      'birthLng': birthLng,
+      'mode': mode,
+      'transitDate': DateTime.now().toUtc().toIso8601String(),
+      'houseSystem': houseSystem,
+    };
+    final resp = await http.post(
+      Uri.parse(_astroApiUrl),
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode(body),
+    ).timeout(const Duration(seconds: 10));
+
+    if (resp.statusCode == 200) {
+      final data = json.decode(resp.body) as Map<String, dynamic>;
+      return ChartResult.fromJson(data);
+    }
+  } catch (e) {
+    // API失敗時はnullを返す（オフライン or Worker未デプロイ）
+  }
+  return null;
+}
+
+/// ============================================================
+/// scoreAll — HTML index.html L1636-L1704 のロジック
+/// ChartResult からMap画面用の16方位スコアを計算
+/// ============================================================
+
+double _norm360(double d) { d = d % 360; return d < 0 ? d + 360 : d; }
+double _angDist(double a, double b) { final d = (_norm360(a) - _norm360(b)).abs(); return d > 180 ? 360 - d : d; }
+double _cosFall(double dist, double spread) {
+  if (dist >= spread) return 0;
+  return (1 + cos(pi * dist / spread)) / 2;
+}
+
+const _spread = 30.0;
+
+final _dir16Ang = <String, double>{
+  for (int i = 0; i < dir16.length; i++) dir16[i]: i * 22.5,
+};
+
+/// Map画面用アスペクト定義（HTML: index.html ASPECTS — Horo画面とはorb値が異なる）
+const _mapAspects = [
+  {'name':'conjunction','angle':0.0,'orb':8.0,'quality':'neutral','weight':0.6},
+  {'name':'sextile','angle':60.0,'orb':4.0,'quality':'soft','weight':0.8},
+  {'name':'square','angle':90.0,'orb':5.0,'quality':'hard','weight':1.0},
+  {'name':'trine','angle':120.0,'orb':5.0,'quality':'soft','weight':1.0},
+  {'name':'quincunx','angle':150.0,'orb':3.0,'quality':'tense','weight':0.4},
+  {'name':'opposition','angle':180.0,'orb':6.0,'quality':'hard','weight':0.8},
+];
+
+String _qBucket(String q) => (q == 'hard' || q == 'tense') ? 'Hard' : 'Soft';
+
+const _fortunePairs = <String, List<List<String>>>{
+  'healing': [['moon','neptune'],['moon','venus'],['sun','neptune']],
+  'money':   [['jupiter','venus'],['jupiter','sun'],['venus','sun']],
+  'love':    [['venus','mars'],['venus','moon'],['mars','moon']],
+  'work':    [['saturn','sun'],['saturn','mars'],['jupiter','sun'],['jupiter','mars']],
+  'communication': [['mercury','sun'],['mercury','venus'],['mercury','moon']],
+};
+
+const _angleBonus = {'_asc': 1.5, '_dsc': 1.5, '_mc': 1.3, '_ic': 1.3};
+
+Map<String, double> _emptyComp() => {'tSoft': 0, 'tHard': 0, 'pSoft': 0, 'pHard': 0};
+
+List<Map<String, dynamic>> _findAspects(
+  Map<String, double> map1, Map<String, double>? map2, double wMult, String prefix,
+) {
+  final results = <Map<String, dynamic>>[];
+  final same = prefix.isEmpty;
+  final k1 = map1.keys.toList(), k2 = (map2 ?? map1).keys.toList();
+  for (int i = 0; i < k1.length; i++) {
+    final jStart = same ? i + 1 : 0;
+    for (int j = jStart; j < k2.length; j++) {
+      if (same && i == j) continue;
+      final p1 = k1[i], p2 = k2[j];
+      final diff = _angDist(map1[p1]!, same ? map1[p2]! : map2![p2]!);
+      for (final a in _mapAspects) {
+        if ((diff - (a['angle'] as double)).abs() <= (a['orb'] as double)) {
+          results.add({'p1': p1, 'p2': '$prefix$p2', 'type': a['name'], 'quality': a['quality'], 'weight': (a['weight'] as double) * wMult});
+          break;
+        }
+      }
+    }
+  }
+  return results;
+}
+
+class ScoreResult {
+  final Map<String, double> sScores;
+  final Map<String, Map<String, double>> sComp;
+  final Map<String, String?> sFortune;
+  final Map<String, String> pDir;
+  final Map<String, Map<String, double>> fScores;
+  final Map<String, Map<String, Map<String, double>>> fComp;
+
+  ScoreResult({
+    required this.sScores, required this.sComp, required this.sFortune,
+    required this.pDir, required this.fScores, required this.fComp,
+  });
+}
+
+/// ChartResult → Map画面用16方位スコア
+ScoreResult scoreAll(ChartResult chart) {
+  final natalWithAngles = Map<String, double>.from(chart.natal);
+  natalWithAngles['_asc'] = chart.asc;
+  natalWithAngles['_mc'] = chart.mc;
+  natalWithAngles['_dsc'] = chart.dsc;
+  natalWithAngles['_ic'] = chart.ic;
+
+  final tA = chart.transit ?? chart.natal;
+  final nA = natalWithAngles;
+  final pA = chart.progressed ?? chart.natal;
+
+  final tt = _findAspects(tA, null, 1.0, '');
+  final tn = _findAspects(tA, nA, 0.6, 'N:');
+  final pn = _findAspects(pA, nA, 0.5, 'N:');
+  final tp = _findAspects(tA, pA, 0.4, 'P:');
+
+  final tComp = <String, Map<String, double>>{for (final k in tA.keys) k: _emptyComp()};
+  final pComp = <String, Map<String, double>>{for (final k in pA.keys) k: _emptyComp()};
+
+  double getAB(String p2key) {
+    final ak = p2key.replaceAll('N:', '').replaceAll('P:', '');
+    return _angleBonus[ak] ?? 1.0;
+  }
+
+  for (final a in tt) {
+    final b = 't${_qBucket(a['quality'])}';
+    tComp[a['p1']]?[b] = (tComp[a['p1']]?[b] ?? 0) + (a['weight'] as double);
+    tComp[a['p2']]?[b] = (tComp[a['p2']]?[b] ?? 0) + (a['weight'] as double);
+  }
+  for (final a in tn) {
+    if (tComp.containsKey(a['p1'])) {
+      final b = 't${_qBucket(a['quality'])}';
+      tComp[a['p1']]![b] = (tComp[a['p1']]![b] ?? 0) + (a['weight'] as double) * getAB(a['p2']);
+    }
+  }
+  for (final a in pn) {
+    if (pComp.containsKey(a['p1'])) {
+      final b = 'p${_qBucket(a['quality'])}';
+      pComp[a['p1']]![b] = (pComp[a['p1']]![b] ?? 0) + (a['weight'] as double) * getAB(a['p2']);
+    }
+  }
+  for (final a in tp) {
+    if (tComp.containsKey(a['p1'])) {
+      final b = 't${_qBucket(a['quality'])}';
+      tComp[a['p1']]![b] = (tComp[a['p1']]![b] ?? 0) + (a['weight'] as double);
+    }
+  }
+
+  // Spread to 16 directions
+  final sComp = <String, Map<String, double>>{for (final d in dir16) d: _emptyComp()};
+  final sScores = <String, double>{for (final d in dir16) d: 0};
+  bool isAngle(String k) => k.startsWith('_');
+
+  for (final e in tA.entries) {
+    final c = tComp[e.key]!;
+    for (final d in dir16) {
+      final f = _cosFall(_angDist(e.value, _dir16Ang[d]!), _spread);
+      sComp[d]!['tSoft'] = sComp[d]!['tSoft']! + c['tSoft']! * f;
+      sComp[d]!['tHard'] = sComp[d]!['tHard']! + c['tHard']! * f;
+    }
+  }
+  for (final e in pA.entries) {
+    if (isAngle(e.key)) continue;
+    final c = pComp[e.key]!;
+    for (final d in dir16) {
+      final f = _cosFall(_angDist(e.value, _dir16Ang[d]!), _spread);
+      sComp[d]!['pSoft'] = sComp[d]!['pSoft']! + c['pSoft']! * f;
+      sComp[d]!['pHard'] = sComp[d]!['pHard']! + c['pHard']! * f;
+    }
+  }
+  for (final d in dir16) {
+    final c = sComp[d]!;
+    sScores[d] = c['tSoft']! + c['tHard']! + c['pSoft']! + c['pHard']!;
+  }
+
+  // Planet directions
+  final pDir = <String, String>{};
+  for (final e in tA.entries) {
+    if (isAngle(e.key)) continue;
+    String best = 'N'; double bd = 999;
+    for (final d in dir16) {
+      final dd = _angDist(e.value, _dir16Ang[d]!);
+      if (dd < bd) { bd = dd; best = d; }
+    }
+    pDir[e.key] = best;
+  }
+
+  // Fortune per category
+  final fScores = <String, Map<String, double>>{};
+  final fComp = <String, Map<String, Map<String, double>>>{};
+  for (final cat in _fortunePairs.keys) {
+    fScores[cat] = {for (final d in dir16) d: 0};
+    fComp[cat] = {for (final d in dir16) d: _emptyComp()};
+    final pairs = _fortunePairs[cat]!;
+    final cp = <String>{};
+    for (final pr in pairs) { for (final p in pr) { cp.add(p); } }
+    final ctc = <String, Map<String, double>>{for (final p in cp) p: _emptyComp()};
+    final cpc = <String, Map<String, double>>{for (final p in cp) p: _emptyComp()};
+
+    for (final a in tt) {
+      final i1 = cp.contains(a['p1']), i2 = cp.contains(a['p2']);
+      if (!i1 && !i2) continue;
+      final pm = pairs.any((pr) =>
+        (a['p1'] == pr[0] && a['p2'] == pr[1]) || (a['p1'] == pr[1] && a['p2'] == pr[0])
+      ) ? 2.0 : 0.5;
+      final b = 't${_qBucket(a['quality'])}';
+      if (i1) ctc[a['p1']]![b] = ctc[a['p1']]![b]! + (a['weight'] as double) * pm;
+      if (i2) ctc[a['p2']]![b] = ctc[a['p2']]![b]! + (a['weight'] as double) * pm;
+    }
+    for (final a in tn) { if (!cp.contains(a['p1'])) continue; ctc[a['p1']]!['t${_qBucket(a['quality'])}'] = ctc[a['p1']]!['t${_qBucket(a['quality'])}']! + (a['weight'] as double) * 0.5; }
+    for (final a in pn) { final p1 = a['p1'] as String; if (!cp.contains(p1) || !cpc.containsKey(p1)) continue; cpc[p1]!['p${_qBucket(a['quality'])}'] = cpc[p1]!['p${_qBucket(a['quality'])}']! + (a['weight'] as double) * 0.5; }
+    for (final a in tp) { if (!cp.contains(a['p1'])) continue; ctc[a['p1']]!['t${_qBucket(a['quality'])}'] = ctc[a['p1']]!['t${_qBucket(a['quality'])}']! + (a['weight'] as double) * 0.5; }
+
+    for (final p in cp) {
+      if (tA.containsKey(p)) {
+        final c = ctc[p]!;
+        for (final d in dir16) {
+          final f = _cosFall(_angDist(tA[p]!, _dir16Ang[d]!), _spread);
+          fComp[cat]![d]!['tSoft'] = fComp[cat]![d]!['tSoft']! + c['tSoft']! * f;
+          fComp[cat]![d]!['tHard'] = fComp[cat]![d]!['tHard']! + c['tHard']! * f;
+        }
+      }
+      if (pA.containsKey(p)) {
+        final c = cpc[p] ?? _emptyComp();
+        for (final d in dir16) {
+          final f = _cosFall(_angDist(pA[p]!, _dir16Ang[d]!), _spread);
+          fComp[cat]![d]!['pSoft'] = fComp[cat]![d]!['pSoft']! + c['pSoft']! * f;
+          fComp[cat]![d]!['pHard'] = fComp[cat]![d]!['pHard']! + c['pHard']! * f;
+        }
+      }
+    }
+    for (final d in dir16) {
+      final c = fComp[cat]![d]!;
+      fScores[cat]![d] = c['tSoft']! + c['tHard']! + c['pSoft']! + c['pHard']!;
+    }
+  }
+
+  // Dominant fortune
+  final sFortune = <String, String?>{};
+  for (final d in dir16) {
+    String? best; double bv = -1;
+    for (final cat in _fortunePairs.keys) {
+      if (fScores[cat]![d]! > bv) { bv = fScores[cat]![d]!; best = cat; }
+    }
+    sFortune[d] = bv > 0.01 ? best : null;
+  }
+
+  return ScoreResult(
+    sScores: sScores, sComp: sComp, sFortune: sFortune,
+    pDir: pDir, fScores: fScores, fComp: fComp,
+  );
+}

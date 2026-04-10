@@ -2010,11 +2010,7 @@ function Particle(x,y,vx,vy,color,size,life,decay){this.x=x;this.y=y;this.vx=vx;
 Particle.prototype.update=function(){if(this.converge){this.vx+=(this.tx-this.x)*.003;this.vy+=(this.ty-this.y)*.003}this.x+=this.vx;this.y+=this.vy;this.vx*=.97;this.vy*=.97;this.life-=this.decay};
 Particle.prototype.draw=function(ctx){if(this.life<=0)return;var a=this.life/this.maxLife;ctx.globalAlpha=a;ctx.shadowBlur=12;ctx.shadowColor=this.color;ctx.fillStyle=this.color;ctx.beginPath();ctx.arc(this.x,this.y,this.size*a,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0};
 
-function spawnImpact(x,y,n){
-  for(var i=0;i<n;i++){var a=Math.random()*Math.PI*2,sp=2+Math.random()*5;
-    particles.push(new Particle(x,y,Math.cos(a)*sp,Math.sin(a)*sp,Math.random()>.3?GOLD:'#F5D76E',1+Math.random()*2.5,.4+Math.random()*.4,.025))}
-  startAnim();
-}
+// [DELETED] spawnImpact — デッドコード (どこからも呼ばれない)
 function spawnConverge(tx,ty,n){
   var cols=['#FFFBE6','#F5D76E','#FFE8A0',GOLD];
   for(var i=0;i<n;i++){var a=Math.random()*Math.PI*2,d=150+Math.random()*250,sx=tx+Math.cos(a)*d,sy=ty+Math.sin(a)*d,sp=.012+Math.random()*.018;
@@ -2022,7 +2018,7 @@ function spawnConverge(tx,ty,n){
   startAnim();
 }
 
-function launchMeteor(tx,ty){meteor={x:tx-40,y:-20,tx:tx,ty:ty,p:0,sp:.025};startAnim()}
+// [DELETED] launchMeteor — デッドコード (どこからも呼ばれない)
 
 function startAnim(){if(animRunning)return;animRunning=true;animate()}
 function animate(){

@@ -1068,17 +1068,9 @@ function getCardInfo(card) {
 
 // ============================================================
 // 4. LOCATION SELECTOR
-//    selectLocation, getLocationLabel
+//    [DELETED] selectLocation — デッドコード (どこからも呼ばれない、.loc-btn要素も存在しない)
+//    getLocationLabel
 // ============================================================
-
-function selectLocation(loc) {
-  selectedLocation = loc;
-  document.querySelectorAll('.loc-btn').forEach(function(b) {
-    b.classList.toggle('active', b.dataset.loc === loc);
-  });
-  var wrap = document.getElementById('customLocWrap');
-  if (wrap) wrap.classList.toggle('visible', loc === 'custom');
-}
 
 function getLocationLabel() {
   if (selectedLocation === 'custom') {
