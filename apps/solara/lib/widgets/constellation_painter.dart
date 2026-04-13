@@ -41,7 +41,6 @@ class ConstellationPainter extends CustomPainter {
       canvas.save();
       final artAlpha = 0.35 * min(1.0, progress * 2);
       final paint = Paint()
-        ..colorFilter = const ColorFilter.mode(Colors.white, BlendMode.screen)
         ..color = Color.fromRGBO(255, 255, 255, artAlpha);
       if (flipX) {
         canvas.translate(size.width, 0);
@@ -181,7 +180,6 @@ class MiniConstellationPainter extends CustomPainter {
     if (artImage != null) {
       canvas.save();
       final paint = Paint()
-        ..colorFilter = const ColorFilter.mode(Colors.white, BlendMode.screen)
         ..color = const Color.fromRGBO(255, 255, 255, 0.35);
       if (flipX) {
         canvas.translate(size.width, 0);

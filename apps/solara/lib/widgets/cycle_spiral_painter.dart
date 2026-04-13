@@ -136,19 +136,6 @@ class CycleSpiralPainter extends CustomPainter {
     // Sort by z for depth ordering (back to front)
     gaDots.sort((a, b) => a.rz.compareTo(b.rz));
 
-    // ═══ Connection threads: spiral anchor → GA position ═══
-    final threadPaint = Paint()
-      ..color = const Color.fromRGBO(249, 217, 118, 0.15)
-      ..strokeWidth = 0.7
-      ..style = PaintingStyle.stroke;
-
-    for (final gd in gaDots) {
-      if (gd.dayIdx >= spiralDots.length) continue;
-      final sp = spiralDots[gd.dayIdx];
-      // HTML: setLineDash([3, 6]) — approximate with path
-      canvas.drawLine(Offset(sp.x, sp.y), Offset(gd.x, gd.y), threadPaint);
-    }
-
     // ═══ Draw reading dots at GA positions ═══
     for (final gd in gaDots) {
       _drawGADot(canvas, gd, now);
