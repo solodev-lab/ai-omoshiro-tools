@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import '../models/daily_reading.dart';
 import '../theme/solara_colors.dart';
@@ -19,6 +20,7 @@ class CycleSpiralPainter extends CustomPainter {
   final double zoom;
   final double breathPhase; // animation time in seconds
   final DateTime cycleStart;
+  final int bgSeed; // random seed for background stars (changes each session)
 
   CycleSpiralPainter({
     required this.days,
@@ -29,6 +31,7 @@ class CycleSpiralPainter extends CustomPainter {
     required this.zoom,
     required this.breathPhase,
     required this.cycleStart,
+    required this.bgSeed,
   });
 
   // HTML: BREATH_PHASES/PERIODS — deterministic per-dot
@@ -37,13 +40,10 @@ class CycleSpiralPainter extends CustomPainter {
   static final List<double> _breathPeriods =
       List.generate(32, (i) => 2.0 + (sin(i * 0.9)).abs() * 2.0);
 
-  static const double _zSpan = 55;
+  static const double _zSpan = 130;
   static const double _totalTurns = 4.2;
   static const double _pathTurns = 4.6;
-  static const double _goldenAngle = 137.508 * pi / 180;
-  static const double _camAngle55 = 55 * pi / 180;
-
-  /// Hit-testing positions (Layer 3 GA positions for reading dots)
+  /// Hit-testing positions for reading dots on spiral
   List<Offset> dotScreenPositions = [];
   List<double> dotScreenScales = [];
 
@@ -56,10 +56,13 @@ class CycleSpiralPainter extends CustomPainter {
     final activeDays = currentDayIndex + 1;
     final now = breathPhase; // seconds
 
+    // ═══ Layer 0: Background stars ═══
+    _drawBackgroundStars(canvas, size, now);
+
     // ═══ Layer 1: Ghost spiral path ═══
     _drawGhostPath(canvas, cx, cy, fov, b, size);
 
-    // ═══ Layer 2: Spiral anchor dots ═══
+    // ═══ Layer 2: Spiral dots — stars plotted ON the spiral (HTML-style) ═══
     final spiralDots = <_SpiralDot>[];
     for (int d = 1; d <= totalDays; d++) {
       final t = d / totalDays;
@@ -75,74 +78,62 @@ class CycleSpiralPainter extends CustomPainter {
       spiralDots.add(_SpiralDot(x: p.x, y: p.y, s: p.s, d: d, rz: rv.z));
     }
 
-    // Draw spiral anchor dots (Layer 2)
+    // Build hit-test positions
+    dotScreenPositions = List.filled(totalDays, Offset.zero);
+    dotScreenScales = List.filled(totalDays, 1.0);
+
+    // Sort by z for depth ordering (back to front)
+    spiralDots.sort((a, b2) => b2.rz.compareTo(a.rz));
+
     for (final sp in spiralDots) {
-      final sc = max(0.5, sp.s);
       final dayIdx = sp.d - 1;
       final active = sp.d <= activeDays;
       final reading = dayIdx < days.length ? days[dayIdx] : null;
 
       if (!active) {
-        // HTML: future day — very faint white dot
+        // Future day — ghost dot
+        final sc = max(0.15, sp.s);
         canvas.drawCircle(Offset(sp.x, sp.y), 2.0 * sc,
-          Paint()..color = Color.fromRGBO(255, 255, 255, 0.20 * sc));
+          Paint()..color = Color.fromRGBO(255, 255, 255, 0.10 * sc));
       } else if (reading == null) {
-        // HTML: active but no card — gray dot
+        // Active but no card — gray dot
+        final sc = max(0.15, sp.s);
         canvas.drawCircle(Offset(sp.x, sp.y), 2 * sc,
           Paint()..color = Color.fromRGBO(120, 120, 120, 0.60 * sc));
       } else {
-        // HTML: has reading — tiny white anchor
-        canvas.drawCircle(Offset(sp.x, sp.y), 1.5 * sc,
-          Paint()..color = Color.fromRGBO(255, 255, 255, 0.20 * sc));
+        // Has reading — draw full star at spiral position
+        final gd = _GADot(x: sp.x, y: sp.y, s: sp.s, rz: sp.rz, dayIdx: dayIdx);
+        _drawGADot(canvas, gd, now);
+        dotScreenPositions[dayIdx] = Offset(sp.x, sp.y);
+        dotScreenScales[dayIdx] = sp.s;
       }
-    }
-
-    // ═══ Pre-compute Golden Angle positions ═══
-    final gaPositions = <int, _GAPos>{};
-    int readingIdx = 0;
-    final rng = _Mulberry32(42);
-    for (int d = 0; d < totalDays; d++) {
-      final reading = d < days.length ? days[d] : null;
-      if (reading == null) continue;
-      final angle = reading.cardId * _goldenAngle;
-      final radius = 0.15 + (readingIdx / max(1, activeDays)) * 0.28;
-      final x = 0.5 + radius * cos(angle);
-      final y = 0.5 + radius * sin(angle);
-      final zLayer = (reading.cardId % 3) - 1;
-      final zJitter = (rng.next() - 0.5) * 0.4;
-      gaPositions[d] = _GAPos(
-        gaX: x.clamp(0.08, 0.92),
-        gaY: y.clamp(0.08, 0.92),
-        gaZ: (zLayer + zJitter).clamp(-1.0, 1.0),
-      );
-      readingIdx++;
-    }
-
-    // ═══ Layer 3: Project GA positions through anamorphic 55° camera ═══
-    final gaDots = <_GADot>[];
-    dotScreenPositions = List.filled(totalDays, Offset.zero);
-    dotScreenScales = List.filled(totalDays, 1.0);
-
-    for (final entry in gaPositions.entries) {
-      final d = entry.key; // 0-based
-      if (d >= activeDays) continue;
-      final ga = entry.value;
-      final p = _projectGA3D(ga.gaX, ga.gaY, ga.gaZ, size.width, size.height, cx, cy, fov);
-      gaDots.add(_GADot(x: p.x, y: p.y, s: p.s, rz: p.rz, dayIdx: d));
-      dotScreenPositions[d] = Offset(p.x, p.y);
-      dotScreenScales[d] = p.s;
-    }
-
-    // Sort by z for depth ordering (back to front)
-    gaDots.sort((a, b) => a.rz.compareTo(b.rz));
-
-    // ═══ Draw reading dots at GA positions ═══
-    for (final gd in gaDots) {
-      _drawGADot(canvas, gd, now);
     }
 
     // ═══ Center Stella glow ═══
     _drawStellaCore(canvas, cx, cy);
+  }
+
+  // ═══ Layer 0: Background stars — ported from HTML .star twinkle ═══
+  // 30 small dots, no MaskFilter.blur, just alpha animation
+  void _drawBackgroundStars(Canvas canvas, Size size, double now) {
+    final rng = _Mulberry32(bgSeed);
+    const count = 30;
+    for (int i = 0; i < count; i++) {
+      final x = rng.next() * size.width;
+      final y = rng.next() * size.height;
+      final radius = 0.5 + rng.next() * 1.0; // 0.5~1.5px
+      // HTML: --dur 4-10s, --op 0.1-0.35
+      final dur = 4.0 + rng.next() * 6.0;
+      final delay = rng.next() * dur;
+      final baseOp = 0.10 + rng.next() * 0.25;
+      // Twinkle: fade between baseOp and 0.8
+      final t = (sin((now + delay) / dur * 2 * pi) + 1) / 2; // 0~1
+      final alpha = baseOp + (0.8 - baseOp) * t;
+      canvas.drawCircle(
+        Offset(x, y), radius,
+        Paint()..color = Color.fromRGBO(255, 255, 255, alpha),
+      );
+    }
   }
 
   // ═══ Layer 1: Ghost spiral path with fade ═══
@@ -189,98 +180,118 @@ class CycleSpiralPainter extends CustomPainter {
     final isFullMoon = MoonPhase.isFullMoon(dayDate);
     final isNewMoon = MoonPhase.isNewMoon(dayDate);
     final isCurrent = dayIdx == currentDayIndex;
-    final sc = max(0.5, gd.s);
+    final sc = max(0.15, gd.s);
 
     // Breathing
     final bPhase = dayIdx < _breathPhases.length ? _breathPhases[dayIdx] : dayIdx * 0.71;
     final bPeriod = dayIdx < _breathPeriods.length ? _breathPeriods[dayIdx] : 3.0;
     final breath = 0.7 + 0.3 * sin(now / bPeriod + bPhase);
 
-    // Color from card
-    final Color col;
+    // Color: gold-based unified palette
+    // Core color: Major=bright gold, Minor=pale gold/warm white
+    // Glow color: element/planet tint at very low saturation
+    final Color coreCol;
+    final Color glowCol;
     if (card.isMajor) {
-      col = SolaraColors.planetColor(card.planet ?? 'sun');
+      coreCol = const Color(0xFFF6BD60); // bright gold
+      glowCol = SolaraColors.planetColor(card.planet ?? 'sun');
     } else {
-      col = SolaraColors.elementColor(card.element);
+      coreCol = const Color(0xFFE8D5A8); // pale warm gold
+      glowCol = SolaraColors.elementColor(card.element);
     }
 
-    // Size
-    double baseSize = card.isMajor ? 8.0 : 4.0;
-    double glowBlur = card.isMajor ? 12.0 : 6.0;
-    if (isFullMoon) baseSize *= 1.5;
-    if (isNewMoon) baseSize *= 0.75;
-    if (isCurrent) baseSize = max(baseSize, 6.5);
-    final dotR = max(2.5, baseSize) * sc * breath;
+    // Size: Major=5.0, Minor=2.0–4.0 graduated
+    double baseSize;
+    if (card.isMajor) {
+      baseSize = 5.0;
+    } else {
+      final rank = ((reading.cardId - 22) % 14) + 1; // 1–14
+      baseSize = 2.0 + (rank / 14.0) * 2.0; // 2.0–4.0
+    }
+    double glowBlur = baseSize * 1.2;
+    if (isFullMoon) baseSize = min(baseSize * 1.3, 5.0);
+    if (isNewMoon) baseSize *= 0.8;
+    if (isCurrent) baseSize = max(baseSize, 4.0);
+    final dotR = max(2.0, baseSize) * sc;
 
-    // Glow — brightened
+    // Glow — 8-layer smooth gradient (no visible boundaries)
     final gR = glowBlur * sc;
-    canvas.drawCircle(
-      Offset(gd.x, gd.y), gR,
-      Paint()
-        ..color = col.withValues(alpha: 0.55 * breath * sc)
-        ..maskFilter = MaskFilter.blur(BlurStyle.normal, gR),
-    );
+    final glowCenter = Offset(gd.x, gd.y);
+    final glowA = (card.isMajor ? 0.15 : 0.35) * breath * sc;
+    const glowLayers = 8;
+    for (int i = 0; i < glowLayers; i++) {
+      final t = i / (glowLayers - 1); // 0.0(outer) → 1.0(inner)
+      final r = gR * (1.8 - t * 0.8); // 1.8x → 1.0x
+      final a = glowA * t * t; // quadratic: smooth ramp-up toward center
+      canvas.drawCircle(glowCenter, r,
+        Paint()..color = glowCol.withValues(alpha: a));
+    }
 
-    // Core — brightened
+
+    // Core — semi-transparent 3D sphere
+    final center = Offset(gd.x, gd.y);
+    final hlOff = Offset(gd.x - dotR * 0.3, gd.y - dotR * 0.3);
+    const coreAlpha = 0.7; // 全体透過
     if (isNewMoon) {
-      // HTML: dark core + purple stroke ring
-      canvas.drawCircle(Offset(gd.x, gd.y), dotR,
-        Paint()..color = const Color(0xFF2A0030));
-      canvas.drawCircle(Offset(gd.x, gd.y), dotR + 1,
-        Paint()
-          ..color = const Color(0x669B6BFF) // rgba(155,107,255,0.4)
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 0.8);
+      canvas.drawCircle(center, dotR,
+        Paint()..color = const Color(0xFF2A0030).withValues(alpha: coreAlpha));
     } else {
-      canvas.drawCircle(Offset(gd.x, gd.y), dotR,
-        Paint()..color = col.withValues(alpha: 1.0));
+      final gradient = ui.Gradient.radial(
+        hlOff, dotR,
+        [
+          Color.lerp(coreCol, const Color(0xFFFFFFFF), 0.55)!.withValues(alpha: coreAlpha),
+          coreCol.withValues(alpha: coreAlpha),
+          Color.lerp(coreCol, const Color(0xFF000000), 0.30)!.withValues(alpha: coreAlpha * 0.6),
+        ],
+        [0.0, 0.5, 1.0],
+      );
+      canvas.drawCircle(center, dotR, Paint()..shader = gradient);
+      // Specular dot
+      final specAlpha2 = (dotR - 2.0).clamp(0.0, 2.0) / 2.0 * 0.3;
+      if (specAlpha2 > 0.01) {
+        canvas.drawCircle(hlOff, dotR * 0.18,
+          Paint()..color = Color.fromRGBO(255, 255, 255, specAlpha2));
+      }
     }
 
-    // Full moon ring + radial glow
+    // Major arcana extra glow — half size & half intensity of Full Moon glow
+    if (card.isMajor && !isFullMoon) {
+      const majCol = Color.fromRGBO(255, 240, 192, 1.0);
+      const layers = 8;
+      for (int i = 0; i < layers; i++) {
+        final t = i / (layers - 1);
+        final r = dotR + (11 - t * 7) * sc;
+        final a = 0.07 * t * t;
+        canvas.drawCircle(center, r,
+          Paint()..color = majCol.withValues(alpha: a));
+      }
+    }
+
+    // Full moon radial glow — 8-layer smooth
     if (isFullMoon) {
-      // HTML: dotR + 4*sc, strokeStyle rgba(255,240,192, 0.5*sc), lineWidth 2
-      canvas.drawCircle(Offset(gd.x, gd.y), dotR + 4 * sc,
-        Paint()
-          ..color = Color.fromRGBO(255, 240, 192, 0.5 * sc)
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 2);
-      // Radial glow
-      canvas.drawCircle(Offset(gd.x, gd.y), dotR + 12 * sc,
-        Paint()
-          ..color = const Color.fromRGBO(255, 240, 192, 0.15)
-          ..maskFilter = MaskFilter.blur(BlurStyle.normal, 18 * sc));
-    }
-
-    // Current day ring
-    if (isCurrent) {
-      // HTML: 11*sc radius, rgba(249,217,118, 0.5*sc), lineWidth 1.5
-      canvas.drawCircle(Offset(gd.x, gd.y), 11 * sc,
-        Paint()
-          ..color = Color.fromRGBO(249, 217, 118, 0.5 * sc)
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 1.5);
-    }
-
-    // 5% random ring
-    if (!isFullMoon && !isNewMoon && ((dayIdx + 1) * 31 + totalDays * 7) % 100 < 5) {
-      canvas.drawCircle(Offset(gd.x, gd.y), dotR + 3 * sc,
-        Paint()
-          ..color = col.withValues(alpha: 0.3 * sc)
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 1.2);
+      const fmCol = Color.fromRGBO(255, 240, 192, 1.0);
+      const layers = 8;
+      for (int i = 0; i < layers; i++) {
+        final t = i / (layers - 1); // 0(outer) → 1(inner)
+        final r = dotR + (22 - t * 14) * sc; // +22 → +8
+        final a = 0.14 * t * t;
+        canvas.drawCircle(center, r,
+          Paint()..color = fmCol.withValues(alpha: a));
+      }
     }
   }
 
   void _drawStellaCore(Canvas canvas, double cx, double cy) {
-    // Stella core — brightened
-    canvas.drawCircle(Offset(cx, cy), 24,
-      Paint()
-        ..color = SolaraColors.solaraGold.withValues(alpha: 0.25)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 28));
-    canvas.drawCircle(Offset(cx, cy), 8,
-      Paint()
-        ..color = SolaraColors.solaraGold.withValues(alpha: 0.8)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 10));
+    // Stella core — 20-layer smooth gradient
+    final c = Offset(cx, cy);
+    const layers = 20;
+    for (int i = 0; i < layers; i++) {
+      final t = i / (layers - 1); // 0(outer) → 1(inner)
+      final r = 42 - t * 38; // 42 → 4
+      final a = 0.25 * t * t; // quadratic: smooth 0 → 0.25
+      final col = Color.lerp(SolaraColors.solaraGold, SolaraColors.solaraGoldLight, t)!;
+      canvas.drawCircle(c, r, Paint()..color = col.withValues(alpha: a));
+    }
   }
 
   // ═══ 3D math (HTML: rot3D, proj3D, projectGA3D) ═══
@@ -296,26 +307,10 @@ class CycleSpiralPainter extends CustomPainter {
   ({double x, double y, double s}) _proj3D(
       double x, double y, double z, double fov, double cx, double cy) {
     final s = fov / (fov + z + 260);
-    return (x: cx + x * s, y: cy + y * s, s: s);
+    return (x: cx + x * s, y: cy + y * s, s: 1.0);
   }
 
-  /// HTML: projectGA3D — anamorphic 55° camera projection for Golden Angle positions
-  ({double x, double y, double s, double rz}) _projectGA3D(
-      double nx, double ny, double nz,
-      double w, double h, double cx, double cy, double fov) {
-    final zWorld = nz * 80;
-    final cosA = cos(_camAngle55);
-    final sinA = sin(_camAngle55);
-    final xWorld = (nx - 0.5) * w * 0.85;
-    final yWorld = (ny - 0.5) * h * 0.7;
-    final yTilt = yWorld * cosA - zWorld * sinA;
-    final zTilt = yWorld * sinA + zWorld * cosA;
-    final rv = _rot3D(xWorld, yTilt, zTilt);
-    final s = fov / (fov + rv.z + 260);
-    return (x: cx + rv.x * s, y: cy + rv.y * s, s: s, rz: rv.z);
-  }
-
-  /// Hit-test for tap on GA dots. Returns dayIndex or -1.
+  /// Hit-test for tap on spiral dots. Returns dayIndex or -1.
   int hitTestDot(Offset tapPoint, {double threshold = 28}) {
     int nearest = -1;
     double nearestDist = threshold;
@@ -351,11 +346,6 @@ class _SpiralDot {
   final double x, y, s, rz;
   final int d; // 1-based day
   const _SpiralDot({required this.x, required this.y, required this.s, required this.d, required this.rz});
-}
-
-class _GAPos {
-  final double gaX, gaY, gaZ;
-  const _GAPos({required this.gaX, required this.gaY, required this.gaZ});
 }
 
 class _GADot {

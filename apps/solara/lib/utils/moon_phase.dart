@@ -238,11 +238,12 @@ class MoonPhase {
     return phaseDay < 1.5;
   }
 
-  /// Is today a Full Moon day? (within ±1 day of exact full moon)
+  /// Is today the Full Moon day? (the single closest day to exact full moon)
   static bool isFullMoon(DateTime date) {
     final fullMoon = findFullMoonInCycle(date);
-    final diff = date.toUtc().difference(fullMoon).inHours.abs();
-    return diff < 36; // ±1.5 days
+    final noon = DateTime.utc(date.year, date.month, date.day, 12);
+    final diff = noon.difference(fullMoon).inHours.abs();
+    return diff < 12; // only the single day whose noon is closest
   }
 
   /// Returns (cycleStart, cycleEnd) for the current lunar cycle.

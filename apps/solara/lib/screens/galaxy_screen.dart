@@ -73,9 +73,27 @@ class _GalaxyScreenState extends State<GalaxyScreen>
   // HTML: ART_IMAGES — pre-loaded constellation art images
   final Map<int, ui.Image> _artImages = {};
 
+  // Random seed for background stars & nebula positions (changes each open)
+  final int _bgSeed = DateTime.now().microsecondsSinceEpoch;
+  List<Alignment> _nebulaPositions = [];
+  List<Color> _nebulaColors = [];
+
+  // Nebula color palette (no gold — cool/mysterious tones only)
+  static const _nebulaPalette = [
+    Color(0x60402060), // purple
+    Color(0x50102850), // deep blue
+    Color(0x40102850), // dark blue
+    Color(0x2680D0F0), // light blue
+    Color(0x30304060), // steel blue
+    Color(0x35502060), // violet
+    Color(0x2860A0B0), // teal
+    Color(0x30203050), // navy
+  ];
+
   @override
   void initState() {
     super.initState();
+    _initNebulaPositions();
     _breathController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 100),
@@ -88,6 +106,25 @@ class _GalaxyScreenState extends State<GalaxyScreen>
     _autoRotateController.addListener(_onAutoRotate);
 
     _loadData();
+  }
+
+  void _initNebulaPositions() {
+    final rng = Random(_bgSeed);
+    double jitter(double base, double range) => base + (rng.nextDouble() - 0.5) * range;
+    _nebulaPositions = [
+      Alignment(jitter(-0.8, 0.4), jitter(-0.6, 0.4)),
+      Alignment(jitter(0.7, 0.4), jitter(0.8, 0.4)),
+      Alignment(jitter(-0.15, 0.3), jitter(0.15, 0.3)),
+      Alignment(jitter(-0.7, 0.4), jitter(0.6, 0.4)),
+      Alignment(jitter(0.0, 0.15), jitter(0.0, 0.15)),    // center gold (fixed color)
+    ];
+    // Random colors for first 4 nebulae (center stays gold)
+    _nebulaColors = [
+      _nebulaPalette[rng.nextInt(_nebulaPalette.length)],
+      _nebulaPalette[rng.nextInt(_nebulaPalette.length)],
+      _nebulaPalette[rng.nextInt(_nebulaPalette.length)],
+      _nebulaPalette[rng.nextInt(_nebulaPalette.length)],
+    ];
   }
 
   @override
@@ -321,6 +358,32 @@ class _GalaxyScreenState extends State<GalaxyScreen>
       child: SafeArea(
         child: Stack(
           children: [
+            // Nebula-like background gradients (positions randomized per session)
+            Positioned.fill(
+              child: IgnorePointer(
+                child: Stack(children: [
+                  if (_nebulaColors.length >= 4) ...[
+                    Container(decoration: BoxDecoration(gradient: RadialGradient(
+                      center: _nebulaPositions[0], radius: 0.8,
+                      colors: [_nebulaColors[0], const Color(0x00000000)]))),
+                    Container(decoration: BoxDecoration(gradient: RadialGradient(
+                      center: _nebulaPositions[1], radius: 0.7,
+                      colors: [_nebulaColors[1], const Color(0x00000000)]))),
+                    Container(decoration: BoxDecoration(gradient: RadialGradient(
+                      center: _nebulaPositions[2], radius: 0.6,
+                      colors: [_nebulaColors[2], const Color(0x00000000)]))),
+                    Container(decoration: BoxDecoration(gradient: RadialGradient(
+                      center: _nebulaPositions[3], radius: 0.65,
+                      colors: [_nebulaColors[3], const Color(0x00000000)]))),
+                  ],
+                  // Center: warm gold glow (fixed)
+                  Container(decoration: BoxDecoration(gradient: RadialGradient(
+                    center: _nebulaPositions.length > 4 ? _nebulaPositions[4] : Alignment.center,
+                    radius: 0.45,
+                    colors: const [Color(0x30F9D976), Color(0x00000000)]))),
+                ]),
+              ),
+            ),
             Column(
               children: [
                 _buildTabBar(),
@@ -399,6 +462,7 @@ class _GalaxyScreenState extends State<GalaxyScreen>
                 rotX: _rotX, rotY: _rotY, zoom: _zoom,
                 breathPhase: _breathController.value * 100,
                 cycleStart: _cycleStart,
+                bgSeed: _bgSeed,
               );
               _lastPainter = painter;
               return CustomPaint(painter: painter, size: Size.infinite);
