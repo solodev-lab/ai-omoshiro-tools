@@ -32,16 +32,22 @@ class ConstellationPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     if (cycle.dots.isEmpty) return;
 
-    // HTML: use ADJ_COLOR for cycle color
+    // HTML: use ADJ_COLOR for cycle color (星・線の核は属性色)
     final color = overrideColor ?? ConstellationNamer.adjColor(cycle.adjIdx);
-    final glowColor = color.withAlpha((0.4 * 255).round());
+    // glow は白ベース: 暗い属性でも星・線の存在感を保つ (濃いめ)
+    final glowColor = Colors.white.withAlpha((0.7 * 255).round());
 
-    // HTML: Constellation illustration overlay (screen blend, 18% opacity)
+    // 黒背景→透明化: ColorFilter.matrix で輝度を alpha に変換 (progressでフェードイン)
     if (artImage != null) {
       canvas.save();
-      final artAlpha = 0.35 * min(1.0, progress * 2);
+      final prog = min(1.0, progress * 2);
       final paint = Paint()
-        ..color = Color.fromRGBO(255, 255, 255, artAlpha);
+        ..colorFilter = ColorFilter.matrix([
+          1, 0, 0, 0, 0,
+          0, 1, 0, 0, 0,
+          0, 0, 1, 0, 0,
+          0.299 * prog, 0.587 * prog, 0.114 * prog, 0, 0, // alpha = 輝度 × progress
+        ]);
       if (flipX) {
         canvas.translate(size.width, 0);
         canvas.scale(-1, 1);
@@ -115,15 +121,15 @@ class ConstellationPainter extends CustomPainter {
         ..strokeCap = StrokeCap.round);
     }
 
-    // HTML: Anchor dots (large with glow)
+    // HTML: Anchor dots (核=属性色、glow=白で存在感UP)
     final anchorDotCount = (anchors.length * progress.clamp(0.0, 1.0)).floor();
     for (int i = 0; i < anchorDotCount && i < anchors.length; i++) {
       final pos = anchorPositions[i];
       final ds = _depthScale(anchors[i].z, cameraAngle).clamp(0.6, 1.5);
-      // Glow
-      final gg = ui.Gradient.radial(pos, 10 * ds, [glowColor, Colors.transparent]);
+      // Glow (白ベース、暗い属性でも見える、濃いめ)
+      final gg = ui.Gradient.radial(pos, 10 * ds, [Colors.white.withAlpha((0.9 * 255).round()), Colors.transparent]);
       canvas.drawCircle(pos, 10 * ds, Paint()..shader = gg);
-      // Core
+      // Core (属性色)
       canvas.drawCircle(pos, 3 * ds, Paint()..color = color.withAlpha((0.9 * 255).round()));
     }
   }
@@ -172,15 +178,22 @@ class MiniConstellationPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     if (cycle.dots.isEmpty) return;
 
-    // HTML: ADJ_COLOR for cycle color
+    // HTML: ADJ_COLOR for cycle color (星・線の核は属性色のまま)
     final color = ConstellationNamer.adjColor(cycle.adjIdx);
-    final glowColor = color.withAlpha((0.4 * 255).round());
+    // glow は白ベース: 暗い属性(Silent/Arcane/Abyssal等)でも星・線の存在感を保つ (濃いめ)
+    final glowColor = Colors.white.withAlpha((0.7 * 255).round());
 
-    // HTML: drawCycleOnCanvas also draws art on 80x80 mini canvas
+    // 黒背景→透明化: ColorFilter.matrix で輝度を alpha に変換
+    // (黒=alpha0 完全透明 / 白=alpha255 完全不透明 / 中間=半透明)
     if (artImage != null) {
       canvas.save();
       final paint = Paint()
-        ..color = const Color.fromRGBO(255, 255, 255, 0.35);
+        ..colorFilter = const ColorFilter.matrix([
+          1, 0, 0, 0, 0,
+          0, 1, 0, 0, 0,
+          0, 0, 1, 0, 0,
+          0.299, 0.587, 0.114, 0, 0, // alpha = 輝度 (ITU-R BT.601)
+        ]);
       if (flipX) {
         canvas.translate(size.width, 0);
         canvas.scale(-1, 1);
@@ -211,27 +224,29 @@ class MiniConstellationPainter extends CustomPainter {
     // Draw edges
     for (final e in edges) {
       if (e.from >= anchors.length || e.to >= anchors.length) continue;
-      // Glow
+      // Glow (濃いめ・太め・強いblur)
       canvas.drawLine(anchors[e.from], anchors[e.to], Paint()
         ..color = glowColor
-        ..strokeWidth = 1.5
+        ..strokeWidth = 2.5
         ..style = PaintingStyle.stroke
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6));
-      // Line
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 9));
+      // Line (核: 属性色、太く)
       canvas.drawLine(anchors[e.from], anchors[e.to], Paint()
-        ..color = color.withAlpha((0.6 * 255).round())
-        ..strokeWidth = 0.8
+        ..color = color.withAlpha((0.8 * 255).round())
+        ..strokeWidth = 1.2
         ..style = PaintingStyle.stroke);
     }
 
-    // Draw field dots
+    // Draw field dots (暗い星→明るい星同等に: α 0.3→0.8)
     for (final pos in fields) {
-      canvas.drawCircle(pos, 1.0, Paint()..color = color.withAlpha((0.3 * 255).round()));
+      canvas.drawCircle(pos, 1.3, Paint()..color = color.withAlpha((0.8 * 255).round()));
     }
 
-    // Draw anchor dots
+    // Draw anchor dots (glow半径UP + core UP: Miniでも存在感を出す)
     for (final pos in anchors) {
-      canvas.drawCircle(pos, 2.5, Paint()..color = color.withAlpha((0.8 * 255).round()));
+      final glow = ui.Gradient.radial(pos, 9, [Colors.white.withAlpha((0.95 * 255).round()), Colors.transparent]);
+      canvas.drawCircle(pos, 9, Paint()..shader = glow);
+      canvas.drawCircle(pos, 3.5, Paint()..color = color);
     }
   }
 

@@ -75,6 +75,8 @@ class GalaxyStarAtlasTab extends StatelessWidget {
   // HTML: .const-card { border-radius:20px; padding:14px; aspect-ratio:0.75; }
   Widget _buildConstellationCard(GalaxyCycle cycle) {
     final adjColor = ConstellationNamer.adjColor(cycle.adjIdx);
+    // パネル色は白方向に50%ブレンド（属性色を残しつつ底上げ、背景はほぼ透明で使う）
+    final lightAdj = Color.lerp(adjColor, Colors.white, 0.5) ?? adjColor;
     final anchorCount = cycle.dots.where((d) => d.isMajor).length;
     final starColor = cycle.rarity >= 4 ? const Color(0xFFF9D976)
         : cycle.rarity >= 3 ? const Color(0xFFB080FF) : const Color(0xFF888888);
@@ -87,10 +89,10 @@ class GalaxyStarAtlasTab extends StatelessWidget {
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft, end: Alignment.bottomRight,
-            colors: [adjColor.withAlpha((0.12 * 255).round()), adjColor.withAlpha((0.03 * 255).round())],
+            colors: [lightAdj.withAlpha((0.08 * 255).round()), lightAdj.withAlpha((0.03 * 255).round())],
           ),
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: adjColor.withAlpha((0.25 * 255).round())),
+          border: Border.all(color: lightAdj.withAlpha((0.3 * 255).round())),
         ),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Expanded(child: Center(child: CustomPaint(

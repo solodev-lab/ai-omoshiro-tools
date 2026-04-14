@@ -868,3 +868,43 @@
 
 ### ビルド状況
 - flutter analyze: error/warningゼロ（全プロジェクト）
+
+## 2026-04-14 セッション: Solara Star Atlas画面 星座絵精緻化
+
+### 星座テンプレート修正 (constellation_namer.dart + galaxy.html)
+- Crux(57): 円+十字 → 十字のみ9点、shape 'loop'→'open'
+- Mobius(60): 楕円 → ∞軌跡12点、新shape 'infinity' を buildEdges に追加
+- Prism(58): 6点 → 10点プリズム+光線、shape 'closed'→'open'
+- Bow(16): 弓向き → 時計回り90°に合わせて三角形頂点左へ反転
+- Leviathan(18): 6点 → 12点C字型（右開口）
+- Excalibur(24): 十字鍔を下部(.5,.75)に、shape 'linear'→'open'
+- Harp(48): 6点 → 10点（左柱+中央縦線+右頂点V型）
+- Lyre(50): 10点 → 13点（縦弦3本×3段）、shape 'closed'→'open'
+
+### 星座絵画像 (assets/constellation-art/)
+- 白枠検出・除去 10画像: chalice/arrow/griffin/anchor/wing/serpent/unicorn/sword/jewel/mirror
+- bow.webp を時計回り90度回転（弦=右、本体=左）
+- 元画像を assets/constellation-art-backup/ に保存
+- tools/ に画像処理Pythonスクリプト5個追加: detect_white_border.py, fix_white_borders.py, rotate_bow.py, check_black_level.py, show_border.py
+
+### 星座絵描画方式改善 (constellation_painter.dart)
+- ColorFilter.matrix(輝度→alpha)で黒背景を完全透明化、BlendMode.screen廃止
+- glow色を属性色→白ベースに変更（暗いSilent/Abyssal等でも星・線が見える）
+- glow濃度UP: 線glow α0.4→0.7、anchor星glow α0.55→0.9
+- MiniConstellationPainter のサイズ強化: anchor glow半径5→9, 線太さ1.5→2.5
+
+### Star Atlasカードパネル (galaxy_star_atlas.dart)
+- パネル色を属性色→lightAdj (Color.lerp白ブレンド50%)で明度統一
+- 背景α 0.08/0.03、枠α 0.3（ほぼクリアで星座絵を見やすく）
+
+### Star Atlas帯問題（未解決・次セッション引継）
+- childAspectRatio 0.62→0.775 変更時に「ボトムナビ上の横長矩形」発生
+- 検証結果: nebula/boxShadow/cardBorder/cardGradient いずれも無関係
+- GalaxyStarAtlasTab 空にすると消える → GridView/中身が原因
+- childAspectRatio を0.62に戻しても帯は残る → 帯は childAspect 変更と独立した別要因
+- 帯の原因特定は次セッションで継続
+- 帯問題発生前の健全な状態に全コードを巻き戻し済み
+
+### ファイル構造
+- galaxy画面 5ファイル分割は維持: galaxy_screen.dart / galaxy_constellation_builder.dart / galaxy_star_atlas.dart / galaxy_replay_overlay.dart / widgets/constellation_painter.dart
+
