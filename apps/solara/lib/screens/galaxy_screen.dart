@@ -384,10 +384,15 @@ class _GalaxyScreenState extends State<GalaxyScreen>
                 ]),
               ),
             ),
+            // HTML: .main-area { position:fixed; top:0; left:0; right:0; bottom:80px; }
+            //       → bottom:80px は BottomNav 分。Column 全体は SafeArea で確保済みの
+            //       画面サイズを使い、下余白はルート側 Scaffold.bottomNavigationBar が担う。
             Column(
               children: [
+                // HTML: .inner-tabs (padding:0 20px; margin-bottom:8px)
                 _buildTabBar(),
                 const SizedBox(height: 8),
+                // HTML: .tab-panel.active { flex:1; display:flex; flex-direction:column; }
                 Expanded(
                   child: _activeTab == 0
                       ? _buildCycleTab()
@@ -396,6 +401,13 @@ class _GalaxyScreenState extends State<GalaxyScreen>
                           artImages: _artImages,
                           onOpenReplay: _openReplay,
                         ),
+                ),
+                // HTML: .stella-msg.glass — #panel-cycle/#panel-atlas の外、
+                //       .main-area の末尾にある。両タブで共有表示される。
+                //       margin: 0 16px 6px
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 6),
+                  child: _buildStellaMessage(),
                 ),
               ],
             ),
@@ -471,7 +483,7 @@ class _GalaxyScreenState extends State<GalaxyScreen>
         ),
         Positioned(top: 8, right: 20, child: _buildDayBadge()),
         Positioned(top: 8, left: 20, child: _buildMoonBadge()),
-        Positioned(bottom: 16, left: 16, right: 16, child: _buildStellaMessage()),
+        // Stella は親Columnの末尾で共有表示 (HTML準拠)
       ],
     );
   }
