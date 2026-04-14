@@ -1,0 +1,150 @@
+{
+  "meta": {
+    "version": "1.0",
+    "system": "Golden Dawn",
+    "description": "78枚タロットカードの惑星マッピング表 - Solara Seed Alignment用",
+    "boostType_legend": {
+      "single": "対応惑星ラインが存在するセクターのみブースト",
+      "all": "全方位に均等ブースト",
+      "element": "元素対応の惑星群すべてにブースト"
+    }
+  },
+
+  "majorArcana": [
+    { "id": 0,  "nameEN": "The Fool",           "nameJP": "愚者",         "keyword": "自由と冒険",     "planet": "uranus",  "element": "air",   "boost": 0.05, "boostType": "all",    "emoji": "🌬️",  "displayName": "THE FOOL" },
+    { "id": 1,  "nameEN": "The Magician",        "nameJP": "魔術師",       "keyword": "意志と創造",     "planet": "mercury", "element": "air",   "boost": 0.30, "boostType": "single", "emoji": "⚡",   "displayName": "THE MAGICIAN" },
+    { "id": 2,  "nameEN": "The High Priestess",  "nameJP": "女教皇",       "keyword": "直感と神秘",     "planet": "moon",    "element": "water", "boost": 0.30, "boostType": "single", "emoji": "🌙",   "displayName": "HIGH PRIESTESS" },
+    { "id": 3,  "nameEN": "The Empress",          "nameJP": "女帝",         "keyword": "豊穣と美",       "planet": "venus",   "element": "earth", "boost": 0.30, "boostType": "single", "emoji": "🌸",   "displayName": "THE EMPRESS" },
+    { "id": 4,  "nameEN": "The Emperor",          "nameJP": "皇帝",         "keyword": "統率と秩序",     "planet": "mars",    "element": "fire",  "boost": 0.30, "boostType": "single", "emoji": "🔥",   "displayName": "THE EMPEROR" },
+    { "id": 5,  "nameEN": "The Hierophant",       "nameJP": "法王",         "keyword": "伝統と教え",     "planet": "venus",   "element": "earth", "boost": 0.30, "boostType": "single", "emoji": "📿",   "displayName": "THE HIEROPHANT" },
+    { "id": 6,  "nameEN": "The Lovers",           "nameJP": "恋人",         "keyword": "選択と結合",     "planet": "mercury", "element": "air",   "boost": 0.30, "boostType": "single", "emoji": "💕",   "displayName": "THE LOVERS" },
+    { "id": 7,  "nameEN": "The Chariot",          "nameJP": "戦車",         "keyword": "勝利と前進",     "planet": "moon",    "element": "water", "boost": 0.30, "boostType": "single", "emoji": "🏆",   "displayName": "THE CHARIOT" },
+    { "id": 8,  "nameEN": "Strength",             "nameJP": "力",           "keyword": "内なる強さ",     "planet": "sun",     "element": "fire",  "boost": 0.30, "boostType": "single", "emoji": "🦁",   "displayName": "STRENGTH" },
+    { "id": 9,  "nameEN": "The Hermit",           "nameJP": "隠者",         "keyword": "内省と知恵",     "planet": "mercury", "element": "earth", "boost": 0.30, "boostType": "single", "emoji": "🏔️",  "displayName": "THE HERMIT" },
+    { "id": 10, "nameEN": "Wheel of Fortune",     "nameJP": "運命の輪",     "keyword": "転機と幸運",     "planet": "jupiter", "element": "fire",  "boost": 0.30, "boostType": "single", "emoji": "🎡",   "displayName": "WHEEL OF FORTUNE" },
+    { "id": 11, "nameEN": "Justice",              "nameJP": "正義",         "keyword": "均衡と真実",     "planet": "venus",   "element": "air",   "boost": 0.30, "boostType": "single", "emoji": "⚖️",  "displayName": "JUSTICE" },
+    { "id": 12, "nameEN": "The Hanged Man",       "nameJP": "吊るされた男", "keyword": "手放しと悟り",   "planet": "neptune", "element": "water", "boost": 0.30, "boostType": "single", "emoji": "🔮",   "displayName": "THE HANGED MAN" },
+    { "id": 13, "nameEN": "Death",                "nameJP": "死神",         "keyword": "変容と再生",     "planet": "pluto",   "element": "water", "boost": 0.30, "boostType": "single", "emoji": "🦋",   "displayName": "DEATH" },
+    { "id": 14, "nameEN": "Temperance",           "nameJP": "節制",         "keyword": "調和と統合",     "planet": "jupiter", "element": "fire",  "boost": 0.30, "boostType": "single", "emoji": "🌈",   "displayName": "TEMPERANCE" },
+    { "id": 15, "nameEN": "The Devil",            "nameJP": "悪魔",         "keyword": "束縛と解放",     "planet": "saturn",  "element": "earth", "boost": 0.30, "boostType": "single", "emoji": "⛓️",  "displayName": "THE DEVIL" },
+    { "id": 16, "nameEN": "The Tower",            "nameJP": "塔",           "keyword": "崩壊と覚醒",     "planet": "mars",    "element": "fire",  "boost": 0.30, "boostType": "single", "emoji": "⚡",   "displayName": "THE TOWER" },
+    { "id": 17, "nameEN": "The Star",             "nameJP": "星",           "keyword": "希望と導き",     "planet": "uranus",  "element": "air",   "boost": 0.30, "boostType": "single", "emoji": "⭐",   "displayName": "THE STAR" },
+    { "id": 18, "nameEN": "The Moon",             "nameJP": "月",           "keyword": "幻想と潜在意識", "planet": "neptune", "element": "water", "boost": 0.30, "boostType": "single", "emoji": "🌕",   "displayName": "THE MOON" },
+    { "id": 19, "nameEN": "The Sun",              "nameJP": "太陽",         "keyword": "喜びと活力",     "planet": "sun",     "element": "fire",  "boost": 0.30, "boostType": "single", "emoji": "☀️",  "displayName": "THE SUN" },
+    { "id": 20, "nameEN": "Judgement",            "nameJP": "審判",         "keyword": "復活と覚醒",     "planet": "pluto",   "element": "fire",  "boost": 0.30, "boostType": "single", "emoji": "🔔",   "displayName": "JUDGEMENT" },
+    { "id": 21, "nameEN": "The World",            "nameJP": "世界",         "keyword": "完成と統合",     "planet": "saturn",  "element": "earth", "boost": 0.25, "boostType": "all",    "emoji": "🌍",   "displayName": "THE WORLD" }
+  ],
+
+  "suitMapping": {
+    "wands":     { "element": "fire",  "planets": ["sun", "mars", "jupiter"],      "emoji": "🔥", "color": "#FF6B35" },
+    "cups":      { "element": "water", "planets": ["moon", "neptune", "pluto"],     "emoji": "🌊", "color": "#4169E1" },
+    "swords":    { "element": "air",   "planets": ["mercury", "uranus", "saturn"],  "emoji": "💨", "color": "#87CEEB" },
+    "pentacles": { "element": "earth", "planets": ["venus", "saturn", "jupiter"],   "emoji": "🌿", "color": "#2E8B57" }
+  },
+
+  "numberBoost": {
+    "1":  0.25,
+    "2":  0.15,
+    "3":  0.15,
+    "4":  0.20,
+    "5":  0.20,
+    "6":  0.20,
+    "7":  0.10,
+    "8":  0.10,
+    "9":  0.10,
+    "10": 0.20
+  },
+
+  "courtBoost": {
+    "page":   { "extraPlanets": ["mercury"],         "boost": 0.15 },
+    "knight": { "extraPlanets": ["mars"],            "boost": 0.20 },
+    "queen":  { "extraPlanets": ["moon", "venus"],   "boost": 0.15 },
+    "king":   { "extraPlanets": ["sun", "jupiter"],  "boost": 0.20 }
+  },
+
+  "minorArcana": [
+    { "suit": "wands", "rank": 1,  "nameEN": "Ace of Wands",      "nameJP": "ワンドのエース",   "keyword": "情熱の始まり",     "displayName": "WAND ACE" },
+    { "suit": "wands", "rank": 2,  "nameEN": "Two of Wands",      "nameJP": "ワンドの2",        "keyword": "計画と決断",       "displayName": "WAND II" },
+    { "suit": "wands", "rank": 3,  "nameEN": "Three of Wands",    "nameJP": "ワンドの3",        "keyword": "展望と拡大",       "displayName": "WAND III" },
+    { "suit": "wands", "rank": 4,  "nameEN": "Four of Wands",     "nameJP": "ワンドの4",        "keyword": "祝福と安定",       "displayName": "WAND IV" },
+    { "suit": "wands", "rank": 5,  "nameEN": "Five of Wands",     "nameJP": "ワンドの5",        "keyword": "競争と成長",       "displayName": "WAND V" },
+    { "suit": "wands", "rank": 6,  "nameEN": "Six of Wands",      "nameJP": "ワンドの6",        "keyword": "勝利と栄光",       "displayName": "WAND VI" },
+    { "suit": "wands", "rank": 7,  "nameEN": "Seven of Wands",    "nameJP": "ワンドの7",        "keyword": "防衛と信念",       "displayName": "WAND VII" },
+    { "suit": "wands", "rank": 8,  "nameEN": "Eight of Wands",    "nameJP": "ワンドの8",        "keyword": "迅速な展開",       "displayName": "WAND VIII" },
+    { "suit": "wands", "rank": 9,  "nameEN": "Nine of Wands",     "nameJP": "ワンドの9",        "keyword": "忍耐と警戒",       "displayName": "WAND IX" },
+    { "suit": "wands", "rank": 10, "nameEN": "Ten of Wands",      "nameJP": "ワンドの10",       "keyword": "重荷と責任",       "displayName": "WAND X" },
+    { "suit": "wands", "rank": 11, "nameEN": "Page of Wands",     "nameJP": "ワンドのペイジ",   "keyword": "冒険の予感",       "displayName": "WAND PAGE",   "court": "page" },
+    { "suit": "wands", "rank": 12, "nameEN": "Knight of Wands",   "nameJP": "ワンドのナイト",   "keyword": "大胆な行動",       "displayName": "WAND KNIGHT", "court": "knight" },
+    { "suit": "wands", "rank": 13, "nameEN": "Queen of Wands",    "nameJP": "ワンドのクイーン", "keyword": "情熱的な魅力",     "displayName": "WAND QUEEN",  "court": "queen" },
+    { "suit": "wands", "rank": 14, "nameEN": "King of Wands",     "nameJP": "ワンドのキング",   "keyword": "ビジョンの統率",   "displayName": "WAND KING",   "court": "king" },
+
+    { "suit": "cups", "rank": 1,  "nameEN": "Ace of Cups",       "nameJP": "カップのエース",   "keyword": "愛の始まり",       "displayName": "CUP ACE" },
+    { "suit": "cups", "rank": 2,  "nameEN": "Two of Cups",       "nameJP": "カップの2",        "keyword": "絆と調和",         "displayName": "CUP II" },
+    { "suit": "cups", "rank": 3,  "nameEN": "Three of Cups",     "nameJP": "カップの3",        "keyword": "再会の喜び",       "displayName": "CUP III" },
+    { "suit": "cups", "rank": 4,  "nameEN": "Four of Cups",      "nameJP": "カップの4",        "keyword": "内省と倦怠",       "displayName": "CUP IV" },
+    { "suit": "cups", "rank": 5,  "nameEN": "Five of Cups",      "nameJP": "カップの5",        "keyword": "喪失と学び",       "displayName": "CUP V" },
+    { "suit": "cups", "rank": 6,  "nameEN": "Six of Cups",       "nameJP": "カップの6",        "keyword": "郷愁と純真",       "displayName": "CUP VI" },
+    { "suit": "cups", "rank": 7,  "nameEN": "Seven of Cups",     "nameJP": "カップの7",        "keyword": "夢と選択",         "displayName": "CUP VII" },
+    { "suit": "cups", "rank": 8,  "nameEN": "Eight of Cups",     "nameJP": "カップの8",        "keyword": "手放しと旅立ち",   "displayName": "CUP VIII" },
+    { "suit": "cups", "rank": 9,  "nameEN": "Nine of Cups",      "nameJP": "カップの9",        "keyword": "願望成就",         "displayName": "CUP IX" },
+    { "suit": "cups", "rank": 10, "nameEN": "Ten of Cups",       "nameJP": "カップの10",       "keyword": "幸福な結末",       "displayName": "CUP X" },
+    { "suit": "cups", "rank": 11, "nameEN": "Page of Cups",      "nameJP": "カップのペイジ",   "keyword": "感性の芽生え",     "displayName": "CUP PAGE",   "court": "page" },
+    { "suit": "cups", "rank": 12, "nameEN": "Knight of Cups",    "nameJP": "カップのナイト",   "keyword": "ロマンの追求",     "displayName": "CUP KNIGHT", "court": "knight" },
+    { "suit": "cups", "rank": 13, "nameEN": "Queen of Cups",     "nameJP": "カップのクイーン", "keyword": "深い共感",         "displayName": "CUP QUEEN",  "court": "queen" },
+    { "suit": "cups", "rank": 14, "nameEN": "King of Cups",      "nameJP": "カップのキング",   "keyword": "感情の統率",       "displayName": "CUP KING",   "court": "king" },
+
+    { "suit": "swords", "rank": 1,  "nameEN": "Ace of Swords",     "nameJP": "ソードのエース",   "keyword": "真実の閃き",       "displayName": "SWORD ACE" },
+    { "suit": "swords", "rank": 2,  "nameEN": "Two of Swords",     "nameJP": "ソードの2",        "keyword": "決断の保留",       "displayName": "SWORD II" },
+    { "suit": "swords", "rank": 3,  "nameEN": "Three of Swords",   "nameJP": "ソードの3",        "keyword": "悲しみと気づき",   "displayName": "SWORD III" },
+    { "suit": "swords", "rank": 4,  "nameEN": "Four of Swords",    "nameJP": "ソードの4",        "keyword": "休息と回復",       "displayName": "SWORD IV" },
+    { "suit": "swords", "rank": 5,  "nameEN": "Five of Swords",    "nameJP": "ソードの5",        "keyword": "衝突と教訓",       "displayName": "SWORD V" },
+    { "suit": "swords", "rank": 6,  "nameEN": "Six of Swords",     "nameJP": "ソードの6",        "keyword": "移行と回復",       "displayName": "SWORD VI" },
+    { "suit": "swords", "rank": 7,  "nameEN": "Seven of Swords",   "nameJP": "ソードの7",        "keyword": "戦略と知恵",       "displayName": "SWORD VII" },
+    { "suit": "swords", "rank": 8,  "nameEN": "Eight of Swords",   "nameJP": "ソードの8",        "keyword": "束縛からの解放",   "displayName": "SWORD VIII" },
+    { "suit": "swords", "rank": 9,  "nameEN": "Nine of Swords",    "nameJP": "ソードの9",        "keyword": "不安と覚醒",       "displayName": "SWORD IX" },
+    { "suit": "swords", "rank": 10, "nameEN": "Ten of Swords",     "nameJP": "ソードの10",       "keyword": "終焉と再出発",     "displayName": "SWORD X" },
+    { "suit": "swords", "rank": 11, "nameEN": "Page of Swords",    "nameJP": "ソードのペイジ",   "keyword": "鋭い観察",         "displayName": "SWORD PAGE",   "court": "page" },
+    { "suit": "swords", "rank": 12, "nameEN": "Knight of Swords",  "nameJP": "ソードのナイト",   "keyword": "果敢な突破",       "displayName": "SWORD KNIGHT", "court": "knight" },
+    { "suit": "swords", "rank": 13, "nameEN": "Queen of Swords",   "nameJP": "ソードのクイーン", "keyword": "明晰な判断",       "displayName": "SWORD QUEEN",  "court": "queen" },
+    { "suit": "swords", "rank": 14, "nameEN": "King of Swords",    "nameJP": "ソードのキング",   "keyword": "知性の統率",       "displayName": "SWORD KING",   "court": "king" },
+
+    { "suit": "pentacles", "rank": 1,  "nameEN": "Ace of Pentacles",     "nameJP": "ペンタクルのエース",   "keyword": "豊かさの種",       "displayName": "PENTACLE ACE" },
+    { "suit": "pentacles", "rank": 2,  "nameEN": "Two of Pentacles",     "nameJP": "ペンタクルの2",        "keyword": "バランスと適応",   "displayName": "PENTACLE II" },
+    { "suit": "pentacles", "rank": 3,  "nameEN": "Three of Pentacles",   "nameJP": "ペンタクルの3",        "keyword": "技術と協力",       "displayName": "PENTACLE III" },
+    { "suit": "pentacles", "rank": 4,  "nameEN": "Four of Pentacles",    "nameJP": "ペンタクルの4",        "keyword": "安定と保守",       "displayName": "PENTACLE IV" },
+    { "suit": "pentacles", "rank": 5,  "nameEN": "Five of Pentacles",    "nameJP": "ペンタクルの5",        "keyword": "試練と希望",       "displayName": "PENTACLE V" },
+    { "suit": "pentacles", "rank": 6,  "nameEN": "Six of Pentacles",     "nameJP": "ペンタクルの6",        "keyword": "分かち合い",       "displayName": "PENTACLE VI" },
+    { "suit": "pentacles", "rank": 7,  "nameEN": "Seven of Pentacles",   "nameJP": "ペンタクルの7",        "keyword": "忍耐と収穫",       "displayName": "PENTACLE VII" },
+    { "suit": "pentacles", "rank": 8,  "nameEN": "Eight of Pentacles",   "nameJP": "ペンタクルの8",        "keyword": "技の鍛錬",         "displayName": "PENTACLE VIII" },
+    { "suit": "pentacles", "rank": 9,  "nameEN": "Nine of Pentacles",    "nameJP": "ペンタクルの9",        "keyword": "自立と豊穣",       "displayName": "PENTACLE IX" },
+    { "suit": "pentacles", "rank": 10, "nameEN": "Ten of Pentacles",     "nameJP": "ペンタクルの10",       "keyword": "遺産と完成",       "displayName": "PENTACLE X" },
+    { "suit": "pentacles", "rank": 11, "nameEN": "Page of Pentacles",    "nameJP": "ペンタクルのペイジ",   "keyword": "学びの始まり",     "displayName": "PENTACLE PAGE",   "court": "page" },
+    { "suit": "pentacles", "rank": 12, "nameEN": "Knight of Pentacles",  "nameJP": "ペンタクルのナイト",   "keyword": "堅実な前進",       "displayName": "PENTACLE KNIGHT", "court": "knight" },
+    { "suit": "pentacles", "rank": 13, "nameEN": "Queen of Pentacles",   "nameJP": "ペンタクルのクイーン", "keyword": "大地の恵み",       "displayName": "PENTACLE QUEEN",  "court": "queen" },
+    { "suit": "pentacles", "rank": 14, "nameEN": "King of Pentacles",    "nameJP": "ペンタクルのキング",   "keyword": "物質の統率",       "displayName": "PENTACLE KING",   "court": "king" }
+  ],
+
+  "planetSymbols": {
+    "sun":     { "symbol": "☉", "nameJP": "太陽",     "color": "#FFD700", "angle": 150 },
+    "moon":    { "symbol": "☽", "nameJP": "月",       "color": "#C0C0C0", "angle": 30 },
+    "mercury": { "symbol": "☿", "nameJP": "水星",     "color": "#87CEEB", "angle": 165 },
+    "venus":   { "symbol": "♀", "nameJP": "金星",     "color": "#FF69B4", "angle": 120 },
+    "mars":    { "symbol": "♂", "nameJP": "火星",     "color": "#FF4500", "angle": 210 },
+    "jupiter": { "symbol": "♃", "nameJP": "木星",     "color": "#FFA500", "angle": 45 },
+    "saturn":  { "symbol": "♄", "nameJP": "土星",     "color": "#808080", "angle": 280 },
+    "uranus":  { "symbol": "♅", "nameJP": "天王星",   "color": "#00CED1", "angle": 310 },
+    "neptune": { "symbol": "♆", "nameJP": "海王星",   "color": "#4169E1", "angle": 160 },
+    "pluto":   { "symbol": "♇", "nameJP": "冥王星",   "color": "#8B0000", "angle": 245 }
+  },
+
+  "sectorDefinitions": [
+    { "dir": "N",  "label": "北",   "start": 337.5, "end": 22.5 },
+    { "dir": "NE", "label": "北東", "start": 22.5,  "end": 67.5 },
+    { "dir": "E",  "label": "東",   "start": 67.5,  "end": 112.5 },
+    { "dir": "SE", "label": "南東", "start": 112.5, "end": 157.5 },
+    { "dir": "S",  "label": "南",   "start": 157.5, "end": 202.5 },
+    { "dir": "SW", "label": "南西", "start": 202.5, "end": 247.5 },
+    { "dir": "W",  "label": "西",   "start": 247.5, "end": 292.5 },
+    { "dir": "NW", "label": "北西", "start": 292.5, "end": 337.5 }
+  ]
+}

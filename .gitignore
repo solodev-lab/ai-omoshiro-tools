@@ -9,3 +9,12 @@ test_ogp.png
 CLAUDE.md
 .obsidian/
 worker/test-server.py
+
+# Node / Wrangler caches (Solaraなどの Cloudflare Worker 用)
+node_modules/
+.wrangler/
+package-lock.json
+
+# 一時ファイル
+tmp_docx.txt
+_*_elements.md

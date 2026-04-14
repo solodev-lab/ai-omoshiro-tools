@@ -1,0 +1,1857 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Solara - Seed Alignment Mockup</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/@turf/turf@7/turf.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #0A0A14;
+    color: #E8E0D0;
+    font-family: 'Segoe UI', 'Helvetica Neue', sans-serif;
+    overflow: hidden;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* ===== Phone frame ===== */
+  .phone-frame {
+    width: 375px;
+    height: 812px;
+    background: #0A0A14;
+    border-radius: 40px;
+    border: 2px solid #1a1a2e;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 0 60px rgba(107, 92, 231, 0.15), 0 0 120px rgba(201, 168, 76, 0.05);
+  }
+
+  /* ===== Status bar ===== */
+  .status-bar {
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    color: #666;
+    letter-spacing: 1px;
+    position: relative;
+    z-index: 100;
+  }
+
+  /* ===== Map container ===== */
+  .map-container {
+    position: absolute;
+    top: 50px;
+    left: 0;
+    right: 0;
+    bottom: 80px;
+    overflow: hidden;
+  }
+
+  #mapCanvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 2;
+    pointer-events: none;
+  }
+
+  /* ===== Particle canvas ===== */
+  #particleCanvas {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 20;
+    pointer-events: none;
+  }
+
+  /* ===== Search bar ===== */
+  .search-bar {
+    position: absolute;
+    top: 55px;
+    left: 16px;
+    right: 16px;
+    z-index: 110;
+    display: none;
+  }
+
+  .search-bar.visible {
+    display: flex;
+    gap: 6px;
+  }
+
+  .search-input {
+    flex: 1;
+    padding: 10px 14px;
+    background: rgba(15, 15, 30, 0.85);
+    backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    color: #E8E0D0;
+    font-size: 13px;
+    outline: none;
+  }
+
+  .search-input:focus {
+    border-color: rgba(201, 168, 76, 0.4);
+  }
+
+  .search-input::placeholder {
+    color: #555;
+  }
+
+  .search-btn {
+    padding: 10px 14px;
+    background: rgba(201, 168, 76, 0.15);
+    border: 1px solid rgba(201, 168, 76, 0.3);
+    border-radius: 10px;
+    color: #C9A84C;
+    font-size: 14px;
+    cursor: pointer;
+  }
+
+  /* Search result popup */
+  .search-result {
+    position: absolute;
+    bottom: 160px;
+    left: 16px;
+    right: 16px;
+    z-index: 110;
+    background: rgba(15, 15, 30, 0.85);
+    backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 14px 16px;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity 0.4s, transform 0.4s;
+    pointer-events: none;
+  }
+
+  .search-result.visible {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+
+  .search-result-name {
+    font-size: 13px;
+    color: #E8E0D0;
+    margin-bottom: 6px;
+  }
+
+  .search-result-sector {
+    font-size: 12px;
+    line-height: 1.5;
+  }
+
+  .search-result-sector.blessed { color: #C9A84C; }
+  .search-result-sector.shadow { color: #8B7AE8; }
+  .search-result-sector.mid { color: #6B8AAB; }
+
+  .search-result-close {
+    position: absolute;
+    top: 8px;
+    right: 12px;
+    background: none;
+    border: none;
+    color: #555;
+    font-size: 16px;
+    cursor: pointer;
+  }
+
+  /* ===== Leaflet overrides ===== */
+  .leaflet-control-zoom, .leaflet-control-attribution {
+    display: none !important;
+  }
+
+  /* Blessed sector glow via CSS */
+  .sector-blessed {
+    filter: drop-shadow(0 0 6px rgba(201, 168, 76, 0.5)) drop-shadow(0 0 12px rgba(80, 210, 255, 0.2));
+  }
+  .sector-shadow {
+    filter: drop-shadow(0 0 4px rgba(107, 92, 231, 0.3));
+  }
+
+  /* ===== Stella message ===== */
+  .stella-message {
+    position: absolute;
+    bottom: 90px;
+    left: 20px;
+    right: 20px;
+    z-index: 110;
+    background: rgba(15, 15, 30, 0.75);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(201, 168, 76, 0.2);
+    border-radius: 16px;
+    padding: 16px 20px;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity 0.8s ease, transform 0.8s ease;
+    pointer-events: none;
+  }
+
+  .stella-message.visible {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+
+  .stella-name {
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: #6B5CE7;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .stella-text {
+    font-size: 13px;
+    line-height: 1.6;
+    color: #E8E0D0;
+  }
+
+  .stella-text .highlight {
+    color: #C9A84C;
+    font-weight: 600;
+  }
+
+  /* ===== Seed badge ===== */
+  .seed-badge {
+    position: absolute;
+    top: 56px;
+    right: 20px;
+    z-index: 110;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: rgba(201, 168, 76, 0.15);
+    border: 1px solid rgba(201, 168, 76, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    opacity: 0;
+    transform: scale(0);
+    transition: opacity 0.5s, transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  .seed-badge.visible {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  /* ===== Card overlay (full screen tarot draw) ===== */
+  .card-overlay {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    z-index: 200;
+    background: rgba(5, 5, 12, 0.95);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.5s;
+  }
+
+  .card-overlay.active {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  .card-prompt {
+    font-size: 14px;
+    color: #666;
+    letter-spacing: 2px;
+    margin-bottom: 40px;
+    text-transform: uppercase;
+    opacity: 0;
+    animation: fadeIn 1s 0.3s forwards;
+  }
+
+  .tarot-card {
+    width: 160px;
+    height: 260px;
+    border-radius: 12px;
+    position: relative;
+    cursor: pointer;
+    transform-style: preserve-3d;
+    transition: transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+
+  .card-back, .card-front {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 12px;
+    backface-visibility: hidden;
+  }
+
+  .card-back {
+    background: linear-gradient(135deg, #1a0a30, #0d0520);
+    border: 1px solid rgba(107, 92, 231, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 30px rgba(107, 92, 231, 0.2);
+  }
+
+  .card-back-pattern {
+    width: 80%;
+    height: 80%;
+    border: 1px solid rgba(107, 92, 231, 0.2);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 40px;
+    background: radial-gradient(circle, rgba(107, 92, 231, 0.1), transparent);
+  }
+
+  .card-front {
+    background: linear-gradient(135deg, #1a1025, #0f0a18);
+    border: 1px solid rgba(201, 168, 76, 0.5);
+    transform: rotateY(180deg);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 40px rgba(201, 168, 76, 0.3);
+  }
+
+  .card-element {
+    font-size: 48px;
+    margin-bottom: 12px;
+    filter: drop-shadow(0 0 15px rgba(201, 168, 76, 0.6));
+  }
+
+  .card-name {
+    font-size: 14px;
+    letter-spacing: 3px;
+    color: #C9A84C;
+    text-transform: uppercase;
+  }
+
+  .card-subtitle {
+    font-size: 11px;
+    color: #8B7A5E;
+    margin-top: 4px;
+    letter-spacing: 1px;
+  }
+
+  .tarot-card.flipped {
+    transform: rotateY(180deg);
+  }
+
+  .tarot-card.shrinking {
+    transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: rotateY(180deg) scale(0.15) translate(400px, -800px);
+    opacity: 0;
+  }
+
+  /* ===== Bottom nav ===== */
+  .bottom-nav {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 80px;
+    background: rgba(10, 10, 20, 0.9);
+    backdrop-filter: blur(10px);
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    padding: 0 20px 15px;
+    z-index: 90;
+  }
+
+  .nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    opacity: 0.4;
+    cursor: pointer;
+    transition: opacity 0.3s;
+  }
+
+  .nav-item.active {
+    opacity: 1;
+  }
+
+  .nav-icon {
+    font-size: 20px;
+  }
+
+  .nav-label {
+    font-size: 9px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .nav-item.active .nav-label {
+    color: #C9A84C;
+  }
+
+  /* ===== CTA Button ===== */
+  .cta-button {
+    position: absolute;
+    bottom: 100px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 80;
+    padding: 14px 32px;
+    background: linear-gradient(135deg, rgba(201, 168, 76, 0.2), rgba(201, 168, 76, 0.1));
+    border: 1px solid rgba(201, 168, 76, 0.4);
+    border-radius: 30px;
+    color: #C9A84C;
+    font-size: 13px;
+    letter-spacing: 2px;
+    cursor: pointer;
+    transition: all 0.3s;
+    backdrop-filter: blur(10px);
+  }
+
+  .cta-button:hover {
+    background: linear-gradient(135deg, rgba(201, 168, 76, 0.3), rgba(201, 168, 76, 0.15));
+    box-shadow: 0 0 30px rgba(201, 168, 76, 0.2);
+  }
+
+  .cta-button.hidden {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateX(-50%) translateY(20px);
+  }
+
+  /* ===== Layer indicator ===== */
+  .layer-indicator {
+    position: absolute;
+    bottom: 90px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 70;
+    display: flex;
+    gap: 8px;
+    opacity: 0;
+    transition: opacity 0.5s;
+  }
+
+  .layer-indicator.visible {
+    opacity: 1;
+  }
+
+  .layer-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+  }
+
+  .layer-dot.l1 { background: rgba(107, 92, 231, 0.6); }
+  .layer-dot.l2 { background: rgba(201, 168, 76, 0.6); }
+  .layer-dot.seed { background: rgba(245, 215, 110, 0.8); }
+
+  /* ===== Screen flash ===== */
+  .screen-flash {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(201, 168, 76, 0.15);
+    z-index: 100;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  /* ===== Gray overlay for pre-seed state ===== */
+  .gray-veil {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(10, 10, 20, 0.5);
+    z-index: 5;
+    transition: opacity 1s ease;
+  }
+
+  .gray-veil.lifted {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  /* ===== Effect video overlay ===== */
+  .effect-video {
+    position: absolute;
+    z-index: 18;
+    pointer-events: none;
+    mix-blend-mode: screen;
+    opacity: 0;
+    transition: opacity 0.3s;
+    object-fit: cover;
+  }
+
+  .effect-video.playing {
+    opacity: 1;
+    animation: effectColorShift 1.5s ease-in-out;
+  }
+
+  @keyframes effectColorShift {
+    0%   { filter: hue-rotate(0deg) brightness(1.2) saturate(1.5); }
+    25%  { filter: hue-rotate(-30deg) brightness(1.5) saturate(1.8); }
+    50%  { filter: hue-rotate(160deg) brightness(1.3) saturate(1.6); }
+    75%  { filter: hue-rotate(60deg) brightness(1.4) saturate(1.4); }
+    100% { filter: hue-rotate(0deg) brightness(1.0) saturate(1.0); }
+  }
+
+  /* ===== Pre-seed prompt ===== */
+  .preseed-prompt {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 30;
+    text-align: center;
+    transition: opacity 0.5s;
+  }
+
+  .preseed-prompt.hidden {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .preseed-icon {
+    font-size: 32px;
+    margin-bottom: 16px;
+    opacity: 0.6;
+    animation: float 3s ease-in-out infinite;
+  }
+
+  .preseed-text {
+    font-size: 12px;
+    color: #555;
+    letter-spacing: 1px;
+    line-height: 1.8;
+  }
+
+  /* ===== Animations ===== */
+  @keyframes fadeIn {
+    to { opacity: 1; }
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+  }
+
+  /* ===== Restart button ===== */
+  .restart-btn {
+    position: absolute;
+    top: 16px;
+    left: 20px;
+    z-index: 150;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 20px;
+    color: #666;
+    font-size: 10px;
+    padding: 6px 14px;
+    cursor: pointer;
+    letter-spacing: 1px;
+  }
+
+  .restart-btn:hover {
+    background: rgba(255,255,255,0.1);
+    color: #999;
+  }
+</style>
+</head>
+<body>
+
+<div class="phone-frame" id="phone">
+  <div class="status-bar">SOLARA</div>
+
+  <button class="restart-btn" onclick="restart()">REPLAY</button>
+
+  <!-- Seed badge (appears after card drawn) -->
+  <div class="seed-badge" id="seedBadge">&#x1F30A;</div>
+
+  <!-- Search bar -->
+  <div class="search-bar" id="searchBar">
+    <input class="search-input" id="searchInput" type="text" placeholder="&#x1F50D; &#x5834;&#x6240;&#x3092;&#x691C;&#x7D22;..." />
+    <button class="search-btn" onclick="doSearch()">&#x2192;</button>
+  </div>
+
+  <!-- Search result -->
+  <div class="search-result" id="searchResult">
+    <button class="search-result-close" onclick="closeSearchResult()">&#x2715;</button>
+    <div class="search-result-name" id="searchResultName"></div>
+    <div class="search-result-sector" id="searchResultSector"></div>
+  </div>
+
+  <!-- Stella message -->
+  <div class="stella-message" id="stellaMsg">
+    <div class="stella-name">&#x2728; Stella</div>
+    <div class="stella-text" id="stellaText">
+      <span class="highlight">『再会の喜び』</span>が今日の種。北東の風が、懐かしい誰かとの縁を運んでくるよ。
+    </div>
+  </div>
+
+  <!-- Map area -->
+  <div class="map-container" id="mapContainer">
+    <div id="leafletMap" style="position:absolute;top:0;left:0;right:0;bottom:0;z-index:1;"></div>
+    <canvas id="mapCanvas"></canvas>
+    <div class="gray-veil" id="grayVeil"></div>
+    <canvas id="particleCanvas"></canvas>
+    <div class="screen-flash" id="screenFlash"></div>
+
+    <!-- Effect video (additive blend via CSS mix-blend-mode: screen) -->
+    <video class="effect-video" id="effectVideo" muted playsinline preload="auto"
+           src="effect_impact.mp4"></video>
+
+    <!-- Pre-seed prompt -->
+    <div class="preseed-prompt" id="preseedPrompt">
+      <div class="preseed-icon">&#x1F331;</div>
+      <div class="preseed-text">
+        &#x4ECA;&#x65E5;&#x306E;&#x65B9;&#x4F4D;&#x306F;&#x307E;&#x3060;&#x7720;&#x3063;&#x3066;&#x3044;&#x308B;&#x3088;<br>
+        Seed&#x30AB;&#x30FC;&#x30C9;&#x3067;&#x8D77;&#x3053;&#x3057;&#x3066;&#xFF1F;
+      </div>
+    </div>
+  </div>
+
+  <!-- CTA Button -->
+  <button class="cta-button" id="ctaButton" onclick="startCardDraw()">
+    &#x1F331; DRAW SEED CARD
+  </button>
+
+  <!-- Layer indicator -->
+  <div class="layer-indicator" id="layerIndicator">
+    <div class="layer-dot l1"></div>
+    <div class="layer-dot l2"></div>
+    <div class="layer-dot seed"></div>
+  </div>
+
+  <!-- Card overlay -->
+  <div class="card-overlay" id="cardOverlay">
+    <div class="card-prompt">TAP TO REVEAL</div>
+    <div class="tarot-card" id="tarotCard" onclick="flipCard()">
+      <div class="card-back">
+        <div class="card-back-pattern">&#x2726;</div>
+      </div>
+      <div class="card-front">
+        <div class="card-element" id="cardEmoji">🌊</div>
+        <div class="card-name" id="cardName">CUP III</div>
+        <div class="card-subtitle" id="cardSubtitle">再会の喜び</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom nav -->
+  <div class="bottom-nav">
+    <div class="nav-item active">
+      <div class="nav-icon">&#x1F9ED;</div>
+      <div class="nav-label">Action</div>
+    </div>
+    <div class="nav-item">
+      <div class="nav-icon">&#x1F300;</div>
+      <div class="nav-label">Rhythm</div>
+    </div>
+    <div class="nav-item">
+      <div class="nav-icon">&#x2728;</div>
+      <div class="nav-label">Intentions</div>
+    </div>
+    <div class="nav-item">
+      <div class="nav-icon">&#x1F464;</div>
+      <div class="nav-label">Profile</div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== Constants =====
+const GOLD = '#C9A84C';
+const GOLD_LIGHT = '#F5D76E';
+
+// ===== State =====
+let state = 'idle';
+let particles = [];
+let mapCtx, particleCtx;
+let mapW, mapH, centerX, centerY;
+let sectorAnimProgress = 0;
+let sectorAnimating = false;
+let breathePhase = 0;
+let impactRings = [];
+let animLoopRunning = false;
+let meteor = null;
+let drawnCard = null;
+let seedBoostData = null;
+
+// ===== Tarot Planet Map (inline from tarot_planet_map.json) =====
+const TAROT_DATA = {
+  majorArcana: [
+    { id:0,  nameJP:'愚者',         planet:'uranus',  boost:0.05, boostType:'all',    emoji:'🌬️', displayName:'THE FOOL',           keyword:'自由と冒険' },
+    { id:1,  nameJP:'魔術師',       planet:'mercury', boost:0.30, boostType:'single', emoji:'⚡',  displayName:'THE MAGICIAN',       keyword:'意志と創造' },
+    { id:2,  nameJP:'女教皇',       planet:'moon',    boost:0.30, boostType:'single', emoji:'🌙',  displayName:'HIGH PRIESTESS',     keyword:'直感と神秘' },
+    { id:3,  nameJP:'女帝',         planet:'venus',   boost:0.30, boostType:'single', emoji:'🌸',  displayName:'THE EMPRESS',        keyword:'豊穣と美' },
+    { id:4,  nameJP:'皇帝',         planet:'mars',    boost:0.30, boostType:'single', emoji:'🔥',  displayName:'THE EMPEROR',        keyword:'統率と秩序' },
+    { id:5,  nameJP:'法王',         planet:'venus',   boost:0.30, boostType:'single', emoji:'📿',  displayName:'THE HIEROPHANT',     keyword:'伝統と教え' },
+    { id:6,  nameJP:'恋人',         planet:'mercury', boost:0.30, boostType:'single', emoji:'💕',  displayName:'THE LOVERS',         keyword:'選択と結合' },
+    { id:7,  nameJP:'戦車',         planet:'moon',    boost:0.30, boostType:'single', emoji:'🏆',  displayName:'THE CHARIOT',        keyword:'勝利と前進' },
+    { id:8,  nameJP:'力',           planet:'sun',     boost:0.30, boostType:'single', emoji:'🦁',  displayName:'STRENGTH',           keyword:'内なる強さ' },
+    { id:9,  nameJP:'隠者',         planet:'mercury', boost:0.30, boostType:'single', emoji:'🏔️', displayName:'THE HERMIT',         keyword:'内省と知恵' },
+    { id:10, nameJP:'運命の輪',     planet:'jupiter', boost:0.30, boostType:'single', emoji:'🎡',  displayName:'WHEEL OF FORTUNE',   keyword:'転機と幸運' },
+    { id:11, nameJP:'正義',         planet:'venus',   boost:0.30, boostType:'single', emoji:'⚖️', displayName:'JUSTICE',            keyword:'均衡と真実' },
+    { id:12, nameJP:'吊るされた男', planet:'neptune', boost:0.30, boostType:'single', emoji:'🔮',  displayName:'THE HANGED MAN',     keyword:'手放しと悟り' },
+    { id:13, nameJP:'死神',         planet:'pluto',   boost:0.30, boostType:'single', emoji:'🦋',  displayName:'DEATH',              keyword:'変容と再生' },
+    { id:14, nameJP:'節制',         planet:'jupiter', boost:0.30, boostType:'single', emoji:'🌈',  displayName:'TEMPERANCE',         keyword:'調和と統合' },
+    { id:15, nameJP:'悪魔',         planet:'saturn',  boost:0.30, boostType:'single', emoji:'⛓️', displayName:'THE DEVIL',          keyword:'束縛と解放' },
+    { id:16, nameJP:'塔',           planet:'mars',    boost:0.30, boostType:'single', emoji:'⚡',  displayName:'THE TOWER',          keyword:'崩壊と覚醒' },
+    { id:17, nameJP:'星',           planet:'uranus',  boost:0.30, boostType:'single', emoji:'⭐',  displayName:'THE STAR',           keyword:'希望と導き' },
+    { id:18, nameJP:'月',           planet:'neptune', boost:0.30, boostType:'single', emoji:'🌕',  displayName:'THE MOON',           keyword:'幻想と潜在意識' },
+    { id:19, nameJP:'太陽',         planet:'sun',     boost:0.30, boostType:'single', emoji:'☀️', displayName:'THE SUN',            keyword:'喜びと活力' },
+    { id:20, nameJP:'審判',         planet:'pluto',   boost:0.30, boostType:'single', emoji:'🔔',  displayName:'JUDGEMENT',          keyword:'復活と覚醒' },
+    { id:21, nameJP:'世界',         planet:'saturn',  boost:0.25, boostType:'all',    emoji:'🌍',  displayName:'THE WORLD',          keyword:'完成と統合' },
+  ],
+  suitMapping: {
+    wands:     { element:'fire',  planets:['sun','mars','jupiter'],     emoji:'🔥', color:'#FF6B35' },
+    cups:      { element:'water', planets:['moon','neptune','pluto'],    emoji:'🌊', color:'#4169E1' },
+    swords:    { element:'air',   planets:['mercury','uranus','saturn'], emoji:'💨', color:'#87CEEB' },
+    pentacles: { element:'earth', planets:['venus','saturn','jupiter'],  emoji:'🌿', color:'#2E8B57' },
+  },
+  numberBoost: { 1:0.25, 2:0.15, 3:0.15, 4:0.20, 5:0.20, 6:0.20, 7:0.10, 8:0.10, 9:0.10, 10:0.20 },
+  courtBoost: {
+    page:   { extraPlanets:['mercury'],        boost:0.15 },
+    knight: { extraPlanets:['mars'],           boost:0.20 },
+    queen:  { extraPlanets:['moon','venus'],   boost:0.15 },
+    king:   { extraPlanets:['sun','jupiter'],  boost:0.20 },
+  },
+  minorArcana: [
+    { suit:'wands',rank:1,nameJP:'ワンドのエース',displayName:'WAND ACE',keyword:'情熱の始まり' },
+    { suit:'wands',rank:2,nameJP:'ワンドの2',displayName:'WAND II',keyword:'計画と決断' },
+    { suit:'wands',rank:3,nameJP:'ワンドの3',displayName:'WAND III',keyword:'展望と拡大' },
+    { suit:'wands',rank:4,nameJP:'ワンドの4',displayName:'WAND IV',keyword:'祝福と安定' },
+    { suit:'wands',rank:5,nameJP:'ワンドの5',displayName:'WAND V',keyword:'競争と成長' },
+    { suit:'wands',rank:6,nameJP:'ワンドの6',displayName:'WAND VI',keyword:'勝利と栄光' },
+    { suit:'wands',rank:7,nameJP:'ワンドの7',displayName:'WAND VII',keyword:'防衛と信念' },
+    { suit:'wands',rank:8,nameJP:'ワンドの8',displayName:'WAND VIII',keyword:'迅速な展開' },
+    { suit:'wands',rank:9,nameJP:'ワンドの9',displayName:'WAND IX',keyword:'忍耐と警戒' },
+    { suit:'wands',rank:10,nameJP:'ワンドの10',displayName:'WAND X',keyword:'重荷と責任' },
+    { suit:'wands',rank:11,nameJP:'ワンドのペイジ',displayName:'WAND PAGE',keyword:'冒険の予感',court:'page' },
+    { suit:'wands',rank:12,nameJP:'ワンドのナイト',displayName:'WAND KNIGHT',keyword:'大胆な行動',court:'knight' },
+    { suit:'wands',rank:13,nameJP:'ワンドのクイーン',displayName:'WAND QUEEN',keyword:'情熱的な魅力',court:'queen' },
+    { suit:'wands',rank:14,nameJP:'ワンドのキング',displayName:'WAND KING',keyword:'ビジョンの統率',court:'king' },
+    { suit:'cups',rank:1,nameJP:'カップのエース',displayName:'CUP ACE',keyword:'愛の始まり' },
+    { suit:'cups',rank:2,nameJP:'カップの2',displayName:'CUP II',keyword:'絆と調和' },
+    { suit:'cups',rank:3,nameJP:'カップの3',displayName:'CUP III',keyword:'再会の喜び' },
+    { suit:'cups',rank:4,nameJP:'カップの4',displayName:'CUP IV',keyword:'内省と倦怠' },
+    { suit:'cups',rank:5,nameJP:'カップの5',displayName:'CUP V',keyword:'喪失と学び' },
+    { suit:'cups',rank:6,nameJP:'カップの6',displayName:'CUP VI',keyword:'郷愁と純真' },
+    { suit:'cups',rank:7,nameJP:'カップの7',displayName:'CUP VII',keyword:'夢と選択' },
+    { suit:'cups',rank:8,nameJP:'カップの8',displayName:'CUP VIII',keyword:'手放しと旅立ち' },
+    { suit:'cups',rank:9,nameJP:'カップの9',displayName:'CUP IX',keyword:'願望成就' },
+    { suit:'cups',rank:10,nameJP:'カップの10',displayName:'CUP X',keyword:'幸福な結末' },
+    { suit:'cups',rank:11,nameJP:'カップのペイジ',displayName:'CUP PAGE',keyword:'感性の芽生え',court:'page' },
+    { suit:'cups',rank:12,nameJP:'カップのナイト',displayName:'CUP KNIGHT',keyword:'ロマンの追求',court:'knight' },
+    { suit:'cups',rank:13,nameJP:'カップのクイーン',displayName:'CUP QUEEN',keyword:'深い共感',court:'queen' },
+    { suit:'cups',rank:14,nameJP:'カップのキング',displayName:'CUP KING',keyword:'感情の統率',court:'king' },
+    { suit:'swords',rank:1,nameJP:'ソードのエース',displayName:'SWORD ACE',keyword:'真実の閃き' },
+    { suit:'swords',rank:2,nameJP:'ソードの2',displayName:'SWORD II',keyword:'決断の保留' },
+    { suit:'swords',rank:3,nameJP:'ソードの3',displayName:'SWORD III',keyword:'悲しみと気づき' },
+    { suit:'swords',rank:4,nameJP:'ソードの4',displayName:'SWORD IV',keyword:'休息と回復' },
+    { suit:'swords',rank:5,nameJP:'ソードの5',displayName:'SWORD V',keyword:'衝突と教訓' },
+    { suit:'swords',rank:6,nameJP:'ソードの6',displayName:'SWORD VI',keyword:'移行と回復' },
+    { suit:'swords',rank:7,nameJP:'ソードの7',displayName:'SWORD VII',keyword:'戦略と知恵' },
+    { suit:'swords',rank:8,nameJP:'ソードの8',displayName:'SWORD VIII',keyword:'束縛からの解放' },
+    { suit:'swords',rank:9,nameJP:'ソードの9',displayName:'SWORD IX',keyword:'不安と覚醒' },
+    { suit:'swords',rank:10,nameJP:'ソードの10',displayName:'SWORD X',keyword:'終焉と再出発' },
+    { suit:'swords',rank:11,nameJP:'ソードのペイジ',displayName:'SWORD PAGE',keyword:'鋭い観察',court:'page' },
+    { suit:'swords',rank:12,nameJP:'ソードのナイト',displayName:'SWORD KNIGHT',keyword:'果敢な突破',court:'knight' },
+    { suit:'swords',rank:13,nameJP:'ソードのクイーン',displayName:'SWORD QUEEN',keyword:'明晰な判断',court:'queen' },
+    { suit:'swords',rank:14,nameJP:'ソードのキング',displayName:'SWORD KING',keyword:'知性の統率',court:'king' },
+    { suit:'pentacles',rank:1,nameJP:'ペンタクルのエース',displayName:'PENTACLE ACE',keyword:'豊かさの種' },
+    { suit:'pentacles',rank:2,nameJP:'ペンタクルの2',displayName:'PENTACLE II',keyword:'バランスと適応' },
+    { suit:'pentacles',rank:3,nameJP:'ペンタクルの3',displayName:'PENTACLE III',keyword:'技術と協力' },
+    { suit:'pentacles',rank:4,nameJP:'ペンタクルの4',displayName:'PENTACLE IV',keyword:'安定と保守' },
+    { suit:'pentacles',rank:5,nameJP:'ペンタクルの5',displayName:'PENTACLE V',keyword:'試練と希望' },
+    { suit:'pentacles',rank:6,nameJP:'ペンタクルの6',displayName:'PENTACLE VI',keyword:'分かち合い' },
+    { suit:'pentacles',rank:7,nameJP:'ペンタクルの7',displayName:'PENTACLE VII',keyword:'忍耐と収穫' },
+    { suit:'pentacles',rank:8,nameJP:'ペンタクルの8',displayName:'PENTACLE VIII',keyword:'技の鍛錬' },
+    { suit:'pentacles',rank:9,nameJP:'ペンタクルの9',displayName:'PENTACLE IX',keyword:'自立と豊穣' },
+    { suit:'pentacles',rank:10,nameJP:'ペンタクルの10',displayName:'PENTACLE X',keyword:'遺産と完成' },
+    { suit:'pentacles',rank:11,nameJP:'ペンタクルのペイジ',displayName:'PENTACLE PAGE',keyword:'学びの始まり',court:'page' },
+    { suit:'pentacles',rank:12,nameJP:'ペンタクルのナイト',displayName:'PENTACLE KNIGHT',keyword:'堅実な前進',court:'knight' },
+    { suit:'pentacles',rank:13,nameJP:'ペンタクルのクイーン',displayName:'PENTACLE QUEEN',keyword:'大地の恵み',court:'queen' },
+    { suit:'pentacles',rank:14,nameJP:'ペンタクルのキング',displayName:'PENTACLE KING',keyword:'物質の統率',court:'king' },
+  ],
+  planetSymbols: {
+    sun:     { symbol:'☉', nameJP:'太陽',   color:'#FFD700', angle:150 },
+    moon:    { symbol:'☽', nameJP:'月',     color:'#C0C0C0', angle:30 },
+    mercury: { symbol:'☿', nameJP:'水星',   color:'#87CEEB', angle:165 },
+    venus:   { symbol:'♀', nameJP:'金星',   color:'#FF69B4', angle:120 },
+    mars:    { symbol:'♂', nameJP:'火星',   color:'#FF4500', angle:210 },
+    jupiter: { symbol:'♃', nameJP:'木星',   color:'#FFA500', angle:45 },
+    saturn:  { symbol:'♄', nameJP:'土星',   color:'#808080', angle:280 },
+    uranus:  { symbol:'♅', nameJP:'天王星', color:'#00CED1', angle:310 },
+    neptune: { symbol:'♆', nameJP:'海王星', color:'#4169E1', angle:160 },
+    pluto:   { symbol:'♇', nameJP:'冥王星', color:'#8B0000', angle:245 },
+  },
+};
+
+// ===== Draw a random card from 78 =====
+function drawRandomCard() {
+  const pool = [];
+  TAROT_DATA.majorArcana.forEach(c => pool.push({ type:'major', ...c }));
+  TAROT_DATA.minorArcana.forEach(c => {
+    const suit = TAROT_DATA.suitMapping[c.suit];
+    pool.push({ type:'minor', emoji: suit.emoji, ...c });
+  });
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
+// ===== Calculate Seed Boost =====
+function calculateSeedBoost(card) {
+  const planets = TAROT_DATA.planetSymbols;
+  const sectorDefs = [
+    { dir:'N',  start:337.5, end:22.5 },
+    { dir:'NE', start:22.5,  end:67.5 },
+    { dir:'E',  start:67.5,  end:112.5 },
+    { dir:'SE', start:112.5, end:157.5 },
+    { dir:'S',  start:157.5, end:202.5 },
+    { dir:'SW', start:202.5, end:247.5 },
+    { dir:'W',  start:247.5, end:292.5 },
+    { dir:'NW', start:292.5, end:337.5 },
+  ];
+  const dirLabels = { N:'北', NE:'北東', E:'東', SE:'南東', S:'南', SW:'南西', W:'西', NW:'北西' };
+
+  // Determine boosted planets and boost amount
+  let boostedPlanets = [];
+  let boostAmount = 0;
+  let boostType = 'element';
+
+  if (card.type === 'major') {
+    boostType = card.boostType;
+    boostAmount = card.boost;
+    if (boostType === 'single') {
+      boostedPlanets = [card.planet];
+    } else {
+      boostedPlanets = Object.keys(planets);
+    }
+  } else {
+    // Minor arcana
+    const suit = TAROT_DATA.suitMapping[card.suit];
+    boostedPlanets = [...suit.planets];
+    if (card.court) {
+      const court = TAROT_DATA.courtBoost[card.court];
+      boostAmount = court.boost;
+      court.extraPlanets.forEach(p => {
+        if (!boostedPlanets.includes(p)) boostedPlanets.push(p);
+      });
+    } else {
+      boostAmount = TAROT_DATA.numberBoost[card.rank] || 0.15;
+    }
+  }
+
+  // Determine which sector each planet falls into
+  function angleToSector(angle) {
+    for (const s of sectorDefs) {
+      if (s.start > s.end) {
+        if (angle >= s.start || angle < s.end) return s.dir;
+      } else {
+        if (angle >= s.start && angle < s.end) return s.dir;
+      }
+    }
+    return 'N';
+  }
+
+  // Base sector scores (from transit planets)
+  const sectorScores = {};
+  sectorDefs.forEach(s => { sectorScores[s.dir] = 0.3; });
+
+  // Each planet contributes to its sector
+  Object.entries(planets).forEach(([name, p]) => {
+    const dir = angleToSector(p.angle);
+    sectorScores[dir] += 0.15;
+  });
+
+  // Apply Seed Boost
+  const boostedSectors = {};
+  boostedPlanets.forEach(pName => {
+    if (planets[pName]) {
+      const dir = angleToSector(planets[pName].angle);
+      if (!boostedSectors[dir]) boostedSectors[dir] = 0;
+      boostedSectors[dir] += boostAmount;
+      sectorScores[dir] *= (1 + boostAmount);
+    }
+  });
+
+  // Classify sectors: blessed/mid/shadow based on scores
+  const scores = Object.entries(sectorScores).map(([dir, score]) => ({ dir, score }));
+  scores.sort((a, b) => b.score - a.score);
+
+  const sectorTypes = {};
+  scores.forEach((s, i) => {
+    if (i < 2) sectorTypes[s.dir] = 'blessed';
+    else if (i < 5) sectorTypes[s.dir] = 'mid';
+    else sectorTypes[s.dir] = 'shadow';
+  });
+
+  // Find the strongest boosted sector for stella message
+  let strongestDir = null;
+  let strongestBoost = 0;
+  Object.entries(boostedSectors).forEach(([dir, val]) => {
+    if (val > strongestBoost) { strongestBoost = val; strongestDir = dir; }
+  });
+
+  return {
+    sectorTypes,
+    sectorScores,
+    boostedPlanets,
+    boostedSectors,
+    boostAmount,
+    strongestDir,
+    strongestDirLabel: strongestDir ? dirLabels[strongestDir] : '',
+  };
+}
+
+// ===== Generate Stella message =====
+function generateStellaMessage(card, boost) {
+  const dirLabel = boost.strongestDirLabel || '全方位';
+  const keyword = card.keyword;
+  const name = card.nameJP;
+
+  const templates = [
+    `『${name}』が今日の種。${keyword}のエネルギーが${dirLabel}の風に乗って流れているよ。`,
+    `今日のSeedは『${name}』。${dirLabel}に${keyword}の光が差している。足を運んでみて。`,
+    `『${name}』が目覚めた。${keyword}の力が${dirLabel}のセクターを押し上げているよ。`,
+  ];
+  return templates[Math.floor(Math.random() * templates.length)];
+}
+
+// ===== Longitude normalization =====
+function normalizeLng(ptLng, refLng) {
+  let diff = ptLng - refLng;
+  while (diff > 180) diff -= 360;
+  while (diff < -180) diff += 360;
+  return refLng + diff;
+}
+
+// ===== Init =====
+function init() {
+  const mapCanvas = document.getElementById('mapCanvas');
+  const particleCanvas = document.getElementById('particleCanvas');
+  const container = document.getElementById('mapContainer');
+
+  const rect = container.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+
+  mapW = rect.width;
+  mapH = rect.height;
+  centerX = mapW / 2;
+  centerY = mapH / 2;
+
+  mapCanvas.width = mapW * dpr;
+  mapCanvas.height = mapH * dpr;
+  mapCanvas.style.width = mapW + 'px';
+  mapCanvas.style.height = mapH + 'px';
+
+  particleCanvas.width = mapW * dpr;
+  particleCanvas.height = mapH * dpr;
+  particleCanvas.style.width = mapW + 'px';
+  particleCanvas.style.height = mapH + 'px';
+
+  mapCtx = mapCanvas.getContext('2d');
+  mapCtx.scale(dpr, dpr);
+
+  particleCtx = particleCanvas.getContext('2d');
+  particleCtx.scale(dpr, dpr);
+
+  // Skip if Leaflet already initialized
+  if (window._leafletMapReady) {
+    window.leafletMap.invalidateSize();
+    drawMapOverlay();
+    return;
+  }
+
+  const mapCenter = [35.1815, 136.9262];
+  const map = L.map('leafletMap', {
+    zoomControl: false,
+    attributionControl: false,
+    dragging: true,
+    scrollWheelZoom: true,
+    doubleClickZoom: true,
+    touchZoom: true,
+    minZoom: 2,
+    maxZoom: 18,
+    worldCopyJump: false,
+    maxBounds: [[-85, mapCenter[1] - 252], [85, mapCenter[1] + 252]],
+    maxBoundsViscosity: 0.8,
+  }).setView(mapCenter, 16);
+
+  // Dark base tiles
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    subdomains: 'abcd',
+    maxZoom: 19,
+    opacity: 0.7,
+  }).addTo(map);
+
+  // Brighter labels overlay
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png', {
+    subdomains: 'abcd',
+    maxZoom: 19,
+    opacity: 1,
+  }).addTo(map);
+
+  window.leafletMap = map;
+  window._leafletMapReady = true;
+  window.mapCenter = mapCenter;
+  window.geoSectors = [];
+  window.geoSectorsVisible = false;
+  window.baseOverlays = [];
+
+  const lat = mapCenter[0];
+  const lng = mapCenter[1];
+  const dirCenter = turf.point([lng, lat]);
+
+  // 8 direction lines (great circle / geodesic)
+  [0, 45, 90, 135, 180, 225, 270, 315].forEach(deg => {
+    const pts = [];
+    for (let d = 0; d <= 20000; d += 1000) {
+      const pt = turf.destination(dirCenter, d, deg, { units: 'kilometers' });
+      pts.push(L.latLng(pt.geometry.coordinates[1], normalizeLng(pt.geometry.coordinates[0], lng)));
+    }
+    const line = L.polyline(pts, {
+      color: '#C9A84C', weight: 1, opacity: 0.35, dashArray: '4 8'
+    }).addTo(map);
+    window.baseOverlays.push(line);
+  });
+
+  // Direction labels at 3 distances
+  const labelDistances = [2, 150, 1000];
+  const dirDefs = [
+    { text: 'N', angle: 0 }, { text: 'NE', angle: 45 },
+    { text: 'E', angle: 90 }, { text: 'SE', angle: 135 },
+    { text: 'S', angle: 180 }, { text: 'SW', angle: 225 },
+    { text: 'W', angle: 270 }, { text: 'NW', angle: 315 },
+  ];
+  labelDistances.forEach(dist => {
+    dirDefs.forEach(l => {
+      const isCardinal = l.text.length === 1;
+      const pt = turf.destination(dirCenter, dist, l.angle, { units: 'kilometers' });
+      const pos = [pt.geometry.coordinates[1], normalizeLng(pt.geometry.coordinates[0], lng)];
+      const marker = L.marker(pos, {
+        icon: L.divIcon({
+          className: '',
+          html: '<div style="color:rgba(255,255,255,' + (isCardinal ? '0.5' : '0.3') +
+                ');font-size:' + (isCardinal ? '11' : '9') + 'px;text-align:center;font-family:sans-serif;font-weight:bold;">' +
+                l.text + '</div>',
+          iconSize: [20, 14],
+          iconAnchor: [10, 7],
+        }),
+        interactive: false,
+      }).addTo(map);
+      window.baseOverlays.push(marker);
+    });
+  });
+
+  // Center marker (user location)
+  const centerMarker = L.circleMarker(mapCenter, {
+    radius: 4, color: '#E8E0D0', fillColor: '#E8E0D0',
+    fillOpacity: 0.8, weight: 0,
+  }).addTo(map);
+  window.baseOverlays.push(centerMarker);
+
+  drawMapOverlay();
+}
+
+// ===== Thin dark gradient overlay on mapCanvas =====
+function drawMapOverlay() {
+  const ctx = mapCtx;
+  ctx.clearRect(0, 0, mapW, mapH);
+  const bg = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, mapW * 0.7);
+  bg.addColorStop(0, 'rgba(10, 10, 25, 0.1)');
+  bg.addColorStop(1, 'rgba(5, 5, 12, 0.25)');
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, mapW, mapH);
+}
+
+// ===== Particle system =====
+class Particle {
+  constructor(x, y, vx, vy, color, size, life, decay) {
+    this.x = x; this.y = y;
+    this.vx = vx; this.vy = vy;
+    this.color = color;
+    this.size = size;
+    this.life = life;
+    this.maxLife = life;
+    this.decay = decay;
+  }
+  update() {
+    this.x += this.vx;
+    this.y += this.vy;
+    this.vx *= 0.97;
+    this.vy *= 0.97;
+    this.life -= this.decay;
+  }
+  draw(ctx) {
+    if (this.life <= 0) return;
+    const alpha = this.life / this.maxLife;
+    ctx.globalAlpha = alpha;
+    ctx.shadowBlur = 12;
+    ctx.shadowColor = this.color;
+    ctx.fillStyle = this.color;
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.size * alpha, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+  }
+}
+
+function spawnImpactParticles(x, y, count) {
+  for (let i = 0; i < count; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const speed = 2 + Math.random() * 5;
+    const size = 1 + Math.random() * 2.5;
+    const life = 0.4 + Math.random() * 0.4;
+    const color = Math.random() > 0.3 ? GOLD : GOLD_LIGHT;
+    particles.push(new Particle(x, y, Math.cos(angle) * speed, Math.sin(angle) * speed, color, size, life, 0.025));
+  }
+  startAnimLoop();
+}
+
+function spawnConvergingParticles(targetX, targetY, count) {
+  const colors = ['#FFFBE6', '#F5D76E', '#FFE8A0', '#C9A84C'];
+  for (let i = 0; i < count; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const dist = 150 + Math.random() * 250;
+    const startX = targetX + Math.cos(angle) * dist;
+    const startY = targetY + Math.sin(angle) * dist;
+    const speed = 0.012 + Math.random() * 0.018;
+    const color = colors[Math.floor(Math.random() * colors.length)];
+    const p = new Particle(
+      startX, startY,
+      (targetX - startX) * speed,
+      (targetY - startY) * speed,
+      color, 1 + Math.random() * 2.5, 1.2 + Math.random() * 0.8, 0.018
+    );
+    p.converge = true;
+    p.targetX = targetX;
+    p.targetY = targetY;
+    particles.push(p);
+  }
+  startAnimLoop();
+}
+
+// ===== Meteor =====
+function launchMeteor(targetX, targetY) {
+  meteor = {
+    x: targetX - 40, y: -20,
+    targetX: targetX, targetY: targetY,
+    progress: 0, speed: 0.025,
+  };
+  startAnimLoop();
+}
+
+function updateMeteor() {
+  if (!meteor) return;
+  meteor.progress += meteor.speed;
+  meteor.speed += 0.002;
+
+  const t = Math.min(1, meteor.progress);
+  const ease = t * t;
+  meteor.x = (meteor.targetX - 40) + 40 * ease;
+  meteor.y = -20 + (meteor.targetY + 20) * ease;
+
+  if (t >= 0.6 && !meteor.effectStarted) {
+    meteor.effectStarted = true;
+    playEffectVideo(meteor.targetX, meteor.targetY);
+  }
+
+  if (t >= 1 && !meteor.impacted) {
+    meteor.impacted = true;
+    onMeteorImpact(meteor.targetX, meteor.targetY);
+  }
+
+  if (t >= 1) meteor = null;
+}
+
+function drawMeteor(ctx) {
+  if (!meteor) return;
+  const t = Math.min(1, meteor.progress);
+  if (t >= 1) return;
+
+  ctx.save();
+  const headGlow = ctx.createRadialGradient(meteor.x, meteor.y, 0, meteor.x, meteor.y, 12);
+  headGlow.addColorStop(0, 'rgba(245, 215, 110, 0.9)');
+  headGlow.addColorStop(0.5, 'rgba(201, 168, 76, 0.4)');
+  headGlow.addColorStop(1, 'transparent');
+  ctx.fillStyle = headGlow;
+  ctx.beginPath();
+  ctx.arc(meteor.x, meteor.y, 12, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = '#fff';
+  ctx.beginPath();
+  ctx.arc(meteor.x, meteor.y, 2, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+
+// ===== Impact handler =====
+function onMeteorImpact(x, y) {
+  // Screen flash
+  const flash = document.getElementById('screenFlash');
+  flash.style.transition = 'none';
+  flash.style.opacity = '0.6';
+  setTimeout(() => {
+    flash.style.transition = 'opacity 0.6s ease';
+    flash.style.opacity = '0';
+  }, 50);
+
+  // Impact ring + converging particles
+  impactRings.push({ x, y, progress: 0 });
+  startAnimLoop();
+
+  setTimeout(() => {
+    spawnConvergingParticles(centerX, centerY, 60);
+  }, 300);
+
+  // Haptic
+  if (navigator.vibrate) navigator.vibrate([30, 50, 30]);
+
+  // Activate map
+  setTimeout(() => {
+    sectorAnimating = true;
+    sectorAnimProgress = 0;
+    startAnimLoop();
+    setTimeout(() => { sectorAnimating = false; }, 10000);
+    createGeoSectors();
+    addBoostedPlanetLines();
+
+    document.getElementById('grayVeil').classList.add('lifted');
+    document.getElementById('layerIndicator').classList.add('visible');
+    document.getElementById('searchBar').classList.add('visible');
+  }, 300);
+
+  // Stella message (dynamic)
+  setTimeout(() => {
+    if (drawnCard && seedBoostData) {
+      const msg = generateStellaMessage(drawnCard, seedBoostData);
+      document.getElementById('stellaText').innerHTML =
+        '<span class="highlight">『' + drawnCard.nameJP + '』</span>' +
+        msg.replace('『' + drawnCard.nameJP + '』', '');
+    }
+    document.getElementById('stellaMsg').classList.add('visible');
+  }, 1200);
+
+  // Seed badge
+  setTimeout(() => {
+    document.getElementById('seedBadge').classList.add('visible');
+  }, 800);
+}
+
+// ===== Geo-aware sparkles on Canvas =====
+function drawGeoSparkles(ctx) {
+  if (!window.leafletMap || !window.geoSectorsVisible) return;
+
+  const lat = window.mapCenter[0];
+  const lng = window.mapCenter[1];
+  const zoom = window.leafletMap.getZoom();
+  const radiusKm = 40075 * Math.cos(lat * Math.PI / 180) / Math.pow(2, zoom) * 0.3;
+
+  const sparkleColors = [
+    [255, 250, 220],
+    [245, 200, 80],
+    [100, 220, 200],
+    [80, 180, 255],
+    [255, 240, 160],
+  ];
+
+  // Dynamic blessed sectors from Seed Boost
+  const blessedDefs = [];
+  if (window.geoSectors) {
+    window.geoSectors.forEach(s => {
+      if (s.type === 'blessed') {
+        const dirAngles = { N:[347.5,12.5], NE:[32.5,57.5], E:[77.5,102.5], SE:[122.5,147.5], S:[167.5,192.5], SW:[212.5,237.5], W:[257.5,282.5], NW:[302.5,327.5] };
+        const da = dirAngles[s.dir];
+        if (da) blessedDefs.push({ start: da[0], end: da[1] });
+      }
+    });
+  }
+  if (blessedDefs.length === 0) {
+    blessedDefs.push({ start: 85, end: 95 }, { start: 265, end: 275 });
+  }
+
+  blessedDefs.forEach((sector, si) => {
+    for (let s = 0; s < 5; s++) {
+      const angleRange = sector.end - sector.start;
+      const angle = sector.start + angleRange * ((s + 0.5) / 5);
+      const drift = Math.sin(breathePhase * 1.5 + s * 1.1 + si * 3) * 2;
+      const distFrac = 0.2 + 0.5 * ((Math.sin(breathePhase * 1.8 + s * 1.7 + si * 2) + 1) / 2);
+      const distKm = radiusKm * distFrac;
+
+      const center = turf.point([lng, lat]);
+      const dest = turf.destination(center, distKm, angle + drift, { units: 'kilometers' });
+      const screenPt = window.leafletMap.latLngToContainerPoint([dest.geometry.coordinates[1], dest.geometry.coordinates[0]]);
+
+      const sparkleAlpha = 0.5 * sectorAnimProgress * (0.4 + Math.sin(breathePhase * 3.5 + s * 2.3 + si) * 0.6);
+      const sparkleSize = 1.2 + Math.sin(breathePhase * 2.5 + s + si) * 0.8;
+      const sc = sparkleColors[(s + si * 2) % sparkleColors.length];
+
+      ctx.fillStyle = `rgba(${sc[0]}, ${sc[1]}, ${sc[2]}, ${sparkleAlpha})`;
+      ctx.shadowBlur = 8;
+      ctx.shadowColor = `rgba(${sc[0]}, ${sc[1]}, ${sc[2]}, 0.6)`;
+      ctx.beginPath();
+      ctx.arc(screenPt.x, screenPt.y, sparkleSize, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+    }
+  });
+
+  // Center glow pulse
+  const centerPt = window.leafletMap.latLngToContainerPoint(window.mapCenter);
+  const glowSize = 15 + Math.sin(breathePhase * 2) * 5;
+  const glowAlpha = 0.15 + Math.sin(breathePhase * 2) * 0.1;
+  const centerGlow = ctx.createRadialGradient(centerPt.x, centerPt.y, 0, centerPt.x, centerPt.y, glowSize);
+  centerGlow.addColorStop(0, `rgba(201, 168, 76, ${glowAlpha})`);
+  centerGlow.addColorStop(1, 'transparent');
+  ctx.fillStyle = centerGlow;
+  ctx.beginPath();
+  ctx.arc(centerPt.x, centerPt.y, glowSize, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+// ===== Planet lines - all 10 planets, boosted ones highlighted =====
+function addBoostedPlanetLines() {
+  if (window.boostedLines) return;
+  window.boostedLines = [];
+  const lat = window.mapCenter[0];
+  const lng = window.mapCenter[1];
+  const boostDistKm = 20000;
+  const center = turf.point([lng, lat]);
+
+  const planets = TAROT_DATA.planetSymbols;
+  const boosted = seedBoostData ? seedBoostData.boostedPlanets : [];
+
+  window.planetSymbolMarkers = [];
+  Object.entries(planets).forEach(([name, p]) => {
+    const isBoosted = boosted.includes(name);
+    const lineColor = isBoosted ? (p.color || '#C9A84C') : 'rgba(100,100,120,0.4)';
+    const lineWeight = isBoosted ? 2.5 : 1;
+    const lineOpacity = isBoosted ? 0.7 : 0.2;
+
+    const linePoints = [];
+    for (let d = 0; d <= boostDistKm; d += boostDistKm / 20) {
+      const pt = turf.destination(center, d, p.angle, { units: 'kilometers' });
+      linePoints.push(L.latLng(pt.geometry.coordinates[1], normalizeLng(pt.geometry.coordinates[0], lng)));
+    }
+    const line = L.polyline(linePoints, {
+      color: lineColor, weight: lineWeight, opacity: lineOpacity, dashArray: isBoosted ? null : '4 8',
+    }).addTo(window.leafletMap);
+    window.boostedLines.push(line);
+
+    // Planet symbol marker (viewport edge tracking)
+    const bgColor = isBoosted ? 'rgba(201,168,76,0.9)' : 'rgba(60,60,80,0.7)';
+    const glowShadow = isBoosted ? '0 0 12px ' + p.color + ',0 2px 4px rgba(0,0,0,0.4)' : '0 2px 4px rgba(0,0,0,0.3)';
+    const symMarker = L.marker(window.mapCenter, {
+      icon: L.divIcon({
+        className: '',
+        html: '<div style="width:28px;height:28px;border-radius:50%;background:' + bgColor +
+              ';display:flex;align-items:center;justify-content:center;font-size:15px;color:' +
+              (isBoosted ? '#1a0a30' : '#aaa') + ';text-shadow:none;font-weight:bold;box-shadow:' +
+              glowShadow + ';">' + p.symbol + '</div>',
+        iconSize: [28, 28],
+        iconAnchor: [14, 14],
+      }),
+      interactive: false,
+    }).addTo(window.leafletMap);
+    window.boostedLines.push(symMarker);
+    window.planetSymbolMarkers.push({ marker: symMarker, angle: p.angle, lineLatLngs: linePoints });
+  });
+
+  // Liang-Barsky viewport edge tracking
+  function updatePlanetSymbolPositions() {
+    if (!window.planetSymbolMarkers) return;
+    const map = window.leafletMap;
+    const mapSize = map.getSize();
+    const m = 30;
+    const xmin = m, ymin = m, xmax = mapSize.x - m, ymax = mapSize.y - m;
+    window.planetSymbolMarkers.forEach(ps => {
+      const pts = ps.lineLatLngs;
+      let bestExitPx = null;
+      let lastPx = null;
+      let anyInside = false;
+      for (let i = 0; i < pts.length; i++) {
+        const px = map.latLngToContainerPoint(pts[i]);
+        if (px.x >= xmin && px.x <= xmax && px.y >= ymin && px.y <= ymax) anyInside = true;
+        if (i > 0) {
+          const sdx = px.x - lastPx.x;
+          const sdy = px.y - lastPx.y;
+          let t0 = 0, t1 = 1;
+          const sp = [-sdx, sdx, -sdy, sdy];
+          const sq = [lastPx.x - xmin, xmax - lastPx.x, lastPx.y - ymin, ymax - lastPx.y];
+          let valid = true;
+          for (let j = 0; j < 4; j++) {
+            if (sp[j] === 0) {
+              if (sq[j] < 0) { valid = false; break; }
+            } else {
+              const t = sq[j] / sp[j];
+              if (sp[j] < 0) t0 = Math.max(t0, t);
+              else t1 = Math.min(t1, t);
+            }
+          }
+          if (valid && t0 <= t1) {
+            bestExitPx = L.point(lastPx.x + sdx * t1, lastPx.y + sdy * t1);
+          }
+        }
+        lastPx = px;
+      }
+      if (bestExitPx) {
+        ps.marker.setLatLng(map.containerPointToLatLng(bestExitPx));
+        ps.marker.setOpacity(1);
+      } else if (anyInside) {
+        ps.marker.setLatLng(pts[pts.length - 1]);
+        ps.marker.setOpacity(1);
+      } else {
+        ps.marker.setOpacity(0);
+      }
+    });
+  }
+  window.leafletMap.on('move moveend zoomend', updatePlanetSymbolPositions);
+  updatePlanetSymbolPositions();
+
+  // Seed marker (geo)
+  const seedGeo = L.circleMarker(window.mapCenter, {
+    radius: 6, color: '#C9A84C', fillColor: '#F5D76E',
+    fillOpacity: 0.8, weight: 2, opacity: 0.8,
+  }).addTo(window.leafletMap);
+  window.boostedLines.push(seedGeo);
+
+  // Seed emoji label (dynamic from drawn card)
+  const seedEmoji = drawnCard ? drawnCard.emoji : '🌱';
+  const seedLabel = L.marker(window.mapCenter, {
+    icon: L.divIcon({
+      className: '',
+      html: '<div style="font-size:16px;text-align:center;filter:drop-shadow(0 0 6px rgba(201,168,76,0.6));">' + seedEmoji + '</div>',
+      iconSize: [20, 20],
+      iconAnchor: [10, 24],
+    }),
+    interactive: false,
+  }).addTo(window.leafletMap);
+  window.boostedLines.push(seedLabel);
+}
+
+// ===== Geodesic arc helper =====
+function geodesicArc(lat, lng, radiusKm, startBearing, endBearing, steps) {
+  const center = turf.point([lng, lat]);
+  const points = [];
+  for (let i = 0; i <= steps; i++) {
+    const bearing = startBearing + (endBearing - startBearing) * (i / steps);
+    const dest = turf.destination(center, radiusKm, bearing, { units: 'kilometers' });
+    const coords = dest.geometry.coordinates;
+    points.push(L.latLng(coords[1], normalizeLng(coords[0], lng)));
+  }
+  return points;
+}
+
+// ===== Leaflet geo-sector creation (dynamic from Seed Boost) =====
+function createGeoSectors() {
+  if (window.geoSectorsVisible) return;
+  window.geoSectorsVisible = true;
+
+  const lat = window.mapCenter[0];
+  const lng = window.mapCenter[1];
+  const radiusKm = 20000;
+
+  // Build 8 full sectors from Seed Boost data
+  const dirAngles = [
+    { dir:'N',  start:337.5, end:22.5 },
+    { dir:'NE', start:22.5,  end:67.5 },
+    { dir:'E',  start:67.5,  end:112.5 },
+    { dir:'SE', start:112.5, end:157.5 },
+    { dir:'S',  start:157.5, end:202.5 },
+    { dir:'SW', start:202.5, end:247.5 },
+    { dir:'W',  start:247.5, end:292.5 },
+    { dir:'NW', start:292.5, end:337.5 },
+  ];
+
+  // Use seedBoostData if available, otherwise fallback
+  const sectorTypes = seedBoostData ? seedBoostData.sectorTypes : {
+    N:'mid', NE:'blessed', E:'shadow', SE:'shadow', S:'mid', SW:'mid', W:'blessed', NW:'mid'
+  };
+
+  const sectorDefs = dirAngles.map(d => {
+    let startDeg = d.start;
+    let endDeg = d.end;
+    if (startDeg > endDeg) endDeg += 360;
+    return [startDeg, endDeg, sectorTypes[d.dir] || 'mid', d.dir];
+  });
+
+  const typeStyles = {
+    blessed: { color: '#C9A84C', fillColor: '#C9A84C', fillOpacity: 0, weight: 2, opacity: 0 },
+    shadow:  { color: '#6B5CE7', fillColor: '#2D1B4E', fillOpacity: 0, weight: 1, opacity: 0 },
+    mid:     { color: '#3A4A6B', fillColor: '#3A4A6B', fillOpacity: 0, weight: 1, opacity: 0 },
+  };
+
+  const targetStyles = {
+    blessed: { fillOpacity: 0.12, opacity: 0.5, weight: 2 },
+    shadow:  { fillOpacity: 0.10, opacity: 0.25, weight: 1 },
+    mid:     { fillOpacity: 0.06, opacity: 0.2, weight: 1 },
+  };
+
+  sectorDefs.forEach((def, i) => {
+    const [startDeg, endDeg, type, dir] = def;
+    const center = turf.point([lng, lat]);
+    const realStart = startDeg % 360;
+    const realEnd = endDeg % 360;
+
+    // Left edge (great circle)
+    const leftEdge = [];
+    for (let d = 0; d <= radiusKm; d += radiusKm / 30) {
+      const pt = turf.destination(center, d, realStart, { units: 'kilometers' });
+      leftEdge.push(L.latLng(pt.geometry.coordinates[1], normalizeLng(pt.geometry.coordinates[0], lng)));
+    }
+
+    // Outer arc
+    const arcPoints = geodesicArc(lat, lng, radiusKm, startDeg, endDeg, 50);
+
+    // Right edge (reversed)
+    const rightEdge = [];
+    for (let d = radiusKm; d >= 0; d -= radiusKm / 30) {
+      const pt = turf.destination(center, d, realEnd, { units: 'kilometers' });
+      rightEdge.push(L.latLng(pt.geometry.coordinates[1], normalizeLng(pt.geometry.coordinates[0], lng)));
+    }
+
+    const points = [...leftEdge, ...arcPoints, ...rightEdge];
+    const style = typeStyles[type];
+    const polygon = L.polygon(points, { ...style, className: 'sector-' + type }).addTo(window.leafletMap);
+
+    // Show boost indicator on boosted sectors
+    const isBoosted = seedBoostData && seedBoostData.boostedSectors[dir];
+    window.geoSectors.push({ polygon, type, index: i, dir, boosted: !!isBoosted });
+
+    // Fade-in with cascade delay
+    const delay = i * 120;
+    const target = targetStyles[type];
+    setTimeout(() => {
+      let step = 0;
+      const maxSteps = 20;
+      const fadeIn = setInterval(() => {
+        step++;
+        const t = step / maxSteps;
+        polygon.setStyle({
+          fillOpacity: target.fillOpacity * t,
+          opacity: target.opacity * t,
+          weight: target.weight,
+        });
+        if (step >= maxSteps) clearInterval(fadeIn);
+      }, 30);
+    }, delay);
+  });
+
+  // World wrap copies at +/-360
+  function shiftPoints(pts, lngOffset) {
+    return pts.map(p => L.latLng(p.lat, p.lng + lngOffset));
+  }
+
+  window.geoSectors.forEach(s => {
+    const origPts = s.polygon.getLatLngs()[0];
+    const targetStyle = targetStyles[s.type];
+    [-360, 360].forEach(offset => {
+      const shifted = shiftPoints(origPts, offset);
+      L.polygon(shifted, {
+        ...typeStyles[s.type],
+        className: 'sector-' + s.type,
+        fillOpacity: targetStyle.fillOpacity,
+        opacity: targetStyle.opacity,
+        weight: targetStyle.weight,
+      }).addTo(window.leafletMap);
+    });
+  });
+
+  // Store sector types globally for search
+  window.currentSectorTypes = sectorTypes;
+}
+
+// ===== Search & sector detection =====
+let searchMarker = null;
+
+function doSearch() {
+  const query = document.getElementById('searchInput').value.trim();
+  if (!query) return;
+
+  fetch('https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(query) + '&limit=1')
+    .then(r => r.json())
+    .then(results => {
+      if (!results.length) {
+        showSearchResult('見つかりませんでした', '', 'mid');
+        return;
+      }
+      const place = results[0];
+      const lat = parseFloat(place.lat);
+      const lng = parseFloat(place.lon);
+      const name = place.display_name.split(',').slice(0, 2).join(', ');
+
+      document.getElementById('stellaMsg').classList.remove('visible');
+      window.leafletMap.flyTo([lat, lng], 15, { duration: 1 });
+
+      if (searchMarker) window.leafletMap.removeLayer(searchMarker);
+      searchMarker = L.circleMarker([lat, lng], {
+        radius: 8, color: '#fff', fillColor: '#C9A84C',
+        fillOpacity: 0.9, weight: 2,
+      }).addTo(window.leafletMap);
+
+      const sector = detectSector(lat, lng);
+      showSearchResult(name, sector.message, sector.type);
+    })
+    .catch(() => {
+      showSearchResult('検索エラー', '', 'mid');
+    });
+}
+
+function detectSector(targetLat, targetLng) {
+  const centerLat = window.mapCenter[0];
+  const centerLng = window.mapCenter[1];
+
+  const from = turf.point([centerLng, centerLat]);
+  const to = turf.point([targetLng, targetLat]);
+  let bearing = turf.bearing(from, to);
+  if (bearing < 0) bearing += 360;
+
+  const distance = turf.distance(from, to, { units: 'kilometers' });
+
+  // Use dynamic sector types from Seed Boost
+  const st = window.currentSectorTypes || { N:'mid',NE:'blessed',E:'shadow',SE:'shadow',S:'mid',SW:'mid',W:'blessed',NW:'mid' };
+  const sectors = [
+    { start: 337.5, end: 22.5,   type: st['N']  || 'mid',     dir: 'N',  label: '北' },
+    { start: 22.5,  end: 67.5,   type: st['NE'] || 'blessed', dir: 'NE', label: '北東' },
+    { start: 67.5,  end: 112.5,  type: st['E']  || 'shadow',  dir: 'E',  label: '東' },
+    { start: 112.5, end: 157.5,  type: st['SE'] || 'shadow',  dir: 'SE', label: '南東' },
+    { start: 157.5, end: 202.5,  type: st['S']  || 'mid',     dir: 'S',  label: '南' },
+    { start: 202.5, end: 247.5,  type: st['SW'] || 'mid',     dir: 'SW', label: '南西' },
+    { start: 247.5, end: 292.5,  type: st['W']  || 'blessed', dir: 'W',  label: '西' },
+    { start: 292.5, end: 337.5,  type: st['NW'] || 'mid',     dir: 'NW', label: '北西' },
+  ];
+
+  let matched = sectors[0];
+  for (const s of sectors) {
+    if (s.start > s.end) {
+      if (bearing >= s.start || bearing < s.end) { matched = s; break; }
+    } else {
+      if (bearing >= s.start && bearing < s.end) { matched = s; break; }
+    }
+  }
+
+  const distText = distance < 1 ? Math.round(distance * 1000) + 'm' : Math.round(distance) + 'km';
+  const messages = {
+    blessed: '✨ 吉方位（' + matched.label + '・' + distText + '）\nこの場所は金星のエネルギーが流れている方角。今日のデートにぴったり！',
+    shadow: '🌙 要注意方位（' + matched.label + '・' + distText + '）\n今日はこの方角は控えめに。別の日なら輝くかも。',
+    mid: '💫 中間方位（' + matched.label + '・' + distText + '）\n悪くないけど、最高でもない。気楽に楽しめる方角。',
+  };
+
+  return { type: matched.type, message: messages[matched.type] };
+}
+
+function showSearchResult(name, message, type) {
+  document.getElementById('searchResultName').textContent = name;
+  const sectorEl = document.getElementById('searchResultSector');
+  sectorEl.textContent = message;
+  sectorEl.className = 'search-result-sector ' + type;
+  sectorEl.style.whiteSpace = 'pre-line';
+  document.getElementById('searchResult').classList.add('visible');
+}
+
+function closeSearchResult() {
+  document.getElementById('searchResult').classList.remove('visible');
+  if (searchMarker) {
+    window.leafletMap.removeLayer(searchMarker);
+    searchMarker = null;
+  }
+}
+
+// Enter key to search
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Enter' && document.activeElement === document.getElementById('searchInput')) {
+    doSearch();
+  }
+});
+
+// ===== Effect video playback =====
+function playEffectVideo(x, y) {
+  const vid = document.getElementById('effectVideo');
+  const size = 110;
+  vid.style.width = size + 'px';
+  vid.style.height = size + 'px';
+  vid.style.left = (x - size / 2) + 'px';
+  vid.style.top = (y - size / 2) + 'px';
+  vid.currentTime = 0;
+  vid.playbackRate = 3.0;
+  vid.classList.add('playing');
+  vid.play().catch(() => {});
+  vid.onended = () => { vid.classList.remove('playing'); };
+}
+
+// ===== Animation loop (auto-stop when idle) =====
+function startAnimLoop() {
+  if (animLoopRunning) return;
+  animLoopRunning = true;
+  animate();
+}
+
+function animate() {
+  try {
+    const ctx = particleCtx;
+    ctx.clearRect(0, 0, mapW, mapH);
+
+    breathePhase += 0.02;
+
+    // Geo sparkles (Canvas)
+    if (sectorAnimating) {
+      sectorAnimProgress = Math.min(1, sectorAnimProgress + 0.012);
+      drawGeoSparkles(ctx);
+    }
+
+    // Impact rings
+    impactRings = impactRings.filter(ring => {
+      ring.progress += 0.015;
+      if (ring.progress < 1) {
+        const alpha = (1 - ring.progress) * 0.4;
+        ctx.strokeStyle = `rgba(201, 168, 76, ${alpha})`;
+        ctx.lineWidth = 2 * (1 - ring.progress);
+        ctx.beginPath();
+        ctx.arc(ring.x, ring.y, ring.progress * Math.min(mapW, mapH) * 0.3, 0, Math.PI * 2);
+        ctx.stroke();
+        return true;
+      }
+      return false;
+    });
+
+    // Meteor
+    updateMeteor();
+    drawMeteor(ctx);
+
+    // Particles
+    particles = particles.filter(p => p.life > 0);
+    particles.forEach(p => {
+      if (p.converge) {
+        p.vx += (p.targetX - p.x) * 0.003;
+        p.vy += (p.targetY - p.y) * 0.003;
+      }
+      p.update();
+      p.draw(ctx);
+    });
+
+    ctx.globalAlpha = 1;
+  } catch(e) {
+    console.error('animate error:', e);
+  }
+
+  const hasWork = sectorAnimating || impactRings.length > 0 || meteor || particles.length > 0;
+  if (hasWork) {
+    setTimeout(animate, 16);
+  } else {
+    animLoopRunning = false;
+  }
+}
+
+// ===== User interaction flow =====
+function startCardDraw() {
+  state = 'cardOverlay';
+
+  // Draw random card from 78
+  drawnCard = drawRandomCard();
+  seedBoostData = calculateSeedBoost(drawnCard);
+
+  // Update card front display
+  document.getElementById('cardEmoji').textContent = drawnCard.emoji;
+  document.getElementById('cardName').textContent = drawnCard.displayName;
+  document.getElementById('cardSubtitle').textContent = drawnCard.keyword;
+
+  // Update seed badge emoji
+  document.getElementById('seedBadge').textContent = drawnCard.emoji;
+
+  document.getElementById('cardOverlay').classList.add('active');
+  document.getElementById('ctaButton').classList.add('hidden');
+  document.getElementById('preseedPrompt').classList.add('hidden');
+}
+
+function flipCard() {
+  if (state !== 'cardOverlay') return;
+  state = 'flipped';
+  document.getElementById('tarotCard').classList.add('flipped');
+
+  setTimeout(() => {
+    state = 'transitioning';
+    document.getElementById('tarotCard').classList.add('shrinking');
+
+    setTimeout(() => {
+      document.getElementById('cardOverlay').classList.remove('active');
+      launchMeteor(centerX, centerY);
+      state = 'active';
+    }, 600);
+  }, 1200);
+}
+
+function restart() {
+  state = 'idle';
+  particles = [];
+  impactRings = [];
+  meteor = null;
+  drawnCard = null;
+  seedBoostData = null;
+  sectorAnimating = false;
+  sectorAnimProgress = 0;
+
+  document.getElementById('cardOverlay').classList.remove('active');
+  document.getElementById('tarotCard').classList.remove('flipped', 'shrinking');
+  document.getElementById('ctaButton').classList.remove('hidden');
+  document.getElementById('preseedPrompt').classList.remove('hidden');
+  document.getElementById('grayVeil').classList.remove('lifted');
+  document.getElementById('stellaMsg').classList.remove('visible');
+  document.getElementById('seedBadge').classList.remove('visible');
+  document.getElementById('layerIndicator').classList.remove('visible');
+  document.getElementById('searchBar').classList.remove('visible');
+  document.getElementById('searchResult').classList.remove('visible');
+  document.getElementById('screenFlash').style.opacity = '0';
+  const vid = document.getElementById('effectVideo');
+  vid.pause();
+  vid.currentTime = 0;
+  vid.classList.remove('playing');
+
+  if (window.leafletMap) {
+    const baseLayers = new Set(window.baseOverlays || []);
+    window.leafletMap.eachLayer(layer => {
+      if (!(layer instanceof L.TileLayer) && !baseLayers.has(layer)) {
+        window.leafletMap.removeLayer(layer);
+      }
+    });
+    window.geoSectors = [];
+    window.geoSectorsVisible = false;
+    window.boostedLines = null;
+    window.planetSymbolMarkers = null;
+    window.currentSectorTypes = null;
+  }
+
+  drawMapOverlay();
+}
+
+// ===== Start =====
+window.addEventListener('load', init);
+window.addEventListener('resize', init);
+</script>
+
+</body>
+</html>
