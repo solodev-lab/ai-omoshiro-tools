@@ -84,6 +84,8 @@ const patternStyles = {
 };
 
 // HTML: IDX_FORTUNE_PLANETS (L1139-1145)
+// ⚠️ UIフィルタ用 (Horo絞込チップ「癒し/金運/恋愛/仕事/対話」で使用)
+// Fortune API (Gemini) 用のテーブルは utils/fortune_api.dart の fortuneApiPlanets (key='overall')
 const fortunePlanets = {
   'healing': ['moon', 'neptune', 'jupiter'],
   'money': ['venus', 'jupiter', 'saturn'],

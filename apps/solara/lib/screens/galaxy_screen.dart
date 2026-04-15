@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math';
 import 'dart:ui' as ui;
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../models/daily_reading.dart';
@@ -401,9 +402,9 @@ class _GalaxyScreenState extends State<GalaxyScreen>
                 // HTML: .inner-tabs (padding:0 20px; margin-bottom:8px)
                 _buildTabBar(),
                 const SizedBox(height: 4),
-                // DEBUG: Cycle完了フローの各タイミングを手動トリガー
-                _buildDebugTriggerRow(),
-                const SizedBox(height: 4),
+                // DEBUG: Cycle完了フローの各タイミングを手動トリガー (release時は非表示)
+                if (kDebugMode) _buildDebugTriggerRow(),
+                if (kDebugMode) const SizedBox(height: 4),
                 // HTML: .tab-panel.active { flex:1; display:flex; flex-direction:column; }
                 Expanded(
                   child: _activeTab == 0

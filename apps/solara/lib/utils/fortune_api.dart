@@ -72,8 +72,13 @@ Future<FortuneReading?> fetchFortune({
   return null;
 }
 
-// ── Fortune カテゴリの親和惑星 (worker側と一致) ──
-const fortunePlanetsByCategory = {
+// ── Fortune API カテゴリの親和惑星 ──
+// worker/src/fortune.js の FORTUNE_CATEGORIES と完全一致 (LLM入力と score計算で使用)
+// ⚠️ horo_constants.fortunePlanets (UIフィルタ用、key='healing') とは別用途:
+//   - こちら: API/LLM 向け、key='overall' (全体運)
+//   - あちら: Horo画面の絞込チップ、key='healing' (癒し運)
+//   キーが 4/5 重複するが、意味が違うので統合しない
+const fortuneApiPlanets = {
   'overall': ['sun', 'moon', 'jupiter'],
   'love': ['venus', 'mars', 'moon'],
   'money': ['venus', 'jupiter', 'saturn'],
@@ -84,7 +89,7 @@ const fortunePlanetsByCategory = {
 /// 関連惑星のアスペクト強度からスコア (20-95) を算出。
 /// worker側 computeCategoryScore と同ロジック (オフライン表示用)。
 int computeFortuneScore(String category, List<Map<String, dynamic>> aspects) {
-  final planets = fortunePlanetsByCategory[category];
+  final planets = fortuneApiPlanets[category];
   if (planets == null) return 50;
   final rel = planets.toSet();
 
