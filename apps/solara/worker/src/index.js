@@ -2,8 +2,10 @@
  * Solara API — Cloudflare Worker
  * Endpoints: /astro/chart, /astro/predict, /search, /fortune, /health
  */
-import { computeChart, computePredictions } from './astro.js';
+import { computeChart, computePredictions, computeMonthEvents } from './astro.js';
 import { searchPlace } from './search.js';
+import { lookupTimezone } from './tzlookup.js';
+import { handleFortune } from './fortune.js';
 
 // ── CORS ──
 const ALLOWED_ORIGINS = [
@@ -110,6 +112,28 @@ export default {
         return jsonOk(result, origin);
       }
 
+      // ── Timezone Lookup ──
+      if (path === '/tz' && request.method === 'GET') {
+        const lat = parseFloat(url.searchParams.get('lat'));
+        const lng = parseFloat(url.searchParams.get('lng'));
+        if (isNaN(lat) || isNaN(lng)) {
+          return jsonError(400, 'Query parameters "lat" and "lng" required', origin);
+        }
+        const result = lookupTimezone(lat, lng);
+        return jsonOk(result, origin);
+      }
+
+      // ── Astro Events (ingress / retrograde / eclipse) ──
+      if (path === '/astro/events' && request.method === 'GET') {
+        const year = parseInt(url.searchParams.get('year'), 10);
+        const month = parseInt(url.searchParams.get('month'), 10);
+        if (!year || !month || month < 1 || month > 12) {
+          return jsonError(400, 'Query parameters "year" and "month" (1-12) required', origin);
+        }
+        const result = computeMonthEvents(year, month);
+        return jsonOk(result, origin);
+      }
+
       // ── Search ──
       if (path === '/search' && request.method === 'GET') {
         const q = url.searchParams.get('q');
@@ -120,9 +144,16 @@ export default {
         return jsonOk(results, origin);
       }
 
-      // ── Fortune (stub) ──
+      // ── Fortune (Gemini-powered reading) ──
       if (path === '/fortune' && request.method === 'POST') {
-        return jsonError(501, 'Fortune endpoint not yet implemented', origin);
+        const body = await request.json();
+        try {
+          const result = await handleFortune(body, env);
+          return jsonOk(result, origin);
+        } catch (err) {
+          console.error('Fortune error:', err);
+          return jsonError(500, err.message || 'Fortune generation failed', origin);
+        }
       }
 
       return jsonError(404, 'Not found', origin);

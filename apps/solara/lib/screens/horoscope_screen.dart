@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import '../utils/solara_storage.dart';
+import '../utils/fortune_api.dart';
 
 import 'horoscope/horo_constants.dart';
 import 'horoscope/horo_chart_painter.dart';
@@ -43,12 +44,19 @@ class HoroscopeScreenState extends State<HoroscopeScreen> {
   // Pattern visibility toggle (grandtrine / tsquare / yod)
   final Map<String, bool> _patternVisible = {'grandtrine': true, 'tsquare': true, 'yod': true};
 
+  // Fortune readings (Gemini経由取得 / カテゴリ別キャッシュ)
+  final Map<String, FortuneReading?> _fortunes = {};
+  bool _fortuneLoading = false;
+  String? _fortuneError;
+  DateTime? _fortuneFetchedAt;
+
   @override
   void initState() { super.initState(); loadProfile(); }
 
   @override
-  @override
-  void dispose() { super.dispose(); }
+  void dispose() {
+    super.dispose();
+  }
 
   Future<void> loadProfile() async {
     final p = await SolaraStorage.loadProfile();
@@ -57,6 +65,88 @@ class HoroscopeScreenState extends State<HoroscopeScreen> {
       _generateMockChart(p);
     }
     setState(() { _profile = p; _loading = false; });
+    if (p != null && p.isComplete) {
+      _loadFortunes();
+    }
+  }
+
+  /// 全5カテゴリの占い文を並列取得 (Gemini API経由)
+  /// 同日中は再取得しない (キャッシュ)
+  Future<void> _loadFortunes({bool force = false}) async {
+    if (_fortuneLoading) return;
+    final today = DateTime.now();
+    if (!force &&
+        _fortuneFetchedAt != null &&
+        _fortuneFetchedAt!.year == today.year &&
+        _fortuneFetchedAt!.month == today.month &&
+        _fortuneFetchedAt!.day == today.day &&
+        _fortunes.length == fortuneCategories.length) {
+      return; // 同日キャッシュ有効
+    }
+    setState(() {
+      _fortuneLoading = true;
+      _fortuneError = null;
+    });
+
+    final dateStr = '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
+    final aspects = _aspects
+        .map((a) => {
+              'p1': a['p1'],
+              'p2': a['p2'],
+              'type': a['type'],
+              'quality': a['quality'],
+              'diff': a['diff'],
+              'aspectAngle': a['aspectAngle'],
+              'orb': a['orb'],
+            })
+        .cast<Map<String, dynamic>>()
+        .toList();
+    // パターン情報をAPIに渡せる形式に整形
+    final allPatterns = detectPatterns(_natalPlanets, secondary: _secondaryPlanets, chartMode: _chartMode);
+    final patternsPayload = <String, List<Map<String, dynamic>>>{};
+    for (final type in ['grandtrine', 'tsquare', 'yod']) {
+      patternsPayload[type] = (allPatterns[type] ?? [])
+          .map((p) => {
+                'planets': (p['planets'] as List).cast<String>(),
+              })
+          .toList();
+    }
+
+    try {
+      // 並列fetch
+      final futures = fortuneCategories.map((cat) async {
+        final id = cat['id'] as String;
+        final reading = await fetchFortune(
+          category: id,
+          lang: 'ja',
+          natal: _natalPlanets,
+          aspects: aspects,
+          patterns: patternsPayload,
+          date: dateStr,
+          userName: _profile?.name,
+        );
+        return MapEntry(id, reading);
+      }).toList();
+      final results = await Future.wait(futures);
+      if (!mounted) return;
+      setState(() {
+        _fortunes
+          ..clear()
+          ..addEntries(results);
+        _fortuneFetchedAt = today;
+        _fortuneLoading = false;
+        // 全てnullなら失敗扱い
+        if (results.every((e) => e.value == null)) {
+          _fortuneError = 'Fortune API に接続できませんでした';
+        }
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _fortuneLoading = false;
+        _fortuneError = '$e';
+      });
+    }
   }
 
   void _generateMockChart(SolaraProfile p) {
@@ -313,6 +403,10 @@ class HoroscopeScreenState extends State<HoroscopeScreen> {
                   natalPatterns: _patternsForMode('single'),
                   transitPatterns: _patternsForMode('nt'),
                   progressedPatterns: _patternsForMode('np'),
+                  fortunes: _fortunes,
+                  fortuneLoading: _fortuneLoading,
+                  fortuneError: _fortuneError,
+                  onRetry: () => _loadFortunes(force: true),
                 )
               : _buildChartScrollView(),
             ),

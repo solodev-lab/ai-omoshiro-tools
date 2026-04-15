@@ -51,17 +51,20 @@ class ChartResult {
 }
 
 /// CF Worker にチャートを要求
+/// birthTzName (IANA TZ名, C案) が指定された場合はそれを優先し、
+/// 未指定なら birthTz (UTCオフセット整数) にfallback。
 Future<ChartResult?> fetchChart({
   required String birthDate,
   required String birthTime,
   required double birthLat,
   required double birthLng,
   int birthTz = 9,
+  String? birthTzName,
   String mode = 'transit', // 'natal' | 'transit' | 'progressed'
   String houseSystem = 'placidus',
 }) async {
   try {
-    final body = {
+    final body = <String, dynamic>{
       'birthDate': birthDate,
       'birthTime': birthTime,
       'birthTz': birthTz,
@@ -71,6 +74,9 @@ Future<ChartResult?> fetchChart({
       'transitDate': DateTime.now().toUtc().toIso8601String(),
       'houseSystem': houseSystem,
     };
+    if (birthTzName != null && birthTzName.isNotEmpty) {
+      body['birthTzName'] = birthTzName;
+    }
     final resp = await http.post(
       Uri.parse(_astroApiUrl),
       headers: {'Content-Type': 'application/json'},

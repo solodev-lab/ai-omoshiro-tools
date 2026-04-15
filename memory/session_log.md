@@ -908,3 +908,47 @@
 ### ファイル構造
 - galaxy画面 5ファイル分割は維持: galaxy_screen.dart / galaxy_constellation_builder.dart / galaxy_star_atlas.dart / galaxy_replay_overlay.dart / widgets/constellation_painter.dart
 
+
+## 2026-04-15 セッション: Solara Timezone C案 + Fortune API (Gemini) + CF Worker本番デプロイ
+
+### 追加/変更ファイル
+- **Worker (新規)**:
+  - `apps/solara/worker/src/tzlookup.js` — 緯度経度→IANA TZ名 (bounding-box heuristic)
+  - `apps/solara/worker/src/fortune.js` — Gemini 2.5 Flash (→2.0 fallback) 占い文生成、503/429リトライ、スコア計算 (aspects×quality加重)
+- **Worker (修正)**:
+  - `apps/solara/worker/src/index.js` — `/tz`, `/fortune` エンドポイント追加
+  - `apps/solara/worker/src/astro.js` — `makeUTCDateFromTzName` (Intl DST対応)、computeChart/Predictions が `birthTzName` optional 受付
+  - `apps/solara/worker/wrangler.toml` — custom_domain route、workers_dev = true
+- **Flutter (新規)**:
+  - `lib/utils/solara_api.dart` — `fetchTimezoneName()` (/tz呼出)
+  - `lib/utils/fortune_api.dart` — `fetchFortune()` + `computeFortuneScore()` + `FortuneReading` モデル
+- **Flutter (修正)**:
+  - `lib/utils/solara_storage.dart` — `SolaraProfile.birthTzName` 追加 (null許容、copyWith付き、後方互換)
+  - `lib/screens/sanctuary/sanctuary_profile_editor.dart` — 出生地選択時に `/tz` 自動呼出、UIにTZ名表示
+  - `lib/screens/map/map_astro.dart` — `fetchChart` に `birthTzName` 優先送信
+  - `lib/screens/map_screen.dart` — profile.birthTzName を fetchChart に渡す
+  - `lib/screens/horoscope_screen.dart` — `_loadFortunes()` (5カテゴリ並列、日次キャッシュ、loading/error状態)
+  - `lib/screens/horoscope/horo_fortune_cards.dart` — HoroAstrologyView に `fortunes/fortuneLoading/fortuneError/onRetry` パラメータ、mockデータ→API結果表示、スコアバッジ、スケルトン、再試行ボタン
+
+### デプロイ
+- **Cloudflare Worker**: `https://solara-api.solodev-lab.com` (custom domain) 本番稼働
+  - fallback: `https://solara-api.kojifo369.workers.dev`
+  - `GEMINI_API_KEY` wrangler secret put 完了
+  - `/health`, `/tz`, `/astro/events`, `/fortune` 全エンドポイント疎通確認済み
+- **wrangler.toml**: `routes = [{pattern: "solara-api.solodev-lab.com", custom_domain: true}]`
+  - 初回 `routes pattern/zone_name` 形式ではDNS自動作成されず → `custom_domain = true` で自動発行
+
+### APIキー管理確認
+- `.env` は `.gitignore` 登録済み、Git履歴にコミットなし
+- `GEMINI_API_KEY` は Cloudflare 暗号化シークレットストアのみ、コード/設定に平文なし
+- `git ls-files | grep "AIzaSy"` → ヒット0件
+
+### 仕様書更新
+- `apps/solara/docs/architecture.md` — CF Worker本番稼働セクション追加、全エンドポイント表
+- `apps/solara/mockup/SPEC.md` — Fortune API仕様・TZ C案処理フロー追記
+
+### 学び・注意点
+- `routes` で DNS 自動作成するには `custom_domain = true` が必要 (`zone_name` 形式は手動DNS設定必要)
+- Gemini JSON mode の `maxOutputTokens: 1024` はJSON途中切断のリスク → `2048` に引き上げ
+- Windows PC の負の DNS キャッシュ (NXDOMAIN) は `ipconfig /flushdns` でも ISP/ルーターキャッシュが残る → ブラウザDoH or 待つ
+- Horoscope のパターン検出UI (GT/TSQ/Yod) は既に Flutter 側で完全実装済み (HoroPredictionPanel + HoroAstrologyView + ChartPainter)、今回は Fortune 文字生成のみが残タスクだった

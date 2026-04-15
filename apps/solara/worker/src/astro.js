@@ -326,23 +326,64 @@ function predictPatternCompletions(natal, daysAhead) {
 }
 
 // ── Date Helper ──
+// 固定offset版 (レガシー互換)
 function makeUTCDate(dateStr, timeStr, tzHours) {
   const [y, m, d] = dateStr.split('-').map(Number);
   const [h, min] = timeStr.split(':').map(Number);
   return new Date(Date.UTC(y, m - 1, d, h - tzHours, min, 0, 0));
 }
 
+// IANA TZ名版 (DST考慮、Intl ベース)
+// "2025-07-10 15:00" + "America/Los_Angeles" → その瞬間の実UTC Date を返す
+// 夏は PDT (UTC-7)、冬は PST (UTC-8) を IANA DB から自動判定
+function makeUTCDateFromTzName(dateStr, timeStr, tzName) {
+  const [y, m, d] = dateStr.split('-').map(Number);
+  const [h, min] = timeStr.split(':').map(Number);
+  // 1) 指定された local wall-clock 時刻をまず UTC として解釈
+  const asIfUtc = Date.UTC(y, m - 1, d, h, min, 0, 0);
+  // 2) その Date を tzName で formatToParts すると、tz での wall-clock が得られる
+  //    両者の差分が 「その瞬間の tz オフセット (ms)」
+  const offsetMs = getTzOffsetMs(new Date(asIfUtc), tzName);
+  // 3) wall-clock 時刻から offset を引いて UTC 瞬間を確定
+  return new Date(asIfUtc - offsetMs);
+}
+
+// 任意 Date (UTC瞬間) に対する、tzName での offset (ms) を Intl 経由で取得
+function getTzOffsetMs(date, tzName) {
+  try {
+    const dtf = new Intl.DateTimeFormat('en-US', {
+      timeZone: tzName,
+      year: 'numeric', month: '2-digit', day: '2-digit',
+      hour: '2-digit', minute: '2-digit', second: '2-digit',
+      hour12: false,
+    });
+    const parts = dtf.formatToParts(date);
+    const v = {};
+    for (const p of parts) v[p.type] = p.value;
+    const asIfUtc = Date.UTC(
+      parseInt(v.year), parseInt(v.month) - 1, parseInt(v.day),
+      parseInt(v.hour) % 24, parseInt(v.minute), parseInt(v.second)
+    );
+    return asIfUtc - date.getTime();
+  } catch (_) {
+    return 0; // 不正tzName → UTC扱い
+  }
+}
+
 // ── Public API: /astro/chart ──
 export function computeChart(params) {
   const {
-    birthDate, birthTime, birthTz = 9,
+    birthDate, birthTime, birthTz = 9, birthTzName,
     birthLat, birthLng,
     transitDate, mode = 'natal',
     houseSystem = 'placidus',
     orbs, patternOrbs
   } = params;
 
-  const birth = makeUTCDate(birthDate, birthTime, birthTz);
+  // birthTzName (IANA) があれば優先、無ければ固定offset birthTz にfallback
+  const birth = birthTzName
+      ? makeUTCDateFromTzName(birthDate, birthTime, birthTzName)
+      : makeUTCDate(birthDate, birthTime, birthTz);
   const natal = calcAllPlanets(birth);
   const natalKeyed = calcAllPlanetsKeyed(birth);
 
@@ -400,8 +441,195 @@ export function computeChart(params) {
 
 // ── Public API: /astro/predict ──
 export function computePredictions(params) {
-  const { birthDate, birthTime, birthTz = 9, daysAhead = 60 } = params;
-  const birth = makeUTCDate(birthDate, birthTime, birthTz);
+  const { birthDate, birthTime, birthTz = 9, birthTzName, daysAhead = 60 } = params;
+  const birth = birthTzName
+      ? makeUTCDateFromTzName(birthDate, birthTime, birthTzName)
+      : makeUTCDate(birthDate, birthTime, birthTz);
   const natal = calcAllPlanets(birth);
   return { predictions: predictPatternCompletions(natal, daysAhead) };
+}
+
+// ══════════════════════════════════════════════════
+// MONTH CELESTIAL EVENTS — ingress / retrograde / eclipse
+// ══════════════════════════════════════════════════
+
+const SIGN_JP = ['牡羊座','牡牛座','双子座','蟹座','獅子座','乙女座','天秤座','蠍座','射手座','山羊座','水瓶座','魚座'];
+const SIGN_EN = ['Aries','Taurus','Gemini','Cancer','Leo','Virgo','Libra','Scorpio','Sagittarius','Capricorn','Aquarius','Pisces'];
+const PLANET_JP = {sun:'太陽', moon:'月', mercury:'水星', venus:'金星', mars:'火星', jupiter:'木星', saturn:'土星', uranus:'天王星', neptune:'海王星', pluto:'冥王星'};
+const PLANET_EN = {sun:'Sun', moon:'Moon', mercury:'Mercury', venus:'Venus', mars:'Mars', jupiter:'Jupiter', saturn:'Saturn', uranus:'Uranus', neptune:'Neptune', pluto:'Pluto'};
+
+// ── 二分探索で ingress の正確な日時を求める ──
+function binarySearchIngress(body, d1, d2, targetSign) {
+  let lo = d1.getTime(), hi = d2.getTime();
+  for (let i = 0; i < 30; i++) { // 30回で十分 (ms精度)
+    const mid = new Date((lo + hi) / 2);
+    const sign = Math.floor(norm360(eclLon(body, mid)) / 30);
+    if (sign >= targetSign) hi = mid.getTime();
+    else lo = mid.getTime();
+    if (hi - lo < 60000) break; // 1分精度で打切り
+  }
+  return new Date(hi);
+}
+
+// ── 逆行検出: 1時間前後の経度差が負 → 逆行中 ──
+function isRetrograde(body, date) {
+  const h1 = new Date(date.getTime() - 3600000);
+  const h2 = new Date(date.getTime() + 3600000);
+  const l1 = eclLon(body, h1);
+  const l2 = eclLon(body, h2);
+  let diff = l2 - l1;
+  if (diff > 180) diff -= 360;
+  if (diff < -180) diff += 360;
+  return diff < 0;
+}
+
+// ── 逆行転換日検出: 1日刻みで状態変化を探す ──
+function findRetrogradeChanges(body, startDate, endDate) {
+  const changes = [];
+  let prev = isRetrograde(body, startDate);
+  const prevState0 = prev;
+  const dayMs = 86400000;
+  for (let t = startDate.getTime() + dayMs; t <= endDate.getTime(); t += dayMs) {
+    const d = new Date(t);
+    const cur = isRetrograde(body, d);
+    if (cur !== prev) {
+      // 二分探索で正確な日を特定
+      let lo = t - dayMs, hi = t;
+      for (let i = 0; i < 20; i++) {
+        const mid = (lo + hi) / 2;
+        const midState = isRetrograde(body, new Date(mid));
+        if (midState === cur) hi = mid;
+        else lo = mid;
+        if (hi - lo < 60000) break;
+      }
+      changes.push({ date: new Date(hi), retrograde: cur });
+      prev = cur;
+    }
+  }
+  return { changes, startState: prevState0 };
+}
+
+// ── 月内の全天体イベント計算 ──
+export function computeMonthEvents(year, month) {
+  const startDate = new Date(Date.UTC(year, month - 1, 1, 0, 0, 0));
+  const endDate = new Date(Date.UTC(year, month, 0, 23, 59, 59));
+  const events = [];
+
+  // ── 1. Ingress (月をまたぐ sign 変化を検出) ──
+  for (let i = 0; i < BODIES.length; i++) {
+    const body = BODIES[i];
+    const key = BODY_KEYS[i];
+    if (key === 'sun' || key === 'moon') continue; // 太陽/月は毎月跨ぐので除外 (別扱い)
+    const startLon = norm360(eclLon(body, startDate));
+    const endLon = norm360(eclLon(body, endDate));
+    const startSign = Math.floor(startLon / 30);
+    const endSign = Math.floor(endLon / 30);
+    // 通常経路 (prograde) での変化
+    if (startSign !== endSign && Math.abs(endLon - startLon) < 60) {
+      const ingressDate = binarySearchIngress(body, startDate, endDate, endSign);
+      events.push({
+        type: 'ingress',
+        planet: key,
+        planetEN: PLANET_EN[key],
+        planetJP: PLANET_JP[key],
+        sign: SIGN_EN[endSign],
+        signJP: SIGN_JP[endSign],
+        date: ingressDate.toISOString(), // UTC ISO (クライアント側で toLocal 変換)
+        // 日付抜きテンプレート (クライアント側でローカル日付を挿入)
+        descTemplate: '{planet} enters {sign}',
+        descTemplateJP: '{planet}が{sign}へ移行',
+      });
+    }
+  }
+
+  // ── 2. Retrograde (start / end) ──
+  for (const key of ['mercury','venus','mars','jupiter','saturn','uranus','neptune','pluto']) {
+    const body = BODIES[BODY_KEYS.indexOf(key)];
+    const { changes } = findRetrogradeChanges(body, startDate, endDate);
+    for (const ch of changes) {
+      const lon = norm360(eclLon(body, ch.date));
+      const sign = Math.floor(lon / 30);
+      const m = ch.date.getUTCMonth() + 1;
+      const d = ch.date.getUTCDate();
+      if (ch.retrograde) {
+        events.push({
+          type: 'retrograde',
+          planet: key,
+          planetEN: PLANET_EN[key],
+          planetJP: PLANET_JP[key],
+          sign: SIGN_EN[sign],
+          signJP: SIGN_JP[sign],
+          date: ch.date.toISOString(),
+          descTemplate: '{planet} Retrograde begins in {sign}',
+          descTemplateJP: '{planet}が{sign}で逆行開始',
+        });
+      } else {
+        events.push({
+          type: 'retrograde_end',
+          planet: key,
+          planetEN: PLANET_EN[key],
+          planetJP: PLANET_JP[key],
+          sign: SIGN_EN[sign],
+          signJP: SIGN_JP[sign],
+          date: ch.date.toISOString(),
+          descTemplate: '{planet} stations direct in {sign}',
+          descTemplateJP: '{planet}が{sign}で順行へ',
+        });
+      }
+    }
+  }
+
+  // ── 3. Eclipses (Solar / Lunar) ──
+  try {
+    // Lunar Eclipse
+    let lunar = Astronomy.SearchLunarEclipse(startDate);
+    while (lunar && lunar.peak.date <= endDate) {
+      if (lunar.peak.date >= startDate) {
+        const lon = norm360(eclLon(Astronomy.Body.Moon, lunar.peak.date));
+        const sign = Math.floor(lon / 30);
+        events.push({
+          type: 'eclipse',
+          planet: 'moon',
+          planetEN: 'Moon',
+          planetJP: '月',
+          sign: SIGN_EN[sign],
+          signJP: SIGN_JP[sign],
+          date: lunar.peak.date.toISOString(),
+          descTemplate: 'Lunar Eclipse in {sign}',
+          descTemplateJP: '{sign}の月食',
+        });
+      }
+      lunar = Astronomy.NextLunarEclipse(lunar.peak.date);
+      if (!lunar || lunar.peak.date > endDate) break;
+    }
+  } catch (_) { /* skip if search fails */ }
+
+  try {
+    // Solar Eclipse (Global)
+    let solar = Astronomy.SearchGlobalSolarEclipse(startDate);
+    while (solar && solar.peak.date <= endDate) {
+      if (solar.peak.date >= startDate) {
+        const lon = norm360(eclLon(Astronomy.Body.Sun, solar.peak.date));
+        const sign = Math.floor(lon / 30);
+        events.push({
+          type: 'eclipse',
+          planet: 'sun',
+          planetEN: 'Sun',
+          planetJP: '太陽',
+          sign: SIGN_EN[sign],
+          signJP: SIGN_JP[sign],
+          date: solar.peak.date.toISOString(),
+          descTemplate: 'Solar Eclipse in {sign}',
+          descTemplateJP: '{sign}の日食',
+        });
+      }
+      solar = Astronomy.NextGlobalSolarEclipse(solar.peak.date);
+      if (!solar || solar.peak.date > endDate) break;
+    }
+  } catch (_) { /* skip if search fails */ }
+
+  // 日付順ソート
+  events.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+  return { year, month, events };
 }

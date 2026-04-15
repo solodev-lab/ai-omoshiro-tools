@@ -83,6 +83,8 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
       birthTime: p.birthTime,
       birthLat: p.birthLat,
       birthLng: p.birthLng,
+      birthTz: p.birthTz,
+      birthTzName: p.birthTzName,
     );
     if (chart != null) {
       _chartResult = chart;

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'horo_constants.dart';
+import '../../utils/fortune_api.dart';
 
 // ══════════════════════════════════════════════════
 // Fortune Cards (carousel in chart view)
@@ -182,11 +183,21 @@ class HoroAstrologyView extends StatelessWidget {
   final Map<String, List<Map<String, dynamic>>> transitPatterns;  // nt (N-T)
   final Map<String, List<Map<String, dynamic>>> progressedPatterns; // np (N-P)
 
+  /// Gemini API で生成された占い文 (カテゴリ別) — nullの場合はmockにfallback
+  final Map<String, FortuneReading?> fortunes;
+  final bool fortuneLoading;
+  final String? fortuneError;
+  final VoidCallback? onRetry;
+
   const HoroAstrologyView({
     super.key,
     this.natalPatterns = const {},
     this.transitPatterns = const {},
     this.progressedPatterns = const {},
+    this.fortunes = const {},
+    this.fortuneLoading = false,
+    this.fortuneError,
+    this.onRetry,
   });
 
   @override
@@ -202,12 +213,25 @@ class HoroAstrologyView extends StatelessWidget {
           style: const TextStyle(fontSize: 11, color: Color(0xFF888888)),
         ),
         const SizedBox(height: 16),
+        // ローディング/エラーバナー
+        if (fortuneLoading) _loadingBanner(),
+        if (fortuneError != null && !fortuneLoading) _errorBanner(),
         ...fortuneCategories.map((cat) {
           final color = Color(cat['color'] as int);
           final catId = cat['id'] as String;
+          final reading = fortunes[catId];
+          final useApi = reading != null;
           final mock = _fortuneMock[catId];
-          final text = mock?['text'] ?? '';
-          final direction = mock?['direction'] ?? '';
+
+          final text = useApi
+              ? reading.reading
+              : (mock?['text'] ?? '');
+          final advice = useApi ? reading.advice : '';
+          final direction = useApi
+              ? (reading.direction.isNotEmpty ? '🧭 ${reading.direction}' : '')
+              : (mock?['direction'] ?? '');
+          final score = useApi ? reading.score : (cat['score'] as int);
+
           return Container(
             margin: const EdgeInsets.only(bottom: 16),
             padding: const EdgeInsets.all(20),
@@ -228,9 +252,29 @@ class HoroAstrologyView extends StatelessWidget {
                 const SizedBox(width: 10),
                 Text(cat['nameJP'] as String, style: TextStyle(
                   fontSize: 15, color: color, fontWeight: FontWeight.w700)),
+                const Spacer(),
+                // スコア表示
+                ShaderMask(
+                  shaderCallback: (bounds) => const LinearGradient(
+                    colors: [Color(0xFFF6BD60), Color(0xFFF9D976)],
+                  ).createShader(bounds),
+                  child: Text('$score',
+                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: Colors.white)),
+                ),
               ]),
               const SizedBox(height: 12),
-              Text(text, style: const TextStyle(fontSize: 13, color: Color(0xD9E8E0D0), height: 1.8)),
+              if (fortuneLoading && !useApi)
+                _skeletonLine()
+              else
+                Text(text, style: const TextStyle(fontSize: 13, color: Color(0xD9E8E0D0), height: 1.8)),
+              if (advice.isNotEmpty) ...[
+                const SizedBox(height: 10),
+                Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  const Text('✦ ', style: TextStyle(fontSize: 12, color: Color(0xFFF6BD60))),
+                  Expanded(child: Text(advice,
+                    style: const TextStyle(fontSize: 12, color: Color(0xD9E8E0D0), height: 1.6, fontStyle: FontStyle.italic))),
+                ]),
+              ],
               if (direction.isNotEmpty) ...[
                 const SizedBox(height: 12),
                 Container(
@@ -252,6 +296,62 @@ class HoroAstrologyView extends StatelessWidget {
       ]),
     );
   }
+
+  Widget _loadingBanner() => Container(
+    margin: const EdgeInsets.only(bottom: 12),
+    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+    decoration: BoxDecoration(
+      borderRadius: BorderRadius.circular(12),
+      color: const Color(0x14F6BD60),
+      border: Border.all(color: const Color(0x33F6BD60)),
+    ),
+    child: const Row(children: [
+      SizedBox(width: 16, height: 16,
+        child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFFF6BD60))),
+      SizedBox(width: 10),
+      Expanded(child: Text('Gemini AIが占い文を生成中…',
+        style: TextStyle(fontSize: 12, color: Color(0xFFF6BD60)))),
+    ]),
+  );
+
+  Widget _errorBanner() => Container(
+    margin: const EdgeInsets.only(bottom: 12),
+    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+    decoration: BoxDecoration(
+      borderRadius: BorderRadius.circular(12),
+      color: const Color(0x14FF6B6B),
+      border: Border.all(color: const Color(0x33FF6B6B)),
+    ),
+    child: Row(children: [
+      const Icon(Icons.cloud_off, size: 14, color: Color(0xFFFF9E9E)),
+      const SizedBox(width: 8),
+      const Expanded(child: Text('AI占い文の取得に失敗。仮テキストを表示中',
+        style: TextStyle(fontSize: 11, color: Color(0xFFFF9E9E)))),
+      if (onRetry != null)
+        GestureDetector(
+          onTap: onRetry,
+          child: const Text('再試行',
+            style: TextStyle(fontSize: 11, color: Color(0xFFF6BD60),
+              decoration: TextDecoration.underline)),
+        ),
+    ]),
+  );
+
+  Widget _skeletonLine() => Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+    _skeletonBar(width: double.infinity),
+    const SizedBox(height: 6),
+    _skeletonBar(width: double.infinity),
+    const SizedBox(height: 6),
+    _skeletonBar(width: 180),
+  ]);
+
+  Widget _skeletonBar({double width = double.infinity}) => Container(
+    height: 10, width: width,
+    decoration: BoxDecoration(
+      color: const Color(0x14FFFFFF),
+      borderRadius: BorderRadius.circular(4),
+    ),
+  );
 
   List<Widget> _buildPatternSections() {
     final sections = <Widget>[];

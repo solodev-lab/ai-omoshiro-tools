@@ -254,19 +254,19 @@ FORTUNE_CATEGORIES = [
   - 新月で選んだインテンションを再表示
   - 3段階の自己評価: 🌊まだ途中 / ✨進展あり / 🌟軽くなった
 
-##### Beat 3: 結晶化 — 新月前日の振り返り演出
-- **トリガー**: 次の新月の前日（cycleEnd - 1日）にインテンション設定済みかつ未結晶の場合
+##### Beat 3: 刻星化 — 新月前日の振り返り演出
+- **トリガー**: 次の新月の前日（cycleEnd - 1日）にインテンション設定済みかつ未刻星の場合
 - **表示内容**:
   - 選んだインテンション + 満月時の中間評価バッジを表示
   - **天体イベント連動の温かいメッセージ**（月別100字、12ヶ月分定義済み）
   - 「この周期の軌跡が星座になります」
-  - 「✦ 星座を結晶化する」ゴールドボタン（選択肢なし、振り返りのみ）
+  - 「✦ 星座を刻星化する」ゴールドボタン（選択肢なし、振り返りのみ）
 - **ボタン押下時の動作**:
   - 即座にStar Atlasにサイクルデータを保存（アニメーション前に永続化）
   - 星座形成アニメーション（8秒4ステージ: CONVERGENCE→IGNITION→LINKING→COMPLETE）
   - 「View in Star Atlas ✦」→ Star Atlasタブに自動遷移
-- **Not nowは廃止**: 結晶化画面が出たら「✦ 星座を結晶化する」を押すのみ
-- **未結晶の救済**: 新月が来た時に前周期の未結晶インテンションを検出→結晶化オーバーレイを優先表示（アプリ閉じて見逃した場合の救済）
+- **Not nowは廃止**: 刻星化画面が出たら「✦ 星座を刻星化する」を押すのみ
+- **未刻星の救済**: 新月が来た時に前周期の未刻星インテンションを検出→刻星化オーバーレイを優先表示（アプリ閉じて見逃した場合の救済）
 
 ##### 天体イベントデータ（2026年）
 - `assets/celestial_events_2026.json` に12ヶ月分を静的定義
@@ -278,7 +278,7 @@ FORTUNE_CATEGORIES = [
 
 #### Star Atlas タブ
 - **星座カードグリッド**: 2カラム、ミニキャンバス描画
-- **リプレイオーバーレイ**: 300×300 キャンバス、結晶化アニメーション再生
+- **リプレイオーバーレイ**: 300×300 キャンバス、刻星化アニメーション再生
 - **星座イラスト背景**: 名詞に対応するイラスト（白線画WebP）を15-20%不透明度でオーバーレイ
 
 #### 星座形成ロジック（v2: 3Dアナモルフィック方式）
@@ -294,7 +294,7 @@ FORTUNE_CATEGORIES = [
    - カードIDベースでlayer振り分け（決定論的）
    - 日々の表示はカメラ角度θ=55°（斜め） → ドットがバラバラに見える
 
-2. **結晶化アニメーション（周期完了時）**:
+2. **刻星化アニメーション（周期完了時）**:
    - カメラ角度θを 55° → 0°（正面）へ3秒でイージング
    - z成分が消失 → ドットが2D星座位置に収束（「星が揃う」瞬間）
    - 投影計算: `screenX = x * cos(θ) + z * sin(θ)`, `screenY = y`
@@ -342,9 +342,9 @@ FORTUNE_CATEGORIES = [
   - ★★★   Rare      — 出現率 2-4%
   - ★★    Uncommon  — 出現率 4-7%
   - ★     Common    — 出現率 7%以上
-- **表示場所**: Star Atlasカード、結晶化演出、シェアカード
+- **表示場所**: Star Atlasカード、刻星化演出、シェアカード
 - **将来計画**: Cloudflare Worker経由でリアルユーザー集計に移行
-  - `POST /api/constellation-stats` で結晶化時に報告
+  - `POST /api/constellation-stats` で刻星化時に報告
   - `GET /api/constellation-stats/{name}` で実測出現率を取得
   - リアル集計と数学的レアリティを併記
 
@@ -368,7 +368,7 @@ lib/
     tarot_card.dart         — 78枚カードモデル
     daily_reading.dart      — 日次占い記録
     galaxy_cycle.dart       — 完了周期 + 星座ドット
-    lunar_intention.dart    — インテンション + 中間 + 結晶化
+    lunar_intention.dart    — インテンション + 中間 + 刻星化
   utils/
     moon_phase.dart         — 月齢計算（Metonic cycle）
     constellation_namer.dart — 星座命名（ハッシュベース）
@@ -378,7 +378,7 @@ lib/
   widgets/
     cycle_spiral_painter.dart     — 3Dスパイラル描画
     constellation_painter.dart    — 星座描画（フル + ミニ）
-    moon_overlay.dart             — 新月/満月/結晶化オーバーレイ
+    moon_overlay.dart             — 新月/満月/刻星化オーバーレイ
   screens/
     galaxy_screen.dart      — GALAXY画面（Cycle + Star Atlas）
     observe_screen.dart     — Observe画面（ランダムカード + 保存）
@@ -936,11 +936,48 @@ S = Tarot × 0.4 + Mood × 0.1 + Transit × 0.3 + Progressed × 0.2
 |-------------|----------------|
 | HTML + JS | Flutter CustomPaint + AnimationController |
 | localStorage | Cloudflare Worker + ローカルDB |
-| ~~モック鑑定文~~ Gemini Flash動的生成済み | Flutter内蔵 or サーバーサイドAPI |
+| ~~モック鑑定文~~ Gemini Flash動的生成済み | **✅ 完了**: CF Worker `/fortune` (Gemini 2.5 Flash) |
 | モック名前生成 | Claude API (Sonnet) テンプレートルール制約付き |
 | events.js DOM注入 | Flutter Widget overlay |
 | CSS glass | Flutter BackdropFilter |
 | 日英2段表示（例: 星読み/READING） | AppLocalizations による自動多言語切替（Sanctuary言語設定と連動） |
+| api_proxy.py ローカル | **✅ 本番稼働**: `https://solara-api.solodev-lab.com` (Cloudflare Worker) |
+
+---
+
+## CF Worker API 仕様 (本番稼働 2026-04-15〜)
+
+**Base URL**: `https://solara-api.solodev-lab.com` (fallback: `solara-api.kojifo369.workers.dev`)
+
+### `/fortune` POST — Gemini生成の占い文
+- **入力**: `{ category, lang, natal, aspects, patterns, date, userName }`
+  - `category`: `'overall'|'love'|'money'|'career'|'communication'`
+  - `lang`: `'ja'|'en'`
+  - `aspects`: `[{p1,p2,type,quality,diff,aspectAngle,orb}, ...]`
+  - `patterns`: `{grandtrine:[], tsquare:[], yod:[]}`
+- **出力**: `{ category, score, reading, advice, direction, lang }`
+  - `score`: 20-95 (関連惑星のアスペクト強度で算出、確定的)
+  - `reading`: 120-200字の鑑定文 (Gemini JSON mode)
+  - `advice`: 実践的アドバイス1文
+  - `direction`: 吉方位 + 理由
+- **モデル**: `gemini-2.5-flash` → 503時は `gemini-2.0-flash` fallback、最大2リトライ
+- **Secret**: `GEMINI_API_KEY` (wrangler secret put で Cloudflare暗号化ストア保存)
+
+### `/tz` GET — IANA TZ名 lookup (C案)
+- **入力**: `?lat=35.68&lng=139.76`
+- **出力**: `{ tz: 'Asia/Tokyo', source: 'box'|'offset'|'utc' }`
+- **用途**: Sanctuaryで出生地選択時に自動呼出 → `SolaraProfile.birthTzName` に保存
+- **実装**: Bounding-box heuristic (主要国) + Etc/GMT±X fallback
+
+### `/astro/chart` POST — natal + transit + aspects + patterns
+- **入力追加** (C案): `birthTzName` (optional) — IANA TZ名、DST自動考慮
+- 未指定時は従来の `birthTz` 整数オフセットにfallback
+- **Worker側処理**: `Intl.DateTimeFormat('en-US', {timeZone: tzName})` で正確なUTC変換
+
+### `/astro/events` GET — 月別天体イベント
+- **入力**: `?year=2026&month=4`
+- **出力**: `{ events: [{type, planet, date (UTC ISO), descTemplate, descTemplateJP, ...}] }`
+- Flutter側でlocal時刻変換して表示 (`CelestialEvent.localDescJP`)
 
 ---
 

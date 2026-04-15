@@ -13,7 +13,8 @@ class SolaraProfile {
   final String birthPlace;
   final double birthLat;
   final double birthLng;
-  final int birthTz; // UTC offset in hours
+  final int birthTz; // UTC offset in hours (legacy fallback)
+  final String? birthTzName; // IANA TZ name e.g. 'Asia/Tokyo' (DST-aware, C案)
   final String homeName; // HTML: p.homeName
   final double homeLat;  // HTML: p.homeLat
   final double homeLng;  // HTML: p.homeLng
@@ -27,6 +28,7 @@ class SolaraProfile {
     this.birthLat = 0,
     this.birthLng = 0,
     this.birthTz = 9,
+    this.birthTzName,
     this.homeName = '',
     this.homeLat = 0,
     this.homeLng = 0,
@@ -43,6 +45,7 @@ class SolaraProfile {
     'birthLat': birthLat,
     'birthLng': birthLng,
     'birthTz': birthTz,
+    'birthTzName': birthTzName,
     'homeName': homeName,
     'homeLat': homeLat,
     'homeLng': homeLng,
@@ -57,9 +60,38 @@ class SolaraProfile {
     birthLat: (j['birthLat'] ?? 0).toDouble(),
     birthLng: (j['birthLng'] ?? 0).toDouble(),
     birthTz: j['birthTz'] ?? 9,
+    birthTzName: j['birthTzName'] as String?,
     homeName: j['homeName'] ?? '',
     homeLat: (j['homeLat'] ?? 0).toDouble(),
     homeLng: (j['homeLng'] ?? 0).toDouble(),
+  );
+
+  SolaraProfile copyWith({
+    String? name,
+    String? birthDate,
+    String? birthTime,
+    bool? birthTimeUnknown,
+    String? birthPlace,
+    double? birthLat,
+    double? birthLng,
+    int? birthTz,
+    String? birthTzName,
+    String? homeName,
+    double? homeLat,
+    double? homeLng,
+  }) => SolaraProfile(
+    name: name ?? this.name,
+    birthDate: birthDate ?? this.birthDate,
+    birthTime: birthTime ?? this.birthTime,
+    birthTimeUnknown: birthTimeUnknown ?? this.birthTimeUnknown,
+    birthPlace: birthPlace ?? this.birthPlace,
+    birthLat: birthLat ?? this.birthLat,
+    birthLng: birthLng ?? this.birthLng,
+    birthTz: birthTz ?? this.birthTz,
+    birthTzName: birthTzName ?? this.birthTzName,
+    homeName: homeName ?? this.homeName,
+    homeLat: homeLat ?? this.homeLat,
+    homeLng: homeLng ?? this.homeLng,
   );
 }
 

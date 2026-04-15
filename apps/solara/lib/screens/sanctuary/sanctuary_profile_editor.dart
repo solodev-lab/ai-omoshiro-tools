@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 
 import '../../utils/solara_storage.dart';
+import '../../utils/solara_api.dart';
 
 // ══════════════════════════════════════════════════
 // ── Profile Editor Page ──
@@ -28,10 +29,12 @@ class _SanctuaryProfileEditorPageState extends State<SanctuaryProfileEditorPage>
   double _birthLat = 0;
   double _birthLng = 0;
   int _birthTz = 9;
+  String? _birthTzName;
 
   final TextEditingController _placeCtrl = TextEditingController();
   List<Map<String, dynamic>> _placeResults = [];
   bool _searching = false;
+  bool _resolvingTz = false;
 
   @override
   void initState() {
@@ -54,6 +57,7 @@ class _SanctuaryProfileEditorPageState extends State<SanctuaryProfileEditorPage>
     _birthLat = p?.birthLat ?? 0;
     _birthLng = p?.birthLng ?? 0;
     _birthTz = p?.birthTz ?? 9;
+    _birthTzName = p?.birthTzName;
     _placeCtrl.text = _birthPlace;
   }
 
@@ -104,6 +108,23 @@ class _SanctuaryProfileEditorPageState extends State<SanctuaryProfileEditorPage>
       _birthLng = place['lng'] as double;
       _placeCtrl.text = _birthPlace;
       _placeResults = [];
+      _birthTzName = null; // 新しい場所を選択したのでリセット
+      _resolvingTz = true;
+    });
+    // C案: 緯度経度から IANA TZ名 を自動取得 (DST対応)
+    _resolveTimezone();
+  }
+
+  Future<void> _resolveTimezone() async {
+    final lat = _birthLat;
+    final lng = _birthLng;
+    final tzName = await fetchTimezoneName(lat, lng);
+    if (!mounted) return;
+    // 結果到着前に別の場所に変わっていたら無視
+    if (_birthLat != lat || _birthLng != lng) return;
+    setState(() {
+      _birthTzName = tzName;
+      _resolvingTz = false;
     });
   }
 
@@ -138,6 +159,7 @@ class _SanctuaryProfileEditorPageState extends State<SanctuaryProfileEditorPage>
       birthLat: _birthLat,
       birthLng: _birthLng,
       birthTz: _birthTz,
+      birthTzName: _birthTzName,
     );
 
     Navigator.of(context).pop(profile);
@@ -369,6 +391,21 @@ class _SanctuaryProfileEditorPageState extends State<SanctuaryProfileEditorPage>
                             Expanded(child: _readonlyField('緯度', _birthLat.toStringAsFixed(4))),
                             const SizedBox(width: 8),
                             Expanded(child: _readonlyField('経度', _birthLng.toStringAsFixed(4))),
+                          ]),
+                          // C案: 取得した IANA TZ名 を表示 (DST自動考慮)
+                          const SizedBox(height: 6),
+                          Row(children: [
+                            const Icon(Icons.schedule, size: 14, color: Color(0xFFACACAC)),
+                            const SizedBox(width: 6),
+                            Expanded(child: Text(
+                              _resolvingTz
+                                ? 'タイムゾーン判定中…'
+                                : (_birthTzName != null
+                                    ? 'タイムゾーン: $_birthTzName (DST自動)'
+                                    : 'タイムゾーン: UTC+$_birthTz (固定)'),
+                              style: const TextStyle(fontSize: 11, color: Color(0xFFACACAC)),
+                              overflow: TextOverflow.ellipsis,
+                            )),
                           ]),
                         ],
                       ],
