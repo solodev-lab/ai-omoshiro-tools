@@ -6,7 +6,7 @@ class LunarIntention {
   final DateTime chosenAt; // when intention was set (new moon)
   final String newMoonSign; // "Aries"
   final MidpointCheck? midpoint; // full moon check-in
-  final CrystallizationResult? crystallization; // end-of-cycle self-assessment
+  final CatasterismResult? catasterism; // end-of-cycle self-assessment (刻星化)
 
   const LunarIntention({
     required this.cycleId,
@@ -15,12 +15,12 @@ class LunarIntention {
     required this.chosenAt,
     required this.newMoonSign,
     this.midpoint,
-    this.crystallization,
+    this.catasterism,
   });
 
   LunarIntention copyWith({
     MidpointCheck? midpoint,
-    CrystallizationResult? crystallization,
+    CatasterismResult? catasterism,
   }) {
     return LunarIntention(
       cycleId: cycleId,
@@ -29,7 +29,7 @@ class LunarIntention {
       chosenAt: chosenAt,
       newMoonSign: newMoonSign,
       midpoint: midpoint ?? this.midpoint,
-      crystallization: crystallization ?? this.crystallization,
+      catasterism: catasterism ?? this.catasterism,
     );
   }
 
@@ -40,10 +40,12 @@ class LunarIntention {
         'chosenAt': chosenAt.toIso8601String(),
         'newMoonSign': newMoonSign,
         'midpoint': midpoint?.toJson(),
-        'crystallization': crystallization?.toJson(),
+        'catasterism': catasterism?.toJson(),
       };
 
   factory LunarIntention.fromJson(Map<String, dynamic> json) {
+    // 旧スキーマ(crystallization)からのマイグレーション対応
+    final catasterismJson = json['catasterism'] ?? json['crystallization'];
     return LunarIntention(
       cycleId: json['cycleId'] as String,
       chosenText: json['chosenText'] as String,
@@ -53,9 +55,9 @@ class LunarIntention {
       midpoint: json['midpoint'] != null
           ? MidpointCheck.fromJson(json['midpoint'] as Map<String, dynamic>)
           : null,
-      crystallization: json['crystallization'] != null
-          ? CrystallizationResult.fromJson(
-              json['crystallization'] as Map<String, dynamic>)
+      catasterism: catasterismJson != null
+          ? CatasterismResult.fromJson(
+              catasterismJson as Map<String, dynamic>)
           : null,
     );
   }
@@ -81,20 +83,21 @@ class MidpointCheck {
   }
 }
 
-/// End-of-cycle crystallization self-assessment.
-class CrystallizationResult {
+/// End-of-cycle catasterism self-assessment (刻星化).
+/// Catasterism: Greek myth — the placing of mortals/creatures among the stars as constellations.
+class CatasterismResult {
   final DateTime assessedAt;
   final bool released; // did the user feel they released it?
 
-  const CrystallizationResult({required this.assessedAt, required this.released});
+  const CatasterismResult({required this.assessedAt, required this.released});
 
   Map<String, dynamic> toJson() => {
         'assessedAt': assessedAt.toIso8601String(),
         'released': released,
       };
 
-  factory CrystallizationResult.fromJson(Map<String, dynamic> json) {
-    return CrystallizationResult(
+  factory CatasterismResult.fromJson(Map<String, dynamic> json) {
+    return CatasterismResult(
       assessedAt: DateTime.parse(json['assessedAt'] as String),
       released: json['released'] as bool,
     );

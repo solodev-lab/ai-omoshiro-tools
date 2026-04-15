@@ -1,5 +1,5 @@
 /* ===== Solara Moon Event Overlays — 3-Beat Intention System ===== */
-/* New Moon → Full Moon → Crystallization cycle with selectable themes */
+/* New Moon → Full Moon → Catasterism cycle with selectable themes */
 
 (function() {
 
@@ -190,7 +190,7 @@
     } catch(e) { return null; }
   }
 
-  // Load intention regardless of cycleId (for catching uncrystallized previous cycles)
+  // Load intention regardless of cycleId (for catching un-catasterized previous cycles)
   function loadAnyIntention() {
     try {
       var raw = localStorage.getItem(LS_INTENTION);
@@ -238,11 +238,11 @@
       '@keyframes moonPulse { 0%,100%{transform:scale(1);opacity:1;} 50%{transform:scale(1.08);opacity:0.85;} }',
       '.moon-overlay-title {',
       '  font-size:20px; font-weight:700; color:#EAEAEA;',
-      '  font-family:'DM Sans',"Noto Sans JP",sans-serif; line-height:1.4;',
+      '  font-family:\'DM Sans\',"Noto Sans JP",sans-serif; line-height:1.4;',
       '}',
       '.moon-overlay-sub {',
       '  font-size:12px; color:#ACACAC; line-height:1.5;',
-      '  font-family:'DM Sans',"Noto Sans JP",sans-serif;',
+      '  font-family:\'DM Sans\',"Noto Sans JP",sans-serif;',
       '}',
       '.moon-overlay-events {',
       '  width:100%; padding:10px 14px; border-radius:12px;',
@@ -253,22 +253,22 @@
       '.moon-overlay-events-title {',
       '  font-size:10px; font-weight:700; color:rgba(249,217,118,0.7);',
       '  letter-spacing:1.2px; text-transform:uppercase; margin-bottom:6px;',
-      '  font-family:'DM Sans',sans-serif;',
+      '  font-family:\'DM Sans\',sans-serif;',
       '}',
       '.moon-overlay-event-item {',
       '  font-size:11px; color:#ACACAC; line-height:1.6;',
-      '  font-family:"Noto Sans JP",'DM Sans',sans-serif;',
+      '  font-family:"Noto Sans JP",\'DM Sans\',sans-serif;',
       '}',
       '.moon-overlay-prompt {',
       '  font-size:14px; color:#EAEAEA; font-weight:600;',
-      '  font-family:"Noto Sans JP",'DM Sans',sans-serif; line-height:1.5;',
+      '  font-family:"Noto Sans JP",\'DM Sans\',sans-serif; line-height:1.5;',
       '}',
       '.moon-choice-list { width:100%; display:flex; flex-direction:column; gap:10px; }',
       '.moon-choice-btn {',
       '  width:100%; padding:14px 16px; border-radius:14px;',
       '  background:rgba(8,12,20,0.95); backdrop-filter:blur(8px);',
       '  -webkit-backdrop-filter:blur(8px); border:1px solid rgba(255,255,255,0.06);',
-      '  color:#EAEAEA; font-size:13px; font-family:"Noto Sans JP",'DM Sans',sans-serif;',
+      '  color:#EAEAEA; font-size:13px; font-family:"Noto Sans JP",\'DM Sans\',sans-serif;',
       '  text-align:left; cursor:pointer; transition:all 0.25s ease;',
       '  line-height:1.5; outline:none;',
       '}',
@@ -282,7 +282,7 @@
       '.moon-gold-btn {',
       '  padding:14px 36px; border:none; border-radius:28px; cursor:pointer;',
       '  font-size:14px; font-weight:700; color:#1A1A2E;',
-      '  font-family:"Noto Sans JP",'DM Sans',sans-serif;',
+      '  font-family:"Noto Sans JP",\'DM Sans\',sans-serif;',
       '  background:linear-gradient(135deg,#F9D976 0%,#F4C542 100%);',
       '  box-shadow:0 4px 20px rgba(249,217,118,0.3);',
       '  transition:all 0.3s ease; opacity:0; pointer-events:none;',
@@ -293,13 +293,13 @@
       '.moon-ghost-btn {',
       '  padding:10px 24px; border:1px solid rgba(255,255,255,0.1); border-radius:20px;',
       '  background:transparent; color:#ACACAC; font-size:12px; cursor:pointer;',
-      '  font-family:"Noto Sans JP",'DM Sans',sans-serif; transition:all 0.2s ease;',
+      '  font-family:"Noto Sans JP",\'DM Sans\',sans-serif; transition:all 0.2s ease;',
       '}',
       '.moon-ghost-btn:hover { border-color:rgba(255,255,255,0.25); color:#EAEAEA; }',
       '.moon-gold-btn {',
       '  padding:14px 32px; border:none; border-radius:24px; cursor:pointer;',
       '  background:linear-gradient(135deg,#F9D976,#F6BD60); color:#0C1D3A;',
-      '  font-size:14px; font-weight:700; font-family:"Noto Sans JP",'DM Sans',sans-serif;',
+      '  font-size:14px; font-weight:700; font-family:"Noto Sans JP",\'DM Sans\',sans-serif;',
       '  letter-spacing:1px; transition:all 0.2s ease;',
       '}',
       '.moon-gold-btn:hover { transform:scale(1.03); box-shadow:0 0 20px rgba(249,217,118,0.3); }',
@@ -309,7 +309,7 @@
       '  background:rgba(8,12,20,0.95); backdrop-filter:blur(8px);',
       '  -webkit-backdrop-filter:blur(8px); border:1px solid rgba(255,255,255,0.08);',
       '  color:#EAEAEA; font-size:13px; text-align:center;',
-      '  font-family:"Noto Sans JP",'DM Sans',sans-serif;',
+      '  font-family:"Noto Sans JP",\'DM Sans\',sans-serif;',
       '  transition:all 0.25s ease; outline:none; line-height:1.5;',
       '}',
       '.moon-big-btn:hover { border-color:rgba(249,217,118,0.3); }',
@@ -324,17 +324,17 @@
       '.moon-intention-recall-label {',
       '  font-size:10px; font-weight:700; color:rgba(249,217,118,0.6);',
       '  letter-spacing:1px; text-transform:uppercase; margin-bottom:4px;',
-      '  font-family:'DM Sans',sans-serif;',
+      '  font-family:\'DM Sans\',sans-serif;',
       '}',
       '.moon-intention-recall-text {',
       '  font-size:13px; color:#EAEAEA; line-height:1.5;',
-      '  font-family:"Noto Sans JP",'DM Sans',sans-serif;',
+      '  font-family:"Noto Sans JP",\'DM Sans\',sans-serif;',
       '}',
       '.moon-midpoint-badge {',
       '  display:inline-block; padding:3px 10px; border-radius:10px;',
       '  background:rgba(249,217,118,0.1); border:1px solid rgba(249,217,118,0.2);',
       '  font-size:11px; color:#F9D976; margin-top:6px;',
-      '  font-family:"Noto Sans JP",'DM Sans',sans-serif;',
+      '  font-family:"Noto Sans JP",\'DM Sans\',sans-serif;',
       '}',
     ].join('\n');
     document.head.appendChild(style);
@@ -418,7 +418,7 @@
         chosenAt: new Date().toISOString(),
         newMoonSign: data.newMoonSign,
         midpoint: null,
-        crystallization: null
+        catasterism: null
       };
       saveIntention(intention);
       closeOverlay('overlayNewMoon');
@@ -526,12 +526,12 @@
     9: '大きな天体イベントのない静かな月。でも、静けさの中にこそ深い癒しがあります。収穫の月のように、あなたの内側にも実りが訪れています。',
     10: '金星と水星がともに逆行するこの月。人間関係やコミュニケーションの見直しの中で、あなたは大切なことに気づいたはず。その気づきが星になります。',
     11: '水星と金星が順行に戻るこの月。滞っていたものが再び流れ始めます。あなたが取り組んだことは、たとえ途中でも、確かな一歩です。',
-    12: '土星と海王星が順行に戻り、年の終わりへ。この一年で最も深い学びを、あなたの星座に結晶化しましょう。新しい年が、新しい光を連れてきます。'
+    12: '土星と海王星が順行に戻り、年の終わりへ。この一年で最も深い学びを、あなたの星座に刻星化しましょう。新しい年が、新しい光を連れてきます。'
   };
 
-  window.showCrystallizationOverlay = function() {
+  window.showCatasterismOverlay = function() {
     injectOverlayStyles();
-    var old = document.getElementById('overlayCrystal');
+    var old = document.getElementById('overlayCatasterism');
     if (old) old.remove();
 
     var intention = loadIntention();
@@ -556,43 +556,43 @@
       '</div>';
     }
 
-    var html = '<div class="moon-overlay-screen" id="overlayCrystal">' +
+    var html = '<div class="moon-overlay-screen" id="overlayCatasterism">' +
       '<div class="moon-overlay-inner">' +
         '<div class="moon-overlay-emoji">💎</div>' +
-        '<div class="moon-overlay-title">Crystallization' +
-          '<br><span style="font-size:15px;color:#ACACAC;">結晶化</span></div>' +
+        '<div class="moon-overlay-title">Catasterism' +
+          '<br><span style="font-size:15px;color:#ACACAC;">刻星化</span></div>' +
         recallHTML +
         '<div style="font-size:13px;color:#EAEAEA;line-height:1.8;max-width:310px;text-align:center;' +
-          'font-weight:300;font-family:'DM Sans',sans-serif;padding:8px 0;">' +
+          'font-weight:300;font-family:\'DM Sans\',sans-serif;padding:8px 0;">' +
           warmMsg +
         '</div>' +
         '<div style="font-size:11px;color:rgba(172,172,172,0.45);text-align:center;margin-top:2px;">' +
           'この周期の軌跡が星座になります' +
         '</div>' +
-        '<button class="moon-gold-btn active" id="crystalProceedBtn">✦ 星座を結晶化する</button>' +
-        '<button class="moon-ghost-btn" id="crystalSkipBtn">Not now</button>' +
+        '<button class="moon-gold-btn active" id="catasterismProceedBtn">✦ 星座を刻星化する</button>' +
+        '<button class="moon-ghost-btn" id="catasterismSkipBtn">Not now</button>' +
       '</div>' +
     '</div>';
 
     container.insertAdjacentHTML('beforeend', html);
 
     // Bind proceed button → constellation formation
-    document.getElementById('crystalProceedBtn').addEventListener('click', function() {
+    document.getElementById('catasterismProceedBtn').addEventListener('click', function() {
       if (intention) {
-        intention.crystallization = { at: new Date().toISOString() };
+        intention.catasterism = { at: new Date().toISOString() };
         saveIntention(intention);
       }
-      closeOverlay('overlayCrystal');
+      closeOverlay('overlayCatasterism');
       if (typeof triggerConstellationFormation === 'function') {
         triggerConstellationFormation();
       }
     });
 
-    document.getElementById('crystalSkipBtn').addEventListener('click', function() {
-      closeOverlay('overlayCrystal');
+    document.getElementById('catasterismSkipBtn').addEventListener('click', function() {
+      closeOverlay('overlayCatasterism');
     });
 
-    var overlayEl = document.getElementById('overlayCrystal');
+    var overlayEl = document.getElementById('overlayCatasterism');
     setTimeout(function() {
       if (overlayEl) overlayEl.classList.add('visible');
     }, 50);
@@ -640,12 +640,12 @@
 
     // New moon (phase 0-1)
     if (phase <= 1) {
-      // First check: previous cycle has uncrystallized intention?
+      // First check: previous cycle has un-catasterized intention?
       var prevIntention = loadAnyIntention();
-      if (prevIntention && prevIntention.cycleId !== getCurrentCycleId() && !prevIntention.crystallization) {
-        // Previous cycle wasn't crystallized — show crystallization first
+      if (prevIntention && prevIntention.cycleId !== getCurrentCycleId() && !prevIntention.catasterism) {
+        // Previous cycle wasn't catasterized — show catasterism first
         setTimeout(function() {
-          showCrystallizationOverlay();
+          showCatasterismOverlay();
         }, 2000);
         return;
       }
@@ -668,13 +668,13 @@
         }, 2000);
       }
     }
-    // Crystallization (phase 28-29, day before new moon)
+    // Catasterism (phase 28-29, day before new moon)
     else if (phase >= 28) {
       var intention3 = loadIntention();
-      if (intention3 && !intention3.crystallization && !wasShownToday('crystallization')) {
+      if (intention3 && !intention3.catasterism && !wasShownToday('catasterism')) {
         setTimeout(function() {
-          showCrystallizationOverlay();
-          markShown('crystallization');
+          showCatasterismOverlay();
+          markShown('catasterism');
         }, 2000);
       }
     }

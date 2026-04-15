@@ -11,6 +11,7 @@ import '../utils/constellation_namer.dart';
 import '../utils/moon_phase.dart';
 import '../utils/solara_storage.dart';
 import '../utils/tarot_data.dart';
+import '../widgets/catasterism_formation_overlay.dart';
 import '../widgets/cycle_spiral_painter.dart';
 import '../widgets/moon_overlay.dart';
 
@@ -67,8 +68,10 @@ class _GalaxyScreenState extends State<GalaxyScreen>
   CycleSpiralPainter? _lastPainter;
 
   // Moon overlay state
-  String? _activeOverlay; // 'new_moon', 'full_moon', 'crystallization', null
+  String? _activeOverlay; // 'new_moon', 'full_moon', 'catasterism', 'formation', null
   LunarIntention? _currentIntention;
+  // 刻星化完了演出で表示する対象cycle (formation overlay用)
+  GalaxyCycle? _formationCycle;
 
   // HTML: ART_IMAGES — pre-loaded constellation art images
   final Map<int, ui.Image> _artImages = {};
@@ -170,7 +173,13 @@ class _GalaxyScreenState extends State<GalaxyScreen>
     }
 
     if (pastReadings.isNotEmpty) {
-      final newCycle = formConstellation(pastReadings, cycleStart);
+      // 既存cycleの名前集合を渡して重複防止(generate()内でattemptシフト)
+      final usedNames = completedCycles.map((c) => c.nameEN).toSet();
+      final newCycle = formConstellation(
+        pastReadings,
+        cycleStart,
+        usedNames: usedNames,
+      );
       if (newCycle != null) {
         await SolaraStorage.saveCompletedCycle(newCycle);
         completedCycles.add(newCycle);
@@ -338,9 +347,9 @@ class _GalaxyScreenState extends State<GalaxyScreen>
         if (mounted) setState(() => _activeOverlay = 'full_moon');
       }
     } else if (today == crystDay || today.isAfter(crystDay)) {
-      if (intention != null && intention.crystallization == null &&
-          !await SolaraStorage.wasOverlayShownToday('crystallization')) {
-        if (mounted) setState(() => _activeOverlay = 'crystallization');
+      if (intention != null && intention.catasterism == null &&
+          !await SolaraStorage.wasOverlayShownToday('catasterism')) {
+        if (mounted) setState(() => _activeOverlay = 'catasterism');
       }
     }
   }
@@ -391,7 +400,10 @@ class _GalaxyScreenState extends State<GalaxyScreen>
               children: [
                 // HTML: .inner-tabs (padding:0 20px; margin-bottom:8px)
                 _buildTabBar(),
-                const SizedBox(height: 8),
+                const SizedBox(height: 4),
+                // DEBUG: Cycle完了フローの各タイミングを手動トリガー
+                _buildDebugTriggerRow(),
+                const SizedBox(height: 4),
                 // HTML: .tab-panel.active { flex:1; display:flex; flex-direction:column; }
                 Expanded(
                   child: _activeTab == 0
@@ -403,12 +415,13 @@ class _GalaxyScreenState extends State<GalaxyScreen>
                         ),
                 ),
                 // HTML: .stella-msg.glass — #panel-cycle/#panel-atlas の外、
-                //       .main-area の末尾にある。両タブで共有表示される。
+                //       .main-area の末尾にある。Cycleタブのみ表示（Atlasでは非表示）。
                 //       margin: 0 16px 6px
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 6),
-                  child: _buildStellaMessage(),
-                ),
+                if (_activeTab == 0)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 6),
+                    child: _buildStellaMessage(),
+                  ),
               ],
             ),
             if (_popupDayIndex >= 0) _buildDotPopup(),
@@ -654,6 +667,145 @@ class _GalaxyScreenState extends State<GalaxyScreen>
     setState(() => _replayCycle = null);
   }
 
+  // ====================== DEBUG TRIGGERS ======================
+  // 4つのタイミングを日付監視をバイパスして直接トリガーする
+
+  Widget _buildDebugTriggerRow() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Row(
+        children: [
+          Expanded(child: _buildDebugBtn('🌑 新月', _debugTriggerNewMoon)),
+          const SizedBox(width: 6),
+          Expanded(child: _buildDebugBtn('🌕 満月', _debugTriggerFullMoon)),
+          const SizedBox(width: 6),
+          Expanded(child: _buildDebugBtn('✦ 刻星化', _debugTriggerCatasterism)),
+          const SizedBox(width: 6),
+          Expanded(child: _buildDebugBtn('✨ 完了', _debugTriggerCycleCompletion)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDebugBtn(String label, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 6),
+        decoration: BoxDecoration(
+          color: const Color(0x22F9D976),
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(color: const Color(0x66F9D976), width: 1),
+        ),
+        alignment: Alignment.center,
+        child: Text(
+          label,
+          style: const TextStyle(
+            color: Color(0xFFF9D976),
+            fontSize: 11,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// 新月トリガー: `_checkMoonOverlay` 内の `if (isNewMoon)` ブロックの下流を実行
+  void _debugTriggerNewMoon() {
+    setState(() => _activeOverlay = 'new_moon');
+  }
+
+  /// 満月トリガー: 意図が無ければダミーをセット → `if (isFullMoon)` ブロックの下流を実行
+  void _debugTriggerFullMoon() {
+    _currentIntention ??= LunarIntention(
+      cycleId: '${_cycleStart.year}-${_cycleStart.month.toString().padLeft(2, '0')}',
+      chosenText: 'Self-doubt',
+      chosenTextJP: '自己不信',
+      chosenAt: _cycleStart,
+      newMoonSign: 'Aries',
+    );
+    setState(() => _activeOverlay = 'full_moon');
+  }
+
+  /// 刻星化トリガー: フル完了フロー模擬
+  /// - ダミー過去readings保存 → _loadDataで cycle が formConstellation 経由で形成
+  /// - 意図+満月記録ダミー → catasterism overlay 表示
+  /// - ユーザーが「手放せた / まだ途中」押下 → _onCatasterismResult → formation animation
+  Future<void> _debugTriggerCatasterism() async {
+    // 1. cycle を事前に作っておく (完了ボタンと同じロジック)
+    await _debugTriggerCycleCompletion();
+    // 2. 意図ダミー (満月中間記録あり)
+    _currentIntention ??= LunarIntention(
+      cycleId: '${_cycleStart.year}-${_cycleStart.month.toString().padLeft(2, '0')}',
+      chosenText: 'Self-doubt',
+      chosenTextJP: '自己不信',
+      chosenAt: _cycleStart,
+      newMoonSign: 'Aries',
+      midpoint: MidpointCheck(checkedAt: DateTime.now(), rating: 2),
+    );
+    // 3. catasterism overlay 表示 (押下後 _onCatasterismResult 経由で formation へ)
+    if (mounted) setState(() => _activeOverlay = 'catasterism');
+  }
+
+  /// サイクル完了トリガー: ダミー過去readingsを保存 → `_loadData` 再実行で
+  /// `if (pastReadings.isNotEmpty)` ブロックの下流(formConstellation+保存)が走る
+  Future<void> _debugTriggerCycleCompletion() async {
+    final now = DateTime.now();
+    final (cycleStart, _) = MoonPhase.getCurrentCycleBounds(now);
+    final rng = Random(now.microsecondsSinceEpoch);
+
+    // [デバッグ専用] 擬似的に「1〜24サイクル前」の過去に readings を配置する。
+    // → formConstellation 内で readings.first.date から prevStart を
+    //    MoonPhase.getCurrentCycleBounds で再計算 → ハッシュのdateStrが毎回変わる
+    // → 同じ日に何度押しても多様な (adjIdx, nounIdx) が出現する
+    // 本番コードは一切変更せず、デバッグ側の入力日付だけを操作。
+    final cyclesBack = 1 + rng.nextInt(24); // 1〜24サイクル前
+    final prevStart = cycleStart.subtract(Duration(days: 29 * cyclesBack));
+
+    final dummyReadings = <DailyReading>[];
+    // 実運用シミュレート: ユーザーが何日タロット引くかランダム (5〜29日)
+    // カードは78枚から自然分布 → Major(<22)は約28%
+    final readingDays = 5 + rng.nextInt(25); // 5-29枚の範囲
+    // 29日サイクル内のユニークな日をランダムに選ぶ
+    final daySlots = List<int>.generate(29, (i) => i)..shuffle(rng);
+    final selectedDays = daySlots.take(readingDays).toList()..sort();
+
+    int majorCount = 0;
+    int minorCount = 0;
+    for (final day in selectedDays) {
+      final cardId = rng.nextInt(78); // 0-77 自然分布
+      final isMajor = cardId < 22;
+      if (isMajor) {
+        majorCount++;
+      } else {
+        minorCount++;
+      }
+      final date = prevStart.add(Duration(days: day));
+      dummyReadings.add(DailyReading(
+        date: '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}',
+        cardId: cardId,
+        isMajor: isMajor,
+        moonPhase: day * 1.0,
+      ));
+    }
+
+    // saveCurrentReadings に保存 → _loadData 内で cycleStart より前のものが
+    // pastReadings として分離され、formConstellation が走る
+    await SolaraStorage.saveCurrentReadings(dummyReadings);
+    await _loadData();
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            '刻星化: $cyclesBackサイクル前, $readingDays日分 (M:$majorCount / m:$minorCount) → Atlas確認',
+          ),
+          duration: const Duration(seconds: 3),
+        ),
+      );
+    }
+  }
+
   // ====================== MOON OVERLAYS ======================
 
   Widget _buildMoonOverlay() {
@@ -679,12 +831,24 @@ class _GalaxyScreenState extends State<GalaxyScreen>
           );
         }
         return const SizedBox.shrink();
-      case 'crystallization':
+      case 'catasterism':
         if (_currentIntention != null) {
           return Positioned.fill(
-            child: CrystallizationOverlay(
+            child: CatasterismOverlay(
               intention: _currentIntention!,
               onDismiss: () => setState(() => _activeOverlay = null),
+              onResult: _onCatasterismResult,
+            ),
+          );
+        }
+        return const SizedBox.shrink();
+      case 'formation':
+        if (_formationCycle != null) {
+          return Positioned.fill(
+            child: CatasterismFormationOverlay(
+              cycle: _formationCycle!,
+              artImage: _artImages[_formationCycle!.nounIdx],
+              onComplete: _onFormationComplete,
             ),
           );
         }
@@ -692,5 +856,30 @@ class _GalaxyScreenState extends State<GalaxyScreen>
       default:
         return const SizedBox.shrink();
     }
+  }
+
+  /// 刻星化判定後 (手放せた / まだ途中) → formation animation 起動
+  /// _completedCycles の最新を演出対象にする (なければ何もしない)
+  void _onCatasterismResult(bool released) {
+    final latest =
+        _completedCycles.isNotEmpty ? _completedCycles.last : null;
+    if (latest != null) {
+      _loadArtImage(latest.nounIdx);
+      setState(() {
+        _activeOverlay = 'formation';
+        _formationCycle = latest;
+      });
+    } else {
+      setState(() => _activeOverlay = null);
+    }
+  }
+
+  /// formation animation 完了 → オーバーレイ閉じてStar Atlasタブへ自動遷移
+  void _onFormationComplete() {
+    setState(() {
+      _activeOverlay = null;
+      _formationCycle = null;
+      _activeTab = 1; // Star Atlasタブへ
+    });
   }
 }

@@ -229,7 +229,14 @@ class ConstellationNamer {
       hash = ((hash << 5) - hash) + s.codeUnitAt(i);
       hash = hash & 0x7FFFFFFF;
     }
-    return hash;
+    // MurmurHash3 finalizer: 小入力でも各ビットを攪拌して等差パターンを崩す
+    // (小seedCardId 0-21 で同じdateStrを使った時の nounIdx 偏り対策)
+    hash ^= hash >> 16;
+    hash = (hash * 0x85ebca6b) & 0x7FFFFFFF;
+    hash ^= hash >> 13;
+    hash = (hash * 0xc2b2ae35) & 0x7FFFFFFF;
+    hash ^= hash >> 16;
+    return hash & 0x7FFFFFFF;
   }
 
   // ============================================================
@@ -237,14 +244,14 @@ class ConstellationNamer {
   // ============================================================
 
   static const nounShapes = [
-    'loop','linear','linear','radial','linear','radial',
+    'loop','linear','linear','radial','crescent','radial', // crescent(4): 2配列+bridgeのカスタムshape
     'open','open','open','open','open','radial','loop',
-    'linear','radial','open','open','closed','open',
+    'linear','trident','open','closed','closed','open', // trident(14): カスタム7edge / bow(16): 台形outline用
     'linear','linear','closed','open','closed','open',
     'closed','closed','open','loop','closed','radial',
     'radial','closed','closed','closed','open','open',
     'closed','linear','linear','closed','open',
-    'closed','closed','closed','open','closed','closed',
+    'closed','mirror','closed','open','closed','closed', // mirror(43): 円+持ち手カスタム
     'open','closed','open','closed',
     'open','linear','closed','loop','closed',
     'open','open','loop','infinity',
@@ -286,19 +293,19 @@ class ConstellationNamer {
     1: [[.7,.25],[.55,.4],[.4,.55],[.25,.7],[.75,.35],[.8,.45]], // comet
     2: [[.2,.85],[.35,.65],[.5,.5],[.65,.35],[.8,.15]], // meteor
     3: [[.5,.5],[.5,.15],[.8,.35],[.8,.65],[.5,.85],[.2,.65],[.2,.35]], // nova
-    4: [[.4,.2],[.55,.35],[.6,.5],[.55,.65],[.4,.8]], // crescent
+    4: [[.3,.2],[.5,.3],[.6,.5],[.5,.7],[.3,.8],[.65,.35],[.75,.5],[.65,.65]], // crescent (Arr1:0-4 大逆C中央+Arr2:5-7 小逆C右側、top/bottom bridgeで繋ぐ)
     5: [[.5,.5],[.25,.2],[.75,.2],[.85,.5],[.75,.8],[.25,.8],[.15,.5]], // singularity
     6: [[.5,.8],[.4,.6],[.6,.6],[.2,.4],[.8,.4],[.15,.2],[.85,.2]], // phoenix
     7: [[.7,.2],[.55,.3],[.4,.45],[.5,.55],[.65,.65],[.5,.8],[.3,.75]], // dragon
     8: [[.7,.15],[.75,.25],[.65,.3],[.6,.4],[.55,.5],[.7,.55],[.75,.7],[.8,.85],[.45,.7],[.4,.85],[.3,.55],[.25,.7],[.2,.85],[.35,.35]], // griffin
-    9: [[.82,.15],[.72,.2],[.62,.25],[.5,.3],[.45,.4],[.4,.5],[.5,.55],[.6,.55],[.55,.7],[.5,.85],[.65,.7],[.65,.85],[.35,.7],[.35,.85]], // unicorn
-    10: [[.1,.3],[.25,.3],[.4,.3],[.5,.3],[.6,.3],[.75,.3],[.9,.3],[.5,.45],[.5,.55],[.5,.65],[.45,.8],[.55,.8],[.4,.85],[.6,.85]], // pegasus
+    9: [[.82,.15],[.72,.22],[.62,.30],[.50,.35],[.40,.42],[.40,.55],[.50,.55],[.60,.55],[.55,.65],[.65,.78],[.40,.65],[.40,.90]], // unicorn (12点: 角/頭/首/胴体5点/前足2点(曲短)/後ろ足2点(直長))
+    10: [[.05,.2],[.25,.3],[.4,.3],[.5,.3],[.6,.3],[.75,.3],[.95,.2],[.5,.45],[.5,.55],[.5,.65],[.45,.8],[.55,.8],[.4,.85],[.6,.85]], // pegasus (両翼端=左上/右上にカーブ)
     11: [[.5,.35],[.5,.2],[.35,.45],[.65,.45],[.2,.15],[.15,.35],[.1,.55],[.8,.15],[.85,.35],[.9,.55],[.25,.7],[.2,.85],[.75,.7],[.8,.85]], // kraken
     12: [[.5,.2],[.75,.3],[.8,.55],[.65,.75],[.35,.75],[.2,.55],[.25,.3]], // ouroboros
     13: [[.75,.2],[.6,.35],[.45,.45],[.55,.6],[.4,.75],[.3,.85]], // serpent
-    14: [[.5,.15],[.5,.4],[.5,.7],[.5,.9],[.3,.2],[.7,.2],[.4,.2],[.6,.2]], // trident
+    14: [[.5,.15],[.4,.15],[.6,.15],[.5,.4],[.4,.4],[.6,.4],[.5,.65],[.5,.9]], // trident (8点: 穂先3本(x=.4/.5/.6) + 横バー3点 + 柄2点、カスタムshape)
     15: [[.5,.15],[.4,.25],[.6,.25],[.5,.35],[.5,.6],[.35,.8],[.65,.8],[.5,.9]], // anchor
-    16: [[.75,.15],[.75,.5],[.75,.85],[.55,.25],[.35,.35],[.15,.5],[.35,.65],[.55,.75]], // bow (弦=右縦線 + 頂点左の三角形)
+    16: [[.35,.35],[.65,.10],[.65,.50],[.65,.90],[.35,.65]], // bow (台形5点: 左短辺2点 x=.35 + 右長辺3点 x=.65, 幅0.3)
     17: [[.5,.35],[.5,.55],[.5,.75],[.3,.2],[.2,.35],[.25,.55],[.35,.65],[.7,.2],[.8,.35],[.75,.55],[.65,.65]], // butterfly
     18: [[.85,.2],[.7,.13],[.5,.12],[.3,.18],[.18,.32],[.12,.5],[.18,.68],[.3,.82],[.5,.88],[.7,.87],[.85,.8],[.9,.7]], // leviathan (C字型・右開口12点)
     19: [[.2,.8],[.35,.65],[.5,.5],[.65,.35],[.8,.2]], // arrow
@@ -311,7 +318,7 @@ class ConstellationNamer {
     26: [[.3,.25],[.7,.25],[.7,.5],[.3,.5],[.5,.6],[.5,.8],[.35,.85],[.65,.85]], // chalice
     27: [[.35,.1],[.65,.1],[.7,.15],[.7,.45],[.65,.5],[.35,.5],[.3,.45],[.3,.15],[.3,.75],[.7,.75]], // throne
     28: [[.45,.12],[.55,.12],[.58,.18],[.55,.24],[.45,.24],[.42,.18],[.5,.18],[.5,.35],[.5,.55],[.5,.85]], // scepter
-    29: [[.5,.2],[.7,.4],[.65,.65],[.5,.8],[.35,.65],[.3,.4]], // jewel
+    29: [[.5,.32],[.62,.44],[.59,.59],[.5,.68],[.41,.59],[.38,.44]], // jewel (中央寄せ・60%縮小)
     30: [[.5,.15],[.25,.7],[.75,.7],[.5,.45],[.3,.45],[.7,.45]], // philosophers_stone
     31: [[.5,.85],[.45,.65],[.55,.5],[.4,.35],[.6,.25],[.5,.1]], // flame
     32: [[.5,.3],[.65,.2],[.8,.3],[.85,.5],[.75,.7],[.55,.75],[.35,.7],[.15,.5],[.2,.3]], // tempest
@@ -325,7 +332,7 @@ class ConstellationNamer {
     40: [[.2,.8],[.2,.5],[.2,.2],[.35,.15],[.5,.2],[.65,.15],[.8,.2],[.8,.5],[.8,.8],[.5,.8]], // citadel
     41: [[.5,.1],[.4,.3],[.6,.3],[.35,.55],[.65,.55],[.3,.8],[.7,.8]], // babel
     42: [[.5,.15],[.73,.3],[.73,.6],[.5,.75],[.27,.6],[.27,.3]], // emblem
-    43: [[.5,.15],[.68,.3],[.68,.55],[.5,.65],[.32,.55],[.32,.3],[.5,.85]], // mirror
+    43: [[.5,.12],[.72,.22],[.78,.4],[.72,.58],[.5,.65],[.28,.58],[.22,.4],[.28,.22],[.5,.78],[.5,.92]], // mirror (10点: 円8点+持ち手2点、カスタムshape)
     44: [[.3,.12],[.7,.12],[.5,.5],[.3,.88],[.7,.88],[.5,.12],[.5,.88]], // hourglass
     45: [[.5,.2],[.5,.6],[.2,.4],[.8,.4],[.15,.55],[.85,.55]], // scale
     46: [[.5,.15],[.7,.3],[.72,.55],[.6,.75],[.4,.75],[.28,.55],[.3,.3]], // mask
@@ -337,7 +344,7 @@ class ConstellationNamer {
     52: [[.2,.65],[.35,.5],[.5,.35],[.7,.2],[.85,.25],[.75,.45]], // wing
     53: [[.45,.15],[.47,.35],[.5,.55],[.53,.75],[.55,.9],[.35,.45],[.65,.45]], // feather
     54: [[.15,.5],[.35,.3],[.65,.3],[.85,.5],[.65,.7],[.35,.7],[.5,.5]], // eye
-    55: [[.5,.2],[.72,.3],[.78,.5],[.72,.65],[.5,.72],[.28,.65],[.22,.5],[.28,.3]], // halo
+    55: [[.5,.35],[.75,.39],[.85,.5],[.75,.61],[.5,.65],[.25,.61],[.15,.5],[.25,.39]], // halo (横長楕円 a=0.35 b=0.15)
     56: [[.5,.15],[.65,.4],[.5,.5],[.35,.4],[.5,.85],[.65,.6],[.35,.6]], // third_eye
     57: [[.5,.1],[.5,.3],[.5,.5],[.5,.7],[.5,.9],[.1,.5],[.3,.5],[.7,.5],[.9,.5]], // crux (縦棒+横棒のみ)
     58: [[.10,.50],[.25,.50],[.40,.25],[.40,.75],[.55,.50],[.70,.30],[.78,.42],[.85,.55],[.78,.68],[.70,.78]], // prism (入射光線+三角+分散5本)
@@ -345,42 +352,8 @@ class ConstellationNamer {
     60: [[.1,.5],[.2,.3],[.4,.3],[.5,.5],[.6,.7],[.8,.7],[.9,.5],[.8,.3],[.6,.3],[.5,.5],[.4,.7],[.2,.7]], // mobius (∞軌跡順・中央で交差)
   };
 
-  /// Get template anchor positions for a noun, with jitter.
-  /// HTML exact: getTemplatePositions(nounIdx, numAnchors, seed)
-  static List<List<double>> getTemplatePositions(int nounIdx, int numAnchors, int seed) {
-    final template = nounTemplates[nounIdx];
-    if (template == null) {
-      final rng = Random(seed);
-      return List.generate(numAnchors, (_) => [0.15 + rng.nextDouble() * 0.7, 0.15 + rng.nextDouble() * 0.7]);
-    }
-
-    final rng = Random(seed);
-    const jitter = 0.04;
-
-    if (numAnchors <= template.length) {
-      final step = template.length / numAnchors;
-      return List.generate(numAnchors, (i) {
-        final ti = (i * step).round().clamp(0, template.length - 1);
-        return [
-          template[ti][0] + (rng.nextDouble() - 0.5) * jitter * 2,
-          template[ti][1] + (rng.nextDouble() - 0.5) * jitter * 2,
-        ];
-      });
-    }
-
-    return List.generate(numAnchors, (i) {
-      final tIdx = (i / numAnchors) * template.length;
-      final lo = tIdx.floor();
-      final hi = (lo + 1).clamp(0, template.length - 1);
-      final frac = tIdx - lo;
-      final x = template[lo][0] + frac * (template[hi][0] - template[lo][0]);
-      final y = template[lo][1] + frac * (template[hi][1] - template[lo][1]);
-      return [
-        x + (rng.nextDouble() - 0.5) * jitter * 2,
-        y + (rng.nextDouble() - 0.5) * jitter * 2,
-      ];
-    });
-  }
+  // [削除] getTemplatePositions — formConstellationが直接 nounTemplates[nounIdx] を
+  //        使うようになったため不要 (jitter/サンプリング/補間を廃止して視覚を完全固定化)
 
   // ============================================================
   // MST (Prim's algorithm) + buildConstellationEdges
@@ -432,6 +405,103 @@ class ConstellationNamer {
         for (int i = 0; i < n - 1; i++) (from: i, to: i + 1),
         (from: n - 1, to: 0),
       ];
+    }
+
+    // -- Trident: 穂先3本(y=.15) + 横バー3点(y=.4) + 柄2点(.65/.9)
+    // Convention: anchors.length == 8 で「0:穂先中, 1:穂先左, 2:穂先右, 3:横バー中, 4:横バー左, 5:横バー右, 6:柄上, 7:柄下」
+    // Edge 7本: 穂先3本縦 + 横バー2本 + 柄2本
+    if (shapeType == 'trident') {
+      if (anchors.length == 8) {
+        return const [
+          (from: 0, to: 3), // 中央穂先
+          (from: 1, to: 4), // 左穂先
+          (from: 2, to: 5), // 右穂先
+          (from: 4, to: 3), // 横バー左
+          (from: 3, to: 5), // 横バー右
+          (from: 3, to: 6), // 柄上
+          (from: 6, to: 7), // 柄下
+        ];
+      }
+      // Fallback: 8点以外は純MST
+      return computeMST(anchors);
+    }
+
+    // -- Mirror: 円(8点closed loop) + 持ち手(2点縦線、円最下部から)
+    // Convention: anchors.length == 10 で「0-7: 円perimeter(時計回り top→UR→...→UL), 8-9: 持ち手」
+    // Edge: 円8本(閉) + 持ち手2本(4→8→9) = 10本
+    if (shapeType == 'mirror') {
+      if (anchors.length == 10) {
+        return const [
+          // 円perimeter (0→1→2→3→4→5→6→7→0 閉ループ)
+          (from: 0, to: 1),
+          (from: 1, to: 2),
+          (from: 2, to: 3),
+          (from: 3, to: 4),
+          (from: 4, to: 5),
+          (from: 5, to: 6),
+          (from: 6, to: 7),
+          (from: 7, to: 0),
+          // 持ち手 (円最下部4→handle上8→handle下9)
+          (from: 4, to: 8),
+          (from: 8, to: 9),
+        ];
+      }
+      // Fallback: 10点以外なら 'closed' MST
+      final mst = computeMST(anchors);
+      final degree = List.filled(anchors.length, 0);
+      for (final e in mst) { degree[e.from]++; degree[e.to]++; }
+      final leaves = [for (int i = 0; i < anchors.length; i++) if (degree[i] == 1) i];
+      if (leaves.length >= 2) {
+        var bestDist = 0.0;
+        var bestA = leaves[0], bestB = leaves[1];
+        for (int i = 0; i < leaves.length; i++) {
+          for (int j = i + 1; j < leaves.length; j++) {
+            final d = (anchors[leaves[i]] - anchors[leaves[j]]).distance;
+            if (d > bestDist) { bestDist = d; bestA = leaves[i]; bestB = leaves[j]; }
+          }
+        }
+        mst.add((from: bestA, to: bestB));
+      }
+      return mst;
+    }
+
+    // -- Crescent: 2配列の逆C + top/bottom bridge
+    // Convention: anchors.length == 8 で「0-4: Arr1(大逆C中央), 5-7: Arr2(小逆C右側)」
+    // Linear chain within each + top bridge(0-5) + bottom bridge(4-7)
+    // 8点以外の時は 'closed' MST にフォールバック
+    if (shapeType == 'crescent') {
+      if (anchors.length == 8) {
+        return const [
+          // Arr1 linear (0→1→2→3→4)
+          (from: 0, to: 1),
+          (from: 1, to: 2),
+          (from: 2, to: 3),
+          (from: 3, to: 4),
+          // Arr2 linear (5→6→7)
+          (from: 5, to: 6),
+          (from: 6, to: 7),
+          // Bridges
+          (from: 0, to: 5), // top
+          (from: 4, to: 7), // bottom
+        ];
+      }
+      // Fallback: 8点以外なら 'closed' MST
+      final mst = computeMST(anchors);
+      final degree = List.filled(anchors.length, 0);
+      for (final e in mst) { degree[e.from]++; degree[e.to]++; }
+      final leaves = [for (int i = 0; i < anchors.length; i++) if (degree[i] == 1) i];
+      if (leaves.length >= 2) {
+        var bestDist = 0.0;
+        var bestA = leaves[0], bestB = leaves[1];
+        for (int i = 0; i < leaves.length; i++) {
+          for (int j = i + 1; j < leaves.length; j++) {
+            final d = (anchors[leaves[i]] - anchors[leaves[j]]).distance;
+            if (d > bestDist) { bestDist = d; bestA = leaves[i]; bestB = leaves[j]; }
+          }
+        }
+        mst.add((from: bestA, to: bestB));
+      }
+      return mst;
     }
 
     // -- Linear: nearest-neighbor chain
@@ -526,4 +596,9 @@ class ConstellationNamer {
     if (nounIdx < 0 || nounIdx >= nounFilenames.length) return '';
     return 'assets/constellation-art/${nounFilenames[nounIdx]}.webp';
   }
+
+  // [削除] highAnchorNouns / minMajorsFor — formConstellationが
+  //        nounTemplates[nounIdx] を template.length 個のアンカーとして
+  //        直接使うようになったため、アンカー数保証やMinor昇格は不要。
+  //        視覚はnounIdxで完全決定されるため、ユーザーのMajor数に左右されない。
 }

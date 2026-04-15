@@ -7,7 +7,7 @@ import '../../widgets/constellation_painter.dart';
 
 // ══════════════════════════════════════════════════
 // Replay Overlay
-// HTML: #replayModal — crystallization camera animation
+// HTML: #replayModal — catasterism (刻星化) camera animation
 // Phase 1: Camera 55°→0° (0-3s)
 // Phase 2: Line connections (3-4.5s)
 // Phase 3: Name + rarity fade-in (4.5-6.5s)

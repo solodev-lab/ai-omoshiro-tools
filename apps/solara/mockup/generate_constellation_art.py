@@ -22,12 +22,14 @@ if env_path.exists():
             os.environ.setdefault(key.strip(), val.strip())
 
 STYLE = (
-    "White line art illustration on pure black background. "
+    "White line art illustration on pure solid black background (#000000). "
     "Elegant, detailed linework with fine white contours only. No color, no fill, only white lines and subtle white shading on black. "
     "Ethereal, celestial, mystical atmosphere like a constellation guide book illustration. "
-    "No text, no letters, no numbers, no watermark. "
+    "ABSOLUTELY NO border, NO frame, NO decorative edge, NO rectangular outline around the illustration. "
+    "The black background extends fully to all edges with no boundary. "
+    "No text, no letters, no numbers, no watermark, no signature. "
     "Semi-transparent feeling, delicate strokes, astronomical art style. "
-    "Square 512x512 composition, subject centered."
+    "Square composition, subject centered with ample negative space."
 )
 
 # All 61 nouns with orientation-matched prompts
@@ -187,6 +189,9 @@ def main():
 
     if arg == "all":
         targets = NOUNS
+    elif "," in arg:
+        indices = {int(s.strip()) for s in arg.split(",")}
+        targets = [n for n in NOUNS if n[0] in indices]
     elif "-" in arg:
         lo, hi = arg.split("-")
         targets = [n for n in NOUNS if int(lo) <= n[0] <= int(hi)]

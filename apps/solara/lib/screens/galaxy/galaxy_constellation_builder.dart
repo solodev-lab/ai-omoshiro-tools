@@ -8,17 +8,23 @@ import '../../utils/tarot_data.dart';
 // ══════════════════════════════════════════════════
 // Constellation Builder
 // HTML: formConstellation() — builds GalaxyCycle from past-cycle readings
+//
+// 設計方針: 名前・色・レアリティはユーザーのreadingsから生成（個別性）、
+// 視覚要素(dots/edges/art)はnounIdxで完全決定（全ユーザー共通の正本形）。
+// → Star Atlasの「同じGriffinは誰にとっても同じGriffin」を実現。
+// → jitter/サンプリング/補間/Minor昇格/Crescent特殊処理は全て廃止。
 // ══════════════════════════════════════════════════
 
 GalaxyCycle? formConstellation(
-    List<DailyReading> readings, DateTime currentCycleStart) {
+    List<DailyReading> readings, DateTime currentCycleStart,
+    {Set<String>? usedNames}) {
   if (readings.isEmpty) return null;
 
   // Find the cycle these readings belong to
   final firstDate = DateTime.parse(readings.first.date);
   final (prevStart, prevEnd) = MoonPhase.getCurrentCycleBounds(firstDate);
 
-  // Determine seed card (most frequent major arcana)
+  // ─── seedCardId 決定 (最頻出Major or スート fallback) ───
   final majorCounts = <int, int>{};
   final suitCounts = <String, int>{};
   for (final r in readings) {
@@ -47,83 +53,68 @@ GalaxyCycle? formConstellation(
     seedCardId = 0;
   }
 
-  // Generate name (v2: 1,220 combos with dedup)
+  // ─── 名前生成 (adj × noun ハッシュ + dedup) ───
   final nameResult = ConstellationNamer.generate(
     seedCardId: seedCardId,
     date: prevStart,
+    usedNames: usedNames,
   );
   final rarity = ConstellationNamer.calculateRarity(
     nameResult.adjIdx,
     nameResult.nounIdx,
   );
 
-  // HTML exact: Place dots — Majors on NOUN_TEMPLATE positions, Minors via Golden Angle
+  // ─── dots配置: gallery方式 (nounIdx決定論、全ユーザー共通) ───
+  // Anchors: template[i] をそのまま使用 (jitter/サンプリング/補間なし)
+  // Minors: Golden Angle で rarity ベースの個数、synthetic cardId
   const goldenAngle = 137.508 * pi / 180;
   final dots = <ConstellationDot>[];
-  final rng = Random(seedCardId + prevStart.millisecondsSinceEpoch);
+  final template = ConstellationNamer.nounTemplates[nameResult.nounIdx] ?? [];
+  final anchorCount = template.length;
+  final minorCount = (rarity.stars * 3 + 2).clamp(2, 25 - anchorCount);
+  final totalDots = anchorCount + minorCount;
+  // nounIdx固定シード → 同じ星座は毎回同じdots生成 (z-layer微揺らぎも決定論)
+  final rng = Random(nameResult.nounIdx * 1000 + 7);
 
-  // Separate major/minor readings
-  final majorReadings = <DailyReading>[];
-  final minorReadings = <DailyReading>[];
-  for (final r in readings) {
-    if (r.isMajor) majorReadings.add(r);
-    else minorReadings.add(r);
-  }
-
-  // Place Majors on template positions (HTML: getTemplatePositions)
-  final templatePos = ConstellationNamer.getTemplatePositions(
-    nameResult.nounIdx, majorReadings.length, seedCardId * 100 + prevStart.day,
-  );
-  for (int i = 0; i < majorReadings.length; i++) {
-    final r = majorReadings[i];
-    final rDate = DateTime.parse(r.date);
-    final dayIdx = rDate.difference(prevStart).inDays;
-    final nx = templatePos[i][0];
-    final ny = templatePos[i][1];
-    final zLayer = (r.cardId % 3) - 1;
-    final zJitter = (rng.nextDouble() - 0.5) * 0.4;
+  // Anchors: テンプレート座標を直接使用
+  for (int i = 0; i < anchorCount; i++) {
+    final cardId = (nameResult.nounIdx * 7 + i * 11) % 78;
     dots.add(ConstellationDot(
-      x: nx.clamp(0.08, 0.92),
-      y: ny.clamp(0.08, 0.92),
-      z: (zLayer + zJitter).clamp(-1.0, 1.0),
-      dayIndex: dayIdx,
-      cardId: r.cardId,
+      x: template[i][0],
+      y: template[i][1],
+      z: (rng.nextDouble() - 0.5) * 1.0,
+      dayIndex: i,
+      cardId: cardId,
       isMajor: true,
     ));
   }
 
-  // Place Minors via Golden Angle (HTML: placeCycleDots minors section)
-  for (int i = 0; i < minorReadings.length; i++) {
-    final r = minorReadings[i];
-    final rDate = DateTime.parse(r.date);
-    final dayIdx = rDate.difference(prevStart).inDays;
-    final angle = r.cardId * goldenAngle;
-    final radius = 0.15 + (i / max(1, minorReadings.length)) * 0.28;
-    final x = 0.5 + radius * cos(angle);
-    final y = 0.5 + radius * sin(angle);
-    final zLayer = (r.cardId % 3) - 1;
-    final zJitter = (rng.nextDouble() - 0.5) * 0.4;
+  // Minors: Golden Angle配置、synthetic cardId
+  for (int i = 0; i < minorCount; i++) {
+    final cardId = (nameResult.nounIdx * 13 + i * 17 + 22) % 78;
+    final angle = cardId * goldenAngle;
+    final radius = 0.12 + (i / totalDots) * 0.3;
+    final x = (0.5 + radius * cos(angle)).clamp(0.08, 0.92);
+    final y = (0.5 + radius * sin(angle)).clamp(0.08, 0.92);
     dots.add(ConstellationDot(
-      x: x.clamp(0.08, 0.92),
-      y: y.clamp(0.08, 0.92),
-      z: (zLayer + zJitter).clamp(-1.0, 1.0),
-      dayIndex: dayIdx,
-      cardId: r.cardId,
+      x: x,
+      y: y,
+      z: (rng.nextDouble() - 0.5) * 1.5,
+      dayIndex: anchorCount + i,
+      cardId: cardId,
       isMajor: false,
     ));
   }
-
-  dots.sort((a, b) => a.dayIndex.compareTo(b.dayIndex));
 
   return GalaxyCycle(
     id: DateTime.now().millisecondsSinceEpoch.toString(),
     cycleStart: prevStart,
     cycleEnd: prevEnd,
-    readings: readings,
+    readings: readings, // ユーザーの実readingsは履歴として保持
     seedCardId: seedCardId,
     nameEN: nameResult.en,
     nameJP: nameResult.jp,
-    dots: dots,
+    dots: dots, // gallery方式で決定論生成
     rarity: rarity.stars,
     rarityLabel: rarity.label,
     adjIdx: nameResult.adjIdx,

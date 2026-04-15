@@ -469,7 +469,7 @@ body {
         </div>
       </div>
 
-      <div class="stella-msg glass" style="flex-shrink:0">
+      <div class="stella-msg glass" id="stellaMsg" style="flex-shrink:0">
         <div class="bubble-by">✦ Stella</div>
         <div class="bubble-msg">"Your cosmic spiral grows brighter with each orbit. Trust the momentum."</div>
       </div>
@@ -813,14 +813,14 @@ function rarityStarsHTML(stars) {
 // ============================================================
 
 const NOUN_SHAPES = [
-  'loop','linear','linear','radial','linear','radial',
+  'loop','linear','linear','radial','crescent','radial', // crescent(4): 2配列+bridgeカスタム
   'open','open','open','open','open','radial','loop',
-  'linear','radial','open','open','closed','open',
+  'linear','trident','open','closed','closed','open', // trident(14): カスタム7edge / bow(16): 台形outline用
   'linear','linear','closed','open','closed','open',
   'closed','closed','open','loop','closed','radial',
   'radial','closed','closed','closed','open','open',
   'closed','linear','linear','closed','open',
-  'closed','closed','closed','open','closed','closed',
+  'closed','mirror','closed','open','closed','closed', // mirror(43): 円+持ち手カスタム
   'open','closed','open','closed',
   'open','linear','closed','loop','closed',
   'open','open','loop','infinity',
@@ -868,6 +868,70 @@ function buildConstellationEdges(anchorPoints, shapeType) {
     for (let i = 0; i < n - 1; i++) edges.push({from: i, to: i + 1});
     edges.push({from: n - 1, to: 0});
     return edges;
+  }
+
+  // -- Trident: 穂先3本縦 + 横バー2本 + 柄2本 (8点構造)
+  if (shapeType === 'trident') {
+    if (anchorPoints.length === 8) {
+      return [
+        {from:0,to:3},{from:1,to:4},{from:2,to:5},
+        {from:4,to:3},{from:3,to:5},
+        {from:3,to:6},{from:6,to:7}
+      ];
+    }
+    return computeMST(anchorPoints);
+  }
+
+  // -- Mirror: 円8点closed + 持ち手2本縦 (10点構造)
+  if (shapeType === 'mirror') {
+    if (anchorPoints.length === 10) {
+      return [
+        {from:0,to:1},{from:1,to:2},{from:2,to:3},{from:3,to:4},
+        {from:4,to:5},{from:5,to:6},{from:6,to:7},{from:7,to:0},
+        {from:4,to:8},{from:8,to:9}
+      ];
+    }
+    // Fallback: closed MST
+    const mst = computeMST(anchorPoints);
+    const deg = new Array(anchorPoints.length).fill(0);
+    mst.forEach(e => { deg[e.from]++; deg[e.to]++; });
+    const leaves = [];
+    for (let i = 0; i < anchorPoints.length; i++) if (deg[i] === 1) leaves.push(i);
+    if (leaves.length >= 2) {
+      let bD = 0, bA = leaves[0], bB = leaves[1];
+      for (let i = 0; i < leaves.length; i++) for (let j = i+1; j < leaves.length; j++) {
+        const d = Math.hypot(anchorPoints[leaves[i]].x-anchorPoints[leaves[j]].x, anchorPoints[leaves[i]].y-anchorPoints[leaves[j]].y);
+        if (d > bD) { bD = d; bA = leaves[i]; bB = leaves[j]; }
+      }
+      mst.push({from:bA, to:bB});
+    }
+    return mst;
+  }
+
+  // -- Crescent: 2配列の逆C + top/bottom bridge (8点構造)
+  if (shapeType === 'crescent') {
+    if (anchorPoints.length === 8) {
+      return [
+        {from: 0, to: 1}, {from: 1, to: 2}, {from: 2, to: 3}, {from: 3, to: 4},
+        {from: 5, to: 6}, {from: 6, to: 7},
+        {from: 0, to: 5}, {from: 4, to: 7}
+      ];
+    }
+    // Fallback to MST + closed bridge
+    const mst = computeMST(anchorPoints);
+    const deg = new Array(anchorPoints.length).fill(0);
+    mst.forEach(e => { deg[e.from]++; deg[e.to]++; });
+    const leaves = [];
+    for (let i = 0; i < anchorPoints.length; i++) if (deg[i] === 1) leaves.push(i);
+    if (leaves.length >= 2) {
+      let bD = 0, bA = leaves[0], bB = leaves[1];
+      for (let i = 0; i < leaves.length; i++) for (let j = i+1; j < leaves.length; j++) {
+        const d = Math.hypot(anchorPoints[leaves[i]].x-anchorPoints[leaves[j]].x, anchorPoints[leaves[i]].y-anchorPoints[leaves[j]].y);
+        if (d > bD) { bD = d; bA = leaves[i]; bB = leaves[j]; }
+      }
+      mst.push({from: bA, to: bB});
+    }
+    return mst;
   }
 
   // -- Linear: nearest-neighbor chain
@@ -956,19 +1020,19 @@ const NOUN_TEMPLATES = {
   1: [[.7,.25],[.55,.4],[.4,.55],[.25,.7],[.75,.35],[.8,.45]],
   2: [[.2,.85],[.35,.65],[.5,.5],[.65,.35],[.8,.15]],
   3: [[.5,.5],[.5,.15],[.8,.35],[.8,.65],[.5,.85],[.2,.65],[.2,.35]],
-  4: [[.4,.2],[.55,.35],[.6,.5],[.55,.65],[.4,.8]],
+  4: [[.3,.2],[.5,.3],[.6,.5],[.5,.7],[.3,.8],[.65,.35],[.75,.5],[.65,.65]], // crescent: Arr1(0-4 大逆C中央)+Arr2(5-7 小逆C右側)、top/bottom bridge
   5: [[.5,.5],[.25,.2],[.75,.2],[.85,.5],[.75,.8],[.25,.8],[.15,.5]],
   6: [[.5,.8],[.4,.6],[.6,.6],[.2,.4],[.8,.4],[.15,.2],[.85,.2]],
   7: [[.7,.2],[.55,.3],[.4,.45],[.5,.55],[.65,.65],[.5,.8],[.3,.75]],
   8: [[.7,.15],[.75,.25],[.65,.3],[.6,.4],[.55,.5],[.7,.55],[.75,.7],[.8,.85],[.45,.7],[.4,.85],[.3,.55],[.25,.7],[.2,.85],[.35,.35]],
-  9: [[.82,.15],[.72,.2],[.62,.25],[.5,.3],[.45,.4],[.4,.5],[.5,.55],[.6,.55],[.55,.7],[.5,.85],[.65,.7],[.65,.85],[.35,.7],[.35,.85]],
-  10:[[.1,.3],[.25,.3],[.4,.3],[.5,.3],[.6,.3],[.75,.3],[.9,.3],[.5,.45],[.5,.55],[.5,.65],[.45,.8],[.55,.8],[.4,.85],[.6,.85]],
+  9: [[.82,.15],[.72,.22],[.62,.30],[.50,.35],[.40,.42],[.40,.55],[.50,.55],[.60,.55],[.55,.65],[.65,.78],[.40,.65],[.40,.90]], // unicorn: 12点、前足(右短曲)+後脚(左長直)
+  10:[[.05,.2],[.25,.3],[.4,.3],[.5,.3],[.6,.3],[.75,.3],[.95,.2],[.5,.45],[.5,.55],[.5,.65],[.45,.8],[.55,.8],[.4,.85],[.6,.85]], // pegasus: 両翼端 左上/右上カーブ
   11:[[.5,.35],[.5,.2],[.35,.45],[.65,.45],[.2,.15],[.15,.35],[.1,.55],[.8,.15],[.85,.35],[.9,.55],[.25,.7],[.2,.85],[.75,.7],[.8,.85]],
   12:[[.5,.2],[.75,.3],[.8,.55],[.65,.75],[.35,.75],[.2,.55],[.25,.3]],
   13:[[.75,.2],[.6,.35],[.45,.45],[.55,.6],[.4,.75],[.3,.85]],
-  14:[[.5,.15],[.5,.4],[.5,.7],[.5,.9],[.3,.2],[.7,.2],[.4,.2],[.6,.2]],
+  14:[[.5,.15],[.4,.15],[.6,.15],[.5,.4],[.4,.4],[.6,.4],[.5,.65],[.5,.9]], // trident: 穂先3本(x=.4/.5/.6)+横バー3点+柄2点、カスタムshape
   15:[[.5,.15],[.4,.25],[.6,.25],[.5,.35],[.5,.6],[.35,.8],[.65,.8],[.5,.9]],
-  16:[[.75,.15],[.75,.5],[.75,.85],[.55,.25],[.35,.35],[.15,.5],[.35,.65],[.55,.75]],
+  16:[[.35,.35],[.65,.10],[.65,.50],[.65,.90],[.35,.65]], // bow: 台形5点 左短2点(x=.35) + 右長3点(x=.65) 幅0.3
   17:[[.5,.35],[.5,.55],[.5,.75],[.3,.2],[.2,.35],[.25,.55],[.35,.65],[.7,.2],[.8,.35],[.75,.55],[.65,.65]],
   18:[[.85,.2],[.7,.13],[.5,.12],[.3,.18],[.18,.32],[.12,.5],[.18,.68],[.3,.82],[.5,.88],[.7,.87],[.85,.8],[.9,.7]],
   19:[[.2,.8],[.35,.65],[.5,.5],[.65,.35],[.8,.2]],
@@ -981,7 +1045,7 @@ const NOUN_TEMPLATES = {
   26:[[.3,.25],[.7,.25],[.7,.5],[.3,.5],[.5,.6],[.5,.8],[.35,.85],[.65,.85]],
   27:[[.35,.1],[.65,.1],[.7,.15],[.7,.45],[.65,.5],[.35,.5],[.3,.45],[.3,.15],[.3,.75],[.7,.75]],
   28:[[.45,.12],[.55,.12],[.58,.18],[.55,.24],[.45,.24],[.42,.18],[.5,.18],[.5,.35],[.5,.55],[.5,.85]],
-  29:[[.5,.2],[.7,.4],[.65,.65],[.5,.8],[.35,.65],[.3,.4]],
+  29:[[.5,.32],[.62,.44],[.59,.59],[.5,.68],[.41,.59],[.38,.44]], // jewel: 中央寄せ60%縮小
   30:[[.5,.15],[.25,.7],[.75,.7],[.5,.45],[.3,.45],[.7,.45]],
   31:[[.5,.85],[.45,.65],[.55,.5],[.4,.35],[.6,.25],[.5,.1]],
   32:[[.5,.3],[.65,.2],[.8,.3],[.85,.5],[.75,.7],[.55,.75],[.35,.7],[.15,.5],[.2,.3]],
@@ -995,7 +1059,7 @@ const NOUN_TEMPLATES = {
   40:[[.2,.8],[.2,.5],[.2,.2],[.35,.15],[.5,.2],[.65,.15],[.8,.2],[.8,.5],[.8,.8],[.5,.8]],
   41:[[.5,.1],[.4,.3],[.6,.3],[.35,.55],[.65,.55],[.3,.8],[.7,.8]],
   42:[[.5,.15],[.73,.3],[.73,.6],[.5,.75],[.27,.6],[.27,.3]],
-  43:[[.5,.15],[.68,.3],[.68,.55],[.5,.65],[.32,.55],[.32,.3],[.5,.85]],
+  43:[[.5,.12],[.72,.22],[.78,.4],[.72,.58],[.5,.65],[.28,.58],[.22,.4],[.28,.22],[.5,.78],[.5,.92]], // mirror: 円8点+持ち手2点
   44:[[.3,.12],[.7,.12],[.5,.5],[.3,.88],[.7,.88],[.5,.12],[.5,.88]],
   45:[[.5,.2],[.5,.6],[.2,.4],[.8,.4],[.15,.55],[.85,.55]],
   46:[[.5,.15],[.7,.3],[.72,.55],[.6,.75],[.4,.75],[.28,.55],[.3,.3]],
@@ -1007,7 +1071,7 @@ const NOUN_TEMPLATES = {
   52:[[.2,.65],[.35,.5],[.5,.35],[.7,.2],[.85,.25],[.75,.45]],
   53:[[.45,.15],[.47,.35],[.5,.55],[.53,.75],[.55,.9],[.35,.45],[.65,.45]],
   54:[[.15,.5],[.35,.3],[.65,.3],[.85,.5],[.65,.7],[.35,.7],[.5,.5]],
-  55:[[.5,.2],[.72,.3],[.78,.5],[.72,.65],[.5,.72],[.28,.65],[.22,.5],[.28,.3]],
+  55:[[.5,.35],[.75,.39],[.85,.5],[.75,.61],[.5,.65],[.25,.61],[.15,.5],[.25,.39]], // halo: 横長楕円 a=0.35 b=0.15
   56:[[.5,.15],[.65,.4],[.5,.5],[.35,.4],[.5,.85],[.65,.6],[.35,.6]],
   57:[[.5,.1],[.5,.3],[.5,.5],[.5,.7],[.5,.9],[.1,.5],[.3,.5],[.7,.5],[.9,.5]],
   58:[[.10,.50],[.25,.50],[.40,.25],[.40,.75],[.55,.50],[.70,.30],[.78,.42],[.85,.55],[.78,.68],[.70,.78]],
@@ -1015,41 +1079,13 @@ const NOUN_TEMPLATES = {
   60:[[.1,.5],[.2,.3],[.4,.3],[.5,.5],[.6,.7],[.8,.7],[.9,.5],[.8,.3],[.6,.3],[.5,.5],[.4,.7],[.2,.7]],
 };
 
-function getTemplatePositions(nounIdx, numAnchors, seed) {
+// getTemplatePositions: gallery方式に簡略化
+// jitter/サンプリング/補間は全廃止。nounTemplates[nounIdx] を直接使用。
+// 視覚は nounIdx で完全決定 → 同じ星座は誰にとっても同じ形。
+function getTemplatePositions(nounIdx) {
   const template = NOUN_TEMPLATES[nounIdx];
-  if (!template) {
-    const rng = mulberry32(seed);
-    return Array.from({length: numAnchors}, () => [0.15 + rng()*0.7, 0.15 + rng()*0.7]);
-  }
-
-  const rng = mulberry32(seed);
-  const jitter = 0.04;
-
-  if (numAnchors <= template.length) {
-    const step = template.length / numAnchors;
-    return Array.from({length: numAnchors}, (_, i) => {
-      const ti = Math.min(template.length - 1, Math.round(i * step));
-      return [
-        template[ti][0] + (rng() - 0.5) * jitter * 2,
-        template[ti][1] + (rng() - 0.5) * jitter * 2,
-      ];
-    });
-  }
-
-  const positions = [];
-  for (let i = 0; i < numAnchors; i++) {
-    const tIdx = (i / numAnchors) * template.length;
-    const lo = Math.floor(tIdx);
-    const hi = Math.min(template.length - 1, lo + 1);
-    const frac = tIdx - lo;
-    const x = template[lo][0] + frac * (template[hi][0] - template[lo][0]);
-    const y = template[lo][1] + frac * (template[hi][1] - template[lo][1]);
-    positions.push([
-      x + (rng() - 0.5) * jitter * 2,
-      y + (rng() - 0.5) * jitter * 2,
-    ]);
-  }
-  return positions;
+  if (!template) return [];
+  return template.map(p => [p[0], p[1]]);
 }
 
 // ============================================================
@@ -1078,36 +1114,42 @@ const ADJ_COLORS = [
 
 const GOLDEN_ANGLE = 137.508 * Math.PI / 180;
 
-function placeCycleDots(majors, minors, nounIdx, seedCard, id) {
+// placeCycleDots: gallery方式 — nounIdx決定論で dots を生成
+// Anchors: NOUN_TEMPLATES[nounIdx] 直接 (jitter/サンプリング/補間なし)
+// Minors: Golden Angle, rarityベースのminorCount, synthetic cardId
+// majors/minors引数は readings履歴として受け取るが、dot生成には使わない
+function placeCycleDots(majors, minors, nounIdx, seedCard, id, stars) {
   const dots = [];
-  const rng = mulberry32(seedCard * 1000 + id * 7);
+  const template = NOUN_TEMPLATES[nounIdx] || [];
+  const anchorCount = template.length;
+  const minorCount = Math.max(2, Math.min(25 - anchorCount, (stars || 1) * 3 + 2));
+  const totalDots = anchorCount + minorCount;
+  // nounIdx固定シード → 同じ星座は毎回同じdots
+  const rng = mulberry32(nounIdx * 1000 + 7);
 
-  const templatePos = getTemplatePositions(nounIdx, majors.length, seedCard * 100 + id);
-  for (let i = 0; i < majors.length; i++) {
-    const [nx, ny] = templatePos[i];
-    const zLayer = (majors[i].cardId % 3) - 1;
-    const zJitter = (rng() - 0.5) * 0.4;
+  // Anchors: テンプレート座標を直接使用
+  for (let i = 0; i < anchorCount; i++) {
+    const cardId = (nounIdx * 7 + i * 11) % 78;
     dots.push({
-      x: Math.max(5, Math.min(75, nx * 80)),
-      y: Math.max(5, Math.min(75, ny * 80)),
-      z: Math.max(-1, Math.min(1, zLayer + zJitter)),
-      isMajor: true, cardId: majors[i].cardId
+      x: Math.max(5, Math.min(75, template[i][0] * 80)),
+      y: Math.max(5, Math.min(75, template[i][1] * 80)),
+      z: Math.max(-1, Math.min(1, (rng() - 0.5) * 1.0)),
+      isMajor: true, cardId: cardId
     });
   }
 
-  for (let i = 0; i < minors.length; i++) {
-    const r = minors[i];
-    const angle = r.cardId * GOLDEN_ANGLE;
-    const radius = 10 + (i / minors.length) * 24;
+  // Minors: Golden Angle配置 (synthetic cardId)
+  for (let i = 0; i < minorCount; i++) {
+    const cardId = (nounIdx * 13 + i * 17 + 22) % 78;
+    const angle = cardId * GOLDEN_ANGLE;
+    const radius = 10 + (i / totalDots) * 24;
     const x = 40 + radius * Math.cos(angle);
     const y = 40 + radius * Math.sin(angle);
-    const zLayer = (r.cardId % 3) - 1;
-    const zJitter = (rng() - 0.5) * 0.4;
     dots.push({
       x: Math.max(5, Math.min(75, x)),
       y: Math.max(5, Math.min(75, y)),
-      z: Math.max(-1, Math.min(1, zLayer + zJitter)),
-      isMajor: false, cardId: r.cardId
+      z: Math.max(-1, Math.min(1, (rng() - 0.5) * 1.5)),
+      isMajor: false, cardId: cardId
     });
   }
 
@@ -1140,24 +1182,18 @@ function forceNameDemoCycle(id, seedCard, readings, forceAdjIdx, forceNounIdx) {
     // カードCSS専用: ほぼ透明な背景 + 属性色の薄い枠
     cardBgGrad: [hexToRgba(lightBase, 0.08), hexToRgba(lightBase, 0.03)],
     cardBorder: hexToRgba(lightBase, 0.3),
-    dots: placeCycleDots(majors, minors, forceNounIdx, seedCard, id)
+    dots: placeCycleDots(majors, minors, forceNounIdx, seedCard, id, stars)
   };
 }
 
-function makeDemoReadings(seedCard, count, seed, minMajor) {
-  minMajor = minMajor || 5;
+// readings生成: 実運用に近い自然な分布 (cardId 0-77 ランダム、Major ~28%)
+// dotsはnounIdxで決定するため、readingsはseedCardId計算と履歴表示用のみ
+function makeDemoReadings(seedCard, count, seed) {
   const rng = mulberry32(seed);
   const readings = [];
-  for (let i = 0; i < Math.min(minMajor, count); i++) {
-    readings.push({ cardId: Math.floor(rng() * 22), isMajor: true });
-  }
-  for (let i = minMajor; i < count; i++) {
-    const r = rng();
-    if (r < 0.25) {
-      readings.push({ cardId: Math.floor(rng() * 22), isMajor: true });
-    } else {
-      readings.push({ cardId: 22 + Math.floor(rng() * 56), isMajor: false });
-    }
+  for (let i = 0; i < count; i++) {
+    const cardId = Math.floor(rng() * 78);
+    readings.push({ cardId: cardId, isMajor: cardId < 22 });
   }
   return readings;
 }
@@ -1176,16 +1212,11 @@ const DEMO_SPECS = [
   [57, 17, 17], [58, 18, 10], [59,  2, 13], [60,  8,  0],
 ];
 
-// Nouns with 10+ template points need more anchors
-const HIGH_ANCHOR_NOUNS = {8:1,9:1,10:1,11:1,17:1,27:1,28:1,36:1,40:1,50:1,57:1,60:1};
-
+// gallery方式: dotsはnounIdxで決定するため、HIGH_ANCHOR_NOUNS/minMajor保証は不要
 const GALAXY_CYCLES = DEMO_SPECS.map((spec, i) => {
   const [nounIdx, adjIdx, seedCard] = spec;
-  const baseCount = 14 + (i % 6);
-  const isHigh = HIGH_ANCHOR_NOUNS[nounIdx];
-  const count = isHigh ? Math.max(baseCount, 28) : baseCount;
-  const minMajor = isHigh ? (NOUN_TEMPLATES[nounIdx] ? NOUN_TEMPLATES[nounIdx].length : 10) : 5;
-  return forceNameDemoCycle(i, seedCard, makeDemoReadings(seedCard, count, 100 + i * 37, minMajor), adjIdx, nounIdx);
+  const count = 14 + (i % 6); // readings数のバリエーションのみ
+  return forceNameDemoCycle(i, seedCard, makeDemoReadings(seedCard, count, 100 + i * 37), adjIdx, nounIdx);
 });
 
 // ============================================================
@@ -1288,6 +1319,8 @@ function switchInner(tab) {
   document.querySelectorAll('.inner-tab-btn').forEach((b, i) => b.classList.toggle('active', (i === 0 && tab === 'cycle') || (i === 1 && tab === 'atlas')));
   document.getElementById('panel-cycle').classList.toggle('active', tab === 'cycle');
   document.getElementById('panel-atlas').classList.toggle('active', tab === 'atlas');
+  // Stellaメッセージ: Cycleタブのみ表示（Atlasでは非表示）
+  document.getElementById('stellaMsg').style.display = (tab === 'atlas') ? 'none' : '';
   if (tab === 'cycle') { if (!sp.raf) startSpiral3D(); }
   else { if (sp.raf) { cancelAnimationFrame(sp.raf); sp.raf = null; } }
 }

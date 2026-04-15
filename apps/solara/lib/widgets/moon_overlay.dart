@@ -440,24 +440,27 @@ class _FullMoonOverlayState extends State<FullMoonOverlay>
 }
 
 // ============================================================
-//  Crystallization Overlay — day before new moon self-assessment
+//  Catasterism Overlay (刻星化) — day before new moon self-assessment
+//  Catasterism: Greek myth — the placing of mortals among the stars as constellations.
 // ============================================================
 
-class CrystallizationOverlay extends StatefulWidget {
+class CatasterismOverlay extends StatefulWidget {
   final LunarIntention intention;
   final VoidCallback onDismiss;
+  final void Function(bool released)? onResult;
 
-  const CrystallizationOverlay({
+  const CatasterismOverlay({
     super.key,
     required this.intention,
     required this.onDismiss,
+    this.onResult,
   });
 
   @override
-  State<CrystallizationOverlay> createState() => _CrystallizationOverlayState();
+  State<CatasterismOverlay> createState() => _CatasterismOverlayState();
 }
 
-class _CrystallizationOverlayState extends State<CrystallizationOverlay>
+class _CatasterismOverlayState extends State<CatasterismOverlay>
     with SingleTickerProviderStateMixin {
   late AnimationController _fadeController;
   late Animation<double> _fadeAnim;
@@ -500,7 +503,7 @@ class _CrystallizationOverlayState extends State<CrystallizationOverlay>
                 const Text('\u{1F48E}', style: TextStyle(fontSize: 48)),
                 const SizedBox(height: 16),
                 const Text(
-                  'Crystallization',
+                  'Catasterism',
                   style: TextStyle(
                     color: SolaraColors.textPrimary,
                     fontSize: 22,
@@ -509,7 +512,7 @@ class _CrystallizationOverlayState extends State<CrystallizationOverlay>
                   ),
                 ),
                 const Text(
-                  '\u7d50\u6676\u5316',
+                  '\u523b\u661f\u5316', // 刻星化
                   style: TextStyle(
                     color: SolaraColors.solaraGold,
                     fontSize: 14,
@@ -597,7 +600,7 @@ class _CrystallizationOverlayState extends State<CrystallizationOverlay>
                 const SizedBox(height: 16),
                 TextButton(
                   onPressed: () async {
-                    await SolaraStorage.markOverlayShown('crystallization');
+                    await SolaraStorage.markOverlayShown('catasterism');
                     widget.onDismiss();
                   },
                   child: const Text(
@@ -650,11 +653,16 @@ class _CrystallizationOverlayState extends State<CrystallizationOverlay>
 
   Future<void> _submit(bool released) async {
     final updated = widget.intention.copyWith(
-      crystallization:
-          CrystallizationResult(assessedAt: DateTime.now(), released: released),
+      catasterism:
+          CatasterismResult(assessedAt: DateTime.now(), released: released),
     );
     await SolaraStorage.saveIntention(updated);
-    await SolaraStorage.markOverlayShown('crystallization');
-    widget.onDismiss();
+    await SolaraStorage.markOverlayShown('catasterism');
+    // onResult があればそちらを呼ぶ (formation animation遷移用)。なければ単純dismiss。
+    if (widget.onResult != null) {
+      widget.onResult!(released);
+    } else {
+      widget.onDismiss();
+    }
   }
 }
