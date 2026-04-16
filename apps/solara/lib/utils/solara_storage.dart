@@ -250,4 +250,16 @@ class SolaraStorage {
         '${_overlayShownKey}_${type}_${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
     await prefs.setBool(key, true);
   }
+
+  /// Not today 押下回数（サイクルID単位で保存）
+  static Future<int> getNotTodayCount(String cycleId) async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getInt('not_today_count_$cycleId') ?? 0;
+  }
+
+  static Future<void> incrementNotTodayCount(String cycleId) async {
+    final prefs = await SharedPreferences.getInstance();
+    final count = prefs.getInt('not_today_count_$cycleId') ?? 0;
+    await prefs.setInt('not_today_count_$cycleId', count + 1);
+  }
 }

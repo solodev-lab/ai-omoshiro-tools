@@ -8,65 +8,62 @@
 ## 全体構成
 
 ```
-lib/ (合計 約12,400行 / 48ファイル)
+lib/ (合計 約14,670行 / 58ファイル)
 ├── main.dart              ← アプリ起点。IndexedStackで5画面を管理
 ├── models/                ← データクラス
-│   ├── daily_reading.dart    (37行)   デイリーリーディング
-│   ├── galaxy_cycle.dart     (119行)  銀河サイクル・星座ドット
-│   ├── lunar_intention.dart  (102行)  月の意図・中間チェック・刻星化
-│   └── tarot_card.dart       (61行)   タロットカード
+│   ├── daily_reading.dart    デイリーリーディング
+│   ├── galaxy_cycle.dart     銀河サイクル・星座ドット
+│   ├── lunar_intention.dart  月の意図・中間チェック・刻星化
+│   └── tarot_card.dart       タロットカード
 ├── screens/               ← 各画面
-│   ├── map_screen.dart       (568行)  世界地図・運勢方位（メイン）
+│   ├── map_screen.dart       世界地図・運勢方位（メイン）
 │   ├── map/                  ← Map サブウィジェット
-│   │   ├── map_vp_panel.dart    (435行)  VP Panel
-│   │   ├── map_astro.dart       (321行)  天体計算
-│   │   ├── map_fortune_sheet.dart (308行) 運勢シート
-│   │   ├── map_planet_lines.dart (191行) 天体ライン描画
-│   │   ├── map_sectors.dart     (151行)  セクター描画
-│   │   ├── map_layer_panel.dart (117行)  レイヤーパネル
-│   │   ├── map_constants.dart   (101行)  定数
-│   │   ├── map_widgets.dart     (87行)   共通ウィジェット
-│   │   └── map_stella.dart      (57行)   Stella
-│   ├── horoscope_screen.dart (604行)  ホロスコープチャート（メイン）
+│   │   ├── map_vp_panel.dart, map_astro.dart, map_fortune_sheet.dart
+│   │   ├── map_planet_lines.dart, map_sectors.dart, map_layer_panel.dart
+│   │   ├── map_constants.dart, map_widgets.dart, map_stella.dart
+│   ├── horoscope_screen.dart ホロスコープチャート（メイン）
 │   ├── horoscope/            ← Horoscope サブウィジェット
-│   │   ├── horo_bottom_panels.dart (719行) BS各タブ + パターン検出 + 60日予測
-│   │   ├── horo_chart_painter.dart (368行) チャートホイール描画（2重円対応）
-│   │   ├── horo_fortune_cards.dart (341行) 星読みView + FORTUNE_MOCK
-│   │   └── horo_constants.dart     (93行)  共通定数（アスペクト名JP・パターンORB）
-│   ├── observe_screen.dart   (332行)  タロット占い（メイン）
+│   │   ├── horo_bottom_panels.dart, horo_chart_painter.dart
+│   │   ├── horo_fortune_cards.dart, horo_constants.dart
+│   ├── observe_screen.dart   タロット占い（メイン）
 │   ├── observe/              ← Observe サブウィジェット
-│   │   ├── observe_history.dart      (253行) 履歴パネル・履歴カード・SyncInput
-│   │   ├── observe_card_widgets.dart  (175行) 3Dカード・裏面・表面（画像フル表示）
-│   │   └── observe_constants.dart     (59行)  テンプレート・惑星情報・元素マップ
-│   ├── galaxy_screen.dart    (620行)  銀河・星座（メイン・サンプルデータ含む）
+│   │   ├── observe_history.dart, observe_card_widgets.dart, observe_constants.dart
+│   ├── galaxy_screen.dart    銀河・星座（メイン）
 │   ├── galaxy/               ← Galaxy サブウィジェット
-│   │   ├── galaxy_constellation_builder.dart (132行) 星座生成ロジック
-│   │   ├── galaxy_star_atlas.dart            (126行) Star Atlasタブ・カード
-│   │   └── galaxy_replay_overlay.dart        (121行) リプレイオーバーレイ
-│   ├── sanctuary_screen.dart (810行)  プロフィール・設定（メイン）
+│   │   ├── galaxy_constellation_builder.dart  星座生成ロジック
+│   │   ├── galaxy_star_atlas.dart             Star Atlasタブ・カード
+│   │   ├── galaxy_replay_overlay.dart         リプレイオーバーレイ
+│   │   └── galaxy_sample_data.dart            デモ用サンプルデータ
+│   ├── sanctuary_screen.dart プロフィール・設定（メイン）
 │   └── sanctuary/            ← Sanctuary サブウィジェット
-│       ├── sanctuary_profile_editor.dart  (479行) 出生情報エディタ
-│       ├── sanctuary_title_diagnosis.dart (364行) 称号診断ページ
-│       ├── sanctuary_orb_overlay.dart     (245行) Orbオーバーレイ
-│       └── sanctuary_home_editor.dart     (209行) 自宅エディタ
+│       ├── sanctuary_profile_editor.dart, sanctuary_title_diagnosis.dart
+│       ├── sanctuary_orb_overlay.dart, sanctuary_home_editor.dart
 ├── theme/                 ← 色・フォント定義
-│   ├── solara_colors.dart    (90行)   全色定数
-│   └── solara_theme.dart     (63行)   ThemeData
+│   ├── solara_colors.dart, solara_theme.dart
 ├── utils/                 ← 計算・データ・永続化
-│   ├── solara_storage.dart   (217行)  SharedPreferencesラッパー
-│   ├── moon_phase.dart       (327行)  月相計算（Jean Meeusアルゴリズム）
-│   ├── constellation_namer.dart (483行) 星座名生成・MST構築
-│   ├── celestial_events.dart (121行)  天体イベント読み込み
-│   ├── tarot_data.dart       (52行)   タロットデータ読み込み
-│   └── title_data.dart       (173行)  称号システム
+│   ├── solara_storage.dart      SharedPreferencesラッパー
+│   ├── solara_api.dart          CF Worker API呼び出し（TZ取得）
+│   ├── fortune_api.dart         Fortune API呼び出し（Gemini占い文）
+│   ├── moon_phase.dart          月相計算（Jean Meeusアルゴリズム）
+│   ├── constellation_namer.dart 星座名生成・MST構築
+│   ├── celestial_events.dart    天体イベント読み込み（API+キャッシュ+静的JSON）
+│   ├── celestial_event_meanings.dart  天体イベント占星術的意味辞書（JP/EN）
+│   ├── cycle_story_texts.dart   月齢サイクルストーリーテキスト（JP/EN）
+│   ├── tarot_data.dart          タロットデータ読み込み
+│   └── title_data.dart          称号システム
 └── widgets/               ← 共通ウィジェット
-    ├── solara_nav_bar.dart   (130行)  ボトムナビゲーション
-    ├── glass_panel.dart      (38行)   フロストガラスパネル
-    ├── moon_overlay.dart     (660行)  新月・満月・刻星化オーバーレイ
-    ├── nav_icons.dart        (218行)  ナビアイコン（CustomPainter x5）
-    ├── constellation_painter.dart (198行) 星座描画
-    ├── cycle_spiral_painter.dart  (311行) サイクルスパイラル描画
-    └── spiral_painter.dart        (91行)  スパイラル描画
+    ├── solara_nav_bar.dart          ボトムナビゲーション
+    ├── glass_panel.dart             フロストガラスパネル
+    ├── moon_overlay.dart            re-export (下記3ファイル)
+    ├── new_moon_overlay.dart        新月オーバーレイ（ストーリー+テーマ選択）
+    ├── full_moon_overlay.dart       満月オーバーレイ（ストーリー+振り返り）
+    ├── catasterism_overlay.dart     刻星化オーバーレイ（ストーリー+自己評価）
+    ├── catasterism_formation_overlay.dart  刻星化アニメーション（4ステージ）
+    ├── celestial_event_bar.dart     天体イベント横スクロールバー
+    ├── nav_icons.dart               ナビアイコン（CustomPainter x5）
+    ├── constellation_painter.dart   星座描画（screen合成）
+    ├── cycle_spiral_painter.dart    サイクルスパイラル描画
+    └── spiral_painter.dart          スパイラル描画
 ```
 
 ---

@@ -37,17 +37,10 @@ class ConstellationPainter extends CustomPainter {
     // glow は白ベース: 暗い属性でも星・線の存在感を保つ (濃いめ)
     final glowColor = Colors.white.withAlpha((0.7 * 255).round());
 
-    // 黒背景→透明化: ColorFilter.matrix で輝度を alpha に変換 (progressでフェードイン)
+    // 黒→透明: screen合成（黒=影響なし、白=明るく、中間色=鮮やか）
     if (artImage != null) {
       canvas.save();
       final prog = min(1.0, progress * 2);
-      final paint = Paint()
-        ..colorFilter = ColorFilter.matrix([
-          1, 0, 0, 0, 0,
-          0, 1, 0, 0, 0,
-          0, 0, 1, 0, 0,
-          0.299 * prog, 0.587 * prog, 0.114 * prog, 0, 0, // alpha = 輝度 × progress
-        ]);
       if (flipX) {
         canvas.translate(size.width, 0);
         canvas.scale(-1, 1);
@@ -56,7 +49,9 @@ class ConstellationPainter extends CustomPainter {
         artImage!,
         Rect.fromLTWH(0, 0, artImage!.width.toDouble(), artImage!.height.toDouble()),
         Rect.fromLTWH(0, 0, size.width, size.height),
-        paint,
+        Paint()
+          ..blendMode = BlendMode.screen
+          ..color = Color.fromRGBO(255, 255, 255, prog),
       );
       canvas.restore();
     }
@@ -183,17 +178,9 @@ class MiniConstellationPainter extends CustomPainter {
     // glow は白ベース: 暗い属性(Silent/Arcane/Abyssal等)でも星・線の存在感を保つ (濃いめ)
     final glowColor = Colors.white.withAlpha((0.7 * 255).round());
 
-    // 黒背景→透明化: ColorFilter.matrix で輝度を alpha に変換
-    // (黒=alpha0 完全透明 / 白=alpha255 完全不透明 / 中間=半透明)
+    // 黒→透明: screen合成（黒=影響なし、白=明るく、中間色=鮮やか）
     if (artImage != null) {
       canvas.save();
-      final paint = Paint()
-        ..colorFilter = const ColorFilter.matrix([
-          1, 0, 0, 0, 0,
-          0, 1, 0, 0, 0,
-          0, 0, 1, 0, 0,
-          0.299, 0.587, 0.114, 0, 0, // alpha = 輝度 (ITU-R BT.601)
-        ]);
       if (flipX) {
         canvas.translate(size.width, 0);
         canvas.scale(-1, 1);
@@ -202,7 +189,7 @@ class MiniConstellationPainter extends CustomPainter {
         artImage!,
         Rect.fromLTWH(0, 0, artImage!.width.toDouble(), artImage!.height.toDouble()),
         Rect.fromLTWH(0, 0, size.width, size.height),
-        paint,
+        Paint()..blendMode = BlendMode.screen,
       );
       canvas.restore();
     }

@@ -44,6 +44,7 @@ class _CatasterismFormationOverlayState
   late AnimationController _fadeController;
   // 12星座シンボル画像 (preload)
   final List<ui.Image?> _zodiacImages = List.filled(12, null);
+  ui.Image? _bgImage;
 
   @override
   void initState() {
@@ -57,6 +58,16 @@ class _CatasterismFormationOverlayState
       duration: const Duration(milliseconds: 600),
     )..forward();
     _preloadZodiacImages();
+    _loadBgImage();
+  }
+
+  Future<void> _loadBgImage() async {
+    try {
+      final data = await rootBundle.load('assets/catasterism_bg.webp');
+      final codec = await ui.instantiateImageCodec(data.buffer.asUint8List());
+      final frame = await codec.getNextFrame();
+      if (mounted) setState(() => _bgImage = frame.image);
+    } catch (_) {}
   }
 
   Future<void> _preloadZodiacImages() async {
@@ -100,8 +111,11 @@ class _CatasterismFormationOverlayState
     return FadeTransition(
       opacity: CurvedAnimation(parent: _fadeController, curve: Curves.easeOut),
       child: Container(
-        color: const Color(0xF0040810),
-        child: SafeArea(
+        color: const Color(0xFF040810),
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            SafeArea(
           child: AnimatedBuilder(
             animation: _controller,
             builder: (context, _) {
@@ -137,24 +151,17 @@ class _CatasterismFormationOverlayState
                       ],
                     ),
                   ),
-                  // Constellation animation (center) — 4ステージ専用Painter
+                  // Constellation animation — 画面全体に描画（グローがクリップされないように）
                   Positioned.fill(
-                    child: Center(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 32),
-                        child: AspectRatio(
-                          aspectRatio: 1,
-                          child: CustomPaint(
-                            painter: _FormationPainter(
-                              cycle: widget.cycle,
-                              progress: p,
-                              artImage: widget.artImage,
-                              zodiacImages: _zodiacImages,
-                            ),
-                            child: const SizedBox.expand(),
-                          ),
-                        ),
+                    child: CustomPaint(
+                      painter: _FormationPainter(
+                        cycle: widget.cycle,
+                        progress: p,
+                        artImage: widget.artImage,
+                        bgImage: _bgImage,
+                        zodiacImages: _zodiacImages,
                       ),
+                      child: const SizedBox.expand(),
                     ),
                   ),
                   // Stage label (above constellation)
@@ -304,8 +311,10 @@ class _CatasterismFormationOverlayState
             },
           ),
         ),
-      ),
-    );
+          ], // Stack children
+        ), // Stack
+      ), // Container
+    ); // FadeTransition
   }
 }
 
@@ -318,6 +327,7 @@ class _FormationPainter extends CustomPainter {
   final GalaxyCycle cycle;
   final double progress;
   final ui.Image? artImage;
+  final ui.Image? bgImage;
   final List<ui.Image?> zodiacImages;
 
   // 各dot固定の初期散らばり位置 (cycle.id seed で決定論的)
@@ -327,6 +337,7 @@ class _FormationPainter extends CustomPainter {
     required this.cycle,
     required this.progress,
     this.artImage,
+    this.bgImage,
     required this.zodiacImages,
   }) {
     final rng = Random(cycle.id.hashCode);
@@ -344,7 +355,16 @@ class _FormationPainter extends CustomPainter {
     if (cycle.dots.isEmpty) return;
 
     final color = ConstellationNamer.adjColor(cycle.adjIdx);
-    final glowColor = Colors.white.withAlpha((0.7 * 255).round());
+    final glowColor = Colors.white.withAlpha((0.9 * 255).round());
+
+    // ── 星座エリア: 画面中央の正方形 (padding 32px相当) ──
+    final side = size.width - 64;
+    final areaLeft = (size.width - side) / 2;
+    final areaTop = (size.height - side) / 2;
+
+    // 正規化座標(0-1) → 画面座標に変換するヘルパー
+    Offset toScreen(double nx, double ny) =>
+        Offset(areaLeft + nx * side, areaTop + ny * side);
 
     // ── ステージ別進捗 (各 0.0-1.0) ──
     final convergence = (progress / 0.25).clamp(0.0, 1.0);
@@ -352,84 +372,89 @@ class _FormationPainter extends CustomPainter {
     final linking = ((progress - 0.375) / 0.25).clamp(0.0, 1.0);
     final complete = ((progress - 0.625) / 0.375).clamp(0.0, 1.0);
 
+    // ── 背景画像 (2秒目からフェードイン、最大50%) ──
+    if (bgImage != null) {
+      final bgAlpha = ((progress - 0.625) / 0.375).clamp(0.0, 1.0) * 0.25;
+      if (bgAlpha > 0) {
+        canvas.drawImageRect(
+          bgImage!,
+          Rect.fromLTWH(0, 0, bgImage!.width.toDouble(), bgImage!.height.toDouble()),
+          Offset.zero & size,
+          Paint()..color = Color.fromRGBO(255, 255, 255, bgAlpha),
+        );
+      }
+    }
+
     // ── 星位置の補間 (CONVERGENCE中はlerp、それ以降は最終位置) ──
     final easedConv = Curves.easeInOut.transform(convergence);
     final positions = <Offset>[];
     for (int i = 0; i < cycle.dots.length; i++) {
       final dot = cycle.dots[i];
-      final initial = Offset(
-        _initialNorm[i].dx * size.width,
-        _initialNorm[i].dy * size.height,
-      );
-      final target = Offset(dot.x * size.width, dot.y * size.height);
+      final initial = toScreen(_initialNorm[i].dx, _initialNorm[i].dy);
+      final target = toScreen(dot.x, dot.y);
       positions.add(Offset.lerp(initial, target, easedConv)!);
     }
 
-    // ── 星座絵 (COMPLETE でフェードイン) ──
+    // ── 星座絵 (COMPLETE でフェードイン) — screen合成で黒を透明に ──
+    // BlendMode.screen: 黒(0)→影響なし、白(1)→加算で明るく、中間色→鮮やかに残る
     if (artImage != null && complete > 0) {
-      canvas.save();
-      final imgPaint = Paint()
-        ..colorFilter = ColorFilter.matrix([
-          1, 0, 0, 0, 0,
-          0, 1, 0, 0, 0,
-          0, 0, 1, 0, 0,
-          0.299 * complete, 0.587 * complete, 0.114 * complete, 0, 0,
-        ]);
+      final artDst = Rect.fromLTWH(areaLeft, areaTop, side, side);
       canvas.drawImageRect(
         artImage!,
         Rect.fromLTWH(0, 0, artImage!.width.toDouble(), artImage!.height.toDouble()),
-        Rect.fromLTWH(0, 0, size.width, size.height),
-        imgPaint,
+        artDst,
+        Paint()
+          ..blendMode = BlendMode.screen
+          ..color = Color.fromRGBO(255, 255, 255, complete),
       );
-      canvas.restore();
     }
 
-    // ── 背景radial gradient (IGNITION以降ほんのり) ──
+    final cx = size.width / 2;
+    final cy = size.height / 2;
+
+    // ── 背景radial gradient (IGNITION以降ほんのり) — 画面全体に広がる ──
     if (ignition > 0) {
       final bgGrad = ui.Gradient.radial(
-        Offset(size.width / 2, size.height / 2),
-        size.width * 0.7,
+        Offset(cx, cy),
+        size.height * 0.6,
         [
-          color.withAlpha((0.10 * ignition * 255).round()),
+          color.withAlpha((0.15 * ignition * 255).round()),
           color.withAlpha((0.02 * ignition * 255).round()),
         ],
       );
       canvas.drawRect(Offset.zero & size, Paint()..shader = bgGrad);
     }
 
-    // ── IGNITION 演出: 中央から12本の放射状光線 (sin山形で広がる、背景レイヤー) ──
+    // ── IGNITION 演出: 中央から12本の放射状光線 — 画面全体に届く ──
     final ignitionPulse = ignition > 0 && ignition < 1
         ? sin(ignition * pi)
         : 0.0;
     if (ignitionPulse > 0) {
-      final cx = size.width / 2;
-      final cy = size.height / 2;
-      final innerR = size.width * 0.18;
-      final outerR = size.width * (0.40 + ignitionPulse * 0.25);
+      final innerR = side * 0.18;
+      final outerR = size.height * (0.35 + ignitionPulse * 0.25);
       for (int i = 0; i < 12; i++) {
-        final ang = (i / 12) * 2 * pi + ignition * 0.6; // 回転
+        final ang = (i / 12) * 2 * pi + ignition * 0.6;
         final s = Offset(cx + innerR * cos(ang), cy + innerR * sin(ang));
         final e = Offset(cx + outerR * cos(ang), cy + outerR * sin(ang));
         canvas.drawLine(
           s, e,
           Paint()
-            ..color = Colors.white.withAlpha((ignitionPulse * 0.55 * 255).round())
-            ..strokeWidth = 1.0
-            ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5),
+            ..color = Colors.white.withAlpha((ignitionPulse * 0.7 * 255).round())
+            ..strokeWidth = 1.2
+            ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6),
         );
       }
-      // 中央コアバースト (ゴールドの放射光)
       final centerGlow = ui.Gradient.radial(
         Offset(cx, cy),
-        size.width * 0.25 * ignitionPulse,
+        side * 0.3 * ignitionPulse,
         [
-          const Color(0xFFF9D976).withAlpha((ignitionPulse * 0.6 * 255).round()),
+          const Color(0xFFF9D976).withAlpha((ignitionPulse * 0.7 * 255).round()),
           Colors.transparent,
         ],
       );
       canvas.drawCircle(
         Offset(cx, cy),
-        size.width * 0.25 * ignitionPulse,
+        side * 0.3 * ignitionPulse,
         Paint()..shader = centerGlow,
       );
     }
@@ -438,9 +463,8 @@ class _FormationPainter extends CustomPainter {
     for (int i = 0; i < cycle.dots.length; i++) {
       if (cycle.dots[i].isMajor) continue;
       final pos = positions[i];
-      // CONVERGENCE中はalpha低め、その後フル
-      final alpha = (0.3 + 0.5 * convergence).clamp(0.0, 0.8);
-      canvas.drawCircle(pos, 1.3,
+      final alpha = (0.4 + 0.6 * convergence).clamp(0.0, 1.0);
+      canvas.drawCircle(pos, 1.8,
           Paint()..color = color.withAlpha((alpha * 255).round()));
     }
 
@@ -469,13 +493,13 @@ class _FormationPainter extends CustomPainter {
         // Glow
         canvas.drawLine(a1, a2, Paint()
           ..color = glowColor
-          ..strokeWidth = 2.5
+          ..strokeWidth = 3.5
           ..style = PaintingStyle.stroke
-          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8));
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 10));
         // Main line
         canvas.drawLine(a1, a2, Paint()
-          ..color = color.withAlpha((0.85 * 255).round())
-          ..strokeWidth = 1.4
+          ..color = color
+          ..strokeWidth = 1.8
           ..style = PaintingStyle.stroke
           ..strokeCap = StrokeCap.round);
       }
@@ -483,15 +507,15 @@ class _FormationPainter extends CustomPainter {
 
     // ── Anchor星 (Major) 描画 ──
     // IGNITION中は glow size と core size を増幅 (sin山形)
-    final glowR = 9.0 + ignitionPulse * 6.0;
-    final coreR = 3.5 + ignitionPulse * 1.5;
+    final glowR = 12.0 + ignitionPulse * 8.0;
+    final coreR = 4.5 + ignitionPulse * 2.0;
     for (int i = 0; i < cycle.dots.length; i++) {
       if (!cycle.dots[i].isMajor) continue;
       final pos = positions[i];
       // Glow (白ベース)
       final gg = ui.Gradient.radial(
         pos, glowR, [
-          Colors.white.withAlpha((0.95 * 255).round()),
+          Colors.white,
           Colors.transparent,
         ],
       );
@@ -514,9 +538,7 @@ class _FormationPainter extends CustomPainter {
       zodiacAlpha = zodiacAlpha.clamp(0.0, 1.0);
     }
     if (zodiacAlpha > 0) {
-      final cx = size.width / 2;
-      final cy = size.height / 2;
-      final glyphRadius = size.width * 0.40;
+      final glyphRadius = side * 0.45;
       const imgSize = 36.0; // 描画サイズ
       final rotation = (progress - 0.25) * 1.0; // ゆっくり回転
       for (int i = 0; i < 12; i++) {

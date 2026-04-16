@@ -4,12 +4,15 @@ import 'package:http/http.dart' as http;
 
 /// Loads and provides celestial event data for intention generation.
 ///
-/// データソース:
-/// - themes (意図テーマ): 静的JSON `assets/celestial_events_2026.json` (手書きコンテンツ)
-/// - events (天体イベント): CF Worker `/astro/events` でリアル計算 (astronomy-engine)
-///   → API失敗時は静的JSONにfallback
+/// データソース優先順:
+/// 1. CF Worker API `/astro/events` (astronomy-engine リアル計算) → メモリキャッシュ
+/// 2. 前回API取得成功時のキャッシュ（APIエラー時に使用）
+/// 3. 静的JSON `assets/celestial_events_2026.json` (最終fallback)
+///
+/// themes (意図テーマ) は静的JSONのみ（手書きコンテンツ）
 class CelestialEvents {
-  static Map<int, MonthEvents>? _months;
+  static Map<int, MonthEvents>? _months; // 静的JSON
+  static final Map<String, List<CelestialEvent>> _apiCache = {}; // APIキャッシュ (key: "year-month")
   static const _workerBase = 'https://solara-api.solodev-lab.workers.dev';
 
   static Future<void> initialize() async {
@@ -27,29 +30,99 @@ class CelestialEvents {
     _months = months;
   }
 
-  /// CF Worker にリアル計算を要求。失敗時は静的JSONを返す。
-  /// 成功時: 静的JSONのthemes + リアル計算events で更新したMonthEvents
-  static Future<MonthEvents?> fetchMonthEvents(int year, int month) async {
-    if (_months == null) await initialize();
-    final cached = _months?[month];
+  // APIレスポンスから取得した新月日付キャッシュ (key: "year-month")
+  static final Map<String, String?> _newMoonCache = {};
+
+  /// CF Worker から1ヶ月分のイベント+新月日付を取得してキャッシュ。
+  /// 成功→キャッシュ更新、失敗→既存キャッシュを返す、キャッシュも無い→静的JSON
+  static Future<List<CelestialEvent>> _fetchAndCache(int year, int month) async {
+    final key = '$year-$month';
     try {
       final uri = Uri.parse('$_workerBase/astro/events?year=$year&month=$month');
       final res = await http.get(uri).timeout(const Duration(seconds: 5));
+
       if (res.statusCode == 200) {
         final body = json.decode(res.body) as Map<String, dynamic>;
-        final apiEvents = (body['events'] as List)
+        final events = (body['events'] as List)
             .map((e) => CelestialEvent.fromJson(e as Map<String, dynamic>))
             .toList();
-        if (cached != null) {
-          return cached.copyWithEvents(apiEvents);
-        }
+        _apiCache[key] = events;
+        _newMoonCache[key] = body['newMoonDate'] as String?;
+
+        return events;
       }
-    } catch (_) { /* network error → fallback */ }
-    return cached;
+    } catch (e) {
+
+    }
+    if (_apiCache.containsKey(key)) return _apiCache[key]!;
+    final fallback = _months?[month]?.events ?? [];
+
+    return fallback;
+  }
+
+  /// 新月日付を取得（API→APIキャッシュ→静的JSON の3段fallback）
+  static DateTime _getNewMoonDate(int year, int month) {
+    final key = '$year-$month';
+    // APIキャッシュ
+    if (_newMoonCache.containsKey(key) && _newMoonCache[key] != null) {
+      return DateTime.parse(_newMoonCache[key]!).toLocal();
+    }
+    // 静的JSON
+    final m = _months?[month];
+    if (m != null) return DateTime.parse(m.newMoonDate);
+    // 最終fallback
+    return DateTime(year, month, 15);
+  }
+
+  /// 当月新月〜翌々月新月（約2ヶ月分）のイベントを取得。
+  /// 当月+翌月のAPIを呼び、日付範囲でフィルタして返す。
+  static Future<List<CelestialEvent>> fetchCycleEvents(int year, int month) async {
+    if (_months == null) await initialize();
+    final nextMonth = month < 12 ? month + 1 : 1;
+    final nextYear = month < 12 ? year : year + 1;
+    final month3 = nextMonth < 12 ? nextMonth + 1 : 1;
+    final year3 = nextMonth < 12 ? nextYear : nextYear + 1;
+
+    // 当月+翌月を並列取得（イベント+新月日付がキャッシュされる）
+    final results = await Future.wait([
+      _fetchAndCache(year, month),
+      _fetchAndCache(nextYear, nextMonth),
+    ]);
+
+    // 当月新月〜翌々月新月でフィルタ
+    final newMoonDate = _getNewMoonDate(year, month);
+    // 翌々月の新月日付を取得（キャッシュにない場合はAPIを呼ぶ）
+    await _fetchAndCache(year3, month3); // endDate用にキャッシュ
+    final endDate = _getNewMoonDate(year3, month3);
+
+    final allEvents = results.expand((e) => e).toList();
+
+
+    // 範囲フィルタ（newMoonDate <= event.date < endDate）
+    final filtered = allEvents.where((e) {
+      final d = e.localDate;
+      if (d == null) return true;
+      final pass = !d.isBefore(newMoonDate) && d.isBefore(endDate);
+
+      return pass;
+    }).toList();
+
+
+    // 日付順ソート
+    filtered.sort((a, b) {
+      final da = a.localDate;
+      final db = b.localDate;
+      if (da == null && db == null) return 0;
+      if (da == null) return 1;
+      if (db == null) return -1;
+      return da.compareTo(db);
+    });
+
+    return filtered;
   }
 
   /// Get events for a given month (1-12). Returns null if year not loaded.
-  /// (同期版 - 静的JSONのみ使用。リアル計算が欲しい場合は fetchMonthEvents を使う)
+  /// (同期版 - 静的JSONのみ使用)
   static MonthEvents? getMonth(int month) => _months?[month];
 
   /// Get intention themes for a month. Returns 3 choices in EN and JP.
@@ -150,7 +223,8 @@ class CelestialEvent {
   final String descJP; // (legacy / fallback) 完成済みの説明文
 
   // API からの追加フィールド (dateはUTC ISO, テンプレートは日付抜き)
-  final String? dateISO; // UTC ISO8601
+  final String? dateISO; // UTC ISO8601 (開始日)
+  final String? endDateISO; // UTC ISO8601 (逆行等の終了日、無ければnull)
   final String? planetEN;
   final String? planetJP;
   final String? sign;
@@ -164,6 +238,7 @@ class CelestialEvent {
     required this.desc,
     required this.descJP,
     this.dateISO,
+    this.endDateISO,
     this.planetEN,
     this.planetJP,
     this.sign,
@@ -179,6 +254,7 @@ class CelestialEvent {
       desc: (json['desc'] ?? '') as String,
       descJP: (json['descJP'] ?? '') as String,
       dateISO: json['date'] as String?,
+      endDateISO: json['endDate'] as String?,
       planetEN: json['planetEN'] as String?,
       planetJP: json['planetJP'] as String?,
       sign: json['sign'] as String?,
@@ -194,30 +270,43 @@ class CelestialEvent {
     return DateTime.parse(dateISO!).toLocal();
   }
 
-  /// ローカル日付で動的組み立てした日本語説明
-  /// 例: '天王星が双子座へ移行（4/26）'
-  /// APIからの descTemplateJP がある場合に使用、無ければ legacy descJP を返す
+  /// endDateISO (UTC) を端末のローカルタイムに変換
+  DateTime? get localEndDate {
+    if (endDateISO == null) return null;
+    return DateTime.parse(endDateISO!).toLocal();
+  }
+
+  /// 端末ローカル日付で組み立てた日本語説明
+  /// 全ての日付を端末タイムゾーンで変換して表示
   String get localDescJP {
-    if (descTemplateJP != null && planetJP != null && signJP != null) {
-      final ld = localDate;
-      final dateSuffix = ld != null ? '（${ld.month}/${ld.day}）' : '';
-      return descTemplateJP!
-              .replaceAll('{planet}', planetJP!)
-              .replaceAll('{sign}', signJP!) +
-          dateSuffix;
+    final ld = localDate;
+    if (ld != null && descTemplateJP != null && planetJP != null && signJP != null) {
+      final base = descTemplateJP!
+          .replaceAll('{planet}', planetJP!)
+          .replaceAll('{sign}', signJP!);
+      final led = localEndDate;
+      if (led != null) {
+        // 期間イベント（逆行等）: '水星が魚座で逆行開始（2/26〜3/21）'
+        return '$base（${ld.month}/${ld.day}〜${led.month}/${led.day}）';
+      }
+      // 単発イベント: '天王星が双子座へ移行（4/26）'
+      return '$base（${ld.month}/${ld.day}）';
     }
     return descJP;
   }
 
-  /// ローカル日付で動的組み立てした英語説明
+  /// 端末ローカル日付で組み立てた英語説明
   String get localDesc {
-    if (descTemplate != null && planetEN != null && sign != null) {
-      final ld = localDate;
-      final dateSuffix = ld != null ? ' (${ld.month}/${ld.day})' : '';
-      return descTemplate!
-              .replaceAll('{planet}', planetEN!)
-              .replaceAll('{sign}', sign!) +
-          dateSuffix;
+    final ld = localDate;
+    if (ld != null && descTemplate != null && planetEN != null && sign != null) {
+      final base = descTemplate!
+          .replaceAll('{planet}', planetEN!)
+          .replaceAll('{sign}', sign!);
+      final led = localEndDate;
+      if (led != null) {
+        return '$base (${ld.month}/${ld.day} - ${led.month}/${led.day})';
+      }
+      return '$base (${ld.month}/${ld.day})';
     }
     return desc;
   }

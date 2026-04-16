@@ -686,7 +686,7 @@ class HoroPredictionPanel extends StatelessWidget {
     final style = patternStyles[type]!;
     final color = Color(style['color'] as int);
     final days = pred['daysUntil'] as int;
-    final date = pred['dateEstimate'] as DateTime;
+    final date = (pred['dateEstimate'] as DateTime).toLocal();
     final timeLabel = days < 1 ? 'まもなく' : '${days}日後';
     final dateStr = '${date.year}/${date.month}/${date.day}';
     final p1 = planetGlyphs[pred['natalPair'][0]] ?? '';

@@ -72,6 +72,7 @@ flutter:
     - assets/constellation-art/
     - assets/card-images/
     - assets/zodiac-symbols/
+    - assets/catasterism_bg.webp
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

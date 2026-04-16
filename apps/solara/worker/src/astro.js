@@ -631,5 +631,21 @@ export function computeMonthEvents(year, month) {
   // 日付順ソート
   events.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
-  return { year, month, events };
+  // ── 4. New Moon / Full Moon dates (astronomy-engine で正確に計算) ──
+  let newMoonDate = null;
+  let fullMoonDate = null;
+  try {
+    const nm = Astronomy.SearchMoonPhase(0, startDate, 35);
+    if (nm && nm.date >= startDate && nm.date <= endDate) {
+      newMoonDate = nm.date.toISOString();
+    }
+  } catch (_) { /* skip */ }
+  try {
+    const fm = Astronomy.SearchMoonPhase(180, startDate, 35);
+    if (fm && fm.date >= startDate && fm.date <= endDate) {
+      fullMoonDate = fm.date.toISOString();
+    }
+  } catch (_) { /* skip */ }
+
+  return { year, month, newMoonDate, fullMoonDate, events };
 }

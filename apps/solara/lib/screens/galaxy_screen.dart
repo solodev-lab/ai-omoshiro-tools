@@ -8,15 +8,18 @@ import '../models/daily_reading.dart';
 import '../models/galaxy_cycle.dart';
 import '../models/lunar_intention.dart';
 
+import '../utils/celestial_events.dart';
 import '../utils/constellation_namer.dart';
 import '../utils/moon_phase.dart';
 import '../utils/solara_storage.dart';
 import '../utils/tarot_data.dart';
 import '../widgets/catasterism_formation_overlay.dart';
+import '../widgets/celestial_event_bar.dart';
 import '../widgets/cycle_spiral_painter.dart';
 import '../widgets/moon_overlay.dart';
 
 import 'galaxy/galaxy_constellation_builder.dart';
+import 'galaxy/galaxy_sample_data.dart';
 import 'galaxy/galaxy_star_atlas.dart';
 import 'galaxy/galaxy_replay_overlay.dart';
 
@@ -40,6 +43,9 @@ class _GalaxyScreenState extends State<GalaxyScreen>
 
   // Star Atlas
   List<GalaxyCycle> _completedCycles = [];
+
+  // Celestial events (サイクル内)
+  List<CelestialEvent> _cycleEvents = [];
 
   // 3D rotation state
   double _rotX = -0.32;
@@ -201,7 +207,7 @@ class _GalaxyScreenState extends State<GalaxyScreen>
     final intention = await SolaraStorage.loadIntention(cycleId);
 
     // ── サンプルデータ注入（デモ用） ──
-    _injectSampleData(days, completedCycles, cycleStart, totalDays);
+    injectGalaxySampleData(days, completedCycles, cycleStart, totalDays);
 
     if (mounted) {
       setState(() {
@@ -219,100 +225,10 @@ class _GalaxyScreenState extends State<GalaxyScreen>
     for (final c in completedCycles) {
       _loadArtImage(c.nounIdx);
     }
-  }
 
-  /// デモ用サンプルデータ: Cycleに25個の星 + Star Atlasに61全星座
-  void _injectSampleData(List<DailyReading?> days, List<GalaxyCycle> cycles, DateTime cycleStart, int totalDays) {
-    final rng = Random(42);
-
-    // ── Cycle: 25個のサンプル星を散りばめる ──
-    for (int i = 0; i < 25 && i < totalDays; i++) {
-      final dayIdx = (i * totalDays / 25).floor();
-      if (dayIdx < days.length && days[dayIdx] == null) {
-        final cardId = rng.nextInt(78);
-        final isMajor = cardId < 22;
-        final date = cycleStart.add(Duration(days: dayIdx));
-        days[dayIdx] = DailyReading(
-          date: '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}',
-          cardId: cardId, isMajor: isMajor, moonPhase: (dayIdx / totalDays * 29.53),
-        );
-      }
-    }
-
-    // ── Star Atlas: 61全星座のサンプル（formConstellation経由でテンプレート座標使用） ──
-    if (cycles.isEmpty) {
-      for (int nounIdx = 0; nounIdx < 61; nounIdx++) {
-        final cycle = _buildSampleFromTemplate(nounIdx, cycleStart);
-        cycles.add(cycle);
-      }
-    }
-  }
-
-  /// nounIdx指定でテンプレート座標を使った正確なサンプル星座を生成
-  GalaxyCycle _buildSampleFromTemplate(int nounIdx, DateTime now) {
-    final adjIdx = (nounIdx * 3 + 5) % 20;
-    final start = now.subtract(Duration(days: 30 * (61 - nounIdx)));
-    final end = start.add(const Duration(days: 29));
-    final rng = Random(nounIdx * 1000 + 7);
-
-    // テンプレート座標を取得（Anchor=Major星の位置）
-    final template = ConstellationNamer.nounTemplates[nounIdx] ?? [];
-    final anchorCount = template.length;
-    // レアリティに応じてMinor星を追加（合計8〜25個）
-    final rarity = ConstellationNamer.calculateRarity(adjIdx, nounIdx);
-    final minorCount = (rarity.stars * 3 + 2).clamp(2, 25 - anchorCount);
-    final totalDots = anchorCount + minorCount;
-    const goldenAngle = 137.508 * pi / 180;
-
-    final readings = <DailyReading>[];
-    final dots = <ConstellationDot>[];
-
-    // Anchor星（Major）: テンプレート座標をそのまま使用
-    for (int i = 0; i < anchorCount; i++) {
-      final cardId = (nounIdx * 7 + i * 11) % 78;
-      final date = start.add(Duration(days: i));
-      readings.add(DailyReading(
-        date: '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}',
-        cardId: cardId, isMajor: true, moonPhase: i * 1.0,
-      ));
-      dots.add(ConstellationDot(
-        x: template[i][0],
-        y: template[i][1],
-        z: (rng.nextDouble() - 0.5) * 1.0,
-        dayIndex: i, cardId: cardId, isMajor: true,
-      ));
-    }
-
-    // Minor星（Field）: Golden Angle配置でAnchor周辺に散りばめる
-    for (int i = 0; i < minorCount; i++) {
-      final cardId = (nounIdx * 13 + i * 17 + 22) % 78;
-      final date = start.add(Duration(days: anchorCount + i));
-      readings.add(DailyReading(
-        date: '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}',
-        cardId: cardId, isMajor: false, moonPhase: (anchorCount + i) * 1.0,
-      ));
-      final angle = cardId * goldenAngle;
-      final radius = 0.12 + (i / totalDots) * 0.3;
-      final x = (0.5 + radius * cos(angle)).clamp(0.08, 0.92);
-      final y = (0.5 + radius * sin(angle)).clamp(0.08, 0.92);
-      dots.add(ConstellationDot(
-        x: x, y: y,
-        z: (rng.nextDouble() - 0.5) * 1.5,
-        dayIndex: anchorCount + i, cardId: cardId, isMajor: false,
-      ));
-    }
-
-    final nameEN = ConstellationNamer.buildName(adjIdx, nounIdx, en: true);
-    final nameJP = ConstellationNamer.buildName(adjIdx, nounIdx, en: false);
-
-    return GalaxyCycle(
-      id: 'sample_$nounIdx',
-      cycleStart: start, cycleEnd: end,
-      readings: readings, seedCardId: readings.isNotEmpty ? readings.first.cardId : 0,
-      nameEN: nameEN, nameJP: nameJP,
-      dots: dots, rarity: rarity.stars, rarityLabel: rarity.label,
-      adjIdx: adjIdx, nounIdx: nounIdx,
-    );
+    // サイクル内天体イベントを取得
+    final events = await CelestialEvents.fetchCycleEvents(now.year, now.month);
+    if (mounted) setState(() => _cycleEvents = events);
   }
 
   Future<void> _loadArtImage(int nounIdx) async {
@@ -415,6 +331,12 @@ class _GalaxyScreenState extends State<GalaxyScreen>
                           onOpenReplay: _openReplay,
                         ),
                 ),
+                // 天体イベントバー（Cycleタブのみ、Stellaの上）
+                if (_activeTab == 0 && _cycleEvents.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 6),
+                    child: CelestialEventBar(events: _cycleEvents),
+                  ),
                 // HTML: .stella-msg.glass — #panel-cycle/#panel-atlas の外、
                 //       .main-area の末尾にある。Cycleタブのみ表示（Atlasでは非表示）。
                 //       margin: 0 16px 6px
@@ -837,6 +759,7 @@ class _GalaxyScreenState extends State<GalaxyScreen>
           return Positioned.fill(
             child: CatasterismOverlay(
               intention: _currentIntention!,
+              totalDays: _totalDays,
               onDismiss: () => setState(() => _activeOverlay = null),
               onResult: _onCatasterismResult,
             ),
