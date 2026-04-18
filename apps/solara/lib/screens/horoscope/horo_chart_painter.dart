@@ -1,5 +1,13 @@
 import 'dart:math';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'horo_astro_glyphs.dart';
+
+// ─── ローマ数字 (Ⅰ–Ⅻ) for antique house numbering ───
+const List<String> _romanNumerals = [
+  'Ⅰ', 'Ⅱ', 'Ⅲ', 'Ⅳ', 'Ⅴ', 'Ⅵ', 'Ⅶ', 'Ⅷ', 'Ⅸ', 'Ⅹ', 'Ⅺ', 'Ⅻ',
+];
 
 // ══════════════════════════════════════════════════
 // Legend Item
@@ -9,12 +17,23 @@ import 'package:flutter/material.dart';
 class HoroLegendItem extends StatelessWidget {
   final Color color;
   final String label;
-  const HoroLegendItem({super.key, required this.color, required this.label});
+  /// 'line' = 太バー (アスペクト線用), 'dot' = 丸 (惑星用)
+  final String shape;
+  const HoroLegendItem({
+    super.key, required this.color, required this.label,
+    this.shape = 'line',
+  });
 
   @override
   Widget build(BuildContext context) {
     return Row(mainAxisSize: MainAxisSize.min, children: [
-      Container(width: 8, height: 8, decoration: BoxDecoration(shape: BoxShape.circle, color: color)),
+      if (shape == 'dot')
+        Container(width: 8, height: 8,
+          decoration: BoxDecoration(shape: BoxShape.circle, color: color))
+      else
+        Container(width: 14, height: 3,
+          decoration: BoxDecoration(
+            color: color, borderRadius: BorderRadius.circular(1.5))),
       const SizedBox(width: 6),
       Text(label, style: const TextStyle(fontSize: 11, color: Color(0xFF888888))),
     ]);
@@ -41,6 +60,12 @@ class HoroChartWheelPainter extends CustomPainter {
   final bool birthTimeUnknown;
   /// HTML: detectPatterns() result — drawn as polygons on chart
   final Map<String, List<Map<String, dynamic>>>? patterns;
+  /// Breathing animation value 0.0–1.0 (for glow pulse)
+  final double breath;
+  /// Secondary chart (transit/progressed) ASC & MC — drawn at outer ring
+  final double? secondaryAsc, secondaryMc;
+  /// Prefix for secondary labels ('t' for transit, 'p' for progressed)
+  final String secondaryLabelPrefix;
 
   HoroChartWheelPainter({
     required this.planets,
@@ -57,10 +82,13 @@ class HoroChartWheelPainter extends CustomPainter {
     this.userTime = '',
     this.birthTimeUnknown = false,
     this.patterns,
+    this.breath = 0.5,
+    this.secondaryAsc,
+    this.secondaryMc,
+    this.secondaryLabelPrefix = 't',
   });
 
-  static const _glyphs = ['♈','♉','♊','♋','♌','♍','♎','♏','♐','♑','♒','♓'];
-  static const _pGlyphs = {'sun':'☉','moon':'☽','mercury':'☿','venus':'♀','mars':'♂',
+  static const _pGlyphs ={'sun':'☉','moon':'☽','mercury':'☿','venus':'♀','mars':'♂',
     'jupiter':'♃','saturn':'♄','uranus':'♅','neptune':'♆','pluto':'♇'};
 
   // HTML: toRad(asc - lon + 180) — ASC points to bottom (180°)
@@ -101,18 +129,7 @@ class HoroChartWheelPainter extends CustomPainter {
         Paint()..color = const Color(0x14FFFFFF)..strokeWidth = 0.5,
       );
 
-      // Glyph at midpoint of sector
-      final midLon = signLon + 15;
-      final midAngle = _lonToAngle(midLon);
-      final glyphR = (zodiacOuter + zodiacInner) / 2;
-      final tp = TextPainter(
-        text: TextSpan(text: _glyphs[i], style: TextStyle(fontSize: 14 * scale, color: signColors[i].withAlpha(180))),
-        textDirection: TextDirection.ltr,
-      )..layout();
-      tp.paint(canvas, Offset(
-        cx + glyphR * cos(midAngle) - tp.width / 2,
-        cy + glyphR * sin(midAngle) - tp.height / 2,
-      ));
+      // Zodiac glyphs — image overlay drawn in horoscope_screen Stack (not here)
     }
 
     // ── House lines & Angle axes (skip if birth time unknown) ──
@@ -125,17 +142,28 @@ class HoroChartWheelPainter extends CustomPainter {
         canvas.drawLine(
           Offset(cx + innerR * cos(angle), cy + innerR * sin(angle)),
           Offset(cx + zodiacInner * cos(angle), cy + zodiacInner * sin(angle)),
-          Paint()..color = const Color(0x1FFFFFFF)..strokeWidth = 0.7,
+          Paint()..color = const Color(0x40FFFFFF)..strokeWidth = 0.8,
         );
 
-        // HTML: house number at innerR + 14
-        final numR = (innerR + 14 * scale);
+        // Roman numeral house at innerR + 18 (antique serif, copper gold, larger)
+        final numR = (innerR + 18 * scale);
         final nextIdx = (i + 1) % 12;
         final midHouseAngle = _lonToAngle((houseList[i] + houseList[nextIdx]) / 2 +
             (houseList[nextIdx] < houseList[i] ? 180 : 0));
-        final houseNum = '${i + 1}';
+        final houseRoman = _romanNumerals[i];
         final htp = TextPainter(
-          text: TextSpan(text: houseNum, style: TextStyle(fontSize: 8 * scale, color: const Color(0x66FFFFFF))),
+          text: TextSpan(
+            text: houseRoman,
+            style: GoogleFonts.cinzel(
+              fontSize: 20 * scale,
+              fontWeight: FontWeight.w600,
+              color: const Color(0xFFC9A84C).withAlpha(230),
+              letterSpacing: 0.8,
+              shadows: [
+                Shadow(color: const Color(0xFFC9A84C).withAlpha(100), blurRadius: 4 * scale),
+              ],
+            ),
+          ),
           textDirection: TextDirection.ltr,
         )..layout();
         htp.paint(canvas, Offset(
@@ -148,24 +176,38 @@ class HoroChartWheelPainter extends CustomPainter {
       final dsc = (asc + 180) % 360;
       final ic = (mc + 180) % 360;
       final angleAxes = [
-        (asc, 'ASC', const Color(0xFFFFD370)),
-        (dsc, 'DSC', const Color(0xFFFFD370)),
-        (mc, 'MC', const Color(0xFF6BB5FF)),
-        (ic, 'IC', const Color(0xFF6BB5FF)),
+        (asc, 'A', const Color(0xFFFFD370)),
+        (dsc, 'D', const Color(0xFFFFD370)),
+        (mc, 'M', const Color(0xFFFFD370)),
+        (ic, 'I', const Color(0xFFFFD370)),
       ];
+      const glowPulse = 1.0; // fixed at brightest — no breathing on axes
       for (final (lon, label, color) in angleAxes) {
         final angle = _lonToAngle(lon);
-        // HTML: line from center area to zodiacInner, color at 25% opacity
-        canvas.drawLine(
-          Offset(cx + centerR * cos(angle), cy + centerR * sin(angle)),
-          Offset(cx + zodiacInner * cos(angle), cy + zodiacInner * sin(angle)),
-          Paint()..color = color.withAlpha(64)..strokeWidth = 1,
-        );
-        // HTML: label at zodiacInner - 12
-        final labelR = zodiacInner - 12 * scale;
+        final p1 = Offset(cx + centerR * cos(angle), cy + centerR * sin(angle));
+        final p2 = Offset(cx + zodiacInner * cos(angle), cy + zodiacInner * sin(angle));
+        // Wide glow halo
+        canvas.drawLine(p1, p2, Paint()
+          ..color = color.withAlpha((0.25 * glowPulse * 255).round())
+          ..strokeWidth = 4 * scale
+          ..maskFilter = MaskFilter.blur(BlurStyle.normal, 5 * scale));
+        // Sharp line
+        canvas.drawLine(p1, p2, Paint()
+          ..color = color.withAlpha((0.55 * glowPulse * 255).round())
+          ..strokeWidth = 1 * scale);
+        // Label just outside zodiac band (slightly inward from previous 308)
+        final labelR = (zodiacOuter + 8 * scale);
         final ltp = TextPainter(
-          text: TextSpan(text: label, style: TextStyle(
-            fontSize: 10 * scale, fontWeight: FontWeight.bold, color: color)),
+          text: TextSpan(text: label, style: GoogleFonts.cinzel(
+            fontSize: 22 * scale,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 1.2,
+            color: color,
+            shadows: [
+              Shadow(color: color.withAlpha(160), blurRadius: 8 * scale),
+              Shadow(color: color.withAlpha(90), blurRadius: 14 * scale),
+            ],
+          )),
           textDirection: TextDirection.ltr,
         )..layout();
         ltp.paint(canvas, Offset(
@@ -212,18 +254,18 @@ class HoroChartWheelPainter extends CustomPainter {
             final cxP = sumX / pkeys.length;
             final cyP = sumY / pkeys.length;
             final ltp = TextPainter(
-              text: TextSpan(text: style.label, style: TextStyle(fontSize: 9 * scale, color: style.stroke)),
+              text: TextSpan(text: style.label, style: TextStyle(fontSize: 16 * scale, color: style.stroke)),
               textDirection: TextDirection.ltr,
             )..layout();
-            ltp.paint(canvas, Offset(cxP - ltp.width / 2, cyP - 6 * scale - ltp.height / 2));
+            ltp.paint(canvas, Offset(cxP - ltp.width / 2, cyP - 10 * scale - ltp.height / 2));
             // Planet glyphs below label (with source prefix)
             final pText = List.generate(pkeys.length, (i) =>
               '${sources[i]}${_pGlyphs[pkeys[i]] ?? pkeys[i]}').join('');
             final ptp = TextPainter(
-              text: TextSpan(text: pText, style: TextStyle(fontSize: 8 * scale, color: style.stroke.withAlpha(153))),
+              text: TextSpan(text: pText, style: TextStyle(fontSize: 14 * scale, color: style.stroke.withAlpha(153))),
               textDirection: TextDirection.ltr,
             )..layout();
-            ptp.paint(canvas, Offset(cxP - ptp.width / 2, cyP + 6 * scale - ptp.height / 2));
+            ptp.paint(canvas, Offset(cxP - ptp.width / 2, cyP + 10 * scale - ptp.height / 2));
           }
         }
       }
@@ -258,7 +300,7 @@ class HoroChartWheelPainter extends CustomPainter {
         final midLon = (lon1 + lon2) / 2;
         final midAng = _lonToAngle(midLon);
         final tp = TextPainter(
-          text: TextSpan(text: '☌', style: TextStyle(fontSize: 10 * scale, color: color)),
+          text: TextSpan(text: '☌', style: TextStyle(fontSize: 20 * scale, color: color)),
           textDirection: TextDirection.ltr,
         )..layout();
         tp.paint(canvas, Offset(
@@ -274,88 +316,363 @@ class HoroChartWheelPainter extends CustomPainter {
       }
     }
 
-    // ── Planet glyphs ──
-    // HTML: dot at r=2, glyph above at y-10
+    // ── Planet glyphs (vector paths) with dramatic golden pulse ──
+    // breath: 0..1, widen variance so it is clearly visible
+    final pulse = 0.4 + 0.6 * breath;
+    // 衝突回避: glyph表示用に longitude をずらした displayLon を計算
+    // 真の位置にはドットを置き、ずらした位置にグリフを置く + leader line で接続
+    // ASC/MC/DSC/IC は固定 anchor (動かさない)
+    final natalAnchors = birthTimeUnknown ? <String, double>{} : {
+      '_asc': asc,
+      '_mc': mc,
+      '_dsc': (asc + 180) % 360,
+      '_ic': (mc + 180) % 360,
+    };
+    final natalDisplay = _spreadOverlappingPlanets(
+      planets, minGapDeg: 8.0, anchors: natalAnchors);
     for (final e in planets.entries) {
-      final angle = _lonToAngle(e.value);
-      final glyph = _pGlyphs[e.key] ?? '?';
+      final trueAngle = _lonToAngle(e.value);
+      final dotPos = Offset(cx + planetR * cos(trueAngle), cy + planetR * sin(trueAngle));
 
-      // Small dot
-      canvas.drawCircle(
-        Offset(cx + planetR * cos(angle), cy + planetR * sin(angle)),
-        2 * scale,
-        Paint()..color = const Color(0xFFFFD370),
-      );
+      // Expanding halo — radius grows with breath, opacity fades
+      final haloR = (5 + 8 * breath) * scale;
+      final haloAlpha = (0.55 * (1.0 - breath * 0.6) * 255).round();
+      canvas.drawCircle(dotPos, haloR, Paint()
+        ..color = const Color(0xFFF6BD60).withAlpha(haloAlpha)
+        ..maskFilter = MaskFilter.blur(BlurStyle.normal, 6 * scale));
 
-      // Glyph above dot (offset by ~10 units outward)
-      final glyphOffset = 10 * scale;
-      final gx = cx + (planetR + glyphOffset) * cos(angle);
-      final gy = cy + (planetR + glyphOffset) * sin(angle);
-      final tp = TextPainter(
-        text: TextSpan(text: glyph, style: TextStyle(fontSize: 13 * scale, color: const Color(0xFFFFD370))),
-        textDirection: TextDirection.ltr,
-      )..layout();
-      tp.paint(canvas, Offset(gx - tp.width / 2, gy - tp.height / 2));
+      // Secondary expanding ring (stroke, for clear "pulse" read)
+      canvas.drawCircle(dotPos, haloR + 3 * scale, Paint()
+        ..color = const Color(0xFFF6BD60).withAlpha(((0.5 - 0.5 * breath) * 255).round().clamp(0, 255))
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 0.8 * scale);
+
+      // Dot with breathing brightness (at true position)
+      canvas.drawCircle(dotPos, (2.5 + 1.0 * breath) * scale,
+        Paint()..color = Color.lerp(const Color(0xFFC9A84C), const Color(0xFFFFE89A), breath)!);
+
+      // Displayed glyph position (may be shifted for overlap avoidance)
+      final displayLon = natalDisplay[e.key] ?? e.value;
+      final displayAngle = _lonToAngle(displayLon);
+      final glyphOffset = 18 * scale;
+      final gx = cx + (planetR + glyphOffset) * cos(displayAngle);
+      final gy = cy + (planetR + glyphOffset) * sin(displayAngle);
+
+      // Leader line when glyph was displaced
+      if ((displayLon - e.value).abs() > 0.3) {
+        final leaderStart = Offset(
+          cx + (planetR + 4 * scale) * cos(trueAngle),
+          cy + (planetR + 4 * scale) * sin(trueAngle));
+        final leaderEnd = Offset(
+          cx + (planetR + glyphOffset - 12 * scale) * cos(displayAngle),
+          cy + (planetR + glyphOffset - 12 * scale) * sin(displayAngle));
+        canvas.drawLine(leaderStart, leaderEnd, Paint()
+          ..color = const Color(0xFFFFD370).withAlpha(120)
+          ..strokeWidth = 0.8 * scale);
+      }
+
+      _drawVectorGlyph(canvas, planetGlyph(e.key), const Color(0xFFFFD370),
+        gx, gy, 24 * scale, strokeWidth: 2.0 * scale, glow: true,
+        glowIntensity: pulse);
     }
 
     // ── Secondary planet glyphs (transit/progressed at outer ring) ──
     // HTML: secondaryR = 248
     if (secondaryPlanets != null && secondaryPlanets!.isNotEmpty) {
       final secondaryR = 248 * scale;
+      final secAnchors = <String, double>{
+        if (secondaryAsc != null) '_sasc': secondaryAsc!,
+        if (secondaryMc != null) '_smc': secondaryMc!,
+        if (secondaryAsc != null) '_sdsc': (secondaryAsc! + 180) % 360,
+        if (secondaryMc != null) '_sic': (secondaryMc! + 180) % 360,
+      };
+      final secDisplay = _spreadOverlappingPlanets(
+        secondaryPlanets!, minGapDeg: 7.0, anchors: secAnchors);
+      // Lighter shade of secondaryColor for breathing bright state
+      final secondaryBright = Color.lerp(secondaryColor, Colors.white, 0.55)!;
       for (final e in secondaryPlanets!.entries) {
-        final angle = _lonToAngle(e.value);
-        final glyph = _pGlyphs[e.key] ?? '?';
-        // Small dot
-        canvas.drawCircle(
-          Offset(cx + secondaryR * cos(angle), cy + secondaryR * sin(angle)),
-          2 * scale,
-          Paint()..color = secondaryColor,
-        );
-        // Glyph
-        final gx = cx + (secondaryR + 10 * scale) * cos(angle);
-        final gy = cy + (secondaryR + 10 * scale) * sin(angle);
-        final tp = TextPainter(
-          text: TextSpan(text: glyph, style: TextStyle(fontSize: 12 * scale, color: secondaryColor)),
-          textDirection: TextDirection.ltr,
-        )..layout();
-        tp.paint(canvas, Offset(gx - tp.width / 2, gy - tp.height / 2));
+        final trueAngle = _lonToAngle(e.value);
+        final dotPos = Offset(cx + secondaryR * cos(trueAngle), cy + secondaryR * sin(trueAngle));
+
+        // Expanding halo — radius grows with breath, opacity fades
+        final sHaloR = (5 + 8 * breath) * scale;
+        final sHaloAlpha = (0.55 * (1.0 - breath * 0.6) * 255).round();
+        canvas.drawCircle(dotPos, sHaloR, Paint()
+          ..color = secondaryBright.withAlpha(sHaloAlpha)
+          ..maskFilter = MaskFilter.blur(BlurStyle.normal, 6 * scale));
+
+        // Expanding ring (stroke, pulse outward)
+        canvas.drawCircle(dotPos, sHaloR + 3 * scale, Paint()
+          ..color = secondaryBright.withAlpha(((0.5 - 0.5 * breath) * 255).round().clamp(0, 255))
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 0.8 * scale);
+
+        // Dot with breathing brightness
+        canvas.drawCircle(dotPos, (2.5 + 1.0 * breath) * scale,
+          Paint()..color = Color.lerp(secondaryColor, secondaryBright, breath)!);
+
+        final displayLon = secDisplay[e.key] ?? e.value;
+        final displayAngle = _lonToAngle(displayLon);
+        final gx = cx + (secondaryR + 18 * scale) * cos(displayAngle);
+        final gy = cy + (secondaryR + 18 * scale) * sin(displayAngle);
+
+        // Leader line when displaced
+        if ((displayLon - e.value).abs() > 0.3) {
+          final leaderStart = Offset(
+            cx + (secondaryR + 4 * scale) * cos(trueAngle),
+            cy + (secondaryR + 4 * scale) * sin(trueAngle));
+          final leaderEnd = Offset(
+            cx + (secondaryR + 18 * scale - 12 * scale) * cos(displayAngle),
+            cy + (secondaryR + 18 * scale - 12 * scale) * sin(displayAngle));
+          canvas.drawLine(leaderStart, leaderEnd, Paint()
+            ..color = secondaryColor.withAlpha(120)
+            ..strokeWidth = 0.8 * scale);
+        }
+
+        _drawVectorGlyph(canvas, planetGlyph(e.key), secondaryColor,
+          gx, gy, 24 * scale, strokeWidth: 1.9 * scale, glow: true);
       }
     }
 
-    // ── Center circle ──
-    // HTML: centerR=50, filled dark, name/date/ASC info
-    canvas.drawCircle(center, centerR, Paint()..color = const Color(0xD90A0A14));
-    canvas.drawCircle(center, centerR, Paint()..color = const Color(0x14FFFFFF)..style = PaintingStyle.stroke..strokeWidth = 0.5);
+    // ── Secondary ASC/MC/DSC/IC markers (transit/progressed) ──
+    // 外周の secondaryR リング上に短いマーカー＋ラベル
+    if (secondaryAsc != null && secondaryMc != null) {
+      final sR = 248 * scale;
+      final sDsc = (secondaryAsc! + 180) % 360;
+      final sIc = (secondaryMc! + 180) % 360;
+      final markers = [
+        (secondaryAsc!, '${secondaryLabelPrefix}A', secondaryColor),
+        (sDsc, '${secondaryLabelPrefix}D', secondaryColor),
+        (secondaryMc!, '${secondaryLabelPrefix}M', secondaryColor),
+        (sIc, '${secondaryLabelPrefix}I', secondaryColor),
+      ];
+      for (final (lon, label, color) in markers) {
+        final a = _lonToAngle(lon);
+        // Short tick: from sR-8 to sR+4
+        final p1 = Offset(cx + (sR - 8 * scale) * cos(a), cy + (sR - 8 * scale) * sin(a));
+        final p2 = Offset(cx + (sR + 4 * scale) * cos(a), cy + (sR + 4 * scale) * sin(a));
+        // Glow halo
+        canvas.drawLine(p1, p2, Paint()
+          ..color = color.withAlpha(90)
+          ..strokeWidth = 4 * scale
+          ..maskFilter = MaskFilter.blur(BlurStyle.normal, 4 * scale));
+        // Sharp stroke
+        canvas.drawLine(p1, p2, Paint()
+          ..color = color
+          ..strokeWidth = 1.5 * scale
+          ..strokeCap = StrokeCap.round);
+        // Label outside
+        final labelR = sR + 18 * scale;
+        final ltp = TextPainter(
+          text: TextSpan(text: label, style: GoogleFonts.cinzel(
+            fontSize: 18 * scale,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 1.0,
+            color: color,
+            shadows: [
+              Shadow(color: color.withAlpha(140), blurRadius: 6 * scale),
+            ],
+          )),
+          textDirection: TextDirection.ltr,
+        )..layout();
+        ltp.paint(canvas, Offset(
+          cx + labelR * cos(a) - ltp.width / 2,
+          cy + labelR * sin(a) - ltp.height / 2,
+        ));
+      }
+    }
 
-    // HTML: user name at cy-20, date at cy-6, ASC at cy+6
-    if (userName.isNotEmpty) {
-      _drawCenterText(canvas, cx, cy - 20 * scale, userName, 10 * scale, const Color(0xFFE8E0D0));
+    // ── Center medallion — antique parchment disc with gold bezel ──
+    final medalRect = Rect.fromCircle(center: center, radius: centerR);
+    canvas.drawCircle(center, centerR, Paint()
+      ..shader = const RadialGradient(
+        colors: [Color(0xFF1A1328), Color(0xFF0A0A14)],
+      ).createShader(medalRect));
+    // Gold breathing halo — dramatic expanding ring
+    final haloRadiusPulse = centerR + (2 + 10 * breath) * scale;
+    final haloAlphaPulse = (0.55 * (1.0 - breath * 0.4) * 255).round().clamp(0, 255);
+    canvas.drawCircle(center, haloRadiusPulse, Paint()
+      ..color = const Color(0xFFF6BD60).withAlpha(haloAlphaPulse)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = (3 + 2 * breath) * scale
+      ..maskFilter = MaskFilter.blur(BlurStyle.normal, (4 + 3 * breath) * scale));
+    // Inner steady glow (always visible)
+    canvas.drawCircle(center, centerR + 3 * scale, Paint()
+      ..color = const Color(0xFFC9A84C).withAlpha(((0.3 + 0.3 * breath) * 255).round())
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2 * scale
+      ..maskFilter = MaskFilter.blur(BlurStyle.normal, 3 * scale));
+    // Double gold bezel
+    canvas.drawCircle(center, centerR, Paint()
+      ..color = const Color(0xFFC9A84C).withAlpha(180)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.2 * scale);
+    canvas.drawCircle(center, centerR - 3 * scale, Paint()
+      ..color = const Color(0xFFC9A84C).withAlpha(90)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 0.6 * scale);
+    // Cardinal decorative dots
+    for (int i = 0; i < 4; i++) {
+      final a = (i * 90 - 90) * pi / 180;
+      canvas.drawCircle(
+        Offset(cx + (centerR - 1.5 * scale) * cos(a), cy + (centerR - 1.5 * scale) * sin(a)),
+        1.4 * scale,
+        Paint()..color = const Color(0xFFF6BD60).withAlpha(220));
     }
-    if (userDate.isNotEmpty) {
-      final dateTimeStr = '$userDate $userTime';
-      _drawCenterText(canvas, cx, cy - 6 * scale, dateTimeStr, 7 * scale, const Color(0xFF888888));
-    }
+
+    // Center: ASC/度数は時刻ありのみ。時刻不明時は星座シンボル (Sun sign) だけ表示 (overlayで)
     if (!birthTimeUnknown) {
-      final ascText = 'ASC ${_formatDegree(asc)}';
-      _drawCenterText(canvas, cx, cy + 6 * scale, ascText, 7 * scale, const Color(0xFF666666));
-    } else {
-      _drawCenterText(canvas, cx, cy + 6 * scale, '時刻不明', 7 * scale, const Color(0xFF666666));
+      final deg = (asc % 30).toStringAsFixed(1);
+      // Line 1: "ASC"
+      _drawCenterSerif(canvas, cx, cy - 26 * scale, 'ASC', 18 * scale,
+        const Color(0xFFC9A84C).withAlpha(210),
+        weight: FontWeight.w700, letterSpacing: 2.0);
+      // Line 2: zodiac image overlay (rendered in Stack)
+      // Line 3: degree — same weight as ASC label
+      _drawCenterSerif(canvas, cx, cy + 26 * scale, '$deg°', 18 * scale,
+        const Color(0xFFC9A84C).withAlpha(210),
+        weight: FontWeight.w700, letterSpacing: 1.0);
     }
+    // 時刻不明時はテキスト描画しない (星座シンボルのみ Stack 側で表示)
   }
 
-  void _drawCenterText(Canvas canvas, double cx, double y, String text, double fontSize, Color color) {
+  /// Draw centered Cinzel serif text (視認性優先 — Cormorant Garamondは廃止)
+  void _drawCenterSerif(Canvas canvas, double cx, double y, String text,
+      double fontSize, Color color,
+      {FontWeight weight = FontWeight.w400,
+      double letterSpacing = 0.3}) {
+    final style = GoogleFonts.cinzel(
+      fontSize: fontSize, color: color, fontWeight: weight,
+      letterSpacing: letterSpacing);
     final tp = TextPainter(
-      text: TextSpan(text: text, style: TextStyle(fontSize: fontSize, color: color)),
+      text: TextSpan(text: text, style: style),
       textDirection: TextDirection.ltr,
       textAlign: TextAlign.center,
     )..layout();
     tp.paint(canvas, Offset(cx - tp.width / 2, y - tp.height / 2));
   }
 
-  String _formatDegree(double lon) {
-    final signIdx = (lon / 30).floor() % 12;
-    final deg = (lon % 30).toStringAsFixed(1);
-    return '$deg° ${_glyphs[signIdx]}';
+  /// Draw a vector glyph (Path) centered at (cx, cy) with given size.
+  /// Glyph paths are defined in a 24×24 unit box.
+  void _drawVectorGlyph(Canvas canvas, Path glyph, Color color,
+      double cx, double cy, double size,
+      {double strokeWidth = 1.2, bool glow = false, double glowIntensity = 1.0}) {
+    final s = size / 24.0;
+    final matrix = Float64List.fromList([
+      s, 0, 0, 0,
+      0, s, 0, 0,
+      0, 0, 1, 0,
+      cx - size / 2, cy - size / 2, 0, 1,
+    ]);
+    final transformed = glyph.transform(matrix);
+
+    // Glow layer (blurred, wider stroke)
+    if (glow) {
+      canvas.drawPath(transformed, Paint()
+        ..color = color.withAlpha((60 * glowIntensity).round().clamp(0, 255))
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = strokeWidth * 3
+        ..strokeCap = StrokeCap.round
+        ..strokeJoin = StrokeJoin.round
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3));
+    }
+
+    // Main stroke
+    canvas.drawPath(transformed, Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeWidth
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round);
+  }
+
+  /// 重なった惑星の表示経度を外側に広げて衝突回避。
+  /// 真の位置は変えず、グリフ表示用の displayLon を返す。
+  /// [anchors] はASC/MC/DSC/IC等の固定基準点 — これらは動かさず、
+  ///          惑星側を押し退ける。
+  Map<String, double> _spreadOverlappingPlanets(
+      Map<String, double> src, {
+      double minGapDeg = 8.0,
+      Map<String, double>? anchors,
+  }) {
+    if (src.isEmpty) return <String, double>{};
+    // 全点(惑星+anchor)をソート
+    final items = <_SpreadItem>[
+      for (final e in src.entries) _SpreadItem(e.key, e.value, false),
+      if (anchors != null)
+        for (final e in anchors.entries) _SpreadItem(e.key, e.value, true),
+    ]..sort((a, b) => a.lon.compareTo(b.lon));
+
+    // 隣接点が minGapDeg 以内なら同じクラスタ
+    final clusters = <List<_SpreadItem>>[];
+    var current = <_SpreadItem>[items.first];
+    for (int i = 1; i < items.length; i++) {
+      final gap = _angDistSigned(current.last.lon, items[i].lon).abs();
+      if (gap < minGapDeg) {
+        current.add(items[i]);
+      } else {
+        clusters.add(current);
+        current = [items[i]];
+      }
+    }
+    clusters.add(current);
+    // 360°境界処理
+    if (clusters.length >= 2) {
+      final tail = clusters.last.last.lon;
+      final head = clusters.first.first.lon;
+      final wrapGap = ((head + 360) - tail).abs();
+      if (wrapGap < minGapDeg) {
+        clusters.first.insertAll(0, clusters.removeLast());
+      }
+    }
+
+    final result = <String, double>{};
+    for (final cluster in clusters) {
+      if (cluster.length == 1) {
+        // 単独 → そのまま (anchor でも planet でも)
+        if (!cluster[0].isAnchor) result[cluster[0].key] = cluster[0].lon;
+        continue;
+      }
+      final anchorsInCluster = cluster.where((c) => c.isAnchor).toList();
+      final n = cluster.length;
+
+      if (anchorsInCluster.isEmpty) {
+        // anchor なし → 従来通り、重心を保って均等分散
+        final anchor0 = cluster.first.lon;
+        double sum = 0;
+        for (final c in cluster) {
+          var diff = c.lon - anchor0;
+          while (diff > 180) { diff -= 360; }
+          while (diff < -180) { diff += 360; }
+          sum += diff;
+        }
+        final center = (anchor0 + sum / n) % 360;
+        for (int i = 0; i < n; i++) {
+          final offset = (i - (n - 1) / 2.0) * minGapDeg;
+          result[cluster[i].key] = (center + offset + 360) % 360;
+        }
+      } else {
+        // anchor あり → anchor位置固定、その周りに惑星を minGap間隔で配置
+        // 元の経度順を維持したまま等間隔スロットに割当
+        final pivot = anchorsInCluster.first.lon;
+        final anchorIdx = cluster.indexOf(anchorsInCluster.first);
+        for (int i = 0; i < n; i++) {
+          if (cluster[i].isAnchor) continue; // anchorは動かさない (結果mapにも入れない)
+          // anchorからの相対位置 (インデックス差) ベースで等間隔配置
+          final slot = i - anchorIdx;
+          result[cluster[i].key] = (pivot + slot * minGapDeg + 360) % 360;
+        }
+      }
+    }
+    return result;
+  }
+
+  /// 符号付き最短角度距離 (a→b)
+  double _angDistSigned(double a, double b) {
+    var d = b - a;
+    while (d > 180) { d -= 360; }
+    while (d < -180) { d += 360; }
+    return d;
   }
 
   List<double> _defaultHouses() {
@@ -364,5 +681,22 @@ class HoroChartWheelPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
+  bool shouldRepaint(covariant HoroChartWheelPainter old) =>
+      old.breath != breath ||
+      old.planets != planets ||
+      old.secondaryPlanets != secondaryPlanets ||
+      old.secondaryAsc != secondaryAsc ||
+      old.secondaryMc != secondaryMc ||
+      old.asc != asc ||
+      old.mc != mc ||
+      old.aspects != aspects ||
+      old.patterns != patterns;
+}
+
+/// 内部用: 惑星配置広げアルゴリズムの各点
+class _SpreadItem {
+  final String key;
+  final double lon;
+  final bool isAnchor; // true = 動かさない (ASC/MC等), false = 動かしてOK (惑星)
+  _SpreadItem(this.key, this.lon, this.isAnchor);
 }

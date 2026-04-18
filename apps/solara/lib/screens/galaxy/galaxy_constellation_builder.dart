@@ -62,6 +62,7 @@ GalaxyCycle? formConstellation(
   final rarity = ConstellationNamer.calculateRarity(
     nameResult.adjIdx,
     nameResult.nounIdx,
+    daysDrawn: readings.length, // コミット量による確率的 tier bump
   );
 
   // ─── dots配置: gallery方式 (nounIdx決定論、全ユーザー共通) ───

@@ -45,7 +45,6 @@ class _ObserveScreenState extends State<ObserveScreen>
 
   // Reading typewriter
   String _readingText = '';
-  String _adviceText = '';
   String _stellaText = '';
   int _typedChars = 0;
   bool _typingDone = false;
@@ -143,11 +142,6 @@ class _ObserveScreenState extends State<ObserveScreen>
     final template = templates[rng.nextInt(templates.length)];
 
     _readingText = template.replaceAll('{card}', card.nameJP).replaceAll('{keyword}', card.keyword);
-
-    final adviceTemplate = tarotAdvices[rng.nextInt(tarotAdvices.length)];
-    const dirs = ['北', '北東', '東', '南東', '南', '南西', '西', '北西'];
-    final dir = dirs[rng.nextInt(dirs.length)];
-    _adviceText = adviceTemplate.replaceAll('{keyword}', card.keyword).replaceAll('{dir}', dir);
 
     _typedChars = 0;
     _typingDone = false;

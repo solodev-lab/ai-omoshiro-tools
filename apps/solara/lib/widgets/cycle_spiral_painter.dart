@@ -113,26 +113,42 @@ class CycleSpiralPainter extends CustomPainter {
     _drawStellaCore(canvas, cx, cy);
   }
 
-  // ═══ Layer 0: Background stars — ported from HTML .star twinkle ═══
-  // 30 small dots, no MaskFilter.blur, just alpha animation
+  // ═══ Layer 0: Background stars — 繊細な宝石のような輝き ═══
+  // 3層構造: ソフトハロー + 鋭い核 + 輝きの十字光条 (明るい星のみ)
   void _drawBackgroundStars(Canvas canvas, Size size, double now) {
     final rng = _Mulberry32(bgSeed);
     const count = 30;
     for (int i = 0; i < count; i++) {
       final x = rng.next() * size.width;
       final y = rng.next() * size.height;
-      final radius = 0.5 + rng.next() * 1.0; // 0.5~1.5px
-      // HTML: --dur 4-10s, --op 0.1-0.35
-      final dur = 4.0 + rng.next() * 6.0;
+      final coreR = 0.4 + rng.next() * 0.6; // 核: 0.4~1.0px 小さめ
+      final dur = 3.5 + rng.next() * 5.5;
       final delay = rng.next() * dur;
-      final baseOp = 0.10 + rng.next() * 0.25;
-      // Twinkle: fade between baseOp and 0.8
-      final t = (sin((now + delay) / dur * 2 * pi) + 1) / 2; // 0~1
-      final alpha = baseOp + (0.8 - baseOp) * t;
-      canvas.drawCircle(
-        Offset(x, y), radius,
-        Paint()..color = Color.fromRGBO(255, 255, 255, alpha),
-      );
+      final baseOp = 0.10 + rng.next() * 0.20;
+      final peakOp = 0.65 + rng.next() * 0.25; // 星毎に異なるピーク輝度
+      final t = (sin((now + delay) / dur * 2 * pi) + 1) / 2;
+      // 非線形 twinkle (より鋭いピークに)
+      final twinkle = pow(t, 0.6).toDouble();
+      final alpha = (baseOp + (peakOp - baseOp) * twinkle).clamp(0.0, 1.0);
+
+      // 星の色: 95%白、5%暖色・冷色にバリエーション
+      final tint = rng.next();
+      final starColor = tint < 0.85
+          ? const Color(0xFFFFFEF8)          // 僅かに暖白
+          : tint < 0.93
+              ? const Color(0xFFFFE4B8)      // 淡い金 (珍しい)
+              : const Color(0xFFD8E4FF);     // 淡い青 (珍しい)
+
+      final center = Offset(x, y);
+
+      // ① ソフトハロー (ぼかし)
+      canvas.drawCircle(center, coreR * 3.0, Paint()
+        ..color = starColor.withValues(alpha: alpha * 0.25)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 1.5));
+
+      // ② 鋭い核 (1px以下の白い点)
+      canvas.drawCircle(center, coreR, Paint()
+        ..color = starColor.withValues(alpha: alpha));
     }
   }
 

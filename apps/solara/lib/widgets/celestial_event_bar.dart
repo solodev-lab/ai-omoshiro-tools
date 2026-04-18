@@ -51,13 +51,13 @@ class CelestialEventBar extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(icon, style: const TextStyle(fontSize: 12)),
+            Text(icon, style: const TextStyle(fontSize: 15)),
             const SizedBox(width: 6),
             Text(
               label,
               style: const TextStyle(
                 color: SolaraColors.textSecondary,
-                fontSize: 11,
+                fontSize: 14,
                 height: 1.0,
               ),
             ),

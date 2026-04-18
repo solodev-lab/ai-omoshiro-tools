@@ -4,6 +4,8 @@ import 'dart:ui' as ui;
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'horoscope/horo_antique_icons.dart';
 import '../models/daily_reading.dart';
 import '../models/galaxy_cycle.dart';
 import '../models/lunar_intention.dart';
@@ -27,10 +29,10 @@ class GalaxyScreen extends StatefulWidget {
   const GalaxyScreen({super.key});
 
   @override
-  State<GalaxyScreen> createState() => _GalaxyScreenState();
+  State<GalaxyScreen> createState() => GalaxyScreenState();
 }
 
-class _GalaxyScreenState extends State<GalaxyScreen>
+class GalaxyScreenState extends State<GalaxyScreen>
     with TickerProviderStateMixin {
   // Tab
   int _activeTab = 0; // 0=Cycle, 1=Star Atlas
@@ -84,7 +86,16 @@ class _GalaxyScreenState extends State<GalaxyScreen>
   final Map<int, ui.Image> _artImages = {};
 
   // Random seed for background stars & nebula positions (changes each open)
-  final int _bgSeed = DateTime.now().microsecondsSinceEpoch;
+  int _bgSeed = DateTime.now().microsecondsSinceEpoch;
+
+  /// タブ切替でGalaxyに入ってきた時に、背景 (ネビュラ位置・色・星の位置)
+  /// を再生成するための公開メソッド。main.dart から呼ばれる。
+  void regenerateBackground() {
+    setState(() {
+      _bgSeed = DateTime.now().microsecondsSinceEpoch;
+      _initNebulaPositions();
+    });
+  }
   List<Alignment> _nebulaPositions = [];
   List<Color> _nebulaColors = [];
 
@@ -366,14 +377,15 @@ class _GalaxyScreenState extends State<GalaxyScreen>
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Row(children: [
-        Expanded(child: _buildTab(0, '🌀 Cycle')),
-        Expanded(child: _buildTab(1, '✦ Star Atlas')),
+        Expanded(child: _buildTab(0, AntiqueIcon.cycle, 'Cycle')),
+        Expanded(child: _buildTab(1, AntiqueIcon.pattern, 'Star Atlas')),
       ]),
     );
   }
 
-  Widget _buildTab(int index, String label) {
+  Widget _buildTab(int index, AntiqueIcon icon, String label) {
     final isActive = _activeTab == index;
+    final color = isActive ? const Color(0xFFF9D976) : const Color(0x80FFFFFF);
     return GestureDetector(
       onTap: () => setState(() => _activeTab = index),
       child: Container(
@@ -382,10 +394,17 @@ class _GalaxyScreenState extends State<GalaxyScreen>
           border: Border(bottom: BorderSide(
             color: isActive ? const Color(0xFFF9D976) : Colors.transparent, width: 2)),
         ),
-        child: Center(child: Text(label, style: TextStyle(
-          color: isActive ? const Color(0xFFF9D976) : const Color(0x59FFFFFF),
-          fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 1,
-        ))),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            AntiqueGlyph(icon: icon, size: 16, color: color, glow: isActive),
+            const SizedBox(width: 6),
+            Text(label, style: GoogleFonts.cinzel(
+              color: color, fontSize: 13, letterSpacing: 1.8,
+              fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
+            )),
+          ],
+        ),
       ),
     );
   }
@@ -433,10 +452,11 @@ class _GalaxyScreenState extends State<GalaxyScreen>
         border: Border.all(color: const Color(0x47F9D976)),
       ),
       child: Column(children: [
-        Text('${_currentDayIndex + 1}', style: const TextStyle(
-          fontSize: 22, fontWeight: FontWeight.w700, color: Color(0xFFF9D976), height: 1)),
-        Text('of $_totalDays', style: const TextStyle(
-          fontSize: 9, color: Color(0xA6F9D976), letterSpacing: 1.2)),
+        Text('${_currentDayIndex + 1}', style: GoogleFonts.cinzel(
+          fontSize: 22, fontWeight: FontWeight.w700,
+          color: const Color(0xFFF9D976), height: 1)),
+        Text('of $_totalDays', style: GoogleFonts.cinzel(
+          fontSize: 10, color: const Color(0xA6F9D976), letterSpacing: 1.5)),
       ]),
     );
   }
@@ -453,8 +473,8 @@ class _GalaxyScreenState extends State<GalaxyScreen>
       child: Column(children: [
         Text(info.emoji, style: const TextStyle(fontSize: 20, height: 1)),
         const SizedBox(height: 2),
-        Text(info.label, style: const TextStyle(
-          fontSize: 9, color: Color(0xA6C0C8E0), letterSpacing: 1)),
+        Text(info.label, style: GoogleFonts.cinzel(
+          fontSize: 10, color: const Color(0xA6C0C8E0), letterSpacing: 1.2)),
       ]),
     );
   }
@@ -480,11 +500,21 @@ class _GalaxyScreenState extends State<GalaxyScreen>
         border: Border.all(color: const Color(0x1AFFFFFF)),
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        const Text('✦ Stella', style: TextStyle(
-          fontSize: 10, fontWeight: FontWeight.w700, color: Color(0xFFF9D976), letterSpacing: 1.8)),
-        const SizedBox(height: 7),
-        Text('"$msg"', style: const TextStyle(
-          fontSize: 13, fontWeight: FontWeight.w300, color: Color(0xFFEAEAEA), height: 1.6)),
+        // Stella label — Cinzel Bold
+        Row(children: [
+          const AntiqueGlyph(icon: AntiqueIcon.pattern, size: 13,
+            color: Color(0xFFF9D976), glow: false),
+          const SizedBox(width: 5),
+          Text('Stella', style: GoogleFonts.cinzel(
+            fontSize: 13, fontWeight: FontWeight.w700,
+            color: const Color(0xFFF9D976), letterSpacing: 2.0)),
+        ]),
+        const SizedBox(height: 8),
+        // Message body — Cormorant italic (letter-like), w500で読みやすく
+        Text('"$msg"', style: GoogleFonts.cormorantGaramond(
+          fontSize: 19, fontWeight: FontWeight.w500,
+          fontStyle: FontStyle.italic,
+          color: const Color(0xFFEAEAEA), height: 1.6)),
       ]),
     );
   }

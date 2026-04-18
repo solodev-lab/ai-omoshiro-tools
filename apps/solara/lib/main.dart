@@ -6,6 +6,7 @@ import 'screens/horoscope_screen.dart';
 import 'screens/observe_screen.dart';
 import 'screens/galaxy_screen.dart';
 import 'screens/sanctuary_screen.dart';
+import 'utils/app_locale.dart';
 import 'utils/celestial_events.dart';
 import 'utils/tarot_data.dart';
 import 'widgets/solara_nav_bar.dart';
@@ -21,6 +22,7 @@ void main() async {
   ));
   await TarotData.initialize();
   await CelestialEvents.initialize();
+  await AppLocale.instance.load();
   runApp(const SolaraApp());
 }
 
@@ -29,11 +31,16 @@ class SolaraApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Solara',
-      debugShowCheckedModeBanner: false,
-      theme: SolaraTheme.dark,
-      home: const SolaraHome(),
+    return ValueListenableBuilder<Locale?>(
+      valueListenable: AppLocale.instance.notifier,
+      builder: (_, locale, __) => MaterialApp(
+        title: 'Solara',
+        debugShowCheckedModeBanner: false,
+        theme: SolaraTheme.dark,
+        locale: locale, // null の時は端末設定が使われる
+        supportedLocales: const [Locale('ja'), Locale('en')],
+        home: const SolaraHome(),
+      ),
     );
   }
 }
@@ -48,19 +55,25 @@ class SolaraHome extends StatefulWidget {
 class _SolaraHomeState extends State<SolaraHome> {
   int _currentIndex = 0;
   final _horoKey = GlobalKey<HoroscopeScreenState>();
+  final _galaxyKey = GlobalKey<GalaxyScreenState>();
 
   late final _screens = <Widget>[
     const MapScreen(),
     HoroscopeScreen(key: _horoKey, onNavigateToSanctuary: () => _onTabTap(4)),
     const ObserveScreen(),
-    const GalaxyScreen(),
+    GalaxyScreen(key: _galaxyKey),
     const SanctuaryScreen(),
   ];
 
   void _onTabTap(int i) {
+    // Galaxy タブ入室時は同じタブ再タップでなければ背景を再生成
+    // (Horoと違い、毎回新鮮な星空を表示)
+    final switchingToGalaxy = i == 3 && _currentIndex != 3;
     setState(() => _currentIndex = i);
     // Refresh profile when switching to Horo tab
     if (i == 1) _horoKey.currentState?.loadProfile();
+    // Regenerate Galaxy background each time entering
+    if (switchingToGalaxy) _galaxyKey.currentState?.regenerateBackground();
   }
 
   @override

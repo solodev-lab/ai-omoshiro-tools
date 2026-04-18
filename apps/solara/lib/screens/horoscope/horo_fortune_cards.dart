@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import 'horo_constants.dart';
+import 'horo_antique_icons.dart';
 import '../../utils/fortune_api.dart';
 
 // ══════════════════════════════════════════════════
@@ -33,25 +35,6 @@ const _fortuneMock = {
   },
 };
 
-// 特殊アスペクトの解説テキスト
-const _patternDescriptions = {
-  'grandtrine': {
-    'N': 'グランドトラインがネイタルチャートに成立しています。3つの天体が120°ずつ調和的に結ばれ、才能や恵みが自然と流れる配置です。この力を意識的に活かすことで、大きな成果を引き寄せることができるでしょう。',
-    'T': 'トランジット天体がネイタル天体とグランドトラインを形成しています。宇宙の調和が今まさにあなたに降り注いでいます。流れに身を任せることで、物事が驚くほどスムーズに進む時期です。チャンスを逃さず、積極的に行動しましょう。',
-    'P': 'プログレス天体がグランドトラインを完成させています。人生の深い層で調和のエネルギーが熟成し、長期的な幸運の流れが形成されつつあります。内面的な成長が外側の現実に反映される重要な時期です。',
-  },
-  'tsquare': {
-    'N': 'Tスクエアがネイタルチャートに成立しています。緊張と葛藤のエネルギーが3つの天体間で生まれていますが、これは成長の原動力でもあります。頂点の天体が示すテーマに取り組むことで、大きな飛躍が期待できます。',
-    'T': 'トランジット天体がTスクエアを活性化しています。一時的な緊張やプレッシャーを感じるかもしれませんが、それは変化と成長のサインです。課題に正面から向き合うことで、停滞を打破する力が得られるでしょう。',
-    'P': 'プログレス天体がTスクエアを形成しています。人生の転換期を示す重要な配置です。内面的な葛藤が表面化しやすい時期ですが、この緊張を乗り越えることで人格的な成熟が進みます。',
-  },
-  'yod': {
-    'N': 'ヨッド（神の指）がネイタルチャートに成立しています。運命的な使命を暗示する神秘的な配置です。頂点の天体が指し示す方向に、あなたの魂の目的が隠されています。直感を信じて、その道を探求してみましょう。',
-    'T': 'トランジット天体がヨッドを完成させています。運命的な転機が訪れている暗示です。予期せぬ出来事や出会いが、人生の新しい方向性を示してくれるかもしれません。宇宙からのメッセージに耳を傾けてください。',
-    'P': 'プログレス天体がヨッドを形成しています。魂のレベルで深い変容が起きている時期です。長年の謎が解けるような気づきや、人生の使命がより明確になる体験があるかもしれません。',
-  },
-};
-
 class HoroAstrologyView extends StatelessWidget {
   /// 各モードで成立中の特殊アスペクト
   final Map<String, List<Map<String, dynamic>>> natalPatterns;   // single (N-N)
@@ -63,6 +46,10 @@ class HoroAstrologyView extends StatelessWidget {
   final bool fortuneLoading;
   final String? fortuneError;
   final VoidCallback? onRetry;
+  /// BIRTH DATAが編集されているか — trueなら警告バナーを表示
+  final bool birthEdited;
+  /// 外部から渡されるスクロールコントローラ (背景パララックス用)
+  final ScrollController? scrollController;
 
   const HoroAstrologyView({
     super.key,
@@ -73,21 +60,31 @@ class HoroAstrologyView extends StatelessWidget {
     this.fortuneLoading = false,
     this.fortuneError,
     this.onRetry,
+    this.birthEdited = false,
+    this.scrollController,
   });
 
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
+      controller: scrollController,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        const Text('✦ TODAY\'S READING', style: TextStyle(
-          fontSize: 14, color: Color(0xFFF6BD60), letterSpacing: 2, fontWeight: FontWeight.w600)),
+        Row(children: [
+          const AntiqueGlyph(icon: AntiqueIcon.reading, size: 20,
+            color: Color(0xFFF6BD60)),
+          const SizedBox(width: 8),
+          Text("TODAY'S READING", style: GoogleFonts.cinzel(
+            fontSize: 15, color: const Color(0xFFF6BD60),
+            letterSpacing: 3.0, fontWeight: FontWeight.w600)),
+        ]),
         const SizedBox(height: 4),
         Text(
           '${DateTime.now().month}/${DateTime.now().day} のホロスコープ運勢',
           style: const TextStyle(fontSize: 11, color: Color(0xFF888888)),
         ),
         const SizedBox(height: 16),
+        if (birthEdited) _birthEditedBanner(),
         // ローディング/エラーバナー
         if (fortuneLoading) _loadingBanner(),
         if (fortuneError != null && !fortuneLoading) _errorBanner(),
@@ -141,13 +138,17 @@ class HoroAstrologyView extends StatelessWidget {
               if (fortuneLoading && !useApi)
                 _skeletonLine()
               else
-                Text(text, style: const TextStyle(fontSize: 13, color: Color(0xD9E8E0D0), height: 1.8)),
+                Text(text, style: const TextStyle(fontSize: 15, color: Color(0xD9E8E0D0), height: 1.8)),
               if (advice.isNotEmpty) ...[
                 const SizedBox(height: 10),
                 Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  const Text('✦ ', style: TextStyle(fontSize: 12, color: Color(0xFFF6BD60))),
+                  const Padding(
+                    padding: EdgeInsets.only(top: 2, right: 6),
+                    child: AntiqueGlyph(icon: AntiqueIcon.pattern, size: 12,
+                      color: Color(0xFFF6BD60), glow: false),
+                  ),
                   Expanded(child: Text(advice,
-                    style: const TextStyle(fontSize: 12, color: Color(0xD9E8E0D0), height: 1.6, fontStyle: FontStyle.italic))),
+                    style: const TextStyle(fontSize: 15, color: Color(0xD9E8E0D0), height: 1.6, fontStyle: FontStyle.italic))),
                 ]),
               ],
               if (direction.isNotEmpty) ...[
@@ -159,7 +160,7 @@ class HoroAstrologyView extends StatelessWidget {
                     color: const Color(0x0FF9D976),
                     border: Border.all(color: const Color(0x26F9D976)),
                   ),
-                  child: Text(direction, style: const TextStyle(fontSize: 12, color: Color(0xFFF6BD60))),
+                  child: Text(direction, style: const TextStyle(fontSize: 15, color: Color(0xFFF6BD60))),
                 ),
               ],
             ]),
@@ -167,10 +168,27 @@ class HoroAstrologyView extends StatelessWidget {
         }),
 
         // ── 特殊アスペクト解説セクション ──
-        ..._buildPatternSections(),
+        // (特殊アスペクト解説は 相タブの解説モーダル側へ移動)
       ]),
     );
   }
+
+  Widget _birthEditedBanner() => Container(
+    margin: const EdgeInsets.only(bottom: 12),
+    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+    decoration: BoxDecoration(
+      borderRadius: BorderRadius.circular(12),
+      color: const Color(0x22FF9E6B),
+      border: Border.all(color: const Color(0x66FF9E6B)),
+    ),
+    child: const Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Icon(Icons.info_outline, size: 16, color: Color(0xFFFF9E6B)),
+      SizedBox(width: 10),
+      Expanded(child: Text(
+        '星読みは元の出生情報のみ反映されます。\nBIRTH DATAの編集は星読みに反映されません。',
+        style: TextStyle(fontSize: 12, color: Color(0xFFFF9E6B), height: 1.5))),
+    ]),
+  );
 
   Widget _loadingBanner() => Container(
     margin: const EdgeInsets.only(bottom: 12),
@@ -228,89 +246,4 @@ class HoroAstrologyView extends StatelessWidget {
     ),
   );
 
-  List<Widget> _buildPatternSections() {
-    final sections = <Widget>[];
-
-    // ネイタル (N-N)
-    final natalItems = _patternItems(natalPatterns, 'N');
-    if (natalItems.isNotEmpty) {
-      sections.addAll([
-        const SizedBox(height: 8),
-        _sectionHeader('✦ ネイタル特殊アスペクト', const Color(0xFFFFD370)),
-        ...natalItems,
-      ]);
-    }
-
-    // トランジット (N-T)
-    final transitItems = _patternItems(transitPatterns, 'T');
-    if (transitItems.isNotEmpty) {
-      sections.addAll([
-        const SizedBox(height: 8),
-        _sectionHeader('☾ トランジット特殊アスペクト', const Color(0xFF6BB5FF)),
-        ...transitItems,
-      ]);
-    }
-
-    // プログレス (N-P)
-    final progItems = _patternItems(progressedPatterns, 'P');
-    if (progItems.isNotEmpty) {
-      sections.addAll([
-        const SizedBox(height: 8),
-        _sectionHeader('☆ プログレス特殊アスペクト', const Color(0xFFB088FF)),
-        ...progItems,
-      ]);
-    }
-
-    return sections;
-  }
-
-  Widget _sectionHeader(String label, Color color) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Text(label, style: TextStyle(
-        fontSize: 13, color: color, fontWeight: FontWeight.w600, letterSpacing: 1)),
-    );
-  }
-
-  List<Widget> _patternItems(Map<String, List<Map<String, dynamic>>> patterns, String sourceKey) {
-    final items = <Widget>[];
-    for (final type in ['grandtrine', 'tsquare', 'yod']) {
-      for (final p in patterns[type] ?? []) {
-        final style = patternStyles[type]!;
-        final color = Color(style['color'] as int);
-        final pKeys = p['planets'] as List<String>;
-        final sources = p['sources'] as List<String>? ?? List.filled(pKeys.length, 'N');
-        final planetText = List.generate(pKeys.length, (i) =>
-          '${sources[i]}${planetGlyphs[pKeys[i]] ?? pKeys[i]}').join(' ');
-        final desc = _patternDescriptions[type]?[sourceKey] ?? '';
-
-        items.add(Container(
-          margin: const EdgeInsets.only(bottom: 12),
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(14),
-            color: color.withAlpha(15),
-            border: Border.all(color: color.withAlpha(40)),
-          ),
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Row(children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                decoration: BoxDecoration(
-                  color: color.withAlpha(30), borderRadius: BorderRadius.circular(6)),
-                child: Text(style['labelJP'] as String, style: TextStyle(fontSize: 11, color: color, fontWeight: FontWeight.w600)),
-              ),
-              const SizedBox(width: 8),
-              Text(planetText, style: const TextStyle(fontSize: 12, color: Color(0xFFCCCCCC))),
-            ]),
-            if (desc.isNotEmpty) ...[
-              const SizedBox(height: 10),
-              Text(desc, style: const TextStyle(fontSize: 13, color: Color(0xD9E8E0D0), height: 1.8)),
-            ],
-          ]),
-        ));
-      }
-    }
-    return items;
-  }
 }

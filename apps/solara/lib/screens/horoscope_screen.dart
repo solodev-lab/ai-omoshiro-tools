@@ -1,5 +1,6 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../utils/solara_storage.dart';
 import '../utils/fortune_api.dart';
 
@@ -7,6 +8,9 @@ import 'horoscope/horo_constants.dart';
 import 'horoscope/horo_chart_painter.dart';
 import 'horoscope/horo_fortune_cards.dart';
 import 'horoscope/horo_bottom_panels.dart';
+import 'horoscope/horo_ornament_painter.dart';
+import 'horoscope/horo_antique_icons.dart';
+import 'sanctuary/sanctuary_profile_editor.dart';
 
 class HoroscopeScreen extends StatefulWidget {
   final VoidCallback? onNavigateToSanctuary;
@@ -15,10 +19,35 @@ class HoroscopeScreen extends StatefulWidget {
   State<HoroscopeScreen> createState() => HoroscopeScreenState();
 }
 
-class HoroscopeScreenState extends State<HoroscopeScreen> {
-  SolaraProfile? _profile;
+// 星座画像のファイル名 (牡羊座=0, 牡牛座=1, ...)
+const List<String> _zodiacFilenames = [
+  'aries', 'taurus', 'gemini', 'cancer', 'leo', 'virgo',
+  'libra', 'scorpio', 'sagittarius', 'capricorn', 'aquarius', 'pisces',
+];
+
+class HoroscopeScreenState extends State<HoroscopeScreen>
+    with TickerProviderStateMixin {
+  // ── 2-profile model ──
+  // _baseProfile:    ストレージと同期。星読み (Fortune) 計算の基礎。
+  // _workingProfile: 画面上で編集可能。チャート描画に使われる。
+  // 編集されると _isEdited = true、画面離脱で base に戻る。
+  SolaraProfile? _baseProfile;
+  SolaraProfile? _workingProfile;
+  // 便利getter — 既存コードで _profile 参照している所に影響なし
+  SolaraProfile? get _profile => _workingProfile;
+  bool get _isEdited => _baseProfile != null && _workingProfile != null &&
+      !_profilesEqual(_baseProfile!, _workingProfile!);
+
   bool _loading = true;
   bool _birthTimeUnknown = false;
+
+  // Breathing animation controller (4s cycle, sinusoidal 0..1..0)
+  late final AnimationController _breathCtl;
+  // Slow nebula parallax rotation (他のモード用・星読み画面では停止)
+  late final AnimationController _rotCtl;
+  // 星読み画面のスクロールで駆動される垂直シフト (px)
+  final ValueNotifier<double> _readingParallax = ValueNotifier(0.0);
+  final ScrollController _readingScrollCtl = ScrollController();
 
   // HTML: chartMode 'single' | 'nt' | 'np' | 'astrology'
   String _chartMode = 'single';
@@ -34,6 +63,8 @@ class HoroscopeScreenState extends State<HoroscopeScreen> {
   Map<String, double> _natalPlanets = {};
   Map<String, double> _secondaryPlanets = {}; // transit or progressed
   double _asc = 0, _mc = 0;
+  // secondary (transit/progressed) ASC/MC — null if unused
+  double? _secondaryAsc, _secondaryMc;
   List<Map<String, dynamic>> _aspects = [];
 
   // Aspect filters — HTML: activeFilters
@@ -44,6 +75,41 @@ class HoroscopeScreenState extends State<HoroscopeScreen> {
   // Pattern visibility toggle (grandtrine / tsquare / yod)
   final Map<String, bool> _patternVisible = {'grandtrine': true, 'tsquare': true, 'yod': true};
 
+  // ── メモ化キャッシュ (チャートや予測の重複計算を防止) ──
+  String? _cacheKey;
+  Map<String, List<Map<String, dynamic>>>? _cachedDetectPatterns;
+  List<Map<String, dynamic>>? _cachedPredictions;
+  String? _predictionsCacheMode;
+  final Map<String, Map<String, List<Map<String, dynamic>>>> _patternsForModeCache = {};
+
+  /// natal + secondary + chartMode の現在状態を表すキー
+  String _currentCacheKey() {
+    final sb = StringBuffer();
+    const keys = ['sun','moon','mercury','venus','mars','jupiter','saturn','uranus','neptune','pluto'];
+    for (final k in keys) {
+      sb.write((_natalPlanets[k] ?? 0).toStringAsFixed(3));
+      sb.write('|');
+    }
+    for (final k in keys) {
+      sb.write((_secondaryPlanets[k] ?? 0).toStringAsFixed(3));
+      sb.write('|');
+    }
+    sb.write(_chartMode);
+    return sb.toString();
+  }
+
+  /// キャッシュを現在状態に合わせる (natal/secondary/mode が変わっていれば無効化)
+  void _refreshCacheKey() {
+    final k = _currentCacheKey();
+    if (k != _cacheKey) {
+      _cacheKey = k;
+      _cachedDetectPatterns = null;
+      _cachedPredictions = null;
+      _predictionsCacheMode = null;
+      _patternsForModeCache.clear();
+    }
+  }
+
   // Fortune readings (Gemini経由取得 / カテゴリ別キャッシュ)
   final Map<String, FortuneReading?> _fortunes = {};
   bool _fortuneLoading = false;
@@ -51,11 +117,38 @@ class HoroscopeScreenState extends State<HoroscopeScreen> {
   DateTime? _fortuneFetchedAt;
 
   @override
-  void initState() { super.initState(); loadProfile(); }
+  void initState() {
+    super.initState();
+    // 6秒周期 (呼吸テンポを落として自然に)
+    _breathCtl = AnimationController(
+      vsync: this, duration: const Duration(milliseconds: 6000),
+    )..repeat(reverse: true);
+    _rotCtl = AnimationController(
+      vsync: this, duration: const Duration(seconds: 180),
+    )..repeat();
+    // 星読み画面でのスクロール量を監視 (パララックス用)
+    _readingScrollCtl.addListener(() {
+      _readingParallax.value = _readingScrollCtl.offset * 0.15;
+    });
+    loadProfile();
+  }
 
   @override
   void dispose() {
+    _breathCtl.dispose();
+    _rotCtl.dispose();
+    _readingScrollCtl.dispose();
+    _readingParallax.dispose();
     super.dispose();
+  }
+
+  /// astrology (星読み) モード時に _rotCtl を停止、それ以外は再開
+  void _syncRotationByMode() {
+    if (_chartMode == 'astrology') {
+      if (_rotCtl.isAnimating) _rotCtl.stop();
+    } else {
+      if (!_rotCtl.isAnimating) _rotCtl.repeat();
+    }
   }
 
   Future<void> loadProfile() async {
@@ -64,11 +157,67 @@ class HoroscopeScreenState extends State<HoroscopeScreen> {
       _birthTimeUnknown = p.birthTimeUnknown;
       _generateMockChart(p);
     }
-    setState(() { _profile = p; _loading = false; });
+    setState(() {
+      _baseProfile = p;
+      _workingProfile = p;
+      _loading = false;
+    });
     if (p != null && p.isComplete) {
       _loadFortunes();
     }
   }
+
+  /// 編集後の profile を working 側にのみ反映。storage は触らない。
+  void _applyWorkingProfile(SolaraProfile newProfile) {
+    if (!newProfile.isComplete) return;
+    setState(() {
+      _workingProfile = newProfile;
+      _birthTimeUnknown = newProfile.birthTimeUnknown;
+      // チャート planets を再生成 (natal / secondary 両方)
+      _generateMockChart(newProfile);
+      if (_chartMode == 'nt') _generateTransitPlanets();
+      else if (_chartMode == 'np') _generateProgressedPlanets();
+      _recalcAspects();
+      // Fortune は base のまま — 再取得しない
+    });
+  }
+
+  /// base に戻す (編集リセット)
+  void _resetWorkingProfile() {
+    if (_baseProfile == null) return;
+    _applyWorkingProfile(_baseProfile!);
+  }
+
+  /// Profile Editor (Sanctuary共用) を push。結果をworking側にのみ反映。
+  Future<void> _openProfileEditor() async {
+    if (_workingProfile == null) return;
+    final edited = await Navigator.of(context).push<SolaraProfile>(
+      MaterialPageRoute(
+        builder: (_) => SanctuaryProfileEditorPage(profile: _workingProfile),
+      ),
+    );
+    if (edited != null) {
+      // storage には保存しない — workingのみ更新
+      _applyWorkingProfile(edited);
+    }
+  }
+
+  /// 2つのプロファイルが同じか判定 (isEdited計算用)
+  bool _profilesEqual(SolaraProfile a, SolaraProfile b) {
+    return a.name == b.name &&
+        a.birthDate == b.birthDate &&
+        a.birthTime == b.birthTime &&
+        a.birthTimeUnknown == b.birthTimeUnknown &&
+        a.birthPlace == b.birthPlace &&
+        a.birthLat == b.birthLat &&
+        a.birthLng == b.birthLng &&
+        a.birthTz == b.birthTz &&
+        a.birthTzName == b.birthTzName;
+  }
+
+  // (画面離脱時の自動リセットは不要 — 他タブから戻ってくる時に
+  // main.dart の _onTabTap が loadProfile() を呼び、_workingProfile が
+  // _baseProfile で上書きされることで自動的にリセットされる)
 
   /// 全5カテゴリの占い文を並列取得 (Gemini API経由)
   /// 同日中は再取得しない (キャッシュ)
@@ -173,6 +322,10 @@ class HoroscopeScreenState extends State<HoroscopeScreen> {
     _secondaryPlanets = {};
     for (final k in keys) { _secondaryPlanets[k] = rng.nextDouble() * 360; }
     _secondaryPlanets['sun'] = _approxSunLon(now.month, now.day);
+    // transit ASC/MC — rotates rapidly with time of day
+    final hourFrac = (now.hour + now.minute / 60.0) / 24.0;
+    _secondaryAsc = (hourFrac * 360 + rng.nextDouble() * 30) % 360;
+    _secondaryMc = (_secondaryAsc! + 90 + rng.nextDouble() * 10 - 5) % 360;
   }
 
   /// HTML: progressed = 1 day = 1 year method (mock)
@@ -189,6 +342,9 @@ class HoroscopeScreenState extends State<HoroscopeScreen> {
     _secondaryPlanets = {};
     for (final k in keys) { _secondaryPlanets[k] = rng.nextDouble() * 360; }
     _secondaryPlanets['sun'] = _approxSunLon(progDate.month, progDate.day);
+    // progressed ASC/MC — slowly advances from natal (~1° per year)
+    _secondaryAsc = (_asc + yearsLived + rng.nextDouble() * 5) % 360;
+    _secondaryMc = (_mc + yearsLived + rng.nextDouble() * 3) % 360;
   }
 
   /// Recalculate aspects based on current chart mode
@@ -286,10 +442,13 @@ class HoroscopeScreenState extends State<HoroscopeScreen> {
   /// チャート描画用（dimmedは暗く描画）
   List<Map<String, dynamic>> _chartAspects() => _allAspectsWithDimmed();
 
-  /// モードに合致するパターンのみ抽出
+  /// モードに合致するパターンのみ抽出 (メモ化対応)
   /// single: N-Nのみ, nt: Tを含むもののみ, np: Pを含むもののみ
   Map<String, List<Map<String, dynamic>>> _modeFilteredPatterns() {
-    final all = detectPatterns(_natalPlanets, secondary: _secondaryPlanets, chartMode: _chartMode);
+    _refreshCacheKey();
+    _cachedDetectPatterns ??= detectPatterns(
+      _natalPlanets, secondary: _secondaryPlanets, chartMode: _chartMode);
+    final all = _cachedDetectPatterns!;
     final result = <String, List<Map<String, dynamic>>>{};
     for (final type in ['grandtrine', 'tsquare', 'yod']) {
       result[type] = (all[type] ?? []).where((p) {
@@ -303,8 +462,11 @@ class HoroscopeScreenState extends State<HoroscopeScreen> {
     return result;
   }
 
-  /// 指定モードで成立する特殊アスペクトを取得
+  /// 指定モードで成立する特殊アスペクトを取得 (メモ化対応)
   Map<String, List<Map<String, dynamic>>> _patternsForMode(String mode) {
+    _refreshCacheKey();
+    final cached = _patternsForModeCache[mode];
+    if (cached != null) return cached;
     final sec = mode == 'single' ? <String, double>{} : _secondaryPlanets;
     final all = detectPatterns(_natalPlanets, secondary: sec, chartMode: mode);
     final result = <String, List<Map<String, dynamic>>>{};
@@ -317,7 +479,21 @@ class HoroscopeScreenState extends State<HoroscopeScreen> {
         return true;
       }).toList();
     }
+    _patternsForModeCache[mode] = result;
     return result;
+  }
+
+  /// 60日予測 (メモ化対応 — natal/mode が変わらなければ再計算しない)
+  List<Map<String, dynamic>> _memoizedPredictions() {
+    if (_chartMode == 'single') return [];
+    _refreshCacheKey();
+    if (_cachedPredictions != null && _predictionsCacheMode == _chartMode) {
+      return _cachedPredictions!;
+    }
+    _cachedPredictions = predictPatternCompletions(
+      _natalPlanets, chartMode: _chartMode);
+    _predictionsCacheMode = _chartMode;
+    return _cachedPredictions!;
   }
 
   /// パターン表示フィルタ（ON/OFFトグル反映 + モードフィルタ）
@@ -335,8 +511,7 @@ class HoroscopeScreenState extends State<HoroscopeScreen> {
   @override
   Widget build(BuildContext context) {
     if (_loading) {
-      return Container(
-        decoration: _bgDecoration,
+      return _mysticalBackdrop(
         child: const Center(child: CircularProgressIndicator(color: Color(0xFFF6BD60))),
       );
     }
@@ -344,8 +519,7 @@ class HoroscopeScreenState extends State<HoroscopeScreen> {
 
     return Scaffold(
       backgroundColor: Colors.transparent,
-      body: Container(
-        decoration: _bgDecoration,
+      body: _mysticalBackdrop(
         child: SafeArea(
           child: Column(children: [
             // ── Top bar with hamburger ──
@@ -361,9 +535,12 @@ class HoroscopeScreenState extends State<HoroscopeScreen> {
                     _qualityFilters.updateAll((k, v) => true);
                     _pgroupFilters.updateAll((k, v) => true);
                     _fortuneFilter = null;
+                    _secondaryAsc = null;
+                    _secondaryMc = null;
                     if (mode == 'nt') { _generateTransitPlanets(); }
                     else if (mode == 'np') { _generateProgressedPlanets(); }
                     _recalcAspects();
+                    _syncRotationByMode();
                     setState(() {});
                   },
                   offset: const Offset(0, 40),
@@ -407,6 +584,8 @@ class HoroscopeScreenState extends State<HoroscopeScreen> {
                   fortuneLoading: _fortuneLoading,
                   fortuneError: _fortuneError,
                   onRetry: () => _loadFortunes(force: true),
+                  birthEdited: _isEdited,
+                  scrollController: _readingScrollCtl,
                 )
               : _buildChartScrollView(),
             ),
@@ -419,12 +598,81 @@ class HoroscopeScreenState extends State<HoroscopeScreen> {
     );
   }
 
+  /// Mystical cosmic backdrop:
+  /// [1] deep radial base color
+  /// [2] slowly rotating nebula image (full-screen, 25% opacity)
+  /// [3] subtle vignette over the whole thing
+  Widget _mysticalBackdrop({required Widget child}) {
+    return Stack(children: [
+      // base radial
+      const Positioned.fill(child: DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: RadialGradient(
+            center: Alignment.center, radius: 1.3,
+            colors: [Color(0xFF1A0F2E), Color(0xFF050810)],
+          ),
+        ),
+      )),
+      // nebula — 星読み: 静止 + スクロールで垂直パララックス、それ以外: 緩やか回転
+      Positioned.fill(child: IgnorePointer(child: ClipRect(
+        child: _chartMode == 'astrology'
+          // ── 星読み: _rotCtl 停止・スクロール量で Y 方向にシフト ──
+          ? ValueListenableBuilder<double>(
+              valueListenable: _readingParallax,
+              builder: (_, dy, __) => Opacity(
+                opacity: 0.35,
+                child: Transform.translate(
+                  offset: Offset(0, -dy), // 下にスクロールすると背景が上に少し動く
+                  child: Transform.scale(
+                    scale: 1.5,
+                    child: Image.asset(
+                      'assets/horo-bg/cosmic_nebula.webp',
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                    ),
+                  ),
+                ),
+              ),
+            )
+          // ── 通常モード: 従来通り緩やかに回転 ──
+          : AnimatedBuilder(
+              animation: _rotCtl,
+              builder: (_, __) => Opacity(
+                opacity: 0.35,
+                child: Transform.scale(
+                  scale: 1.5,
+                  child: Transform.rotate(
+                    angle: _rotCtl.value * 2 * pi,
+                    child: Image.asset(
+                      'assets/horo-bg/cosmic_nebula.webp',
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+      ))),
+      // soft vignette (60% at edges — weaker to let nebula show through top/bottom)
+      const Positioned.fill(child: IgnorePointer(child: DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: RadialGradient(
+            center: Alignment.center, radius: 1.0,
+            colors: [Color(0x00000000), Color(0xB3000000)],
+            stops: [0.55, 1.0],
+          ),
+        ),
+      ))),
+      // actual content
+      child,
+    ]);
+  }
+
   // ══════════════════════════════════════════════
   // No Profile
   // ══════════════════════════════════════════════
   Widget _buildNoProfile() {
-    return Container(
-      decoration: _bgDecoration,
+    return _mysticalBackdrop(
       child: SafeArea(child: Center(child: Padding(
         padding: const EdgeInsets.all(32),
         child: Container(
@@ -435,7 +683,8 @@ class HoroscopeScreenState extends State<HoroscopeScreen> {
             border: Border.all(color: const Color(0x40F9D976)),
           ),
           child: Column(mainAxisSize: MainAxisSize.min, children: [
-            const Text('✦', style: TextStyle(fontSize: 28, color: Color(0xFFF6BD60))),
+            const AntiqueGlyph(icon: AntiqueIcon.reading, size: 32,
+              color: Color(0xFFF6BD60)),
             const SizedBox(height: 8),
             const Text('SANCTUARYでプロフィールを設定すると、\nあなた専用のホロスコープが表示されます',
               textAlign: TextAlign.center,
@@ -452,9 +701,42 @@ class HoroscopeScreenState extends State<HoroscopeScreen> {
     );
   }
 
+  /// 外周12星座画像 (黒透過 + 輝度→alpha)
+  List<Widget> _buildZodiacImages(double chartSize, double asc) {
+    final base = chartSize / 600.0; // scale
+    final r = 282.5 * base; // (zodiacOuter + zodiacInner) / 2
+    final imgSize = chartSize * 0.07;
+    final cx = chartSize / 2;
+    final cy = chartSize / 2;
+    return List.generate(12, (i) {
+      final midLon = i * 30 + 15;
+      // lonToAngle = (asc - lon + 180) * pi/180 (チャートペインターと同じ式)
+      final angleRad = (asc - midLon + 180) * pi / 180;
+      final x = cx + r * cos(angleRad) - imgSize / 2;
+      final y = cy + r * sin(angleRad) - imgSize / 2;
+      return Positioned(
+        left: x, top: y,
+        width: imgSize, height: imgSize,
+        child: IgnorePointer(child: ColorFiltered(
+          colorFilter: const ColorFilter.matrix(<double>[
+            1, 0, 0, 0, 0,
+            0, 1, 0, 0, 0,
+            0, 0, 1, 0, 0,
+            1.70, 5.72, 0.58, 0, 0, // 純黒のみ透明
+          ]),
+          child: Image.asset(
+            'assets/zodiac-symbols/${_zodiacFilenames[i]}.webp',
+            fit: BoxFit.contain,
+            errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+          ),
+        )),
+      );
+    });
+  }
+
   Widget _buildChartScrollView() {
     final screenW = MediaQuery.of(context).size.width;
-    final chartSize = (screenW - 16).clamp(200.0, 600.0); // 8px padding each side
+    final chartSize = (screenW - 16).clamp(200.0, 600.0);
     final chartAsp = _chartAspects();
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -462,33 +744,102 @@ class HoroscopeScreenState extends State<HoroscopeScreen> {
         const SizedBox(height: 8),
         Center(child: SizedBox(
           width: chartSize, height: chartSize,
-          child: Stack(children: [
-            Positioned(
-              top: chartSize * 0.42 - 8, left: 0, right: 0,
-              child: const Center(child: Text('SOLARA', style: TextStyle(
-                fontSize: 14, fontWeight: FontWeight.w700, letterSpacing: 4,
-                color: Color(0x2EF6BD60),
-              ))),
-            ),
-            CustomPaint(
-              size: Size(chartSize, chartSize),
-              painter: HoroChartWheelPainter(
-                planets: _natalPlanets, asc: _asc, mc: _mc,
-                aspects: chartAsp,
-                signColors: signColors.map((c) => Color(c)).toList(),
-                showHouses: !_birthTimeUnknown,
-                birthTimeUnknown: _birthTimeUnknown,
-                userName: _profile?.name ?? '',
-                userDate: _profile?.birthDate ?? '',
-                userTime: _profile?.birthTime ?? '',
-                secondaryPlanets: (_chartMode == 'nt' || _chartMode == 'np') ? _secondaryPlanets : null,
-                secondaryColor: _chartMode == 'np'
-                  ? const Color(0xFFB088FF)
-                  : const Color(0xFF6BB5FF),
-                patterns: _visiblePatterns(),
-              ),
-            ),
-          ]),
+          child: AnimatedBuilder(
+            animation: _breathCtl,
+            builder: (context, _) {
+              // easeInOut → 20段階に離散化 (80%の無駄な再描画削減)
+              final rawBreath = Curves.easeInOut.transform(_breathCtl.value);
+              final breath = (rawBreath * 20).round() / 20.0;
+              return Stack(
+                clipBehavior: Clip.none,  // labels drawn outside chart bounds (A/D/M/I)
+                children: [
+                // ── Parchment base disc (plain, no astrological diagrams) ──
+                Positioned.fill(child: ClipOval(
+                  child: Opacity(
+                    opacity: 0.75,
+                    child: Image.asset(
+                      'assets/horo-bg/parchment_base.webp',
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                    ),
+                  ),
+                )),
+                // Slight golden bloom overlay
+                Positioned.fill(child: ClipOval(child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: RadialGradient(
+                      colors: [
+                        Color(0x22C9A84C),
+                        Color(0x00000000),
+                      ],
+                      stops: const [0.0, 0.8],
+                    ),
+                  ),
+                ))),
+                // ── Watermark title (Cinzel serif) ──
+                Positioned(
+                  top: chartSize * 0.42 - 8, left: 0, right: 0,
+                  child: Center(child: Text('SOLARA', style: GoogleFonts.cinzel(
+                    fontSize: 14, fontWeight: FontWeight.w700, letterSpacing: 6,
+                    color: const Color(0xFFC9A84C).withAlpha(60),
+                  ))),
+                ),
+                // ── Chart wheel ──
+                CustomPaint(
+                  size: Size(chartSize, chartSize),
+                  painter: HoroChartWheelPainter(
+                    planets: _natalPlanets, asc: _asc, mc: _mc,
+                    aspects: chartAsp,
+                    signColors: signColors.map((c) => Color(c)).toList(),
+                    showHouses: !_birthTimeUnknown,
+                    birthTimeUnknown: _birthTimeUnknown,
+                    userName: _profile?.name ?? '',
+                    userDate: _profile?.birthDate ?? '',
+                    userTime: _profile?.birthTime ?? '',
+                    secondaryPlanets: (_chartMode == 'nt' || _chartMode == 'np') ? _secondaryPlanets : null,
+                    secondaryAsc: (_chartMode == 'nt' || _chartMode == 'np') ? _secondaryAsc : null,
+                    secondaryMc: (_chartMode == 'nt' || _chartMode == 'np') ? _secondaryMc : null,
+                    secondaryLabelPrefix: _chartMode == 'np' ? 'p' : 't',
+                    secondaryColor: _chartMode == 'np'
+                      ? const Color(0xFFB088FF)
+                      : const Color(0xFF6BB5FF),
+                    patterns: _visiblePatterns(),
+                    breath: breath,
+                  ),
+                ),
+                // ── Antique ornament frame (on top of wheel, outside) ──
+                Positioned.fill(child: CustomPaint(
+                  painter: HoroOrnamentPainter(breath: breath, asc: _asc),
+                )),
+                // ── 12 zodiac sign images around outer ring ──
+                ..._buildZodiacImages(chartSize, _asc),
+                // ── Center zodiac image — 時刻あり: ASC sign / 時刻不明: Sun sign ──
+                Positioned.fill(child: Center(
+                  child: SizedBox(
+                    // 時刻不明時はテキストがないので大きめに表示
+                    width: chartSize * (_birthTimeUnknown ? 0.14 : 0.09),
+                    height: chartSize * (_birthTimeUnknown ? 0.14 : 0.09),
+                    child: ColorFiltered(
+                      colorFilter: const ColorFilter.matrix(<double>[
+                        1, 0, 0, 0, 0,
+                        0, 1, 0, 0, 0,
+                        0, 0, 1, 0, 0,
+                        // alpha = luminance * 8 — 純黒のみ透明
+                        1.70, 5.72, 0.58, 0, 0,
+                      ]),
+                      child: Image.asset(
+                        'assets/zodiac-symbols/${_zodiacFilenames[(((_birthTimeUnknown
+                          ? (_natalPlanets['sun'] ?? 0)
+                          : _asc) / 30).floor() % 12)]}.webp',
+                        fit: BoxFit.contain,
+                        errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                      ),
+                    ),
+                  ),
+                )),
+              ]);
+            },
+          ),
         )),
         const SizedBox(height: 12),
         _buildChartLegend(),
@@ -512,37 +863,40 @@ class HoroscopeScreenState extends State<HoroscopeScreen> {
   // Chart Legend
   // ══════════════════════════════════════════════
   Widget _buildChartLegend() {
-    return const Wrap(
+    final showSecondary = _chartMode == 'nt' || _chartMode == 'np';
+    return Wrap(
       spacing: 16, runSpacing: 4,
       alignment: WrapAlignment.center,
       children: [
-        HoroLegendItem(color: Color(0xFFC9A84C), label: 'ソフト'),
-        HoroLegendItem(color: Color(0xFF6B5CE7), label: 'ハード'),
-        HoroLegendItem(color: Color(0xFF26D0CE), label: '中立'),
-        HoroLegendItem(color: Color(0xFFFFD370), label: 'ネイタル'),
+        // アスペクト線 (太バー表示)
+        const HoroLegendItem(color: Color(0xFFC9A84C), label: 'ソフト', shape: 'line'),
+        const HoroLegendItem(color: Color(0xFF6B5CE7), label: 'ハード', shape: 'line'),
+        const HoroLegendItem(color: Color(0xFF26D0CE), label: '中立', shape: 'line'),
+        // 惑星ドット (丸表示) — 2重モード時のみネイタル凡例を追加
+        if (showSecondary) ...[
+          const HoroLegendItem(color: Color(0xFFFFD370), label: 'ネイタル', shape: 'dot'),
+          if (_chartMode == 'nt')
+            const HoroLegendItem(color: Color(0xFF6BB5FF), label: 'トランジット', shape: 'dot'),
+          if (_chartMode == 'np')
+            const HoroLegendItem(color: Color(0xFFB088FF), label: 'プログレス', shape: 'dot'),
+        ],
       ],
     );
   }
 
   // ══════════════════════════════════════════════
-  // Bottom Sheet — HTML: 3-state (mini 52px / half ~280px / full ~500px)
-  // AnimatedContainer + ドラッグハンドルタップで切替
+  // Bottom Sheet — 2-state (half 280px / full 65%)
+  // バーをタップで half ↔ full トグル
   // ══════════════════════════════════════════════
-  // HTML: BS_MINI_H=52, BS_HALF_RATIO=0.45, BS_FULL_RATIO=0.85
   double _bsHeight(BuildContext context) {
-    switch (_bsState) {
-      case 0: return 52;  // mini: ドラッグハンドル + ラベルのみ
-      case 2: return MediaQuery.of(context).size.height * 0.65; // full
-      default: return 280; // half
-    }
+    if (_bsState == 2) return MediaQuery.of(context).size.height * 0.65; // full
+    return 280; // half (default)
   }
 
   void _cycleBsState() {
-    // タップ: mini→half, half→full, full→half（miniには下スワイプでのみ）
+    // half ↔ full トグル
     setState(() {
-      if (_bsState == 0) { _bsState = 1; }
-      else if (_bsState == 1) { _bsState = 2; }
-      else { _bsState = 1; }
+      _bsState = _bsState == 2 ? 1 : 2;
     });
   }
 
@@ -560,22 +914,21 @@ class HoroscopeScreenState extends State<HoroscopeScreen> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // HTML: .bs-drag-handle — タップで3段階切替
+          // ドラッグハンドル: タップで half ↔ full トグル
           GestureDetector(
             onTap: _cycleBsState,
             onVerticalDragEnd: (d) {
-              // 上スワイプで拡大、下スワイプで縮小
               if (d.primaryVelocity != null) {
                 setState(() {
-                  if (d.primaryVelocity! < -200 && _bsState < 2) _bsState++;
-                  if (d.primaryVelocity! > 200 && _bsState > 0) _bsState--;
+                  if (d.primaryVelocity! < -200) { _bsState = 2; }
+                  else if (d.primaryVelocity! > 200) { _bsState = 1; }
                 });
               }
             },
             child: Container(
               width: double.infinity,
               padding: const EdgeInsets.symmetric(vertical: 8),
-              color: Colors.transparent, // タッチ領域確保
+              color: Colors.transparent,
               child: Center(child: Container(
                 width: 36, height: 4,
                 decoration: BoxDecoration(
@@ -585,26 +938,13 @@ class HoroscopeScreenState extends State<HoroscopeScreen> {
               )),
             ),
           ),
-          // mini状態ではラベルだけ表示
-          if (_bsState == 0)
-            GestureDetector(
-              onTap: () => setState(() => _bsState = 1),
-              child: const Padding(
-                padding: EdgeInsets.only(bottom: 8),
-                child: Text('▲ ホロスコープ設定',
-                  style: TextStyle(fontSize: 11, color: Color(0xFFF6BD60), letterSpacing: 1.5)),
-              ),
+          _buildBSTabs(),
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(14, 12, 14, 24),
+              child: _buildBSContent(),
             ),
-          // half/full状態ではタブ + コンテンツ
-          if (_bsState > 0) ...[
-            _buildBSTabs(),
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(14, 12, 14, 24),
-                child: _buildBSContent(),
-              ),
-            ),
-          ],
+          ),
         ],
       ),
     );
@@ -613,12 +953,14 @@ class HoroscopeScreenState extends State<HoroscopeScreen> {
   Widget _buildBSTabs() {
     final showTransit = _chartMode == 'nt' || _chartMode == 'np';
     // HTML: bs-tab — 5 tabs (fortune has no tab button in HTML mobile)
-    final tabs = <(String, String)>[
-      ('birth', '⚙ 誕生'),
-      if (showTransit) ('transit', _chartMode == 'np' ? '☆ 進行' : '☾ 経過'),
-      ('planets', '☉ 天体'),
-      ('filter', '⚙ 絞込'),
-      ('aspects', '△ 相'),
+    final tabs = <(String, AntiqueIcon, String)>[
+      ('birth', AntiqueIcon.birth, '誕生'),
+      if (showTransit)
+        ('transit', _chartMode == 'np' ? AntiqueIcon.progressed : AntiqueIcon.transit,
+         _chartMode == 'np' ? '進行' : '経過'),
+      ('planets', AntiqueIcon.planets, '天体'),
+      ('filter', AntiqueIcon.filter, '絞込'),
+      ('aspects', AntiqueIcon.aspects, '相'),
     ];
 
     return Container(
@@ -628,6 +970,7 @@ class HoroscopeScreenState extends State<HoroscopeScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 8),
       child: Row(children: tabs.map((t) {
         final active = _bsTab == t.$1;
+        final tabColor = active ? const Color(0xFFF6BD60) : const Color(0xFF888888);
         return Expanded(child: GestureDetector(
           onTap: () => setState(() => _bsTab = t.$1),
           child: Container(
@@ -636,10 +979,18 @@ class HoroscopeScreenState extends State<HoroscopeScreen> {
               border: Border(bottom: BorderSide(
                 color: active ? const Color(0xFFF6BD60) : Colors.transparent, width: 2)),
             ),
-            child: Center(child: Text(t.$2, style: TextStyle(
-              fontSize: 11, letterSpacing: 0.5,
-              color: active ? const Color(0xFFF6BD60) : const Color(0xFF777777),
-            ))),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                AntiqueGlyph(icon: t.$2, size: 15, color: tabColor, glow: active),
+                const SizedBox(width: 5),
+                Text(t.$3, style: GoogleFonts.cinzel(
+                  fontSize: 12, letterSpacing: 1.2,
+                  fontWeight: active ? FontWeight.w600 : FontWeight.w400,
+                  color: tabColor,
+                )),
+              ],
+            ),
           ),
         ));
       }).toList()),
@@ -648,9 +999,22 @@ class HoroscopeScreenState extends State<HoroscopeScreen> {
 
   Widget _buildBSContent() {
     switch (_bsTab) {
-      case 'birth': return HoroBirthPanel(profile: _profile!);
+      case 'birth': return HoroBirthPanel(
+        profile: _profile!,
+        isEdited: _isEdited,
+        onEdit: _openProfileEditor,
+        onReset: _resetWorkingProfile,
+      );
       case 'transit': return HoroTransitPanel(chartMode: _chartMode);
-      case 'planets': return HoroPlanetTable(natalPlanets: _natalPlanets, asc: _asc, mc: _mc, birthTimeUnknown: _birthTimeUnknown);
+      case 'planets': return HoroPlanetTable(
+        natalPlanets: _natalPlanets,
+        asc: _asc, mc: _mc,
+        birthTimeUnknown: _birthTimeUnknown,
+        secondaryPlanets: (_chartMode == 'nt' || _chartMode == 'np') ? _secondaryPlanets : null,
+        secondaryAsc: (_chartMode == 'nt' || _chartMode == 'np') ? _secondaryAsc : null,
+        secondaryMc: (_chartMode == 'nt' || _chartMode == 'np') ? _secondaryMc : null,
+        chartMode: _chartMode,
+      );
       case 'filter': return HoroFilterPanel(
         qualityFilters: _qualityFilters,
         pgroupFilters: _pgroupFilters,
@@ -675,9 +1039,8 @@ class HoroscopeScreenState extends State<HoroscopeScreen> {
         const SizedBox(height: 12),
         HoroPredictionPanel(
           activePatterns: _modeFilteredPatterns(),
-          // 60日予測はnt/npモード（2重円画面）で表示。singleでは不要
-          predictions: (_chartMode == 'nt' || _chartMode == 'np')
-            ? predictPatternCompletions(_natalPlanets, chartMode: _chartMode) : [],
+          // 60日予測はnt/npモードで表示。singleでは不要 (メモ化済)
+          predictions: _memoizedPredictions(),
           patternVisible: _patternVisible,
           onPatternToggle: (type, v) => setState(() => _patternVisible[type] = v),
         ),
@@ -686,13 +1049,4 @@ class HoroscopeScreenState extends State<HoroscopeScreen> {
     }
   }
 
-  // ══════════════════════════════════════════════
-  // Background
-  // ══════════════════════════════════════════════
-  static const _bgDecoration = BoxDecoration(
-    gradient: RadialGradient(
-      center: Alignment.center, radius: 1.2,
-      colors: [Color(0xFF0C1D3A), Color(0xFF080C14)],
-    ),
-  );
 }

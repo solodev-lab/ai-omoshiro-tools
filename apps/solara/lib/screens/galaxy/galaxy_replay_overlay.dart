@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../models/galaxy_cycle.dart';
 import '../../utils/constellation_namer.dart';
 import '../../widgets/constellation_painter.dart';
@@ -50,16 +51,25 @@ class GalaxyReplayOverlay extends StatelessWidget {
               return SizedBox(
                 width: 340,
                 child: Column(mainAxisSize: MainAxisSize.min, children: [
-                  // HTML: .replay-title — nameEN + nameJP
-                  Opacity(opacity: fadeT, child: Column(children: [
-                    Text(cycle.nameEN, style: const TextStyle(
-                      color: Color(0xFFEAEAEA), fontSize: 20, fontWeight: FontWeight.w700),
-                      textAlign: TextAlign.center),
-                    const SizedBox(height: 4),
-                    Text(cycle.nameJP, style: const TextStyle(
-                      color: Color(0xFFF9D976), fontSize: 14, fontWeight: FontWeight.w300),
-                      textAlign: TextAlign.center),
-                  ])),
+                  // replay title — 端末言語でEN or JP を1つだけ表示
+                  Opacity(opacity: fadeT, child: Builder(builder: (ctx) {
+                    final isJP = Localizations.localeOf(ctx).languageCode == 'ja';
+                    final rawName = isJP && cycle.nameJP.isNotEmpty
+                        ? cycle.nameJP : cycle.nameEN;
+                    final name = rawName.startsWith('The ')
+                        ? rawName.substring(4) : rawName;
+                    return Text(
+                      name,
+                      style: isJP
+                        ? const TextStyle(
+                            color: Color(0xFFEAEAEA), fontSize: 22,
+                            fontWeight: FontWeight.w600, letterSpacing: 2)
+                        : GoogleFonts.cinzel(
+                            color: const Color(0xFFEAEAEA), fontSize: 22,
+                            fontWeight: FontWeight.w700, letterSpacing: 2.5),
+                      textAlign: TextAlign.center,
+                    );
+                  })),
                   const SizedBox(height: 20),
                   // HTML: #replayCanvas
                   Container(
@@ -80,25 +90,31 @@ class GalaxyReplayOverlay extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 20),
-                  // HTML: .replay-sub
+                  // サブ情報 — Cinzelで統一 (大きめサイズ)
                   Opacity(opacity: fadeT, child: Column(children: [
                     Text('${cycle.dots.length} stars · ${cycle.dots.where((d) => d.isMajor).length} anchors',
-                      style: const TextStyle(fontSize: 12, color: Color(0xFFACACAC)),
+                      style: GoogleFonts.cinzel(
+                        fontSize: 16, color: const Color(0xFFCCCCCC),
+                        letterSpacing: 1.5, fontWeight: FontWeight.w500),
                       textAlign: TextAlign.center),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 10),
                     Row(mainAxisSize: MainAxisSize.min, children: [
+                      Text(cycle.rarityLabel, style: GoogleFonts.cinzel(
+                        fontSize: 18, color: const Color(0xFFEAEAEA),
+                        letterSpacing: 2.2, fontWeight: FontWeight.w600)),
+                      const SizedBox(width: 10),
                       Text('${'★' * cycle.rarity}${'☆' * (5 - cycle.rarity)}',
-                        style: TextStyle(fontSize: 12, letterSpacing: 2,
+                        style: TextStyle(fontSize: 18, letterSpacing: 2.5,
                           color: cycle.rarity >= 4 ? const Color(0xFFF9D976)
                               : cycle.rarity >= 3 ? const Color(0xFFB080FF) : const Color(0xFF888888))),
-                      const SizedBox(width: 6),
-                      Text(cycle.rarityLabel, style: const TextStyle(fontSize: 11, color: Color(0xFFACACAC))),
                     ]),
-                    const SizedBox(height: 4),
-                    Text(cycle.dateRangeLabel, style: const TextStyle(fontSize: 12, color: Color(0xFFACACAC))),
+                    const SizedBox(height: 10),
+                    Text(cycle.dateRangeLabel, style: GoogleFonts.cinzel(
+                      fontSize: 15, color: const Color(0xFFCCCCCC),
+                      letterSpacing: 1.3, fontWeight: FontWeight.w600)),
                   ])),
                   const SizedBox(height: 24),
-                  // HTML: .replay-close
+                  // Close ボタン
                   GestureDetector(
                     onTap: onClose,
                     child: Container(
@@ -107,7 +123,9 @@ class GalaxyReplayOverlay extends StatelessWidget {
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(color: const Color(0x33FFFFFF)),
                       ),
-                      child: const Text('← Back to Star Atlas', style: TextStyle(fontSize: 13, color: Color(0xFFACACAC))),
+                      child: Text('← Back to Star Atlas', style: GoogleFonts.cinzel(
+                        fontSize: 12, color: const Color(0xFFACACAC),
+                        letterSpacing: 1.8, fontWeight: FontWeight.w500)),
                     ),
                   ),
                 ]),

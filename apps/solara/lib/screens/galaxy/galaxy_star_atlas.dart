@@ -1,8 +1,10 @@
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../models/galaxy_cycle.dart';
 import '../../utils/constellation_namer.dart';
 import '../../widgets/constellation_painter.dart';
+import '../horoscope/horo_antique_icons.dart';
 
 // ══════════════════════════════════════════════════════════════════════════
 // STAR ATLAS TAB
@@ -101,27 +103,21 @@ class _AtlasHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: const [
-        // HTML: .screen-h1 { font-size:24px; font-weight:700; color:#EAEAEA; font-family:Libre Caslon Text }
+      children: [
         Text(
           'Star Atlas',
-          style: TextStyle(
-            fontFamily: 'LibreCaslonText',
-            fontSize: 24,
-            fontWeight: FontWeight.w700,
-            color: Color(0xFFEAEAEA),
-            height: 1.0,
+          style: GoogleFonts.cinzel(
+            fontSize: 24, fontWeight: FontWeight.w700,
+            color: const Color(0xFFEAEAEA), height: 1.0,
+            letterSpacing: 2.0,
           ),
         ),
-        // HTML: .screen-h2 { font-size:13px; font-weight:300; color:#ACACAC; margin-top:4px; font-family:DM Sans }
-        SizedBox(height: 4),
+        const SizedBox(height: 4),
         Text(
           'Your completed cosmic cycles',
-          style: TextStyle(
-            fontFamily: 'DMSans',
-            fontSize: 13,
-            fontWeight: FontWeight.w300,
-            color: Color(0xFFACACAC),
+          style: GoogleFonts.cinzel(
+            fontSize: 12, fontWeight: FontWeight.w400,
+            color: const Color(0xFFACACAC), letterSpacing: 1.5,
           ),
         ),
       ],
@@ -159,11 +155,7 @@ class _ConstellationCard extends StatelessWidget {
     final bgBottom = lightBase.withAlpha((0.03 * 255).round());
     final borderColor = lightBase.withAlpha((0.30 * 255).round());
 
-    // HTML: NOUN_SHAPES[nounIdx] (shape type label)
-    final shapeType = (cycle.nounIdx >= 0 && cycle.nounIdx < ConstellationNamer.nounShapes.length)
-        ? ConstellationNamer.nounShapes[cycle.nounIdx]
-        : 'open';
-
+    // (shapeType 変数は UI 表示を削除したため除去済み)
     // HTML: rarityStarsHTML(cycle.stars) — color by rarity
     final rarity = cycle.rarity;
     final starColor = rarity >= 4
@@ -218,74 +210,56 @@ class _ConstellationCard extends StatelessWidget {
               ),
             ),
 
-            // ─── Meta block (HTML JS L1724-1731) ───────────────────────────
-            // 行1: shape label (左) + rarity stars (右)
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                // HTML: .const-date { font-size:10px; color:#ACACAC; }
-                // 実際はshapeTypeラベルを表示 (L1726)
-                Flexible(
-                  child: Text(
-                    shapeType,
-                    style: const TextStyle(
-                      fontFamily: 'DMSans',
-                      fontSize: 10,
-                      color: Color(0xFFACACAC),
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                // HTML: rarityStarsHTML(cycle.stars)
-                Text(
-                  rarityText,
-                  style: TextStyle(
-                    fontFamily: 'DMSans',
-                    fontSize: 10,
-                    color: starColor,
-                    letterSpacing: 1,
-                  ),
-                ),
-              ],
-            ),
-            // 行2: nameEN (.const-seed) — margin-top:2px
-            const SizedBox(height: 2),
+            // 星座名 — 端末言語でEN/JP切替 (日本語=JP、それ以外=EN)
+            // maxLines:2 で長い名前は "形容詞 / 名詞" に折り返し
+            const SizedBox(height: 4),
+            Builder(builder: (ctx) {
+              final isJP = Localizations.localeOf(ctx).languageCode == 'ja';
+              // 既存データの "The " プレフィックスは表示時に除去 (後方互換)
+              final rawName = isJP && cycle.nameJP.isNotEmpty
+                  ? cycle.nameJP : cycle.nameEN;
+              final name = rawName.startsWith('The ')
+                  ? rawName.substring(4) : rawName;
+              return Text(
+                name,
+                style: isJP
+                  ? const TextStyle(
+                      fontSize: 14, fontWeight: FontWeight.w600,
+                      color: Color(0xFFEAEAEA), height: 1.2)
+                  : GoogleFonts.cinzel(
+                      fontSize: 14, fontWeight: FontWeight.w700,
+                      color: const Color(0xFFEAEAEA),
+                      height: 1.2, letterSpacing: 1.2),
+                overflow: TextOverflow.ellipsis,
+                maxLines: 2,
+              );
+            }),
+            // Meta line 1: stars · anchors — 名称との間を広めに
+            const SizedBox(height: 7),
             Text(
-              cycle.nameEN,
+              '${cycle.dots.length} stars · $anchorCount anchors',
               style: const TextStyle(
                 fontFamily: 'DMSans',
                 fontSize: 12,
-                fontWeight: FontWeight.w700,
-                color: Color(0xFFEAEAEA),
-                height: 1.2,
+                fontWeight: FontWeight.w500,
+                color: Color(0xFFB8B8B8),
+                letterSpacing: 0.5,
+                height: 1.0, // meta2 に近づけるため詰める
               ),
               overflow: TextOverflow.ellipsis,
               maxLines: 1,
             ),
-            // 行3: nameJP — font-size:11px; color:#ACACAC
-            if (cycle.nameJP.isNotEmpty)
-              Text(
-                cycle.nameJP,
-                style: const TextStyle(
-                  fontFamily: 'DMSans',
-                  fontSize: 11,
-                  color: Color(0xFFACACAC),
-                  height: 1.2,
-                ),
-                overflow: TextOverflow.ellipsis,
-                maxLines: 1,
-              ),
-            // 行4: "X stars · Y anchors · rarityLabel"
-            // HTML: font-size:10px; color:rgba(172,172,172,0.6); margin-top:2px
-            const SizedBox(height: 2),
+            // Meta line 2: rarityLabel + star rating — meta1 にピッタリ寄せる
+            const SizedBox(height: 1),
             Text(
-              '${cycle.dots.length} stars · $anchorCount anchors · ${cycle.rarityLabel}',
+              '${cycle.rarityLabel}  $rarityText',
               style: TextStyle(
                 fontFamily: 'DMSans',
-                fontSize: 10,
-                color: const Color(0xFFACACAC).withAlpha((0.6 * 255).round()),
-                height: 1.2,
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: starColor,
+                letterSpacing: 1.2,
+                height: 1.1,
               ),
               overflow: TextOverflow.ellipsis,
               maxLines: 1,
@@ -310,19 +284,18 @@ class _EmptyState extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('✦',
-                style: TextStyle(
-                  fontSize: 48,
-                  color: const Color(0xFFF9D976).withAlpha(77),
-                )),
+            AntiqueGlyph(
+              icon: AntiqueIcon.pattern, size: 56,
+              color: const Color(0xFFF9D976).withAlpha(100),
+              glow: false,
+            ),
             const SizedBox(height: 16),
-            const Text(
+            Text(
               'Star Atlas',
-              style: TextStyle(
-                fontFamily: 'LibreCaslonText',
-                color: Color(0xFFEAEAEA),
-                fontSize: 24,
-                fontWeight: FontWeight.w700,
+              style: GoogleFonts.cinzel(
+                color: const Color(0xFFEAEAEA),
+                fontSize: 24, fontWeight: FontWeight.w700,
+                letterSpacing: 2.0,
               ),
             ),
             const SizedBox(height: 8),

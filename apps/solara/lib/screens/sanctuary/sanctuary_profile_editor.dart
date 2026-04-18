@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 
+import '../../utils/app_locale.dart';
 import '../../utils/solara_storage.dart';
 import '../../utils/solara_api.dart';
 
@@ -411,7 +412,27 @@ class _SanctuaryProfileEditorPageState extends State<SanctuaryProfileEditorPage>
                       ],
                     )),
 
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 16),
+
+                    // 言語切替
+                    _birthSection('言語 / Language', ValueListenableBuilder<Locale?>(
+                      valueListenable: AppLocale.instance.notifier,
+                      builder: (_, currentLocale, __) {
+                        final code = currentLocale?.languageCode;
+                        return Row(children: [
+                          _langBtn('端末', 'システム設定', code == null, () =>
+                            AppLocale.instance.setOverride(null)),
+                          const SizedBox(width: 8),
+                          _langBtn('日本語', 'Japanese', code == 'ja', () =>
+                            AppLocale.instance.setOverride('ja')),
+                          const SizedBox(width: 8),
+                          _langBtn('English', '英語', code == 'en', () =>
+                            AppLocale.instance.setOverride('en')),
+                        ]);
+                      },
+                    )),
+
+                    const SizedBox(height: 16),
 
                     // Save button
                     // HTML: .birth-save-btn { width:100%; padding:14px; border-radius:14px; }
@@ -444,6 +465,41 @@ class _SanctuaryProfileEditorPageState extends State<SanctuaryProfileEditorPage>
   }
 
   // HTML: .birth-section { margin-bottom:18px; }
+  Widget _langBtn(String primary, String sub, bool active, VoidCallback onTap) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 6),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(10),
+            color: active
+              ? const Color(0x33F9D976) : const Color(0x0FFFFFFF),
+            border: Border.all(
+              color: active
+                ? const Color(0xFFF9D976) : const Color(0x20FFFFFF),
+              width: active ? 1.5 : 1,
+            ),
+          ),
+          child: Column(children: [
+            Text(primary, style: TextStyle(
+              fontSize: 13, fontWeight: FontWeight.w600,
+              color: active ? const Color(0xFFF9D976) : const Color(0xFFE0E0E0),
+            )),
+            const SizedBox(height: 2),
+            Text(sub, style: TextStyle(
+              fontSize: 10,
+              color: active
+                ? const Color(0xFFF9D976).withAlpha(180)
+                : const Color(0xFF888888),
+            )),
+          ]),
+        ),
+      ),
+    );
+  }
+
   Widget _birthSection(String label, Widget child) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 18),

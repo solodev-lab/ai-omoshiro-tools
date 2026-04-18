@@ -214,7 +214,9 @@ class _CatasterismFormationOverlayState
                       child: Column(
                         children: [
                           Text(
-                            widget.cycle.nameEN,
+                            widget.cycle.nameEN.startsWith('The ')
+                              ? widget.cycle.nameEN.substring(4)
+                              : widget.cycle.nameEN,
                             style: const TextStyle(
                               color: SolaraColors.textPrimary,
                               fontSize: 20,

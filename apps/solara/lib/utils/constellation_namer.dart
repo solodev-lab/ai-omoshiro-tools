@@ -57,7 +57,7 @@ class ConstellationNamer {
     // 武器・道具 (5+1)
     'Arrow', 'Sword', 'Shield', 'Key', 'Lantern', 'Excalibur',
     // 王権・宝物 (5+1)
-    'Crown', 'Chalice', 'Throne', 'Scepter', 'Jewel', "Philosopher's Stone",
+    'Crown', 'Chalice', 'Throne', 'Scepter', 'Jewel', 'SageStone',
     // 自然・植物 (5+1)
     'Flame', 'Tempest', 'Pyramid', 'Ember', 'Glacier', 'Yggdrasil',
     // 建造物・場所 (4+1)
@@ -163,7 +163,7 @@ class ConstellationNamer {
     for (int attempt = 0; attempt < totalCombos; attempt++) {
       final adjIdx = (hash + attempt) % _adjectivesEN.length;
       final nounIdx = ((hash >> 8) + attempt * 7) % _nounsEN.length;
-      final nameEN = 'The ${_adjectivesEN[adjIdx]} ${_nounsEN[nounIdx]}';
+      final nameEN = '${_adjectivesEN[adjIdx]} ${_nounsEN[nounIdx]}';
 
       if (usedNames == null || !usedNames.contains(nameEN)) {
         final nameJP = '${_adjectivesJP[adjIdx]}${_nounsJP[nounIdx]}';
@@ -175,7 +175,7 @@ class ConstellationNamer {
     final adjIdx = hash % _adjectivesEN.length;
     final nounIdx = (hash >> 8) % _nounsEN.length;
     return (
-      en: '★★ The ${_adjectivesEN[adjIdx]} ${_nounsEN[nounIdx]}',
+      en: '★★ ${_adjectivesEN[adjIdx]} ${_nounsEN[nounIdx]}',
       jp: '★★ ${_adjectivesJP[adjIdx]}${_nounsJP[nounIdx]}',
       adjIdx: adjIdx,
       nounIdx: nounIdx,
@@ -184,7 +184,9 @@ class ConstellationNamer {
 
   /// Calculate rarity from adjective and noun indices.
   /// Returns (stars: 1-5, label: String).
-  static ({int stars, String label}) calculateRarity(int adjIdx, int nounIdx) {
+  /// [daysDrawn] optional: コミット日数。一定以上で確率的に +1/+2 tier bump (内部処理のみ)
+  static ({int stars, String label}) calculateRarity(
+      int adjIdx, int nounIdx, {int daysDrawn = 0}) {
     if (adjIdx >= _adjTiers.length || nounIdx >= _nounTiers.length) {
       return (stars: 1, label: 'Common');
     }
@@ -193,13 +195,33 @@ class ConstellationNamer {
 
     // Rarity matrix: adj tier + noun tier
     final combined = adjTier + nounTier;
+    int baseStars;
     switch (combined) {
-      case 0: return (stars: 1, label: 'Common');
-      case 1: return (stars: 2, label: 'Uncommon');
-      case 2: return (stars: 3, label: 'Rare');
-      case 3: return (stars: 4, label: 'Legendary');
-      default: return (stars: 5, label: 'Mythic');
+      case 0: baseStars = 1; break;
+      case 1: baseStars = 2; break;
+      case 2: baseStars = 3; break;
+      case 3: baseStars = 4; break;
+      default: baseStars = 5; break;
     }
+
+    // ── Engagement bonus (内部処理のみ・見た目は整数★) ──
+    // +0.2 (≥14日) → 20%の確率で +1 tier
+    // +0.5 (≥28日) → 50%の確率で +1 tier
+    final bonus = daysDrawn >= 28 ? 0.5
+        : daysDrawn >= 14 ? 0.2
+        : 0.0;
+    int bonusBump = bonus.floor(); // 整数分は確定加算
+    final frac = bonus - bonusBump;
+    if (frac > 0) {
+      // Deterministic pseudo-random based on (adj, noun, daysDrawn)
+      final seed = adjIdx * 10000 + nounIdx * 31 + daysDrawn;
+      final rand = (seed * 2654435761 & 0x7FFFFFFF) / 0x7FFFFFFF; // 0.0..1.0
+      if (rand < frac) bonusBump += 1;
+    }
+    final finalStars = (baseStars + bonusBump).clamp(1, 5);
+
+    const labels = ['', 'Common', 'Uncommon', 'Rare', 'Legendary', 'Mythic'];
+    return (stars: finalStars, label: labels[finalStars]);
   }
 
   /// Hash-based rarity percentage (Phase 1: mathematical).
