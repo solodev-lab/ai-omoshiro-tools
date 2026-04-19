@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ui' show lerpDouble;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/lunar_intention.dart';
@@ -7,30 +8,7 @@ import '../utils/celestial_events.dart';
 import '../utils/cycle_story_texts.dart';
 import '../utils/solara_storage.dart';
 import 'glass_panel.dart';
-
-Widget _mysticalMoonBackdrop({
-  required String assetPath,
-  required Widget child,
-}) {
-  return Stack(fit: StackFit.expand, children: [
-    const ColoredBox(color: Color(0xFF040810)),
-    Image.asset(
-      assetPath,
-      fit: BoxFit.cover,
-      errorBuilder: (_, __, ___) => const SizedBox.shrink(),
-    ),
-    const DecoratedBox(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter, end: Alignment.bottomCenter,
-          colors: [Color(0x66000000), Color(0xCC000000), Color(0xF0000000)],
-          stops: [0.0, 0.45, 1.0],
-        ),
-      ),
-    ),
-    child,
-  ]);
-}
+import 'moon_overlay_shared.dart';
 
 // ============================================================
 //  Full Moon Overlay — midpoint check-in
@@ -56,9 +34,25 @@ class _FullMoonOverlayState extends State<FullMoonOverlay>
     with TickerProviderStateMixin {
   bool _showStory = true;
   late AnimationController _fadeController;
-  late AnimationController _scrollController;
+  /// 物語→評価画面のクロスフェード用 (0=物語のみ / 0.5=切替点 / 1=評価画面のみ)
+  late AnimationController _pageCtl;
   late Animation<double> _fadeAnim;
-  Timer? _autoAdvanceTimer;
+  // ── 評価選択後のリビール演出 ─────────────────────────────
+  /// 選択済みの評価 (1-3)、未選択時は -1
+  int _selectedRating = -1;
+  /// タイトル＋選択肢を中央に寄せるスライド (0→1、同時にゴール)
+  late AnimationController _revealCtl;
+  /// 詩的メッセージのフェードイン
+  late AnimationController _messageCtl;
+  /// 自動クローズタイマー
+  Timer? _dismissTimer;
+  // 位置計測用
+  final GlobalKey _titleKey = GlobalKey();
+  final List<GlobalKey> _ratingKeys = List.generate(3, (_) => GlobalKey());
+  double? _titleStartY;
+  double? _titleHeight;
+  double? _ratingStartY;
+  double? _ratingHeight;
 
   @override
   void initState() {
@@ -68,25 +62,39 @@ class _FullMoonOverlayState extends State<FullMoonOverlay>
       duration: const Duration(milliseconds: 1200),
     )..forward();
     _fadeAnim = CurvedAnimation(parent: _fadeController, curve: Curves.easeOut);
-    _scrollController = AnimationController(
+    // ページクロスフェード (物語フェードアウト→評価画面フェードイン)
+    _pageCtl = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 40),
-    )..forward();
-    // スクロール完了後、2秒待って次ページ (評価画面) へ自動切替
-    _scrollController.addStatusListener((status) {
-      if (status == AnimationStatus.completed && _showStory && mounted) {
-        _autoAdvanceTimer = Timer(const Duration(seconds: 2), () {
-          if (mounted && _showStory) setState(() => _showStory = false);
-        });
+      duration: const Duration(milliseconds: 700),
+    )..addListener(() {
+      if (_pageCtl.value >= 0.5 && _showStory && mounted) {
+        setState(() => _showStory = false);
       }
     });
+    // 選択後リビール用
+    _revealCtl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    );
+    _messageCtl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 600),
+    );
+  }
+
+  /// 物語→評価画面のフェード遷移を開始。多重呼び出しは無視。
+  void _transitionToRating() {
+    if (_pageCtl.isAnimating || _pageCtl.value > 0) return;
+    _pageCtl.forward();
   }
 
   @override
   void dispose() {
-    _autoAdvanceTimer?.cancel();
     _fadeController.dispose();
-    _scrollController.dispose();
+    _pageCtl.dispose();
+    _revealCtl.dispose();
+    _messageCtl.dispose();
+    _dismissTimer?.cancel();
     super.dispose();
   }
 
@@ -96,61 +104,214 @@ class _FullMoonOverlayState extends State<FullMoonOverlay>
     ('\u{1F31F}', 'Feeling lighter', '\u8efd\u304f\u306a\u3063\u3066\u304d\u305f'),
   ];
 
-  @override
-  Widget build(BuildContext context) {
-    if (_showStory) return _buildStoryPage(context);
-    return _buildRatingPage(context);
+  /// 評価タップ → GlobalKey で現在位置を測定 → リビール演出を順次再生
+  void _onRatingTap(int i) {
+    if (_selectedRating >= 0) return; // 既に選択済み
+    final titleBox = _titleKey.currentContext?.findRenderObject() as RenderBox?;
+    final ratingBox = _ratingKeys[i].currentContext?.findRenderObject() as RenderBox?;
+    if (titleBox == null || ratingBox == null) return;
+    final titlePos = titleBox.localToGlobal(Offset.zero);
+    final ratingPos = ratingBox.localToGlobal(Offset.zero);
+    setState(() {
+      _selectedRating = i + 1; // rating値は1-3
+      _titleStartY = titlePos.dy;
+      _titleHeight = titleBox.size.height;
+      _ratingStartY = ratingPos.dy;
+      _ratingHeight = ratingBox.size.height;
+    });
+    _runRevealSequence();
   }
 
-  Widget _buildStoryPage(BuildContext context) {
+  Future<void> _runRevealSequence() async {
+    await _revealCtl.forward();
+    if (!mounted) return;
+    await _messageCtl.forward();
+    if (!mounted) return;
+    // 余韻を残して自動確定 (合計3秒)
+    _dismissTimer = Timer(const Duration(milliseconds: 3000), () {
+      if (mounted) _submitRating(_selectedRating);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // オーバーレイ全体を初期フェードインで包む (月背景含む)
+    return FadeTransition(
+      opacity: _fadeAnim,
+      child: mysticalMoonBackdrop(
+        assetPath: 'assets/horo-bg/full_moon_bg.webp',
+        child: AnimatedBuilder(
+          animation: _pageCtl,
+          builder: (context, _) {
+            final t = _pageCtl.value;
+            final opacity = _showStory
+                ? (1 - t * 2).clamp(0.0, 1.0)
+                : ((t - 0.5) * 2).clamp(0.0, 1.0);
+            return Opacity(
+              opacity: opacity,
+              child: _showStory
+                  ? _buildStoryContent(context)
+                  : (_selectedRating >= 0
+                      ? _buildRevealLayout(context)
+                      : _buildRatingList(context)),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  // ══════════════════════════════════════════════════
+  // Story content (backdrop は外側で付与済み)
+  // ══════════════════════════════════════════════════
+  Widget _buildStoryContent(BuildContext context) {
     final locale = Localizations.localeOf(context).toString();
     final chosenText = locale.startsWith('ja')
         ? widget.intention.chosenTextJP
         : widget.intention.chosenText;
     final paragraphs = CycleStoryTexts.getFullMoon(locale, chosenText);
 
-    return _mysticalMoonBackdrop(
-      assetPath: 'assets/horo-bg/full_moon_bg.webp',
-      child: SafeArea(
-        child: Column(
-          children: [
-            Expanded(
-              child: _FullMoonScrollingStory(
-                fadeAnim: _fadeAnim,
-                scrollAnim: _scrollController,
-                paragraphs: paragraphs,
-              ),
+    return SafeArea(
+      child: Column(
+        children: [
+          Expanded(
+            child: MoonScrollingStory(
+              fadeAnim: _fadeAnim,
+              label: 'FULL MOON',
+              paragraphs: paragraphs,
+              onReachedEnd: _transitionToRating,
             ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(28, 0, 28, 24),
-              child: FadeTransition(
-                opacity: _fadeAnim,
-                child: GestureDetector(
-                  onTap: () => setState(() => _showStory = false),
-                  child: Container(
-                    width: 240,
-                    padding: const EdgeInsets.symmetric(vertical: 15),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(28),
-                      gradient: const LinearGradient(
-                        colors: [
-                          SolaraColors.solaraGold,
-                          SolaraColors.solaraGoldLight,
-                        ],
-                      ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(28, 0, 28, 24),
+            child: FadeTransition(
+              opacity: _fadeAnim,
+              child: GestureDetector(
+                onTap: _transitionToRating,
+                child: Container(
+                  width: 240,
+                  padding: const EdgeInsets.symmetric(vertical: 15),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(28),
+                    gradient: const LinearGradient(
+                      colors: [
+                        SolaraColors.solaraGold,
+                        SolaraColors.solaraGoldLight,
+                      ],
                     ),
-                    child: Center(
-                      child: Text(
-                        'Continue',
-                        style: GoogleFonts.cinzel(
-                          color: SolaraColors.celestialBlueDark,
-                          fontSize: 15,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: 2.5,
-                        ),
+                  ),
+                  child: Center(
+                    child: Text(
+                      'Continue',
+                      style: GoogleFonts.cinzel(
+                        color: SolaraColors.celestialBlueDark,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 2.5,
                       ),
                     ),
                   ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ══════════════════════════════════════════════════
+  // 評価リスト (初期画面)
+  // ══════════════════════════════════════════════════
+  Widget _buildRatingList(BuildContext context) {
+    final monthData = CelestialEvents.getMonth(widget.month);
+    final moonName = monthData?.fullMoonName ?? 'Full Moon';
+    final moonNameJP = monthData?.fullMoonNameJP ?? '\u6e80\u6708';
+
+    return SafeArea(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 16),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const SizedBox(height: 14),
+            _titleBlock(keyRef: _titleKey, moonName: moonName, moonNameJP: moonNameJP),
+            // 月背景にかぶらないよう縦スペースを広げる (全体を下に)
+            const SizedBox(height: 170),
+            Text(
+              'You set out to release:',
+              style: GoogleFonts.cinzel(
+                color: SolaraColors.textSecondary,
+                fontSize: 14, letterSpacing: 1.8,
+              ),
+            ),
+            const SizedBox(height: 10),
+            GlassPanel(
+              padding: const EdgeInsets.all(18),
+              borderRadius: BorderRadius.circular(14),
+              child: Column(
+                children: [
+                  Text(
+                    widget.intention.chosenTextJP,
+                    style: const TextStyle(
+                      color: SolaraColors.solaraGold,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    widget.intention.chosenText,
+                    style: const TextStyle(
+                      color: SolaraColors.textSecondary,
+                      fontSize: 13,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 28),
+            Text(
+              'How does it feel now?',
+              style: GoogleFonts.cinzel(
+                color: SolaraColors.textPrimary,
+                fontSize: 18, letterSpacing: 1.5,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 16),
+            // 3 rating options
+            ...List.generate(3, (i) {
+              final (emoji, labelEN, labelJP) = _ratingLabels[i];
+              return Padding(
+                key: _ratingKeys[i],
+                padding: const EdgeInsets.symmetric(vertical: 5),
+                child: GestureDetector(
+                  onTap: () => _onRatingTap(i),
+                  child: _ratingCardWidget(
+                    isSelected: false,
+                    emoji: emoji,
+                    labelJP: labelJP,
+                    labelEN: labelEN,
+                  ),
+                ),
+              );
+            }),
+            const SizedBox(height: 16),
+            TextButton(
+              onPressed: () async {
+                await SolaraStorage.markOverlayShown('full_moon');
+                widget.onDismiss();
+              },
+              child: const Text(
+                'Not today',
+                style: TextStyle(
+                  color: SolaraColors.textSecondary,
+                  fontSize: 14,
+                  letterSpacing: 1.2,
+                  decoration: TextDecoration.underline,
+                  decorationColor: SolaraColors.textSecondary,
                 ),
               ),
             ),
@@ -160,145 +321,179 @@ class _FullMoonOverlayState extends State<FullMoonOverlay>
     );
   }
 
-  Widget _buildRatingPage(BuildContext context) {
+  // ══════════════════════════════════════════════════
+  // 選択後のリビール画面
+  // タイトルと選択肢を中央に寄せ、メッセージ→惑星イベントを順次表示
+  // ══════════════════════════════════════════════════
+  Widget _buildRevealLayout(BuildContext context) {
     final monthData = CelestialEvents.getMonth(widget.month);
     final moonName = monthData?.fullMoonName ?? 'Full Moon';
     final moonNameJP = monthData?.fullMoonNameJP ?? '\u6e80\u6708';
+    final idx = _selectedRating - 1;
+    final (emoji, labelEN, labelJP) = _ratingLabels[idx];
+    final size = MediaQuery.of(context).size;
 
-    return FadeTransition(
-      opacity: _fadeAnim,
-      child: _mysticalMoonBackdrop(
-        assetPath: 'assets/horo-bg/full_moon_bg.webp',
-        child: SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 16),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const SizedBox(height: 14),
-                Text(
-                  moonName,
-                  style: GoogleFonts.cinzel(
-                    color: SolaraColors.textPrimary,
-                    fontSize: 22,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 2.5,
-                  ),
-                ),
-                Text(
-                  moonNameJP,
-                  style: const TextStyle(
-                    color: SolaraColors.solaraGold,
-                    fontSize: 15,
-                    fontWeight: FontWeight.w500,
-                    letterSpacing: 2,
-                  ),
-                ),
-                const SizedBox(height: 28),
-                Text(
-                  'You set out to release:',
-                  style: GoogleFonts.cinzel(
-                    color: SolaraColors.textSecondary,
-                    fontSize: 14, letterSpacing: 1.8,
-                  ),
-                ),
-                const SizedBox(height: 10),
-                GlassPanel(
-                  padding: const EdgeInsets.all(18),
-                  borderRadius: BorderRadius.circular(14),
-                  child: Column(
-                    children: [
-                      Text(
-                        widget.intention.chosenTextJP,
-                        style: const TextStyle(
-                          color: SolaraColors.solaraGold,
-                          fontSize: 18,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        widget.intention.chosenText,
-                        style: const TextStyle(
-                          color: SolaraColors.textSecondary,
-                          fontSize: 13,
-                          letterSpacing: 0.5,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 28),
-                Text(
-                  'How does it feel now?',
-                  style: GoogleFonts.cinzel(
-                    color: SolaraColors.textPrimary,
-                    fontSize: 18, letterSpacing: 1.5,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                // 3 rating options
-                ...List.generate(3, (i) {
-                  final (emoji, labelEN, labelJP) = _ratingLabels[i];
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 5),
-                    child: GestureDetector(
-                      onTap: () => _submitRating(i + 1),
-                      child: Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 20, vertical: 14),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(14),
-                          color: SolaraColors.glassFill,
-                          border: Border.all(color: SolaraColors.glassBorder),
-                        ),
-                        child: Row(
-                          children: [
-                            Text(emoji, style: const TextStyle(fontSize: 26)),
-                            const SizedBox(width: 14),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(labelJP,
-                                    style: const TextStyle(
-                                        color: SolaraColors.textPrimary,
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w500)),
-                                const SizedBox(height: 2),
-                                Text(labelEN,
-                                    style: const TextStyle(
-                                        color: SolaraColors.textSecondary,
-                                        fontSize: 12,
-                                        letterSpacing: 0.5)),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  );
-                }),
-                const SizedBox(height: 16),
-                TextButton(
-                  onPressed: () async {
-                    await SolaraStorage.markOverlayShown('full_moon');
-                    widget.onDismiss();
-                  },
-                  child: const Text(
-                    'Not today',
-                    style: TextStyle(
-                      color: SolaraColors.textSecondary,
-                      fontSize: 14,
-                      letterSpacing: 1.2,
-                    ),
-                  ),
-                ),
-              ],
+    // ゴール位置 — 評価カードを画面中央付近に据え、タイトルはその上
+    final titleHeight = _titleHeight ?? 60;
+    final ratingHeight = _ratingHeight ?? 60;
+    final ratingTargetY = size.height * 0.42;
+    final titleTargetY = ratingTargetY - titleHeight - 28;
+
+    return AnimatedBuilder(
+      animation: _revealCtl,
+      builder: (context, _) {
+        final t = Curves.easeInOutCubic.transform(_revealCtl.value);
+        final titleY = lerpDouble(_titleStartY!, titleTargetY, t)!;
+        final ratingY = lerpDouble(_ratingStartY!, ratingTargetY, t)!;
+        return Stack(
+          fit: StackFit.expand,
+          children: [
+            // タイトル (Pink Moon / 満月)
+            Positioned(
+              left: 0,
+              right: 0,
+              top: titleY,
+              child: Center(
+                child: _titleBlock(moonName: moonName, moonNameJP: moonNameJP),
+              ),
+            ),
+            // 選択された評価カード
+            Positioned(
+              left: 28,
+              right: 28,
+              top: ratingY,
+              child: _ratingCardWidget(
+                isSelected: true,
+                emoji: emoji,
+                labelJP: labelJP,
+                labelEN: labelEN,
+              ),
+            ),
+            // 選択肢の下: 詩的メッセージ (満月は惑星イベント非表示)
+            Positioned(
+              left: 28,
+              right: 28,
+              top: ratingY + ratingHeight + 26,
+              child: FadeTransition(
+                opacity: _messageCtl,
+                child: _revealMessage(context),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // ══════════════════════════════════════════════════
+  // 共通 widget builder
+  // ══════════════════════════════════════════════════
+
+  /// タイトルブロック (moonName + moonNameJP)
+  Widget _titleBlock({
+    Key? keyRef,
+    required String moonName,
+    required String moonNameJP,
+  }) {
+    return Container(
+      key: keyRef,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            moonName,
+            style: GoogleFonts.cinzel(
+              color: SolaraColors.textPrimary,
+              fontSize: 22,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 2.5,
             ),
           ),
+          Text(
+            moonNameJP,
+            style: const TextStyle(
+              color: SolaraColors.solaraGold,
+              fontSize: 15,
+              fontWeight: FontWeight.w500,
+              letterSpacing: 2,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 評価カード (選択前/後で見た目同じ、isSelected で枠色が変わる)
+  Widget _ratingCardWidget({
+    required bool isSelected,
+    required String emoji,
+    required String labelJP,
+    required String labelEN,
+  }) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(14),
+        color: isSelected
+            ? SolaraColors.solaraGold.withValues(alpha: 0.12)
+            : SolaraColors.glassFill,
+        border: Border.all(
+          color: isSelected
+              ? SolaraColors.solaraGold.withValues(alpha: 0.5)
+              : SolaraColors.glassBorder,
         ),
+      ),
+      child: Row(
+        children: [
+          Text(emoji, style: const TextStyle(fontSize: 26)),
+          const SizedBox(width: 14),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                labelJP,
+                style: TextStyle(
+                  color: isSelected
+                      ? SolaraColors.solaraGold
+                      : SolaraColors.textPrimary,
+                  fontSize: 16,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                labelEN,
+                style: const TextStyle(
+                  color: SolaraColors.textSecondary,
+                  fontSize: 12,
+                  letterSpacing: 0.5,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 詩的メッセージ (選択後フェードイン)
+  Widget _revealMessage(BuildContext context) {
+    final locale = Localizations.localeOf(context).toString();
+    final isJA = locale.startsWith('ja');
+    final text = isJA
+        ? '今のあなたの感覚は、すべて受けとめられている。\n月はあなたの歩みを祝福している。'
+        : 'Whatever you feel now is received.\nThe moon honors your journey.';
+    return Text(
+      text,
+      textAlign: TextAlign.center,
+      style: TextStyle(
+        color: SolaraColors.textPrimary.withValues(alpha: 0.92),
+        fontSize: 14,
+        height: 1.8,
+        letterSpacing: 1.2,
+        fontStyle: FontStyle.italic,
       ),
     );
   }
@@ -310,90 +505,6 @@ class _FullMoonOverlayState extends State<FullMoonOverlay>
     await SolaraStorage.saveIntention(updated);
     await SolaraStorage.markOverlayShown('full_moon');
     widget.onDismiss();
-  }
-}
-
-class _FullMoonScrollingStory extends StatelessWidget {
-  final Animation<double> fadeAnim;
-  final Animation<double> scrollAnim;
-  final List<String> paragraphs;
-  const _FullMoonScrollingStory({
-    required this.fadeAnim,
-    required this.scrollAnim,
-    required this.paragraphs,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(builder: (ctx, cons) {
-      final h = cons.maxHeight;
-      final startY = h * 0.5;
-      final endY = -h * 1.2;
-
-      return ClipRect(
-        child: ShaderMask(
-          shaderCallback: (rect) => const LinearGradient(
-            begin: Alignment.topCenter, end: Alignment.bottomCenter,
-            colors: [
-              Color(0x00FFFFFF),
-              Color(0x00FFFFFF),
-              Color(0xFFFFFFFF),
-              Color(0xFFFFFFFF),
-            ],
-            stops: [0.0, 0.22, 0.38, 1.0],
-          ).createShader(rect),
-          blendMode: BlendMode.dstIn,
-          child: FadeTransition(
-            opacity: fadeAnim,
-            child: AnimatedBuilder(
-              animation: scrollAnim,
-              child: RepaintBoundary(
-                child: OverflowBox(
-                  alignment: Alignment.topCenter,
-                  minHeight: 0,
-                  maxHeight: double.infinity,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 28),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Text('FULL MOON', style: GoogleFonts.cinzel(
-                          color: const Color(0xFFF9D976),
-                          fontSize: 14, letterSpacing: 4,
-                          fontWeight: FontWeight.w600)),
-                        const SizedBox(height: 32),
-                        ...paragraphs.map((p) => Padding(
-                          padding: const EdgeInsets.only(bottom: 28),
-                          child: Text(
-                            p,
-                            style: const TextStyle(
-                              color: Color(0xFFF5EFDA),
-                              fontSize: 17,
-                              fontWeight: FontWeight.w400,
-                              height: 1.9,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                        )),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              builder: (_, child) {
-                final t = scrollAnim.value;
-                final y = startY + (endY - startY) * t;
-                return Transform.translate(
-                  offset: Offset(0, y),
-                  child: child,
-                );
-              },
-            ),
-          ),
-        ),
-      );
-    });
   }
 }
 

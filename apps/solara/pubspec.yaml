@@ -73,6 +73,7 @@ flutter:
     - assets/card-images/
     - assets/zodiac-symbols/
     - assets/catasterism_bg.webp
+    - assets/catasterism_bg_void2.webp
     - assets/horo-bg/
 
   # An image asset can refer to one or more resolution-specific "variants", see

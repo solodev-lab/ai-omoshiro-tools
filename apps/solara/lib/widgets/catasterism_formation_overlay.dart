@@ -53,10 +53,13 @@ class _CatasterismFormationOverlayState
       vsync: this,
       duration: const Duration(seconds: 8),
     )..forward();
+    // 前画面(刻星化選択)からの切替時に Cycle 画面が一瞬透けないよう、
+    // フェードインせず最初から完全不透明で出す。
     _fadeController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 600),
-    )..forward();
+      duration: const Duration(milliseconds: 1),
+      value: 1.0,
+    );
     _preloadZodiacImages();
     _loadBgImage();
   }
@@ -573,14 +576,7 @@ class _FormationPainter extends CustomPainter {
       }
     }
 
-    // ── IGNITION中の白フラッシュ (sin山形、控えめに調整) ──
-    if (ignitionPulse > 0) {
-      final flashAlpha = ignitionPulse * 0.20; // 0.35→0.20 (光線・記号と被るので控えめ)
-      canvas.drawRect(
-        Offset.zero & size,
-        Paint()..color = Colors.white.withAlpha((flashAlpha * 255).round()),
-      );
-    }
+    // IGNITION 時の画面全体の白フラッシュは削除 (星の発火時の局所グロウは残る)
   }
 
   @override
