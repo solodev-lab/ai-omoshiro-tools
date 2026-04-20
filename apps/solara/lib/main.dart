@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'theme/solara_theme.dart';
 import 'screens/map_screen.dart';
 import 'screens/horoscope_screen.dart';
@@ -39,6 +40,11 @@ class SolaraApp extends StatelessWidget {
         theme: SolaraTheme.dark,
         locale: locale, // null の時は端末設定が使われる
         supportedLocales: const [Locale('ja'), Locale('en')],
+        localizationsDelegates: const [
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
         home: const SolaraHome(),
       ),
     );

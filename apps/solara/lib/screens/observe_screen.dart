@@ -9,6 +9,7 @@ import '../utils/tarot_data.dart';
 import 'observe/observe_constants.dart';
 import 'observe/observe_card_widgets.dart';
 import 'observe/observe_history.dart';
+import 'observe/tarot_altar_scene.dart';
 
 /// Tarot Draw screen — matches tarot.html exactly.
 /// Layout: Inner tabs (TAROT DRAW / HISTORY) → Card scene → Tap hint → Stella → Reading panel
@@ -164,14 +165,7 @@ class _ObserveScreenState extends State<ObserveScreen>
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(
-        gradient: RadialGradient(
-          center: Alignment(0, -1), radius: 1.1,
-          colors: [Color(0xFF0F2850), Color(0xFF080C14)],
-          stops: [0.0, 0.55],
-        ),
-      ),
+    return TarotAltarScene(
       child: SafeArea(
         child: Column(children: [
           _buildInnerTabs(),
@@ -231,15 +225,37 @@ class _ObserveScreenState extends State<ObserveScreen>
       child: Column(children: [
         GestureDetector(
           onTap: _drawCard,
-          child: SizedBox(
-            width: 200, height: 320,
-            child: Observe3DCard(
-              flipAnimation: _flipAnimation,
-              pulseOpacity: _pulseOpacity,
-              pulseScale: _pulseScale,
-              pulseCtrl: _pulseCtrl,
-              drawnCard: _drawnCard,
-            ),
+          child: AnimatedBuilder(
+            animation: _pulseCtrl,
+            builder: (_, __) {
+              final t = _pulseCtrl.value * 2 * pi;
+              final dy = sin(t) * 4.0;
+              return Transform.translate(
+                offset: Offset(0, dy),
+                child: Container(
+                  width: 200,
+                  height: 320,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(14),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.55),
+                        blurRadius: 30,
+                        spreadRadius: 4,
+                        offset: Offset(0, 16 - dy * 0.6),
+                      ),
+                    ],
+                  ),
+                  child: Observe3DCard(
+                    flipAnimation: _flipAnimation,
+                    pulseOpacity: _pulseOpacity,
+                    pulseScale: _pulseScale,
+                    pulseCtrl: _pulseCtrl,
+                    drawnCard: _drawnCard,
+                  ),
+                ),
+              );
+            },
           ),
         ),
         const SizedBox(height: 8),

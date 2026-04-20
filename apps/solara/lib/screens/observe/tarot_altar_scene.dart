@@ -5,9 +5,13 @@ import 'package:flutter/material.dart';
 ///
 /// Layers (bottom → top):
 ///   1. Deep-space radial gradient
-///   2. Altar photo (zodiac wheel seen from overhead, lower 60%)
-///   3. 10 floating planets positioned around the altar ring
-///   4. Occasional shooting star streaks (BlendMode.plus overlay)
+///   2. Altar photo (zodiac wheel seen from overhead at 45°, with the
+///      twelve Roman-numeral houses and candles baked into the image)
+///   3. Five personal planets (Sun/Moon/Mercury/Venus/Mars) floating
+///      on the altar ring, each with a ground shadow that drops straight
+///      down then is tugged toward the altar center by the candle light
+///   4. Occasional alpha-keyed shooting-star streaks
+///   5. Foreground tabs/card/panels (passed in as `child`)
 ///
 /// Planet positions approximate the current night-sky longitudes
 /// (snapshot — ok to be static, this screen isn't a live chart).
@@ -185,14 +189,16 @@ class _TarotAltarSceneState extends State<TarotAltarScene>
     );
   }
 
-  /// DEMO LAYOUT (shadow check): NE / W / SW / SSE / E.
-  /// lonDeg = (90 − compass-bearing) mod 360
+  /// Five personal planets at approximate current-sky longitudes.
+  /// Screen coord convention: lonDeg 0°=E, 90°=N(top), 180°=W, 270°=S(bot).
+  /// The baseline ellipse + shadow rule below were tuned from a cardinal
+  /// demo so that planets land naturally on every bearing.
   static const List<_PlanetDef> _planets = [
-    _PlanetDef('moon',    lonDeg: 45,    size: 33, z: 2),  // 北東 (NE)
-    _PlanetDef('venus',   lonDeg: 180,   size: 44, z: 1),  // 西 (W)
-    _PlanetDef('sun',     lonDeg: 225,   size: 54, z: 2),  // 南西 (SW)
-    _PlanetDef('mars',    lonDeg: 292.5, size: 44, z: 1),  // 南南東 (SSE)
-    _PlanetDef('mercury', lonDeg: 0,     size: 38, z: 1),  // 東 (E)
+    _PlanetDef('sun',     lonDeg: 30,  size: 54, z: 2),  // Taurus ~0°
+    _PlanetDef('moon',    lonDeg: 100, size: 33, z: 2),  // Cancer ~10°
+    _PlanetDef('mercury', lonDeg: 18,  size: 38, z: 1),  // Aries ~18°
+    _PlanetDef('venus',   lonDeg: 358, size: 44, z: 1),  // Pisces ~28°
+    _PlanetDef('mars',    lonDeg: 118, size: 44, z: 1),  // Cancer ~28°
   ];
 
   List<Widget> _buildPlanets(double w, double h) {
@@ -218,7 +224,7 @@ class _TarotAltarSceneState extends State<TarotAltarScene>
     for (final p in sorted) {
       final rad = -p.lonDeg * pi / 180;
       final baseX = cx + rx * cos(rad);
-      final baseY = cy + ry * sin(rad) + h * p.yOffsetRatio;
+      final baseY = cy + ry * sin(rad);
       final phase = p.lonDeg / 360.0;
 
       // Per-axis shadow offset rule (simple, deterministic):
@@ -456,15 +462,11 @@ class _PlanetDef {
   final double lonDeg;
   final double size;
   final int z;
-  /// Extra vertical nudge (fraction of screen height). + down, − up.
-  /// Lets us push a single planet off the shared ellipse when needed.
-  final double yOffsetRatio;
   const _PlanetDef(
     this.name, {
     required this.lonDeg,
     required this.size,
     required this.z,
-    this.yOffsetRatio = 0.0,
   });
 }
 

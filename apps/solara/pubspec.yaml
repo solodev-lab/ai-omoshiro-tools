@@ -30,6 +30,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
   cupertino_icons: ^1.0.8
   google_fonts: ^8.0.2
   shared_preferences: ^2.5.5
@@ -75,6 +77,10 @@ flutter:
     - assets/catasterism_bg.webp
     - assets/catasterism_bg_void2.webp
     - assets/horo-bg/
+    - assets/tarot_scene/
+    - assets/tarot_scene/planets/
+    - assets/tarot_scene/planet_rotations/
+    - assets/tarot_scene/shooting_stars/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

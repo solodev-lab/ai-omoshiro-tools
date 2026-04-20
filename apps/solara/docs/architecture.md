@@ -49,6 +49,7 @@ lib/ (77 .dart ファイル)
 │   ├── observe_screen.dart   タロット占い（メイン）
 │   ├── observe/              ← Observe サブウィジェット
 │   │   ├── observe_history.dart, observe_card_widgets.dart, observe_constants.dart
+│   │   └── tarot_altar_scene.dart  斜め見下ろし占卓シーン（背景画像+5惑星浮遊+自転WebP+影+流れ星+太陽blaze）
 │   ├── galaxy_screen.dart    銀河・星座（メイン）
 │   ├── galaxy/               ← Galaxy サブウィジェット
 │   │   ├── galaxy_constellation_builder.dart  星座生成ロジック
@@ -320,6 +321,53 @@ Sanctuary Profile Editor で出生地選択
 HoroscopeScreenState が public で、GlobalKey 経由で外部からメソッドを呼んでいる。
 - Riverpod 導入時にこのパターンを解消する
 - 現状は動いているのでリリース前は触らない
+
+### Tarot 占卓シーン (observe/tarot_altar_scene.dart)
+Tarot Draw 画面の背景。Stack 5 レイヤー構成:
+```
+① 深宇宙 RadialGradient
+② 占卓画像 (assets/tarot_scene/altar.png, 1024×1024、contain配置)
+③ 影レイヤー (5惑星の影、真下 + 中央方向バイアス)
+③ 惑星レイヤー (5惑星、自転WebP + ふわふわ浮遊、Sun は3層パルスblaze)
+④ 流れ星 (20-90秒間隔、左上→右下 or 右上→左下、600ms)
+⑤ 前景 (タブ/カード/パネル、widget.child)
+```
+- 影 = 「真下 +0.6×size」基準 +「南成分で上へ-0.4×size」+「東西成分で反対側へ-0.25×size」
+- 占卓の 12 ハウス ローマ数字は **画像に焼き込み済み**（Python スクリプトで合成）
+- 惑星自転 WebP は `mockup/generate_planet_rotations.py` で生成（equirectangularテクスチャ→球体マッピング）
+
+### i18n / Localizations
+`MaterialApp` に `flutter_localizations` の delegate 3種を必ず指定する:
+```dart
+localizationsDelegates: const [
+  GlobalMaterialLocalizations.delegate,
+  GlobalWidgetsLocalizations.delegate,
+  GlobalCupertinoLocalizations.delegate,
+],
+```
+これが無いと `locale: Locale('ja')` 指定時に TextField 等が
+`No MaterialLocalizations found` でレンダリング失敗する。
+
+---
+
+## 画像生成・後処理スクリプト (apps/solara/mockup/)
+
+全て Gemini 3.1 Flash Image を使用、`.env` の `GEMINI_API_KEY` を読み込み:
+
+| スクリプト | 用途 |
+|---|---|
+| `generate_tarot_altar.py` | 占卓背景（1024×1024 1:1、45°斜め見下ろし） |
+| `generate_tarot_planets.py` | 10惑星静止画 (1:1) |
+| `generate_planet_textures.py` | equirectangularテクスチャマップ (2:1) |
+| `generate_planet_rotations.py` | 自転WebPアニメ（NumPy球体マッピング、60フレーム/6秒ループ） |
+| `generate_tarot_shooting_stars.py` | 流れ星3種 (16:9) |
+| `alpha_from_black.py` | 惑星透明化（楕円マスク、Saturnのみ楕円×輝度合成） |
+| `alpha_shooting_star.py` | 流れ星透明化（輝度ベース） |
+| `draw_house_numerals_on_altar.py` | 占卓画像にローマ数字を焼き込む（Pillow） |
+| `backup_util.py` | `--force` 上書き前の自動バックアップユーティリティ |
+| `snapshot_tarot_scene.py` | 現在のアセットをまとめて `_backup/<timestamp>/` に退避 |
+
+全生成スクリプトは `--force` 実行時に既存ファイルを `_backup/<timestamp>_<name>` に退避してから上書きする（CLAUDE.md の元絵保護ルール準拠）。
 
 ---
 

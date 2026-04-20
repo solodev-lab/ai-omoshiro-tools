@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tarot 占卓モック – Phase A</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 30px 20px;
+    background: #05050a;
+    color: #E8E0D0;
+    font-family: -apple-system, "Hiragino Sans", "Yu Gothic UI", sans-serif;
+  }
+  h1 {
+    text-align: center;
+    color: #C9A84C;
+    font-weight: 300;
+    letter-spacing: 4px;
+    margin: 0 0 6px;
+    font-size: 22px;
+  }
+  .sub {
+    text-align: center;
+    color: #777;
+    font-size: 12px;
+    margin-bottom: 30px;
+    letter-spacing: 1px;
+  }
+  .row {
+    display: flex;
+    gap: 30px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .mock {
+    text-align: center;
+  }
+  .mock h2 {
+    color: #C9A84C;
+    margin: 0 0 8px;
+    font-weight: 400;
+    letter-spacing: 3px;
+    font-size: 14px;
+  }
+  .mock .desc {
+    font-size: 11px;
+    color: #888;
+    margin: 0 auto 12px;
+    max-width: 280px;
+    line-height: 1.5;
+  }
+  .scene {
+    width: 300px;
+    height: 600px;
+    border-radius: 24px;
+    overflow: hidden;
+    box-shadow: 0 20px 80px rgba(201, 168, 76, 0.08), 0 0 0 1px rgba(201, 168, 76, 0.12);
+    display: block;
+  }
+  .tag {
+    display: inline-block;
+    margin-top: 10px;
+    padding: 3px 10px;
+    border: 1px solid rgba(201, 168, 76, 0.3);
+    border-radius: 10px;
+    font-size: 10px;
+    color: #C9A84C;
+    letter-spacing: 1px;
+  }
+  @keyframes moonPulse {
+    0%, 100% { opacity: 0.7; }
+    50% { opacity: 1; }
+  }
+  .moon-glow { animation: moonPulse 3s ease-in-out infinite; }
+</style>
+</head>
+<body>
+
+<h1>TAROT 占卓モック — Phase A</h1>
+<div class="sub">背景レイヤー 3 パターン比較 / 2026-04-19</div>
+
+<div class="row">
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- A-1: 純静的 黄道十二宮                              -->
+<!-- ═══════════════════════════════════════════════════ -->
+<div class="mock">
+  <h2>A-1 純静的</h2>
+  <p class="desc">黄道十二宮のみ。毎日同じ装飾的な占卓。<br>カードが完全に主役。</p>
+  <svg class="scene" viewBox="0 0 300 600" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <radialGradient id="bg1" cx="50%" cy="-10%" r="110%">
+        <stop offset="0%" stop-color="#0F2850"/>
+        <stop offset="55%" stop-color="#080C14"/>
+      </radialGradient>
+      <filter id="cardShadow1" x="-50%" y="-50%" width="200%" height="200%">
+        <feGaussianBlur in="SourceAlpha" stdDeviation="6"/>
+        <feOffset dy="6"/>
+        <feComponentTransfer><feFuncA type="linear" slope="0.6"/></feComponentTransfer>
+        <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
+      </filter>
+    </defs>
+
+    <!-- Background -->
+    <rect width="300" height="600" fill="url(#bg1)"/>
+
+    <!-- Scattered stars -->
+    <g fill="#fff">
+      <circle cx="28" cy="55" r="0.7" opacity="0.5"/>
+      <circle cx="85" cy="40" r="0.6" opacity="0.4"/>
+      <circle cx="140" cy="70" r="0.5" opacity="0.3"/>
+      <circle cx="210" cy="58" r="0.8" opacity="0.6"/>
+      <circle cx="260" cy="90" r="0.5" opacity="0.4"/>
+      <circle cx="55" cy="110" r="0.7" opacity="0.5"/>
+      <circle cx="165" cy="150" r="0.6" opacity="0.4"/>
+      <circle cx="230" cy="180" r="0.5" opacity="0.3"/>
+      <circle cx="40" cy="195" r="0.6" opacity="0.4"/>
+      <circle cx="270" cy="210" r="0.7" opacity="0.5"/>
+    </g>
+
+    <!-- Tab Bar -->
+    <rect x="0" y="0" width="300" height="36" fill="#0F0F1E" fill-opacity="0.9"/>
+    <line x1="0" y1="36" x2="300" y2="36" stroke="#C9A84C" stroke-opacity="0.15"/>
+    <line x1="0" y1="35" x2="150" y2="35" stroke="#C9A84C" stroke-width="2"/>
+    <text x="75" y="23" font-size="9" fill="#C9A84C" letter-spacing="1.5" text-anchor="middle" font-weight="500">🃏 TAROT DRAW</text>
+    <text x="225" y="23" font-size="9" fill="#555" letter-spacing="1.5" text-anchor="middle">📜 HISTORY</text>
+
+    <!-- 占卓: 純静的・十二宮円 -->
+    <g transform="translate(150,440)" font-family="serif">
+      <!-- Outer ring -->
+      <circle r="142" fill="none" stroke="#C9A84C" stroke-opacity="0.18" stroke-width="0.6"/>
+      <!-- Sign ring -->
+      <circle r="128" fill="none" stroke="#C9A84C" stroke-opacity="0.3" stroke-width="0.8"/>
+      <circle r="108" fill="none" stroke="#C9A84C" stroke-opacity="0.12" stroke-width="0.4"/>
+      <!-- Inner ring -->
+      <circle r="70" fill="none" stroke="#C9A84C" stroke-opacity="0.2" stroke-width="0.5"/>
+
+      <!-- 12 spokes (division lines) -->
+      <g stroke="#C9A84C" stroke-opacity="0.15" stroke-width="0.4">
+        <line x1="0" y1="-128" x2="0" y2="-108" transform="rotate(0)"/>
+        <line x1="0" y1="-128" x2="0" y2="-108" transform="rotate(30)"/>
+        <line x1="0" y1="-128" x2="0" y2="-108" transform="rotate(60)"/>
+        <line x1="0" y1="-128" x2="0" y2="-108" transform="rotate(90)"/>
+        <line x1="0" y1="-128" x2="0" y2="-108" transform="rotate(120)"/>
+        <line x1="0" y1="-128" x2="0" y2="-108" transform="rotate(150)"/>
+        <line x1="0" y1="-128" x2="0" y2="-108" transform="rotate(180)"/>
+        <line x1="0" y1="-128" x2="0" y2="-108" transform="rotate(210)"/>
+        <line x1="0" y1="-128" x2="0" y2="-108" transform="rotate(240)"/>
+        <line x1="0" y1="-128" x2="0" y2="-108" transform="rotate(270)"/>
+        <line x1="0" y1="-128" x2="0" y2="-108" transform="rotate(300)"/>
+        <line x1="0" y1="-128" x2="0" y2="-108" transform="rotate(330)"/>
+      </g>
+
+      <!-- 12 zodiac signs on radius 120 (astrological counter-clockwise from 3 o'clock) -->
+      <g font-size="13" fill="#C9A84C" fill-opacity="0.75" text-anchor="middle">
+        <text x="120" y="5">♈</text>                           <!-- 0° -->
+        <text x="103.9" y="-55">♉</text>                        <!-- -30° -->
+        <text x="60" y="-99.9">♊</text>                         <!-- -60° -->
+        <text x="0" y="-115">♋</text>                           <!-- -90° -->
+        <text x="-60" y="-99.9">♌</text>                        <!-- -120° -->
+        <text x="-103.9" y="-55">♍</text>                       <!-- -150° -->
+        <text x="-120" y="5">♎</text>                           <!-- 180° -->
+        <text x="-103.9" y="65">♏</text>                        <!-- 210° -->
+        <text x="-60" y="109.9">♐</text>                        <!-- 240° -->
+        <text x="0" y="125">♑</text>                            <!-- 270° -->
+        <text x="60" y="109.9">♒</text>                         <!-- 300° -->
+        <text x="103.9" y="65">♓</text>                         <!-- 330° -->
+      </g>
+
+      <!-- Center: Polaris -->
+      <circle r="1.8" fill="#fff" opacity="0.9"/>
+      <g stroke="#fff" stroke-opacity="0.25" stroke-width="0.3">
+        <line x1="-8" y1="0" x2="8" y2="0"/>
+        <line x1="0" y1="-8" x2="0" y2="8"/>
+      </g>
+    </g>
+
+    <!-- Card -->
+    <g transform="translate(150,260)">
+      <rect x="-60" y="-100" width="120" height="200" rx="8"
+            fill="#0D0D2B" stroke="#C9A84C" stroke-width="1.5"
+            filter="url(#cardShadow1)"/>
+      <rect x="-52" y="-92" width="104" height="184" rx="4"
+            fill="none" stroke="#C9A84C" stroke-opacity="0.25" stroke-width="0.5"/>
+      <text x="0" y="14" font-size="36" text-anchor="middle" fill="#C9A84C" fill-opacity="0.7" font-family="serif">✦</text>
+      <text x="0" y="46" font-size="9" text-anchor="middle" fill="#C9A84C" fill-opacity="0.6" letter-spacing="2">SOLARA</text>
+      <!-- corner ornaments -->
+      <text x="-52" y="-82" font-size="6" fill="#C9A84C" fill-opacity="0.6">✦</text>
+      <text x="52" y="-82" font-size="6" text-anchor="end" fill="#C9A84C" fill-opacity="0.6">✦</text>
+      <text x="-52" y="94" font-size="6" fill="#C9A84C" fill-opacity="0.6">✦</text>
+      <text x="52" y="94" font-size="6" text-anchor="end" fill="#C9A84C" fill-opacity="0.6">✦</text>
+    </g>
+
+    <!-- Tap hint -->
+    <text x="150" y="400" font-size="9" fill="#555" text-anchor="middle" letter-spacing="1">👆 タップしてカードを引く</text>
+
+    <!-- Stella panel (placeholder) -->
+    <g transform="translate(20,520)">
+      <rect width="260" height="60" rx="12" fill="#0F0F1E" fill-opacity="0.7"
+            stroke="#C9A84C" stroke-opacity="0.15" stroke-width="0.8"/>
+      <text x="14" y="18" font-size="7" fill="#C9A84C" letter-spacing="1.5">✨ STELLA</text>
+      <text x="14" y="35" font-size="8" fill="#BBB">引き当てられたカードが、</text>
+      <text x="14" y="48" font-size="8" fill="#BBB">今日のあなたに語りかける。</text>
+    </g>
+  </svg>
+  <div class="tag">STATIC / DECORATIVE</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- A-2: 純動的 今夜のチャート                            -->
+<!-- ═══════════════════════════════════════════════════ -->
+<div class="mock">
+  <h2>A-2 純動的</h2>
+  <p class="desc">今夜の10惑星位置を反映。毎日変わる。<br>Solara らしさ全開。情報量多め。</p>
+  <svg class="scene" viewBox="0 0 300 600" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <radialGradient id="bg2" cx="50%" cy="-10%" r="110%">
+        <stop offset="0%" stop-color="#0F2850"/>
+        <stop offset="55%" stop-color="#080C14"/>
+      </radialGradient>
+      <filter id="cardShadow2" x="-50%" y="-50%" width="200%" height="200%">
+        <feGaussianBlur in="SourceAlpha" stdDeviation="6"/>
+        <feOffset dy="6"/>
+        <feComponentTransfer><feFuncA type="linear" slope="0.6"/></feComponentTransfer>
+        <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
+      </filter>
+    </defs>
+
+    <rect width="300" height="600" fill="url(#bg2)"/>
+
+    <g fill="#fff">
+      <circle cx="28" cy="55" r="0.7" opacity="0.5"/>
+      <circle cx="85" cy="40" r="0.6" opacity="0.4"/>
+      <circle cx="140" cy="70" r="0.5" opacity="0.3"/>
+      <circle cx="210" cy="58" r="0.8" opacity="0.6"/>
+      <circle cx="260" cy="90" r="0.5" opacity="0.4"/>
+      <circle cx="55" cy="110" r="0.7" opacity="0.5"/>
+      <circle cx="165" cy="150" r="0.6" opacity="0.4"/>
+      <circle cx="230" cy="180" r="0.5" opacity="0.3"/>
+      <circle cx="40" cy="195" r="0.6" opacity="0.4"/>
+      <circle cx="270" cy="210" r="0.7" opacity="0.5"/>
+    </g>
+
+    <!-- Tab Bar -->
+    <rect x="0" y="0" width="300" height="36" fill="#0F0F1E" fill-opacity="0.9"/>
+    <line x1="0" y1="36" x2="300" y2="36" stroke="#C9A84C" stroke-opacity="0.15"/>
+    <line x1="0" y1="35" x2="150" y2="35" stroke="#C9A84C" stroke-width="2"/>
+    <text x="75" y="23" font-size="9" fill="#C9A84C" letter-spacing="1.5" text-anchor="middle" font-weight="500">🃏 TAROT DRAW</text>
+    <text x="225" y="23" font-size="9" fill="#555" letter-spacing="1.5" text-anchor="middle">📜 HISTORY</text>
+
+    <!-- 占卓: 純動的・惑星配置 -->
+    <g transform="translate(150,440)" font-family="serif">
+      <circle r="142" fill="none" stroke="#C9A84C" stroke-opacity="0.18" stroke-width="0.6"/>
+      <circle r="128" fill="none" stroke="#C9A84C" stroke-opacity="0.3" stroke-width="0.8"/>
+      <circle r="108" fill="none" stroke="#C9A84C" stroke-opacity="0.12" stroke-width="0.4"/>
+      <circle r="70" fill="none" stroke="#C9A84C" stroke-opacity="0.2" stroke-width="0.5"/>
+
+      <g stroke="#C9A84C" stroke-opacity="0.15" stroke-width="0.4">
+        <line x1="0" y1="-128" x2="0" y2="-108" transform="rotate(0)"/>
+        <line x1="0" y1="-128" x2="0" y2="-108" transform="rotate(30)"/>
+        <line x1="0" y1="-128" x2="0" y2="-108" transform="rotate(60)"/>
+        <line x1="0" y1="-128" x2="0" y2="-108" transform="rotate(90)"/>
+        <line x1="0" y1="-128" x2="0" y2="-108" transform="rotate(120)"/>
+        <line x1="0" y1="-128" x2="0" y2="-108" transform="rotate(150)"/>
+        <line x1="0" y1="-128" x2="0" y2="-108" transform="rotate(180)"/>
+        <line x1="0" y1="-128" x2="0" y2="-108" transform="rotate(210)"/>
+        <line x1="0" y1="-128" x2="0" y2="-108" transform="rotate(240)"/>
+        <line x1="0" y1="-128" x2="0" y2="-108" transform="rotate(270)"/>
+        <line x1="0" y1="-128" x2="0" y2="-108" transform="rotate(300)"/>
+        <line x1="0" y1="-128" x2="0" y2="-108" transform="rotate(330)"/>
+      </g>
+
+      <!-- Zodiac signs dimmed (since planets take focus) -->
+      <g font-size="12" fill="#C9A84C" fill-opacity="0.45" text-anchor="middle">
+        <text x="120" y="5">♈</text>
+        <text x="103.9" y="-55">♉</text>
+        <text x="60" y="-99.9">♊</text>
+        <text x="0" y="-115">♋</text>
+        <text x="-60" y="-99.9">♌</text>
+        <text x="-103.9" y="-55">♍</text>
+        <text x="-120" y="5">♎</text>
+        <text x="-103.9" y="65">♏</text>
+        <text x="-60" y="109.9">♐</text>
+        <text x="0" y="125">♑</text>
+        <text x="60" y="109.9">♒</text>
+        <text x="103.9" y="65">♓</text>
+      </g>
+
+      <!-- Aspect lines (subtle background) -->
+      <g stroke="#C9A84C" stroke-opacity="0.15" stroke-width="0.3">
+        <!-- Sun(♉15°) ↔ Saturn(♓28°) trine ish -->
+        <line x1="84" y1="-64" x2="-78" y2="56"/>
+        <!-- Moon(♊20°) ↔ Jupiter(♊25°) conj -->
+        <line x1="53" y1="-78" x2="48" y2="-82"/>
+        <!-- Venus(♉20°) ↔ Mars(♋8°) sextile -->
+        <line x1="75" y1="-73" x2="24" y2="-83"/>
+      </g>
+
+      <!-- Planets at 2026-04-19 approximate positions -->
+      <!-- Sun: Taurus 29° (real position near end of Aries / early Taurus on 04-19) -->
+      <g>
+        <circle cx="89" cy="-52" r="9" fill="#F9D976" fill-opacity="0.15"/>
+        <text x="89" y="-48" font-size="14" fill="#F9D976" text-anchor="middle" font-weight="bold">☉</text>
+      </g>
+      <!-- Moon: Cancer 10° (placeholder — will be dynamic) -->
+      <g>
+        <circle cx="23" cy="-105" r="9" fill="#E8E8FF" fill-opacity="0.18"/>
+        <text x="23" y="-101" font-size="14" fill="#FFF" text-anchor="middle" font-weight="bold">☽</text>
+      </g>
+      <!-- Mercury: Aries 20° -->
+      <g>
+        <text x="113" y="-38" font-size="11" fill="#AEE5FF" text-anchor="middle">☿</text>
+      </g>
+      <!-- Venus: Aries 8° -->
+      <g>
+        <text x="118" y="-14" font-size="11" fill="#FFD1DC" text-anchor="middle">♀</text>
+      </g>
+      <!-- Mars: Cancer 28° -->
+      <g>
+        <text x="-34" y="-107" font-size="11" fill="#FF6B6B" text-anchor="middle">♂</text>
+      </g>
+      <!-- Jupiter: Cancer 15° -->
+      <g>
+        <text x="-18" y="-113" font-size="11" fill="#F4E4BC" text-anchor="middle">♃</text>
+      </g>
+      <!-- Saturn: Pisces 28° -->
+      <g>
+        <text x="112" y="36" font-size="11" fill="#9A9A9A" text-anchor="middle">♄</text>
+      </g>
+      <!-- Uranus: Taurus 25° -->
+      <g>
+        <text x="78" y="-75" font-size="10" fill="#7FD9FF" text-anchor="middle">♅</text>
+      </g>
+      <!-- Neptune: Aries 1° -->
+      <g>
+        <text x="110" y="2" font-size="10" fill="#7FB3FF" text-anchor="middle">♆</text>
+      </g>
+      <!-- Pluto: Aquarius 3° -->
+      <g>
+        <text x="58" y="102" font-size="10" fill="#B888B8" text-anchor="middle">♇</text>
+      </g>
+
+      <!-- Center: Polaris -->
+      <circle r="1.8" fill="#fff" opacity="0.9"/>
+      <g stroke="#fff" stroke-opacity="0.25" stroke-width="0.3">
+        <line x1="-8" y1="0" x2="8" y2="0"/>
+        <line x1="0" y1="-8" x2="0" y2="8"/>
+      </g>
+
+      <!-- Date label -->
+      <text y="-150" font-size="7" fill="#888" text-anchor="middle" letter-spacing="2">2026.04.19 · TOKYO</text>
+    </g>
+
+    <!-- Card -->
+    <g transform="translate(150,260)">
+      <rect x="-60" y="-100" width="120" height="200" rx="8"
+            fill="#0D0D2B" stroke="#C9A84C" stroke-width="1.5"
+            filter="url(#cardShadow2)"/>
+      <rect x="-52" y="-92" width="104" height="184" rx="4"
+            fill="none" stroke="#C9A84C" stroke-opacity="0.25" stroke-width="0.5"/>
+      <text x="0" y="14" font-size="36" text-anchor="middle" fill="#C9A84C" fill-opacity="0.7" font-family="serif">✦</text>
+      <text x="0" y="46" font-size="9" text-anchor="middle" fill="#C9A84C" fill-opacity="0.6" letter-spacing="2">SOLARA</text>
+      <text x="-52" y="-82" font-size="6" fill="#C9A84C" fill-opacity="0.6">✦</text>
+      <text x="52" y="-82" font-size="6" text-anchor="end" fill="#C9A84C" fill-opacity="0.6">✦</text>
+      <text x="-52" y="94" font-size="6" fill="#C9A84C" fill-opacity="0.6">✦</text>
+      <text x="52" y="94" font-size="6" text-anchor="end" fill="#C9A84C" fill-opacity="0.6">✦</text>
+    </g>
+
+    <text x="150" y="400" font-size="9" fill="#555" text-anchor="middle" letter-spacing="1">👆 タップしてカードを引く</text>
+
+    <g transform="translate(20,520)">
+      <rect width="260" height="60" rx="12" fill="#0F0F1E" fill-opacity="0.7"
+            stroke="#C9A84C" stroke-opacity="0.15" stroke-width="0.8"/>
+      <text x="14" y="18" font-size="7" fill="#C9A84C" letter-spacing="1.5">✨ STELLA</text>
+      <text x="14" y="35" font-size="8" fill="#BBB">今夜の星々と共鳴する一枚が、</text>
+      <text x="14" y="48" font-size="8" fill="#BBB">あなたの元へ引き寄せられる。</text>
+    </g>
+  </svg>
+  <div class="tag">LIVE CHART / INFORMATIVE</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- A-3: 月だけ動く ハイブリッド                         -->
+<!-- ═══════════════════════════════════════════════════ -->
+<div class="mock">
+  <h2>A-3 月だけ動く</h2>
+  <p class="desc">十二宮は静的、月だけ今夜の位置。<br>装飾性と「今夜感」の両立。</p>
+  <svg class="scene" viewBox="0 0 300 600" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <radialGradient id="bg3" cx="50%" cy="-10%" r="110%">
+        <stop offset="0%" stop-color="#0F2850"/>
+        <stop offset="55%" stop-color="#080C14"/>
+      </radialGradient>
+      <filter id="cardShadow3" x="-50%" y="-50%" width="200%" height="200%">
+        <feGaussianBlur in="SourceAlpha" stdDeviation="6"/>
+        <feOffset dy="6"/>
+        <feComponentTransfer><feFuncA type="linear" slope="0.6"/></feComponentTransfer>
+        <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
+      </filter>
+      <radialGradient id="moonHalo" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stop-color="#FFF8E0" stop-opacity="0.9"/>
+        <stop offset="35%" stop-color="#FFD976" stop-opacity="0.25"/>
+        <stop offset="100%" stop-color="#FFD976" stop-opacity="0"/>
+      </radialGradient>
+    </defs>
+
+    <rect width="300" height="600" fill="url(#bg3)"/>
+
+    <g fill="#fff">
+      <circle cx="28" cy="55" r="0.7" opacity="0.5"/>
+      <circle cx="85" cy="40" r="0.6" opacity="0.4"/>
+      <circle cx="140" cy="70" r="0.5" opacity="0.3"/>
+      <circle cx="210" cy="58" r="0.8" opacity="0.6"/>
+      <circle cx="260" cy="90" r="0.5" opacity="0.4"/>
+      <circle cx="55" cy="110" r="0.7" opacity="0.5"/>
+      <circle cx="165" cy="150" r="0.6" opacity="0.4"/>
+      <circle cx="230" cy="180" r="0.5" opacity="0.3"/>
+      <circle cx="40" cy="195" r="0.6" opacity="0.4"/>
+      <circle cx="270" cy="210" r="0.7" opacity="0.5"/>
+    </g>
+
+    <!-- Tab Bar -->
+    <rect x="0" y="0" width="300" height="36" fill="#0F0F1E" fill-opacity="0.9"/>
+    <line x1="0" y1="36" x2="300" y2="36" stroke="#C9A84C" stroke-opacity="0.15"/>
+    <line x1="0" y1="35" x2="150" y2="35" stroke="#C9A84C" stroke-width="2"/>
+    <text x="75" y="23" font-size="9" fill="#C9A84C" letter-spacing="1.5" text-anchor="middle" font-weight="500">🃏 TAROT DRAW</text>
+    <text x="225" y="23" font-size="9" fill="#555" letter-spacing="1.5" text-anchor="middle">📜 HISTORY</text>
+
+    <!-- 占卓: ハイブリッド・月だけ配置 -->
+    <g transform="translate(150,440)" font-family="serif">
+      <circle r="142" fill="none" stroke="#C9A84C" stroke-opacity="0.18" stroke-width="0.6"/>
+      <circle r="128" fill="none" stroke="#C9A84C" stroke-opacity="0.3" stroke-width="0.8"/>
+      <circle r="108" fill="none" stroke="#C9A84C" stroke-opacity="0.12" stroke-width="0.4"/>
+      <circle r="70" fill="none" stroke="#C9A84C" stroke-opacity="0.2" stroke-width="0.5"/>
+
+      <g stroke="#C9A84C" stroke-opacity="0.15" stroke-width="0.4">
+        <line x1="0" y1="-128" x2="0" y2="-108" transform="rotate(0)"/>
+        <line x1="0" y1="-128" x2="0" y2="-108" transform="rotate(30)"/>
+        <line x1="0" y1="-128" x2="0" y2="-108" transform="rotate(60)"/>
+        <line x1="0" y1="-128" x2="0" y2="-108" transform="rotate(90)"/>
+        <line x1="0" y1="-128" x2="0" y2="-108" transform="rotate(120)"/>
+        <line x1="0" y1="-128" x2="0" y2="-108" transform="rotate(150)"/>
+        <line x1="0" y1="-128" x2="0" y2="-108" transform="rotate(180)"/>
+        <line x1="0" y1="-128" x2="0" y2="-108" transform="rotate(210)"/>
+        <line x1="0" y1="-128" x2="0" y2="-108" transform="rotate(240)"/>
+        <line x1="0" y1="-128" x2="0" y2="-108" transform="rotate(270)"/>
+        <line x1="0" y1="-128" x2="0" y2="-108" transform="rotate(300)"/>
+        <line x1="0" y1="-128" x2="0" y2="-108" transform="rotate(330)"/>
+      </g>
+
+      <g font-size="13" fill="#C9A84C" fill-opacity="0.7" text-anchor="middle">
+        <text x="120" y="5">♈</text>
+        <text x="103.9" y="-55">♉</text>
+        <text x="60" y="-99.9">♊</text>
+        <text x="0" y="-115">♋</text>
+        <text x="-60" y="-99.9">♌</text>
+        <text x="-103.9" y="-55">♍</text>
+        <text x="-120" y="5">♎</text>
+        <text x="-103.9" y="65">♏</text>
+        <text x="-60" y="109.9">♐</text>
+        <text x="0" y="125">♑</text>
+        <text x="60" y="109.9">♒</text>
+        <text x="103.9" y="65">♓</text>
+      </g>
+
+      <!-- Moon: Cancer 10° = -100° (astrological) -->
+      <!-- Position: (120 cos(-100°), 120 sin(-100°)) = (-20.8, -118.2), but astrological counter-clockwise means we use -angle -->
+      <!-- Cancer 10° in counter-clockwise convention from Aries 0° = 100° counter-clockwise -->
+      <!-- SVG: x = 120 cos(-100°) = -20.8, y = 120 sin(-100°) = -118.2 -->
+      <g class="moon-glow">
+        <circle cx="-20.8" cy="-118.2" r="18" fill="url(#moonHalo)"/>
+        <circle cx="-20.8" cy="-118.2" r="10" fill="#FFF8E0" fill-opacity="0.95"/>
+        <!-- Crescent shadow (waxing ~30%) -->
+        <circle cx="-16" cy="-118.2" r="9" fill="#0A1428" fill-opacity="0.75"/>
+        <text x="-20.8" y="-114" font-size="10" fill="#0A1428" text-anchor="middle" fill-opacity="0.5">☽</text>
+      </g>
+
+      <!-- Moon indicator line from center -->
+      <line x1="0" y1="0" x2="-20.8" y2="-118.2" stroke="#FFD976" stroke-opacity="0.15" stroke-width="0.3" stroke-dasharray="2,3"/>
+
+      <!-- Center: Polaris -->
+      <circle r="1.8" fill="#fff" opacity="0.9"/>
+      <g stroke="#fff" stroke-opacity="0.25" stroke-width="0.3">
+        <line x1="-8" y1="0" x2="8" y2="0"/>
+        <line x1="0" y1="-8" x2="0" y2="8"/>
+      </g>
+
+      <!-- Moon position label -->
+      <text y="-150" font-size="7" fill="#FFD976" text-anchor="middle" letter-spacing="2" fill-opacity="0.9">☽ ♋ 10° · WAXING CRESCENT</text>
+    </g>
+
+    <!-- Card -->
+    <g transform="translate(150,260)">
+      <rect x="-60" y="-100" width="120" height="200" rx="8"
+            fill="#0D0D2B" stroke="#C9A84C" stroke-width="1.5"
+            filter="url(#cardShadow3)"/>
+      <rect x="-52" y="-92" width="104" height="184" rx="4"
+            fill="none" stroke="#C9A84C" stroke-opacity="0.25" stroke-width="0.5"/>
+      <text x="0" y="14" font-size="36" text-anchor="middle" fill="#C9A84C" fill-opacity="0.7" font-family="serif">✦</text>
+      <text x="0" y="46" font-size="9" text-anchor="middle" fill="#C9A84C" fill-opacity="0.6" letter-spacing="2">SOLARA</text>
+      <text x="-52" y="-82" font-size="6" fill="#C9A84C" fill-opacity="0.6">✦</text>
+      <text x="52" y="-82" font-size="6" text-anchor="end" fill="#C9A84C" fill-opacity="0.6">✦</text>
+      <text x="-52" y="94" font-size="6" fill="#C9A84C" fill-opacity="0.6">✦</text>
+      <text x="52" y="94" font-size="6" text-anchor="end" fill="#C9A84C" fill-opacity="0.6">✦</text>
+    </g>
+
+    <text x="150" y="400" font-size="9" fill="#555" text-anchor="middle" letter-spacing="1">👆 タップしてカードを引く</text>
+
+    <g transform="translate(20,520)">
+      <rect width="260" height="60" rx="12" fill="#0F0F1E" fill-opacity="0.7"
+            stroke="#C9A84C" stroke-opacity="0.15" stroke-width="0.8"/>
+      <text x="14" y="18" font-size="7" fill="#C9A84C" letter-spacing="1.5">✨ STELLA</text>
+      <text x="14" y="35" font-size="8" fill="#BBB">月が蟹座に灯る今夜、</text>
+      <text x="14" y="48" font-size="8" fill="#BBB">感情の深層を照らす一枚を。</text>
+    </g>
+  </svg>
+  <div class="tag">HYBRID · MOON-ONLY</div>
+</div>
+
+</div>
+
+<div style="text-align:center; margin-top:40px; color:#555; font-size:11px;">
+  Phase A — Background Layer Only · Card / Panel はプレースホルダー
+</div>
+
+</body>
+</html>

@@ -43,3 +43,10 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Tarot scene backup snapshots (keep locally, not in git)
+mockup/share-assets/tarot_scene/_backup/
+mockup/share-assets/tarot_scene/*/_backup/
+
+# Planet textures are large, regeneratable via generate_planet_textures.py
+mockup/share-assets/tarot_scene/planet_textures/
