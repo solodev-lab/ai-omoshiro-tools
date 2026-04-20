@@ -4,6 +4,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:http/http.dart' as http;
 import 'package:latlong2/latlong.dart';
 import '../utils/solara_storage.dart';
+import '../widgets/dominant_fortune_overlay.dart';
 import 'map/map_constants.dart';
 import 'map/map_styles.dart';
 import 'map/map_sectors.dart';
@@ -14,6 +15,34 @@ import 'map/map_layer_panel.dart';
 import 'map/map_widgets.dart';
 import 'map/map_astro.dart';
 import 'map/map_planet_lines.dart';
+
+/// 開発用フラグ: true なら日付チェックをバイパスして毎回オーバーレイを表示する。
+/// 本番では false にする。
+const bool _debugAlwaysShowOverlay = true;
+
+/// 開発用: true ならタップ毎に 5 種類の演出を順番に切り替える。
+/// （本番では false、実際のトップカテゴリで表示）
+const bool _debugCycleOverlayKinds = true;
+
+/// デバッグ循環順: 5種を通しで確認できるようにする
+const _debugCycleOrder = <DominantFortuneKind>[
+  DominantFortuneKind.love,
+  DominantFortuneKind.money,
+  DominantFortuneKind.healing,
+  DominantFortuneKind.communication,
+  DominantFortuneKind.work,
+];
+
+/// 実装済みのカテゴリ（5種全て）
+const _implementedOverlayKinds = <DominantFortuneKind>{
+  DominantFortuneKind.love,
+  DominantFortuneKind.money,
+  DominantFortuneKind.healing,
+  DominantFortuneKind.communication,
+  DominantFortuneKind.work,
+};
+
+const _overlayStorageKey = 'dominant_fortune';
 
 class MapScreen extends StatefulWidget {
   const MapScreen({super.key});
@@ -59,6 +88,11 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   ChartResult? _chartResult;
   List<PlanetLineData> _planetLines = [];
   SolaraProfile? _profile;
+
+  // Dominant fortune overlay
+  DominantFortuneKind? _topCategory;
+  DominantFortuneKind? _activeOverlay;
+  int _debugCycleIdx = 0;
 
   // Search result
   String? _searchResultName;
@@ -106,6 +140,16 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
       _chartResult = chart;
       final result = scoreAll(chart);
       final lines = buildPlanetLineData(center: _center, chart: chart);
+      // 16方位合計の最高カテゴリを今日のドミナントとする
+      String? topKey;
+      double topSum = -1;
+      for (final entry in result.fScores.entries) {
+        final sum = entry.value.values.fold<double>(0, (a, b) => a + b);
+        if (sum > topSum) {
+          topSum = sum;
+          topKey = entry.key;
+        }
+      }
       setState(() {
         _sectorScores
           ..clear()
@@ -114,7 +158,38 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
           ..clear()
           ..addAll(result.sComp);
         _planetLines = lines;
+        _topCategory = topKey != null ? kindFromKey(topKey) : null;
       });
+    }
+  }
+
+  /// Map本体タップ時のハンドラ。1日の最初のタップで dominant fortune overlay を起動。
+  Future<void> _onMapTap() async {
+    if (_activeOverlay != null) return; // 再生中は無視
+
+    DominantFortuneKind? kind;
+
+    if (_debugAlwaysShowOverlay && _debugCycleOverlayKinds) {
+      // デバッグ: タップ毎に 5 種類を順番に切り替え
+      kind = _debugCycleOrder[_debugCycleIdx];
+      _debugCycleIdx = (_debugCycleIdx + 1) % _debugCycleOrder.length;
+    } else {
+      kind = _topCategory;
+      if (_debugAlwaysShowOverlay && (kind == null || !_implementedOverlayKinds.contains(kind))) {
+        kind = DominantFortuneKind.love;
+      }
+      if (kind == null) return;
+      if (!_implementedOverlayKinds.contains(kind)) return;
+    }
+
+    if (!_debugAlwaysShowOverlay) {
+      final shown = await SolaraStorage.wasOverlayShownToday(_overlayStorageKey);
+      if (shown) return;
+    }
+    if (!mounted) return;
+    setState(() => _activeOverlay = kind);
+    if (!_debugAlwaysShowOverlay) {
+      await SolaraStorage.markOverlayShown(_overlayStorageKey);
     }
   }
 
@@ -180,6 +255,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
             backgroundColor: mapStyleConfigs[_mapStyle]!.backgroundColor,
             // HTML: long-press 600ms → rebuild(nc, fly:true)
             onLongPress: (tapPos, latlng) => _rebuild(latlng),
+            onTap: (_, _) => _onMapTap(),
           ),
           children: [
             buildStyledTileLayer(_mapStyle),
@@ -467,6 +543,18 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
         if (_searchResultName != null) Positioned(
           bottom: 160, left: 16, right: 16,
           child: _buildSearchResult(),
+        ),
+
+        // ── Dominant Fortune Overlay (1日の最初のタップ演出) ──
+        if (_activeOverlay != null) Positioned.fill(
+          child: DominantFortuneOverlay(
+            key: ValueKey(_activeOverlay),
+            kind: _activeOverlay!,
+            onComplete: () {
+              if (!mounted) return;
+              setState(() => _activeOverlay = null);
+            },
+          ),
         ),
 
         // ── Rest Overlay ──

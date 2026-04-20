@@ -1,0 +1,633 @@
+import 'dart:math' as math;
+import 'dart:ui' as ui;
+import 'package:flutter/material.dart';
+import '_common.dart';
+
+/// 金運: 金貨・金箔が上から降ってきて画面下に積み上がる（落ち物ゲーム風）。
+/// 重力で加速しながら落下、着地時にわずかにバウンドして定位置に収まる。
+class MoneyPainterBuilder extends FortunePainterBuilder {
+  final _rng = math.Random();
+  late final List<_GoldPiece> _pieces;
+  late final List<_GoldDust> _dust;
+  late final List<_Sparkle> _sparkles;
+
+  static const _pieceCount = 120;
+  static const _dustCount = 140;
+  static const _sparkleCount = 30;
+  static const _numColumns = 22; // 積み上げ用のカラム数
+
+  MoneyPainterBuilder() {
+    _pieces = _buildPieces();
+    _dust = _buildDust();
+    _sparkles = _buildSparkles();
+  }
+
+  @override
+  CustomPainter buildPainter(double t) => _MoneyPainter(
+    t: t, pieces: _pieces, dust: _dust, sparkles: _sparkles,
+  );
+
+  List<_GoldPiece> _buildPieces() {
+    const palettes = <_GoldPalette>[
+      // Rich gold
+      _GoldPalette(
+        highlight: Color(0xFFFFF8DC), main: Color(0xFFFFD700),
+        shadow: Color(0xFF6B4A08), backside: Color(0xFFB8860B),
+        edge: Color(0xFFFFFACD), rim: Color(0xFFFFE88A),
+      ),
+      // Warm gold
+      _GoldPalette(
+        highlight: Color(0xFFFFFACD), main: Color(0xFFE8BC3A),
+        shadow: Color(0xFF5A3E05), backside: Color(0xFF8B6914),
+        edge: Color(0xFFFFE480), rim: Color(0xFFFFCC5A),
+      ),
+      // Pale gold
+      _GoldPalette(
+        highlight: Color(0xFFFFFDEE), main: Color(0xFFFFECB3),
+        shadow: Color(0xFF756509), backside: Color(0xFFD4AF37),
+        edge: Color(0xFFFFF4C6), rim: Color(0xFFFFF2A8),
+      ),
+      // Deep amber
+      _GoldPalette(
+        highlight: Color(0xFFFFE4B5), main: Color(0xFFDAA520),
+        shadow: Color(0xFF4E2D00), backside: Color(0xFF8B6914),
+        edge: Color(0xFFFFD580), rim: Color(0xFFE6B84A),
+      ),
+      // Champagne
+      _GoldPalette(
+        highlight: Color(0xFFFFFACD), main: Color(0xFFFFE08C),
+        shadow: Color(0xFF5C4A00), backside: Color(0xFFC9A84C),
+        edge: Color(0xFFFFF4B0), rim: Color(0xFFFFDE87),
+      ),
+    ];
+
+    final pieces = <_GoldPiece>[];
+
+    // 事前データ生成
+    for (var i = 0; i < _pieceCount; i++) {
+      final spawnX = _rng.nextDouble();
+      final isCoin = _rng.nextDouble() < 0.45; // 45% コイン, 55% 金箔
+      pieces.add(_GoldPiece(
+        spawnX: spawnX,
+        targetColumn: 0, // 後で決定
+        stackLayer: 0,   // 後で決定
+        targetXJitter: (_rng.nextDouble() - 0.5) * 0.03,
+        isCoin: isCoin,
+        size: isCoin
+            ? 22.0 + math.pow(_rng.nextDouble(), 1.8).toDouble() * 28.0
+            : 16.0 + math.pow(_rng.nextDouble(), 1.8).toDouble() * 36.0,
+        aspect: isCoin ? 0.92 + _rng.nextDouble() * 0.08 : 0.25 + _rng.nextDouble() * 0.35,
+        palette: palettes[_rng.nextInt(palettes.length)],
+        spawnRotation: _rng.nextDouble() * math.pi * 2,
+        fallSpin: (_rng.nextDouble() - 0.5) * 3.0,
+        restRotation: (_rng.nextDouble() - 0.5) * math.pi,
+        flipSpeed: 2.5 + _rng.nextDouble() * 3.5,
+        flipPhase: _rng.nextDouble() * math.pi * 2,
+        delay: math.pow(_rng.nextDouble(), 0.85).toDouble() * 0.70,
+        fallDuration: 0.28 + _rng.nextDouble() * 0.22,
+        settlePhase: _rng.nextDouble() * math.pi * 2,
+        wobbleAmp: 0.015 + _rng.nextDouble() * 0.025,
+        wobblePhase: _rng.nextDouble() * math.pi * 2,
+      ));
+    }
+
+    // 着地順（delay順）でソートしてスタック位置を割り当て
+    pieces.sort((a, b) => a.delay.compareTo(b.delay));
+    final columnCount = List<int>.filled(_numColumns, 0);
+    for (final p in pieces) {
+      var col = (p.spawnX * _numColumns).toInt().clamp(0, _numColumns - 1);
+      // 左右1カラム以内でドリフト（自然な偏り）
+      final drift = _rng.nextInt(3) - 1;
+      col = (col + drift).clamp(0, _numColumns - 1);
+      p.targetColumn = col;
+      p.stackLayer = columnCount[col];
+      columnCount[col]++;
+    }
+
+    return pieces;
+  }
+
+  List<_GoldDust> _buildDust() {
+    final list = <_GoldDust>[];
+    for (var i = 0; i < _dustCount; i++) {
+      list.add(_GoldDust(
+        spawnX: _rng.nextDouble(),
+        fallSpeed: 0.6 + _rng.nextDouble() * 0.7,
+        size: 1.8 + _rng.nextDouble() * 4.0,
+        twinklePhase: _rng.nextDouble() * math.pi * 2,
+        twinkleSpeed: 2.0 + _rng.nextDouble() * 3.0,
+        wobbleAmp: 0.01 + _rng.nextDouble() * 0.02,
+        wobbleSpeed: 1.5 + _rng.nextDouble() * 2.5,
+        wobblePhase: _rng.nextDouble() * math.pi * 2,
+        hue: _rng.nextDouble(),
+        delay: _rng.nextDouble() * 0.65,
+      ));
+    }
+    return list;
+  }
+
+  List<_Sparkle> _buildSparkles() {
+    final list = <_Sparkle>[];
+    for (var i = 0; i < _sparkleCount; i++) {
+      list.add(_Sparkle(
+        xRatio: _rng.nextDouble(),
+        yRatio: 0.5 + _rng.nextDouble() * 0.48,
+        size: 10 + _rng.nextDouble() * 28,
+        twinklePhase: _rng.nextDouble() * math.pi * 2,
+        twinkleSpeed: 2.5 + _rng.nextDouble() * 2.5,
+        delay: 0.2 + _rng.nextDouble() * 0.7,
+      ));
+    }
+    return list;
+  }
+}
+
+class _GoldPalette {
+  final Color highlight, main, shadow, backside, edge, rim;
+  const _GoldPalette({
+    required this.highlight, required this.main, required this.shadow,
+    required this.backside, required this.edge, required this.rim,
+  });
+}
+
+class _GoldPiece {
+  final double spawnX;
+  int targetColumn;
+  int stackLayer;
+  final double targetXJitter;
+  final bool isCoin;
+  final double size, aspect;
+  final _GoldPalette palette;
+  final double spawnRotation, fallSpin, restRotation;
+  final double flipSpeed, flipPhase;
+  final double delay, fallDuration;
+  final double settlePhase, wobbleAmp, wobblePhase;
+  _GoldPiece({
+    required this.spawnX, required this.targetColumn, required this.stackLayer,
+    required this.targetXJitter, required this.isCoin,
+    required this.size, required this.aspect, required this.palette,
+    required this.spawnRotation, required this.fallSpin, required this.restRotation,
+    required this.flipSpeed, required this.flipPhase,
+    required this.delay, required this.fallDuration,
+    required this.settlePhase, required this.wobbleAmp, required this.wobblePhase,
+  });
+}
+
+class _GoldDust {
+  final double spawnX, fallSpeed, size, twinklePhase, twinkleSpeed;
+  final double wobbleAmp, wobbleSpeed, wobblePhase, hue, delay;
+  _GoldDust({
+    required this.spawnX, required this.fallSpeed, required this.size,
+    required this.twinklePhase, required this.twinkleSpeed,
+    required this.wobbleAmp, required this.wobbleSpeed, required this.wobblePhase,
+    required this.hue, required this.delay,
+  });
+}
+
+class _Sparkle {
+  final double xRatio, yRatio, size, twinklePhase, twinkleSpeed, delay;
+  _Sparkle({
+    required this.xRatio, required this.yRatio, required this.size,
+    required this.twinklePhase, required this.twinkleSpeed, required this.delay,
+  });
+}
+
+class _MoneyPainter extends CustomPainter {
+  final double t;
+  final List<_GoldPiece> pieces;
+  final List<_GoldDust> dust;
+  final List<_Sparkle> sparkles;
+  _MoneyPainter({required this.t, required this.pieces, required this.dust, required this.sparkles});
+
+  // 1レイヤーあたりの積み上げ高さ（画面高さ比）
+  static const _layerStep = 0.028;
+  // 床のベースY（画面高さ比）
+  static const _floorY = 0.965;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final diag = math.sqrt(size.width * size.width + size.height * size.height);
+
+    // 背景: 上からの暖色グロー（金色の空気感）
+    final bgAlpha = stageAlpha(t, fadeIn: 0.10, hold: 0.60, fadeOut: 0.30);
+    if (bgAlpha > 0) {
+      canvas.drawRect(Offset.zero & size, Paint()
+        ..shader = ui.Gradient.linear(
+          Offset(size.width / 2, 0),
+          Offset(size.width / 2, size.height),
+          [
+            Color.fromRGBO(255, 218, 140, 0.45 * bgAlpha),
+            Color.fromRGBO(180, 130, 40, 0.22 * bgAlpha),
+            Color.fromRGBO(40, 25, 5, 0.18 * bgAlpha),
+            const Color(0x00000000),
+          ],
+          [0.0, 0.35, 0.75, 1.0],
+        ));
+    }
+
+    // パイルのグロー（下部に徐々に蓄積）
+    final pileGlow = _pileGlowIntensity();
+    if (pileGlow > 0.01) {
+      final centerX = size.width * 0.5;
+      final baseY = size.height * _floorY;
+      canvas.drawRect(
+        Rect.fromLTWH(0, size.height * 0.6, size.width, size.height * 0.45),
+        Paint()
+          ..shader = ui.Gradient.radial(
+            Offset(centerX, baseY),
+            size.width * 0.75,
+            [
+              Color.fromRGBO(255, 220, 130, 0.55 * pileGlow * bgAlpha),
+              Color.fromRGBO(255, 180, 80, 0.30 * pileGlow * bgAlpha),
+              const Color(0x00000000),
+            ],
+            [0.0, 0.45, 1.0],
+          )
+          ..blendMode = BlendMode.plus,
+      );
+    }
+
+    // 金粉（dust）は奥に描く
+    for (final d in dust) { _drawDust(canvas, d, size, diag); }
+
+    // 金貨・金箔: delay順に描く（後から落ちたものが上に重なる）
+    for (final p in pieces) { _drawPiece(canvas, p, size, diag); }
+
+    // スパークル（パイル表面のキラキラ）
+    for (final s in sparkles) { _drawSparkle(canvas, s, size); }
+  }
+
+  double _pileGlowIntensity() {
+    // tが進むにつれ強くなる
+    return easeInOutQuad(t.clamp(0.0, 1.0));
+  }
+
+  void _drawPiece(Canvas canvas, _GoldPiece p, Size size, double diag) {
+    final now = t - p.delay;
+    if (now <= 0) return;
+
+    // 落下位相 (0〜1)、着地後は 1.0
+    final fallT = (now / p.fallDuration).clamp(0.0, 1.0);
+    final hasLanded = fallT >= 1.0;
+
+    // 着地時間からの経過
+    final sinceLand = now - p.fallDuration;
+
+    // 位置計算
+    // 開始Y: 画面外上方（-size.height * 0.1 - size.pieceSize）
+    final startY = -p.size * 1.5;
+    final targetY = size.height * (_floorY - p.stackLayer * _layerStep) - p.size * p.aspect * 0.5;
+    // 重力で加速（easeIn）
+    final fallProgress = _easeInQuart(fallT);
+    final yRaw = startY + (targetY - startY) * fallProgress;
+
+    // 開始X = spawnX。着地X = 同じspawnX近辺（columnに対応）+ jitter
+    final startX = size.width * p.spawnX;
+    final endX = size.width * ((p.targetColumn + 0.5) / MoneyPainterBuilder._numColumns + p.targetXJitter);
+    final x = startX + (endX - startX) * fallT;
+
+    // バウンド: 着地直後0.14秒で小さく弾む
+    double bounceOffset = 0;
+    double bounceScale = 1.0;
+    if (hasLanded && sinceLand < 0.14) {
+      final b = sinceLand / 0.14;
+      // 減衰sin
+      final bEnv = (1.0 - b);
+      bounceOffset = -math.sin(b * math.pi) * p.size * 0.15 * bEnv;
+      bounceScale = 1.0 + math.sin(b * math.pi) * 0.06 * bEnv;
+    }
+
+    // 着地後はわずかに揺らぐ（山が動いて見える）
+    double settleY = 0;
+    if (hasLanded) {
+      settleY = math.sin(p.settlePhase + t * 1.2 * math.pi * 2) * p.wobbleAmp * size.height * 0.1;
+    }
+
+    final pos = Offset(x, yRaw + bounceOffset + settleY);
+
+    // 回転
+    double rot;
+    if (!hasLanded) {
+      rot = p.spawnRotation + p.fallSpin * fallT;
+    } else {
+      // 着地時の回転から rest へスムーズに吸着
+      final endRot = p.spawnRotation + p.fallSpin;
+      final settleT = (sinceLand / 0.20).clamp(0.0, 1.0);
+      rot = endRot + (p.restRotation - endRot) * _easeOutCubic(settleT);
+    }
+
+    // フリップ（コインは着地後も微かに、金箔は着地時に止まる）
+    double faceVisibility;
+    bool isBackside;
+    if (p.isCoin && !hasLanded) {
+      final fc = math.cos(p.flipPhase + now * p.flipSpeed);
+      isBackside = fc < 0;
+      faceVisibility = fc.abs().clamp(0.15, 1.0);
+    } else if (p.isCoin) {
+      // 着地後は概ね上向き
+      isBackside = false;
+      faceVisibility = 1.0;
+    } else {
+      // 金箔: 落下中ランダムフリップ、着地で停止
+      if (!hasLanded) {
+        final fc = math.cos(p.flipPhase + now * p.flipSpeed);
+        isBackside = fc < 0;
+        faceVisibility = fc.abs().clamp(0.08, 1.0);
+      } else {
+        // 着地時の状態で固定（seed値から決定）
+        final fc = math.cos(p.flipPhase + p.fallDuration * p.flipSpeed);
+        isBackside = fc < 0;
+        faceVisibility = fc.abs().clamp(0.35, 1.0);
+      }
+    }
+
+    final alpha = stageAlpha(t, fadeIn: 0.04, hold: 0.80, fadeOut: 0.15);
+    if (alpha <= 0) return;
+
+    canvas.save();
+    canvas.translate(pos.dx, pos.dy);
+    canvas.rotate(rot);
+    canvas.scale(bounceScale);
+
+    if (p.isCoin) {
+      _drawCoin(canvas, p, faceVisibility, isBackside, alpha);
+    } else {
+      _drawFlake(canvas, p, faceVisibility, isBackside, alpha);
+    }
+
+    canvas.restore();
+  }
+
+  // ────────────────────────────────────────────
+  // コイン描画（リアルな艶のある金貨）
+  // ────────────────────────────────────────────
+  void _drawCoin(Canvas canvas, _GoldPiece p, double faceVis, bool isBack, double alpha) {
+    final s = p.size;
+    final pal = p.palette;
+
+    // 後光（外側のグロー）
+    canvas.drawCircle(Offset.zero, s * 0.75, Paint()
+      ..shader = ui.Gradient.radial(Offset.zero, s * 0.75, [
+        pal.main.withValues(alpha: 0.40 * alpha),
+        pal.main.withValues(alpha: 0.14 * alpha),
+        const Color(0x00000000),
+      ], [0.0, 0.55, 1.0])
+      ..blendMode = BlendMode.plus);
+
+    // 本体（フリップでX方向を潰す）
+    canvas.save();
+    canvas.scale(faceVis, 1.0);
+
+    // 円盤
+    final radius = s * 0.5;
+
+    // 影（下部の暗いリム）
+    canvas.drawCircle(Offset.zero, radius, Paint()
+      ..shader = ui.Gradient.radial(
+        Offset(s * 0.08, s * 0.10), radius * 1.05,
+        isBack
+            ? [pal.backside.withValues(alpha: 0.9 * alpha), pal.shadow.withValues(alpha: alpha)]
+            : [
+                pal.highlight.withValues(alpha: alpha),
+                pal.main.withValues(alpha: alpha),
+                pal.shadow.withValues(alpha: 0.85 * alpha),
+              ],
+        isBack ? [0.0, 1.0] : [0.0, 0.45, 1.0],
+      ));
+
+    // 表: 内側リング（金貨の刻印風）
+    if (!isBack) {
+      canvas.drawCircle(Offset.zero, radius * 0.82, Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = math.max(0.7, s * 0.015)
+        ..color = pal.shadow.withValues(alpha: 0.55 * alpha));
+
+      // さらに内側の艶
+      canvas.drawCircle(Offset(-s * 0.08, -s * 0.08), radius * 0.55, Paint()
+        ..shader = ui.Gradient.radial(
+          Offset(-s * 0.08, -s * 0.08), radius * 0.55,
+          [
+            Color.fromRGBO(255, 255, 255, 0.35 * alpha),
+            const Color(0x00FFFFFF),
+          ],
+          [0.0, 1.0],
+        )
+        ..blendMode = BlendMode.plus);
+    }
+
+    // 外周リム（縁の起伏）
+    canvas.drawCircle(Offset.zero, radius, Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = math.max(0.9, s * 0.02)
+      ..color = (isBack ? pal.shadow : pal.edge).withValues(alpha: 0.75 * alpha));
+
+    // リムライト（右下）
+    canvas.drawCircle(Offset(s * 0.10, s * 0.14), radius * 0.65, Paint()
+      ..shader = ui.Gradient.radial(
+        Offset(s * 0.10, s * 0.14), radius * 0.65,
+        [
+          pal.rim.withValues(alpha: 0.40 * alpha),
+          pal.rim.withValues(alpha: 0.10 * alpha),
+          const Color(0x00000000),
+        ],
+        [0.0, 0.5, 1.0],
+      )
+      ..blendMode = BlendMode.plus);
+
+    // 大ハイライト（上部左の柔らかい白楕円）
+    if (!isBack) {
+      canvas.save();
+      canvas.translate(-s * 0.14, -s * 0.18);
+      canvas.rotate(-0.45);
+      canvas.drawOval(
+        Rect.fromCenter(center: Offset.zero, width: s * 0.42, height: s * 0.15),
+        Paint()
+          ..shader = ui.Gradient.radial(Offset.zero, s * 0.2, [
+            Color.fromRGBO(255, 255, 255, 0.70 * alpha),
+            const Color(0x00FFFFFF),
+          ], [0.0, 1.0]),
+      );
+      canvas.restore();
+
+      // 小スペキュラ
+      canvas.drawCircle(
+        Offset(-s * 0.22, -s * 0.22), s * 0.05,
+        Paint()..color = Color.fromRGBO(255, 255, 255, 0.95 * alpha),
+      );
+    }
+
+    canvas.restore(); // end face scale
+
+    // エッジオン時の明るいスリット
+    if (faceVis < 0.22) {
+      canvas.drawRect(
+        Rect.fromCenter(center: Offset.zero, width: math.max(1.5, s * 0.08), height: s),
+        Paint()
+          ..shader = ui.Gradient.linear(
+            Offset(0, -s / 2), Offset(0, s / 2),
+            [pal.shadow.withValues(alpha: alpha), pal.edge.withValues(alpha: alpha), pal.shadow.withValues(alpha: alpha)],
+            [0.0, 0.5, 1.0],
+          )
+          ..blendMode = BlendMode.plus,
+      );
+    }
+  }
+
+  // ────────────────────────────────────────────
+  // 金箔描画（平たい長方形）
+  // ────────────────────────────────────────────
+  void _drawFlake(Canvas canvas, _GoldPiece f, double faceVis, bool isBack, double alpha) {
+    final s = f.size;
+    final h = s * f.aspect;
+    final pal = f.palette;
+
+    // 後光
+    canvas.drawOval(
+      Rect.fromCenter(center: Offset.zero, width: s * 1.4, height: h * 2.2),
+      Paint()
+        ..shader = ui.Gradient.radial(Offset.zero, s * 0.7, [
+          pal.main.withValues(alpha: 0.38 * alpha),
+          pal.main.withValues(alpha: 0.12 * alpha),
+          const Color(0x00000000),
+        ], [0.0, 0.55, 1.0])
+        ..blendMode = BlendMode.plus,
+    );
+
+    canvas.save();
+    canvas.scale(faceVis, 1.0);
+
+    final rect = Rect.fromCenter(center: Offset.zero, width: s, height: h);
+
+    // 本体
+    canvas.drawRect(rect, Paint()
+      ..shader = ui.Gradient.linear(
+        Offset(-s * 0.5, -h * 0.5), Offset(s * 0.5, h * 0.5),
+        isBack
+            ? [pal.backside.withValues(alpha: 0.9 * alpha), pal.shadow.withValues(alpha: alpha)]
+            : [
+                pal.highlight.withValues(alpha: alpha),
+                pal.main.withValues(alpha: alpha),
+                pal.shadow.withValues(alpha: 0.82 * alpha),
+              ],
+        isBack ? [0.0, 1.0] : [0.0, 0.5, 1.0],
+      ));
+
+    // 表面の縦ストライプ艶
+    if (!isBack) {
+      canvas.drawRect(
+        Rect.fromCenter(center: Offset.zero, width: s * 0.38, height: h * 0.88),
+        Paint()
+          ..shader = ui.Gradient.linear(
+            Offset(-s * 0.19, 0), Offset(s * 0.19, 0),
+            [
+              const Color(0x00FFFFFF),
+              Color.fromRGBO(255, 255, 235, 0.55 * alpha),
+              const Color(0x00FFFFFF),
+            ],
+            [0.0, 0.5, 1.0],
+          )
+          ..blendMode = BlendMode.plus,
+      );
+    }
+
+    // 縁取り
+    canvas.drawRect(rect, Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = math.max(0.8, s * 0.012)
+      ..color = (isBack ? pal.shadow : pal.edge).withValues(alpha: 0.72 * alpha));
+
+    canvas.restore();
+
+    if (faceVis < 0.20) {
+      canvas.drawRect(
+        Rect.fromCenter(center: Offset.zero, width: math.max(1.4, s * 0.08), height: h),
+        Paint()
+          ..color = pal.edge.withValues(alpha: alpha)
+          ..blendMode = BlendMode.plus,
+      );
+    }
+  }
+
+  // ────────────────────────────────────────────
+  // Dust (金粉)
+  // ────────────────────────────────────────────
+  void _drawDust(Canvas canvas, _GoldDust d, Size size, double diag) {
+    final lt = ((t - d.delay) / (1.0 - d.delay)).clamp(0.0, 1.0);
+    if (lt <= 0) return;
+    final fadeEnv = stageAlpha(lt, fadeIn: 0.10, hold: 0.70, fadeOut: 0.20);
+    if (fadeEnv <= 0) return;
+
+    // 上から下へ落下（重力加速）
+    final startY = -10.0;
+    final fallY = _easeInQuart(lt) * size.height * 1.15 * d.fallSpeed;
+    final y = startY + fallY;
+    if (y > size.height + 20) return;
+
+    final wobbleX = math.sin(d.wobblePhase + lt * d.wobbleSpeed * math.pi * 2) * d.wobbleAmp * size.width;
+    final x = size.width * d.spawnX + wobbleX;
+
+    final tw = (math.sin(d.twinklePhase + lt * d.twinkleSpeed * math.pi * 2) + 1) / 2;
+    final alpha = fadeEnv * (0.35 + tw * 0.65);
+
+    final color = Color.lerp(
+      const Color(0xFFFFFACD), const Color(0xFFFFD700), d.hue,
+    )!;
+    final size2 = d.size * (0.7 + tw * 0.5);
+    final pos = Offset(x, y);
+
+    canvas.drawCircle(pos, size2 * 1.4, Paint()
+      ..shader = ui.Gradient.radial(pos, size2 * 1.4, [
+        color.withValues(alpha: 0.5 * alpha),
+        color.withValues(alpha: 0.15 * alpha),
+        const Color(0x00000000),
+      ], [0.0, 0.5, 1.0])
+      ..blendMode = BlendMode.plus);
+    canvas.drawCircle(pos, size2, Paint()
+      ..color = const Color(0xFFFFFFFF).withValues(alpha: alpha));
+  }
+
+  void _drawSparkle(Canvas canvas, _Sparkle sp, Size size) {
+    final lt = ((t - sp.delay) / (1.0 - sp.delay)).clamp(0.0, 1.0);
+    if (lt <= 0) return;
+    final fadeEnv = stageAlpha(lt, fadeIn: 0.18, hold: 0.55, fadeOut: 0.27);
+    if (fadeEnv <= 0) return;
+
+    final pos = Offset(size.width * sp.xRatio, size.height * sp.yRatio);
+    final tw = (math.sin(sp.twinklePhase + lt * sp.twinkleSpeed * math.pi * 2) + 1) / 2;
+    final alpha = fadeEnv * (0.35 + tw * 0.65);
+    const color = Color(0xFFFFE8A0);
+    final size2 = sp.size * (0.7 + tw * 0.6);
+
+    canvas.save();
+    canvas.translate(pos.dx, pos.dy);
+    canvas.drawCircle(Offset.zero, size2 * 0.7, Paint()
+      ..shader = ui.Gradient.radial(Offset.zero, size2 * 0.7, [
+        color.withValues(alpha: 0.65 * alpha),
+        color.withValues(alpha: 0.22 * alpha),
+        const Color(0x00000000),
+      ], [0.0, 0.5, 1.0])
+      ..blendMode = BlendMode.plus);
+    final starPaint = Paint()..color = color.withValues(alpha: alpha)..blendMode = BlendMode.plus;
+    canvas.drawPath(Path()
+      ..moveTo(0, -size2 * 0.5)
+      ..quadraticBezierTo(size2 * 0.04, 0, 0, size2 * 0.5)
+      ..quadraticBezierTo(-size2 * 0.04, 0, 0, -size2 * 0.5)
+      ..close(), starPaint);
+    canvas.drawPath(Path()
+      ..moveTo(-size2 * 0.5, 0)
+      ..quadraticBezierTo(0, size2 * 0.04, size2 * 0.5, 0)
+      ..quadraticBezierTo(0, -size2 * 0.04, -size2 * 0.5, 0)
+      ..close(), starPaint);
+    canvas.drawCircle(Offset.zero, size2 * 0.07, Paint()..color = Color.fromRGBO(255, 255, 255, alpha));
+    canvas.restore();
+  }
+
+  double _easeInQuart(double x) => x * x * x * x;
+  double _easeOutCubic(double x) {
+    final v = 1 - x;
+    return 1 - v * v * v;
+  }
+
+  @override
+  bool shouldRepaint(covariant _MoneyPainter old) => old.t != t;
+}
