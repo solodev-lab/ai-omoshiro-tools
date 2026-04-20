@@ -1,23 +1,28 @@
 import 'package:flutter/material.dart';
 import 'map_constants.dart';
+import 'map_styles.dart';
 
 /// Layer Panel — HTML: .layer-panel { width:100px; }
 class LayerPanel extends StatelessWidget {
   final Map<String, bool> layers;
   final Map<String, bool> planetGroups;
   final String activeCategory;
+  final MapStyle mapStyle;
   final ValueChanged<String> onLayerToggle;
   final ValueChanged<String> onPlanetGroupToggle;
   final ValueChanged<String> onCategoryChanged;
+  final ValueChanged<MapStyle> onMapStyleChanged;
 
   const LayerPanel({
     super.key,
     required this.layers,
     required this.planetGroups,
     required this.activeCategory,
+    required this.mapStyle,
     required this.onLayerToggle,
     required this.onPlanetGroupToggle,
     required this.onCategoryChanged,
+    required this.onMapStyleChanged,
   });
 
   @override
@@ -39,6 +44,10 @@ class LayerPanel extends StatelessWidget {
           _section('MAP', [
             _toggle('sectors', '方位EN', const Color(0xFFC9A84C), layers, onLayerToggle),
             _toggle('compass', 'コンパス', const Color(0xFFE8E0D0), layers, onLayerToggle),
+          ]),
+          _section('STYLE', [
+            for (final e in mapStyleConfigs.entries)
+              _styleOption(e.key, e.value.label),
           ]),
           _section('CHART', [
             _toggle('natal', 'Natal', const Color(0xFFE8E0D0), layers, onLayerToggle),
@@ -88,6 +97,33 @@ class LayerPanel extends StatelessWidget {
           const SizedBox(height: 6),
           ...children,
         ],
+      ),
+    );
+  }
+
+  Widget _styleOption(MapStyle style, String label) {
+    final active = mapStyle == style;
+    const activeColor = Color(0xFFC9A84C);
+    return GestureDetector(
+      onTap: () => onMapStyleChanged(style),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        child: Row(children: [
+          Container(
+            width: 12, height: 12,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: active ? activeColor : const Color(0x33FFFFFF), width: 1.5),
+              color: active ? activeColor.withAlpha(60) : Colors.transparent,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Flexible(
+            child: Text(label,
+              style: TextStyle(fontSize: 10, color: active ? const Color(0xFFBBBBBB) : const Color(0xFF666666)),
+              overflow: TextOverflow.ellipsis),
+          ),
+        ]),
       ),
     );
   }

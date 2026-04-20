@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:latlong2/latlong.dart';
 import '../utils/solara_storage.dart';
 import 'map/map_constants.dart';
+import 'map/map_styles.dart';
 import 'map/map_sectors.dart';
 import 'map/map_fortune_sheet.dart';
 import 'map/map_stella.dart';
@@ -63,12 +64,27 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   String? _searchResultName;
   LatLng? _searchResultPos;
 
+  // Map style (tile source + light/dark filter)
+  MapStyle _mapStyle = MapStyle.osmHotLight;
+
   @override
   void initState() {
     super.initState();
     _loadProfileAndChart();
+    _loadMapStyle();
     // モックスコアをフォールバックとして初期化
     _sectorScores.addAll(generateMockScores(_sectorComps));
+  }
+
+  Future<void> _loadMapStyle() async {
+    final id = await SolaraStorage.loadMapStyleId();
+    if (!mounted) return;
+    setState(() => _mapStyle = mapStyleFromId(id));
+  }
+
+  void _onMapStyleChanged(MapStyle style) {
+    setState(() => _mapStyle = style);
+    SolaraStorage.saveMapStyleId(mapStyleConfigs[style]!.id);
   }
 
   Future<void> _loadProfileAndChart() async {
@@ -160,31 +176,13 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
           mapController: _mapCtrl,
           options: MapOptions(
             initialCenter: _center, initialZoom: 14,
-            minZoom: 2, maxZoom: 18,
-            backgroundColor: const Color(0xFF080C14),
+            minZoom: 2, maxZoom: 19,
+            backgroundColor: mapStyleConfigs[_mapStyle]!.backgroundColor,
             // HTML: long-press 600ms → rebuild(nc, fly:true)
             onLongPress: (tapPos, latlng) => _rebuild(latlng),
           ),
           children: [
-            TileLayer(
-              urlTemplate: 'https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}.png',
-              subdomains: const ['a', 'b', 'c', 'd'],
-              maxZoom: 19,
-              tileBuilder: (context, tileWidget, tile) => ColorFiltered(
-                colorFilter: const ColorFilter.matrix(<double>[
-                  1.42, 0.08, 0.05, 0, 0.0,
-                  0.08, 1.35, 0.05, 0, 0.0,
-                  0.08, 0.08, 1.32, 0, 0.0,
-                  0,    0,    0,    1, 0,
-                ]),
-                child: tileWidget,
-              ),
-            ),
-            TileLayer(
-              urlTemplate: 'https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}.png',
-              subdomains: const ['a', 'b', 'c', 'd'],
-              maxZoom: 19,
-            ),
+            buildStyledTileLayer(_mapStyle),
             PolygonLayer(polygons: buildSectors(
               center: _center,
               sectorScores: _sectorScores,
@@ -368,9 +366,11 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
             layers: _layers,
             planetGroups: _planetGroups,
             activeCategory: _activeCategory,
+            mapStyle: _mapStyle,
             onLayerToggle: (k) => setState(() => _layers[k] = !(_layers[k] ?? false)),
             onPlanetGroupToggle: (k) => setState(() => _planetGroups[k] = !(_planetGroups[k] ?? false)),
             onCategoryChanged: (k) => setState(() => _activeCategory = k),
+            onMapStyleChanged: _onMapStyleChanged,
           ),
         ),
 

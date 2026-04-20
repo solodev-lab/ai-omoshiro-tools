@@ -21,6 +21,7 @@ lib/ (77 .dart ファイル)
 │   │   ├── map_vp_panel.dart, map_astro.dart, map_fortune_sheet.dart
 │   │   ├── map_planet_lines.dart, map_sectors.dart, map_layer_panel.dart
 │   │   ├── map_constants.dart, map_widgets.dart, map_stella.dart
+│   │   ├── map_styles.dart             タイル切替（OSM/CyclOSM × Light/Dark）
 │   ├── horoscope_screen.dart ホロスコープ State本体 + build （part で拡張）
 │   ├── horoscope/            ← Horoscope サブウィジェット
 │   │   │  ─── horoscope_screen.dart の part 拡張 ───
@@ -195,6 +196,14 @@ Map / Galaxy も同様に SolaraStorage 経由で読み込み
 - Jean Meeus "Astronomical Algorithms" Chapter 49 準拠
 - 精度: ±2-3分
 - 機能: 新月/満月の日時算出、月齢計算、サイクルID生成
+
+### マップタイル切替 (map/map_styles.dart)
+- 4プリセット: `osmHotLight` / `osmHotDark` / `cyclosmLight` / `cyclosmDark`
+- タイル源: OpenStreetMap Humanitarian (OSM France) + CyclOSM (OSM France)
+- Dark版: CSS `filter: invert(1) hue-rotate(180deg)` 相当の2段 ColorFiltered（白背景→黒、赤道路→赤保持）
+- 永続化: `shared_preferences` キー `solara_map_style`
+- 選択UI: LayerPanel の STYLE セクション
+- 商用/アップデート計画: MapTiler独自スタイル（紫夜空テーマ）への移行予定（memory: project_solara_map_styles.md）
 
 ### 星座名生成 (constellation_namer.dart)
 - 20形容詞 × 61名詞 = 1,220ユニーク名（日英）

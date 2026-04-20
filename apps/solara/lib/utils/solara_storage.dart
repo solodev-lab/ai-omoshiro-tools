@@ -102,6 +102,19 @@ class SolaraStorage {
   static const _completedCyclesKey = 'solara_galaxy_cycles';
   static const _intentionKey = 'solara_lunar_intention';
   static const _overlayShownKey = 'solara_overlay_shown';
+  static const _mapStyleKey = 'solara_map_style';
+
+  // --- Map style ---
+
+  static Future<String?> loadMapStyleId() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_mapStyleKey);
+  }
+
+  static Future<void> saveMapStyleId(String id) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_mapStyleKey, id);
+  }
 
   // --- Profile ---
 
