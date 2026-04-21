@@ -930,6 +930,61 @@ S = Tarot × 0.4 + Mood × 0.1 + Transit × 0.3 + Progressed × 0.2
 
 ---
 
+## シェアアセット (`share-assets/`)
+
+SNSシェア・Instagram Stories・ギャラリー表示用の星座背景画像を格納。ベース12枚以外は全て `gemini-3.1-flash-image-preview` (Nano Banana 2) で生成、9:16縦長 (768×1376 PNG)。
+
+### フォルダ構成
+
+| フォルダ | 内容 | 枚数 |
+|---------|------|------|
+| `backgrounds_original/` | 元絵（1536×2752 2K、fal.ai Imagen生成・**保護必須・削除禁止**） | 12 |
+| `backgrounds/` | 本番配信用 webp（`backgrounds_original` の変換版） | 12 |
+| `backgrounds_mystical/` | 星座シンボル無し版（抽象ネビュラのみ、Nano Banana 2再生成） | 12 |
+| `backgrounds_aries_variants/` | aries基形状（螺旋）× 他11属性 | 11 |
+| `backgrounds_aquarius_variants/` | aquarius基形状（縦カスケード）× 他11属性 | 11 |
+| `backgrounds_leo_variants/` | leo基形状（サンバースト）× 他11属性 | 11 |
+| `backgrounds_pisces_variants/` | pisces基形状（波）× 他11属性 | 11 |
+| `backgrounds_scorpio_variants/` | scorpio基形状（渦）× 他11属性 | 11 |
+| `backgrounds_virgo_variants/` | virgo基形状（神聖幾何学）× 他11属性 | 11 |
+| `constellation-art/` | 星座名詞の白線画イラスト（512×512 WebP、Galaxy Star Atlas用） | 61 |
+
+累計: 背景画像 90枚 + 星座名詞線画 61枚
+
+### バリエーション生成の設計思想
+
+- **ベース形状を完全固定**、色・属性・雰囲気だけを12星座属性で切り替え
+- 同一ユーザーでも「本命星座」×「運勢相手星座」の組み合わせで違う背景を出せる
+- 各ベースは視覚的に明確に区別される（螺旋 / カスケード / サンバースト / 波 / 渦 / 神聖幾何学）
+
+### 生成スクリプト
+
+| スクリプト | 用途 |
+|-----------|------|
+| `generate_backgrounds_mystical.py` | 12星座の新ベース背景（シンボル無し） |
+| `generate_aries_variants.py` | aries基形状の11バリエーション |
+| `generate_aquarius_variants.py` | aquarius基形状の11バリエーション |
+| `generate_base_variants.py` | 汎用バリエーション生成（leo/pisces/scorpio/virgo）、自動503リトライ付き |
+| `generate_4bases_overnight.py` | 4ベース × 11属性 = 44枚を一括生成（約1.5〜2時間） |
+| `generate_constellation_art.py` | Galaxy Star Atlas用61点線画 |
+| `generate_share_assets.py` | 旧 fal.ai 版（**非推奨・新規使用禁止**） |
+
+### モデル・生成ルール（詳細は `CLAUDE.md` 「🔴 画像生成 必須手順」セクション参照）
+
+- モデル: `gemini-3.1-flash-image-preview` (Nano Banana 2, 2026年2月リリース、Google AI Pro範囲内で動作)
+- アスペクト比: `types.ImageConfig(aspect_ratio="9:16")` で縦長指定
+- API キー: `E:\AppCreate\.env` の `GEMINI_API_KEY`
+- 503エラー時は自動リトライ（30s→60s→90s バックオフ、最大3回）
+- 具体物単語（moon / lion / crab 等）は避ける → 抽象語（aquatic / solar corona / water swirl）に置換
+
+### 禁止事項
+
+- ❌ `backgrounds_original/` の画像を削除・上書きしてはならない
+- ❌ fal.ai / Imagen API / Chrome MCP 手動操作を新規に使わない
+- ❌ 旧モデル `gemini-2.5-flash-image` を新規コードで使わない（アスペクト比指定不可）
+
+---
+
 ## 本番移行時の変更点
 
 | モックアップ | 本番（Flutter） |
