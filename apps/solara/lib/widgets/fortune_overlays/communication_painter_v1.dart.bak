@@ -3,9 +3,8 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import '_common.dart';
 
-/// 話す（Solara風）: ルーン文字・占星術記号・ラテン語片が羊皮紙の上を
-/// ペアで触れ合って金の魔法陣を灯し、同時に無秩序な文字片が現れては消える。
-/// 古い魔導書のページをめくったような神秘的な賑わい。
+/// 話す: 音符ペアが触れ合って光りながら、水平ストリームが走り、
+/// 同時に無秩序な音符・光の粒がランダムに現れては消える混沌とした賑わい。
 class CommunicationPainterBuilder extends FortunePainterBuilder {
   final _rng = math.Random();
   late final List<_NotePair> _pairs;
@@ -35,20 +34,8 @@ class CommunicationPainterBuilder extends FortunePainterBuilder {
   );
 
   List<_NotePair> _buildPairs() {
-    // ルーン＋Money と共通の錬金術/天体記号のみ。星座記号 (♈〜♓) は
-    // OSによっては VS-15 を無視してカラー絵文字化するため使わない。
-    const symbolsA = [
-      'ᚠ', 'ᚢ', 'ᚨ', 'ᚱ', 'ᚲ', 'ᚷ', 'ᚹ', 'ᚾ', 'ᛁ', 'ᛏ',
-      '☉\uFE0E', '☽\uFE0E', '♄\uFE0E', '♃\uFE0E',
-      '✶\uFE0E', '✦\uFE0E', '⚭\uFE0E', '☥\uFE0E',
-      'I', 'V',
-    ];
-    const symbolsB = [
-      'ᛒ', 'ᛖ', 'ᛗ', 'ᛚ', 'ᛞ', 'ᛟ', 'ᛉ', 'ᛋ', 'ᛜ', 'ᛃ',
-      '♀\uFE0E', '♂\uFE0E', '☿\uFE0E',
-      '❋\uFE0E', '✦\uFE0E', '✶\uFE0E',
-      'X', 'M', 'I', '⚭\uFE0E',
-    ];
+    const symbolsA = ['♪', '♫', '♩', '♬'];
+    const symbolsB = ['♩', '♪', '♬', '♫'];
     final list = <_NotePair>[];
     for (var i = 0; i < _pairCount; i++) {
       final sizeA = 26.0 + math.pow(_rng.nextDouble(), 1.6).toDouble() * 42.0;
@@ -81,20 +68,7 @@ class CommunicationPainterBuilder extends FortunePainterBuilder {
   }
 
   List<_Note> _buildChaoticNotes() {
-    // 星座記号 (♈〜♓) は絵文字化リスクが高いため除外。
-    // ルーン＋Money共通の錬金術/天体記号のみ。
-    const symbols = [
-      // ルーン
-      'ᚠ', 'ᚢ', 'ᚦ', 'ᚨ', 'ᚱ', 'ᚲ', 'ᚷ', 'ᚹ', 'ᚺ', 'ᚾ', 'ᛁ',
-      'ᛃ', 'ᛇ', 'ᛈ', 'ᛉ', 'ᛋ', 'ᛏ', 'ᛒ', 'ᛖ', 'ᛗ', 'ᛚ', 'ᛜ', 'ᛞ', 'ᛟ',
-      // 天体・錬金術（Moneyと共通、VS-15）
-      '☉\uFE0E', '☽\uFE0E', '♄\uFE0E', '♃\uFE0E',
-      '♀\uFE0E', '♂\uFE0E', '☿\uFE0E',
-      '✶\uFE0E', '✦\uFE0E', '❋\uFE0E',
-      '⚭\uFE0E', '☥\uFE0E',
-      // ローマ数字
-      'I', 'V', 'X', 'M',
-    ];
+    const symbols = ['♪', '♫', '♩', '♬', '♭', '♯'];
     final list = <_Note>[];
     for (var i = 0; i < _chaoticNoteCount; i++) {
       final stays = _rng.nextDouble() < 0.30;
@@ -250,37 +224,35 @@ class _CommunicationPainter extends CustomPainter {
     required this.streams, required this.sparks, required this.sparkles,
   });
 
-  // Solaraの古典配色: アンティーク金・ローズゴールド・象牙・深紫藍・ワインレッド
-  static const _antiqueGold = Color(0xFFD8B05A);
-  static const _paleGold = Color(0xFFE8C880);
-  static const _ivory = Color(0xFFF0E0C0);
-  static const _roseGold = Color(0xFFD89F80);
-  static const _wine = Color(0xFFA04A5A);
-  static const _nightViolet = Color(0xFF7055A8);
+  static const _lavender = Color(0xFFB088FF);
+  static const _blue = Color(0xFF8AB5FF);
+  static const _violet = Color(0xFFD8BFFF);
+  static const _cyan = Color(0xFFA8DFFF);
+  static const _pink = Color(0xFFFFB0D8);
+  static const _mint = Color(0xFFA8F0E0);
 
   Color _hueColor(double h) {
-    if (h < 0.22) return Color.lerp(_antiqueGold, _paleGold, h / 0.22)!;
-    if (h < 0.42) return Color.lerp(_paleGold, _ivory, (h - 0.22) / 0.20)!;
-    if (h < 0.62) return Color.lerp(_ivory, _roseGold, (h - 0.42) / 0.20)!;
-    if (h < 0.82) return Color.lerp(_roseGold, _wine, (h - 0.62) / 0.20)!;
-    return Color.lerp(_wine, _nightViolet, (h - 0.82) / 0.18)!;
+    if (h < 0.2) return Color.lerp(_lavender, _blue, h * 5)!;
+    if (h < 0.4) return Color.lerp(_blue, _cyan, (h - 0.2) * 5)!;
+    if (h < 0.6) return Color.lerp(_cyan, _mint, (h - 0.4) * 5)!;
+    if (h < 0.8) return Color.lerp(_mint, _violet, (h - 0.6) * 5)!;
+    return Color.lerp(_violet, _pink, (h - 0.8) * 5)!;
   }
 
   @override
   void paint(Canvas canvas, Size size) {
-    // 背景: 羊皮紙クリーム → 深紫藍の神秘グラデ
     final bgAlpha = stageAlpha(t, fadeIn: 0.12, hold: 0.58, fadeOut: 0.30);
     if (bgAlpha > 0) {
       canvas.drawRect(Offset.zero & size, Paint()
         ..shader = ui.Gradient.linear(
           Offset(0, 0), Offset(size.width, size.height),
           [
-            Color.fromRGBO(230, 200, 150, 0.32 * bgAlpha), // 羊皮紙
-            Color.fromRGBO(130, 90, 100, 0.22 * bgAlpha),  // くすんだワイン
-            Color.fromRGBO(40, 25, 60, 0.20 * bgAlpha),    // 深紫藍
+            Color.fromRGBO(180, 150, 255, 0.30 * bgAlpha),
+            Color.fromRGBO(130, 170, 240, 0.20 * bgAlpha),
+            Color.fromRGBO(30, 15, 50, 0.13 * bgAlpha),
             const Color(0x00000000),
           ],
-          [0.0, 0.40, 0.82, 1.0],
+          [0.0, 0.35, 0.75, 1.0],
         ));
     }
 
@@ -352,69 +324,39 @@ class _CommunicationPainter extends CustomPainter {
     final avgSize = (pair.sizeA + pair.sizeB) * 0.5;
     final r = avgSize * (0.7 + intensity * 0.9);
     final a = alpha * intensity;
+    final colorA = _hueColor(pair.hueA);
+    final colorB = _hueColor(pair.hueB);
+    final blend = Color.lerp(colorA, colorB, 0.5)!;
 
-    // 外側グロー（金色）
-    canvas.drawCircle(center, r * 1.5, Paint()
-      ..shader = ui.Gradient.radial(center, r * 1.5, [
-        _antiqueGold.withValues(alpha: 0.65 * a),
-        _antiqueGold.withValues(alpha: 0.22 * a),
+    canvas.drawCircle(center, r * 1.4, Paint()
+      ..shader = ui.Gradient.radial(center, r * 1.4, [
+        blend.withValues(alpha: 0.55 * a),
+        blend.withValues(alpha: 0.18 * a),
         const Color(0x00000000),
       ], [0.0, 0.55, 1.0])
       ..blendMode = BlendMode.plus);
 
-    // 金の小さな魔法陣（二重円＋六芒星）
-    final sigilR = r * 0.85;
-    canvas.save();
-    canvas.translate(center.dx, center.dy);
-    final rotSigil = intensity * math.pi * 0.5;
-    canvas.rotate(rotSigil);
-
-    final goldBright = _paleGold.withValues(alpha: 0.95 * a);
-    final goldSoft = _antiqueGold.withValues(alpha: 0.75 * a);
-
-    // 外円
-    canvas.drawCircle(Offset.zero, sigilR, Paint()
+    canvas.drawCircle(center, r * (0.7 + intensity * 0.35), Paint()
       ..style = PaintingStyle.stroke
-      ..strokeWidth = math.max(1.0, avgSize * 0.025)
-      ..color = goldSoft
-      ..blendMode = BlendMode.plus);
-    // 内円
-    canvas.drawCircle(Offset.zero, sigilR * 0.72, Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = math.max(0.7, avgSize * 0.018)
-      ..color = goldSoft
+      ..strokeWidth = math.max(1.2, avgSize * 0.05)
+      ..color = Color.fromRGBO(255, 255, 255, 0.85 * a)
       ..blendMode = BlendMode.plus);
 
-    // 六芒星（2つの三角形）
-    final starR = sigilR * 0.68;
-    for (var k = 0; k < 2; k++) {
-      final base = k * math.pi / 3;
-      final path = Path();
-      for (var j = 0; j < 3; j++) {
-        final ang = base + j * (math.pi * 2 / 3) - math.pi / 2;
-        final px = math.cos(ang) * starR;
-        final py = math.sin(ang) * starR;
-        if (j == 0) {
-          path.moveTo(px, py);
-        } else {
-          path.lineTo(px, py);
-        }
-      }
-      path.close();
-      canvas.drawPath(path, Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = math.max(0.9, avgSize * 0.022)
-        ..color = goldBright
-        ..blendMode = BlendMode.plus
-        ..strokeJoin = StrokeJoin.round);
-    }
-
-    // 中心の白コア
-    canvas.drawCircle(Offset.zero, avgSize * 0.15 * intensity, Paint()
-      ..color = _ivory.withValues(alpha: 0.95 * a)
+    canvas.drawCircle(center, avgSize * 0.18 * intensity, Paint()
+      ..color = Color.fromRGBO(255, 255, 255, 0.90 * a)
       ..blendMode = BlendMode.plus);
 
-    canvas.restore();
+    final spikePaint = Paint()
+      ..color = Color.fromRGBO(255, 255, 255, 0.70 * a)
+      ..strokeWidth = math.max(1.0, avgSize * 0.03)
+      ..strokeCap = StrokeCap.round
+      ..blendMode = BlendMode.plus;
+    final spike = avgSize * (0.5 + intensity * 0.6);
+    canvas.drawLine(center.translate(-spike, 0), center.translate(spike, 0), spikePaint);
+    canvas.drawLine(center.translate(0, -spike), center.translate(0, spike), spikePaint);
+    final d = spike * 0.65;
+    canvas.drawLine(center.translate(-d, -d), center.translate(d, d), spikePaint);
+    canvas.drawLine(center.translate(-d, d), center.translate(d, -d), spikePaint);
   }
 
   void _drawPairNote(Canvas canvas, Offset pos, String symbol, double s,
@@ -474,8 +416,6 @@ class _CommunicationPainter extends CustomPainter {
       fontSize: s,
       foreground: notePaint,
       height: 1.0,
-      fontFamily: 'serif',
-      fontFamilyFallback: const ['Noto Serif', 'Times New Roman', 'DejaVu Serif'],
       shadows: [
         Shadow(
           color: Colors.white.withValues(alpha: 0.35 * alpha),
@@ -500,8 +440,6 @@ class _CommunicationPainter extends CustomPainter {
     final tpOutline = TextPainter(
       text: TextSpan(text: symbol, style: TextStyle(
         fontSize: s, height: 1.0, foreground: outlinePaint,
-        fontFamily: 'serif',
-        fontFamilyFallback: const ['Noto Serif', 'Times New Roman', 'DejaVu Serif'],
       )),
       textDirection: TextDirection.ltr,
     );

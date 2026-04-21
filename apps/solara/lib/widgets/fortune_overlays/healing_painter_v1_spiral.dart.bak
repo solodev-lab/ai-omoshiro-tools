@@ -3,8 +3,8 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import '_common.dart';
 
-/// 癒し（Solara風）: 月桂樹とオリーブの葉が下から上へ螺旋で舞い上がり、
-/// 銀の霧と月光の粒が夜の森のように漂う。象牙・ヒスイ・深緑・銀のパレット。
+/// 癒し: 花びらと光の粒が下から上へ螺旋を描いて舞い上がる。
+/// 多彩な緑色のパレットで森・新緑・苔・翡翠を重ね合わせる。
 class HealingPainterBuilder extends FortunePainterBuilder {
   final _rng = math.Random();
   late final List<_Petal> _petals;
@@ -28,35 +28,45 @@ class HealingPainterBuilder extends FortunePainterBuilder {
 
   List<_Petal> _buildPetals() {
     const palettes = <_PetalPalette>[
-      // Laurel dark（月桂樹の深緑）
+      // Fresh mint
       _PetalPalette(
-        highlight: Color(0xFFC8D8B8), main: Color(0xFF3E5C2E),
-        shadow: Color(0xFF0A1A0A), rim: Color(0xFF7A9660), vein: Color(0xFF1E3018),
+        highlight: Color(0xFFF0FFF4), main: Color(0xFF86E6A8),
+        shadow: Color(0xFF1F6038), rim: Color(0xFFCAF5D8), vein: Color(0xFF3E8A5A),
       ),
-      // Olive classic
+      // Emerald
       _PetalPalette(
-        highlight: Color(0xFFD5D0A0), main: Color(0xFF7A7438),
-        shadow: Color(0xFF2A2614), rim: Color(0xFFB8B480), vein: Color(0xFF48401C),
+        highlight: Color(0xFFE0FFEA), main: Color(0xFF3FCC78),
+        shadow: Color(0xFF0C4024), rim: Color(0xFFA8EBC0), vein: Color(0xFF1E7E44),
       ),
-      // Jade（ヒスイ）
+      // Sage
       _PetalPalette(
-        highlight: Color(0xFFD4EAD8), main: Color(0xFF4A8A70),
-        shadow: Color(0xFF0E2820), rim: Color(0xFF88C0A8), vein: Color(0xFF264834),
+        highlight: Color(0xFFF5FAEE), main: Color(0xFFA8C68A),
+        shadow: Color(0xFF455A30), rim: Color(0xFFDCE8C6), vein: Color(0xFF6E8B55),
       ),
-      // Silver-green（月光に照らされた葉裏）
+      // Forest
       _PetalPalette(
-        highlight: Color(0xFFE8ECE6), main: Color(0xFF9EB0A4),
-        shadow: Color(0xFF2C3834), rim: Color(0xFFC8D4CC), vein: Color(0xFF526054),
+        highlight: Color(0xFFCCE8D2), main: Color(0xFF3A8058),
+        shadow: Color(0xFF0A2E1A), rim: Color(0xFF6EAA88), vein: Color(0xFF1A4A2E),
       ),
-      // Ivory sage（象牙×セージ）
+      // Moss
       _PetalPalette(
-        highlight: Color(0xFFF5ECD8), main: Color(0xFFA8B084),
-        shadow: Color(0xFF3A3E20), rim: Color(0xFFD4DABA), vein: Color(0xFF5E6840),
+        highlight: Color(0xFFEAF5D8), main: Color(0xFF708A48),
+        shadow: Color(0xFF2A3A18), rim: Color(0xFFB8D090), vein: Color(0xFF45602C),
       ),
-      // Deep forest shadow
+      // Teal green
       _PetalPalette(
-        highlight: Color(0xFFAECAA8), main: Color(0xFF234424),
-        shadow: Color(0xFF050E08), rim: Color(0xFF5A7E58), vein: Color(0xFF102008),
+        highlight: Color(0xFFE0FFF5), main: Color(0xFF4CBFA5),
+        shadow: Color(0xFF0F4840), rim: Color(0xFFA8E8D8), vein: Color(0xFF1E7068),
+      ),
+      // Chartreuse / lime
+      _PetalPalette(
+        highlight: Color(0xFFF5FFD0), main: Color(0xFFBCE560),
+        shadow: Color(0xFF4A6008), rim: Color(0xFFE2F2A0), vein: Color(0xFF708E28),
+      ),
+      // Jade
+      _PetalPalette(
+        highlight: Color(0xFFD8F5E4), main: Color(0xFF5FB888),
+        shadow: Color(0xFF15482E), rim: Color(0xFFA0D6B4), vein: Color(0xFF2A7048),
       ),
     ];
 
@@ -178,16 +188,16 @@ class _HealingPainter extends CustomPainter {
   final List<_Sparkle> sparkles;
   _HealingPainter({required this.t, required this.petals, required this.motes, required this.sparkles});
 
-  // 古典的な緑・銀・象牙のバンク（くすんだ色調）
+  // 多彩な緑のグラデ色相バンク
   static const _greens = <Color>[
-    Color(0xFF5A7E58), // laurel
-    Color(0xFF4A8A70), // jade
-    Color(0xFF7A7438), // olive
-    Color(0xFF9EB0A4), // silver-green
-    Color(0xFFA8B084), // ivory sage
-    Color(0xFFC8D4CC), // moonlit silver
-    Color(0xFF3E5C2E), // deep laurel
-    Color(0xFFB8B480), // pale olive
+    Color(0xFF86E6A8), // fresh mint
+    Color(0xFF3FCC78), // emerald
+    Color(0xFFA8C68A), // sage
+    Color(0xFF3A8058), // forest
+    Color(0xFF708A48), // moss
+    Color(0xFF4CBFA5), // teal green
+    Color(0xFFBCE560), // chartreuse
+    Color(0xFF5FB888), // jade
   ];
 
   Color _greenHue(double h) {
@@ -201,7 +211,7 @@ class _HealingPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    // 背景: 夜の森に射す月光。深翠→濃緑→月光銀のグラデ
+    // 背景: 下から濃緑→上に新緑〜翡翠の空気感
     final bgAlpha = stageAlpha(t, fadeIn: 0.12, hold: 0.60, fadeOut: 0.28);
     if (bgAlpha > 0) {
       canvas.drawRect(Offset.zero & size, Paint()
@@ -209,12 +219,12 @@ class _HealingPainter extends CustomPainter {
           Offset(size.width / 2, size.height),
           Offset(size.width / 2, 0),
           [
-            Color.fromRGBO(10, 30, 22, 0.40 * bgAlpha),   // 深翠の森床
-            Color.fromRGBO(40, 78, 60, 0.30 * bgAlpha),   // 深緑
-            Color.fromRGBO(170, 185, 170, 0.22 * bgAlpha), // 月光銀
+            Color.fromRGBO(30, 70, 45, 0.38 * bgAlpha),
+            Color.fromRGBO(90, 170, 110, 0.30 * bgAlpha),
+            Color.fromRGBO(180, 230, 170, 0.22 * bgAlpha),
             const Color(0x00000000),
           ],
-          [0.0, 0.40, 0.80, 1.0],
+          [0.0, 0.35, 0.75, 1.0],
         ));
     }
 
@@ -237,13 +247,12 @@ class _HealingPainter extends CustomPainter {
     final bandBottom = size.height * 0.35;
     final rect = Rect.fromLTRB(0, bandTop, size.width, bandBottom);
 
-    // オーロラ色: 月光の淡い白銀〜ヒスイ
     final phase = t * math.pi * 0.8;
     final hue1 = Color.lerp(
-      const Color(0xFFD8E5D0), const Color(0xFFB8D4C8), (math.sin(phase) + 1) / 2,
+      const Color(0xFF5FD8A0), const Color(0xFF88E8B0), (math.sin(phase) + 1) / 2,
     )!;
     final hue2 = Color.lerp(
-      const Color(0xFFE8ECE6), const Color(0xFFA0C4B0), (math.cos(phase * 0.7) + 1) / 2,
+      const Color(0xFFBCE590), const Color(0xFF6FC488), (math.cos(phase * 0.7) + 1) / 2,
     )!;
 
     canvas.drawRect(rect, Paint()
@@ -376,28 +385,14 @@ class _HealingPainter extends CustomPainter {
         ..blendMode = BlendMode.plus);
     }
 
-    // 月桂樹らしい葉脈: 中央縦脈 + 対になる斜め脈
-    if (!isBackside && faceVis > 0.45) {
-      final veinPaint = Paint()
-        ..color = pal.vein.withValues(alpha: 0.48 * alpha)
-        ..strokeWidth = math.max(0.6, s * 0.010)
-        ..strokeCap = StrokeCap.round;
-      // 中央縦脈
-      canvas.drawLine(Offset(0, -s * 0.42), Offset(0, s * 0.42), veinPaint);
-      // 対になる斜め脈 3組
-      final sidePaint = Paint()
-        ..color = pal.vein.withValues(alpha: 0.32 * alpha)
-        ..strokeWidth = math.max(0.4, s * 0.006)
-        ..strokeCap = StrokeCap.round;
-      for (var i = 0; i < 3; i++) {
-        final frac = -0.25 + i * 0.22;
-        final y = s * frac;
-        final tip = 0.30 + i * 0.04; // 上部のほど先端寄りへ
-        final dx = w * 0.42;
-        final dy = s * tip * 0.5;
-        canvas.drawLine(Offset(0, y), Offset(dx, y + dy), sidePaint);
-        canvas.drawLine(Offset(0, y), Offset(-dx, y + dy), sidePaint);
-      }
+    if (!isBackside && faceVis > 0.5) {
+      canvas.drawLine(
+        Offset(0, -s * 0.42),
+        Offset(0, s * 0.42),
+        Paint()
+          ..color = pal.vein.withValues(alpha: 0.40 * alpha)
+          ..strokeWidth = math.max(0.6, s * 0.01),
+      );
     }
 
     canvas.drawPath(path, Paint()
@@ -410,13 +405,12 @@ class _HealingPainter extends CustomPainter {
   }
 
   Path _buildPetalPath(double length, double width) {
-    // 月桂樹の葉: 上下両端が尖り、中央がふくらむ細長いアーモンド
     final path = Path();
     final l = length * 0.5;
     final w = width * 0.5;
     path.moveTo(0, -l);
-    path.cubicTo(w * 0.85, -l * 0.55, w * 1.05, l * 0.25, 0, l);
-    path.cubicTo(-w * 1.05, l * 0.25, -w * 0.85, -l * 0.55, 0, -l);
+    path.cubicTo(w * 1.3, -l * 0.5, w * 1.05, l * 0.55, 0, l);
+    path.cubicTo(-w * 1.05, l * 0.55, -w * 1.3, -l * 0.5, 0, -l);
     path.close();
     return path;
   }

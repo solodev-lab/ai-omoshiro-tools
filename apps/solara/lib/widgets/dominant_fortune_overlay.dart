@@ -40,7 +40,7 @@ class _DominantFortuneOverlayState extends State<DominantFortuneOverlay>
   late final AnimationController _ctl;
   late final FortunePainterBuilder _builder;
 
-  static const _duration = Duration(milliseconds: 2400);
+  static const _duration = Duration(milliseconds: 4000);
 
   @override
   void initState() {

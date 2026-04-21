@@ -103,6 +103,7 @@ class SolaraStorage {
   static const _intentionKey = 'solara_lunar_intention';
   static const _overlayShownKey = 'solara_overlay_shown';
   static const _mapStyleKey = 'solara_map_style';
+  static const _dailyResetHourKey = 'solara_daily_reset_hour';
 
   // --- Map style ---
 
@@ -247,20 +248,42 @@ class SolaraStorage {
     );
   }
 
+  /// 1日の基準時刻（0-23時）。この時刻を跨ぐと「今日」が更新される。
+  /// 例: 3 に設定すると、深夜3時を日付の区切りとして扱う。
+  static Future<int> loadDailyResetHour() async {
+    final prefs = await SharedPreferences.getInstance();
+    final h = prefs.getInt(_dailyResetHourKey) ?? 0;
+    return h.clamp(0, 23);
+  }
+
+  static Future<void> saveDailyResetHour(int hour) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_dailyResetHourKey, hour.clamp(0, 23));
+  }
+
+  /// リセット時刻を考慮した「今日」の日付キー (YYYY-MM-DD)。
+  /// 現在時刻がリセット時刻より前なら、前日の日付を返す。
+  static Future<String> _logicalTodayKey() async {
+    final hour = await loadDailyResetHour();
+    var now = DateTime.now();
+    if (now.hour < hour) {
+      now = now.subtract(const Duration(days: 1));
+    }
+    return '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+  }
+
   /// Track which overlay was shown today to avoid re-showing.
   static Future<bool> wasOverlayShownToday(String type) async {
     final prefs = await SharedPreferences.getInstance();
-    final today = DateTime.now();
-    final key =
-        '${_overlayShownKey}_${type}_${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
+    final day = await _logicalTodayKey();
+    final key = '${_overlayShownKey}_${type}_$day';
     return prefs.getBool(key) ?? false;
   }
 
   static Future<void> markOverlayShown(String type) async {
     final prefs = await SharedPreferences.getInstance();
-    final today = DateTime.now();
-    final key =
-        '${_overlayShownKey}_${type}_${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
+    final day = await _logicalTodayKey();
+    final key = '${_overlayShownKey}_${type}_$day';
     await prefs.setBool(key, true);
   }
 

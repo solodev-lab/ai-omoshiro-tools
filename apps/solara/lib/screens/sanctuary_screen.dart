@@ -6,6 +6,7 @@ import '../utils/solara_storage.dart';
 import '../utils/title_data.dart' as titleData;
 import 'sanctuary/sanctuary_orb_overlay.dart';
 import 'sanctuary/sanctuary_profile_editor.dart';
+import 'sanctuary/sanctuary_reset_hour_picker.dart';
 import 'sanctuary/sanctuary_title_diagnosis.dart';
 import 'sanctuary/sanctuary_home_editor.dart';
 
@@ -30,6 +31,9 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
   String _houseSystem = 'placidus';
   bool _houseSelectOpen = false;
   bool _notificationsOn = true;
+
+  // 1日の基準時刻（0-23時）。この時刻を跨ぐと Omen ボタンがリセットされる。
+  int _dailyResetHour = 0;
 
   // Orb values
   final Map<String, double> _orbValues = {
@@ -58,6 +62,8 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
       }
       if (mounted) setState(() {});
     }
+    final h = await SolaraStorage.loadDailyResetHour();
+    if (mounted) setState(() => _dailyResetHour = h);
   }
 
   Future<void> _loadProfile() async {
@@ -632,6 +638,13 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
           value: _notificationsOn,
           onChanged: (v) => setState(() => _notificationsOn = v),
         ),
+        // Daily reset hour（今日のタップボタンのリセット時刻）
+        _SettingsItem(
+          icon: Icons.schedule_outlined,
+          text: '1日の開始時刻',
+          value: '${_dailyResetHour.toString().padLeft(2, '0')}:00 ›',
+          onTap: _pickDailyResetHour,
+        ),
         // Terms & Privacy
         _SettingsItem(
           icon: Icons.description_outlined,
@@ -641,6 +654,20 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
         ),
       ],
     );
+  }
+
+  Future<void> _pickDailyResetHour() async {
+    final picked = await showModalBottomSheet<int>(
+      context: context,
+      backgroundColor: const Color(0xFF0A0E1C),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => SanctuaryResetHourPicker(initial: _dailyResetHour),
+    );
+    if (picked == null) return;
+    setState(() => _dailyResetHour = picked);
+    await SolaraStorage.saveDailyResetHour(picked);
   }
 
   // HTML: background: radial-gradient(ellipse at center, #0a1220 0%, #020408 100%)

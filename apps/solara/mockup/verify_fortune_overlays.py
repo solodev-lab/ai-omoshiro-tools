@@ -216,8 +216,11 @@ def check_map_screen() -> bool:
         (r"_debugCycleOverlayKinds", "_debugCycleOverlayKinds フラグ"),
         (r"_debugCycleOrder", "_debugCycleOrder 定義"),
         (r"_implementedOverlayKinds", "_implementedOverlayKinds 定義"),
-        (r"_onMapTap", "_onMapTap ハンドラ"),
-        (r"onTap:\s*\(_,\s*_\)\s*=>\s*_onMapTap", "Map onTap 接続"),
+        (r"_onOmenTap", "_onOmenTap ハンドラ (Omen Button 経由)"),
+        (r"OmenButton\(", "OmenButton ウィジェット接続"),
+        (r"_checkOmenVisibility", "Omen表示判定"),
+        (r"_onOverlayComplete", "Overlay完了ハンドラ"),
+        (r"import\s+['\"].*omen_phrases\.dart['\"]", "omen_phrases import"),
     ]
     for pat, desc in checks:
         if re.search(pat, content):

@@ -3,131 +3,130 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import '_common.dart';
 
-/// 仕事: 下から立ち上がる光の柱 + 上昇する結晶/幾何形状 + 横切る走査線。
-/// 「地から湧き上がるエネルギー」の力強さ。
+/// 仕事（Solara風）: 金の勲章 medallion が次々と画面に現れ、軽やかに回転し漂う。
+/// 背景では真鍮の歯車が静かに噛み合って回る。演出終盤、medallion達は中央へ
+/// 集まり、中央から左右へ光線が水平に伸びて達成の印を結ぶ。
 class WorkPainterBuilder extends FortunePainterBuilder {
   final _rng = math.Random();
-  late final List<_Pillar> _pillars;
-  late final List<_Shard> _shards;
-  late final List<_ScanLine> _scans;
-  late final List<_Spark> _sparks;
+  late final List<_Medallion> _medallions;
+  late final List<_Gear> _gears;
+  late final List<_GoldDust> _dust;
   late final List<_Sparkle> _sparkles;
 
-  static const _pillarCount = 7;
-  static const _shardCount = 32;
-  static const _scanCount = 3;
-  static const _sparkCount = 90;
-  static const _sparkleCount = 22;
+  static const _medalCount = 20;
+  static const _gearCount = 3;
+  static const _dustCount = 110;
+  static const _sparkleCount = 28;
 
   WorkPainterBuilder() {
-    _pillars = _buildPillars();
-    _shards = _buildShards();
-    _scans = _buildScans();
-    _sparks = _buildSparks();
+    _medallions = _buildMedallions();
+    _gears = _buildGears();
+    _dust = _buildDust();
     _sparkles = _buildSparkles();
   }
 
   @override
   CustomPainter buildPainter(double t) => _WorkPainter(
-    t: t, pillars: _pillars, shards: _shards, scans: _scans, sparks: _sparks, sparkles: _sparkles,
+    t: t, medallions: _medallions, gears: _gears, dust: _dust, sparkles: _sparkles,
   );
 
-  List<_Pillar> _buildPillars() {
-    final list = <_Pillar>[];
-    for (var i = 0; i < _pillarCount; i++) {
-      list.add(_Pillar(
-        xRatio: (i + 0.5) / _pillarCount + (_rng.nextDouble() - 0.5) * 0.04,
-        width: 0.03 + _rng.nextDouble() * 0.06,
-        maxHeight: 0.65 + _rng.nextDouble() * 0.30,
-        riseSpeed: 0.8 + _rng.nextDouble() * 0.5,
-        hue: _rng.nextDouble(),
-        delay: 0.02 + _rng.nextDouble() * 0.25,
-        shimmerSpeed: 2.0 + _rng.nextDouble() * 3.0,
-        shimmerPhase: _rng.nextDouble() * math.pi * 2,
-      ));
-    }
-    return list;
-  }
+  List<_Medallion> _buildMedallions() {
+    // 黒・深青・ガンメタル基調、金と銀の彫刻。暖色（ワイン/ローズ）廃止。
+    const palettes = <_MedalPalette>[
+      // Onyx gold（黒金）
+      _MedalPalette(
+        plate: Color(0xFF0A0812), plateHl: Color(0xFF1C1830),
+        edge: Color(0xFFD8A848), edgeHl: Color(0xFFF0E0A0),
+        emblem: Color(0xFFE8C878), deepShadow: Color(0xFF000000),
+      ),
+      // Midnight gold（深青金）
+      _MedalPalette(
+        plate: Color(0xFF060E22), plateHl: Color(0xFF14284C),
+        edge: Color(0xFFC89830), edgeHl: Color(0xFFE8CC60),
+        emblem: Color(0xFFDEB858), deepShadow: Color(0xFF000000),
+      ),
+      // Gunmetal silver（ガンメタル銀）
+      _MedalPalette(
+        plate: Color(0xFF0E1016), plateHl: Color(0xFF242834),
+        edge: Color(0xFFB0B8C4), edgeHl: Color(0xFFE0E4EC),
+        emblem: Color(0xFFC8CFD8), deepShadow: Color(0xFF020204),
+      ),
+      // Obsidian gold（黒曜石＋金）
+      _MedalPalette(
+        plate: Color(0xFF07060C), plateHl: Color(0xFF1A1628),
+        edge: Color(0xFFBE9040), edgeHl: Color(0xFFE2B868),
+        emblem: Color(0xFFD0A558), deepShadow: Color(0xFF000000),
+      ),
+      // Deep plum gold（深紫金）
+      _MedalPalette(
+        plate: Color(0xFF10081C), plateHl: Color(0xFF2A1448),
+        edge: Color(0xFFC0A250), edgeHl: Color(0xFFE8C878),
+        emblem: Color(0xFFE0BE68), deepShadow: Color(0xFF020006),
+      ),
+    ];
+    const emblems = [
+      '☉\uFE0E', '☽\uFE0E', '✶\uFE0E', '✦\uFE0E', '❋\uFE0E',
+      '☥\uFE0E', '⚭\uFE0E', '⚜\uFE0E',
+      'V', 'X', 'M', 'I',
+    ];
 
-  List<_Shard> _buildShards() {
-    const palettes = <_ShardPalette>[
-      // Electric blue
-      _ShardPalette(
-        highlight: Color(0xFFFFFFFF), main: Color(0xFF6BB5FF),
-        shadow: Color(0xFF15325A), rim: Color(0xFFAEEAFF), glow: Color(0xFF00D4FF),
-      ),
-      // Cyan steel
-      _ShardPalette(
-        highlight: Color(0xFFF0FFFF), main: Color(0xFF8CD6F0),
-        shadow: Color(0xFF244E68), rim: Color(0xFFBEEFFC), glow: Color(0xFF7FE8FF),
-      ),
-      // Ice
-      _ShardPalette(
-        highlight: Color(0xFFFFFFFF), main: Color(0xFFB0E0F0),
-        shadow: Color(0xFF2E5870), rim: Color(0xFFD8F0FA), glow: Color(0xFFB0E0F0),
-      ),
-      // Deep ocean
-      _ShardPalette(
-        highlight: Color(0xFFE5F4FF), main: Color(0xFF5095E0),
-        shadow: Color(0xFF0F1F4A), rim: Color(0xFF8AB5E8), glow: Color(0xFF4FC5FF),
-      ),
-    ];
-    const shapes = <_ShardShape>[
-      _ShardShape.diamond, _ShardShape.triangle, _ShardShape.hexagon, _ShardShape.diamond,
-    ];
-    final list = <_Shard>[];
-    for (var i = 0; i < _shardCount; i++) {
-      list.add(_Shard(
-        spawnX: _rng.nextDouble(),
-        riseSpeed: 0.80 + _rng.nextDouble() * 0.6,
-        size: 16.0 + math.pow(_rng.nextDouble(), 1.7).toDouble() * 38.0,
-        aspect: 0.5 + _rng.nextDouble() * 0.35,
+    final list = <_Medallion>[];
+    for (var i = 0; i < _medalCount; i++) {
+      // 最終的に中央に集まるので、初期位置は中央付近を避けて画面全体に散らす
+      final ang = _rng.nextDouble() * math.pi * 2;
+      final rad = 0.18 + _rng.nextDouble() * 0.30;
+      list.add(_Medallion(
+        xRatio: (0.50 + math.cos(ang) * rad).clamp(0.10, 0.90),
+        yRatio: (0.50 + math.sin(ang) * rad * 0.85).clamp(0.10, 0.90),
+        size: 38.0 + math.pow(_rng.nextDouble(), 1.6).toDouble() * 56.0,
         palette: palettes[_rng.nextInt(palettes.length)],
-        shape: shapes[_rng.nextInt(shapes.length)],
-        rotation: _rng.nextDouble() * math.pi * 2,
-        rotSpeed: (_rng.nextDouble() - 0.5) * 1.4,
-        flipSpeed: 1.5 + _rng.nextDouble() * 2.5,
-        flipPhase: _rng.nextDouble() * math.pi * 2,
-        swayAmp: 0.015 + _rng.nextDouble() * 0.03,
-        swaySpeed: 1.5 + _rng.nextDouble() * 2.0,
-        swayPhase: _rng.nextDouble() * math.pi * 2,
-        flashPhase: _rng.nextDouble() * math.pi * 2,
-        flashSpeed: 3.0 + _rng.nextDouble() * 3.0,
-        delay: _rng.nextDouble() * 0.50,
+        emblem: emblems[_rng.nextInt(emblems.length)],
+        rotation: (_rng.nextDouble() - 0.5) * 0.35,
+        spinSpeed: (_rng.nextDouble() - 0.5) * 0.40,
+        driftAmp: 0.005 + _rng.nextDouble() * 0.010,
+        driftSpeed: 0.8 + _rng.nextDouble() * 0.9,
+        driftPhase: _rng.nextDouble() * math.pi * 2,
+        driftAngle: _rng.nextDouble() * math.pi * 2,
+        delay: _rng.nextDouble() * 0.45,
       ));
     }
     return list;
   }
 
-  List<_ScanLine> _buildScans() {
-    final list = <_ScanLine>[];
-    for (var i = 0; i < _scanCount; i++) {
-      final downward = _rng.nextBool();
-      list.add(_ScanLine(
-        startYRatio: downward ? -0.1 : 1.1,
-        endYRatio: downward ? 1.1 : -0.1,
-        delay: 0.1 + i * 0.35 + _rng.nextDouble() * 0.1,
-        duration: 0.35 + _rng.nextDouble() * 0.15,
-        thickness: 2.0 + _rng.nextDouble() * 2.5,
-        hue: _rng.nextDouble(),
+  List<_Gear> _buildGears() {
+    final list = <_Gear>[];
+    // 画面の四隅寄りに配置、重ならないように
+    final configs = <List<double>>[
+      // xRatio, yRatio, radius(画面幅比), toothCount, rotSpeed, phase
+      [0.18, 0.22, 0.16, 14, 0.35, 0.0],
+      [0.82, 0.36, 0.13, 11, -0.45, 0.8],
+      [0.26, 0.82, 0.14, 13, -0.32, 1.6],
+    ];
+    for (var i = 0; i < _gearCount && i < configs.length; i++) {
+      final c = configs[i];
+      list.add(_Gear(
+        xRatio: c[0], yRatio: c[1], radius: c[2],
+        toothCount: c[3].toInt(), rotSpeed: c[4], phase: c[5],
       ));
     }
     return list;
   }
 
-  List<_Spark> _buildSparks() {
-    final list = <_Spark>[];
-    for (var i = 0; i < _sparkCount; i++) {
-      list.add(_Spark(
-        spawnX: _rng.nextDouble(),
-        riseSpeed: 0.8 + _rng.nextDouble() * 0.8,
-        size: 1.8 + _rng.nextDouble() * 4.5,
-        trailLength: 0.04 + _rng.nextDouble() * 0.10,
-        wobbleAmp: 0.005 + _rng.nextDouble() * 0.02,
-        wobbleSpeed: 2.0 + _rng.nextDouble() * 3.0,
-        wobblePhase: _rng.nextDouble() * math.pi * 2,
-        hue: _rng.nextDouble(),
-        delay: _rng.nextDouble() * 0.6,
+  List<_GoldDust> _buildDust() {
+    final list = <_GoldDust>[];
+    for (var i = 0; i < _dustCount; i++) {
+      list.add(_GoldDust(
+        xRatio: _rng.nextDouble(),
+        yRatio: _rng.nextDouble(),
+        size: 1.2 + _rng.nextDouble() * 3.0,
+        driftAmp: 0.008 + _rng.nextDouble() * 0.020,
+        driftSpeed: 0.8 + _rng.nextDouble() * 1.4,
+        driftPhase: _rng.nextDouble() * math.pi * 2,
+        driftAngle: _rng.nextDouble() * math.pi * 2,
+        twinklePhase: _rng.nextDouble() * math.pi * 2,
+        twinkleSpeed: 1.6 + _rng.nextDouble() * 2.2,
+        warm: _rng.nextDouble() < 0.70,
+        delay: _rng.nextDouble() * 0.35,
       ));
     }
     return list;
@@ -139,450 +138,584 @@ class WorkPainterBuilder extends FortunePainterBuilder {
       list.add(_Sparkle(
         xRatio: _rng.nextDouble(),
         yRatio: _rng.nextDouble(),
-        size: 8 + _rng.nextDouble() * 20,
+        size: 9 + _rng.nextDouble() * 20,
         twinklePhase: _rng.nextDouble() * math.pi * 2,
-        twinkleSpeed: 3.0 + _rng.nextDouble() * 3.0,
-        delay: _rng.nextDouble() * 0.5,
+        twinkleSpeed: 2.0 + _rng.nextDouble() * 2.4,
+        hue: _rng.nextDouble(),
+        delay: _rng.nextDouble() * 0.55,
       ));
     }
     return list;
   }
 }
 
-enum _ShardShape { diamond, triangle, hexagon }
-
-class _ShardPalette {
-  final Color highlight, main, shadow, rim, glow;
-  const _ShardPalette({
-    required this.highlight, required this.main, required this.shadow,
-    required this.rim, required this.glow,
+class _MedalPalette {
+  final Color plate, plateHl, edge, edgeHl, emblem, deepShadow;
+  const _MedalPalette({
+    required this.plate, required this.plateHl,
+    required this.edge, required this.edgeHl,
+    required this.emblem, required this.deepShadow,
   });
 }
 
-class _Pillar {
-  final double xRatio, width, maxHeight, riseSpeed, hue, delay, shimmerSpeed, shimmerPhase;
-  _Pillar({
-    required this.xRatio, required this.width, required this.maxHeight,
-    required this.riseSpeed, required this.hue, required this.delay,
-    required this.shimmerSpeed, required this.shimmerPhase,
+class _Medallion {
+  final double xRatio, yRatio, size;
+  final _MedalPalette palette;
+  final String emblem;
+  final double rotation, spinSpeed;
+  final double driftAmp, driftSpeed, driftPhase, driftAngle;
+  final double delay;
+  _Medallion({
+    required this.xRatio, required this.yRatio, required this.size,
+    required this.palette, required this.emblem,
+    required this.rotation, required this.spinSpeed,
+    required this.driftAmp, required this.driftSpeed,
+    required this.driftPhase, required this.driftAngle,
+    required this.delay,
   });
 }
 
-class _Shard {
-  final double spawnX, riseSpeed, size, aspect;
-  final _ShardPalette palette;
-  final _ShardShape shape;
-  final double rotation, rotSpeed, flipSpeed, flipPhase;
-  final double swayAmp, swaySpeed, swayPhase;
-  final double flashPhase, flashSpeed, delay;
-  _Shard({
-    required this.spawnX, required this.riseSpeed, required this.size, required this.aspect,
-    required this.palette, required this.shape,
-    required this.rotation, required this.rotSpeed, required this.flipSpeed, required this.flipPhase,
-    required this.swayAmp, required this.swaySpeed, required this.swayPhase,
-    required this.flashPhase, required this.flashSpeed, required this.delay,
+class _Gear {
+  final double xRatio, yRatio, radius;
+  final int toothCount;
+  final double rotSpeed, phase;
+  _Gear({
+    required this.xRatio, required this.yRatio, required this.radius,
+    required this.toothCount, required this.rotSpeed, required this.phase,
   });
 }
 
-class _ScanLine {
-  final double startYRatio, endYRatio, delay, duration, thickness, hue;
-  _ScanLine({
-    required this.startYRatio, required this.endYRatio,
-    required this.delay, required this.duration, required this.thickness, required this.hue,
-  });
-}
-
-class _Spark {
-  final double spawnX, riseSpeed, size, trailLength;
-  final double wobbleAmp, wobbleSpeed, wobblePhase, hue, delay;
-  _Spark({
-    required this.spawnX, required this.riseSpeed, required this.size, required this.trailLength,
-    required this.wobbleAmp, required this.wobbleSpeed, required this.wobblePhase,
-    required this.hue, required this.delay,
+class _GoldDust {
+  final double xRatio, yRatio, size;
+  final double driftAmp, driftSpeed, driftPhase, driftAngle;
+  final double twinklePhase, twinkleSpeed;
+  final bool warm;
+  final double delay;
+  _GoldDust({
+    required this.xRatio, required this.yRatio, required this.size,
+    required this.driftAmp, required this.driftSpeed,
+    required this.driftPhase, required this.driftAngle,
+    required this.twinklePhase, required this.twinkleSpeed,
+    required this.warm, required this.delay,
   });
 }
 
 class _Sparkle {
-  final double xRatio, yRatio, size, twinklePhase, twinkleSpeed, delay;
+  final double xRatio, yRatio, size, twinklePhase, twinkleSpeed, hue, delay;
   _Sparkle({
     required this.xRatio, required this.yRatio, required this.size,
-    required this.twinklePhase, required this.twinkleSpeed, required this.delay,
+    required this.twinklePhase, required this.twinkleSpeed,
+    required this.hue, required this.delay,
   });
 }
 
 class _WorkPainter extends CustomPainter {
   final double t;
-  final List<_Pillar> pillars;
-  final List<_Shard> shards;
-  final List<_ScanLine> scans;
-  final List<_Spark> sparks;
+  final List<_Medallion> medallions;
+  final List<_Gear> gears;
+  final List<_GoldDust> dust;
   final List<_Sparkle> sparkles;
   _WorkPainter({
-    required this.t, required this.pillars, required this.shards,
-    required this.scans, required this.sparks, required this.sparkles,
+    required this.t, required this.medallions, required this.gears,
+    required this.dust, required this.sparkles,
   });
 
-  static const _electricBlue = Color(0xFF6BB5FF);
-  static const _cyan = Color(0xFF00D4FF);
-  static const _ice = Color(0xFFB0E0F0);
-  static const _deepBlue = Color(0xFF4070D8);
+  static const _deepBlack = Color(0xFF05060E);
+  static const _navy = Color(0xFF0A1230);
+  static const _violet = Color(0xFF14103A);
+  static const _antiqueGold = Color(0xFFD8A848);
+  static const _paleGold = Color(0xFFF0D890);
+  static const _ivory = Color(0xFFF8E8C0);
+  static const _brassDim = Color(0xFF886028);
 
-  Color _hueColor(double h) {
-    if (h < 0.33) {
-      return Color.lerp(_electricBlue, _cyan, h * 3)!;
-    } else if (h < 0.66) {
-      return Color.lerp(_cyan, _ice, (h - 0.33) * 3)!;
-    }
-    return Color.lerp(_ice, _deepBlue, (h - 0.66) * 3)!;
-  }
+  // 中央収束の開始タイミング / 左右光線の開始
+  static const _convergeStart = 0.55;
+  static const _lateralStart = 0.78;
 
   @override
   void paint(Canvas canvas, Size size) {
-    // 背景: 下から青のエネルギー
     final bgAlpha = stageAlpha(t, fadeIn: 0.10, hold: 0.60, fadeOut: 0.30);
+
+    // 背景: 深黒 → 深青 → 深紫の縦グラデ（クール基調、他カテゴリと同程度に薄く）
     if (bgAlpha > 0) {
       canvas.drawRect(Offset.zero & size, Paint()
         ..shader = ui.Gradient.linear(
-          Offset(size.width / 2, size.height),
           Offset(size.width / 2, 0),
+          Offset(size.width / 2, size.height),
           [
-            Color.fromRGBO(130, 185, 255, 0.40 * bgAlpha),
-            Color.fromRGBO(70, 120, 220, 0.25 * bgAlpha),
-            Color.fromRGBO(10, 20, 50, 0.14 * bgAlpha),
+            _deepBlack.withValues(alpha: 0.30 * bgAlpha),
+            _navy.withValues(alpha: 0.26 * bgAlpha),
+            _violet.withValues(alpha: 0.20 * bgAlpha),
             const Color(0x00000000),
           ],
-          [0.0, 0.35, 0.75, 1.0],
+          [0.0, 0.40, 0.80, 1.0],
         ));
     }
 
-    // 光の柱（背景）
-    for (final p in pillars) { _drawPillar(canvas, p, size); }
+    // 歯車（奥、静かに回転する背景装飾）
+    for (final g in gears) { _drawGear(canvas, g, size, bgAlpha); }
 
-    // 火花（奥）
-    for (final sp in sparks) { _drawSpark(canvas, sp, size); }
+    // 金粉（奥、常時漂う）
+    for (final d in dust) { _drawDust(canvas, d, size); }
 
-    // 結晶（前景）
-    for (final sh in shards) { _drawShard(canvas, sh, size); }
+    // 勲章（メイン、登場→漂う→終盤に中央収束）
+    for (final m in medallions) { _drawMedallion(canvas, m, size); }
 
-    // スキャンライン（手前）
-    for (final sc in scans) { _drawScanLine(canvas, sc, size); }
+    // 最終モーメント: 閃光→波紋リング→中央紋章
+    _drawFinalMoment(canvas, size);
 
-    // スパークル
-    for (final sp in sparkles) { _drawSparkle(canvas, sp, size); }
+    // スパークル（前面、常時輝き）
+    for (final s in sparkles) { _drawSparkle(canvas, s, size); }
   }
 
-  void _drawPillar(Canvas canvas, _Pillar p, Size size) {
-    final lt = ((t - p.delay) / (1.0 - p.delay)).clamp(0.0, 1.0);
-    if (lt <= 0) return;
-    final alpha = stageAlpha(lt, fadeIn: 0.15, hold: 0.55, fadeOut: 0.30);
+  // ─── 歯車（背景） ─────────────────────────
+  void _drawGear(Canvas canvas, _Gear g, Size size, double bgAlpha) {
+    if (bgAlpha <= 0) return;
+    // 演出終盤にかけて歯車自体も少しフェードアウト（medallionが主役化）
+    final fadeOut = t > 0.75 ? (1.0 - (t - 0.75) / 0.25).clamp(0.0, 1.0) : 1.0;
+    final alpha = bgAlpha * fadeOut;
     if (alpha <= 0) return;
 
-    // 柱の高さ: 下から上へ伸びる
-    final currentHeight = p.maxHeight * size.height * easeOutCubic(lt * p.riseSpeed).clamp(0.0, 1.0);
-    final baseY = size.height;
-    final topY = baseY - currentHeight;
-
-    final centerX = size.width * p.xRatio;
-    final w = size.width * p.width;
-
-    // シマー（時間で強弱）
-    final shimmer = (math.sin(p.shimmerPhase + t * p.shimmerSpeed * math.pi * 2) + 1) / 2;
-
-    final color = _hueColor(p.hue);
-
-    // 外側グロー（幅広、柔らかい）
-    final rect = Rect.fromLTWH(centerX - w * 1.5, topY - 30, w * 3, currentHeight + 30);
-    canvas.drawRect(rect, Paint()
-      ..shader = ui.Gradient.linear(
-        Offset(rect.left, 0), Offset(rect.right, 0),
-        [
-          const Color(0x00000000),
-          color.withValues(alpha: (0.30 + shimmer * 0.15) * alpha),
-          const Color(0x00000000),
-        ],
-        [0.0, 0.5, 1.0],
-      )
-      ..blendMode = BlendMode.plus);
-
-    // 中間層
-    final rect2 = Rect.fromLTWH(centerX - w * 0.6, topY - 15, w * 1.2, currentHeight + 15);
-    canvas.drawRect(rect2, Paint()
-      ..shader = ui.Gradient.linear(
-        Offset(rect2.left, 0), Offset(rect2.right, 0),
-        [
-          const Color(0x00000000),
-          color.withValues(alpha: 0.55 * alpha),
-          const Color(0x00000000),
-        ],
-        [0.0, 0.5, 1.0],
-      )
-      ..blendMode = BlendMode.plus);
-
-    // 明るいコア
-    final rect3 = Rect.fromLTWH(centerX - w * 0.15, topY, w * 0.3, currentHeight);
-    canvas.drawRect(rect3, Paint()
-      ..shader = ui.Gradient.linear(
-        Offset(0, topY), Offset(0, baseY),
-        [
-          Color.fromRGBO(255, 255, 255, (0.5 + shimmer * 0.3) * alpha),
-          Color.fromRGBO(255, 255, 255, 0.85 * alpha),
-          Color.fromRGBO(255, 255, 255, 0.3 * alpha),
-        ],
-        [0.0, 0.2, 1.0],
-      )
-      ..blendMode = BlendMode.plus);
-
-    // 先端の輝き
-    canvas.drawCircle(Offset(centerX, topY), w * 2.0, Paint()
-      ..shader = ui.Gradient.radial(
-        Offset(centerX, topY), w * 2.0,
-        [
-          Color.fromRGBO(255, 255, 255, 0.85 * alpha),
-          color.withValues(alpha: 0.35 * alpha),
-          const Color(0x00000000),
-        ],
-        [0.0, 0.4, 1.0],
-      )
-      ..blendMode = BlendMode.plus);
-  }
-
-  void _drawShard(Canvas canvas, _Shard s, Size size) {
-    final lt = ((t - s.delay) / (1.0 - s.delay)).clamp(0.0, 1.0);
-    if (lt <= 0) return;
-    final alpha = stageAlpha(lt, fadeIn: 0.18, hold: 0.55, fadeOut: 0.27);
-    if (alpha <= 0) return;
-
-    // 下から上へ移動
-    final startY = size.height * 1.05;
-    final endY = -size.height * 0.15;
-    final y = startY + (endY - startY) * s.riseSpeed * easeOutCubic(lt);
-    final swayX = math.sin(s.swayPhase + lt * s.swaySpeed * math.pi * 2) * s.swayAmp * size.width;
-    final x = size.width * s.spawnX + swayX;
-
-    final scale = easeOutBack((lt / 0.28).clamp(0.0, 1.0)) * 0.95;
-    final rot = s.rotation + s.rotSpeed * lt;
-    // フラッシュ
-    final flashI = math.max(0, math.sin(s.flashPhase + lt * s.flashSpeed * math.pi * 2));
-    // 3Dフリップ
-    final flipCos = math.cos(s.flipPhase + lt * s.flipSpeed * math.pi * 2);
-    final faceVis = flipCos.abs().clamp(0.25, 1.0);
+    final r = g.radius * size.width;
+    final cx = size.width * g.xRatio;
+    final cy = size.height * g.yRatio;
+    final rot = g.phase + t * g.rotSpeed * math.pi * 2;
+    final toothDepth = r * 0.18;
+    final innerR = r * 0.55;
 
     canvas.save();
-    canvas.translate(x, y);
+    canvas.translate(cx, cy);
     canvas.rotate(rot);
-    canvas.scale(scale);
 
-    final sz = s.size;
-    final w = sz * s.aspect;
-    final pal = s.palette;
+    // 歯車外形
+    final path = Path();
+    final n = g.toothCount;
+    for (var i = 0; i < n * 2; i++) {
+      final a = (i / (n * 2)) * math.pi * 2;
+      final rr = i.isEven ? r : r - toothDepth;
+      final px = math.cos(a) * rr;
+      final py = math.sin(a) * rr;
+      if (i == 0) {
+        path.moveTo(px, py);
+      } else {
+        path.lineTo(px, py);
+      }
+    }
+    path.close();
 
-    // 後光
-    canvas.drawCircle(Offset.zero, sz * 0.8, Paint()
-      ..shader = ui.Gradient.radial(Offset.zero, sz * 0.8, [
-        pal.glow.withValues(alpha: (0.40 + flashI * 0.3) * alpha),
-        pal.glow.withValues(alpha: 0.12 * alpha),
+    canvas.drawPath(path, Paint()
+      ..color = _brassDim.withValues(alpha: 0.14 * alpha)
+      ..blendMode = BlendMode.plus);
+    canvas.drawPath(path, Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = math.max(0.8, r * 0.020)
+      ..color = _antiqueGold.withValues(alpha: 0.45 * alpha)
+      ..blendMode = BlendMode.plus);
+
+    // 中心穴
+    canvas.drawCircle(Offset.zero, innerR * 0.35, Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = math.max(0.8, r * 0.018)
+      ..color = _antiqueGold.withValues(alpha: 0.52 * alpha)
+      ..blendMode = BlendMode.plus);
+    canvas.drawCircle(Offset.zero, innerR * 0.35, Paint()
+      ..color = _paleGold.withValues(alpha: 0.10 * alpha));
+
+    // スポーク4本
+    final spokePaint = Paint()
+      ..strokeWidth = math.max(0.8, r * 0.020)
+      ..color = _antiqueGold.withValues(alpha: 0.38 * alpha)
+      ..strokeCap = StrokeCap.butt
+      ..blendMode = BlendMode.plus;
+    for (var i = 0; i < 4; i++) {
+      final a = i * math.pi / 2;
+      final p0 = Offset(math.cos(a) * innerR * 0.38, math.sin(a) * innerR * 0.38);
+      final p1 = Offset(math.cos(a) * innerR * 0.92, math.sin(a) * innerR * 0.92);
+      canvas.drawLine(p0, p1, spokePaint);
+    }
+
+    canvas.restore();
+  }
+
+  // ─── 最終モーメント: 閃光→波紋リング→中央紋章 ────
+  void _drawFinalMoment(Canvas canvas, Size size) {
+    if (t < _lateralStart) return;
+    final localT = (t - _lateralStart) / (1.0 - _lateralStart);
+    final lt = localT.clamp(0.0, 1.0);
+
+    final c = Offset(size.width * 0.5, size.height * 0.5);
+    final diag = math.sqrt(size.width * size.width + size.height * size.height);
+
+    // ── Phase 1: 閃光（lt 0〜0.20 でピーク→急減衰）
+    double flashAlpha = 0;
+    if (lt < 0.08) {
+      flashAlpha = lt / 0.08;
+    } else if (lt < 0.22) {
+      flashAlpha = 1.0 - (lt - 0.08) / 0.14;
+    }
+    flashAlpha = flashAlpha.clamp(0.0, 1.0);
+    if (flashAlpha > 0) {
+      // 中央から広がる強い白光（画面全体に到達）
+      canvas.drawRect(Offset.zero & size, Paint()
+        ..shader = ui.Gradient.radial(c, diag * 0.65, [
+          Colors.white.withValues(alpha: 0.95 * flashAlpha),
+          _ivory.withValues(alpha: 0.60 * flashAlpha),
+          _paleGold.withValues(alpha: 0.22 * flashAlpha),
+          const Color(0x00000000),
+        ], [0.0, 0.30, 0.65, 1.0])
+        ..blendMode = BlendMode.plus);
+    }
+
+    // ── Phase 2: 波紋リング 3本（時差で外へ広がる）
+    final maxR = diag * 0.58;
+    for (var i = 0; i < 3; i++) {
+      final ringStart = 0.12 + i * 0.14;
+      const ringDuration = 0.46;
+      if (lt < ringStart || lt >= ringStart + ringDuration) continue;
+      final ringT = ((lt - ringStart) / ringDuration).clamp(0.0, 1.0);
+      final ringR = maxR * easeOutCubic(ringT);
+      final ringAlpha = (1.0 - ringT);
+
+      // 外側の金の輪（太め）
+      canvas.drawCircle(c, ringR, Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = math.max(1.8, size.width * 0.008)
+        ..color = _paleGold.withValues(alpha: 0.55 * ringAlpha)
+        ..blendMode = BlendMode.plus);
+      // 内側の白芯（薄い、若干内側）
+      canvas.drawCircle(c, ringR - math.max(1.0, size.width * 0.003), Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = math.max(0.8, size.width * 0.003)
+        ..color = Colors.white.withValues(alpha: 0.70 * ringAlpha)
+        ..blendMode = BlendMode.plus);
+    }
+
+    // ── Phase 3: 中央紋章（lt >= 0.18からフェードイン、回転）
+    if (lt >= 0.15) {
+      final sigilT = ((lt - 0.15) / 0.85).clamp(0.0, 1.0);
+      final sigilAlpha = stageAlpha(sigilT, fadeIn: 0.20, hold: 0.55, fadeOut: 0.25);
+      if (sigilAlpha > 0) {
+        final rBase = math.min(size.width, size.height) * 0.115;
+        final scale = easeOutBack((sigilT / 0.32).clamp(0.0, 1.0));
+        final r = rBase * scale;
+        final rot = sigilT * math.pi * 0.18;
+
+        canvas.save();
+        canvas.translate(c.dx, c.dy);
+        canvas.rotate(rot);
+
+        // 後光（柔らかい広い光）
+        canvas.drawCircle(Offset.zero, r * 2.2, Paint()
+          ..shader = ui.Gradient.radial(Offset.zero, r * 2.2, [
+            _ivory.withValues(alpha: 0.55 * sigilAlpha),
+            _paleGold.withValues(alpha: 0.24 * sigilAlpha),
+            const Color(0x00000000),
+          ], [0.0, 0.5, 1.0])
+          ..blendMode = BlendMode.plus);
+
+        // 二重円
+        canvas.drawCircle(Offset.zero, r, Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = math.max(1.2, r * 0.055)
+          ..color = _antiqueGold.withValues(alpha: 0.95 * sigilAlpha)
+          ..blendMode = BlendMode.plus);
+        canvas.drawCircle(Offset.zero, r * 0.80, Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = math.max(0.6, r * 0.022)
+          ..color = _paleGold.withValues(alpha: 0.90 * sigilAlpha)
+          ..blendMode = BlendMode.plus);
+
+        // 16点の八芒星（金塗り＋縁取り）
+        final starPath = Path();
+        for (var i = 0; i < 16; i++) {
+          final a = (i / 16) * math.pi * 2 - math.pi / 2;
+          final rr = i.isEven ? r * 0.86 : r * 0.42;
+          final px = math.cos(a) * rr;
+          final py = math.sin(a) * rr;
+          if (i == 0) {
+            starPath.moveTo(px, py);
+          } else {
+            starPath.lineTo(px, py);
+          }
+        }
+        starPath.close();
+        canvas.drawPath(starPath, Paint()
+          ..shader = ui.Gradient.radial(Offset.zero, r, [
+            _ivory.withValues(alpha: 0.98 * sigilAlpha),
+            _paleGold.withValues(alpha: 0.85 * sigilAlpha),
+          ], [0.0, 1.0]));
+        canvas.drawPath(starPath, Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = math.max(0.8, r * 0.028)
+          ..color = _antiqueGold.withValues(alpha: 0.95 * sigilAlpha)
+          ..strokeJoin = StrokeJoin.miter
+          ..blendMode = BlendMode.plus);
+
+        // 中心の小さな白コア
+        canvas.drawCircle(Offset.zero, r * 0.14, Paint()
+          ..color = _ivory.withValues(alpha: sigilAlpha));
+        canvas.drawCircle(Offset.zero, r * 0.07, Paint()
+          ..color = Colors.white.withValues(alpha: sigilAlpha));
+
+        canvas.restore();
+      }
+    }
+  }
+
+  // ─── 勲章 medallion ───────────────────────
+  // 登場フェード → 漂う → 中央収束 → 光線フェーズで小さく溶ける
+  void _drawMedallion(Canvas canvas, _Medallion m, Size size) {
+    final localT = t - m.delay;
+    if (localT <= 0) return;
+
+    // 登場フェード（0〜0.18秒）
+    double appearAlpha = (localT / 0.18).clamp(0.0, 1.0);
+    // 光線が広がり始めたら medallion はスッと溶ける
+    double finalAlpha = 1.0;
+    if (t > _lateralStart) {
+      finalAlpha = (1.0 - (t - _lateralStart) / 0.18).clamp(0.0, 1.0);
+    }
+    final alpha = appearAlpha * finalAlpha;
+    if (alpha <= 0) return;
+
+    // 登場ポップスケール
+    final popScale = easeOutBack((localT / 0.22).clamp(0.0, 1.0));
+
+    // 小振幅の漂い
+    final dr = math.sin(m.driftPhase + localT * m.driftSpeed * math.pi * 2) * m.driftAmp;
+    final dxDrift = math.cos(m.driftAngle) * dr * size.width;
+    final dyDrift = math.sin(m.driftAngle) * dr * size.width * 0.6;
+
+    // 基本位置
+    final baseX = size.width * m.xRatio + dxDrift;
+    final baseY = size.height * m.yRatio + dyDrift;
+
+    // 中央収束: t >= _convergeStart から中央へ引き寄せ
+    double convergeT = 0;
+    if (t > _convergeStart) {
+      convergeT = easeInOutQuad(
+        ((t - _convergeStart) / (_lateralStart - _convergeStart)).clamp(0.0, 1.0),
+      );
+    }
+    final cx = size.width * 0.5;
+    final cy = size.height * 0.5;
+    final px = baseX + (cx - baseX) * convergeT;
+    final py = baseY + (cy - baseY) * convergeT;
+
+    // 収束中はスケールを少し縮小（密集感）
+    final convergeScale = 1.0 - convergeT * 0.25;
+    final s = m.size * popScale * convergeScale;
+
+    final rot = m.rotation + m.spinSpeed * localT;
+    final pal = m.palette;
+
+    canvas.save();
+    canvas.translate(px, py);
+    canvas.rotate(rot);
+
+    _paintMedalBody(canvas, s, pal, m.emblem, alpha);
+
+    canvas.restore();
+  }
+
+  // 精密な八角形盤面（機械式メカニカル、黒金）
+  void _paintMedalBody(
+    Canvas canvas, double s, _MedalPalette pal, String emblem, double alpha,
+  ) {
+    final r = s * 0.5;
+
+    // 後光（控えめ、冷たい光）
+    canvas.drawCircle(Offset.zero, r * 1.6, Paint()
+      ..shader = ui.Gradient.radial(Offset.zero, r * 1.6, [
+        pal.edge.withValues(alpha: 0.28 * alpha),
+        pal.edge.withValues(alpha: 0.08 * alpha),
         const Color(0x00000000),
       ], [0.0, 0.55, 1.0])
       ..blendMode = BlendMode.plus);
 
-    canvas.save();
-    canvas.scale(faceVis, 1.0);
+    // 八角形外枠パス
+    final outerPath = _octagonPath(r);
 
-    final path = _buildShardPath(s.shape, sz, w);
-
-    // 本体グラデ
-    canvas.drawPath(path, Paint()
+    // 外枠 — 暗黒プレート（金属の深み）
+    canvas.drawPath(outerPath, Paint()
       ..shader = ui.Gradient.linear(
-        Offset(0, -sz), Offset(0, sz),
+        Offset(-r * 0.5, -r * 0.7), Offset(r * 0.5, r * 0.7),
         [
-          pal.highlight.withValues(alpha: 0.92 * alpha),
-          pal.main.withValues(alpha: alpha),
-          pal.shadow.withValues(alpha: 0.85 * alpha),
+          pal.plateHl.withValues(alpha: alpha),
+          pal.plate.withValues(alpha: alpha),
+          pal.deepShadow.withValues(alpha: 0.95 * alpha),
         ],
-        [0.0, 0.5, 1.0],
+        [0.0, 0.45, 1.0],
       ));
 
-    // 片面のファセット陰影
-    if (s.shape == _ShardShape.diamond || s.shape == _ShardShape.hexagon) {
-      final leftFacet = Path()
-        ..moveTo(0, -sz)
-        ..lineTo(-w, 0)
-        ..lineTo(0, sz)
-        ..close();
-      canvas.drawPath(leftFacet, Paint()
-        ..color = Color.fromRGBO(0, 0, 0, 0.22 * alpha)
-        ..blendMode = BlendMode.multiply);
-    }
-
-    // 中心の縦ハイライト
-    final hlPath = Path()
-      ..moveTo(0, -sz * 0.9)
-      ..lineTo(w * 0.12, 0)
-      ..lineTo(0, sz * 0.9)
-      ..lineTo(-w * 0.12, 0)
-      ..close();
-    canvas.drawPath(hlPath, Paint()
-      ..shader = ui.Gradient.linear(
-        Offset(0, -sz * 0.9), Offset(0, sz * 0.9),
-        [
-          const Color(0x00FFFFFF),
-          Color.fromRGBO(255, 255, 255, (0.55 + flashI * 0.35) * alpha),
-          const Color(0x00FFFFFF),
-        ],
-        [0.0, 0.5, 1.0],
-      )
-      ..blendMode = BlendMode.plus);
-
-    // 縁取り
-    canvas.drawPath(path, Paint()
+    // 外枠エッジ（金の刻印）
+    canvas.drawPath(outerPath, Paint()
       ..style = PaintingStyle.stroke
-      ..strokeWidth = math.max(0.7, sz * 0.02)
-      ..color = pal.rim.withValues(alpha: (0.65 + flashI * 0.35) * alpha)
-      ..blendMode = BlendMode.plus);
+      ..strokeWidth = math.max(1.0, r * 0.050)
+      ..color = pal.edge.withValues(alpha: 0.95 * alpha)
+      ..strokeJoin = StrokeJoin.miter);
 
-    canvas.restore();
+    // 内側の八角形（ひとまわり小さく、金の内枠）
+    final inner1Path = _octagonPath(r * 0.82);
+    canvas.drawPath(inner1Path, Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = math.max(0.6, r * 0.022)
+      ..color = pal.edgeHl.withValues(alpha: 0.90 * alpha)
+      ..strokeJoin = StrokeJoin.miter);
 
-    // エッジオン時のスリット
-    if (faceVis < 0.30) {
-      canvas.drawRect(
-        Rect.fromCenter(center: Offset.zero, width: math.max(1.4, sz * 0.06), height: sz),
-        Paint()
-          ..color = pal.rim.withValues(alpha: alpha)
-          ..blendMode = BlendMode.plus,
-      );
+    // 内側の円（機械盤面）
+    canvas.drawCircle(Offset.zero, r * 0.70, Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = math.max(0.5, r * 0.016)
+      ..color = pal.edge.withValues(alpha: 0.75 * alpha));
+    canvas.drawCircle(Offset.zero, r * 0.60, Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = math.max(0.4, r * 0.012)
+      ..color = pal.edge.withValues(alpha: 0.55 * alpha));
+
+    // 12分目盛（長い/短いを交互に、時計風）
+    for (var i = 0; i < 24; i++) {
+      final a = i * math.pi / 12 - math.pi / 2;
+      final isMajor = i % 2 == 0;
+      final rOut = r * 0.70;
+      final rIn = isMajor ? r * 0.60 : r * 0.65;
+      final p1 = Offset(math.cos(a) * rIn, math.sin(a) * rIn);
+      final p2 = Offset(math.cos(a) * rOut, math.sin(a) * rOut);
+      canvas.drawLine(p1, p2, Paint()
+        ..strokeWidth = math.max(0.5, r * (isMajor ? 0.018 : 0.010))
+        ..color = pal.edge.withValues(alpha: (isMajor ? 0.90 : 0.55) * alpha)
+        ..strokeCap = StrokeCap.butt);
     }
 
-    canvas.restore();
+    // 八角形の各頂点にリベット（金のドット）
+    for (var i = 0; i < 8; i++) {
+      final a = i * math.pi / 4 - math.pi / 2 + math.pi / 8;
+      final px = math.cos(a) * r * 0.92;
+      final py = math.sin(a) * r * 0.92;
+      canvas.drawCircle(Offset(px, py), r * 0.028, Paint()
+        ..color = pal.edgeHl.withValues(alpha: 0.95 * alpha));
+    }
+
+    // 背景の八芒星（薄く、金で）
+    final starPath = Path();
+    for (var i = 0; i < 16; i++) {
+      final a = (i / 16) * math.pi * 2 - math.pi / 2;
+      final rr = i.isEven ? r * 0.52 : r * 0.22;
+      final px = math.cos(a) * rr;
+      final py = math.sin(a) * rr;
+      if (i == 0) {
+        starPath.moveTo(px, py);
+      } else {
+        starPath.lineTo(px, py);
+      }
+    }
+    starPath.close();
+    canvas.drawPath(starPath, Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = math.max(0.5, r * 0.014)
+      ..color = pal.edge.withValues(alpha: 0.50 * alpha)
+      ..strokeJoin = StrokeJoin.miter);
+
+    // 中央の記号（serif）— 金で強く、黒い影で彫り
+    final emblemSize = r * 0.70;
+    // 影（少し下にずらして彫刻の深さ）
+    final darkPaint = Paint()
+      ..color = pal.deepShadow.withValues(alpha: 0.85 * alpha);
+    final tpDark = TextPainter(
+      text: TextSpan(
+        text: emblem,
+        style: TextStyle(
+          fontSize: emblemSize,
+          foreground: darkPaint,
+          height: 1.0,
+          fontFamily: 'serif',
+          fontFamilyFallback: const ['Noto Serif', 'Times New Roman', 'DejaVu Serif'],
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+    );
+    tpDark.layout();
+    tpDark.paint(canvas, Offset(-tpDark.width / 2 + r * 0.018, -tpDark.height / 2 + r * 0.028));
+
+    // 本体（金）
+    final emblemPaint = Paint()
+      ..color = pal.emblem.withValues(alpha: 0.98 * alpha);
+    final tp = TextPainter(
+      text: TextSpan(
+        text: emblem,
+        style: TextStyle(
+          fontSize: emblemSize,
+          foreground: emblemPaint,
+          height: 1.0,
+          fontFamily: 'serif',
+          fontFamilyFallback: const ['Noto Serif', 'Times New Roman', 'DejaVu Serif'],
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+    );
+    tp.layout();
+    tp.paint(canvas, Offset(-tp.width / 2, -tp.height / 2 + r * 0.01));
+
+    // 上端の鋭いエッジハイライト（斜め白光）
+    canvas.drawLine(
+      Offset(-r * 0.45, -r * 0.82),
+      Offset(r * 0.20, -r * 0.55),
+      Paint()
+        ..strokeWidth = math.max(0.5, r * 0.020)
+        ..color = Colors.white.withValues(alpha: 0.32 * alpha)
+        ..strokeCap = StrokeCap.butt
+        ..blendMode = BlendMode.plus,
+    );
   }
 
-  Path _buildShardPath(_ShardShape shape, double sz, double w) {
+  // 八角形パス（頂点を上下左右と対角）
+  Path _octagonPath(double r) {
     final path = Path();
-    switch (shape) {
-      case _ShardShape.diamond:
-        path
-          ..moveTo(0, -sz)
-          ..lineTo(w, 0)
-          ..lineTo(0, sz)
-          ..lineTo(-w, 0)
-          ..close();
-        break;
-      case _ShardShape.triangle:
-        path
-          ..moveTo(0, -sz)
-          ..lineTo(w * 1.15, sz * 0.85)
-          ..lineTo(-w * 1.15, sz * 0.85)
-          ..close();
-        break;
-      case _ShardShape.hexagon:
-        for (var i = 0; i < 6; i++) {
-          final a = math.pi / 2 + i * math.pi / 3;
-          final px = math.cos(a) * w * 1.05;
-          final py = -math.sin(a) * sz;
-          if (i == 0) {
-            path.moveTo(px, py);
-          } else {
-            path.lineTo(px, py);
-          }
-        }
-        path.close();
-        break;
+    for (var i = 0; i < 8; i++) {
+      // -π/2 から π/4 ずつ8頂点。頂点が上下左右＋対角に並ぶ配置
+      final a = -math.pi / 2 + i * math.pi / 4 + math.pi / 8;
+      final px = math.cos(a) * r;
+      final py = math.sin(a) * r;
+      if (i == 0) {
+        path.moveTo(px, py);
+      } else {
+        path.lineTo(px, py);
+      }
     }
+    path.close();
     return path;
   }
 
-  void _drawScanLine(Canvas canvas, _ScanLine sc, Size size) {
-    final localT = t - sc.delay;
-    if (localT <= 0 || localT >= sc.duration) return;
-    final lt = (localT / sc.duration).clamp(0.0, 1.0);
-    final alpha = stageAlpha(lt, fadeIn: 0.15, hold: 0.30, fadeOut: 0.55);
-    if (alpha <= 0) return;
+  // ─── 金粉（奥、常時漂う輝き）──────────────
+  void _drawDust(Canvas canvas, _GoldDust d, Size size) {
+    final localT = t - d.delay;
+    if (localT <= 0) return;
+    final lt = (localT / (1.0 - d.delay)).clamp(0.0, 1.0);
+    final fadeEnv = stageAlpha(lt, fadeIn: 0.18, hold: 0.60, fadeOut: 0.22);
+    if (fadeEnv <= 0) return;
 
-    final startY = size.height * sc.startYRatio;
-    final endY = size.height * sc.endYRatio;
-    final y = startY + (endY - startY) * easeOutCubic(lt);
+    final dr = math.sin(d.driftPhase + lt * d.driftSpeed * math.pi * 2) * d.driftAmp;
+    final dx = math.cos(d.driftAngle) * dr * size.width;
+    final dy = math.sin(d.driftAngle) * dr * size.height;
+    final pos = Offset(size.width * d.xRatio + dx, size.height * d.yRatio + dy);
 
-    final color = _hueColor(sc.hue);
+    final tw = (math.sin(d.twinklePhase + lt * d.twinkleSpeed * math.pi * 2) + 1) / 2;
+    final alpha = fadeEnv * (0.30 + tw * 0.55);
+    final color = d.warm ? _antiqueGold : _paleGold;
+    final sz = d.size * (0.8 + tw * 0.45);
 
-    // 外側グロー（厚い）
-    canvas.drawRect(
-      Rect.fromLTWH(0, y - sc.thickness * 8, size.width, sc.thickness * 16),
-      Paint()
-        ..shader = ui.Gradient.linear(
-          Offset(0, y - sc.thickness * 8), Offset(0, y + sc.thickness * 8),
-          [
-            const Color(0x00000000),
-            color.withValues(alpha: 0.35 * alpha),
-            const Color(0x00000000),
-          ],
-          [0.0, 0.5, 1.0],
-        )
-        ..blendMode = BlendMode.plus,
-    );
-
-    // 中間
-    canvas.drawRect(
-      Rect.fromLTWH(0, y - sc.thickness * 2, size.width, sc.thickness * 4),
-      Paint()
-        ..shader = ui.Gradient.linear(
-          Offset(0, y - sc.thickness * 2), Offset(0, y + sc.thickness * 2),
-          [
-            const Color(0x00000000),
-            color.withValues(alpha: 0.75 * alpha),
-            const Color(0x00000000),
-          ],
-          [0.0, 0.5, 1.0],
-        )
-        ..blendMode = BlendMode.plus,
-    );
-
-    // 白いコアライン
-    canvas.drawLine(
-      Offset(0, y), Offset(size.width, y),
-      Paint()
-        ..strokeWidth = sc.thickness * 0.7
-        ..color = Color.fromRGBO(255, 255, 255, 0.9 * alpha)
-        ..blendMode = BlendMode.plus,
-    );
-  }
-
-  void _drawSpark(Canvas canvas, _Spark sp, Size size) {
-    final lt = ((t - sp.delay) / (1.0 - sp.delay)).clamp(0.0, 1.0);
-    if (lt <= 0) return;
-    final alpha = stageAlpha(lt, fadeIn: 0.15, hold: 0.55, fadeOut: 0.30);
-    if (alpha <= 0) return;
-
-    final travel = size.height * 1.15 * sp.riseSpeed * easeOutCubic(lt);
-    final wobble = math.sin(sp.wobblePhase + lt * sp.wobbleSpeed * math.pi * 2) * sp.wobbleAmp * size.width;
-    final x = sp.spawnX * size.width + wobble;
-    final y = size.height * 1.05 - travel;
-
-    final color = Color.lerp(_electricBlue, const Color(0xFFE0FAFF), sp.hue)!;
-    final tail = sp.trailLength * size.height;
-    final tailStart = Offset(x - wobble * 0.3, y + tail);
-    final head = Offset(x, y);
-
-    canvas.drawLine(tailStart, head, Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = sp.size * 0.6
-      ..shader = ui.Gradient.linear(tailStart, head, [
-        color.withValues(alpha: 0.0),
-        color.withValues(alpha: 0.8 * alpha),
-      ], [0.0, 1.0])
-      ..blendMode = BlendMode.plus
-      ..strokeCap = StrokeCap.round);
-
-    canvas.drawCircle(head, sp.size * 2.2, Paint()
-      ..shader = ui.Gradient.radial(head, sp.size * 2.2, [
-        color.withValues(alpha: 0.85 * alpha),
-        color.withValues(alpha: 0.22 * alpha),
+    canvas.drawCircle(pos, sz * 1.6, Paint()
+      ..shader = ui.Gradient.radial(pos, sz * 1.6, [
+        color.withValues(alpha: 0.55 * alpha),
+        color.withValues(alpha: 0.18 * alpha),
         const Color(0x00000000),
       ], [0.0, 0.5, 1.0])
       ..blendMode = BlendMode.plus);
-
-    canvas.drawCircle(head, sp.size * 0.7, Paint()
-      ..color = Color.fromRGBO(255, 255, 255, alpha));
+    canvas.drawCircle(pos, sz * 0.55, Paint()
+      ..color = _ivory.withValues(alpha: alpha));
   }
 
+  // ─── スパークル（前面、常時輝き）──────────
   void _drawSparkle(Canvas canvas, _Sparkle sp, Size size) {
     final lt = ((t - sp.delay) / (1.0 - sp.delay)).clamp(0.0, 1.0);
     if (lt <= 0) return;
@@ -592,15 +725,15 @@ class _WorkPainter extends CustomPainter {
     final pos = Offset(size.width * sp.xRatio, size.height * sp.yRatio);
     final tw = (math.sin(sp.twinklePhase + lt * sp.twinkleSpeed * math.pi * 2) + 1) / 2;
     final alpha = fadeEnv * (0.35 + tw * 0.65);
-    const color = Color(0xFFE0F5FF);
+    final color = sp.hue < 0.5 ? _ivory : _paleGold;
     final size2 = sp.size * (0.7 + tw * 0.6);
 
     canvas.save();
     canvas.translate(pos.dx, pos.dy);
     canvas.drawCircle(Offset.zero, size2 * 0.7, Paint()
       ..shader = ui.Gradient.radial(Offset.zero, size2 * 0.7, [
-        color.withValues(alpha: 0.55 * alpha),
-        color.withValues(alpha: 0.18 * alpha),
+        color.withValues(alpha: 0.60 * alpha),
+        color.withValues(alpha: 0.20 * alpha),
         const Color(0x00000000),
       ], [0.0, 0.5, 1.0])
       ..blendMode = BlendMode.plus);
@@ -615,7 +748,8 @@ class _WorkPainter extends CustomPainter {
       ..quadraticBezierTo(0, size2 * 0.04, size2 * 0.5, 0)
       ..quadraticBezierTo(0, -size2 * 0.04, -size2 * 0.5, 0)
       ..close(), starPaint);
-    canvas.drawCircle(Offset.zero, size2 * 0.06, Paint()..color = Color.fromRGBO(255, 255, 255, alpha));
+    canvas.drawCircle(Offset.zero, size2 * 0.07, Paint()
+      ..color = Colors.white.withValues(alpha: alpha));
     canvas.restore();
   }
 

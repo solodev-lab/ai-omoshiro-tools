@@ -29,52 +29,36 @@ class MoneyPainterBuilder extends FortunePainterBuilder {
 
   List<_GoldPiece> _buildPieces() {
     const palettes = <_GoldPalette>[
-      // Antique gold (くすんだ古金貨)
+      // Rich gold
       _GoldPalette(
-        highlight: Color(0xFFF5DFA8), main: Color(0xFFC9A24A),
-        shadow: Color(0xFF4A3010), backside: Color(0xFF8A6820),
-        edge: Color(0xFFE8CC7A), rim: Color(0xFFE0BC6A),
+        highlight: Color(0xFFFFF8DC), main: Color(0xFFFFD700),
+        shadow: Color(0xFF6B4A08), backside: Color(0xFFB8860B),
+        edge: Color(0xFFFFFACD), rim: Color(0xFFFFE88A),
       ),
-      // Sepia gold (羊皮紙ゴールド)
+      // Warm gold
       _GoldPalette(
-        highlight: Color(0xFFEED1A0), main: Color(0xFFB08238),
-        shadow: Color(0xFF3A2408), backside: Color(0xFF6C4C18),
-        edge: Color(0xFFD8B468), rim: Color(0xFFCCA858),
+        highlight: Color(0xFFFFFACD), main: Color(0xFFE8BC3A),
+        shadow: Color(0xFF5A3E05), backside: Color(0xFF8B6914),
+        edge: Color(0xFFFFE480), rim: Color(0xFFFFCC5A),
       ),
-      // Patina (古美術の緑青がかった金)
+      // Pale gold
       _GoldPalette(
-        highlight: Color(0xFFD8E0B8), main: Color(0xFF9A9050),
-        shadow: Color(0xFF2E2E14), backside: Color(0xFF645C2E),
-        edge: Color(0xFFBAB888), rim: Color(0xFFAFAB7A),
+        highlight: Color(0xFFFFFDEE), main: Color(0xFFFFECB3),
+        shadow: Color(0xFF756509), backside: Color(0xFFD4AF37),
+        edge: Color(0xFFFFF4C6), rim: Color(0xFFFFF2A8),
       ),
-      // Bronze / brass
+      // Deep amber
       _GoldPalette(
-        highlight: Color(0xFFE8C8A0), main: Color(0xFFB07840),
-        shadow: Color(0xFF3E1E08), backside: Color(0xFF6E4822),
-        edge: Color(0xFFCF9C66), rim: Color(0xFFC68E58),
+        highlight: Color(0xFFFFE4B5), main: Color(0xFFDAA520),
+        shadow: Color(0xFF4E2D00), backside: Color(0xFF8B6914),
+        edge: Color(0xFFFFD580), rim: Color(0xFFE6B84A),
       ),
-      // Pale antique (少量、象牙金)
+      // Champagne
       _GoldPalette(
-        highlight: Color(0xFFF8EACA), main: Color(0xFFE0C078),
-        shadow: Color(0xFF4A3818), backside: Color(0xFFA88850),
-        edge: Color(0xFFEFD4A0), rim: Color(0xFFE5C890),
+        highlight: Color(0xFFFFFACD), main: Color(0xFFFFE08C),
+        shadow: Color(0xFF5C4A00), backside: Color(0xFFC9A84C),
+        edge: Color(0xFFFFF4B0), rim: Color(0xFFFFDE87),
       ),
-      // Tarnished silver (少量の銀・希少性)
-      _GoldPalette(
-        highlight: Color(0xFFE0E0DC), main: Color(0xFFA0A098),
-        shadow: Color(0xFF303038), backside: Color(0xFF60605C),
-        edge: Color(0xFFBCBCB4), rim: Color(0xFFB0B0A8),
-      ),
-    ];
-    // 刻印シンボル: 太陽・月・惑星・星・ローマ数字・錬金術。
-    // Variation Selector-15 (\uFE0E) で絵文字グリフへの置換を抑止し、
-    // serif 活字でアンティークに見せる。
-    const symbols = <String>[
-      '☉\uFE0E', '☽\uFE0E', '♄\uFE0E', '♃\uFE0E',
-      '♀\uFE0E', '♂\uFE0E', '☿\uFE0E',
-      '✶\uFE0E', '✦\uFE0E', '❋\uFE0E',
-      'I', 'V', 'X', 'M',
-      '⚭\uFE0E', '☥\uFE0E',
     ];
 
     final pieces = <_GoldPiece>[];
@@ -82,10 +66,7 @@ class MoneyPainterBuilder extends FortunePainterBuilder {
     // 事前データ生成
     for (var i = 0; i < _pieceCount; i++) {
       final spawnX = _rng.nextDouble();
-      final isCoin = _rng.nextDouble() < 0.55; // 55% コイン, 45% 金箔/羊皮紙片
-      // 銀はコインの5%にのみ
-      var paletteIdx = _rng.nextInt(palettes.length - 1);
-      if (_rng.nextDouble() < 0.05) paletteIdx = palettes.length - 1;
+      final isCoin = _rng.nextDouble() < 0.45; // 45% コイン, 55% 金箔
       pieces.add(_GoldPiece(
         spawnX: spawnX,
         targetColumn: 0, // 後で決定
@@ -96,8 +77,7 @@ class MoneyPainterBuilder extends FortunePainterBuilder {
             ? 22.0 + math.pow(_rng.nextDouble(), 1.8).toDouble() * 28.0
             : 16.0 + math.pow(_rng.nextDouble(), 1.8).toDouble() * 36.0,
         aspect: isCoin ? 0.92 + _rng.nextDouble() * 0.08 : 0.25 + _rng.nextDouble() * 0.35,
-        palette: palettes[paletteIdx],
-        symbol: symbols[_rng.nextInt(symbols.length)],
+        palette: palettes[_rng.nextInt(palettes.length)],
         spawnRotation: _rng.nextDouble() * math.pi * 2,
         fallSpin: (_rng.nextDouble() - 0.5) * 3.0,
         restRotation: (_rng.nextDouble() - 0.5) * math.pi,
@@ -178,7 +158,6 @@ class _GoldPiece {
   final bool isCoin;
   final double size, aspect;
   final _GoldPalette palette;
-  final String symbol;
   final double spawnRotation, fallSpin, restRotation;
   final double flipSpeed, flipPhase;
   final double delay, fallDuration;
@@ -187,7 +166,6 @@ class _GoldPiece {
     required this.spawnX, required this.targetColumn, required this.stackLayer,
     required this.targetXJitter, required this.isCoin,
     required this.size, required this.aspect, required this.palette,
-    required this.symbol,
     required this.spawnRotation, required this.fallSpin, required this.restRotation,
     required this.flipSpeed, required this.flipPhase,
     required this.delay, required this.fallDuration,
@@ -230,7 +208,7 @@ class _MoneyPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final diag = math.sqrt(size.width * size.width + size.height * size.height);
 
-    // 背景: 羊皮紙セピア → 深焦茶のクラシカルグラデ
+    // 背景: 上からの暖色グロー（金色の空気感）
     final bgAlpha = stageAlpha(t, fadeIn: 0.10, hold: 0.60, fadeOut: 0.30);
     if (bgAlpha > 0) {
       canvas.drawRect(Offset.zero & size, Paint()
@@ -238,16 +216,16 @@ class _MoneyPainter extends CustomPainter {
           Offset(size.width / 2, 0),
           Offset(size.width / 2, size.height),
           [
-            Color.fromRGBO(238, 210, 164, 0.40 * bgAlpha), // 羊皮紙クリームセピア
-            Color.fromRGBO(158, 100, 50, 0.28 * bgAlpha),  // 焦げ茶
-            Color.fromRGBO(60, 30, 12, 0.22 * bgAlpha),
+            Color.fromRGBO(255, 218, 140, 0.45 * bgAlpha),
+            Color.fromRGBO(180, 130, 40, 0.22 * bgAlpha),
+            Color.fromRGBO(40, 25, 5, 0.18 * bgAlpha),
             const Color(0x00000000),
           ],
-          [0.0, 0.40, 0.80, 1.0],
+          [0.0, 0.35, 0.75, 1.0],
         ));
     }
 
-    // パイルのグロー（下部に徐々に蓄積）— 落ち着いたアンバー
+    // パイルのグロー（下部に徐々に蓄積）
     final pileGlow = _pileGlowIntensity();
     if (pileGlow > 0.01) {
       final centerX = size.width * 0.5;
@@ -259,8 +237,8 @@ class _MoneyPainter extends CustomPainter {
             Offset(centerX, baseY),
             size.width * 0.75,
             [
-              Color.fromRGBO(230, 180, 90, 0.50 * pileGlow * bgAlpha),
-              Color.fromRGBO(180, 120, 50, 0.26 * pileGlow * bgAlpha),
+              Color.fromRGBO(255, 220, 130, 0.55 * pileGlow * bgAlpha),
+              Color.fromRGBO(255, 180, 80, 0.30 * pileGlow * bgAlpha),
               const Color(0x00000000),
             ],
             [0.0, 0.45, 1.0],
@@ -435,47 +413,6 @@ class _MoneyPainter extends CustomPainter {
           [0.0, 1.0],
         )
         ..blendMode = BlendMode.plus);
-
-      // 刻印シンボル（錬金術/占星術記号）— serif+VS-15 でアンティーク活字
-      if (s >= 22) {
-        final symbolFontSize = s * 0.55;
-        final engravePaint = Paint()
-          ..color = pal.shadow.withValues(alpha: 0.78 * alpha);
-        final tp = TextPainter(
-          text: TextSpan(
-            text: p.symbol,
-            style: TextStyle(
-              fontSize: symbolFontSize,
-              foreground: engravePaint,
-              height: 1.0,
-              fontFamily: 'serif',
-              fontFamilyFallback: const ['Noto Serif', 'Times New Roman', 'DejaVu Serif'],
-            ),
-          ),
-          textDirection: TextDirection.ltr,
-        );
-        tp.layout();
-        tp.paint(canvas, Offset(-tp.width / 2, -tp.height / 2 + s * 0.01));
-
-        // 刻印のハイライト（わずかに上ずらし、光り方を演出）
-        final highlightPaint = Paint()
-          ..color = pal.highlight.withValues(alpha: 0.45 * alpha);
-        final tpHl = TextPainter(
-          text: TextSpan(
-            text: p.symbol,
-            style: TextStyle(
-              fontSize: symbolFontSize,
-              foreground: highlightPaint,
-              height: 1.0,
-              fontFamily: 'serif',
-              fontFamilyFallback: const ['Noto Serif', 'Times New Roman', 'DejaVu Serif'],
-            ),
-          ),
-          textDirection: TextDirection.ltr,
-        );
-        tpHl.layout();
-        tpHl.paint(canvas, Offset(-tpHl.width / 2 - s * 0.012, -tpHl.height / 2 - s * 0.012));
-      }
     }
 
     // 外周リム（縁の起伏）

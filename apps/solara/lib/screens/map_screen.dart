@@ -4,7 +4,9 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:http/http.dart' as http;
 import 'package:latlong2/latlong.dart';
 import '../utils/solara_storage.dart';
+import '../utils/omen_phrases.dart';
 import '../widgets/dominant_fortune_overlay.dart';
+import '../widgets/omen_button.dart';
 import 'map/map_constants.dart';
 import 'map/map_styles.dart';
 import 'map/map_sectors.dart';
@@ -17,12 +19,12 @@ import 'map/map_astro.dart';
 import 'map/map_planet_lines.dart';
 
 /// 開発用フラグ: true なら日付チェックをバイパスして毎回オーバーレイを表示する。
-/// 本番では false にする。
-const bool _debugAlwaysShowOverlay = true;
+/// 本番では false。
+const bool _debugAlwaysShowOverlay = false;
 
-/// 開発用: true ならタップ毎に 5 種類の演出を順番に切り替える。
-/// （本番では false、実際のトップカテゴリで表示）
-const bool _debugCycleOverlayKinds = true;
+/// 開発用: true ならタップ毎に _debugCycleOrder の順番で演出を切り替える。
+/// 本番では false、実際のトップカテゴリで表示。
+const bool _debugCycleOverlayKinds = false;
 
 /// デバッグ循環順: 5種を通しで確認できるようにする
 const _debugCycleOrder = <DominantFortuneKind>[
@@ -94,6 +96,10 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   DominantFortuneKind? _activeOverlay;
   int _debugCycleIdx = 0;
 
+  // Daily Omen button
+  bool _omenVisible = false;
+  OmenPhrase _omenPhrase = pickRandomOmenPhrase();
+
   // Search result
   String? _searchResultName;
   LatLng? _searchResultPos;
@@ -108,6 +114,30 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     _loadMapStyle();
     // モックスコアをフォールバックとして初期化
     _sectorScores.addAll(generateMockScores(_sectorComps));
+    _checkOmenVisibility();
+  }
+
+  /// 「今日のタップボタン」表示判定。
+  /// ホロスコープ最高カテゴリが算出されていて、かつリセット時刻考慮の
+  /// 「今日」で未表示なら出す。（デバッグフラグ ON 時は常に表示）
+  Future<void> _checkOmenVisibility() async {
+    bool visible;
+    if (_debugAlwaysShowOverlay) {
+      visible = true;
+    } else {
+      if (_topCategory == null ||
+          !_implementedOverlayKinds.contains(_topCategory)) {
+        visible = false;
+      } else {
+        final shown = await SolaraStorage.wasOverlayShownToday(_overlayStorageKey);
+        visible = !shown;
+      }
+    }
+    if (!mounted) return;
+    setState(() {
+      _omenVisible = visible;
+      _omenPhrase = pickRandomOmenPhrase();
+    });
   }
 
   Future<void> _loadMapStyle() async {
@@ -160,17 +190,18 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
         _planetLines = lines;
         _topCategory = topKey != null ? kindFromKey(topKey) : null;
       });
+      // トップカテゴリが確定したので Omen ボタンの表示判定を再評価
+      await _checkOmenVisibility();
     }
   }
 
-  /// Map本体タップ時のハンドラ。1日の最初のタップで dominant fortune overlay を起動。
-  Future<void> _onMapTap() async {
-    if (_activeOverlay != null) return; // 再生中は無視
+  /// 今日のタップボタン押下時のハンドラ。
+  /// ホロスコープから得た最高スコアカテゴリの演出を起動する。
+  Future<void> _onOmenTap() async {
+    if (_activeOverlay != null) return;
 
     DominantFortuneKind? kind;
-
     if (_debugAlwaysShowOverlay && _debugCycleOverlayKinds) {
-      // デバッグ: タップ毎に 5 種類を順番に切り替え
       kind = _debugCycleOrder[_debugCycleIdx];
       _debugCycleIdx = (_debugCycleIdx + 1) % _debugCycleOrder.length;
     } else {
@@ -182,15 +213,28 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
       if (!_implementedOverlayKinds.contains(kind)) return;
     }
 
-    if (!_debugAlwaysShowOverlay) {
-      final shown = await SolaraStorage.wasOverlayShownToday(_overlayStorageKey);
-      if (shown) return;
-    }
     if (!mounted) return;
-    setState(() => _activeOverlay = kind);
+    setState(() {
+      _activeOverlay = kind;
+      _omenVisible = false;
+    });
     if (!_debugAlwaysShowOverlay) {
       await SolaraStorage.markOverlayShown(_overlayStorageKey);
     }
+  }
+
+  /// Dominant Fortune Overlay 完了時の処理。
+  /// 本番: ボタンは当日再表示しない（リセット時刻で自動的に復活）。
+  /// デバッグ: フラグ ON 時のみ再表示＋フレーズ再抽選。
+  void _onOverlayComplete() {
+    if (!mounted) return;
+    setState(() {
+      _activeOverlay = null;
+      if (_debugAlwaysShowOverlay) {
+        _omenVisible = true;
+        _omenPhrase = pickRandomOmenPhrase();
+      }
+    });
   }
 
   Future<void> _doSearch(String query) async {
@@ -255,7 +299,6 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
             backgroundColor: mapStyleConfigs[_mapStyle]!.backgroundColor,
             // HTML: long-press 600ms → rebuild(nc, fly:true)
             onLongPress: (tapPos, latlng) => _rebuild(latlng),
-            onTap: (_, _) => _onMapTap(),
           ),
           children: [
             buildStyledTileLayer(_mapStyle),
@@ -545,15 +588,18 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
           child: _buildSearchResult(),
         ),
 
-        // ── Dominant Fortune Overlay (1日の最初のタップ演出) ──
+        // ── Daily Omen Button（今日のタップボタン）──
+        if (_omenVisible && _activeOverlay == null) Positioned(
+          left: 24, right: 24, bottom: 170,
+          child: OmenButton(phrase: _omenPhrase, onTap: _onOmenTap),
+        ),
+
+        // ── Dominant Fortune Overlay ──
         if (_activeOverlay != null) Positioned.fill(
           child: DominantFortuneOverlay(
             key: ValueKey(_activeOverlay),
             kind: _activeOverlay!,
-            onComplete: () {
-              if (!mounted) return;
-              setState(() => _activeOverlay = null);
-            },
+            onComplete: _onOverlayComplete,
           ),
         ),
 
