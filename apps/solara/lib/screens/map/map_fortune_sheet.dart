@@ -129,13 +129,24 @@ class FortuneSheet extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           GestureDetector(
+            behavior: HitTestBehavior.opaque,
             onTap: onClose,
+            onVerticalDragEnd: (details) {
+              if ((details.primaryVelocity ?? 0) > 0) onClose();
+            },
+            onVerticalDragUpdate: (details) {
+              if ((details.primaryDelta ?? 0) > 8) onClose();
+            },
             child: Container(
-              width: 36, height: 4,
-              margin: const EdgeInsets.only(top: 10, bottom: 6),
-              decoration: BoxDecoration(
-                color: const Color(0x40FFFFFF),
-                borderRadius: BorderRadius.circular(2),
+              width: double.infinity,
+              padding: const EdgeInsets.only(top: 10, bottom: 6),
+              alignment: Alignment.center,
+              child: Container(
+                width: 36, height: 4,
+                decoration: BoxDecoration(
+                  color: const Color(0x40FFFFFF),
+                  borderRadius: BorderRadius.circular(2),
+                ),
               ),
             ),
           ),

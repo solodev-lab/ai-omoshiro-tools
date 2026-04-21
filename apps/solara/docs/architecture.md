@@ -207,6 +207,23 @@ Map / Galaxy も同様に SolaraStorage 経由で読み込み
 - 精度: ±2-3分
 - 機能: 新月/満月の日時算出、月齢計算、サイクルID生成
 
+### 方位スコア計算 (map/map_astro.dart `scoreAll`)
+- 入力: `ChartResult` (natal/transit/progressed 10天体 + asc/mc/dsc/ic)
+- **4種のアスペクトペアから weight で寄与計算**:
+  - `tt`（Transit×Transit）×1.0（両側加算）
+  - `tn`（Transit×Natal）×0.6 + angle bonus（ASC/DSC=1.5, MC/IC=1.3）
+  - `pn`（Progressed×Natal）×0.5 + angle bonus
+  - `tp`（Transit×Progressed）×0.4（**両側加算 — 2026-04-21 対称化**）
+- **quality → バケット分配** (`_qSplit`):
+  - soft → `Soft` 全額 / hard·tense → `Hard` 全額
+  - **neutral**（conjunction） → **Soft/Hard 半々**（2026-04-21 変更）
+- **16方位への分配** (`_cosFall`):
+  - **spread = 22.5°**（2026-04-21 30°→22.5° 変更）
+  - 16方位間隔と一致 → Σf ≡ 1.0 の partition of unity が成立
+  - Hann窓（コサイン窓）で各天体の黄経を中心にベル型分配
+- 出力: `sScores[dir]` / `sComp[dir][bucket]` / カテゴリ別 `fScores[cat][dir]` / ドミナント `sFortune[dir]`
+- 運勢方位シートの「合計/トランジット/プログレス」タブは `sComp` の4バケットからのバケット合算フィルタ
+
 ### マップタイル切替 (map/map_styles.dart)
 - 4プリセット: `osmHotLight` / `osmHotDark` / `cyclosmLight` / `cyclosmDark`
 - タイル源: OpenStreetMap Humanitarian (OSM France) + CyclOSM (OSM France)
@@ -393,15 +410,27 @@ localizationsDelegates: const [
 
 ```
 cd apps/solara
-python tools/verify_code.py
+python tools/verify_code.py           # 総合チェック（既存）
+python tools/check_file_split.py      # ファイル分割の健全性（300行 WARN / 500行 CRIT）
+python tools/check_unused.py          # map/ 配下の未使用シンボル検出
 ```
 
-チェック内容:
+### verify_code.py (総合)
 1. ファイル行数（500行超で WARN、900行超で CRIT）
 2. 未使用 import（ヒューリスティック、false-positive あり）
 3. print/debugPrint 残り
 4. TODO/FIXME/XXX
 5. 未使用 private シンボル
+
+### check_file_split.py (責務分離)
+- lib/ 全体の各ファイル行数・クラス数・import数を一覧表示
+- 300行超で WARN、500行超で CRIT を出してファイル分割判断に使う
+- 末尾に `map/` 配下のみのサマリーを出す
+
+### check_unused.py (未使用シンボル)
+- map/ 配下の public 関数・クラス・定数を lib/ 全体で grep
+- 定義ファイル以外で参照ゼロの場合「未使用候補」として報告
+- 動的解決（Map lookup等）は誤検知することに注意
 
 Flutter 標準の静的解析は `flutter analyze` で行う。
 

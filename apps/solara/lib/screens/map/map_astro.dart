@@ -105,7 +105,7 @@ double _cosFall(double dist, double spread) {
   return (1 + cos(pi * dist / spread)) / 2;
 }
 
-const _spread = 30.0;
+const _spread = 22.5;
 
 final _dir16Ang = <String, double>{
   for (int i = 0; i < dir16.length; i++) dir16[i]: i * 22.5,
@@ -121,7 +121,15 @@ const _mapAspects = [
   {'name':'opposition','angle':180.0,'orb':6.0,'quality':'hard','weight':0.8},
 ];
 
-String _qBucket(String q) => (q == 'hard' || q == 'tense') ? 'Hard' : 'Soft';
+/// weight を quality に応じて (Soft, Hard) に分配する
+/// - soft → 全額Soft
+/// - hard / tense → 全額Hard
+/// - neutral → Soft/Hard に半々
+(double, double) _qSplit(String q, double w) {
+  if (q == 'hard' || q == 'tense') return (0.0, w);
+  if (q == 'soft') return (w, 0.0);
+  return (w / 2, w / 2);
+}
 
 const _fortunePairs = <String, List<List<String>>>{
   'healing': [['moon','neptune'],['moon','venus'],['sun','neptune']],
@@ -197,28 +205,36 @@ ScoreResult scoreAll(ChartResult chart) {
     return _angleBonus[ak] ?? 1.0;
   }
 
+  void addT(String planet, String q, double amt) {
+    if (!tComp.containsKey(planet)) return;
+    final (s, h) = _qSplit(q, amt);
+    tComp[planet]!['tSoft'] = tComp[planet]!['tSoft']! + s;
+    tComp[planet]!['tHard'] = tComp[planet]!['tHard']! + h;
+  }
+  void addP(String planet, String q, double amt) {
+    if (!pComp.containsKey(planet)) return;
+    final (s, h) = _qSplit(q, amt);
+    pComp[planet]!['pSoft'] = pComp[planet]!['pSoft']! + s;
+    pComp[planet]!['pHard'] = pComp[planet]!['pHard']! + h;
+  }
+
   for (final a in tt) {
-    final b = 't${_qBucket(a['quality'])}';
-    tComp[a['p1']]?[b] = (tComp[a['p1']]?[b] ?? 0) + (a['weight'] as double);
-    tComp[a['p2']]?[b] = (tComp[a['p2']]?[b] ?? 0) + (a['weight'] as double);
+    final q = a['quality'] as String;
+    final w = a['weight'] as double;
+    addT(a['p1'] as String, q, w);
+    addT(a['p2'] as String, q, w);
   }
   for (final a in tn) {
-    if (tComp.containsKey(a['p1'])) {
-      final b = 't${_qBucket(a['quality'])}';
-      tComp[a['p1']]![b] = (tComp[a['p1']]![b] ?? 0) + (a['weight'] as double) * getAB(a['p2']);
-    }
+    addT(a['p1'] as String, a['quality'] as String, (a['weight'] as double) * getAB(a['p2'] as String));
   }
   for (final a in pn) {
-    if (pComp.containsKey(a['p1'])) {
-      final b = 'p${_qBucket(a['quality'])}';
-      pComp[a['p1']]![b] = (pComp[a['p1']]![b] ?? 0) + (a['weight'] as double) * getAB(a['p2']);
-    }
+    addP(a['p1'] as String, a['quality'] as String, (a['weight'] as double) * getAB(a['p2'] as String));
   }
   for (final a in tp) {
-    if (tComp.containsKey(a['p1'])) {
-      final b = 't${_qBucket(a['quality'])}';
-      tComp[a['p1']]![b] = (tComp[a['p1']]![b] ?? 0) + (a['weight'] as double);
-    }
+    final q = a['quality'] as String;
+    final w = a['weight'] as double;
+    addT(a['p1'] as String, q, w);
+    addP((a['p2'] as String).replaceFirst('P:', ''), q, w);
   }
 
   // Spread to 16 directions
@@ -272,19 +288,46 @@ ScoreResult scoreAll(ChartResult chart) {
     final ctc = <String, Map<String, double>>{for (final p in cp) p: _emptyComp()};
     final cpc = <String, Map<String, double>>{for (final p in cp) p: _emptyComp()};
 
+    void addCT(String planet, String q, double amt) {
+      if (!ctc.containsKey(planet)) return;
+      final (s, h) = _qSplit(q, amt);
+      ctc[planet]!['tSoft'] = ctc[planet]!['tSoft']! + s;
+      ctc[planet]!['tHard'] = ctc[planet]!['tHard']! + h;
+    }
+    void addCP(String planet, String q, double amt) {
+      if (!cpc.containsKey(planet)) return;
+      final (s, h) = _qSplit(q, amt);
+      cpc[planet]!['pSoft'] = cpc[planet]!['pSoft']! + s;
+      cpc[planet]!['pHard'] = cpc[planet]!['pHard']! + h;
+    }
+
     for (final a in tt) {
       final i1 = cp.contains(a['p1']), i2 = cp.contains(a['p2']);
       if (!i1 && !i2) continue;
       final pm = pairs.any((pr) =>
         (a['p1'] == pr[0] && a['p2'] == pr[1]) || (a['p1'] == pr[1] && a['p2'] == pr[0])
       ) ? 2.0 : 0.5;
-      final b = 't${_qBucket(a['quality'])}';
-      if (i1) ctc[a['p1']]![b] = ctc[a['p1']]![b]! + (a['weight'] as double) * pm;
-      if (i2) ctc[a['p2']]![b] = ctc[a['p2']]![b]! + (a['weight'] as double) * pm;
+      final amt = (a['weight'] as double) * pm;
+      final q = a['quality'] as String;
+      if (i1) addCT(a['p1'] as String, q, amt);
+      if (i2) addCT(a['p2'] as String, q, amt);
     }
-    for (final a in tn) { if (!cp.contains(a['p1'])) continue; ctc[a['p1']]!['t${_qBucket(a['quality'])}'] = ctc[a['p1']]!['t${_qBucket(a['quality'])}']! + (a['weight'] as double) * 0.5; }
-    for (final a in pn) { final p1 = a['p1'] as String; if (!cp.contains(p1) || !cpc.containsKey(p1)) continue; cpc[p1]!['p${_qBucket(a['quality'])}'] = cpc[p1]!['p${_qBucket(a['quality'])}']! + (a['weight'] as double) * 0.5; }
-    for (final a in tp) { if (!cp.contains(a['p1'])) continue; ctc[a['p1']]!['t${_qBucket(a['quality'])}'] = ctc[a['p1']]!['t${_qBucket(a['quality'])}']! + (a['weight'] as double) * 0.5; }
+    for (final a in tn) {
+      if (!cp.contains(a['p1'])) continue;
+      addCT(a['p1'] as String, a['quality'] as String, (a['weight'] as double) * 0.5);
+    }
+    for (final a in pn) {
+      if (!cp.contains(a['p1'])) continue;
+      addCP(a['p1'] as String, a['quality'] as String, (a['weight'] as double) * 0.5);
+    }
+    for (final a in tp) {
+      final p1 = a['p1'] as String;
+      final p2 = (a['p2'] as String).replaceFirst('P:', '');
+      final amt = (a['weight'] as double) * 0.5;
+      final q = a['quality'] as String;
+      if (cp.contains(p1)) addCT(p1, q, amt);
+      if (cp.contains(p2)) addCP(p2, q, amt);
+    }
 
     for (final p in cp) {
       if (tA.containsKey(p)) {
