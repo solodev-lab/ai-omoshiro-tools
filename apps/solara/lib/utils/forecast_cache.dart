@@ -79,10 +79,16 @@ String profileHashOf(SolaraProfile p) {
 const _cooldownHours = 6;
 
 class ForecastRepo {
+  /// yearOffset 0=今日起点の1年、1=翌年、2=翌々年...最大4（5年目）
+  static String _cKey(String hash, int yearOffset) =>
+      yearOffset == 0 ? '$_cacheKeyPrefix$hash' : '$_cacheKeyPrefix${hash}_y$yearOffset';
+  static String _coolKey(String hash, int yearOffset) =>
+      yearOffset == 0 ? '${_cooldownKey}_$hash' : '${_cooldownKey}_${hash}_y$yearOffset';
+
   /// キャッシュから読み込む（profileHash が一致する場合のみ有効）
-  static Future<ForecastCache?> loadCached(String profileHash) async {
+  static Future<ForecastCache?> loadCached(String profileHash, {int yearOffset = 0}) async {
     final prefs = await SharedPreferences.getInstance();
-    final raw = prefs.getString('$_cacheKeyPrefix$profileHash');
+    final raw = prefs.getString(_cKey(profileHash, yearOffset));
     if (raw == null) return null;
     try {
       return ForecastCache.fromJson(json.decode(raw) as Map<String, dynamic>);
@@ -91,10 +97,10 @@ class ForecastRepo {
     }
   }
 
-  /// クールダウン残時間（0ならfetch可）
-  static Future<Duration> cooldownRemaining(String profileHash) async {
+  /// クールダウン残時間（0ならfetch可）。年オフセットごとに独立。
+  static Future<Duration> cooldownRemaining(String profileHash, {int yearOffset = 0}) async {
     final prefs = await SharedPreferences.getInstance();
-    final raw = prefs.getString('${_cooldownKey}_$profileHash');
+    final raw = prefs.getString(_coolKey(profileHash, yearOffset));
     if (raw == null) return Duration.zero;
     final last = DateTime.tryParse(raw);
     if (last == null) return Duration.zero;
@@ -104,32 +110,42 @@ class ForecastRepo {
     return cooldown - elapsed;
   }
 
-  static Future<void> _saveCache(ForecastCache cache) async {
+  static Future<void> _saveCache(ForecastCache cache, {int yearOffset = 0}) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('$_cacheKeyPrefix${cache.profileHash}', json.encode(cache.toJson()));
+    await prefs.setString(_cKey(cache.profileHash, yearOffset), json.encode(cache.toJson()));
   }
 
-  static Future<void> _markFetched(String profileHash) async {
+  static Future<void> _markFetched(String profileHash, {int yearOffset = 0}) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('${_cooldownKey}_$profileHash', DateTime.now().toIso8601String());
+    await prefs.setString(_coolKey(profileHash, yearOffset), DateTime.now().toIso8601String());
   }
 
   /// Worker /astro/forecast を呼び出して全365日取得。
   /// 強制キャッシュ無効化時は force=true で cooldown を無視する。
+  /// yearOffset: 0=今日から1年、1=翌年、2=翌々年...4=5年目
+  /// - yearOffset>0 で startDate 未指定時は today+yearOffset*365 を自動設定
+  /// - キャッシュは yearOffset ごとに独立
+  /// - API呼び出しは yearOffset ごとに1回のみ（複数年一括フェッチはしない）
   static Future<ForecastCache?> fetchFull({
     required SolaraProfile profile,
     String? startDate,
     int days = 365,
     int step = 1,
     bool force = false,
+    int yearOffset = 0,
   }) async {
     final hash = profileHashOf(profile);
     if (!force) {
-      final rem = await cooldownRemaining(hash);
+      final rem = await cooldownRemaining(hash, yearOffset: yearOffset);
       if (rem > Duration.zero) {
-        final cached = await loadCached(hash);
+        final cached = await loadCached(hash, yearOffset: yearOffset);
         if (cached != null) return cached;
       }
+    }
+    // yearOffset>0 で startDate 未指定なら today+N*365日を自動セット
+    if (yearOffset > 0 && startDate == null) {
+      final start = DateTime.now().add(Duration(days: yearOffset * 365));
+      startDate = '${start.year.toString().padLeft(4, "0")}-${start.month.toString().padLeft(2, "0")}-${start.day.toString().padLeft(2, "0")}';
     }
 
     try {
@@ -161,17 +177,17 @@ class ForecastRepo {
           fetchedAt: DateTime.now(),
           days: list,
         );
-        await _saveCache(cache);
-        await _markFetched(hash);
+        await _saveCache(cache, yearOffset: yearOffset);
+        await _markFetched(hash, yearOffset: yearOffset);
         return cache;
       }
       // 429: quota exceeded — 既存キャッシュがあれば返す
       if (resp.statusCode == 429) {
-        return await loadCached(hash);
+        return await loadCached(hash, yearOffset: yearOffset);
       }
     } catch (_) {
       // ネットワーク失敗 — 既存キャッシュがあれば返す
-      return await loadCached(hash);
+      return await loadCached(hash, yearOffset: yearOffset);
     }
     return null;
   }

@@ -39,6 +39,10 @@ class _ForecastScreenState extends State<ForecastScreen> {
   /// Top5 の並べ替え基準: 'overall' | 'love' | 'money' | 'healing' | 'work' | 'communication'
   String _top5Mode = 'overall';
 
+  /// 年オフセット（0=今日から1年、1=翌年、2=翌々年...4=5年目）— 実験用。
+  /// 切替時のみ Worker を1回呼び、他年は lazy。一括フェッチはしない。
+  int _yearOffset = 0;
+
   @override
   void initState() {
     super.initState();
@@ -72,22 +76,42 @@ class _ForecastScreenState extends State<ForecastScreen> {
       return;
     }
     _profile = p;
-    final cache = forceRefresh
-        ? await ForecastRepo.fetchFull(profile: p, force: true)
-        : await ForecastRepo.refreshIncremental(profile: p);
+    // yearOffset=0 は差分更新対応、>0 は単純フェッチ（未来のデータなので増分の概念なし）
+    final ForecastCache? cache;
+    if (_yearOffset == 0) {
+      cache = forceRefresh
+          ? await ForecastRepo.fetchFull(profile: p, force: true)
+          : await ForecastRepo.refreshIncremental(profile: p);
+    } else {
+      cache = await ForecastRepo.fetchFull(
+        profile: p,
+        force: forceRefresh,
+        yearOffset: _yearOffset,
+      );
+    }
     if (!mounted) return;
     setState(() {
       _cache = cache;
       _loading = false;
       _errorMsg = cache == null ? 'Forecast の取得に失敗しました。ネットワーク接続を確認してください。' : null;
-      // 初期選択: 今日
+      // 初期選択: 先頭の日
       _selected = cache != null && cache.days.isNotEmpty ? cache.days.first : null;
     });
   }
 
+  Future<void> _setYearOffset(int offset) async {
+    if (_yearOffset == offset) return;
+    setState(() => _yearOffset = offset);
+    // 切替時のみ1回フェッチ（キャッシュがあれば API 呼び出しなし）
+    await _load();
+  }
+
   Future<void> _forceRefresh() async {
     if (_profile == null) return;
-    final rem = await ForecastRepo.cooldownRemaining(profileHashOf(_profile!));
+    final rem = await ForecastRepo.cooldownRemaining(
+      profileHashOf(_profile!),
+      yearOffset: _yearOffset,
+    );
     if (rem > Duration.zero) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -168,6 +192,8 @@ class _ForecastScreenState extends State<ForecastScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         _buildBaseLocation(),
+        const SizedBox(height: 12),
+        _buildYearSelector(),
         const SizedBox(height: 14),
         _buildHeatmap(c.days),
         const SizedBox(height: 18),
@@ -236,6 +262,63 @@ class _ForecastScreenState extends State<ForecastScreen> {
           ],
         )),
       ]),
+    );
+  }
+
+  /// 年セレクター（実験用）— 1年目〜5年目を選択。
+  /// 切替時のみその年のデータを Worker から取得する。キャッシュは年別に独立。
+  Widget _buildYearSelector() {
+    final now = DateTime.now();
+    final start = now.add(Duration(days: _yearOffset * 365));
+    final end = start.add(const Duration(days: 364));
+    final startLabel = '${start.year}/${start.month.toString().padLeft(2, "0")}/${start.day.toString().padLeft(2, "0")}';
+    final endLabel = '${end.year}/${end.month.toString().padLeft(2, "0")}/${end.day.toString().padLeft(2, "0")}';
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+      decoration: BoxDecoration(
+        color: const Color(0x14FFFFFF),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: const Color(0x22C9A84C)),
+      ),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Row(children: [
+          const Text('🧪 年範囲（実験）',
+              style: TextStyle(fontSize: 9, color: Color(0xFF888888), letterSpacing: 1)),
+          const Spacer(),
+          Text('$startLabel 〜 $endLabel',
+              style: const TextStyle(fontSize: 9, color: Color(0xFF999999))),
+        ]),
+        const SizedBox(height: 6),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(children: [
+            for (int i = 0; i < 5; i++) _yearSeg(i),
+          ]),
+        ),
+      ]),
+    );
+  }
+
+  Widget _yearSeg(int offset) {
+    final active = _yearOffset == offset;
+    return GestureDetector(
+      onTap: _loading ? null : () => _setYearOffset(offset),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        margin: const EdgeInsets.only(right: 5),
+        decoration: BoxDecoration(
+          color: active ? const Color(0x33C9A84C) : const Color(0x14FFFFFF),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: active ? const Color(0xFFC9A84C) : const Color(0x22FFFFFF)),
+        ),
+        child: Text('${offset + 1}年目',
+            style: TextStyle(
+              fontSize: 10,
+              color: active ? const Color(0xFFC9A84C) : const Color(0xFF888888),
+              fontWeight: active ? FontWeight.w600 : FontWeight.normal,
+            )),
+      ),
     );
   }
 
