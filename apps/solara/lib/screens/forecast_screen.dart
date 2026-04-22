@@ -274,25 +274,37 @@ class _ForecastScreenState extends State<ForecastScreen> {
   }
 
   /// 3-way セグメント: 相対 / 絶対 / カテゴリ（＋ 色方向トグル）
+  /// 色方向トグルは常に表示（位置固定のため）。category モード時は無効化。
   Widget _buildColorModeToggle() {
+    final toggleDisabled = _colorMode == 'category';
     return Row(mainAxisSize: MainAxisSize.min, children: [
       _segment('相対', 'relative'),
       _segment('絶対', 'absolute'),
       _segment('カテゴリ', 'category'),
-      if (_colorMode != 'category') Padding(
+      Padding(
         padding: const EdgeInsets.only(left: 6),
         child: GestureDetector(
-          onTap: () => _setHighColor(_highColor == 'green' ? 'red' : 'green'),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-            decoration: BoxDecoration(
-              color: const Color(0x14FFFFFF),
-              borderRadius: BorderRadius.circular(6),
-              border: Border.all(color: const Color(0x33C9A84C)),
-            ),
-            child: Text(
-              _highColor == 'green' ? '🟢↑高' : '🔴↑高',
-              style: const TextStyle(fontSize: 9, color: Color(0xFFE8E0D0)),
+          onTap: toggleDisabled
+              ? null
+              : () => _setHighColor(_highColor == 'green' ? 'red' : 'green'),
+          child: Opacity(
+            opacity: toggleDisabled ? 0.35 : 1.0,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+              decoration: BoxDecoration(
+                color: toggleDisabled ? const Color(0x08FFFFFF) : const Color(0x14FFFFFF),
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(
+                  color: toggleDisabled ? const Color(0x22FFFFFF) : const Color(0x33C9A84C),
+                ),
+              ),
+              child: Text(
+                _highColor == 'green' ? '🟢↑高' : '🔴↑高',
+                style: TextStyle(
+                  fontSize: 9,
+                  color: toggleDisabled ? const Color(0xFF666666) : const Color(0xFFE8E0D0),
+                ),
+              ),
             ),
           ),
         ),
