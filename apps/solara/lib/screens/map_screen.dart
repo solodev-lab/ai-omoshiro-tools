@@ -100,6 +100,11 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   DateTime? _selectedDate;
   bool _loadingChart = false;
 
+  /// 初回ロードで _center を出生地に揃える用のフラグ。
+  /// 2回目以降の _loadProfileAndChart 呼び出し（日付変更・Forecastジャンプ等）では
+  /// ユーザーが選んだ VP / 手動中心を保持する。
+  bool _hasInitialCenter = false;
+
   // Dominant fortune overlay
   DominantFortuneKind? _topCategory;
   DominantFortuneKind? _activeOverlay;
@@ -167,7 +172,22 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     _profile = p;
     if (mounted) {
       setState(() {
-        _center = LatLng(p.birthLat, p.birthLng);
+        // 初回のみ _center を出生地に設定。日付変更等の再計算では
+        // ユーザーが選んだ VP / 手動中心を保持する。
+        if (!_hasInitialCenter) {
+          _center = LatLng(p.birthLat, p.birthLng);
+          _hasInitialCenter = true;
+          // FlutterMap 初期化後にカメラを出生地へ移動
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              try {
+                _mapCtrl.move(_center, _mapCtrl.camera.zoom);
+              } catch (_) {
+                // MapController が未接続の場合は無視（次回 rebuild で追従）
+              }
+            }
+          });
+        }
         _loadingChart = true;
       });
     }
@@ -430,7 +450,18 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     });
   }
 
-  Color get _sectorColor => categoryColors[_activeCategory] ?? const Color(0xFFC9A84C);
+  Color get _sectorColor {
+    final base = categoryColors[_activeCategory] ?? const Color(0xFFC9A84C);
+    final isDark = mapStyleConfigs[_mapStyle]?.dark ?? true;
+    if (isDark) return base;
+    // 明るい地図（OSM Light/Cycle Light）はパステル色が埋もれるため、
+    // 明度を下げ彩度を上げて視認性を確保する。
+    final hsl = HSLColor.fromColor(base);
+    return hsl
+        .withLightness((hsl.lightness * 0.45).clamp(0.0, 0.55))
+        .withSaturation((hsl.saturation * 1.2).clamp(0.0, 1.0))
+        .toColor();
+  }
 
   /// カテゴリ × ソース（transit/progressed/combined）に応じた
   /// 16方位スコアを算出する。セクター描画・FortuneFilterLabel 共通利用。
@@ -508,6 +539,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
               sectorScores: _displayScores(),
               sectorColor: _sectorColor,
               visible: _layers['sectors']!,
+              lightMap: !(mapStyleConfigs[_mapStyle]?.dark ?? true),
             )),
             PolylineLayer(polylines: buildCompass(center: _center, visible: _layers['compass']!)),
             // HTML: addPlanetLines() — natal/progressed/transit 天体ライン

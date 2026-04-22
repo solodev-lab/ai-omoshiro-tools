@@ -16,11 +16,15 @@ String sectorType(String dir, Map<String, double> sectorScores) {
 
 /// HTML: scoreToStyle — 16方位セクターのポリゴンを生成
 /// 参考: mockup/index.html L1875-1895（R=20000km、nPolar/sPolar で極域距離制限）
+///
+/// lightMap=true の時は明るい地図（OSM Light等）用に、塗り alpha と
+/// ボーダー alpha を少し上げて、薄い地色にも負けないようにする。
 List<Polygon> buildSectors({
   required LatLng center,
   required Map<String, double> sectorScores,
   required Color sectorColor,
   required bool visible,
+  bool lightMap = false,
 }) {
   if (!visible) return [];
   final polygons = <Polygon>[];
@@ -69,16 +73,21 @@ List<Polygon> buildSectors({
     Color fillColor;
     Color borderColor;
     double borderWidth;
+    // lightMap の時は alpha を上げて明るい地色に対するコントラストを確保
+    final strongFillA = lightMap ? 140 : 102;
+    final strongBorderA = lightMap ? 240 : 217;
+    final weakFillA = lightMap ? 80 : 51;
+    final weakBorderA = lightMap ? 180 : 128;
     switch (type) {
       case 'strong':
-        fillColor = sectorColor.withAlpha(102);
-        borderColor = sectorColor.withAlpha(217);
-        borderWidth = 3;
+        fillColor = sectorColor.withAlpha(strongFillA);
+        borderColor = sectorColor.withAlpha(strongBorderA);
+        borderWidth = lightMap ? 3.5 : 3;
         break;
       case 'weak':
-        fillColor = sectorColor.withAlpha(51);
-        borderColor = sectorColor.withAlpha(128);
-        borderWidth = 2;
+        fillColor = sectorColor.withAlpha(weakFillA);
+        borderColor = sectorColor.withAlpha(weakBorderA);
+        borderWidth = lightMap ? 2.5 : 2;
         break;
       default:
         // top 2 以外は視覚的にブレンドしないよう完全透明。
