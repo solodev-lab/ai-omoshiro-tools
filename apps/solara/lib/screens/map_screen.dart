@@ -213,9 +213,37 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
       });
       // トップカテゴリが確定したので Omen ボタンの表示判定を再評価
       await _checkOmenVisibility();
+      // 検索結果が残っていれば、新しい日付のスコアで再注入
+      _reannotateSearchResults();
     } else {
       if (mounted) setState(() => _loadingChart = false);
     }
+  }
+
+  /// 既存の検索結果（リスト + フォーカス1件）に、現在の中心・日付・カテゴリ・ソース
+  /// で算出したスコアを再注入する。日付ピッカー・VP切替・カテゴリ切替から呼ぶ。
+  void _reannotateSearchResults() {
+    final hasHits = _searchHits.isNotEmpty;
+    final hasFocus = _searchFocus != null;
+    if (!hasHits && !hasFocus) return;
+    final scores = _displayScores();
+    if (hasHits) {
+      annotateHitsWithScores(
+        hits: _searchHits,
+        center: _center,
+        sectorScores: scores,
+        scoreResult: _scoreResult,
+      );
+    }
+    if (hasFocus) {
+      annotateHitsWithScores(
+        hits: [_searchFocus!],
+        center: _center,
+        sectorScores: scores,
+        scoreResult: _scoreResult,
+      );
+    }
+    if (mounted) setState(() {});
   }
 
   /// 日付ピッカー表示。選択されたら該当日の transit/progressed で再計算する。
@@ -418,6 +446,8 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
         _planetLines = buildPlanetLineData(center: newCenter, chart: _chartResult!);
       }
     });
+    // 中心が変われば検索結果の方位/距離/スコアも変わる
+    _reannotateSearchResults();
   }
 
   /// HTML: vpGeo() — GPS現在地に移動（geolocatorパッケージ未導入のため仮実装）
@@ -494,6 +524,8 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                 onPanEnd: (_) {
                   // HTML: vpPin.on('dragend') → rebuild — スコアはAPIベースなので再計算不要、UI更新のみ
                   setState(() {});
+                  // 中心が動いたので検索結果の方位/距離/スコアを再注入
+                  _reannotateSearchResults();
                 },
                 child: Container(
                   width: 20, height: 20,
@@ -684,7 +716,10 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
             mapStyle: _mapStyle,
             onLayerToggle: (k) => setState(() => _layers[k] = !(_layers[k] ?? false)),
             onPlanetGroupToggle: (k) => setState(() => _planetGroups[k] = !(_planetGroups[k] ?? false)),
-            onCategoryChanged: (k) => setState(() => _activeCategory = k),
+            onCategoryChanged: (k) {
+              setState(() => _activeCategory = k);
+              _reannotateSearchResults();
+            },
             onMapStyleChanged: _onMapStyleChanged,
           ),
         ),
@@ -740,8 +775,14 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
             sectorComps: _activeCategory == 'all'
                 ? _sectorComps
                 : (_fComps[_activeCategory] ?? _sectorComps),
-            onSrcChanged: (s) => setState(() => _activeSrc = s),
-            onCatChanged: (c) => setState(() => _activeCategory = c),
+            onSrcChanged: (s) {
+              setState(() => _activeSrc = s);
+              _reannotateSearchResults();
+            },
+            onCatChanged: (c) {
+              setState(() => _activeCategory = c);
+              _reannotateSearchResults();
+            },
             onClose: () => setState(() => _fortuneSheetOpen = false),
           ),
         ),
