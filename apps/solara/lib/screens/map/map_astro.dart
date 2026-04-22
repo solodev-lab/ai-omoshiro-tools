@@ -10,8 +10,9 @@ import 'map_constants.dart';
 ///   サーバーサイド計算（CF Worker + astronomy-engine.js）
 /// ============================================================
 
-// TODO: デプロイ後に実URLに差し替え
-const _astroApiUrl = 'https://solara-api.solodev-lab.workers.dev/astro/chart';
+// Solara専用 Worker URL（カスタムドメイン経由）
+// wrangler.toml: solara-api.solodev-lab.com（src/index.js）
+const _astroApiUrl = 'https://solara-api.solodev-lab.com/astro/chart';
 
 /// CF Worker /astro/chart のレスポンス
 class ChartResult {
@@ -60,7 +61,7 @@ Future<ChartResult?> fetchChart({
   required double birthLng,
   int birthTz = 9,
   String? birthTzName,
-  String mode = 'transit', // 'natal' | 'transit' | 'progressed'
+  String mode = 'both', // 'natal' | 'transit' | 'progressed' | 'both'
   String houseSystem = 'placidus',
 }) async {
   try {

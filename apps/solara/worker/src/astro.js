@@ -396,29 +396,38 @@ export function computeChart(params) {
   const houses = calcHouses(mc, asc, birthLat, obliquity, houseSystem)
     .map(h => Math.round(h * 100) / 100);
 
-  let secondary = null;
-  let secondaryKeyed = null;
+  // mode: 'natal' | 'transit' | 'progressed' | 'both'
+  // 'both' は Map画面用に transit と progressed を同時取得する
+  let transitArr = null, transitKeyed = null;
+  let progressedArr = null, progressedKeyed = null;
   if (mode !== 'natal' && transitDate) {
     const tDate = new Date(transitDate);
-    if (mode === 'transit') {
-      secondary = calcAllPlanets(tDate);
-      secondaryKeyed = calcAllPlanetsKeyed(tDate);
-    } else if (mode === 'progressed') {
+    if (mode === 'transit' || mode === 'both') {
+      transitArr = calcAllPlanets(tDate);
+      transitKeyed = calcAllPlanetsKeyed(tDate);
+    }
+    if (mode === 'progressed' || mode === 'both') {
       const pDate = calcProgressedDate(birth, tDate);
-      secondary = calcAllPlanets(pDate);
-      secondaryKeyed = calcAllPlanetsKeyed(pDate);
+      progressedArr = calcAllPlanets(pDate);
+      progressedKeyed = calcAllPlanetsKeyed(pDate);
     }
   }
+  // 旧ロジック互換: secondary は aspects/patterns 計算に使う「主対象」
+  const secondary = transitArr || progressedArr;
 
   // Aspects
   let aspects = collectAspects(natal, natal, false, 'N-N', orbs);
-  if (secondary) {
-    const crossLabel = mode === 'transit' ? 'N-T' : 'N-P';
-    aspects = aspects.concat(collectAspects(natal, secondary, true, crossLabel, orbs));
+  if (transitArr) {
+    aspects = aspects.concat(collectAspects(natal, transitArr, true, 'N-T', orbs));
+  }
+  if (progressedArr && mode !== 'both') {
+    // 'both' の場合は transit との aspect だけで十分（Map画面用途）
+    aspects = aspects.concat(collectAspects(natal, progressedArr, true, 'N-P', orbs));
   }
 
   // Patterns
-  const patterns = detectPatterns(natal, secondary, mode, patternOrbs);
+  const patternMode = (mode === 'both') ? 'transit' : mode;
+  const patterns = detectPatterns(natal, secondary, patternMode, patternOrbs);
 
   const result = {
     natal: natalKeyed,
@@ -432,9 +441,8 @@ export function computeChart(params) {
     patterns
   };
 
-  if (secondaryKeyed) {
-    result[mode] = secondaryKeyed;
-  }
+  if (transitKeyed) result.transit = transitKeyed;
+  if (progressedKeyed) result.progressed = progressedKeyed;
 
   return result;
 }

@@ -78,11 +78,21 @@
 - **URL**: `https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}.png`
 - **用途**: Map画面のベースマップ
 
-### Cloudflare Worker（未接続）
-- **状態**: Worker側は存在するが、FlutterアプリからのAPI呼び出しは未実装
-- **Worker場所**: `worker/` ディレクトリ
-- **機能**: Gemini API による占い文生成、Google Places 検索
-- **TODO**: 星読み（Horoscope）のFortune APIをWorker経由で接続する
+### Cloudflare Worker `solara-api`
+- **URL**: `https://solara-api.solodev-lab.com`（カスタムドメイン）
+- **Worker場所**: `apps/solara/worker/`（`wrangler.toml`, `src/index.js`）
+- **稼働エンドポイント**:
+  - `GET /health` — 死活監視
+  - `POST /astro/chart` — 天体計算（natal/transit/progressed + ASC/MC/アスペクト）
+    - `mode`: `'natal' | 'transit' | 'progressed' | 'both'`（`'both'` は Map画面用に同時取得）
+  - `POST /astro/predict` — 60日アスペクト予測
+  - `GET /astro/events?year=&month=` — ingress/逆行/食イベント
+  - `GET /tz?lat=&lng=` — タイムゾーン解決
+  - `GET /search?q=` — 場所検索（Nominatim→Google Places フォールバック）
+  - `POST /fortune` — Gemini による占い文生成
+- **Flutter 接続状況**:
+  - Map画面: `/astro/chart`（mode='both'）接続済、scoreAll() で16方位スコア計算
+  - 他画面: 順次接続予定
 
 ---
 

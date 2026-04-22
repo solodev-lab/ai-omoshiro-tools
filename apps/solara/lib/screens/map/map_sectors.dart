@@ -15,6 +15,7 @@ String sectorType(String dir, Map<String, double> sectorScores) {
 }
 
 /// HTML: scoreToStyle — 16方位セクターのポリゴンを生成
+/// 参考: mockup/index.html L1875-1895（R=20000km、nPolar/sPolar で極域距離制限）
 List<Polygon> buildSectors({
   required LatLng center,
   required Map<String, double> sectorScores,
@@ -24,30 +25,44 @@ List<Polygon> buildSectors({
   if (!visible) return [];
   final polygons = <Polygon>[];
   const d = Distance();
-  const maxDist = 20000000.0;
+  const maxDist = 20000000.0; // 20,000 km（HTMLと同じ）
   const radialSteps = 30;
   const arcSteps = 30;
+  const sectorWidth = 22.5; // HTMLと同じ 22.5° 分割
+
+  // HTML: nPolar = max(500, (90-lat)*111.32 - 200)  — 北極到達を避ける距離制限
+  //       sPolar = max(500, (90+lat)*111.32 - 200)
+  // 単位はkm → メートルに変換
+  final lat = center.latitude;
+  final nPolarM = ((90 - lat) * 111.32 - 200).clamp(500.0, 20000.0) * 1000.0;
+  final sPolarM = ((90 + lat) * 111.32 - 200).clamp(500.0, 20000.0) * 1000.0;
 
   for (int i = 0; i < dir16.length; i++) {
     final dir = dir16[i];
-    final startDeg = i * 22.5 - 11.25;
+    final centerDeg = i * 22.5;
+    final startDeg = centerDeg - sectorWidth / 2;
     final adjustedStart = startDeg < 0 ? startDeg + 360 : startDeg;
     final s = adjustedStart;
-    final e2 = s + 22.5;
+    final e2 = s + sectorWidth;
+
+    // HTML: N/S方向は極域近くまでしか描画しない（ポリゴン破綻防止）
+    double radius = maxDist;
+    if (dir == 'N') radius = nPolarM < maxDist ? nPolarM : maxDist;
+    if (dir == 'S') radius = sPolarM < maxDist ? sPolarM : maxDist;
 
     final type = sectorType(dir, sectorScores);
     final points = <LatLng>[];
 
     for (int step = 0; step <= radialSteps; step++) {
-      final dist = maxDist * step / radialSteps;
+      final dist = radius * step / radialSteps;
       points.add(d.offset(center, dist, s % 360));
     }
     for (int step = 1; step <= arcSteps; step++) {
       final a = s + (e2 - s) * step / arcSteps;
-      points.add(d.offset(center, maxDist, a % 360));
+      points.add(d.offset(center, radius, a % 360));
     }
     for (int step = radialSteps; step >= 0; step--) {
-      final dist = maxDist * step / radialSteps;
+      final dist = radius * step / radialSteps;
       points.add(d.offset(center, dist, e2 % 360));
     }
 
@@ -66,10 +81,11 @@ List<Polygon> buildSectors({
         borderWidth = 2;
         break;
       default:
-        // 16方位すべて見えるよう薄く表示
-        fillColor = sectorColor.withAlpha(15);
-        borderColor = sectorColor.withAlpha(40);
-        borderWidth = 0.5;
+        // top 2 以外は視覚的にブレンドしないよう完全透明。
+        // 16方位の境界は compass ライン（別レイヤー）で把握できる。
+        fillColor = const Color(0x00000000);
+        borderColor = const Color(0x00000000);
+        borderWidth = 0;
     }
 
     polygons.add(Polygon(

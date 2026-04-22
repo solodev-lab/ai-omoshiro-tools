@@ -84,8 +84,11 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   };
 
   // Sector scores
+  // _sectorComps: 総合（all）用の per-direction components {tSoft, tHard, pSoft, pHard}
+  // _fComps: カテゴリ別の per-direction components  _fComps[cat][dir] = {tSoft,...}
   final Map<String, double> _sectorScores = {};
   final Map<String, Map<String, double>> _sectorComps = {};
+  final Map<String, Map<String, Map<String, double>>> _fComps = {};
 
   ChartResult? _chartResult;
   List<PlanetLineData> _planetLines = [];
@@ -187,6 +190,9 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
         _sectorComps
           ..clear()
           ..addAll(result.sComp);
+        _fComps
+          ..clear()
+          ..addAll(result.fComp);
         _planetLines = lines;
         _topCategory = topKey != null ? kindFromKey(topKey) : null;
       });
@@ -261,6 +267,34 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
 
   Color get _sectorColor => categoryColors[_activeCategory] ?? const Color(0xFFC9A84C);
 
+  /// カテゴリ × ソース（transit/progressed/combined）に応じた
+  /// 16方位スコアを算出する。セクター描画・FortuneFilterLabel 共通利用。
+  /// _activeCategory == 'all' の場合は総合合算、それ以外はカテゴリ別 _fComps を使用。
+  /// _activeSrc で transit/progressed/combined を切替。
+  Map<String, double> _displayScores() {
+    final comps = _activeCategory == 'all'
+        ? _sectorComps
+        : (_fComps[_activeCategory] ?? const <String, Map<String, double>>{});
+    if (comps.isEmpty) return _sectorScores; // データ未取得時のフォールバック
+
+    final keys = _activeSrc == 'transit'
+        ? const ['tSoft', 'tHard']
+        : _activeSrc == 'progressed'
+            ? const ['pSoft', 'pHard']
+            : compKeys;
+
+    final result = <String, double>{};
+    for (final d in dir16) {
+      final c = comps[d] ?? const <String, double>{};
+      double total = 0;
+      for (final k in keys) {
+        total += c[k] ?? 0;
+      }
+      result[d] = total;
+    }
+    return result;
+  }
+
   /// HTML: rebuild(nc, fly) — center変更 + flyTo + セクター再計算 + 天体ライン再構築
   void _rebuild(LatLng newCenter) {
     _mapCtrl.move(newCenter, _mapCtrl.camera.zoom.clamp(12, 18).toDouble());
@@ -304,7 +338,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
             buildStyledTileLayer(_mapStyle),
             PolygonLayer(polygons: buildSectors(
               center: _center,
-              sectorScores: _sectorScores,
+              sectorScores: _displayScores(),
               sectorColor: _sectorColor,
               visible: _layers['sectors']!,
             )),
@@ -372,7 +406,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
         Positioned(
           top: topPad + 2, left: 16,
           child: FortuneFilterLabel(
-            sectorScores: _sectorScores,
+            sectorScores: _displayScores(),
             activeSrc: _activeSrc,
             activeCategory: _activeCategory,
           ),
@@ -540,7 +574,10 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
           child: FortuneSheet(
             activeSrc: _activeSrc,
             activeCategory: _activeCategory,
-            sectorComps: _sectorComps,
+            // 'all' 時は総合 sComp、それ以外はカテゴリ別 fComp を渡す
+            sectorComps: _activeCategory == 'all'
+                ? _sectorComps
+                : (_fComps[_activeCategory] ?? _sectorComps),
             onSrcChanged: (s) => setState(() => _activeSrc = s),
             onCatChanged: (c) => setState(() => _activeCategory = c),
             onClose: () => setState(() => _fortuneSheetOpen = false),
