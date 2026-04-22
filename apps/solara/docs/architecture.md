@@ -350,9 +350,17 @@ Cloudflare Worker 本番デプロイ済み: `https://solara-api.solodev-lab.com`
 | `/tz` | GET | 緯度経度→IANA TZ名 (C案, DST対応) | `solara_api.dart#fetchTimezoneName` |
 | `/search` | GET | Nominatim placelookup proxy | (未接続) |
 | `/fortune` | POST | Gemini 2.5 Flash 生成の占い文 (5カテゴリ) | `fortune_api.dart#fetchFortune` |
+| `/tiles/jawg/<style>/<z>/<x>/<y>.png?lang=xx` | GET | Jawg Maps タイルプロキシ（トークン秘匿・多言語ラベル）| `map_styles.dart`, `map_hybrid_provider.dart` |
 
 **Secrets (Cloudflare暗号化ストア):**
 - `GEMINI_API_KEY` — Fortune LLM 生成用 (wrangler secret put で設定済み)
+- `JAWG_TOKEN` — Jawg Maps タイルアクセス用 (2026-04-22 追加)
+
+**Worker URL 単一情報源ルール（2026-04-23 確立）:**
+アプリ内で Worker を参照する全ての Dart ファイルは、
+`lib/utils/solara_api.dart` の `solaraWorkerBase` 定数を import して参照すること。
+ハードコード禁止（過去バグ: `solodev-lab.workers.dev` という存在しないサブドメインが
+複数ファイルに散在してサイレント失敗していた）。
 
 **Fortune 処理フロー:**
 ```

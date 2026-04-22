@@ -14,6 +14,7 @@ workers_dev = true
 [vars]
 # GEMINI_API_KEY は wrangler secret put GEMINI_API_KEY で設定
 # GOOGLE_PLACES_KEY は wrangler secret put GOOGLE_PLACES_KEY で設定
+# JAWG_TOKEN は wrangler secret put JAWG_TOKEN で設定（地図タイルプロキシ用）
 
 # KV: /astro/forecast の月次クォータ用。
 # 有効化手順:

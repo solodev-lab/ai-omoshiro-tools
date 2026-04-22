@@ -38,6 +38,7 @@ const rateLimitMap = new Map();
 const RATE_WINDOW = 60000; // 1分
 const RATE_DEFAULT_MAX = 30;
 const RATE_FORECAST_MAX = 6;   // 1分あたり6req
+const RATE_TILES_MAX = 600;    // 1分あたり600タイル（1ユーザーの地図操作を想定、5-10セッション/分）
 
 function rateLimitKey(ip, bucket) { return `${bucket}:${ip}`; }
 
@@ -92,6 +93,104 @@ function jsonError(status, message, origin) {
   });
 }
 
+// ── Jawg Maps tile proxy ──
+// クライアントから /tiles/jawg/<style>/<z>/<x>/<y>.png?lang=xx で来たリクエストを
+// Jawg 公式 (https://tile.jawg.io/<style>/<z>/<x>/<y>.png?access-token=SECRET&lang=xx) に
+// 中継する。トークンは env.JAWG_TOKEN（wrangler secret put JAWG_TOKEN で設定）。
+//
+// - 許可スタイル/言語は allowlist で制限（URL 書き換えによる悪用防止）
+// - Z/X/Y は整数のみ受け付け
+// - Cloudflare edge cache を活用し、Jawg 使用量を抑える（24時間キャッシュ）
+const JAWG_ALLOWED_STYLES = new Set([
+  'jawg-streets',
+  'jawg-dark',
+  'jawg-light',
+  'jawg-sunny',
+  'jawg-terrain',
+  'jawg-matrix',
+  'jawg-lagoon',
+]);
+const JAWG_ALLOWED_LANGS = new Set([
+  'ja', 'en', 'de', 'es', 'fr', 'it', 'ko', 'nl', 'ru', 'zh',
+]);
+
+async function handleJawgTile(request, url, env) {
+  if (!env || !env.JAWG_TOKEN) {
+    return new Response('Jawg token not configured', { status: 503 });
+  }
+
+  // /tiles/jawg/<style>/<z>/<x>/<y>.png を分解
+  const prefix = '/tiles/jawg/';
+  const rest = url.pathname.slice(prefix.length); // e.g. "jawg-streets/14/7234/5928.png"
+  const parts = rest.split('/');
+  if (parts.length !== 4) {
+    return new Response('Bad tile path', { status: 400 });
+  }
+  const [style, zStr, xStr, yWithExt] = parts;
+
+  if (!JAWG_ALLOWED_STYLES.has(style)) {
+    return new Response('Style not allowed', { status: 400 });
+  }
+
+  // y 部分は "{number}.png" 形式
+  const yMatch = yWithExt.match(/^(\d+)\.png$/);
+  if (!yMatch || !/^\d+$/.test(zStr) || !/^\d+$/.test(xStr)) {
+    return new Response('Bad tile coordinates', { status: 400 });
+  }
+  const z = parseInt(zStr, 10);
+  const x = parseInt(xStr, 10);
+  const y = parseInt(yMatch[1], 10);
+  if (z < 0 || z > 22) {
+    return new Response('Zoom out of range', { status: 400 });
+  }
+
+  const lang = url.searchParams.get('lang') || 'ja';
+  if (!JAWG_ALLOWED_LANGS.has(lang)) {
+    return new Response('Language not allowed', { status: 400 });
+  }
+
+  const target =
+    `https://tile.jawg.io/${style}/${z}/${x}/${y}.png` +
+    `?access-token=${encodeURIComponent(env.JAWG_TOKEN)}&lang=${lang}`;
+
+  // Cloudflare edge cache を利用（24時間）
+  const cache = caches.default;
+  const cacheKey = new Request(
+    `https://tile-cache/${style}/${z}/${x}/${y}/${lang}`,
+    { method: 'GET' },
+  );
+  let cached = await cache.match(cacheKey);
+  if (cached) return cached;
+
+  const upstream = await fetch(target, {
+    // Jawg の CDN に直接。User-Agent はデフォルトでよい。
+    cf: { cacheTtl: 86400, cacheEverything: true },
+  });
+  if (!upstream.ok) {
+    return new Response(`Upstream error: ${upstream.status}`, {
+      status: upstream.status,
+    });
+  }
+
+  // 返却用レスポンスを複製し、明示的にキャッシュヘッダを付与
+  const headers = new Headers(upstream.headers);
+  headers.set('Cache-Control', 'public, max-age=86400, immutable');
+  // クライアント側（flutter_map の HTTP キャッシュ）にも効かせる
+  const body = await upstream.arrayBuffer();
+  const response = new Response(body, {
+    status: 200,
+    headers: {
+      'Content-Type': headers.get('Content-Type') || 'image/png',
+      'Cache-Control': 'public, max-age=86400, immutable',
+    },
+  });
+
+  // edge cache へ保存（async で待たない）
+  try { await cache.put(cacheKey, response.clone()); } catch (_) { /* ignore */ }
+
+  return response;
+}
+
 // ── Main Handler ──
 export default {
   async fetch(request, env) {
@@ -107,8 +206,15 @@ export default {
 
     // Rate limit (per-endpoint bucket)
     const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
-    const bucket = path === '/astro/forecast' ? 'forecast' : 'default';
-    const max = bucket === 'forecast' ? RATE_FORECAST_MAX : RATE_DEFAULT_MAX;
+    let bucket;
+    let max;
+    if (path === '/astro/forecast') {
+      bucket = 'forecast'; max = RATE_FORECAST_MAX;
+    } else if (path.startsWith('/tiles/')) {
+      bucket = 'tiles'; max = RATE_TILES_MAX;
+    } else {
+      bucket = 'default'; max = RATE_DEFAULT_MAX;
+    }
     if (!checkRateLimit(ip, bucket, max)) {
       return jsonError(429, 'Rate limit exceeded', origin);
     }
@@ -117,6 +223,14 @@ export default {
       // ── Health ──
       if (path === '/health') {
         return jsonOk({ status: 'ok', service: 'solara-api' }, origin);
+      }
+
+      // ── Jawg tile proxy ──
+      // GET /tiles/jawg/<style>/<z>/<x>/<y>.png?lang=ja
+      // JAWG_TOKEN を環境変数から注入して Jawg 公式エンドポイントに中継する。
+      // アプリバイナリにトークンを埋め込まず、サーバ側で管理。
+      if (path.startsWith('/tiles/jawg/') && request.method === 'GET') {
+        return await handleJawgTile(request, url, env);
       }
 
       // ── Astro Chart ──

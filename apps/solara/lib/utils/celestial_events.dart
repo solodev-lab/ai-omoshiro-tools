@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:http/http.dart' as http;
+import 'solara_api.dart' show solaraWorkerBase;
 
 /// Loads and provides celestial event data for intention generation.
 ///
@@ -13,7 +14,7 @@ import 'package:http/http.dart' as http;
 class CelestialEvents {
   static Map<int, MonthEvents>? _months; // 静的JSON
   static final Map<String, List<CelestialEvent>> _apiCache = {}; // APIキャッシュ (key: "year-month")
-  static const _workerBase = 'https://solara-api.solodev-lab.workers.dev';
+  static const _workerBase = solaraWorkerBase;
 
   static Future<void> initialize() async {
     if (_months != null) return;

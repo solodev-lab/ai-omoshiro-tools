@@ -7,6 +7,68 @@
 
 ---
 
+## 実装状況（2026-04-23 セッション時点）
+
+### ✅ Phase 2: 多言語対応 + 米国ターゲット化（2026-04-22〜23 完了）
+
+| 機能 | 入口 | 主要ファイル |
+|---|---|---|
+| Jawg Maps ラスタタイル（多言語対応）| STYLE パネル Jawg/Jawg 夜 | `map_styles.dart` |
+| Smart ハイブリッドスタイル（OSM + Jawg 自動振り分け）| STYLE パネル Smart | `map_hybrid_provider.dart` |
+| LANG 切替（日本語/English）| LAYER パネル LANG セクション | `map_layer_panel.dart` |
+| CF Worker Jawg プロキシ（トークン秘匿）| `/tiles/jawg/<style>/<z>/<x>/<y>.png?lang=xx` | `worker/src/index.js` |
+| Worker URL 一元化（`solaraWorkerBase` 定数）| 全ファイル共通参照 | `utils/solara_api.dart` |
+| スマートデフォルト言語（端末ロケール検出）| 起動時自動 | `utils/solara_storage.dart` |
+
+### Smart ハイブリッド方式の仕組み
+
+- タイル座標 (z/x/y) → lat/lng bbox に逆変換
+- 設定言語の「ホーム圏」と交差するタイルは **OSM HOT（無料・現地語）**
+- 圏外または低ズーム (z<5) のタイルは **Jawg（有料・name:xx 多言語）**
+- 例: 日本語ユーザーが東京を見る → OSM（日本語）、パリを見る → Jawg（日本語ラベル）
+
+### 言語ホーム圏定義
+
+```dart
+'ja': [日本全域 (20-46°N, 122-154°E)]
+'en': [米本土, アラスカ, ハワイ, プエルトリコ, カナダ, 英・アイルランド, 豪, NZ]
+```
+
+### セキュリティ
+
+- Jawg アクセストークンは CF Worker 環境変数 `JAWG_TOKEN` に格納（アプリバイナリには含まれない）
+- Worker 側で style/lang を allowlist 制限、edge cache 24h、レートリミット 600req/分
+- 設定方法: `npx wrangler secret put JAWG_TOKEN`
+
+### 消費削減効果（推定）
+
+- 日本語ユーザー: Jawg 消費 **約70%減**（国内は OSM、海外のみ Jawg）
+- 英語ユーザー（米国ターゲット）: Jawg 消費 **約80%減**（北米・英語圏全体が OSM でカバー）
+- 無料枠 25k views/月 での対応 MAU:
+  - 日本語市場: 30〜100人
+  - 英語市場: 100〜500人（広大な英語圏を OSM でカバーできるため）
+
+### 米国ターゲット Phase 1（2026-04-23）
+
+1. デフォルトスタイル: `smartLight`（新規ユーザー向けベスト選択）
+2. デフォルト言語: 端末ロケール自動判定（日本語端末=ja、それ以外=en）
+3. bbox にハワイ・プエルトリコ追加
+4. UI 英語化は**リリース直前まで保留**（機能確定してから i18n 実装）
+
+### 未実装（将来タスク）
+
+- Smart Dark モード（OSM HOT + Jawg Dark の組合せ、ColorFilter invert 衝突問題あり）
+- Flutter i18n（UI の英語化）
+- MAU が増えたら Protomaps 自前ホスト or MapTiler API 移行を検討
+
+### 過去の試行（リバート済み）
+
+OpenFreeMap ベクタタイル（vector_map_tiles 10.0.0-beta.2）を試したが、
+Impeller GLES のシェーダ互換性問題（`Unsupported uniform data type`）で
+実機クラッシュ。全面リバートして Jawg ラスタ方式に切替えた経緯あり。
+
+---
+
 ## 実装状況（2026-04-22 セッション時点）
 
 ### ✅ Phase 0: 天体計算基盤（完了）

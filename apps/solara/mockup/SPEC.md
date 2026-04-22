@@ -1034,6 +1034,20 @@ SNSシェア・Instagram Stories・ギャラリー表示用の星座背景画像
 - **出力**: `{ events: [{type, planet, date (UTC ISO), descTemplate, descTemplateJP, ...}] }`
 - Flutter側でlocal時刻変換して表示 (`CelestialEvent.localDescJP`)
 
+### `/tiles/jawg/<style>/<z>/<x>/<y>.png?lang=xx` GET — Jawg Maps タイルプロキシ（2026-04-22追加）
+- **入力パス**: `<style>` は allowlist（`jawg-streets`/`jawg-dark`/`jawg-light`/`jawg-sunny`/`jawg-terrain`/`jawg-matrix`/`jawg-lagoon`）、`z/x/y` は整数
+- **クエリ**: `lang` は allowlist（`ja/en/de/es/fr/it/ko/nl/ru/zh`）、省略時 `ja`
+- **出力**: タイル PNG（`Content-Type: image/png`）
+- **処理**: `JAWG_TOKEN` を Worker 環境変数から注入して `https://tile.jawg.io/...` に転送
+- **キャッシュ**: Cloudflare edge cache 24h（`cf: {cacheTtl: 86400, cacheEverything: true}`）
+- **レートリミット**: 600req/分/IP
+- **用途**: アプリに Jawg トークンを埋め込まず、Worker 経由でタイルを取得することでトークン漏洩を防ぐ
+
+### Worker URL 単一情報源（2026-04-23 確立）
+アプリ内で Worker を参照する全ての Dart ファイルは、
+`lib/utils/solara_api.dart` の `solaraWorkerBase` 定数を import して参照する。
+ハードコード禁止（過去バグ: 存在しない `solodev-lab.workers.dev` が散在してサイレント失敗）。
+
 ---
 
 ## ファイル構成（確定）

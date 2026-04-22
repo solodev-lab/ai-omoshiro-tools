@@ -397,12 +397,14 @@ class _ForecastScreenState extends State<ForecastScreen> {
     final monthKeys = byMonth.keys.toList()..sort();
 
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Row(children: [
-        const Text('▸ 1年ヒートマップ',
-            style: TextStyle(fontSize: 11, color: Color(0xFFC9A84C), letterSpacing: 2)),
-        const Spacer(),
-        _buildColorModeToggle(),
-      ]),
+      const Text('▸ 1年ヒートマップ',
+          style: TextStyle(fontSize: 11, color: Color(0xFFC9A84C), letterSpacing: 2)),
+      const SizedBox(height: 6),
+      // 狭い画面でも overflow しないよう、トグル列は横スクロール可能にする
+      SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: _buildColorModeToggle(),
+      ),
       const SizedBox(height: 6),
       _buildLegend(minV, maxV),
       const SizedBox(height: 10),

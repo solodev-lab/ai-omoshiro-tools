@@ -121,7 +121,12 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   bool _searching = false;
 
   // Map style (tile source + light/dark filter)
-  MapStyle _mapStyle = MapStyle.osmHotLight;
+  // デフォルトは Smart（ハイブリッド）: 言語ホーム圏で OSM、圏外で Jawg を使用。
+  // 米国ターゲットの英語ユーザーなら北米が OSM で賄えるため Jawg 消費が激減。
+  MapStyle _mapStyle = MapStyle.smartLight;
+  // Jawg / Smart スタイル利用時のラベル言語。'ja' | 'en' 等。
+  // 実際の初期値は _loadMapStyle で端末ロケールから決定される。
+  String _mapLang = 'en';
 
   @override
   void initState() {
@@ -158,13 +163,23 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
 
   Future<void> _loadMapStyle() async {
     final id = await SolaraStorage.loadMapStyleId();
+    final lang = await SolaraStorage.loadMapLanguage();
     if (!mounted) return;
-    setState(() => _mapStyle = mapStyleFromId(id));
+    setState(() {
+      _mapStyle = mapStyleFromId(id);
+      _mapLang = lang;
+    });
   }
 
   void _onMapStyleChanged(MapStyle style) {
     setState(() => _mapStyle = style);
     SolaraStorage.saveMapStyleId(mapStyleConfigs[style]!.id);
+  }
+
+  void _onMapLanguageChanged(String lang) {
+    if (_mapLang == lang) return;
+    setState(() => _mapLang = lang);
+    SolaraStorage.saveMapLanguage(lang);
   }
 
   Future<void> _loadProfileAndChart({DateTime? targetDate}) async {
@@ -427,9 +442,15 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     // 明るい地図（OSM Light/Cycle Light）はパステル色が埋もれるため、
     // 明度を下げ彩度を上げて視認性を確保する。
     final hsl = HSLColor.fromColor(base);
+    // all/money は強めのコントラスト、healing/love はさらに薄めに、他は中間。
+    final isStrong = _activeCategory == 'all' || _activeCategory == 'money';
+    final isLight = _activeCategory == 'healing' || _activeCategory == 'love';
+    final double lightMul = isStrong ? 0.65 : (isLight ? 0.95 : 0.85);
+    final double lightMax = isStrong ? 0.72 : (isLight ? 0.90 : 0.85);
+    final double satMul = isStrong ? 1.2 : (isLight ? 0.80 : 0.95);
     return hsl
-        .withLightness((hsl.lightness * 0.45).clamp(0.0, 0.55))
-        .withSaturation((hsl.saturation * 1.2).clamp(0.0, 1.0))
+        .withLightness((hsl.lightness * lightMul).clamp(0.0, lightMax))
+        .withSaturation((hsl.saturation * satMul).clamp(0.0, 1.0))
         .toColor();
   }
 
@@ -503,7 +524,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
             onLongPress: (tapPos, latlng) => _rebuild(latlng),
           ),
           children: [
-            buildStyledTileLayer(_mapStyle),
+            buildStyledTileLayer(_mapStyle, lang: _mapLang),
             PolygonLayer(polygons: buildSectors(
               center: _center,
               sectorScores: _displayScores(),
@@ -629,6 +650,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
             planetGroups: _planetGroups,
             activeCategory: _activeCategory,
             mapStyle: _mapStyle,
+            mapLang: _mapLang,
             onLayerToggle: (k) => setState(() => _layers[k] = !(_layers[k] ?? false)),
             onPlanetGroupToggle: (k) => setState(() => _planetGroups[k] = !(_planetGroups[k] ?? false)),
             onCategoryChanged: (k) {
@@ -636,6 +658,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
               _reannotateSearchResults();
             },
             onMapStyleChanged: _onMapStyleChanged,
+            onMapLanguageChanged: _onMapLanguageChanged,
           ),
         ),
 

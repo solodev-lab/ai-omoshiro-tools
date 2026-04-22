@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:math';
 import 'package:http/http.dart' as http;
+import '../../utils/solara_api.dart' show solaraWorkerBase;
 import 'map_constants.dart';
 
 /// ============================================================
@@ -10,9 +11,8 @@ import 'map_constants.dart';
 ///   サーバーサイド計算（CF Worker + astronomy-engine.js）
 /// ============================================================
 
-// Solara専用 Worker URL（カスタムドメイン経由）
-// wrangler.toml: solara-api.solodev-lab.com（src/index.js）
-const _astroApiUrl = 'https://solara-api.solodev-lab.com/astro/chart';
+// Worker URL は solara_api.dart の solaraWorkerBase（単一情報源）から合成
+const _astroApiUrl = '$solaraWorkerBase/astro/chart';
 
 /// CF Worker /astro/chart のレスポンス
 class ChartResult {
