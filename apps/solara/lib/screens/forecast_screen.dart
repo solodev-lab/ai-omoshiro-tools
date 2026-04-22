@@ -43,6 +43,9 @@ class _ForecastScreenState extends State<ForecastScreen> {
   /// 切替時のみ Worker を1回呼び、他年は lazy。一括フェッチはしない。
   int _yearOffset = 0;
 
+  /// カテゴリ色モード時の表示ランク: 1 = その日の1位カテゴリ、2 = 2位カテゴリ
+  int _categoryRank = 1;
+
   @override
   void initState() {
     super.initState();
@@ -407,10 +410,13 @@ class _ForecastScreenState extends State<ForecastScreen> {
     ]);
   }
 
-  /// 3-way セグメント: 相対 / 絶対 / カテゴリ（＋ 色方向トグル）
-  /// 色方向トグルは常に表示（位置固定のため）。category モード時は無効化。
+  /// 3-way セグメント: 相対 / 絶対 / カテゴリ
+  /// ＋ 色方向トグル（category モードで無効化）
+  /// ＋ ランクセグメント 1位/2位（category モードのみ有効）
+  /// 全て常に表示（位置を固定、モードに応じて活性/不活性が切り替わる）
   Widget _buildColorModeToggle() {
-    final toggleDisabled = _colorMode == 'category';
+    final highToggleDisabled = _colorMode == 'category';
+    final rankDisabled = _colorMode != 'category';
     return Row(mainAxisSize: MainAxisSize.min, children: [
       _segment('相対', 'relative'),
       _segment('絶対', 'absolute'),
@@ -418,32 +424,65 @@ class _ForecastScreenState extends State<ForecastScreen> {
       Padding(
         padding: const EdgeInsets.only(left: 6),
         child: GestureDetector(
-          onTap: toggleDisabled
+          onTap: highToggleDisabled
               ? null
               : () => _setHighColor(_highColor == 'green' ? 'red' : 'green'),
           child: Opacity(
-            opacity: toggleDisabled ? 0.35 : 1.0,
+            opacity: highToggleDisabled ? 0.35 : 1.0,
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
               decoration: BoxDecoration(
-                color: toggleDisabled ? const Color(0x08FFFFFF) : const Color(0x14FFFFFF),
+                color: highToggleDisabled ? const Color(0x08FFFFFF) : const Color(0x14FFFFFF),
                 borderRadius: BorderRadius.circular(6),
                 border: Border.all(
-                  color: toggleDisabled ? const Color(0x22FFFFFF) : const Color(0x33C9A84C),
+                  color: highToggleDisabled ? const Color(0x22FFFFFF) : const Color(0x33C9A84C),
                 ),
               ),
               child: Text(
                 _highColor == 'green' ? '🟢↑高' : '🔴↑高',
                 style: TextStyle(
                   fontSize: 9,
-                  color: toggleDisabled ? const Color(0xFF666666) : const Color(0xFFE8E0D0),
+                  color: highToggleDisabled ? const Color(0xFF666666) : const Color(0xFFE8E0D0),
                 ),
               ),
             ),
           ),
         ),
       ),
+      const SizedBox(width: 6),
+      _rankSeg(1, rankDisabled),
+      _rankSeg(2, rankDisabled),
     ]);
+  }
+
+  Widget _rankSeg(int rank, bool disabled) {
+    final active = !disabled && _categoryRank == rank;
+    return Opacity(
+      opacity: disabled ? 0.35 : 1.0,
+      child: GestureDetector(
+        onTap: disabled ? null : () => setState(() => _categoryRank = rank),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+          margin: const EdgeInsets.only(left: 2),
+          decoration: BoxDecoration(
+            color: active ? const Color(0x33C9A84C)
+                 : (disabled ? const Color(0x08FFFFFF) : const Color(0x14FFFFFF)),
+            borderRadius: BorderRadius.circular(6),
+            border: Border.all(
+              color: active ? const Color(0xFFC9A84C)
+                   : (disabled ? const Color(0x22FFFFFF) : const Color(0x33C9A84C)),
+            ),
+          ),
+          child: Text('$rank位',
+              style: TextStyle(
+                fontSize: 9,
+                color: active ? const Color(0xFFC9A84C)
+                     : (disabled ? const Color(0xFF666666) : const Color(0xFFE8E0D0)),
+                fontWeight: active ? FontWeight.w600 : FontWeight.normal,
+              )),
+        ),
+      ),
+    );
   }
 
   Widget _segment(String label, String value) {
@@ -481,8 +520,8 @@ class _ForecastScreenState extends State<ForecastScreen> {
             style: const TextStyle(fontSize: 9, color: Color(0xFF666666)));
       case 'category':
         return Row(children: [
-          const Text('色=最強カテゴリ / 濃さ=スコア高低',
-              style: TextStyle(fontSize: 9, color: Color(0xFF666666))),
+          Text('色=$_categoryRank位カテゴリ / 濃さ=スコア高低',
+              style: const TextStyle(fontSize: 9, color: Color(0xFF666666))),
           const SizedBox(width: 6),
           ..._catColorChips(),
         ]);
@@ -567,14 +606,20 @@ class _ForecastScreenState extends State<ForecastScreen> {
     }
   }
 
-  /// カテゴリ色。topFortune が無ければ中間グレー。
+  /// カテゴリ色。_categoryRank (1 or 2) に応じてその日の上位 N 位カテゴリ色を返す。
   /// overall が年内で高いほど明るく（alpha 大）、低いほど暗く（alpha 小）。
   Color _categoryColor(ForecastDay d, double minV, double range) {
-    final cat = d.topFortune;
+    // catScores 降順ソートから rank 番目を取得
+    final sorted = d.catScores.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+    String? cat;
+    if (sorted.length >= _categoryRank) {
+      final entry = sorted[_categoryRank - 1];
+      if (entry.value > 0) cat = entry.key;
+    }
     if (cat == null) return const Color(0xFF333333);
     final base = categoryColors[cat] ?? const Color(0xFF888888);
     final ratio = ((d.overall - minV) / range).clamp(0.0, 1.0);
-    // alpha 0.35 〜 1.0（最弱日でも色味が見える程度に）
     return base.withValues(alpha: 0.35 + ratio * 0.65);
   }
 
