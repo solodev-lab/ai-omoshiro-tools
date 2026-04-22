@@ -36,6 +36,9 @@ class _ForecastScreenState extends State<ForecastScreen> {
   /// 高スコア側の色: 'green' (信号機: 高=緑) | 'red' (赤=高)
   String _highColor = 'green';
 
+  /// Top5 の並べ替え基準: 'overall' | 'love' | 'money' | 'healing' | 'work' | 'communication'
+  String _top5Mode = 'overall';
+
   @override
   void initState() {
     super.initState();
@@ -528,21 +531,80 @@ class _ForecastScreenState extends State<ForecastScreen> {
   }
 
   Widget _buildTop5(List<ForecastDay> days) {
-    final sorted = List<ForecastDay>.from(days)
-      ..sort((a, b) => b.overall.compareTo(a.overall));
+    final isOverall = _top5Mode == 'overall';
+    final sorted = List<ForecastDay>.from(days);
+    if (isOverall) {
+      sorted.sort((a, b) => b.overall.compareTo(a.overall));
+    } else {
+      sorted.sort((a, b) => (b.catScores[_top5Mode] ?? 0)
+          .compareTo(a.catScores[_top5Mode] ?? 0));
+    }
     final top5 = sorted.take(5).toList();
     if (top5.isEmpty) return const SizedBox.shrink();
 
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      const Text('▸ 強運Top5', style: TextStyle(fontSize: 11, color: Color(0xFFC9A84C), letterSpacing: 2)),
+      const Text('▸ 強運Top5',
+          style: TextStyle(fontSize: 11, color: Color(0xFFC9A84C), letterSpacing: 2)),
+      const SizedBox(height: 8),
+      _buildTop5ModeSelector(),
       const SizedBox(height: 10),
       for (int i = 0; i < top5.length; i++) _top5Row(i, top5[i]),
     ]);
   }
 
+  Widget _buildTop5ModeSelector() {
+    final modes = <Map<String, Object>>[
+      {'key': 'overall', 'label': '総合', 'color': const Color(0xFFC9A84C)},
+      {'key': 'love', 'label': '恋愛', 'color': categoryColors['love']!},
+      {'key': 'money', 'label': '金運', 'color': categoryColors['money']!},
+      {'key': 'healing', 'label': '癒し', 'color': categoryColors['healing']!},
+      {'key': 'work', 'label': '仕事', 'color': categoryColors['work']!},
+      {'key': 'communication', 'label': '話す', 'color': categoryColors['communication']!},
+    ];
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(children: [
+        for (final m in modes)
+          _top5Seg(m['key'] as String, m['label'] as String, m['color'] as Color),
+      ]),
+    );
+  }
+
+  Widget _top5Seg(String key, String label, Color color) {
+    final active = _top5Mode == key;
+    return GestureDetector(
+      onTap: () => setState(() => _top5Mode = key),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        margin: const EdgeInsets.only(right: 5),
+        decoration: BoxDecoration(
+          color: active ? color.withValues(alpha: 0.22) : const Color(0x14FFFFFF),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: active ? color : const Color(0x22FFFFFF)),
+        ),
+        child: Text(label,
+            style: TextStyle(
+              fontSize: 10,
+              color: active ? color : const Color(0xFF888888),
+              fontWeight: active ? FontWeight.w600 : FontWeight.normal,
+            )),
+      ),
+    );
+  }
+
   Widget _top5Row(int rank, ForecastDay d) {
     final parts = d.date.split('-');
     final dateLabel = '${parts[1]}/${parts[2]}';
+
+    // 表示スコア: 総合モードは overall、カテゴリモードは該当カテゴリスコア
+    final isOverall = _top5Mode == 'overall';
+    final score = isOverall ? d.overall : (d.catScores[_top5Mode] ?? 0);
+
+    // 総合モード: dominant fortune を色バッジで表示
+    // カテゴリモード: 選択中カテゴリの色で枠取り
+    final modeColor = isOverall
+        ? const Color(0xFFC9A84C)
+        : (categoryColors[_top5Mode] ?? const Color(0xFFE8E0D0));
     final fortune = d.topFortune;
     final fortuneLabel = fortune != null ? (categoryLabels[fortune] ?? fortune) : '';
     final fortuneColor = fortune != null
@@ -556,7 +618,7 @@ class _ForecastScreenState extends State<ForecastScreen> {
         child: Row(children: [
           SizedBox(width: 24,
               child: Text('#${rank + 1}',
-                  style: const TextStyle(fontSize: 11, color: Color(0xFFC9A84C), fontWeight: FontWeight.w600))),
+                  style: TextStyle(fontSize: 11, color: modeColor, fontWeight: FontWeight.w600))),
           SizedBox(width: 50,
               child: Text(dateLabel,
                   style: const TextStyle(fontSize: 12, color: Color(0xFFE8E0D0)))),
@@ -564,7 +626,7 @@ class _ForecastScreenState extends State<ForecastScreen> {
             Text('${dir16JP[d.topDir] ?? d.topDir}方位',
                 style: const TextStyle(fontSize: 10, color: Color(0xFF999999))),
             const SizedBox(width: 10),
-            if (fortuneLabel.isNotEmpty) Container(
+            if (isOverall && fortuneLabel.isNotEmpty) Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
               decoration: BoxDecoration(
                 color: fortuneColor.withValues(alpha: 0.15),
@@ -573,16 +635,16 @@ class _ForecastScreenState extends State<ForecastScreen> {
               child: Text(fortuneLabel, style: TextStyle(fontSize: 9, color: fortuneColor)),
             ),
           ])),
-          Text(d.overall.toStringAsFixed(1),
-              style: const TextStyle(fontSize: 11, color: Color(0xFFC9A84C), fontWeight: FontWeight.w600)),
+          Text(score.toStringAsFixed(1),
+              style: TextStyle(fontSize: 11, color: modeColor, fontWeight: FontWeight.w600)),
           if (widget.onJumpToDate != null) IconButton(
             icon: const Icon(Icons.map_outlined, size: 16, color: Color(0xFF888888)),
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
             tooltip: 'その日をMapで見る',
             onPressed: () {
-              final parts = d.date.split('-').map(int.parse).toList();
-              final date = DateTime.utc(parts[0], parts[1], parts[2], 3, 0, 0);
+              final ps = d.date.split('-').map(int.parse).toList();
+              final date = DateTime.utc(ps[0], ps[1], ps[2], 3, 0, 0);
               widget.onJumpToDate!(date);
               Navigator.of(context).maybePop();
             },
