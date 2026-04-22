@@ -7,8 +7,17 @@ import 'map/map_constants.dart';
 /// Map画面から BottomSheet フルスクリーンで開く。
 class ForecastScreen extends StatefulWidget {
   final void Function(DateTime date)? onJumpToDate;
+  /// 基準地ラベル（VPスロット名やホーム名など）。未指定時はプロフィールから導出。
+  final String? baseLabel;
+  /// 基準地の住所/座標テキスト。未指定時はプロフィール座標を表示。
+  final String? baseDetail;
 
-  const ForecastScreen({super.key, this.onJumpToDate});
+  const ForecastScreen({
+    super.key,
+    this.onJumpToDate,
+    this.baseLabel,
+    this.baseDetail,
+  });
 
   @override
   State<ForecastScreen> createState() => _ForecastScreenState();
@@ -131,6 +140,8 @@ class _ForecastScreenState extends State<ForecastScreen> {
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        _buildBaseLocation(),
+        const SizedBox(height: 14),
         _buildHeatmap(c.days),
         const SizedBox(height: 18),
         _buildSelectedDayDetail(),
@@ -138,6 +149,65 @@ class _ForecastScreenState extends State<ForecastScreen> {
         _buildTop5(c.days),
         const SizedBox(height: 24),
         _buildFetchInfo(),
+      ]),
+    );
+  }
+
+  /// 基準地ブロック — ヒートマップ見出しの上に表示。
+  /// Forecast は出生情報（natal）をベースに計算しているため、
+  /// 明示的に「どこを基準に見ているか」を示す。
+  Widget _buildBaseLocation() {
+    // ラベル優先順位: widget.baseLabel > profile.homeName > profile.birthPlace > '基準地'
+    final p = _profile;
+    String label;
+    if (widget.baseLabel != null && widget.baseLabel!.isNotEmpty) {
+      label = widget.baseLabel!;
+    } else if (p != null && p.homeName.isNotEmpty) {
+      label = p.homeName;
+    } else if (p != null && p.birthPlace.isNotEmpty) {
+      label = p.birthPlace;
+    } else {
+      label = '基準地';
+    }
+
+    // 詳細テキスト: widget.baseDetail > 座標
+    String? detail = widget.baseDetail;
+    if ((detail == null || detail.isEmpty) && p != null) {
+      final lat = p.homeLat != 0 ? p.homeLat : p.birthLat;
+      final lng = p.homeLng != 0 ? p.homeLng : p.birthLng;
+      if (lat != 0 || lng != 0) {
+        detail = '${lat.toStringAsFixed(4)}, ${lng.toStringAsFixed(4)}';
+      }
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: const Color(0x1FC9A84C),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: const Color(0x33C9A84C)),
+      ),
+      child: Row(children: [
+        const Text('📍', style: TextStyle(fontSize: 16)),
+        const SizedBox(width: 10),
+        Expanded(child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('基準地',
+                style: TextStyle(fontSize: 9, color: Color(0xFF999999), letterSpacing: 2)),
+            const SizedBox(height: 2),
+            Text(label,
+                style: const TextStyle(fontSize: 13, color: Color(0xFFC9A84C), fontWeight: FontWeight.w600),
+                maxLines: 1, overflow: TextOverflow.ellipsis),
+            if (detail != null) Padding(
+              padding: const EdgeInsets.only(top: 2),
+              child: Text(detail,
+                  style: const TextStyle(fontSize: 10, color: Color(0xFF888888)),
+                  maxLines: 1, overflow: TextOverflow.ellipsis),
+            ),
+          ],
+        )),
       ]),
     );
   }

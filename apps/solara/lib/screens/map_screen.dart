@@ -306,6 +306,28 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   }
 
   Future<void> _openForecast() async {
+    // 現在の中心が出生地/ホームと一致するか判定し、ラベルと座標文字列を決定する
+    String? baseLabel;
+    String? baseDetail;
+    final p = _profile;
+    if (p != null) {
+      // Home と一致する場合は Home 表示、それ以外は "現在地点"
+      final isHome = p.homeName.isNotEmpty &&
+          (p.homeLat - _center.latitude).abs() < 0.001 &&
+          (p.homeLng - _center.longitude).abs() < 0.001;
+      final isBirth = p.birthPlace.isNotEmpty &&
+          (p.birthLat - _center.latitude).abs() < 0.001 &&
+          (p.birthLng - _center.longitude).abs() < 0.001;
+      if (isHome) {
+        baseLabel = p.homeName;
+      } else if (isBirth) {
+        baseLabel = p.birthPlace;
+      } else {
+        baseLabel = '現在のビューポイント';
+      }
+      baseDetail = '${_center.latitude.toStringAsFixed(4)}, ${_center.longitude.toStringAsFixed(4)}';
+    }
+
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
@@ -316,6 +338,8 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
         child: ClipRRect(
           borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
           child: ForecastScreen(
+            baseLabel: baseLabel,
+            baseDetail: baseDetail,
             onJumpToDate: (date) {
               setState(() => _selectedDate = date);
               _loadProfileAndChart(targetDate: date);
@@ -931,16 +955,27 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     final f = _searchFocus!;
     final parts = f.name.split(',');
     final short = parts.length > 2 ? '${parts[0]}, ${parts[1]}' : f.name;
-    final dir = f.bestDir ?? f.directionFrom(_center);
+    // 中心が動いたら方位を再計算（bestDir はキャッシュの可能性がある）
+    final dir = f.directionFrom(_center);
     final dirJp = dir16JP[dir] ?? dir;
     final km = f.distanceKmFrom(_center);
 
-    // この方位のカテゴリ別スコア top 3
+    // この方位のカテゴリ別スコア — _displayScores と同じ src フィルタを適用して、
+    // 日付変更・ソース切替に追随して値が動くようにする。
+    final srcKeys = _activeSrc == 'transit'
+        ? const ['tSoft', 'tHard']
+        : _activeSrc == 'progressed'
+            ? const ['pSoft', 'pHard']
+            : compKeys;
     final catEntries = <MapEntry<String, double>>[];
     for (final cat in _fComps.keys) {
       final comps = _fComps[cat]?[dir];
       if (comps == null) continue;
-      final sum = (comps['tSoft'] ?? 0) + (comps['tHard'] ?? 0) + (comps['pSoft'] ?? 0) + (comps['pHard'] ?? 0);
+      double sum = 0;
+      for (final k in srcKeys) {
+        sum += comps[k] ?? 0;
+      }
+      if (sum < 0.05) continue; // 0同然のカテゴリは省く
       catEntries.add(MapEntry(cat, sum));
     }
     catEntries.sort((a, b) => b.value.compareTo(a.value));
