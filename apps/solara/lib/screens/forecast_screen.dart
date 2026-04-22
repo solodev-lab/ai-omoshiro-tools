@@ -30,10 +30,34 @@ class _ForecastScreenState extends State<ForecastScreen> {
   String? _errorMsg;
   ForecastDay? _selected;
 
+  /// 色モード: 'relative' (年内min-max正規化) | 'absolute' (固定閾値) | 'category' (topFortune色)
+  String _colorMode = 'relative';
+
+  /// 高スコア側の色: 'green' (信号機: 高=緑) | 'red' (赤=高)
+  String _highColor = 'green';
+
   @override
   void initState() {
     super.initState();
+    _loadSettings();
     _load();
+  }
+
+  Future<void> _loadSettings() async {
+    final mode = await SolaraStorage.loadForecastColorMode();
+    final high = await SolaraStorage.loadForecastHighColor();
+    if (!mounted) return;
+    setState(() { _colorMode = mode; _highColor = high; });
+  }
+
+  Future<void> _setColorMode(String m) async {
+    setState(() => _colorMode = m);
+    await SolaraStorage.saveForecastColorMode(m);
+  }
+
+  Future<void> _setHighColor(String c) async {
+    setState(() => _highColor = c);
+    await SolaraStorage.saveForecastHighColor(c);
   }
 
   Future<void> _load({bool forceRefresh = false}) async {
@@ -216,7 +240,7 @@ class _ForecastScreenState extends State<ForecastScreen> {
   Widget _buildHeatmap(List<ForecastDay> days) {
     if (days.isEmpty) return const SizedBox.shrink();
 
-    // overall の min/max を取って正規化
+    // overall の min/max を取って正規化（relative / category モードで使用）
     double minV = double.infinity, maxV = -double.infinity;
     for (final d in days) {
       if (d.overall < minV) minV = d.overall;
@@ -233,14 +257,102 @@ class _ForecastScreenState extends State<ForecastScreen> {
     final monthKeys = byMonth.keys.toList()..sort();
 
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      const Text('▸ 1年ヒートマップ',
-          style: TextStyle(fontSize: 11, color: Color(0xFFC9A84C), letterSpacing: 2)),
-      const SizedBox(height: 4),
-      const Text('緑 = 強運 / 赤 = 試練',
-          style: TextStyle(fontSize: 9, color: Color(0xFF666666))),
+      Row(children: [
+        const Text('▸ 1年ヒートマップ',
+            style: TextStyle(fontSize: 11, color: Color(0xFFC9A84C), letterSpacing: 2)),
+        const Spacer(),
+        _buildColorModeToggle(),
+      ]),
+      const SizedBox(height: 6),
+      _buildLegend(minV, maxV),
       const SizedBox(height: 10),
       for (final ym in monthKeys) _monthRow(ym, byMonth[ym]!, minV, range),
     ]);
+  }
+
+  /// 3-way セグメント: 相対 / 絶対 / カテゴリ（＋ 色方向トグル）
+  Widget _buildColorModeToggle() {
+    return Row(mainAxisSize: MainAxisSize.min, children: [
+      _segment('相対', 'relative'),
+      _segment('絶対', 'absolute'),
+      _segment('カテゴリ', 'category'),
+      if (_colorMode != 'category') Padding(
+        padding: const EdgeInsets.only(left: 6),
+        child: GestureDetector(
+          onTap: () => _setHighColor(_highColor == 'green' ? 'red' : 'green'),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+            decoration: BoxDecoration(
+              color: const Color(0x14FFFFFF),
+              borderRadius: BorderRadius.circular(6),
+              border: Border.all(color: const Color(0x33C9A84C)),
+            ),
+            child: Text(
+              _highColor == 'green' ? '🟢↑高' : '🔴↑高',
+              style: const TextStyle(fontSize: 9, color: Color(0xFFE8E0D0)),
+            ),
+          ),
+        ),
+      ),
+    ]);
+  }
+
+  Widget _segment(String label, String value) {
+    final active = _colorMode == value;
+    return GestureDetector(
+      onTap: () => _setColorMode(value),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+        margin: const EdgeInsets.only(left: 2),
+        decoration: BoxDecoration(
+          color: active ? const Color(0x33C9A84C) : const Color(0x14FFFFFF),
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(color: active ? const Color(0xFFC9A84C) : const Color(0x22FFFFFF)),
+        ),
+        child: Text(label,
+          style: TextStyle(
+            fontSize: 9,
+            color: active ? const Color(0xFFC9A84C) : const Color(0xFF888888),
+          )),
+      ),
+    );
+  }
+
+  Widget _buildLegend(double minV, double maxV) {
+    switch (_colorMode) {
+      case 'relative':
+        final low = _highColor == 'green' ? '赤=年内最低' : '緑=年内最低';
+        final high = _highColor == 'green' ? '緑=年内最高' : '赤=年内最高';
+        return Text('$low  /  $high  （min:${minV.toStringAsFixed(1)} → max:${maxV.toStringAsFixed(1)}）',
+            style: const TextStyle(fontSize: 9, color: Color(0xFF666666)));
+      case 'absolute':
+        final low = _highColor == 'green' ? '赤=45以下' : '緑=45以下';
+        final high = _highColor == 'green' ? '緑=85以上' : '赤=85以上';
+        return Text('$low  /  黄=65  /  $high  （固定スケール）',
+            style: const TextStyle(fontSize: 9, color: Color(0xFF666666)));
+      case 'category':
+        return Row(children: [
+          const Text('色=最強カテゴリ / 濃さ=スコア高低',
+              style: TextStyle(fontSize: 9, color: Color(0xFF666666))),
+          const SizedBox(width: 6),
+          ..._catColorChips(),
+        ]);
+    }
+    return const SizedBox.shrink();
+  }
+
+  List<Widget> _catColorChips() {
+    final cats = ['love', 'money', 'healing', 'work', 'communication'];
+    return [for (final c in cats) Padding(
+      padding: const EdgeInsets.only(right: 4),
+      child: Container(
+        width: 6, height: 6,
+        decoration: BoxDecoration(
+          color: categoryColors[c],
+          borderRadius: BorderRadius.circular(1),
+        ),
+      ),
+    )];
   }
 
   Widget _monthRow(String ym, List<ForecastDay> monthDays, double minV, double range) {
@@ -261,8 +373,7 @@ class _ForecastScreenState extends State<ForecastScreen> {
   }
 
   Widget _dayCell(ForecastDay d, double minV, double range) {
-    final ratio = ((d.overall - minV) / range).clamp(0.0, 1.0);
-    final color = _heatColor(ratio);
+    final color = _cellColor(d, minV, range);
     final isSelected = _selected != null && _selected!.date == d.date;
     return GestureDetector(
       onTap: () => setState(() => _selected = d),
@@ -280,17 +391,42 @@ class _ForecastScreenState extends State<ForecastScreen> {
     );
   }
 
-  /// 0..1 → red..yellow..green グラデ
-  Color _heatColor(double t) {
-    if (t < 0.5) {
-      // red → yellow
-      final k = t * 2; // 0..1
-      return Color.lerp(const Color(0xFFE74C6B), const Color(0xFFF5D76E), k)!;
-    } else {
-      // yellow → green
-      final k = (t - 0.5) * 2;
-      return Color.lerp(const Color(0xFFF5D76E), const Color(0xFF64C8B4), k)!;
+  /// モードに応じたセル色算出
+  Color _cellColor(ForecastDay d, double minV, double range) {
+    switch (_colorMode) {
+      case 'absolute':
+        // 固定閾値: 45 → red, 65 → yellow, 85 → green（365日テストの overall range 47-81 を包含）
+        final ratio = ((d.overall - 45) / (85 - 45)).clamp(0.0, 1.0);
+        return _gradientColor(ratio);
+      case 'category':
+        // topFortune 色をベース、overall で明度/alpha を調整
+        return _categoryColor(d, minV, range);
+      case 'relative':
+      default:
+        final ratio = ((d.overall - minV) / range).clamp(0.0, 1.0);
+        return _gradientColor(ratio);
     }
+  }
+
+  /// 赤↔黄↔緑のグラデ。_highColor='red' ならratio反転で赤が高い。
+  Color _gradientColor(double ratio) {
+    final t = _highColor == 'green' ? ratio : 1.0 - ratio;
+    if (t < 0.5) {
+      return Color.lerp(const Color(0xFFE74C6B), const Color(0xFFF5D76E), t * 2)!;
+    } else {
+      return Color.lerp(const Color(0xFFF5D76E), const Color(0xFF64C8B4), (t - 0.5) * 2)!;
+    }
+  }
+
+  /// カテゴリ色。topFortune が無ければ中間グレー。
+  /// overall が年内で高いほど明るく（alpha 大）、低いほど暗く（alpha 小）。
+  Color _categoryColor(ForecastDay d, double minV, double range) {
+    final cat = d.topFortune;
+    if (cat == null) return const Color(0xFF333333);
+    final base = categoryColors[cat] ?? const Color(0xFF888888);
+    final ratio = ((d.overall - minV) / range).clamp(0.0, 1.0);
+    // alpha 0.35 〜 1.0（最弱日でも色味が見える程度に）
+    return base.withValues(alpha: 0.35 + ratio * 0.65);
   }
 
   Widget _buildSelectedDayDetail() {

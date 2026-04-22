@@ -104,6 +104,32 @@ class SolaraStorage {
   static const _overlayShownKey = 'solara_overlay_shown';
   static const _mapStyleKey = 'solara_map_style';
   static const _dailyResetHourKey = 'solara_daily_reset_hour';
+  static const _forecastColorModeKey = 'solara_forecast_color_mode';
+  static const _forecastHighColorKey = 'solara_forecast_high_color';
+
+  // --- Forecast heatmap display settings ---
+
+  /// ヒートマップ色モード: 'relative' | 'absolute' | 'category'
+  static Future<String> loadForecastColorMode() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_forecastColorModeKey) ?? 'relative';
+  }
+
+  static Future<void> saveForecastColorMode(String mode) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_forecastColorModeKey, mode);
+  }
+
+  /// 高スコア側の色: 'green' | 'red'
+  static Future<String> loadForecastHighColor() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_forecastHighColorKey) ?? 'green';
+  }
+
+  static Future<void> saveForecastHighColor(String color) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_forecastHighColorKey, color);
+  }
 
   // --- Map style ---
 
