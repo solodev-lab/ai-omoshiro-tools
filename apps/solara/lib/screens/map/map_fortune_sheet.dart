@@ -30,14 +30,18 @@ class FortuneFilterLabel extends StatelessWidget {
     final maxScore = top2.isNotEmpty ? top2.first.value : 1.0;
     final catColor = categoryColors[activeCategory] ?? const Color(0xFFC9A84C);
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-      decoration: BoxDecoration(
-        color: const Color(0xB30A0A14),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: const Color(0x4DC9A84C)),
-      ),
-      child: IntrinsicWidth(
+    // ClipRRect で境界半径を維持しつつ、sub-pixel オーバーフローを視覚的に吸収
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(10),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+        decoration: BoxDecoration(
+          color: const Color(0xB30A0A14),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: const Color(0x4DC9A84C)),
+        ),
+        // IntrinsicWidth は使わない — dry layout の sub-pixel 丸め誤差で 0.x px
+        // オーバーフロー警告が出ることがある。mainAxisSize.min だけで十分。
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           mainAxisSize: MainAxisSize.min,
