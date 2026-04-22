@@ -46,15 +46,21 @@ class _ForecastScreenState extends State<ForecastScreen> {
   @override
   void initState() {
     super.initState();
-    _loadSettings();
-    _load();
+    _initialize();
+  }
+
+  Future<void> _initialize() async {
+    // 設定を先に読んでから _load — yearOffset が 0 のまま初回フェッチが走るのを防ぐ
+    await _loadSettings();
+    await _load();
   }
 
   Future<void> _loadSettings() async {
     final mode = await SolaraStorage.loadForecastColorMode();
     final high = await SolaraStorage.loadForecastHighColor();
+    final year = await SolaraStorage.loadForecastYearOffset();
     if (!mounted) return;
-    setState(() { _colorMode = mode; _highColor = high; });
+    setState(() { _colorMode = mode; _highColor = high; _yearOffset = year; });
   }
 
   Future<void> _setColorMode(String m) async {
@@ -102,6 +108,7 @@ class _ForecastScreenState extends State<ForecastScreen> {
   Future<void> _setYearOffset(int offset) async {
     if (_yearOffset == offset) return;
     setState(() => _yearOffset = offset);
+    await SolaraStorage.saveForecastYearOffset(offset);
     // 切替時のみ1回フェッチ（キャッシュがあれば API 呼び出しなし）
     await _load();
   }
@@ -191,14 +198,14 @@ class _ForecastScreenState extends State<ForecastScreen> {
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        _buildBaseLocation(),
-        const SizedBox(height: 12),
-        _buildYearSelector(),
-        const SizedBox(height: 14),
+        _buildBasisCard(c.days),
+        const SizedBox(height: 16),
         _buildHeatmap(c.days),
         const SizedBox(height: 18),
         _buildSelectedDayDetail(),
-        const SizedBox(height: 18),
+        const SizedBox(height: 20),
+        _buildLifePeriods(c.days),
+        const SizedBox(height: 20),
         _buildTop5(c.days),
         const SizedBox(height: 24),
         _buildFetchInfo(),
@@ -206,102 +213,146 @@ class _ForecastScreenState extends State<ForecastScreen> {
     );
   }
 
-  /// 基準地ブロック — ヒートマップ見出しの上に表示。
-  /// Forecast は出生情報（natal）をベースに計算しているため、
-  /// 明示的に「どこを基準に見ているか」を示す。
-  Widget _buildBaseLocation() {
-    // ラベル優先順位: widget.baseLabel > profile.homeName > profile.birthPlace > '基準地'
+  /// 基準地 + 表示期間 + 年間ベストの統合カード
+  Widget _buildBasisCard(List<ForecastDay> days) {
+    // 基準地
     final p = _profile;
-    String label;
+    String baseLabel;
     if (widget.baseLabel != null && widget.baseLabel!.isNotEmpty) {
-      label = widget.baseLabel!;
+      baseLabel = widget.baseLabel!;
     } else if (p != null && p.homeName.isNotEmpty) {
-      label = p.homeName;
+      baseLabel = p.homeName;
     } else if (p != null && p.birthPlace.isNotEmpty) {
-      label = p.birthPlace;
+      baseLabel = p.birthPlace;
     } else {
-      label = '基準地';
+      baseLabel = '基準地';
     }
-
-    // 詳細テキスト: widget.baseDetail > 座標
-    String? detail = widget.baseDetail;
-    if ((detail == null || detail.isEmpty) && p != null) {
+    String? baseDetail = widget.baseDetail;
+    if ((baseDetail == null || baseDetail.isEmpty) && p != null) {
       final lat = p.homeLat != 0 ? p.homeLat : p.birthLat;
       final lng = p.homeLng != 0 ? p.homeLng : p.birthLng;
       if (lat != 0 || lng != 0) {
-        detail = '${lat.toStringAsFixed(4)}, ${lng.toStringAsFixed(4)}';
+        baseDetail = '${lat.toStringAsFixed(4)}, ${lng.toStringAsFixed(4)}';
       }
     }
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      decoration: BoxDecoration(
-        color: const Color(0x1FC9A84C),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: const Color(0x33C9A84C)),
-      ),
-      child: Row(children: [
-        const Text('📍', style: TextStyle(fontSize: 16)),
-        const SizedBox(width: 10),
-        Expanded(child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text('基準地',
-                style: TextStyle(fontSize: 9, color: Color(0xFF999999), letterSpacing: 2)),
-            const SizedBox(height: 2),
-            Text(label,
-                style: const TextStyle(fontSize: 13, color: Color(0xFFC9A84C), fontWeight: FontWeight.w600),
-                maxLines: 1, overflow: TextOverflow.ellipsis),
-            if (detail != null) Padding(
-              padding: const EdgeInsets.only(top: 2),
-              child: Text(detail,
-                  style: const TextStyle(fontSize: 10, color: Color(0xFF888888)),
-                  maxLines: 1, overflow: TextOverflow.ellipsis),
-            ),
-          ],
-        )),
-      ]),
-    );
-  }
-
-  /// 年セレクター（実験用）— 1年目〜5年目を選択。
-  /// 切替時のみその年のデータを Worker から取得する。キャッシュは年別に独立。
-  Widget _buildYearSelector() {
+    // 表示期間
     final now = DateTime.now();
     final start = now.add(Duration(days: _yearOffset * 365));
     final end = start.add(const Duration(days: 364));
-    final startLabel = '${start.year}/${start.month.toString().padLeft(2, "0")}/${start.day.toString().padLeft(2, "0")}';
-    final endLabel = '${end.year}/${end.month.toString().padLeft(2, "0")}/${end.day.toString().padLeft(2, "0")}';
+    final rangeText = '${_fmt(start)} 〜 ${_fmt(end)}';
+
+    // 年間ベスト
+    ForecastDay? best;
+    for (final d in days) {
+      if (best == null || d.overall > best.overall) best = d;
+    }
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: const Color(0x14FFFFFF),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: const Color(0x22C9A84C)),
+        color: const Color(0x1FC9A84C),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0x33C9A84C)),
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        // 基準地
         Row(children: [
-          const Text('🧪 年範囲（実験）',
-              style: TextStyle(fontSize: 9, color: Color(0xFF888888), letterSpacing: 1)),
-          const Spacer(),
-          Text('$startLabel 〜 $endLabel',
-              style: const TextStyle(fontSize: 9, color: Color(0xFF999999))),
+          const Text('📍', style: TextStyle(fontSize: 15)),
+          const SizedBox(width: 8),
+          const Text('基準地',
+              style: TextStyle(fontSize: 9, color: Color(0xFF999999), letterSpacing: 2)),
+          const SizedBox(width: 10),
+          Expanded(child: Text(baseLabel,
+              style: const TextStyle(fontSize: 13, color: Color(0xFFC9A84C), fontWeight: FontWeight.w600),
+              maxLines: 1, overflow: TextOverflow.ellipsis)),
         ]),
-        const SizedBox(height: 6),
+        if (baseDetail != null) Padding(
+          padding: const EdgeInsets.only(left: 24, top: 1),
+          child: Text(baseDetail,
+              style: const TextStyle(fontSize: 10, color: Color(0xFF888888)),
+              maxLines: 1, overflow: TextOverflow.ellipsis),
+        ),
+        const Divider(height: 18, color: Color(0x22C9A84C)),
+        // 表示期間
+        Row(children: [
+          const Text('📅', style: TextStyle(fontSize: 15)),
+          const SizedBox(width: 8),
+          const Text('表示期間',
+              style: TextStyle(fontSize: 9, color: Color(0xFF999999), letterSpacing: 2)),
+          const Spacer(),
+          Text(rangeText,
+              style: const TextStyle(fontSize: 10, color: Color(0xFF999999))),
+        ]),
+        const SizedBox(height: 8),
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           child: Row(children: [
             for (int i = 0; i < 5; i++) _yearSeg(i),
           ]),
         ),
+        // 年間ベスト
+        if (best != null) Padding(
+          padding: const EdgeInsets.only(top: 10),
+          child: _buildBestChip(best),
+        ),
       ]),
     );
   }
 
+  String _fmt(DateTime d) =>
+      '${d.year}/${d.month.toString().padLeft(2, "0")}/${d.day.toString().padLeft(2, "0")}';
+
+  Widget _buildBestChip(ForecastDay best) {
+    final parts = best.date.split('-');
+    final mm = parts[1];
+    final dd = parts[2];
+    final fortune = best.topFortune;
+    final fLabel = fortune != null ? (categoryLabels[fortune] ?? fortune) : '';
+    final fColor = fortune != null
+        ? (categoryColors[fortune] ?? const Color(0xFFC9A84C))
+        : const Color(0xFFC9A84C);
+    return Row(children: [
+      const Text('⭐', style: TextStyle(fontSize: 12)),
+      const SizedBox(width: 6),
+      const Text('年間ベスト',
+          style: TextStyle(fontSize: 9, color: Color(0xFF999999), letterSpacing: 2)),
+      const SizedBox(width: 10),
+      Text('$mm/$dd',
+          style: const TextStyle(fontSize: 12, color: Color(0xFFE8E0D0), fontWeight: FontWeight.w600)),
+      const SizedBox(width: 8),
+      if (fLabel.isNotEmpty) Container(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+        decoration: BoxDecoration(
+          color: fColor.withValues(alpha: 0.18),
+          borderRadius: BorderRadius.circular(6),
+        ),
+        child: Text(fLabel, style: TextStyle(fontSize: 9, color: fColor)),
+      ),
+      const SizedBox(width: 6),
+      Text(best.overall.toStringAsFixed(1),
+          style: const TextStyle(fontSize: 10, color: Color(0xFFC9A84C))),
+      const Spacer(),
+      if (widget.onJumpToDate != null) GestureDetector(
+        onTap: () {
+          final ps = best.date.split('-').map(int.parse).toList();
+          widget.onJumpToDate!(DateTime.utc(ps[0], ps[1], ps[2], 3, 0, 0));
+          Navigator.of(context).maybePop();
+        },
+        child: const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+          child: Text('Mapで見る →',
+              style: TextStyle(fontSize: 9, color: Color(0xFFC9A84C), decoration: TextDecoration.underline)),
+        ),
+      ),
+    ]);
+  }
+
+  static const _yearLabels = ['今年', '来年', '再来年', '3年後', '4年後'];
+
   Widget _yearSeg(int offset) {
     final active = _yearOffset == offset;
+    final label = offset < _yearLabels.length ? _yearLabels[offset] : '+$offset年';
     return GestureDetector(
       onTap: _loading ? null : () => _setYearOffset(offset),
       child: Container(
@@ -312,7 +363,7 @@ class _ForecastScreenState extends State<ForecastScreen> {
           borderRadius: BorderRadius.circular(8),
           border: Border.all(color: active ? const Color(0xFFC9A84C) : const Color(0x22FFFFFF)),
         ),
-        child: Text('${offset + 1}年目',
+        child: Text(label,
             style: TextStyle(
               fontSize: 10,
               color: active ? const Color(0xFFC9A84C) : const Color(0xFF888888),
@@ -621,6 +672,68 @@ class _ForecastScreenState extends State<ForecastScreen> {
             child: Text(value.toStringAsFixed(1),
                 textAlign: TextAlign.right,
                 style: const TextStyle(fontSize: 10, color: Color(0xFFAAAAAA)))),
+      ]),
+    );
+  }
+
+  /// 期間ラベル定義
+  static const _periodLabels = <String, (String, String)>{
+    'love':          ('モテ期', '💗'),
+    'money':         ('金運期', '💰'),
+    'healing':       ('癒し期', '🌿'),
+    'work':          ('仕事期', '⚙'),
+    'communication': ('発信期', '💬'),
+  };
+
+  /// 「◯◯期」セクション — detectLifePeriods で検出した連続期間を表示
+  Widget _buildLifePeriods(List<ForecastDay> days) {
+    final periods = detectLifePeriods(days);
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      const Text('▸ あなたの運勢サイクル',
+          style: TextStyle(fontSize: 11, color: Color(0xFFC9A84C), letterSpacing: 2)),
+      const SizedBox(height: 4),
+      const Text('スコアが一定以上を連続で保った期間（7日以上）',
+          style: TextStyle(fontSize: 9, color: Color(0xFF666666))),
+      const SizedBox(height: 10),
+      if (periods.isEmpty) Padding(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        child: Text('この期間は目立った連続期なし',
+            style: TextStyle(fontSize: 11, color: Colors.white.withValues(alpha: 0.45))),
+      ) else for (final p in periods) _periodRow(p),
+    ]);
+  }
+
+  Widget _periodRow(LifePeriod p) {
+    final label = _periodLabels[p.category];
+    final (name, emoji) = label ?? (p.category, '✨');
+    final color = categoryColors[p.category] ?? const Color(0xFFC9A84C);
+    final startLabel = '${p.start.month}/${p.start.day.toString().padLeft(2, "0")}';
+    final endLabel = '${p.end.month}/${p.end.day.toString().padLeft(2, "0")}';
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(children: [
+        SizedBox(width: 24,
+            child: Text(emoji, style: const TextStyle(fontSize: 14))),
+        SizedBox(width: 62,
+            child: Text(name,
+                style: TextStyle(fontSize: 12, color: color, fontWeight: FontWeight.w600))),
+        Expanded(child: Text('$startLabel 〜 $endLabel',
+            style: const TextStyle(fontSize: 11, color: Color(0xFFE8E0D0)))),
+        SizedBox(width: 60,
+            child: Text('${p.days}日間',
+                textAlign: TextAlign.right,
+                style: const TextStyle(fontSize: 10, color: Color(0xFF888888)))),
+        if (widget.onJumpToDate != null) IconButton(
+          icon: const Icon(Icons.map_outlined, size: 16, color: Color(0xFF888888)),
+          padding: EdgeInsets.zero,
+          constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
+          tooltip: '開始日を Map で見る',
+          onPressed: () {
+            widget.onJumpToDate!(DateTime.utc(p.start.year, p.start.month, p.start.day, 3, 0, 0));
+            Navigator.of(context).maybePop();
+          },
+        ),
       ]),
     );
   }

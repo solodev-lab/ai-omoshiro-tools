@@ -106,6 +106,7 @@ class SolaraStorage {
   static const _dailyResetHourKey = 'solara_daily_reset_hour';
   static const _forecastColorModeKey = 'solara_forecast_color_mode';
   static const _forecastHighColorKey = 'solara_forecast_high_color';
+  static const _forecastYearOffsetKey = 'solara_forecast_year_offset';
 
   // --- Forecast heatmap display settings ---
 
@@ -129,6 +130,17 @@ class SolaraStorage {
   static Future<void> saveForecastHighColor(String color) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_forecastHighColorKey, color);
+  }
+
+  /// Forecast 画面で最後に見た年オフセット（0-4）
+  static Future<int> loadForecastYearOffset() async {
+    final prefs = await SharedPreferences.getInstance();
+    return (prefs.getInt(_forecastYearOffsetKey) ?? 0).clamp(0, 4);
+  }
+
+  static Future<void> saveForecastYearOffset(int offset) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_forecastYearOffsetKey, offset.clamp(0, 4));
   }
 
   // --- Map style ---

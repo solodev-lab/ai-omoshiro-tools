@@ -41,6 +41,90 @@ class ForecastDay {
   };
 }
 
+/// 運勢サイクル（「◯◯期」）1件分。
+/// 特定カテゴリが年内で高スコア状態を一定期間保った期間を表す。
+class LifePeriod {
+  final String category;   // 'love' | 'money' | 'healing' | 'work' | 'communication'
+  final DateTime start;
+  final DateTime end;
+  final double avgScore;   // 期間内のカテゴリスコア平均
+  final int days;          // 期間日数（両端含む）
+
+  LifePeriod({
+    required this.category,
+    required this.start,
+    required this.end,
+    required this.avgScore,
+    required this.days,
+  });
+}
+
+/// ForecastDay 列から各カテゴリの「◯◯期」を検出する。
+/// - 各カテゴリの日次スコアを昇順ソートし上位 topPct% の閾値を決める
+/// - その閾値以上が minDays 日以上連続する区間を抽出（maxGap 日以内の凹みは吸収）
+/// - カテゴリごとに最長1件（最長期間）を採用
+/// - 戻り値は start 昇順
+List<LifePeriod> detectLifePeriods(
+  List<ForecastDay> days, {
+  double topPct = 0.25,
+  int minDays = 7,
+  int maxGap = 2,
+}) {
+  if (days.isEmpty) return [];
+  const cats = ['love', 'money', 'healing', 'work', 'communication'];
+  final results = <LifePeriod>[];
+
+  for (final cat in cats) {
+    final scores = days.map((d) => d.catScores[cat] ?? 0.0).toList();
+    final sorted = List<double>.from(scores)..sort((a, b) => b.compareTo(a));
+    final cutIdx = (sorted.length * topPct).floor().clamp(1, sorted.length - 1);
+    final threshold = sorted[cutIdx];
+    if (threshold <= 0) continue;
+
+    // 連続区間抽出
+    int? runStart;
+    int gap = 0;
+    final runs = <(int, int)>[]; // (start, end) inclusive
+
+    for (int i = 0; i < scores.length; i++) {
+      final active = scores[i] >= threshold;
+      if (active) {
+        runStart ??= i;
+        gap = 0;
+      } else if (runStart != null) {
+        gap++;
+        if (gap > maxGap) {
+          final end = i - gap;
+          if (end >= runStart) runs.add((runStart, end));
+          runStart = null;
+          gap = 0;
+        }
+      }
+    }
+    if (runStart != null) {
+      final end = scores.length - 1 - gap;
+      if (end >= runStart) runs.add((runStart, end));
+    }
+
+    // minDays 以上のうち最長を採用
+    final long = runs.where((r) => (r.$2 - r.$1 + 1) >= minDays).toList();
+    if (long.isEmpty) continue;
+    long.sort((a, b) => (b.$2 - b.$1).compareTo(a.$2 - a.$1));
+    final top = long.first;
+    final len = top.$2 - top.$1 + 1;
+    double sum = 0;
+    for (int i = top.$1; i <= top.$2; i++) { sum += scores[i]; }
+    final sd = DateTime.parse('${days[top.$1].date}T00:00:00Z');
+    final ed = DateTime.parse('${days[top.$2].date}T00:00:00Z');
+    results.add(LifePeriod(
+      category: cat, start: sd, end: ed, avgScore: sum / len, days: len,
+    ));
+  }
+
+  results.sort((a, b) => a.start.compareTo(b.start));
+  return results;
+}
+
 /// Forecast キャッシュ項目
 class ForecastCache {
   final String profileHash;
