@@ -2,7 +2,7 @@
  * Solara API — Cloudflare Worker
  * Endpoints: /astro/chart, /astro/predict, /search, /fortune, /health
  */
-import { computeChart, computePredictions, computeMonthEvents } from './astro.js';
+import { computeChart, computePredictions, computeMonthEvents, computeForecast } from './astro.js';
 import { searchPlace } from './search.js';
 import { lookupTimezone } from './tzlookup.js';
 import { handleFortune } from './fortune.js';
@@ -30,27 +30,52 @@ function corsHeaders(origin) {
   };
 }
 
-// ── Rate Limit (memory-based) ──
+// ── Rate Limit (memory-based, per-endpoint) ──
+// memory は CF Worker インスタンスローカル（cold start で消える）。
+// /astro/forecast は計算コストが高いので厳しめ。
+// 永続化は後段の KV 側で追加する（checkKvQuota）。
 const rateLimitMap = new Map();
-const RATE_WINDOW = 60000;
-const RATE_MAX = 30;
+const RATE_WINDOW = 60000; // 1分
+const RATE_DEFAULT_MAX = 30;
+const RATE_FORECAST_MAX = 6;   // 1分あたり6req
 
-function checkRateLimit(ip) {
+function rateLimitKey(ip, bucket) { return `${bucket}:${ip}`; }
+
+function checkRateLimit(ip, bucket, max) {
+  const key = rateLimitKey(ip, bucket);
   const now = Date.now();
-  const rec = rateLimitMap.get(ip);
+  const rec = rateLimitMap.get(key);
   if (!rec || now - rec.start > RATE_WINDOW) {
-    rateLimitMap.set(ip, { start: now, count: 1 });
+    rateLimitMap.set(key, { start: now, count: 1 });
     return true;
   }
   rec.count++;
-  return rec.count <= RATE_MAX;
+  return rec.count <= max;
 }
 
 function cleanupRateLimit() {
   const now = Date.now();
-  for (const [ip, rec] of rateLimitMap) {
-    if (now - rec.start > RATE_WINDOW * 2) rateLimitMap.delete(ip);
+  for (const [k, rec] of rateLimitMap) {
+    if (now - rec.start > RATE_WINDOW * 2) rateLimitMap.delete(k);
   }
+}
+
+// ── KV-based monthly quota (per IP) ──
+// FORECAST_KV が binding されていない環境では no-op。
+// 月次で forecast の利用回数を制限する（デフォルト 60回/月）。
+const FORECAST_MONTHLY_MAX = 60;
+
+async function checkKvForecastQuota(env, ip) {
+  if (!env || !env.FORECAST_KV) return { ok: true, remaining: -1 };
+  const now = new Date();
+  const ymKey = `fq:${ip}:${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, '0')}`;
+  const prev = parseInt((await env.FORECAST_KV.get(ymKey)) || '0', 10);
+  if (prev >= FORECAST_MONTHLY_MAX) {
+    return { ok: false, remaining: 0 };
+  }
+  // 月末まで TTL（簡易: 45日）
+  await env.FORECAST_KV.put(ymKey, String(prev + 1), { expirationTtl: 60 * 60 * 24 * 45 });
+  return { ok: true, remaining: FORECAST_MONTHLY_MAX - (prev + 1) };
 }
 
 // ── JSON helpers ──
@@ -80,9 +105,11 @@ export default {
       return new Response(null, { status: 204, headers: corsHeaders(origin) });
     }
 
-    // Rate limit
+    // Rate limit (per-endpoint bucket)
     const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
-    if (!checkRateLimit(ip)) {
+    const bucket = path === '/astro/forecast' ? 'forecast' : 'default';
+    const max = bucket === 'forecast' ? RATE_FORECAST_MAX : RATE_DEFAULT_MAX;
+    if (!checkRateLimit(ip, bucket, max)) {
       return jsonError(429, 'Rate limit exceeded', origin);
     }
 
@@ -99,6 +126,22 @@ export default {
           return jsonError(400, 'Missing required fields: birthDate, birthTime, birthLat, birthLng', origin);
         }
         const result = computeChart(body);
+        return jsonOk(result, origin);
+      }
+
+      // ── Astro Forecast (日次スコアの時系列) ──
+      if (path === '/astro/forecast' && request.method === 'POST') {
+        const body = await request.json();
+        if (!body.birthDate || !body.birthTime) {
+          return jsonError(400, 'Missing required fields: birthDate, birthTime', origin);
+        }
+        // KV 月次クォータ（binding 未設定なら no-op）
+        const q = await checkKvForecastQuota(env, ip);
+        if (!q.ok) {
+          return jsonError(429, 'Monthly forecast quota exceeded', origin);
+        }
+        const result = computeForecast(body);
+        if (q.remaining >= 0) result.quotaRemaining = q.remaining;
         return jsonOk(result, origin);
       }
 

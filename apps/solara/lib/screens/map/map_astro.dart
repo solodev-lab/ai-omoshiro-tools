@@ -54,6 +54,8 @@ class ChartResult {
 /// CF Worker にチャートを要求
 /// birthTzName (IANA TZ名, C案) が指定された場合はそれを優先し、
 /// 未指定なら birthTz (UTCオフセット整数) にfallback。
+/// targetDate が指定されると、その日時 (UTC) の transit/progressed を計算する。
+/// 未指定時は現在時刻を使用。
 Future<ChartResult?> fetchChart({
   required String birthDate,
   required String birthTime,
@@ -63,8 +65,10 @@ Future<ChartResult?> fetchChart({
   String? birthTzName,
   String mode = 'both', // 'natal' | 'transit' | 'progressed' | 'both'
   String houseSystem = 'placidus',
+  DateTime? targetDate,
 }) async {
   try {
+    final t = (targetDate ?? DateTime.now()).toUtc();
     final body = <String, dynamic>{
       'birthDate': birthDate,
       'birthTime': birthTime,
@@ -72,7 +76,7 @@ Future<ChartResult?> fetchChart({
       'birthLat': birthLat,
       'birthLng': birthLng,
       'mode': mode,
-      'transitDate': DateTime.now().toUtc().toIso8601String(),
+      'transitDate': t.toIso8601String(),
       'houseSystem': houseSystem,
     };
     if (birthTzName != null && birthTzName.isNotEmpty) {

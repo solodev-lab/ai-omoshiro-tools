@@ -14,3 +14,13 @@ workers_dev = true
 [vars]
 # GEMINI_API_KEY は wrangler secret put GEMINI_API_KEY で設定
 # GOOGLE_PLACES_KEY は wrangler secret put GOOGLE_PLACES_KEY で設定
+
+# KV: /astro/forecast の月次クォータ用。
+# 有効化手順:
+#   1. wrangler kv namespace create FORECAST_KV
+#   2. 出力された id を下の kv_namespaces に貼る
+#   3. wrangler deploy
+# binding なしでもサーバーは動作する（checkKvForecastQuota が no-op）
+# [[kv_namespaces]]
+# binding = "FORECAST_KV"
+# id = "<namespace_id>"

@@ -458,6 +458,217 @@ export function computePredictions(params) {
 }
 
 // ══════════════════════════════════════════════════
+// FORECAST — 日次スコアの時系列
+// 各日の transit / progressed を計算し、natal とのアスペクトから
+// overallScore / catScores (5 カテゴリ) / topDirection / topFortune を算出。
+// Map 画面の scoreAll() と同じ重み・同じ _fortunePairs を使用する。
+// ══════════════════════════════════════════════════
+
+// Map用アスペクト定義（apps/solara/lib/screens/map/map_astro.dart:_mapAspects と同じ）
+const MAP_ASPECTS = [
+  { name:'conjunction', angle:0,   orb:8, quality:'neutral', weight:0.6 },
+  { name:'sextile',     angle:60,  orb:4, quality:'soft',    weight:0.8 },
+  { name:'square',      angle:90,  orb:5, quality:'hard',    weight:1.0 },
+  { name:'trine',       angle:120, orb:5, quality:'soft',    weight:1.0 },
+  { name:'quincunx',    angle:150, orb:3, quality:'tense',   weight:0.4 },
+  { name:'opposition',  angle:180, orb:6, quality:'hard',    weight:0.8 },
+];
+
+const DIR16 = ['N','NNE','NE','ENE','E','ESE','SE','SSE',
+               'S','SSW','SW','WSW','W','WNW','NW','NNW'];
+const DIR16_ANG = DIR16.map((_, i) => i * 22.5);
+const SPREAD = 22.5;
+
+const FORTUNE_PAIRS = {
+  healing: [['moon','neptune'],['moon','venus'],['sun','neptune']],
+  money:   [['jupiter','venus'],['jupiter','sun'],['venus','sun']],
+  love:    [['venus','mars'],['venus','moon'],['mars','moon']],
+  work:    [['saturn','sun'],['saturn','mars'],['jupiter','sun'],['jupiter','mars']],
+  communication: [['mercury','sun'],['mercury','venus'],['mercury','moon']],
+};
+
+function cosFall(dist, spread) {
+  if (dist >= spread) return 0;
+  return (1 + Math.cos(Math.PI * dist / spread)) / 2;
+}
+
+function qSplit(q, w) {
+  if (q === 'hard' || q === 'tense') return [0, w];
+  if (q === 'soft') return [w, 0];
+  return [w / 2, w / 2];
+}
+
+function findAspects(p1Arr, p2Arr, cross, wMult) {
+  const hits = [];
+  for (let i = 0; i < p1Arr.length; i++) {
+    const jStart = cross ? 0 : i + 1;
+    for (let j = jStart; j < p2Arr.length; j++) {
+      if (!cross && i === j) continue;
+      const diff = angDist(p1Arr[i], p2Arr[j]);
+      for (const a of MAP_ASPECTS) {
+        if (Math.abs(diff - a.angle) <= a.orb) {
+          hits.push({ p1: i, p2: j, quality: a.quality, weight: a.weight * wMult });
+          break;
+        }
+      }
+    }
+  }
+  return hits;
+}
+
+/// natal + 指定日の transit + progressed から 16 方位 overall score, per-category score を算出。
+/// scoreOneDate(birth, date) → { sScores, fScores, topDir, topFortune, overall }
+function scoreOneDate(birth, natal, date) {
+  const tArr = calcAllPlanets(date);                                 // {0..9}
+  const pDate = calcProgressedDate(birth, date);
+  const pArr = calcAllPlanets(pDate);
+
+  // components per planet (key by 'p0'..'p9')
+  const tComp = Array.from({ length: 10 }, () => ({ tSoft: 0, tHard: 0 }));
+  const pComp = Array.from({ length: 10 }, () => ({ pSoft: 0, pHard: 0 }));
+
+  // transit-transit
+  const tArrList = Array.from({ length: 10 }, (_, i) => tArr[i]);
+  const pArrList = Array.from({ length: 10 }, (_, i) => pArr[i]);
+  const nArrList = Array.from({ length: 10 }, (_, i) => natal[i]);
+
+  const tt = findAspects(tArrList, tArrList, false, 1.0);
+  const tn = findAspects(tArrList, nArrList, true, 0.6);
+  const pn = findAspects(pArrList, nArrList, true, 0.5);
+  const tp = findAspects(tArrList, pArrList, true, 0.4);
+
+  for (const a of tt) {
+    const [s, h] = qSplit(a.quality, a.weight);
+    tComp[a.p1].tSoft += s; tComp[a.p1].tHard += h;
+    tComp[a.p2].tSoft += s; tComp[a.p2].tHard += h;
+  }
+  for (const a of tn) {
+    const [s, h] = qSplit(a.quality, a.weight);
+    tComp[a.p1].tSoft += s; tComp[a.p1].tHard += h;
+  }
+  for (const a of pn) {
+    const [s, h] = qSplit(a.quality, a.weight);
+    pComp[a.p1].pSoft += s; pComp[a.p1].pHard += h;
+  }
+  for (const a of tp) {
+    const [s, h] = qSplit(a.quality, a.weight);
+    tComp[a.p1].tSoft += s; tComp[a.p1].tHard += h;
+    pComp[a.p2].pSoft += s; pComp[a.p2].pHard += h;
+  }
+
+  // spread to 16 directions
+  const sComp = DIR16.map(() => ({ tSoft: 0, tHard: 0, pSoft: 0, pHard: 0 }));
+  for (let i = 0; i < 10; i++) {
+    for (let k = 0; k < 16; k++) {
+      const fT = cosFall(angDist(tArr[i], DIR16_ANG[k]), SPREAD);
+      sComp[k].tSoft += tComp[i].tSoft * fT;
+      sComp[k].tHard += tComp[i].tHard * fT;
+      const fP = cosFall(angDist(pArr[i], DIR16_ANG[k]), SPREAD);
+      sComp[k].pSoft += pComp[i].pSoft * fP;
+      sComp[k].pHard += pComp[i].pHard * fP;
+    }
+  }
+
+  const sScores = sComp.map(c => c.tSoft + c.tHard + c.pSoft + c.pHard);
+
+  // Overall = 16方位合計（天体視点の総エネルギー）
+  const overall = sScores.reduce((a, b) => a + b, 0);
+
+  // Top direction
+  let topIdx = 0, topVal = -Infinity;
+  for (let k = 0; k < 16; k++) {
+    if (sScores[k] > topVal) { topVal = sScores[k]; topIdx = k; }
+  }
+
+  // カテゴリ別：簡易版 — fortune pair に一致するアスペクトの weight 合計
+  const catScores = {};
+  for (const cat of Object.keys(FORTUNE_PAIRS)) {
+    const pairs = FORTUNE_PAIRS[cat];
+    const pairIdx = new Set();
+    for (const pr of pairs) {
+      for (const p of pr) pairIdx.add(BODY_KEYS.indexOf(p));
+    }
+    let sum = 0;
+    const addMatch = (list) => {
+      for (const a of list) {
+        const p1Key = BODY_KEYS[a.p1];
+        const p2Key = BODY_KEYS[a.p2];
+        const pm = pairs.some(pr =>
+          (p1Key === pr[0] && p2Key === pr[1]) ||
+          (p1Key === pr[1] && p2Key === pr[0])
+        ) ? 2.0 : 0.5;
+        if (pairIdx.has(a.p1) || pairIdx.has(a.p2)) {
+          sum += a.weight * pm;
+        }
+      }
+    };
+    addMatch(tt);
+    addMatch(tn);
+    addMatch(pn);
+    addMatch(tp);
+    catScores[cat] = Math.round(sum * 100) / 100;
+  }
+
+  // Top fortune
+  let topFortune = null, topFortuneVal = 0;
+  for (const [cat, v] of Object.entries(catScores)) {
+    if (v > topFortuneVal) { topFortuneVal = v; topFortune = cat; }
+  }
+
+  return {
+    overall: Math.round(overall * 100) / 100,
+    topDir: DIR16[topIdx],
+    topDirScore: Math.round(topVal * 100) / 100,
+    topFortune,
+    catScores,
+  };
+}
+
+// ── Public API: /astro/forecast ──
+// params: {
+//   birthDate, birthTime, birthLat, birthLng, birthTz, birthTzName,
+//   startDate?:"YYYY-MM-DD"   (default: today),
+//   days?:int                 (default: 365, max 370),
+//   step?:int                 (default: 1, 1=毎日 / 7=週次)
+// }
+// response: { days: [{ date, overall, topDir, topDirScore, topFortune, catScores }] }
+export function computeForecast(params) {
+  const {
+    birthDate, birthTime, birthTz = 9, birthTzName,
+    startDate, days = 365, step = 1,
+  } = params;
+
+  const dayCount = Math.min(Math.max(parseInt(days, 10) || 365, 1), 370);
+  const stepInt = Math.min(Math.max(parseInt(step, 10) || 1, 1), 14);
+
+  const birth = birthTzName
+    ? makeUTCDateFromTzName(birthDate, birthTime, birthTzName)
+    : makeUTCDate(birthDate, birthTime, birthTz);
+  const natal = calcAllPlanets(birth);
+
+  let start;
+  if (startDate) {
+    const [y, m, d] = startDate.split('-').map(Number);
+    start = new Date(Date.UTC(y, m - 1, d, 3, 0, 0, 0)); // 正午JST ≒ 03:00 UTC
+  } else {
+    const now = new Date();
+    start = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 3, 0, 0, 0));
+  }
+
+  const out = [];
+  const dayMs = 86400000;
+  for (let i = 0; i < dayCount; i += stepInt) {
+    const t = new Date(start.getTime() + i * dayMs);
+    const sc = scoreOneDate(birth, natal, t);
+    const yyyy = t.getUTCFullYear();
+    const mm = String(t.getUTCMonth() + 1).padStart(2, '0');
+    const dd = String(t.getUTCDate()).padStart(2, '0');
+    out.push({ date: `${yyyy}-${mm}-${dd}`, ...sc });
+  }
+  return { days: out, step: stepInt, count: out.length };
+}
+
+// ══════════════════════════════════════════════════
 // MONTH CELESTIAL EVENTS — ingress / retrograde / eclipse
 // ══════════════════════════════════════════════════
 

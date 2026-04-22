@@ -1,7 +1,5 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
-import 'package:http/http.dart' as http;
 import 'package:latlong2/latlong.dart';
 import '../utils/solara_storage.dart';
 import '../utils/omen_phrases.dart';
@@ -17,6 +15,9 @@ import 'map/map_layer_panel.dart';
 import 'map/map_widgets.dart';
 import 'map/map_astro.dart';
 import 'map/map_planet_lines.dart';
+import 'map/map_search.dart';
+import 'forecast_screen.dart';
+import 'locations_screen.dart';
 
 /// 開発用フラグ: true なら日付チェックをバイパスして毎回オーバーレイを表示する。
 /// 本番では false。
@@ -89,10 +90,15 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   final Map<String, double> _sectorScores = {};
   final Map<String, Map<String, double>> _sectorComps = {};
   final Map<String, Map<String, Map<String, double>>> _fComps = {};
+  ScoreResult? _scoreResult;
 
   ChartResult? _chartResult;
   List<PlanetLineData> _planetLines = [];
   SolaraProfile? _profile;
+
+  // 日付選択（null = 今日）。UTC 扱い。
+  DateTime? _selectedDate;
+  bool _loadingChart = false;
 
   // Dominant fortune overlay
   DominantFortuneKind? _topCategory;
@@ -103,9 +109,10 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   bool _omenVisible = false;
   OmenPhrase _omenPhrase = pickRandomOmenPhrase();
 
-  // Search result
-  String? _searchResultName;
-  LatLng? _searchResultPos;
+  // Search results
+  List<SearchHit> _searchHits = [];
+  SearchHit? _searchFocus; // 選択済み1件（ピン表示用）
+  bool _searching = false;
 
   // Map style (tile source + light/dark filter)
   MapStyle _mapStyle = MapStyle.osmHotLight;
@@ -154,11 +161,16 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     SolaraStorage.saveMapStyleId(mapStyleConfigs[style]!.id);
   }
 
-  Future<void> _loadProfileAndChart() async {
+  Future<void> _loadProfileAndChart({DateTime? targetDate}) async {
     final p = await SolaraStorage.loadProfile();
     if (p == null || !p.isComplete) return;
     _profile = p;
-    setState(() => _center = LatLng(p.birthLat, p.birthLng));
+    if (mounted) {
+      setState(() {
+        _center = LatLng(p.birthLat, p.birthLng);
+        _loadingChart = true;
+      });
+    }
 
     // CF Worker API で天体データを取得 → scoreAll で16方位スコア計算
     final chart = await fetchChart(
@@ -168,6 +180,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
       birthLng: p.birthLng,
       birthTz: p.birthTz,
       birthTzName: p.birthTzName,
+      targetDate: targetDate,
     );
     if (chart != null) {
       _chartResult = chart;
@@ -193,12 +206,104 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
         _fComps
           ..clear()
           ..addAll(result.fComp);
+        _scoreResult = result;
         _planetLines = lines;
         _topCategory = topKey != null ? kindFromKey(topKey) : null;
+        _loadingChart = false;
       });
       // トップカテゴリが確定したので Omen ボタンの表示判定を再評価
       await _checkOmenVisibility();
+    } else {
+      if (mounted) setState(() => _loadingChart = false);
     }
+  }
+
+  /// 日付ピッカー表示。選択されたら該当日の transit/progressed で再計算する。
+  Future<void> _pickDate() async {
+    final now = DateTime.now();
+    final initial = _selectedDate ?? now;
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: initial,
+      firstDate: DateTime(now.year - 1, now.month, now.day),
+      lastDate: DateTime(now.year + 2, now.month, now.day),
+      builder: (ctx, child) => Theme(
+        data: Theme.of(ctx).copyWith(
+          colorScheme: const ColorScheme.dark(
+            primary: Color(0xFFC9A84C),
+            onPrimary: Color(0xFF0F0F1E),
+            surface: Color(0xFF0F0F1E),
+            onSurface: Color(0xFFE8E0D0),
+          ),
+          dialogTheme: const DialogThemeData(backgroundColor: Color(0xFF0F0F1E)),
+        ),
+        child: child!,
+      ),
+    );
+    if (picked == null) return;
+    // 正午固定（house 位置の揺れを抑える意図で日中の代表時刻を選ぶ）
+    final noon = DateTime.utc(picked.year, picked.month, picked.day, 3, 0, 0);
+    setState(() => _selectedDate = noon);
+    await _loadProfileAndChart(targetDate: noon);
+  }
+
+  /// 日付リセット（「今日」に戻す）
+  Future<void> _resetDateToToday() async {
+    setState(() => _selectedDate = null);
+    await _loadProfileAndChart();
+  }
+
+  Future<void> _openLocations() async {
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      barrierColor: const Color(0xB3000000),
+      builder: (ctx) => SizedBox(
+        height: MediaQuery.of(ctx).size.height * 0.9,
+        child: ClipRRect(
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+          child: LocationsScreen(
+            center: _center,
+            scoreResult: _scoreResult,
+            sectorScores: _displayScores(),
+            profile: _profile,
+            onSelectSlot: (slot) {
+              _rebuild(LatLng(slot.lat, slot.lng));
+            },
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _openForecast() async {
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      barrierColor: const Color(0xB3000000),
+      builder: (ctx) => SizedBox(
+        height: MediaQuery.of(ctx).size.height * 0.92,
+        child: ClipRRect(
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+          child: ForecastScreen(
+            onJumpToDate: (date) {
+              setState(() => _selectedDate = date);
+              _loadProfileAndChart(targetDate: date);
+            },
+          ),
+        ),
+      ),
+    );
+  }
+
+  String _formatSelectedDate() {
+    final d = _selectedDate;
+    if (d == null) return '今日';
+    // UTC → JST 表示（正午固定なので日付だけで十分）
+    final jst = d.toLocal();
+    return '${jst.year}/${jst.month.toString().padLeft(2, '0')}/${jst.day.toString().padLeft(2, '0')}';
   }
 
   /// 今日のタップボタン押下時のハンドラ。
@@ -244,25 +349,33 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   }
 
   Future<void> _doSearch(String query) async {
-    if (query.length < 2) return;
-    try {
-      final uri = Uri.parse(
-        'https://nominatim.openstreetmap.org/search?q=${Uri.encodeComponent(query)}&format=json&limit=1');
-      final resp = await http.get(uri, headers: {'User-Agent': 'SolaraApp/1.0', 'Accept-Language': 'ja,en'});
-      if (resp.statusCode == 200) {
-        final data = json.decode(resp.body) as List;
-        if (data.isNotEmpty) {
-          final lat = double.parse(data[0]['lat']);
-          final lng = double.parse(data[0]['lon']);
-          _mapCtrl.move(LatLng(lat, lng), 15);
-          setState(() {
-            _searchOpen = false;
-            _searchResultName = data[0]['display_name'] as String?;
-            _searchResultPos = LatLng(lat, lng);
-          });
-        }
-      }
-    } catch (_) {}
+    if (query.trim().length < 2) return;
+    setState(() => _searching = true);
+    final hits = await searchPlaces(query);
+    annotateHitsWithScores(
+      hits: hits,
+      center: _center,
+      sectorScores: _displayScores(),
+      scoreResult: _scoreResult,
+    );
+    if (!mounted) return;
+    setState(() {
+      _searchHits = hits;
+      _searching = false;
+      _searchOpen = false;
+    });
+    if (hits.length == 1) {
+      _selectSearchHit(hits.first);
+    }
+  }
+
+  void _selectSearchHit(SearchHit hit) {
+    final pos = LatLng(hit.lat, hit.lng);
+    _mapCtrl.move(pos, 15);
+    setState(() {
+      _searchFocus = hit;
+      _searchHits = []; // リスト閉じる
+    });
   }
 
   Color get _sectorColor => categoryColors[_activeCategory] ?? const Color(0xFFC9A84C);
@@ -354,9 +467,9 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
             )),
             MarkerLayer(markers: buildDirLabels(center: _center)),
             // HTML: searchMarker — circleMarker(radius:8, color:#fff, fillColor:GOLD, fillOpacity:.9, weight:2)
-            if (_searchResultPos != null) CircleLayer(circles: [
+            if (_searchFocus != null) CircleLayer(circles: [
               CircleMarker(
-                point: _searchResultPos!,
+                point: LatLng(_searchFocus!.lat, _searchFocus!.lng),
                 radius: 8,
                 color: const Color(0xE6C9A84C), // GOLD fillOpacity:.9
                 borderColor: const Color(0xFFFFFFFF), // color:#fff
@@ -412,6 +525,30 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
           ),
         ),
 
+        // ── 選択日バッジ（今日以外を選択中のみ表示） ──
+        if (_selectedDate != null) Positioned(
+          top: topPad + 44, left: 16,
+          child: GestureDetector(
+            onTap: _resetDateToToday,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: const Color(0xE60F0F1E),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0x66C9A84C)),
+              ),
+              child: Row(mainAxisSize: MainAxisSize.min, children: [
+                const Text('📅', style: TextStyle(fontSize: 11)),
+                const SizedBox(width: 6),
+                Text(_formatSelectedDate(),
+                    style: const TextStyle(fontSize: 11, color: Color(0xFFC9A84C), letterSpacing: 0.5)),
+                const SizedBox(width: 6),
+                const Text('✕', style: TextStyle(fontSize: 10, color: Color(0xFF888888))),
+              ]),
+            ),
+          ),
+        ),
+
         // ── Buttons (search, layer, vp) ──
         if (!_searchOpen) Positioned(
           top: topPad + 76, left: 16,
@@ -440,6 +577,31 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
             active: _vpPanelOpen,
             onTap: () => setState(() => _vpPanelOpen = !_vpPanelOpen),
             child: const Text('📍', style: TextStyle(fontSize: 16)),
+          ),
+        ),
+        // Date picker button (📅)
+        Positioned(
+          top: topPad + 220, left: 16,
+          child: MapBtn(
+            active: _selectedDate != null,
+            onTap: _pickDate,
+            child: const Text('📅', style: TextStyle(fontSize: 14)),
+          ),
+        ),
+        // Locations list button (🗺)
+        Positioned(
+          top: topPad + 268, left: 16,
+          child: MapBtn(
+            onTap: _openLocations,
+            child: const Text('🗺', style: TextStyle(fontSize: 14)),
+          ),
+        ),
+        // Forecast button (🔮)
+        Positioned(
+          top: topPad + 316, left: 16,
+          child: MapBtn(
+            onTap: _openForecast,
+            child: const Text('🔮', style: TextStyle(fontSize: 14)),
           ),
         ),
 
@@ -619,10 +781,41 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
           ),
         ),
 
-        // ── Search Result Popup ──
-        if (_searchResultName != null) Positioned(
+        // ── Search Result List（複数候補） ──
+        if (_searchHits.isNotEmpty) Positioned(
           bottom: 160, left: 16, right: 16,
-          child: _buildSearchResult(),
+          child: SearchResultList(
+            hits: _searchHits,
+            onTap: _selectSearchHit,
+            onClose: () => setState(() => _searchHits = []),
+          ),
+        ),
+
+        // ── Search Focus Popup（単一選択後） ──
+        if (_searchFocus != null) Positioned(
+          bottom: 160, left: 16, right: 16,
+          child: _buildSearchFocusPopup(),
+        ),
+
+        // ── Searching spinner ──
+        if (_searching) Positioned(
+          top: topPad + 128, left: 16,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(
+              color: const Color(0xE60F0F1E),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: const Color(0x33C9A84C)),
+            ),
+            child: Row(mainAxisSize: MainAxisSize.min, children: const [
+              SizedBox(
+                width: 10, height: 10,
+                child: CircularProgressIndicator(strokeWidth: 1.5, color: Color(0xFFC9A84C)),
+              ),
+              SizedBox(width: 8),
+              Text('検索中…', style: TextStyle(fontSize: 10, color: Color(0xFFC9A84C))),
+            ]),
+          ),
         ),
 
         // ── Daily Omen Button（今日のタップボタン）──
@@ -637,6 +830,27 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
             key: ValueKey(_activeOverlay),
             kind: _activeOverlay!,
             onComplete: _onOverlayComplete,
+          ),
+        ),
+
+        // ── Loading Indicator (date change) ──
+        if (_loadingChart) Positioned(
+          top: topPad + 44, right: 16,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(
+              color: const Color(0xE60F0F1E),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: const Color(0x33C9A84C)),
+            ),
+            child: Row(mainAxisSize: MainAxisSize.min, children: const [
+              SizedBox(
+                width: 10, height: 10,
+                child: CircularProgressIndicator(strokeWidth: 1.5, color: Color(0xFFC9A84C)),
+              ),
+              SizedBox(width: 8),
+              Text('計算中…', style: TextStyle(fontSize: 10, color: Color(0xFFC9A84C))),
+            ]),
           ),
         ),
 
@@ -670,19 +884,29 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   }
 
   // ══════════════════════════════════════════════
-  // Search Result Popup
+  // Search Focus Popup（単一選択後）
   // ══════════════════════════════════════════════
-  Widget _buildSearchResult() {
-    final name = _searchResultName ?? '';
-    final parts = name.split(',');
-    final short = parts.length > 2 ? '${parts[0]}, ${parts[1]}' : name;
-    // Find score for this location (placeholder)
-    final sorted = _sectorScores.entries.toList()..sort((a, b) => b.value.compareTo(a.value));
-    final bestDir = sorted.isNotEmpty ? sorted.first.key : 'N';
-    final bestScore = sorted.isNotEmpty ? sorted.first.value : 0.0;
+  Widget _buildSearchFocusPopup() {
+    final f = _searchFocus!;
+    final parts = f.name.split(',');
+    final short = parts.length > 2 ? '${parts[0]}, ${parts[1]}' : f.name;
+    final dir = f.bestDir ?? f.directionFrom(_center);
+    final dirJp = dir16JP[dir] ?? dir;
+    final km = f.distanceKmFrom(_center);
+
+    // この方位のカテゴリ別スコア top 3
+    final catEntries = <MapEntry<String, double>>[];
+    for (final cat in _fComps.keys) {
+      final comps = _fComps[cat]?[dir];
+      if (comps == null) continue;
+      final sum = (comps['tSoft'] ?? 0) + (comps['tHard'] ?? 0) + (comps['pSoft'] ?? 0) + (comps['pHard'] ?? 0);
+      catEntries.add(MapEntry(cat, sum));
+    }
+    catEntries.sort((a, b) => b.value.compareTo(a.value));
+    final top3 = catEntries.take(3).toList();
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: const Color(0xF20F0F1E),
         borderRadius: BorderRadius.circular(14),
@@ -696,46 +920,96 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
             style: const TextStyle(fontSize: 13, color: Color(0xFFE8E0D0), fontWeight: FontWeight.w600),
             maxLines: 1, overflow: TextOverflow.ellipsis)),
           GestureDetector(
-            onTap: () => setState(() { _searchResultName = null; _searchResultPos = null; }),
+            onTap: () => setState(() => _searchFocus = null),
             child: const Text('✕', style: TextStyle(color: Color(0xFF555555), fontSize: 14)),
           ),
         ]),
+        const SizedBox(height: 10),
+        Row(children: [
+          Text('$dirJp方位',
+              style: const TextStyle(fontSize: 11, color: Color(0xFFC9A84C), letterSpacing: 1)),
+          const SizedBox(width: 10),
+          Text('${km.toStringAsFixed(km < 100 ? 1 : 0)} km',
+              style: const TextStyle(fontSize: 10, color: Color(0xFF888888))),
+          const Spacer(),
+          Text('総合 ${(f.bestScore).toStringAsFixed(1)}',
+              style: const TextStyle(fontSize: 10, color: Color(0xFFE8E0D0))),
+        ]),
         const SizedBox(height: 8),
-        // SR Tabs
-        DefaultTabController(
-          length: 3,
-          child: Column(mainAxisSize: MainAxisSize.min, children: [
-            const TabBar(
-              isScrollable: true,
-              labelColor: Color(0xFFF6BD60),
-              unselectedLabelColor: Color(0xFF666666),
-              indicatorColor: Color(0xFFF6BD60),
-              labelStyle: TextStyle(fontSize: 11),
-              tabs: [
-                Tab(text: '✦ 総合'),
-                Tab(text: '🌿 癒し'),
-                Tab(text: '💰 金運'),
-              ],
-            ),
-            SizedBox(
-              height: 80,
-              child: TabBarView(children: [
-                _srContent('この地点は${dir16JP[bestDir]}方面。\n運勢スコア: ${bestScore.toStringAsFixed(2)}'),
-                _srContent('癒しのエネルギーが流れている場所です。'),
-                _srContent('金運に関連するエネルギーが感じられます。'),
-              ]),
-            ),
-          ]),
+        if (top3.isNotEmpty) Wrap(
+          spacing: 8, runSpacing: 4,
+          children: [for (final e in top3) _catChip(e.key, e.value)],
         ),
+        const SizedBox(height: 10),
+        Row(children: [
+          Expanded(child: _actionTile('📌 拠点として登録', _saveFocusAsLocation)),
+          const SizedBox(width: 6),
+          Expanded(child: _actionTile('✈ ここへ移動', () {
+            _rebuild(LatLng(f.lat, f.lng));
+            setState(() => _searchFocus = null);
+          })),
+        ]),
       ]),
     );
   }
 
-  Widget _srContent(String text) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 8),
-      child: Text(text,
-        style: const TextStyle(fontSize: 12, color: Color(0xFFCCCCCC), height: 1.6)),
+  Widget _catChip(String cat, double score) {
+    final color = categoryColors[cat] ?? const Color(0xFFE8E0D0);
+    final label = categoryLabels[cat] ?? cat;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withValues(alpha: 0.4)),
+      ),
+      child: Row(mainAxisSize: MainAxisSize.min, children: [
+        Text(label, style: TextStyle(fontSize: 10, color: color)),
+        const SizedBox(width: 4),
+        Text(score.toStringAsFixed(1), style: const TextStyle(fontSize: 9, color: Color(0xFF999999))),
+      ]),
+    );
+  }
+
+  Widget _actionTile(String label, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
+        decoration: BoxDecoration(
+          color: const Color(0x1FC9A84C),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: const Color(0x66C9A84C)),
+        ),
+        child: Center(
+          child: Text(label,
+              style: const TextStyle(fontSize: 10, color: Color(0xFFC9A84C), letterSpacing: 0.5)),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _saveFocusAsLocation() async {
+    final f = _searchFocus;
+    if (f == null) return;
+    final mgr = SlotManager(storageKey: 'solara_locations', defaultNames: ['場所1','場所2','場所3','場所4']);
+    final slots = await mgr.load();
+    final homeCount = (slots.isNotEmpty && slots[0].isHome) ? 1 : 0;
+    if (slots.length >= mgr.maxSlots) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('保存は${mgr.maxSlots - homeCount}件までです。'), duration: const Duration(seconds: 2)),
+      );
+      return;
+    }
+    final parts = f.name.split(',');
+    final name = parts.isNotEmpty ? parts.first.substring(0, parts.first.length.clamp(0, 12)) : 'spot';
+    slots.add(VPSlot(name: name, lat: f.lat, lng: f.lng, icon: '⭐'));
+    await mgr.save(slots);
+    if (!mounted) return;
+    setState(() => _searchFocus = null);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('$nameを登録しました'), duration: const Duration(seconds: 2)),
     );
   }
 }
