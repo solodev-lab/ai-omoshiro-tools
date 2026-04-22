@@ -208,3 +208,153 @@ class SearchResultList extends StatelessWidget {
     }
   }
 }
+
+/// 検索候補から1件選ばれたあとの詳細ポップアップ。
+/// 現在の中心・日付・カテゴリ/ソースで再計算される動的表示。
+class SearchFocusPopup extends StatelessWidget {
+  final SearchHit focus;
+  final LatLng center;
+  /// fComps[category][direction] = {tSoft, tHard, pSoft, pHard}
+  final Map<String, Map<String, Map<String, double>>> fComps;
+  /// 'transit' | 'progressed' | 'combined'
+  final String activeSrc;
+  final VoidCallback onClose;
+  final VoidCallback onMoveToHit;
+  final VoidCallback onSaveAsLocation;
+
+  const SearchFocusPopup({
+    super.key,
+    required this.focus,
+    required this.center,
+    required this.fComps,
+    required this.activeSrc,
+    required this.onClose,
+    required this.onMoveToHit,
+    required this.onSaveAsLocation,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final parts = focus.name.split(',');
+    final short = parts.length > 2 ? '${parts[0]}, ${parts[1]}' : focus.name;
+    // 中心が動いたら方位を再計算（bestDir はキャッシュの可能性がある）
+    final dir = focus.directionFrom(center);
+    final dirJp = dir16JP[dir] ?? dir;
+    final km = focus.distanceKmFrom(center);
+
+    // この方位のカテゴリ別スコア — _displayScores と同じ src フィルタを適用して、
+    // 日付変更・ソース切替に追随して値が動くようにする。
+    final srcKeys = activeSrc == 'transit'
+        ? const ['tSoft', 'tHard']
+        : activeSrc == 'progressed'
+            ? const ['pSoft', 'pHard']
+            : compKeys;
+    final catEntries = <MapEntry<String, double>>[];
+    for (final cat in fComps.keys) {
+      final comps = fComps[cat]?[dir];
+      if (comps == null) continue;
+      double sum = 0;
+      for (final k in srcKeys) {
+        sum += comps[k] ?? 0;
+      }
+      if (sum < 0.05) continue; // 0同然のカテゴリは省く
+      catEntries.add(MapEntry(cat, sum));
+    }
+    catEntries.sort((a, b) => b.value.compareTo(a.value));
+    final top3 = catEntries.take(3).toList();
+
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: const Color(0xF20F0F1E),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0x33C9A84C)),
+      ),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
+        Row(children: [
+          const Text('📍', style: TextStyle(fontSize: 18)),
+          const SizedBox(width: 8),
+          Expanded(child: Text(short,
+            style: const TextStyle(fontSize: 13, color: Color(0xFFE8E0D0), fontWeight: FontWeight.w600),
+            maxLines: 1, overflow: TextOverflow.ellipsis)),
+          GestureDetector(
+            onTap: onClose,
+            child: const Text('✕', style: TextStyle(color: Color(0xFF555555), fontSize: 14)),
+          ),
+        ]),
+        const SizedBox(height: 10),
+        Row(children: [
+          Text('$dirJp方位',
+              style: const TextStyle(fontSize: 11, color: Color(0xFFC9A84C), letterSpacing: 1)),
+          const SizedBox(width: 10),
+          Text('${km.toStringAsFixed(km < 100 ? 1 : 0)} km',
+              style: const TextStyle(fontSize: 10, color: Color(0xFF888888))),
+          const Spacer(),
+          Text('総合 ${focus.bestScore.toStringAsFixed(1)}',
+              style: const TextStyle(fontSize: 10, color: Color(0xFFE8E0D0))),
+        ]),
+        const SizedBox(height: 8),
+        if (top3.isNotEmpty) Wrap(
+          spacing: 8, runSpacing: 4,
+          children: [for (final e in top3) _CatChip(cat: e.key, score: e.value)],
+        ),
+        const SizedBox(height: 10),
+        Row(children: [
+          Expanded(child: _ActionTile(label: '📌 拠点として登録', onTap: onSaveAsLocation)),
+          const SizedBox(width: 6),
+          Expanded(child: _ActionTile(label: '✈ ここへ移動', onTap: onMoveToHit)),
+        ]),
+      ]),
+    );
+  }
+}
+
+class _CatChip extends StatelessWidget {
+  final String cat;
+  final double score;
+  const _CatChip({required this.cat, required this.score});
+
+  @override
+  Widget build(BuildContext context) {
+    final color = categoryColors[cat] ?? const Color(0xFFE8E0D0);
+    final label = categoryLabels[cat] ?? cat;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withValues(alpha: 0.4)),
+      ),
+      child: Row(mainAxisSize: MainAxisSize.min, children: [
+        Text(label, style: TextStyle(fontSize: 10, color: color)),
+        const SizedBox(width: 4),
+        Text(score.toStringAsFixed(1), style: const TextStyle(fontSize: 9, color: Color(0xFF999999))),
+      ]),
+    );
+  }
+}
+
+class _ActionTile extends StatelessWidget {
+  final String label;
+  final VoidCallback onTap;
+  const _ActionTile({required this.label, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
+        decoration: BoxDecoration(
+          color: const Color(0x1FC9A84C),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: const Color(0x66C9A84C)),
+        ),
+        child: Center(
+          child: Text(label,
+              style: const TextStyle(fontSize: 10, color: Color(0xFFC9A84C), letterSpacing: 0.5)),
+        ),
+      ),
+    );
+  }
+}

@@ -16,6 +16,7 @@ import 'map/map_widgets.dart';
 import 'map/map_astro.dart';
 import 'map/map_planet_lines.dart';
 import 'map/map_search.dart';
+import 'map/map_overlays.dart';
 import 'forecast_screen.dart';
 import 'locations_screen.dart';
 
@@ -268,26 +269,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
 
   /// 日付ピッカー表示。選択されたら該当日の transit/progressed で再計算する。
   Future<void> _pickDate() async {
-    final now = DateTime.now();
-    final initial = _selectedDate ?? now;
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: initial,
-      firstDate: DateTime(now.year - 1, now.month, now.day),
-      lastDate: DateTime(now.year + 2, now.month, now.day),
-      builder: (ctx, child) => Theme(
-        data: Theme.of(ctx).copyWith(
-          colorScheme: const ColorScheme.dark(
-            primary: Color(0xFFC9A84C),
-            onPrimary: Color(0xFF0F0F1E),
-            surface: Color(0xFF0F0F1E),
-            onSurface: Color(0xFFE8E0D0),
-          ),
-          dialogTheme: const DialogThemeData(backgroundColor: Color(0xFF0F0F1E)),
-        ),
-        child: child!,
-      ),
-    );
+    final picked = await showSolaraDatePicker(context, initial: _selectedDate);
     if (picked == null) return;
     // 正午固定（house 位置の揺れを抑える意図で日中の代表時刻を選ぶ）
     final noon = DateTime.utc(picked.year, picked.month, picked.day, 3, 0, 0);
@@ -301,72 +283,60 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     await _loadProfileAndChart();
   }
 
-  Future<void> _openLocations() async {
-    await showModalBottomSheet<void>(
+  /// 共通: 角丸付き全画面BottomSheet
+  Future<void> _showSheet(Widget child, {double heightFrac = 0.9}) {
+    return showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       barrierColor: const Color(0xB3000000),
       builder: (ctx) => SizedBox(
-        height: MediaQuery.of(ctx).size.height * 0.9,
+        height: MediaQuery.of(ctx).size.height * heightFrac,
         child: ClipRRect(
           borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-          child: LocationsScreen(
-            center: _center,
-            scoreResult: _scoreResult,
-            sectorScores: _displayScores(),
-            profile: _profile,
-            onSelectSlot: (slot) {
-              _rebuild(LatLng(slot.lat, slot.lng));
-            },
-          ),
+          child: child,
         ),
       ),
     );
   }
 
-  Future<void> _openForecast() async {
-    // 現在の中心が出生地/ホームと一致するか判定し、ラベルと座標文字列を決定する
-    String? baseLabel;
-    String? baseDetail;
-    final p = _profile;
-    if (p != null) {
-      // Home と一致する場合は Home 表示、それ以外は "現在地点"
-      final isHome = p.homeName.isNotEmpty &&
-          (p.homeLat - _center.latitude).abs() < 0.001 &&
-          (p.homeLng - _center.longitude).abs() < 0.001;
-      final isBirth = p.birthPlace.isNotEmpty &&
-          (p.birthLat - _center.latitude).abs() < 0.001 &&
-          (p.birthLng - _center.longitude).abs() < 0.001;
-      if (isHome) {
-        baseLabel = p.homeName;
-      } else if (isBirth) {
-        baseLabel = p.birthPlace;
-      } else {
-        baseLabel = '現在のビューポイント';
-      }
-      baseDetail = '${_center.latitude.toStringAsFixed(4)}, ${_center.longitude.toStringAsFixed(4)}';
-    }
+  Future<void> _openLocations() => _showSheet(LocationsScreen(
+    center: _center,
+    scoreResult: _scoreResult,
+    sectorScores: _displayScores(),
+    profile: _profile,
+    onSelectSlot: (slot) => _rebuild(LatLng(slot.lat, slot.lng)),
+  ));
 
-    await showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      barrierColor: const Color(0xB3000000),
-      builder: (ctx) => SizedBox(
-        height: MediaQuery.of(ctx).size.height * 0.92,
-        child: ClipRRect(
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-          child: ForecastScreen(
-            baseLabel: baseLabel,
-            baseDetail: baseDetail,
-            onJumpToDate: (date) {
-              setState(() => _selectedDate = date);
-              _loadProfileAndChart(targetDate: date);
-            },
-          ),
-        ),
+  /// Forecast 画面用の「基準地」ラベル算出
+  (String?, String?) _forecastBaseInfo() {
+    final p = _profile;
+    if (p == null) return (null, null);
+    final isHome = p.homeName.isNotEmpty &&
+        (p.homeLat - _center.latitude).abs() < 0.001 &&
+        (p.homeLng - _center.longitude).abs() < 0.001;
+    final isBirth = p.birthPlace.isNotEmpty &&
+        (p.birthLat - _center.latitude).abs() < 0.001 &&
+        (p.birthLng - _center.longitude).abs() < 0.001;
+    final label = isHome ? p.homeName
+        : isBirth ? p.birthPlace
+        : '現在のビューポイント';
+    final detail = '${_center.latitude.toStringAsFixed(4)}, ${_center.longitude.toStringAsFixed(4)}';
+    return (label, detail);
+  }
+
+  Future<void> _openForecast() {
+    final (baseLabel, baseDetail) = _forecastBaseInfo();
+    return _showSheet(
+      ForecastScreen(
+        baseLabel: baseLabel,
+        baseDetail: baseDetail,
+        onJumpToDate: (date) {
+          setState(() => _selectedDate = date);
+          _loadProfileAndChart(targetDate: date);
+        },
       ),
+      heightFrac: 0.92,
     );
   }
 
@@ -564,41 +534,16 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
             ]),
             // VP Pin — HTML: draggable gold circle, dragend → rebuild
             MarkerLayer(markers: [
-              Marker(point: _center, width: 20, height: 20, child: GestureDetector(
-                onPanUpdate: (d) {
-                  final bounds = _mapCtrl.camera.visibleBounds;
-                  final latRange = bounds.north - bounds.south;
-                  final lngRange = bounds.east - bounds.west;
-                  final size = MediaQuery.of(context).size;
-                  setState(() {
-                    _center = LatLng(
-                      _center.latitude - d.delta.dy * latRange / size.height,
-                      _center.longitude + d.delta.dx * lngRange / size.width,
-                    );
-                  });
-                },
-                onPanEnd: (_) {
-                  // HTML: vpPin.on('dragend') → rebuild — スコアはAPIベースなので再計算不要、UI更新のみ
+              buildVpPinMarker(
+                mapCtrl: _mapCtrl,
+                center: _center,
+                screenSize: MediaQuery.of(context).size,
+                onCenterChange: (c) => setState(() => _center = c),
+                onDragEnd: () {
                   setState(() {});
-                  // 中心が動いたので検索結果の方位/距離/スコアを再注入
                   _reannotateSearchResults();
                 },
-                child: Container(
-                  width: 20, height: 20,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: const RadialGradient(
-                      center: Alignment(-0.2, -0.3),
-                      colors: [Color(0xFFFFE8A0), Color(0xFFC9A84C)],
-                    ),
-                    border: Border.all(color: const Color(0xFFE8E0D0), width: 2),
-                    boxShadow: const [
-                      BoxShadow(color: Color(0x99C9A84C), blurRadius: 12),
-                      BoxShadow(color: Color(0x66000000), blurRadius: 6, offset: Offset(0, 2)),
-                    ],
-                  ),
-                ),
-              )),
+              ),
             ]),
           ],
         ),
@@ -616,112 +561,34 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
         // ── 選択日バッジ（今日以外を選択中のみ表示） ──
         if (_selectedDate != null) Positioned(
           top: topPad + 44, left: 16,
-          child: GestureDetector(
+          child: SelectedDateBadge(
+            label: _formatSelectedDate(),
             onTap: _resetDateToToday,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(
-                color: const Color(0xE60F0F1E),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: const Color(0x66C9A84C)),
-              ),
-              child: Row(mainAxisSize: MainAxisSize.min, children: [
-                const Text('📅', style: TextStyle(fontSize: 11)),
-                const SizedBox(width: 6),
-                Text(_formatSelectedDate(),
-                    style: const TextStyle(fontSize: 11, color: Color(0xFFC9A84C), letterSpacing: 0.5)),
-                const SizedBox(width: 6),
-                const Text('✕', style: TextStyle(fontSize: 10, color: Color(0xFF888888))),
-              ]),
-            ),
           ),
         ),
 
-        // ── Buttons (search, layer, vp) ──
-        if (!_searchOpen) Positioned(
-          top: topPad + 76, left: 16,
-          child: MapBtn(
-            child: const Icon(Icons.search, size: 18, color: Color(0x99C9A84C)),
-            onTap: () => setState(() => _searchOpen = true),
-          ),
-        ),
-        Positioned(
-          top: topPad + 124, left: 16,
-          child: MapBtn(
-            active: _layerPanelOpen,
-            onTap: () => setState(() => _layerPanelOpen = !_layerPanelOpen),
-            child: Column(mainAxisSize: MainAxisSize.min, children: [
-              Container(width: 18, height: 2, decoration: BoxDecoration(color: const Color(0xFFE8E0D0), borderRadius: BorderRadius.circular(1))),
-              const SizedBox(height: 3),
-              Container(width: 18, height: 2, decoration: BoxDecoration(color: const Color(0xFFC9A84C), borderRadius: BorderRadius.circular(1))),
-              const SizedBox(height: 3),
-              Container(width: 18, height: 2, decoration: BoxDecoration(color: const Color(0xFF00D4FF), borderRadius: BorderRadius.circular(1))),
-            ]),
-          ),
-        ),
-        Positioned(
-          top: topPad + 172, left: 16,
-          child: MapBtn(
-            active: _vpPanelOpen,
-            onTap: () => setState(() => _vpPanelOpen = !_vpPanelOpen),
-            child: const Text('📍', style: TextStyle(fontSize: 16)),
-          ),
-        ),
-        // Date picker button (📅)
-        Positioned(
-          top: topPad + 220, left: 16,
-          child: MapBtn(
-            active: _selectedDate != null,
-            onTap: _pickDate,
-            child: const Text('📅', style: TextStyle(fontSize: 14)),
-          ),
-        ),
-        // Locations list button (🗺)
-        Positioned(
-          top: topPad + 268, left: 16,
-          child: MapBtn(
-            onTap: _openLocations,
-            child: const Text('🗺', style: TextStyle(fontSize: 14)),
-          ),
-        ),
-        // Forecast button (🔮)
-        Positioned(
-          top: topPad + 316, left: 16,
-          child: MapBtn(
-            onTap: _openForecast,
-            child: const Text('🔮', style: TextStyle(fontSize: 14)),
-          ),
+        // ── サイドボタン群（🔍 ≡ 📍 📅 🗺 🔮） ──
+        MapSideButtons(
+          topPad: topPad,
+          searchOpen: _searchOpen,
+          layerPanelOpen: _layerPanelOpen,
+          vpPanelOpen: _vpPanelOpen,
+          hasSelectedDate: _selectedDate != null,
+          onSearchTap: () => setState(() => _searchOpen = true),
+          onLayerTap: () => setState(() => _layerPanelOpen = !_layerPanelOpen),
+          onVpTap: () => setState(() => _vpPanelOpen = !_vpPanelOpen),
+          onDateTap: _pickDate,
+          onLocationsTap: _openLocations,
+          onForecastTap: _openForecast,
         ),
 
         // ── Search Bar ──
         if (_searchOpen) Positioned(
           top: topPad + 76, left: 16, right: 16,
-          child: Container(
-            decoration: BoxDecoration(
-              color: const Color(0xE60F0F1E),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: const Color(0x26FFFFFF)),
-            ),
-            child: Row(children: [
-              Expanded(child: TextField(
-                controller: _searchCtrl, autofocus: true,
-                style: const TextStyle(color: Color(0xFFE8E0D0), fontSize: 13),
-                decoration: const InputDecoration(
-                  hintText: '🔍 場所を検索...',
-                  hintStyle: TextStyle(color: Color(0xFF555555)),
-                  border: InputBorder.none,
-                  contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                ),
-                onSubmitted: _doSearch,
-              )),
-              GestureDetector(
-                onTap: () => setState(() => _searchOpen = false),
-                child: const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 12),
-                  child: Text('✕', style: TextStyle(color: Color(0xFF555555), fontSize: 16)),
-                ),
-              ),
-            ]),
+          child: SearchBarOverlay(
+            controller: _searchCtrl,
+            onSubmitted: _doSearch,
+            onClose: () => setState(() => _searchOpen = false),
           ),
         ),
 
@@ -742,15 +609,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
         // ── Seed Badge ──
         if (_preseedState == 'hidden') Positioned(
           top: topPad + 6, right: 20,
-          child: Container(
-            width: 36, height: 36,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: const Color(0x26C9A84C),
-              border: Border.all(color: const Color(0x66C9A84C)),
-            ),
-            child: const Center(child: Text('🌱', style: TextStyle(fontSize: 16))),
-          ),
+          child: const SeedBadge(),
         ),
 
         // ── 外側タップでパネルを閉じる（HTML: pointerdown outside → close）──
@@ -801,23 +660,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
         if (!_fortuneSheetOpen) Positioned(
           bottom: 80, left: 0, right: 0,
           child: Center(
-            child: GestureDetector(
-              onTap: () => setState(() => _fortuneSheetOpen = true),
-              child: Container(
-                padding: const EdgeInsets.fromLTRB(18, 4, 18, 2),
-                decoration: const BoxDecoration(
-                  color: Color(0xCC0A0A19),
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
-                  border: Border(
-                    top: BorderSide(color: Color(0x33C9A84C)),
-                    left: BorderSide(color: Color(0x33C9A84C)),
-                    right: BorderSide(color: Color(0x33C9A84C)),
-                  ),
-                ),
-                child: const Text('▲ 運勢方位',
-                  style: TextStyle(fontSize: 10, color: Color(0xFF888888), letterSpacing: 0.5)),
-              ),
-            ),
+            child: FortunePullTab(onTap: () => setState(() => _fortuneSheetOpen = true)),
           ),
         ),
 
@@ -863,19 +706,9 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
 
         // ── Preseed ──
         if (_preseedState == 'center') const Center(child: Preseed()),
-        if (_preseedState == 'bottom') Positioned(
+        if (_preseedState == 'bottom') const Positioned(
           bottom: 12, left: 0, right: 0,
-          child: AnimatedOpacity(
-            opacity: 0.7,
-            duration: const Duration(milliseconds: 600),
-            child: const Column(mainAxisSize: MainAxisSize.min, children: [
-              Text('🌱', style: TextStyle(fontSize: 20)),
-              SizedBox(height: 6),
-              Text('今日の方位を探索してみよう\n地図をタップして始めてね',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 10, color: Color(0xFF555555), letterSpacing: 1, height: 1.5)),
-            ]),
-          ),
+          child: PreseedHint(),
         ),
 
         // ── Search Result List（複数候補） ──
@@ -891,28 +724,25 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
         // ── Search Focus Popup（単一選択後） ──
         if (_searchFocus != null) Positioned(
           bottom: 160, left: 16, right: 16,
-          child: _buildSearchFocusPopup(),
+          child: SearchFocusPopup(
+            focus: _searchFocus!,
+            center: _center,
+            fComps: _fComps,
+            activeSrc: _activeSrc,
+            onClose: () => setState(() => _searchFocus = null),
+            onMoveToHit: () {
+              final f = _searchFocus!;
+              _rebuild(LatLng(f.lat, f.lng));
+              setState(() => _searchFocus = null);
+            },
+            onSaveAsLocation: _saveFocusAsLocation,
+          ),
         ),
 
         // ── Searching spinner ──
         if (_searching) Positioned(
           top: topPad + 128, left: 16,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-            decoration: BoxDecoration(
-              color: const Color(0xE60F0F1E),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0x33C9A84C)),
-            ),
-            child: Row(mainAxisSize: MainAxisSize.min, children: const [
-              SizedBox(
-                width: 10, height: 10,
-                child: CircularProgressIndicator(strokeWidth: 1.5, color: Color(0xFFC9A84C)),
-              ),
-              SizedBox(width: 8),
-              Text('検索中…', style: TextStyle(fontSize: 10, color: Color(0xFFC9A84C))),
-            ]),
-          ),
+          child: const StatusBadge(label: '検索中…'),
         ),
 
         // ── Daily Omen Button（今日のタップボタン）──
@@ -933,167 +763,17 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
         // ── Loading Indicator (date change) ──
         if (_loadingChart) Positioned(
           top: topPad + 44, right: 16,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-            decoration: BoxDecoration(
-              color: const Color(0xE60F0F1E),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0x33C9A84C)),
-            ),
-            child: Row(mainAxisSize: MainAxisSize.min, children: const [
-              SizedBox(
-                width: 10, height: 10,
-                child: CircularProgressIndicator(strokeWidth: 1.5, color: Color(0xFFC9A84C)),
-              ),
-              SizedBox(width: 8),
-              Text('計算中…', style: TextStyle(fontSize: 10, color: Color(0xFFC9A84C))),
-            ]),
-          ),
+          child: const StatusBadge(label: '計算中…'),
         ),
 
         // ── Rest Overlay ──
         if (_restOverlayVisible) Positioned.fill(
-          child: GestureDetector(
-            onTap: () => setState(() => _restOverlayVisible = false),
-            child: Container(
-              color: Colors.transparent,
-              child: Center(child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 20),
-                constraints: const BoxConstraints(maxWidth: 260),
-                decoration: BoxDecoration(
-                  color: const Color(0xD90F0F1E),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: const Color(0x4DC9A84C)),
-                ),
-                child: Column(mainAxisSize: MainAxisSize.min, children: [
-                  const Text('🌙', style: TextStyle(fontSize: 28)),
-                  const SizedBox(height: 8),
-                  Text(_restOverlayText,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(fontSize: 13, color: Color(0xFFC9A84C), height: 1.7)),
-                ]),
-              )),
-            ),
+          child: RestOverlay(
+            text: _restOverlayText,
+            onDismiss: () => setState(() => _restOverlayVisible = false),
           ),
         ),
       ],
-    );
-  }
-
-  // ══════════════════════════════════════════════
-  // Search Focus Popup（単一選択後）
-  // ══════════════════════════════════════════════
-  Widget _buildSearchFocusPopup() {
-    final f = _searchFocus!;
-    final parts = f.name.split(',');
-    final short = parts.length > 2 ? '${parts[0]}, ${parts[1]}' : f.name;
-    // 中心が動いたら方位を再計算（bestDir はキャッシュの可能性がある）
-    final dir = f.directionFrom(_center);
-    final dirJp = dir16JP[dir] ?? dir;
-    final km = f.distanceKmFrom(_center);
-
-    // この方位のカテゴリ別スコア — _displayScores と同じ src フィルタを適用して、
-    // 日付変更・ソース切替に追随して値が動くようにする。
-    final srcKeys = _activeSrc == 'transit'
-        ? const ['tSoft', 'tHard']
-        : _activeSrc == 'progressed'
-            ? const ['pSoft', 'pHard']
-            : compKeys;
-    final catEntries = <MapEntry<String, double>>[];
-    for (final cat in _fComps.keys) {
-      final comps = _fComps[cat]?[dir];
-      if (comps == null) continue;
-      double sum = 0;
-      for (final k in srcKeys) {
-        sum += comps[k] ?? 0;
-      }
-      if (sum < 0.05) continue; // 0同然のカテゴリは省く
-      catEntries.add(MapEntry(cat, sum));
-    }
-    catEntries.sort((a, b) => b.value.compareTo(a.value));
-    final top3 = catEntries.take(3).toList();
-
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: const Color(0xF20F0F1E),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0x33C9A84C)),
-      ),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
-        Row(children: [
-          const Text('📍', style: TextStyle(fontSize: 18)),
-          const SizedBox(width: 8),
-          Expanded(child: Text(short,
-            style: const TextStyle(fontSize: 13, color: Color(0xFFE8E0D0), fontWeight: FontWeight.w600),
-            maxLines: 1, overflow: TextOverflow.ellipsis)),
-          GestureDetector(
-            onTap: () => setState(() => _searchFocus = null),
-            child: const Text('✕', style: TextStyle(color: Color(0xFF555555), fontSize: 14)),
-          ),
-        ]),
-        const SizedBox(height: 10),
-        Row(children: [
-          Text('$dirJp方位',
-              style: const TextStyle(fontSize: 11, color: Color(0xFFC9A84C), letterSpacing: 1)),
-          const SizedBox(width: 10),
-          Text('${km.toStringAsFixed(km < 100 ? 1 : 0)} km',
-              style: const TextStyle(fontSize: 10, color: Color(0xFF888888))),
-          const Spacer(),
-          Text('総合 ${(f.bestScore).toStringAsFixed(1)}',
-              style: const TextStyle(fontSize: 10, color: Color(0xFFE8E0D0))),
-        ]),
-        const SizedBox(height: 8),
-        if (top3.isNotEmpty) Wrap(
-          spacing: 8, runSpacing: 4,
-          children: [for (final e in top3) _catChip(e.key, e.value)],
-        ),
-        const SizedBox(height: 10),
-        Row(children: [
-          Expanded(child: _actionTile('📌 拠点として登録', _saveFocusAsLocation)),
-          const SizedBox(width: 6),
-          Expanded(child: _actionTile('✈ ここへ移動', () {
-            _rebuild(LatLng(f.lat, f.lng));
-            setState(() => _searchFocus = null);
-          })),
-        ]),
-      ]),
-    );
-  }
-
-  Widget _catChip(String cat, double score) {
-    final color = categoryColors[cat] ?? const Color(0xFFE8E0D0);
-    final label = categoryLabels[cat] ?? cat;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withValues(alpha: 0.4)),
-      ),
-      child: Row(mainAxisSize: MainAxisSize.min, children: [
-        Text(label, style: TextStyle(fontSize: 10, color: color)),
-        const SizedBox(width: 4),
-        Text(score.toStringAsFixed(1), style: const TextStyle(fontSize: 9, color: Color(0xFF999999))),
-      ]),
-    );
-  }
-
-  Widget _actionTile(String label, VoidCallback onTap) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
-        decoration: BoxDecoration(
-          color: const Color(0x1FC9A84C),
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: const Color(0x66C9A84C)),
-        ),
-        child: Center(
-          child: Text(label,
-              style: const TextStyle(fontSize: 10, color: Color(0xFFC9A84C), letterSpacing: 0.5)),
-        ),
-      ),
     );
   }
 

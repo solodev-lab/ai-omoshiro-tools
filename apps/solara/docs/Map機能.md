@@ -1,56 +1,92 @@
 ## できる事
 1. 今日の一番のスコアを恋愛、仕事、金運、会話、癒しからアクション表示
-2. VIEWPOINTからの指定日付の運勢方位をしる
-3. VIEWPOINTから見る指定日付のLocationsの運勢スコア。Locations一覧画面。
-4. VIEWPOINTから見る指定日付の検索地点毎のスコアが見れる。
-5. 引越し、旅行計画の参考となる未来予測。１年分のスコア一覧、まずは月毎で出して、月を選択して日付も見れる。最大スコアを強調表示。
-   
-   これ、実装できる？
-   アプリ容量と処理速度、計算量、電池使用量など考慮して教えてください。
-
-
-２つのパターンの未来予測がほしい。
-
-引越し計画の場合は自宅基準で１年でよい。１６方位事で
-
-旅行計画の場合、３か所くらいできるようにして、日付を範囲指定させれば、より少なくて済むかな？
+2. VIEWPOINTから指定日の運勢方位（📅ボタン）
+3. VIEWPOINTから見る指定日付のLocationsの運勢スコア（🗺ボタンでLocations一覧画面）
+4. VIEWPOINTから見る指定日付の検索地点毎のスコア（🔍検索、日付/ソース切替追従）
+5. 1年〜5年の運勢予測 Forecast（🔮ボタン、ヒートマップ＋Top5＋「◯◯期」抽出）
 
 ---
 
 ## 実装状況（2026-04-22 セッション時点）
 
 ### ✅ Phase 0: 天体計算基盤（完了）
+- Worker `solara-api`（`solara-api.solodev-lab.com`）稼働
+- `/astro/chart` で Natal/Transit/Progressed + ASC/MC/DSC/IC + アスペクト
+- mode='both' で Transit+Progressed 同時取得
+- `map_astro.dart` scoreAll() で16方位スコア
+- N方向ポリゴン破綻を修正済（nPolar 距離制限）
 
-- **Worker**: `apps/solara/worker/` の `solara-api` がカスタムドメイン `solara-api.solodev-lab.com` で稼働中
-- `/astro/chart` エンドポイントで Natal/Transit/Progressed 天体位置 + ASC/MC/DSC/IC + アスペクトを返却
-- **mode='both'** を追加（Map画面用に Transit と Progressed を1リクエストで同時取得）
-- Dart 側 `map_astro.dart` が実URLを参照し、scoreAll() で16方位スコアを計算
-- Map画面にカテゴリ/ソース切替が正しく反映される（`_displayScores()` で fComp から再集計）
-- N方向セクターが北極を越えてポリゴン破綻する問題を修正（HTMLモック同様 `nPolar` 距離制限）
+### ✅ Phase 1: Map操作系 + Forecast（完了）
 
-### 🔜 次セッション以降の実装順序
+| 機能 | 入口 | 主要ファイル |
+|-----|-----|------------|
+| 日付ピッカー統合 | Map画面 📅 | `map_screen.dart` / `map_astro.dart fetchChart` |
+| Locations 一覧 | Map画面 🗺 | `screens/locations_screen.dart` |
+| 検索強化（スコア付き・日付連動） | Map画面 🔍 | `screens/map/map_search.dart` |
+| Forecast（1〜5年分） | Map画面 🔮 | `screens/forecast_screen.dart` |
+| Worker 日次予測 | POST `/astro/forecast` | `worker/src/astro.js computeForecast` |
+| クライアントキャッシュ＋月次差分 | — | `utils/forecast_cache.dart` |
+| 「◯◯期」検出 | Forecast 画面 | `utils/forecast_cache.dart detectLifePeriods` |
+| Rate Limit + KV 月次クォータ | Worker | `worker/src/index.js` (forecast=6/min, KV=60/month) |
+| ヒートマップ 3モード切替 | Forecast 画面 | 相対/絶対/カテゴリ + 🟢↑高/🔴↑高 |
+| ランク別表示 | Forecast 画面 | カテゴリモードの 1位/2位 セグメント |
+| 年範囲 5年まで | Forecast 画面 | 今年/来年/再来年/3年後/4年後 |
+| Top5 カテゴリ別 | Forecast 画面 | 総合＋5カテゴリの 6セグメント |
+| 年間ベスト日 | Forecast 画面基準地カード | Mapジャンプ可 |
 
-| 優先 | 機能 | 概要 |
-|-----|------|------|
-| 1 | 日付ピッカー統合 | VIEWPOINTから指定日の運勢方位を見る（過去/未来日） |
-| 2 | Locations一覧画面 | 登録地点の指定日スコアをリスト表示、編集・削除 |
-| 3 | 検索強化 | Google Places API切替、スコア表示、Locations保存ボタン |
-| 4 | Worker /astro/forecast | 指定期間の日次バッチ取得API |
-| 5 | クライアントキャッシュ + クールダウン | SharedPreferencesで12ヶ月ローリング、同地点24h制限、最大5地点 |
-| 6 | Forecast画面 | 年次ヒートマップ + 月詳細ドリルダウン + Top5サマリー + カテゴリフィルタ |
-| 7 | 旅行/引越しモード切替 | 1地点 vs 16方位の計算方式切替 |
-| 8 | Map画面への切替ボタン | 全画面データビュートグル |
-| 9 | 保護機構 | CF Workers Rate Limit + KV共有キャッシュ |
-| 10 | 月次差分更新 | 前月データ破棄+新月追加のロジック |
+### ファイル分割（Phase 1 後）
 
-### スコア計算方針（確定）
+Map画面のコードは以下に分割：
 
-- **重み**: トランジット 75%、プログレス 25%（既存ロジック維持）
-- **予測・日常とも同じ計算方式**を使用（予測日に当日スコアと乖離しないよう）
-- プログレスは1度/月の緩やかな動きで長期テーマの底流を形成
+```
+lib/screens/map_screen.dart (803行)  ← メインStatefulWidget
+lib/screens/map/
+  ├─ map_astro.dart        (375) — fetchChart + scoreAll
+  ├─ map_constants.dart    (101) — dir16, カテゴリ色, 惑星メタデータ
+  ├─ map_fortune_sheet.dart(323) — FortuneFilterLabel + FortuneSheet
+  ├─ map_layer_panel.dart  (153) — レイヤー表示切替パネル
+  ├─ map_overlays.dart     (349) — SideButtons/SearchBar/Badges/VP Pin/RestOverlay 等
+  ├─ map_planet_lines.dart (191) — 天体ライン描画
+  ├─ map_search.dart       (360) — searchPlaces / SearchResultList / SearchFocusPopup
+  ├─ map_sectors.dart      (176) — 16方位セクターポリゴン
+  ├─ map_stella.dart       ( 57) — Stella / StellaMinimized / Preseed
+  ├─ map_styles.dart       (116) — MapStyle enum + タイル定義
+  ├─ map_vp_panel.dart     (435) — VPPanel + SlotManager + VPSlot
+  └─ map_widgets.dart      ( 87) — MapBtn 共通ボタン
 
-### インフラ想定
+lib/screens/
+  ├─ locations_screen.dart (290) — 拠点一覧画面
+  └─ forecast_screen.dart  (720) — Forecast 画面
 
-- **Cloudflare Workers 無料枠**: DAU 2万人まで無料で運用可能（1ユーザー約5req/日想定）
-- **外部API費用**: 追加料金なし（Gemini API Key は Places API 別物のため要取得）
-- **データ量**: 1地点12ヶ月分 ≈ 120KB JSON（圧縮後 30KB程度）
+lib/utils/
+  └─ forecast_cache.dart   (280) — ForecastDay / ForecastCache / detectLifePeriods
+```
+
+### スコア計算方針
+
+- アスペクト重み: 0.4〜1.0（conjunction/sextile/square/trine/quincunx/opposition）
+- Transit/Natal=0.6、Progressed/Natal=0.5、Transit/Progressed=0.4 の掛率
+- 16方位 spread=22.5°、cos falloff
+- `_fortunePairs` で 5カテゴリ（love/money/healing/work/communication）別スコア
+- Scoreモデルは Flutter 側 `scoreAll()` と Worker 側 `scoreOneDate()` で完全一致
+
+### 「◯◯期」検出ロジック
+
+- 各カテゴリの年間スコアを降順ソート → 上位25%を閾値に
+- 閾値以上が 7日以上連続（2日以内の凹みは吸収）で「期」として抽出
+- カテゴリごと最長1期を採用
+- 絵文字ラベル: 💗モテ期/💰金運期/🌿癒し期/⚙仕事期/💬発信期
+
+### インフラ
+
+- **Cloudflare Workers 無料枠**（10万req/day）内で動作
+- `/astro/forecast` は Rate Limit 6req/min、KV ベース 60req/月/IP
+- **Gemini API Key は Places API と別物**（必要時は `GOOGLE_PLACES_KEY` を追加）
+- データ量: 1年分キャッシュ≈ 120KB JSON、5年で ≈ 600KB
+
+### 視認性・UX
+
+- OSM 明るい地図でのセクター視認性: HSL 明度×0.45/彩度×1.2 で自動暗色化
+- カメラリセット問題解消: `_hasInitialCenter` フラグ導入（VP 切替後の日付変更で VP を保持）
+- FortuneFilterLabel sub-pixel overflow: ClipRRect + IntrinsicWidth 除去で解消
+- Heat map 色慣習: 🟢↑高（信号機式）/ 🔴↑高（日本株価式）切替
