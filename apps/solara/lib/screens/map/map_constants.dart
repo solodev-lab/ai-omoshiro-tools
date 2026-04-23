@@ -48,18 +48,23 @@ class ChartLineStyle {
   });
 }
 
+// Horoscope 画面と色を統一:
+// - natal: gold 0xFFFFD370
+// - progressed: purple 0xFFB088FF
+// - transit: light blue 0xFF6BB5FF
+// 線の太さ/不透明度/破線パターンは大圏線が画面上で混雑しないよう従来値を維持。
 const chartStyles = <String, ChartLineStyle>{
   'natal': ChartLineStyle(
-    color: Color(0xFFE8E0D0), weight: 2, opacity: 0.5, dashPattern: null,
-    bg: Color(0xD9E8E0D0), fg: Color(0xFF1A0A30),
+    color: Color(0xFFFFD370), weight: 2, opacity: 0.5, dashPattern: null,
+    bg: Color(0xD9FFD370), fg: Color(0xFF1A0A30),
   ),
   'progressed': ChartLineStyle(
-    color: Color(0xFFC9A84C), weight: 1.8, opacity: 0.45, dashPattern: [8, 6],
-    bg: Color(0xD9C9A84C), fg: Color(0xFF1A0A30),
+    color: Color(0xFFB088FF), weight: 1.8, opacity: 0.45, dashPattern: [8, 6],
+    bg: Color(0xD9B088FF), fg: Color(0xFF1A0A30),
   ),
   'transit': ChartLineStyle(
-    color: Color(0xFF00D4FF), weight: 1.8, opacity: 0.45, dashPattern: [3, 6],
-    bg: Color(0xD900D4FF), fg: Color(0xFF1A0A30),
+    color: Color(0xFF6BB5FF), weight: 1.8, opacity: 0.45, dashPattern: [3, 6],
+    bg: Color(0xD96BB5FF), fg: Color(0xFF1A0A30),
   ),
 };
 
@@ -71,6 +76,9 @@ class PlanetMeta {
   const PlanetMeta(this.sym, this.jp, this.color);
 }
 
+// `sym` は仕様参照用（Map のマーカー描画は Horo と同じ PlanetVectorIcon の
+// ベクターグリフを使用するため OS フォント依存なし — Venus/Mars が
+// 絵文字化されない）。
 const planetMeta = <String, PlanetMeta>{
   'sun':     PlanetMeta('☉', '太陽',   Color(0xFFFFD700)),
   'moon':    PlanetMeta('☽', '月',     Color(0xFFC0C0C0)),

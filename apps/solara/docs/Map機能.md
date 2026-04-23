@@ -1,71 +1,83 @@
 ## できる事
 1. 今日の一番のスコアを恋愛、仕事、金運、会話、癒しからアクション表示
-2. VIEWPOINTから指定日の運勢方位（📅ボタン）
-3. VIEWPOINTから見る指定日付のLocationsの運勢スコア（🗺ボタンでLocations一覧画面）
-4. VIEWPOINTから見る指定日付の検索地点毎のスコア（🔍検索、日付/ソース切替追従）
-5. 1年〜5年の運勢予測 Forecast（🔮ボタン、ヒートマップ＋Top5＋「◯◯期」抽出）
+2. 日付バッジ（左上）から指定日の運勢方位 — タップでピッカー、✕ で今日リセット
+3. Locations 画面（🗺ボタン）— 基準地点プルダウン＋カテゴリ別スコア＋日付ステッパー
+4. 検索（🔍）— 検索地点毎のスコア（日付/ソース/カテゴリ切替追従）
+5. Forecast（🔮）— 1〜5年の運勢予測ヒートマップ＋強運Top5＋運勢サイクル
 
 ---
 
-## 実装状況（2026-04-23 セッション時点）
+## 実装状況（2026-04-23 後半セッション 完了）
 
-### ✅ Phase 2: 多言語対応 + 米国ターゲット化（2026-04-22〜23 完了）
+### Map 操作 UI（最新）
 
-| 機能 | 入口 | 主要ファイル |
-|---|---|---|
-| Jawg Maps ラスタタイル（多言語対応）| STYLE パネル Jawg/Jawg 夜 | `map_styles.dart` |
-| Smart ハイブリッドスタイル（OSM + Jawg 自動振り分け）| STYLE パネル Smart | `map_hybrid_provider.dart` |
-| LANG 切替（日本語/English）| LAYER パネル LANG セクション | `map_layer_panel.dart` |
-| CF Worker Jawg プロキシ（トークン秘匿）| `/tiles/jawg/<style>/<z>/<x>/<y>.png?lang=xx` | `worker/src/index.js` |
-| Worker URL 一元化（`solaraWorkerBase` 定数）| 全ファイル共通参照 | `utils/solara_api.dart` |
-| スマートデフォルト言語（端末ロケール検出）| 起動時自動 | `utils/solara_storage.dart` |
+| 要素 | 機能 |
+|---|---|
+| 日付バッジ（左上、常時表示・大きめ）| 「今日」表示 → タップでピッカー、カスタム日 → ✕ でリセット |
+| サイドボタン 5 個 | 🔍 検索 / ≡ Layer / 📍 VP / 🗺 Locations / 🔮 Forecast（48px等間隔） |
+| 📅 日付ボタン削除 | 左上バッジに集約 |
 
-### Smart ハイブリッド方式の仕組み
+### MAPSTYLE（ラベル変更前は STYLE）
 
-- タイル座標 (z/x/y) → lat/lng bbox に逆変換
-- 設定言語の「ホーム圏」と交差するタイルは **OSM HOT（無料・現地語）**
-- 圏外または低ズーム (z<5) のタイルは **Jawg（有料・name:xx 多言語）**
-- 例: 日本語ユーザーが東京を見る → OSM（日本語）、パリを見る → Jawg（日本語ラベル）
+- **Map / MapDark / Cycle / CycleDark** の 4 種（OSM HOT + CyclOSM、現地語ラベル）
+- 全タイルは Solara Worker `/tiles/osm/<source>/{z}/{x}/{y}.png` 経由（UA固定 + edge cache 24h）
+- LANG 切替・Smart ハイブリッド・Jawg は撤去済み（多言語ニーズ低 + 月25kビュー無料枠で十分）
+- ユーザー数増えたら Jawg/$25 プラン再導入を検討（Worker 側コード参考用に削除済みだが履歴に残置）
 
-### 言語ホーム圏定義
+### 惑星アイコン（ベクター描画）
 
-```dart
-'ja': [日本全域 (20-46°N, 122-154°E)]
-'en': [米本土, アラスカ, ハワイ, プエルトリコ, カナダ, 英・アイルランド, 豪, NZ]
-```
+- HORO と同じ `PlanetVectorIcon`（`horo_panel_shared.dart`）を Map マーカー内で使用
+- OS フォント依存なし → Venus/Mars が絵文字化されず他惑星と同じ細線で揃う
+- 色合いも HORO と統一: natal=ゴールド `#FFD370`、progressed=パープル `#B088FF`、transit=ライトブルー `#6BB5FF`
+- 惑星ラインの edge tracking（Liang–Barsky 投影）でビューポート端に張り付く
 
-### セキュリティ
+### Locations 画面（拡張完了）
 
-- Jawg アクセストークンは CF Worker 環境変数 `JAWG_TOKEN` に格納（アプリバイナリには含まれない）
-- Worker 側で style/lang を allowlist 制限、edge cache 24h、レートリミット 600req/分
-- 設定方法: `npx wrangler secret put JAWG_TOKEN`
+- ヘッダ直下に 3 操作メニュー：
+  1. 日付ステッパー `[年▲▼] [月▲▼] [日▲▼]` + ✕ 今日リセット（手入力対応）
+  2. 基準地点プルダウン（現在地 + VIEWPOINT スロット）
+  3. 5カテゴリチップ（癒し/金運/恋愛/仕事/話す、再タップで総合に戻る）
+- 行レイアウト：方位+距離→スコアバー、右端 40px 固定枠（HOMEバッジ or ⋯ メニュー）
+- 日付変更は内部で `fetchChart + scoreAll` を再実行（親 `_selectedDate` には影響なし）
+- 関連ウィジェットは `screens/locations/locations_date_stepper.dart` に分離
 
-### 消費削減効果（推定）
+### Forecast 画面（永続キャッシュ + 整理）
 
-- 日本語ユーザー: Jawg 消費 **約70%減**（国内は OSM、海外のみ Jawg）
-- 英語ユーザー（米国ターゲット）: Jawg 消費 **約80%減**（北米・英語圏全体が OSM でカバー）
-- 無料枠 25k views/月 での対応 MAU:
-  - 日本語市場: 30〜100人
-  - 英語市場: 100〜500人（広大な英語圏を OSM でカバーできるため）
+- **基準地セクション削除**（地点に依存しない計算なので誤解防止）
+- **運勢サイクル永続化**：`detectLifePeriods` の結果を `solara_forecast_periods_*` に保存。1年=1回計算、強制リフレッシュ時のみ再計算
+- **強運Top5 永続化**：6 mode × 5日を `solara_forecast_top5_*` に保存。mode 切替で再計算なし
+- 運勢サイクル設定: `topPct=0.15, minDays=7, maxGap=2`（カテゴリ毎 2〜4件想定）
+- 表示ロジック: 「今日以降の最初の期間」を本番表示。「次へ ▶」ボタンで全期間循環（確認用・臨時）
+- 選択日カードに「Mapで見る →」リンク追加
+- 関連ウィジェット分離: `screens/forecast/forecast_life_periods.dart`, `forecast_top5.dart`
 
-### 米国ターゲット Phase 1（2026-04-23）
+### 日付選択範囲（全画面統一）
 
-1. デフォルトスタイル: `smartLight`（新規ユーザー向けベスト選択）
-2. デフォルト言語: 端末ロケール自動判定（日本語端末=ja、それ以外=en）
-3. bbox にハワイ・プエルトリコ追加
-4. UI 英語化は**リリース直前まで保留**（機能確定してから i18n 実装）
+- 今日 −10年 〜 今日 +20年（過去回顧 + 中長期予測）
+- `showSolaraDatePicker`（Map バッジ）と Locations YMDステッパーの両方が同レンジ
 
 ### 未実装（将来タスク）
 
-- Smart Dark モード（OSM HOT + Jawg Dark の組合せ、ColorFilter invert 衝突問題あり）
-- Flutter i18n（UI の英語化）
-- MAU が増えたら Protomaps 自前ホスト or MapTiler API 移行を検討
+- Flutter i18n（UI の英語化、リリース直前まで保留）
+- MAU 増加時の Jawg / 多言語タイル再導入
+- Horo 画面への日付選択追加（現在は今日固定 + モック計算）
 
-### 過去の試行（リバート済み）
+---
 
-OpenFreeMap ベクタタイル（vector_map_tiles 10.0.0-beta.2）を試したが、
-Impeller GLES のシェーダ互換性問題（`Unsupported uniform data type`）で
-実機クラッシュ。全面リバートして Jawg ラスタ方式に切替えた経緯あり。
+## 過去の試行履歴
+
+### Smart ハイブリッド + Jawg 多言語タイル（撤去済み）
+
+2026-04-22〜23 で実装したが、以下の理由で 2026-04-23 後半セッションで撤去：
+- 想定ほど日本語化されない（OSM 現地語で十分なケースが多い）
+- ユーザー数次第で月 25k views を超えるリスクがあり過剰実装
+- ユーザー数が増えた段階で再導入予定（$25/100kビュープラン or Jawg）
+
+撤去内容: `MapStyle` enum から smartLight/jawgStreets/jawgDark、`map_hybrid_provider.dart`、Worker `/tiles/jawg/`、LANG セクション。Jawg トークンは CF secret に残置（再導入時の再利用用）。
+
+### OpenFreeMap ベクタタイル（リバート済み）
+
+vector_map_tiles 10.0.0-beta.2 を試したが Impeller GLES シェーダ互換性問題で実機クラッシュ。全面リバートしてラスタ方式維持。
 
 ---
 

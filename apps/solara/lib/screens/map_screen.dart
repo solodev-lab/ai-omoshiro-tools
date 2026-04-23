@@ -121,12 +121,8 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   bool _searching = false;
 
   // Map style (tile source + light/dark filter)
-  // デフォルトは Smart（ハイブリッド）: 言語ホーム圏で OSM、圏外で Jawg を使用。
-  // 米国ターゲットの英語ユーザーなら北米が OSM で賄えるため Jawg 消費が激減。
-  MapStyle _mapStyle = MapStyle.smartLight;
-  // Jawg / Smart スタイル利用時のラベル言語。'ja' | 'en' 等。
-  // 実際の初期値は _loadMapStyle で端末ロケールから決定される。
-  String _mapLang = 'en';
+  // OSM HOT は現地言語ラベルのまま（多言語化はユーザー数増えてから再検討）。
+  MapStyle _mapStyle = MapStyle.osmHotLight;
 
   @override
   void initState() {
@@ -163,23 +159,13 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
 
   Future<void> _loadMapStyle() async {
     final id = await SolaraStorage.loadMapStyleId();
-    final lang = await SolaraStorage.loadMapLanguage();
     if (!mounted) return;
-    setState(() {
-      _mapStyle = mapStyleFromId(id);
-      _mapLang = lang;
-    });
+    setState(() => _mapStyle = mapStyleFromId(id));
   }
 
   void _onMapStyleChanged(MapStyle style) {
     setState(() => _mapStyle = style);
     SolaraStorage.saveMapStyleId(mapStyleConfigs[style]!.id);
-  }
-
-  void _onMapLanguageChanged(String lang) {
-    if (_mapLang == lang) return;
-    setState(() => _mapLang = lang);
-    SolaraStorage.saveMapLanguage(lang);
   }
 
   Future<void> _loadProfileAndChart({DateTime? targetDate}) async {
@@ -323,29 +309,9 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     onSelectSlot: (slot) => _rebuild(LatLng(slot.lat, slot.lng)),
   ));
 
-  /// Forecast 画面用の「基準地」ラベル算出
-  (String?, String?) _forecastBaseInfo() {
-    final p = _profile;
-    if (p == null) return (null, null);
-    final isHome = p.homeName.isNotEmpty &&
-        (p.homeLat - _center.latitude).abs() < 0.001 &&
-        (p.homeLng - _center.longitude).abs() < 0.001;
-    final isBirth = p.birthPlace.isNotEmpty &&
-        (p.birthLat - _center.latitude).abs() < 0.001 &&
-        (p.birthLng - _center.longitude).abs() < 0.001;
-    final label = isHome ? p.homeName
-        : isBirth ? p.birthPlace
-        : '現在のビューポイント';
-    final detail = '${_center.latitude.toStringAsFixed(4)}, ${_center.longitude.toStringAsFixed(4)}';
-    return (label, detail);
-  }
-
   Future<void> _openForecast() {
-    final (baseLabel, baseDetail) = _forecastBaseInfo();
     return _showSheet(
       ForecastScreen(
-        baseLabel: baseLabel,
-        baseDetail: baseDetail,
         onJumpToDate: (date) {
           setState(() => _selectedDate = date);
           _loadProfileAndChart(targetDate: date);
@@ -524,7 +490,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
             onLongPress: (tapPos, latlng) => _rebuild(latlng),
           ),
           children: [
-            buildStyledTileLayer(_mapStyle, lang: _mapLang),
+            buildStyledTileLayer(_mapStyle),
             PolygonLayer(polygons: buildSectors(
               center: _center,
               sectorScores: _displayScores(),
@@ -538,10 +504,10 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
               lines: _planetLines, layers: _layers,
               planetGroupVis: _planetGroups, activeCategory: _activeCategory,
             )),
-            if (_planetLines.isNotEmpty) MarkerLayer(markers: buildPlanetSymbols(
+            if (_planetLines.isNotEmpty) PlanetSymbolsLayer(
               lines: _planetLines, layers: _layers,
               planetGroupVis: _planetGroups, activeCategory: _activeCategory,
-            )),
+            ),
             MarkerLayer(markers: buildDirLabels(center: _center)),
             // HTML: searchMarker — circleMarker(radius:8, color:#fff, fillColor:GOLD, fillOpacity:.9, weight:2)
             if (_searchFocus != null) CircleLayer(circles: [
@@ -579,33 +545,33 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
           ),
         ),
 
-        // ── 選択日バッジ（今日以外を選択中のみ表示） ──
-        if (_selectedDate != null) Positioned(
+        // ── 日付バッジ（常時表示。今日なら「今日」、ラベルタップでピッカー）──
+        Positioned(
           top: topPad + 44, left: 16,
           child: SelectedDateBadge(
             label: _formatSelectedDate(),
-            onTap: _resetDateToToday,
+            onTap: _pickDate,
+            onReset: _selectedDate != null ? _resetDateToToday : null,
           ),
         ),
 
-        // ── サイドボタン群（🔍 ≡ 📍 📅 🗺 🔮） ──
+        // ── サイドボタン群（🔍 ≡ 📍 🗺 🔮） ──
+        // 📅 日付ボタンは削除済み（左上の SelectedDateBadge から起動）
         MapSideButtons(
           topPad: topPad,
           searchOpen: _searchOpen,
           layerPanelOpen: _layerPanelOpen,
           vpPanelOpen: _vpPanelOpen,
-          hasSelectedDate: _selectedDate != null,
           onSearchTap: () => setState(() => _searchOpen = true),
           onLayerTap: () => setState(() => _layerPanelOpen = !_layerPanelOpen),
           onVpTap: () => setState(() => _vpPanelOpen = !_vpPanelOpen),
-          onDateTap: _pickDate,
           onLocationsTap: _openLocations,
           onForecastTap: _openForecast,
         ),
 
         // ── Search Bar ──
         if (_searchOpen) Positioned(
-          top: topPad + 76, left: 16, right: 16,
+          top: topPad + 92, left: 16, right: 16,
           child: SearchBarOverlay(
             controller: _searchCtrl,
             onSubmitted: _doSearch,
@@ -644,13 +610,12 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
 
         // ── Layer Panel ──
         if (_layerPanelOpen) Positioned(
-          top: topPad + 76, left: 60,
+          top: topPad + 92, left: 60,
           child: LayerPanel(
             layers: _layers,
             planetGroups: _planetGroups,
             activeCategory: _activeCategory,
             mapStyle: _mapStyle,
-            mapLang: _mapLang,
             onLayerToggle: (k) => setState(() => _layers[k] = !(_layers[k] ?? false)),
             onPlanetGroupToggle: (k) => setState(() => _planetGroups[k] = !(_planetGroups[k] ?? false)),
             onCategoryChanged: (k) {
@@ -658,13 +623,12 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
               _reannotateSearchResults();
             },
             onMapStyleChanged: _onMapStyleChanged,
-            onMapLanguageChanged: _onMapLanguageChanged,
           ),
         ),
 
         // ── VP Panel ──
         if (_vpPanelOpen) Positioned(
-          top: topPad + 172, left: 60,
+          top: topPad + 188, left: 60,
           child: VPPanel(
             activeTab: _vpTab,
             onTabChanged: (t) => setState(() => _vpTab = t),
@@ -764,7 +728,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
 
         // ── Searching spinner ──
         if (_searching) Positioned(
-          top: topPad + 128, left: 16,
+          top: topPad + 144, left: 16,
           child: const StatusBadge(label: '検索中…'),
         ),
 

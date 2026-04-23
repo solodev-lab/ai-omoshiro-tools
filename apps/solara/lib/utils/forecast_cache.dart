@@ -58,16 +58,36 @@ class LifePeriod {
     required this.avgScore,
     required this.days,
   });
+
+  Map<String, dynamic> toJson() => {
+    'category': category,
+    'start': start.toIso8601String(),
+    'end': end.toIso8601String(),
+    'avgScore': avgScore,
+    'days': days,
+  };
+
+  factory LifePeriod.fromJson(Map<String, dynamic> j) => LifePeriod(
+    category: j['category'] as String,
+    start: DateTime.parse(j['start'] as String),
+    end: DateTime.parse(j['end'] as String),
+    avgScore: (j['avgScore'] as num).toDouble(),
+    days: (j['days'] as num).toInt(),
+  );
 }
 
 /// ForecastDay 列から各カテゴリの「◯◯期」を検出する。
 /// - 各カテゴリの日次スコアを昇順ソートし上位 topPct% の閾値を決める
 /// - その閾値以上が minDays 日以上連続する区間を抽出（maxGap 日以内の凹みは吸収）
-/// - カテゴリごとに最長1件（最長期間）を採用
-/// - 戻り値は start 昇順
+/// - **minDays 以上の全区間を返す**（カテゴリ毎に複数件あり得る）
+/// - 戻り値は (category, start) で昇順
 List<LifePeriod> detectLifePeriods(
   List<ForecastDay> days, {
-  double topPct = 0.25,
+  // 標準化された設定（2026-04 調整）：
+  // - topPct 0.15 → 各カテゴリ年間 約55日が閾値超え
+  // - minDays 7 → 7日連続必須
+  // 変更時は強制リフレッシュで再計算が必要（保存済み periods は旧値のまま）
+  double topPct = 0.15,
   int minDays = 7,
   int maxGap = 2,
 }) {
@@ -107,22 +127,25 @@ List<LifePeriod> detectLifePeriods(
       if (end >= runStart) runs.add((runStart, end));
     }
 
-    // minDays 以上のうち最長を採用
-    final long = runs.where((r) => (r.$2 - r.$1 + 1) >= minDays).toList();
-    if (long.isEmpty) continue;
-    long.sort((a, b) => (b.$2 - b.$1).compareTo(a.$2 - a.$1));
-    final top = long.first;
-    final len = top.$2 - top.$1 + 1;
-    double sum = 0;
-    for (int i = top.$1; i <= top.$2; i++) { sum += scores[i]; }
-    final sd = DateTime.parse('${days[top.$1].date}T00:00:00Z');
-    final ed = DateTime.parse('${days[top.$2].date}T00:00:00Z');
-    results.add(LifePeriod(
-      category: cat, start: sd, end: ed, avgScore: sum / len, days: len,
-    ));
+    // minDays 以上の全期間を採用（カーソルで切替表示するため複数残す）
+    for (final r in runs) {
+      final len = r.$2 - r.$1 + 1;
+      if (len < minDays) continue;
+      double sum = 0;
+      for (int i = r.$1; i <= r.$2; i++) { sum += scores[i]; }
+      final sd = DateTime.parse('${days[r.$1].date}T00:00:00Z');
+      final ed = DateTime.parse('${days[r.$2].date}T00:00:00Z');
+      results.add(LifePeriod(
+        category: cat, start: sd, end: ed, avgScore: sum / len, days: len,
+      ));
+    }
   }
 
-  results.sort((a, b) => a.start.compareTo(b.start));
+  results.sort((a, b) {
+    final c = a.category.compareTo(b.category);
+    if (c != 0) return c;
+    return a.start.compareTo(b.start);
+  });
   return results;
 }
 
@@ -154,6 +177,13 @@ class ForecastCache {
 const _forecastApiUrl = '$solaraWorkerBase/astro/forecast';
 const _cacheKeyPrefix = 'solara_forecast_cache_';
 const _cooldownKey = 'solara_forecast_last_fetch';
+// 運勢サイクル（LifePeriod）専用の永続キャッシュ。日次データの 6h cooldown とは独立。
+// 保存値は profile + yearOffset 単位。プロフィール変更で hash が変わり実質クリア。
+// 強制リフレッシュ（force=true）でのみ再計算される。
+const _periodsKeyPrefix = 'solara_forecast_periods_';
+// 強運Top5 専用の永続キャッシュ。modes（overall + 5 カテゴリ）を一括保存。
+const _top5KeyPrefix = 'solara_forecast_top5_';
+const _top5Modes = ['overall', 'love', 'money', 'healing', 'work', 'communication'];
 
 /// 出生情報のハッシュ。プロフィール変更を検知するために使う。
 String profileHashOf(SolaraProfile p) {
@@ -169,6 +199,86 @@ class ForecastRepo {
       yearOffset == 0 ? '$_cacheKeyPrefix$hash' : '$_cacheKeyPrefix${hash}_y$yearOffset';
   static String _coolKey(String hash, int yearOffset) =>
       yearOffset == 0 ? '${_cooldownKey}_$hash' : '${_cooldownKey}_${hash}_y$yearOffset';
+  static String _periodsKey(String hash, int yearOffset) =>
+      yearOffset == 0 ? '$_periodsKeyPrefix$hash' : '$_periodsKeyPrefix${hash}_y$yearOffset';
+  static String _top5StorageKey(String hash, int yearOffset) =>
+      yearOffset == 0 ? '$_top5KeyPrefix$hash' : '$_top5KeyPrefix${hash}_y$yearOffset';
+
+  /// 運勢サイクルを取得：保存済みなら使い、なければ計算 → 保存。
+  /// 同一プロフィール × 同一 yearOffset で 1回のみ計算される（永続）。
+  /// - force=true: 保存値を破棄して再計算（強制リフレッシュ時のみ）
+  /// - 日次データのキャッシュ（_cKey）が更新されても periods は再計算しない
+  static Future<List<LifePeriod>> loadOrComputePeriods({
+    required ForecastCache cache,
+    required int yearOffset,
+    bool force = false,
+  }) async {
+    final prefs = await SharedPreferences.getInstance();
+    final key = _periodsKey(cache.profileHash, yearOffset);
+    if (!force) {
+      final raw = prefs.getString(key);
+      if (raw != null) {
+        try {
+          final list = (json.decode(raw) as List)
+              .map((j) => LifePeriod.fromJson(j as Map<String, dynamic>))
+              .toList();
+          return list;
+        } catch (_) {
+          // 破損データはフォールスルーで再計算
+        }
+      }
+    }
+    final periods = detectLifePeriods(cache.days);
+    await prefs.setString(
+      key,
+      json.encode(periods.map((p) => p.toJson()).toList()),
+    );
+    return periods;
+  }
+
+  /// 強運Top5 を取得：保存済みなら使い、なければ全 mode 分計算 → 保存。
+  /// - 6 modes（overall + 5 fortune categories）×5日 を一括計算（並べ替えのみで安価）
+  /// - mode 切替で再計算は走らない（保存値を即引く）
+  /// - force=true で再計算
+  static Future<Map<String, List<ForecastDay>>> loadOrComputeTop5({
+    required ForecastCache cache,
+    required int yearOffset,
+    bool force = false,
+  }) async {
+    final prefs = await SharedPreferences.getInstance();
+    final key = _top5StorageKey(cache.profileHash, yearOffset);
+    if (!force) {
+      final raw = prefs.getString(key);
+      if (raw != null) {
+        try {
+          final m = json.decode(raw) as Map<String, dynamic>;
+          return m.map((k, v) => MapEntry(
+                k,
+                (v as List)
+                    .map((j) => ForecastDay.fromJson(j as Map<String, dynamic>))
+                    .toList(),
+              ));
+        } catch (_) {
+          // 破損データはフォールスルーで再計算
+        }
+      }
+    }
+    final result = <String, List<ForecastDay>>{};
+    for (final mode in _top5Modes) {
+      final sorted = List<ForecastDay>.from(cache.days);
+      if (mode == 'overall') {
+        sorted.sort((a, b) => b.overall.compareTo(a.overall));
+      } else {
+        sorted.sort((a, b) =>
+            (b.catScores[mode] ?? 0).compareTo(a.catScores[mode] ?? 0));
+      }
+      result[mode] = sorted.take(5).toList();
+    }
+    final encoded = result.map(
+        (k, v) => MapEntry(k, v.map((d) => d.toJson()).toList()));
+    await prefs.setString(key, json.encode(encoded));
+    return result;
+  }
 
   /// キャッシュから読み込む（profileHash が一致する場合のみ有効）
   static Future<ForecastCache?> loadCached(String profileHash, {int yearOffset = 0}) async {

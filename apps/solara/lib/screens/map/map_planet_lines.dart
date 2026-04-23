@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
+import '../horoscope/horo_panel_shared.dart' show PlanetVectorIcon;
 import 'map_constants.dart';
 import 'map_astro.dart';
 
@@ -117,75 +118,143 @@ List<Polyline> buildPlanetPolylines({
   return polylines;
 }
 
-/// 惑星シンボルマーカー（ラインの端点に表示）
-/// HTML: edge tracking — ビューポート端にシンボルを配置する機能は
-/// flutter_map では直接実装困難なため、ライン末端に固定配置する
-List<Marker> buildPlanetSymbols({
-  required List<PlanetLineData> lines,
-  required Map<String, bool> layers,
-  required Map<String, bool> planetGroupVis,
-  required String activeCategory,
-}) {
-  final markers = <Marker>[];
-  for (final pl in lines) {
-    if (!(layers[pl.layer] ?? false)) continue;
-    final pg = _planetGroup(pl.planet);
-    if (pg != null && !(planetGroupVis[pg] ?? true)) continue;
+/// 惑星シンボルレイヤー（HTML: updateSymPos の edge tracking を再現）
+///
+/// 各惑星ラインを画面座標に投影し、Liang–Barsky でビューポート矩形（マージン 30px）
+/// との交点を求めてシンボルを配置する。
+/// - 交点あり → ビューポート端にシンボル
+/// - 交点なし & ライン上の点が画面内にある → ライン末端
+/// - どちらでもない → 非表示（透明度 0）
+///
+/// `MapCamera.of(context)` を使うため `FlutterMap` の `children` 内で使うこと。
+/// flutter_map 8.x の InheritedModel が camera 変化で自動 rebuild する。
+class PlanetSymbolsLayer extends StatelessWidget {
+  final List<PlanetLineData> lines;
+  final Map<String, bool> layers;
+  final Map<String, bool> planetGroupVis;
+  final String activeCategory;
 
-    double opacity = 1.0;
-    if (activeCategory != 'all') {
-      final catPlanets = fortunePlanets[activeCategory];
-      if (catPlanets != null && !catPlanets.contains(pl.planet)) {
-        opacity = 0.1;
-      }
+  const PlanetSymbolsLayer({
+    super.key,
+    required this.lines,
+    required this.layers,
+    required this.planetGroupVis,
+    required this.activeCategory,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final camera = MapCamera.of(context);
+    final size = camera.nonRotatedSize;
+    // 画面サイズ未確定（初期 1フレーム目の kImpossibleSize 等）はスキップ
+    if (size.width <= 0 || size.height <= 0) {
+      return const SizedBox.shrink();
     }
 
-    final meta = planetMeta[pl.planet];
-    if (meta == null) continue;
+    const margin = 30.0;
+    final xn = margin, yn = margin;
+    final xx = size.width - margin, yx = size.height - margin;
 
-    final style = chartStyles[pl.layer]!;
-    final isNatal = pl.layer == 'natal';
-    final sz = isNatal ? 28.0 : 22.0;
-    final fs = isNatal ? 15.0 : 11.0;
+    final markers = <Marker>[];
+    for (final pl in lines) {
+      if (!(layers[pl.layer] ?? false)) continue;
+      final pg = _planetGroup(pl.planet);
+      if (pg != null && !(planetGroupVis[pg] ?? true)) continue;
 
-    // 線の途中（7番目のポイントあたり）にシンボルを配置
-    // HTML では edge tracking するが、Flutter では固定位置
-    final symIdx = (pl.points.length * 0.12).round().clamp(1, pl.points.length - 1);
-    final symPos = pl.points[symIdx];
+      double opacity = 1.0;
+      if (activeCategory != 'all') {
+        final catPlanets = fortunePlanets[activeCategory];
+        if (catPlanets != null && !catPlanets.contains(pl.planet)) {
+          opacity = 0.1;
+        }
+      }
 
-    markers.add(Marker(
-      point: symPos,
-      width: sz, height: sz,
-      child: Opacity(
-        opacity: opacity,
-        child: Container(
-          width: sz, height: sz,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: style.bg,
-            border: isNatal ? null : Border.all(
-              color: style.color.withAlpha(153),
-              width: 1.5,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withAlpha(76),
-                blurRadius: 4, offset: const Offset(0, 2),
+      // 惑星キーが planetMeta に登録されていない場合はスキップ（_asc 等は line 生成時に弾かれる）
+      if (!planetMeta.containsKey(pl.planet)) continue;
+
+      // Liang–Barsky でビューポート交点を探索（HTML: updateSymPos と等価）
+      Offset? bestExit;
+      Offset? last;
+      bool inside = false;
+      for (int i = 0; i < pl.points.length; i++) {
+        final px = camera.latLngToScreenOffset(pl.points[i]);
+        if (px.dx >= xn && px.dx <= xx && px.dy >= yn && px.dy <= yx) {
+          inside = true;
+        }
+        if (i > 0 && last != null) {
+          final dx = px.dx - last.dx;
+          final dy = px.dy - last.dy;
+          final sp = <double>[-dx, dx, -dy, dy];
+          final sq = <double>[last.dx - xn, xx - last.dx, last.dy - yn, yx - last.dy];
+          double t0 = 0, t1 = 1;
+          bool ok = true;
+          for (int j = 0; j < 4; j++) {
+            if (sp[j] == 0) {
+              if (sq[j] < 0) { ok = false; break; }
+            } else {
+              final t = sq[j] / sp[j];
+              if (sp[j] < 0) {
+                if (t > t0) t0 = t;
+              } else {
+                if (t < t1) t1 = t;
+              }
+            }
+          }
+          if (ok && t0 <= t1) {
+            bestExit = Offset(last.dx + dx * t1, last.dy + dy * t1);
+          }
+        }
+        last = px;
+      }
+
+      LatLng markerPos;
+      if (bestExit != null) {
+        markerPos = camera.screenOffsetToLatLng(bestExit);
+      } else if (inside) {
+        markerPos = pl.points.last;
+      } else {
+        continue; // 画面外
+      }
+
+      final style = chartStyles[pl.layer]!;
+      final isNatal = pl.layer == 'natal';
+      final sz = isNatal ? 28.0 : 22.0;
+      // ベクターグリフのサイズ。フォント描画と違い OS に依存しないので Venus/Mars も
+      // 他惑星と同じ単色細線で揃う。Horo 画面と同じ PlanetVectorIcon を使用。
+      final glyphSize = isNatal ? 18.0 : 14.0;
+
+      markers.add(Marker(
+        point: markerPos,
+        width: sz, height: sz,
+        child: Opacity(
+          opacity: opacity,
+          child: Container(
+            width: sz, height: sz,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: style.bg,
+              border: isNatal ? null : Border.all(
+                color: style.color.withAlpha(153),
+                width: 1.5,
               ),
-            ],
-          ),
-          child: Center(
-            child: Text(
-              meta.sym,
-              style: TextStyle(
-                fontSize: fs, fontWeight: FontWeight.bold,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withAlpha(76),
+                  blurRadius: 4, offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Center(
+              child: PlanetVectorIcon(
+                planetKey: pl.planet,
+                size: glyphSize,
                 color: style.fg,
               ),
             ),
           ),
         ),
-      ),
-    ));
+      ));
+    }
+    return MarkerLayer(markers: markers);
   }
-  return markers;
 }

@@ -1,22 +1,19 @@
 import 'package:flutter/material.dart';
 import '../utils/forecast_cache.dart';
 import '../utils/solara_storage.dart';
+import 'forecast/forecast_life_periods.dart';
+import 'forecast/forecast_top5.dart';
 import 'map/map_constants.dart';
 
 /// Forecast 画面 — 1年予測（ヒートマップ + 選択日詳細 + 強運Top5）
 /// Map画面から BottomSheet フルスクリーンで開く。
+/// 出生情報のみで決まり地点に依存しないので基準地は持たない。
 class ForecastScreen extends StatefulWidget {
   final void Function(DateTime date)? onJumpToDate;
-  /// 基準地ラベル（VPスロット名やホーム名など）。未指定時はプロフィールから導出。
-  final String? baseLabel;
-  /// 基準地の住所/座標テキスト。未指定時はプロフィール座標を表示。
-  final String? baseDetail;
 
   const ForecastScreen({
     super.key,
     this.onJumpToDate,
-    this.baseLabel,
-    this.baseDetail,
   });
 
   @override
@@ -45,6 +42,21 @@ class _ForecastScreenState extends State<ForecastScreen> {
 
   /// カテゴリ色モード時の表示ランク: 1 = その日の1位カテゴリ、2 = 2位カテゴリ
   int _categoryRank = 1;
+
+  /// 運勢サイクルのカテゴリ別カーソル（'love' → idx）。
+  /// 本番は基本「end >= today の最初」を表示。「次へ」ボタンで循環。
+  /// データ再フェッチや年切替で _resetPeriodCursors() を呼んでクリアする。
+  final Map<String, int> _periodCursor = {};
+
+  void _resetPeriodCursors() => _periodCursor.clear();
+
+  /// 永続保存された運勢サイクル（プロフィール × yearOffset 単位）。
+  /// 強制リフレッシュ時のみ再計算され、それ以外は保存値をそのまま使用。
+  List<LifePeriod> _periods = [];
+
+  /// 永続保存された強運Top5（mode → 上位5日）。periods と同じく force でのみ再計算。
+  /// mode 切替時は保存値から即引くだけで再計算しない。
+  Map<String, List<ForecastDay>> _top5 = {};
 
   @override
   void initState() {
@@ -98,13 +110,28 @@ class _ForecastScreenState extends State<ForecastScreen> {
         yearOffset: _yearOffset,
       );
     }
+    // 運勢サイクルと強運Top5 を永続キャッシュから読み込み（無ければ計算 → 保存）。
+    // 強制リフレッシュ時のみ再計算する。日次データの 6h 通常更新では再計算しない。
+    final periods = (cache != null)
+        ? await ForecastRepo.loadOrComputePeriods(
+            cache: cache, yearOffset: _yearOffset, force: forceRefresh,
+          )
+        : <LifePeriod>[];
+    final top5 = (cache != null)
+        ? await ForecastRepo.loadOrComputeTop5(
+            cache: cache, yearOffset: _yearOffset, force: forceRefresh,
+          )
+        : <String, List<ForecastDay>>{};
     if (!mounted) return;
     setState(() {
       _cache = cache;
+      _periods = periods;
+      _top5 = top5;
       _loading = false;
       _errorMsg = cache == null ? 'Forecast の取得に失敗しました。ネットワーク接続を確認してください。' : null;
       // 初期選択: 先頭の日
       _selected = cache != null && cache.days.isNotEmpty ? cache.days.first : null;
+      _resetPeriodCursors();
     });
   }
 
@@ -207,38 +234,29 @@ class _ForecastScreenState extends State<ForecastScreen> {
         const SizedBox(height: 18),
         _buildSelectedDayDetail(),
         const SizedBox(height: 20),
-        _buildLifePeriods(c.days),
+        ForecastLifePeriodsSection(
+          periods: _periods,
+          cursor: _periodCursor,
+          onCursorChange: (cat, idx) => setState(() => _periodCursor[cat] = idx),
+          onJumpToDate: widget.onJumpToDate,
+        ),
         const SizedBox(height: 20),
-        _buildTop5(c.days),
+        ForecastTop5Section(
+          top5: _top5,
+          mode: _top5Mode,
+          onModeChange: (m) => setState(() => _top5Mode = m),
+          onSelect: (d) => setState(() => _selected = d),
+          onJumpToDate: widget.onJumpToDate,
+        ),
         const SizedBox(height: 24),
         _buildFetchInfo(),
       ]),
     );
   }
 
-  /// 基準地 + 表示期間 + 年間ベストの統合カード
+  /// 表示期間 + 年間ベストの統合カード
+  /// （Forecast スコアは出生情報のみで決まり地点に依存しないため基準地は表示しない）
   Widget _buildBasisCard(List<ForecastDay> days) {
-    // 基準地
-    final p = _profile;
-    String baseLabel;
-    if (widget.baseLabel != null && widget.baseLabel!.isNotEmpty) {
-      baseLabel = widget.baseLabel!;
-    } else if (p != null && p.homeName.isNotEmpty) {
-      baseLabel = p.homeName;
-    } else if (p != null && p.birthPlace.isNotEmpty) {
-      baseLabel = p.birthPlace;
-    } else {
-      baseLabel = '基準地';
-    }
-    String? baseDetail = widget.baseDetail;
-    if ((baseDetail == null || baseDetail.isEmpty) && p != null) {
-      final lat = p.homeLat != 0 ? p.homeLat : p.birthLat;
-      final lng = p.homeLng != 0 ? p.homeLng : p.birthLng;
-      if (lat != 0 || lng != 0) {
-        baseDetail = '${lat.toStringAsFixed(4)}, ${lng.toStringAsFixed(4)}';
-      }
-    }
-
     // 表示期間
     final now = DateTime.now();
     final start = now.add(Duration(days: _yearOffset * 365));
@@ -259,24 +277,6 @@ class _ForecastScreenState extends State<ForecastScreen> {
         border: Border.all(color: const Color(0x33C9A84C)),
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        // 基準地
-        Row(children: [
-          const Text('📍', style: TextStyle(fontSize: 15)),
-          const SizedBox(width: 8),
-          const Text('基準地',
-              style: TextStyle(fontSize: 9, color: Color(0xFF999999), letterSpacing: 2)),
-          const SizedBox(width: 10),
-          Expanded(child: Text(baseLabel,
-              style: const TextStyle(fontSize: 13, color: Color(0xFFC9A84C), fontWeight: FontWeight.w600),
-              maxLines: 1, overflow: TextOverflow.ellipsis)),
-        ]),
-        if (baseDetail != null) Padding(
-          padding: const EdgeInsets.only(left: 24, top: 1),
-          child: Text(baseDetail,
-              style: const TextStyle(fontSize: 10, color: Color(0xFF888888)),
-              maxLines: 1, overflow: TextOverflow.ellipsis),
-        ),
-        const Divider(height: 18, color: Color(0x22C9A84C)),
         // 表示期間
         Row(children: [
           const Text('📅', style: TextStyle(fontSize: 15)),
@@ -651,6 +651,20 @@ class _ForecastScreenState extends State<ForecastScreen> {
         Row(children: [
           Text(dateLabel, style: const TextStyle(fontSize: 16, color: Color(0xFFE8E0D0), fontWeight: FontWeight.w600)),
           const Spacer(),
+          if (widget.onJumpToDate != null) GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: () {
+              final ps = d.date.split('-').map(int.parse).toList();
+              widget.onJumpToDate!(DateTime.utc(ps[0], ps[1], ps[2], 3, 0, 0));
+              Navigator.of(context).maybePop();
+            },
+            child: const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              child: Text('Mapで見る →',
+                  style: TextStyle(fontSize: 11, color: Color(0xFFC9A84C), fontWeight: FontWeight.w600)),
+            ),
+          ),
+          const SizedBox(width: 6),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
             decoration: BoxDecoration(
@@ -720,192 +734,6 @@ class _ForecastScreenState extends State<ForecastScreen> {
                 textAlign: TextAlign.right,
                 style: const TextStyle(fontSize: 10, color: Color(0xFFAAAAAA)))),
       ]),
-    );
-  }
-
-  /// 期間ラベル定義
-  static const _periodLabels = <String, (String, String)>{
-    'love':          ('モテ期', '💗'),
-    'money':         ('金運期', '💰'),
-    'healing':       ('癒し期', '🌿'),
-    'work':          ('仕事期', '⚙'),
-    'communication': ('発信期', '💬'),
-  };
-
-  /// 「◯◯期」セクション — detectLifePeriods で検出した連続期間を表示
-  Widget _buildLifePeriods(List<ForecastDay> days) {
-    final periods = detectLifePeriods(days);
-    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      const Text('▸ あなたの運勢サイクル',
-          style: TextStyle(fontSize: 11, color: Color(0xFFC9A84C), letterSpacing: 2)),
-      const SizedBox(height: 4),
-      const Text('スコアが一定以上を連続で保った期間（7日以上）',
-          style: TextStyle(fontSize: 9, color: Color(0xFF666666))),
-      const SizedBox(height: 10),
-      if (periods.isEmpty) Padding(
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        child: Text('この期間は目立った連続期なし',
-            style: TextStyle(fontSize: 11, color: Colors.white.withValues(alpha: 0.45))),
-      ) else for (final p in periods) _periodRow(p),
-    ]);
-  }
-
-  Widget _periodRow(LifePeriod p) {
-    final label = _periodLabels[p.category];
-    final (name, emoji) = label ?? (p.category, '✨');
-    final color = categoryColors[p.category] ?? const Color(0xFFC9A84C);
-    final startLabel = '${p.start.month}/${p.start.day.toString().padLeft(2, "0")}';
-    final endLabel = '${p.end.month}/${p.end.day.toString().padLeft(2, "0")}';
-
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Row(children: [
-        SizedBox(width: 24,
-            child: Text(emoji, style: const TextStyle(fontSize: 14))),
-        SizedBox(width: 62,
-            child: Text(name,
-                style: TextStyle(fontSize: 12, color: color, fontWeight: FontWeight.w600))),
-        Expanded(child: Text('$startLabel 〜 $endLabel',
-            style: const TextStyle(fontSize: 11, color: Color(0xFFE8E0D0)))),
-        SizedBox(width: 60,
-            child: Text('${p.days}日間',
-                textAlign: TextAlign.right,
-                style: const TextStyle(fontSize: 10, color: Color(0xFF888888)))),
-        if (widget.onJumpToDate != null) IconButton(
-          icon: const Icon(Icons.map_outlined, size: 16, color: Color(0xFF888888)),
-          padding: EdgeInsets.zero,
-          constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
-          tooltip: '開始日を Map で見る',
-          onPressed: () {
-            widget.onJumpToDate!(DateTime.utc(p.start.year, p.start.month, p.start.day, 3, 0, 0));
-            Navigator.of(context).maybePop();
-          },
-        ),
-      ]),
-    );
-  }
-
-  Widget _buildTop5(List<ForecastDay> days) {
-    final isOverall = _top5Mode == 'overall';
-    final sorted = List<ForecastDay>.from(days);
-    if (isOverall) {
-      sorted.sort((a, b) => b.overall.compareTo(a.overall));
-    } else {
-      sorted.sort((a, b) => (b.catScores[_top5Mode] ?? 0)
-          .compareTo(a.catScores[_top5Mode] ?? 0));
-    }
-    final top5 = sorted.take(5).toList();
-    if (top5.isEmpty) return const SizedBox.shrink();
-
-    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      const Text('▸ 強運Top5',
-          style: TextStyle(fontSize: 11, color: Color(0xFFC9A84C), letterSpacing: 2)),
-      const SizedBox(height: 8),
-      _buildTop5ModeSelector(),
-      const SizedBox(height: 10),
-      for (int i = 0; i < top5.length; i++) _top5Row(i, top5[i]),
-    ]);
-  }
-
-  Widget _buildTop5ModeSelector() {
-    final modes = <Map<String, Object>>[
-      {'key': 'overall', 'label': '総合', 'color': const Color(0xFFC9A84C)},
-      {'key': 'love', 'label': '恋愛', 'color': categoryColors['love']!},
-      {'key': 'money', 'label': '金運', 'color': categoryColors['money']!},
-      {'key': 'healing', 'label': '癒し', 'color': categoryColors['healing']!},
-      {'key': 'work', 'label': '仕事', 'color': categoryColors['work']!},
-      {'key': 'communication', 'label': '話す', 'color': categoryColors['communication']!},
-    ];
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(children: [
-        for (final m in modes)
-          _top5Seg(m['key'] as String, m['label'] as String, m['color'] as Color),
-      ]),
-    );
-  }
-
-  Widget _top5Seg(String key, String label, Color color) {
-    final active = _top5Mode == key;
-    return GestureDetector(
-      onTap: () => setState(() => _top5Mode = key),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-        margin: const EdgeInsets.only(right: 5),
-        decoration: BoxDecoration(
-          color: active ? color.withValues(alpha: 0.22) : const Color(0x14FFFFFF),
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: active ? color : const Color(0x22FFFFFF)),
-        ),
-        child: Text(label,
-            style: TextStyle(
-              fontSize: 10,
-              color: active ? color : const Color(0xFF888888),
-              fontWeight: active ? FontWeight.w600 : FontWeight.normal,
-            )),
-      ),
-    );
-  }
-
-  Widget _top5Row(int rank, ForecastDay d) {
-    final parts = d.date.split('-');
-    final dateLabel = '${parts[1]}/${parts[2]}';
-
-    // 表示スコア: 総合モードは overall、カテゴリモードは該当カテゴリスコア
-    final isOverall = _top5Mode == 'overall';
-    final score = isOverall ? d.overall : (d.catScores[_top5Mode] ?? 0);
-
-    // 総合モード: dominant fortune を色バッジで表示
-    // カテゴリモード: 選択中カテゴリの色で枠取り
-    final modeColor = isOverall
-        ? const Color(0xFFC9A84C)
-        : (categoryColors[_top5Mode] ?? const Color(0xFFE8E0D0));
-    final fortune = d.topFortune;
-    final fortuneLabel = fortune != null ? (categoryLabels[fortune] ?? fortune) : '';
-    final fortuneColor = fortune != null
-        ? (categoryColors[fortune] ?? const Color(0xFFE8E0D0))
-        : const Color(0xFF888888);
-
-    return InkWell(
-      onTap: () => setState(() => _selected = d),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 6),
-        child: Row(children: [
-          SizedBox(width: 24,
-              child: Text('#${rank + 1}',
-                  style: TextStyle(fontSize: 11, color: modeColor, fontWeight: FontWeight.w600))),
-          SizedBox(width: 50,
-              child: Text(dateLabel,
-                  style: const TextStyle(fontSize: 12, color: Color(0xFFE8E0D0)))),
-          Expanded(child: Row(children: [
-            Text('${dir16JP[d.topDir] ?? d.topDir}方位',
-                style: const TextStyle(fontSize: 10, color: Color(0xFF999999))),
-            const SizedBox(width: 10),
-            if (isOverall && fortuneLabel.isNotEmpty) Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
-              decoration: BoxDecoration(
-                color: fortuneColor.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: Text(fortuneLabel, style: TextStyle(fontSize: 9, color: fortuneColor)),
-            ),
-          ])),
-          Text(score.toStringAsFixed(1),
-              style: TextStyle(fontSize: 11, color: modeColor, fontWeight: FontWeight.w600)),
-          if (widget.onJumpToDate != null) IconButton(
-            icon: const Icon(Icons.map_outlined, size: 16, color: Color(0xFF888888)),
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
-            tooltip: 'その日をMapで見る',
-            onPressed: () {
-              final ps = d.date.split('-').map(int.parse).toList();
-              final date = DateTime.utc(ps[0], ps[1], ps[2], 3, 0, 0);
-              widget.onJumpToDate!(date);
-              Navigator.of(context).maybePop();
-            },
-          ),
-        ]),
-      ),
     );
   }
 

@@ -93,46 +93,37 @@ function jsonError(status, message, origin) {
   });
 }
 
-// ── Jawg Maps tile proxy ──
-// クライアントから /tiles/jawg/<style>/<z>/<x>/<y>.png?lang=xx で来たリクエストを
-// Jawg 公式 (https://tile.jawg.io/<style>/<z>/<x>/<y>.png?access-token=SECRET&lang=xx) に
-// 中継する。トークンは env.JAWG_TOKEN（wrangler secret put JAWG_TOKEN で設定）。
+// ── OSM tile proxy ──
+// クライアントから /tiles/osm/<source>/<z>/<x>/<y>.png で来たリクエストを
+// 各 OSM ソース（OSM France HOT / 標準 OSM / CyclOSM）に中継する。
+// アプリから直接叩くと UA 不足で 403 を食らうため、Worker 側で
+// 識別可能な User-Agent を設定し、edge cache（24h）で OSM 側負荷も最小化する。
 //
-// - 許可スタイル/言語は allowlist で制限（URL 書き換えによる悪用防止）
+// - source は allowlist 制限（'hot' | 'standard' | 'cyclosm'）
 // - Z/X/Y は整数のみ受け付け
-// - Cloudflare edge cache を活用し、Jawg 使用量を抑える（24時間キャッシュ）
-const JAWG_ALLOWED_STYLES = new Set([
-  'jawg-streets',
-  'jawg-dark',
-  'jawg-light',
-  'jawg-sunny',
-  'jawg-terrain',
-  'jawg-matrix',
-  'jawg-lagoon',
-]);
-const JAWG_ALLOWED_LANGS = new Set([
-  'ja', 'en', 'de', 'es', 'fr', 'it', 'ko', 'nl', 'ru', 'zh',
-]);
+// - Cloudflare edge cache を活用し、同一タイル再取得は OSM に届かない
+const OSM_SOURCE_TARGETS = {
+  hot: (z, x, y) => `https://a.tile.openstreetmap.fr/hot/${z}/${x}/${y}.png`,
+  standard: (z, x, y) => `https://tile.openstreetmap.org/${z}/${x}/${y}.png`,
+  cyclosm: (z, x, y) => `https://a.tile-cyclosm.openstreetmap.fr/cyclosm/${z}/${x}/${y}.png`,
+};
 
-async function handleJawgTile(request, url, env) {
-  if (!env || !env.JAWG_TOKEN) {
-    return new Response('Jawg token not configured', { status: 503 });
-  }
+const OSM_USER_AGENT = 'Solara/1.0 (https://solodev-lab.com; kojifo369@gmail.com)';
 
-  // /tiles/jawg/<style>/<z>/<x>/<y>.png を分解
-  const prefix = '/tiles/jawg/';
-  const rest = url.pathname.slice(prefix.length); // e.g. "jawg-streets/14/7234/5928.png"
+async function handleOsmTile(request, url) {
+  const prefix = '/tiles/osm/';
+  const rest = url.pathname.slice(prefix.length);
   const parts = rest.split('/');
   if (parts.length !== 4) {
     return new Response('Bad tile path', { status: 400 });
   }
-  const [style, zStr, xStr, yWithExt] = parts;
+  const [source, zStr, xStr, yWithExt] = parts;
 
-  if (!JAWG_ALLOWED_STYLES.has(style)) {
-    return new Response('Style not allowed', { status: 400 });
+  const buildTarget = OSM_SOURCE_TARGETS[source];
+  if (!buildTarget) {
+    return new Response('Source not allowed', { status: 400 });
   }
 
-  // y 部分は "{number}.png" 形式
   const yMatch = yWithExt.match(/^(\d+)\.png$/);
   if (!yMatch || !/^\d+$/.test(zStr) || !/^\d+$/.test(xStr)) {
     return new Response('Bad tile coordinates', { status: 400 });
@@ -140,30 +131,22 @@ async function handleJawgTile(request, url, env) {
   const z = parseInt(zStr, 10);
   const x = parseInt(xStr, 10);
   const y = parseInt(yMatch[1], 10);
-  if (z < 0 || z > 22) {
+  if (z < 0 || z > 19) {
     return new Response('Zoom out of range', { status: 400 });
   }
 
-  const lang = url.searchParams.get('lang') || 'ja';
-  if (!JAWG_ALLOWED_LANGS.has(lang)) {
-    return new Response('Language not allowed', { status: 400 });
-  }
+  const target = buildTarget(z, x, y);
 
-  const target =
-    `https://tile.jawg.io/${style}/${z}/${x}/${y}.png` +
-    `?access-token=${encodeURIComponent(env.JAWG_TOKEN)}&lang=${lang}`;
-
-  // Cloudflare edge cache を利用（24時間）
   const cache = caches.default;
   const cacheKey = new Request(
-    `https://tile-cache/${style}/${z}/${x}/${y}/${lang}`,
+    `https://tile-cache/osm/${source}/${z}/${x}/${y}`,
     { method: 'GET' },
   );
-  let cached = await cache.match(cacheKey);
+  const cached = await cache.match(cacheKey);
   if (cached) return cached;
 
   const upstream = await fetch(target, {
-    // Jawg の CDN に直接。User-Agent はデフォルトでよい。
+    headers: { 'User-Agent': OSM_USER_AGENT },
     cf: { cacheTtl: 86400, cacheEverything: true },
   });
   if (!upstream.ok) {
@@ -172,20 +155,16 @@ async function handleJawgTile(request, url, env) {
     });
   }
 
-  // 返却用レスポンスを複製し、明示的にキャッシュヘッダを付与
-  const headers = new Headers(upstream.headers);
-  headers.set('Cache-Control', 'public, max-age=86400, immutable');
-  // クライアント側（flutter_map の HTTP キャッシュ）にも効かせる
+  const contentType = upstream.headers.get('Content-Type') || 'image/png';
   const body = await upstream.arrayBuffer();
   const response = new Response(body, {
     status: 200,
     headers: {
-      'Content-Type': headers.get('Content-Type') || 'image/png',
+      'Content-Type': contentType,
       'Cache-Control': 'public, max-age=86400, immutable',
     },
   });
 
-  // edge cache へ保存（async で待たない）
   try { await cache.put(cacheKey, response.clone()); } catch (_) { /* ignore */ }
 
   return response;
@@ -225,12 +204,12 @@ export default {
         return jsonOk({ status: 'ok', service: 'solara-api' }, origin);
       }
 
-      // ── Jawg tile proxy ──
-      // GET /tiles/jawg/<style>/<z>/<x>/<y>.png?lang=ja
-      // JAWG_TOKEN を環境変数から注入して Jawg 公式エンドポイントに中継する。
-      // アプリバイナリにトークンを埋め込まず、サーバ側で管理。
-      if (path.startsWith('/tiles/jawg/') && request.method === 'GET') {
-        return await handleJawgTile(request, url, env);
+      // ── OSM tile proxy ──
+      // GET /tiles/osm/<source>/<z>/<x>/<y>.png
+      // OSM 系（hot/standard/cyclosm）に Worker 側 UA で中継。
+      // 直叩きで 403 を食らうのを回避し、edge cache で OSM 負荷も最小化。
+      if (path.startsWith('/tiles/osm/') && request.method === 'GET') {
+        return await handleOsmTile(request, url);
       }
 
       // ── Astro Chart ──

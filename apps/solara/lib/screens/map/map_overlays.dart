@@ -41,11 +41,9 @@ class MapSideButtons extends StatelessWidget {
   final bool searchOpen;
   final bool layerPanelOpen;
   final bool vpPanelOpen;
-  final bool hasSelectedDate;
   final VoidCallback onSearchTap;
   final VoidCallback onLayerTap;
   final VoidCallback onVpTap;
-  final VoidCallback onDateTap;
   final VoidCallback onLocationsTap;
   final VoidCallback onForecastTap;
 
@@ -55,27 +53,27 @@ class MapSideButtons extends StatelessWidget {
     required this.searchOpen,
     required this.layerPanelOpen,
     required this.vpPanelOpen,
-    required this.hasSelectedDate,
     required this.onSearchTap,
     required this.onLayerTap,
     required this.onVpTap,
-    required this.onDateTap,
     required this.onLocationsTap,
     required this.onForecastTap,
   });
 
   @override
   Widget build(BuildContext context) {
+    // 📅 日付ボタンは削除（左上の SelectedDateBadge をタップでピッカー起動するため重複）。
+    // 日付バッジ（top+44, 高さ約38px）と被らないよう全ボタンを 16px 下げて 48px 等間隔に並べる。
     return Stack(children: [
       if (!searchOpen) Positioned(
-        top: topPad + 76, left: 16,
+        top: topPad + 92, left: 16,
         child: MapBtn(
           onTap: onSearchTap,
           child: const Icon(Icons.search, size: 18, color: Color(0x99C9A84C)),
         ),
       ),
       Positioned(
-        top: topPad + 124, left: 16,
+        top: topPad + 140, left: 16,
         child: MapBtn(
           active: layerPanelOpen,
           onTap: onLayerTap,
@@ -89,7 +87,7 @@ class MapSideButtons extends StatelessWidget {
         ),
       ),
       Positioned(
-        top: topPad + 172, left: 16,
+        top: topPad + 188, left: 16,
         child: MapBtn(
           active: vpPanelOpen,
           onTap: onVpTap,
@@ -97,22 +95,14 @@ class MapSideButtons extends StatelessWidget {
         ),
       ),
       Positioned(
-        top: topPad + 220, left: 16,
-        child: MapBtn(
-          active: hasSelectedDate,
-          onTap: onDateTap,
-          child: const Text('📅', style: TextStyle(fontSize: 14)),
-        ),
-      ),
-      Positioned(
-        top: topPad + 268, left: 16,
+        top: topPad + 236, left: 16,
         child: MapBtn(
           onTap: onLocationsTap,
           child: const Text('🗺', style: TextStyle(fontSize: 14)),
         ),
       ),
       Positioned(
-        top: topPad + 316, left: 16,
+        top: topPad + 284, left: 16,
         child: MapBtn(
           onTap: onForecastTap,
           child: const Text('🔮', style: TextStyle(fontSize: 14)),
@@ -167,30 +157,51 @@ class SearchBarOverlay extends StatelessWidget {
   }
 }
 
-/// 選択日バッジ（「今日」以外を選択中に左上に表示）
+/// 選択日バッジ（地図左上に常時表示）
+/// - ラベルタップ → 日付ピッカー（[onTap]）
+/// - ✕ アイコン → 今日リセット（[onReset] が null の場合は ✕ 非表示）
 class SelectedDateBadge extends StatelessWidget {
   final String label;
   final VoidCallback onTap;
-  const SelectedDateBadge({super.key, required this.label, required this.onTap});
+  final VoidCallback? onReset;
+  const SelectedDateBadge({
+    super.key,
+    required this.label,
+    required this.onTap,
+    this.onReset,
+  });
 
   @override
   Widget build(BuildContext context) {
+    // 外側 GestureDetector で Container 全体（padding 含む）を onTap 領域にする。
+    // ✕ アイコンだけ内側 GestureDetector で先取りして onReset を呼ぶ。
+    // こうしないと padding 領域のタップが取りこぼされ「反応しない」状態になる。
     return GestureDetector(
       onTap: onTap,
+      behavior: HitTestBehavior.opaque,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
         decoration: BoxDecoration(
           color: const Color(0xE60F0F1E),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(14),
           border: Border.all(color: const Color(0x66C9A84C)),
         ),
         child: Row(mainAxisSize: MainAxisSize.min, children: [
-          const Text('📅', style: TextStyle(fontSize: 11)),
-          const SizedBox(width: 6),
+          const Text('📅', style: TextStyle(fontSize: 18)),
+          const SizedBox(width: 8),
           Text(label,
-              style: const TextStyle(fontSize: 11, color: Color(0xFFC9A84C), letterSpacing: 0.5)),
-          const SizedBox(width: 6),
-          const Text('✕', style: TextStyle(fontSize: 10, color: Color(0xFF888888))),
+              style: const TextStyle(fontSize: 18, color: Color(0xFFC9A84C), letterSpacing: 0.5, fontWeight: FontWeight.w600)),
+          if (onReset != null) ...[
+            const SizedBox(width: 10),
+            GestureDetector(
+              onTap: onReset,
+              behavior: HitTestBehavior.opaque,
+              child: const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 4),
+                child: Text('✕', style: TextStyle(fontSize: 16, color: Color(0xFF888888))),
+              ),
+            ),
+          ],
         ]),
       ),
     );
@@ -327,13 +338,20 @@ class RestOverlay extends StatelessWidget {
 }
 
 /// Solara テーマ適用の DatePicker を開く。選択されたら DateTime を返す（正午固定はしない）。
+/// 範囲: 今日−10年 〜 今日+20年（過去回顧 + 中長期予測をカバー）。
+/// initial が範囲外なら自動クランプして assertion を回避。
 Future<DateTime?> showSolaraDatePicker(BuildContext context, {DateTime? initial}) {
   final now = DateTime.now();
+  final firstDate = DateTime(now.year - 10, now.month, now.day);
+  final lastDate = DateTime(now.year + 20, now.month, now.day);
+  var safeInitial = (initial ?? now).toLocal();
+  if (safeInitial.isBefore(firstDate)) safeInitial = firstDate;
+  if (safeInitial.isAfter(lastDate)) safeInitial = lastDate;
   return showDatePicker(
     context: context,
-    initialDate: initial ?? now,
-    firstDate: DateTime(now.year - 1, now.month, now.day),
-    lastDate: DateTime(now.year + 2, now.month, now.day),
+    initialDate: safeInitial,
+    firstDate: firstDate,
+    lastDate: lastDate,
     builder: (ctx, child) => Theme(
       data: Theme.of(ctx).copyWith(
         colorScheme: const ColorScheme.dark(

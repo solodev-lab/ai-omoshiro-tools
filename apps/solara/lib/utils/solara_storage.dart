@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:ui' show PlatformDispatcher;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/daily_reading.dart';
 import '../models/galaxy_cycle.dart';
@@ -104,7 +103,6 @@ class SolaraStorage {
   static const _intentionKey = 'solara_lunar_intention';
   static const _overlayShownKey = 'solara_overlay_shown';
   static const _mapStyleKey = 'solara_map_style';
-  static const _mapLanguageKey = 'solara_map_language';
   static const _dailyResetHourKey = 'solara_daily_reset_hour';
   static const _forecastColorModeKey = 'solara_forecast_color_mode';
   static const _forecastHighColorKey = 'solara_forecast_high_color';
@@ -155,27 +153,6 @@ class SolaraStorage {
   static Future<void> saveMapStyleId(String id) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_mapStyleKey, id);
-  }
-
-  /// 地図ラベル言語コード（Jawg Maps / Smart ハイブリッド用: 'ja' | 'en' 等）。
-  ///
-  /// 初回起動時は**端末のロケール**から自動選択:
-  /// - 日本語端末 → 'ja'
-  /// - それ以外 → 'en'（米国をメインターゲットにしているため）
-  ///
-  /// 一度ユーザーが LANG パネルで明示的に変更すれば以降はその値を記憶。
-  static Future<String> loadMapLanguage() async {
-    final prefs = await SharedPreferences.getInstance();
-    final saved = prefs.getString(_mapLanguageKey);
-    if (saved != null) return saved;
-    final deviceLang =
-        PlatformDispatcher.instance.locale.languageCode.toLowerCase();
-    return deviceLang == 'ja' ? 'ja' : 'en';
-  }
-
-  static Future<void> saveMapLanguage(String lang) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_mapLanguageKey, lang);
   }
 
   // --- Profile ---

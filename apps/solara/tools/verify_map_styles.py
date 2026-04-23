@@ -132,7 +132,7 @@ checks = [
     ("import 'map_styles.dart'", "import"),
     ("MapStyle mapStyle", "受入フィールド"),
     ("onMapStyleChanged", "callback"),
-    ("_section('STYLE'", "STYLE セクション"),
+    ("_section('MAPSTYLE'", "MAPSTYLE セクション"),
     ("_styleOption", "描画メソッド"),
     ("mapStyleConfigs.entries", "ループ元"),
 ]
