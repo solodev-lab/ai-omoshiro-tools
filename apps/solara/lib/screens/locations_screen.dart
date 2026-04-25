@@ -158,6 +158,8 @@ class _LocationsScreenState extends State<LocationsScreen> {
       _selectedDate = utcNoon;
       _refetchingDate = true;
     });
+    // 現住所が登録されていればハウス計算は現住所ベース(リロケーション)。
+    final useRelocate = !(p.homeLat == 0 && p.homeLng == 0);
     final chart = await fetchChart(
       birthDate: p.birthDate,
       birthTime: p.birthTime,
@@ -166,6 +168,8 @@ class _LocationsScreenState extends State<LocationsScreen> {
       birthTz: p.birthTz,
       birthTzName: p.birthTzName,
       targetDate: utcNoon,
+      relocateLat: useRelocate ? p.homeLat : null,
+      relocateLng: useRelocate ? p.homeLng : null,
     );
     if (!mounted) return;
     if (chart != null) {

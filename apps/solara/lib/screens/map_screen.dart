@@ -212,6 +212,10 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     }
 
     // CF Worker API で天体データを取得 → scoreAll で16方位スコア計算
+    // 現住所が登録されていればハウス計算は現住所ベース(リロケーション)。
+    // 注意: scoreAll() は houses 配列を直接使わない(aspects/角度距離のみ)ため、
+    // 現状 16方位スコアには影響なし。将来 M1(ハウス重み付け)で意味を持つ。
+    final useRelocate = !(p.homeLat == 0 && p.homeLng == 0);
     final chart = await fetchChart(
       birthDate: p.birthDate,
       birthTime: p.birthTime,
@@ -220,6 +224,8 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
       birthTz: p.birthTz,
       birthTzName: p.birthTzName,
       targetDate: targetDate,
+      relocateLat: useRelocate ? p.homeLat : null,
+      relocateLng: useRelocate ? p.homeLng : null,
     );
     if (chart != null) {
       _chartResult = chart;

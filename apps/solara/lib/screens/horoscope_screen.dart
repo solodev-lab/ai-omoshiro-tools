@@ -10,7 +10,8 @@ import 'horoscope/horo_fortune_cards.dart';
 import 'horoscope/horo_bottom_panels.dart';
 import 'horoscope/horo_ornament_painter.dart';
 import 'horoscope/horo_antique_icons.dart';
-import 'map/map_astro.dart' show fetchChart;
+import 'horoscope/horo_relocation_panel.dart';
+import 'map/map_astro.dart' show fetchChart, ChartResult;
 import 'sanctuary/sanctuary_profile_editor.dart';
 
 part 'horoscope/horo_chart_data.dart';
@@ -58,6 +59,16 @@ class HoroscopeScreenState extends State<HoroscopeScreen>
   // HTML: chartMode 'single' | 'nt' | 'np' | 'astrology'
   String _chartMode = 'single';
 
+  // ハウス基準モード: false = 本質モード(出生地), true = 現実モード(現住所/relocate)
+  // homeLat/Lng が有効なら loadProfile() でデフォルト true にする。
+  bool _relocateMode = false;
+
+  /// 現住所(homeLat/Lng)が有効値か(0/0でないか)
+  bool get _hasValidHome {
+    final p = _profile;
+    return p != null && !(p.homeLat == 0 && p.homeLng == 0);
+  }
+
   // HTML: bottom sheet 3-state: mini(52px) / half(~280px) / full(~500px)
   int _bsState = 1; // 0=mini, 1=half, 2=full
 
@@ -73,8 +84,22 @@ class HoroscopeScreenState extends State<HoroscopeScreen>
   double? _secondaryAsc, _secondaryMc;
   // 12ハウス cusp度数配列（Placidus, [0]=1H, [9]=10H=MC等）。
   // birthTime 不明 / Worker接続失敗時は空配列。
+  // _houses: 現在の表示で使うハウス（toggleの結果に応じて切替わる)
+  // _natalHouses / _relocateHouses: 1重円+home有効時に並列fetchで両方保持
+  // (リロケーション解説パネルで natal vs relocate を比較するため)
   List<double> _houses = [];
+  List<double> _natalHouses = [];
+  List<double> _relocateHouses = [];
+  // 同様に asc/mc も両方保持
+  double _natalAsc = 0, _natalMc = 0;
+  double _relocateAsc = 0, _relocateMc = 0;
   List<Map<String, dynamic>> _aspects = [];
+
+  /// 星読み(astrology)モードでは現実ベース固定。1重円・2重円ではトグル尊重。
+  bool get _effectiveRelocateMode {
+    if (_chartMode == 'astrology') return _hasValidHome; // 星読みは現実固定(homeあれば)
+    return _relocateMode && _hasValidHome;
+  }
 
   /// 惑星の黄経からハウス番号(1-12)を算出。
   /// houses 配列が空ならnullを返す（出生時刻不明 or API失敗時）。
@@ -181,6 +206,8 @@ class HoroscopeScreenState extends State<HoroscopeScreen>
     final p = await SolaraStorage.loadProfile();
     if (p != null && p.isComplete) {
       _birthTimeUnknown = p.birthTimeUnknown;
+      // 現住所が登録されていればデフォルトで現実モード(リロケーション)を使う
+      _relocateMode = !(p.homeLat == 0 && p.homeLng == 0);
       // Worker /astro/chart 取得 → 失敗時はモックにフォールバック
       await _fetchRealChart(p);
     }
@@ -227,16 +254,54 @@ class HoroscopeScreenState extends State<HoroscopeScreen>
     // 出生時刻不明なら正午で代用 (Worker側で houses が不完全になるのを許容)
     final birthTime = p.birthTimeUnknown ? '12:00' : p.birthTime;
 
-    final chart = await fetchChart(
-      birthDate: p.birthDate,
-      birthTime: birthTime,
-      birthLat: p.birthLat,
-      birthLng: p.birthLng,
-      birthTz: p.birthTz,
-      birthTzName: p.birthTzName,
-      mode: mode,
-      houseSystem: 'placidus',
-    );
+    // 1重円+home有効時: natal/relocate 2本を並列fetchして両方保持
+    // (リロケーション解説パネルで比較するため)
+    // 他モード: 1本のみ (_effectiveRelocateMode に従う)
+    final hasHome = !(p.homeLat == 0 && p.homeLng == 0);
+    final wantBothCharts = _chartMode == 'single' && hasHome;
+
+    ChartResult? chart;
+    ChartResult? natalChart;
+    ChartResult? relocateChart;
+
+    if (wantBothCharts) {
+      // 並列実行 (Worker計算は軽いので2倍にしてもUX影響は小さい)
+      final results = await Future.wait([
+        fetchChart(
+          birthDate: p.birthDate, birthTime: birthTime,
+          birthLat: p.birthLat, birthLng: p.birthLng,
+          birthTz: p.birthTz, birthTzName: p.birthTzName,
+          mode: mode, houseSystem: 'placidus',
+        ),
+        fetchChart(
+          birthDate: p.birthDate, birthTime: birthTime,
+          birthLat: p.birthLat, birthLng: p.birthLng,
+          birthTz: p.birthTz, birthTzName: p.birthTzName,
+          mode: mode, houseSystem: 'placidus',
+          relocateLat: p.homeLat, relocateLng: p.homeLng,
+        ),
+      ]);
+      natalChart = results[0];
+      relocateChart = results[1];
+      chart = _effectiveRelocateMode ? relocateChart : natalChart;
+    } else {
+      // 単一fetch
+      final useRelocate = _effectiveRelocateMode;
+      chart = await fetchChart(
+        birthDate: p.birthDate,
+        birthTime: birthTime,
+        birthLat: p.birthLat,
+        birthLng: p.birthLng,
+        birthTz: p.birthTz,
+        birthTzName: p.birthTzName,
+        mode: mode,
+        houseSystem: 'placidus',
+        relocateLat: useRelocate ? p.homeLat : null,
+        relocateLng: useRelocate ? p.homeLng : null,
+      );
+      // 単一fetchの場合は natal/relocate キャッシュは更新しない
+      // (1重円に戻った時に再fetchで埋まる)
+    }
 
     if (chart != null) {
       // API成功: 実データを格納
@@ -246,6 +311,21 @@ class HoroscopeScreenState extends State<HoroscopeScreen>
       _asc = chart.asc;
       _mc = chart.mc;
       _houses = p.birthTimeUnknown ? [] : List<double>.from(chart.houses);
+
+      // 並列fetchの場合: natal/relocate 両方のhouses & ASC/MCをキャッシュ
+      // (リロケーション解説パネルで比較するため)
+      if (natalChart != null && relocateChart != null && !p.birthTimeUnknown) {
+        _natalHouses = List<double>.from(natalChart.houses);
+        _relocateHouses = List<double>.from(relocateChart.houses);
+        _natalAsc = natalChart.asc;
+        _natalMc = natalChart.mc;
+        _relocateAsc = relocateChart.asc;
+        _relocateMc = relocateChart.mc;
+      } else if (!wantBothCharts) {
+        // 単一fetch時はキャッシュをクリア(古い値が残らないように)
+        _natalHouses = [];
+        _relocateHouses = [];
+      }
 
       if (_chartMode == 'nt' && chart.transit != null) {
         _secondaryPlanets = Map<String, double>.from(chart.transit!);
@@ -270,6 +350,8 @@ class HoroscopeScreenState extends State<HoroscopeScreen>
     } else {
       // API失敗: モックにフォールバック
       _houses = [];
+      _natalHouses = [];
+      _relocateHouses = [];
       _generateMockChart(p);
       // モック時の progressed モードは別途乱数生成
       if (_chartMode == 'np') {
@@ -426,20 +508,27 @@ class HoroscopeScreenState extends State<HoroscopeScreen>
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               child: Row(children: [
+                // ハウス基準モードトグル(本質/現実) — 出生地ハウス vs 現住所リロケーション
+                // 星読みモードは現実固定なのでトグル非表示
+                if (_chartMode != 'astrology') _buildHouseModeToggle(),
                 const Spacer(),
                 // HTML: .chart-menu-btn
                 PopupMenuButton<String>(
                   onSelected: (mode) async {
                     // HTML: setChartMode() — reset filters + (re)fetch secondary planets
                     _chartMode = mode;
+                    // 'relocate' タブは1重円のみ表示 → モード変更で誕生に戻す
+                    if (_bsTab == 'relocate' && mode != 'single') _bsTab = 'birth';
                     _qualityFilters.updateAll((k, v) => true);
                     _pgroupFilters.updateAll((k, v) => true);
                     _fortuneFilter = null;
                     _secondaryAsc = null;
                     _secondaryMc = null;
                     // mode 切替で transit/progressed が必要 → /astro/chart 再取得
+                    // また 'single' 入りで natal/relocate 両並列が必要、'astrology' 入りで現実固定切替
+                    // → 'single' / 'astrology' に切り替わる時も再取得が必要
                     final p = _workingProfile;
-                    if (p != null && p.isComplete && (mode == 'nt' || mode == 'np')) {
+                    if (p != null && p.isComplete) {
                       await _fetchRealChart(p);
                     } else {
                       _recalcAspects();
@@ -511,5 +600,81 @@ class HoroscopeScreenState extends State<HoroscopeScreen>
         color: active ? const Color(0xFFF6BD60) : const Color(0xFFACACAC),
       )),
     );
+  }
+
+  /// ハウス基準モードトグル: 本質(出生地) ⇔ 現実(現住所)
+  /// homeLat/Lng が未設定なら「現実」側はdisabled (グレーアウト)。
+  Widget _buildHouseModeToggle() {
+    final hasHome = _hasValidHome;
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xEB0C0C1A),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: const Color(0x4DF6BD60)),
+      ),
+      child: Row(mainAxisSize: MainAxisSize.min, children: [
+        _toggleSegment(
+          label: '本質',
+          tooltip: '出生地ベースのハウス',
+          active: !_relocateMode,
+          enabled: true,
+          onTap: () => _setRelocateMode(false),
+        ),
+        Container(width: 1, height: 20, color: const Color(0x4DF6BD60)),
+        _toggleSegment(
+          label: '現実',
+          tooltip: hasHome ? '現住所ベースのハウス(リロケーション)' : 'サンクチュアリで現住所を設定してください',
+          active: _relocateMode,
+          enabled: hasHome,
+          onTap: () => _setRelocateMode(true),
+        ),
+      ]),
+    );
+  }
+
+  Widget _toggleSegment({
+    required String label,
+    required String tooltip,
+    required bool active,
+    required bool enabled,
+    required VoidCallback onTap,
+  }) {
+    final fg = !enabled
+        ? const Color(0x66ACACAC)
+        : active
+            ? const Color(0xFF0C0C1A)
+            : const Color(0xFFACACAC);
+    final bg = active && enabled ? const Color(0xFFF6BD60) : Colors.transparent;
+    final w = Material(
+      color: bg,
+      borderRadius: BorderRadius.circular(8),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(8),
+        onTap: enabled ? onTap : null,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+          child: Text(
+            label,
+            style: GoogleFonts.notoSansJp(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: fg,
+            ),
+          ),
+        ),
+      ),
+    );
+    return Tooltip(message: tooltip, child: w);
+  }
+
+  Future<void> _setRelocateMode(bool value) async {
+    if (_relocateMode == value) return;
+    if (value && !_hasValidHome) return;
+    setState(() => _relocateMode = value);
+    final p = _workingProfile;
+    if (p != null && p.isComplete) {
+      await _fetchRealChart(p);
+      if (mounted) setState(() {});
+    }
   }
 }

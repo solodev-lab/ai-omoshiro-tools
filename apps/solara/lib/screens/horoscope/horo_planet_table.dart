@@ -20,6 +20,10 @@ class HoroPlanetTable extends StatelessWidget {
   final double? secondaryAsc, secondaryMc;
   /// 'nt' → 'TRANSIT', 'np' → 'PROGRESSED', それ以外 null
   final String? chartMode;
+  /// 12ハウスのカスプ度数配列 ([0]=1H〜[11]=12H)。空なら未表示。
+  /// 出生時刻不明 / Worker接続失敗時は空。
+  /// 注: secondary(T/P)惑星もこのハウス系で表示する(古典的トランジットby-house)。
+  final List<double> houses;
   const HoroPlanetTable({
     super.key,
     required this.natalPlanets,
@@ -27,7 +31,23 @@ class HoroPlanetTable extends StatelessWidget {
     required this.birthTimeUnknown,
     this.secondaryPlanets, this.secondaryAsc, this.secondaryMc,
     this.chartMode,
+    this.houses = const [],
   });
+
+  /// 惑星の黄経 → ハウス番号(1-12)。houses が空なら null。
+  int? _planetHouse(double planetLon) {
+    if (houses.length != 12) return null;
+    final lon = planetLon % 360;
+    for (int i = 0; i < 12; i++) {
+      final cusp = houses[i] % 360;
+      final next = houses[(i + 1) % 12] % 360;
+      final inHouse = (cusp <= next)
+          ? (lon >= cusp && lon < next)
+          : (lon >= cusp || lon < next);
+      if (inHouse) return i + 1;
+    }
+    return null;
+  }
 
   bool get _hasSecondary =>
       (chartMode == 'nt' || chartMode == 'np') &&
@@ -102,6 +122,9 @@ class HoroPlanetTable extends StatelessWidget {
     final signIdx = (lon / 30).floor() % 12;
     final deg = lon % 30;
     final iconColor = color ?? const Color(0xFFFFD370);
+    // 角点も含めて全行ハウス番号を表示する
+    // (ASC=1H, IC=4H, DSC=7H, MC=10H — カスプの起点なので分かりやすい)
+    final houseNum = _planetHouse(lon);
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 5),
       decoration: const BoxDecoration(
@@ -117,8 +140,22 @@ class HoroPlanetTable extends StatelessWidget {
         Text('${deg.toStringAsFixed(1)}°', style: const TextStyle(
           color: Color(0xFFE8E0D0), fontFamily: 'Courier New', fontSize: 13)),
         const SizedBox(width: 4),
-        Text(signNames[signIdx], style: TextStyle(
-          color: Color(signColors[signIdx]).withAlpha(180), fontSize: 13)),
+        Expanded(child: Text(signNames[signIdx], style: TextStyle(
+          color: Color(signColors[signIdx]).withAlpha(180), fontSize: 13))),
+        // ハウス番号 (右端、固定幅で揃える)
+        SizedBox(
+          width: 36,
+          child: Text(
+            houseNum != null ? '${houseNum}H' : '',
+            textAlign: TextAlign.right,
+            style: TextStyle(
+              color: (color ?? const Color(0xFFF6BD60)).withAlpha(200),
+              fontFamily: 'Courier New',
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
       ]),
     );
   }

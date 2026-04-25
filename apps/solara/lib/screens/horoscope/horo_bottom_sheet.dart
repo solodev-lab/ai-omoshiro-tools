@@ -36,9 +36,11 @@ extension _HoroBottomSheet on HoroscopeScreenState {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // ドラッグハンドル: タップで half ↔ full トグル
+          // ドラッグハンドル + タブバーを1つのドラッグエリアに統合
+          // タブバー上の縦フリックでも half ↔ full 切替できるようにする
+          // タブのタップは内側 GestureDetector で個別処理 (gesture arena が解決)
           GestureDetector(
-            onTap: _cycleBsState,
+            behavior: HitTestBehavior.translucent,
             onVerticalDragEnd: (d) {
               if (d.primaryVelocity != null) {
                 setState(() {
@@ -47,20 +49,29 @@ extension _HoroBottomSheet on HoroscopeScreenState {
                 });
               }
             },
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              color: Colors.transparent,
-              child: Center(child: Container(
-                width: 36, height: 4,
-                decoration: BoxDecoration(
-                  color: const Color(0x66F6BD60),
-                  borderRadius: BorderRadius.circular(2),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // ドラッグハンドル本体: タップで half ↔ full トグル
+                GestureDetector(
+                  onTap: _cycleBsState,
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    color: Colors.transparent,
+                    child: Center(child: Container(
+                      width: 36, height: 4,
+                      decoration: BoxDecoration(
+                        color: const Color(0x66F6BD60),
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    )),
+                  ),
                 ),
-              )),
+                _buildBSTabs(),
+              ],
             ),
           ),
-          _buildBSTabs(),
           Expanded(
             child: SingleChildScrollView(
               padding: const EdgeInsets.fromLTRB(14, 12, 14, 24),
@@ -74,6 +85,10 @@ extension _HoroBottomSheet on HoroscopeScreenState {
 
   Widget _buildBSTabs() {
     final showTransit = _chartMode == 'nt' || _chartMode == 'np';
+    // 拠点(リロケーション解説)タブ: 1重円 + home有効 + houses両方取得済みの時のみ表示
+    final showRelocate = _chartMode == 'single'
+        && _natalHouses.length == 12
+        && _relocateHouses.length == 12;
     // HTML: bs-tab — 5 tabs (fortune has no tab button in HTML mobile)
     final tabs = <(String, AntiqueIcon, String)>[
       ('birth', AntiqueIcon.birth, '誕生'),
@@ -81,6 +96,8 @@ extension _HoroBottomSheet on HoroscopeScreenState {
         ('transit', _chartMode == 'np' ? AntiqueIcon.progressed : AntiqueIcon.transit,
          _chartMode == 'np' ? '進行' : '経過'),
       ('planets', AntiqueIcon.planets, '天体'),
+      if (showRelocate)
+        ('relocate', AntiqueIcon.cycle, '拠点'),
       ('filter', AntiqueIcon.filter, '絞込'),
       ('aspects', AntiqueIcon.aspects, '相'),
     ];
@@ -136,6 +153,16 @@ extension _HoroBottomSheet on HoroscopeScreenState {
         secondaryAsc: (_chartMode == 'nt' || _chartMode == 'np') ? _secondaryAsc : null,
         secondaryMc: (_chartMode == 'nt' || _chartMode == 'np') ? _secondaryMc : null,
         chartMode: _chartMode,
+        houses: _houses,
+      );
+      case 'relocate': return HoroRelocationPanel(
+        natalPlanets: _natalPlanets,
+        natalHouses: _natalHouses,
+        relocateHouses: _relocateHouses,
+        natalAsc: _natalAsc, natalMc: _natalMc,
+        relocateAsc: _relocateAsc, relocateMc: _relocateMc,
+        birthPlaceName: _profile?.birthPlace,
+        homeName: _profile?.homeName,
       );
       case 'filter': return HoroFilterPanel(
         qualityFilters: _qualityFilters,

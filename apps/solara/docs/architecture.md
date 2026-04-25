@@ -38,7 +38,9 @@ lib/ (77 .dart ファイル)
 │   │   ├── horo_pattern_logic.dart    detectPatterns / predictPatternCompletions
 │   │   ├── horo_birth_panel.dart      HoroBirthPanel
 │   │   ├── horo_transit_panel.dart    HoroTransitPanel
-│   │   ├── horo_planet_table.dart     HoroPlanetTable
+│   │   ├── horo_planet_table.dart     HoroPlanetTable (ハウス番号列付き)
+│   │   ├── horo_relocation_panel.dart リロケーション解説パネル (出生地↔現住所比較)
+│   │   ├── horo_relocation_templates.dart (惑星×ハウス) 120 + ASC/MC×星座 24 テンプレート
 │   │   ├── horo_filter_panel.dart     HoroFilterPanel
 │   │   ├── horo_aspect_list.dart      HoroAspectList + 解説モーダル
 │   │   ├── horo_prediction_panel.dart HoroPredictionPanel + 解説モーダル
@@ -270,6 +272,21 @@ Map画面を開くと、1日1回「今日のタップボタン」（Daily Omen B
 ### 称号システム (title_data.dart)
 - 太陽星座12 × 月星座12 × 5軸 × 5宮廷 = 多数の組み合わせ
 - 光の称号（表）+ 影の称号（裏）
+
+### リロケーション (Phase M0, 2026-04-25)
+**古典的リロケーションチャート**: natal惑星位置は固定したまま、ハウスだけ現住所(`homeLat/Lng`)で再計算する。
+- **Worker側** (`worker/src/astro.js` `computeChart`): `relocateLat`/`relocateLng` パラメータ追加。指定時は ASC/MC/houses だけ relocate座標で計算、natal惑星位置は出生地ベース不変。
+- **Dart側** (`lib/screens/map/map_astro.dart` `fetchChart`): `relocateLat`/`relocateLng` 引数追加、`0/0` は未指定扱い。
+- **デフォルト挙動**: home登録ありなら **現住所ハウスを運用チャート**として使う（古典派の標準）。Map / Locations は内部 relocate 反映のみ（UIトグル無し）。
+- **Horoscope画面のトグル** (本質/現実):
+  - 1重円NATAL / 2重円N+T / 2重円N+P: 表示・尊重
+  - 星読みモード: 非表示・現実固定
+- **リロケーション解説パネル** (`horo_relocation_panel.dart`):
+  - 1重円+home有効時のみ表示。Bottom Sheet 「拠点」タブ。
+  - 静的テンプレート (`horo_relocation_templates.dart`): 惑星×ハウス 120個 + ASC/MC×星座 24個。Phase B で Gemini 動的生成へ移行予定。
+  - ASC・MC・10惑星すべて表示（変化なしも dim styling で含める）。
+  - 出生地/現住所の意味を **2行並列で比較表示**。
+- **並列fetch**: 1重円+home時のみ natal/relocate 2チャートを並列取得（パネル比較用）。他モードは単一fetch。
 
 ---
 

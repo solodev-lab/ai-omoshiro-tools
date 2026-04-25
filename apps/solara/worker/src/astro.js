@@ -371,10 +371,14 @@ function getTzOffsetMs(date, tzName) {
 }
 
 // ── Public API: /astro/chart ──
+// relocateLat / relocateLng が指定された場合、natal惑星位置は出生地ベースのまま、
+// ASC/MC/houses だけ relocate座標 + 出生UTC時刻 で再計算する（古典的リロケーションチャート）。
+// 未指定 / 0 / null の場合は従来通り birthLat / birthLng を使う。
 export function computeChart(params) {
   const {
     birthDate, birthTime, birthTz = 9, birthTzName,
     birthLat, birthLng,
+    relocateLat, relocateLng,
     transitDate, mode = 'natal',
     houseSystem = 'placidus',
     orbs, patternOrbs
@@ -387,13 +391,21 @@ export function computeChart(params) {
   const natal = calcAllPlanets(birth);
   const natalKeyed = calcAllPlanetsKeyed(birth);
 
-  const asc = Math.round(calcAscendant(birth, birthLat, birthLng) * 100) / 100;
-  const mc = Math.round(calcMC(birth, birthLng) * 100) / 100;
+  // リロケーション: relocate座標が有効値なら ASC/MC/houses 計算にそれを使う
+  // (有効 = null/undefined でなく、かつ 0/0 でない — 0/0 は未入力扱い)
+  const hasRelocate =
+    relocateLat != null && relocateLng != null &&
+    !(relocateLat === 0 && relocateLng === 0);
+  const angleLat = hasRelocate ? relocateLat : birthLat;
+  const angleLng = hasRelocate ? relocateLng : birthLng;
+
+  const asc = Math.round(calcAscendant(birth, angleLat, angleLng) * 100) / 100;
+  const mc = Math.round(calcMC(birth, angleLng) * 100) / 100;
 
   const jd = (birth.getTime() / 86400000) + 2440587.5;
   const T = (jd - 2451545.0) / 36525.0;
   const obliquity = 23.4393 - 0.013 * T;
-  const houses = calcHouses(mc, asc, birthLat, obliquity, houseSystem)
+  const houses = calcHouses(mc, asc, angleLat, obliquity, houseSystem)
     .map(h => Math.round(h * 100) / 100);
 
   // mode: 'natal' | 'transit' | 'progressed' | 'both'
@@ -436,7 +448,7 @@ export function computeChart(params) {
     ic: Math.round(norm360(mc + 180) * 100) / 100,
     houses,
     houseSystem: (houseSystem === 'whole_sign') ? 'whole_sign'
-      : (Math.abs(birthLat) > 66) ? 'equal' : 'placidus',
+      : (Math.abs(angleLat) > 66) ? 'equal' : 'placidus',
     aspects,
     patterns
   };

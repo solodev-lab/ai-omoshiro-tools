@@ -56,6 +56,11 @@ class ChartResult {
 /// 未指定なら birthTz (UTCオフセット整数) にfallback。
 /// targetDate が指定されると、その日時 (UTC) の transit/progressed を計算する。
 /// 未指定時は現在時刻を使用。
+///
+/// relocateLat / relocateLng が指定された場合、Worker 側で natal惑星位置は
+/// 出生地ベースのまま、ASC/MC/houses だけ relocate座標で再計算する
+/// （古典的リロケーションチャート）。
+/// 0/0 や null は未指定扱い → 出生地でハウス計算。
 Future<ChartResult?> fetchChart({
   required String birthDate,
   required String birthTime,
@@ -66,6 +71,8 @@ Future<ChartResult?> fetchChart({
   String mode = 'both', // 'natal' | 'transit' | 'progressed' | 'both'
   String houseSystem = 'placidus',
   DateTime? targetDate,
+  double? relocateLat,
+  double? relocateLng,
 }) async {
   try {
     final t = (targetDate ?? DateTime.now()).toUtc();
@@ -81,6 +88,12 @@ Future<ChartResult?> fetchChart({
     };
     if (birthTzName != null && birthTzName.isNotEmpty) {
       body['birthTzName'] = birthTzName;
+    }
+    // リロケーション: 0/0 や null は無視（出生地でハウス計算）
+    if (relocateLat != null && relocateLng != null &&
+        !(relocateLat == 0 && relocateLng == 0)) {
+      body['relocateLat'] = relocateLat;
+      body['relocateLng'] = relocateLng;
     }
     final resp = await http.post(
       Uri.parse(_astroApiUrl),
