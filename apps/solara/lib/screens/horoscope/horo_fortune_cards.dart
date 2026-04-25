@@ -102,7 +102,6 @@ class HoroAstrologyView extends StatelessWidget {
           final direction = useApi
               ? (reading.direction.isNotEmpty ? '🧭 ${reading.direction}' : '')
               : (mock?['direction'] ?? '');
-          final score = useApi ? reading.score : (cat['score'] as int);
 
           return Container(
             margin: const EdgeInsets.only(bottom: 16),
@@ -124,15 +123,7 @@ class HoroAstrologyView extends StatelessWidget {
                 const SizedBox(width: 10),
                 Text(cat['nameJP'] as String, style: TextStyle(
                   fontSize: 15, color: color, fontWeight: FontWeight.w700)),
-                const Spacer(),
-                // スコア表示
-                ShaderMask(
-                  shaderCallback: (bounds) => const LinearGradient(
-                    colors: [Color(0xFFF6BD60), Color(0xFFF9D976)],
-                  ).createShader(bounds),
-                  child: Text('$score',
-                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: Colors.white)),
-                ),
+                // 数値スコア表示は廃止（占い文だけで完結させる方針）
               ]),
               const SizedBox(height: 12),
               if (fortuneLoading && !useApi)

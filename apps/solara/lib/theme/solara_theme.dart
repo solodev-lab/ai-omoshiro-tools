@@ -30,6 +30,11 @@ class SolaraTheme {
 
   static TextTheme get _textTheme {
     // HTML: heading = Cormorant Garamond, body = DM Sans
+    // Latin は DM Sans、それ以外（日本語）は Noto Sans JP にフォールバック。
+    // Flutter は TextStyle.fontFamilyFallback を TextStyle merge でも引き継ぐので、
+    // 個別の Text / RichText が明示的に fontFamily を指定していても、
+    // 指定外の文字（＝日本語）は自動で Noto Sans JP にフォールバックする。
+    final japaneseFallback = GoogleFonts.notoSansJp().fontFamily!;
     return GoogleFonts.dmSansTextTheme(
       const TextTheme(
         headlineLarge: TextStyle(
@@ -58,6 +63,6 @@ class SolaraTheme {
           color: SolaraColors.textSecondary,
         ),
       ),
-    );
+    ).apply(fontFamilyFallback: [japaneseFallback]);
   }
 }

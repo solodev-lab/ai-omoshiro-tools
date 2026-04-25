@@ -2,6 +2,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:latlong2/latlong.dart';
 import '../utils/solara_storage.dart';
+import 'horoscope/horo_antique_icons.dart';
 import 'locations/locations_date_stepper.dart';
 import 'map/map_astro.dart';
 import 'map/map_constants.dart';
@@ -16,6 +17,8 @@ class LocationsScreen extends StatefulWidget {
   final Map<String, double> sectorScores;
   final SolaraProfile? profile;
   final void Function(VPSlot slot)? onSelectSlot;
+  /// Sanctuary タブへの遷移コールバック（プロフィール未設定時の案内から呼ばれる）
+  final VoidCallback? onNavigateToSanctuary;
 
   const LocationsScreen({
     super.key,
@@ -24,6 +27,7 @@ class LocationsScreen extends StatefulWidget {
     required this.sectorScores,
     required this.profile,
     this.onSelectSlot,
+    this.onNavigateToSanctuary,
   });
 
   @override
@@ -255,11 +259,6 @@ class _LocationsScreenState extends State<LocationsScreen> {
                 style: TextStyle(fontSize: 13, color: Color(0xFFC9A84C), letterSpacing: 3, fontWeight: FontWeight.w600)),
             const Spacer(),
             IconButton(
-              icon: const Icon(Icons.add, color: Color(0xFFC9A84C)),
-              tooltip: '現在地を登録',
-              onPressed: _addCurrent,
-            ),
-            IconButton(
               icon: const Icon(Icons.close, color: Color(0xFF888888)),
               onPressed: () => Navigator.of(context).pop(),
             ),
@@ -267,7 +266,11 @@ class _LocationsScreenState extends State<LocationsScreen> {
         ),
         if (_loading) const Expanded(child: Center(
           child: CircularProgressIndicator(color: Color(0xFFC9A84C), strokeWidth: 2),
-        )) else ...[
+        )) else if (!(widget.profile?.isComplete ?? false))
+          // プロフィール未設定時は Horo 画面と同じ案内カードを出す。
+          // 日付ステッパー等は出生情報に依存するため、混乱を避けて非表示。
+          Expanded(child: _buildNoProfileGuide())
+        else ...[
           // 操作メニュー（ヘッダ直下に配置）
           LocationsDateStepper(
             displayDate: _displayDate,
@@ -286,6 +289,40 @@ class _LocationsScreenState extends State<LocationsScreen> {
       ]),
       ),
     );
+  }
+
+  /// プロフィール未設定時の案内カード（Horo 画面の _buildNoProfile と同スタイル）。
+  /// 「設定する」タップで Navigator.pop でシートを閉じ、Sanctuary タブへ遷移。
+  Widget _buildNoProfileGuide() {
+    return SafeArea(child: Center(child: Padding(
+      padding: const EdgeInsets.all(32),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+        decoration: BoxDecoration(
+          color: const Color(0x14F9D976),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: const Color(0x40F9D976)),
+        ),
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          const AntiqueGlyph(icon: AntiqueIcon.reading, size: 32,
+            color: Color(0xFFF6BD60)),
+          const SizedBox(height: 8),
+          const Text('SANCTUARYでプロフィールを設定すると、\n各地点の方位スコアが表示されます',
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 13, color: Color(0xFFF6BD60))),
+          const SizedBox(height: 8),
+          GestureDetector(
+            onTap: () {
+              Navigator.of(context).maybePop();
+              widget.onNavigateToSanctuary?.call();
+            },
+            child: const Text('設定する →',
+              style: TextStyle(fontSize: 12, color: Color(0xFFF9D976),
+                decoration: TextDecoration.underline)),
+          ),
+        ]),
+      ),
+    )));
   }
 
   /// 基準地点プルダウン：現在地 + VIEWPOINT スロット一覧

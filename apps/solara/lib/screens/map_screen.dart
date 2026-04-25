@@ -18,6 +18,7 @@ import 'map/map_planet_lines.dart';
 import 'map/map_search.dart';
 import 'map/map_overlays.dart';
 import 'forecast_screen.dart';
+import 'horoscope/horo_antique_icons.dart';
 import 'locations_screen.dart';
 
 /// 開発用フラグ: true なら日付チェックをバイパスして毎回オーバーレイを表示する。
@@ -49,12 +50,16 @@ const _implementedOverlayKinds = <DominantFortuneKind>{
 const _overlayStorageKey = 'dominant_fortune';
 
 class MapScreen extends StatefulWidget {
-  const MapScreen({super.key});
+  /// プロフィール未設定時の案内から Sanctuary タブへ遷移させるコールバック。
+  /// 実体は main.dart の `_onTabTap(4)`。
+  final VoidCallback? onNavigateToSanctuary;
+  const MapScreen({super.key, this.onNavigateToSanctuary});
+
   @override
-  State<MapScreen> createState() => _MapScreenState();
+  State<MapScreen> createState() => MapScreenState();
 }
 
-class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
+class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   final MapController _mapCtrl = MapController();
   LatLng _center = const LatLng(35.4233, 136.7607);
 
@@ -97,6 +102,11 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   List<PlanetLineData> _planetLines = [];
   SolaraProfile? _profile;
 
+  /// プロフィール未設定状態。true の間は占い系オーバーレイ（セクター・
+  /// FortuneSheet・Omen 等）を非表示にし、中央に案内カードを出す。
+  /// 乱数のモックスコアを見せて誤解を招くのを防ぐ目的。
+  bool _noProfile = false;
+
   // 日付選択（null = 今日）。UTC 扱い。
   DateTime? _selectedDate;
   bool _loadingChart = false;
@@ -129,8 +139,6 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     super.initState();
     _loadProfileAndChart();
     _loadMapStyle();
-    // モックスコアをフォールバックとして初期化
-    _sectorScores.addAll(generateMockScores(_sectorComps));
     _checkOmenVisibility();
   }
 
@@ -168,10 +176,19 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     SolaraStorage.saveMapStyleId(mapStyleConfigs[style]!.id);
   }
 
+  /// 外部（main.dart のタブ切替）から呼ばれる公開リロード。
+  /// Sanctuary でプロフィール登録/編集後に Map に戻ったとき、
+  /// `_noProfile` フラグを更新して占い系オーバーレイを再表示するために使う。
+  Future<void> reloadProfile() => _loadProfileAndChart();
+
   Future<void> _loadProfileAndChart({DateTime? targetDate}) async {
     final p = await SolaraStorage.loadProfile();
-    if (p == null || !p.isComplete) return;
+    if (p == null || !p.isComplete) {
+      if (mounted) setState(() => _noProfile = true);
+      return;
+    }
     _profile = p;
+    if (mounted) setState(() => _noProfile = false);
     if (mounted) {
       setState(() {
         // 初回のみ _center を出生地に設定。日付変更等の再計算では
@@ -307,6 +324,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     sectorScores: _displayScores(),
     profile: _profile,
     onSelectSlot: (slot) => _rebuild(LatLng(slot.lat, slot.lng)),
+    onNavigateToSanctuary: widget.onNavigateToSanctuary,
   ));
 
   Future<void> _openForecast() {
@@ -316,6 +334,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
           setState(() => _selectedDate = date);
           _loadProfileAndChart(targetDate: date);
         },
+        onNavigateToSanctuary: widget.onNavigateToSanctuary,
       ),
       heightFrac: 0.92,
     );
@@ -491,7 +510,8 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
           ),
           children: [
             buildStyledTileLayer(_mapStyle),
-            PolygonLayer(polygons: buildSectors(
+            // 出生情報が無い間はセクターを描画しない（スコアが乱数になるため）
+            if (!_noProfile) PolygonLayer(polygons: buildSectors(
               center: _center,
               sectorScores: _displayScores(),
               sectorColor: _sectorColor,
@@ -536,7 +556,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
         ),
 
         // ── FF Label ──
-        Positioned(
+        if (!_noProfile) Positioned(
           top: topPad + 2, left: 16,
           child: FortuneFilterLabel(
             sectorScores: _displayScores(),
@@ -643,8 +663,8 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
           ),
         ),
 
-        // ── Fortune Pull Tab ──
-        if (!_fortuneSheetOpen) Positioned(
+        // ── Fortune Pull Tab ──（プロフィール未設定時は非表示）
+        if (!_noProfile && !_fortuneSheetOpen) Positioned(
           bottom: 80, left: 0, right: 0,
           child: Center(
             child: FortunePullTab(onTap: () => setState(() => _fortuneSheetOpen = true)),
@@ -652,7 +672,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
         ),
 
         // ── Fortune Sheet ──
-        if (_fortuneSheetOpen) Positioned(
+        if (!_noProfile && _fortuneSheetOpen) Positioned(
           bottom: 80, left: 0, right: 0,
           child: FortuneSheet(
             activeSrc: _activeSrc,
@@ -733,7 +753,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
         ),
 
         // ── Daily Omen Button（今日のタップボタン）──
-        if (_omenVisible && _activeOverlay == null) Positioned(
+        if (!_noProfile && _omenVisible && _activeOverlay == null) Positioned(
           left: 24, right: 24, bottom: 170,
           child: OmenButton(phrase: _omenPhrase, onTap: _onOmenTap),
         ),
@@ -760,7 +780,46 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
             onDismiss: () => setState(() => _restOverlayVisible = false),
           ),
         ),
+
+        // ── プロフィール未設定時の案内カード（Horo/Locations/Forecast と同文面・同スタイル）──
+        if (_noProfile) Positioned.fill(
+          child: IgnorePointer(
+            ignoring: false,
+            child: Center(child: _buildNoProfileGuide()),
+          ),
+        ),
       ],
+    );
+  }
+
+  /// プロフィール未設定時の案内カード（他画面と完全同一）。
+  /// 「設定する」タップで Sanctuary タブへ遷移。
+  Widget _buildNoProfileGuide() {
+    return Padding(
+      padding: const EdgeInsets.all(32),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+        decoration: BoxDecoration(
+          color: const Color(0xE60C0C1A), // 地図上に出すので不透明度高めの背景
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: const Color(0x40F9D976)),
+        ),
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          const AntiqueGlyph(icon: AntiqueIcon.reading, size: 32,
+            color: Color(0xFFF6BD60)),
+          const SizedBox(height: 8),
+          const Text('SANCTUARYでプロフィールを設定すると、\n各地点の方位スコアが表示されます',
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 13, color: Color(0xFFF6BD60))),
+          const SizedBox(height: 8),
+          GestureDetector(
+            onTap: () => widget.onNavigateToSanctuary?.call(),
+            child: const Text('設定する →',
+              style: TextStyle(fontSize: 12, color: Color(0xFFF9D976),
+                decoration: TextDecoration.underline)),
+          ),
+        ]),
+      ),
     );
   }
 

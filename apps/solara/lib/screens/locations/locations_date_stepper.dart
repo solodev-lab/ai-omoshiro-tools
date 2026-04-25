@@ -59,17 +59,31 @@ class LocationsDateStepper extends StatelessWidget {
               onDelta: (d) => onShift(days: d),
               onSet: (v) => onSetYmd(displayDate.year, displayDate.month, v)),
         ])),
-        if (refetching) const Padding(
-          padding: EdgeInsets.only(left: 8),
-          child: SizedBox(width: 14, height: 14,
-            child: CircularProgressIndicator(strokeWidth: 1.5, color: Color(0xFFC9A84C)),
+        // 右端は常に 28x28 の固定枠。refetching=スピナー / 通常=「今日に戻す」ボタン（今日状態では薄色 disabled）。
+        // 固定幅にすることで、年月日ボタン押下や再読込でレイアウトがブレない。
+        Padding(
+          padding: const EdgeInsets.only(left: 8),
+          child: SizedBox(
+            width: 28, height: 28,
+            child: refetching
+              ? const Padding(
+                  padding: EdgeInsets.all(7),
+                  child: CircularProgressIndicator(strokeWidth: 1.5, color: Color(0xFFC9A84C)),
+                )
+              : IconButton(
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+                  icon: Icon(
+                    Icons.today,
+                    color: onResetToToday != null
+                      ? const Color(0xFFC9A84C)
+                      : const Color(0x33C9A84C),
+                    size: 16,
+                  ),
+                  tooltip: '今日に戻す',
+                  onPressed: onResetToToday,
+                ),
           ),
-        ) else if (onResetToToday != null) IconButton(
-          padding: EdgeInsets.zero,
-          constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
-          icon: const Icon(Icons.refresh, color: Color(0xFFC9A84C), size: 16),
-          tooltip: '今日に戻す',
-          onPressed: onResetToToday,
         ),
       ]),
     );

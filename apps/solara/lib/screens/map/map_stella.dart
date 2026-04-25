@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 
 /// HTML: .stella { bottom:90px; left:20px; right:20px;
 ///   background:rgba(15,15,30,.75); border-radius:16px; padding:16px 20px; }
+///
+/// 日本語フォントは solara_theme.dart のテーマ fontFamilyFallback 経由で
+/// Noto Sans JP が自動適用される（個別指定不要）。
 class Stella extends StatelessWidget {
   const Stella({super.key});
 
@@ -19,10 +22,12 @@ class Stella extends StatelessWidget {
           const Text('✨ Stella', style: TextStyle(
             fontSize: 10, letterSpacing: 2, color: Color(0xFF6B5CE7))),
           const Spacer(),
-          Text('▼', style: TextStyle(fontSize: 8, color: const Color(0xFF555555))),
+          const Text('▼', style: TextStyle(fontSize: 8, color: Color(0xFF555555))),
         ]),
         const SizedBox(height: 4),
-        RichText(text: const TextSpan(
+        // Text.rich は DefaultTextStyle を継承するので theme の Noto Sans JP fallback が効く。
+        // RichText を使うと継承されず日本語フォールバックが無効になる点に注意。
+        const Text.rich(TextSpan(
           style: TextStyle(fontSize: 13, color: Color(0xFFEAEAEA), height: 1.6),
           children: [
             TextSpan(text: '『再会の喜び』', style: TextStyle(color: Color(0xFFC9A84C), fontWeight: FontWeight.w600)),

@@ -3,6 +3,7 @@ import '../utils/forecast_cache.dart';
 import '../utils/solara_storage.dart';
 import 'forecast/forecast_life_periods.dart';
 import 'forecast/forecast_top5.dart';
+import 'horoscope/horo_antique_icons.dart';
 import 'map/map_constants.dart';
 
 /// Forecast 画面 — 1年予測（ヒートマップ + 選択日詳細 + 強運Top5）
@@ -10,10 +11,13 @@ import 'map/map_constants.dart';
 /// 出生情報のみで決まり地点に依存しないので基準地は持たない。
 class ForecastScreen extends StatefulWidget {
   final void Function(DateTime date)? onJumpToDate;
+  /// プロフィール未設定時の案内から Sanctuary タブへ遷移させるコールバック。
+  final VoidCallback? onNavigateToSanctuary;
 
   const ForecastScreen({
     super.key,
     this.onJumpToDate,
+    this.onNavigateToSanctuary,
   });
 
   @override
@@ -21,10 +25,10 @@ class ForecastScreen extends StatefulWidget {
 }
 
 class _ForecastScreenState extends State<ForecastScreen> {
-  SolaraProfile? _profile;
   ForecastCache? _cache;
   bool _loading = true;
   String? _errorMsg;
+  bool _noProfile = false;
   ForecastDay? _selected;
 
   /// 色モード: 'relative' (年内min-max正規化) | 'absolute' (固定閾値) | 'category' (topFortune色)
@@ -42,13 +46,6 @@ class _ForecastScreenState extends State<ForecastScreen> {
 
   /// カテゴリ色モード時の表示ランク: 1 = その日の1位カテゴリ、2 = 2位カテゴリ
   int _categoryRank = 1;
-
-  /// 運勢サイクルのカテゴリ別カーソル（'love' → idx）。
-  /// 本番は基本「end >= today の最初」を表示。「次へ」ボタンで循環。
-  /// データ再フェッチや年切替で _resetPeriodCursors() を呼んでクリアする。
-  final Map<String, int> _periodCursor = {};
-
-  void _resetPeriodCursors() => _periodCursor.clear();
 
   /// 永続保存された運勢サイクル（プロフィール × yearOffset 単位）。
   /// 強制リフレッシュ時のみ再計算され、それ以外は保存値をそのまま使用。
@@ -88,39 +85,23 @@ class _ForecastScreenState extends State<ForecastScreen> {
     await SolaraStorage.saveForecastHighColor(c);
   }
 
-  Future<void> _load({bool forceRefresh = false}) async {
-    setState(() { _loading = true; _errorMsg = null; });
+  Future<void> _load() async {
+    setState(() { _loading = true; _errorMsg = null; _noProfile = false; });
     final p = await SolaraStorage.loadProfile();
     if (p == null || !p.isComplete) {
       if (!mounted) return;
-      setState(() { _loading = false; _errorMsg = '出生情報を Sanctuary で登録してください'; });
+      setState(() { _loading = false; _noProfile = true; });
       return;
     }
-    _profile = p;
-    // yearOffset=0 は差分更新対応、>0 は単純フェッチ（未来のデータなので増分の概念なし）
-    final ForecastCache? cache;
-    if (_yearOffset == 0) {
-      cache = forceRefresh
-          ? await ForecastRepo.fetchFull(profile: p, force: true)
-          : await ForecastRepo.refreshIncremental(profile: p);
-    } else {
-      cache = await ForecastRepo.fetchFull(
-        profile: p,
-        force: forceRefresh,
-        yearOffset: _yearOffset,
-      );
-    }
-    // 運勢サイクルと強運Top5 を永続キャッシュから読み込み（無ければ計算 → 保存）。
-    // 強制リフレッシュ時のみ再計算する。日次データの 6h 通常更新では再計算しない。
+    // yearOffset=0 は差分更新、>0 は単純フェッチ（未来のデータなので増分の概念なし）
+    final ForecastCache? cache = _yearOffset == 0
+        ? await ForecastRepo.refreshIncremental(profile: p)
+        : await ForecastRepo.fetchFull(profile: p, yearOffset: _yearOffset);
     final periods = (cache != null)
-        ? await ForecastRepo.loadOrComputePeriods(
-            cache: cache, yearOffset: _yearOffset, force: forceRefresh,
-          )
+        ? await ForecastRepo.loadOrComputePeriods(cache: cache, yearOffset: _yearOffset)
         : <LifePeriod>[];
     final top5 = (cache != null)
-        ? await ForecastRepo.loadOrComputeTop5(
-            cache: cache, yearOffset: _yearOffset, force: forceRefresh,
-          )
+        ? await ForecastRepo.loadOrComputeTop5(cache: cache, yearOffset: _yearOffset)
         : <String, List<ForecastDay>>{};
     if (!mounted) return;
     setState(() {
@@ -131,7 +112,6 @@ class _ForecastScreenState extends State<ForecastScreen> {
       _errorMsg = cache == null ? 'Forecast の取得に失敗しました。ネットワーク接続を確認してください。' : null;
       // 初期選択: 先頭の日
       _selected = cache != null && cache.days.isNotEmpty ? cache.days.first : null;
-      _resetPeriodCursors();
     });
   }
 
@@ -141,25 +121,6 @@ class _ForecastScreenState extends State<ForecastScreen> {
     await SolaraStorage.saveForecastYearOffset(offset);
     // 切替時のみ1回フェッチ（キャッシュがあれば API 呼び出しなし）
     await _load();
-  }
-
-  Future<void> _forceRefresh() async {
-    if (_profile == null) return;
-    final rem = await ForecastRepo.cooldownRemaining(
-      profileHashOf(_profile!),
-      yearOffset: _yearOffset,
-    );
-    if (rem > Duration.zero) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('クールダウン中です（残り ${rem.inMinutes} 分）'),
-          duration: const Duration(seconds: 3),
-        ),
-      );
-      return;
-    }
-    await _load(forceRefresh: true);
   }
 
   @override
@@ -184,11 +145,6 @@ class _ForecastScreenState extends State<ForecastScreen> {
                 style: const TextStyle(fontSize: 9, color: Color(0xFF666666))),
             const Spacer(),
             IconButton(
-              icon: const Icon(Icons.refresh, color: Color(0xFFC9A84C), size: 20),
-              tooltip: '再取得',
-              onPressed: _loading ? null : _forceRefresh,
-            ),
-            IconButton(
               icon: const Icon(Icons.close, color: Color(0xFF888888)),
               onPressed: () => Navigator.of(context).pop(),
             ),
@@ -209,6 +165,7 @@ class _ForecastScreenState extends State<ForecastScreen> {
         ]),
       );
     }
+    if (_noProfile) return _buildNoProfileGuide();
     if (_errorMsg != null) {
       return Center(
         child: Padding(
@@ -236,8 +193,6 @@ class _ForecastScreenState extends State<ForecastScreen> {
         const SizedBox(height: 20),
         ForecastLifePeriodsSection(
           periods: _periods,
-          cursor: _periodCursor,
-          onCursorChange: (cat, idx) => setState(() => _periodCursor[cat] = idx),
           onJumpToDate: widget.onJumpToDate,
         ),
         const SizedBox(height: 20),
@@ -252,6 +207,40 @@ class _ForecastScreenState extends State<ForecastScreen> {
         _buildFetchInfo(),
       ]),
     );
+  }
+
+  /// プロフィール未設定時の案内カード（Locations/Horo と同スタイル・同文面）。
+  /// 「設定する」タップで Navigator.pop でシートを閉じ、Sanctuary タブへ遷移。
+  Widget _buildNoProfileGuide() {
+    return SafeArea(child: Center(child: Padding(
+      padding: const EdgeInsets.all(32),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+        decoration: BoxDecoration(
+          color: const Color(0x14F9D976),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: const Color(0x40F9D976)),
+        ),
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          const AntiqueGlyph(icon: AntiqueIcon.reading, size: 32,
+            color: Color(0xFFF6BD60)),
+          const SizedBox(height: 8),
+          const Text('SANCTUARYでプロフィールを設定すると、\n各地点の方位スコアが表示されます',
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 13, color: Color(0xFFF6BD60))),
+          const SizedBox(height: 8),
+          GestureDetector(
+            onTap: () {
+              Navigator.of(context).maybePop();
+              widget.onNavigateToSanctuary?.call();
+            },
+            child: const Text('設定する →',
+              style: TextStyle(fontSize: 12, color: Color(0xFFF9D976),
+                decoration: TextDecoration.underline)),
+          ),
+        ]),
+      ),
+    )));
   }
 
   /// 表示期間 + 年間ベストの統合カード
@@ -344,7 +333,7 @@ class _ForecastScreenState extends State<ForecastScreen> {
         },
         child: const Padding(
           padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-          child: Text('Mapで見る →',
+          child: Text('Mapで見る',
               style: TextStyle(fontSize: 9, color: Color(0xFFC9A84C), decoration: TextDecoration.underline)),
         ),
       ),
@@ -660,8 +649,14 @@ class _ForecastScreenState extends State<ForecastScreen> {
             },
             child: const Padding(
               padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-              child: Text('Mapで見る →',
-                  style: TextStyle(fontSize: 11, color: Color(0xFFC9A84C), fontWeight: FontWeight.w600)),
+              child: Text('Mapで見る',
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: Color(0xFFC9A84C),
+                    fontWeight: FontWeight.w600,
+                    decoration: TextDecoration.underline,
+                    decorationColor: Color(0xFFC9A84C),
+                  )),
             ),
           ),
           const SizedBox(width: 6),

@@ -157,7 +157,6 @@ class _VPPanelState extends State<VPPanel> {
   List<VPSlot> _vpSlots = [];
   List<VPSlot> _locSlots = [];
   int _activeSub = -1;
-  int? _iconPickerIdx;
   String? _msg;
 
   @override
@@ -182,7 +181,6 @@ class _VPPanelState extends State<VPPanel> {
     if (mounted) setState(() {
       if (widget.activeTab == 'vp') _vpSlots = slots; else _locSlots = slots;
       _activeSub = -1;
-      _iconPickerIdx = null;
     });
   }
 
@@ -232,7 +230,7 @@ class _VPPanelState extends State<VPPanel> {
   Widget _tabBtn(String key, String label) {
     final active = widget.activeTab == key;
     return Expanded(child: GestureDetector(
-      onTap: () { widget.onTabChanged(key); setState(() { _activeSub = -1; _iconPickerIdx = null; }); _reload(); },
+      onTap: () { widget.onTabChanged(key); setState(() { _activeSub = -1; }); _reload(); },
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 6),
         decoration: BoxDecoration(
@@ -315,8 +313,6 @@ class _VPPanelState extends State<VPPanel> {
       ),
       // Submenu
       if (_activeSub == idx && !slot.isHome) _buildSubMenu(idx, total, showMove),
-      // Icon picker
-      if (_iconPickerIdx == idx) _buildIconPicker(idx),
     ]);
   }
 
@@ -334,7 +330,7 @@ class _VPPanelState extends State<VPPanel> {
           _subItem('↑', '上に移動', idx == 0, () async { await _activeMgr.moveSlot(idx, -1); await _reload(); }),
           _subItem('↓', '下に移動', idx == total - 1, () async { await _activeMgr.moveSlot(idx, 1); await _reload(); }),
         ],
-        _subItem('🎨', 'アイコン変更', false, () => setState(() => _iconPickerIdx = _iconPickerIdx == idx ? null : idx)),
+        _subItem('🎨', 'アイコン変更', false, () => _showIconPickerDialog(idx)),
         _subItem('✏️', '名称変更', false, () => _showRenameDialog(idx)),
         _subItem('🗑', '削除', false, () async { await _activeMgr.deleteSlot(idx); await _reload(); }, isDanger: true),
       ]),
@@ -358,33 +354,55 @@ class _VPPanelState extends State<VPPanel> {
     );
   }
 
-  Widget _buildIconPicker(int idx) {
-    return Container(
-      margin: const EdgeInsets.only(left: 20, bottom: 4),
-      padding: const EdgeInsets.all(6),
-      decoration: BoxDecoration(
-        color: const Color(0xFF14142A),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: const Color(0x1AFFFFFF)),
-      ),
-      child: Wrap(
-        spacing: 4, runSpacing: 4,
-        children: _allIcons.map((ic) {
-          final cur = _activeSlots[idx].icon == ic;
-          return GestureDetector(
-            onTap: () async { await _activeMgr.changeIcon(idx, ic); await _reload(); },
-            child: Container(
-              width: 24, height: 24,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(4),
-                color: cur ? const Color(0x33C9A84C) : Colors.transparent,
-              ),
-              child: Center(child: Text(ic, style: const TextStyle(fontSize: 14))),
-            ),
-          );
-        }).toList(),
+  /// アイコン選択をダイアログで表示（インライン展開だとパネル下端で画面外に切れるため）。
+  /// VIEWPOINT/LOCATIONS 両タブ共通で、選択済みアイコンは金色枠で強調。
+  Future<void> _showIconPickerDialog(int idx) async {
+    if (idx >= _activeSlots.length) return;
+    final current = _activeSlots[idx].icon;
+    final picked = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF0C0C1A),
+        // 8個/行 × 4行で 32アイコンを表示するため、横幅を広げて狭い画面でも入るよう inset を詰める。
+        insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+        title: const Text('アイコンを選択',
+            style: TextStyle(fontSize: 14, color: Color(0xFFC9A84C))),
+        contentPadding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+        content: SizedBox(
+          width: 352, // 8個/行: 36*8 + 8*7 = 344 + 余白8
+          child: Wrap(
+            spacing: 8, runSpacing: 8,
+            children: _allIcons.map((ic) {
+              final cur = current == ic;
+              return GestureDetector(
+                onTap: () => Navigator.pop(ctx, ic),
+                child: Container(
+                  width: 36, height: 36,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(6),
+                    color: cur ? const Color(0x33C9A84C) : Colors.transparent,
+                    border: Border.all(
+                      color: cur ? const Color(0xFFC9A84C) : const Color(0x1AFFFFFF),
+                    ),
+                  ),
+                  child: Center(child: Text(ic, style: const TextStyle(fontSize: 20))),
+                ),
+              );
+            }).toList(),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('キャンセル', style: TextStyle(color: Color(0xFF555555))),
+          ),
+        ],
       ),
     );
+    if (picked != null && picked != current) {
+      await _activeMgr.changeIcon(idx, picked);
+      await _reload();
+    }
   }
 
   void _showRenameDialog(int idx) {

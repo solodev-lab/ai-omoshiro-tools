@@ -1,4 +1,3 @@
-import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
@@ -158,19 +157,4 @@ List<Marker> buildDirLabels({required LatLng center}) {
     }
   }
   return markers;
-}
-
-/// モックスコア生成（天文計算の実装前）
-Map<String, double> generateMockScores(Map<String, Map<String, double>> sectorComps) {
-  final rng = Random(DateTime.now().day);
-  final scores = <String, double>{};
-  for (final d in dir16) {
-    final ts = rng.nextDouble() * 2.5;
-    final th = rng.nextDouble() * 1.5;
-    final ps = rng.nextDouble() * 1.2;
-    final ph = rng.nextDouble() * 0.8;
-    sectorComps[d] = {'tSoft': ts, 'tHard': th, 'pSoft': ps, 'pHard': ph};
-    scores[d] = ts + th + ps + ph;
-  }
-  return scores;
 }

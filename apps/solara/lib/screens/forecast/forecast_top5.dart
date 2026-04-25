@@ -84,6 +84,9 @@ class ForecastTop5Section extends StatelessWidget {
     );
   }
 
+  /// 順位マーカー: 👑 / 🥈 / 🥉 / ⭐ / ✨（1位=王冠、以降はメダル→星の段階表示）
+  static const _rankMarkers = ['👑', '🥈', '🥉', '⭐', '✨'];
+
   Widget _row(BuildContext context, int rank, ForecastDay d) {
     final parts = d.date.split('-');
     final dateLabel = '${parts[1]}/${parts[2]}';
@@ -93,15 +96,16 @@ class ForecastTop5Section extends StatelessWidget {
     final modeColor = isOverall
         ? const Color(0xFFC9A84C)
         : (categoryColors[mode] ?? const Color(0xFFE8E0D0));
+    final marker = rank < _rankMarkers.length ? _rankMarkers[rank] : '#${rank + 1}';
 
     return InkWell(
       onTap: () => onSelect(d),
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 6),
         child: Row(children: [
-          SizedBox(width: 24,
-              child: Text('#${rank + 1}',
-                  style: TextStyle(fontSize: 11, color: modeColor, fontWeight: FontWeight.w600))),
+          SizedBox(width: 28,
+              child: Center(child: Text(marker,
+                  style: const TextStyle(fontSize: 16)))),
           SizedBox(width: 50,
               child: Text(dateLabel,
                   style: const TextStyle(fontSize: 12, color: Color(0xFFE8E0D0)))),
