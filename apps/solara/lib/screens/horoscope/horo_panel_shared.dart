@@ -89,7 +89,7 @@ class ZodiacImageIcon extends StatelessWidget {
         child: Image.asset(
           'assets/zodiac-symbols/${horoZodiacFiles[i]}.webp',
           fit: BoxFit.contain,
-          errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+          errorBuilder: (_, _, _) => const SizedBox.shrink(),
         ),
       ),
     );

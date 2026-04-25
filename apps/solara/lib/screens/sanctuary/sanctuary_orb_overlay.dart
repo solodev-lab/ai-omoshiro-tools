@@ -47,9 +47,15 @@ class _SanctuaryOrbOverlayState extends State<SanctuaryOrbOverlay> {
 
   void _reset() {
     setState(() {
-      for (final a in _majorAspects) _vals[a.$2] = a.$3;
-      for (final a in _minorAspects) _vals[a.$2] = a.$3;
-      for (final a in _patternOrbs) _vals[a.$2] = a.$3;
+      for (final a in _majorAspects) {
+        _vals[a.$2] = a.$3;
+      }
+      for (final a in _minorAspects) {
+        _vals[a.$2] = a.$3;
+      }
+      for (final a in _patternOrbs) {
+        _vals[a.$2] = a.$3;
+      }
     });
   }
 

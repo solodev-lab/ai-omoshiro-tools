@@ -5,6 +5,7 @@
 /// simple Metonic cycle approximation).
 ///
 /// Uses 14 correction terms for New Moon and Full Moon.
+library;
 import 'dart:math' as math;
 
 class MoonPhase {

@@ -216,6 +216,28 @@ class SolaraStorage {
     await saveCurrentReadings(readings);
   }
 
+  /// Update an existing reading (matched by date) with new reading text.
+  /// 用途: /tarot API 応答後に Gemini 生成テキストを保存する。
+  static Future<void> updateReading(DailyReading updated) async {
+    final readings = await loadCurrentReadings();
+    for (final r in readings) {
+      if (r.date == updated.date) {
+        r.reading = updated.reading;
+        // synchronicity はユーザー入力なので上書きしない
+        break;
+      }
+    }
+    await saveCurrentReadings(readings);
+  }
+
+  /// Remove a reading by date (used for the dev "reset today" button).
+  /// 本番では呼ばれない想定。
+  static Future<void> removeReadingByDate(String date) async {
+    final readings = await loadCurrentReadings();
+    readings.removeWhere((r) => r.date == date);
+    await saveCurrentReadings(readings);
+  }
+
   // --- Title Diagnosis persistence ---
 
   static const _titleKey = 'solara_title_data';

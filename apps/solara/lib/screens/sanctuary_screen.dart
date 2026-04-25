@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../utils/solara_storage.dart';
-import '../utils/title_data.dart' as titleData;
+import '../utils/title_data.dart' as title_data;
 import 'sanctuary/sanctuary_orb_overlay.dart';
 import 'sanctuary/sanctuary_profile_editor.dart';
 import 'sanctuary/sanctuary_reset_hour_picker.dart';
@@ -90,15 +90,15 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
       await SolaraStorage.saveProfile(result);
       // HTML: saveBirthInfo() — auto-update title if sun/moon sign changed
       if (_titleLight != null && _profile != null) {
-        final oldSun = titleData.getSunSign(_profile!.birthDate);
-        final oldMoon = titleData.getMoonSign(_profile!.birthDate, _profile!.birthTime);
-        final newSun = titleData.getSunSign(result.birthDate);
-        final newMoon = titleData.getMoonSign(result.birthDate, result.birthTime);
+        final oldSun = title_data.getSunSign(_profile!.birthDate);
+        final oldMoon = title_data.getMoonSign(_profile!.birthDate, _profile!.birthTime);
+        final newSun = title_data.getSunSign(result.birthDate);
+        final newMoon = title_data.getMoonSign(result.birthDate, result.birthTime);
         if (newSun != oldSun || newMoon != oldMoon) {
-          final t144 = titleData.title144[newSun]?[newMoon];
-          final sunA = titleData.sunAdj[newSun];
+          final t144 = title_data.title144[newSun]?[newMoon];
+          final sunA = title_data.sunAdj[newSun];
           final newLight = t144?['light'] ?? (sunA?['jp'] ?? '');
-          final newShadow = t144?['shadow'] ?? '${sunA?['jp'] ?? ''}${titleData.moonNoun[newMoon]?['jp'] ?? ''}';
+          final newShadow = t144?['shadow'] ?? '${sunA?['jp'] ?? ''}${title_data.moonNoun[newMoon]?['jp'] ?? ''}';
           final updated = {
             'lightJP': newLight, 'shadowJP': newShadow,
             'classEN': _titleClassEN ?? '', 'classJP': '',

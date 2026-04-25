@@ -115,7 +115,18 @@ class _ObserveHistoryPanelState extends State<ObserveHistoryPanel> {
               SizedBox(width: 40, child: Text(card.emoji, style: const TextStyle(fontSize: 28), textAlign: TextAlign.center)),
               const SizedBox(width: 12),
               Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text(card.nameJP, style: const TextStyle(fontSize: 14, color: Color(0xFFE8E0D0), fontWeight: FontWeight.w500)),
+                Row(mainAxisSize: MainAxisSize.min, children: [
+                  Text(card.nameJP, style: const TextStyle(fontSize: 14, color: Color(0xFFE8E0D0), fontWeight: FontWeight.w500)),
+                  const SizedBox(width: 6),
+                  Text(
+                    r.reversed ? '逆' : '正',
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: r.reversed ? const Color(0xFFB088FF) : const Color(0xFFC9A84C),
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ]),
                 const SizedBox(height: 2),
                 Text(card.keyword, style: const TextStyle(fontSize: 11, color: Color(0xFF999999), fontStyle: FontStyle.italic)),
                 const SizedBox(height: 4),
@@ -156,6 +167,16 @@ class _ObserveHistoryPanelState extends State<ObserveHistoryPanel> {
             padding: const EdgeInsets.only(bottom: 12),
             child: Text(planetDisplay, style: const TextStyle(fontSize: 11, color: Color(0xFF999999))),
           ),
+        if (r.reading.isNotEmpty) ...[
+          const Row(children: [
+            Text('🔮', style: TextStyle(fontSize: 10, color: Color(0xFFC9A84C))),
+            SizedBox(width: 4),
+            Text('READING', style: TextStyle(fontSize: 10, color: Color(0xFFC9A84C), letterSpacing: 1)),
+          ]),
+          const SizedBox(height: 6),
+          Text(r.reading, style: const TextStyle(fontSize: 12, color: Color(0xD9E8E0D0), height: 1.7)),
+          const SizedBox(height: 12),
+        ],
         Container(
           padding: const EdgeInsets.only(top: 10),
           decoration: const BoxDecoration(

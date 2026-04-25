@@ -9,12 +9,30 @@
  */
 
 // ── Fortune カテゴリ定義 ──
+// houses: そのカテゴリで重視する伝統占星術のハウス番号
+//   1H=自己, 2H=所有/才能/収入, 3H=対話/兄弟/短距離, 4H=家庭/基盤,
+//   5H=恋愛/楽しみ/創造, 6H=日常業務/健康, 7H=パートナー/結婚, 8H=共有資産/変容,
+//   9H=哲学/遠距離/学問, 10H=社会的地位/キャリア, 11H=友人/ネットワーク, 12H=潜在意識/隠れた事
 const FORTUNE_CATEGORIES = {
-  overall: { jp: '全体運', en: 'Overall', planets: ['sun', 'moon', 'jupiter'] },
-  love: { jp: '恋愛運', en: 'Love', planets: ['venus', 'mars', 'moon'] },
-  money: { jp: '金運', en: 'Money', planets: ['venus', 'jupiter', 'saturn'] },
-  career: { jp: '仕事運', en: 'Career', planets: ['saturn', 'venus', 'sun'] },
-  communication: { jp: '対話運', en: 'Communication', planets: ['mercury', 'moon', 'jupiter'] },
+  overall: { jp: '全体運', en: 'Overall', planets: ['sun', 'moon', 'jupiter'], houses: [1] },
+  love: { jp: '恋愛運', en: 'Love', planets: ['venus', 'mars', 'moon'], houses: [5, 7] },
+  money: { jp: '金運', en: 'Money', planets: ['venus', 'jupiter', 'saturn'], houses: [2, 8] },
+  career: { jp: '仕事運', en: 'Career', planets: ['saturn', 'venus', 'sun'], houses: [6, 10] },
+  communication: { jp: '対話運', en: 'Communication', planets: ['mercury', 'moon', 'jupiter'], houses: [3, 9] },
+};
+
+const HOUSE_MEANINGS_JP = {
+  1: '自己・新しい始まり', 2: '所有・才能・収入', 3: '対話・短距離・兄弟',
+  4: '家庭・基盤', 5: '恋愛・楽しみ・創造', 6: '日常業務・健康',
+  7: 'パートナー・結婚', 8: '共有資産・変容', 9: '哲学・遠距離・学問',
+  10: '社会的地位・キャリア', 11: '友人・ネットワーク', 12: '潜在意識・隠れた事',
+};
+
+const HOUSE_MEANINGS_EN = {
+  1: 'self/new beginnings', 2: 'possessions/talents/income', 3: 'communication/siblings/short trips',
+  4: 'home/foundations', 5: 'romance/play/creativity', 6: 'daily work/health',
+  7: 'partners/marriage', 8: 'shared resources/transformation', 9: 'philosophy/long trips/higher learning',
+  10: 'career/public status', 11: 'friends/networks', 12: 'subconscious/hidden matters',
 };
 
 const PLANET_JP = {
@@ -58,10 +76,9 @@ export function computeCategoryScore(category, aspects) {
   return Math.max(20, Math.min(95, score));
 }
 
-// ── Gemini API 呼び出し (503時はリトライ) ──
-async function callGemini(apiKey, prompt, { retries = 2 } = {}) {
-  // fallback 順: 2.5-flash → 2.0-flash (503回避)
-  const models = ['gemini-2.5-flash', 'gemini-2.0-flash'];
+// ── Gemini API 呼び出し (503時はリトライ、404はモデル廃止扱いで即fallback) ──
+// models: 試行順の配列。先頭が PRIMARY、それ以降が FALLBACK チェーン。
+async function callGemini(apiKey, prompt, models, { retries = 2 } = {}) {
   let lastErr;
   for (const model of models) {
     for (let attempt = 0; attempt <= retries; attempt++) {
@@ -88,9 +105,15 @@ async function callGemini(apiKey, prompt, { retries = 2 } = {}) {
           }
           break; // 次のモデルへ
         }
+        if (res.status === 404) {
+          // モデル廃止 → 即フォールバックへ
+          const err = await res.text().catch(() => '');
+          lastErr = new Error(`Gemini ${model} 404 (deprecated): ${err.slice(0, 200)}`);
+          break;
+        }
         if (!res.ok) {
           const err = await res.text().catch(() => '');
-          throw new Error(`Gemini API ${res.status}: ${err.slice(0, 200)}`);
+          throw new Error(`Gemini API ${model} ${res.status}: ${err.slice(0, 200)}`);
         }
         const data = await res.json();
         const cand = data?.candidates?.[0];
@@ -112,7 +135,7 @@ async function callGemini(apiKey, prompt, { retries = 2 } = {}) {
 }
 
 // ── プロンプト生成 ──
-function buildPrompt({ category, lang, natal, aspects, patterns, date, userName }) {
+function buildPrompt({ category, lang, natal, planetHouses, aspects, patterns, date, userName }) {
   const cat = FORTUNE_CATEGORIES[category] || FORTUNE_CATEGORIES.overall;
   const catName = lang === 'en' ? cat.en : cat.jp;
   const dateStr = date || new Date().toISOString().slice(0, 10);
@@ -144,17 +167,43 @@ function buildPrompt({ category, lang, natal, aspects, patterns, date, userName 
     }
   }
 
+  // ハウス情報（出生時刻が判明している場合のみ planetHouses が渡される）
+  const HOUSE_MEANINGS = lang === 'en' ? HOUSE_MEANINGS_EN : HOUSE_MEANINGS_JP;
+  const hasHouses = planetHouses && Object.keys(planetHouses).length > 0;
+  let houseLines = '';
+  let categoryHousesHint = '';
+  if (hasHouses) {
+    // カテゴリで重視するハウスの説明
+    const houseHints = (cat.houses || []).map(h => `${h}H(${HOUSE_MEANINGS[h] || ''})`);
+    categoryHousesHint = houseHints.join(' / ');
+    // 関連惑星のハウス位置（cat.planets を優先）
+    const lines = [];
+    for (const p of cat.planets) {
+      const h = planetHouses[p];
+      if (h) {
+        const pName = lang === 'en' ? p : (PLANET_JP[p] || p);
+        const meaning = HOUSE_MEANINGS[h] || '';
+        lines.push(`- ${pName}: ${h}H (${meaning})`);
+      }
+    }
+    houseLines = lines.join('\n');
+  }
+
   if (lang === 'en') {
     return `You are an expert astrologer. Generate a personalized ${catName} fortune reading for today (${dateStr}).
 
 Focus planets for this category: ${cat.planets.join(', ')}
+${categoryHousesHint ? `Houses traditionally read for ${catName}: ${categoryHousesHint}` : ''}
 ${userName ? `User: ${userName}` : ''}
 
+${hasHouses ? `Natal house positions of focus planets:\n${houseLines || '(none mapped)'}\n` : '(House positions unavailable — birth time unknown)\n'}
 Key aspects involving these planets:
 ${aspectLines || '(no significant aspects)'}
 
 Active special patterns:
 ${patternLines.join('\n') || '(none)'}
+
+🔴 If house positions are provided, weave them into the reading concretely (e.g. "with Venus in your 10th house of career, your love appears in professional contexts"). If unavailable, do not invent or mention houses.
 
 Return ONLY a JSON object with exactly these fields (no markdown, no extra text):
 {
@@ -168,13 +217,17 @@ Return ONLY a JSON object with exactly these fields (no markdown, no extra text)
   return `あなたは経験豊かな占星術師です。今日 (${dateStr}) の${catName}について、パーソナライズされた占い文を生成してください。
 
 このカテゴリの主要天体: ${cat.planets.map(p => PLANET_JP[p]).join('、')}
+${categoryHousesHint ? `${catName}で重視するハウス: ${categoryHousesHint}` : ''}
 ${userName ? `対象者: ${userName}さん` : ''}
 
+${hasHouses ? `主要天体の出生ハウス位置:\n${houseLines || '(なし)'}\n` : '(ハウス位置は不明 — 出生時刻が登録されていません)\n'}
 主要天体に関わる現在のアスペクト:
 ${aspectLines || '(顕著なアスペクトなし)'}
 
 成立中の特殊パターン:
 ${patternLines.join('\n') || '(なし)'}
+
+🔴 ハウス位置が与えられている場合は、それを具体的に織り込んでください（例:「金星が10ハウス（社会的地位）にあるあなたの恋愛運は、職場や公的な場での出会いから訪れる」）。ハウス位置が「不明」の場合は、ハウスについて捏造したり言及したりしないでください。
 
 以下のJSON形式のみで返答してください (マークダウンや余分な文言は不要):
 {
@@ -190,6 +243,7 @@ export async function handleFortune(body, env) {
     category = 'overall',
     lang = 'ja',
     natal = {},
+    planetHouses = null,
     aspects = [],
     patterns = {},
     date,
@@ -207,8 +261,13 @@ export async function handleFortune(body, env) {
   if (!env.GEMINI_API_KEY) {
     throw new Error('GEMINI_API_KEY not configured on worker');
   }
-  const prompt = buildPrompt({ category, lang, natal, aspects, patterns, date, userName });
-  const raw = await callGemini(env.GEMINI_API_KEY, prompt);
+  // env vars から試行順のモデル配列を構築（未設定ならハードコード fallback）
+  const primary = env.FORTUNE_MODEL_PRIMARY || 'gemini-2.5-flash';
+  const fallback = env.FORTUNE_MODEL_FALLBACK || 'gemini-flash-latest';
+  const models = primary === fallback ? [primary] : [primary, fallback];
+
+  const prompt = buildPrompt({ category, lang, natal, planetHouses, aspects, patterns, date, userName });
+  const raw = await callGemini(env.GEMINI_API_KEY, prompt, models);
 
   // 3. JSON抽出 (Geminiは基本JSON返すが念のためfallback)
   let parsed;

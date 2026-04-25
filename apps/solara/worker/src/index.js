@@ -6,6 +6,7 @@ import { computeChart, computePredictions, computeMonthEvents, computeForecast }
 import { searchPlace } from './search.js';
 import { lookupTimezone } from './tzlookup.js';
 import { handleFortune } from './fortune.js';
+import { handleTarot } from './tarot.js';
 
 // ── CORS ──
 const ALLOWED_ORIGINS = [
@@ -289,6 +290,18 @@ export default {
         } catch (err) {
           console.error('Fortune error:', err);
           return jsonError(500, err.message || 'Fortune generation failed', origin);
+        }
+      }
+
+      // ── Tarot (Gemini-powered tarot reading + Stella message) ──
+      if (path === '/tarot' && request.method === 'POST') {
+        const body = await request.json();
+        try {
+          const result = await handleTarot(body, env);
+          return jsonOk(result, origin);
+        } catch (err) {
+          console.error('Tarot error:', err);
+          return jsonError(500, err.message || 'Tarot generation failed', origin);
         }
       }
 

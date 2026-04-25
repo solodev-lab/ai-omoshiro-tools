@@ -52,8 +52,8 @@ class CelestialEvents {
 
         return events;
       }
-    } catch (e) {
-
+    } catch (_) {
+      // network/parse error → fall through to month or empty fallback
     }
     if (_apiCache.containsKey(key)) return _apiCache[key]!;
     final fallback = _months?[month]?.events ?? [];

@@ -13,6 +13,7 @@ class Observe3DCard extends StatelessWidget {
   final Animation<double> pulseScale;
   final AnimationController pulseCtrl;
   final TarotCard? drawnCard;
+  final bool reversed;
 
   const Observe3DCard({
     super.key,
@@ -21,6 +22,7 @@ class Observe3DCard extends StatelessWidget {
     required this.pulseScale,
     required this.pulseCtrl,
     required this.drawnCard,
+    this.reversed = false,
   });
 
   @override
@@ -37,7 +39,7 @@ class Observe3DCard extends StatelessWidget {
           ? Transform(
               alignment: Alignment.center,
               transform: Matrix4.rotationY(pi),
-              child: ObserveCardFront(card: drawnCard!),
+              child: ObserveCardFront(card: drawnCard!, reversed: reversed),
             )
           : ObserveCardBack(pulseCtrl: pulseCtrl, pulseOpacity: pulseOpacity, pulseScale: pulseScale),
     );
@@ -108,23 +110,28 @@ class ObserveCardBack extends StatelessWidget {
 
 class ObserveCardFront extends StatelessWidget {
   final TarotCard card;
-  const ObserveCardFront({super.key, required this.card});
+  final bool reversed;
+  const ObserveCardFront({super.key, required this.card, this.reversed = false});
 
   @override
   Widget build(BuildContext context) {
     final borderColor = Color(elementColors[card.element] ?? 0xFFC9A84C);
 
+    final cardImage = ClipRRect(
+      borderRadius: BorderRadius.circular(12),
+      child: Image.asset(card.imagePath, fit: BoxFit.cover),
+    );
+
     return Container(
-      key: ValueKey('front-${card.id}'),
+      key: ValueKey('front-${card.id}-${reversed ? 'r' : 'u'}'),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: borderColor, width: 2),
         color: const Color(0xFF0D0D2B),
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(12),
-        child: Image.asset(card.imagePath, fit: BoxFit.cover),
-      ),
+      child: reversed
+          ? Transform.rotate(angle: pi, child: cardImage)
+          : cardImage,
     );
   }
 }
@@ -135,7 +142,8 @@ class ObserveCardFront extends StatelessWidget {
 
 class ObserveCardInfo extends StatelessWidget {
   final TarotCard card;
-  const ObserveCardInfo({super.key, required this.card});
+  final bool reversed;
+  const ObserveCardInfo({super.key, required this.card, this.reversed = false});
 
   @override
   Widget build(BuildContext context) {
@@ -156,8 +164,23 @@ class ObserveCardInfo extends StatelessWidget {
           style: const TextStyle(fontSize: 14, color: Color(0xFFC9A84C), letterSpacing: 2, fontWeight: FontWeight.w600),
           textAlign: TextAlign.center),
       const SizedBox(height: 2),
-      // Card name JP
-      Text(card.nameJP, style: const TextStyle(fontSize: 18, color: Color(0xFFE8E0D0), fontWeight: FontWeight.w300)),
+      // Card name JP + 正逆位置
+      Row(mainAxisAlignment: MainAxisAlignment.center, mainAxisSize: MainAxisSize.min, children: [
+        Text(card.nameJP, style: const TextStyle(fontSize: 18, color: Color(0xFFE8E0D0), fontWeight: FontWeight.w300)),
+        const SizedBox(width: 8),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+          decoration: BoxDecoration(
+            color: reversed ? const Color(0x33B088FF) : const Color(0x33C9A84C),
+            borderRadius: BorderRadius.circular(4),
+            border: Border.all(color: reversed ? const Color(0x80B088FF) : const Color(0x80C9A84C)),
+          ),
+          child: Text(
+            reversed ? '逆位置' : '正位置',
+            style: TextStyle(fontSize: 10, color: reversed ? const Color(0xFFB088FF) : const Color(0xFFC9A84C), letterSpacing: 1),
+          ),
+        ),
+      ]),
       const SizedBox(height: 6),
       // Keyword
       Text(card.keyword, style: const TextStyle(fontSize: 13, color: Color(0xFF999999), fontStyle: FontStyle.italic)),

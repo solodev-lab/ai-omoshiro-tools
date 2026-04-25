@@ -16,6 +16,17 @@ workers_dev = true
 # GOOGLE_PLACES_KEY は wrangler secret put GOOGLE_PLACES_KEY で設定
 # JAWG_TOKEN は将来 Jawg 多言語タイルを再導入する場合に再利用可能（CF secret に残置）
 
+# ── Gemini モデル設定 ──────────────────────────────
+# 廃止リスク対策で env var 化。コード変更せず wrangler deploy で切替可能。
+# 廃止時は両方を新世代モデル（例: gemini-3-flash, gemini-3.1-flash-lite）に書き換え。
+# - PRIMARY: 安定動作の明示版（突然死リスクあり）
+# - FALLBACK: -latest エイリアス（preview指定で挙動変化リスクあり、ただし廃止リスクなし）
+# どちらか片方が死んでも、もう一方が拾う二重保険構成。
+TAROT_MODEL_PRIMARY = "gemini-2.5-flash"
+TAROT_MODEL_FALLBACK = "gemini-flash-latest"
+FORTUNE_MODEL_PRIMARY = "gemini-2.5-flash"
+FORTUNE_MODEL_FALLBACK = "gemini-flash-latest"
+
 # KV: /astro/forecast の月次クォータ用。
 # 有効化手順:
 #   1. wrangler kv namespace create FORECAST_KV

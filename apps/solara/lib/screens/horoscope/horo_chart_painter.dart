@@ -381,8 +381,8 @@ class HoroChartWheelPainter extends CustomPainter {
     if (secondaryPlanets != null && secondaryPlanets!.isNotEmpty) {
       final secondaryR = 248 * scale;
       final secAnchors = <String, double>{
-        if (secondaryAsc != null) '_sasc': secondaryAsc!,
-        if (secondaryMc != null) '_smc': secondaryMc!,
+        '_sasc': ?secondaryAsc,
+        '_smc': ?secondaryMc,
         if (secondaryAsc != null) '_sdsc': (secondaryAsc! + 180) % 360,
         if (secondaryMc != null) '_sic': (secondaryMc! + 180) % 360,
       };

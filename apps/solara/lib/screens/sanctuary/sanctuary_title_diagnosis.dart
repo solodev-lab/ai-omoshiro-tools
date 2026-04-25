@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../utils/solara_storage.dart';
-import '../../utils/title_data.dart' as titleData;
+import '../../utils/title_data.dart' as title_data;
 
 // ══════════════════════════════════════════════════
 // ── Title Diagnosis Page ──
@@ -187,17 +187,17 @@ class _SanctuaryTitleDiagnosisPageState extends State<SanctuaryTitleDiagnosisPag
     }
 
     // HTML: TITLE_CLASSES[axis][court]
-    final cls = titleData.getClassByAxisCourt(topAxis, court);
+    final cls = title_data.getClassByAxisCourt(topAxis, court);
     if (cls == null) { Navigator.of(context).pop(null); return; }
 
     // HTML: getSunSign/getMoonSign → TITLE_144 lookup
-    final sunSign = titleData.getSunSign(_profile?.birthDate ?? '');
-    final moonSign = titleData.getMoonSign(_profile?.birthDate ?? '', _profile?.birthTime ?? '');
-    final t144 = titleData.title144[sunSign]?[moonSign];
+    final sunSign = title_data.getSunSign(_profile?.birthDate ?? '');
+    final moonSign = title_data.getMoonSign(_profile?.birthDate ?? '', _profile?.birthTime ?? '');
+    final t144 = title_data.title144[sunSign]?[moonSign];
 
     // HTML: mainTitle = {jp: t144.shadow, en: sunAdj.en + moonNoun.en, lightJP: t144.light}
-    final sunA = titleData.sunAdj[sunSign];
-    final moonN = titleData.moonNoun[moonSign];
+    final sunA = title_data.sunAdj[sunSign];
+    final moonN = title_data.moonNoun[moonSign];
     _revealTitleJP = t144?['shadow'] ?? '${sunA?['jp'] ?? ''}${moonN?['jp'] ?? ''}';
     _revealTitleEN = '${sunA?['en'] ?? ''} ${moonN?['en'] ?? ''}';
     _revealLightJP = t144?['light'] ?? (sunA?['jp'] ?? '');
@@ -322,7 +322,7 @@ class _SanctuaryTitleDiagnosisPageState extends State<SanctuaryTitleDiagnosisPag
         decoration: BoxDecoration(shape: BoxShape.circle,
           gradient: const RadialGradient(colors: [Color(0x99F9D976), Color(0x1AF9D976), Colors.transparent], stops: [0, 0.6, 0.8]),
           boxShadow: [BoxShadow(color: const Color(0x4DF9D976), blurRadius: 40 + (v - 0.9) * 160)]),
-        transform: Matrix4.identity()..scale(v))),
+        transform: Matrix4.identity()..scaleByDouble(v, v, v, 1.0))),
     const SizedBox(height: 24),
     const Text('Forging your title...', style: TextStyle(fontSize: 14, color: Color(0xFFACACAC), letterSpacing: 2)),
   ]));

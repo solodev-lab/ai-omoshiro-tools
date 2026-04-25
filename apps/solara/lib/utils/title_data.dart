@@ -1,5 +1,6 @@
 /// Solara Title System data — matches SPEC.md exactly.
 /// 144 titles = 12 sun parts × 12 moon parts + 25 classes
+library;
 
 // ── Sun Sign → External Pattern (太陽星座 → 外面パーツ) ──
 const sunParts = <String, String>{

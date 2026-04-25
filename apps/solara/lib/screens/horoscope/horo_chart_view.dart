@@ -32,7 +32,7 @@ extension _HoroChartView on HoroscopeScreenState {
           child: Image.asset(
             'assets/zodiac-symbols/${_zodiacFilenames[i]}.webp',
             fit: BoxFit.contain,
-            errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+            errorBuilder: (_, _, _) => const SizedBox.shrink(),
           ),
         )),
       );
@@ -65,7 +65,7 @@ extension _HoroChartView on HoroscopeScreenState {
                     child: Image.asset(
                       'assets/horo-bg/parchment_base.webp',
                       fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                      errorBuilder: (_, _, _) => const SizedBox.shrink(),
                     ),
                   ),
                 )),
@@ -137,7 +137,7 @@ extension _HoroChartView on HoroscopeScreenState {
                           ? (_natalPlanets['sun'] ?? 0)
                           : _asc) / 30).floor() % 12)]}.webp',
                         fit: BoxFit.contain,
-                        errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                        errorBuilder: (_, _, _) => const SizedBox.shrink(),
                       ),
                     ),
                   ),

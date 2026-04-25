@@ -1,5 +1,6 @@
 /// 月齢サイクルのストーリーテキスト（JP/EN）
 /// 翻訳ではなく、それぞれの言語でネイティブに書かれたテキスト。
+library;
 
 class CycleStoryTexts {
   CycleStoryTexts._();

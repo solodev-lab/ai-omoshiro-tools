@@ -138,7 +138,7 @@ class _TarotAltarSceneState extends State<TarotAltarScene>
             // 4. Shooting star overlay
             AnimatedBuilder(
               animation: _meteorCtrl,
-              builder: (_, __) => _meteorCtrl.value > 0 && _meteorCtrl.value < 1
+              builder: (_, _) => _meteorCtrl.value > 0 && _meteorCtrl.value < 1
                   ? _buildMeteor()
                   : const SizedBox.shrink(),
             ),
@@ -247,7 +247,7 @@ class _TarotAltarSceneState extends State<TarotAltarScene>
       // Shadow (drawn in the shadow layer below every planet)
       shadowLayer.add(AnimatedBuilder(
         animation: _floatCtrl,
-        builder: (_, __) {
+        builder: (_, _) {
           final t = (_floatCtrl.value + phase) * 2 * pi;
           final dy = sin(t) * 3.5;
           final dx = cos(t * 2) * 1.5;
@@ -276,7 +276,7 @@ class _TarotAltarSceneState extends State<TarotAltarScene>
       // Planet itself (above ALL shadows)
       planetLayer.add(AnimatedBuilder(
         animation: _floatCtrl,
-        builder: (_, __) {
+        builder: (_, _) {
           final t = (_floatCtrl.value + phase) * 2 * pi;
           final dy = sin(t) * 3.5;
           final dx = cos(t * 2) * 1.5;
@@ -345,7 +345,7 @@ class _TarotAltarSceneState extends State<TarotAltarScene>
       child: IgnorePointer(
         child: AnimatedBuilder(
           animation: _floatCtrl,
-          builder: (_, __) {
+          builder: (_, _) {
             final t = _floatCtrl.value * 2 * pi;
             final s1 = 1.00 + sin(t) * 0.08;            // outer, slow
             final s2 = 1.00 + sin(t * 2 + 1.2) * 0.10;  // mid, double speed

@@ -10,6 +10,7 @@ import 'horoscope/horo_fortune_cards.dart';
 import 'horoscope/horo_bottom_panels.dart';
 import 'horoscope/horo_ornament_painter.dart';
 import 'horoscope/horo_antique_icons.dart';
+import 'map/map_astro.dart' show fetchChart;
 import 'sanctuary/sanctuary_profile_editor.dart';
 
 part 'horoscope/horo_chart_data.dart';
@@ -64,13 +65,32 @@ class HoroscopeScreenState extends State<HoroscopeScreen>
   String _bsTab = 'birth';
 
 
-  // Planet data (mock until CF Worker deployed)
-  Map<String, double> _natalPlanets = {};
+  // Planet data — Worker /astro/chart 経由（接続失敗時のみモック乱数にフォールバック）
+  final Map<String, double> _natalPlanets = {};
   Map<String, double> _secondaryPlanets = {}; // transit or progressed
   double _asc = 0, _mc = 0;
   // secondary (transit/progressed) ASC/MC — null if unused
   double? _secondaryAsc, _secondaryMc;
+  // 12ハウス cusp度数配列（Placidus, [0]=1H, [9]=10H=MC等）。
+  // birthTime 不明 / Worker接続失敗時は空配列。
+  List<double> _houses = [];
   List<Map<String, dynamic>> _aspects = [];
+
+  /// 惑星の黄経からハウス番号(1-12)を算出。
+  /// houses 配列が空ならnullを返す（出生時刻不明 or API失敗時）。
+  int? _planetHouse(double planetLon) {
+    if (_houses.length != 12) return null;
+    final lon = planetLon % 360;
+    for (int i = 0; i < 12; i++) {
+      final cusp = _houses[i] % 360;
+      final next = _houses[(i + 1) % 12] % 360;
+      final inHouse = (cusp <= next)
+          ? (lon >= cusp && lon < next)
+          : (lon >= cusp || lon < next); // wrap 12→1 (例: cusp=350, next=20)
+      if (inHouse) return i + 1;
+    }
+    return null;
+  }
 
   // Aspect filters — HTML: activeFilters
   final Map<String, bool> _qualityFilters = {'soft': true, 'hard': true, 'neutral': true};
@@ -161,7 +181,8 @@ class HoroscopeScreenState extends State<HoroscopeScreen>
     final p = await SolaraStorage.loadProfile();
     if (p != null && p.isComplete) {
       _birthTimeUnknown = p.birthTimeUnknown;
-      _generateMockChart(p);
+      // Worker /astro/chart 取得 → 失敗時はモックにフォールバック
+      await _fetchRealChart(p);
     }
     setState(() {
       _baseProfile = p;
@@ -174,18 +195,88 @@ class HoroscopeScreenState extends State<HoroscopeScreen>
   }
 
   /// 編集後の profile を working 側にのみ反映。storage は触らない。
-  void _applyWorkingProfile(SolaraProfile newProfile) {
+  Future<void> _applyWorkingProfile(SolaraProfile newProfile) async {
     if (!newProfile.isComplete) return;
+    _workingProfile = newProfile;
+    _birthTimeUnknown = newProfile.birthTimeUnknown;
+    // チャートを再取得 (natal / secondary 両方)
+    await _fetchRealChart(newProfile);
+    if (!mounted) return;
     setState(() {
-      _workingProfile = newProfile;
-      _birthTimeUnknown = newProfile.birthTimeUnknown;
-      // チャート planets を再生成 (natal / secondary 両方)
-      _generateMockChart(newProfile);
-      if (_chartMode == 'nt') _generateTransitPlanets();
-      else if (_chartMode == 'np') _generateProgressedPlanets();
       _recalcAspects();
       // Fortune は base のまま — 再取得しない
     });
+  }
+
+  /// Worker /astro/chart からチャートを取得。失敗時はモック乱数にフォールバック。
+  /// _natalPlanets / _secondaryPlanets / _asc / _mc / _houses を更新する。
+  Future<void> _fetchRealChart(SolaraProfile p) async {
+    // モード判定: nt なら transit, np なら progressed, それ以外は natal のみ
+    String mode;
+    switch (_chartMode) {
+      case 'nt':
+        mode = 'both'; // natal + transit
+        break;
+      case 'np':
+        mode = 'both'; // natal + progressed
+        break;
+      default:
+        mode = 'natal';
+    }
+
+    // 出生時刻不明なら正午で代用 (Worker側で houses が不完全になるのを許容)
+    final birthTime = p.birthTimeUnknown ? '12:00' : p.birthTime;
+
+    final chart = await fetchChart(
+      birthDate: p.birthDate,
+      birthTime: birthTime,
+      birthLat: p.birthLat,
+      birthLng: p.birthLng,
+      birthTz: p.birthTz,
+      birthTzName: p.birthTzName,
+      mode: mode,
+      houseSystem: 'placidus',
+    );
+
+    if (chart != null) {
+      // API成功: 実データを格納
+      _natalPlanets
+        ..clear()
+        ..addAll(chart.natal);
+      _asc = chart.asc;
+      _mc = chart.mc;
+      _houses = p.birthTimeUnknown ? [] : List<double>.from(chart.houses);
+
+      if (_chartMode == 'nt' && chart.transit != null) {
+        _secondaryPlanets = Map<String, double>.from(chart.transit!);
+        // transit ASC/MC は Worker レスポンスに無いため近似計算（時間経過ベース）
+        final hourFrac = (DateTime.now().hour + DateTime.now().minute / 60.0) / 24.0;
+        _secondaryAsc = (hourFrac * 360) % 360;
+        _secondaryMc = (_secondaryAsc! + 90) % 360;
+      } else if (_chartMode == 'np' && chart.progressed != null) {
+        _secondaryPlanets = Map<String, double>.from(chart.progressed!);
+        final parts = p.birthDate.split('-').map(int.parse).toList();
+        final birthDate = DateTime(parts[0], parts[1], parts[2]);
+        final yearsLived = DateTime.now().difference(birthDate).inDays / 365.25;
+        _secondaryAsc = (_asc + yearsLived) % 360;
+        _secondaryMc = (_mc + yearsLived) % 360;
+      } else {
+        _secondaryPlanets = {};
+        _secondaryAsc = null;
+        _secondaryMc = null;
+      }
+
+      _recalcAspects();
+    } else {
+      // API失敗: モックにフォールバック
+      _houses = [];
+      _generateMockChart(p);
+      // モック時の progressed モードは別途乱数生成
+      if (_chartMode == 'np') {
+        _generateProgressedPlanets();
+        _recalcAspects();
+      }
+    }
   }
 
   /// base に戻す (編集リセット)
@@ -267,6 +358,15 @@ class HoroscopeScreenState extends State<HoroscopeScreen>
           .toList();
     }
 
+    // 各惑星のハウス番号（1-12）。houses が空（出生時刻不明 / API失敗）なら null。
+    final planetHouses = <String, int>{};
+    if (_houses.length == 12) {
+      for (final entry in _natalPlanets.entries) {
+        final h = _planetHouse(entry.value);
+        if (h != null) planetHouses[entry.key] = h;
+      }
+    }
+
     try {
       // 並列fetch
       final futures = fortuneCategories.map((cat) async {
@@ -275,6 +375,7 @@ class HoroscopeScreenState extends State<HoroscopeScreen>
           category: id,
           lang: 'ja',
           natal: _natalPlanets,
+          planetHouses: planetHouses.isEmpty ? null : planetHouses,
           aspects: aspects,
           patterns: patternsPayload,
           date: dateStr,
@@ -328,19 +429,23 @@ class HoroscopeScreenState extends State<HoroscopeScreen>
                 const Spacer(),
                 // HTML: .chart-menu-btn
                 PopupMenuButton<String>(
-                  onSelected: (mode) {
-                    // HTML: setChartMode() — reset filters + generate secondary planets
+                  onSelected: (mode) async {
+                    // HTML: setChartMode() — reset filters + (re)fetch secondary planets
                     _chartMode = mode;
                     _qualityFilters.updateAll((k, v) => true);
                     _pgroupFilters.updateAll((k, v) => true);
                     _fortuneFilter = null;
                     _secondaryAsc = null;
                     _secondaryMc = null;
-                    if (mode == 'nt') { _generateTransitPlanets(); }
-                    else if (mode == 'np') { _generateProgressedPlanets(); }
-                    _recalcAspects();
+                    // mode 切替で transit/progressed が必要 → /astro/chart 再取得
+                    final p = _workingProfile;
+                    if (p != null && p.isComplete && (mode == 'nt' || mode == 'np')) {
+                      await _fetchRealChart(p);
+                    } else {
+                      _recalcAspects();
+                    }
                     _syncRotationByMode();
-                    setState(() {});
+                    if (mounted) setState(() {});
                   },
                   offset: const Offset(0, 40),
                   color: const Color(0xF80C0C1A),

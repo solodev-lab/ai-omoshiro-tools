@@ -28,7 +28,7 @@ extension _HoroBackdrop on HoroscopeScreenState {
           // ── 星読み: _rotCtl 停止・スクロール量で Y 方向にシフト ──
           ? ValueListenableBuilder<double>(
               valueListenable: _readingParallax,
-              builder: (_, dy, __) => Opacity(
+              builder: (_, dy, _) => Opacity(
                 opacity: 0.35,
                 child: Transform.translate(
                   offset: Offset(0, -dy), // 下にスクロールすると背景が上に少し動く
@@ -37,7 +37,7 @@ extension _HoroBackdrop on HoroscopeScreenState {
                     child: Image.asset(
                       'assets/horo-bg/cosmic_nebula.webp',
                       fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                      errorBuilder: (_, _, _) => const SizedBox.shrink(),
                     ),
                   ),
                 ),
@@ -46,7 +46,7 @@ extension _HoroBackdrop on HoroscopeScreenState {
           // ── 通常モード: 従来通り緩やかに回転 ──
           : AnimatedBuilder(
               animation: _rotCtl,
-              builder: (_, __) => Opacity(
+              builder: (_, _) => Opacity(
                 opacity: 0.35,
                 child: Transform.scale(
                   scale: 1.5,
@@ -55,7 +55,7 @@ extension _HoroBackdrop on HoroscopeScreenState {
                     child: Image.asset(
                       'assets/horo-bg/cosmic_nebula.webp',
                       fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                      errorBuilder: (_, _, _) => const SizedBox.shrink(),
                     ),
                   ),
                 ),

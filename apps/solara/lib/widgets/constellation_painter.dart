@@ -60,8 +60,11 @@ class ConstellationPainter extends CustomPainter {
     final anchors = <ConstellationDot>[];
     final fields = <ConstellationDot>[];
     for (final d in cycle.dots) {
-      if (d.isMajor) anchors.add(d);
-      else fields.add(d);
+      if (d.isMajor) {
+        anchors.add(d);
+      } else {
+        fields.add(d);
+      }
     }
 
     // Project dots with 3D camera
@@ -199,8 +202,11 @@ class MiniConstellationPainter extends CustomPainter {
     final fields = <Offset>[];
     for (final d in cycle.dots) {
       final pos = Offset(d.x * size.width, d.y * size.height);
-      if (d.isMajor) anchors.add(pos);
-      else fields.add(pos);
+      if (d.isMajor) {
+        anchors.add(pos);
+      } else {
+        fields.add(pos);
+      }
     }
 
     // HTML: MST edges with shapeType

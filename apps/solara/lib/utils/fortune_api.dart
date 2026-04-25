@@ -36,10 +36,13 @@ class FortuneReading {
 /// category: overall|love|money|career|communication
 /// aspects: chartから生成したアスペクト配列 [{p1,p2,type,quality,diff,aspectAngle,orb}, ...]
 /// patterns: {grandtrine:[], tsquare:[], yod:[]} (planets配列含む)
+/// planetHouses: {sun: 10, moon: 4, ...} 各惑星のハウス番号 (1-12)。
+///   出生時刻不明 / Worker 接続失敗時は null を渡すこと（Worker 側がハウス言及を避ける）。
 Future<FortuneReading?> fetchFortune({
   required String category,
   String lang = 'ja',
   Map<String, double>? natal,
+  Map<String, int>? planetHouses,
   List<Map<String, dynamic>>? aspects,
   Map<String, List<Map<String, dynamic>>>? patterns,
   String? date,
@@ -49,20 +52,94 @@ Future<FortuneReading?> fetchFortune({
     final body = <String, dynamic>{
       'category': category,
       'lang': lang,
-      if (natal != null) 'natal': natal,
-      if (aspects != null) 'aspects': aspects,
-      if (patterns != null) 'patterns': patterns,
-      if (date != null) 'date': date,
+      'natal': ?natal,
+      'planetHouses': ?planetHouses,
+      'aspects': ?aspects,
+      'patterns': ?patterns,
+      'date': ?date,
       if (userName != null && userName.isNotEmpty) 'userName': userName,
     };
     final res = await http.post(
       Uri.parse('$solaraWorkerBase/fortune'),
       headers: {'Content-Type': 'application/json'},
       body: json.encode(body),
-    ).timeout(const Duration(seconds: 30)); // LLM生成は数秒かかる
+    ).timeout(const Duration(seconds: 60)); // LLM生成は数秒〜30秒。死神等の強烈カードは安全フィルターで遅い
 
     if (res.statusCode == 200) {
       return FortuneReading.fromJson(
+        json.decode(res.body) as Map<String, dynamic>,
+      );
+    }
+  } catch (_) {
+    // network / LLM error → null fallback
+  }
+  return null;
+}
+
+// ──────────────────────────────────────────────────
+// Tarot API — /tarot エンドポイント (Gemini生成のタロット占い文)
+// 関連: worker/src/tarot.js
+// ──────────────────────────────────────────────────
+
+class TarotReading {
+  final int cardId;
+  final bool reversed;
+  final String reading;
+  final String lang;
+
+  const TarotReading({
+    required this.cardId,
+    required this.reversed,
+    required this.reading,
+    required this.lang,
+  });
+
+  factory TarotReading.fromJson(Map<String, dynamic> j) => TarotReading(
+        cardId: (j['cardId'] as num?)?.toInt() ?? 0,
+        reversed: j['reversed'] as bool? ?? false,
+        reading: j['reading'] as String? ?? '',
+        lang: j['lang'] as String? ?? 'ja',
+      );
+}
+
+/// /tarot を叩いて1枚引きの Reading を生成する。
+/// 失敗時は null。呼び出し側で静的テンプレート fallback すること。
+///
+/// [moonPhase] は 0.0〜29.53（[MoonPhase.getPhaseDay]）。
+/// [planet] は major arcana のみ存在することが多い（minor は null）。
+Future<TarotReading?> fetchTarotReading({
+  required int cardId,
+  required bool reversed,
+  required String nameJP,
+  String? nameEN,
+  required String keyword,
+  required String element,
+  String? planet,
+  double? moonPhase,
+  String? userName,
+  String lang = 'ja',
+}) async {
+  try {
+    final body = <String, dynamic>{
+      'cardId': cardId,
+      'reversed': reversed,
+      'nameJP': nameJP,
+      'nameEN': ?nameEN,
+      'keyword': keyword,
+      'element': element,
+      'planet': ?planet,
+      'moonPhase': ?moonPhase,
+      if (userName != null && userName.isNotEmpty) 'userName': userName,
+      'lang': lang,
+    };
+    final res = await http.post(
+      Uri.parse('$solaraWorkerBase/tarot'),
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode(body),
+    ).timeout(const Duration(seconds: 60)); // 死神等の強烈カードは安全フィルターで遅延
+
+    if (res.statusCode == 200) {
+      return TarotReading.fromJson(
         json.decode(res.body) as Map<String, dynamic>,
       );
     }

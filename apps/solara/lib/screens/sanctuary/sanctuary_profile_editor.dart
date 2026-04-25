@@ -251,7 +251,7 @@ class _SanctuaryProfileEditorPageState extends State<SanctuaryProfileEditorPage>
                               border: Border.all(color: const Color(0x1FFFFFFF)),
                             ),
                             child: DropdownButtonHideUnderline(child: DropdownButton<String>(
-                              value: _birthTimeUnknown ? null : _birthTime != null ? _birthTime!.hour.toString().padLeft(2, '0') : null,
+                              value: _birthTimeUnknown ? null : _birthTime?.hour.toString().padLeft(2, '0'),
                               hint: Text(_birthTimeUnknown ? '12' : '時', style: TextStyle(fontSize: 14, color: _birthTimeUnknown ? const Color(0x59EAEAEA) : const Color(0x99EAEAEA))),
                               isExpanded: true, dropdownColor: const Color(0xFF0A1220),
                               style: const TextStyle(fontSize: 14, color: Color(0xFFEAEAEA)),
@@ -274,7 +274,7 @@ class _SanctuaryProfileEditorPageState extends State<SanctuaryProfileEditorPage>
                               border: Border.all(color: const Color(0x1FFFFFFF)),
                             ),
                             child: DropdownButtonHideUnderline(child: DropdownButton<String>(
-                              value: _birthTimeUnknown ? null : _birthTime != null ? _birthTime!.minute.toString().padLeft(2, '0') : null,
+                              value: _birthTimeUnknown ? null : _birthTime?.minute.toString().padLeft(2, '0'),
                               hint: Text(_birthTimeUnknown ? '00' : '分', style: TextStyle(fontSize: 14, color: _birthTimeUnknown ? const Color(0x59EAEAEA) : const Color(0x99EAEAEA))),
                               isExpanded: true, dropdownColor: const Color(0xFF0A1220),
                               style: const TextStyle(fontSize: 14, color: Color(0xFFEAEAEA)),
@@ -370,7 +370,7 @@ class _SanctuaryProfileEditorPageState extends State<SanctuaryProfileEditorPage>
                             child: ListView.separated(
                               shrinkWrap: true,
                               itemCount: _placeResults.length,
-                              separatorBuilder: (_, __) => const Divider(color: Color(0x1AFFFFFF), height: 1),
+                              separatorBuilder: (_, _) => const Divider(color: Color(0x1AFFFFFF), height: 1),
                               itemBuilder: (_, i) {
                                 final place = _placeResults[i];
                                 return ListTile(
@@ -417,7 +417,7 @@ class _SanctuaryProfileEditorPageState extends State<SanctuaryProfileEditorPage>
                     // 言語切替
                     _birthSection('言語 / Language', ValueListenableBuilder<Locale?>(
                       valueListenable: AppLocale.instance.notifier,
-                      builder: (_, currentLocale, __) {
+                      builder: (_, currentLocale, _) {
                         final code = currentLocale?.languageCode;
                         return Row(children: [
                           _langBtn('端末', 'システム設定', code == null, () =>

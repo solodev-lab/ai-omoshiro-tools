@@ -3,7 +3,8 @@ class DailyReading {
   final int cardId; // 0-77
   final bool isMajor;
   final double moonPhase; // 0.0-29.53
-  final String stellaMsg; // HTML: generateStellaMsg() output
+  final bool reversed; // 正逆位置（false=正位置, true=逆位置）
+  String reading; // Gemini /tarot 生成のリーディング本文
   String synchronicity; // HTML: sync-input textarea (editable)
 
   DailyReading({
@@ -11,7 +12,8 @@ class DailyReading {
     required this.cardId,
     required this.isMajor,
     required this.moonPhase,
-    this.stellaMsg = '',
+    this.reversed = false,
+    this.reading = '',
     this.synchronicity = '',
   });
 
@@ -20,7 +22,8 @@ class DailyReading {
         'cardId': cardId,
         'isMajor': isMajor,
         'moonPhase': moonPhase,
-        'stellaMsg': stellaMsg,
+        'reversed': reversed,
+        'reading': reading,
         'synchronicity': synchronicity,
       };
 
@@ -30,7 +33,8 @@ class DailyReading {
       cardId: json['cardId'] as int,
       isMajor: json['isMajor'] as bool,
       moonPhase: (json['moonPhase'] as num).toDouble(),
-      stellaMsg: json['stellaMsg'] as String? ?? '',
+      reversed: json['reversed'] as bool? ?? false,
+      reading: json['reading'] as String? ?? '',
       synchronicity: json['synchronicity'] as String? ?? '',
     );
   }

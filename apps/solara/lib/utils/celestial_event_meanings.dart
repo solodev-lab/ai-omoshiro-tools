@@ -1,6 +1,7 @@
 /// 天体イベントの占星術的意味辞書
 /// key: "${type}_${planet}" or "${type}_${planet}_${sign}"
 /// 惑星×タイプで汎用解説。星座固有の意味が必要な場合は planet_sign キーで上書き。
+library;
 
 const Map<String, String> eventMeaningsJP = {
   // ── Ingress (惑星移行) ──

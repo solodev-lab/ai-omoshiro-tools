@@ -34,7 +34,7 @@ class SolaraApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return ValueListenableBuilder<Locale?>(
       valueListenable: AppLocale.instance.notifier,
-      builder: (_, locale, __) => MaterialApp(
+      builder: (_, locale, _) => MaterialApp(
         title: 'Solara',
         debugShowCheckedModeBanner: false,
         theme: SolaraTheme.dark,

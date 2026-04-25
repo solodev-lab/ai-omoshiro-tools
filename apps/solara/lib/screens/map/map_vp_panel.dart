@@ -178,10 +178,16 @@ class _VPPanelState extends State<VPPanel> {
 
   Future<void> _reload() async {
     final slots = await _activeMgr.load();
-    if (mounted) setState(() {
-      if (widget.activeTab == 'vp') _vpSlots = slots; else _locSlots = slots;
+    if (mounted) {
+      setState(() {
+      if (widget.activeTab == 'vp') {
+        _vpSlots = slots;
+      } else {
+        _locSlots = slots;
+      }
       _activeSub = -1;
     });
+    }
   }
 
   Future<void> _saveLocation() async {
