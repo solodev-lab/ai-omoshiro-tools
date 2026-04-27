@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../utils/astro_houses.dart';
+import '../../widgets/astro_term_label.dart';
 import '../horoscope/horo_constants.dart' show planetGlyphs, planetNamesJP, signNames;
 
 // ══════════════════════════════════════════════════
@@ -97,12 +98,17 @@ class MapRelocationPopup extends StatelessWidget {
         Icon(Icons.place, size: 14, color: Colors.pink.shade200),
         const SizedBox(width: 6),
         Expanded(
-          child: Text(
-            '引越しレイヤー — ${_fmtCoord(tapLat, tapLng)}',
-            style: GoogleFonts.notoSansJp(
-              fontSize: 11,
-              color: const Color(0xFFE8E0D0),
-              letterSpacing: 0.6,
+          child: AstroTermLabel(
+            termKey: 'relocate_layer',
+            iconSize: 12,
+            iconColor: const Color(0xAACCCCCC),
+            child: Text(
+              '引越しレイヤー — ${_fmtCoord(tapLat, tapLng)}',
+              style: GoogleFonts.notoSansJp(
+                fontSize: 11,
+                color: const Color(0xFFE8E0D0),
+                letterSpacing: 0.6,
+              ),
             ),
           ),
         ),
@@ -124,17 +130,23 @@ class MapRelocationPopup extends StatelessWidget {
 
   Widget _buildAngleRow(String label, int signFrom, int signTo) {
     final changed = signFrom != signTo;
+    final termKey = label.toLowerCase(); // 'asc' or 'mc'
     return Row(
       children: [
         SizedBox(
-          width: 40,
-          child: Text(
-            label,
-            style: GoogleFonts.notoSansJp(
-              fontSize: 11,
-              color: const Color(0xFFC9A84C),
-              fontWeight: FontWeight.w600,
-              letterSpacing: 0.8,
+          width: 50,
+          child: AstroTermLabel(
+            termKey: termKey,
+            iconSize: 10,
+            spacing: 2,
+            child: Text(
+              label,
+              style: GoogleFonts.notoSansJp(
+                fontSize: 11,
+                color: const Color(0xFFC9A84C),
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.8,
+              ),
             ),
           ),
         ),
