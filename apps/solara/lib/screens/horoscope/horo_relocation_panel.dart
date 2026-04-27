@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../utils/astro_houses.dart' show assignPlanetHouse;
 import '../../utils/fortune_api.dart' show RelocationNarrative, fetchRelocationNarrative;
 import 'horo_constants.dart' show planetNamesJP, signNames;
 import 'horo_relocation_templates.dart';
@@ -46,21 +47,6 @@ class HoroRelocationPanel extends StatefulWidget {
     this.homeName,
     this.userName,
   });
-
-  /// 黄経からハウス番号(1-12)を算出
-  static int? _houseOf(double lon, List<double> houses) {
-    if (houses.length != 12) return null;
-    lon = lon % 360;
-    for (int i = 0; i < 12; i++) {
-      final cusp = houses[i] % 360;
-      final next = houses[(i + 1) % 12] % 360;
-      final inHouse = (cusp <= next)
-          ? (lon >= cusp && lon < next)
-          : (lon >= cusp || lon < next);
-      if (inHouse) return i + 1;
-    }
-    return null;
-  }
 
   @override
   State<HoroRelocationPanel> createState() => _HoroRelocationPanelState();
@@ -109,8 +95,8 @@ class _HoroRelocationPanelState extends State<HoroRelocationPanel> {
     for (final planetKey in planetPriority) {
       final lon = widget.natalPlanets[planetKey];
       if (lon == null) continue;
-      final from = HoroRelocationPanel._houseOf(lon, widget.natalHouses);
-      final to = HoroRelocationPanel._houseOf(lon, widget.relocateHouses);
+      final from = assignPlanetHouse(lon, widget.natalHouses);
+      final to = assignPlanetHouse(lon, widget.relocateHouses);
       if (from == null || to == null) continue;
       shifts.add(HouseShift(planet: planetKey, fromHouse: from, toHouse: to));
     }

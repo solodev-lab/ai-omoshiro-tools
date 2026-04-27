@@ -16,11 +16,15 @@ lib/ (77 .dart ファイル)
 │   ├── lunar_intention.dart  月の意図・中間チェック・刻星化
 │   └── tarot_card.dart       タロットカード
 ├── screens/               ← 各画面
-│   ├── map_screen.dart       世界地図・運勢方位（メイン、Phase 1 で 1123→803 行に整理）
+│   ├── map_screen.dart       世界地図・運勢方位（メイン、Phase M2 完成版 967 行）
+│   │                           Phase M2 でアスペクト線 (40本) + 引越しレイヤー追加
 │   ├── map/                  ← Map サブウィジェット
 │   │   ├── map_vp_panel.dart, map_astro.dart, map_fortune_sheet.dart
-│   │   ├── map_planet_lines.dart, map_sectors.dart, map_layer_panel.dart
-│   │   ├── map_constants.dart, map_widgets.dart, map_stella.dart
+│   │   ├── map_planet_lines.dart, map_sectors.dart, map_stella.dart
+│   │   ├── map_constants.dart, map_widgets.dart
+│   │   ├── map_layer_panel.dart        Phase M2: 4流派並列 (16方位/惑星ライン/引越し/アスペクト) + i アイコン
+│   │   ├── map_astro_lines.dart        Phase M2: アスペクト線 Polyline 変換 (FORTUNE 連動 dim)
+│   │   ├── map_relocation_popup.dart   Phase M2: 統合タップ popup (線情報+12ハウス情報)
 │   │   ├── map_styles.dart             タイル切替（OSM/CyclOSM × Light/Dark）
 │   │   ├── map_search.dart             検索候補リスト + SearchFocusPopup
 │   │   └── map_overlays.dart           SideButtons/SearchBar/Badges/VP Pin/RestOverlay 等
@@ -71,7 +75,7 @@ lib/ (77 .dart ファイル)
 ├── utils/                 ← 計算・データ・永続化
 │   ├── solara_storage.dart      SharedPreferencesラッパー
 │   ├── solara_api.dart          CF Worker API呼び出し（TZ取得）
-│   ├── fortune_api.dart         Fortune API呼び出し（Gemini占い文）
+│   ├── fortune_api.dart         Fortune API呼び出し（Gemini占い文 + リロケーション解説）
 │   ├── moon_phase.dart          月相計算（Jean Meeusアルゴリズム）
 │   ├── constellation_namer.dart 星座名生成・MST構築
 │   ├── celestial_events.dart    天体イベント読み込み（API+キャッシュ+静的JSON）
@@ -79,10 +83,14 @@ lib/ (77 .dart ファイル)
 │   ├── cycle_story_texts.dart   月齢サイクルストーリーテキスト（JP/EN）
 │   ├── tarot_data.dart          タロットデータ読み込み
 │   ├── title_data.dart          称号システム
-│   └── app_locale.dart          言語切替（端末設定/JP/EN）グローバル Singleton
+│   ├── app_locale.dart          言語切替（端末設定/JP/EN）グローバル Singleton
+│   ├── astro_houses.dart        Phase M2: LST/ASC/MC/Placidus を Dart で完結 (Worker同等)
+│   ├── astro_lines.dart         Phase M2: 40本アスペクト線計算 (球面三角法 + 近接線検出)
+│   └── astro_glossary.dart      Phase M2: 占星術用語辞書 (i アイコン popup 用)
 └── widgets/               ← 共通ウィジェット
     ├── solara_nav_bar.dart          ボトムナビゲーション
     ├── glass_panel.dart             フロストガラスパネル
+    ├── astro_term_label.dart        Phase M2: 占星術用語の i アイコン + 解説 popup ラベル
     ├── moon_overlay.dart            re-export (下記3ファイル)
     ├── moon_overlay_shared.dart     mysticalMoonBackdrop + MoonScrollingStory (共通)
     ├── new_moon_overlay.dart        新月: ストーリー→テーマ選択→リビール演出+Set Intention
@@ -287,6 +295,34 @@ Map画面を開くと、1日1回「今日のタップボタン」（Daily Omen B
   - ASC・MC・10惑星すべて表示（変化なしも dim styling で含める）。
   - 出生地/現住所の意味を **2行並列で比較表示**。
 - **並列fetch**: 1重円+home時のみ natal/relocate 2チャートを並列取得（パネル比較用）。他モードは単一fetch。
+
+### アストロカートグラフィ (Phase M2, 2026-04-27)
+**真のアストロカートグラフィ**を Dart 側で完結。地図タップで <50ms 即応。
+
+**核心: Dart 完結ハウス計算** (`lib/utils/astro_houses.dart`):
+- Worker `calcHousesPlacidus` / `calcAscendant` / `calcMC` を Dart 移植 (210 行)
+- **LST 復元戦略**: `chart.mc` から `RA(MC)=LST_baseline` を逆算し、UTC再構築/DST補正を完全回避
+  - `LST_tap = LST_baseline + (tapLng - baselineLng)` の単純加算で任意座標の LST を取得
+- 検証: Worker `/astro/chart` の relocate 結果と全6ペアで最大誤差 0.0122° (`worker/verify_phase_m2.py`)
+
+**40本アスペクト線** (`lib/utils/astro_lines.dart`):
+- 各惑星 (10) × 4アングル (ASC/MC/DSC/IC) = 40本のラインを地球曲面上に計算 (球面三角法)
+- MC line: `lng = α - GMST*15` 縦直線。IC line: 経度180°シフト。
+- ASC line: `cos(H) = -tan(δ)·tan(φ)` を緯度ごとに解いて経度導出。DSC: 西半球版。
+- Haversine 距離による近接線検出 (`findNearbyLines`、閾値 200km)
+- 検証: Worker と全80ケースで最大誤差 0.01° (`worker/verify_astro_lines.py`)
+
+**LayerPanel 4流派並列** (`lib/screens/map/map_layer_panel.dart`):
+- ASTRO セクション: 16方位 / 惑星ライン / 引越し / アスペクト線
+- 各トグルに用語解説 i アイコン (グラスモーフィズム popup, `astro_glossary` 連携)
+- `planetLines` メタトグルで CHART (natal/progressed/transit) サブメニュー表示制御
+
+**統合タップ popup** (`lib/screens/map/map_relocation_popup.dart`):
+- aspect ON & 線が近い → 線セクション表示 (惑星グリフ + アングル + 距離)
+- relocate ON → ASC/MC + 12ハウス再配置 + 比較ベース (home優先・出生地fallback)
+- 両方ON & 線あり → 統合表示
+
+**戦略観点**: 英語版 (海外展開) で本機能がメインフィーチャー予定。日本市場では β機能扱い (デフォルトOFF, 論点8)。Phase M3 で L10N + 動的解釈テキスト + パワースポット (線交差点) 検出を追加予定。
 
 ---
 

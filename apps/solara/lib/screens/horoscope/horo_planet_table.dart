@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../utils/astro_houses.dart' show assignPlanetHouse;
 import 'horo_antique_icons.dart';
 import 'horo_constants.dart';
 import 'horo_panel_shared.dart';
@@ -35,19 +36,7 @@ class HoroPlanetTable extends StatelessWidget {
   });
 
   /// 惑星の黄経 → ハウス番号(1-12)。houses が空なら null。
-  int? _planetHouse(double planetLon) {
-    if (houses.length != 12) return null;
-    final lon = planetLon % 360;
-    for (int i = 0; i < 12; i++) {
-      final cusp = houses[i] % 360;
-      final next = houses[(i + 1) % 12] % 360;
-      final inHouse = (cusp <= next)
-          ? (lon >= cusp && lon < next)
-          : (lon >= cusp || lon < next);
-      if (inHouse) return i + 1;
-    }
-    return null;
-  }
+  int? _planetHouse(double planetLon) => assignPlanetHouse(planetLon, houses);
 
   bool get _hasSecondary =>
       (chartMode == 'nt' || chartMode == 'np') &&

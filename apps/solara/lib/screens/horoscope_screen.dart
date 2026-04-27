@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../utils/astro_houses.dart' show assignPlanetHouse;
 import '../utils/solara_storage.dart';
 import '../utils/fortune_api.dart';
 
@@ -103,19 +104,7 @@ class HoroscopeScreenState extends State<HoroscopeScreen>
 
   /// 惑星の黄経からハウス番号(1-12)を算出。
   /// houses 配列が空ならnullを返す（出生時刻不明 or API失敗時）。
-  int? _planetHouse(double planetLon) {
-    if (_houses.length != 12) return null;
-    final lon = planetLon % 360;
-    for (int i = 0; i < 12; i++) {
-      final cusp = _houses[i] % 360;
-      final next = _houses[(i + 1) % 12] % 360;
-      final inHouse = (cusp <= next)
-          ? (lon >= cusp && lon < next)
-          : (lon >= cusp || lon < next); // wrap 12→1 (例: cusp=350, next=20)
-      if (inHouse) return i + 1;
-    }
-    return null;
-  }
+  int? _planetHouse(double planetLon) => assignPlanetHouse(planetLon, _houses);
 
   // Aspect filters — HTML: activeFilters
   final Map<String, bool> _qualityFilters = {'soft': true, 'hard': true, 'neutral': true};
