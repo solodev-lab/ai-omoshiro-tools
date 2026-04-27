@@ -15,6 +15,7 @@ import 'map/map_layer_panel.dart';
 import 'map/map_widgets.dart';
 import 'map/map_astro.dart';
 import 'map/map_planet_lines.dart';
+import 'map/map_relocation_popup.dart';
 import 'map/map_search.dart';
 import 'map/map_overlays.dart';
 import 'forecast_screen.dart';
@@ -89,6 +90,15 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   final Map<String, bool> _planetGroups = {
     'personal': true, 'social': false, 'generational': false,
   };
+
+  // Phase M2 ASTRO レイヤー: 引越し / アスペクト線
+  // 設計: project_solara_astrocartography_m2.md 論点8 (両方OFFスタート)
+  final Map<String, bool> _astroLayers = {
+    'relocate': false, 'aspect': false,
+  };
+
+  // 引越しレイヤー ON時のタップ詳細ポップアップ用
+  LatLng? _relocateTapPoint;
 
   // Sector scores
   // _sectorComps: 総合（all）用の per-direction components {tSoft, tHard, pSoft, pHard}
@@ -429,20 +439,27 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   Color get _sectorColor {
     final base = categoryColors[_activeCategory] ?? const Color(0xFFC9A84C);
     final isDark = mapStyleConfigs[_mapStyle]?.dark ?? true;
-    if (isDark) return base;
-    // 明るい地図（OSM Light/Cycle Light）はパステル色が埋もれるため、
-    // 明度を下げ彩度を上げて視認性を確保する。
-    final hsl = HSLColor.fromColor(base);
-    // all/money は強めのコントラスト、healing/love はさらに薄めに、他は中間。
-    final isStrong = _activeCategory == 'all' || _activeCategory == 'money';
-    final isLight = _activeCategory == 'healing' || _activeCategory == 'love';
-    final double lightMul = isStrong ? 0.65 : (isLight ? 0.95 : 0.85);
-    final double lightMax = isStrong ? 0.72 : (isLight ? 0.90 : 0.85);
-    final double satMul = isStrong ? 1.2 : (isLight ? 0.80 : 0.95);
-    return hsl
-        .withLightness((hsl.lightness * lightMul).clamp(0.0, lightMax))
-        .withSaturation((hsl.saturation * satMul).clamp(0.0, 1.0))
-        .toColor();
+    Color color = base;
+    if (!isDark) {
+      // 明るい地図（OSM Light/Cycle Light）はパステル色が埋もれるため、
+      // 明度を下げ彩度を上げて視認性を確保する。
+      final hsl = HSLColor.fromColor(base);
+      // all/money は強めのコントラスト、healing/love はさらに薄めに、他は中間。
+      final isStrong = _activeCategory == 'all' || _activeCategory == 'money';
+      final isLight = _activeCategory == 'healing' || _activeCategory == 'love';
+      final double lightMul = isStrong ? 0.65 : (isLight ? 0.95 : 0.85);
+      final double lightMax = isStrong ? 0.72 : (isLight ? 0.90 : 0.85);
+      final double satMul = isStrong ? 1.2 : (isLight ? 0.80 : 0.95);
+      color = hsl
+          .withLightness((hsl.lightness * lightMul).clamp(0.0, lightMax))
+          .withSaturation((hsl.saturation * satMul).clamp(0.0, 1.0))
+          .toColor();
+    }
+    // Phase M2 論点9 (7-E2): 引越しレイヤーON時は16方位カラーをdim
+    if (_astroLayers['relocate'] == true) {
+      color = color.withAlpha((color.a * 255 * 0.4).round());
+    }
+    return color;
   }
 
   /// カテゴリ × ソース（transit/progressed/combined）に応じた
@@ -513,6 +530,12 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
             backgroundColor: mapStyleConfigs[_mapStyle]!.backgroundColor,
             // HTML: long-press 600ms → rebuild(nc, fly:true)
             onLongPress: (tapPos, latlng) => _rebuild(latlng),
+            // Phase M2: 引越しレイヤーON時のみ、タップで引越しチャート再計算
+            onTap: (tapPos, latlng) {
+              if (_astroLayers['relocate'] == true && _chartResult != null) {
+                setState(() => _relocateTapPoint = latlng);
+              }
+            },
           ),
           children: [
             buildStyledTileLayer(_mapStyle),
@@ -640,10 +663,18 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
           child: LayerPanel(
             layers: _layers,
             planetGroups: _planetGroups,
+            astroLayers: _astroLayers,
             activeCategory: _activeCategory,
             mapStyle: _mapStyle,
             onLayerToggle: (k) => setState(() => _layers[k] = !(_layers[k] ?? false)),
             onPlanetGroupToggle: (k) => setState(() => _planetGroups[k] = !(_planetGroups[k] ?? false)),
+            onAstroToggle: (k) => setState(() {
+              _astroLayers[k] = !(_astroLayers[k] ?? false);
+              // 引越しレイヤーOFF時はタップ詳細も閉じる
+              if (k == 'relocate' && !(_astroLayers[k] ?? false)) {
+                _relocateTapPoint = null;
+              }
+            }),
             onCategoryChanged: (k) {
               setState(() => _activeCategory = k);
               _reannotateSearchResults();
@@ -794,7 +825,37 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
             child: Center(child: _buildNoProfileGuide()),
           ),
         ),
+
+        // ── Phase M2: 引越しレイヤー タップ詳細ポップアップ ──
+        if (_relocateTapPoint != null && _chartResult != null && _profile != null)
+          Positioned(
+            left: 0, right: 0, bottom: 0,
+            child: SafeArea(
+              top: false,
+              child: _buildRelocationPopup(_relocateTapPoint!),
+            ),
+          ),
       ],
+    );
+  }
+
+  /// Phase M2 引越しレイヤー: タップ地点の引越しチャートを表示。
+  /// 比較ベースは home (現住所) 優先、未設定時は出生地。
+  Widget _buildRelocationPopup(LatLng tap) {
+    final p = _profile!;
+    final chart = _chartResult!;
+    final hasHome = !(p.homeLat == 0 && p.homeLng == 0);
+    final baselineLng = hasHome ? p.homeLng : p.birthLng;
+    final baselineLabel = hasHome ? '現住所' : '出生地';
+    return MapRelocationPopup(
+      tapLat: tap.latitude,
+      tapLng: tap.longitude,
+      natalPlanets: chart.natal,
+      baselineMc: chart.mc,
+      baselineLng: baselineLng,
+      baselineHouses: chart.houses,
+      baselineLabel: baselineLabel,
+      onClose: () => setState(() => _relocateTapPoint = null),
     );
   }
 

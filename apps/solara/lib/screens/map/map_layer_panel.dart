@@ -6,10 +6,12 @@ import 'map_styles.dart';
 class LayerPanel extends StatelessWidget {
   final Map<String, bool> layers;
   final Map<String, bool> planetGroups;
+  final Map<String, bool> astroLayers; // Phase M2: 引越しレイヤー / アスペクト線
   final String activeCategory;
   final MapStyle mapStyle;
   final ValueChanged<String> onLayerToggle;
   final ValueChanged<String> onPlanetGroupToggle;
+  final ValueChanged<String> onAstroToggle;
   final ValueChanged<String> onCategoryChanged;
   final ValueChanged<MapStyle> onMapStyleChanged;
 
@@ -17,10 +19,12 @@ class LayerPanel extends StatelessWidget {
     super.key,
     required this.layers,
     required this.planetGroups,
+    required this.astroLayers,
     required this.activeCategory,
     required this.mapStyle,
     required this.onLayerToggle,
     required this.onPlanetGroupToggle,
+    required this.onAstroToggle,
     required this.onCategoryChanged,
     required this.onMapStyleChanged,
   });
@@ -58,6 +62,10 @@ class LayerPanel extends StatelessWidget {
             _toggle('personal', '個人天体', const Color(0xFFFFD370), planetGroups, onPlanetGroupToggle),
             _toggle('social', '社会天体', const Color(0xFF6BB5FF), planetGroups, onPlanetGroupToggle),
             _toggle('generational', '世代天体', const Color(0xFFB088FF), planetGroups, onPlanetGroupToggle),
+          ]),
+          _section('ASTRO', [
+            _toggle('relocate', '引越し', const Color(0xFFFFB6C1), astroLayers, onAstroToggle),
+            _toggle('aspect', 'アスペクト', const Color(0xFFB088FF), astroLayers, onAstroToggle),
           ]),
           _section('FORTUNE', [
             ...categoryColors.entries.map((e) {
