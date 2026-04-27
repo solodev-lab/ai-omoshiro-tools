@@ -545,11 +545,21 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
             backgroundColor: mapStyleConfigs[_mapStyle]!.backgroundColor,
             // HTML: long-press 600ms → rebuild(nc, fly:true)
             onLongPress: (tapPos, latlng) => _rebuild(latlng),
-            // Phase M2: 引越しレイヤーON時のみ、タップで引越しチャート再計算
+            // Phase M2: aspect / relocate いずれかON時、タップで統合 popup
+            // 設計: 論点10 (8-β) — 1タップで線情報+12ハウス情報を集約表示
             onTap: (tapPos, latlng) {
-              if (_astroLayers['relocate'] == true && _chartResult != null) {
-                setState(() => _relocateTapPoint = latlng);
+              if (_chartResult == null) return;
+              final aspectOn = _astroLayers['aspect'] == true;
+              final relocateOn = _astroLayers['relocate'] == true;
+              if (!aspectOn && !relocateOn) return;
+              // aspect ONのみで近接線がない場合は popup を出さない (空表示防止)
+              if (aspectOn && !relocateOn) {
+                final near = astro_lines.findNearbyLines(
+                  tap: latlng, lines: _astroLinesCache, thresholdKm: 200,
+                );
+                if (near.isEmpty) return;
               }
+              setState(() => _relocateTapPoint = latlng);
             },
           ),
           children: [
@@ -864,7 +874,8 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     );
   }
 
-  /// Phase M2 引越しレイヤー: タップ地点の引越しチャートを表示。
+  /// Phase M2 統合タップ popup (論点10 8-β):
+  /// aspect ON で線情報、relocate ON で ASC/MC + 12ハウス、両方ONで統合表示。
   /// 比較ベースは home (現住所) 優先、未設定時は出生地。
   Widget _buildRelocationPopup(LatLng tap) {
     final p = _profile!;
@@ -872,6 +883,19 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     final hasHome = !(p.homeLat == 0 && p.homeLng == 0);
     final baselineLng = hasHome ? p.homeLng : p.birthLng;
     final baselineLabel = hasHome ? '現住所' : '出生地';
+
+    final aspectOn = _astroLayers['aspect'] == true;
+    final relocateOn = _astroLayers['relocate'] == true;
+
+    // aspect ON 時のみ近接線検出 (Haversine距離 ≤ 200km)
+    final List<astro_lines.NearbyAstroLine>? nearby = aspectOn && _astroLinesCache.isNotEmpty
+        ? astro_lines.findNearbyLines(
+            tap: tap,
+            lines: _astroLinesCache,
+            thresholdKm: 200,
+          )
+        : null;
+
     return MapRelocationPopup(
       tapLat: tap.latitude,
       tapLng: tap.longitude,
@@ -880,6 +904,8 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
       baselineLng: baselineLng,
       baselineHouses: chart.houses,
       baselineLabel: baselineLabel,
+      showHouses: relocateOn,
+      nearbyLines: nearby,
       onClose: () => setState(() => _relocateTapPoint = null),
     );
   }

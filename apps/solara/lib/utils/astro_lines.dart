@@ -237,3 +237,53 @@ const Map<String, Set<String>> astroLineFortunePlanets = {
   'communication': {'mercury', 'venus', 'moon'},
   'healing': {'moon', 'neptune', 'venus'},
 };
+
+// ── 論点10 統合 popup 用: 近接線の検出 ──
+
+/// タップ地点と AstroLine の各セグメント点との最小 Haversine 距離 (km)。
+double _haversineKm(LatLng a, LatLng b) {
+  const R = 6371.0;
+  final lat1 = _toRad(a.latitude);
+  final lat2 = _toRad(b.latitude);
+  final dLat = lat2 - lat1;
+  final dLng = _toRad(b.longitude - a.longitude);
+  final h = sin(dLat / 2) * sin(dLat / 2) +
+      cos(lat1) * cos(lat2) * sin(dLng / 2) * sin(dLng / 2);
+  return 2 * R * asin(min(1.0, sqrt(h)));
+}
+
+/// 1本のラインの全セグメント点とタップ地点の最小距離 (km)。
+double _minDistanceKmToLine(LatLng tap, AstroLine line) {
+  double minDist = double.infinity;
+  for (final seg in line.segments) {
+    for (final pt in seg) {
+      final d = _haversineKm(tap, pt);
+      if (d < minDist) minDist = d;
+    }
+  }
+  return minDist;
+}
+
+/// 近接ラインの結果。距離付き。
+class NearbyAstroLine {
+  final AstroLine line;
+  final double distanceKm;
+  const NearbyAstroLine(this.line, this.distanceKm);
+}
+
+/// タップ地点から [thresholdKm] 以内のアスペクト線を検出して
+/// 近い順に並べて返す。FORTUNE カテゴリで dim されている線は除外しない
+/// (popup は常に全情報を出す方針、表示側で処理)。
+List<NearbyAstroLine> findNearbyLines({
+  required LatLng tap,
+  required List<AstroLine> lines,
+  double thresholdKm = 200,
+}) {
+  final hits = <NearbyAstroLine>[];
+  for (final line in lines) {
+    final d = _minDistanceKmToLine(tap, line);
+    if (d <= thresholdKm) hits.add(NearbyAstroLine(line, d));
+  }
+  hits.sort((a, b) => a.distanceKm.compareTo(b.distanceKm));
+  return hits;
+}

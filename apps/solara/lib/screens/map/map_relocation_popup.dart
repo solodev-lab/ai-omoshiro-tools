@@ -2,21 +2,22 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../utils/astro_houses.dart';
+import '../../utils/astro_lines.dart';
 import '../../widgets/astro_term_label.dart';
 import '../horoscope/horo_constants.dart' show planetGlyphs, planetNamesJP, signNames;
+import 'map_constants.dart' show planetMeta;
 
 // ══════════════════════════════════════════════════
 // Map Relocation Popup — Phase M2 引越しレイヤー (タップ詳細)
-//
-// 引越しレイヤーON時、地図タップで表示される floating sheet。
-// タップ地点で natal 惑星のハウス位置を再計算し、
-// home (現住所) ベースのハウスとの差分を表示。
 //
 // 設計: project_solara_astrocartography_m2.md
 //   論点11 (9-β改): home設定済み→現住所→引越し先比較
 //                  home未設定→出生地→タップ地点比較
 //   論点8 (6-D1): デフォルトOFF (LayerPanelで明示的にON)
-//   論点10は別セッションで論点3完成後に統合ポップアップへ拡張
+//   論点10 (8-β):  1タップで線情報+12ハウス情報を統合表示
+//                 ・aspect レイヤーON & 線が近い  → 線セクション表示
+//                 ・relocate レイヤーON         → ASC/MC + ハウスセクション表示
+//                 ・両方ON                      → 全部表示 (統合 popup)
 // ══════════════════════════════════════════════════
 
 const _planetOrder = [
@@ -25,6 +26,14 @@ const _planetOrder = [
 ];
 
 const _personalPlanets = {'sun', 'moon', 'mercury', 'venus', 'mars'};
+
+// アングル別の短い添字 (popup の線セクション用)
+const _angleShortJp = {
+  'asc': '自我・第一印象',
+  'mc': 'キャリア・社会',
+  'dsc': '対人・パートナー',
+  'ic': '家庭・心の拠り所',
+};
 
 class MapRelocationPopup extends StatelessWidget {
   /// タップ地点
@@ -40,6 +49,13 @@ class MapRelocationPopup extends StatelessWidget {
   /// 比較ベースが home(現住所) か birth(出生地) かのラベル用
   final String baselineLabel;
 
+  /// 引越しレイヤー (ASC/MC + 12ハウス) を表示するか
+  /// (relocate トグルがONなら true)
+  final bool showHouses;
+
+  /// 近接アスペクト線 (空 or null なら線セクション非表示)
+  final List<NearbyAstroLine>? nearbyLines;
+
   final VoidCallback onClose;
 
   const MapRelocationPopup({
@@ -52,21 +68,29 @@ class MapRelocationPopup extends StatelessWidget {
     required this.baselineHouses,
     required this.baselineLabel,
     required this.onClose,
+    this.showHouses = true,
+    this.nearbyLines,
   });
 
   @override
   Widget build(BuildContext context) {
-    final relocated = calcHousesRelocate(
-      natalMc: baselineMc,
-      natalLng: baselineLng,
-      tapLat: tapLat,
-      tapLng: tapLng,
-    );
+    final hasLines = (nearbyLines != null && nearbyLines!.isNotEmpty);
 
-    final ascSignFrom = _signOf(_recoverBaselineAsc());
-    final ascSignTo = _signOf(relocated.asc);
-    final mcSignFrom = _signOf(baselineMc);
-    final mcSignTo = _signOf(relocated.mc);
+    // showHouses 時のみ ASC/MC/houses を再計算 (重い処理を回避)
+    HousesResult? relocated;
+    int ascSignFrom = 0, ascSignTo = 0, mcSignFrom = 0, mcSignTo = 0;
+    if (showHouses) {
+      relocated = calcHousesRelocate(
+        natalMc: baselineMc,
+        natalLng: baselineLng,
+        tapLat: tapLat,
+        tapLng: tapLng,
+      );
+      ascSignFrom = _signOf(_recoverBaselineAsc());
+      ascSignTo = _signOf(relocated.asc);
+      mcSignFrom = _signOf(baselineMc);
+      mcSignTo = _signOf(relocated.mc);
+    }
 
     return Container(
       width: double.infinity,
@@ -80,45 +104,179 @@ class MapRelocationPopup extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildHeader(),
-          const SizedBox(height: 10),
-          _buildAngleRow('ASC', ascSignFrom, ascSignTo),
-          const SizedBox(height: 4),
-          _buildAngleRow('MC', mcSignFrom, mcSignTo),
-          const Divider(color: Color(0x22FFFFFF), height: 18),
-          _buildPlanetGrid(relocated.houses),
+          _buildHeader(showHouses: showHouses, hasLines: hasLines),
+          if (hasLines) ...[
+            const SizedBox(height: 10),
+            _buildLinesSection(nearbyLines!),
+          ],
+          if (showHouses && relocated != null) ...[
+            if (hasLines)
+              const Divider(color: Color(0x22FFFFFF), height: 18)
+            else
+              const SizedBox(height: 10),
+            _buildAngleRow('ASC', ascSignFrom, ascSignTo),
+            const SizedBox(height: 4),
+            _buildAngleRow('MC', mcSignFrom, mcSignTo),
+            const Divider(color: Color(0x22FFFFFF), height: 18),
+            _buildPlanetGrid(relocated.houses),
+          ],
         ],
       ),
     );
   }
 
-  Widget _buildHeader() {
+  // ── 論点10: 線情報セクション ──
+  Widget _buildLinesSection(List<NearbyAstroLine> lines) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            const Icon(Icons.timeline, size: 12, color: Color(0xFFB088FF)),
+            const SizedBox(width: 6),
+            AstroTermLabel(
+              termKey: 'aspect_lines',
+              iconSize: 10,
+              spacing: 2,
+              child: Text(
+                'ライン上の地点 (近接${lines.length}本)',
+                style: GoogleFonts.notoSansJp(
+                  fontSize: 11,
+                  color: const Color(0xFFB088FF),
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.5,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 6),
+        // 近い順に最大5本表示 (それ以上は省略)
+        for (final n in lines.take(5)) _buildLineRow(n),
+        if (lines.length > 5)
+          Padding(
+            padding: const EdgeInsets.only(top: 2, left: 18),
+            child: Text(
+              '他${lines.length - 5}本',
+              style: GoogleFonts.notoSansJp(
+                fontSize: 9,
+                color: const Color(0xFF666666),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildLineRow(NearbyAstroLine n) {
+    final meta = planetMeta[n.line.planet];
+    final glyph = planetGlyphs[n.line.planet] ?? '';
+    final pName = planetNamesJP[n.line.planet] ?? n.line.planet;
+    final aLabel = n.line.angle.toUpperCase();
+    final shortJp = _angleShortJp[n.line.angle] ?? '';
+    final color = meta?.color ?? const Color(0xFFE8E0D0);
+    final dist = n.distanceKm;
+    final distStr = dist < 10
+        ? '${dist.toStringAsFixed(1)}km'
+        : '${dist.round()}km';
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 16,
+            child: Text(glyph, style: TextStyle(fontSize: 13, color: color)),
+          ),
+          const SizedBox(width: 4),
+          SizedBox(
+            width: 50,
+            child: Text(
+              pName,
+              style: GoogleFonts.notoSansJp(
+                fontSize: 11, color: color, fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(4),
+              border: Border.all(color: color.withAlpha(120)),
+            ),
+            child: Text(
+              aLabel,
+              style: GoogleFonts.notoSansJp(
+                fontSize: 9, color: color, letterSpacing: 0.5,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          const SizedBox(width: 6),
+          Expanded(
+            child: Text(
+              shortJp,
+              style: GoogleFonts.notoSansJp(
+                fontSize: 10, color: const Color(0xFFAAAAAA),
+              ),
+            ),
+          ),
+          Text(
+            distStr,
+            style: GoogleFonts.notoSansJp(
+              fontSize: 9, color: const Color(0xFF777777),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHeader({required bool showHouses, required bool hasLines}) {
+    // タイトルは状況に応じて変える
+    final String title;
+    final String? termKey;
+    if (showHouses && hasLines) {
+      title = '統合 — ${_fmtCoord(tapLat, tapLng)}';
+      termKey = null; // 統合表示は専用辞書なし
+    } else if (showHouses) {
+      title = '引越しレイヤー — ${_fmtCoord(tapLat, tapLng)}';
+      termKey = 'relocate_layer';
+    } else {
+      title = 'タップ地点 — ${_fmtCoord(tapLat, tapLng)}';
+      termKey = 'aspect_lines';
+    }
+
+    Widget titleWidget = Text(
+      title,
+      style: GoogleFonts.notoSansJp(
+        fontSize: 11,
+        color: const Color(0xFFE8E0D0),
+        letterSpacing: 0.6,
+      ),
+    );
+    if (termKey != null) {
+      titleWidget = AstroTermLabel(
+        termKey: termKey,
+        iconSize: 12,
+        iconColor: const Color(0xAACCCCCC),
+        child: titleWidget,
+      );
+    }
+
     return Row(
       children: [
         Icon(Icons.place, size: 14, color: Colors.pink.shade200),
         const SizedBox(width: 6),
-        Expanded(
-          child: AstroTermLabel(
-            termKey: 'relocate_layer',
-            iconSize: 12,
-            iconColor: const Color(0xAACCCCCC),
-            child: Text(
-              '引越しレイヤー — ${_fmtCoord(tapLat, tapLng)}',
-              style: GoogleFonts.notoSansJp(
-                fontSize: 11,
-                color: const Color(0xFFE8E0D0),
-                letterSpacing: 0.6,
-              ),
+        Expanded(child: titleWidget),
+        if (showHouses)
+          Text(
+            '$baselineLabel → タップ地点',
+            style: GoogleFonts.notoSansJp(
+              fontSize: 9,
+              color: const Color(0xFF888888),
             ),
           ),
-        ),
-        Text(
-          '$baselineLabel → タップ地点',
-          style: GoogleFonts.notoSansJp(
-            fontSize: 9,
-            color: const Color(0xFF888888),
-          ),
-        ),
         const SizedBox(width: 8),
         GestureDetector(
           onTap: onClose,
