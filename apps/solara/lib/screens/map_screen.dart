@@ -93,10 +93,11 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     'personal': true, 'social': false, 'generational': false,
   };
 
-  // Phase M2 ASTRO レイヤー: 引越し / アスペクト線
-  // 設計: project_solara_astrocartography_m2.md 論点8 (両方OFFスタート)
+  // Phase M2 ASTRO レイヤー: 16方位/惑星ライン/引越し/アスペクト線 (論点5 4流派並列)
+  // 設計: project_solara_astrocartography_m2.md 論点8 (引越し/アスペクトはOFFスタート)
+  // planetLines は既存挙動の維持で true デフォルト (新機能のM2のみOFFスタート)
   final Map<String, bool> _astroLayers = {
-    'relocate': false, 'aspect': false, 'aspectAll': false,
+    'planetLines': true, 'relocate': false, 'aspect': false, 'aspectAll': false,
   };
 
   // 引越しレイヤー ON時のタップ詳細ポップアップ用
@@ -563,14 +564,17 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
             )),
             PolylineLayer(polylines: buildCompass(center: _center, visible: _layers['compass']!)),
             // HTML: addPlanetLines() — natal/progressed/transit 天体ライン
-            if (_planetLines.isNotEmpty) PolylineLayer(polylines: buildPlanetPolylines(
-              lines: _planetLines, layers: _layers,
-              planetGroupVis: _planetGroups, activeCategory: _activeCategory,
-            )),
-            if (_planetLines.isNotEmpty) PlanetSymbolsLayer(
-              lines: _planetLines, layers: _layers,
-              planetGroupVis: _planetGroups, activeCategory: _activeCategory,
-            ),
+            // Phase M2 論点5: ASTRO『惑星ライン』メタトグル (planetLines) で全体ON/OFF
+            if (_planetLines.isNotEmpty && (_astroLayers['planetLines'] ?? true))
+              PolylineLayer(polylines: buildPlanetPolylines(
+                lines: _planetLines, layers: _layers,
+                planetGroupVis: _planetGroups, activeCategory: _activeCategory,
+              )),
+            if (_planetLines.isNotEmpty && (_astroLayers['planetLines'] ?? true))
+              PlanetSymbolsLayer(
+                lines: _planetLines, layers: _layers,
+                planetGroupVis: _planetGroups, activeCategory: _activeCategory,
+              ),
             // Phase M2 論点3: アスペクト線 (40本) - aspect トグルON時のみ
             if (_astroLayers['aspect'] == true && _astroLinesCache.isNotEmpty)
               PolylineLayer(polylines: buildAstroPolylines(
