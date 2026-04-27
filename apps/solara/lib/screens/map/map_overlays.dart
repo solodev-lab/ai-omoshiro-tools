@@ -46,6 +46,7 @@ class MapSideButtons extends StatelessWidget {
   final VoidCallback onVpTap;
   final VoidCallback onLocationsTap;
   final VoidCallback onForecastTap;
+  final VoidCallback onAstroCartoTap;
 
   const MapSideButtons({
     super.key,
@@ -58,6 +59,7 @@ class MapSideButtons extends StatelessWidget {
     required this.onVpTap,
     required this.onLocationsTap,
     required this.onForecastTap,
+    required this.onAstroCartoTap,
   });
 
   @override
@@ -106,6 +108,14 @@ class MapSideButtons extends StatelessWidget {
         child: MapBtn(
           onTap: onForecastTap,
           child: const Text('🔮', style: TextStyle(fontSize: 14)),
+        ),
+      ),
+      // Astro*Carto*Graphy モード起動ボタン (世界規模ライン+天頂点表示)
+      Positioned(
+        top: topPad + 332, left: 16,
+        child: MapBtn(
+          onTap: onAstroCartoTap,
+          child: const Text('🌐', style: TextStyle(fontSize: 14)),
         ),
       ),
     ]);

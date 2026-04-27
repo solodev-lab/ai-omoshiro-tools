@@ -54,10 +54,18 @@ class AstroLine {
   final String angle;  // 'mc' | 'ic' | 'asc' | 'dsc'
   final List<List<LatLng>> segments; // 子午線跨ぎで区切ったセグメント
 
+  /// 天頂点 (zenith point) の地点情報。
+  /// MC ライン上で 緯度 = 惑星赤緯 δ となる唯一の地点。
+  /// 物理的に「惑星が真上(高度90°)に来る」場所。
+  /// Astro*Carto*Graphy モードでマーカー描画に使う。
+  /// MC line のみ非null。他の angle (ic/asc/dsc) では null。
+  final LatLng? zenith;
+
   AstroLine({
     required this.planet,
     required this.angle,
     required this.segments,
+    this.zenith,
   });
 
   /// 線のキー (UI から参照しやすいように) "venus_asc" 等
@@ -178,12 +186,16 @@ List<AstroLine> buildAstroLines({
     if (lon == null) continue;
     final coord = _eclipticToEquatorial(lon);
 
-    // MC line
+    // MC line + zenith point
+    // zenith: 緯度=惑星赤緯δ、経度=MC line の固定経度
+    // δ が描画緯度範囲外でも理論値として保持(マーカー表示時にクランプ判定)。
+    final mcLng = _normLng(coord.ra - gmst * 15);
     lines.add(AstroLine(
       planet: planet,
       angle: 'mc',
       segments: _meridianLine(coord.ra, gmst,
           antiMeridian: false, latMin: latMin, latMax: latMax),
+      zenith: LatLng(coord.dec, mcLng),
     ));
     // IC line
     lines.add(AstroLine(

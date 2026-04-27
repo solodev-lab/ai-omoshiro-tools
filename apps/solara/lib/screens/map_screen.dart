@@ -14,6 +14,7 @@ import 'map/map_vp_panel.dart';
 import 'map/map_layer_panel.dart';
 import 'map/map_widgets.dart';
 import 'map/map_astro.dart';
+import 'map/map_astro_carto.dart';
 import 'map/map_astro_lines.dart';
 import 'map/map_planet_lines.dart';
 import 'map/map_relocation_popup.dart';
@@ -103,6 +104,10 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   // 引越しレイヤー ON時のタップ詳細ポップアップ用
   LatLng? _relocateTapPoint;
 
+  // Astro*Carto*Graphy モード: 天頂点マーカータップ詳細用
+  // 値が入っていれば下部 popup を表示する。値は惑星キー ('sun' 等)。
+  String? _zenithTapPlanet;
+
   // Phase M2 論点3: アスペクト線 40本キャッシュ (chart 取得時に build)
   List<astro_lines.AstroLine> _astroLinesCache = const [];
 
@@ -149,6 +154,18 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   // Map style (tile source + light/dark filter)
   // OSM HOT は現地言語ラベルのまま（多言語化はユーザー数増えてから再検討）。
   MapStyle _mapStyle = MapStyle.osmHotLight;
+
+  // Astro*Carto*Graphy モード
+  // ON時: 世界地図ズームアウト + relocate/aspect/aspectAll 強制ON +
+  //       16方位/コンパス/惑星ライン/各種オーバーレイ非表示 +
+  //       天頂点マーカー表示。情報密度を抑え世界規模ビューに集中させる。
+  // 退避先: モード解除時に元の状態を完全復元する。
+  bool _astroCartoMode = false;
+  LatLng? _savedCenter;
+  double? _savedZoom;
+  Map<String, bool>? _savedLayers;
+  Map<String, bool>? _savedAstroLayers;
+  MapStyle? _savedMapStyle;
 
   @override
   void initState() {
@@ -519,6 +536,84 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     _reannotateSearchResults();
   }
 
+  /// Astro*Carto*Graphy モード起動。
+  /// 現状を退避 → 世界規模ビュー(出生地経度・緯度20°・zoom 2.5)+ ダーク強制 +
+  /// relocate/aspect/aspectAll ON + 不要レイヤー OFF。
+  void _enterAstroCartoMode() {
+    if (_chartResult == null || _profile == null) return;
+    _savedCenter = _center;
+    _savedZoom = _mapCtrl.camera.zoom;
+    _savedLayers = Map<String, bool>.from(_layers);
+    _savedAstroLayers = Map<String, bool>.from(_astroLayers);
+    _savedMapStyle = _mapStyle;
+
+    setState(() {
+      _astroCartoMode = true;
+      _layers['sectors'] = false;
+      _layers['compass'] = false;
+      _astroLayers['planetLines'] = false;
+      _astroLayers['relocate'] = true;
+      _astroLayers['aspect'] = true;
+      _astroLayers['aspectAll'] = true;
+      _mapStyle = MapStyle.osmHotDark;
+      // 既存パネル/シート/ピンを片付け、世界規模ビューにフォーカス
+      _layerPanelOpen = false;
+      _vpPanelOpen = false;
+      _searchOpen = false;
+      _fortuneSheetOpen = false;
+      _searchHits = [];
+      _searchFocus = null;
+      _relocateTapPoint = null;
+      _zenithTapPlanet = null;
+    });
+    SolaraStorage.saveMapStyleId(mapStyleConfigs[MapStyle.osmHotDark]!.id);
+
+    // 出生地経度を中心に世界全景 (緯度20°≒赤道よりやや北で南北バランス良)
+    final lng = _profile!.birthLng;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      try {
+        _mapCtrl.move(LatLng(20, lng), 2.5);
+      } catch (_) {/* 初期化中は無視 */}
+    });
+  }
+
+  /// Astro*Carto*Graphy モード解除。退避した状態を完全復元。
+  void _exitAstroCartoMode() {
+    if (_savedCenter == null) return;
+    final restoreCenter = _savedCenter!;
+    final restoreZoom = _savedZoom!;
+    final restoreLayers = _savedLayers!;
+    final restoreAstroLayers = _savedAstroLayers!;
+    final restoreStyle = _savedMapStyle!;
+
+    setState(() {
+      _astroCartoMode = false;
+      _layers
+        ..clear()
+        ..addAll(restoreLayers);
+      _astroLayers
+        ..clear()
+        ..addAll(restoreAstroLayers);
+      _mapStyle = restoreStyle;
+      _relocateTapPoint = null;
+      _zenithTapPlanet = null;
+    });
+    SolaraStorage.saveMapStyleId(mapStyleConfigs[restoreStyle]!.id);
+    _savedCenter = null;
+    _savedZoom = null;
+    _savedLayers = null;
+    _savedAstroLayers = null;
+    _savedMapStyle = null;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      try {
+        _mapCtrl.move(restoreCenter, restoreZoom);
+      } catch (_) {/* 無視 */}
+    });
+  }
+
   /// HTML: vpGeo() — GPS現在地に移動（geolocatorパッケージ未導入のため仮実装）
   void _geolocate() {
     // TODO: geolocator パッケージ追加後に実装
@@ -559,7 +654,10 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                 );
                 if (near.isEmpty) return;
               }
-              setState(() => _relocateTapPoint = latlng);
+              setState(() {
+                _relocateTapPoint = latlng;
+                _zenithTapPlanet = null; // 排他: 天頂popupを閉じる
+              });
             },
           ),
           children: [
@@ -592,7 +690,21 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                 activeCategory: _activeCategory,
                 allPlanetMode: _astroLayers['aspectAll'] ?? false,
               )),
-            MarkerLayer(markers: buildDirLabels(center: _center)),
+            // Astro*Carto*Graphy モード: 各惑星の天頂点マーカー (MC線上の惑星赤緯緯度)
+            // タップで惑星固有の天頂解説 popup を表示。relocate popup とは排他。
+            if (_astroCartoMode && _astroLinesCache.isNotEmpty)
+              MarkerLayer(markers: buildAstroZenithMarkers(
+                lines: _astroLinesCache,
+                activeCategory: _activeCategory,
+                allPlanetMode: _astroLayers['aspectAll'] ?? false,
+                onTap: (planetKey) => setState(() {
+                  _zenithTapPlanet = planetKey;
+                  _relocateTapPoint = null; // 排他: 線+ハウス popup を閉じる
+                }),
+              )),
+            // 16方位ラベル: モード中は世界規模ビューでは意味を成さないので非表示
+            if (!_astroCartoMode)
+              MarkerLayer(markers: buildDirLabels(center: _center)),
             // HTML: searchMarker — circleMarker(radius:8, color:#fff, fillColor:GOLD, fillOpacity:.9, weight:2)
             if (_searchFocus != null) CircleLayer(circles: [
               CircleMarker(
@@ -604,23 +716,26 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
               ),
             ]),
             // VP Pin — HTML: draggable gold circle, dragend → rebuild
-            MarkerLayer(markers: [
-              buildVpPinMarker(
-                mapCtrl: _mapCtrl,
-                center: _center,
-                screenSize: MediaQuery.of(context).size,
-                onCenterChange: (c) => setState(() => _center = c),
-                onDragEnd: () {
-                  setState(() {});
-                  _reannotateSearchResults();
-                },
-              ),
-            ]),
+            // モード中は VP ピン非表示 (世界規模ビューでは中心の概念が無意味)
+            if (!_astroCartoMode)
+              MarkerLayer(markers: [
+                buildVpPinMarker(
+                  mapCtrl: _mapCtrl,
+                  center: _center,
+                  screenSize: MediaQuery.of(context).size,
+                  onCenterChange: (c) => setState(() => _center = c),
+                  onDragEnd: () {
+                    setState(() {});
+                    _reannotateSearchResults();
+                  },
+                ),
+              ]),
           ],
         ),
 
         // ── FF Label ──
-        if (!_noProfile) Positioned(
+        // モード中は「世界規模スコア」の概念が無いので非表示
+        if (!_noProfile && !_astroCartoMode) Positioned(
           top: topPad + 2, left: 16,
           child: FortuneFilterLabel(
             sectorScores: _displayScores(),
@@ -639,9 +754,10 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
           ),
         ),
 
-        // ── サイドボタン群（🔍 ≡ 📍 🗺 🔮） ──
+        // ── サイドボタン群（🔍 ≡ 📍 🗺 🔮 🌐） ──
         // 📅 日付ボタンは削除済み（左上の SelectedDateBadge から起動）
-        MapSideButtons(
+        // モード中は全サイドボタン非表示 (バナー × で復帰)
+        if (!_astroCartoMode) MapSideButtons(
           topPad: topPad,
           searchOpen: _searchOpen,
           layerPanelOpen: _layerPanelOpen,
@@ -651,6 +767,22 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
           onVpTap: () => setState(() => _vpPanelOpen = !_vpPanelOpen),
           onLocationsTap: _openLocations,
           onForecastTap: _openForecast,
+          onAstroCartoTap: _enterAstroCartoMode,
+        ),
+
+        // ── Astro*Carto*Graphy モードバナー (上部中央) + カテゴリピル (下部中央) ──
+        if (_astroCartoMode) Positioned(
+          top: topPad + 12, left: 0, right: 0,
+          child: Center(child: AstroCartoBanner(onClose: _exitAstroCartoMode)),
+        ),
+        if (_astroCartoMode) Positioned(
+          left: 0, right: 0, bottom: 24,
+          child: Center(
+            child: AstroCartoCategoryPills(
+              activeCategory: _activeCategory,
+              onChanged: (k) => setState(() => _activeCategory = k),
+            ),
+          ),
         ),
 
         // ── Search Bar ──
@@ -664,7 +796,8 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
         ),
 
         // ── Stella ──
-        Positioned(
+        // モード中は世界規模ビューに集中させるため非表示
+        if (!_astroCartoMode) Positioned(
           bottom: 90, left: 20, right: 20,
           child: GestureDetector(
             onTap: () => setState(() => _stellaMinimized = !_stellaMinimized),
@@ -678,7 +811,7 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
         ),
 
         // ── Seed Badge ──
-        if (_preseedState == 'hidden') Positioned(
+        if (_preseedState == 'hidden' && !_astroCartoMode) Positioned(
           top: topPad + 6, right: 20,
           child: const SeedBadge(),
         ),
@@ -735,8 +868,8 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
           ),
         ),
 
-        // ── Fortune Pull Tab ──（プロフィール未設定時は非表示）
-        if (!_noProfile && !_fortuneSheetOpen) Positioned(
+        // ── Fortune Pull Tab ──（プロフィール未設定時 / モード中は非表示）
+        if (!_noProfile && !_fortuneSheetOpen && !_astroCartoMode) Positioned(
           bottom: 80, left: 0, right: 0,
           child: Center(
             child: FortunePullTab(onTap: () => setState(() => _fortuneSheetOpen = true)),
@@ -744,7 +877,7 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
         ),
 
         // ── Fortune Sheet ──
-        if (!_noProfile && _fortuneSheetOpen) Positioned(
+        if (!_noProfile && _fortuneSheetOpen && !_astroCartoMode) Positioned(
           bottom: 80, left: 0, right: 0,
           child: FortuneSheet(
             activeSrc: _activeSrc,
@@ -825,7 +958,8 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
         ),
 
         // ── Daily Omen Button（今日のタップボタン）──
-        if (!_noProfile && _omenVisible && _activeOverlay == null) Positioned(
+        // モード中は世界規模ビューにカテゴリピルを置くので非表示
+        if (!_noProfile && _omenVisible && _activeOverlay == null && !_astroCartoMode) Positioned(
           left: 24, right: 24, bottom: 170,
           child: OmenButton(phrase: _omenPhrase, onTap: _onOmenTap),
         ),
@@ -870,7 +1004,35 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
               child: _buildRelocationPopup(_relocateTapPoint!),
             ),
           ),
+
+        // ── Astro*Carto*Graphy モード: 天頂点タップ詳細 popup ──
+        // 線+ハウス popup と排他 (どちらか片方のみ表示)。
+        if (_zenithTapPlanet != null && _astroCartoMode)
+          Positioned(
+            left: 0, right: 0, bottom: 0,
+            child: SafeArea(
+              top: false,
+              child: _buildZenithPopup(_zenithTapPlanet!),
+            ),
+          ),
       ],
+    );
+  }
+
+  /// 天頂点 popup ビルダ。AstroLine の zenith から表示用座標を取り出す。
+  Widget _buildZenithPopup(String planetKey) {
+    LatLng? zenith;
+    for (final line in _astroLinesCache) {
+      if (line.planet == planetKey && line.angle == 'mc' && line.zenith != null) {
+        zenith = line.zenith;
+        break;
+      }
+    }
+    if (zenith == null) return const SizedBox.shrink();
+    return AstroZenithPopup(
+      planetKey: planetKey,
+      zenith: zenith,
+      onClose: () => setState(() => _zenithTapPlanet = null),
     );
   }
 
