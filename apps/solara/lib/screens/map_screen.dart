@@ -14,10 +14,12 @@ import 'map/map_vp_panel.dart';
 import 'map/map_layer_panel.dart';
 import 'map/map_widgets.dart';
 import 'map/map_astro.dart';
+import 'map/map_astro_lines.dart';
 import 'map/map_planet_lines.dart';
 import 'map/map_relocation_popup.dart';
 import 'map/map_search.dart';
 import 'map/map_overlays.dart';
+import '../utils/astro_lines.dart' as astro_lines;
 import 'forecast_screen.dart';
 import 'horoscope/horo_antique_icons.dart';
 import 'locations_screen.dart';
@@ -94,11 +96,14 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   // Phase M2 ASTRO レイヤー: 引越し / アスペクト線
   // 設計: project_solara_astrocartography_m2.md 論点8 (両方OFFスタート)
   final Map<String, bool> _astroLayers = {
-    'relocate': false, 'aspect': false,
+    'relocate': false, 'aspect': false, 'aspectAll': false,
   };
 
   // 引越しレイヤー ON時のタップ詳細ポップアップ用
   LatLng? _relocateTapPoint;
+
+  // Phase M2 論点3: アスペクト線 40本キャッシュ (chart 取得時に build)
+  List<astro_lines.AstroLine> _astroLinesCache = const [];
 
   // Sector scores
   // _sectorComps: 総合（all）用の per-direction components {tSoft, tHard, pSoft, pHard}
@@ -241,6 +246,14 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
       _chartResult = chart;
       final result = scoreAll(chart);
       final lines = buildPlanetLineData(center: _center, chart: chart);
+      // Phase M2 論点3: アスペクト線 40本を build (Worker呼出ゼロ)
+      // 比較ベースは relocate=home優先・未設定なら出生地 (chart fetch と同じ)
+      final baselineLng = useRelocate ? p.homeLng : p.birthLng;
+      final astroLines = astro_lines.buildAstroLines(
+        natal: chart.natal,
+        baselineMc: chart.mc,
+        baselineLng: baselineLng,
+      );
       // 16方位合計の最高カテゴリを今日のドミナントとする
       String? topKey;
       double topSum = -1;
@@ -263,6 +276,7 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
           ..addAll(result.fComp);
         _scoreResult = result;
         _planetLines = lines;
+        _astroLinesCache = astroLines;
         _topCategory = topKey != null ? kindFromKey(topKey) : null;
         _loadingChart = false;
       });
@@ -557,6 +571,13 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
               lines: _planetLines, layers: _layers,
               planetGroupVis: _planetGroups, activeCategory: _activeCategory,
             ),
+            // Phase M2 論点3: アスペクト線 (40本) - aspect トグルON時のみ
+            if (_astroLayers['aspect'] == true && _astroLinesCache.isNotEmpty)
+              PolylineLayer(polylines: buildAstroPolylines(
+                lines: _astroLinesCache,
+                activeCategory: _activeCategory,
+                allPlanetMode: _astroLayers['aspectAll'] ?? false,
+              )),
             MarkerLayer(markers: buildDirLabels(center: _center)),
             // HTML: searchMarker — circleMarker(radius:8, color:#fff, fillColor:GOLD, fillOpacity:.9, weight:2)
             if (_searchFocus != null) CircleLayer(circles: [

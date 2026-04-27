@@ -66,6 +66,12 @@ class LayerPanel extends StatelessWidget {
           _section('ASTRO', [
             _toggle('relocate', '引越し', const Color(0xFFFFB6C1), astroLayers, onAstroToggle),
             _toggle('aspect', 'アスペクト', const Color(0xFFB088FF), astroLayers, onAstroToggle),
+            // 'aspectAll' は aspect ON 時のみ表示 (FORTUNE 連動を無効化して全惑星表示)
+            if (astroLayers['aspect'] == true)
+              Padding(
+                padding: const EdgeInsets.only(left: 18),
+                child: _toggle('aspectAll', '全惑星', const Color(0xFFE8E0D0), astroLayers, onAstroToggle),
+              ),
           ]),
           _section('FORTUNE', [
             ...categoryColors.entries.map((e) {
