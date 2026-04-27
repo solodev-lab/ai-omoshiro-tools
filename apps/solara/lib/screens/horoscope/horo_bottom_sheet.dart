@@ -163,6 +163,7 @@ extension _HoroBottomSheet on HoroscopeScreenState {
         relocateAsc: _relocateAsc, relocateMc: _relocateMc,
         birthPlaceName: _profile?.birthPlace,
         homeName: _profile?.homeName,
+        userName: _profile?.name,
       );
       case 'filter': return HoroFilterPanel(
         qualityFilters: _qualityFilters,

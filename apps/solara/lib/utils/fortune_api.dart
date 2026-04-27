@@ -77,6 +77,101 @@ Future<FortuneReading?> fetchFortune({
 }
 
 // ──────────────────────────────────────────────────
+// Relocation API — /relocation エンドポイント (Gemini生成のリロケーション解説)
+// 関連: worker/src/relocation.js
+// Phase B: 静的テンプレート (horo_relocation_templates.dart) を動的解説で上書き。
+// 失敗時は null fallback、呼出側 (horo_relocation_panel.dart) で静的テンプレ表示。
+// ──────────────────────────────────────────────────
+
+class RelocationNarrative {
+  /// planet ('sun' 等) → 動的解説文。変化なし or APIで生成されなかった惑星はキー無し。
+  final Map<String, String> planetNarratives;
+  /// ASC 動的解説文。変化なしの場合は空文字。
+  final String ascNarrative;
+  /// MC 動的解説文。変化なしの場合は空文字。
+  final String mcNarrative;
+  /// 総合サマリー（パネル先頭表示用）
+  final String summary;
+  final String lang;
+
+  const RelocationNarrative({
+    required this.planetNarratives,
+    required this.ascNarrative,
+    required this.mcNarrative,
+    required this.summary,
+    required this.lang,
+  });
+
+  factory RelocationNarrative.fromJson(Map<String, dynamic> j) {
+    final shiftsList = (j['shifts'] as List?) ?? [];
+    final planetMap = <String, String>{};
+    for (final s in shiftsList) {
+      if (s is Map<String, dynamic>) {
+        final planet = s['planet'] as String?;
+        final narrative = s['narrative'] as String?;
+        if (planet != null && narrative != null && narrative.isNotEmpty) {
+          planetMap[planet] = narrative;
+        }
+      }
+    }
+    return RelocationNarrative(
+      planetNarratives: planetMap,
+      ascNarrative: j['ascNarrative'] as String? ?? '',
+      mcNarrative: j['mcNarrative'] as String? ?? '',
+      summary: j['summary'] as String? ?? '',
+      lang: j['lang'] as String? ?? 'ja',
+    );
+  }
+
+  /// 全項目が空 = サーバー側で「変化なし」判定。呼出側はこの場合 null と同等扱いで静的テンプレに任せる。
+  bool get isEmpty =>
+      planetNarratives.isEmpty &&
+      ascNarrative.isEmpty &&
+      mcNarrative.isEmpty &&
+      summary.isEmpty;
+}
+
+/// /relocation を叩いてリロケーション解説を取得。
+/// shifts: [{planet, fromHouse, toHouse}] (変化なし含む全惑星でも、変化ありでも可)
+/// ascChange / mcChange: {fromSign, toSign} 0-11 (null は変化なし or 算出不可)
+/// 失敗時は null。呼出側で静的テンプレートにフォールバックすること。
+Future<RelocationNarrative?> fetchRelocationNarrative({
+  required List<Map<String, dynamic>> shifts,
+  Map<String, int>? ascChange,
+  Map<String, int>? mcChange,
+  String? birthPlaceName,
+  String? homeName,
+  String? userName,
+  String lang = 'ja',
+}) async {
+  try {
+    final body = <String, dynamic>{
+      'shifts': shifts,
+      'ascChange': ?ascChange,
+      'mcChange': ?mcChange,
+      if (birthPlaceName != null && birthPlaceName.isNotEmpty) 'birthPlaceName': birthPlaceName,
+      if (homeName != null && homeName.isNotEmpty) 'homeName': homeName,
+      if (userName != null && userName.isNotEmpty) 'userName': userName,
+      'lang': lang,
+    };
+    final res = await http.post(
+      Uri.parse('$solaraWorkerBase/relocation'),
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode(body),
+    ).timeout(const Duration(seconds: 60)); // LLM生成は数秒〜30秒
+
+    if (res.statusCode == 200) {
+      return RelocationNarrative.fromJson(
+        json.decode(res.body) as Map<String, dynamic>,
+      );
+    }
+  } catch (_) {
+    // network / LLM error → null fallback
+  }
+  return null;
+}
+
+// ──────────────────────────────────────────────────
 // Tarot API — /tarot エンドポイント (Gemini生成のタロット占い文)
 // 関連: worker/src/tarot.js
 // ──────────────────────────────────────────────────

@@ -7,6 +7,7 @@ import { searchPlace } from './search.js';
 import { lookupTimezone } from './tzlookup.js';
 import { handleFortune } from './fortune.js';
 import { handleTarot } from './tarot.js';
+import { handleRelocation } from './relocation.js';
 
 // ── CORS ──
 const ALLOWED_ORIGINS = [
@@ -302,6 +303,20 @@ export default {
         } catch (err) {
           console.error('Tarot error:', err);
           return jsonError(500, err.message || 'Tarot generation failed', origin);
+        }
+      }
+
+      // ── Relocation (Gemini-powered relocation chart narrative) ──
+      // Phase B: 静的テンプレート (horo_relocation_templates.dart) を動的解説で上書き。
+      // 失敗時は呼出側 (Dart) で null を受けて静的テンプレ表示にフォールバック。
+      if (path === '/relocation' && request.method === 'POST') {
+        const body = await request.json();
+        try {
+          const result = await handleRelocation(body, env);
+          return jsonOk(result, origin);
+        } catch (err) {
+          console.error('Relocation error:', err);
+          return jsonError(500, err.message || 'Relocation generation failed', origin);
         }
       }
 

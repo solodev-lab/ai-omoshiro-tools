@@ -78,7 +78,8 @@ export function computeCategoryScore(category, aspects) {
 
 // ── Gemini API 呼び出し (503時はリトライ、404はモデル廃止扱いで即fallback) ──
 // models: 試行順の配列。先頭が PRIMARY、それ以降が FALLBACK チェーン。
-async function callGemini(apiKey, prompt, models, { retries = 2 } = {}) {
+// export: relocation.js など他モジュールから再利用するため。
+export async function callGemini(apiKey, prompt, models, { retries = 2 } = {}) {
   let lastErr;
   for (const model of models) {
     for (let attempt = 0; attempt <= retries; attempt++) {
