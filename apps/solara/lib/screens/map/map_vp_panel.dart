@@ -87,7 +87,10 @@ class SlotManager {
       if (resp.statusCode == 200) {
         final data = json.decode(resp.body) as Map<String, dynamic>;
         final addr = data['address'] as Map<String, dynamic>? ?? {};
-        final disp = addr['suburb'] ?? addr['neighbourhood'] ?? addr['city'] ?? addr['town'] ?? addr['village'] ?? defaultName;
+        // 市区町村を最優先 (suburb 優先だと OSM の道路ループや橋ループ等に
+        // 付いた "Loop" のような局所タグを拾ってしまう。先に都市名を探す)
+        final disp = addr['city'] ?? addr['town'] ?? addr['village']
+            ?? addr['suburb'] ?? addr['neighbourhood'] ?? defaultName;
         name = disp.toString().substring(0, disp.toString().length.clamp(0, 8));
       }
     } catch (_) {}

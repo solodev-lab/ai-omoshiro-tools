@@ -16,6 +16,7 @@ import 'map/map_widgets.dart';
 import 'map/map_astro.dart';
 import 'map/map_astro_carto.dart';
 import 'map/map_astro_lines.dart';
+import 'map/map_location_markers.dart';
 import 'map/map_planet_lines.dart';
 import 'map/map_relocation_popup.dart';
 import 'map/map_search.dart';
@@ -167,6 +168,17 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   Map<String, bool>? _savedAstroLayers;
   MapStyle? _savedMapStyle;
 
+  // 登録地マーカー (出生地 + VP slots + Locations slots、両モード共通表示)
+  // VP/Locations 編集後は _reloadLocationSlots() で再読込。
+  final SlotManager _vpSlotMgr =
+      SlotManager(storageKey: 'solara_vp_slots', defaultNames: ['職場','お気に入り','スポット','場所']);
+  final SlotManager _locSlotMgr =
+      SlotManager(storageKey: 'solara_locations', defaultNames: ['場所1','場所2','場所3','場所4']);
+  List<VPSlot> _vpSlotsCache = const [];
+  List<VPSlot> _locSlotsCache = const [];
+  // タップされたマーカー情報 (popup 表示用)。null = popup 非表示。
+  ({String name, LatLng point, bool isBirth})? _locationTapInfo;
+
   @override
   void initState() {
     super.initState();
@@ -222,6 +234,8 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     }
     _profile = p;
     if (mounted) setState(() => _noProfile = false);
+    // 登録地スロット (home含む) を読込してマーカー描画に使う
+    await _reloadLocationSlots();
     if (mounted) {
       setState(() {
         // 初回のみ _center を出生地に設定。日付変更等の再計算では
@@ -366,14 +380,22 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     );
   }
 
-  Future<void> _openLocations() => _showSheet(LocationsScreen(
-    center: _center,
-    scoreResult: _scoreResult,
-    sectorScores: _displayScores(),
-    profile: _profile,
-    onSelectSlot: (slot) => _rebuild(LatLng(slot.lat, slot.lng)),
-    onNavigateToSanctuary: widget.onNavigateToSanctuary,
-  ));
+  Future<void> _openLocations() async {
+    // C-2: 検索中なら検索地を「現在地」として渡す (VP Pinより検索地優先)
+    final effective = _searchFocus != null
+        ? LatLng(_searchFocus!.lat, _searchFocus!.lng)
+        : _center;
+    await _showSheet(LocationsScreen(
+      center: effective,
+      scoreResult: _scoreResult,
+      sectorScores: _displayScores(),
+      profile: _profile,
+      onSelectSlot: (slot) => _rebuild(LatLng(slot.lat, slot.lng)),
+      onNavigateToSanctuary: widget.onNavigateToSanctuary,
+    ));
+    // 戻ったタイミングでスロット編集が反映されている可能性 → マーカー再描画
+    await _reloadLocationSlots();
+  }
 
   Future<void> _openForecast() {
     return _showSheet(
@@ -649,9 +671,7 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
               if (!aspectOn && !relocateOn) return;
               // aspect ONのみで近接線がない場合は popup を出さない (空表示防止)
               if (aspectOn && !relocateOn) {
-                final near = astro_lines.findNearbyLines(
-                  tap: latlng, lines: _astroLinesCache, thresholdKm: 200,
-                );
+                final near = _findNearbyAstroLines(latlng);
                 if (near.isEmpty) return;
               }
               setState(() {
@@ -705,6 +725,17 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
             // 16方位ラベル: モード中は世界規模ビューでは意味を成さないので非表示
             if (!_astroCartoMode)
               MarkerLayer(markers: buildDirLabels(center: _center)),
+            // 登録地マーカー (出生地🌟+グロー / VP slots / Locations slots)
+            // 通常Map / Astro*Carto*Graphy モード共通で表示。
+            if (!_noProfile)
+              MarkerLayer(markers: buildLocationMarkers(
+                profile: _profile,
+                vpSlots: _vpSlotsCache,
+                locationSlots: _locSlotsCache,
+                onTap: (name, point, isBirth) => setState(() {
+                  _locationTapInfo = (name: name, point: point, isBirth: isBirth);
+                }),
+              )),
             // HTML: searchMarker — circleMarker(radius:8, color:#fff, fillColor:GOLD, fillOpacity:.9, weight:2)
             if (_searchFocus != null) CircleLayer(circles: [
               CircleMarker(
@@ -820,7 +851,12 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
         if (_layerPanelOpen || _vpPanelOpen) Positioned.fill(
           child: GestureDetector(
             behavior: HitTestBehavior.translucent,
-            onTap: () => setState(() { _layerPanelOpen = false; _vpPanelOpen = false; }),
+            onTap: () {
+              final wasVpOpen = _vpPanelOpen;
+              setState(() { _layerPanelOpen = false; _vpPanelOpen = false; });
+              // VP panel 内でスロット編集していた可能性を考慮し再読込
+              if (wasVpOpen) _reloadLocationSlots();
+            },
             child: const SizedBox.expand(),
           ),
         ),
@@ -857,12 +893,17 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
           child: VPPanel(
             activeTab: _vpTab,
             onTabChanged: (t) => setState(() => _vpTab = t),
-            center: _center,
+            // C-2: 検索中なら検索地を「現在地」として渡す (VP Pinより検索地優先)
+            center: _searchFocus != null
+                ? LatLng(_searchFocus!.lat, _searchFocus!.lng)
+                : _center,
             profile: _profile,
             onSlotSelected: (slot) {
               // HTML: onSelect → rebuild + close panel
               _rebuild(LatLng(slot.lat, slot.lng));
               setState(() => _vpPanelOpen = false);
+              // パネル内でスロット編集していた可能性 → マーカー再描画
+              _reloadLocationSlots();
             },
             onGeolocate: _geolocate,
           ),
@@ -947,7 +988,6 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
               _rebuild(LatLng(f.lat, f.lng));
               setState(() => _searchFocus = null);
             },
-            onSaveAsLocation: _saveFocusAsLocation,
           ),
         ),
 
@@ -1015,6 +1055,21 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
               child: _buildZenithPopup(_zenithTapPlanet!),
             ),
           ),
+
+        // ── 登録地マーカータップ詳細 popup (出生地 / VP / Locations 共通) ──
+        if (_locationTapInfo != null)
+          Positioned(
+            left: 0, right: 0, bottom: 0,
+            child: SafeArea(
+              top: false,
+              child: LocationMarkerPopup(
+                name: _locationTapInfo!.name,
+                point: _locationTapInfo!.point,
+                isBirth: _locationTapInfo!.isBirth,
+                onClose: () => setState(() => _locationTapInfo = null),
+              ),
+            ),
+          ),
       ],
     );
   }
@@ -1049,13 +1104,11 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     final aspectOn = _astroLayers['aspect'] == true;
     final relocateOn = _astroLayers['relocate'] == true;
 
-    // aspect ON 時のみ近接線検出 (Haversine距離 ≤ 200km)
+    // aspect ON 時のみ近接線検出
+    // - Astro*Carto*Graphy モード: 画面pixel距離 (Tier A #3、世界ビューで線をタップした感覚と一致)
+    // - 通常 Map: km距離 (高ズームではpx換算と差が小さく km の方が予測可能)
     final List<astro_lines.NearbyAstroLine>? nearby = aspectOn && _astroLinesCache.isNotEmpty
-        ? astro_lines.findNearbyLines(
-            tap: tap,
-            lines: _astroLinesCache,
-            thresholdKm: 200,
-          )
+        ? _findNearbyAstroLines(tap)
         : null;
 
     return MapRelocationPopup(
@@ -1069,6 +1122,39 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
       showHouses: relocateOn,
       nearbyLines: nearby,
       onClose: () => setState(() => _relocateTapPoint = null),
+    );
+  }
+
+  /// 登録地スロット (VP + Locations) を再読込してマーカー描画に反映する。
+  /// 呼出タイミング: プロフィール初回ロード後 / VP panel 閉じた後 /
+  /// Locations screen から戻った後 / 検索結果から登録した後。
+  /// home は両 SlotManager の syncHome で先頭に同期される。
+  Future<void> _reloadLocationSlots() async {
+    await _vpSlotMgr.syncHome(_profile);
+    await _locSlotMgr.syncHome(_profile);
+    final vp = await _vpSlotMgr.load();
+    final loc = await _locSlotMgr.load();
+    if (!mounted) return;
+    setState(() {
+      _vpSlotsCache = vp;
+      _locSlotsCache = loc;
+    });
+  }
+
+  /// 近接アスペクト線を検出 (Tier A #3)。
+  /// 通常Map / Astro*Carto*Graphy モード共通で画面pixel距離 (20px) で判定。
+  /// km固定閾値はズームに比例して破綻するため不採用 (zoom 14 で 200km は ~21,000px)。
+  /// camera は1度だけキャプチャして project に渡す
+  /// (camera ゲッタを毎呼出すとインスタンス再生成のリスクがあるため)。
+  List<astro_lines.NearbyAstroLine> _findNearbyAstroLines(LatLng tap) {
+    if (_astroLinesCache.isEmpty) return const [];
+    final cam = _mapCtrl.camera;
+    return astro_lines.findNearbyLinesScreen(
+      tapPx: cam.latLngToScreenOffset(tap),
+      tapLatLng: tap,
+      lines: _astroLinesCache,
+      project: cam.latLngToScreenOffset,
+      thresholdPx: 20,
     );
   }
 
@@ -1103,27 +1189,4 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     );
   }
 
-  Future<void> _saveFocusAsLocation() async {
-    final f = _searchFocus;
-    if (f == null) return;
-    final mgr = SlotManager(storageKey: 'solara_locations', defaultNames: ['場所1','場所2','場所3','場所4']);
-    final slots = await mgr.load();
-    final homeCount = (slots.isNotEmpty && slots[0].isHome) ? 1 : 0;
-    if (slots.length >= mgr.maxSlots) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('保存は${mgr.maxSlots - homeCount}件までです。'), duration: const Duration(seconds: 2)),
-      );
-      return;
-    }
-    final parts = f.name.split(',');
-    final name = parts.isNotEmpty ? parts.first.substring(0, parts.first.length.clamp(0, 12)) : 'spot';
-    slots.add(VPSlot(name: name, lat: f.lat, lng: f.lng, icon: '⭐'));
-    await mgr.save(slots);
-    if (!mounted) return;
-    setState(() => _searchFocus = null);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('$nameを登録しました'), duration: const Duration(seconds: 2)),
-    );
-  }
 }

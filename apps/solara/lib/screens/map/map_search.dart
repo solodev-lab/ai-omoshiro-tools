@@ -221,7 +221,6 @@ class SearchFocusPopup extends StatelessWidget {
   final String activeSrc;
   final VoidCallback onClose;
   final VoidCallback onMoveToHit;
-  final VoidCallback onSaveAsLocation;
 
   const SearchFocusPopup({
     super.key,
@@ -231,7 +230,6 @@ class SearchFocusPopup extends StatelessWidget {
     required this.activeSrc,
     required this.onClose,
     required this.onMoveToHit,
-    required this.onSaveAsLocation,
   });
 
   @override
@@ -300,11 +298,9 @@ class SearchFocusPopup extends StatelessWidget {
           children: [for (final e in top3) _CatChip(cat: e.key, score: e.value)],
         ),
         const SizedBox(height: 10),
-        Row(children: [
-          Expanded(child: _ActionTile(label: '📌 拠点として登録', onTap: onSaveAsLocation)),
-          const SizedBox(width: 6),
-          Expanded(child: _ActionTile(label: '✈ ここへ移動', onTap: onMoveToHit)),
-        ]),
+        // C-2: 「拠点として登録」削除。保存は VP/Loc パネルの「この地点を保存」へ集約
+        // (検索中は popup の検索地が VP panel の center として渡される)
+        _ActionTile(label: '✈ ここへ移動', onTap: onMoveToHit),
       ]),
     );
   }

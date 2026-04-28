@@ -26,7 +26,9 @@ lib/ (77 .dart ファイル)
 │   │   ├── map_astro_lines.dart        Phase M2: アスペクト線 Polyline 変換 (FORTUNE 連動 dim)
 │   │   ├── map_relocation_popup.dart   Phase M2: 統合タップ popup (線情報+12ハウス情報)
 │   │   ├── map_styles.dart             タイル切替（OSM/CyclOSM × Light/Dark）
-│   │   ├── map_search.dart             検索候補リスト + SearchFocusPopup
+│   │   ├── map_search.dart             検索候補リスト + SearchFocusPopup (C-2: 保存ボタン削除済)
+│   │   ├── map_astro_carto.dart        Phase M3: Astro*Carto*Graphy モード専用UI (Banner/Pills/ZenithPopup)
+│   │   ├── map_location_markers.dart   Tier A: 出生地🌟+グロー / VP・Locations slot マーカー / 詳細popup
 │   │   └── map_overlays.dart           SideButtons/SearchBar/Badges/VP Pin/RestOverlay 等
 │   ├── locations_screen.dart   拠点一覧画面（Map 🗺ボタンから BottomSheet）
 │   ├── forecast_screen.dart    1〜5年 Forecast（Map 🔮ボタンから BottomSheet、ヒートマップ+◯◯期+Top5）
@@ -309,8 +311,12 @@ Map画面を開くと、1日1回「今日のタップボタン」（Daily Omen B
 - 各惑星 (10) × 4アングル (ASC/MC/DSC/IC) = 40本のラインを地球曲面上に計算 (球面三角法)
 - MC line: `lng = α - GMST*15` 縦直線。IC line: 経度180°シフト。
 - ASC line: `cos(H) = -tan(δ)·tan(φ)` を緯度ごとに解いて経度導出。DSC: 西半球版。
-- Haversine 距離による近接線検出 (`findNearbyLines`、閾値 200km)
+- 画面pixel距離による近接線検出 (`findNearbyLinesScreen`、閾値 20px、Tier A #3)
+  - flutter_map `camera.latLngToScreenOffset` を projector に渡し点-線分(Euclidean)距離で計測
+  - 子午線跨ぎ対策: 隣接2点が画面幅(4096px)以上離れた線分は skip
+  - 通常Map / Astro\*Carto\*Graphy モード共通で全ズームに一貫した感覚
 - 検証: Worker と全80ケースで最大誤差 0.01° (`worker/verify_astro_lines.py`)
+- ヒットテスト検証: 11/11 pass (`worker/verify_astro_line_hittest.py`)
 
 **LayerPanel 4流派並列** (`lib/screens/map/map_layer_panel.dart`):
 - ASTRO セクション: 16方位 / 惑星ライン / 引越し / アスペクト線
@@ -323,6 +329,29 @@ Map画面を開くと、1日1回「今日のタップボタン」（Daily Omen B
 - 両方ON & 線あり → 統合表示
 
 **戦略観点**: 英語版 (海外展開) で本機能がメインフィーチャー予定。日本市場では β機能扱い (デフォルトOFF, 論点8)。Phase M3 で L10N + 動的解釈テキスト + パワースポット (線交差点) 検出を追加予定。
+
+### 登録地マーカー (Tier A 補助、2026-04-28)
+**全モード共通の登録地ピン** (`lib/screens/map/map_location_markers.dart`):
+- 出生地 🌟 (BirthMarker、20px円 + 多層グロー + 2.4秒呼吸パルス) — 「個性の源」を視覚的に強調
+- VPSlot (VIEWPOINT・Locations、25px円 + 各 slot.icon 絵文字) — `FittedBox` で円内自動拡大
+- レイヤー優先順位 (上→下): 出生地 → VP slots (上位先) → Locations slots (下位最後)
+  - flutter_map MarkerLayer は list 順描画 (先頭=下) のため、build側で逆順積み
+- 全マーカーに tap → 名前+座標 popup (`LocationMarkerPopup`)
+- マーカー自身のサイズは `Center` でラップして flutter_map Marker の tight constraints を解放
+- syncHome で home が両 SlotManager 先頭に同期 (重複表示は許容、オーナー判断)
+
+**検索保存フロー統一 (C-2 案、2026-04-28)**:
+- 検索 popup から「📌 拠点として登録」ボタン削除 → 「✈ ここへ移動」のみ残す
+- 保存は VP/Loc パネル「この地点を保存」「この地点を登録」に集約
+- 検索中 (`_searchFocus != null`) はパネルに渡す `center` を検索地に切替
+  - `center: _searchFocus != null ? LatLng(_searchFocus.lat, _searchFocus.lng) : _center`
+  - VP Pin 自体は `_center` (不動)、保存対象だけ検索地優先
+- 副次効果: パネルの座標表示・現在地ハイライトも検索地基準に変わる
+
+**Nominatim 逆引き優先順位修正 (2026-04-28)**:
+- `SlotManager.saveCurrentLocation` の名称取得を `city > town > village > suburb > neighbourhood` に変更
+- 旧: `suburb` 最優先で OSM の道路ループ等局所タグを拾い "Loop" 等を返していた
+- 新: 都市名最優先で「ニューヨーク」「東京」等の認識可能な名称に
 
 ---
 

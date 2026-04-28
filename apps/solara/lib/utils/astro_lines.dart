@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'dart:ui' show Offset;
 
 import 'package:latlong2/latlong.dart';
 
@@ -283,19 +284,100 @@ class NearbyAstroLine {
   const NearbyAstroLine(this.line, this.distanceKm);
 }
 
-/// タップ地点から [thresholdKm] 以内のアスペクト線を検出して
-/// 近い順に並べて返す。FORTUNE カテゴリで dim されている線は除外しない
-/// (popup は常に全情報を出す方針、表示側で処理)。
-List<NearbyAstroLine> findNearbyLines({
-  required LatLng tap,
-  required List<AstroLine> lines,
-  double thresholdKm = 200,
-}) {
-  final hits = <NearbyAstroLine>[];
-  for (final line in lines) {
-    final d = _minDistanceKmToLine(tap, line);
-    if (d <= thresholdKm) hits.add(NearbyAstroLine(line, d));
+// ── Tier A #3: 画面pixel距離による線タップ判定 ──
+//
+// km固定閾値はズームに比例して破綻する:
+//   zoom 2.5 (世界): 200km ≈ 7px  → タイトすぎ
+//   zoom 14  (街)  : 200km ≈ 21,000px → 緩すぎ
+// flutter_map の latLngToScreenOffset を projector として渡し、画面pixel距離で
+// 点-線分距離を測ることで全ズームで一貫した「線にタップした」感覚を提供する。
+//
+// 子午線跨ぎ対策: セグメント内の隣接2点が画面幅以上離れている場合、その線分は
+// 反対側へラップした見えない接続なので距離計算をスキップする (maxJumpPx = 4096)。
+//
+// 戻り値の distanceKm は表示用 (Haversine で別計算)。並び順は pixel 距離の昇順。
+
+/// 点 p から線分 (a, b) への最短距離 (px)。
+double _pointToSegmentPx(Offset p, Offset a, Offset b) {
+  final dx = b.dx - a.dx;
+  final dy = b.dy - a.dy;
+  final lenSq = dx * dx + dy * dy;
+  if (lenSq < 1e-9) {
+    final ex = p.dx - a.dx;
+    final ey = p.dy - a.dy;
+    return sqrt(ex * ex + ey * ey);
   }
-  hits.sort((a, b) => a.distanceKm.compareTo(b.distanceKm));
-  return hits;
+  double t = ((p.dx - a.dx) * dx + (p.dy - a.dy) * dy) / lenSq;
+  if (t < 0) t = 0;
+  if (t > 1) t = 1;
+  final cx = a.dx + t * dx;
+  final cy = a.dy + t * dy;
+  final ex = p.dx - cx;
+  final ey = p.dy - cy;
+  return sqrt(ex * ex + ey * ey);
+}
+
+/// 1本のラインの全セグメントとタップ位置 [tapPx] の最短pixel距離。
+/// 隣接2点が [maxJumpPx] 以上離れた線分は (子午線跨ぎ等で見た目に繋がっていないため) 無視。
+double _minPixelDistanceToLine({
+  required Offset tapPx,
+  required AstroLine line,
+  required Offset Function(LatLng) project,
+  double maxJumpPx = 4096,
+}) {
+  double minDist = double.infinity;
+  for (final seg in line.segments) {
+    if (seg.length < 2) continue;
+    Offset prev = project(seg[0]);
+    for (int i = 1; i < seg.length; i++) {
+      final next = project(seg[i]);
+      final jx = next.dx - prev.dx;
+      final jy = next.dy - prev.dy;
+      if (jx * jx + jy * jy < maxJumpPx * maxJumpPx) {
+        final d = _pointToSegmentPx(tapPx, prev, next);
+        if (d < minDist) minDist = d;
+      }
+      prev = next;
+    }
+  }
+  return minDist;
+}
+
+class _RankedLine {
+  final AstroLine line;
+  final double distanceKm;
+  final double distancePx;
+  _RankedLine(this.line, this.distanceKm, this.distancePx);
+}
+
+/// 画面pixel距離で近接アスペクト線を検出する (Astro*Carto*Graphy モード専用)。
+///
+/// [tapPx]      タップの画面座標 (Map widget 基準)
+/// [tapLatLng]  タップの地理座標 (distanceKm 表示用)
+/// [project]    LatLng → Offset 投影関数 (通常 `camera.latLngToScreenOffset`)
+/// [thresholdPx] この pixel 距離以内の線のみ採用 (default 20px)
+///
+/// 戻りは pixel 距離の昇順 (視覚的に最も近い線が先頭)。
+/// `NearbyAstroLine.distanceKm` は Haversine 距離 (表示用、フィルタには使わない)。
+List<NearbyAstroLine> findNearbyLinesScreen({
+  required Offset tapPx,
+  required LatLng tapLatLng,
+  required List<AstroLine> lines,
+  required Offset Function(LatLng) project,
+  double thresholdPx = 20,
+}) {
+  final ranked = <_RankedLine>[];
+  for (final line in lines) {
+    final dPx = _minPixelDistanceToLine(
+      tapPx: tapPx,
+      line: line,
+      project: project,
+    );
+    if (dPx <= thresholdPx) {
+      final dKm = _minDistanceKmToLine(tapLatLng, line);
+      ranked.add(_RankedLine(line, dKm, dPx));
+    }
+  }
+  ranked.sort((a, b) => a.distancePx.compareTo(b.distancePx));
+  return ranked.map((r) => NearbyAstroLine(r.line, r.distanceKm)).toList();
 }
