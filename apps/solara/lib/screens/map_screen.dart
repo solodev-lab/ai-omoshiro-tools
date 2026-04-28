@@ -5,6 +5,7 @@ import '../utils/solara_storage.dart';
 import '../utils/omen_phrases.dart';
 import '../widgets/dominant_fortune_overlay.dart';
 import '../widgets/omen_button.dart';
+import '../widgets/solara_nav_bar.dart';
 import 'map/map_constants.dart';
 import 'map/map_styles.dart';
 import 'map/map_sectors.dart';
@@ -21,6 +22,7 @@ import 'map/map_planet_lines.dart';
 import 'map/map_relocation_popup.dart';
 import 'map/map_search.dart';
 import 'map/map_overlays.dart';
+import 'map/map_time_slider.dart';
 import '../utils/astro_lines.dart' as astro_lines;
 import 'forecast_screen.dart';
 import 'horoscope/horo_antique_icons.dart';
@@ -71,6 +73,9 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   // UI state
   bool _searchOpen = false;
   bool _layerPanelOpen = false;
+  // 2026-04-29: CCG 4 frame 追加でパネル長過ぎる問題を解決すべく
+  // ☰DISPLAY (16方位/MAPSTYLE/コンパス) と ✨ASTRO (惑星ライン/CCG/CHART/PLANET GROUP/FORTUNE) に分割。
+  bool _astroPanelOpen = false;
   bool _fortuneSheetOpen = false;
   bool _vpPanelOpen = false;
   String _vpTab = 'vp';
@@ -98,19 +103,37 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   // Phase M2 ASTRO レイヤー: 16方位/惑星ライン/引越し/アスペクト線 (論点5 4流派並列)
   // 設計: project_solara_astrocartography_m2.md 論点8 (引越し/アスペクトはOFFスタート)
   // planetLines は既存挙動の維持で true デフォルト (新機能のM2のみOFFスタート)
+  //
+  // Tier A #5 (CCG): aspectTransit / aspectProgressed / aspectSolarArc 追加。
+  // 'aspect' は natal フレームを意味する (後方互換のため既存キー名を維持)。
+  // 動的フレーム (T/P/SA) は viewDate から GMST を再計算する設計。
   final Map<String, bool> _astroLayers = {
-    'planetLines': true, 'relocate': false, 'aspect': false, 'aspectAll': false,
+    'planetLines': true,
+    'relocate': false,
+    'aspect': false,         // natal フレーム
+    'aspectTransit': false,  // CCG transit
+    'aspectProgressed': false, // CCG progressed
+    'aspectSolarArc': false, // CCG solar arc
+    'aspectAll': false,      // 全惑星モード (FORTUNE フィルタ無視)
   };
 
   // 引越しレイヤー ON時のタップ詳細ポップアップ用
   LatLng? _relocateTapPoint;
 
   // Astro*Carto*Graphy モード: 天頂点マーカータップ詳細用
-  // 値が入っていれば下部 popup を表示する。値は惑星キー ('sun' 等)。
-  String? _zenithTapPlanet;
+  // 値が入っていれば下部 popup を表示する。
+  // CCG: frame と point を保持し、natal以外の天頂タップにも対応。
+  ({String planet, astro_lines.AstroFrame frame, LatLng point})? _zenithTapInfo;
 
   // Phase M2 論点3: アスペクト線 40本キャッシュ (chart 取得時に build)
+  // CCG (Tier A #5): 4フレーム合算 (natal+transit+progressed+solarArc) を保持
   List<astro_lines.AstroLine> _astroLinesCache = const [];
+
+  // CCG: 日付別 ChartResult キャッシュ (タイムスライダーの往復で再fetch回避)。
+  // key = "yyyy-MM-dd" (UTC日)、null は relocate設定変化等で無効化。
+  // LRU 風: 50件超えたら古いものから削除 (≒ ±25日往復で十分)。
+  final Map<String, ChartResult> _chartCacheByDate = {};
+  static const int _chartCacheMax = 50;
 
   // Sector scores
   // _sectorComps: 総合（all）用の per-direction components {tSoft, tHard, pSoft, pHard}
@@ -263,17 +286,35 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     // 注意: scoreAll() は houses 配列を直接使わない(aspects/角度距離のみ)ため、
     // 現状 16方位スコアには影響なし。将来 M1(ハウス重み付け)で意味を持つ。
     final useRelocate = !(p.homeLat == 0 && p.homeLng == 0);
-    final chart = await fetchChart(
-      birthDate: p.birthDate,
-      birthTime: p.birthTime,
-      birthLat: p.birthLat,
-      birthLng: p.birthLng,
-      birthTz: p.birthTz,
-      birthTzName: p.birthTzName,
-      targetDate: targetDate,
-      relocateLat: useRelocate ? p.homeLat : null,
-      relocateLng: useRelocate ? p.homeLng : null,
-    );
+
+    // CCG (Tier A #5): 日付別 chart キャッシュ参照。
+    // タイムスライダーで往復した際の API 連続呼出を回避する。
+    // キーは UTC日 (1日刻みでスライダーが snap するため)。
+    final cacheKey = targetDate != null
+        ? '${targetDate.year.toString().padLeft(4, '0')}-${targetDate.month.toString().padLeft(2, '0')}-${targetDate.day.toString().padLeft(2, '0')}'
+        : 'today';
+    ChartResult? chart = _chartCacheByDate[cacheKey];
+    if (chart == null) {
+      chart = await fetchChart(
+        birthDate: p.birthDate,
+        birthTime: p.birthTime,
+        birthLat: p.birthLat,
+        birthLng: p.birthLng,
+        birthTz: p.birthTz,
+        birthTzName: p.birthTzName,
+        targetDate: targetDate,
+        relocateLat: useRelocate ? p.homeLat : null,
+        relocateLng: useRelocate ? p.homeLng : null,
+      );
+      if (chart != null) {
+        // LRU 風: 既存キーは末尾移動、超過時に先頭削除
+        _chartCacheByDate.remove(cacheKey);
+        _chartCacheByDate[cacheKey] = chart;
+        if (_chartCacheByDate.length > _chartCacheMax) {
+          _chartCacheByDate.remove(_chartCacheByDate.keys.first);
+        }
+      }
+    }
     if (chart != null) {
       _chartResult = chart;
       final result = scoreAll(chart);
@@ -281,11 +322,51 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
       // Phase M2 論点3: アスペクト線 40本を build (Worker呼出ゼロ)
       // 比較ベースは relocate=home優先・未設定なら出生地 (chart fetch と同じ)
       final baselineLng = useRelocate ? p.homeLng : p.birthLng;
-      final astroLines = astro_lines.buildAstroLines(
+      // Tier A #5 (CCG): 4フレーム同時計算
+      // - natal:   baseline 由来 GMST (chart fetch時の MC + lng から逆算)
+      // - dynamic: viewDate (= targetDate ?? now) UTC から計算した GMST
+      //            transit/progressed planets は Worker 計算済み
+      //            solarArc planets は natal+progressed から arc=Δsun を全惑星に加算
+      final viewUtc = (targetDate ?? DateTime.now()).toUtc();
+      final viewGmst = astro_lines.gmstHoursFromUtc(viewUtc);
+      final natalLines = astro_lines.buildAstroLines(
         natal: chart.natal,
         baselineMc: chart.mc,
         baselineLng: baselineLng,
       );
+      final transitLines = chart.transit != null
+          ? astro_lines.buildAstroLinesAt(
+              planets: chart.transit!,
+              gmstHours: viewGmst,
+              frame: astro_lines.AstroFrame.transit,
+            )
+          : const <astro_lines.AstroLine>[];
+      final progressedLines = chart.progressed != null
+          ? astro_lines.buildAstroLinesAt(
+              planets: chart.progressed!,
+              gmstHours: viewGmst,
+              frame: astro_lines.AstroFrame.progressed,
+            )
+          : const <astro_lines.AstroLine>[];
+      final solarArcMap = chart.progressed != null
+          ? astro_lines.solarArcPlanets(
+              natal: chart.natal,
+              progressed: chart.progressed!,
+            )
+          : const <String, double>{};
+      final solarArcLines = solarArcMap.isNotEmpty
+          ? astro_lines.buildAstroLinesAt(
+              planets: solarArcMap,
+              gmstHours: viewGmst,
+              frame: astro_lines.AstroFrame.solarArc,
+            )
+          : const <astro_lines.AstroLine>[];
+      final astroLines = [
+        ...natalLines,
+        ...transitLines,
+        ...progressedLines,
+        ...solarArcLines,
+      ];
       // 16方位合計の最高カテゴリを今日のドミナントとする
       String? topKey;
       double topSum = -1;
@@ -347,21 +428,8 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     if (mounted) setState(() {});
   }
 
-  /// 日付ピッカー表示。選択されたら該当日の transit/progressed で再計算する。
-  Future<void> _pickDate() async {
-    final picked = await showSolaraDatePicker(context, initial: _selectedDate);
-    if (picked == null) return;
-    // 正午固定（house 位置の揺れを抑える意図で日中の代表時刻を選ぶ）
-    final noon = DateTime.utc(picked.year, picked.month, picked.day, 3, 0, 0);
-    setState(() => _selectedDate = noon);
-    await _loadProfileAndChart(targetDate: noon);
-  }
-
-  /// 日付リセット（「今日」に戻す）
-  Future<void> _resetDateToToday() async {
-    setState(() => _selectedDate = null);
-    await _loadProfileAndChart();
-  }
+  // 旧 _pickDate / _resetDateToToday は MapTimeSlider 常時表示に置き換えで削除 (2026-04-29)。
+  // 日付選択は MapTimeSlider の slider/▲▼/LIVE で完結する。
 
   /// 共通: 角丸付き全画面BottomSheet
   Future<void> _showSheet(Widget child, {double heightFrac = 0.9}) {
@@ -410,13 +478,7 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     );
   }
 
-  String _formatSelectedDate() {
-    final d = _selectedDate;
-    if (d == null) return '今日';
-    // UTC → JST 表示（正午固定なので日付だけで十分）
-    final jst = d.toLocal();
-    return '${jst.year}/${jst.month.toString().padLeft(2, '0')}/${jst.day.toString().padLeft(2, '0')}';
-  }
+  // 旧 _formatSelectedDate は MapTimeSlider 内で表示するため削除 (2026-04-29)。
 
   /// 今日のタップボタン押下時のハンドラ。
   /// ホロスコープから得た最高スコアカテゴリの演出を起動する。
@@ -575,18 +637,22 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
       _layers['compass'] = false;
       _astroLayers['planetLines'] = false;
       _astroLayers['relocate'] = true;
+      // CCG (D2): モード入時は natal を強制ON。Transit/Progressed/SolarArc は
+      // ユーザーの直前選択を維持 (Pills UI で個別切替可能)。
+      // aspectAll は強制ONしない (FORTUNE Pills でカテゴリ絞込みする UX 用)。
+      // 「総合」タップで activeCategory='all' → 自動で全惑星 100% になる。
       _astroLayers['aspect'] = true;
-      _astroLayers['aspectAll'] = true;
       _mapStyle = MapStyle.osmHotDark;
       // 既存パネル/シート/ピンを片付け、世界規模ビューにフォーカス
       _layerPanelOpen = false;
+      _astroPanelOpen = false;
       _vpPanelOpen = false;
       _searchOpen = false;
       _fortuneSheetOpen = false;
       _searchHits = [];
       _searchFocus = null;
       _relocateTapPoint = null;
-      _zenithTapPlanet = null;
+      _zenithTapInfo = null;
     });
     SolaraStorage.saveMapStyleId(mapStyleConfigs[MapStyle.osmHotDark]!.id);
 
@@ -619,7 +685,7 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
         ..addAll(restoreAstroLayers);
       _mapStyle = restoreStyle;
       _relocateTapPoint = null;
-      _zenithTapPlanet = null;
+      _zenithTapInfo = null;
     });
     SolaraStorage.saveMapStyleId(mapStyleConfigs[restoreStyle]!.id);
     _savedCenter = null;
@@ -650,6 +716,10 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     final topPad = MediaQuery.of(context).padding.top;
+    // 2026-04-29: NavBar 被り問題の根本解決。オーバーレイ群を内側の Padded Stack に
+    // 集約し、bottom: 0 = NavBar の上端 として扱う。各 widget で navInset を
+    // 手動加算する必要がなく、新規追加時の被りリスクが原則無くなる。
+    // FlutterMap だけは全画面のまま (NavBar 越しに blur が効く視覚効果を保持)。
 
     return Stack(
       children: [
@@ -660,13 +730,22 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
             initialCenter: _center, initialZoom: 14,
             minZoom: 2, maxZoom: 19,
             backgroundColor: mapStyleConfigs[_mapStyle]!.backgroundColor,
+            // 回転ジェスチャー無効化 (2026-04-29):
+            // Solara Map は北上固定前提 (16方位セクター・コンパス・VP Pin の方位概念が
+            // 回転で破綻する)。ピンチズーム時の指のひねりで誤回転していた問題を解消。
+            interactionOptions: const InteractionOptions(
+              flags: InteractiveFlag.all & ~InteractiveFlag.rotate,
+            ),
             // HTML: long-press 600ms → rebuild(nc, fly:true)
             onLongPress: (tapPos, latlng) => _rebuild(latlng),
-            // Phase M2: aspect / relocate いずれかON時、タップで統合 popup
+            // Phase M2 + CCG: aspect (4フレーム何れか) / relocate ON時、タップで統合 popup
             // 設計: 論点10 (8-β) — 1タップで線情報+12ハウス情報を集約表示
             onTap: (tapPos, latlng) {
               if (_chartResult == null) return;
-              final aspectOn = _astroLayers['aspect'] == true;
+              final aspectOn = _astroLayers['aspect'] == true ||
+                  _astroLayers['aspectTransit'] == true ||
+                  _astroLayers['aspectProgressed'] == true ||
+                  _astroLayers['aspectSolarArc'] == true;
               final relocateOn = _astroLayers['relocate'] == true;
               if (!aspectOn && !relocateOn) return;
               // aspect ONのみで近接線がない場合は popup を出さない (空表示防止)
@@ -676,7 +755,7 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
               }
               setState(() {
                 _relocateTapPoint = latlng;
-                _zenithTapPlanet = null; // 排他: 天頂popupを閉じる
+                _zenithTapInfo = null;
               });
             },
           ),
@@ -703,22 +782,25 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                 lines: _planetLines, layers: _layers,
                 planetGroupVis: _planetGroups, activeCategory: _activeCategory,
               ),
-            // Phase M2 論点3: アスペクト線 (40本) - aspect トグルON時のみ
-            if (_astroLayers['aspect'] == true && _astroLinesCache.isNotEmpty)
+            // Phase M2 論点3 + Tier A #5 (CCG): 4フレームのアスペクト線
+            // _visibleAstroLines() で _astroLayers の natal/transit/progressed/solarArc トグルから絞り込む
+            if (_visibleAstroLines().isNotEmpty)
               PolylineLayer(polylines: buildAstroPolylines(
-                lines: _astroLinesCache,
+                lines: _visibleAstroLines(),
                 activeCategory: _activeCategory,
                 allPlanetMode: _astroLayers['aspectAll'] ?? false,
               )),
-            // Astro*Carto*Graphy モード: 各惑星の天頂点マーカー (MC線上の惑星赤緯緯度)
-            // タップで惑星固有の天頂解説 popup を表示。relocate popup とは排他。
-            if (_astroCartoMode && _astroLinesCache.isNotEmpty)
+            // 天頂点マーカー (CCG): 表示中の全フレームの zenith を描画。
+            // 動的フレーム (Transit/Prog/SArc) は時間で動くため CCG の核となる。
+            // ACGモードでは natal を強制ON、通常Mapでは toggle 状況に従う。
+            if (_zenithVisibleFrames().isNotEmpty && _astroLinesCache.isNotEmpty)
               MarkerLayer(markers: buildAstroZenithMarkers(
                 lines: _astroLinesCache,
                 activeCategory: _activeCategory,
                 allPlanetMode: _astroLayers['aspectAll'] ?? false,
-                onTap: (planetKey) => setState(() {
-                  _zenithTapPlanet = planetKey;
+                framesWithZenith: _zenithVisibleFrames(),
+                onTap: (planetKey, frame, point) => setState(() {
+                  _zenithTapInfo = (planet: planetKey, frame: frame, point: point);
                   _relocateTapPoint = null; // 排他: 線+ハウス popup を閉じる
                 }),
               )),
@@ -764,6 +846,18 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
           ],
         ),
 
+        // ── オーバーレイ全体: NavBar 上端までの領域に閉じ込める ──
+        // 内側の Stack 内では bottom: 0 = NavBar 上端。手動 navInset 不要。
+        // MediaQuery.removePadding(removeBottom:true) で SafeArea が二重 padding
+        // しないように systemNav 値をゼロ化 (popup 内 SafeArea 互換)。
+        Positioned.fill(
+          child: Padding(
+            padding: EdgeInsets.only(bottom: SolaraNavBar.totalHeight(context)),
+            child: MediaQuery.removePadding(
+              context: context,
+              removeBottom: true,
+              child: Stack(children: [
+
         // ── FF Label ──
         // モード中は「世界規模スコア」の概念が無いので非表示
         if (!_noProfile && !_astroCartoMode) Positioned(
@@ -775,26 +869,41 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
           ),
         ),
 
-        // ── 日付バッジ（常時表示。今日なら「今日」、ラベルタップでピッカー）──
+        // ── 日付タイムスライダー (旧日付バッジを置換、2026-04-29) ──
+        // 通常Map / ACG モード共通で上部に常時表示。
+        // ◀▶ 1日ステッパ + ±365日スライダー + LIVE ボタン + ⏰ で時刻行展開
+        // 左端は left:60 でサイドボタン列 (left:16, 幅 ~40px) を回避。
+        // 動的フレーム (Transit/Prog/SArc) ON 時は線が時刻連動で動く
+        // Natal 単独でも 16方位スコア・FORTUNE は target date で再計算される
         Positioned(
-          top: topPad + 44, left: 16,
-          child: SelectedDateBadge(
-            label: _formatSelectedDate(),
-            onTap: _pickDate,
-            onReset: _selectedDate != null ? _resetDateToToday : null,
+          top: topPad + 44, left: 12, right: 12,
+          child: MapTimeSlider(
+            date: _selectedDate,
+            onCommit: (d) async {
+              setState(() => _selectedDate = d);
+              await _loadProfileAndChart(targetDate: d);
+            },
           ),
         ),
 
-        // ── サイドボタン群（🔍 ≡ 📍 🗺 🔮 🌐） ──
+        // ── サイドボタン群（🔍 ☰ ✨ 📍 🗺 🔮 🌐） ──
         // 📅 日付ボタンは削除済み（左上の SelectedDateBadge から起動）
         // モード中は全サイドボタン非表示 (バナー × で復帰)
         if (!_astroCartoMode) MapSideButtons(
           topPad: topPad,
           searchOpen: _searchOpen,
           layerPanelOpen: _layerPanelOpen,
+          astroPanelOpen: _astroPanelOpen,
           vpPanelOpen: _vpPanelOpen,
           onSearchTap: () => setState(() => _searchOpen = true),
-          onLayerTap: () => setState(() => _layerPanelOpen = !_layerPanelOpen),
+          onLayerTap: () => setState(() {
+            _layerPanelOpen = !_layerPanelOpen;
+            if (_layerPanelOpen) _astroPanelOpen = false;
+          }),
+          onAstroPanelTap: () => setState(() {
+            _astroPanelOpen = !_astroPanelOpen;
+            if (_astroPanelOpen) _layerPanelOpen = false;
+          }),
           onVpTap: () => setState(() => _vpPanelOpen = !_vpPanelOpen),
           onLocationsTap: _openLocations,
           onForecastTap: _openForecast,
@@ -802,23 +911,17 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
         ),
 
         // ── Astro*Carto*Graphy モードバナー (上部中央) + カテゴリピル (下部中央) ──
+        // 日付バッジ (top+44) との重なり回避のため top+2 に上げた (2026-04-29)
         if (_astroCartoMode) Positioned(
-          top: topPad + 12, left: 0, right: 0,
+          top: topPad + 2, left: 0, right: 0,
           child: Center(child: AstroCartoBanner(onClose: _exitAstroCartoMode)),
         ),
-        if (_astroCartoMode) Positioned(
-          left: 0, right: 0, bottom: 24,
-          child: Center(
-            child: AstroCartoCategoryPills(
-              activeCategory: _activeCategory,
-              onChanged: (k) => setState(() => _activeCategory = k),
-            ),
-          ),
-        ),
+        // 通常Map 用 TimeSlider は上部に常時表示 (上の SelectedDateBadge 置換コード参照)
+        // ここは ACG モード用 UI の積み下ろし開始点
 
         // ── Search Bar ──
         if (_searchOpen) Positioned(
-          top: topPad + 92, left: 16, right: 16,
+          top: topPad + 152, left: 16, right: 16,
           child: SearchBarOverlay(
             controller: _searchCtrl,
             onSubmitted: _doSearch,
@@ -829,7 +932,7 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
         // ── Stella ──
         // モード中は世界規模ビューに集中させるため非表示
         if (!_astroCartoMode) Positioned(
-          bottom: 90, left: 20, right: 20,
+          bottom: 10, left: 20, right: 20,
           child: GestureDetector(
             onTap: () => setState(() => _stellaMinimized = !_stellaMinimized),
             child: AnimatedSwitcher(
@@ -848,12 +951,16 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
         ),
 
         // ── 外側タップでパネルを閉じる（HTML: pointerdown outside → close）──
-        if (_layerPanelOpen || _vpPanelOpen) Positioned.fill(
+        if (_layerPanelOpen || _astroPanelOpen || _vpPanelOpen) Positioned.fill(
           child: GestureDetector(
             behavior: HitTestBehavior.translucent,
             onTap: () {
               final wasVpOpen = _vpPanelOpen;
-              setState(() { _layerPanelOpen = false; _vpPanelOpen = false; });
+              setState(() {
+                _layerPanelOpen = false;
+                _astroPanelOpen = false;
+                _vpPanelOpen = false;
+              });
               // VP panel 内でスロット編集していた可能性を考慮し再読込
               if (wasVpOpen) _reloadLocationSlots();
             },
@@ -861,10 +968,11 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
           ),
         ),
 
-        // ── Layer Panel ──
+        // ── Display Layer Panel (☰): 16方位/コンパス/MAPSTYLE ──
         if (_layerPanelOpen) Positioned(
-          top: topPad + 92, left: 60,
+          top: topPad + 152, left: 60,
           child: LayerPanel(
+            view: LayerPanelView.display,
             layers: _layers,
             planetGroups: _planetGroups,
             astroLayers: _astroLayers,
@@ -874,7 +982,32 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
             onPlanetGroupToggle: (k) => setState(() => _planetGroups[k] = !(_planetGroups[k] ?? false)),
             onAstroToggle: (k) => setState(() {
               _astroLayers[k] = !(_astroLayers[k] ?? false);
-              // 引越しレイヤーOFF時はタップ詳細も閉じる
+              if (k == 'relocate' && !(_astroLayers[k] ?? false)) {
+                _relocateTapPoint = null;
+              }
+            }),
+            onCategoryChanged: (k) {
+              setState(() => _activeCategory = k);
+              _reannotateSearchResults();
+            },
+            onMapStyleChanged: _onMapStyleChanged,
+          ),
+        ),
+
+        // ── Astro Panel (✨): 惑星ライン/引越し/CCG 4 frame/CHART/PLANET GROUP/FORTUNE ──
+        if (_astroPanelOpen) Positioned(
+          top: topPad + 152, left: 60,
+          child: LayerPanel(
+            view: LayerPanelView.astro,
+            layers: _layers,
+            planetGroups: _planetGroups,
+            astroLayers: _astroLayers,
+            activeCategory: _activeCategory,
+            mapStyle: _mapStyle,
+            onLayerToggle: (k) => setState(() => _layers[k] = !(_layers[k] ?? false)),
+            onPlanetGroupToggle: (k) => setState(() => _planetGroups[k] = !(_planetGroups[k] ?? false)),
+            onAstroToggle: (k) => setState(() {
+              _astroLayers[k] = !(_astroLayers[k] ?? false);
               if (k == 'relocate' && !(_astroLayers[k] ?? false)) {
                 _relocateTapPoint = null;
               }
@@ -888,8 +1021,9 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
         ),
 
         // ── VP Panel ──
+        // 📍ボタンは topPad+236 へ移動 (✨ ASTRO ボタン挿入のため)
         if (_vpPanelOpen) Positioned(
-          top: topPad + 188, left: 60,
+          top: topPad + 296, left: 60,
           child: VPPanel(
             activeTab: _vpTab,
             onTabChanged: (t) => setState(() => _vpTab = t),
@@ -911,7 +1045,7 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
 
         // ── Fortune Pull Tab ──（プロフィール未設定時 / モード中は非表示）
         if (!_noProfile && !_fortuneSheetOpen && !_astroCartoMode) Positioned(
-          bottom: 80, left: 0, right: 0,
+          bottom: 0, left: 0, right: 0,
           child: Center(
             child: FortunePullTab(onTap: () => setState(() => _fortuneSheetOpen = true)),
           ),
@@ -919,7 +1053,7 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
 
         // ── Fortune Sheet ──
         if (!_noProfile && _fortuneSheetOpen && !_astroCartoMode) Positioned(
-          bottom: 80, left: 0, right: 0,
+          bottom: 0, left: 0, right: 0,
           child: FortuneSheet(
             activeSrc: _activeSrc,
             activeCategory: _activeCategory,
@@ -966,7 +1100,7 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
 
         // ── Search Result List（複数候補） ──
         if (_searchHits.isNotEmpty) Positioned(
-          bottom: 160, left: 16, right: 16,
+          bottom: 80, left: 16, right: 16,
           child: SearchResultList(
             hits: _searchHits,
             onTap: _selectSearchHit,
@@ -976,7 +1110,7 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
 
         // ── Search Focus Popup（単一選択後） ──
         if (_searchFocus != null) Positioned(
-          bottom: 160, left: 16, right: 16,
+          bottom: 80, left: 16, right: 16,
           child: SearchFocusPopup(
             focus: _searchFocus!,
             center: _center,
@@ -993,14 +1127,14 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
 
         // ── Searching spinner ──
         if (_searching) Positioned(
-          top: topPad + 144, left: 16,
+          top: topPad + 204, left: 16,
           child: const StatusBadge(label: '検索中…'),
         ),
 
         // ── Daily Omen Button（今日のタップボタン）──
         // モード中は世界規模ビューにカテゴリピルを置くので非表示
         if (!_noProfile && _omenVisible && _activeOverlay == null && !_astroCartoMode) Positioned(
-          left: 24, right: 24, bottom: 170,
+          left: 24, right: 24, bottom: 90,
           child: OmenButton(phrase: _omenPhrase, onTap: _onOmenTap),
         ),
 
@@ -1045,14 +1179,14 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
             ),
           ),
 
-        // ── Astro*Carto*Graphy モード: 天頂点タップ詳細 popup ──
+        // ── 天頂点タップ詳細 popup (CCG: 全フレーム対応) ──
         // 線+ハウス popup と排他 (どちらか片方のみ表示)。
-        if (_zenithTapPlanet != null && _astroCartoMode)
+        if (_zenithTapInfo != null)
           Positioned(
             left: 0, right: 0, bottom: 0,
             child: SafeArea(
               top: false,
-              child: _buildZenithPopup(_zenithTapPlanet!),
+              child: _buildZenithPopup(_zenithTapInfo!),
             ),
           ),
 
@@ -1070,24 +1204,48 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
               ),
             ),
           ),
+
+        // ── ACGモード下部 UI (popup より後に描画して常に最前面) ──
+        // NavBar (80px) を避けて積み上げる:
+        // bottom 92  → CategoryPills (FORTUNE 切替)
+        // bottom 132 → FramePills    (Natal/Transit/Prog/SArc)
+        // bottom 176 → TimeSlider    (動的フレーム ON 時のみ)
+        if (_astroCartoMode) Positioned(
+          left: 0, right: 0, bottom: 12,
+          child: Center(
+            child: AstroCartoCategoryPills(
+              activeCategory: _activeCategory,
+              onChanged: (k) => setState(() => _activeCategory = k),
+            ),
+          ),
+        ),
+        if (_astroCartoMode) Positioned(
+          left: 0, right: 0, bottom: 52,
+          child: Center(
+            child: AstroCartoFramePills(
+              astroLayers: _astroLayers,
+              onToggle: (k) => setState(() {
+                _astroLayers[k] = !(_astroLayers[k] ?? false);
+              }),
+            ),
+          ),
+        ),
+        // ACGモード下部スライダーは廃止 (2026-04-29、上部常時表示に統一)
+              ]), // Inner Stack 終端 (NavBar 上端までの overlay 領域)
+            ), // MediaQuery.removePadding 終端
+          ), // Padding 終端
+        ), // Positioned.fill 終端
       ],
     );
   }
 
-  /// 天頂点 popup ビルダ。AstroLine の zenith から表示用座標を取り出す。
-  Widget _buildZenithPopup(String planetKey) {
-    LatLng? zenith;
-    for (final line in _astroLinesCache) {
-      if (line.planet == planetKey && line.angle == 'mc' && line.zenith != null) {
-        zenith = line.zenith;
-        break;
-      }
-    }
-    if (zenith == null) return const SizedBox.shrink();
+  /// 天頂点 popup ビルダ。CCG: タップされた frame の zenith 座標を直接使う。
+  Widget _buildZenithPopup(({String planet, astro_lines.AstroFrame frame, LatLng point}) info) {
     return AstroZenithPopup(
-      planetKey: planetKey,
-      zenith: zenith,
-      onClose: () => setState(() => _zenithTapPlanet = null),
+      planetKey: info.planet,
+      zenith: info.point,
+      frame: info.frame,
+      onClose: () => setState(() => _zenithTapInfo = null),
     );
   }
 
@@ -1101,13 +1259,16 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     final baselineLng = hasHome ? p.homeLng : p.birthLng;
     final baselineLabel = hasHome ? '現住所' : '出生地';
 
-    final aspectOn = _astroLayers['aspect'] == true;
+    // CCG: aspect トグルは4フレームの何れか ON で有効
+    final aspectOn = _astroLayers['aspect'] == true ||
+        _astroLayers['aspectTransit'] == true ||
+        _astroLayers['aspectProgressed'] == true ||
+        _astroLayers['aspectSolarArc'] == true;
     final relocateOn = _astroLayers['relocate'] == true;
 
-    // aspect ON 時のみ近接線検出
-    // - Astro*Carto*Graphy モード: 画面pixel距離 (Tier A #3、世界ビューで線をタップした感覚と一致)
-    // - 通常 Map: km距離 (高ズームではpx換算と差が小さく km の方が予測可能)
-    final List<astro_lines.NearbyAstroLine>? nearby = aspectOn && _astroLinesCache.isNotEmpty
+    // aspect ON 時のみ近接線検出 (Tier A #3、画面pixel距離 20px)
+    // _findNearbyAstroLines が _visibleAstroLines() 経由で表示中フレームのみ対象にする。
+    final List<astro_lines.NearbyAstroLine>? nearby = aspectOn
         ? _findNearbyAstroLines(tap)
         : null;
 
@@ -1146,16 +1307,53 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   /// km固定閾値はズームに比例して破綻するため不採用 (zoom 14 で 200km は ~21,000px)。
   /// camera は1度だけキャプチャして project に渡す
   /// (camera ゲッタを毎呼出すとインスタンス再生成のリスクがあるため)。
+  /// CCG: 表示中の全フレームを跨いで近接判定する (Natal + Transit + ...)。
   List<astro_lines.NearbyAstroLine> _findNearbyAstroLines(LatLng tap) {
-    if (_astroLinesCache.isEmpty) return const [];
+    final visible = _visibleAstroLines();
+    if (visible.isEmpty) return const [];
     final cam = _mapCtrl.camera;
     return astro_lines.findNearbyLinesScreen(
       tapPx: cam.latLngToScreenOffset(tap),
       tapLatLng: tap,
-      lines: _astroLinesCache,
+      lines: visible,
       project: cam.latLngToScreenOffset,
       thresholdPx: 20,
     );
+  }
+
+  /// 天頂マーカーを表示するフレーム集合。
+  /// 各 aspect トグル ON でそのフレームの天頂シンボルが描画される。
+  /// 動的フレーム (T/P/SA) は時間で動くので時刻スライダーと連動する。
+  Set<astro_lines.AstroFrame> _zenithVisibleFrames() {
+    final s = <astro_lines.AstroFrame>{};
+    if (_astroLayers['aspect'] == true) s.add(astro_lines.AstroFrame.natal);
+    if (_astroLayers['aspectTransit'] == true) s.add(astro_lines.AstroFrame.transit);
+    if (_astroLayers['aspectProgressed'] == true) s.add(astro_lines.AstroFrame.progressed);
+    if (_astroLayers['aspectSolarArc'] == true) s.add(astro_lines.AstroFrame.solarArc);
+    return s;
+  }
+
+  /// 現在 ON の aspect レイヤートグルから可視フレーム集合を導き、_astroLinesCache を絞り込む。
+  /// CCG (Tier A #5): natal/transit/progressed/solarArc を独立にトグルできる。
+  List<astro_lines.AstroLine> _visibleAstroLines() {
+    if (_astroLinesCache.isEmpty) return const [];
+    final visibleFrames = <astro_lines.AstroFrame>{};
+    if (_astroLayers['aspect'] == true) {
+      visibleFrames.add(astro_lines.AstroFrame.natal);
+    }
+    if (_astroLayers['aspectTransit'] == true) {
+      visibleFrames.add(astro_lines.AstroFrame.transit);
+    }
+    if (_astroLayers['aspectProgressed'] == true) {
+      visibleFrames.add(astro_lines.AstroFrame.progressed);
+    }
+    if (_astroLayers['aspectSolarArc'] == true) {
+      visibleFrames.add(astro_lines.AstroFrame.solarArc);
+    }
+    if (visibleFrames.isEmpty) return const [];
+    return _astroLinesCache
+        .where((l) => visibleFrames.contains(l.frame))
+        .toList();
   }
 
   /// プロフィール未設定時の案内カード（他画面と完全同一）。

@@ -1,16 +1,24 @@
 import 'package:flutter/material.dart';
 
 import '../../utils/astro_glossary.dart';
-import '../../widgets/glass_panel.dart';
 import 'map_constants.dart';
 import 'map_styles.dart';
+
+/// LayerPanel ビュー種別。CCG で 4 frame 追加してパネルが画面外に伸びる問題を
+/// 解決するためボタンを2系統に分割した (2026-04-29)。
+/// - display: 表示系 (16方位/コンパス/MAPSTYLE)
+/// - astro:   占星術系 (惑星ライン/引越し/CCG 4 frame/CHART/PLANET GROUP/FORTUNE)
+enum LayerPanelView { display, astro }
 
 /// Layer Panel — HTML: .layer-panel { width:100px; }
 ///
 /// Phase M2 論点5 (3-A1改): 4流派 (16方位/惑星ライン/引越し/アスペクト線)
 /// を ASTRO セクションに並列配置。CHART (natal/progressed/transit) は
 /// 惑星ラインの詳細制御として残し、PLANET GROUP も従前通り。
+/// 2026-04-29: CCG 4 frame 追加でパネル長過ぎる問題を解決すべく、
+/// view パラメータで Display 系 / Astro 系の2ボタンに分割。
 class LayerPanel extends StatelessWidget {
+  final LayerPanelView view;
   final Map<String, bool> layers;
   final Map<String, bool> planetGroups;
   final Map<String, bool> astroLayers; // Phase M2: 16方位/惑星ライン/引越し/アスペクト
@@ -24,6 +32,7 @@ class LayerPanel extends StatelessWidget {
 
   const LayerPanel({
     super.key,
+    this.view = LayerPanelView.display,
     required this.layers,
     required this.planetGroups,
     required this.astroLayers,
@@ -38,9 +47,8 @@ class LayerPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final showPlanetLineDetails = astroLayers['planetLines'] ?? true;
     return Container(
-      width: 100,
+      width: 110,
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: const Color(0xEB0C0C1A),
@@ -50,68 +58,98 @@ class LayerPanel extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
-        children: [
-          const Text('LAYERS', style: TextStyle(fontSize: 9, color: Color(0xFF666666), letterSpacing: 1.5)),
-          const SizedBox(height: 10),
-          // ── ASTRO: 4流派並列 (Phase M2 論点5) ──
-          _section('ASTRO', [
-            _toggleWithGlossary('sectors', '16方位', 'sector_score_16',
-                const Color(0xFFC9A84C), layers, onLayerToggle, context),
-            _toggleWithGlossary('planetLines', '惑星ライン', 'planet_lines',
-                const Color(0xFFFFD370), astroLayers, onAstroToggle, context),
-            _toggleWithGlossary('relocate', '引越し', 'relocate_layer',
-                const Color(0xFFFFB6C1), astroLayers, onAstroToggle, context),
-            _toggleWithGlossary('aspect', 'アスペクト線', 'aspect_lines',
-                const Color(0xFFB088FF), astroLayers, onAstroToggle, context),
-            // aspect ON 時に「全惑星」サブトグル表示
-            if (astroLayers['aspect'] == true)
-              Padding(
-                padding: const EdgeInsets.only(left: 18),
-                child: _toggle('aspectAll', '全惑星', const Color(0xFFE8E0D0),
-                    astroLayers, onAstroToggle),
-              ),
-          ]),
-          // ── CHART: 惑星ラインの詳細 (planetLines ON 時のみ表示) ──
-          if (showPlanetLineDetails)
-            _section('CHART', [
-              _toggle('natal', 'Natal', const Color(0xFFE8E0D0), layers, onLayerToggle),
-              _toggle('progressed', 'Progressed', const Color(0xFFC9A84C), layers, onLayerToggle),
-              _toggle('transit', 'Transit', const Color(0xFF00D4FF), layers, onLayerToggle),
-            ]),
-          _section('PLANET GROUP', [
-            _toggle('personal', '個人天体', const Color(0xFFFFD370), planetGroups, onPlanetGroupToggle),
-            _toggle('social', '社会天体', const Color(0xFF6BB5FF), planetGroups, onPlanetGroupToggle),
-            _toggle('generational', '世代天体', const Color(0xFFB088FF), planetGroups, onPlanetGroupToggle),
-          ]),
-          _section('MAP', [
-            _toggle('compass', 'コンパス', const Color(0xFFE8E0D0), layers, onLayerToggle),
-          ]),
-          _section('MAPSTYLE', [
-            for (final e in mapStyleConfigs.entries)
-              _styleOption(e.key, e.value.label),
-          ]),
-          _section('FORTUNE', [
-            ...categoryColors.entries.map((e) {
-              final active = activeCategory == e.key;
-              return GestureDetector(
-                onTap: () => onCategoryChanged(e.key),
-                child: Container(
-                  margin: const EdgeInsets.only(bottom: 3),
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: active ? e.value : const Color(0x1FFFFFFF)),
-                    color: active ? e.value.withAlpha(26) : Colors.transparent,
-                  ),
-                  child: Text(categoryLabels[e.key] ?? e.key,
-                    style: TextStyle(fontSize: 10, color: active ? e.value : const Color(0xFF555555), letterSpacing: 0.3)),
-                ),
-              );
-            }),
-          ]),
-        ],
+        children: view == LayerPanelView.display
+            ? _displaySections(context)
+            : _astroSections(context),
       ),
     );
+  }
+
+  // ── DISPLAY ビュー: 表示系のみ ──
+  List<Widget> _displaySections(BuildContext context) {
+    return [
+      const Text('DISPLAY', style: TextStyle(fontSize: 9, color: Color(0xFF666666), letterSpacing: 1.5)),
+      const SizedBox(height: 10),
+      _section('ASTRO', [
+        _toggleWithGlossary('sectors', '16方位', 'sector_score_16',
+            const Color(0xFFC9A84C), layers, onLayerToggle, context),
+      ]),
+      _section('MAP', [
+        _toggle('compass', 'コンパス', const Color(0xFFE8E0D0), layers, onLayerToggle),
+      ]),
+      _section('MAPSTYLE', [
+        for (final e in mapStyleConfigs.entries)
+          _styleOption(e.key, e.value.label),
+      ]),
+    ];
+  }
+
+  // ── ASTRO ビュー: 占星術系の全部 ──
+  List<Widget> _astroSections(BuildContext context) {
+    final showPlanetLineDetails = astroLayers['planetLines'] ?? true;
+    final anyAspectOn = astroLayers['aspect'] == true ||
+        astroLayers['aspectTransit'] == true ||
+        astroLayers['aspectProgressed'] == true ||
+        astroLayers['aspectSolarArc'] == true;
+    return [
+      const Text('ASTRO', style: TextStyle(fontSize: 9, color: Color(0xFF666666), letterSpacing: 1.5)),
+      const SizedBox(height: 10),
+      // ── 線レイヤー ──
+      _section('LINES', [
+        _toggleWithGlossary('planetLines', '惑星ライン', 'planet_lines',
+            const Color(0xFFFFD370), astroLayers, onAstroToggle, context),
+        _toggleWithGlossary('relocate', '引越し', 'relocate_layer',
+            const Color(0xFFFFB6C1), astroLayers, onAstroToggle, context),
+      ]),
+      // ── A*C*G / CCG 4 frame ──
+      _section('A*C*G', [
+        _toggleWithGlossary('aspect', 'Natal線', 'aspect_lines',
+            const Color(0xFFE9D29A), astroLayers, onAstroToggle, context),
+        _toggleWithGlossary('aspectTransit', 'Transit線', 'transit_acg',
+            const Color(0xFFFF8E5C), astroLayers, onAstroToggle, context),
+        _toggleWithGlossary('aspectProgressed', 'Prog線', 'progressed_acg',
+            const Color(0xFF63D6A0), astroLayers, onAstroToggle, context),
+        _toggleWithGlossary('aspectSolarArc', 'S.Arc線', 'solar_arc_acg',
+            const Color(0xFFB07CFF), astroLayers, onAstroToggle, context),
+        if (anyAspectOn)
+          Padding(
+            padding: const EdgeInsets.only(left: 18),
+            child: _toggle('aspectAll', '全惑星', const Color(0xFFE8E0D0),
+                astroLayers, onAstroToggle),
+          ),
+      ]),
+      // ── CHART: 惑星ラインの詳細 (planetLines ON 時のみ表示) ──
+      if (showPlanetLineDetails)
+        _section('CHART', [
+          _toggle('natal', 'Natal', const Color(0xFFE8E0D0), layers, onLayerToggle),
+          _toggle('progressed', 'Progressed', const Color(0xFFC9A84C), layers, onLayerToggle),
+          _toggle('transit', 'Transit', const Color(0xFF00D4FF), layers, onLayerToggle),
+        ]),
+      _section('PLANET GROUP', [
+        _toggle('personal', '個人天体', const Color(0xFFFFD370), planetGroups, onPlanetGroupToggle),
+        _toggle('social', '社会天体', const Color(0xFF6BB5FF), planetGroups, onPlanetGroupToggle),
+        _toggle('generational', '世代天体', const Color(0xFFB088FF), planetGroups, onPlanetGroupToggle),
+      ]),
+      _section('FORTUNE', [
+        ...categoryColors.entries.map((e) {
+          final active = activeCategory == e.key;
+          return GestureDetector(
+            onTap: () => onCategoryChanged(e.key),
+            child: Container(
+              margin: const EdgeInsets.only(bottom: 3),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: active ? e.value : const Color(0x1FFFFFFF)),
+                color: active ? e.value.withAlpha(26) : Colors.transparent,
+              ),
+              child: Text(categoryLabels[e.key] ?? e.key,
+                style: TextStyle(fontSize: 10, color: active ? e.value : const Color(0xFF555555), letterSpacing: 0.3)),
+            ),
+          );
+        }),
+      ]),
+    ];
   }
 
   Widget _section(String label, List<Widget> children) {
@@ -220,7 +258,7 @@ class LayerPanel extends StatelessWidget {
         ),
         // i アイコン (用語解説 popup 起動)
         GestureDetector(
-          onTap: () => _showGlossaryPopup(context, termKey),
+          onTap: () => showAstroGlossaryDialog(context, termKey),
           behavior: HitTestBehavior.opaque,
           child: const Padding(
             padding: EdgeInsets.only(left: 2),
@@ -228,59 +266,6 @@ class LayerPanel extends StatelessWidget {
           ),
         ),
       ]),
-    );
-  }
-
-  void _showGlossaryPopup(BuildContext context, String termKey) {
-    final entry = astroGlossary[termKey];
-    if (entry == null) return;
-    showDialog<void>(
-      context: context,
-      barrierColor: const Color(0x99000000),
-      builder: (ctx) => Dialog(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        insetPadding: const EdgeInsets.symmetric(horizontal: 32, vertical: 80),
-        child: GlassPanel(
-          padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 360),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(entry.title,
-                        style: const TextStyle(
-                          fontSize: 14, color: Color(0xFFC9A84C),
-                          fontWeight: FontWeight.w600, letterSpacing: 0.4,
-                        )),
-                    ),
-                    GestureDetector(
-                      onTap: () => Navigator.of(ctx).pop(),
-                      child: const Icon(Icons.close, size: 18, color: Color(0xFFAAAAAA)),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Text(entry.summary,
-                  style: const TextStyle(
-                    fontSize: 11, color: Color(0xFFAAAAAA),
-                    height: 1.5, letterSpacing: 0.3,
-                  )),
-                const Divider(color: Color(0x22FFFFFF), height: 18),
-                Text(entry.detail,
-                  style: const TextStyle(
-                    fontSize: 12, color: Color(0xFFE8E0D0),
-                    height: 1.7, letterSpacing: 0.2,
-                  )),
-              ],
-            ),
-          ),
-        ),
-      ),
     );
   }
 }

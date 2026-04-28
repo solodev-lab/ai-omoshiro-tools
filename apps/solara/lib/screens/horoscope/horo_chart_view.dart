@@ -41,14 +41,21 @@ extension _HoroChartView on HoroscopeScreenState {
 
   Widget _buildChartScrollView() {
     final screenW = MediaQuery.of(context).size.width;
-    final chartSize = (screenW - 16).clamp(200.0, 600.0);
     final chartAsp = _chartAspects();
-    return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 8),
-      child: Column(children: [
-        const SizedBox(height: 8),
-        Center(child: SizedBox(
-          width: chartSize, height: chartSize,
+    // 2026-04-29: 縦に短い端末で chart が bottom sheet に被る問題を解決。
+    // chart サイズは画面幅と利用可能な縦幅の両方を考慮し、min を採用。
+    // 200px 下限はクランプで担保 (これ以下は読めなくなるため)。
+    return LayoutBuilder(builder: (ctx, constraints) {
+      final maxH = constraints.maxHeight;
+      // 上部 padding (8) + ラベル等の余白 ~24px を引いた純粋な chart 描画域
+      final availH = maxH - 32;
+      final chartSize = min(screenW - 16, availH).clamp(200.0, 600.0);
+      return SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 8),
+        child: Column(children: [
+          const SizedBox(height: 8),
+          Center(child: SizedBox(
+            width: chartSize, height: chartSize,
           child: AnimatedBuilder(
             animation: _breathCtl,
             builder: (context, _) {
@@ -146,11 +153,12 @@ extension _HoroChartView on HoroscopeScreenState {
             },
           ),
         )),
-        const SizedBox(height: 12),
-        _buildChartLegend(),
-        const SizedBox(height: 20),
-      ]),
-    );
+          const SizedBox(height: 12),
+          _buildChartLegend(),
+          const SizedBox(height: 20),
+        ]),
+      );
+    });
   }
 
   Widget _buildChartLegend() {

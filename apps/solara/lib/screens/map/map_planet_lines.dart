@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
+import '../../widgets/solara_nav_bar.dart';
 import '../horoscope/horo_panel_shared.dart' show PlanetVectorIcon;
 import 'map_constants.dart';
 import 'map_astro.dart';
@@ -151,9 +152,18 @@ class PlanetSymbolsLayer extends StatelessWidget {
       return const SizedBox.shrink();
     }
 
-    const margin = 30.0;
-    final xn = margin, yn = margin;
-    final xx = size.width - margin, yx = size.height - margin;
+    // 2026-04-29: 左右マージンを縮小 (ユーザー要望「画面の端に近づけて、左右対称」)。
+    // 下端は SolaraNavBar 全高 (= 80 + 3ボタンナビ時のみ systemNav-12px) を避ける。
+    // ジェスチャーナビ端末ではここの加算は 0 で、旧来の 92px と同等。
+    const leftMargin = 12.0;
+    const rightMargin = 12.0;
+    const topMargin = 30.0;
+    final navInset = SolaraNavBar.systemNavInset(context);
+    final bottomMargin = 80.0 + navInset + 12.0; // NavBar全高 + 視覚マージン
+    final xn = leftMargin;
+    final yn = topMargin;
+    final xx = size.width - rightMargin;
+    final yx = size.height - bottomMargin;
 
     final markers = <Marker>[];
     for (final pl in lines) {

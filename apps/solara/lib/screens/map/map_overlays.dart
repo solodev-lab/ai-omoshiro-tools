@@ -40,9 +40,11 @@ class MapSideButtons extends StatelessWidget {
   final double topPad;
   final bool searchOpen;
   final bool layerPanelOpen;
+  final bool astroPanelOpen; // 2026-04-29: ☰ DISPLAY と ✨ ASTRO の2ボタン分割
   final bool vpPanelOpen;
   final VoidCallback onSearchTap;
   final VoidCallback onLayerTap;
+  final VoidCallback onAstroPanelTap;
   final VoidCallback onVpTap;
   final VoidCallback onLocationsTap;
   final VoidCallback onForecastTap;
@@ -53,9 +55,11 @@ class MapSideButtons extends StatelessWidget {
     required this.topPad,
     required this.searchOpen,
     required this.layerPanelOpen,
+    required this.astroPanelOpen,
     required this.vpPanelOpen,
     required this.onSearchTap,
     required this.onLayerTap,
+    required this.onAstroPanelTap,
     required this.onVpTap,
     required this.onLocationsTap,
     required this.onForecastTap,
@@ -66,16 +70,19 @@ class MapSideButtons extends StatelessWidget {
   Widget build(BuildContext context) {
     // 📅 日付ボタンは削除（左上の SelectedDateBadge をタップでピッカー起動するため重複）。
     // 日付バッジ（top+44, 高さ約38px）と被らないよう全ボタンを 16px 下げて 48px 等間隔に並べる。
+    // 2026-04-29: TimeSlider が top+44 で展開時 ~144 まで伸びるため、
+    // 全サイドボタンを +60 シフト (旧: 92→152, 140→200, ...)。
     return Stack(children: [
       if (!searchOpen) Positioned(
-        top: topPad + 92, left: 16,
+        top: topPad + 152, left: 16,
         child: MapBtn(
           onTap: onSearchTap,
           child: const Icon(Icons.search, size: 18, color: Color(0x99C9A84C)),
         ),
       ),
+      // ☰ DISPLAY パネル: 16方位/コンパス/MAPSTYLE
       Positioned(
-        top: topPad + 140, left: 16,
+        top: topPad + 200, left: 16,
         child: MapBtn(
           active: layerPanelOpen,
           onTap: onLayerTap,
@@ -88,8 +95,17 @@ class MapSideButtons extends StatelessWidget {
           ]),
         ),
       ),
+      // ✨ ASTRO パネル: 惑星ライン/引越し/CCG 4 frame/CHART/PLANET GROUP/FORTUNE
       Positioned(
-        top: topPad + 188, left: 16,
+        top: topPad + 248, left: 16,
+        child: MapBtn(
+          active: astroPanelOpen,
+          onTap: onAstroPanelTap,
+          child: const Text('✨', style: TextStyle(fontSize: 16)),
+        ),
+      ),
+      Positioned(
+        top: topPad + 296, left: 16,
         child: MapBtn(
           active: vpPanelOpen,
           onTap: onVpTap,
@@ -97,14 +113,14 @@ class MapSideButtons extends StatelessWidget {
         ),
       ),
       Positioned(
-        top: topPad + 236, left: 16,
+        top: topPad + 344, left: 16,
         child: MapBtn(
           onTap: onLocationsTap,
           child: const Text('🗺', style: TextStyle(fontSize: 14)),
         ),
       ),
       Positioned(
-        top: topPad + 284, left: 16,
+        top: topPad + 392, left: 16,
         child: MapBtn(
           onTap: onForecastTap,
           child: const Text('🔮', style: TextStyle(fontSize: 14)),
@@ -112,7 +128,7 @@ class MapSideButtons extends StatelessWidget {
       ),
       // Astro*Carto*Graphy モード起動ボタン (世界規模ライン+天頂点表示)
       Positioned(
-        top: topPad + 332, left: 16,
+        top: topPad + 440, left: 16,
         child: MapBtn(
           onTap: onAstroCartoTap,
           child: const Text('🌐', style: TextStyle(fontSize: 14)),

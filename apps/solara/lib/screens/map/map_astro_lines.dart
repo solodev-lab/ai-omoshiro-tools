@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
 
 import '../../utils/astro_lines.dart';
 import 'map_constants.dart';
 
 /// ============================================================
-/// Map Astro Lines Renderer — Phase M2 論点3
+/// Map Astro Lines Renderer — Phase M2 論点3 + Tier A #5 (CCG)
 ///
-/// buildAstroLines の結果 (40本) を flutter_map の Polyline 列に変換する。
+/// buildAstroLines / buildAstroLinesAt の結果を flutter_map の Polyline 列に変換する。
 ///
 /// アングル別の線スタイル:
 ///   ASC (上昇宮): 太め実線
@@ -15,9 +16,15 @@ import 'map_constants.dart';
 ///   DSC (下降宮): 細め点線
 ///   IC  (天底):   細め点線
 ///
+/// フレーム別のスタイル (Tier A #5):
+///   Natal (出生時固定):   原色、opacity 100%
+///   Transit (今この瞬間): 暖色寄りに +25% tint、opacity 85%
+///   Progressed (2次進行): 緑系に +25% tint、opacity 70%
+///   SolarArc (ソーラーアーク): 紫系に +25% tint、opacity 55%
+///
 /// FORTUNE カテゴリ連動 (論点6 4-B5):
 ///   activeCategory != 'all' のとき関連惑星 (love=Venus/Mars/Moon等) のみ100%、
-///   他はdim (alpha=0.12)。
+///   他はdim (alpha=0.18)。
 ///
 /// allPlanetMode == true なら活性化カテゴリ無視で全惑星100%表示 (ガチ勢用)。
 /// ============================================================
@@ -46,6 +53,65 @@ const _angleStyles = <String, _AngleStyle>{
 /// dim (非該当 FORTUNE 惑星のライン) の alpha 倍率
 const double _dimMultiplier = 0.18;
 
+/// フレーム別の視覚プリセット。Tier A #5 で4フレーム同時描画する際の
+/// 識別用 (色味/不透明度)。
+class AstroFrameStyle {
+  /// このフレームの代表色 (LayerPanel/Pill UI で使う)
+  final Color accent;
+  /// 線色に対するtint混合度 (0=色変えない、1=accentに完全置換)
+  final double tintMix;
+  /// 全線に乗せる不透明度倍率
+  final double opacityMul;
+  /// UI 表示ラベル
+  final String label;
+
+  const AstroFrameStyle({
+    required this.accent,
+    required this.tintMix,
+    required this.opacityMul,
+    required this.label,
+  });
+}
+
+const Map<AstroFrame, AstroFrameStyle> astroFrameStyles = {
+  AstroFrame.natal: AstroFrameStyle(
+    accent: Color(0xFFE9D29A), // 既存ゴールド (アイコン色と統一)
+    tintMix: 0.0,
+    opacityMul: 1.0,
+    label: 'Natal',
+  ),
+  AstroFrame.transit: AstroFrameStyle(
+    accent: Color(0xFFFF8E5C), // 暖色オレンジ系
+    tintMix: 0.28,
+    opacityMul: 0.88,
+    label: 'Transit',
+  ),
+  AstroFrame.progressed: AstroFrameStyle(
+    accent: Color(0xFF63D6A0), // 緑/ターコイズ
+    tintMix: 0.30,
+    opacityMul: 0.72,
+    label: 'Progressed',
+  ),
+  AstroFrame.solarArc: AstroFrameStyle(
+    accent: Color(0xFFB07CFF), // 紫
+    tintMix: 0.32,
+    opacityMul: 0.62,
+    label: 'Solar Arc',
+  ),
+};
+
+/// 2色を線形補間 (sRGB空間)。Flutter 3.27+ の新Color API (.r/.g/.b/.a, double 0..1) 対応。
+Color _lerpColor(Color a, Color b, double t) {
+  if (t <= 0) return a;
+  if (t >= 1) return b;
+  return Color.from(
+    alpha: a.a,
+    red: a.r + (b.r - a.r) * t,
+    green: a.g + (b.g - a.g) * t,
+    blue: a.b + (b.b - a.b) * t,
+  );
+}
+
 /// アスペクトラインを Polyline[] に変換。
 ///
 /// [activeCategory] は 'all' / 'love' / 'money' 等。
@@ -65,12 +131,16 @@ List<Polyline> buildAstroPolylines({
     if (style == null) continue;
     final meta = planetMeta[line.planet];
     if (meta == null) continue;
+    final frameStyle = astroFrameStyles[line.frame] ?? astroFrameStyles[AstroFrame.natal]!;
 
     final isHighlighted = highlightSet == null || highlightSet.contains(line.planet);
-    final opacity = isHighlighted
-        ? style.opacity
-        : style.opacity * _dimMultiplier;
-    final color = meta.color.withAlpha((opacity * 255).round());
+    final opacity = (isHighlighted
+            ? style.opacity
+            : style.opacity * _dimMultiplier) *
+        frameStyle.opacityMul;
+    // 惑星色をフレームaccentに向けて tint mix → 識別性UP (Natal は tint=0)
+    final tinted = _lerpColor(meta.color, frameStyle.accent, frameStyle.tintMix);
+    final color = tinted.withAlpha((opacity * 255).round());
 
     for (final segment in line.segments) {
       if (segment.length < 2) continue;
@@ -96,15 +166,19 @@ List<Polyline> buildAstroPolylines({
 // 緯度がδで描画範囲外(極地)になる場合は表示しない。
 
 /// 各惑星の天頂点 (= AstroLine.zenith) に装飾マーカーを生成。
-/// MC line にのみ zenith が設定されるため自動的に1惑星=1マーカーになる。
+/// MC line にのみ zenith が設定されるため自動的に1フレーム×1惑星=1マーカー。
 /// FORTUNE 連動 dim 対象の惑星はマーカーも非表示(ノイズ削減)。
-/// [onTap] が指定されていれば、マーカータップで惑星キーを通知する。
+/// [onTap] が指定されていれば、タップで (planet, frame, zenith座標) を通知する。
+/// [framesWithZenith] 天頂マーカーを表示するフレーム集合 (default: natal のみ)。
+/// 4フレーム全部表示すると最大40個になるが、CCG では「惑星が今どこを真上に
+/// 通っているか」が主役なので動的フレームの zenith こそ重要 (時間で動く)。
 List<Marker> buildAstroZenithMarkers({
   required List<AstroLine> lines,
   required String activeCategory,
   bool allPlanetMode = false,
   double latLimit = 75, // 描画緯度上限と揃える
-  void Function(String planetKey)? onTap,
+  void Function(String planetKey, AstroFrame frame, LatLng zenith)? onTap,
+  Set<AstroFrame> framesWithZenith = const {AstroFrame.natal},
 }) {
   final highlightSet = (allPlanetMode || activeCategory == 'all')
       ? null
@@ -112,6 +186,7 @@ List<Marker> buildAstroZenithMarkers({
 
   final markers = <Marker>[];
   for (final line in lines) {
+    if (!framesWithZenith.contains(line.frame)) continue;
     final zenith = line.zenith;
     if (zenith == null) continue; // MC 以外は zenith null
     if (zenith.latitude.abs() > latLimit) continue; // 極地は表示外
@@ -124,8 +199,11 @@ List<Marker> buildAstroZenithMarkers({
     final marker = AstroZenithMarker(
       planetSym: meta.sym,
       planetColor: meta.color,
+      frame: line.frame,
     );
     final planetKey = line.planet;
+    final frame = line.frame;
+    final point = zenith;
     markers.add(Marker(
       point: zenith,
       width: 56,
@@ -134,7 +212,7 @@ List<Marker> buildAstroZenithMarkers({
       child: onTap != null
           ? GestureDetector(
               behavior: HitTestBehavior.opaque,
-              onTap: () => onTap(planetKey),
+              onTap: () => onTap(planetKey, frame, point),
               child: marker,
             )
           : marker,
@@ -143,52 +221,69 @@ List<Marker> buildAstroZenithMarkers({
   return markers;
 }
 
-/// 装飾的な天頂点マーカー:
-///   外側に惑星色のソフトグロー
-///   金色二重リング(外1.2px + 内0.6px)
-///   中央に惑星記号(惑星色)
-///   下部に「天頂」小ラベル
+/// 装飾的な天頂点マーカー (frame で見た目を切替):
+///   Natal      : 32px、金色二重リング、「天頂」ラベル
+///   Transit    : 24px、オレンジリング、「TRANSIT」ラベル (毎日動く)
+///   Progressed : 24px、緑リング、「PROG」ラベル
+///   SolarArc   : 24px、紫リング、「S.ARC」ラベル
 class AstroZenithMarker extends StatelessWidget {
   final String planetSym;
   final Color planetColor;
+  final AstroFrame frame;
 
   const AstroZenithMarker({
     super.key,
     required this.planetSym,
     required this.planetColor,
+    this.frame = AstroFrame.natal,
   });
 
   @override
   Widget build(BuildContext context) {
+    final isNatal = frame == AstroFrame.natal;
+    final frameStyle = astroFrameStyles[frame] ?? astroFrameStyles[AstroFrame.natal]!;
+    // ring色 = natal はゴールド、それ以外は frame accent
+    final ringColor = isNatal ? const Color(0xCCC9A84C) : frameStyle.accent.withAlpha(220);
+    final innerRing = isNatal ? const Color(0x88C9A84C) : frameStyle.accent.withAlpha(140);
+    final labelColor = isNatal ? const Color(0xFFC9A84C) : frameStyle.accent;
+    final labelText = isNatal
+        ? '天頂'
+        : (frame == AstroFrame.transit
+            ? 'TRANS'
+            : frame == AstroFrame.progressed
+                ? 'PROG'
+                : 'S.ARC');
+    final size = isNatal ? 32.0 : 24.0;
+    final fontSize = isNatal ? 15.0 : 12.0;
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        // 装飾的な二重リング + グロー
         Container(
-          width: 32, height: 32,
+          width: size, height: size,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            border: Border.all(color: const Color(0xCCC9A84C), width: 1.2),
+            border: Border.all(color: ringColor, width: isNatal ? 1.2 : 1.0),
             boxShadow: [
               BoxShadow(
-                color: planetColor.withAlpha(160),
-                blurRadius: 14,
-                spreadRadius: 1,
+                color: planetColor.withAlpha(isNatal ? 160 : 120),
+                blurRadius: isNatal ? 14 : 10,
+                spreadRadius: isNatal ? 1 : 0,
               ),
             ],
           ),
           child: Container(
-            margin: const EdgeInsets.all(2.5),
+            margin: EdgeInsets.all(isNatal ? 2.5 : 2.0),
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: const Color(0xE60C0C1A),
-              border: Border.all(color: const Color(0x88C9A84C), width: 0.6),
+              border: Border.all(color: innerRing, width: 0.6),
             ),
             child: Center(
               child: Text(
                 planetSym,
                 style: TextStyle(
-                  fontSize: 15,
+                  fontSize: fontSize,
                   fontWeight: FontWeight.w700,
                   color: planetColor,
                   height: 1.0,
@@ -203,14 +298,14 @@ class AstroZenithMarker extends StatelessWidget {
           decoration: BoxDecoration(
             color: const Color(0xCC0C0C1A),
             borderRadius: BorderRadius.circular(3),
-            border: Border.all(color: const Color(0x66C9A84C), width: 0.6),
+            border: Border.all(color: labelColor.withAlpha(102), width: 0.6),
           ),
-          child: const Text(
-            '天頂',
+          child: Text(
+            labelText,
             style: TextStyle(
-              fontSize: 8,
-              color: Color(0xFFC9A84C),
-              letterSpacing: 1.5,
+              fontSize: 7.5,
+              color: labelColor,
+              letterSpacing: 1.2,
               fontWeight: FontWeight.w500,
               height: 1.0,
             ),

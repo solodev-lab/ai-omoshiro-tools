@@ -10,9 +10,16 @@ part of '../horoscope_screen.dart';
 // ══════════════════════════════════════════════════
 
 extension _HoroBottomSheet on HoroscopeScreenState {
+  /// chart 描画域に最低限残しておきたい高さ。これ未満になる端末では sheet を縮める。
+  static const double _minChartArea = 320;
+
   double _bsHeight(BuildContext context) {
-    if (_bsState == 2) return MediaQuery.of(context).size.height * 0.65; // full
-    return 280; // half (default)
+    final screenH = MediaQuery.of(context).size.height;
+    // sheet の上限: 「画面高 - 最低 chart 領域」 で chart に必ず読める空間を残す。
+    // 縦に短い端末でホロスコープが sheet に被って見えなくなる問題への対策 (2026-04-29)。
+    final maxH = (screenH - _minChartArea).clamp(160.0, screenH);
+    if (_bsState == 2) return min(screenH * 0.65, maxH); // full
+    return min(280.0, maxH); // half (default)
   }
 
   void _cycleBsState() {

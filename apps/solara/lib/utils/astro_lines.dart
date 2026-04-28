@@ -33,6 +33,20 @@ const _planetKeys = [
 ];
 const angleKeys = ['mc', 'ic', 'asc', 'dsc'];
 
+/// アストロカートグラフィの惑星フレーム (Tier A #5 / CCG)。
+/// natal: 出生時の惑星 (固定)。Jim Lewis 1976 の A*C*G。
+/// transit: 任意UTC時の天体位置 (動的)。CCG = Cyclo*Carto*Graphy。
+/// progressed: 2次進行 (1日=1年)。Worker 計算済み。
+/// solarArc: ソーラーアーク方向、natal[p] + (prog.sun - natal.sun)。
+enum AstroFrame { natal, transit, progressed, solarArc }
+
+String astroFrameKey(AstroFrame f) => switch (f) {
+      AstroFrame.natal => 'natal',
+      AstroFrame.transit => 'transit',
+      AstroFrame.progressed => 'progressed',
+      AstroFrame.solarArc => 'solarArc',
+    };
+
 double _toRad(double d) => d * pi / 180;
 double _toDeg(double r) => r * 180 / pi;
 double _norm360(double d) {
@@ -53,6 +67,7 @@ double _clamp(double v, double lo, double hi) =>
 class AstroLine {
   final String planet; // 'sun' | 'moon' | ...
   final String angle;  // 'mc' | 'ic' | 'asc' | 'dsc'
+  final AstroFrame frame; // natal | transit | progressed | solarArc
   final List<List<LatLng>> segments; // 子午線跨ぎで区切ったセグメント
 
   /// 天頂点 (zenith point) の地点情報。
@@ -66,11 +81,12 @@ class AstroLine {
     required this.planet,
     required this.angle,
     required this.segments,
+    this.frame = AstroFrame.natal,
     this.zenith,
   });
 
-  /// 線のキー (UI から参照しやすいように) "venus_asc" 等
-  String get key => '${planet}_$angle';
+  /// 線のキー (UI から参照しやすいように) "natal_venus_asc" 等
+  String get key => '${astroFrameKey(frame)}_${planet}_$angle';
 }
 
 /// chart.mc + chart fetch時の lng から GMST_hours を逆算。
@@ -81,6 +97,42 @@ double _gmstHoursFromBaseline(double baselineMc, double baselineLng) {
   final lstBase = _norm360(_toDeg(atan2(sin(mcR) * cosEps, cos(mcR))));
   // GMST は時単位、LST は度単位
   return ((lstBase - baselineLng) / 15) % 24;
+}
+
+/// 任意UTC時刻から GMST (時間, 0..24) を計算。Tier A #5 / CCG 用。
+///
+/// 標準公式 (USNO Astronomical Almanac, Meeus):
+///   JD_UTC = 2440587.5 + ms_since_epoch / 86400000
+///   d = JD_UTC - 2451545.0
+///   GMST = 18.697374558 + 24.06570982441908 * d  (時間)
+///
+/// ±50年で誤差 <0.05秒。Solara の線描画 (1°オーダー) に対し十分。
+/// Worker calcGMST と同じアルゴリズム (worker/src/astro.js)。
+double gmstHoursFromUtc(DateTime utc) {
+  final u = utc.toUtc();
+  final jd = u.millisecondsSinceEpoch / 86400000.0 + 2440587.5;
+  final d = jd - 2451545.0;
+  final g = 18.697374558 + 24.06570982441908 * d;
+  return ((g % 24) + 24) % 24;
+}
+
+/// natal + progressed から Solar Arc (ソーラーアーク方向) の惑星位置を導出。
+/// 全惑星に同じ arc (= prog.sun - natal.sun) を加算する古典的計算法。
+/// CCG Tier A #5 用、Worker 側で計算しないためクライアント側で生成。
+Map<String, double> solarArcPlanets({
+  required Map<String, double> natal,
+  required Map<String, double> progressed,
+}) {
+  final natalSun = natal['sun'];
+  final progSun = progressed['sun'];
+  if (natalSun == null || progSun == null) return const {};
+  // 弧は順方向 (時間進行方向) なので 0..360° に正規化
+  final arc = ((progSun - natalSun) % 360 + 360) % 360;
+  final result = <String, double>{};
+  for (final entry in natal.entries) {
+    result[entry.key] = (entry.value + arc) % 360;
+  }
+  return result;
 }
 
 /// 黄経 (β=0 仮定) → 赤道座標 (RA, Dec)
@@ -164,13 +216,16 @@ List<List<LatLng>> _horizonLine({
   return segments;
 }
 
-/// 全 40本のアストロラインを計算。
+/// 全 40本のアストロラインを計算 (natal フレーム)。
 ///
 /// [natal] は 10惑星の黄経 (度)。
 /// [baselineMc] / [baselineLng] は chart fetch時の MC と地点経度
 /// (relocate設定時は relocated MC と home lng、未設定なら birth)。
 /// [latRange] は描画緯度範囲 (デフォルト -75..75 度)。
 /// [latStep] はホライズン線のサンプリング間隔 (度、デフォルト2)。
+///
+/// 内部で GMST を baseline から逆算して [buildAstroLinesAt] に委譲する。
+/// 後方互換 API: 既存の natal-only 呼出はこのまま動く。
 List<AstroLine> buildAstroLines({
   required Map<String, double> natal,
   required double baselineMc,
@@ -180,21 +235,51 @@ List<AstroLine> buildAstroLines({
   double latStep = 2.0,
 }) {
   final gmst = _gmstHoursFromBaseline(baselineMc, baselineLng);
+  return buildAstroLinesAt(
+    planets: natal,
+    gmstHours: gmst,
+    frame: AstroFrame.natal,
+    latMin: latMin,
+    latMax: latMax,
+    latStep: latStep,
+  );
+}
+
+/// 任意フレーム × 任意 GMST のアスペクト線 40本を計算 (Tier A #5 / CCG 汎用)。
+///
+/// [planets]   フレームに対応する10惑星の黄経マップ
+///   - natal:      chart.natal (出生時の固定値)
+///   - transit:    chart.transit (任意UTC時の動的値、Worker から取得)
+///   - progressed: chart.progressed (2次進行、Worker から取得)
+///   - solarArc:   solarArcPlanets(natal, progressed) の戻り
+/// [gmstHours] そのフレームの GMST (時間, 0..24)
+///   - natal:      _gmstHoursFromBaseline(chart.mc, baselineLng) ※buildAstroLines 経由
+///   - dynamic:    gmstHoursFromUtc(viewDate.toUtc())
+/// [frame]     線の所属フレーム。AstroLine.frame に設定され UI 側で色分けに使う。
+List<AstroLine> buildAstroLinesAt({
+  required Map<String, double> planets,
+  required double gmstHours,
+  required AstroFrame frame,
+  double latMin = -75,
+  double latMax = 75,
+  double latStep = 2.0,
+}) {
   final lines = <AstroLine>[];
 
   for (final planet in _planetKeys) {
-    final lon = natal[planet];
+    final lon = planets[planet];
     if (lon == null) continue;
     final coord = _eclipticToEquatorial(lon);
 
     // MC line + zenith point
     // zenith: 緯度=惑星赤緯δ、経度=MC line の固定経度
     // δ が描画緯度範囲外でも理論値として保持(マーカー表示時にクランプ判定)。
-    final mcLng = _normLng(coord.ra - gmst * 15);
+    final mcLng = _normLng(coord.ra - gmstHours * 15);
     lines.add(AstroLine(
       planet: planet,
       angle: 'mc',
-      segments: _meridianLine(coord.ra, gmst,
+      frame: frame,
+      segments: _meridianLine(coord.ra, gmstHours,
           antiMeridian: false, latMin: latMin, latMax: latMax),
       zenith: LatLng(coord.dec, mcLng),
     ));
@@ -202,17 +287,19 @@ List<AstroLine> buildAstroLines({
     lines.add(AstroLine(
       planet: planet,
       angle: 'ic',
-      segments: _meridianLine(coord.ra, gmst,
+      frame: frame,
+      segments: _meridianLine(coord.ra, gmstHours,
           antiMeridian: true, latMin: latMin, latMax: latMax),
     ));
     // ASC line
     lines.add(AstroLine(
       planet: planet,
       angle: 'asc',
+      frame: frame,
       segments: _horizonLine(
         raDeg: coord.ra,
         decDeg: coord.dec,
-        gmstHours: gmst,
+        gmstHours: gmstHours,
         ascending: true,
         latMin: latMin,
         latMax: latMax,
@@ -223,10 +310,11 @@ List<AstroLine> buildAstroLines({
     lines.add(AstroLine(
       planet: planet,
       angle: 'dsc',
+      frame: frame,
       segments: _horizonLine(
         raDeg: coord.ra,
         decDeg: coord.dec,
-        gmstHours: gmst,
+        gmstHours: gmstHours,
         ascending: false,
         latMin: latMin,
         latMax: latMax,

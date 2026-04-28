@@ -29,6 +29,7 @@ lib/ (77 .dart ファイル)
 │   │   ├── map_search.dart             検索候補リスト + SearchFocusPopup (C-2: 保存ボタン削除済)
 │   │   ├── map_astro_carto.dart        Phase M3: Astro*Carto*Graphy モード専用UI (Banner/Pills/ZenithPopup)
 │   │   ├── map_location_markers.dart   Tier A: 出生地🌟+グロー / VP・Locations slot マーカー / 詳細popup
+│   │   ├── map_time_slider.dart        Tier A #5 (CCG): ±365日タイムスライダー + LIVEボタン
 │   │   └── map_overlays.dart           SideButtons/SearchBar/Badges/VP Pin/RestOverlay 等
 │   ├── locations_screen.dart   拠点一覧画面（Map 🗺ボタンから BottomSheet）
 │   ├── forecast_screen.dart    1〜5年 Forecast（Map 🔮ボタンから BottomSheet、ヒートマップ+◯◯期+Top5）
@@ -329,6 +330,124 @@ Map画面を開くと、1日1回「今日のタップボタン」（Daily Omen B
 - 両方ON & 線あり → 統合表示
 
 **戦略観点**: 英語版 (海外展開) で本機能がメインフィーチャー予定。日本市場では β機能扱い (デフォルトOFF, 論点8)。Phase M3 で L10N + 動的解釈テキスト + パワースポット (線交差点) 検出を追加予定。
+
+### CCG (Cyclo*Carto*Graphy) — Tier A #5 (2026-04-28)
+**動的フレーム4種を独立トグル可能に拡張** (`lib/utils/astro_lines.dart` + 関連)。
+
+**フレーム定義** (`AstroFrame` enum):
+- **Natal**:      出生時固定 (一生不変、本質の地図) — 既存 buildAstroLines
+- **Transit**:    今この瞬間の天体位置 (毎日動く、CCG の核) — `chart.transit` を Worker 取得
+- **Progressed**: 2次進行 (1日=1年、人生の長期テーマ) — `chart.progressed` を Worker 取得
+- **Solar Arc**:  全惑星に同 arc (= prog.sun − natal.sun) 加算した古典予測法 — クライアント側で導出
+
+**汎用ビルダ** (`buildAstroLinesAt`):
+- `(planets, gmstHours, frame)` を受けて40本生成。natal/transit/progressed/solarArc 共通路。
+- GMST 取得経路は2系統:
+  - natal: `_gmstHoursFromBaseline(chart.mc, baselineLng)` (既存・出生時GMST逆算)
+  - dynamic: `gmstHoursFromUtc(viewDate.toUtc())` (USNO線形公式、Worker `Astronomy.SiderealTime` と <0.6秒誤差)
+- 動的3フレームは同一 `viewGmst` (= タイムスライダー位置) で投影 → 「今(or指定時刻)の天体を世界に映す」標準解釈
+
+**Solar Arc 算術** (`solarArcPlanets`):
+- arc = (prog.sun − natal.sun) mod 360
+- 全惑星に同 arc 加算 → solarArc[planet] = (natal[planet] + arc) mod 360
+- 検証: solarArc.sun ≡ progressed.sun (定義より)
+
+**フレーム別スタイリング** (`map_astro_lines.dart` の `astroFrameStyles`):
+| フレーム | accent色 | tint混合 | opacity倍 |
+|---------|---------|---------|-----------|
+| Natal      | ゴールド (#E9D29A) | 0.0  | 1.00 |
+| Transit    | オレンジ (#FF8E5C) | 0.28 | 0.88 |
+| Progressed | 緑      (#63D6A0) | 0.30 | 0.72 |
+| Solar Arc  | 紫      (#B07CFF) | 0.32 | 0.62 |
+
+惑星色を accent に向けて `_lerpColor` で混色 → 惑星識別を保ちつつ frame を区別。
+
+**LayerPanel 拡張** (`map_layer_panel.dart`):
+- 2026-04-29 改修: CCG 4 frame 追加でパネルが画面外に伸びる問題を解決すべく
+  `LayerPanelView` enum (`display` / `astro`) で **2ボタン分割**:
+  - ☰ DISPLAY 系 (topPad+140): 16方位 / コンパス / MAPSTYLE
+  - ✨ ASTRO 系 (topPad+188): 惑星ライン / 引越し / Natal線 / Transit線 / Prog線 / S.Arc線 / aspectAll / CHART / PLANET GROUP / FORTUNE
+- 各 ASTRO 線トグルは frame accent カラーで彩色
+- aspectAll サブトグルは何れかの aspect ON 時に表示 (4フレーム共通フィルタ)
+- 同時には1パネルのみ開く (排他)。サイドボタン位置: 📍/🗺/🔮/🌐 を ✨ 分だけ下へずらした
+
+**Astro\*Carto\*Graphy モード Pills** (`map_astro_carto.dart` の `AstroCartoFramePills`):
+- 世界規模ビュー下部に4 frame 切替ピル配置 (Banner と CategoryPills の間 bottom 64)
+- D2 仕様: モード入時 Natal=ON、Transit/Progressed/SolarArc は直前選択維持
+
+**タイムスライダー** (`map_time_slider.dart` `MapTimeSlider`、2026-04-29 改修):
+- 上部常時表示 (旧 SelectedDateBadge / 日付ピッカーを置換、`top: topPad+44`)
+- 上段: ◀ 1日 [日付] 1日 ▶ + ±365日スライダー + LIVE + ⏰ 展開トグル
+- 下段 (折りたたみ): ◀ 1時間 [時刻] 1時間 ▶ + 0..23h スライダー (緑系 accent)
+- ドラッグ中はラベルのみ更新、指離しで commit (API 節約)
+- LIVE ボタン: 「今日」+「現在時刻」に復帰 (= `_selectedDate = null`)
+- 日付ラベルは `committedDays==0` のとき自動で「今日」表記に切替
+- 上下段で ▶ 位置・スライダー長を完全一致 (label width:90、LIVE+⏰ stack:76)
+
+**chart 日付別キャッシュ** (`_chartCacheByDate`):
+- key = "yyyy-MM-dd" UTC日、LRU 50件
+- スライダー往復で同じ日に戻った際の Worker API 連続呼出を回避
+- 時刻だけ変えた場合は同日キャッシュ HIT → planets 流用 + GMST 再計算で線がヌルヌル動く
+
+**検証** (`worker/verify_ccg_lines.py`):
+- USNO線形 GMST vs Worker SiderealTime: 4ケース全 pass、max diff 0.54秒
+- Transit MC line geometry: 15/15 pass、max diff 0.0000°
+- Solar Arc 算術: solarArc.sun ≡ progressed.sun 完全一致
+
+**戦略観点**: ACG (本質の地図) と CCG (タイミングの地図) を独立軸として並列展開。
+英米圏では Solar Fire / TimePassages 系の主機能 → 英語版で必須。
+
+### Map レイアウト構造リファクタ (2026-04-29)
+NavBar 被り問題の根本解決として overlay 群を内側 Padded Stack に集約:
+
+```
+Stack (画面全体)
+├── FlutterMap (全画面、NavBar 越しに blur 効果が透ける)
+└── Positioned.fill
+    └── Padding(bottom: SolaraNavBar.totalHeight)
+        └── MediaQuery.removePadding(removeBottom: true)
+            └── Stack (overlay 群)
+                ├── 全 Positioned widgets (top: は status bar 基準のまま)
+                └── bottom: 0 = NavBar 上端 (自動)
+```
+
+- 全 overlay widget の `bottom: X` が「NavBar の上 X px」を意味する
+- 新規追加時に `+ navInset` 等を意識する必要なし
+- 例外: FlutterMap 内の `PlanetSymbolsLayer` は `MapCamera.size` ベースのため
+  `SolaraNavBar.systemNavInset(context)` を独自参照 (1箇所のみ)
+
+**SolaraNavBar 動的拡張** (`widgets/solara_nav_bar.dart`):
+- 高さ = `baseHeight (80) + systemNavInset(context)`
+- ジェスチャーナビ (Pixel 8 等、viewPadding ≤ 30px): inset = 0、旧来通り
+- 3ボタンナビ (△〇□、viewPadding ~48px): inset = viewPadding - 12 (12px 詰める)
+- アイコン行は上 80px に固定、追加領域は systemNav の下に伸びる gradient 領域
+- 公開 helper: `SolaraNavBar.totalHeight(context)` / `SolaraNavBar.systemNavInset(context)`
+
+### 回転ジェスチャー無効化 (2026-04-29)
+`MapOptions.interactionOptions` に `flags: InteractiveFlag.all & ~InteractiveFlag.rotate`
+を指定。Solara は北上固定前提 (16方位/コンパス/VP Pin の方位概念) のため
+ピンチズーム時の指のひねりで誤回転していた問題を解消。
+
+### 惑星シンボル端部マージン (2026-04-29)
+`PlanetSymbolsLayer` のビューポートマージンを4方向に分離:
+- 左右: 各 12px (画面端ギリギリ、左右対称)
+- 上: 30px (現状維持)
+- 下: `80 + SolaraNavBar.systemNavInset(context) + 12` (NavBar 全高 + 視覚マージン)
+
+### Horo 縦短端末対応 (2026-04-29)
+縦に短い端末で chart が bottom sheet に被って見えない問題を解決:
+
+**chart 自動縮小** (`horo_chart_view.dart` `_buildChartScrollView`):
+- `LayoutBuilder` で利用可能な縦幅 (`constraints.maxHeight`) を取得
+- `chartSize = min(screenW - 16, availH - 32).clamp(200, 600)` で動的サイズ決定
+- 上下端の余白 32px (上 padding 8 + 凡例等) を引く
+- 200px 下限はクランプで担保 (これ以下では読めなくなるため)
+
+**bottom sheet 上限** (`horo_bottom_sheet.dart` `_bsHeight`):
+- 上限 = `screenH - 320`、chart に最低 320px を確保
+- full 状態 (`screenH * 0.65`) と上限 の `min` を採用
+- half 状態 (280) も同上限でクランプ
+- 縦に短い端末では sheet が自動で縮み、chart に必要なスペースを譲る
 
 ### 登録地マーカー (Tier A 補助、2026-04-28)
 **全モード共通の登録地ピン** (`lib/screens/map/map_location_markers.dart`):

@@ -16,11 +16,41 @@ import 'nav_icons.dart';
 /// - icon: 24x24, inactive rgba(255,255,255,0.35), active #F9D976 with glow
 /// - label: 9px, uppercase, letter-spacing 0.5px
 /// - active glow dot: 4x4px #F9D976 with box-shadow
+///
+/// 2026-04-29: Android systemNav (3ボタン △〇□ / ジェスチャーバー) 対応。
+/// `MediaQuery.viewPaddingOf(context).bottom` 分だけ高さを動的に拡張し、
+/// アイコンは上 80px に固定して背景 gradient のみ systemNav 領域まで延ばす。
+/// これによりジェスチャーナビでも 3ボタンナビでも見た目が綺麗に揃う。
 class SolaraNavBar extends StatelessWidget {
+  /// 視覚上の固定高さ (アイコン行が収まる本来の高さ)。
+  /// systemNav 領域はこれに加算される。
+  static const double baseHeight = 80;
+
   final int currentIndex;
   final ValueChanged<int> onTap;
 
   const SolaraNavBar({super.key, required this.currentIndex, required this.onTap});
+
+  /// systemNav 込みの NavBar 全体の高さ。
+  /// Map画面など bottom 配置で「NavBar の上」を計算するときに使う。
+  static double totalHeight(BuildContext context) =>
+      baseHeight + systemNavInset(context);
+
+  /// 3ボタンナビ (△〇□) 検出用の閾値。
+  /// ジェスチャーナビ (Pixel 8 等) は 16〜24px、3ボタンナビは ~48px。
+  /// 閾値以下は「ジェスチャーバーが NavBar 下端の空白に収まる」とみなして拡張しない。
+  static const double _threeButtonNavThreshold = 30;
+
+  /// 3ボタンナビ時のみ加算する追加高さ。ジェスチャーナビ時は 0。
+  /// オーナー指定 (2026-04-29): 3ボタン時も systemNav 高 - 12px で詰める
+  /// (NavBar が大き過ぎないよう僅かに短縮)。
+  static const double _threeButtonShrink = 12;
+  static double systemNavInset(BuildContext context) {
+    final v = MediaQuery.viewPaddingOf(context).bottom;
+    if (v <= _threeButtonNavThreshold) return 0;
+    final adjusted = v - _threeButtonShrink;
+    return adjusted < 0 ? 0 : adjusted;
+  }
 
   static const _gold = Color(0xFFF9D976);
   static const _inactiveColor = Color(0x59FFFFFF); // rgba(255,255,255,0.35)
@@ -29,12 +59,15 @@ class SolaraNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final inset = systemNavInset(context);
     return ClipRect(
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14), // blur(28px) → sigma ≈ 14
         child: Container(
-          height: 80, // --nav-height
-          padding: const EdgeInsets.only(top: 10, left: 4, right: 4),
+          // ジェスチャーナビ時 inset=0 → 旧来の 80px。
+          // 3ボタンナビ時 inset = systemNav-12px → NavBar が △〇□ の上に出る。
+          height: baseHeight + inset,
+          padding: EdgeInsets.only(top: 10, left: 4, right: 4, bottom: inset),
           decoration: BoxDecoration(
             // linear-gradient(180deg, rgba(6,10,18,0.80), rgba(4,6,14,0.95))
             gradient: const LinearGradient(

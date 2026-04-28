@@ -8,6 +8,10 @@
 //   全て専門用語表記 + iアイコンで補助。
 // ============================================================
 
+import 'package:flutter/material.dart';
+
+import '../widgets/glass_panel.dart';
+
 class AstroGlossaryEntry {
   /// 表示用の正式名 (例: "ASC (上昇宮)")
   final String title;
@@ -150,15 +154,52 @@ const Map<String, AstroGlossaryEntry> astroGlossary = {
         '人生の方向性が変わる可能性のある土地と言える。',
   ),
   'aspect_lines': AstroGlossaryEntry(
-    title: 'アスペクト線 (Astro*Carto*Graphy)',
-    summary: '各惑星×ASC/MC/DSC/ICの世界地図上ライン。',
+    title: 'アスペクト線 (Astro*Carto*Graphy / Natal)',
+    summary: '出生時の各惑星×ASC/MC/DSC/ICの世界地図上ライン。',
     detail:
         'Jim Lewis (1970年代) が体系化したアストロカートグラフィの主要手法。'
-        '各惑星 × 4アングル = 40本のラインを地球曲面に投影。\n\n'
+        '出生時の10惑星 × 4アングル = 40本のラインを地球曲面に投影。'
+        '一生変わらない「本質の地図」。\n\n'
         '線上の土地ではその惑星のエネルギーが特定のアングルで強く働く。\n'
         '・金星 ASC ライン → 対人運・恋愛運が前面に\n'
         '・木星 MC ライン → キャリアでの幸運\n'
         '・土星 IC ライン → 家庭での重い責任',
+  ),
+  'transit_acg': AstroGlossaryEntry(
+    title: 'Transit線 (Cyclo*Carto*Graphy)',
+    summary: '今この瞬間の天体位置で引いた40本のライン。毎日動く。',
+    detail:
+        'Jim Lewis が A*C*G の続編として体系化した CCG (Cyclo*Carto*Graphy)。'
+        '出生時ではなく「今 (またはタイムスライダーで指定した時刻)」'
+        'の天体位置を世界地図に投影する。\n\n'
+        '線は時間と共に動く。地球の自転で MC/IC は1日360°、'
+        'ASC/DSC は緯度依存で蛇行しながら西へ流れる。\n\n'
+        '使い方:\n'
+        '・木星 ASC が今どこを通っているか → 今日のラッキー地点\n'
+        '・土星 MC が来週東京を通る → 重い決断のタイミング',
+  ),
+  'progressed_acg': AstroGlossaryEntry(
+    title: 'Progressed線 (Secondary Progression)',
+    summary: '2次進行 (1日=1年) の天体位置で引いた40本。',
+    detail:
+        '2次進行 (1日=1年) で進めた天体位置を A*C*G ライン化したもの。'
+        '人生の長期テーマがどこに現れるかの地図。\n\n'
+        '出生から30年経った人なら、出生から30日後の天体位置を使う。'
+        '太陽は約1°/年でゆっくり動き、月は約12°/年。\n\n'
+        '「現在の自分の本質」が活性化する土地を示す。'
+        'Natal線 (出生固定) より動きが緩やかで、Transit線より深い意味を持つ。',
+  ),
+  'solar_arc_acg': AstroGlossaryEntry(
+    title: 'Solar Arc線 (ソーラーアーク方向)',
+    summary: '太陽の進行弧を全惑星に等しく加算した位置でのライン。',
+    detail:
+        'ソーラーアーク・ディレクション = 太陽の2次進行による移動弧 '
+        '(arc = 進行太陽 - 出生太陽) を全惑星に同じだけ加算する古典的予測法。\n\n'
+        'Progressed と異なり、すべての惑星が同じ速度 (太陽速度) で動くため、'
+        '惑星間のアスペクト構造が崩れず、人生の重要転機の'
+        'タイミングを示す指標として伝統的に重視される。\n\n'
+        'CCG では Solar Arc 木星MC 通過 = 大きな成功運の年、'
+        'Solar Arc 土星ASC = 重大な責任年、のように読む。',
   ),
   'sector_score_16': AstroGlossaryEntry(
     title: '16方位スコア',
@@ -187,4 +228,121 @@ const Map<String, AstroGlossaryEntry> astroGlossary = {
         '高緯度 (|lat|>66°) では計算破綻するため、Solara は自動的に Equal House に'
         'フォールバックする。',
   ),
+  // ── FORTUNE カテゴリ (CategoryPills の i アイコン用、2026-04-29) ──
+  'fortune_all': AstroGlossaryEntry(
+    title: '総合 (All Categories)',
+    summary: '全10惑星のラインを100%表示。フィルタなし。',
+    detail:
+        '占星術の全領域を一望するモード。10惑星 × 4アングル = 40本の'
+        'アスペクト線をすべて同じ強度で表示する。\n\n'
+        '個別の運勢カテゴリではなく、「人生全体のエネルギー地図」'
+        'として土地の総合的な性質を確認したいときに使う。',
+  ),
+  'fortune_love': AstroGlossaryEntry(
+    title: '恋愛 (Love)',
+    summary: '金星・火星・月のラインを強調、他は dim。',
+    detail:
+        '対人運・恋愛運に関わる惑星のみを際立たせるフィルタ。\n\n'
+        '・金星 (Venus): 愛・美・関係性\n'
+        '・火星 (Mars): 情熱・行動・性\n'
+        '・月 (Moon): 感情・親密さ\n\n'
+        'これら3惑星のラインが集まる土地は、恋愛体験が活性化しやすい。',
+  ),
+  'fortune_money': AstroGlossaryEntry(
+    title: '金運 (Money)',
+    summary: '木星・金星・太陽のラインを強調、他は dim。',
+    detail:
+        '財運・物質的成功に関わる惑星のフィルタ。\n\n'
+        '・木星 (Jupiter): 拡大・幸運・繁栄\n'
+        '・金星 (Venus): 価値・所有・贅沢\n'
+        '・太陽 (Sun): 自己実現・地位\n\n'
+        'これらの ASC/MC ラインが通る土地は、金運の追い風を得やすい。',
+  ),
+  'fortune_work': AstroGlossaryEntry(
+    title: '仕事 (Career)',
+    summary: '土星・火星・木星・太陽のラインを強調、他は dim。',
+    detail:
+        'キャリア・社会的達成に関わる惑星のフィルタ。\n\n'
+        '・土星 (Saturn): 責任・規律・長期成果\n'
+        '・火星 (Mars): 競争力・突破力\n'
+        '・木星 (Jupiter): 機会・拡大\n'
+        '・太陽 (Sun): リーダーシップ・公的評価\n\n'
+        '特に MC ライン (天頂) が重要 — その土地での「社会的な顔」を示す。',
+  ),
+  'fortune_communication': AstroGlossaryEntry(
+    title: '話す (Communication)',
+    summary: '水星・金星・月のラインを強調、他は dim。',
+    detail:
+        'コミュニケーション・知的活動・対話に関わる惑星のフィルタ。\n\n'
+        '・水星 (Mercury): 思考・言語・情報伝達\n'
+        '・金星 (Venus): 社交・調和・魅力\n'
+        '・月 (Moon): 共感・感情伝達\n\n'
+        'これらのラインが通る土地は、執筆・営業・教育・SNS発信等が乗りやすい。',
+  ),
+  'fortune_healing': AstroGlossaryEntry(
+    title: '癒し (Healing)',
+    summary: '月・海王星・金星のラインを強調、他は dim。',
+    detail:
+        '癒し・休息・スピリチュアルな再生に関わる惑星のフィルタ。\n\n'
+        '・月 (Moon): 安らぎ・無意識・母性\n'
+        '・海王星 (Neptune): 直感・夢・統合\n'
+        '・金星 (Venus): 美・喜び・自己受容\n\n'
+        'これらのラインが通る土地は、リトリート・療養・内省に向く。',
+  ),
 };
+
+/// 用語解説 popup を表示する共通ヘルパー。
+/// LayerPanel / FramePills / CategoryPills 等から共通で呼ぶ。
+/// [termKey] が astroGlossary に存在しなければ何もしない。
+void showAstroGlossaryDialog(BuildContext context, String termKey) {
+  final entry = astroGlossary[termKey];
+  if (entry == null) return;
+  showDialog<void>(
+    context: context,
+    barrierColor: const Color(0x99000000),
+    builder: (ctx) => Dialog(
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+      insetPadding: const EdgeInsets.symmetric(horizontal: 32, vertical: 80),
+      child: GlassPanel(
+        padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 360),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(entry.title,
+                      style: const TextStyle(
+                        fontSize: 14, color: Color(0xFFC9A84C),
+                        fontWeight: FontWeight.w600, letterSpacing: 0.4,
+                      )),
+                  ),
+                  GestureDetector(
+                    onTap: () => Navigator.of(ctx).pop(),
+                    child: const Icon(Icons.close, size: 18, color: Color(0xFFAAAAAA)),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(entry.summary,
+                style: const TextStyle(
+                  fontSize: 11, color: Color(0xFFAAAAAA),
+                  height: 1.5, letterSpacing: 0.3,
+                )),
+              const Divider(color: Color(0x22FFFFFF), height: 18),
+              Text(entry.detail,
+                style: const TextStyle(
+                  fontSize: 12, color: Color(0xFFE8E0D0),
+                  height: 1.7, letterSpacing: 0.2,
+                )),
+            ],
+          ),
+        ),
+      ),
+    ),
+  );
+}
