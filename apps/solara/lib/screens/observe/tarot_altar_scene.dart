@@ -118,19 +118,26 @@ class _TarotAltarSceneState extends State<TarotAltarScene>
               ),
             ),
 
-            // 2. Altar image — sized with contain-style math so the wheel
-            //    is never clipped. Explicit Positioned keeps the wheel
-            //    centered and anchored to the bottom (with shift).
+            // 2. Altar image — bottom-anchored、上端 30% を fade して切れ目を消す
+            //    (2026-04-29: top の動的計算撤廃で画面サイズ変動に強くした)
             Positioned(
               left: _altarLayout(w, h).left,
-              top: _altarLayout(w, h).top,
+              bottom: -h * _altarBottomShift, // shift = -0.04 → bottom: h*0.04
               width: _altarLayout(w, h).width,
               height: _altarLayout(w, h).height,
-              child: Image.asset('assets/tarot_scene/altar.png'),
+              child: ShaderMask(
+                blendMode: BlendMode.dstIn,
+                shaderCallback: (rect) => const LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Colors.transparent, Colors.white],
+                  stops: [0.0, 0.30], // 上 0% 透明 → 30% 不透明
+                ).createShader(rect),
+                child: Image.asset('assets/tarot_scene/altar.png'),
+              ),
             ),
 
-            // (Roman numerals are now baked into altar.png itself, so the
-            //  Flutter-side painter is no longer needed.)
+            // (Roman numerals are baked into altar.png — no Flutter-side painter needed.)
 
             // 3. Planets floating around the altar
             ..._buildPlanets(w, h),

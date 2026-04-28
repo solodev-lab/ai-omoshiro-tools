@@ -71,59 +71,76 @@ class CelestialEventBar extends StatelessWidget {
     final meaning = getEventMeaningJP(event.type, event.planet);
     if (meaning.isEmpty) return;
 
+    // 2026-04-29: 高さを画面半分で固定 (タブが常に画面中央位置から出る)。
+    // 内容が短くても sheet 上端は画面中央、長ければ SingleChildScrollView で
+    // 縦スクロール可能。文字情報が多いイベント (eclipse 等) も全文読める。
+    final halfHeight = MediaQuery.of(context).size.height * 0.5;
     showModalBottomSheet(
       context: context,
       backgroundColor: const Color(0xFF0A0E1A),
+      isScrollControlled: true, // height 制御を有効化
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (_) => Padding(
-        padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // ドラッグハンドル
-            Center(
-              child: Container(
-                width: 40, height: 4,
-                decoration: BoxDecoration(
-                  color: const Color(0x40FFFFFF),
-                  borderRadius: BorderRadius.circular(2),
+      builder: (_) => SizedBox(
+        height: halfHeight,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // ドラッグハンドル: タップで sheet を閉じる (2026-04-29)
+              // 視覚は 40×4px のバーのまま、タップ領域を上下 12px に拡大して
+              // 押しやすく。
+              Center(
+                child: GestureDetector(
+                  onTap: () => Navigator.of(context).pop(),
+                  behavior: HitTestBehavior.opaque,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+                    child: Container(
+                      width: 40, height: 4,
+                      decoration: BoxDecoration(
+                        color: const Color(0x40FFFFFF),
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(height: 16),
-            // イベント名
-            Text(
-              event.localDescJP,
-              style: const TextStyle(
-                color: SolaraColors.solaraGold,
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
+              const SizedBox(height: 16),
+              // イベント名
+              Text(
+                event.localDescJP,
+                style: const TextStyle(
+                  color: SolaraColors.solaraGold,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
-            ),
-            const SizedBox(height: 4),
-            // タイプラベル
-            Text(
-              _typeLabel(event.type),
-              style: const TextStyle(
-                color: SolaraColors.textSecondary,
-                fontSize: 11,
+              const SizedBox(height: 4),
+              // タイプラベル
+              Text(
+                _typeLabel(event.type),
+                style: const TextStyle(
+                  color: SolaraColors.textSecondary,
+                  fontSize: 11,
+                ),
               ),
-            ),
-            const SizedBox(height: 16),
-            // 意味の解説
-            Text(
-              meaning,
-              style: const TextStyle(
-                color: Color(0xFFEAEAEA),
-                fontSize: 14,
-                fontWeight: FontWeight.w300,
-                height: 1.7,
+              const SizedBox(height: 16),
+              // 意味の解説
+              Text(
+                meaning,
+                style: const TextStyle(
+                  color: Color(0xFFEAEAEA),
+                  fontSize: 14,
+                  fontWeight: FontWeight.w300,
+                  height: 1.7,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

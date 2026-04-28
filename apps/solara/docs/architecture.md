@@ -398,21 +398,23 @@ Map画面を開くと、1日1回「今日のタップボタン」（Daily Omen B
 英米圏では Solar Fire / TimePassages 系の主機能 → 英語版で必須。
 
 ### Map レイアウト構造リファクタ (2026-04-29)
-NavBar 被り問題の根本解決として overlay 群を内側 Padded Stack に集約:
+NavBar 被り問題の根本解決として overlay 群を内側 SafeArea で囲み込み:
 
 ```
 Stack (画面全体)
 ├── FlutterMap (全画面、NavBar 越しに blur 効果が透ける)
 └── Positioned.fill
-    └── Padding(bottom: SolaraNavBar.totalHeight)
-        └── MediaQuery.removePadding(removeBottom: true)
-            └── Stack (overlay 群)
-                ├── 全 Positioned widgets (top: は status bar 基準のまま)
-                └── bottom: 0 = NavBar 上端 (自動)
+    └── SafeArea(top: false, left: false, right: false)  // bottom のみ尊重
+        └── Stack (overlay 群)
+            ├── 全 Positioned widgets (top: は status bar 基準のまま)
+            └── bottom: 0 = NavBar 上端 (自動)
 ```
 
+- Scaffold の `extendBody:true` 環境では body の `MediaQuery.padding.bottom` =
+  bottomNavigationBar の実高 を Scaffold が自動設定 → SafeArea がそれを尊重
 - 全 overlay widget の `bottom: X` が「NavBar の上 X px」を意味する
 - 新規追加時に `+ navInset` 等を意識する必要なし
+- 端末・Flutter バージョン・systemNav 設定が変わっても自動追従
 - 例外: FlutterMap 内の `PlanetSymbolsLayer` は `MapCamera.size` ベースのため
   `SolaraNavBar.systemNavInset(context)` を独自参照 (1箇所のみ)
 
@@ -433,6 +435,26 @@ Stack (画面全体)
 - 左右: 各 12px (画面端ギリギリ、左右対称)
 - 上: 30px (現状維持)
 - 下: `80 + SolaraNavBar.systemNavInset(context) + 12` (NavBar 全高 + 視覚マージン)
+
+### Tarot 円卓 bottom-anchored + 上端 fade (2026-04-29)
+`tarot_altar_scene.dart`:
+- 旧: `Positioned(top: layout.top, height: layout.height)` で top-anchored
+  → 画面サイズ変動で top 値が動き視覚的にブレる
+- 新: `Positioned(bottom: -h * _altarBottomShift, height: ...)` で bottom-anchored
+  → 画面下からの相対位置で固定
+- 上端 30% に `ShaderMask + LinearGradient` で fade 適用
+  - `colors: [transparent, white]`、`stops: [0.0, 0.30]`、`blendMode: dstIn`
+  - 画像の切れ目が背景に溶け込み視覚的に消える
+
+### Galaxy 惑星イベント popup (2026-04-29)
+`celestial_event_bar.dart` の `_showMeaning`:
+- 旧: 高さ無制限、内容に応じて伸縮
+- 新: `SizedBox(height: screenH * 0.5)` で **画面半分固定**
+  - 上端は常に画面中央位置 → 一貫した UX
+  - `isScrollControlled: true` + `SingleChildScrollView` で長文時は縦スクロール
+- ドラッグハンドル (40×4px バー) に `GestureDetector` でタップ閉じ機能
+  - タップ領域は Padding(vertical: 12, horizontal: 24) で拡大
+  - `Navigator.of(context).pop()` で sheet 閉じる
 
 ### Horo 縦短端末対応 (2026-04-29)
 縦に短い端末で chart が bottom sheet に被って見えない問題を解決:

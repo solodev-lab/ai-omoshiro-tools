@@ -5,7 +5,6 @@ import '../utils/solara_storage.dart';
 import '../utils/omen_phrases.dart';
 import '../widgets/dominant_fortune_overlay.dart';
 import '../widgets/omen_button.dart';
-import '../widgets/solara_nav_bar.dart';
 import 'map/map_constants.dart';
 import 'map/map_styles.dart';
 import 'map/map_sectors.dart';
@@ -847,16 +846,17 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
         ),
 
         // ── オーバーレイ全体: NavBar 上端までの領域に閉じ込める ──
+        // SafeArea で Scaffold が自動設定する body padding.bottom (= NavBar 実高、
+        // extendBody:true 時は NavBar が含まれる) を尊重する。これで端末や設定
+        // ごとに変わる NavBar 高を Scaffold 任せで処理できる (手動計算で
+        // ズレるリスクを排除)。
         // 内側の Stack 内では bottom: 0 = NavBar 上端。手動 navInset 不要。
-        // MediaQuery.removePadding(removeBottom:true) で SafeArea が二重 padding
-        // しないように systemNav 値をゼロ化 (popup 内 SafeArea 互換)。
+        // 内側 SafeArea (popup 内等) は外側 SafeArea で消費済みのため二重 padding
+        // しない。
         Positioned.fill(
-          child: Padding(
-            padding: EdgeInsets.only(bottom: SolaraNavBar.totalHeight(context)),
-            child: MediaQuery.removePadding(
-              context: context,
-              removeBottom: true,
-              child: Stack(children: [
+          child: SafeArea(
+            top: false, left: false, right: false,
+            child: Stack(children: [
 
         // ── FF Label ──
         // モード中は「世界規模スコア」の概念が無いので非表示
@@ -1232,8 +1232,7 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
         ),
         // ACGモード下部スライダーは廃止 (2026-04-29、上部常時表示に統一)
               ]), // Inner Stack 終端 (NavBar 上端までの overlay 領域)
-            ), // MediaQuery.removePadding 終端
-          ), // Padding 終端
+          ), // SafeArea 終端
         ), // Positioned.fill 終端
       ],
     );
