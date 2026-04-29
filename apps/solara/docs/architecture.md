@@ -2,13 +2,26 @@
 
 > アプリ全体の構造と設計方針。
 > 新しい画面や機能を追加する時はこのファイルを確認する。
+> 2026-04-29 更新: F1-c (Daily Transit) + Phase E1-E8 (Soft/Hard 設計思想) 反映。
+
+---
+
+## 設計思想（最優先）
+
+> 詳細: `memory/project_solara_design_philosophy.md`
+
+- **ソフト/ハードは独立した別エネルギー**（1軸の両端ではない）
+- **占い的吉凶判定をしない**（「ラッキー/アンラッキー」は出さない）
+- **両面思想**（陰陽・Jungian）
+- **実装禁止**: `total = soft + hard` 合算 / `softRatio` / 赤=悪 緑=良 色分け
+- **実装すべき**: `DirectionEnergy { soft, hard }` 独立2軸 / 銀月色（ソフト）+ 金陽色（ハード）
 
 ---
 
 ## 全体構成
 
 ```
-lib/ (77 .dart ファイル)
+lib/ (約 80 .dart ファイル)
 ├── main.dart              ← アプリ起点。IndexedStackで5画面を管理
 ├── models/                ← データクラス
 │   ├── daily_reading.dart    デイリーリーディング
@@ -16,20 +29,29 @@ lib/ (77 .dart ファイル)
 │   ├── lunar_intention.dart  月の意図・中間チェック・刻星化
 │   └── tarot_card.dart       タロットカード
 ├── screens/               ← 各画面
-│   ├── map_screen.dart       世界地図・運勢方位（メイン、Phase M2 完成版 967 行）
-│   │                           Phase M2 でアスペクト線 (40本) + 引越しレイヤー追加
+│   ├── map_screen.dart       世界地図・運勢方位（メイン、約 1480 行）
+│   │                           Phase M2: アスペクト線(40本) + 引越しレイヤー
+│   │                           F1-c (2026-04-29): DailyTransitBadge + フルUI 統合
+│   ├── solara_philosophy_screen.dart  Phase E5 (2026-04-29): 設計思想ガイド画面
 │   ├── map/                  ← Map サブウィジェット
 │   │   ├── map_vp_panel.dart, map_astro.dart, map_fortune_sheet.dart
 │   │   ├── map_planet_lines.dart, map_sectors.dart, map_stella.dart
 │   │   ├── map_constants.dart, map_widgets.dart
-│   │   ├── map_layer_panel.dart        Phase M2: 4流派並列 (16方位/惑星ライン/引越し/アスペクト) + i アイコン
+│   │   ├── map_layer_panel.dart        Phase M2: 4流派並列 + 設計思想ガイド導線
 │   │   ├── map_astro_lines.dart        Phase M2: アスペクト線 Polyline 変換 (FORTUNE 連動 dim)
 │   │   ├── map_relocation_popup.dart   Phase M2: 統合タップ popup (線情報+12ハウス情報)
 │   │   ├── map_styles.dart             タイル切替（OSM/CyclOSM × Light/Dark）
-│   │   ├── map_search.dart             検索候補リスト + SearchFocusPopup (C-2: 保存ボタン削除済)
-│   │   ├── map_astro_carto.dart        Phase M3: Astro*Carto*Graphy モード専用UI (Banner/Pills/ZenithPopup)
-│   │   ├── map_location_markers.dart   Tier A: 出生地🌟+グロー / VP・Locations slot マーカー / 詳細popup
-│   │   ├── map_time_slider.dart        Tier A #5 (CCG): ±365日タイムスライダー + LIVEボタン
+│   │   ├── map_search.dart             検索候補リスト + SearchFocusPopup
+│   │   ├── map_astro_carto.dart        Phase M3: Astro*Carto*Graphy モード専用UI
+│   │   ├── map_location_markers.dart   Tier A: 出生地+グロー / VP/Locations マーカー
+│   │   ├── map_time_slider.dart        Tier A #5 (CCG): ±365日 + 時刻スライダー
+│   │   ├── map_direction_popup.dart    E4 (2026-04-29): セクタータップ詳細 popup
+│   │   │                                  (2エネルギー独立バー + アスペクト attribution)
+│   │   ├── map_aspect_chip.dart        F1-c (2026-04-29): MapAspectChip
+│   │   │                                  Daily Transit V2 のアスペクトチップ
+│   │   │                                  タップで Horo 相タブ同等の詳細を表示
+│   │   ├── map_daily_transit_screen.dart  F1-c (2026-04-29): Daily Transit フルUI
+│   │   │                                  ヘッダ(カテゴリ + 拠点) + 本日/明日タブ + タイムライン
 │   │   └── map_overlays.dart           SideButtons/SearchBar/Badges/VP Pin/RestOverlay 等
 │   ├── locations_screen.dart   拠点一覧画面（Map 🗺ボタンから BottomSheet）
 │   ├── forecast_screen.dart    1〜5年 Forecast（Map 🔮ボタンから BottomSheet、ヒートマップ+◯◯期+Top5）
@@ -76,9 +98,14 @@ lib/ (77 .dart ファイル)
 ├── theme/                 ← 色・フォント定義
 │   ├── solara_colors.dart, solara_theme.dart
 ├── utils/                 ← 計算・データ・永続化
-│   ├── solara_storage.dart      SharedPreferencesラッパー
+│   ├── solara_storage.dart      SharedPreferencesラッパー (orb設定読込ヘルパー追加)
 │   ├── solara_api.dart          CF Worker API呼び出し（TZ取得）
 │   ├── fortune_api.dart         Fortune API呼び出し（Gemini占い文 + リロケーション解説）
+│   ├── daily_transits_api.dart  F1-b (2026-04-29): /astro/daily-transits 呼び出し
+│   │                              TransitEvent / TransitAspect / DailyTransitsResult
+│   ├── direction_energy.dart    E1/E3 (2026-04-29): Soft/Hard 独立2エネルギー
+│   │                              DirectionEnergy + AspectContribution + 集約ヘルパー
+│   ├── solara_manifesto.dart    E0 (2026-04-29): 設計思想マニフェスト（JP/EN）
 │   ├── moon_phase.dart          月相計算（Jean Meeusアルゴリズム）
 │   ├── constellation_namer.dart 星座名生成・MST構築
 │   ├── celestial_events.dart    天体イベント読み込み（API+キャッシュ+静的JSON）
@@ -90,10 +117,18 @@ lib/ (77 .dart ファイル)
 │   ├── astro_houses.dart        Phase M2: LST/ASC/MC/Placidus を Dart で完結 (Worker同等)
 │   ├── astro_lines.dart         Phase M2: 40本アスペクト線計算 (球面三角法 + 近接線検出)
 │   └── astro_glossary.dart      Phase M2: 占星術用語辞書 (i アイコン popup 用)
+│                                  E6 (2026-04-29): 文言全面書き直し + 'two_energies' /
+│                                  'soft_aspect' / 'hard_aspect' / 'transit_angles' /
+│                                  'top_category_logic' エントリ追加
 └── widgets/               ← 共通ウィジェット
     ├── solara_nav_bar.dart          ボトムナビゲーション
     ├── glass_panel.dart             フロストガラスパネル
-    ├── astro_term_label.dart        Phase M2: 占星術用語の i アイコン + 解説 popup ラベル
+    ├── astro_term_label.dart        Phase M2: 用語ラベル + i アイコン (16px / タップ領域32px)
+    ├── daily_transit_badge.dart     F1-c (2026-04-29): Map右上の日次トリガー
+    │                                  リセット時刻後初回=光る、閲覧済み=カテゴリアイコン
+    ├── category_icon.dart           E8.1 (2026-04-29): 6カテゴリベクターアイコン
+    │                                  Style D = 惑星シンボル + 装飾線 (CustomPainter)
+    │                                  all/love/money/work/healing/communication
     ├── moon_overlay.dart            re-export (下記3ファイル)
     ├── moon_overlay_shared.dart     mysticalMoonBackdrop + MoonScrollingStory (共通)
     ├── new_moon_overlay.dart        新月: ストーリー→テーマ選択→リビール演出+Set Intention
@@ -102,11 +137,10 @@ lib/ (77 .dart ファイル)
     ├── catasterism_formation_overlay.dart  刻星化アニメーション（4ステージ）
     ├── celestial_event_bar.dart     天体イベント横スクロールバー
     ├── dominant_fortune_overlay.dart ディスパッチャ: 5カテゴリ演出を enum で切替
-    ├── omen_button.dart             Daily Omen Button: 呼吸する金縁＋タイトル/サブ/CTA
-    ├── fortune_overlays/            ← 5カテゴリの全画面演出（Omen Button タップで発火）
+    ├── fortune_overlays/            ← 5カテゴリの全画面演出（DailyTransitBadge タップで発火）
     │   ├── _common.dart                FortunePainterBuilder 抽象 + easing/stageAlpha 共有
     │   ├── love_painter.dart           恋愛（Solara風）: 薔薇花弁放射 + 中央の金魔法陣 + 金の蔦
-    │   ├── money_painter.dart          金運（Solara風）: 錬金術刻印のアンティーク金貨/金箔積み上げ
+    │   ├── money_painter.dart          豊かさ（Solara風）: 錬金術刻印のアンティーク金貨/金箔積み上げ
     │   ├── healing_painter.dart        癒し（Solara風）: 月桂樹/ヒスイの葉が螺旋で舞い上がる
     │   ├── communication_painter.dart  話す（Solara風）: ルーン/惑星記号ペア + 金の衝突魔法陣
     │   └── work_painter.dart           仕事（Solara風）: 金の勲章が歯車背景で漂い、中央収束→閃光→紋章
@@ -115,6 +149,11 @@ lib/ (77 .dart ファイル)
     ├── cycle_spiral_painter.dart    サイクルスパイラル描画
     └── spiral_painter.dart          スパイラル描画
 ```
+
+### 2026-04-29 セッションでの削除ファイル
+- `lib/widgets/omen_button.dart`     — DailyTransitBadge に置換
+- `lib/utils/omen_phrases.dart`      — 固定文言「今日の惑星からのエネルギーを確認する」に置換
+- (Preseed / PreseedHint / SeedBadge クラスも内部で削除)
 
 ---
 
@@ -569,11 +608,15 @@ Cloudflare Worker 本番デプロイ済み: `https://solara-api.solodev-lab.com`
 | `/health` | GET | ヘルスチェック | - |
 | `/astro/chart` | POST | ネイタル/トランジット/プログレス計算 + アスペクト + パターン | `map_astro.dart#fetchChart` |
 | `/astro/predict` | POST | 3ヶ月予測 | (未接続) |
+| `/astro/forecast` | POST | 1〜5年 Forecast (KV月次クォータ60req/月) | `forecast_screen` |
 | `/astro/events` | GET | 月別天体イベント (ingress/retrograde/eclipse) | `celestial_events.dart#fetchMonthEvents` |
+| `/astro/daily-transits` | POST | F1 (2026-04-29): 拠点での1日のトランジット通過時刻 + 各時刻 natal アスペクト併記 (V2.2) | `daily_transits_api.dart#fetchDailyTransits` |
 | `/tz` | GET | 緯度経度→IANA TZ名 (C案, DST対応) | `solara_api.dart#fetchTimezoneName` |
 | `/search` | GET | Nominatim placelookup proxy | (未接続) |
 | `/fortune` | POST | Gemini 2.5 Flash 生成の占い文 (5カテゴリ) | `fortune_api.dart#fetchFortune` |
-| `/tiles/jawg/<style>/<z>/<x>/<y>.png?lang=xx` | GET | Jawg Maps タイルプロキシ（トークン秘匿・多言語ラベル）| `map_styles.dart`, `map_hybrid_provider.dart` |
+| `/tarot` | POST | Gemini 生成のタロットリーディング | `observe_screen` |
+| `/relocation` | POST | Gemini 生成のリロケーションナラティブ | `horo_relocation_panel.dart` |
+| `/tiles/osm/<source>/<z>/<x>/<y>.png` | GET | OSM 系タイルプロキシ (HOT/Standard/CyclOSM) | `map_styles.dart` |
 
 **Secrets (Cloudflare暗号化ストア):**
 - `GEMINI_API_KEY` — Fortune LLM 生成用 (wrangler secret put で設定済み)

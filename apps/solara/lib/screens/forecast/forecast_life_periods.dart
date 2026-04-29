@@ -5,7 +5,7 @@ import '../map/map_constants.dart';
 /// 期間ラベル定義（カテゴリ → (日本語名, 絵文字)）
 const Map<String, (String, String)> lifePeriodLabels = {
   'love':          ('モテ期', '💗'),
-  'money':         ('金運期', '💰'),
+  'money':         ('豊かさ期', '💰'),
   'healing':       ('癒し期', '🌿'),
   'work':          ('仕事期', '⚙'),
   'communication': ('発信期', '💬'),

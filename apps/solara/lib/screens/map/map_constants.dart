@@ -19,14 +19,20 @@ const categoryColors = <String, Color>{
 };
 
 /// カテゴリ日本語ラベル
+/// 「金運」は設計思想（吉凶判定回避）に基づき「豊かさ」に変更（2026-04-29）。
 const categoryLabels = <String, String>{
-  'all':'総合','healing':'癒し','money':'金運','love':'恋愛','work':'仕事','communication':'話す',
+  'all':'総合','healing':'癒し','money':'豊かさ','love':'恋愛','work':'仕事','communication':'話す',
 };
 
-/// HTML: COMP_COLORS
+/// 4成分カラー（Solara 設計思想: ソフト=銀月色、ハード=金陽色）
+/// 旧色 (赤紫の T剛/P剛) は吉凶判定的だったため2026-04-29に書き換え。
+/// T (Transit) と P (Progressed) は同色相の明度違いで区別。
+/// 関連: project_solara_design_philosophy.md
 const compColors = <String, Color>{
-  'tSoft': Color(0xFFC9A84C), 'tHard': Color(0xFF6B5CE7),
-  'pSoft': Color(0xFF4CB8B0), 'pHard': Color(0xFFE74C6B),
+  'tSoft': Color(0xFFC8D4E8), // ソフト・トランジット（銀月色 明）
+  'tHard': Color(0xFFD6915C), // ハード・トランジット（金陽色 明）
+  'pSoft': Color(0xFF8A9CB8), // ソフト・プログレス（銀月色 暗）
+  'pHard': Color(0xFFA56838), // ハード・プログレス（金陽色 暗）
 };
 const compKeys = ['tSoft', 'tHard', 'pSoft', 'pHard'];
 

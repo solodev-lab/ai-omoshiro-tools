@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../utils/astro_glossary.dart';
+import '../solara_philosophy_screen.dart';
 import 'map_constants.dart';
 import 'map_styles.dart';
 
@@ -81,6 +82,7 @@ class LayerPanel extends StatelessWidget {
         for (final e in mapStyleConfigs.entries)
           _styleOption(e.key, e.value.label),
       ]),
+      _philosophyLink(context),
     ];
   }
 
@@ -149,7 +151,44 @@ class LayerPanel extends StatelessWidget {
           );
         }),
       ]),
+      _philosophyLink(context),
     ];
+  }
+
+  /// 設計思想ガイドへのリンク（パネル最下部・両ビュー共通）。
+  /// ソフト/ハード独立2エネルギーの考え方を伝える章0画面へ遷移する。
+  Widget _philosophyLink(BuildContext context) {
+    return GestureDetector(
+      onTap: () => Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (_) => const SolaraPhilosophyScreen(),
+        ),
+      ),
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        margin: const EdgeInsets.only(top: 4),
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+        decoration: const BoxDecoration(
+          border: Border(top: BorderSide(color: Color(0x14FFFFFF))),
+        ),
+        child: const Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text('☯', style: TextStyle(fontSize: 11, color: Color(0xFFC9A84C))),
+            SizedBox(width: 5),
+            Flexible(
+              child: Text('設計思想',
+                style: TextStyle(
+                  fontSize: 10,
+                  color: Color(0xFFC9A84C),
+                  letterSpacing: 0.5,
+                ),
+                overflow: TextOverflow.ellipsis),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Widget _section(String label, List<Widget> children) {
@@ -257,12 +296,13 @@ class LayerPanel extends StatelessWidget {
           ),
         ),
         // i アイコン (用語解説 popup 起動)
+        // 2026-04-29: 9px → 16px。EdgeInsets.all(8) でタップ領域 32×32px 確保。
         GestureDetector(
           onTap: () => showAstroGlossaryDialog(context, termKey),
           behavior: HitTestBehavior.opaque,
           child: const Padding(
-            padding: EdgeInsets.only(left: 2),
-            child: Icon(Icons.info_outline, size: 9, color: Color(0x88888888)),
+            padding: EdgeInsets.all(8),
+            child: Icon(Icons.info_outline, size: 16, color: Color(0xCCAAAAAA)),
           ),
         ),
       ]),

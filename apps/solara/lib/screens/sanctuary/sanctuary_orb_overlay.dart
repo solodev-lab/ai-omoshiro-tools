@@ -80,8 +80,12 @@ class _SanctuaryOrbOverlayState extends State<SanctuaryOrbOverlay> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 // HTML: .birth-title { font-size:16px; font-weight:700; color:#F9D976; letter-spacing:1px; }
-                const Text('🔭 Aspect Orbs',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Color(0xFFF9D976), letterSpacing: 1)),
+                const Row(mainAxisSize: MainAxisSize.min, children: [
+                  Icon(Icons.tune, size: 18, color: Color(0xFFF9D976)),
+                  SizedBox(width: 8),
+                  Text('Aspect Orbs',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Color(0xFFF9D976), letterSpacing: 1)),
+                ]),
                 Row(children: [
                   GestureDetector(
                     onTap: _reset,
@@ -103,7 +107,7 @@ class _SanctuaryOrbOverlayState extends State<SanctuaryOrbOverlay> {
                         shape: BoxShape.circle,
                         color: const Color(0x14FFFFFF),
                       ),
-                      child: const Center(child: Text('✕', style: TextStyle(fontSize: 18, color: Color(0xFFACACAC)))),
+                      child: const Center(child: Icon(Icons.close, size: 18, color: Color(0xFFACACAC))),
                     ),
                   ),
                 ]),

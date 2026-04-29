@@ -256,8 +256,8 @@ class _VPPanelState extends State<VPPanel> {
 
   Widget _buildVPContent() {
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      _actionBtn('📡', '現在地に移動', widget.onGeolocate),
-      _actionBtn('💾', 'この地点を保存', _saveLocation),
+      _actionBtn(Icons.my_location, '現在地に移動', widget.onGeolocate),
+      _actionBtn(Icons.save_alt, 'この地点を保存', _saveLocation),
       const SizedBox(height: 8),
       // Coordinate display
       Text(
@@ -273,7 +273,7 @@ class _VPPanelState extends State<VPPanel> {
 
   Widget _buildLocContent() {
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      _actionBtn('📍', 'この地点を登録', _saveLocation),
+      _actionBtn(Icons.add_location_alt, 'この地点を登録', _saveLocation),
       const SizedBox(height: 8),
       const Text('登録地', style: TextStyle(fontSize: 8, color: Color(0xFF555555), letterSpacing: 1)),
       const SizedBox(height: 6),
@@ -441,7 +441,7 @@ class _VPPanelState extends State<VPPanel> {
     );
   }
 
-  Widget _actionBtn(String icon, String label, VoidCallback onTap) {
+  Widget _actionBtn(IconData icon, String label, VoidCallback onTap) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -452,7 +452,7 @@ class _VPPanelState extends State<VPPanel> {
           border: Border.all(color: const Color(0x1AFFFFFF)),
         ),
         child: Row(children: [
-          Text(icon, style: const TextStyle(fontSize: 14)),
+          Icon(icon, size: 14, color: const Color(0xFFC9A84C)),
           const SizedBox(width: 8),
           Expanded(child: Text(label, style: const TextStyle(fontSize: 11, color: Color(0xFFAAAAAA)))),
         ]),

@@ -16,7 +16,7 @@
 const FORTUNE_CATEGORIES = {
   overall: { jp: '全体運', en: 'Overall', planets: ['sun', 'moon', 'jupiter'], houses: [1] },
   love: { jp: '恋愛運', en: 'Love', planets: ['venus', 'mars', 'moon'], houses: [5, 7] },
-  money: { jp: '金運', en: 'Money', planets: ['venus', 'jupiter', 'saturn'], houses: [2, 8] },
+  money: { jp: '豊かさ', en: 'Abundance', planets: ['venus', 'jupiter', 'saturn'], houses: [2, 8] },
   career: { jp: '仕事運', en: 'Career', planets: ['saturn', 'venus', 'sun'], houses: [6, 10] },
   communication: { jp: '対話運', en: 'Communication', planets: ['mercury', 'moon', 'jupiter'], houses: [3, 9] },
 };

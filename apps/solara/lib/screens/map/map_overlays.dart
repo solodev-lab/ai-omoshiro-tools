@@ -101,7 +101,7 @@ class MapSideButtons extends StatelessWidget {
         child: MapBtn(
           active: astroPanelOpen,
           onTap: onAstroPanelTap,
-          child: const Text('✨', style: TextStyle(fontSize: 16)),
+          child: const Icon(Icons.auto_awesome, size: 18, color: Color(0xFFC9A84C)),
         ),
       ),
       Positioned(
@@ -109,21 +109,21 @@ class MapSideButtons extends StatelessWidget {
         child: MapBtn(
           active: vpPanelOpen,
           onTap: onVpTap,
-          child: const Text('📍', style: TextStyle(fontSize: 16)),
+          child: const Icon(Icons.location_on_outlined, size: 18, color: Color(0xFFC9A84C)),
         ),
       ),
       Positioned(
         top: topPad + 344, left: 16,
         child: MapBtn(
           onTap: onLocationsTap,
-          child: const Text('🗺', style: TextStyle(fontSize: 14)),
+          child: const Icon(Icons.map_outlined, size: 18, color: Color(0xFFC9A84C)),
         ),
       ),
       Positioned(
         top: topPad + 392, left: 16,
         child: MapBtn(
           onTap: onForecastTap,
-          child: const Text('🔮', style: TextStyle(fontSize: 14)),
+          child: const Icon(Icons.auto_graph, size: 18, color: Color(0xFFC9A84C)),
         ),
       ),
       // Astro*Carto*Graphy モード起動ボタン (世界規模ライン+天頂点表示)
@@ -131,7 +131,7 @@ class MapSideButtons extends StatelessWidget {
         top: topPad + 440, left: 16,
         child: MapBtn(
           onTap: onAstroCartoTap,
-          child: const Text('🌐', style: TextStyle(fontSize: 14)),
+          child: const Icon(Icons.public, size: 18, color: Color(0xFFC9A84C)),
         ),
       ),
     ]);
@@ -160,14 +160,18 @@ class SearchBarOverlay extends StatelessWidget {
         border: Border.all(color: const Color(0x26FFFFFF)),
       ),
       child: Row(children: [
+        const Padding(
+          padding: EdgeInsets.only(left: 12, right: 4),
+          child: Icon(Icons.search, size: 16, color: Color(0xFF888888)),
+        ),
         Expanded(child: TextField(
           controller: controller, autofocus: true,
           style: const TextStyle(color: Color(0xFFE8E0D0), fontSize: 13),
           decoration: const InputDecoration(
-            hintText: '🔍 場所を検索...',
+            hintText: '場所を検索...',
             hintStyle: TextStyle(color: Color(0xFF555555)),
             border: InputBorder.none,
-            contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 10),
           ),
           onSubmitted: onSubmitted,
         )),
@@ -175,7 +179,7 @@ class SearchBarOverlay extends StatelessWidget {
           onTap: onClose,
           child: const Padding(
             padding: EdgeInsets.symmetric(horizontal: 12),
-            child: Text('✕', style: TextStyle(color: Color(0xFF555555), fontSize: 16)),
+            child: Icon(Icons.close, size: 16, color: Color(0xFF888888)),
           ),
         ),
       ]),
@@ -256,24 +260,6 @@ class StatusBadge extends StatelessWidget {
         const SizedBox(width: 8),
         Text(label, style: const TextStyle(fontSize: 10, color: Color(0xFFC9A84C))),
       ]),
-    );
-  }
-}
-
-/// 右上の種バッジ（Preseed hidden 状態の時に右上に出る🌱）
-class SeedBadge extends StatelessWidget {
-  const SeedBadge({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 36, height: 36,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: const Color(0x26C9A84C),
-        border: Border.all(color: const Color(0x66C9A84C)),
-      ),
-      child: const Center(child: Text('🌱', style: TextStyle(fontSize: 16))),
     );
   }
 }
@@ -393,22 +379,3 @@ Future<DateTime?> showSolaraDatePicker(BuildContext context, {DateTime? initial}
   );
 }
 
-/// Preseed の hint（「今日の方位を探索してみよう」）
-class PreseedHint extends StatelessWidget {
-  const PreseedHint({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const AnimatedOpacity(
-      opacity: 0.7,
-      duration: Duration(milliseconds: 600),
-      child: Column(mainAxisSize: MainAxisSize.min, children: [
-        Text('🌱', style: TextStyle(fontSize: 20)),
-        SizedBox(height: 6),
-        Text('今日の方位を探索してみよう\n地図をタップして始めてね',
-          textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 10, color: Color(0xFF555555), letterSpacing: 1, height: 1.5)),
-      ]),
-    );
-  }
-}

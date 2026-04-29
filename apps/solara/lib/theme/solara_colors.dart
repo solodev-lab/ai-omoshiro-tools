@@ -13,6 +13,26 @@ class SolaraColors {
   static const textPrimary = Color(0xFFEAEAEA);
   static const textSecondary = Color(0xFFACACAC);
 
+  // ── Solara 設計思想: Soft / Hard 独立2エネルギー ──
+  // 設計思想: project_solara_design_philosophy.md
+  // ソフト = 銀月色（cool・流れ・受容）
+  // ハード = 金陽色（warm・摩擦・変容）
+  // 両方とも「正のエネルギー」を表現する美しい色。
+  // 「赤=悪 緑=良」を絶対回避。
+
+  /// ソフトエネルギー基準色（銀月色 / 流れ）
+  static const energySoft = Color(0xFFC8D4E8);
+  static const energySoftLight = Color(0xFFE0E8F2);
+  static const energySoftDark = Color(0xFF8A9CB8);
+  static const energySoftGlow = Color(0xCCB8C8E0);
+
+  /// ハードエネルギー基準色（金陽色 / 鍛造）
+  /// solaraGold (0xF6BD60) と被らないよう、より深い copper/amber 寄り。
+  static const energyHard = Color(0xFFD6915C);
+  static const energyHardLight = Color(0xFFE8B080);
+  static const energyHardDark = Color(0xFFA56838);
+  static const energyHardGlow = Color(0xCCD6915C);
+
   // Frosted Glass
   static const glassFill = Color(0x0DFFFFFF); // rgba(255,255,255,0.05)
   static const glassBorder = Color(0x1AFFFFFF); // rgba(255,255,255,0.1)

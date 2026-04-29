@@ -19,10 +19,12 @@ class Stella extends StatelessWidget {
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
         Row(children: [
-          const Text('✨ Stella', style: TextStyle(
+          const Icon(Icons.auto_awesome, size: 12, color: Color(0xFF6B5CE7)),
+          const SizedBox(width: 4),
+          const Text('Stella', style: TextStyle(
             fontSize: 10, letterSpacing: 2, color: Color(0xFF6B5CE7))),
           const Spacer(),
-          const Text('▼', style: TextStyle(fontSize: 8, color: Color(0xFF555555))),
+          const Icon(Icons.expand_more, size: 12, color: Color(0xFF555555)),
         ]),
         const SizedBox(height: 4),
         // Text.rich は DefaultTextStyle を継承するので theme の Noto Sans JP fallback が効く。
@@ -53,9 +55,11 @@ class StellaMinimized extends StatelessWidget {
         border: Border.all(color: const Color(0x33C9A84C)),
       ),
       child: const Row(mainAxisSize: MainAxisSize.min, children: [
-        Text('✨ Stella', style: TextStyle(fontSize: 9, letterSpacing: 1, color: Color(0xFF6B5CE7))),
+        Icon(Icons.auto_awesome, size: 11, color: Color(0xFF6B5CE7)),
+        SizedBox(width: 4),
+        Text('Stella', style: TextStyle(fontSize: 9, letterSpacing: 1, color: Color(0xFF6B5CE7))),
         SizedBox(width: 6),
-        Text('▲', style: TextStyle(fontSize: 8, color: Color(0xFF555555))),
+        Icon(Icons.expand_less, size: 11, color: Color(0xFF555555)),
       ]),
     );
   }

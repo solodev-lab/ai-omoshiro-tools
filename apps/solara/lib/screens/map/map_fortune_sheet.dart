@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+
+import '../../utils/direction_energy.dart';
 import 'map_constants.dart';
+import 'map_direction_popup.dart';
 import 'map_widgets.dart';
 
 /// pct() from HTML: 0-5 → 0-83.3%, 5-10 → 83.3-100%
@@ -107,6 +110,10 @@ class FortuneSheet extends StatelessWidget {
   final String activeSrc;
   final String activeCategory;
   final Map<String, Map<String, double>> sectorComps;
+  /// E4: 2エネルギー詳細ポップアップ用。指定時、各方角行をタップで詳細を表示。
+  final Map<String, DirectionEnergy>? sectorEnergies;
+  /// E4: アスペクト attribution 用（行タップ時の詳細に表示）。
+  final Map<String, List<AspectContribution>>? sectorContributors;
   final ValueChanged<String> onSrcChanged;
   final ValueChanged<String> onCatChanged;
   final VoidCallback onClose;
@@ -116,6 +123,8 @@ class FortuneSheet extends StatelessWidget {
     required this.activeSrc,
     required this.activeCategory,
     required this.sectorComps,
+    this.sectorEnergies,
+    this.sectorContributors,
     required this.onSrcChanged,
     required this.onCatChanged,
     required this.onClose,
@@ -159,14 +168,14 @@ class FortuneSheet extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
-              children: const [
-                LegendDot(color: Color(0xFFC9A84C), label: 'T柔'),
-                SizedBox(width: 10),
-                LegendDot(color: Color(0xFF6B5CE7), label: 'T剛'),
-                SizedBox(width: 10),
-                LegendDot(color: Color(0xFF4CB8B0), label: 'P柔'),
-                SizedBox(width: 10),
-                LegendDot(color: Color(0xFFE74C6B), label: 'P剛'),
+              children: [
+                LegendDot(color: compColors['tSoft']!, label: 'Tソフト'),
+                const SizedBox(width: 8),
+                LegendDot(color: compColors['tHard']!, label: 'Tハード'),
+                const SizedBox(width: 8),
+                LegendDot(color: compColors['pSoft']!, label: 'Pソフト'),
+                const SizedBox(width: 8),
+                LegendDot(color: compColors['pHard']!, label: 'Pハード'),
               ],
             ),
           ),
@@ -178,10 +187,10 @@ class FortuneSheet extends StatelessWidget {
               radius: const Radius.circular(2),
               thickness: 3,
               thumbVisibility: true,
-              child: ListView(
+              child: Builder(builder: (rowsContext) => ListView(
                 padding: const EdgeInsets.fromLTRB(14, 10, 14, 14),
-                children: _buildFortuneRows(),
-              ),
+                children: _buildFortuneRows(rowsContext),
+              )),
             ),
           ),
         ],
@@ -245,7 +254,7 @@ class FortuneSheet extends StatelessWidget {
     );
   }
 
-  List<Widget> _buildFortuneRows() {
+  List<Widget> _buildFortuneRows(BuildContext rowsContext) {
     final ck = activeSrc == 'transit' ? ['tSoft', 'tHard']
              : activeSrc == 'progressed' ? ['pSoft', 'pHard']
              : compKeys;
@@ -278,7 +287,9 @@ class FortuneSheet extends StatelessWidget {
         ));
       }
 
-      return Container(
+      // E4: 2エネルギー詳細を表示できる場合は行をタップ可能にする。
+      final canShowDetail = sectorEnergies != null && sectorEnergies![dir] != null;
+      final rowContent = Container(
         padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 7),
         decoration: BoxDecoration(
           border: isLast ? null : const Border(bottom: BorderSide(color: Color(0x0AFFFFFF))),
@@ -316,7 +327,25 @@ class FortuneSheet extends StatelessWidget {
           SizedBox(width: 48, child: Text(total.toStringAsFixed(2),
             style: const TextStyle(fontSize: 11, fontFamily: 'monospace', color: Color(0xFFF6BD60)),
             textAlign: TextAlign.right)),
+          if (canShowDetail)
+            const Padding(
+              padding: EdgeInsets.only(left: 4),
+              child: Icon(Icons.chevron_right, size: 14, color: Color(0x88888888)),
+            ),
         ]),
+      );
+
+      if (!canShowDetail) return rowContent;
+      return GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () => showDirectionEnergyPopup(
+          rowsContext,
+          direction: dir,
+          energy: sectorEnergies![dir]!,
+          contributors: sectorContributors?[dir] ?? const [],
+          categoryLabel: categoryLabels[activeCategory],
+        ),
+        child: rowContent,
       );
     });
   }

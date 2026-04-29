@@ -141,11 +141,11 @@ class AstroCartoFramePills extends StatelessWidget {
                   onTap: () => showAstroGlossaryDialog(context, e.termKey),
                   behavior: HitTestBehavior.opaque,
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(0, 4, 7, 4),
+                    padding: const EdgeInsets.all(8),
                     child: Icon(
                       Icons.info_outline,
-                      size: 10,
-                      color: on ? accent.withAlpha(180) : const Color(0x88888888),
+                      size: 16,
+                      color: on ? accent.withAlpha(220) : const Color(0xCCAAAAAA),
                     ),
                   ),
                 ),
@@ -216,11 +216,11 @@ class AstroCartoCategoryPills extends StatelessWidget {
                   onTap: () => showAstroGlossaryDialog(context, termKey),
                   behavior: HitTestBehavior.opaque,
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(0, 4, 7, 4),
+                    padding: const EdgeInsets.all(8),
                     child: Icon(
                       Icons.info_outline,
-                      size: 10,
-                      color: active ? e.value.withAlpha(180) : const Color(0x88888888),
+                      size: 16,
+                      color: active ? e.value.withAlpha(220) : const Color(0xCCAAAAAA),
                     ),
                   ),
                 ),

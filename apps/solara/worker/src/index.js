@@ -3,6 +3,7 @@
  * Endpoints: /astro/chart, /astro/predict, /search, /fortune, /health
  */
 import { computeChart, computePredictions, computeMonthEvents, computeForecast } from './astro.js';
+import { computeDailyTransits } from './daily_transits.js';
 import { searchPlace } from './search.js';
 import { lookupTimezone } from './tzlookup.js';
 import { handleFortune } from './fortune.js';
@@ -247,6 +248,20 @@ export default {
           return jsonError(400, 'Missing required fields: birthDate, birthTime', origin);
         }
         const result = computePredictions(body);
+        return jsonOk(result, origin);
+      }
+
+      // ── Daily Transits (F1: 拠点での1日のトランジット通過時刻) ──
+      // POST /astro/daily-transits { lat, lng, date?, natal? }
+      // V2: natal {sun, moon, ...} を渡すと各イベントに aspects 配列を併記。
+      // 各惑星 × 4アングル(ASC/MC/DSC/IC) の通過時刻を返す。
+      // 設計思想: project_solara_design_philosophy.md 参照。
+      if (path === '/astro/daily-transits' && request.method === 'POST') {
+        const body = await request.json();
+        if (typeof body.lat !== 'number' || typeof body.lng !== 'number') {
+          return jsonError(400, 'lat / lng required (numbers)', origin);
+        }
+        const result = computeDailyTransits(body);
         return jsonOk(result, origin);
       }
 

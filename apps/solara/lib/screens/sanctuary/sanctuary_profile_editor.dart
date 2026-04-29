@@ -202,7 +202,7 @@ class _SanctuaryProfileEditorPageState extends State<SanctuaryProfileEditorPage>
                               shape: BoxShape.circle,
                               color: Color(0x14FFFFFF),
                             ),
-                            child: const Center(child: Text('✕', style: TextStyle(fontSize: 18, color: Color(0xFFACACAC)))),
+                            child: const Center(child: Icon(Icons.close, size: 18, color: Color(0xFFACACAC))),
                           ),
                         ),
                       ],

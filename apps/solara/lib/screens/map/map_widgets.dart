@@ -49,39 +49,3 @@ class LegendDot extends StatelessWidget {
   }
 }
 
-/// Preseed prompt — HTML: .preseed { z-index:30; text-align:center; }
-class Preseed extends StatefulWidget {
-  const Preseed({super.key});
-  @override
-  State<Preseed> createState() => _PreseedState();
-}
-
-class _PreseedState extends State<Preseed> with SingleTickerProviderStateMixin {
-  late AnimationController _ctrl;
-  late Animation<double> _float;
-
-  @override
-  void initState() {
-    super.initState();
-    _ctrl = AnimationController(vsync: this, duration: const Duration(seconds: 3))..repeat(reverse: true);
-    _float = Tween<double>(begin: 0, end: -8).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut));
-  }
-
-  @override
-  void dispose() { _ctrl.dispose(); super.dispose(); }
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _float,
-      builder: (_, child) => Transform.translate(offset: Offset(0, _float.value), child: child),
-      child: const Column(mainAxisSize: MainAxisSize.min, children: [
-        Opacity(opacity: 0.6, child: Text('🌱', style: TextStyle(fontSize: 32))),
-        SizedBox(height: 16),
-        Text('今日の方位を探索してみよう\n地図をタップして始めてね',
-          textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 12, color: Color(0xFF555555), letterSpacing: 1, height: 1.8)),
-      ]),
-    );
-  }
-}

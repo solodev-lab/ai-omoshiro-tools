@@ -321,6 +321,32 @@ class SolaraStorage {
     await prefs.setInt(_dailyResetHourKey, hour.clamp(0, 23));
   }
 
+  /// Sanctuary で設定されたアスペクトオーブ値を読み込む。
+  /// SharedPreferences key: 'solara_orb_settings' (JSON)
+  /// 戻り値: {conjunction, opposition, trine, square, sextile, quincunx,
+  ///         semisextile, semisquare} の各 orb（°）。
+  /// 未保存時はデフォルト値（Sanctuary の初期値と同じ）を返す。
+  static Future<Map<String, double>> loadOrbSettings() async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString('solara_orb_settings');
+    final defaults = <String, double>{
+      'conjunction': 2, 'opposition': 2, 'trine': 2, 'square': 2,
+      'sextile': 2, 'quincunx': 2, 'semisextile': 1, 'semisquare': 1,
+    };
+    if (raw == null) return defaults;
+    try {
+      final m = json.decode(raw) as Map<String, dynamic>;
+      final result = Map<String, double>.from(defaults);
+      for (final k in m.keys) {
+        final v = m[k];
+        if (v is num) result[k] = v.toDouble();
+      }
+      return result;
+    } catch (_) {
+      return defaults;
+    }
+  }
+
   /// リセット時刻を考慮した「今日」の日付キー (YYYY-MM-DD)。
   /// 現在時刻がリセット時刻より前なら、前日の日付を返す。
   static Future<String> _logicalTodayKey() async {

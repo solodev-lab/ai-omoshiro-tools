@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:math';
 import 'package:http/http.dart' as http;
+import '../../utils/direction_energy.dart';
 import '../../utils/solara_api.dart' show solaraWorkerBase;
 import 'map_constants.dart';
 
@@ -185,16 +186,43 @@ List<Map<String, dynamic>> _findAspects(
 }
 
 class ScoreResult {
+  /// ⚠ 設計思想的に非推奨: ソフト/ハードを合算した1次元スコア。
+  /// 既存UI（金色強度等）の互換性のため残しているが、新規参照は禁止。
+  /// 新規UI は sEnergy を参照すること。
+  /// （詳細: project_solara_design_philosophy.md）
   final Map<String, double> sScores;
+
   final Map<String, Map<String, double>> sComp;
   final Map<String, String?> sFortune;
   final Map<String, String> pDir;
+
+  /// ⚠ 設計思想的に非推奨。新規UIは fEnergy を参照すること。
   final Map<String, Map<String, double>> fScores;
+
   final Map<String, Map<String, Map<String, double>>> fComp;
+
+  /// 16方位ごとの2エネルギー（Solara設計思想の正準形式）。
+  /// soft / hard は独立した別エネルギー。total/ratio は意図的に持たない。
+  /// 新規UIは必ずこちらを参照する。
+  final Map<String, DirectionEnergy> sEnergy;
+
+  /// フォーチュンカテゴリ × 16方位 ごとの2エネルギー。
+  /// 同じくSolara設計思想の正準形式。
+  final Map<String, Map<String, DirectionEnergy>> fEnergy;
+
+  /// 16方位 ごとの寄与アスペクト一覧（E4 ポップアップ attribution 用）。
+  /// 同方角に同じアスペクトが複数回出現することがあるので、
+  /// UI 側で groupKey で集約して上位を取り出す想定。
+  final Map<String, List<AspectContribution>> sContributors;
+
+  /// フォーチュンカテゴリ × 16方位 ごとの寄与アスペクト一覧。
+  final Map<String, Map<String, List<AspectContribution>>> fContributors;
 
   ScoreResult({
     required this.sScores, required this.sComp, required this.sFortune,
     required this.pDir, required this.fScores, required this.fComp,
+    required this.sEnergy, required this.fEnergy,
+    required this.sContributors, required this.fContributors,
   });
 }
 
@@ -218,68 +246,123 @@ ScoreResult scoreAll(ChartResult chart) {
   final tComp = <String, Map<String, double>>{for (final k in tA.keys) k: _emptyComp()};
   final pComp = <String, Map<String, double>>{for (final k in pA.keys) k: _emptyComp()};
 
+  // ── E3: 惑星バケット別アスペクト contributor 追跡 ──
+  // tComp/pComp と並列に、各惑星に寄与したアスペクトを記録。
+  // 後の spreading loop で _cosFall を掛けて方角別リストに分配する。
+  final tContribs = <String, List<AspectContribution>>{
+    for (final k in tA.keys) k: <AspectContribution>[]
+  };
+  final pContribs = <String, List<AspectContribution>>{
+    for (final k in pA.keys) k: <AspectContribution>[]
+  };
+
   double getAB(String p2key) {
     final ak = p2key.replaceAll('N:', '').replaceAll('P:', '');
     return _angleBonus[ak] ?? 1.0;
   }
 
-  void addT(String planet, String q, double amt) {
+  void addT(String planet, Map<String, dynamic> a, double amt) {
     if (!tComp.containsKey(planet)) return;
+    final q = a['quality'] as String;
     final (s, h) = _qSplit(q, amt);
     tComp[planet]!['tSoft'] = tComp[planet]!['tSoft']! + s;
     tComp[planet]!['tHard'] = tComp[planet]!['tHard']! + h;
+    tContribs[planet]!.add(AspectContribution(
+      p1: a['p1'] as String,
+      p2: a['p2'] as String,
+      aspectType: a['type'] as String,
+      quality: q,
+      softAmount: s,
+      hardAmount: h,
+    ));
   }
-  void addP(String planet, String q, double amt) {
+  void addP(String planet, Map<String, dynamic> a, double amt) {
     if (!pComp.containsKey(planet)) return;
+    final q = a['quality'] as String;
     final (s, h) = _qSplit(q, amt);
     pComp[planet]!['pSoft'] = pComp[planet]!['pSoft']! + s;
     pComp[planet]!['pHard'] = pComp[planet]!['pHard']! + h;
+    pContribs[planet]!.add(AspectContribution(
+      p1: a['p1'] as String,
+      p2: a['p2'] as String,
+      aspectType: a['type'] as String,
+      quality: q,
+      softAmount: s,
+      hardAmount: h,
+    ));
   }
 
   for (final a in tt) {
-    final q = a['quality'] as String;
     final w = a['weight'] as double;
-    addT(a['p1'] as String, q, w);
-    addT(a['p2'] as String, q, w);
+    addT(a['p1'] as String, a, w);
+    addT(a['p2'] as String, a, w);
   }
   for (final a in tn) {
-    addT(a['p1'] as String, a['quality'] as String, (a['weight'] as double) * getAB(a['p2'] as String));
+    addT(a['p1'] as String, a, (a['weight'] as double) * getAB(a['p2'] as String));
   }
   for (final a in pn) {
-    addP(a['p1'] as String, a['quality'] as String, (a['weight'] as double) * getAB(a['p2'] as String));
+    addP(a['p1'] as String, a, (a['weight'] as double) * getAB(a['p2'] as String));
   }
   for (final a in tp) {
-    final q = a['quality'] as String;
     final w = a['weight'] as double;
-    addT(a['p1'] as String, q, w);
-    addP((a['p2'] as String).replaceFirst('P:', ''), q, w);
+    addT(a['p1'] as String, a, w);
+    addP((a['p2'] as String).replaceFirst('P:', ''), a, w);
   }
 
   // Spread to 16 directions
   final sComp = <String, Map<String, double>>{for (final d in dir16) d: _emptyComp()};
   final sScores = <String, double>{for (final d in dir16) d: 0};
+  // E3: 方角別アスペクト contributor リスト
+  final sContributors = <String, List<AspectContribution>>{
+    for (final d in dir16) d: <AspectContribution>[]
+  };
   bool isAngle(String k) => k.startsWith('_');
 
   for (final e in tA.entries) {
     final c = tComp[e.key]!;
+    final contribs = tContribs[e.key]!;
     for (final d in dir16) {
       final f = _cosFall(_angDist(e.value, _dir16Ang[d]!), _spread);
       sComp[d]!['tSoft'] = sComp[d]!['tSoft']! + c['tSoft']! * f;
       sComp[d]!['tHard'] = sComp[d]!['tHard']! + c['tHard']! * f;
+      if (f > 0) {
+        for (final ac in contribs) {
+          sContributors[d]!.add(ac.scaledBy(f));
+        }
+      }
     }
   }
   for (final e in pA.entries) {
     if (isAngle(e.key)) continue;
     final c = pComp[e.key]!;
+    final contribs = pContribs[e.key]!;
     for (final d in dir16) {
       final f = _cosFall(_angDist(e.value, _dir16Ang[d]!), _spread);
       sComp[d]!['pSoft'] = sComp[d]!['pSoft']! + c['pSoft']! * f;
       sComp[d]!['pHard'] = sComp[d]!['pHard']! + c['pHard']! * f;
+      if (f > 0) {
+        for (final ac in contribs) {
+          sContributors[d]!.add(ac.scaledBy(f));
+        }
+      }
     }
   }
   for (final d in dir16) {
     final c = sComp[d]!;
     sScores[d] = c['tSoft']! + c['tHard']! + c['pSoft']! + c['pHard']!;
+  }
+
+  // ── Solara 設計思想: Soft / Hard 独立2エネルギーを構築 ──
+  // sComp の {tSoft, tHard, pSoft, pHard} を soft / hard の2軸に集約。
+  // tSoft + pSoft → soft（流れ）、tHard + pHard → hard（摩擦）。
+  // 両軸は独立して保持し、合算しない。
+  final sEnergy = <String, DirectionEnergy>{};
+  for (final d in dir16) {
+    final c = sComp[d]!;
+    sEnergy[d] = DirectionEnergy(
+      soft: c['tSoft']! + c['pSoft']!,
+      hard: c['tHard']! + c['pHard']!,
+    );
   }
 
   // Planet directions
@@ -297,26 +380,56 @@ ScoreResult scoreAll(ChartResult chart) {
   // Fortune per category
   final fScores = <String, Map<String, double>>{};
   final fComp = <String, Map<String, Map<String, double>>>{};
+  // E3: フォーチュンカテゴリ × 方角 ごとのアスペクト contributor
+  final fContributors = <String, Map<String, List<AspectContribution>>>{};
   for (final cat in _fortunePairs.keys) {
     fScores[cat] = {for (final d in dir16) d: 0};
     fComp[cat] = {for (final d in dir16) d: _emptyComp()};
+    fContributors[cat] = {
+      for (final d in dir16) d: <AspectContribution>[]
+    };
     final pairs = _fortunePairs[cat]!;
     final cp = <String>{};
     for (final pr in pairs) { for (final p in pr) { cp.add(p); } }
     final ctc = <String, Map<String, double>>{for (final p in cp) p: _emptyComp()};
     final cpc = <String, Map<String, double>>{for (final p in cp) p: _emptyComp()};
+    // カテゴリ内の惑星バケット別 contributor
+    final ctcContribs = <String, List<AspectContribution>>{
+      for (final p in cp) p: <AspectContribution>[]
+    };
+    final cpcContribs = <String, List<AspectContribution>>{
+      for (final p in cp) p: <AspectContribution>[]
+    };
 
-    void addCT(String planet, String q, double amt) {
+    void addCT(String planet, Map<String, dynamic> a, double amt) {
       if (!ctc.containsKey(planet)) return;
+      final q = a['quality'] as String;
       final (s, h) = _qSplit(q, amt);
       ctc[planet]!['tSoft'] = ctc[planet]!['tSoft']! + s;
       ctc[planet]!['tHard'] = ctc[planet]!['tHard']! + h;
+      ctcContribs[planet]!.add(AspectContribution(
+        p1: a['p1'] as String,
+        p2: a['p2'] as String,
+        aspectType: a['type'] as String,
+        quality: q,
+        softAmount: s,
+        hardAmount: h,
+      ));
     }
-    void addCP(String planet, String q, double amt) {
+    void addCP(String planet, Map<String, dynamic> a, double amt) {
       if (!cpc.containsKey(planet)) return;
+      final q = a['quality'] as String;
       final (s, h) = _qSplit(q, amt);
       cpc[planet]!['pSoft'] = cpc[planet]!['pSoft']! + s;
       cpc[planet]!['pHard'] = cpc[planet]!['pHard']! + h;
+      cpcContribs[planet]!.add(AspectContribution(
+        p1: a['p1'] as String,
+        p2: a['p2'] as String,
+        aspectType: a['type'] as String,
+        quality: q,
+        softAmount: s,
+        hardAmount: h,
+      ));
     }
 
     for (final a in tt) {
@@ -326,48 +439,72 @@ ScoreResult scoreAll(ChartResult chart) {
         (a['p1'] == pr[0] && a['p2'] == pr[1]) || (a['p1'] == pr[1] && a['p2'] == pr[0])
       ) ? 2.0 : 0.5;
       final amt = (a['weight'] as double) * pm;
-      final q = a['quality'] as String;
-      if (i1) addCT(a['p1'] as String, q, amt);
-      if (i2) addCT(a['p2'] as String, q, amt);
+      if (i1) addCT(a['p1'] as String, a, amt);
+      if (i2) addCT(a['p2'] as String, a, amt);
     }
     for (final a in tn) {
       if (!cp.contains(a['p1'])) continue;
-      addCT(a['p1'] as String, a['quality'] as String, (a['weight'] as double) * 0.5);
+      addCT(a['p1'] as String, a, (a['weight'] as double) * 0.5);
     }
     for (final a in pn) {
       if (!cp.contains(a['p1'])) continue;
-      addCP(a['p1'] as String, a['quality'] as String, (a['weight'] as double) * 0.5);
+      addCP(a['p1'] as String, a, (a['weight'] as double) * 0.5);
     }
     for (final a in tp) {
       final p1 = a['p1'] as String;
       final p2 = (a['p2'] as String).replaceFirst('P:', '');
       final amt = (a['weight'] as double) * 0.5;
-      final q = a['quality'] as String;
-      if (cp.contains(p1)) addCT(p1, q, amt);
-      if (cp.contains(p2)) addCP(p2, q, amt);
+      if (cp.contains(p1)) addCT(p1, a, amt);
+      if (cp.contains(p2)) addCP(p2, a, amt);
     }
 
     for (final p in cp) {
       if (tA.containsKey(p)) {
         final c = ctc[p]!;
+        final contribs = ctcContribs[p]!;
         for (final d in dir16) {
           final f = _cosFall(_angDist(tA[p]!, _dir16Ang[d]!), _spread);
           fComp[cat]![d]!['tSoft'] = fComp[cat]![d]!['tSoft']! + c['tSoft']! * f;
           fComp[cat]![d]!['tHard'] = fComp[cat]![d]!['tHard']! + c['tHard']! * f;
+          if (f > 0) {
+            for (final ac in contribs) {
+              fContributors[cat]![d]!.add(ac.scaledBy(f));
+            }
+          }
         }
       }
       if (pA.containsKey(p)) {
         final c = cpc[p] ?? _emptyComp();
+        final contribs = cpcContribs[p] ?? const <AspectContribution>[];
         for (final d in dir16) {
           final f = _cosFall(_angDist(pA[p]!, _dir16Ang[d]!), _spread);
           fComp[cat]![d]!['pSoft'] = fComp[cat]![d]!['pSoft']! + c['pSoft']! * f;
           fComp[cat]![d]!['pHard'] = fComp[cat]![d]!['pHard']! + c['pHard']! * f;
+          if (f > 0) {
+            for (final ac in contribs) {
+              fContributors[cat]![d]!.add(ac.scaledBy(f));
+            }
+          }
         }
       }
     }
     for (final d in dir16) {
       final c = fComp[cat]![d]!;
       fScores[cat]![d] = c['tSoft']! + c['tHard']! + c['pSoft']! + c['pHard']!;
+    }
+  }
+
+  // ── Solara 設計思想: フォーチュンカテゴリ別の2エネルギー構築 ──
+  // sEnergy と同じ方針で、各カテゴリ × 16方位 を soft / hard 独立保持。
+  final fEnergy = <String, Map<String, DirectionEnergy>>{};
+  for (final cat in _fortunePairs.keys) {
+    fEnergy[cat] = <String, DirectionEnergy>{};
+    for (final d in dir16) {
+      final c = fComp[cat]![d]!;
+      fEnergy[cat]![d] = DirectionEnergy(
+        soft: c['tSoft']! + c['pSoft']!,
+        hard: c['tHard']! + c['pHard']!,
+      );
     }
   }
 
@@ -384,5 +521,7 @@ ScoreResult scoreAll(ChartResult chart) {
   return ScoreResult(
     sScores: sScores, sComp: sComp, sFortune: sFortune,
     pDir: pDir, fScores: fScores, fComp: fComp,
+    sEnergy: sEnergy, fEnergy: fEnergy,
+    sContributors: sContributors, fContributors: fContributors,
   );
 }

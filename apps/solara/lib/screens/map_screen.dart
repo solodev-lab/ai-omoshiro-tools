@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import '../utils/solara_storage.dart';
-import '../utils/omen_phrases.dart';
 import '../widgets/dominant_fortune_overlay.dart';
-import '../widgets/omen_button.dart';
+import '../widgets/daily_transit_badge.dart';
+import 'map/map_daily_transit_screen.dart';
 import 'map/map_constants.dart';
 import 'map/map_styles.dart';
 import 'map/map_sectors.dart';
@@ -12,7 +12,6 @@ import 'map/map_fortune_sheet.dart';
 import 'map/map_stella.dart';
 import 'map/map_vp_panel.dart';
 import 'map/map_layer_panel.dart';
-import 'map/map_widgets.dart';
 import 'map/map_astro.dart';
 import 'map/map_astro_carto.dart';
 import 'map/map_astro_lines.dart';
@@ -23,6 +22,7 @@ import 'map/map_search.dart';
 import 'map/map_overlays.dart';
 import 'map/map_time_slider.dart';
 import '../utils/astro_lines.dart' as astro_lines;
+import '../utils/direction_energy.dart';
 import 'forecast_screen.dart';
 import 'horoscope/horo_antique_icons.dart';
 import 'locations_screen.dart';
@@ -78,7 +78,6 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   bool _fortuneSheetOpen = false;
   bool _vpPanelOpen = false;
   String _vpTab = 'vp';
-  String _preseedState = 'hidden';
   bool _stellaMinimized = false;
   bool _restOverlayVisible = false;
   final String _restOverlayText = '';
@@ -165,9 +164,11 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   DominantFortuneKind? _activeOverlay;
   int _debugCycleIdx = 0;
 
-  // Daily Omen button
-  bool _omenVisible = false;
-  OmenPhrase _omenPhrase = pickRandomOmenPhrase();
+  // F1-c: Daily Transit Badge — 右上の日次トリガー。
+  // _dailyBadgeUnseen=true 時は光る（リセット時刻後の初回表示）。
+  // タップで _onDailyBadgeTap() → アニメ → F1-c フルUI へ。
+  bool _dailyBadgeUnseen = false;
+  bool _dailyTransitOpen = false;
 
   // Search results
   List<SearchHit> _searchHits = [];
@@ -206,30 +207,28 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     super.initState();
     _loadProfileAndChart();
     _loadMapStyle();
-    _checkOmenVisibility();
+    _checkDailyBadgeState();
   }
 
-  /// 「今日のタップボタン」表示判定。
-  /// ホロスコープ最高カテゴリが算出されていて、かつリセット時刻考慮の
+  /// 右上 DailyTransitBadge の「未閲覧（光る）」状態判定。
+  /// _topCategory が算出されていて、かつリセット時刻考慮の
   /// 「今日」で未表示なら出す。（デバッグフラグ ON 時は常に表示）
-  Future<void> _checkOmenVisibility() async {
-    bool visible;
+  Future<void> _checkDailyBadgeState() async {
+    bool unseen;
     if (_debugAlwaysShowOverlay) {
-      visible = true;
+      unseen = true;
     } else {
       if (_topCategory == null ||
           !_implementedOverlayKinds.contains(_topCategory)) {
-        visible = false;
+        // トップカテゴリ未算出 or アニメ未実装カテゴリ: 光らない（プロフィール無等）
+        unseen = false;
       } else {
         final shown = await SolaraStorage.wasOverlayShownToday(_overlayStorageKey);
-        visible = !shown;
+        unseen = !shown;
       }
     }
     if (!mounted) return;
-    setState(() {
-      _omenVisible = visible;
-      _omenPhrase = pickRandomOmenPhrase();
-    });
+    setState(() => _dailyBadgeUnseen = unseen);
   }
 
   Future<void> _loadMapStyle() async {
@@ -286,12 +285,21 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     // 現状 16方位スコアには影響なし。将来 M1(ハウス重み付け)で意味を持つ。
     final useRelocate = !(p.homeLat == 0 && p.homeLng == 0);
 
-    // CCG (Tier A #5): 日付別 chart キャッシュ参照。
+    // CCG (Tier A #5): 日時別 chart キャッシュ参照。
     // タイムスライダーで往復した際の API 連続呼出を回避する。
-    // キーは UTC日 (1日刻みでスライダーが snap するため)。
-    final cacheKey = targetDate != null
-        ? '${targetDate.year.toString().padLeft(4, '0')}-${targetDate.month.toString().padLeft(2, '0')}-${targetDate.day.toString().padLeft(2, '0')}'
-        : 'today';
+    //
+    // 2026-04-29 修正: キーに時(hour)を含める。
+    // 旧実装は YYYY-MM-DD だけだったため、時刻スライダーを動かしても
+    // 同日キャッシュがヒットして月などの惑星黄経が更新されない問題があった。
+    // 月は約0.5°/h 動くので、1h 刻みで chart を再取得する妥当性が高い。
+    String cacheKey;
+    if (targetDate == null) {
+      cacheKey = 'today';
+    } else {
+      final t = targetDate.toUtc();
+      cacheKey =
+          '${t.year.toString().padLeft(4, '0')}-${t.month.toString().padLeft(2, '0')}-${t.day.toString().padLeft(2, '0')}T${t.hour.toString().padLeft(2, '0')}';
+    }
     ChartResult? chart = _chartCacheByDate[cacheKey];
     if (chart == null) {
       chart = await fetchChart(
@@ -392,8 +400,8 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
         _topCategory = topKey != null ? kindFromKey(topKey) : null;
         _loadingChart = false;
       });
-      // トップカテゴリが確定したので Omen ボタンの表示判定を再評価
-      await _checkOmenVisibility();
+      // トップカテゴリが確定したので Daily Transit Badge の状態を再評価
+      await _checkDailyBadgeState();
       // 検索結果が残っていれば、新しい日付のスコアで再注入
       _reannotateSearchResults();
     } else {
@@ -479,10 +487,14 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
 
   // 旧 _formatSelectedDate は MapTimeSlider 内で表示するため削除 (2026-04-29)。
 
-  /// 今日のタップボタン押下時のハンドラ。
-  /// ホロスコープから得た最高スコアカテゴリの演出を起動する。
-  Future<void> _onOmenTap() async {
+  /// 右上 Daily Transit Badge タップ時のハンドラ。
+  /// プロフィール無 or トップカテゴリ未算出ならば何もしない。
+  /// 「未閲覧（リセット時刻後初回）」: アニメ → 0.5s 余韻 → F1-c フルUI
+  /// 「閲覧済み（同日2回目以降）」: アニメ無し、F1-c フルUI を直接フェードイン
+  Future<void> _onDailyBadgeTap() async {
     if (_activeOverlay != null) return;
+    if (_dailyTransitOpen) return;
+    if (_noProfile) return;
 
     DominantFortuneKind? kind;
     if (_debugAlwaysShowOverlay && _debugCycleOverlayKinds) {
@@ -493,14 +505,31 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
       if (_debugAlwaysShowOverlay && (kind == null || !_implementedOverlayKinds.contains(kind))) {
         kind = DominantFortuneKind.love;
       }
-      if (kind == null) return;
-      if (!_implementedOverlayKinds.contains(kind)) return;
+      if (kind == null) {
+        // トップカテゴリ未算出: アニメ無しで F1-c だけ開く（カテゴリ表示は「TOP表示」）
+        setState(() => _dailyTransitOpen = true);
+        return;
+      }
+      if (!_implementedOverlayKinds.contains(kind)) {
+        // アニメ未実装カテゴリ: F1-c のみ
+        setState(() => _dailyTransitOpen = true);
+        return;
+      }
     }
 
     if (!mounted) return;
+
+    // 同日2回目以降: アニメ skip して F1-c へ直接
+    final shown = await SolaraStorage.wasOverlayShownToday(_overlayStorageKey);
+    if (shown && !_debugAlwaysShowOverlay) {
+      setState(() => _dailyTransitOpen = true);
+      return;
+    }
+
+    // 初回: アニメ再生 → 完了後に F1-c 表示
     setState(() {
       _activeOverlay = kind;
-      _omenVisible = false;
+      _dailyBadgeUnseen = false;
     });
     if (!_debugAlwaysShowOverlay) {
       await SolaraStorage.markOverlayShown(_overlayStorageKey);
@@ -508,17 +537,51 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   }
 
   /// Dominant Fortune Overlay 完了時の処理。
-  /// 本番: ボタンは当日再表示しない（リセット時刻で自動的に復活）。
-  /// デバッグ: フラグ ON 時のみ再表示＋フレーズ再抽選。
-  void _onOverlayComplete() {
+  /// アニメ → 0.5s 余韻 → F1-c フルUI フェードイン
+  Future<void> _onOverlayComplete() async {
+    if (!mounted) return;
+    setState(() => _activeOverlay = null);
+    // 余韻 0.5 秒
+    await Future<void>.delayed(const Duration(milliseconds: 500));
+    if (!mounted) return;
+    setState(() => _dailyTransitOpen = true);
+  }
+
+  /// F1-c フル UI を閉じる。バッジは閲覧済み状態（光らない）に。
+  void _onDailyTransitClose() {
     if (!mounted) return;
     setState(() {
-      _activeOverlay = null;
-      if (_debugAlwaysShowOverlay) {
-        _omenVisible = true;
-        _omenPhrase = pickRandomOmenPhrase();
-      }
+      _dailyTransitOpen = false;
+      _dailyBadgeUnseen = false;
     });
+  }
+
+  /// F1-c 観測点を決定する。
+  /// 優先: Sanctuary で設定された home → 出生地 → 地図中心。
+  /// 「あなたの拠点で今日の惑星がいつ・どこに現れるか」を表示するための座標。
+  LatLng _dailyTransitLocation() {
+    final p = _profile;
+    if (p != null) {
+      final hasHome = !(p.homeLat == 0 && p.homeLng == 0);
+      if (hasHome) return LatLng(p.homeLat, p.homeLng);
+      final hasBirth = !(p.birthLat == 0 && p.birthLng == 0);
+      if (hasBirth) return LatLng(p.birthLat, p.birthLng);
+    }
+    return _center;
+  }
+
+  /// F1-c ヘッダに表示する観測地ラベル（「自宅」「出生地」「地図中心」など）。
+  String _dailyTransitLocationLabel() {
+    final p = _profile;
+    if (p != null) {
+      if (!(p.homeLat == 0 && p.homeLng == 0)) {
+        return p.homeName.isNotEmpty ? p.homeName : '自宅';
+      }
+      if (!(p.birthLat == 0 && p.birthLng == 0)) {
+        return '出生地';
+      }
+    }
+    return '地図中心';
   }
 
   Future<void> _doSearch(String query) async {
@@ -601,6 +664,37 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
         total += c[k] ?? 0;
       }
       result[d] = total;
+    }
+    return result;
+  }
+
+  /// 🔴 Solara設計思想: ソフト/ハード独立2エネルギー版の方位データ。
+  /// セクター描画は本メソッドの戻り値を `sectorEnergies` に渡す。
+  /// _activeSrc によりトランジット/プログレス/合計を切替。
+  /// （詳細: project_solara_design_philosophy.md）
+  Map<String, DirectionEnergy>? _displayEnergies() {
+    final comps = _activeCategory == 'all'
+        ? _sectorComps
+        : (_fComps[_activeCategory] ?? const <String, Map<String, double>>{});
+    if (comps.isEmpty) return null;
+
+    final useT = _activeSrc == 'transit' || _activeSrc == 'combined';
+    final useP = _activeSrc == 'progressed' || _activeSrc == 'combined';
+
+    final result = <String, DirectionEnergy>{};
+    for (final d in dir16) {
+      final c = comps[d] ?? const <String, double>{};
+      double soft = 0;
+      double hard = 0;
+      if (useT) {
+        soft += c['tSoft'] ?? 0;
+        hard += c['tHard'] ?? 0;
+      }
+      if (useP) {
+        soft += c['pSoft'] ?? 0;
+        hard += c['pHard'] ?? 0;
+      }
+      result[d] = DirectionEnergy(soft: soft, hard: hard);
     }
     return result;
   }
@@ -767,6 +861,9 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
               sectorColor: _sectorColor,
               visible: _layers['sectors']!,
               lightMap: !(mapStyleConfigs[_mapStyle]?.dark ?? true),
+              // 🔴 Solara設計思想: 2エネルギー独立描画
+              sectorEnergies: _displayEnergies(),
+              dimFactor: _astroLayers['relocate'] == true ? 0.4 : 1.0,
             )),
             PolylineLayer(polylines: buildCompass(center: _center, visible: _layers['compass']!)),
             // HTML: addPlanetLines() — natal/progressed/transit 天体ライン
@@ -944,10 +1041,18 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
           ),
         ),
 
-        // ── Seed Badge ──
-        if (_preseedState == 'hidden' && !_astroCartoMode) Positioned(
+        // ── Daily Transit Badge（右上の日次トリガー） ──
+        // ACGモード中は世界規模ビューを邪魔しないため非表示。
+        // F1-c (2026-04-29 オーナー設計): タップで「今日の動き」を開く。
+        // 未閲覧時は光るグロー演出、閲覧済みはトップカテゴリアイコン。
+        if (!_astroCartoMode) Positioned(
           top: topPad + 6, right: 20,
-          child: const SeedBadge(),
+          child: DailyTransitBadge(
+            unseen: _dailyBadgeUnseen,
+            topCategory: _topCategory,
+            disabled: _noProfile,
+            onTap: _onDailyBadgeTap,
+          ),
         ),
 
         // ── 外側タップでパネルを閉じる（HTML: pointerdown outside → close）──
@@ -1061,6 +1166,11 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
             sectorComps: _activeCategory == 'all'
                 ? _sectorComps
                 : (_fComps[_activeCategory] ?? _sectorComps),
+            // E4: 2エネルギー詳細ポップアップ用データ
+            sectorEnergies: _displayEnergies(),
+            sectorContributors: _activeCategory == 'all'
+                ? _scoreResult?.sContributors
+                : _scoreResult?.fContributors[_activeCategory],
             onSrcChanged: (s) {
               setState(() => _activeSrc = s);
               _reannotateSearchResults();
@@ -1071,31 +1181,6 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
             },
             onClose: () => setState(() => _fortuneSheetOpen = false),
           ),
-        ),
-
-        // ── Gray veil (pre-seed state) ──
-        if (_preseedState != 'hidden') Positioned.fill(
-          child: GestureDetector(
-            onTap: () {
-              if (_preseedState == 'center') {
-                setState(() => _preseedState = 'bottom');
-              } else if (_preseedState == 'bottom') {
-                setState(() => _preseedState = 'hidden');
-              }
-            },
-            child: AnimatedOpacity(
-              opacity: _preseedState == 'center' ? 1.0 : 0.0,
-              duration: const Duration(milliseconds: 800),
-              child: Container(color: const Color(0x400A0A14)),
-            ),
-          ),
-        ),
-
-        // ── Preseed ──
-        if (_preseedState == 'center') const Center(child: Preseed()),
-        if (_preseedState == 'bottom') const Positioned(
-          bottom: 12, left: 0, right: 0,
-          child: PreseedHint(),
         ),
 
         // ── Search Result List（複数候補） ──
@@ -1131,19 +1216,27 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
           child: const StatusBadge(label: '検索中…'),
         ),
 
-        // ── Daily Omen Button（今日のタップボタン）──
-        // モード中は世界規模ビューにカテゴリピルを置くので非表示
-        if (!_noProfile && _omenVisible && _activeOverlay == null && !_astroCartoMode) Positioned(
-          left: 24, right: 24, bottom: 90,
-          child: OmenButton(phrase: _omenPhrase, onTap: _onOmenTap),
-        ),
-
         // ── Dominant Fortune Overlay ──
         if (_activeOverlay != null) Positioned.fill(
           child: DominantFortuneOverlay(
             key: ValueKey(_activeOverlay),
             kind: _activeOverlay!,
             onComplete: _onOverlayComplete,
+          ),
+        ),
+
+        // ── F1-c: Daily Transit Full UI ──
+        // _onDailyBadgeTap または _onOverlayComplete で _dailyTransitOpen=true。
+        // 閉じる → _onDailyTransitClose で右上バッジ位置に縮小フェード。
+        // 観測点優先順: home (Sanctuary 拠点) → birth → 地図中心
+        // V2: natal を渡してイベント時刻のアスペクト contextを併記
+        if (_dailyTransitOpen) Positioned.fill(
+          child: MapDailyTransitScreen(
+            topCategory: _topCategory,
+            location: _dailyTransitLocation(),
+            locationLabel: _dailyTransitLocationLabel(),
+            natal: _chartResult?.natal,
+            onClose: _onDailyTransitClose,
           ),
         ),
 

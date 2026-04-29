@@ -60,7 +60,7 @@ class HoroFilterPanel extends StatelessWidget {
       // B: Fortune Category
       _filterSection('B', '運勢カテゴリ', [
         _exclusiveChip('癒し', 'healing', const Color(0xFF26D0CE)),
-        _exclusiveChip('金運', 'money', const Color(0xFFFFD370)),
+        _exclusiveChip('豊かさ', 'money', const Color(0xFFFFD370)),
         _exclusiveChip('恋愛運', 'love', const Color(0xFFFF6B9D)),
         _exclusiveChip('仕事運', 'career', const Color(0xFFFF8C42)),
         _exclusiveChip('コミュニケーション', 'communication', const Color(0xFF6BB5FF)),

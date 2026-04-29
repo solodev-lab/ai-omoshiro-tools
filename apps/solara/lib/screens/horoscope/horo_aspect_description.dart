@@ -25,7 +25,7 @@ const Map<String, Map<String, String>> planetInfo = {
 const Map<String, Map<String, String>> aspectInfo = {
   'conjunction': {
     'name': '合 (コンジャンクション)', 'angle': '0°', 'quality': '融合',
-    'summary': '2つのエネルギーが重なり一体化し、最も強い影響を発揮する。',
+    'summary': '2つのエネルギーが重なり一体化・共存し、最も強い影響を発揮する。',
   },
   'sextile': {
     'name': 'セクスタイル', 'angle': '60°', 'quality': '調和 (軽)',

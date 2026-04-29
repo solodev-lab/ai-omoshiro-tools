@@ -104,14 +104,18 @@ class _SanctuaryHomeEditorPageState extends State<SanctuaryHomeEditorPage> {
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 // Header
                 Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                  const Text('🏠 自宅（現住所）', style: TextStyle(
-                    fontSize: 16, fontWeight: FontWeight.w700, color: Color(0xFFF9D976), letterSpacing: 1)),
+                  const Row(mainAxisSize: MainAxisSize.min, children: [
+                    Icon(Icons.home_rounded, size: 18, color: Color(0xFFF9D976)),
+                    SizedBox(width: 8),
+                    Text('自宅（現住所）', style: TextStyle(
+                      fontSize: 16, fontWeight: FontWeight.w700, color: Color(0xFFF9D976), letterSpacing: 1)),
+                  ]),
                   GestureDetector(
                     onTap: () => Navigator.pop(context),
                     child: Container(
                       width: 32, height: 32,
                       decoration: const BoxDecoration(shape: BoxShape.circle, color: Color(0x14FFFFFF)),
-                      child: const Center(child: Text('✕', style: TextStyle(fontSize: 18, color: Color(0xFFACACAC)))),
+                      child: const Center(child: Icon(Icons.close, size: 18, color: Color(0xFFACACAC))),
                     ),
                   ),
                 ]),

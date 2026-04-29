@@ -131,13 +131,15 @@ class SearchResultList extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.fromLTRB(14, 10, 10, 6),
           child: Row(children: [
-            const Text('🔍 検索結果', style: TextStyle(fontSize: 11, color: Color(0xFFC9A84C), letterSpacing: 1)),
+            const Icon(Icons.search, size: 14, color: Color(0xFFC9A84C)),
+            const SizedBox(width: 5),
+            const Text('検索結果', style: TextStyle(fontSize: 11, color: Color(0xFFC9A84C), letterSpacing: 1)),
             const Spacer(),
             GestureDetector(
               onTap: onClose,
               child: const Padding(
                 padding: EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-                child: Text('✕', style: TextStyle(color: Color(0xFF888888), fontSize: 14)),
+                child: Icon(Icons.close, size: 14, color: Color(0xFF888888)),
               ),
             ),
           ]),
@@ -271,14 +273,14 @@ class SearchFocusPopup extends StatelessWidget {
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
         Row(children: [
-          const Text('📍', style: TextStyle(fontSize: 18)),
-          const SizedBox(width: 8),
+          const Icon(Icons.place, size: 16, color: Color(0xFFC9A84C)),
+          const SizedBox(width: 6),
           Expanded(child: Text(short,
             style: const TextStyle(fontSize: 13, color: Color(0xFFE8E0D0), fontWeight: FontWeight.w600),
             maxLines: 1, overflow: TextOverflow.ellipsis)),
           GestureDetector(
             onTap: onClose,
-            child: const Text('✕', style: TextStyle(color: Color(0xFF555555), fontSize: 14)),
+            child: const Icon(Icons.close, size: 14, color: Color(0xFF888888)),
           ),
         ]),
         const SizedBox(height: 10),

@@ -32,11 +32,13 @@ class AstroTermLabel extends StatelessWidget {
   /// アイコンと child の間隔
   final double spacing;
 
+  // 2026-04-29: タップ領域を確保するため iconSize 11→16 のデフォルトに引き上げ。
+  // 周囲に EdgeInsets.all(8) を入れて 32×32px のタップ領域を確保。
   const AstroTermLabel({
     super.key,
     required this.termKey,
     required this.child,
-    this.iconSize = 11,
+    this.iconSize = 16,
     this.iconColor,
     this.spacing = 3,
   });
@@ -46,22 +48,31 @@ class AstroTermLabel extends StatelessWidget {
     final entry = astroGlossary[termKey];
     if (entry == null) return child; // 辞書未登録ならそのまま表示
 
-    return GestureDetector(
-      onTap: () => _showGlossary(context, entry),
-      behavior: HitTestBehavior.opaque,
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          child,
-          SizedBox(width: spacing),
-          Icon(
-            Icons.info_outline,
-            size: iconSize,
-            color: iconColor ?? const Color(0x88AAAAAA),
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        // ラベルだけタップ → 用語解説（タップ領域は文字部分相当）
+        GestureDetector(
+          onTap: () => _showGlossary(context, entry),
+          behavior: HitTestBehavior.opaque,
+          child: child,
+        ),
+        SizedBox(width: spacing),
+        // i アイコン本体: 周囲 8px パディングでタップ領域 32×32px を確保
+        GestureDetector(
+          onTap: () => _showGlossary(context, entry),
+          behavior: HitTestBehavior.opaque,
+          child: Padding(
+            padding: const EdgeInsets.all(8),
+            child: Icon(
+              Icons.info_outline,
+              size: iconSize,
+              color: iconColor ?? const Color(0xCCAAAAAA),
+            ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 

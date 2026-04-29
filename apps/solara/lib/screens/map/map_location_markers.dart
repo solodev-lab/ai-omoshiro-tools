@@ -262,9 +262,10 @@ class LocationMarkerPopup extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Text(
-              isBirth ? '🌟' : '📍',
-              style: const TextStyle(fontSize: 22, height: 1.0),
+            Icon(
+              isBirth ? Icons.star_rounded : Icons.place,
+              size: 22,
+              color: accent,
             ),
             const SizedBox(width: 10),
             Expanded(

@@ -133,11 +133,15 @@ class _ObserveHistoryPanelState extends State<ObserveHistoryPanel> {
                 Wrap(spacing: 8, children: [
                   Text('${elementEmojis[card.element] ?? ''} ${elementNames[card.element] ?? ''}',
                     style: TextStyle(fontSize: 10, color: elColor)),
-                  const Text('🏠 自宅', style: TextStyle(fontSize: 10, color: Color(0xFF555555))),
+                  const Row(mainAxisSize: MainAxisSize.min, children: [
+                    Icon(Icons.home_rounded, size: 11, color: Color(0xFF666666)),
+                    SizedBox(width: 3),
+                    Text('自宅', style: TextStyle(fontSize: 10, color: Color(0xFF555555))),
+                  ]),
                   Text(r.date, style: const TextStyle(fontSize: 10, color: Color(0xFF555555))),
                 ]),
               ])),
-              Text(expanded ? '▲' : '▼', style: const TextStyle(fontSize: 14, color: Color(0xFF555555))),
+              Icon(expanded ? Icons.expand_less : Icons.expand_more, size: 16, color: const Color(0xFF555555)),
             ]),
           ),
         ),

@@ -48,7 +48,7 @@ class ForecastTop5Section extends StatelessWidget {
     final modes = <Map<String, Object>>[
       {'key': 'overall', 'label': '総合', 'color': const Color(0xFFC9A84C)},
       {'key': 'love', 'label': '恋愛', 'color': categoryColors['love']!},
-      {'key': 'money', 'label': '金運', 'color': categoryColors['money']!},
+      {'key': 'money', 'label': '豊かさ', 'color': categoryColors['money']!},
       {'key': 'healing', 'label': '癒し', 'color': categoryColors['healing']!},
       {'key': 'work', 'label': '仕事', 'color': categoryColors['work']!},
       {'key': 'communication', 'label': '話す', 'color': categoryColors['communication']!},
