@@ -9,6 +9,7 @@ import { lookupTimezone } from './tzlookup.js';
 import { handleFortune } from './fortune.js';
 import { handleTarot } from './tarot.js';
 import { handleRelocation } from './relocation.js';
+import { handleLineNarrative } from './line_narrative.js';
 
 // ── CORS ──
 const ALLOWED_ORIGINS = [
@@ -288,12 +289,21 @@ export default {
       }
 
       // ── Search ──
+      // 任意で lat/lng を受取り Google Places の locationBias.circle (15km) に渡す
+      // → マップ中心付近のカフェ等POIを優先表示。
       if (path === '/search' && request.method === 'GET') {
         const q = url.searchParams.get('q');
         if (!q || q.length < 2) {
           return jsonError(400, 'Query parameter "q" required (min 2 chars)', origin);
         }
-        const results = await searchPlace(q, env);
+        const latParam = parseFloat(url.searchParams.get('lat'));
+        const lngParam = parseFloat(url.searchParams.get('lng'));
+        const options = {};
+        if (!isNaN(latParam) && !isNaN(lngParam)) {
+          options.lat = latParam;
+          options.lng = lngParam;
+        }
+        const results = await searchPlace(q, env, options);
         return jsonOk(results, origin);
       }
 
@@ -332,6 +342,24 @@ export default {
         } catch (err) {
           console.error('Relocation error:', err);
           return jsonError(500, err.message || 'Relocation generation failed', origin);
+        }
+      }
+
+      // ── Astro*Carto*Graphy Line Narrative (Tier S #2) ──
+      // POST /astro/line-narrative
+      // 入力: { frame:'natal'|'transit', planet, angle:'ASC|MC|DSC|IC',
+      //        tappedLat, tappedLng, tappedPlaceName?, natalSummary?, transitDate?, userName?, lang? }
+      // 出力: { title, narrative, softNote, hardNote, lang }
+      // 設計思想: project_solara_design_philosophy.md（Soft/Hard 独立2エネルギー、吉凶禁止）。
+      // 失敗時は Dart 側で静的辞書 (astro_glossary aspect_lines) にフォールバック。
+      if (path === '/astro/line-narrative' && request.method === 'POST') {
+        const body = await request.json();
+        try {
+          const result = await handleLineNarrative(body, env);
+          return jsonOk(result, origin);
+        } catch (err) {
+          console.error('LineNarrative error:', err);
+          return jsonError(500, err.message || 'Line narrative generation failed', origin);
         }
       }
 

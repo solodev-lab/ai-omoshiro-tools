@@ -293,7 +293,7 @@ class _EnergyBar extends StatelessWidget {
             SizedBox(
               width: 38,
               child: Text(
-                value.toStringAsFixed(2),
+                value.toStringAsFixed(1),
                 style: TextStyle(
                   fontSize: 11,
                   fontFamily: 'monospace',
@@ -325,7 +325,7 @@ class _ContribRow extends StatelessWidget {
     final p1Label = _planetLabel(agg.p1);
     final p2Label = _planetLabel(agg.p2);
     final aspectLabel = _aspectLabel(agg.aspectType);
-    final mag = agg.magnitude.toStringAsFixed(2);
+    final mag = agg.magnitude.toStringAsFixed(1);
 
     return Row(
       children: [

@@ -16,12 +16,16 @@ class FortuneFilterLabel extends StatelessWidget {
   final Map<String, double> sectorScores;
   final String activeSrc;
   final String activeCategory;
+  /// タップでカテゴリ次へ切替 (2026-04-30 オーナー要望)。
+  /// 渡されない場合はタップ無効。
+  final VoidCallback? onTap;
 
   const FortuneFilterLabel({
     super.key,
     required this.sectorScores,
     required this.activeSrc,
     required this.activeCategory,
+    this.onTap,
   });
 
   @override
@@ -34,7 +38,10 @@ class FortuneFilterLabel extends StatelessWidget {
     final catColor = categoryColors[activeCategory] ?? const Color(0xFFC9A84C);
 
     // ClipRRect で境界半径を維持しつつ、sub-pixel オーバーフローを視覚的に吸収
-    return ClipRRect(
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: ClipRRect(
       borderRadius: BorderRadius.circular(10),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
@@ -89,7 +96,7 @@ class FortuneFilterLabel extends StatelessWidget {
                       ),
                       const SizedBox(width: 4),
                       SizedBox(width: 28, child: Text(
-                        e.value.toStringAsFixed(2),
+                        e.value.toStringAsFixed(1),
                         style: const TextStyle(fontSize: 8, fontFamily: 'monospace', color: Color(0xFFF6BD60), fontWeight: FontWeight.w600),
                         textAlign: TextAlign.right,
                       )),
@@ -101,6 +108,7 @@ class FortuneFilterLabel extends StatelessWidget {
           ],
         ),
       ),
+    ),
     );
   }
 }
@@ -324,7 +332,7 @@ class FortuneSheet extends StatelessWidget {
               }),
             ),
           ),
-          SizedBox(width: 48, child: Text(total.toStringAsFixed(2),
+          SizedBox(width: 48, child: Text(total.toStringAsFixed(1),
             style: const TextStyle(fontSize: 11, fontFamily: 'monospace', color: Color(0xFFF6BD60)),
             textAlign: TextAlign.right)),
           if (canShowDetail)

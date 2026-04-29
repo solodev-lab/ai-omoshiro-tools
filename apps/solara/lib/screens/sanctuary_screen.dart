@@ -25,7 +25,8 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
   String? _titleLight;
   String? _titleShadow;
   String? _titleClassEN;
-  bool _titleFlipped = false;
+  // 2026-04-30: シャドー称号無効化中のため変化しないが、復活時に flip するため var 維持
+  bool _titleFlipped = false; // ignore: prefer_final_fields
 
   // Astrology settings
   String _houseSystem = 'placidus';
@@ -298,18 +299,13 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
       children: [
         // Title card (if diagnosed)
         if (_titleLight != null) ...[
-          GestureDetector(
-            onTap: () => setState(() => _titleFlipped = !_titleFlipped),
-            child: _buildTitleFlipCard(),
-          ),
-          // HTML: .td-flip-hint { font-size:10px; color:rgba(172,172,172,0.4); text-align:center; }
-          const Padding(
-            padding: EdgeInsets.only(top: 8),
-            child: Center(
-              child: Text('tap to flip',
-                style: TextStyle(fontSize: 10, color: Color(0x66ACACAC), letterSpacing: 0.5)),
-            ),
-          ),
+          // 2026-04-30 オーナー判断: シャドー称号は一時的に無効化（後で復活可能）。
+          //   - flip タップを停止し、`tap to flip` ヒントも非表示
+          //   - `_titleFlipped` は常に false のまま → LIGHT 側のみ表示
+          //   - SHADOW 描画ロジック（_buildTitleFlipCard 内の SHADOW 分岐）と
+          //     `_titleShadow` state、保存ロジックは維持
+          //   復活手順: ここで GestureDetector で _titleFlipped をトグル + hint 復元
+          _buildTitleFlipCard(),
           const SizedBox(height: 10),
         ],
         // HTML: #titleStartBtn — gold button (shown when not yet diagnosed)

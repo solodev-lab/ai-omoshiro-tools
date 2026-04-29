@@ -25,8 +25,8 @@ const tarotReadings = <String, List<String>>{
 // HTML exact: TAROT_ADVICES
 const tarotAdvices = [
   '🧭 {dir}の方角にエネルギーが集中。可能なら足を運んでみて。',
-  '🌟 今日のラッキーアクション: {keyword}を意識した行動が幸運を呼びます。',
-  '✦ {dir}方位が吉。この方角でのインスピレーションを大切に。',
+  '🌟 今日の意識ポイント: {keyword}を意識した行動が追い風を生みます。',
+  '✦ {dir}方位にエネルギー集中。この方角でのインスピレーションを大切に。',
 ];
 
 // HTML exact: PLANET_SYMBOLS

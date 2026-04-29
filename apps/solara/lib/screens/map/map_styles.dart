@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import '../../utils/solara_api.dart' show solaraWorkerBase;
+import '../../utils/tile_http_client.dart';
 
 /// マップスタイルの種類。LayerPanel から切替可。
 enum MapStyle {
@@ -99,6 +100,9 @@ MapStyle mapStyleFromId(String? id) {
 
 /// 選択スタイルに応じた TileLayer を返す。
 /// dark 指定の場合は ColorFilter で反転して暗色化。
+///
+/// tileProvider: アプリ全体で共有する HttpClient を渡し、
+///   socket 枯渇による DNS 失敗の連鎖を防止 (詳細: tile_http_client.dart)。
 Widget buildStyledTileLayer(MapStyle style) {
   final cfg = mapStyleConfigs[style]!;
   return TileLayer(
@@ -107,6 +111,7 @@ Widget buildStyledTileLayer(MapStyle style) {
     subdomains: cfg.subdomains,
     maxZoom: cfg.maxZoom.toDouble(),
     userAgentPackageName: 'com.solara.app',
+    tileProvider: NetworkTileProvider(httpClient: sharedTileHttpClient),
     tileBuilder: cfg.dark
         ? (context, tileWidget, tile) => ColorFiltered(
               // 外側：色相180°回転（invert後の色を元に戻す）

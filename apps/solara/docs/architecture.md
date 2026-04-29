@@ -3,6 +3,7 @@
 > アプリ全体の構造と設計方針。
 > 新しい画面や機能を追加する時はこのファイルを確認する。
 > 2026-04-29 更新: F1-c (Daily Transit) + Phase E1-E8 (Soft/Hard 設計思想) 反映。
+> 2026-04-30 更新: Tier S #2 ライン narrative + Daily Transit フィルタ/VP切替 + 検索 Google Places + tile fd 対策。
 
 ---
 
@@ -51,7 +52,14 @@ lib/ (約 80 .dart ファイル)
 │   │   │                                  Daily Transit V2 のアスペクトチップ
 │   │   │                                  タップで Horo 相タブ同等の詳細を表示
 │   │   ├── map_daily_transit_screen.dart  F1-c (2026-04-29): Daily Transit フルUI
-│   │   │                                  ヘッダ(カテゴリ + 拠点) + 本日/明日タブ + タイムライン
+│   │   │                                  ヘッダ(カテゴリ + VP切替) + 本日/明日タブ
+│   │   │                                  + アングル/カテゴリフィルタ + タイムライン
+│   │   │                                  2026-04-30: VIEWPOINT切替 + フィルタ + i Dialog
+│   │   ├── daily_transit_data.dart      2026-04-30 分割: AngleFilter + tips/baseText/appendix
+│   │   │                                  10惑星 × 4アングル = 40パターン基本意味
+│   │   │                                  5カテゴリ × 2相 = 10パターン行動指針
+│   │   ├── map_line_narrative_sheet.dart  Tier S #2 (2026-04-30): A*C*G ライン詳細シート
+│   │   │                                  静的辞書 → 「詳しく読む」→ Soft/Hard別表示
 │   │   └── map_overlays.dart           SideButtons/SearchBar/Badges/VP Pin/RestOverlay 等
 │   ├── locations_screen.dart   拠点一覧画面（Map 🗺ボタンから BottomSheet）
 │   ├── forecast_screen.dart    1〜5年 Forecast（Map 🔮ボタンから BottomSheet、ヒートマップ+◯◯期+Top5）
@@ -116,10 +124,16 @@ lib/ (約 80 .dart ファイル)
 │   ├── app_locale.dart          言語切替（端末設定/JP/EN）グローバル Singleton
 │   ├── astro_houses.dart        Phase M2: LST/ASC/MC/Placidus を Dart で完結 (Worker同等)
 │   ├── astro_lines.dart         Phase M2: 40本アスペクト線計算 (球面三角法 + 近接線検出)
-│   └── astro_glossary.dart      Phase M2: 占星術用語辞書 (i アイコン popup 用)
-│                                  E6 (2026-04-29): 文言全面書き直し + 'two_energies' /
-│                                  'soft_aspect' / 'hard_aspect' / 'transit_angles' /
-│                                  'top_category_logic' エントリ追加
+│   ├── astro_glossary.dart      Phase M2: 占星術用語辞書 (i アイコン popup 用)
+│   │                              E6 (2026-04-29): 文言全面書き直し + 'two_energies' /
+│   │                              'soft_aspect' / 'hard_aspect' / 'transit_angles' /
+│   │                              'top_category_logic' エントリ追加
+│   │                              2026-04-30: 'category_tips_intent' 追加 +
+│   │                              Dialog スクロール対応 (overflow防止)
+│   ├── line_narrative_api.dart  Tier S #2 (2026-04-30): /astro/line-narrative
+│   │                              呼出 + LRU キャッシュ (max 100, lat/lng 0.1° 丸め)
+│   └── tile_http_client.dart    2026-04-30: タイル取得用 共有 HttpClient
+│                                  fd 枯渇対策 (maxConnectionsPerHost=6, idleTimeout=15s)
 └── widgets/               ← 共通ウィジェット
     ├── solara_nav_bar.dart          ボトムナビゲーション
     ├── glass_panel.dart             フロストガラスパネル
@@ -611,16 +625,18 @@ Cloudflare Worker 本番デプロイ済み: `https://solara-api.solodev-lab.com`
 | `/astro/forecast` | POST | 1〜5年 Forecast (KV月次クォータ60req/月) | `forecast_screen` |
 | `/astro/events` | GET | 月別天体イベント (ingress/retrograde/eclipse) | `celestial_events.dart#fetchMonthEvents` |
 | `/astro/daily-transits` | POST | F1 (2026-04-29): 拠点での1日のトランジット通過時刻 + 各時刻 natal アスペクト併記 (V2.2) | `daily_transits_api.dart#fetchDailyTransits` |
+| `/astro/line-narrative` | POST | Tier S #2 (2026-04-30): A*C*G ライン (natal/transit) のタップ詳細解説 (Soft/Hard 両面記述) | `line_narrative_api.dart#fetchLineNarrative` |
 | `/tz` | GET | 緯度経度→IANA TZ名 (C案, DST対応) | `solara_api.dart#fetchTimezoneName` |
-| `/search` | GET | Nominatim placelookup proxy | (未接続) |
+| `/search` | GET | Google Places (New) Text Search 優先 → Nominatim fallback (lat/lng で locationBias.circle 15km, pageSize 20) | `map_search.dart#searchPlaces` |
 | `/fortune` | POST | Gemini 2.5 Flash 生成の占い文 (5カテゴリ) | `fortune_api.dart#fetchFortune` |
 | `/tarot` | POST | Gemini 生成のタロットリーディング | `observe_screen` |
 | `/relocation` | POST | Gemini 生成のリロケーションナラティブ | `horo_relocation_panel.dart` |
-| `/tiles/osm/<source>/<z>/<x>/<y>.png` | GET | OSM 系タイルプロキシ (HOT/Standard/CyclOSM) | `map_styles.dart` |
+| `/tiles/osm/<source>/<z>/<x>/<y>.png` | GET | OSM 系タイルプロキシ (HOT/Standard/CyclOSM) | `map_styles.dart` (sharedTileHttpClient 経由) |
 
 **Secrets (Cloudflare暗号化ストア):**
 - `GEMINI_API_KEY` — Fortune LLM 生成用 (wrangler secret put で設定済み)
 - `JAWG_TOKEN` — Jawg Maps タイルアクセス用 (2026-04-22 追加)
+- `GOOGLE_PLACES_KEY` — Places API (New) Text Search 用 (2026-04-30 追加、月10,000 req 無料枠)
 
 **Worker URL 単一情報源ルール（2026-04-23 確立）:**
 アプリ内で Worker を参照する全ての Dart ファイルは、

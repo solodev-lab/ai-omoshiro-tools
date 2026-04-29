@@ -436,6 +436,40 @@ const Map<String, AstroGlossaryEntry> astroGlossary = {
         '「悪い」のではない。むしろ深い学びが起こる時間。'
         '見つめ直すか、行動するか、距離を取るかは、あなたが選ぶ。',
   ),
+
+  // ── Daily Transit カテゴリ別「おすすめ行動の例」の意図（2026-04-30 追加） ──
+  'category_tips_intent': AstroGlossaryEntry(
+    title: 'おすすめ行動の例 — 使い方',
+    summary: 'これは「指示」ではなく「ヒント」。あなた自身で動きを考える参考に。',
+    detail:
+        'このフィルタで見える時間帯は、選んだカテゴリのエネルギーが\n'
+        '動く瞬間です。表示されている行動例は「絶対にこうすべき」\n'
+        'という指示ではありません。\n\n'
+        '─────────────\n'
+        '行動例の意図\n'
+        '─────────────\n'
+        '・このカテゴリ × アングル相（外向き／内向き）の典型的な\n'
+        '　動き方を例示する\n'
+        '・あなた独自の状況に合わせて、動きを応用するヒントとして使う\n'
+        '・「自分ならどう動くか」を考えるきっかけにする\n\n'
+        '─────────────\n'
+        '応用の例\n'
+        '─────────────\n'
+        '例えば「新しい出会いの場や対話のきっかけを意識する」とあれば、\n'
+        '実際の動きはあなたの生活に合わせて自由です。\n'
+        '・友人を誘って食事に行く\n'
+        '・SNSで久しぶりの知人に連絡する\n'
+        '・職場で隣の席の人にひとこと声をかける\n'
+        '・お店で店員さんと少し話してみる\n'
+        '・新しいコミュニティを覗いてみる\n'
+        'いずれも「対話のきっかけを意識する」の応用です。\n\n'
+        '─────────────\n'
+        'Solara の姿勢\n'
+        '─────────────\n'
+        'Solara はエネルギーがどこに動いているかを伝えるだけ。\n'
+        '「ラッキー」「アンラッキー」とは言いません。\n'
+        'どう関わるか、何をするかは、あなたが選びます。',
+  ),
 };
 
 /// 用語解説 popup を表示する共通ヘルパー。
@@ -447,49 +481,76 @@ void showAstroGlossaryDialog(BuildContext context, String termKey) {
   showDialog<void>(
     context: context,
     barrierColor: const Color(0x99000000),
-    builder: (ctx) => Dialog(
-      backgroundColor: Colors.transparent,
-      elevation: 0,
-      insetPadding: const EdgeInsets.symmetric(horizontal: 32, vertical: 80),
-      child: GlassPanel(
-        padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 360),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(entry.title,
-                      style: const TextStyle(
-                        fontSize: 14, color: Color(0xFFC9A84C),
-                        fontWeight: FontWeight.w600, letterSpacing: 0.4,
-                      )),
+    builder: (ctx) {
+      // 画面高さ - insetPadding(80*2) - 内側余白 を最大高さに。
+      // 長文 entry (category_tips_intent 等) で Column が縦溢れするのを防ぐ。
+      final screenH = MediaQuery.of(ctx).size.height;
+      final maxH = (screenH - 160).clamp(200.0, double.infinity);
+      return Dialog(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        insetPadding:
+            const EdgeInsets.symmetric(horizontal: 32, vertical: 80),
+        child: GlassPanel(
+          padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: 360, maxHeight: maxH),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // ── ヘッダー (タイトル + 閉じる) は固定 ──
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(entry.title,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            color: Color(0xFFC9A84C),
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 0.4,
+                          )),
+                    ),
+                    GestureDetector(
+                      onTap: () => Navigator.of(ctx).pop(),
+                      child: const Icon(Icons.close,
+                          size: 18, color: Color(0xFFAAAAAA)),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                // ── 本文部 (summary + divider + detail) はスクロール可能 ──
+                Flexible(
+                  child: SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(entry.summary,
+                            style: const TextStyle(
+                              fontSize: 11,
+                              color: Color(0xFFAAAAAA),
+                              height: 1.5,
+                              letterSpacing: 0.3,
+                            )),
+                        const Divider(
+                            color: Color(0x22FFFFFF), height: 18),
+                        Text(entry.detail,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Color(0xFFE8E0D0),
+                              height: 1.7,
+                              letterSpacing: 0.2,
+                            )),
+                      ],
+                    ),
                   ),
-                  GestureDetector(
-                    onTap: () => Navigator.of(ctx).pop(),
-                    child: const Icon(Icons.close, size: 18, color: Color(0xFFAAAAAA)),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Text(entry.summary,
-                style: const TextStyle(
-                  fontSize: 11, color: Color(0xFFAAAAAA),
-                  height: 1.5, letterSpacing: 0.3,
-                )),
-              const Divider(color: Color(0x22FFFFFF), height: 18),
-              Text(entry.detail,
-                style: const TextStyle(
-                  fontSize: 12, color: Color(0xFFE8E0D0),
-                  height: 1.7, letterSpacing: 0.2,
-                )),
-            ],
+                ),
+              ],
+            ),
           ),
         ),
-      ),
-    ),
+      );
+    },
   );
 }

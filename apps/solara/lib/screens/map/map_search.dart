@@ -6,6 +6,7 @@ import 'package:latlong2/latlong.dart';
 import '../../utils/solara_api.dart' show solaraWorkerBase;
 import 'map_astro.dart';
 import 'map_constants.dart';
+import 'map_vp_panel.dart' show VPSlot;
 
 const _searchApiUrl = '$solaraWorkerBase/search';
 
@@ -63,11 +64,18 @@ double _haversineKm(double lat1, double lng1, double lat2, double lng2) {
   return R * 2 * atan2(sqrt(a), sqrt(1 - a));
 }
 
-/// CF Worker /search 経由で場所検索
-Future<List<SearchHit>> searchPlaces(String query) async {
+/// CF Worker /search 経由で場所検索。
+/// [biasCenter] を渡すと Google Places の locationBias.circle (15km) として
+/// 中心付近のPOIを優先する。出生地検索など特定地名のときは null で良い。
+Future<List<SearchHit>> searchPlaces(String query, {LatLng? biasCenter}) async {
   if (query.trim().length < 2) return [];
   try {
-    final uri = Uri.parse('$_searchApiUrl?q=${Uri.encodeComponent(query)}');
+    final params = <String, String>{'q': query};
+    if (biasCenter != null) {
+      params['lat'] = biasCenter.latitude.toString();
+      params['lng'] = biasCenter.longitude.toString();
+    }
+    final uri = Uri.parse(_searchApiUrl).replace(queryParameters: params);
     final resp = await http.get(uri).timeout(const Duration(seconds: 8));
     if (resp.statusCode != 200) return [];
     final data = json.decode(resp.body) as Map<String, dynamic>;
@@ -110,18 +118,33 @@ class SearchResultList extends StatelessWidget {
   final List<SearchHit> hits;
   final void Function(SearchHit) onTap;
   final VoidCallback onClose;
+  /// 距離km・方位計算の起点座標 (= 選択中 VIEWPOINT または地図中心)
+  final LatLng center;
+  /// 最大高さ (画面下まで伸ばすために呼出側で MediaQuery 連動して指定)
+  final double maxHeight;
+  /// VIEWPOINT 切替プルダウン用。未指定なら dropdown 非表示。
+  final List<VPSlot>? vpSlots;
+  /// 選択中の VIEWPOINT index (-1 = 地図中心、0+ = vpSlots の index)
+  final int selectedVpIndex;
+  /// VP 選択変更コールバック
+  final ValueChanged<int>? onVpChanged;
 
   const SearchResultList({
     super.key,
     required this.hits,
     required this.onTap,
     required this.onClose,
+    required this.center,
+    this.maxHeight = 320,
+    this.vpSlots,
+    this.selectedVpIndex = -1,
+    this.onVpChanged,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      constraints: const BoxConstraints(maxHeight: 320),
+      constraints: BoxConstraints(maxHeight: maxHeight),
       decoration: BoxDecoration(
         color: const Color(0xF20F0F1E),
         borderRadius: BorderRadius.circular(14),
@@ -133,8 +156,13 @@ class SearchResultList extends StatelessWidget {
           child: Row(children: [
             const Icon(Icons.search, size: 14, color: Color(0xFFC9A84C)),
             const SizedBox(width: 5),
-            const Text('検索結果', style: TextStyle(fontSize: 11, color: Color(0xFFC9A84C), letterSpacing: 1)),
+            Text('検索結果 (${hits.length})',
+                style: const TextStyle(fontSize: 11, color: Color(0xFFC9A84C), letterSpacing: 1)),
             const Spacer(),
+            // ── VIEWPOINT 選択 dropdown (距離・方位・スコアの起点を切替) ──
+            if (vpSlots != null && onVpChanged != null)
+              _buildVpDropdown(),
+            const SizedBox(width: 6),
             GestureDetector(
               onTap: onClose,
               child: const Padding(
@@ -151,26 +179,54 @@ class SearchResultList extends StatelessWidget {
             shrinkWrap: true,
             itemCount: hits.length,
             separatorBuilder: (_, _) => const Divider(height: 1, color: Color(0x11FFFFFF)),
-            itemBuilder: (ctx, i) => _hitRow(hits[i]),
+            itemBuilder: (ctx, i) => _hitRow(hits[i], index: i + 1),
           ),
         ),
       ]),
     );
   }
 
-  Widget _hitRow(SearchHit h) {
+  Widget _hitRow(SearchHit h, {required int index}) {
     final parts = h.name.split(',');
     final short = parts.length > 2 ? '${parts[0]},${parts[1]}' : h.name;
     final fortuneIcon = _fortuneIcon(h.bestFortune);
     final catColor = h.bestFortune != null
         ? (categoryColors[h.bestFortune!] ?? const Color(0xFFE8E0D0))
         : const Color(0xFFE8E0D0);
+    // マップ中心からの距離km (近い順並び替えはGoogle側RELEVANCE+bias任せ、
+    // ユーザーには km 数字で位置感を提示する)
+    final km = h.distanceKmFrom(center);
+    final kmStr = km < 1
+        ? '${(km * 1000).round()}m'
+        : km < 10
+            ? '${km.toStringAsFixed(1)}km'
+            : '${km.round()}km';
 
     return InkWell(
       onTap: () => onTap(h),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         child: Row(children: [
+          // 地図上の番号マーカーと同じ番号を行頭に表示 (連動視覚化)
+          Container(
+            width: 22,
+            height: 22,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: const Color(0xFFC9A84C),
+            ),
+            alignment: Alignment.center,
+            child: Text(
+              '$index',
+              style: const TextStyle(
+                fontSize: 11,
+                color: Color(0xFF0C0C16),
+                fontWeight: FontWeight.bold,
+                height: 1.0,
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
           Expanded(child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
@@ -180,6 +236,12 @@ class SearchResultList extends StatelessWidget {
                 maxLines: 1, overflow: TextOverflow.ellipsis),
               const SizedBox(height: 2),
               Row(children: [
+                Text(kmStr,
+                    style: const TextStyle(
+                      fontSize: 9, color: Color(0xFFC9A84C),
+                      fontWeight: FontWeight.w600,
+                    )),
+                const SizedBox(width: 8),
                 if (h.bestDir != null) ...[
                   Text('${dir16JP[h.bestDir!]}方位',
                       style: const TextStyle(fontSize: 9, color: Color(0xFF999999))),
@@ -209,6 +271,73 @@ class SearchResultList extends StatelessWidget {
       case 'work': return '⚙';
       default: return null;
     }
+  }
+
+  /// VIEWPOINT 選択 dropdown。
+  /// -1 = 地図中心、0+ = vpSlots の index。
+  /// 距離km・方位・スコアの起点を切替えるためのもの。
+  Widget _buildVpDropdown() {
+    final slots = vpSlots ?? const [];
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: const Color(0x33C9A84C)),
+      ),
+      child: DropdownButton<int>(
+        value: selectedVpIndex,
+        underline: const SizedBox.shrink(),
+        isDense: true,
+        dropdownColor: const Color(0xF20F0F1E),
+        iconEnabledColor: const Color(0xFFC9A84C),
+        iconSize: 16,
+        style: const TextStyle(
+          fontSize: 11,
+          color: Color(0xFFE8E0D0),
+        ),
+        items: [
+          const DropdownMenuItem<int>(
+            value: -1,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.my_location,
+                    size: 12, color: Color(0xFFC9A84C)),
+                SizedBox(width: 4),
+                Text('地図中心',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: Color(0xFFE8E0D0),
+                    )),
+              ],
+            ),
+          ),
+          for (int i = 0; i < slots.length; i++)
+            DropdownMenuItem<int>(
+              value: i,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(slots[i].icon,
+                      style: const TextStyle(fontSize: 12)),
+                  const SizedBox(width: 4),
+                  Text(
+                    slots[i].name.isEmpty ? 'VP${i + 1}' : slots[i].name,
+                    style: const TextStyle(
+                      fontSize: 11,
+                      color: Color(0xFFE8E0D0),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+        ],
+        onChanged: (v) {
+          if (v == null) return;
+          onVpChanged?.call(v);
+        },
+      ),
+    );
   }
 }
 

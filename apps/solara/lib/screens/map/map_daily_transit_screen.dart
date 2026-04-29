@@ -20,14 +20,19 @@ import '../../utils/solara_storage.dart';
 import '../../widgets/category_icon.dart';
 import '../../widgets/dominant_fortune_overlay.dart' show DominantFortuneKind;
 import '../../widgets/glass_panel.dart';
+import 'daily_transit_data.dart';
 import 'map_aspect_chip.dart';
 import 'map_constants.dart';
+import 'map_vp_panel.dart' show VPSlot;
 
 class MapDailyTransitScreen extends StatefulWidget {
   final DominantFortuneKind? topCategory;
-  final LatLng location;
-  /// 観測点ラベル（ヘッダ表示用）。例: 「自宅」「東京都渋谷区」。
-  final String locationLabel;
+  /// 出生地座標 (常に有効)。VIEWPOINT 切替の選択肢の1つ「出生地」として使う。
+  final LatLng birthLocation;
+  /// 出生地名 (例: '東京都'). 空ならデフォルト「出生地」を表示。
+  final String birthLocationName;
+  /// VIEWPOINT スロット (home + 登録地、最大5件)。home は先頭。
+  final List<VPSlot> vpSlots;
   /// V2: natal 黄経マップ。指定時、各イベントにアスペクト context が表示される。
   final Map<String, double>? natal;
   final VoidCallback onClose;
@@ -35,8 +40,9 @@ class MapDailyTransitScreen extends StatefulWidget {
   const MapDailyTransitScreen({
     super.key,
     required this.topCategory,
-    required this.location,
-    this.locationLabel = '',
+    required this.birthLocation,
+    this.birthLocationName = '',
+    this.vpSlots = const [],
     this.natal,
     required this.onClose,
   });
@@ -48,27 +54,59 @@ class MapDailyTransitScreen extends StatefulWidget {
 /// タブ識別子。
 enum _DayTab { today, tomorrow }
 
+// データ定義は daily_transit_data.dart に分離 (2026-04-30)。
+
 class _MapDailyTransitScreenState extends State<MapDailyTransitScreen>
     with SingleTickerProviderStateMixin {
   late final AnimationController _fadeCtrl;
 
-  // タブ別キャッシュ。再タップで再 fetch を避ける。
-  final Map<_DayTab, DailyTransitsResult> _cache = {};
-  final Map<_DayTab, bool> _failed = {
-    _DayTab.today: false, _DayTab.tomorrow: false,
-  };
-  final Map<_DayTab, bool> _loading = {
-    _DayTab.today: false, _DayTab.tomorrow: false,
-  };
+  // (tab, vpIndex) 別キャッシュ。VIEWPOINT 切替で再 fetch を避ける。
+  // key = '${tab.name}|$vpIndex'  (-1 = 出生地、0+ = vpSlots index)
+  final Map<String, DailyTransitsResult> _cache = {};
+  final Map<String, bool> _failed = {};
+  final Map<String, bool> _loading = {};
 
   _DayTab _activeTab = _DayTab.today;
+
+  // VIEWPOINT 選択 index (-1 = 出生地、0+ = widget.vpSlots index)
+  // 初期値は initState で「自宅 (vpSlots[0].isHome) → 出生地」の順で決定
+  int _vpIndex = -1;
+
+  // フィルタ初期値: アングルは ASC+MC（地表より上=顕在に入る相）
+  // カテゴリは all（全カテゴリ）。情報過多回避でアングルのみ既定で絞る。
+  AngleFilter _angleFilter = AngleFilter.ascMc;
+  String _categoryFilter = 'all';
 
   // Sanctuary で設定された orb 値（読込が完了するまで null）
   Map<String, double>? _orbs;
 
+  /// 現在選択中の VIEWPOINT ラベル。
+  String get _currentLocationLabel {
+    if (_vpIndex >= 0 && _vpIndex < widget.vpSlots.length) {
+      final s = widget.vpSlots[_vpIndex];
+      return s.name.isEmpty ? 'VP${_vpIndex + 1}' : s.name;
+    }
+    return widget.birthLocationName.isNotEmpty
+        ? widget.birthLocationName
+        : '出生地';
+  }
+
+  /// キャッシュ・状態管理用のキー。
+  String _cacheKey(_DayTab tab, int vpIndex) => '${tab.name}|$vpIndex';
+
+  /// 初期 VIEWPOINT を決定する。
+  /// オーナールール (2026-04-30):
+  ///   1. 自宅 (vpSlots[0].isHome) が登録済みなら 0
+  ///   2. それ以外は出生地 (-1)
+  int _resolveInitialVpIndex() {
+    if (widget.vpSlots.isNotEmpty && widget.vpSlots[0].isHome) return 0;
+    return -1;
+  }
+
   @override
   void initState() {
     super.initState();
+    _vpIndex = _resolveInitialVpIndex();
     _fadeCtrl = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 350),
@@ -79,7 +117,7 @@ class _MapDailyTransitScreenState extends State<MapDailyTransitScreen>
   Future<void> _loadOrbsAndStart() async {
     _orbs = await SolaraStorage.loadOrbSettings();
     if (!mounted) return;
-    _loadTab(_DayTab.today);
+    _loadTab(_DayTab.today, _vpIndex);
   }
 
   @override
@@ -96,26 +134,33 @@ class _MapDailyTransitScreenState extends State<MapDailyTransitScreen>
     return tab == _DayTab.today ? base : base.add(const Duration(days: 1));
   }
 
-  Future<void> _loadTab(_DayTab tab) async {
-    if (_cache.containsKey(tab) || (_loading[tab] ?? false)) return;
+  /// 指定 (tab, vpIndex) のデータを取得する。キャッシュ済みなら何もしない。
+  Future<void> _loadTab(_DayTab tab, int vpIndex) async {
+    final key = _cacheKey(tab, vpIndex);
+    if (_cache.containsKey(key) || (_loading[key] ?? false)) return;
+    // 取得用の location 確定 (vpIndex に応じて切替)
+    final loc = (vpIndex >= 0 && vpIndex < widget.vpSlots.length)
+        ? LatLng(
+            widget.vpSlots[vpIndex].lat, widget.vpSlots[vpIndex].lng)
+        : widget.birthLocation;
     setState(() {
-      _loading[tab] = true;
-      _failed[tab] = false;
+      _loading[key] = true;
+      _failed[key] = false;
     });
     final result = await fetchDailyTransits(
-      lat: widget.location.latitude,
-      lng: widget.location.longitude,
+      lat: loc.latitude,
+      lng: loc.longitude,
       startTime: _tabStartTime(tab),
       natal: widget.natal,
       orbs: _orbs,
     );
     if (!mounted) return;
     setState(() {
-      _loading[tab] = false;
+      _loading[key] = false;
       if (result != null) {
-        _cache[tab] = result;
+        _cache[key] = result;
       } else {
-        _failed[tab] = true;
+        _failed[key] = true;
       }
     });
   }
@@ -123,7 +168,15 @@ class _MapDailyTransitScreenState extends State<MapDailyTransitScreen>
   void _selectTab(_DayTab tab) {
     if (_activeTab == tab) return;
     setState(() => _activeTab = tab);
-    _loadTab(tab); // 未取得なら lazy load
+    _loadTab(tab, _vpIndex); // 未取得なら lazy load
+  }
+
+  /// VIEWPOINT dropdown 切替時。両方のタブを必要に応じて再読込。
+  void _selectVp(int newIndex) {
+    if (newIndex == _vpIndex) return;
+    setState(() => _vpIndex = newIndex);
+    // active タブ優先で fetch、もう片方は表示時に lazy load
+    _loadTab(_activeTab, newIndex);
   }
 
   Future<void> _close() async {
@@ -134,9 +187,10 @@ class _MapDailyTransitScreenState extends State<MapDailyTransitScreen>
 
   @override
   Widget build(BuildContext context) {
-    final cached = _cache[_activeTab];
-    final isLoading = _loading[_activeTab] ?? false;
-    final hasFailed = _failed[_activeTab] ?? false;
+    final key = _cacheKey(_activeTab, _vpIndex);
+    final cached = _cache[key];
+    final isLoading = _loading[key] ?? false;
+    final hasFailed = _failed[key] ?? false;
     return FadeTransition(
       opacity: _fadeCtrl,
       child: Container(
@@ -146,20 +200,32 @@ class _MapDailyTransitScreenState extends State<MapDailyTransitScreen>
             children: [
               _Header(
                 topCategory: widget.topCategory,
-                locationLabel: widget.locationLabel,
+                locationLabel: _currentLocationLabel,
+                vpSlots: widget.vpSlots,
+                vpIndex: _vpIndex,
+                birthLocationName: widget.birthLocationName,
+                onVpChanged: _selectVp,
                 onClose: _close,
               ),
               _DayTabBar(
                 active: _activeTab,
                 onSelect: _selectTab,
+                angleFilter: _angleFilter,
+                categoryFilter: _categoryFilter,
+                onAngleChanged: (v) => setState(() => _angleFilter = v),
+                onCategoryChanged: (v) => setState(() => _categoryFilter = v),
               ),
               Expanded(
                 child: isLoading
                     ? const _LoadingBody()
                     : hasFailed
-                        ? _FailedBody(onRetry: () => _loadTab(_activeTab))
+                        ? _FailedBody(onRetry: () => _loadTab(_activeTab, _vpIndex))
                         : cached != null
-                            ? _TimelineBody(result: cached)
+                            ? _TimelineBody(
+                                result: cached,
+                                angleFilter: _angleFilter,
+                                categoryFilter: _categoryFilter,
+                              )
                             : const _LoadingBody(),
               ),
             ],
@@ -170,26 +236,238 @@ class _MapDailyTransitScreenState extends State<MapDailyTransitScreen>
   }
 }
 
-// ── DayTabBar （本日 / 明日 切替） ──
+// ── DayTabBar （本日 / 明日 切替 + フィルタ） ──
 
 class _DayTabBar extends StatelessWidget {
   final _DayTab active;
   final ValueChanged<_DayTab> onSelect;
+  final AngleFilter angleFilter;
+  final String categoryFilter;
+  final ValueChanged<AngleFilter> onAngleChanged;
+  final ValueChanged<String> onCategoryChanged;
 
-  const _DayTabBar({required this.active, required this.onSelect});
+  const _DayTabBar({
+    required this.active,
+    required this.onSelect,
+    required this.angleFilter,
+    required this.categoryFilter,
+    required this.onAngleChanged,
+    required this.onCategoryChanged,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       decoration: const BoxDecoration(
         border: Border(bottom: BorderSide(color: Color(0x14FFFFFF))),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _tabBtn(_DayTab.today, '本日'),
-          const SizedBox(width: 6),
-          _tabBtn(_DayTab.tomorrow, '明日'),
+          // ── 行1: 本日/明日 + カテゴリフィルタ ──
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 6, 16, 4),
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              physics: const BouncingScrollPhysics(),
+              child: Row(
+                children: [
+                  _tabBtn(_DayTab.today, '本日'),
+                  const SizedBox(width: 6),
+                  _tabBtn(_DayTab.tomorrow, '明日'),
+                  const SizedBox(width: 14),
+                  Container(
+                    width: 1, height: 16,
+                    color: const Color(0x22FFFFFF),
+                  ),
+                  const SizedBox(width: 14),
+                  // カテゴリフィルタ (初期 all)
+                  _categoryDropdown(),
+                ],
+              ),
+            ),
+          ),
+          // ── 行2: ASC+MC フィルタ + i + アングル説明文 ──
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 2, 16, 6),
+            child: Row(
+              children: [
+                _angleDropdown(),
+                const SizedBox(width: 2),
+                // i アイコン: 4アングル詳細解説を popup で開示
+                Builder(
+                  builder: (ctx) => GestureDetector(
+                    onTap: () => showAstroGlossaryDialog(
+                        ctx, 'transit_angles'),
+                    behavior: HitTestBehavior.opaque,
+                    child: const Padding(
+                      padding: EdgeInsets.all(6),
+                      child: Icon(Icons.info_outline,
+                          size: 14, color: Color(0xCCAAAAAA)),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    angleFilterShortMeaning[angleFilter] ?? '',
+                    style: const TextStyle(
+                      fontSize: 10,
+                      color: Color(0xFF888888),
+                      height: 1.5,
+                      letterSpacing: 0.3,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // ── 行3: カテゴリ別行動指針 (カテゴリが all 以外のとき表示) ──
+          if (categoryFilter != 'all' &&
+              categoryFilterTips.containsKey(categoryFilter))
+            _buildCategoryTips(categoryFilter, angleFilter),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCategoryTips(String categoryKey, AngleFilter angleFilter) {
+    final tipsData = categoryFilterTips[categoryKey];
+    if (tipsData == null) return const SizedBox.shrink();
+    final color = categoryColors[categoryKey] ?? SolaraColors.solaraGoldLight;
+
+    // アングル相に応じて tips を切替。
+    // ASC+MC = 外向き、DSC+IC = 内向き、全角度 = ASC+MC を既定表示し
+    // 「両方の相が混在」の旨をヘッドラインに添える。
+    final List<String> tips;
+    final String subLabel;
+    switch (angleFilter) {
+      case AngleFilter.ascMc:
+        tips = tipsData.tipsAscMc;
+        subLabel = '外向きの相';
+        break;
+      case AngleFilter.dscIc:
+        tips = tipsData.tipsDscIc;
+        subLabel = '内向きの相';
+        break;
+      case AngleFilter.all:
+        tips = tipsData.tipsAscMc;
+        subLabel = '外向き＋内向きの相が混在';
+        break;
+    }
+
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+      padding: const EdgeInsets.fromLTRB(12, 8, 12, 10),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withAlpha(60)),
+        color: color.withAlpha(15),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Expanded(
+                child: Text(
+                  tipsData.headline,
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: color,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.4,
+                  ),
+                ),
+              ),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(4),
+                  border: Border.all(color: color.withAlpha(110)),
+                ),
+                child: Text(
+                  subLabel,
+                  style: TextStyle(
+                    fontSize: 9,
+                    color: color,
+                    letterSpacing: 0.4,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          // 「おすすめ行動の例（参考）」サブヘッダー + i アイコン
+          // tips が「指示」ではなく「ユーザー自身の動きを考える参考の例示」である
+          // ことを明示し、i ボタンで Solara の姿勢・使い方を popup で説明。
+          Builder(
+            builder: (ctx) => Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Text(
+                  'おすすめ行動の例（参考）',
+                  style: TextStyle(
+                    fontSize: 9,
+                    color: color.withAlpha(200),
+                    letterSpacing: 0.5,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                GestureDetector(
+                  onTap: () => showAstroGlossaryDialog(
+                      ctx, 'category_tips_intent'),
+                  behavior: HitTestBehavior.opaque,
+                  child: Padding(
+                    padding: const EdgeInsets.all(4),
+                    child: Icon(
+                      Icons.info_outline,
+                      size: 12,
+                      color: color.withAlpha(180),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 2),
+          for (final t in tips)
+            Padding(
+              padding: const EdgeInsets.only(top: 2),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('• ',
+                      style: TextStyle(
+                          fontSize: 10, color: Color(0xFF888888))),
+                  Expanded(
+                    child: Text(
+                      t,
+                      style: const TextStyle(
+                        fontSize: 10,
+                        color: Color(0xFFAAAAAA),
+                        height: 1.5,
+                        letterSpacing: 0.2,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          const SizedBox(height: 6),
+          // 注記: 他の動きも自由に考える
+          Text(
+            '※ 他の行動も、この例を参考に自由に考えてみてください',
+            style: TextStyle(
+              fontSize: 9,
+              color: const Color(0xFF777777),
+              fontStyle: FontStyle.italic,
+              height: 1.4,
+              letterSpacing: 0.2,
+            ),
+          ),
         ],
       ),
     );
@@ -227,6 +505,92 @@ class _DayTabBar extends StatelessWidget {
       ),
     );
   }
+
+  Widget _angleDropdown() {
+    return _filterPill(
+      child: DropdownButton<AngleFilter>(
+        value: angleFilter,
+        underline: const SizedBox.shrink(),
+        isDense: true,
+        dropdownColor: const Color(0xF20F0F1E),
+        iconEnabledColor: SolaraColors.solaraGoldLight,
+        iconSize: 16,
+        style: const TextStyle(
+          fontSize: 11,
+          color: SolaraColors.solaraGoldLight,
+          letterSpacing: 0.5,
+        ),
+        items: [
+          for (final f in AngleFilter.values)
+            DropdownMenuItem<AngleFilter>(
+              value: f,
+              child: Text(
+                angleFilterLabels[f] ?? f.name,
+                style: const TextStyle(
+                  fontSize: 11,
+                  color: Color(0xFFE8E0D0),
+                ),
+              ),
+            ),
+        ],
+        onChanged: (v) {
+          if (v != null) onAngleChanged(v);
+        },
+      ),
+    );
+  }
+
+  Widget _categoryDropdown() {
+    final entries = <MapEntry<String, String>>[];
+    // 「全カテゴリ」を先頭に固定
+    entries.add(const MapEntry('all', '全カテゴリ'));
+    for (final k in categoryPlanetSets.keys) {
+      if (k == 'all') continue;
+      entries.add(MapEntry(k, categoryLabels[k] ?? k));
+    }
+    return _filterPill(
+      child: DropdownButton<String>(
+        value: categoryFilter,
+        underline: const SizedBox.shrink(),
+        isDense: true,
+        dropdownColor: const Color(0xF20F0F1E),
+        iconEnabledColor: SolaraColors.solaraGoldLight,
+        iconSize: 16,
+        style: const TextStyle(
+          fontSize: 11,
+          color: SolaraColors.solaraGoldLight,
+          letterSpacing: 0.5,
+        ),
+        items: [
+          for (final e in entries)
+            DropdownMenuItem<String>(
+              value: e.key,
+              child: Text(
+                e.value,
+                style: const TextStyle(
+                  fontSize: 11,
+                  color: Color(0xFFE8E0D0),
+                ),
+              ),
+            ),
+        ],
+        onChanged: (v) {
+          if (v != null) onCategoryChanged(v);
+        },
+      ),
+    );
+  }
+
+  Widget _filterPill({required Widget child}) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 1),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0x33C9A84C)),
+      ),
+      child: child,
+    );
+  }
 }
 
 // ── Header（トップカテゴリバナー + 閉じる） ──
@@ -234,11 +598,19 @@ class _DayTabBar extends StatelessWidget {
 class _Header extends StatelessWidget {
   final DominantFortuneKind? topCategory;
   final String locationLabel;
+  final List<VPSlot> vpSlots;
+  final int vpIndex;
+  final String birthLocationName;
+  final ValueChanged<int> onVpChanged;
   final VoidCallback onClose;
 
   const _Header({
     required this.topCategory,
     required this.locationLabel,
+    required this.vpSlots,
+    required this.vpIndex,
+    required this.birthLocationName,
+    required this.onVpChanged,
     required this.onClose,
   });
 
@@ -303,27 +675,8 @@ class _Header extends StatelessWidget {
                     letterSpacing: 0.3,
                   ),
                 ),
-                if (locationLabel.isNotEmpty) ...[
-                  const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      const Icon(Icons.place,
-                          size: 11, color: Color(0xFF888888)),
-                      const SizedBox(width: 3),
-                      Flexible(
-                        child: Text(
-                          locationLabel,
-                          style: const TextStyle(
-                            fontSize: 10,
-                            color: Color(0xFF888888),
-                            letterSpacing: 0.3,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+                const SizedBox(height: 4),
+                _buildVpDropdown(),
               ],
             ),
           ),
@@ -378,6 +731,81 @@ class _Header extends StatelessWidget {
       case DominantFortuneKind.communication:
         return '対話と知性のエネルギーが動く一日';
     }
+  }
+
+  /// VIEWPOINT dropdown。
+  /// 選択肢: 出生地（-1） + 各VPスロット（0+）。
+  /// 場所が変わると Daily Transit の通過時刻が再計算される。
+  Widget _buildVpDropdown() {
+    final birthName =
+        birthLocationName.isEmpty ? '出生地' : birthLocationName;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const Icon(Icons.place, size: 12, color: Color(0xFF888888)),
+        const SizedBox(width: 2),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: const Color(0x33C9A84C)),
+          ),
+          child: DropdownButton<int>(
+            value: vpIndex,
+            underline: const SizedBox.shrink(),
+            isDense: true,
+            dropdownColor: const Color(0xF20F0F1E),
+            iconEnabledColor: const Color(0xFFC9A84C),
+            iconSize: 14,
+            style: const TextStyle(
+              fontSize: 11,
+              color: Color(0xFFE8E0D0),
+            ),
+            items: [
+              DropdownMenuItem<int>(
+                value: -1,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text('🌟', style: TextStyle(fontSize: 11)),
+                    const SizedBox(width: 4),
+                    Text(birthName,
+                        style: const TextStyle(
+                          fontSize: 11,
+                          color: Color(0xFFE8E0D0),
+                        )),
+                  ],
+                ),
+              ),
+              for (int i = 0; i < vpSlots.length; i++)
+                DropdownMenuItem<int>(
+                  value: i,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(vpSlots[i].icon,
+                          style: const TextStyle(fontSize: 12)),
+                      const SizedBox(width: 4),
+                      Text(
+                        vpSlots[i].name.isEmpty
+                            ? 'VP${i + 1}'
+                            : vpSlots[i].name,
+                        style: const TextStyle(
+                          fontSize: 11,
+                          color: Color(0xFFE8E0D0),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+            ],
+            onChanged: (v) {
+              if (v != null) onVpChanged(v);
+            },
+          ),
+        ),
+      ],
+    );
   }
 }
 
@@ -460,17 +888,51 @@ class _FailedBody extends StatelessWidget {
 
 class _TimelineBody extends StatelessWidget {
   final DailyTransitsResult result;
-  const _TimelineBody({required this.result});
+  final AngleFilter angleFilter;
+  final String categoryFilter;
+
+  const _TimelineBody({
+    required this.result,
+    required this.angleFilter,
+    required this.categoryFilter,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final events = result.flatTimeline();
-    if (events.isEmpty) {
+    // フィルタ適用 (アングル AND カテゴリ)
+    final allowedAngles = angleFilterSets[angleFilter] ?? const {};
+    final allowedPlanets = categoryPlanetSets[categoryFilter] ?? const {};
+    final allEvents = result.flatTimeline();
+    final events = allEvents
+        .where((e) =>
+            allowedAngles.contains(e.event.angle) &&
+            allowedPlanets.contains(e.planet))
+        .toList();
+
+    if (allEvents.isEmpty) {
       return const Center(
         child: Padding(
           padding: EdgeInsets.all(28),
           child: Text(
             '今日は静かな日。\n特別な動きは見えません。',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 12,
+              color: SolaraColors.textSecondary,
+              height: 1.7,
+              letterSpacing: 0.5,
+            ),
+          ),
+        ),
+      );
+    }
+    if (events.isEmpty) {
+      // 全データはあるがフィルタで0件 → ユーザーにフィルタ変更を促す
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(28),
+          child: Text(
+            'このフィルタ条件に\n該当するイベントはありません。\nフィルタを変更してください。',
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 12,
@@ -490,6 +952,7 @@ class _TimelineBody extends StatelessWidget {
       itemBuilder: (ctx, i) => _TimelineRow(
         planetKey: events[i].planet,
         event: events[i].event,
+        categoryFilter: categoryFilter,
       ),
     );
   }
@@ -498,8 +961,13 @@ class _TimelineBody extends StatelessWidget {
 class _TimelineRow extends StatelessWidget {
   final String planetKey;
   final TransitEvent event;
+  final String categoryFilter;
 
-  const _TimelineRow({required this.planetKey, required this.event});
+  const _TimelineRow({
+    required this.planetKey,
+    required this.event,
+    required this.categoryFilter,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -553,10 +1021,15 @@ class _TimelineRow extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // 行のタイトル — i アイコン付きでタップ可。
-                    // タップで 4アングル(ASC/MC/DSC/IC) の意味解説を表示。
+                    // タップで「惑星 × アングル × カテゴリ」の組み合わせ解説を表示
+                    // (アングル一般説明はヘッダーの transit_angles 側に集約済み)
                     GestureDetector(
-                      onTap: () => showAstroGlossaryDialog(
-                          context, 'transit_angles'),
+                      onTap: () => _showEventDetailDialog(
+                        context,
+                        planetKey: planetKey,
+                        angle: event.angle,
+                        categoryFilter: categoryFilter,
+                      ),
                       behavior: HitTestBehavior.opaque,
                       child: Row(
                         children: [
@@ -652,5 +1125,103 @@ class _TimelineRow extends StatelessWidget {
     final idx = ((norm + 11.25) ~/ 22.5) % 16;
     return labels[idx];
   }
+}
+
+/// 個別イベント i ボタン用ダイアログ。
+/// 「惑星 × アングル」の基本意味文 + 「カテゴリ」別の補足文を表示する。
+/// テンプレ式 (40 × 5 = 45 パターン) で構成。
+void _showEventDetailDialog(
+  BuildContext context, {
+  required String planetKey,
+  required String angle,
+  required String categoryFilter,
+}) {
+  final meta = planetMeta[planetKey];
+  final planetJP = meta?.jp ?? planetKey;
+  final planetColor = meta?.color ?? SolaraColors.solaraGoldLight;
+  final angleUpper = angle.toUpperCase();
+  final base = planetAngleBaseText[planetKey]?[angleUpper] ?? '';
+  final appendix = (categoryFilter != 'all')
+      ? categoryAppendix[categoryFilter]
+      : null;
+  final title = '$planetJPの$angleUpper通過';
+
+  showDialog<void>(
+    context: context,
+    barrierColor: const Color(0x99000000),
+    builder: (ctx) => Dialog(
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+      insetPadding: const EdgeInsets.symmetric(horizontal: 32, vertical: 80),
+      child: GlassPanel(
+        padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 360),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      title,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: planetColor,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 0.4,
+                      ),
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () => Navigator.of(ctx).pop(),
+                    behavior: HitTestBehavior.opaque,
+                    child: const Padding(
+                      padding: EdgeInsets.all(2),
+                      child: Icon(Icons.close,
+                          size: 18, color: Color(0xFFAAAAAA)),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              if (base.isNotEmpty)
+                Text(
+                  base,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: Color(0xFFE8E0D0),
+                    height: 1.7,
+                    letterSpacing: 0.2,
+                  ),
+                ),
+              if (appendix != null) ...[
+                const SizedBox(height: 14),
+                Container(
+                  padding: const EdgeInsets.fromLTRB(10, 8, 10, 10),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                        color: SolaraColors.solaraGoldLight.withAlpha(80)),
+                    color: SolaraColors.solaraGoldLight.withAlpha(15),
+                  ),
+                  child: Text(
+                    appendix,
+                    style: const TextStyle(
+                      fontSize: 11,
+                      color: Color(0xFFCCCCCC),
+                      height: 1.7,
+                      letterSpacing: 0.2,
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    ),
+  );
 }
 

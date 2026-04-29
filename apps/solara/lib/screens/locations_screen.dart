@@ -39,7 +39,7 @@ class _LocationsScreenState extends State<LocationsScreen> {
     storageKey: 'solara_locations',
     defaultNames: ['場所1','場所2','場所3','場所4'],
   );
-  // 基準地点プルダウン用に VIEWPOINT スロットも読み込む。
+  // VIEWPOINT プルダウン用に VIEWPOINT スロットも読み込む。
   // null = 現在地（widget.center）、それ以外は VP スロットの index
   final SlotManager _vpMgr = SlotManager(
     storageKey: 'solara_vp_slots',
@@ -76,7 +76,7 @@ class _LocationsScreenState extends State<LocationsScreen> {
     setState(() { _slots = s; _vpSlots = vp; _loading = false; });
   }
 
-  /// 基準地点 = 選択中 VP スロットの座標、未選択なら widget.center（現在の地図中心）
+  /// VIEWPOINT = 選択中 VP スロットの座標、未選択なら widget.center（現在の地図中心）
   LatLng get _refPoint {
     if (_refVpIdx != null && _refVpIdx! < _vpSlots.length) {
       final v = _vpSlots[_refVpIdx!];
@@ -329,7 +329,7 @@ class _LocationsScreenState extends State<LocationsScreen> {
     )));
   }
 
-  /// 基準地点プルダウン：現在地 + VIEWPOINT スロット一覧
+  /// VIEWPOINT プルダウン：現在地 + VIEWPOINT スロット一覧
   Widget _buildRefPointSelector() {
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 10, 16, 6),
@@ -337,7 +337,7 @@ class _LocationsScreenState extends State<LocationsScreen> {
         border: Border(top: BorderSide(color: Color(0x22C9A84C))),
       ),
       child: Row(children: [
-        const Text('基準地点',
+        const Text('VIEWPOINT',
             style: TextStyle(fontSize: 10, color: Color(0xFF888888), letterSpacing: 1.5)),
         const SizedBox(width: 12),
         Expanded(child: Container(

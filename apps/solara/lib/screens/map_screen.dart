@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
@@ -174,6 +176,13 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   List<SearchHit> _searchHits = [];
   SearchHit? _searchFocus; // 選択済み1件（ピン表示用）
   bool _searching = false;
+  // 検索一覧を表示し始めた時のマップ状態 (center/zoom)。
+  // hit を選んでズームイン後、戻るボタンで一覧画面に戻る際に復元する。
+  LatLng? _searchListCenter;
+  double? _searchListZoom;
+  // 検索結果リスト dropdown で選択中の VIEWPOINT index
+  // -1 = 地図中心、0+ = _vpSlotsCache の index
+  int _searchVpIndex = -1;
 
   // Map style (tile source + light/dark filter)
   // OSM HOT は現地言語ラベルのまま（多言語化はユーザー数増えてから再検討）。
@@ -409,6 +418,31 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     }
   }
 
+  /// FF Label タップで循環切替するカテゴリの順序。
+  /// 総合 → 癒し → 豊かさ → 恋愛 → 仕事 → 話す → 総合 ... の順で繰返す。
+  static const _categoryCycle = <String>[
+    'all', 'healing', 'money', 'love', 'work', 'communication',
+  ];
+
+  /// FF Label タップ時、_activeCategory を次のカテゴリへ進める。
+  /// セクター描画も同フレームで再計算されるので扇状もリアルタイム切替される。
+  void _cycleActiveCategory() {
+    final idx = _categoryCycle.indexOf(_activeCategory);
+    final nextIdx = (idx + 1) % _categoryCycle.length;
+    setState(() => _activeCategory = _categoryCycle[nextIdx]);
+    _reannotateSearchResults();
+  }
+
+  /// 検索結果距離・方位・スコアの起点座標。
+  /// _searchVpIndex == -1: 地図中心、>= 0: 該当 VPSlot の座標。
+  LatLng get _searchEffectiveCenter {
+    if (_searchVpIndex >= 0 && _searchVpIndex < _vpSlotsCache.length) {
+      final s = _vpSlotsCache[_searchVpIndex];
+      return LatLng(s.lat, s.lng);
+    }
+    return _center;
+  }
+
   /// 既存の検索結果（リスト + フォーカス1件）に、現在の中心・日付・カテゴリ・ソース
   /// で算出したスコアを再注入する。日付ピッカー・VP切替・カテゴリ切替から呼ぶ。
   void _reannotateSearchResults() {
@@ -416,10 +450,11 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     final hasFocus = _searchFocus != null;
     if (!hasHits && !hasFocus) return;
     final scores = _displayScores();
+    final c = _searchEffectiveCenter;
     if (hasHits) {
       annotateHitsWithScores(
         hits: _searchHits,
-        center: _center,
+        center: c,
         sectorScores: scores,
         scoreResult: _scoreResult,
       );
@@ -427,7 +462,7 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     if (hasFocus) {
       annotateHitsWithScores(
         hits: [_searchFocus!],
-        center: _center,
+        center: c,
         sectorScores: scores,
         scoreResult: _scoreResult,
       );
@@ -556,41 +591,18 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     });
   }
 
-  /// F1-c 観測点を決定する。
-  /// 優先: Sanctuary で設定された home → 出生地 → 地図中心。
-  /// 「あなたの拠点で今日の惑星がいつ・どこに現れるか」を表示するための座標。
-  LatLng _dailyTransitLocation() {
-    final p = _profile;
-    if (p != null) {
-      final hasHome = !(p.homeLat == 0 && p.homeLng == 0);
-      if (hasHome) return LatLng(p.homeLat, p.homeLng);
-      final hasBirth = !(p.birthLat == 0 && p.birthLng == 0);
-      if (hasBirth) return LatLng(p.birthLat, p.birthLng);
-    }
-    return _center;
-  }
-
-  /// F1-c ヘッダに表示する観測地ラベル（「自宅」「出生地」「地図中心」など）。
-  String _dailyTransitLocationLabel() {
-    final p = _profile;
-    if (p != null) {
-      if (!(p.homeLat == 0 && p.homeLng == 0)) {
-        return p.homeName.isNotEmpty ? p.homeName : '自宅';
-      }
-      if (!(p.birthLat == 0 && p.birthLng == 0)) {
-        return '出生地';
-      }
-    }
-    return '地図中心';
-  }
+  // 旧 _dailyTransitLocation / _dailyTransitLocationLabel は廃止 (2026-04-30)。
+  // MapDailyTransitScreen 内部で VIEWPOINT dropdown により切替可能になった。
+  // 親は出生地と vpSlots を渡すだけ。
 
   Future<void> _doSearch(String query) async {
     if (query.trim().length < 2) return;
     setState(() => _searching = true);
-    final hits = await searchPlaces(query);
+    // マップ中心 (現在の _center) を bias に渡し、Google 側で半径15kmを優先
+    final hits = await searchPlaces(query, biasCenter: _center);
     annotateHitsWithScores(
       hits: hits,
-      center: _center,
+      center: _searchEffectiveCenter,
       sectorScores: _displayScores(),
       scoreResult: _scoreResult,
     );
@@ -599,10 +611,54 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
       _searchHits = hits;
       _searching = false;
       _searchOpen = false;
+      _searchFocus = null; // 前回の focus は破棄
     });
     if (hits.length == 1) {
       _selectSearchHit(hits.first);
+    } else if (hits.length > 1) {
+      // 複数候補: zoom 11 で半径15km全体を見せ、中心をリスト上部へずらす
+      _frameSearchArea(_center);
     }
+  }
+
+  /// 検索結果リストが画面下半分を覆う前提で、マップ中心を「南」にずらして
+  /// 元の center が画面の上半分中央に来るようにする。
+  /// ズームは都市内のエリア詳細が見える 13.0（オーナー判断 2026-04-30）。
+  ///
+  /// この時の (shifted, zoom) を保存しておき、hit 選択後に focus を閉じた際に
+  /// `_restoreSearchListView` で同じ位置・ズームへ復元する。
+  void _frameSearchArea(LatLng around) {
+    final size = MediaQuery.of(context).size;
+    // 検索結果リスト高さ = 画面の 45% (SearchResultList に渡している maxHeight と一致)
+    // 上部の地図領域 (約55%) を広めに取り、店舗探索の視認性を上げる。
+    final listH = size.height * 0.45;
+    // リスト中心からのオフセット (この距離だけ地図中心を南に動かす)
+    final offsetPx = listH / 2;
+    // Web Mercator: 1° latitude = 256 * 2^zoom / 360 / cos(lat) px
+    const zoom = 13.0;
+    const zoomInt = 13;
+    final pxPerLatDeg = 256 * (1 << zoomInt) /
+        360 /
+        math.cos(around.latitude * math.pi / 180);
+    final offsetLat = offsetPx / pxPerLatDeg;
+    final shifted = LatLng(around.latitude - offsetLat, around.longitude);
+    _searchListCenter = shifted;
+    _searchListZoom = zoom;
+    try {
+      _mapCtrl.move(shifted, zoom);
+    } catch (_) {/* 初期化中は無視 */}
+  }
+
+  /// hit 選択後に focus を閉じた際、`_frameSearchArea` で記録した
+  /// 元の一覧表示状態 (center, zoom) へ地図を戻す。
+  /// 一覧表示前の状態が保存されていない場合は何もしない。
+  void _restoreSearchListView() {
+    final c = _searchListCenter;
+    final z = _searchListZoom;
+    if (c == null || z == null) return;
+    try {
+      _mapCtrl.move(c, z);
+    } catch (_) {/* 初期化中は無視 */}
   }
 
   void _selectSearchHit(SearchHit hit) {
@@ -610,8 +666,96 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     _mapCtrl.move(pos, 15);
     setState(() {
       _searchFocus = hit;
-      _searchHits = []; // リスト閉じる
+      // _searchHits は維持。focus を閉じるとリストが復帰する。
     });
+  }
+
+  /// 検索 focus 中の単一マーカー。
+  /// リスト中の hit 順 (1〜20) をそのまま中心に表示し、選択した番号を保持する。
+  /// 一覧マーカー(_buildSearchHitMarkers)より大きめ・影濃いめ。
+  Marker _buildFocusedHitMarker() {
+    final f = _searchFocus!;
+    // _searchHits の中での位置 = リストでの番号
+    // _selectSearchHit は _searchHits を破棄せず focus を立てるので indexOf が機能する。
+    final idx = _searchHits.indexOf(f);
+    final hasNumber = idx >= 0;
+    return Marker(
+      point: LatLng(f.lat, f.lng),
+      width: 38,
+      height: 38,
+      child: Container(
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: const Color(0xE6C9A84C), // ゴールド (一覧マーカーと同色)
+          border: Border.all(color: Colors.white, width: 2),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0xCC000000),
+              blurRadius: 6,
+              offset: Offset(0, 2),
+            ),
+          ],
+        ),
+        alignment: Alignment.center,
+        child: hasNumber
+            ? Text(
+                '${idx + 1}',
+                style: const TextStyle(
+                  fontSize: 16,
+                  color: Color(0xFF0C0C16),
+                  fontWeight: FontWeight.bold,
+                  height: 1.0,
+                ),
+              )
+            : null,
+      ),
+    );
+  }
+
+  /// 検索結果リスト中に地図上へ番号マーカー (1〜20) を描画する。
+  /// 表示順 = リスト順 (Google RELEVANCE + locationBias)。
+  /// タップで `_selectSearchHit` を呼び、リスト側でタップしたのと同等に focus する。
+  List<Marker> _buildSearchHitMarkers() {
+    final hits = _searchHits;
+    final markers = <Marker>[];
+    for (int i = 0; i < hits.length; i++) {
+      final h = hits[i];
+      markers.add(Marker(
+        point: LatLng(h.lat, h.lng),
+        width: 32,
+        height: 32,
+        // 円中心がピン先になるよう alignment 中央のままにする
+        child: GestureDetector(
+          onTap: () => _selectSearchHit(h),
+          behavior: HitTestBehavior.opaque,
+          child: Container(
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: const Color(0xE6C9A84C), // ゴールド円 (テーマ色)
+              border: Border.all(color: Colors.white, width: 1.5),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x99000000),
+                  blurRadius: 4,
+                  offset: Offset(0, 2),
+                ),
+              ],
+            ),
+            alignment: Alignment.center,
+            child: Text(
+              '${i + 1}',
+              style: const TextStyle(
+                fontSize: 14,
+                color: Color(0xFF0C0C16),
+                fontWeight: FontWeight.bold,
+                height: 1.0,
+              ),
+            ),
+          ),
+        ),
+      ));
+    }
+    return markers;
   }
 
   Color get _sectorColor {
@@ -808,6 +952,29 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   // ══════════════════════════════════════════════
   @override
   Widget build(BuildContext context) {
+    // 物理戻るボタン (Android) で検索 focus → 検索結果リスト → 通常Map の順に
+    // 段階的に閉じる。focus / hits 表示中は OS のデフォルト pop を抑制。
+    return PopScope(
+      canPop: _searchFocus == null && _searchHits.isEmpty,
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop) return;
+        if (_searchFocus != null) {
+          // hits は維持 → リスト復帰 + 地図も検索一覧時の状態に戻す
+          setState(() => _searchFocus = null);
+          _restoreSearchListView();
+        } else if (_searchHits.isNotEmpty) {
+          setState(() {
+            _searchHits = [];
+            _searchListCenter = null;
+            _searchListZoom = null;
+          });
+        }
+      },
+      child: _buildBody(context),
+    );
+  }
+
+  Widget _buildBody(BuildContext context) {
     final topPad = MediaQuery.of(context).padding.top;
     // 2026-04-29: NavBar 被り問題の根本解決。オーバーレイ群を内側の Padded Stack に
     // 集約し、bottom: 0 = NavBar の上端 として扱う。各 widget で navInset を
@@ -914,16 +1081,16 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                   _locationTapInfo = (name: name, point: point, isBirth: isBirth);
                 }),
               )),
-            // HTML: searchMarker — circleMarker(radius:8, color:#fff, fillColor:GOLD, fillOpacity:.9, weight:2)
-            if (_searchFocus != null) CircleLayer(circles: [
-              CircleMarker(
-                point: LatLng(_searchFocus!.lat, _searchFocus!.lng),
-                radius: 8,
-                color: const Color(0xE6C9A84C), // GOLD fillOpacity:.9
-                borderColor: const Color(0xFFFFFFFF), // color:#fff
-                borderStrokeWidth: 2,
-              ),
-            ]),
+            // 検索結果リスト中: 各 hit に番号マーカー (1〜20) を描画。
+            // タップで _selectSearchHit (= 該当 hit にズームイン + Focus popup)。
+            // focus 中は数字マーカーを消し、下の CircleLayer のゴールド円のみ表示。
+            if (_searchHits.isNotEmpty && _searchFocus == null)
+              MarkerLayer(markers: _buildSearchHitMarkers()),
+            // 検索 focus 中マーカー: リストでタップした番号(1〜20)を中心に表示。
+            // 2026-04-30: 数字なし金色丸 → 番号付き金色丸に変更（オーナー要望）。
+            // 一覧時マーカー(32x32)より少し大きく 38x38、影濃いめで「選択中」を強調。
+            if (_searchFocus != null)
+              MarkerLayer(markers: [_buildFocusedHitMarker()]),
             // VP Pin — HTML: draggable gold circle, dragend → rebuild
             // モード中は VP ピン非表示 (世界規模ビューでは中心の概念が無意味)
             if (!_astroCartoMode)
@@ -957,12 +1124,14 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
 
         // ── FF Label ──
         // モード中は「世界規模スコア」の概念が無いので非表示
+        // 2026-04-30: ラベルタップでカテゴリ循環切替（オーナー要望）
         if (!_noProfile && !_astroCartoMode) Positioned(
           top: topPad + 2, left: 16,
           child: FortuneFilterLabel(
             sectorScores: _displayScores(),
             activeSrc: _activeSrc,
             activeCategory: _activeCategory,
+            onTap: _cycleActiveCategory,
           ),
         ),
 
@@ -1184,12 +1353,27 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
         ),
 
         // ── Search Result List（複数候補） ──
-        if (_searchHits.isNotEmpty) Positioned(
-          bottom: 80, left: 16, right: 16,
+        // focus 中はリスト非表示。focus を閉じるとリスト復帰。
+        if (_searchHits.isNotEmpty && _searchFocus == null) Positioned(
+          bottom: 0, left: 8, right: 8,
           child: SearchResultList(
             hits: _searchHits,
+            center: _searchEffectiveCenter,
+            // 0.45 = ハーフサイズより少し小さめ。地図領域を広めに取る (オーナー判断)
+            maxHeight: MediaQuery.of(context).size.height * 0.45,
             onTap: _selectSearchHit,
-            onClose: () => setState(() => _searchHits = []),
+            onClose: () => setState(() {
+              _searchHits = [];
+              _searchListCenter = null;
+              _searchListZoom = null;
+              _searchVpIndex = -1; // 次回検索の起点を地図中心に戻す
+            }),
+            vpSlots: _vpSlotsCache,
+            selectedVpIndex: _searchVpIndex,
+            onVpChanged: (idx) {
+              setState(() => _searchVpIndex = idx);
+              _reannotateSearchResults();
+            },
           ),
         ),
 
@@ -1201,11 +1385,21 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
             center: _center,
             fComps: _fComps,
             activeSrc: _activeSrc,
-            onClose: () => setState(() => _searchFocus = null),
+            // ×タップ: focus 閉じる → リスト復帰 + 地図も一覧表示時へ復元
+            onClose: () {
+              setState(() => _searchFocus = null);
+              _restoreSearchListView();
+            },
+            // 「ここへ移動」: 中心をその地点に移してリスト・focus 全て破棄
             onMoveToHit: () {
               final f = _searchFocus!;
               _rebuild(LatLng(f.lat, f.lng));
-              setState(() => _searchFocus = null);
+              setState(() {
+                _searchFocus = null;
+                _searchHits = [];
+                _searchListCenter = null;
+                _searchListZoom = null;
+              });
             },
           ),
         ),
@@ -1228,13 +1422,17 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
         // ── F1-c: Daily Transit Full UI ──
         // _onDailyBadgeTap または _onOverlayComplete で _dailyTransitOpen=true。
         // 閉じる → _onDailyTransitClose で右上バッジ位置に縮小フェード。
-        // 観測点優先順: home (Sanctuary 拠点) → birth → 地図中心
-        // V2: natal を渡してイベント時刻のアスペクト contextを併記
-        if (_dailyTransitOpen) Positioned.fill(
+        // 2026-04-30: 観測点を画面内 VIEWPOINT dropdown で切替可能に変更。
+        // 親は出生地と VP slots 一式を渡すだけ。初期は自宅 → 自宅未登録なら出生地。
+        // V2: natal を渡してイベント時刻のアスペクト context を併記
+        if (_dailyTransitOpen && _profile != null) Positioned.fill(
           child: MapDailyTransitScreen(
             topCategory: _topCategory,
-            location: _dailyTransitLocation(),
-            locationLabel: _dailyTransitLocationLabel(),
+            birthLocation: LatLng(_profile!.birthLat, _profile!.birthLng),
+            birthLocationName: _profile!.birthPlace.isNotEmpty
+                ? _profile!.birthPlace
+                : '出生地',
+            vpSlots: _vpSlotsCache,
             natal: _chartResult?.natal,
             onClose: _onDailyTransitClose,
           ),
@@ -1274,12 +1472,30 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
 
         // ── 天頂点タップ詳細 popup (CCG: 全フレーム対応) ──
         // 線+ハウス popup と排他 (どちらか片方のみ表示)。
+        // 2026-04-30: 画面中央付近まで浮上させ、視認性を高める (オーナー要望)。
         if (_zenithTapInfo != null)
-          Positioned(
-            left: 0, right: 0, bottom: 0,
+          Positioned.fill(
             child: SafeArea(
-              top: false,
-              child: _buildZenithPopup(_zenithTapInfo!),
+              child: GestureDetector(
+                onTap: () => setState(() => _zenithTapInfo = null),
+                behavior: HitTestBehavior.opaque,
+                child: Container(
+                  color: const Color(0x77000000),
+                  alignment: Alignment.center,
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: GestureDetector(
+                    onTap: () {}, // popup自体のタップは閉じない
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        maxHeight: MediaQuery.of(context).size.height * 0.78,
+                      ),
+                      child: SingleChildScrollView(
+                        child: _buildZenithPopup(_zenithTapInfo!),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
             ),
           ),
 
@@ -1364,6 +1580,17 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
         ? _findNearbyAstroLines(tap)
         : null;
 
+    // Tier S #2: ライン narrative API 用の natal 文脈を組み立てる
+    int signOf(double lon) =>
+        ((lon % 360 + 360) % 360 / 30).floor() % 12;
+    final natalSummary = <String, int>{
+      if (chart.houses.isNotEmpty) 'ascSign': signOf(chart.houses[0]),
+      'mcSign': signOf(chart.mc),
+      if (chart.natal['sun'] != null) 'sunSign': signOf(chart.natal['sun']!),
+      if (chart.natal['moon'] != null)
+        'moonSign': signOf(chart.natal['moon']!),
+    };
+
     return MapRelocationPopup(
       tapLat: tap.latitude,
       tapLng: tap.longitude,
@@ -1374,6 +1601,8 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
       baselineLabel: baselineLabel,
       showHouses: relocateOn,
       nearbyLines: nearby,
+      natalSummary: natalSummary,
+      userName: p.name.isNotEmpty ? p.name : null,
       onClose: () => setState(() => _relocateTapPoint = null),
     );
   }

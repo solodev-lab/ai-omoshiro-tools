@@ -55,10 +55,10 @@ const Map<String, ZenithMessage> astroZenithMessages = {
   ),
   'jupiter': ZenithMessage(
     title: '木星天頂点',
-    summary: '拡大と幸運が頭上から降る',
+    summary: '拡大と恵みが頭上から降る',
     detail: '豊かさと成長機会の象徴。視野が広がり、寛大さ・楽観性・哲学的洞察が深まる地点。'
         '海外・教育・出版・宗教との縁が生まれやすい土地です。',
-    tags: ['幸運', '拡大', '学び'],
+    tags: ['恩恵', '拡大', '学び'],
   ),
   'saturn': ZenithMessage(
     title: '土星天頂点',

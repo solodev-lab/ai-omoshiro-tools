@@ -96,13 +96,10 @@ class AstroCartoFramePills extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 5),
-      decoration: BoxDecoration(
-        color: const Color(0xE60C0C1A),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0x33C9A84C)),
-      ),
+    return _ScrollableRowPanel(
+      borderRadius: 16,
+      // ピル中央寄せ: コンテンツが画面幅に収まれば中央、超えれば横スクロール可能
+      maxWidthMargin: 16,
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: _entries.map((e) {
@@ -158,6 +155,43 @@ class AstroCartoFramePills extends StatelessWidget {
   }
 }
 
+/// ピル列の overflow 対策ラッパー。
+/// - コンテンツが画面幅 - maxWidthMargin に収まる: 中央寄せで通常表示
+/// - 超える: 横スクロール可能
+/// 共通のグラスモーフィズム枠 (背景・border・角丸) を内蔵。
+class _ScrollableRowPanel extends StatelessWidget {
+  final Widget child;
+  final double borderRadius;
+  final double maxWidthMargin;
+  const _ScrollableRowPanel({
+    required this.child,
+    required this.borderRadius,
+    this.maxWidthMargin = 16,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final maxW =
+        MediaQuery.of(context).size.width - maxWidthMargin;
+    return ConstrainedBox(
+      constraints: BoxConstraints(maxWidth: maxW),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 5),
+        decoration: BoxDecoration(
+          color: const Color(0xE60C0C1A),
+          borderRadius: BorderRadius.circular(borderRadius),
+          border: Border.all(color: const Color(0x33C9A84C)),
+        ),
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          physics: const BouncingScrollPhysics(),
+          child: child,
+        ),
+      ),
+    );
+  }
+}
+
 /// Astro*Carto*Graphy モード中のカテゴリピル。
 /// (LayerPanel の代わりにモード中のFORTUNEカテゴリ切替を担当)
 class AstroCartoCategoryPills extends StatelessWidget {
@@ -171,13 +205,9 @@ class AstroCartoCategoryPills extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 5),
-      decoration: BoxDecoration(
-        color: const Color(0xE60C0C1A),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0x33C9A84C)),
-      ),
+    return _ScrollableRowPanel(
+      borderRadius: 18,
+      maxWidthMargin: 16,
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: categoryColors.entries.map((e) {
@@ -269,15 +299,16 @@ class AstroZenithPopup extends StatelessWidget {
       width: double.infinity,
       decoration: BoxDecoration(
         color: const Color(0xEE0C0C1A),
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+        // 2026-04-30: 中央表示に対応するため全周角丸 (旧: 上端のみ)
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: isNatal ? const Color(0x66C9A84C) : frameStyle.accent.withAlpha(140),
         ),
         boxShadow: const [
           BoxShadow(
             color: Color(0x99000000),
-            blurRadius: 16,
-            offset: Offset(0, -2),
+            blurRadius: 18,
+            offset: Offset(0, 4),
           ),
         ],
       ),

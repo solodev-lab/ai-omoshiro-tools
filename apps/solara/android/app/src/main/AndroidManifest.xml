@@ -31,6 +31,13 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+        <!-- Impeller (新世代レンダラー) を明示的に有効化。
+             Flutter 3.27+ では Android で既定 ON だが、将来のデフォルト変更に対する
+             保険として明示。BLASTBufferQueue 関連のログ抑制は OS 側の動作なので
+             これで完全には消えないが、Impeller 経由で描画パイプラインが安定する。 -->
+        <meta-data
+            android:name="io.flutter.embedding.android.EnableImpeller"
+            android:value="true" />
     </application>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and

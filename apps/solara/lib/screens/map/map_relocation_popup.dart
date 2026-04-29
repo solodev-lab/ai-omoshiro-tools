@@ -6,6 +6,7 @@ import '../../utils/astro_lines.dart';
 import '../../widgets/astro_term_label.dart';
 import '../horoscope/horo_constants.dart' show planetGlyphs, planetNamesJP, signNames;
 import 'map_constants.dart' show planetMeta;
+import 'map_line_narrative_sheet.dart';
 
 // ══════════════════════════════════════════════════
 // Map Relocation Popup — Phase M2 引越しレイヤー (タップ詳細)
@@ -56,6 +57,15 @@ class MapRelocationPopup extends StatelessWidget {
   /// 近接アスペクト線 (空 or null なら線セクション非表示)
   final List<NearbyAstroLine>? nearbyLines;
 
+  /// Tier S #2: ライン narrative API 用文脈（任意）
+  /// 設定済みなら線行タップで MapLineNarrativeSheet を開ける。
+  /// null の場合は線行はタップ不可（静的表示のみ）。
+  final Map<String, int>? natalSummary; // {ascSign, mcSign, sunSign, moonSign}
+  final String? tappedPlaceName;
+  final String? transitDate; // frame==transit のラインで使う
+  final String lang;
+  final String? userName;
+
   final VoidCallback onClose;
 
   const MapRelocationPopup({
@@ -70,6 +80,11 @@ class MapRelocationPopup extends StatelessWidget {
     required this.onClose,
     this.showHouses = true,
     this.nearbyLines,
+    this.natalSummary,
+    this.tappedPlaceName,
+    this.transitDate,
+    this.lang = 'ja',
+    this.userName,
   });
 
   @override
@@ -107,7 +122,7 @@ class MapRelocationPopup extends StatelessWidget {
           _buildHeader(showHouses: showHouses, hasLines: hasLines),
           if (hasLines) ...[
             const SizedBox(height: 10),
-            _buildLinesSection(nearbyLines!),
+            _buildLinesSection(context, nearbyLines!),
           ],
           if (showHouses && relocated != null) ...[
             if (hasLines)
@@ -126,7 +141,7 @@ class MapRelocationPopup extends StatelessWidget {
   }
 
   // ── 論点10: 線情報セクション ──
-  Widget _buildLinesSection(List<NearbyAstroLine> lines) {
+  Widget _buildLinesSection(BuildContext context, List<NearbyAstroLine> lines) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -152,7 +167,7 @@ class MapRelocationPopup extends StatelessWidget {
         ),
         const SizedBox(height: 6),
         // 近い順に最大5本表示 (それ以上は省略)
-        for (final n in lines.take(5)) _buildLineRow(n),
+        for (final n in lines.take(5)) _buildLineRow(context, n),
         if (lines.length > 5)
           Padding(
             padding: const EdgeInsets.only(top: 2, left: 18),
@@ -168,7 +183,7 @@ class MapRelocationPopup extends StatelessWidget {
     );
   }
 
-  Widget _buildLineRow(NearbyAstroLine n) {
+  Widget _buildLineRow(BuildContext context, NearbyAstroLine n) {
     final meta = planetMeta[n.line.planet];
     final glyph = planetGlyphs[n.line.planet] ?? '';
     final pName = planetNamesJP[n.line.planet] ?? n.line.planet;
@@ -180,10 +195,16 @@ class MapRelocationPopup extends StatelessWidget {
         ? '${dist.toStringAsFixed(1)}km'
         : '${dist.round()}km';
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 2),
-      child: Row(
-        children: [
+    // Tier S #2: 文脈が揃っていれば行タップで詳細 BottomSheet を開く
+    final canOpen = natalSummary != null;
+
+    return InkWell(
+      onTap: canOpen ? () => _openLineSheet(context, n) : null,
+      borderRadius: BorderRadius.circular(4),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 2, horizontal: 2),
+        child: Row(
+          children: [
           SizedBox(
             width: 16,
             child: Text(glyph, style: TextStyle(fontSize: 13, color: color)),
@@ -227,8 +248,31 @@ class MapRelocationPopup extends StatelessWidget {
               fontSize: 9, color: const Color(0xFF777777),
             ),
           ),
-        ],
+          if (canOpen) ...[
+            const SizedBox(width: 4),
+            const Icon(Icons.chevron_right,
+                size: 14, color: Color(0xFF888888)),
+          ],
+          ],
+        ),
       ),
+    );
+  }
+
+  void _openLineSheet(BuildContext context, NearbyAstroLine n) {
+    final frameKey =
+        n.line.frame == AstroFrame.transit ? 'transit' : 'natal';
+    showLineNarrativeSheet(
+      context,
+      nearby: n,
+      frame: frameKey,
+      tappedLat: tapLat,
+      tappedLng: tapLng,
+      natalSummary: natalSummary,
+      transitDate: frameKey == 'transit' ? transitDate : null,
+      tappedPlaceName: tappedPlaceName,
+      lang: lang,
+      userName: userName,
     );
   }
 
