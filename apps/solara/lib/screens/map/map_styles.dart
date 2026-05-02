@@ -14,6 +14,14 @@ enum MapStyle {
 /// ナイトモード用の2段フィルター：
 /// ①色を反転（invert）→ ②色相を180°回転（hue-rotate）
 /// 合成すると CSS の `filter: invert(1) hue-rotate(180deg)` と同等。
+///
+/// 2026-05-01: 旧版は ColorFiltered を 2段ネスト (内: invert / 外: hue-rotate)
+/// していたが、各 ColorFiltered が独立した GPU saveLayer / Surface buffer を
+/// 生成するため、画面上のタイル枚数 × 2 倍のオフスクリーンバッファが消費され、
+/// Adreno (Snapdragon) で fd 枯渇 + メモリプレッシャーの主要因となっていた。
+///
+/// 解決策: 4×5 アフィン色行列を CPU 側で前計算合成 (`hue ∘ invert`)、
+/// 単一の ColorFiltered で同じ視覚結果を得る。saveLayer 数が半減する。
 const List<double> _invertMatrix = <double>[
   -1, 0, 0, 0, 255,
    0,-1, 0, 0, 255,
@@ -26,6 +34,33 @@ const List<double> _hueRotate180Matrix = <double>[
    0.426, 1.430,-0.856, 0, 0,
    0,     0,    0,     1, 0,
 ];
+
+/// 4×5 アフィン色行列の合成: `outer ∘ inner`。
+/// out = outer · (inner · src + inner_offset) + outer_offset
+///     = (outer · inner) · src + (outer · inner_offset + outer_offset)
+List<double> _composeColorMatrix(List<double> outer, List<double> inner) {
+  final r = List<double>.filled(20, 0);
+  for (int row = 0; row < 4; row++) {
+    for (int col = 0; col < 4; col++) {
+      double sum = 0;
+      for (int k = 0; k < 4; k++) {
+        sum += outer[row * 5 + k] * inner[k * 5 + col];
+      }
+      r[row * 5 + col] = sum;
+    }
+    // offset 列: outer · inner_offset + outer_offset
+    double offset = outer[row * 5 + 4];
+    for (int k = 0; k < 4; k++) {
+      offset += outer[row * 5 + k] * inner[k * 5 + 4];
+    }
+    r[row * 5 + 4] = offset;
+  }
+  return r;
+}
+
+/// 起動時に一度だけ計算する合成行列 (hue-rotate ∘ invert)。
+final List<double> _darkComposedMatrix =
+    _composeColorMatrix(_hueRotate180Matrix, _invertMatrix);
 
 class MapStyleConfig {
   final String id;
@@ -114,13 +149,10 @@ Widget buildStyledTileLayer(MapStyle style) {
     tileProvider: NetworkTileProvider(httpClient: sharedTileHttpClient),
     tileBuilder: cfg.dark
         ? (context, tileWidget, tile) => ColorFiltered(
-              // 外側：色相180°回転（invert後の色を元に戻す）
-              colorFilter: const ColorFilter.matrix(_hueRotate180Matrix),
-              child: ColorFiltered(
-                // 内側：色反転（白↔黒）
-                colorFilter: const ColorFilter.matrix(_invertMatrix),
-                child: tileWidget,
-              ),
+              // 2026-05-01: hue-rotate ∘ invert を 1段合成。
+              // saveLayer / Surface buffer がタイル枚数分減り Adreno で安定化。
+              colorFilter: ColorFilter.matrix(_darkComposedMatrix),
+              child: tileWidget,
             )
         : null,
   );
