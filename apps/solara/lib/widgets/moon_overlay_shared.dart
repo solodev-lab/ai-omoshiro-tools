@@ -106,41 +106,39 @@ class _MoonScrollingStoryState extends State<MoonScrollingStory> {
             stops: [0.0, 0.22, 0.38, 1.0],
           ).createShader(rect),
           blendMode: BlendMode.dstIn,
-          child: FadeTransition(
-            opacity: widget.fadeAnim,
-            child: SingleChildScrollView(
-              controller: _scrollCtl,
-              physics: const BouncingScrollPhysics(),
-              padding: EdgeInsets.only(
-                top: h * 0.75,
-                bottom: h, // 本文が viewport 上端まで完全に流れ切る余白
-              ),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 28),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Text(widget.label, style: GoogleFonts.cinzel(
-                      color: const Color(0xFFF9D976),
-                      fontSize: 14, letterSpacing: 4,
-                      fontWeight: FontWeight.w600)),
-                    const SizedBox(height: 32),
-                    ...widget.paragraphs.map((p) => Padding(
-                      padding: const EdgeInsets.only(bottom: 28),
-                      child: Text(
-                        p,
-                        style: const TextStyle(
-                          color: Color(0xFFF5EFDA),
-                          fontSize: 17,
-                          fontWeight: FontWeight.w400,
-                          height: 1.9,
-                        ),
-                        textAlign: TextAlign.center,
+          // 2026-05-03: FadeTransition 撤廃 (Phase 2 saveLayer leak 対策)。
+          child: SingleChildScrollView(
+            controller: _scrollCtl,
+            physics: const BouncingScrollPhysics(),
+            padding: EdgeInsets.only(
+              top: h * 0.75,
+              bottom: h,
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 28),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Text(widget.label, style: GoogleFonts.cinzel(
+                    color: const Color(0xFFF9D976),
+                    fontSize: 14, letterSpacing: 4,
+                    fontWeight: FontWeight.w600)),
+                  const SizedBox(height: 32),
+                  ...widget.paragraphs.map((p) => Padding(
+                    padding: const EdgeInsets.only(bottom: 28),
+                    child: Text(
+                      p,
+                      style: const TextStyle(
+                        color: Color(0xFFF5EFDA),
+                        fontSize: 17,
+                        fontWeight: FontWeight.w400,
+                        height: 1.9,
                       ),
-                    )),
-                  ],
-                ),
+                      textAlign: TextAlign.center,
+                    ),
+                  )),
+                ],
               ),
             ),
           ),

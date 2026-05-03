@@ -111,14 +111,13 @@ class _CatasterismFormationOverlayState
 
   @override
   Widget build(BuildContext context) {
-    return FadeTransition(
-      opacity: CurvedAnimation(parent: _fadeController, curve: Curves.easeOut),
-      child: Container(
-        color: const Color(0xFF040810),
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            SafeArea(
+    // 2026-05-03: FadeTransition 撤廃 (Phase 2 saveLayer leak 対策)。
+    return Container(
+      color: const Color(0xFF040810),
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          SafeArea(
           child: AnimatedBuilder(
             animation: _controller,
             builder: (context, _) {
@@ -206,88 +205,82 @@ class _CatasterismFormationOverlayState
                       ),
                     ),
                   ),
-                  // Cycle info (bottom, fade in at COMPLETE)
-                  Positioned(
+                  // Cycle info (bottom, show at COMPLETE)
+                  // 2026-05-03: AnimatedOpacity \u64a4\u5ec3 \u2192 if (isComplete) \u3067\u5373\u6642\u5207\u66ff\u3002
+                  if (isComplete) Positioned(
                     bottom: 96,
                     left: 0,
                     right: 0,
-                    child: AnimatedOpacity(
-                      duration: const Duration(milliseconds: 600),
-                      opacity: isComplete ? 1.0 : 0.0,
-                      child: Column(
-                        children: [
-                          Text(
-                            widget.cycle.nameEN.startsWith('The ')
-                              ? widget.cycle.nameEN.substring(4)
-                              : widget.cycle.nameEN,
-                            style: const TextStyle(
-                              color: SolaraColors.textPrimary,
-                              fontSize: 20,
-                              fontWeight: FontWeight.w300,
-                              letterSpacing: 1.5,
-                            ),
-                            textAlign: TextAlign.center,
+                    child: Column(
+                      children: [
+                        Text(
+                          widget.cycle.nameEN.startsWith('The ')
+                            ? widget.cycle.nameEN.substring(4)
+                            : widget.cycle.nameEN,
+                          style: const TextStyle(
+                            color: SolaraColors.textPrimary,
+                            fontSize: 20,
+                            fontWeight: FontWeight.w300,
+                            letterSpacing: 1.5,
                           ),
-                          const SizedBox(height: 4),
-                          Text(
-                            widget.cycle.nameJP,
-                            style: const TextStyle(
-                              color: SolaraColors.solaraGold,
-                              fontSize: 14,
-                            ),
-                            textAlign: TextAlign.center,
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          widget.cycle.nameJP,
+                          style: const TextStyle(
+                            color: SolaraColors.solaraGold,
+                            fontSize: 14,
                           ),
-                          const SizedBox(height: 8),
-                          Text(
-                            '${'\u2605' * widget.cycle.rarity}${'\u2606' * (5 - widget.cycle.rarity)}  \u00b7  ${widget.cycle.rarityLabel}',
-                            style: const TextStyle(
-                              color: SolaraColors.textSecondary,
-                              fontSize: 12,
-                              letterSpacing: 2,
-                            ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          '${'\u2605' * widget.cycle.rarity}${'\u2606' * (5 - widget.cycle.rarity)}  \u00b7  ${widget.cycle.rarityLabel}',
+                          style: const TextStyle(
+                            color: SolaraColors.textSecondary,
+                            fontSize: 12,
+                            letterSpacing: 2,
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ),
-                  // "View in Star Atlas" button (fade in when finished)
-                  Positioned(
+                  // "View in Star Atlas" button (show when finished)
+                  // 2026-05-03: AnimatedOpacity \u64a4\u5ec3 \u2192 if (isFinished) \u3067\u5373\u6642\u5207\u66ff\u3002
+                  if (isFinished) Positioned(
                     bottom: 32,
                     left: 32,
                     right: 32,
-                    child: AnimatedOpacity(
-                      duration: const Duration(milliseconds: 600),
-                      opacity: isFinished ? 1.0 : 0.0,
-                      child: GestureDetector(
-                        onTap: isFinished ? widget.onComplete : null,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [
-                                Color(0xFFF9D976),
-                                Color(0xFFC4923A),
-                              ],
-                            ),
-                            borderRadius: BorderRadius.circular(12),
-                            boxShadow: [
-                              BoxShadow(
-                                color: SolaraColors.solaraGold
-                                    .withAlpha((0.4 * 255).round()),
-                                blurRadius: 16,
-                                spreadRadius: 1,
-                              ),
+                    child: GestureDetector(
+                      onTap: widget.onComplete,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [
+                              Color(0xFFF9D976),
+                              Color(0xFFC4923A),
                             ],
                           ),
-                          child: const Center(
-                            child: Text(
-                              'View in Star Atlas \u2728',
-                              style: TextStyle(
-                                color: Color(0xFF1A0F00),
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                                letterSpacing: 2,
-                              ),
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: SolaraColors.solaraGold
+                                  .withAlpha((0.4 * 255).round()),
+                              blurRadius: 16,
+                              spreadRadius: 1,
+                            ),
+                          ],
+                        ),
+                        child: const Center(
+                          child: Text(
+                            'View in Star Atlas \u2728',
+                            style: TextStyle(
+                              color: Color(0xFF1A0F00),
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              letterSpacing: 2,
                             ),
                           ),
                         ),
@@ -318,8 +311,7 @@ class _CatasterismFormationOverlayState
         ),
           ], // Stack children
         ), // Stack
-      ), // Container
-    ); // FadeTransition
+    ); // Container (Phase 2 で FadeTransition 撤廃)
   }
 }
 

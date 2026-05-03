@@ -371,9 +371,8 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
     // AnimatedSwitcher for flip effect
     return AnimatedSwitcher(
       duration: const Duration(milliseconds: 600),
-      transitionBuilder: (child, animation) {
-        return FadeTransition(opacity: animation, child: child);
-      },
+      // 2026-05-03: FadeTransition 撤廃 → 即時切替 (画面遷移 fade なし、Phase 2 対策)。
+      transitionBuilder: (child, animation) => child,
       child: _titleFlipped
           ? _buildTitleVCard(
               key: const ValueKey('shadow'),

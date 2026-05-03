@@ -135,28 +135,25 @@ class _FullMoonOverlayState extends State<FullMoonOverlay>
 
   @override
   Widget build(BuildContext context) {
-    // オーバーレイ全体を初期フェードインで包む (月背景含む)
-    return FadeTransition(
-      opacity: _fadeAnim,
-      child: mysticalMoonBackdrop(
-        assetPath: 'assets/horo-bg/full_moon_bg.webp',
-        child: AnimatedBuilder(
-          animation: _pageCtl,
-          builder: (context, _) {
-            final t = _pageCtl.value;
-            final opacity = _showStory
-                ? (1 - t * 2).clamp(0.0, 1.0)
-                : ((t - 0.5) * 2).clamp(0.0, 1.0);
-            return Opacity(
-              opacity: opacity,
-              child: _showStory
-                  ? _buildStoryContent(context)
-                  : (_selectedRating >= 0
-                      ? _buildRevealLayout(context)
-                      : _buildRatingList(context)),
-            );
-          },
-        ),
+    // 2026-05-03: FadeTransition 撤廃 (Phase 2 saveLayer leak 対策)。
+    return mysticalMoonBackdrop(
+      assetPath: 'assets/horo-bg/full_moon_bg.webp',
+      child: AnimatedBuilder(
+        animation: _pageCtl,
+        builder: (context, _) {
+          final t = _pageCtl.value;
+          final opacity = _showStory
+              ? (1 - t * 2).clamp(0.0, 1.0)
+              : ((t - 0.5) * 2).clamp(0.0, 1.0);
+          return Opacity(
+            opacity: opacity,
+            child: _showStory
+                ? _buildStoryContent(context)
+                : (_selectedRating >= 0
+                    ? _buildRevealLayout(context)
+                    : _buildRatingList(context)),
+          );
+        },
       ),
     );
   }
@@ -182,33 +179,31 @@ class _FullMoonOverlayState extends State<FullMoonOverlay>
               onReachedEnd: _transitionToRating,
             ),
           ),
+          // 2026-05-03: FadeTransition 撤廃。
           Padding(
             padding: const EdgeInsets.fromLTRB(28, 0, 28, 24),
-            child: FadeTransition(
-              opacity: _fadeAnim,
-              child: GestureDetector(
-                onTap: _transitionToRating,
-                child: Container(
-                  width: 240,
-                  padding: const EdgeInsets.symmetric(vertical: 15),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(28),
-                    gradient: const LinearGradient(
-                      colors: [
-                        SolaraColors.solaraGold,
-                        SolaraColors.solaraGoldLight,
-                      ],
-                    ),
+            child: GestureDetector(
+              onTap: _transitionToRating,
+              child: Container(
+                width: 240,
+                padding: const EdgeInsets.symmetric(vertical: 15),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(28),
+                  gradient: const LinearGradient(
+                    colors: [
+                      SolaraColors.solaraGold,
+                      SolaraColors.solaraGoldLight,
+                    ],
                   ),
-                  child: Center(
-                    child: Text(
-                      'Continue',
-                      style: GoogleFonts.cinzel(
-                        color: SolaraColors.celestialBlueDark,
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 2.5,
-                      ),
+                ),
+                child: Center(
+                  child: Text(
+                    'Continue',
+                    style: GoogleFonts.cinzel(
+                      color: SolaraColors.celestialBlueDark,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 2.5,
                     ),
                   ),
                 ),
@@ -370,14 +365,12 @@ class _FullMoonOverlayState extends State<FullMoonOverlay>
               ),
             ),
             // 選択肢の下: 詩的メッセージ (満月は惑星イベント非表示)
+            // 2026-05-03: FadeTransition 撤廃。
             Positioned(
               left: 28,
               right: 28,
               top: ratingY + ratingHeight + 26,
-              child: FadeTransition(
-                opacity: _messageCtl,
-                child: _revealMessage(context),
-              ),
+              child: _revealMessage(context),
             ),
           ],
         );

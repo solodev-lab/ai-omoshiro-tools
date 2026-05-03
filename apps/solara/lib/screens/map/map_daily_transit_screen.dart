@@ -191,45 +191,43 @@ class _MapDailyTransitScreenState extends State<MapDailyTransitScreen>
     final cached = _cache[key];
     final isLoading = _loading[key] ?? false;
     final hasFailed = _failed[key] ?? false;
-    return FadeTransition(
-      opacity: _fadeCtrl,
-      child: Container(
-        color: const Color(0xEE0A0A14),
-        child: SafeArea(
-          child: Column(
-            children: [
-              _Header(
-                topCategory: widget.topCategory,
-                locationLabel: _currentLocationLabel,
-                vpSlots: widget.vpSlots,
-                vpIndex: _vpIndex,
-                birthLocationName: widget.birthLocationName,
-                onVpChanged: _selectVp,
-                onClose: _close,
-              ),
-              _DayTabBar(
-                active: _activeTab,
-                onSelect: _selectTab,
-                angleFilter: _angleFilter,
-                categoryFilter: _categoryFilter,
-                onAngleChanged: (v) => setState(() => _angleFilter = v),
-                onCategoryChanged: (v) => setState(() => _categoryFilter = v),
-              ),
-              Expanded(
-                child: isLoading
-                    ? const _LoadingBody()
-                    : hasFailed
-                        ? _FailedBody(onRetry: () => _loadTab(_activeTab, _vpIndex))
-                        : cached != null
-                            ? _TimelineBody(
-                                result: cached,
-                                angleFilter: _angleFilter,
-                                categoryFilter: _categoryFilter,
-                              )
-                            : const _LoadingBody(),
-              ),
-            ],
-          ),
+    // 2026-05-03: FadeTransition 撤廃 (Phase 2 saveLayer leak 対策)。
+    return Container(
+      color: const Color(0xEE0A0A14),
+      child: SafeArea(
+        child: Column(
+          children: [
+            _Header(
+              topCategory: widget.topCategory,
+              locationLabel: _currentLocationLabel,
+              vpSlots: widget.vpSlots,
+              vpIndex: _vpIndex,
+              birthLocationName: widget.birthLocationName,
+              onVpChanged: _selectVp,
+              onClose: _close,
+            ),
+            _DayTabBar(
+              active: _activeTab,
+              onSelect: _selectTab,
+              angleFilter: _angleFilter,
+              categoryFilter: _categoryFilter,
+              onAngleChanged: (v) => setState(() => _angleFilter = v),
+              onCategoryChanged: (v) => setState(() => _categoryFilter = v),
+            ),
+            Expanded(
+              child: isLoading
+                  ? const _LoadingBody()
+                  : hasFailed
+                      ? _FailedBody(onRetry: () => _loadTab(_activeTab, _vpIndex))
+                      : cached != null
+                          ? _TimelineBody(
+                              result: cached,
+                              angleFilter: _angleFilter,
+                              categoryFilter: _categoryFilter,
+                            )
+                          : const _LoadingBody(),
+            ),
+          ],
         ),
       ),
     );
