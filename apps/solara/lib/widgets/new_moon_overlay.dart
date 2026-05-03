@@ -157,25 +157,30 @@ class _NewMoonOverlayState extends State<NewMoonOverlay>
 
   @override
   Widget build(BuildContext context) {
-    // 2026-05-03: FadeTransition 撤廃 (Phase 2 saveLayer leak 対策)。
-    return mysticalMoonBackdrop(
-      assetPath: 'assets/horo-bg/new_moon_bg.webp',
-      child: AnimatedBuilder(
-        animation: _pageCtl,
-        builder: (context, _) {
-          final t = _pageCtl.value;
-          final opacity = _showStory
-              ? (1 - t * 2).clamp(0.0, 1.0)
-              : ((t - 0.5) * 2).clamp(0.0, 1.0);
-          return Opacity(
-            opacity: opacity,
-            child: _showStory
-                ? _buildStoryContent(context)
-                : (_selectedIndex >= 0
-                    ? _buildRevealLayout(context)
-                    : _buildChoiceList(context)),
-          );
-        },
+    // オーバーレイ全体を初期フェードインで包む (月背景含む)
+    // Backdrop はこの下で常時表示し、クロスフェード中にCycle画面が透けるのを防ぐ
+    return FadeTransition(
+      opacity: _fadeAnim,
+      child: mysticalMoonBackdrop(
+        assetPath: 'assets/horo-bg/new_moon_bg.webp',
+        child: AnimatedBuilder(
+          animation: _pageCtl,
+          builder: (context, _) {
+            final t = _pageCtl.value;
+            // 前半(0→0.5): 物語フェードアウト / 後半(0.5→1): 選択画面フェードイン
+            final opacity = _showStory
+                ? (1 - t * 2).clamp(0.0, 1.0)
+                : ((t - 0.5) * 2).clamp(0.0, 1.0);
+            return Opacity(
+              opacity: opacity,
+              child: _showStory
+                  ? _buildStoryContent(context)
+                  : (_selectedIndex >= 0
+                      ? _buildRevealLayout(context)
+                      : _buildChoiceList(context)),
+            );
+          },
+        ),
       ),
     );
   }
@@ -199,31 +204,33 @@ class _NewMoonOverlayState extends State<NewMoonOverlay>
             ),
           ),
           // Continue button (fixed at bottom)
-          // 2026-05-03: FadeTransition 撤廃。
           Padding(
             padding: const EdgeInsets.fromLTRB(28, 0, 28, 24),
-            child: GestureDetector(
-              onTap: _transitionToChoice,
-              child: Container(
-                width: 240,
-                padding: const EdgeInsets.symmetric(vertical: 15),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(28),
-                  gradient: const LinearGradient(
-                    colors: [
-                      SolaraColors.solaraGold,
-                      SolaraColors.solaraGoldLight,
-                    ],
+            child: FadeTransition(
+              opacity: _fadeAnim,
+              child: GestureDetector(
+                onTap: _transitionToChoice,
+                child: Container(
+                  width: 240,
+                  padding: const EdgeInsets.symmetric(vertical: 15),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(28),
+                    gradient: const LinearGradient(
+                      colors: [
+                        SolaraColors.solaraGold,
+                        SolaraColors.solaraGoldLight,
+                      ],
+                    ),
                   ),
-                ),
-                child: Center(
-                  child: Text(
-                    'Continue',
-                    style: GoogleFonts.cinzel(
-                      color: SolaraColors.celestialBlueDark,
-                      fontSize: 15,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 2.5,
+                  child: Center(
+                    child: Text(
+                      'Continue',
+                      style: GoogleFonts.cinzel(
+                        color: SolaraColors.celestialBlueDark,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 2.5,
+                      ),
                     ),
                   ),
                 ),
@@ -379,7 +386,6 @@ class _NewMoonOverlayState extends State<NewMoonOverlay>
               ),
             ),
             // 選択肢の下: 詩的メッセージ → 惑星イベント を縦に積む
-            // 2026-05-03: FadeTransition x3 撤廃。
             Positioned(
               left: 28,
               right: 28,
@@ -387,9 +393,15 @@ class _NewMoonOverlayState extends State<NewMoonOverlay>
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  _revealMessage(context),
+                  FadeTransition(
+                    opacity: _messageCtl,
+                    child: _revealMessage(context),
+                  ),
                   const SizedBox(height: 22),
-                  _revealEvents(events),
+                  FadeTransition(
+                    opacity: _eventsCtl,
+                    child: _revealEvents(events),
+                  ),
                 ],
               ),
             ),
@@ -398,30 +410,33 @@ class _NewMoonOverlayState extends State<NewMoonOverlay>
               left: 0,
               right: 0,
               bottom: 40,
-              child: Center(
-                child: GestureDetector(
-                  onTap: _setIntention,
-                  behavior: HitTestBehavior.opaque,
-                  child: Container(
-                    width: 240,
-                    padding: const EdgeInsets.symmetric(vertical: 15),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(28),
-                      gradient: const LinearGradient(
-                        colors: [
-                          SolaraColors.solaraGold,
-                          SolaraColors.solaraGoldLight,
-                        ],
+              child: FadeTransition(
+                opacity: _actionCtl,
+                child: Center(
+                  child: GestureDetector(
+                    onTap: _setIntention,
+                    behavior: HitTestBehavior.opaque,
+                    child: Container(
+                      width: 240,
+                      padding: const EdgeInsets.symmetric(vertical: 15),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(28),
+                        gradient: const LinearGradient(
+                          colors: [
+                            SolaraColors.solaraGold,
+                            SolaraColors.solaraGoldLight,
+                          ],
+                        ),
                       ),
-                    ),
-                    child: Center(
-                      child: Text(
-                        'Set Intention',
-                        style: GoogleFonts.cinzel(
-                          color: SolaraColors.celestialBlueDark,
-                          fontSize: 15,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: 2.5,
+                      child: Center(
+                        child: Text(
+                          'Set Intention',
+                          style: GoogleFonts.cinzel(
+                            color: SolaraColors.celestialBlueDark,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 2.5,
+                          ),
                         ),
                       ),
                     ),

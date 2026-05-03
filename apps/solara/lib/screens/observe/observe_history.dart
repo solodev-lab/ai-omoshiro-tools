@@ -265,9 +265,9 @@ class _SyncInputState extends State<_SyncInput> {
           focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: Color(0x4DC9A84C))),
         ),
       ),
-      // 2026-05-03: AnimatedOpacity 撤廃 → Visibility で即時切替 (Phase 2 対策)。
-      Visibility(
-        visible: _showSaved,
+      AnimatedOpacity(
+        opacity: _showSaved ? 1.0 : 0.0,
+        duration: const Duration(milliseconds: 300),
         child: const Padding(
           padding: EdgeInsets.only(top: 4),
           child: Text('saved', style: TextStyle(fontSize: 9, color: Color(0xFFC9A84C))),
