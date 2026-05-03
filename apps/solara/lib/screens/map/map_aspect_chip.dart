@@ -110,95 +110,92 @@ class MapAspectChip extends StatelessWidget {
     final transitMeta = planetMeta[transitPlanet];
     final natalMeta = planetMeta[aspect.natalPlanet];
 
-    showModalBottomSheet<void>(
+    // showModalBottomSheet → showDialog 化 (2026-05-04 ユーザー指示):
+    // i ボタン (info_outline) からの説明ダイアログと挙動を統一。
+    // BottomSheet の常時 Material オーバーレイより軽量で、CPU/レイアウト負荷低い。
+    showDialog<void>(
       context: context,
-      backgroundColor: const Color(0xF00C0C16),
       barrierColor: Colors.black54,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
-      ),
-      builder: (ctx) => Padding(
-        padding: EdgeInsets.only(
-          left: 20,
-          right: 20,
-          top: 16,
-          bottom: 20 + MediaQuery.of(ctx).viewInsets.bottom,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xF00C0C16),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(14),
+          side: BorderSide(color: color.withValues(alpha: 0.45)),
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Align(
-              alignment: Alignment.topRight,
-              child: GestureDetector(
-                onTap: () => Navigator.of(ctx).pop(),
-                behavior: HitTestBehavior.opaque,
-                child: const Padding(
-                  padding: EdgeInsets.all(6),
-                  child: Icon(Icons.close,
-                      size: 18, color: Color(0xFFC9A84C)),
+        contentPadding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(children: [
+                Text(transitMeta?.sym ?? '✦',
+                    style: TextStyle(fontSize: 20, color: transitMeta?.color)),
+                const SizedBox(width: 6),
+                Text(transitMeta?.jp ?? transitPlanet,
+                    style: const TextStyle(
+                        fontSize: 16,
+                        color: SolaraColors.textPrimary,
+                        fontWeight: FontWeight.w600)),
+                const SizedBox(width: 4),
+                const Text('(T)',
+                    style: TextStyle(fontSize: 10, color: Color(0xFF888888))),
+                const SizedBox(width: 10),
+                Text('×',
+                    style: TextStyle(
+                        fontSize: 16, color: color.withValues(alpha: 0.8))),
+                const SizedBox(width: 10),
+                Text(natalMeta?.sym ?? '✦',
+                    style: TextStyle(fontSize: 20, color: natalMeta?.color)),
+                const SizedBox(width: 6),
+                Text(natalMeta?.jp ?? aspect.natalPlanet,
+                    style: const TextStyle(
+                        fontSize: 16,
+                        color: SolaraColors.textPrimary,
+                        fontWeight: FontWeight.w600)),
+                const SizedBox(width: 4),
+                const Text('(N)',
+                    style: TextStyle(fontSize: 10, color: Color(0xFF888888))),
+              ]),
+              const SizedBox(height: 14),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(color: color.withValues(alpha: 0.45)),
                 ),
+                child: Text(desc['aspect'] ?? '',
+                    style: TextStyle(
+                        fontSize: 14,
+                        color: color,
+                        fontWeight: FontWeight.w600)),
               ),
-            ),
-            const SizedBox(height: 4),
-            Row(children: [
-              Text(transitMeta?.sym ?? '✦',
-                  style: TextStyle(fontSize: 20, color: transitMeta?.color)),
-              const SizedBox(width: 6),
-              Text(transitMeta?.jp ?? transitPlanet,
-                  style: const TextStyle(
-                      fontSize: 16,
-                      color: SolaraColors.textPrimary,
-                      fontWeight: FontWeight.w600)),
-              const SizedBox(width: 4),
-              const Text('(T)',
-                  style: TextStyle(fontSize: 10, color: Color(0xFF888888))),
-              const SizedBox(width: 10),
-              Text('×',
-                  style: TextStyle(
-                      fontSize: 16, color: color.withValues(alpha: 0.8))),
-              const SizedBox(width: 10),
-              Text(natalMeta?.sym ?? '✦',
-                  style: TextStyle(fontSize: 20, color: natalMeta?.color)),
-              const SizedBox(width: 6),
-              Text(natalMeta?.jp ?? aspect.natalPlanet,
-                  style: const TextStyle(
-                      fontSize: 16,
-                      color: SolaraColors.textPrimary,
-                      fontWeight: FontWeight.w600)),
-              const SizedBox(width: 4),
-              const Text('(N)',
-                  style: TextStyle(fontSize: 10, color: Color(0xFF888888))),
-            ]),
-            const SizedBox(height: 14),
-            Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(6),
-                border: Border.all(color: color.withValues(alpha: 0.45)),
-              ),
-              child: Text(desc['aspect'] ?? '',
-                  style: TextStyle(
-                      fontSize: 14,
-                      color: color,
-                      fontWeight: FontWeight.w600)),
-            ),
-            const SizedBox(height: 6),
-            Text('オーブ ${aspect.orb.toStringAsFixed(2)}°',
-                style: const TextStyle(fontSize: 12, color: Color(0xFF888888))),
-            const SizedBox(height: 18),
-            _descSection('性質', desc['summary'] ?? '', color),
-            const SizedBox(height: 14),
-            _descSection(
-                'テーマ', desc['theme'] ?? '', SolaraColors.solaraGoldLight),
-            const SizedBox(height: 14),
-            _descSection(
-                '読み解き', desc['reading'] ?? '', SolaraColors.solaraGoldLight),
-          ],
+              const SizedBox(height: 6),
+              Text('オーブ ${aspect.orb.toStringAsFixed(2)}°',
+                  style:
+                      const TextStyle(fontSize: 12, color: Color(0xFF888888))),
+              const SizedBox(height: 18),
+              _descSection('性質', desc['summary'] ?? '', color),
+              const SizedBox(height: 14),
+              _descSection('テーマ', desc['theme'] ?? '',
+                  SolaraColors.solaraGoldLight),
+              const SizedBox(height: 14),
+              _descSection('読み解き', desc['reading'] ?? '',
+                  SolaraColors.solaraGoldLight),
+            ],
+          ),
         ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text(
+              '閉じる',
+              style: TextStyle(color: Color(0xFFC9A84C), letterSpacing: 1),
+            ),
+          ),
+        ],
       ),
     );
   }

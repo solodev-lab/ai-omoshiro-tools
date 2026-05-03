@@ -128,6 +128,9 @@ class SearchResultList extends StatelessWidget {
   final int selectedVpIndex;
   /// VP 選択変更コールバック
   final ValueChanged<int>? onVpChanged;
+  /// 上部スコアバーと同じ activeCategory ('all' / 'money' / 'love' / 等)。
+  /// 検索結果一覧で「カテゴリ名 X.X」表示に使う。
+  final String activeCategory;
 
   const SearchResultList({
     super.key,
@@ -139,6 +142,7 @@ class SearchResultList extends StatelessWidget {
     this.vpSlots,
     this.selectedVpIndex = -1,
     this.onVpChanged,
+    this.activeCategory = 'all',
   });
 
   @override
@@ -247,7 +251,7 @@ class SearchResultList extends StatelessWidget {
                       style: const TextStyle(fontSize: 9, color: Color(0xFF999999))),
                   const SizedBox(width: 8),
                 ],
-                Text('スコア ${h.bestScore.toStringAsFixed(1)}',
+                Text('${categoryLabels[activeCategory] ?? '総合'} ${h.bestScore.toStringAsFixed(1)}',
                     style: TextStyle(fontSize: 9, color: catColor)),
                 const SizedBox(width: 8),
                 if (fortuneIcon != null) Text(fortuneIcon,
@@ -352,6 +356,9 @@ class SearchFocusPopup extends StatelessWidget {
   final String activeSrc;
   final VoidCallback onClose;
   final VoidCallback onMoveToHit;
+  /// 上部スコアバーと同じ activeCategory ('all' / 'money' 等)。
+  /// 「総合 / 豊かさ / 癒し」等のラベル動的化に使う。
+  final String activeCategory;
 
   const SearchFocusPopup({
     super.key,
@@ -361,6 +368,7 @@ class SearchFocusPopup extends StatelessWidget {
     required this.activeSrc,
     required this.onClose,
     required this.onMoveToHit,
+    this.activeCategory = 'all',
   });
 
   @override
@@ -412,6 +420,18 @@ class SearchFocusPopup extends StatelessWidget {
             child: const Icon(Icons.close, size: 14, color: Color(0xFF888888)),
           ),
         ]),
+        // 場所名の下に住所行 (短縮で取ったあとの残り部分を表示)
+        if (parts.length > 2) ...[
+          const SizedBox(height: 2),
+          Padding(
+            padding: const EdgeInsets.only(left: 22),
+            child: Text(
+              parts.skip(2).join(',').trim(),
+              style: const TextStyle(fontSize: 10, color: Color(0xFF888888), height: 1.3),
+              maxLines: 2, overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
         const SizedBox(height: 10),
         Row(children: [
           Text('$dirJp方位',
@@ -420,7 +440,7 @@ class SearchFocusPopup extends StatelessWidget {
           Text('${km.toStringAsFixed(km < 100 ? 1 : 0)} km',
               style: const TextStyle(fontSize: 10, color: Color(0xFF888888))),
           const Spacer(),
-          Text('総合 ${focus.bestScore.toStringAsFixed(1)}',
+          Text('${categoryLabels[activeCategory] ?? '総合'} ${focus.bestScore.toStringAsFixed(1)}',
               style: const TextStyle(fontSize: 10, color: Color(0xFFE8E0D0))),
         ]),
         const SizedBox(height: 8),

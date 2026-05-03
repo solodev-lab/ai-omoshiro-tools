@@ -843,6 +843,42 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     return result;
   }
 
+  /// activeCategory == 'all' のとき、各方位における dominant カテゴリ色を
+  /// 返す ({dir: Color})。それ以外は null (= sector tint なし、設計思想通り)。
+  /// 5 カテゴリ (healing/money/love/work/communication) のうち、その方位で
+  /// (tSoft+tHard+pSoft+pHard) の合計が最大のものの色を採用。
+  Map<String, Color>? _dominantTintByDir() {
+    if (_activeCategory != 'all') return null;
+    if (_fComps.isEmpty) return null;
+    final keys = _activeSrc == 'transit'
+        ? const ['tSoft', 'tHard']
+        : _activeSrc == 'progressed'
+            ? const ['pSoft', 'pHard']
+            : compKeys;
+    final result = <String, Color>{};
+    for (final d in dir16) {
+      String? topCat;
+      double topVal = 0;
+      for (final cat in _fComps.keys) {
+        final c = _fComps[cat]?[d];
+        if (c == null) continue;
+        double sum = 0;
+        for (final k in keys) {
+          sum += c[k] ?? 0;
+        }
+        if (sum > topVal) {
+          topVal = sum;
+          topCat = cat;
+        }
+      }
+      if (topCat != null && topVal > 0.05) {
+        final col = categoryColors[topCat];
+        if (col != null) result[d] = col;
+      }
+    }
+    return result.isEmpty ? null : result;
+  }
+
   /// HTML: rebuild(nc, fly) — center変更 + flyTo + セクター再計算 + 天体ライン再構築
   void _rebuild(LatLng newCenter) {
     _mapCtrl.move(newCenter, _mapCtrl.camera.zoom.clamp(12, 18).toDouble());
@@ -1032,6 +1068,7 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
               sectorEnergies: _displayEnergies(),
               dimFactor: _astroLayers['relocate'] == true ? 0.4 : 1.0,
               activeCategory: _activeCategory,
+              sectorTintByDir: _dominantTintByDir(),
             )),
             PolylineLayer(polylines: buildCompass(center: _center, visible: _layers['compass']!)),
             // HTML: addPlanetLines() — natal/progressed/transit 天体ライン
@@ -1222,6 +1259,7 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
             topCategory: _topCategory,
             disabled: _noProfile,
             onTap: _onDailyBadgeTap,
+            isLightMap: !(mapStyleConfigs[_mapStyle]?.dark ?? true),
           ),
         ),
 
@@ -1375,6 +1413,7 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
               setState(() => _searchVpIndex = idx);
               _reannotateSearchResults();
             },
+            activeCategory: _activeCategory,
           ),
         ),
 
@@ -1386,6 +1425,7 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
             center: _center,
             fComps: _fComps,
             activeSrc: _activeSrc,
+            activeCategory: _activeCategory,
             // ×タップ: focus 閉じる → リスト復帰 + 地図も一覧表示時へ復元
             onClose: () {
               setState(() => _searchFocus = null);

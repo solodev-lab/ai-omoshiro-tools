@@ -156,19 +156,28 @@ class HoroAspectList extends StatelessWidget {
             ),
             const SizedBox(width: 4),
             // Row body (dimmed when off) — NOT tappable; only badge is.
+            // 2026-05-04 overflow 修正:
+            //   - 惑星名 Text を Flexible + ellipsis で縮め可能に
+            //   - Aspect badge から日本語名削除 (symbol + 度数のみ) → 詳細はタップで dialog
             Expanded(child: Opacity(
               opacity: isOff ? 0.25 : 1.0,
               child: Row(children: [
                 PlanetVectorIcon(planetKey: a['p1'] as String, size: 16),
                 const SizedBox(width: 3),
-                Text(horoPlanetOrAngleName(a['p1'] as String),
-                  style: const TextStyle(color: Color(0xFFE8E0D0), fontSize: 13)),
+                Flexible(
+                  child: Text(horoPlanetOrAngleName(a['p1'] as String),
+                    style: const TextStyle(color: Color(0xFFE8E0D0), fontSize: 13),
+                    maxLines: 1, overflow: TextOverflow.ellipsis),
+                ),
                 Text(' — ', style: TextStyle(color: aspColor.withAlpha(180), fontSize: 13)),
                 PlanetVectorIcon(planetKey: a['p2'] as String, size: 16),
                 const SizedBox(width: 3),
-                Text(horoPlanetOrAngleName(a['p2'] as String),
-                  style: const TextStyle(color: Color(0xFFE8E0D0), fontSize: 13)),
-                const Spacer(),
+                Flexible(
+                  child: Text(horoPlanetOrAngleName(a['p2'] as String),
+                    style: const TextStyle(color: Color(0xFFE8E0D0), fontSize: 13),
+                    maxLines: 1, overflow: TextOverflow.ellipsis),
+                ),
+                const SizedBox(width: 6),
                 Text('${(a['diff'] as double).toStringAsFixed(1)}°',
                   style: const TextStyle(color: Color(0xFF888888), fontSize: 13)),
                 const SizedBox(width: 4),
@@ -184,7 +193,7 @@ class HoroAspectList extends StatelessWidget {
                       border: Border.all(color: aspColor.withAlpha(80)),
                     ),
                     child: Text(
-                      '${aspectSymbol[a['type']] ?? ''} ${aspectNameJP[a['type']] ?? a['type']}${(a['aspectAngle'] as double?)?.toInt() ?? 0}°',
+                      '${aspectSymbol[a['type']] ?? ''} ${(a['aspectAngle'] as double?)?.toInt() ?? 0}°',
                       style: TextStyle(color: aspColor, fontSize: 11)),
                   ),
                 ),

@@ -50,6 +50,9 @@ List<Polygon> buildSectors({
   Map<String, DirectionEnergy>? sectorEnergies,
   double dimFactor = 1.0,
   String activeCategory = 'all',
+  /// activeCategory == 'all' のとき各方位の dominant カテゴリ色を渡す。
+  /// {dir: Color} 形式。null or 空時は energySoft/energyHard で塗る (旧挙動)。
+  Map<String, Color>? sectorTintByDir,
 }) {
   if (!visible) return [];
 
@@ -61,6 +64,7 @@ List<Polygon> buildSectors({
       lightMap: lightMap,
       dimFactor: dimFactor,
       activeCategory: activeCategory,
+      tintByDir: sectorTintByDir,
     );
   }
 
@@ -135,6 +139,7 @@ List<Polygon> _buildSectorsTwoEnergy({
   required bool lightMap,
   required double dimFactor,
   String activeCategory = 'all',
+  Map<String, Color>? tintByDir,
 }) {
   final polygons = <Polygon>[];
   const d = Distance();
@@ -220,8 +225,17 @@ List<Polygon> _buildSectorsTwoEnergy({
     final softBorderA = (softAlphaBase * rankMul * dimFactor * maxBorderA).round();
     final hardBorderA = (hardAlphaBase * rankMul * dimFactor * maxBorderA).round();
 
-    final softColor = SolaraColors.energySoft;
-    final hardColor = SolaraColors.energyHard;
+    // 設計思想: ソフト=銀月色 / ハード=金陽色 が基本。
+    // ただし activeCategory == 'all' のときは「各方位の dominant カテゴリ色」を
+    // 渡せる (tintByDir)。各方位で healing/money/love/work/communication の
+    // どれが最大かを反映 → 一目でカテゴリ性質が分かる。
+    final tint = tintByDir?[dir];
+    final softColor = tint != null
+        ? Color.lerp(SolaraColors.energySoft, tint, 0.6)!
+        : SolaraColors.energySoft;
+    final hardColor = tint != null
+        ? Color.lerp(SolaraColors.energyHard, tint, 0.6)!
+        : SolaraColors.energyHard;
 
     // ソフトリング（内側）
     if (softFillA > 5) {

@@ -28,12 +28,17 @@ class DailyTransitBadge extends StatefulWidget {
   /// タップハンドラ。disabled=true なら呼ばれない。
   final VoidCallback onTap;
 
+  /// Map style が Light のとき true。
+  /// Light モードの白背景上で目立たせるためコントラストを強める。
+  final bool isLightMap;
+
   const DailyTransitBadge({
     super.key,
     required this.unseen,
     required this.topCategory,
     required this.disabled,
     required this.onTap,
+    this.isLightMap = false,
   });
 
   @override
@@ -100,27 +105,41 @@ class _DailyTransitBadgeState extends State<DailyTransitBadge>
           )!
         : SolaraColors.solaraGoldLight;
 
+    // Light map 上では金色が薄れて視認性低下。
+    // 内側を暗紺で塗り、border と icon は金で強調 (反転コントラスト)。
+    final lightFillBase = widget.isLightMap
+        ? const Color(0xCC0A0A1E)   // ほぼ不透明な深紺
+        : const Color(0x11C9A84C);  // 半透明 gold (旧)
+    final lightFillBright = widget.isLightMap
+        ? const Color(0xFF1A1A38)   // 暗紺 + わずかに明るく
+        : const Color(0x88F9D976);
+    final lightBorderBase = widget.isLightMap
+        ? const Color(0xCCC9A84C)
+        : const Color(0x44C9A84C);
+    final lightBorderBright = widget.isLightMap
+        ? const Color(0xFFFFE99A)
+        : const Color(0xFFFFE99A);
+
     return _container(
       size: 40,
       // ユーザー指摘「暗いから明るいに変わる、明暗はっきり」対応:
       // 旧: alpha 振れ幅 約2倍 (51→102, 136→255, 0.35→0.80) — 控えめ
       // 新: alpha 振れ幅 約4倍 (17→136, 68→255, 0.10→0.95) — はっきり明暗
       fillColor: widget.unseen
-          ? Color.lerp(
-              const Color(0x11C9A84C),  // 暗 (alpha 17)
-              const Color(0x88F9D976),  // 明 (alpha 136)
-              pulse,
-            )!
-          : const Color(0x26C9A84C),
+          ? Color.lerp(lightFillBase, lightFillBright, pulse)!
+          : (widget.isLightMap
+              ? const Color(0xCC0A0A1E)
+              : const Color(0x26C9A84C)),
       borderColor: widget.unseen
-          ? Color.lerp(
-              const Color(0x44C9A84C),  // 暗 (alpha 68)
-              const Color(0xFFFFE99A),  // 明 (alpha 255)
-              pulse,
-            )!
-          : const Color(0x77C9A84C),
+          ? Color.lerp(lightBorderBase, lightBorderBright, pulse)!
+          : (widget.isLightMap
+              ? const Color(0xFFC9A84C)
+              : const Color(0x77C9A84C)),
       glow: widget.unseen,
-      glowOpacity: 0.10 + 0.85 * pulse,  // 0.10 → 0.95 (旧 0.35 → 0.80)
+      // Light map では glow も濃いめ (alpha 0.30→1.00)。
+      glowOpacity: widget.isLightMap
+          ? 0.30 + 0.70 * pulse
+          : 0.10 + 0.85 * pulse,
       glowColor: pulseColor,
       child: Center(
         child: CategoryIcon(
