@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:io';
 
 import 'package:http/http.dart';
@@ -20,39 +19,21 @@ import 'package:http/retry.dart';
 ///   解決策: シングルトン HttpClient を外部から渡し、接続上限と timeout を
 ///   明示する。
 ///
-/// 2026-05-01 再調整:
-///   ACG モードで世界規模 (zoom 2.5) になると 24+ tile を一気に要求するため、
-///   旧 maxConn=6 / idle=15s では keep-alive socket が滞留し fd 枯渇の
-///   主要因となっていた。maxConn=4 / idle=3s に絞り、socket 再利用回転率を
-///   上げて常時保有 fd 数を半分以下に。
-///
-///   RetryClient の retries も 3 → 1 に。retry が連鎖すると socket が
-///   さらに累積するため、ACG モードでは「速やかに諦める」方針に変更。
-///
 /// 設定:
-///   - maxConnectionsPerHost = 4
-///       ACG world view 24+ tiles で socket pool 滞留を防ぐ。
-///   - idleTimeout = 3 秒
-///       keep-alive を短く切ることで常時保有 socket 数を抑制。
-///   - connectionTimeout = 12 秒
-///       Worker 経由の遠回り通信を考慮しやや余裕を持たせる。
+///   - maxConnectionsPerHost = 6
+///       同一ホストへの同時 socket 数を 6 に固定。dart:io のデフォルトは
+///       理論上 6 だが端末/Flutter バージョンで変動するため明示。
+///   - idleTimeout = 15 秒
+///       keep-alive socket を 15 秒で再利用。長すぎると累積、短すぎると
+///       毎回 TCP/DNS 再接続でコスト悪化。
+///   - connectionTimeout = 10 秒
+///       到達不能ホストへの試行を 10 秒で諦める。fd ハングを防ぐ。
 final HttpClient _ioClient = HttpClient()
-  ..maxConnectionsPerHost = 4
-  ..idleTimeout = const Duration(seconds: 3)
-  ..connectionTimeout = const Duration(seconds: 12);
+  ..maxConnectionsPerHost = 6
+  ..idleTimeout = const Duration(seconds: 15)
+  ..connectionTimeout = const Duration(seconds: 10);
 
 /// `flutter_map` の `NetworkTileProvider(httpClient: ...)` に渡すための
-/// 共有クライアント。
-///
-/// 2026-05-01: retries 3 → 1。SocketException / TimeoutException /
-/// HandshakeException のときだけ 1 度だけ 400ms 後に再試行する。
-/// 連続 retry で socket pool が膨張するのを防ぐ。
-final Client sharedTileHttpClient = RetryClient(
-  IOClient(_ioClient),
-  retries: 1,
-  whenError: (error, _) =>
-      error is SocketException ||
-      error is TimeoutException ||
-      error is HandshakeException,
-  delay: (_) => const Duration(milliseconds: 400),
-);
+/// 共有クライアント。`RetryClient` で 1 回まで自動リトライする
+/// (flutter_map デフォルト挙動と同等)。
+final Client sharedTileHttpClient = RetryClient(IOClient(_ioClient));
