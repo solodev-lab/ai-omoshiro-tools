@@ -31,13 +31,13 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
-        <!-- Impeller (新世代レンダラー) を明示的に有効化。
-             Flutter 3.27+ では Android で既定 ON だが、将来のデフォルト変更に対する
-             保険として明示。BLASTBufferQueue 関連のログ抑制は OS 側の動作なので
-             これで完全には消えないが、Impeller 経由で描画パイプラインが安定する。 -->
+        <!-- 一時無効化 (2026-05-03 fd leak 検証):
+             A101FC で sync_file が 42 fd/秒 で leak し 12.5 分で 32768 上限到達 →
+             Impeller backend 由来か検証するため OpenGLES に切替。
+             結果次第で true に戻す or 維持する。 -->
         <meta-data
             android:name="io.flutter.embedding.android.EnableImpeller"
-            android:value="true" />
+            android:value="false" />
     </application>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and
