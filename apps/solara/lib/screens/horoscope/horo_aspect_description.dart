@@ -44,8 +44,16 @@ const Map<String, Map<String, String>> aspectInfo = {
     'summary': '内外の2極のバランスを取る課題。関係性の中で自分を知る。',
   },
   'quincunx': {
-    'name': 'クインカンクス', 'angle': '150°', 'quality': '違和感',
-    'summary': '異質なエネルギー同士が噛み合いにくい。調整・統合が必要。',
+    'name': 'クインカンクス', 'angle': '150°', 'quality': '異視点',
+    'summary': '異なる視点・価値観のエネルギーが対面する。統合と再調整の課題。',
+  },
+  'semisextile': {
+    'name': 'セミセクスタイル', 'angle': '30°', 'quality': '微調整',
+    'summary': '小さな機会と気付きを通して微細な調整を促す。意識すれば伸びる方向。',
+  },
+  'semisquare': {
+    'name': 'セミスクエア', 'angle': '45°', 'quality': '小緊張',
+    'summary': '小さな摩擦から動きが生まれる。日常の調整を通して前進を促す。',
   },
 };
 

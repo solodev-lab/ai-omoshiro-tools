@@ -424,10 +424,33 @@ class SearchFocusPopup extends StatelessWidget {
               style: const TextStyle(fontSize: 10, color: Color(0xFFE8E0D0))),
         ]),
         const SizedBox(height: 8),
-        if (top3.isNotEmpty) Wrap(
-          spacing: 8, runSpacing: 4,
-          children: [for (final e in top3) _CatChip(cat: e.key, score: e.value)],
-        ),
+        if (top3.isNotEmpty) ...[
+          Row(children: [
+            const Text(
+              'カテゴリ別内訳 (参考)',
+              style: TextStyle(fontSize: 9, color: Color(0xFF888888), letterSpacing: 0.5),
+            ),
+            const SizedBox(width: 6),
+            const Text(
+              '※ 総合は別計算',
+              style: TextStyle(fontSize: 9, color: Color(0xFF666666)),
+            ),
+            const SizedBox(width: 4),
+            GestureDetector(
+              onTap: () => _showScoreInfo(context),
+              behavior: HitTestBehavior.opaque,
+              child: const Padding(
+                padding: EdgeInsets.all(2),
+                child: Icon(Icons.info_outline, size: 12, color: Color(0xFF888888)),
+              ),
+            ),
+          ]),
+          const SizedBox(height: 4),
+          Wrap(
+            spacing: 8, runSpacing: 4,
+            children: [for (final e in top3) _CatChip(cat: e.key, score: e.value)],
+          ),
+        ],
         const SizedBox(height: 10),
         // C-2: 「拠点として登録」削除。保存は VP/Loc パネルの「この地点を保存」へ集約
         // (検索中は popup の検索地が VP panel の center として渡される)
@@ -435,6 +458,48 @@ class SearchFocusPopup extends StatelessWidget {
       ]),
     );
   }
+}
+
+/// 「総合は別計算」i ボタン押下時の説明ダイアログ。
+/// ユーザー指摘: 検索結果一覧の総合と詳細の各カテゴリ合算が一致しない理由を可視化。
+void _showScoreInfo(BuildContext context) {
+  showDialog<void>(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      backgroundColor: const Color(0xF00F0F1E),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(14),
+        side: const BorderSide(color: Color(0x33C9A84C)),
+      ),
+      title: const Text(
+        '総合スコアの計算',
+        style: TextStyle(color: Color(0xFFC9A84C), fontSize: 14, letterSpacing: 1),
+      ),
+      content: const SingleChildScrollView(
+        child: Text(
+          '【総合スコア (上段の数字)】\n'
+          '現在選択中のカテゴリ (デフォルト: 総合) における、その方位のスコアを表示。\n'
+          '総合カテゴリでは、全カテゴリのソフト・ハード両エネルギーを加重合成した値です。\n\n'
+          '【カテゴリ別内訳 (下段のチップ)】\n'
+          'その方位における各カテゴリ単独のスコアを表示。\n'
+          '癒し / 豊かさ / 恋愛 / 仕事 / 話す をそれぞれ独立に算出。\n\n'
+          '【なぜ合計が一致しないか】\n'
+          '総合は単純な足し算ではなく、エネルギーの方向性を考慮した加重計算です。\n'
+          'カテゴリ別内訳の合算 ≠ 総合 となるのは、計算方法が異なるためです。',
+          style: TextStyle(color: Color(0xFFE8E0D0), fontSize: 12, height: 1.6),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(ctx).pop(),
+          child: const Text(
+            '閉じる',
+            style: TextStyle(color: Color(0xFFC9A84C), letterSpacing: 1),
+          ),
+        ),
+      ],
+    ),
+  );
 }
 
 class _CatChip extends StatelessWidget {

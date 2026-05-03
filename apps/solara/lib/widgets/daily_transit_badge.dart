@@ -47,9 +47,11 @@ class _DailyTransitBadgeState extends State<DailyTransitBadge>
   @override
   void initState() {
     super.initState();
+    // 周期を短めにして明暗の動きを強調 (旧 2400ms → 1800ms)。
+    // ユーザー指摘「ずっと暗いと暗いイメージ」対策で目立たせる。
     _ctrl = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 2400),
+      duration: const Duration(milliseconds: 1800),
     )..repeat(reverse: true);
   }
 
@@ -100,22 +102,25 @@ class _DailyTransitBadgeState extends State<DailyTransitBadge>
 
     return _container(
       size: 40,
+      // ユーザー指摘「暗いから明るいに変わる、明暗はっきり」対応:
+      // 旧: alpha 振れ幅 約2倍 (51→102, 136→255, 0.35→0.80) — 控えめ
+      // 新: alpha 振れ幅 約4倍 (17→136, 68→255, 0.10→0.95) — はっきり明暗
       fillColor: widget.unseen
           ? Color.lerp(
-              const Color(0x33C9A84C),
-              const Color(0x66F9D976),
+              const Color(0x11C9A84C),  // 暗 (alpha 17)
+              const Color(0x88F9D976),  // 明 (alpha 136)
               pulse,
             )!
           : const Color(0x26C9A84C),
       borderColor: widget.unseen
           ? Color.lerp(
-              const Color(0x88C9A84C),
-              const Color(0xFFF9D976),
+              const Color(0x44C9A84C),  // 暗 (alpha 68)
+              const Color(0xFFFFE99A),  // 明 (alpha 255)
               pulse,
             )!
           : const Color(0x77C9A84C),
       glow: widget.unseen,
-      glowOpacity: 0.35 + 0.45 * pulse,
+      glowOpacity: 0.10 + 0.85 * pulse,  // 0.10 → 0.95 (旧 0.35 → 0.80)
       glowColor: pulseColor,
       child: Center(
         child: CategoryIcon(

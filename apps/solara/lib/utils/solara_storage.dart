@@ -104,6 +104,7 @@ class SolaraStorage {
   static const _overlayShownKey = 'solara_overlay_shown';
   static const _mapStyleKey = 'solara_map_style';
   static const _dailyResetHourKey = 'solara_daily_reset_hour';
+  static const _dailyResetMinuteKey = 'solara_daily_reset_minute';
   static const _forecastColorModeKey = 'solara_forecast_color_mode';
   static const _forecastHighColorKey = 'solara_forecast_high_color';
   static const _forecastYearOffsetKey = 'solara_forecast_year_offset';
@@ -321,6 +322,19 @@ class SolaraStorage {
     await prefs.setInt(_dailyResetHourKey, hour.clamp(0, 23));
   }
 
+  /// 1日の基準時刻 (分、0-59)。1 分単位ピッカーの導入で追加。
+  /// 旧バージョンとの互換性のため、未保存時は 0 を返す。
+  static Future<int> loadDailyResetMinute() async {
+    final prefs = await SharedPreferences.getInstance();
+    final m = prefs.getInt(_dailyResetMinuteKey) ?? 0;
+    return m.clamp(0, 59);
+  }
+
+  static Future<void> saveDailyResetMinute(int minute) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_dailyResetMinuteKey, minute.clamp(0, 59));
+  }
+
   /// Sanctuary で設定されたアスペクトオーブ値を読み込む。
   /// SharedPreferences key: 'solara_orb_settings' (JSON)
   /// 戻り値: {conjunction, opposition, trine, square, sextile, quincunx,
@@ -348,11 +362,14 @@ class SolaraStorage {
   }
 
   /// リセット時刻を考慮した「今日」の日付キー (YYYY-MM-DD)。
-  /// 現在時刻がリセット時刻より前なら、前日の日付を返す。
+  /// 現在時刻がリセット時刻 (hour:minute) より前なら、前日の日付を返す。
   static Future<String> _logicalTodayKey() async {
     final hour = await loadDailyResetHour();
+    final minute = await loadDailyResetMinute();
     var now = DateTime.now();
-    if (now.hour < hour) {
+    final beforeReset =
+        now.hour < hour || (now.hour == hour && now.minute < minute);
+    if (beforeReset) {
       now = now.subtract(const Duration(days: 1));
     }
     return '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';

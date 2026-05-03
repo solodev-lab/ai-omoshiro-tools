@@ -1031,6 +1031,7 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
               // 🔴 Solara設計思想: 2エネルギー独立描画
               sectorEnergies: _displayEnergies(),
               dimFactor: _astroLayers['relocate'] == true ? 0.4 : 1.0,
+              activeCategory: _activeCategory,
             )),
             PolylineLayer(polylines: buildCompass(center: _center, visible: _layers['compass']!)),
             // HTML: addPlanetLines() — natal/progressed/transit 天体ライン

@@ -385,62 +385,62 @@ class _NewMoonOverlayState extends State<NewMoonOverlay>
                 titleEN: isSkip ? 'No particular theme' : themes.en[_selectedIndex],
               ),
             ),
-            // 選択肢の下: 詩的メッセージ → 惑星イベント を縦に積む
+            // 選択肢の下: 詩的メッセージ → 惑星イベント → SET INTENTION ボタン
+            // 全体スクロール可。ボタンは天体イベントの下、最下部にスクロールして到達。
             Positioned(
               left: 28,
               right: 28,
               top: choiceY + choiceHeight + 26,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  FadeTransition(
-                    opacity: _messageCtl,
-                    child: _revealMessage(context),
-                  ),
-                  const SizedBox(height: 22),
-                  FadeTransition(
-                    opacity: _eventsCtl,
-                    child: _revealEvents(events),
-                  ),
-                ],
-              ),
-            ),
-            // 最下部: 確定ボタン (タップで保存＋クローズ)
-            Positioned(
-              left: 0,
-              right: 0,
-              bottom: 40,
-              child: FadeTransition(
-                opacity: _actionCtl,
-                child: Center(
-                  child: GestureDetector(
-                    onTap: _setIntention,
-                    behavior: HitTestBehavior.opaque,
-                    child: Container(
-                      width: 240,
-                      padding: const EdgeInsets.symmetric(vertical: 15),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(28),
-                        gradient: const LinearGradient(
-                          colors: [
-                            SolaraColors.solaraGold,
-                            SolaraColors.solaraGoldLight,
-                          ],
-                        ),
-                      ),
+              bottom: 0,
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.only(bottom: 40),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    FadeTransition(
+                      opacity: _messageCtl,
+                      child: _revealMessage(context),
+                    ),
+                    const SizedBox(height: 22),
+                    FadeTransition(
+                      opacity: _eventsCtl,
+                      child: _revealEvents(events),
+                    ),
+                    const SizedBox(height: 36),
+                    FadeTransition(
+                      opacity: _actionCtl,
                       child: Center(
-                        child: Text(
-                          'Set Intention',
-                          style: GoogleFonts.cinzel(
-                            color: SolaraColors.celestialBlueDark,
-                            fontSize: 15,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 2.5,
+                        child: GestureDetector(
+                          onTap: _setIntention,
+                          behavior: HitTestBehavior.opaque,
+                          child: Container(
+                            width: 240,
+                            padding: const EdgeInsets.symmetric(vertical: 15),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(28),
+                              gradient: const LinearGradient(
+                                colors: [
+                                  SolaraColors.solaraGold,
+                                  SolaraColors.solaraGoldLight,
+                                ],
+                              ),
+                            ),
+                            child: Center(
+                              child: Text(
+                                'Set Intention',
+                                style: GoogleFonts.cinzel(
+                                  color: SolaraColors.celestialBlueDark,
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w700,
+                                  letterSpacing: 2.5,
+                                ),
+                              ),
+                            ),
                           ),
                         ),
                       ),
                     ),
-                  ),
+                  ],
                 ),
               ),
             ),

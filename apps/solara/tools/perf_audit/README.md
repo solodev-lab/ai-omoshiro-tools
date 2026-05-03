@@ -129,6 +129,28 @@ operations:
 
 すべて `run-as` 経由なので **debuggable APK 限定**。release build では `proc` 系は skip。
 
+## レポートの比較 (compare.py)
+
+2 つのレポートを side-by-side で比較する CLI。debug build vs profile build、
+修正前 vs 修正後、A101FC vs Pixel 8 等を一発で見比べる用。
+
+```bash
+python apps/solara/tools/perf_audit/analyzers/compare.py \
+  --left  apps/solara/tools/perf_audit/reports/a101fc_idle_30min_20260504_000428.md \
+  --right apps/solara/tools/perf_audit/reports/a101fc_idle_30min_20260504_004500.md \
+  --label-left  debug \
+  --label-right profile \
+  --out   apps/solara/tools/perf_audit/reports/compare_debug_vs_profile.md
+```
+
+出力内容:
+- **Conditions** 表 — 計測条件 (Device / Scenario / Started / 等) を並列表示
+- **Summary side-by-side** — 共通メトリクスを 9 列で比較 (各 First/Last/Δ + Last Δ% + Verdict)
+- **Highlights** — 差分 10% 以上を絶対値順に列挙、↑↓ + (低下/増加/大幅...) で要点抽出
+
+注意: 片方だけに含まれる collector のメトリクス (例: profile で `proc` skip) は
+"(L 取得失敗)" / "(R 取得失敗)" と表示される。
+
 ## レポートの読み方
 
 レポートには 3 つのセクション:

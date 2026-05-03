@@ -37,6 +37,22 @@ class FortuneFilterLabel extends StatelessWidget {
     final maxScore = top2.isNotEmpty ? top2.first.value : 1.0;
     final catColor = categoryColors[activeCategory] ?? const Color(0xFFC9A84C);
 
+    // 端末幅に応じてレイアウト寸法を可変化:
+    //   - 左ラベル (合計/総合) を画面幅の 32% で頭打ち + ellipsis
+    //     → 英語表記 (Total/Communication) でも他要素を圧迫しない
+    //   - 方角ラベル幅 44 (旧 32) → "東南東" 3 文字が 1 行に収まる
+    //   - バー幅は LayoutBuilder で残幅から逆算 (60-110 px clamp)
+    final screenW = MediaQuery.of(context).size.width;
+    final leftLabelMax = screenW * 0.32;
+    const dirLabelW = 44.0;
+    const valueLabelW = 28.0;
+    const innerHPad = 10.0;  // Container horizontal padding (片側)
+    const sideMargin = 16.0;  // 親 Positioned の left:16 分
+    // 残幅 = 画面幅 − サイドマージン − 左ラベル − Container padding × 2
+    //         − 6 (左ラベルとバー列の間) − dirLabelW − 4 − valueLabelW − 4
+    final reserved = sideMargin + leftLabelMax + innerHPad * 2 + 6 + dirLabelW + 4 + valueLabelW + 4;
+    final barW = (screenW - reserved).clamp(60.0, 110.0);
+
     // ClipRRect で境界半径を維持しつつ、sub-pixel オーバーフローを視覚的に吸収
     return GestureDetector(
       onTap: onTap,
@@ -44,7 +60,7 @@ class FortuneFilterLabel extends StatelessWidget {
       child: ClipRRect(
       borderRadius: BorderRadius.circular(10),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+        padding: const EdgeInsets.symmetric(horizontal: innerHPad, vertical: 3),
         decoration: BoxDecoration(
           color: const Color(0xB30A0A14),
           borderRadius: BorderRadius.circular(10),
@@ -56,9 +72,14 @@ class FortuneFilterLabel extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.center,
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-              '${srcLabels[activeSrc] ?? '合計'} / ${categoryLabels[activeCategory] ?? '総合'}',
-              style: const TextStyle(fontSize: 10, color: Color(0xFFC9A84C), letterSpacing: 0.5, fontWeight: FontWeight.w600),
+            ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: leftLabelMax),
+              child: Text(
+                '${srcLabels[activeSrc] ?? '合計'} / ${categoryLabels[activeCategory] ?? '総合'}',
+                style: const TextStyle(fontSize: 10, color: Color(0xFFC9A84C), letterSpacing: 0.5, fontWeight: FontWeight.w600),
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
+              ),
             ),
             if (top2.isNotEmpty) ...[
               const SizedBox(width: 6),
@@ -69,14 +90,16 @@ class FortuneFilterLabel extends StatelessWidget {
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 2),
                     child: Row(mainAxisSize: MainAxisSize.min, children: [
-                      SizedBox(width: 32, child: Text(
+                      SizedBox(width: dirLabelW, child: Text(
                         dir16JP[e.key] ?? e.key,
                         style: const TextStyle(fontSize: 10, color: Color(0xFF888888), fontWeight: FontWeight.w500),
                         textAlign: TextAlign.right,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       )),
                       const SizedBox(width: 4),
                       SizedBox(
-                        width: 120, height: 5,
+                        width: barW, height: 5,
                         child: Container(
                           decoration: BoxDecoration(
                             color: const Color(0x15FFFFFF),
@@ -95,7 +118,7 @@ class FortuneFilterLabel extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(width: 4),
-                      SizedBox(width: 28, child: Text(
+                      SizedBox(width: valueLabelW, child: Text(
                         e.value.toStringAsFixed(1),
                         style: const TextStyle(fontSize: 8, fontFamily: 'monospace', color: Color(0xFFF6BD60), fontWeight: FontWeight.w600),
                         textAlign: TextAlign.right,

@@ -1,22 +1,34 @@
 import 'package:flutter/material.dart';
 
-/// 1日の開始時刻ピッカー（時計風ホイール）。
-/// bottom sheet で表示して、選択された hour (0-23) を pop 時に返す。
+/// 1日の開始時刻ピッカー (時 + 分の 2 ドロップダウン、1 分単位)。
+///
+/// 出生時刻入力フォーム (sanctuary_profile_editor) と同じ操作感を提供する。
+/// bottom sheet で表示し、決定時に `(hour, minute)` レコードを pop する。
 class SanctuaryResetHourPicker extends StatefulWidget {
-  final int initial;
-  const SanctuaryResetHourPicker({super.key, required this.initial});
+  final int initialHour;
+  final int initialMinute;
+  const SanctuaryResetHourPicker({
+    super.key,
+    required this.initialHour,
+    this.initialMinute = 0,
+  });
 
   @override
   State<SanctuaryResetHourPicker> createState() => _SanctuaryResetHourPickerState();
 }
 
 class _SanctuaryResetHourPickerState extends State<SanctuaryResetHourPicker> {
-  late int _selected;
+  late int _hour;
+  late int _minute;
+
+  static final _hourOptions = List.generate(24, (i) => i);
+  static final _minuteOptions = List.generate(60, (i) => i);
 
   @override
   void initState() {
     super.initState();
-    _selected = widget.initial.clamp(0, 23);
+    _hour = widget.initialHour.clamp(0, 23);
+    _minute = widget.initialMinute.clamp(0, 59);
   }
 
   @override
@@ -44,32 +56,35 @@ class _SanctuaryResetHourPickerState extends State<SanctuaryResetHourPicker> {
               textAlign: TextAlign.center,
               style: TextStyle(color: Color(0xFFACACAC), fontSize: 12, height: 1.5),
             ),
-            const SizedBox(height: 18),
-            SizedBox(
-              height: 180,
-              child: ListWheelScrollView.useDelegate(
-                controller: FixedExtentScrollController(initialItem: _selected),
-                itemExtent: 44,
-                perspective: 0.003,
-                physics: const FixedExtentScrollPhysics(),
-                onSelectedItemChanged: (i) => setState(() => _selected = i),
-                childDelegate: ListWheelChildBuilderDelegate(
-                  childCount: 24,
-                  builder: (_, i) => Center(
-                    child: Text(
-                      '${i.toString().padLeft(2, '0')}:00',
-                      style: TextStyle(
-                        color: i == _selected
-                            ? const Color(0xFFF9D976)
-                            : const Color(0x99FFFFFF),
-                        fontSize: i == _selected ? 22 : 17,
-                        fontWeight:
-                            i == _selected ? FontWeight.w600 : FontWeight.w400,
-                        letterSpacing: 2,
-                      ),
-                    ),
-                  ),
+            const SizedBox(height: 22),
+            // 時 / 分 を 2 ドロップダウンで選択 (出生時刻フォームと同じスタイル)
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                _dropdown(
+                  value: _hour,
+                  options: _hourOptions,
+                  unit: '時',
+                  onChanged: (v) => setState(() => _hour = v),
                 ),
+                const SizedBox(width: 18),
+                _dropdown(
+                  value: _minute,
+                  options: _minuteOptions,
+                  unit: '分',
+                  onChanged: (v) => setState(() => _minute = v),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            Text(
+              '${_hour.toString().padLeft(2, '0')}:${_minute.toString().padLeft(2, '0')}',
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: Color(0x99FFFFFF),
+                fontSize: 13,
+                fontFamily: 'monospace',
+                letterSpacing: 2,
               ),
             ),
             const SizedBox(height: 18),
@@ -88,7 +103,9 @@ class _SanctuaryResetHourPickerState extends State<SanctuaryResetHourPicker> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: ElevatedButton(
-                    onPressed: () => Navigator.of(context).pop(_selected),
+                    onPressed: () => Navigator.of(context).pop(
+                      (hour: _hour, minute: _minute),
+                    ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0x33F9D976),
                       foregroundColor: const Color(0xFFF9D976),
@@ -111,6 +128,43 @@ class _SanctuaryResetHourPickerState extends State<SanctuaryResetHourPicker> {
               ],
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _dropdown({
+    required int value,
+    required List<int> options,
+    required String unit,
+    required ValueChanged<int> onChanged,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+      decoration: BoxDecoration(
+        color: const Color(0x22F9D976),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: const Color(0x66F9D976)),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<int>(
+          value: value,
+          dropdownColor: const Color(0xFF1A1A2E),
+          style: const TextStyle(
+            color: Color(0xFFF9D976),
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+          ),
+          iconEnabledColor: const Color(0xFFF9D976),
+          items: options
+              .map((v) => DropdownMenuItem(
+                    value: v,
+                    child: Text('${v.toString().padLeft(2, '0')} $unit'),
+                  ))
+              .toList(),
+          onChanged: (v) {
+            if (v != null) onChanged(v);
+          },
         ),
       ),
     );

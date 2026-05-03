@@ -26,7 +26,8 @@ devices:
 
   pixel8:
     name: "Pixel 8"
-    serial: ""   # auto-detect (only if a101fc/so41b not also connected)
+    serial: ""              # 空なら model_pattern で auto-detect
+    model_pattern: "Pixel 8"  # `adb devices -l` 出力中の部分文字列 (case-insensitive)
     platform: android
     android_version: "15"
     sdk_api: 35
@@ -38,7 +39,8 @@ devices:
 
   so41b:
     name: "Sony Xperia Ace II (SO-41B)"
-    serial: ""   # auto-detect
+    serial: ""
+    model_pattern: "SO-41B"   # 接続時に `adb devices -l` で model: 値を確認して調整
     platform: android
     android_version: "11"
     sdk_api: 30

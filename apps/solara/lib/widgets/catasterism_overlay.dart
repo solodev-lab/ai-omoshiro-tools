@@ -214,10 +214,14 @@ class _CatasterismOverlayState extends State<CatasterismOverlay>
         return Opacity(
           opacity: exitOpacity,
           child: SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 28),
+            // 小画面 (Pixel 8 縦持ち / SO-41B / A101FC など) で
+            // 「Did you release it?」セクションが overflow するため
+            // SingleChildScrollView でラップ。Column の中央寄せは使わず、
+            // 上下に Spacer 風の SizedBox で位置調整する。
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 24),
               child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
                     'Catasterism',
@@ -282,8 +286,9 @@ class _CatasterismOverlayState extends State<CatasterismOverlay>
                       ],
                     ),
                   ),
-                  // 「Did you release it? / 手放せましたか？」を画面中央より下に押し下げる
-                  const SizedBox(height: 150),
+                  // ScrollView 化で「中央より下」概念が消えたため、
+                  // 単なる視覚的セパレータとして 60 に縮小 (旧 150)。
+                  const SizedBox(height: 60),
                   Text(
                     'Did you release it?',
                     style: GoogleFonts.cinzel(

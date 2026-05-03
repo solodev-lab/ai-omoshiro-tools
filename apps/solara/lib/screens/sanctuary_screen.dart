@@ -33,8 +33,9 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
   bool _houseSelectOpen = false;
   bool _notificationsOn = true;
 
-  // 1日の基準時刻（0-23時）。この時刻を跨ぐと Omen ボタンがリセットされる。
+  // 1日の基準時刻 (hour 0-23, minute 0-59、1 分単位)。この時刻を跨ぐと Omen ボタンがリセットされる。
   int _dailyResetHour = 0;
+  int _dailyResetMinute = 0;
 
   // Orb values
   final Map<String, double> _orbValues = {
@@ -64,7 +65,13 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
       if (mounted) setState(() {});
     }
     final h = await SolaraStorage.loadDailyResetHour();
-    if (mounted) setState(() => _dailyResetHour = h);
+    final m = await SolaraStorage.loadDailyResetMinute();
+    if (mounted) {
+      setState(() {
+        _dailyResetHour = h;
+        _dailyResetMinute = m;
+      });
+    }
   }
 
   Future<void> _loadProfile() async {
@@ -638,7 +645,7 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
         _SettingsItem(
           icon: Icons.schedule_outlined,
           text: '1日の開始時刻',
-          value: '${_dailyResetHour.toString().padLeft(2, '0')}:00 ›',
+          value: '${_dailyResetHour.toString().padLeft(2, '0')}:${_dailyResetMinute.toString().padLeft(2, '0')} ›',
           onTap: _pickDailyResetHour,
         ),
         // Terms & Privacy
@@ -653,17 +660,24 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
   }
 
   Future<void> _pickDailyResetHour() async {
-    final picked = await showModalBottomSheet<int>(
+    final picked = await showModalBottomSheet<({int hour, int minute})>(
       context: context,
       backgroundColor: const Color(0xFF0A0E1C),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (ctx) => SanctuaryResetHourPicker(initial: _dailyResetHour),
+      builder: (ctx) => SanctuaryResetHourPicker(
+        initialHour: _dailyResetHour,
+        initialMinute: _dailyResetMinute,
+      ),
     );
     if (picked == null) return;
-    setState(() => _dailyResetHour = picked);
-    await SolaraStorage.saveDailyResetHour(picked);
+    setState(() {
+      _dailyResetHour = picked.hour;
+      _dailyResetMinute = picked.minute;
+    });
+    await SolaraStorage.saveDailyResetHour(picked.hour);
+    await SolaraStorage.saveDailyResetMinute(picked.minute);
   }
 
   // HTML: background: radial-gradient(ellipse at center, #0a1220 0%, #020408 100%)

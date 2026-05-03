@@ -48,18 +48,60 @@ def _load_yaml(p: Path) -> dict:
         return yaml.safe_load(f) or {}
 
 
-def _autodetect_serial(adb: str) -> str:
-    r = subprocess.run([adb, "devices"], capture_output=True, text=True, timeout=10)
-    devs = [ln.split("\t")[0] for ln in r.stdout.splitlines()[1:] if "\tdevice" in ln]
-    if len(devs) == 1:
-        return devs[0]
-    if not devs:
+def _autodetect_serial(adb: str, dev: dict) -> str:
+    """Resolve a serial for `dev` from adb devices -l.
+
+    Resolution order:
+      1. dev["serial"] if non-empty
+      2. dev["model_pattern"] matched against `adb devices -l` lines
+      3. If only one device is connected, fall back to it (and warn)
+    """
+    if dev.get("serial"):
+        return dev["serial"]
+
+    r = subprocess.run([adb, "devices", "-l"], capture_output=True, text=True, timeout=10)
+    online: list[tuple[str, str]] = []  # (serial, full_line)
+    for ln in r.stdout.splitlines()[1:]:
+        # Format: "df1daf14    device product:A101FC model:A101FC device:A101FC ..."
+        parts = ln.split()
+        if len(parts) < 2:
+            continue
+        if parts[1] != "device":
+            continue
+        online.append((parts[0], ln))
+
+    if not online:
         click.echo("No device connected via adb.", err=True)
         sys.exit(2)
+
+    pattern = (dev.get("model_pattern") or "").strip()
+    if pattern:
+        # Normalize: '_' is what `adb` substitutes for spaces in model:
+        pat_norm = pattern.replace(" ", "_").lower()
+        matches = [s for s, ln in online if pat_norm in ln.lower()]
+        if len(matches) == 1:
+            return matches[0]
+        if not matches:
+            click.echo(
+                f"No connected device matches model_pattern='{pattern}'.\n"
+                f"adb devices -l output:\n  " + "\n  ".join(ln for _, ln in online),
+                err=True,
+            )
+            sys.exit(2)
+        click.echo(
+            f"Multiple devices match model_pattern='{pattern}': {matches}\n"
+            f"Edit presets/devices.yaml to set 'serial:' explicitly.",
+            err=True,
+        )
+        sys.exit(2)
+
+    # No pattern — fall back to single-device auto-detect
+    if len(online) == 1:
+        return online[0][0]
+    serials = [s for s, _ in online]
     click.echo(
-        f"Multiple devices connected ({devs}). "
-        f"Edit presets/devices.yaml to set the serial, "
-        f"or disconnect others and retry.",
+        f"Multiple devices connected ({serials}) and no model_pattern set "
+        f"for this device. Edit presets/devices.yaml.",
         err=True,
     )
     sys.exit(2)
@@ -231,7 +273,7 @@ def main(
     poll_interval = interval if interval is not None else sc.get("poll_interval_sec", 30)
 
     # ---- Resolve serial ----
-    serial = dev.get("serial", "") or _autodetect_serial(adb)
+    serial = _autodetect_serial(adb, dev)
 
     # ---- Build collector instances ----
     collectors_inst = _build_collectors(col_list, adb, serial, package)

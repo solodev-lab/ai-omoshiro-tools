@@ -49,6 +49,7 @@ List<Polygon> buildSectors({
   bool lightMap = false,
   Map<String, DirectionEnergy>? sectorEnergies,
   double dimFactor = 1.0,
+  String activeCategory = 'all',
 }) {
   if (!visible) return [];
 
@@ -59,6 +60,7 @@ List<Polygon> buildSectors({
       energies: sectorEnergies,
       lightMap: lightMap,
       dimFactor: dimFactor,
+      activeCategory: activeCategory,
     );
   }
 
@@ -132,6 +134,7 @@ List<Polygon> _buildSectorsTwoEnergy({
   required Map<String, DirectionEnergy> energies,
   required bool lightMap,
   required double dimFactor,
+  String activeCategory = 'all',
 }) {
   final polygons = <Polygon>[];
   const d = Distance();
@@ -192,12 +195,14 @@ List<Polygon> _buildSectorsTwoEnergy({
         radialSteps: radialSteps, arcSteps: arcSteps);
 
     // alpha 計算: 上位ランクほど強調、各エネルギーの量で調整
-    // rank0 = 強調、rank1 = 中、それ以外 = 薄
+    // activeCategory == 'all' のときのみ TOP2 を +0.10 強調 (総合表示で目立たせる)
+    // 他カテゴリは控えめにして、TOP2 と他の差を弱める (カテゴリ別の細部に集中)
+    final isAll = activeCategory == 'all';
     double rankMul;
     if (rank == 0) {
-      rankMul = 1.0;
+      rankMul = isAll ? 0.85 : 0.75;
     } else if (rank == 1) {
-      rankMul = 0.7;
+      rankMul = isAll ? 0.65 : 0.55;
     } else {
       rankMul = 0.4;
     }
