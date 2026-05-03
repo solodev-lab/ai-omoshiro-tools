@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:math';
 import 'dart:ui' as ui;
-import 'package:flutter/foundation.dart' show kDebugMode;
+import 'package:flutter/foundation.dart' show kReleaseMode;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -329,9 +329,10 @@ class GalaxyScreenState extends State<GalaxyScreen>
                 // HTML: .inner-tabs (padding:0 20px; margin-bottom:8px)
                 _buildTabBar(),
                 const SizedBox(height: 4),
-                // DEBUG: Cycle完了フローの各タイミングを手動トリガー (release時は非表示)
-                if (kDebugMode) _buildDebugTriggerRow(),
-                if (kDebugMode) const SizedBox(height: 4),
+                // DEBUG: Cycle完了フローの各タイミングを手動トリガー
+                // (release 時のみ非表示、profile build では表示してテスト可能)
+                if (!kReleaseMode) _buildDebugTriggerRow(),
+                if (!kReleaseMode) const SizedBox(height: 4),
                 // HTML: .tab-panel.active { flex:1; display:flex; flex-direction:column; }
                 Expanded(
                   child: _activeTab == 0

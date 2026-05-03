@@ -417,8 +417,7 @@ class _DayTabBar extends StatelessWidget {
                   ),
                 ),
                 GestureDetector(
-                  onTap: () => showAstroGlossaryDialog(
-                      ctx, 'category_tips_intent'),
+                  onTap: () => _showCategoryTipsIntent(ctx, categoryKey),
                   behavior: HitTestBehavior.opaque,
                   child: Padding(
                     padding: const EdgeInsets.all(4),
@@ -1141,11 +1140,79 @@ void _showEventDetailDialog(
   final planetColor = meta?.color ?? SolaraColors.solaraGoldLight;
   final angleUpper = angle.toUpperCase();
   final base = planetAngleBaseText[planetKey]?[angleUpper] ?? '';
+  // B6: カテゴリ × アングル の組み合わせ補足を優先 (惑星×カテゴリ×アングル の文脈)。
+  // データが無い場合は legacy の categoryAppendix (カテゴリ単体) にフォールバック。
   final appendix = (categoryFilter != 'all')
-      ? categoryAppendix[categoryFilter]
+      ? (categoryAngleAppendix[categoryFilter]?[angleUpper] ??
+          categoryAppendix[categoryFilter])
       : null;
   final title = '$planetJPの$angleUpper通過';
 
+  _showPlanetAngleDetail(
+    context: context,
+    title: title,
+    base: base,
+    appendix: appendix,
+    planetColor: planetColor,
+  );
+}
+
+/// B5: 「お勧め行動の例」i ボタンタップ時のカテゴリ別ガイド dialog。
+/// activeCategory に応じた使い方説明を出す。
+/// fallback: カテゴリ entry がない場合 (=all 等) は astro_glossary に投げる。
+void _showCategoryTipsIntent(BuildContext context, String categoryKey) {
+  final entry = categoryTipsIntent[categoryKey];
+  if (entry == null) {
+    showAstroGlossaryDialog(context, 'category_tips_intent');
+    return;
+  }
+  showDialog<void>(
+    context: context,
+    barrierColor: const Color(0x99000000),
+    builder: (ctx) => AlertDialog(
+      backgroundColor: const Color(0xF00C0C16),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(14),
+        side: const BorderSide(color: Color(0x33C9A84C)),
+      ),
+      title: Text(
+        entry.title,
+        style: const TextStyle(
+          color: Color(0xFFC9A84C),
+          fontSize: 14,
+          letterSpacing: 1,
+        ),
+      ),
+      content: SingleChildScrollView(
+        child: Text(
+          entry.body,
+          style: const TextStyle(
+            color: Color(0xFFE8E0D0),
+            fontSize: 12,
+            height: 1.7,
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(ctx).pop(),
+          child: const Text(
+            '閉じる',
+            style: TextStyle(color: Color(0xFFC9A84C), letterSpacing: 1),
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+void _showPlanetAngleDetail({
+  required BuildContext context,
+  required String title,
+  required String base,
+  required String? appendix,
+  required Color planetColor,
+}) {
   showDialog<void>(
     context: context,
     barrierColor: const Color(0x99000000),
