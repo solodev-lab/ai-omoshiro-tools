@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -11,26 +9,11 @@ import 'screens/galaxy_screen.dart';
 import 'screens/sanctuary_screen.dart';
 import 'utils/app_locale.dart';
 import 'utils/celestial_events.dart';
-import 'utils/http_overrides.dart';
 import 'utils/tarot_data.dart';
 import 'widgets/solara_nav_bar.dart';
 
 void main() async {
-  // 2026-05-01: 長時間運用での fd 枯渇 (Too many open files) を抑止するため、
-  // アプリ内で生成される全 HttpClient のデフォルトを絞る。
-  // 詳細: utils/http_overrides.dart
-  HttpOverrides.global = SolaraHttpOverrides();
-
   WidgetsFlutterBinding.ensureInitialized();
-
-  // ImageCache 上限抑制 (デフォルト 1000枚 / 100MB)。
-  // 2026-05-01: タイル + 占いカード画像で常時数百枚保持されると、
-  //   GPU surface buffer + 元画像メモリで Adreno (Snapdragon) の
-  //   メモリプレッシャーが上がり fd 枯渇の遠因となる。
-  //   100枚 / 30MB に絞って安定化。
-  PaintingBinding.instance.imageCache.maximumSize = 100;
-  PaintingBinding.instance.imageCache.maximumSizeBytes = 30 << 20;
-
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
   // Make system nav bar transparent for edge-to-edge
   SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
