@@ -149,22 +149,18 @@ Map<String, double> solarArcPlanets({
 
 /// MC ライン: lng_obs = α - GMST*15、緯度範囲全体で縦線
 /// IC ライン: lng_obs = α - GMST*15 + 180、同上
-/// 戻り: -75..75 度緯度範囲を端点 2 点だけで結ぶセグメント。
-///
-/// 2026-05-01 (K-2):
-///   子午線は経度固定なので Web Mercator 投影上は完全な縦直線。
-///   旧版は 5度刻みで 31 点をサンプリングしていたが、これらは画面上で
-///   完全に同一直線上に並ぶため GPU の path 頂点を無駄に増やすだけだった。
-///   端点 2 点だけに削減 (1 line あたり頂点 31 → 2、約 -94%) しても
-///   視覚は完全に同一。Adreno 系で path op 数が減り fd 枯渇耐性が向上。
+/// 戻り: -75..75 度緯度範囲のサンプル列、子午線跨ぎ対応セグメント
 List<List<LatLng>> _meridianLine(double raDeg, double gmstHours,
     {required bool antiMeridian, double latMin = -75, double latMax = 75}) {
   double lng = raDeg - gmstHours * 15;
   if (antiMeridian) lng += 180;
   lng = _normLng(lng);
-  return [
-    [LatLng(latMin, lng), LatLng(latMax, lng)],
-  ];
+  // 緯度を細かくサンプリング (5度刻み)
+  final pts = <LatLng>[];
+  for (double lat = latMin; lat <= latMax + 0.1; lat += 5) {
+    pts.add(LatLng(lat, lng));
+  }
+  return [pts]; // 子午線跨がない (固定経度) ので1セグメント
 }
 
 /// ASC ライン: 惑星が東の地平線にある地点 = 高度 h=0 かつ 方位は東半球
@@ -180,10 +176,7 @@ List<List<LatLng>> _horizonLine({
   required bool ascending, // true=ASC (東), false=DSC (西)
   double latMin = -75,
   double latMax = 75,
-  // 2026-05-01 (K-2): 2.0 → 5.0 に粗化。ACG モードは世界規模ビュー
-  // (zoom 2.5) 想定で、5度刻みでも画面上の角張りはほぼ知覚不能。
-  // GPU path 頂点を約 60% 削減し Adreno 系の fd 枯渇耐性を改善する。
-  double latStep = 5.0,
+  double latStep = 2.0,
 }) {
   final raR = _toRad(raDeg);
   final decR = _toRad(decDeg);
@@ -239,8 +232,7 @@ List<AstroLine> buildAstroLines({
   required double baselineLng,
   double latMin = -75,
   double latMax = 75,
-  // 2026-05-01 (K-2): _horizonLine と同期。2.0 → 5.0
-  double latStep = 5.0,
+  double latStep = 2.0,
 }) {
   final gmst = _gmstHoursFromBaseline(baselineMc, baselineLng);
   return buildAstroLinesAt(
@@ -270,8 +262,7 @@ List<AstroLine> buildAstroLinesAt({
   required AstroFrame frame,
   double latMin = -75,
   double latMax = 75,
-  // 2026-05-01 (K-2): _horizonLine と同期。2.0 → 5.0
-  double latStep = 5.0,
+  double latStep = 2.0,
 }) {
   final lines = <AstroLine>[];
 
