@@ -449,19 +449,19 @@ class _ObserveScreenState extends State<ObserveScreen>
                 ),
             ]),
             const SizedBox(height: 14),
-            Opacity(
-              opacity: breathOpacity.clamp(0.5, 1.0),
-              child: Text(
-                _loadingMessages[_loadingMsgIdx],
-                style: const TextStyle(
-                  fontSize: 12.5,
-                  color: Color(0xFFE8E0D0),
-                  fontStyle: FontStyle.italic,
-                  letterSpacing: 1.2,
-                  height: 1.6,
-                ),
-                textAlign: TextAlign.center,
+            // 2026-05-03: Opacity widget 撤去 (Critical fix)。
+            // breathing は Color alpha で表現 = saveLayer 回避。
+            Text(
+              _loadingMessages[_loadingMsgIdx],
+              style: TextStyle(
+                fontSize: 12.5,
+                color: const Color(0xFFE8E0D0)
+                    .withValues(alpha: breathOpacity.clamp(0.5, 1.0)),
+                fontStyle: FontStyle.italic,
+                letterSpacing: 1.2,
+                height: 1.6,
               ),
+              textAlign: TextAlign.center,
             ),
             const SizedBox(height: 6),
             Text(

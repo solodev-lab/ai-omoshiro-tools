@@ -60,33 +60,25 @@ class SolaraNavBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final inset = systemNavInset(context);
-    return ClipRect(
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14), // blur(28px) → sigma ≈ 14
-        child: Container(
-          // ジェスチャーナビ時 inset=0 → 旧来の 80px。
-          // 3ボタンナビ時 inset = systemNav-12px → NavBar が △〇□ の上に出る。
-          height: baseHeight + inset,
-          padding: EdgeInsets.only(top: 10, left: 4, right: 4, bottom: inset),
-          decoration: BoxDecoration(
-            // linear-gradient(180deg, rgba(6,10,18,0.80), rgba(4,6,14,0.95))
-            gradient: const LinearGradient(
-              begin: Alignment.topCenter, end: Alignment.bottomCenter,
-              colors: [Color(0xCC060A12), Color(0xF204060E)],
-            ),
-            // border-top: 1px solid rgba(249,217,118,0.06)
-            border: const Border(top: BorderSide(color: Color(0x0FF9D976), width: 1)),
-            // box-shadow: 0 -4px 30px rgba(0,0,0,0.4)
-            boxShadow: const [
-              BoxShadow(color: Color(0x66000000), blurRadius: 30, offset: Offset(0, -4)),
-            ],
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: List.generate(5, (i) => _buildItem(i)),
-          ),
+    // 2026-05-03: BackdropFilter 撤去 (Adreno saveLayer leak の Critical)。
+    // gradient は alpha 高めに変更し、後ろの地図がうっすら透ける程度を維持。
+    return Container(
+      height: baseHeight + inset,
+      padding: EdgeInsets.only(top: 10, left: 4, right: 4, bottom: inset),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topCenter, end: Alignment.bottomCenter,
+          colors: [Color(0xF2060A12), Color(0xFF04060E)],
         ),
+        border: const Border(top: BorderSide(color: Color(0x0FF9D976), width: 1)),
+        boxShadow: const [
+          BoxShadow(color: Color(0x66000000), blurRadius: 30, offset: Offset(0, -4)),
+        ],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: List.generate(5, (i) => _buildItem(i)),
       ),
     );
   }

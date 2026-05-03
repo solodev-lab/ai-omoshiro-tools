@@ -146,10 +146,12 @@ class _DailyTransitBadgeState extends State<DailyTransitBadge>
         border: Border.all(color: borderColor, width: 1.4),
         boxShadow: glow && glowColor != null
             ? [
+                // 2026-05-03: blurRadius/spreadRadius を固定化 (Critical fix)。
+                // glow の breathing は color alpha のみで表現 = saveLayer 回避。
                 BoxShadow(
                   color: glowColor.withValues(alpha: glowOpacity),
-                  blurRadius: 14 + 8 * glowOpacity,
-                  spreadRadius: 2 * glowOpacity,
+                  blurRadius: 18,
+                  spreadRadius: 1,
                 ),
               ]
             : null,

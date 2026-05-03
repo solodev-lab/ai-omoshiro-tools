@@ -65,11 +65,13 @@ class _BirthMarkerState extends State<BirthMarker>
               shape: BoxShape.circle,
               boxShadow: [
                 // 外側ソフトグロー (拡散大、暖色)
+                // 2026-05-03: blur/spread を固定化 (Critical fix)。
+                // breathing は alpha のみで表現 = saveLayer 回避。
                 BoxShadow(
                   color: const Color(0xFFFFD370)
                       .withAlpha((180 * intensity).round()),
-                  blurRadius: 14 * intensity,
-                  spreadRadius: 1.8 * intensity,
+                  blurRadius: 14,
+                  spreadRadius: 1.8,
                 ),
                 // 中間グロー (やや明るく、クリーム色)
                 BoxShadow(
