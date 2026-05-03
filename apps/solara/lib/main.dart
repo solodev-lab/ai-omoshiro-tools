@@ -23,11 +23,13 @@ void main() async {
 
   WidgetsFlutterBinding.ensureInitialized();
 
-  // 2026-05-03 (T-1): ImageCache 100枚/30MB の縮小は、A101FC (Snapdragon Adreno)
-  //   で逆効果と判明したため revert (Flutter デフォルト 1000枚/100MB に戻す)。
-  //   仮説 H1: cache を絞るとマップパン時にタイル再デコード→GPU 再アップロード
-  //   が増え、Adreno の sync object leak バグが加速して 12.5 分で fd 枯渇。
-  //   実測: M-1 適用前 (a30f090) は A101FC で問題なし、M-1 適用後 fd 枯渇発生。
+  // ImageCache 上限抑制 (デフォルト 1000枚 / 100MB)。
+  // 2026-05-01: タイル + 占いカード画像で常時数百枚保持されると、
+  //   GPU surface buffer + 元画像メモリで Adreno (Snapdragon) の
+  //   メモリプレッシャーが上がり fd 枯渇の遠因となる。
+  //   100枚 / 30MB に絞って安定化。
+  PaintingBinding.instance.imageCache.maximumSize = 100;
+  PaintingBinding.instance.imageCache.maximumSizeBytes = 30 << 20;
 
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
   // Make system nav bar transparent for edge-to-edge
