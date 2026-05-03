@@ -233,33 +233,32 @@ class PlanetSymbolsLayer extends StatelessWidget {
       // 他惑星と同じ単色細線で揃う。Horo 画面と同じ PlanetVectorIcon を使用。
       final glyphSize = isNatal ? 18.0 : 14.0;
 
+      // 2026-05-03: Opacity widget 撤去 (ACG 画面点滅の原因)。
+      // opacity を各色の alpha に伝搬 = saveLayer 回避。
       markers.add(Marker(
         point: markerPos,
         width: sz, height: sz,
-        child: Opacity(
-          opacity: opacity,
-          child: Container(
-            width: sz, height: sz,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: style.bg,
-              border: isNatal ? null : Border.all(
-                color: style.color.withAlpha(153),
-                width: 1.5,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withAlpha(76),
-                  blurRadius: 4, offset: const Offset(0, 2),
-                ),
-              ],
+        child: Container(
+          width: sz, height: sz,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: style.bg.withValues(alpha: opacity),
+            border: isNatal ? null : Border.all(
+              color: style.color.withAlpha((153 * opacity).round()),
+              width: 1.5,
             ),
-            child: Center(
-              child: PlanetVectorIcon(
-                planetKey: pl.planet,
-                size: glyphSize,
-                color: style.fg,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withAlpha((76 * opacity).round()),
+                blurRadius: 4, offset: const Offset(0, 2),
               ),
+            ],
+          ),
+          child: Center(
+            child: PlanetVectorIcon(
+              planetKey: pl.planet,
+              size: glyphSize,
+              color: style.fg.withValues(alpha: opacity),
             ),
           ),
         ),

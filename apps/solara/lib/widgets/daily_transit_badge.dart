@@ -151,7 +151,7 @@ class _DailyTransitBadgeState extends State<DailyTransitBadge>
                 BoxShadow(
                   color: glowColor.withValues(alpha: glowOpacity),
                   blurRadius: 18,
-                  spreadRadius: 1,
+                  spreadRadius: 0,
                 ),
               ]
             : null,

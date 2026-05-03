@@ -265,10 +265,12 @@ class AstroZenithMarker extends StatelessWidget {
             shape: BoxShape.circle,
             border: Border.all(color: ringColor, width: isNatal ? 1.2 : 1.0),
             boxShadow: [
+              // 2026-05-03: blur/spread を固定値化 (ACG 画面点滅対策)。
+              // 三項演算子で marker 毎に異なる値だと saveLayer 多発。
               BoxShadow(
                 color: planetColor.withAlpha(isNatal ? 160 : 120),
-                blurRadius: isNatal ? 14 : 10,
-                spreadRadius: isNatal ? 1 : 0,
+                blurRadius: 12,
+                spreadRadius: 0,
               ),
             ],
           ),
