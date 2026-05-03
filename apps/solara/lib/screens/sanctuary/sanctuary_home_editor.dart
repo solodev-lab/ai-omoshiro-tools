@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 import '../../utils/solara_storage.dart';
+import '../../widgets/location_picker_minimap.dart';
 
 // ══════════════════════════════════════════════════
 // ── Home Info Editor Page ──
@@ -145,9 +146,22 @@ class _SanctuaryHomeEditorPageState extends State<SanctuaryHomeEditorPage> {
                     padding: const EdgeInsets.only(top: 6),
                     child: Text(_searchResult, style: const TextStyle(fontSize: 11, color: Color(0xFF6CC070))),
                   ),
+
+                // 検索後にミニマップで微調整 (マップを動かしてピン位置調整)
+                if (_lat != null && _lng != null) ...[
+                  const SizedBox(height: 12),
+                  LocationPickerMinimap(
+                    lat: _lat!,
+                    lng: _lng!,
+                    onChanged: (p) => setState(() {
+                      _lat = p.lat;
+                      _lng = p.lng;
+                    }),
+                  ),
+                ],
                 const SizedBox(height: 8),
 
-                // Lat/Lng
+                // Lat/Lng (ミニマップ操作で動的更新される)
                 Row(children: [
                   Expanded(child: _readonlyField('緯度', _lat?.toStringAsFixed(4) ?? '')),
                   const SizedBox(width: 8),

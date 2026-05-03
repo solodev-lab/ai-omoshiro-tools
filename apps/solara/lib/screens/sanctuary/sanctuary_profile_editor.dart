@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 import '../../utils/app_locale.dart';
 import '../../utils/solara_storage.dart';
 import '../../utils/solara_api.dart';
+import '../../widgets/location_picker_minimap.dart';
 
 // ══════════════════════════════════════════════════
 // ── Profile Editor Page ──
@@ -385,7 +386,19 @@ class _SanctuaryProfileEditorPageState extends State<SanctuaryProfileEditorPage>
                             ),
                           ),
                         ],
-                        // HTML: .map-coords
+                        // 検索後にミニマップで微調整 (マップを動かしてピン位置調整)
+                        if (_birthLat != 0 && _birthLng != 0) ...[
+                          const SizedBox(height: 12),
+                          LocationPickerMinimap(
+                            lat: _birthLat,
+                            lng: _birthLng,
+                            onChanged: (p) => setState(() {
+                              _birthLat = p.lat;
+                              _birthLng = p.lng;
+                            }),
+                          ),
+                        ],
+                        // HTML: .map-coords (ミニマップ操作で動的更新される)
                         if (_birthLat != 0 && _birthLng != 0) ...[
                           const SizedBox(height: 8),
                           Row(children: [
