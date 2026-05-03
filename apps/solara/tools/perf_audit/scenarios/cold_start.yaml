@@ -1,0 +1,18 @@
+name: cold_start
+description: |
+  アプリ起動 → 30秒の起動直後計測。
+  起動直後のメモリ占有・フレーム rendering・初期 CPU を取る。
+duration_sec: 30
+poll_interval_sec: 5
+operations:
+  - type: instruction
+    message: |
+      [手順]
+      1. このスクリプトが「Press Enter to launch」と表示するのを待ってください
+      2. Enter で実行 → アプリが自動起動 + 計測開始
+      3. 30 秒後に自動で計測終了
+      4. アプリは起動したまま放置で OK (操作不要)
+  - type: prompt_enter
+    message: "Press Enter to launch app and start collection..."
+  - type: launch
+  - type: poll

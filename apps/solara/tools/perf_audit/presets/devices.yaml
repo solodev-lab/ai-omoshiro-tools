@@ -1,0 +1,96 @@
+# Solara perf_audit — device profiles
+#
+# Each entry describes a target device for performance measurement.
+# `serial` may be left empty: when empty, run.py auto-detects via `adb devices`
+# (works only when a single device matching `platform` is connected).
+#
+# `caps` lists collector capabilities. Use `caps_skip` to exclude noisy/heavy ones
+# per-device (e.g. older Android may not support `gfxinfo framestats`).
+#
+# Add new devices here as they come online.
+
+devices:
+  a101fc:
+    name: "Ulefone Armor A101FC"
+    serial: "df1daf14"
+    platform: android
+    android_version: "14"
+    sdk_api: 34
+    ram_gb: 4
+    gpu: "Adreno (Snapdragon)"
+    package: com.solodevlab.solara
+    notes: |
+      Impeller off (AndroidManifest EnableImpeller=false) で fd leak 完全停止済。
+      Solara A/B 検証メイン端末。Adreno + Vulkan の sync_file leak 対策済。
+    caps_skip: []
+
+  pixel8:
+    name: "Pixel 8"
+    serial: ""   # auto-detect (only if a101fc/so41b not also connected)
+    platform: android
+    android_version: "15"
+    sdk_api: 35
+    ram_gb: 8
+    gpu: "Mali (Tensor G3)"
+    package: com.solodevlab.solara
+    notes: "メイン開発端末。最新 Android で全機能テスト用。"
+    caps_skip: []
+
+  so41b:
+    name: "Sony Xperia Ace II (SO-41B)"
+    serial: ""   # auto-detect
+    platform: android
+    android_version: "11"
+    sdk_api: 30
+    ram_gb: 4
+    gpu: "Mali-G52 (Helio P35)"
+    package: com.solodevlab.solara
+    notes: |
+      ローエンド検証用。Android 11 で一部 dumpsys 出力フォーマット異なる。
+      run-as は debuggable APK のみ可、release build では proc collector 動かない。
+    caps_skip:
+      - "dumpsys.gfxinfo_framestats"  # フォーマットが新しい
+
+# Collector profiles — sets of collectors to run together.
+# Use --profile <name> on the CLI.
+profiles:
+  quick:
+    description: "CPU + Memory + Frame のみ (起動直後の動作確認用)"
+    collectors:
+      - dumpsys.meminfo
+      - dumpsys.gfxinfo
+      - dumpsys.cpuinfo
+      - proc.fd
+      - proc.status
+
+  standard:
+    description: "+ Battery + Network + IO (通常使用想定の本格計測)"
+    collectors:
+      - dumpsys.meminfo
+      - dumpsys.gfxinfo
+      - dumpsys.gfxinfo_framestats
+      - dumpsys.batterystats_pkg
+      - dumpsys.netstats
+      - dumpsys.cpuinfo
+      - dumpsys.activity_processes
+      - proc.fd
+      - proc.status
+      - proc.io
+      - proc.smaps_rollup
+
+  full:
+    description: "全 K カテゴリ (GPS/Sensor も含む完全計測。デフォルト)"
+    collectors:
+      - dumpsys.meminfo
+      - dumpsys.gfxinfo
+      - dumpsys.gfxinfo_framestats
+      - dumpsys.batterystats_pkg
+      - dumpsys.netstats
+      - dumpsys.sensorservice
+      - dumpsys.location
+      - dumpsys.cpuinfo
+      - dumpsys.activity_processes
+      - proc.fd
+      - proc.status
+      - proc.io
+      - proc.smaps_rollup

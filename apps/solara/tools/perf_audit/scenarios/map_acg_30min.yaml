@@ -1,0 +1,18 @@
+name: map_acg_30min
+description: |
+  Map ACG モードを 30 分使用した場合の負荷計測。
+  動的 4 frame 線描画 + Time Slider 操作時のピーク負荷検出用。
+duration_sec: 1800
+poll_interval_sec: 30
+operations:
+  - type: instruction
+    message: |
+      [手順]
+      1. アプリを起動 → Map 画面 → 🌐 ACG モードボタンを ON
+      2. ☰/✨ パネルから 4 frame (Natal/Transit/Prog/SArc) を全 ON
+      3. Time Slider を時々動かす (ドラッグ→離す→数秒待機 を繰り返す)
+      4. Enter で計測開始 → 30 分継続
+      5. 30 分間、地図移動・zoom・線タップ等を時々行う (普段の使用想定)
+  - type: prompt_enter
+    message: "Press Enter when ACG mode is set up and ready..."
+  - type: poll

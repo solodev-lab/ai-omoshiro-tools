@@ -1,0 +1,17 @@
+name: idle_30min
+description: |
+  アプリ起動 → 30 分の手動放置計測。
+  常時消費 (CPU idle / wakelock / GPS / Sensor / Animation) と memory leak の検出用。
+duration_sec: 1800
+poll_interval_sec: 30
+operations:
+  - type: instruction
+    message: |
+      [手順]
+      1. アプリを起動した状態にしてください (まだ手動で起動 or 既に起動済み)
+      2. Enter で計測開始 → 30 分間 30 秒間隔で計測
+      3. 計測中はアプリを操作しないでください (Map なら起動時の状態のまま放置)
+      4. 画面 ON のまま、画面 OFF にしないでください (= 通常使用想定)
+  - type: prompt_enter
+    message: "Press Enter to start 30-minute idle collection..."
+  - type: poll
