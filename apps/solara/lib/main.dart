@@ -90,7 +90,13 @@ class _SolaraHomeState extends State<SolaraHome> {
       extendBody: true,
       body: IndexedStack(
         index: _currentIndex,
-        children: _screens,
+        // 2026-05-03: TickerMode で裏画面の AnimationController.repeat() を停止。
+        // Galaxy 星空回転 / Horoscope 円 / Tarot Altar 等の常時 tick が
+        // SurfaceFlinger の release タイミングを乱して Map 画面の点滅を引き起こしていた。
+        children: [
+          for (int i = 0; i < _screens.length; i++)
+            TickerMode(enabled: i == _currentIndex, child: _screens[i]),
+        ],
       ),
       bottomNavigationBar: SolaraNavBar(
         currentIndex: _currentIndex,
