@@ -4,6 +4,8 @@
 > 新しい画面や機能を追加する時はこのファイルを確認する。
 > 2026-04-29 更新: F1-c (Daily Transit) + Phase E1-E8 (Soft/Hard 設計思想) 反映。
 > 2026-04-30 更新: Tier S #2 ライン narrative + Daily Transit フィルタ/VP切替 + 検索 Google Places + tile fd 対策。
+> 2026-05-03 更新: Phase 1 saveLayer leak 撤去 (Critical 30→5、CPU 半減、Jank 5x 改善)、Impeller off で fd leak 解消。
+> 2026-05-04 更新: 5/1 メモ機能修正 9 + UX 修正 5 + 3-1 ミニマップ + Daily Transit i ボタンカテゴリ別 (詳細は末尾)。
 
 ---
 
@@ -766,3 +768,91 @@ Flutter 標準の静的解析は `flutter analyze` で行う。
 1. `security.md` のチェックリストを確認
 2. APIキーはCF Worker経由で使う（Flutterにハードコードしない）
 3. `data_schema.md` のAPI一覧に追記
+
+---
+
+## 変更履歴
+
+### 2026-05-04 セッション
+
+**5/1 メモ機能修正 9 項目** (commit `c2709cf`):
+- クインカンクス用語変更 (違和感→異視点) + summary 文言更新
+- セミセクスタイル/セミスクエア度数欠落 fix (`aspectInfo` 未登録 → entry 追加)
+- スコアバー (FortuneFilterLabel) 端末幅対応 (左ラベル ConstrainedBox 32% / 方角幅 32→44 / バー幅 LayoutBuilder)
+- 扇状 `activeCategory='all'` 限定 TOP2 濃さ +0.10 (rank0 0.85, rank1 0.65, rank>1 0.40)
+- DailyTransitBadge 明暗アニメ強化 (alpha 振れ幅 約4倍、周期 2400ms→1800ms)
+- 検索結果総合スコア計算注記 + 計算内容ボタン (info_outline + dialog)
+- Sanctuary 1日開始時刻 1分単位ピッカー (時/分 ドロップダウン、`solara_daily_reset_minute` storage 追加)
+- 新月 reveal 画面 SET INTENTION ボタン位置 (Stack 固定→SingleChildScrollView 化、events の下)
+- Catasterism 選択肢画面 overflow 修正 (固定 SizedBox 150 + Stack→ScrollView 化)
+
+**UX 修正 5 項目 + 検索住所** (commit `6c4e795`):
+- アスペクト詳細 popup BottomSheet → AlertDialog (`map_aspect_chip.dart`、軽量化)
+- Horo 相タブ overflow 修正 (Flexible + ellipsis + badge 文字列短縮)
+- 検索詳細 popup に住所行追加 (parts.skip(1) で複数階層住所表示)
+- 検索結果スコアラベル「総合」固定 → activeCategory 動的化 (合計/豊かさ/癒し 等)
+- 扇状 `activeCategory='all'` 時に方位別 dominant カテゴリ色 (`map_screen._dominantTintByDir()`)
+- Map (Light) で DailyTransitBadge 反転コントラスト (内側 暗紺 + 強い金 border)
+
+**3-1 出生地/現住所 ミニマップ + パン式座標調整** (commit `fdc1b99`):
+- 新規 widget `lib/widgets/location_picker_minimap.dart`
+- flutter_map ベース、初期 zoom 14、中央固定ピン (B 方式 = マップパン)
+- onPositionChanged で座標即時更新、didUpdateWidget で外部変化検知 (epsilon でループ防止)
+- `sanctuary_profile_editor.dart` 出生地検索後に表示
+- `sanctuary_home_editor.dart` 現住所検索後に表示
+
+**緊急 4 件 fix** (commit `c3b2164`):
+- 検索 popup 住所表示条件緩和 (parts.length > 2 → > 1)
+- 扇状 dominant カテゴリ色の lerp 廃止 (上部スコアバーと同色)
+- スコアバーと DailyTransitBadge 重なり修正 (右マージン 64 予約)
+- カテゴリスコア閾値 0.05 → 0.001 (低スコアでも chip 表示)
+
+**Daily Transit i ボタン カテゴリ別動的化** (commit `e9d2239`):
+- 4-2 デモボタン profile build 表示 (`kDebugMode` → `!kReleaseMode`)
+- B5 「お勧め行動の例」i ボタン → カテゴリ別 dialog (`categoryTipsIntent` 5 種、`_showCategoryTipsIntent`)
+- B6 惑星×アングル i ボタン → カテゴリ×アングル補足 (`categoryAngleAppendix` 5×4=20 パターン)
+- `daily_transit_data.dart` に上記 2 データセット追加 (+142 行)
+- `_showPlanetAngleDetail()` ヘルパーに既存 dialog ロジック切出し
+
+**新規ファイル**:
+- `lib/widgets/location_picker_minimap.dart` (B 方式座標ピッカー、141 行)
+
+**主要修正ファイル**:
+- `lib/screens/map/map_search.dart` — SearchResultList/SearchFocusPopup に activeCategory + 住所
+- `lib/screens/map/map_sectors.dart` — sectorTintByDir 引数 + lerp 廃止
+- `lib/screens/map_screen.dart` — `_dominantTintByDir()` ヘルパー追加
+- `lib/screens/map/map_fortune_sheet.dart` — LayoutBuilder + ConstrainedBox + バー幅可変
+- `lib/screens/map/map_aspect_chip.dart` — Dialog 化 (BottomSheet 廃止)
+- `lib/screens/map/map_daily_transit_screen.dart` — i ボタン dialog 動的化 (+73 行)
+- `lib/screens/map/daily_transit_data.dart` — categoryAngleAppendix + categoryTipsIntent (+142 行)
+- `lib/screens/horoscope/horo_aspect_description.dart` — クインカンクス + minor aspect 追加
+- `lib/screens/horoscope/horo_aspect_list.dart` — overflow fix
+- `lib/screens/sanctuary/sanctuary_profile_editor.dart` — ミニマップ組込
+- `lib/screens/sanctuary/sanctuary_home_editor.dart` — ミニマップ組込
+- `lib/screens/sanctuary/sanctuary_reset_hour_picker.dart` — 1分単位ピッカー全書換
+- `lib/screens/sanctuary_screen.dart` — minute state + storage
+- `lib/utils/solara_storage.dart` — `solara_daily_reset_minute` key
+- `lib/widgets/daily_transit_badge.dart` — 明暗アニメ強化 + isLightMap 引数
+- `lib/widgets/new_moon_overlay.dart` — SET INTENTION ScrollView 化
+- `lib/widgets/catasterism_overlay.dart` — overflow fix (ScrollView)
+- `lib/screens/galaxy_screen.dart` — デモボタン profile 表示
+
+**残課題 (次セッション)**:
+- 4-2 catasterism「ガサガサ」感の真の原因究明 (実機確認 + Phase 2 Perfetto trace 想定)
+- map_screen.dart 1752 行 / map_daily_transit_screen.dart 1294 行 の分割 (大規模 refactor)
+- audit Critical 22 件のうち実害ある箇所の選定 + 修正 (FadeTransition 等)
+
+### 2026-05-03 セッション
+
+**Phase 1 saveLayer leak 撤去** (Critical 30→5, CPU 227%→113%, Jank 52%→7.32%):
+- NavBar/GlassPanel BackdropFilter 撤去、動的 blur 固定化、Opacity → Color alpha
+- IndexedStack 裏画面の TickerMode で Animation 完全停止
+- Dark タイル ColorFilter 二重→1段合成
+- Impeller off (`AndroidManifest EnableImpeller=false`) で A101FC fd leak 完全停止
+
+**perf_audit ツール追加** (commit `2340d4a`):
+- `apps/solara/tools/perf_audit/` Android 性能網羅計測 CLI
+- 13 collector (CPU/Memory/Frame/Battery/Network/GPS/Sensor/fd/IO 等)
+- 3 端末 (a101fc/pixel8/so41b) + 3 profile (quick/standard/full)
+- compare.py で 2 レポート side-by-side 比較
+- PHASE2_DESIGN.md で Perfetto trace 統合計画
