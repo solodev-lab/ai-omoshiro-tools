@@ -227,15 +227,11 @@ List<Polygon> _buildSectorsTwoEnergy({
 
     // 設計思想: ソフト=銀月色 / ハード=金陽色 が基本。
     // ただし activeCategory == 'all' のときは「各方位の dominant カテゴリ色」を
-    // 渡せる (tintByDir)。各方位で healing/money/love/work/communication の
-    // どれが最大かを反映 → 一目でカテゴリ性質が分かる。
+    // 渡せる (tintByDir)。上部スコアバー (FortuneFilterLabel) と同じ
+    // categoryColors[cat] をそのまま使う (lerp 廃止、2026-05-04 修正)。
     final tint = tintByDir?[dir];
-    final softColor = tint != null
-        ? Color.lerp(SolaraColors.energySoft, tint, 0.6)!
-        : SolaraColors.energySoft;
-    final hardColor = tint != null
-        ? Color.lerp(SolaraColors.energyHard, tint, 0.6)!
-        : SolaraColors.energyHard;
+    final softColor = tint ?? SolaraColors.energySoft;
+    final hardColor = tint ?? SolaraColors.energyHard;
 
     // ソフトリング（内側）
     if (softFillA > 5) {

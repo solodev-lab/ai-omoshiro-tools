@@ -373,8 +373,12 @@ class SearchFocusPopup extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final parts = focus.name.split(',');
-    final short = parts.length > 2 ? '${parts[0]}, ${parts[1]}' : focus.name;
+    // 場所名 / 住所 を分割。Nominatim/Google Places の display_name は
+    // "店名, 区, 市, 県, 国" のような ',' 区切り。1 行目に短縮表示、
+    // 2 行目に残り全部 (住所部分) を表示する。
+    final parts = focus.name.split(',').map((s) => s.trim()).where((s) => s.isNotEmpty).toList();
+    final short = parts.isNotEmpty ? parts[0] : focus.name;
+    final addressLine = parts.length > 1 ? parts.skip(1).join(', ') : '';
     // 中心が動いたら方位を再計算（bestDir はキャッシュの可能性がある）
     final dir = focus.directionFrom(center);
     final dirJp = dir16JP[dir] ?? dir;
@@ -395,7 +399,9 @@ class SearchFocusPopup extends StatelessWidget {
       for (final k in srcKeys) {
         sum += comps[k] ?? 0;
       }
-      if (sum < 0.05) continue; // 0同然のカテゴリは省く
+      // 閾値 0.05 → 0.001 に緩和。低スコアでもカテゴリ表示を残す
+      // (ユーザー指摘: カテゴリが消える方位がある対策)
+      if (sum < 0.001) continue;
       catEntries.add(MapEntry(cat, sum));
     }
     catEntries.sort((a, b) => b.value.compareTo(a.value));
@@ -420,13 +426,13 @@ class SearchFocusPopup extends StatelessWidget {
             child: const Icon(Icons.close, size: 14, color: Color(0xFF888888)),
           ),
         ]),
-        // 場所名の下に住所行 (短縮で取ったあとの残り部分を表示)
-        if (parts.length > 2) ...[
+        // 場所名の下に住所行 (parts[1] 以降全部)
+        if (addressLine.isNotEmpty) ...[
           const SizedBox(height: 2),
           Padding(
             padding: const EdgeInsets.only(left: 22),
             child: Text(
-              parts.skip(2).join(',').trim(),
+              addressLine,
               style: const TextStyle(fontSize: 10, color: Color(0xFF888888), height: 1.3),
               maxLines: 2, overflow: TextOverflow.ellipsis,
             ),

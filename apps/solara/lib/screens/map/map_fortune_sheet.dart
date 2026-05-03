@@ -39,19 +39,22 @@ class FortuneFilterLabel extends StatelessWidget {
 
     // 端末幅に応じてレイアウト寸法を可変化:
     //   - 左ラベル (合計/総合) を画面幅の 32% で頭打ち + ellipsis
-    //     → 英語表記 (Total/Communication) でも他要素を圧迫しない
     //   - 方角ラベル幅 44 (旧 32) → "東南東" 3 文字が 1 行に収まる
-    //   - バー幅は LayoutBuilder で残幅から逆算 (60-110 px clamp)
+    //   - バー幅は MediaQuery で残幅から逆算
+    //   - 右側 DailyTransitBadge (右上 right:20, 幅 40) と重ならないよう
+    //     右マージン 64 を予約 (2026-05-04 ユーザー指摘対応)
     final screenW = MediaQuery.of(context).size.width;
     final leftLabelMax = screenW * 0.32;
     const dirLabelW = 44.0;
     const valueLabelW = 28.0;
     const innerHPad = 10.0;  // Container horizontal padding (片側)
     const sideMargin = 16.0;  // 親 Positioned の left:16 分
+    const dailyBadgeReserved = 64.0;  // DailyTransitBadge 用右マージン
     // 残幅 = 画面幅 − サイドマージン − 左ラベル − Container padding × 2
     //         − 6 (左ラベルとバー列の間) − dirLabelW − 4 − valueLabelW − 4
-    final reserved = sideMargin + leftLabelMax + innerHPad * 2 + 6 + dirLabelW + 4 + valueLabelW + 4;
-    final barW = (screenW - reserved).clamp(60.0, 110.0);
+    //         − dailyBadgeReserved (右上 Badge 用)
+    final reserved = sideMargin + leftLabelMax + innerHPad * 2 + 6 + dirLabelW + 4 + valueLabelW + 4 + dailyBadgeReserved;
+    final barW = (screenW - reserved).clamp(40.0, 110.0);
 
     // ClipRRect で境界半径を維持しつつ、sub-pixel オーバーフローを視覚的に吸収
     return GestureDetector(
