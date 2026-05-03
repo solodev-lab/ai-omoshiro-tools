@@ -108,6 +108,9 @@ Widget buildStyledTileLayer(MapStyle style) {
     maxZoom: cfg.maxZoom.toDouble(),
     userAgentPackageName: 'com.solara.app',
     tileProvider: NetworkTileProvider(httpClient: sharedTileHttpClient),
+    // 2026-05-03: タイル fade-in を無効化 (内部 AnimatedOpacity が saveLayer trigger)。
+    // ACG モード 2 回目入時の画面点滅 / Map スクロール後の砂嵐の主因対策。
+    tileDisplay: const TileDisplay.instantaneous(),
     tileBuilder: cfg.dark
         ? (context, tileWidget, tile) => ColorFiltered(
               // 1 段に合成済 (saveLayer x2 → x1、ACG 画面点滅対策)
