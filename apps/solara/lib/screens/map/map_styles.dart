@@ -11,20 +11,16 @@ enum MapStyle {
   cyclosmDark,
 }
 
-/// ナイトモード用の2段フィルター：
-/// ①色を反転（invert）→ ②色相を180°回転（hue-rotate）
-/// 合成すると CSS の `filter: invert(1) hue-rotate(180deg)` と同等。
-const List<double> _invertMatrix = <double>[
-  -1, 0, 0, 0, 255,
-   0,-1, 0, 0, 255,
-   0, 0,-1, 0, 255,
-   0, 0, 0, 1, 0,
-];
-const List<double> _hueRotate180Matrix = <double>[
-  -0.574, 1.430, 0.144, 0, 0,
-   0.426, 0.430, 0.144, 0, 0,
-   0.426, 1.430,-0.856, 0, 0,
-   0,     0,    0,     1, 0,
+/// ナイトモード用の合成フィルター: invert + hue-rotate(180deg) を 1 段に合成。
+/// CSS の `filter: invert(1) hue-rotate(180deg)` と同等。
+/// Phase 3 (2026-05-03): 二重 ColorFiltered の saveLayer を 1 段に削減し、
+/// ACG 画面点滅 / タイル描画砂嵐の主因を撤去。
+/// (M2 * M1 を Python np.matmul で算出、テストピクセルで反転・色相維持を確認済)
+const List<double> _darkInvertHueRotate180Matrix = <double>[
+   0.574, -1.430, -0.144, 0, 255,
+  -0.426, -0.430, -0.144, 0, 255,
+  -0.426, -1.430,  0.856, 0, 255,
+   0,      0,      0,     1,   0,
 ];
 
 class MapStyleConfig {
@@ -114,13 +110,9 @@ Widget buildStyledTileLayer(MapStyle style) {
     tileProvider: NetworkTileProvider(httpClient: sharedTileHttpClient),
     tileBuilder: cfg.dark
         ? (context, tileWidget, tile) => ColorFiltered(
-              // 外側：色相180°回転（invert後の色を元に戻す）
-              colorFilter: const ColorFilter.matrix(_hueRotate180Matrix),
-              child: ColorFiltered(
-                // 内側：色反転（白↔黒）
-                colorFilter: const ColorFilter.matrix(_invertMatrix),
-                child: tileWidget,
-              ),
+              // 1 段に合成済 (saveLayer x2 → x1、ACG 画面点滅対策)
+              colorFilter: const ColorFilter.matrix(_darkInvertHueRotate180Matrix),
+              child: tileWidget,
             )
         : null,
   );
