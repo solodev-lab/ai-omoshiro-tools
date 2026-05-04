@@ -101,7 +101,7 @@ MapStyle mapStyleFromId(String? id) {
 ///   socket 枯渇による DNS 失敗の連鎖を防止 (詳細: tile_http_client.dart)。
 Widget buildStyledTileLayer(MapStyle style) {
   final cfg = mapStyleConfigs[style]!;
-  return TileLayer(
+  final layer = TileLayer(
     key: ValueKey(cfg.id),
     urlTemplate: cfg.urlTemplate,
     subdomains: cfg.subdomains,
@@ -111,12 +111,13 @@ Widget buildStyledTileLayer(MapStyle style) {
     // 2026-05-03: タイル fade-in を無効化 (内部 AnimatedOpacity が saveLayer trigger)。
     // ACG モード 2 回目入時の画面点滅 / Map スクロール後の砂嵐の主因対策。
     tileDisplay: const TileDisplay.instantaneous(),
-    tileBuilder: cfg.dark
-        ? (context, tileWidget, tile) => ColorFiltered(
-              // 1 段に合成済 (saveLayer x2 → x1、ACG 画面点滅対策)
-              colorFilter: const ColorFilter.matrix(_darkInvertHueRotate180Matrix),
-              child: tileWidget,
-            )
-        : null,
+  );
+  if (!cfg.dark) return layer;
+  // Phase 3 (2026-05-04): per-tile ColorFiltered → container 単位に変更。
+  // saveLayer 回数を画面タイル数 (~36) から 1 に削減。matrix は flutter_map 公式の
+  // darkModeTilesContainerBuilder と同一値 (invert + hue-rotate 180° を 1 段合成)。
+  return ColorFiltered(
+    colorFilter: const ColorFilter.matrix(_darkInvertHueRotate180Matrix),
+    child: layer,
   );
 }
