@@ -22,7 +22,10 @@ import 'map_vp_panel.dart' show VPSlot;
 /// 出生地マーカー: 🌟 + 多層グロー + 2.4秒周期の呼吸パルス。
 /// 「個性の源」を視覚的に印象付ける。
 class BirthMarker extends StatefulWidget {
-  const BirthMarker({super.key});
+  /// pulseEnabled=false の場合 breathing アニメ無効 (intensity=1.0 固定)。
+  /// ACG モード等、常時アニメ削減のための実験フラグ (2026-05-04)。
+  final bool pulseEnabled;
+  const BirthMarker({super.key, this.pulseEnabled = true});
 
   @override
   State<BirthMarker> createState() => _BirthMarkerState();
@@ -30,72 +33,78 @@ class BirthMarker extends StatefulWidget {
 
 class _BirthMarkerState extends State<BirthMarker>
     with SingleTickerProviderStateMixin {
-  late final AnimationController _ctrl;
+  AnimationController? _ctrl;
 
   @override
   void initState() {
     super.initState();
-    _ctrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 2400),
-    )..repeat(reverse: true);
+    if (widget.pulseEnabled) {
+      _ctrl = AnimationController(
+        vsync: this,
+        duration: const Duration(milliseconds: 2400),
+      )..repeat(reverse: true);
+    }
   }
 
   @override
   void dispose() {
-    _ctrl.dispose();
+    _ctrl?.dispose();
     super.dispose();
+  }
+
+  Widget _buildContent(double intensity) {
+    // Center で囲って flutter_map Marker の tight constraints (60x60) を解放。
+    // これがないと Container の width/height が ignore され膨張する。
+    return Center(
+      child: Container(
+        width: 20,
+        height: 20,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          boxShadow: [
+            // 外側ソフトグロー (拡散大、暖色)
+            // 2026-05-03: blur/spread を固定化 (Critical fix)。
+            // breathing は alpha のみで表現 = saveLayer 回避。
+            BoxShadow(
+              color: const Color(0xFFFFD370)
+                  .withAlpha((180 * intensity).round()),
+              blurRadius: 14,
+              spreadRadius: 1.8,
+            ),
+            BoxShadow(
+              color: const Color(0xFFFFE8A0)
+                  .withAlpha((220 * intensity).round()),
+              blurRadius: 7,
+              spreadRadius: 0.6,
+            ),
+            BoxShadow(
+              color: const Color(0xFFFFFFFF)
+                  .withAlpha((120 * intensity).round()),
+              blurRadius: 3,
+            ),
+          ],
+        ),
+        child: const FittedBox(
+          fit: BoxFit.contain,
+          child: Text('🌟', style: TextStyle(fontSize: 100, height: 1.0)),
+        ),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    final ctrl = _ctrl;
+    if (ctrl == null) {
+      return _buildContent(1.0);
+    }
     return AnimatedBuilder(
-      animation: _ctrl,
+      animation: ctrl,
       builder: (context, _) {
-        final t = Curves.easeInOut.transform(_ctrl.value);
+        final t = Curves.easeInOut.transform(ctrl.value);
         // 0.6 〜 1.0 で呼吸 (常に最低 60% の発光を維持)
         final intensity = 0.6 + 0.4 * t;
-        // Center で囲って flutter_map Marker の tight constraints (60x60) を解放。
-        // これがないと Container の width/height が ignore され膨張する。
-        return Center(
-          child: Container(
-            width: 20,
-            height: 20,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              boxShadow: [
-                // 外側ソフトグロー (拡散大、暖色)
-                // 2026-05-03: blur/spread を固定化 (Critical fix)。
-                // breathing は alpha のみで表現 = saveLayer 回避。
-                BoxShadow(
-                  color: const Color(0xFFFFD370)
-                      .withAlpha((180 * intensity).round()),
-                  blurRadius: 14,
-                  spreadRadius: 1.8,
-                ),
-                // 中間グロー (やや明るく、クリーム色)
-                BoxShadow(
-                  color: const Color(0xFFFFE8A0)
-                      .withAlpha((220 * intensity).round()),
-                  blurRadius: 7,
-                  spreadRadius: 0.6,
-                ),
-                // 芯のハイライト (白系、シャープ)
-                BoxShadow(
-                  color: const Color(0xFFFFFFFF)
-                      .withAlpha((120 * intensity).round()),
-                  blurRadius: 3,
-                ),
-              ],
-            ),
-            // FittedBox で emoji を円内一杯に自動拡大
-            // (fontSize は単なる文字箱サイズで実描画は font padding 含むため小さく見える問題を解消)
-            child: const FittedBox(
-              fit: BoxFit.contain,
-              child: Text('🌟', style: TextStyle(fontSize: 100, height: 1.0)),
-            ),
-          ),
-        );
+        return _buildContent(intensity);
       },
     );
   }
@@ -172,6 +181,7 @@ List<Marker> buildLocationMarkers({
   required List<VPSlot> vpSlots,
   required List<VPSlot> locationSlots,
   required void Function(String name, LatLng point, bool isBirth) onTap,
+  bool birthPulseEnabled = true,
 }) {
   final markers = <Marker>[];
 
@@ -215,7 +225,7 @@ List<Marker> buildLocationMarkers({
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTap: () => onTap(name, point, true),
-        child: const BirthMarker(),
+        child: BirthMarker(pulseEnabled: birthPulseEnabled),
       ),
     ));
   }

@@ -1115,6 +1115,9 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                 profile: _profile,
                 vpSlots: _vpSlotsCache,
                 locationSlots: _locSlotsCache,
+                // Phase 3 実験 (2026-05-04): ACG モード時 BirthMarker pulse 停止。
+                // 仮説: 常時 AnimationController が BLAST 警告残存の主因。
+                birthPulseEnabled: !_astroCartoMode,
                 onTap: (name, point, isBirth) => setState(() {
                   _locationTapInfo = (name: name, point: point, isBirth: isBirth);
                 }),
