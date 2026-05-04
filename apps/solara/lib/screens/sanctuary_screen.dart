@@ -488,17 +488,17 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
             border: Border.all(color: const Color(0x2EF9D976)), // rgba(249,217,118,0.18)
           ),
           child: Column(children: [
-            // HTML: .pro-title { font-size:18px; font-weight:700; background:linear-gradient(135deg,var(--gold),var(--gold-end));
-            //   -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
-            // (Flutter doesn't support background-clip text easily, use ShaderMask)
-            ShaderMask(
-              shaderCallback: (bounds) => const LinearGradient(
-                begin: Alignment.topLeft, end: Alignment.bottomRight,
-                colors: [Color(0xFFF9D976), Color(0xFFF6BD60)],
-              ).createShader(bounds),
-              child: const Text('Upgrade to Cosmic Pro',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Colors.white)),
-            ),
+            // .pro-title gradient: ShaderMask の saveLayer を避けるため foreground Paint で実現。
+            Text('Upgrade to Cosmic Pro',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                foreground: Paint()
+                  ..shader = const LinearGradient(
+                    begin: Alignment.topLeft, end: Alignment.bottomRight,
+                    colors: [Color(0xFFF9D976), Color(0xFFF6BD60)],
+                  ).createShader(const Rect.fromLTWH(0, 0, 220, 24)),
+              )),
             const SizedBox(height: 12),
             // HTML: .pro-sub { font-size:13px; color:var(--text-secondary); line-height:1.55; }
             const Text('Aether shaders · Galaxy Archive · Advanced astrology',
