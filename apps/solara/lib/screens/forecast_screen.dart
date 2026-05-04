@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import '../utils/forecast_cache.dart';
 import '../utils/solara_storage.dart';
+import '../widgets/no_profile_guide.dart';
 import 'forecast/forecast_life_periods.dart';
 import 'forecast/forecast_top5.dart';
-import 'horoscope/horo_antique_icons.dart';
 import 'map/map_constants.dart';
 
 /// Forecast 画面 — 1年予測（ヒートマップ + 選択日詳細 + 強運Top5）
@@ -165,7 +165,7 @@ class _ForecastScreenState extends State<ForecastScreen> {
         ]),
       );
     }
-    if (_noProfile) return _buildNoProfileGuide();
+    if (_noProfile) return NoProfileGuide(onNavigateToSanctuary: widget.onNavigateToSanctuary);
     if (_errorMsg != null) {
       return Center(
         child: Padding(
@@ -207,40 +207,6 @@ class _ForecastScreenState extends State<ForecastScreen> {
         _buildFetchInfo(),
       ]),
     );
-  }
-
-  /// プロフィール未設定時の案内カード（Locations/Horo と同スタイル・同文面）。
-  /// 「設定する」タップで Navigator.pop でシートを閉じ、Sanctuary タブへ遷移。
-  Widget _buildNoProfileGuide() {
-    return SafeArea(child: Center(child: Padding(
-      padding: const EdgeInsets.all(32),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-        decoration: BoxDecoration(
-          color: const Color(0x14F9D976),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: const Color(0x40F9D976)),
-        ),
-        child: Column(mainAxisSize: MainAxisSize.min, children: [
-          const AntiqueGlyph(icon: AntiqueIcon.reading, size: 32,
-            color: Color(0xFFF6BD60)),
-          const SizedBox(height: 8),
-          const Text('SANCTUARYでプロフィールを設定すると、\n各地点の方位スコアが表示されます',
-            textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 13, color: Color(0xFFF6BD60))),
-          const SizedBox(height: 8),
-          GestureDetector(
-            onTap: () {
-              Navigator.of(context).maybePop();
-              widget.onNavigateToSanctuary?.call();
-            },
-            child: const Text('設定する →',
-              style: TextStyle(fontSize: 12, color: Color(0xFFF9D976),
-                decoration: TextDecoration.underline)),
-          ),
-        ]),
-      ),
-    )));
   }
 
   /// 表示期間 + 年間ベストの統合カード

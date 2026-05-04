@@ -2,7 +2,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:latlong2/latlong.dart';
 import '../utils/solara_storage.dart';
-import 'horoscope/horo_antique_icons.dart';
+import '../widgets/no_profile_guide.dart';
 import 'locations/locations_date_stepper.dart';
 import 'map/map_astro.dart';
 import 'map/map_constants.dart';
@@ -273,7 +273,7 @@ class _LocationsScreenState extends State<LocationsScreen> {
         )) else if (!(widget.profile?.isComplete ?? false))
           // プロフィール未設定時は Horo 画面と同じ案内カードを出す。
           // 日付ステッパー等は出生情報に依存するため、混乱を避けて非表示。
-          Expanded(child: _buildNoProfileGuide())
+          Expanded(child: NoProfileGuide(onNavigateToSanctuary: widget.onNavigateToSanctuary))
         else ...[
           // 操作メニュー（ヘッダ直下に配置）
           LocationsDateStepper(
@@ -293,40 +293,6 @@ class _LocationsScreenState extends State<LocationsScreen> {
       ]),
       ),
     );
-  }
-
-  /// プロフィール未設定時の案内カード（Horo 画面の _buildNoProfile と同スタイル）。
-  /// 「設定する」タップで Navigator.pop でシートを閉じ、Sanctuary タブへ遷移。
-  Widget _buildNoProfileGuide() {
-    return SafeArea(child: Center(child: Padding(
-      padding: const EdgeInsets.all(32),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-        decoration: BoxDecoration(
-          color: const Color(0x14F9D976),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: const Color(0x40F9D976)),
-        ),
-        child: Column(mainAxisSize: MainAxisSize.min, children: [
-          const AntiqueGlyph(icon: AntiqueIcon.reading, size: 32,
-            color: Color(0xFFF6BD60)),
-          const SizedBox(height: 8),
-          const Text('SANCTUARYでプロフィールを設定すると、\n各地点の方位スコアが表示されます',
-            textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 13, color: Color(0xFFF6BD60))),
-          const SizedBox(height: 8),
-          GestureDetector(
-            onTap: () {
-              Navigator.of(context).maybePop();
-              widget.onNavigateToSanctuary?.call();
-            },
-            child: const Text('設定する →',
-              style: TextStyle(fontSize: 12, color: Color(0xFFF9D976),
-                decoration: TextDecoration.underline)),
-          ),
-        ]),
-      ),
-    )));
   }
 
   /// VIEWPOINT プルダウン：現在地 + VIEWPOINT スロット一覧
