@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../utils/solara_storage.dart';
 import 'horo_antique_icons.dart';
+import 'horo_info_row.dart';
 import 'horo_panel_shared.dart';
 
 // ══════════════════════════════════════════════════
@@ -43,12 +44,12 @@ class HoroBirthPanel extends StatelessWidget {
         )),
       ]),
       const SizedBox(height: 10),
-      _bsInfoRow('氏名 NAME', p.name.isEmpty ? '未設定' : p.name),
-      _bsInfoRow('生年月日 DATE', p.birthDate),
-      _bsInfoRow('出生時刻 TIME', p.birthTimeUnknown ? '不明' : p.birthTime),
-      _bsInfoRow('出生地 BIRTHPLACE', p.birthPlace.isEmpty ? '未設定' : p.birthPlace),
+      HoroInfoRow('氏名 NAME', p.name.isEmpty ? '未設定' : p.name),
+      HoroInfoRow('生年月日 DATE', p.birthDate),
+      HoroInfoRow('出生時刻 TIME', p.birthTimeUnknown ? '不明' : p.birthTime),
+      HoroInfoRow('出生地 BIRTHPLACE', p.birthPlace.isEmpty ? '未設定' : p.birthPlace),
       if (p.birthLat != 0) ...[
-        _bsInfoRow('緯度/経度', '${p.birthLat.toStringAsFixed(4)} / ${p.birthLng.toStringAsFixed(4)}'),
+        HoroInfoRow('緯度/経度', '${p.birthLat.toStringAsFixed(4)} / ${p.birthLng.toStringAsFixed(4)}'),
       ],
       const SizedBox(height: 8),
       Row(children: [
@@ -87,23 +88,4 @@ class HoroBirthPanel extends StatelessWidget {
     ]);
   }
 
-  Widget _bsInfoRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text(label, style: const TextStyle(fontSize: 11, color: Color(0xFF888888), letterSpacing: 1)),
-        const SizedBox(height: 3),
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          decoration: BoxDecoration(
-            color: const Color(0x0DFFFFFF),
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: const Color(0x1AFFFFFF)),
-          ),
-          child: Text(value, style: const TextStyle(fontSize: 13, color: Color(0xFFE8E0D0))),
-        ),
-      ]),
-    );
-  }
 }
