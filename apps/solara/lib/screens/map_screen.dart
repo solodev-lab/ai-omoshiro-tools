@@ -843,40 +843,27 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     return result;
   }
 
-  /// activeCategory == 'all' のとき、各方位における dominant カテゴリ色を
-  /// 返す ({dir: Color})。それ以外は null (= sector tint なし、設計思想通り)。
-  /// 5 カテゴリ (healing/money/love/work/communication) のうち、その方位で
-  /// (tSoft+tHard+pSoft+pHard) の合計が最大のものの色を採用。
-  Map<String, Color>? _dominantTintByDir() {
-    if (_activeCategory != 'all') return null;
-    if (_fComps.isEmpty) return null;
-    final keys = _activeSrc == 'transit'
-        ? const ['tSoft', 'tHard']
-        : _activeSrc == 'progressed'
-            ? const ['pSoft', 'pHard']
-            : compKeys;
-    final result = <String, Color>{};
-    for (final d in dir16) {
-      String? topCat;
-      double topVal = 0;
-      for (final cat in _fComps.keys) {
-        final c = _fComps[cat]?[d];
-        if (c == null) continue;
-        double sum = 0;
-        for (final k in keys) {
-          sum += c[k] ?? 0;
-        }
-        if (sum > topVal) {
-          topVal = sum;
-          topCat = cat;
-        }
-      }
-      if (topCat != null && topVal > 0.05) {
-        final col = categoryColors[topCat];
-        if (col != null) result[d] = col;
-      }
+  /// 扇状の rank (1/2/3位) 別 alpha 倍率を activeCategory に応じて返す。
+  /// スコア比正規化はせず、rank で固定差を出す (1位/2位/3位 を見て分かる差)。
+  /// 2026-05-04 オーナー要望微調整:
+  ///   - 総合 / 恋愛: 1位 少し濃く (1.15)
+  ///   - 癒し / 仕事: 3位 薄く (0.30)
+  ///   - 話す: 2位 薄く (0.55) / 3位 さらに薄く (0.20)
+  List<double> _sectorRankAlphaMul() {
+    switch (_activeCategory) {
+      case 'all':
+      case 'love':
+        return const [1.15, 0.70, 0.40];
+      case 'healing':
+      case 'work':
+        return const [1.00, 0.70, 0.30];
+      case 'communication':
+        return const [1.00, 0.55, 0.20];
+      case 'money':
+        return const [1.00, 0.70, 0.40];
+      default:
+        return const [1.00, 0.70, 0.40];
     }
-    return result.isEmpty ? null : result;
   }
 
   /// HTML: rebuild(nc, fly) — center変更 + flyTo + セクター再計算 + 天体ライン再構築
@@ -1060,15 +1047,15 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
             // 出生情報が無い間はセクターを描画しない（スコアが乱数になるため）
             if (!_noProfile) PolygonLayer(polygons: buildSectors(
               center: _center,
+              // soft+hard 合算済スコア (=`_displayScores()`)
               sectorScores: _displayScores(),
+              // 🔴 activeCategory のカテゴリ色 1色 (スコアバーと同じ色 = 唯一の正解)
+              // 詳細: project_solara_design_philosophy.md「Map扇状の例外」節
               sectorColor: _sectorColor,
               visible: _layers['sectors']!,
               lightMap: !(mapStyleConfigs[_mapStyle]?.dark ?? true),
-              // 🔴 Solara設計思想: 2エネルギー独立描画
-              sectorEnergies: _displayEnergies(),
               dimFactor: _astroLayers['relocate'] == true ? 0.4 : 1.0,
-              activeCategory: _activeCategory,
-              sectorTintByDir: _dominantTintByDir(),
+              rankAlphaMul: _sectorRankAlphaMul(),
             )),
             PolylineLayer(polylines: buildCompass(center: _center, visible: _layers['compass']!)),
             // HTML: addPlanetLines() — natal/progressed/transit 天体ライン

@@ -39,19 +39,19 @@ devices:
 
   so41b:
     name: "Sony Xperia Ace II (SO-41B)"
-    serial: ""
-    model_pattern: "SO-41B"   # 接続時に `adb devices -l` で model: 値を確認して調整
+    serial: "HQ61BN06BD"
+    model_pattern: "SO-41B"
     platform: android
-    android_version: "11"
-    sdk_api: 30
+    android_version: "13"
+    sdk_api: 33
     ram_gb: 4
     gpu: "Mali-G52 (Helio P35)"
     package: com.solodevlab.solara
     notes: |
-      ローエンド検証用。Android 11 で一部 dumpsys 出力フォーマット異なる。
-      run-as は debuggable APK のみ可、release build では proc collector 動かない。
-    caps_skip:
-      - "dumpsys.gfxinfo_framestats"  # フォーマットが新しい
+      ローエンド検証用 (Helio P35 + Mali-G52)。
+      2026-05-04 時点で Android 13 (SDK 33) にアップデート済、run-as 動作確認済。
+      release build では proc collector 動かない。debuggable APK 推奨。
+    caps_skip: []
 
 # Collector profiles — sets of collectors to run together.
 # Use --profile <name> on the CLI.

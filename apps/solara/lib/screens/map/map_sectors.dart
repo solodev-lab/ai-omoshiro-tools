@@ -1,74 +1,34 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
-import '../../theme/solara_colors.dart';
-import '../../utils/direction_energy.dart';
 import 'map_constants.dart';
 
-/// HTML: computeRanks — sort 16-dir by score, top1=strong, top2=weak, rest=null
-/// ⚠ 設計思想的に非推奨: ソフト/ハード合算スコアでランク付けしている。
-/// 新規呼び出しは sectorTypeFromEnergy を使うこと。
-String sectorType(String dir, Map<String, double> sectorScores) {
-  final sorted = sectorScores.entries.toList()
-    ..sort((a, b) => b.value.compareTo(a.value));
-  final rank = sorted.indexWhere((e) => e.key == dir);
-  if (rank == 0) return 'strong';
-  if (rank == 1) return 'weak';
-  return 'null';
-}
-
-/// 2エネルギー版ランク付け。
-/// `sortKey`（= max(soft, hard)）で並べ、top1=strong / top2=weak。
-/// これは「合算」ではなく「最大成分」での比較なので、
-/// 設計思想に違反しない（ソフト/ハードを独立に保持したまま、
-/// 表示順用の便宜的な並びを得るだけ）。
-String sectorTypeFromEnergy(String dir, Map<String, DirectionEnergy> energies) {
-  final sorted = energies.entries.toList()
-    ..sort((a, b) => b.value.sortKey.compareTo(a.value.sortKey));
-  final rank = sorted.indexWhere((e) => e.key == dir);
-  if (rank == 0) return 'strong';
-  if (rank == 1) return 'weak';
-  return 'null';
-}
-
-/// HTML: scoreToStyle — 16方位セクターのポリゴンを生成
-/// 参考: mockup/index.html L1875-1895（R=20000km、nPolar/sPolar で極域距離制限）
+/// 16方位扇状セクター — `activeCategory` のカテゴリ色 1色 + alpha のみ可変。
 ///
-/// lightMap=true の時は明るい地図（OSM Light等）用に、塗り alpha と
-/// ボーダー alpha を少し上げて、薄い地色にも負けないようにする。
+/// 🔴 設計仕様 (2026-05-04 オーナー直接指示、`project_solara_design_philosophy.md` の例外節):
+/// - **1色のみ**で塗る（`sectorColor` = `categoryColors[activeCategory]`）
+/// - **alpha (濃さ) は合算スコアの相対値**で 1軸変化
+/// - **soft/hard の色分け・リング構造・境目なし**
+/// - どこまで遠くを見てもその方角は 1色のみ
+/// - soft+hard 合算は `_displayScores()` 側で済んでいる前提（呼出側責務）
 ///
-/// 🔴 設計思想変更 (2026-04-29): 単色塗りから2エネルギー並列描画へ。
-/// sectorEnergies が指定された場合: 各セクターを「内側=ソフト色 / 外側=ハード色」
-/// の2リング構造で描画し、ソフト/ハード量を独立した alpha で表現する。
-/// 後方互換のため sectorScores パラメータは残し、フォールバックとして利用。
+/// 過去にあった以下の機構は **すべて撤廃** された (再導入禁止):
+/// - 2リング構造 (内 soft / 外 hard) を別色で描画
+/// - `tintByDir` で各方位を dominant カテゴリ色に上書き (合算 dominant 判定 = 設計思想違反)
+/// - `sectorType` / `sectorTypeFromEnergy` の strong/weak/null 3段階判定
 List<Polygon> buildSectors({
   required LatLng center,
   required Map<String, double> sectorScores,
   required Color sectorColor,
   required bool visible,
   bool lightMap = false,
-  Map<String, DirectionEnergy>? sectorEnergies,
   double dimFactor = 1.0,
-  String activeCategory = 'all',
-  /// activeCategory == 'all' のとき各方位の dominant カテゴリ色を渡す。
-  /// {dir: Color} 形式。null or 空時は energySoft/energyHard で塗る (旧挙動)。
-  Map<String, Color>? sectorTintByDir,
+  /// rank 1/2/3 の濃さ倍率 (default: 1.00/0.70/0.40)。
+  /// カテゴリ別の微調整を呼出側で渡せる。スコア比正規化はせず純粋 rank 由来。
+  List<double> rankAlphaMul = const [1.00, 0.70, 0.40],
 }) {
-  if (!visible) return [];
+  if (!visible) return const [];
 
-  // 2エネルギー版が利用可能ならそちらを優先
-  if (sectorEnergies != null && sectorEnergies.isNotEmpty) {
-    return _buildSectorsTwoEnergy(
-      center: center,
-      energies: sectorEnergies,
-      lightMap: lightMap,
-      dimFactor: dimFactor,
-      activeCategory: activeCategory,
-      tintByDir: sectorTintByDir,
-    );
-  }
-
-  // ── レガシー: 単色塗り版（設計思想的に非推奨だが互換性のため残す） ──
   final polygons = <Polygon>[];
   const d = Distance();
   const maxDist = 20000000.0;
@@ -80,8 +40,33 @@ List<Polygon> buildSectors({
   final nPolarM = ((90 - lat) * 111.32 - 200).clamp(500.0, 20000.0) * 1000.0;
   final sPolarM = ((90 + lat) * 111.32 - 200).clamp(500.0, 20000.0) * 1000.0;
 
+  // 2026-05-04 オーナー要望: 各カテゴリで上位 3 方位のみ描画。
+  // スコア値は順位決定のためにのみ使い、濃さは rank で明確に分ける
+  // (スコアが近接していても 1位/2位/3位 で見て分かる差をつける)。
+  final sortedDirs = sectorScores.entries
+      .where((e) => e.value > 0.01)
+      .toList()
+    ..sort((a, b) => b.value.compareTo(a.value));
+  if (sortedDirs.isEmpty) return polygons;
+  final rankByDir = <String, int>{
+    for (int i = 0; i < sortedDirs.length && i < 3; i++) sortedDirs[i].key: i,
+  };
+
+  // alpha 上限 (light map では地色に負けないよう底上げ)。
+  // 2026-05-04 オーナー要望: 全体的に薄く。
+  final maxFillA = lightMap ? 130 : 100;
+  final maxBorderA = lightMap ? 180 : 150;
+
   for (int i = 0; i < dir16.length; i++) {
     final dir = dir16[i];
+    final rank = rankByDir[dir];
+    if (rank == null) continue;
+
+    final mul = rank < rankAlphaMul.length ? rankAlphaMul[rank] : 1.0;
+    final fillA = (mul * dimFactor * maxFillA).round().clamp(0, 255);
+    final borderA = (mul * dimFactor * maxBorderA).round().clamp(0, 255);
+    if (fillA < 5) continue;
+
     final centerDeg = i * 22.5;
     final startDeg = centerDeg - sectorWidth / 2;
     final adjustedStart = startDeg < 0 ? startDeg + 360 : startDeg;
@@ -92,217 +77,51 @@ List<Polygon> buildSectors({
     if (dir == 'N') radius = nPolarM < maxDist ? nPolarM : maxDist;
     if (dir == 'S') radius = sPolarM < maxDist ? sPolarM : maxDist;
 
-    final type = sectorType(dir, sectorScores);
-    final points = _fanPoints(d, center, s, e2, radius, 0, 1.0,
+    final points = _fanPoints(d, center, s, e2, radius,
         radialSteps: radialSteps, arcSteps: arcSteps);
-
-    Color fillColor;
-    Color borderColor;
-    double borderWidth;
-    final strongFillA = lightMap ? 140 : 102;
-    final strongBorderA = lightMap ? 240 : 217;
-    final weakFillA = lightMap ? 80 : 51;
-    final weakBorderA = lightMap ? 180 : 128;
-    switch (type) {
-      case 'strong':
-        fillColor = sectorColor.withAlpha(strongFillA);
-        borderColor = sectorColor.withAlpha(strongBorderA);
-        borderWidth = lightMap ? 3.5 : 3;
-        break;
-      case 'weak':
-        fillColor = sectorColor.withAlpha(weakFillA);
-        borderColor = sectorColor.withAlpha(weakBorderA);
-        borderWidth = lightMap ? 2.5 : 2;
-        break;
-      default:
-        fillColor = const Color(0x00000000);
-        borderColor = const Color(0x00000000);
-        borderWidth = 0;
-    }
 
     polygons.add(Polygon(
       points: points,
-      color: fillColor,
-      borderColor: borderColor,
-      borderStrokeWidth: borderWidth,
+      color: sectorColor.withAlpha(fillA),
+      borderColor: sectorColor.withAlpha(borderA),
+      borderStrokeWidth: 1.5,
     ));
   }
   return polygons;
 }
 
-/// 2エネルギー描画: 各セクターを「内側ソフト / 外側ハード」の2リングで描画。
-/// ソフト = SolaraColors.energySoft（銀月色）、ハード = SolaraColors.energyHard（金陽色）。
-/// 量は独立して alpha に反映され、合算しない。
-List<Polygon> _buildSectorsTwoEnergy({
-  required LatLng center,
-  required Map<String, DirectionEnergy> energies,
-  required bool lightMap,
-  required double dimFactor,
-  String activeCategory = 'all',
-  Map<String, Color>? tintByDir,
-}) {
-  final polygons = <Polygon>[];
-  const d = Distance();
-  const maxDist = 20000000.0;
-  const radialSteps = 30;
-  const arcSteps = 30;
-  const sectorWidth = 22.5;
-
-  final lat = center.latitude;
-  final nPolarM = ((90 - lat) * 111.32 - 200).clamp(500.0, 20000.0) * 1000.0;
-  final sPolarM = ((90 + lat) * 111.32 - 200).clamp(500.0, 20000.0) * 1000.0;
-
-  // 全方位中の最大ソフト・最大ハードを取り、各方位を独立に正規化する。
-  // 「ソフト全体での比率」「ハード全体での比率」をそれぞれ独立に算出するため、
-  // 1次元化（合算）にはならない。
-  double maxSoft = 0;
-  double maxHard = 0;
-  for (final e in energies.values) {
-    if (e.soft > maxSoft) maxSoft = e.soft;
-    if (e.hard > maxHard) maxHard = e.hard;
-  }
-  if (maxSoft < 1e-9) maxSoft = 1;
-  if (maxHard < 1e-9) maxHard = 1;
-
-  // top 2 ランクで強調表示。それ以外は薄く控えめに描画。
-  final ranking = energies.entries.toList()
-    ..sort((a, b) => b.value.sortKey.compareTo(a.value.sortKey));
-  final topRanks = <String, int>{
-    for (int i = 0; i < ranking.length; i++) ranking[i].key: i,
-  };
-
-  for (int i = 0; i < dir16.length; i++) {
-    final dir = dir16[i];
-    final energy = energies[dir];
-    if (energy == null) continue;
-
-    final rank = topRanks[dir] ?? 99;
-    if (rank > 1 && energy.soft / maxSoft < 0.35 && energy.hard / maxHard < 0.35) {
-      // 上位2位以外で、かつ両エネルギーが控えめな方角はスキップ
-      continue;
-    }
-
-    final centerDeg = i * 22.5;
-    final startDeg = centerDeg - sectorWidth / 2;
-    final adjustedStart = startDeg < 0 ? startDeg + 360 : startDeg;
-    final s = adjustedStart;
-    final e2 = s + sectorWidth;
-
-    double radius = maxDist;
-    if (dir == 'N') radius = nPolarM < maxDist ? nPolarM : maxDist;
-    if (dir == 'S') radius = sPolarM < maxDist ? sPolarM : maxDist;
-
-    // 内側半分（0 → 50%） = ソフトリング
-    final softPoints = _fanPoints(d, center, s, e2, radius, 0.0, 0.5,
-        radialSteps: radialSteps, arcSteps: arcSteps);
-    // 外側半分（50% → 100%） = ハードリング
-    final hardPoints = _fanPoints(d, center, s, e2, radius, 0.5, 1.0,
-        radialSteps: radialSteps, arcSteps: arcSteps);
-
-    // alpha 計算: 上位ランクほど強調、各エネルギーの量で調整
-    // activeCategory == 'all' のときのみ TOP2 を +0.10 強調 (総合表示で目立たせる)
-    // 他カテゴリは控えめにして、TOP2 と他の差を弱める (カテゴリ別の細部に集中)
-    final isAll = activeCategory == 'all';
-    double rankMul;
-    if (rank == 0) {
-      rankMul = isAll ? 0.85 : 0.75;
-    } else if (rank == 1) {
-      rankMul = isAll ? 0.65 : 0.55;
-    } else {
-      rankMul = 0.4;
-    }
-
-    // 各エネルギーは自分のスケールで正規化（独立保持）
-    final softAlphaBase = (energy.soft / maxSoft).clamp(0.0, 1.0);
-    final hardAlphaBase = (energy.hard / maxHard).clamp(0.0, 1.0);
-
-    // lightMap モードでは alpha を底上げして可視性確保
-    final maxFillA = lightMap ? 170 : 135;
-    final maxBorderA = lightMap ? 230 : 200;
-
-    final softFillA = (softAlphaBase * rankMul * dimFactor * maxFillA).round();
-    final hardFillA = (hardAlphaBase * rankMul * dimFactor * maxFillA).round();
-    final softBorderA = (softAlphaBase * rankMul * dimFactor * maxBorderA).round();
-    final hardBorderA = (hardAlphaBase * rankMul * dimFactor * maxBorderA).round();
-
-    // 設計思想: ソフト=銀月色 / ハード=金陽色 が基本。
-    // ただし activeCategory == 'all' のときは「各方位の dominant カテゴリ色」を
-    // 渡せる (tintByDir)。上部スコアバー (FortuneFilterLabel) と同じ
-    // categoryColors[cat] をそのまま使う (lerp 廃止、2026-05-04 修正)。
-    final tint = tintByDir?[dir];
-    final softColor = tint ?? SolaraColors.energySoft;
-    final hardColor = tint ?? SolaraColors.energyHard;
-
-    // ソフトリング（内側）
-    if (softFillA > 5) {
-      polygons.add(Polygon(
-        points: softPoints,
-        color: softColor.withAlpha(softFillA),
-        borderColor: softColor.withAlpha(softBorderA),
-        borderStrokeWidth: rank == 0 ? 2.0 : 1.2,
-      ));
-    }
-    // ハードリング（外側）
-    if (hardFillA > 5) {
-      polygons.add(Polygon(
-        points: hardPoints,
-        color: hardColor.withAlpha(hardFillA),
-        borderColor: hardColor.withAlpha(hardBorderA),
-        borderStrokeWidth: rank == 0 ? 2.0 : 1.2,
-      ));
-    }
-  }
-  return polygons;
-}
-
-/// 扇形（リング）のポイント列を生成。
-/// innerRatio / outerRatio は radius に対する内側/外側の半径比（0〜1）。
-/// innerRatio=0, outerRatio=1 で従来のフル扇。
+/// 扇形のポイント列を生成 (full fan、innerRatio=0 / outerRatio=1 固定)。
 List<LatLng> _fanPoints(
   Distance d,
   LatLng center,
   double startDeg,
   double endDeg,
-  double radius,
-  double innerRatio,
-  double outerRatio, {
+  double radius, {
   required int radialSteps,
   required int arcSteps,
 }) {
   final points = <LatLng>[];
-  final innerR = radius * innerRatio;
-  final outerR = radius * outerRatio;
-
-  // 始辺: inner → outer
+  // 始辺: 中心 → 外側
   for (int step = 0; step <= radialSteps; step++) {
-    final t = step / radialSteps;
-    final dist = innerR + (outerR - innerR) * t;
+    final dist = radius * step / radialSteps;
     points.add(d.offset(center, dist, startDeg % 360));
   }
   // 外周弧: start → end
   for (int step = 1; step <= arcSteps; step++) {
     final a = startDeg + (endDeg - startDeg) * step / arcSteps;
-    points.add(d.offset(center, outerR, a % 360));
+    points.add(d.offset(center, radius, a % 360));
   }
-  // 終辺: outer → inner
+  // 終辺: 外側 → 中心
   for (int step = radialSteps; step >= 0; step--) {
-    final t = step / radialSteps;
-    final dist = innerR + (outerR - innerR) * t;
+    final dist = radius * step / radialSteps;
     points.add(d.offset(center, dist, endDeg % 360));
-  }
-  // innerR > 0 のとき内周弧を逆順で閉じる
-  if (innerR > 0) {
-    for (int step = arcSteps - 1; step >= 1; step--) {
-      final a = startDeg + (endDeg - startDeg) * step / arcSteps;
-      points.add(d.offset(center, innerR, a % 360));
-    }
   }
   return points;
 }
 
-/// 8方向のコンパスライン — HTML: 8 direction lines, gold dashed
+/// 8方向のコンパスライン — gold dashed、扇状とは独立。
 List<Polyline> buildCompass({required LatLng center, required bool visible}) {
-  if (!visible) return [];
+  if (!visible) return const [];
   final lines = <Polyline>[];
   const d = Distance();
   for (int i = 0; i < 8; i++) {
@@ -321,7 +140,7 @@ List<Polyline> buildCompass({required LatLng center, required bool visible}) {
   return lines;
 }
 
-/// 方位ラベルマーカー（N,NE,E... を3距離に表示）
+/// 方位ラベルマーカー（N,NE,E... を3距離に表示）。
 List<Marker> buildDirLabels({required LatLng center}) {
   final markers = <Marker>[];
   const d = Distance();
