@@ -151,7 +151,10 @@ extension _HoroBottomSheet on HoroscopeScreenState {
         onEdit: _openProfileEditor,
         onReset: _resetWorkingProfile,
       );
-      case 'transit': return HoroTransitPanel(chartMode: _chartMode);
+      case 'transit': return HoroTransitPanel(
+        chartMode: _chartMode,
+        onUpdate: _onTransitUpdate,
+      );
       case 'planets': return HoroPlanetTable(
         natalPlanets: _natalPlanets,
         asc: _asc, mc: _mc,

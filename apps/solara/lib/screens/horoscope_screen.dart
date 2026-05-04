@@ -210,6 +210,18 @@ class HoroscopeScreenState extends State<HoroscopeScreen>
     }
   }
 
+  /// HoroTransitPanel から呼ばれる callback。任意日時で transit/progressed を再計算。
+  /// 永続化なし: パネル側は毎回 `DateTime.now()` で初期化される。
+  Future<void> _onTransitUpdate(DateTime when) async {
+    final p = _baseProfile;
+    if (p == null || !p.isComplete) return;
+    await _fetchRealChart(p, targetDate: when);
+    if (!mounted) return;
+    setState(() {
+      _recalcAspects();
+    });
+  }
+
   /// 編集後の profile を working 側にのみ反映。storage は触らない。
   Future<void> _applyWorkingProfile(SolaraProfile newProfile) async {
     if (!newProfile.isComplete) return;
@@ -226,7 +238,10 @@ class HoroscopeScreenState extends State<HoroscopeScreen>
 
   /// Worker /astro/chart からチャートを取得。失敗時はモック乱数にフォールバック。
   /// _natalPlanets / _secondaryPlanets / _asc / _mc / _houses を更新する。
-  Future<void> _fetchRealChart(SolaraProfile p) async {
+  ///
+  /// [targetDate] 指定時は transit/progressed をその日時で計算 (未指定時は現在)。
+  /// HoroTransitPanel の編集 → onUpdate callback 経由で渡される。
+  Future<void> _fetchRealChart(SolaraProfile p, {DateTime? targetDate}) async {
     // モード判定: nt なら transit, np なら progressed, それ以外は natal のみ
     String mode;
     switch (_chartMode) {
@@ -261,6 +276,7 @@ class HoroscopeScreenState extends State<HoroscopeScreen>
           birthLat: p.birthLat, birthLng: p.birthLng,
           birthTz: p.birthTz, birthTzName: p.birthTzName,
           mode: mode, houseSystem: 'placidus',
+          targetDate: targetDate,
         ),
         fetchChart(
           birthDate: p.birthDate, birthTime: birthTime,
@@ -268,6 +284,7 @@ class HoroscopeScreenState extends State<HoroscopeScreen>
           birthTz: p.birthTz, birthTzName: p.birthTzName,
           mode: mode, houseSystem: 'placidus',
           relocateLat: p.homeLat, relocateLng: p.homeLng,
+          targetDate: targetDate,
         ),
       ]);
       natalChart = results[0];
@@ -287,6 +304,7 @@ class HoroscopeScreenState extends State<HoroscopeScreen>
         houseSystem: 'placidus',
         relocateLat: useRelocate ? p.homeLat : null,
         relocateLng: useRelocate ? p.homeLng : null,
+        targetDate: targetDate,
       );
       // 単一fetchの場合は natal/relocate キャッシュは更新しない
       // (1重円に戻った時に再fetchで埋まる)
