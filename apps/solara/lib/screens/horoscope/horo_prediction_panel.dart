@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import 'horo_antique_icons.dart';
 import 'horo_aspect_description.dart';
+import 'horo_desc_section.dart';
 import 'horo_constants.dart';
 import 'horo_panel_shared.dart';
 
@@ -112,30 +113,19 @@ class HoroPredictionPanel extends StatelessWidget {
                   fontWeight: FontWeight.w600)),
             ),
             const SizedBox(height: 18),
-            _patternDescSection('配置の特徴', data['summary'] ?? '', color),
+            HoroDescSection('配置の特徴', data['summary'] ?? '', color),
             const SizedBox(height: 14),
-            _patternDescSection('ネイタル成立時 (N)', data['N'] ?? '',
+            HoroDescSection('ネイタル成立時 (N)', data['N'] ?? '',
               const Color(0xFFFFD370)),
             const SizedBox(height: 14),
-            _patternDescSection('トランジット活性時 (T)', data['T'] ?? '',
+            HoroDescSection('トランジット活性時 (T)', data['T'] ?? '',
               const Color(0xFF6BB5FF)),
             const SizedBox(height: 14),
-            _patternDescSection('プログレス成立時 (P)', data['P'] ?? '',
+            HoroDescSection('プログレス成立時 (P)', data['P'] ?? '',
               const Color(0xFFB088FF)),
           ]),
       ),
     );
-  }
-
-  Widget _patternDescSection(String label, String body, Color accent) {
-    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Text(label, style: GoogleFonts.cinzel(
-        fontSize: 12, color: accent.withAlpha(220),
-        letterSpacing: 2.0, fontWeight: FontWeight.w600)),
-      const SizedBox(height: 4),
-      Text(body, style: const TextStyle(
-        fontSize: 15, color: Color(0xE6E8E0D0), height: 1.7)),
-    ]);
   }
 
   Widget _activeItem(BuildContext context, String type, Map<String, dynamic> pattern) {

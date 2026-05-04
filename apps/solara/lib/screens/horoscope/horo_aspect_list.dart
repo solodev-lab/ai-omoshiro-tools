@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import 'horo_antique_icons.dart';
 import 'horo_aspect_description.dart';
+import 'horo_desc_section.dart';
 import 'horo_constants.dart';
 import 'horo_panel_shared.dart';
 
@@ -95,27 +96,16 @@ class HoroAspectList extends StatelessWidget {
               style: const TextStyle(fontSize: 12, color: Color(0xFF888888))),
             const SizedBox(height: 18),
             // Quality summary
-            _descSection('性質', desc['summary'] ?? '', color),
+            HoroDescSection('性質', desc['summary'] ?? '', color),
             const SizedBox(height: 14),
             // Theme
-            _descSection('テーマ', desc['theme'] ?? '', const Color(0xFFF6BD60)),
+            HoroDescSection('テーマ', desc['theme'] ?? '', const Color(0xFFF6BD60)),
             const SizedBox(height: 14),
             // Reading
-            _descSection('読み解き', desc['reading'] ?? '', const Color(0xFFF6BD60)),
+            HoroDescSection('読み解き', desc['reading'] ?? '', const Color(0xFFF6BD60)),
           ]),
       ),
     );
-  }
-
-  Widget _descSection(String label, String body, Color accent) {
-    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Text(label, style: GoogleFonts.cinzel(
-        fontSize: 12, color: accent.withAlpha(220),
-        letterSpacing: 2.0, fontWeight: FontWeight.w600)),
-      const SizedBox(height: 4),
-      Text(body, style: const TextStyle(
-        fontSize: 15, color: Color(0xE6E8E0D0), height: 1.7)),
-    ]);
   }
 
   @override
