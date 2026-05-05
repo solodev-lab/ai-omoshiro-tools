@@ -51,6 +51,12 @@ android {
             } else {
                 signingConfigs.getByName("debug")
             }
+            // MainActivity の override が R8 に剥ぎ取られないよう keep ルール追加。
+            // optimize 版は Log.w 呼び出しまで no-op 化する場合があるため標準を使用。
+            proguardFiles(
+                getDefaultProguardFile("proguard-android.txt"),
+                "proguard-rules.pro",
+            )
         }
     }
 }
