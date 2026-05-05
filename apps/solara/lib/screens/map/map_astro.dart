@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:math';
 import 'package:http/http.dart' as http;
+import '../../utils/astro_math.dart';
 import '../../utils/direction_energy.dart';
 import '../../utils/solara_api.dart' show solaraWorkerBase;
 import 'map_constants.dart';
@@ -117,8 +118,6 @@ Future<ChartResult?> fetchChart({
 /// ChartResult からMap画面用の16方位スコアを計算
 /// ============================================================
 
-double _norm360(double d) { d = d % 360; return d < 0 ? d + 360 : d; }
-double _angDist(double a, double b) { final d = (_norm360(a) - _norm360(b)).abs(); return d > 180 ? 360 - d : d; }
 double _cosFall(double dist, double spread) {
   if (dist >= spread) return 0;
   return (1 + cos(pi * dist / spread)) / 2;
@@ -173,7 +172,7 @@ List<Map<String, dynamic>> _findAspects(
     for (int j = jStart; j < k2.length; j++) {
       if (same && i == j) continue;
       final p1 = k1[i], p2 = k2[j];
-      final diff = _angDist(map1[p1]!, same ? map1[p2]! : map2![p2]!);
+      final diff = angDist(map1[p1]!, same ? map1[p2]! : map2![p2]!);
       for (final a in _mapAspects) {
         if ((diff - (a['angle'] as double)).abs() <= (a['orb'] as double)) {
           results.add({'p1': p1, 'p2': '$prefix$p2', 'type': a['name'], 'quality': a['quality'], 'weight': (a['weight'] as double) * wMult});
@@ -322,7 +321,7 @@ ScoreResult scoreAll(ChartResult chart) {
     final c = tComp[e.key]!;
     final contribs = tContribs[e.key]!;
     for (final d in dir16) {
-      final f = _cosFall(_angDist(e.value, _dir16Ang[d]!), _spread);
+      final f = _cosFall(angDist(e.value, _dir16Ang[d]!), _spread);
       sComp[d]!['tSoft'] = sComp[d]!['tSoft']! + c['tSoft']! * f;
       sComp[d]!['tHard'] = sComp[d]!['tHard']! + c['tHard']! * f;
       if (f > 0) {
@@ -337,7 +336,7 @@ ScoreResult scoreAll(ChartResult chart) {
     final c = pComp[e.key]!;
     final contribs = pContribs[e.key]!;
     for (final d in dir16) {
-      final f = _cosFall(_angDist(e.value, _dir16Ang[d]!), _spread);
+      final f = _cosFall(angDist(e.value, _dir16Ang[d]!), _spread);
       sComp[d]!['pSoft'] = sComp[d]!['pSoft']! + c['pSoft']! * f;
       sComp[d]!['pHard'] = sComp[d]!['pHard']! + c['pHard']! * f;
       if (f > 0) {
@@ -371,7 +370,7 @@ ScoreResult scoreAll(ChartResult chart) {
     if (isAngle(e.key)) continue;
     String best = 'N'; double bd = 999;
     for (final d in dir16) {
-      final dd = _angDist(e.value, _dir16Ang[d]!);
+      final dd = angDist(e.value, _dir16Ang[d]!);
       if (dd < bd) { bd = dd; best = d; }
     }
     pDir[e.key] = best;
@@ -463,7 +462,7 @@ ScoreResult scoreAll(ChartResult chart) {
         final c = ctc[p]!;
         final contribs = ctcContribs[p]!;
         for (final d in dir16) {
-          final f = _cosFall(_angDist(tA[p]!, _dir16Ang[d]!), _spread);
+          final f = _cosFall(angDist(tA[p]!, _dir16Ang[d]!), _spread);
           fComp[cat]![d]!['tSoft'] = fComp[cat]![d]!['tSoft']! + c['tSoft']! * f;
           fComp[cat]![d]!['tHard'] = fComp[cat]![d]!['tHard']! + c['tHard']! * f;
           if (f > 0) {
@@ -477,7 +476,7 @@ ScoreResult scoreAll(ChartResult chart) {
         final c = cpc[p] ?? _emptyComp();
         final contribs = cpcContribs[p] ?? const <AspectContribution>[];
         for (final d in dir16) {
-          final f = _cosFall(_angDist(pA[p]!, _dir16Ang[d]!), _spread);
+          final f = _cosFall(angDist(pA[p]!, _dir16Ang[d]!), _spread);
           fComp[cat]![d]!['pSoft'] = fComp[cat]![d]!['pSoft']! + c['pSoft']! * f;
           fComp[cat]![d]!['pHard'] = fComp[cat]![d]!['pHard']! + c['pHard']! * f;
           if (f > 0) {

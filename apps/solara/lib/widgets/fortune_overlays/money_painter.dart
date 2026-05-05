@@ -335,7 +335,7 @@ class _MoneyPainter extends CustomPainter {
       // 着地時の回転から rest へスムーズに吸着
       final endRot = p.spawnRotation + p.fallSpin;
       final settleT = (sinceLand / 0.20).clamp(0.0, 1.0);
-      rot = endRot + (p.restRotation - endRot) * _easeOutCubic(settleT);
+      rot = endRot + (p.restRotation - endRot) * easeOutCubic(settleT);
     }
 
     // フリップ（コインは着地後も微かに、金箔は着地時に止まる）
@@ -686,10 +686,7 @@ class _MoneyPainter extends CustomPainter {
   }
 
   double _easeInQuart(double x) => x * x * x * x;
-  double _easeOutCubic(double x) {
-    final v = 1 - x;
-    return 1 - v * v * v;
-  }
+  // _easeOutCubic は _common.dart の easeOutCubic を共用 (audit T1 #7, 2026-05-05)
 
   @override
   bool shouldRepaint(covariant _MoneyPainter old) => old.t != t;

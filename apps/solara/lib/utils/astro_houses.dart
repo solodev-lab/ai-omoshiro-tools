@@ -1,5 +1,7 @@
 import 'dart:math';
 
+import 'astro_math.dart';
+
 /// ============================================================
 /// Solara Astro Houses — Phase M2 真のアストロカートグラフィー
 ///
@@ -15,10 +17,6 @@ import 'dart:math';
 
 double _toRad(double d) => d * pi / 180;
 double _toDeg(double r) => r * 180 / pi;
-double _norm360(double d) {
-  d = d % 360;
-  return d < 0 ? d + 360 : d;
-}
 
 double _clamp(double v, double lo, double hi) =>
     v < lo ? lo : (v > hi ? hi : v);
@@ -64,7 +62,7 @@ HousesResult calcHousesRelocate({
   String houseSystem = 'placidus',
 }) {
   final lstHome = _recoverLstFromMc(natalMc);
-  final lstTap = _norm360(lstHome + (tapLng - natalLng));
+  final lstTap = normalize360(lstHome + (tapLng - natalLng));
   return _housesFromLst(
     lstDeg: lstTap,
     lat: tapLat,
@@ -80,18 +78,18 @@ HousesResult _housesFromLst({
 }) {
   final asc = _calcAscendant(lstDeg, lat, _obliquityDeg);
   final mc = _calcMc(lstDeg, _obliquityDeg);
-  final dsc = _norm360(asc + 180);
-  final ic = _norm360(mc + 180);
+  final dsc = normalize360(asc + 180);
+  final ic = normalize360(mc + 180);
 
   late List<double> houses;
   late String system;
   if (houseSystem == 'whole_sign') {
     final start = (asc / 30).floor() * 30.0;
-    houses = List<double>.generate(12, (i) => _norm360(start + i * 30.0));
+    houses = List<double>.generate(12, (i) => normalize360(start + i * 30.0));
     system = 'whole_sign';
   } else if (lat.abs() > 66) {
     // 極域: Placidus が不能 → Equal house にフォールバック
-    houses = List<double>.generate(12, (i) => _norm360(asc + i * 30.0));
+    houses = List<double>.generate(12, (i) => normalize360(asc + i * 30.0));
     system = 'equal';
   } else {
     houses = _placidusCusps(mc, asc, lat);
@@ -112,7 +110,7 @@ HousesResult _housesFromLst({
 double _recoverLstFromMc(double mcDeg) {
   final mcR = _toRad(mcDeg);
   final cosEps = cos(_toRad(_obliquityDeg));
-  return _norm360(_toDeg(atan2(sin(mcR) * cosEps, cos(mcR))));
+  return normalize360(_toDeg(atan2(sin(mcR) * cosEps, cos(mcR))));
 }
 
 /// ASC = atan2(-cos(LST), sin(ε)·tan(lat) + cos(ε)·sin(LST)) [+180°]
@@ -120,7 +118,7 @@ double _calcAscendant(double lstDeg, double lat, double obliquityDeg) {
   final lstR = _toRad(lstDeg);
   final epsR = _toRad(obliquityDeg);
   final latR = _toRad(lat);
-  return _norm360(
+  return normalize360(
     _toDeg(atan2(
       -cos(lstR),
       sin(epsR) * tan(latR) + cos(epsR) * sin(lstR),
@@ -133,7 +131,7 @@ double _calcAscendant(double lstDeg, double lat, double obliquityDeg) {
 double _calcMc(double lstDeg, double obliquityDeg) {
   final lstR = _toRad(lstDeg);
   final epsR = _toRad(obliquityDeg);
-  return _norm360(
+  return normalize360(
     _toDeg(atan2(sin(lstR), cos(lstR) * cos(epsR))),
   );
 }
@@ -148,16 +146,16 @@ List<double> _placidusCusps(double mc, double asc, double lat) {
   final houses = List<double>.filled(12, 0.0);
   houses[0] = asc;
   houses[9] = mc;
-  houses[6] = _norm360(asc + 180);
-  houses[3] = _norm360(mc + 180);
+  houses[6] = normalize360(asc + 180);
+  houses[3] = normalize360(mc + 180);
 
   final mcR = _toRad(mc);
-  final ramc = _norm360(_toDeg(atan2(sin(mcR) * cosEps, cos(mcR))));
+  final ramc = normalize360(_toDeg(atan2(sin(mcR) * cosEps, cos(mcR))));
 
   double cusp(int house) {
     double lon = (house <= 12)
-        ? _norm360(mc + (house - 10) * 30.0)
-        : _norm360(asc + (house - 1) * 30.0);
+        ? normalize360(mc + (house - 10) * 30.0)
+        : normalize360(asc + (house - 1) * 30.0);
     for (int iter = 0; iter < 50; iter++) {
       final sinDecl = _clamp(sin(_toRad(lon)) * sinEps, -1, 1);
       final decl = asin(sinDecl);
@@ -174,7 +172,7 @@ List<double> _placidusCusps(double mc, double asc, double lat) {
         targetRA = ramc - 210 + ad / 3;
       }
       final raR = _toRad(targetRA);
-      final newLon = _norm360(_toDeg(atan2(sin(raR), cos(raR) * cosEps)));
+      final newLon = normalize360(_toDeg(atan2(sin(raR), cos(raR) * cosEps)));
       final delta = (newLon - lon).abs();
       if (delta < 0.001 || delta > 359.999) break;
       lon = newLon;
@@ -186,10 +184,10 @@ List<double> _placidusCusps(double mc, double asc, double lat) {
   houses[11] = cusp(12);
   houses[1] = cusp(2);
   houses[2] = cusp(3);
-  houses[4] = _norm360(houses[10] + 180);
-  houses[5] = _norm360(houses[11] + 180);
-  houses[7] = _norm360(houses[1] + 180);
-  houses[8] = _norm360(houses[2] + 180);
+  houses[4] = normalize360(houses[10] + 180);
+  houses[5] = normalize360(houses[11] + 180);
+  houses[7] = normalize360(houses[1] + 180);
+  houses[8] = normalize360(houses[2] + 180);
   return houses;
 }
 

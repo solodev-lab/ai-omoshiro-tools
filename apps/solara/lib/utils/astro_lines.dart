@@ -3,6 +3,8 @@ import 'dart:ui' show Offset;
 
 import 'package:latlong2/latlong.dart';
 
+import 'astro_math.dart';
+
 /// ============================================================
 /// Solara Astro Lines — Phase M2 論点3 (アスペクト線 / アストロカートグラフィ)
 ///
@@ -49,10 +51,6 @@ String astroFrameKey(AstroFrame f) => switch (f) {
 
 double _toRad(double d) => d * pi / 180;
 double _toDeg(double r) => r * 180 / pi;
-double _norm360(double d) {
-  d = d % 360;
-  return d < 0 ? d + 360 : d;
-}
 
 /// 経度を -180..180 に正規化 (flutter_map の LatLng 用)
 double _normLng(double d) {
@@ -94,7 +92,7 @@ class AstroLine {
 double _gmstHoursFromBaseline(double baselineMc, double baselineLng) {
   final mcR = _toRad(baselineMc);
   final cosEps = cos(_toRad(_obliquityDeg));
-  final lstBase = _norm360(_toDeg(atan2(sin(mcR) * cosEps, cos(mcR))));
+  final lstBase = normalize360(_toDeg(atan2(sin(mcR) * cosEps, cos(mcR))));
   // GMST は時単位、LST は度単位
   return ((lstBase - baselineLng) / 15) % 24;
 }
@@ -144,7 +142,7 @@ Map<String, double> solarArcPlanets({
   //   cos(α)·cos(δ) = cos(λ),  sin(α)·cos(δ) = cos(ε)·sin(λ)
   final dec = asin(sin(eR) * sin(lR));
   final ra = atan2(cos(eR) * sin(lR), cos(lR));
-  return (ra: _norm360(_toDeg(ra)), dec: _toDeg(dec));
+  return (ra: normalize360(_toDeg(ra)), dec: _toDeg(dec));
 }
 
 /// MC ライン: lng_obs = α - GMST*15、緯度範囲全体で縦線
@@ -200,7 +198,7 @@ List<List<LatLng>> _horizonLine({
     // DSC: 時角 H = +h
     final hSigned = ascending ? -h : h;
     final lstR = raR + hSigned;
-    final lst = _norm360(_toDeg(lstR));
+    final lst = normalize360(_toDeg(lstR));
     double lng = lst - gmstHours * 15;
     lng = _normLng(lng);
 

@@ -93,7 +93,7 @@ extension _HoroChartData on HoroscopeScreenState {
   }
 
   void _addAspect(String p1, String p2, double lon1, double lon2, {String label = 'N-N', bool isAngle = false}) {
-    final diff = _angDist(lon1, lon2);
+    final diff = angDist(lon1, lon2);
     for (final asp in aspectTypes) {
       final aspAngle = asp['angle'] as double;
       final aspOrb = asp['orb'] as double;
@@ -112,11 +112,6 @@ extension _HoroChartData on HoroscopeScreenState {
   double _approxSunLon(int m, int d) {
     final dayOfYear = DateTime(2000, m, d).difference(DateTime(2000, 3, 21)).inDays;
     return (dayOfYear * 360.0 / 365.25) % 360;
-  }
-
-  double _angDist(double a, double b) {
-    final d = (a - b).abs() % 360;
-    return d > 180 ? 360 - d : d;
   }
 
   /// フィルター判定（trueならアクティブ、falseなら暗く表示）
