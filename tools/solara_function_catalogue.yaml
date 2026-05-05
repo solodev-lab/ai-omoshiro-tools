@@ -185,7 +185,7 @@ functions:
     signature: "Widget _buildBasisCard(List<ForecastDay> days)"
     doc_jp: "表示期間 + 年間ベストの統合カード （Forecast スコアは出生情報のみで決まり地点に依存しないため基準地は表示しない）"
     name_words_en: ["build", "basis", "card"]
-    comment_keywords_jp: ["スコアは出生情報のみで決まり地点に依存しないため基準地は表示しない", "年間ベストの統合カード", "表示期間", "Forecast"]
+    comment_keywords_jp: ["年間ベストの統合カード", "表示期間", "Forecast", "スコアは出生情報のみで決まり地点に依存しないため基準地は表示しない"]
   - id: "a90c52286759"
     file: "screens/forecast_screen.dart"
     line: 264
@@ -209,7 +209,7 @@ functions:
     signature: "Widget _buildHeatmap(List<ForecastDay> days)"
     doc_jp: "ヒートマップ — 12ヶ月 × ~31日 グリッド"
     name_words_en: ["build", "heatmap"]
-    comment_keywords_jp: ["ヶ月", "ヒートマップ", "グリッド"]
+    comment_keywords_jp: ["グリッド", "ヒートマップ", "ヶ月"]
   - id: "6ae928172ddd"
     file: "screens/forecast_screen.dart"
     line: 374
@@ -217,7 +217,7 @@ functions:
     signature: "Widget _buildColorModeToggle()"
     doc_jp: "3-way セグメント: 相対 / 絶対 / カテゴリ ＋ 色方向トグル（category モードで無効化） ＋ ランクセグメント 1位/2位（category モードのみ有効） 全て常に表示（位置を固定、モードに応じて活性/不活性が切り替わる）"
     name_words_en: ["build", "color", "mode", "toggle"]
-    comment_keywords_jp: ["相対", "全て常に表示", "セグメント", "絶対", "ランクセグメント", "category", "モードで無効化", "位置を固定", "色方向トグル", "不活性が切り替わる", "way", "モードのみ有効", "モードに応じて活性", "カテゴリ"]
+    comment_keywords_jp: ["不活性が切り替わる", "位置を固定", "モードのみ有効", "色方向トグル", "モードに応じて活性", "way", "ランクセグメント", "全て常に表示", "絶対", "相対", "category", "セグメント", "モードで無効化", "カテゴリ"]
   - id: "a532f37e880b"
     file: "screens/forecast_screen.dart"
     line: 415
@@ -281,7 +281,7 @@ functions:
     signature: "Color _gradientColor(double ratio)"
     doc_jp: "赤↔黄↔緑のグラデ。_highColor='red' ならratio反転で赤が高い。"
     name_words_en: ["gradient", "color"]
-    comment_keywords_jp: ["緑のグラデ", "red", "ならratio反転で赤が高い", "highColor"]
+    comment_keywords_jp: ["ならratio反転で赤が高い", "highColor", "緑のグラデ", "red"]
   - id: "8133bace7906"
     file: "screens/forecast_screen.dart"
     line: 568
@@ -289,7 +289,7 @@ functions:
     signature: "Color _categoryColor(ForecastDay d, double minV, double range)"
     doc_jp: "カテゴリ色。_categoryRank (1 or 2) に応じてその日の上位 N 位カテゴリ色を返す。 overall が年内で高いほど明るく（alpha 大）、低いほど暗く（alpha 小）。"
     name_words_en: ["category", "color"]
-    comment_keywords_jp: ["低いほど暗く", "overall", "が年内で高いほど明るく", "に応じてその日の上位", "位カテゴリ色を返す", "alpha", "or", "カテゴリ色", "categoryRank"]
+    comment_keywords_jp: ["or", "alpha", "overall", "低いほど暗く", "が年内で高いほど明るく", "カテゴリ色", "に応じてその日の上位", "位カテゴリ色を返す", "categoryRank"]
   - id: "1c0171d1b8f1"
     file: "screens/forecast_screen.dart"
     line: 583
@@ -345,7 +345,7 @@ functions:
     signature: "void injectGalaxySampleData(   List<DailyReading?> days,   List<GalaxyCycle> cycles,   DateTime cycleStart,   int totalDays, )"
     doc_jp: "デモ用サンプルデータ: Cycleに25個の星 + Star Atlasに61全星座"
     name_words_en: ["inject", "galaxy", "sample", "data"]
-    comment_keywords_jp: ["Star", "Atlasに", "全星座", "Cycleに", "デモ用サンプルデータ", "個の星"]
+    comment_keywords_jp: ["個の星", "Cycleに", "Atlasに", "全星座", "デモ用サンプルデータ", "Star"]
   - id: "accda5634ca6"
     file: "screens/galaxy/galaxy_sample_data.dart"
     line: 41
@@ -393,7 +393,7 @@ functions:
     signature: "void regenerateBackground()"
     doc_jp: "タブ切替でGalaxyに入ってきた時に、背景 (ネビュラ位置・色・星の位置) を再生成するための公開メソッド。main.dart から呼ばれる。"
     name_words_en: ["regenerate", "background"]
-    comment_keywords_jp: ["ネビュラ位置・色・星の位置", "から呼ばれる", "main", "dart", "を再生成するための公開メソッド", "タブ切替でGalaxyに入ってきた時に", "背景"]
+    comment_keywords_jp: ["dart", "を再生成するための公開メソッド", "から呼ばれる", "ネビュラ位置・色・星の位置", "背景", "main", "タブ切替でGalaxyに入ってきた時に"]
   - id: "05424fa9de96"
     file: "screens/galaxy_screen.dart"
     line: 115
@@ -585,7 +585,7 @@ functions:
     signature: "void _debugTriggerFullMoon()"
     doc_jp: "満月トリガー: 意図が無ければダミーをセット → `if (isFullMoon)` ブロックの下流を実行"
     name_words_en: ["debug", "trigger", "full", "moon"]
-    comment_keywords_jp: ["意図が無ければダミーをセット", "ブロックの下流を実行", "満月トリガー", "if", "isFullMoon"]
+    comment_keywords_jp: ["ブロックの下流を実行", "isFullMoon", "if", "満月トリガー", "意図が無ければダミーをセット"]
   - id: "5ed56feadf2b"
     file: "screens/galaxy_screen.dart"
     line: 688
@@ -593,7 +593,7 @@ functions:
     signature: "Future<void> _debugTriggerCatasterism() async"
     doc_jp: "刻星化トリガー: フル完了フロー模擬 - ダミー過去readings保存 → _loadDataで cycle が formConstellation 経由で形成 - 意図+満月記録ダミー → catasterism overlay 表示 - ユーザーが「手放せた / まだ途中」押下 → _onCatasterismResult → formation animation"
     name_words_en: ["debug", "trigger", "catasterism"]
-    comment_keywords_jp: ["formConstellation", "catasterism", "意図", "loadDataで", "animation", "onCatasterismResult", "押下", "ダミー過去readings保存", "刻星化トリガー", "cycle", "満月記録ダミー", "手放せた", "ユーザーが", "フル完了フロー模擬", "overlay", "まだ途中", "formation", "経由で形成", "表示"]
+    comment_keywords_jp: ["catasterism", "経由で形成", "cycle", "満月記録ダミー", "フル完了フロー模擬", "animation", "表示", "onCatasterismResult", "loadDataで", "overlay", "押下", "formConstellation", "手放せた", "ユーザーが", "formation", "ダミー過去readings保存", "刻星化トリガー", "意図", "まだ途中"]
   - id: "6b13435d347f"
     file: "screens/galaxy_screen.dart"
     line: 706
@@ -601,7 +601,7 @@ functions:
     signature: "Future<void> _debugTriggerCycleCompletion() async"
     doc_jp: "サイクル完了トリガー: ダミー過去readingsを保存 → `_loadData` 再実行で `if (pastReadings.isNotEmpty)` ブロックの下流(formConstellation+保存)が走る"
     name_words_en: ["debug", "trigger", "cycle", "completion"]
-    comment_keywords_jp: ["formConstellation", "サイクル完了トリガー", "ダミー過去readingsを保存", "pastReadings", "isNotEmpty", "が走る", "保存", "ブロックの下流", "loadData", "再実行で", "if"]
+    comment_keywords_jp: ["loadData", "pastReadings", "ブロックの下流", "isNotEmpty", "formConstellation", "if", "サイクル完了トリガー", "ダミー過去readingsを保存", "保存", "再実行で", "が走る"]
   - id: "f46315aa371b"
     file: "screens/galaxy_screen.dart"
     line: 765
@@ -617,7 +617,7 @@ functions:
     signature: "void _onCatasterismResult(bool released)"
     doc_jp: "刻星化判定後 (手放せた / まだ途中) → formation animation 起動 _completedCycles の最新を演出対象にする (なければ何もしない)"
     name_words_en: ["on", "catasterism", "result"]
-    comment_keywords_jp: ["animation", "まだ途中", "の最新を演出対象にする", "刻星化判定後", "completedCycles", "formation", "手放せた", "なければ何もしない", "起動"]
+    comment_keywords_jp: ["起動", "completedCycles", "刻星化判定後", "formation", "animation", "なければ何もしない", "の最新を演出対象にする", "まだ途中", "手放せた"]
   - id: "3e5f2bd20068"
     file: "screens/galaxy_screen.dart"
     line: 833
@@ -625,7 +625,7 @@ functions:
     signature: "void _onFormationComplete()"
     doc_jp: "formation animation 完了 → オーバーレイ閉じてStar Atlasタブへ自動遷移"
     name_words_en: ["on", "formation", "complete"]
-    comment_keywords_jp: ["animation", "オーバーレイ閉じてStar", "formation", "完了", "Atlasタブへ自動遷移"]
+    comment_keywords_jp: ["オーバーレイ閉じてStar", "formation", "animation", "Atlasタブへ自動遷移", "完了"]
   - id: "4d66ad856eec"
     file: "screens/horoscope/horo_antique_icons.dart"
     line: 37
@@ -665,7 +665,7 @@ functions:
     signature: "Path _birthStar()"
     doc_jp: "✧ Birth — 4-point diamond star"
     name_words_en: ["birth", "star"]
-    comment_keywords_jp: ["star", "diamond", "point", "Birth"]
+    comment_keywords_jp: ["diamond", "Birth", "point", "star"]
   - id: "0639ba343884"
     file: "screens/horoscope/horo_antique_icons.dart"
     line: 142
@@ -673,7 +673,7 @@ functions:
     signature: "Path _crescent()"
     doc_jp: "☾ Crescent moon with small accompanying star"
     name_words_en: ["crescent"]
-    comment_keywords_jp: ["small", "accompanying", "star", "moon", "with", "Crescent"]
+    comment_keywords_jp: ["small", "star", "with", "Crescent", "accompanying", "moon"]
   - id: "763cc29a0dfb"
     file: "screens/horoscope/horo_antique_icons.dart"
     line: 157
@@ -681,7 +681,7 @@ functions:
     signature: "Path _compassStar()"
     doc_jp: "⚝ 6-point compass star (two overlapping triangles)"
     name_words_en: ["compass", "star"]
-    comment_keywords_jp: ["point", "compass", "triangles", "two", "star", "overlapping"]
+    comment_keywords_jp: ["point", "star", "two", "overlapping", "compass", "triangles"]
   - id: "fa2a1564b72d"
     file: "screens/horoscope/horo_antique_icons.dart"
     line: 177
@@ -689,7 +689,7 @@ functions:
     signature: "Path _sunRays()"
     doc_jp: "☉ Sun with 8 rays"
     name_words_en: ["sun", "rays"]
-    comment_keywords_jp: ["with", "rays", "Sun"]
+    comment_keywords_jp: ["with", "Sun", "rays"]
   - id: "94050350d063"
     file: "screens/horoscope/horo_antique_icons.dart"
     line: 192
@@ -697,7 +697,7 @@ functions:
     signature: "Path _asterisk()"
     doc_jp: "⚹ 6-arm asterisk (alchemy-style)"
     name_words_en: ["asterisk"]
-    comment_keywords_jp: ["style", "asterisk", "alchemy", "arm"]
+    comment_keywords_jp: ["arm", "asterisk", "alchemy", "style"]
   - id: "bd268df36b5c"
     file: "screens/horoscope/horo_antique_icons.dart"
     line: 211
@@ -705,7 +705,7 @@ functions:
     signature: "Path _triangleOrnate()"
     doc_jp: "△ Ornate triangle (alchemy fire with flourish)"
     name_words_en: ["triangle", "ornate"]
-    comment_keywords_jp: ["alchemy", "fire", "triangle", "Ornate", "flourish", "with"]
+    comment_keywords_jp: ["with", "fire", "Ornate", "triangle", "flourish", "alchemy"]
   - id: "a52c0fe12748"
     file: "screens/horoscope/horo_antique_icons.dart"
     line: 228
@@ -713,7 +713,7 @@ functions:
     signature: "Path _eightPointStar()"
     doc_jp: "✦ 8-point star (pattern)"
     name_words_en: ["eight", "point", "star"]
-    comment_keywords_jp: ["star", "point", "pattern"]
+    comment_keywords_jp: ["pattern", "point", "star"]
   - id: "0be2d1804bdc"
     file: "screens/horoscope/horo_antique_icons.dart"
     line: 241
@@ -721,7 +721,7 @@ functions:
     signature: "Path _ornateStarCrescent()"
     doc_jp: "✦ Ornate star with crescent (reading)"
     name_words_en: ["ornate", "star", "crescent"]
-    comment_keywords_jp: ["reading", "Ornate", "star", "crescent", "with"]
+    comment_keywords_jp: ["star", "reading", "Ornate", "crescent", "with"]
   - id: "26c31faa9293"
     file: "screens/horoscope/horo_antique_icons.dart"
     line: 257
@@ -729,7 +729,7 @@ functions:
     signature: "Path _cycleSpiral()"
     doc_jp: "Lunar cycle — circular arc with arrowhead + center dot (cycle/recurrence)"
     name_words_en: ["cycle", "spiral"]
-    comment_keywords_jp: ["recurrence", "circular", "arc", "Lunar", "with", "center", "dot", "arrowhead", "cycle"]
+    comment_keywords_jp: ["arrowhead", "center", "cycle", "arc", "recurrence", "Lunar", "dot", "with", "circular"]
   - id: "66be04c403c9"
     file: "screens/horoscope/horo_antique_icons.dart"
     line: 278
@@ -745,7 +745,7 @@ functions:
     signature: "Map<String, String> buildAspectDescription(String p1, String p2, String aspectType)"
     doc_jp: "アスペクト説明を生成 (3セクション) title: \"太陽 トライン 月\" 形式 theme: 両惑星のテーマ quality: アスペクトの性質 reading: 組み合わせ解釈 (短文)"
     name_words_en: ["build", "aspect", "description"]
-    comment_keywords_jp: ["reading", "形式", "アスペクト説明を生成", "組み合わせ解釈", "theme", "トライン", "セクション", "quality", "短文", "アスペクトの性質", "両惑星のテーマ", "title", "太陽"]
+    comment_keywords_jp: ["短文", "セクション", "quality", "形式", "アスペクトの性質", "reading", "title", "トライン", "theme", "組み合わせ解釈", "アスペクト説明を生成", "太陽", "両惑星のテーマ"]
   - id: "c6b41c714de3"
     file: "screens/horoscope/horo_aspect_list.dart"
     line: 21
@@ -769,7 +769,7 @@ functions:
     signature: "Path zodiacGlyph(int index)"
     doc_jp: "Zodiac sign paths (index 0-11 = Aries..Pisces)"
     name_words_en: ["zodiac", "glyph"]
-    comment_keywords_jp: ["Pisces", "sign", "Aries", "paths", "index", "Zodiac"]
+    comment_keywords_jp: ["Zodiac", "Aries", "index", "paths", "sign", "Pisces"]
   - id: "245cc31a7ce2"
     file: "screens/horoscope/horo_astro_glyphs.dart"
     line: 28
@@ -777,7 +777,7 @@ functions:
     signature: "Path planetGlyph(String key)"
     doc_jp: "Planet glyph paths by key"
     name_words_en: ["planet", "glyph"]
-    comment_keywords_jp: ["by", "paths", "glyph", "key", "Planet"]
+    comment_keywords_jp: ["paths", "Planet", "key", "by", "glyph"]
   - id: "d252ddad15ab"
     file: "screens/horoscope/horo_astro_glyphs.dart"
     line: 49
@@ -961,7 +961,7 @@ functions:
     signature: "Widget _mysticalBackdrop({required Widget child})"
     doc_jp: "Mystical cosmic backdrop: [1] deep radial base color [2] slowly rotating nebula image (full-screen, 25% opacity) [3] subtle vignette over the whole thing"
     name_words_en: ["mystical", "backdrop"]
-    comment_keywords_jp: ["thing", "Mystical", "over", "image", "subtle", "backdrop", "slowly", "cosmic", "full", "base", "vignette", "the", "deep", "radial", "opacity", "whole", "screen", "nebula", "color", "rotating"]
+    comment_keywords_jp: ["thing", "full", "image", "radial", "slowly", "subtle", "Mystical", "backdrop", "nebula", "the", "cosmic", "deep", "vignette", "opacity", "whole", "rotating", "color", "screen", "over", "base"]
   - id: "6ab9e474c451"
     file: "screens/horoscope/horo_backdrop.dart"
     line: 81
@@ -1033,7 +1033,7 @@ functions:
     signature: "void _generateTransitPlanets()"
     doc_jp: "HTML: transit = current sky positions (mock: seed from today's date)"
     name_words_en: ["generate", "transit", "planets"]
-    comment_keywords_jp: ["from", "today", "HTML", "transit", "positions", "mock", "sky", "date", "current", "seed"]
+    comment_keywords_jp: ["current", "seed", "date", "positions", "from", "today", "HTML", "mock", "transit", "sky"]
   - id: "ed89f74648a6"
     file: "screens/horoscope/horo_chart_data.dart"
     line: 41
@@ -1041,7 +1041,7 @@ functions:
     signature: "void _generateProgressedPlanets()"
     doc_jp: "HTML: progressed = 1 day = 1 year method (mock)"
     name_words_en: ["generate", "progressed", "planets"]
-    comment_keywords_jp: ["year", "method", "HTML", "day", "mock", "progressed"]
+    comment_keywords_jp: ["year", "day", "progressed", "HTML", "mock", "method"]
   - id: "b015f7ac98f7"
     file: "screens/horoscope/horo_chart_data.dart"
     line: 60
@@ -1049,7 +1049,7 @@ functions:
     signature: "void _recalcAspects()"
     doc_jp: "Recalculate aspects based on current chart mode"
     name_words_en: ["recalc", "aspects"]
-    comment_keywords_jp: ["on", "mode", "aspects", "based", "Recalculate", "current", "chart"]
+    comment_keywords_jp: ["aspects", "current", "on", "based", "chart", "mode", "Recalculate"]
   - id: "a0bd777c79cf"
     file: "screens/horoscope/horo_chart_data.dart"
     line: 95
@@ -1073,7 +1073,7 @@ functions:
     signature: "bool _aspectPassesFilter(Map<String, dynamic> a)"
     doc_jp: "フィルター判定（trueならアクティブ、falseなら暗く表示）"
     name_words_en: ["aspect", "passes", "filter"]
-    comment_keywords_jp: ["フィルター判定", "trueならアクティブ", "falseなら暗く表示"]
+    comment_keywords_jp: ["trueならアクティブ", "falseなら暗く表示", "フィルター判定"]
   - id: "412699c275b9"
     file: "screens/horoscope/horo_chart_painter.dart"
     line: 28
@@ -1097,7 +1097,7 @@ functions:
     signature: "void _drawCenterSerif(Canvas canvas, double cx, double y, String text,       double fontSize, Color color,       {FontWeight weight = FontWeight.w400,       double letterSpacing = 0.3})"
     doc_jp: "Draw centered Cinzel serif text (視認性優先 — Cormorant Garamondは廃止)"
     name_words_en: ["draw", "center", "serif"]
-    comment_keywords_jp: ["centered", "Cormorant", "視認性優先", "Garamondは廃止", "Draw", "text", "serif", "Cinzel"]
+    comment_keywords_jp: ["Cormorant", "centered", "text", "Garamondは廃止", "Draw", "Cinzel", "視認性優先", "serif"]
   - id: "0b7dcc23f654"
     file: "screens/horoscope/horo_chart_painter.dart"
     line: 557
@@ -1105,7 +1105,7 @@ functions:
     signature: "void _drawVectorGlyph(Canvas canvas, Path glyph, Color color,       double cx, double cy, double size,       {double strokeWidth = 1.2, bool glow = false, double glowIntensity = 1.0})"
     doc_jp: "Draw a vector glyph (Path) centered at (cx, cy) with given size. Glyph paths are defined in a 24×24 unit box."
     name_words_en: ["draw", "vector", "glyph"]
-    comment_keywords_jp: ["cx", "centered", "given", "at", "Glyph", "are", "vector", "Draw", "defined", "unit", "box", "in", "paths", "glyph", "Path", "cy", "with", "size"]
+    comment_keywords_jp: ["cx", "paths", "centered", "in", "vector", "Glyph", "Draw", "size", "at", "Path", "given", "unit", "defined", "with", "box", "glyph", "are", "cy"]
   - id: "19d602f1650b"
     file: "screens/horoscope/horo_chart_painter.dart"
     line: 593
@@ -1113,7 +1113,7 @@ functions:
     signature: "Map<String, double> _spreadOverlappingPlanets(       Map<String, double> src, {       double minGapDeg = 8.0,       Map<String, double>? anchors,   })"
     doc_jp: "重なった惑星の表示経度を外側に広げて衝突回避。 真の位置は変えず、グリフ表示用の displayLon を返す。 [anchors] はASC/MC/DSC/IC等の固定基準点 — これらは動かさず、 惑星側を押し退ける。"
     name_words_en: ["spread", "overlapping", "planets"]
-    comment_keywords_jp: ["グリフ表示用の", "displayLon", "anchors", "はASC", "IC等の固定基準点", "MC", "DSC", "真の位置は変えず", "重なった惑星の表示経度を外側に広げて衝突回避", "惑星側を押し退ける", "を返す", "これらは動かさず"]
+    comment_keywords_jp: ["グリフ表示用の", "anchors", "displayLon", "MC", "はASC", "DSC", "真の位置は変えず", "重なった惑星の表示経度を外側に広げて衝突回避", "惑星側を押し退ける", "これらは動かさず", "を返す", "IC等の固定基準点"]
   - id: "afa3798132b1"
     file: "screens/horoscope/horo_chart_painter.dart"
     line: 671
@@ -1137,7 +1137,7 @@ functions:
     signature: "List<Widget> _buildZodiacImages(double chartSize, double asc)"
     doc_jp: "外周12星座画像 (黒透過 + 輝度→alpha)"
     name_words_en: ["build", "zodiac", "images"]
-    comment_keywords_jp: ["輝度", "外周", "黒透過", "alpha", "星座画像"]
+    comment_keywords_jp: ["星座画像", "alpha", "輝度", "黒透過", "外周"]
   - id: "52645988cf44"
     file: "screens/horoscope/horo_chart_view.dart"
     line: 42
@@ -1281,7 +1281,7 @@ functions:
     signature: "Widget horoAntiqueHeader(AntiqueIcon icon, String label, {double iconSize = 18})"
     doc_jp: "Helper: antique-style panel header row (icon + label)."
     name_words_en: ["horo", "antique", "header"]
-    comment_keywords_jp: ["header", "panel", "row", "style", "Helper", "icon", "label", "antique"]
+    comment_keywords_jp: ["style", "icon", "row", "header", "label", "panel", "antique", "Helper"]
   - id: "25f719c81feb"
     file: "screens/horoscope/horo_panel_shared.dart"
     line: 116
@@ -1289,7 +1289,7 @@ functions:
     signature: "String horoActivePatternKey(String type, Map<String, dynamic> pattern)"
     doc_jp: "アクティブパターン (detectPatterns の結果) 1件を一意に識別するキー。 同じタイプでも惑星組合せが違うパターンは別キーになる。"
     name_words_en: ["horo", "active", "pattern", "key"]
-    comment_keywords_jp: ["detectPatterns", "アクティブパターン", "件を一意に識別するキー", "同じタイプでも惑星組合せが違うパターンは別キーになる", "の結果"]
+    comment_keywords_jp: ["アクティブパターン", "の結果", "件を一意に識別するキー", "同じタイプでも惑星組合せが違うパターンは別キーになる", "detectPatterns"]
   - id: "58c169fbc0c8"
     file: "screens/horoscope/horo_panel_shared.dart"
     line: 126
@@ -1297,7 +1297,7 @@ functions:
     signature: "String horoPredictionKey(Map<String, dynamic> pred)"
     doc_jp: "予測 (predictPatternCompletions の結果) 1件を一意に識別するキー。"
     name_words_en: ["horo", "prediction", "key"]
-    comment_keywords_jp: ["予測", "の結果", "件を一意に識別するキー", "predictPatternCompletions"]
+    comment_keywords_jp: ["predictPatternCompletions", "の結果", "予測", "件を一意に識別するキー"]
   - id: "13b9f1d25e0f"
     file: "screens/horoscope/horo_panel_shared.dart"
     line: 144
@@ -1409,7 +1409,7 @@ functions:
     signature: "String _buildFetchKey()"
     doc_jp: "入力パラメータからキーを生成し、変化していれば再fetch。 出生地名/現住所名/houses が変わると別の解説が必要なため。"
     name_words_en: ["build", "fetch", "key"]
-    comment_keywords_jp: ["が変わると別の解説が必要なため", "変化していれば再fetch", "入力パラメータからキーを生成し", "現住所名", "出生地名", "houses"]
+    comment_keywords_jp: ["入力パラメータからキーを生成し", "houses", "変化していれば再fetch", "が変わると別の解説が必要なため", "現住所名", "出生地名"]
   - id: "0f248b37caab"
     file: "screens/horoscope/horo_relocation_panel.dart"
     line: 84
@@ -1425,7 +1425,7 @@ functions:
     signature: "List<HouseShift> _computeAllPositions()"
     doc_jp: "全惑星の natal vs relocate ハウス位置を抽出 (変化なし含む)"
     name_words_en: ["compute", "all", "positions"]
-    comment_keywords_jp: ["relocate", "ハウス位置を抽出", "全惑星の", "vs", "natal", "変化なし含む"]
+    comment_keywords_jp: ["全惑星の", "ハウス位置を抽出", "vs", "変化なし含む", "relocate", "natal"]
   - id: "90d021ad7cf7"
     file: "screens/horoscope/horo_relocation_panel.dart"
     line: 107
@@ -1433,7 +1433,7 @@ functions:
     signature: "Map<String, int>? _angleSignChange(double natalLon, double relocateLon)"
     doc_jp: "ASC/MC の星座変化を {fromSign, toSign} で返す。変化なしなら null。"
     name_words_en: ["angle", "sign", "change"]
-    comment_keywords_jp: ["で返す", "変化なしなら", "の星座変化を", "null", "MC", "ASC", "toSign", "fromSign"]
+    comment_keywords_jp: ["null", "toSign", "で返す", "fromSign", "MC", "の星座変化を", "変化なしなら", "ASC"]
   - id: "aebf65ef772e"
     file: "screens/horoscope/horo_relocation_panel.dart"
     line: 114
@@ -1473,7 +1473,7 @@ functions:
     signature: "Widget _buildLoadingHint()"
     doc_jp: "API fetch 中の控えめな表示（既存テンプレ表示と並行）"
     name_words_en: ["build", "loading", "hint"]
-    comment_keywords_jp: ["中の控えめな表示", "API", "既存テンプレ表示と並行", "fetch"]
+    comment_keywords_jp: ["API", "中の控えめな表示", "既存テンプレ表示と並行", "fetch"]
   - id: "e29aede5a0fb"
     file: "screens/horoscope/horo_relocation_panel.dart"
     line: 258
@@ -1481,7 +1481,7 @@ functions:
     signature: "Widget _buildAngleBlock(     String label, int fromIdx, int toIdx, Map<int, String> descriptions,     String? dynamicNarrative,   )"
     doc_jp: "ASC/MC ブロック (星座変化の比較、変化なしも表示) dynamicNarrative が空でなければ「現住所」行を上書き表示。"
     name_words_en: ["build", "angle", "block"]
-    comment_keywords_jp: ["現住所", "MC", "ASC", "変化なしも表示", "dynamicNarrative", "が空でなければ", "ブロック", "星座変化の比較", "行を上書き表示"]
+    comment_keywords_jp: ["星座変化の比較", "変化なしも表示", "行を上書き表示", "MC", "ブロック", "dynamicNarrative", "が空でなければ", "現住所", "ASC"]
   - id: "3413c085bccb"
     file: "screens/horoscope/horo_relocation_panel.dart"
     line: 316
@@ -1489,7 +1489,7 @@ functions:
     signature: "Widget _buildShiftBlock(HouseShift shift)"
     doc_jp: "惑星 shift ブロック (ハウス変化の比較、変化なしも表示) 動的narrativeがあれば「現住所」行を上書き表示。"
     name_words_en: ["build", "shift", "block"]
-    comment_keywords_jp: ["現住所", "動的narrativeがあれば", "変化なしも表示", "ハウス変化の比較", "ブロック", "shift", "惑星", "行を上書き表示"]
+    comment_keywords_jp: ["変化なしも表示", "行を上書き表示", "動的narrativeがあれば", "ブロック", "shift", "惑星", "ハウス変化の比較", "現住所"]
   - id: "faddc1efe45b"
     file: "screens/horoscope/horo_relocation_panel.dart"
     line: 382
@@ -1497,7 +1497,7 @@ functions:
     signature: "Widget _buildCompareRow(String label, String text, bool emphasized)"
     doc_jp: "「出生地: ○○」「現住所: ○○」の1行"
     name_words_en: ["build", "compare", "row"]
-    comment_keywords_jp: ["出生地", "現住所"]
+    comment_keywords_jp: ["現住所", "出生地"]
   - id: "c4ebf00c1db8"
     file: "screens/horoscope/horo_transit_panel.dart"
     line: 43
@@ -1537,7 +1537,7 @@ functions:
     signature: "String _currentCacheKey()"
     doc_jp: "natal + secondary + chartMode の現在状態を表すキー"
     name_words_en: ["current", "cache", "key"]
-    comment_keywords_jp: ["chartMode", "natal", "secondary", "の現在状態を表すキー"]
+    comment_keywords_jp: ["secondary", "chartMode", "の現在状態を表すキー", "natal"]
   - id: "6dd31fd350d7"
     file: "screens/horoscope_screen.dart"
     line: 143
@@ -1545,7 +1545,7 @@ functions:
     signature: "void _refreshCacheKey()"
     doc_jp: "キャッシュを現在状態に合わせる (natal/secondary/mode が変わっていれば無効化)"
     name_words_en: ["refresh", "cache", "key"]
-    comment_keywords_jp: ["mode", "が変わっていれば無効化", "secondary", "natal", "キャッシュを現在状態に合わせる"]
+    comment_keywords_jp: ["キャッシュを現在状態に合わせる", "mode", "secondary", "が変わっていれば無効化", "natal"]
   - id: "b680a269af4f"
     file: "screens/horoscope_screen.dart"
     line: 161
@@ -1569,7 +1569,7 @@ functions:
     signature: "void _syncRotationByMode()"
     doc_jp: "astrology (星読み) モード時に _rotCtl を停止、それ以外は再開"
     name_words_en: ["sync", "rotation", "by", "mode"]
-    comment_keywords_jp: ["astrology", "モード時に", "星読み", "それ以外は再開", "rotCtl", "を停止"]
+    comment_keywords_jp: ["モード時に", "rotCtl", "astrology", "星読み", "それ以外は再開", "を停止"]
   - id: "1e4990ccc197"
     file: "screens/horoscope_screen.dart"
     line: 195
@@ -1585,7 +1585,7 @@ functions:
     signature: "Future<void> _onTransitUpdate(DateTime when) async"
     doc_jp: "HoroTransitPanel から呼ばれる callback。任意日時で transit/progressed を再計算。 永続化なし: パネル側は毎回 `DateTime.now()` で初期化される。"
     name_words_en: ["on", "transit", "update"]
-    comment_keywords_jp: ["HoroTransitPanel", "から呼ばれる", "を再計算", "永続化なし", "now", "transit", "callback", "で初期化される", "DateTime", "パネル側は毎回", "任意日時で", "progressed"]
+    comment_keywords_jp: ["永続化なし", "から呼ばれる", "HoroTransitPanel", "callback", "now", "で初期化される", "progressed", "を再計算", "DateTime", "任意日時で", "パネル側は毎回", "transit"]
   - id: "0f24e9f5a102"
     file: "screens/horoscope_screen.dart"
     line: 227
@@ -1593,7 +1593,7 @@ functions:
     signature: "Future<void> _applyWorkingProfile(SolaraProfile newProfile) async"
     doc_jp: "編集後の profile を working 側にのみ反映。storage は触らない。"
     name_words_en: ["apply", "working", "profile"]
-    comment_keywords_jp: ["storage", "側にのみ反映", "working", "編集後の", "は触らない", "profile"]
+    comment_keywords_jp: ["側にのみ反映", "working", "storage", "profile", "は触らない", "編集後の"]
   - id: "4892873d8d4c"
     file: "screens/horoscope_screen.dart"
     line: 245
@@ -1601,7 +1601,7 @@ functions:
     signature: "Future<void> _fetchRealChart(SolaraProfile p, {DateTime? targetDate}) async"
     doc_jp: "Worker /astro/chart からチャートを取得。失敗時はモック乱数にフォールバック。 _natalPlanets / _secondaryPlanets / _asc / _mc / _houses を更新する。  [targetDate] 指定時は transit/progressed をその日時で計算 (未指定時は現在)。 HoroTransitPanel の編集 → onUpdate callback 経由で渡される。"
     name_words_en: ["fetch", "real", "chart"]
-    comment_keywords_jp: ["secondaryPlanets", "astro", "経由で渡される", "natalPlanets", "transit", "をその日時で計算", "onUpdate", "指定時は", "の編集", "progressed", "chart", "houses", "HoroTransitPanel", "失敗時はモック乱数にフォールバック", "Worker", "callback", "targetDate", "未指定時は現在", "からチャートを取得", "を更新する", "mc", "asc"]
+    comment_keywords_jp: ["の編集", "失敗時はモック乱数にフォールバック", "progressed", "natalPlanets", "をその日時で計算", "secondaryPlanets", "経由で渡される", "onUpdate", "HoroTransitPanel", "callback", "を更新する", "からチャートを取得", "未指定時は現在", "astro", "mc", "asc", "houses", "chart", "Worker", "指定時は", "targetDate", "transit"]
   - id: "90097c97b2c9"
     file: "screens/horoscope_screen.dart"
     line: 373
@@ -1609,7 +1609,7 @@ functions:
     signature: "void _resetWorkingProfile()"
     doc_jp: "base に戻す (編集リセット)"
     name_words_en: ["reset", "working", "profile"]
-    comment_keywords_jp: ["編集リセット", "base", "に戻す"]
+    comment_keywords_jp: ["に戻す", "編集リセット", "base"]
   - id: "72f98a1eb47a"
     file: "screens/horoscope_screen.dart"
     line: 379
@@ -1617,7 +1617,7 @@ functions:
     signature: "Future<void> _openProfileEditor() async"
     doc_jp: "Profile Editor (Sanctuary共用) を push。結果をworking側にのみ反映。"
     name_words_en: ["open", "profile", "editor"]
-    comment_keywords_jp: ["push", "Profile", "Sanctuary共用", "Editor", "結果をworking側にのみ反映"]
+    comment_keywords_jp: ["Sanctuary共用", "結果をworking側にのみ反映", "Profile", "push", "Editor"]
   - id: "f353170c90b6"
     file: "screens/horoscope_screen.dart"
     line: 393
@@ -1633,7 +1633,7 @@ functions:
     signature: "Future<void> _loadFortunes({bool force = false}) async"
     doc_jp: "全5カテゴリの占い文を並列取得 (Gemini API経由) 同日中は再取得しない (キャッシュ)"
     name_words_en: ["load", "fortunes"]
-    comment_keywords_jp: ["API経由", "Gemini", "カテゴリの占い文を並列取得", "キャッシュ", "同日中は再取得しない"]
+    comment_keywords_jp: ["同日中は再取得しない", "API経由", "カテゴリの占い文を並列取得", "キャッシュ", "Gemini"]
   - id: "e826650d9cf3"
     file: "screens/horoscope_screen.dart"
     line: 502
@@ -1657,7 +1657,7 @@ functions:
     signature: "Widget _buildHouseModeToggle()"
     doc_jp: "ハウス基準モードトグル: 本質(出生地) ⇔ 現実(現住所) homeLat/Lng が未設定なら「現実」側はdisabled (グレーアウト)。"
     name_words_en: ["build", "house", "mode", "toggle"]
-    comment_keywords_jp: ["現実", "現住所", "ハウス基準モードトグル", "が未設定なら", "本質", "側はdisabled", "出生地", "グレーアウト", "homeLat", "Lng"]
+    comment_keywords_jp: ["Lng", "homeLat", "出生地", "ハウス基準モードトグル", "現実", "グレーアウト", "本質", "側はdisabled", "現住所", "が未設定なら"]
   - id: "7734b05a82af"
     file: "screens/horoscope_screen.dart"
     line: 643
@@ -1769,7 +1769,7 @@ functions:
     signature: "Future<void> _setYmd(int year, int month, int day) async"
     doc_jp: "年月日を絶対値で指定（手入力用）。月の最大日や年範囲は内部でクランプ。"
     name_words_en: ["set", "ymd"]
-    comment_keywords_jp: ["月の最大日や年範囲は内部でクランプ", "年月日を絶対値で指定", "手入力用"]
+    comment_keywords_jp: ["月の最大日や年範囲は内部でクランプ", "手入力用", "年月日を絶対値で指定"]
   - id: "981de3641182"
     file: "screens/locations_screen.dart"
     line: 144
@@ -1777,7 +1777,7 @@ functions:
     signature: "Future<void> _resetToday() async"
     doc_jp: "「今日」に戻す（fetch 不要、親の値を使う）"
     name_words_en: ["reset", "today"]
-    comment_keywords_jp: ["親の値を使う", "不要", "に戻す", "fetch", "今日"]
+    comment_keywords_jp: ["今日", "親の値を使う", "不要", "に戻す", "fetch"]
   - id: "9737f4cd9c3a"
     file: "screens/locations_screen.dart"
     line: 154
@@ -1825,7 +1825,7 @@ functions:
     signature: "Widget _buildRefPointSelector()"
     doc_jp: "VIEWPOINT プルダウン：現在地 + VIEWPOINT スロット一覧"
     name_words_en: ["build", "ref", "point", "selector"]
-    comment_keywords_jp: ["VIEWPOINT", "現在地", "プルダウン", "スロット一覧"]
+    comment_keywords_jp: ["現在地", "スロット一覧", "VIEWPOINT", "プルダウン"]
   - id: "0fd9737d8fea"
     file: "screens/locations_screen.dart"
     line: 354
@@ -1833,7 +1833,7 @@ functions:
     signature: "Widget _buildCategorySelector()"
     doc_jp: "カテゴリ別スコア表示切替（5つ：癒し/金運/恋愛/仕事/話す） 未選択 = 総合スコア。アクティブなチップを再タップで未選択に戻る。"
     name_words_en: ["build", "category", "selector"]
-    comment_keywords_jp: ["カテゴリ別スコア表示切替", "仕事", "癒し", "恋愛", "金運", "未選択", "話す", "総合スコア", "アクティブなチップを再タップで未選択に戻る"]
+    comment_keywords_jp: ["金運", "仕事", "アクティブなチップを再タップで未選択に戻る", "話す", "恋愛", "癒し", "未選択", "カテゴリ別スコア表示切替", "総合スコア"]
   - id: "5ade9723fc12"
     file: "screens/locations_screen.dart"
     line: 398
@@ -1921,7 +1921,7 @@ functions:
     signature: "Future<ChartResult?> fetchChart({   required String birthDate,   required String birthTime,   required double birthLat,   required double birthLng,   int birthTz = 9,   String? birthTzName,   String m"
     doc_jp: "CF Worker にチャートを要求 birthTzName (IANA TZ名, C案) が指定された場合はそれを優先し、 未指定なら birthTz (UTCオフセット整数) にfallback。 targetDate が指定されると、その日時 (UTC) の transit/progressed を計算する。 未指定時は現在時刻を使用。  relocateLat / relocateLng が指定された場合、Worker 側で natal惑星位置は 出生地ベースのまま、ASC/MC/houses だけ relocate座標で再計算する （古典的リロケーションチャート）。 0/0 や null は未指定扱い → 出生地でハウス計算。"
     name_words_en: ["fetch", "chart"]
-    comment_keywords_jp: ["CF", "null", "IANA", "は未指定扱い", "MC", "が指定された場合", "側で", "古典的リロケーションチャート", "birthTzName", "birthTz", "UTCオフセット整数", "だけ", "にチャートを要求", "transit", "UTC", "progressed", "にfallback", "houses", "natal惑星位置は", "C案", "未指定時は現在時刻を使用", "ASC", "Worker", "その日時", "targetDate", "relocateLng", "relocate座標で再計算する", "relocateLat", "を計算する", "出生地でハウス計算", "TZ名", "が指定されると", "が指定された場合はそれを優先し", "未指定なら", "出生地ベースのまま"]
+    comment_keywords_jp: ["が指定された場合はそれを優先し", "MC", "TZ名", "は未指定扱い", "UTC", "progressed", "birthTz", "natal惑星位置は", "C案", "ASC", "null", "が指定されると", "UTCオフセット整数", "側で", "relocateLng", "だけ", "その日時", "未指定時は現在時刻を使用", "出生地でハウス計算", "が指定された場合", "relocateLat", "relocate座標で再計算する", "未指定なら", "古典的リロケーションチャート", "出生地ベースのまま", "birthTzName", "を計算する", "houses", "にチャートを要求", "Worker", "CF", "targetDate", "にfallback", "transit", "IANA"]
   - id: "5b77ab93253c"
     file: "screens/map/map_astro.dart"
     line: 121
@@ -1929,7 +1929,7 @@ functions:
     signature: "double _cosFall(double dist, double spread)"
     doc_jp: "============================================================ scoreAll — HTML index.html L1636-L1704 のロジック ChartResult からMap画面用の16方位スコアを計算 ============================================================"
     name_words_en: ["cos", "fall"]
-    comment_keywords_jp: ["方位スコアを計算", "HTML", "html", "からMap画面用の", "ChartResult", "index", "のロジック", "scoreAll"]
+    comment_keywords_jp: ["方位スコアを計算", "index", "のロジック", "scoreAll", "HTML", "html", "ChartResult", "からMap画面用の"]
   - id: "820384259be8"
     file: "screens/map/map_astro.dart"
     line: 234
@@ -1937,7 +1937,7 @@ functions:
     signature: "void _addAspectComp(   String planet,   Map<String, dynamic> aspect,   double amt,   Map<String, Map<String, double>> compMap,   Map<String, List<AspectContribution>> contribsMap,   String softField, "
     doc_jp: "addT/addP/addCT/addCP 4 関数の共通本体。  入力 [aspect] からソフト/ハード分解し [compMap]/[contribsMap] に追記する。 soft/hard を保存する key は [softField]/[hardField] で指定 (T 系は 'tSoft'/'tHard'、P 系は 'pSoft'/'pHard')。集計対象の惑星 [planet] が [compMap] に含まれない場合は何もしない (惑星アングル等のフィルタ用途)。"
     name_words_en: ["add", "aspect", "comp"]
-    comment_keywords_jp: ["addP", "addCP", "soft", "hardField", "hard", "contribsMap", "aspect", "関数の共通本体", "に追記する", "で指定", "を保存する", "からソフト", "tHard", "tSoft", "入力", "pSoft", "惑星アングル等のフィルタ用途", "に含まれない場合は何もしない", "集計対象の惑星", "系は", "softField", "addT", "planet", "pHard", "ハード分解し", "key", "addCT", "compMap"]
+    comment_keywords_jp: ["compMap", "key", "を保存する", "で指定", "softField", "関数の共通本体", "に含まれない場合は何もしない", "に追記する", "hard", "soft", "tHard", "tSoft", "hardField", "contribsMap", "pSoft", "惑星アングル等のフィルタ用途", "addCT", "pHard", "addT", "系は", "addP", "planet", "集計対象の惑星", "addCP", "aspect", "からソフト", "入力", "ハード分解し"]
   - id: "125eb9a615ff"
     file: "screens/map/map_astro.dart"
     line: 259
@@ -1945,7 +1945,7 @@ functions:
     signature: "ScoreResult scoreAll(ChartResult chart)"
     doc_jp: "ChartResult → Map画面用16方位スコア"
     name_words_en: ["score", "all"]
-    comment_keywords_jp: ["ChartResult", "方位スコア", "Map画面用"]
+    comment_keywords_jp: ["ChartResult", "Map画面用", "方位スコア"]
   - id: "792e69a5bd5c"
     file: "screens/map/map_astro.dart"
     line: 288
@@ -2001,7 +2001,7 @@ functions:
     signature: "Color _lerpColor(Color a, Color b, double t)"
     doc_jp: "2色を線形補間 (sRGB空間)。Flutter 3.27+ の新Color API (.r/.g/.b/.a, double 0..1) 対応。"
     name_words_en: ["lerp", "color"]
-    comment_keywords_jp: ["対応", "API", "の新Color", "Flutter", "double", "sRGB空間", "色を線形補間"]
+    comment_keywords_jp: ["Flutter", "double", "API", "sRGB空間", "の新Color", "色を線形補間", "対応"]
   - id: "fcce7f135161"
     file: "screens/map/map_astro_lines.dart"
     line: 119
@@ -2009,7 +2009,7 @@ functions:
     signature: "List<Polyline> buildAstroPolylines({   required List<AstroLine> lines,   required String activeCategory,   bool allPlanetMode = false, })"
     doc_jp: "アスペクトラインを Polyline[] に変換。  [activeCategory] は 'all' / 'love' / 'money' 等。 [allPlanetMode] が true なら category 連動を無視して全表示。"
     name_words_en: ["build", "astro", "polylines"]
-    comment_keywords_jp: ["連動を無視して全表示", "activeCategory", "allPlanetMode", "all", "category", "アスペクトラインを", "money", "なら", "Polyline", "に変換", "true", "love"]
+    comment_keywords_jp: ["に変換", "all", "連動を無視して全表示", "money", "Polyline", "なら", "アスペクトラインを", "category", "true", "activeCategory", "allPlanetMode", "love"]
   - id: "514440b5835b"
     file: "screens/map/map_astro_lines.dart"
     line: 175
@@ -2017,7 +2017,7 @@ functions:
     signature: "List<Marker> buildAstroZenithMarkers({   required List<AstroLine> lines,   required String activeCategory,   bool allPlanetMode = false,   double latLimit = 75, // 描画緯度上限と揃える   void Function(String pl"
     doc_jp: "各惑星の天頂点 (= AstroLine.zenith) に装飾マーカーを生成。 MC line にのみ zenith が設定されるため自動的に1フレーム×1惑星=1マーカー。 FORTUNE 連動 dim 対象の惑星はマーカーも非表示(ノイズ削減)。 [onTap] が指定されていれば、タップで (planet, frame, zenith座標) を通知する。 [framesWithZenith] 天頂マーカーを表示するフレーム集合 (default: natal のみ)。 4フレーム全部表示すると最大40個になるが、CCG では「惑星が今どこを真上に 通っているか」が主役なので動的フレームの zenith こそ重要 (時間で動く)。"
     name_words_en: ["build", "astro", "zenith", "markers"]
-    comment_keywords_jp: ["に装飾マーカーを生成", "MC", "zenith座標", "時間で動く", "ノイズ削減", "dim", "通っているか", "連動", "CCG", "zenith", "frame", "framesWithZenith", "onTap", "個になるが", "AstroLine", "フレーム全部表示すると最大", "各惑星の天頂点", "対象の惑星はマーカーも非表示", "natal", "を通知する", "惑星", "惑星が今どこを真上に", "line", "フレーム", "では", "天頂マーカーを表示するフレーム集合", "が主役なので動的フレームの", "こそ重要", "タップで", "が指定されていれば", "マーカー", "のみ", "default", "planet", "が設定されるため自動的に", "FORTUNE", "にのみ"]
+    comment_keywords_jp: ["のみ", "zenith", "に装飾マーカーを生成", "dim", "FORTUNE", "タップで", "MC", "フレーム全部表示すると最大", "zenith座標", "では", "を通知する", "天頂マーカーを表示するフレーム集合", "連動", "フレーム", "natal", "line", "ノイズ削減", "惑星が今どこを真上に", "onTap", "個になるが", "通っているか", "が指定されていれば", "各惑星の天頂点", "CCG", "framesWithZenith", "planet", "frame", "時間で動く", "AstroLine", "が設定されるため自動的に", "にのみ", "マーカー", "対象の惑星はマーカーも非表示", "こそ重要", "惑星", "が主役なので動的フレームの", "default"]
   - id: "a19d393ce3a6"
     file: "screens/map/map_astro_lines.dart"
     line: 242
@@ -2033,7 +2033,7 @@ functions:
     signature: "int _resolveInitialVpIndex()"
     doc_jp: "初期 VIEWPOINT を決定する。 オーナールール (2026-04-30): 1. 自宅 (vpSlots[0].isHome) が登録済みなら 0 2. それ以外は出生地 (-1)"
     name_words_en: ["resolve", "initial", "vp", "index"]
-    comment_keywords_jp: ["vpSlots", "初期", "VIEWPOINT", "を決定する", "が登録済みなら", "自宅", "それ以外は出生地", "オーナールール", "isHome"]
+    comment_keywords_jp: ["を決定する", "isHome", "VIEWPOINT", "が登録済みなら", "それ以外は出生地", "オーナールール", "自宅", "vpSlots", "初期"]
   - id: "3b73989d3a7a"
     file: "screens/map/map_daily_transit_screen.dart"
     line: 107
@@ -2065,7 +2065,7 @@ functions:
     signature: "DateTime _tabStartTime(_DayTab tab)"
     doc_jp: "タブの開始時刻（local 0:00 を UTC 化）を返す。 「本日」= 今日のローカル 00:00、「明日」= 明日のローカル 00:00。"
     name_words_en: ["tab", "start", "time"]
-    comment_keywords_jp: ["本日", "明日", "今日のローカル", "明日のローカル", "local", "UTC", "タブの開始時刻", "を返す"]
+    comment_keywords_jp: ["明日", "今日のローカル", "本日", "タブの開始時刻", "UTC", "を返す", "明日のローカル", "local"]
   - id: "b2d8cc149e5d"
     file: "screens/map/map_daily_transit_screen.dart"
     line: 138
@@ -2073,7 +2073,7 @@ functions:
     signature: "Future<void> _loadTab(_DayTab tab, int vpIndex) async"
     doc_jp: "指定 (tab, vpIndex) のデータを取得する。キャッシュ済みなら何もしない。"
     name_words_en: ["load", "tab"]
-    comment_keywords_jp: ["キャッシュ済みなら何もしない", "vpIndex", "tab", "のデータを取得する", "指定"]
+    comment_keywords_jp: ["vpIndex", "キャッシュ済みなら何もしない", "指定", "のデータを取得する", "tab"]
   - id: "a2408e36aad1"
     file: "screens/map/map_daily_transit_screen.dart"
     line: 168
@@ -2089,7 +2089,7 @@ functions:
     signature: "void _selectVp(int newIndex)"
     doc_jp: "VIEWPOINT dropdown 切替時。両方のタブを必要に応じて再読込。"
     name_words_en: ["select", "vp"]
-    comment_keywords_jp: ["VIEWPOINT", "dropdown", "両方のタブを必要に応じて再読込", "切替時"]
+    comment_keywords_jp: ["dropdown", "VIEWPOINT", "切替時", "両方のタブを必要に応じて再読込"]
   - id: "a7e3d3203a44"
     file: "screens/map/map_daily_transit_screen.dart"
     line: 182
@@ -2162,105 +2162,97 @@ functions:
     doc_jp: ""
     name_words_en: ["build"]
     comment_keywords_jp: []
-  - id: "b9f8dcd5ee24"
+  - id: "15e537d19737"
     file: "screens/map/map_daily_transit_screen.dart"
-    line: 708
-    name: "_categoryKey"
-    signature: "String _categoryKey(DominantFortuneKind? cat)"
-    doc_jp: ""
-    name_words_en: ["category", "key"]
-    comment_keywords_jp: []
-  - id: "2f8f5496cd8f"
-    file: "screens/map/map_daily_transit_screen.dart"
-    line: 719
+    line: 713
     name: "_tagline"
     signature: "String _tagline(DominantFortuneKind? cat)"
     doc_jp: ""
     name_words_en: ["tagline"]
     comment_keywords_jp: []
-  - id: "94bebdb0a22e"
+  - id: "e5d292971d54"
     file: "screens/map/map_daily_transit_screen.dart"
-    line: 738
+    line: 732
     name: "_buildVpDropdown"
     signature: "Widget _buildVpDropdown()"
     doc_jp: "VIEWPOINT dropdown。 選択肢: 出生地（-1） + 各VPスロット（0+）。 場所が変わると Daily Transit の通過時刻が再計算される。"
     name_words_en: ["build", "vp", "dropdown"]
-    comment_keywords_jp: ["各VPスロット", "VIEWPOINT", "dropdown", "の通過時刻が再計算される", "出生地", "Daily", "場所が変わると", "選択肢", "Transit"]
-  - id: "dd4cd046e094"
+    comment_keywords_jp: ["出生地", "選択肢", "Daily", "の通過時刻が再計算される", "VIEWPOINT", "各VPスロット", "Transit", "場所が変わると", "dropdown"]
+  - id: "b14c0e6b8d9d"
     file: "screens/map/map_daily_transit_screen.dart"
-    line: 816
+    line: 810
     name: "build"
     signature: "Widget build(BuildContext context)"
     doc_jp: ""
     name_words_en: ["build"]
     comment_keywords_jp: []
-  - id: "9f5d7379b691"
+  - id: "d90f1c00faa9"
     file: "screens/map/map_daily_transit_screen.dart"
-    line: 847
+    line: 841
     name: "build"
     signature: "Widget build(BuildContext context)"
     doc_jp: ""
     name_words_en: ["build"]
     comment_keywords_jp: []
-  - id: "3573e0bc12fc"
+  - id: "71d0cefd6ace"
     file: "screens/map/map_daily_transit_screen.dart"
-    line: 900
+    line: 894
     name: "build"
     signature: "Widget build(BuildContext context)"
     doc_jp: ""
     name_words_en: ["build"]
     comment_keywords_jp: []
-  - id: "e20995e4da9f"
+  - id: "64ec142971a5"
     file: "screens/map/map_daily_transit_screen.dart"
-    line: 972
+    line: 966
     name: "build"
     signature: "Widget build(BuildContext context)"
     doc_jp: ""
     name_words_en: ["build"]
     comment_keywords_jp: []
-  - id: "28bec8b24dba"
+  - id: "316892c90f9c"
     file: "screens/map/map_daily_transit_screen.dart"
-    line: 1095
+    line: 1089
     name: "_angleLabel"
     signature: "String _angleLabel(String angle)"
     doc_jp: ""
     name_words_en: ["angle", "label"]
     comment_keywords_jp: []
-  - id: "0272acf7248f"
+  - id: "13407aa04719"
     file: "screens/map/map_daily_transit_screen.dart"
-    line: 1105
+    line: 1099
     name: "_angleHint"
     signature: "String _angleHint(String angle, String compass)"
     doc_jp: ""
     name_words_en: ["angle", "hint"]
     comment_keywords_jp: []
-  - id: "fcb47d4862bb"
+  - id: "18de7f2240c8"
     file: "screens/map/map_daily_transit_screen.dart"
-    line: 1115
+    line: 1109
     name: "_azimuthToCompass"
     signature: "String _azimuthToCompass(double az)"
     doc_jp: ""
     name_words_en: ["azimuth", "to", "compass"]
     comment_keywords_jp: []
-  - id: "28149680c489"
+  - id: "59b85a4119e2"
     file: "screens/map/map_daily_transit_screen.dart"
-    line: 1132
+    line: 1126
     name: "_showEventDetailDialog"
     signature: "void _showEventDetailDialog(   BuildContext context, {   required String planetKey,   required String angle,   required String categoryFilter, })"
     doc_jp: "個別イベント i ボタン用ダイアログ。 「惑星 × アングル」の基本意味文 + 「カテゴリ」別の補足文を表示する。 テンプレ式 (40 × 5 = 45 パターン) で構成。"
     name_words_en: ["show", "event", "detail", "dialog"]
-    comment_keywords_jp: ["個別イベント", "ボタン用ダイアログ", "アングル", "別の補足文を表示する", "テンプレ式", "で構成", "惑星", "カテゴリ", "パターン", "の基本意味文"]
-  - id: "b76919a64265"
+    comment_keywords_jp: ["別の補足文を表示する", "個別イベント", "アングル", "惑星", "ボタン用ダイアログ", "の基本意味文", "パターン", "で構成", "テンプレ式", "カテゴリ"]
+  - id: "54f4199e046b"
     file: "screens/map/map_daily_transit_screen.dart"
-    line: 1163
+    line: 1157
     name: "_showCategoryTipsIntent"
     signature: "void _showCategoryTipsIntent(BuildContext context, String categoryKey)"
     doc_jp: "B5: 「お勧め行動の例」i ボタンタップ時のカテゴリ別ガイド dialog。 activeCategory に応じた使い方説明を出す。 fallback: カテゴリ entry がない場合 (=all 等) は astro_glossary に投げる。"
     name_words_en: ["show", "category", "tips", "intent"]
-    comment_keywords_jp: ["fallback", "ボタンタップ時のカテゴリ別ガイド", "に応じた使い方説明を出す", "に投げる", "activeCategory", "entry", "お勧め行動の例", "all", "dialog", "glossary", "がない場合", "astro", "カテゴリ"]
-  - id: "9382f4792f1b"
+    comment_keywords_jp: ["all", "お勧め行動の例", "entry", "に投げる", "に応じた使い方説明を出す", "dialog", "glossary", "がない場合", "fallback", "activeCategory", "ボタンタップ時のカテゴリ別ガイド", "astro", "カテゴリ"]
+  - id: "5f34dc514dc2"
     file: "screens/map/map_daily_transit_screen.dart"
-    line: 1209
+    line: 1203
     name: "_showPlanetAngleDetail"
     signature: "void _showPlanetAngleDetail({   required BuildContext context,   required String title,   required String base,   required String? appendix,   required Color planetColor, })"
     doc_jp: ""
@@ -2289,7 +2281,7 @@ functions:
     signature: "String _guidanceText(DirectionEnergy e)"
     doc_jp: "エネルギー量に応じた事実提示型のガイダンス文。 判定はしない、状態の言語化のみ。"
     name_words_en: ["guidance", "text"]
-    comment_keywords_jp: ["状態の言語化のみ", "判定はしない", "エネルギー量に応じた事実提示型のガイダンス文"]
+    comment_keywords_jp: ["エネルギー量に応じた事実提示型のガイダンス文", "判定はしない", "状態の言語化のみ"]
   - id: "c45454ab2c0a"
     file: "screens/map/map_direction_popup.dart"
     line: 235
@@ -2321,7 +2313,7 @@ functions:
     signature: "double pctValue(double v)"
     doc_jp: "pct() from HTML: 0-5 → 0-83.3%, 5-10 → 83.3-100%"
     name_words_en: ["pct", "value"]
-    comment_keywords_jp: ["from", "pct", "HTML"]
+    comment_keywords_jp: ["HTML", "from", "pct"]
   - id: "f9769ce3e951"
     file: "screens/map/map_fortune_sheet.dart"
     line: 32
@@ -2393,7 +2385,7 @@ functions:
     signature: "Widget _philosophyLink(BuildContext context)"
     doc_jp: "設計思想ガイドへのリンク（パネル最下部・両ビュー共通）。 ソフト/ハード独立2エネルギーの考え方を伝える章0画面へ遷移する。"
     name_words_en: ["philosophy", "link"]
-    comment_keywords_jp: ["パネル最下部・両ビュー共通", "ソフト", "ハード独立", "設計思想ガイドへのリンク", "画面へ遷移する", "エネルギーの考え方を伝える章"]
+    comment_keywords_jp: ["設計思想ガイドへのリンク", "パネル最下部・両ビュー共通", "ハード独立", "画面へ遷移する", "エネルギーの考え方を伝える章", "ソフト"]
   - id: "7c3b33371838"
     file: "screens/map/map_layer_panel.dart"
     line: 194
@@ -2425,7 +2417,7 @@ functions:
     signature: "Widget _toggleWithGlossary(     String key,     String label,     String termKey,     Color color,     Map<String, bool> map,     ValueChanged<String> onToggle,     BuildContext context,   )"
     doc_jp: "_toggle に i アイコン付き (論点4 連動)。 チェックボックス本体タップで切替、i アイコンタップで用語解説 popup。"
     name_words_en: ["toggle", "with", "glossary"]
-    comment_keywords_jp: ["アイコン付き", "アイコンタップで用語解説", "論点", "toggle", "チェックボックス本体タップで切替", "連動", "popup"]
+    comment_keywords_jp: ["アイコンタップで用語解説", "チェックボックス本体タップで切替", "toggle", "アイコン付き", "popup", "論点", "連動"]
   - id: "81c6f57e5221"
     file: "screens/map/map_line_narrative_sheet.dart"
     line: 90
@@ -2497,7 +2489,7 @@ functions:
     signature: "Future<void> showLineNarrativeSheet(   BuildContext context, {   required NearbyAstroLine nearby,   required String frame,   required double tappedLat,   required double tappedLng,   Map<String, int>?"
     doc_jp: "共通呼び出しヘルパー: タップから直接 BottomSheet を表示"
     name_words_en: ["show", "line", "narrative", "sheet"]
-    comment_keywords_jp: ["共通呼び出しヘルパー", "BottomSheet", "タップから直接", "を表示"]
+    comment_keywords_jp: ["を表示", "タップから直接", "共通呼び出しヘルパー", "BottomSheet"]
   - id: "844560dcad79"
     file: "screens/map/map_location_markers.dart"
     line: 29
@@ -2521,7 +2513,7 @@ functions:
     signature: "List<Marker> buildLocationMarkers({   required SolaraProfile? profile,   required List<VPSlot> vpSlots,   required List<VPSlot> locationSlots,   required void Function(String name, LatLng point, bool "
     doc_jp: "登録地マーカー群を構築。 [onTap] にはマーカータップ時のコールバックを渡す (引数: name, point, isBirth)。  レイヤー順 (上から下、重なったときの優先度): 1. 出生地 🌟 (最上位 — 必ず見える) 2. VP slots (リスト上位ほど上) 3. Locations slots (リスト上位ほど上、最下位 = 最も下のレイヤー)  flutter_map の MarkerLayer は list 順に描画 (先頭=下、末尾=上) のため list には bottom-first で積む: Locations 逆順 → VP 逆順 → Birth。"
     name_words_en: ["build", "location", "markers"]
-    comment_keywords_jp: ["flutter", "先頭", "のため", "最上位", "にはマーカータップ時のコールバックを渡す", "重なったときの優先度", "isBirth", "VP", "onTap", "引数", "point", "必ず見える", "リスト上位ほど上", "Birth", "出生地", "slots", "Locations", "登録地マーカー群を構築", "list", "で積む", "first", "map", "順に描画", "上から下", "MarkerLayer", "bottom", "逆順", "最下位", "name", "末尾", "最も下のレイヤー", "レイヤー順", "には"]
+    comment_keywords_jp: ["list", "出生地", "Locations", "Birth", "のため", "map", "末尾", "name", "point", "bottom", "isBirth", "順に描画", "引数", "重なったときの優先度", "必ず見える", "登録地マーカー群を構築", "onTap", "first", "にはマーカータップ時のコールバックを渡す", "レイヤー順", "最も下のレイヤー", "slots", "最下位", "VP", "MarkerLayer", "flutter", "最上位", "には", "で積む", "先頭", "上から下", "リスト上位ほど上", "逆順"]
   - id: "b6667f8840e9"
     file: "screens/map/map_location_markers.dart"
     line: 140
@@ -2545,7 +2537,7 @@ functions:
     signature: "Marker buildVpPinMarker({   required MapController mapCtrl,   required LatLng center,   required Size screenSize,   required ValueChanged<LatLng> onCenterChange,   required VoidCallback onDragEnd, })"
     doc_jp: "VP Pin (ドラッグ可能な中央の金色ピン) の Marker を生成する。 pan 量を現在の可視範囲から緯経度差分に変換する計算を内包。"
     name_words_en: ["build", "vp", "pin", "marker"]
-    comment_keywords_jp: ["VP", "Marker", "量を現在の可視範囲から緯経度差分に変換する計算を内包", "Pin", "ドラッグ可能な中央の金色ピン", "pan", "を生成する"]
+    comment_keywords_jp: ["を生成する", "Pin", "pan", "量を現在の可視範囲から緯経度差分に変換する計算を内包", "Marker", "ドラッグ可能な中央の金色ピン", "VP"]
   - id: "1ea506108474"
     file: "screens/map/map_overlays.dart"
     line: 70
@@ -2609,7 +2601,7 @@ functions:
     signature: "Future<DateTime?> showSolaraDatePicker(BuildContext context, {DateTime? initial})"
     doc_jp: "Solara テーマ適用の DatePicker を開く。選択されたら DateTime を返す（正午固定はしない）。 範囲: 今日−10年 〜 今日+20年（過去回顧 + 中長期予測をカバー）。 initial が範囲外なら自動クランプして assertion を回避。"
     name_words_en: ["show", "solara", "date", "picker"]
-    comment_keywords_jp: ["正午固定はしない", "を回避", "を開く", "が範囲外なら自動クランプして", "選択されたら", "今日", "範囲", "テーマ適用の", "DatePicker", "DateTime", "initial", "assertion", "を返す", "中長期予測をカバー", "過去回顧", "Solara"]
+    comment_keywords_jp: ["今日", "initial", "を開く", "過去回顧", "選択されたら", "範囲", "assertion", "正午固定はしない", "を回避", "DateTime", "中長期予測をカバー", "を返す", "が範囲外なら自動クランプして", "DatePicker", "テーマ適用の", "Solara"]
   - id: "ce125cc28385"
     file: "screens/map/map_planet_lines.dart"
     line: 13
@@ -2617,7 +2609,7 @@ functions:
     signature: "List<LatLng> _geodesicLine(LatLng center, double bearing, {int steps = 50, double maxKm = 20000})"
     doc_jp: "大圏線のポイント生成（HTML: turfLine() 準拠）"
     name_words_en: ["geodesic", "line"]
-    comment_keywords_jp: ["turfLine", "準拠", "大圏線のポイント生成", "HTML"]
+    comment_keywords_jp: ["大圏線のポイント生成", "準拠", "HTML", "turfLine"]
   - id: "c4af1688d1f9"
     file: "screens/map/map_planet_lines.dart"
     line: 24
@@ -2641,7 +2633,7 @@ functions:
     signature: "List<Polyline> buildPlanetPolylines({   required List<PlanetLineData> lines,   required Map<String, bool> layers,   required Map<String, bool> planetGroupVis,   required String activeCategory, })"
     doc_jp: "PlanetLineData → flutter_map Polyline に変換 フィルター: layer visibility, planet group visibility, fortune category filter"
     name_words_en: ["build", "planet", "polylines"]
-    comment_keywords_jp: ["flutter", "group", "layer", "fortune", "filter", "map", "planet", "category", "visibility", "Polyline", "フィルター", "に変換", "PlanetLineData"]
+    comment_keywords_jp: ["flutter", "に変換", "visibility", "layer", "Polyline", "フィルター", "group", "map", "planet", "filter", "PlanetLineData", "category", "fortune"]
   - id: "b714f86a6097"
     file: "screens/map/map_planet_lines.dart"
     line: 147
@@ -2721,7 +2713,7 @@ functions:
     signature: "double _recoverBaselineAsc()"
     doc_jp: "baselineMc を起点に baselineHouses[0]=ASC を取得 (Placidus定義より houses[0]=asc)"
     name_words_en: ["recover", "baseline", "asc"]
-    comment_keywords_jp: ["baselineHouses", "ASC", "asc", "Placidus定義より", "baselineMc", "を取得", "を起点に", "houses"]
+    comment_keywords_jp: ["を取得", "asc", "houses", "Placidus定義より", "baselineHouses", "baselineMc", "ASC", "を起点に"]
   - id: "d47d215ed86a"
     file: "screens/map/map_relocation_popup.dart"
     line: 490
@@ -2801,7 +2793,7 @@ functions:
     signature: "Widget _buildVpDropdown()"
     doc_jp: "VIEWPOINT 選択 dropdown。 -1 = 地図中心、0+ = vpSlots の index。 距離km・方位・スコアの起点を切替えるためのもの。"
     name_words_en: ["build", "vp", "dropdown"]
-    comment_keywords_jp: ["地図中心", "vpSlots", "VIEWPOINT", "選択", "dropdown", "index", "距離km・方位・スコアの起点を切替えるためのもの"]
+    comment_keywords_jp: ["index", "地図中心", "VIEWPOINT", "距離km・方位・スコアの起点を切替えるためのもの", "選択", "dropdown", "vpSlots"]
   - id: "58a6d5cb6210"
     file: "screens/map/map_search.dart"
     line: 375
@@ -2817,7 +2809,7 @@ functions:
     signature: "void _showScoreInfo(BuildContext context)"
     doc_jp: "「総合は別計算」i ボタン押下時の説明ダイアログ。 ユーザー指摘: 検索結果一覧の総合と詳細の各カテゴリ合算が一致しない理由を可視化。"
     name_words_en: ["show", "score", "info"]
-    comment_keywords_jp: ["ボタン押下時の説明ダイアログ", "ユーザー指摘", "検索結果一覧の総合と詳細の各カテゴリ合算が一致しない理由を可視化", "総合は別計算"]
+    comment_keywords_jp: ["総合は別計算", "ボタン押下時の説明ダイアログ", "検索結果一覧の総合と詳細の各カテゴリ合算が一致しない理由を可視化", "ユーザー指摘"]
   - id: "1fa303a29577"
     file: "screens/map/map_search.dart"
     line: 537
@@ -2841,7 +2833,7 @@ functions:
     signature: "List<Polygon> buildSectors({   required LatLng center,   required Map<String, double> sectorScores,   required Color sectorColor,   required bool visible,   bool lightMap = false,   double dimFactor ="
     doc_jp: "16方位扇状セクター — `activeCategory` のカテゴリ色 1色 + alpha のみ可変。  🔴 設計仕様 (2026-05-04 オーナー直接指示、`project_solara_design_philosophy.md` の例外節): - **1色のみ**で塗る（`sectorColor` = `categoryColors[activeCategory]`） - **alpha (濃さ) は合算スコアの相対値**で 1軸変化 - **soft/hard の色分け・リング構造・境目なし** - どこまで遠くを見てもその方角は 1色のみ - soft+hard 合算は `_displayScores()` 側で済んでいる前提（呼出側責務）  過去にあった以下の機構は **すべて撤廃** された (再導入禁止): - 2リング構造 (内 soft / 外 hard) を別色で描画 - `tintByDir` で各方位を dominant カテゴリ色に上書き (合算 dominant 判定 = 設計思想違反) - `sectorType` / `sectorTypeFromEnergy` の strong/weak/null 3段階判定"
     name_words_en: ["build", "sectors"]
-    comment_keywords_jp: ["null", "philosophy", "どこまで遠くを見てもその方角は", "再導入禁止", "側で済んでいる前提", "design", "呼出側責務", "のみ可変", "tintByDir", "soft", "された", "alpha", "hard", "weak", "設計思想違反", "dominant", "リング構造", "過去にあった以下の機構は", "categoryColors", "sectorTypeFromEnergy", "を別色で描画", "md", "で塗る", "合算", "設計仕様", "色のみ", "の色分け・リング構造・境目なし", "オーナー直接指示", "sectorType", "activeCategory", "軸変化", "で各方位を", "カテゴリ色に上書き", "displayScores", "濃さ", "solara", "段階判定", "の例外節", "すべて撤廃", "方位扇状セクター", "strong", "project", "判定", "合算は", "は合算スコアの相対値", "のカテゴリ色", "sectorColor"]
+    comment_keywords_jp: ["alpha", "strong", "段階判定", "sectorTypeFromEnergy", "の色分け・リング構造・境目なし", "weak", "された", "濃さ", "を別色で描画", "tintByDir", "categoryColors", "で塗る", "オーナー直接指示", "null", "project", "色のみ", "hard", "のカテゴリ色", "displayScores", "soft", "設計思想違反", "のみ可変", "philosophy", "どこまで遠くを見てもその方角は", "design", "呼出側責務", "リング構造", "で各方位を", "軸変化", "合算", "合算は", "の例外節", "判定", "すべて撤廃", "sectorType", "solara", "再導入禁止", "md", "は合算スコアの相対値", "dominant", "設計仕様", "方位扇状セクター", "sectorColor", "側で済んでいる前提", "activeCategory", "カテゴリ色に上書き", "過去にあった以下の機構は"]
   - id: "87c4757fdcee"
     file: "screens/map/map_sectors.dart"
     line: 94
@@ -2849,7 +2841,7 @@ functions:
     signature: "List<LatLng> _fanPoints(   Distance d,   LatLng center,   double startDeg,   double endDeg,   double radius, {   required int radialSteps,   required int arcSteps, })"
     doc_jp: "扇形のポイント列を生成 (full fan、innerRatio=0 / outerRatio=1 固定)。"
     name_words_en: ["fan", "points"]
-    comment_keywords_jp: ["固定", "outerRatio", "fan", "full", "innerRatio", "扇形のポイント列を生成"]
+    comment_keywords_jp: ["fan", "扇形のポイント列を生成", "innerRatio", "outerRatio", "full", "固定"]
   - id: "41d11b5a155d"
     file: "screens/map/map_sectors.dart"
     line: 123
@@ -2857,7 +2849,7 @@ functions:
     signature: "List<Polyline> buildCompass({required LatLng center, required bool visible})"
     doc_jp: "8方向のコンパスライン — gold dashed、扇状とは独立。"
     name_words_en: ["build", "compass"]
-    comment_keywords_jp: ["dashed", "方向のコンパスライン", "扇状とは独立", "gold"]
+    comment_keywords_jp: ["dashed", "gold", "扇状とは独立", "方向のコンパスライン"]
   - id: "250cc9d229e6"
     file: "screens/map/map_sectors.dart"
     line: 144
@@ -2865,7 +2857,7 @@ functions:
     signature: "List<Marker> buildDirLabels({required LatLng center})"
     doc_jp: "方位ラベルマーカー（N,NE,E... を3距離に表示）。"
     name_words_en: ["build", "dir", "labels"]
-    comment_keywords_jp: ["NE", "方位ラベルマーカー", "距離に表示"]
+    comment_keywords_jp: ["NE", "距離に表示", "方位ラベルマーカー"]
   - id: "d84b9cf73b23"
     file: "screens/map/map_stella.dart"
     line: 12
@@ -2889,7 +2881,7 @@ functions:
     signature: "MapStyle mapStyleFromId(String? id)"
     doc_jp: "id 文字列から MapStyle を復元。不明値（未保存・旧 Smart/Jawg id）は osmHotLight。"
     name_words_en: ["map", "style", "from", "id"]
-    comment_keywords_jp: ["Jawg", "id", "不明値", "osmHotLight", "未保存・旧", "を復元", "Smart", "MapStyle", "文字列から"]
+    comment_keywords_jp: ["id", "文字列から", "Jawg", "不明値", "Smart", "未保存・旧", "を復元", "MapStyle", "osmHotLight"]
   - id: "f200d17e09bb"
     file: "screens/map/map_styles.dart"
     line: 102
@@ -2897,7 +2889,7 @@ functions:
     signature: "Widget buildStyledTileLayer(MapStyle style)"
     doc_jp: "選択スタイルに応じた TileLayer を返す。 dark 指定の場合は ColorFilter で反転して暗色化。  tileProvider: アプリ全体で共有する HttpClient を渡し、 socket 枯渇による DNS 失敗の連鎖を防止 (詳細: tile_http_client.dart)。"
     name_words_en: ["build", "styled", "tile", "layer"]
-    comment_keywords_jp: ["アプリ全体で共有する", "詳細", "選択スタイルに応じた", "socket", "失敗の連鎖を防止", "dark", "枯渇による", "DNS", "ColorFilter", "を返す", "http", "tile", "tileProvider", "TileLayer", "client", "指定の場合は", "を渡し", "HttpClient", "dart", "で反転して暗色化"]
+    comment_keywords_jp: ["アプリ全体で共有する", "socket", "を渡し", "で反転して暗色化", "dart", "http", "HttpClient", "ColorFilter", "dark", "選択スタイルに応じた", "TileLayer", "枯渇による", "tile", "tileProvider", "指定の場合は", "client", "を返す", "詳細", "DNS", "失敗の連鎖を防止"]
   - id: "32a14c272046"
     file: "screens/map/map_time_slider.dart"
     line: 44
@@ -2905,7 +2897,7 @@ functions:
     signature: "double _committedDays()"
     doc_jp: "widget.date を「今日からの日数オフセット」に変換 (null=0)"
     name_words_en: ["committed", "days"]
-    comment_keywords_jp: ["null", "widget", "date", "今日からの日数オフセット", "に変換"]
+    comment_keywords_jp: ["null", "に変換", "widget", "date", "今日からの日数オフセット"]
   - id: "695de1aa6c32"
     file: "screens/map/map_time_slider.dart"
     line: 54
@@ -2913,7 +2905,7 @@ functions:
     signature: "int _committedHourJst()"
     doc_jp: "確定中の JST 時刻 (0..23)"
     name_words_en: ["committed", "hour", "jst"]
-    comment_keywords_jp: ["時刻", "JST", "確定中の"]
+    comment_keywords_jp: ["JST", "時刻", "確定中の"]
   - id: "abe7f287df80"
     file: "screens/map/map_time_slider.dart"
     line: 60
@@ -2921,7 +2913,7 @@ functions:
     signature: "DateTime _previewDateJst()"
     doc_jp: "表示用の (日付 + 時刻) JST"
     name_words_en: ["preview", "date", "jst"]
-    comment_keywords_jp: ["時刻", "JST", "日付", "表示用の"]
+    comment_keywords_jp: ["JST", "表示用の", "時刻", "日付"]
   - id: "7ffdfde683e6"
     file: "screens/map/map_time_slider.dart"
     line: 72
@@ -2937,7 +2929,7 @@ functions:
     signature: "void _commitHour(int hourJst)"
     doc_jp: "時刻 (JST hour) を commit (日付部分は既存値を維持)"
     name_words_en: ["commit", "hour"]
-    comment_keywords_jp: ["commit", "日付部分は既存値を維持", "JST", "hour", "時刻"]
+    comment_keywords_jp: ["JST", "commit", "hour", "日付部分は既存値を維持", "時刻"]
   - id: "0cf1306a95f2"
     file: "screens/map/map_time_slider.dart"
     line: 103
@@ -2945,7 +2937,7 @@ functions:
     signature: "bool _isLiveHour()"
     doc_jp: "時刻が「現在」と一致するか (LIVE の hour 側判定用)"
     name_words_en: ["is", "live", "hour"]
-    comment_keywords_jp: ["現在", "側判定用", "LIVE", "hour", "と一致するか", "時刻が"]
+    comment_keywords_jp: ["LIVE", "と一致するか", "hour", "側判定用", "現在", "時刻が"]
   - id: "1c2775cb2278"
     file: "screens/map/map_time_slider.dart"
     line: 110
@@ -3025,7 +3017,7 @@ functions:
     signature: "Future<void> syncHome(SolaraProfile? profile) async"
     doc_jp: "HTML: syncHome — プロフィールのホーム地点を先頭スロットに同期"
     name_words_en: ["sync", "home"]
-    comment_keywords_jp: ["syncHome", "プロフィールのホーム地点を先頭スロットに同期", "HTML"]
+    comment_keywords_jp: ["HTML", "syncHome", "プロフィールのホーム地点を先頭スロットに同期"]
   - id: "f118dedd8669"
     file: "screens/map/map_vp_panel.dart"
     line: 73
@@ -3033,7 +3025,7 @@ functions:
     signature: "Future<String?> saveCurrentLocation(LatLng center) async"
     doc_jp: "HTML: saveCurrentLocation — reverse geocodingで地名取得して保存"
     name_words_en: ["save", "current", "location"]
-    comment_keywords_jp: ["geocodingで地名取得して保存", "saveCurrentLocation", "reverse", "HTML"]
+    comment_keywords_jp: ["reverse", "geocodingで地名取得して保存", "HTML", "saveCurrentLocation"]
   - id: "937027a246d4"
     file: "screens/map/map_vp_panel.dart"
     line: 103
@@ -3169,7 +3161,7 @@ functions:
     signature: "Future<void> _showIconPickerDialog(int idx) async"
     doc_jp: "アイコン選択をダイアログで表示（インライン展開だとパネル下端で画面外に切れるため）。 VIEWPOINT/LOCATIONS 両タブ共通で、選択済みアイコンは金色枠で強調。"
     name_words_en: ["show", "icon", "picker", "dialog"]
-    comment_keywords_jp: ["両タブ共通で", "VIEWPOINT", "選択済みアイコンは金色枠で強調", "LOCATIONS", "インライン展開だとパネル下端で画面外に切れるため", "アイコン選択をダイアログで表示"]
+    comment_keywords_jp: ["LOCATIONS", "VIEWPOINT", "選択済みアイコンは金色枠で強調", "アイコン選択をダイアログで表示", "両タブ共通で", "インライン展開だとパネル下端で画面外に切れるため"]
   - id: "28ee2a552d79"
     file: "screens/map/map_vp_panel.dart"
     line: 417
@@ -3217,7 +3209,7 @@ functions:
     signature: "Future<void> _checkDailyBadgeState() async"
     doc_jp: "右上 DailyTransitBadge の「未閲覧（光る）」状態判定。 _topCategory が算出されていて、かつリセット時刻考慮の 「今日」で未表示なら出す。（デバッグフラグ ON 時は常に表示）"
     name_words_en: ["check", "daily", "badge", "state"]
-    comment_keywords_jp: ["未閲覧", "右上", "ON", "光る", "かつリセット時刻考慮の", "時は常に表示", "今日", "で未表示なら出す", "状態判定", "が算出されていて", "デバッグフラグ", "DailyTransitBadge", "topCategory"]
+    comment_keywords_jp: ["DailyTransitBadge", "で未表示なら出す", "今日", "未閲覧", "ON", "デバッグフラグ", "かつリセット時刻考慮の", "topCategory", "が算出されていて", "光る", "状態判定", "右上", "時は常に表示"]
   - id: "c96c90d6ad1f"
     file: "screens/map_screen.dart"
     line: 243
@@ -3249,7 +3241,7 @@ functions:
     signature: "void _cycleActiveCategory()"
     doc_jp: "FF Label タップ時、_activeCategory を次のカテゴリへ進める。 セクター描画も同フレームで再計算されるので扇状もリアルタイム切替される。"
     name_words_en: ["cycle", "active", "category"]
-    comment_keywords_jp: ["FF", "activeCategory", "タップ時", "Label", "を次のカテゴリへ進める", "セクター描画も同フレームで再計算されるので扇状もリアルタイム切替される"]
+    comment_keywords_jp: ["セクター描画も同フレームで再計算されるので扇状もリアルタイム切替される", "Label", "FF", "を次のカテゴリへ進める", "タップ時", "activeCategory"]
   - id: "514d0ef2004b"
     file: "screens/map_screen.dart"
     line: 448
@@ -3257,7 +3249,7 @@ functions:
     signature: "void _reannotateSearchResults()"
     doc_jp: "既存の検索結果（リスト + フォーカス1件）に、現在の中心・日付・カテゴリ・ソース で算出したスコアを再注入する。日付ピッカー・VP切替・カテゴリ切替から呼ぶ。"
     name_words_en: ["reannotate", "search", "results"]
-    comment_keywords_jp: ["現在の中心・日付・カテゴリ・ソース", "既存の検索結果", "で算出したスコアを再注入する", "リスト", "日付ピッカー・VP切替・カテゴリ切替から呼ぶ", "フォーカス"]
+    comment_keywords_jp: ["で算出したスコアを再注入する", "リスト", "フォーカス", "日付ピッカー・VP切替・カテゴリ切替から呼ぶ", "現在の中心・日付・カテゴリ・ソース", "既存の検索結果"]
   - id: "e912b4158f2b"
     file: "screens/map_screen.dart"
     line: 477
@@ -3265,7 +3257,7 @@ functions:
     signature: "Future<void> _showSheet(Widget child, {double heightFrac = 0.9})"
     doc_jp: "共通: 角丸付き全画面BottomSheet"
     name_words_en: ["show", "sheet"]
-    comment_keywords_jp: ["角丸付き全画面BottomSheet", "共通"]
+    comment_keywords_jp: ["共通", "角丸付き全画面BottomSheet"]
   - id: "87711e7e3986"
     file: "screens/map_screen.dart"
     line: 493
@@ -3289,7 +3281,7 @@ functions:
     signature: "Future<void> _onDailyBadgeTap() async"
     doc_jp: "右上 Daily Transit Badge タップ時のハンドラ。 プロフィール無 or トップカテゴリ未算出ならば何もしない。 「未閲覧（リセット時刻後初回）」: アニメ → 0.5s 余韻 → F1-c フルUI 「閲覧済み（同日2回目以降）」: アニメ無し、F1-c フルUI を直接フェードイン"
     name_words_en: ["on", "daily", "badge", "tap"]
-    comment_keywords_jp: ["未閲覧", "タップ時のハンドラ", "アニメ", "右上", "同日", "Daily", "Badge", "フルUI", "リセット時刻後初回", "余韻", "アニメ無し", "プロフィール無", "トップカテゴリ未算出ならば何もしない", "閲覧済み", "回目以降", "or", "Transit", "を直接フェードイン"]
+    comment_keywords_jp: ["or", "未閲覧", "閲覧済み", "Badge", "Daily", "トップカテゴリ未算出ならば何もしない", "フルUI", "余韻", "回目以降", "同日", "タップ時のハンドラ", "Transit", "を直接フェードイン", "アニメ", "リセット時刻後初回", "プロフィール無", "右上", "アニメ無し"]
   - id: "22b1cfadac56"
     file: "screens/map_screen.dart"
     line: 576
@@ -3297,7 +3289,7 @@ functions:
     signature: "Future<void> _onOverlayComplete() async"
     doc_jp: "Dominant Fortune Overlay 完了時の処理。 アニメ → 0.5s 余韻 → F1-c フルUI フェードイン"
     name_words_en: ["on", "overlay", "complete"]
-    comment_keywords_jp: ["アニメ", "Fortune", "フルUI", "Overlay", "Dominant", "余韻", "フェードイン", "完了時の処理"]
+    comment_keywords_jp: ["Dominant", "Fortune", "Overlay", "フェードイン", "完了時の処理", "余韻", "アニメ", "フルUI"]
   - id: "7ba01529500f"
     file: "screens/map_screen.dart"
     line: 586
@@ -3305,7 +3297,7 @@ functions:
     signature: "void _onDailyTransitClose()"
     doc_jp: "F1-c フル UI を閉じる。バッジは閲覧済み状態（光らない）に。"
     name_words_en: ["on", "daily", "transit", "close"]
-    comment_keywords_jp: ["フル", "光らない", "UI", "バッジは閲覧済み状態", "を閉じる"]
+    comment_keywords_jp: ["バッジは閲覧済み状態", "光らない", "UI", "フル", "を閉じる"]
   - id: "0626911ebe1b"
     file: "screens/map_screen.dart"
     line: 598
@@ -3321,7 +3313,7 @@ functions:
     signature: "void _frameSearchArea(LatLng around)"
     doc_jp: "検索結果リストが画面下半分を覆う前提で、マップ中心を「南」にずらして 元の center が画面の上半分中央に来るようにする。 ズームは都市内のエリア詳細が見える 13.0（オーナー判断 2026-04-30）。  この時の (shifted, zoom) を保存しておき、hit 選択後に focus を閉じた際に `_restoreSearchListView` で同じ位置・ズームへ復元する。"
     name_words_en: ["frame", "search", "area"]
-    comment_keywords_jp: ["元の", "を保存しておき", "shifted", "focus", "が画面の上半分中央に来るようにする", "にずらして", "オーナー判断", "を閉じた際に", "で同じ位置・ズームへ復元する", "ズームは都市内のエリア詳細が見える", "zoom", "マップ中心を", "hit", "選択後に", "検索結果リストが画面下半分を覆う前提で", "この時の", "center", "restoreSearchListView"]
+    comment_keywords_jp: ["マップ中心を", "元の", "center", "が画面の上半分中央に来るようにする", "この時の", "zoom", "を閉じた際に", "ズームは都市内のエリア詳細が見える", "検索結果リストが画面下半分を覆う前提で", "hit", "オーナー判断", "focus", "にずらして", "restoreSearchListView", "で同じ位置・ズームへ復元する", "を保存しておき", "選択後に", "shifted"]
   - id: "8b91c42bb895"
     file: "screens/map_screen.dart"
     line: 655
@@ -3329,7 +3321,7 @@ functions:
     signature: "void _restoreSearchListView()"
     doc_jp: "hit 選択後に focus を閉じた際、`_frameSearchArea` で記録した 元の一覧表示状態 (center, zoom) へ地図を戻す。 一覧表示前の状態が保存されていない場合は何もしない。"
     name_words_en: ["restore", "search", "list", "view"]
-    comment_keywords_jp: ["で記録した", "focus", "を閉じた際", "へ地図を戻す", "frameSearchArea", "zoom", "一覧表示前の状態が保存されていない場合は何もしない", "元の一覧表示状態", "選択後に", "hit", "center"]
+    comment_keywords_jp: ["frameSearchArea", "center", "zoom", "へ地図を戻す", "focus", "hit", "を閉じた際", "で記録した", "一覧表示前の状態が保存されていない場合は何もしない", "元の一覧表示状態", "選択後に"]
   - id: "6fcf6502c3e3"
     file: "screens/map_screen.dart"
     line: 664
@@ -3345,7 +3337,7 @@ functions:
     signature: "Marker _buildFocusedHitMarker()"
     doc_jp: "検索 focus 中の単一マーカー。 リスト中の hit 順 (1〜20) をそのまま中心に表示し、選択した番号を保持する。 一覧マーカー(_buildSearchHitMarkers)より大きめ・影濃いめ。"
     name_words_en: ["build", "focused", "hit", "marker"]
-    comment_keywords_jp: ["をそのまま中心に表示し", "focus", "検索", "中の単一マーカー", "より大きめ・影濃いめ", "選択した番号を保持する", "hit", "一覧マーカー", "リスト中の", "buildSearchHitMarkers"]
+    comment_keywords_jp: ["一覧マーカー", "をそのまま中心に表示し", "中の単一マーカー", "hit", "リスト中の", "選択した番号を保持する", "検索", "focus", "buildSearchHitMarkers", "より大きめ・影濃いめ"]
   - id: "783b9bf6b1c3"
     file: "screens/map_screen.dart"
     line: 718
@@ -3353,7 +3345,7 @@ functions:
     signature: "List<Marker> _buildSearchHitMarkers()"
     doc_jp: "検索結果リスト中に地図上へ番号マーカー (1〜20) を描画する。 表示順 = リスト順 (Google RELEVANCE + locationBias)。 タップで `_selectSearchHit` を呼び、リスト側でタップしたのと同等に focus する。"
     name_words_en: ["build", "search", "hit", "markers"]
-    comment_keywords_jp: ["検索結果リスト中に地図上へ番号マーカー", "RELEVANCE", "リスト側でタップしたのと同等に", "する", "focus", "Google", "を呼び", "を描画する", "リスト順", "selectSearchHit", "表示順", "タップで", "locationBias"]
+    comment_keywords_jp: ["リスト順", "を呼び", "を描画する", "タップで", "focus", "検索結果リスト中に地図上へ番号マーカー", "する", "locationBias", "selectSearchHit", "表示順", "Google", "RELEVANCE", "リスト側でタップしたのと同等に"]
   - id: "f8dfaa20679e"
     file: "screens/map_screen.dart"
     line: 791
@@ -3361,7 +3353,7 @@ functions:
     signature: "Map<String, double> _displayScores()"
     doc_jp: "カテゴリ × ソース（transit/progressed/combined）に応じた 16方位スコアを算出する。セクター描画・FortuneFilterLabel 共通利用。 _activeCategory == 'all' の場合は総合合算、それ以外はカテゴリ別 _fComps を使用。 _activeSrc で transit/progressed/combined を切替。"
     name_words_en: ["display", "scores"]
-    comment_keywords_jp: ["fComps", "方位スコアを算出する", "セクター描画・FortuneFilterLabel", "activeCategory", "activeSrc", "ソース", "それ以外はカテゴリ別", "transit", "combined", "を使用", "all", "を切替", "共通利用", "に応じた", "progressed", "の場合は総合合算", "カテゴリ"]
+    comment_keywords_jp: ["を切替", "all", "を使用", "fComps", "セクター描画・FortuneFilterLabel", "activeSrc", "方位スコアを算出する", "ソース", "combined", "共通利用", "それ以外はカテゴリ別", "progressed", "activeCategory", "に応じた", "transit", "の場合は総合合算", "カテゴリ"]
   - id: "2d93b360382d"
     file: "screens/map_screen.dart"
     line: 819
@@ -3369,7 +3361,7 @@ functions:
     signature: "Map<String, DirectionEnergy>? _displayEnergies()"
     doc_jp: "🔴 Solara設計思想: ソフト/ハード独立2エネルギー版の方位データ。 セクター描画は本メソッドの戻り値を `sectorEnergies` に渡す。 _activeSrc によりトランジット/プログレス/合計を切替。 （詳細: project_solara_design_philosophy.md）"
     name_words_en: ["display", "energies"]
-    comment_keywords_jp: ["sectorEnergies", "エネルギー版の方位データ", "Solara設計思想", "ソフト", "ハード独立", "に渡す", "セクター描画は本メソッドの戻り値を", "activeSrc", "プログレス", "philosophy", "md", "design", "solara", "合計を切替", "によりトランジット", "詳細", "project"]
+    comment_keywords_jp: ["プログレス", "project", "によりトランジット", "md", "ハード独立", "activeSrc", "合計を切替", "sectorEnergies", "に渡す", "詳細", "solara", "セクター描画は本メソッドの戻り値を", "Solara設計思想", "ソフト", "design", "エネルギー版の方位データ", "philosophy"]
   - id: "937704bb17c8"
     file: "screens/map_screen.dart"
     line: 852
@@ -3377,7 +3369,7 @@ functions:
     signature: "List<double> _sectorRankAlphaMul()"
     doc_jp: "扇状の rank (1/2/3位) 別 alpha 倍率を activeCategory に応じて返す。 スコア比正規化はせず、rank で固定差を出す (1位/2位/3位 を見て分かる差)。 2026-05-04 オーナー要望微調整: - 総合 / 恋愛: 1位 少し濃く (1.15) - 癒し / 仕事: 3位 薄く (0.30) - 話す: 2位 薄く (0.55) / 3位 さらに薄く (0.20)"
     name_words_en: ["sector", "rank", "alpha", "mul"]
-    comment_keywords_jp: ["rank", "薄く", "少し濃く", "で固定差を出す", "activeCategory", "倍率を", "スコア比正規化はせず", "オーナー要望微調整", "を見て分かる差", "仕事", "癒し", "さらに薄く", "扇状の", "恋愛", "alpha", "話す", "に応じて返す", "総合"]
+    comment_keywords_jp: ["rank", "仕事", "alpha", "スコア比正規化はせず", "オーナー要望微調整", "総合", "を見て分かる差", "扇状の", "少し濃く", "さらに薄く", "に応じて返す", "話す", "恋愛", "癒し", "倍率を", "activeCategory", "で固定差を出す", "薄く"]
   - id: "b71b2c47afc9"
     file: "screens/map_screen.dart"
     line: 870
@@ -3385,7 +3377,7 @@ functions:
     signature: "void _rebuild(LatLng newCenter)"
     doc_jp: "HTML: rebuild(nc, fly) — center変更 + flyTo + セクター再計算 + 天体ライン再構築"
     name_words_en: ["rebuild"]
-    comment_keywords_jp: ["nc", "HTML", "center変更", "セクター再計算", "rebuild", "天体ライン再構築", "fly", "flyTo"]
+    comment_keywords_jp: ["セクター再計算", "fly", "nc", "rebuild", "HTML", "天体ライン再構築", "flyTo", "center変更"]
   - id: "6682608e3178"
     file: "screens/map_screen.dart"
     line: 886
@@ -3393,7 +3385,7 @@ functions:
     signature: "void _enterAstroCartoMode()"
     doc_jp: "Astro*Carto*Graphy モード起動。 現状を退避 → 世界規模ビュー(出生地経度・緯度20°・zoom 2.5)+ ダーク強制 + relocate/aspect/aspectAll ON + 不要レイヤー OFF。"
     name_words_en: ["enter", "astro", "carto", "mode"]
-    comment_keywords_jp: ["ダーク強制", "モード起動", "出生地経度・緯度", "不要レイヤー", "ON", "relocate", "aspectAll", "世界規模ビュー", "現状を退避", "Carto", "・zoom", "Graphy", "OFF", "Astro", "aspect"]
+    comment_keywords_jp: ["・zoom", "ダーク強制", "ON", "Carto", "世界規模ビュー", "aspectAll", "aspect", "現状を退避", "モード起動", "OFF", "Astro", "relocate", "出生地経度・緯度", "不要レイヤー", "Graphy"]
   - id: "ca75589cc4a8"
     file: "screens/map_screen.dart"
     line: 930
@@ -3401,7 +3393,7 @@ functions:
     signature: "void _exitAstroCartoMode()"
     doc_jp: "Astro*Carto*Graphy モード解除。退避した状態を完全復元。"
     name_words_en: ["exit", "astro", "carto", "mode"]
-    comment_keywords_jp: ["退避した状態を完全復元", "Carto", "モード解除", "Graphy", "Astro"]
+    comment_keywords_jp: ["Carto", "退避した状態を完全復元", "モード解除", "Astro", "Graphy"]
   - id: "c9b6a10867f2"
     file: "screens/map_screen.dart"
     line: 966
@@ -3409,7 +3401,7 @@ functions:
     signature: "void _geolocate()"
     doc_jp: "HTML: vpGeo() — GPS現在地に移動（geolocatorパッケージ未導入のため仮実装）"
     name_words_en: ["geolocate"]
-    comment_keywords_jp: ["geolocatorパッケージ未導入のため仮実装", "vpGeo", "GPS現在地に移動", "HTML"]
+    comment_keywords_jp: ["GPS現在地に移動", "HTML", "vpGeo", "geolocatorパッケージ未導入のため仮実装"]
   - id: "5bb53da63066"
     file: "screens/map_screen.dart"
     line: 977
@@ -3433,7 +3425,7 @@ functions:
     signature: "Widget _buildZenithPopup(({String planet, astro_lines.AstroFrame frame, LatLng point}) info)"
     doc_jp: "天頂点 popup ビルダ。CCG: タップされた frame の zenith 座標を直接使う。"
     name_words_en: ["build", "zenith", "popup"]
-    comment_keywords_jp: ["天頂点", "タップされた", "zenith", "ビルダ", "CCG", "popup", "frame", "座標を直接使う"]
+    comment_keywords_jp: ["ビルダ", "zenith", "CCG", "タップされた", "座標を直接使う", "frame", "popup", "天頂点"]
   - id: "39d09a0b593f"
     file: "screens/map_screen.dart"
     line: 1591
@@ -3441,7 +3433,7 @@ functions:
     signature: "Widget _buildRelocationPopup(LatLng tap)"
     doc_jp: "Phase M2 統合タップ popup (論点10 8-β): aspect ON で線情報、relocate ON で ASC/MC + 12ハウス、両方ONで統合表示。 比較ベースは home (現住所) 優先、未設定時は出生地。"
     name_words_en: ["build", "relocation", "popup"]
-    comment_keywords_jp: ["ハウス", "現住所", "統合タップ", "ON", "relocate", "論点", "ASC", "MC", "両方ONで統合表示", "比較ベースは", "home", "で線情報", "優先", "未設定時は出生地", "Phase", "popup", "aspect"]
+    comment_keywords_jp: ["統合タップ", "比較ベースは", "両方ONで統合表示", "ON", "Phase", "MC", "relocate", "aspect", "home", "未設定時は出生地", "で線情報", "優先", "現住所", "ハウス", "popup", "論点", "ASC"]
   - id: "7875043705d3"
     file: "screens/map_screen.dart"
     line: 1642
@@ -3449,7 +3441,7 @@ functions:
     signature: "Future<void> _reloadLocationSlots() async"
     doc_jp: "登録地スロット (VP + Locations) を再読込してマーカー描画に反映する。 呼出タイミング: プロフィール初回ロード後 / VP panel 閉じた後 / Locations screen から戻った後 / 検索結果から登録した後。 home は両 SlotManager の syncHome で先頭に同期される。"
     name_words_en: ["reload", "location", "slots"]
-    comment_keywords_jp: ["閉じた後", "VP", "panel", "で先頭に同期される", "を再読込してマーカー描画に反映する", "呼出タイミング", "Locations", "screen", "登録地スロット", "home", "から戻った後", "は両", "SlotManager", "syncHome", "プロフィール初回ロード後", "検索結果から登録した後"]
+    comment_keywords_jp: ["で先頭に同期される", "を再読込してマーカー描画に反映する", "登録地スロット", "Locations", "syncHome", "呼出タイミング", "閉じた後", "検索結果から登録した後", "から戻った後", "panel", "は両", "SlotManager", "screen", "home", "プロフィール初回ロード後", "VP"]
   - id: "bb7ca2507ac9"
     file: "screens/map_screen.dart"
     line: 1660
@@ -3457,7 +3449,7 @@ functions:
     signature: "List<astro_lines.NearbyAstroLine> _findNearbyAstroLines(LatLng tap)"
     doc_jp: "近接アスペクト線を検出 (Tier A #3)。 通常Map / Astro*Carto*Graphy モード共通で画面pixel距離 (20px) で判定。 km固定閾値はズームに比例して破綻するため不採用 (zoom 14 で 200km は ~21,000px)。 camera は1度だけキャプチャして project に渡す (camera ゲッタを毎呼出すとインスタンス再生成のリスクがあるため)。 CCG: 表示中の全フレームを跨いで近接判定する (Natal + Transit + ...)。"
     name_words_en: ["find", "nearby", "astro", "lines"]
-    comment_keywords_jp: ["に渡す", "Transit", "Astro", "で判定", "px", "ゲッタを毎呼出すとインスタンス再生成のリスクがあるため", "zoom", "モード共通で画面pixel距離", "Graphy", "Natal", "度だけキャプチャして", "Tier", "camera", "Carto", "km", "km固定閾値はズームに比例して破綻するため不採用", "project", "通常Map", "表示中の全フレームを跨いで近接判定する", "CCG", "近接アスペクト線を検出"]
+    comment_keywords_jp: ["Natal", "Carto", "通常Map", "px", "に渡す", "近接アスペクト線を検出", "km固定閾値はズームに比例して破綻するため不採用", "km", "project", "Graphy", "Tier", "モード共通で画面pixel距離", "度だけキャプチャして", "Transit", "zoom", "ゲッタを毎呼出すとインスタンス再生成のリスクがあるため", "CCG", "で判定", "camera", "Astro", "表示中の全フレームを跨いで近接判定する"]
   - id: "b78a7690e472"
     file: "screens/map_screen.dart"
     line: 1676
@@ -3465,7 +3457,7 @@ functions:
     signature: "Set<astro_lines.AstroFrame> _zenithVisibleFrames()"
     doc_jp: "天頂マーカーを表示するフレーム集合。 各 aspect トグル ON でそのフレームの天頂シンボルが描画される。 動的フレーム (T/P/SA) は時間で動くので時刻スライダーと連動する。"
     name_words_en: ["zenith", "visible", "frames"]
-    comment_keywords_jp: ["トグル", "動的フレーム", "ON", "天頂マーカーを表示するフレーム集合", "は時間で動くので時刻スライダーと連動する", "でそのフレームの天頂シンボルが描画される", "aspect", "SA"]
+    comment_keywords_jp: ["でそのフレームの天頂シンボルが描画される", "ON", "aspect", "動的フレーム", "は時間で動くので時刻スライダーと連動する", "SA", "トグル", "天頂マーカーを表示するフレーム集合"]
   - id: "a2e05189c549"
     file: "screens/map_screen.dart"
     line: 1687
@@ -3473,7 +3465,7 @@ functions:
     signature: "List<astro_lines.AstroLine> _visibleAstroLines()"
     doc_jp: "現在 ON の aspect レイヤートグルから可視フレーム集合を導き、_astroLinesCache を絞り込む。 CCG (Tier A #5): natal/transit/progressed/solarArc を独立にトグルできる。"
     name_words_en: ["visible", "astro", "lines"]
-    comment_keywords_jp: ["現在", "を絞り込む", "ON", "を独立にトグルできる", "Tier", "transit", "solarArc", "CCG", "natal", "astroLinesCache", "progressed", "レイヤートグルから可視フレーム集合を導き", "aspect"]
+    comment_keywords_jp: ["transit", "astroLinesCache", "レイヤートグルから可視フレーム集合を導き", "ON", "CCG", "Tier", "aspect", "solarArc", "progressed", "を絞り込む", "を独立にトグルできる", "現在", "natal"]
   - id: "8a5d827aa150"
     file: "screens/map_screen.dart"
     line: 1710
@@ -3481,7 +3473,7 @@ functions:
     signature: "Widget _buildNoProfileGuide()"
     doc_jp: "プロフィール未設定時の案内カード（他画面と完全同一）。 「設定する」タップで Sanctuary タブへ遷移。"
     name_words_en: ["build", "no", "profile", "guide"]
-    comment_keywords_jp: ["設定する", "タブへ遷移", "プロフィール未設定時の案内カード", "他画面と完全同一", "Sanctuary", "タップで"]
+    comment_keywords_jp: ["タップで", "Sanctuary", "タブへ遷移", "他画面と完全同一", "プロフィール未設定時の案内カード", "設定する"]
   - id: "eafbd0e4cb05"
     file: "screens/observe/observe_card_widgets.dart"
     line: 29
@@ -3641,7 +3633,7 @@ functions:
     signature: "Widget _buildSunBlaze(double size)"
     doc_jp: "Multi-layer pulsating \"blaze\" for the Sun — outer red-orange, mid orange, inner yellow, each breathing at a different rate for a shimmering flame feel. Blended additively to brighten the core."
     name_words_en: ["build", "sun", "blaze"]
-    comment_keywords_jp: ["to", "shimmering", "orange", "additively", "Multi", "Blended", "at", "brighten", "red", "for", "different", "pulsating", "Sun", "yellow", "blaze", "the", "inner", "feel", "breathing", "rate", "mid", "flame", "core", "layer", "outer", "each"]
+    comment_keywords_jp: ["breathing", "layer", "additively", "at", "flame", "red", "core", "each", "for", "the", "rate", "different", "inner", "outer", "feel", "yellow", "Blended", "blaze", "orange", "Multi", "brighten", "pulsating", "Sun", "to", "shimmering", "mid"]
   - id: "7a4a16aa507e"
     file: "screens/observe/tarot_altar_scene.dart"
     line: 431
@@ -4049,7 +4041,7 @@ functions:
     signature: "Future<void> _syncHomeToVP(SolaraProfile profile) async"
     doc_jp: "HTML: syncHomeToVP(profile) — sync home to solara_vp_slots and solara_locations"
     name_words_en: ["sync", "home", "to", "v", "p"]
-    comment_keywords_jp: ["to", "sync", "HTML", "vp", "slots", "home", "and", "locations", "solara", "profile", "syncHomeToVP"]
+    comment_keywords_jp: ["to", "syncHomeToVP", "vp", "HTML", "profile", "and", "sync", "slots", "solara", "home", "locations"]
   - id: "45cc12bb3308"
     file: "screens/sanctuary_screen.dart"
     line: 171
@@ -4225,7 +4217,7 @@ functions:
     signature: "Future<void> setOverride(String? code) async"
     doc_jp: "言語を変更して保存 (null=端末設定に戻す)"
     name_words_en: ["set", "override"]
-    comment_keywords_jp: ["端末設定に戻す", "null", "言語を変更して保存"]
+    comment_keywords_jp: ["null", "言語を変更して保存", "端末設定に戻す"]
   - id: "238568f935e7"
     file: "utils/astro_glossary.dart"
     line: 478
@@ -4233,7 +4225,7 @@ functions:
     signature: "void showAstroGlossaryDialog(BuildContext context, String termKey)"
     doc_jp: "用語解説 popup を表示する共通ヘルパー。 LayerPanel / FramePills / CategoryPills 等から共通で呼ぶ。 [termKey] が astroGlossary に存在しなければ何もしない。"
     name_words_en: ["show", "astro", "glossary", "dialog"]
-    comment_keywords_jp: ["を表示する共通ヘルパー", "LayerPanel", "用語解説", "CategoryPills", "等から共通で呼ぶ", "termKey", "FramePills", "astroGlossary", "popup", "に存在しなければ何もしない"]
+    comment_keywords_jp: ["に存在しなければ何もしない", "termKey", "を表示する共通ヘルパー", "CategoryPills", "用語解説", "astroGlossary", "LayerPanel", "FramePills", "popup", "等から共通で呼ぶ"]
   - id: "982312fd26d0"
     file: "utils/astro_houses.dart"
     line: 57
@@ -4241,7 +4233,7 @@ functions:
     signature: "HousesResult calcHousesRelocate({   required double natalMc,   required double natalLng,   required double tapLat,   required double tapLng,   String houseSystem = 'placidus', })"
     doc_jp: "natalMc + natalLng (chart fetch時の lng) から LST を逆算し、 任意の (tapLat, tapLng) でハウスを再計算する。  LST 復元戦略: RA(MC) = LST  (子午線の赤経 = LST、定義より) Worker calcMC: MC = atan2(sin(LST), cos(LST)·cos(ε)) 逆算: LST = atan2(sin(MC)·cos(ε), cos(MC)) 同一 UTC 瞬間における経度差: LST_tap = LST_home + (tapLng - natalLng)  この戦略により birthDate/birthTime/tz から UTC を再構築する必要がなく、 IANA TZ や DST 補正の問題を完全に回避できる。"
     name_words_en: ["calc", "houses", "relocate"]
-    comment_keywords_jp: ["birthTime", "IANA", "MC", "tapLng", "natalLng", "定義より", "瞬間における経度差", "逆算", "tz", "DST", "natalMc", "cos", "sin", "UTC", "tapLat", "chart", "birthDate", "から", "calcMC", "復元戦略", "Worker", "TZ", "LST", "でハウスを再計算する", "子午線の赤経", "lng", "tap", "を再構築する必要がなく", "atan", "任意の", "RA", "補正の問題を完全に回避できる", "この戦略により", "home", "fetch時の", "を逆算し", "同一"]
+    comment_keywords_jp: ["この戦略により", "fetch時の", "birthDate", "瞬間における経度差", "MC", "同一", "natalLng", "UTC", "DST", "atan", "任意の", "home", "を再構築する必要がなく", "tap", "補正の問題を完全に回避できる", "cos", "calcMC", "tz", "birthTime", "定義より", "RA", "sin", "TZ", "natalMc", "子午線の赤経", "LST", "tapLat", "tapLng", "lng", "を逆算し", "chart", "Worker", "IANA", "でハウスを再計算する", "逆算", "復元戦略", "から"]
   - id: "8bf80a018cf0"
     file: "utils/astro_houses.dart"
     line: 74
@@ -4249,7 +4241,7 @@ functions:
     signature: "HousesResult _housesFromLst({   required double lstDeg,   required double lat,   required String houseSystem, })"
     doc_jp: "LST + lat から ASC/MC/houses を組み立てる内部実装。"
     name_words_en: ["houses", "from", "lst"]
-    comment_keywords_jp: ["を組み立てる内部実装", "MC", "houses", "ASC", "LST", "lat", "から"]
+    comment_keywords_jp: ["houses", "MC", "を組み立てる内部実装", "LST", "lat", "ASC", "から"]
   - id: "5f81fa87b398"
     file: "utils/astro_houses.dart"
     line: 110
@@ -4257,7 +4249,7 @@ functions:
     signature: "double _recoverLstFromMc(double mcDeg)"
     doc_jp: "MC ecliptic → RA(MC)=LST の逆変換 (Worker calcHousesPlacidus 内 ramc と同形)。"
     name_words_en: ["recover", "lst", "from", "mc"]
-    comment_keywords_jp: ["ramc", "の逆変換", "MC", "RA", "Worker", "calcHousesPlacidus", "と同形", "LST", "ecliptic"]
+    comment_keywords_jp: ["RA", "の逆変換", "MC", "Worker", "ecliptic", "と同形", "LST", "ramc", "calcHousesPlacidus"]
   - id: "586ef89627d1"
     file: "utils/astro_houses.dart"
     line: 117
@@ -4265,7 +4257,7 @@ functions:
     signature: "double _calcAscendant(double lstDeg, double lat, double obliquityDeg)"
     doc_jp: "ASC = atan2(-cos(LST), sin(ε)·tan(lat) + cos(ε)·sin(LST)) [+180°]"
     name_words_en: ["calc", "ascendant"]
-    comment_keywords_jp: ["ASC", "cos", "sin", "LST", "tan", "lat", "atan"]
+    comment_keywords_jp: ["sin", "cos", "tan", "atan", "LST", "lat", "ASC"]
   - id: "775da4ffb4e9"
     file: "utils/astro_houses.dart"
     line: 131
@@ -4273,7 +4265,7 @@ functions:
     signature: "double _calcMc(double lstDeg, double obliquityDeg)"
     doc_jp: "MC = atan2(sin(LST), cos(LST)·cos(ε))"
     name_words_en: ["calc", "mc"]
-    comment_keywords_jp: ["MC", "cos", "sin", "LST", "atan"]
+    comment_keywords_jp: ["sin", "MC", "cos", "atan", "LST"]
   - id: "03fd16847b7c"
     file: "utils/astro_houses.dart"
     line: 141
@@ -4281,7 +4273,7 @@ functions:
     signature: "List<double> _placidusCusps(double mc, double asc, double lat)"
     doc_jp: "Placidus 12-cusp 反復計算 (Worker calcHousesPlacidus L94-137 を Dart 移植)。 極域 (|lat|>66) では呼ばないこと。"
     name_words_en: ["placidus", "cusps"]
-    comment_keywords_jp: ["反復計算", "Dart", "極域", "cusp", "Worker", "calcHousesPlacidus", "lat", "Placidus", "では呼ばないこと", "移植"]
+    comment_keywords_jp: ["lat", "では呼ばないこと", "Worker", "Dart", "移植", "極域", "Placidus", "反復計算", "cusp", "calcHousesPlacidus"]
   - id: "a46e2dc3110d"
     file: "utils/astro_houses.dart"
     line: 155
@@ -4297,7 +4289,7 @@ functions:
     signature: "int? assignPlanetHouse(double planetLon, List<double> houses)"
     doc_jp: "黄経 [planetLon] が houses (12 cusps) のどのハウスに入るか判定 (1-12)。 houses 不正時は null。 horoscope_screen の _planetHouse と同ロジック。"
     name_words_en: ["assign", "planet", "house"]
-    comment_keywords_jp: ["のどのハウスに入るか判定", "null", "planetHouse", "cusps", "planetLon", "黄経", "screen", "horoscope", "と同ロジック", "不正時は", "houses"]
+    comment_keywords_jp: ["null", "planetLon", "houses", "のどのハウスに入るか判定", "黄経", "horoscope", "と同ロジック", "cusps", "screen", "planetHouse", "不正時は"]
   - id: "60295407c037"
     file: "utils/astro_lines.dart"
     line: 56
@@ -4305,7 +4297,7 @@ functions:
     signature: "double _normLng(double d)"
     doc_jp: "経度を -180..180 に正規化 (flutter_map の LatLng 用)"
     name_words_en: ["norm", "lng"]
-    comment_keywords_jp: ["flutter", "LatLng", "に正規化", "map", "経度を"]
+    comment_keywords_jp: ["LatLng", "flutter", "に正規化", "map", "経度を"]
   - id: "18ed8292b180"
     file: "utils/astro_lines.dart"
     line: 92
@@ -4313,7 +4305,7 @@ functions:
     signature: "double _gmstHoursFromBaseline(double baselineMc, double baselineLng)"
     doc_jp: "chart.mc + chart fetch時の lng から GMST_hours を逆算。 LST_baseline = recover(MC), GMST_hours = (LST_baseline - baselineLng) / 15"
     name_words_en: ["gmst", "hours", "from", "baseline"]
-    comment_keywords_jp: ["recover", "baselineLng", "baseline", "MC", "hours", "mc", "を逆算", "LST", "lng", "GMST", "fetch時の", "chart", "から"]
+    comment_keywords_jp: ["mc", "baseline", "fetch時の", "を逆算", "chart", "MC", "lng", "GMST", "hours", "LST", "recover", "から", "baselineLng"]
   - id: "3d13db8ed9ad"
     file: "utils/astro_lines.dart"
     line: 109
@@ -4321,7 +4313,7 @@ functions:
     signature: "double gmstHoursFromUtc(DateTime utc)"
     doc_jp: "任意UTC時刻から GMST (時間, 0..24) を計算。Tier A #5 / CCG 用。  標準公式 (USNO Astronomical Almanac, Meeus): JD_UTC = 2440587.5 + ms_since_epoch / 86400000 d = JD_UTC - 2451545.0 GMST = 18.697374558 + 24.06570982441908 * d  (時間)  ±50年で誤差 <0.05秒。Solara の線描画 (1°オーダー) に対し十分。 Worker calcGMST と同じアルゴリズム (worker/src/astro.js)。"
     name_words_en: ["gmst", "hours", "from", "utc"]
-    comment_keywords_jp: ["Almanac", "since", "標準公式", "と同じアルゴリズム", "Astronomical", "worker", "src", "任意UTC時刻から", "astro", "オーダー", "UTC", "を計算", "の線描画", "時間", "ms", "USNO", "Tier", "年で誤差", "js", "Worker", "calcGMST", "epoch", "GMST", "に対し十分", "Solara", "JD", "Meeus", "CCG"]
+    comment_keywords_jp: ["ms", "を計算", "の線描画", "UTC", "Astronomical", "時間", "Solara", "と同じアルゴリズム", "USNO", "Tier", "GMST", "worker", "JD", "since", "オーダー", "Meeus", "CCG", "標準公式", "js", "calcGMST", "astro", "epoch", "Worker", "年で誤差", "src", "Almanac", "任意UTC時刻から", "に対し十分"]
   - id: "d7adf05fe28f"
     file: "utils/astro_lines.dart"
     line: 120
@@ -4329,7 +4321,7 @@ functions:
     signature: "Map<String, double> solarArcPlanets({   required Map<String, double> natal,   required Map<String, double> progressed, })"
     doc_jp: "natal + progressed から Solar Arc (ソーラーアーク方向) の惑星位置を導出。 全惑星に同じ arc (= prog.sun - natal.sun) を加算する古典的計算法。 CCG Tier A #5 用、Worker 側で計算しないためクライアント側で生成。"
     name_words_en: ["solar", "arc", "planets"]
-    comment_keywords_jp: ["prog", "Solar", "の惑星位置を導出", "を加算する古典的計算法", "Tier", "Worker", "arc", "sun", "natal", "CCG", "側で計算しないためクライアント側で生成", "全惑星に同じ", "Arc", "progressed", "から", "ソーラーアーク方向"]
+    comment_keywords_jp: ["sun", "ソーラーアーク方向", "Arc", "Solar", "prog", "CCG", "Tier", "Worker", "arc", "progressed", "natal", "の惑星位置を導出", "側で計算しないためクライアント側で生成", "を加算する古典的計算法", "全惑星に同じ", "から"]
   - id: "88cf9ecac39b"
     file: "utils/astro_lines.dart"
     line: 227
@@ -4337,7 +4329,7 @@ functions:
     signature: "List<AstroLine> buildAstroLines({   required Map<String, double> natal,   required double baselineMc,   required double baselineLng,   double latMin = -75,   double latMax = 75,   double latStep = 2.0"
     doc_jp: "全 40本のアストロラインを計算 (natal フレーム)。  [natal] は 10惑星の黄経 (度)。 [baselineMc] / [baselineLng] は chart fetch時の MC と地点経度 (relocate設定時は relocated MC と home lng、未設定なら birth)。 [latRange] は描画緯度範囲 (デフォルト -75..75 度)。 [latStep] はホライズン線のサンプリング間隔 (度、デフォルト2)。  内部で GMST を baseline から逆算して [buildAstroLinesAt] に委譲する。 後方互換 API: 既存の natal-only 呼出はこのまま動く。"
     name_words_en: ["build", "astro", "lines"]
-    comment_keywords_jp: ["に委譲する", "は描画緯度範囲", "buildAstroLinesAt", "MC", "と地点経度", "API", "デフォルト", "呼出はこのまま動く", "latStep", "はホライズン線のサンプリング間隔", "本のアストロラインを計算", "relocated", "relocate設定時は", "から逆算して", "後方互換", "only", "natal", "chart", "フレーム", "内部で", "未設定なら", "既存の", "lng", "GMST", "baselineLng", "birth", "baseline", "home", "惑星の黄経", "baselineMc", "latRange", "fetch時の"]
+    comment_keywords_jp: ["fetch時の", "MC", "API", "はホライズン線のサンプリング間隔", "本のアストロラインを計算", "home", "relocated", "natal", "フレーム", "既存の", "は描画緯度範囲", "に委譲する", "buildAstroLinesAt", "GMST", "デフォルト", "latRange", "内部で", "から逆算して", "latStep", "baseline", "baselineMc", "baselineLng", "lng", "惑星の黄経", "relocate設定時は", "呼出はこのまま動く", "birth", "未設定なら", "chart", "後方互換", "only", "と地点経度"]
   - id: "9265afe8f123"
     file: "utils/astro_lines.dart"
     line: 257
@@ -4345,7 +4337,7 @@ functions:
     signature: "List<AstroLine> buildAstroLinesAt({   required Map<String, double> planets,   required double gmstHours,   required AstroFrame frame,   double latMin = -75,   double latMax = 75,   double latStep = 2."
     doc_jp: "任意フレーム × 任意 GMST のアスペクト線 40本を計算 (Tier A #5 / CCG 汎用)。  [planets]   フレームに対応する10惑星の黄経マップ - natal:      chart.natal (出生時の固定値) - transit:    chart.transit (任意UTC時の動的値、Worker から取得) - progressed: chart.progressed (2次進行、Worker から取得) - solarArc:   solarArcPlanets(natal, progressed) の戻り [gmstHours] そのフレームの GMST (時間, 0..24) - natal:      _gmstHoursFromBaseline(chart.mc, baselineLng) ※buildAstroLines 経由 - dynamic:    gmstHoursFromUtc(viewDate.toUtc()) [frame]     線の所属フレーム。AstroLine.frame に設定され UI 側で色分けに使う。"
     name_words_en: ["build", "astro", "lines", "at"]
-    comment_keywords_jp: ["任意フレーム", "dynamic", "任意", "そのフレームの", "viewDate", "線の所属フレーム", "solarArcPlanets", "フレームに対応する", "frame", "側で色分けに使う", "惑星の黄経マップ", "AstroLine", "transit", "のアスペクト線", "natal", "UI", "本を計算", "progressed", "に設定され", "chart", "時間", "の戻り", "任意UTC時の動的値", "Tier", "buildAstroLines", "出生時の固定値", "Worker", "solarArc", "planets", "toUtc", "汎用", "GMST", "baselineLng", "経由", "次進行", "gmstHours", "gmstHoursFromBaseline", "gmstHoursFromUtc", "から取得", "mc", "CCG"]
+    comment_keywords_jp: ["solarArcPlanets", "そのフレームの", "の戻り", "toUtc", "progressed", "gmstHours", "viewDate", "任意フレーム", "planets", "natal", "時間", "惑星の黄経マップ", "経由", "Tier", "GMST", "任意", "線の所属フレーム", "から取得", "フレームに対応する", "buildAstroLines", "gmstHoursFromUtc", "汎用", "のアスペクト線", "CCG", "solarArc", "UI", "frame", "に設定され", "AstroLine", "baselineLng", "本を計算", "mc", "dynamic", "側で色分けに使う", "chart", "Worker", "出生時の固定値", "次進行", "任意UTC時の動的値", "gmstHoursFromBaseline", "transit"]
   - id: "05ba5d507998"
     file: "utils/astro_lines.dart"
     line: 343
@@ -4353,7 +4345,7 @@ functions:
     signature: "double _haversineKm(LatLng a, LatLng b)"
     doc_jp: "タップ地点と AstroLine の各セグメント点との最小 Haversine 距離 (km)。"
     name_words_en: ["haversine", "km"]
-    comment_keywords_jp: ["Haversine", "AstroLine", "距離", "タップ地点と", "km", "の各セグメント点との最小"]
+    comment_keywords_jp: ["の各セグメント点との最小", "タップ地点と", "距離", "Haversine", "AstroLine", "km"]
   - id: "ba72d0f68639"
     file: "utils/astro_lines.dart"
     line: 355
@@ -4369,7 +4361,7 @@ functions:
     signature: "double _pointToSegmentPx(Offset p, Offset a, Offset b)"
     doc_jp: "点 p から線分 (a, b) への最短距離 (px)。"
     name_words_en: ["point", "to", "segment", "px"]
-    comment_keywords_jp: ["から線分", "への最短距離", "px"]
+    comment_keywords_jp: ["への最短距離", "px", "から線分"]
   - id: "877f04abc994"
     file: "utils/astro_lines.dart"
     line: 408
@@ -4377,7 +4369,7 @@ functions:
     signature: "double _minPixelDistanceToLine({   required Offset tapPx,   required AstroLine line,   required Offset Function(LatLng) project,   double maxJumpPx = 4096, })"
     doc_jp: "1本のラインの全セグメントとタップ位置 [tapPx] の最短pixel距離。 隣接2点が [maxJumpPx] 以上離れた線分は (子午線跨ぎ等で見た目に繋がっていないため) 無視。"
     name_words_en: ["min", "pixel", "distance", "to", "line"]
-    comment_keywords_jp: ["点が", "以上離れた線分は", "tapPx", "子午線跨ぎ等で見た目に繋がっていないため", "の最短pixel距離", "隣接", "本のラインの全セグメントとタップ位置", "maxJumpPx", "無視"]
+    comment_keywords_jp: ["本のラインの全セグメントとタップ位置", "tapPx", "maxJumpPx", "無視", "子午線跨ぎ等で見た目に繋がっていないため", "隣接", "点が", "以上離れた線分は", "の最短pixel距離"]
   - id: "26d10e739bed"
     file: "utils/astro_lines.dart"
     line: 448
@@ -4385,7 +4377,7 @@ functions:
     signature: "List<NearbyAstroLine> findNearbyLinesScreen({   required Offset tapPx,   required LatLng tapLatLng,   required List<AstroLine> lines,   required Offset Function(LatLng) project,   double thresholdPx ="
     doc_jp: "画面pixel距離で近接アスペクト線を検出する (Astro*Carto*Graphy モード専用)。  [tapPx]      タップの画面座標 (Map widget 基準) [tapLatLng]  タップの地理座標 (distanceKm 表示用) [project]    LatLng → Offset 投影関数 (通常 `camera.latLngToScreenOffset`) [thresholdPx] この pixel 距離以内の線のみ採用 (default 20px)  戻りは pixel 距離の昇順 (視覚的に最も近い線が先頭)。 `NearbyAstroLine.distanceKm` は Haversine 距離 (表示用、フィルタには使わない)。"
     name_words_en: ["find", "nearby", "lines", "screen"]
-    comment_keywords_jp: ["pixel", "フィルタには使わない", "NearbyAstroLine", "戻りは", "距離", "モード専用", "tapLatLng", "Astro", "タップの地理座標", "Haversine", "px", "距離の昇順", "Graphy", "タップの画面座標", "画面pixel距離で近接アスペクト線を検出する", "通常", "視覚的に最も近い線が先頭", "Offset", "この", "LatLng", "tapPx", "thresholdPx", "camera", "Carto", "表示用", "widget", "投影関数", "距離以内の線のみ採用", "project", "latLngToScreenOffset", "Map", "基準", "default", "distanceKm"]
+    comment_keywords_jp: ["widget", "Carto", "モード専用", "px", "pixel", "distanceKm", "この", "Graphy", "project", "通常", "距離", "タップの地理座標", "Map", "表示用", "Haversine", "基準", "視覚的に最も近い線が先頭", "LatLng", "thresholdPx", "画面pixel距離で近接アスペクト線を検出する", "距離以内の線のみ採用", "フィルタには使わない", "タップの画面座標", "latLngToScreenOffset", "tapLatLng", "NearbyAstroLine", "camera", "距離の昇順", "Astro", "投影関数", "default", "戻りは", "tapPx", "Offset"]
   - id: "0901536c0745"
     file: "utils/astro_math.dart"
     line: 20
@@ -4393,7 +4385,7 @@ functions:
     signature: "double normalize360(double d)"
     doc_jp: "角度 d を 0..360 に正規化する。 入力は任意の実数 (負・360超 OK)。"
     name_words_en: ["normalize360"]
-    comment_keywords_jp: ["負・", "角度", "OK", "に正規化する", "入力は任意の実数"]
+    comment_keywords_jp: ["に正規化する", "入力は任意の実数", "OK", "角度", "負・"]
   - id: "745e40d9a7e8"
     file: "utils/astro_math.dart"
     line: 27
@@ -4401,7 +4393,7 @@ functions:
     signature: "double angDist(double a, double b)"
     doc_jp: "2 つの角度の最小角距離 (0..180)。 入力 a, b は度。内部で abs % 360 → 180 折り返し。"
     name_words_en: ["ang", "dist"]
-    comment_keywords_jp: ["つの角度の最小角距離", "abs", "内部で", "折り返し", "入力", "は度"]
+    comment_keywords_jp: ["折り返し", "は度", "つの角度の最小角距離", "abs", "入力", "内部で"]
   - id: "a853c7b863fc"
     file: "utils/celestial_events.dart"
     line: 196
@@ -4409,7 +4401,7 @@ functions:
     signature: "String eventSummary({String lang = 'en'})"
     doc_jp: "Format active events as a summary string. localDescJP/localDesc を使用 → UTC→端末ローカル日付で正しく表示"
     name_words_en: ["event", "summary"]
-    comment_keywords_jp: ["summary", "events", "string", "active", "を使用", "UTC", "端末ローカル日付で正しく表示", "as", "localDescJP", "Format", "localDesc"]
+    comment_keywords_jp: ["Format", "端末ローカル日付で正しく表示", "を使用", "active", "string", "as", "UTC", "summary", "localDesc", "events", "localDescJP"]
   - id: "762f5dbe1e19"
     file: "utils/celestial_events.dart"
     line: 204
@@ -4425,7 +4417,7 @@ functions:
     signature: "Future<DailyTransitsResult?> fetchDailyTransits({   required double lat,   required double lng,   DateTime? startTime,   String? date,   Map<String, double>? natal,   Map<String, double>? orbs, }) asy"
     doc_jp: "拠点における今日のトランジット通過時刻を取得する。  [startTime] を渡すとその瞬間から24h を走査する（local-day 境界に最適）。 [date] (yyyy-MM-dd) は startTime 未指定時のフォールバック。 両方 null なら Worker 側で today (UTC) が使われる。 [natal] (黄経マップ) を渡すと V2 機能としてアスペクトも併記される。 [orbs] (アスペクト種別 → orb °) で Sanctuary 設定の orb を反映できる。 API 失敗時は null を返す（オフライン or Worker エラー）。"
     name_words_en: ["fetch", "daily", "transits"]
-    comment_keywords_jp: ["を走査する", "null", "境界に最適", "API", "date", "側で", "orbs", "or", "dd", "失敗時は", "を反映できる", "機能としてアスペクトも併記される", "MM", "黄経マップ", "local", "UTC", "natal", "startTime", "Sanctuary", "を返す", "today", "両方", "day", "Worker", "なら", "設定の", "orb", "未指定時のフォールバック", "オフライン", "yyyy", "が使われる", "エラー", "を渡すと", "アスペクト種別", "を渡すとその瞬間から", "拠点における今日のトランジット通過時刻を取得する"]
+    comment_keywords_jp: ["yyyy", "未指定時のフォールバック", "黄経マップ", "を渡すとその瞬間から", "機能としてアスペクトも併記される", "MM", "UTC", "API", "を走査する", "エラー", "local", "orbs", "natal", "null", "失敗時は", "側で", "を反映できる", "dd", "アスペクト種別", "or", "date", "が使われる", "day", "today", "orb", "設定の", "境界に最適", "startTime", "Sanctuary", "Worker", "なら", "を渡すと", "を返す", "オフライン", "拠点における今日のトランジット通過時刻を取得する", "両方"]
   - id: "003cb035cccb"
     file: "utils/direction_energy.dart"
     line: 48
@@ -4433,7 +4425,7 @@ functions:
     signature: "EnergyMode classify(double threshold)"
     doc_jp: "性質分類（4象限）。優劣ではなく、エネルギーの組み合わせの違い。  閾値はUI側のキャリブレーションに依存するため引数で渡す。 同じ閾値を全方向に適用することで「相対比較」ではなく 「絶対量の有無」で分類できる。"
     name_words_en: ["classify"]
-    comment_keywords_jp: ["相対比較", "ではなく", "同じ閾値を全方向に適用することで", "エネルギーの組み合わせの違い", "優劣ではなく", "で分類できる", "閾値はUI側のキャリブレーションに依存するため引数で渡す", "性質分類", "象限", "絶対量の有無"]
+    comment_keywords_jp: ["象限", "閾値はUI側のキャリブレーションに依存するため引数で渡す", "絶対量の有無", "優劣ではなく", "性質分類", "同じ閾値を全方向に適用することで", "相対比較", "ではなく", "で分類できる", "エネルギーの組み合わせの違い"]
   - id: "9c92c9376bc2"
     file: "utils/direction_energy.dart"
     line: 182
@@ -4441,7 +4433,7 @@ functions:
     signature: "List<AggregatedAspect> aggregateContributions(   List<AspectContribution> contributions, {   int? topN, })"
     doc_jp: "寄与アスペクトリストを groupKey で集約し、magnitude の降順でソート。 [topN] が指定されていれば上位N件のみ返す。"
     name_words_en: ["aggregate", "contributions"]
-    comment_keywords_jp: ["topN", "の降順でソート", "で集約し", "が指定されていれば上位N件のみ返す", "groupKey", "寄与アスペクトリストを", "magnitude"]
+    comment_keywords_jp: ["magnitude", "寄与アスペクトリストを", "topN", "の降順でソート", "groupKey", "が指定されていれば上位N件のみ返す", "で集約し"]
   - id: "d6b8e40a6c8a"
     file: "utils/direction_energy.dart"
     line: 222
@@ -4457,7 +4449,7 @@ functions:
     signature: "List<LifePeriod> detectLifePeriods(   List<ForecastDay> days, {   // 標準化された設定（2026-04 調整）：   // - topPct 0.15 → 各カテゴリ年間 約55日が閾値超え   // - minDays 7 → 7日連続必須   // 変更時は強制リフレッシュで再計算が必要（保存済み periods は旧値のまま"
     doc_jp: "ForecastDay 列から各カテゴリの「◯◯期」を検出する。 - 各カテゴリの日次スコアを昇順ソートし上位 topPct% の閾値を決める - その閾値以上が minDays 日以上連続する区間を抽出（maxGap 日以内の凹みは吸収） - **minDays 以上の全区間を返す**（カテゴリ毎に複数件あり得る） - 戻り値は (category, start) で昇順"
     name_words_en: ["detect", "life", "periods"]
-    comment_keywords_jp: ["日以内の凹みは吸収", "日以上連続する区間を抽出", "カテゴリ毎に複数件あり得る", "各カテゴリの日次スコアを昇順ソートし上位", "列から各カテゴリの", "topPct", "minDays", "の閾値を決める", "maxGap", "で昇順", "以上の全区間を返す", "を検出する", "その閾値以上が", "戻り値は", "category", "start", "ForecastDay"]
+    comment_keywords_jp: ["カテゴリ毎に複数件あり得る", "maxGap", "日以上連続する区間を抽出", "列から各カテゴリの", "以上の全区間を返す", "で昇順", "ForecastDay", "を検出する", "の閾値を決める", "各カテゴリの日次スコアを昇順ソートし上位", "topPct", "戻り値は", "category", "minDays", "その閾値以上が", "日以内の凹みは吸収", "start"]
   - id: "6cd54523ec7c"
     file: "utils/fortune_api.dart"
     line: 41
@@ -4465,7 +4457,7 @@ functions:
     signature: "Future<FortuneReading?> fetchFortune({   required String category,   String lang = 'ja',   Map<String, double>? natal,   Map<String, int>? planetHouses,   List<Map<String, dynamic>>? aspects,   Map<St"
     doc_jp: "/fortune を叩いて占い文を取得 category: overall|love|money|career|communication aspects: chartから生成したアスペクト配列 [{p1,p2,type,quality,diff,aspectAngle,orb}, ...] patterns: {grandtrine:[], tsquare:[], yod:[]} (planets配列含む) planetHouses: {sun: 10, moon: 4, ...} 各惑星のハウス番号 (1-12)。 出生時刻不明 / Worker 接続失敗時は null を渡すこと（Worker 側がハウス言及を避ける）。"
     name_words_en: ["fetch", "fortune"]
-    comment_keywords_jp: ["null", "tsquare", "fortune", "を渡すこと", "grandtrine", "career", "sun", "diff", "aspectAngle", "patterns", "communication", "money", "moon", "planets配列含む", "を叩いて占い文を取得", "overall", "出生時刻不明", "type", "Worker", "orb", "love", "各惑星のハウス番号", "aspects", "chartから生成したアスペクト配列", "yod", "planetHouses", "接続失敗時は", "quality", "側がハウス言及を避ける", "category"]
+    comment_keywords_jp: ["grandtrine", "type", "overall", "money", "yod", "communication", "tsquare", "を渡すこと", "moon", "null", "出生時刻不明", "quality", "chartから生成したアスペクト配列", "aspects", "sun", "planets配列含む", "diff", "orb", "aspectAngle", "career", "category", "fortune", "側がハウス言及を避ける", "patterns", "Worker", "各惑星のハウス番号", "を叩いて占い文を取得", "planetHouses", "接続失敗時は", "love"]
   - id: "a73fdb25d231"
     file: "utils/fortune_api.dart"
     line: 138
@@ -4473,7 +4465,7 @@ functions:
     signature: "Future<RelocationNarrative?> fetchRelocationNarrative({   required List<Map<String, dynamic>> shifts,   Map<String, int>? ascChange,   Map<String, int>? mcChange,   String? birthPlaceName,   String? h"
     doc_jp: "/relocation を叩いてリロケーション解説を取得。 shifts: [{planet, fromHouse, toHouse}] (変化なし含む全惑星でも、変化ありでも可) ascChange / mcChange: {fromSign, toSign} 0-11 (null は変化なし or 算出不可) 失敗時は null。呼出側で静的テンプレートにフォールバックすること。"
     name_words_en: ["fetch", "relocation", "narrative"]
-    comment_keywords_jp: ["relocation", "toHouse", "null", "は変化なし", "shifts", "ascChange", "呼出側で静的テンプレートにフォールバックすること", "planet", "toSign", "を叩いてリロケーション解説を取得", "mcChange", "算出不可", "変化なし含む全惑星でも", "変化ありでも可", "or", "fromSign", "失敗時は", "fromHouse"]
+    comment_keywords_jp: ["null", "は変化なし", "or", "失敗時は", "toSign", "shifts", "fromSign", "relocation", "ascChange", "算出不可", "toHouse", "planet", "変化なし含む全惑星でも", "mcChange", "を叩いてリロケーション解説を取得", "呼出側で静的テンプレートにフォールバックすること", "fromHouse", "変化ありでも可"]
   - id: "bf2df0e67ea8"
     file: "utils/fortune_api.dart"
     line: 205
@@ -4481,7 +4473,7 @@ functions:
     signature: "Future<TarotReading?> fetchTarotReading({   required int cardId,   required bool reversed,   required String nameJP,   String? nameEN,   required String keyword,   required String element,   String? p"
     doc_jp: "/tarot を叩いて1枚引きの Reading を生成する。 失敗時は null。呼び出し側で静的テンプレート fallback すること。  [moonPhase] は 0.0〜29.53（[MoonPhase.getPhaseDay]）。 [planet] は major arcana のみ存在することが多い（minor は null）。"
     name_words_en: ["fetch", "tarot", "reading"]
-    comment_keywords_jp: ["fallback", "tarot", "minor", "null", "呼び出し側で静的テンプレート", "枚引きの", "を叩いて", "MoonPhase", "moonPhase", "major", "planet", "arcana", "すること", "のみ存在することが多い", "getPhaseDay", "を生成する", "Reading", "失敗時は"]
+    comment_keywords_jp: ["失敗時は", "null", "major", "を生成する", "minor", "getPhaseDay", "すること", "のみ存在することが多い", "moonPhase", "tarot", "MoonPhase", "fallback", "呼び出し側で静的テンプレート", "枚引きの", "planet", "arcana", "を叩いて", "Reading"]
   - id: "4dc0b826b5c5"
     file: "utils/fortune_api.dart"
     line: 263
@@ -4489,7 +4481,7 @@ functions:
     signature: "int computeFortuneScore(String category, List<Map<String, dynamic>> aspects)"
     doc_jp: "関連惑星のアスペクト強度からスコア (20-95) を算出。 worker側 computeCategoryScore と同ロジック (オフライン表示用)。"
     name_words_en: ["compute", "fortune", "score"]
-    comment_keywords_jp: ["関連惑星のアスペクト強度からスコア", "worker側", "computeCategoryScore", "を算出", "オフライン表示用", "と同ロジック"]
+    comment_keywords_jp: ["関連惑星のアスペクト強度からスコア", "computeCategoryScore", "オフライン表示用", "worker側", "を算出", "と同ロジック"]
   - id: "7a02923b96e5"
     file: "utils/line_narrative_api.dart"
     line: 50
@@ -4521,7 +4513,7 @@ functions:
     signature: "Future<LineNarrative?> fetchLineNarrative({   required String frame, // 'natal' | 'transit'   required String planet, // 'venus' 等   required String angle, // 'ASC' | 'MC' | 'DSC' | 'IC'   required do"
     doc_jp: "/astro/line-narrative を叩いて A*C*G ライン解説を取得。 失敗時 null fallback。呼出側で astro_glossary 静的辞書にフォールバックすること。"
     name_words_en: ["fetch", "line", "narrative"]
-    comment_keywords_jp: ["ライン解説を取得", "fallback", "null", "を叩いて", "静的辞書にフォールバックすること", "呼出側で", "glossary", "narrative", "line", "astro", "失敗時"]
+    comment_keywords_jp: ["null", "呼出側で", "line", "失敗時", "fallback", "静的辞書にフォールバックすること", "glossary", "ライン解説を取得", "を叩いて", "narrative", "astro"]
   - id: "a924e83c0db6"
     file: "utils/solara_api.dart"
     line: 22
@@ -4529,7 +4521,7 @@ functions:
     signature: "Future<String?> fetchTimezoneName(double lat, double lng) async"
     doc_jp: "緯度経度から IANA TZ名 (DST対応の基準) を取得。 例: (35.68, 139.76) → 'Asia/Tokyo' 失敗時は null を返す (呼び出し側で birthTz 整数fallback想定)。"
     name_words_en: ["fetch", "timezone", "name"]
-    comment_keywords_jp: ["null", "IANA", "Asia", "Tokyo", "緯度経度から", "TZ名", "DST対応の基準", "を取得", "整数fallback想定", "を返す", "birthTz", "失敗時は", "呼び出し側で"]
+    comment_keywords_jp: ["を取得", "失敗時は", "Asia", "Tokyo", "null", "整数fallback想定", "TZ名", "を返す", "birthTz", "DST対応の基準", "呼び出し側で", "緯度経度から", "IANA"]
   - id: "b331d8701c9b"
     file: "utils/title_data.dart"
     line: 156
@@ -4537,7 +4529,7 @@ functions:
     signature: "TitleClass? getClassByAxisCourt(String axis, String court)"
     doc_jp: "Get class by axis + court type"
     name_words_en: ["get", "class", "by", "axis", "court"]
-    comment_keywords_jp: ["court", "axis", "class", "type", "by", "Get"]
+    comment_keywords_jp: ["class", "type", "court", "by", "axis", "Get"]
   - id: "fc52509bd1a3"
     file: "utils/title_data.dart"
     line: 169
@@ -4545,7 +4537,7 @@ functions:
     signature: "String buildTitle(String sunSign, String moonSign, {int? connectorIndex})"
     doc_jp: "Build full title text: [sun part] + [connector] + [moon part]"
     name_words_en: ["build", "title"]
-    comment_keywords_jp: ["part", "connector", "full", "text", "sun", "moon", "Build", "title"]
+    comment_keywords_jp: ["sun", "part", "connector", "full", "text", "title", "Build", "moon"]
   - id: "898bcedf6f19"
     file: "utils/title_data.dart"
     line: 418
@@ -4553,7 +4545,7 @@ functions:
     signature: "String getSunSign(String dateStr)"
     doc_jp: "HTML: getSunSign(dateStr) — birthDate → 太陽星座"
     name_words_en: ["get", "sun", "sign"]
-    comment_keywords_jp: ["HTML", "dateStr", "太陽星座", "getSunSign", "birthDate"]
+    comment_keywords_jp: ["太陽星座", "dateStr", "birthDate", "getSunSign", "HTML"]
   - id: "3e0e032efcff"
     file: "utils/title_data.dart"
     line: 432
@@ -4561,7 +4553,7 @@ functions:
     signature: "String getMoonSign(String dateStr, String timeStr)"
     doc_jp: "HTML: getMoonSign(dateStr, timeStr) — birthDate+Time → 月星座（近似計算）"
     name_words_en: ["get", "moon", "sign"]
-    comment_keywords_jp: ["月星座", "HTML", "dateStr", "timeStr", "Time", "近似計算", "birthDate", "getMoonSign"]
+    comment_keywords_jp: ["Time", "dateStr", "近似計算", "月星座", "birthDate", "HTML", "timeStr", "getMoonSign"]
   - id: "05d2f70002f3"
     file: "widgets/astro_term_label.dart"
     line: 47
@@ -4665,7 +4657,7 @@ functions:
     signature: "void _transitionToChoice()"
     doc_jp: "物語→選択画面のフェード遷移を開始。多重呼び出しは無視。"
     name_words_en: ["transition", "to", "choice"]
-    comment_keywords_jp: ["物語", "選択画面のフェード遷移を開始", "多重呼び出しは無視"]
+    comment_keywords_jp: ["選択画面のフェード遷移を開始", "物語", "多重呼び出しは無視"]
   - id: "09a70127ab01"
     file: "widgets/catasterism_overlay.dart"
     line: 84
@@ -4673,7 +4665,7 @@ functions:
     signature: "Future<void> _onReleasedTap(bool released) async"
     doc_jp: "選択タップ → 発光パルス(forward→reverse)で元に戻す → 余韻 → 全体をフェードアウト → アニメーションへ"
     name_words_en: ["on", "released", "tap"]
-    comment_keywords_jp: ["選択タップ", "reverse", "forward", "アニメーションへ", "で元に戻す", "余韻", "発光パルス", "全体をフェードアウト"]
+    comment_keywords_jp: ["forward", "選択タップ", "余韻", "発光パルス", "アニメーションへ", "で元に戻す", "reverse", "全体をフェードアウト"]
   - id: "ecec35ca35ec"
     file: "widgets/catasterism_overlay.dart"
     line: 103
@@ -4889,7 +4881,7 @@ functions:
     signature: "int hitTestDot(Offset tapPoint, {double threshold = 28})"
     doc_jp: "Hit-test for tap on spiral dots. Returns dayIndex or -1."
     name_words_en: ["hit", "test", "dot"]
-    comment_keywords_jp: ["on", "Returns", "test", "Hit", "dots", "or", "dayIndex", "for", "tap", "spiral"]
+    comment_keywords_jp: ["or", "tap", "dots", "for", "Hit", "on", "spiral", "test", "Returns", "dayIndex"]
   - id: "f80697d37a0a"
     file: "widgets/cycle_spiral_painter.dart"
     line: 344
@@ -5001,7 +4993,7 @@ functions:
     signature: "double easeOutBack(double x)"
     doc_jp: "イージング: バウンドつき出現"
     name_words_en: ["ease", "out", "back"]
-    comment_keywords_jp: ["イージング", "バウンドつき出現"]
+    comment_keywords_jp: ["バウンドつき出現", "イージング"]
   - id: "270c97b53aa4"
     file: "widgets/fortune_overlays/_common.dart"
     line: 27
@@ -5009,7 +5001,7 @@ functions:
     signature: "double easeInOutQuad(double x)"
     doc_jp: "イージング: 二次イーズインアウト"
     name_words_en: ["ease", "in", "out", "quad"]
-    comment_keywords_jp: ["イージング", "二次イーズインアウト"]
+    comment_keywords_jp: ["二次イーズインアウト", "イージング"]
   - id: "49b28ffe75f3"
     file: "widgets/fortune_overlays/_common.dart"
     line: 33
@@ -5017,7 +5009,7 @@ functions:
     signature: "double stageAlpha(double x, {   required double fadeIn,   required double hold,   required double fadeOut, })"
     doc_jp: "3段階αカーブ: fadeIn / hold / fadeOut"
     name_words_en: ["stage", "alpha"]
-    comment_keywords_jp: ["fadeOut", "fadeIn", "段階", "カーブ", "hold"]
+    comment_keywords_jp: ["カーブ", "fadeIn", "hold", "fadeOut", "段階"]
   - id: "1bc77651f6ee"
     file: "widgets/fortune_overlays/communication_painter.dart"
     line: 23
@@ -5569,66 +5561,66 @@ functions:
     signature: "void _onRatingTap(int i)"
     doc_jp: "評価タップ → GlobalKey で現在位置を測定 → リビール演出を順次再生"
     name_words_en: ["on", "rating", "tap"]
-    comment_keywords_jp: ["リビール演出を順次再生", "GlobalKey", "評価タップ", "で現在位置を測定"]
-  - id: "317dc2ddd042"
+    comment_keywords_jp: ["GlobalKey", "評価タップ", "で現在位置を測定", "リビール演出を順次再生"]
+  - id: "332b1d7b44c4"
     file: "widgets/full_moon_overlay.dart"
-    line: 125
+    line: 122
     name: "_runRevealSequence"
     signature: "Future<void> _runRevealSequence() async"
     doc_jp: ""
     name_words_en: ["run", "reveal", "sequence"]
     comment_keywords_jp: []
-  - id: "e24b3fdd250e"
+  - id: "13c8659fe58a"
     file: "widgets/full_moon_overlay.dart"
-    line: 137
+    line: 134
     name: "build"
     signature: "Widget build(BuildContext context)"
     doc_jp: ""
     name_words_en: ["build"]
     comment_keywords_jp: []
-  - id: "84fe2c052b32"
+  - id: "d8aec665490d"
     file: "widgets/full_moon_overlay.dart"
-    line: 167
+    line: 151
     name: "_buildStoryContent"
     signature: "Widget _buildStoryContent(BuildContext context)"
     doc_jp: ""
     name_words_en: ["build", "story", "content"]
     comment_keywords_jp: []
-  - id: "f0d139fc3888"
+  - id: "42c0cecf5b65"
     file: "widgets/full_moon_overlay.dart"
-    line: 226
+    line: 210
     name: "_buildRatingList"
     signature: "Widget _buildRatingList(BuildContext context)"
     doc_jp: ""
     name_words_en: ["build", "rating", "list"]
     comment_keywords_jp: []
-  - id: "6fe89fd82265"
+  - id: "5e52a6650b01"
     file: "widgets/full_moon_overlay.dart"
-    line: 328
+    line: 312
     name: "_buildRevealLayout"
     signature: "Widget _buildRevealLayout(BuildContext context)"
     doc_jp: ""
     name_words_en: ["build", "reveal", "layout"]
     comment_keywords_jp: []
-  - id: "92a2635d5fd6"
+  - id: "51abf8046f84"
     file: "widgets/full_moon_overlay.dart"
-    line: 393
+    line: 377
     name: "_titleBlock"
     signature: "Widget _titleBlock({     Key? keyRef,     required String moonName,     required String moonNameJP,   })"
     doc_jp: "タイトルブロック (moonName + moonNameJP)"
     name_words_en: ["title", "block"]
-    comment_keywords_jp: ["moonName", "タイトルブロック", "moonNameJP"]
-  - id: "09fdeae774dd"
+    comment_keywords_jp: ["タイトルブロック", "moonName", "moonNameJP"]
+  - id: "5af2b4a04202"
     file: "widgets/full_moon_overlay.dart"
-    line: 427
+    line: 412
     name: "_ratingCardWidget"
     signature: "Widget _ratingCardWidget({     required bool isSelected,     required String emoji,     required String labelJP,     required String labelEN,   })"
-    doc_jp: "評価カード (選択前/後で見た目同じ、isSelected で枠色が変わる)"
+    doc_jp: "評価カード (選択前/後で見た目同じ、isSelected で枠色が変わる) 外枠は moon_overlay_shared.dart の moonOverlaySelectableCard を共用。"
     name_words_en: ["rating", "card", "widget"]
-    comment_keywords_jp: ["後で見た目同じ", "で枠色が変わる", "選択前", "評価カード", "isSelected"]
-  - id: "8286ae3cf695"
+    comment_keywords_jp: ["overlay", "isSelected", "dart", "を共用", "評価カード", "で枠色が変わる", "外枠は", "後で見た目同じ", "選択前", "shared", "moonOverlaySelectableCard", "moon"]
+  - id: "8327ab322c5d"
     file: "widgets/full_moon_overlay.dart"
-    line: 488
+    line: 460
     name: "_submitRating"
     signature: "Future<void> _submitRating(int rating) async"
     doc_jp: ""
@@ -5673,50 +5665,74 @@ functions:
     signature: "Widget revealPoeticMessage(BuildContext context, {required String ja, required String en})"
     doc_jp: "選択後フェードインで表示する詩的メッセージ。 full_moon_overlay の `_revealMessage` と new_moon_overlay の `_revealMessage` が テキスト 2 行のみ違い完全同形だったため共有化 (audit T2, 2026-05-06)。 ロケール ja で [ja]、それ以外は [en] を使う。"
     name_words_en: ["reveal", "poetic", "message"]
-    comment_keywords_jp: ["new", "ロケール", "full", "選択後フェードインで表示する詩的メッセージ", "を使う", "revealMessage", "行のみ違い完全同形だったため共有化", "moon", "テキスト", "それ以外は", "audit", "overlay", "en", "ja"]
-  - id: "cb26186a6891"
+    comment_keywords_jp: ["overlay", "ja", "audit", "full", "テキスト", "new", "それ以外は", "選択後フェードインで表示する詩的メッセージ", "ロケール", "moon", "を使う", "revealMessage", "en", "行のみ違い完全同形だったため共有化"]
+  - id: "7168e66ef313"
     file: "widgets/moon_overlay_shared.dart"
-    line: 34
+    line: 39
+    name: "moonOverlaySelectableCard"
+    signature: "Widget moonOverlaySelectableCard({required bool isSelected, required Widget child})"
+    doc_jp: "月オーバーレイの選択可能カードの共通枠 (full_moon の評価カード / new_moon の選択肢カード)。  AnimatedContainer + 角丸 + isSelected による枠色/背景色の切替までを共通化。 内部 child は呼び側で構築 (Row/Column どちらでも可)。 audit T7, 2026-05-06。"
+    name_words_en: ["moon", "overlay", "selectable", "card"]
+    comment_keywords_jp: ["isSelected", "audit", "月オーバーレイの選択可能カードの共通枠", "AnimatedContainer", "child", "full", "は呼び側で構築", "内部", "Row", "背景色の切替までを共通化", "new", "の選択肢カード", "の評価カード", "Column", "どちらでも可", "角丸", "moon", "による枠色"]
+  - id: "2ccfaf64d0b3"
+    file: "widgets/moon_overlay_shared.dart"
+    line: 68
+    name: "moonOverlayPageStructure"
+    signature: "Widget moonOverlayPageStructure({   required Animation<double> fadeAnim,   required Animation<double> pageAnim,   required String assetPath,   required bool showStory,   required bool showReveal,   re"
+    doc_jp: "月オーバーレイの共通ページ構造 (full_moon / new_moon の build() 共通枠)。  物語 (showStory) → 選択 (=選択前 build) → リビール (showReveal=true) の 3 段階を `_pageCtl` の値でクロスフェード: - 0..0.5: showStory 用フェードアウト (1 - 2t) - 0.5..1: 選択画面用フェードイン (2(t - 0.5)) build 自体は前後どちらかしか描画しないため showStory フラグで切替。  audit T2 #14 (full_moon_overlay.build ⇄ new_moon_overlay.build) の集約結果。"
+    name_words_en: ["moon", "overlay", "page", "structure"]
+    comment_keywords_jp: ["の値でクロスフェード", "full", "pageCtl", "選択", "moon", "true", "選択前", "選択画面用フェードイン", "の集約結果", "自体は前後どちらかしか描画しないため", "月オーバーレイの共通ページ構造", "overlay", "audit", "showStory", "new", "段階を", "用フェードアウト", "build", "共通枠", "リビール", "物語", "フラグで切替", "showReveal"]
+  - id: "0873f9e5e6d4"
+    file: "widgets/moon_overlay_shared.dart"
+    line: 109
+    name: "measureMoonOverlayTapGeometry"
+    signature: "measureMoonOverlayTapGeometry(GlobalKey titleKey, GlobalKey itemKey)"
+    doc_jp: ""
+    name_words_en: ["measure", "moon", "overlay", "tap", "geometry"]
+    comment_keywords_jp: []
+  - id: "e9d6bb573210"
+    file: "widgets/moon_overlay_shared.dart"
+    line: 122
     name: "mysticalMoonBackdrop"
     signature: "Widget mysticalMoonBackdrop({   required String assetPath,   required Widget child, })"
     doc_jp: "神秘的な月/刻星化背景 — 黒ベース + 画像レイヤー + 子widget"
     name_words_en: ["mystical", "moon", "backdrop"]
-    comment_keywords_jp: ["神秘的な月", "刻星化背景", "子widget", "画像レイヤー", "黒ベース"]
-  - id: "8b1065beb5ce"
+    comment_keywords_jp: ["黒ベース", "子widget", "神秘的な月", "刻星化背景", "画像レイヤー"]
+  - id: "5d83b609ef15"
     file: "widgets/moon_overlay_shared.dart"
-    line: 80
+    line: 168
     name: "initState"
     signature: "void initState()"
     doc_jp: ""
     name_words_en: ["init", "state"]
     comment_keywords_jp: []
-  - id: "0a047775ceac"
+  - id: "11593480d8b1"
     file: "widgets/moon_overlay_shared.dart"
-    line: 86
+    line: 174
     name: "_startAutoScroll"
     signature: "void _startAutoScroll()"
     doc_jp: ""
     name_words_en: ["start", "auto", "scroll"]
     comment_keywords_jp: []
-  - id: "2528dba8cc14"
+  - id: "4e7364942c87"
     file: "widgets/moon_overlay_shared.dart"
-    line: 99
+    line: 187
     name: "_onScroll"
     signature: "void _onScroll()"
     doc_jp: ""
     name_words_en: ["on", "scroll"]
     comment_keywords_jp: []
-  - id: "132324f3d1fc"
+  - id: "63bc391a180d"
     file: "widgets/moon_overlay_shared.dart"
-    line: 109
+    line: 197
     name: "dispose"
     signature: "void dispose()"
     doc_jp: ""
     name_words_en: ["dispose"]
     comment_keywords_jp: []
-  - id: "816da05898bd"
+  - id: "492e0f138188"
     file: "widgets/moon_overlay_shared.dart"
-    line: 115
+    line: 203
     name: "build"
     signature: "Widget build(BuildContext context)"
     doc_jp: ""
@@ -5777,7 +5793,7 @@ functions:
     signature: "void _transitionToChoice()"
     doc_jp: "物語→選択画面のフェード遷移を開始。多重呼び出しは無視。"
     name_words_en: ["transition", "to", "choice"]
-    comment_keywords_jp: ["物語", "選択画面のフェード遷移を開始", "多重呼び出しは無視"]
+    comment_keywords_jp: ["選択画面のフェード遷移を開始", "物語", "多重呼び出しは無視"]
   - id: "3f3d58e40894"
     file: "widgets/new_moon_overlay.dart"
     line: 107
@@ -5809,74 +5825,74 @@ functions:
     signature: "void _onChoiceTap(int i)"
     doc_jp: "選択タップ → GlobalKey で現在位置を測定 → リビール演出を順次再生"
     name_words_en: ["on", "choice", "tap"]
-    comment_keywords_jp: ["GlobalKey", "選択タップ", "で現在位置を測定", "リビール演出を順次再生"]
-  - id: "0ee8d4e57417"
+    comment_keywords_jp: ["GlobalKey", "で現在位置を測定", "選択タップ", "リビール演出を順次再生"]
+  - id: "a74e8738ac1b"
     file: "widgets/new_moon_overlay.dart"
-    line: 147
+    line: 144
     name: "_runRevealSequence"
     signature: "Future<void> _runRevealSequence() async"
     doc_jp: ""
     name_words_en: ["run", "reveal", "sequence"]
     comment_keywords_jp: []
-  - id: "a2fed8a48680"
+  - id: "831c0da17c68"
     file: "widgets/new_moon_overlay.dart"
-    line: 159
+    line: 156
     name: "build"
     signature: "Widget build(BuildContext context)"
     doc_jp: ""
     name_words_en: ["build"]
     comment_keywords_jp: []
-  - id: "148c8183cc0a"
+  - id: "d23528c4ada8"
     file: "widgets/new_moon_overlay.dart"
-    line: 191
+    line: 173
     name: "_buildStoryContent"
     signature: "Widget _buildStoryContent(BuildContext context)"
     doc_jp: ""
     name_words_en: ["build", "story", "content"]
     comment_keywords_jp: []
-  - id: "66dcee2be549"
+  - id: "a55d6b123e89"
     file: "widgets/new_moon_overlay.dart"
-    line: 248
+    line: 230
     name: "_buildChoiceList"
     signature: "Widget _buildChoiceList(BuildContext context)"
     doc_jp: ""
     name_words_en: ["build", "choice", "list"]
     comment_keywords_jp: []
-  - id: "d8d8bb29ccd6"
+  - id: "3c77b9c9ca84"
     file: "widgets/new_moon_overlay.dart"
-    line: 343
+    line: 325
     name: "_buildRevealLayout"
     signature: "Widget _buildRevealLayout(BuildContext context)"
     doc_jp: ""
     name_words_en: ["build", "reveal", "layout"]
     comment_keywords_jp: []
-  - id: "4f9c36c69bcb"
+  - id: "09098cb4c1d0"
     file: "widgets/new_moon_overlay.dart"
-    line: 458
+    line: 440
     name: "_titleBlock"
     signature: "Widget _titleBlock({     Key? keyRef,     required String sign,     required String signJP,   })"
     doc_jp: "タイトルブロック (英語大見出し + 日本語サブ)"
     name_words_en: ["title", "block"]
-    comment_keywords_jp: ["タイトルブロック", "英語大見出し", "日本語サブ"]
-  - id: "8961fc52ba59"
+    comment_keywords_jp: ["英語大見出し", "タイトルブロック", "日本語サブ"]
+  - id: "664417f7a0db"
     file: "widgets/new_moon_overlay.dart"
-    line: 493
+    line: 476
     name: "_choiceCardWidget"
     signature: "Widget _choiceCardWidget({     required bool isSelected,     required bool isSkipChoice,     required String titleJP,     required String titleEN,   })"
-    doc_jp: "選択肢カード (選択前/後で見た目同じ、isSelected で枠色が変わる)"
+    doc_jp: "選択肢カード (選択前/後で見た目同じ、isSelected で枠色が変わる) 外枠は moon_overlay_shared.dart の moonOverlaySelectableCard を共用。"
     name_words_en: ["choice", "card", "widget"]
-    comment_keywords_jp: ["選択肢カード", "後で見た目同じ", "で枠色が変わる", "選択前", "isSelected"]
-  - id: "d44124487d12"
+    comment_keywords_jp: ["overlay", "isSelected", "dart", "を共用", "で枠色が変わる", "外枠は", "後で見た目同じ", "選択前", "shared", "moonOverlaySelectableCard", "選択肢カード", "moon"]
+  - id: "9d7e6e6eef9f"
     file: "widgets/new_moon_overlay.dart"
-    line: 549
+    line: 519
     name: "_revealEvents"
     signature: "Widget _revealEvents(List<CelestialEvent> events)"
     doc_jp: "惑星イベント一覧 (選択後フェードイン)"
     name_words_en: ["reveal", "events"]
-    comment_keywords_jp: ["選択後フェードイン", "惑星イベント一覧"]
-  - id: "3570ec6b03cb"
+    comment_keywords_jp: ["惑星イベント一覧", "選択後フェードイン"]
+  - id: "354db269ea35"
     file: "widgets/new_moon_overlay.dart"
-    line: 573
+    line: 543
     name: "_setIntention"
     signature: "Future<void> _setIntention() async"
     doc_jp: ""

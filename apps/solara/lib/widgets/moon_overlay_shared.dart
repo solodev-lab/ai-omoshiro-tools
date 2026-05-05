@@ -56,6 +56,48 @@ Widget moonOverlaySelectableCard({required bool isSelected, required Widget chil
   );
 }
 
+/// 月オーバーレイの共通ページ構造 (full_moon / new_moon の build() 共通枠)。
+///
+/// 物語 (showStory) → 選択 (=選択前 build) → リビール (showReveal=true) の
+/// 3 段階を `_pageCtl` の値でクロスフェード:
+///   - 0..0.5: showStory 用フェードアウト (1 - 2t)
+///   - 0.5..1: 選択画面用フェードイン (2(t - 0.5))
+/// build 自体は前後どちらかしか描画しないため showStory フラグで切替。
+///
+/// audit T2 #14 (full_moon_overlay.build ⇄ new_moon_overlay.build) の集約結果。
+Widget moonOverlayPageStructure({
+  required Animation<double> fadeAnim,
+  required Animation<double> pageAnim,
+  required String assetPath,
+  required bool showStory,
+  required bool showReveal,
+  required Widget Function(BuildContext) storyBuilder,
+  required Widget Function(BuildContext) selectionBuilder,
+  required Widget Function(BuildContext) revealBuilder,
+}) {
+  return FadeTransition(
+    opacity: fadeAnim,
+    child: mysticalMoonBackdrop(
+      assetPath: assetPath,
+      child: AnimatedBuilder(
+        animation: pageAnim,
+        builder: (context, _) {
+          final t = pageAnim.value;
+          final opacity = showStory
+              ? (1 - t * 2).clamp(0.0, 1.0)
+              : ((t - 0.5) * 2).clamp(0.0, 1.0);
+          return Opacity(
+            opacity: opacity,
+            child: showStory
+                ? storyBuilder(context)
+                : (showReveal ? revealBuilder(context) : selectionBuilder(context)),
+          );
+        },
+      ),
+    ),
+  );
+}
+
 /// 月オーバーレイのタップ時の幾何測定 — title と選択 item の Y 座標 + 高さ。
 ///
 /// full_moon の _onRatingTap / new_moon の _onChoiceTap が GlobalKey から

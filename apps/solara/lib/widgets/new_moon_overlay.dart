@@ -154,31 +154,16 @@ class _NewMoonOverlayState extends State<NewMoonOverlay>
 
   @override
   Widget build(BuildContext context) {
-    // オーバーレイ全体を初期フェードインで包む (月背景含む)
-    // Backdrop はこの下で常時表示し、クロスフェード中にCycle画面が透けるのを防ぐ
-    return FadeTransition(
-      opacity: _fadeAnim,
-      child: mysticalMoonBackdrop(
-        assetPath: 'assets/horo-bg/new_moon_bg.webp',
-        child: AnimatedBuilder(
-          animation: _pageCtl,
-          builder: (context, _) {
-            final t = _pageCtl.value;
-            // 前半(0→0.5): 物語フェードアウト / 後半(0.5→1): 選択画面フェードイン
-            final opacity = _showStory
-                ? (1 - t * 2).clamp(0.0, 1.0)
-                : ((t - 0.5) * 2).clamp(0.0, 1.0);
-            return Opacity(
-              opacity: opacity,
-              child: _showStory
-                  ? _buildStoryContent(context)
-                  : (_selectedIndex >= 0
-                      ? _buildRevealLayout(context)
-                      : _buildChoiceList(context)),
-            );
-          },
-        ),
-      ),
+    // 共通ページ構造は moon_overlay_shared.dart の moonOverlayPageStructure を共用。
+    return moonOverlayPageStructure(
+      fadeAnim: _fadeAnim,
+      pageAnim: _pageCtl,
+      assetPath: 'assets/horo-bg/new_moon_bg.webp',
+      showStory: _showStory,
+      showReveal: _selectedIndex >= 0,
+      storyBuilder: _buildStoryContent,
+      selectionBuilder: _buildChoiceList,
+      revealBuilder: _buildRevealLayout,
     );
   }
 

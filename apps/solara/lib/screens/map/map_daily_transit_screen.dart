@@ -615,7 +615,9 @@ class _Header extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final catKey = _categoryKey(topCategory);
+    // null は 'all' に正規化。enum の .name は宣言名そのままなので
+    // DominantFortuneKind.love → 'love' などキー文字列と一致する。
+    final catKey = topCategory?.name ?? 'all';
     final color = categoryColors[catKey] ?? SolaraColors.solaraGoldLight;
     final label = categoryLabels[catKey] ?? 'TOP';
     final iconKind = topCategory?.toCategoryIcon() ?? CategoryIconKind.all;
@@ -705,16 +707,8 @@ class _Header extends StatelessWidget {
     );
   }
 
-  String _categoryKey(DominantFortuneKind? cat) {
-    if (cat == null) return 'all';
-    switch (cat) {
-      case DominantFortuneKind.love: return 'love';
-      case DominantFortuneKind.money: return 'money';
-      case DominantFortuneKind.work: return 'work';
-      case DominantFortuneKind.healing: return 'healing';
-      case DominantFortuneKind.communication: return 'communication';
-    }
-  }
+  // _categoryKey は削除。enum.name で代替可能 (audit T2 #6, 2026-05-06)。
+  // → final catKey = topCategory?.name ?? 'all';
 
   String _tagline(DominantFortuneKind? cat) {
     if (cat == null) return '今日の動きを確認しましょう';

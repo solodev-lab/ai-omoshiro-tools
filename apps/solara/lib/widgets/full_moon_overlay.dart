@@ -132,29 +132,16 @@ class _FullMoonOverlayState extends State<FullMoonOverlay>
 
   @override
   Widget build(BuildContext context) {
-    // オーバーレイ全体を初期フェードインで包む (月背景含む)
-    return FadeTransition(
-      opacity: _fadeAnim,
-      child: mysticalMoonBackdrop(
-        assetPath: 'assets/horo-bg/full_moon_bg.webp',
-        child: AnimatedBuilder(
-          animation: _pageCtl,
-          builder: (context, _) {
-            final t = _pageCtl.value;
-            final opacity = _showStory
-                ? (1 - t * 2).clamp(0.0, 1.0)
-                : ((t - 0.5) * 2).clamp(0.0, 1.0);
-            return Opacity(
-              opacity: opacity,
-              child: _showStory
-                  ? _buildStoryContent(context)
-                  : (_selectedRating >= 0
-                      ? _buildRevealLayout(context)
-                      : _buildRatingList(context)),
-            );
-          },
-        ),
-      ),
+    // 共通ページ構造は moon_overlay_shared.dart の moonOverlayPageStructure を共用。
+    return moonOverlayPageStructure(
+      fadeAnim: _fadeAnim,
+      pageAnim: _pageCtl,
+      assetPath: 'assets/horo-bg/full_moon_bg.webp',
+      showStory: _showStory,
+      showReveal: _selectedRating >= 0,
+      storyBuilder: _buildStoryContent,
+      selectionBuilder: _buildRatingList,
+      revealBuilder: _buildRevealLayout,
     );
   }
 
