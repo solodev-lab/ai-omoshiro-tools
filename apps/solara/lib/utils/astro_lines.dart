@@ -33,8 +33,6 @@ const _planetKeys = [
   'sun', 'moon', 'mercury', 'venus', 'mars',
   'jupiter', 'saturn', 'uranus', 'neptune', 'pluto',
 ];
-const angleKeys = ['mc', 'ic', 'asc', 'dsc'];
-
 /// アストロカートグラフィの惑星フレーム (Tier A #5 / CCG)。
 /// natal: 出生時の惑星 (固定)。Jim Lewis 1976 の A*C*G。
 /// transit: 任意UTC時の天体位置 (動的)。CCG = Cyclo*Carto*Graphy。

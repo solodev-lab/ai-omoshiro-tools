@@ -2,40 +2,9 @@
 /// 144 titles = 12 sun parts × 12 moon parts + 25 classes
 library;
 
-// ── Sun Sign → External Pattern (太陽星座 → 外面パーツ) ──
-const sunParts = <String, String>{
-  'aries':       '思い立ったら即行動する猪突猛進型',
-  'taurus':      '一度決めたらテコでも動かないマイペース',
-  'gemini':      '話題が3秒で変わるおしゃべり好き',
-  'cancer':      '身内には甘いけど外には壁を作りがち',
-  'leo':         '調子に乗って自由に表現しちゃう',
-  'virgo':       '細かいところが気になって仕方ない完璧主義',
-  'libra':       'みんなに良い顔しすぎて疲れる八方美人',
-  'scorpio':     '好きなものへの執着がすごい一途タイプ',
-  'sagittarius': '楽しそうなことに飛びつく自由人',
-  'capricorn':   'コツコツ積み上げないと気が済まない努力家',
-  'aquarius':    '人と同じが嫌で逆張りしがち',
-  'pisces':      '妄想が止まらないロマンチスト',
-};
-
-// ── Moon Sign → Internal Pattern (月星座 → 内面パーツ) ──
-const moonParts = <String, String>{
-  'aries':       '実はすぐカッとなって後悔する',
-  'taurus':      '実は変化が怖くてしがみつく',
-  'gemini':      '実は考えすぎて頭の中が忙しい',
-  'cancer':      '実はナイーブで反省会が欠かせない',
-  'leo':         '実は褒められないと不安になる',
-  'virgo':       '実は自分にダメ出しが止まらない',
-  'libra':       '実は本音を隠すのが上手すぎる',
-  'scorpio':     '実は傷つきやすくて根に持つ',
-  'sagittarius': '実は飽きっぽくて続かない',
-  'capricorn':   '実は弱みを見せるのが怖い',
-  'aquarius':    '実は寂しがり屋なのに素直になれない',
-  'pisces':      '実は現実逃避が得意すぎる',
-};
-
-// ── Connectors (接続詞) ──
-const connectors = ['けど', 'のに', 'したあとに', 'だし'];
+// sunParts / moonParts / connectors 削除 (audit dead-symbol cascade, 2026-05-06):
+// buildTitle (上で削除) のサポート定数だったが、buildTitle 削除により参照
+// ゼロ化。Title 称号システム再開時は git log から復元可能。
 
 // ── 25 Classes (5 axes × 5 court types) ──
 class TitleClass {
@@ -143,14 +112,9 @@ const allClasses = <TitleClass>[
     lightEN:'Treasures "that moment"',shadowEN:'Too nostalgic — photo albums keep multiplying'),
 ];
 
-// ── Axis Colors (SPEC.md exact) ──
-const axisColors = <String, int>{
-  'power': 0xFFFF4444,
-  'mind': 0xFF6BB5FF,
-  'spirit': 0xFF9B6BFF,
-  'shadow': 0xFFC06BFF,
-  'heart': 0xFFF9D976,
-};
+// axisColors / getClassesForAxis / buildTitle 削除 (audit dead-symbol, 2026-05-06):
+// Title 称号システムは未実装フェーズで、現状 UI から呼ばれない。
+// 必要になったら git log から復元可能 (project_solara_title_system.md 参照)。
 
 /// Get class by axis + court type
 TitleClass? getClassByAxisCourt(String axis, String court) {
@@ -158,19 +122,6 @@ TitleClass? getClassByAxisCourt(String axis, String court) {
     if (c.axis == axis && c.court == court) return c;
   }
   return null;
-}
-
-/// Get all classes for an axis (5 classes)
-List<TitleClass> getClassesForAxis(String axis) {
-  return allClasses.where((c) => c.axis == axis).toList();
-}
-
-/// Build full title text: [sun part] + [connector] + [moon part]
-String buildTitle(String sunSign, String moonSign, {int? connectorIndex}) {
-  final sun = sunParts[sunSign] ?? sunParts['aries']!;
-  final moon = moonParts[moonSign] ?? moonParts['aries']!;
-  final idx = connectorIndex ?? (sunSign.hashCode + moonSign.hashCode).abs() % connectors.length;
-  return '$sun${connectors[idx]}$moon';
 }
 
 // ══════════════════════════════════════════════
@@ -383,16 +334,8 @@ const title144 = <String, Map<String, Map<String, String>>>{
   },
 };
 
-// ══════════════════════════════════════════════
-// HTML sanctuary.html: TITLE_CLASSES
-// ══════════════════════════════════════════════
-const titleClasses = <String, Map<String, String>>{
-  'power':  {'page':'Knight','knight':'Dragoon','queen':'Paladin','king':'Overlord','mixed':'Spellblade'},
-  'mind':   {'page':'Sage','knight':'Strategist','queen':'Chancellor','king':'Judge','mixed':'Wizard'},
-  'spirit': {'page':'Cleric','knight':'Astrologer','queen':'Oracle','king':'Fate Weaver','mixed':'Druid'},
-  'shadow': {'page':'Trickster','knight':'Liberator','queen':'Phantom','king':'Rogue','mixed':'Alchemist'},
-  'heart':  {'page':'Bard','knight':'Sorcerer','queen':'Enchanter','king':'Emperor','mixed':'Chronomancer'},
-};
+// titleClasses 削除 (audit dead-symbol, 2026-05-06):
+// 上記 axisColors 等と同様、Title 称号システム未実装で参照ゼロ。
 
 // ══════════════════════════════════════════════
 // HTML: ZODIAC_DATES + getSunSign + getMoonSign

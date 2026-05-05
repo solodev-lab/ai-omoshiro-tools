@@ -42,44 +42,11 @@ const Map<String, String> eventMeaningsJP = {
   'node_shift_moon': 'ノースノードの移動は、集合的な運命の方向転換を示します。社会全体が目指すべきテーマが切り替わり、個人の成長の方向性にも影響を与えます。約18ヶ月ごとの大きな転換です。',
 };
 
-const Map<String, String> eventMeaningsEN = {
-  'ingress_mercury': 'When Mercury changes signs, your thinking and communication style shifts. A time to embrace new perspectives and fresh ways of processing information.',
-  'ingress_venus': 'Venus changing signs brings a shift in how you express love, appreciate beauty, and define value. New energy flows into relationships and creativity.',
-  'ingress_mars': 'Mars changing signs redirects your drive and energy. Your motivation source shifts, bringing fresh enthusiasm for new challenges.',
-  'ingress_jupiter': 'Jupiter changing signs is a major annual shift. The themes of luck and growth change, directing expansive energy into new areas of life.',
-  'ingress_saturn': 'Saturn changes signs roughly every 2.5 years. Themes of responsibility and discipline shift, marking a long-term structural turning point.',
-  'ingress_uranus': 'Uranus changes signs about every 7 years — a generational shift. Conventions are challenged and technology transforms society at its foundations.',
-  'ingress_neptune': 'Neptune changes signs about every 14 years. Collective dreams, ideals, and spiritual themes shift at a generational level.',
-  'ingress_chiron': 'Chiron changing signs shifts the collective healing theme. Society faces new wounds to acknowledge and new paths toward wholeness.',
-
-  'retrograde_mercury': 'Mercury retrograde is a review period for communication and plans. Great for revisiting unfinished business, but double-check contracts and be mindful of misunderstandings.',
-  'retrograde_venus': 'Venus retrograde is a time to reassess relationships and values. Past connections may resurface. Avoid major purchases or drastic appearance changes.',
-  'retrograde_mars': 'Mars retrograde turns energy inward. External drive weakens while inner strength builds. Managing frustration becomes key.',
-  'retrograde_jupiter': 'Jupiter retrograde shifts focus from outer expansion to inner growth. A time to reassess beliefs and whether past decisions still align with your truth.',
-  'retrograde_saturn': 'Saturn retrograde prompts reassessment of self-imposed rules and obligations. An opportunity to release outdated structures.',
-  'retrograde_uranus': 'Uranus retrograde internalizes revolutionary energy. Inner freedom takes priority over external rebellion.',
-  'retrograde_neptune': 'Neptune retrograde clarifies the boundary between illusion and reality. Truths hidden by fog become visible.',
-  'retrograde_pluto': 'Pluto retrograde drives deep transformation beneath the surface. What needs releasing and what truly matters becomes clearer.',
-
-  'retrograde_end_mercury': 'Mercury stations direct. Stalled communications and projects begin moving forward again.',
-  'retrograde_end_venus': 'Venus stations direct. Relationship stagnation lifts and love flows outward once more.',
-  'retrograde_end_saturn': 'Saturn stations direct. New understanding of responsibility enables concrete forward action.',
-  'retrograde_end_neptune': 'Neptune stations direct. Idealism and intuition guide you forward with the clarity gained during retrograde.',
-  'retrograde_end_pluto': 'Pluto stations direct. Deep inner transformations begin manifesting in external reality.',
-
-  'eclipse_sun': 'A solar eclipse is a supercharged new moon. Destiny-level events and turning points arise, with effects lasting six months or more.',
-  'eclipse_moon': 'A lunar eclipse is a supercharged full moon. Hidden truths emerge and emotional release intensifies. Themes of endings and completion are amplified.',
-
-  'conjunction_saturn': 'Saturn conjunct Neptune occurs roughly every 36 years. Reality (Saturn) and idealism (Neptune) merge, creating a major societal turning point where dreams take concrete form.',
-
-  'node_shift_moon': 'The North Node shifting signs redirects collective destiny. The themes society should pursue change, influencing individual growth directions for the next 18 months.',
-};
+// eventMeaningsEN 削除 (audit dead-symbol, 2026-05-06): 多言語対応未実装で
+// 参照ゼロ。i18n フェーズで必要になったら git log から復元可能。
 
 /// CelestialEvent から意味を取得するヘルパー
 String getEventMeaningJP(String type, String planet) {
   return eventMeaningsJP['${type}_$planet'] ?? eventMeaningsJP[type] ?? '';
 }
 
-String getEventMeaningEN(String type, String planet) {
-  return eventMeaningsEN['${type}_$planet'] ?? eventMeaningsEN[type] ?? '';
-}

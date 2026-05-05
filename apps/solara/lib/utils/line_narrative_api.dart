@@ -144,7 +144,3 @@ Future<LineNarrative?> fetchLineNarrative({
   return null;
 }
 
-/// テスト・デバッグ用: メモリキャッシュ全削除
-void clearLineNarrativeCache() {
-  _cache.clear();
-}

@@ -22,12 +22,8 @@ const tarotReadings = <String, List<String>>{
   ],
 };
 
-// HTML exact: TAROT_ADVICES
-const tarotAdvices = [
-  '🧭 {dir}の方角にエネルギーが集中。可能なら足を運んでみて。',
-  '🌟 今日の意識ポイント: {keyword}を意識した行動が追い風を生みます。',
-  '✦ {dir}方位にエネルギー集中。この方角でのインスピレーションを大切に。',
-];
+// tarotAdvices 削除 (audit dead-symbol, 2026-05-06): HTML mockup の遺物で
+// 参照ゼロ。Tarot 機能は別の実装パスを採用済み。
 
 // HTML exact: PLANET_SYMBOLS
 const planetInfo = <String, List<String>>{

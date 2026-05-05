@@ -24,16 +24,7 @@ const fortuneCategories = [
 ];
 
 // HTML: ASPECT_TYPES — 日本語名・シンボル付き (L1162-1171)
-const aspectNameJP = {
-  'conjunction': 'コンジャンクション',
-  'opposition': 'オポジション',
-  'trine': 'トライン',
-  'square': 'スクエア',
-  'sextile': 'セクスタイル',
-  'quincunx': 'クインカンクス',
-  'semisextile': 'セミセクスタイル',
-  'semisquare': 'セミスクエア',
-};
+// aspectNameJP は dead-symbol 検出で削除 (2026-05-06)。aspectSymbol で表示する仕様。
 const aspectSymbol = {
   'conjunction': '☌',
   'opposition': '☍',
@@ -64,8 +55,7 @@ const planetGroups = {
   'asc': 'angle', 'mc': 'angle', 'dsc': 'angle', 'ic': 'angle',
 };
 
-// Angle point glyphs and names
-const angleGlyphs = {'asc': 'ASC', 'mc': 'MC', 'dsc': 'DSC', 'ic': 'IC'};
+// Angle point names (angleGlyphs は dead-symbol 検出で削除 — 2026-05-06)
 const angleNamesJP = {'asc': 'ASC', 'mc': 'MC', 'dsc': 'DSC', 'ic': 'IC'};
 
 // HTML: PATTERN_ORB_SETTINGS

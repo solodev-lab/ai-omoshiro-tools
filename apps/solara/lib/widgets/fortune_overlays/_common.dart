@@ -20,9 +20,6 @@ double easeOutBack(double x) {
   return 1 + c3 * v * v * v + c1 * v * v;
 }
 
-/// イージング: 急加速
-double easeInCubic(double x) => x * x * x;
-
 /// イージング: 二次イーズインアウト
 double easeInOutQuad(double x) {
   if (x < 0.5) return 2 * x * x;

@@ -244,49 +244,7 @@ Future<TarotReading?> fetchTarotReading({
   return null;
 }
 
-// ── Fortune API カテゴリの親和惑星 ──
-// worker/src/fortune.js の FORTUNE_CATEGORIES と完全一致 (LLM入力と score計算で使用)
-// ⚠️ horo_constants.fortunePlanets (UIフィルタ用、key='healing') とは別用途:
-//   - こちら: API/LLM 向け、key='overall' (全体運)
-//   - あちら: Horo画面の絞込チップ、key='healing' (癒し運)
-//   キーが 4/5 重複するが、意味が違うので統合しない
-const fortuneApiPlanets = {
-  'overall': ['sun', 'moon', 'jupiter'],
-  'love': ['venus', 'mars', 'moon'],
-  'money': ['venus', 'jupiter', 'saturn'],
-  'career': ['saturn', 'venus', 'sun'],
-  'communication': ['mercury', 'moon', 'jupiter'],
-};
-
-/// 関連惑星のアスペクト強度からスコア (20-95) を算出。
-/// worker側 computeCategoryScore と同ロジック (オフライン表示用)。
-int computeFortuneScore(String category, List<Map<String, dynamic>> aspects) {
-  final planets = fortuneApiPlanets[category];
-  if (planets == null) return 50;
-  final rel = planets.toSet();
-
-  double influence = 0;
-  for (final a in aspects) {
-    final p1 = a['p1'] as String?;
-    final p2 = a['p2'] as String?;
-    if (!rel.contains(p1) && !rel.contains(p2)) continue;
-
-    final orb = (a['orb'] as num?)?.toDouble() ?? 2.0;
-    final diff = (a['diff'] as num?)?.toDouble() ?? 0.0;
-    final angle = (a['aspectAngle'] as num?)?.toDouble() ?? 0.0;
-    final diffFromExact = (diff - angle).abs();
-    final tightness = (1 - diffFromExact / orb).clamp(0.0, 1.0);
-
-    final q = a['quality'] as String? ?? 'neutral';
-    if (q == 'soft') {
-      influence += 10 * tightness;
-    } else if (q == 'hard') {
-      influence -= 6 * tightness;
-    } else {
-      influence += 3 * tightness;
-    }
-  }
-
-  final score = (50 + influence).round();
-  return score.clamp(20, 95);
-}
+// computeFortuneScore + fortuneApiPlanets 削除 (audit dead-symbol, 2026-05-06):
+// オフライン表示用のスコア再計算ロジックだったが UI から呼ばれず。
+// Worker (worker/src/fortune.js) 側のサーバー計算結果を直接使う設計に
+// 移行済みのため不要。必要になったら git log から復元可能。
