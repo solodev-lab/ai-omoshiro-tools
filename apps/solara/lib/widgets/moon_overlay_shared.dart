@@ -30,6 +30,52 @@ Widget revealPoeticMessage(BuildContext context, {required String ja, required S
   );
 }
 
+/// 月オーバーレイの選択可能カードの共通枠 (full_moon の評価カード /
+/// new_moon の選択肢カード)。
+///
+/// AnimatedContainer + 角丸 + isSelected による枠色/背景色の切替までを共通化。
+/// 内部 child は呼び側で構築 (Row/Column どちらでも可)。
+/// audit T7, 2026-05-06。
+Widget moonOverlaySelectableCard({required bool isSelected, required Widget child}) {
+  return AnimatedContainer(
+    duration: const Duration(milliseconds: 200),
+    width: double.infinity,
+    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+    decoration: BoxDecoration(
+      borderRadius: BorderRadius.circular(14),
+      color: isSelected
+          ? SolaraColors.solaraGold.withValues(alpha: 0.12)
+          : SolaraColors.glassFill,
+      border: Border.all(
+        color: isSelected
+            ? SolaraColors.solaraGold.withValues(alpha: 0.5)
+            : SolaraColors.glassBorder,
+      ),
+    ),
+    child: child,
+  );
+}
+
+/// 月オーバーレイのタップ時の幾何測定 — title と選択 item の Y 座標 + 高さ。
+///
+/// full_moon の _onRatingTap / new_moon の _onChoiceTap が GlobalKey から
+/// RenderBox を取って localToGlobal + size.height を返す処理を完全に同じ形で
+/// 持っていたため共有化 (audit T7, 2026-05-06)。
+///
+/// 戻り値が null の場合は RenderBox がまだ未確定 (build 前) のため呼び側は早期 return。
+({double titleY, double titleH, double itemY, double itemH})?
+    measureMoonOverlayTapGeometry(GlobalKey titleKey, GlobalKey itemKey) {
+  final titleBox = titleKey.currentContext?.findRenderObject() as RenderBox?;
+  final itemBox = itemKey.currentContext?.findRenderObject() as RenderBox?;
+  if (titleBox == null || itemBox == null) return null;
+  return (
+    titleY: titleBox.localToGlobal(Offset.zero).dy,
+    titleH: titleBox.size.height,
+    itemY: itemBox.localToGlobal(Offset.zero).dy,
+    itemH: itemBox.size.height,
+  );
+}
+
 /// 神秘的な月/刻星化背景 — 黒ベース + 画像レイヤー + 子widget
 Widget mysticalMoonBackdrop({
   required String assetPath,

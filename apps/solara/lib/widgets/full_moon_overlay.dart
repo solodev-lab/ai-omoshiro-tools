@@ -107,17 +107,14 @@ class _FullMoonOverlayState extends State<FullMoonOverlay>
   /// 評価タップ → GlobalKey で現在位置を測定 → リビール演出を順次再生
   void _onRatingTap(int i) {
     if (_selectedRating >= 0) return; // 既に選択済み
-    final titleBox = _titleKey.currentContext?.findRenderObject() as RenderBox?;
-    final ratingBox = _ratingKeys[i].currentContext?.findRenderObject() as RenderBox?;
-    if (titleBox == null || ratingBox == null) return;
-    final titlePos = titleBox.localToGlobal(Offset.zero);
-    final ratingPos = ratingBox.localToGlobal(Offset.zero);
+    final g = measureMoonOverlayTapGeometry(_titleKey, _ratingKeys[i]);
+    if (g == null) return;
     setState(() {
       _selectedRating = i + 1; // rating値は1-3
-      _titleStartY = titlePos.dy;
-      _titleHeight = titleBox.size.height;
-      _ratingStartY = ratingPos.dy;
-      _ratingHeight = ratingBox.size.height;
+      _titleStartY = g.titleY;
+      _titleHeight = g.titleH;
+      _ratingStartY = g.itemY;
+      _ratingHeight = g.itemH;
     });
     _runRevealSequence();
   }
@@ -424,27 +421,15 @@ class _FullMoonOverlayState extends State<FullMoonOverlay>
   }
 
   /// 評価カード (選択前/後で見た目同じ、isSelected で枠色が変わる)
+  /// 外枠は moon_overlay_shared.dart の moonOverlaySelectableCard を共用。
   Widget _ratingCardWidget({
     required bool isSelected,
     required String emoji,
     required String labelJP,
     required String labelEN,
   }) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 200),
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(14),
-        color: isSelected
-            ? SolaraColors.solaraGold.withValues(alpha: 0.12)
-            : SolaraColors.glassFill,
-        border: Border.all(
-          color: isSelected
-              ? SolaraColors.solaraGold.withValues(alpha: 0.5)
-              : SolaraColors.glassBorder,
-        ),
-      ),
+    return moonOverlaySelectableCard(
+      isSelected: isSelected,
       child: Row(
         children: [
           Text(emoji, style: const TextStyle(fontSize: 26)),

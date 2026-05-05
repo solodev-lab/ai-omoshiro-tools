@@ -129,17 +129,14 @@ class _NewMoonOverlayState extends State<NewMoonOverlay>
   /// 選択タップ → GlobalKey で現在位置を測定 → リビール演出を順次再生
   void _onChoiceTap(int i) {
     if (_selectedIndex >= 0) return; // 既に選択済み
-    final titleBox = _titleKey.currentContext?.findRenderObject() as RenderBox?;
-    final choiceBox = _choiceKeys[i].currentContext?.findRenderObject() as RenderBox?;
-    if (titleBox == null || choiceBox == null) return;
-    final titlePos = titleBox.localToGlobal(Offset.zero);
-    final choicePos = choiceBox.localToGlobal(Offset.zero);
+    final g = measureMoonOverlayTapGeometry(_titleKey, _choiceKeys[i]);
+    if (g == null) return;
     setState(() {
       _selectedIndex = i;
-      _titleStartY = titlePos.dy;
-      _titleHeight = titleBox.size.height;
-      _choiceStartY = choicePos.dy;
-      _choiceHeight = choiceBox.size.height;
+      _titleStartY = g.titleY;
+      _titleHeight = g.titleH;
+      _choiceStartY = g.itemY;
+      _choiceHeight = g.itemH;
     });
     _runRevealSequence();
   }
@@ -490,27 +487,15 @@ class _NewMoonOverlayState extends State<NewMoonOverlay>
   }
 
   /// 選択肢カード (選択前/後で見た目同じ、isSelected で枠色が変わる)
+  /// 外枠は moon_overlay_shared.dart の moonOverlaySelectableCard を共用。
   Widget _choiceCardWidget({
     required bool isSelected,
     required bool isSkipChoice,
     required String titleJP,
     required String titleEN,
   }) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 200),
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(14),
-        color: isSelected
-            ? SolaraColors.solaraGold.withValues(alpha: 0.12)
-            : SolaraColors.glassFill,
-        border: Border.all(
-          color: isSelected
-              ? SolaraColors.solaraGold.withValues(alpha: 0.5)
-              : SolaraColors.glassBorder,
-        ),
-      ),
+    return moonOverlaySelectableCard(
+      isSelected: isSelected,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
