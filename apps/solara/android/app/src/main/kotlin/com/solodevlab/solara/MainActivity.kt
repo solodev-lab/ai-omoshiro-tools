@@ -13,15 +13,17 @@ import io.flutter.embedding.android.FlutterActivity
  * 反復するため、ダイアログ/ドロップダウン等を 1 回開閉する度に警告が
  * 1〜2 件発生する。
  *
- * Flutter Engine では `setFrameworkHandlesBack` (PlatformChannel) /
- * `onCreate` 経由 (savedInstanceState 復元時) / `release` 経由などから
- * `registerOnBackInvokedCallback()` / `unregisterOnBackInvokedCallback()`
- * が呼ばれる。これら 2 つの public method を直接 no-op 化することで
- * Android dispatcher への登録自体を抑止し、警告を完全に消す。
+ * Flutter Engine の `setFrameworkHandlesBack` (PlatformChannel) /
+ * `registerOnBackInvokedCallback` / `unregisterOnBackInvokedCallback`
+ * を no-op で override し、Android dispatcher への登録自体を抑止する。
+ * これによりエミュレータ実機上で警告は完全消滅。
  *
- * トレードオフ: Flutter の back 処理 (route pop) が Android の
- * predictive back gesture API を経由しなくなる。ただし legacy onBackPressed
- * のフォールバック経路は残るため Solara の動作 (戻る → 前画面) は維持される。
+ * トレードオフ: Flutter の back 処理が Android の predictive back gesture
+ * API 経由ではなく、legacy onBackPressed() フォールバック経路を通る。
+ * Solara の戻る挙動 (画面遷移・モーダル閉じ) は維持される。
+ *
+ * 注: R8/ProGuard が空 body の override を strip しないよう
+ * proguard-rules.pro で MainActivity を keep。
  */
 class MainActivity : FlutterActivity() {
 
