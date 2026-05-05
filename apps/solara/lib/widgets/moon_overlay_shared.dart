@@ -1,11 +1,34 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../theme/solara_colors.dart';
+
 // ══════════════════════════════════════════════════════════════
 // 月 / 刻星化オーバーレイ共通ビルディングブロック
 // - mysticalMoonBackdrop: 暗い宇宙背景 + 画像
 // - MoonScrollingStory: 下1/4から始まる自動スクロール物語テキスト
+// - revealPoeticMessage: 選択後フェードインの詩的メッセージ (full/new moon 共有)
 // ══════════════════════════════════════════════════════════════
+
+/// 選択後フェードインで表示する詩的メッセージ。
+/// full_moon_overlay の `_revealMessage` と new_moon_overlay の `_revealMessage` が
+/// テキスト 2 行のみ違い完全同形だったため共有化 (audit T2, 2026-05-06)。
+/// ロケール ja で [ja]、それ以外は [en] を使う。
+Widget revealPoeticMessage(BuildContext context, {required String ja, required String en}) {
+  final locale = Localizations.localeOf(context).toString();
+  final isJA = locale.startsWith('ja');
+  return Text(
+    isJA ? ja : en,
+    textAlign: TextAlign.center,
+    style: TextStyle(
+      color: SolaraColors.textPrimary.withValues(alpha: 0.92),
+      fontSize: 14,
+      height: 1.8,
+      letterSpacing: 1.2,
+      fontStyle: FontStyle.italic,
+    ),
+  );
+}
 
 /// 神秘的な月/刻星化背景 — 黒ベース + 画像レイヤー + 子widget
 Widget mysticalMoonBackdrop({

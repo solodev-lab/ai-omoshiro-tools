@@ -478,25 +478,12 @@ class _FullMoonOverlayState extends State<FullMoonOverlay>
     );
   }
 
-  /// 詩的メッセージ (選択後フェードイン)
-  Widget _revealMessage(BuildContext context) {
-    final locale = Localizations.localeOf(context).toString();
-    final isJA = locale.startsWith('ja');
-    final text = isJA
-        ? '今のあなたの感覚は、すべて受けとめられている。\n月はあなたの歩みを祝福している。'
-        : 'Whatever you feel now is received.\nThe moon honors your journey.';
-    return Text(
-      text,
-      textAlign: TextAlign.center,
-      style: TextStyle(
-        color: SolaraColors.textPrimary.withValues(alpha: 0.92),
-        fontSize: 14,
-        height: 1.8,
-        letterSpacing: 1.2,
-        fontStyle: FontStyle.italic,
-      ),
-    );
-  }
+  /// 詩的メッセージ (選択後フェードイン) — 共通実装は moon_overlay_shared.dart
+  Widget _revealMessage(BuildContext context) => revealPoeticMessage(
+        context,
+        ja: '今のあなたの感覚は、すべて受けとめられている。\n月はあなたの歩みを祝福している。',
+        en: 'Whatever you feel now is received.\nThe moon honors your journey.',
+      );
 
   Future<void> _submitRating(int rating) async {
     final updated = widget.intention.copyWith(

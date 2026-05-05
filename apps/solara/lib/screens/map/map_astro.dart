@@ -225,6 +225,36 @@ class ScoreResult {
   });
 }
 
+/// addT/addP/addCT/addCP 4 関数の共通本体。
+///
+/// 入力 [aspect] からソフト/ハード分解し [compMap]/[contribsMap] に追記する。
+/// soft/hard を保存する key は [softField]/[hardField] で指定 (T 系は
+/// 'tSoft'/'tHard'、P 系は 'pSoft'/'pHard')。集計対象の惑星 [planet] が
+/// [compMap] に含まれない場合は何もしない (惑星アングル等のフィルタ用途)。
+void _addAspectComp(
+  String planet,
+  Map<String, dynamic> aspect,
+  double amt,
+  Map<String, Map<String, double>> compMap,
+  Map<String, List<AspectContribution>> contribsMap,
+  String softField,
+  String hardField,
+) {
+  if (!compMap.containsKey(planet)) return;
+  final q = aspect['quality'] as String;
+  final (s, h) = _qSplit(q, amt);
+  compMap[planet]![softField] = compMap[planet]![softField]! + s;
+  compMap[planet]![hardField] = compMap[planet]![hardField]! + h;
+  contribsMap[planet]!.add(AspectContribution(
+    p1: aspect['p1'] as String,
+    p2: aspect['p2'] as String,
+    aspectType: aspect['type'] as String,
+    quality: q,
+    softAmount: s,
+    hardAmount: h,
+  ));
+}
+
 /// ChartResult → Map画面用16方位スコア
 ScoreResult scoreAll(ChartResult chart) {
   final natalWithAngles = Map<String, double>.from(chart.natal);
@@ -260,36 +290,14 @@ ScoreResult scoreAll(ChartResult chart) {
     return _angleBonus[ak] ?? 1.0;
   }
 
-  void addT(String planet, Map<String, dynamic> a, double amt) {
-    if (!tComp.containsKey(planet)) return;
-    final q = a['quality'] as String;
-    final (s, h) = _qSplit(q, amt);
-    tComp[planet]!['tSoft'] = tComp[planet]!['tSoft']! + s;
-    tComp[planet]!['tHard'] = tComp[planet]!['tHard']! + h;
-    tContribs[planet]!.add(AspectContribution(
-      p1: a['p1'] as String,
-      p2: a['p2'] as String,
-      aspectType: a['type'] as String,
-      quality: q,
-      softAmount: s,
-      hardAmount: h,
-    ));
-  }
-  void addP(String planet, Map<String, dynamic> a, double amt) {
-    if (!pComp.containsKey(planet)) return;
-    final q = a['quality'] as String;
-    final (s, h) = _qSplit(q, amt);
-    pComp[planet]!['pSoft'] = pComp[planet]!['pSoft']! + s;
-    pComp[planet]!['pHard'] = pComp[planet]!['pHard']! + h;
-    pContribs[planet]!.add(AspectContribution(
-      p1: a['p1'] as String,
-      p2: a['p2'] as String,
-      aspectType: a['type'] as String,
-      quality: q,
-      softAmount: s,
-      hardAmount: h,
-    ));
-  }
+  // 4 つあった addT/addP/addCT/addCP は完全に同形 (compMap+contribsMap+
+  // softField+hardField パラメータの違いのみ) だったため _addAspectComp
+  // に集約。call site の見た目は維持するため thin wrapper のみ残す
+  // (audit T2, 2026-05-06)。
+  void addT(String p, Map<String, dynamic> a, double amt) =>
+    _addAspectComp(p, a, amt, tComp, tContribs, 'tSoft', 'tHard');
+  void addP(String p, Map<String, dynamic> a, double amt) =>
+    _addAspectComp(p, a, amt, pComp, pContribs, 'pSoft', 'pHard');
 
   for (final a in tt) {
     final w = a['weight'] as double;
@@ -400,36 +408,10 @@ ScoreResult scoreAll(ChartResult chart) {
       for (final p in cp) p: <AspectContribution>[]
     };
 
-    void addCT(String planet, Map<String, dynamic> a, double amt) {
-      if (!ctc.containsKey(planet)) return;
-      final q = a['quality'] as String;
-      final (s, h) = _qSplit(q, amt);
-      ctc[planet]!['tSoft'] = ctc[planet]!['tSoft']! + s;
-      ctc[planet]!['tHard'] = ctc[planet]!['tHard']! + h;
-      ctcContribs[planet]!.add(AspectContribution(
-        p1: a['p1'] as String,
-        p2: a['p2'] as String,
-        aspectType: a['type'] as String,
-        quality: q,
-        softAmount: s,
-        hardAmount: h,
-      ));
-    }
-    void addCP(String planet, Map<String, dynamic> a, double amt) {
-      if (!cpc.containsKey(planet)) return;
-      final q = a['quality'] as String;
-      final (s, h) = _qSplit(q, amt);
-      cpc[planet]!['pSoft'] = cpc[planet]!['pSoft']! + s;
-      cpc[planet]!['pHard'] = cpc[planet]!['pHard']! + h;
-      cpcContribs[planet]!.add(AspectContribution(
-        p1: a['p1'] as String,
-        p2: a['p2'] as String,
-        aspectType: a['type'] as String,
-        quality: q,
-        softAmount: s,
-        hardAmount: h,
-      ));
-    }
+    void addCT(String p, Map<String, dynamic> a, double amt) =>
+      _addAspectComp(p, a, amt, ctc, ctcContribs, 'tSoft', 'tHard');
+    void addCP(String p, Map<String, dynamic> a, double amt) =>
+      _addAspectComp(p, a, amt, cpc, cpcContribs, 'pSoft', 'pHard');
 
     for (final a in tt) {
       final i1 = cp.contains(a['p1']), i2 = cp.contains(a['p2']);

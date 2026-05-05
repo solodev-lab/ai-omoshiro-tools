@@ -538,25 +538,12 @@ class _NewMoonOverlayState extends State<NewMoonOverlay>
     );
   }
 
-  /// 詩的メッセージ (選択後フェードイン)
-  Widget _revealMessage(BuildContext context) {
-    final locale = Localizations.localeOf(context).toString();
-    final isJA = locale.startsWith('ja');
-    final text = isJA
-        ? 'あなたの選んだ道は、すべて正しい。\n星々はあなたを照らし、導いている。'
-        : 'Every path you choose is right.\nThe stars light your way.';
-    return Text(
-      text,
-      textAlign: TextAlign.center,
-      style: TextStyle(
-        color: SolaraColors.textPrimary.withValues(alpha: 0.92),
-        fontSize: 14,
-        height: 1.8,
-        letterSpacing: 1.2,
-        fontStyle: FontStyle.italic,
-      ),
-    );
-  }
+  /// 詩的メッセージ (選択後フェードイン) — 共通実装は moon_overlay_shared.dart
+  Widget _revealMessage(BuildContext context) => revealPoeticMessage(
+        context,
+        ja: 'あなたの選んだ道は、すべて正しい。\n星々はあなたを照らし、導いている。',
+        en: 'Every path you choose is right.\nThe stars light your way.',
+      );
 
   /// 惑星イベント一覧 (選択後フェードイン)
   Widget _revealEvents(List<CelestialEvent> events) {
