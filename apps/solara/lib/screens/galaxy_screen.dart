@@ -58,11 +58,21 @@ class GalaxyScreenState extends State<GalaxyScreen>
   bool _dragging = false;
   Offset _lastDrag = Offset.zero;
 
-  // Breathing animation
-  late AnimationController _breathController;
-
-  // Auto-rotate animation
-  late AnimationController _autoRotateController;
+  // ── Motion state (Horoscope Phase 3c 路線 + Galaxy 専用 ease-out 減速) ──
+  // 60fps `.repeat()` AnimationController で raster を回し続けるのを止め、
+  // 単一 Timer.periodic 30fps で breath / autoRotate を駆動する。
+  // ライフサイクル: 覚醒(tap/drag) → 30s フルスピード → 10s ease-out 減速 → 完全停止 (raster 0%)。
+  // 停止中は _isMotionFrozen=true を painter に伝え、breath/twinkle を最大値固定 (Phase 3c 路線)。
+  double _breathPhaseSec = 0.0;        // breath 累積秒 (sin 引数として painter に渡す)
+  Timer? _motionTimer;                  // 単一 30fps tick (breath + autoRotate 兼用)
+  DateTime? _motionStartedAt;           // 覚醒時刻 (経過からフェーズ判定)
+  bool _isMotionFrozen = false;         // 完全停止中フラグ (painter で breath/twinkle=1.0 固定)
+  static const Duration _motionTick = Duration(milliseconds: 33); // 30fps
+  static const double _motionFps = 30.0;
+  static const double _motionActiveSec = 30.0;   // フルスピード期間
+  static const double _motionDecelSec = 10.0;    // ease-out 減速期間 (1→0)
+  static const double _autoRotStep30fps = 0.005; // 60fps の 0.0025/frame と等価な 30fps step
+  static const double _velDecay30fps = 0.81;     // pow(0.90, 60/30) ≈ 0.81 (60fps の 0.90 等価)
 
   // Dot popup
   int _popupDayIndex = -1;
@@ -115,17 +125,7 @@ class GalaxyScreenState extends State<GalaxyScreen>
   void initState() {
     super.initState();
     _initNebulaPositions();
-    _breathController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 100),
-    )..repeat();
-
-    _autoRotateController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 100),
-    )..repeat();
-    _autoRotateController.addListener(_onAutoRotate);
-
+    _wakeMotion();    // 画面初期表示時に motion 起動 (30s 後に減速、40s 後に完全停止)
     _loadData();
   }
 
@@ -150,24 +150,66 @@ class GalaxyScreenState extends State<GalaxyScreen>
 
   @override
   void dispose() {
-    _breathController.dispose();
-    _autoRotateController.removeListener(_onAutoRotate);
-    _autoRotateController.dispose();
+    _motionTimer?.cancel();
     _popupTimer?.cancel();
     _replayController?.dispose();
     super.dispose();
   }
 
-  void _onAutoRotate() {
-    if (!_dragging && mounted) {
-      setState(() {
-        _rotY += 0.0025;
-        _velX *= 0.90;
-        _velY *= 0.90;
-        _rotX += _velX;
-        _rotY += _velY;
-      });
+  /// motion 覚醒: 30s フルスピード → 10s ease-out 減速 → 完全停止 (raster 0%)。
+  /// tap/drag のたびに呼ばれ、寿命カウンタをリセットする。
+  void _wakeMotion() {
+    _motionStartedAt = DateTime.now();
+    if (_isMotionFrozen) {
+      _isMotionFrozen = false;
     }
+    _motionTimer?.cancel();
+    _motionTimer = Timer.periodic(_motionTick, _onMotionTick);
+  }
+
+  /// 30fps tick — breath 位相 + autoRotate + 慣性減衰を一括更新。
+  /// 経過 t に応じて速度倍率を ease-out cubic で 1→0 に落とし、40s で完全停止。
+  void _onMotionTick(Timer t) {
+    if (!mounted) {
+      t.cancel();
+      return;
+    }
+    final elapsed = DateTime.now().difference(_motionStartedAt!).inMilliseconds / 1000.0;
+
+    // 完全停止フェーズ: timer 解除 + frozen フラグで painter に max 固定指示
+    if (elapsed >= _motionActiveSec + _motionDecelSec) {
+      t.cancel();
+      _motionTimer = null;
+      setState(() {
+        _isMotionFrozen = true;
+        _velX = 0;
+        _velY = 0;
+      });
+      return;
+    }
+
+    // 速度倍率: 0..30s = 1.0、30..40s = ease-out cubic で 1→0
+    final double speedMul;
+    if (elapsed < _motionActiveSec) {
+      speedMul = 1.0;
+    } else {
+      final tt = (elapsed - _motionActiveSec) / _motionDecelSec; // 0..1
+      speedMul = 1.0 - tt * tt * tt;                              // ease-out cubic
+    }
+
+    setState(() {
+      // breath: 実時間秒で進める (painter 内 sin 用、停止時は frozen 側で 1.0 固定)
+      _breathPhaseSec += (1.0 / _motionFps) * speedMul;
+      // autoRotate: drag 中は触らない (ユーザー操作優先)
+      if (!_dragging) {
+        _rotY += _autoRotStep30fps * speedMul;
+      }
+      // 慣性減衰: drag 後の余韻 (60fps→30fps 等価係数)
+      _velX *= _velDecay30fps;
+      _velY *= _velDecay30fps;
+      _rotX += _velX;
+      _rotY += _velY;
+    });
   }
 
   Future<void> _loadData() async {
@@ -420,22 +462,22 @@ class GalaxyScreenState extends State<GalaxyScreen>
           onPanUpdate: _onDragUpdate,
           onPanEnd: _onDragEnd,
           onTapUp: _onTapUp,
-          child: AnimatedBuilder(
-            animation: _breathController,
-            builder: (context, _) {
-              final painter = CycleSpiralPainter(
-                days: _cycleDays,
-                currentDayIndex: _currentDayIndex,
-                totalDays: _totalDays,
-                rotX: _rotX, rotY: _rotY, zoom: _zoom,
-                breathPhase: _breathController.value * 100,
-                cycleStart: _cycleStart,
-                bgSeed: _bgSeed,
-              );
-              _lastPainter = painter;
-              return CustomPaint(painter: painter, size: Size.infinite);
-            },
-          ),
+          // `.repeat()` AnimationController + AnimatedBuilder を撤去し、
+          // _onMotionTick() の setState 駆動に統一 (raster lifecycle 制御のため)。
+          child: Builder(builder: (context) {
+            final painter = CycleSpiralPainter(
+              days: _cycleDays,
+              currentDayIndex: _currentDayIndex,
+              totalDays: _totalDays,
+              rotX: _rotX, rotY: _rotY, zoom: _zoom,
+              breathPhase: _breathPhaseSec,
+              frozenAtMax: _isMotionFrozen,
+              cycleStart: _cycleStart,
+              bgSeed: _bgSeed,
+            );
+            _lastPainter = painter;
+            return CustomPaint(painter: painter, size: Size.infinite);
+          }),
         ),
         Positioned(top: 8, right: 20, child: _buildDayBadge()),
         Positioned(top: 8, left: 20, child: _buildMoonBadge()),
@@ -526,6 +568,7 @@ class GalaxyScreenState extends State<GalaxyScreen>
     _dragging = true;
     _lastDrag = d.localPosition;
     _velX = 0; _velY = 0;
+    _wakeMotion();    // ユーザー操作 = 寿命タイマー reset & motion 再開
   }
 
   void _onDragUpdate(DragUpdateDetails d) {
@@ -539,9 +582,13 @@ class GalaxyScreenState extends State<GalaxyScreen>
     _lastDrag = d.localPosition;
   }
 
-  void _onDragEnd(DragEndDetails d) { _dragging = false; }
+  void _onDragEnd(DragEndDetails d) {
+    _dragging = false;
+    _wakeMotion();    // drag 終了直後の慣性余韻を tick で見せるため再起動
+  }
 
   void _onTapUp(TapUpDetails details) {
+    _wakeMotion();    // tap も「触った」と見なし motion 再覚醒
     if (_lastPainter == null) return;
     final dayIndex = _lastPainter!.hitTestDot(details.localPosition);
     if (dayIndex >= 0 && dayIndex < _cycleDays.length && _cycleDays[dayIndex] != null) {
