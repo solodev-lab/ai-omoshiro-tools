@@ -32,10 +32,12 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
-        <!-- 一時無効化 (2026-05-03 fd leak 検証):
-             A101FC で sync_file が 42 fd/秒 で leak し 12.5 分で 32768 上限到達 →
-             Impeller backend 由来か検証するため OpenGLES に切替。
-             結果次第で true に戻す or 維持する。 -->
+        <!-- Impeller 無効化:
+             ① A101FC fd leak (Vulkan sync_file leak) 対策。Impeller off で完全停止確認済 (commit 93368ee)。
+             ② 2026-05-06 再有効化テストで raster CPU 問題は Impeller では解決せず
+                (97% vs Skia 100%、誤差レベル)、むしろ FPS 52→10 に激減。
+             結論: Impeller=false が現時点で正解。raster 問題は AnimationController.repeat()
+             側の対策 (Phase 3c: 静止 + 最大輝度固定) で対応。 -->
         <meta-data
             android:name="io.flutter.embedding.android.EnableImpeller"
             android:value="false" />
