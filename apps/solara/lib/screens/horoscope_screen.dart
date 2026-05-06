@@ -64,7 +64,7 @@ class HoroscopeScreenState extends State<HoroscopeScreen>
 
   // ── アニメ寿命タイマー ──
   // 画面表示後 30s で _breathCtl / _rotTimer を停止 (→ raster 0% 化)。
-  // ユーザーが chart を tap/scroll すると _wakeAnimations() で再覚醒し、
+  // ユーザーがタブ入室 / mode 切替すると wakeAnimations() で再覚醒し、
   // 再び 30s カウントダウン。
   // 停止時の breath 値は 1.0 (最大輝度固定 = Phase 3c 路線、DailyTransitBadge と一貫)。
   Timer? _animLifeTimer;
@@ -175,17 +175,18 @@ class HoroscopeScreenState extends State<HoroscopeScreen>
   @override
   void initState() {
     super.initState();
-    // 6秒周期 (呼吸テンポを落として自然に)
-    // 初期値 1.0 で開始 → 最大輝度から始まり「吸って吐く」順序になる
+    // breathCtl は値 1.0 (最大輝度) で停止状態のまま生成。
+    // .repeat() / _startRotTimer() / _resetAnimLifeTimer() の起動はタブ入室時
+    // (main.dart _onTabTap → wakeAnimations) に委譲。IndexedStack で initState は
+    // app 起動時に走るため、ここで起動すると裏タブで anim が CPU 浪費 + 30s 寿命タイマーが
+    // 経過して、Horo タブに入ったら何も動いていない状態になる (= 計測で発見した bug)。
     _breathCtl = AnimationController(
       vsync: this, duration: const Duration(milliseconds: 6000),
       value: 1.0,
-    )..repeat(reverse: true);
+    );
     _rotCtl = AnimationController(
       vsync: this, duration: _rotPeriod,
     );
-    _startRotTimer();
-    _resetAnimLifeTimer();
     // 星読み画面でのスクロール量を監視 (パララックス用)
     _readingScrollCtl.addListener(() {
       _readingParallax.value = _readingScrollCtl.offset * 0.15;
@@ -222,8 +223,9 @@ class HoroscopeScreenState extends State<HoroscopeScreen>
     _rotTimer = null;
   }
 
-  /// chart tap / scroll で呼ばれる「再覚醒」: anim 再開 + 30s タイマー再起動。
-  void _wakeAnimations() {
+  /// 「再覚醒」: anim 再開 + 30s タイマー再起動。
+  /// main.dart からのタブ入室時、および内部 _syncRotationByMode (mode 切替) から呼ばれる。
+  void wakeAnimations() {
     // breath は最大輝度 (1.0) から再開 → 停止状態 (value=1.0 固定) と
     // 完全に滑らかに繋がり、覚醒の瞬間に視覚ジャンプが起こらない。
     if (!_breathCtl.isAnimating) {
@@ -234,6 +236,13 @@ class HoroscopeScreenState extends State<HoroscopeScreen>
       _startRotTimer();
     }
     _resetAnimLifeTimer();
+  }
+
+  /// main.dart からタブ離脱時に呼ばれる。Anim + 寿命タイマー両方停止 = raster 0%。
+  void pauseAnimations() {
+    _animLifeTimer?.cancel();
+    _animLifeTimer = null;
+    _stopAnimations();
   }
 
   /// 2fps Timer で _rotCtl.value を進める。
@@ -257,7 +266,7 @@ class HoroscopeScreenState extends State<HoroscopeScreen>
       _rotTimer?.cancel();
       _rotTimer = null;
     } else {
-      _wakeAnimations();   // breath + rotation 両方覚醒 + 30s タイマー再起動
+      wakeAnimations();   // breath + rotation 両方覚醒 + 30s タイマー再起動
     }
   }
 

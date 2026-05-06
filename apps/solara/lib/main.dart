@@ -73,18 +73,25 @@ class _SolaraHomeState extends State<SolaraHome> {
   ];
 
   void _onTabTap(int i) {
-    // Galaxy タブ入室時は同じタブ再タップでなければ背景を再生成
-    // (Horoと違い、毎回新鮮な星空を表示)
+    // タブ切替前後の状態を捕捉 (setState で _currentIndex が変わる前)
     final switchingToGalaxy = i == 3 && _currentIndex != 3;
     final leavingGalaxy = i != 3 && _currentIndex == 3;
+    final leavingHoro = i != 1 && _currentIndex == 1;
     setState(() => _currentIndex = i);
     // Map / Horo へ戻ったときはプロフィールを再読込（Sanctuary で編集された場合に追従）
     if (i == 0) _mapKey.currentState?.reloadProfile();
-    if (i == 1) _horoKey.currentState?.loadProfile();
-    // Regenerate Galaxy background + motion fresh start (40s lifecycle)
+    if (i == 1) {
+      _horoKey.currentState?.loadProfile();
+      // Horo 入室で anim 起動 (30s 寿命タイマー fresh start)
+      // 注: initState ではなく、ここで起動する。IndexedStack で initState は app 起動時に
+      // 走るため、そこで wake すると裏タブで CPU 浪費 + 寿命タイマーが消化されてしまう。
+      _horoKey.currentState?.wakeAnimations();
+    }
+    // Galaxy 入室で背景再生成 + motion fresh 40s lifecycle
     if (switchingToGalaxy) _galaxyKey.currentState?.regenerateBackground();
-    // Galaxy 離脱時は Timer.periodic も明示停止 (TickerMode の対象外なので)
+    // タブ離脱時は Timer.periodic も明示停止 (TickerMode の対象外なので)
     if (leavingGalaxy) _galaxyKey.currentState?.pauseMotion();
+    if (leavingHoro) _horoKey.currentState?.pauseAnimations();
   }
 
   @override
