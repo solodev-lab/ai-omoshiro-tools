@@ -19,10 +19,6 @@ class CycleSpiralPainter extends CustomPainter {
   final double rotY;
   final double zoom;
   final double breathPhase; // animation time in seconds
-  /// true のとき breath / twinkle を最大値 (1.0) で固定する。
-  /// Galaxy idle 完全停止フェーズで raster 0% を実現するため、画面側 (_isMotionFrozen) から渡される。
-  /// Phase 3c (BirthMarker breathing 撤去) と一貫した「最大輝度静止」路線。
-  final bool frozenAtMax;
   final DateTime cycleStart;
   final int bgSeed; // random seed for background stars (changes each session)
 
@@ -34,7 +30,6 @@ class CycleSpiralPainter extends CustomPainter {
     required this.rotY,
     required this.zoom,
     required this.breathPhase,
-    this.frozenAtMax = false,
     required this.cycleStart,
     required this.bgSeed,
   });
@@ -123,6 +118,13 @@ class CycleSpiralPainter extends CustomPainter {
   // MaskFilter.blur は star 毎に saveLayer を発生させ、30 stars × 60fps で
   // 1800 saveLayer/sec に達するため Map DailyTransitBadge と同じ理由で撤去。
   // 視覚的には 4 層 alpha 円 (Gaussian-like falloff) で同等のソフト感を再現。
+  //
+  // frozen 時の挙動: 画面側 (galaxy_screen.dart) が `_breathPhaseSec` を保持したまま
+  // Timer を停止するため、`now` はフリーズ瞬間の値で固定される → sin 位置も固定 →
+  // 各星は「フリーズした瞬間の sin 位置の輝度」のまま静止する。
+  // wake 時は同じ `now` から再開するので alpha 連続 = 切れ目ゼロ。
+  // (以前は frozenAtMax フラグで peakOp に上書きしていたため freeze/wake で alpha
+  //  ジャンプが発生していた。フラグ撤去で根本解決。)
   void _drawBackgroundStars(Canvas canvas, Size size, double now) {
     final rng = _Mulberry32(bgSeed);
     const count = 30;
@@ -134,15 +136,9 @@ class CycleSpiralPainter extends CustomPainter {
       final delay = rng.next() * dur;
       final baseOp = 0.10 + rng.next() * 0.20;
       final peakOp = 0.65 + rng.next() * 0.25; // 星毎に異なるピーク輝度
-      // frozen 時は twinkle を最大固定 (= peakOp 出力)、通常時は sin 振動
-      final double alpha;
-      if (frozenAtMax) {
-        alpha = peakOp.clamp(0.0, 1.0);
-      } else {
-        final t = (sin((now + delay) / dur * 2 * pi) + 1) / 2;
-        final twinkle = pow(t, 0.6).toDouble();   // 非線形 (鋭いピーク)
-        alpha = (baseOp + (peakOp - baseOp) * twinkle).clamp(0.0, 1.0);
-      }
+      final t = (sin((now + delay) / dur * 2 * pi) + 1) / 2;
+      final twinkle = pow(t, 0.6).toDouble();   // 非線形 (鋭いピーク)
+      final alpha = (baseOp + (peakOp - baseOp) * twinkle).clamp(0.0, 1.0);
 
       // 星の色: 95%白、5%暖色・冷色にバリエーション
       final tint = rng.next();
@@ -213,15 +209,11 @@ class CycleSpiralPainter extends CustomPainter {
     final isCurrent = dayIdx == currentDayIndex;
     final sc = max(0.15, gd.s);
 
-    // Breathing — frozen 時は最大値 (1.0) で固定 (Phase 3c 路線、視覚的に最も光った状態)
-    final double breath;
-    if (frozenAtMax) {
-      breath = 1.0;
-    } else {
-      final bPhase = dayIdx < _breathPhases.length ? _breathPhases[dayIdx] : dayIdx * 0.71;
-      final bPeriod = dayIdx < _breathPeriods.length ? _breathPeriods[dayIdx] : 3.0;
-      breath = 0.7 + 0.3 * sin(now / bPeriod + bPhase);
-    }
+    // Breathing — `now` が freeze 中も保持されるため sin 位置で自動的に固定される
+    // (背景星と同じ「切れ目ゼロ」原理)。
+    final bPhase = dayIdx < _breathPhases.length ? _breathPhases[dayIdx] : dayIdx * 0.71;
+    final bPeriod = dayIdx < _breathPeriods.length ? _breathPeriods[dayIdx] : 3.0;
+    final breath = 0.7 + 0.3 * sin(now / bPeriod + bPhase);
 
     // Color: gold-based unified palette
     // Core color: Major=bright gold, Minor=pale gold/warm white
@@ -363,7 +355,6 @@ class CycleSpiralPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant CycleSpiralPainter oldDelegate) {
     return oldDelegate.breathPhase != breathPhase ||
-        oldDelegate.frozenAtMax != frozenAtMax ||
         oldDelegate.rotX != rotX ||
         oldDelegate.rotY != rotY ||
         oldDelegate.zoom != zoom ||
