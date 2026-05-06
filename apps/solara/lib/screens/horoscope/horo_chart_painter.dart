@@ -186,13 +186,11 @@ class HoroChartWheelPainter extends CustomPainter {
         final angle = _lonToAngle(lon);
         final p1 = Offset(cx + centerR * cos(angle), cy + centerR * sin(angle));
         final p2 = Offset(cx + zodiacInner * cos(angle), cy + zodiacInner * sin(angle));
-        // Wide glow halo (replaces MaskFilter.blur 5px = saveLayer): 2-layer stacked stroke
+        // Wide glow halo
         canvas.drawLine(p1, p2, Paint()
-          ..color = color.withAlpha((0.10 * glowPulse * 255).round())
-          ..strokeWidth = 10 * scale);
-        canvas.drawLine(p1, p2, Paint()
-          ..color = color.withAlpha((0.22 * glowPulse * 255).round())
-          ..strokeWidth = 5 * scale);
+          ..color = color.withAlpha((0.25 * glowPulse * 255).round())
+          ..strokeWidth = 4 * scale
+          ..maskFilter = MaskFilter.blur(BlurStyle.normal, 5 * scale));
         // Sharp line
         canvas.drawLine(p1, p2, Paint()
           ..color = color.withAlpha((0.55 * glowPulse * 255).round())
@@ -337,16 +335,11 @@ class HoroChartWheelPainter extends CustomPainter {
       final dotPos = Offset(cx + planetR * cos(trueAngle), cy + planetR * sin(trueAngle));
 
       // Expanding halo — radius grows with breath, opacity fades
-      // (MaskFilter.blur 撤去 → 3 層 alpha 円で Gaussian-like falloff、saveLayer ゼロ)
       final haloR = (5 + 8 * breath) * scale;
       final haloAlpha = (0.55 * (1.0 - breath * 0.6) * 255).round();
-      const haloColor = Color(0xFFF6BD60);
-      canvas.drawCircle(dotPos, haloR + 8 * scale, Paint()
-        ..color = haloColor.withAlpha((haloAlpha * 0.10).round().clamp(0, 255)));
-      canvas.drawCircle(dotPos, haloR + 4 * scale, Paint()
-        ..color = haloColor.withAlpha((haloAlpha * 0.28).round().clamp(0, 255)));
       canvas.drawCircle(dotPos, haloR, Paint()
-        ..color = haloColor.withAlpha(haloAlpha));
+        ..color = const Color(0xFFF6BD60).withAlpha(haloAlpha)
+        ..maskFilter = MaskFilter.blur(BlurStyle.normal, 6 * scale));
 
       // Secondary expanding ring (stroke, for clear "pulse" read)
       canvas.drawCircle(dotPos, haloR + 3 * scale, Paint()
@@ -401,15 +394,12 @@ class HoroChartWheelPainter extends CustomPainter {
         final trueAngle = _lonToAngle(e.value);
         final dotPos = Offset(cx + secondaryR * cos(trueAngle), cy + secondaryR * sin(trueAngle));
 
-        // Expanding halo — 3-layer alpha (replaces MaskFilter.blur)
+        // Expanding halo — radius grows with breath, opacity fades
         final sHaloR = (5 + 8 * breath) * scale;
         final sHaloAlpha = (0.55 * (1.0 - breath * 0.6) * 255).round();
-        canvas.drawCircle(dotPos, sHaloR + 8 * scale, Paint()
-          ..color = secondaryBright.withAlpha((sHaloAlpha * 0.10).round().clamp(0, 255)));
-        canvas.drawCircle(dotPos, sHaloR + 4 * scale, Paint()
-          ..color = secondaryBright.withAlpha((sHaloAlpha * 0.28).round().clamp(0, 255)));
         canvas.drawCircle(dotPos, sHaloR, Paint()
-          ..color = secondaryBright.withAlpha(sHaloAlpha));
+          ..color = secondaryBright.withAlpha(sHaloAlpha)
+          ..maskFilter = MaskFilter.blur(BlurStyle.normal, 6 * scale));
 
         // Expanding ring (stroke, pulse outward)
         canvas.drawCircle(dotPos, sHaloR + 3 * scale, Paint()
@@ -461,13 +451,11 @@ class HoroChartWheelPainter extends CustomPainter {
         // Short tick: from sR-8 to sR+4
         final p1 = Offset(cx + (sR - 8 * scale) * cos(a), cy + (sR - 8 * scale) * sin(a));
         final p2 = Offset(cx + (sR + 4 * scale) * cos(a), cy + (sR + 4 * scale) * sin(a));
-        // Glow halo (replaces MaskFilter.blur 4px = saveLayer): 2-layer stacked stroke
+        // Glow halo
         canvas.drawLine(p1, p2, Paint()
-          ..color = color.withAlpha(40)
-          ..strokeWidth = 9 * scale);
-        canvas.drawLine(p1, p2, Paint()
-          ..color = color.withAlpha(80)
-          ..strokeWidth = 4 * scale);
+          ..color = color.withAlpha(90)
+          ..strokeWidth = 4 * scale
+          ..maskFilter = MaskFilter.blur(BlurStyle.normal, 4 * scale));
         // Sharp stroke
         canvas.drawLine(p1, p2, Paint()
           ..color = color
@@ -500,28 +488,20 @@ class HoroChartWheelPainter extends CustomPainter {
       ..shader = const RadialGradient(
         colors: [Color(0xFF1A1328), Color(0xFF0A0A14)],
       ).createShader(medalRect));
-    // Gold breathing halo — replaces MaskFilter.blur with 2-layer stacked stroke ring
+    // Gold breathing halo — dramatic expanding ring
     final haloRadiusPulse = centerR + (2 + 10 * breath) * scale;
     final haloAlphaPulse = (0.55 * (1.0 - breath * 0.4) * 255).round().clamp(0, 255);
-    final haloStroke = (3 + 2 * breath) * scale;
-    canvas.drawCircle(center, haloRadiusPulse, Paint()
-      ..color = const Color(0xFFF6BD60).withAlpha((haloAlphaPulse * 0.30).round().clamp(0, 255))
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = haloStroke + (8 + 6 * breath) * scale);
     canvas.drawCircle(center, haloRadiusPulse, Paint()
       ..color = const Color(0xFFF6BD60).withAlpha(haloAlphaPulse)
       ..style = PaintingStyle.stroke
-      ..strokeWidth = haloStroke);
-    // Inner steady glow — 2-layer stacked stroke (replaces MaskFilter.blur 3px)
-    final innerAlpha = ((0.3 + 0.3 * breath) * 255).round();
+      ..strokeWidth = (3 + 2 * breath) * scale
+      ..maskFilter = MaskFilter.blur(BlurStyle.normal, (4 + 3 * breath) * scale));
+    // Inner steady glow (always visible)
     canvas.drawCircle(center, centerR + 3 * scale, Paint()
-      ..color = const Color(0xFFC9A84C).withAlpha((innerAlpha * 0.40).round().clamp(0, 255))
+      ..color = const Color(0xFFC9A84C).withAlpha(((0.3 + 0.3 * breath) * 255).round())
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 6 * scale);
-    canvas.drawCircle(center, centerR + 3 * scale, Paint()
-      ..color = const Color(0xFFC9A84C).withAlpha(innerAlpha)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2 * scale);
+      ..strokeWidth = 2 * scale
+      ..maskFilter = MaskFilter.blur(BlurStyle.normal, 3 * scale));
     // Double gold bezel
     canvas.drawCircle(center, centerR, Paint()
       ..color = const Color(0xFFC9A84C).withAlpha(180)
@@ -586,20 +566,15 @@ class HoroChartWheelPainter extends CustomPainter {
     ]);
     final transformed = glyph.transform(matrix);
 
-    // Glow layer (replaces MaskFilter.blur 3px = saveLayer): 2-layer stacked stroke
+    // Glow layer (blurred, wider stroke)
     if (glow) {
       canvas.drawPath(transformed, Paint()
-        ..color = color.withAlpha((25 * glowIntensity).round().clamp(0, 255))
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = strokeWidth * 5
-        ..strokeCap = StrokeCap.round
-        ..strokeJoin = StrokeJoin.round);
-      canvas.drawPath(transformed, Paint()
-        ..color = color.withAlpha((50 * glowIntensity).round().clamp(0, 255))
+        ..color = color.withAlpha((60 * glowIntensity).round().clamp(0, 255))
         ..style = PaintingStyle.stroke
         ..strokeWidth = strokeWidth * 3
         ..strokeCap = StrokeCap.round
-        ..strokeJoin = StrokeJoin.round);
+        ..strokeJoin = StrokeJoin.round
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3));
     }
 
     // Main stroke
