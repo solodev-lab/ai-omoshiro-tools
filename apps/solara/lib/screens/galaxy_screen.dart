@@ -99,12 +99,22 @@ class GalaxyScreenState extends State<GalaxyScreen>
   int _bgSeed = DateTime.now().microsecondsSinceEpoch;
 
   /// タブ切替でGalaxyに入ってきた時に、背景 (ネビュラ位置・色・星の位置)
-  /// を再生成するための公開メソッド。main.dart から呼ばれる。
+  /// を再生成 + motion 再起動 (40s 寿命タイマー fresh start) するための公開メソッド。
+  /// main.dart から呼ばれる。
   void regenerateBackground() {
     setState(() {
       _bgSeed = DateTime.now().microsecondsSinceEpoch;
       _initNebulaPositions();
     });
+    // タブ入室の見せ場 = motion fresh start (40s フル動作 → 減速 → 停止 のサイクル)
+    _wakeMotion();
+  }
+
+  /// main.dart から Galaxy タブ離脱時に呼ばれる。Timer 即停止 = raster 0% 化。
+  /// (TickerMode は AnimationController のみカバー、Timer.periodic は対象外なので明示停止)
+  void pauseMotion() {
+    _motionTimer?.cancel();
+    _motionTimer = null;
   }
   List<Alignment> _nebulaPositions = [];
   List<Color> _nebulaColors = [];
@@ -125,7 +135,9 @@ class GalaxyScreenState extends State<GalaxyScreen>
   void initState() {
     super.initState();
     _initNebulaPositions();
-    _wakeMotion();    // 画面初期表示時に motion 起動 (30s 後に減速、40s 後に完全停止)
+    // motion 起動は `regenerateBackground()` (= main.dart _onTabTap が Galaxy タブ
+    // 入室時に呼ぶ) に委譲。IndexedStack で initState は app 起動時に走るため、
+    // ここで wake すると裏タブで Timer が走り CPU 浪費する。
     _loadData();
   }
 
@@ -427,7 +439,16 @@ class GalaxyScreenState extends State<GalaxyScreen>
     final isActive = _activeTab == index;
     final color = isActive ? const Color(0xFFF9D976) : const Color(0x80FFFFFF);
     return GestureDetector(
-      onTap: () => setState(() => _activeTab = index),
+      onTap: () {
+        setState(() => _activeTab = index);
+        // Cycle (= 0) 入室時のみ motion 起動。Star Atlas (= 1) では Cycle 描画自体
+        // 走らないので Timer も停止する (= raster 0%)。
+        if (index == 0) {
+          _wakeMotion();
+        } else {
+          pauseMotion();
+        }
+      },
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 10),
         decoration: BoxDecoration(
