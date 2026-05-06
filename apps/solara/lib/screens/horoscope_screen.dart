@@ -176,8 +176,10 @@ class HoroscopeScreenState extends State<HoroscopeScreen>
   void initState() {
     super.initState();
     // 6秒周期 (呼吸テンポを落として自然に)
+    // 初期値 1.0 で開始 → 最大輝度から始まり「吸って吐く」順序になる
     _breathCtl = AnimationController(
       vsync: this, duration: const Duration(milliseconds: 6000),
+      value: 1.0,
     )..repeat(reverse: true);
     _rotCtl = AnimationController(
       vsync: this, duration: _rotPeriod,
@@ -222,9 +224,10 @@ class HoroscopeScreenState extends State<HoroscopeScreen>
 
   /// chart tap / scroll で呼ばれる「再覚醒」: anim 再開 + 30s タイマー再起動。
   void _wakeAnimations() {
-    // breath は 0.0 から始めて 1 サイクル目を最初から見せる
+    // breath は最大輝度 (1.0) から再開 → 停止状態 (value=1.0 固定) と
+    // 完全に滑らかに繋がり、覚醒の瞬間に視覚ジャンプが起こらない。
     if (!_breathCtl.isAnimating) {
-      _breathCtl.value = 0.0;
+      _breathCtl.value = 1.0;
       _breathCtl.repeat(reverse: true);
     }
     if (_rotTimer == null && _chartMode != 'astrology') {
