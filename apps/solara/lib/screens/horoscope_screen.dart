@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -53,7 +54,21 @@ class HoroscopeScreenState extends State<HoroscopeScreen>
   // Breathing animation controller (4s cycle, sinusoidal 0..1..0)
   late final AnimationController _breathCtl;
   // Slow nebula parallax rotation (他のモード用・星読み画面では停止)
+  // 60fps の `.repeat()` は SO-41B (Snapdragon 480) で raster 1 コア食い切るため、
+  // Timer.periodic で低 fps 駆動 (= ピクセル再ラスタ回数を抑える) する。
   late final AnimationController _rotCtl;
+  Timer? _rotTimer;
+  // 720 s/周 (= 0.5°/sec) を 5fps (200ms tick) で進める → 0.1°/frame
+  static const Duration _rotPeriod = Duration(seconds: 720);
+  static const Duration _rotTick = Duration(milliseconds: 200);
+
+  // ── アニメ寿命タイマー ──
+  // 画面表示後 30s で _breathCtl / _rotTimer を停止 (→ raster 0% 化)。
+  // ユーザーが chart を tap/scroll すると _wakeAnimations() で再覚醒し、
+  // 再び 30s カウントダウン。
+  // 停止時の breath 値は 1.0 (最大輝度固定 = Phase 3c 路線、DailyTransitBadge と一貫)。
+  Timer? _animLifeTimer;
+  static const Duration _animLifespan = Duration(seconds: 30);
   // 星読み画面のスクロールで駆動される垂直シフト (px)
   final ValueNotifier<double> _readingParallax = ValueNotifier(0.0);
   final ScrollController _readingScrollCtl = ScrollController();
@@ -165,8 +180,10 @@ class HoroscopeScreenState extends State<HoroscopeScreen>
       vsync: this, duration: const Duration(milliseconds: 6000),
     )..repeat(reverse: true);
     _rotCtl = AnimationController(
-      vsync: this, duration: const Duration(seconds: 180),
-    )..repeat();
+      vsync: this, duration: _rotPeriod,
+    );
+    _startRotTimer();
+    _resetAnimLifeTimer();
     // 星読み画面でのスクロール量を監視 (パララックス用)
     _readingScrollCtl.addListener(() {
       _readingParallax.value = _readingScrollCtl.offset * 0.15;
@@ -176,6 +193,8 @@ class HoroscopeScreenState extends State<HoroscopeScreen>
 
   @override
   void dispose() {
+    _animLifeTimer?.cancel();
+    _rotTimer?.cancel();
     _breathCtl.dispose();
     _rotCtl.dispose();
     _readingScrollCtl.dispose();
@@ -183,12 +202,59 @@ class HoroscopeScreenState extends State<HoroscopeScreen>
     super.dispose();
   }
 
-  /// astrology (星読み) モード時に _rotCtl を停止、それ以外は再開
+  /// 30s タイマーをリセット — 期限到達で `_stopAnimations()` 起動。
+  void _resetAnimLifeTimer() {
+    _animLifeTimer?.cancel();
+    _animLifeTimer = Timer(_animLifespan, () {
+      if (!mounted) return;
+      _stopAnimations();
+    });
+  }
+
+  /// breath / rotation を完全停止 → raster 0% 化。
+  /// breath は最大輝度 (value=1.0) で固定 (Phase 3c 路線)。
+  void _stopAnimations() {
+    if (_breathCtl.isAnimating) _breathCtl.stop();
+    _breathCtl.value = 1.0;   // 最大輝度で固定
+    _rotTimer?.cancel();
+    _rotTimer = null;
+  }
+
+  /// chart tap / scroll で呼ばれる「再覚醒」: anim 再開 + 30s タイマー再起動。
+  void _wakeAnimations() {
+    // breath は 0.0 から始めて 1 サイクル目を最初から見せる
+    if (!_breathCtl.isAnimating) {
+      _breathCtl.value = 0.0;
+      _breathCtl.repeat(reverse: true);
+    }
+    if (_rotTimer == null && _chartMode != 'astrology') {
+      _startRotTimer();
+    }
+    _resetAnimLifeTimer();
+  }
+
+  /// 2fps Timer で _rotCtl.value を進める。
+  /// AnimationController.repeat() は 60fps で raster を回し続けるため、
+  /// 視覚的に十分な滑らかさを保てる最低限の fps に絞ることで raster コストを削減。
+  void _startRotTimer() {
+    _rotTimer?.cancel();
+    final periodMs = _rotPeriod.inMilliseconds;
+    final tickMs = _rotTick.inMilliseconds;
+    final delta = tickMs / periodMs; // 1 tick あたりの value 増分
+    _rotTimer = Timer.periodic(_rotTick, (_) {
+      if (!mounted) return;
+      _rotCtl.value = (_rotCtl.value + delta) % 1.0;
+    });
+  }
+
+  /// astrology (星読み) モード時に _rotCtl を停止、それ以外は再開。
+  /// モード切替もユーザーアクション → anim も再覚醒させる。
   void _syncRotationByMode() {
     if (_chartMode == 'astrology') {
-      if (_rotCtl.isAnimating) _rotCtl.stop();
+      _rotTimer?.cancel();
+      _rotTimer = null;
     } else {
-      if (!_rotCtl.isAnimating) _rotCtl.repeat();
+      _wakeAnimations();   // breath + rotation 両方覚醒 + 30s タイマー再起動
     }
   }
 

@@ -50,7 +50,12 @@ extension _HoroChartView on HoroscopeScreenState {
       // 上部 padding (8) + ラベル等の余白 ~24px を引いた純粋な chart 描画域
       final availH = maxH - 32;
       final chartSize = min(screenW - 16, availH).clamp(200.0, 600.0);
-      return SingleChildScrollView(
+      return Listener(
+        // chart 領域への pointer down で anim 再覚醒 (30s 再カウント)。
+        // GestureDetector 内蔵の子 (惑星 tap 等) は影響を受けない。
+        behavior: HitTestBehavior.translucent,
+        onPointerDown: (_) => _wakeAnimations(),
+        child: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 8),
         child: Column(children: [
           const SizedBox(height: 8),
@@ -157,6 +162,7 @@ extension _HoroChartView on HoroscopeScreenState {
           _buildChartLegend(),
           const SizedBox(height: 20),
         ]),
+      ),
       );
     });
   }

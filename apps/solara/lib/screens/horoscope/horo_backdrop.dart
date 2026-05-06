@@ -23,44 +23,46 @@ extension _HoroBackdrop on HoroscopeScreenState {
         ),
       )),
       // nebula — 星読み: 静止 + スクロールで垂直パララックス、それ以外: 緩やか回転
+      //
+      // RepaintBoundary で囲み、rotation/parallax 更新時に
+      // chart wheel layer (上に重なる expensive な CustomPainter) の
+      // raster cache を invalidate しないようにする。
+      // alpha=0.35 を焼き込んだ cosmic_nebula_a35.webp を使うことで
+      // Opacity widget (saveLayer 強制発生源) も撤去済。
       Positioned.fill(child: IgnorePointer(child: ClipRect(
-        child: _chartMode == 'astrology'
-          // ── 星読み: _rotCtl 停止・スクロール量で Y 方向にシフト ──
-          ? ValueListenableBuilder<double>(
-              valueListenable: _readingParallax,
-              builder: (_, dy, _) => Opacity(
-                opacity: 0.35,
-                child: Transform.translate(
+        child: RepaintBoundary(
+          child: _chartMode == 'astrology'
+            // ── 星読み: _rotCtl 停止・スクロール量で Y 方向にシフト ──
+            ? ValueListenableBuilder<double>(
+                valueListenable: _readingParallax,
+                builder: (_, dy, _) => Transform.translate(
                   offset: Offset(0, -dy), // 下にスクロールすると背景が上に少し動く
                   child: Transform.scale(
                     scale: 1.5,
                     child: Image.asset(
-                      'assets/horo-bg/cosmic_nebula.webp',
+                      'assets/horo-bg/cosmic_nebula_a35.webp',
                       fit: BoxFit.cover,
                       errorBuilder: (_, _, _) => const SizedBox.shrink(),
                     ),
                   ),
                 ),
-              ),
-            )
-          // ── 通常モード: 従来通り緩やかに回転 ──
-          : AnimatedBuilder(
-              animation: _rotCtl,
-              builder: (_, _) => Opacity(
-                opacity: 0.35,
-                child: Transform.scale(
+              )
+            // ── 通常モード: 従来通り緩やかに回転 (360s/周) ──
+            : AnimatedBuilder(
+                animation: _rotCtl,
+                builder: (_, _) => Transform.scale(
                   scale: 1.5,
                   child: Transform.rotate(
                     angle: _rotCtl.value * 2 * pi,
                     child: Image.asset(
-                      'assets/horo-bg/cosmic_nebula.webp',
+                      'assets/horo-bg/cosmic_nebula_a35.webp',
                       fit: BoxFit.cover,
                       errorBuilder: (_, _, _) => const SizedBox.shrink(),
                     ),
                   ),
                 ),
               ),
-            ),
+        ),
       ))),
       // soft vignette (60% at edges — weaker to let nebula show through top/bottom)
       const Positioned.fill(child: IgnorePointer(child: DecoratedBox(
@@ -72,8 +74,10 @@ extension _HoroBackdrop on HoroscopeScreenState {
           ),
         ),
       ))),
-      // actual content
-      child,
+      // actual content — rotating backdrop の更新で expensive な chart wheel
+      // (CustomPainter + 多数 MaskFilter.blur) の raster cache を
+      // invalidate されないよう RepaintBoundary で隔離。
+      RepaintBoundary(child: child),
     ]);
   }
 
