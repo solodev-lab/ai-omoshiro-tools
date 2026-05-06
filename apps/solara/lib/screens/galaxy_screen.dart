@@ -62,11 +62,11 @@ class GalaxyScreenState extends State<GalaxyScreen>
   // 60fps `.repeat()` AnimationController で raster を回し続けるのを止め、
   // 単一 Timer.periodic 30fps で breath / autoRotate を駆動する。
   // ライフサイクル: 覚醒(tap/drag) → 30s フルスピード → 10s ease-out 減速 → 完全停止 (raster 0%)。
-  // 停止中は _isMotionFrozen=true を painter に伝え、breath/twinkle を最大値固定 (Phase 3c 路線)。
+  // 完全停止中は _breathPhaseSec を据え置く (= sin 位置固定) → painter は同じ値を返す
+  // → freeze/wake で alpha 切れ目ゼロ。"frozenAtMax で peakOp 上書き" は撤去 (ジャンプ要因)。
   double _breathPhaseSec = 0.0;        // breath 累積秒 (sin 引数として painter に渡す)
   Timer? _motionTimer;                  // 単一 30fps tick (breath + autoRotate 兼用)
   DateTime? _motionStartedAt;           // 覚醒時刻 (経過からフェーズ判定)
-  bool _isMotionFrozen = false;         // 完全停止中フラグ (painter で breath/twinkle=1.0 固定)
   static const Duration _motionTick = Duration(milliseconds: 33); // 30fps
   static const double _motionFps = 30.0;
   static const double _motionActiveSec = 30.0;   // フルスピード期間
@@ -160,9 +160,6 @@ class GalaxyScreenState extends State<GalaxyScreen>
   /// tap/drag のたびに呼ばれ、寿命カウンタをリセットする。
   void _wakeMotion() {
     _motionStartedAt = DateTime.now();
-    if (_isMotionFrozen) {
-      _isMotionFrozen = false;
-    }
     _motionTimer?.cancel();
     _motionTimer = Timer.periodic(_motionTick, _onMotionTick);
   }
@@ -176,12 +173,12 @@ class GalaxyScreenState extends State<GalaxyScreen>
     }
     final elapsed = DateTime.now().difference(_motionStartedAt!).inMilliseconds / 1000.0;
 
-    // 完全停止フェーズ: timer 解除 + frozen フラグで painter に max 固定指示
+    // 完全停止フェーズ: timer 解除のみ。`_breathPhaseSec` は据え置きで sin 位置を固定
+    // → painter は freeze 中 / wake 直後で同じ alpha を返す = 切れ目ゼロ。
     if (elapsed >= _motionActiveSec + _motionDecelSec) {
       t.cancel();
       _motionTimer = null;
       setState(() {
-        _isMotionFrozen = true;
         _velX = 0;
         _velY = 0;
       });
@@ -471,7 +468,6 @@ class GalaxyScreenState extends State<GalaxyScreen>
               totalDays: _totalDays,
               rotX: _rotX, rotY: _rotY, zoom: _zoom,
               breathPhase: _breathPhaseSec,
-              frozenAtMax: _isMotionFrozen,
               cycleStart: _cycleStart,
               bgSeed: _bgSeed,
             );
