@@ -54,7 +54,7 @@ extension _HoroChartView on HoroscopeScreenState {
         // chart 領域への pointer down で anim 再覚醒 (30s 再カウント)。
         // GestureDetector 内蔵の子 (惑星 tap 等) は影響を受けない。
         behavior: HitTestBehavior.translucent,
-        onPointerDown: (_) => _wakeAnimations(),
+        onPointerDown: (_) => wakeAnimations(),
         child: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 8),
         child: Column(children: [
