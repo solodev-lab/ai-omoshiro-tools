@@ -76,12 +76,15 @@ class _SolaraHomeState extends State<SolaraHome> {
     // Galaxy タブ入室時は同じタブ再タップでなければ背景を再生成
     // (Horoと違い、毎回新鮮な星空を表示)
     final switchingToGalaxy = i == 3 && _currentIndex != 3;
+    final leavingGalaxy = i != 3 && _currentIndex == 3;
     setState(() => _currentIndex = i);
     // Map / Horo へ戻ったときはプロフィールを再読込（Sanctuary で編集された場合に追従）
     if (i == 0) _mapKey.currentState?.reloadProfile();
     if (i == 1) _horoKey.currentState?.loadProfile();
-    // Regenerate Galaxy background each time entering
+    // Regenerate Galaxy background + motion fresh start (40s lifecycle)
     if (switchingToGalaxy) _galaxyKey.currentState?.regenerateBackground();
+    // Galaxy 離脱時は Timer.periodic も明示停止 (TickerMode の対象外なので)
+    if (leavingGalaxy) _galaxyKey.currentState?.pauseMotion();
   }
 
   @override
