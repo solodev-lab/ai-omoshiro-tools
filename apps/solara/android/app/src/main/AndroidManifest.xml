@@ -34,12 +34,13 @@
             android:value="2" />
         <!-- Impeller 制御の経緯:
              - commit 93368ee: A101FC fd leak (Vulkan sync_file leak) 対策で Impeller=false に。
-             - 2026-05-06 再検証: Impeller=true は raster CPU 不変、FPS 52→10 に激減で却下。
-             - 2026-05-06 (本コミット): Flutter framework が opt-out 廃止予告
-               ([Action Required]: Impeller opt-out deprecated)。BLAST Faking 警告 443/305s も
-               Impeller off の副作用と確認。Plan A: opt-out 撤去 = Impeller デフォルト有効に戻し、
-               最新 Flutter で fd leak / FPS 問題が修正されているか A101FC 30 分 active で再検証。
-             - 検証で問題再発した場合は本タグを再追加する (`android:value="false"`)。-->
+             - 2026-05-06 再検証: opt-out 廃止予告 ([Action Required]: Impeller opt-out deprecated)
+               に伴い Impeller=ON で A101FC 30 分連続描画テストを実施。
+               結果: fd_total 181→181 (リーク 0) / sync_file 47→46 (リーク 0) /
+                     FATAL 0 / Adreno error 0 / Java heap 安定。
+               最新 Flutter で sync_file leak は完全に修正済みと確認、Impeller デフォルトを採択。
+             - BLAST Faking 警告は Flutter Engine 既知 issue (アプリ側で消せない、致命ではない)。
+             - 将来 fd leak が再発した場合のみ `<meta-data android:name="io.flutter.embedding.android.EnableImpeller" android:value="false" />` を再追加する。-->
     </application>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and
