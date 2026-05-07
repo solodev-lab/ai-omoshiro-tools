@@ -85,7 +85,9 @@ class _HoroBirthPanelState extends State<HoroBirthPanel> {
 
   void _initFromProfile(SolaraProfile p) {
     _nameCtrl = TextEditingController(text: p.name);
-    _dateCtrl = TextEditingController(text: p.birthDate);
+    // SolaraProfile.birthDate は YYYY-MM-DD 保存だが、フォーム側は
+    // DateSlashFormatter (YYYY/MM/DD 表示) を使うのでスラッシュへ変換。
+    _dateCtrl = TextEditingController(text: p.birthDate.replaceAll('-', '/'));
     _latCtrl = TextEditingController(
         text: p.birthLat == 0 ? '' : p.birthLat.toStringAsFixed(4));
     _lngCtrl = TextEditingController(
@@ -160,7 +162,19 @@ class _HoroBirthPanelState extends State<HoroBirthPanel> {
     final lng = double.tryParse(_lngCtrl.text);
     if (lat == null || lng == null) return;
     if (lat.abs() > 90 || lng.abs() > 180) return;
-    if (_dateCtrl.text.length < 8) return; // YYYY/MM/DD 不揃い
+
+    // _dateCtrl は YYYY/MM/DD (DateSlashFormatter) で保持されているため
+    // SolaraProfile.birthDate 仕様の YYYY-MM-DD に正規化する。
+    // 桁数チェック+各要素 int 化で異常入力 (途中入力など) を弾く。
+    final dateParts = _dateCtrl.text.split('/');
+    if (dateParts.length != 3) return;
+    final y = int.tryParse(dateParts[0]);
+    final m = int.tryParse(dateParts[1]);
+    final d = int.tryParse(dateParts[2]);
+    if (y == null || m == null || d == null) return;
+    if (m < 1 || m > 12 || d < 1 || d > 31) return;
+    final birthDateStr =
+        '$y-${m.toString().padLeft(2, '0')}-${d.toString().padLeft(2, '0')}';
 
     final timeStr = _timeUnknown
         ? '12:00'
@@ -168,7 +182,7 @@ class _HoroBirthPanelState extends State<HoroBirthPanel> {
 
     final newProfile = widget.profile.copyWith(
       name: _nameCtrl.text,
-      birthDate: _dateCtrl.text,
+      birthDate: birthDateStr,
       birthTime: timeStr,
       birthTimeUnknown: _timeUnknown,
       birthLat: lat,
