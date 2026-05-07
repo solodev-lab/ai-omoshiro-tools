@@ -161,6 +161,13 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   /// ユーザーが選んだ VP / 手動中心を保持する。
   bool _hasInitialCenter = false;
 
+  /// FlutterMap の onMapReady が発火済みか。
+  /// 出生地ロードが先行した場合は _pendingInitialMove に積んで onMapReady 時に消化する。
+  /// (旧実装: addPostFrameCallback で _mapCtrl.camera.zoom 直叩き → MapController 未接続で
+  /// 無音失敗し、初期表示の地図描画が出ない事象が時々発生していた)
+  bool _mapReady = false;
+  LatLng? _pendingInitialMove;
+
   // Dominant fortune overlay
   DominantFortuneKind? _topCategory;
   DominantFortuneKind? _activeOverlay;
@@ -256,6 +263,19 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   /// `_noProfile` フラグを更新して占い系オーバーレイを再表示するために使う。
   Future<void> reloadProfile() => _loadProfileAndChart();
 
+  /// 出生地ロード時の初期カメラ移動を MapController が確実に attach されている
+  /// タイミングで実行する。onMapReady 未到達なら _pendingInitialMove に積み、
+  /// onMapReady 発火時に消化する (= flutter_map 推奨パターン)。
+  /// 旧実装の addPostFrameCallback + try/catch では未接続例外を握り潰し、
+  /// 「初期表示の地図描画ができない」事象を引き起こしていた。
+  void _moveToInitialCenter(LatLng target) {
+    if (_mapReady) {
+      _mapCtrl.move(target, _mapCtrl.camera.zoom);
+    } else {
+      _pendingInitialMove = target;
+    }
+  }
+
   Future<void> _loadProfileAndChart({DateTime? targetDate}) async {
     final p = await SolaraStorage.loadProfile();
     if (p == null || !p.isComplete) {
@@ -267,25 +287,19 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     // 登録地スロット (home含む) を読込してマーカー描画に使う
     await _reloadLocationSlots();
     if (mounted) {
+      // 初回のみ _center を出生地に設定 + カメラ移動を予約。
+      // 日付変更等の再計算ではユーザーが選んだ VP / 手動中心を保持する。
+      final shouldMoveInitial = !_hasInitialCenter;
       setState(() {
-        // 初回のみ _center を出生地に設定。日付変更等の再計算では
-        // ユーザーが選んだ VP / 手動中心を保持する。
         if (!_hasInitialCenter) {
           _center = LatLng(p.birthLat, p.birthLng);
           _hasInitialCenter = true;
-          // FlutterMap 初期化後にカメラを出生地へ移動
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (mounted) {
-              try {
-                _mapCtrl.move(_center, _mapCtrl.camera.zoom);
-              } catch (_) {
-                // MapController が未接続の場合は無視（次回 rebuild で追従）
-              }
-            }
-          });
         }
         _loadingChart = true;
       });
+      if (shouldMoveInitial) {
+        _moveToInitialCenter(_center);
+      }
     }
 
     // CF Worker API で天体データを取得 → scoreAll で16方位スコア計算
@@ -1013,6 +1027,16 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
             initialCenter: _center, initialZoom: 14,
             minZoom: 2, maxZoom: 19,
             backgroundColor: mapStyleConfigs[_mapStyle]!.backgroundColor,
+            // FlutterMap 内部初期化完了通知。出生地が先に揃って _pendingInitialMove
+            // が積まれていればここで消化する。初期タイル取得が安定する前提タイミング。
+            onMapReady: () {
+              _mapReady = true;
+              final pending = _pendingInitialMove;
+              if (pending != null) {
+                _pendingInitialMove = null;
+                _mapCtrl.move(pending, _mapCtrl.camera.zoom);
+              }
+            },
             // 回転ジェスチャー無効化 (2026-04-29):
             // Solara Map は北上固定前提 (16方位セクター・コンパス・VP Pin の方位概念が
             // 回転で破綻する)。ピンチズーム時の指のひねりで誤回転していた問題を解消。
