@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../sanctuary/sanctuary_profile_editor.dart' show DateSlashFormatter;
-import '../sanctuary/sanctuary_reset_hour_picker.dart';
 import 'horo_antique_icons.dart';
 import 'horo_panel_shared.dart';
 
@@ -13,8 +12,8 @@ import 'horo_panel_shared.dart';
 // に任意日時を伝えて transit/progressed を再計算できるよう拡張。
 // 永続化なし: パネル毎回 `DateTime.now()` で初期化される。
 //   - 日付入力: sanctuary_profile_editor の `DateSlashFormatter` 流用
-//   - 時刻入力: sanctuary_screen 「日付リセット時刻設定」と同じ
-//                `SanctuaryResetHourPicker` を BottomSheet で表示
+//   - 時刻入力: 時/分の独立プルダウン (HoroHourMinuteDropdown)。
+//                2026-05-07 BottomSheet 廃止、インライン編集に統一。
 // ══════════════════════════════════════════════════
 
 class HoroTransitPanel extends StatefulWidget {
@@ -56,29 +55,6 @@ class _HoroTransitPanelState extends State<HoroTransitPanel> {
   void dispose() {
     _dateCtrl.dispose();
     super.dispose();
-  }
-
-  Future<void> _pickTime() async {
-    // 2026-05-07: 「1日のリセット時刻」用の文言ではなく、純粋な時刻設定として表示。
-    // title/subtitle 引数で文言を Horo 用に上書き。
-    final picked = await showModalBottomSheet<({int hour, int minute})>(
-      context: context,
-      backgroundColor: const Color(0xFF0A0E1C),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (ctx) => SanctuaryResetHourPicker(
-        initialHour: _hour,
-        initialMinute: _minute,
-        title: widget.chartMode == 'np' ? '✦ プログレス時刻' : '✦ トランジット時刻',
-        subtitle: null,
-      ),
-    );
-    if (picked == null) return;
-    setState(() {
-      _hour = picked.hour;
-      _minute = picked.minute;
-    });
   }
 
   @override
@@ -136,29 +112,18 @@ class _HoroTransitPanelState extends State<HoroTransitPanel> {
         ]),
       ),
 
-      // ── 時刻編集: sanctuary_screen の「1日の開始時刻」設定と同じ BottomSheet ピッカー
+      // ── 時刻編集: 時/分の独立プルダウン (BottomSheet 廃止、2026-05-07)
       Padding(
         padding: const EdgeInsets.only(bottom: 8),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           const Text('時刻 TIME',
               style: TextStyle(fontSize: 11, color: Color(0xFF888888), letterSpacing: 1)),
           const SizedBox(height: 3),
-          GestureDetector(
-            onTap: _pickTime,
-            behavior: HitTestBehavior.opaque,
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(
-                color: const Color(0x0DFFFFFF),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: const Color(0x1AFFFFFF)),
-              ),
-              child: Text(
-                '${_hour.toString().padLeft(2, '0')}:${_minute.toString().padLeft(2, '0')}',
-                style: const TextStyle(fontSize: 13, color: Color(0xFFE8E0D0)),
-              ),
-            ),
+          HoroHourMinuteDropdown(
+            hour: _hour,
+            minute: _minute,
+            onHourChanged: (v) => setState(() => _hour = v),
+            onMinuteChanged: (v) => setState(() => _minute = v),
           ),
         ]),
       ),

@@ -209,3 +209,94 @@ class _CheckmarkPainter extends CustomPainter {
 
 // 2026-05-07: HoroCloseXPainter は popup 統一 (showInfoPopup, widgets/info_popup.dart)
 // により全廃。Shell が Icons.close を提供するため、独自 Painter は不要になった。
+
+// ══════════════════════════════════════════════════════════════
+// Horo 時刻入力プルダウン (時:分 を独立2ドロップダウンで)
+// 2026-05-07: Birth/Transit パネルの時刻入力を BottomSheet (SanctuaryResetHourPicker)
+// から「直接プルダウン」方式に統一。別 Window を出さずインライン編集できる。
+// ══════════════════════════════════════════════════════════════
+class HoroHourMinuteDropdown extends StatelessWidget {
+  final int hour;
+  final int minute;
+  final bool enabled;
+  final ValueChanged<int>? onHourChanged;
+  final ValueChanged<int>? onMinuteChanged;
+
+  const HoroHourMinuteDropdown({
+    super.key,
+    required this.hour,
+    required this.minute,
+    this.enabled = true,
+    this.onHourChanged,
+    this.onMinuteChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(children: [
+      Expanded(
+        child: _dropdownBox(
+          value: hour,
+          count: 24,
+          suffix: '時',
+          onChanged: enabled ? onHourChanged : null,
+        ),
+      ),
+      const SizedBox(width: 8),
+      Expanded(
+        child: _dropdownBox(
+          value: minute,
+          count: 60,
+          suffix: '分',
+          onChanged: enabled ? onMinuteChanged : null,
+        ),
+      ),
+    ]);
+  }
+
+  Widget _dropdownBox({
+    required int value,
+    required int count,
+    required String suffix,
+    required ValueChanged<int>? onChanged,
+  }) {
+    final disabled = onChanged == null;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+      decoration: BoxDecoration(
+        color: const Color(0x0DFFFFFF),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: const Color(0x1AFFFFFF)),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<int>(
+          isExpanded: true,
+          value: value.clamp(0, count - 1),
+          dropdownColor: const Color(0xFF0A0E1C),
+          iconEnabledColor: const Color(0xFFAAAAAA),
+          iconDisabledColor: const Color(0xFF555555),
+          style: TextStyle(
+            fontSize: 13,
+            color: disabled ? const Color(0xFF666666) : const Color(0xFFE8E0D0),
+            fontFamily: 'monospace',
+            letterSpacing: 1.5,
+          ),
+          onChanged: disabled ? null : (v) {
+            if (v != null) onChanged(v);
+          },
+          items: List.generate(count, (i) => DropdownMenuItem<int>(
+            value: i,
+            child: Text(
+              '${i.toString().padLeft(2, '0')} $suffix',
+              style: const TextStyle(
+                fontSize: 13,
+                color: Color(0xFFE8E0D0),
+                fontFamily: 'monospace',
+              ),
+            ),
+          )),
+        ),
+      ),
+    );
+  }
+}

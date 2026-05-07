@@ -8,9 +8,9 @@ import '../../utils/reverse_geocode.dart';
 import '../../utils/solara_api.dart';
 import '../../utils/solara_storage.dart';
 import '../sanctuary/sanctuary_profile_editor.dart' show DateSlashFormatter;
-import '../sanctuary/sanctuary_reset_hour_picker.dart';
 import 'horo_antique_icons.dart';
-import 'horo_panel_shared.dart' show horoAntiqueHeader;
+import 'horo_panel_shared.dart'
+    show horoAntiqueHeader, HoroHourMinuteDropdown;
 
 // ══════════════════════════════════════════════════
 // Birth Section (BS tab) — Horo 試算用 BIRTH DATA インライン入力
@@ -134,27 +134,6 @@ class _HoroBirthPanelState extends State<HoroBirthPanel> {
     });
   }
 
-  Future<void> _pickTime() async {
-    final picked = await showModalBottomSheet<({int hour, int minute})>(
-      context: context,
-      backgroundColor: const Color(0xFF0A0E1C),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (ctx) => SanctuaryResetHourPicker(
-        initialHour: _hour,
-        initialMinute: _minute,
-        title: '✦ 出生時刻',
-        subtitle: null,
-      ),
-    );
-    if (picked == null) return;
-    setState(() {
-      _hour = picked.hour;
-      _minute = picked.minute;
-      _timeUnknown = false;
-    });
-  }
 
   /// 「✨ このデータで試算」押下: フォーム値から SolaraProfile を組んで親へ
   void _apply() {
@@ -246,25 +225,15 @@ class _HoroBirthPanelState extends State<HoroBirthPanel> {
       )),
 
       // ── 出生時刻 ──
+      // 2026-05-07: BottomSheet の SanctuaryResetHourPicker を廃止し、
+      // 時/分の独立プルダウン (HoroHourMinuteDropdown) に置換。
       _labeled('出生時刻 TIME', Row(children: [
-        Expanded(child: GestureDetector(
-          onTap: _timeUnknown ? null : _pickTime,
-          behavior: HitTestBehavior.opaque,
-          child: _inputBox(
-            child: Text(
-              _timeUnknown
-                  ? '— : —'
-                  : '${_hour.toString().padLeft(2, "0")}:${_minute.toString().padLeft(2, "0")}',
-              style: TextStyle(
-                fontSize: 13,
-                color: _timeUnknown
-                    ? const Color(0xFF666666)
-                    : const Color(0xFFE8E0D0),
-                fontFamily: 'monospace',
-                letterSpacing: 1.5,
-              ),
-            ),
-          ),
+        Expanded(child: HoroHourMinuteDropdown(
+          hour: _hour,
+          minute: _minute,
+          enabled: !_timeUnknown,
+          onHourChanged: (v) => setState(() => _hour = v),
+          onMinuteChanged: (v) => setState(() => _minute = v),
         )),
         const SizedBox(width: 8),
         // 不明 toggle
