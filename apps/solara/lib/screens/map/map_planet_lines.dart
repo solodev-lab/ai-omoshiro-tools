@@ -135,12 +135,17 @@ class PlanetSymbolsLayer extends StatelessWidget {
   final Map<String, bool> planetGroupVis;
   final String activeCategory;
 
+  /// マーカータップ時に (planet キー, frame キー = 'natal'/'transit'/'progressed')
+  /// を通知する。null なら従来通りタップ無効。
+  final void Function(String planet, String frame)? onTap;
+
   const PlanetSymbolsLayer({
     super.key,
     required this.lines,
     required this.layers,
     required this.planetGroupVis,
     required this.activeCategory,
+    this.onTap,
   });
 
   @override
@@ -235,33 +240,44 @@ class PlanetSymbolsLayer extends StatelessWidget {
 
       // 2026-05-03: Opacity widget 撤去 (ACG 画面点滅の原因)。
       // opacity を各色の alpha に伝搬 = saveLayer 回避。
+      final visual = Container(
+        width: sz, height: sz,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: style.bg.withValues(alpha: opacity),
+          border: isNatal ? null : Border.all(
+            color: style.color.withAlpha((153 * opacity).round()),
+            width: 1.5,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withAlpha((76 * opacity).round()),
+              blurRadius: 4, offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Center(
+          child: PlanetVectorIcon(
+            planetKey: pl.planet,
+            size: glyphSize,
+            color: style.fg.withValues(alpha: opacity),
+          ),
+        ),
+      );
+      // 2026-05-07: タップで惑星紹介 popup を出すため GestureDetector で包む。
+      // onTap が null のときは従来通り非インタラクティブ。
+      final tapHandler = onTap;
+      final markerChild = tapHandler == null
+          ? visual
+          : GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () => tapHandler(pl.planet, pl.layer),
+              child: visual,
+            );
       markers.add(Marker(
         point: markerPos,
         width: sz, height: sz,
-        child: Container(
-          width: sz, height: sz,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: style.bg.withValues(alpha: opacity),
-            border: isNatal ? null : Border.all(
-              color: style.color.withAlpha((153 * opacity).round()),
-              width: 1.5,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withAlpha((76 * opacity).round()),
-                blurRadius: 4, offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Center(
-            child: PlanetVectorIcon(
-              planetKey: pl.planet,
-              size: glyphSize,
-              color: style.fg.withValues(alpha: opacity),
-            ),
-          ),
-        ),
+        child: markerChild,
       ));
     }
     return MarkerLayer(markers: markers);

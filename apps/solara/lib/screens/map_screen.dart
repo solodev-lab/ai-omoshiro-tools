@@ -19,6 +19,7 @@ import 'map/map_astro.dart';
 import 'map/map_astro_carto.dart';
 import 'map/map_astro_lines.dart';
 import 'map/map_location_markers.dart';
+import 'map/map_planet_intro_popup.dart';
 import 'map/map_planet_lines.dart';
 import 'map/map_relocation_popup.dart';
 import 'map/map_search.dart';
@@ -1139,6 +1140,11 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
               PlanetSymbolsLayer(
                 lines: _planetLines, layers: _layers,
                 planetGroupVis: _planetGroups, activeCategory: _activeCategory,
+                onTap: (planet, frame) => showPlanetIntroPopup(
+                  context: context,
+                  planetKey: planet,
+                  frame: frame,
+                ),
               ),
             // Phase M2 論点3 + Tier A #5 (CCG): 4フレームのアスペクト線
             // _visibleAstroLines() で _astroLayers の natal/transit/progressed/solarArc トグルから絞り込む
