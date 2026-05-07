@@ -1488,7 +1488,38 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
           ),
         ),
 
+        // ── ACGモード下部 UI ──
+        // 2026-05-07: popup より「先に」描画して、popup が上に重なる順序へ変更。
+        //   従来は pills を最前面にしていたが、ACGライン説明 popup が pills に隠れて
+        //   読めない不具合があったため、popup 優先に切替えた。
+        // NavBar (80px) を避けて積み上げる:
+        // bottom 92  → CategoryPills (FORTUNE 切替)
+        // bottom 132 → FramePills    (Natal/Transit/Prog/SArc)
+        // bottom 176 → TimeSlider    (動的フレーム ON 時のみ)
+        if (_astroCartoMode) Positioned(
+          left: 0, right: 0, bottom: 12,
+          child: Center(
+            child: AstroCartoCategoryPills(
+              activeCategory: _activeCategory,
+              onChanged: (k) => setState(() => _activeCategory = k),
+            ),
+          ),
+        ),
+        if (_astroCartoMode) Positioned(
+          left: 0, right: 0, bottom: 52,
+          child: Center(
+            child: AstroCartoFramePills(
+              astroLayers: _astroLayers,
+              onToggle: (k) => setState(() {
+                _astroLayers[k] = !(_astroLayers[k] ?? false);
+              }),
+            ),
+          ),
+        ),
+        // ACGモード下部スライダーは廃止 (2026-04-29、上部常時表示に統一)
+
         // ── Phase M2: 引越しレイヤー タップ詳細ポップアップ ──
+        // popup は ACG 下部 UI より「後」に描画 → pills の上に重なる (2026-05-07)
         if (_relocateTapPoint != null && _chartResult != null && _profile != null)
           Positioned(
             left: 0, right: 0, bottom: 0,
@@ -1541,33 +1572,6 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
               ),
             ),
           ),
-
-        // ── ACGモード下部 UI (popup より後に描画して常に最前面) ──
-        // NavBar (80px) を避けて積み上げる:
-        // bottom 92  → CategoryPills (FORTUNE 切替)
-        // bottom 132 → FramePills    (Natal/Transit/Prog/SArc)
-        // bottom 176 → TimeSlider    (動的フレーム ON 時のみ)
-        if (_astroCartoMode) Positioned(
-          left: 0, right: 0, bottom: 12,
-          child: Center(
-            child: AstroCartoCategoryPills(
-              activeCategory: _activeCategory,
-              onChanged: (k) => setState(() => _activeCategory = k),
-            ),
-          ),
-        ),
-        if (_astroCartoMode) Positioned(
-          left: 0, right: 0, bottom: 52,
-          child: Center(
-            child: AstroCartoFramePills(
-              astroLayers: _astroLayers,
-              onToggle: (k) => setState(() {
-                _astroLayers[k] = !(_astroLayers[k] ?? false);
-              }),
-            ),
-          ),
-        ),
-        // ACGモード下部スライダーは廃止 (2026-04-29、上部常時表示に統一)
               ]), // Inner Stack 終端 (NavBar 上端までの overlay 領域)
           ), // SafeArea 終端
         ), // Positioned.fill 終端
