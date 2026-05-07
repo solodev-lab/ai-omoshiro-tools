@@ -1027,8 +1027,12 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
             initialCenter: _center, initialZoom: 14,
             minZoom: 2, maxZoom: 19,
             backgroundColor: mapStyleConfigs[_mapStyle]!.backgroundColor,
-            // FlutterMap 内部初期化完了通知。出生地が先に揃って _pendingInitialMove
-            // が積まれていればここで消化する。初期タイル取得が安定する前提タイミング。
+            // FlutterMap 内部初期化完了通知。
+            // ① 出生地が先に揃って _pendingInitialMove が積まれていればここで消化。
+            // ② flutter_map 8.x の既知挙動 (hot restart 直後に TileLayer が tile fetch を
+            //    自発キックしない) 対策として、move 後にもう一度 100ms 遅延で
+            //    「現在地への move」を打って viewport 再計算を強制発火させる。
+            //    これにより「ホットリスタートしたら最初から地図が無い」事象を防ぐ。
             onMapReady: () {
               _mapReady = true;
               final pending = _pendingInitialMove;
@@ -1036,6 +1040,12 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                 _pendingInitialMove = null;
                 _mapCtrl.move(pending, _mapCtrl.camera.zoom);
               }
+              // tile fetch 強制キック。pending 有無に関わらず必ず実行する。
+              Future.delayed(const Duration(milliseconds: 100), () {
+                if (!mounted) return;
+                final cam = _mapCtrl.camera;
+                _mapCtrl.move(cam.center, cam.zoom);
+              });
             },
             // 回転ジェスチャー無効化 (2026-04-29):
             // Solara Map は北上固定前提 (16方位セクター・コンパス・VP Pin の方位概念が
