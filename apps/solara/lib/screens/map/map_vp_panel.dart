@@ -1,8 +1,8 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:latlong2/latlong.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../utils/reverse_geocode.dart';
 import '../../utils/solara_storage.dart';
 
 /// HTML: VP_ICONS — デフォルトアイコン
@@ -70,6 +70,9 @@ class SlotManager {
   }
 
   /// HTML: saveCurrentLocation — reverse geocodingで地名取得して保存
+  ///
+  /// 2026-05-07: 地名取得部分を [reverseGeocode] (utils/reverse_geocode.dart)
+  /// に抽出。Horo Birth Panel の試算用 BirthData 入力でも同じヘルパーを共用する。
   Future<String?> saveCurrentLocation(LatLng center) async {
     final slots = await load();
     final homeCount = (slots.isNotEmpty && slots[0].isHome) ? 1 : 0;
@@ -79,21 +82,9 @@ class SlotManager {
     final userIdx = slots.length - homeCount;
     final defaultName = userIdx < defaultNames.length ? defaultNames[userIdx] : 'スポット';
 
-    String name = defaultName;
-    try {
-      final uri = Uri.parse(
-        'https://nominatim.openstreetmap.org/reverse?format=json&lat=${center.latitude}&lon=${center.longitude}&zoom=16');
-      final resp = await http.get(uri, headers: {'User-Agent': 'SolaraApp/1.0', 'Accept-Language': 'ja,en'});
-      if (resp.statusCode == 200) {
-        final data = json.decode(resp.body) as Map<String, dynamic>;
-        final addr = data['address'] as Map<String, dynamic>? ?? {};
-        // 市区町村を最優先 (suburb 優先だと OSM の道路ループや橋ループ等に
-        // 付いた "Loop" のような局所タグを拾ってしまう。先に都市名を探す)
-        final disp = addr['city'] ?? addr['town'] ?? addr['village']
-            ?? addr['suburb'] ?? addr['neighbourhood'] ?? defaultName;
-        name = disp.toString().substring(0, disp.toString().length.clamp(0, 8));
-      }
-    } catch (_) {}
+    final geocoded =
+        await reverseGeocode(center.latitude, center.longitude, maxLength: 8);
+    final name = geocoded ?? defaultName;
 
     slots.add(VPSlot(name: name, lat: center.latitude, lng: center.longitude, icon: _defaultIcons[userIdx.clamp(0, _defaultIcons.length - 1)]));
     await save(slots);

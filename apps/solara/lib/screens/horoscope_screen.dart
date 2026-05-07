@@ -15,7 +15,8 @@ import 'horoscope/horo_ornament_painter.dart';
 import 'horoscope/horo_antique_icons.dart';
 import 'horoscope/horo_relocation_panel.dart';
 import 'map/map_astro.dart' show fetchChart, ChartResult;
-import 'sanctuary/sanctuary_profile_editor.dart';
+// 2026-05-07: SanctuaryProfileEditorPage への push (_openProfileEditor) は廃止。
+// HoroBirthPanel がパネル内フォームから直接 _applyWorkingProfile を呼ぶ設計に変更。
 
 part 'horoscope/horo_chart_data.dart';
 part 'horoscope/horo_backdrop.dart';
@@ -453,19 +454,6 @@ class HoroscopeScreenState extends State<HoroscopeScreen>
     _applyWorkingProfile(_baseProfile!);
   }
 
-  /// Profile Editor (Sanctuary共用) を push。結果をworking側にのみ反映。
-  Future<void> _openProfileEditor() async {
-    if (_workingProfile == null) return;
-    final edited = await Navigator.of(context).push<SolaraProfile>(
-      MaterialPageRoute(
-        builder: (_) => SanctuaryProfileEditorPage(profile: _workingProfile),
-      ),
-    );
-    if (edited != null) {
-      // storage には保存しない — workingのみ更新
-      _applyWorkingProfile(edited);
-    }
-  }
 
   /// 2つのプロファイルが同じか判定 (isEdited計算用)
   bool _profilesEqual(SolaraProfile a, SolaraProfile b) {

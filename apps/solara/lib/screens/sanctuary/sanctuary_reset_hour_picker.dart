@@ -1,16 +1,31 @@
 import 'package:flutter/material.dart';
 
-/// 1日の開始時刻ピッカー (時 + 分の 2 ドロップダウン、1 分単位)。
+/// 時:分 ピッカー (時 + 分の 2 ドロップダウン、1 分単位)。
 ///
 /// 出生時刻入力フォーム (sanctuary_profile_editor) と同じ操作感を提供する。
 /// bottom sheet で表示し、決定時に `(hour, minute)` レコードを pop する。
+///
+/// 2026-05-07: 用途汎用化のため [title] / [subtitle] パラメータ追加。
+///   - sanctuary_screen 1日リセット時刻: 引数省略でデフォルト文言
+///   - horo_birth_panel 出生時刻 / horo_transit_panel トランジット時刻:
+///     `title` / `subtitle: null` を指定して単純な時計設定として使う
 class SanctuaryResetHourPicker extends StatefulWidget {
   final int initialHour;
   final int initialMinute;
+
+  /// 上部タイトル文言。デフォルトは Sanctuary 用途。
+  final String title;
+
+  /// 下のサブテキスト。null なら非表示。
+  /// デフォルトは Sanctuary 用途の説明文 (後方互換)。
+  final String? subtitle;
+
   const SanctuaryResetHourPicker({
     super.key,
     required this.initialHour,
     this.initialMinute = 0,
+    this.title = '✦ 1日の開始時刻',
+    this.subtitle = 'この時刻を跨ぐと「今日のタップボタン」がリセットされます',
   });
 
   @override
@@ -40,22 +55,25 @@ class _SanctuaryResetHourPickerState extends State<SanctuaryResetHourPicker> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text(
-              '✦ 1日の開始時刻',
+            Text(
+              widget.title,
               textAlign: TextAlign.center,
-              style: TextStyle(
+              style: const TextStyle(
                 color: Color(0xFFF9D976),
                 fontSize: 16,
                 letterSpacing: 2,
                 fontWeight: FontWeight.w500,
               ),
             ),
-            const SizedBox(height: 10),
-            const Text(
-              'この時刻を跨ぐと「今日のタップボタン」がリセットされます',
-              textAlign: TextAlign.center,
-              style: TextStyle(color: Color(0xFFACACAC), fontSize: 12, height: 1.5),
-            ),
+            if (widget.subtitle != null) ...[
+              const SizedBox(height: 10),
+              Text(
+                widget.subtitle!,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                    color: Color(0xFFACACAC), fontSize: 12, height: 1.5),
+              ),
+            ],
             const SizedBox(height: 22),
             // 時 / 分 を 2 ドロップダウンで選択 (出生時刻フォームと同じスタイル)
             Row(

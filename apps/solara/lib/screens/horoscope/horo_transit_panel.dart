@@ -59,6 +59,8 @@ class _HoroTransitPanelState extends State<HoroTransitPanel> {
   }
 
   Future<void> _pickTime() async {
+    // 2026-05-07: 「1日のリセット時刻」用の文言ではなく、純粋な時刻設定として表示。
+    // title/subtitle 引数で文言を Horo 用に上書き。
     final picked = await showModalBottomSheet<({int hour, int minute})>(
       context: context,
       backgroundColor: const Color(0xFF0A0E1C),
@@ -68,6 +70,8 @@ class _HoroTransitPanelState extends State<HoroTransitPanel> {
       builder: (ctx) => SanctuaryResetHourPicker(
         initialHour: _hour,
         initialMinute: _minute,
+        title: widget.chartMode == 'np' ? '✦ プログレス時刻' : '✦ トランジット時刻',
+        subtitle: null,
       ),
     );
     if (picked == null) return;

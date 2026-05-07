@@ -148,7 +148,9 @@ extension _HoroBottomSheet on HoroscopeScreenState {
       case 'birth': return HoroBirthPanel(
         profile: _profile!,
         isEdited: _isEdited,
-        onEdit: _openProfileEditor,
+        // 2026-05-07: 別画面 push (_openProfileEditor) を廃止し、
+        // パネル内フォームから直接 _applyWorkingProfile を呼ぶ形に変更。
+        onApply: _applyWorkingProfile,
         onReset: _resetWorkingProfile,
       );
       case 'transit': return HoroTransitPanel(
