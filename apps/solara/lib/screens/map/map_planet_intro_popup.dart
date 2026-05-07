@@ -217,6 +217,8 @@ class _PlanetIntroBody extends StatelessWidget {
   }
 
   Widget _placeholder() {
+    // 2026-05-07 全 10 惑星収録済み。本来 _placeholder は呼ばれないが、
+    // 将来データキー欠落時の安全網として残しておく。
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
@@ -224,8 +226,7 @@ class _PlanetIntroBody extends StatelessWidget {
         border: Border.all(color: const Color(0x33FFFFFF), width: 0.8),
       ),
       child: const Text(
-        'この惑星の解説は順次追加予定です。\n'
-        '現在は 月 / 金星 / 木星 / 土星 のみご覧いただけます。',
+        'この惑星の解説はまだ準備中です。',
         style: TextStyle(
           fontSize: 12,
           color: Color(0xFFAAAAAA),
