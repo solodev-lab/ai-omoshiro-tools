@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:latlong2/latlong.dart';
 import '../../utils/solara_api.dart' show solaraWorkerBase;
+import '../../widgets/info_popup.dart';
 import 'map_astro.dart';
 import 'map_constants.dart';
 import 'map_vp_panel.dart' show VPSlot;
@@ -488,21 +489,23 @@ class SearchFocusPopup extends StatelessWidget {
 
 /// 「総合は別計算」i ボタン押下時の説明ダイアログ。
 /// ユーザー指摘: 検索結果一覧の総合と詳細の各カテゴリ合算が一致しない理由を可視化。
+///
+/// 2026-05-07: 統一 popup ヘルパー [showInfoPopup] 経由に移行。
+/// 右上 × / 全文スクロール / 外タップ閉じが Shell 側で自動提供される。
 void _showScoreInfo(BuildContext context) {
-  showDialog<void>(
+  showInfoPopup(
     context: context,
-    builder: (ctx) => AlertDialog(
-      backgroundColor: const Color(0xF00F0F1E),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(14),
-        side: const BorderSide(color: Color(0x33C9A84C)),
-      ),
-      title: const Text(
-        '総合スコアの計算',
-        style: TextStyle(color: Color(0xFFC9A84C), fontSize: 14, letterSpacing: 1),
-      ),
-      content: const SingleChildScrollView(
-        child: Text(
+    child: Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: const [
+        Text(
+          '総合スコアの計算',
+          style: TextStyle(
+              color: Color(0xFFC9A84C), fontSize: 14, letterSpacing: 1),
+        ),
+        SizedBox(height: 10),
+        Text(
           '【総合スコア (上段の数字)】\n'
           '現在選択中のカテゴリ (デフォルト: 総合) における、その方位のスコアを表示。\n'
           '総合カテゴリでは、全カテゴリのソフト・ハード両エネルギーを加重合成した値です。\n\n'
@@ -513,15 +516,6 @@ void _showScoreInfo(BuildContext context) {
           '総合は単純な足し算ではなく、エネルギーの方向性を考慮した加重計算です。\n'
           'カテゴリ別内訳の合算 ≠ 総合 となるのは、計算方法が異なるためです。',
           style: TextStyle(color: Color(0xFFE8E0D0), fontSize: 12, height: 1.6),
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(ctx).pop(),
-          child: const Text(
-            '閉じる',
-            style: TextStyle(color: Color(0xFFC9A84C), letterSpacing: 1),
-          ),
         ),
       ],
     ),

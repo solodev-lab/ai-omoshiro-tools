@@ -10,7 +10,7 @@
 
 import 'package:flutter/material.dart';
 
-import '../widgets/glass_panel.dart';
+import '../widgets/info_popup.dart';
 
 class AstroGlossaryEntry {
   /// 表示用の正式名 (例: "ASC (上昇宮)")
@@ -475,82 +475,43 @@ const Map<String, AstroGlossaryEntry> astroGlossary = {
 /// 用語解説 popup を表示する共通ヘルパー。
 /// LayerPanel / FramePills / CategoryPills 等から共通で呼ぶ。
 /// [termKey] が astroGlossary に存在しなければ何もしない。
+///
+/// 2026-05-07: 統一 popup ヘルパー [showInfoPopup] 経由に移行。
+/// 右上 × / 全文スクロール / 外タップ閉じが Shell 側で自動提供される。
 void showAstroGlossaryDialog(BuildContext context, String termKey) {
   final entry = astroGlossary[termKey];
   if (entry == null) return;
-  showDialog<void>(
+  showInfoPopup(
     context: context,
-    barrierColor: const Color(0x99000000),
-    builder: (ctx) {
-      // 画面高さ - insetPadding(80*2) - 内側余白 を最大高さに。
-      // 長文 entry (category_tips_intent 等) で Column が縦溢れするのを防ぐ。
-      final screenH = MediaQuery.of(ctx).size.height;
-      final maxH = (screenH - 160).clamp(200.0, double.infinity);
-      return Dialog(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        insetPadding:
-            const EdgeInsets.symmetric(horizontal: 32, vertical: 80),
-        child: GlassPanel(
-          padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
-          child: ConstrainedBox(
-            constraints: BoxConstraints(maxWidth: 360, maxHeight: maxH),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // ── ヘッダー (タイトル + 閉じる) は固定 ──
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(entry.title,
-                          style: const TextStyle(
-                            fontSize: 14,
-                            color: Color(0xFFC9A84C),
-                            fontWeight: FontWeight.w600,
-                            letterSpacing: 0.4,
-                          )),
-                    ),
-                    GestureDetector(
-                      onTap: () => Navigator.of(ctx).pop(),
-                      child: const Icon(Icons.close,
-                          size: 18, color: Color(0xFFAAAAAA)),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                // ── 本文部 (summary + divider + detail) はスクロール可能 ──
-                Flexible(
-                  child: SingleChildScrollView(
-                    physics: const BouncingScrollPhysics(),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(entry.summary,
-                            style: const TextStyle(
-                              fontSize: 11,
-                              color: Color(0xFFAAAAAA),
-                              height: 1.5,
-                              letterSpacing: 0.3,
-                            )),
-                        const Divider(
-                            color: Color(0x22FFFFFF), height: 18),
-                        Text(entry.detail,
-                            style: const TextStyle(
-                              fontSize: 12,
-                              color: Color(0xFFE8E0D0),
-                              height: 1.7,
-                              letterSpacing: 0.2,
-                            )),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      );
-    },
+    maxWidth: 360,
+    child: Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(entry.title,
+            style: const TextStyle(
+              fontSize: 14,
+              color: Color(0xFFC9A84C),
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.4,
+            )),
+        const SizedBox(height: 8),
+        Text(entry.summary,
+            style: const TextStyle(
+              fontSize: 11,
+              color: Color(0xFFAAAAAA),
+              height: 1.5,
+              letterSpacing: 0.3,
+            )),
+        const Divider(color: Color(0x22FFFFFF), height: 18),
+        Text(entry.detail,
+            style: const TextStyle(
+              fontSize: 12,
+              color: Color(0xFFE8E0D0),
+              height: 1.7,
+              letterSpacing: 0.2,
+            )),
+      ],
+    ),
   );
 }

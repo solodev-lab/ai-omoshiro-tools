@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../widgets/info_popup.dart';
 import 'horo_antique_icons.dart';
 import 'horo_aspect_description.dart';
 import 'horo_desc_section.dart';
@@ -26,85 +27,57 @@ class HoroAspectList extends StatelessWidget {
     final diff = a['diff'] as double;
     final desc = buildAspectDescription(p1, p2, type);
 
-    showModalBottomSheet(
+    // 2026-05-07: showModalBottomSheet → showInfoPopup へ統一移行。
+    // 右上 × / 全文スクロール / 外タップ閉じが Shell 側で自動提供される。
+    showInfoPopup(
       context: context,
-      backgroundColor: const Color(0xF00C0C16),
-      barrierColor: Colors.black54,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
-      ),
-      builder: (ctx) => Padding(
-        padding: EdgeInsets.only(
-          left: 20, right: 20, top: 16,
-          bottom: 20 + MediaQuery.of(ctx).viewInsets.bottom,
-        ),
-        child: Column(mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Close button (top right)
-            Align(
-              alignment: Alignment.topRight,
-              child: GestureDetector(
-                onTap: () => Navigator.of(ctx).pop(),
-                behavior: HitTestBehavior.opaque,
-                child: Container(
-                  padding: const EdgeInsets.all(6),
-                  child: SizedBox(
-                    width: 22, height: 22,
-                    child: CustomPaint(
-                      painter: HoroCloseXPainter(
-                        color: const Color(0xFFC9A84C).withAlpha(220)),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 4),
-            // Title row: planet × planet with icons
-            Row(children: [
-              PlanetVectorIcon(planetKey: p1, size: 22),
-              const SizedBox(width: 6),
-              Text(horoPlanetOrAngleName(p1), style: GoogleFonts.cinzel(
-                fontSize: 17, color: const Color(0xFFE8E0D0),
-                fontWeight: FontWeight.w600)),
-              const SizedBox(width: 10),
-              Text('×', style: TextStyle(fontSize: 17,
-                color: color.withAlpha(200))),
-              const SizedBox(width: 10),
-              PlanetVectorIcon(planetKey: p2, size: 22),
-              const SizedBox(width: 6),
-              Text(horoPlanetOrAngleName(p2), style: GoogleFonts.cinzel(
-                fontSize: 17, color: const Color(0xFFE8E0D0),
-                fontWeight: FontWeight.w600)),
-            ]),
-            const SizedBox(height: 14),
-            // Aspect badge
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-              decoration: BoxDecoration(
-                color: color.withAlpha(30),
-                borderRadius: BorderRadius.circular(6),
-                border: Border.all(color: color.withAlpha(90)),
-              ),
-              child: Text(desc['aspect'] ?? '',
-                style: TextStyle(fontSize: 14, color: color,
-                  fontWeight: FontWeight.w600)),
-            ),
-            const SizedBox(height: 6),
-            Text('オーブ ${diff.toStringAsFixed(2)}°',
-              style: const TextStyle(fontSize: 12, color: Color(0xFF888888))),
-            const SizedBox(height: 18),
-            // Quality summary
-            HoroDescSection('性質', desc['summary'] ?? '', color),
-            const SizedBox(height: 14),
-            // Theme
-            HoroDescSection('テーマ', desc['theme'] ?? '', const Color(0xFFF6BD60)),
-            const SizedBox(height: 14),
-            // Reading
-            HoroDescSection('読み解き', desc['reading'] ?? '', const Color(0xFFF6BD60)),
+      borderColor: color.withAlpha(120),
+      child: Column(mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Title row: planet × planet with icons
+          Row(children: [
+            PlanetVectorIcon(planetKey: p1, size: 22),
+            const SizedBox(width: 6),
+            Text(horoPlanetOrAngleName(p1), style: GoogleFonts.cinzel(
+              fontSize: 17, color: const Color(0xFFE8E0D0),
+              fontWeight: FontWeight.w600)),
+            const SizedBox(width: 10),
+            Text('×', style: TextStyle(fontSize: 17,
+              color: color.withAlpha(200))),
+            const SizedBox(width: 10),
+            PlanetVectorIcon(planetKey: p2, size: 22),
+            const SizedBox(width: 6),
+            Text(horoPlanetOrAngleName(p2), style: GoogleFonts.cinzel(
+              fontSize: 17, color: const Color(0xFFE8E0D0),
+              fontWeight: FontWeight.w600)),
           ]),
-      ),
+          const SizedBox(height: 14),
+          // Aspect badge
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+            decoration: BoxDecoration(
+              color: color.withAlpha(30),
+              borderRadius: BorderRadius.circular(6),
+              border: Border.all(color: color.withAlpha(90)),
+            ),
+            child: Text(desc['aspect'] ?? '',
+              style: TextStyle(fontSize: 14, color: color,
+                fontWeight: FontWeight.w600)),
+          ),
+          const SizedBox(height: 6),
+          Text('オーブ ${diff.toStringAsFixed(2)}°',
+            style: const TextStyle(fontSize: 12, color: Color(0xFF888888))),
+          const SizedBox(height: 18),
+          // Quality summary
+          HoroDescSection('性質', desc['summary'] ?? '', color),
+          const SizedBox(height: 14),
+          // Theme
+          HoroDescSection('テーマ', desc['theme'] ?? '', const Color(0xFFF6BD60)),
+          const SizedBox(height: 14),
+          // Reading
+          HoroDescSection('読み解き', desc['reading'] ?? '', const Color(0xFFF6BD60)),
+        ]),
     );
   }
 

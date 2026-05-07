@@ -15,10 +15,14 @@ import 'package:flutter/material.dart';
 import '../../theme/solara_colors.dart';
 import '../../utils/astro_glossary.dart';
 import '../../utils/direction_energy.dart';
-import '../../widgets/glass_panel.dart';
+import '../../widgets/info_popup.dart';
+// glass_panel: 旧 _PopupBody が直接使っていたが、showInfoPopup Shell に移譲したため不要。
 import 'map_constants.dart';
 
 /// 方角タップ詳細ポップアップを表示するヘルパー。
+///
+/// 2026-05-07: 統一 popup ヘルパー [showInfoPopup] 経由に移行。
+/// 右上 × / 全文スクロール / 外タップ閉じが Shell 側で自動提供される。
 void showDirectionEnergyPopup(
   BuildContext context, {
   required String direction,
@@ -26,19 +30,14 @@ void showDirectionEnergyPopup(
   required List<AspectContribution> contributors,
   String? categoryLabel,
 }) {
-  showDialog<void>(
+  showInfoPopup(
     context: context,
-    barrierColor: const Color(0x99000000),
-    builder: (ctx) => Dialog(
-      backgroundColor: Colors.transparent,
-      elevation: 0,
-      insetPadding: const EdgeInsets.symmetric(horizontal: 28, vertical: 60),
-      child: _PopupBody(
-        direction: direction,
-        energy: energy,
-        contributors: contributors,
-        categoryLabel: categoryLabel,
-      ),
+    maxWidth: 380,
+    child: _PopupBody(
+      direction: direction,
+      energy: energy,
+      contributors: contributors,
+      categoryLabel: categoryLabel,
     ),
   );
 }
@@ -61,127 +60,106 @@ class _PopupBody extends StatelessWidget {
     final dirJP = dir16JP[direction] ?? direction;
     final aggregated = aggregateContributions(contributors, topN: 6);
 
-    return GlassPanel(
-      padding: const EdgeInsets.fromLTRB(20, 18, 20, 20),
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 380),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // ── ヘッダ ──
-            Row(
+    // 2026-05-07: 外枠 (GlassPanel + 右上 × + maxWidth) は showInfoPopup Shell に移譲。
+    // ここでは中身 (ヘッダ + エネルギーバー + ...) のみを返す。
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // ── ヘッダ ──
+        Text(
+          dirJP,
+          style: const TextStyle(
+            fontSize: 18,
+            color: SolaraColors.solaraGoldLight,
+            fontWeight: FontWeight.w500,
+            letterSpacing: 1.5,
+          ),
+        ),
+        Text(
+          '$direction ${categoryLabel != null ? "・$categoryLabel" : ""}'.trim(),
+          style: const TextStyle(
+            fontSize: 10,
+            color: SolaraColors.textSecondary,
+            letterSpacing: 0.5,
+          ),
+        ),
+        const SizedBox(height: 14),
+
+        // ── エネルギーバー（2軸独立） ──
+        _EnergyBar(
+          symbol: '☯',
+          label: 'ソフト',
+          labelEn: 'Soft',
+          value: energy.soft,
+          color: SolaraColors.energySoft,
+          termKey: 'soft_aspect',
+        ),
+        const SizedBox(height: 8),
+        _EnergyBar(
+          symbol: '☐',
+          label: 'ハード',
+          labelEn: 'Hard',
+          value: energy.hard,
+          color: SolaraColors.energyHard,
+          termKey: 'hard_aspect',
+        ),
+        const SizedBox(height: 6),
+
+        // ── 寄与アスペクト ──
+        if (aggregated.isNotEmpty) ...[
+          const Divider(color: Color(0x22FFFFFF), height: 22),
+          const Text(
+            '主な寄与アスペクト',
+            style: TextStyle(
+              fontSize: 11,
+              color: SolaraColors.textSecondary,
+              letterSpacing: 1.0,
+            ),
+          ),
+          const SizedBox(height: 8),
+          for (final a in aggregated) ...[
+            _ContribRow(agg: a),
+            const SizedBox(height: 4),
+          ],
+        ],
+
+        // ── 設計思想ガイダンス ──
+        const Divider(color: Color(0x22FFFFFF), height: 22),
+        Text(
+          _guidanceText(energy),
+          style: const TextStyle(
+            fontSize: 11.5,
+            color: SolaraColors.textPrimary,
+            height: 1.7,
+            letterSpacing: 0.3,
+          ),
+        ),
+        const SizedBox(height: 4),
+        GestureDetector(
+          onTap: () => showAstroGlossaryDialog(context, 'two_energies'),
+          behavior: HitTestBehavior.opaque,
+          child: const Padding(
+            padding: EdgeInsets.fromLTRB(8, 8, 8, 8),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        dirJP,
-                        style: const TextStyle(
-                          fontSize: 18,
-                          color: SolaraColors.solaraGoldLight,
-                          fontWeight: FontWeight.w500,
-                          letterSpacing: 1.5,
-                        ),
-                      ),
-                      Text(
-                        '$direction ${categoryLabel != null ? "・$categoryLabel" : ""}'
-                            .trim(),
-                        style: const TextStyle(
-                          fontSize: 10,
-                          color: SolaraColors.textSecondary,
-                          letterSpacing: 0.5,
-                        ),
-                      ),
-                    ],
+                Icon(Icons.info_outline,
+                    size: 16, color: Color(0xCCAAAAAA)),
+                SizedBox(width: 5),
+                Text(
+                  '2つのエネルギーについて',
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: Color(0xCCCCCCCC),
+                    letterSpacing: 0.3,
                   ),
                 ),
-                GestureDetector(
-                  onTap: () => Navigator.of(context).pop(),
-                  child: const Icon(Icons.close,
-                      size: 18, color: Color(0xFFAAAAAA)),
-                ),
               ],
             ),
-            const SizedBox(height: 14),
-
-            // ── エネルギーバー（2軸独立） ──
-            _EnergyBar(
-              symbol: '☯',
-              label: 'ソフト',
-              labelEn: 'Soft',
-              value: energy.soft,
-              color: SolaraColors.energySoft,
-              termKey: 'soft_aspect',
-            ),
-            const SizedBox(height: 8),
-            _EnergyBar(
-              symbol: '☐',
-              label: 'ハード',
-              labelEn: 'Hard',
-              value: energy.hard,
-              color: SolaraColors.energyHard,
-              termKey: 'hard_aspect',
-            ),
-            const SizedBox(height: 6),
-
-            // ── 寄与アスペクト ──
-            if (aggregated.isNotEmpty) ...[
-              const Divider(color: Color(0x22FFFFFF), height: 22),
-              const Text(
-                '主な寄与アスペクト',
-                style: TextStyle(
-                  fontSize: 11,
-                  color: SolaraColors.textSecondary,
-                  letterSpacing: 1.0,
-                ),
-              ),
-              const SizedBox(height: 8),
-              for (final a in aggregated) ...[
-                _ContribRow(agg: a),
-                const SizedBox(height: 4),
-              ],
-            ],
-
-            // ── 設計思想ガイダンス ──
-            const Divider(color: Color(0x22FFFFFF), height: 22),
-            Text(
-              _guidanceText(energy),
-              style: const TextStyle(
-                fontSize: 11.5,
-                color: SolaraColors.textPrimary,
-                height: 1.7,
-                letterSpacing: 0.3,
-              ),
-            ),
-            const SizedBox(height: 4),
-            GestureDetector(
-              onTap: () => showAstroGlossaryDialog(context, 'two_energies'),
-              behavior: HitTestBehavior.opaque,
-              child: const Padding(
-                padding: EdgeInsets.fromLTRB(8, 8, 8, 8),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    Icon(Icons.info_outline,
-                        size: 16, color: Color(0xCCAAAAAA)),
-                    SizedBox(width: 5),
-                    Text(
-                      '2つのエネルギーについて',
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: Color(0xCCCCCCCC),
-                        letterSpacing: 0.3,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
+          ),
         ),
-      ),
+      ],
     );
   }
 

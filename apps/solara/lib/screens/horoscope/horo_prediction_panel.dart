@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../widgets/info_popup.dart';
 import 'horo_antique_icons.dart';
 import 'horo_aspect_description.dart';
 import 'horo_desc_section.dart';
@@ -57,74 +58,47 @@ class HoroPredictionPanel extends StatelessWidget {
   void _showPatternDescription(BuildContext context, String type, Color color) {
     final data = patternDescriptions[type];
     if (data == null) return;
-    showModalBottomSheet(
+    // 2026-05-07: showModalBottomSheet → showInfoPopup へ統一移行。
+    // 右上 × / 全文スクロール / 外タップ閉じが Shell 側で自動提供される。
+    showInfoPopup(
       context: context,
-      backgroundColor: const Color(0xF00C0C16),
-      barrierColor: Colors.black54,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
-      ),
-      builder: (ctx) => Padding(
-        padding: EdgeInsets.only(
-          left: 20, right: 20, top: 4,
-          bottom: 20 + MediaQuery.of(ctx).viewInsets.bottom,
-        ),
-        child: Column(mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Close button
-            Align(
-              alignment: Alignment.topRight,
-              child: GestureDetector(
-                onTap: () => Navigator.of(ctx).pop(),
-                behavior: HitTestBehavior.opaque,
-                child: Container(
-                  padding: const EdgeInsets.all(6),
-                  child: SizedBox(
-                    width: 22, height: 22,
-                    child: CustomPaint(
-                      painter: HoroCloseXPainter(
-                        color: const Color(0xFFC9A84C).withAlpha(220)),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            // Title
-            Row(children: [
-              AntiqueGlyph(icon: AntiqueIcon.pattern, size: 22, color: color),
-              const SizedBox(width: 8),
-              Text(data['title'] ?? type, style: GoogleFonts.cinzel(
-                fontSize: 18, color: const Color(0xFFE8E0D0),
-                fontWeight: FontWeight.w600)),
-            ]),
-            const SizedBox(height: 12),
-            // Quality badge
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-              decoration: BoxDecoration(
-                color: color.withAlpha(30),
-                borderRadius: BorderRadius.circular(6),
-                border: Border.all(color: color.withAlpha(90)),
-              ),
-              child: Text(data['quality'] ?? '',
-                style: TextStyle(fontSize: 14, color: color,
-                  fontWeight: FontWeight.w600)),
-            ),
-            const SizedBox(height: 18),
-            HoroDescSection('配置の特徴', data['summary'] ?? '', color),
-            const SizedBox(height: 14),
-            HoroDescSection('ネイタル成立時 (N)', data['N'] ?? '',
-              const Color(0xFFFFD370)),
-            const SizedBox(height: 14),
-            HoroDescSection('トランジット活性時 (T)', data['T'] ?? '',
-              const Color(0xFF6BB5FF)),
-            const SizedBox(height: 14),
-            HoroDescSection('プログレス成立時 (P)', data['P'] ?? '',
-              const Color(0xFFB088FF)),
+      borderColor: color.withAlpha(120),
+      child: Column(mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Title
+          Row(children: [
+            AntiqueGlyph(icon: AntiqueIcon.pattern, size: 22, color: color),
+            const SizedBox(width: 8),
+            Text(data['title'] ?? type, style: GoogleFonts.cinzel(
+              fontSize: 18, color: const Color(0xFFE8E0D0),
+              fontWeight: FontWeight.w600)),
           ]),
-      ),
+          const SizedBox(height: 12),
+          // Quality badge
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+            decoration: BoxDecoration(
+              color: color.withAlpha(30),
+              borderRadius: BorderRadius.circular(6),
+              border: Border.all(color: color.withAlpha(90)),
+            ),
+            child: Text(data['quality'] ?? '',
+              style: TextStyle(fontSize: 14, color: color,
+                fontWeight: FontWeight.w600)),
+          ),
+          const SizedBox(height: 18),
+          HoroDescSection('配置の特徴', data['summary'] ?? '', color),
+          const SizedBox(height: 14),
+          HoroDescSection('ネイタル成立時 (N)', data['N'] ?? '',
+            const Color(0xFFFFD370)),
+          const SizedBox(height: 14),
+          HoroDescSection('トランジット活性時 (T)', data['T'] ?? '',
+            const Color(0xFF6BB5FF)),
+          const SizedBox(height: 14),
+          HoroDescSection('プログレス成立時 (P)', data['P'] ?? '',
+            const Color(0xFFB088FF)),
+        ]),
     );
   }
 

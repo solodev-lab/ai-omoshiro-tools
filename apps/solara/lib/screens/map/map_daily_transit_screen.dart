@@ -20,6 +20,7 @@ import '../../utils/solara_storage.dart';
 import '../../widgets/category_icon.dart';
 import '../../widgets/dominant_fortune_overlay.dart' show DominantFortuneKind;
 import '../../widgets/glass_panel.dart';
+import '../../widgets/info_popup.dart';
 import 'daily_transit_data.dart';
 import 'map_aspect_chip.dart';
 import 'map_constants.dart';
@@ -1154,31 +1155,31 @@ void _showEventDetailDialog(
 /// B5: 「お勧め行動の例」i ボタンタップ時のカテゴリ別ガイド dialog。
 /// activeCategory に応じた使い方説明を出す。
 /// fallback: カテゴリ entry がない場合 (=all 等) は astro_glossary に投げる。
+///
+/// 2026-05-07: 統一 popup ヘルパー [showInfoPopup] 経由に移行。
+/// 右上 × / 全文スクロール / 外タップ閉じが Shell 側で自動提供される。
 void _showCategoryTipsIntent(BuildContext context, String categoryKey) {
   final entry = categoryTipsIntent[categoryKey];
   if (entry == null) {
     showAstroGlossaryDialog(context, 'category_tips_intent');
     return;
   }
-  showDialog<void>(
+  showInfoPopup(
     context: context,
-    barrierColor: const Color(0x99000000),
-    builder: (ctx) => AlertDialog(
-      backgroundColor: const Color(0xF00C0C16),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(14),
-        side: const BorderSide(color: Color(0x33C9A84C)),
-      ),
-      title: Text(
-        entry.title,
-        style: const TextStyle(
-          color: Color(0xFFC9A84C),
-          fontSize: 14,
-          letterSpacing: 1,
+    child: Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          entry.title,
+          style: const TextStyle(
+            color: Color(0xFFC9A84C),
+            fontSize: 14,
+            letterSpacing: 1,
+          ),
         ),
-      ),
-      content: SingleChildScrollView(
-        child: Text(
+        const SizedBox(height: 10),
+        Text(
           entry.body,
           style: const TextStyle(
             color: Color(0xFFE8E0D0),
@@ -1186,20 +1187,13 @@ void _showCategoryTipsIntent(BuildContext context, String categoryKey) {
             height: 1.7,
           ),
         ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(ctx).pop(),
-          child: const Text(
-            '閉じる',
-            style: TextStyle(color: Color(0xFFC9A84C), letterSpacing: 1),
-          ),
-        ),
       ],
     ),
   );
 }
 
+/// 2026-05-07: 統一 popup ヘルパー [showInfoPopup] 経由に移行。
+/// 右上 × / 全文スクロール / 外タップ閉じが Shell 側で自動提供される。
 void _showPlanetAngleDetail({
   required BuildContext context,
   required String title,
@@ -1207,81 +1201,55 @@ void _showPlanetAngleDetail({
   required String? appendix,
   required Color planetColor,
 }) {
-  showDialog<void>(
+  showInfoPopup(
     context: context,
-    barrierColor: const Color(0x99000000),
-    builder: (ctx) => Dialog(
-      backgroundColor: Colors.transparent,
-      elevation: 0,
-      insetPadding: const EdgeInsets.symmetric(horizontal: 32, vertical: 80),
-      child: GlassPanel(
-        padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 360),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      title,
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: planetColor,
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: 0.4,
-                      ),
-                    ),
-                  ),
-                  GestureDetector(
-                    onTap: () => Navigator.of(ctx).pop(),
-                    behavior: HitTestBehavior.opaque,
-                    child: const Padding(
-                      padding: EdgeInsets.all(2),
-                      child: Icon(Icons.close,
-                          size: 18, color: Color(0xFFAAAAAA)),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 10),
-              if (base.isNotEmpty)
-                Text(
-                  base,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: Color(0xFFE8E0D0),
-                    height: 1.7,
-                    letterSpacing: 0.2,
-                  ),
-                ),
-              if (appendix != null) ...[
-                const SizedBox(height: 14),
-                Container(
-                  padding: const EdgeInsets.fromLTRB(10, 8, 10, 10),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                        color: SolaraColors.solaraGoldLight.withAlpha(80)),
-                    color: SolaraColors.solaraGoldLight.withAlpha(15),
-                  ),
-                  child: Text(
-                    appendix,
-                    style: const TextStyle(
-                      fontSize: 11,
-                      color: Color(0xFFCCCCCC),
-                      height: 1.7,
-                      letterSpacing: 0.2,
-                    ),
-                  ),
-                ),
-              ],
-            ],
+    maxWidth: 360,
+    child: Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: TextStyle(
+            fontSize: 14,
+            color: planetColor,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 0.4,
           ),
         ),
-      ),
+        const SizedBox(height: 10),
+        if (base.isNotEmpty)
+          Text(
+            base,
+            style: const TextStyle(
+              fontSize: 12,
+              color: Color(0xFFE8E0D0),
+              height: 1.7,
+              letterSpacing: 0.2,
+            ),
+          ),
+        if (appendix != null) ...[
+          const SizedBox(height: 14),
+          Container(
+            padding: const EdgeInsets.fromLTRB(10, 8, 10, 10),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                  color: SolaraColors.solaraGoldLight.withAlpha(80)),
+              color: SolaraColors.solaraGoldLight.withAlpha(15),
+            ),
+            child: Text(
+              appendix,
+              style: const TextStyle(
+                fontSize: 11,
+                color: Color(0xFFCCCCCC),
+                height: 1.7,
+                letterSpacing: 0.2,
+              ),
+            ),
+          ),
+        ],
+      ],
     ),
   );
 }

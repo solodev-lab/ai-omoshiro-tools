@@ -207,39 +207,5 @@ class _CheckmarkPainter extends CustomPainter {
       old.active != active || old.color != color;
 }
 
-// ══════════════════════════════════════════════════════════════
-// Close (×) painter — antique thin strokes with subtle glow
-// ══════════════════════════════════════════════════════════════
-class HoroCloseXPainter extends CustomPainter {
-  final Color color;
-  HoroCloseXPainter({required this.color});
-  @override
-  void paint(Canvas canvas, Size size) {
-    final w = size.width;
-    final inset = w * 0.2;
-    final p1a = Offset(inset, inset);
-    final p1b = Offset(w - inset, w - inset);
-    final p2a = Offset(w - inset, inset);
-    final p2b = Offset(inset, w - inset);
-
-    final glow = Paint()
-      ..color = color.withAlpha(100)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 3.0
-      ..strokeCap = StrokeCap.round
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2.0);
-    final stroke = Paint()
-      ..color = color
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.6
-      ..strokeCap = StrokeCap.round;
-
-    canvas.drawLine(p1a, p1b, glow);
-    canvas.drawLine(p2a, p2b, glow);
-    canvas.drawLine(p1a, p1b, stroke);
-    canvas.drawLine(p2a, p2b, stroke);
-  }
-
-  @override
-  bool shouldRepaint(covariant HoroCloseXPainter old) => old.color != color;
-}
+// 2026-05-07: HoroCloseXPainter は popup 統一 (showInfoPopup, widgets/info_popup.dart)
+// により全廃。Shell が Icons.close を提供するため、独自 Painter は不要になった。
