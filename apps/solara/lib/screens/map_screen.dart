@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -168,6 +169,15 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   bool _mapReady = false;
   LatLng? _pendingInitialMove;
 
+  /// タイル再 fetch 用 session カウンタ。インクリメントすると TileLayer の key が
+  /// 変わり State 再生成 → 全タイル再 fetch される。errored タイルが固着したとき
+  /// の救済用。errorTileCallback で検知 → 1.5s デバウンス → bump。
+  /// 上限 _tileBumpMax 回までで以降は諦める (ネットワーク断時の暴走防止)。
+  int _tileSessionBump = 0;
+  int _tileBumpCount = 0;
+  static const int _tileBumpMax = 3;
+  Timer? _tileErrorDebounce;
+
   // Dominant fortune overlay
   DominantFortuneKind? _topCategory;
   DominantFortuneKind? _activeOverlay;
@@ -224,6 +234,28 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     _loadProfileAndChart();
     _loadMapStyle();
     _checkDailyBadgeState();
+  }
+
+  @override
+  void dispose() {
+    _tileErrorDebounce?.cancel();
+    super.dispose();
+  }
+
+  /// 個別タイル fetch 失敗時のフック。1.5s デバウンスして session bump で
+  /// TileLayer State を再生成し、まとめて再 fetch する。最大 _tileBumpMax 回。
+  /// hot restart 直後の cold DNS / TLS で数枚穴が空く事象への対策 (2026-05-07)。
+  void _onTileError() {
+    if (_tileBumpCount >= _tileBumpMax) return;
+    _tileErrorDebounce?.cancel();
+    _tileErrorDebounce = Timer(const Duration(milliseconds: 1500), () {
+      if (!mounted) return;
+      if (_tileBumpCount >= _tileBumpMax) return;
+      setState(() {
+        _tileSessionBump++;
+        _tileBumpCount++;
+      });
+    });
   }
 
   /// 右上 DailyTransitBadge の「未閲覧（光る）」状態判定。
@@ -1077,7 +1109,11 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
             },
           ),
           children: [
-            buildStyledTileLayer(_mapStyle),
+            buildStyledTileLayer(
+              _mapStyle,
+              sessionBump: _tileSessionBump,
+              onTileError: _onTileError,
+            ),
             // 出生情報が無い間はセクターを描画しない（スコアが乱数になるため）
             if (!_noProfile) PolygonLayer(polygons: buildSectors(
               center: _center,

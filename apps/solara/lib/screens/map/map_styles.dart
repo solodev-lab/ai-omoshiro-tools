@@ -99,10 +99,20 @@ MapStyle mapStyleFromId(String? id) {
 ///
 /// tileProvider: アプリ全体で共有する HttpClient を渡し、
 ///   socket 枯渇による DNS 失敗の連鎖を防止 (詳細: tile_http_client.dart)。
-Widget buildStyledTileLayer(MapStyle style) {
+///
+/// [sessionBump] 呼出側がインクリメントすることで TileLayer の key を変え、
+///   State を再生成して全タイルを再 fetch させる。errored タイルが固着した
+///   ときの再試行ハンドルとして使う (caller 側でデバウンス + 上限管理)。
+/// [onTileError] 個別タイル fetch 失敗時に呼ばれる。caller でデバウンスして
+///   sessionBump をインクリメントすると、まとめて再試行できる。
+Widget buildStyledTileLayer(
+  MapStyle style, {
+  int sessionBump = 0,
+  void Function()? onTileError,
+}) {
   final cfg = mapStyleConfigs[style]!;
   final layer = TileLayer(
-    key: ValueKey(cfg.id),
+    key: ValueKey('${cfg.id}_$sessionBump'),
     urlTemplate: cfg.urlTemplate,
     subdomains: cfg.subdomains,
     maxZoom: cfg.maxZoom.toDouble(),
@@ -111,6 +121,12 @@ Widget buildStyledTileLayer(MapStyle style) {
     // 2026-05-03: タイル fade-in を無効化 (内部 AnimatedOpacity が saveLayer trigger)。
     // ACG モード 2 回目入時の画面点滅 / Map スクロール後の砂嵐の主因対策。
     tileDisplay: const TileDisplay.instantaneous(),
+    // 2026-05-07: hot restart 直後の「一部タイル描画されない」対策。
+    // errored タイルは pan/zoom で margin 外に出たら自動 evict → 次回 fetch 機会を作る。
+    evictErrorTileStrategy: EvictErrorTileStrategy.notVisibleRespectMargin,
+    errorTileCallback: onTileError == null
+        ? null
+        : (tile, error, stackTrace) => onTileError(),
   );
   if (!cfg.dark) return layer;
   // Phase 3 (2026-05-04): per-tile ColorFiltered → container 単位に変更。

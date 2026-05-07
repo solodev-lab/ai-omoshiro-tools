@@ -26,12 +26,15 @@ import 'package:http/retry.dart';
 ///   - idleTimeout = 15 秒
 ///       keep-alive socket を 15 秒で再利用。長すぎると累積、短すぎると
 ///       毎回 TCP/DNS 再接続でコスト悪化。
-///   - connectionTimeout = 10 秒
-///       到達不能ホストへの試行を 10 秒で諦める。fd ハングを防ぐ。
+///   - connectionTimeout = 25 秒
+///       到達不能ホストへの試行を 25 秒で諦める。
+///       2026-05-07: 旧 10 秒だと hot restart 直後の cold DNS / TLS 確立に
+///       一部タイルが間に合わず描画穴が残る事象があったため緩和。
+///       fd ハング防止の意味では 25 秒でも十分早い。
 final HttpClient _ioClient = HttpClient()
   ..maxConnectionsPerHost = 6
   ..idleTimeout = const Duration(seconds: 15)
-  ..connectionTimeout = const Duration(seconds: 10);
+  ..connectionTimeout = const Duration(seconds: 25);
 
 /// `flutter_map` の `NetworkTileProvider(httpClient: ...)` に渡すための
 /// 共有クライアント。`RetryClient` で 1 回まで自動リトライする
