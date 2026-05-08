@@ -112,8 +112,13 @@ class SolaraNavBar extends StatelessWidget {
               iconWidget,
             const SizedBox(height: 4),
             // Label: 9px, uppercase, letter-spacing 0.5
+            // 2026-05-08: textScaler.noScaling 適用。global の 1.5x 拡大が
+            // 9px label に乗ると Container 高 80px 内 (実 content 70px) を
+            // 超えて BOTTOM OVERFLOWED が発生 (特に Noto Sans JP で行高が
+            // 大きい)。NavBar label は固定 9px UI 要素として扱う。
             Text(
               _labels[index],
+              textScaler: TextScaler.noScaling,
               style: TextStyle(
                 fontSize: 9, color: color, letterSpacing: 0.5,
                 fontWeight: FontWeight.w400,

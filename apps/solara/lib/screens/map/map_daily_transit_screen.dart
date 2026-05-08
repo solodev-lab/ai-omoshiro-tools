@@ -753,12 +753,52 @@ class _Header extends StatelessWidget {
   ///
   /// 2026-05-08: プルダウン左の Icons.place (場所ピン) を Icons.help_outline
   /// (❓) に置換。タップで「今日の動きの読み方」popup を開く。
-  /// 基準地点 (VIEWPOINT) を中心に惑星の方角×時刻を表示している、という
-  /// 機能ガイドを基準地点プルダウンの隣に置くことで、何の地点を基準に
-  /// しているのかが直感的に分かる動線にする。
+  ///
+  /// 2026-05-08 (#2): プルダウンの表示ラベルを住所文字列ではなく
+  /// カテゴリ名 (出生地 / 現住所 / VIEWPOINT 名) に統一。
+  /// - スロット -1: 必ず「出生地」(birthLocationName の住所は表示しない)
+  /// - isHome=true の VPSlot: 必ず「現住所」(slot.name の住所は表示しない)
+  /// - その他の VPSlot: slot.name (登録時の名前)
+  /// 横幅を超える長い名前は ellipsis で truncate して RIGHT OVERFLOW 対策。
   Widget _buildVpDropdownWithGuide(BuildContext context) {
-    final birthName =
-        birthLocationName.isEmpty ? '出生地' : birthLocationName;
+    // スロット index → 表示ラベル (カテゴリ名 or VIEWPOINT 名)
+    String labelFor(int idx) {
+      if (idx < 0) return '出生地';
+      if (idx >= vpSlots.length) return 'VP';
+      final s = vpSlots[idx];
+      if (s.isHome) return '現住所';
+      return s.name.isEmpty ? 'VP${idx + 1}' : s.name;
+    }
+
+    // スロット index → アイコン文字
+    String iconFor(int idx) {
+      if (idx < 0) return '🌟';
+      if (idx >= vpSlots.length) return '📍';
+      return vpSlots[idx].icon;
+    }
+
+    Widget itemRow(int idx) {
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(iconFor(idx), style: const TextStyle(fontSize: 13)),
+          const SizedBox(width: 4),
+          // 長名 truncate 用に Flexible + ellipsis
+          Flexible(
+            child: Text(
+              labelFor(idx),
+              style: const TextStyle(
+                fontSize: 13,
+                color: Color(0xFFE8E0D0),
+              ),
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
+            ),
+          ),
+        ],
+      );
+    }
+
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -772,64 +812,38 @@ class _Header extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 2),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: const Color(0x33C9A84C)),
-          ),
-          child: DropdownButton<int>(
-            value: vpIndex,
-            underline: const SizedBox.shrink(),
-            isDense: true,
-            dropdownColor: const Color(0xF20F0F1E),
-            iconEnabledColor: const Color(0xFFC9A84C),
-            iconSize: 14,
-            style: const TextStyle(
-              fontSize: 13,
-              color: Color(0xFFE8E0D0),
+        // 親 Row が Header の Expanded 内にいるので、ConstrainedBox で
+        // 上限幅を指定して RIGHT OVERFLOW を防ぐ。長 VIEWPOINT 名は
+        // Flexible + ellipsis でこの幅内に truncate される。
+        ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 180),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: const Color(0x33C9A84C)),
             ),
-            items: [
-              DropdownMenuItem<int>(
-                value: -1,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Text('🌟', style: TextStyle(fontSize: 13)),
-                    const SizedBox(width: 4),
-                    Text(birthName,
-                        style: const TextStyle(
-                          fontSize: 13,
-                          color: Color(0xFFE8E0D0),
-                        )),
-                  ],
-                ),
+            child: DropdownButton<int>(
+              value: vpIndex,
+              underline: const SizedBox.shrink(),
+              isDense: true,
+              isExpanded: true,
+              dropdownColor: const Color(0xF20F0F1E),
+              iconEnabledColor: const Color(0xFFC9A84C),
+              iconSize: 14,
+              style: const TextStyle(
+                fontSize: 13,
+                color: Color(0xFFE8E0D0),
               ),
-              for (int i = 0; i < vpSlots.length; i++)
-                DropdownMenuItem<int>(
-                  value: i,
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(vpSlots[i].icon,
-                          style: const TextStyle(fontSize: 13)),
-                      const SizedBox(width: 4),
-                      Text(
-                        vpSlots[i].name.isEmpty
-                            ? 'VP${i + 1}'
-                            : vpSlots[i].name,
-                        style: const TextStyle(
-                          fontSize: 13,
-                          color: Color(0xFFE8E0D0),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-            ],
-            onChanged: (v) {
-              if (v != null) onVpChanged(v);
-            },
+              items: [
+                DropdownMenuItem<int>(value: -1, child: itemRow(-1)),
+                for (int i = 0; i < vpSlots.length; i++)
+                  DropdownMenuItem<int>(value: i, child: itemRow(i)),
+              ],
+              onChanged: (v) {
+                if (v != null) onVpChanged(v);
+              },
+            ),
           ),
         ),
       ],
