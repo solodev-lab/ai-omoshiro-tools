@@ -139,31 +139,42 @@ class _MapTimeSliderState extends State<MapTimeSlider> {
     final preview = _previewDateJst();
     final isLive = _isLive();
 
-    return Container(
-      padding: const EdgeInsets.fromLTRB(8, 4, 6, 4),
-      decoration: BoxDecoration(
-        color: const Color(0xE60C0C1A),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0x33C9A84C)),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // ── 上段: 日付コントロール ──
-          _buildDayRow(dayValue, preview, isLive),
-          // ── 下段: 時刻コントロール (折りたたみ可能) ──
-          AnimatedSize(
-            duration: const Duration(milliseconds: 180),
-            curve: Curves.easeOut,
-            alignment: Alignment.topCenter,
-            child: _timeRowExpanded
-                ? Padding(
-                    padding: const EdgeInsets.only(top: 4),
-                    child: _buildHourRow(hourValue),
-                  )
-                : const SizedBox.shrink(),
-          ),
-        ],
+    // 2026-05-08: タイムスライダー全体に内部 clamp 1.3 倍を適用。
+    //   - 全体 (main.dart) は 1.5 倍まで許容、内側でさらに 1.3 倍に絞る
+    //   - 'MM/DD' (5 文字) と 'HH:MM' (5 文字) を固定幅 56px に収める
+    //     fontSize 13 × 1.3 = 16.9 → 5 文字 ≈ 49px (OK)
+    //     fontSize 13 × 1.5 = 19.5 → 5 文字 ≈ 58px (NG、改行)
+    //   - ◀▶ 矢印位置を維持しつつアクセシビリティも部分的に確保
+    //   - NOW バッジは内部で textScaler.noScaling を持つので影響なし
+    return MediaQuery.withClampedTextScaling(
+      minScaleFactor: 1.0,
+      maxScaleFactor: 1.3,
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(8, 4, 6, 4),
+        decoration: BoxDecoration(
+          color: const Color(0xE60C0C1A),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: const Color(0x33C9A84C)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // ── 上段: 日付コントロール ──
+            _buildDayRow(dayValue, preview, isLive),
+            // ── 下段: 時刻コントロール (折りたたみ可能) ──
+            AnimatedSize(
+              duration: const Duration(milliseconds: 180),
+              curve: Curves.easeOut,
+              alignment: Alignment.topCenter,
+              child: _timeRowExpanded
+                  ? Padding(
+                      padding: const EdgeInsets.only(top: 4),
+                      child: _buildHourRow(hourValue),
+                    )
+                  : const SizedBox.shrink(),
+            ),
+          ],
+        ),
       ),
     );
   }
