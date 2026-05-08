@@ -18,6 +18,7 @@ import '../utils/tarot_data.dart';
 import '../widgets/catasterism_formation_overlay.dart';
 import '../widgets/celestial_event_bar.dart';
 import '../widgets/cycle_spiral_painter.dart';
+import '../widgets/info_popup.dart';
 import '../widgets/moon_overlay.dart';
 
 import 'galaxy/galaxy_constellation_builder.dart';
@@ -523,19 +524,26 @@ class GalaxyScreenState extends State<GalaxyScreen>
 
   Widget _buildMoonBadge() {
     final info = MoonPhase.getPhaseInfo(DateTime.now());
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-      decoration: BoxDecoration(
-        color: const Color(0x1AC0C8E0),
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: const Color(0x38C0C8E0)),
+    // 2026-05-08: 月齢バッジをタップ可能化。
+    // 月齢の説明 → Galaxy 画面全体 (CYCLE / Star Atlas) の使い方を
+    // 1 つの popup で順に説明する (ユーザー要望: 機能をパッと見て理解)。
+    return GestureDetector(
+      onTap: () => _showGalaxyUsageGuide(context, info),
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color: const Color(0x1AC0C8E0),
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(color: const Color(0x38C0C8E0)),
+        ),
+        child: Column(children: [
+          Text(info.emoji, style: const TextStyle(fontSize: 20, height: 1)),
+          const SizedBox(height: 2),
+          Text(info.label, style: GoogleFonts.cinzel(
+            fontSize: 13, color: const Color(0xA6C0C8E0), letterSpacing: 1.2)),
+        ]),
       ),
-      child: Column(children: [
-        Text(info.emoji, style: const TextStyle(fontSize: 20, height: 1)),
-        const SizedBox(height: 2),
-        Text(info.label, style: GoogleFonts.cinzel(
-          fontSize: 13, color: const Color(0xA6C0C8E0), letterSpacing: 1.2)),
-      ]),
     );
   }
 
@@ -901,4 +909,183 @@ class GalaxyScreenState extends State<GalaxyScreen>
       _activeTab = 1; // Star Atlasタブへ
     });
   }
+}
+
+/// 月齢ごとの詩的な解説 (popup の冒頭で表示)。
+/// labelJP (新月 / 三日月 / 上弦の月 / 十三夜月 / 満月 / 十八夜月 /
+///        下弦の月 / 二十六夜月) で分岐。
+String _moonPhaseDescription(String labelJP) {
+  switch (labelJP) {
+    case '新月':
+      return '始まりの時。\n'
+          '空が最も暗く、星々が最もよく見える夜。\n'
+          '新しい意図を立て、種を蒔く時間帯です。';
+    case '三日月':
+      return '芽吹きの時。\n'
+          '細い光が西の空に現れます。\n'
+          '新月で蒔いた意図に向けて、少しずつ動き出す時間帯。';
+    case '上弦の月':
+      return '行動の時。\n'
+          '半月が天頂に達し、決断と行動が求められます。\n'
+          '芽生えた意図を形にしていく転換点。';
+    case '十三夜月':
+      return '高まりの時。\n'
+          '月が満ちていく勢いがピークに近づきます。\n'
+          '準備が整い、表現が膨らむ時間帯。';
+    case '満月':
+      return '達成・解放の時。\n'
+          '月が最も明るく輝く夜。\n'
+          '気づきと完了がやってきます。\n'
+          '手にしたものを見つめ直し、感謝する時間帯。';
+    case '十八夜月':
+      return '共有の時。\n'
+          '月が欠け始めます。\n'
+          '満月で得た学びを他者と分かち合う時間帯。';
+    case '下弦の月':
+      return '手放しの時。\n'
+          '半月が逆向きに浮かびます。\n'
+          '不要なものを整理し、ゆるめる時間帯。';
+    case '二十六夜月':
+      return '休息の時。\n'
+          '空に薄い月が残ります。\n'
+          '次のサイクルへ向けて静かに整える時間帯。';
+    default:
+      return '月のサイクルが流れています。';
+  }
+}
+
+/// Galaxy 画面の総合ガイド popup (月齢バッジをタップで開く)。
+/// 月齢の説明 → Galaxy 画面全体 → CYCLE タブ → Star Atlas タブを
+/// 1 つの popup で順に表示する。
+void _showGalaxyUsageGuide(
+    BuildContext context, ({String label, String labelJP, String emoji}) info) {
+  showInfoPopup(
+    context: context,
+    child: Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // ── 今日の月齢 ──
+        Row(
+          children: [
+            Text(info.emoji, style: const TextStyle(fontSize: 28)),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '今日の月: ${info.labelJP}',
+                    style: const TextStyle(
+                        color: Color(0xFFC9A84C),
+                        fontSize: 14,
+                        letterSpacing: 1,
+                        fontWeight: FontWeight.w600),
+                  ),
+                  Text(
+                    info.label,
+                    style: const TextStyle(
+                        color: Color(0xA6C0C8E0),
+                        fontSize: 11,
+                        letterSpacing: 1.2),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Text(
+          _moonPhaseDescription(info.labelJP),
+          style: const TextStyle(
+              color: Color(0xFFE8E0D0), fontSize: 13, height: 1.7),
+        ),
+        const SizedBox(height: 16),
+        const Divider(color: Color(0x33C9A84C), height: 1),
+        const SizedBox(height: 16),
+        // ── Galaxy 画面とは ──
+        const Text(
+          'Galaxy 画面とは',
+          style: TextStyle(
+              color: Color(0xFFC9A84C), fontSize: 14, letterSpacing: 1),
+        ),
+        const SizedBox(height: 8),
+        const Text(
+          '月のサイクル (約 29.5 日) に合わせて、\n'
+          'あなたの日々のタロットリーディングが\n'
+          '「星」として記録されていく画面です。\n\n'
+          '1 サイクル = 1 つの constellation (星座) が完成。\n'
+          '内面のリズムが、星座という形で残っていきます。',
+          style: TextStyle(
+              color: Color(0xFFE8E0D0), fontSize: 13, height: 1.7),
+        ),
+        const SizedBox(height: 16),
+        // ── CYCLE タブ ──
+        const Text(
+          '🌌 CYCLE タブ (現在のサイクル)',
+          style: TextStyle(
+              color: Color(0xFFC9A84C),
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.5),
+        ),
+        const SizedBox(height: 6),
+        const Text(
+          '今の月サイクルの「現在地」を表示。\n'
+          '日々の reading を描いた "dot" が螺旋上に並び、\n'
+          '完成に向けて進んでいきます。\n\n'
+          '・右上の数字: サイクル何日目か (例: 12 of 30)\n'
+          '・左上の月齢バッジ: 今日の月の相 (← 今ココ)\n'
+          '・ドラッグで 3D 回転、ピンチでズーム\n'
+          '・dot タップで該当日のリーディングを表示\n'
+          '・新月・満月の日は特別オーバーレイで\n'
+          '　意図を立てる/振り返るアクションを促します',
+          style: TextStyle(
+              color: Color(0xFFE8E0D0), fontSize: 13, height: 1.7),
+        ),
+        const SizedBox(height: 14),
+        // ── Star Atlas タブ ──
+        const Text(
+          '🌟 Star Atlas タブ (過去の星座図鑑)',
+          style: TextStyle(
+              color: Color(0xFFC9A84C),
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.5),
+        ),
+        const SizedBox(height: 6),
+        const Text(
+          '完成した過去のサイクル (= 星座) のコレクション。\n'
+          '1 つ 1 つが、あなた自身の内面が紡いだ星座です。\n\n'
+          '・各カードは 1 サイクル分の reading が織りなす星座\n'
+          '・カードタップで再アニメ + 詳細表示\n'
+          '　(星座名・期間・rarity)\n'
+          '・レア度: 5 段階の星評価 (★)\n'
+          '　高 rarity ほど「珍しい組み合わせ」が出た証',
+          style: TextStyle(
+              color: Color(0xFFE8E0D0), fontSize: 13, height: 1.7),
+        ),
+        const SizedBox(height: 14),
+        // ── 月のサイクルの意味 ──
+        const Text(
+          '月のサイクルの意味',
+          style: TextStyle(
+              color: Color(0xFFC9A84C),
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.5),
+        ),
+        const SizedBox(height: 6),
+        const Text(
+          '🌑 新月 → 始まり。種を蒔く時。\n'
+          '🌕 満月 → 達成・解放。気づきの時。\n\n'
+          '1 サイクルかけて、あなたの内面が 1 つの星座に\n'
+          'なっていきます。Observe タブで日々のカードを\n'
+          '引いて、ゆっくり育てていってください。',
+          style: TextStyle(
+              color: Color(0xFFE8E0D0), fontSize: 13, height: 1.7),
+        ),
+      ],
+    ),
+  );
 }
