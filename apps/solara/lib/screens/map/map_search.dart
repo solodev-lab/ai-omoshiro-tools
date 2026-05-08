@@ -463,7 +463,6 @@ class SearchFocusPopup extends StatelessWidget {
       catEntries.add(MapEntry(cat, sum));
     }
     catEntries.sort((a, b) => b.value.compareTo(a.value));
-    final top3 = catEntries.take(3).toList();
 
     return Container(
       padding: const EdgeInsets.all(14),
@@ -516,17 +515,16 @@ class SearchFocusPopup extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 8),
-        if (top3.isNotEmpty) ...[
-          // 2026-05-08: フォント拡大時の RIGHT OVERFLOW 対策で Wrap 化。
-          // インラインの '※ 総合は別計算' ヒントは i ボタン popup 内に同等説明
-          // があるため削除して短縮、可読性向上。
-          Wrap(
-            spacing: 6,
-            runSpacing: 2,
-            crossAxisAlignment: WrapCrossAlignment.center,
+        if (catEntries.isNotEmpty) ...[
+          // 2026-05-08: 「(参考)」削除 + top3 制限を撤廃して全カテゴリを
+          // スコア降順で表示。横方向に入りきらない場合は SingleChildScrollView
+          // で横スライドさせる (折返し Wrap だと縦に伸びて popup が縦長化する
+          // ため、popup 高さ固定 + 横スライドの方が UI 安定)。
+          Row(
+            mainAxisSize: MainAxisSize.min,
             children: [
               const Text(
-                'カテゴリ別内訳 (参考)',
+                'カテゴリ別内訳',
                 style: TextStyle(
                     fontSize: 13,
                     color: Color(0xFF888888),
@@ -544,9 +542,17 @@ class SearchFocusPopup extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 4),
-          Wrap(
-            spacing: 8, runSpacing: 4,
-            children: [for (final e in top3) _CatChip(cat: e.key, score: e.value)],
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                for (int i = 0; i < catEntries.length; i++) ...[
+                  if (i > 0) const SizedBox(width: 8),
+                  _CatChip(cat: catEntries[i].key, score: catEntries[i].value),
+                ],
+              ],
+            ),
           ),
         ],
         const SizedBox(height: 10),
@@ -577,13 +583,15 @@ void _showScoreInfo(BuildContext context) {
         ),
         SizedBox(height: 10),
         Text(
-          '【カテゴリ別内訳 (下段のチップ)】\n'
-          'この方位における各カテゴリ単独のスコアを表示。\n'
-          '癒し / 豊かさ / 恋愛 / 仕事 / 話す をそれぞれ独立に算出。\n\n'
+          '【カテゴリ別内訳】\n'
+          'この方位における各カテゴリ単独のスコアを、高い順に表示します。\n'
+          '癒し / 豊かさ / 恋愛 / 仕事 / 話す をそれぞれ独立に算出。\n'
+          '横に入りきらない場合は左右にスライドして全カテゴリを確認できます。\n\n'
           '【上部スコアバーの「総合」との関係】\n'
-          '上部スコアバーで「総合」を選んでいる時、そこに出る数字は\n'
+          '上部スコアバーで「総合」を選んでいる時の数字は、\n'
           '全カテゴリのソフト・ハード両エネルギーを加重合成した値です。\n'
-          'カテゴリ別内訳の合算 ≠ 総合 となるのは、計算方法が異なるためです。',
+          'カテゴリ別内訳の単純な合算 ≠ 総合 となるのは、\n'
+          '総合がエネルギーの方向性を考慮した加重計算だからです。',
           style: TextStyle(color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
         ),
       ],
