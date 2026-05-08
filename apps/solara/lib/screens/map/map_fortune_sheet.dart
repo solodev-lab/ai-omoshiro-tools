@@ -100,6 +100,10 @@ class FortuneFilterLabel extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
+                    // 上に唯一の Spacer を置き、text + icon を下にまとめる。
+                    // 中間 Spacer は削除 (text と icon が密着するように)。
+                    // これにより text が「下半分の上端」付近に来て、視覚的に
+                    // バーの縦中央寄り (1.3x スケール時はほぼ中央) になる。
                     const Spacer(),
                     Text(
                       '${srcLabels[activeSrc] ?? '合計'} / ${categoryLabels[activeCategory] ?? '総合'}',
@@ -107,7 +111,6 @@ class FortuneFilterLabel extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       maxLines: 1,
                     ),
-                    const Spacer(),
                     // i ボタン: タップで「カテゴリと関連惑星ペア」popup を表示。
                     // 親 GestureDetector (onTap=カテゴリ次へ切替) の上にあるが、
                     // 内側が gesture arena で勝つため切替は発火しない。
