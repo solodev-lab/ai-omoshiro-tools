@@ -647,24 +647,24 @@ class GalaxyScreenState extends State<GalaxyScreen>
         ),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
           Text('DAY ${_popupDayIndex + 1}', style: const TextStyle(
-            fontSize: 10, fontWeight: FontWeight.w700, color: Color(0xFFF9D976), letterSpacing: 1.5)),
+            fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFFF9D976), letterSpacing: 1.5)),
           const SizedBox(height: 8),
           Row(children: [
             Text(card.emoji, style: const TextStyle(fontSize: 22)),
             const SizedBox(width: 8),
             Expanded(child: Text(card.nameEN, style: const TextStyle(
-              fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFFEAEAEA)))),
+              fontSize: 15, fontWeight: FontWeight.w700, color: Color(0xFFEAEAEA)))),
           ]),
           const SizedBox(height: 8),
           if (card.planet != null)
             Text('Planet: ${planetNamesJP[card.planet] ?? card.planet}', style: const TextStyle(
-              fontSize: 11, color: Color(0xCCACACAC))),
+              fontSize: 13, color: Color(0xCCACACAC))),
           const SizedBox(height: 4),
           Text('Keyword: ${card.keyword}', style: const TextStyle(
-            fontSize: 11, fontWeight: FontWeight.w300, color: Color(0xB3F9D976))),
+            fontSize: 13, fontWeight: FontWeight.w300, color: Color(0xB3F9D976))),
           const SizedBox(height: 6),
           const Text('"Your momentum is cosmic."', style: TextStyle(
-            fontSize: 11, fontWeight: FontWeight.w300, color: Color(0xB3ACACAC), fontStyle: FontStyle.italic)),
+            fontSize: 13, fontWeight: FontWeight.w300, color: Color(0xB3ACACAC), fontStyle: FontStyle.italic)),
         ]),
       ),
     );
