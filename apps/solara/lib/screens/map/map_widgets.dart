@@ -41,9 +41,9 @@ class LegendDot extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text('●', style: TextStyle(fontSize: 9, color: color)),
+        Text('●', style: TextStyle(fontSize: 13, color: color)),
         const SizedBox(width: 2),
-        Text(label, style: const TextStyle(fontSize: 9, color: Color(0xFF888888))),
+        Text(label, style: const TextStyle(fontSize: 13, color: Color(0xFF888888))),
       ],
     );
   }

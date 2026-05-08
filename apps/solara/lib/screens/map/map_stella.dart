@@ -22,7 +22,7 @@ class Stella extends StatelessWidget {
           const Icon(Icons.auto_awesome, size: 12, color: Color(0xFF6B5CE7)),
           const SizedBox(width: 4),
           const Text('Stella', style: TextStyle(
-            fontSize: 10, letterSpacing: 2, color: Color(0xFF6B5CE7))),
+            fontSize: 13, letterSpacing: 2, color: Color(0xFF6B5CE7))),
           const Spacer(),
           const Icon(Icons.expand_more, size: 12, color: Color(0xFF555555)),
         ]),
@@ -57,7 +57,7 @@ class StellaMinimized extends StatelessWidget {
       child: const Row(mainAxisSize: MainAxisSize.min, children: [
         Icon(Icons.auto_awesome, size: 11, color: Color(0xFF6B5CE7)),
         SizedBox(width: 4),
-        Text('Stella', style: TextStyle(fontSize: 9, letterSpacing: 1, color: Color(0xFF6B5CE7))),
+        Text('Stella', style: TextStyle(fontSize: 13, letterSpacing: 1, color: Color(0xFF6B5CE7))),
         SizedBox(width: 6),
         Icon(Icons.expand_less, size: 11, color: Color(0xFF555555)),
       ]),

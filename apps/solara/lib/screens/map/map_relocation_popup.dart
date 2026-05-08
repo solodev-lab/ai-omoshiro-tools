@@ -156,7 +156,7 @@ class MapRelocationPopup extends StatelessWidget {
               child: Text(
                 'ライン上の地点 (近接${lines.length}本)',
                 style: GoogleFonts.notoSansJp(
-                  fontSize: 11,
+                  fontSize: 13,
                   color: const Color(0xFFB088FF),
                   fontWeight: FontWeight.w600,
                   letterSpacing: 0.5,
@@ -174,7 +174,7 @@ class MapRelocationPopup extends StatelessWidget {
             child: Text(
               '他${lines.length - 5}本',
               style: GoogleFonts.notoSansJp(
-                fontSize: 9,
+                fontSize: 13,
                 color: const Color(0xFF666666),
               ),
             ),
@@ -215,7 +215,7 @@ class MapRelocationPopup extends StatelessWidget {
             child: Text(
               pName,
               style: GoogleFonts.notoSansJp(
-                fontSize: 11, color: color, fontWeight: FontWeight.w500,
+                fontSize: 13, color: color, fontWeight: FontWeight.w500,
               ),
             ),
           ),
@@ -228,7 +228,7 @@ class MapRelocationPopup extends StatelessWidget {
             child: Text(
               aLabel,
               style: GoogleFonts.notoSansJp(
-                fontSize: 9, color: color, letterSpacing: 0.5,
+                fontSize: 13, color: color, letterSpacing: 0.5,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -238,14 +238,14 @@ class MapRelocationPopup extends StatelessWidget {
             child: Text(
               shortJp,
               style: GoogleFonts.notoSansJp(
-                fontSize: 10, color: const Color(0xFFAAAAAA),
+                fontSize: 13, color: const Color(0xFFAAAAAA),
               ),
             ),
           ),
           Text(
             distStr,
             style: GoogleFonts.notoSansJp(
-              fontSize: 9, color: const Color(0xFF777777),
+              fontSize: 13, color: const Color(0xFF777777),
             ),
           ),
           if (canOpen) ...[
@@ -294,7 +294,7 @@ class MapRelocationPopup extends StatelessWidget {
     Widget titleWidget = Text(
       title,
       style: GoogleFonts.notoSansJp(
-        fontSize: 11,
+        fontSize: 13,
         color: const Color(0xFFE8E0D0),
         letterSpacing: 0.6,
       ),
@@ -317,7 +317,7 @@ class MapRelocationPopup extends StatelessWidget {
           Text(
             '$baselineLabel → タップ地点',
             style: GoogleFonts.notoSansJp(
-              fontSize: 9,
+              fontSize: 13,
               color: const Color(0xFF888888),
             ),
           ),
@@ -344,7 +344,7 @@ class MapRelocationPopup extends StatelessWidget {
             child: Text(
               label,
               style: GoogleFonts.notoSansJp(
-                fontSize: 11,
+                fontSize: 13,
                 color: const Color(0xFFC9A84C),
                 fontWeight: FontWeight.w600,
                 letterSpacing: 0.8,
@@ -355,7 +355,7 @@ class MapRelocationPopup extends StatelessWidget {
         Text(
           '${signNames[signFrom]}座',
           style: GoogleFonts.notoSansJp(
-            fontSize: 11,
+            fontSize: 13,
             color: const Color(0xFFAAAAAA),
           ),
         ),
@@ -371,7 +371,7 @@ class MapRelocationPopup extends StatelessWidget {
         Text(
           '${signNames[signTo]}座',
           style: GoogleFonts.notoSansJp(
-            fontSize: 11,
+            fontSize: 13,
             color: changed
                 ? const Color(0xFFFFD370)
                 : const Color(0xFFAAAAAA),
@@ -383,7 +383,7 @@ class MapRelocationPopup extends StatelessWidget {
           Text(
             '変化なし',
             style: GoogleFonts.notoSansJp(
-              fontSize: 9,
+              fontSize: 13,
               color: const Color(0xFF555555),
             ),
           ),
@@ -431,13 +431,13 @@ class MapRelocationPopup extends StatelessWidget {
             width: 50,
             child: Text(
               planetNamesJP[planet] ?? planet,
-              style: GoogleFonts.notoSansJp(fontSize: 11, color: dimColor),
+              style: GoogleFonts.notoSansJp(fontSize: 13, color: dimColor),
             ),
           ),
           Text(
             fromHouse != null ? '${fromHouse}H' : '—',
             style: GoogleFonts.notoSansJp(
-              fontSize: 11,
+              fontSize: 13,
               color: const Color(0xFFAAAAAA),
             ),
           ),
@@ -447,7 +447,7 @@ class MapRelocationPopup extends StatelessWidget {
           Text(
             toHouse != null ? '${toHouse}H' : '—',
             style: GoogleFonts.notoSansJp(
-              fontSize: 11,
+              fontSize: 13,
               color: accentColor,
               fontWeight: changed ? FontWeight.w600 : FontWeight.w400,
             ),
@@ -463,7 +463,7 @@ class MapRelocationPopup extends StatelessWidget {
               child: Text(
                 '個人天体',
                 style: GoogleFonts.notoSansJp(
-                  fontSize: 8,
+                  fontSize: 13,
                   color: const Color(0xFFFFD370),
                 ),
               ),
@@ -472,7 +472,7 @@ class MapRelocationPopup extends StatelessWidget {
             Text(
               '変化なし',
               style: GoogleFonts.notoSansJp(
-                fontSize: 9,
+                fontSize: 13,
                 color: const Color(0xFF555555),
               ),
             ),

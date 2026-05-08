@@ -221,7 +221,7 @@ class _VPPanelState extends State<VPPanel> {
         // Message
         if (_msg != null) Padding(
           padding: const EdgeInsets.only(top: 6),
-          child: Text(_msg!, style: const TextStyle(fontSize: 9, color: Color(0xFFFF6B6B)), textAlign: TextAlign.center),
+          child: Text(_msg!, style: const TextStyle(fontSize: 13, color: Color(0xFFFF6B6B)), textAlign: TextAlign.center),
         ),
       ]),
     );
@@ -238,7 +238,7 @@ class _VPPanelState extends State<VPPanel> {
           borderRadius: BorderRadius.circular(6),
         ),
         child: Center(child: Text(label, style: TextStyle(
-          fontSize: 8, letterSpacing: 0.5,
+          fontSize: 13, letterSpacing: 0.5,
           color: active ? const Color(0xFFC9A84C) : const Color(0xFF555555),
         ))),
       ),
@@ -253,10 +253,10 @@ class _VPPanelState extends State<VPPanel> {
       // Coordinate display
       Text(
         '${widget.center.latitude.toStringAsFixed(4)}, ${widget.center.longitude.toStringAsFixed(4)}',
-        style: const TextStyle(fontSize: 8, color: Color(0xFF555555), letterSpacing: 0.5),
+        style: const TextStyle(fontSize: 13, color: Color(0xFF555555), letterSpacing: 0.5),
       ),
       const SizedBox(height: 8),
-      const Text('保存済みスロット', style: TextStyle(fontSize: 8, color: Color(0xFF555555), letterSpacing: 1)),
+      const Text('保存済みスロット', style: TextStyle(fontSize: 13, color: Color(0xFF555555), letterSpacing: 1)),
       const SizedBox(height: 6),
       _buildSlotList(_vpSlots, true),
     ]);
@@ -266,7 +266,7 @@ class _VPPanelState extends State<VPPanel> {
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       _actionBtn(Icons.add_location_alt, 'この地点を登録', _saveLocation),
       const SizedBox(height: 8),
-      const Text('登録地', style: TextStyle(fontSize: 8, color: Color(0xFF555555), letterSpacing: 1)),
+      const Text('登録地', style: TextStyle(fontSize: 13, color: Color(0xFF555555), letterSpacing: 1)),
       const SizedBox(height: 6),
       _buildSlotList(_locSlots, false),
     ]);
@@ -274,7 +274,7 @@ class _VPPanelState extends State<VPPanel> {
 
   Widget _buildSlotList(List<VPSlot> slots, bool showMove) {
     if (slots.isEmpty) {
-      return const Text('（スロットなし）', style: TextStyle(fontSize: 10, color: Color(0xFF444444)));
+      return const Text('（スロットなし）', style: TextStyle(fontSize: 13, color: Color(0xFF444444)));
     }
     return Column(mainAxisSize: MainAxisSize.min, children: [
       for (int i = 0; i < slots.length; i++) _buildSlotRow(slots[i], i, slots.length, showMove),
@@ -297,10 +297,10 @@ class _VPPanelState extends State<VPPanel> {
           child: Row(children: [
             Text(slot.icon, style: const TextStyle(fontSize: 14)),
             const SizedBox(width: 6),
-            Expanded(child: Text(slot.name, style: const TextStyle(fontSize: 11, color: Color(0xFFAAAAAA)),
+            Expanded(child: Text(slot.name, style: const TextStyle(fontSize: 13, color: Color(0xFFAAAAAA)),
               maxLines: 1, overflow: TextOverflow.ellipsis)),
             if (slot.isHome)
-              const Text('HOME', style: TextStyle(fontSize: 8, color: Color(0x99F9D976), letterSpacing: 1)),
+              const Text('HOME', style: TextStyle(fontSize: 13, color: Color(0x99F9D976), letterSpacing: 1)),
             if (!slot.isHome) GestureDetector(
               onTap: () => setState(() => _activeSub = _activeSub == idx ? -1 : idx),
               child: const Padding(
@@ -345,9 +345,9 @@ class _VPPanelState extends State<VPPanel> {
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
           child: Row(children: [
-            Text(icon, style: const TextStyle(fontSize: 12)),
+            Text(icon, style: const TextStyle(fontSize: 13)),
             const SizedBox(width: 6),
-            Text(label, style: TextStyle(fontSize: 10, color: isDanger ? const Color(0xFFFF6B6B) : const Color(0xFFAAAAAA))),
+            Text(label, style: TextStyle(fontSize: 13, color: isDanger ? const Color(0xFFFF6B6B) : const Color(0xFFAAAAAA))),
           ]),
         ),
       ),
@@ -445,7 +445,7 @@ class _VPPanelState extends State<VPPanel> {
         child: Row(children: [
           Icon(icon, size: 14, color: const Color(0xFFC9A84C)),
           const SizedBox(width: 8),
-          Expanded(child: Text(label, style: const TextStyle(fontSize: 11, color: Color(0xFFAAAAAA)))),
+          Expanded(child: Text(label, style: const TextStyle(fontSize: 13, color: Color(0xFFAAAAAA)))),
         ]),
       ),
     );

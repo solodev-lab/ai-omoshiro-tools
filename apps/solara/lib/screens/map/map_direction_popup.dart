@@ -79,7 +79,7 @@ class _PopupBody extends StatelessWidget {
         Text(
           '$direction ${categoryLabel != null ? "・$categoryLabel" : ""}'.trim(),
           style: const TextStyle(
-            fontSize: 10,
+            fontSize: 13,
             color: SolaraColors.textSecondary,
             letterSpacing: 0.5,
           ),
@@ -112,7 +112,7 @@ class _PopupBody extends StatelessWidget {
           const Text(
             '主な寄与アスペクト',
             style: TextStyle(
-              fontSize: 11,
+              fontSize: 13,
               color: SolaraColors.textSecondary,
               letterSpacing: 1.0,
             ),
@@ -129,7 +129,7 @@ class _PopupBody extends StatelessWidget {
         Text(
           _guidanceText(energy),
           style: const TextStyle(
-            fontSize: 11.5,
+            fontSize: 13,
             color: SolaraColors.textPrimary,
             height: 1.7,
             letterSpacing: 0.3,
@@ -150,7 +150,7 @@ class _PopupBody extends StatelessWidget {
                 Text(
                   '2つのエネルギーについて',
                   style: TextStyle(
-                    fontSize: 11,
+                    fontSize: 13,
                     color: Color(0xCCCCCCCC),
                     letterSpacing: 0.3,
                   ),
@@ -235,7 +235,7 @@ class _EnergyBar extends StatelessWidget {
               child: Text(
                 label,
                 style: TextStyle(
-                  fontSize: 12,
+                  fontSize: 13,
                   color: color,
                   fontWeight: FontWeight.w500,
                   letterSpacing: 0.5,
@@ -273,7 +273,7 @@ class _EnergyBar extends StatelessWidget {
               child: Text(
                 value.toStringAsFixed(1),
                 style: TextStyle(
-                  fontSize: 11,
+                  fontSize: 13,
                   fontFamily: 'monospace',
                   color: color,
                 ),
@@ -311,7 +311,7 @@ class _ContribRow extends StatelessWidget {
           width: 16,
           child: Text(
             symbol,
-            style: TextStyle(fontSize: 12, color: color, height: 1.0),
+            style: TextStyle(fontSize: 13, color: color, height: 1.0),
           ),
         ),
         const SizedBox(width: 4),
@@ -319,7 +319,7 @@ class _ContribRow extends StatelessWidget {
           child: Text(
             '$p1Label × $p2Label  $aspectLabel',
             style: const TextStyle(
-              fontSize: 11,
+              fontSize: 13,
               color: SolaraColors.textPrimary,
               letterSpacing: 0.2,
             ),
@@ -328,7 +328,7 @@ class _ContribRow extends StatelessWidget {
         Text(
           mag,
           style: TextStyle(
-            fontSize: 10,
+            fontSize: 13,
             fontFamily: 'monospace',
             color: color,
           ),

@@ -139,7 +139,7 @@ class _PlanetIntroBody extends StatelessWidget {
               child: Text(
                 frameLabel,
                 style: TextStyle(
-                  fontSize: 10,
+                  fontSize: 13,
                   color: frameColor,
                   letterSpacing: 1.2,
                   fontWeight: FontWeight.w500,
@@ -167,7 +167,7 @@ class _PlanetIntroBody extends StatelessWidget {
       Text(
         frame.detail,
         style: const TextStyle(
-          fontSize: 12.5,
+          fontSize: 13,
           color: Color(0xFFE0DCD0),
           height: 1.65,
         ),
@@ -187,7 +187,7 @@ class _PlanetIntroBody extends StatelessWidget {
         Text(
           '${intro.jp} の基本',
           style: TextStyle(
-            fontSize: 11,
+            fontSize: 13,
             color: planetColor.withAlpha(220),
             letterSpacing: 1.2,
             fontWeight: FontWeight.w600,
@@ -197,7 +197,7 @@ class _PlanetIntroBody extends StatelessWidget {
         Text(
           intro.coreSummary,
           style: TextStyle(
-            fontSize: 12,
+            fontSize: 13,
             color: planetColor,
             fontWeight: FontWeight.w500,
             height: 1.5,
@@ -207,7 +207,7 @@ class _PlanetIntroBody extends StatelessWidget {
         Text(
           intro.coreDetail,
           style: const TextStyle(
-            fontSize: 11.5,
+            fontSize: 13,
             color: Color(0xFFCCC5B5),
             height: 1.6,
           ),
@@ -228,7 +228,7 @@ class _PlanetIntroBody extends StatelessWidget {
       child: const Text(
         'この惑星の解説はまだ準備中です。',
         style: TextStyle(
-          fontSize: 12,
+          fontSize: 13,
           color: Color(0xFFAAAAAA),
           height: 1.6,
           fontStyle: FontStyle.italic,

@@ -313,7 +313,7 @@ class _DayTabBar extends StatelessWidget {
                   child: Text(
                     angleFilterShortMeaning[angleFilter] ?? '',
                     style: const TextStyle(
-                      fontSize: 10,
+                      fontSize: 13,
                       color: Color(0xFF888888),
                       height: 1.5,
                       letterSpacing: 0.3,
@@ -375,7 +375,7 @@ class _DayTabBar extends StatelessWidget {
                 child: Text(
                   tipsData.headline,
                   style: TextStyle(
-                    fontSize: 10,
+                    fontSize: 13,
                     color: color,
                     fontWeight: FontWeight.w600,
                     letterSpacing: 0.4,
@@ -392,7 +392,7 @@ class _DayTabBar extends StatelessWidget {
                 child: Text(
                   subLabel,
                   style: TextStyle(
-                    fontSize: 9,
+                    fontSize: 13,
                     color: color,
                     letterSpacing: 0.4,
                   ),
@@ -411,7 +411,7 @@ class _DayTabBar extends StatelessWidget {
                 Text(
                   'おすすめ行動の例（参考）',
                   style: TextStyle(
-                    fontSize: 9,
+                    fontSize: 13,
                     color: color.withAlpha(200),
                     letterSpacing: 0.5,
                     fontWeight: FontWeight.w600,
@@ -441,12 +441,12 @@ class _DayTabBar extends StatelessWidget {
                 children: [
                   const Text('• ',
                       style: TextStyle(
-                          fontSize: 10, color: Color(0xFF888888))),
+                          fontSize: 13, color: Color(0xFF888888))),
                   Expanded(
                     child: Text(
                       t,
                       style: const TextStyle(
-                        fontSize: 10,
+                        fontSize: 13,
                         color: Color(0xFFAAAAAA),
                         height: 1.5,
                         letterSpacing: 0.2,
@@ -461,7 +461,7 @@ class _DayTabBar extends StatelessWidget {
           Text(
             '※ 他の行動も、この例を参考に自由に考えてみてください',
             style: TextStyle(
-              fontSize: 9,
+              fontSize: 13,
               color: const Color(0xFF777777),
               fontStyle: FontStyle.italic,
               height: 1.4,
@@ -494,7 +494,7 @@ class _DayTabBar extends StatelessWidget {
         child: Text(
           label,
           style: TextStyle(
-            fontSize: 12,
+            fontSize: 13,
             color: isActive
                 ? SolaraColors.solaraGoldLight
                 : const Color(0xFF888888),
@@ -516,7 +516,7 @@ class _DayTabBar extends StatelessWidget {
         iconEnabledColor: SolaraColors.solaraGoldLight,
         iconSize: 16,
         style: const TextStyle(
-          fontSize: 11,
+          fontSize: 13,
           color: SolaraColors.solaraGoldLight,
           letterSpacing: 0.5,
         ),
@@ -527,7 +527,7 @@ class _DayTabBar extends StatelessWidget {
               child: Text(
                 angleFilterLabels[f] ?? f.name,
                 style: const TextStyle(
-                  fontSize: 11,
+                  fontSize: 13,
                   color: Color(0xFFE8E0D0),
                 ),
               ),
@@ -557,7 +557,7 @@ class _DayTabBar extends StatelessWidget {
         iconEnabledColor: SolaraColors.solaraGoldLight,
         iconSize: 16,
         style: const TextStyle(
-          fontSize: 11,
+          fontSize: 13,
           color: SolaraColors.solaraGoldLight,
           letterSpacing: 0.5,
         ),
@@ -568,7 +568,7 @@ class _DayTabBar extends StatelessWidget {
               child: Text(
                 e.value,
                 style: const TextStyle(
-                  fontSize: 11,
+                  fontSize: 13,
                   color: Color(0xFFE8E0D0),
                 ),
               ),
@@ -671,7 +671,7 @@ class _Header extends StatelessWidget {
                 Text(
                   tagline,
                   style: const TextStyle(
-                    fontSize: 11,
+                    fontSize: 13,
                     color: SolaraColors.textSecondary,
                     height: 1.4,
                     letterSpacing: 0.3,
@@ -752,7 +752,7 @@ class _Header extends StatelessWidget {
             iconEnabledColor: const Color(0xFFC9A84C),
             iconSize: 14,
             style: const TextStyle(
-              fontSize: 11,
+              fontSize: 13,
               color: Color(0xFFE8E0D0),
             ),
             items: [
@@ -761,11 +761,11 @@ class _Header extends StatelessWidget {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Text('🌟', style: TextStyle(fontSize: 11)),
+                    const Text('🌟', style: TextStyle(fontSize: 13)),
                     const SizedBox(width: 4),
                     Text(birthName,
                         style: const TextStyle(
-                          fontSize: 11,
+                          fontSize: 13,
                           color: Color(0xFFE8E0D0),
                         )),
                   ],
@@ -778,14 +778,14 @@ class _Header extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(vpSlots[i].icon,
-                          style: const TextStyle(fontSize: 12)),
+                          style: const TextStyle(fontSize: 13)),
                       const SizedBox(width: 4),
                       Text(
                         vpSlots[i].name.isEmpty
                             ? 'VP${i + 1}'
                             : vpSlots[i].name,
                         style: const TextStyle(
-                          fontSize: 11,
+                          fontSize: 13,
                           color: Color(0xFFE8E0D0),
                         ),
                       ),
@@ -824,7 +824,7 @@ class _LoadingBody extends StatelessWidget {
           Text(
             '惑星の動きを読み取っています',
             style: TextStyle(
-              fontSize: 11,
+              fontSize: 13,
               color: SolaraColors.textSecondary,
               letterSpacing: 0.5,
             ),
@@ -849,7 +849,7 @@ class _FailedBody extends StatelessWidget {
           const Text(
             'データの取得に失敗しました',
             style: TextStyle(
-              fontSize: 12,
+              fontSize: 13,
               color: SolaraColors.textSecondary,
             ),
           ),
@@ -865,7 +865,7 @@ class _FailedBody extends StatelessWidget {
               child: const Text(
                 'もう一度',
                 style: TextStyle(
-                  fontSize: 11,
+                  fontSize: 13,
                   color: SolaraColors.solaraGoldLight,
                   letterSpacing: 0.5,
                 ),
@@ -911,7 +911,7 @@ class _TimelineBody extends StatelessWidget {
             '今日は静かな日。\n特別な動きは見えません。',
             textAlign: TextAlign.center,
             style: TextStyle(
-              fontSize: 12,
+              fontSize: 13,
               color: SolaraColors.textSecondary,
               height: 1.7,
               letterSpacing: 0.5,
@@ -929,7 +929,7 @@ class _TimelineBody extends StatelessWidget {
             'このフィルタ条件に\n該当するイベントはありません。\nフィルタを変更してください。',
             textAlign: TextAlign.center,
             style: TextStyle(
-              fontSize: 12,
+              fontSize: 13,
               color: SolaraColors.textSecondary,
               height: 1.7,
               letterSpacing: 0.5,
@@ -1050,7 +1050,7 @@ class _TimelineRow extends StatelessWidget {
                     Text(
                       _angleHint(event.angle, compassLabel),
                       style: const TextStyle(
-                        fontSize: 10,
+                        fontSize: 13,
                         color: SolaraColors.textSecondary,
                         height: 1.4,
                       ),
@@ -1183,7 +1183,7 @@ void _showCategoryTipsIntent(BuildContext context, String categoryKey) {
           entry.body,
           style: const TextStyle(
             color: Color(0xFFE8E0D0),
-            fontSize: 12,
+            fontSize: 13,
             height: 1.7,
           ),
         ),
@@ -1222,7 +1222,7 @@ void _showPlanetAngleDetail({
           Text(
             base,
             style: const TextStyle(
-              fontSize: 12,
+              fontSize: 13,
               color: Color(0xFFE8E0D0),
               height: 1.7,
               letterSpacing: 0.2,
@@ -1241,7 +1241,7 @@ void _showPlanetAngleDetail({
             child: Text(
               appendix,
               style: const TextStyle(
-                fontSize: 11,
+                fontSize: 13,
                 color: Color(0xFFCCCCCC),
                 height: 1.7,
                 letterSpacing: 0.2,

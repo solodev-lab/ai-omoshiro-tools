@@ -258,7 +258,7 @@ class StatusBadge extends StatelessWidget {
           child: CircularProgressIndicator(strokeWidth: 1.5, color: Color(0xFFC9A84C)),
         ),
         const SizedBox(width: 8),
-        Text(label, style: const TextStyle(fontSize: 10, color: Color(0xFFC9A84C))),
+        Text(label, style: const TextStyle(fontSize: 13, color: Color(0xFFC9A84C))),
       ]),
     );
   }
@@ -310,7 +310,7 @@ class FortunePullTab extends StatelessWidget {
           ),
         ),
         child: const Text('▲ 運勢方位',
-          style: TextStyle(fontSize: 10, color: Color(0xFF888888), letterSpacing: 0.5)),
+          style: TextStyle(fontSize: 13, color: Color(0xFF888888), letterSpacing: 0.5)),
       ),
     );
   }

@@ -241,7 +241,7 @@ class LocationMarkerPopup extends StatelessWidget {
                     Text(
                       '出生地',
                       style: GoogleFonts.notoSansJp(
-                        fontSize: 9,
+                        fontSize: 13,
                         color: accent,
                         letterSpacing: 1.6,
                         fontWeight: FontWeight.w600,
@@ -260,7 +260,7 @@ class LocationMarkerPopup extends StatelessWidget {
                   Text(
                     _fmtCoord(point.latitude, point.longitude),
                     style: const TextStyle(
-                      fontSize: 11,
+                      fontSize: 13,
                       color: Color(0xFF888888),
                       fontFamily: 'monospace',
                       letterSpacing: 0.2,

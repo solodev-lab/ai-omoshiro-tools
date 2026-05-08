@@ -50,7 +50,7 @@ class AstroCartoBanner extends StatelessWidget {
           const Text(
             'ASTRO*CARTO*GRAPHY',
             style: TextStyle(
-              fontSize: 11,
+              fontSize: 13,
               color: Color(0xFFC9A84C),
               letterSpacing: 2.0,
               fontWeight: FontWeight.w600,
@@ -126,7 +126,7 @@ class AstroCartoFramePills extends StatelessWidget {
                     child: Text(
                       e.shortLabel,
                       style: TextStyle(
-                        fontSize: 10,
+                        fontSize: 13,
                         color: on ? accent : const Color(0xFF888888),
                         letterSpacing: 0.3,
                         fontWeight: on ? FontWeight.w600 : FontWeight.w400,
@@ -234,7 +234,7 @@ class AstroCartoCategoryPills extends StatelessWidget {
                     child: Text(
                       categoryLabels[e.key] ?? e.key,
                       style: TextStyle(
-                        fontSize: 11,
+                        fontSize: 13,
                         color: active ? e.value : const Color(0xFF888888),
                         letterSpacing: 0.4,
                         fontWeight: active ? FontWeight.w600 : FontWeight.w400,
@@ -331,7 +331,7 @@ class AstroZenithPopup extends StatelessWidget {
                 child: Text(
                   frameLabel,
                   style: TextStyle(
-                    fontSize: 10,
+                    fontSize: 13,
                     color: frameStyle.accent,
                     letterSpacing: 0.6,
                     fontWeight: FontWeight.w600,
@@ -367,7 +367,7 @@ class AstroZenithPopup extends StatelessWidget {
                       Text(
                         msg.summary,
                         style: const TextStyle(
-                          fontSize: 12,
+                          fontSize: 13,
                           color: Color(0xFFC9A84C),
                           letterSpacing: 0.3,
                           height: 1.3,
@@ -413,7 +413,7 @@ class AstroZenithPopup extends StatelessWidget {
                   child: Text(
                     tag,
                     style: TextStyle(
-                      fontSize: 10,
+                      fontSize: 13,
                       color: meta.color,
                       letterSpacing: 0.3,
                     ),
@@ -428,7 +428,7 @@ class AstroZenithPopup extends StatelessWidget {
                   child: Text(
                     '${zenith.latitude.toStringAsFixed(1)}°, ${zenith.longitude.toStringAsFixed(1)}°',
                     style: const TextStyle(
-                      fontSize: 10,
+                      fontSize: 13,
                       color: Color(0xFF888888),
                       fontFamily: 'monospace',
                       letterSpacing: 0.2,

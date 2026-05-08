@@ -204,7 +204,7 @@ class _MapLineNarrativeSheetState extends State<MapLineNarrativeSheet> {
               child: Text(
                 _angle,
                 style: GoogleFonts.notoSansJp(
-                  fontSize: 10,
+                  fontSize: 13,
                   color: _planetColor,
                   letterSpacing: 0.6,
                   fontWeight: FontWeight.w600,
@@ -221,7 +221,7 @@ class _MapLineNarrativeSheetState extends State<MapLineNarrativeSheet> {
               child: Text(
                 widget.frame == 'transit' ? 'Transit' : 'Natal',
                 style: GoogleFonts.notoSansJp(
-                  fontSize: 10,
+                  fontSize: 13,
                   color: const Color(0xFFCCCCCC),
                   letterSpacing: 0.5,
                 ),
@@ -230,7 +230,7 @@ class _MapLineNarrativeSheetState extends State<MapLineNarrativeSheet> {
             Text(
               distStr,
               style: GoogleFonts.notoSansJp(
-                fontSize: 11,
+                fontSize: 13,
                 color: const Color(0xFF888888),
               ),
             ),
@@ -259,7 +259,7 @@ class _MapLineNarrativeSheetState extends State<MapLineNarrativeSheet> {
             Text(
               summary,
               style: GoogleFonts.notoSansJp(
-                fontSize: 11,
+                fontSize: 13,
                 color: const Color(0xFFAAAAAA),
                 height: 1.5,
                 letterSpacing: 0.3,
@@ -271,7 +271,7 @@ class _MapLineNarrativeSheetState extends State<MapLineNarrativeSheet> {
             Text(
               detail,
               style: GoogleFonts.notoSansJp(
-                fontSize: 12,
+                fontSize: 13,
                 color: const Color(0xFFE8E0D0),
                 height: 1.65,
                 letterSpacing: 0.2,
@@ -338,7 +338,7 @@ class _MapLineNarrativeSheetState extends State<MapLineNarrativeSheet> {
                 ? 'Could not load AI narrative. Static reading is shown above.'
                 : 'AI解釈を取得できませんでした。上の静的解説が表示されています。',
             style: GoogleFonts.notoSansJp(
-              fontSize: 10,
+              fontSize: 13,
               color: const Color(0xFF888888),
               height: 1.4,
             ),
@@ -421,7 +421,7 @@ class _MapLineNarrativeSheetState extends State<MapLineNarrativeSheet> {
               Text(
                 label,
                 style: GoogleFonts.notoSansJp(
-                  fontSize: 11,
+                  fontSize: 13,
                   color: color,
                   fontWeight: FontWeight.w600,
                   letterSpacing: 1.0,
@@ -433,7 +433,7 @@ class _MapLineNarrativeSheetState extends State<MapLineNarrativeSheet> {
           Text(
             body,
             style: GoogleFonts.notoSansJp(
-              fontSize: 12,
+              fontSize: 13,
               color: SolaraColors.textPrimary,
               height: 1.6,
               letterSpacing: 0.2,

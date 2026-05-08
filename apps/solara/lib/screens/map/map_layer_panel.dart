@@ -69,7 +69,7 @@ class LayerPanel extends StatelessWidget {
   // ── DISPLAY ビュー: 表示系のみ ──
   List<Widget> _displaySections(BuildContext context) {
     return [
-      const Text('DISPLAY', style: TextStyle(fontSize: 9, color: Color(0xFF666666), letterSpacing: 1.5)),
+      const Text('DISPLAY', style: TextStyle(fontSize: 13, color: Color(0xFF666666), letterSpacing: 1.5)),
       const SizedBox(height: 10),
       _section('ASTRO', [
         _toggleWithGlossary('sectors', '16方位', 'sector_score_16',
@@ -94,7 +94,7 @@ class LayerPanel extends StatelessWidget {
         astroLayers['aspectProgressed'] == true ||
         astroLayers['aspectSolarArc'] == true;
     return [
-      const Text('ASTRO', style: TextStyle(fontSize: 9, color: Color(0xFF666666), letterSpacing: 1.5)),
+      const Text('ASTRO', style: TextStyle(fontSize: 13, color: Color(0xFF666666), letterSpacing: 1.5)),
       const SizedBox(height: 10),
       // ── 線レイヤー ──
       _section('LINES', [
@@ -146,7 +146,7 @@ class LayerPanel extends StatelessWidget {
                 color: active ? e.value.withAlpha(26) : Colors.transparent,
               ),
               child: Text(categoryLabels[e.key] ?? e.key,
-                style: TextStyle(fontSize: 10, color: active ? e.value : const Color(0xFF555555), letterSpacing: 0.3)),
+                style: TextStyle(fontSize: 13, color: active ? e.value : const Color(0xFF555555), letterSpacing: 0.3)),
             ),
           );
         }),
@@ -174,12 +174,12 @@ class LayerPanel extends StatelessWidget {
         child: const Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text('☯', style: TextStyle(fontSize: 11, color: Color(0xFFC9A84C))),
+            Text('☯', style: TextStyle(fontSize: 13, color: Color(0xFFC9A84C))),
             SizedBox(width: 5),
             Flexible(
               child: Text('設計思想',
                 style: TextStyle(
-                  fontSize: 10,
+                  fontSize: 13,
                   color: Color(0xFFC9A84C),
                   letterSpacing: 0.5,
                 ),
@@ -201,7 +201,7 @@ class LayerPanel extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: const TextStyle(fontSize: 8, color: Color(0xFF555555), letterSpacing: 1)),
+          Text(label, style: const TextStyle(fontSize: 13, color: Color(0xFF555555), letterSpacing: 1)),
           const SizedBox(height: 6),
           ...children,
         ],
@@ -228,7 +228,7 @@ class LayerPanel extends StatelessWidget {
           const SizedBox(width: 8),
           Flexible(
             child: Text(label,
-              style: TextStyle(fontSize: 10, color: active ? const Color(0xFFBBBBBB) : const Color(0xFF666666)),
+              style: TextStyle(fontSize: 13, color: active ? const Color(0xFFBBBBBB) : const Color(0xFF666666)),
               overflow: TextOverflow.ellipsis),
           ),
         ]),
@@ -250,10 +250,10 @@ class LayerPanel extends StatelessWidget {
               border: Border.all(color: on ? color : const Color(0x33FFFFFF), width: 1.5),
               color: on ? color.withAlpha(26) : Colors.transparent,
             ),
-            child: on ? Center(child: Text('✓', style: TextStyle(fontSize: 9, color: color))) : null,
+            child: on ? Center(child: Text('✓', style: TextStyle(fontSize: 13, color: color))) : null,
           ),
           const SizedBox(width: 8),
-          Flexible(child: Text(label, style: TextStyle(fontSize: 11, color: on ? const Color(0xFFBBBBBB) : const Color(0xFF666666)), overflow: TextOverflow.ellipsis)),
+          Flexible(child: Text(label, style: TextStyle(fontSize: 13, color: on ? const Color(0xFFBBBBBB) : const Color(0xFF666666)), overflow: TextOverflow.ellipsis)),
         ]),
       ),
     );
@@ -283,7 +283,7 @@ class LayerPanel extends StatelessWidget {
               border: Border.all(color: on ? color : const Color(0x33FFFFFF), width: 1.5),
               color: on ? color.withAlpha(26) : Colors.transparent,
             ),
-            child: on ? Center(child: Text('✓', style: TextStyle(fontSize: 9, color: color))) : null,
+            child: on ? Center(child: Text('✓', style: TextStyle(fontSize: 13, color: color))) : null,
           ),
         ),
         const SizedBox(width: 8),
@@ -291,7 +291,7 @@ class LayerPanel extends StatelessWidget {
           child: GestureDetector(
             onTap: () => onToggle(key),
             child: Text(label,
-              style: TextStyle(fontSize: 11, color: on ? const Color(0xFFBBBBBB) : const Color(0xFF666666)),
+              style: TextStyle(fontSize: 13, color: on ? const Color(0xFFBBBBBB) : const Color(0xFF666666)),
               overflow: TextOverflow.ellipsis),
           ),
         ),

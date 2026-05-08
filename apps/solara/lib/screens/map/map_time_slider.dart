@@ -231,7 +231,7 @@ class _MapTimeSliderState extends State<MapTimeSlider> {
               isLive ? '● LIVE' : 'LIVE',
               textAlign: TextAlign.center,
               style: TextStyle(
-                fontSize: 9,
+                fontSize: 13,
                 color: isLive ? const Color(0xFFFF8E5C) : const Color(0x99FF8E5C),
                 fontWeight: FontWeight.w700,
                 letterSpacing: 0.4,

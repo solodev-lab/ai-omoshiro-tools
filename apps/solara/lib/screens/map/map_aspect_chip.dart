@@ -72,13 +72,13 @@ class MapAspectChip extends StatelessWidget {
           children: [
             Text(
               symbol,
-              style: TextStyle(fontSize: 11, color: color, height: 1.0),
+              style: TextStyle(fontSize: 13, color: color, height: 1.0),
             ),
             const SizedBox(width: 4),
             Text(
               'natal $natalSym$natalJP',
               style: TextStyle(
-                fontSize: 10,
+                fontSize: 13,
                 color: color,
                 letterSpacing: 0.3,
                 height: 1.0,
@@ -88,7 +88,7 @@ class MapAspectChip extends StatelessWidget {
             Text(
               '${aspect.orb.toStringAsFixed(1)}°',
               style: TextStyle(
-                fontSize: 9,
+                fontSize: 13,
                 color: color.withValues(alpha: 0.7),
                 fontFamily: 'monospace',
                 height: 1.0,
@@ -132,7 +132,7 @@ class MapAspectChip extends StatelessWidget {
                     fontWeight: FontWeight.w600)),
             const SizedBox(width: 4),
             const Text('(T)',
-                style: TextStyle(fontSize: 10, color: Color(0xFF888888))),
+                style: TextStyle(fontSize: 13, color: Color(0xFF888888))),
             const SizedBox(width: 10),
             Text('×',
                 style: TextStyle(
@@ -148,7 +148,7 @@ class MapAspectChip extends StatelessWidget {
                     fontWeight: FontWeight.w600)),
             const SizedBox(width: 4),
             const Text('(N)',
-                style: TextStyle(fontSize: 10, color: Color(0xFF888888))),
+                style: TextStyle(fontSize: 13, color: Color(0xFF888888))),
           ]),
           const SizedBox(height: 14),
           Container(
@@ -166,7 +166,7 @@ class MapAspectChip extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Text('オーブ ${aspect.orb.toStringAsFixed(2)}°',
-              style: const TextStyle(fontSize: 12, color: Color(0xFF888888))),
+              style: const TextStyle(fontSize: 13, color: Color(0xFF888888))),
           const SizedBox(height: 18),
           _descSection('性質', desc['summary'] ?? '', color),
           const SizedBox(height: 14),
@@ -186,7 +186,7 @@ class MapAspectChip extends StatelessWidget {
       children: [
         Text(label,
             style: TextStyle(
-                fontSize: 12,
+                fontSize: 13,
                 color: accent.withValues(alpha: 0.85),
                 letterSpacing: 2.0,
                 fontWeight: FontWeight.w600)),

@@ -79,7 +79,7 @@ class FortuneFilterLabel extends StatelessWidget {
               constraints: BoxConstraints(maxWidth: leftLabelMax),
               child: Text(
                 '${srcLabels[activeSrc] ?? '合計'} / ${categoryLabels[activeCategory] ?? '総合'}',
-                style: const TextStyle(fontSize: 10, color: Color(0xFFC9A84C), letterSpacing: 0.5, fontWeight: FontWeight.w600),
+                style: const TextStyle(fontSize: 13, color: Color(0xFFC9A84C), letterSpacing: 0.5, fontWeight: FontWeight.w600),
                 overflow: TextOverflow.ellipsis,
                 maxLines: 1,
               ),
@@ -95,7 +95,7 @@ class FortuneFilterLabel extends StatelessWidget {
                     child: Row(mainAxisSize: MainAxisSize.min, children: [
                       SizedBox(width: dirLabelW, child: Text(
                         dir16JP[e.key] ?? e.key,
-                        style: const TextStyle(fontSize: 10, color: Color(0xFF888888), fontWeight: FontWeight.w500),
+                        style: const TextStyle(fontSize: 13, color: Color(0xFF888888), fontWeight: FontWeight.w500),
                         textAlign: TextAlign.right,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -123,7 +123,7 @@ class FortuneFilterLabel extends StatelessWidget {
                       const SizedBox(width: 4),
                       SizedBox(width: valueLabelW, child: Text(
                         e.value.toStringAsFixed(1),
-                        style: const TextStyle(fontSize: 8, fontFamily: 'monospace', color: Color(0xFFF6BD60), fontWeight: FontWeight.w600),
+                        style: const TextStyle(fontSize: 13, fontFamily: 'monospace', color: Color(0xFFF6BD60), fontWeight: FontWeight.w600),
                         textAlign: TextAlign.right,
                       )),
                     ]),
@@ -250,7 +250,7 @@ class FortuneSheet extends StatelessWidget {
                 border: Border(bottom: BorderSide(
                   color: active ? const Color(0xFFC9A84C) : Colors.transparent, width: 2)),
               ),
-              child: Text(s.$2, style: TextStyle(fontSize: 11,
+              child: Text(s.$2, style: TextStyle(fontSize: 13,
                 color: active ? const Color(0xFFC9A84C) : const Color(0xFF666666))),
             ),
           );
@@ -278,7 +278,7 @@ class FortuneSheet extends StatelessWidget {
                   border: Border(bottom: BorderSide(
                     color: active ? const Color(0xFFC9A84C) : Colors.transparent, width: 2)),
                 ),
-                child: Text(categoryLabels[e.key] ?? e.key, style: TextStyle(fontSize: 10,
+                child: Text(categoryLabels[e.key] ?? e.key, style: TextStyle(fontSize: 13,
                   color: active ? const Color(0xFFC9A84C) : const Color(0xFF666666))),
               ),
             );
@@ -330,7 +330,7 @@ class FortuneSheet extends StatelessWidget {
         ),
         child: Row(children: [
           SizedBox(width: 36, child: Text(dir16JP[dir] ?? dir,
-            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFFB49774)))),
+            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFFB49774)))),
           Expanded(
             child: Container(
               height: 14, margin: const EdgeInsets.symmetric(horizontal: 10),
@@ -359,7 +359,7 @@ class FortuneSheet extends StatelessWidget {
             ),
           ),
           SizedBox(width: 48, child: Text(total.toStringAsFixed(1),
-            style: const TextStyle(fontSize: 11, fontFamily: 'monospace', color: Color(0xFFF6BD60)),
+            style: const TextStyle(fontSize: 13, fontFamily: 'monospace', color: Color(0xFFF6BD60)),
             textAlign: TextAlign.right)),
           if (canShowDetail)
             const Padding(

@@ -305,7 +305,7 @@ class AstroZenithMarker extends StatelessWidget {
           child: Text(
             labelText,
             style: TextStyle(
-              fontSize: 7.5,
+              fontSize: 13,
               color: labelColor,
               letterSpacing: 1.2,
               fontWeight: FontWeight.w500,

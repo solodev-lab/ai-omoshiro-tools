@@ -1808,7 +1808,7 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
           GestureDetector(
             onTap: () => widget.onNavigateToSanctuary?.call(),
             child: const Text('設定する →',
-              style: TextStyle(fontSize: 12, color: Color(0xFFF9D976),
+              style: TextStyle(fontSize: 13, color: Color(0xFFF9D976),
                 decoration: TextDecoration.underline)),
           ),
         ]),

@@ -162,7 +162,7 @@ class SearchResultList extends StatelessWidget {
             const Icon(Icons.search, size: 14, color: Color(0xFFC9A84C)),
             const SizedBox(width: 5),
             Text('検索結果 (${hits.length})',
-                style: const TextStyle(fontSize: 11, color: Color(0xFFC9A84C), letterSpacing: 1)),
+                style: const TextStyle(fontSize: 13, color: Color(0xFFC9A84C), letterSpacing: 1)),
             const Spacer(),
             // ── VIEWPOINT 選択 dropdown (距離・方位・スコアの起点を切替) ──
             if (vpSlots != null && onVpChanged != null)
@@ -224,7 +224,7 @@ class SearchResultList extends StatelessWidget {
             child: Text(
               '$index',
               style: const TextStyle(
-                fontSize: 11,
+                fontSize: 13,
                 color: Color(0xFF0C0C16),
                 fontWeight: FontWeight.bold,
                 height: 1.0,
@@ -237,26 +237,26 @@ class SearchResultList extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(short,
-                style: const TextStyle(fontSize: 12, color: Color(0xFFE8E0D0), fontWeight: FontWeight.w600),
+                style: const TextStyle(fontSize: 13, color: Color(0xFFE8E0D0), fontWeight: FontWeight.w600),
                 maxLines: 1, overflow: TextOverflow.ellipsis),
               const SizedBox(height: 2),
               Row(children: [
                 Text(kmStr,
                     style: const TextStyle(
-                      fontSize: 9, color: Color(0xFFC9A84C),
+                      fontSize: 13, color: Color(0xFFC9A84C),
                       fontWeight: FontWeight.w600,
                     )),
                 const SizedBox(width: 8),
                 if (h.bestDir != null) ...[
                   Text('${dir16JP[h.bestDir!]}方位',
-                      style: const TextStyle(fontSize: 9, color: Color(0xFF999999))),
+                      style: const TextStyle(fontSize: 13, color: Color(0xFF999999))),
                   const SizedBox(width: 8),
                 ],
                 Text('${categoryLabels[activeCategory] ?? '総合'} ${h.bestScore.toStringAsFixed(1)}',
-                    style: TextStyle(fontSize: 9, color: catColor)),
+                    style: TextStyle(fontSize: 13, color: catColor)),
                 const SizedBox(width: 8),
                 if (fortuneIcon != null) Text(fortuneIcon,
-                    style: const TextStyle(fontSize: 10)),
+                    style: const TextStyle(fontSize: 13)),
               ]),
             ],
           )),
@@ -297,7 +297,7 @@ class SearchResultList extends StatelessWidget {
         iconEnabledColor: const Color(0xFFC9A84C),
         iconSize: 16,
         style: const TextStyle(
-          fontSize: 11,
+          fontSize: 13,
           color: Color(0xFFE8E0D0),
         ),
         items: [
@@ -311,7 +311,7 @@ class SearchResultList extends StatelessWidget {
                 SizedBox(width: 4),
                 Text('地図中心',
                     style: TextStyle(
-                      fontSize: 11,
+                      fontSize: 13,
                       color: Color(0xFFE8E0D0),
                     )),
               ],
@@ -324,12 +324,12 @@ class SearchResultList extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(slots[i].icon,
-                      style: const TextStyle(fontSize: 12)),
+                      style: const TextStyle(fontSize: 13)),
                   const SizedBox(width: 4),
                   Text(
                     slots[i].name.isEmpty ? 'VP${i + 1}' : slots[i].name,
                     style: const TextStyle(
-                      fontSize: 11,
+                      fontSize: 13,
                       color: Color(0xFFE8E0D0),
                     ),
                   ),
@@ -434,7 +434,7 @@ class SearchFocusPopup extends StatelessWidget {
             padding: const EdgeInsets.only(left: 22),
             child: Text(
               addressLine,
-              style: const TextStyle(fontSize: 10, color: Color(0xFF888888), height: 1.3),
+              style: const TextStyle(fontSize: 13, color: Color(0xFF888888), height: 1.3),
               maxLines: 2, overflow: TextOverflow.ellipsis,
             ),
           ),
@@ -442,25 +442,25 @@ class SearchFocusPopup extends StatelessWidget {
         const SizedBox(height: 10),
         Row(children: [
           Text('$dirJp方位',
-              style: const TextStyle(fontSize: 11, color: Color(0xFFC9A84C), letterSpacing: 1)),
+              style: const TextStyle(fontSize: 13, color: Color(0xFFC9A84C), letterSpacing: 1)),
           const SizedBox(width: 10),
           Text('${km.toStringAsFixed(km < 100 ? 1 : 0)} km',
-              style: const TextStyle(fontSize: 10, color: Color(0xFF888888))),
+              style: const TextStyle(fontSize: 13, color: Color(0xFF888888))),
           const Spacer(),
           Text('${categoryLabels[activeCategory] ?? '総合'} ${focus.bestScore.toStringAsFixed(1)}',
-              style: const TextStyle(fontSize: 10, color: Color(0xFFE8E0D0))),
+              style: const TextStyle(fontSize: 13, color: Color(0xFFE8E0D0))),
         ]),
         const SizedBox(height: 8),
         if (top3.isNotEmpty) ...[
           Row(children: [
             const Text(
               'カテゴリ別内訳 (参考)',
-              style: TextStyle(fontSize: 9, color: Color(0xFF888888), letterSpacing: 0.5),
+              style: TextStyle(fontSize: 13, color: Color(0xFF888888), letterSpacing: 0.5),
             ),
             const SizedBox(width: 6),
             const Text(
               '※ 総合は別計算',
-              style: TextStyle(fontSize: 9, color: Color(0xFF666666)),
+              style: TextStyle(fontSize: 13, color: Color(0xFF666666)),
             ),
             const SizedBox(width: 4),
             GestureDetector(
@@ -515,7 +515,7 @@ void _showScoreInfo(BuildContext context) {
           '【なぜ合計が一致しないか】\n'
           '総合は単純な足し算ではなく、エネルギーの方向性を考慮した加重計算です。\n'
           'カテゴリ別内訳の合算 ≠ 総合 となるのは、計算方法が異なるためです。',
-          style: TextStyle(color: Color(0xFFE8E0D0), fontSize: 12, height: 1.6),
+          style: TextStyle(color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
         ),
       ],
     ),
@@ -539,9 +539,9 @@ class _CatChip extends StatelessWidget {
         border: Border.all(color: color.withValues(alpha: 0.4)),
       ),
       child: Row(mainAxisSize: MainAxisSize.min, children: [
-        Text(label, style: TextStyle(fontSize: 10, color: color)),
+        Text(label, style: TextStyle(fontSize: 13, color: color)),
         const SizedBox(width: 4),
-        Text(score.toStringAsFixed(1), style: const TextStyle(fontSize: 9, color: Color(0xFF999999))),
+        Text(score.toStringAsFixed(1), style: const TextStyle(fontSize: 13, color: Color(0xFF999999))),
       ]),
     );
   }
@@ -565,7 +565,7 @@ class _ActionTile extends StatelessWidget {
         ),
         child: Center(
           child: Text(label,
-              style: const TextStyle(fontSize: 10, color: Color(0xFFC9A84C), letterSpacing: 0.5)),
+              style: const TextStyle(fontSize: 13, color: Color(0xFFC9A84C), letterSpacing: 0.5)),
         ),
       ),
     );
