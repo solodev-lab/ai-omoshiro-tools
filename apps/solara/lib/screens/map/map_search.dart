@@ -368,6 +368,11 @@ class SearchResultList extends StatelessWidget {
               ],
             ),
           ),
+          // 2026-05-08: スロットラベルを住所→カテゴリ名に統一。
+          // - isHome=true VPSlot → 「現住所」(固定)
+          // - その他 VPSlot → slot.name (空なら VP{n})
+          // 長 VIEWPOINT 名は ellipsis で truncate (親 SingleChildScrollView
+          // が overflow を吸収する前提でも、dropdown 展開時の見やすさのため)
           for (int i = 0; i < slots.length; i++)
             DropdownMenuItem<int>(
               value: i,
@@ -378,9 +383,15 @@ class SearchResultList extends StatelessWidget {
                       style: const TextStyle(fontSize: 13)),
                   const SizedBox(width: 4),
                   Text(
-                    slots[i].name.isEmpty ? 'VP${i + 1}' : slots[i].name,
+                    slots[i].isHome
+                        ? '現住所'
+                        : (slots[i].name.isEmpty
+                            ? 'VP${i + 1}'
+                            : slots[i].name),
                     style: const TextStyle(
                         fontSize: 13, color: Color(0xFFE8E0D0)),
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
                   ),
                 ],
               ),
@@ -475,9 +486,24 @@ class SearchFocusPopup extends StatelessWidget {
         Row(children: [
           const Icon(Icons.place, size: 16, color: Color(0xFFC9A84C)),
           const SizedBox(width: 6),
-          Expanded(child: Text(short,
-            style: const TextStyle(fontSize: 13, color: Color(0xFFE8E0D0), fontWeight: FontWeight.w600),
-            maxLines: 1, overflow: TextOverflow.ellipsis)),
+          // 2026-05-08: 場所名が長いと "..." で truncate されていたのを、
+          // 横スクロール (SingleChildScrollView, scrollDirection: horizontal)
+          // で全文確認できるように変更。softWrap: false で 1 行固定。
+          Expanded(
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Text(
+                short,
+                style: const TextStyle(
+                    fontSize: 13,
+                    color: Color(0xFFE8E0D0),
+                    fontWeight: FontWeight.w600),
+                softWrap: false,
+                maxLines: 1,
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
           GestureDetector(
             onTap: onClose,
             child: const Icon(Icons.close, size: 14, color: Color(0xFF888888)),
