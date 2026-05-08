@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import '../../utils/solara_api.dart' show solaraWorkerBase;
@@ -124,10 +125,26 @@ Widget buildStyledTileLayer(
     // 2026-05-07: hot restart 直後の「一部タイル描画されない」対策。
     // errored タイルは pan/zoom で margin 外に出たら自動 evict → 次回 fetch 機会を作る。
     evictErrorTileStrategy: EvictErrorTileStrategy.notVisibleRespectMargin,
-    errorTileCallback: onTileError == null
-        ? null
-        : (tile, error, stackTrace) => onTileError(),
+    // 2026-05-08 診断ログ追加: タイル fetch エラーをターミナルに表示。
+    // Worker 側の問題 (5xx/429) なのか flutter_map 内部 (タイムアウト/解析失敗)
+    // なのか切り分けるための情報源。本番ビルド (kReleaseMode) では何も出さない。
+    errorTileCallback: (tile, error, stackTrace) {
+      if (kDebugMode) {
+        // ignore: avoid_print
+        debugPrint(
+          '[Solara TileLayer] ❌ z=${tile.coordinates.z} '
+          'x=${tile.coordinates.x} y=${tile.coordinates.y} → $error',
+        );
+      }
+      if (onTileError != null) onTileError();
+    },
   );
+  if (kDebugMode) {
+    // ignore: avoid_print
+    debugPrint(
+      '[Solara TileLayer] 🏗  build style=${cfg.id} bump=$sessionBump',
+    );
+  }
   if (!cfg.dark) return layer;
   // Phase 3 (2026-05-04): per-tile ColorFiltered → container 単位に変更。
   // saveLayer 回数を画面タイル数 (~36) から 1 に削減。matrix は flutter_map 公式の

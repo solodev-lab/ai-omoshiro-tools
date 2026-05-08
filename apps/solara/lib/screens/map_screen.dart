@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
@@ -262,16 +263,30 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   /// Worker (タイル元) への DNS/TLS cold start を画面表示前に解消するための
   /// プリウォーム。fire-and-forget。失敗しても本番 fetch でリトライされるので無視。
   /// 2026-05-08: Pixel8 エミュ初期描画失敗対策で導入。
+  /// 診断ログ: 経過時間と HTTP status を出力 → Worker 側か接続側か切り分け。
   Future<void> _warmupTileConnection() async {
+    final stopwatch = Stopwatch()..start();
     try {
       // 低 zoom (z=2) のタイルは Worker の edge cache に大体ある。
       // sharedTileHttpClient と同じ HTTP プールを使うので、
       // ここで握った keep-alive socket が直後の本番 tile fetch に再利用される。
       final url = Uri.parse('$solaraWorkerBase/tiles/osm/hot/2/0/0.png');
-      await sharedTileHttpClient
+      final response = await sharedTileHttpClient
           .head(url)
           .timeout(const Duration(seconds: 8));
-    } catch (_) {
+      if (kDebugMode) {
+        debugPrint(
+          '[Solara Map] 🔥 prewarm OK '
+          '(${stopwatch.elapsedMilliseconds}ms, status=${response.statusCode})',
+        );
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint(
+          '[Solara Map] ⚠️ prewarm failed '
+          '(${stopwatch.elapsedMilliseconds}ms): $e',
+        );
+      }
       // 失敗しても本番リトライがあるので無視
     }
   }
@@ -285,17 +300,20 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   ///                 State を強制再生成し、全タイルを fresh fetch させる
   ///                 (Worker 側 24h edge cache が効くので再 fetch は実質無料)。
   void _scheduleInitialKicks() {
-    void kick() {
+    void kick(String label) {
       if (!mounted) return;
       final cam = _mapCtrl.camera;
       _mapCtrl.move(cam.center, cam.zoom);
+      if (kDebugMode) {
+        debugPrint('[Solara Map] 👟 kick fired: $label');
+      }
     }
 
-    _kickTimers.add(Timer(const Duration(milliseconds: 100), kick));
-    _kickTimers.add(Timer(const Duration(milliseconds: 800), kick));
+    _kickTimers.add(Timer(const Duration(milliseconds: 100), () => kick('100ms')));
+    _kickTimers.add(Timer(const Duration(milliseconds: 800), () => kick('800ms')));
     _kickTimers.add(Timer(const Duration(milliseconds: 2500), () {
       if (!mounted) return;
-      kick();
+      kick('2500ms');
       // 最終保険: 必ず key bump して TileLayer を fresh state にする。
       // 既にタイルが正常表示されている場合でも、bump 1 回なら 24h edge cache
       // から即返るのでユーザーへの影響は最小限。
@@ -305,6 +323,12 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
           _tileSessionBump++;
           // _tileBumpCount は据え置き (errorTileCallback 経由 bump の上限とは独立)
         });
+        if (kDebugMode) {
+          debugPrint(
+            '[Solara Map] 💥 forced session bump '
+            '(2.5s 最終保険、bump=$_tileSessionBump)',
+          );
+        }
       }
     }));
   }
@@ -313,7 +337,14 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   /// TileLayer State を再生成し、まとめて再 fetch する。最大 _tileBumpMax 回。
   /// hot restart 直後の cold DNS / TLS で数枚穴が空く事象への対策 (2026-05-07)。
   void _onTileError() {
-    if (_tileBumpCount >= _tileBumpMax) return;
+    if (_tileBumpCount >= _tileBumpMax) {
+      if (kDebugMode) {
+        debugPrint(
+          '[Solara Map] ⛔ tile error (上限 $_tileBumpMax 到達、bump skip)',
+        );
+      }
+      return;
+    }
     _tileErrorDebounce?.cancel();
     _tileErrorDebounce = Timer(const Duration(milliseconds: 1500), () {
       if (!mounted) return;
@@ -322,6 +353,12 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
         _tileSessionBump++;
         _tileBumpCount++;
       });
+      if (kDebugMode) {
+        debugPrint(
+          '[Solara Map] 🔁 error-triggered bump '
+          '(回数=$_tileBumpCount/$_tileBumpMax, bump=$_tileSessionBump)',
+        );
+      }
     });
   }
 
