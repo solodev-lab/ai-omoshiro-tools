@@ -1363,7 +1363,18 @@ void showDailyUsageGuidePopup(BuildContext context) {
           style: TextStyle(
               color: Color(0xFFC9A84C), fontSize: 14, letterSpacing: 1),
         ),
-        SizedBox(height: 10),
+        SizedBox(height: 8),
+        // ── 画面要約 (ユーザー要望: パッと見て機能が分かる一行) ──
+        Text(
+          'この画面では、あなたの意図する目的に合わせて\n'
+          '「いつ行動するか」の時間の指針が分かります。',
+          style: TextStyle(
+              color: Color(0xFFE8E0D0),
+              fontSize: 13,
+              height: 1.6,
+              fontWeight: FontWeight.w500),
+        ),
+        SizedBox(height: 14),
         // ── 基準地点 (VIEWPOINT) の説明 ──
         Text(
           '【基準地点 (VIEWPOINT)】',
