@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../utils/forecast_cache.dart';
 import '../utils/solara_storage.dart';
+import '../widgets/info_popup.dart';
 import '../widgets/no_profile_guide.dart';
 import 'forecast/forecast_life_periods.dart';
 import 'forecast/forecast_top5.dart';
@@ -140,7 +141,18 @@ class _ForecastScreenState extends State<ForecastScreen> {
             const SizedBox(width: 8),
             const Text('FORECAST',
                 style: TextStyle(fontSize: 13, color: Color(0xFFC9A84C), letterSpacing: 3, fontWeight: FontWeight.w600)),
-            const SizedBox(width: 6),
+            const SizedBox(width: 4),
+            // ❓ help_outline: 画面の使い方説明 popup
+            GestureDetector(
+              onTap: () => _showForecastUsageGuide(context),
+              behavior: HitTestBehavior.opaque,
+              child: const Padding(
+                padding: EdgeInsets.all(4),
+                child: Icon(Icons.help_outline,
+                    size: 16, color: Color(0xCCAAAAAA)),
+              ),
+            ),
+            const SizedBox(width: 4),
             if (_cache != null) Text('(${_cache!.days.length}日)',
                 style: const TextStyle(fontSize: 9, color: Color(0xFF666666))),
             const Spacer(),
@@ -352,8 +364,21 @@ class _ForecastScreenState extends State<ForecastScreen> {
     final monthKeys = byMonth.keys.toList()..sort();
 
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      const Text('▸ 1年ヒートマップ',
-          style: TextStyle(fontSize: 11, color: Color(0xFFC9A84C), letterSpacing: 2)),
+      Row(children: [
+        const Text('▸ 1年ヒートマップ',
+            style: TextStyle(fontSize: 11, color: Color(0xFFC9A84C), letterSpacing: 2)),
+        const SizedBox(width: 4),
+        // ⓘ info_outline: ヒートマップの色モード・色方向・ランクの読み方
+        GestureDetector(
+          onTap: () => _showHeatmapInfo(context),
+          behavior: HitTestBehavior.opaque,
+          child: const Padding(
+            padding: EdgeInsets.all(2),
+            child: Icon(Icons.info_outline,
+                size: 13, color: Color(0xCCAAAAAA)),
+          ),
+        ),
+      ]),
       const SizedBox(height: 6),
       // 狭い画面でも overflow しないよう、トグル列は横スクロール可能にする
       SingleChildScrollView(
@@ -709,4 +734,200 @@ class _ForecastScreenState extends State<ForecastScreen> {
           style: const TextStyle(fontSize: 9, color: Color(0xFF555555))),
     );
   }
+}
+
+/// FORECAST 画面の使い方 popup (ヘッダの ❓ ボタンから開く)。
+void _showForecastUsageGuide(BuildContext context) {
+  showInfoPopup(
+    context: context,
+    child: Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: const [
+        Text(
+          'FORECAST の使い方',
+          style: TextStyle(
+              color: Color(0xFFC9A84C), fontSize: 14, letterSpacing: 1),
+        ),
+        SizedBox(height: 10),
+        Text(
+          'あなたの今後 1 年 (365 日) の運勢を予測表示します。\n'
+          '日々の総合スコア・カテゴリ別スコアを一目で把握でき、\n'
+          '動きやすい日 / 慎重に進める日を事前に確認できます。',
+          style: TextStyle(
+              color: Color(0xFFE8E0D0),
+              fontSize: 13,
+              height: 1.6,
+              fontWeight: FontWeight.w500),
+        ),
+        SizedBox(height: 14),
+        Text(
+          '【1 年ヒートマップ】',
+          style: TextStyle(
+              color: Color(0xFFC9A84C),
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.5),
+        ),
+        SizedBox(height: 4),
+        Text(
+          '12 ヶ月 × 31 日のグリッドで、各日のスコアを色で表現。\n'
+          'モード切替 (相対 / 絶対 / カテゴリ)、色方向 (緑↑高 /\n'
+          '赤↑高)、ランク (1 位 / 2 位) で見せ方を変えられます。\n'
+          '詳細はヒートマップ右の i ボタンを参照してください。',
+          style: TextStyle(
+              color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
+        ),
+        SizedBox(height: 10),
+        Text(
+          '【選択日詳細】',
+          style: TextStyle(
+              color: Color(0xFFC9A84C),
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.5),
+        ),
+        SizedBox(height: 4),
+        Text(
+          'ヒートマップで日をタップすると、その日の方位スコアと\n'
+          'カテゴリ別ランキングが下に表示されます。',
+          style: TextStyle(
+              color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
+        ),
+        SizedBox(height: 10),
+        Text(
+          '【あなたの運勢サイクル】',
+          style: TextStyle(
+              color: Color(0xFFC9A84C),
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.5),
+        ),
+        SizedBox(height: 4),
+        Text(
+          'カテゴリ別の「期間」(モテ期 / 豊かさ期 / 癒し期 等) を\n'
+          '表示。今日以降に到来する継続期間のみ表示します。\n'
+          '長期計画の指針に。',
+          style: TextStyle(
+              color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
+        ),
+        SizedBox(height: 10),
+        Text(
+          '【強運 Top5】',
+          style: TextStyle(
+              color: Color(0xFFC9A84C),
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.5),
+        ),
+        SizedBox(height: 4),
+        Text(
+          'カテゴリ別の上位 5 日を表示。「いつ動くか」の\n'
+          '短期ピンポイント計画に。',
+          style: TextStyle(
+              color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
+        ),
+        SizedBox(height: 10),
+        Text(
+          '【日付ジャンプ】',
+          style: TextStyle(
+              color: Color(0xFFC9A84C),
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.5),
+        ),
+        SizedBox(height: 4),
+        Text(
+          '各リストの 🗺 ボタンで、その日を Map 画面で開けます。\n'
+          'Map のスコアバーで「方角」、Daily Transit で「時刻」を\n'
+          '組み合わせると、最適な「方角 × 時間」が見えます。',
+          style: TextStyle(
+              color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
+        ),
+      ],
+    ),
+  );
+}
+
+/// 1 年ヒートマップの読み方 popup (ヒートマップ見出し横の i ボタンから)。
+/// 3 つの色モード・色方向・ランクの仕組みを解説。
+void _showHeatmapInfo(BuildContext context) {
+  showInfoPopup(
+    context: context,
+    child: Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: const [
+        Text(
+          '1 年ヒートマップの読み方',
+          style: TextStyle(
+              color: Color(0xFFC9A84C), fontSize: 14, letterSpacing: 1),
+        ),
+        SizedBox(height: 10),
+        Text(
+          '【3 つの色モード】',
+          style: TextStyle(
+              color: Color(0xFFC9A84C),
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.5),
+        ),
+        SizedBox(height: 4),
+        Text(
+          '■ 相対モード (デフォルト)\n'
+          '1 年内の最低 → 最高で正規化。\n'
+          'あなたの 365 日のうち相対的に高い日が明るく\n'
+          '見えます。日々の濃淡を最大化して把握できます。\n\n'
+          '■ 絶対モード\n'
+          'スコアの絶対値で色化。低い値は暗く、\n'
+          '高い値は明るい。他の年・他のユーザーと\n'
+          '比較する時に使います。\n\n'
+          '■ カテゴリモード\n'
+          '日ごとに最も強いカテゴリを色で表現:\n'
+          '　🟢 癒し　🟡 豊かさ　🩷 恋愛\n'
+          '　🔵 仕事　🟣 話す',
+          style: TextStyle(
+              color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
+        ),
+        SizedBox(height: 10),
+        Text(
+          '【色方向 (🟢↑高 / 🔴↑高)】',
+          style: TextStyle(
+              color: Color(0xFFC9A84C),
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.5),
+        ),
+        SizedBox(height: 4),
+        Text(
+          '「相対」「絶対」モードで有効です。\n'
+          '・🟢↑高: 高スコア=緑、低スコア=赤\n'
+          '・🔴↑高: 高スコア=赤、低スコア=緑 (反転)\n\n'
+          '吉凶判定を避けるため、見たい色の方向を\n'
+          'あなた自身で選べます。',
+          style: TextStyle(
+              color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
+        ),
+        SizedBox(height: 10),
+        Text(
+          '【ランク (1 位 / 2 位)】',
+          style: TextStyle(
+              color: Color(0xFFC9A84C),
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.5),
+        ),
+        SizedBox(height: 4),
+        Text(
+          '「カテゴリ」モードで有効です。\n'
+          '・1 位: その日の最強カテゴリ色で塗る\n'
+          '・2 位: 2 番目に強いカテゴリ色で塗る\n\n'
+          '両方確認すると、1 日の中の「主役」と「サブ」が\n'
+          '見えてきます。',
+          style: TextStyle(
+              color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
+        ),
+      ],
+    ),
+  );
 }

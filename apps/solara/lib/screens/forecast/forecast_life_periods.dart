@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../utils/forecast_cache.dart';
+import '../../widgets/info_popup.dart';
 import '../map/map_constants.dart';
 
 /// 期間ラベル定義（カテゴリ → (日本語名, 絵文字)）
@@ -46,8 +47,21 @@ class ForecastLifePeriodsSection extends StatelessWidget {
     }
 
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      const Text('▸ あなたの運勢サイクル',
-          style: TextStyle(fontSize: 11, color: Color(0xFFC9A84C), letterSpacing: 2)),
+      Row(children: [
+        const Text('▸ あなたの運勢サイクル',
+            style: TextStyle(fontSize: 11, color: Color(0xFFC9A84C), letterSpacing: 2)),
+        const SizedBox(width: 4),
+        // ⓘ 運勢サイクル説明 popup
+        GestureDetector(
+          onTap: () => _showLifePeriodsInfo(context),
+          behavior: HitTestBehavior.opaque,
+          child: const Padding(
+            padding: EdgeInsets.all(2),
+            child: Icon(Icons.info_outline,
+                size: 13, color: Color(0xCCAAAAAA)),
+          ),
+        ),
+      ]),
       const SizedBox(height: 4),
       const Text('今日以降に到来する期間を表示（7日以上の継続）',
           style: TextStyle(fontSize: 9, color: Color(0xFF666666))),
@@ -99,4 +113,78 @@ class ForecastLifePeriodsSection extends StatelessWidget {
       ]),
     );
   }
+}
+
+/// 運勢サイクル説明 popup (見出し横の i ボタンから開く)。
+void _showLifePeriodsInfo(BuildContext context) {
+  showInfoPopup(
+    context: context,
+    child: Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: const [
+        Text(
+          '運勢サイクルとは',
+          style: TextStyle(
+              color: Color(0xFFC9A84C), fontSize: 14, letterSpacing: 1),
+        ),
+        SizedBox(height: 10),
+        Text(
+          '【表示の意味】',
+          style: TextStyle(
+              color: Color(0xFFC9A84C),
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.5),
+        ),
+        SizedBox(height: 4),
+        Text(
+          '今後 1 年で、各カテゴリ (恋愛 / 豊かさ / 癒し /\n'
+          '仕事 / 話す) のエネルギーが強く流れる「期間」を\n'
+          '表示します。\n\n'
+          '例:「💗 モテ期 6/15 〜 7/2 (18 日間)」\n'
+          '　 → 6/15 から 7/2 まで関係性のエネルギーが\n'
+          '　   継続して強い時期',
+          style: TextStyle(
+              color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
+        ),
+        SizedBox(height: 10),
+        Text(
+          '【表示条件】',
+          style: TextStyle(
+              color: Color(0xFFC9A84C),
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.5),
+        ),
+        SizedBox(height: 4),
+        Text(
+          '・今日以降に到来する期間のみ表示\n'
+          '　(過ぎた期間は非表示)\n'
+          '・7 日以上連続して強い場合のみ「期間」と認定\n'
+          '　(短い波は表示しない)\n'
+          '・カテゴリごとに最も近い 1 件ずつ表示',
+          style: TextStyle(
+              color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
+        ),
+        SizedBox(height: 10),
+        Text(
+          '【活用方法】',
+          style: TextStyle(
+              color: Color(0xFFC9A84C),
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.5),
+        ),
+        SizedBox(height: 4),
+        Text(
+          '「いつ動くか」の長期計画に。\n'
+          '各期間の開始日を 🗺 ボタンで Map に飛ばして、\n'
+          'その日の方角・時間と組み合わせて活用できます。',
+          style: TextStyle(
+              color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
+        ),
+      ],
+    ),
+  );
 }
