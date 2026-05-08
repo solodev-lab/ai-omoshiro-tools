@@ -109,13 +109,17 @@ class _LocationsScreenState extends State<LocationsScreen> {
     return DateTime.utc(n.year + 20, n.month, n.day);
   }
 
-  /// 表示用の現在の選択日（null なら今日）
+  /// 表示用の現在の選択日時 (null なら今日 + 現在時刻)。
+  /// 2026-05-08: 時刻表示対応のため UTC noon → DateTime.now().toUtc() に変更。
+  /// これにより _displayDate.toLocal().hour が現在時刻 (live) を反映する。
   DateTime get _displayDate {
     final d = _selectedDate;
     if (d != null) return d;
-    final n = DateTime.now().toUtc();
-    return DateTime.utc(n.year, n.month, n.day, 12);
+    return DateTime.now().toUtc();
   }
+
+  /// 現在表示中のローカル時刻 (0..23)
+  int get _displayHourLocal => _displayDate.toLocal().hour;
 
   /// y/m/d オフセットで日付を移動。範囲外はクランプ。
   Future<void> _shiftDate({int years = 0, int months = 0, int days = 0}) async {
@@ -127,6 +131,7 @@ class _LocationsScreenState extends State<LocationsScreen> {
   }
 
   /// 年月日を絶対値で指定（手入力用）。月の最大日や年範囲は内部でクランプ。
+  /// 時刻部分は _displayHourLocal を維持。
   Future<void> _setYmd(int year, int month, int day) async {
     int newY = year;
     int newM = month;
@@ -134,10 +139,28 @@ class _LocationsScreenState extends State<LocationsScreen> {
     while (newM > 12) { newM -= 12; newY += 1; }
     final daysInMonth = DateUtils.getDaysInMonth(newY, newM);
     int newD = day.clamp(1, daysInMonth);
-    var next = DateTime.utc(newY, newM, newD, 12);
+    // 既存の時刻 (local) を維持しつつ年月日のみ差し替え。
+    final curHour = _displayHourLocal;
+    final newLocal = DateTime(newY, newM, newD, curHour, 0, 0);
+    var next = newLocal.toUtc();
     if (next.isBefore(_dateMin)) next = _dateMin;
     if (next.isAfter(_dateMax)) next = _dateMax;
     await _setDate(next);
+  }
+
+  /// 時刻 (local hour 0..23) を絶対値で指定。年月日は維持。
+  Future<void> _setHour(int hour) async {
+    final clamped = hour.clamp(0, 23);
+    final cur = _displayDate.toLocal();
+    final newLocal = DateTime(cur.year, cur.month, cur.day, clamped, 0, 0);
+    await _setDate(newLocal.toUtc());
+  }
+
+  /// 時刻 (local hour) をオフセットで移動。0 ⇄ 23 でラップ。
+  Future<void> _shiftHour(int delta) async {
+    final cur = _displayHourLocal;
+    final next = ((cur + delta) % 24 + 24) % 24;
+    await _setHour(next);
   }
 
   /// 「今日」に戻す（fetch 不要、親の値を使う）
@@ -278,6 +301,7 @@ class _LocationsScreenState extends State<LocationsScreen> {
           // 操作メニュー（ヘッダ直下に配置）
           LocationsDateStepper(
             displayDate: _displayDate,
+            displayHour: _displayHourLocal,
             dateMin: _dateMin,
             dateMax: _dateMax,
             onResetToToday: _selectedDate != null ? _resetToday : null,
@@ -285,6 +309,8 @@ class _LocationsScreenState extends State<LocationsScreen> {
             onShift: ({int years = 0, int months = 0, int days = 0}) =>
                 _shiftDate(years: years, months: months, days: days),
             onSetYmd: _setYmd,
+            onShiftHour: _shiftHour,
+            onSetHour: _setHour,
           ),
           _buildRefPointSelector(),
           _buildCategorySelector(),
