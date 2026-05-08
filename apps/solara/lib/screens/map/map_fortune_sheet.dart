@@ -39,25 +39,26 @@ class FortuneFilterLabel extends StatelessWidget {
 
     // 端末幅に応じてレイアウト寸法を可変化:
     //   - 左ラベル (合計/総合) を画面幅の 32% で頭打ち + ellipsis
-    //   - 方角ラベル幅 52 → fontSize 13 で "東南東" 3 文字が 1 行に収まる
-    //     (2026-05-07 fontSize 11→13 化に合わせて 44→52 へ拡大)
-    //   - 値ラベル幅 36 → fontSize 13 monospace で "10.0" まで収まる
-    //     (2026-05-07 fontSize 11→13 化に合わせて 28→36 へ拡大)
+    //   - 方角ラベル幅 44 → fontSize 11 で "東南東" 3 文字が 1 行に収まる
+    //   - 値ラベル幅 30 → fontSize 11 monospace で "15.7" まで収まる
     //   - バー幅は MediaQuery で残幅から逆算
     //   - 右側 DailyTransitBadge (右上 right:20, 幅 40) と重ならないよう
     //     右マージン 64 を予約 (2026-05-04 ユーザー指摘対応)
+    //
+    // 2026-05-08: noTextScaling 化に伴い視覚的に大きく見えていた事象への
+    // 対策で fontSize 13→11 + 寸法縮小でコンパクト化。
     final screenW = MediaQuery.of(context).size.width;
     final leftLabelMax = screenW * 0.32;
-    const dirLabelW = 52.0;
-    const valueLabelW = 36.0;
-    const innerHPad = 10.0;  // Container horizontal padding (片側)
+    const dirLabelW = 44.0;
+    const valueLabelW = 30.0;
+    const innerHPad = 8.0;   // Container horizontal padding (片側)
     const sideMargin = 16.0;  // 親 Positioned の left:16 分
     const dailyBadgeReserved = 64.0;  // DailyTransitBadge 用右マージン
     // 残幅 = 画面幅 − サイドマージン − 左ラベル − Container padding × 2
     //         − 6 (左ラベルとバー列の間) − dirLabelW − 4 − valueLabelW − 4
     //         − dailyBadgeReserved (右上 Badge 用)
     final reserved = sideMargin + leftLabelMax + innerHPad * 2 + 6 + dirLabelW + 4 + valueLabelW + 4 + dailyBadgeReserved;
-    final barW = (screenW - reserved).clamp(40.0, 110.0);
+    final barW = (screenW - reserved).clamp(36.0, 90.0);
 
     // ClipRRect で境界半径を維持しつつ、sub-pixel オーバーフローを視覚的に吸収。
     // 2026-05-08: スコアバー全体を MediaQuery.withNoTextScaling で包んで
@@ -89,7 +90,7 @@ class FortuneFilterLabel extends StatelessWidget {
               constraints: BoxConstraints(maxWidth: leftLabelMax),
               child: Text(
                 '${srcLabels[activeSrc] ?? '合計'} / ${categoryLabels[activeCategory] ?? '総合'}',
-                style: const TextStyle(fontSize: 13, color: Color(0xFFC9A84C), letterSpacing: 0.5, fontWeight: FontWeight.w600),
+                style: const TextStyle(fontSize: 11, color: Color(0xFFC9A84C), letterSpacing: 0.5, fontWeight: FontWeight.w600),
                 overflow: TextOverflow.ellipsis,
                 maxLines: 1,
               ),
@@ -105,15 +106,15 @@ class FortuneFilterLabel extends StatelessWidget {
                     child: Row(mainAxisSize: MainAxisSize.min, children: [
                       SizedBox(width: dirLabelW, child: Text(
                         dir16JP[e.key] ?? e.key,
-                        style: const TextStyle(fontSize: 13, color: Color(0xFF888888), fontWeight: FontWeight.w500),
+                        style: const TextStyle(fontSize: 11, color: Color(0xFF888888), fontWeight: FontWeight.w500),
                         textAlign: TextAlign.right,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       )),
                       const SizedBox(width: 4),
                       SizedBox(
-                        // バー高さ 7px (旧 5) — fontSize 13 化に合わせて視覚的バランス調整
-                        width: barW, height: 7,
+                        // バー高さ 5px — fontSize 11 化に合わせて視覚的バランス再調整
+                        width: barW, height: 5,
                         child: Container(
                           decoration: BoxDecoration(
                             color: const Color(0x15FFFFFF),
@@ -134,7 +135,7 @@ class FortuneFilterLabel extends StatelessWidget {
                       const SizedBox(width: 4),
                       SizedBox(width: valueLabelW, child: Text(
                         e.value.toStringAsFixed(1),
-                        style: const TextStyle(fontSize: 13, fontFamily: 'monospace', color: Color(0xFFF6BD60), fontWeight: FontWeight.w600),
+                        style: const TextStyle(fontSize: 11, fontFamily: 'monospace', color: Color(0xFFF6BD60), fontWeight: FontWeight.w600),
                         textAlign: TextAlign.right,
                       )),
                     ]),
