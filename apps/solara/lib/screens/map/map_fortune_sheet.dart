@@ -59,10 +59,17 @@ class FortuneFilterLabel extends StatelessWidget {
     final reserved = sideMargin + leftLabelMax + innerHPad * 2 + 6 + dirLabelW + 4 + valueLabelW + 4 + dailyBadgeReserved;
     final barW = (screenW - reserved).clamp(40.0, 110.0);
 
-    // ClipRRect で境界半径を維持しつつ、sub-pixel オーバーフローを視覚的に吸収
+    // ClipRRect で境界半径を維持しつつ、sub-pixel オーバーフローを視覚的に吸収。
+    // 2026-05-08: スコアバー全体を MediaQuery.withNoTextScaling で包んで
+    // 端末フォント拡大の影響を受けないコンパクト UI として扱う。
+    //   - 寸法を全部 fontSize 13 前提で計算しているため、拡大すると
+    //     スコア '15.7' / 方角 '北北東' / 左ラベルが全部はみ出す
+    //   - 「合計/総合」表示は status indicator (バッテリー残量バッジ的) で
+    //     アクセシビリティの拡大対象にしないのが業界慣習
     return GestureDetector(
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
+      child: MediaQuery.withNoTextScaling(
       child: ClipRRect(
       borderRadius: BorderRadius.circular(10),
       child: Container(
@@ -138,7 +145,8 @@ class FortuneFilterLabel extends StatelessWidget {
           ],
         ),
       ),
-    ),
+    ),  // ClipRRect 終端
+    ),  // MediaQuery.withNoTextScaling 終端
     );
   }
 }
