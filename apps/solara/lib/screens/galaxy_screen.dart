@@ -516,7 +516,7 @@ class GalaxyScreenState extends State<GalaxyScreen>
           fontSize: 22, fontWeight: FontWeight.w700,
           color: const Color(0xFFF9D976), height: 1)),
         Text('of $_totalDays', style: GoogleFonts.cinzel(
-          fontSize: 10, color: const Color(0xA6F9D976), letterSpacing: 1.5)),
+          fontSize: 13, color: const Color(0xA6F9D976), letterSpacing: 1.5)),
       ]),
     );
   }
