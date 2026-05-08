@@ -158,22 +158,26 @@ class SearchResultList extends StatelessWidget {
       child: Column(mainAxisSize: MainAxisSize.min, children: [
         Padding(
           padding: const EdgeInsets.fromLTRB(14, 10, 10, 6),
+          // 2026-05-08: 検索アイコン削除 + タイトルと dropdown を横スクロール化。
+          // 端末フォント拡大時に '検索結果 (N)' + dropdown 内容が幅を超える事象を
+          // 横スクロールで吸収。✕ ボタンだけは右端固定でスクロール対象外。
           child: Row(children: [
-            const Icon(Icons.search, size: 14, color: Color(0xFFC9A84C)),
-            const SizedBox(width: 5),
-            Text('検索結果 (${hits.length})',
-                style: const TextStyle(fontSize: 13, color: Color(0xFFC9A84C), letterSpacing: 1)),
-            const Spacer(),
-            // ── VIEWPOINT 選択 dropdown (距離・方位・スコアの起点を切替) ──
-            // ConstrainedBox で最大幅を画面の 40% にキャップ。
-            // 親 Row 全体 (検索結果 + dropdown + close) が overflow するのを防ぐ。
-            if (vpSlots != null && onVpChanged != null)
-              ConstrainedBox(
-                constraints: BoxConstraints(
-                  maxWidth: MediaQuery.of(context).size.width * 0.40,
-                ),
-                child: _buildVpDropdown(),
+            Expanded(
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(children: [
+                  Text('検索結果 (${hits.length})',
+                      style: const TextStyle(
+                          fontSize: 13,
+                          color: Color(0xFFC9A84C),
+                          letterSpacing: 1)),
+                  const SizedBox(width: 10),
+                  // ── VIEWPOINT 選択 dropdown (距離・方位・スコアの起点を切替) ──
+                  if (vpSlots != null && onVpChanged != null)
+                    _buildVpDropdown(),
+                ]),
               ),
+            ),
             const SizedBox(width: 6),
             GestureDetector(
               onTap: onClose,
@@ -293,9 +297,9 @@ class SearchResultList extends StatelessWidget {
   /// -1 = 地図中心、0+ = vpSlots の index。
   /// 距離km・方位・スコアの起点を切替えるためのもの。
   ///
-  /// 2026-05-08: selectedItemBuilder を使い、閉じた状態 (現在選択中) は
-  /// 1 行 + ellipsis で短縮、展開メニュー項目は折返し可でフル表示。
-  /// 選択時に多くの情報が見えるように、選択後は枠に収まる短縮表示に。
+  /// 2026-05-08: 親 Row が横スクロール対応になったので、dropdown 自体は
+  /// 内容に合わせた自然サイズ (isExpanded: false) で展開。長い slot 名でも
+  /// truncation せずフル表示。親の SingleChildScrollView が overflow を吸収。
   /// フォントは TextStyle に fontFamily 未指定 → MaterialApp テーマの
   /// DM Sans + Noto Sans JP fallback がそのまま継承される。
   Widget _buildVpDropdown() {
@@ -310,9 +314,7 @@ class SearchResultList extends StatelessWidget {
         value: selectedVpIndex,
         underline: const SizedBox.shrink(),
         isDense: true,
-        // ConstrainedBox で囲まれているので isExpanded=true で枠いっぱい
-        // 使い、selectedItemBuilder の Expanded + ellipsis を有効化する
-        isExpanded: true,
+        // isExpanded: false (デフォルト) — 内容のサイズに合わせる
         dropdownColor: const Color(0xF20F0F1E),
         iconEnabledColor: const Color(0xFFC9A84C),
         iconSize: 16,
@@ -320,61 +322,17 @@ class SearchResultList extends StatelessWidget {
           fontSize: 13,
           color: Color(0xFFE8E0D0),
         ),
-        // ── 閉じた状態 (現在選択中) の表示: ellipsis で短縮 ──
-        selectedItemBuilder: (context) {
-          return [
-            // 地図中心 (selected)
-            const Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.my_location, size: 12, color: Color(0xFFC9A84C)),
-                SizedBox(width: 4),
-                Flexible(
-                  child: Text(
-                    '地図中心',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(fontSize: 13, color: Color(0xFFE8E0D0)),
-                  ),
-                ),
-              ],
-            ),
-            // slots (selected, name のみ ellipsis)
-            for (int i = 0; i < slots.length; i++)
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(slots[i].icon, style: const TextStyle(fontSize: 13)),
-                  const SizedBox(width: 4),
-                  Flexible(
-                    child: Text(
-                      slots[i].name.isEmpty ? 'VP${i + 1}' : slots[i].name,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 13,
-                        color: Color(0xFFE8E0D0),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-          ];
-        },
-        // ── メニュー項目 (展開時): フル表示、長ければ複数行 ──
         items: [
           const DropdownMenuItem<int>(
             value: -1,
             child: Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(Icons.my_location, size: 12, color: Color(0xFFC9A84C)),
                 SizedBox(width: 4),
-                Expanded(
-                  child: Text(
-                    '地図中心',
-                    style: TextStyle(fontSize: 13, color: Color(0xFFE8E0D0)),
-                  ),
-                ),
+                Text('地図中心',
+                    style: TextStyle(
+                        fontSize: 13, color: Color(0xFFE8E0D0))),
               ],
             ),
           ),
@@ -382,19 +340,15 @@ class SearchResultList extends StatelessWidget {
             DropdownMenuItem<int>(
               value: i,
               child: Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(slots[i].icon, style: const TextStyle(fontSize: 13)),
+                  Text(slots[i].icon,
+                      style: const TextStyle(fontSize: 13)),
                   const SizedBox(width: 4),
-                  Expanded(
-                    child: Text(
-                      slots[i].name.isEmpty ? 'VP${i + 1}' : slots[i].name,
-                      // 長い名前はメニュー幅で折返して全文表示
-                      softWrap: true,
-                      style: const TextStyle(
-                        fontSize: 13,
-                        color: Color(0xFFE8E0D0),
-                      ),
-                    ),
+                  Text(
+                    slots[i].name.isEmpty ? 'VP${i + 1}' : slots[i].name,
+                    style: const TextStyle(
+                        fontSize: 13, color: Color(0xFFE8E0D0)),
                   ),
                 ],
               ),
