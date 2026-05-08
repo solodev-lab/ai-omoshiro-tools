@@ -1307,14 +1307,37 @@ void showDailyUsageGuidePopup(BuildContext context) {
           '右側のプルダウンが「基準地点」です。\n'
           '出生地 (現住所として登録した地点) や、\n'
           'VIEWPOINT として登録した地点を選択できます。\n'
-          'この画面では、選択した基準地点の空における\n'
-          '惑星の方角と通過時刻を表示しています。',
+          'この画面では、選択した基準地点の空で、\n'
+          '惑星が「天空方位」のどこにいつ来るかを表示します。',
+          style: TextStyle(
+              color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
+        ),
+        SizedBox(height: 10),
+        // ── Map 画面の方位との違いを明示 ──
+        Text(
+          '【⚠ Map 画面の方位とは別物です】',
+          style: TextStyle(
+              color: Color(0xFFFFA864), // やや警告色 (混同防止)
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.5),
+        ),
+        SizedBox(height: 4),
+        Text(
+          '・Map 画面 = 「地表方位」(16 方位)\n'
+          '　基準地点から見て地表のどの方向に行くか\n'
+          '　(東の土地へ行く / 北の土地へ向かう、という地理)\n\n'
+          '・この画面 = 「天空方位」(4 アングル)\n'
+          '　基準地点の真上の空で惑星がどこにあるか\n'
+          '　(東の地平線 / 真上の天頂 / 西の地平線 / 真下)\n\n'
+          '同じ「東」でも、Map では「東の土地」、\n'
+          'この画面では「東の地平線 (惑星が昇る位置)」を指します。',
           style: TextStyle(
               color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
         ),
         SizedBox(height: 10),
         Text(
-          '【時間と方角を読む】',
+          '【時間と天空方位を読む】',
           style: TextStyle(
               color: Color(0xFFC9A84C),
               fontSize: 13,
@@ -1324,8 +1347,11 @@ void showDailyUsageGuidePopup(BuildContext context) {
         SizedBox(height: 4),
         Text(
           '今日、各惑星が選択した基準地点の空で\n'
-          '4 つの方角 (東 = ASC / 天頂 = MC / 西 = DSC /\n'
-          '地下 = IC) をいつ通るかをタイムラインで表示します。\n'
+          '4 つの天空方位 (アングル) を通る時刻を表示します:\n\n'
+          '・ASC (東の地平線) — 惑星が昇る瞬間\n'
+          '・MC  (真上 = 天頂) — 惑星が最高点を通る瞬間\n'
+          '・DSC (西の地平線) — 惑星が沈む瞬間\n'
+          '・IC  (真下 = 地下) — 惑星が地球の裏側にある瞬間\n\n'
           '「いつ恋愛運が上がる」「いつ仕事の節目になる」など、\n'
           '行動する時間の指針が読み取れます。',
           style: TextStyle(
@@ -1342,11 +1368,12 @@ void showDailyUsageGuidePopup(BuildContext context) {
         ),
         SizedBox(height: 4),
         Text(
-          '方角ごとのエネルギーの強さは、\n'
-          'Map のスコアバーから確認できます。\n'
+          '地表方位ごとのエネルギーの強さは、\n'
+          'Map のスコアバーから確認できます (16 方位)。\n'
           '「合計 / 総合」ラベル下の i ボタンに詳細解説があります。\n\n'
-          'スコアバー (方角の強さ) と この画面 (惑星の方角×時刻) を\n'
-          '組み合わせると、あなたの望む未来に対する最適な\n'
+          'スコアバー (地表方位の強さ) と\n'
+          'この画面 (天空方位 × 時刻) を組み合わせると、\n'
+          'あなたの望む未来に対する最適な\n'
           '「方角 × 時間」を Solara が算出します。',
           style: TextStyle(
               color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
