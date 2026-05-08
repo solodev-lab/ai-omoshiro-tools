@@ -207,7 +207,11 @@ class _MapTimeSliderState extends State<MapTimeSlider> {
           ),
         ),
       ),
-      // LIVE (固定幅 44 で時刻行のスペーサーと一致させる)
+      // LIVE (固定幅 44 で時刻行のスペーサーと一致させる)。
+      // 2026-05-08: テキスト 'LIVE'/'● LIVE' から稲妻アイコンに変更。
+      // ON: 鮮やかなオレンジ + 背景塗り + 太縁
+      // OFF: 薄いオレンジ + 透明背景 + 細縁
+      // (端末フォント拡大の影響を受けない & 一目で状態が分かる)
       SizedBox(
         width: 44,
         child: GestureDetector(
@@ -220,24 +224,25 @@ class _MapTimeSliderState extends State<MapTimeSlider> {
           },
           behavior: HitTestBehavior.opaque,
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(8),
               border: Border.all(
-                color: isLive ? const Color(0xFFFF8E5C) : const Color(0x33FF8E5C),
+                color: isLive
+                    ? const Color(0xFFFF8E5C)
+                    : const Color(0x33FF8E5C),
                 width: isLive ? 1.0 : 0.8,
               ),
-              color: isLive ? const Color(0x22FF8E5C) : Colors.transparent,
+              color: isLive
+                  ? const Color(0x22FF8E5C)
+                  : Colors.transparent,
             ),
-            child: Text(
-              isLive ? '● LIVE' : 'LIVE',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 13,
-                color: isLive ? const Color(0xFFFF8E5C) : const Color(0x99FF8E5C),
-                fontWeight: FontWeight.w700,
-                letterSpacing: 0.4,
-              ),
+            child: Icon(
+              Icons.bolt,
+              size: 20,
+              color: isLive
+                  ? const Color(0xFFFF8E5C)
+                  : const Color(0x66FF8E5C),
             ),
           ),
         ),
