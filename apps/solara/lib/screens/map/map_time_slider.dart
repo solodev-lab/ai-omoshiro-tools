@@ -226,7 +226,7 @@ class _MapTimeSliderState extends State<MapTimeSlider> {
           },
           behavior: HitTestBehavior.opaque,
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 5),
+            padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 5),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(8),
               border: Border.all(
@@ -244,13 +244,16 @@ class _MapTimeSliderState extends State<MapTimeSlider> {
               textAlign: TextAlign.center,
               // 端末フォント拡大の影響を受けないアイコン的振る舞い
               textScaler: TextScaler.noScaling,
+              // 44px 幅に収めるため改行禁止
+              maxLines: 1,
+              softWrap: false,
               style: TextStyle(
                 fontSize: 13,
                 color: isLive
                     ? const Color(0xFFFF8E5C)
                     : const Color(0x66FF8E5C),
                 fontWeight: FontWeight.w700,
-                letterSpacing: 1.2,
+                letterSpacing: 0.6,
                 height: 1.0,
               ),
             ),
