@@ -463,14 +463,20 @@ class FortuneSheet extends StatelessWidget {
 /// Map の使い方 + カテゴリと関連惑星ペアの説明 popup。
 /// スコアバー左ラベル下の i ボタンから開く。
 ///
-/// 構成:
-///   1. 「Map の使い方」 — 方角・場所検索・時間の連動を概観
+/// 構成 (フル):
+///   1. 「Map の使い方」 — 方角を読む / 基準地点登録 / 場所検索 / 時間連動
 ///   2. 「カテゴリと関連惑星」 — 5 カテゴリそれぞれの惑星ペア定義
-///      (実装は map_astro.dart の `_fortunePairs` と一致)
+///      + ペア重みの仕組み詳細
 ///   3. 「総合との関係」 — カテゴリ別合算 ≠ 総合 の理由
 ///
-/// パッと見て Solara の Map で何ができるか理解してもらうのが目的。
-void showCategoryInfoPopup(BuildContext context) {
+/// [includeMapUsageTop] = false (検索詳細 popup から呼ばれる場合) は、
+/// 「方角を読む」「基準地点を登録する」セクションを省略し、「場所を探す」
+/// から開始する。検索詳細では既に Map 上で操作中なのでスコアバーや基準
+/// 地点登録の説明は冗長なため。
+void showCategoryInfoPopup(
+  BuildContext context, {
+  bool includeMapUsageTop = true,
+}) {
   // 各カテゴリのアイコン文字 (絵文字)、関連惑星ペア (実装と一致)、
   // ニュアンス説明をデータ駆動で並べる。
   // ペア定義は map_astro.dart の _fortunePairs と一致させる:
@@ -500,65 +506,69 @@ void showCategoryInfoPopup(BuildContext context) {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // ── Section 1: Map の使い方 (機能概観) ──
-        const Text(
-          'Map の使い方',
-          style: TextStyle(
-              color: Color(0xFFC9A84C), fontSize: 14, letterSpacing: 1),
-        ),
-        const SizedBox(height: 10),
-        const Text(
-          '【方角を読む】',
-          style: TextStyle(
-              color: Color(0xFFC9A84C),
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              letterSpacing: 0.5),
-        ),
-        const SizedBox(height: 4),
-        const Text(
-          '基準地点 (VIEWPOINT) を中心に、地表の 16 方位\n'
-          '(北・北北東・北東・東北東・東…) ごとのエネルギーを\n'
-          'スコア化して表示しています。\n'
-          '「どの土地・方向に意識を向けるべきか」が判断できます。\n\n'
-          'どの方向に進むべきかだけの表示ではありません。\n'
-          'もちろん方角に向かい進む事も一つの方角に対する\n'
-          '行動です。他には、意識を向ける事や、声をかける、\n'
-          '大切なアイテムの置き場所を方角に合わせて家を出発する、\n'
-          '話しかける時の方角を意識する、深呼吸をする方角、\n'
-          'など、あなたが自由に決められます。\n'
-          '決めた行動により、惑星たちのエネルギーが\n'
-          'あなたに届くでしょう。\n'
-          '惑星たちは常に大きな視点であなたを見守っています。\n\n'
-          'スコアバーをタップするとカテゴリが切替わります\n'
-          '(総合 → 癒し → 豊かさ → 恋愛 → 仕事 → 話す)。\n'
-          '見たいカテゴリを選ぶと、そのエネルギーが\n'
-          'どの方位に強く出ているかが分かります。',
-          style: TextStyle(
-              color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
-        ),
-        const SizedBox(height: 10),
-        const Text(
-          '【基準地点を登録する】',
-          style: TextStyle(
-              color: Color(0xFFC9A84C),
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              letterSpacing: 0.5),
-        ),
-        const SizedBox(height: 4),
-        const Text(
-          '基準地点は地図画面の左側にある 📍 (VIEWPOINT) ボタン\n'
-          'から登録できます。\n'
-          '登録したい場所を地図中央に表示してパネルを開き、\n'
-          '「この地点を保存」をタップすると、その地点が\n'
-          'VIEWPOINT として保存されます。\n\n'
-          '保存した基準地点は、検索結果一覧の上部や\n'
-          '右上 ⊙ アイコン (Daily Transit) のプルダウンから、\n'
-          'いつでも切り替えて使えます。',
-          style: TextStyle(
-              color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
-        ),
-        const SizedBox(height: 10),
+        // includeMapUsageTop=false の場合 (検索詳細から呼ばれた時) は
+        // 「方角を読む」「基準地点を登録する」を省略し、「場所を探す」から開始。
+        if (includeMapUsageTop) ...[
+          const Text(
+            'Map の使い方',
+            style: TextStyle(
+                color: Color(0xFFC9A84C), fontSize: 14, letterSpacing: 1),
+          ),
+          const SizedBox(height: 10),
+          const Text(
+            '【方角を読む】',
+            style: TextStyle(
+                color: Color(0xFFC9A84C),
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.5),
+          ),
+          const SizedBox(height: 4),
+          const Text(
+            '基準地点 (VIEWPOINT) を中心に、地表の 16 方位\n'
+            '(北・北北東・北東・東北東・東…) ごとのエネルギーを\n'
+            'スコア化して表示しています。\n'
+            '「どの土地・方向に意識を向けるべきか」が判断できます。\n\n'
+            'どの方向に進むべきかだけの表示ではありません。\n'
+            'もちろん方角に向かい進む事も一つの方角に対する\n'
+            '行動です。他には、意識を向ける事や、声をかける、\n'
+            '大切なアイテムの置き場所を方角に合わせて家を出発する、\n'
+            '話しかける時の方角を意識する、深呼吸をする方角、\n'
+            'など、あなたが自由に決められます。\n'
+            '決めた行動により、惑星たちのエネルギーが\n'
+            'あなたに届くでしょう。\n'
+            '惑星たちは常に大きな視点であなたを見守っています。\n\n'
+            'スコアバーをタップするとカテゴリが切替わります\n'
+            '(総合 → 癒し → 豊かさ → 恋愛 → 仕事 → 話す)。\n'
+            '見たいカテゴリを選ぶと、そのエネルギーが\n'
+            'どの方位に強く出ているかが分かります。',
+            style: TextStyle(
+                color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
+          ),
+          const SizedBox(height: 10),
+          const Text(
+            '【基準地点を登録する】',
+            style: TextStyle(
+                color: Color(0xFFC9A84C),
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.5),
+          ),
+          const SizedBox(height: 4),
+          const Text(
+            '基準地点は地図画面の左側にある 📍 (VIEWPOINT) ボタン\n'
+            'から登録できます。\n'
+            '登録したい場所を地図中央に表示してパネルを開き、\n'
+            '「この地点を保存」をタップすると、その地点が\n'
+            'VIEWPOINT として保存されます。\n\n'
+            '保存した基準地点は、検索結果一覧の上部や\n'
+            '右上 ⊙ アイコン (Daily Transit) のプルダウンから、\n'
+            'いつでも切り替えて使えます。',
+            style: TextStyle(
+                color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
+          ),
+          const SizedBox(height: 10),
+        ],
         const Text(
           '【場所を探す】',
           style: TextStyle(
@@ -610,7 +620,8 @@ void showCategoryInfoPopup(BuildContext context) {
         const SizedBox(height: 10),
         const Text(
           '各カテゴリは、関連する惑星ペアのアスペクトを抽出し、\n'
-          'ペア重みをかけて方位ごとにスコア化しています。',
+          'ペア重みをかけて方位ごとにスコア化しています。\n'
+          '(ペア重みの仕組みは下に詳しく説明)',
           style: TextStyle(
               color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
         ),
@@ -657,14 +668,60 @@ void showCategoryInfoPopup(BuildContext context) {
           const SizedBox(height: 10),
         ],
         const SizedBox(height: 4),
+        // ── ペア重みの詳細解説 (2026-05-08 ボリューム増) ──
         const Text(
-          '【総合との関係】\n'
+          '【ペア重みの仕組み】',
+          style: TextStyle(
+              color: Color(0xFFC9A84C),
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.5),
+        ),
+        const SizedBox(height: 4),
+        const Text(
+          'カテゴリ別スコアは、関連する惑星ペアのアスペクトを抽出し、\n'
+          'ペアの「中心度」に応じた重みをかけて合算しています。\n\n'
+          '・主役ペア (重み 2.0)\n'
+          '　そのカテゴリの中心テーマを担う惑星ペア。\n'
+          '　例: 恋愛 = 金星×火星 / 仕事 = 土星×太陽\n'
+          '　→ アスペクト出現時は 2 倍の影響力で計上されます。\n\n'
+          '・サブペア (重み 0.5)\n'
+          '　片方の惑星だけがカテゴリに関わるアスペクト。\n'
+          '　例: 恋愛で「金星×木星」(金星のみ love 担当)\n'
+          '　→ 0.5 倍の控えめな影響力で計上されます。\n\n'
+          '・ペア外 (重み 0)\n'
+          '　両方ともカテゴリに関係ない惑星のアスペクト。\n'
+          '　→ そのカテゴリのスコアには反映されません。\n\n'
+          'この「重み付け」により、カテゴリの「中心テーマ」を\n'
+          '反映した精度の高いスコアが得られます。\n'
+          'ペア重みなしの単純合算では、カテゴリの個性が\n'
+          'ぼやけてしまうため、加重計算で精緻化しています。',
+          style: TextStyle(
+              color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
+        ),
+        const SizedBox(height: 14),
+        const Text(
+          '【総合との関係】',
+          style: TextStyle(
+              color: Color(0xFFC9A84C),
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.5),
+        ),
+        const SizedBox(height: 4),
+        const Text(
           '上部スコアバーで「総合」を選んでいる時の数字は、\n'
-          '全惑星・全アスペクトをそのまま合算した値で、\n'
-          'カテゴリ重みは入りません。\n'
-          'カテゴリ別はペア重みがかかり、1 つのアスペクトが\n'
-          '複数カテゴリに重複計上されることもあります。\n'
-          'このため「カテゴリ別の合算 ≠ 総合」となります。',
+          '全惑星・全アスペクトをそのまま合算した値です。\n'
+          'カテゴリ重みは入りません (= ペア重みなし)。\n\n'
+          '一方、カテゴリ別 (癒し / 豊かさ / 恋愛 / 仕事 / 話す) は\n'
+          '上記のペア重みがかかります。\n'
+          'さらに 1 つのアスペクトが複数カテゴリに重複計上される\n'
+          'こともあります (例: 金星×木星 → 恋愛にも豊かさにも入る)。\n\n'
+          'このため「カテゴリ別 5 つの単純合算 ≠ 総合」となります。\n'
+          '両者は別の角度からエネルギーを見るための数値で、\n'
+          'どちらが正しいということはありません。\n'
+          '・カテゴリ別 = カテゴリの「集中度」を見る\n'
+          '・総合 = 全体の「総量」を見る',
           style: TextStyle(
               color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
         ),
