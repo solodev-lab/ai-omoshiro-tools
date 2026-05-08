@@ -1304,33 +1304,46 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
             top: false, left: false, right: false,
             child: Stack(children: [
 
-        // ── FF Label ──
-        // モード中は「世界規模スコア」の概念が無いので非表示
-        // 2026-04-30: ラベルタップでカテゴリ循環切替（オーナー要望）
-        if (!_noProfile && !_astroCartoMode) Positioned(
-          top: topPad + 2, left: 16,
-          child: FortuneFilterLabel(
-            sectorScores: _displayScores(),
-            activeSrc: _activeSrc,
-            activeCategory: _activeCategory,
-            onTap: _cycleActiveCategory,
-          ),
-        ),
-
-        // ── 日付タイムスライダー (旧日付バッジを置換、2026-04-29) ──
-        // 通常Map / ACG モード共通で上部に常時表示。
-        // ◀▶ 1日ステッパ + ±365日スライダー + LIVE ボタン + ⏰ で時刻行展開
-        // 左端は left:60 でサイドボタン列 (left:16, 幅 ~40px) を回避。
-        // 動的フレーム (Transit/Prog/SArc) ON 時は線が時刻連動で動く
-        // Natal 単独でも 16方位スコア・FORTUNE は target date で再計算される
+        // ── FF Label (スコアバー) + 日付タイムスライダーを縦 stack ──
+        // 2026-05-08: 端末フォントサイズ拡大でバーの高さが変わって干渉する
+        // 事象を解消するため、絶対配置 (top:2 / top:44) を Column 化。
+        // スコアバーの実高さに応じて日付バーが自動で下に追従する。
+        // 境目には SizedBox(height: 6) で視覚的なギャップを確保。
+        //
+        // モード中は「世界規模スコア」の概念が無いのでスコアバーは非表示。
+        // ラベルタップでカテゴリ循環切替（オーナー要望、2026-04-30）。
         Positioned(
-          top: topPad + 44, left: 12, right: 12,
-          child: MapTimeSlider(
-            date: _selectedDate,
-            onCommit: (d) async {
-              setState(() => _selectedDate = d);
-              await _loadProfileAndChart(targetDate: d);
-            },
+          top: topPad + ((!_noProfile && !_astroCartoMode) ? 2 : 44),
+          left: 12, right: 12,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (!_noProfile && !_astroCartoMode) ...[
+                // 元の left:16 と整列維持 (親の left:12 + ここの padding:4 = 16)。
+                // FortuneFilterLabel 内の sideMargin=16 計算と整合する。
+                Padding(
+                  padding: const EdgeInsets.only(left: 4),
+                  child: FortuneFilterLabel(
+                    sectorScores: _displayScores(),
+                    activeSrc: _activeSrc,
+                    activeCategory: _activeCategory,
+                    onTap: _cycleActiveCategory,
+                  ),
+                ),
+                // スコアバーと日付バーの境目 gap
+                const SizedBox(height: 6),
+              ],
+              // 日付タイムスライダー (常時表示)
+              // ◀▶ 1日ステッパ + ±365日スライダー + NOW + ⏰ で時刻行展開
+              MapTimeSlider(
+                date: _selectedDate,
+                onCommit: (d) async {
+                  setState(() => _selectedDate = d);
+                  await _loadProfileAndChart(targetDate: d);
+                },
+              ),
+            ],
           ),
         ),
 
