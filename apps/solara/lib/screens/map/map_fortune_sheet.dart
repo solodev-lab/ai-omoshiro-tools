@@ -39,18 +39,19 @@ class FortuneFilterLabel extends StatelessWidget {
 
     // 端末幅に応じてレイアウト寸法を可変化:
     //   - 左ラベル (合計/総合) を画面幅の 32% で頭打ち + ellipsis
-    //   - 方角ラベル幅 44 → fontSize 11 で "東南東" 3 文字が 1 行に収まる
-    //   - 値ラベル幅 30 → fontSize 11 monospace で "15.7" まで収まる
+    //   - 方角ラベル幅 48 → fontSize 11 × 内部 1.3 倍 = 14.3 で "東南東" を収める
+    //   - 値ラベル幅 36 → fontSize 11 monospace × 1.3 で "15.7" を収める
     //   - バー幅は MediaQuery で残幅から逆算
     //   - 右側 DailyTransitBadge (右上 right:20, 幅 40) と重ならないよう
     //     右マージン 64 を予約 (2026-05-04 ユーザー指摘対応)
     //
-    // 2026-05-08: noTextScaling 化に伴い視覚的に大きく見えていた事象への
-    // 対策で fontSize 13→11 + 寸法縮小でコンパクト化。
+    // 2026-05-08: アクセシビリティ配慮で score bar 内部のみ
+    // clamp 1.3 倍 (= 全体 1.5 倍より控え目) を許容。寸法は 1.3 倍時の
+    // テキストが収まるよう拡大調整。
     final screenW = MediaQuery.of(context).size.width;
     final leftLabelMax = screenW * 0.32;
-    const dirLabelW = 44.0;
-    const valueLabelW = 30.0;
+    const dirLabelW = 48.0;
+    const valueLabelW = 36.0;
     const innerHPad = 8.0;   // Container horizontal padding (片側)
     const sideMargin = 16.0;  // 親 Positioned の left:16 分
     const dailyBadgeReserved = 64.0;  // DailyTransitBadge 用右マージン
@@ -61,16 +62,17 @@ class FortuneFilterLabel extends StatelessWidget {
     final barW = (screenW - reserved).clamp(36.0, 90.0);
 
     // ClipRRect で境界半径を維持しつつ、sub-pixel オーバーフローを視覚的に吸収。
-    // 2026-05-08: スコアバー全体を MediaQuery.withNoTextScaling で包んで
-    // 端末フォント拡大の影響を受けないコンパクト UI として扱う。
-    //   - 寸法を全部 fontSize 13 前提で計算しているため、拡大すると
-    //     スコア '15.7' / 方角 '北北東' / 左ラベルが全部はみ出す
-    //   - 「合計/総合」表示は status indicator (バッテリー残量バッジ的) で
-    //     アクセシビリティの拡大対象にしないのが業界慣習
+    // 2026-05-08: スコアバー内のみ独自に clamp 1.3 倍を適用。
+    //   - 全体 (main.dart) は 1.5 倍までクランプ
+    //   - score bar 内部はさらに 1.3 倍まで絞ることで、コンパクト UI
+    //     としての見た目を維持しつつ、ある程度のアクセシビリティ拡大も許容
+    //   - 1.3 倍時にテキストが収まるよう dirLabelW / valueLabelW を計算済み
     return GestureDetector(
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
-      child: MediaQuery.withNoTextScaling(
+      child: MediaQuery.withClampedTextScaling(
+      minScaleFactor: 1.0,
+      maxScaleFactor: 1.3,
       child: ClipRRect(
       borderRadius: BorderRadius.circular(10),
       child: Container(
@@ -147,7 +149,7 @@ class FortuneFilterLabel extends StatelessWidget {
         ),
       ),
     ),  // ClipRRect 終端
-    ),  // MediaQuery.withNoTextScaling 終端
+    ),  // MediaQuery.withClampedTextScaling 終端
     );
   }
 }
