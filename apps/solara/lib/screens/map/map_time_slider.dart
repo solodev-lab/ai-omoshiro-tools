@@ -185,11 +185,14 @@ class _MapTimeSliderState extends State<MapTimeSlider> {
       const SizedBox(width: 4),
       // 日付ラベル: 固定幅 56 で時刻ラベルと中央揃え (▶ の X 位置を一致させる)。
       // 2026-05-07: 年表示撤去で 90→56 にコンパクト化 ('05/07' / '今日' / '12:00' いずれも収まる)。
+      // 2026-05-08: textScaler.noScaling で端末フォント拡大の影響を完全遮断。
+      // (clamp 1.3 では '12:00' 等が 56px に収まらず改行されていた)
       SizedBox(
         width: 56,
         child: Center(
           child: Text(
             _fmtDate(preview, dayValue),
+            textScaler: TextScaler.noScaling,
             style: const TextStyle(
               fontSize: 13,
               color: Color(0xFFE9D29A),
@@ -308,11 +311,13 @@ class _MapTimeSliderState extends State<MapTimeSlider> {
       const SizedBox(width: 4),
       // 時刻表示: 固定幅 56 で日付ラベルと中央揃え (▶ の X 位置を一致)。
       // 2026-05-07: 日付ラベル 90→56 のコンパクト化に同期。
+      // 2026-05-08: textScaler.noScaling で端末フォント拡大の影響を完全遮断。
       SizedBox(
         width: 56,
         child: Center(
           child: Text(
             _fmtHour(hourValue.round()),
+            textScaler: TextScaler.noScaling,
             style: const TextStyle(
               fontSize: 13,
               color: Color(0xFF63D6A0), // 緑系で日付と区別
