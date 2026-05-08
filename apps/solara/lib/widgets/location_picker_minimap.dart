@@ -124,7 +124,7 @@ class _LocationPickerMinimapState extends State<LocationPickerMinimap> {
                   child: const Text(
                     '地図を動かしてピン位置調整',
                     style: TextStyle(
-                      fontSize: 10,
+                      fontSize: 15,
                       color: Color(0xFFE8E0D0),
                       fontWeight: FontWeight.w500,
                       letterSpacing: 0.3,
