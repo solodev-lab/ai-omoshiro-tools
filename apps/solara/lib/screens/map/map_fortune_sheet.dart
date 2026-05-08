@@ -460,12 +460,16 @@ class FortuneSheet extends StatelessWidget {
   }
 }
 
-/// カテゴリと関連惑星ペアの説明 popup。
+/// Map の使い方 + カテゴリと関連惑星ペアの説明 popup。
 /// スコアバー左ラベル下の i ボタンから開く。
 ///
-/// 5 カテゴリそれぞれの実装上の惑星ペア (`_fortunePairs` in map_astro.dart) を
-/// ユーザー向けに開示し、「このカテゴリは何を見ているか」を理解できるようにする。
-/// 「総合」との計算差異もここで一括説明する。
+/// 構成:
+///   1. 「Map の使い方」 — 方角・場所検索・時間の連動を概観
+///   2. 「カテゴリと関連惑星」 — 5 カテゴリそれぞれの惑星ペア定義
+///      (実装は map_astro.dart の `_fortunePairs` と一致)
+///   3. 「総合との関係」 — カテゴリ別合算 ≠ 総合 の理由
+///
+/// パッと見て Solara の Map で何ができるか理解してもらうのが目的。
 void showCategoryInfoPopup(BuildContext context) {
   // 各カテゴリのアイコン文字 (絵文字)、関連惑星ペア (実装と一致)、
   // ニュアンス説明をデータ駆動で並べる。
@@ -495,6 +499,73 @@ void showCategoryInfoPopup(BuildContext context) {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // ── Section 1: Map の使い方 (機能概観) ──
+        const Text(
+          'Map の使い方',
+          style: TextStyle(
+              color: Color(0xFFC9A84C), fontSize: 14, letterSpacing: 1),
+        ),
+        const SizedBox(height: 10),
+        const Text(
+          '【方角を読む】',
+          style: TextStyle(
+              color: Color(0xFFC9A84C),
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.5),
+        ),
+        const SizedBox(height: 4),
+        const Text(
+          '基準点 (VIEWPOINT) を中心に、各方位のエネルギーを\n'
+          'スコア化して表示しています。\n'
+          '「どの方角に意識を向けるべきか」が判断できます。\n\n'
+          'スコアバーをタップするとカテゴリが切替わります\n'
+          '(総合 → 癒し → 豊かさ → 恋愛 → 仕事 → 話す)。\n'
+          '見たいカテゴリを選ぶと、そのエネルギーが\n'
+          'どの方角に強く出ているかが分かります。',
+          style: TextStyle(
+              color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
+        ),
+        const SizedBox(height: 10),
+        const Text(
+          '【場所を探す】',
+          style: TextStyle(
+              color: Color(0xFFC9A84C),
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.5),
+        ),
+        const SizedBox(height: 4),
+        const Text(
+          '検索ボタンから買い物・待ち合わせ・お店などを\n'
+          '検索すると、その地点が今どの惑星から\n'
+          'エネルギーを受けているかを確認できます。',
+          style: TextStyle(
+              color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
+        ),
+        const SizedBox(height: 10),
+        const Text(
+          '【時間を読む】',
+          style: TextStyle(
+              color: Color(0xFFC9A84C),
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.5),
+        ),
+        const SizedBox(height: 4),
+        const Text(
+          '右上の ⊙ アイコンから「行動する時間の指針」が\n'
+          '分かります。\n'
+          'スコアバー (方角) と右上アイコン (時間) を\n'
+          '組み合わせると、あなたの望む未来に対する\n'
+          '最適な「方角 × 時間」を Solara が算出します。',
+          style: TextStyle(
+              color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
+        ),
+        const SizedBox(height: 16),
+        const Divider(color: Color(0x33C9A84C), height: 1),
+        const SizedBox(height: 16),
+        // ── Section 2: カテゴリと関連惑星 ──
         const Text(
           'カテゴリと関連惑星',
           style: TextStyle(
