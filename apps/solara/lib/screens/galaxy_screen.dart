@@ -534,7 +534,7 @@ class GalaxyScreenState extends State<GalaxyScreen>
         Text(info.emoji, style: const TextStyle(fontSize: 20, height: 1)),
         const SizedBox(height: 2),
         Text(info.label, style: GoogleFonts.cinzel(
-          fontSize: 10, color: const Color(0xA6C0C8E0), letterSpacing: 1.2)),
+          fontSize: 13, color: const Color(0xA6C0C8E0), letterSpacing: 1.2)),
       ]),
     );
   }
