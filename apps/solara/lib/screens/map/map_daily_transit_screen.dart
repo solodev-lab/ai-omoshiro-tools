@@ -682,7 +682,18 @@ class _Header extends StatelessWidget {
               ],
             ),
           ),
-          // i アイコン: 「なぜこのカテゴリが今日の TOP か」の技術的説明
+          // ❓ help_outline: 「今日の動きの読み方」=この画面の機能ガイド。
+          // Map スコアバーの ⓘ と対になる、時間×方角の使い方を概説。
+          GestureDetector(
+            onTap: () => showDailyUsageGuidePopup(context),
+            behavior: HitTestBehavior.opaque,
+            child: const Padding(
+              padding: EdgeInsets.all(8),
+              child: Icon(Icons.help_outline,
+                  size: 18, color: Color(0xCCAAAAAA)),
+            ),
+          ),
+          // ⓘ info_outline: 「なぜこのカテゴリが今日の TOP か」の技術的説明
           // 5カテゴリ × 担当惑星 × ペア倍率の集計ロジックを popup で開示。
           GestureDetector(
             onTap: () =>
@@ -1249,6 +1260,71 @@ void _showPlanetAngleDetail({
             ),
           ),
         ],
+      ],
+    ),
+  );
+}
+
+/// 「今日の動き」画面の使い方 popup。
+/// _Header の ❓ help_outline アイコンから開く。
+///
+/// Map スコアバー側の `showCategoryInfoPopup` と対になる「逆向き」説明:
+///   - スコアバー (Map 本体) = 方角の指針
+///   - この画面                = 時間の指針
+///   - 両方を組み合わせて Solara が「方角 × 時間」を算出
+///
+/// 「今日の動きの読み方」というシンプルな見出しでパッと見て機能を理解
+/// してもらうのが目的。技術的な「なぜこのカテゴリが TOP か」はもう一つの
+/// ⓘ info_outline アイコン (`top_category_logic` glossary) に分離。
+void showDailyUsageGuidePopup(BuildContext context) {
+  showInfoPopup(
+    context: context,
+    child: Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: const [
+        Text(
+          '今日の動きの読み方',
+          style: TextStyle(
+              color: Color(0xFFC9A84C), fontSize: 14, letterSpacing: 1),
+        ),
+        SizedBox(height: 10),
+        Text(
+          '【時間を読む】',
+          style: TextStyle(
+              color: Color(0xFFC9A84C),
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.5),
+        ),
+        SizedBox(height: 4),
+        Text(
+          '今日、どのカテゴリのエネルギーが いつ ピークを\n'
+          '迎えるかをタイムラインで表示します。\n'
+          '「いつ恋愛運が上がる」「いつ仕事の節目になる」など、\n'
+          '行動する時間の指針が分かります。',
+          style: TextStyle(
+              color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
+        ),
+        SizedBox(height: 10),
+        Text(
+          '【方角を読む】',
+          style: TextStyle(
+              color: Color(0xFFC9A84C),
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.5),
+        ),
+        SizedBox(height: 4),
+        Text(
+          '方角は Map のスコアバーから確認できます。\n'
+          '「合計 / 総合」ラベル下の i ボタンに詳細解説があります。\n\n'
+          'スコアバー (方角) と この画面 (時間) を組み合わせると、\n'
+          'あなたの望む未来に対する最適な「方角 × 時間」を\n'
+          'Solara が算出します。',
+          style: TextStyle(
+              color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
+        ),
       ],
     ),
   );
