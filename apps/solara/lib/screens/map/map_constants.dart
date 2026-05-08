@@ -36,8 +36,15 @@ const compColors = <String, Color>{
 };
 const compKeys = ['tSoft', 'tHard', 'pSoft', 'pHard'];
 
-/// ソースタブラベル
-const srcLabels = <String, String>{'combined':'合計','transit':'トランジット','progressed':'プログレス'};
+/// ソースタブラベル (スコアバー左ラベル用、短縮表記)。
+/// 2026-05-08: 'トランジット'/'プログレス' は 6/5 文字でスコアバー枠を超えて
+/// 表示が消える事象があったため 'TR'/'PR' に短縮。FortuneSheet 内の展開表示は
+/// 別途フルネーム定義 (map_fortune_sheet.dart 内) を使うので影響なし。
+const srcLabels = <String, String>{
+  'combined': '合計',
+  'transit': 'TR',
+  'progressed': 'PR',
+};
 
 /// HTML: CHART_STYLE — natal/progressed/transit の線スタイル
 class ChartLineStyle {
