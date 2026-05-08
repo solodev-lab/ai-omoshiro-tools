@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../utils/forecast_cache.dart';
+import '../../widgets/info_popup.dart';
 import '../map/map_constants.dart';
 
 /// 強運Top5 セクション — 永続保存された Top5 を mode 別に表示
@@ -35,8 +36,21 @@ class ForecastTop5Section extends StatelessWidget {
     if (list.isEmpty) return const SizedBox.shrink();
 
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      const Text('▸ 強運Top5',
-          style: TextStyle(fontSize: 11, color: Color(0xFFC9A84C), letterSpacing: 2)),
+      Row(children: [
+        const Text('▸ 強運Top5',
+            style: TextStyle(fontSize: 11, color: Color(0xFFC9A84C), letterSpacing: 2)),
+        const SizedBox(width: 4),
+        // ⓘ 強運Top5 説明 popup
+        GestureDetector(
+          onTap: () => _showTop5Info(context),
+          behavior: HitTestBehavior.opaque,
+          child: const Padding(
+            padding: EdgeInsets.all(2),
+            child: Icon(Icons.info_outline,
+                size: 13, color: Color(0xCCAAAAAA)),
+          ),
+        ),
+      ]),
       const SizedBox(height: 8),
       _modeSelector(),
       const SizedBox(height: 10),
@@ -129,4 +143,103 @@ class ForecastTop5Section extends StatelessWidget {
       ),
     );
   }
+}
+
+/// 強運Top5 説明 popup (見出し横の i ボタンから開く)。
+void _showTop5Info(BuildContext context) {
+  showInfoPopup(
+    context: context,
+    child: Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: const [
+        Text(
+          '強運 Top5 の読み方',
+          style: TextStyle(
+              color: Color(0xFFC9A84C), fontSize: 14, letterSpacing: 1),
+        ),
+        SizedBox(height: 10),
+        Text(
+          '【表示の意味】',
+          style: TextStyle(
+              color: Color(0xFFC9A84C),
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.5),
+        ),
+        SizedBox(height: 4),
+        Text(
+          '今後 1 年で、選択中のカテゴリのスコアが\n'
+          '最も高い 5 日を表示します。',
+          style: TextStyle(
+              color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
+        ),
+        SizedBox(height: 10),
+        Text(
+          '【カテゴリ切替】',
+          style: TextStyle(
+              color: Color(0xFFC9A84C),
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.5),
+        ),
+        SizedBox(height: 4),
+        Text(
+          '総合 / 恋愛 / 豊かさ / 癒し / 仕事 / 話す から選択。\n'
+          '選んだカテゴリの上位 5 日が表示されます。',
+          style: TextStyle(
+              color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
+        ),
+        SizedBox(height: 10),
+        Text(
+          '【順位マーカー】',
+          style: TextStyle(
+              color: Color(0xFFC9A84C),
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.5),
+        ),
+        SizedBox(height: 4),
+        Text(
+          '👑 1 位 / 🥈 2 位 / 🥉 3 位 / ⭐ 4 位 / ✨ 5 位',
+          style: TextStyle(
+              color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
+        ),
+        SizedBox(height: 10),
+        Text(
+          '【行の見方】',
+          style: TextStyle(
+              color: Color(0xFFC9A84C),
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.5),
+        ),
+        SizedBox(height: 4),
+        Text(
+          '日付 — その日の最強方位 — その日のスコア\n'
+          'タップで選択日詳細にジャンプ。\n'
+          '🗺 ボタンでその日を Map で開けます。',
+          style: TextStyle(
+              color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
+        ),
+        SizedBox(height: 10),
+        Text(
+          '【活用方法】',
+          style: TextStyle(
+              color: Color(0xFFC9A84C),
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.5),
+        ),
+        SizedBox(height: 4),
+        Text(
+          '「動きどころ」の短期ピンポイント計画に。\n'
+          '特に 1 位の日は、そのカテゴリのテーマで動くと\n'
+          '追い風が強い日です。',
+          style: TextStyle(
+              color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
+        ),
+      ],
+    ),
+  );
 }

@@ -2,6 +2,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:latlong2/latlong.dart';
 import '../utils/solara_storage.dart';
+import '../widgets/info_popup.dart';
 import '../widgets/no_profile_guide.dart';
 import 'locations/locations_date_stepper.dart';
 import 'map/map_astro.dart';
@@ -284,6 +285,17 @@ class _LocationsScreenState extends State<LocationsScreen> {
             const SizedBox(width: 8),
             const Text('LOCATIONS',
                 style: TextStyle(fontSize: 13, color: Color(0xFFC9A84C), letterSpacing: 3, fontWeight: FontWeight.w600)),
+            const SizedBox(width: 6),
+            // ❓ help_outline: 画面の使い方説明 popup
+            GestureDetector(
+              onTap: () => _showLocationsUsageGuide(context),
+              behavior: HitTestBehavior.opaque,
+              child: const Padding(
+                padding: EdgeInsets.all(4),
+                child: Icon(Icons.help_outline,
+                    size: 16, color: Color(0xCCAAAAAA)),
+              ),
+            ),
             const Spacer(),
             IconButton(
               icon: const Icon(Icons.close, color: Color(0xFF888888)),
@@ -584,4 +596,105 @@ class _SlotStats {
   final String? fortune;
   final double km;
   _SlotStats({required this.dir, required this.score, this.fortune, required this.km});
+}
+
+/// LOCATIONS 画面の使い方 popup (ヘッダの ❓ ボタンから開く)。
+/// 登録した VIEWPOINT 一覧画面の各機能を概観する。
+void _showLocationsUsageGuide(BuildContext context) {
+  showInfoPopup(
+    context: context,
+    child: Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: const [
+        Text(
+          'LOCATIONS の使い方',
+          style: TextStyle(
+              color: Color(0xFFC9A84C), fontSize: 14, letterSpacing: 1),
+        ),
+        SizedBox(height: 10),
+        Text(
+          'あなたが登録した VIEWPOINT (お気に入りの地点) を\n'
+          '一覧で見られます。それぞれの地点が選択した基準点から見て\n'
+          'どの方位にあり、どのカテゴリのエネルギーが\n'
+          'どのくらい強いかを一目で比較できます。',
+          style: TextStyle(
+              color: Color(0xFFE8E0D0),
+              fontSize: 13,
+              height: 1.6,
+              fontWeight: FontWeight.w500),
+        ),
+        SizedBox(height: 14),
+        Text(
+          '【日付・時刻】',
+          style: TextStyle(
+              color: Color(0xFFC9A84C),
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.5),
+        ),
+        SizedBox(height: 4),
+        Text(
+          '上部の「日付」と「時刻」を変更すると、その時点の\n'
+          'スコアで再計算されます。「今日に戻す」ボタンで\n'
+          '現在に戻せます。',
+          style: TextStyle(
+              color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
+        ),
+        SizedBox(height: 10),
+        Text(
+          '【VIEWPOINT 切替】',
+          style: TextStyle(
+              color: Color(0xFFC9A84C),
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.5),
+        ),
+        SizedBox(height: 4),
+        Text(
+          '「VIEWPOINT」プルダウンで、距離・方位スコアの\n'
+          '基準地点を切替えられます。\n'
+          '・地図中心 (現在地) ・現住所 ・登録した VIEWPOINT\n'
+          'を選択可能。',
+          style: TextStyle(
+              color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
+        ),
+        SizedBox(height: 10),
+        Text(
+          '【カテゴリ切替】',
+          style: TextStyle(
+              color: Color(0xFFC9A84C),
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.5),
+        ),
+        SizedBox(height: 4),
+        Text(
+          '癒し / 豊かさ / 恋愛 / 仕事 / 話す をタップで切替えると、\n'
+          'そのカテゴリのスコアで地点が再ランクされます。\n'
+          'もう一度同じカテゴリをタップで未選択 (= 総合スコア表示) に\n'
+          '戻ります。',
+          style: TextStyle(
+              color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
+        ),
+        SizedBox(height: 10),
+        Text(
+          '【地点の登録】',
+          style: TextStyle(
+              color: Color(0xFFC9A84C),
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.5),
+        ),
+        SizedBox(height: 4),
+        Text(
+          'Map 画面の左側 📍 (VIEWPOINT) ボタンから、\n'
+          '地図中央の地点を VIEWPOINT として保存できます。\n'
+          '保存した地点は名前変更や削除も可能です。',
+          style: TextStyle(
+              color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
+        ),
+      ],
+    ),
+  );
 }
