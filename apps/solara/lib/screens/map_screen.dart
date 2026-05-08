@@ -4,7 +4,9 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
+import '../utils/solara_api.dart' show solaraWorkerBase;
 import '../utils/solara_storage.dart';
+import '../utils/tile_http_client.dart' show sharedTileHttpClient;
 import '../widgets/dominant_fortune_overlay.dart';
 import '../widgets/daily_transit_badge.dart';
 import 'map/map_daily_transit_screen.dart';
@@ -179,6 +181,15 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   static const int _tileBumpMax = 3;
   Timer? _tileErrorDebounce;
 
+  /// 多段 viewport キック用 Timer。初期描画失敗対策で
+  /// onMapReady 後に複数回 move(self) を打って TileLayer を起こす。
+  /// dispose で全部キャンセル。
+  final List<Timer> _kickTimers = [];
+
+  /// 強制 bump 済みフラグ (2.5s 経過時の最終手段が走ったか)。
+  /// 走っていれば errorTileCallback の bump も即時走らせて連鎖回復を狙う。
+  bool _initialForcedBumpDone = false;
+
   // Dominant fortune overlay
   DominantFortuneKind? _topCategory;
   DominantFortuneKind? _activeOverlay;
@@ -232,6 +243,7 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
+    _warmupTileConnection();   // ★ DNS/TLS の cold start を吸収
     _loadProfileAndChart();
     _loadMapStyle();
     _checkDailyBadgeState();
@@ -240,7 +252,61 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   @override
   void dispose() {
     _tileErrorDebounce?.cancel();
+    for (final t in _kickTimers) {
+      t.cancel();
+    }
+    _kickTimers.clear();
     super.dispose();
+  }
+
+  /// Worker (タイル元) への DNS/TLS cold start を画面表示前に解消するための
+  /// プリウォーム。fire-and-forget。失敗しても本番 fetch でリトライされるので無視。
+  /// 2026-05-08: Pixel8 エミュ初期描画失敗対策で導入。
+  Future<void> _warmupTileConnection() async {
+    try {
+      // 低 zoom (z=2) のタイルは Worker の edge cache に大体ある。
+      // sharedTileHttpClient と同じ HTTP プールを使うので、
+      // ここで握った keep-alive socket が直後の本番 tile fetch に再利用される。
+      final url = Uri.parse('$solaraWorkerBase/tiles/osm/hot/2/0/0.png');
+      await sharedTileHttpClient
+          .head(url)
+          .timeout(const Duration(seconds: 8));
+    } catch (_) {
+      // 失敗しても本番リトライがあるので無視
+    }
+  }
+
+  /// onMapReady 後に多段で viewport を強制再計算するキック群を仕掛ける。
+  /// flutter_map 8.x で hot restart 直後に「TileLayer が tile fetch を自発的に
+  /// キックしないまま固着」する事象への対策 (2026-05-08, Pixel8 で再発確認)。
+  ///
+  /// 100ms / 800ms : 軽量 move(self) で viewport 再計算を促す
+  /// 2500ms        : 上記でもダメな場合の最終手段。session bump で TileLayer
+  ///                 State を強制再生成し、全タイルを fresh fetch させる
+  ///                 (Worker 側 24h edge cache が効くので再 fetch は実質無料)。
+  void _scheduleInitialKicks() {
+    void kick() {
+      if (!mounted) return;
+      final cam = _mapCtrl.camera;
+      _mapCtrl.move(cam.center, cam.zoom);
+    }
+
+    _kickTimers.add(Timer(const Duration(milliseconds: 100), kick));
+    _kickTimers.add(Timer(const Duration(milliseconds: 800), kick));
+    _kickTimers.add(Timer(const Duration(milliseconds: 2500), () {
+      if (!mounted) return;
+      kick();
+      // 最終保険: 必ず key bump して TileLayer を fresh state にする。
+      // 既にタイルが正常表示されている場合でも、bump 1 回なら 24h edge cache
+      // から即返るのでユーザーへの影響は最小限。
+      if (!_initialForcedBumpDone) {
+        _initialForcedBumpDone = true;
+        setState(() {
+          _tileSessionBump++;
+          // _tileBumpCount は据え置き (errorTileCallback 経由 bump の上限とは独立)
+        });
+      }
+    }));
   }
 
   /// 個別タイル fetch 失敗時のフック。1.5s デバウンスして session bump で
@@ -1062,10 +1128,9 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
             backgroundColor: mapStyleConfigs[_mapStyle]!.backgroundColor,
             // FlutterMap 内部初期化完了通知。
             // ① 出生地が先に揃って _pendingInitialMove が積まれていればここで消化。
-            // ② flutter_map 8.x の既知挙動 (hot restart 直後に TileLayer が tile fetch を
-            //    自発キックしない) 対策として、move 後にもう一度 100ms 遅延で
-            //    「現在地への move」を打って viewport 再計算を強制発火させる。
-            //    これにより「ホットリスタートしたら最初から地図が無い」事象を防ぐ。
+            // ② 多段 viewport キック (_scheduleInitialKicks) で初期描画失敗を防ぐ。
+            //    100ms / 800ms / 2.5s の 3 段階で強制発火。最後は session bump も。
+            //    Pixel8 エミュレータで再発した「初期表示で地図が出ない」事象への対策。
             onMapReady: () {
               _mapReady = true;
               final pending = _pendingInitialMove;
@@ -1073,12 +1138,7 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                 _pendingInitialMove = null;
                 _mapCtrl.move(pending, _mapCtrl.camera.zoom);
               }
-              // tile fetch 強制キック。pending 有無に関わらず必ず実行する。
-              Future.delayed(const Duration(milliseconds: 100), () {
-                if (!mounted) return;
-                final cam = _mapCtrl.camera;
-                _mapCtrl.move(cam.center, cam.zoom);
-              });
+              _scheduleInitialKicks();
             },
             // 回転ジェスチャー無効化 (2026-04-29):
             // Solara Map は北上固定前提 (16方位セクター・コンパス・VP Pin の方位概念が
