@@ -45,15 +45,16 @@ class SolaraApp extends StatelessWidget {
           GlobalWidgetsLocalizations.delegate,
           GlobalCupertinoLocalizations.delegate,
         ],
-        // 端末のフォントサイズ設定によるテキスト拡大を最大 1.3 倍にクランプ。
+        // 端末のフォントサイズ設定によるテキスト拡大を最大 1.5 倍にクランプ。
         // 2026-05-08: Solara はタイトな詩的レイアウト (スコアバー / 16方位 /
         // 天頂マーカー等) が多く、端末側 200% 設定でレイアウト崩壊する事象を
         // 防ぎつつ、アクセシビリティもある程度確保するための妥協点。
         // 無効化 (TextScaler.noScaling) は Apple HIG 違反 + ストア審査リスクの
-        // ため避け、業界標準の「1.2〜1.5 クランプ」のうち中間値を採用。
+        // ため避け、業界標準の「1.2〜1.5 クランプ」のうち上限値を採用。
+        // (スコアバー / 日付バーは Column 化済みなので 1.5 まで耐えられる)
         builder: (context, child) => MediaQuery.withClampedTextScaling(
           minScaleFactor: 1.0,
-          maxScaleFactor: 1.3,
+          maxScaleFactor: 1.5,
           child: child!,
         ),
         home: const SolaraHome(),
