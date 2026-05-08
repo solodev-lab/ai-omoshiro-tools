@@ -247,24 +247,28 @@ class SearchResultList extends StatelessWidget {
                 style: const TextStyle(fontSize: 13, color: Color(0xFFE8E0D0), fontWeight: FontWeight.w600),
                 maxLines: 1, overflow: TextOverflow.ellipsis),
               const SizedBox(height: 2),
-              Row(children: [
-                Text(kmStr,
-                    style: const TextStyle(
-                      fontSize: 13, color: Color(0xFFC9A84C),
-                      fontWeight: FontWeight.w600,
-                    )),
-                const SizedBox(width: 8),
-                if (h.bestDir != null) ...[
-                  Text('${dir16JP[h.bestDir!]}方位',
-                      style: const TextStyle(fontSize: 13, color: Color(0xFF999999))),
-                  const SizedBox(width: 8),
+              // メタ情報 (距離 / 方位 / カテゴリ&スコア / 絵文字) は
+              // 端末フォント拡大時 (1.5 倍) に Row では入りきらないため
+              // Wrap に置換: 入らなければ自動で 2 行目へ折返し。
+              Wrap(
+                spacing: 8,
+                runSpacing: 4,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  Text(kmStr,
+                      style: const TextStyle(
+                        fontSize: 13, color: Color(0xFFC9A84C),
+                        fontWeight: FontWeight.w600,
+                      )),
+                  if (h.bestDir != null)
+                    Text('${dir16JP[h.bestDir!]}方位',
+                        style: const TextStyle(fontSize: 13, color: Color(0xFF999999))),
+                  Text('${categoryLabels[activeCategory] ?? '総合'} ${h.bestScore.toStringAsFixed(1)}',
+                      style: TextStyle(fontSize: 13, color: catColor)),
+                  if (fortuneIcon != null)
+                    Text(fortuneIcon, style: const TextStyle(fontSize: 13)),
                 ],
-                Text('${categoryLabels[activeCategory] ?? '総合'} ${h.bestScore.toStringAsFixed(1)}',
-                    style: TextStyle(fontSize: 13, color: catColor)),
-                const SizedBox(width: 8),
-                if (fortuneIcon != null) Text(fortuneIcon,
-                    style: const TextStyle(fontSize: 13)),
-              ]),
+              ),
             ],
           )),
           const SizedBox(width: 6),
