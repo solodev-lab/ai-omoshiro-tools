@@ -98,16 +98,25 @@ class GalaxyReplayOverlay extends StatelessWidget {
                         letterSpacing: 1.5, fontWeight: FontWeight.w500),
                       textAlign: TextAlign.center),
                     const SizedBox(height: 10),
-                    Row(mainAxisSize: MainAxisSize.min, children: [
-                      Text(cycle.rarityLabel, style: GoogleFonts.cinzel(
-                        fontSize: 18, color: const Color(0xFFEAEAEA),
-                        letterSpacing: 2.2, fontWeight: FontWeight.w600)),
-                      const SizedBox(width: 10),
-                      Text('${'★' * cycle.rarity}${'☆' * (5 - cycle.rarity)}',
-                        style: TextStyle(fontSize: 18, letterSpacing: 2.5,
-                          color: cycle.rarity >= 4 ? const Color(0xFFF9D976)
-                              : cycle.rarity >= 3 ? const Color(0xFFB080FF) : const Color(0xFF888888))),
-                    ]),
+                    // 2026-05-08: Row → Wrap に変更。global 1.5x 拡大時に
+                    // rarityLabel + 星 5 個 (letterSpacing 2.5 込み) が
+                    // 横幅を超えて RIGHT OVERFLOW していた。Wrap で入りきら
+                    // ない場合は自動で 2 行表示に折返し、中央揃え。
+                    Wrap(
+                      alignment: WrapAlignment.center,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      spacing: 10,
+                      runSpacing: 4,
+                      children: [
+                        Text(cycle.rarityLabel, style: GoogleFonts.cinzel(
+                          fontSize: 18, color: const Color(0xFFEAEAEA),
+                          letterSpacing: 2.2, fontWeight: FontWeight.w600)),
+                        Text('${'★' * cycle.rarity}${'☆' * (5 - cycle.rarity)}',
+                          style: TextStyle(fontSize: 18, letterSpacing: 2.5,
+                            color: cycle.rarity >= 4 ? const Color(0xFFF9D976)
+                                : cycle.rarity >= 3 ? const Color(0xFFB080FF) : const Color(0xFF888888))),
+                      ],
+                    ),
                     const SizedBox(height: 10),
                     Text(cycle.dateRangeLabel, style: GoogleFonts.cinzel(
                       fontSize: 15, color: const Color(0xFFCCCCCC),

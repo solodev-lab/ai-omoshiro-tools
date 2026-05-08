@@ -437,6 +437,9 @@ class _NewMoonOverlayState extends State<NewMoonOverlay>
   // ══════════════════════════════════════════════════
 
   /// タイトルブロック (英語大見出し + 日本語サブ)
+  /// 2026-05-08: textAlign: TextAlign.center を明示。global の 1.5x 拡大で
+  /// "New Moon in TAURUS" が画面幅を超え自動折返しされた際、各行が
+  /// 左寄せになる事象 (Text のデフォルト textAlign は start = 左) を解消。
   Widget _titleBlock({
     Key? keyRef,
     required String sign,
@@ -449,6 +452,7 @@ class _NewMoonOverlayState extends State<NewMoonOverlay>
         children: [
           Text(
             'New Moon in $sign',
+            textAlign: TextAlign.center,
             style: GoogleFonts.cinzel(
               color: SolaraColors.textPrimary,
               fontSize: 22,
@@ -459,6 +463,7 @@ class _NewMoonOverlayState extends State<NewMoonOverlay>
           const SizedBox(height: 4),
           Text(
             '$signJPの新月',
+            textAlign: TextAlign.center,
             style: const TextStyle(
               color: SolaraColors.solaraGold,
               fontSize: 15,
