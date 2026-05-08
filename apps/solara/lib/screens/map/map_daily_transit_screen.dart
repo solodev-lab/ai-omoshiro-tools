@@ -678,23 +678,13 @@ class _Header extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 4),
-                _buildVpDropdown(),
+                _buildVpDropdownWithGuide(context),
               ],
-            ),
-          ),
-          // ❓ help_outline: 「今日の動きの読み方」=この画面の機能ガイド。
-          // Map スコアバーの ⓘ と対になる、時間×方角の使い方を概説。
-          GestureDetector(
-            onTap: () => showDailyUsageGuidePopup(context),
-            behavior: HitTestBehavior.opaque,
-            child: const Padding(
-              padding: EdgeInsets.all(8),
-              child: Icon(Icons.help_outline,
-                  size: 18, color: Color(0xCCAAAAAA)),
             ),
           ),
           // ⓘ info_outline: 「なぜこのカテゴリが今日の TOP か」の技術的説明
           // 5カテゴリ × 担当惑星 × ペア倍率の集計ロジックを popup で開示。
+          // (機能ガイド ❓ は基準地点プルダウン左に移動 — 2026-05-08)
           GestureDetector(
             onTap: () =>
                 showAstroGlossaryDialog(context, 'top_category_logic'),
@@ -741,13 +731,27 @@ class _Header extends StatelessWidget {
   /// VIEWPOINT dropdown。
   /// 選択肢: 出生地（-1） + 各VPスロット（0+）。
   /// 場所が変わると Daily Transit の通過時刻が再計算される。
-  Widget _buildVpDropdown() {
+  ///
+  /// 2026-05-08: プルダウン左の Icons.place (場所ピン) を Icons.help_outline
+  /// (❓) に置換。タップで「今日の動きの読み方」popup を開く。
+  /// 基準地点 (VIEWPOINT) を中心に惑星の方角×時刻を表示している、という
+  /// 機能ガイドを基準地点プルダウンの隣に置くことで、何の地点を基準に
+  /// しているのかが直感的に分かる動線にする。
+  Widget _buildVpDropdownWithGuide(BuildContext context) {
     final birthName =
         birthLocationName.isEmpty ? '出生地' : birthLocationName;
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        const Icon(Icons.place, size: 12, color: Color(0xFF888888)),
+        GestureDetector(
+          onTap: () => showDailyUsageGuidePopup(context),
+          behavior: HitTestBehavior.opaque,
+          child: const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 2, vertical: 2),
+            child: Icon(Icons.help_outline,
+                size: 14, color: Color(0xFF888888)),
+          ),
+        ),
         const SizedBox(width: 2),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
@@ -1289,8 +1293,9 @@ void showDailyUsageGuidePopup(BuildContext context) {
               color: Color(0xFFC9A84C), fontSize: 14, letterSpacing: 1),
         ),
         SizedBox(height: 10),
+        // ── 基準地点 (VIEWPOINT) の説明 ──
         Text(
-          '【時間を読む】',
+          '【基準地点 (VIEWPOINT)】',
           style: TextStyle(
               color: Color(0xFFC9A84C),
               fontSize: 13,
@@ -1299,16 +1304,17 @@ void showDailyUsageGuidePopup(BuildContext context) {
         ),
         SizedBox(height: 4),
         Text(
-          '今日、どのカテゴリのエネルギーが いつ ピークを\n'
-          '迎えるかをタイムラインで表示します。\n'
-          '「いつ恋愛運が上がる」「いつ仕事の節目になる」など、\n'
-          '行動する時間の指針が分かります。',
+          '右側のプルダウンが「基準地点」です。\n'
+          '出生地 (現住所として登録した地点) や、\n'
+          'VIEWPOINT として登録した地点を選択できます。\n'
+          'この画面では、選択した基準地点の空における\n'
+          '惑星の方角と通過時刻を表示しています。',
           style: TextStyle(
               color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
         ),
         SizedBox(height: 10),
         Text(
-          '【方角を読む】',
+          '【時間と方角を読む】',
           style: TextStyle(
               color: Color(0xFFC9A84C),
               fontSize: 13,
@@ -1317,11 +1323,31 @@ void showDailyUsageGuidePopup(BuildContext context) {
         ),
         SizedBox(height: 4),
         Text(
-          '方角は Map のスコアバーから確認できます。\n'
+          '今日、各惑星が選択した基準地点の空で\n'
+          '4 つの方角 (東 = ASC / 天頂 = MC / 西 = DSC /\n'
+          '地下 = IC) をいつ通るかをタイムラインで表示します。\n'
+          '「いつ恋愛運が上がる」「いつ仕事の節目になる」など、\n'
+          '行動する時間の指針が読み取れます。',
+          style: TextStyle(
+              color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
+        ),
+        SizedBox(height: 10),
+        Text(
+          '【Map スコアバーと組み合わせる】',
+          style: TextStyle(
+              color: Color(0xFFC9A84C),
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.5),
+        ),
+        SizedBox(height: 4),
+        Text(
+          '方角ごとのエネルギーの強さは、\n'
+          'Map のスコアバーから確認できます。\n'
           '「合計 / 総合」ラベル下の i ボタンに詳細解説があります。\n\n'
-          'スコアバー (方角) と この画面 (時間) を組み合わせると、\n'
-          'あなたの望む未来に対する最適な「方角 × 時間」を\n'
-          'Solara が算出します。',
+          'スコアバー (方角の強さ) と この画面 (惑星の方角×時刻) を\n'
+          '組み合わせると、あなたの望む未来に対する最適な\n'
+          '「方角 × 時間」を Solara が算出します。',
           style: TextStyle(
               color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
         ),
