@@ -48,8 +48,12 @@ class AstroCartoBanner extends StatelessWidget {
         children: [
           const Text('🌐', style: TextStyle(fontSize: 14)),
           const SizedBox(width: 8),
+          // 2026-05-08: textScaler.noScaling で固定サイズ。ACG モードバナーは
+          // 上部固定の小さな pill UI で、フォント拡大時に title が膨張すると
+          // バナー自体が画面幅を圧迫し、❓ や ✕ ボタンが見えなくなる。
           const Text(
             'ASTRO*CARTO*GRAPHY',
+            textScaler: TextScaler.noScaling,
             style: TextStyle(
               fontSize: 13,
               color: Color(0xFFC9A84C),
