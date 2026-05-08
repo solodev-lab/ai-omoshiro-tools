@@ -139,42 +139,36 @@ class _MapTimeSliderState extends State<MapTimeSlider> {
     final preview = _previewDateJst();
     final isLive = _isLive();
 
-    // 2026-05-08: タイムスライダー全体に内部 clamp 1.3 倍を適用。
-    //   - 全体 (main.dart) は 1.5 倍まで許容、内側でさらに 1.3 倍に絞る
-    //   - 'MM/DD' (5 文字) と 'HH:MM' (5 文字) を固定幅 56px に収める
-    //     fontSize 13 × 1.3 = 16.9 → 5 文字 ≈ 49px (OK)
-    //     fontSize 13 × 1.5 = 19.5 → 5 文字 ≈ 58px (NG、改行)
-    //   - ◀▶ 矢印位置を維持しつつアクセシビリティも部分的に確保
-    //   - NOW バッジは内部で textScaler.noScaling を持つので影響なし
-    return MediaQuery.withClampedTextScaling(
-      minScaleFactor: 1.0,
-      maxScaleFactor: 1.3,
-      child: Container(
-        padding: const EdgeInsets.fromLTRB(8, 4, 6, 4),
-        decoration: BoxDecoration(
-          color: const Color(0xE60C0C1A),
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: const Color(0x33C9A84C)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // ── 上段: 日付コントロール ──
-            _buildDayRow(dayValue, preview, isLive),
-            // ── 下段: 時刻コントロール (折りたたみ可能) ──
-            AnimatedSize(
-              duration: const Duration(milliseconds: 180),
-              curve: Curves.easeOut,
-              alignment: Alignment.topCenter,
-              child: _timeRowExpanded
-                  ? Padding(
-                      padding: const EdgeInsets.only(top: 4),
-                      child: _buildHourRow(hourValue),
-                    )
-                  : const SizedBox.shrink(),
-            ),
-          ],
-        ),
+    // 2026-05-08: 全体クランプ 1.5 倍をそのまま適用 (内側追加クランプは撤去)。
+    //   - 'MM/DD' (5 文字) と 'HH:MM' (5 文字) を固定幅 64px に収める
+    //     fontSize 13 × 1.5 = 19.5 → 5 文字 ≈ 55px (OK)
+    //   - 矢印位置は 56→64 で 8px 外側にシフト
+    //   - NOW バッジは内部で textScaler.noScaling 維持 (44px に収めるため)
+    return Container(
+      padding: const EdgeInsets.fromLTRB(8, 4, 6, 4),
+      decoration: BoxDecoration(
+        color: const Color(0xE60C0C1A),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0x33C9A84C)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // ── 上段: 日付コントロール ──
+          _buildDayRow(dayValue, preview, isLive),
+          // ── 下段: 時刻コントロール (折りたたみ可能) ──
+          AnimatedSize(
+            duration: const Duration(milliseconds: 180),
+            curve: Curves.easeOut,
+            alignment: Alignment.topCenter,
+            child: _timeRowExpanded
+                ? Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: _buildHourRow(hourValue),
+                  )
+                : const SizedBox.shrink(),
+          ),
+        ],
       ),
     );
   }
@@ -183,16 +177,14 @@ class _MapTimeSliderState extends State<MapTimeSlider> {
     return Row(children: [
       _stepperBtn(icon: Icons.arrow_left, onTap: () => _stepDay(-1)),
       const SizedBox(width: 4),
-      // 日付ラベル: 固定幅 56 で時刻ラベルと中央揃え (▶ の X 位置を一致させる)。
-      // 2026-05-07: 年表示撤去で 90→56 にコンパクト化 ('05/07' / '今日' / '12:00' いずれも収まる)。
-      // 2026-05-08: textScaler.noScaling で端末フォント拡大の影響を完全遮断。
-      // (clamp 1.3 では '12:00' 等が 56px に収まらず改行されていた)
+      // 日付ラベル: 固定幅 64 で時刻ラベルと中央揃え (▶ の X 位置を一致させる)。
+      // 2026-05-08: 端末フォント 1.5 倍時にも '05/07' / '今日' が収まる幅に拡張
+      // (旧 56 → 64)。noScaling 撤去でアクセシビリティ拡大に追従させる。
       SizedBox(
-        width: 56,
+        width: 64,
         child: Center(
           child: Text(
             _fmtDate(preview, dayValue),
-            textScaler: TextScaler.noScaling,
             style: const TextStyle(
               fontSize: 13,
               color: Color(0xFFE9D29A),
@@ -309,15 +301,13 @@ class _MapTimeSliderState extends State<MapTimeSlider> {
     return Row(children: [
       _stepperBtn(icon: Icons.arrow_left, onTap: () => _stepHour(-1)),
       const SizedBox(width: 4),
-      // 時刻表示: 固定幅 56 で日付ラベルと中央揃え (▶ の X 位置を一致)。
-      // 2026-05-07: 日付ラベル 90→56 のコンパクト化に同期。
-      // 2026-05-08: textScaler.noScaling で端末フォント拡大の影響を完全遮断。
+      // 時刻表示: 固定幅 64 で日付ラベルと中央揃え (▶ の X 位置を一致)。
+      // 2026-05-08: 日付ラベル 56→64 同期 + noScaling 撤去でアクセシビリティ追従。
       SizedBox(
-        width: 56,
+        width: 64,
         child: Center(
           child: Text(
             _fmtHour(hourValue.round()),
-            textScaler: TextScaler.noScaling,
             style: const TextStyle(
               fontSize: 13,
               color: Color(0xFF63D6A0), // 緑系で日付と区別
