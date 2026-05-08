@@ -202,19 +202,25 @@ class FortuneSheet extends StatelessWidget {
             ),
           ),
           _buildSrcTabs(),
+          // 凡例 Row。フォント拡大時の RIGHT OVERFLOW 対策で横スクロール化
+          // (2026-05-08)。center 配置 → 左寄せ + ContentPadding に変更。
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                LegendDot(color: compColors['tSoft']!, label: 'Tソフト'),
-                const SizedBox(width: 8),
-                LegendDot(color: compColors['tHard']!, label: 'Tハード'),
-                const SizedBox(width: 8),
-                LegendDot(color: compColors['pSoft']!, label: 'Pソフト'),
-                const SizedBox(width: 8),
-                LegendDot(color: compColors['pHard']!, label: 'Pハード'),
-              ],
+            padding: const EdgeInsets.symmetric(vertical: 4),
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  LegendDot(color: compColors['tSoft']!, label: 'Tソフト'),
+                  const SizedBox(width: 8),
+                  LegendDot(color: compColors['tHard']!, label: 'Tハード'),
+                  const SizedBox(width: 8),
+                  LegendDot(color: compColors['pSoft']!, label: 'Pソフト'),
+                  const SizedBox(width: 8),
+                  LegendDot(color: compColors['pHard']!, label: 'Pハード'),
+                ],
+              ),
             ),
           ),
           _buildCatTabs(),
@@ -238,27 +244,32 @@ class FortuneSheet extends StatelessWidget {
 
   Widget _buildSrcTabs() {
     const srcs = [('combined', '合計'), ('transit', 'トランジット'), ('progressed', 'プログレス')];
+    // 2026-05-08: フォント拡大時の RIGHT OVERFLOW 対策で横スクロール化。
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8),
       decoration: const BoxDecoration(
         border: Border(bottom: BorderSide(color: Color(0x14FFFFFF))),
       ),
-      child: Row(
-        children: srcs.map((s) {
-          final active = activeSrc == s.$1;
-          return GestureDetector(
-            onTap: () => onSrcChanged(s.$1),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(
-                border: Border(bottom: BorderSide(
-                  color: active ? const Color(0xFFC9A84C) : Colors.transparent, width: 2)),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 8),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: srcs.map((s) {
+            final active = activeSrc == s.$1;
+            return GestureDetector(
+              onTap: () => onSrcChanged(s.$1),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  border: Border(bottom: BorderSide(
+                    color: active ? const Color(0xFFC9A84C) : Colors.transparent, width: 2)),
+                ),
+                child: Text(s.$2, style: TextStyle(fontSize: 13,
+                  color: active ? const Color(0xFFC9A84C) : const Color(0xFF666666))),
               ),
-              child: Text(s.$2, style: TextStyle(fontSize: 13,
-                color: active ? const Color(0xFFC9A84C) : const Color(0xFF666666))),
-            ),
-          );
-        }).toList(),
+            );
+          }).toList(),
+        ),
       ),
     );
   }
