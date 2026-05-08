@@ -557,7 +557,11 @@ class SearchFocusPopup extends StatelessWidget {
                     letterSpacing: 0.5),
               ),
               GestureDetector(
-                onTap: () => showCategoryInfoPopup(context),
+                // 2026-05-08: 検索詳細では「Map の使い方」上部 (方角を読む /
+                // 基準地点を登録する) を省略。検索中は既に Map で操作中なので
+                // 冗長になるため。「場所を探す」以下から表示。
+                onTap: () => showCategoryInfoPopup(context,
+                    includeMapUsageTop: false),
                 behavior: HitTestBehavior.opaque,
                 child: const Padding(
                   padding: EdgeInsets.all(2),
