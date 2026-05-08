@@ -324,169 +324,11 @@ class _DayTabBar extends StatelessWidget {
               ],
             ),
           ),
-          // ── 行3: カテゴリ別行動指針 (カテゴリが all 以外のとき表示) ──
-          if (categoryFilter != 'all' &&
-              categoryFilterTips.containsKey(categoryFilter))
-            _buildCategoryTips(categoryFilter, angleFilter),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCategoryTips(String categoryKey, AngleFilter angleFilter) {
-    final tipsData = categoryFilterTips[categoryKey];
-    if (tipsData == null) return const SizedBox.shrink();
-    final color = categoryColors[categoryKey] ?? SolaraColors.solaraGoldLight;
-
-    // アングルに応じて tips を切替。
-    // 個別 4 アングル: そのアングル専用の 3 tips を表示
-    // 複合相 ASC+MC / DSC+IC: 4 tips を表示
-    // 全角度: ASC+MC tips を既定で表示し「混在」をラベルに添える
-    final List<String> tips;
-    final String subLabel;
-    switch (angleFilter) {
-      case AngleFilter.asc:
-        tips = tipsData.tipsAsc;
-        subLabel = angleIndividualSubLabels[AngleFilter.asc] ?? 'ASC';
-        break;
-      case AngleFilter.mc:
-        tips = tipsData.tipsMc;
-        subLabel = angleIndividualSubLabels[AngleFilter.mc] ?? 'MC';
-        break;
-      case AngleFilter.dsc:
-        tips = tipsData.tipsDsc;
-        subLabel = angleIndividualSubLabels[AngleFilter.dsc] ?? 'DSC';
-        break;
-      case AngleFilter.ic:
-        tips = tipsData.tipsIc;
-        subLabel = angleIndividualSubLabels[AngleFilter.ic] ?? 'IC';
-        break;
-      case AngleFilter.ascMc:
-        tips = tipsData.tipsAscMc;
-        subLabel = '外向きの相';
-        break;
-      case AngleFilter.dscIc:
-        tips = tipsData.tipsDscIc;
-        subLabel = '内向きの相';
-        break;
-      case AngleFilter.all:
-        tips = tipsData.tipsAscMc;
-        subLabel = '外向き＋内向きの相が混在';
-        break;
-    }
-
-    return Container(
-      margin: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-      padding: const EdgeInsets.fromLTRB(12, 8, 12, 10),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withAlpha(60)),
-        color: color.withAlpha(15),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Expanded(
-                child: Text(
-                  tipsData.headline,
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: color,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 0.4,
-                  ),
-                ),
-              ),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(4),
-                  border: Border.all(color: color.withAlpha(110)),
-                ),
-                child: Text(
-                  subLabel,
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: color,
-                    letterSpacing: 0.4,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 6),
-          // 「おすすめ行動の例（参考）」サブヘッダー + i アイコン
-          // tips が「指示」ではなく「ユーザー自身の動きを考える参考の例示」である
-          // ことを明示し、i ボタンで Solara の姿勢・使い方を popup で説明。
-          Builder(
-            builder: (ctx) => Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Text(
-                  'おすすめ行動の例（参考）',
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: color.withAlpha(200),
-                    letterSpacing: 0.5,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                GestureDetector(
-                  onTap: () => _showCategoryTipsIntent(
-                      ctx, categoryKey, angleFilter),
-                  behavior: HitTestBehavior.opaque,
-                  child: Padding(
-                    padding: const EdgeInsets.all(4),
-                    child: Icon(
-                      Icons.info_outline,
-                      size: 12,
-                      color: color.withAlpha(180),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 2),
-          for (final t in tips)
-            Padding(
-              padding: const EdgeInsets.only(top: 2),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('• ',
-                      style: TextStyle(
-                          fontSize: 13, color: Color(0xFF888888))),
-                  Expanded(
-                    child: Text(
-                      t,
-                      style: const TextStyle(
-                        fontSize: 13,
-                        color: Color(0xFFAAAAAA),
-                        height: 1.5,
-                        letterSpacing: 0.2,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          const SizedBox(height: 6),
-          // 注記: 他の動きも自由に考える
-          Text(
-            '※ 他の行動も、この例を参考に自由に考えてみてください',
-            style: TextStyle(
-              fontSize: 13,
-              color: const Color(0xFF777777),
-              fontStyle: FontStyle.italic,
-              height: 1.4,
-              letterSpacing: 0.2,
-            ),
-          ),
+          // 2026-05-08: カテゴリ別行動指針ボックスは _DayTabBar から
+          // _TimelineBody のスクロール領域内 (先頭) に移動。
+          // ユーザー要望: フォントサイズ最大時にボックスが固定表示だと
+          // タイムラインの可視枠が極端に狭くなる事象を、スクロールで上に
+          // 流して可視枠を確保する形に解消。
         ],
       ),
     );
@@ -851,6 +693,177 @@ class _Header extends StatelessWidget {
   }
 }
 
+// ── カテゴリ別行動指針ボックス ──
+// 2026-05-08: _DayTabBar から分離。_TimelineBody の ListView 先頭に
+// 配置することで、スクロールに合わせて上に流れていく。フォントサイズ
+// 最大時に固定表示で可視枠が圧迫される問題を解消。
+class _CategoryTipsBox extends StatelessWidget {
+  final String categoryKey;
+  final AngleFilter angleFilter;
+
+  const _CategoryTipsBox({
+    required this.categoryKey,
+    required this.angleFilter,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final tipsData = categoryFilterTips[categoryKey];
+    if (tipsData == null) return const SizedBox.shrink();
+    final color = categoryColors[categoryKey] ?? SolaraColors.solaraGoldLight;
+
+    // アングルに応じて tips を切替。
+    // 個別 4 アングル: そのアングル専用の 3 tips を表示
+    // 複合相 ASC+MC / DSC+IC: 4 tips を表示
+    // 全角度: ASC+MC tips を既定で表示し「混在」をラベルに添える
+    final List<String> tips;
+    final String subLabel;
+    switch (angleFilter) {
+      case AngleFilter.asc:
+        tips = tipsData.tipsAsc;
+        subLabel = angleIndividualSubLabels[AngleFilter.asc] ?? 'ASC';
+        break;
+      case AngleFilter.mc:
+        tips = tipsData.tipsMc;
+        subLabel = angleIndividualSubLabels[AngleFilter.mc] ?? 'MC';
+        break;
+      case AngleFilter.dsc:
+        tips = tipsData.tipsDsc;
+        subLabel = angleIndividualSubLabels[AngleFilter.dsc] ?? 'DSC';
+        break;
+      case AngleFilter.ic:
+        tips = tipsData.tipsIc;
+        subLabel = angleIndividualSubLabels[AngleFilter.ic] ?? 'IC';
+        break;
+      case AngleFilter.ascMc:
+        tips = tipsData.tipsAscMc;
+        subLabel = '外向きの相';
+        break;
+      case AngleFilter.dscIc:
+        tips = tipsData.tipsDscIc;
+        subLabel = '内向きの相';
+        break;
+      case AngleFilter.all:
+        tips = tipsData.tipsAscMc;
+        subLabel = '外向き＋内向きの相が混在';
+        break;
+    }
+
+    return Container(
+      // 横マージンは親 ListView の padding(16) が effective、ここでは 0。
+      // 下マージンは ListView.separated の separator が担当するので 0。
+      padding: const EdgeInsets.fromLTRB(12, 8, 12, 10),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withAlpha(60)),
+        color: color.withAlpha(15),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Expanded(
+                child: Text(
+                  tipsData.headline,
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: color,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.4,
+                  ),
+                ),
+              ),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(4),
+                  border: Border.all(color: color.withAlpha(110)),
+                ),
+                child: Text(
+                  subLabel,
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: color,
+                    letterSpacing: 0.4,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          // 「おすすめ行動の例（参考）」サブヘッダー + i アイコン
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Text(
+                'おすすめ行動の例（参考）',
+                style: TextStyle(
+                  fontSize: 13,
+                  color: color.withAlpha(200),
+                  letterSpacing: 0.5,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              GestureDetector(
+                onTap: () => _showCategoryTipsIntent(
+                    context, categoryKey, angleFilter),
+                behavior: HitTestBehavior.opaque,
+                child: Padding(
+                  padding: const EdgeInsets.all(4),
+                  child: Icon(
+                    Icons.info_outline,
+                    size: 12,
+                    color: color.withAlpha(180),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 2),
+          for (final t in tips)
+            Padding(
+              padding: const EdgeInsets.only(top: 2),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('• ',
+                      style: TextStyle(
+                          fontSize: 13, color: Color(0xFF888888))),
+                  Expanded(
+                    child: Text(
+                      t,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: Color(0xFFAAAAAA),
+                        height: 1.5,
+                        letterSpacing: 0.2,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          const SizedBox(height: 6),
+          // 注記: 他の動きも自由に考える
+          const Text(
+            '※ 他の行動も、この例を参考に自由に考えてみてください',
+            style: TextStyle(
+              fontSize: 13,
+              color: Color(0xFF777777),
+              fontStyle: FontStyle.italic,
+              height: 1.4,
+              letterSpacing: 0.2,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 // ── Loading / Failed states ──
 
 class _LoadingBody extends StatelessWidget {
@@ -951,51 +964,68 @@ class _TimelineBody extends StatelessWidget {
             allowedPlanets.contains(e.planet))
         .toList();
 
-    if (allEvents.isEmpty) {
-      return const Center(
-        child: Padding(
-          padding: EdgeInsets.all(28),
-          child: Text(
-            '今日は静かな日。\n特別な動きは見えません。',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 13,
-              color: SolaraColors.textSecondary,
-              height: 1.7,
-              letterSpacing: 0.5,
-            ),
-          ),
-        ),
-      );
+    // カテゴリ tips ボックスをスクロール領域の先頭に挿入する条件:
+    // カテゴリが all 以外、かつ tips データが存在する場合。
+    // 2026-05-08: _DayTabBar 固定領域から ListView 先頭に移動。
+    // ユーザー要望: フォントサイズ最大時にボックス分の表示枠が固定で
+    // ロックされタイムライン可視枠が極端に圧迫される事象を、
+    // 「下方向にスクロールするとボックスが上に流れる」形で解消。
+    final showTips = categoryFilter != 'all' &&
+        categoryFilterTips.containsKey(categoryFilter);
+
+    // 空状態 (今日イベント無し / フィルタで 0 件) でも tips は活きるので、
+    // 全状態で同じ ListView 構造を使い、children list で組み立てる。
+    final children = <Widget>[];
+    if (showTips) {
+      children.add(_CategoryTipsBox(
+        categoryKey: categoryFilter,
+        angleFilter: angleFilter,
+      ));
     }
-    if (events.isEmpty) {
-      // 全データはあるがフィルタで0件 → ユーザーにフィルタ変更を促す
-      return const Center(
-        child: Padding(
-          padding: EdgeInsets.all(28),
-          child: Text(
-            'このフィルタ条件に\n該当するイベントはありません。\nフィルタを変更してください。',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 13,
-              color: SolaraColors.textSecondary,
-              height: 1.7,
-              letterSpacing: 0.5,
-            ),
+    if (allEvents.isEmpty) {
+      children.add(const Padding(
+        padding: EdgeInsets.fromLTRB(12, 28, 12, 28),
+        child: Text(
+          '今日は静かな日。\n特別な動きは見えません。',
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontSize: 13,
+            color: SolaraColors.textSecondary,
+            height: 1.7,
+            letterSpacing: 0.5,
           ),
         ),
-      );
+      ));
+    } else if (events.isEmpty) {
+      // 全データはあるがフィルタで0件 → ユーザーにフィルタ変更を促す
+      children.add(const Padding(
+        padding: EdgeInsets.fromLTRB(12, 28, 12, 28),
+        child: Text(
+          'このフィルタ条件に\n該当するイベントはありません。\nフィルタを変更してください。',
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontSize: 13,
+            color: SolaraColors.textSecondary,
+            height: 1.7,
+            letterSpacing: 0.5,
+          ),
+        ),
+      ));
+    } else {
+      for (final e in events) {
+        children.add(_TimelineRow(
+          planetKey: e.planet,
+          event: e.event,
+          categoryFilter: categoryFilter,
+        ));
+      }
     }
 
     return ListView.separated(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
-      itemCount: events.length,
+      itemCount: children.length,
       separatorBuilder: (_, _) => const SizedBox(height: 8),
-      itemBuilder: (ctx, i) => _TimelineRow(
-        planetKey: events[i].planet,
-        event: events[i].event,
-        categoryFilter: categoryFilter,
-      ),
+      itemBuilder: (_, i) => children[i],
     );
   }
 }
