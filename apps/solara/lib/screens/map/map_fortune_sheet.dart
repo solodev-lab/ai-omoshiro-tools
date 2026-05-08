@@ -356,13 +356,13 @@ class FortuneSheet extends StatelessWidget {
         ),
         child: Row(children: [
           // 方角ラベル: '北北東' '東南東' などの 3 文字日本語が 1 行で収まるよう
-          // 幅 44px。textScaler.noScaling で端末フォント拡大の影響を受けず固定。
-          // (2026-05-08: 旧 36px だと '北北東' が 1 文字ずつ縦表示になる事象を修正)
+          // 幅 60px (= 13 × 3 × 1.5 倍 = 58.5px + 余白)。
+          // 2026-05-08: noTextScaling 撤去。端末フォント拡大 (clamp 1.5x) に
+          // 追従させても Expanded のバー領域が十分広い (~178px) ので影響軽微。
           SizedBox(
-            width: 44,
+            width: 60,
             child: Text(
               dir16JP[dir] ?? dir,
-              textScaler: TextScaler.noScaling,
               maxLines: 1,
               softWrap: false,
               style: const TextStyle(
