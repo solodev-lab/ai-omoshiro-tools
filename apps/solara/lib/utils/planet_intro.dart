@@ -141,7 +141,7 @@ const Map<String, PlanetIntro> planetIntros = {
     transit: PlanetIntroFrame(
       summary: '空をめぐる月が、今日の心に小さな潮を運ぶ。',
       detail:
-          '空の月は、約2.5日でひとつの星座を渡ります。\n'
+          '空の月は、約2.3日でひとつの星座を渡ります。\n'
           'なんとなく泣きたい夕方、\n'
           'なんとなくはしゃぎたい夜 ―\n'
           'それらは月が運ぶ、ささやかな潮の流れです。\n\n'
@@ -190,7 +190,7 @@ const Map<String, PlanetIntro> planetIntros = {
     transit: PlanetIntroFrame(
       summary: '空の水星が、月ごとに会話と学びの風向きを変える。',
       detail:
-          '空の水星は約1ヶ月でひとつの星座を渡ります。\n'
+          '空の水星は、約3週間でひとつの星座を渡ります (逆行を挟むと長引きます)。\n'
           '滞在中の星座のテーマで、\n'
           'やりとり、ニュース、学びごとに色がつきます。\n\n'
           '年に3回ある逆行 (約3週間) は、\n'
@@ -533,7 +533,8 @@ const Map<String, PlanetIntro> planetIntros = {
     transit: PlanetIntroFrame(
       summary: '空の冥王星が、約20年かけてあなたの奥底を作り変える。',
       detail:
-          '空の冥王星は、20年でひとつの星座を渡ります。\n'
+          '空の冥王星は、ひとつの星座を渡るのに平均およそ20年。\n'
+          'ただし軌道が大きな楕円のため、星座によって12〜30年と幅があります。\n'
           '滞在中の星座のテーマで、\n'
           '長い時間をかけた変容が、静かに進みます。\n\n'
           '変化が始まったときには気づきません。\n'
