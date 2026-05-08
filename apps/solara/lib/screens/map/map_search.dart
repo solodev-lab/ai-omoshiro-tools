@@ -14,6 +14,10 @@ const _searchApiUrl = '$solaraWorkerBase/search';
 /// 検索結果1件分
 class SearchHit {
   final String name;
+  /// 住所文字列 (Worker の Google Places source のみ別フィールドで返る)。
+  /// Nominatim source では name 自体が "場所名, 区, 市, 県, 国" 形式の
+  /// display_name なので address は null。
+  final String? address;
   final double lat;
   final double lng;
   final String? country;
@@ -26,6 +30,7 @@ class SearchHit {
 
   SearchHit({
     required this.name, required this.lat, required this.lng,
+    this.address,
     this.country, this.source = 'nominatim',
     this.bestDir, this.bestScore = 0, this.bestFortune,
   });
@@ -84,8 +89,12 @@ Future<List<SearchHit>> searchPlaces(String query, {LatLng? biasCenter}) async {
     final results = (data['results'] as List? ?? []);
     return results.map((r) {
       final m = r as Map<String, dynamic>;
+      // address は Google Places 経路のみ Worker が別フィールドで返す。
+      // 空文字は null 扱い (popup 側で fallback 判定)。
+      final rawAddress = m['address'] as String?;
       return SearchHit(
         name: m['name'] as String? ?? '',
+        address: (rawAddress?.isNotEmpty ?? false) ? rawAddress : null,
         lat: (m['lat'] as num).toDouble(),
         lng: (m['lng'] as num).toDouble(),
         country: m['country'] as String?,
@@ -391,12 +400,20 @@ class SearchFocusPopup extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // 場所名 / 住所 を分割。Nominatim/Google Places の display_name は
-    // "店名, 区, 市, 県, 国" のような ',' 区切り。1 行目に短縮表示、
-    // 2 行目に残り全部 (住所部分) を表示する。
-    final parts = focus.name.split(',').map((s) => s.trim()).where((s) => s.isNotEmpty).toList();
+    // 場所名 / 住所 の決定:
+    //   Google Places 経路: focus.address (Worker が formattedAddress を別途返す)
+    //   Nominatim 経路   : name = display_name (',' 区切り) を split して取り出し
+    // 2026-05-08: Google Places で name='Tokyo Tower' のように 1 単語のみで
+    // 帰ってくるケースで住所が空になっていた事象を、address 直接参照で修正。
+    final parts = focus.name
+        .split(',')
+        .map((s) => s.trim())
+        .where((s) => s.isNotEmpty)
+        .toList();
     final short = parts.isNotEmpty ? parts[0] : focus.name;
-    final addressLine = parts.length > 1 ? parts.skip(1).join(', ') : '';
+    final addressLine = focus.address?.isNotEmpty == true
+        ? focus.address!
+        : (parts.length > 1 ? parts.skip(1).join(', ') : '');
     // 中心が動いたら方位を再計算（bestDir はキャッシュの可能性がある）
     final dir = focus.directionFrom(center);
     final dirJp = dir16JP[dir] ?? dir;
@@ -457,38 +474,52 @@ class SearchFocusPopup extends StatelessWidget {
           ),
         ],
         const SizedBox(height: 10),
-        Row(children: [
-          Text('$dirJp方位',
-              style: const TextStyle(fontSize: 13, color: Color(0xFFC9A84C), letterSpacing: 1)),
-          const SizedBox(width: 10),
-          Text('${km.toStringAsFixed(km < 100 ? 1 : 0)} km',
-              style: const TextStyle(fontSize: 13, color: Color(0xFF888888))),
-          const Spacer(),
-          Text('${categoryLabels[activeCategory] ?? '総合'} ${focus.bestScore.toStringAsFixed(1)}',
-              style: const TextStyle(fontSize: 13, color: Color(0xFFE8E0D0))),
-        ]),
+        // 方角・距離・スコアの行。フォント拡大時に overflow しないよう Wrap 化。
+        Wrap(
+          spacing: 10,
+          runSpacing: 4,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          children: [
+            Text('$dirJp方位',
+                style: const TextStyle(
+                    fontSize: 13,
+                    color: Color(0xFFC9A84C),
+                    letterSpacing: 1)),
+            Text('${km.toStringAsFixed(km < 100 ? 1 : 0)} km',
+                style: const TextStyle(fontSize: 13, color: Color(0xFF888888))),
+            Text(
+                '${categoryLabels[activeCategory] ?? '総合'} ${focus.bestScore.toStringAsFixed(1)}',
+                style: const TextStyle(fontSize: 13, color: Color(0xFFE8E0D0))),
+          ],
+        ),
         const SizedBox(height: 8),
         if (top3.isNotEmpty) ...[
-          Row(children: [
-            const Text(
-              'カテゴリ別内訳 (参考)',
-              style: TextStyle(fontSize: 13, color: Color(0xFF888888), letterSpacing: 0.5),
-            ),
-            const SizedBox(width: 6),
-            const Text(
-              '※ 総合は別計算',
-              style: TextStyle(fontSize: 13, color: Color(0xFF666666)),
-            ),
-            const SizedBox(width: 4),
-            GestureDetector(
-              onTap: () => _showScoreInfo(context),
-              behavior: HitTestBehavior.opaque,
-              child: const Padding(
-                padding: EdgeInsets.all(2),
-                child: Icon(Icons.info_outline, size: 12, color: Color(0xFF888888)),
+          // 2026-05-08: フォント拡大時の RIGHT OVERFLOW 対策で Wrap 化。
+          // インラインの '※ 総合は別計算' ヒントは i ボタン popup 内に同等説明
+          // があるため削除して短縮、可読性向上。
+          Wrap(
+            spacing: 6,
+            runSpacing: 2,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              const Text(
+                'カテゴリ別内訳 (参考)',
+                style: TextStyle(
+                    fontSize: 13,
+                    color: Color(0xFF888888),
+                    letterSpacing: 0.5),
               ),
-            ),
-          ]),
+              GestureDetector(
+                onTap: () => _showScoreInfo(context),
+                behavior: HitTestBehavior.opaque,
+                child: const Padding(
+                  padding: EdgeInsets.all(2),
+                  child: Icon(Icons.info_outline,
+                      size: 13, color: Color(0xFF888888)),
+                ),
+              ),
+            ],
+          ),
           const SizedBox(height: 4),
           Wrap(
             spacing: 8, runSpacing: 4,
