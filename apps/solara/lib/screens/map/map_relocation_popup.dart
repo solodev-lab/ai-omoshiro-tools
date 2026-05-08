@@ -150,8 +150,9 @@ class MapRelocationPopup extends StatelessWidget {
             const Icon(Icons.timeline, size: 12, color: Color(0xFFB088FF)),
             const SizedBox(width: 6),
             AstroTermLabel(
+              // 2026-05-08: i ボタン拡大 (iconSize 10→16)
               termKey: 'aspect_lines',
-              iconSize: 10,
+              iconSize: 16,
               spacing: 2,
               child: Text(
                 'ライン上の地点 (近接${lines.length}本)',
@@ -300,9 +301,10 @@ class MapRelocationPopup extends StatelessWidget {
       ),
     );
     if (termKey != null) {
+      // 2026-05-08: i ボタンが小さすぎるという指摘で iconSize 12→16
       titleWidget = AstroTermLabel(
         termKey: termKey,
-        iconSize: 12,
+        iconSize: 16,
         iconColor: const Color(0xAACCCCCC),
         child: titleWidget,
       );
@@ -333,22 +335,26 @@ class MapRelocationPopup extends StatelessWidget {
   Widget _buildAngleRow(String label, int signFrom, int signTo) {
     final changed = signFrom != signTo;
     final termKey = label.toLowerCase(); // 'asc' or 'mc'
-    return Row(
+    // 2026-05-08: フォント拡大時の RIGHT OVERFLOW 対策で Wrap 化。
+    // i ボタンは iconSize 10→16 に拡大 (異常に小さいというユーザー指摘)。
+    // 星座ラベル + 矢印を 1 ユニットとして Wrap で扱い、入りきらない場合は
+    // 2 行に折返し可能。
+    return Wrap(
+      spacing: 6,
+      runSpacing: 4,
+      crossAxisAlignment: WrapCrossAlignment.center,
       children: [
-        SizedBox(
-          width: 50,
-          child: AstroTermLabel(
-            termKey: termKey,
-            iconSize: 10,
-            spacing: 2,
-            child: Text(
-              label,
-              style: GoogleFonts.notoSansJp(
-                fontSize: 13,
-                color: const Color(0xFFC9A84C),
-                fontWeight: FontWeight.w600,
-                letterSpacing: 0.8,
-              ),
+        AstroTermLabel(
+          termKey: termKey,
+          iconSize: 16,
+          spacing: 2,
+          child: Text(
+            label,
+            style: GoogleFonts.notoSansJp(
+              fontSize: 13,
+              color: const Color(0xFFC9A84C),
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.8,
             ),
           ),
         ),
@@ -359,7 +365,6 @@ class MapRelocationPopup extends StatelessWidget {
             color: const Color(0xFFAAAAAA),
           ),
         ),
-        const SizedBox(width: 6),
         Icon(
           Icons.arrow_forward,
           size: 11,
@@ -367,7 +372,6 @@ class MapRelocationPopup extends StatelessWidget {
               ? const Color(0xFFFFB6C1)
               : const Color(0xFF555555),
         ),
-        const SizedBox(width: 6),
         Text(
           '${signNames[signTo]}座',
           style: GoogleFonts.notoSansJp(
@@ -378,7 +382,6 @@ class MapRelocationPopup extends StatelessWidget {
             fontWeight: changed ? FontWeight.w600 : FontWeight.w400,
           ),
         ),
-        const Spacer(),
         if (!changed)
           Text(
             '変化なし',
@@ -415,6 +418,9 @@ class MapRelocationPopup extends StatelessWidget {
         ? (isPersonal ? const Color(0xFFFFD370) : const Color(0xFFFFB6C1))
         : const Color(0xFF888888);
 
+    // 2026-05-08: 3 文字惑星名 (天王星 / 海王星 / 冥王星) がフォント拡大時に
+    // 2 行表示になっていた問題を解消。横幅は余裕があるので、固定幅 50→64 に
+    // 拡張 + softWrap: false + maxLines: 1 で 1 行表示を保証。
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 3),
       child: Row(
@@ -428,10 +434,13 @@ class MapRelocationPopup extends StatelessWidget {
           ),
           const SizedBox(width: 4),
           SizedBox(
-            width: 50,
+            width: 64,
             child: Text(
               planetNamesJP[planet] ?? planet,
               style: GoogleFonts.notoSansJp(fontSize: 13, color: dimColor),
+              softWrap: false,
+              maxLines: 1,
+              overflow: TextOverflow.visible,
             ),
           ),
           Text(
