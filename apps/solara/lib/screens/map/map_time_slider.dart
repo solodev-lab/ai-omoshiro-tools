@@ -207,11 +207,13 @@ class _MapTimeSliderState extends State<MapTimeSlider> {
           ),
         ),
       ),
-      // LIVE (固定幅 44 で時刻行のスペーサーと一致させる)。
-      // 2026-05-08: テキスト 'LIVE'/'● LIVE' から稲妻アイコンに変更。
-      // ON: 鮮やかなオレンジ + 背景塗り + 太縁
-      // OFF: 薄いオレンジ + 透明背景 + 細縁
-      // (端末フォント拡大の影響を受けない & 一目で状態が分かる)
+      // NOW バッジ (固定幅 44 で時刻行のスペーサーと一致させる)。
+      // 2026-05-08: 稲妻アイコン → 'NOW' テキストバッジに変更。
+      //   稲妻が分かりにくいというフィードバックを受けて、明示的な
+      //   'NOW' 表記にしつつ TextScaler.noScaling で端末フォント
+      //   拡大の影響を受けないアイコン的な振る舞いに固定。
+      // ON  : 鮮やかオレンジ + 背景塗り + 太縁
+      // OFF : 薄いオレンジ + 透明背景 + 細縁
       SizedBox(
         width: 44,
         child: GestureDetector(
@@ -224,7 +226,7 @@ class _MapTimeSliderState extends State<MapTimeSlider> {
           },
           behavior: HitTestBehavior.opaque,
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 5),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(8),
               border: Border.all(
@@ -237,12 +239,20 @@ class _MapTimeSliderState extends State<MapTimeSlider> {
                   ? const Color(0x22FF8E5C)
                   : Colors.transparent,
             ),
-            child: Icon(
-              Icons.bolt,
-              size: 20,
-              color: isLive
-                  ? const Color(0xFFFF8E5C)
-                  : const Color(0x66FF8E5C),
+            child: Text(
+              'NOW',
+              textAlign: TextAlign.center,
+              // 端末フォント拡大の影響を受けないアイコン的振る舞い
+              textScaler: TextScaler.noScaling,
+              style: TextStyle(
+                fontSize: 13,
+                color: isLive
+                    ? const Color(0xFFFF8E5C)
+                    : const Color(0x66FF8E5C),
+                fontWeight: FontWeight.w700,
+                letterSpacing: 1.2,
+                height: 1.0,
+              ),
             ),
           ),
         ),
