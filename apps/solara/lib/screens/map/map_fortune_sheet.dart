@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../utils/direction_energy.dart';
+import '../../widgets/info_popup.dart';
 import 'map_constants.dart';
 import 'map_direction_popup.dart';
 import 'map_widgets.dart';
@@ -90,11 +91,42 @@ class FortuneFilterLabel extends StatelessWidget {
           children: [
             ConstrainedBox(
               constraints: BoxConstraints(maxWidth: leftLabelMax),
-              child: Text(
-                '${srcLabels[activeSrc] ?? '合計'} / ${categoryLabels[activeCategory] ?? '総合'}',
-                style: const TextStyle(fontSize: 11, color: Color(0xFFC9A84C), letterSpacing: 0.5, fontWeight: FontWeight.w600),
-                overflow: TextOverflow.ellipsis,
-                maxLines: 1,
+              // 2026-05-08: 「合計 / 総合」テキストの下に i ボタンを追加。
+              // タップで「カテゴリと関連惑星ペア」の説明 popup を出す。
+              // 親 GestureDetector (onTap=カテゴリ次へ切替) の上にあるが、
+              // 内側 GestureDetector が gesture arena で勝つため切替は発火しない。
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '${srcLabels[activeSrc] ?? '合計'} / ${categoryLabels[activeCategory] ?? '総合'}',
+                    style: const TextStyle(fontSize: 11, color: Color(0xFFC9A84C), letterSpacing: 0.5, fontWeight: FontWeight.w600),
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
+                  ),
+                  const SizedBox(height: 1),
+                  GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () => showCategoryInfoPopup(context),
+                    child: const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 1),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.info_outline,
+                              size: 11, color: Color(0xFF888888)),
+                          SizedBox(width: 3),
+                          Text('カテゴリ詳細',
+                              style: TextStyle(
+                                  fontSize: 9,
+                                  color: Color(0xFF888888),
+                                  letterSpacing: 0.3)),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
             if (top2.isNotEmpty) ...[
@@ -424,4 +456,110 @@ class FortuneSheet extends StatelessWidget {
       );
     });
   }
+}
+
+/// カテゴリと関連惑星ペアの説明 popup。
+/// スコアバー左ラベル下の i ボタンから開く。
+///
+/// 5 カテゴリそれぞれの実装上の惑星ペア (`_fortunePairs` in map_astro.dart) を
+/// ユーザー向けに開示し、「このカテゴリは何を見ているか」を理解できるようにする。
+/// 「総合」との計算差異もここで一括説明する。
+void showCategoryInfoPopup(BuildContext context) {
+  // 各カテゴリのアイコン文字 (絵文字)、関連惑星ペア (実装と一致)、
+  // ニュアンス説明をデータ駆動で並べる。
+  // ペア定義は map_astro.dart の _fortunePairs と一致させる:
+  //   healing: moon×neptune / moon×venus / sun×neptune
+  //   money:   jupiter×venus / jupiter×sun / venus×sun
+  //   love:    venus×mars / venus×moon / mars×moon
+  //   work:    saturn×sun / saturn×mars / jupiter×sun / jupiter×mars
+  //   communication: mercury×sun / mercury×venus / mercury×moon
+  const entries = <(String, String, String, String)>[
+    // (cat key, icon, pairs text, nuance)
+    ('healing', '🌿', '月×海王星 / 月×金星 / 太陽×海王星',
+        '休息・回復・直感が流れるテーマ'),
+    ('money', '💰', '木星×金星 / 木星×太陽 / 金星×太陽',
+        '繁栄・喜び・自己肯定のテーマ'),
+    ('love', '💗', '金星×火星 / 金星×月 / 火星×月',
+        '愛・情熱・親密さのテーマ'),
+    ('work', '⚙', '土星×太陽 / 土星×火星 / 木星×太陽 / 木星×火星',
+        '責任・行動・拡大のテーマ'),
+    ('communication', '💬', '水星×太陽 / 水星×金星 / 水星×月',
+        '伝達・対話・知性のテーマ'),
+  ];
+
+  showInfoPopup(
+    context: context,
+    child: Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'カテゴリと関連惑星',
+          style: TextStyle(
+              color: Color(0xFFC9A84C), fontSize: 14, letterSpacing: 1),
+        ),
+        const SizedBox(height: 10),
+        const Text(
+          '各カテゴリは、関連する惑星ペアのアスペクトを抽出し、\n'
+          'ペア重みをかけて方位ごとにスコア化しています。',
+          style: TextStyle(
+              color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
+        ),
+        const SizedBox(height: 12),
+        for (final e in entries) ...[
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(e.$2, style: const TextStyle(fontSize: 16)),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      categoryLabels[e.$1] ?? e.$1,
+                      style: TextStyle(
+                          color: categoryColors[e.$1] ??
+                              const Color(0xFFE8E0D0),
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 0.5),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      e.$3,
+                      style: const TextStyle(
+                          color: Color(0xFFB8B0A0),
+                          fontSize: 12,
+                          height: 1.5),
+                    ),
+                    Text(
+                      e.$4,
+                      style: const TextStyle(
+                          color: Color(0xFF888888),
+                          fontSize: 12,
+                          height: 1.5),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+        ],
+        const SizedBox(height: 4),
+        const Text(
+          '【総合との関係】\n'
+          '上部スコアバーで「総合」を選んでいる時の数字は、\n'
+          '全惑星・全アスペクトをそのまま合算した値で、\n'
+          'カテゴリ重みは入りません。\n'
+          'カテゴリ別はペア重みがかかり、1 つのアスペクトが\n'
+          '複数カテゴリに重複計上されることもあります。\n'
+          'このため「カテゴリ別の合算 ≠ 総合」となります。',
+          style: TextStyle(
+              color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
+        ),
+      ],
+    ),
+  );
 }

@@ -4,9 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:latlong2/latlong.dart';
 import '../../utils/solara_api.dart' show solaraWorkerBase;
-import '../../widgets/info_popup.dart';
 import 'map_astro.dart';
 import 'map_constants.dart';
+import 'map_fortune_sheet.dart' show showCategoryInfoPopup;
 import 'map_vp_panel.dart' show VPSlot;
 
 const _searchApiUrl = '$solaraWorkerBase/search';
@@ -531,7 +531,7 @@ class SearchFocusPopup extends StatelessWidget {
                     letterSpacing: 0.5),
               ),
               GestureDetector(
-                onTap: () => _showScoreInfo(context),
+                onTap: () => showCategoryInfoPopup(context),
                 behavior: HitTestBehavior.opaque,
                 child: const Padding(
                   padding: EdgeInsets.all(2),
@@ -562,43 +562,6 @@ class SearchFocusPopup extends StatelessWidget {
       ]),
     );
   }
-}
-
-/// 「総合は別計算」i ボタン押下時の説明ダイアログ。
-/// ユーザー指摘: 検索結果一覧の総合と詳細の各カテゴリ合算が一致しない理由を可視化。
-///
-/// 2026-05-07: 統一 popup ヘルパー [showInfoPopup] 経由に移行。
-/// 右上 × / 全文スクロール / 外タップ閉じが Shell 側で自動提供される。
-void _showScoreInfo(BuildContext context) {
-  showInfoPopup(
-    context: context,
-    child: Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: const [
-        Text(
-          '総合スコアの計算',
-          style: TextStyle(
-              color: Color(0xFFC9A84C), fontSize: 14, letterSpacing: 1),
-        ),
-        SizedBox(height: 10),
-        Text(
-          '【カテゴリ別内訳】\n'
-          'この方位における各カテゴリ単独のスコアを、高い順に表示します。\n'
-          'カテゴリに関連する惑星ペア (恋愛=金星×火星 等) の\n'
-          'アスペクトを抽出し、ペア重みをかけて算出。\n'
-          '横に入りきらない場合は左右にスライドして全件確認できます。\n\n'
-          '【上部スコアバーの「総合」との関係】\n'
-          '「総合」は全惑星・全アスペクトをそのまま合算した値で、\n'
-          'カテゴリ重みは入りません。\n'
-          '一方カテゴリ別はペア重みがかかり、1 つのアスペクトが\n'
-          '複数カテゴリに重複計上されることもあります。\n'
-          'このため「カテゴリ別の合算 ≠ 総合」となります。',
-          style: TextStyle(color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
-        ),
-      ],
-    ),
-  );
 }
 
 class _CatChip extends StatelessWidget {
