@@ -27,12 +27,17 @@ class SearchHit {
   String? bestDir;
   double bestScore;
   String? bestFortune; // dominant fortune category
+  /// 支配カテゴリ (bestFortune) 単体での bestDir 方位スコア。
+  /// activeCategory='all' (総合) の時、リスト表示で「総合 N.N」より
+  /// 「豊かさ N.N」のように方位の支配エネルギーを直接見せるために使う。
+  double bestFortuneScore;
 
   SearchHit({
     required this.name, required this.lat, required this.lng,
     this.address,
     this.country, this.source = 'nominatim',
     this.bestDir, this.bestScore = 0, this.bestFortune,
+    this.bestFortuneScore = 0,
   });
 
   /// 中心座標から見たこの地点の方位（16方位名）
@@ -119,6 +124,13 @@ void annotateHitsWithScores({
     h.bestScore = sectorScores[dir] ?? 0;
     if (scoreResult != null) {
       h.bestFortune = scoreResult.sFortune[dir];
+      // activeCategory='all' 表示用に、支配カテゴリ単体スコアを格納
+      final domCat = h.bestFortune;
+      if (domCat != null) {
+        h.bestFortuneScore = scoreResult.fScores[domCat]?[dir] ?? 0;
+      } else {
+        h.bestFortuneScore = 0;
+      }
     }
   }
 }
@@ -215,6 +227,17 @@ class SearchResultList extends StatelessWidget {
     final parts = h.name.split(',');
     final short = parts.length > 2 ? '${parts[0]},${parts[1]}' : h.name;
     final fortuneIcon = _fortuneIcon(h.bestFortune);
+    // 表示するカテゴリ・スコアを決定。
+    // activeCategory='all' の時は「総合 N.N」が紛らわしい (上部スコアバーと
+    // 同じ数字なので情報量ゼロ) ため、その方位の支配カテゴリ + 単独スコアを
+    // 出す。それ以外 (money/love 等) は activeCategory のスコアをそのまま出す。
+    final isAll = activeCategory == 'all';
+    final displayCat = isAll && h.bestFortune != null
+        ? h.bestFortune!
+        : activeCategory;
+    final displayScore = isAll && h.bestFortune != null
+        ? h.bestFortuneScore
+        : h.bestScore;
     final catColor = h.bestFortune != null
         ? (categoryColors[h.bestFortune!] ?? const Color(0xFFE8E0D0))
         : const Color(0xFFE8E0D0);
@@ -276,7 +299,7 @@ class SearchResultList extends StatelessWidget {
                   if (h.bestDir != null)
                     Text('${dir16JP[h.bestDir!]}方位',
                         style: const TextStyle(fontSize: 13, color: Color(0xFF999999))),
-                  Text('${categoryLabels[activeCategory] ?? '総合'} ${h.bestScore.toStringAsFixed(1)}',
+                  Text('${categoryLabels[displayCat] ?? '総合'} ${displayScore.toStringAsFixed(1)}',
                       style: TextStyle(fontSize: 13, color: catColor)),
                   if (fortuneIcon != null)
                     Text(fortuneIcon, style: const TextStyle(fontSize: 13)),
@@ -474,7 +497,10 @@ class SearchFocusPopup extends StatelessWidget {
           ),
         ],
         const SizedBox(height: 10),
-        // 方角・距離・スコアの行。フォント拡大時に overflow しないよう Wrap 化。
+        // 方角・距離の行。フォント拡大時に overflow しないよう Wrap 化。
+        // 2026-05-08: 「総合 N.N」表示を削除。上部スコアバーと完全に同じ数字を
+        // ここで再掲しても情報量ゼロで紛らわしい (ユーザー指摘) ため、
+        // 詳細はカテゴリ別内訳 (下段チップ) に集約。
         Wrap(
           spacing: 10,
           runSpacing: 4,
@@ -487,9 +513,6 @@ class SearchFocusPopup extends StatelessWidget {
                     letterSpacing: 1)),
             Text('${km.toStringAsFixed(km < 100 ? 1 : 0)} km',
                 style: const TextStyle(fontSize: 13, color: Color(0xFF888888))),
-            Text(
-                '${categoryLabels[activeCategory] ?? '総合'} ${focus.bestScore.toStringAsFixed(1)}',
-                style: const TextStyle(fontSize: 13, color: Color(0xFFE8E0D0))),
           ],
         ),
         const SizedBox(height: 8),
@@ -554,14 +577,12 @@ void _showScoreInfo(BuildContext context) {
         ),
         SizedBox(height: 10),
         Text(
-          '【総合スコア (上段の数字)】\n'
-          '現在選択中のカテゴリ (デフォルト: 総合) における、その方位のスコアを表示。\n'
-          '総合カテゴリでは、全カテゴリのソフト・ハード両エネルギーを加重合成した値です。\n\n'
           '【カテゴリ別内訳 (下段のチップ)】\n'
-          'その方位における各カテゴリ単独のスコアを表示。\n'
+          'この方位における各カテゴリ単独のスコアを表示。\n'
           '癒し / 豊かさ / 恋愛 / 仕事 / 話す をそれぞれ独立に算出。\n\n'
-          '【なぜ合計が一致しないか】\n'
-          '総合は単純な足し算ではなく、エネルギーの方向性を考慮した加重計算です。\n'
+          '【上部スコアバーの「総合」との関係】\n'
+          '上部スコアバーで「総合」を選んでいる時、そこに出る数字は\n'
+          '全カテゴリのソフト・ハード両エネルギーを加重合成した値です。\n'
           'カテゴリ別内訳の合算 ≠ 総合 となるのは、計算方法が異なるためです。',
           style: TextStyle(color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
         ),
