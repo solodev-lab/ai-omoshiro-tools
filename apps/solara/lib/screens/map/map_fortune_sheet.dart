@@ -516,13 +516,35 @@ void showCategoryInfoPopup(BuildContext context) {
         ),
         const SizedBox(height: 4),
         const Text(
-          '基準点 (VIEWPOINT) を中心に、各方位のエネルギーを\n'
+          '基準地点 (VIEWPOINT) を中心に、各方位のエネルギーを\n'
           'スコア化して表示しています。\n'
           '「どの方角に意識を向けるべきか」が判断できます。\n\n'
           'スコアバーをタップするとカテゴリが切替わります\n'
           '(総合 → 癒し → 豊かさ → 恋愛 → 仕事 → 話す)。\n'
           '見たいカテゴリを選ぶと、そのエネルギーが\n'
           'どの方角に強く出ているかが分かります。',
+          style: TextStyle(
+              color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
+        ),
+        const SizedBox(height: 10),
+        const Text(
+          '【基準地点を登録する】',
+          style: TextStyle(
+              color: Color(0xFFC9A84C),
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.5),
+        ),
+        const SizedBox(height: 4),
+        const Text(
+          '基準地点は地図画面の左側にある 📍 (VIEWPOINT) ボタン\n'
+          'から登録できます。\n'
+          '登録したい場所を地図中央に表示してパネルを開き、\n'
+          '「この地点を保存」をタップすると、その地点が\n'
+          'VIEWPOINT として保存されます。\n\n'
+          '保存した基準地点は、検索結果一覧の上部や\n'
+          '右上 ⊙ アイコン (Daily Transit) のプルダウンから、\n'
+          'いつでも切り替えて使えます。',
           style: TextStyle(
               color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
         ),
