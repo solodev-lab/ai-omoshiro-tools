@@ -344,8 +344,23 @@ class FortuneSheet extends StatelessWidget {
           border: isLast ? null : const Border(bottom: BorderSide(color: Color(0x0AFFFFFF))),
         ),
         child: Row(children: [
-          SizedBox(width: 36, child: Text(dir16JP[dir] ?? dir,
-            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFFB49774)))),
+          // 方角ラベル: '北北東' '東南東' などの 3 文字日本語が 1 行で収まるよう
+          // 幅 44px。textScaler.noScaling で端末フォント拡大の影響を受けず固定。
+          // (2026-05-08: 旧 36px だと '北北東' が 1 文字ずつ縦表示になる事象を修正)
+          SizedBox(
+            width: 44,
+            child: Text(
+              dir16JP[dir] ?? dir,
+              textScaler: TextScaler.noScaling,
+              maxLines: 1,
+              softWrap: false,
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFFB49774),
+              ),
+            ),
+          ),
           Expanded(
             child: Container(
               height: 14, margin: const EdgeInsets.symmetric(horizontal: 10),
