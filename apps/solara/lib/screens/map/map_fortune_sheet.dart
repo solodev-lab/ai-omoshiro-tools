@@ -39,14 +39,17 @@ class FortuneFilterLabel extends StatelessWidget {
 
     // 端末幅に応じてレイアウト寸法を可変化:
     //   - 左ラベル (合計/総合) を画面幅の 32% で頭打ち + ellipsis
-    //   - 方角ラベル幅 44 (旧 32) → "東南東" 3 文字が 1 行に収まる
+    //   - 方角ラベル幅 52 → fontSize 13 で "東南東" 3 文字が 1 行に収まる
+    //     (2026-05-07 fontSize 11→13 化に合わせて 44→52 へ拡大)
+    //   - 値ラベル幅 36 → fontSize 13 monospace で "10.0" まで収まる
+    //     (2026-05-07 fontSize 11→13 化に合わせて 28→36 へ拡大)
     //   - バー幅は MediaQuery で残幅から逆算
     //   - 右側 DailyTransitBadge (右上 right:20, 幅 40) と重ならないよう
     //     右マージン 64 を予約 (2026-05-04 ユーザー指摘対応)
     final screenW = MediaQuery.of(context).size.width;
     final leftLabelMax = screenW * 0.32;
-    const dirLabelW = 44.0;
-    const valueLabelW = 28.0;
+    const dirLabelW = 52.0;
+    const valueLabelW = 36.0;
     const innerHPad = 10.0;  // Container horizontal padding (片側)
     const sideMargin = 16.0;  // 親 Positioned の left:16 分
     const dailyBadgeReserved = 64.0;  // DailyTransitBadge 用右マージン
@@ -102,7 +105,8 @@ class FortuneFilterLabel extends StatelessWidget {
                       )),
                       const SizedBox(width: 4),
                       SizedBox(
-                        width: barW, height: 5,
+                        // バー高さ 7px (旧 5) — fontSize 13 化に合わせて視覚的バランス調整
+                        width: barW, height: 7,
                         child: Container(
                           decoration: BoxDecoration(
                             color: const Color(0x15FFFFFF),
