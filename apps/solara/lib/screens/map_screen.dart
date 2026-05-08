@@ -797,10 +797,27 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
 
   void _selectSearchHit(SearchHit hit) {
     final pos = LatLng(hit.lat, hit.lng);
+    // Step 1: まず通常通り中央へ移動・ズーム (既存のレベル維持)
     _mapCtrl.move(pos, 15);
     setState(() {
       _searchFocus = hit;
       // _searchHits は維持。focus を閉じるとリストが復帰する。
+    });
+    // Step 2: 次フレームでカメラを南へシフトし、マーカーを画面上 30% 付近に
+    // 配置する。下端からせり上がる Search Focus popup (font 拡大で高くなる)
+    // にマーカーが隠れないようにするため。
+    // 2026-05-08: フォントサイズ拡大時に popup がマーカーを覆う事象の対策。
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final cam = _mapCtrl.camera;
+      final size = cam.nonRotatedSize;
+      if (size.width <= 0 || size.height <= 0) return;
+      // 現在のカメラ中心 = hit。 hit を画面上から 30% 位置に出すには、
+      // カメラを「現在の (W/2, 70%H) にあるはずの座標」へ移動すればよい。
+      final shiftedCenter = cam.screenOffsetToLatLng(
+        Offset(size.width / 2, size.height * 0.70),
+      );
+      _mapCtrl.move(shiftedCenter, cam.zoom);
     });
   }
 
