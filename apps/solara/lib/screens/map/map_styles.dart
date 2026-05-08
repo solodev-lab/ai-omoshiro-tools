@@ -112,8 +112,14 @@ Widget buildStyledTileLayer(
   void Function()? onTileError,
 }) {
   final cfg = mapStyleConfigs[style]!;
+  // 2026-05-08: TileLayer key を urlTemplate ベースに変更。
+  // 旧実装は cfg.id (osm_hot_light vs osm_hot_dark) で key が変わっていたため、
+  // light↔dark 切替で TileLayer State 全破棄 → 進行中の tile fetch が silent
+  // キャンセルされる事象が起きていた (Pixel8 hot restart で再現)。
+  // light/dark は単に ColorFilter の違いで urlTemplate は同じなので、
+  // urlTemplate を key にすれば State 維持のまま見た目だけ切替えられる。
   final layer = TileLayer(
-    key: ValueKey('${cfg.id}_$sessionBump'),
+    key: ValueKey('${cfg.urlTemplate}_$sessionBump'),
     urlTemplate: cfg.urlTemplate,
     subdomains: cfg.subdomains,
     maxZoom: cfg.maxZoom.toDouble(),

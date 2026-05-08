@@ -187,10 +187,6 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   /// dispose で全部キャンセル。
   final List<Timer> _kickTimers = [];
 
-  /// 強制 bump 済みフラグ (2.5s 経過時の最終手段が走ったか)。
-  /// 走っていれば errorTileCallback の bump も即時走らせて連鎖回復を狙う。
-  bool _initialForcedBumpDone = false;
-
   // Dominant fortune overlay
   DominantFortuneKind? _topCategory;
   DominantFortuneKind? _activeOverlay;
@@ -264,20 +260,24 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   /// プリウォーム。fire-and-forget。失敗しても本番 fetch でリトライされるので無視。
   /// 2026-05-08: Pixel8 エミュ初期描画失敗対策で導入。
   /// 診断ログ: 経過時間と HTTP status を出力 → Worker 側か接続側か切り分け。
+  ///
+  /// 2026-05-08 修正: HEAD → GET に変更。CF Worker が HEAD method を受け付けず
+  /// 404 を返していた (実機ログで判明)。z=0/0/0 は世界全体の 1 タイルで最小。
   Future<void> _warmupTileConnection() async {
     final stopwatch = Stopwatch()..start();
     try {
-      // 低 zoom (z=2) のタイルは Worker の edge cache に大体ある。
+      // z=0/x=0/y=0 は世界全体を 1 枚で表す最小タイル (約 5-15KB)。
       // sharedTileHttpClient と同じ HTTP プールを使うので、
       // ここで握った keep-alive socket が直後の本番 tile fetch に再利用される。
-      final url = Uri.parse('$solaraWorkerBase/tiles/osm/hot/2/0/0.png');
+      final url = Uri.parse('$solaraWorkerBase/tiles/osm/hot/0/0/0.png');
       final response = await sharedTileHttpClient
-          .head(url)
+          .get(url)
           .timeout(const Duration(seconds: 8));
       if (kDebugMode) {
         debugPrint(
           '[Solara Map] 🔥 prewarm OK '
-          '(${stopwatch.elapsedMilliseconds}ms, status=${response.statusCode})',
+          '(${stopwatch.elapsedMilliseconds}ms, '
+          'status=${response.statusCode}, ${response.bodyBytes.length}B)',
         );
       }
     } catch (e) {
@@ -295,10 +295,13 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   /// flutter_map 8.x で hot restart 直後に「TileLayer が tile fetch を自発的に
   /// キックしないまま固着」する事象への対策 (2026-05-08, Pixel8 で再発確認)。
   ///
-  /// 100ms / 800ms : 軽量 move(self) で viewport 再計算を促す
-  /// 2500ms        : 上記でもダメな場合の最終手段。session bump で TileLayer
-  ///                 State を強制再生成し、全タイルを fresh fetch させる
-  ///                 (Worker 側 24h edge cache が効くので再 fetch は実質無料)。
+  /// 100ms / 800ms / 2500ms : 軽量 move(self) で viewport 再計算を促す。
+  ///
+  /// 2026-05-08 修正: 2.5s での強制 session bump は撤去。
+  /// Worker cold start 中 (~2 秒) に bump すると、進行中の slow tile fetch が
+  /// State 破棄でキャンセル → 何度繰り返しても新しい cold fetch が出るだけで
+  /// 永久に表示されない悪循環を引き起こすため。errorTileCallback 経由の bump
+  /// (実際の HTTP error 検知時) のみ残す。
   void _scheduleInitialKicks() {
     void kick(String label) {
       if (!mounted) return;
@@ -311,26 +314,7 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
 
     _kickTimers.add(Timer(const Duration(milliseconds: 100), () => kick('100ms')));
     _kickTimers.add(Timer(const Duration(milliseconds: 800), () => kick('800ms')));
-    _kickTimers.add(Timer(const Duration(milliseconds: 2500), () {
-      if (!mounted) return;
-      kick('2500ms');
-      // 最終保険: 必ず key bump して TileLayer を fresh state にする。
-      // 既にタイルが正常表示されている場合でも、bump 1 回なら 24h edge cache
-      // から即返るのでユーザーへの影響は最小限。
-      if (!_initialForcedBumpDone) {
-        _initialForcedBumpDone = true;
-        setState(() {
-          _tileSessionBump++;
-          // _tileBumpCount は据え置き (errorTileCallback 経由 bump の上限とは独立)
-        });
-        if (kDebugMode) {
-          debugPrint(
-            '[Solara Map] 💥 forced session bump '
-            '(2.5s 最終保険、bump=$_tileSessionBump)',
-          );
-        }
-      }
-    }));
+    _kickTimers.add(Timer(const Duration(milliseconds: 2500), () => kick('2500ms')));
   }
 
   /// 個別タイル fetch 失敗時のフック。1.5s デバウンスして session bump で
