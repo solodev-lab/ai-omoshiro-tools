@@ -124,7 +124,8 @@ class _MapTimeSliderState extends State<MapTimeSlider> {
   String _fmtDate(DateTime d, double dayOffsetForLabel) {
     // 日数オフセット 0 = 今日 → 数字でなく「今日」表記
     if (dayOffsetForLabel.round() == 0) return '今日';
-    return '${d.year}/${d.month.toString().padLeft(2, '0')}/${d.day.toString().padLeft(2, '0')}';
+    // 2026-05-07: 年表示を撤去してコンパクト化 (旧 '2026/05/07' → '05/07')。
+    return '${d.month.toString().padLeft(2, '0')}/${d.day.toString().padLeft(2, '0')}';
   }
 
   String _fmtHour(int hourJst) {
@@ -171,9 +172,10 @@ class _MapTimeSliderState extends State<MapTimeSlider> {
     return Row(children: [
       _stepperBtn(icon: Icons.arrow_left, onTap: () => _stepDay(-1)),
       const SizedBox(width: 4),
-      // 日付ラベル: 固定幅 90 で時刻ラベルと中央揃え (▶ の X 位置を一致させる)
+      // 日付ラベル: 固定幅 56 で時刻ラベルと中央揃え (▶ の X 位置を一致させる)。
+      // 2026-05-07: 年表示撤去で 90→56 にコンパクト化 ('05/07' / '今日' / '12:00' いずれも収まる)。
       SizedBox(
-        width: 90,
+        width: 56,
         child: Center(
           child: Text(
             _fmtDate(preview, dayValue),
@@ -275,9 +277,10 @@ class _MapTimeSliderState extends State<MapTimeSlider> {
     return Row(children: [
       _stepperBtn(icon: Icons.arrow_left, onTap: () => _stepHour(-1)),
       const SizedBox(width: 4),
-      // 時刻表示: 固定幅 90 で日付ラベルと中央揃え (▶ の X 位置を一致)
+      // 時刻表示: 固定幅 56 で日付ラベルと中央揃え (▶ の X 位置を一致)。
+      // 2026-05-07: 日付ラベル 90→56 のコンパクト化に同期。
       SizedBox(
-        width: 90,
+        width: 56,
         child: Center(
           child: Text(
             _fmtHour(hourValue.round()),
