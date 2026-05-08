@@ -358,19 +358,30 @@ class _LocationsScreenState extends State<LocationsScreen> {
               dropdownColor: const Color(0xFF14142A),
               icon: const Icon(Icons.arrow_drop_down, color: Color(0xFFC9A84C), size: 18),
               style: const TextStyle(fontSize: 12, color: Color(0xFFE8E0D0)),
+              // 2026-05-08: スロットラベルを住所→カテゴリ名に統一
+              // (Daily Transit / 検索結果一覧と同じ規則)
+              // - 地図中心 (value=null): 「地図中心」(短縮、検索結果と統一)
+              // - isHome=true VPSlot → 「現住所」(固定)
+              // - その他 VPSlot → slot.name (空なら VP{n})
+              // 全 Text を Flexible + ellipsis でラップして RIGHT OVERFLOW 防止
+              // (1.5x フォント拡大時に '現在地（地図中心）' が dropdown 幅を超えていた)
               items: [
-                const DropdownMenuItem<int?>(
+                DropdownMenuItem<int?>(
                   value: null,
-                  child: Row(mainAxisSize: MainAxisSize.min, children: [
+                  child: Row(mainAxisSize: MainAxisSize.min, children: const [
                     Text('📡', style: TextStyle(fontSize: 13)),
                     SizedBox(width: 6),
-                    Text('現在地（地図中心）', style: TextStyle(fontSize: 12, color: Color(0xFFE8E0D0))),
+                    Flexible(
+                      child: Text(
+                        '地図中心',
+                        style: TextStyle(
+                            fontSize: 12, color: Color(0xFFE8E0D0)),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                      ),
+                    ),
                   ]),
                 ),
-                // 2026-05-08: スロットラベルを住所→カテゴリ名に統一
-                // (Daily Transit / 検索結果一覧と同じ規則)
-                // - isHome=true VPSlot → 「現住所」(固定)
-                // - その他 VPSlot → slot.name (空なら VP{n})
                 for (int i = 0; i < _vpSlots.length; i++)
                   DropdownMenuItem<int?>(
                     value: i,
