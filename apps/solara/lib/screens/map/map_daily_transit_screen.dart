@@ -288,18 +288,19 @@ class _DayTabBar extends StatelessWidget {
               ),
             ),
           ),
-          // ── 行2: ASC+MC フィルタ + i + アングル説明文 ──
+          // ── 行2: アングルフィルタ + i + アングル説明文 ──
+          // 2026-05-08: 個別 4 アングル (ASC/MC/DSC/IC) を追加 + i ボタンが
+          // 選択中アングルに応じた専用 popup を開くように変更。
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 2, 16, 6),
             child: Row(
               children: [
                 _angleDropdown(),
                 const SizedBox(width: 2),
-                // i アイコン: 4アングル詳細解説を popup で開示
+                // i アイコン: 選択中アングル別の詳細解説 (瞬間 + 経過) を表示
                 Builder(
                   builder: (ctx) => GestureDetector(
-                    onTap: () => showAstroGlossaryDialog(
-                        ctx, 'transit_angles'),
+                    onTap: () => _showAngleDetailPopup(ctx, angleFilter),
                     behavior: HitTestBehavior.opaque,
                     child: const Padding(
                       padding: EdgeInsets.all(6),
@@ -337,12 +338,29 @@ class _DayTabBar extends StatelessWidget {
     if (tipsData == null) return const SizedBox.shrink();
     final color = categoryColors[categoryKey] ?? SolaraColors.solaraGoldLight;
 
-    // アングル相に応じて tips を切替。
-    // ASC+MC = 外向き、DSC+IC = 内向き、全角度 = ASC+MC を既定表示し
-    // 「両方の相が混在」の旨をヘッドラインに添える。
+    // アングルに応じて tips を切替。
+    // 個別 4 アングル: そのアングル専用の 3 tips を表示
+    // 複合相 ASC+MC / DSC+IC: 4 tips を表示
+    // 全角度: ASC+MC tips を既定で表示し「混在」をラベルに添える
     final List<String> tips;
     final String subLabel;
     switch (angleFilter) {
+      case AngleFilter.asc:
+        tips = tipsData.tipsAsc;
+        subLabel = angleIndividualSubLabels[AngleFilter.asc] ?? 'ASC';
+        break;
+      case AngleFilter.mc:
+        tips = tipsData.tipsMc;
+        subLabel = angleIndividualSubLabels[AngleFilter.mc] ?? 'MC';
+        break;
+      case AngleFilter.dsc:
+        tips = tipsData.tipsDsc;
+        subLabel = angleIndividualSubLabels[AngleFilter.dsc] ?? 'DSC';
+        break;
+      case AngleFilter.ic:
+        tips = tipsData.tipsIc;
+        subLabel = angleIndividualSubLabels[AngleFilter.ic] ?? 'IC';
+        break;
       case AngleFilter.ascMc:
         tips = tipsData.tipsAscMc;
         subLabel = '外向きの相';
@@ -418,7 +436,8 @@ class _DayTabBar extends StatelessWidget {
                   ),
                 ),
                 GestureDetector(
-                  onTap: () => _showCategoryTipsIntent(ctx, categoryKey),
+                  onTap: () => _showCategoryTipsIntent(
+                      ctx, categoryKey, angleFilter),
                   behavior: HitTestBehavior.opaque,
                   child: Padding(
                     padding: const EdgeInsets.all(4),
@@ -1167,16 +1186,54 @@ void _showEventDetailDialog(
   );
 }
 
-/// B5: 「お勧め行動の例」i ボタンタップ時のカテゴリ別ガイド dialog。
-/// activeCategory に応じた使い方説明を出す。
+/// 「お勧め行動の例」i ボタンタップ時のカテゴリ × アングル別ガイド dialog。
+/// activeCategory + 選択中 angleFilter に応じた使い方説明を出す。
 /// fallback: カテゴリ entry がない場合 (=all 等) は astro_glossary に投げる。
-///
-/// 2026-05-07: 統一 popup ヘルパー [showInfoPopup] 経由に移行。
-/// 右上 × / 全文スクロール / 外タップ閉じが Shell 側で自動提供される。
-void _showCategoryTipsIntent(BuildContext context, String categoryKey) {
-  final entry = categoryTipsIntent[categoryKey];
+/// 2026-05-08: angleFilter パラメータ追加 — 個別アングル別の細分化対応。
+void _showCategoryTipsIntent(
+    BuildContext context, String categoryKey, AngleFilter angleFilter) {
+  final catEntries = categoryTipsIntent[categoryKey];
+  final entry = catEntries?[angleFilter] ?? catEntries?[AngleFilter.all];
   if (entry == null) {
     showAstroGlossaryDialog(context, 'category_tips_intent');
+    return;
+  }
+  showInfoPopup(
+    context: context,
+    child: Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          entry.title,
+          style: const TextStyle(
+            color: Color(0xFFC9A84C),
+            fontSize: 14,
+            letterSpacing: 1,
+          ),
+        ),
+        const SizedBox(height: 10),
+        Text(
+          entry.body,
+          style: const TextStyle(
+            color: Color(0xFFE8E0D0),
+            fontSize: 13,
+            height: 1.7,
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+/// アングル詳細 popup (アングルプルダウン横の i ボタンから開く)。
+/// 個別アングル選択時はその瞬間 + 次のアングルへの経過を表示。
+/// 複合 / 全角度の場合はまとめ表示。
+/// 2026-05-08: showAstroGlossaryDialog('transit_angles') を置換。
+void _showAngleDetailPopup(BuildContext context, AngleFilter filter) {
+  final entry = angleDetailContent[filter];
+  if (entry == null) {
+    showAstroGlossaryDialog(context, 'transit_angles');
     return;
   }
   showInfoPopup(
