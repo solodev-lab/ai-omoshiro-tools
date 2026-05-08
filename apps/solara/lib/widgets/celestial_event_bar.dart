@@ -96,7 +96,7 @@ class CelestialEventBar extends StatelessWidget {
             _typeLabel(event.type),
             style: const TextStyle(
               color: SolaraColors.textSecondary,
-              fontSize: 11,
+              fontSize: 13,
             ),
           ),
           const SizedBox(height: 16),
