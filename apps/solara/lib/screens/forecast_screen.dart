@@ -303,17 +303,17 @@ class _ForecastScreenState extends State<ForecastScreen> {
       Text(best.overall.toStringAsFixed(1),
           style: const TextStyle(fontSize: 10, color: Color(0xFFC9A84C))),
       const Spacer(),
-      if (widget.onJumpToDate != null) GestureDetector(
-        onTap: () {
+      if (widget.onJumpToDate != null) IconButton(
+        icon: const Icon(Icons.map_outlined,
+            size: 14, color: Color(0xFFC9A84C)),
+        padding: EdgeInsets.zero,
+        constraints: const BoxConstraints(minWidth: 22, minHeight: 22),
+        tooltip: 'その日をMapで見る',
+        onPressed: () {
           final ps = best.date.split('-').map(int.parse).toList();
           widget.onJumpToDate!(DateTime.utc(ps[0], ps[1], ps[2], 3, 0, 0));
           Navigator.of(context).maybePop();
         },
-        child: const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-          child: Text('Mapで見る',
-              style: TextStyle(fontSize: 9, color: Color(0xFFC9A84C), decoration: TextDecoration.underline)),
-        ),
       ),
     ]);
   }
@@ -631,24 +631,17 @@ class _ForecastScreenState extends State<ForecastScreen> {
         Row(children: [
           Text(dateLabel, style: const TextStyle(fontSize: 16, color: Color(0xFFE8E0D0), fontWeight: FontWeight.w600)),
           const Spacer(),
-          if (widget.onJumpToDate != null) GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTap: () {
+          if (widget.onJumpToDate != null) IconButton(
+            icon: const Icon(Icons.map_outlined,
+                size: 18, color: Color(0xFFC9A84C)),
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+            tooltip: 'その日をMapで見る',
+            onPressed: () {
               final ps = d.date.split('-').map(int.parse).toList();
               widget.onJumpToDate!(DateTime.utc(ps[0], ps[1], ps[2], 3, 0, 0));
               Navigator.of(context).maybePop();
             },
-            child: const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-              child: Text('Mapで見る',
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: Color(0xFFC9A84C),
-                    fontWeight: FontWeight.w600,
-                    decoration: TextDecoration.underline,
-                    decorationColor: Color(0xFFC9A84C),
-                  )),
-            ),
           ),
           const SizedBox(width: 6),
           Container(
@@ -885,7 +878,17 @@ void _showHeatmapInfo(BuildContext context) {
           '■ カテゴリモード\n'
           '日ごとに最も強いカテゴリを色で表現:\n'
           '　🟢 癒し　🟡 豊かさ　🩷 恋愛\n'
-          '　🔵 仕事　🟣 話す',
+          '　🔵 仕事　🟣 話す\n\n'
+          '同じ色が連続している期間が、そのカテゴリの\n'
+          '「波」が来ている時期です。\n'
+          '・🩷 が連続 → モテ期 (関係性のエネルギーが流れる)\n'
+          '・🟡 が連続 → 豊かさ期\n'
+          '・🟢 が連続 → 癒し期\n'
+          '・🔵 が連続 → 仕事期\n'
+          '・🟣 が連続 → 発信期\n\n'
+          'これらの「○○期」は下の「あなたの運勢サイクル」\n'
+          'セクションでも、開始日・終了日付きで一覧表示されます\n'
+          '(7 日以上の継続のみ抽出)。',
           style: TextStyle(
               color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
         ),
