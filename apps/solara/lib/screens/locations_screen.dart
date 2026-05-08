@@ -329,15 +329,29 @@ class _LocationsScreenState extends State<LocationsScreen> {
                     Text('現在地（地図中心）', style: TextStyle(fontSize: 12, color: Color(0xFFE8E0D0))),
                   ]),
                 ),
+                // 2026-05-08: スロットラベルを住所→カテゴリ名に統一
+                // (Daily Transit / 検索結果一覧と同じ規則)
+                // - isHome=true VPSlot → 「現住所」(固定)
+                // - その他 VPSlot → slot.name (空なら VP{n})
                 for (int i = 0; i < _vpSlots.length; i++)
                   DropdownMenuItem<int?>(
                     value: i,
                     child: Row(mainAxisSize: MainAxisSize.min, children: [
                       Text(_vpSlots[i].icon, style: const TextStyle(fontSize: 13)),
                       const SizedBox(width: 6),
-                      Flexible(child: Text(_vpSlots[i].name,
-                          style: const TextStyle(fontSize: 12, color: Color(0xFFE8E0D0)),
-                          overflow: TextOverflow.ellipsis)),
+                      Flexible(
+                        child: Text(
+                          _vpSlots[i].isHome
+                              ? '現住所'
+                              : (_vpSlots[i].name.isEmpty
+                                  ? 'VP${i + 1}'
+                                  : _vpSlots[i].name),
+                          style: const TextStyle(
+                              fontSize: 12, color: Color(0xFFE8E0D0)),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                        ),
+                      ),
                     ]),
                   ),
               ],
