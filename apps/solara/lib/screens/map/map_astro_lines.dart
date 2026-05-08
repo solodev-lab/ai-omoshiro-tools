@@ -302,8 +302,13 @@ class AstroZenithMarker extends StatelessWidget {
             borderRadius: BorderRadius.circular(3),
             border: Border.all(color: labelColor.withAlpha(102), width: 0.6),
           ),
+          // 2026-05-08: textScaler.noScaling で fontSize 13 固定。
+          // 天頂マーカーラベルは地図上のオブジェクトとして固定サイズが望ましく、
+          // 端末フォント拡大時にサイズが変わると周囲のラインや他マーカーとの
+          // 視覚バランスが崩れるため。
           child: Text(
             labelText,
+            textScaler: TextScaler.noScaling,
             style: TextStyle(
               fontSize: 13,
               color: labelColor,

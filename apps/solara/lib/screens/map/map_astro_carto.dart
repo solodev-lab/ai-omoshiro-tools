@@ -4,6 +4,7 @@ import 'package:latlong2/latlong.dart';
 import '../../utils/astro_glossary.dart';
 import '../../utils/astro_lines.dart' show AstroFrame;
 import '../../utils/astro_zenith_messages.dart';
+import '../../widgets/info_popup.dart';
 import 'map_astro_lines.dart' show AstroZenithMarker, astroFrameStyles;
 import 'map_constants.dart';
 
@@ -56,7 +57,18 @@ class AstroCartoBanner extends StatelessWidget {
               fontWeight: FontWeight.w600,
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 6),
+          // ❓ help_outline: ACG 画面の使い方説明 popup
+          GestureDetector(
+            onTap: () => _showAcgUsageGuide(context),
+            behavior: HitTestBehavior.opaque,
+            child: const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+              child: Icon(Icons.help_outline,
+                  size: 16, color: Color(0xCCAAAAAA)),
+            ),
+          ),
+          const SizedBox(width: 6),
           GestureDetector(
             onTap: onClose,
             behavior: HitTestBehavior.opaque,
@@ -69,6 +81,132 @@ class AstroCartoBanner extends StatelessWidget {
       ),
     );
   }
+}
+
+/// ACG (Astro*Carto*Graphy) 画面の使い方 popup。
+/// バナー左の ❓ ボタンから開く。
+void _showAcgUsageGuide(BuildContext context) {
+  showInfoPopup(
+    context: context,
+    child: Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: const [
+        Text(
+          'ASTRO*CARTO*GRAPHY の使い方',
+          style: TextStyle(
+              color: Color(0xFFC9A84C), fontSize: 14, letterSpacing: 1),
+        ),
+        SizedBox(height: 10),
+        Text(
+          'あなたが地球上のどこにいるかで、惑星のエネルギーの\n'
+          '受け方が変わる。それを世界地図上の「線」で可視化する\n'
+          '画面です。',
+          style: TextStyle(
+              color: Color(0xFFE8E0D0),
+              fontSize: 13,
+              height: 1.6,
+              fontWeight: FontWeight.w500),
+        ),
+        SizedBox(height: 14),
+        Text(
+          '【4 つのフレーム (上部ピル)】',
+          style: TextStyle(
+              color: Color(0xFFC9A84C),
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.5),
+        ),
+        SizedBox(height: 4),
+        Text(
+          '・Natal: 出生時の天体位置に基づくライン (生涯不変)\n'
+          '・Transit: 今この瞬間の天体位置のライン (毎日動く)\n'
+          '・Prog: 2 次進行 (1 日 = 1 年の比率) のライン\n'
+          '・S.Arc: ソーラーアーク (太陽進行弧で全惑星シフト)\n\n'
+          'それぞれ独立に ON/OFF 可能。各ピル横の i ボタンで\n'
+          '詳しい説明が見られます。',
+          style: TextStyle(
+              color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
+        ),
+        SizedBox(height: 10),
+        Text(
+          '【天頂マーカー (地図上の◯)】',
+          style: TextStyle(
+              color: Color(0xFFC9A84C),
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.5),
+        ),
+        SizedBox(height: 4),
+        Text(
+          '各惑星が真上 (天頂) を通る土地を表示します。\n'
+          'そこではその惑星のエネルギーがダイレクトに\n'
+          '頭上から降る「シャワー直下」の地点です。\n'
+          'タップで惑星固有のメッセージを確認できます。',
+          style: TextStyle(
+              color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
+        ),
+        SizedBox(height: 10),
+        Text(
+          '【アングルライン (地図上の線)】',
+          style: TextStyle(
+              color: Color(0xFFC9A84C),
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.5),
+        ),
+        SizedBox(height: 4),
+        Text(
+          '惑星 × 4 アングル (ASC/MC/DSC/IC) のライン:\n'
+          '・ASC (上昇): 惑星が東の地平線に昇る土地\n'
+          '・MC (天頂): 惑星が真上を通る土地\n'
+          '・DSC (下降): 惑星が西の地平線に沈む土地\n'
+          '・IC (天底): 惑星が真下 (地球の裏側) にある土地\n\n'
+          '線をタップすると、その地点の引越し効果\n'
+          '(ASC/MC のサイン変化、惑星のハウス遷移) が\n'
+          '詳細表示されます。',
+          style: TextStyle(
+              color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
+        ),
+        SizedBox(height: 10),
+        Text(
+          '【カテゴリピル (下部)】',
+          style: TextStyle(
+              color: Color(0xFFC9A84C),
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.5),
+        ),
+        SizedBox(height: 4),
+        Text(
+          '癒し / 豊かさ / 恋愛 / 仕事 / 話す をタップで切替えると、\n'
+          'そのカテゴリ関連の惑星ラインだけが強調表示されます。\n'
+          '「総合」では全惑星のラインを表示。',
+          style: TextStyle(
+              color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
+        ),
+        SizedBox(height: 10),
+        Text(
+          '【活用方法】',
+          style: TextStyle(
+              color: Color(0xFFC9A84C),
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.5),
+        ),
+        SizedBox(height: 4),
+        Text(
+          '旅行先・引越し先・出張先の選定に。\n'
+          '同じ「行動」でも、ある土地ではエネルギーが\n'
+          '強く流れ、別の土地では静かに流れます。\n'
+          '見たい惑星のラインを基準に、\n'
+          'あなたの目的に合う土地を見つけられます。',
+          style: TextStyle(
+              color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
+        ),
+      ],
+    ),
+  );
 }
 
 /// Astro*Carto*Graphy モード中の4フレーム切替ピル (Tier A #5 / CCG D2)。

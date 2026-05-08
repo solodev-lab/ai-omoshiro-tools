@@ -1048,11 +1048,14 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
       _layers['compass'] = false;
       _astroLayers['planetLines'] = false;
       _astroLayers['relocate'] = true;
-      // CCG (D2): モード入時は natal を強制ON。Transit/Progressed/SolarArc は
-      // ユーザーの直前選択を維持 (Pills UI で個別切替可能)。
-      // aspectAll は強制ONしない (FORTUNE Pills でカテゴリ絞込みする UX 用)。
+      // CCG (D2): モード入時は Transit を強制 ON (2026-05-08 ユーザー要望で
+      // 旧 Natal → Transit に変更)。Transit は「今この瞬間」のラインで
+      // 一番直感的に効果を実感できるため、初期表示として最適。
+      // Natal/Progressed/SolarArc は Pills UI で個別切替可能。
+      // aspectAll は強制 ON しない (FORTUNE Pills でカテゴリ絞込みする UX 用)。
       // 「総合」タップで activeCategory='all' → 自動で全惑星 100% になる。
-      _astroLayers['aspect'] = true;
+      _astroLayers['aspect'] = false;
+      _astroLayers['aspectTransit'] = true;
       _mapStyle = MapStyle.osmHotDark;
       // 既存パネル/シート/ピンを片付け、世界規模ビューにフォーカス
       _layerPanelOpen = false;
