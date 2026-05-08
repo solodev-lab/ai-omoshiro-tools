@@ -83,57 +83,55 @@ class FortuneFilterLabel extends StatelessWidget {
           borderRadius: BorderRadius.circular(10),
           border: Border.all(color: const Color(0x4DC9A84C)),
         ),
-        // IntrinsicWidth は使わない — dry layout の sub-pixel 丸め誤差で 0.x px
-        // オーバーフロー警告が出ることがある。mainAxisSize.min だけで十分。
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ConstrainedBox(
-              constraints: BoxConstraints(maxWidth: leftLabelMax),
-              // 2026-05-08: 「合計 / 総合」テキストの下に i ボタンを追加。
-              // タップで「カテゴリと関連惑星ペア」の説明 popup を出す。
-              // 親 GestureDetector (onTap=カテゴリ次へ切替) の上にあるが、
-              // 内側 GestureDetector が gesture arena で勝つため切替は発火しない。
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '${srcLabels[activeSrc] ?? '合計'} / ${categoryLabels[activeCategory] ?? '総合'}',
-                    style: const TextStyle(fontSize: 11, color: Color(0xFFC9A84C), letterSpacing: 0.5, fontWeight: FontWeight.w600),
-                    overflow: TextOverflow.ellipsis,
-                    maxLines: 1,
-                  ),
-                  const SizedBox(height: 1),
-                  GestureDetector(
-                    behavior: HitTestBehavior.opaque,
-                    onTap: () => showCategoryInfoPopup(context),
-                    child: const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 1),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.info_outline,
-                              size: 11, color: Color(0xFF888888)),
-                          SizedBox(width: 3),
-                          Text('カテゴリ詳細',
-                              style: TextStyle(
-                                  fontSize: 9,
-                                  color: Color(0xFF888888),
-                                  letterSpacing: 0.3)),
-                        ],
+        // 2026-05-08: 「合計 / 総合」を縦中央寄せ、i ボタンを最下部 +
+        // ラベル右端 (= 「総合」の「合」の下) に配置するため IntrinsicHeight +
+        // crossAxisStretch + Spacer 構成に変更。
+        // - IntrinsicHeight で Row 内の左右 Column が同じ高さを共有
+        // - 左 Column: [Spacer, Text, Spacer, Icon] で text を中央寄り、
+        //   icon を最下部に。crossAxisAlignment.end でラベル右端 (合) の下に。
+        // - 右 Column: mainAxisAlignment.center で 2 本のバーも縦中央寄せ
+        child: IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ConstrainedBox(
+                constraints: BoxConstraints(maxWidth: leftLabelMax),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    const Spacer(),
+                    Text(
+                      '${srcLabels[activeSrc] ?? '合計'} / ${categoryLabels[activeCategory] ?? '総合'}',
+                      style: const TextStyle(fontSize: 11, color: Color(0xFFC9A84C), letterSpacing: 0.5, fontWeight: FontWeight.w600),
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
+                    ),
+                    const Spacer(),
+                    // i ボタン: タップで「カテゴリと関連惑星ペア」popup を表示。
+                    // 親 GestureDetector (onTap=カテゴリ次へ切替) の上にあるが、
+                    // 内側が gesture arena で勝つため切替は発火しない。
+                    // crossAxisAlignment.end によりアイコン右端 = ラベル右端 =
+                    // 「総合」の「合」の文字の真下に配置される。
+                    GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: () => showCategoryInfoPopup(context),
+                      child: const Padding(
+                        padding: EdgeInsets.only(left: 6, top: 1),
+                        child: Icon(Icons.info_outline,
+                            size: 11, color: Color(0xFF888888)),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-            if (top2.isNotEmpty) ...[
-              const SizedBox(width: 6),
-              Column(
-                mainAxisSize: MainAxisSize.min,
-                children: top2.map((e) {
+              if (top2.isNotEmpty) ...[
+                const SizedBox(width: 6),
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  // 左の text 中央寄せに合わせて右の 2 バーも縦中央寄せ
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: top2.map((e) {
                   final pct = (e.value / maxScore).clamp(0.0, 1.0);
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 2),
@@ -179,7 +177,8 @@ class FortuneFilterLabel extends StatelessWidget {
             ],
           ],
         ),
-      ),
+      ),  // IntrinsicHeight 終端
+      ),  // Container 終端
     ),  // ClipRRect 終端
     ),  // MediaQuery.withClampedTextScaling 終端
     );
