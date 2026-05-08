@@ -247,7 +247,7 @@ class _SanctuaryTitleDiagnosisPageState extends State<SanctuaryTitleDiagnosisPag
       const Text('\u79f0\u53f7\u306e\u5100\u5f0f', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: Color(0xFFF9D976))),
       const SizedBox(height: 8),
       const Text('\u30ab\u30fc\u30c9\u304c\u3042\u306a\u305f\u3092\u6620\u3057\u51fa\u3057\u307e\u3059\u3002\n28\u306e\u554f\u3044\u306b\u3001\u76f4\u611f\u3067\u7b54\u3048\u3066\u304f\u3060\u3055\u3044\u3002', textAlign: TextAlign.center,
-        style: TextStyle(fontSize: 13, color: Color(0xFFACACAC), height: 1.7)),
+        style: TextStyle(fontSize: 15, color: Color(0xFFACACAC), height: 1.7)),
       const SizedBox(height: 24),
       GestureDetector(onTap: _beginRounds, child: Container(
         width: double.infinity, padding: const EdgeInsets.symmetric(vertical: 14),
@@ -256,7 +256,7 @@ class _SanctuaryTitleDiagnosisPageState extends State<SanctuaryTitleDiagnosisPag
         child: const Center(child: Text('\u59cb\u3081\u308b', style: TextStyle(color: Color(0xFF0A0A14), fontSize: 15, fontWeight: FontWeight.w700))))),
       const SizedBox(height: 12),
       GestureDetector(onTap: () => Navigator.pop(context),
-        child: const Text('\u3042\u3068\u3067', style: TextStyle(fontSize: 11, color: Color(0x66ACACAC)))),
+        child: const Text('\u3042\u3068\u3067', style: TextStyle(fontSize: 15, color: Color(0x66ACACAC)))),
     ]),
   ));
 
@@ -271,13 +271,13 @@ class _SanctuaryTitleDiagnosisPageState extends State<SanctuaryTitleDiagnosisPag
       Padding(padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
         child: Column(children: [
           Text('${_roundIdx + 1} / ${_rounds.length}',
-            style: const TextStyle(fontSize: 14, color: Color(0xCCF9D976), letterSpacing: 2, fontWeight: FontWeight.w600)),
+            style: const TextStyle(fontSize: 15, color: Color(0xCCF9D976), letterSpacing: 2, fontWeight: FontWeight.w600)),
           const SizedBox(height: 4),
-          Text(_partNames[r['part']] ?? '', style: const TextStyle(fontSize: 11, color: Color(0xB3F9D976), letterSpacing: 2)),
+          Text(_partNames[r['part']] ?? '', style: const TextStyle(fontSize: 15, color: Color(0xB3F9D976), letterSpacing: 2)),
           const SizedBox(height: 16),
           Text(r['q'] as String, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: Color(0xFFEAEAEA), height: 1.5), textAlign: TextAlign.center),
           const SizedBox(height: 4),
-          Text(r['qen'] as String, style: const TextStyle(fontSize: 12, color: Color(0x80ACACAC)), textAlign: TextAlign.center),
+          Text(r['qen'] as String, style: const TextStyle(fontSize: 15, color: Color(0x80ACACAC)), textAlign: TextAlign.center),
           const SizedBox(height: 28),
           Expanded(child: Center(child: Wrap(spacing: 12, runSpacing: 12, alignment: WrapAlignment.center,
             children: List.generate(cards.length, (i) {
@@ -302,7 +302,7 @@ class _SanctuaryTitleDiagnosisPageState extends State<SanctuaryTitleDiagnosisPag
                       : Column(mainAxisSize: MainAxisSize.min, children: [
                           Text(c['emoji'] as String? ?? '', style: const TextStyle(fontSize: 32)),
                           const SizedBox(height: 8),
-                          Text(c['name'] as String? ?? '', style: const TextStyle(fontSize: 11, color: Color(0xFFEAEAEA), fontWeight: FontWeight.w600), textAlign: TextAlign.center),
+                          Text(c['name'] as String? ?? '', style: const TextStyle(fontSize: 15, color: Color(0xFFEAEAEA), fontWeight: FontWeight.w600), textAlign: TextAlign.center),
                         ])),
                 ),
               );
@@ -324,7 +324,7 @@ class _SanctuaryTitleDiagnosisPageState extends State<SanctuaryTitleDiagnosisPag
           boxShadow: [BoxShadow(color: const Color(0x4DF9D976), blurRadius: 40 + (v - 0.9) * 160)]),
         transform: Matrix4.identity()..scaleByDouble(v, v, v, 1.0))),
     const SizedBox(height: 24),
-    const Text('Forging your title...', style: TextStyle(fontSize: 14, color: Color(0xFFACACAC), letterSpacing: 2)),
+    const Text('Forging your title...', style: TextStyle(fontSize: 15, color: Color(0xFFACACAC), letterSpacing: 2)),
   ]));
 
   Widget _buildReveal() => AnimatedBuilder(animation: _revealCtrl, builder: (_, child) {
@@ -336,7 +336,7 @@ class _SanctuaryTitleDiagnosisPageState extends State<SanctuaryTitleDiagnosisPag
             child: Text(_revealTitleJP, textAlign: TextAlign.center, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w700, color: Color(0xFFF9D976))))),
         const SizedBox(height: 4),
         Opacity(opacity: ((t - 0.3) / 1.2).clamp(0.0, 1.0),
-          child: Text(_revealTitleEN, textAlign: TextAlign.center, style: const TextStyle(fontSize: 13, color: Color(0x80F9D976)))),
+          child: Text(_revealTitleEN, textAlign: TextAlign.center, style: const TextStyle(fontSize: 15, color: Color(0x80F9D976)))),
         Container(width: 200 * ((t - 1.8) / 1.0).clamp(0.0, 1.0), height: 1, margin: const EdgeInsets.symmetric(vertical: 16),
           decoration: const BoxDecoration(gradient: LinearGradient(colors: [Colors.transparent, Color(0xFFF9D976), Colors.transparent]))),
         Opacity(opacity: ((t - 2.8) / 0.8).clamp(0.0, 1.0),
@@ -345,10 +345,10 @@ class _SanctuaryTitleDiagnosisPageState extends State<SanctuaryTitleDiagnosisPag
               style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: Color(0xFFEAEAEA), letterSpacing: 3)))),
         const SizedBox(height: 20),
         Opacity(opacity: ((t - 3.8) / 1.2).clamp(0.0, 1.0),
-          child: Text('\u2726 $_revealLightJP', textAlign: TextAlign.center, style: const TextStyle(fontSize: 13, color: Color(0xFFACACAC), height: 1.6))),
+          child: Text('\u2726 $_revealLightJP', textAlign: TextAlign.center, style: const TextStyle(fontSize: 15, color: Color(0xFFACACAC), height: 1.6))),
         const SizedBox(height: 6),
         Opacity(opacity: ((t - 5.0) / 1.2).clamp(0.0, 1.0),
-          child: Text('\u2726 $_revealShadowJP', textAlign: TextAlign.center, style: const TextStyle(fontSize: 13, color: Color(0xFFACACAC), height: 1.6, fontStyle: FontStyle.italic))),
+          child: Text('\u2726 $_revealShadowJP', textAlign: TextAlign.center, style: const TextStyle(fontSize: 15, color: Color(0xFFACACAC), height: 1.6, fontStyle: FontStyle.italic))),
         const SizedBox(height: 28),
         Opacity(opacity: ((t - 6.2) / 0.8).clamp(0.0, 1.0),
           child: Column(children: [
@@ -357,7 +357,7 @@ class _SanctuaryTitleDiagnosisPageState extends State<SanctuaryTitleDiagnosisPag
               child: const Center(child: Text('\u3053\u308c\u3067\u3044\u304f', style: TextStyle(color: Color(0xFF0A0A14), fontSize: 15, fontWeight: FontWeight.w700))))),
             const SizedBox(height: 12),
             GestureDetector(onTap: () => setState(() { _roundIdx = 0; _scores.updateAll((_, v) => 0); _selectedCard = null; _screen = 'intro'; _revealCtrl.reset(); }),
-              child: const Text('\u3082\u3046\u4e00\u5ea6\u8a3a\u65ad\u3059\u308b', style: TextStyle(fontSize: 12, color: Color(0xFFACACAC), decoration: TextDecoration.underline))),
+              child: const Text('\u3082\u3046\u4e00\u5ea6\u8a3a\u65ad\u3059\u308b', style: TextStyle(fontSize: 15, color: Color(0xFFACACAC), decoration: TextDecoration.underline))),
           ])),
       ])));
   });

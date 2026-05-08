@@ -123,7 +123,7 @@ class _SanctuaryHomeEditorPageState extends State<SanctuaryHomeEditorPage> {
                 const SizedBox(height: 20),
 
                 // Search
-                const Text('住所・地名', style: TextStyle(fontSize: 12, color: Color(0xFFACACAC), letterSpacing: 0.5)),
+                const Text('住所・地名', style: TextStyle(fontSize: 15, color: Color(0xFFACACAC), letterSpacing: 0.5)),
                 const SizedBox(height: 6),
                 Row(children: [
                   Expanded(child: _input(_nameCtrl, '例: 東京都渋谷区')),
@@ -137,14 +137,14 @@ class _SanctuaryHomeEditorPageState extends State<SanctuaryHomeEditorPage> {
                         gradient: const LinearGradient(colors: [Color(0xFFF9D976), Color(0xFFE8A840)]),
                       ),
                       child: Text(_searching ? '...' : '検索',
-                        style: const TextStyle(color: Color(0xFF0A0A14), fontSize: 13, fontWeight: FontWeight.w600)),
+                        style: const TextStyle(color: Color(0xFF0A0A14), fontSize: 15, fontWeight: FontWeight.w600)),
                     ),
                   ),
                 ]),
                 if (_searchResult.isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.only(top: 6),
-                    child: Text(_searchResult, style: const TextStyle(fontSize: 11, color: Color(0xFF6CC070))),
+                    child: Text(_searchResult, style: const TextStyle(fontSize: 15, color: Color(0xFF6CC070))),
                   ),
 
                 // 検索後にミニマップで微調整 (マップを動かしてピン位置調整)
@@ -193,7 +193,7 @@ class _SanctuaryHomeEditorPageState extends State<SanctuaryHomeEditorPage> {
 
   Widget _input(TextEditingController ctrl, String hint) => TextField(
     controller: ctrl,
-    style: const TextStyle(color: Color(0xFFEAEAEA), fontSize: 14),
+    style: const TextStyle(color: Color(0xFFEAEAEA), fontSize: 15),
     decoration: InputDecoration(
       hintText: hint,
       hintStyle: const TextStyle(color: Color(0x40FFFFFF)),
@@ -209,7 +209,7 @@ class _SanctuaryHomeEditorPageState extends State<SanctuaryHomeEditorPage> {
   Widget _readonlyField(String label, String value) => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      Text(label, style: const TextStyle(fontSize: 12, color: Color(0xFFACACAC))),
+      Text(label, style: const TextStyle(fontSize: 15, color: Color(0xFFACACAC))),
       const SizedBox(height: 4),
       Container(
         width: double.infinity,
@@ -220,7 +220,7 @@ class _SanctuaryHomeEditorPageState extends State<SanctuaryHomeEditorPage> {
           border: Border.all(color: const Color(0x1EFFFFFF)),
         ),
         child: Text(value.isEmpty ? '—' : value,
-          style: TextStyle(fontSize: 14, color: value.isEmpty ? const Color(0x40FFFFFF) : const Color(0xFFEAEAEA))),
+          style: TextStyle(fontSize: 15, color: value.isEmpty ? const Color(0x40FFFFFF) : const Color(0xFFEAEAEA))),
       ),
     ],
   );

@@ -213,7 +213,7 @@ class _SanctuaryProfileEditorPageState extends State<SanctuaryProfileEditorPage>
                     // 氏名
                     _birthSection('氏名', TextField(
                       controller: _nameCtrl,
-                      style: const TextStyle(color: Color(0xFFEAEAEA), fontSize: 14),
+                      style: const TextStyle(color: Color(0xFFEAEAEA), fontSize: 15),
                       decoration: _inputDecoration('氏名を入力'),
                     )),
 
@@ -221,7 +221,7 @@ class _SanctuaryProfileEditorPageState extends State<SanctuaryProfileEditorPage>
                     _birthSection('生年月日', TextField(
                       controller: _birthDateCtrl,
                       keyboardType: TextInputType.number,
-                      style: const TextStyle(color: Color(0xFFEAEAEA), fontSize: 14),
+                      style: const TextStyle(color: Color(0xFFEAEAEA), fontSize: 15),
                       decoration: _inputDecoration('YYYY/MM/DD'),
                       inputFormatters: [DateSlashFormatter()],
                       onChanged: (v) {
@@ -253,9 +253,9 @@ class _SanctuaryProfileEditorPageState extends State<SanctuaryProfileEditorPage>
                             ),
                             child: DropdownButtonHideUnderline(child: DropdownButton<String>(
                               value: _birthTimeUnknown ? null : _birthTime?.hour.toString().padLeft(2, '0'),
-                              hint: Text(_birthTimeUnknown ? '12' : '時', style: TextStyle(fontSize: 14, color: _birthTimeUnknown ? const Color(0x59EAEAEA) : const Color(0x99EAEAEA))),
+                              hint: Text(_birthTimeUnknown ? '12' : '時', style: TextStyle(fontSize: 15, color: _birthTimeUnknown ? const Color(0x59EAEAEA) : const Color(0x99EAEAEA))),
                               isExpanded: true, dropdownColor: const Color(0xFF0A1220),
-                              style: const TextStyle(fontSize: 14, color: Color(0xFFEAEAEA)),
+                              style: const TextStyle(fontSize: 15, color: Color(0xFFEAEAEA)),
                               icon: Icon(Icons.arrow_drop_down, color: _birthTimeUnknown ? const Color(0x59EAEAEA) : const Color(0xFFACACAC)),
                               items: _birthTimeUnknown ? null : _hourOptions.map((h) => DropdownMenuItem(value: h, child: Text('$h 時'))).toList(),
                               onChanged: _birthTimeUnknown ? null : (val) {
@@ -276,9 +276,9 @@ class _SanctuaryProfileEditorPageState extends State<SanctuaryProfileEditorPage>
                             ),
                             child: DropdownButtonHideUnderline(child: DropdownButton<String>(
                               value: _birthTimeUnknown ? null : _birthTime?.minute.toString().padLeft(2, '0'),
-                              hint: Text(_birthTimeUnknown ? '00' : '分', style: TextStyle(fontSize: 14, color: _birthTimeUnknown ? const Color(0x59EAEAEA) : const Color(0x99EAEAEA))),
+                              hint: Text(_birthTimeUnknown ? '00' : '分', style: TextStyle(fontSize: 15, color: _birthTimeUnknown ? const Color(0x59EAEAEA) : const Color(0x99EAEAEA))),
                               isExpanded: true, dropdownColor: const Color(0xFF0A1220),
-                              style: const TextStyle(fontSize: 14, color: Color(0xFFEAEAEA)),
+                              style: const TextStyle(fontSize: 15, color: Color(0xFFEAEAEA)),
                               icon: Icon(Icons.arrow_drop_down, color: _birthTimeUnknown ? const Color(0x59EAEAEA) : const Color(0xFFACACAC)),
                               items: _birthTimeUnknown ? null : _minuteOptions.map((m) => DropdownMenuItem(value: m, child: Text('$m 分'))).toList(),
                               onChanged: _birthTimeUnknown ? null : (val) {
@@ -302,7 +302,7 @@ class _SanctuaryProfileEditorPageState extends State<SanctuaryProfileEditorPage>
                           GestureDetector(
                             onTap: () => setState(() => _birthTimeUnknown = !_birthTimeUnknown),
                             child: const Text('出生時刻が分からない',
-                              style: TextStyle(fontSize: 12, color: Color(0xFFACACAC))),
+                              style: TextStyle(fontSize: 15, color: Color(0xFFACACAC))),
                           ),
                         ]),
                         // HTML: .time-noon-hint
@@ -316,7 +316,7 @@ class _SanctuaryProfileEditorPageState extends State<SanctuaryProfileEditorPage>
                             ),
                             child: const Text(
                               '鑑定には惑星配置とアスペクト情報を使用します。ハウス・ASC・MCの鑑定は省略されます。',
-                              style: TextStyle(color: Color(0xFFF9D976), fontSize: 11, height: 1.4),
+                              style: TextStyle(color: Color(0xFFF9D976), fontSize: 15, height: 1.4),
                             ),
                           ),
                         ],
@@ -331,7 +331,7 @@ class _SanctuaryProfileEditorPageState extends State<SanctuaryProfileEditorPage>
                         Row(children: [
                           Expanded(child: TextField(
                             controller: _placeCtrl,
-                            style: const TextStyle(color: Color(0xFFEAEAEA), fontSize: 14),
+                            style: const TextStyle(color: Color(0xFFEAEAEA), fontSize: 15),
                             decoration: _inputDecoration('例: 岐阜県岐阜市'),
                             onSubmitted: _searchPlace,
                           )),
@@ -349,7 +349,7 @@ class _SanctuaryProfileEditorPageState extends State<SanctuaryProfileEditorPage>
                                 ),
                               ),
                               child: const Text('検索', style: TextStyle(
-                                color: Color(0xFF0A0A14), fontSize: 13, fontWeight: FontWeight.w600)),
+                                color: Color(0xFF0A0A14), fontSize: 15, fontWeight: FontWeight.w600)),
                             ),
                           ),
                         ]),
@@ -377,7 +377,7 @@ class _SanctuaryProfileEditorPageState extends State<SanctuaryProfileEditorPage>
                                 return ListTile(
                                   dense: true,
                                   title: Text(place['name'] as String,
-                                    style: const TextStyle(color: Color(0xFFEAEAEA), fontSize: 13),
+                                    style: const TextStyle(color: Color(0xFFEAEAEA), fontSize: 15),
                                     maxLines: 2, overflow: TextOverflow.ellipsis),
                                   leading: const Icon(Icons.location_on, color: Color(0xFFF9D976), size: 18),
                                   onTap: () => _selectPlace(place),
@@ -417,7 +417,7 @@ class _SanctuaryProfileEditorPageState extends State<SanctuaryProfileEditorPage>
                                 : (_birthTzName != null
                                     ? 'タイムゾーン: $_birthTzName (DST自動)'
                                     : 'タイムゾーン: UTC+$_birthTz (固定)'),
-                              style: const TextStyle(fontSize: 11, color: Color(0xFFACACAC)),
+                              style: const TextStyle(fontSize: 15, color: Color(0xFFACACAC)),
                               overflow: TextOverflow.ellipsis,
                             )),
                           ]),
@@ -497,12 +497,12 @@ class _SanctuaryProfileEditorPageState extends State<SanctuaryProfileEditorPage>
           ),
           child: Column(children: [
             Text(primary, style: TextStyle(
-              fontSize: 13, fontWeight: FontWeight.w600,
+              fontSize: 15, fontWeight: FontWeight.w600,
               color: active ? const Color(0xFFF9D976) : const Color(0xFFE0E0E0),
             )),
             const SizedBox(height: 2),
             Text(sub, style: TextStyle(
-              fontSize: 10,
+              fontSize: 15,
               color: active
                 ? const Color(0xFFF9D976).withAlpha(180)
                 : const Color(0xFF888888),
@@ -521,7 +521,7 @@ class _SanctuaryProfileEditorPageState extends State<SanctuaryProfileEditorPage>
         children: [
           // HTML: .birth-label { font-size:12px; color:#ACACAC; letter-spacing:0.5px; text-transform:uppercase; }
           Text(label.toUpperCase(),
-            style: const TextStyle(fontSize: 12, color: Color(0xFFACACAC), letterSpacing: 0.5)),
+            style: const TextStyle(fontSize: 15, color: Color(0xFFACACAC), letterSpacing: 0.5)),
           const SizedBox(height: 6),
           child,
         ],
@@ -550,7 +550,7 @@ class _SanctuaryProfileEditorPageState extends State<SanctuaryProfileEditorPage>
       border: Border.all(color: const Color(0x1FFFFFFF)),
     ),
     child: Text(value.isEmpty ? hint : value,
-      style: TextStyle(fontSize: 14, color: value.isEmpty ? const Color(0x66EAEAEA) : const Color(0xFFEAEAEA))),
+      style: TextStyle(fontSize: 15, color: value.isEmpty ? const Color(0x66EAEAEA) : const Color(0xFFEAEAEA))),
   );
 }
 

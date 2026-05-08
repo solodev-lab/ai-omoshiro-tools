@@ -218,7 +218,7 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
                   // ── Version ──
                   const Center(
                     child: Text('Solara v1.0.0 · Made with ✦',
-                      style: TextStyle(fontSize: 11, color: Color(0x59ACACAC))), // rgba(172,172,172,0.35)
+                      style: TextStyle(fontSize: 15, color: Color(0x59ACACAC))), // rgba(172,172,172,0.35)
                   ),
                   const SizedBox(height: 8),
                 ],
@@ -265,7 +265,7 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
               const SizedBox(height: 2),
               // HTML: .profile-tier { font-size:12px; color:#ACACAC; margin-top:2px; }
               const Text('Free Tier · Cosmic Journey',
-                style: TextStyle(fontSize: 12, color: Color(0xFFACACAC))),
+                style: TextStyle(fontSize: 15, color: Color(0xFFACACAC))),
             ],
           ),
         ),
@@ -353,7 +353,7 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
               ),
               child: const Center(
                 child: Text('再診断する（Cosmic Pro）',
-                  style: TextStyle(color: Color(0xFFF9D976), fontSize: 13)),
+                  style: TextStyle(color: Color(0xFFF9D976), fontSize: 15)),
               ),
             ),
           ),
@@ -364,7 +364,7 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
             padding: EdgeInsets.all(10),
             child: Center(
               child: Text('まず出生情報を設定してください',
-                style: TextStyle(fontSize: 13, color: Color(0xFFACACAC))),
+                style: TextStyle(fontSize: 15, color: Color(0xFFACACAC))),
             ),
           ),
         ],
@@ -429,7 +429,7 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
       child: Column(
         children: [
           // HTML: .td-vcard-label { font-size:10px; letter-spacing:3px; }
-          Text(label, style: TextStyle(fontSize: 10, letterSpacing: 3, color: labelColor, fontWeight: FontWeight.w300)),
+          Text(label, style: TextStyle(fontSize: 15, letterSpacing: 3, color: labelColor, fontWeight: FontWeight.w300)),
           const SizedBox(height: 6),
           // HTML: .td-vcard-line
           Container(
@@ -502,7 +502,7 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
             const SizedBox(height: 12),
             // HTML: .pro-sub { font-size:13px; color:var(--text-secondary); line-height:1.55; }
             const Text('Aether shaders · Galaxy Archive · Advanced astrology',
-              style: TextStyle(fontSize: 13, color: Color(0xFFACACAC), height: 1.55),
+              style: TextStyle(fontSize: 15, color: Color(0xFFACACAC), height: 1.55),
               textAlign: TextAlign.center),
             const SizedBox(height: 12),
             // Price row (from sanctuary.html inline styles)
@@ -513,7 +513,7 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
               children: const [
                 Text('\$9.99', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700, color: Color(0xFFF9D976))),
                 SizedBox(width: 6),
-                Text('/month', style: TextStyle(fontSize: 12, color: Color(0xFFACACAC))),
+                Text('/month', style: TextStyle(fontSize: 15, color: Color(0xFFACACAC))),
               ],
             ),
             const SizedBox(height: 12),
@@ -529,12 +529,12 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
                 ),
               ),
               child: const Text('Unlock Cosmic Pro ✦',
-                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Color(0xFF0C1D3A))),
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Color(0xFF0C1D3A))),
             ),
             const SizedBox(height: 12),
             // HTML inline: font-size:11px; color:rgba(172,172,172,0.45)
             const Text('\$49.99/year · Cancel anytime',
-              style: TextStyle(fontSize: 11, color: Color(0x73ACACAC))),
+              style: TextStyle(fontSize: 15, color: Color(0x73ACACAC))),
           ]),
         ),
       ],
@@ -591,7 +591,7 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(label, style: const TextStyle(fontSize: 14, color: Color(0xFFEAEAEA))),
+            Text(label, style: const TextStyle(fontSize: 15, color: Color(0xFFEAEAEA))),
             Text('✓', style: TextStyle(fontSize: 16, color: const Color(0xFFF9D976),
               fontWeight: FontWeight.w600),
             ).withOpacity(isSelected ? 1.0 : 0.0),
@@ -713,7 +713,7 @@ class _SettingsGroup extends StatelessWidget {
       children: [
         // HTML: .section-label { font-size:11px; font-weight:700; color:var(--gold); letter-spacing:1.8px; text-transform:uppercase; }
         Text(label, style: const TextStyle(
-          fontSize: 11, fontWeight: FontWeight.w700,
+          fontSize: 15, fontWeight: FontWeight.w700,
           color: Color(0xFFF9D976), letterSpacing: 1.8,
         )),
         const SizedBox(height: 10),
@@ -769,10 +769,10 @@ class _SettingsItem extends StatelessWidget {
             const SizedBox(width: 12),
             // HTML: .settings-txt { font-size:14px; }
             Expanded(
-              child: Text(text, style: const TextStyle(fontSize: 14, color: Color(0xFFEAEAEA))),
+              child: Text(text, style: const TextStyle(fontSize: 15, color: Color(0xFFEAEAEA))),
             ),
             // HTML: .settings-val { font-size:13px; color:#ACACAC; }
-            Text(value, style: const TextStyle(fontSize: 13, color: Color(0xFFACACAC))),
+            Text(value, style: const TextStyle(fontSize: 15, color: Color(0xFFACACAC))),
           ],
         ),
       ),
@@ -812,7 +812,7 @@ class _SettingsItemWithToggle extends StatelessWidget {
           ),
           const SizedBox(width: 12),
           Expanded(
-            child: Text(text, style: const TextStyle(fontSize: 14, color: Color(0xFFEAEAEA))),
+            child: Text(text, style: const TextStyle(fontSize: 15, color: Color(0xFFEAEAEA))),
           ),
           // HTML: .toggle { width:44px; height:26px; border-radius:13px; }
           GestureDetector(

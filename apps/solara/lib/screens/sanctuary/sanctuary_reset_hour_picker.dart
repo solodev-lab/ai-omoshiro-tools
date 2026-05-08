@@ -71,7 +71,7 @@ class _SanctuaryResetHourPickerState extends State<SanctuaryResetHourPicker> {
                 widget.subtitle!,
                 textAlign: TextAlign.center,
                 style: const TextStyle(
-                    color: Color(0xFFACACAC), fontSize: 12, height: 1.5),
+                    color: Color(0xFFACACAC), fontSize: 15, height: 1.5),
               ),
             ],
             const SizedBox(height: 22),
@@ -100,7 +100,7 @@ class _SanctuaryResetHourPickerState extends State<SanctuaryResetHourPicker> {
               textAlign: TextAlign.center,
               style: const TextStyle(
                 color: Color(0x99FFFFFF),
-                fontSize: 13,
+                fontSize: 15,
                 fontFamily: 'monospace',
                 letterSpacing: 2,
               ),

@@ -95,7 +95,7 @@ class _SanctuaryOrbOverlayState extends State<SanctuaryOrbOverlay> {
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(color: const Color(0x40F9D976)),
                       ),
-                      child: const Text('リセット', style: TextStyle(fontSize: 12, color: Color(0xFFF9D976))),
+                      child: const Text('リセット', style: TextStyle(fontSize: 15, color: Color(0xFFF9D976))),
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -175,7 +175,7 @@ class _SanctuaryOrbOverlayState extends State<SanctuaryOrbOverlay> {
         children: [
           // HTML: .orb-name { font-size:12px; color:#ACACAC; min-width:120px; }
           SizedBox(width: 120,
-            child: Text(label, style: const TextStyle(fontSize: 12, color: Color(0xFFACACAC)))),
+            child: Text(label, style: const TextStyle(fontSize: 15, color: Color(0xFFACACAC)))),
           // − button
           _orbPmBtn('−', () {
             if (val > 0.5) setState(() => _vals[key] = val - 0.5);
@@ -220,7 +220,7 @@ class _SanctuaryOrbOverlayState extends State<SanctuaryOrbOverlay> {
           // HTML: .orb-val { font-size:13px; color:#F9D976; min-width:36px; text-align:center; }
           SizedBox(width: 36,
             child: Text('${val.toStringAsFixed(1)}°',
-              style: TextStyle(fontSize: 13, color: const Color(0xFFF9D976), fontWeight: FontWeight.w600,
+              style: TextStyle(fontSize: 15, color: const Color(0xFFF9D976), fontWeight: FontWeight.w600,
                 decoration: val == defaultVal ? TextDecoration.underline : null),
               textAlign: TextAlign.center)),
           // + button
@@ -251,5 +251,5 @@ class _OrbSectionLabel extends StatelessWidget {
   const _OrbSectionLabel(this.text);
   @override
   Widget build(BuildContext context) => Text(text,
-    style: const TextStyle(fontSize: 12, color: Color(0xFFACACAC), letterSpacing: 0.5, fontWeight: FontWeight.w600));
+    style: const TextStyle(fontSize: 15, color: Color(0xFFACACAC), letterSpacing: 0.5, fontWeight: FontWeight.w600));
 }
