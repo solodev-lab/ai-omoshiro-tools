@@ -1,30 +1,42 @@
 import 'package:flutter/material.dart';
 
-/// メニューチップの種別。タップで対応する BottomSheet が起動。
-enum MapMenuChip {
-  /// 表示: 16方位 / コンパス / マップスタイル
-  display,
+import '../../theme/solara_colors.dart';
+import '../../widgets/category_icon.dart';
+import '../../widgets/dominant_fortune_overlay.dart' show DominantFortuneKind;
 
-  /// 占星: 惑星ライン / 引越し / CCG 4線 / CHART / PLANET GROUP / FORTUNE カテゴリ + ACG
-  astro,
-
-  /// 地点: VIEWPOINT / LOCATIONS タブ + 詳細管理画面リンク
-  locations,
-
-  /// 予報: ForecastScreen を開く
-  forecast,
-}
-
-/// NavBar 直上の 4 チップバー。
+/// 下部チップバー (NavBar 直上、4 個)。
 ///
-/// 設計（2026-05-09）:
-/// - 旧 7 サイドボタンのうち 6 個 (☰/✨/📍/🗺/🔮/🌐) をここに集約。
-/// - 🔍 検索は左サイドに残存。▲運勢方位 PullTab はチップバーの上に配置。
-/// - タップ → 対応する _showSheet 起動 (showModalBottomSheet 経由)。
+/// 2026-05-09 第二弾再設計:
+///   旧 4 チップ (⚙️/✨/📍/📈) → 新 4 チップ (Daily Transit / 運勢方位 / LOCATIONS / 予報)
+///   利用頻度トップ 3 (Daily Transit / 運勢方位 / LOCATIONS) を主役チップに昇格。
+///   表示・占星 (低頻度) は左サイド ☰ 表示メニューに移動。
+///   右上 DailyTransitBadge は廃止し、未閲覧時のグロー演出はこのチップで実施。
 class MapMenuChips extends StatelessWidget {
-  final ValueChanged<MapMenuChip> onTap;
+  /// Daily Transit チップ: 未閲覧 (リセット時刻後初回) で halo 発光
+  final bool dailyTransitUnseen;
+  final bool dailyTransitDisabled; // プロフィール未設定時 true
+  final DominantFortuneKind? topCategory;
+  final VoidCallback onDailyTransitTap;
 
-  const MapMenuChips({super.key, required this.onTap});
+  /// 運勢方位 (FortuneSheet 起動)
+  final VoidCallback onFortuneTap;
+
+  /// LOCATIONS (LocationsScreen 起動)
+  final VoidCallback onLocationsTap;
+
+  /// 予報 (ForecastScreen 起動)
+  final VoidCallback onForecastTap;
+
+  const MapMenuChips({
+    super.key,
+    required this.dailyTransitUnseen,
+    required this.dailyTransitDisabled,
+    required this.topCategory,
+    required this.onDailyTransitTap,
+    required this.onFortuneTap,
+    required this.onLocationsTap,
+    required this.onForecastTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -48,23 +60,49 @@ class MapMenuChips extends StatelessWidget {
         bottom: false,
         child: Row(
           children: [
-            _chip(MapMenuChip.display, '⚙️', '表示'),
-            _chip(MapMenuChip.astro, '✨', '占星'),
-            _chip(MapMenuChip.locations, '📍', '地点'),
-            _chip(MapMenuChip.forecast, '📈', '予報'),
+            _DailyTransitChip(
+              unseen: dailyTransitUnseen,
+              disabled: dailyTransitDisabled,
+              topCategory: topCategory,
+              onTap: onDailyTransitTap,
+            ),
+            _StaticChip(
+              icon: '🧭',
+              label: '運勢方位',
+              onTap: onFortuneTap,
+            ),
+            _StaticChip(
+              icon: '📍',
+              label: 'LOCATIONS',
+              onTap: onLocationsTap,
+            ),
+            _StaticChip(
+              icon: '📈',
+              label: '予報',
+              onTap: onForecastTap,
+            ),
           ],
         ),
       ),
     );
   }
+}
 
-  Widget _chip(MapMenuChip key, String icon, String label) {
+// ── 通常チップ (Daily Transit 以外) ────────────────────────────────
+class _StaticChip extends StatelessWidget {
+  final String icon;
+  final String label;
+  final VoidCallback onTap;
+  const _StaticChip({required this.icon, required this.label, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
     return Expanded(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 3),
         child: GestureDetector(
           behavior: HitTestBehavior.opaque,
-          onTap: () => onTap(key),
+          onTap: onTap,
           child: Container(
             padding: const EdgeInsets.symmetric(vertical: 8),
             decoration: BoxDecoration(
@@ -96,6 +134,132 @@ class MapMenuChips extends StatelessWidget {
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+// ── Daily Transit 専用チップ (unseen halo + topCategory アイコン) ──
+//
+// 旧 DailyTransitBadge (右上、円形 40px) からの移植版。形状を chip 矩形に合わせ、
+// halo は背景に焼き込む RadialGradient で saveLayer ゼロ・idle frame 誘発ゼロ。
+class _DailyTransitChip extends StatelessWidget {
+  final bool unseen;
+  final bool disabled;
+  final DominantFortuneKind? topCategory;
+  final VoidCallback onTap;
+  const _DailyTransitChip({
+    required this.unseen,
+    required this.disabled,
+    required this.topCategory,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final showHalo = unseen && !disabled;
+    final iconKind = topCategory?.toCategoryIcon() ?? CategoryIconKind.all;
+
+    // unseen = 最大輝度固定 (border + fill とも明るい金)、
+    // 閲覧済み = 通常チップと同等の控えめ色。
+    final fillGradient = unseen
+        ? const LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Color(0x66F9D976), Color(0x22F9D976)],
+          )
+        : const LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Color(0x22C9A84C), Color(0x0AC9A84C)],
+          );
+    final borderColor = unseen
+        ? const Color(0xFFFFE99A)
+        : const Color(0x33C9A84C);
+    final iconColor = unseen
+        ? SolaraColors.solaraGoldLight
+        : const Color(0xFFC9A84C);
+
+    return Expanded(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 3),
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: disabled ? null : onTap,
+          child: Stack(
+            clipBehavior: Clip.none,
+            alignment: Alignment.center,
+            children: [
+              // 未閲覧時の halo (chip 矩形の外側に拡張、IgnorePointer)
+              if (showHalo)
+                const Positioned(
+                  left: -8,
+                  right: -8,
+                  top: -8,
+                  bottom: -8,
+                  child: IgnorePointer(child: _ChipHalo()),
+                ),
+              Container(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: borderColor, width: unseen ? 1.4 : 1),
+                  gradient: fillGradient,
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (disabled)
+                      const Text('🌱', style: TextStyle(fontSize: 18))
+                    else
+                      CategoryIcon(
+                        kind: iconKind,
+                        size: 18,
+                        color: iconColor,
+                        strokeWidth: 1.5,
+                      ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Daily',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: unseen
+                            ? const Color(0xFFFFE99A)
+                            : const Color(0xFFC9A84C),
+                        letterSpacing: 0.6,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// チップの周囲に静的に描画する halo。RadialGradient で焼き込み (saveLayer 不要)。
+class _ChipHalo extends StatelessWidget {
+  const _ChipHalo();
+
+  @override
+  Widget build(BuildContext context) {
+    const glow = SolaraColors.solaraGoldLight;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(14),
+        gradient: RadialGradient(
+          radius: 0.7,
+          colors: [
+            glow.withValues(alpha: 0.45),
+            glow.withValues(alpha: 0.18),
+            glow.withValues(alpha: 0.0),
+          ],
+          stops: const [0.30, 0.60, 1.00],
         ),
       ),
     );

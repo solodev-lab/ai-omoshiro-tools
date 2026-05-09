@@ -43,9 +43,8 @@ class FortuneFilterLabel extends StatelessWidget {
     //   - 方角ラベル幅 48 → fontSize 11 × 内部 1.3 倍 = 14.3 で "東南東" を収める
     //   - 値ラベル幅 36 → fontSize 11 monospace × 1.3 で "15.7" を収める
     //   - バー幅は MediaQuery で残幅から逆算
-    //   - 右側 DailyTransitBadge (右上 right:20, 幅 40) と重ならないよう
-    //     右マージン 64 を予約 (2026-05-04 ユーザー指摘対応)
     //
+    // 2026-05-09: 旧 DailyTransitBadge 撤去でスコアバー右マージン 64px を解放。
     // 2026-05-08: アクセシビリティ配慮で score bar 内部のみ
     // clamp 1.3 倍 (= 全体 1.5 倍より控え目) を許容。寸法は 1.3 倍時の
     // テキストが収まるよう拡大調整。
@@ -55,11 +54,9 @@ class FortuneFilterLabel extends StatelessWidget {
     const valueLabelW = 36.0;
     const innerHPad = 8.0;   // Container horizontal padding (片側)
     const sideMargin = 16.0;  // 親 Positioned の left:16 分
-    const dailyBadgeReserved = 64.0;  // DailyTransitBadge 用右マージン
     // 残幅 = 画面幅 − サイドマージン − 左ラベル − Container padding × 2
     //         − 6 (左ラベルとバー列の間) − dirLabelW − 4 − valueLabelW − 4
-    //         − dailyBadgeReserved (右上 Badge 用)
-    final reserved = sideMargin + leftLabelMax + innerHPad * 2 + 6 + dirLabelW + 4 + valueLabelW + 4 + dailyBadgeReserved;
+    final reserved = sideMargin + leftLabelMax + innerHPad * 2 + 6 + dirLabelW + 4 + valueLabelW + 4;
     final barW = (screenW - reserved).clamp(36.0, 90.0);
 
     // ClipRRect で境界半径を維持しつつ、sub-pixel オーバーフローを視覚的に吸収。

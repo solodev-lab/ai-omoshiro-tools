@@ -38,6 +38,11 @@ class MapDailyTransitScreen extends StatefulWidget {
   final Map<String, double>? natal;
   final VoidCallback onClose;
 
+  /// 「🌐 世界規模で見る」フッターリンクのハンドラ。
+  /// null なら表示しない。設定すると Daily Transit popup 下部に ACG モード起動
+  /// リンクが現れる (2026-05-09: 旧 🌐 サイドボタンの代替動線)。
+  final VoidCallback? onEnterAcg;
+
   const MapDailyTransitScreen({
     super.key,
     required this.topCategory,
@@ -46,6 +51,7 @@ class MapDailyTransitScreen extends StatefulWidget {
     this.vpSlots = const [],
     this.natal,
     required this.onClose,
+    this.onEnterAcg,
   });
 
   @override
@@ -229,8 +235,53 @@ class _MapDailyTransitScreenState extends State<MapDailyTransitScreen>
                               )
                             : const _LoadingBody(),
               ),
+              // ACG モード起動フッター (旧🌐ボタンの代替動線、2026-05-09)。
+              // 「今日の動き → 世界規模に投影して見る」自然な文脈接続。
+              if (widget.onEnterAcg != null)
+                _AcgEntryFooter(onTap: () {
+                  _close(); // popup を閉じてから ACG モードへ
+                  widget.onEnterAcg!();
+                }),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Daily Transit popup 下部に表示する「🌐 世界規模で見る (ACG)」リンク行。
+class _AcgEntryFooter extends StatelessWidget {
+  final VoidCallback onTap;
+  const _AcgEntryFooter({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+        decoration: const BoxDecoration(
+          border: Border(top: BorderSide(color: Color(0x22C9A84C))),
+        ),
+        child: Row(
+          children: [
+            const Text('🌐', style: TextStyle(fontSize: 18)),
+            const SizedBox(width: 10),
+            const Expanded(
+              child: Text(
+                '世界規模で見る (Astro*Carto*Graphy)',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Color(0xFFC9A84C),
+                  letterSpacing: 0.4,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+            const Icon(Icons.chevron_right, size: 18, color: Color(0x99C9A84C)),
+          ],
         ),
       ),
     );
