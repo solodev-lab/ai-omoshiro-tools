@@ -1,93 +1,108 @@
 # Solara Code Audit
 
-対象: lib (125 個の .dart)
+対象: lib (129 個の .dart)
 
 ## 1. ファイル行数 (>= 300 行)
 
 | 行数 | 判定 | ファイル |
 |------|------|----------|
-| 1739 | 🔴 HARD | lib/screens/map_screen.dart |
-| 1288 | 🔴 HARD | lib/screens/map/map_daily_transit_screen.dart |
-| 904 | 🔴 HARD | lib/screens/galaxy_screen.dart |
+| 1933 | 🔴 HARD | lib/screens/map_screen.dart |
+| 1497 | 🔴 HARD | lib/screens/map/map_daily_transit_screen.dart |
+| 1091 | 🔴 HARD | lib/screens/galaxy_screen.dart |
+| 1023 | 🔴 HARD | lib/screens/map/daily_transit_data.dart |
+| 936 | 🔴 HARD | lib/screens/forecast_screen.dart |
 | 847 | 🔴 HARD | lib/screens/sanctuary_screen.dart |
-| 766 | 🔴 HARD | lib/screens/horoscope_screen.dart |
 | 758 | 🔴 HARD | lib/widgets/fortune_overlays/work_painter.dart |
-| 712 | 🔴 HARD | lib/screens/forecast_screen.dart |
+| 754 | 🔴 HARD | lib/screens/horoscope_screen.dart |
+| 731 | 🔴 HARD | lib/screens/map/map_fortune_sheet.dart |
+| 711 | 🔴 HARD | lib/screens/locations_screen.dart |
 | 702 | 🔴 HARD | lib/screens/horoscope/horo_chart_painter.dart |
 | 693 | 🔴 HARD | lib/widgets/fortune_overlays/money_painter.dart |
+| 645 | 🔴 HARD | lib/screens/map/map_search.dart |
 | 642 | 🔴 HARD | lib/widgets/fortune_overlays/communication_painter.dart |
 | 626 | 🔴 HARD | lib/utils/constellation_namer.dart |
+| 587 | 🔴 HARD | lib/screens/map/map_astro_carto.dart |
 | 585 | 🔴 HARD | lib/widgets/catasterism_formation_overlay.dart |
 | 585 | 🔴 HARD | lib/screens/sanctuary/sanctuary_profile_editor.dart |
 | 581 | 🔴 HARD | lib/widgets/fortune_overlays/love_painter.dart |
-| 579 | 🔴 HARD | lib/screens/map/map_search.dart |
-| 559 | 🔴 HARD | lib/widgets/new_moon_overlay.dart |
-| 556 | 🔴 HARD | lib/utils/astro_glossary.dart |
-| 547 | 🔴 HARD | lib/screens/locations_screen.dart |
+| 564 | 🔴 HARD | lib/widgets/new_moon_overlay.dart |
+| 559 | 🔴 HARD | lib/utils/planet_intro.dart |
 | 520 | 🔴 HARD | lib/screens/observe_screen.dart |
+| 517 | 🔴 HARD | lib/utils/astro_glossary.dart |
+| 509 | 🔴 HARD | lib/screens/map/map_relocation_popup.dart |
 | 508 | 🔴 HARD | lib/screens/map/map_astro.dart |
-| 500 | 🔴 HARD | lib/screens/map/map_relocation_popup.dart |
 | 500 | 🔴 HARD | lib/screens/observe/tarot_altar_scene.dart |
 | 498 | 🟡 WARN | lib/widgets/fortune_overlays/healing_painter.dart |
 | 481 | 🟡 WARN | lib/screens/map/map_line_narrative_sheet.dart |
 | 469 | 🟡 WARN | lib/widgets/full_moon_overlay.dart |
 | 467 | 🟡 WARN | lib/utils/astro_lines.dart |
 | 462 | 🟡 WARN | lib/utils/forecast_cache.dart |
-| 462 | 🟡 WARN | lib/screens/map/map_vp_panel.dart |
+| 453 | 🟡 WARN | lib/screens/map/map_vp_panel.dart |
 | 445 | 🟡 WARN | lib/widgets/catasterism_overlay.dart |
-| 445 | 🟡 WARN | lib/screens/map/map_astro_carto.dart |
+| 432 | 🟡 WARN | lib/screens/horoscope/horo_birth_panel.dart |
 | 408 | 🟡 WARN | lib/screens/horoscope/horo_relocation_panel.dart |
 | 404 | 🟡 WARN | lib/utils/solara_storage.dart |
 | 396 | 🟡 WARN | lib/widgets/cycle_spiral_painter.dart |
 | 395 | 🟡 WARN | lib/utils/title_data.dart |
-| 391 | 🟡 WARN | lib/screens/map/map_direction_popup.dart |
-| 386 | 🟡 WARN | lib/screens/map/map_fortune_sheet.dart |
+| 391 | 🟡 WARN | lib/screens/locations/locations_date_stepper.dart |
 | 381 | 🟡 WARN | lib/screens/map/map_overlays.dart |
-| 372 | 🟡 WARN | lib/screens/map/daily_transit_data.dart |
+| 378 | 🟡 WARN | lib/screens/map/map_time_slider.dart |
+| 369 | 🟡 WARN | lib/screens/map/map_direction_popup.dart |
 | 364 | 🟡 WARN | lib/screens/sanctuary/sanctuary_title_diagnosis.dart |
-| 351 | 🟡 WARN | lib/screens/map/map_time_slider.dart |
 | 329 | 🟡 WARN | lib/utils/moon_phase.dart |
-| 319 | 🟡 WARN | lib/screens/map/map_astro_lines.dart |
+| 324 | 🟡 WARN | lib/screens/map/map_astro_lines.dart |
 | 317 | 🟡 WARN | lib/screens/galaxy/galaxy_star_atlas.dart |
 | 314 | 🟡 WARN | lib/utils/celestial_events.dart |
 | 311 | 🟡 WARN | lib/screens/map/map_layer_panel.dart |
+| 302 | 🟡 WARN | lib/screens/horoscope/horo_panel_shared.dart |
 
 ## 2. 重複コード (>= 8 行連続一致、上位 20 件)
 
-### 1. 📁 別ファイル間 (10 箇所、7 ファイル)
+### 1. 📁 別ファイル間 (12 箇所、7 ファイル)
 
   - lib/widgets/catasterism_overlay.dart:191
   - lib/widgets/full_moon_overlay.dart:200
   - lib/widgets/full_moon_overlay.dart:403
   - lib/widgets/new_moon_overlay.dart:220
-  - lib/widgets/new_moon_overlay.dart:467
+  - lib/widgets/new_moon_overlay.dart:472
   ```
   ),
   ```
 
-### 2. 📁 別ファイル間 (7 箇所、7 ファイル)
+### 2. 📁 別ファイル間 (28 箇所、6 ファイル)
 
-  - lib/widgets/celestial_event_bar.dart:62
-  - lib/widgets/full_moon_overlay.dart:300
-  - lib/widgets/new_moon_overlay.dart:313
-  - lib/screens/map/map_aspect_chip.dart:94
-  - lib/screens/map/map_direction_popup.dart:180
+  - lib/screens/forecast_screen.dart:759
+  - lib/screens/forecast_screen.dart:777
+  - lib/screens/forecast_screen.dart:793
+  - lib/screens/forecast_screen.dart:810
+  - lib/screens/forecast_screen.dart:826
   ```
-  ),
+  style: TextStyle(
   ```
 
-### 3. 📁 別ファイル間 (5 箇所、5 ファイル)
+### 3. 📁 別ファイル間 (6 箇所、6 ファイル)
 
   - lib/screens/sanctuary_screen.dart:839
   - lib/widgets/catasterism_overlay.dart:189
   - lib/widgets/full_moon_overlay.dart:198
+  - lib/widgets/info_popup.dart:105
   - lib/widgets/new_moon_overlay.dart:218
-  - lib/screens/map/map_daily_transit_screen.dart:870
   ```
   ),
   ```
 
-### 4. 📁 別ファイル間 (5 箇所、5 ファイル)
+### 4. 📁 別ファイル間 (6 箇所、6 ファイル)
+
+  - lib/widgets/celestial_event_bar.dart:63
+  - lib/widgets/full_moon_overlay.dart:300
+  - lib/widgets/new_moon_overlay.dart:313
+  - lib/screens/map/map_aspect_chip.dart:95
+  - lib/screens/map/map_location_markers.dart:278
+  ```
+  ),
+  ```
+
+### 5. 📁 別ファイル間 (5 箇所、5 ファイル)
 
   - lib/widgets/fortune_overlays/communication_painter.dart:151
   - lib/widgets/fortune_overlays/healing_painter.dart:101
@@ -98,7 +113,7 @@
   ));
   ```
 
-### 5. 📁 別ファイル間 (5 箇所、5 ファイル)
+### 6. 📁 別ファイル間 (5 箇所、5 ファイル)
 
   - lib/widgets/fortune_overlays/communication_painter.dart:152
   - lib/widgets/fortune_overlays/healing_painter.dart:102
@@ -109,7 +124,7 @@
   }
   ```
 
-### 6. 📁 別ファイル間 (4 箇所、4 ファイル)
+### 7. 📁 別ファイル間 (4 箇所、4 ファイル)
 
   - lib/screens/sanctuary_screen.dart:838
   - lib/widgets/catasterism_overlay.dart:188
@@ -119,27 +134,7 @@
   ),
   ```
 
-### 7. 📁 別ファイル間 (4 箇所、4 ファイル)
-
-  - lib/widgets/full_moon_overlay.dart:299
-  - lib/widgets/location_picker_minimap.dart:133
-  - lib/screens/map/map_direction_popup.dart:179
-  - lib/screens/sanctuary/sanctuary_orb_overlay.dart:155
-  ```
-  ),
-  ```
-
 ### 8. 📁 別ファイル間 (4 箇所、4 ファイル)
-
-  - lib/widgets/full_moon_overlay.dart:301
-  - lib/widgets/new_moon_overlay.dart:314
-  - lib/screens/map/map_direction_popup.dart:181
-  - lib/screens/sanctuary/sanctuary_orb_overlay.dart:157
-  ```
-  ),
-  ```
-
-### 9. 📁 別ファイル間 (4 箇所、4 ファイル)
 
   - lib/widgets/fortune_overlays/communication_painter.dart:153
   - lib/widgets/fortune_overlays/healing_painter.dart:103
@@ -149,7 +144,7 @@
   return list;
   ```
 
-### 10. 📁 別ファイル間 (4 箇所、4 ファイル)
+### 9. 📁 別ファイル間 (4 箇所、4 ファイル)
 
   - lib/widgets/fortune_overlays/communication_painter.dart:622
   - lib/widgets/fortune_overlays/healing_painter.dart:478
@@ -159,7 +154,7 @@
   const Color(0x00000000),
   ```
 
-### 11. 📁 別ファイル間 (4 箇所、4 ファイル)
+### 10. 📁 別ファイル間 (4 箇所、4 ファイル)
 
   - lib/widgets/fortune_overlays/communication_painter.dart:623
   - lib/widgets/fortune_overlays/healing_painter.dart:479
@@ -169,7 +164,7 @@
   ], [0.0, 0.5, 1.0])
   ```
 
-### 12. 📁 別ファイル間 (4 箇所、4 ファイル)
+### 11. 📁 別ファイル間 (4 箇所、4 ファイル)
 
   - lib/widgets/fortune_overlays/communication_painter.dart:624
   - lib/widgets/fortune_overlays/healing_painter.dart:480
@@ -179,7 +174,7 @@
   ..blendMode = BlendMode.plus);
   ```
 
-### 13. 📁 別ファイル間 (4 箇所、4 ファイル)
+### 12. 📁 別ファイル間 (4 箇所、4 ファイル)
 
   - lib/widgets/fortune_overlays/communication_painter.dart:625
   - lib/widgets/fortune_overlays/healing_painter.dart:481
@@ -189,7 +184,7 @@
   final starPaint = Paint()..color = color.withValues(alpha: alpha)..blendMode = B
   ```
 
-### 14. 📁 別ファイル間 (4 箇所、4 ファイル)
+### 13. 📁 別ファイル間 (4 箇所、4 ファイル)
 
   - lib/widgets/fortune_overlays/communication_painter.dart:626
   - lib/widgets/fortune_overlays/healing_painter.dart:482
@@ -199,7 +194,7 @@
   canvas.drawPath(Path()
   ```
 
-### 15. 📁 別ファイル間 (4 箇所、4 ファイル)
+### 14. 📁 別ファイル間 (4 箇所、4 ファイル)
 
   - lib/widgets/fortune_overlays/communication_painter.dart:627
   - lib/widgets/fortune_overlays/healing_painter.dart:483
@@ -209,7 +204,7 @@
   ..moveTo(0, -size2 * 0.5)
   ```
 
-### 16. 📁 別ファイル間 (4 箇所、4 ファイル)
+### 15. 📁 別ファイル間 (4 箇所、4 ファイル)
 
   - lib/widgets/fortune_overlays/communication_painter.dart:628
   - lib/widgets/fortune_overlays/healing_painter.dart:484
@@ -217,6 +212,17 @@
   - lib/widgets/fortune_overlays/work_painter.dart:743
   ```
   ..quadraticBezierTo(size2 * 0.04, 0, 0, size2 * 0.5)
+  ```
+
+### 16. 📁 別ファイル間 (5 箇所、3 ファイル)
+
+  - lib/screens/map/map_astro_carto.dart:82
+  - lib/screens/map/map_daily_transit_screen.dart:859
+  - lib/screens/map/map_daily_transit_screen.dart:891
+  - lib/screens/map/map_daily_transit_screen.dart:934
+  - lib/screens/map/map_line_narrative_sheet.dart:440
+  ```
+  ),
   ```
 
 ### 17. 📁 別ファイル間 (4 箇所、3 ファイル)
@@ -262,12 +268,18 @@
 
 ## 3. TODO/FIXME/HACK/DEBUG 残置
 
-  - lib/screens/galaxy_screen.dart:383 — `// DEBUG: Cycle完了フローの各タイミングを手動トリガー`
-  - lib/screens/map_screen.dart:967 — `// TODO: geolocator パッケージ追加後に実装`
+  - lib/screens/galaxy_screen.dart:384 — `// DEBUG: Cycle完了フローの各タイミングを手動トリガー`
+  - lib/screens/map_screen.dart:1121 — `// TODO: geolocator パッケージ追加後に実装`
 
 ## 4. print()/debugPrint() 残置
 
-✅ なし
+  - lib/screens/map_screen.dart:277 — `debugPrint(`
+  - lib/screens/map_screen.dart:285 — `debugPrint(`
+  - lib/screens/map_screen.dart:311 — `debugPrint('[Solara Map] 👟 kick fired: $label');`
+  - lib/screens/map_screen.dart:326 — `debugPrint(`
+  - lib/screens/map_screen.dart:341 — `debugPrint(`
+  - lib/screens/map/map_styles.dart:140 — `debugPrint(`
+  - lib/screens/map/map_styles.dart:150 — `debugPrint(`
 
 ## 5. 未使用 private member 候補 (file 内 reference == 1)
 
@@ -275,4 +287,4 @@
 
 ---
 
-総計: 行数違反 45 / 重複 20 / TODO 2 / print 0 / 未使用候補 0
+総計: 行数違反 49 / 重複 20 / TODO 2 / print 7 / 未使用候補 0
