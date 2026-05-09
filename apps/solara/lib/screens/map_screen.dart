@@ -15,7 +15,6 @@ import 'map/map_constants.dart';
 import 'map/map_styles.dart';
 import 'map/map_sectors.dart';
 import 'map/map_fortune_sheet.dart';
-import 'map/map_stella.dart';
 import 'map/map_vp_panel.dart';
 import 'map/map_layer_panel.dart';
 import 'map/map_astro.dart';
@@ -85,7 +84,6 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   bool _fortuneSheetOpen = false;
   bool _vpPanelOpen = false;
   String _vpTab = 'vp';
-  bool _stellaMinimized = false;
   bool _restOverlayVisible = false;
   final String _restOverlayText = '';
   final TextEditingController _searchCtrl = TextEditingController();
@@ -1435,21 +1433,6 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
             controller: _searchCtrl,
             onSubmitted: _doSearch,
             onClose: () => setState(() => _searchOpen = false),
-          ),
-        ),
-
-        // ── Stella ──
-        // モード中は世界規模ビューに集中させるため非表示
-        if (!_astroCartoMode) Positioned(
-          bottom: 10, left: 20, right: 20,
-          child: GestureDetector(
-            onTap: () => setState(() => _stellaMinimized = !_stellaMinimized),
-            child: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 400),
-              child: _stellaMinimized
-                ? const StellaMinimized()
-                : const Stella(),
-            ),
           ),
         ),
 
