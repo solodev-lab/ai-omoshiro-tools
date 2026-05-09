@@ -114,14 +114,7 @@ class _MapViewpointMenuState extends State<MapViewpointMenu> {
 
   @override
   Widget build(BuildContext context) {
-    // 端末アクセシビリティで font scale が過剰に大きくなるとパネル内の
-    // テキスト/サブメニューが見切れる可能性があるため、メニュー内に限り
-    // 上限 1.3 倍にクランプ (map_fortune_sheet.dart と同方針、2026-05-08 教訓)。
-    return MediaQuery(
-      data: MediaQuery.of(context).copyWith(
-        textScaler: MediaQuery.textScalerOf(context).clamp(maxScaleFactor: 1.3),
-      ),
-      child: Container(
+    return Container(
       decoration: BoxDecoration(
         color: const Color(0xF20A0A19),
         borderRadius: BorderRadius.circular(14),
@@ -204,7 +197,6 @@ class _MapViewpointMenuState extends State<MapViewpointMenu> {
             ),
           ),
         ],
-      ),
       ),
     );
   }
