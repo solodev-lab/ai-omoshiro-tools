@@ -9,12 +9,14 @@ import 'map_styles.dart';
 ///   L1 (主タブ): [Map] [惑星] [ACG]
 ///   L2 (副タブ): 主タブ別に異なる
 ///       Map → [Map][MapDark][運勢方位][コンパス]
-///       惑星 → [CHART][PG][FORTUNE]    (各々が L3 開閉トリガー)
+///       惑星 → [タイプ][グループ][テーマ]    (各々が L3 開閉トリガー)
 ///       ACG → [Natal線][Transit線][Prog線][S.Arc線][引越し]
 ///   L3 (惑星の副タブ展開時のみ):
-///       CHART → [Natal][Prog][Transit]
-///       PG    → [個人][社会][世代]
-///       FORTUNE → [総合][癒し][豊かさ][恋愛][仕事][話す]
+///       タイプ   → [Natal][Prog][Transit]
+///       グループ → [個人][社会][世代]
+///       テーマ   → [総合][癒し][豊かさ][恋愛][仕事][話す]
+///
+/// 英語ロケール対応時は L2 を TYPE/GROUP/FOCUS に切替予定。
 ///
 /// 設計意図:
 /// - 旧 BottomSheet 方式は「シートで地図が隠れて変化が見えない」問題があった。
@@ -106,10 +108,13 @@ class _MapDisplayMenuState extends State<MapDisplayMenu> {
               () => widget.onLayerToggle('compass')),
         ];
       case _MainTab.planet:
+        // L2 ラベル (2026-05-09 リネーム): 旧 CHART/PG/FORTUNE は日本語として
+        // 直感的でなかったので、カタカナの簡素なラベルに統一。
+        // 英語ロケール対応時は TYPE/GROUP/FOCUS の予定。
         return [
-          _subTabBtn('CHART', _planetSub == _PlanetSub.chart, () => _toggleSub(_PlanetSub.chart)),
-          _subTabBtn('PG', _planetSub == _PlanetSub.pg, () => _toggleSub(_PlanetSub.pg)),
-          _subTabBtn('FORTUNE', _planetSub == _PlanetSub.fortune, () => _toggleSub(_PlanetSub.fortune)),
+          _subTabBtn('タイプ', _planetSub == _PlanetSub.chart, () => _toggleSub(_PlanetSub.chart)),
+          _subTabBtn('グループ', _planetSub == _PlanetSub.pg, () => _toggleSub(_PlanetSub.pg)),
+          _subTabBtn('テーマ', _planetSub == _PlanetSub.fortune, () => _toggleSub(_PlanetSub.fortune)),
         ];
       case _MainTab.acg:
         return [
