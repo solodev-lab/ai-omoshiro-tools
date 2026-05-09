@@ -114,7 +114,8 @@ Google Play にはデータセーフティの質問がある。正直に回答�
 | タイル | 出典 | ライセンス | 表記例 |
 |-------|------|-----------|-------|
 | OSM Humanitarian (osmHot) | OSM France | ODbL + CC-BY-SA | `© OpenStreetMap contributors, Tiles style by Humanitarian OpenStreetMap Team` |
-| CyclOSM | OSM France | ODbL + CC-BY-SA | `© OpenStreetMap contributors, Tiles style © CyclOSM, hosted by OpenStreetMap France` |
+
+CyclOSM は 2026-05-09 にクライアント側から撤去（OSM usage policy がアプリ商用利用を制限する記述があり、ストア審査リスク回避のため）。再導入する場合は CyclOSM 公式の利用条件を再確認した上で attribution 表記も追加すること。
 
 ### 表記場所（推奨）
 - Map画面の右下に小さく常時表示（他のマップアプリ準拠）
@@ -149,4 +150,4 @@ Google Play にはデータセーフティの質問がある。正直に回答�
 - [ ] アプリ内 Sanctuary画面の Privacy Policy リンクを接続
 - [ ] 星読み結果画面に免責文言を表示
 - [ ] 初回起動時の同意画面（オプション）
-- [ ] Map画面に OSM/CyclOSM の Attribution 表記を追加（ストア公開前 必須）
+- [ ] Map画面に OSM HOT の Attribution 表記を追加（ストア公開前 必須）

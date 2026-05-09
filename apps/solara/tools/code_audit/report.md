@@ -6,7 +6,7 @@
 
 | 行数 | 判定 | ファイル |
 |------|------|----------|
-| 1933 | 🔴 HARD | lib/screens/map_screen.dart |
+| 1961 | 🔴 HARD | lib/screens/map_screen.dart |
 | 1497 | 🔴 HARD | lib/screens/map/map_daily_transit_screen.dart |
 | 1091 | 🔴 HARD | lib/screens/galaxy_screen.dart |
 | 1023 | 🔴 HARD | lib/screens/map/daily_transit_data.dart |
@@ -269,17 +269,17 @@
 ## 3. TODO/FIXME/HACK/DEBUG 残置
 
   - lib/screens/galaxy_screen.dart:384 — `// DEBUG: Cycle完了フローの各タイミングを手動トリガー`
-  - lib/screens/map_screen.dart:1121 — `// TODO: geolocator パッケージ追加後に実装`
+  - lib/screens/map_screen.dart:1131 — `// TODO: geolocator パッケージ追加後に実装`
 
 ## 4. print()/debugPrint() 残置
 
-  - lib/screens/map_screen.dart:277 — `debugPrint(`
-  - lib/screens/map_screen.dart:285 — `debugPrint(`
-  - lib/screens/map_screen.dart:311 — `debugPrint('[Solara Map] 👟 kick fired: $label');`
-  - lib/screens/map_screen.dart:326 — `debugPrint(`
-  - lib/screens/map_screen.dart:341 — `debugPrint(`
-  - lib/screens/map/map_styles.dart:140 — `debugPrint(`
-  - lib/screens/map/map_styles.dart:150 — `debugPrint(`
+  - lib/screens/map_screen.dart:276 — `debugPrint('[Solara Map] 🔄 settle reset (verify-recover, 4層防御 第4層)');`
+  - lib/screens/map_screen.dart:311 — `debugPrint(`
+  - lib/screens/map_screen.dart:319 — `debugPrint(`
+  - lib/screens/map_screen.dart:338 — `debugPrint(`
+  - lib/screens/map_screen.dart:350 — `debugPrint(`
+  - lib/screens/map/map_styles.dart:132 — `debugPrint(`
+  - lib/screens/map/map_styles.dart:142 — `debugPrint('[Solara TileLayer] 🏗  build style=${cfg.id}');`
 
 ## 5. 未使用 private member 候補 (file 内 reference == 1)
 
