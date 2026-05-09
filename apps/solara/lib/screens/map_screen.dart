@@ -686,10 +686,16 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   // 相互排他: 一方を開く → 他方は自動的に閉じる。
   // 同じボタンの再タップでトグル (開→閉)。
 
+  // 検索バー / 表示メニュー / 地点メニュー は配置位置が重なるため相互排他。
+  // 1 つを開くと他は強制的に閉じる。
+
   void _onDisplayMenuTap() {
     setState(() {
       _displayMenuOpen = !_displayMenuOpen;
-      if (_displayMenuOpen) _viewpointMenuOpen = false;
+      if (_displayMenuOpen) {
+        _viewpointMenuOpen = false;
+        _searchOpen = false;
+      }
     });
   }
 
@@ -697,12 +703,22 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     final wasOpen = _viewpointMenuOpen;
     setState(() {
       _viewpointMenuOpen = !_viewpointMenuOpen;
-      if (_viewpointMenuOpen) _displayMenuOpen = false;
+      if (_viewpointMenuOpen) {
+        _displayMenuOpen = false;
+        _searchOpen = false;
+      }
     });
-    // 閉じる際にスロット編集の可能性 → マーカー再読込
     if (wasOpen && !_viewpointMenuOpen) {
       _reloadLocationSlots();
     }
+  }
+
+  void _onSearchTap() {
+    setState(() {
+      _searchOpen = true;
+      _displayMenuOpen = false;
+      _viewpointMenuOpen = false;
+    });
   }
 
   // 旧 _formatSelectedDate は MapTimeSlider 内で表示するため削除 (2026-04-29)。
@@ -1442,7 +1458,7 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
           searchOpen: _searchOpen,
           displayMenuOpen: _displayMenuOpen,
           viewpointMenuOpen: _viewpointMenuOpen,
-          onSearchTap: () => setState(() => _searchOpen = true),
+          onSearchTap: _onSearchTap,
           onDisplayMenuTap: _onDisplayMenuTap,
           onViewpointMenuTap: _onViewpointMenuTap,
         ),
@@ -1466,9 +1482,10 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
           ),
         ),
 
-        // ── 表示メニュー (☰ボタン右展開) ──────────────────────
-        // 開いているとき外側タップで閉じる (Positioned.fill 透明 GestureDetector)。
-        // メニュー本体は ☰ ボタンの右隣 (left: 60) に配置。
+        // ── 表示メニュー (☰ボタン → 検索ボックス位置に展開) ──────
+        // 2026-05-09 第三弾: 旧右展開を廃止し、検索バーと同じ位置 (top+152, 全幅) に配置。
+        // メニュー幅が広くなり L1/L2/L3 の横並びボタンが見やすくなる。
+        // 検索バー / 地点メニューとは相互排他 (タップハンドラで他を閉じる)。
         if (_displayMenuOpen && !_astroCartoMode) ...[
           Positioned.fill(
             child: GestureDetector(
@@ -1478,7 +1495,7 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
             ),
           ),
           Positioned(
-            top: topPad + 200, left: 60, right: 16,
+            top: topPad + 152, left: 16, right: 16,
             child: MapDisplayMenu(
               layers: _layers,
               planetGroups: _planetGroups,
@@ -1493,14 +1510,17 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                   _relocateTapPoint = null;
                 }
               }),
-              // 惑星>FORTUNE は惑星フィルタのみを更新 (扇状非干渉)
+              // 惑星>テーマ は惑星フィルタのみを更新 (扇状非干渉)
               onPlanetFilterChanged: (k) => setState(() => _planetFilterCategory = k),
               onMapStyleChanged: _onMapStyleChanged,
             ),
           ),
         ],
 
-        // ── 地点メニュー (📍ボタン右展開) ─────────────────────
+        // ── 地点メニュー (📍ボタン → 画面上部 ~40% に展開) ────────
+        // 2026-05-09 第三弾: VIEWPOINT / LOCATIONS タブ切替で地点登録を管理する
+        // 旧 VPPanel の体験を復活。スコアバー/タイムスライダーは隠れるが、
+        // 地点登録中は俯瞰情報より管理 UI を優先したいというオーナー判断。
         if (_viewpointMenuOpen && !_astroCartoMode) ...[
           Positioned.fill(
             child: GestureDetector(
@@ -1513,19 +1533,28 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
             ),
           ),
           Positioned(
-            top: topPad + 248, left: 60, right: 16,
-            child: MapViewpointMenu(
-              center: _searchFocus != null
-                  ? LatLng(_searchFocus!.lat, _searchFocus!.lng)
-                  : _center,
-              profile: _profile,
-              onSlotSelected: (slot) {
-                _rebuild(LatLng(slot.lat, slot.lng));
-                setState(() => _viewpointMenuOpen = false);
-                _reloadLocationSlots();
-              },
-              onGeolocate: _geolocate,
-              onSlotsChanged: _reloadLocationSlots,
+            top: topPad + 6, left: 16, right: 16,
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.of(context).size.height * 0.4,
+              ),
+              child: MapViewpointMenu(
+                center: _searchFocus != null
+                    ? LatLng(_searchFocus!.lat, _searchFocus!.lng)
+                    : _center,
+                profile: _profile,
+                onSlotSelected: (slot) {
+                  _rebuild(LatLng(slot.lat, slot.lng));
+                  setState(() => _viewpointMenuOpen = false);
+                  _reloadLocationSlots();
+                },
+                onGeolocate: _geolocate,
+                onClose: () {
+                  setState(() => _viewpointMenuOpen = false);
+                  _reloadLocationSlots();
+                },
+                onSlotsChanged: _reloadLocationSlots,
+              ),
             ),
           ),
         ],
