@@ -38,7 +38,7 @@ lib/ (約 80 .dart ファイル)
 │   ├── solara_philosophy_screen.dart  Phase E5 (2026-04-29): 設計思想ガイド画面
 │   ├── map/                  ← Map サブウィジェット
 │   │   ├── map_vp_panel.dart, map_astro.dart, map_fortune_sheet.dart
-│   │   ├── map_planet_lines.dart, map_sectors.dart, map_stella.dart
+│   │   ├── map_planet_lines.dart, map_sectors.dart
 │   │   ├── map_constants.dart, map_widgets.dart
 │   │   ├── map_layer_panel.dart        Phase M2: 4流派並列 + 設計思想ガイド導線
 │   │   ├── map_astro_lines.dart        Phase M2: アスペクト線 Polyline 変換 (FORTUNE 連動 dim)

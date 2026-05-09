@@ -175,7 +175,6 @@ lib/screens/map/
   ├─ map_planet_lines.dart (191) — 天体ライン描画
   ├─ map_search.dart       (360) — searchPlaces / SearchResultList / SearchFocusPopup
   ├─ map_sectors.dart      (176) — 16方位セクターポリゴン
-  ├─ map_stella.dart       ( 57) — Stella / StellaMinimized / Preseed
   ├─ map_styles.dart       (116) — MapStyle enum + タイル定義
   ├─ map_vp_panel.dart     (435) — VPPanel + SlotManager + VPSlot
   └─ map_widgets.dart      ( 87) — MapBtn 共通ボタン
