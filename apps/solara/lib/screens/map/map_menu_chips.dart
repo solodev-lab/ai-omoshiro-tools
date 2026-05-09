@@ -194,11 +194,16 @@ class _DailyTransitChip extends StatelessWidget {
           onTap: disabled ? null : onTap,
           child: Stack(
             clipBehavior: Clip.none,
-            // StackFit.expand は使わない。親 Positioned(bottom:0) は高さが
-            // unbounded なので expand させると h=Infinity 強制で assert 失敗
-            // (RenderBox 'BoxConstraints forces an infinite height') する。
-            // 代わりに Container 自身に width: double.infinity を与えて、
-            // 高さは child intrinsic 任せにする (Static チップと同じ挙動)。
+            // 構造上の難所:
+            //  - Positioned.fill で Container を Stack 領域いっぱいに伸ばす。
+            //    Stack 自身は Expanded(Row) から tight 制約 (隣の Static chip
+            //    intrinsic 高 ≈ 54) を受けるので、Positioned.fill = その 54 を埋める。
+            //  - Static chip (Container 直下) は Expanded の tight でフィルされる
+            //    のに対し、Daily 側は間に Stack が挟まり StackFit.loose で
+            //    Container がコンテンツ高にしか広がらず ~3-4px 低くなる事象があった
+            //    (CategoryIcon 18 固定 vs Text 行高 21.6 の差も加味)。
+            //  - StackFit.expand は親が unbounded vertical なときに h=Infinity を
+            //    強制して assert 失敗するため使えない。
             children: [
               // 未閲覧時の halo (chip 矩形の外側に拡張、IgnorePointer)
               if (showHalo)
@@ -209,16 +214,16 @@ class _DailyTransitChip extends StatelessWidget {
                   bottom: -8,
                   child: IgnorePointer(child: _ChipHalo()),
                 ),
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: borderColor, width: unseen ? 1.4 : 1),
-                  gradient: fillGradient,
-                ),
-                child: Column(
+              Positioned.fill(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: borderColor, width: unseen ? 1.4 : 1),
+                    gradient: fillGradient,
+                  ),
+                  child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     if (disabled)
@@ -245,6 +250,7 @@ class _DailyTransitChip extends StatelessWidget {
                       ),
                     ),
                   ],
+                ),
                 ),
               ),
             ],
