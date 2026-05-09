@@ -5,11 +5,16 @@ import '../../utils/solara_api.dart' show solaraWorkerBase;
 import '../../utils/tile_http_client.dart';
 
 /// マップスタイルの種類。LayerPanel から切替可。
+///
+/// 2026-05-09: cyclosm{Light,Dark} を一旦削除。理由は2つ:
+/// (1) 本番 Worker のデプロイ済み版に cyclosm allowlist が含まれず HTTP 400 多発
+/// (2) CyclOSM の OSM usage policy がアプリ商用利用を制限しており、
+///     ストアアップ前に再検討が必要 (Apple/Google 審査で問題視されるリスク)
+/// 旧 id 'cyclosm_light' / 'cyclosm_dark' は mapStyleFromId() で osmHotLight に
+/// フォールバックされる。詳細: project_solara_map_styles.md
 enum MapStyle {
   osmHotLight,
   osmHotDark,
-  cyclosmLight,
-  cyclosmDark,
 }
 
 /// ナイトモード用の合成フィルター: invert + hue-rotate(180deg) を 1 段に合成。
@@ -45,7 +50,7 @@ class MapStyleConfig {
 }
 
 const Map<MapStyle, MapStyleConfig> mapStyleConfigs = {
-  // OSM HOT / CyclOSM はすべて Solara Worker 経由でプロキシ。
+  // OSM HOT は Solara Worker 経由でプロキシ。
   // 直叩きだと OSM France 側で UA 不足の 403 が頻発するため、Worker 側で
   // 識別可能な User-Agent を設定 + Cloudflare edge cache 24h で安定化。
   // ラベルは現地言語のまま（Jawg 多言語対応はユーザー増えたら再検討）。
@@ -67,27 +72,10 @@ const Map<MapStyle, MapStyleConfig> mapStyleConfigs = {
     dark: true,
     backgroundColor: Color(0xFF0A0A14),
   ),
-  MapStyle.cyclosmLight: MapStyleConfig(
-    id: 'cyclosm_light',
-    label: 'Cycle',
-    urlTemplate: '$solaraWorkerBase/tiles/osm/cyclosm/{z}/{x}/{y}.png',
-    subdomains: [],
-    maxZoom: 19,
-    dark: false,
-    backgroundColor: Color(0xFFF4F1EA),
-  ),
-  MapStyle.cyclosmDark: MapStyleConfig(
-    id: 'cyclosm_dark',
-    label: 'CycleDark',
-    urlTemplate: '$solaraWorkerBase/tiles/osm/cyclosm/{z}/{x}/{y}.png',
-    subdomains: [],
-    maxZoom: 19,
-    dark: true,
-    backgroundColor: Color(0xFF0A0A14),
-  ),
 };
 
-/// id 文字列から MapStyle を復元。不明値（未保存・旧 Smart/Jawg id）は osmHotLight。
+/// id 文字列から MapStyle を復元。
+/// 不明値（未保存・旧 Smart/Jawg/CyclOSM id）は osmHotLight にフォールバック。
 MapStyle mapStyleFromId(String? id) {
   for (final e in mapStyleConfigs.entries) {
     if (e.value.id == id) return e.key;
