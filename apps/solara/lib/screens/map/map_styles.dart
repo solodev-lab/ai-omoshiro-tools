@@ -101,30 +101,34 @@ MapStyle mapStyleFromId(String? id) {
 /// tileProvider: アプリ全体で共有する HttpClient を渡し、
 ///   socket 枯渇による DNS 失敗の連鎖を防止 (詳細: tile_http_client.dart)。
 ///
-/// [sessionBump] 呼出側がインクリメントすることで TileLayer の key を変え、
-///   State を再生成して全タイルを再 fetch させる。errored タイルが固着した
-///   ときの再試行ハンドルとして使う (caller 側でデバウンス + 上限管理)。
+/// [resetStream] 呼出側で `StreamController<void>` を持ち `add(null)` 発火すると、
+///   flutter_map の公式機構で全タイルを State 保持のまま再 fetch する。
+///   過去の ValueKey bump (State 破棄) は in-flight fetch をキャンセルして
+///   Case C (flutter_map がタイル消失に気付かない状態) を量産していたので廃止。
 /// [onTileError] 個別タイル fetch 失敗時に呼ばれる。caller でデバウンスして
-///   sessionBump をインクリメントすると、まとめて再試行できる。
+///   resetStream を発火すると、まとめて再試行できる。
 Widget buildStyledTileLayer(
   MapStyle style, {
-  int sessionBump = 0,
+  Stream<void>? resetStream,
   void Function()? onTileError,
 }) {
   final cfg = mapStyleConfigs[style]!;
-  // 2026-05-08: TileLayer key を urlTemplate ベースに変更。
-  // 旧実装は cfg.id (osm_hot_light vs osm_hot_dark) で key が変わっていたため、
-  // light↔dark 切替で TileLayer State 全破棄 → 進行中の tile fetch が silent
-  // キャンセルされる事象が起きていた (Pixel8 hot restart で再現)。
-  // light/dark は単に ColorFilter の違いで urlTemplate は同じなので、
-  // urlTemplate を key にすれば State 維持のまま見た目だけ切替えられる。
+  // 2026-05-09: TileLayer の ValueKey を撤去。
+  // 過去 (2026-05-08) は urlTemplate ベース key で State 維持を狙ったが、
+  // dark 用 ColorFiltered ラップで親要素の型が変わるため、ValueKey 同一でも
+  // State は破棄される (Flutter element matching の仕様)。
+  // 8.3.0 の内部 TileKey システム (#2195) との衝突回避も兼ねて key 撤去。
+  // State 強制再生成は reset Stream で実現する。
   final layer = TileLayer(
-    key: ValueKey('${cfg.urlTemplate}_$sessionBump'),
     urlTemplate: cfg.urlTemplate,
     subdomains: cfg.subdomains,
     maxZoom: cfg.maxZoom.toDouble(),
     userAgentPackageName: 'com.solara.app',
     tileProvider: NetworkTileProvider(httpClient: sharedTileHttpClient),
+    // 2026-05-09: 公式の State 保持リフレッシュ機構 (v8.0+ TileLayer.reset)。
+    // Case C (errorTileCallback も呼ばれず痕跡なくタイルが蒸発する状態) からの
+    // 唯一効く復旧手段。caller が StreamController で発火を制御。
+    reset: resetStream,
     // 2026-05-03: タイル fade-in を無効化 (内部 AnimatedOpacity が saveLayer trigger)。
     // ACG モード 2 回目入時の画面点滅 / Map スクロール後の砂嵐の主因対策。
     tileDisplay: const TileDisplay.instantaneous(),
@@ -147,9 +151,7 @@ Widget buildStyledTileLayer(
   );
   if (kDebugMode) {
     // ignore: avoid_print
-    debugPrint(
-      '[Solara TileLayer] 🏗  build style=${cfg.id} bump=$sessionBump',
-    );
+    debugPrint('[Solara TileLayer] 🏗  build style=${cfg.id}');
   }
   if (!cfg.dark) return layer;
   // Phase 3 (2026-05-04): per-tile ColorFiltered → container 単位に変更。

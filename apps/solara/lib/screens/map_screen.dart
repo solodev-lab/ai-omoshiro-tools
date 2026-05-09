@@ -173,19 +173,33 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   bool _mapReady = false;
   LatLng? _pendingInitialMove;
 
-  /// タイル再 fetch 用 session カウンタ。インクリメントすると TileLayer の key が
-  /// 変わり State 再生成 → 全タイル再 fetch される。errored タイルが固着したとき
-  /// の救済用。errorTileCallback で検知 → 1.5s デバウンス → bump。
-  /// 上限 _tileBumpMax 回までで以降は諦める (ネットワーク断時の暴走防止)。
-  int _tileSessionBump = 0;
-  int _tileBumpCount = 0;
-  static const int _tileBumpMax = 3;
+  /// 4層防御モデル (project_solara_map_render_protocol.md):
+  /// (1) flutter_map 8.3+ の visibility 計算 fix を取込む
+  /// (2) _bootReady flag で warmup + style 完了まで mount を遅延 (cold start race 排除)
+  /// (3) TileLayer に reset Stream を渡し、State 保持で全タイル再評価
+  /// (4) settle 後の無条件リセットで Case C (flutter_map がタイル消失に気付かない状態)
+  ///     からの自動復旧
+  ///
+  /// _bootReady=true まで FlutterMap を mount しない。warmup と _loadMapStyle が
+  /// 完了するのを待つことで、初期 fetch を warm 状態 (DNS/TLS 確立済 + style 確定済)
+  /// で起こす。light↔dark 構造変化 race も排除される。
+  bool _bootReady = false;
+
+  /// TileLayer.reset Stream の発火源。発火すると flutter_map が全タイル状態を
+  /// 保持しつつ再評価する。State 破棄を伴わないので in-flight fetch が
+  /// silent キャンセルされない。errorTileCallback と settle reset の両方から発火。
+  late final StreamController<void> _tileResetCtrl;
+
+  /// reset 発火回数カウンタ。errorTileCallback 連発で暴走しないよう上限管理。
+  /// settle reset (mount 後 1 回限り) はこのカウンタを消費しない。
+  int _tileResetCount = 0;
+  static const int _tileResetMax = 3;
   Timer? _tileErrorDebounce;
 
-  /// 多段 viewport キック用 Timer。初期描画失敗対策で
-  /// onMapReady 後に複数回 move(self) を打って TileLayer を起こす。
-  /// dispose で全部キャンセル。
-  final List<Timer> _kickTimers = [];
+  /// settle 後の verify-recover 用 Timer (4層防御モデル 第4層)。
+  /// FlutterMap mount から 4 秒後に無条件で reset Stream を発火し、
+  /// Case C で空になったタイルを救済する。dispose でキャンセル。
+  Timer? _settleResetTimer;
 
   // Dominant fortune overlay
   DominantFortuneKind? _topCategory;
@@ -240,19 +254,39 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
-    _warmupTileConnection();   // ★ DNS/TLS の cold start を吸収
+    _tileResetCtrl = StreamController<void>.broadcast();
+    _bootstrap();
+  }
+
+  /// 4層防御モデル 第2層: warmup + style 確定まで FlutterMap mount を遅延。
+  /// これにより初期 fetch は DNS/TLS 確立済 + style 確定済の状態で起こる。
+  /// cold start race と light↔dark switch race の両方を排除。
+  Future<void> _bootstrap() async {
+    await Future.wait([
+      _loadMapStyle(),
+      _warmupTileConnection(),
+    ]);
+    if (!mounted) return;
+    setState(() => _bootReady = true);
+    // 第4層: 4 秒後に無条件 reset で Case C を救済 (mount 後 1 回限り)
+    _settleResetTimer?.cancel();
+    _settleResetTimer = Timer(const Duration(seconds: 4), () {
+      if (!mounted) return;
+      if (kDebugMode) {
+        debugPrint('[Solara Map] 🔄 settle reset (verify-recover, 4層防御 第4層)');
+      }
+      _tileResetCtrl.add(null);
+    });
+    // FlutterMap が mount された後にこれらを開始 (mount は build() 内で _bootReady true 化により発生)
     _loadProfileAndChart();
-    _loadMapStyle();
     _checkDailyBadgeState();
   }
 
   @override
   void dispose() {
     _tileErrorDebounce?.cancel();
-    for (final t in _kickTimers) {
-      t.cancel();
-    }
-    _kickTimers.clear();
+    _settleResetTimer?.cancel();
+    _tileResetCtrl.close();
     super.dispose();
   }
 
@@ -291,40 +325,18 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     }
   }
 
-  /// onMapReady 後に多段で viewport を強制再計算するキック群を仕掛ける。
-  /// flutter_map 8.x で hot restart 直後に「TileLayer が tile fetch を自発的に
-  /// キックしないまま固着」する事象への対策 (2026-05-08, Pixel8 で再発確認)。
+  /// 個別タイル fetch 失敗時のフック。1.5s デバウンスして reset Stream を発火し、
+  /// flutter_map 内部の全タイル状態を State 保持のまま再評価させる。
+  /// 最大 _tileResetMax 回まで (ネットワーク断時の暴走防止)。
   ///
-  /// 100ms / 800ms / 2500ms : 軽量 move(self) で viewport 再計算を促す。
-  ///
-  /// 2026-05-08 修正: 2.5s での強制 session bump は撤去。
-  /// Worker cold start 中 (~2 秒) に bump すると、進行中の slow tile fetch が
-  /// State 破棄でキャンセル → 何度繰り返しても新しい cold fetch が出るだけで
-  /// 永久に表示されない悪循環を引き起こすため。errorTileCallback 経由の bump
-  /// (実際の HTTP error 検知時) のみ残す。
-  void _scheduleInitialKicks() {
-    void kick(String label) {
-      if (!mounted) return;
-      final cam = _mapCtrl.camera;
-      _mapCtrl.move(cam.center, cam.zoom);
-      if (kDebugMode) {
-        debugPrint('[Solara Map] 👟 kick fired: $label');
-      }
-    }
-
-    _kickTimers.add(Timer(const Duration(milliseconds: 100), () => kick('100ms')));
-    _kickTimers.add(Timer(const Duration(milliseconds: 800), () => kick('800ms')));
-    _kickTimers.add(Timer(const Duration(milliseconds: 2500), () => kick('2500ms')));
-  }
-
-  /// 個別タイル fetch 失敗時のフック。1.5s デバウンスして session bump で
-  /// TileLayer State を再生成し、まとめて再 fetch する。最大 _tileBumpMax 回。
-  /// hot restart 直後の cold DNS / TLS で数枚穴が空く事象への対策 (2026-05-07)。
+  /// 2026-05-09: 旧 ValueKey bump 機構から移行。bump は State 破棄を伴うため
+  /// in-flight fetch が silent キャンセル → 新たな Case C を量産していた。
+  /// reset Stream は flutter_map v8.0+ 公式機構で State 保持のまま再評価が可能。
   void _onTileError() {
-    if (_tileBumpCount >= _tileBumpMax) {
+    if (_tileResetCount >= _tileResetMax) {
       if (kDebugMode) {
         debugPrint(
-          '[Solara Map] ⛔ tile error (上限 $_tileBumpMax 到達、bump skip)',
+          '[Solara Map] ⛔ tile error (上限 $_tileResetMax 到達、reset skip)',
         );
       }
       return;
@@ -332,17 +344,15 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     _tileErrorDebounce?.cancel();
     _tileErrorDebounce = Timer(const Duration(milliseconds: 1500), () {
       if (!mounted) return;
-      if (_tileBumpCount >= _tileBumpMax) return;
-      setState(() {
-        _tileSessionBump++;
-        _tileBumpCount++;
-      });
+      if (_tileResetCount >= _tileResetMax) return;
+      _tileResetCount++;
       if (kDebugMode) {
         debugPrint(
-          '[Solara Map] 🔁 error-triggered bump '
-          '(回数=$_tileBumpCount/$_tileBumpMax, bump=$_tileSessionBump)',
+          '[Solara Map] 🔁 error-triggered reset '
+          '(回数=$_tileResetCount/$_tileResetMax)',
         );
       }
+      _tileResetCtrl.add(null);
     });
   }
 
@@ -1152,6 +1162,23 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   }
 
   Widget _buildBody(BuildContext context) {
+    // 4層防御モデル 第2層: warmup + style 確定まで FlutterMap mount を遅延。
+    // 起動時に黒画面 + ローディング表示。warmup の prewarm OK ログが出てから mount される。
+    // 通常 50ms〜3秒程度。これにより初期 fetch を必ず warm 状態で起こす。
+    if (!_bootReady) {
+      return const ColoredBox(
+        color: Color(0xFF080C14),
+        child: Center(
+          child: SizedBox(
+            width: 32, height: 32,
+            child: CircularProgressIndicator(
+              color: Color(0xFFE8C26B),
+              strokeWidth: 2.5,
+            ),
+          ),
+        ),
+      );
+    }
     final topPad = MediaQuery.of(context).padding.top;
     // 2026-04-29: NavBar 被り問題の根本解決。オーバーレイ群を内側の Padded Stack に
     // 集約し、bottom: 0 = NavBar の上端 として扱う。各 widget で navInset を
@@ -1168,10 +1195,12 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
             minZoom: 2, maxZoom: 19,
             backgroundColor: mapStyleConfigs[_mapStyle]!.backgroundColor,
             // FlutterMap 内部初期化完了通知。
-            // ① 出生地が先に揃って _pendingInitialMove が積まれていればここで消化。
-            // ② 多段 viewport キック (_scheduleInitialKicks) で初期描画失敗を防ぐ。
-            //    100ms / 800ms / 2.5s の 3 段階で強制発火。最後は session bump も。
-            //    Pixel8 エミュレータで再発した「初期表示で地図が出ない」事象への対策。
+            // 出生地が先に揃って _pendingInitialMove が積まれていればここで消化。
+            //
+            // 2026-05-09: 多段 viewport キックを廃止。FlutterMap 自体の mount を
+            // _bootReady=true (warmup + style 完了) まで遅延しているため、初期 fetch は
+            // 既に warm 状態で起こる。kick で「TileLayer を起こす」必要がなくなった。
+            // 万一の Case C 救済は settle reset (4 秒後の reset Stream 発火) が担当。
             onMapReady: () {
               _mapReady = true;
               final pending = _pendingInitialMove;
@@ -1179,7 +1208,6 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                 _pendingInitialMove = null;
                 _mapCtrl.move(pending, _mapCtrl.camera.zoom);
               }
-              _scheduleInitialKicks();
             },
             // 回転ジェスチャー無効化 (2026-04-29):
             // Solara Map は北上固定前提 (16方位セクター・コンパス・VP Pin の方位概念が
@@ -1213,7 +1241,7 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
           children: [
             buildStyledTileLayer(
               _mapStyle,
-              sessionBump: _tileSessionBump,
+              resetStream: _tileResetCtrl.stream,
               onTileError: _onTileError,
             ),
             // 出生情報が無い間はセクターを描画しない（スコアが乱数になるため）
