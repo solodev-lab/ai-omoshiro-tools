@@ -34,21 +34,34 @@ Marker buildVpPinMarker({
 
 /// Map 画面の小さなオーバーレイ群。map_screen.dart から分離。
 
-/// 左サイドの 🔍 検索ボタン (単独)。
+/// 左サイド縦並び 3 ボタン: 🔍 検索 / ☰ 表示 / 📍 地点 (2026-05-09 第二弾)。
 ///
-/// 2026-05-09: 旧 7 サイドボタンのうち ☰/✨/📍/🗺/🔮/🌐 の 6 個は下部 MapMenuChips
-/// に集約。検索のみ視認性とアクセス性のためサイドに残置 (検索は文字入力フローで
-/// シートと相性が悪く、即座にバー展開する現状動線が最適)。
+/// 設計の経緯:
+/// - 旧 7 サイドボタン (検索/DISPLAY/ASTRO/VP/LOC/予報/ACG) → 集約再設計を経て
+/// - 検索は文字入力フローでサイドに残置
+/// - 表示・地点は「右に展開する」メニューを開くトリガーボタン
+///   (表示メニュー = MapDisplayMenu、地点メニュー = MapViewpointMenu)
+/// - 下部チップ (Daily Transit / 運勢方位 / LOCATIONS / 予報) は別 widget
+///
+/// 表示と地点メニューは相互排他。両方同時に開けない (親 state で管理)。
 class MapSideButtons extends StatelessWidget {
   final double topPad;
   final bool searchOpen;
+  final bool displayMenuOpen;
+  final bool viewpointMenuOpen;
   final VoidCallback onSearchTap;
+  final VoidCallback onDisplayMenuTap;
+  final VoidCallback onViewpointMenuTap;
 
   const MapSideButtons({
     super.key,
     required this.topPad,
     required this.searchOpen,
+    required this.displayMenuOpen,
+    required this.viewpointMenuOpen,
     required this.onSearchTap,
+    required this.onDisplayMenuTap,
+    required this.onViewpointMenuTap,
   });
 
   @override
@@ -63,6 +76,32 @@ class MapSideButtons extends StatelessWidget {
             child: const Icon(Icons.search, size: 18, color: Color(0x99C9A84C)),
           ),
         ),
+      // ☰ 表示メニュートリガー (3本ライン = レイヤー切替の象徴)
+      Positioned(
+        top: topPad + 200,
+        left: 16,
+        child: MapBtn(
+          active: displayMenuOpen,
+          onTap: onDisplayMenuTap,
+          child: Column(mainAxisSize: MainAxisSize.min, children: [
+            Container(width: 18, height: 2, decoration: BoxDecoration(color: const Color(0xFFE8E0D0), borderRadius: BorderRadius.circular(1))),
+            const SizedBox(height: 3),
+            Container(width: 18, height: 2, decoration: BoxDecoration(color: const Color(0xFFC9A84C), borderRadius: BorderRadius.circular(1))),
+            const SizedBox(height: 3),
+            Container(width: 18, height: 2, decoration: BoxDecoration(color: const Color(0xFF00D4FF), borderRadius: BorderRadius.circular(1))),
+          ]),
+        ),
+      ),
+      // 📍 地点メニュートリガー (VIEWPOINT 保存スロット選択)
+      Positioned(
+        top: topPad + 248,
+        left: 16,
+        child: MapBtn(
+          active: viewpointMenuOpen,
+          onTap: onViewpointMenuTap,
+          child: const Icon(Icons.location_on_outlined, size: 18, color: Color(0xFFC9A84C)),
+        ),
+      ),
     ]);
   }
 }
@@ -213,33 +252,6 @@ class VpPinVisual extends StatelessWidget {
           BoxShadow(color: Color(0x99C9A84C), blurRadius: 12),
           BoxShadow(color: Color(0x66000000), blurRadius: 6, offset: Offset(0, 2)),
         ],
-      ),
-    );
-  }
-}
-
-/// Pull tab（Fortune Sheet を呼ぶ「▲ 運勢方位」タブ）
-class FortunePullTab extends StatelessWidget {
-  final VoidCallback onTap;
-  const FortunePullTab({super.key, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.fromLTRB(18, 4, 18, 2),
-        decoration: const BoxDecoration(
-          color: Color(0xCC0A0A19),
-          borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
-          border: Border(
-            top: BorderSide(color: Color(0x33C9A84C)),
-            left: BorderSide(color: Color(0x33C9A84C)),
-            right: BorderSide(color: Color(0x33C9A84C)),
-          ),
-        ),
-        child: const Text('▲ 運勢方位',
-          style: TextStyle(fontSize: 13, color: Color(0xFF888888), letterSpacing: 0.5)),
       ),
     );
   }

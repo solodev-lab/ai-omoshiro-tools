@@ -9,7 +9,6 @@ import '../utils/solara_api.dart' show solaraWorkerBase;
 import '../utils/solara_storage.dart';
 import '../utils/tile_http_client.dart' show sharedTileHttpClient;
 import '../widgets/dominant_fortune_overlay.dart';
-import '../widgets/daily_transit_badge.dart';
 import 'map/map_daily_transit_screen.dart';
 import 'map/map_constants.dart';
 import 'map/map_styles.dart';
@@ -17,7 +16,8 @@ import 'map/map_sectors.dart';
 import 'map/map_fortune_sheet.dart';
 import 'map/map_vp_panel.dart';
 import 'map/map_menu_chips.dart';
-import 'map/map_menu_sheets.dart';
+import 'map/map_display_menu.dart';
+import 'map/map_viewpoint_menu.dart';
 import 'map/map_astro.dart';
 import 'map/map_astro_carto.dart';
 import 'map/map_astro_lines.dart';
@@ -76,13 +76,14 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   final MapController _mapCtrl = MapController();
   LatLng _center = const LatLng(35.4233, 136.7607);
 
-  // UI state
+  // UI state (2026-05-09 第二弾再設計)
+  // - 旧 BottomSheet 方式は地図が隠れてトグル変化が見えない問題があり、
+  //   左サイド ☰表示 / 📍地点 ボタンタップ → 右に展開する方式へ変更。
+  // - 表示メニューと地点メニューは相互排他 (両方同時に開かない)。
   bool _searchOpen = false;
   bool _fortuneSheetOpen = false;
-  // 旧 _layerPanelOpen / _astroPanelOpen / _vpPanelOpen は 2026-05-09 に廃止。
-  // 下部 MapMenuChips → showModalBottomSheet で代替（_openDisplaySheet / _openAstroSheet /
-  // _openLocationsSheet）。シート開閉状態は modal route 自身が管理するため state 不要。
-  String _vpTab = 'vp'; // VIEWPOINT / LOCATIONS タブ位置を sheet 跨ぎで保持
+  bool _displayMenuOpen = false;   // ☰ 表示メニュー開閉
+  bool _viewpointMenuOpen = false; // 📍 地点メニュー開閉
   bool _restOverlayVisible = false;
   final String _restOverlayText = '';
   final TextEditingController _searchCtrl = TextEditingController();
@@ -668,106 +669,27 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     );
   }
 
-  // ── 下部チップバーから起動するシート群 (2026-05-09) ────────────────────
-  // showModalBottomSheet は内容を 1 度しかビルドしないため、トグル変更で
-  // チェック状態を即時反映させるには StatefulBuilder で sheetSetState を併発する。
-  // 親 setState (Map 再描画) と sheetSetState (チェック visual) を両方呼ぶ。
+  // ── 左サイド ☰ 表示 / 📍 地点 メニューの開閉 (2026-05-09 第二弾) ───────
+  // 相互排他: 一方を開く → 他方は自動的に閉じる。
+  // 同じボタンの再タップでトグル (開→閉)。
 
-  void _onMenuChipTap(MapMenuChip chip) {
-    switch (chip) {
-      case MapMenuChip.display:
-        _openDisplaySheet();
-      case MapMenuChip.astro:
-        _openAstroSheet();
-      case MapMenuChip.locations:
-        _openLocationsSheet();
-      case MapMenuChip.forecast:
-        _openForecast();
+  void _onDisplayMenuTap() {
+    setState(() {
+      _displayMenuOpen = !_displayMenuOpen;
+      if (_displayMenuOpen) _viewpointMenuOpen = false;
+    });
+  }
+
+  void _onViewpointMenuTap() {
+    final wasOpen = _viewpointMenuOpen;
+    setState(() {
+      _viewpointMenuOpen = !_viewpointMenuOpen;
+      if (_viewpointMenuOpen) _displayMenuOpen = false;
+    });
+    // 閉じる際にスロット編集の可能性 → マーカー再読込
+    if (wasOpen && !_viewpointMenuOpen) {
+      _reloadLocationSlots();
     }
-  }
-
-  Future<void> _openDisplaySheet() {
-    return _showSheet(
-      StatefulBuilder(
-        builder: (ctx, sheetSetState) => MapDisplaySheet(
-          layers: _layers,
-          mapStyle: _mapStyle,
-          onLayerToggle: (k) {
-            setState(() => _layers[k] = !(_layers[k] ?? false));
-            sheetSetState(() {});
-          },
-          onMapStyleChanged: (s) {
-            _onMapStyleChanged(s);
-            sheetSetState(() {});
-          },
-        ),
-      ),
-      heightFrac: 0.55,
-      barrierAlpha: 0x55,
-    );
-  }
-
-  Future<void> _openAstroSheet() {
-    return _showSheet(
-      StatefulBuilder(
-        builder: (ctx, sheetSetState) => MapAstroSheet(
-          layers: _layers,
-          planetGroups: _planetGroups,
-          astroLayers: _astroLayers,
-          activeCategory: _activeCategory,
-          onLayerToggle: (k) {
-            setState(() => _layers[k] = !(_layers[k] ?? false));
-            sheetSetState(() {});
-          },
-          onPlanetGroupToggle: (k) {
-            setState(() => _planetGroups[k] = !(_planetGroups[k] ?? false));
-            sheetSetState(() {});
-          },
-          onAstroToggle: (k) {
-            setState(() {
-              _astroLayers[k] = !(_astroLayers[k] ?? false);
-              if (k == 'relocate' && !(_astroLayers[k] ?? false)) {
-                _relocateTapPoint = null;
-              }
-            });
-            sheetSetState(() {});
-          },
-          onCategoryChanged: (k) {
-            setState(() => _activeCategory = k);
-            _reannotateSearchResults();
-            sheetSetState(() {});
-          },
-          onEnterAcg: _enterAstroCartoMode,
-        ),
-      ),
-      heightFrac: 0.85,
-      barrierAlpha: 0x55,
-    );
-  }
-
-  Future<void> _openLocationsSheet() async {
-    // C-2: 検索中なら検索地を「現在地」として渡す (VP Pin より検索地優先)
-    final effective = _searchFocus != null
-        ? LatLng(_searchFocus!.lat, _searchFocus!.lng)
-        : _center;
-    await _showSheet(
-      MapLocationsSheet(
-        activeTab: _vpTab,
-        onTabChanged: (t) => setState(() => _vpTab = t),
-        center: effective,
-        profile: _profile,
-        onSlotSelected: (slot) {
-          _rebuild(LatLng(slot.lat, slot.lng));
-          Navigator.of(context).maybePop();
-        },
-        onGeolocate: _geolocate,
-        onOpenFullLocations: _openLocations,
-      ),
-      heightFrac: 0.75,
-      barrierAlpha: 0x55,
-    );
-    // スロット編集の可能性 → マーカー再読込
-    await _reloadLocationSlots();
   }
 
   // 旧 _formatSelectedDate は MapTimeSlider 内で表示するため削除 (2026-04-29)。
@@ -1173,9 +1095,9 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
       _astroLayers['aspect'] = false;
       _astroLayers['aspectTransit'] = true;
       _mapStyle = MapStyle.osmHotDark;
-      // 既存シート/ピンを片付け、世界規模ビューにフォーカス
-      // (2026-05-09: 旧 _layerPanelOpen 等は撤去済み。modal sheet が開いていれば
-      //  setState 後の再描画で MapMenuChips が非表示になる)
+      // 既存メニュー/シート/ピンを片付け、世界規模ビューにフォーカス
+      _displayMenuOpen = false;
+      _viewpointMenuOpen = false;
       _searchOpen = false;
       _fortuneSheetOpen = false;
       _searchHits = [];
@@ -1500,13 +1422,16 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
           ),
         ),
 
-        // ── 左サイド: 🔍 検索ボタン (単独) ──
-        // 旧 7 サイドボタンのうち他 6 個は下部 MapMenuChips に集約 (2026-05-09)。
-        // 検索は文字入力フローでシートと相性が悪いためサイドに残置。
+        // ── 左サイド 3 ボタン: 🔍 検索 / ☰ 表示 / 📍 地点 ──
+        // 表示・地点メニューは右に展開する別ウィジェットで描画 (下記)。
         if (!_astroCartoMode) MapSideButtons(
           topPad: topPad,
           searchOpen: _searchOpen,
+          displayMenuOpen: _displayMenuOpen,
+          viewpointMenuOpen: _viewpointMenuOpen,
           onSearchTap: () => setState(() => _searchOpen = true),
+          onDisplayMenuTap: _onDisplayMenuTap,
+          onViewpointMenuTap: _onViewpointMenuTap,
         ),
 
         // ── Astro*Carto*Graphy モードバナー (上部中央) + カテゴリピル (下部中央) ──
@@ -1528,36 +1453,89 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
           ),
         ),
 
-        // ── Daily Transit Badge（右上の日次トリガー） ──
-        // ACGモード中は世界規模ビューを邪魔しないため非表示。
-        // F1-c (2026-04-29 オーナー設計): タップで「今日の動き」を開く。
-        // 未閲覧時は光るグロー演出、閲覧済みはトップカテゴリアイコン。
-        if (!_astroCartoMode) Positioned(
-          top: topPad + 6, right: 20,
-          child: DailyTransitBadge(
-            unseen: _dailyBadgeUnseen,
-            topCategory: _topCategory,
-            disabled: _noProfile,
-            onTap: _onDailyBadgeTap,
-            isLightMap: !(mapStyleConfigs[_mapStyle]?.dark ?? true),
+        // ── 表示メニュー (☰ボタン右展開) ──────────────────────
+        // 開いているとき外側タップで閉じる (Positioned.fill 透明 GestureDetector)。
+        // メニュー本体は ☰ ボタンの右隣 (left: 60) に配置。
+        if (_displayMenuOpen && !_astroCartoMode) ...[
+          Positioned.fill(
+            child: GestureDetector(
+              behavior: HitTestBehavior.translucent,
+              onTap: () => setState(() => _displayMenuOpen = false),
+              child: const SizedBox.expand(),
+            ),
           ),
-        ),
-
-        // ── ▲ 運勢方位 Pull Tab ──（プロフィール未設定時 / モード中は非表示）
-        // 2026-05-09: 下部チップバー (約 64px) の上に配置するため bottom を上げた。
-        if (!_noProfile && !_fortuneSheetOpen && !_astroCartoMode) Positioned(
-          bottom: 64, left: 0, right: 0,
-          child: Center(
-            child: FortunePullTab(onTap: () => setState(() => _fortuneSheetOpen = true)),
+          Positioned(
+            top: topPad + 200, left: 60, right: 16,
+            child: MapDisplayMenu(
+              layers: _layers,
+              planetGroups: _planetGroups,
+              astroLayers: _astroLayers,
+              activeCategory: _activeCategory,
+              mapStyle: _mapStyle,
+              onLayerToggle: (k) => setState(() => _layers[k] = !(_layers[k] ?? false)),
+              onPlanetGroupToggle: (k) => setState(() => _planetGroups[k] = !(_planetGroups[k] ?? false)),
+              onAstroToggle: (k) => setState(() {
+                _astroLayers[k] = !(_astroLayers[k] ?? false);
+                if (k == 'relocate' && !(_astroLayers[k] ?? false)) {
+                  _relocateTapPoint = null;
+                }
+              }),
+              onCategoryChanged: (k) {
+                setState(() => _activeCategory = k);
+                _reannotateSearchResults();
+              },
+              onMapStyleChanged: _onMapStyleChanged,
+            ),
           ),
-        ),
+        ],
 
-        // ── 下部メニューチップバー (⚙️ ✨ 📍 📈) ──
-        // 旧サイドボタン (☰/✨/📍/🗺/🔮/🌐) を集約。タップで対応シート起動。
+        // ── 地点メニュー (📍ボタン右展開) ─────────────────────
+        if (_viewpointMenuOpen && !_astroCartoMode) ...[
+          Positioned.fill(
+            child: GestureDetector(
+              behavior: HitTestBehavior.translucent,
+              onTap: () {
+                setState(() => _viewpointMenuOpen = false);
+                _reloadLocationSlots();
+              },
+              child: const SizedBox.expand(),
+            ),
+          ),
+          Positioned(
+            top: topPad + 248, left: 60, right: 16,
+            child: MapViewpointMenu(
+              center: _searchFocus != null
+                  ? LatLng(_searchFocus!.lat, _searchFocus!.lng)
+                  : _center,
+              profile: _profile,
+              onSlotSelected: (slot) {
+                _rebuild(LatLng(slot.lat, slot.lng));
+                setState(() => _viewpointMenuOpen = false);
+                _reloadLocationSlots();
+              },
+              onGeolocate: _geolocate,
+              onSlotsChanged: _reloadLocationSlots,
+            ),
+          ),
+        ],
+
+        // ── 下部チップバー (Daily Transit / 運勢方位 / LOCATIONS / 予報) ──
+        // 2026-05-09 第二弾: 利用頻度トップ4を下部主役チップに集約。
+        // Daily Transit は未閲覧時に halo 発光 (旧右上バッジの代替)。
         // ACG モード中・運勢方位 Sheet 展開中は非表示。
         if (!_astroCartoMode && !_fortuneSheetOpen) Positioned(
           bottom: 0, left: 0, right: 0,
-          child: MapMenuChips(onTap: _onMenuChipTap),
+          child: MapMenuChips(
+            dailyTransitUnseen: _dailyBadgeUnseen,
+            dailyTransitDisabled: _noProfile,
+            topCategory: _topCategory,
+            onDailyTransitTap: _onDailyBadgeTap,
+            onFortuneTap: _noProfile
+                ? () {} // プロフィール未設定時は無効化 (FortuneSheet も意味を成さない)
+                : () => setState(() => _fortuneSheetOpen = true),
+            onLocationsTap: _openLocations,
+            onForecastTap: _openForecast,
+          ),
         ),
 
         // ── Fortune Sheet ──
@@ -1672,6 +1650,7 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
             vpSlots: _vpSlotsCache,
             natal: _chartResult?.natal,
             onClose: _onDailyTransitClose,
+            onEnterAcg: _enterAstroCartoMode,
           ),
         ),
 
