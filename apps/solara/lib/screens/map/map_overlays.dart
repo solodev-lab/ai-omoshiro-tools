@@ -34,106 +34,35 @@ Marker buildVpPinMarker({
 
 /// Map 画面の小さなオーバーレイ群。map_screen.dart から分離。
 
-/// 左サイドの縦並びボタン群（🔍 ≡ 📍 📅 🗺 🔮）
-/// topPad+76 から 48px 間隔で配置。
+/// 左サイドの 🔍 検索ボタン (単独)。
+///
+/// 2026-05-09: 旧 7 サイドボタンのうち ☰/✨/📍/🗺/🔮/🌐 の 6 個は下部 MapMenuChips
+/// に集約。検索のみ視認性とアクセス性のためサイドに残置 (検索は文字入力フローで
+/// シートと相性が悪く、即座にバー展開する現状動線が最適)。
 class MapSideButtons extends StatelessWidget {
   final double topPad;
   final bool searchOpen;
-  final bool layerPanelOpen;
-  final bool astroPanelOpen; // 2026-04-29: ☰ DISPLAY と ✨ ASTRO の2ボタン分割
-  final bool vpPanelOpen;
   final VoidCallback onSearchTap;
-  final VoidCallback onLayerTap;
-  final VoidCallback onAstroPanelTap;
-  final VoidCallback onVpTap;
-  final VoidCallback onLocationsTap;
-  final VoidCallback onForecastTap;
-  final VoidCallback onAstroCartoTap;
 
   const MapSideButtons({
     super.key,
     required this.topPad,
     required this.searchOpen,
-    required this.layerPanelOpen,
-    required this.astroPanelOpen,
-    required this.vpPanelOpen,
     required this.onSearchTap,
-    required this.onLayerTap,
-    required this.onAstroPanelTap,
-    required this.onVpTap,
-    required this.onLocationsTap,
-    required this.onForecastTap,
-    required this.onAstroCartoTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    // 📅 日付ボタンは削除（左上の SelectedDateBadge をタップでピッカー起動するため重複）。
-    // 日付バッジ（top+44, 高さ約38px）と被らないよう全ボタンを 16px 下げて 48px 等間隔に並べる。
-    // 2026-04-29: TimeSlider が top+44 で展開時 ~144 まで伸びるため、
-    // 全サイドボタンを +60 シフト (旧: 92→152, 140→200, ...)。
     return Stack(children: [
-      if (!searchOpen) Positioned(
-        top: topPad + 152, left: 16,
-        child: MapBtn(
-          onTap: onSearchTap,
-          child: const Icon(Icons.search, size: 18, color: Color(0x99C9A84C)),
+      if (!searchOpen)
+        Positioned(
+          top: topPad + 152,
+          left: 16,
+          child: MapBtn(
+            onTap: onSearchTap,
+            child: const Icon(Icons.search, size: 18, color: Color(0x99C9A84C)),
+          ),
         ),
-      ),
-      // ☰ DISPLAY パネル: 16方位/コンパス/MAPSTYLE
-      Positioned(
-        top: topPad + 200, left: 16,
-        child: MapBtn(
-          active: layerPanelOpen,
-          onTap: onLayerTap,
-          child: Column(mainAxisSize: MainAxisSize.min, children: [
-            Container(width: 18, height: 2, decoration: BoxDecoration(color: const Color(0xFFE8E0D0), borderRadius: BorderRadius.circular(1))),
-            const SizedBox(height: 3),
-            Container(width: 18, height: 2, decoration: BoxDecoration(color: const Color(0xFFC9A84C), borderRadius: BorderRadius.circular(1))),
-            const SizedBox(height: 3),
-            Container(width: 18, height: 2, decoration: BoxDecoration(color: const Color(0xFF00D4FF), borderRadius: BorderRadius.circular(1))),
-          ]),
-        ),
-      ),
-      // ✨ ASTRO パネル: 惑星ライン/引越し/CCG 4 frame/CHART/PLANET GROUP/FORTUNE
-      Positioned(
-        top: topPad + 248, left: 16,
-        child: MapBtn(
-          active: astroPanelOpen,
-          onTap: onAstroPanelTap,
-          child: const Icon(Icons.auto_awesome, size: 18, color: Color(0xFFC9A84C)),
-        ),
-      ),
-      Positioned(
-        top: topPad + 296, left: 16,
-        child: MapBtn(
-          active: vpPanelOpen,
-          onTap: onVpTap,
-          child: const Icon(Icons.location_on_outlined, size: 18, color: Color(0xFFC9A84C)),
-        ),
-      ),
-      Positioned(
-        top: topPad + 344, left: 16,
-        child: MapBtn(
-          onTap: onLocationsTap,
-          child: const Icon(Icons.map_outlined, size: 18, color: Color(0xFFC9A84C)),
-        ),
-      ),
-      Positioned(
-        top: topPad + 392, left: 16,
-        child: MapBtn(
-          onTap: onForecastTap,
-          child: const Icon(Icons.auto_graph, size: 18, color: Color(0xFFC9A84C)),
-        ),
-      ),
-      // Astro*Carto*Graphy モード起動ボタン (世界規模ライン+天頂点表示)
-      Positioned(
-        top: topPad + 440, left: 16,
-        child: MapBtn(
-          onTap: onAstroCartoTap,
-          child: const Icon(Icons.public, size: 18, color: Color(0xFFC9A84C)),
-        ),
-      ),
     ]);
   }
 }

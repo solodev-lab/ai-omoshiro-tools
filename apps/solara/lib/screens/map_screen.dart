@@ -16,7 +16,8 @@ import 'map/map_styles.dart';
 import 'map/map_sectors.dart';
 import 'map/map_fortune_sheet.dart';
 import 'map/map_vp_panel.dart';
-import 'map/map_layer_panel.dart';
+import 'map/map_menu_chips.dart';
+import 'map/map_menu_sheets.dart';
 import 'map/map_astro.dart';
 import 'map/map_astro_carto.dart';
 import 'map/map_astro_lines.dart';
@@ -77,13 +78,11 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
 
   // UI state
   bool _searchOpen = false;
-  bool _layerPanelOpen = false;
-  // 2026-04-29: CCG 4 frame 追加でパネル長過ぎる問題を解決すべく
-  // ☰DISPLAY (16方位/MAPSTYLE/コンパス) と ✨ASTRO (惑星ライン/CCG/CHART/PLANET GROUP/FORTUNE) に分割。
-  bool _astroPanelOpen = false;
   bool _fortuneSheetOpen = false;
-  bool _vpPanelOpen = false;
-  String _vpTab = 'vp';
+  // 旧 _layerPanelOpen / _astroPanelOpen / _vpPanelOpen は 2026-05-09 に廃止。
+  // 下部 MapMenuChips → showModalBottomSheet で代替（_openDisplaySheet / _openAstroSheet /
+  // _openLocationsSheet）。シート開閉状態は modal route 自身が管理するため state 不要。
+  String _vpTab = 'vp'; // VIEWPOINT / LOCATIONS タブ位置を sheet 跨ぎで保持
   bool _restOverlayVisible = false;
   final String _restOverlayText = '';
   final TextEditingController _searchCtrl = TextEditingController();
@@ -616,12 +615,19 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   // 日付選択は MapTimeSlider の slider/▲▼/LIVE で完結する。
 
   /// 共通: 角丸付き全画面BottomSheet
-  Future<void> _showSheet(Widget child, {double heightFrac = 0.9}) {
+  ///
+  /// [barrierAlpha] 0xB3 (≈70% 黒) がデフォルト。
+  /// メニューシート (display/astro/locations) ではマップ視認性のため低めに渡す。
+  Future<void> _showSheet(
+    Widget child, {
+    double heightFrac = 0.9,
+    int barrierAlpha = 0xB3,
+  }) {
     return showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      barrierColor: const Color(0xB3000000),
+      barrierColor: Color((barrierAlpha << 24)),
       builder: (ctx) => SizedBox(
         height: MediaQuery.of(ctx).size.height * heightFrac,
         child: ClipRRect(
@@ -660,6 +666,108 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
       ),
       heightFrac: 0.92,
     );
+  }
+
+  // ── 下部チップバーから起動するシート群 (2026-05-09) ────────────────────
+  // showModalBottomSheet は内容を 1 度しかビルドしないため、トグル変更で
+  // チェック状態を即時反映させるには StatefulBuilder で sheetSetState を併発する。
+  // 親 setState (Map 再描画) と sheetSetState (チェック visual) を両方呼ぶ。
+
+  void _onMenuChipTap(MapMenuChip chip) {
+    switch (chip) {
+      case MapMenuChip.display:
+        _openDisplaySheet();
+      case MapMenuChip.astro:
+        _openAstroSheet();
+      case MapMenuChip.locations:
+        _openLocationsSheet();
+      case MapMenuChip.forecast:
+        _openForecast();
+    }
+  }
+
+  Future<void> _openDisplaySheet() {
+    return _showSheet(
+      StatefulBuilder(
+        builder: (ctx, sheetSetState) => MapDisplaySheet(
+          layers: _layers,
+          mapStyle: _mapStyle,
+          onLayerToggle: (k) {
+            setState(() => _layers[k] = !(_layers[k] ?? false));
+            sheetSetState(() {});
+          },
+          onMapStyleChanged: (s) {
+            _onMapStyleChanged(s);
+            sheetSetState(() {});
+          },
+        ),
+      ),
+      heightFrac: 0.55,
+      barrierAlpha: 0x55,
+    );
+  }
+
+  Future<void> _openAstroSheet() {
+    return _showSheet(
+      StatefulBuilder(
+        builder: (ctx, sheetSetState) => MapAstroSheet(
+          layers: _layers,
+          planetGroups: _planetGroups,
+          astroLayers: _astroLayers,
+          activeCategory: _activeCategory,
+          onLayerToggle: (k) {
+            setState(() => _layers[k] = !(_layers[k] ?? false));
+            sheetSetState(() {});
+          },
+          onPlanetGroupToggle: (k) {
+            setState(() => _planetGroups[k] = !(_planetGroups[k] ?? false));
+            sheetSetState(() {});
+          },
+          onAstroToggle: (k) {
+            setState(() {
+              _astroLayers[k] = !(_astroLayers[k] ?? false);
+              if (k == 'relocate' && !(_astroLayers[k] ?? false)) {
+                _relocateTapPoint = null;
+              }
+            });
+            sheetSetState(() {});
+          },
+          onCategoryChanged: (k) {
+            setState(() => _activeCategory = k);
+            _reannotateSearchResults();
+            sheetSetState(() {});
+          },
+          onEnterAcg: _enterAstroCartoMode,
+        ),
+      ),
+      heightFrac: 0.85,
+      barrierAlpha: 0x55,
+    );
+  }
+
+  Future<void> _openLocationsSheet() async {
+    // C-2: 検索中なら検索地を「現在地」として渡す (VP Pin より検索地優先)
+    final effective = _searchFocus != null
+        ? LatLng(_searchFocus!.lat, _searchFocus!.lng)
+        : _center;
+    await _showSheet(
+      MapLocationsSheet(
+        activeTab: _vpTab,
+        onTabChanged: (t) => setState(() => _vpTab = t),
+        center: effective,
+        profile: _profile,
+        onSlotSelected: (slot) {
+          _rebuild(LatLng(slot.lat, slot.lng));
+          Navigator.of(context).maybePop();
+        },
+        onGeolocate: _geolocate,
+        onOpenFullLocations: _openLocations,
+      ),
+      heightFrac: 0.75,
+      barrierAlpha: 0x55,
+    );
+    // スロット編集の可能性 → マーカー再読込
+    await _reloadLocationSlots();
   }
 
   // 旧 _formatSelectedDate は MapTimeSlider 内で表示するため削除 (2026-04-29)。
@@ -1065,10 +1173,9 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
       _astroLayers['aspect'] = false;
       _astroLayers['aspectTransit'] = true;
       _mapStyle = MapStyle.osmHotDark;
-      // 既存パネル/シート/ピンを片付け、世界規模ビューにフォーカス
-      _layerPanelOpen = false;
-      _astroPanelOpen = false;
-      _vpPanelOpen = false;
+      // 既存シート/ピンを片付け、世界規模ビューにフォーカス
+      // (2026-05-09: 旧 _layerPanelOpen 等は撤去済み。modal sheet が開いていれば
+      //  setState 後の再描画で MapMenuChips が非表示になる)
       _searchOpen = false;
       _fortuneSheetOpen = false;
       _searchHits = [];
@@ -1393,28 +1500,13 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
           ),
         ),
 
-        // ── サイドボタン群（🔍 ☰ ✨ 📍 🗺 🔮 🌐） ──
-        // 📅 日付ボタンは削除済み（左上の SelectedDateBadge から起動）
-        // モード中は全サイドボタン非表示 (バナー × で復帰)
+        // ── 左サイド: 🔍 検索ボタン (単独) ──
+        // 旧 7 サイドボタンのうち他 6 個は下部 MapMenuChips に集約 (2026-05-09)。
+        // 検索は文字入力フローでシートと相性が悪いためサイドに残置。
         if (!_astroCartoMode) MapSideButtons(
           topPad: topPad,
           searchOpen: _searchOpen,
-          layerPanelOpen: _layerPanelOpen,
-          astroPanelOpen: _astroPanelOpen,
-          vpPanelOpen: _vpPanelOpen,
           onSearchTap: () => setState(() => _searchOpen = true),
-          onLayerTap: () => setState(() {
-            _layerPanelOpen = !_layerPanelOpen;
-            if (_layerPanelOpen) _astroPanelOpen = false;
-          }),
-          onAstroPanelTap: () => setState(() {
-            _astroPanelOpen = !_astroPanelOpen;
-            if (_astroPanelOpen) _layerPanelOpen = false;
-          }),
-          onVpTap: () => setState(() => _vpPanelOpen = !_vpPanelOpen),
-          onLocationsTap: _openLocations,
-          onForecastTap: _openForecast,
-          onAstroCartoTap: _enterAstroCartoMode,
         ),
 
         // ── Astro*Carto*Graphy モードバナー (上部中央) + カテゴリピル (下部中央) ──
@@ -1451,105 +1543,21 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
           ),
         ),
 
-        // ── 外側タップでパネルを閉じる（HTML: pointerdown outside → close）──
-        if (_layerPanelOpen || _astroPanelOpen || _vpPanelOpen) Positioned.fill(
-          child: GestureDetector(
-            behavior: HitTestBehavior.translucent,
-            onTap: () {
-              final wasVpOpen = _vpPanelOpen;
-              setState(() {
-                _layerPanelOpen = false;
-                _astroPanelOpen = false;
-                _vpPanelOpen = false;
-              });
-              // VP panel 内でスロット編集していた可能性を考慮し再読込
-              if (wasVpOpen) _reloadLocationSlots();
-            },
-            child: const SizedBox.expand(),
-          ),
-        ),
-
-        // ── Display Layer Panel (☰): 16方位/コンパス/MAPSTYLE ──
-        if (_layerPanelOpen) Positioned(
-          top: topPad + 152, left: 60,
-          child: LayerPanel(
-            view: LayerPanelView.display,
-            layers: _layers,
-            planetGroups: _planetGroups,
-            astroLayers: _astroLayers,
-            activeCategory: _activeCategory,
-            mapStyle: _mapStyle,
-            onLayerToggle: (k) => setState(() => _layers[k] = !(_layers[k] ?? false)),
-            onPlanetGroupToggle: (k) => setState(() => _planetGroups[k] = !(_planetGroups[k] ?? false)),
-            onAstroToggle: (k) => setState(() {
-              _astroLayers[k] = !(_astroLayers[k] ?? false);
-              if (k == 'relocate' && !(_astroLayers[k] ?? false)) {
-                _relocateTapPoint = null;
-              }
-            }),
-            onCategoryChanged: (k) {
-              setState(() => _activeCategory = k);
-              _reannotateSearchResults();
-            },
-            onMapStyleChanged: _onMapStyleChanged,
-          ),
-        ),
-
-        // ── Astro Panel (✨): 惑星ライン/引越し/CCG 4 frame/CHART/PLANET GROUP/FORTUNE ──
-        if (_astroPanelOpen) Positioned(
-          top: topPad + 152, left: 60,
-          child: LayerPanel(
-            view: LayerPanelView.astro,
-            layers: _layers,
-            planetGroups: _planetGroups,
-            astroLayers: _astroLayers,
-            activeCategory: _activeCategory,
-            mapStyle: _mapStyle,
-            onLayerToggle: (k) => setState(() => _layers[k] = !(_layers[k] ?? false)),
-            onPlanetGroupToggle: (k) => setState(() => _planetGroups[k] = !(_planetGroups[k] ?? false)),
-            onAstroToggle: (k) => setState(() {
-              _astroLayers[k] = !(_astroLayers[k] ?? false);
-              if (k == 'relocate' && !(_astroLayers[k] ?? false)) {
-                _relocateTapPoint = null;
-              }
-            }),
-            onCategoryChanged: (k) {
-              setState(() => _activeCategory = k);
-              _reannotateSearchResults();
-            },
-            onMapStyleChanged: _onMapStyleChanged,
-          ),
-        ),
-
-        // ── VP Panel ──
-        // 📍ボタンは topPad+236 へ移動 (✨ ASTRO ボタン挿入のため)
-        if (_vpPanelOpen) Positioned(
-          top: topPad + 296, left: 60,
-          child: VPPanel(
-            activeTab: _vpTab,
-            onTabChanged: (t) => setState(() => _vpTab = t),
-            // C-2: 検索中なら検索地を「現在地」として渡す (VP Pinより検索地優先)
-            center: _searchFocus != null
-                ? LatLng(_searchFocus!.lat, _searchFocus!.lng)
-                : _center,
-            profile: _profile,
-            onSlotSelected: (slot) {
-              // HTML: onSelect → rebuild + close panel
-              _rebuild(LatLng(slot.lat, slot.lng));
-              setState(() => _vpPanelOpen = false);
-              // パネル内でスロット編集していた可能性 → マーカー再描画
-              _reloadLocationSlots();
-            },
-            onGeolocate: _geolocate,
-          ),
-        ),
-
-        // ── Fortune Pull Tab ──（プロフィール未設定時 / モード中は非表示）
+        // ── ▲ 運勢方位 Pull Tab ──（プロフィール未設定時 / モード中は非表示）
+        // 2026-05-09: 下部チップバー (約 64px) の上に配置するため bottom を上げた。
         if (!_noProfile && !_fortuneSheetOpen && !_astroCartoMode) Positioned(
-          bottom: 0, left: 0, right: 0,
+          bottom: 64, left: 0, right: 0,
           child: Center(
             child: FortunePullTab(onTap: () => setState(() => _fortuneSheetOpen = true)),
           ),
+        ),
+
+        // ── 下部メニューチップバー (⚙️ ✨ 📍 📈) ──
+        // 旧サイドボタン (☰/✨/📍/🗺/🔮/🌐) を集約。タップで対応シート起動。
+        // ACG モード中・運勢方位 Sheet 展開中は非表示。
+        if (!_astroCartoMode && !_fortuneSheetOpen) Positioned(
+          bottom: 0, left: 0, right: 0,
+          child: MapMenuChips(onTap: _onMenuChipTap),
         ),
 
         // ── Fortune Sheet ──
