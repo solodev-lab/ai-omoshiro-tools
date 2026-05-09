@@ -306,20 +306,21 @@ class _MapViewpointMenuState extends State<MapViewpointMenu> {
             const SizedBox(width: 8),
             Expanded(
               child: Text(
-                slot.name,
-                style: const TextStyle(fontSize: 13, color: Color(0xFFE8E0D0)),
+                // HOME スロットは住所そのものではなく「現住所」固定表示。
+                // (オーナー指示 2026-05-09: 個人情報的な住所文字列を見せない方針)
+                slot.isHome ? '現住所' : slot.name,
+                style: TextStyle(
+                  fontSize: 13,
+                  color: slot.isHome
+                      ? const Color(0xFFF9D976) // HOME は金色で目立たせる
+                      : const Color(0xFFE8E0D0),
+                  fontWeight: slot.isHome ? FontWeight.w600 : FontWeight.w400,
+                  letterSpacing: slot.isHome ? 0.5 : 0,
+                ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
             ),
-            if (slot.isHome)
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 4),
-                child: Text(
-                  'HOME',
-                  style: TextStyle(fontSize: 10, color: Color(0x99F9D976), letterSpacing: 1.2),
-                ),
-              ),
             if (!slot.isHome)
               GestureDetector(
                 behavior: HitTestBehavior.opaque,
