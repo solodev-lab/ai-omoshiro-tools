@@ -114,7 +114,14 @@ class _MapViewpointMenuState extends State<MapViewpointMenu> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    // 端末アクセシビリティで font scale が過剰に大きくなるとパネル内の
+    // テキスト/サブメニューが見切れる可能性があるため、メニュー内に限り
+    // 上限 1.3 倍にクランプ (map_fortune_sheet.dart と同方針、2026-05-08 教訓)。
+    return MediaQuery(
+      data: MediaQuery.of(context).copyWith(
+        textScaler: MediaQuery.textScalerOf(context).clamp(maxScaleFactor: 1.3),
+      ),
+      child: Container(
       decoration: BoxDecoration(
         color: const Color(0xF20A0A19),
         borderRadius: BorderRadius.circular(14),
@@ -154,6 +161,8 @@ class _MapViewpointMenuState extends State<MapViewpointMenu> {
                   // 現在の中心座標
                   Text(
                     '${widget.center.latitude.toStringAsFixed(4)}, ${widget.center.longitude.toStringAsFixed(4)}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                       fontSize: 12,
                       color: Color(0xFF888888),
@@ -180,6 +189,8 @@ class _MapViewpointMenuState extends State<MapViewpointMenu> {
                   const SizedBox(height: 12),
                   Text(
                     _tab == 'vp' ? '保存済みスロット' : '登録地',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                       fontSize: 12,
                       color: Color(0xFF666666),
@@ -193,6 +204,7 @@ class _MapViewpointMenuState extends State<MapViewpointMenu> {
             ),
           ),
         ],
+      ),
       ),
     );
   }
@@ -220,6 +232,8 @@ class _MapViewpointMenuState extends State<MapViewpointMenu> {
         child: Center(
           child: Text(
             label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(
               fontSize: 13,
               letterSpacing: 0.5,
@@ -246,13 +260,17 @@ class _MapViewpointMenuState extends State<MapViewpointMenu> {
         child: Row(children: [
           Icon(icon, size: 16, color: const Color(0xFFC9A84C)),
           const SizedBox(width: 8),
-          Text(
-            label,
-            style: const TextStyle(
-              fontSize: 13,
-              color: Color(0xFFC9A84C),
-              letterSpacing: 0.4,
-              fontWeight: FontWeight.w500,
+          Expanded(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                fontSize: 13,
+                color: Color(0xFFC9A84C),
+                letterSpacing: 0.4,
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ),
         ]),
@@ -367,11 +385,15 @@ class _MapViewpointMenuState extends State<MapViewpointMenu> {
           child: Row(children: [
             Text(icon, style: const TextStyle(fontSize: 14)),
             const SizedBox(width: 10),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 13,
-                color: isDanger ? const Color(0xFFFF6B6B) : const Color(0xFFE8E0D0),
+            Expanded(
+              child: Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 13,
+                  color: isDanger ? const Color(0xFFFF6B6B) : const Color(0xFFE8E0D0),
+                ),
               ),
             ),
           ]),
