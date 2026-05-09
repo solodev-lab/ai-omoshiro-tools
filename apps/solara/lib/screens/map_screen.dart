@@ -1482,9 +1482,9 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
           ),
         ),
 
-        // ── 表示メニュー (☰ボタン → 検索ボックス位置に展開) ──────
-        // 2026-05-09 第三弾: 旧右展開を廃止し、検索バーと同じ位置 (top+152, 全幅) に配置。
-        // メニュー幅が広くなり L1/L2/L3 の横並びボタンが見やすくなる。
+        // ── 表示メニュー (☰ボタン → 検索ボックス高さで右展開) ──────
+        // 2026-05-09 第四弾: 全幅 → 左サイドボタン (🔍/☰/📍) を見せるため left:60。
+        // 縦位置は検索バーと同じ top+152 を維持 (オーナー要望)。
         // 検索バー / 地点メニューとは相互排他 (タップハンドラで他を閉じる)。
         if (_displayMenuOpen && !_astroCartoMode) ...[
           Positioned.fill(
@@ -1495,7 +1495,7 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
             ),
           ),
           Positioned(
-            top: topPad + 152, left: 16, right: 16,
+            top: topPad + 152, left: 60, right: 16,
             child: MapDisplayMenu(
               layers: _layers,
               planetGroups: _planetGroups,
@@ -1518,9 +1518,9 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
         ],
 
         // ── 地点メニュー (📍ボタン → 画面上部 ~40% に展開) ────────
-        // 2026-05-09 第三弾: VIEWPOINT / LOCATIONS タブ切替で地点登録を管理する
-        // 旧 VPPanel の体験を復活。スコアバー/タイムスライダーは隠れるが、
-        // 地点登録中は俯瞰情報より管理 UI を優先したいというオーナー判断。
+        // 2026-05-09 第四弾: 左サイドボタンを残すため left:60 (旧 16 → 変更)。
+        // VIEWPOINT / LOCATIONS タブ切替で旧 VPPanel の体験を復活。
+        // スコアバー/タイムスライダーは隠れる (登録中は管理 UI 優先)。
         if (_viewpointMenuOpen && !_astroCartoMode) ...[
           Positioned.fill(
             child: GestureDetector(
@@ -1533,7 +1533,7 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
             ),
           ),
           Positioned(
-            top: topPad + 6, left: 16, right: 16,
+            top: topPad + 6, left: 60, right: 16,
             child: ConstrainedBox(
               constraints: BoxConstraints(
                 maxHeight: MediaQuery.of(context).size.height * 0.4,
