@@ -122,7 +122,6 @@ class _MapViewpointMenuState extends State<MapViewpointMenu> {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
-        mainAxisSize: MainAxisSize.min,
         children: [
           // ── タブバー + 閉じるボタン ──
           Padding(
@@ -144,8 +143,9 @@ class _MapViewpointMenuState extends State<MapViewpointMenu> {
               ),
             ]),
           ),
-          // ── 本体 ──
-          Flexible(
+          // ── 本体 (Expanded で残りの高さを全部使い、内部 scrollview で
+          //         submenu 展開時も全項目を可視化) ──
+          Expanded(
             child: SingleChildScrollView(
               padding: const EdgeInsets.fromLTRB(14, 4, 14, 14),
               child: Column(
