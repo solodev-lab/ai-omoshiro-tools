@@ -25,12 +25,16 @@ class MapDisplayMenu extends StatefulWidget {
   final Map<String, bool> layers;
   final Map<String, bool> planetGroups;
   final Map<String, bool> astroLayers;
-  final String activeCategory;
+
+  /// 惑星>FORTUNE の選択状態。扇状の `_activeCategory` とは独立。
+  /// このメニューから変更してもセクター描画には影響しない (惑星ライン/
+  /// アスペクト線/天頂点マーカーの表示フィルタのみ更新)。
+  final String planetFilterCategory;
   final MapStyle mapStyle;
   final ValueChanged<String> onLayerToggle;
   final ValueChanged<String> onPlanetGroupToggle;
   final ValueChanged<String> onAstroToggle;
-  final ValueChanged<String> onCategoryChanged;
+  final ValueChanged<String> onPlanetFilterChanged;
   final ValueChanged<MapStyle> onMapStyleChanged;
 
   const MapDisplayMenu({
@@ -38,12 +42,12 @@ class MapDisplayMenu extends StatefulWidget {
     required this.layers,
     required this.planetGroups,
     required this.astroLayers,
-    required this.activeCategory,
+    required this.planetFilterCategory,
     required this.mapStyle,
     required this.onLayerToggle,
     required this.onPlanetGroupToggle,
     required this.onAstroToggle,
-    required this.onCategoryChanged,
+    required this.onPlanetFilterChanged,
     required this.onMapStyleChanged,
   });
 
@@ -149,8 +153,8 @@ class _MapDisplayMenuState extends State<MapDisplayMenu> {
           for (final e in categoryColors.entries)
             _radioBtn(
               categoryLabels[e.key] ?? e.key,
-              widget.activeCategory == e.key,
-              () => widget.onCategoryChanged(e.key),
+              widget.planetFilterCategory == e.key,
+              () => widget.onPlanetFilterChanged(e.key),
               tintColor: e.value,
             ),
         ];

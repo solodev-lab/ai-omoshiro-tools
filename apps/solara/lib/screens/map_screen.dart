@@ -95,7 +95,15 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   };
 
   // Fortune category / source
+  // _activeCategory: 16方位スコアバー / 扇状ポリゴン / FortuneSheet / 検索ハイライト等
+  //   "全体UIコンテキスト" を司る (色・スコア・rank alpha 全部)。
+  // _planetFilterCategory: 惑星ライン / アスペクト線 / 天頂点マーカーの表示フィルタのみ。
+  //   2026-05-09 ユーザー要望で扇状と分離。バーガーメニュー惑星>FORTUNE は
+  //   このフィルタのみを更新し、扇状の表示は変えない。
+  //   FortuneSheet / 上部スコアバータップ / ACG モードピル経由で _activeCategory が
+  //   変わる時は両方を同期させる (旧挙動の維持・予期せぬ乖離を防止)。
   String _activeCategory = 'all';
+  String _planetFilterCategory = 'all';
   String _activeSrc = 'combined';
 
   // Planet group visibility
@@ -571,7 +579,12 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   void _cycleActiveCategory() {
     final idx = _categoryCycle.indexOf(_activeCategory);
     final nextIdx = (idx + 1) % _categoryCycle.length;
-    setState(() => _activeCategory = _categoryCycle[nextIdx]);
+    setState(() {
+      _activeCategory = _categoryCycle[nextIdx];
+      // スコアバータップは「全体UIコンテキスト」変更扱いなので
+      // 惑星フィルタも追従させる (旧挙動維持)。
+      _planetFilterCategory = _activeCategory;
+    });
     _reannotateSearchResults();
   }
 
@@ -1290,12 +1303,12 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
             if (_planetLines.isNotEmpty && (_astroLayers['planetLines'] ?? true))
               PolylineLayer(polylines: buildPlanetPolylines(
                 lines: _planetLines, layers: _layers,
-                planetGroupVis: _planetGroups, activeCategory: _activeCategory,
+                planetGroupVis: _planetGroups, activeCategory: _planetFilterCategory,
               )),
             if (_planetLines.isNotEmpty && (_astroLayers['planetLines'] ?? true))
               PlanetSymbolsLayer(
                 lines: _planetLines, layers: _layers,
-                planetGroupVis: _planetGroups, activeCategory: _activeCategory,
+                planetGroupVis: _planetGroups, activeCategory: _planetFilterCategory,
                 onTap: (planet, frame) => showPlanetIntroPopup(
                   context: context,
                   planetKey: planet,
@@ -1307,7 +1320,7 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
             if (_visibleAstroLines().isNotEmpty)
               PolylineLayer(polylines: buildAstroPolylines(
                 lines: _visibleAstroLines(),
-                activeCategory: _activeCategory,
+                activeCategory: _planetFilterCategory,
                 allPlanetMode: _astroLayers['aspectAll'] ?? false,
               )),
             // 天頂点マーカー (CCG): 表示中の全フレームの zenith を描画。
@@ -1316,7 +1329,7 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
             if (_zenithVisibleFrames().isNotEmpty && _astroLinesCache.isNotEmpty)
               MarkerLayer(markers: buildAstroZenithMarkers(
                 lines: _astroLinesCache,
-                activeCategory: _activeCategory,
+                activeCategory: _planetFilterCategory,
                 allPlanetMode: _astroLayers['aspectAll'] ?? false,
                 framesWithZenith: _zenithVisibleFrames(),
                 onTap: (planetKey, frame, point) => setState(() {
@@ -1470,7 +1483,7 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
               layers: _layers,
               planetGroups: _planetGroups,
               astroLayers: _astroLayers,
-              activeCategory: _activeCategory,
+              planetFilterCategory: _planetFilterCategory,
               mapStyle: _mapStyle,
               onLayerToggle: (k) => setState(() => _layers[k] = !(_layers[k] ?? false)),
               onPlanetGroupToggle: (k) => setState(() => _planetGroups[k] = !(_planetGroups[k] ?? false)),
@@ -1480,10 +1493,8 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                   _relocateTapPoint = null;
                 }
               }),
-              onCategoryChanged: (k) {
-                setState(() => _activeCategory = k);
-                _reannotateSearchResults();
-              },
+              // 惑星>FORTUNE は惑星フィルタのみを更新 (扇状非干渉)
+              onPlanetFilterChanged: (k) => setState(() => _planetFilterCategory = k),
               onMapStyleChanged: _onMapStyleChanged,
             ),
           ),
@@ -1558,7 +1569,10 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
               _reannotateSearchResults();
             },
             onCatChanged: (c) {
-              setState(() => _activeCategory = c);
+              setState(() {
+                _activeCategory = c;
+                _planetFilterCategory = c; // 全体カテゴリ変更時は惑星フィルタも同期
+              });
               _reannotateSearchResults();
             },
             onClose: () => setState(() => _fortuneSheetOpen = false),
@@ -1689,7 +1703,10 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
           child: Center(
             child: AstroCartoCategoryPills(
               activeCategory: _activeCategory,
-              onChanged: (k) => setState(() => _activeCategory = k),
+              onChanged: (k) => setState(() {
+                _activeCategory = k;
+                _planetFilterCategory = k; // ACG モードはセクター非表示なので両者同期
+              }),
             ),
           ),
         ),
