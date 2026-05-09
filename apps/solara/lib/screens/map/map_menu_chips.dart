@@ -40,8 +40,11 @@ class MapMenuChips extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // 等間隔のための padding 設計 (2026-05-09):
+    //   外側 horizontal = 4, 各チップ horizontal = 4 で
+    //   edge gap = 4 + 4 = 8、chip 間 gap = 4 + 4 = 8 と一致させる。
     return Container(
-      padding: const EdgeInsets.fromLTRB(8, 6, 8, 6),
+      padding: const EdgeInsets.fromLTRB(4, 6, 4, 6),
       decoration: const BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter,
@@ -99,7 +102,7 @@ class _StaticChip extends StatelessWidget {
   Widget build(BuildContext context) {
     return Expanded(
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 3),
+        padding: const EdgeInsets.symmetric(horizontal: 4),
         child: GestureDetector(
           behavior: HitTestBehavior.opaque,
           onTap: onTap,
@@ -124,6 +127,8 @@ class _StaticChip extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
                     fontSize: 12,
                     color: Color(0xFFC9A84C),
@@ -183,13 +188,16 @@ class _DailyTransitChip extends StatelessWidget {
 
     return Expanded(
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 3),
+        padding: const EdgeInsets.symmetric(horizontal: 4),
         child: GestureDetector(
           behavior: HitTestBehavior.opaque,
           onTap: disabled ? null : onTap,
           child: Stack(
             clipBehavior: Clip.none,
-            alignment: Alignment.center,
+            // StackFit.expand: 非 Positioned の Container を chip 領域いっぱいに
+            // 拡げる (Static チップと同じ幅・高さに揃えるため)。Stack 親 (Expanded)
+            // から tight 制約が来ているので非 Positioned 子は parent サイズで埋まる。
+            fit: StackFit.expand,
             children: [
               // 未閲覧時の halo (chip 矩形の外側に拡張、IgnorePointer)
               if (showHalo)
@@ -202,6 +210,7 @@ class _DailyTransitChip extends StatelessWidget {
                 ),
               Container(
                 padding: const EdgeInsets.symmetric(vertical: 8),
+                alignment: Alignment.center,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(10),
                   border: Border.all(color: borderColor, width: unseen ? 1.4 : 1),
@@ -222,6 +231,8 @@ class _DailyTransitChip extends StatelessWidget {
                     const SizedBox(height: 2),
                     Text(
                       'Daily',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         fontSize: 12,
                         color: unseen
