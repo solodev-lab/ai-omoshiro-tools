@@ -1517,10 +1517,11 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
           ),
         ],
 
-        // ── 地点メニュー (📍ボタン → 画面上部 ~40% に展開) ────────
-        // 2026-05-09 第四弾: 左サイドボタンを残すため left:60 (旧 16 → 変更)。
-        // VIEWPOINT / LOCATIONS タブ切替で旧 VPPanel の体験を復活。
-        // スコアバー/タイムスライダーは隠れる (登録中は管理 UI 優先)。
+        // ── 地点メニュー (📍ボタン → 縦フル展開) ─────────────────
+        // 2026-05-09 第五弾: maxHeight 40% 制約を撤廃 (オーナー要望)。
+        // 旧設計ではアイコン/名称変更の submenu が下端で見切れていた。
+        // 「見えない方が問題」とのオーナー判断で縦は bottom:16 までフル展開。
+        // チップバーは menu 開いている間は非表示 (重なり回避、下記参照)。
         if (_viewpointMenuOpen && !_astroCartoMode) ...[
           Positioned.fill(
             child: GestureDetector(
@@ -1533,28 +1534,23 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
             ),
           ),
           Positioned(
-            top: topPad + 6, left: 60, right: 16,
-            child: ConstrainedBox(
-              constraints: BoxConstraints(
-                maxHeight: MediaQuery.of(context).size.height * 0.4,
-              ),
-              child: MapViewpointMenu(
-                center: _searchFocus != null
-                    ? LatLng(_searchFocus!.lat, _searchFocus!.lng)
-                    : _center,
-                profile: _profile,
-                onSlotSelected: (slot) {
-                  _rebuild(LatLng(slot.lat, slot.lng));
-                  setState(() => _viewpointMenuOpen = false);
-                  _reloadLocationSlots();
-                },
-                onGeolocate: _geolocate,
-                onClose: () {
-                  setState(() => _viewpointMenuOpen = false);
-                  _reloadLocationSlots();
-                },
-                onSlotsChanged: _reloadLocationSlots,
-              ),
+            top: topPad + 6, left: 60, right: 16, bottom: 16,
+            child: MapViewpointMenu(
+              center: _searchFocus != null
+                  ? LatLng(_searchFocus!.lat, _searchFocus!.lng)
+                  : _center,
+              profile: _profile,
+              onSlotSelected: (slot) {
+                _rebuild(LatLng(slot.lat, slot.lng));
+                setState(() => _viewpointMenuOpen = false);
+                _reloadLocationSlots();
+              },
+              onGeolocate: _geolocate,
+              onClose: () {
+                setState(() => _viewpointMenuOpen = false);
+                _reloadLocationSlots();
+              },
+              onSlotsChanged: _reloadLocationSlots,
             ),
           ),
         ],
@@ -1562,8 +1558,8 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
         // ── 下部チップバー (Daily Transit / 運勢方位 / LOCATIONS / 予報) ──
         // 2026-05-09 第二弾: 利用頻度トップ4を下部主役チップに集約。
         // Daily Transit は未閲覧時に halo 発光 (旧右上バッジの代替)。
-        // ACG モード中・運勢方位 Sheet 展開中は非表示。
-        if (!_astroCartoMode && !_fortuneSheetOpen) Positioned(
+        // ACG モード中・運勢方位 Sheet 展開中・地点メニュー縦フル展開中は非表示。
+        if (!_astroCartoMode && !_fortuneSheetOpen && !_viewpointMenuOpen) Positioned(
           bottom: 0, left: 0, right: 0,
           child: MapMenuChips(
             dailyTransitUnseen: _dailyBadgeUnseen,
