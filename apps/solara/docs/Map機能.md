@@ -170,13 +170,14 @@ lib/screens/map/
   ├─ map_astro.dart        (375) — fetchChart + scoreAll
   ├─ map_constants.dart    (101) — dir16, カテゴリ色, 惑星メタデータ
   ├─ map_fortune_sheet.dart(323) — FortuneFilterLabel + FortuneSheet
-  ├─ map_layer_panel.dart  (153) — レイヤー表示切替パネル
-  ├─ map_overlays.dart     (349) — SideButtons/SearchBar/Badges/VP Pin/RestOverlay 等
+  ├─ map_menu_chips.dart   (2026-05-09 新設) — NavBar 直上 4 チップバー (⚙️/✨/📍/📈)
+  ├─ map_menu_sheets.dart  (2026-05-09 新設) — Display/Astro/Locations 統合 BottomSheet
+  ├─ map_overlays.dart     (短縮済) — 🔍 検索ボタン (単独) + 各種小オーバーレイ
   ├─ map_planet_lines.dart (191) — 天体ライン描画
   ├─ map_search.dart       (360) — searchPlaces / SearchResultList / SearchFocusPopup
   ├─ map_sectors.dart      (176) — 16方位セクターポリゴン
   ├─ map_styles.dart       (116) — MapStyle enum + タイル定義
-  ├─ map_vp_panel.dart     (435) — VPPanel + SlotManager + VPSlot
+  ├─ map_vp_panel.dart     (短縮済) — VPSlot + SlotManager のみ (VPPanel widget は廃止)
   └─ map_widgets.dart      ( 87) — MapBtn 共通ボタン
 
 lib/screens/
