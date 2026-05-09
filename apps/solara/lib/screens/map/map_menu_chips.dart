@@ -194,10 +194,11 @@ class _DailyTransitChip extends StatelessWidget {
           onTap: disabled ? null : onTap,
           child: Stack(
             clipBehavior: Clip.none,
-            // StackFit.expand: 非 Positioned の Container を chip 領域いっぱいに
-            // 拡げる (Static チップと同じ幅・高さに揃えるため)。Stack 親 (Expanded)
-            // から tight 制約が来ているので非 Positioned 子は parent サイズで埋まる。
-            fit: StackFit.expand,
+            // StackFit.expand は使わない。親 Positioned(bottom:0) は高さが
+            // unbounded なので expand させると h=Infinity 強制で assert 失敗
+            // (RenderBox 'BoxConstraints forces an infinite height') する。
+            // 代わりに Container 自身に width: double.infinity を与えて、
+            // 高さは child intrinsic 任せにする (Static チップと同じ挙動)。
             children: [
               // 未閲覧時の halo (chip 矩形の外側に拡張、IgnorePointer)
               if (showHalo)
@@ -209,6 +210,7 @@ class _DailyTransitChip extends StatelessWidget {
                   child: IgnorePointer(child: _ChipHalo()),
                 ),
               Container(
+                width: double.infinity,
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
