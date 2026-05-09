@@ -43,7 +43,7 @@ lib/ (約 80 .dart ファイル)
 │   │   ├── map_layer_panel.dart        Phase M2: 4流派並列 + 設計思想ガイド導線
 │   │   ├── map_astro_lines.dart        Phase M2: アスペクト線 Polyline 変換 (FORTUNE 連動 dim)
 │   │   ├── map_relocation_popup.dart   Phase M2: 統合タップ popup (線情報+12ハウス情報)
-│   │   ├── map_styles.dart             タイル切替（OSM/CyclOSM × Light/Dark）
+│   │   ├── map_styles.dart             タイル切替（OSM HOT × Light/Dark）
 │   │   ├── map_search.dart             検索候補リスト + SearchFocusPopup
 │   │   ├── map_astro_carto.dart        Phase M3: Astro*Carto*Graphy モード専用UI
 │   │   ├── map_location_markers.dart   Tier A: 出生地+グロー / VP/Locations マーカー
@@ -297,9 +297,10 @@ Map / Galaxy も同様に SolaraStorage 経由で読み込み
 - 運勢方位シートの「合計/トランジット/プログレス」タブは `sComp` の4バケットからのバケット合算フィルタ
 
 ### マップタイル切替 (map/map_styles.dart)
-- 4プリセット: `osmHotLight` / `osmHotDark` / `cyclosmLight` / `cyclosmDark`
-- タイル源: OpenStreetMap Humanitarian (OSM France) + CyclOSM (OSM France)
-- Dark版: CSS `filter: invert(1) hue-rotate(180deg)` 相当の2段 ColorFiltered（白背景→黒、赤道路→赤保持）
+- 2プリセット: `osmHotLight` / `osmHotDark` (CyclOSM は 2026-05-09 削除、project_solara_map_styles.md 参照)
+- タイル源: OpenStreetMap Humanitarian (OSM France)
+- Dark版: 公式 `darkModeTilesContainerBuilder` 同等の `_darkInvertHueRotate180Matrix` 1段 ColorFiltered（Phase 3 で per-tile→container単位、saveLayer 36→1 に削減）
+- **4層防御モデル** (2026-05-09): flutter_map 8.3+ / mount delay (warmup+style 完了待ち) / TileLayer.reset Stream / settle 後の verify-recover。詳細: project_solara_map_render_protocol.md
 - 永続化: `shared_preferences` キー `solara_map_style`
 - 選択UI: LayerPanel の STYLE セクション
 - 商用/アップデート計画: MapTiler独自スタイル（紫夜空テーマ）への移行予定（memory: project_solara_map_styles.md）
@@ -633,7 +634,7 @@ Cloudflare Worker 本番デプロイ済み: `https://solara-api.solodev-lab.com`
 | `/fortune` | POST | Gemini 2.5 Flash 生成の占い文 (5カテゴリ) | `fortune_api.dart#fetchFortune` |
 | `/tarot` | POST | Gemini 生成のタロットリーディング | `observe_screen` |
 | `/relocation` | POST | Gemini 生成のリロケーションナラティブ | `horo_relocation_panel.dart` |
-| `/tiles/osm/<source>/<z>/<x>/<y>.png` | GET | OSM 系タイルプロキシ (HOT/Standard/CyclOSM) | `map_styles.dart` (sharedTileHttpClient 経由) |
+| `/tiles/osm/<source>/<z>/<x>/<y>.png` | GET | OSM 系タイルプロキシ (HOT/Standard、CyclOSM はクライアント側で 2026-05-09 撤去、Worker側ソースには残置) | `map_styles.dart` (sharedTileHttpClient 経由) |
 
 **Secrets (Cloudflare暗号化ストア):**
 - `GEMINI_API_KEY` — Fortune LLM 生成用 (wrangler secret put で設定済み)

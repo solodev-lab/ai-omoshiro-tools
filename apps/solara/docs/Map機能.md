@@ -69,10 +69,12 @@
 
 ### MAPSTYLE（ラベル変更前は STYLE）
 
-- **Map / MapDark / Cycle / CycleDark** の 4 種（OSM HOT + CyclOSM、現地語ラベル）
+- **Map / MapDark** の 2 種（OSM HOT × Light/Dark、現地語ラベル）
 - 全タイルは Solara Worker `/tiles/osm/<source>/{z}/{x}/{y}.png` 経由（UA固定 + edge cache 24h）
-- LANG 切替・Smart ハイブリッド・Jawg は撤去済み（多言語ニーズ低 + 月25kビュー無料枠で十分）
-- ユーザー数増えたら Jawg/$25 プラン再導入を検討（Worker 側コード参考用に削除済みだが履歴に残置）
+- LANG 切替・Smart ハイブリッド・Jawg・CyclOSM は撤去済み
+  - Jawg: 多言語ニーズ低 + 月25kビュー無料枠で十分（ユーザー数増えたら$25プラン再導入を検討）
+  - CyclOSM: 2026-05-09 削除。本番 Worker の allowlist 不整合で 400 多発 + 商用利用ポリシー懸念（OSM usage policy）。再導入時は要 wrangler deploy + ストア審査リスク再評価
+- ユーザー数増えたら多言語タイル再導入を検討（memory: project_solara_map_styles.md にスケール戦略あり）
 
 ### 惑星アイコン（ベクター描画）
 

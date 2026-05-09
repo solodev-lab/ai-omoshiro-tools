@@ -1,8 +1,13 @@
-"""マップスタイル機能の実装検証スクリプト（2026-04-20）。
+"""マップスタイル機能の実装検証スクリプト。
 
 - 変更したファイルのサイズ・行数・関連シンボルを確認
 - 未使用 import / 未参照シンボルを検出
 - dart analyze との併用で最終チェック
+
+履歴:
+- 2026-04-20: 初版（4スタイル: OSM HOT × Light/Dark + CyclOSM × Light/Dark）
+- 2026-05-04: Phase 3 でダークマトリクスを 2段→1段合成 (`_darkInvertHueRotate180Matrix`)
+- 2026-05-09: CyclOSM 撤去 (2スタイル化) + 4層防御モデル導入時の reset Stream wiring 検証
 """
 
 from __future__ import annotations
@@ -64,8 +69,8 @@ expected = [
     ("mapStyleConfigs", "プリセット辞書"),
     ("mapStyleFromId", "id復元関数"),
     ("buildStyledTileLayer", "TileLayer builder"),
-    ("_invertMatrix", "反転マトリクス"),
-    ("_hueRotate180Matrix", "色相回転マトリクス"),
+    ("_darkInvertHueRotate180Matrix", "ダーク反転+色相回転 1段合成マトリクス (Phase 3)"),
+    ("reset:", "TileLayer.reset Stream wiring (4層防御 第3層)"),
 ]
 for sym, desc in expected:
     if sym in styles_src:
@@ -73,12 +78,14 @@ for sym, desc in expected:
     else:
         warn(f"missing: {desc} ({sym})")
 
-# 4プリセット列挙
+# 2プリセット列挙 (2026-05-09: CyclOSM 撤去で 4→2)
 enum_names = re.findall(r"MapStyle\.(\w+)", styles_src)
 unique_names = set(enum_names)
 print(f"  enum 値: {sorted(unique_names)}  ({len(unique_names)} 種)")
-if len(unique_names) != 4:
-    warn(f"MapStyle の列挙数が想定(4)と違う")
+if len(unique_names) != 2:
+    warn(f"MapStyle の列挙数が想定(2 = osmHotLight/osmHotDark)と違う")
+if "cyclosmLight" in unique_names or "cyclosmDark" in unique_names:
+    warn("CyclOSM 撤去 (2026-05-09) のはずだが enum に残存している")
 
 
 # ──────────────────────────────────────────────────────────
@@ -93,9 +100,12 @@ checks = [
     ("_loadMapStyle()", "initState呼び出し"),
     ("SolaraStorage.loadMapStyleId", "load 呼び出し"),
     ("SolaraStorage.saveMapStyleId", "save 呼び出し"),
-    ("buildStyledTileLayer(_mapStyle)", "TileLayer差替"),
+    ("buildStyledTileLayer(", "TileLayer差替"),
     ("mapStyleConfigs[_mapStyle]!.backgroundColor", "背景色連動"),
     ("onMapStyleChanged: _onMapStyleChanged", "LayerPanel 接続"),
+    ("_bootReady", "4層防御 第2層: mount delay flag"),
+    ("_tileResetCtrl", "4層防御 第3層: reset Stream controller"),
+    ("_settleResetTimer", "4層防御 第4層: settle 後 verify-recover タイマー"),
 ]
 for pat, desc in checks:
     if pat in screen_src:
@@ -111,8 +121,8 @@ legacy_urls = [
     "tiles.stadiamaps.com/tiles/stamen",
     "tile.opentopomap.org",
     "server.arcgisonline.com",
-    "tile-cyclosm.openstreetmap.fr",  # これは map_styles.dart では使うが screen には残ってはいけない
-    "tile.openstreetmap.fr/hot",
+    "tile-cyclosm.openstreetmap.fr",  # 2026-05-09 撤去: クライアント側からは完全消滅すべき
+    "tile.openstreetmap.fr/hot",      # Worker 経由なので screen に直接書かれていてはいけない
 ]
 print("  旧タイルURLが map_screen.dart に残っていないかチェック:")
 for url in legacy_urls:
