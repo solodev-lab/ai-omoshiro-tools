@@ -5,21 +5,24 @@ Adds a feathered circular alpha mask so the four black corners of each
 emblem are transparent. This prevents the chip background gradient from
 being interrupted by hard black squares.
 
-Source: apps/solara/mockup/share-assets/menu-icons/
+Source: apps/solara/mockup/share-assets/menu-icons/v2/  (V2 woodblock style)
 Dest:   apps/solara/assets/menu_icons/
 
-Mapping (only adopted versions; 8-pointed and subtle 9-pointed PNGs are
-kept in source as backup but NOT copied to assets):
-  unsealed_9pt_vivid.png  ->  unsealed.webp
-  all.png                 ->  all.webp
-  love.png                ->  love.webp
-  money.png               ->  money.webp
-  work.png                ->  work.webp
-  healing.png             ->  healing.webp
-  communication.png       ->  communication.webp
-  fortune.png             ->  fortune.webp
-  location.png            ->  location.webp
-  forecast.png            ->  forecast.webp
+V1 PNG (assets/menu_icons/{V1}.webp は v1 vivid 由来) は元絵が
+mockup/share-assets/menu-icons/{name}.png に元絵保護されており、
+webp 上書きしても元絵は失われない。
+
+Mapping (V2 採用版、healing は moon 採用、healing_no_moon は不採用):
+  v2/unsealed.png       ->  unsealed.webp
+  v2/all.png            ->  all.webp
+  v2/love.png           ->  love.webp
+  v2/money.png          ->  money.webp
+  v2/work.png           ->  work.webp           (大樹)
+  v2/healing_moon.png   ->  healing.webp        (月採用)
+  v2/communication.png  ->  communication.webp
+  v2/fortune.png        ->  fortune.webp        (文字なし)
+  v2/location.png       ->  location.webp
+  v2/forecast.png       ->  forecast.webp
 """
 from pathlib import Path
 from PIL import Image, ImageDraw, ImageFilter
@@ -29,16 +32,16 @@ DST_DIR = Path(__file__).resolve().parents[1] / "assets" / "menu_icons"
 DST_DIR.mkdir(parents=True, exist_ok=True)
 
 MAPPING = {
-    "unsealed_9pt_vivid.png": "unsealed.webp",
-    "all.png": "all.webp",
-    "love.png": "love.webp",
-    "money.png": "money.webp",
-    "work.png": "work.webp",
-    "healing.png": "healing.webp",
-    "communication.png": "communication.webp",
-    "fortune.png": "fortune.webp",
-    "location.png": "location.webp",
-    "forecast.png": "forecast.webp",
+    "v2/unsealed.png": "unsealed.webp",
+    "v2/all.png": "all.webp",
+    "v2/love.png": "love.webp",
+    "v2/money.png": "money.webp",
+    "v2/work.png": "work.webp",
+    "v2/healing_moon.png": "healing.webp",
+    "v2/communication.png": "communication.webp",
+    "v2/fortune.png": "fortune.webp",
+    "v2/location.png": "location.webp",
+    "v2/forecast.png": "forecast.webp",
 }
 
 TARGET_SIZE = 256
