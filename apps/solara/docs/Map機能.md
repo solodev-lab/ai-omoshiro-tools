@@ -170,9 +170,10 @@ lib/screens/map/
   ├─ map_astro.dart        (375) — fetchChart + scoreAll
   ├─ map_constants.dart    (101) — dir16, カテゴリ色, 惑星メタデータ
   ├─ map_fortune_sheet.dart(323) — FortuneFilterLabel + FortuneSheet
-  ├─ map_menu_chips.dart   (2026-05-09 新設) — NavBar 直上 4 チップバー (⚙️/✨/📍/📈)
-  ├─ map_menu_sheets.dart  (2026-05-09 新設) — Display/Astro/Locations 統合 BottomSheet
-  ├─ map_overlays.dart     (短縮済) — 🔍 検索ボタン (単独) + 各種小オーバーレイ
+  ├─ map_menu_chips.dart   (2026-05-09) — NavBar 直上 4 チップバー (Daily Transit/運勢方位/LOCATIONS/予報) + Daily Transit halo
+  ├─ map_display_menu.dart (2026-05-09) — ☰表示ボタン展開 3階層タブメニュー (Map/惑星/ACG)
+  ├─ map_viewpoint_menu.dart (2026-05-09) — 📍地点ボタン展開 VIEWPOINT/LOCATIONS タブパネル + スロット管理
+  ├─ map_overlays.dart     (322) — 🔍 検索ボタン + ☰表示 + 📍地点 ボタン (3個に簡素化)
   ├─ map_planet_lines.dart (191) — 天体ライン描画
   ├─ map_search.dart       (360) — searchPlaces / SearchResultList / SearchFocusPopup
   ├─ map_sectors.dart      (176) — 16方位セクターポリゴン

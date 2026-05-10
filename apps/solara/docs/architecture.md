@@ -41,8 +41,9 @@ lib/ (約 80 .dart ファイル)
 │   │   ├── map_astro.dart, map_fortune_sheet.dart
 │   │   ├── map_planet_lines.dart, map_sectors.dart
 │   │   ├── map_constants.dart, map_widgets.dart
-│   │   ├── map_menu_chips.dart         (2026-05-09): NavBar 直上の 4 チップバー
-│   │   ├── map_menu_sheets.dart        (2026-05-09): Display/Astro/Locations 統合 BottomSheet
+│   │   ├── map_menu_chips.dart         (2026-05-09): NavBar 直上 4 チップ (Daily/運勢/LOC/予報) + halo
+│   │   ├── map_display_menu.dart       (2026-05-09): ☰表示ボタン展開 3階層タブメニュー (Map/惑星/ACG)
+│   │   ├── map_viewpoint_menu.dart     (2026-05-09): 📍地点ボタン展開 VIEWPOINT/LOCATIONS タブパネル
 │   │   ├── map_astro_lines.dart        Phase M2: アスペクト線 Polyline 変換 (FORTUNE 連動 dim)
 │   │   ├── map_relocation_popup.dart   Phase M2: 統合タップ popup (線情報+12ハウス情報)
 │   │   ├── map_styles.dart             タイル切替（OSM HOT × Light/Dark）
@@ -64,9 +65,9 @@ lib/ (約 80 .dart ファイル)
 │   │   │                                  5カテゴリ × 2相 = 10パターン行動指針
 │   │   ├── map_line_narrative_sheet.dart  Tier S #2 (2026-04-30): A*C*G ライン詳細シート
 │   │   │                                  静的辞書 → 「詳しく読む」→ Soft/Hard別表示
-│   │   └── map_overlays.dart           SideButtons/SearchBar/Badges/VP Pin/RestOverlay 等
-│   ├── locations_screen.dart   拠点一覧画面（Map 🗺ボタンから BottomSheet）
-│   ├── forecast_screen.dart    1〜5年 Forecast（Map 🔮ボタンから BottomSheet、ヒートマップ+◯◯期+Top5）
+│   │   └── map_overlays.dart           MapSideButtons (🔍/☰/📍 3個) + SearchBar + Badges + VP Pin + RestOverlay
+│   ├── locations_screen.dart   拠点一覧画面（下部 LOCATIONS チップから BottomSheet）
+│   ├── forecast_screen.dart    1〜5年 Forecast（下部 予報 チップから BottomSheet、ヒートマップ+◯◯期+Top5）
 │   ├── horoscope_screen.dart ホロスコープ State本体 + build （part で拡張）
 │   ├── horoscope/            ← Horoscope サブウィジェット
 │   │   │  ─── horoscope_screen.dart の part 拡張 ───
