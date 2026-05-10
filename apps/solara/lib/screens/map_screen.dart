@@ -1402,20 +1402,11 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                 activeCategory: _planetFilterCategory,
                 allPlanetMode: _astroLayers['aspectAll'] ?? false,
               )),
-            // 天頂点マーカー (CCG): 表示中の全フレームの zenith を描画。
-            // 動的フレーム (Transit/Prog/SArc) は時間で動くため CCG の核となる。
-            // ACGモードでは natal を強制ON、通常Mapでは toggle 状況に従う。
-            if (_zenithVisibleFrames().isNotEmpty && _astroLinesCache.isNotEmpty)
-              MarkerLayer(markers: buildAstroZenithMarkers(
-                lines: _astroLinesCache,
-                activeCategory: _planetFilterCategory,
-                allPlanetMode: _astroLayers['aspectAll'] ?? false,
-                framesWithZenith: _zenithVisibleFrames(),
-                onTap: (planetKey, frame, point) => setState(() {
-                  _zenithTapInfo = (planet: planetKey, frame: frame, point: point);
-                  _relocateTapPoint = null; // 排他: 線+ハウス popup を閉じる
-                }),
-              )),
+            // 天頂点マーカー本体は Stack 最前面の AstroZenithOverlay で
+            // 描画する (= タイル/メニュー等の上に出してタップ可能性を確保)。
+            // flutter_map 内の MarkerLayer は撤去済み (旧: ここで MarkerLayer
+            // 描画 → 画面下部の MapMenuChips に被って惑星がタップ不能になる
+            // 問題があった)。
             // 16方位ラベル: モード中は世界規模ビューでは意味を成さないので非表示
             if (!_astroCartoMode)
               MarkerLayer(markers: buildDirLabels(center: _center)),
@@ -1720,6 +1711,30 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
             onForecastTap: _openForecast,
           ),
         ),
+
+        // 天頂マーカーオーバーレイ: Stack の最前面 (タイル後・popup 前) に
+        // 配置することで、画面下部の MapMenuChips に被っても惑星マーカーが
+        // 上に出てタップ可能性を確保する。Map イベントストリームを listen
+        // して各惑星をリアルタイムに screen 座標へ追従させる。
+        if (_zenithVisibleFrames().isNotEmpty && _astroLinesCache.isNotEmpty)
+          Positioned.fill(
+            child: IgnorePointer(
+              ignoring: false,
+              child: AstroZenithOverlay(
+                mapCtrl: _mapCtrl,
+                entries: buildAstroZenithEntries(
+                  lines: _astroLinesCache,
+                  activeCategory: _planetFilterCategory,
+                  allPlanetMode: _astroLayers['aspectAll'] ?? false,
+                  framesWithZenith: _zenithVisibleFrames(),
+                  onTap: (planetKey, frame, point) => setState(() {
+                    _zenithTapInfo = (planet: planetKey, frame: frame, point: point);
+                    _relocateTapPoint = null; // 排他: 線+ハウス popup を閉じる
+                  }),
+                ),
+              ),
+            ),
+          ),
 
         // ── Fortune Sheet ──
         if (!_noProfile && _fortuneSheetOpen && !_astroCartoMode) Positioned(
