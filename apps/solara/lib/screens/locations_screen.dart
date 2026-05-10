@@ -100,14 +100,17 @@ class _LocationsScreenState extends State<LocationsScreen> {
     return _activeSectorScores;
   }
 
-  // 日付選択の許容範囲（showSolaraDatePicker と同じ）: 今日−10年 〜 今日+20年
+  // 日付選択の許容範囲（showSolaraDatePicker と同じ）: 今日−10年 〜 今日+20年。
+  // ローカル DateTime (JST 0:00) で持つ。DateTime.utc(...) で構築すると
+  // JST の年月日が UTC として再解釈され、9 時間ズレた境界になってしまう
+  // (JST 0..8 時帯で日付が 1 日早く弾かれる)。
   DateTime get _dateMin {
     final n = DateTime.now();
-    return DateTime.utc(n.year - 10, n.month, n.day);
+    return DateTime(n.year - 10, n.month, n.day);
   }
   DateTime get _dateMax {
     final n = DateTime.now();
-    return DateTime.utc(n.year + 20, n.month, n.day);
+    return DateTime(n.year + 20, n.month, n.day);
   }
 
   /// 表示用の現在の選択日時 (null なら今日 + 現在時刻)。
@@ -123,8 +126,10 @@ class _LocationsScreenState extends State<LocationsScreen> {
   int get _displayHourLocal => _displayDate.toLocal().hour;
 
   /// y/m/d オフセットで日付を移動。範囲外はクランプ。
+  /// 年月日抽出はローカル (.toLocal()) 基準で行う。UTC オブジェクトの
+  /// .year/.month/.day を直接読むと JST 0..8 時帯で 1 日ズレる。
   Future<void> _shiftDate({int years = 0, int months = 0, int days = 0}) async {
-    final base = _displayDate;
+    final base = _displayDate.toLocal();
     int newY = base.year + years;
     int newM = base.month + months;
     int newD = (years != 0 || months != 0) ? base.day : base.day + days;
@@ -142,11 +147,13 @@ class _LocationsScreenState extends State<LocationsScreen> {
     int newD = day.clamp(1, daysInMonth);
     // 既存の時刻 (local) を維持しつつ年月日のみ差し替え。
     final curHour = _displayHourLocal;
-    final newLocal = DateTime(newY, newM, newD, curHour, 0, 0);
-    var next = newLocal.toUtc();
-    if (next.isBefore(_dateMin)) next = _dateMin;
-    if (next.isAfter(_dateMax)) next = _dateMax;
-    await _setDate(next);
+    // 比較・clamp はローカル基準で統一 (_dateMin/Max もローカル)。
+    // 以前は newLocal.toUtc() を UTC の min/max と比較していたため、
+    // JST 0..8 時帯で境界がズレていた。
+    var newLocal = DateTime(newY, newM, newD, curHour, 0, 0);
+    if (newLocal.isBefore(_dateMin)) newLocal = _dateMin;
+    if (newLocal.isAfter(_dateMax)) newLocal = _dateMax;
+    await _setDate(newLocal.toUtc());
   }
 
   /// 時刻 (local hour 0..23) を絶対値で指定。年月日は維持。
