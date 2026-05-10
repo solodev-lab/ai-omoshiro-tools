@@ -554,7 +554,9 @@ class _ForecastScreenState extends State<ForecastScreen> {
     // 桁数違いでも揃って見えるようにする。年は見出し横の期間表示に集約。
     final monthLabel = int.parse(parts[1]).toString();
     return Padding(
-      padding: const EdgeInsets.only(bottom: 4),
+      // 行間は最低限 (1px)。タイル自体の vertical margin は持たないので、
+      // 隣接月のタイルが詰まって 1 年分の流れが読み取りやすくなる。
+      padding: const EdgeInsets.only(bottom: 1),
       child: Row(children: [
         SizedBox(
           width: 24,
@@ -586,8 +588,19 @@ class _ForecastScreenState extends State<ForecastScreen> {
         decoration: BoxDecoration(
           color: color,
           borderRadius: BorderRadius.circular(2),
+          // 選択タイルは白枠 + 淡い白 glow で他タイルから明確に浮かす。
+          // 下の詳細パネル冒頭に同じ色見本を出して視覚的に紐付ける。
           border: isSelected
-              ? Border.all(color: const Color(0xFFFFFFFF), width: 1)
+              ? Border.all(color: const Color(0xFFFFFFFF), width: 1.5)
+              : null,
+          boxShadow: isSelected
+              ? const [
+                  BoxShadow(
+                    color: Color(0x66FFFFFF),
+                    blurRadius: 4,
+                    spreadRadius: 0.5,
+                  ),
+                ]
               : null,
         ),
       ),
@@ -662,6 +675,19 @@ class _ForecastScreenState extends State<ForecastScreen> {
     if (d == null) return const SizedBox.shrink();
     final parts = d.date.split('-');
     final dateLabel = '${parts[0]}/${parts[1]}/${parts[2]}';
+    // ヒートマップ上で選んだタイルと同じ色を詳細パネル冒頭にスウォッチ表示。
+    // どの日を見ているか視覚的に直結させるための手がかり。
+    Color? swatchColor;
+    final cache = _cache;
+    if (cache != null && cache.days.isNotEmpty) {
+      double minV = double.infinity, maxV = -double.infinity;
+      for (final dd in cache.days) {
+        if (dd.overall < minV) minV = dd.overall;
+        if (dd.overall > maxV) maxV = dd.overall;
+      }
+      final range = (maxV - minV).abs() < 0.01 ? 1.0 : (maxV - minV);
+      swatchColor = _cellColor(d, minV, range);
+    }
     final fortune = d.topFortune;
     final fortuneLabel = fortune != null ? (categoryLabels[fortune] ?? fortune) : '—';
     final fortuneColor = fortune != null
@@ -681,6 +707,21 @@ class _ForecastScreenState extends State<ForecastScreen> {
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(children: [
+          // 選択タイルの色見本 (ヒートマップ上のタイルと同じ色)。
+          // 下の日付がどのタイルに対応するか視覚的に紐付ける。
+          if (swatchColor != null) ...[
+            Container(
+              width: 14,
+              height: 14,
+              decoration: BoxDecoration(
+                color: swatchColor,
+                borderRadius: BorderRadius.circular(3),
+                border: Border.all(
+                    color: const Color(0xCCFFFFFF), width: 1.2),
+              ),
+            ),
+            const SizedBox(width: 8),
+          ],
           // 左△: 1日前へ。日付リスト先頭で disable。
           _DayStepperButton(
             icon: Icons.arrow_left,
