@@ -119,6 +119,7 @@ class _StaticChip extends StatelessWidget {
           behavior: HitTestBehavior.opaque,
           onTap: onTap,
           child: Container(
+            height: 54,
             padding: const EdgeInsets.symmetric(vertical: 3),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(10),
@@ -132,11 +133,11 @@ class _StaticChip extends StatelessWidget {
                 ],
               ),
             ),
-            // 寸法 (2026-05-10 第三弾):
-            //   padding 3 + Image 32 + spacing 1 + Text fontSize 9 (~10.8) + padding 3 = 49.8
-            //   旧 53 just-fit 構成で Daily 側 Stack 構造の subpixel 由来 OVERFLOW
-            //   が再発したため、余裕を ~3px 確保。アイコンも 28→32 へ拡大、
-            //   ラベルは 10→9 に縮小 (オーナー要望「もっと大きく / もっと小さく」)。
+            // 寸法 (2026-05-10 第六弾 = 最終):
+            //   height: 54 で explicit 固定 → Daily/Static 両方完全に 54 で揃う。
+            //   child available = 54 − padding 6 − border 2 = 46 vs Column 43.8
+            //   → 2.2px 余裕で subpixel OVERFLOW を完全回避。
+            //   構成: Image 32 + spacing 1 + Text fontSize 9 (~10.8) = 43.8
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -212,52 +213,49 @@ class _DailyTransitChip extends StatelessWidget {
         child: GestureDetector(
           behavior: HitTestBehavior.opaque,
           onTap: disabled ? null : onTap,
-          // 構造 (2026-05-10 第四弾):
-          //   Stack { clipBehavior: Clip.none, children: [
-          //     Positioned (halo, -8 拡張),  // 描画順 = 背面
-          //     Container (non-positioned),  // ← Stack のサイズ基準
-          //   ]}
+          // 構造 (2026-05-10 第六弾 = 最終):
+          //   Container { decoration, padding, child: Stack {
+          //     Positioned (halo, padding+border 含む -12 拡張),  // 背面
+          //     Column (non-positioned),  // メインコンテンツ
+          //   }}
           //
-          // 旧 (Positioned.fill Container) では Stack が parent tight 制約
-          // (Row crossAxisAlignment.stretch 由来) を受け、Positioned.fill
-          // Container がその tight 高を埋めて just-fit となり、Column の
-          // intrinsic + padding の subpixel 計算で Daily 側だけ常時
-          // OVERFLOW していた。
+          // 第四/五弾 (Container を Stack の non-positioned 子に) では Stack
+          // の幅が Container intrinsic 幅 (32px) で shrink → Daily チップだけ
+          // 横幅が小さくなる副作用が出た。
           //
-          // 新構造: Container を non-positioned に置くと Stack のサイズは
-          // Container の intrinsic で決まる (Static chip と同じ) ため、
-          // child Column が padding 内に正しく収まる。halo は Positioned
-          // で外側 (−8) に拡張、clipBehavior: Clip.none で外周描画継続。
-          child: Stack(
-            clipBehavior: Clip.none,
-            children: [
-              // 1. halo を背面に (Positioned)
-              if (showHalo)
-                const Positioned(
-                  left: -8,
-                  right: -8,
-                  top: -8,
-                  bottom: -8,
-                  child: IgnorePointer(child: _ChipHalo()),
-                ),
-              // 2. Container を non-positioned で配置 (Static chip と同じ)
-              //
-              // border width を Static chip と完全一致 (1) で固定。
-              // 旧 unseen=1.4 だと IntrinsicHeight が Daily 側 intrinsic を
-              // max として採用 (52.6) し、Daily Container だけ tight ぴったり
-              // = just-fit で subpixel OVERFLOW していた。
-              // unseen 時の存在感は halo (背面発光) と border color (明金) で
-              // 表現するため、太さの差別化は不要。
-              Container(
-                padding: const EdgeInsets.symmetric(vertical: 3),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: borderColor, width: 1),
-                  gradient: fillGradient,
-                ),
-                // Static chip と完全一致する寸法:
-                //   padding 3 + Image 32 + spacing 1 + Text fontSize 9 (~10.8) + padding 3 = 49.8
-                child: Column(
+          // 最終構造: Static chip と外形を完全一致させ (Expanded > Padding >
+          // GestureDetector > Container)、Container 内側で Stack を使い
+          // halo + Column を配置。Container は parent (Expanded) の幅を
+          // 採用 → 4 chips が均等幅。Container の clipBehavior は default
+          // none なので halo (Positioned で -12 外側拡張) も問題なく外周描画。
+          child: Container(
+            height: 54,
+            // border width も Static と一致 (1)。unseen 時の存在感は halo +
+            // border color (明金) + gradient brightness で表現済。
+            padding: const EdgeInsets.symmetric(vertical: 3),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: borderColor, width: 1),
+              gradient: fillGradient,
+            ),
+            // 寸法 (Static chip と完全一致):
+            //   height: 54 で explicit 固定。child available = 54 − padding 6 − border 2 = 46
+            //   vs Column 43.8 → 2.2px 余裕で subpixel OVERFLOW 完全回避。
+            child: Stack(
+              clipBehavior: Clip.none,
+              alignment: Alignment.center,
+              children: [
+                // halo は Container の外側まで拡張 (padding 3 + border 1 + 追加 8 = -12)
+                if (showHalo)
+                  const Positioned(
+                    left: -12,
+                    right: -12,
+                    top: -12,
+                    bottom: -12,
+                    child: IgnorePointer(child: _ChipHalo()),
+                  ),
+                // メインコンテンツ (non-positioned で Stack のサイズ基準)
+                Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     // 表示分岐 (2026-05-10):
@@ -294,8 +292,8 @@ class _DailyTransitChip extends StatelessWidget {
                     ),
                   ],
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
