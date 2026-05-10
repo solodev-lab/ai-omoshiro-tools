@@ -240,6 +240,13 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   //       天頂点マーカー表示。情報密度を抑え世界規模ビューに集中させる。
   // 退避先: モード解除時に元の状態を完全復元する。
   bool _astroCartoMode = false;
+  // MapTimeSlider 制御用:
+  //   時刻行展開時に back ボタンで畳む処理を、 map_screen.dart の PopScope に
+  //   統合する。 GlobalKey で closeTimeRow() を呼び、 _timeRowExpanded で
+  //   状態を反映 (PopScope.canPop の再計算を trigger するため map_screen.dart
+  //   の state として保持)。 MapTimeSlider 側は onExpandedChanged で通知。
+  final GlobalKey<MapTimeSliderState> _timeSliderKey = GlobalKey<MapTimeSliderState>();
+  bool _timeRowExpanded = false;
   LatLng? _savedCenter;
   double? _savedZoom;
   Map<String, bool>? _savedLayers;
@@ -1205,19 +1212,23 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     //   1. Daily Transit popup
     //   2. Fortune Sheet (運勢方位)
     //   3. Zenith popup (天頂タップ、 ACG モード中にも開く)
-    //      ACG モード中なら zenith 閉じても ACG は維持 (= ACG に戻る)。
-    //   4. ACG (Astro*Carto*Graphy) モード
-    //   5. 表示メニュー / 地点メニュー (左サイド展開メニュー)
-    //   6. 検索バー (= _searchOpen / focus / hits を一括クリア)
+    //   4. Relocation popup (ACG line tap、 Stack ベース)
+    //      → ACG モード中なら閉じても ACG は維持 (= ACG に戻る)
+    //   5. 時刻バー展開 (MapTimeSlider 内 _timeRowExpanded、 GlobalKey 経由制御)
+    //   6. ACG (Astro*Carto*Graphy) モード
+    //   7. 表示メニュー / 地点メニュー (左サイド展開メニュー)
+    //   8. 検索バー (= _searchOpen / focus / hits を一括クリア)
     //
     // 注: 以下は Navigator stack (showDialog / showModalBottomSheet) に
     // 乗っているため Flutter 標準で back 自動処理される (この PopScope 不要):
-    //   - Line tap 説明 (MapLineNarrativeSheet)
+    //   - showLineNarrativeSheet (相 narrative 詳細 modal sheet)
     //   - showInfoPopup 各種
     final hasSearchUi = _searchOpen || _searchFocus != null || _searchHits.isNotEmpty;
     final hasOverlay = _dailyTransitOpen ||
         _fortuneSheetOpen ||
         _zenithTapInfo != null ||
+        _relocateTapPoint != null ||
+        _timeRowExpanded ||
         _astroCartoMode ||
         _displayMenuOpen ||
         _viewpointMenuOpen ||
@@ -1233,6 +1244,10 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
           setState(() => _fortuneSheetOpen = false);
         } else if (_zenithTapInfo != null) {
           setState(() => _zenithTapInfo = null);
+        } else if (_relocateTapPoint != null) {
+          setState(() => _relocateTapPoint = null);
+        } else if (_timeRowExpanded) {
+          _timeSliderKey.currentState?.closeTimeRow();
         } else if (_astroCartoMode) {
           _exitAstroCartoMode();
         } else if (_displayMenuOpen) {
@@ -1478,7 +1493,10 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
               // 日付タイムスライダー (常時表示)
               // ◀▶ 1日ステッパ + ±365日スライダー + NOW + ⏰ で時刻行展開
               MapTimeSlider(
+                key: _timeSliderKey,
                 date: _selectedDate,
+                onExpandedChanged: (e) =>
+                    setState(() => _timeRowExpanded = e),
                 onCommit: (d) async {
                   setState(() => _selectedDate = d);
                   await _loadProfileAndChart(targetDate: d);

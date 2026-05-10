@@ -19,18 +19,42 @@ class MapTimeSlider extends StatefulWidget {
   final DateTime? date;
   /// commit 時に呼ばれる: null=今日 LIVE、それ以外は具体UTC日時 (時刻含む)
   final ValueChanged<DateTime?> onCommit;
+  /// 時刻行展開状態が変化した時に呼ばれる (省略可、true=展開、false=畳む)。
+  /// map_screen.dart の back ハンドラが PopScope.canPop を再計算するために使う。
+  final ValueChanged<bool>? onExpandedChanged;
 
   const MapTimeSlider({
     super.key,
     required this.date,
     required this.onCommit,
+    this.onExpandedChanged,
   });
 
   @override
-  State<MapTimeSlider> createState() => _MapTimeSliderState();
+  State<MapTimeSlider> createState() => MapTimeSliderState();
 }
 
-class _MapTimeSliderState extends State<MapTimeSlider> {
+/// public State: GlobalKey 経由で map_screen.dart の PopScope から
+/// 時刻行展開を制御する (back 押下時に畳む) ため public 化。
+class MapTimeSliderState extends State<MapTimeSlider> {
+  /// 時刻行が展開中か (外部参照用)
+  bool get isTimeRowExpanded => _timeRowExpanded;
+
+  /// 時刻行が開いていれば閉じる。 開いていなければ何もしない。
+  /// map_screen.dart の back ハンドラから呼ばれる。
+  void closeTimeRow() {
+    if (_timeRowExpanded) {
+      setState(() => _timeRowExpanded = false);
+      widget.onExpandedChanged?.call(false);
+    }
+  }
+
+  void _setTimeRowExpanded(bool v) {
+    if (_timeRowExpanded == v) return;
+    setState(() => _timeRowExpanded = v);
+    widget.onExpandedChanged?.call(v);
+  }
+
   static const _rangeDays = 365.0; // ±1年
 
   // 上段ドラフト (日数オフセット、ドラッグ中のみ非null)
@@ -197,42 +221,34 @@ class _MapTimeSliderState extends State<MapTimeSlider> {
     //   - 矢印位置は 56→64 で 8px 外側にシフト
     //   - NOW バッジは内部で textScaler.noScaling 維持 (44px に収めるため)
     //
-    // 2026-05-10: 時刻行展開中 (= _timeRowExpanded) は端末 back で展開を畳む。
-    //   PopScope の AND 評価で map_screen 側の overlay PopScope と協調。
-    return PopScope(
-      canPop: !_timeRowExpanded,
-      onPopInvokedWithResult: (didPop, _) {
-        if (didPop) return;
-        if (_timeRowExpanded) {
-          setState(() => _timeRowExpanded = false);
-        }
-      },
-      child: Container(
-        padding: const EdgeInsets.fromLTRB(8, 4, 6, 4),
-        decoration: BoxDecoration(
-          color: const Color(0xE60C0C1A),
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: const Color(0x33C9A84C)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // ── 上段: 日付コントロール ──
-            _buildDayRow(dayValue, preview, isLive),
-            // ── 下段: 時刻コントロール (折りたたみ可能) ──
-            AnimatedSize(
-              duration: const Duration(milliseconds: 180),
-              curve: Curves.easeOut,
-              alignment: Alignment.topCenter,
-              child: _timeRowExpanded
-                  ? Padding(
-                      padding: const EdgeInsets.only(top: 4),
-                      child: _buildHourRow(hourValue),
-                    )
-                  : const SizedBox.shrink(),
-            ),
-          ],
-        ),
+    // 2026-05-10: 時刻行展開時の back ボタン処理は map_screen.dart の
+    //   PopScope に統合 (GlobalKey<MapTimeSliderState> で closeTimeRow() を呼ぶ)。
+    //   旧: 本 widget 内の PopScope が動作しないケースがあったため撤去。
+    return Container(
+      padding: const EdgeInsets.fromLTRB(8, 4, 6, 4),
+      decoration: BoxDecoration(
+        color: const Color(0xE60C0C1A),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0x33C9A84C)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // ── 上段: 日付コントロール ──
+          _buildDayRow(dayValue, preview, isLive),
+          // ── 下段: 時刻コントロール (折りたたみ可能) ──
+          AnimatedSize(
+            duration: const Duration(milliseconds: 180),
+            curve: Curves.easeOut,
+            alignment: Alignment.topCenter,
+            child: _timeRowExpanded
+                ? Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: _buildHourRow(hourValue),
+                  )
+                : const SizedBox.shrink(),
+          ),
+        ],
       ),
     );
   }
@@ -328,7 +344,7 @@ class _MapTimeSliderState extends State<MapTimeSlider> {
       const SizedBox(width: 4),
       // 時刻行展開トグル
       GestureDetector(
-        onTap: () => setState(() => _timeRowExpanded = !_timeRowExpanded),
+        onTap: () => _setTimeRowExpanded(!_timeRowExpanded),
         behavior: HitTestBehavior.opaque,
         child: Container(
           width: 28, height: 28,
