@@ -1203,13 +1203,15 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     //
     // 優先順位 (上から処理):
     //   1. Daily Transit popup
-    //   2. ACG (Astro*Carto*Graphy) モード
-    //   3. 表示メニュー / 地点メニュー (左サイド展開メニュー)
-    //   4. 検索 focus
-    //   5. 検索結果リスト
+    //   2. Fortune Sheet (運勢方位)
+    //   3. ACG (Astro*Carto*Graphy) モード
+    //   4. 表示メニュー / 地点メニュー (左サイド展開メニュー)
+    //   5. 検索 focus
+    //   6. 検索結果リスト
     //
     // 全部 false の時のみ canPop=true → main.dart PopScope に渡る。
     final hasOverlay = _dailyTransitOpen ||
+        _fortuneSheetOpen ||
         _astroCartoMode ||
         _displayMenuOpen ||
         _viewpointMenuOpen ||
@@ -1222,6 +1224,8 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
         // 上から順に 1 つだけ閉じる (back 1 回 = overlay 1 つ閉じる)
         if (_dailyTransitOpen) {
           _onDailyTransitClose();
+        } else if (_fortuneSheetOpen) {
+          setState(() => _fortuneSheetOpen = false);
         } else if (_astroCartoMode) {
           _exitAstroCartoMode();
         } else if (_displayMenuOpen) {
