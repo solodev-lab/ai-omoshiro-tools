@@ -113,10 +113,11 @@ class _SolaraHomeState extends State<SolaraHome> {
     //   - Map タブ → アプリを閉じる (= 通常の root pop = SystemNavigator.pop)
     // タブ内で Navigator.push された sub-screen (LocationsScreen 等) は、
     // この PopScope より内側の Navigator で先に pop されるため干渉しない。
+    debugPrint('[Solara PopScope] BUILD canPop=${_currentIndex == 0} tab=$_currentIndex');
     return PopScope(
       canPop: _currentIndex == 0,
       onPopInvokedWithResult: (didPop, result) {
-        debugPrint('[Solara PopScope] tab=$_currentIndex didPop=$didPop');
+        debugPrint('[Solara PopScope] CALLBACK tab=$_currentIndex didPop=$didPop');
         if (didPop) return;
         if (_currentIndex != 0) {
           _onTabTap(0);
