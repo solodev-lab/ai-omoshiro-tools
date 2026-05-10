@@ -421,29 +421,36 @@ class _FullMoonOverlayState extends State<FullMoonOverlay>
         children: [
           Text(emoji, style: const TextStyle(fontSize: 26)),
           const SizedBox(width: 14),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                labelJP,
-                style: TextStyle(
-                  color: isSelected
-                      ? SolaraColors.solaraGold
-                      : SolaraColors.textPrimary,
-                  fontSize: 16,
-                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+          // Column を Expanded で囲んで Row の残幅を割り当てる。
+          // 旧: 直接 Column → 内容の自然幅が容器を超えてフォント拡大時に
+          // 「まだ取り組んでいる」「Still working on it」が RIGHT OVERFLOWED
+          // していた。Expanded 化で Text は softWrap で 2 行に逃げる。
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  labelJP,
+                  style: TextStyle(
+                    color: isSelected
+                        ? SolaraColors.solaraGold
+                        : SolaraColors.textPrimary,
+                    fontSize: 16,
+                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                labelEN,
-                style: const TextStyle(
-                  color: SolaraColors.textSecondary,
-                  fontSize: 12,
-                  letterSpacing: 0.5,
+                const SizedBox(height: 2),
+                Text(
+                  labelEN,
+                  style: const TextStyle(
+                    color: SolaraColors.textSecondary,
+                    fontSize: 12,
+                    letterSpacing: 0.5,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ],
       ),
