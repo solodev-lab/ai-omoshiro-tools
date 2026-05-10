@@ -3,6 +3,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show Clipboard, ClipboardData;
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import '../utils/solara_api.dart' show solaraWorkerBase;
@@ -89,9 +90,10 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   final TextEditingController _searchCtrl = TextEditingController();
 
   // Layer visibility
+  // 'coords': 画面中央に十字 + 緯度経度を常時表示 (Map L2 メニュー「座標取得」)。
   final Map<String, bool> _layers = {
     'sectors': true, 'compass': true, 'transit': true,
-    'natal': false, 'progressed': false,
+    'natal': false, 'progressed': false, 'coords': false,
   };
 
   // Fortune category / source
@@ -1468,6 +1470,82 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
           child: SafeArea(
             top: false, left: false, right: false,
             child: Stack(children: [
+
+        // ── 座標取得オーバーレイ (Map L2「座標取得」トグル ON 時) ──
+        // 画面中央に十字 + 緯度経度ラベルを常時表示。地図を動かすと
+        // mapEventStream 経由で再描画され、リアルタイムに座標が追従する。
+        // ラベルタップでクリップボードにコピー。
+        // ACG モードでは中心の概念が薄れるため非表示 (VP ピンと同方針)。
+        if ((_layers['coords'] ?? false) && !_astroCartoMode)
+          Positioned.fill(
+            child: StreamBuilder<MapEvent>(
+              stream: _mapCtrl.mapEventStream,
+              builder: (ctx, _) {
+                final c = _mapCtrl.camera.center;
+                final coordsText =
+                    '${c.latitude.toStringAsFixed(5)}, ${c.longitude.toStringAsFixed(5)}';
+                return Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // 十字マーカー (タップ通す: 地図ドラッグ可能)
+                      IgnorePointer(
+                        child: SizedBox(
+                          width: 28, height: 28,
+                          child: Stack(children: [
+                            Center(child: Container(
+                              width: 2, height: 28,
+                              color: const Color(0xCCC9A84C))),
+                            Center(child: Container(
+                              width: 28, height: 2,
+                              color: const Color(0xCCC9A84C))),
+                            Center(child: Container(
+                              width: 6, height: 6,
+                              decoration: const BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: Color(0xFFC9A84C)))),
+                          ]),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      // 座標ラベル (タップでコピー)
+                      GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onTap: () async {
+                          await Clipboard.setData(
+                              ClipboardData(text: coordsText));
+                          if (!ctx.mounted) return;
+                          ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(
+                            content: Text('座標をコピー: $coordsText'),
+                            duration: const Duration(seconds: 2),
+                          ));
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: const Color(0xCC0C0C16),
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(
+                                color: const Color(0x66C9A84C)),
+                          ),
+                          child: Text(
+                            coordsText,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Color(0xFFE9D29A),
+                              fontFamily: 'monospace',
+                              letterSpacing: 0.4,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
 
         // ── FF Label (スコアバー) + 日付タイムスライダーを縦 stack ──
         // 2026-05-08: 端末フォントサイズ拡大でバーの高さが変わって干渉する
