@@ -77,17 +77,17 @@ class MapMenuChips extends StatelessWidget {
               ),
               _StaticChip(
                 iconAsset: 'fortune',
-                label: '運勢方位',
+                label: 'Fortune',
                 onTap: onFortuneTap,
               ),
               _StaticChip(
                 iconAsset: 'location',
-                label: 'LOCATIONS',
+                label: 'Locations',
                 onTap: onLocationsTap,
               ),
               _StaticChip(
                 iconAsset: 'forecast',
-                label: '予報',
+                label: 'Forecast',
                 onTap: onForecastTap,
               ),
             ],
@@ -119,7 +119,7 @@ class _StaticChip extends StatelessWidget {
           behavior: HitTestBehavior.opaque,
           onTap: onTap,
           child: Container(
-            padding: const EdgeInsets.symmetric(vertical: 8),
+            padding: const EdgeInsets.symmetric(vertical: 6),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(10),
               border: Border.all(color: const Color(0x33C9A84C)),
@@ -132,25 +132,29 @@ class _StaticChip extends StatelessWidget {
                 ],
               ),
             ),
+            // 寸法 (2026-05-10 第二弾調整):
+            //   padding 6 + Image 28 + spacing 1 + Text fontSize 10 (line height ~12) + padding 6 = 53
+            //   旧 54.4 構成で 0.8px OVERFLOW していたため縦幅を ~1.4px 詰めた。
+            //   ラベルは英字化 (Fortune/Locations/Forecast) で下部 NavBar と統一感を出す。
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Image.asset(
                   'assets/menu_icons/$iconAsset.webp',
-                  width: 22,
-                  height: 22,
+                  width: 28,
+                  height: 28,
                   fit: BoxFit.contain,
                   filterQuality: FilterQuality.medium,
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: 1),
                 Text(
                   label,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
-                    fontSize: 12,
+                    fontSize: 10,
                     color: Color(0xFFC9A84C),
-                    letterSpacing: 0.6,
+                    letterSpacing: 0.3,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -231,45 +235,47 @@ class _DailyTransitChip extends StatelessWidget {
                 ),
               Positioned.fill(
                 child: Container(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  padding: const EdgeInsets.symmetric(vertical: 6),
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(10),
                     border: Border.all(color: borderColor, width: unseen ? 1.4 : 1),
                     gradient: fillGradient,
                   ),
+                  // Static chip と完全一致する寸法:
+                  //   padding 6 + Image 28 + spacing 1 + Text fontSize 10 (~12) + padding 6 = 53
                   child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     // 表示分岐 (2026-05-10):
-                    //  - disabled (プロフィール未設定): 🌱 emoji (現状維持)
+                    //  - disabled (プロフィール未設定): 🌱 emoji (28pt 表示)
                     //  - unseen (未開封): unsealed.webp (9芒星アンティーク章)
                     //    → 答えがまだ見えていないことを象徴。halo は外側で別途発光
                     //  - seen (開封済): topCategory に応じた CategoryIcon
                     //    → 今日の追い風カテゴリを示す
                     if (disabled)
-                      const Text('🌱', style: TextStyle(fontSize: 18))
+                      const Text('🌱', style: TextStyle(fontSize: 28))
                     else if (unseen)
                       Image.asset(
                         'assets/menu_icons/unsealed.webp',
-                        width: 22,
-                        height: 22,
+                        width: 28,
+                        height: 28,
                         fit: BoxFit.contain,
                         filterQuality: FilterQuality.medium,
                       )
                     else
-                      CategoryIcon(kind: iconKind, size: 22),
-                    const SizedBox(height: 2),
+                      CategoryIcon(kind: iconKind, size: 28),
+                    const SizedBox(height: 1),
                     Text(
                       'Daily',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                        fontSize: 12,
+                        fontSize: 10,
                         color: unseen
                             ? const Color(0xFFFFE99A)
                             : const Color(0xFFC9A84C),
-                        letterSpacing: 0.6,
+                        letterSpacing: 0.3,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
