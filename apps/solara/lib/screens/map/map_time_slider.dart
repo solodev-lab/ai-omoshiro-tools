@@ -64,13 +64,16 @@ class MapTimeSliderState extends State<MapTimeSlider> {
   // 下段展開状態
   bool _timeRowExpanded = false;
 
-  /// widget.date を「今日からの日数オフセット」に変換 (null=0)
+  /// widget.date を「今日からの日数オフセット」に変換 (null=0)。
+  /// 日付境界は端末ローカル (JST) で判定する。UTC で計算すると
+  /// JST 0..8 時 = UTC 前日 となり、JST 9 時で日付ラベルが進んでしまう。
   double _committedDays() {
     final d = widget.date;
     if (d == null) return 0;
-    final today = DateTime.now().toUtc();
-    final pivot = DateTime.utc(today.year, today.month, today.day);
-    final picked = DateTime.utc(d.year, d.month, d.day);
+    final nowLocal = DateTime.now();
+    final pivot = DateTime(nowLocal.year, nowLocal.month, nowLocal.day);
+    final dl = d.toLocal();
+    final picked = DateTime(dl.year, dl.month, dl.day);
     return picked.difference(pivot).inDays.toDouble();
   }
 
@@ -88,19 +91,20 @@ class MapTimeSliderState extends State<MapTimeSlider> {
     return (d.toLocal().minute ~/ 10) * 10;
   }
 
-  /// 表示用の (日付 + 時刻) JST
+  /// 表示用の (日付 + 時刻) JST。
+  /// base はローカル日付の 00:00 で取り、そこに dayOffset 日を足す。
+  /// UTC 経由で .toLocal() すると JST 0..8 時帯で日付が 1 日ずれる。
   DateTime _previewDateJst() {
     final dayOffset = (_draftDays ?? _committedDays()).round();
     final hourJst = (_draftHour ?? _committedHourJst().toDouble()).round();
-    final today = DateTime.now().toUtc();
-    final base = DateTime.utc(today.year, today.month, today.day);
-    final utc = base.add(Duration(days: dayOffset));
-    // base+dayOffset = 該当日 00:00 UTC、これを JST 表示で hour 上書き
-    final local = utc.toLocal();
-    return DateTime(local.year, local.month, local.day, hourJst, 0, 0);
+    final nowLocal = DateTime.now();
+    final base = DateTime(nowLocal.year, nowLocal.month, nowLocal.day);
+    final picked = base.add(Duration(days: dayOffset));
+    return DateTime(picked.year, picked.month, picked.day, hourJst, 0, 0);
   }
 
-  /// 日数オフセットを commit (時刻部分は既存値を維持)
+  /// 日数オフセットを commit (時刻部分は既存値を維持)。
+  /// 日付計算はローカル (JST) で行い、最後に toUtc() して外に渡す。
   void _commitDays(double days) {
     final rounded = days.round();
     final existingHourJst = _committedHourJst();
@@ -109,12 +113,11 @@ class MapTimeSliderState extends State<MapTimeSlider> {
       widget.onCommit(null);
       return;
     }
-    final today = DateTime.now().toUtc();
-    final base = DateTime.utc(today.year, today.month, today.day);
-    final pickedUtc = base.add(Duration(days: rounded));
-    final pickedLocal = pickedUtc.toLocal();
+    final nowLocal = DateTime.now();
+    final base = DateTime(nowLocal.year, nowLocal.month, nowLocal.day);
+    final picked = base.add(Duration(days: rounded));
     final localDt = DateTime(
-      pickedLocal.year, pickedLocal.month, pickedLocal.day,
+      picked.year, picked.month, picked.day,
       existingHourJst, 0, 0,
     );
     widget.onCommit(localDt.toUtc());
