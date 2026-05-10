@@ -61,19 +61,14 @@ class MapMenuChips extends StatelessWidget {
       child: SafeArea(
         top: false,
         bottom: false,
-        // chip bar 内は text scale を 1.0 でクランプ:
-        //   main.dart 全体で 1.5 クランプ済みだが、4つの小型 chip は固定寸法
-        //   (height 54、icon 32、label 9pt) で intrinsic レイアウトしているため、
-        //   textScale 1.5 だと label が 13.5pt = line height ~16.2 まで膨張し、
-        //   Container child available (46px) を超えて全 chip OVERFLOW する。
-        //   chip 内のラベルは英字 5-8 文字の極短ラベルなので拡大不要と判断。
-        //   (map_fortune_sheet.dart のスコアバーは 1.3 クランプの前例あり)
-        child: MediaQuery.withClampedTextScaling(
-          maxScaleFactor: 1.0,
-          child: IntrinsicHeight(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
+        // IntrinsicHeight + stretch で全チップに有限 tight vertical 制約を渡す。
+        // Container.height 60 を両 chip に固定 → textScale 1.5 (main.dart 全体
+        // クランプ上限) でも label line height ~16.2 が padding 内に収まる
+        // (60 − padding 6 − border 2 = 52 vs Column intrinsic 49.2、余裕 2.8px)。
+        child: IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
               _DailyTransitChip(
                 unseen: dailyTransitUnseen,
                 disabled: dailyTransitDisabled,
@@ -96,7 +91,6 @@ class MapMenuChips extends StatelessWidget {
                 onTap: onForecastTap,
               ),
             ],
-          ),
           ),
         ),
       ),
@@ -125,7 +119,7 @@ class _StaticChip extends StatelessWidget {
           behavior: HitTestBehavior.opaque,
           onTap: onTap,
           child: Container(
-            height: 54,
+            height: 60,
             padding: const EdgeInsets.symmetric(vertical: 3),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(10),
@@ -235,7 +229,7 @@ class _DailyTransitChip extends StatelessWidget {
           // 採用 → 4 chips が均等幅。Container の clipBehavior は default
           // none なので halo (Positioned で -12 外側拡張) も問題なく外周描画。
           child: Container(
-            height: 54,
+            height: 60,
             // border width も Static と一致 (1)。unseen 時の存在感は halo +
             // border color (明金) + gradient brightness で表現済。
             padding: const EdgeInsets.symmetric(vertical: 3),
