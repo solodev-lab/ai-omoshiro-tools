@@ -141,12 +141,17 @@ class _PopupBody extends StatelessWidget {
           behavior: HitTestBehavior.opaque,
           child: const Padding(
             padding: EdgeInsets.fromLTRB(8, 8, 8, 8),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.end,
+            // フォント拡大時に Row の固定 mainAxisSize.max + 右寄せでは
+            // テキスト末尾が画面端を超えて RIGHT OVERFLOWED になっていた。
+            // Wrap に切り替え、幅不足時はアイコンと文字が次行に折り返す。
+            child: Wrap(
+              alignment: WrapAlignment.end,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              spacing: 5,
+              runSpacing: 4,
               children: [
                 Icon(Icons.info_outline,
                     size: 16, color: Color(0xCCAAAAAA)),
-                SizedBox(width: 5),
                 Text(
                   '2つのエネルギーについて',
                   style: TextStyle(
