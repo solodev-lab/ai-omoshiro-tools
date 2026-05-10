@@ -107,6 +107,13 @@ class MapRelocationPopup extends StatelessWidget {
       mcSignTo = _signOf(relocated.mc);
     }
 
+    final mq = MediaQuery.of(context);
+    // 端末フォント拡大時にコンテンツが伸びても画面上端を突き抜けないよう、
+    // 画面高さの 70% で上限を切り、その内側を SingleChildScrollView で
+    // スクロール可能にする。
+    // 旧: Positioned(bottom: 0) + Column(mainAxisSize: min) + 高さ制限なし
+    //   で、長文時に上端が status bar を突き抜けてスクロール不能だった。
+    final maxH = (mq.size.height - mq.padding.top) * 0.7;
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
@@ -114,28 +121,31 @@ class MapRelocationPopup extends StatelessWidget {
         borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
         border: Border.all(color: const Color(0x33C9A84C)),
       ),
+      constraints: BoxConstraints(maxHeight: maxH),
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildHeader(showHouses: showHouses, hasLines: hasLines),
-          if (hasLines) ...[
-            const SizedBox(height: 10),
-            _buildLinesSection(context, nearbyLines!),
-          ],
-          if (showHouses && relocated != null) ...[
-            if (hasLines)
-              const Divider(color: Color(0x22FFFFFF), height: 18)
-            else
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildHeader(showHouses: showHouses, hasLines: hasLines),
+            if (hasLines) ...[
               const SizedBox(height: 10),
-            _buildAngleRow('ASC', ascSignFrom, ascSignTo),
-            const SizedBox(height: 4),
-            _buildAngleRow('MC', mcSignFrom, mcSignTo),
-            const Divider(color: Color(0x22FFFFFF), height: 18),
-            _buildPlanetGrid(relocated.houses),
+              _buildLinesSection(context, nearbyLines!),
+            ],
+            if (showHouses && relocated != null) ...[
+              if (hasLines)
+                const Divider(color: Color(0x22FFFFFF), height: 18)
+              else
+                const SizedBox(height: 10),
+              _buildAngleRow('ASC', ascSignFrom, ascSignTo),
+              const SizedBox(height: 4),
+              _buildAngleRow('MC', mcSignFrom, mcSignTo),
+              const Divider(color: Color(0x22FFFFFF), height: 18),
+              _buildPlanetGrid(relocated.houses),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }
