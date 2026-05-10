@@ -266,7 +266,10 @@ class GalaxyScreenState extends State<GalaxyScreen>
       }
     }
 
-    final cycleId = '${cycleStart.year}-${cycleStart.month.toString().padLeft(2, '0')}';
+    // cycleStart は JST 当日 0:00 を UTC instant にしたもの。
+    // .year/.month を直接読むと UTC 視点になり月またぎでズレるため、必ず .toLocal() 経由。
+    final csLocal = cycleStart.toLocal();
+    final cycleId = '${csLocal.year}-${csLocal.month.toString().padLeft(2, '0')}';
     final intention = await SolaraStorage.loadIntention(cycleId);
 
     // ── サンプルデータ注入（デモ用） ──
@@ -744,7 +747,7 @@ class GalaxyScreenState extends State<GalaxyScreen>
   /// 満月トリガー: 意図が無ければダミーをセット → `if (isFullMoon)` ブロックの下流を実行
   void _debugTriggerFullMoon() {
     _currentIntention ??= LunarIntention(
-      cycleId: '${_cycleStart.year}-${_cycleStart.month.toString().padLeft(2, '0')}',
+      cycleId: '${_cycleStart.toLocal().year}-${_cycleStart.toLocal().month.toString().padLeft(2, '0')}',
       chosenText: 'Self-doubt',
       chosenTextJP: '自己不信',
       chosenAt: _cycleStart,
@@ -762,7 +765,7 @@ class GalaxyScreenState extends State<GalaxyScreen>
     await _debugTriggerCycleCompletion();
     // 2. 意図ダミー (満月中間記録あり)
     _currentIntention ??= LunarIntention(
-      cycleId: '${_cycleStart.year}-${_cycleStart.month.toString().padLeft(2, '0')}',
+      cycleId: '${_cycleStart.toLocal().year}-${_cycleStart.toLocal().month.toString().padLeft(2, '0')}',
       chosenText: 'Self-doubt',
       chosenTextJP: '自己不信',
       chosenAt: _cycleStart,
@@ -835,7 +838,8 @@ class GalaxyScreenState extends State<GalaxyScreen>
   // ====================== MOON OVERLAYS ======================
 
   Widget _buildMoonOverlay() {
-    final cycleId = '${_cycleStart.year}-${_cycleStart.month.toString().padLeft(2, '0')}';
+    final csLocal = _cycleStart.toLocal();
+    final cycleId = '${csLocal.year}-${csLocal.month.toString().padLeft(2, '0')}';
     final month = DateTime.now().month;
 
     switch (_activeOverlay) {
