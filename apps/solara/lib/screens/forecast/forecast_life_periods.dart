@@ -12,6 +12,16 @@ const Map<String, (String, String)> lifePeriodLabels = {
   'communication': ('発信期', '💬'),
 };
 
+/// 英語ロケール用カテゴリラベル (短い 1 単語に揃える。
+/// 行内の固定幅 (98px) で太字表示しても 1 行に収まる範囲)。
+const Map<String, String> lifePeriodLabelsEn = {
+  'love':          'Love',
+  'money':         'Wealth',
+  'healing':       'Healing',
+  'work':          'Work',
+  'communication': 'Voice',
+};
+
 /// 「◯◯期」セクション — 永続保存された運勢サイクルを表示
 /// - カテゴリ毎に1件（end >= today の最初の期間）を表示
 /// - 過去のみのカテゴリは非表示
@@ -80,8 +90,11 @@ class ForecastLifePeriodsSection extends StatelessWidget {
     if (idx < 0) idx = list.length - 1;
     final p = list[idx];
 
+    final isJP = Localizations.localeOf(context).languageCode == 'ja';
     final label = lifePeriodLabels[cat];
-    final (name, emoji) = label ?? (cat, '✨');
+    final (jaName, emoji) = label ?? (cat, '✨');
+    // 表示名は ja/en 切替。英語ラベル未定義カテゴリは ja にフォールバック。
+    final name = isJP ? jaName : (lifePeriodLabelsEn[cat] ?? jaName);
     final color = categoryColors[cat] ?? const Color(0xFFC9A84C);
     final startLabel = '${p.start.month}/${p.start.day.toString().padLeft(2, "0")}';
     final endLabel = '${p.end.month}/${p.end.day.toString().padLeft(2, "0")}';
@@ -91,14 +104,32 @@ class ForecastLifePeriodsSection extends StatelessWidget {
       child: Row(children: [
         SizedBox(width: 24,
             child: Text(emoji, style: const TextStyle(fontSize: 14))),
-        SizedBox(width: 62,
-            child: Text(name,
-                style: TextStyle(fontSize: 12, color: color, fontWeight: FontWeight.w600))),
+        // カテゴリ名は 1 行強制 (旧: 62px 幅で「豊かさ期」が 2 行に折返す
+        // 端末があった)。ja/en の最大長 (「Healing」など) を踏まえ 80px に
+        // 拡張、softWrap: false + ellipsis で 1 行を確定。
+        SizedBox(
+          width: 80,
+          child: Text(
+            name,
+            maxLines: 1,
+            softWrap: false,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: 12,
+              color: color,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
         Expanded(child: Text('$startLabel 〜 $endLabel',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: const TextStyle(fontSize: 11, color: Color(0xFFE8E0D0)))),
         SizedBox(width: 50,
-            child: Text('${p.days}日間',
+            child: Text(isJP ? '${p.days}日間' : '${p.days}d',
                 textAlign: TextAlign.right,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
                 style: const TextStyle(fontSize: 10, color: Color(0xFF888888)))),
         if (onJumpToDate != null) IconButton(
           icon: const Icon(Icons.map_outlined, size: 16, color: Color(0xFF888888)),
