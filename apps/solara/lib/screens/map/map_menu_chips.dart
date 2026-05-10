@@ -241,11 +241,18 @@ class _DailyTransitChip extends StatelessWidget {
                   child: IgnorePointer(child: _ChipHalo()),
                 ),
               // 2. Container を non-positioned で配置 (Static chip と同じ)
+              //
+              // border width を Static chip と完全一致 (1) で固定。
+              // 旧 unseen=1.4 だと IntrinsicHeight が Daily 側 intrinsic を
+              // max として採用 (52.6) し、Daily Container だけ tight ぴったり
+              // = just-fit で subpixel OVERFLOW していた。
+              // unseen 時の存在感は halo (背面発光) と border color (明金) で
+              // 表現するため、太さの差別化は不要。
               Container(
                 padding: const EdgeInsets.symmetric(vertical: 3),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: borderColor, width: unseen ? 1.4 : 1),
+                  border: Border.all(color: borderColor, width: 1),
                   gradient: fillGradient,
                 ),
                 // Static chip と完全一致する寸法:
