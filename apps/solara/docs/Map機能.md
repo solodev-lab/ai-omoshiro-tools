@@ -217,3 +217,116 @@ lib/utils/
 - カメラリセット問題解消: `_hasInitialCenter` フラグ導入（VP 切替後の日付変更で VP を保持）
 - FortuneFilterLabel sub-pixel overflow: ClipRRect + IntrinsicWidth 除去で解消
 - Heat map 色慣習: 🟢↑高（信号機式）/ 🔴↑高（日本株価式）切替
+
+
+---
+
+## 端末 back ボタン挙動 (2026-05-10 追加)
+
+Android 端末の戻るボタン (△ / 戻すジェスチャ) で overlay/popup を上から順に閉じる。
+全 overlay が閉じている時のみアプリ全体の back に伝播する。
+
+### 優先順位 (back 1 回 = 1 つ閉じる)
+
+1. **Daily Transit popup** (Map > Daily チップから開く)
+2. **Fortune Sheet** (Map > Fortune チップから開く運勢方位 BottomSheet)
+3. **Zenith popup** (天頂タップ。 ACG モード中も発火)
+4. **Relocation popup** (ACG モード中のライン tap で開く)
+5. **時刻バー展開** (上部時刻バーの ⏰ トグルで展開)
+6. **ACG モード** (Astro*Carto*Graphy)
+7. **表示メニュー / 地点メニュー** (左サイド ☰ / 📍)
+8. **検索バー** (= `_searchOpen` / `_searchFocus` / `_searchHits` を一括クリア)
+
+ここまで全部閉じると `main.dart` SolaraHome の root `PopScope` に伝播:
+- Map 以外のタブ (Horo/Tarot/Galaxy/Sanctuary) → **Map タブに戻る**
+- Map タブで何もない → **アプリ終了**
+
+### 実装の要点
+
+- `lib/main.dart` SolaraHome: タブ管理用 root PopScope (canPop = `_currentIndex == 0`)
+- `lib/screens/map_screen.dart`: overlay 8 個分の優先順位付き分岐 PopScope
+- `lib/screens/map/map_time_slider.dart`: `MapTimeSliderState` を public 化、 `onExpandedChanged`
+  callback で親に展開状態通知 → 親 PopScope の canPop が再計算される
+- `android/.../MainActivity.kt`: 過去の `OnBackInvokedDispatcher` 抑制 override (no-op
+  registerOnBackInvokedCallback 等) は **PopScope を完全無効化していたため撤回**。
+  空 class に戻し dispatcher の標準動作で PopScope 機能を有効化。
+
+### Navigator 経由の popup は標準処理
+
+以下は `showDialog` / `showModalBottomSheet` で Navigator stack に push されているため、
+PopScope 統合は不要 (Flutter 標準で back 自動処理):
+- `showLineNarrativeSheet` (相 narrative 詳細)
+- `showInfoPopup` (各種説明 popup)
+- `LocationsScreen` / `ForecastScreen` (Navigator.push)
+
+---
+
+## メニューチップ v2 (2026-05-10 採用)
+
+下部 NavBar 直上の 4 チップ (Daily / Fortune / Locations / Forecast) のアイコンを
+woodblock simple 風アンティーク神秘画 (Gemini 3.1 Flash Image 生成) に置換。
+
+### 設計
+
+- **中央モチーフ大型化** (~80% canvas) で 32px 表示時の識別性確保
+- **太線 woodblock 風** (細線 filigree からの転換)
+- **外周は単純な点線リング 1 本** (旧 v1 の二重リング + 12 zodiac tick + filigree 装飾を撤廃)
+- **惑星シンボル (♀♃♄☽☿) 廃止** (1 つの惑星でカテゴリを定義しないため)
+- **円形 alpha マスク** で四隅透過 (チップ背景グラデーションに自然になじむ)
+
+### アイコン一覧 (`assets/menu_icons/*.webp`)
+
+| アセット | モチーフ | アクセント色 |
+|---|---|---|
+| `unsealed.webp` | 9芒星 + 中央封蝋 | 銀紫 (#B8B0C8) |
+| `all.webp` | 8芒星 (汎用 / Daily トップ未確定) | 純金のみ |
+| `love.webp` | ハート + 薔薇蔓 | dusty rose (#C99A9A) |
+| `money.webp` | 月桂樹冠 + 中央星 | muted amber (#B8985A) |
+| `work.webp` | 大樹 (Tree of Life) | dusty slate (#7B8B9E) |
+| `healing.webp` | 三日月 + 葉 + 水滴 | silver-blue (#A8B8C8) |
+| `communication.webp` | 翼 + 中央羽軸 | verdigris (#7BA098) |
+| `fortune.webp` | 16方位コンパスローズ | aged copper (#9A6F4A) |
+| `location.webp` | 地図ピン | sepia (#A88E66) |
+| `forecast.webp` | 12 spoke 円 + 時計針 | parchment (#BFA070) |
+
+### 生成・変換
+
+- 生成: `mockup/generate_menu_icons_v2.py` (Gemini 3.1 Flash Image、 `gemini-3.1-flash-image-preview`)
+- WebP化: `mockup/convert_menu_icons_to_webp.py` (1024px PNG → 256px WebP + 円形 alpha mask)
+- 元絵保護: `mockup/share-assets/menu-icons/v2/` (PNG)、 `_backup/` に旧版退避
+- 採用 webp 計 206KB (10 枚)
+
+### Daily チップの状態分岐
+
+- **disabled** (プロフィール未設定): 🌱 emoji
+- **unseen** (未開封): `unsealed.webp` (9芒星) + halo 発光
+- **seen** (開封済): `topCategory.webp` (love/money/work/healing/communication/all)
+
+---
+
+## 時刻ステッパー仕様 (2026-05-10 拡張)
+
+### 日付ロールオーバー
+
+- `23:XX → ▶ → 翌日 00:XX` (分維持)
+- `00:XX → ◀ → 前日 23:XX`
+- `_stepHour` で raw 値が 0..23 範囲外の時 `_commitDayShiftAndTime(dayDelta, ...)` で日付・時・分を一括 commit。
+
+### 分用 ◀▶ (10 分刻み)
+
+- 時刻バー右側スペース (76px) に ◀ / ▶ を配置。 ⏰ トグルの真下。
+- `_stepMinute(±10)`: `totalMin = HH*60 + MM ± 10` を 1440 で正規化、 wrap 時に時/日付に連鎖。
+- 表示も `"HH:00"` から `"HH:MM"` に拡張。
+- `_committedMinuteJst()` は `(minute ~/ 10) * 10` で 10 分単位 floor (現在時刻が `12:34` のような中途半端な値にならない)。
+
+### chart cache key
+
+`map_screen.dart::_loadProfileAndChart` の cacheKey に minute (10 分単位 floor) を追加:
+
+```
+旧: YYYY-MM-DDThh
+新: YYYY-MM-DDThh:mm  (mm は 10 分 bucket)
+```
+
+これで分用 ◀▶ で進めるたびに chart が再 fetch され、 月 (約 0.08°/10min) や GMST (約 2.5°/10min) で
+惑星線位置・スコアが実際に動く。

@@ -860,3 +860,53 @@ Flutter 標準の静的解析は `flutter analyze` で行う。
 - 3 端末 (a101fc/pixel8/so41b) + 3 profile (quick/standard/full)
 - compare.py で 2 レポート side-by-side 比較
 - PHASE2_DESIGN.md で Perfetto trace 統合計画
+
+### 2026-05-10 セッション (Map メニュー大型整備 + 端末 back ボタン対応)
+
+**Map チップバー全面リニューアル** (commit `89d87e9` → `3dc52cf`):
+- 旧 emoji + ベクター CategoryIcon → アンティーク神秘画 WebP に置換
+- v1 (細線 filigree) → v2 (woodblock simple、 中央モチーフ大型化、 惑星シンボル廃止)
+- `mockup/generate_menu_icons_v2.py` (Gemini 3.1 Flash Image)
+- `mockup/convert_menu_icons_to_webp.py` (PNG 1024px → WebP 256px + 円形 alpha mask)
+- 詳細は `docs/Map機能.md` 「メニューチップ v2」セクション
+
+**LOCATIONS popup 用語整合** (commit `5c66ecd` / `e2ba629`):
+- VIEWPOINT (視点の中心点) と LOCATION (登録地点) の区別を冒頭文で明確化
+- 「VIEWPOINT と LOCATION のどちらにも保存できます」(実装は元から両ストレージ対応)
+
+**Map チップ寸法・OVERFLOW 修正** (`64be858` → `8c94b7a` → `0ce7b0d` → `9261951`):
+- height 60 explicit + アイコン 32 + ラベル fontSize 9 + 英字化 (Daily/Fortune/Locations/Forecast)
+- Container 構造を共通化 (`_ChipBody` + `_ChipColumn`)
+- halo は showHalo 時のみ Stack で wrap (通常時 Stack オーバーヘッドゼロ)
+- main.dart 全体 textScaler 1.5 クランプとの合わせで余裕 2.8px 確保
+
+**時刻ステッパー機能拡張** (commit `ec164d1` → `8db4c40`):
+- 23時 → ▶ で翌日 00時 (日付ロールオーバー、 分維持)
+- 時刻バー右側に分用 ◀▶ (10 分刻み、 時/日付に連鎖 wrap)
+- 表示 "HH:00" → "HH:MM"、 LIVE 時の minute は 10 分単位 floor で表示安定
+- chart cache key に minute (10 分 bucket) 追加 → 10 分単位で chart 再 fetch &
+  惑星位置・スコア更新
+- 詳細は `docs/Map機能.md` 「時刻ステッパー仕様」セクション
+
+**端末 back ボタンで Map タブ統合 + overlay 順次クローズ** (commit `e2ba629` → `c929b6d` → `936d081` → `55a41de`):
+- `main.dart` SolaraHome に root PopScope: 非 Map タブ → Map タブ、 Map タブ → アプリ終了
+- `map_screen.dart` に overlay 8 段優先順位付き PopScope (Daily / Fortune / Zenith /
+  Relocation / 時刻バー / ACG / 各種メニュー / 検索)
+- `MapTimeSliderState` を public 化、 `onExpandedChanged` callback で親通知
+- **MainActivity.kt の `OnBackInvokedDispatcher` 抑制 override を撤回 (空 class 化)**:
+  旧実装は `sendCancelIfRunning` 警告ノイズ抑止のため `registerOnBackInvokedCallback` 等を
+  no-op override していたが、 これにより Flutter PopScope.onPopInvokedWithResult が
+  完全無効化されていた (Flutter docs: dispatcher 経由が必須)。
+  警告は復活するが既知の Engine issue で致命でない。
+- 詳細は `docs/Map機能.md` 「端末 back ボタン挙動」セクション
+
+**Android back ボタン関連の Flutter 統合 (恒久的注意点)**:
+- `enableOnBackInvokedCallback="true"` を `AndroidManifest.xml` で必須
+- MainActivity で `registerOnBackInvokedCallback` 系 override を no-op にしない
+- Flutter docs: https://docs.flutter.dev/release/breaking-changes/android-predictive-back
+- Kotlin コード変更は **flutter clean + flutter run の Gradle 再ビルド必須** (hot restart 不可)
+
+**コード整理**:
+- `map_screen.dart` に `_clearAllSearch()` ヘルパー (検索系 5 state を一括 reset)
+- map_menu_chips.dart を `_ChipBody` / `_ChipColumn` 共通化で 327 → 297 行
+- 動作確認用 debugPrint は production マージ前に撤去
