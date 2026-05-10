@@ -23,6 +23,7 @@ import '../../theme/solara_colors.dart';
 import '../../utils/astro_glossary.dart';
 import '../../utils/astro_lines.dart';
 import '../../utils/line_narrative_api.dart';
+import '../../widgets/info_popup.dart';
 import '../horoscope/horo_constants.dart' show planetGlyphs, planetNamesJP;
 import 'map_constants.dart' show planetMeta;
 
@@ -117,49 +118,34 @@ class _MapLineNarrativeSheetState extends State<MapLineNarrativeSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final mq = MediaQuery.of(context);
-    // 端末フォント拡大 (1.5x 等) で本文が伸びても画面上端を突き抜けないよう、
-    // 画面の 90% で上限を切り、その内側で SingleChildScrollView がスクロールを担当する。
-    // ConstrainedBox を入れないと isScrollControlled: true の bottom sheet は
-    // 内容に合わせて無限に伸び、status bar 上にはみ出してスクロール不能になる。
-    final maxH = mq.size.height * 0.9 - mq.padding.top;
-    return ConstrainedBox(
-      constraints: BoxConstraints(maxHeight: maxH),
-      child: Padding(
-        padding: EdgeInsets.only(
-          left: 20,
-          right: 20,
-          top: 14,
-          bottom: 20 + mq.viewInsets.bottom,
-        ),
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildHeader(),
-              const SizedBox(height: 12),
-              _buildStaticSection(),
-              const SizedBox(height: 18),
-              if (_narrative != null) ...[
-                _buildNarrativeSection(),
-              ] else ...[
-                _buildLoadButton(),
-                if (_failed) ...[
-                  const SizedBox(height: 8),
-                  _buildFailedNote(),
-                ],
-              ],
-              const SizedBox(height: 12),
-            ],
-          ),
-        ),
-      ),
+    // 本文のみを返す。外側の枠 (ConstrainedBox + maxHeight 制限 +
+    // SingleChildScrollView + 右上 × ボタン + 外タップで閉じる) は
+    // showInfoPopup 側のシェル (_InfoPopupShell) が提供する。
+    // これにより他の説明 popup (Aspect / Pattern / Direction Energy 等)
+    // と同じ挙動 (画面内に収まり、長文は下スクロール) になる。
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildHeader(),
+        const SizedBox(height: 12),
+        _buildStaticSection(),
+        const SizedBox(height: 18),
+        if (_narrative != null) ...[
+          _buildNarrativeSection(),
+        ] else ...[
+          _buildLoadButton(),
+          if (_failed) ...[
+            const SizedBox(height: 8),
+            _buildFailedNote(),
+          ],
+        ],
+      ],
     );
   }
 
   // ── ヘッダー: 2段構成で横幅 overflow を回避 ──
-  // 1段目: 惑星 glyph + 名前 + 閉じる×（タイトル行）
+  // 1段目: 惑星 glyph + 名前 (× ボタンは showInfoPopup シェル側が右上に固定配置)
   // 2段目: ANGLE chip + Frame chip + 距離（メタ行、左右余れば均等配置）
   Widget _buildHeader() {
     final dist = widget.nearby.distanceKm;
@@ -183,15 +169,6 @@ class _MapLineNarrativeSheetState extends State<MapLineNarrativeSheet> {
                   color: SolaraColors.textPrimary,
                   fontWeight: FontWeight.w600,
                 ),
-              ),
-            ),
-            GestureDetector(
-              onTap: () => Navigator.of(context).pop(),
-              behavior: HitTestBehavior.opaque,
-              child: const Padding(
-                padding: EdgeInsets.all(4),
-                child: Icon(Icons.close,
-                    size: 18, color: Color(0xFFC9A84C)),
               ),
             ),
           ],
@@ -454,7 +431,12 @@ class _MapLineNarrativeSheetState extends State<MapLineNarrativeSheet> {
   }
 }
 
-/// 共通呼び出しヘルパー: タップから直接 BottomSheet を表示
+/// 共通呼び出しヘルパー: タップから直接 説明 popup を表示。
+/// Solara の説明 popup 統一仕様 (showInfoPopup) に乗せる
+/// → 画面高さ - 120px で上限が切られ、長文は SingleChildScrollView で
+///   下スクロール、右上 × で閉じる、外タップでも閉じる挙動になる。
+/// 旧: showModalBottomSheet 直書きで、isScrollControlled: true と
+///   無制限の高さの組合せでフォント拡大時に上端が画面外にはみ出していた。
 Future<void> showLineNarrativeSheet(
   BuildContext context, {
   required NearbyAstroLine nearby,
@@ -467,15 +449,9 @@ Future<void> showLineNarrativeSheet(
   String lang = 'ja',
   String? userName,
 }) {
-  return showModalBottomSheet<void>(
+  return showInfoPopup(
     context: context,
-    backgroundColor: const Color(0xF00C0C16),
-    barrierColor: Colors.black54,
-    isScrollControlled: true,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
-    ),
-    builder: (ctx) => MapLineNarrativeSheet(
+    child: MapLineNarrativeSheet(
       nearby: nearby,
       frame: frame,
       tappedLat: tappedLat,
