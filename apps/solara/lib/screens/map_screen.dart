@@ -242,12 +242,6 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   //       天頂点マーカー表示。情報密度を抑え世界規模ビューに集中させる。
   // 退避先: モード解除時に元の状態を完全復元する。
   bool _astroCartoMode = false;
-
-  // 下部 4 タイル (MapMenuChips) の実測高さ。フォントサイズで変動するため
-  // GlobalKey + post-frame で測定し、AstroZenithOverlay の bottomExclusion
-  // (= 惑星マーカーがタイル上端より南に行かないクリップ閾値) として使う。
-  final GlobalKey _chipsKey = GlobalKey();
-  double _chipsHeight = 90; // 初期推定値 (測定前の暫定)
   // MapTimeSlider 制御用:
   //   時刻行展開時に back ボタンで畳む処理を、 map_screen.dart の PopScope に
   //   統合する。 GlobalKey で closeTimeRow() を呼び、 _timeRowExpanded で
@@ -1226,23 +1220,8 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   // ══════════════════════════════════════════════
   // BUILD
   // ══════════════════════════════════════════════
-  /// MapMenuChips の高さを実測して _chipsHeight に反映する。
-  /// build のたびに post-frame で測定し、フォントサイズ変更時にも追従する。
-  /// AstroZenithOverlay の bottomExclusion として使われる。
-  void _measureChipsHeight() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      final h = _chipsKey.currentContext?.size?.height;
-      if (h != null && (h - _chipsHeight).abs() > 0.5) {
-        setState(() => _chipsHeight = h);
-      }
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
-    // 4 タイルの高さを post-frame で測定 (フォントサイズ変化に追従)。
-    _measureChipsHeight();
     // 物理戻るボタン (Android) で overlay/popup を上から順に閉じる。
     // 全 overlay が閉じている時のみ canPop=true で main.dart の root PopScope
     // (= タブ Map に戻す or アプリ終了) に伝播する。
@@ -1423,11 +1402,20 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                 activeCategory: _planetFilterCategory,
                 allPlanetMode: _astroLayers['aspectAll'] ?? false,
               )),
-            // 天頂点マーカー本体は Stack 最前面の AstroZenithOverlay で
-            // 描画する (= タイル/メニュー等の上に出してタップ可能性を確保)。
-            // flutter_map 内の MarkerLayer は撤去済み (旧: ここで MarkerLayer
-            // 描画 → 画面下部の MapMenuChips に被って惑星がタップ不能になる
-            // 問題があった)。
+            // 天頂点マーカー (CCG): 表示中の全フレームの zenith を描画。
+            // 動的フレーム (Transit/Prog/SArc) は時間で動くため CCG の核となる。
+            // ACGモードでは natal を強制ON、通常Mapでは toggle 状況に従う。
+            if (_zenithVisibleFrames().isNotEmpty && _astroLinesCache.isNotEmpty)
+              MarkerLayer(markers: buildAstroZenithMarkers(
+                lines: _astroLinesCache,
+                activeCategory: _planetFilterCategory,
+                allPlanetMode: _astroLayers['aspectAll'] ?? false,
+                framesWithZenith: _zenithVisibleFrames(),
+                onTap: (planetKey, frame, point) => setState(() {
+                  _zenithTapInfo = (planet: planetKey, frame: frame, point: point);
+                  _relocateTapPoint = null; // 排他: 線+ハウス popup を閉じる
+                }),
+              )),
             // 16方位ラベル: モード中は世界規模ビューでは意味を成さないので非表示
             if (!_astroCartoMode)
               MarkerLayer(markers: buildDirLabels(center: _center)),
@@ -1721,7 +1709,6 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
         if (!_astroCartoMode && !_fortuneSheetOpen && !_viewpointMenuOpen) Positioned(
           bottom: 0, left: 0, right: 0,
           child: MapMenuChips(
-            key: _chipsKey,
             dailyTransitUnseen: _dailyBadgeUnseen,
             dailyTransitDisabled: _noProfile,
             topCategory: _topCategory,
@@ -1733,32 +1720,6 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
             onForecastTap: _openForecast,
           ),
         ),
-
-        // 天頂マーカーオーバーレイ: Stack の最前面に配置し、各惑星を
-        // screen 座標に変換して描画する。bottomExclusionPx でタイル上端より
-        // 南の領域はクリップ → 惑星が物理的に 4 タイル領域 (および結果的に
-        // Bottom Nav 領域) に来ない設計。マップ自体は全画面のまま透ける。
-        if (_zenithVisibleFrames().isNotEmpty && _astroLinesCache.isNotEmpty)
-          Positioned.fill(
-            child: IgnorePointer(
-              ignoring: false,
-              child: AstroZenithOverlay(
-                mapCtrl: _mapCtrl,
-                bottomExclusionPx:
-                    _astroCartoMode ? 0 : _chipsHeight,
-                entries: buildAstroZenithEntries(
-                  lines: _astroLinesCache,
-                  activeCategory: _planetFilterCategory,
-                  allPlanetMode: _astroLayers['aspectAll'] ?? false,
-                  framesWithZenith: _zenithVisibleFrames(),
-                  onTap: (planetKey, frame, point) => setState(() {
-                    _zenithTapInfo = (planet: planetKey, frame: frame, point: point);
-                    _relocateTapPoint = null; // 排他: 線+ハウス popup を閉じる
-                  }),
-                ),
-              ),
-            ),
-          ),
 
         // ── Fortune Sheet ──
         if (!_noProfile && _fortuneSheetOpen && !_astroCartoMode) Positioned(
