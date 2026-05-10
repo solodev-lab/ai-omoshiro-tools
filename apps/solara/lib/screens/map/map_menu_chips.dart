@@ -61,14 +61,19 @@ class MapMenuChips extends StatelessWidget {
       child: SafeArea(
         top: false,
         bottom: false,
-        // IntrinsicHeight + stretch で全チップに有限 tight vertical 制約を渡す。
-        // これがないと Daily 側の Stack (全 Positioned.fill 構成) が
-        // h=Infinity で assert 失敗する (constraints.biggest が無限になる)。
-        // 副作用として Static / Daily の高さも自動で揃う (max intrinsic に統一)。
-        child: IntrinsicHeight(
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
+        // chip bar 内は text scale を 1.0 でクランプ:
+        //   main.dart 全体で 1.5 クランプ済みだが、4つの小型 chip は固定寸法
+        //   (height 54、icon 32、label 9pt) で intrinsic レイアウトしているため、
+        //   textScale 1.5 だと label が 13.5pt = line height ~16.2 まで膨張し、
+        //   Container child available (46px) を超えて全 chip OVERFLOW する。
+        //   chip 内のラベルは英字 5-8 文字の極短ラベルなので拡大不要と判断。
+        //   (map_fortune_sheet.dart のスコアバーは 1.3 クランプの前例あり)
+        child: MediaQuery.withClampedTextScaling(
+          maxScaleFactor: 1.0,
+          child: IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
               _DailyTransitChip(
                 unseen: dailyTransitUnseen,
                 disabled: dailyTransitDisabled,
@@ -91,6 +96,7 @@ class MapMenuChips extends StatelessWidget {
                 onTap: onForecastTap,
               ),
             ],
+          ),
           ),
         ),
       ),
