@@ -410,7 +410,7 @@ class GalaxyScreenState extends State<GalaxyScreen>
                 if (_activeTab == 0)
                   Padding(
                     padding: const EdgeInsets.fromLTRB(16, 0, 16, 6),
-                    child: _buildStellaMessage(),
+                    child: _buildStellaMessage(context),
                   ),
               ],
             ),
@@ -550,17 +550,32 @@ class GalaxyScreenState extends State<GalaxyScreen>
     );
   }
 
-  Widget _buildStellaMessage() {
-    final readingCount = _cycleDays.where((d) => d != null).length;
-    String msg;
-    if (readingCount == 0) {
-      msg = 'Draw a card on the Observe tab to begin your cosmic spiral...';
-    } else if (readingCount < 7) {
-      msg = 'Your spiral awakens. $readingCount star${readingCount > 1 ? 's' : ''} now glow in this cycle.';
-    } else if (readingCount < 20) {
-      msg = 'The constellation takes shape. Keep drawing to reveal its true form.';
-    } else {
-      msg = 'A luminous cycle. Soon these stars will become a constellation.';
+  Widget _buildStellaMessage(BuildContext context) {
+    final isJP = Localizations.localeOf(context).languageCode == 'ja';
+    final now = DateTime.now();
+
+    // 月相連動メッセージ (当日 / 3 日以内) を最優先で表示。
+    // 該当しない場合のみ既存のカード描画進捗メッセージにフォールバック。
+    String? msg = _stellaMoonPhaseMsg(now, isJP: isJP);
+    if (msg == null) {
+      final readingCount = _cycleDays.where((d) => d != null).length;
+      if (readingCount == 0) {
+        msg = isJP
+            ? 'Observe タブでカードを引き、宇宙の螺旋を始めよう...'
+            : 'Draw a card on the Observe tab to begin your cosmic spiral...';
+      } else if (readingCount < 7) {
+        msg = isJP
+            ? 'あなたの螺旋が目覚める。$readingCount つの星が今このサイクルに灯る。'
+            : 'Your spiral awakens. $readingCount star${readingCount > 1 ? 's' : ''} now glow in this cycle.';
+      } else if (readingCount < 20) {
+        msg = isJP
+            ? '星座が形を成していく。さらにカードを引き、真の姿を顕現させよう。'
+            : 'The constellation takes shape. Keep drawing to reveal its true form.';
+      } else {
+        msg = isJP
+            ? '輝かしいサイクル。まもなくこの星々は星座となる。'
+            : 'A luminous cycle. Soon these stars will become a constellation.';
+      }
     }
 
     return Container(
@@ -588,6 +603,52 @@ class GalaxyScreenState extends State<GalaxyScreen>
           color: const Color(0xFFEAEAEA), height: 1.6)),
       ]),
     );
+  }
+
+  /// 新月・満月の発生時刻 (JST) を Stella メッセージに告知する。
+  /// 当日 (isFullMoon / isNewMoon) または 3 日以内 (72h) の場合のみ
+  /// メッセージを返す。それ以外は null (= 既存メッセージへフォールバック)。
+  String? _stellaMoonPhaseMsg(DateTime now, {required bool isJP}) {
+    String fmtTime(DateTime d) =>
+        '${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}';
+    String fmtDate(DateTime d) =>
+        '${d.month}/${d.day.toString().padLeft(2, '0')}';
+
+    // 1. 今日が満月の日
+    if (MoonPhase.isFullMoon(now)) {
+      final fm = MoonPhase.findFullMoonInCycle(now).toLocal();
+      return isJP
+          ? '今日 ${fmtTime(fm)} (JST) が満月のピーク。'
+          : 'Today ${fmtTime(fm)} JST is the full moon.';
+    }
+    // 2. 今日が新月の日
+    if (MoonPhase.isNewMoon(now)) {
+      final nm = MoonPhase.findPreviousNewMoon(now).toLocal();
+      return isJP
+          ? '今日 ${fmtTime(nm)} (JST) が新月のピーク。'
+          : 'Today ${fmtTime(nm)} JST is the new moon.';
+    }
+    // 3. 次の新月まで 3 日以内
+    final nextNew = MoonPhase.findNextNewMoon(now).toLocal();
+    final hoursToNew = nextNew.difference(now).inHours;
+    if (hoursToNew > 0 && hoursToNew < 72) {
+      final days = (hoursToNew / 24).ceil();
+      final dt = '${fmtDate(nextNew)} ${fmtTime(nextNew)}';
+      return isJP
+          ? '次の新月まであと $days 日 — $dt (JST)。'
+          : 'New moon in $days day${days > 1 ? 's' : ''} — $dt JST.';
+    }
+    // 4. 次の満月まで 3 日以内
+    final fullMoon = MoonPhase.findFullMoonInCycle(now).toLocal();
+    final hoursToFull = fullMoon.difference(now).inHours;
+    if (hoursToFull > 0 && hoursToFull < 72) {
+      final days = (hoursToFull / 24).ceil();
+      final dt = '${fmtDate(fullMoon)} ${fmtTime(fullMoon)}';
+      return isJP
+          ? '次の満月まであと $days 日 — $dt (JST)。'
+          : 'Full moon in $days day${days > 1 ? 's' : ''} — $dt JST.';
+    }
+    return null;
   }
 
   // --- 3D interaction ---
