@@ -119,7 +119,7 @@ class _StaticChip extends StatelessWidget {
           behavior: HitTestBehavior.opaque,
           onTap: onTap,
           child: Container(
-            padding: const EdgeInsets.symmetric(vertical: 6),
+            padding: const EdgeInsets.symmetric(vertical: 3),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(10),
               border: Border.all(color: const Color(0x33C9A84C)),
@@ -132,17 +132,18 @@ class _StaticChip extends StatelessWidget {
                 ],
               ),
             ),
-            // 寸法 (2026-05-10 第二弾調整):
-            //   padding 6 + Image 28 + spacing 1 + Text fontSize 10 (line height ~12) + padding 6 = 53
-            //   旧 54.4 構成で 0.8px OVERFLOW していたため縦幅を ~1.4px 詰めた。
-            //   ラベルは英字化 (Fortune/Locations/Forecast) で下部 NavBar と統一感を出す。
+            // 寸法 (2026-05-10 第三弾):
+            //   padding 3 + Image 32 + spacing 1 + Text fontSize 9 (~10.8) + padding 3 = 49.8
+            //   旧 53 just-fit 構成で Daily 側 Stack 構造の subpixel 由来 OVERFLOW
+            //   が再発したため、余裕を ~3px 確保。アイコンも 28→32 へ拡大、
+            //   ラベルは 10→9 に縮小 (オーナー要望「もっと大きく / もっと小さく」)。
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Image.asset(
                   'assets/menu_icons/$iconAsset.webp',
-                  width: 28,
-                  height: 28,
+                  width: 32,
+                  height: 32,
                   fit: BoxFit.contain,
                   filterQuality: FilterQuality.medium,
                 ),
@@ -152,7 +153,7 @@ class _StaticChip extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
-                    fontSize: 10,
+                    fontSize: 9,
                     color: Color(0xFFC9A84C),
                     letterSpacing: 0.3,
                     fontWeight: FontWeight.w500,
@@ -235,7 +236,7 @@ class _DailyTransitChip extends StatelessWidget {
                 ),
               Positioned.fill(
                 child: Container(
-                  padding: const EdgeInsets.symmetric(vertical: 6),
+                  padding: const EdgeInsets.symmetric(vertical: 3),
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(10),
@@ -243,35 +244,35 @@ class _DailyTransitChip extends StatelessWidget {
                     gradient: fillGradient,
                   ),
                   // Static chip と完全一致する寸法:
-                  //   padding 6 + Image 28 + spacing 1 + Text fontSize 10 (~12) + padding 6 = 53
+                  //   padding 3 + Image 32 + spacing 1 + Text fontSize 9 (~10.8) + padding 3 = 49.8
                   child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     // 表示分岐 (2026-05-10):
-                    //  - disabled (プロフィール未設定): 🌱 emoji (28pt 表示)
+                    //  - disabled (プロフィール未設定): 🌱 emoji (32pt 表示)
                     //  - unseen (未開封): unsealed.webp (9芒星アンティーク章)
                     //    → 答えがまだ見えていないことを象徴。halo は外側で別途発光
                     //  - seen (開封済): topCategory に応じた CategoryIcon
                     //    → 今日の追い風カテゴリを示す
                     if (disabled)
-                      const Text('🌱', style: TextStyle(fontSize: 28))
+                      const Text('🌱', style: TextStyle(fontSize: 32))
                     else if (unseen)
                       Image.asset(
                         'assets/menu_icons/unsealed.webp',
-                        width: 28,
-                        height: 28,
+                        width: 32,
+                        height: 32,
                         fit: BoxFit.contain,
                         filterQuality: FilterQuality.medium,
                       )
                     else
-                      CategoryIcon(kind: iconKind, size: 28),
+                      CategoryIcon(kind: iconKind, size: 32),
                     const SizedBox(height: 1),
                     Text(
                       'Daily',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                        fontSize: 10,
+                        fontSize: 9,
                         color: unseen
                             ? const Color(0xFFFFE99A)
                             : const Color(0xFFC9A84C),
