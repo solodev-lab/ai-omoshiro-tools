@@ -196,31 +196,43 @@ class _MapTimeSliderState extends State<MapTimeSlider> {
     //     fontSize 13 × 1.5 = 19.5 → 5 文字 ≈ 55px (OK)
     //   - 矢印位置は 56→64 で 8px 外側にシフト
     //   - NOW バッジは内部で textScaler.noScaling 維持 (44px に収めるため)
-    return Container(
-      padding: const EdgeInsets.fromLTRB(8, 4, 6, 4),
-      decoration: BoxDecoration(
-        color: const Color(0xE60C0C1A),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0x33C9A84C)),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // ── 上段: 日付コントロール ──
-          _buildDayRow(dayValue, preview, isLive),
-          // ── 下段: 時刻コントロール (折りたたみ可能) ──
-          AnimatedSize(
-            duration: const Duration(milliseconds: 180),
-            curve: Curves.easeOut,
-            alignment: Alignment.topCenter,
-            child: _timeRowExpanded
-                ? Padding(
-                    padding: const EdgeInsets.only(top: 4),
-                    child: _buildHourRow(hourValue),
-                  )
-                : const SizedBox.shrink(),
-          ),
-        ],
+    //
+    // 2026-05-10: 時刻行展開中 (= _timeRowExpanded) は端末 back で展開を畳む。
+    //   PopScope の AND 評価で map_screen 側の overlay PopScope と協調。
+    return PopScope(
+      canPop: !_timeRowExpanded,
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop) return;
+        if (_timeRowExpanded) {
+          setState(() => _timeRowExpanded = false);
+        }
+      },
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(8, 4, 6, 4),
+        decoration: BoxDecoration(
+          color: const Color(0xE60C0C1A),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: const Color(0x33C9A84C)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // ── 上段: 日付コントロール ──
+            _buildDayRow(dayValue, preview, isLive),
+            // ── 下段: 時刻コントロール (折りたたみ可能) ──
+            AnimatedSize(
+              duration: const Duration(milliseconds: 180),
+              curve: Curves.easeOut,
+              alignment: Alignment.topCenter,
+              child: _timeRowExpanded
+                  ? Padding(
+                      padding: const EdgeInsets.only(top: 4),
+                      child: _buildHourRow(hourValue),
+                    )
+                  : const SizedBox.shrink(),
+            ),
+          ],
+        ),
       ),
     );
   }
