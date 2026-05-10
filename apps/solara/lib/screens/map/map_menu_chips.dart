@@ -76,17 +76,17 @@ class MapMenuChips extends StatelessWidget {
                 onTap: onDailyTransitTap,
               ),
               _StaticChip(
-                icon: '🧭',
+                iconAsset: 'fortune',
                 label: '運勢方位',
                 onTap: onFortuneTap,
               ),
               _StaticChip(
-                icon: '📍',
+                iconAsset: 'location',
                 label: 'LOCATIONS',
                 onTap: onLocationsTap,
               ),
               _StaticChip(
-                icon: '📈',
+                iconAsset: 'forecast',
                 label: '予報',
                 onTap: onForecastTap,
               ),
@@ -99,11 +99,16 @@ class MapMenuChips extends StatelessWidget {
 }
 
 // ── 通常チップ (Daily Transit 以外) ────────────────────────────────
+// 2026-05-10: emoji (🧭/📍/📈) → アンティーク神秘 WebP に置換
+//             (assets/menu_icons/{iconAsset}.webp)。Daily チップと
+//             同じ画材で統一感を出す。
 class _StaticChip extends StatelessWidget {
-  final String icon;
+  /// assets/menu_icons/{iconAsset}.webp として読み込む。
+  /// 例: 'fortune' / 'location' / 'forecast'
+  final String iconAsset;
   final String label;
   final VoidCallback onTap;
-  const _StaticChip({required this.icon, required this.label, required this.onTap});
+  const _StaticChip({required this.iconAsset, required this.label, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -130,7 +135,13 @@ class _StaticChip extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(icon, style: const TextStyle(fontSize: 18)),
+                Image.asset(
+                  'assets/menu_icons/$iconAsset.webp',
+                  width: 22,
+                  height: 22,
+                  fit: BoxFit.contain,
+                  filterQuality: FilterQuality.medium,
+                ),
                 const SizedBox(height: 2),
                 Text(
                   label,
@@ -189,9 +200,6 @@ class _DailyTransitChip extends StatelessWidget {
     final borderColor = unseen
         ? const Color(0xFFFFE99A)
         : const Color(0x33C9A84C);
-    final iconColor = unseen
-        ? SolaraColors.solaraGoldLight
-        : const Color(0xFFC9A84C);
 
     return Expanded(
       child: Padding(
@@ -233,15 +241,24 @@ class _DailyTransitChip extends StatelessWidget {
                   child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
+                    // 表示分岐 (2026-05-10):
+                    //  - disabled (プロフィール未設定): 🌱 emoji (現状維持)
+                    //  - unseen (未開封): unsealed.webp (9芒星アンティーク章)
+                    //    → 答えがまだ見えていないことを象徴。halo は外側で別途発光
+                    //  - seen (開封済): topCategory に応じた CategoryIcon
+                    //    → 今日の追い風カテゴリを示す
                     if (disabled)
                       const Text('🌱', style: TextStyle(fontSize: 18))
+                    else if (unseen)
+                      Image.asset(
+                        'assets/menu_icons/unsealed.webp',
+                        width: 22,
+                        height: 22,
+                        fit: BoxFit.contain,
+                        filterQuality: FilterQuality.medium,
+                      )
                     else
-                      CategoryIcon(
-                        kind: iconKind,
-                        size: 18,
-                        color: iconColor,
-                        strokeWidth: 1.5,
-                      ),
+                      CategoryIcon(kind: iconKind, size: 22),
                     const SizedBox(height: 2),
                     Text(
                       'Daily',
