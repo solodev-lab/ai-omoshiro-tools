@@ -516,7 +516,13 @@ class GalaxyScreenState extends State<GalaxyScreen>
         border: Border.all(color: const Color(0x47F9D976)),
       ),
       child: Column(children: [
-        Text('${_currentDayIndex + 1}', style: GoogleFonts.cinzel(
+        // サイクル日数表記を月齢 (0-indexed) に揃える。
+        // _currentDayIndex は MoonPhase.getCurrentDayIndex で
+        // 「JST 新月発生日 0:00 → JST 当日 0:00 の経過日数」を返すので、
+        // 検索サイト等で見る月齢と同じ数字になる。
+        // (旧: +1 した 1-indexed 表記。新月日が「Day 1」になり、
+        //  検索サイト等の月齢と 1 ズレてユーザーが混乱していた。)
+        Text('$_currentDayIndex', style: GoogleFonts.cinzel(
           fontSize: 22, fontWeight: FontWeight.w700,
           color: const Color(0xFFF9D976), height: 1)),
         Text('of $_totalDays', style: GoogleFonts.cinzel(
