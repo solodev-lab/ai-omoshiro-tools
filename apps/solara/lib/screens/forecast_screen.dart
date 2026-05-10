@@ -363,6 +363,17 @@ class _ForecastScreenState extends State<ForecastScreen> {
     }
     final monthKeys = byMonth.keys.toList()..sort();
 
+    // 表示中の年月レンジ (見出し横に「YYYY年M月 〜 YYYY年M月」として
+    // 表示。各行ラベルから年表記を撤去して月数字のみにしたので、
+    // 年情報はここに集約する)。
+    String monthRangeLabel = '';
+    if (monthKeys.isNotEmpty) {
+      final fp = monthKeys.first.split('-');
+      final lp = monthKeys.last.split('-');
+      final fm = int.parse(fp[1]);
+      final lm = int.parse(lp[1]);
+      monthRangeLabel = '${fp[0]}年$fm月 〜 ${lp[0]}年$lm月';
+    }
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Row(children: [
         const Text('▸ 1年ヒートマップ',
@@ -376,6 +387,18 @@ class _ForecastScreenState extends State<ForecastScreen> {
             padding: EdgeInsets.all(2),
             child: Icon(Icons.info_outline,
                 size: 13, color: Color(0xCCAAAAAA)),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            monthRangeLabel,
+            style: const TextStyle(
+              fontSize: 11,
+              color: Color(0xFF888888),
+              letterSpacing: 0.4,
+            ),
+            overflow: TextOverflow.ellipsis,
           ),
         ),
       ]),
@@ -527,13 +550,23 @@ class _ForecastScreenState extends State<ForecastScreen> {
 
   Widget _monthRow(String ym, List<ForecastDay> monthDays, double minV, double range) {
     final parts = ym.split('-');
-    final label = '${parts[0]}/${parts[1]}';
+    // 月数字のみ (0 padding なし)。固定幅 + 中央寄せで「5」と「12」が
+    // 桁数違いでも揃って見えるようにする。年は見出し横の期間表示に集約。
+    final monthLabel = int.parse(parts[1]).toString();
     return Padding(
       padding: const EdgeInsets.only(bottom: 4),
       child: Row(children: [
         SizedBox(
-          width: 50,
-          child: Text(label, style: const TextStyle(fontSize: 10, color: Color(0xFF888888))),
+          width: 24,
+          child: Text(
+            monthLabel,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontSize: 11,
+              color: Color(0xFF888888),
+              fontWeight: FontWeight.w500,
+            ),
+          ),
         ),
         Expanded(child: Row(children: [
           for (final d in monthDays) Expanded(child: _dayCell(d, minV, range)),
@@ -605,6 +638,25 @@ class _ForecastScreenState extends State<ForecastScreen> {
     return base.withValues(alpha: 0.35 + ratio * 0.65);
   }
 
+  /// 選択日を delta 日ずらせるか (リスト範囲内か)
+  bool _canShiftSelectedDay(int delta) {
+    final cur = _selected;
+    final cache = _cache;
+    if (cur == null || cache == null || cache.days.isEmpty) return false;
+    final idx = cache.days.indexWhere((d) => d.date == cur.date);
+    if (idx < 0) return false;
+    final newIdx = idx + delta;
+    return newIdx >= 0 && newIdx < cache.days.length;
+  }
+
+  /// 選択日を 1 日ずつ前後に動かす。月またぎは days リスト連続性で自然に進む。
+  void _shiftSelectedDay(int delta) {
+    if (!_canShiftSelectedDay(delta)) return;
+    final cache = _cache!;
+    final idx = cache.days.indexWhere((d) => d.date == _selected!.date);
+    setState(() => _selected = cache.days[idx + delta]);
+  }
+
   Widget _buildSelectedDayDetail() {
     final d = _selected;
     if (d == null) return const SizedBox.shrink();
@@ -629,7 +681,21 @@ class _ForecastScreenState extends State<ForecastScreen> {
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(children: [
+          // 左△: 1日前へ。日付リスト先頭で disable。
+          _DayStepperButton(
+            icon: Icons.arrow_left,
+            enabled: _canShiftSelectedDay(-1),
+            onTap: () => _shiftSelectedDay(-1),
+          ),
+          const SizedBox(width: 4),
           Text(dateLabel, style: const TextStyle(fontSize: 16, color: Color(0xFFE8E0D0), fontWeight: FontWeight.w600)),
+          const SizedBox(width: 4),
+          // 右△: 1日後へ。日付リスト末尾で disable。
+          _DayStepperButton(
+            icon: Icons.arrow_right,
+            enabled: _canShiftSelectedDay(1),
+            onTap: () => _shiftSelectedDay(1),
+          ),
           const Spacer(),
           if (widget.onJumpToDate != null) IconButton(
             icon: const Icon(Icons.map_outlined,
@@ -933,4 +999,37 @@ void _showHeatmapInfo(BuildContext context) {
       ],
     ),
   );
+}
+
+/// 選択日詳細パネルの △ ボタン (左右で 1 日前後に動かす)。
+/// 端 (リスト先頭/末尾) に達したら disabled (薄色) で押せなくなる。
+class _DayStepperButton extends StatelessWidget {
+  final IconData icon;
+  final bool enabled;
+  final VoidCallback onTap;
+  const _DayStepperButton({
+    required this.icon,
+    required this.enabled,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: enabled ? onTap : null,
+      behavior: HitTestBehavior.opaque,
+      child: SizedBox(
+        width: 28, height: 28,
+        child: Center(
+          child: Icon(
+            icon,
+            size: 22,
+            color: enabled
+                ? const Color(0xFFC9A84C)
+                : const Color(0x33C9A84C),
+          ),
+        ),
+      ),
+    );
+  }
 }
