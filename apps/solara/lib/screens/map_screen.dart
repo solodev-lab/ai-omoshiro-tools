@@ -1478,13 +1478,23 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
         // モード中は「世界規模スコア」の概念が無いのでスコアバーは非表示。
         // ラベルタップでカテゴリ循環切替（オーナー要望、2026-04-30）。
         Positioned(
-          top: topPad + ((!_noProfile && !_astroCartoMode) ? 2 : 44),
+          // ACG モード時は Banner が先頭、通常 (プロフィールあり) は
+          // FortuneFilterLabel が先頭、通常 (プロフィールなし) のみ
+          // 上に余白 (44) を確保 (元のスコアバッジ表示位置と同じ)。
+          top: topPad + ((_noProfile && !_astroCartoMode) ? 44 : 2),
           left: 12, right: 12,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              if (!_noProfile && !_astroCartoMode) ...[
+              if (_astroCartoMode) ...[
+                // ACG タイトルバナー: フォント拡大時に下の TimeSlider と
+                // 重ならないよう SizedBox(8) で一定間隔を確保する。
+                // 旧: 独立した Positioned(top: topPad+2) で固定配置 →
+                //     TimeSlider (top+44) と 42px 固定差で、フォント拡大で重なっていた。
+                Center(child: AstroCartoBanner(onClose: _exitAstroCartoMode)),
+                const SizedBox(height: 8),
+              ] else if (!_noProfile) ...[
                 // 元の left:16 と整列維持 (親の left:12 + ここの padding:4 = 16)。
                 // FortuneFilterLabel 内の sideMargin=16 計算と整合する。
                 Padding(
@@ -1527,13 +1537,8 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
           onViewpointMenuTap: _onViewpointMenuTap,
         ),
 
-        // ── Astro*Carto*Graphy モードバナー (上部中央) + カテゴリピル (下部中央) ──
-        // 日付バッジ (top+44) との重なり回避のため top+2 に上げた (2026-04-29)
-        if (_astroCartoMode) Positioned(
-          top: topPad + 2, left: 0, right: 0,
-          child: Center(child: AstroCartoBanner(onClose: _exitAstroCartoMode)),
-        ),
-        // 通常Map 用 TimeSlider は上部に常時表示 (上の SelectedDateBadge 置換コード参照)
+        // ACG タイトルバナーは上部 TimeSlider Positioned 内に統合済み
+        // (フォント拡大時に下の TimeSlider と重ならないよう Column で順次配置)。
         // ここは ACG モード用 UI の積み下ろし開始点
 
         // ── Search Bar ──
@@ -1783,31 +1788,36 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
         // 2026-05-07: popup より「先に」描画して、popup が上に重なる順序へ変更。
         //   従来は pills を最前面にしていたが、ACGライン説明 popup が pills に隠れて
         //   読めない不具合があったため、popup 優先に切替えた。
-        // NavBar (80px) を避けて積み上げる:
-        // bottom 92  → CategoryPills (FORTUNE 切替)
-        // bottom 132 → FramePills    (Natal/Transit/Prog/SArc)
-        // bottom 176 → TimeSlider    (動的フレーム ON 時のみ)
+        // 2 つの Pills (Frame / Category) は固定 bottom 値だと
+        // フォント拡大時に重なるため、bottom: 12 を起点に Column で
+        // 順次積み上げる構成に統一 (SizedBox(8) で一定間隔確保)。
         if (_astroCartoMode) Positioned(
           left: 0, right: 0, bottom: 12,
-          child: Center(
-            child: AstroCartoCategoryPills(
-              activeCategory: _activeCategory,
-              onChanged: (k) => setState(() {
-                _activeCategory = k;
-                _planetFilterCategory = k; // ACG モードはセクター非表示なので両者同期
-              }),
-            ),
-          ),
-        ),
-        if (_astroCartoMode) Positioned(
-          left: 0, right: 0, bottom: 52,
-          child: Center(
-            child: AstroCartoFramePills(
-              astroLayers: _astroLayers,
-              onToggle: (k) => setState(() {
-                _astroLayers[k] = !(_astroLayers[k] ?? false);
-              }),
-            ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // 上: Natal/Transit/Prog/SArc 切替 (FramePills)
+              Center(
+                child: AstroCartoFramePills(
+                  astroLayers: _astroLayers,
+                  onToggle: (k) => setState(() {
+                    _astroLayers[k] = !(_astroLayers[k] ?? false);
+                  }),
+                ),
+              ),
+              const SizedBox(height: 8),
+              // 下: FORTUNE カテゴリ切替 (CategoryPills)
+              Center(
+                child: AstroCartoCategoryPills(
+                  activeCategory: _activeCategory,
+                  onChanged: (k) => setState(() {
+                    _activeCategory = k;
+                    // ACG モードはセクター非表示なので両者同期
+                    _planetFilterCategory = k;
+                  }),
+                ),
+              ),
+            ],
           ),
         ),
         // ACGモード下部スライダーは廃止 (2026-04-29、上部常時表示に統一)
