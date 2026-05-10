@@ -255,7 +255,7 @@ Android 端末の戻るボタン (△ / 戻すジェスチャ) で overlay/popup
 
 以下は `showDialog` / `showModalBottomSheet` で Navigator stack に push されているため、
 PopScope 統合は不要 (Flutter 標準で back 自動処理):
-- `showLineNarrativeSheet` (相 narrative 詳細)
+- `showLineNarrativeSheet` (ACG ライン詳細、2026-05-11 以降は静的辞書のみ。AI 解説撤去済み。`showInfoPopup` ベース)
 - `showInfoPopup` (各種説明 popup)
 - `LocationsScreen` / `ForecastScreen` (Navigator.push)
 
