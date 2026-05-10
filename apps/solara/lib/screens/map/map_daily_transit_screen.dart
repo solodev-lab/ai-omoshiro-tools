@@ -237,11 +237,13 @@ class _MapDailyTransitScreenState extends State<MapDailyTransitScreen>
               ),
               // ACG モード起動フッター (旧🌐ボタンの代替動線、2026-05-09)。
               // 「今日の動き → 世界規模に投影して見る」自然な文脈接続。
+              // POPUP のクローズは親の _enterAstroCartoMode 内 setState
+              // (_dailyTransitOpen = false) でまとめて行う。
+              // 旧: ここで _close() を呼んでフェード reverse を待たずに
+              // onEnterAcg を呼んでいたため、ACG 切り替え後も POPUP が
+              // 数百 ms 残って「裏で切り替わる」違和感があった。
               if (widget.onEnterAcg != null)
-                _AcgEntryFooter(onTap: () {
-                  _close(); // popup を閉じてから ACG モードへ
-                  widget.onEnterAcg!();
-                }),
+                _AcgEntryFooter(onTap: () => widget.onEnterAcg!()),
             ],
           ),
         ),
