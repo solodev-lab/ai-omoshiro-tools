@@ -111,17 +111,14 @@ class _SolaraHomeState extends State<SolaraHome> {
     // Android system back button:
     //   - Map 以外のタブ → Map に戻す
     //   - Map タブ → アプリを閉じる (= 通常の root pop = SystemNavigator.pop)
-    // タブ内で Navigator.push された sub-screen (LocationsScreen 等) は、
-    // この PopScope より内側の Navigator で先に pop されるため干渉しない。
-    debugPrint('[Solara PopScope] BUILD canPop=${_currentIndex == 0} tab=$_currentIndex');
+    // タブ内 overlay (Daily Transit 等) は map_screen.dart の PopScope で
+    // 先に消化される (AND 評価で本 PopScope より下位)。
     return PopScope(
       canPop: _currentIndex == 0,
       onPopInvokedWithResult: (didPop, result) {
-        debugPrint('[Solara PopScope] CALLBACK tab=$_currentIndex didPop=$didPop');
         if (didPop) return;
         if (_currentIndex != 0) {
           _onTabTap(0);
-          debugPrint('[Solara PopScope] -> switched to Map tab');
         }
       },
       child: Scaffold(
