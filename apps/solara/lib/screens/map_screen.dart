@@ -447,17 +447,19 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     // CCG (Tier A #5): 日時別 chart キャッシュ参照。
     // タイムスライダーで往復した際の API 連続呼出を回避する。
     //
-    // 2026-04-29 修正: キーに時(hour)を含める。
-    // 旧実装は YYYY-MM-DD だけだったため、時刻スライダーを動かしても
-    // 同日キャッシュがヒットして月などの惑星黄経が更新されない問題があった。
-    // 月は約0.5°/h 動くので、1h 刻みで chart を再取得する妥当性が高い。
+    // 2026-04-29: キーに時(hour)を含める (時刻スライダー対応)。
+    // 2026-05-10: キーに 10 分単位の minute bucket も含める。
+    //   分用▶△ (10 分刻み) で進めても hour 単位 cache hit で
+    //   惑星位置が動かない問題を解消。月は 10min で約 0.08° 動き、
+    //   GMST は 10min で 2.5° 動くので、地図上の惑星線位置に反映される。
     String cacheKey;
     if (targetDate == null) {
       cacheKey = 'today';
     } else {
       final t = targetDate.toUtc();
+      final minBucket = (t.minute ~/ 10) * 10;
       cacheKey =
-          '${t.year.toString().padLeft(4, '0')}-${t.month.toString().padLeft(2, '0')}-${t.day.toString().padLeft(2, '0')}T${t.hour.toString().padLeft(2, '0')}';
+          '${t.year.toString().padLeft(4, '0')}-${t.month.toString().padLeft(2, '0')}-${t.day.toString().padLeft(2, '0')}T${t.hour.toString().padLeft(2, '0')}:${minBucket.toString().padLeft(2, '0')}';
     }
     ChartResult? chart = _chartCacheByDate[cacheKey];
     if (chart == null) {
