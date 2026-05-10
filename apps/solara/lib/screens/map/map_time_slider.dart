@@ -263,73 +263,52 @@ class _MapTimeSliderState extends State<MapTimeSlider> {
           ),
         ),
       ),
-      // NOW バッジ + 分用右△ (固定幅 44、Column 縦並び)。
-      // 上: 'NOW' テキストバッジ (タップで LIVE = 現在時刻に戻す)
-      // 下: '分' 用右△ (タップで +10 分、wrap 時は時/日付に連鎖更新)
+      // NOW バッジ (固定幅 44 で時刻行のスペーサーと一致させる)。
+      // 2026-05-08: 稲妻アイコン → 'NOW' テキストバッジに変更。
+      // ON  : 鮮やかオレンジ + 背景塗り + 太縁
+      // OFF : 薄いオレンジ + 透明背景 + 細縁
       SizedBox(
         width: 44,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            GestureDetector(
-              onTap: isLive ? null : () {
-                setState(() {
-                  _draftDays = null;
-                  _draftHour = null;
-                });
-                widget.onCommit(null);
-              },
-              behavior: HitTestBehavior.opaque,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 3),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                    color: isLive
-                        ? const Color(0xFFFF8E5C)
-                        : const Color(0x33FF8E5C),
-                    width: isLive ? 1.0 : 0.8,
-                  ),
-                  color: isLive
-                      ? const Color(0x22FF8E5C)
-                      : Colors.transparent,
-                ),
-                child: Text(
-                  'NOW',
-                  textAlign: TextAlign.center,
-                  textScaler: TextScaler.noScaling,
-                  maxLines: 1,
-                  softWrap: false,
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: isLive
-                        ? const Color(0xFFFF8E5C)
-                        : const Color(0x66FF8E5C),
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.6,
-                    height: 1.0,
-                  ),
-                ),
+        child: GestureDetector(
+          onTap: isLive ? null : () {
+            setState(() {
+              _draftDays = null;
+              _draftHour = null;
+            });
+            widget.onCommit(null);
+          },
+          behavior: HitTestBehavior.opaque,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 5),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: isLive
+                    ? const Color(0xFFFF8E5C)
+                    : const Color(0x33FF8E5C),
+                width: isLive ? 1.0 : 0.8,
+              ),
+              color: isLive
+                  ? const Color(0x22FF8E5C)
+                  : Colors.transparent,
+            ),
+            child: Text(
+              'NOW',
+              textAlign: TextAlign.center,
+              textScaler: TextScaler.noScaling,
+              maxLines: 1,
+              softWrap: false,
+              style: TextStyle(
+                fontSize: 13,
+                color: isLive
+                    ? const Color(0xFFFF8E5C)
+                    : const Color(0x66FF8E5C),
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.6,
+                height: 1.0,
               ),
             ),
-            // 分用右△: タップで +10 分、wrap 時に時/日付へ連鎖。
-            // tap target 確保のため SizedBox で 16px 高を保ちつつ、
-            // 視覚上は icon 14px で控えめに配置。
-            GestureDetector(
-              onTap: () => _stepMinute(10),
-              behavior: HitTestBehavior.opaque,
-              child: const SizedBox(
-                height: 16,
-                child: Center(
-                  child: Icon(
-                    Icons.arrow_right,
-                    size: 16,
-                    color: Color(0xCCE9D29A),
-                  ),
-                ),
-              ),
-            ),
-          ],
+          ),
         ),
       ),
       const SizedBox(width: 4),
@@ -402,8 +381,14 @@ class _MapTimeSliderState extends State<MapTimeSlider> {
           ),
         ),
       ),
-      // 時刻側の隙間: 上段 LIVE(44) + gap(4) + ⏰(28) = 76 と一致させてバー長を完全揃える
-      const SizedBox(width: 76),
+      // 上段スペーサー (LIVE 44 + gap 4 + ⏰ 28 = 76) の真下に
+      // 分用 ◀▶ (10 分刻み) を 2 個配置:
+      //   gap 4 + ◀ 32 + gap 4 + ▶ 32 + gap 4 = 76 (ぴったり一致)
+      const SizedBox(width: 4),
+      _stepperBtn(icon: Icons.arrow_left, onTap: () => _stepMinute(-10)),
+      const SizedBox(width: 4),
+      _stepperBtn(icon: Icons.arrow_right, onTap: () => _stepMinute(10)),
+      const SizedBox(width: 4),
     ]);
   }
 
