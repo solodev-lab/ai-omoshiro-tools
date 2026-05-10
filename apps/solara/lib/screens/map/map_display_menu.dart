@@ -218,11 +218,35 @@ class _MapDisplayMenuState extends State<MapDisplayMenu> {
         ];
         break;
       case _MainTab.planet:
+        // map_constants.dart の planetMeta / planetGroups / fortunePlanets
+        // を引いて日本語名で全惑星を列挙する (短縮 Sun〜Mars 表記をやめ、
+        // ユーザーが惑星を見落とさず確認できる形に)。
+        String planetsJp(List<String> keys) =>
+            keys.map((k) => planetMeta[k]?.jp ?? k).join(' / ');
         title = '惑星レイヤー';
-        items = const [
-          ('タイプ', 'どのチャートの惑星を表示するか。Natal (出生時固定) / Prog (1日=1年で進行) / Transit (今この瞬間)。'),
-          ('グループ', '10 惑星のグループフィルタ。個人 (Sun〜Mars) / 社会 (Jup〜Sat) / 世代 (Uranus〜Pluto)。'),
-          ('テーマ', 'カテゴリ別フィルタ。総合 / 癒し / 豊かさ / 恋愛 / 仕事 / 話す。テーマに関わる惑星のみ強調。'),
+        items = [
+          (
+            'タイプ',
+            'どのチャートの惑星を表示するか。'
+                'Natal (出生時固定) / Prog (1日=1年で進行) / Transit (今この瞬間)。'
+          ),
+          (
+            'グループ',
+            '10 惑星のグループフィルタ。\n'
+                '・個人: ${planetsJp(planetGroups["personal"]!)}\n'
+                '・社会: ${planetsJp(planetGroups["social"]!)}\n'
+                '・世代: ${planetsJp(planetGroups["generational"]!)}'
+          ),
+          (
+            'テーマ',
+            'カテゴリ別フィルタ。テーマに関わる惑星のみ強調表示する。\n'
+                '・総合: 全惑星\n'
+                '・癒し: ${planetsJp(fortunePlanets["healing"]!)}\n'
+                '・豊かさ: ${planetsJp(fortunePlanets["money"]!)}\n'
+                '・恋愛: ${planetsJp(fortunePlanets["love"]!)}\n'
+                '・仕事: ${planetsJp(fortunePlanets["work"]!)}\n'
+                '・話す: ${planetsJp(fortunePlanets["communication"]!)}'
+          ),
         ];
         break;
       case _MainTab.acg:
