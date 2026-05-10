@@ -63,8 +63,9 @@ lib/ (約 80 .dart ファイル)
 │   │   ├── daily_transit_data.dart      2026-04-30 分割: AngleFilter + tips/baseText/appendix
 │   │   │                                  10惑星 × 4アングル = 40パターン基本意味
 │   │   │                                  5カテゴリ × 2相 = 10パターン行動指針
-│   │   ├── map_line_narrative_sheet.dart  Tier S #2 (2026-04-30): A*C*G ライン詳細シート
-│   │   │                                  静的辞書 → 「詳しく読む」→ Soft/Hard別表示
+│   │   ├── map_line_narrative_sheet.dart  A*C*G ライン詳細 popup
+│   │   │                                  静的辞書 (astro_glossary) ベースの解説のみ。
+│   │   │                                  AI 解説 (Gemini 動的生成) は 2026-05-11 撤去。
 │   │   └── map_overlays.dart           MapSideButtons (🔍/☰/📍 3個) + SearchBar + Badges + VP Pin + RestOverlay
 │   ├── locations_screen.dart   拠点一覧画面（下部 LOCATIONS チップから BottomSheet）
 │   ├── forecast_screen.dart    1〜5年 Forecast（下部 予報 チップから BottomSheet、ヒートマップ+◯◯期+Top5）
@@ -135,8 +136,9 @@ lib/ (約 80 .dart ファイル)
 │   │                              'top_category_logic' エントリ追加
 │   │                              2026-04-30: 'category_tips_intent' 追加 +
 │   │                              Dialog スクロール対応 (overflow防止)
-│   ├── line_narrative_api.dart  Tier S #2 (2026-04-30): /astro/line-narrative
-│   │                              呼出 + LRU キャッシュ (max 100, lat/lng 0.1° 丸め)
+│   │                              ※ line_narrative_api.dart は 2026-05-11 削除
+│   │                                 (AI 解説機能撤去に伴い、唯一の利用元 =
+│   │                                 map_line_narrative_sheet.dart も静的辞書のみに統一)
 │   └── tile_http_client.dart    2026-04-30: タイル取得用 共有 HttpClient
 │                                  fd 枯渇対策 (maxConnectionsPerHost=6, idleTimeout=15s)
 └── widgets/               ← 共通ウィジェット
@@ -631,7 +633,7 @@ Cloudflare Worker 本番デプロイ済み: `https://solara-api.solodev-lab.com`
 | `/astro/forecast` | POST | 1〜5年 Forecast (KV月次クォータ60req/月) | `forecast_screen` |
 | `/astro/events` | GET | 月別天体イベント (ingress/retrograde/eclipse) | `celestial_events.dart#fetchMonthEvents` |
 | `/astro/daily-transits` | POST | F1 (2026-04-29): 拠点での1日のトランジット通過時刻 + 各時刻 natal アスペクト併記 (V2.2) | `daily_transits_api.dart#fetchDailyTransits` |
-| `/astro/line-narrative` | POST | Tier S #2 (2026-04-30): A*C*G ライン (natal/transit) のタップ詳細解説 (Soft/Hard 両面記述) | `line_narrative_api.dart#fetchLineNarrative` |
+| ~~`/astro/line-narrative`~~ | POST | 2026-05-11 クライアントから利用撤去 (AI 解説機能撤去)。Worker 側エンドポイントは未削除、再デプロイ時に整理予定 | (利用元なし) |
 | `/tz` | GET | 緯度経度→IANA TZ名 (C案, DST対応) | `solara_api.dart#fetchTimezoneName` |
 | `/search` | GET | Google Places (New) Text Search 優先 → Nominatim fallback (lat/lng で locationBias.circle 15km, pageSize 20) | `map_search.dart#searchPlaces` |
 | `/fortune` | POST | Gemini 2.5 Flash 生成の占い文 (5カテゴリ) | `fortune_api.dart#fetchFortune` |
