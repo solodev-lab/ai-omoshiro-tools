@@ -625,10 +625,11 @@ void _showLocationsUsageGuide(BuildContext context) {
         ),
         SizedBox(height: 10),
         Text(
-          'あなたが登録した VIEWPOINT (お気に入りの地点) を\n'
-          '一覧で見られます。それぞれの地点が選択した基準点から見て\n'
-          'どの方位にあり、どのカテゴリのエネルギーが\n'
-          'どのくらい強いかを一目で比較できます。',
+          'あなたが登録したVIEWPOINT（視点の中心点）から\n'
+          'みた、LOCATION（登録地点）のエネルギーを\n'
+          '一覧で確認できます。\n'
+          '気になるところをLOCATIONとして登録しておけば、\n'
+          '一目で今日のエネルギーを知る事ができます。',
           style: TextStyle(
               color: Color(0xFFE8E0D0),
               fontSize: 13,
