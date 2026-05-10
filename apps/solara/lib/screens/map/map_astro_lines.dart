@@ -180,67 +180,11 @@ List<Marker> buildAstroZenithMarkers({
   void Function(String planetKey, AstroFrame frame, LatLng zenith)? onTap,
   Set<AstroFrame> framesWithZenith = const {AstroFrame.natal},
 }) {
-  // 内部で entries を共有して Marker 化するだけ。
-  // (オーバーレイ描画 = AstroZenithOverlay でも同じ entries を直接使う)
-  final entries = buildAstroZenithEntries(
-    lines: lines,
-    activeCategory: activeCategory,
-    allPlanetMode: allPlanetMode,
-    latLimit: latLimit,
-    onTap: onTap,
-    framesWithZenith: framesWithZenith,
-  );
-  return [
-    for (final e in entries)
-      Marker(
-        point: e.zenith,
-        width: 56,
-        height: 64,
-        alignment: Alignment.center,
-        child: e.onTap != null
-            ? GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTap: e.onTap,
-                child: e.marker,
-              )
-            : e.marker,
-      ),
-  ];
-}
-
-/// 天頂マーカー描画用エントリ。
-/// flutter_map の MarkerLayer 経由 (= [buildAstroZenithMarkers]) と
-/// Stack 最前面のオーバーレイ (= [AstroZenithOverlay]) で共通利用する。
-class AstroZenithEntry {
-  final String planetKey;
-  final AstroFrame frame;
-  final LatLng zenith;
-  final Widget marker;
-  final VoidCallback? onTap;
-  const AstroZenithEntry({
-    required this.planetKey,
-    required this.frame,
-    required this.zenith,
-    required this.marker,
-    this.onTap,
-  });
-}
-
-/// 天頂マーカーのエントリ列を返す。フィルタロジックは
-/// [buildAstroZenithMarkers] と完全に共通 (こちらが本体)。
-List<AstroZenithEntry> buildAstroZenithEntries({
-  required List<AstroLine> lines,
-  required String activeCategory,
-  bool allPlanetMode = false,
-  double latLimit = 75,
-  void Function(String planetKey, AstroFrame frame, LatLng zenith)? onTap,
-  Set<AstroFrame> framesWithZenith = const {AstroFrame.natal},
-}) {
   final highlightSet = (allPlanetMode || activeCategory == 'all')
       ? null
       : astroLineFortunePlanets[activeCategory];
 
-  final entries = <AstroZenithEntry>[];
+  final markers = <Marker>[];
   for (final line in lines) {
     if (!framesWithZenith.contains(line.frame)) continue;
     final zenith = line.zenith;
@@ -252,95 +196,29 @@ List<AstroZenithEntry> buildAstroZenithEntries({
     final isHighlighted = highlightSet == null || highlightSet.contains(line.planet);
     if (!isHighlighted) continue;
 
-    final markerWidget = AstroZenithMarker(
+    final marker = AstroZenithMarker(
       planetSym: meta.sym,
       planetColor: meta.color,
       frame: line.frame,
     );
-    final pk = line.planet;
-    final fr = line.frame;
-    final pt = zenith;
-    entries.add(AstroZenithEntry(
-      planetKey: pk,
-      frame: fr,
-      zenith: pt,
-      marker: markerWidget,
-      onTap: onTap == null ? null : () => onTap(pk, fr, pt),
-    ));
-  }
-  return entries;
-}
-
-/// 天頂マーカーを Stack の最前面 (タイルやサイドメニューの上) で描画する
-/// オーバーレイ。flutter_map の MarkerLayer は Map レイヤーの上にしか
-/// 出ないため、画面下部の MapMenuChips 等に被ってマーカーが隠れて
-/// タップできない問題を回避する。
-///
-/// マップ操作 (ドラッグ・ズーム) の度に [MapController.mapEventStream] を
-/// 通じて再描画され、各エントリは [MapCamera.latLngToScreenOffset] で
-/// 算出した screen 座標に [Positioned] で配置される。
-class AstroZenithOverlay extends StatelessWidget {
-  final MapController mapCtrl;
-  final List<AstroZenithEntry> entries;
-  /// 画面下端から N px 以内 (= マーカーの y がこの帯に入ったら) は描画しない。
-  /// MapMenuChips の実測高さを渡すことで「惑星マーカーが 4 タイル領域に
-  /// 行かない」 = タイル上端で止まる挙動を実現する。0 なら clip なし。
-  final double bottomExclusionPx;
-  const AstroZenithOverlay({
-    super.key,
-    required this.mapCtrl,
-    required this.entries,
-    this.bottomExclusionPx = 0,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    if (entries.isEmpty) return const SizedBox.shrink();
-    return StreamBuilder<MapEvent>(
-      stream: mapCtrl.mapEventStream,
-      builder: (ctx, _) {
-        final cam = mapCtrl.camera;
-        final size = cam.nonRotatedSize;
-        if (size.width <= 0 || size.height <= 0) {
-          return const SizedBox.shrink();
-        }
-        return Stack(
-          fit: StackFit.expand,
-          children: [
-            for (final e in entries) _place(cam, size, e),
-          ],
-        );
-      },
-    );
-  }
-
-  Widget _place(MapCamera cam, Size size, AstroZenithEntry e) {
-    final pt = cam.latLngToScreenOffset(e.zenith);
-    const w = 56.0, h = 64.0;
-    // 画面外 (とその近傍) は描画スキップ
-    if (pt.dx < -w || pt.dx > size.width + w ||
-        pt.dy < -h || pt.dy > size.height + h) {
-      return const SizedBox.shrink();
-    }
-    // タイル上端より南は描画しない (マーカーの中心 y が閾値を超えたら clip)
-    if (bottomExclusionPx > 0 &&
-        pt.dy > size.height - bottomExclusionPx) {
-      return const SizedBox.shrink();
-    }
-    return Positioned(
-      left: pt.dx - w / 2,
-      top: pt.dy - h / 2,
-      width: w,
-      height: h,
-      child: e.onTap != null
+    final planetKey = line.planet;
+    final frame = line.frame;
+    final point = zenith;
+    markers.add(Marker(
+      point: zenith,
+      width: 56,
+      height: 64,
+      alignment: Alignment.center,
+      child: onTap != null
           ? GestureDetector(
               behavior: HitTestBehavior.opaque,
-              onTap: e.onTap,
-              child: e.marker,
+              onTap: () => onTap(planetKey, frame, point),
+              child: marker,
             )
-          : e.marker,
-    );
+          : marker,
+    ));
   }
+  return markers;
 }
 
 /// 装飾的な天頂点マーカー (frame で見た目を切替):
