@@ -61,30 +61,37 @@ class MapMenuChips extends StatelessWidget {
       child: SafeArea(
         top: false,
         bottom: false,
-        child: Row(
-          children: [
-            _DailyTransitChip(
-              unseen: dailyTransitUnseen,
-              disabled: dailyTransitDisabled,
-              topCategory: topCategory,
-              onTap: onDailyTransitTap,
-            ),
-            _StaticChip(
-              icon: '🧭',
-              label: '運勢方位',
-              onTap: onFortuneTap,
-            ),
-            _StaticChip(
-              icon: '📍',
-              label: 'LOCATIONS',
-              onTap: onLocationsTap,
-            ),
-            _StaticChip(
-              icon: '📈',
-              label: '予報',
-              onTap: onForecastTap,
-            ),
-          ],
+        // IntrinsicHeight + stretch で全チップに有限 tight vertical 制約を渡す。
+        // これがないと Daily 側の Stack (全 Positioned.fill 構成) が
+        // h=Infinity で assert 失敗する (constraints.biggest が無限になる)。
+        // 副作用として Static / Daily の高さも自動で揃う (max intrinsic に統一)。
+        child: IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _DailyTransitChip(
+                unseen: dailyTransitUnseen,
+                disabled: dailyTransitDisabled,
+                topCategory: topCategory,
+                onTap: onDailyTransitTap,
+              ),
+              _StaticChip(
+                icon: '🧭',
+                label: '運勢方位',
+                onTap: onFortuneTap,
+              ),
+              _StaticChip(
+                icon: '📍',
+                label: 'LOCATIONS',
+                onTap: onLocationsTap,
+              ),
+              _StaticChip(
+                icon: '📈',
+                label: '予報',
+                onTap: onForecastTap,
+              ),
+            ],
+          ),
         ),
       ),
     );
