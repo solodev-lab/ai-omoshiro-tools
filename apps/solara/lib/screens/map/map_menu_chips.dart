@@ -212,20 +212,26 @@ class _DailyTransitChip extends StatelessWidget {
         child: GestureDetector(
           behavior: HitTestBehavior.opaque,
           onTap: disabled ? null : onTap,
+          // 構造 (2026-05-10 第四弾):
+          //   Stack { clipBehavior: Clip.none, children: [
+          //     Positioned (halo, -8 拡張),  // 描画順 = 背面
+          //     Container (non-positioned),  // ← Stack のサイズ基準
+          //   ]}
+          //
+          // 旧 (Positioned.fill Container) では Stack が parent tight 制約
+          // (Row crossAxisAlignment.stretch 由来) を受け、Positioned.fill
+          // Container がその tight 高を埋めて just-fit となり、Column の
+          // intrinsic + padding の subpixel 計算で Daily 側だけ常時
+          // OVERFLOW していた。
+          //
+          // 新構造: Container を non-positioned に置くと Stack のサイズは
+          // Container の intrinsic で決まる (Static chip と同じ) ため、
+          // child Column が padding 内に正しく収まる。halo は Positioned
+          // で外側 (−8) に拡張、clipBehavior: Clip.none で外周描画継続。
           child: Stack(
             clipBehavior: Clip.none,
-            // 構造上の難所:
-            //  - Positioned.fill で Container を Stack 領域いっぱいに伸ばす。
-            //    Stack 自身は Expanded(Row) から tight 制約 (隣の Static chip
-            //    intrinsic 高 ≈ 54) を受けるので、Positioned.fill = その 54 を埋める。
-            //  - Static chip (Container 直下) は Expanded の tight でフィルされる
-            //    のに対し、Daily 側は間に Stack が挟まり StackFit.loose で
-            //    Container がコンテンツ高にしか広がらず ~3-4px 低くなる事象があった
-            //    (CategoryIcon 18 固定 vs Text 行高 21.6 の差も加味)。
-            //  - StackFit.expand は親が unbounded vertical なときに h=Infinity を
-            //    強制して assert 失敗するため使えない。
             children: [
-              // 未閲覧時の halo (chip 矩形の外側に拡張、IgnorePointer)
+              // 1. halo を背面に (Positioned)
               if (showHalo)
                 const Positioned(
                   left: -8,
@@ -234,24 +240,23 @@ class _DailyTransitChip extends StatelessWidget {
                   bottom: -8,
                   child: IgnorePointer(child: _ChipHalo()),
                 ),
-              Positioned.fill(
-                child: Container(
-                  padding: const EdgeInsets.symmetric(vertical: 3),
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: borderColor, width: unseen ? 1.4 : 1),
-                    gradient: fillGradient,
-                  ),
-                  // Static chip と完全一致する寸法:
-                  //   padding 3 + Image 32 + spacing 1 + Text fontSize 9 (~10.8) + padding 3 = 49.8
-                  child: Column(
+              // 2. Container を non-positioned で配置 (Static chip と同じ)
+              Container(
+                padding: const EdgeInsets.symmetric(vertical: 3),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: borderColor, width: unseen ? 1.4 : 1),
+                  gradient: fillGradient,
+                ),
+                // Static chip と完全一致する寸法:
+                //   padding 3 + Image 32 + spacing 1 + Text fontSize 9 (~10.8) + padding 3 = 49.8
+                child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     // 表示分岐 (2026-05-10):
                     //  - disabled (プロフィール未設定): 🌱 emoji (32pt 表示)
                     //  - unseen (未開封): unsealed.webp (9芒星アンティーク章)
-                    //    → 答えがまだ見えていないことを象徴。halo は外側で別途発光
+                    //    → 答えがまだ見えていないことを象徴。halo は背面で発光
                     //  - seen (開封済): topCategory に応じた CategoryIcon
                     //    → 今日の追い風カテゴリを示す
                     if (disabled)
@@ -281,7 +286,6 @@ class _DailyTransitChip extends StatelessWidget {
                       ),
                     ),
                   ],
-                ),
                 ),
               ),
             ],
