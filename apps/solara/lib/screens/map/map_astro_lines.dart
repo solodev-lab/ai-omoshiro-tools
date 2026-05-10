@@ -282,10 +282,15 @@ List<AstroZenithEntry> buildAstroZenithEntries({
 class AstroZenithOverlay extends StatelessWidget {
   final MapController mapCtrl;
   final List<AstroZenithEntry> entries;
+  /// 画面下端から N px 以内 (= マーカーの y がこの帯に入ったら) は描画しない。
+  /// MapMenuChips の実測高さを渡すことで「惑星マーカーが 4 タイル領域に
+  /// 行かない」 = タイル上端で止まる挙動を実現する。0 なら clip なし。
+  final double bottomExclusionPx;
   const AstroZenithOverlay({
     super.key,
     required this.mapCtrl,
     required this.entries,
+    this.bottomExclusionPx = 0,
   });
 
   @override
@@ -315,6 +320,11 @@ class AstroZenithOverlay extends StatelessWidget {
     // 画面外 (とその近傍) は描画スキップ
     if (pt.dx < -w || pt.dx > size.width + w ||
         pt.dy < -h || pt.dy > size.height + h) {
+      return const SizedBox.shrink();
+    }
+    // タイル上端より南は描画しない (マーカーの中心 y が閾値を超えたら clip)
+    if (bottomExclusionPx > 0 &&
+        pt.dy > size.height - bottomExclusionPx) {
       return const SizedBox.shrink();
     }
     return Positioned(
