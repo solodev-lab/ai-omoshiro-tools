@@ -102,17 +102,36 @@ void _showAcgUsageGuide(BuildContext context) {
               color: Color(0xFFC9A84C), fontSize: 14, letterSpacing: 1),
         ),
         SizedBox(height: 10),
+        // ── Jim Lewis への礼と Solara 独自性 ──
         Text(
-          'あなたが地球上のどこにいるかで、惑星のエネルギーの\n'
-          '受け方が変わる。それを世界地図上の「線」で可視化する\n'
-          '画面です。',
+          '— Jim Lewis が遺した、地球上の天体地図 —',
+          style: TextStyle(
+            color: Color(0xFFE9D29A),
+            fontSize: 13,
+            fontStyle: FontStyle.italic,
+            letterSpacing: 0.6,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        SizedBox(height: 8),
+        Text(
+          '1970 年代、占星術師 Jim Lewis によって体系化された手法。\n'
+          '出生時の天体配置を世界地図上の「線」として投影し、\n'
+          'どの土地でどの惑星が立ち上がるのかを描き出します。\n\n'
+          'Solara はこの伝統的な ACG に「時間軸」を重ねました。\n'
+          'Natal / Transit / Progressed / Solar Arc の 4 フレームと\n'
+          '時刻スライダーで、過去・今・先の天体配置に自由に飛べる。\n'
+          '線が時間とともに動き、星の風景が刻一刻と書き換わります。\n\n'
+          'さらに Solara 独自の 16 方位スコア (運勢方位扇) を重ねれば、\n'
+          '「どこに」と「いつ」が、地図と時計の上に同時に立ち上がる。\n'
+          '旅・引越し・出張・大事な約束 — 行動の基準点が、ここで決まります。',
           style: TextStyle(
               color: Color(0xFFE8E0D0),
               fontSize: 13,
-              height: 1.6,
+              height: 1.7,
               fontWeight: FontWeight.w500),
         ),
-        SizedBox(height: 14),
+        SizedBox(height: 18),
         Text(
           '【4 つのフレーム (上部ピル)】',
           style: TextStyle(
