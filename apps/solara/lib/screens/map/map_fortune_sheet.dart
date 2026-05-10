@@ -108,18 +108,20 @@ class FortuneFilterLabel extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       maxLines: 1,
                     ),
-                    // i ボタン: タップで「カテゴリと関連惑星ペア」popup を表示。
+                    // ? ボタン: タップで「カテゴリと関連惑星ペア」popup を表示。
                     // 親 GestureDetector (onTap=カテゴリ次へ切替) の上にあるが、
                     // 内側が gesture arena で勝つため切替は発火しない。
                     // crossAxisAlignment.end によりアイコン右端 = ラベル右端 =
                     // 「総合」の「合」の文字の真下に配置される。
+                    // 2026-05-10: info_outline (ⓘ) → help_outline (❓) に変更。
+                    // 「使い方」系の ? マークに統一。size 11 → 13 で視認性向上。
                     GestureDetector(
                       behavior: HitTestBehavior.opaque,
                       onTap: () => showCategoryInfoPopup(context),
                       child: const Padding(
                         padding: EdgeInsets.only(left: 6, top: 1),
-                        child: Icon(Icons.info_outline,
-                            size: 11, color: Color(0xFF888888)),
+                        child: Icon(Icons.help_outline,
+                            size: 13, color: Color(0xFF888888)),
                       ),
                     ),
                   ],
