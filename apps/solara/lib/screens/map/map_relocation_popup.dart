@@ -206,11 +206,11 @@ class MapRelocationPopup extends StatelessWidget {
         ? '${dist.toStringAsFixed(1)}km'
         : '${dist.round()}km';
 
-    // Tier S #2: 文脈が揃っていれば行タップで詳細 BottomSheet を開く
-    final canOpen = natalSummary != null;
-
+    // 静的解説のみなので natalSummary 等の文脈に関わらず常にタップ可能。
+    // 旧: natalSummary != null (AI 用文脈) で判定していたが、AI 解説は
+    // 2026-05-11 撤去済み。
     return InkWell(
-      onTap: canOpen ? () => _openLineSheet(context, n) : null,
+      onTap: () => _openLineSheet(context, n),
       borderRadius: BorderRadius.circular(4),
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 2, horizontal: 2),
@@ -259,11 +259,9 @@ class MapRelocationPopup extends StatelessWidget {
               fontSize: 13, color: const Color(0xFF777777),
             ),
           ),
-          if (canOpen) ...[
-            const SizedBox(width: 4),
-            const Icon(Icons.chevron_right,
-                size: 14, color: Color(0xFF888888)),
-          ],
+          const SizedBox(width: 4),
+          const Icon(Icons.chevron_right,
+              size: 14, color: Color(0xFF888888)),
           ],
         ),
       ),
@@ -279,11 +277,6 @@ class MapRelocationPopup extends StatelessWidget {
       frame: frameKey,
       tappedLat: tapLat,
       tappedLng: tapLng,
-      natalSummary: natalSummary,
-      transitDate: frameKey == 'transit' ? transitDate : null,
-      tappedPlaceName: tappedPlaceName,
-      lang: lang,
-      userName: userName,
     );
   }
 

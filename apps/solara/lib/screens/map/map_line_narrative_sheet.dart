@@ -1,18 +1,18 @@
 // ══════════════════════════════════════════════════
-// Map Line Narrative Sheet — Tier S #2
-// A*C*G ライン (natal / transit) のタップ詳細 BottomSheet。
+// Map Line Narrative Sheet
+// A*C*G ライン (natal / transit) のタップ詳細 popup。
 //
 // 構成:
-//   ① 静的セクション: タイトル + 用語辞書 (aspect_lines / transit_acg) サマリ
-//   ② 「詳しく読む (AI解釈)」ボタン → Gemini API 呼び出し
-//   ③ 結果を Soft/Hard に分けて表示
-//   ④ 失敗時は静的セクションのままフォールバック (詳細生成失敗の旨を提示)
+//   ① ヘッダー: 惑星 glyph + 名前 + ANGLE/Frame chip + 距離
+//   ② 静的セクション: 用語辞書 (aspect_lines / transit_acg) サマリ
 //
 // 設計思想: project_solara_design_philosophy.md (Soft/Hard 独立2エネルギー)
 //
+// 旧実装にあった Gemini AI 解説機能 (詳しく読むボタン → 動的生成) は
+// 2026-05-11 撤去。静的辞書ベースの解説のみに統一。
+//
 // 関連:
 //   - 呼び出し元: map_relocation_popup.dart の _buildLineRow タップ
-//   - API: utils/line_narrative_api.dart
 //   - 静的辞書: utils/astro_glossary.dart (aspect_lines / transit_acg)
 // ══════════════════════════════════════════════════
 
@@ -22,7 +22,6 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../theme/solara_colors.dart';
 import '../../utils/astro_glossary.dart';
 import '../../utils/astro_lines.dart';
-import '../../utils/line_narrative_api.dart';
 import '../../widgets/info_popup.dart';
 import '../horoscope/horo_constants.dart' show planetGlyphs, planetNamesJP;
 import 'map_constants.dart' show planetMeta;
@@ -38,32 +37,12 @@ class MapLineNarrativeSheet extends StatefulWidget {
   final double tappedLat;
   final double tappedLng;
 
-  /// natal 文脈（Gemini プロンプトに渡す任意ヒント）
-  final Map<String, int>? natalSummary;
-
-  /// frame=='transit' 時の時刻（ISO8601）
-  final String? transitDate;
-
-  /// 表示用の地点名（任意・null なら緯度経度）
-  final String? tappedPlaceName;
-
-  /// 言語
-  final String lang;
-
-  /// ユーザー名（任意・narrative の語りかけに使う）
-  final String? userName;
-
   const MapLineNarrativeSheet({
     super.key,
     required this.nearby,
     required this.frame,
     required this.tappedLat,
     required this.tappedLng,
-    this.natalSummary,
-    this.transitDate,
-    this.tappedPlaceName,
-    this.lang = 'ja',
-    this.userName,
   });
 
   @override
@@ -71,10 +50,6 @@ class MapLineNarrativeSheet extends StatefulWidget {
 }
 
 class _MapLineNarrativeSheetState extends State<MapLineNarrativeSheet> {
-  bool _loading = false;
-  bool _failed = false;
-  LineNarrative? _narrative;
-
   String get _planet => widget.nearby.line.planet;
   String get _angle => widget.nearby.line.angle.toUpperCase();
 
@@ -88,41 +63,11 @@ class _MapLineNarrativeSheetState extends State<MapLineNarrativeSheet> {
   String get _glossaryKey =>
       widget.frame == 'transit' ? 'transit_acg' : 'aspect_lines';
 
-  Future<void> _loadNarrative() async {
-    setState(() {
-      _loading = true;
-      _failed = false;
-    });
-    final result = await fetchLineNarrative(
-      frame: widget.frame,
-      planet: _planet,
-      angle: _angle,
-      tappedLat: widget.tappedLat,
-      tappedLng: widget.tappedLng,
-      tappedPlaceName: widget.tappedPlaceName,
-      natalSummary: widget.natalSummary,
-      transitDate: widget.transitDate,
-      userName: widget.userName,
-      lang: widget.lang,
-    );
-    if (!mounted) return;
-    setState(() {
-      _loading = false;
-      if (result == null || result.isEmpty) {
-        _failed = true;
-      } else {
-        _narrative = result;
-      }
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     // 本文のみを返す。外側の枠 (ConstrainedBox + maxHeight 制限 +
     // SingleChildScrollView + 右上 × ボタン + 外タップで閉じる) は
     // showInfoPopup 側のシェル (_InfoPopupShell) が提供する。
-    // これにより他の説明 popup (Aspect / Pattern / Direction Energy 等)
-    // と同じ挙動 (画面内に収まり、長文は下スクロール) になる。
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -130,16 +75,6 @@ class _MapLineNarrativeSheetState extends State<MapLineNarrativeSheet> {
         _buildHeader(),
         const SizedBox(height: 12),
         _buildStaticSection(),
-        const SizedBox(height: 18),
-        if (_narrative != null) ...[
-          _buildNarrativeSection(),
-        ] else ...[
-          _buildLoadButton(),
-          if (_failed) ...[
-            const SizedBox(height: 8),
-            _buildFailedNote(),
-          ],
-        ],
       ],
     );
   }
@@ -268,186 +203,18 @@ class _MapLineNarrativeSheetState extends State<MapLineNarrativeSheet> {
     );
   }
 
-  // ── 詳しく読むボタン ──
-  Widget _buildLoadButton() {
-    return SizedBox(
-      width: double.infinity,
-      child: ElevatedButton.icon(
-        onPressed: _loading ? null : _loadNarrative,
-        icon: _loading
-            ? const SizedBox(
-                width: 14, height: 14,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation<Color>(
-                      SolaraColors.solaraGold),
-                ),
-              )
-            : const Icon(Icons.auto_awesome, size: 16),
-        label: Text(
-          _loading
-              ? (widget.lang == 'en' ? 'Reading…' : '解釈中…')
-              : (widget.lang == 'en'
-                  ? 'Read with AI'
-                  : '詳しく読む (AI解釈)'),
-          style: GoogleFonts.notoSansJp(
-            fontSize: 13,
-            color: SolaraColors.solaraGold,
-            fontWeight: FontWeight.w600,
-            letterSpacing: 0.5,
-          ),
-        ),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0x22C9A84C),
-          foregroundColor: SolaraColors.solaraGold,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-            side: BorderSide(color: SolaraColors.solaraGold.withAlpha(120)),
-          ),
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          elevation: 0,
-        ),
-      ),
-    );
-  }
-
-  // ── 失敗時の注記 (静的セクションは表示済みなので軽く済ませる) ──
-  Widget _buildFailedNote() {
-    return Row(
-      children: [
-        const Icon(Icons.cloud_off,
-            size: 14, color: Color(0xFF888888)),
-        const SizedBox(width: 6),
-        Expanded(
-          child: Text(
-            widget.lang == 'en'
-                ? 'Could not load AI narrative. Static reading is shown above.'
-                : 'AI解釈を取得できませんでした。上の静的解説が表示されています。',
-            style: GoogleFonts.notoSansJp(
-              fontSize: 13,
-              color: const Color(0xFF888888),
-              height: 1.4,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  // ── 動的 narrative セクション ──
-  Widget _buildNarrativeSection() {
-    final n = _narrative!;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        if (n.title.isNotEmpty) ...[
-          Text(
-            n.title,
-            style: GoogleFonts.notoSansJp(
-              fontSize: 13,
-              color: SolaraColors.solaraGoldLight,
-              fontWeight: FontWeight.w600,
-              letterSpacing: 0.5,
-            ),
-          ),
-          const SizedBox(height: 8),
-        ],
-        if (n.narrative.isNotEmpty)
-          Text(
-            n.narrative,
-            style: GoogleFonts.notoSansJp(
-              fontSize: 13,
-              color: SolaraColors.textPrimary,
-              height: 1.75,
-              letterSpacing: 0.2,
-            ),
-          ),
-        if (n.softNote.isNotEmpty) ...[
-          const SizedBox(height: 14),
-          _buildEnergyNote(
-            label: widget.lang == 'en' ? 'Soft' : 'ソフト',
-            symbol: '☯',
-            body: n.softNote,
-            color: SolaraColors.energySoft,
-          ),
-        ],
-        if (n.hardNote.isNotEmpty) ...[
-          const SizedBox(height: 8),
-          _buildEnergyNote(
-            label: widget.lang == 'en' ? 'Hard' : 'ハード',
-            symbol: '☐',
-            body: n.hardNote,
-            color: SolaraColors.energyHard,
-          ),
-        ],
-      ],
-    );
-  }
-
-  Widget _buildEnergyNote({
-    required String label,
-    required String symbol,
-    required String body,
-    required Color color,
-  }) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(10, 8, 10, 10),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withAlpha(110)),
-        color: color.withAlpha(20),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Text(symbol, style: TextStyle(fontSize: 14, color: color)),
-              const SizedBox(width: 6),
-              Text(
-                label,
-                style: GoogleFonts.notoSansJp(
-                  fontSize: 13,
-                  color: color,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 1.0,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 4),
-          Text(
-            body,
-            style: GoogleFonts.notoSansJp(
-              fontSize: 13,
-              color: SolaraColors.textPrimary,
-              height: 1.6,
-              letterSpacing: 0.2,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }
 
 /// 共通呼び出しヘルパー: タップから直接 説明 popup を表示。
 /// Solara の説明 popup 統一仕様 (showInfoPopup) に乗せる
 /// → 画面高さ - 120px で上限が切られ、長文は SingleChildScrollView で
 ///   下スクロール、右上 × で閉じる、外タップでも閉じる挙動になる。
-/// 旧: showModalBottomSheet 直書きで、isScrollControlled: true と
-///   無制限の高さの組合せでフォント拡大時に上端が画面外にはみ出していた。
 Future<void> showLineNarrativeSheet(
   BuildContext context, {
   required NearbyAstroLine nearby,
   required String frame,
   required double tappedLat,
   required double tappedLng,
-  Map<String, int>? natalSummary,
-  String? transitDate,
-  String? tappedPlaceName,
-  String lang = 'ja',
-  String? userName,
 }) {
   return showInfoPopup(
     context: context,
@@ -456,11 +223,6 @@ Future<void> showLineNarrativeSheet(
       frame: frame,
       tappedLat: tappedLat,
       tappedLng: tappedLng,
-      natalSummary: natalSummary,
-      transitDate: transitDate,
-      tappedPlaceName: tappedPlaceName,
-      lang: lang,
-      userName: userName,
     ),
   );
 }
