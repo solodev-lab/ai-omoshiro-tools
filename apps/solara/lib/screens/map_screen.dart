@@ -730,6 +730,18 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     });
   }
 
+  /// 検索 UI 関連 state を一括クリア (バー / focus / 結果リスト / フレーミング)。
+  /// 端末 back ボタン (PopScope) で「検索系をまとめて消して Map に戻す」用途。
+  void _clearAllSearch() {
+    setState(() {
+      _searchOpen = false;
+      _searchFocus = null;
+      _searchHits = [];
+      _searchListCenter = null;
+      _searchListZoom = null;
+    });
+  }
+
   // 旧 _formatSelectedDate は MapTimeSlider 内で表示するため削除 (2026-04-29)。
 
   /// 右上 Daily Transit Badge タップ時のハンドラ。
@@ -1255,14 +1267,7 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
         } else if (_viewpointMenuOpen) {
           setState(() => _viewpointMenuOpen = false);
         } else if (hasSearchUi) {
-          // 検索状態 (バー / focus / 結果) を 1 回で完全クリア
-          setState(() {
-            _searchOpen = false;
-            _searchFocus = null;
-            _searchHits = [];
-            _searchListCenter = null;
-            _searchListZoom = null;
-          });
+          _clearAllSearch();
         }
       },
       child: _buildBody(context),
