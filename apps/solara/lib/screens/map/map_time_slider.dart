@@ -56,10 +56,12 @@ class _MapTimeSliderState extends State<MapTimeSlider> {
     return d.toLocal().hour;
   }
 
-  /// 確定中の JST 分 (0..59)
+  /// 確定中の JST 分 (10 分刻みに floor)。
+  /// LIVE 時 (widget.date==null) の現在時刻が 12 分や 1 分など
+  /// 中途半端な値を出さないよう、表示・操作とも 10 分単位に揃える。
   int _committedMinuteJst() {
     final d = widget.date ?? DateTime.now();
-    return d.toLocal().minute;
+    return (d.toLocal().minute ~/ 10) * 10;
   }
 
   /// 表示用の (日付 + 時刻) JST
