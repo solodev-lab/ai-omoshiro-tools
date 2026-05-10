@@ -1204,14 +1204,20 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     // 優先順位 (上から処理):
     //   1. Daily Transit popup
     //   2. Fortune Sheet (運勢方位)
-    //   3. ACG (Astro*Carto*Graphy) モード
-    //   4. 表示メニュー / 地点メニュー (左サイド展開メニュー)
-    //   5. 検索バー (= _searchOpen / focus / hits を一括クリア)
+    //   3. Zenith popup (天頂タップ、 ACG モード中にも開く)
+    //      ACG モード中なら zenith 閉じても ACG は維持 (= ACG に戻る)。
+    //   4. ACG (Astro*Carto*Graphy) モード
+    //   5. 表示メニュー / 地点メニュー (左サイド展開メニュー)
+    //   6. 検索バー (= _searchOpen / focus / hits を一括クリア)
     //
-    // 検索状態は back 1 回で全部閉じる方針 (オーナー要望「Map 画面に戻る」)。
+    // 注: 以下は Navigator stack (showDialog / showModalBottomSheet) に
+    // 乗っているため Flutter 標準で back 自動処理される (この PopScope 不要):
+    //   - Line tap 説明 (MapLineNarrativeSheet)
+    //   - showInfoPopup 各種
     final hasSearchUi = _searchOpen || _searchFocus != null || _searchHits.isNotEmpty;
     final hasOverlay = _dailyTransitOpen ||
         _fortuneSheetOpen ||
+        _zenithTapInfo != null ||
         _astroCartoMode ||
         _displayMenuOpen ||
         _viewpointMenuOpen ||
@@ -1225,6 +1231,8 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
           _onDailyTransitClose();
         } else if (_fortuneSheetOpen) {
           setState(() => _fortuneSheetOpen = false);
+        } else if (_zenithTapInfo != null) {
+          setState(() => _zenithTapInfo = null);
         } else if (_astroCartoMode) {
           _exitAstroCartoMode();
         } else if (_displayMenuOpen) {
