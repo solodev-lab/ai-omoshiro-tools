@@ -1197,14 +1197,38 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   // ══════════════════════════════════════════════
   @override
   Widget build(BuildContext context) {
-    // 物理戻るボタン (Android) で検索 focus → 検索結果リスト → 通常Map の順に
-    // 段階的に閉じる。focus / hits 表示中は OS のデフォルト pop を抑制。
+    // 物理戻るボタン (Android) で overlay/popup を上から順に閉じる。
+    // 全 overlay が閉じている時のみ canPop=true で main.dart の root PopScope
+    // (= タブ Map に戻す or アプリ終了) に伝播する。
+    //
+    // 優先順位 (上から処理):
+    //   1. Daily Transit popup
+    //   2. ACG (Astro*Carto*Graphy) モード
+    //   3. 表示メニュー / 地点メニュー (左サイド展開メニュー)
+    //   4. 検索 focus
+    //   5. 検索結果リスト
+    //
+    // 全部 false の時のみ canPop=true → main.dart PopScope に渡る。
+    final hasOverlay = _dailyTransitOpen ||
+        _astroCartoMode ||
+        _displayMenuOpen ||
+        _viewpointMenuOpen ||
+        _searchFocus != null ||
+        _searchHits.isNotEmpty;
     return PopScope(
-      canPop: _searchFocus == null && _searchHits.isEmpty,
+      canPop: !hasOverlay,
       onPopInvokedWithResult: (didPop, _) {
         if (didPop) return;
-        if (_searchFocus != null) {
-          // hits は維持 → リスト復帰 + 地図も検索一覧時の状態に戻す
+        // 上から順に 1 つだけ閉じる (back 1 回 = overlay 1 つ閉じる)
+        if (_dailyTransitOpen) {
+          _onDailyTransitClose();
+        } else if (_astroCartoMode) {
+          _exitAstroCartoMode();
+        } else if (_displayMenuOpen) {
+          setState(() => _displayMenuOpen = false);
+        } else if (_viewpointMenuOpen) {
+          setState(() => _viewpointMenuOpen = false);
+        } else if (_searchFocus != null) {
           setState(() => _searchFocus = null);
           _restoreSearchListView();
         } else if (_searchHits.isNotEmpty) {
