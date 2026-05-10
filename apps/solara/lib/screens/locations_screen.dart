@@ -700,8 +700,8 @@ void _showLocationsUsageGuide(BuildContext context) {
         ),
         SizedBox(height: 4),
         Text(
-          'Map 画面の左側 📍 (VIEWPOINT) ボタンから、\n'
-          '地図中央の地点を VIEWPOINT として保存できます。\n'
+          'Map 画面の左側 📍 ボタンから、地図中央の地点を\n'
+          'VIEWPOINT と LOCATION のどちらにも保存できます。\n'
           '保存した地点は名前変更や削除も可能です。',
           style: TextStyle(
               color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
