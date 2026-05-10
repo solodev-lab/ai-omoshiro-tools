@@ -1206,17 +1206,16 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     //   2. Fortune Sheet (運勢方位)
     //   3. ACG (Astro*Carto*Graphy) モード
     //   4. 表示メニュー / 地点メニュー (左サイド展開メニュー)
-    //   5. 検索 focus
-    //   6. 検索結果リスト
+    //   5. 検索バー (= _searchOpen / focus / hits を一括クリア)
     //
-    // 全部 false の時のみ canPop=true → main.dart PopScope に渡る。
+    // 検索状態は back 1 回で全部閉じる方針 (オーナー要望「Map 画面に戻る」)。
+    final hasSearchUi = _searchOpen || _searchFocus != null || _searchHits.isNotEmpty;
     final hasOverlay = _dailyTransitOpen ||
         _fortuneSheetOpen ||
         _astroCartoMode ||
         _displayMenuOpen ||
         _viewpointMenuOpen ||
-        _searchFocus != null ||
-        _searchHits.isNotEmpty;
+        hasSearchUi;
     return PopScope(
       canPop: !hasOverlay,
       onPopInvokedWithResult: (didPop, _) {
@@ -1232,11 +1231,11 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
           setState(() => _displayMenuOpen = false);
         } else if (_viewpointMenuOpen) {
           setState(() => _viewpointMenuOpen = false);
-        } else if (_searchFocus != null) {
-          setState(() => _searchFocus = null);
-          _restoreSearchListView();
-        } else if (_searchHits.isNotEmpty) {
+        } else if (hasSearchUi) {
+          // 検索状態 (バー / focus / 結果) を 1 回で完全クリア
           setState(() {
+            _searchOpen = false;
+            _searchFocus = null;
             _searchHits = [];
             _searchListCenter = null;
             _searchListZoom = null;
