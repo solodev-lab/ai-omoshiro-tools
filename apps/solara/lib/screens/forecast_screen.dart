@@ -1060,11 +1060,11 @@ class _DayStepperButton extends StatelessWidget {
       onTap: enabled ? onTap : null,
       behavior: HitTestBehavior.opaque,
       child: SizedBox(
-        width: 28, height: 28,
+        width: 40, height: 40,
         child: Center(
           child: Icon(
             icon,
-            size: 22,
+            size: 32,
             color: enabled
                 ? const Color(0xFFC9A84C)
                 : const Color(0x33C9A84C),
