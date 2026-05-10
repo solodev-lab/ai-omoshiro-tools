@@ -76,41 +76,50 @@ class _SanctuaryOrbOverlayState extends State<SanctuaryOrbOverlay> {
           controller: scrollCtrl,
           children: [
             // Header
+            // 旧: Row(spaceBetween) で左右両方が固定 → フォント拡大時に
+            // タイトル + リセット + 閉じるが画面幅を超え RIGHT OVERFLOWED。
+            // タイトル側を Expanded で吸収幅にし、必要なら ellipsis で
+            // カットして overflow を防ぐ。
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                // HTML: .birth-title { font-size:16px; font-weight:700; color:#F9D976; letter-spacing:1px; }
-                const Row(mainAxisSize: MainAxisSize.min, children: [
-                  Icon(Icons.tune, size: 18, color: Color(0xFFF9D976)),
-                  SizedBox(width: 8),
-                  Text('Aspect Orbs',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Color(0xFFF9D976), letterSpacing: 1)),
-                ]),
-                Row(children: [
-                  GestureDetector(
-                    onTap: _reset,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: const Color(0x40F9D976)),
-                      ),
-                      child: const Text('リセット', style: TextStyle(fontSize: 15, color: Color(0xFFF9D976))),
+                Expanded(
+                  child: Row(mainAxisSize: MainAxisSize.min, children: const [
+                    Icon(Icons.tune, size: 18, color: Color(0xFFF9D976)),
+                    SizedBox(width: 8),
+                    Flexible(
+                      child: Text('Aspect Orbs',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Color(0xFFF9D976), letterSpacing: 1)),
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  GestureDetector(
-                    onTap: () => Navigator.pop(context),
-                    child: Container(
-                      width: 32, height: 32,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: const Color(0x14FFFFFF),
-                      ),
-                      child: const Center(child: Icon(Icons.close, size: 18, color: Color(0xFFACACAC))),
+                  ]),
+                ),
+                GestureDetector(
+                  onTap: _reset,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: const Color(0x40F9D976)),
                     ),
+                    child: const Text('リセット',
+                      maxLines: 1,
+                      softWrap: false,
+                      style: TextStyle(fontSize: 15, color: Color(0xFFF9D976))),
                   ),
-                ]),
+                ),
+                const SizedBox(width: 8),
+                GestureDetector(
+                  onTap: () => Navigator.pop(context),
+                  child: Container(
+                    width: 32, height: 32,
+                    decoration: const BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Color(0x14FFFFFF),
+                    ),
+                    child: const Center(child: Icon(Icons.close, size: 18, color: Color(0xFFACACAC))),
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 20),
@@ -217,9 +226,11 @@ class _SanctuaryOrbOverlayState extends State<SanctuaryOrbOverlay> {
               }),
             ),
           ),
-          // HTML: .orb-val { font-size:13px; color:#F9D976; min-width:36px; text-align:center; }
+          // 数値のみ (旧: 末尾に「°」を付けていたが、各アスペクト名 ('Trine
+          // (120°)' など) で既に度マークが提示されているため、設定値側の
+          // 「°」は冗長。削除して数値だけに。
           SizedBox(width: 36,
-            child: Text('${val.toStringAsFixed(1)}°',
+            child: Text(val.toStringAsFixed(1),
               style: TextStyle(fontSize: 15, color: const Color(0xFFF9D976), fontWeight: FontWeight.w600,
                 decoration: val == defaultVal ? TextDecoration.underline : null),
               textAlign: TextAlign.center)),
