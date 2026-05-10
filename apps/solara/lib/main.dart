@@ -108,21 +108,35 @@ class _SolaraHomeState extends State<SolaraHome> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      extendBody: true,
-      body: IndexedStack(
-        index: _currentIndex,
-        // 2026-05-03: TickerMode で裏画面の AnimationController.repeat() を停止。
-        // Galaxy 星空回転 / Horoscope 円 / Tarot Altar 等の常時 tick が
-        // SurfaceFlinger の release タイミングを乱して Map 画面の点滅を引き起こしていた。
-        children: [
-          for (int i = 0; i < _screens.length; i++)
-            TickerMode(enabled: i == _currentIndex, child: _screens[i]),
-        ],
-      ),
-      bottomNavigationBar: SolaraNavBar(
-        currentIndex: _currentIndex,
-        onTap: _onTabTap,
+    // Android system back button:
+    //   - Map 以外のタブ → Map に戻す
+    //   - Map タブ → アプリを閉じる (= 通常の root pop = SystemNavigator.pop)
+    // タブ内で Navigator.push された sub-screen (LocationsScreen 等) は、
+    // この PopScope より内側の Navigator で先に pop されるため干渉しない。
+    return PopScope(
+      canPop: _currentIndex == 0,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        if (_currentIndex != 0) {
+          _onTabTap(0);
+        }
+      },
+      child: Scaffold(
+        extendBody: true,
+        body: IndexedStack(
+          index: _currentIndex,
+          // 2026-05-03: TickerMode で裏画面の AnimationController.repeat() を停止。
+          // Galaxy 星空回転 / Horoscope 円 / Tarot Altar 等の常時 tick が
+          // SurfaceFlinger の release タイミングを乱して Map 画面の点滅を引き起こしていた。
+          children: [
+            for (int i = 0; i < _screens.length; i++)
+              TickerMode(enabled: i == _currentIndex, child: _screens[i]),
+          ],
+        ),
+        bottomNavigationBar: SolaraNavBar(
+          currentIndex: _currentIndex,
+          onTap: _onTabTap,
+        ),
       ),
     );
   }
