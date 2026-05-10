@@ -5,40 +5,21 @@ import io.flutter.embedding.android.FlutterActivity
 /**
  * Solara 用 MainActivity。
  *
- * Android 13+ (API 33+) の OnBackInvokedDispatcher.register/unregister は
- * register-side で `sendCancelIfRunning` が必ず呼ばれ、現在進行中ジェスチャ
- * がない場合 (= ほぼ常にそう) Android Framework が
+ * 2026-05-10: 旧実装で OnBackInvokedDispatcher への register/unregister と
+ * setFrameworkHandlesBack を no-op override していた。これは
  *   W/WindowOnBackDispatcher: sendCancelIfRunning: isInProgress=false ...
- * という警告を吐く。Flutter は Route push/pop ごとに register/unregister を
- * 反復するため、ダイアログ/ドロップダウン等を 1 回開閉する度に警告が
- * 1〜2 件発生する。
+ * の警告ノイズを抑える目的だったが、副作用として Flutter 側の PopScope
+ * (onPopInvokedWithResult) が完全に無効化されていた:
+ *   - Android 13+ の PopScope は OnBackInvokedDispatcher 経由で発火する
+ *   - register を no-op にすると dispatcher が動かず PopScope.callback も呼ばれない
+ *   - 結果、 Solara の Galaxy 等のタブから back ボタンを押すと、 PopScope
+ *     によるタブ切替が起きずに直接 finish() = アプリ終了していた
  *
- * Flutter Engine の `setFrameworkHandlesBack` (PlatformChannel) /
- * `registerOnBackInvokedCallback` / `unregisterOnBackInvokedCallback`
- * を no-op で override し、Android dispatcher への登録自体を抑止する。
- * これによりエミュレータ実機上で警告は完全消滅。
+ * PopScope を機能させるため override を全廃止。 警告ノイズ
+ * (sendCancelIfRunning) は Flutter Engine 既知 issue で致命ではないため
+ * 受け入れる。
  *
- * トレードオフ: Flutter の back 処理が Android の predictive back gesture
- * API 経由ではなく、legacy onBackPressed() フォールバック経路を通る。
- * Solara の戻る挙動 (画面遷移・モーダル閉じ) は維持される。
- *
- * 注: R8/ProGuard が空 body の override を strip しないよう
- * proguard-rules.pro で MainActivity を keep。
+ * 注: R8/ProGuard 設定 (proguard-rules.pro) で MainActivity を keep しているが、
+ * 空 class でも keep ルールは有効。
  */
-class MainActivity : FlutterActivity() {
-
-    /** Flutter からの toggle (PlatformChannel 経由) を完全無視。 */
-    override fun setFrameworkHandlesBack(frameworkHandlesBack: Boolean) {
-        // no-op
-    }
-
-    /** OnBackInvokedDispatcher への register をしない。 */
-    override fun registerOnBackInvokedCallback() {
-        // no-op
-    }
-
-    /** unregister も呼ぶ意味なし (register していないため)。 */
-    override fun unregisterOnBackInvokedCallback() {
-        // no-op
-    }
-}
+class MainActivity : FlutterActivity()

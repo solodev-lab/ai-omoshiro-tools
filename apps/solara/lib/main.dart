@@ -116,9 +116,11 @@ class _SolaraHomeState extends State<SolaraHome> {
     return PopScope(
       canPop: _currentIndex == 0,
       onPopInvokedWithResult: (didPop, result) {
+        debugPrint('[Solara PopScope] tab=$_currentIndex didPop=$didPop');
         if (didPop) return;
         if (_currentIndex != 0) {
           _onTabTap(0);
+          debugPrint('[Solara PopScope] -> switched to Map tab');
         }
       },
       child: Scaffold(
