@@ -115,13 +115,19 @@ ICONS = {
     ),
 
     "work": (
-        "A large masonic compass-and-square symbol at exact center occupying ~75% of the canvas: "
-        "a draftsman's COMPASS (two legs forming an inverted V) overlapping with a CARPENTER'S SQUARE "
-        "(an L-shaped right angle), forming the classic Freemason emblem. "
-        "Drawn with thick bold gold strokes. "
-        "NO Saturn glyph, NO planetary rings, NO astrological symbols. "
+        "A large majestic oak tree at exact center occupying ~80% of the canvas, "
+        "drawn with thick bold gold strokes. The tree has wide spreading branches "
+        "at the top with detailed foliage and a few visible acorns, a strong trunk, "
+        "and visible roots spreading symmetrically at the bottom — "
+        "Tree of Life style with branches and roots in balanced proportion. "
+        "NO masonic compass, NO carpenter's square, NO Freemason emblem, "
+        "NO letters of any kind (especially NO 'G'), "
+        "NO astrological symbols, NO planetary glyphs, "
+        "NO numbers, NO text inside or around the tree. "
+        "The tree symbolizes growth, social presence, and accumulated effort - "
+        "applicable to students, workers, and retirees alike. "
         + accent("dusty slate-blue indigo grey (#7B8B9E)")
-        + "The compass and square carry the slate-blue tint; the dotted ring stays gold."
+        + "The foliage and roots carry the slate-blue tint; the trunk and dotted ring stay gold."
     ),
 
     "healing_moon": (
@@ -158,10 +164,15 @@ ICONS = {
 
     "fortune": (
         "A large compass rose at exact center occupying ~80% of the canvas: "
-        "8 prominent radiating points (N/E/S/W cardinal + 4 intermediate), "
-        "with thick bold gold strokes. "
-        "A small upward-pointing arrow or fleur-de-lis at the North position. "
-        "Cartographic engraving style, simplified. "
+        "8 prominent radiating triangular points - 4 cardinal directions at the "
+        "topmost / rightmost / bottommost / leftmost positions, plus 4 intermediate "
+        "diagonal directions. Drawn with thick bold gold strokes. "
+        "A small upward-pointing arrow or fleur-de-lis ornament at the topmost position. "
+        "ABSOLUTELY NO LETTERS anywhere on the image. "
+        "NO compass direction abbreviations, NO labels, NO writing, NO characters, "
+        "NO text of any kind. The directional points are visually distinct by their "
+        "angular position only - NOT by any letter, symbol, or character. "
+        "Simplified cartographic engraving aesthetic. "
         + accent("aged copper bronze (#9A6F4A)")
         + "The compass points carry the copper tint; the central rose lines and dotted ring stay gold."
     ),
