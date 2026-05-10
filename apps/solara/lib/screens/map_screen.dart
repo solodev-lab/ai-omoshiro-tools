@@ -1724,6 +1724,23 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                 _searchListZoom = null;
               });
             },
+            // VIEWPOINT スロットへ登録 (popup は閉じない: 連続で
+            // LOCATION 側にも登録したいケースに対応)。
+            onSaveAsViewpoint: () async {
+              final f = _searchFocus!;
+              final err = await _vpSlotMgr
+                  .saveCurrentLocation(LatLng(f.lat, f.lng));
+              await _reloadLocationSlots();
+              return err;
+            },
+            // LOCATION スロットへ登録
+            onSaveAsLocation: () async {
+              final f = _searchFocus!;
+              final err = await _locSlotMgr
+                  .saveCurrentLocation(LatLng(f.lat, f.lng));
+              await _reloadLocationSlots();
+              return err;
+            },
           ),
         ),
 

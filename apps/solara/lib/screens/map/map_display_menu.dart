@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../widgets/info_popup.dart';
 import 'map_constants.dart';
 import 'map_styles.dart';
 
@@ -78,9 +79,9 @@ class _MapDisplayMenuState extends State<MapDisplayMenu> {
         mainAxisSize: MainAxisSize.min,
         children: [
           _scrollRow([
-            _tabBtn('Map', _tab == _MainTab.map, () => setState(() => _tab = _MainTab.map)),
-            _tabBtn('惑星', _tab == _MainTab.planet, () => setState(() => _tab = _MainTab.planet)),
-            _tabBtn('ACG', _tab == _MainTab.acg, () => setState(() => _tab = _MainTab.acg)),
+            _tabBtnWithInfo('Map', _MainTab.map),
+            _tabBtnWithInfo('惑星', _MainTab.planet),
+            _tabBtnWithInfo('ACG', _MainTab.acg),
           ]),
           const SizedBox(height: 6),
           _scrollRow(_l2Buttons()),
@@ -184,6 +185,78 @@ class _MapDisplayMenuState extends State<MapDisplayMenu> {
     );
   }
 
+  /// L1 タブ + 右隣に i ボタン (タップで内部表示の説明 popup)。
+  /// i は本体タブと別の GestureDetector を持ち、タブ切替とは独立に動く。
+  Widget _tabBtnWithInfo(String label, _MainTab tab) {
+    return Row(mainAxisSize: MainAxisSize.min, children: [
+      _tabBtn(label, _tab == tab, () => setState(() => _tab = tab)),
+      const SizedBox(width: 2),
+      GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () => _showTabInfo(tab),
+        child: const Padding(
+          padding: EdgeInsets.all(4),
+          child: Icon(Icons.info_outline,
+              size: 14, color: Color(0x99C9A84C)),
+        ),
+      ),
+    ]);
+  }
+
+  /// L1 主タブの内部表示を説明する popup を出す。
+  /// 内容は L2/L3 の各項目で何ができるかの概要。
+  void _showTabInfo(_MainTab tab) {
+    late String title;
+    late List<(String, String)> items;
+    switch (tab) {
+      case _MainTab.map:
+        title = 'Map レイヤー';
+        items = const [
+          ('Map / MapDark', '通常マップとダークマップを切替。視認性の好みで選択。'),
+          ('運勢方位', '自分の運勢を 16 方位の扇形で地図上に表示。色が濃い方位ほど追い風。タップでカテゴリ別に絞り込める。'),
+          ('コンパス', '中心地点から見た方位線 (N / E / S / W)。距離感の把握に。'),
+        ];
+        break;
+      case _MainTab.planet:
+        title = '惑星レイヤー';
+        items = const [
+          ('タイプ', 'どのチャートの惑星を表示するか。Natal (出生時固定) / Prog (1日=1年で進行) / Transit (今この瞬間)。'),
+          ('グループ', '10 惑星のグループフィルタ。個人 (Sun〜Mars) / 社会 (Jup〜Sat) / 世代 (Uranus〜Pluto)。'),
+          ('テーマ', 'カテゴリ別フィルタ。総合 / 癒し / 豊かさ / 恋愛 / 仕事 / 話す。テーマに関わる惑星のみ強調。'),
+        ];
+        break;
+      case _MainTab.acg:
+        title = 'ACG レイヤー (Astro*Carto*Graphy)';
+        items = const [
+          ('Natal線 / Transit線 / Prog線 / S.Arc線',
+              '4 つのフレームのアスペクト線を世界規模で描画。各惑星のアングル (ASC/MC/DSC/IC) ラインが地図上に表示される。'),
+          ('引越し (relocate)',
+              '地図タップ地点を引越し先として ASC/MC/12 ハウスを再計算。実際に引越したらどう変わるかを比較できる。'),
+        ];
+        break;
+    }
+    showInfoPopup(
+      context: context,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(title,
+              style: const TextStyle(
+                  fontSize: 16,
+                  color: Color(0xFFC9A84C),
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.6)),
+          const SizedBox(height: 12),
+          for (final item in items) ...[
+            _MenuInfoRow(title: item.$1, body: item.$2),
+            const SizedBox(height: 10),
+          ],
+        ],
+      ),
+    );
+  }
+
   /// L2 副タブ (惑星専用、開閉トリガー)
   Widget _subTabBtn(String label, bool open, VoidCallback onTap) {
     return _ChipButton(
@@ -227,6 +300,33 @@ class _MapDisplayMenuState extends State<MapDisplayMenu> {
           ],
         ],
       ),
+    );
+  }
+}
+
+/// 説明 popup 用の項目行 (見出し + 本文)。
+class _MenuInfoRow extends StatelessWidget {
+  final String title;
+  final String body;
+  const _MenuInfoRow({required this.title, required this.body});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(title,
+            style: const TextStyle(
+                fontSize: 13,
+                color: Color(0xFFE9D29A),
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.4)),
+        const SizedBox(height: 3),
+        Text(body,
+            style: const TextStyle(
+                fontSize: 12, color: Color(0xFFCCCCCC), height: 1.45)),
+      ],
     );
   }
 }

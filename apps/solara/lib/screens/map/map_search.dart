@@ -421,6 +421,15 @@ class SearchFocusPopup extends StatelessWidget {
   /// 「総合 / 豊かさ / 癒し」等のラベル動的化に使う。
   final String activeCategory;
 
+  /// VIEWPOINT スロットへ登録するハンドラ。
+  /// 戻り値: 失敗時はエラーメッセージ、成功時は null。
+  /// null なら登録ボタン非表示。
+  final Future<String?> Function()? onSaveAsViewpoint;
+
+  /// LOCATION スロットへ登録するハンドラ。
+  /// 戻り値・null 時の挙動は onSaveAsViewpoint と同じ。
+  final Future<String?> Function()? onSaveAsLocation;
+
   const SearchFocusPopup({
     super.key,
     required this.focus,
@@ -430,6 +439,8 @@ class SearchFocusPopup extends StatelessWidget {
     required this.onClose,
     required this.onMoveToHit,
     this.activeCategory = 'all',
+    this.onSaveAsViewpoint,
+    this.onSaveAsLocation,
   });
 
   @override
@@ -586,8 +597,37 @@ class SearchFocusPopup extends StatelessWidget {
           ),
         ],
         const SizedBox(height: 10),
-        // C-2: 「拠点として登録」削除。保存は VP/Loc パネルの「この地点を保存」へ集約
-        // (検索中は popup の検索地が VP panel の center として渡される)
+        // 登録ボタン: VIEWPOINT (基準視点) と LOCATION (拠点) は別管理なので
+        // それぞれ個別ボタン。検索結果から直接登録できる導線。
+        // 結果は SnackBar で通知 (満杯時はエラーメッセージ)。
+        if (onSaveAsViewpoint != null) ...[
+          _ActionTile(
+            label: '📍 VIEWPOINT に登録',
+            onTap: () async {
+              final err = await onSaveAsViewpoint!();
+              if (!context.mounted) return;
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                content: Text(err ?? '✓ VIEWPOINT に登録しました'),
+                duration: const Duration(seconds: 2),
+              ));
+            },
+          ),
+          const SizedBox(height: 6),
+        ],
+        if (onSaveAsLocation != null) ...[
+          _ActionTile(
+            label: '🏠 LOCATION に登録',
+            onTap: () async {
+              final err = await onSaveAsLocation!();
+              if (!context.mounted) return;
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                content: Text(err ?? '✓ LOCATION に登録しました'),
+                duration: const Duration(seconds: 2),
+              ));
+            },
+          ),
+          const SizedBox(height: 6),
+        ],
         _ActionTile(label: '✈ ここへ移動', onTap: onMoveToHit),
       ]),
     );
