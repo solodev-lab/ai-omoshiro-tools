@@ -245,8 +245,19 @@ class MoonPhase {
     return diff.inMilliseconds / 86400000.0;
   }
 
-  /// Returns integer phase (0-29).
-  static int getPhaseInt(DateTime date) => getPhaseDay(date).floor();
+  /// Returns integer phase day (0-29) for display.
+  /// JST 日付ベース: 「JST 新月発生日の 0:00」から「JST 当日の 0:00」までの
+  /// 経過日数。日本の月齢表記 (検索サイト等) と同じ基準なので、
+  /// 時刻に依存して当日中に切り替わることがなく、ユーザーの認識と一致する。
+  ///
+  /// fractional な天文学的月齢 (照度・isNewMoon 判定用) は getPhaseDay を使う。
+  /// floor(getPhaseDay) は新月時刻が当日 JST 朝〜夜にある場合、現時刻が
+  /// 進むにつれて +1 される (例: 23 → 24) ため表示用には不向き。
+  static int getPhaseInt(DateTime date) {
+    final cycleStart = _localDateAsUtc(findPreviousNewMoon(date));
+    final today = _localDateAsUtc(date);
+    return today.difference(cycleStart).inDays;
+  }
 
   /// Is today a New Moon day? (within ±1 day of exact new moon)
   static bool isNewMoon(DateTime date) {
