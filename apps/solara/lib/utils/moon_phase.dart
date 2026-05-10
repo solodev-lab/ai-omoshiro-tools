@@ -172,7 +172,22 @@ class MoonPhase {
 
   // ──────────────────────────────────────────────
   //  Public API — drop-in replacements
+  //
+  //  日付境界の判定 (今日が満月か / サイクル何日目か / サイクル開始日) は
+  //  すべて JST (端末ローカル) 基準で行う。入力 [date] が UTC でもローカル
+  //  でも、内部で .toLocal() 経由で JST 日付を抜き出して扱う。
+  //
+  //  これにより、UTC 視点では前日扱いとなる JST 早朝発生の満月/新月でも、
+  //  ユーザーから見た「今日」として正しく判定できる
+  //  (例: 満月時刻 UTC 前日 20:00 = JST 当日 05:00 を「JST 当日が満月」と扱う)。
   // ──────────────────────────────────────────────
+
+  /// JST (ローカル) の同じ日付の指定時刻を、UTC instant として返す内部ヘルパー。
+  /// 例: 入力が JST 2026-05-22 のどこかの時刻 → JST 2026-05-22 hour:00 を UTC で表現
+  static DateTime _localDateAsUtc(DateTime date, {int hour = 0}) {
+    final l = date.toLocal();
+    return DateTime(l.year, l.month, l.day, hour).toUtc();
+  }
 
   /// Find the most recent New Moon on or before [date].
   static DateTime findPreviousNewMoon(DateTime date) {
@@ -240,20 +255,23 @@ class MoonPhase {
   }
 
   /// Is today the Full Moon day? (the single closest day to exact full moon)
+  /// JST 基準: 「JST 当日の正午」と満月時刻 (UTC) の差が 12h 未満なら true。
   static bool isFullMoon(DateTime date) {
     final fullMoon = findFullMoonInCycle(date);
-    final noon = DateTime.utc(date.year, date.month, date.day, 12);
+    final noon = _localDateAsUtc(date, hour: 12);
     final diff = noon.difference(fullMoon).inHours.abs();
     return diff < 12; // only the single day whose noon is closest
   }
 
   /// Returns (cycleStart, cycleEnd) for the current lunar cycle.
+  /// 開始/終了は新月発生 JST 日付の 0:00 を UTC instant として返す
+  /// (JST 早朝の新月でも JST 当日をサイクル開始扱いにするため)。
   static (DateTime, DateTime) getCurrentCycleBounds(DateTime date) {
     final start = findPreviousNewMoon(date);
     final end = findNextNewMoon(date);
     return (
-      DateTime.utc(start.year, start.month, start.day),
-      DateTime.utc(end.year, end.month, end.day),
+      _localDateAsUtc(start),
+      _localDateAsUtc(end),
     );
   }
 
@@ -264,15 +282,17 @@ class MoonPhase {
   }
 
   /// Which day (0-based) in the current cycle is [date].
+  /// 「JST 当日の 0:00」とサイクル開始 (JST 0:00 instant) の日数差。
   static int getCurrentDayIndex(DateTime date) {
     final (start, _) = getCurrentCycleBounds(date);
-    final today = DateTime.utc(date.year, date.month, date.day);
+    final today = _localDateAsUtc(date);
     return today.difference(start).inDays;
   }
 
   /// Generate a unique cycle ID from the new moon date.
+  /// JST 日付ベースの YYYY-MM-DD 文字列 (新月時刻が JST 早朝でも JST 当日を採用)。
   static String getCycleId(DateTime date) {
-    final prevNew = findPreviousNewMoon(date);
+    final prevNew = findPreviousNewMoon(date).toLocal();
     return '${prevNew.year}-${prevNew.month.toString().padLeft(2, '0')}-${prevNew.day.toString().padLeft(2, '0')}';
   }
 
