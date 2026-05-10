@@ -1132,6 +1132,10 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
 
     setState(() {
       _astroCartoMode = true;
+      // Daily POPUP が開いていれば即時閉じる (フッターの「世界規模で見る」
+      // から呼ばれた場合、POPUP が裏に残ったまま ACG に切り替わると
+      // 切り替わった感覚が薄れるため)。
+      _dailyTransitOpen = false;
       _layers['sectors'] = false;
       _layers['compass'] = false;
       _astroLayers['planetLines'] = false;

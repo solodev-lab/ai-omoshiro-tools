@@ -117,33 +117,42 @@ class _MapLineNarrativeSheetState extends State<MapLineNarrativeSheet> {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.only(
-        left: 20,
-        right: 20,
-        top: 14,
-        bottom: 20 + MediaQuery.of(context).viewInsets.bottom,
-      ),
-      child: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildHeader(),
-            const SizedBox(height: 12),
-            _buildStaticSection(),
-            const SizedBox(height: 18),
-            if (_narrative != null) ...[
-              _buildNarrativeSection(),
-            ] else ...[
-              _buildLoadButton(),
-              if (_failed) ...[
-                const SizedBox(height: 8),
-                _buildFailedNote(),
+    final mq = MediaQuery.of(context);
+    // 端末フォント拡大 (1.5x 等) で本文が伸びても画面上端を突き抜けないよう、
+    // 画面の 90% で上限を切り、その内側で SingleChildScrollView がスクロールを担当する。
+    // ConstrainedBox を入れないと isScrollControlled: true の bottom sheet は
+    // 内容に合わせて無限に伸び、status bar 上にはみ出してスクロール不能になる。
+    final maxH = mq.size.height * 0.9 - mq.padding.top;
+    return ConstrainedBox(
+      constraints: BoxConstraints(maxHeight: maxH),
+      child: Padding(
+        padding: EdgeInsets.only(
+          left: 20,
+          right: 20,
+          top: 14,
+          bottom: 20 + mq.viewInsets.bottom,
+        ),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildHeader(),
+              const SizedBox(height: 12),
+              _buildStaticSection(),
+              const SizedBox(height: 18),
+              if (_narrative != null) ...[
+                _buildNarrativeSection(),
+              ] else ...[
+                _buildLoadButton(),
+                if (_failed) ...[
+                  const SizedBox(height: 8),
+                  _buildFailedNote(),
+                ],
               ],
+              const SizedBox(height: 12),
             ],
-            const SizedBox(height: 12),
-          ],
+          ),
         ),
       ),
     );
