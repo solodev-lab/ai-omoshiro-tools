@@ -56,6 +56,12 @@ class _MapTimeSliderState extends State<MapTimeSlider> {
     return d.toLocal().hour;
   }
 
+  /// 確定中の JST 分 (0..59)
+  int _committedMinuteJst() {
+    final d = widget.date ?? DateTime.now();
+    return d.toLocal().minute;
+  }
+
   /// 表示用の (日付 + 時刻) JST
   DateTime _previewDateJst() {
     final dayOffset = (_draftDays ?? _committedDays()).round();
@@ -88,12 +94,24 @@ class _MapTimeSliderState extends State<MapTimeSlider> {
     widget.onCommit(localDt.toUtc());
   }
 
-  /// 時刻 (JST hour) を commit (日付部分は既存値を維持)
+  /// 時刻 (JST hour) を commit (日付部分は既存値を維持、分は維持)
   void _commitHour(int hourJst) {
     final base = widget.date ?? DateTime.now();
     final local = base.toLocal();
-    final newLocal = DateTime(local.year, local.month, local.day, hourJst, 0, 0);
+    final newLocal = DateTime(
+      local.year, local.month, local.day, hourJst, local.minute, 0,
+    );
     widget.onCommit(newLocal.toUtc());
+  }
+
+  /// 日付 ±delta 日 + 指定時分を一括 commit (時/分の wrap 連鎖用)。
+  void _commitDayShiftAndTime(int dayDelta, int hour, int minute) {
+    final base = widget.date ?? DateTime.now();
+    final local = base.toLocal();
+    final shifted = DateTime(
+      local.year, local.month, local.day, hour, minute, 0,
+    ).add(Duration(days: dayDelta));
+    widget.onCommit(shifted.toUtc());
   }
 
   /// LIVE 判定: widget.date が null なら LIVE
@@ -116,9 +134,41 @@ class _MapTimeSliderState extends State<MapTimeSlider> {
 
   void _stepHour(int delta) {
     final cur = _committedHourJst();
-    final next = ((cur + delta) % 24 + 24) % 24;
+    final raw = cur + delta;
+    final next = ((raw % 24) + 24) % 24;
+    final dayDelta = (raw < 0) ? -1 : (raw >= 24 ? 1 : 0);
     setState(() => _draftHour = null);
-    _commitHour(next);
+    if (dayDelta != 0) {
+      // 23 → 0 で翌日、0 → 23 で前日 (日時の連続感)
+      _commitDayShiftAndTime(dayDelta, next, _committedMinuteJst());
+    } else {
+      _commitHour(next);
+    }
+  }
+
+  /// 分を delta 刻み (典型: +10) で進める。
+  /// 60 を超えたら時間に繰り上がり、24 時に達したら日付に繰り上がる。
+  void _stepMinute(int delta) {
+    final curHour = _committedHourJst();
+    final curMin = _committedMinuteJst();
+    final totalMin = curHour * 60 + curMin + delta;
+    // 1 日 = 1440 分。負・1440超えを正規化。
+    final normMin = ((totalMin % 1440) + 1440) % 1440;
+    final dayDelta = (totalMin < 0)
+        ? -((((-totalMin) - 1) ~/ 1440) + 1)
+        : (totalMin >= 1440 ? totalMin ~/ 1440 : 0);
+    final nextHour = normMin ~/ 60;
+    final nextMin = normMin % 60;
+    if (dayDelta != 0) {
+      _commitDayShiftAndTime(dayDelta, nextHour, nextMin);
+    } else {
+      final base = widget.date ?? DateTime.now();
+      final local = base.toLocal();
+      final newLocal = DateTime(
+        local.year, local.month, local.day, nextHour, nextMin, 0,
+      );
+      widget.onCommit(newLocal.toUtc());
+    }
   }
 
   String _fmtDate(DateTime d, double dayOffsetForLabel) {
@@ -128,8 +178,8 @@ class _MapTimeSliderState extends State<MapTimeSlider> {
     return '${d.month.toString().padLeft(2, '0')}/${d.day.toString().padLeft(2, '0')}';
   }
 
-  String _fmtHour(int hourJst) {
-    return '${hourJst.toString().padLeft(2, '0')}:00';
+  String _fmtTime(int hourJst, int minuteJst) {
+    return '${hourJst.toString().padLeft(2, '0')}:${minuteJst.toString().padLeft(2, '0')}';
   }
 
   @override
@@ -213,57 +263,73 @@ class _MapTimeSliderState extends State<MapTimeSlider> {
           ),
         ),
       ),
-      // NOW バッジ (固定幅 44 で時刻行のスペーサーと一致させる)。
-      // 2026-05-08: 稲妻アイコン → 'NOW' テキストバッジに変更。
-      //   稲妻が分かりにくいというフィードバックを受けて、明示的な
-      //   'NOW' 表記にしつつ TextScaler.noScaling で端末フォント
-      //   拡大の影響を受けないアイコン的な振る舞いに固定。
-      // ON  : 鮮やかオレンジ + 背景塗り + 太縁
-      // OFF : 薄いオレンジ + 透明背景 + 細縁
+      // NOW バッジ + 分用右△ (固定幅 44、Column 縦並び)。
+      // 上: 'NOW' テキストバッジ (タップで LIVE = 現在時刻に戻す)
+      // 下: '分' 用右△ (タップで +10 分、wrap 時は時/日付に連鎖更新)
       SizedBox(
         width: 44,
-        child: GestureDetector(
-          onTap: isLive ? null : () {
-            setState(() {
-              _draftDays = null;
-              _draftHour = null;
-            });
-            widget.onCommit(null);
-          },
-          behavior: HitTestBehavior.opaque,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 5),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(
-                color: isLive
-                    ? const Color(0xFFFF8E5C)
-                    : const Color(0x33FF8E5C),
-                width: isLive ? 1.0 : 0.8,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            GestureDetector(
+              onTap: isLive ? null : () {
+                setState(() {
+                  _draftDays = null;
+                  _draftHour = null;
+                });
+                widget.onCommit(null);
+              },
+              behavior: HitTestBehavior.opaque,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 3),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: isLive
+                        ? const Color(0xFFFF8E5C)
+                        : const Color(0x33FF8E5C),
+                    width: isLive ? 1.0 : 0.8,
+                  ),
+                  color: isLive
+                      ? const Color(0x22FF8E5C)
+                      : Colors.transparent,
+                ),
+                child: Text(
+                  'NOW',
+                  textAlign: TextAlign.center,
+                  textScaler: TextScaler.noScaling,
+                  maxLines: 1,
+                  softWrap: false,
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: isLive
+                        ? const Color(0xFFFF8E5C)
+                        : const Color(0x66FF8E5C),
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.6,
+                    height: 1.0,
+                  ),
+                ),
               ),
-              color: isLive
-                  ? const Color(0x22FF8E5C)
-                  : Colors.transparent,
             ),
-            child: Text(
-              'NOW',
-              textAlign: TextAlign.center,
-              // 端末フォント拡大の影響を受けないアイコン的振る舞い
-              textScaler: TextScaler.noScaling,
-              // 44px 幅に収めるため改行禁止
-              maxLines: 1,
-              softWrap: false,
-              style: TextStyle(
-                fontSize: 13,
-                color: isLive
-                    ? const Color(0xFFFF8E5C)
-                    : const Color(0x66FF8E5C),
-                fontWeight: FontWeight.w700,
-                letterSpacing: 0.6,
-                height: 1.0,
+            // 分用右△: タップで +10 分、wrap 時に時/日付へ連鎖。
+            // tap target 確保のため SizedBox で 16px 高を保ちつつ、
+            // 視覚上は icon 14px で控えめに配置。
+            GestureDetector(
+              onTap: () => _stepMinute(10),
+              behavior: HitTestBehavior.opaque,
+              child: const SizedBox(
+                height: 16,
+                child: Center(
+                  child: Icon(
+                    Icons.arrow_right,
+                    size: 16,
+                    color: Color(0xCCE9D29A),
+                  ),
+                ),
               ),
             ),
-          ),
+          ],
         ),
       ),
       const SizedBox(width: 4),
@@ -307,7 +373,7 @@ class _MapTimeSliderState extends State<MapTimeSlider> {
         width: 64,
         child: Center(
           child: Text(
-            _fmtHour(hourValue.round()),
+            _fmtTime(hourValue.round(), _committedMinuteJst()),
             style: const TextStyle(
               fontSize: 13,
               color: Color(0xFF63D6A0), // 緑系で日付と区別
