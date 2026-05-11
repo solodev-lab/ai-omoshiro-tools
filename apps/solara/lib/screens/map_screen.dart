@@ -1958,7 +1958,7 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                   }),
                 ),
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 4),
               // [2] 第2層: active frame のサブトグル (active なしなら高さ 0)
               Center(
                 child: AstroCartoSubPills(
@@ -1970,7 +1970,7 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                 ),
               ),
               // SizedBox は SubPills が空のとき余分にならないよう activeFrame で分岐
-              if (_activeAstroFrame != null) const SizedBox(height: 10),
+              if (_activeAstroFrame != null) const SizedBox(height: 4),
               // [3] 最下部: FORTUNE カテゴリ
               Center(
                 child: AstroCartoCategoryPills(
