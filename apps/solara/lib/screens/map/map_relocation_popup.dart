@@ -109,25 +109,21 @@ class MapRelocationPopup extends StatelessWidget {
 
     final mq = MediaQuery.of(context);
     // 端末フォント拡大時にコンテンツが伸びても画面上端を突き抜けないよう、
-    // 画面高さの 65% で上限を切る (status bar + 余白 80px を確実に残す)。
-    // 内側を SingleChildScrollView で確実にスクロール可能にする。
-    // 2026-05-11: 旧 0.7 だと フォント拡大時に上端突き抜け + スクロール不可
-    //   報告があったため、0.65 + 上余白 80 で安全マージン確保。
-    final maxH = (mq.size.height - mq.padding.top - 80) * 0.95;
-    return ConstrainedBox(
-      constraints: BoxConstraints(
-        maxHeight: maxH > 200 ? maxH : mq.size.height * 0.65,
-      ),
-      child: Container(
+    // 画面高さの 70% で上限を切り、その内側を SingleChildScrollView で
+    // スクロール可能にする。
+    // 旧: Positioned(bottom: 0) + Column(mainAxisSize: min) + 高さ制限なし
+    //   で、長文時に上端が status bar を突き抜けてスクロール不能だった。
+    final maxH = (mq.size.height - mq.padding.top) * 0.7;
+    return Container(
       width: double.infinity,
       decoration: BoxDecoration(
         color: const Color(0xEE0C0C1A),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
         border: Border.all(color: const Color(0x33C9A84C)),
       ),
+      constraints: BoxConstraints(maxHeight: maxH),
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
       child: SingleChildScrollView(
-        physics: const ClampingScrollPhysics(),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -150,7 +146,6 @@ class MapRelocationPopup extends StatelessWidget {
             ],
           ],
         ),
-      ),
       ),
     );
   }
@@ -300,12 +295,8 @@ class MapRelocationPopup extends StatelessWidget {
       termKey = 'aspect_lines';
     }
 
-    // 2026-05-11: フォント拡大時の RIGHT OVERFLOW 対策。
-    // タイトル/ベースラベル両方を 1 行省略 (ellipsis) + 比較ラベルは Flexible 化。
     Widget titleWidget = Text(
       title,
-      maxLines: 1,
-      overflow: TextOverflow.ellipsis,
       style: GoogleFonts.notoSansJp(
         fontSize: 13,
         color: const Color(0xFFE8E0D0),
@@ -327,20 +318,14 @@ class MapRelocationPopup extends StatelessWidget {
         Icon(Icons.place, size: 14, color: Colors.pink.shade200),
         const SizedBox(width: 6),
         Expanded(child: titleWidget),
-        if (showHouses) ...[
-          const SizedBox(width: 6),
-          Flexible(
-            child: Text(
-              '$baselineLabel → タップ地点',
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: GoogleFonts.notoSansJp(
-                fontSize: 13,
-                color: const Color(0xFF888888),
-              ),
+        if (showHouses)
+          Text(
+            '$baselineLabel → タップ地点',
+            style: GoogleFonts.notoSansJp(
+              fontSize: 13,
+              color: const Color(0xFF888888),
             ),
           ),
-        ],
         const SizedBox(width: 8),
         GestureDetector(
           onTap: onClose,
