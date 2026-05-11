@@ -100,6 +100,50 @@ class PlanetDailyTransits {
       );
 }
 
+/// 緯度帯ヒット惑星 (Lewis 流の緯度効果)。
+/// 観測時刻における赤緯 ≈ 観測者緯度 (zenith) または -観測者緯度 (nadir) の惑星。
+class LatitudeBandHit {
+  final String planet;
+  /// 観測時刻の惑星赤緯 (度、北緯 + / 南緯 -)
+  final double dec;
+  /// 観測者緯度との差の絶対値 (zenith なら |dec - lat|、nadir なら |dec + lat|)
+  final double delta;
+  const LatitudeBandHit({
+    required this.planet,
+    required this.dec,
+    required this.delta,
+  });
+  factory LatitudeBandHit.fromJson(Map<String, dynamic> j) => LatitudeBandHit(
+        planet: j['planet'] as String,
+        dec: (j['dec'] as num).toDouble(),
+        delta: (j['delta'] as num).toDouble(),
+      );
+}
+
+/// 観測時刻における緯度帯セクション (zenith / nadir のヒット惑星 + オーブ)。
+class LatitudeBand {
+  final double observerLat;
+  final double orb;
+  final List<LatitudeBandHit> zenith;
+  final List<LatitudeBandHit> nadir;
+  const LatitudeBand({
+    required this.observerLat,
+    required this.orb,
+    required this.zenith,
+    required this.nadir,
+  });
+  factory LatitudeBand.fromJson(Map<String, dynamic> j) => LatitudeBand(
+        observerLat: (j['observerLat'] as num).toDouble(),
+        orb: (j['orb'] as num).toDouble(),
+        zenith: ((j['zenith'] as List?) ?? const [])
+            .map((e) => LatitudeBandHit.fromJson(e as Map<String, dynamic>))
+            .toList(),
+        nadir: ((j['nadir'] as List?) ?? const [])
+            .map((e) => LatitudeBandHit.fromJson(e as Map<String, dynamic>))
+            .toList(),
+      );
+}
+
 /// /astro/daily-transits の完全レスポンス。
 class DailyTransitsResult {
   /// 計算対象日 (yyyy-MM-dd, UTC)
@@ -112,11 +156,16 @@ class DailyTransitsResult {
   /// 10惑星分の通過イベント
   final List<PlanetDailyTransits> transits;
 
+  /// L3 Lewis: 観測時刻における緯度帯ヒット (赤緯 ≈ ±観測者緯度 の惑星)。
+  /// worker 古バージョン互換のため nullable。
+  final LatitudeBand? latitudeBand;
+
   const DailyTransitsResult({
     required this.date,
     required this.lat,
     required this.lng,
     required this.transits,
+    this.latitudeBand,
   });
 
   factory DailyTransitsResult.fromJson(Map<String, dynamic> j) {
@@ -128,6 +177,9 @@ class DailyTransitsResult {
       transits: (j['transits'] as List)
           .map((t) => PlanetDailyTransits.fromJson(t as Map<String, dynamic>))
           .toList(),
+      latitudeBand: j['latitudeBand'] != null
+          ? LatitudeBand.fromJson(j['latitudeBand'] as Map<String, dynamic>)
+          : null,
     );
   }
 

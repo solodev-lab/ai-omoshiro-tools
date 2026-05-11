@@ -209,10 +209,56 @@ export function computeDailyTransits({ lat, lng, date, startTimeIso, natal, orbs
     transits.push({ planet: planetKey, events });
   }
 
+  // ── 緯度帯ヒット (Lewis 流の緯度効果、Solara L3) ──
+  // 観測時刻 (startTime) で:
+  //   zenith band: 惑星赤緯 ≈ 観測者緯度 → 緯度線全周に惑星天頂エネルギー
+  //   nadir  band: 惑星赤緯 ≈ -観測者緯度 → 緯度線全周に惑星天底エネルギー
+  // オーブ ±5° (ACG ライン強度範囲と整合)。
+  // Lewis: 「天頂帯/天底帯は同じ緯度線全周に効く」 → 観測者の緯度線上に
+  // 惑星天頂/天底が乗っているなら、観測者はその経度に居なくても影響を受ける。
+  const latitudeBand = computeLatitudeBand(startTime, observer);
+
   return {
     date: targetDate.toISOString().slice(0, 10),
     location: { lat, lng },
     transits,
+    latitudeBand,
+  };
+}
+
+/**
+ * 観測時刻における、観測者緯度に最も近い赤緯を持つ惑星を列挙する。
+ * @param {Astronomy.AstroTime} time
+ * @param {Astronomy.Observer} observer
+ * @returns {{ observerLat, zenith: Array<{planet, dec, delta}>, nadir: Array<{planet, dec, delta}> }}
+ */
+function computeLatitudeBand(time, observer) {
+  const ORB = 5.0; // ACG ライン強度範囲と整合
+  const zenith = [];
+  const nadir = [];
+  for (let i = 0; i < BODIES.length; i++) {
+    const body = BODIES[i];
+    const planetKey = BODY_KEYS[i];
+    try {
+      const equ = Astronomy.Equator(body, time, observer, true, true);
+      const dec = equ.dec;
+      const zenithDelta = Math.abs(dec - observer.latitude);
+      const nadirDelta = Math.abs(dec + observer.latitude);
+      if (zenithDelta <= ORB) {
+        zenith.push({ planet: planetKey, dec: round2(dec), delta: round2(zenithDelta) });
+      }
+      if (nadirDelta <= ORB) {
+        nadir.push({ planet: planetKey, dec: round2(dec), delta: round2(nadirDelta) });
+      }
+    } catch (_) { /* 計算失敗は無視 */ }
+  }
+  zenith.sort((a, b) => a.delta - b.delta);
+  nadir.sort((a, b) => a.delta - b.delta);
+  return {
+    observerLat: round2(observer.latitude),
+    orb: ORB,
+    zenith,
+    nadir,
   };
 }
 
