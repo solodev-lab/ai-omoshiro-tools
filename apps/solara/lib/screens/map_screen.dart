@@ -139,6 +139,10 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
         '${sub}_$f': false,
   };
 
+  // ACG 第2層メニュー: 直前にタップした「線 ON」フレーム (排他表示用)。
+  // null のとき第2層は折り畳まれ、地図領域がその分広がる。
+  astro_lines.AstroFrame? _activeAstroFrame;
+
   // 引越しレイヤー ON時のタップ詳細ポップアップ用
   LatLng? _relocateTapPoint;
 
@@ -1164,6 +1168,7 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
       // 旧仕様 (天頂自動表示) からの体験劣化を防ぐ。天底/天頂帯/天底帯は OFF のまま
       // (ユーザーが意識して ON する段階的 UX)。
       _astroLayers['zenith_transit'] = true;
+      _activeAstroFrame = astro_lines.AstroFrame.transit; // 初期 active
       _mapStyle = MapStyle.osmHotDark;
       // 既存メニュー/シート/ピンを片付け、世界規模ビューにフォーカス
       _displayMenuOpen = false;
@@ -1207,6 +1212,7 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
       _mapStyle = restoreStyle;
       _relocateTapPoint = null;
       _zenithTapInfo = null;
+      _activeAstroFrame = null;
     });
     SolaraStorage.saveMapStyleId(mapStyleConfigs[restoreStyle]!.id);
     _savedCenter = null;
@@ -1917,35 +1923,60 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
           ),
         ),
 
-        // ── ACGモード下部 UI ──
-        // 2026-05-07: popup より「先に」描画して、popup が上に重なる順序へ変更。
-        //   従来は pills を最前面にしていたが、ACGライン説明 popup が pills に隠れて
-        //   読めない不具合があったため、popup 優先に切替えた。
-        // 2 つの Pills (Frame / Category) は固定 bottom 値だと
-        // フォント拡大時に重なるため、bottom: 12 を起点に Column で
-        // 順次積み上げる構成に統一 (SizedBox(8) で一定間隔確保)。
+        // ── ACGモード下部 UI (2026-05-11 3 段化) ──
+        // 下から積み上げ (地図領域を最大化):
+        //   [3] CategoryPills (FORTUNE)
+        //   [2] SubPills (active frame の天頂/天底/天頂帯/天底帯、active なしなら高さ 0)
+        //   [1] FramePills (Natal/Transit/Prog/S.Arc 横並び)
+        // SizedBox(10) でフォント拡大時の接触を回避。
+        // popup より「先」に描画して popup が上に重なる順序を維持。
         if (_astroCartoMode) Positioned(
           left: 0, right: 0, bottom: 12,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // 上: Natal/Transit/Prog/SArc 切替 (FramePills)
+              // [1] 第1層: フレームピル
               Center(
                 child: AstroCartoFramePills(
                   astroLayers: _astroLayers,
+                  activeFrame: _activeAstroFrame,
+                  onToggle: (k) => setState(() {
+                    final nowOn = !(_astroLayers[k] ?? false);
+                    _astroLayers[k] = nowOn;
+                    // active 更新: ON にしたらこのフレーム、OFF にしたら
+                    // 元 active と同じなら null クリア (別 active は維持)
+                    for (final def in acgFrameDefs) {
+                      if (def.layerKey == k) {
+                        if (nowOn) {
+                          _activeAstroFrame = def.frame;
+                        } else if (_activeAstroFrame == def.frame) {
+                          _activeAstroFrame = null;
+                        }
+                        break;
+                      }
+                    }
+                  }),
+                ),
+              ),
+              const SizedBox(height: 10),
+              // [2] 第2層: active frame のサブトグル (active なしなら高さ 0)
+              Center(
+                child: AstroCartoSubPills(
+                  astroLayers: _astroLayers,
+                  activeFrame: _activeAstroFrame,
                   onToggle: (k) => setState(() {
                     _astroLayers[k] = !(_astroLayers[k] ?? false);
                   }),
                 ),
               ),
-              const SizedBox(height: 8),
-              // 下: FORTUNE カテゴリ切替 (CategoryPills)
+              // SizedBox は SubPills が空のとき余分にならないよう activeFrame で分岐
+              if (_activeAstroFrame != null) const SizedBox(height: 10),
+              // [3] 最下部: FORTUNE カテゴリ
               Center(
                 child: AstroCartoCategoryPills(
                   activeCategory: _activeCategory,
                   onChanged: (k) => setState(() {
                     _activeCategory = k;
-                    // ACG モードはセクター非表示なので両者同期
                     _planetFilterCategory = k;
                   }),
                 ),
@@ -2123,21 +2154,13 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   Set<astro_lines.AstroFrame> _zenithBandFrames() => _filteredFrames('zenithBand');
   Set<astro_lines.AstroFrame> _nadirBandFrames() => _filteredFrames('nadirBand');
 
-  /// フレーム定義テーブル (第1層 aspect キー / 第2層 suffix / enum)。
-  /// _filteredFrames / _enterAstroCartoMode 等が参照。
-  static const List<({String aspectKey, String suffix, astro_lines.AstroFrame frame})>
-      _frameDefs = [
-    (aspectKey: 'aspect', suffix: 'natal', frame: astro_lines.AstroFrame.natal),
-    (aspectKey: 'aspectTransit', suffix: 'transit', frame: astro_lines.AstroFrame.transit),
-    (aspectKey: 'aspectProgressed', suffix: 'progressed', frame: astro_lines.AstroFrame.progressed),
-    (aspectKey: 'aspectSolarArc', suffix: 'solarArc', frame: astro_lines.AstroFrame.solarArc),
-  ];
-
+  /// フレーム定義テーブルは [acgFrameDefs] (map_astro_carto.dart で定義) を流用。
+  /// 第1層 aspectKey / 第2層 frameSuffix / 描画用 frame / 表示ラベル を一元管理。
   Set<astro_lines.AstroFrame> _filteredFrames(String subKey) {
     final s = <astro_lines.AstroFrame>{};
-    for (final def in _frameDefs) {
-      if (_astroLayers[def.aspectKey] == true &&
-          _astroLayers['${subKey}_${def.suffix}'] == true) {
+    for (final def in acgFrameDefs) {
+      if (_astroLayers[def.layerKey] == true &&
+          _astroLayers['${subKey}_${def.frameSuffix}'] == true) {
         s.add(def.frame);
       }
     }
