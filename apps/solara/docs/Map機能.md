@@ -37,11 +37,20 @@
 ### タップ → 全面UI（`MapDailyTransitScreen`）
 1. （初回のみ）`DominantFortuneOverlay` で TOP カテゴリのアニメ → 0.5s 余韻
 2. フェードイン → 全面表示
-3. ヘッダ: TOP カテゴリ + 拠点ラベル + i ボタン（カテゴリ選定ロジック説明）
+3. ヘッダ: 大型カテゴリアイコン(64px) + 「今日の TOP — label」 + i (2026-05-12 行末配置) + ✕
 4. タブ: **本日 / 明日**（lazy load + キャッシュ）
 5. タイムライン: 10惑星 × 4アングル を時刻順に並列
-6. 各行: 時刻(1行固定) / 惑星 / 「金星 が 天頂(MC) 通過 ⓘ」 / アスペクトチップ群（横スクロール）
-7. アスペクトチップ: タップで Horo 相タブ同等の詳細
+6. 各行: 時刻(1分単位固定) / 惑星 / 「金星 が 天頂(MC) 通過 ⓘ」 / アスペクトチップ群（横スクロール）
+7. 各行下: 🗺 地図マーク (2026-05-12 追加、タップでその時刻 1 分単位を Map に飛ばす)
+8. アスペクトチップ: タップで Horo 相タブ同等の詳細
+
+### onJumpToTime 連携 (2026-05-12)
+- Daily Transit 各行の 🗺 → `MapDailyTransitScreen.onJumpToTime(event.time)` 発火
+- 親 (`map_screen.dart`) で `_selectedDate = time` + `_dailyTransitOpen = false`
+  + `_loadProfileAndChart(targetDate: time)`
+- `MapTimeSlider` の分表示は実分 (1 分単位、`_displayMinuteJst()`)
+- step 操作 (▶◀) は 10 分 grid に合流 (`_committedMinuteJst()` = floor 10)
+  - 例: 11:02 表示 → ▶ で 11:10 → 11:20 → ◀ で 11:10 → 11:00
 
 ### 観測点（拠点）優先順
 1. Sanctuary 設定の home (homeLat, homeLng)

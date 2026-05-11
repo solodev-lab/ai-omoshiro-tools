@@ -708,7 +708,12 @@ class _ForecastScreenState extends State<ForecastScreen> {
             onTap: () => _shiftSelectedDay(-1),
           ),
           const SizedBox(width: 4),
-          Text(dateLabel, style: const TextStyle(fontSize: 16, color: Color(0xFFE8E0D0), fontWeight: FontWeight.w600)),
+          Flexible(
+            child: Text(dateLabel,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontSize: 16, color: Color(0xFFE8E0D0), fontWeight: FontWeight.w600)),
+          ),
           const SizedBox(width: 4),
           // 右△: 1日後へ。日付リスト末尾で disable。
           _DayStepperButton(
