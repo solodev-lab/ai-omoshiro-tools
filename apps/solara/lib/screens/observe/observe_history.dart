@@ -55,8 +55,12 @@ class _ObserveHistoryPanelState extends State<ObserveHistoryPanel> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text('NATAL TAROT HISTORY',
-                style: TextStyle(fontSize: 12, color: Color(0xFF666666), letterSpacing: 1.5)),
+            const Flexible(
+              child: Text('NATAL TAROT HISTORY',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(fontSize: 12, color: Color(0xFF666666), letterSpacing: 1.5)),
+            ),
             GestureDetector(
               onTap: _confirmClearHistory,
               child: const Text('CLEAR', style: TextStyle(fontSize: 10, color: Color(0xFF444444))),
@@ -190,7 +194,12 @@ class _ObserveHistoryPanelState extends State<ObserveHistoryPanel> {
             const Row(children: [
               Text('🔗', style: TextStyle(fontSize: 10, color: Color(0xFF666666))),
               SizedBox(width: 4),
-              Text('SYNCHRONICITY', style: TextStyle(fontSize: 10, color: Color(0xFF666666), letterSpacing: 1)),
+              Flexible(
+                child: Text('SYNCHRONICITY',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(fontSize: 10, color: Color(0xFF666666), letterSpacing: 1)),
+              ),
             ]),
             const SizedBox(height: 6),
             _SyncInput(

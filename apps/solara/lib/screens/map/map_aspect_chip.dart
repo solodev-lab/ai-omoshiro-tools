@@ -125,11 +125,15 @@ class MapAspectChip extends StatelessWidget {
             Text(transitMeta?.sym ?? '✦',
                 style: TextStyle(fontSize: 20, color: transitMeta?.color)),
             const SizedBox(width: 6),
-            Text(transitMeta?.jp ?? transitPlanet,
-                style: const TextStyle(
-                    fontSize: 16,
-                    color: SolaraColors.textPrimary,
-                    fontWeight: FontWeight.w600)),
+            Flexible(
+              child: Text(transitMeta?.jp ?? transitPlanet,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                      fontSize: 16,
+                      color: SolaraColors.textPrimary,
+                      fontWeight: FontWeight.w600)),
+            ),
             const SizedBox(width: 4),
             const Text('(T)',
                 style: TextStyle(fontSize: 13, color: Color(0xFF888888))),
@@ -141,11 +145,15 @@ class MapAspectChip extends StatelessWidget {
             Text(natalMeta?.sym ?? '✦',
                 style: TextStyle(fontSize: 20, color: natalMeta?.color)),
             const SizedBox(width: 6),
-            Text(natalMeta?.jp ?? aspect.natalPlanet,
-                style: const TextStyle(
-                    fontSize: 16,
-                    color: SolaraColors.textPrimary,
-                    fontWeight: FontWeight.w600)),
+            Flexible(
+              child: Text(natalMeta?.jp ?? aspect.natalPlanet,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                      fontSize: 16,
+                      color: SolaraColors.textPrimary,
+                      fontWeight: FontWeight.w600)),
+            ),
             const SizedBox(width: 4),
             const Text('(N)',
                 style: TextStyle(fontSize: 13, color: Color(0xFF888888))),

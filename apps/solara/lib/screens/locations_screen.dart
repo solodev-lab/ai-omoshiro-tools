@@ -512,7 +512,12 @@ class _LocationsScreenState extends State<LocationsScreen> {
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(children: [
-          Text(s.icon, style: const TextStyle(fontSize: 22)),
+          Flexible(
+            child: Text(s.icon,
+                maxLines: 1,
+                overflow: TextOverflow.clip,
+                style: const TextStyle(fontSize: 22)),
+          ),
           const SizedBox(width: 12),
           Expanded(child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -523,11 +528,19 @@ class _LocationsScreenState extends State<LocationsScreen> {
                   maxLines: 1, overflow: TextOverflow.ellipsis),
               const SizedBox(height: 4),
               Row(children: [
-                Text('$dirJp方位',
-                    style: const TextStyle(fontSize: 10, color: Color(0xFF999999))),
+                Flexible(
+                  child: Text('$dirJp方位',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontSize: 10, color: Color(0xFF999999))),
+                ),
                 const SizedBox(width: 8),
-                Text('${_fmtKm(stats.km)} km',
-                    style: const TextStyle(fontSize: 10, color: Color(0xFF666666))),
+                Flexible(
+                  child: Text('${_fmtKm(stats.km)} km',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontSize: 10, color: Color(0xFF666666))),
+                ),
               ]),
               const SizedBox(height: 4),
               _scoreBar(stats.score),

@@ -464,10 +464,16 @@ class GalaxyScreenState extends State<GalaxyScreen>
           children: [
             AntiqueGlyph(icon: icon, size: 16, color: color, glow: isActive),
             const SizedBox(width: 6),
-            Text(label, style: GoogleFonts.cinzel(
-              color: color, fontSize: 13, letterSpacing: 1.8,
-              fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
-            )),
+            Flexible(
+              child: Text(label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: GoogleFonts.cinzel(
+                  color: color, fontSize: 13, letterSpacing: 1.8,
+                  fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
+                ),
+              ),
+            ),
           ],
         ),
       ),
@@ -728,10 +734,18 @@ class GalaxyScreenState extends State<GalaxyScreen>
             fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFFF9D976), letterSpacing: 1.5)),
           const SizedBox(height: 8),
           Row(children: [
-            Text(card.emoji, style: const TextStyle(fontSize: 22)),
+            Flexible(
+              child: Text(card.emoji,
+                  maxLines: 1,
+                  overflow: TextOverflow.clip,
+                  style: const TextStyle(fontSize: 22)),
+            ),
             const SizedBox(width: 8),
-            Expanded(child: Text(card.nameEN, style: const TextStyle(
-              fontSize: 15, fontWeight: FontWeight.w700, color: Color(0xFFEAEAEA)))),
+            Expanded(child: Text(card.nameEN,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                fontSize: 15, fontWeight: FontWeight.w700, color: Color(0xFFEAEAEA)))),
           ]),
           const SizedBox(height: 8),
           if (card.planet != null)
@@ -1025,7 +1039,12 @@ void _showGalaxyUsageGuide(
         // ── 今日の月齢 ──
         Row(
           children: [
-            Text(info.emoji, style: const TextStyle(fontSize: 28)),
+            Flexible(
+              child: Text(info.emoji,
+                  maxLines: 1,
+                  overflow: TextOverflow.clip,
+                  style: const TextStyle(fontSize: 28)),
+            ),
             const SizedBox(width: 10),
             Expanded(
               child: Column(

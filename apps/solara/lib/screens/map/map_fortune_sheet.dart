@@ -620,7 +620,12 @@ void showCategoryInfoPopup(
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(e.$2, style: const TextStyle(fontSize: 16)),
+              Flexible(
+                child: Text(e.$2,
+                    maxLines: 1,
+                    overflow: TextOverflow.clip,
+                    style: const TextStyle(fontSize: 16)),
+              ),
               const SizedBox(width: 8),
               Expanded(
                 child: Column(

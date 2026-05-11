@@ -58,8 +58,12 @@ class ForecastLifePeriodsSection extends StatelessWidget {
 
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Row(children: [
-        const Text('▸ あなたの運勢サイクル',
-            style: TextStyle(fontSize: 11, color: Color(0xFFC9A84C), letterSpacing: 2)),
+        const Flexible(
+          child: Text('▸ あなたの運勢サイクル',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(fontSize: 11, color: Color(0xFFC9A84C), letterSpacing: 2)),
+        ),
         const SizedBox(width: 4),
         // ⓘ 運勢サイクル説明 popup
         GestureDetector(

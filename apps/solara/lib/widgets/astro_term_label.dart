@@ -48,15 +48,22 @@ class AstroTermLabel extends StatelessWidget {
     final entry = astroGlossary[termKey];
     if (entry == null) return child; // 辞書未登録なら i アイコンも出さない
 
+    // 2026-05-11: Row(mainAxisSize:min) + 裸 child の組み合わせで、親 Expanded
+    // の制約を無視して RIGHT OVERFLOWED が発生していた問題を解消。
+    // child を Flexible でラップして、長文時に折り返し / ellipsis が効くように。
+    // feedback_text_overflow.md の規約準拠。
     return Row(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         // ラベル本体タップ → 用語解説 popup
-        GestureDetector(
-          onTap: () => showAstroGlossaryDialog(context, termKey),
-          behavior: HitTestBehavior.opaque,
-          child: child,
+        // Flexible でラップして親制約を尊重 (overflow しない)。
+        Flexible(
+          child: GestureDetector(
+            onTap: () => showAstroGlossaryDialog(context, termKey),
+            behavior: HitTestBehavior.opaque,
+            child: child,
+          ),
         ),
         SizedBox(width: spacing),
         // i アイコン本体: 周囲 8px パディングでタップ領域 32×32px を確保
