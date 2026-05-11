@@ -123,14 +123,23 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   final Map<String, bool> _astroLayers = {
     'planetLines': true,
     'relocate': false,
+    // ── 第1層: フレーム線 ON/OFF ──
     'aspect': false,         // natal フレーム
     'aspectTransit': false,  // CCG transit
     'aspectProgressed': false, // CCG progressed
     'aspectSolarArc': false, // CCG solar arc
     'aspectAll': false,      // 全惑星モード (FORTUNE フィルタ無視)
-    // L3 / Lewis: 天頂・天底の緯度線 (同じ緯度全周に効くという緯度効果を視覚化)
-    // デフォルト OFF: 視覚密度を抑え、Lewis 理論を知るユーザーが意識して ON
-    'latitudeBands': false,
+    // ── 第2層: フレーム別の天頂/天底/天頂帯/天底帯 (2026-05-11 ACG 2層メニュー化) ──
+    // 各 frame の線が ON のときのみ第2層メニューに表示される (アコーディオン)。
+    // 旧 'latitudeBands' (共通フラグ) は廃止、frame-specific に分割。
+    'zenith_natal': false, 'zenith_transit': false,
+    'zenith_progressed': false, 'zenith_solarArc': false,
+    'nadir_natal': false, 'nadir_transit': false,
+    'nadir_progressed': false, 'nadir_solarArc': false,
+    'zenithBand_natal': false, 'zenithBand_transit': false,
+    'zenithBand_progressed': false, 'zenithBand_solarArc': false,
+    'nadirBand_natal': false, 'nadirBand_transit': false,
+    'nadirBand_progressed': false, 'nadirBand_solarArc': false,
   };
 
   // 引越しレイヤー ON時のタップ詳細ポップアップ用
@@ -1153,6 +1162,11 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
       // 「総合」タップで activeCategory='all' → 自動で全惑星 100% になる。
       _astroLayers['aspect'] = false;
       _astroLayers['aspectTransit'] = true;
+      // 2026-05-11 2 層メニュー化: Transit 線 ON と同時に Transit の天頂も自動 ON。
+      // モード入時に第2層 4 トグル全 OFF だと「ラインだけで天頂マーカー無し」となり、
+      // 旧仕様 (天頂自動表示) からの体験劣化を防ぐ。天底/天頂帯/天底帯は OFF のまま
+      // (ユーザーが意識して ON する段階的 UX)。
+      _astroLayers['zenith_transit'] = true;
       _mapStyle = MapStyle.osmHotDark;
       // 既存メニュー/シート/ピンを片付け、世界規模ビューにフォーカス
       _displayMenuOpen = false;
@@ -1405,40 +1419,42 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                 activeCategory: _planetFilterCategory,
                 allPlanetMode: _astroLayers['aspectAll'] ?? false,
               )),
-            // L3 / Lewis: 天頂・天底緯度線 (同じ緯度全周に効く効果を視覚化)
-            // latitudeBands トグルON かつ aspect 系フレームONのとき描画。
+            // ── L3 / Lewis: 天頂帯・天底帯 (緯度線) ──
+            // フレーム別 zenithBand_* / nadirBand_* で個別 ON/OFF (2層メニュー)。
             // マーカーより下のレイヤーに置き、マーカーが上に乗る配置。
-            if ((_astroLayers['latitudeBands'] ?? false) &&
-                _zenithVisibleFrames().isNotEmpty &&
-                _astroLinesCache.isNotEmpty)
-              PolylineLayer(polylines: buildAstroLatitudePolylines(
+            if (_zenithBandFrames().isNotEmpty && _astroLinesCache.isNotEmpty)
+              PolylineLayer(polylines: buildAstroZenithBandPolylines(
                 lines: _astroLinesCache,
                 activeCategory: _planetFilterCategory,
                 allPlanetMode: _astroLayers['aspectAll'] ?? false,
-                framesWithBands: _zenithVisibleFrames(),
+                framesWithBands: _zenithBandFrames(),
               )),
-            // 天頂点マーカー (CCG): 表示中の全フレームの zenith を描画。
-            // 動的フレーム (Transit/Prog/SArc) は時間で動くため CCG の核となる。
-            // ACGモードでは natal を強制ON、通常Mapでは toggle 状況に従う。
-            if (_zenithVisibleFrames().isNotEmpty && _astroLinesCache.isNotEmpty)
+            if (_nadirBandFrames().isNotEmpty && _astroLinesCache.isNotEmpty)
+              PolylineLayer(polylines: buildAstroNadirBandPolylines(
+                lines: _astroLinesCache,
+                activeCategory: _planetFilterCategory,
+                allPlanetMode: _astroLayers['aspectAll'] ?? false,
+                framesWithBands: _nadirBandFrames(),
+              )),
+            // 天頂点マーカー (CCG): zenith_<frame> ON のフレームのみ描画。
+            if (_zenithMarkerFrames().isNotEmpty && _astroLinesCache.isNotEmpty)
               MarkerLayer(markers: buildAstroZenithMarkers(
                 lines: _astroLinesCache,
                 activeCategory: _planetFilterCategory,
                 allPlanetMode: _astroLayers['aspectAll'] ?? false,
-                framesWithZenith: _zenithVisibleFrames(),
+                framesWithZenith: _zenithMarkerFrames(),
                 onTap: (planetKey, frame, point) => setState(() {
                   _zenithTapInfo = (planet: planetKey, frame: frame, point: point, isNadir: false);
                   _relocateTapPoint = null; // 排他: 線+ハウス popup を閉じる
                 }),
               )),
-            // 天底点マーカー (L2 / Lewis): IC ライン上の zenith 対称点。
-            // ON 中の各 aspect レイヤーに対応する天底を描画 (フレーム集合は zenith と共通)。
-            if (_zenithVisibleFrames().isNotEmpty && _astroLinesCache.isNotEmpty)
+            // 天底点マーカー: nadir_<frame> ON のフレームのみ描画。
+            if (_nadirMarkerFrames().isNotEmpty && _astroLinesCache.isNotEmpty)
               MarkerLayer(markers: buildAstroNadirMarkers(
                 lines: _astroLinesCache,
                 activeCategory: _planetFilterCategory,
                 allPlanetMode: _astroLayers['aspectAll'] ?? false,
-                framesWithNadir: _zenithVisibleFrames(),
+                framesWithNadir: _nadirMarkerFrames(),
                 onTap: (planetKey, frame, point) => setState(() {
                   _zenithTapInfo = (planet: planetKey, frame: frame, point: point, isNadir: true);
                   _relocateTapPoint = null;
@@ -1679,31 +1695,12 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
               mapStyle: _mapStyle,
               onLayerToggle: (k) => setState(() => _layers[k] = !(_layers[k] ?? false)),
               onPlanetGroupToggle: (k) => setState(() => _planetGroups[k] = !(_planetGroups[k] ?? false)),
-              onAstroToggle: (k) {
-                // 天頂帯は aspect 系 (Natal/Transit/Prog/S.Arc) のいずれかが
-                // ON でないと描画対象が無い → 空振り防止のガード。
-                // OFF→ON 操作時のみチェック (ON→OFF は素通り)。
-                if (k == 'latitudeBands' &&
-                    !(_astroLayers['latitudeBands'] ?? false) &&
-                    _zenithVisibleFrames().isEmpty) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text(
-                        '天頂帯を表示するには、Natal線 / Transit線 / Prog線 / S.Arc線'
-                        'のいずれかを先に選択してください',
-                      ),
-                      duration: Duration(seconds: 3),
-                    ),
-                  );
-                  return;
+              onAstroToggle: (k) => setState(() {
+                _astroLayers[k] = !(_astroLayers[k] ?? false);
+                if (k == 'relocate' && !(_astroLayers[k] ?? false)) {
+                  _relocateTapPoint = null;
                 }
-                setState(() {
-                  _astroLayers[k] = !(_astroLayers[k] ?? false);
-                  if (k == 'relocate' && !(_astroLayers[k] ?? false)) {
-                    _relocateTapPoint = null;
-                  }
-                });
-              },
+              }),
               // 惑星>テーマ は惑星フィルタのみを更新 (扇状非干渉)
               onPlanetFilterChanged: (k) => setState(() => _planetFilterCategory = k),
               onMapStyleChanged: _onMapStyleChanged,
@@ -2122,15 +2119,28 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     );
   }
 
-  /// 天頂マーカーを表示するフレーム集合。
-  /// 各 aspect トグル ON でそのフレームの天頂シンボルが描画される。
-  /// 動的フレーム (T/P/SA) は時間で動くので時刻スライダーと連動する。
-  Set<astro_lines.AstroFrame> _zenithVisibleFrames() {
+  /// 2 層メニュー化に伴うフレーム集合ヘルパー (2026-05-11)。
+  /// 各サブ機能 (天頂/天底/天頂帯/天底帯) を独立に持つ。
+  /// すべて「第1層 (線) が ON」かつ「第2層トグルが ON」を満たすフレームに絞る:
+  /// 線 OFF のフレームは第2層メニュー自体が折り畳まれて操作不能。
+
+  Set<astro_lines.AstroFrame> _zenithMarkerFrames() => _filteredFrames('zenith');
+  Set<astro_lines.AstroFrame> _nadirMarkerFrames() => _filteredFrames('nadir');
+  Set<astro_lines.AstroFrame> _zenithBandFrames() => _filteredFrames('zenithBand');
+  Set<astro_lines.AstroFrame> _nadirBandFrames() => _filteredFrames('nadirBand');
+
+  Set<astro_lines.AstroFrame> _filteredFrames(String subKey) {
     final s = <astro_lines.AstroFrame>{};
-    if (_astroLayers['aspect'] == true) s.add(astro_lines.AstroFrame.natal);
-    if (_astroLayers['aspectTransit'] == true) s.add(astro_lines.AstroFrame.transit);
-    if (_astroLayers['aspectProgressed'] == true) s.add(astro_lines.AstroFrame.progressed);
-    if (_astroLayers['aspectSolarArc'] == true) s.add(astro_lines.AstroFrame.solarArc);
+    void add(String aspectKey, String suffix, astro_lines.AstroFrame frame) {
+      if (_astroLayers[aspectKey] == true &&
+          _astroLayers['${subKey}_$suffix'] == true) {
+        s.add(frame);
+      }
+    }
+    add('aspect', 'natal', astro_lines.AstroFrame.natal);
+    add('aspectTransit', 'transit', astro_lines.AstroFrame.transit);
+    add('aspectProgressed', 'progressed', astro_lines.AstroFrame.progressed);
+    add('aspectSolarArc', 'solarArc', astro_lines.AstroFrame.solarArc);
     return s;
   }
 
