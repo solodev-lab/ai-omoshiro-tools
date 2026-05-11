@@ -164,6 +164,22 @@ List<Polyline> buildAstroPolylines({
 // MapタイルがWebMercator上で緯度線は水平直線になるため、サンプル2点 (lng=-180/+180)
 // で十分な精度の Polyline が引ける。
 
+/// 緯度線の Polyline 点列を生成。
+///
+/// 経度 ±180 ぴったりは flutter_map の projection が破綻する場合があるため、
+/// 端点は ±179.9 に内側化する。さらに -90/0/90 の中間点を挿入することで
+/// 極端なズームでもクリッピング起因の NaN を防ぐ (中間点なしで端点だけだと
+/// Mercator pixel bounds 計算で巨大数値を経由する)。
+///
+/// 2026-05-11 ACG モードズームアウト時の `LatLng(NaN, NaN)` 連発バグ対策。
+List<LatLng> _latitudePolylinePoints(double lat) => [
+      LatLng(lat, -179.9),
+      LatLng(lat, -90),
+      LatLng(lat, 0),
+      LatLng(lat, 90),
+      LatLng(lat, 179.9),
+    ];
+
 /// 天頂・天底の緯度線を Polyline[] に変換する。
 ///
 /// 1本のラインから最大2本生成:
@@ -197,23 +213,23 @@ List<Polyline> buildAstroLatitudePolylines({
         (isHighlighted ? 1.0 : _dimMultiplier) * frameStyle.opacityMul;
 
     final zenith = line.zenith;
-    if (zenith != null && zenith.latitude.abs() <= latLimit) {
+    if (zenith != null &&
+        zenith.latitude.isFinite &&
+        zenith.latitude.abs() <= latLimit) {
       // 天頂緯度線: 惑星色をフレームaccentに向けてtint
       final tinted = _lerpColor(meta.color, frameStyle.accent, frameStyle.tintMix);
       final color = tinted.withAlpha((opacityBase * alphaMul * 255).round());
       polylines.add(Polyline(
-        points: [
-          LatLng(zenith.latitude, -180),
-          LatLng(zenith.latitude, 0),
-          LatLng(zenith.latitude, 180),
-        ],
+        points: _latitudePolylinePoints(zenith.latitude),
         color: color,
         strokeWidth: 1.4,
       ));
     }
 
     final nadir = line.nadir;
-    if (nadir != null && nadir.latitude.abs() <= latLimit) {
+    if (nadir != null &&
+        nadir.latitude.isFinite &&
+        nadir.latitude.abs() <= latLimit) {
       // 天底緯度線: 惑星色を暗トーン化 + 点線
       final darkenedPlanet = Color.from(
         alpha: 1.0,
@@ -224,11 +240,7 @@ List<Polyline> buildAstroLatitudePolylines({
       final tinted = _lerpColor(darkenedPlanet, frameStyle.accent, frameStyle.tintMix * 0.6);
       final color = tinted.withAlpha((opacityBase * alphaMul * 0.85 * 255).round());
       polylines.add(Polyline(
-        points: [
-          LatLng(nadir.latitude, -180),
-          LatLng(nadir.latitude, 0),
-          LatLng(nadir.latitude, 180),
-        ],
+        points: _latitudePolylinePoints(nadir.latitude),
         color: color,
         strokeWidth: 1.2,
         pattern: StrokePattern.dashed(segments: const [5, 6]),
