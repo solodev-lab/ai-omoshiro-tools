@@ -131,15 +131,12 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     'aspectAll': false,      // 全惑星モード (FORTUNE フィルタ無視)
     // ── 第2層: フレーム別の天頂/天底/天頂帯/天底帯 (2026-05-11 ACG 2層メニュー化) ──
     // 各 frame の線が ON のときのみ第2層メニューに表示される (アコーディオン)。
-    // 旧 'latitudeBands' (共通フラグ) は廃止、frame-specific に分割。
-    'zenith_natal': false, 'zenith_transit': false,
-    'zenith_progressed': false, 'zenith_solarArc': false,
-    'nadir_natal': false, 'nadir_transit': false,
-    'nadir_progressed': false, 'nadir_solarArc': false,
-    'zenithBand_natal': false, 'zenithBand_transit': false,
-    'zenithBand_progressed': false, 'zenithBand_solarArc': false,
-    'nadirBand_natal': false, 'nadirBand_transit': false,
-    'nadirBand_progressed': false, 'nadirBand_solarArc': false,
+    // キー組立規約: '<subKey>_<frameSuffix>'
+    //   subKey      = zenith | nadir | zenithBand | nadirBand
+    //   frameSuffix = natal | transit | progressed | solarArc
+    for (final sub in ['zenith', 'nadir', 'zenithBand', 'nadirBand'])
+      for (final f in ['natal', 'transit', 'progressed', 'solarArc'])
+        '${sub}_$f': false,
   };
 
   // 引越しレイヤー ON時のタップ詳細ポップアップ用
@@ -1421,20 +1418,17 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
               )),
             // ── L3 / Lewis: 天頂帯・天底帯 (緯度線) ──
             // フレーム別 zenithBand_* / nadirBand_* で個別 ON/OFF (2層メニュー)。
+            // 統合関数 1 つで両方描画 (lines を 1 度だけ走査、PolylineLayer も 1 つ)。
             // マーカーより下のレイヤーに置き、マーカーが上に乗る配置。
-            if (_zenithBandFrames().isNotEmpty && _astroLinesCache.isNotEmpty)
-              PolylineLayer(polylines: buildAstroZenithBandPolylines(
+            if ((_zenithBandFrames().isNotEmpty ||
+                    _nadirBandFrames().isNotEmpty) &&
+                _astroLinesCache.isNotEmpty)
+              PolylineLayer(polylines: buildAstroLatitudeBandPolylines(
                 lines: _astroLinesCache,
                 activeCategory: _planetFilterCategory,
                 allPlanetMode: _astroLayers['aspectAll'] ?? false,
-                framesWithBands: _zenithBandFrames(),
-              )),
-            if (_nadirBandFrames().isNotEmpty && _astroLinesCache.isNotEmpty)
-              PolylineLayer(polylines: buildAstroNadirBandPolylines(
-                lines: _astroLinesCache,
-                activeCategory: _planetFilterCategory,
-                allPlanetMode: _astroLayers['aspectAll'] ?? false,
-                framesWithBands: _nadirBandFrames(),
+                zenithFrames: _zenithBandFrames(),
+                nadirFrames: _nadirBandFrames(),
               )),
             // 天頂点マーカー (CCG): zenith_<frame> ON のフレームのみ描画。
             if (_zenithMarkerFrames().isNotEmpty && _astroLinesCache.isNotEmpty)
@@ -2129,18 +2123,24 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   Set<astro_lines.AstroFrame> _zenithBandFrames() => _filteredFrames('zenithBand');
   Set<astro_lines.AstroFrame> _nadirBandFrames() => _filteredFrames('nadirBand');
 
+  /// フレーム定義テーブル (第1層 aspect キー / 第2層 suffix / enum)。
+  /// _filteredFrames / _enterAstroCartoMode 等が参照。
+  static const List<({String aspectKey, String suffix, astro_lines.AstroFrame frame})>
+      _frameDefs = [
+    (aspectKey: 'aspect', suffix: 'natal', frame: astro_lines.AstroFrame.natal),
+    (aspectKey: 'aspectTransit', suffix: 'transit', frame: astro_lines.AstroFrame.transit),
+    (aspectKey: 'aspectProgressed', suffix: 'progressed', frame: astro_lines.AstroFrame.progressed),
+    (aspectKey: 'aspectSolarArc', suffix: 'solarArc', frame: astro_lines.AstroFrame.solarArc),
+  ];
+
   Set<astro_lines.AstroFrame> _filteredFrames(String subKey) {
     final s = <astro_lines.AstroFrame>{};
-    void add(String aspectKey, String suffix, astro_lines.AstroFrame frame) {
-      if (_astroLayers[aspectKey] == true &&
-          _astroLayers['${subKey}_$suffix'] == true) {
-        s.add(frame);
+    for (final def in _frameDefs) {
+      if (_astroLayers[def.aspectKey] == true &&
+          _astroLayers['${subKey}_${def.suffix}'] == true) {
+        s.add(def.frame);
       }
     }
-    add('aspect', 'natal', astro_lines.AstroFrame.natal);
-    add('aspectTransit', 'transit', astro_lines.AstroFrame.transit);
-    add('aspectProgressed', 'progressed', astro_lines.AstroFrame.progressed);
-    add('aspectSolarArc', 'solarArc', astro_lines.AstroFrame.solarArc);
     return s;
   }
 

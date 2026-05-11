@@ -283,22 +283,33 @@ class AstroCartoFramePills extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return _ScrollableRowPanel(
-      borderRadius: 16,
-      maxWidthMargin: 16,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: _entries.map((e) {
-          final on = astroLayers[e.layerKey] ?? false;
-          return _FrameRow(
-            entry: e,
-            on: on,
-            astroLayers: astroLayers,
-            onToggle: onToggle,
-            subEntries: _subEntries,
-          );
-        }).toList(),
+    // 縦並び 4 行固定 (横スクロール不要)。
+    // _ScrollableRowPanel (= Row 横スクロール用) を流用すると、Column を内側に置いた瞬間
+    // Column 幅が ∞ になり Container の制約解決が破綻するため、ここは直接 Container で組む。
+    final maxW = MediaQuery.of(context).size.width - 16;
+    return ConstrainedBox(
+      constraints: BoxConstraints(maxWidth: maxW),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+        decoration: BoxDecoration(
+          color: const Color(0xE60C0C1A),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0x33C9A84C)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: _entries.map((e) {
+            final on = astroLayers[e.layerKey] ?? false;
+            return _FrameRow(
+              entry: e,
+              on: on,
+              astroLayers: astroLayers,
+              onToggle: onToggle,
+              subEntries: _subEntries,
+            );
+          }).toList(),
+        ),
       ),
     );
   }
