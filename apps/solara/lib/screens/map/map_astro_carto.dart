@@ -236,12 +236,16 @@ void _showAcgUsageGuide(BuildContext context) {
 
 /// Astro*Carto*Graphy モード中の4フレーム切替ピル (Tier A #5 / CCG D2)。
 /// Natal / Transit / Progressed / Solar Arc を独立にON/OFF可能。
+///
+/// 2026-05-11 2層メニュー化:
+///   第1層: 各フレームピル (タップで線 ON/OFF + 第2層展開)
+///   第2層: ON 中のフレームのみ「天頂 / 天底 / 天頂帯 / 天底帯」サブトグル4つ表示
+///
 /// 各ピルは frame の accent 色で塗られ、ON時は枠+塗り、OFF時は薄文字。
-/// 入時の規定: Natal=ON、他=OFF (ユーザー直前選択を維持)。
 class AstroCartoFramePills extends StatelessWidget {
   /// _astroLayers のキー → 表示状態。ON のフレームを accent 強調。
   final Map<String, bool> astroLayers;
-  /// _astroLayers のキー名で trigger (例: 'aspect', 'aspectTransit')
+  /// _astroLayers のキー名で trigger (例: 'aspect', 'aspectTransit', 'zenith_natal')
   final ValueChanged<String> onToggle;
 
   const AstroCartoFramePills({
@@ -250,26 +254,99 @@ class AstroCartoFramePills extends StatelessWidget {
     required this.onToggle,
   });
 
-  static const List<({String layerKey, AstroFrame frame, String shortLabel, String termKey})> _entries = [
-    (layerKey: 'aspect', frame: AstroFrame.natal, shortLabel: 'Natal', termKey: 'aspect_lines'),
-    (layerKey: 'aspectTransit', frame: AstroFrame.transit, shortLabel: 'Transit', termKey: 'transit_acg'),
-    (layerKey: 'aspectProgressed', frame: AstroFrame.progressed, shortLabel: 'Prog', termKey: 'progressed_acg'),
-    (layerKey: 'aspectSolarArc', frame: AstroFrame.solarArc, shortLabel: 'S.Arc', termKey: 'solar_arc_acg'),
+  static const List<_FrameEntry> _entries = [
+    _FrameEntry(
+      layerKey: 'aspect', frame: AstroFrame.natal,
+      shortLabel: 'Natal', termKey: 'aspect_lines', frameSuffix: 'natal',
+    ),
+    _FrameEntry(
+      layerKey: 'aspectTransit', frame: AstroFrame.transit,
+      shortLabel: 'Transit', termKey: 'transit_acg', frameSuffix: 'transit',
+    ),
+    _FrameEntry(
+      layerKey: 'aspectProgressed', frame: AstroFrame.progressed,
+      shortLabel: 'Prog', termKey: 'progressed_acg', frameSuffix: 'progressed',
+    ),
+    _FrameEntry(
+      layerKey: 'aspectSolarArc', frame: AstroFrame.solarArc,
+      shortLabel: 'S.Arc', termKey: 'solar_arc_acg', frameSuffix: 'solarArc',
+    ),
+  ];
+
+  /// 第2層: 各フレームに紐づくサブトグル定義。
+  static const List<({String subKey, String label, String termKey})> _subEntries = [
+    (subKey: 'zenith', label: '天頂', termKey: 'zenith_point'),
+    (subKey: 'nadir', label: '天底', termKey: 'nadir_point'),
+    (subKey: 'zenithBand', label: '天頂帯', termKey: 'latitude_band'),
+    (subKey: 'nadirBand', label: '天底帯', termKey: 'latitude_band'),
   ];
 
   @override
   Widget build(BuildContext context) {
     return _ScrollableRowPanel(
       borderRadius: 16,
-      // ピル中央寄せ: コンテンツが画面幅に収まれば中央、超えれば横スクロール可能
       maxWidthMargin: 16,
-      child: Row(
+      child: Column(
         mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: _entries.map((e) {
           final on = astroLayers[e.layerKey] ?? false;
-          final accent = astroFrameStyles[e.frame]!.accent;
-          return Container(
-            margin: const EdgeInsets.symmetric(horizontal: 2),
+          return _FrameRow(
+            entry: e,
+            on: on,
+            astroLayers: astroLayers,
+            onToggle: onToggle,
+            subEntries: _subEntries,
+          );
+        }).toList(),
+      ),
+    );
+  }
+}
+
+/// フレームエントリ定義 (record の代わりに class を使うのは const List 化のため)
+class _FrameEntry {
+  final String layerKey;     // 'aspect', 'aspectTransit' 等
+  final AstroFrame frame;
+  final String shortLabel;   // 'Natal', 'Transit' 等
+  final String termKey;      // glossary キー
+  final String frameSuffix;  // 'natal', 'transit' 等 (第2層 _astroLayers キー組立用)
+  const _FrameEntry({
+    required this.layerKey,
+    required this.frame,
+    required this.shortLabel,
+    required this.termKey,
+    required this.frameSuffix,
+  });
+}
+
+/// 1フレームの行: 第1層ピル + (ON時のみ) 第2層サブトグル。
+class _FrameRow extends StatelessWidget {
+  final _FrameEntry entry;
+  final bool on;
+  final Map<String, bool> astroLayers;
+  final ValueChanged<String> onToggle;
+  final List<({String subKey, String label, String termKey})> subEntries;
+
+  const _FrameRow({
+    required this.entry,
+    required this.on,
+    required this.astroLayers,
+    required this.onToggle,
+    required this.subEntries,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final accent = astroFrameStyles[entry.frame]!.accent;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // ── 第1層: フレームピル ──
+          Container(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(11),
               border: Border.all(
@@ -282,12 +359,12 @@ class AstroCartoFramePills extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 GestureDetector(
-                  onTap: () => onToggle(e.layerKey),
+                  onTap: () => onToggle(entry.layerKey),
                   behavior: HitTestBehavior.opaque,
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(9, 4, 4, 4),
+                    padding: const EdgeInsets.fromLTRB(10, 5, 4, 5),
                     child: Text(
-                      e.shortLabel,
+                      entry.shortLabel,
                       style: TextStyle(
                         fontSize: 13,
                         color: on ? accent : const Color(0xFF888888),
@@ -298,7 +375,7 @@ class AstroCartoFramePills extends StatelessWidget {
                   ),
                 ),
                 GestureDetector(
-                  onTap: () => showAstroGlossaryDialog(context, e.termKey),
+                  onTap: () => showAstroGlossaryDialog(context, entry.termKey),
                   behavior: HitTestBehavior.opaque,
                   child: Padding(
                     padding: const EdgeInsets.all(8),
@@ -311,8 +388,97 @@ class AstroCartoFramePills extends StatelessWidget {
                 ),
               ],
             ),
-          );
-        }).toList(),
+          ),
+          // ── 第2層: ON 時のみアコーディオン展開 ──
+          AnimatedSize(
+            duration: const Duration(milliseconds: 180),
+            curve: Curves.easeOutCubic,
+            alignment: Alignment.topLeft,
+            child: on
+                ? Padding(
+                    padding: const EdgeInsets.fromLTRB(10, 4, 4, 2),
+                    child: Wrap(
+                      spacing: 6,
+                      runSpacing: 4,
+                      children: subEntries.map((sub) {
+                        final key = '${sub.subKey}_${entry.frameSuffix}';
+                        final subOn = astroLayers[key] ?? false;
+                        return _SubToggle(
+                          label: sub.label,
+                          on: subOn,
+                          accent: accent,
+                          onTap: () => onToggle(key),
+                          onInfoTap: () => showAstroGlossaryDialog(context, sub.termKey),
+                        );
+                      }).toList(),
+                    ),
+                  )
+                : const SizedBox.shrink(),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// 第2層のサブトグル小ピル (天頂 / 天底 / 天頂帯 / 天底帯)。
+class _SubToggle extends StatelessWidget {
+  final String label;
+  final bool on;
+  final Color accent;
+  final VoidCallback onTap;
+  final VoidCallback onInfoTap;
+  const _SubToggle({
+    required this.label,
+    required this.on,
+    required this.accent,
+    required this.onTap,
+    required this.onInfoTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(9),
+        border: Border.all(
+          color: on ? accent.withAlpha(200) : const Color(0x1FFFFFFF),
+          width: on ? 1.0 : 0.6,
+        ),
+        color: on ? accent.withAlpha(20) : Colors.transparent,
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          GestureDetector(
+            onTap: onTap,
+            behavior: HitTestBehavior.opaque,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(8, 3, 3, 3),
+              child: Text(
+                label,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: on ? accent : const Color(0xFF888888),
+                  letterSpacing: 0.2,
+                  fontWeight: on ? FontWeight.w600 : FontWeight.w400,
+                ),
+              ),
+            ),
+          ),
+          GestureDetector(
+            onTap: onInfoTap,
+            behavior: HitTestBehavior.opaque,
+            child: Padding(
+              padding: const EdgeInsets.all(6),
+              child: Icon(
+                Icons.info_outline,
+                size: 13,
+                color: on ? accent.withAlpha(200) : const Color(0xCCAAAAAA),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
