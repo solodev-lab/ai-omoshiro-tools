@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../utils/astro_glossary.dart' show showAstroGlossaryDialog;
 import '../../utils/astro_houses.dart';
 import '../../utils/astro_lines.dart';
 import '../../widgets/astro_term_label.dart';
@@ -128,7 +129,7 @@ class MapRelocationPopup extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildHeader(showHouses: showHouses, hasLines: hasLines),
+            _buildHeader(context, showHouses: showHouses, hasLines: hasLines),
             if (hasLines) ...[
               const SizedBox(height: 10),
               _buildLinesSection(context, nearbyLines!),
@@ -280,7 +281,43 @@ class MapRelocationPopup extends StatelessWidget {
     );
   }
 
-  Widget _buildHeader({required bool showHouses, required bool hasLines}) {
+  /// Flexible で囲んだタイトル + (termKey 非 null 時) i ボタンを横並びに。
+  /// Row(min) 内で Flexible Text なので、親 Expanded の制約を尊重して overflow しない。
+  Widget _buildTitleArea(
+      BuildContext context, String? termKey, Widget titleText) {
+    if (termKey == null) {
+      // ラインタップ popup と同じ「生の Flexible Text」
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [Flexible(child: titleText)],
+      );
+    }
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Flexible(
+          child: GestureDetector(
+            onTap: () => showAstroGlossaryDialog(context, termKey),
+            behavior: HitTestBehavior.opaque,
+            child: titleText,
+          ),
+        ),
+        const SizedBox(width: 3),
+        GestureDetector(
+          onTap: () => showAstroGlossaryDialog(context, termKey),
+          behavior: HitTestBehavior.opaque,
+          child: const Padding(
+            padding: EdgeInsets.all(8),
+            child: Icon(Icons.info_outline,
+                size: 16, color: Color(0xAACCCCCC)),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildHeader(BuildContext context,
+      {required bool showHouses, required bool hasLines}) {
     // タイトルは状況に応じて変える
     final String title;
     final String? termKey;
@@ -295,37 +332,42 @@ class MapRelocationPopup extends StatelessWidget {
       termKey = 'aspect_lines';
     }
 
-    Widget titleWidget = Text(
+    // 2026-05-11: 旧仕様で termKey!=null のとき AstroTermLabel (= Row mainAxis:min)
+    // でラップしていたため、内部 Text が親 Expanded の制約を無視して overflow を
+    // 起こしていた。ラインタップ popup (termKey=null = 生 Text) と同じ動作にする
+    // ため、Expanded の中で「Flexible Text + i ボタン」を自前で組む。
+    final titleText = Text(
       title,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
       style: GoogleFonts.notoSansJp(
         fontSize: 13,
         color: const Color(0xFFE8E0D0),
         letterSpacing: 0.6,
       ),
     );
-    if (termKey != null) {
-      // 2026-05-08: i ボタンが小さすぎるという指摘で iconSize 12→16
-      titleWidget = AstroTermLabel(
-        termKey: termKey,
-        iconSize: 16,
-        iconColor: const Color(0xAACCCCCC),
-        child: titleWidget,
-      );
-    }
 
     return Row(
       children: [
         Icon(Icons.place, size: 14, color: Colors.pink.shade200),
         const SizedBox(width: 6),
-        Expanded(child: titleWidget),
-        if (showHouses)
-          Text(
-            '$baselineLabel → タップ地点',
-            style: GoogleFonts.notoSansJp(
-              fontSize: 13,
-              color: const Color(0xFF888888),
+        // タイトル + (任意で) i ボタン を Expanded 内で並べる。
+        // Flexible Text で長文時に省略 → overflow しない。
+        Expanded(child: _buildTitleArea(context, termKey, titleText)),
+        if (showHouses) ...[
+          const SizedBox(width: 6),
+          Flexible(
+            child: Text(
+              '$baselineLabel → タップ地点',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: GoogleFonts.notoSansJp(
+                fontSize: 13,
+                color: const Color(0xFF888888),
+              ),
             ),
           ),
+        ],
         const SizedBox(width: 8),
         GestureDetector(
           onTap: onClose,
