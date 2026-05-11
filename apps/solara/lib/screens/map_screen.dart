@@ -1183,7 +1183,11 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
       _layers['sectors'] = false;
       _layers['compass'] = false;
       _astroLayers['planetLines'] = false;
-      _astroLayers['relocate'] = true;
+      // 2026-05-11: ACG モード入時の relocate 強制 ON を撤廃。
+      // 引越しは ACG メニューの「引越し」ピルで明示的に ON/OFF (排他モード)。
+      // ON のとき: 地点タップで引越し popup のみ、他のタップ反応は抑制。
+      // OFF のとき: 線/天頂/天底タップが従来通り反応。
+      _astroLayers['relocate'] = false;
       // CCG (D2): モード入時は Transit を強制 ON (2026-05-08 ユーザー要望で
       // 旧 Natal → Transit に変更)。Transit は「今この瞬間」のラインで
       // 一番直感的に効果を実感できるため、初期表示として最適。
@@ -1398,21 +1402,31 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
             ),
             // HTML: long-press 600ms → rebuild(nc, fly:true)
             onLongPress: (tapPos, latlng) => _rebuild(latlng),
-            // Phase M2 + CCG: aspect (4フレーム何れか) / relocate ON時、タップで統合 popup
-            // 設計: 論点10 (8-β) — 1タップで線情報+12ハウス情報を集約表示
+            // タップ動作の二択:
+            //   ① relocate ON (排他モード) → 地点タップで必ず引越し popup を出す
+            //   ② relocate OFF + aspect 系 ON → 近接線があれば線 popup
+            //   いずれにも当てはまらないタップは無視。
+            //
+            // 2026-05-11: 「引越し」トグルを排他モードに変更。
+            //   ON 中: ライン/天頂/天底タップは反応しない (引越し popup のみ)。
+            //   マーカー側の onTap も relocate 中は null を渡して抑制 (下記参照)。
             onTap: (tapPos, latlng) {
               if (_chartResult == null) return;
+              final relocateOn = _astroLayers['relocate'] == true;
+              if (relocateOn) {
+                setState(() {
+                  _relocateTapPoint = latlng;
+                  _zenithTapInfo = null;
+                });
+                return;
+              }
               final aspectOn = _astroLayers['aspect'] == true ||
                   _astroLayers['aspectTransit'] == true ||
                   _astroLayers['aspectProgressed'] == true ||
                   _astroLayers['aspectSolarArc'] == true;
-              final relocateOn = _astroLayers['relocate'] == true;
-              if (!aspectOn && !relocateOn) return;
-              // aspect ONのみで近接線がない場合は popup を出さない (空表示防止)
-              if (aspectOn && !relocateOn) {
-                final near = _findNearbyAstroLines(latlng);
-                if (near.isEmpty) return;
-              }
+              if (!aspectOn) return;
+              final near = _findNearbyAstroLines(latlng);
+              if (near.isEmpty) return;
               setState(() {
                 _relocateTapPoint = latlng;
                 _zenithTapInfo = null;
@@ -1479,16 +1493,19 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                 nadirFrames: _nadirBandFrames(),
               )),
             // 天頂点マーカー (CCG): zenith_<frame> ON のフレームのみ描画。
+            // relocate 排他モード中はマーカー onTap を null にして反応抑制。
             if (_zenithMarkerFrames().isNotEmpty && _astroLinesCache.isNotEmpty)
               MarkerLayer(markers: buildAstroZenithMarkers(
                 lines: _astroLinesCache,
                 activeCategory: _planetFilterCategory,
                 allPlanetMode: _astroLayers['aspectAll'] ?? false,
                 framesWithZenith: _zenithMarkerFrames(),
-                onTap: (planetKey, frame, point) => setState(() {
-                  _zenithTapInfo = (planet: planetKey, frame: frame, point: point, isNadir: false);
-                  _relocateTapPoint = null; // 排他: 線+ハウス popup を閉じる
-                }),
+                onTap: (_astroLayers['relocate'] == true)
+                    ? null
+                    : (planetKey, frame, point) => setState(() {
+                          _zenithTapInfo = (planet: planetKey, frame: frame, point: point, isNadir: false);
+                          _relocateTapPoint = null; // 排他: 線+ハウス popup を閉じる
+                        }),
               )),
             // 天底点マーカー: nadir_<frame> ON のフレームのみ描画。
             if (_nadirMarkerFrames().isNotEmpty && _astroLinesCache.isNotEmpty)
@@ -1497,10 +1514,12 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                 activeCategory: _planetFilterCategory,
                 allPlanetMode: _astroLayers['aspectAll'] ?? false,
                 framesWithNadir: _nadirMarkerFrames(),
-                onTap: (planetKey, frame, point) => setState(() {
-                  _zenithTapInfo = (planet: planetKey, frame: frame, point: point, isNadir: true);
-                  _relocateTapPoint = null;
-                }),
+                onTap: (_astroLayers['relocate'] == true)
+                    ? null
+                    : (planetKey, frame, point) => setState(() {
+                          _zenithTapInfo = (planet: planetKey, frame: frame, point: point, isNadir: true);
+                          _relocateTapPoint = null;
+                        }),
               )),
             // 16方位ラベル: モード中は世界規模ビューでは意味を成さないので非表示
             if (!_astroCartoMode)
