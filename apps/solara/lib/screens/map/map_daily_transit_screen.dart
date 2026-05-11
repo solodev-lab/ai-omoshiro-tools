@@ -1029,6 +1029,13 @@ class _TimelineBody extends StatelessWidget {
     // 空状態 (今日イベント無し / フィルタで 0 件) でも tips は活きるので、
     // 全状態で同じ ListView 構造を使い、children list で組み立てる。
     final children = <Widget>[];
+    // L3 Lewis: 観測時刻の緯度帯ヒット惑星リスト (先頭に表示、Lewis 緯度効果)。
+    // 旧 worker は latitudeBand を返さないため null 安全。
+    if (result.latitudeBand != null &&
+        (result.latitudeBand!.zenith.isNotEmpty ||
+            result.latitudeBand!.nadir.isNotEmpty)) {
+      children.add(_LatitudeBandBox(band: result.latitudeBand!));
+    }
     if (showTips) {
       children.add(_CategoryTipsBox(
         categoryKey: categoryFilter,
@@ -1178,13 +1185,28 @@ class _TimelineRow extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 2),
-                    Text(
-                      _angleHint(event.angle, compassLabel),
-                      style: const TextStyle(
-                        fontSize: 13,
-                        color: SolaraColors.textSecondary,
-                        height: 1.4,
-                      ),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            _angleHint(event.angle, compassLabel),
+                            style: const TextStyle(
+                              fontSize: 13,
+                              color: SolaraColors.textSecondary,
+                              height: 1.4,
+                            ),
+                          ),
+                        ),
+                        // L3 Lewis: MC/IC イベントで高度バッジ表示。
+                        // 高度 ≈ 90° (≥85°) で天頂寄り、≈ -90° (≤-85°) で天底寄り。
+                        // 天頂寄り = 観測者緯度がほぼ惑星赤緯 = 真上から降る瞬間
+                        // 天底寄り = 観測者の足下を通る瞬間
+                        if (event.angle == 'MC' || event.angle == 'IC') ...[
+                          const SizedBox(width: 6),
+                          _AltitudeBadge(angle: event.angle, altitude: event.altitude),
+                        ],
+                      ],
                     ),
                   ],
                 ),
@@ -1249,6 +1271,166 @@ class _TimelineRow extends StatelessWidget {
     ];
     final idx = ((norm + 11.25) ~/ 22.5) % 16;
     return labels[idx];
+  }
+}
+
+/// L3 Lewis 高度バッジ。
+/// MC イベント: 高度 90° に近いほど天頂寄り (観測者緯度 ≈ 惑星赤緯)
+/// IC イベント: 高度 -90° に近いほど天底寄り
+/// 閾値 85° = Lewis ACG オーブ 5° と整合。
+/// バッジタップで altitude_event 用語解説 popup を開く。
+class _AltitudeBadge extends StatelessWidget {
+  final String angle;     // 'MC' | 'IC'
+  final double altitude;  // 度
+  const _AltitudeBadge({required this.angle, required this.altitude});
+
+  @override
+  Widget build(BuildContext context) {
+    final isMC = angle == 'MC';
+    final extreme = isMC ? altitude >= 85.0 : altitude <= -85.0;
+    final label = extreme ? (isMC ? '★ 天頂寄り' : '★ 天底寄り') : null;
+    final color = extreme
+        ? (isMC ? const Color(0xFFC9A84C) : const Color(0xFFB07CFF))
+        : const Color(0x99AAAAAA);
+    final altText = '${altitude.toStringAsFixed(0)}°';
+
+    return GestureDetector(
+      onTap: () => showAstroGlossaryDialog(context, 'altitude_event'),
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(color: color.withAlpha(extreme ? 200 : 100), width: 0.7),
+          color: extreme ? color.withAlpha(20) : Colors.transparent,
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (label != null) ...[
+              Text(label, style: TextStyle(
+                fontSize: 11, color: color, fontWeight: FontWeight.w600,
+                letterSpacing: 0.3,
+              )),
+              const SizedBox(width: 4),
+            ],
+            Text(altText, style: TextStyle(
+              fontSize: 11, color: color, fontFamily: 'monospace',
+              fontWeight: extreme ? FontWeight.w600 : FontWeight.w400,
+            )),
+            const SizedBox(width: 3),
+            Icon(Icons.info_outline, size: 11, color: color.withAlpha(180)),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// L3 Lewis 緯度帯ボックス。
+/// 観測時刻に「観測者と同じ緯度線上で天頂/天底を迎えている惑星」を列挙。
+/// 緯度効果 (Lewis): 同じ緯度線全周に効くため、観測者は経度を問わず影響を受ける。
+class _LatitudeBandBox extends StatelessWidget {
+  final LatitudeBand band;
+  const _LatitudeBandBox({required this.band});
+
+  @override
+  Widget build(BuildContext context) {
+    if (band.zenith.isEmpty && band.nadir.isEmpty) {
+      return const SizedBox.shrink();
+    }
+    return GlassPanel(
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          GestureDetector(
+            onTap: () => showAstroGlossaryDialog(context, 'latitude_band_now'),
+            behavior: HitTestBehavior.opaque,
+            child: Row(
+              children: [
+                const Text('🌐', style: TextStyle(fontSize: 14)),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    '今あなたの緯度帯 (緯度 ${band.observerLat.toStringAsFixed(1)}°、オーブ ±${band.orb.toStringAsFixed(0)}°)',
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: SolaraColors.textPrimary,
+                      letterSpacing: 0.3,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+                const Icon(Icons.info_outline, size: 14, color: Color(0xCCAAAAAA)),
+              ],
+            ),
+          ),
+          if (band.zenith.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            _LatitudeBandRow(label: '天頂帯', hits: band.zenith, accent: const Color(0xFFC9A84C)),
+          ],
+          if (band.nadir.isNotEmpty) ...[
+            const SizedBox(height: 6),
+            _LatitudeBandRow(label: '天底帯', hits: band.nadir, accent: const Color(0xFFB07CFF)),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _LatitudeBandRow extends StatelessWidget {
+  final String label;
+  final List<LatitudeBandHit> hits;
+  final Color accent;
+  const _LatitudeBandRow({required this.label, required this.hits, required this.accent});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          width: 50,
+          child: Text(label, style: TextStyle(
+            fontSize: 12, color: accent,
+            fontWeight: FontWeight.w600, letterSpacing: 0.4,
+          )),
+        ),
+        const SizedBox(width: 4),
+        Expanded(
+          child: Wrap(
+            spacing: 6, runSpacing: 4,
+            children: hits.map((h) {
+              final meta = planetMeta[h.planet];
+              final sym = meta?.sym ?? '✦';
+              final color = meta?.color ?? accent;
+              return Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: color.withAlpha(140), width: 0.7),
+                  color: color.withAlpha(20),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(sym, style: TextStyle(fontSize: 13, color: color)),
+                    const SizedBox(width: 3),
+                    Text('δ${h.dec >= 0 ? '+' : ''}${h.dec.toStringAsFixed(1)}°',
+                      style: TextStyle(
+                        fontSize: 10, color: color.withAlpha(220),
+                        fontFamily: 'monospace',
+                      )),
+                  ],
+                ),
+              );
+            }).toList(),
+          ),
+        ),
+      ],
+    );
   }
 }
 
