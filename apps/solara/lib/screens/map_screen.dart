@@ -470,12 +470,16 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     // 登録地スロット (home含む) を読込してマーカー描画に使う
     await _reloadLocationSlots();
     if (mounted) {
-      // 初回のみ _center を出生地に設定 + カメラ移動を予約。
+      // 初回のみ _center を「現住所優先、未設定なら出生地」に設定 + カメラ移動を予約。
+      // 設計方針: Map = 現住所基準の引越し検討ツール (project_solara_astrocartography_m2)。
       // 日付変更等の再計算ではユーザーが選んだ VP / 手動中心を保持する。
       final shouldMoveInitial = !_hasInitialCenter;
       setState(() {
         if (!_hasInitialCenter) {
-          _center = LatLng(p.birthLat, p.birthLng);
+          final hasHome = !(p.homeLat == 0 && p.homeLng == 0);
+          _center = hasHome
+              ? LatLng(p.homeLat, p.homeLng)
+              : LatLng(p.birthLat, p.birthLng);
           _hasInitialCenter = true;
         }
         _loadingChart = true;
@@ -1208,12 +1212,19 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     });
     SolaraStorage.saveMapStyleId(mapStyleConfigs[MapStyle.osmHotDark]!.id);
 
-    // 出生地経度を中心に世界全景 (緯度20°≒赤道よりやや北で南北バランス良)
-    final lng = _profile!.birthLng;
+    // 世界全景 (zoom 2.5)。中心は「現住所優先、未設定なら出生地」の経度。
+    // 表示緯度は出身/現住所の半球に追従:
+    //   北半球 → 20°N (赤道よりやや北で南北バランス)
+    //   南半球 → 20°S (赤道よりやや南、オーストラリア等のユーザー向け)
+    final p = _profile!;
+    final hasHome = !(p.homeLat == 0 && p.homeLng == 0);
+    final centerLat = hasHome ? p.homeLat : p.birthLat;
+    final centerLng = hasHome ? p.homeLng : p.birthLng;
+    final viewLat = centerLat < 0 ? -20.0 : 20.0;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       try {
-        _mapCtrl.move(LatLng(20, lng), 2.5);
+        _mapCtrl.move(LatLng(viewLat, centerLng), 2.5);
       } catch (_) {/* 初期化中は無視 */}
     });
   }
