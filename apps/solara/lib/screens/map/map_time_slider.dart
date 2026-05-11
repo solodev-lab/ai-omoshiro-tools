@@ -83,12 +83,23 @@ class MapTimeSliderState extends State<MapTimeSlider> {
     return d.toLocal().hour;
   }
 
-  /// 確定中の JST 分 (10 分刻みに floor)。
-  /// LIVE 時 (widget.date==null) の現在時刻が 12 分や 1 分など
-  /// 中途半端な値を出さないよう、表示・操作とも 10 分単位に揃える。
+  /// step 操作の base となる JST 分 (10 分刻みに floor)。
+  /// 「11:02 → ▶ で 11:10、▶▶で 11:20」の挙動を実現するため、
+  /// 加減算の起点を 10 分の倍数に揃える。
   int _committedMinuteJst() {
     final d = widget.date ?? DateTime.now();
     return (d.toLocal().minute ~/ 10) * 10;
+  }
+
+  /// 表示用 JST 分 (floor しない実分)。
+  /// 2026-05-12: Daily Transit から onJumpToTime で 11:02 等
+  /// 1 分単位の時刻が入った場合、ユーザーがその時刻をそのまま
+  /// 確認できるよう表示は実分にする。
+  /// (step ボタンを押すと _stepMinute が _committedMinuteJst を
+  /// 起点に 10 分刻み移動するので、即座に grid に合流する)
+  int _displayMinuteJst() {
+    final d = widget.date ?? DateTime.now();
+    return d.toLocal().minute;
   }
 
   /// 表示用の (日付 + 時刻) JST。
@@ -385,7 +396,7 @@ class MapTimeSliderState extends State<MapTimeSlider> {
         width: 64,
         child: Center(
           child: Text(
-            _fmtTime(hourValue.round(), _committedMinuteJst()),
+            _fmtTime(hourValue.round(), _displayMinuteJst()),
             style: const TextStyle(
               fontSize: 13,
               color: Color(0xFF63D6A0), // 緑系で日付と区別
