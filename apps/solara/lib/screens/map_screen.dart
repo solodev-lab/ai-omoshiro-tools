@@ -1936,22 +1936,19 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
             mainAxisSize: MainAxisSize.min,
             children: [
               // [1] 第1層: フレームピル
+              // タップ挙動: 線を強制 ON + active 切替のみ (OFF にはしない)。
+              // 旧仕様 (タップでトグル) は active 中の pill を再タップしたとき
+              // 第2層が消える罠があったため廃止。OFF にしたい場合は
+              // 表示メニュー (display_menu) の Natal線/Transit線等トグルから。
               Center(
                 child: AstroCartoFramePills(
                   astroLayers: _astroLayers,
                   activeFrame: _activeAstroFrame,
                   onToggle: (k) => setState(() {
-                    final nowOn = !(_astroLayers[k] ?? false);
-                    _astroLayers[k] = nowOn;
-                    // active 更新: ON にしたらこのフレーム、OFF にしたら
-                    // 元 active と同じなら null クリア (別 active は維持)
                     for (final def in acgFrameDefs) {
                       if (def.layerKey == k) {
-                        if (nowOn) {
-                          _activeAstroFrame = def.frame;
-                        } else if (_activeAstroFrame == def.frame) {
-                          _activeAstroFrame = null;
-                        }
+                        _astroLayers[k] = true;
+                        _activeAstroFrame = def.frame;
                         break;
                       }
                     }
