@@ -157,6 +157,87 @@ List<Polyline> buildAstroPolylines({
   return polylines;
 }
 
+// ── L3 / Lewis: 天頂・天底緯度線 (Zenith/Nadir Latitude Bands) ──
+// Lewis 理論では、天頂点・天底点は単独の1点ではなく、その緯度線全周に
+// 惑星エネルギーを発動させるとされる (緯度効果)。
+// 経度を問わず、同じ緯度の都市はすべて影響を受ける、という見立て。
+// MapタイルがWebMercator上で緯度線は水平直線になるため、サンプル2点 (lng=-180/+180)
+// で十分な精度の Polyline が引ける。
+
+/// 天頂・天底の緯度線を Polyline[] に変換する。
+///
+/// 1本のラインから最大2本生成:
+///   - zenith != null なら 緯度=δ の全周線 (惑星色、半透明実線)
+///   - nadir  != null なら 緯度=-δ の全周線 (惑星色を暗トーン化、半透明点線)
+///
+/// [activeCategory] FORTUNE 連動。非該当惑星の緯度線は dim。
+/// [framesWithBands] 天頂緯度線を表示するフレーム集合 (zenith マーカーと連動)。
+/// [opacityBase] 緯度線のベース透明度 (default 0.22、視覚密度抑え目)。
+List<Polyline> buildAstroLatitudePolylines({
+  required List<AstroLine> lines,
+  required String activeCategory,
+  bool allPlanetMode = false,
+  Set<AstroFrame> framesWithBands = const {AstroFrame.natal},
+  double latLimit = 75,
+  double opacityBase = 0.22,
+}) {
+  final highlightSet = (allPlanetMode || activeCategory == 'all')
+      ? null
+      : astroLineFortunePlanets[activeCategory];
+
+  final polylines = <Polyline>[];
+  for (final line in lines) {
+    if (!framesWithBands.contains(line.frame)) continue;
+    final meta = planetMeta[line.planet];
+    if (meta == null) continue;
+    final frameStyle = astroFrameStyles[line.frame] ?? astroFrameStyles[AstroFrame.natal]!;
+
+    final isHighlighted = highlightSet == null || highlightSet.contains(line.planet);
+    final alphaMul =
+        (isHighlighted ? 1.0 : _dimMultiplier) * frameStyle.opacityMul;
+
+    final zenith = line.zenith;
+    if (zenith != null && zenith.latitude.abs() <= latLimit) {
+      // 天頂緯度線: 惑星色をフレームaccentに向けてtint
+      final tinted = _lerpColor(meta.color, frameStyle.accent, frameStyle.tintMix);
+      final color = tinted.withAlpha((opacityBase * alphaMul * 255).round());
+      polylines.add(Polyline(
+        points: [
+          LatLng(zenith.latitude, -180),
+          LatLng(zenith.latitude, 0),
+          LatLng(zenith.latitude, 180),
+        ],
+        color: color,
+        strokeWidth: 1.4,
+      ));
+    }
+
+    final nadir = line.nadir;
+    if (nadir != null && nadir.latitude.abs() <= latLimit) {
+      // 天底緯度線: 惑星色を暗トーン化 + 点線
+      final darkenedPlanet = Color.from(
+        alpha: 1.0,
+        red: meta.color.r * 0.6,
+        green: meta.color.g * 0.6,
+        blue: meta.color.b * 0.6,
+      );
+      final tinted = _lerpColor(darkenedPlanet, frameStyle.accent, frameStyle.tintMix * 0.6);
+      final color = tinted.withAlpha((opacityBase * alphaMul * 0.85 * 255).round());
+      polylines.add(Polyline(
+        points: [
+          LatLng(nadir.latitude, -180),
+          LatLng(nadir.latitude, 0),
+          LatLng(nadir.latitude, 180),
+        ],
+        color: color,
+        strokeWidth: 1.2,
+        pattern: StrokePattern.dashed(segments: const [5, 6]),
+      ));
+    }
+  }
+  return polylines;
+}
+
 // ── Astro*Carto*Graphy モード: 天頂点 (Zenith Point) マーカー ──
 // 各惑星のMCライン上、緯度=惑星赤緯δ となる唯一の点 = 「真上に星がある土地」。
 // 理論上 1惑星=1天頂点(MC線上のみ)、計10個。
@@ -170,8 +251,9 @@ List<Polyline> buildAstroPolylines({
 /// FORTUNE 連動 dim 対象の惑星はマーカーも非表示(ノイズ削減)。
 /// [onTap] が指定されていれば、タップで (planet, frame, zenith座標) を通知する。
 /// [framesWithZenith] 天頂マーカーを表示するフレーム集合 (default: natal のみ)。
-/// 4フレーム全部表示すると最大40個になるが、CCG では「惑星が今どこを真上に
-/// 通っているか」が主役なので動的フレームの zenith こそ重要 (時間で動く)。
+/// 呼出側は通常 `_zenithVisibleFrames()` で ON 中のフレームを渡す。
+/// Lewis 理論的にはどのフレームの天頂も「同じ緯度線全周に効くポイント」として
+/// 等価なので、natal だけでなく動的フレーム (T/P/SA) でも表示する設計。
 List<Marker> buildAstroZenithMarkers({
   required List<AstroLine> lines,
   required String activeCategory,
@@ -221,11 +303,181 @@ List<Marker> buildAstroZenithMarkers({
   return markers;
 }
 
+// ── Astro*Carto*Graphy モード: 天底点 (Nadir Point) マーカー (L2) ──
+// 各惑星の IC ライン上、緯度=-δ となる点 = 「真下に星がある土地」
+// (= 地球を貫通すると裏側の天頂点に出る、対称ペア)。
+// 占星術的意味:
+//   IC ライン全体 = 家庭・大地・ルーツ方向で惑星が働く帯
+//   天底点        = エネルギーが大地の核から逆流する「裏側ノズル」
+// 緯度が -δ で描画範囲外(極地)になる場合は表示しない。
+
+/// 各惑星の天底点 (= AstroLine.nadir) に装飾マーカーを生成。
+/// IC line にのみ nadir が設定されるため自動的に1フレーム×1惑星=1マーカー。
+/// FORTUNE 連動 dim 対象の惑星はマーカーも非表示(ノイズ削減)。
+/// [onTap] が指定されていれば、タップで (planet, frame, nadir座標) を通知する。
+/// [framesWithNadir] 天底マーカーを表示するフレーム集合。
+List<Marker> buildAstroNadirMarkers({
+  required List<AstroLine> lines,
+  required String activeCategory,
+  bool allPlanetMode = false,
+  double latLimit = 75,
+  void Function(String planetKey, AstroFrame frame, LatLng nadir)? onTap,
+  Set<AstroFrame> framesWithNadir = const {AstroFrame.natal},
+}) {
+  final highlightSet = (allPlanetMode || activeCategory == 'all')
+      ? null
+      : astroLineFortunePlanets[activeCategory];
+
+  final markers = <Marker>[];
+  for (final line in lines) {
+    if (!framesWithNadir.contains(line.frame)) continue;
+    final nadir = line.nadir;
+    if (nadir == null) continue; // IC 以外は nadir null
+    if (nadir.latitude.abs() > latLimit) continue;
+
+    final meta = planetMeta[line.planet];
+    if (meta == null) continue;
+    final isHighlighted = highlightSet == null || highlightSet.contains(line.planet);
+    if (!isHighlighted) continue;
+
+    final marker = AstroNadirMarker(
+      planetSym: meta.sym,
+      planetColor: meta.color,
+      frame: line.frame,
+    );
+    final planetKey = line.planet;
+    final frame = line.frame;
+    final point = nadir;
+    markers.add(Marker(
+      point: nadir,
+      width: 56,
+      height: 64,
+      alignment: Alignment.center,
+      child: onTap != null
+          ? GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () => onTap(planetKey, frame, point),
+              child: marker,
+            )
+          : marker,
+    ));
+  }
+  return markers;
+}
+
+/// 装飾的な天底点マーカー (Lewis 理論: 裏側に在る天体)。
+/// 天頂マーカーの暗いペア版として描画:
+///   - 中心円が暗トーン (惑星色を 60% 暗くした色)
+///   - リング色は frame accent (天頂と同じ) だが alpha を低めに
+///   - ラベルは「天底 (N/T/P/SA)」
+class AstroNadirMarker extends StatelessWidget {
+  final String planetSym;
+  final Color planetColor;
+  final AstroFrame frame;
+
+  const AstroNadirMarker({
+    super.key,
+    required this.planetSym,
+    required this.planetColor,
+    this.frame = AstroFrame.natal,
+  });
+
+  /// 惑星色を暗トーン化 (sRGB線形に 0.55 倍 → 大地の底のイメージ)
+  Color get _darkenedPlanet => Color.from(
+        alpha: 1.0,
+        red: planetColor.r * 0.55,
+        green: planetColor.g * 0.55,
+        blue: planetColor.b * 0.55,
+      );
+
+  @override
+  Widget build(BuildContext context) {
+    final isNatal = frame == AstroFrame.natal;
+    final frameStyle = astroFrameStyles[frame] ?? astroFrameStyles[AstroFrame.natal]!;
+    // 天頂より控えめなリング (alpha 180/100 程度)
+    final ringColor = isNatal ? const Color(0x99C9A84C) : frameStyle.accent.withAlpha(170);
+    final innerRing = isNatal ? const Color(0x66C9A84C) : frameStyle.accent.withAlpha(100);
+    final labelColor = isNatal ? const Color(0xFFA88A38) : frameStyle.accent.withAlpha(220);
+    final labelText = switch (frame) {
+      AstroFrame.natal => '天底 (N)',
+      AstroFrame.transit => '天底 (T)',
+      AstroFrame.progressed => '天底 (P)',
+      AstroFrame.solarArc => '天底 (SA)',
+    };
+    final size = isNatal ? 28.0 : 22.0;
+    final fontSize = isNatal ? 14.0 : 11.0;
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: size, height: size,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            border: Border.all(color: ringColor, width: isNatal ? 1.1 : 0.9),
+            // 天頂より弱いグロー (大地の底に沈む感)
+            boxShadow: [
+              BoxShadow(
+                color: _darkenedPlanet.withAlpha(isNatal ? 120 : 90),
+                blurRadius: 9,
+                spreadRadius: 0,
+              ),
+            ],
+          ),
+          child: Container(
+            margin: EdgeInsets.all(isNatal ? 2.2 : 1.8),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: const Color(0xE6080814), // 天頂より暗い背景
+              border: Border.all(color: innerRing, width: 0.6),
+            ),
+            child: Center(
+              child: Text(
+                planetSym,
+                style: TextStyle(
+                  fontSize: fontSize,
+                  fontWeight: FontWeight.w600,
+                  color: _darkenedPlanet,
+                  height: 1.0,
+                ),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 2),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+          decoration: BoxDecoration(
+            color: const Color(0xCC080814),
+            borderRadius: BorderRadius.circular(3),
+            border: Border.all(color: labelColor.withAlpha(80), width: 0.6),
+          ),
+          child: Text(
+            labelText,
+            textScaler: TextScaler.noScaling,
+            style: TextStyle(
+              fontSize: 12,
+              color: labelColor,
+              letterSpacing: 1.2,
+              fontWeight: FontWeight.w500,
+              height: 1.0,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 /// 装飾的な天頂点マーカー (frame で見た目を切替):
-///   Natal      : 32px、金色二重リング、「天頂」ラベル
-///   Transit    : 24px、オレンジリング、「TRANSIT」ラベル (毎日動く)
-///   Progressed : 24px、緑リング、「PROG」ラベル
-///   SolarArc   : 24px、紫リング、「S.ARC」ラベル
+///   Natal      : 32px、金色二重リング、「天頂 (N)」ラベル
+///   Transit    : 24px、オレンジリング、「天頂 (T)」ラベル (毎日動く)
+///   Progressed : 24px、緑リング、「天頂 (P)」ラベル
+///   SolarArc   : 24px、紫リング、「天頂 (SA)」ラベル
+///
+/// 2026-05-11 ラベル統一: 全フレーム共通で「天頂」表記とし、括弧内のフレーム略号
+/// (N/T/P/SA) で識別。Lewis 理論的にはどのフレームでも「真上に来る点」という
+/// 同一概念なので「TRANS」「PROG」のように天頂であることを隠す表記は不適切。
 class AstroZenithMarker extends StatelessWidget {
   final String planetSym;
   final Color planetColor;
@@ -246,13 +498,12 @@ class AstroZenithMarker extends StatelessWidget {
     final ringColor = isNatal ? const Color(0xCCC9A84C) : frameStyle.accent.withAlpha(220);
     final innerRing = isNatal ? const Color(0x88C9A84C) : frameStyle.accent.withAlpha(140);
     final labelColor = isNatal ? const Color(0xFFC9A84C) : frameStyle.accent;
-    final labelText = isNatal
-        ? '天頂'
-        : (frame == AstroFrame.transit
-            ? 'TRANS'
-            : frame == AstroFrame.progressed
-                ? 'PROG'
-                : 'S.ARC');
+    final labelText = switch (frame) {
+      AstroFrame.natal => '天頂 (N)',
+      AstroFrame.transit => '天頂 (T)',
+      AstroFrame.progressed => '天頂 (P)',
+      AstroFrame.solarArc => '天頂 (SA)',
+    };
     final size = isNatal ? 32.0 : 24.0;
     final fontSize = isNatal ? 15.0 : 12.0;
 

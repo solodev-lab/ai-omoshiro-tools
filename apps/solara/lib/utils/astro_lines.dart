@@ -73,12 +73,20 @@ class AstroLine {
   /// MC line のみ非null。他の angle (ic/asc/dsc) では null。
   final LatLng? zenith;
 
+  /// 天底点 (nadir point) の地点情報。
+  /// 天頂と地球を貫通して対称の地点 = IC ライン上で 緯度 = -δ となる地点。
+  /// 物理的に「惑星が真下(高度-90°)にある = 地球の裏側」場所。
+  /// Lewis 理論では天底もその緯度線全周に影響を及ぼすとされる。
+  /// IC line のみ非null。他の angle (mc/asc/dsc) では null。
+  final LatLng? nadir;
+
   AstroLine({
     required this.planet,
     required this.angle,
     required this.segments,
     this.frame = AstroFrame.natal,
     this.zenith,
+    this.nadir,
   });
 
   /// 線のキー (UI から参照しやすいように) "natal_venus_asc" 等
@@ -279,13 +287,17 @@ List<AstroLine> buildAstroLinesAt({
           antiMeridian: false, latMin: latMin, latMax: latMax),
       zenith: LatLng(coord.dec, mcLng),
     ));
-    // IC line
+    // IC line + nadir point
+    // nadir: 緯度=-δ (天頂の南北対称)、経度=IC line の固定経度 (= mcLng+180°)
+    // 天頂と地球中心を挟んで完全に対称、Lewis 理論で「裏側に在る天体」を示す。
+    final icLng = _normLng(mcLng + 180);
     lines.add(AstroLine(
       planet: planet,
       angle: 'ic',
       frame: frame,
       segments: _meridianLine(coord.ra, gmstHours,
           antiMeridian: true, latMin: latMin, latMax: latMax),
+      nadir: LatLng(-coord.dec, icLng),
     ));
     // ASC line
     lines.add(AstroLine(

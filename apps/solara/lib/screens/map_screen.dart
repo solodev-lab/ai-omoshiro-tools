@@ -128,6 +128,9 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     'aspectProgressed': false, // CCG progressed
     'aspectSolarArc': false, // CCG solar arc
     'aspectAll': false,      // 全惑星モード (FORTUNE フィルタ無視)
+    // L3 / Lewis: 天頂・天底の緯度線 (同じ緯度全周に効くという緯度効果を視覚化)
+    // デフォルト OFF: 視覚密度を抑え、Lewis 理論を知るユーザーが意識して ON
+    'latitudeBands': false,
   };
 
   // 引越しレイヤー ON時のタップ詳細ポップアップ用
@@ -136,7 +139,7 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   // Astro*Carto*Graphy モード: 天頂点マーカータップ詳細用
   // 値が入っていれば下部 popup を表示する。
   // CCG: frame と point を保持し、natal以外の天頂タップにも対応。
-  ({String planet, astro_lines.AstroFrame frame, LatLng point})? _zenithTapInfo;
+  ({String planet, astro_lines.AstroFrame frame, LatLng point, bool isNadir})? _zenithTapInfo;
 
   // Phase M2 論点3: アスペクト線 40本キャッシュ (chart 取得時に build)
   // CCG (Tier A #5): 4フレーム合算 (natal+transit+progressed+solarArc) を保持
@@ -1402,6 +1405,18 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                 activeCategory: _planetFilterCategory,
                 allPlanetMode: _astroLayers['aspectAll'] ?? false,
               )),
+            // L3 / Lewis: 天頂・天底緯度線 (同じ緯度全周に効く効果を視覚化)
+            // latitudeBands トグルON かつ aspect 系フレームONのとき描画。
+            // マーカーより下のレイヤーに置き、マーカーが上に乗る配置。
+            if ((_astroLayers['latitudeBands'] ?? false) &&
+                _zenithVisibleFrames().isNotEmpty &&
+                _astroLinesCache.isNotEmpty)
+              PolylineLayer(polylines: buildAstroLatitudePolylines(
+                lines: _astroLinesCache,
+                activeCategory: _planetFilterCategory,
+                allPlanetMode: _astroLayers['aspectAll'] ?? false,
+                framesWithBands: _zenithVisibleFrames(),
+              )),
             // 天頂点マーカー (CCG): 表示中の全フレームの zenith を描画。
             // 動的フレーム (Transit/Prog/SArc) は時間で動くため CCG の核となる。
             // ACGモードでは natal を強制ON、通常Mapでは toggle 状況に従う。
@@ -1412,8 +1427,21 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                 allPlanetMode: _astroLayers['aspectAll'] ?? false,
                 framesWithZenith: _zenithVisibleFrames(),
                 onTap: (planetKey, frame, point) => setState(() {
-                  _zenithTapInfo = (planet: planetKey, frame: frame, point: point);
+                  _zenithTapInfo = (planet: planetKey, frame: frame, point: point, isNadir: false);
                   _relocateTapPoint = null; // 排他: 線+ハウス popup を閉じる
+                }),
+              )),
+            // 天底点マーカー (L2 / Lewis): IC ライン上の zenith 対称点。
+            // ON 中の各 aspect レイヤーに対応する天底を描画 (フレーム集合は zenith と共通)。
+            if (_zenithVisibleFrames().isNotEmpty && _astroLinesCache.isNotEmpty)
+              MarkerLayer(markers: buildAstroNadirMarkers(
+                lines: _astroLinesCache,
+                activeCategory: _planetFilterCategory,
+                allPlanetMode: _astroLayers['aspectAll'] ?? false,
+                framesWithNadir: _zenithVisibleFrames(),
+                onTap: (planetKey, frame, point) => setState(() {
+                  _zenithTapInfo = (planet: planetKey, frame: frame, point: point, isNadir: true);
+                  _relocateTapPoint = null;
                 }),
               )),
             // 16方位ラベル: モード中は世界規模ビューでは意味を成さないので非表示
@@ -1978,12 +2006,14 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     );
   }
 
-  /// 天頂点 popup ビルダ。CCG: タップされた frame の zenith 座標を直接使う。
-  Widget _buildZenithPopup(({String planet, astro_lines.AstroFrame frame, LatLng point}) info) {
+  /// 天頂・天底 popup ビルダ。CCG: タップされた frame と座標を直接使う。
+  /// [info.isNadir] で天頂版 / 天底版を切替。
+  Widget _buildZenithPopup(({String planet, astro_lines.AstroFrame frame, LatLng point, bool isNadir}) info) {
     return AstroZenithPopup(
       planetKey: info.planet,
       zenith: info.point,
       frame: info.frame,
+      isNadir: info.isNadir,
       onClose: () => setState(() => _zenithTapInfo = null),
     );
   }

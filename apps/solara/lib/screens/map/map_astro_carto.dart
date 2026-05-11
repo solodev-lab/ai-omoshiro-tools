@@ -3,9 +3,11 @@ import 'package:latlong2/latlong.dart';
 
 import '../../utils/astro_glossary.dart';
 import '../../utils/astro_lines.dart' show AstroFrame;
-import '../../utils/astro_zenith_messages.dart';
+import '../../utils/astro_zenith_messages.dart'
+    show astroNadirMessages, astroZenithMessages;
 import '../../widgets/info_popup.dart';
-import 'map_astro_lines.dart' show AstroZenithMarker, astroFrameStyles;
+import 'map_astro_lines.dart'
+    show AstroNadirMarker, AstroZenithMarker, astroFrameStyles;
 import 'map_constants.dart';
 
 // ══════════════════════════════════════════════════
@@ -424,13 +426,15 @@ class AstroCartoCategoryPills extends StatelessWidget {
   }
 }
 
-/// 天頂点タップ詳細 popup。
+/// 天頂・天底点タップ詳細 popup。
 /// 画面下部に表示し、惑星固有のメッセージ + 座標 + タグを示す。
 /// CCG: frame で見出し付加 (Transit/Progressed/Solar Arc は時間連動を明示)。
+/// [isNadir] で天底版を表示 (astroNadirMessages 参照、マーカー装飾も切替)。
 class AstroZenithPopup extends StatelessWidget {
   final String planetKey;        // 'sun', 'moon', ...
   final LatLng zenith;           // 表示用の座標 (lat=δ, lng=MC line)
   final AstroFrame frame;
+  final bool isNadir;
   final VoidCallback onClose;
 
   const AstroZenithPopup({
@@ -439,12 +443,13 @@ class AstroZenithPopup extends StatelessWidget {
     required this.zenith,
     required this.onClose,
     this.frame = AstroFrame.natal,
+    this.isNadir = false,
   });
 
   @override
   Widget build(BuildContext context) {
     final meta = planetMeta[planetKey];
-    final msg = astroZenithMessages[planetKey];
+    final msg = (isNadir ? astroNadirMessages : astroZenithMessages)[planetKey];
     if (meta == null || msg == null) return const SizedBox.shrink();
     final frameStyle = astroFrameStyles[frame] ?? astroFrameStyles[AstroFrame.natal]!;
     final isNatal = frame == AstroFrame.natal;
@@ -504,11 +509,17 @@ class AstroZenithPopup extends StatelessWidget {
             Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                AstroZenithMarker(
-                  planetSym: meta.sym,
-                  planetColor: meta.color,
-                  frame: frame,
-                ),
+                isNadir
+                    ? AstroNadirMarker(
+                        planetSym: meta.sym,
+                        planetColor: meta.color,
+                        frame: frame,
+                      )
+                    : AstroZenithMarker(
+                        planetSym: meta.sym,
+                        planetColor: meta.color,
+                        frame: frame,
+                      ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
