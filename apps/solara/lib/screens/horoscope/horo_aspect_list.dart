@@ -39,18 +39,28 @@ class HoroAspectList extends StatelessWidget {
           Row(children: [
             PlanetVectorIcon(planetKey: p1, size: 22),
             const SizedBox(width: 6),
-            Text(horoPlanetOrAngleName(p1), style: GoogleFonts.cinzel(
-              fontSize: 17, color: const Color(0xFFE8E0D0),
-              fontWeight: FontWeight.w600)),
+            Flexible(
+              child: Text(horoPlanetOrAngleName(p1),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: GoogleFonts.cinzel(
+                  fontSize: 17, color: const Color(0xFFE8E0D0),
+                  fontWeight: FontWeight.w600)),
+            ),
             const SizedBox(width: 10),
             Text('×', style: TextStyle(fontSize: 17,
               color: color.withAlpha(200))),
             const SizedBox(width: 10),
             PlanetVectorIcon(planetKey: p2, size: 22),
             const SizedBox(width: 6),
-            Text(horoPlanetOrAngleName(p2), style: GoogleFonts.cinzel(
-              fontSize: 17, color: const Color(0xFFE8E0D0),
-              fontWeight: FontWeight.w600)),
+            Flexible(
+              child: Text(horoPlanetOrAngleName(p2),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: GoogleFonts.cinzel(
+                  fontSize: 17, color: const Color(0xFFE8E0D0),
+                  fontWeight: FontWeight.w600)),
+            ),
           ]),
           const SizedBox(height: 14),
           // Aspect badge

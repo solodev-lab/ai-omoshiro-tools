@@ -591,7 +591,12 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(label, style: const TextStyle(fontSize: 15, color: Color(0xFFEAEAEA))),
+            Flexible(
+              child: Text(label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontSize: 15, color: Color(0xFFEAEAEA))),
+            ),
             Text('✓', style: TextStyle(fontSize: 16, color: const Color(0xFFF9D976),
               fontWeight: FontWeight.w600),
             ).withOpacity(isSelected ? 1.0 : 0.0),

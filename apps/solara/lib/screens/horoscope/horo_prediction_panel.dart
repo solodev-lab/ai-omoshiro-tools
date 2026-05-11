@@ -197,7 +197,12 @@ class HoroPredictionPanel extends StatelessWidget {
             const Text('-N', style: TextStyle(fontSize: 12, color: Color(0xFFCCCCCC))),
             PlanetVectorIcon(planetKey: p2, size: 14),
             const Text(' + ', style: TextStyle(fontSize: 12, color: Color(0xFFCCCCCC))),
-            Text(src, style: const TextStyle(fontSize: 12, color: Color(0xFFCCCCCC))),
+            Flexible(
+              child: Text(src,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontSize: 12, color: Color(0xFFCCCCCC))),
+            ),
             PlanetVectorIcon(planetKey: tBody, size: 14),
             const Spacer(),
             // Pattern name badge (tap = modal)

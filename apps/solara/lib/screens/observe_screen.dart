@@ -510,8 +510,12 @@ class _ObserveScreenState extends State<ObserveScreen>
         if (_typingDone && !_readingFromApi) ...[
           const SizedBox(height: 12),
           Row(mainAxisAlignment: MainAxisAlignment.end, children: const [
-            Text('⚠ オフラインモード（簡易表示）',
-                style: TextStyle(fontSize: 9, color: Color(0xFF666666), letterSpacing: 0.8)),
+            Flexible(
+              child: Text('⚠ オフラインモード（簡易表示）',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(fontSize: 9, color: Color(0xFF666666), letterSpacing: 0.8)),
+            ),
           ]),
         ],
       ]),

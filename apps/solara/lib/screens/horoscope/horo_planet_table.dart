@@ -58,9 +58,14 @@ class HoroPlanetTable extends StatelessWidget {
           child: Row(children: [
             AntiqueGlyph(icon: _secondaryIcon, size: 18, color: _secondaryColor),
             const SizedBox(width: 8),
-            Text('$_secondaryLabel POSITIONS', style: GoogleFonts.cinzel(
-              fontSize: 13, color: _secondaryColor,
-              letterSpacing: 2.5, fontWeight: FontWeight.w600)),
+            Flexible(
+              child: Text('$_secondaryLabel POSITIONS',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: GoogleFonts.cinzel(
+                  fontSize: 13, color: _secondaryColor,
+                  letterSpacing: 2.5, fontWeight: FontWeight.w600)),
+            ),
           ]),
         ),
         const SizedBox(height: 10),
@@ -86,10 +91,14 @@ class HoroPlanetTable extends StatelessWidget {
           const AntiqueGlyph(icon: AntiqueIcon.planets, size: 18,
             color: Color(0xFFF6BD60)),
           const SizedBox(width: 8),
-          Text(_hasSecondary ? 'NATAL POSITIONS' : 'PLANET POSITIONS',
-            style: GoogleFonts.cinzel(
-              fontSize: 13, color: const Color(0xFFF6BD60),
-              letterSpacing: 2.5, fontWeight: FontWeight.w600)),
+          Flexible(
+            child: Text(_hasSecondary ? 'NATAL POSITIONS' : 'PLANET POSITIONS',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: GoogleFonts.cinzel(
+                fontSize: 13, color: const Color(0xFFF6BD60),
+                letterSpacing: 2.5, fontWeight: FontWeight.w600)),
+          ),
         ]),
       ),
       const SizedBox(height: 10),

@@ -851,13 +851,17 @@ class _CategoryTipsBox extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Text(
-                'おすすめ行動の例（参考）',
-                style: TextStyle(
-                  fontSize: 13,
-                  color: color.withAlpha(200),
-                  letterSpacing: 0.5,
-                  fontWeight: FontWeight.w600,
+              Flexible(
+                child: Text(
+                  'おすすめ行動の例（参考）',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: color.withAlpha(200),
+                    letterSpacing: 0.5,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
               GestureDetector(

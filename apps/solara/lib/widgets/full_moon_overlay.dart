@@ -419,7 +419,12 @@ class _FullMoonOverlayState extends State<FullMoonOverlay>
       isSelected: isSelected,
       child: Row(
         children: [
-          Text(emoji, style: const TextStyle(fontSize: 26)),
+          Flexible(
+            child: Text(emoji,
+                maxLines: 1,
+                overflow: TextOverflow.clip,
+                style: const TextStyle(fontSize: 26)),
+          ),
           const SizedBox(width: 14),
           // Column を Expanded で囲んで Row の残幅を割り当てる。
           // 旧: 直接 Column → 内容の自然幅が容器を超えてフォント拡大時に

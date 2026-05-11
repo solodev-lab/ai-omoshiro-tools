@@ -101,9 +101,14 @@ Widget horoAntiqueHeader(AntiqueIcon icon, String label, {double iconSize = 18})
   return Row(children: [
     AntiqueGlyph(icon: icon, size: iconSize, color: const Color(0xFFF6BD60)),
     const SizedBox(width: 8),
-    Text(label, style: GoogleFonts.cinzel(
-      fontSize: 13, color: const Color(0xFFF6BD60),
-      letterSpacing: 2.5, fontWeight: FontWeight.w600)),
+    Flexible(
+      child: Text(label,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: GoogleFonts.cinzel(
+          fontSize: 13, color: const Color(0xFFF6BD60),
+          letterSpacing: 2.5, fontWeight: FontWeight.w600)),
+    ),
   ]);
 }
 

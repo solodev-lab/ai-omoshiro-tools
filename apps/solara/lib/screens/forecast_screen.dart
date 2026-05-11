@@ -251,8 +251,12 @@ class _ForecastScreenState extends State<ForecastScreen> {
           const Text('表示期間',
               style: TextStyle(fontSize: 9, color: Color(0xFF999999), letterSpacing: 2)),
           const Spacer(),
-          Text(rangeText,
-              style: const TextStyle(fontSize: 10, color: Color(0xFF999999))),
+          Flexible(
+            child: Text(rangeText,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontSize: 10, color: Color(0xFF999999))),
+          ),
         ]),
         const SizedBox(height: 8),
         SingleChildScrollView(
@@ -525,8 +529,12 @@ class _ForecastScreenState extends State<ForecastScreen> {
             style: const TextStyle(fontSize: 9, color: Color(0xFF666666)));
       case 'category':
         return Row(children: [
-          Text('色=$_categoryRank位カテゴリ / 濃さ=スコア高低',
-              style: const TextStyle(fontSize: 9, color: Color(0xFF666666))),
+          Flexible(
+            child: Text('色=$_categoryRank位カテゴリ / 濃さ=スコア高低',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontSize: 9, color: Color(0xFF666666))),
+          ),
           const SizedBox(width: 6),
           ..._catColorChips(),
         ]);

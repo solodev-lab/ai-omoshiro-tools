@@ -92,8 +92,12 @@ class _MapLineNarrativeSheetState extends State<MapLineNarrativeSheet> {
       children: [
         Row(
           children: [
-            Text(_glyph,
-                style: TextStyle(fontSize: 22, color: _planetColor)),
+            Flexible(
+              child: Text(_glyph,
+                  maxLines: 1,
+                  overflow: TextOverflow.clip,
+                  style: TextStyle(fontSize: 22, color: _planetColor)),
+            ),
             const SizedBox(width: 8),
             Expanded(
               child: Text(

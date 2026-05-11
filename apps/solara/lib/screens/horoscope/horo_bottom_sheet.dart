@@ -130,11 +130,16 @@ extension _HoroBottomSheet on HoroscopeScreenState {
               children: [
                 AntiqueGlyph(icon: t.$2, size: 15, color: tabColor, glow: active),
                 const SizedBox(width: 5),
-                Text(t.$3, style: GoogleFonts.cinzel(
-                  fontSize: 12, letterSpacing: 1.2,
-                  fontWeight: active ? FontWeight.w600 : FontWeight.w400,
-                  color: tabColor,
-                )),
+                Flexible(
+                  child: Text(t.$3,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.cinzel(
+                      fontSize: 12, letterSpacing: 1.2,
+                      fontWeight: active ? FontWeight.w600 : FontWeight.w400,
+                      color: tabColor,
+                    )),
+                ),
               ],
             ),
           ),

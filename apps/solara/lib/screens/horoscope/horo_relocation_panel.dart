@@ -283,6 +283,8 @@ class _HoroRelocationPanelState extends State<HoroRelocationPanel> {
             Row(children: [
               Text(
                 '$label  ',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
                 style: GoogleFonts.cinzel(
                   fontSize: 12,
                   color: const Color(0xFFF6BD60),
@@ -290,14 +292,18 @@ class _HoroRelocationPanelState extends State<HoroRelocationPanel> {
                   fontWeight: FontWeight.w600,
                 ),
               ),
-              Text(
-                changed
-                    ? '${signNames[fromIdx]}座 → ${signNames[toIdx]}座'
-                    : '${signNames[fromIdx]}座 → 変化なし',
-                style: GoogleFonts.notoSansJp(
-                  fontSize: 12,
-                  color: const Color(0xFFE8E0D0),
-                  fontWeight: FontWeight.w500,
+              Flexible(
+                child: Text(
+                  changed
+                      ? '${signNames[fromIdx]}座 → ${signNames[toIdx]}座'
+                      : '${signNames[fromIdx]}座 → 変化なし',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.notoSansJp(
+                    fontSize: 12,
+                    color: const Color(0xFFE8E0D0),
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ),
             ]),
@@ -348,23 +354,31 @@ class _HoroRelocationPanelState extends State<HoroRelocationPanel> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(children: [
-              Text(
-                name,
-                style: GoogleFonts.notoSansJp(
-                  fontSize: 13,
-                  color: headerColor,
-                  fontWeight: FontWeight.w600,
+              Flexible(
+                child: Text(
+                  name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.notoSansJp(
+                    fontSize: 13,
+                    color: headerColor,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
               const SizedBox(width: 8),
-              Text(
-                changed
-                    ? '${shift.fromHouse}H → ${shift.toHouse}H'
-                    : '${shift.fromHouse}H → 変化なし',
-                style: const TextStyle(
-                  color: Color(0xFFAAAAAA),
-                  fontFamily: 'Courier New',
-                  fontSize: 12,
+              Flexible(
+                child: Text(
+                  changed
+                      ? '${shift.fromHouse}H → ${shift.toHouse}H'
+                      : '${shift.fromHouse}H → 変化なし',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Color(0xFFAAAAAA),
+                    fontFamily: 'Courier New',
+                    fontSize: 12,
+                  ),
                 ),
               ),
             ]),

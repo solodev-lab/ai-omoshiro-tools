@@ -302,7 +302,12 @@ class _MapViewpointMenuState extends State<MapViewpointMenu> {
             color: isActive ? const Color(0x22C9A84C) : Colors.transparent,
           ),
           child: Row(children: [
-            Text(slot.icon, style: const TextStyle(fontSize: 16)),
+            Flexible(
+              child: Text(slot.icon,
+                  maxLines: 1,
+                  overflow: TextOverflow.clip,
+                  style: const TextStyle(fontSize: 16)),
+            ),
             const SizedBox(width: 8),
             Expanded(
               child: Text(
@@ -376,7 +381,12 @@ class _MapViewpointMenuState extends State<MapViewpointMenu> {
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           child: Row(children: [
-            Text(icon, style: const TextStyle(fontSize: 14)),
+            Flexible(
+              child: Text(icon,
+                  maxLines: 1,
+                  overflow: TextOverflow.clip,
+                  style: const TextStyle(fontSize: 14)),
+            ),
             const SizedBox(width: 10),
             Expanded(
               child: Text(
