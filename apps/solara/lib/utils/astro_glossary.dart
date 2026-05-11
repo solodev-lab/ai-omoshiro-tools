@@ -150,7 +150,7 @@ const Map<String, AstroGlossaryEntry> astroGlossary = {
         'Solara の引越し検討ツール。地図タップで、その土地に住んだ場合の'
         '10惑星のハウス再配置と、ASC/MC の星座変化を表示する。\n\n'
         '比較ベースは現住所 (未設定なら出生地)。'
-        '個人天体 (太陽〜火星) のハウスが大きく変わる土地は、'
+        '個人天体 (太陽・月・水星・金星・火星) のハウスが大きく変わる土地は、'
         '人生の方向性が変わる可能性のある土地と言える。',
   ),
   'aspect_lines': AstroGlossaryEntry(
