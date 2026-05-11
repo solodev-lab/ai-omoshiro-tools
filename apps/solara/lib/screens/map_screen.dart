@@ -1959,6 +1959,16 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
             natal: _chartResult?.natal,
             onClose: _onDailyTransitClose,
             onEnterAcg: _enterAstroCartoMode,
+            // 2026-05-12: 各行の地図マークでイベント時刻 (1 分単位) を
+            // Map に飛ばす。MapTimeSlider 側は実分表示 → step 操作で
+            // 10 分 grid に合流するように変更済み。
+            onJumpToTime: (time) {
+              setState(() {
+                _selectedDate = time;
+                _dailyTransitOpen = false;
+              });
+              _loadProfileAndChart(targetDate: time);
+            },
           ),
         ),
 

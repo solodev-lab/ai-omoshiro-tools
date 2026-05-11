@@ -43,6 +43,13 @@ class MapDailyTransitScreen extends StatefulWidget {
   /// リンクが現れる (2026-05-09: 旧 🌐 サイドボタンの代替動線)。
   final VoidCallback? onEnterAcg;
 
+  /// イベント時刻を Map に飛ばすハンドラ (各タイムライン行の地図マーク用)。
+  /// null なら地図マーク非表示。
+  /// 渡された DateTime はそのイベントの瞬時時刻 (1 分単位)。
+  /// Map 側は受け取った時刻をそのまま表示し、step ボタン操作で 10 分刻み grid
+  /// に合流する。
+  final void Function(DateTime time)? onJumpToTime;
+
   const MapDailyTransitScreen({
     super.key,
     required this.topCategory,
@@ -52,6 +59,7 @@ class MapDailyTransitScreen extends StatefulWidget {
     this.natal,
     required this.onClose,
     this.onEnterAcg,
+    this.onJumpToTime,
   });
 
   @override
@@ -232,6 +240,7 @@ class _MapDailyTransitScreenState extends State<MapDailyTransitScreen>
                                 result: cached,
                                 angleFilter: _angleFilter,
                                 categoryFilter: _categoryFilter,
+                                onJumpToTime: widget.onJumpToTime,
                               )
                             : const _LoadingBody(),
               ),
@@ -1002,11 +1011,14 @@ class _TimelineBody extends StatelessWidget {
   final DailyTransitsResult result;
   final AngleFilter angleFilter;
   final String categoryFilter;
+  /// 行毎の地図マークタップ時のハンドラ。null なら地図マーク非表示。
+  final void Function(DateTime time)? onJumpToTime;
 
   const _TimelineBody({
     required this.result,
     required this.angleFilter,
     required this.categoryFilter,
+    this.onJumpToTime,
   });
 
   @override
@@ -1081,6 +1093,7 @@ class _TimelineBody extends StatelessWidget {
           planetKey: e.planet,
           event: e.event,
           categoryFilter: categoryFilter,
+          onJumpToTime: onJumpToTime,
         ));
       }
     }
@@ -1098,11 +1111,16 @@ class _TimelineRow extends StatelessWidget {
   final String planetKey;
   final TransitEvent event;
   final String categoryFilter;
+  /// 地図マークタップで「このイベント時刻を Map に飛ばす」コールバック。
+  /// 渡された DateTime はイベントの瞬時時刻 (1 分単位)。
+  /// null なら地図マーク非表示。
+  final void Function(DateTime time)? onJumpToTime;
 
   const _TimelineRow({
     required this.planetKey,
     required this.event,
     required this.categoryFilter,
+    this.onJumpToTime,
   });
 
   @override
@@ -1123,32 +1141,65 @@ class _TimelineRow extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // 時刻 — 必ず1行（5文字 HH:mm が折り返さないよう固定幅 + 折返し禁止）
+              // 左ブロック: [時刻 + 惑星] 行 + 地図マーク (2026-05-12 追加)
+              // 全体幅 = 64 + 4 + 24 = 92。
               SizedBox(
-                width: 64,
-                child: Text(
-                  timeStr,
-                  maxLines: 1,
-                  softWrap: false,
-                  overflow: TextOverflow.visible,
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: planetColor,
-                    fontWeight: FontWeight.w500,
-                    fontFamily: 'monospace',
-                    letterSpacing: 0,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 4),
-              // 惑星シンボル
-              SizedBox(
-                width: 24,
-                child: Text(
-                  planetSym,
-                  style: TextStyle(fontSize: 18, color: planetColor),
-                  textAlign: TextAlign.center,
+                width: 92,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        // 時刻 — 必ず1行（5文字 HH:mm が折り返さないよう固定幅 + 折返し禁止）
+                        SizedBox(
+                          width: 64,
+                          child: Text(
+                            timeStr,
+                            maxLines: 1,
+                            softWrap: false,
+                            overflow: TextOverflow.visible,
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: planetColor,
+                              fontWeight: FontWeight.w500,
+                              fontFamily: 'monospace',
+                              letterSpacing: 0,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        // 惑星シンボル
+                        SizedBox(
+                          width: 24,
+                          child: Text(
+                            planetSym,
+                            style: TextStyle(fontSize: 18, color: planetColor),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      ],
+                    ),
+                    // 2026-05-12: 地図マーク。タップでこの時刻 (1 分単位) を
+                    // Map に飛ばす。Forecast 日別詳細と同じ機能。
+                    if (onJumpToTime != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 2),
+                        child: IconButton(
+                          icon: const Icon(Icons.map_outlined,
+                              size: 18, color: Color(0xFFC9A84C)),
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(
+                              minWidth: 28, minHeight: 28),
+                          tooltip: 'この時刻をMapで見る',
+                          // Daily Transit は state 駆動なので Navigator.pop は呼ばない。
+                          // 親 (map_screen) 側で onJumpToTime ハンドラ内で
+                          // _dailyTransitOpen=false にして閉じる。
+                          onPressed: () => onJumpToTime!(event.time),
+                        ),
+                      ),
+                  ],
                 ),
               ),
               const SizedBox(width: 10),
