@@ -29,6 +29,7 @@ import 'map/map_relocation_popup.dart';
 import 'map/map_search.dart';
 import 'map/map_overlays.dart';
 import 'map/map_time_slider.dart';
+import 'map/map_widgets.dart';
 import '../utils/astro_lines.dart' as astro_lines;
 import '../utils/direction_energy.dart';
 import 'forecast_screen.dart';
@@ -85,6 +86,9 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   bool _fortuneSheetOpen = false;
   bool _displayMenuOpen = false;   // ☰ 表示メニュー開閉
   bool _viewpointMenuOpen = false; // 📍 地点メニュー開閉
+  // ACG モード専用: 下部 3 段メニュー (Frame/Sub/Category) のバーガー開閉。
+  // 初期 false (閉じ) → ☰タップで展開、再タップ or △で閉じる。
+  bool _acgMenuOpen = false;
   bool _restOverlayVisible = false;
   final String _restOverlayText = '';
   final TextEditingController _searchCtrl = TextEditingController();
@@ -1190,6 +1194,7 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
       // (ユーザーが意識して ON する段階的 UX)。
       _astroLayers['zenith_transit'] = true;
       _activeAstroFrame = astro_lines.AstroFrame.transit; // 初期 active
+      _acgMenuOpen = false; // モード入時はバーガー閉、地図最大表示
       _mapStyle = MapStyle.osmHotDark;
       // 既存メニュー/シート/ピンを片付け、世界規模ビューにフォーカス
       _displayMenuOpen = false;
@@ -1234,6 +1239,7 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
       _relocateTapPoint = null;
       _zenithTapInfo = null;
       _activeAstroFrame = null;
+      _acgMenuOpen = false;
     });
     SolaraStorage.saveMapStyleId(mapStyleConfigs[restoreStyle]!.id);
     _savedCenter = null;
@@ -1289,6 +1295,7 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
         _relocateTapPoint != null ||
         _timeRowExpanded ||
         _astroCartoMode ||
+        _acgMenuOpen ||
         _displayMenuOpen ||
         _viewpointMenuOpen ||
         hasSearchUi;
@@ -1307,6 +1314,9 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
           setState(() => _relocateTapPoint = null);
         } else if (_timeRowExpanded) {
           _timeSliderKey.currentState?.closeTimeRow();
+        } else if (_acgMenuOpen) {
+          // ACG モード中: バーガーを優先で閉じる (モード解除より前)
+          setState(() => _acgMenuOpen = false);
         } else if (_astroCartoMode) {
           _exitAstroCartoMode();
         } else if (_displayMenuOpen) {
@@ -1944,62 +1954,78 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
           ),
         ),
 
-        // ── ACGモード下部 UI (2026-05-11 3 段化) ──
-        // 下から積み上げ (地図領域を最大化):
-        //   [3] CategoryPills (FORTUNE)
-        //   [2] SubPills (active frame の天頂/天底/天頂帯/天底帯、active なしなら高さ 0)
-        //   [1] FramePills (Natal/Transit/Prog/S.Arc 横並び)
-        // SizedBox(10) でフォント拡大時の接触を回避。
-        // popup より「先」に描画して popup が上に重なる順序を維持。
+        // ── ACGモード下部 UI (2026-05-11 バーガーメニュー化) ──
+        // 表示専用 UI なので普段は隠して地図を最大表示。
+        // ☰ボタン (下部中央、Map 画面 display_menu と同じ動作) を常に表示し、
+        // タップで上方向に 3 段メニューを展開 / 折り畳む。
+        // 下から積み上げ:
+        //   [☰] ── 常時表示 (active 中は accent 強調)
+        //   [3] CategoryPills    ─┐
+        //   [2] SubPills          │ _acgMenuOpen=true のときだけ
+        //   [1] FramePills        ─┘
+        // SizedBox(1) で密着、フォント拡大時は border padding でクリアランス確保。
         if (_astroCartoMode) Builder(builder: (context) {
-          // 線 ON 状態と active を整合させて hot reload や不整合状態でも第2層が出るように
           final active = _resolveActiveAstroFrame();
           return Positioned(
           left: 0, right: 0, bottom: 12,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // [1] 第1層: フレームピル
-              // タップ挙動: 線を強制 ON + active 切替のみ (OFF にはしない)。
-              // 旧仕様 (タップでトグル) は active 中の pill を再タップしたとき
-              // 第2層が消える罠があったため廃止。OFF にしたい場合は
-              // 表示メニュー (display_menu) の Natal線/Transit線等トグルから。
-              Center(
-                child: AstroCartoFramePills(
-                  astroLayers: _astroLayers,
-                  activeFrame: active,
-                  onToggle: (k) => setState(() {
-                    for (final def in acgFrameDefs) {
-                      if (def.layerKey == k) {
-                        _astroLayers[k] = true;
-                        _activeAstroFrame = def.frame;
-                        break;
+              if (_acgMenuOpen) ...[
+                // [1] 第1層: フレームピル
+                // タップ: 線を強制 ON + active 切替のみ (OFF にはしない)。
+                // OFF にしたい場合は表示メニューの Natal線/Transit線等から。
+                Center(
+                  child: AstroCartoFramePills(
+                    astroLayers: _astroLayers,
+                    activeFrame: active,
+                    onToggle: (k) => setState(() {
+                      for (final def in acgFrameDefs) {
+                        if (def.layerKey == k) {
+                          _astroLayers[k] = true;
+                          _activeAstroFrame = def.frame;
+                          break;
+                        }
                       }
-                    }
-                  }),
+                    }),
+                  ),
                 ),
-              ),
-              const SizedBox(height: 1),
-              // [2] 第2層: active frame のサブトグル (active なしなら高さ 0)
-              Center(
-                child: AstroCartoSubPills(
-                  astroLayers: _astroLayers,
-                  activeFrame: active,
-                  onToggle: (k) => setState(() {
-                    _astroLayers[k] = !(_astroLayers[k] ?? false);
-                  }),
+                const SizedBox(height: 1),
+                // [2] 第2層: active frame のサブトグル (active なしなら高さ 0)
+                Center(
+                  child: AstroCartoSubPills(
+                    astroLayers: _astroLayers,
+                    activeFrame: active,
+                    onToggle: (k) => setState(() {
+                      _astroLayers[k] = !(_astroLayers[k] ?? false);
+                    }),
+                  ),
                 ),
-              ),
-              // SizedBox は SubPills が空のとき余分にならないよう activeFrame で分岐
-              if (active != null) const SizedBox(height: 1),
-              // [3] 最下部: FORTUNE カテゴリ
+                if (active != null) const SizedBox(height: 1),
+                // [3] FORTUNE カテゴリ
+                Center(
+                  child: AstroCartoCategoryPills(
+                    activeCategory: _activeCategory,
+                    onChanged: (k) => setState(() {
+                      _activeCategory = k;
+                      _planetFilterCategory = k;
+                    }),
+                  ),
+                ),
+                const SizedBox(height: 4),
+              ],
+              // ☰ バーガー (常時、下部中央)
               Center(
-                child: AstroCartoCategoryPills(
-                  activeCategory: _activeCategory,
-                  onChanged: (k) => setState(() {
-                    _activeCategory = k;
-                    _planetFilterCategory = k;
-                  }),
+                child: MapBtn(
+                  active: _acgMenuOpen,
+                  onTap: () => setState(() => _acgMenuOpen = !_acgMenuOpen),
+                  child: Icon(
+                    _acgMenuOpen ? Icons.close : Icons.menu,
+                    size: 20,
+                    color: _acgMenuOpen
+                        ? const Color(0xFFC9A84C)
+                        : const Color(0xFFE8E0D0),
+                  ),
                 ),
               ),
             ],
