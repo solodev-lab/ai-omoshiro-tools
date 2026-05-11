@@ -2019,23 +2019,26 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
               ),
               if (_acgMenuOpen) ...[
                 // [1] 第1層: フレームピル (Natal/Transit/Prog/S.Arc + 引越し)
-                // タップ挙動:
-                //   - フレームピル (acgFrameDefs): 線を強制 ON + active 切替のみ
-                //     (OFF にしたい場合は表示メニューの Natal線/Transit線等から)
-                //   - 引越しピル ('relocate'): トグル ON/OFF (排他モードの切替)
+                // タップ挙動: すべてトグル ON/OFF。
+                //   - フレームピル: ON → 線描画 + active = フレーム、再タップ OFF
+                //     OFF にしたフレームが現 active と一致するなら active = null
+                //     (= 第2層折り畳み、_resolveActiveAstroFrame() が他 ON 中
+                //      フレームへ自動補正)
+                //   - 引越しピル: ON/OFF トグル (排他モードの切替)
                 Center(
                   child: AstroCartoFramePills(
                     astroLayers: _astroLayers,
                     activeFrame: active,
                     onToggle: (k) => setState(() {
-                      if (k == 'relocate') {
-                        _astroLayers[k] = !(_astroLayers[k] ?? false);
-                        return;
-                      }
+                      final nowOn = !(_astroLayers[k] ?? false);
+                      _astroLayers[k] = nowOn;
                       for (final def in acgFrameDefs) {
                         if (def.layerKey == k) {
-                          _astroLayers[k] = true;
-                          _activeAstroFrame = def.frame;
+                          if (nowOn) {
+                            _activeAstroFrame = def.frame;
+                          } else if (_activeAstroFrame == def.frame) {
+                            _activeAstroFrame = null;
+                          }
                           break;
                         }
                       }
