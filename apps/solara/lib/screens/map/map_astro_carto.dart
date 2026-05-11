@@ -304,24 +304,38 @@ class AstroCartoFramePills extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final relocateOn = astroLayers['relocate'] ?? false;
     return _ScrollableRowPanel(
       borderRadius: 16,
       maxWidthMargin: 16,
       child: Row(
         mainAxisSize: MainAxisSize.min,
-        children: acgFrameDefs.map((d) {
-          final on = astroLayers[d.layerKey] ?? false;
-          final active = on && activeFrame == d.frame;
-          final accent = astroFrameStyles[d.frame]!.accent;
-          return _FramePill(
-            label: d.shortLabel,
-            accent: accent,
-            on: on,
-            active: active,
-            onTap: () => onToggle(d.layerKey),
-            onInfoTap: () => showAstroGlossaryDialog(context, d.termKey),
-          );
-        }).toList(),
+        children: [
+          ...acgFrameDefs.map((d) {
+            final on = astroLayers[d.layerKey] ?? false;
+            final active = on && activeFrame == d.frame;
+            final accent = astroFrameStyles[d.frame]!.accent;
+            return _FramePill(
+              label: d.shortLabel,
+              accent: accent,
+              on: on,
+              active: active,
+              onTap: () => onToggle(d.layerKey),
+              onInfoTap: () => showAstroGlossaryDialog(context, d.termKey),
+            );
+          }),
+          // S.Arc の右隣に「引越し」ピル。
+          // ON のとき排他的に: 地点タップで引越し popup のみ、他 (線/天頂/天底
+          // タップ) は反応しない。地図上の引越し検討に集中するためのモードトグル。
+          _FramePill(
+            label: '引越し',
+            accent: const Color(0xFFE9D29A),
+            on: relocateOn,
+            active: false,
+            onTap: () => onToggle('relocate'),
+            onInfoTap: () => showAstroGlossaryDialog(context, 'relocate_layer'),
+          ),
+        ],
       ),
     );
   }
