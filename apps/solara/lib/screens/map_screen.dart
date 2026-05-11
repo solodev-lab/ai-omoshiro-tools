@@ -1183,11 +1183,7 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
       _layers['sectors'] = false;
       _layers['compass'] = false;
       _astroLayers['planetLines'] = false;
-      // 2026-05-11: ACG モード入時の relocate=true 強制 ON を撤廃。
-      // ACG メニュー第1層に「引越し」ピル (S.Arc 右隣) を追加して、
-      // ユーザーが明示的に ON/OFF を切替える設計へ。
-      // 初期値 false: 「何もない地点タップで意図せず引越し popup が出る」事象を防止。
-      _astroLayers['relocate'] = false;
+      _astroLayers['relocate'] = true;
       // CCG (D2): モード入時は Transit を強制 ON (2026-05-08 ユーザー要望で
       // 旧 Natal → Transit に変更)。Transit は「今この瞬間」のラインで
       // 一番直感的に効果を実感できるため、初期表示として最適。
@@ -1402,15 +1398,8 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
             ),
             // HTML: long-press 600ms → rebuild(nc, fly:true)
             onLongPress: (tapPos, latlng) => _rebuild(latlng),
-            // Phase M2 + CCG: aspect / relocate トグル状態に応じてタップで popup
+            // Phase M2 + CCG: aspect (4フレーム何れか) / relocate ON時、タップで統合 popup
             // 設計: 論点10 (8-β) — 1タップで線情報+12ハウス情報を集約表示
-            //
-            // 2026-05-11 第2弾: ACG モードで relocate を明示トグル可に。
-            // popup を出す条件:
-            //   ① aspect 系 ON で「近接線あり」      → 線情報 popup
-            //   ② relocate ON で「線がない」地点    → ハウス popup (引越し検討)
-            //   ③ aspect + relocate 両 ON で線あり  → 統合 popup
-            // 線も relocate も無効なタップは popup 抑制。
             onTap: (tapPos, latlng) {
               if (_chartResult == null) return;
               final aspectOn = _astroLayers['aspect'] == true ||
@@ -1419,10 +1408,11 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                   _astroLayers['aspectSolarArc'] == true;
               final relocateOn = _astroLayers['relocate'] == true;
               if (!aspectOn && !relocateOn) return;
-              // aspect ON のとき近接線判定 (なければ relocate ON 限定で popup を許す)
-              final hasNearby = aspectOn &&
-                  _findNearbyAstroLines(latlng).isNotEmpty;
-              if (!hasNearby && !relocateOn) return; // 線なし & relocate OFF → 抑制
+              // aspect ONのみで近接線がない場合は popup を出さない (空表示防止)
+              if (aspectOn && !relocateOn) {
+                final near = _findNearbyAstroLines(latlng);
+                if (near.isEmpty) return;
+              }
               setState(() {
                 _relocateTapPoint = latlng;
                 _zenithTapInfo = null;

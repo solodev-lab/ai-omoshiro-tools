@@ -304,37 +304,24 @@ class AstroCartoFramePills extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final relocateOn = astroLayers['relocate'] ?? false;
     return _ScrollableRowPanel(
       borderRadius: 16,
       maxWidthMargin: 16,
       child: Row(
         mainAxisSize: MainAxisSize.min,
-        children: [
-          ...acgFrameDefs.map((d) {
-            final on = astroLayers[d.layerKey] ?? false;
-            final active = on && activeFrame == d.frame;
-            final accent = astroFrameStyles[d.frame]!.accent;
-            return _FramePill(
-              label: d.shortLabel,
-              accent: accent,
-              on: on,
-              active: active,
-              onTap: () => onToggle(d.layerKey),
-              onInfoTap: () => showAstroGlossaryDialog(context, d.termKey),
-            );
-          }),
-          // S.Arc の右隣に「引越し」ピル (frame ではないので acgFrameDefs と分離)。
-          // ON のとき、線がない地点タップで 12 ハウス popup を表示 (引越し検討動線)。
-          _FramePill(
-            label: '引越し',
-            accent: const Color(0xFFE9D29A),
-            on: relocateOn,
-            active: false, // 第2層展開対象ではない
-            onTap: () => onToggle('relocate'),
-            onInfoTap: () => showAstroGlossaryDialog(context, 'relocate_layer'),
-          ),
-        ],
+        children: acgFrameDefs.map((d) {
+          final on = astroLayers[d.layerKey] ?? false;
+          final active = on && activeFrame == d.frame;
+          final accent = astroFrameStyles[d.frame]!.accent;
+          return _FramePill(
+            label: d.shortLabel,
+            accent: accent,
+            on: on,
+            active: active,
+            onTap: () => onToggle(d.layerKey),
+            onInfoTap: () => showAstroGlossaryDialog(context, d.termKey),
+          );
+        }).toList(),
       ),
     );
   }

@@ -91,14 +91,10 @@ class MapRelocationPopup extends StatelessWidget {
   Widget build(BuildContext context) {
     final hasLines = (nearbyLines != null && nearbyLines!.isNotEmpty);
 
-    // showHouses 時のみ ASC/MC/houses を再計算 (重い処理を回避)。
-    // baselineHouses が 12 個揃っていない (chart 取得失敗・極地等) なら
-    // houses セクションを表示しない (旧仕様では _recoverBaselineAsc が MC で
-    // フォールバックし ASC=MC の誤表示を起こしていた)。
-    final canShowHouses = showHouses && baselineHouses.length == 12;
+    // showHouses 時のみ ASC/MC/houses を再計算 (重い処理を回避)
     HousesResult? relocated;
     int ascSignFrom = 0, ascSignTo = 0, mcSignFrom = 0, mcSignTo = 0;
-    if (canShowHouses) {
+    if (showHouses) {
       relocated = calcHousesRelocate(
         natalMc: baselineMc,
         natalLng: baselineLng,
@@ -109,11 +105,6 @@ class MapRelocationPopup extends StatelessWidget {
       ascSignTo = _signOf(relocated.asc);
       mcSignFrom = _signOf(baselineMc);
       mcSignTo = _signOf(relocated.mc);
-    }
-    // 何も表示するセクションがない (= 線なし & houses 表示不可) → 空 popup を抑止
-    if (!hasLines && !canShowHouses) {
-      WidgetsBinding.instance.addPostFrameCallback((_) => onClose());
-      return const SizedBox.shrink();
     }
 
     final mq = MediaQuery.of(context);
@@ -137,12 +128,12 @@ class MapRelocationPopup extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildHeader(showHouses: canShowHouses, hasLines: hasLines),
+            _buildHeader(showHouses: showHouses, hasLines: hasLines),
             if (hasLines) ...[
               const SizedBox(height: 10),
               _buildLinesSection(context, nearbyLines!),
             ],
-            if (canShowHouses && relocated != null) ...[
+            if (showHouses && relocated != null) ...[
               if (hasLines)
                 const Divider(color: Color(0x22FFFFFF), height: 18)
               else
