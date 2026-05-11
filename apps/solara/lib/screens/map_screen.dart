@@ -1679,12 +1679,31 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
               mapStyle: _mapStyle,
               onLayerToggle: (k) => setState(() => _layers[k] = !(_layers[k] ?? false)),
               onPlanetGroupToggle: (k) => setState(() => _planetGroups[k] = !(_planetGroups[k] ?? false)),
-              onAstroToggle: (k) => setState(() {
-                _astroLayers[k] = !(_astroLayers[k] ?? false);
-                if (k == 'relocate' && !(_astroLayers[k] ?? false)) {
-                  _relocateTapPoint = null;
+              onAstroToggle: (k) {
+                // 天頂帯は aspect 系 (Natal/Transit/Prog/S.Arc) のいずれかが
+                // ON でないと描画対象が無い → 空振り防止のガード。
+                // OFF→ON 操作時のみチェック (ON→OFF は素通り)。
+                if (k == 'latitudeBands' &&
+                    !(_astroLayers['latitudeBands'] ?? false) &&
+                    _zenithVisibleFrames().isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                        '天頂帯を表示するには、Natal線 / Transit線 / Prog線 / S.Arc線'
+                        'のいずれかを先に選択してください',
+                      ),
+                      duration: Duration(seconds: 3),
+                    ),
+                  );
+                  return;
                 }
-              }),
+                setState(() {
+                  _astroLayers[k] = !(_astroLayers[k] ?? false);
+                  if (k == 'relocate' && !(_astroLayers[k] ?? false)) {
+                    _relocateTapPoint = null;
+                  }
+                });
+              },
               // 惑星>テーマ は惑星フィルタのみを更新 (扇状非干渉)
               onPlanetFilterChanged: (k) => setState(() => _planetFilterCategory = k),
               onMapStyleChanged: _onMapStyleChanged,
