@@ -129,6 +129,9 @@ class _MapDisplayMenuState extends State<MapDisplayMenu> {
               () => widget.onAstroToggle('aspectProgressed')),
           _toggleBtn('S.Arc線', widget.astroLayers['aspectSolarArc'] ?? false,
               () => widget.onAstroToggle('aspectSolarArc')),
+          // L3 / Lewis: 天頂・天底の緯度線 (同じ緯度全周に効く緯度効果)。
+          _toggleBtn('天頂帯', widget.astroLayers['latitudeBands'] ?? false,
+              () => widget.onAstroToggle('latitudeBands')),
           _toggleBtn('引越し', widget.astroLayers['relocate'] ?? false,
               () => widget.onAstroToggle('relocate')),
         ];
