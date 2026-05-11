@@ -565,30 +565,55 @@ class _Header extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
+          // 2026-05-12: アイコンサイズを 44→64 (内側 26→40) に拡大。
+          // 「今日の TOP」の主役 = カテゴリアイコンなので視認性優先。
           Container(
-            width: 44,
-            height: 44,
+            width: 64,
+            height: 64,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: color.withValues(alpha: 0.15),
               border: Border.all(color: color.withValues(alpha: 0.5)),
             ),
             alignment: Alignment.center,
-            child: CategoryIcon(kind: iconKind, size: 26, color: color),
+            child: CategoryIcon(kind: iconKind, size: 40, color: color),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  '今日の TOP — $label',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: color,
-                    fontWeight: FontWeight.w500,
-                    letterSpacing: 1.0,
-                  ),
+                // 2026-05-12: i ボタンを Row 末尾から「今日の TOP — label」行の
+                // 末尾に移動。アイコン拡大分のスペースを確保するため。
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Flexible(
+                      child: Text(
+                        '今日の TOP — $label',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: color,
+                          fontWeight: FontWeight.w500,
+                          letterSpacing: 1.0,
+                        ),
+                      ),
+                    ),
+                    // ⓘ info_outline: 「なぜこのカテゴリが今日の TOP か」の技術的説明
+                    // 5カテゴリ × 担当惑星 × ペア倍率の集計ロジックを popup で開示。
+                    GestureDetector(
+                      onTap: () => showAstroGlossaryDialog(
+                          context, 'top_category_logic'),
+                      behavior: HitTestBehavior.opaque,
+                      child: const Padding(
+                        padding: EdgeInsets.all(6),
+                        child: Icon(Icons.info_outline,
+                            size: 16, color: Color(0xCCAAAAAA)),
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 3),
                 Text(
@@ -603,19 +628,6 @@ class _Header extends StatelessWidget {
                 const SizedBox(height: 4),
                 _buildVpDropdownWithGuide(context),
               ],
-            ),
-          ),
-          // ⓘ info_outline: 「なぜこのカテゴリが今日の TOP か」の技術的説明
-          // 5カテゴリ × 担当惑星 × ペア倍率の集計ロジックを popup で開示。
-          // (機能ガイド ❓ は基準地点プルダウン左に移動 — 2026-05-08)
-          GestureDetector(
-            onTap: () =>
-                showAstroGlossaryDialog(context, 'top_category_logic'),
-            behavior: HitTestBehavior.opaque,
-            child: const Padding(
-              padding: EdgeInsets.all(8),
-              child:
-                  Icon(Icons.info_outline, size: 18, color: Color(0xCCAAAAAA)),
             ),
           ),
           // ✕ 閉じる
