@@ -683,15 +683,10 @@ class _ForecastScreenState extends State<ForecastScreen> {
     if (d == null) return const SizedBox.shrink();
     final parts = d.date.split('-');
     final dateLabel = '${parts[0]}/${parts[1]}/${parts[2]}';
-    // 2026-05-12: 左のスウォッチ (色見本タイル) を撤去
-    //   ・ヒートマップでタップした時点でどの日か明白なので冗長
-    //   ・横一列のヘッダで日付 + 矢印 + 地図ボタン + 運勢チップが
-    //     入りきらず RIGHT OVERFLOWED していた主要因の 1 つ
-    final fortune = d.topFortune;
-    final fortuneLabel = fortune != null ? (categoryLabels[fortune] ?? fortune) : '—';
-    final fortuneColor = fortune != null
-        ? (categoryColors[fortune] ?? const Color(0xFFE8E0D0))
-        : const Color(0xFF888888);
+    // 2026-05-12: ヘッダ行は「日付 + 矢印 + 地図ボタン」のみ。
+    //   ・左のスウォッチ (色見本タイル): どの日か自明なので撤去
+    //   ・右の運勢チップ: 下のカテゴリ別バーで詳細を見られるので撤去
+    //   ・両者撤去で横並びの overflow リスクも解消
 
     // カテゴリ別スコアを降順でソート
     final catList = d.catScores.entries.toList()
@@ -733,23 +728,6 @@ class _ForecastScreenState extends State<ForecastScreen> {
               widget.onJumpToDate!(DateTime.utc(ps[0], ps[1], ps[2], 3, 0, 0));
               Navigator.of(context).maybePop();
             },
-          ),
-          const SizedBox(width: 6),
-          // 運勢チップ: 長文 (「コミュニケーション期」等) が Spacer を食い潰して
-          // overflow するのを防ぐため Flexible でラップ。
-          Flexible(
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-              decoration: BoxDecoration(
-                color: fortuneColor.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: fortuneColor.withValues(alpha: 0.5)),
-              ),
-              child: Text(fortuneLabel,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(fontSize: 10, color: fortuneColor)),
-            ),
           ),
         ]),
         const SizedBox(height: 10),
