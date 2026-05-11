@@ -683,19 +683,10 @@ class _ForecastScreenState extends State<ForecastScreen> {
     if (d == null) return const SizedBox.shrink();
     final parts = d.date.split('-');
     final dateLabel = '${parts[0]}/${parts[1]}/${parts[2]}';
-    // ヒートマップ上で選んだタイルと同じ色を詳細パネル冒頭にスウォッチ表示。
-    // どの日を見ているか視覚的に直結させるための手がかり。
-    Color? swatchColor;
-    final cache = _cache;
-    if (cache != null && cache.days.isNotEmpty) {
-      double minV = double.infinity, maxV = -double.infinity;
-      for (final dd in cache.days) {
-        if (dd.overall < minV) minV = dd.overall;
-        if (dd.overall > maxV) maxV = dd.overall;
-      }
-      final range = (maxV - minV).abs() < 0.01 ? 1.0 : (maxV - minV);
-      swatchColor = _cellColor(d, minV, range);
-    }
+    // 2026-05-12: 左のスウォッチ (色見本タイル) を撤去
+    //   ・ヒートマップでタップした時点でどの日か明白なので冗長
+    //   ・横一列のヘッダで日付 + 矢印 + 地図ボタン + 運勢チップが
+    //     入りきらず RIGHT OVERFLOWED していた主要因の 1 つ
     final fortune = d.topFortune;
     final fortuneLabel = fortune != null ? (categoryLabels[fortune] ?? fortune) : '—';
     final fortuneColor = fortune != null
@@ -715,21 +706,6 @@ class _ForecastScreenState extends State<ForecastScreen> {
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(children: [
-          // 選択タイルの色見本 (ヒートマップ上のタイルと同じ色)。
-          // 下の日付がどのタイルに対応するか視覚的に紐付ける。
-          if (swatchColor != null) ...[
-            Container(
-              width: 14,
-              height: 14,
-              decoration: BoxDecoration(
-                color: swatchColor,
-                borderRadius: BorderRadius.circular(3),
-                border: Border.all(
-                    color: const Color(0xCCFFFFFF), width: 1.2),
-              ),
-            ),
-            const SizedBox(width: 8),
-          ],
           // 左△: 1日前へ。日付リスト先頭で disable。
           _DayStepperButton(
             icon: Icons.arrow_left,
@@ -759,14 +735,21 @@ class _ForecastScreenState extends State<ForecastScreen> {
             },
           ),
           const SizedBox(width: 6),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-            decoration: BoxDecoration(
-              color: fortuneColor.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: fortuneColor.withValues(alpha: 0.5)),
+          // 運勢チップ: 長文 (「コミュニケーション期」等) が Spacer を食い潰して
+          // overflow するのを防ぐため Flexible でラップ。
+          Flexible(
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              decoration: BoxDecoration(
+                color: fortuneColor.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: fortuneColor.withValues(alpha: 0.5)),
+              ),
+              child: Text(fortuneLabel,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(fontSize: 10, color: fortuneColor)),
             ),
-            child: Text(fortuneLabel, style: TextStyle(fontSize: 10, color: fortuneColor)),
           ),
         ]),
         const SizedBox(height: 10),
