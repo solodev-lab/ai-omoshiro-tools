@@ -141,7 +141,28 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
 
   // ACG 第2層メニュー: 直前にタップした「線 ON」フレーム (排他表示用)。
   // null のとき第2層は折り畳まれ、地図領域がその分広がる。
+  // build 時に _resolveActiveAstroFrame() で「線 ON のフレームと整合する値」へ
+  // 自動補完される (hot reload や state 不整合からの自己復旧)。
   astro_lines.AstroFrame? _activeAstroFrame;
+
+  /// 現在の _astroLayers と整合する active を返す。
+  /// - active が既に line ON フレームを指していればそのまま
+  /// - active が null or line OFF を指していれば、ON 中の先頭フレームへ補正
+  /// - ON 中のフレームが 1 つもなければ null (第2層折り畳み)
+  astro_lines.AstroFrame? _resolveActiveAstroFrame() {
+    final cur = _activeAstroFrame;
+    if (cur != null) {
+      for (final def in acgFrameDefs) {
+        if (def.frame == cur && _astroLayers[def.layerKey] == true) {
+          return cur;
+        }
+      }
+    }
+    for (final def in acgFrameDefs) {
+      if (_astroLayers[def.layerKey] == true) return def.frame;
+    }
+    return null;
+  }
 
   // 引越しレイヤー ON時のタップ詳細ポップアップ用
   LatLng? _relocateTapPoint;
@@ -1930,7 +1951,10 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
         //   [1] FramePills (Natal/Transit/Prog/S.Arc 横並び)
         // SizedBox(10) でフォント拡大時の接触を回避。
         // popup より「先」に描画して popup が上に重なる順序を維持。
-        if (_astroCartoMode) Positioned(
+        if (_astroCartoMode) Builder(builder: (context) {
+          // 線 ON 状態と active を整合させて hot reload や不整合状態でも第2層が出るように
+          final active = _resolveActiveAstroFrame();
+          return Positioned(
           left: 0, right: 0, bottom: 12,
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -1943,7 +1967,7 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
               Center(
                 child: AstroCartoFramePills(
                   astroLayers: _astroLayers,
-                  activeFrame: _activeAstroFrame,
+                  activeFrame: active,
                   onToggle: (k) => setState(() {
                     for (final def in acgFrameDefs) {
                       if (def.layerKey == k) {
@@ -1955,19 +1979,19 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                   }),
                 ),
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: 1),
               // [2] 第2層: active frame のサブトグル (active なしなら高さ 0)
               Center(
                 child: AstroCartoSubPills(
                   astroLayers: _astroLayers,
-                  activeFrame: _activeAstroFrame,
+                  activeFrame: active,
                   onToggle: (k) => setState(() {
                     _astroLayers[k] = !(_astroLayers[k] ?? false);
                   }),
                 ),
               ),
               // SizedBox は SubPills が空のとき余分にならないよう activeFrame で分岐
-              if (_activeAstroFrame != null) const SizedBox(height: 4),
+              if (active != null) const SizedBox(height: 1),
               // [3] 最下部: FORTUNE カテゴリ
               Center(
                 child: AstroCartoCategoryPills(
@@ -1980,7 +2004,8 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
               ),
             ],
           ),
-        ),
+        );
+        }),
         // ACGモード下部スライダーは廃止 (2026-04-29、上部常時表示に統一)
 
         // ── Phase M2: 引越しレイヤー タップ詳細ポップアップ ──
