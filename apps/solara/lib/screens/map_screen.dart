@@ -2153,7 +2153,6 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
         _astroLayers['aspectTransit'] == true ||
         _astroLayers['aspectProgressed'] == true ||
         _astroLayers['aspectSolarArc'] == true;
-    final relocateOn = _astroLayers['relocate'] == true;
 
     // aspect ON 時のみ近接線検出 (Tier A #3、画面pixel距離 20px)
     // _findNearbyAstroLines が _visibleAstroLines() 経由で表示中フレームのみ対象にする。
@@ -2180,7 +2179,10 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
       baselineLng: baselineLng,
       baselineHouses: chart.houses,
       baselineLabel: baselineLabel,
-      showHouses: relocateOn,
+      // 旧仕様: ライン押した時も「線情報 + ハウス情報」を統合表示する。
+      // 引越しトグルは「地点タップで popup を開くかどうか」の制御のみで、
+      // popup の中身 (ハウス情報を出すか) とは切り離す。
+      showHouses: true,
       nearbyLines: nearby,
       natalSummary: natalSummary,
       userName: p.name.isNotEmpty ? p.name : null,
