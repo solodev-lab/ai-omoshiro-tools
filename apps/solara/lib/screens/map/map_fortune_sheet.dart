@@ -270,16 +270,7 @@ class FortuneSheet extends StatelessWidget {
           _buildCatTabs(),
           SizedBox(
             height: 185,
-            child: RawScrollbar(
-              thumbColor: const Color(0x40C9A84C),
-              radius: const Radius.circular(2),
-              thickness: 3,
-              thumbVisibility: true,
-              child: Builder(builder: (rowsContext) => ListView(
-                padding: const EdgeInsets.fromLTRB(14, 10, 14, 14),
-                children: _buildFortuneRows(rowsContext),
-              )),
-            ),
+            child: _FortuneRowsList(buildRows: _buildFortuneRows),
           ),
         ],
       ),
@@ -727,4 +718,41 @@ void showCategoryInfoPopup(
       ],
     ),
   );
+}
+
+/// `RawScrollbar` と `ListView` で同じ `ScrollController` を共有する。
+/// PrimaryScrollController を複数 ScrollView が共有して
+/// `thumbVisibility: true` が assert に引っかかる問題の対策 (2026-05-12)。
+class _FortuneRowsList extends StatefulWidget {
+  final List<Widget> Function(BuildContext) buildRows;
+  const _FortuneRowsList({required this.buildRows});
+
+  @override
+  State<_FortuneRowsList> createState() => _FortuneRowsListState();
+}
+
+class _FortuneRowsListState extends State<_FortuneRowsList> {
+  final ScrollController _ctrl = ScrollController();
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return RawScrollbar(
+      controller: _ctrl,
+      thumbColor: const Color(0x40C9A84C),
+      radius: const Radius.circular(2),
+      thickness: 3,
+      thumbVisibility: true,
+      child: ListView(
+        controller: _ctrl,
+        padding: const EdgeInsets.fromLTRB(14, 10, 14, 14),
+        children: widget.buildRows(context),
+      ),
+    );
+  }
 }
