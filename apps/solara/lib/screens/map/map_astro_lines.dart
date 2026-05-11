@@ -180,19 +180,22 @@ List<LatLng> _latitudePolylinePoints(double lat) => [
       LatLng(lat, 179.9),
     ];
 
-/// 天頂帯 (zenith latitude band) の緯度線を Polyline[] に変換する。
+/// 天頂帯・天底帯 (latitude bands) の緯度線を Polyline[] に変換する。
 ///
-/// 1本のラインの zenith から 緯度=δ の全周線 (惑星色、半透明実線) を生成。
-/// MC line のみ zenith が設定されているため、自動的に1フレーム×1惑星=1本。
+/// 1本のラインから最大2本生成:
+///   - [zenithFrames] にフレームが含まれ zenith!=null → 緯度=δ の実線 (惑星色)
+///   - [nadirFrames]  にフレームが含まれ nadir!=null  → 緯度=-δ の点線 (惑星色を暗トーン化)
+/// 線データを 1 度しか走査しない (PolylineLayer も 1 つで済む) ため zenith/nadir を
+/// 分離した旧設計より効率的。
 ///
 /// [activeCategory] FORTUNE 連動。非該当惑星の緯度線は dim。
-/// [framesWithBands] 天頂帯を表示するフレーム集合 (第2層トグルから渡される)。
 /// [opacityBase] 緯度線のベース透明度 (default 0.22、視覚密度抑え目)。
-List<Polyline> buildAstroZenithBandPolylines({
+List<Polyline> buildAstroLatitudeBandPolylines({
   required List<AstroLine> lines,
   required String activeCategory,
   bool allPlanetMode = false,
-  Set<AstroFrame> framesWithBands = const {AstroFrame.natal},
+  Set<AstroFrame> zenithFrames = const {},
+  Set<AstroFrame> nadirFrames = const {},
   double latLimit = 75,
   double opacityBase = 0.22,
 }) {
@@ -202,79 +205,48 @@ List<Polyline> buildAstroZenithBandPolylines({
 
   final polylines = <Polyline>[];
   for (final line in lines) {
-    if (!framesWithBands.contains(line.frame)) continue;
-    final zenith = line.zenith;
-    if (zenith == null ||
-        !zenith.latitude.isFinite ||
-        zenith.latitude.abs() > latLimit) {
-      continue;
-    }
+    final showZenith = zenithFrames.contains(line.frame);
+    final showNadir = nadirFrames.contains(line.frame);
+    if (!showZenith && !showNadir) continue;
     final meta = planetMeta[line.planet];
     if (meta == null) continue;
-    final frameStyle = astroFrameStyles[line.frame] ?? astroFrameStyles[AstroFrame.natal]!;
-
-    final isHighlighted = highlightSet == null || highlightSet.contains(line.planet);
+    final frameStyle =
+        astroFrameStyles[line.frame] ?? astroFrameStyles[AstroFrame.natal]!;
+    final isHighlighted =
+        highlightSet == null || highlightSet.contains(line.planet);
     final alphaMul =
         (isHighlighted ? 1.0 : _dimMultiplier) * frameStyle.opacityMul;
 
-    final tinted = _lerpColor(meta.color, frameStyle.accent, frameStyle.tintMix);
-    final color = tinted.withAlpha((opacityBase * alphaMul * 255).round());
-    polylines.add(Polyline(
-      points: _latitudePolylinePoints(zenith.latitude),
-      color: color,
-      strokeWidth: 1.4,
-    ));
-  }
-  return polylines;
-}
-
-/// 天底帯 (nadir latitude band) の緯度線を Polyline[] に変換する。
-///
-/// 1本のラインの nadir から 緯度=-δ の全周線 (惑星色を暗トーン化、半透明点線) を生成。
-/// IC line のみ nadir が設定されているため、自動的に1フレーム×1惑星=1本。
-List<Polyline> buildAstroNadirBandPolylines({
-  required List<AstroLine> lines,
-  required String activeCategory,
-  bool allPlanetMode = false,
-  Set<AstroFrame> framesWithBands = const {AstroFrame.natal},
-  double latLimit = 75,
-  double opacityBase = 0.22,
-}) {
-  final highlightSet = (allPlanetMode || activeCategory == 'all')
-      ? null
-      : astroLineFortunePlanets[activeCategory];
-
-  final polylines = <Polyline>[];
-  for (final line in lines) {
-    if (!framesWithBands.contains(line.frame)) continue;
-    final nadir = line.nadir;
-    if (nadir == null ||
-        !nadir.latitude.isFinite ||
-        nadir.latitude.abs() > latLimit) {
-      continue;
+    if (showZenith) {
+      final p = line.zenith;
+      if (p != null && p.latitude.isFinite && p.latitude.abs() <= latLimit) {
+        final tinted = _lerpColor(meta.color, frameStyle.accent, frameStyle.tintMix);
+        polylines.add(Polyline(
+          points: _latitudePolylinePoints(p.latitude),
+          color: tinted.withAlpha((opacityBase * alphaMul * 255).round()),
+          strokeWidth: 1.4,
+        ));
+      }
     }
-    final meta = planetMeta[line.planet];
-    if (meta == null) continue;
-    final frameStyle = astroFrameStyles[line.frame] ?? astroFrameStyles[AstroFrame.natal]!;
-
-    final isHighlighted = highlightSet == null || highlightSet.contains(line.planet);
-    final alphaMul =
-        (isHighlighted ? 1.0 : _dimMultiplier) * frameStyle.opacityMul;
-
-    final darkenedPlanet = Color.from(
-      alpha: 1.0,
-      red: meta.color.r * 0.6,
-      green: meta.color.g * 0.6,
-      blue: meta.color.b * 0.6,
-    );
-    final tinted = _lerpColor(darkenedPlanet, frameStyle.accent, frameStyle.tintMix * 0.6);
-    final color = tinted.withAlpha((opacityBase * alphaMul * 0.85 * 255).round());
-    polylines.add(Polyline(
-      points: _latitudePolylinePoints(nadir.latitude),
-      color: color,
-      strokeWidth: 1.2,
-      pattern: StrokePattern.dashed(segments: const [5, 6]),
-    ));
+    if (showNadir) {
+      final p = line.nadir;
+      if (p != null && p.latitude.isFinite && p.latitude.abs() <= latLimit) {
+        final darkened = Color.from(
+          alpha: 1.0,
+          red: meta.color.r * 0.6,
+          green: meta.color.g * 0.6,
+          blue: meta.color.b * 0.6,
+        );
+        final tinted =
+            _lerpColor(darkened, frameStyle.accent, frameStyle.tintMix * 0.6);
+        polylines.add(Polyline(
+          points: _latitudePolylinePoints(p.latitude),
+          color: tinted.withAlpha((opacityBase * alphaMul * 0.85 * 255).round()),
+          strokeWidth: 1.2,
+          pattern: StrokePattern.dashed(segments: const [5, 6]),
+        ));
+      }
+    }
   }
   return polylines;
 }
@@ -292,7 +264,7 @@ List<Polyline> buildAstroNadirBandPolylines({
 /// FORTUNE 連動 dim 対象の惑星はマーカーも非表示(ノイズ削減)。
 /// [onTap] が指定されていれば、タップで (planet, frame, zenith座標) を通知する。
 /// [framesWithZenith] 天頂マーカーを表示するフレーム集合 (default: natal のみ)。
-/// 呼出側は通常 `_zenithVisibleFrames()` で ON 中のフレームを渡す。
+/// 呼出側は `_zenithMarkerFrames()` 等で ON 中のフレームを渡す (2 層メニュー連動)。
 /// Lewis 理論的にはどのフレームの天頂も「同じ緯度線全周に効くポイント」として
 /// 等価なので、natal だけでなく動的フレーム (T/P/SA) でも表示する設計。
 List<Marker> buildAstroZenithMarkers({
