@@ -1400,6 +1400,12 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
             onLongPress: (tapPos, latlng) => _rebuild(latlng),
             // Phase M2 + CCG: aspect (4フレーム何れか) / relocate ON時、タップで統合 popup
             // 設計: 論点10 (8-β) — 1タップで線情報+12ハウス情報を集約表示
+            //
+            // 2026-05-11 修正: aspect 系がいずれか ON ならば「近接線あり」のみ popup を出す。
+            // ACG モードでは relocate も強制 ON される (line 1186) ため、旧仕様
+            // (relocateOn なら無条件 popup) では「何もない地点」でも引越し popup が
+            // 開いてしまい不自然だった。ACG モード = 線タップ時のみ反応に統一。
+            // 通常 Map で aspect 全 OFF・relocate のみ ON のとき、従来通り地点 popup。
             onTap: (tapPos, latlng) {
               if (_chartResult == null) return;
               final aspectOn = _astroLayers['aspect'] == true ||
@@ -1408,8 +1414,9 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                   _astroLayers['aspectSolarArc'] == true;
               final relocateOn = _astroLayers['relocate'] == true;
               if (!aspectOn && !relocateOn) return;
-              // aspect ONのみで近接線がない場合は popup を出さない (空表示防止)
-              if (aspectOn && !relocateOn) {
+              // aspect 系がいずれかでも ON ならば近接線判定。線がなければ popup なし。
+              // → ACG モードで「何もないところ」をタップしても popup は出ない。
+              if (aspectOn) {
                 final near = _findNearbyAstroLines(latlng);
                 if (near.isEmpty) return;
               }
