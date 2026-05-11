@@ -347,31 +347,41 @@ class MapRelocationPopup extends StatelessWidget {
       ),
     );
 
-    return Row(
+    // 2026-05-12: 横一列だと「統合 — 35.71°N, 139.77°E」と「現住所 → タップ地点」
+    // が窮屈で見にくいため、2 行構成に変更。
+    //   1 行目: [📍] 統合 — 35.71°N, 139.77°E              [×]
+    //   2 行目: 　　 現住所 → タップ地点
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(Icons.place, size: 14, color: Colors.pink.shade200),
-        const SizedBox(width: 6),
-        // タイトル + (任意で) i ボタン を Expanded 内で並べる。
-        // Flexible Text で長文時に省略 → overflow しない。
-        Expanded(child: _buildTitleArea(context, termKey, titleText)),
-        if (showHouses) ...[
-          const SizedBox(width: 6),
-          Flexible(
-            child: Text(
-              '$baselineLabel → タップ地点',
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: GoogleFonts.notoSansJp(
-                fontSize: 13,
-                color: const Color(0xFF888888),
-              ),
+        Row(
+          children: [
+            Icon(Icons.place, size: 14, color: Colors.pink.shade200),
+            const SizedBox(width: 6),
+            // タイトル + (任意で) i ボタン を Expanded 内で並べる。
+            // Flexible Text で長文時に省略 → overflow しない。
+            Expanded(child: _buildTitleArea(context, termKey, titleText)),
+            const SizedBox(width: 8),
+            GestureDetector(
+              onTap: onClose,
+              child: const Icon(Icons.close, size: 16, color: Color(0xFF888888)),
+            ),
+          ],
+        ),
+        if (showHouses) Padding(
+          // アイコン (size 14) + spacing (6) = 20px 分インデントして
+          // タイトルテキストの左端と揃える。
+          padding: const EdgeInsets.only(left: 20, top: 2),
+          child: Text(
+            '$baselineLabel → タップ地点',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: GoogleFonts.notoSansJp(
+              fontSize: 12,
+              color: const Color(0xFF888888),
             ),
           ),
-        ],
-        const SizedBox(width: 8),
-        GestureDetector(
-          onTap: onClose,
-          child: const Icon(Icons.close, size: 16, color: Color(0xFF888888)),
         ),
       ],
     );
