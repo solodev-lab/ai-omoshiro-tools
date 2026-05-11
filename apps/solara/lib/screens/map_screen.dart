@@ -1954,23 +1954,39 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
           ),
         ),
 
-        // ── ACGモード下部 UI (2026-05-11 バーガーメニュー化) ──
-        // 表示専用 UI なので普段は隠して地図を最大表示。
-        // ☰ボタン (下部中央、Map 画面 display_menu と同じ動作) を常に表示し、
-        // タップで上方向に 3 段メニューを展開 / 折り畳む。
-        // 下から積み上げ:
-        //   [☰] ── 常時表示 (active 中は accent 強調)
-        //   [3] CategoryPills    ─┐
-        //   [2] SubPills          │ _acgMenuOpen=true のときだけ
-        //   [1] FramePills        ─┘
-        // SizedBox(1) で密着、フォント拡大時は border padding でクリアランス確保。
+        // ── ACGモード下部 UI (2026-05-11 バーガー左端 + 3 層を下に展開) ──
+        // 上から順:
+        //   [☰] ─ 左端、常時表示
+        //   [1] FramePills        ─┐
+        //   [2] SubPills           │ _acgMenuOpen=true のときだけ
+        //   [3] CategoryPills     ─┘ NavBar 直上 1px に密着
+        // Column 全体を Positioned(bottom: 1) で NavBar 上端から 1px に配置。
+        // メニュー閉時はバーガーのみで Column 縮、地図領域最大。
         if (_astroCartoMode) Builder(builder: (context) {
           final active = _resolveActiveAstroFrame();
           return Positioned(
-          left: 0, right: 0, bottom: 12,
+          left: 0, right: 0, bottom: 1,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
+              // ☰ バーガー (左端、常時表示)
+              Padding(
+                padding: const EdgeInsets.only(left: 12, bottom: 4),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: MapBtn(
+                    active: _acgMenuOpen,
+                    onTap: () => setState(() => _acgMenuOpen = !_acgMenuOpen),
+                    child: Icon(
+                      _acgMenuOpen ? Icons.close : Icons.menu,
+                      size: 20,
+                      color: _acgMenuOpen
+                          ? const Color(0xFFC9A84C)
+                          : const Color(0xFFE8E0D0),
+                    ),
+                  ),
+                ),
+              ),
               if (_acgMenuOpen) ...[
                 // [1] 第1層: フレームピル
                 // タップ: 線を強制 ON + active 切替のみ (OFF にはしない)。
@@ -2002,7 +2018,7 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                   ),
                 ),
                 if (active != null) const SizedBox(height: 1),
-                // [3] FORTUNE カテゴリ
+                // [3] FORTUNE カテゴリ (NavBar 直上 1px に密着)
                 Center(
                   child: AstroCartoCategoryPills(
                     activeCategory: _activeCategory,
@@ -2012,22 +2028,7 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                     }),
                   ),
                 ),
-                const SizedBox(height: 4),
               ],
-              // ☰ バーガー (常時、下部中央)
-              Center(
-                child: MapBtn(
-                  active: _acgMenuOpen,
-                  onTap: () => setState(() => _acgMenuOpen = !_acgMenuOpen),
-                  child: Icon(
-                    _acgMenuOpen ? Icons.close : Icons.menu,
-                    size: 20,
-                    color: _acgMenuOpen
-                        ? const Color(0xFFC9A84C)
-                        : const Color(0xFFE8E0D0),
-                  ),
-                ),
-              ),
             ],
           ),
         );
