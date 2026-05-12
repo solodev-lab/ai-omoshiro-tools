@@ -176,8 +176,11 @@ class _HoroBirthPanelState extends State<HoroBirthPanel> {
   Widget build(BuildContext context) {
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       // ── ヘッダ + 編集中通知 + リセットボタン ──
+      // 注意: isEdited 時に Expanded 兄弟があるため、horoAntiqueHeader (内部に Flexible 持ち)
+      // を非flex で配置すると Row layout が unbounded width を渡してエラーになる。
+      // Flexible(fit: loose) でラップして flex 子として配置すること。
       Row(children: [
-        horoAntiqueHeader(AntiqueIcon.birth, 'BIRTH DATA'),
+        Flexible(child: horoAntiqueHeader(AntiqueIcon.birth, 'BIRTH DATA')),
         const SizedBox(width: 8),
         if (widget.isEdited) Expanded(child: Text(
           '※ Horo画面から離れるとBIRTH DATAは初期化されます',
