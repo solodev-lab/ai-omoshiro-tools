@@ -132,8 +132,17 @@ class ClassCard extends StatelessWidget {
 
     final accentColor = isLight ? const Color(0xFFF9D976) : const Color(0xFFEAEAEA);
 
+    // ── 固定高さで Light/Shadow のクラス名位置を一致させる ──
+    // テキスト 3行ぶんを確保 (短い Light でも長い Shadow でも同じレイアウト)
+    final isSmall = width < 200;
+    final overlayHeight = width * 0.62; // 280→174, 260→161, 200→124
+    final fsClassJP = isSmall ? 16.0 : 22.0;
+    final fsClassEN = isSmall ? 9.0 : 11.0;
+    final fsText = isSmall ? 11.0 : 14.0;
+
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 40, 16, 16),
+      height: overlayHeight,
+      padding: const EdgeInsets.fromLTRB(16, 36, 16, 14),
       decoration: BoxDecoration(
         borderRadius: const BorderRadius.vertical(bottom: Radius.circular(16)),
         gradient: LinearGradient(
@@ -147,49 +156,54 @@ class ClassCard extends StatelessWidget {
         ),
       ),
       child: Column(
-        mainAxisSize: MainAxisSize.min,
+        mainAxisSize: MainAxisSize.max,
+        mainAxisAlignment: MainAxisAlignment.start,
         children: [
           // クラス名 JP (大)
           Text(
             isEnglish ? classNameEN : classNameJP,
             style: TextStyle(
               color: accentColor,
-              fontSize: width < 200 ? 14 : 18,
+              fontSize: fsClassJP,
               fontWeight: FontWeight.w700,
-              letterSpacing: 1.5,
+              letterSpacing: 2,
               shadows: const [
                 Shadow(color: Colors.black, blurRadius: 6),
               ],
             ),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 2),
+          const SizedBox(height: 3),
           // クラス名 EN (小)
           Text(
             isEnglish ? '— ${classData.axis.toUpperCase()} ${classData.court.toUpperCase()} —' : classNameEN,
             style: TextStyle(
               color: accentColor.withValues(alpha: 0.6),
-              fontSize: width < 200 ? 8 : 10,
+              fontSize: fsClassEN,
               letterSpacing: 3,
               fontWeight: FontWeight.w300,
             ),
             textAlign: TextAlign.center,
           ),
           if (text.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            // Light/Shadow テキスト
-            Text(
-              text,
-              style: TextStyle(
-                color: accentColor.withValues(alpha: 0.92),
-                fontSize: width < 200 ? 10 : 12,
-                fontStyle: isLight ? FontStyle.normal : FontStyle.italic,
-                height: 1.5,
-                letterSpacing: 0.3,
+            const SizedBox(height: 10),
+            // Light/Shadow テキスト (固定領域で揃える)
+            Expanded(
+              child: Center(
+                child: Text(
+                  text,
+                  style: TextStyle(
+                    color: accentColor.withValues(alpha: 0.92),
+                    fontSize: fsText,
+                    fontStyle: isLight ? FontStyle.normal : FontStyle.italic,
+                    height: 1.5,
+                    letterSpacing: 0.3,
+                  ),
+                  textAlign: TextAlign.center,
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
-              textAlign: TextAlign.center,
-              maxLines: 3,
-              overflow: TextOverflow.ellipsis,
             ),
           ],
         ],
