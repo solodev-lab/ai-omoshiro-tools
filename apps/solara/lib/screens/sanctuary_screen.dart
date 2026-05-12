@@ -25,8 +25,7 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
   String? _titleLight;
   String? _titleShadow;
   String? _titleClassEN;
-  // 2026-04-30: シャドー称号無効化中のため変化しないが、復活時に flip するため var 維持
-  bool _titleFlipped = false; // ignore: prefer_final_fields
+  bool _titleFlipped = false;
 
   // Astrology settings
   String _houseSystem = 'placidus';
@@ -306,13 +305,20 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
       children: [
         // Title card (if diagnosed)
         if (_titleLight != null) ...[
-          // 2026-04-30 オーナー判断: シャドー称号は一時的に無効化（後で復活可能）。
-          //   - flip タップを停止し、`tap to flip` ヒントも非表示
-          //   - `_titleFlipped` は常に false のまま → LIGHT 側のみ表示
-          //   - SHADOW 描画ロジック（_buildTitleFlipCard 内の SHADOW 分岐）と
-          //     `_titleShadow` state、保存ロジックは維持
-          //   復活手順: ここで GestureDetector で _titleFlipped をトグル + hint 復元
-          _buildTitleFlipCard(),
+          // 2026-05-12 SHADOW flip 復活: 一言シャドー（10〜18文字）に短縮したことで
+          // Solara イメージとの整合性が取れた為、再有効化。
+          // タップで LIGHT ↔ SHADOW をトグル。
+          GestureDetector(
+            onTap: () => setState(() => _titleFlipped = !_titleFlipped),
+            child: _buildTitleFlipCard(),
+          ),
+          const SizedBox(height: 6),
+          Center(
+            child: Text(
+              _titleFlipped ? 'tap to show LIGHT' : 'tap to show SHADOW',
+              style: const TextStyle(fontSize: 12, color: Color(0x80ACACAC), letterSpacing: 1.2),
+            ),
+          ),
           const SizedBox(height: 10),
         ],
         // HTML: #titleStartBtn — gold button (shown when not yet diagnosed)
