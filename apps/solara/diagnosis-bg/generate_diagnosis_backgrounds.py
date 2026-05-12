@@ -78,6 +78,69 @@ TECHNICAL:
 # ============================================================
 
 BACKGROUNDS = [
+    ("ceremony", """
+SUBJECT — THE CEREMONY (召喚演出: 暗黒の中に金色の粒子と神秘):
+A pure darkness composition with subtle gold particles and mystical lighting.
+COMPOSITION:
+- Deep velvety black background filling the entire canvas
+- Floating golden particles, light dust, and ember sparks drifting slowly upward
+- A faint central glow as if a star is being born in the void
+- Subtle Mucha-style gold filigree at the very top and bottom edges only (NOT framing the whole image)
+- The center area is mostly empty pure black
+PALETTE:
+- Pure black, deep void
+- Warm gold particles
+- Faint amber central glow
+- Overall feeling: 召喚直前の静謐な暗闇、神秘の予感
+"""),
+
+    ("intro", """
+SUBJECT — INTRO (儀式の祭壇: タロット+5軸シンボル+ろうそく):
+A decorative Art Nouveau ceremonial altar composition.
+COMPOSITION:
+- Top section: ornamental arch with FIVE elemental symbols arranged in pentagonal pattern — flame (power/red), open book (mind/blue), crescent moon (spirit/violet), eye (shadow/dark-purple), heart (heart/rose-gold)
+- Middle section: empty (deep velvet midnight space with subtle stars) — for title overlay
+- Bottom section: TWO ornate ceremonial candles burning, with curling smoke rising into stylized incense patterns, decorated tarot cards fanned out across the bottom
+- Frame: thin gold ornamental borders with corner ornaments
+PALETTE:
+- Deep velvet midnight blue background
+- Gold accents on candles, symbols, and tarot cards
+- Soft amber candlelight glow at the bottom
+- Overall feeling: 神秘的な祭壇、儀式が始まる前の厳粛な空気
+"""),
+
+    ("forging", """
+SUBJECT — FORGING (称号鍛造中: 銀河・星雲・コズミック):
+A cosmic galaxy/nebula composition for the moment a title is being forged.
+COMPOSITION:
+- Deep cosmic space filling the entire image
+- Center: a swirling spiral galaxy or vortex of nebula clouds with bright core (this will be where the forging orb appears, so it must blend with a pulsing center)
+- Stars and constellations scattered throughout
+- Wispy nebula clouds in deep purple, violet, indigo, with hints of pink and gold
+- Mucha-style minimal gold filigree at very top and bottom edges (subtle, not dominant)
+PALETTE:
+- Deep cosmic palette: indigo, violet, ultramarine, with bright golden-white core
+- Stars: silver-white and gold
+- Nebula: soft purple/pink gradients
+- Overall feeling: コズミックな鍛造、宇宙の力で称号が生まれる
+"""),
+
+    ("reveal", """
+SUBJECT — REVEAL (称号公開: 神殿・栄光・荘厳):
+A grand temple/sanctuary composition for the title revelation moment.
+COMPOSITION:
+- Top section: ornate dome ceiling with rays of divine light streaming down through stylized openings
+- Two tall pillars at left and right, ornamented Art Nouveau columns with botanical capitals
+- Bottom section: marble floor or altar steps with rose petals scattered, laurel wreaths at the base
+- Center: empty space with subtle radiant glow (for ClassCard to be displayed)
+- Frame: ornamental gold borders
+PALETTE:
+- Warm ivory, gold, soft cream, with hints of rose
+- Radiant golden light beams from above
+- Pearl-white highlights on pillars
+- Overall feeling: 荘厳な神殿、称号が授けられる神聖な瞬間
+"""),
+
     ("part_1_minor_arcana", """
 SUBJECT — PART 1: MINOR ARCANA (daily life situations, four elemental suits):
 A decorative Art Nouveau composition for the introduction to "Minor Arcana" — themes of daily life, choice, growth.
