@@ -20,16 +20,22 @@ DST_DIR.mkdir(parents=True, exist_ok=True)
 MAX_DIM = 1080
 QUALITY = 80
 
-pattern = re.compile(r"^part_(\d+)(?:_.*)?$")
+part_pattern = re.compile(r"^part_(\d+)(?:_.*)?$")
+# 4 シーン背景は filename と同じで OK
+SCENE_NAMES = {"ceremony", "intro", "forging", "reveal"}
 
 converted = []
 for png in sorted(SRC_DIR.glob("*.png")):
-    m = pattern.match(png.stem)
-    if not m:
-        print(f"skip: {png.name} (does not match part_<num>)")
-        continue
-    part_num = m.group(1)
-    dst = DST_DIR / f"part_{part_num}.webp"
+    stem = png.stem
+    if stem in SCENE_NAMES:
+        dst = DST_DIR / f"{stem}.webp"
+    else:
+        m = part_pattern.match(stem)
+        if not m:
+            print(f"skip: {png.name} (unknown pattern)")
+            continue
+        part_num = m.group(1)
+        dst = DST_DIR / f"part_{part_num}.webp"
 
     img = Image.open(png)
     w, h = img.size
