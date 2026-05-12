@@ -734,24 +734,24 @@ Map画面のStella冒頭に表示。
 | Spellblade | 剣と魔を束ねる者よ | 二つの力を持つ者よ | どちらも手放さない君へ |
 | Sage | 知を愛する求道者よ | 真理を追う者よ | 問い続ける君へ |
 | Strategist | 盤上を見渡す軍師よ | 三手先を読む者よ | 静かに勝利を描く君へ |
-| Chancellor | 影の立役者よ | 糸を引く知恵者よ | 誰より全体が見える君へ |
+| Chancellor | 知の番人たる司書よ | 全てを束ねる者よ | 誰より全体が見える君へ |
 | Judge | 公正なる裁定者よ | 真実を見抜く眼よ | 曇りなき目を持つ君へ |
 | Wizard | 探究の魔術師よ | 未知を愛する者よ | 好奇心が止まらない君へ |
-| Cleric | 癒しの祈り手よ | 静かな光を灯す者よ | そこにいるだけで安心をくれる君へ |
+| Cleric | 癒しの神官よ | 静かな光を灯す者よ | そこにいるだけで安心をくれる君へ |
 | Astrologer | 星を読む旅人よ | 天空の地図を持つ者よ | 見えない線を辿る君へ |
 | Oracle | 静かなる預言者よ | 言葉になる前を知る者よ | 空気で全てを感じ取る君へ |
-| Fate Weaver | 運命を紡ぐ者よ | 糸を手繰る導き手よ | 人の才能を照らす君へ |
-| Druid | 森と語る者よ | 境界に立つ調和の番人よ | 静けさの中で充電する君へ |
-| Trickster | やあ、いたずら好きの君 | 退屈を壊す天才よ | 黙っていられない君へ |
-| Liberator | 鎖を断つ解放者よ | 声を上げる勇者よ | 自由を愛しすぎる君へ |
-| Phantom | 影に溶ける者よ | 気配を消す達人よ | 見えないのに確かにいる君へ |
+| Mentor | 人を導く師よ | 才能を見抜く者よ | 人の背中を押せる君へ |
+| Druid | 森と語る祭司よ | 境界に立つ守り手よ | 静けさの中で充電する君へ |
+| Performer | やあ、旅芸人の君 | 退屈を壊す天才よ | 黙っていられない君へ |
+| Revolutionary | 鎖を断つ革命家よ | 声を上げる者よ | 自由を愛しすぎる君へ |
+| Ninja | 影を駆ける忍びよ | 気配を消す達人よ | 見えないのに確かにいる君へ |
 | Rogue | 我が道を行く者よ | ルールの外に立つ者よ | 自分のやり方を貫く君へ |
 | Alchemist | 禁断の錬金術師よ | 混ぜるな危険の探求者よ | 何でも試してみたい君へ |
 | Bard | 歌と物語の語り手よ | 笑顔を連れてくる者よ | 場の空気を変えられる君へ |
 | Sorcerer | 感情が魔力になる者よ | 心の炎を燃やす者よ | 喜怒哀楽が全部パワーの君へ |
 | Enchanter | 人を魅了する者よ | 世界を書き換える魔法使いよ | 会うだけで何かが変わる君へ |
 | Emperor | 人が集まる王よ | 国を築く者よ | 理想を諦めない君へ |
-| Chronomancer | 時を操る者よ | 瞬間を永遠にする者よ | 思い出を宝物にする君へ |
+| Chronomancer | 時を綴る歴史家よ | 瞬間を永遠にする者よ | 思い出を宝物にする君へ |
 
 **Stellaフレーズ（英語版）**
 
@@ -764,24 +764,24 @@ Map画面のStella冒頭に表示。
 | Spellblade | Bearer of blade and spell | You who wield two powers | To you who refuse to choose just one |
 | Sage | Seeker of truth | You who chase wisdom | To you who never stop asking |
 | Strategist | Grand tactician | You who read three moves ahead | To you who quietly design victory |
-| Chancellor | The one behind the curtain | Master of threads | To you who see the whole picture |
+| Chancellor | Keeper of all knowledge | Library of the mind | To you who see the whole picture |
 | Judge | Arbiter of truth | Eyes that pierce deception | To you whose gaze never clouds |
 | Wizard | Wizard of wonder | You who love the unknown | To you whose curiosity never sleeps |
-| Cleric | Gentle healer | You who light a quiet flame | To you whose presence is comfort enough |
+| Cleric | Gentle priest | You who light a quiet flame | To you whose presence is comfort enough |
 | Astrologer | Star traveler | You who hold the celestial map | To you who trace the invisible lines |
 | Oracle | Silent prophet | You who know before words are spoken | To you who feel everything in the air |
-| Fate Weaver | Weaver of destiny | You who pull the thread of fate | To you who shine a light on hidden talent |
-| Druid | Whisperer of the forest | Guardian of the boundary | To you who recharge in stillness |
-| Trickster | Hey there, troublemaker | Genius of chaos | To you who can't keep quiet |
-| Liberator | Breaker of chains | Voice of the voiceless | To you who love freedom too much |
-| Phantom | One who melts into shadow | Master of disappearing | To you who are invisible yet always there |
+| Mentor | Guide of souls | You who see hidden talent | To you who push others forward |
+| Druid | Whisperer of the forest | Priest of nature | To you who recharge in stillness |
+| Performer | Hey there, wandering star | Master of changing the mood | To you who can't keep quiet |
+| Revolutionary | Breaker of chains | Voice that rises | To you who love freedom too much |
+| Ninja | Shadow walker | Master of vanishing | To you who are invisible yet always there |
 | Rogue | Lone wolf | You who stand outside the rules | To you who always do it your way |
 | Alchemist | Forbidden alchemist | You who mix the unmixable | To you who want to try everything |
 | Bard | Teller of tales | You who bring the smiles | To you who change the room just by walking in |
 | Sorcerer | You whose emotions are magic | You who burn with inner fire | To you whose every feeling is power |
 | Enchanter | The one who enchants | Spellcaster who rewrites the world | To you who change something just by meeting people |
 | Emperor | The one people gather around | Builder of kingdoms | To you who never give up on the dream |
-| Chronomancer | Master of time | You who make moments eternal | To you who turn memories into treasure |
+| Chronomancer | Chronicler of time | You who make moments eternal | To you who turn memories into treasure |
 
 ##### シェア機能
 
