@@ -73,6 +73,7 @@ flutter:
     - assets/solara_logo.png
     - assets/constellation-art/
     - assets/card-images/
+    - assets/class-cards/
     - assets/zodiac-symbols/
     - assets/menu_icons/
     - assets/catasterism_bg.webp
