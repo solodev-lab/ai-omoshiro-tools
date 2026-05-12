@@ -96,6 +96,8 @@ class _SanctuaryTitleDiagnosisPageState extends State<SanctuaryTitleDiagnosisPag
   late AnimationController _revealCtrl;
   late AnimationController _summoningCtrl;
   late AnimationController _forgingCtrl;
+  late AnimationController _flipCtrl;
+  bool _showShadowSide = false;
   String _revealTitleJP = '', _revealTitleEN = '';
   String _revealClassEN = '', _revealClassJP = '';
   String _revealLightJP = '', _revealShadowJP = '', _revealAxis = '', _revealCourt = '';
@@ -106,6 +108,7 @@ class _SanctuaryTitleDiagnosisPageState extends State<SanctuaryTitleDiagnosisPag
     _revealCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 7000));
     _summoningCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 4400));
     _forgingCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 4000));
+    _flipCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 800));
 
     // 召喚演出: 起動と同時に Haptic + アニメ開始、2.4秒後に Intro へ
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -121,6 +124,7 @@ class _SanctuaryTitleDiagnosisPageState extends State<SanctuaryTitleDiagnosisPag
     _revealCtrl.dispose();
     _summoningCtrl.dispose();
     _forgingCtrl.dispose();
+    _flipCtrl.dispose();
     super.dispose();
   }
 
@@ -774,7 +778,7 @@ class _SanctuaryTitleDiagnosisPageState extends State<SanctuaryTitleDiagnosisPag
                   const SizedBox(height: 40),
                   // 多段テキスト（同じ高さに重ね、フェードで切替）
                   SizedBox(
-                    height: 28,
+                    height: 44,
                     child: Stack(
                       alignment: Alignment.center,
                       children: [
@@ -811,76 +815,170 @@ class _SanctuaryTitleDiagnosisPageState extends State<SanctuaryTitleDiagnosisPag
     );
   }
 
-  Widget _buildReveal() => AnimatedBuilder(animation: _revealCtrl, builder: (_, child) {
-    // \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
-    // Reveal animation timeline (t = 0.0 \u2192 7.0):
-    //   0.0 \u2014 1.5 : Title JP (\u592a\u967d\u00d7\u6708\u306e\u4e8c\u3064\u540d) fade in + slide
-    //   0.3 \u2014 1.5 : Title EN
-    //   1.8 \u2014 2.8 : \u533a\u5207\u308a\u7dda\u304c\u4f38\u3073\u308b
-    //   2.8 \u2014 4.5 : ClassCard \u304c\u62e1\u5927\u3057\u306a\u304c\u3089\u51fa\u73fe\uff08\u30e1\u30a4\u30f3\u30d3\u30b8\u30e5\u30a2\u30eb\uff09
-    //   4.5 \u2014 5.8 : Light \u30c6\u30ad\u30b9\u30c8
-    //   5.8 \u2014 6.6 : \u4e00\u8a00\u30b7\u30e3\u30c9\u30fc
-    //   6.2 \u2014 7.0 : \u30dc\u30bf\u30f3\u7fa4
-    // \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+  // ══════════════════════════════════════════════════════
+  // Reveal — Light/Shadow 2面フリップ
+  //   Front (Light): ✦ Light の言葉 + クラス名 + カード
+  //   Back  (Shadow): t144.shadow タイトル + cls.shadowJP
+  //   タップで画面全体が Y軸回転、両面切替
+  // ══════════════════════════════════════════════════════
+  void _toggleShadowSide() {
+    if (_revealCtrl.value < 0.98) return;
+    HapticFeedback.mediumImpact();
+    if (_showShadowSide) {
+      _flipCtrl.reverse();
+    } else {
+      _flipCtrl.forward();
+    }
+    setState(() => _showShadowSide = !_showShadowSide);
+  }
+
+  Widget _buildReveal() => AnimatedBuilder(
+    animation: Listenable.merge([_revealCtrl, _flipCtrl]),
+    builder: (_, child) {
+      final flip = _flipCtrl.value;
+      final showBack = flip >= 0.5;
+      final angle = flip * 3.14159265;
+      return Transform(
+        alignment: Alignment.center,
+        transform: Matrix4.identity()
+          ..setEntry(3, 2, 0.0012)
+          ..rotateY(angle),
+        child: showBack
+            ? Transform(
+                alignment: Alignment.center,
+                transform: Matrix4.rotationY(3.14159265),
+                child: _buildRevealShadowSide(),
+              )
+            : _buildRevealLightSide(),
+      );
+    },
+  );
+
+  // ── Front: Light side ─────────────────────────────────
+  Widget _buildRevealLightSide() {
+    // Reveal animation timeline (t = 0.0 → 7.0):
+    //   0.0 — 1.5 : Light の言葉 fade in + slide
+    //   1.0 — 2.0 : クラス名 (JP + EN)
+    //   2.0 — 3.0 : 区切り線が伸びる
+    //   2.8 — 4.5 : ClassCard が拡大しながら出現
+    //   4.5 — 5.5 : Title EN (太陽×月の二つ名 英)
+    //   5.8 — 6.6 : シャドー誘導ヒント
+    //   6.2 — 7.0 : ボタン群
     final t = _revealCtrl.value * 7;
     final cls = title_data.getClassByAxisCourt(_revealAxis, _revealCourt);
 
-    return Center(child: SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 28),
-      child: Column(mainAxisSize: MainAxisSize.min, children: [
-        // \u2500\u2500 Title JP \u2500\u2500
-        Opacity(opacity: (t / 1.5).clamp(0.0, 1.0),
-          child: Transform.translate(offset: Offset(0, 20 * (1 - (t / 1.5).clamp(0.0, 1.0))),
-            child: Text(_revealTitleJP, textAlign: TextAlign.center, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: Color(0xFFF9D976), height: 1.4)))),
-        const SizedBox(height: 4),
-        // \u2500\u2500 Title EN \u2500\u2500
-        Opacity(opacity: ((t - 0.3) / 1.2).clamp(0.0, 1.0),
-          child: Text(_revealTitleEN, textAlign: TextAlign.center, style: const TextStyle(fontSize: 13, color: Color(0x80F9D976), letterSpacing: 2))),
-        // \u2500\u2500 divider \u2500\u2500
-        Container(width: 200 * ((t - 1.8) / 1.0).clamp(0.0, 1.0), height: 1, margin: const EdgeInsets.symmetric(vertical: 18),
-          decoration: const BoxDecoration(gradient: LinearGradient(colors: [Colors.transparent, Color(0xFFF9D976), Colors.transparent]))),
-        // \u2500\u2500 ClassCard (\u30e1\u30a4\u30f3\u30d3\u30b8\u30e5\u30a2\u30eb) \u2500\u2500
-        if (cls != null)
-          Opacity(opacity: ((t - 2.8) / 1.5).clamp(0.0, 1.0),
-            child: Transform.scale(scale: 0.85 + 0.15 * ((t - 2.8) / 1.5).clamp(0.0, 1.0),
-              child: ClassCard(
-                classData: cls,
-                width: 260,
-                mode: ClassCardMode.none,
-                showGlow: true,
-              ))),
-        const SizedBox(height: 14),
-        // \u2500\u2500 \u30af\u30e9\u30b9\u540d \u2500\u2500
-        if (cls != null)
-          Opacity(opacity: ((t - 3.3) / 0.8).clamp(0.0, 1.0),
+    return GestureDetector(
+      onTap: _toggleShadowSide,
+      behavior: HitTestBehavior.opaque,
+      child: Center(child: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 28),
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          // ── Light の言葉 (最上段、ゴールド) ──
+          Opacity(opacity: (t / 1.5).clamp(0.0, 1.0),
+            child: Transform.translate(offset: Offset(0, 20 * (1 - (t / 1.5).clamp(0.0, 1.0))),
+              child: Text('✦ $_revealLightJP ✦', textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: Color(0xFFF9D976), height: 1.5, letterSpacing: 1)))),
+          const SizedBox(height: 10),
+          // ── クラス名 ──
+          if (cls != null)
+            Opacity(opacity: ((t - 1.0) / 1.0).clamp(0.0, 1.0),
+              child: Column(children: [
+                Text(_revealClassJP, textAlign: TextAlign.center,
+                  style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w700, color: Color(0xFFEAEAEA), letterSpacing: 6)),
+                const SizedBox(height: 2),
+                Text(_revealClassEN, textAlign: TextAlign.center,
+                  style: const TextStyle(fontSize: 11, color: Color(0x80EAEAEA), letterSpacing: 3)),
+              ])),
+          // ── divider ──
+          Container(width: 200 * ((t - 2.0) / 1.0).clamp(0.0, 1.0), height: 1, margin: const EdgeInsets.symmetric(vertical: 18),
+            decoration: const BoxDecoration(gradient: LinearGradient(colors: [Colors.transparent, Color(0xFFF9D976), Colors.transparent]))),
+          // ── ClassCard (メインビジュアル) ──
+          if (cls != null)
+            Opacity(opacity: ((t - 2.8) / 1.5).clamp(0.0, 1.0),
+              child: Transform.scale(scale: 0.85 + 0.15 * ((t - 2.8) / 1.5).clamp(0.0, 1.0),
+                child: ClassCard(
+                  classData: cls,
+                  width: 260,
+                  mode: ClassCardMode.none,
+                  showGlow: true,
+                ))),
+          const SizedBox(height: 14),
+          // ── Title EN (太陽×月の英語二つ名) ──
+          Opacity(opacity: ((t - 4.5) / 1.0).clamp(0.0, 1.0),
+            child: Text(_revealTitleEN, textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 13, color: Color(0x80F9D976), letterSpacing: 2, fontStyle: FontStyle.italic))),
+          const SizedBox(height: 18),
+          // ── シャドー誘導ヒント ──
+          Opacity(opacity: ((t - 5.8) / 0.8).clamp(0.0, 1.0),
+            child: const Text('✦ タップしてシャドーを見る ✦',
+              style: TextStyle(fontSize: 12, color: Color(0xAAF9D976), letterSpacing: 3))),
+          const SizedBox(height: 24),
+          // ── ボタン群 ──
+          Opacity(opacity: ((t - 6.2) / 0.8).clamp(0.0, 1.0),
             child: Column(children: [
-              Text(_revealClassJP, textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: Color(0xFFEAEAEA), letterSpacing: 4)),
-              const SizedBox(height: 2),
-              Text(_revealClassEN, textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 11, color: Color(0x80EAEAEA), letterSpacing: 3)),
+              GestureDetector(onTap: _accept, child: Container(width: double.infinity, padding: const EdgeInsets.symmetric(vertical: 14),
+                decoration: BoxDecoration(borderRadius: BorderRadius.circular(14), gradient: const LinearGradient(colors: [Color(0xFFF9D976), Color(0xFFE8A840)])),
+                child: const Center(child: Text('これでいく', style: TextStyle(color: Color(0xFF0A0A14), fontSize: 15, fontWeight: FontWeight.w700))))),
+              const SizedBox(height: 12),
+              GestureDetector(onTap: () => setState(() { _roundIdx = 0; _scores.updateAll((_, v) => 0); _selectedCard = null; _screen = 'intro'; _revealCtrl.reset(); _flipCtrl.reset(); _showShadowSide = false; }),
+                child: const Text('もう一度診断する', style: TextStyle(fontSize: 15, color: Color(0xFFACACAC), decoration: TextDecoration.underline))),
             ])),
-        const SizedBox(height: 18),
-        // \u2500\u2500 Light \u30c6\u30ad\u30b9\u30c8 \u2500\u2500
-        Opacity(opacity: ((t - 4.5) / 1.0).clamp(0.0, 1.0),
-          child: Text('\u2726 $_revealLightJP', textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 14, color: Color(0xFFACACAC), height: 1.6))),
-        const SizedBox(height: 6),
-        // \u2500\u2500 Shadow (\u4e00\u8a00) \u30c6\u30ad\u30b9\u30c8 \u2500\u2500
-        Opacity(opacity: ((t - 5.4) / 1.0).clamp(0.0, 1.0),
-          child: Text('\u2726 $_revealShadowJP', textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 14, color: Color(0xFFACACAC), height: 1.6, fontStyle: FontStyle.italic))),
-        const SizedBox(height: 28),
-        // \u2500\u2500 \u30dc\u30bf\u30f3\u7fa4 \u2500\u2500
-        Opacity(opacity: ((t - 6.2) / 0.8).clamp(0.0, 1.0),
-          child: Column(children: [
+        ]))),
+    );
+  }
+
+  // ── Back: Shadow side ─────────────────────────────────
+  Widget _buildRevealShadowSide() {
+    final cls = title_data.getClassByAxisCourt(_revealAxis, _revealCourt);
+    return GestureDetector(
+      onTap: _toggleShadowSide,
+      behavior: HitTestBehavior.opaque,
+      child: Center(child: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 28),
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          // ── 一言シャドー (タイトル、アメジスト) ──
+          Text('✦ $_revealTitleJP ✦', textAlign: TextAlign.center,
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: Color(0xFFC9A8E0), height: 1.5, letterSpacing: 1)),
+          const SizedBox(height: 10),
+          // ── クラス名 (SHADOW SIDE) ──
+          if (cls != null)
+            Column(children: [
+              Text(_revealClassJP, textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w700, color: Color(0xFFD7BCEC), letterSpacing: 6)),
+              const SizedBox(height: 2),
+              Text('SHADOW SIDE', textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 11, color: const Color(0xFFC9A8E0).withValues(alpha: 0.55), letterSpacing: 4)),
+            ]),
+          // ── divider (アメジスト) ──
+          Container(width: 200, height: 1, margin: const EdgeInsets.symmetric(vertical: 18),
+            decoration: const BoxDecoration(gradient: LinearGradient(colors: [Colors.transparent, Color(0xFFC9A8E0), Colors.transparent]))),
+          // ── ClassCard (Shadow mode) ──
+          if (cls != null)
+            ClassCard(
+              classData: cls,
+              width: 260,
+              mode: ClassCardMode.shadow,
+              showGlow: true,
+            ),
+          const SizedBox(height: 18),
+          // ── クラス Shadow テキスト ──
+          Text('✦ $_revealShadowJP ✦', textAlign: TextAlign.center,
+            style: const TextStyle(fontSize: 14, color: Color(0xFFD7BCEC), height: 1.6, fontStyle: FontStyle.italic)),
+          const SizedBox(height: 20),
+          // ── ライト誘導ヒント ──
+          const Text('◀ タップしてライトに戻る',
+            style: TextStyle(fontSize: 12, color: Color(0xAAC9A8E0), letterSpacing: 3)),
+          const SizedBox(height: 24),
+          // ── ボタン群 (シャドー配色) ──
+          Column(children: [
             GestureDetector(onTap: _accept, child: Container(width: double.infinity, padding: const EdgeInsets.symmetric(vertical: 14),
-              decoration: BoxDecoration(borderRadius: BorderRadius.circular(14), gradient: const LinearGradient(colors: [Color(0xFFF9D976), Color(0xFFE8A840)])),
-              child: const Center(child: Text('\u3053\u308c\u3067\u3044\u304f', style: TextStyle(color: Color(0xFF0A0A14), fontSize: 15, fontWeight: FontWeight.w700))))),
+              decoration: BoxDecoration(borderRadius: BorderRadius.circular(14), gradient: const LinearGradient(colors: [Color(0xFFC9A8E0), Color(0xFF8C5BC0)])),
+              child: const Center(child: Text('これでいく', style: TextStyle(color: Color(0xFF0A0A14), fontSize: 15, fontWeight: FontWeight.w700))))),
             const SizedBox(height: 12),
-            GestureDetector(onTap: () => setState(() { _roundIdx = 0; _scores.updateAll((_, v) => 0); _selectedCard = null; _screen = 'intro'; _revealCtrl.reset(); }),
-              child: const Text('\u3082\u3046\u4e00\u5ea6\u8a3a\u65ad\u3059\u308b', style: TextStyle(fontSize: 15, color: Color(0xFFACACAC), decoration: TextDecoration.underline))),
-          ])),
-      ])));
-  });
+            GestureDetector(onTap: () => setState(() { _roundIdx = 0; _scores.updateAll((_, v) => 0); _selectedCard = null; _screen = 'intro'; _revealCtrl.reset(); _flipCtrl.reset(); _showShadowSide = false; }),
+              child: const Text('もう一度診断する', style: TextStyle(fontSize: 15, color: Color(0xFFACACAC), decoration: TextDecoration.underline))),
+          ]),
+        ]))),
+    );
+  }
 }
