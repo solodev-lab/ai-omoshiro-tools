@@ -159,18 +159,19 @@ class ClassCard extends StatelessWidget {
     final hasTitle = titleOneLine.isNotEmpty;
 
     // ── 固定高さで Light/Shadow のクラス名位置を一致させる ──
-    // 一言 → クラス名 → クラステキスト の縦書き連結用に拡大
+    // オーバーレイはカード下部 1/3 ほどに収め、絵が見える領域を最大化
     final isSmall = width < 200;
-    // 一言ありなら大きめ、なしなら従来通り
-    final overlayHeight = width * (hasTitle ? 0.84 : 0.72);
-    final fsTitleOne = isSmall ? 13.0 : 17.0;
-    final fsClassJP = isSmall ? 16.0 : 22.0;
-    final fsClassEN = isSmall ? 9.0 : 11.0;
-    final fsText = isSmall ? 10.0 : 13.0;
+    // 280px の場合: 280 * 0.62 = 173.6, カード全体 420 の 41% を占有
+    // (一言なしは少しコンパクト)
+    final overlayHeight = width * (hasTitle ? 0.62 : 0.52);
+    final fsTitleOne = isSmall ? 12.0 : 15.0;
+    final fsClassJP = isSmall ? 16.0 : 21.0;
+    final fsClassEN = isSmall ? 9.0 : 10.0;
+    final fsText = isSmall ? 10.0 : 12.0;
 
     return Container(
       height: overlayHeight,
-      padding: const EdgeInsets.fromLTRB(14, 28, 14, 18),
+      padding: const EdgeInsets.fromLTRB(10, 14, 10, 16),
       decoration: BoxDecoration(
         borderRadius: const BorderRadius.vertical(bottom: Radius.circular(16)),
         gradient: LinearGradient(
@@ -185,7 +186,7 @@ class ClassCard extends StatelessWidget {
       ),
       child: Column(
         mainAxisSize: MainAxisSize.max,
-        mainAxisAlignment: MainAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.end, // 下寄せ。上に余白を作る
         children: [
           // 一言 (任意)「省察に長けた」「謎キャラぶって脳内ダメ出し中な」
           if (hasTitle) ...[
@@ -197,13 +198,13 @@ class ClassCard extends StatelessWidget {
                 fontSize: fsTitleOne,
                 fontWeight: FontWeight.w600,
                 height: 1.3,
-                letterSpacing: 0.5,
+                letterSpacing: 0.3,
                 shadows: const [Shadow(color: Colors.black, blurRadius: 4)],
               ),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 3),
           ],
           // クラス名 JP (大) — 一言の次の行に来て「省察に長けた / 騎士」と読める
           Text(
@@ -219,7 +220,7 @@ class ClassCard extends StatelessWidget {
             ),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 2),
+          const SizedBox(height: 1),
           // クラス名 EN (小)
           Text(
             isEnglish ? '— ${classData.axis.toUpperCase()} ${classData.court.toUpperCase()} —' : classNameEN,
@@ -232,24 +233,20 @@ class ClassCard extends StatelessWidget {
             textAlign: TextAlign.center,
           ),
           if (text.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            // Light/Shadow クラステキスト (固定領域で揃える)
-            Expanded(
-              child: Center(
-                child: Text(
-                  text,
-                  style: TextStyle(
-                    color: accentColor.withValues(alpha: 0.88),
-                    fontSize: fsText,
-                    fontStyle: isLight ? FontStyle.normal : FontStyle.italic,
-                    height: 1.5,
-                    letterSpacing: 0.3,
-                  ),
-                  textAlign: TextAlign.center,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
+            const SizedBox(height: 6),
+            // Light/Shadow クラステキスト — 折返し可で全文表示
+            Text(
+              text,
+              style: TextStyle(
+                color: accentColor.withValues(alpha: 0.88),
+                fontSize: fsText,
+                fontStyle: isLight ? FontStyle.normal : FontStyle.italic,
+                height: 1.4,
+                letterSpacing: 0,
               ),
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
             ),
           ],
         ],
