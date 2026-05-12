@@ -126,7 +126,11 @@ class _SanctuaryTitleDiagnosisPageState extends State<SanctuaryTitleDiagnosisPag
 
   void _beginRounds() {
     HapticFeedback.mediumImpact();
-    setState(() { _screen = 'round'; _lastPart = _rounds[0]['part'] as int; });
+    _lastPart = _rounds[0]['part'] as int; // = 1
+    setState(() => _screen = 'partTrans');
+    Future.delayed(const Duration(milliseconds: 3300), () {
+      if (mounted) setState(() => _screen = 'round');
+    });
   }
 
   void _selectCard(int idx, String axisOrCourt) {
@@ -166,7 +170,7 @@ class _SanctuaryTitleDiagnosisPageState extends State<SanctuaryTitleDiagnosisPag
           HapticFeedback.mediumImpact();
           setState(() => _screen = 'partTrans');
           _lastPart = nextPart;
-          Future.delayed(const Duration(seconds: 2), () { if (mounted) setState(() => _screen = 'round'); });
+          Future.delayed(const Duration(milliseconds: 3300), () { if (mounted) setState(() => _screen = 'round'); });
         }
       } else {
         HapticFeedback.heavyImpact();
