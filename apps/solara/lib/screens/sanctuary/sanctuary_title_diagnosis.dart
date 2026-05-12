@@ -314,10 +314,105 @@ class _SanctuaryTitleDiagnosisPageState extends State<SanctuaryTitleDiagnosisPag
     ]);
   }
 
-  Widget _buildPartTrans() => Center(child: TweenAnimationBuilder<double>(
-    tween: Tween(begin: 0.0, end: 1.0), duration: const Duration(seconds: 1),
-    builder: (_, v, child) => Opacity(opacity: v, child: Text(_partNames[_lastPart] ?? '',
-      style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: Color(0xFFF9D976), letterSpacing: 3)))));
+  Widget _buildPartTrans() {
+    final raw = _partNames[_lastPart] ?? '';
+    final parts = raw.split(':').map((s) => s.trim()).toList();
+    final partNum = parts.isNotEmpty ? parts[0] : raw;       // "PART 2"
+    final partTitle = parts.length > 1 ? parts[1] : '';      // "MAJOR ARCANA"
+
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        // ── 背景画像 (PART別、フォールバックでグラデーション) ──
+        Image.asset(
+          'assets/diagnosis-bg/part_$_lastPart.webp',
+          fit: BoxFit.cover,
+          errorBuilder: (ctx, err, stack) => Container(
+            decoration: const BoxDecoration(
+              gradient: RadialGradient(
+                center: Alignment.center,
+                radius: 1.2,
+                colors: [Color(0xFF1A0820), Color(0xFF050208)],
+              ),
+            ),
+          ),
+        ),
+        // ── 暗いビネット (タイトル可読性) ──
+        Container(
+          decoration: BoxDecoration(
+            gradient: RadialGradient(
+              center: Alignment.center,
+              radius: 1.0,
+              colors: [
+                Colors.black.withValues(alpha: 0.25),
+                Colors.black.withValues(alpha: 0.85),
+              ],
+            ),
+          ),
+        ),
+        // ── タイトル (中央2行配置) ──
+        Center(
+          child: TweenAnimationBuilder<double>(
+            tween: Tween(begin: 0.0, end: 1.0),
+            duration: const Duration(milliseconds: 900),
+            curve: Curves.easeOut,
+            builder: (ctx, v, child) => Opacity(
+              opacity: v,
+              child: Transform.translate(
+                offset: Offset(0, 12 * (1 - v)),
+                child: child,
+              ),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // PART X (上、小さめ)
+                Text(
+                  partNum,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: Color(0xCCF9D976),
+                    letterSpacing: 8,
+                    fontWeight: FontWeight.w300,
+                    shadows: [Shadow(color: Colors.black, blurRadius: 6)],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                // 装飾ライン
+                Container(
+                  width: 80,
+                  height: 1,
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [Colors.transparent, Color(0xFFF9D976), Colors.transparent],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                // MAJOR ARCANA (下、大きく)
+                Text(
+                  partTitle,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 28,
+                    color: Color(0xFFF9D976),
+                    letterSpacing: 6,
+                    fontWeight: FontWeight.w700,
+                    height: 1.4,
+                    shadows: [
+                      Shadow(color: Colors.black, blurRadius: 12),
+                      Shadow(color: Color(0x66F9D976), blurRadius: 24),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
 
   Widget _buildForging() => Center(child: Column(mainAxisSize: MainAxisSize.min, children: [
     TweenAnimationBuilder<double>(tween: Tween(begin: 0.9, end: 1.15), duration: const Duration(seconds: 1), curve: Curves.easeInOut,
