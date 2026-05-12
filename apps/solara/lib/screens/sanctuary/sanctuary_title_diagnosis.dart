@@ -101,6 +101,7 @@ class _SanctuaryTitleDiagnosisPageState extends State<SanctuaryTitleDiagnosisPag
   String _revealTitleJP = '', _revealTitleEN = '';
   String _revealClassEN = '', _revealClassJP = '';
   String _revealLightJP = '', _revealShadowJP = '', _revealAxis = '', _revealCourt = '';
+  String _revealClsLightJP = ''; // クラス Light テキスト (cls.lightJP)
 
   @override
   void initState() {
@@ -239,6 +240,7 @@ class _SanctuaryTitleDiagnosisPageState extends State<SanctuaryTitleDiagnosisPag
     _revealTitleJP = t144?['shadow'] ?? '${sunA?['jp'] ?? ''}${moonN?['jp'] ?? ''}';
     _revealTitleEN = '${sunA?['en'] ?? ''} ${moonN?['en'] ?? ''}';
     _revealLightJP = t144?['light'] ?? (sunA?['jp'] ?? '');
+    _revealClsLightJP = cls.lightJP;
     _revealShadowJP = cls.shadowJP;
     _revealClassEN = cls.nameEN;
     _revealClassJP = cls.nameJP;
@@ -902,14 +904,19 @@ class _SanctuaryTitleDiagnosisPageState extends State<SanctuaryTitleDiagnosisPag
                   mode: ClassCardMode.none,
                   showGlow: true,
                 ))),
-          const SizedBox(height: 14),
-          // ── Title EN (太陽×月の英語二つ名) ──
+          const SizedBox(height: 16),
+          // ── クラス Light テキスト (カード下、Shadow 面と対をなす) ──
           Opacity(opacity: ((t - 4.5) / 1.0).clamp(0.0, 1.0),
+            child: Text('✦ $_revealClsLightJP ✦', textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 14, color: Color(0xFFF9D976), height: 1.6, fontStyle: FontStyle.italic))),
+          const SizedBox(height: 8),
+          // ── Title EN (太陽×月の英語二つ名) ──
+          Opacity(opacity: ((t - 5.0) / 1.0).clamp(0.0, 1.0),
             child: Text(_revealTitleEN, textAlign: TextAlign.center,
               style: const TextStyle(fontSize: 13, color: Color(0x80F9D976), letterSpacing: 2, fontStyle: FontStyle.italic))),
           const SizedBox(height: 18),
           // ── シャドー誘導ヒント ──
-          Opacity(opacity: ((t - 5.8) / 0.8).clamp(0.0, 1.0),
+          Opacity(opacity: ((t - 6.0) / 0.8).clamp(0.0, 1.0),
             child: const Text('✦ タップしてシャドーを見る ✦',
               style: TextStyle(fontSize: 12, color: Color(0xAAF9D976), letterSpacing: 3))),
           const SizedBox(height: 24),
@@ -952,12 +959,12 @@ class _SanctuaryTitleDiagnosisPageState extends State<SanctuaryTitleDiagnosisPag
           // ── divider (アメジスト) ──
           Container(width: 200, height: 1, margin: const EdgeInsets.symmetric(vertical: 18),
             decoration: const BoxDecoration(gradient: LinearGradient(colors: [Colors.transparent, Color(0xFFC9A8E0), Colors.transparent]))),
-          // ── ClassCard (Shadow mode) ──
+          // ── ClassCard (mode=none: 外側のテキスト群と重複しないよう画像のみ) ──
           if (cls != null)
             ClassCard(
               classData: cls,
               width: 260,
-              mode: ClassCardMode.shadow,
+              mode: ClassCardMode.none,
               showGlow: true,
             ),
           const SizedBox(height: 18),
