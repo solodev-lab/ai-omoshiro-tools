@@ -272,7 +272,12 @@ class _DailyTransitChip extends StatelessWidget {
   }
 }
 
-/// チップの周囲に静的に描画する halo。RadialGradient で焼き込み (saveLayer 不要)。
+/// チップの周囲に静的に描画する halo。
+///
+/// 旧実装は RadialGradient(円形) を Positioned で長方形領域に投影していたため、
+/// ボタン幅が高さより大きい時に半径 0.7 の境界が左右端に縦帯として露出していた。
+/// BoxShadow に置き換え、ボタン外周の長方形に沿ったグローのみを描画する
+/// (内部に放射状の濃淡が発生しない)。
 class _ChipHalo extends StatelessWidget {
   const _ChipHalo();
 
@@ -282,15 +287,20 @@ class _ChipHalo extends StatelessWidget {
     return DecoratedBox(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(14),
-        gradient: RadialGradient(
-          radius: 0.7,
-          colors: [
-            glow.withValues(alpha: 0.45),
-            glow.withValues(alpha: 0.18),
-            glow.withValues(alpha: 0.0),
-          ],
-          stops: const [0.30, 0.60, 1.00],
-        ),
+        boxShadow: [
+          // 強めの内側グロー
+          BoxShadow(
+            color: glow.withValues(alpha: 0.45),
+            blurRadius: 14,
+            spreadRadius: 1,
+          ),
+          // 広がる柔らかい外側グロー
+          BoxShadow(
+            color: glow.withValues(alpha: 0.22),
+            blurRadius: 26,
+            spreadRadius: 2,
+          ),
+        ],
       ),
     );
   }
