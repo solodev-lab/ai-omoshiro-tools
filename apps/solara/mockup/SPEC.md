@@ -526,16 +526,16 @@ assets/
 | Page | Cleric | いるだけで周りが安心する | 優しすぎて全員の相談役になる |
 | Knight | Astrologer | 見えないつながりを見つけるのが得意 | 星が気になりすぎて空ばかり見ている |
 | Queen | Oracle | 言葉にする前に空気で分かる | 感受性が高すぎて映画で毎回泣く |
-| King | Fate Weaver | 人の才能を見抜いて背中を押せる | おせっかいが止まらない |
+| King | Mentor | 人の才能を見抜いて背中を押せる | おせっかいが止まらない |
 | 混合 | Druid | 自然の中にいると充電できる | 一人の時間が好きすぎて誘いを忘れる |
 
 ***Shadow軸（影・自由・変革）***
 
 | 人物傾向 | クラス | Light | Shadow |
 |----------|--------|-------|--------|
-| Page | Trickster | 退屈な場の空気を一瞬で変える | 面白いことを思いつくと黙っていられない |
-| Knight | Liberator | 「おかしい」と思ったら声を上げる | 自由すぎてスケジュールが守れない |
-| Queen | Phantom | 気配を消すのが天才的にうまい | 存在感を消すのが上手すぎて探される |
+| Page | Performer | 退屈な場の空気を一瞬で変える | 面白いことを思いつくと黙っていられない |
+| Knight | Revolutionary | 「おかしい」と思ったら声を上げる | 自由すぎてスケジュールが守れない |
+| Queen | Ninja | 気配を消すのが天才的にうまい | 存在感を消すのが上手すぎて探される |
 | King | Rogue | 自分のやり方で結果を出す | マイペースすぎて周りがハラハラする |
 | 混合 | Alchemist | 関係なさそうなものを組み合わせて化ける | 好奇心が強すぎて余計なものまで作る |
 
@@ -566,11 +566,11 @@ assets/
 | Cleric | People feel safe just being near them | Too kind — accidentally becomes everyone's therapist |
 | Astrologer | Finds invisible connections everywhere | Stares at the sky so much, forgets the ground |
 | Oracle | Reads the room before a word is spoken | So sensitive they cry at every movie |
-| Fate Weaver | Spots hidden talent and pushes people forward | Can't stop meddling |
+| Mentor | Spots hidden talent and pushes people forward | Can't stop meddling |
 | Druid | Recharges in nature like a solar panel | Loves alone time so much, forgets to reply |
-| Trickster | Flips a boring room upside down in seconds | Can't keep a good idea to themselves |
-| Liberator | Speaks up the moment something feels off | Too free-spirited to keep a schedule |
-| Phantom | Disappears so well it's basically a superpower | So good at vanishing, people file missing reports |
+| Performer | Flips a boring room upside down in seconds | Can't keep a good idea to themselves |
+| Revolutionary | Speaks up the moment something feels off | Too free-spirited to keep a schedule |
+| Ninja | Disappears so well it's basically a superpower | So good at vanishing, people file missing reports |
 | Rogue | Gets results their own way, every time | So independent it makes everyone nervous |
 | Alchemist | Combines random things into something brilliant | Too curious — builds stuff nobody asked for |
 | Bard | Makes every person in the room smile | Empathy so strong they ugly-cry for others |
@@ -800,7 +800,7 @@ Map画面のStella冒頭に表示。
 ├── COSMIC PROFILE
 │   ├── 名前
 │   ├── 称号表示（常時表示）
-│   │   「風を駆ける灯台 — Trickster」
+│   │   「風を駆ける灯台 — Performer」
 │   └── 出生データ（日付・時刻・場所）
 ├── TITLE DIAGNOSIS
 │   ├── 未診断 → 「✦ あなたの称号を受け取る」ゴールドボタン
