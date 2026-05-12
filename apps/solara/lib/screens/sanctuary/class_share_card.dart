@@ -13,22 +13,25 @@ import '../../widgets/class_card.dart';
 ///
 /// 用途: 「I got X, what did you get?」拡散用の縦長画像生成。
 /// Instagram Stories (9:16) 向け 1080×1920 でレンダリング、OS標準シェアシートで共有。
+///
+/// レイアウト (Light面/Shadow面 切替):
+///   上段: SOLARA / Your Title / ✦ 一言 (t144) ✦ / TitleEN
+///   中央: ClassCard (mode=none、絵のみで完全表示)
+///   下段: クラス名 JP/EN / ✦ クラステキスト ✦ / What is yours?
 class ClassShareCardPage extends StatefulWidget {
   final String axis;
   final String court;
-  final String titleJP;
-  final String titleEN;
-  final String lightJP;
-  final String shadowJP;
+  final String titleLightJP; // 一言 Light (t144.light) 例: 「省察に長けた」
+  final String titleShadowJP; // 一言 Shadow (t144.shadow) 例: 「謎キャラぶって脳内ダメ出し中な」
+  final String titleEN; // 太陽×月 英語二つ名 例: 「Abyssal Lighthouse」
 
   const ClassShareCardPage({
     super.key,
     required this.axis,
     required this.court,
-    required this.titleJP,
+    required this.titleLightJP,
+    required this.titleShadowJP,
     required this.titleEN,
-    required this.lightJP,
-    required this.shadowJP,
   });
 
   @override
@@ -61,6 +64,10 @@ class _ClassShareCardPageState extends State<ClassShareCardPage> {
     }
   }
 
+  /// Light/Shadow 面のアクセント色
+  Color get _accentColor =>
+      _showShadow ? const Color(0xFFC9A8E0) : const Color(0xFFF9D976);
+
   Future<void> _share() async {
     if (_sharing) return;
     setState(() => _sharing = true);
@@ -78,9 +85,10 @@ class _ClassShareCardPageState extends State<ClassShareCardPage> {
       final file = await File('${tmpDir.path}/solara_title.png').create();
       await file.writeAsBytes(byteData.buffer.asUint8List());
 
+      final titleForShare = _showShadow ? widget.titleShadowJP : widget.titleLightJP;
       await SharePlus.instance.share(ShareParams(
         files: [XFile(file.path)],
-        text: '私の称号は「${widget.titleJP}」— ${_cls?.nameJP ?? ""}\n#Solara',
+        text: '私の称号は「$titleForShare」— ${_cls?.nameJP ?? ""}\n#Solara',
       ));
     } catch (e) {
       if (mounted) {
@@ -109,7 +117,7 @@ class _ClassShareCardPageState extends State<ClassShareCardPage> {
             onPressed: () => setState(() => _showShadow = !_showShadow),
             child: Text(
               _showShadow ? 'LIGHT 面' : 'SHADOW 面',
-              style: const TextStyle(color: Color(0xFFF9D976)),
+              style: TextStyle(color: _accentColor),
             ),
           ),
         ],
@@ -144,10 +152,14 @@ class _ClassShareCardPageState extends State<ClassShareCardPage> {
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(14),
-                          gradient: const LinearGradient(
-                            colors: [Color(0xFFF9D976), Color(0xFFE8A840)],
+                          gradient: LinearGradient(
+                            colors: _showShadow
+                                ? const [Color(0xFFC9A8E0), Color(0xFF8C5BC0)]
+                                : const [Color(0xFFF9D976), Color(0xFFE8A840)],
                           ),
-                          boxShadow: const [BoxShadow(color: Color(0x40F9D976), blurRadius: 24)],
+                          boxShadow: [
+                            BoxShadow(color: _accentColor.withValues(alpha: 0.25), blurRadius: 24),
+                          ],
                         ),
                         child: Center(
                           child: _sharing
@@ -175,6 +187,11 @@ class _ClassShareCardPageState extends State<ClassShareCardPage> {
 
   /// シェア用画像の中身（縦長 9:16）
   Widget _buildShareImage(title_data.TitleClass cls) {
+    // Light/Shadow 切替で表示する値
+    final titleOneLine = _showShadow ? widget.titleShadowJP : widget.titleLightJP;
+    final classText = _showShadow ? cls.shadowJP : cls.lightJP;
+    final accent = _accentColor;
+
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -185,75 +202,80 @@ class _ClassShareCardPageState extends State<ClassShareCardPage> {
         borderRadius: BorderRadius.circular(20),
       ),
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 28, 20, 28),
+        padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            // ── 上部 ──
+            // ══════ 上段: SOLARA + 一言 ══════
             Column(
               children: [
-                const Text(
+                Text(
                   'S O L A R A',
                   style: TextStyle(
-                    color: Color(0xFFF9D976),
-                    fontSize: 14,
-                    letterSpacing: 8,
+                    color: accent,
+                    fontSize: 13,
+                    letterSpacing: 7,
                     fontWeight: FontWeight.w300,
                   ),
                 ),
-                const SizedBox(height: 6),
-                const Text(
-                  '— Your Title —',
+                const SizedBox(height: 4),
+                Text(
+                  _showShadow ? '— Shadow Title —' : '— Your Title —',
                   style: TextStyle(
-                    color: Color(0x80F9D976),
-                    fontSize: 11,
+                    color: accent.withValues(alpha: 0.55),
+                    fontSize: 10,
                     letterSpacing: 3,
                   ),
                 ),
-                const SizedBox(height: 14),
+                const SizedBox(height: 12),
+                // 一言 (t144.light or t144.shadow)
                 Text(
-                  widget.titleJP,
+                  '✦ $titleOneLine ✦',
                   textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    color: Color(0xFFF9D976),
-                    fontSize: 22,
+                  style: TextStyle(
+                    color: accent,
+                    fontSize: 18,
                     fontWeight: FontWeight.w700,
                     height: 1.4,
+                    letterSpacing: 1,
                   ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: 4),
                 Text(
                   widget.titleEN,
                   textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    color: Color(0x99F9D976),
-                    fontSize: 12,
+                  style: TextStyle(
+                    color: accent.withValues(alpha: 0.6),
+                    fontSize: 11,
                     letterSpacing: 2,
+                    fontStyle: FontStyle.italic,
                   ),
                 ),
               ],
             ),
 
-            // ── ClassCard 中央 ──
+            // ══════ 中央: ClassCard (mode=none で絵だけ完全表示) ══════
             Flexible(
               child: ClassCard(
                 classData: cls,
                 width: 220,
-                mode: _showShadow ? ClassCardMode.shadow : ClassCardMode.light,
+                mode: ClassCardMode.none,
                 showGlow: true,
               ),
             ),
 
-            // ── 下部 ──
+            // ══════ 下段: クラス名 + クラステキスト ══════
             Column(
               children: [
                 Text(
                   cls.nameJP,
                   style: const TextStyle(
                     color: Color(0xFFEAEAEA),
-                    fontSize: 20,
+                    fontSize: 22,
                     fontWeight: FontWeight.w700,
-                    letterSpacing: 4,
+                    letterSpacing: 5,
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -267,22 +289,23 @@ class _ClassShareCardPageState extends State<ClassShareCardPage> {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  _showShadow ? '✦ ${widget.shadowJP}' : '✦ ${widget.lightJP}',
+                  '✦ $classText ✦',
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    color: const Color(0xFFACACAC),
+                    color: accent.withValues(alpha: 0.85),
                     fontSize: 13,
                     height: 1.6,
                     fontStyle: _showShadow ? FontStyle.italic : FontStyle.normal,
+                    letterSpacing: 0.5,
                   ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 12),
-                const Text(
+                const SizedBox(height: 14),
+                Text(
                   'What is yours?',
                   style: TextStyle(
-                    color: Color(0x66F9D976),
+                    color: accent.withValues(alpha: 0.4),
                     fontSize: 10,
                     letterSpacing: 4,
                   ),

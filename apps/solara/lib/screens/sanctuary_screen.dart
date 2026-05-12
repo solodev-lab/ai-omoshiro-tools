@@ -133,13 +133,16 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
     final moonSign = title_data.getMoonSign(_profile?.birthDate ?? '', _profile?.birthTime ?? '');
     final sunA = title_data.sunAdj[sunSign];
     final moonN = title_data.moonNoun[moonSign];
+    final t144 = title_data.title144[sunSign]?[moonSign];
+    // 一言 Light / Shadow (フォールバック: sunA.jp + moonN.jp)
+    final titleLight = t144?['light'] ?? '${sunA?['jp'] ?? ''}${moonN?['jp'] ?? ''}';
+    final titleShadow = t144?['shadow'] ?? '${sunA?['jp'] ?? ''}${moonN?['jp'] ?? ''}';
     Navigator.of(context).push(MaterialPageRoute(
       builder: (_) => ClassShareCardPage(
         axis: _titleAxis!, court: _titleCourt!,
-        titleJP: _titleShadow ?? '${sunA?['jp'] ?? ''}${moonN?['jp'] ?? ''}',
+        titleLightJP: titleLight,
+        titleShadowJP: titleShadow,
         titleEN: '${sunA?['en'] ?? ''} ${moonN?['en'] ?? ''}',
-        lightJP: _titleLight ?? '',
-        shadowJP: _titleShadow ?? '',
       ),
     ));
   }

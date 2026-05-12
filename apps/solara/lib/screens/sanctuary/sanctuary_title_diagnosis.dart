@@ -834,27 +834,62 @@ class _SanctuaryTitleDiagnosisPageState extends State<SanctuaryTitleDiagnosisPag
     setState(() => _showShadowSide = !_showShadowSide);
   }
 
-  Widget _buildReveal() => AnimatedBuilder(
-    animation: Listenable.merge([_revealCtrl, _flipCtrl]),
-    builder: (_, child) {
-      final flip = _flipCtrl.value;
-      final showBack = flip >= 0.5;
-      final angle = flip * 3.14159265;
-      return Transform(
-        alignment: Alignment.center,
-        transform: Matrix4.identity()
-          ..setEntry(3, 2, 0.0012)
-          ..rotateY(angle),
-        child: showBack
-            ? Transform(
-                alignment: Alignment.center,
-                transform: Matrix4.rotationY(3.14159265),
-                child: _buildRevealShadowSide(),
-              )
-            : _buildRevealLightSide(),
-      );
-    },
-  );
+  Widget _buildReveal() {
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        // ── 背景: 神殿 (reveal.webp) ──
+        Image.asset(
+          'assets/diagnosis-bg/reveal.webp',
+          fit: BoxFit.cover,
+          errorBuilder: (ctx, err, stack) => Container(
+            decoration: const BoxDecoration(
+              gradient: RadialGradient(
+                center: Alignment.center,
+                radius: 1.4,
+                colors: [Color(0xFF1A0820), Color(0xFF050208)],
+              ),
+            ),
+          ),
+        ),
+        // ── 暗化ビネット (テキスト可読性) ──
+        Container(
+          decoration: BoxDecoration(
+            gradient: RadialGradient(
+              center: Alignment.center,
+              radius: 1.2,
+              colors: [
+                Colors.black.withValues(alpha: 0.35),
+                Colors.black.withValues(alpha: 0.78),
+              ],
+            ),
+          ),
+        ),
+        // ── フリップする内容 (Light ⟷ Shadow) ──
+        AnimatedBuilder(
+          animation: Listenable.merge([_revealCtrl, _flipCtrl]),
+          builder: (_, child) {
+            final flip = _flipCtrl.value;
+            final showBack = flip >= 0.5;
+            final angle = flip * 3.14159265;
+            return Transform(
+              alignment: Alignment.center,
+              transform: Matrix4.identity()
+                ..setEntry(3, 2, 0.0012)
+                ..rotateY(angle),
+              child: showBack
+                  ? Transform(
+                      alignment: Alignment.center,
+                      transform: Matrix4.rotationY(3.14159265),
+                      child: _buildRevealShadowSide(),
+                    )
+                  : _buildRevealLightSide(),
+            );
+          },
+        ),
+      ],
+    );
+  }
 
   // ── Front: Light side ─────────────────────────────────
   Widget _buildRevealLightSide() {
