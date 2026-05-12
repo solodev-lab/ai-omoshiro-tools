@@ -104,7 +104,7 @@ class _SanctuaryTitleDiagnosisPageState extends State<SanctuaryTitleDiagnosisPag
   void initState() {
     super.initState();
     _revealCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 7000));
-    _summoningCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 2400));
+    _summoningCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 4400));
     _forgingCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 4000));
 
     // 召喚演出: 起動と同時に Haptic + アニメ開始、2.4秒後に Intro へ
@@ -112,7 +112,7 @@ class _SanctuaryTitleDiagnosisPageState extends State<SanctuaryTitleDiagnosisPag
       HapticFeedback.heavyImpact();
       _summoningCtrl.forward();
     });
-    Future.delayed(const Duration(milliseconds: 2400), () {
+    Future.delayed(const Duration(milliseconds: 4400), () {
       if (mounted) setState(() => _screen = 'intro');
     });
   }
