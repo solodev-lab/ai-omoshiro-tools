@@ -32,6 +32,13 @@ class ClassCard extends StatelessWidget {
   /// 軸別グローを表示するか
   final bool showGlow;
 
+  /// オーバーレイ最上段に表示する「一言」(Light面: t144.light、例「省察に長けた」)
+  /// 空文字なら非表示。クラス名と縦書きで「省察に長けた / 騎士」と読める順序。
+  final String titleLightJP;
+
+  /// 同上 (Shadow面: t144.shadow、例「謎キャラぶって脳内ダメ出し中な」)
+  final String titleShadowJP;
+
   const ClassCard({
     super.key,
     required this.classData,
@@ -40,6 +47,8 @@ class ClassCard extends StatelessWidget {
     this.onTap,
     this.isEnglish = false,
     this.showGlow = true,
+    this.titleLightJP = '',
+    this.titleShadowJP = '',
   });
 
   // ── 軸別カラー ──
@@ -132,17 +141,23 @@ class ClassCard extends StatelessWidget {
 
     final accentColor = isLight ? const Color(0xFFF9D976) : const Color(0xFFEAEAEA);
 
+    // 一言 (Light/Shadow 切替)
+    final titleOneLine = isLight ? titleLightJP : titleShadowJP;
+    final hasTitle = titleOneLine.isNotEmpty;
+
     // ── 固定高さで Light/Shadow のクラス名位置を一致させる ──
-    // 日本語フォントの実効 line-height (~1.5) を考慮しテキスト 3行ぶんを確保
+    // 一言 → クラス名 → クラステキスト の縦書き連結用に拡大
     final isSmall = width < 200;
-    final overlayHeight = width * 0.72; // 280→202, 260→187, 200→144
+    // 一言ありなら大きめ、なしなら従来通り
+    final overlayHeight = width * (hasTitle ? 0.84 : 0.72);
+    final fsTitleOne = isSmall ? 13.0 : 17.0;
     final fsClassJP = isSmall ? 16.0 : 22.0;
     final fsClassEN = isSmall ? 9.0 : 11.0;
-    final fsText = isSmall ? 11.0 : 14.0;
+    final fsText = isSmall ? 10.0 : 13.0;
 
     return Container(
       height: overlayHeight,
-      padding: const EdgeInsets.fromLTRB(16, 36, 16, 20),
+      padding: const EdgeInsets.fromLTRB(14, 28, 14, 18),
       decoration: BoxDecoration(
         borderRadius: const BorderRadius.vertical(bottom: Radius.circular(16)),
         gradient: LinearGradient(
@@ -159,7 +174,25 @@ class ClassCard extends StatelessWidget {
         mainAxisSize: MainAxisSize.max,
         mainAxisAlignment: MainAxisAlignment.start,
         children: [
-          // クラス名 JP (大)
+          // 一言 (任意)「省察に長けた」「謎キャラぶって脳内ダメ出し中な」
+          if (hasTitle) ...[
+            Text(
+              titleOneLine,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: accentColor,
+                fontSize: fsTitleOne,
+                fontWeight: FontWeight.w600,
+                height: 1.3,
+                letterSpacing: 0.5,
+                shadows: const [Shadow(color: Colors.black, blurRadius: 4)],
+              ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 4),
+          ],
+          // クラス名 JP (大) — 一言の次の行に来て「省察に長けた / 騎士」と読める
           Text(
             isEnglish ? classNameEN : classNameJP,
             style: TextStyle(
@@ -173,7 +206,7 @@ class ClassCard extends StatelessWidget {
             ),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 3),
+          const SizedBox(height: 2),
           // クラス名 EN (小)
           Text(
             isEnglish ? '— ${classData.axis.toUpperCase()} ${classData.court.toUpperCase()} —' : classNameEN,
@@ -186,21 +219,21 @@ class ClassCard extends StatelessWidget {
             textAlign: TextAlign.center,
           ),
           if (text.isNotEmpty) ...[
-            const SizedBox(height: 10),
-            // Light/Shadow テキスト (固定領域で揃える)
+            const SizedBox(height: 8),
+            // Light/Shadow クラステキスト (固定領域で揃える)
             Expanded(
               child: Center(
                 child: Text(
                   text,
                   style: TextStyle(
-                    color: accentColor.withValues(alpha: 0.92),
+                    color: accentColor.withValues(alpha: 0.88),
                     fontSize: fsText,
                     fontStyle: isLight ? FontStyle.normal : FontStyle.italic,
                     height: 1.5,
                     letterSpacing: 0.3,
                   ),
                   textAlign: TextAlign.center,
-                  maxLines: 3,
+                  maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
               ),

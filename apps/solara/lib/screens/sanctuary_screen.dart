@@ -445,6 +445,17 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
       return _buildLegacyVCard();
     }
 
+    // t144 から一言 (Light / Shadow) を取得して「省察に長けた / 騎士」と縦書き連結
+    final sunSign = _profile != null ? title_data.getSunSign(_profile!.birthDate) : '';
+    final moonSign = _profile != null
+        ? title_data.getMoonSign(_profile!.birthDate, _profile!.birthTime)
+        : '';
+    final t144 = title_data.title144[sunSign]?[moonSign];
+    final sunA = title_data.sunAdj[sunSign];
+    final moonN = title_data.moonNoun[moonSign];
+    final titleLight = t144?['light'] ?? '${sunA?['jp'] ?? ''}${moonN?['jp'] ?? ''}';
+    final titleShadow = t144?['shadow'] ?? '${sunA?['jp'] ?? ''}${moonN?['jp'] ?? ''}';
+
     return AnimatedSwitcher(
       duration: const Duration(milliseconds: 600),
       transitionBuilder: (child, animation) => FadeTransition(opacity: animation, child: child),
@@ -455,6 +466,8 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
           width: 280,
           mode: _titleFlipped ? ClassCardMode.shadow : ClassCardMode.light,
           showGlow: true,
+          titleLightJP: titleLight,
+          titleShadowJP: titleShadow,
         ),
       ),
     );
