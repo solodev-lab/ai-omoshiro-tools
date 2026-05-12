@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../utils/solara_storage.dart';
 import '../../utils/title_data.dart' as title_data;
+import '../../widgets/class_card.dart';
 
 // ══════════════════════════════════════════════════
 // ── Title Diagnosis Page ──
@@ -94,7 +95,7 @@ class _SanctuaryTitleDiagnosisPageState extends State<SanctuaryTitleDiagnosisPag
   late AnimationController _revealCtrl;
   String _revealTitleJP = '', _revealTitleEN = '';
   String _revealClassEN = '', _revealClassJP = '';
-  String _revealLightJP = '', _revealShadowJP = '', _revealAxis = '';
+  String _revealLightJP = '', _revealShadowJP = '', _revealAxis = '', _revealCourt = '';
 
   @override
   void initState() { super.initState(); _revealCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 7000)); }
@@ -205,6 +206,7 @@ class _SanctuaryTitleDiagnosisPageState extends State<SanctuaryTitleDiagnosisPag
     _revealClassEN = cls.nameEN;
     _revealClassJP = cls.nameJP;
     _revealAxis = topAxis;
+    _revealCourt = court;
     setState(() => _screen = 'reveal');
     _revealCtrl.forward();
   }
@@ -214,7 +216,8 @@ class _SanctuaryTitleDiagnosisPageState extends State<SanctuaryTitleDiagnosisPag
   void _accept() {
     Navigator.of(context).pop({
       'lightJP': _revealLightJP, 'shadowJP': _revealShadowJP,
-      'classEN': _revealClassEN, 'classJP': _revealClassJP, 'axis': _revealAxis,
+      'classEN': _revealClassEN, 'classJP': _revealClassJP,
+      'axis': _revealAxis, 'court': _revealCourt,
       'titleJP': _revealTitleJP, 'titleEN': _revealTitleEN,
     });
   }
@@ -328,28 +331,66 @@ class _SanctuaryTitleDiagnosisPageState extends State<SanctuaryTitleDiagnosisPag
   ]));
 
   Widget _buildReveal() => AnimatedBuilder(animation: _revealCtrl, builder: (_, child) {
+    // \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+    // Reveal animation timeline (t = 0.0 \u2192 7.0):
+    //   0.0 \u2014 1.5 : Title JP (\u592a\u967d\u00d7\u6708\u306e\u4e8c\u3064\u540d) fade in + slide
+    //   0.3 \u2014 1.5 : Title EN
+    //   1.8 \u2014 2.8 : \u533a\u5207\u308a\u7dda\u304c\u4f38\u3073\u308b
+    //   2.8 \u2014 4.5 : ClassCard \u304c\u62e1\u5927\u3057\u306a\u304c\u3089\u51fa\u73fe\uff08\u30e1\u30a4\u30f3\u30d3\u30b8\u30e5\u30a2\u30eb\uff09
+    //   4.5 \u2014 5.8 : Light \u30c6\u30ad\u30b9\u30c8
+    //   5.8 \u2014 6.6 : \u4e00\u8a00\u30b7\u30e3\u30c9\u30fc
+    //   6.2 \u2014 7.0 : \u30dc\u30bf\u30f3\u7fa4
+    // \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
     final t = _revealCtrl.value * 7;
-    return Center(child: Padding(padding: const EdgeInsets.symmetric(horizontal: 28),
+    final cls = title_data.getClassByAxisCourt(_revealAxis, _revealCourt);
+
+    return Center(child: SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 28),
       child: Column(mainAxisSize: MainAxisSize.min, children: [
+        // \u2500\u2500 Title JP \u2500\u2500
         Opacity(opacity: (t / 1.5).clamp(0.0, 1.0),
           child: Transform.translate(offset: Offset(0, 20 * (1 - (t / 1.5).clamp(0.0, 1.0))),
-            child: Text(_revealTitleJP, textAlign: TextAlign.center, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w700, color: Color(0xFFF9D976))))),
+            child: Text(_revealTitleJP, textAlign: TextAlign.center, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: Color(0xFFF9D976), height: 1.4)))),
         const SizedBox(height: 4),
+        // \u2500\u2500 Title EN \u2500\u2500
         Opacity(opacity: ((t - 0.3) / 1.2).clamp(0.0, 1.0),
-          child: Text(_revealTitleEN, textAlign: TextAlign.center, style: const TextStyle(fontSize: 15, color: Color(0x80F9D976)))),
-        Container(width: 200 * ((t - 1.8) / 1.0).clamp(0.0, 1.0), height: 1, margin: const EdgeInsets.symmetric(vertical: 16),
+          child: Text(_revealTitleEN, textAlign: TextAlign.center, style: const TextStyle(fontSize: 13, color: Color(0x80F9D976), letterSpacing: 2))),
+        // \u2500\u2500 divider \u2500\u2500
+        Container(width: 200 * ((t - 1.8) / 1.0).clamp(0.0, 1.0), height: 1, margin: const EdgeInsets.symmetric(vertical: 18),
           decoration: const BoxDecoration(gradient: LinearGradient(colors: [Colors.transparent, Color(0xFFF9D976), Colors.transparent]))),
-        Opacity(opacity: ((t - 2.8) / 0.8).clamp(0.0, 1.0),
-          child: Transform.scale(scale: 1.0 + 0.5 * (1 - ((t - 2.8) / 0.8).clamp(0.0, 1.0)),
-            child: Text('\u2014 $_revealClassJP / $_revealClassEN \u2014', textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: Color(0xFFEAEAEA), letterSpacing: 3)))),
-        const SizedBox(height: 20),
-        Opacity(opacity: ((t - 3.8) / 1.2).clamp(0.0, 1.0),
-          child: Text('\u2726 $_revealLightJP', textAlign: TextAlign.center, style: const TextStyle(fontSize: 15, color: Color(0xFFACACAC), height: 1.6))),
+        // \u2500\u2500 ClassCard (\u30e1\u30a4\u30f3\u30d3\u30b8\u30e5\u30a2\u30eb) \u2500\u2500
+        if (cls != null)
+          Opacity(opacity: ((t - 2.8) / 1.5).clamp(0.0, 1.0),
+            child: Transform.scale(scale: 0.85 + 0.15 * ((t - 2.8) / 1.5).clamp(0.0, 1.0),
+              child: ClassCard(
+                classData: cls,
+                width: 260,
+                mode: ClassCardMode.none,
+                showGlow: true,
+              ))),
+        const SizedBox(height: 14),
+        // \u2500\u2500 \u30af\u30e9\u30b9\u540d \u2500\u2500
+        if (cls != null)
+          Opacity(opacity: ((t - 3.3) / 0.8).clamp(0.0, 1.0),
+            child: Column(children: [
+              Text(_revealClassJP, textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: Color(0xFFEAEAEA), letterSpacing: 4)),
+              const SizedBox(height: 2),
+              Text(_revealClassEN, textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 11, color: Color(0x80EAEAEA), letterSpacing: 3)),
+            ])),
+        const SizedBox(height: 18),
+        // \u2500\u2500 Light \u30c6\u30ad\u30b9\u30c8 \u2500\u2500
+        Opacity(opacity: ((t - 4.5) / 1.0).clamp(0.0, 1.0),
+          child: Text('\u2726 $_revealLightJP', textAlign: TextAlign.center,
+            style: const TextStyle(fontSize: 14, color: Color(0xFFACACAC), height: 1.6))),
         const SizedBox(height: 6),
-        Opacity(opacity: ((t - 5.0) / 1.2).clamp(0.0, 1.0),
-          child: Text('\u2726 $_revealShadowJP', textAlign: TextAlign.center, style: const TextStyle(fontSize: 15, color: Color(0xFFACACAC), height: 1.6, fontStyle: FontStyle.italic))),
+        // \u2500\u2500 Shadow (\u4e00\u8a00) \u30c6\u30ad\u30b9\u30c8 \u2500\u2500
+        Opacity(opacity: ((t - 5.4) / 1.0).clamp(0.0, 1.0),
+          child: Text('\u2726 $_revealShadowJP', textAlign: TextAlign.center,
+            style: const TextStyle(fontSize: 14, color: Color(0xFFACACAC), height: 1.6, fontStyle: FontStyle.italic))),
         const SizedBox(height: 28),
+        // \u2500\u2500 \u30dc\u30bf\u30f3\u7fa4 \u2500\u2500
         Opacity(opacity: ((t - 6.2) / 0.8).clamp(0.0, 1.0),
           child: Column(children: [
             GestureDetector(onTap: _accept, child: Container(width: double.infinity, padding: const EdgeInsets.symmetric(vertical: 14),

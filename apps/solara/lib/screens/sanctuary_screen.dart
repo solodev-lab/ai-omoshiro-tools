@@ -4,10 +4,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../utils/solara_storage.dart';
 import '../utils/title_data.dart' as title_data;
+import '../widgets/class_card.dart';
 import 'sanctuary/sanctuary_orb_overlay.dart';
 import 'sanctuary/sanctuary_profile_editor.dart';
 import 'sanctuary/sanctuary_reset_hour_picker.dart';
 import 'sanctuary/sanctuary_title_diagnosis.dart';
+import 'sanctuary/class_share_card.dart';
 import 'sanctuary/sanctuary_home_editor.dart';
 
 class SanctuaryScreen extends StatefulWidget {
@@ -25,6 +27,9 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
   String? _titleLight;
   String? _titleShadow;
   String? _titleClassEN;
+  String? _titleClassJP;
+  String? _titleAxis;
+  String? _titleCourt;
   bool _titleFlipped = false;
 
   // Astrology settings
@@ -83,6 +88,9 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
         _titleLight = td['lightJP'] as String?;
         _titleShadow = td['shadowJP'] as String?;
         _titleClassEN = td['classEN'] as String?;
+        _titleClassJP = td['classJP'] as String?;
+        _titleAxis = td['axis'] as String?;
+        _titleCourt = td['court'] as String?;
       }
     });
   }
@@ -108,7 +116,8 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
           final newShadow = t144?['shadow'] ?? '${sunA?['jp'] ?? ''}${title_data.moonNoun[newMoon]?['jp'] ?? ''}';
           final updated = {
             'lightJP': newLight, 'shadowJP': newShadow,
-            'classEN': _titleClassEN ?? '', 'classJP': '',
+            'classEN': _titleClassEN ?? '', 'classJP': _titleClassJP ?? '',
+            'axis': _titleAxis ?? '', 'court': _titleCourt ?? '',
           };
           await SolaraStorage.saveTitleData(updated);
           setState(() { _titleLight = newLight; _titleShadow = newShadow; });
@@ -116,6 +125,23 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
       }
       setState(() => _profile = result);
     }
+  }
+
+  void _openShareCard() {
+    if (_titleAxis == null || _titleCourt == null) return;
+    final sunSign = title_data.getSunSign(_profile?.birthDate ?? '');
+    final moonSign = title_data.getMoonSign(_profile?.birthDate ?? '', _profile?.birthTime ?? '');
+    final sunA = title_data.sunAdj[sunSign];
+    final moonN = title_data.moonNoun[moonSign];
+    Navigator.of(context).push(MaterialPageRoute(
+      builder: (_) => ClassShareCardPage(
+        axis: _titleAxis!, court: _titleCourt!,
+        titleJP: _titleShadow ?? '${sunA?['jp'] ?? ''}${moonN?['jp'] ?? ''}',
+        titleEN: '${sunA?['en'] ?? ''} ${moonN?['en'] ?? ''}',
+        lightJP: _titleLight ?? '',
+        shadowJP: _titleShadow ?? '',
+      ),
+    ));
   }
 
   void _startDiagnosis() async {
@@ -128,6 +154,9 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
         _titleLight = result['lightJP'];
         _titleShadow = result['shadowJP'];
         _titleClassEN = result['classEN'];
+        _titleClassJP = result['classJP'];
+        _titleAxis = result['axis'];
+        _titleCourt = result['court'];
       });
     }
   }
@@ -345,6 +374,28 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
             ),
           ),
         ],
+        // ── ✦ 称号を共有する（診断後） ──
+        if (_titleLight != null && _titleAxis != null && _titleCourt != null) ...[
+          GestureDetector(
+            onTap: _openShareCard,
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: const Color(0x66F9D976)),
+                gradient: const LinearGradient(
+                  colors: [Color(0x33F9D976), Color(0x1AF9D976)],
+                ),
+              ),
+              child: const Center(
+                child: Text('✦ 称号カードを共有する',
+                  style: TextStyle(color: Color(0xFFF9D976), fontSize: 15, fontWeight: FontWeight.w600)),
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+        ],
         // HTML: #titleRediagnose — ghost button (shown after diagnosis)
         if (_titleLight != null) ...[
           // HTML: border:1px solid rgba(249,217,118,0.3); background:none; color:#F9D976; font-size:13px;
@@ -378,35 +429,55 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
     );
   }
 
-  // ── Title Flip Card ──
+  // ── Title Flip Card (アール・ヌーヴォーカード + Light/Shadow テキストオーバーレイ) ──
   Widget _buildTitleFlipCard() {
-    // HTML: .td-result-card-inner { height:480px; }
-    // AnimatedSwitcher for flip effect
+    // axis + court から TitleClass を引いて ClassCard 表示
+    // 旧データ（axis/court 未保存）の場合は axis のみ推定 or プレースホルダ
+    final cls = (_titleAxis != null && _titleCourt != null)
+        ? title_data.getClassByAxisCourt(_titleAxis!, _titleCourt!)
+        : null;
+
+    if (cls == null) {
+      // フォールバック: 旧データ or アセット欠落時のテキスト表示
+      return _buildLegacyVCard();
+    }
+
     return AnimatedSwitcher(
       duration: const Duration(milliseconds: 600),
-      transitionBuilder: (child, animation) {
-        return FadeTransition(opacity: animation, child: child);
-      },
-      child: _titleFlipped
-          ? _buildTitleVCard(
-              key: const ValueKey('shadow'),
-              label: '✦ SHADOW ✦',
-              labelColor: const Color(0x80ACACAC),
-              title: _titleShadow ?? '',
-              titleColor: const Color(0xFFEAEAEA),
-              className: _titleClassEN ?? '',
-              isLight: false,
-            )
-          : _buildTitleVCard(
-              key: const ValueKey('light'),
-              label: '✦ LIGHT ✦',
-              labelColor: const Color(0x80F9D976),
-              title: _titleLight ?? '',
-              titleColor: const Color(0xFFF9D976),
-              className: _titleClassEN ?? '',
-              isLight: true,
-            ),
+      transitionBuilder: (child, animation) => FadeTransition(opacity: animation, child: child),
+      child: Center(
+        key: ValueKey(_titleFlipped ? 'shadow' : 'light'),
+        child: ClassCard(
+          classData: cls,
+          width: 280,
+          mode: _titleFlipped ? ClassCardMode.shadow : ClassCardMode.light,
+          showGlow: true,
+        ),
+      ),
     );
+  }
+
+  /// 旧データ用フォールバック（axis/court 未保存時 or アセット欠落時）
+  Widget _buildLegacyVCard() {
+    return _titleFlipped
+        ? _buildTitleVCard(
+            key: const ValueKey('shadow-legacy'),
+            label: '✦ SHADOW ✦',
+            labelColor: const Color(0x80ACACAC),
+            title: _titleShadow ?? '',
+            titleColor: const Color(0xFFEAEAEA),
+            className: _titleClassEN ?? '',
+            isLight: false,
+          )
+        : _buildTitleVCard(
+            key: const ValueKey('light-legacy'),
+            label: '✦ LIGHT ✦',
+            labelColor: const Color(0x80F9D976),
+            title: _titleLight ?? '',
+            titleColor: const Color(0xFFF9D976),
+            className: _titleClassEN ?? '',
+            isLight: true,
+          );
   }
 
   // HTML: .td-vcard { border-radius:16px; padding:28px 20px 24px; border:1px solid rgba(249,217,118,0.15); }

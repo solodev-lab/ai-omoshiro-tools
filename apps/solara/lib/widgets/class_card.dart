@@ -75,7 +75,7 @@ class ClassCard extends StatelessWidget {
               child: Image.asset(
                 _assetPath,
                 fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => _buildPlaceholder(),
+                errorBuilder: (ctx, err, stack) => _buildPlaceholder(),
               ),
             ),
           ),
