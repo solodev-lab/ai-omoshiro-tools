@@ -159,11 +159,11 @@ class ClassCard extends StatelessWidget {
     final hasTitle = titleOneLine.isNotEmpty;
 
     // ── 固定高さで Light/Shadow のクラス名位置を一致させる ──
-    // オーバーレイはカード下部 1/3 ほどに収め、絵が見える領域を最大化
+    // オーバーレイはカード下部 1/3 強に収め、絵が見える領域を最大化
     final isSmall = width < 200;
-    // 280px の場合: 280 * 0.62 = 173.6, カード全体 420 の 41% を占有
-    // (一言なしは少しコンパクト)
-    final overlayHeight = width * (hasTitle ? 0.62 : 0.52);
+    // 280px の場合: 280 * 0.7 = 196px, カード全体 420 の 47% を占有
+    // (長い一言/クラステキスト時のオーバーフロー余裕を確保)
+    final overlayHeight = width * (hasTitle ? 0.70 : 0.56);
     final fsTitleOne = isSmall ? 12.0 : 15.0;
     final fsClassJP = isSmall ? 16.0 : 21.0;
     final fsClassEN = isSmall ? 9.0 : 10.0;
@@ -171,7 +171,7 @@ class ClassCard extends StatelessWidget {
 
     return Container(
       height: overlayHeight,
-      padding: const EdgeInsets.fromLTRB(10, 14, 10, 16),
+      padding: const EdgeInsets.fromLTRB(10, 12, 10, 14),
       decoration: BoxDecoration(
         borderRadius: const BorderRadius.vertical(bottom: Radius.circular(16)),
         gradient: LinearGradient(
@@ -184,10 +184,13 @@ class ClassCard extends StatelessWidget {
           ],
         ),
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.max,
-        mainAxisAlignment: MainAxisAlignment.end, // 下寄せ。上に余白を作る
-        children: [
+      // Align で下寄せ。Column は内容高さに収縮 (mainAxisSize.min) するため
+      // 長い一言+クラステキストの組合せでも overflow しない。
+      child: Align(
+        alignment: Alignment.bottomCenter,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
           // 一言 (任意)「省察に長けた」「謎キャラぶって脳内ダメ出し中な」
           if (hasTitle) ...[
             Text(
@@ -249,7 +252,8 @@ class ClassCard extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
             ),
           ],
-        ],
+          ],
+        ),
       ),
     );
   }
