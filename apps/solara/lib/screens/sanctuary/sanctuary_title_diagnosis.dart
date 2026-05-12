@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../utils/solara_storage.dart';
 import '../../utils/title_data.dart' as title_data;
@@ -89,22 +90,47 @@ class _SanctuaryTitleDiagnosisPageState extends State<SanctuaryTitleDiagnosisPag
   // HTML: TD.selections — tiebreak 用に全選択を記録
   final List<Map<String, String>> _selections = [];
 
-  String _screen = 'intro'; // intro, round, partTrans, forging, reveal
+  String _screen = 'summoning'; // summoning, intro, round, partTrans, forging, reveal
   int? _selectedCard;
   int _lastPart = 0;
   late AnimationController _revealCtrl;
+  late AnimationController _summoningCtrl;
+  late AnimationController _forgingCtrl;
   String _revealTitleJP = '', _revealTitleEN = '';
   String _revealClassEN = '', _revealClassJP = '';
   String _revealLightJP = '', _revealShadowJP = '', _revealAxis = '', _revealCourt = '';
 
   @override
-  void initState() { super.initState(); _revealCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 7000)); }
-  @override
-  void dispose() { _revealCtrl.dispose(); super.dispose(); }
+  void initState() {
+    super.initState();
+    _revealCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 7000));
+    _summoningCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 2400));
+    _forgingCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 4000));
 
-  void _beginRounds() => setState(() { _screen = 'round'; _lastPart = _rounds[0]['part'] as int; });
+    // 召喚演出: 起動と同時に Haptic + アニメ開始、2.4秒後に Intro へ
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      HapticFeedback.heavyImpact();
+      _summoningCtrl.forward();
+    });
+    Future.delayed(const Duration(milliseconds: 2400), () {
+      if (mounted) setState(() => _screen = 'intro');
+    });
+  }
+  @override
+  void dispose() {
+    _revealCtrl.dispose();
+    _summoningCtrl.dispose();
+    _forgingCtrl.dispose();
+    super.dispose();
+  }
+
+  void _beginRounds() {
+    HapticFeedback.mediumImpact();
+    setState(() { _screen = 'round'; _lastPart = _rounds[0]['part'] as int; });
+  }
 
   void _selectCard(int idx, String axisOrCourt) {
+    HapticFeedback.lightImpact();
     setState(() => _selectedCard = idx);
     Future.delayed(const Duration(milliseconds: 500), () {
       if (!mounted) return;
@@ -137,13 +163,16 @@ class _SanctuaryTitleDiagnosisPageState extends State<SanctuaryTitleDiagnosisPag
         final curPart = _rounds[_roundIdx]['part'] as int;
         setState(() { _roundIdx++; _selectedCard = null; });
         if (nextPart != curPart) {
+          HapticFeedback.mediumImpact();
           setState(() => _screen = 'partTrans');
           _lastPart = nextPart;
           Future.delayed(const Duration(seconds: 2), () { if (mounted) setState(() => _screen = 'round'); });
         }
       } else {
+        HapticFeedback.heavyImpact();
         setState(() => _screen = 'forging');
-        Future.delayed(const Duration(seconds: 3), () { if (mounted) _finishDiagnosis(); });
+        _forgingCtrl.forward();
+        Future.delayed(const Duration(milliseconds: 4200), () { if (mounted) _finishDiagnosis(); });
       }
     });
   }
@@ -207,8 +236,16 @@ class _SanctuaryTitleDiagnosisPageState extends State<SanctuaryTitleDiagnosisPag
     _revealClassJP = cls.nameJP;
     _revealAxis = topAxis;
     _revealCourt = court;
+    HapticFeedback.heavyImpact();
     setState(() => _screen = 'reveal');
     _revealCtrl.forward();
+    // Reveal フィナーレで脈動的に振動
+    Future.delayed(const Duration(milliseconds: 2800), () {
+      if (mounted) HapticFeedback.mediumImpact();
+    });
+    Future.delayed(const Duration(milliseconds: 4500), () {
+      if (mounted) HapticFeedback.heavyImpact();
+    });
   }
 
   SolaraProfile? get _profile => widget.profile;
@@ -230,6 +267,7 @@ class _SanctuaryTitleDiagnosisPageState extends State<SanctuaryTitleDiagnosisPag
         decoration: const BoxDecoration(gradient: RadialGradient(
           center: Alignment.center, radius: 1.2, colors: [Color(0xFF0A1220), Color(0xFF020408)])),
         child: SafeArea(child: switch (_screen) {
+          'summoning' => _buildSummoning(),
           'round' => _buildRound(),
           'partTrans' => _buildPartTrans(),
           'forging' => _buildForging(),
@@ -240,28 +278,261 @@ class _SanctuaryTitleDiagnosisPageState extends State<SanctuaryTitleDiagnosisPag
     );
   }
 
-  Widget _buildIntro() => Center(child: Container(
-    constraints: const BoxConstraints(maxWidth: 340),
-    padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 40),
-    decoration: BoxDecoration(color: const Color(0x0DFFFFFF), borderRadius: BorderRadius.circular(20), border: Border.all(color: const Color(0x1AFFFFFF))),
-    child: Column(mainAxisSize: MainAxisSize.min, children: [
-      const Text('\u2726', style: TextStyle(fontSize: 28, color: Color(0xFFF9D976))),
-      const SizedBox(height: 12),
-      const Text('\u79f0\u53f7\u306e\u5100\u5f0f', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: Color(0xFFF9D976))),
-      const SizedBox(height: 8),
-      const Text('\u30ab\u30fc\u30c9\u304c\u3042\u306a\u305f\u3092\u6620\u3057\u51fa\u3057\u307e\u3059\u3002\n28\u306e\u554f\u3044\u306b\u3001\u76f4\u611f\u3067\u7b54\u3048\u3066\u304f\u3060\u3055\u3044\u3002', textAlign: TextAlign.center,
-        style: TextStyle(fontSize: 15, color: Color(0xFFACACAC), height: 1.7)),
-      const SizedBox(height: 24),
-      GestureDetector(onTap: _beginRounds, child: Container(
-        width: double.infinity, padding: const EdgeInsets.symmetric(vertical: 14),
-        decoration: BoxDecoration(borderRadius: BorderRadius.circular(14),
-          gradient: const LinearGradient(colors: [Color(0xFFF9D976), Color(0xFFE8A840)])),
-        child: const Center(child: Text('\u59cb\u3081\u308b', style: TextStyle(color: Color(0xFF0A0A14), fontSize: 15, fontWeight: FontWeight.w700))))),
-      const SizedBox(height: 12),
-      GestureDetector(onTap: () => Navigator.pop(context),
-        child: const Text('\u3042\u3068\u3067', style: TextStyle(fontSize: 15, color: Color(0x66ACACAC)))),
-    ]),
-  ));
+  // \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
+  // \u53ec\u559a\u6f14\u51fa (Summoning) \u2014 \u8d77\u52d5\u76f4\u5f8c\u306e\u6697\u8ee2 + \u91d1\u5149\u51fa\u73fe
+  // \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
+  Widget _buildSummoning() {
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        // \u2500\u2500 \u80cc\u666f: \u9ed2+\u91d1\u7c92\u5b50\uff08\u30d5\u30a9\u30fc\u30eb\u30d0\u30c3\u30af\uff09\u2500\u2500
+        Image.asset(
+          'assets/diagnosis-bg/ceremony.webp',
+          fit: BoxFit.cover,
+          errorBuilder: (ctx, err, stack) => Container(color: Colors.black),
+        ),
+        // \u2500\u2500 \u53ec\u559a\u30c6\u30ad\u30b9\u30c8\u300c\u2726 THE CEREMONY \u2726\u300d\u2500\u2500
+        Center(
+          child: AnimatedBuilder(
+            animation: _summoningCtrl,
+            builder: (ctx, child) {
+              final t = _summoningCtrl.value;
+              final opacity = t < 0.15
+                  ? t / 0.15
+                  : (t > 0.85 ? (1.0 - t) / 0.15 : 1.0);
+              final scale = 0.9 + 0.15 * (t.clamp(0.0, 0.5) / 0.5);
+              return Opacity(
+                opacity: opacity.clamp(0.0, 1.0),
+                child: Transform.scale(
+                  scale: scale,
+                  child: child,
+                ),
+              );
+            },
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  '\u2726',
+                  style: TextStyle(
+                    fontSize: 40,
+                    color: Color(0xFFF9D976),
+                    shadows: [
+                      Shadow(color: Color(0xFFF9D976), blurRadius: 24),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'THE CEREMONY',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 26,
+                    color: Color(0xFFF9D976),
+                    letterSpacing: 10,
+                    fontWeight: FontWeight.w300,
+                    shadows: [
+                      Shadow(color: Colors.black, blurRadius: 8),
+                      Shadow(color: Color(0x66F9D976), blurRadius: 32),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+                const Text(
+                  '\u2014 \u79f0\u53f7\u306e\u5100\u5f0f \u2014',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: Color(0x99F9D976),
+                    letterSpacing: 4,
+                    fontWeight: FontWeight.w300,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
+  // Intro \u753b\u9762 \u2014 Mucha \u80cc\u666f + slide-in + pulse \u30dc\u30bf\u30f3
+  // \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
+  Widget _buildIntro() {
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        // \u2500\u2500 \u80cc\u666f: Mucha\u98a8 \u796d\u58c7 (5\u8ef8\u30b7\u30f3\u30dc\u30eb+\u308d\u3046\u305d\u304f) \u2500\u2500
+        Image.asset(
+          'assets/diagnosis-bg/intro.webp',
+          fit: BoxFit.cover,
+          errorBuilder: (ctx, err, stack) => Container(
+            decoration: const BoxDecoration(
+              gradient: RadialGradient(
+                center: Alignment.center,
+                radius: 1.2,
+                colors: [Color(0xFF1A0820), Color(0xFF050208)],
+              ),
+            ),
+          ),
+        ),
+        // \u2500\u2500 \u4e2d\u592e\u30d3\u30cd\u30c3\u30c8 \u2500\u2500
+        Container(
+          decoration: BoxDecoration(
+            gradient: RadialGradient(
+              center: Alignment.center,
+              radius: 1.0,
+              colors: [
+                Colors.black.withValues(alpha: 0.2),
+                Colors.black.withValues(alpha: 0.75),
+              ],
+            ),
+          ),
+        ),
+        // \u2500\u2500 \u4e2d\u592e\u30b3\u30f3\u30c6\u30f3\u30c4 \u2500\u2500
+        Center(
+          child: TweenAnimationBuilder<double>(
+            tween: Tween(begin: 0.0, end: 1.0),
+            duration: const Duration(milliseconds: 1100),
+            curve: Curves.easeOut,
+            builder: (ctx, v, child) => Opacity(
+              opacity: v,
+              child: Transform.translate(offset: Offset(0, 16 * (1 - v)), child: child),
+            ),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 360),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 28),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text(
+                      '\u2726',
+                      style: TextStyle(
+                        fontSize: 32,
+                        color: Color(0xFFF9D976),
+                        shadows: [Shadow(color: Color(0xFFF9D976), blurRadius: 20)],
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    const Text(
+                      '\u79f0\u53f7\u306e\u5100\u5f0f',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 26,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFFF9D976),
+                        letterSpacing: 8,
+                        shadows: [
+                          Shadow(color: Colors.black, blurRadius: 10),
+                          Shadow(color: Color(0x80F9D976), blurRadius: 24),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    const Text(
+                      'THE TITLE CEREMONY',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: Color(0x99F9D976),
+                        letterSpacing: 3,
+                        fontWeight: FontWeight.w300,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    // \u88c5\u98fe\u30e9\u30a4\u30f3
+                    Container(
+                      width: 80,
+                      height: 1,
+                      decoration: const BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [Colors.transparent, Color(0xFFF9D976), Colors.transparent],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    const Text(
+                      '\u30ab\u30fc\u30c9\u304c\u3042\u306a\u305f\u3092\u6620\u3057\u51fa\u3057\u307e\u3059\u3002\n28\u306e\u554f\u3044\u306b\u3001\u76f4\u611f\u3067\u7b54\u3048\u3066\u304f\u3060\u3055\u3044\u3002',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 15,
+                        color: Color(0xCCEAEAEA),
+                        height: 1.8,
+                        letterSpacing: 1,
+                        shadows: [Shadow(color: Colors.black, blurRadius: 6)],
+                      ),
+                    ),
+                    const SizedBox(height: 32),
+                    // \u8108\u52d5\u3059\u308b\u300c\u59cb\u3081\u308b\u300d\u30dc\u30bf\u30f3
+                    TweenAnimationBuilder<double>(
+                      tween: Tween(begin: 0.0, end: 1.0),
+                      duration: const Duration(milliseconds: 1800),
+                      curve: Curves.easeInOut,
+                      builder: (ctx, pulse, child) {
+                        // 0\u21921\u3067\u8108\u52d5: 0, 1, 0 \u306e\u30b5\u30a4\u30f3\u6ce2\u76f8\u5f53
+                        final p = (pulse * 2 * 3.14159).remainder(2 * 3.14159);
+                        final intensity = 0.5 + 0.5 * (p < 3.14159 ? p / 3.14159 : (6.28318 - p) / 3.14159);
+                        return GestureDetector(
+                          onTap: _beginRounds,
+                          child: Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(14),
+                              gradient: const LinearGradient(
+                                colors: [Color(0xFFF9D976), Color(0xFFE8A840)],
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: const Color(0xFFF9D976).withValues(alpha: 0.3 + 0.4 * intensity),
+                                  blurRadius: 24 + 16 * intensity,
+                                  spreadRadius: 2,
+                                ),
+                              ],
+                            ),
+                            child: const Center(
+                              child: Text(
+                                '\u59cb\u3081\u308b',
+                                style: TextStyle(
+                                  color: Color(0xFF0A0A14),
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w700,
+                                  letterSpacing: 4,
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                      onEnd: () {
+                        // \u6c38\u7d9a\u8108\u52d5: setState \u3067\u518d\u30ad\u30c3\u30af\u3057\u306a\u3044\u3068\u518d\u751f\u3055\u308c\u306a\u3044\u306e\u3067\u3001
+                        // \u3053\u3053\u3067 rebuild \u30c8\u30ea\u30ac\u30fc\uff08\u7c21\u6613\u30eb\u30fc\u30d7\uff09
+                        if (mounted && _screen == 'intro') setState(() {});
+                      },
+                    ),
+                    const SizedBox(height: 14),
+                    GestureDetector(
+                      onTap: () => Navigator.pop(context),
+                      child: const Text(
+                        '\u3042\u3068\u3067',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Color(0x88ACACAC),
+                          letterSpacing: 2,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
 
   Widget _buildRound() {
     final r = _rounds[_roundIdx];
@@ -414,16 +685,127 @@ class _SanctuaryTitleDiagnosisPageState extends State<SanctuaryTitleDiagnosisPag
     );
   }
 
-  Widget _buildForging() => Center(child: Column(mainAxisSize: MainAxisSize.min, children: [
-    TweenAnimationBuilder<double>(tween: Tween(begin: 0.9, end: 1.15), duration: const Duration(seconds: 1), curve: Curves.easeInOut,
-      builder: (_, v, child) => Container(width: 120, height: 120,
-        decoration: BoxDecoration(shape: BoxShape.circle,
-          gradient: const RadialGradient(colors: [Color(0x99F9D976), Color(0x1AF9D976), Colors.transparent], stops: [0, 0.6, 0.8]),
-          boxShadow: [BoxShadow(color: const Color(0x4DF9D976), blurRadius: 40 + (v - 0.9) * 160)]),
-        transform: Matrix4.identity()..scaleByDouble(v, v, v, 1.0))),
-    const SizedBox(height: 24),
-    const Text('Forging your title...', style: TextStyle(fontSize: 15, color: Color(0xFFACACAC), letterSpacing: 2)),
-  ]));
+  // ════════════════════════════════════════════════
+  // Forging — 銀河背景 + 脈動オーブ + 多段テキスト
+  // ════════════════════════════════════════════════
+  Widget _buildForging() {
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        // ── 背景: 銀河・星雲 ──
+        Image.asset(
+          'assets/diagnosis-bg/forging.webp',
+          fit: BoxFit.cover,
+          errorBuilder: (ctx, err, stack) => Container(
+            decoration: const BoxDecoration(
+              gradient: RadialGradient(
+                center: Alignment.center,
+                radius: 1.4,
+                colors: [Color(0xFF1F0D38), Color(0xFF050208)],
+              ),
+            ),
+          ),
+        ),
+        // ── 中央ビネット ──
+        Container(
+          decoration: BoxDecoration(
+            gradient: RadialGradient(
+              center: Alignment.center,
+              radius: 0.9,
+              colors: [
+                Colors.transparent,
+                Colors.black.withValues(alpha: 0.6),
+              ],
+            ),
+          ),
+        ),
+        // ── 脈動オーブ + 多段テキスト ──
+        Center(
+          child: AnimatedBuilder(
+            animation: _forgingCtrl,
+            builder: (ctx, child) {
+              final t = _forgingCtrl.value;
+              // オーブ脈動 (0→1で 0.8→1.3→0.8 の繰返し)
+              final orbScale = 0.85 + 0.35 * (1 - ((t * 4) % 1.0 - 0.5).abs() * 2);
+              // テキスト3段階フェード
+              final stage1Op = (t / 0.3).clamp(0.0, 1.0) - ((t - 0.3) / 0.2).clamp(0.0, 1.0);
+              final stage2Op = ((t - 0.35) / 0.3).clamp(0.0, 1.0) - ((t - 0.65) / 0.2).clamp(0.0, 1.0);
+              final stage3Op = ((t - 0.7) / 0.3).clamp(0.0, 1.0);
+
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // 脈動オーブ
+                  Transform.scale(
+                    scale: orbScale,
+                    child: Container(
+                      width: 140,
+                      height: 140,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: const RadialGradient(
+                          colors: [
+                            Color(0xFFFFFAEA),
+                            Color(0xFFF9D976),
+                            Color(0x66F9D976),
+                            Colors.transparent,
+                          ],
+                          stops: [0.0, 0.3, 0.7, 1.0],
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFFF9D976).withValues(alpha: 0.6),
+                            blurRadius: 60 + 60 * orbScale,
+                            spreadRadius: 8,
+                          ),
+                          BoxShadow(
+                            color: const Color(0xFFE8A840).withValues(alpha: 0.4),
+                            blurRadius: 120,
+                            spreadRadius: 20,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 40),
+                  // 多段テキスト（同じ高さに重ね、フェードで切替）
+                  SizedBox(
+                    height: 28,
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        Opacity(
+                          opacity: stage1Op.clamp(0.0, 1.0),
+                          child: const Text(
+                            'あなたの星を読み取る…',
+                            style: TextStyle(fontSize: 16, color: Color(0xFFEAEAEA), letterSpacing: 3),
+                          ),
+                        ),
+                        Opacity(
+                          opacity: stage2Op.clamp(0.0, 1.0),
+                          child: const Text(
+                            '運命が結ばれる…',
+                            style: TextStyle(fontSize: 16, color: Color(0xFFEAEAEA), letterSpacing: 3),
+                          ),
+                        ),
+                        Opacity(
+                          opacity: stage3Op.clamp(0.0, 1.0),
+                          child: const Text(
+                            '称号が刻まれる…',
+                            style: TextStyle(fontSize: 16, color: Color(0xFFF9D976), letterSpacing: 3, fontWeight: FontWeight.w600),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
 
   Widget _buildReveal() => AnimatedBuilder(animation: _revealCtrl, builder: (_, child) {
     // \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
