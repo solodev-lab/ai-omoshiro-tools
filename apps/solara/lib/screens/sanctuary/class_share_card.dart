@@ -186,6 +186,9 @@ class _ClassShareCardPageState extends State<ClassShareCardPage> {
   }
 
   /// シェア用画像の中身（縦長 9:16）
+  ///
+  /// レイアウトの読み下し方:
+  ///   一言(t144) → クラス名(JP) で「省察に長けた **騎士**」と縦書き連結
   Widget _buildShareImage(title_data.TitleClass cls) {
     // Light/Shadow 切替で表示する値
     final titleOneLine = _showShadow ? widget.titleShadowJP : widget.titleLightJP;
@@ -206,7 +209,7 @@ class _ClassShareCardPageState extends State<ClassShareCardPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            // ══════ 上段: SOLARA + 一言 ══════
+            // ══════ 上段: SOLARA + サブタイトル + TitleEN ══════
             Column(
               children: [
                 Text(
@@ -227,10 +230,39 @@ class _ClassShareCardPageState extends State<ClassShareCardPage> {
                     letterSpacing: 3,
                   ),
                 ),
-                const SizedBox(height: 12),
-                // 一言 (t144.light or t144.shadow)
+                const SizedBox(height: 8),
                 Text(
-                  '✦ $titleOneLine ✦',
+                  widget.titleEN,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: accent.withValues(alpha: 0.7),
+                    fontSize: 12,
+                    letterSpacing: 2,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ],
+            ),
+
+            // ══════ 中央: ClassCard (絵のみ、FittedBoxで縮小可能) ══════
+            Flexible(
+              child: FittedBox(
+                fit: BoxFit.contain,
+                child: ClassCard(
+                  classData: cls,
+                  width: 220,
+                  mode: ClassCardMode.none,
+                  showGlow: true,
+                ),
+              ),
+            ),
+
+            // ══════ 下段: 一言 → クラス名 (縦書き連結「省察に長けた 騎士」) ══════
+            Column(
+              children: [
+                // 一言 (t144.light or t144.shadow) — クラス名の前に置いて連結読み
+                Text(
+                  titleOneLine,
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     color: accent,
@@ -243,39 +275,14 @@ class _ClassShareCardPageState extends State<ClassShareCardPage> {
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 4),
-                Text(
-                  widget.titleEN,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: accent.withValues(alpha: 0.6),
-                    fontSize: 11,
-                    letterSpacing: 2,
-                    fontStyle: FontStyle.italic,
-                  ),
-                ),
-              ],
-            ),
-
-            // ══════ 中央: ClassCard (mode=none で絵だけ完全表示) ══════
-            Flexible(
-              child: ClassCard(
-                classData: cls,
-                width: 220,
-                mode: ClassCardMode.none,
-                showGlow: true,
-              ),
-            ),
-
-            // ══════ 下段: クラス名 + クラステキスト ══════
-            Column(
-              children: [
+                // クラス名 JP — 一言と連結して「○○な + 騎士」と読める
                 Text(
                   cls.nameJP,
                   style: const TextStyle(
                     color: Color(0xFFEAEAEA),
-                    fontSize: 22,
+                    fontSize: 26,
                     fontWeight: FontWeight.w700,
-                    letterSpacing: 5,
+                    letterSpacing: 6,
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -287,13 +294,14 @@ class _ClassShareCardPageState extends State<ClassShareCardPage> {
                     letterSpacing: 3,
                   ),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 10),
+                // クラステキスト (補足、✦なし)
                 Text(
-                  '✦ $classText ✦',
+                  classText,
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    color: accent.withValues(alpha: 0.85),
-                    fontSize: 13,
+                    color: accent.withValues(alpha: 0.78),
+                    fontSize: 12,
                     height: 1.6,
                     fontStyle: _showShadow ? FontStyle.italic : FontStyle.normal,
                     letterSpacing: 0.5,
@@ -301,7 +309,7 @@ class _ClassShareCardPageState extends State<ClassShareCardPage> {
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 14),
+                const SizedBox(height: 12),
                 Text(
                   'What is yours?',
                   style: TextStyle(
