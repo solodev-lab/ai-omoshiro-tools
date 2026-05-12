@@ -70,7 +70,7 @@ TECHNICAL:
 - LEAVE THE CENTER VERTICALLY EMPTY — the upper-middle and lower-middle areas should have dense decoration, but the EXACT CENTER (around 30%-60% of vertical height) must be visually quieter so a title text can be overlaid in the center
 - Solid black or very dark background base — no white areas anywhere
 - High detail, museum quality decorative art
-- No text, no numbers, no letters anywhere in the image
+- ABSOLUTELY NO text, no numbers, no letters, no calligraphy, no inscriptions, no symbols resembling letters anywhere in the image — including on ribbons, banners, shields, scrolls, plaques, or any rectangular surface. The image must be PURELY pictorial and decorative
 """
 
 # ============================================================
@@ -174,10 +174,11 @@ PALETTE:
 SUBJECT — PART 3: COURT CARDS (royal characters, archetypal personalities):
 A decorative Art Nouveau composition for the introduction to "Court Cards" — themes of personality, role, archetypal characters.
 COMPOSITION:
-- Top section: ornamental arch with regal symbols arranged symmetrically — a CROWN, twin SCEPTERS crossed behind it, FLEUR-DE-LIS motifs at the sides
-- Bottom section: heraldic stylized lion and eagle silhouettes in profile, framed by laurel wreaths, royal banner ribbons
-- The center area is mostly empty (deep crimson-and-gold void with subtle damask pattern)
-- Frame edges: thin gold filigree borders with small crown motifs at corners
+- Top section: ornamental arch with regal symbols arranged symmetrically — a CROWN at top center, twin SCEPTERS crossed behind it, FLEUR-DE-LIS motifs at the sides
+- Bottom section: heraldic stylized lion silhouette on the LEFT and eagle silhouette on the RIGHT in profile, each framed by small laurel wreaths
+- STRICTLY FORBIDDEN ELEMENTS: any banners, ribbons, scrolls, shields, plaques, books, or rectangular surfaces — these auto-fill with letters in image generation. Use ONLY pure ornamental motifs (crown, scepters, lion, eagle, laurel, fleur-de-lis, damask pattern)
+- The EXACT CENTER (vertical 30%–65%) MUST BE VISUALLY EMPTY — a deep crimson-and-gold void with only an extremely subtle damask wallpaper pattern (very low opacity). NO objects, symbols, or motifs in the center area
+- Frame edges: thin gold filigree borders with small crown motifs at the four corners
 PALETTE:
 - Royal and warm: deep crimson, burgundy, rich gold, ivory white
 - Bold gold leaf accents on crown, scepters, lion, eagle
