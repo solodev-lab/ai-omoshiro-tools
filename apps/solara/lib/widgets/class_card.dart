@@ -133,16 +133,16 @@ class ClassCard extends StatelessWidget {
     final accentColor = isLight ? const Color(0xFFF9D976) : const Color(0xFFEAEAEA);
 
     // ── 固定高さで Light/Shadow のクラス名位置を一致させる ──
-    // テキスト 3行ぶんを確保 (短い Light でも長い Shadow でも同じレイアウト)
+    // 日本語フォントの実効 line-height (~1.5) を考慮しテキスト 3行ぶんを確保
     final isSmall = width < 200;
-    final overlayHeight = width * 0.62; // 280→174, 260→161, 200→124
+    final overlayHeight = width * 0.72; // 280→202, 260→187, 200→144
     final fsClassJP = isSmall ? 16.0 : 22.0;
     final fsClassEN = isSmall ? 9.0 : 11.0;
     final fsText = isSmall ? 11.0 : 14.0;
 
     return Container(
       height: overlayHeight,
-      padding: const EdgeInsets.fromLTRB(16, 36, 16, 14),
+      padding: const EdgeInsets.fromLTRB(16, 36, 16, 20),
       decoration: BoxDecoration(
         borderRadius: const BorderRadius.vertical(bottom: Radius.circular(16)),
         gradient: LinearGradient(
