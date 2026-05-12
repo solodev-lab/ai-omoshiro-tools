@@ -306,17 +306,8 @@ class _ClassShareCardPageState extends State<ClassShareCardPage> {
                     fontStyle: _showShadow ? FontStyle.italic : FontStyle.normal,
                     letterSpacing: 0.5,
                   ),
-                  maxLines: 2,
+                  maxLines: 3,
                   overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  'What is yours?',
-                  style: TextStyle(
-                    color: accent.withValues(alpha: 0.4),
-                    fontSize: 10,
-                    letterSpacing: 4,
-                  ),
                 ),
               ],
             ),
