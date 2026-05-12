@@ -89,6 +89,19 @@ class ClassCard extends StatelessWidget {
             ),
           ),
 
+          // ── Shadow 時の薄暗化レイヤー (Light との切替が分かるように) ──
+          if (mode == ClassCardMode.shadow)
+            Positioned.fill(
+              child: IgnorePointer(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(16),
+                  child: Container(
+                    color: Colors.black.withValues(alpha: 0.28),
+                  ),
+                ),
+              ),
+            ),
+
           // ── オーバーレイ ──
           if (mode != ClassCardMode.none)
             Positioned(
