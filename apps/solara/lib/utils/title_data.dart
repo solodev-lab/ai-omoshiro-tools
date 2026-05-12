@@ -268,7 +268,7 @@ const title144 = <String, Map<String, Map<String, String>>>{
     'gemini':      {'light':'深淵を見通す','shadow':'知らん顔で全員を精密分析中な','shadowEN':'Blank face, profiling everyone'},
     'cancer':      {'light':'慈しみに満ちた','shadow':'身内にだけ見せる顔がびっくり甘い','shadowEN':'Inner circle gets shockingly sweet face'},
     'leo':         {'light':'玉座に座す','shadow':'無関心装って夜中に枕を殴ってる','shadowEN':'Plays "couldn\'t care less," punches pillow at 2am'},
-    'virgo':       {'light':'省察に長けた','shadow':'謎キャラぶって脳内は自虐中な','shadowEN':'Mystery vibes outside, self-roast inside'},
+    'virgo':       {'light':'省察に長けた','shadow':'謎キャラぶって脳内ダメ出し中な','shadowEN':'Mystery vibes outside, nitpicks self inside'},
     'libra':       {'light':'静寂の威を放つ','shadow':'沈黙で圧かけ急に愛想笑いする','shadowEN':'Silent pressure, then sudden fake smile'},
     'scorpio':     {'light':'覚悟を決めた','shadow':'ゼロか百か、全部重い','shadowEN':'Zero or hundred, all heavy'},
     'sagittarius': {'light':'誓いと自由を併せ持つ','shadow':'愛も自由も全部欲しい','shadowEN':'Wants all the love AND all the freedom'},
