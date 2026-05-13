@@ -183,6 +183,29 @@ class MapAspectChip extends StatelessWidget {
           const SizedBox(height: 14),
           _descSection(
               '読み解き', desc['reading'] ?? '', SolaraColors.solaraGoldLight),
+          const SizedBox(height: 18),
+          // 「Map のスコアバー (16 方位 Fortune) と同じ方角の数字では？」と
+          // 誤解されないよう、Daily Transit の方位概念を popup 末尾で明示。
+          // 天空方位 = ASC/MC/DSC/IC など、今いる場所の空での惑星位置。
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+            decoration: BoxDecoration(
+              color: const Color(0x14FFFFFF),
+              borderRadius: BorderRadius.circular(6),
+              border: Border.all(color: const Color(0x22FFFFFF)),
+            ),
+            child: const Text(
+              '※ ここで示す「方角」は天空方位 — 今いる場所の空で惑星が通る位置 '
+              '(ASC=東の地平 / MC=南中 / DSC=西の地平 / IC=北底など) を表します。\n'
+              'Map のスコアバーが示す 16 方位 Fortune (アスペクト合算スコア) '
+              'とは別の指標です。',
+              style: TextStyle(
+                fontSize: 11,
+                color: Color(0xFF999999),
+                height: 1.55,
+              ),
+            ),
+          ),
         ],
       ),
     );
