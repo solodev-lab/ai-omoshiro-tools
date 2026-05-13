@@ -523,7 +523,8 @@ void showCategoryInfoPopup(
             'もちろん方角に向かい進む事も一つの方角に対する\n'
             '行動です。他には、意識を向ける事や、声をかける、\n'
             '大切なアイテムの置き場所を方角に合わせて家を出発する、\n'
-            '話しかける時の方角を意識する、深呼吸をする方角、\n'
+            '話しかける時の方角を意識する、お店で座る席や\n'
+            'どちらに向くか意識する、深呼吸をする方角、\n'
             'など、あなたが自由に決められます。\n'
             '決めた行動により、惑星たちのエネルギーが\n'
             'あなたに届くでしょう。\n'
@@ -545,17 +546,28 @@ void showCategoryInfoPopup(
                 letterSpacing: 0.5),
           ),
           const SizedBox(height: 4),
-          const Text(
-            '基準地点は地図画面の左側にある 📍 (VIEWPOINT) ボタン\n'
-            'から登録できます。\n'
-            '登録したい場所を地図中央に表示してパネルを開き、\n'
-            '「この地点を保存」をタップすると、その地点が\n'
-            'VIEWPOINT として保存されます。\n\n'
-            '保存した基準地点は、検索結果一覧の上部や\n'
-            '右上 ⊙ アイコン (Daily Transit) のプルダウンから、\n'
-            'いつでも切り替えて使えます。',
-            style: TextStyle(
-                color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
+          Text.rich(
+            TextSpan(
+              style: const TextStyle(
+                  color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
+              children: const [
+                TextSpan(text: '基準地点は地図画面の左側にある '),
+                WidgetSpan(
+                  alignment: PlaceholderAlignment.middle,
+                  child: Icon(Icons.location_on_outlined,
+                      size: 14, color: Color(0xFFC9A84C)),
+                ),
+                TextSpan(
+                    text: ' (VIEWPOINT) ボタン\n'
+                        'から登録できます。\n'
+                        '登録したい場所を地図中央に表示してパネルを開き、\n'
+                        '「この地点を保存」をタップすると、その地点が\n'
+                        'VIEWPOINT として保存されます。\n\n'
+                        '保存した基準地点は、検索結果一覧の上部や\n'
+                        '下部メニューの「Daily」チップ内のプルダウンから、\n'
+                        'いつでも切り替えて使えます。'),
+              ],
+            ),
           ),
           const SizedBox(height: 10),
         ],
@@ -586,12 +598,12 @@ void showCategoryInfoPopup(
         ),
         const SizedBox(height: 4),
         const Text(
-          '右上の ⊙ アイコンから「行動する時間の指針」が\n'
-          '分かります。\n'
-          '※ 右上アイコンの画面は「天空方位」(惑星が空のどこに\n'
-          '　 いつ来るか) を扱い、この Map の「地表方位」\n'
+          '下部メニューの「Daily」チップから\n'
+          '「行動する時間の指針」が分かります。\n'
+          '※「Daily」チップの画面は「天空方位」(惑星が空の\n'
+          '　 どこにいつ来るか) を扱い、この Map の「地表方位」\n'
           '　 (どの土地に向かうか) とは別物です。\n\n'
-          'スコアバー (地表方位の強さ) と右上アイコン\n'
+          'スコアバー (地表方位の強さ) と「Daily」チップ\n'
           '(天空方位 × 時刻) を組み合わせると、\n'
           'あなたの望む未来に対する最適な\n'
           '「方角 × 時間」を Solara が算出します。',
