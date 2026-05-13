@@ -548,50 +548,57 @@ class _SanctuaryTitleDiagnosisPageState extends State<SanctuaryTitleDiagnosisPag
     final r = _rounds[_roundIdx];
     final cards = r['cards'] as List;
     final progress = (_roundIdx + 1) / _rounds.length;
+    // 質問+カード選択画面は端末によりカードが画面下端で切れるため
+    // SingleChildScrollView で全要素を可視化 (スクロール可能化)。
+    // タイトル/PART遷移画面 (_buildPartTrans) はスクロール対応しない。
     return Stack(children: [
       Positioned(top: 0, left: 0, right: 0,
         child: LinearProgressIndicator(value: progress, minHeight: 3,
           backgroundColor: const Color(0x14FFFFFF), valueColor: const AlwaysStoppedAnimation(Color(0xFFF9D976)))),
-      Padding(padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
-        child: Column(children: [
-          Text('${_roundIdx + 1} / ${_rounds.length}',
-            style: const TextStyle(fontSize: 15, color: Color(0xCCF9D976), letterSpacing: 2, fontWeight: FontWeight.w600)),
-          const SizedBox(height: 4),
-          Text(_partNames[r['part']] ?? '', style: const TextStyle(fontSize: 15, color: Color(0xB3F9D976), letterSpacing: 2)),
-          const SizedBox(height: 16),
-          Text(r['q'] as String, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: Color(0xFFEAEAEA), height: 1.5), textAlign: TextAlign.center),
-          const SizedBox(height: 4),
-          Text(r['qen'] as String, style: const TextStyle(fontSize: 15, color: Color(0x80ACACAC)), textAlign: TextAlign.center),
-          const SizedBox(height: 28),
-          Expanded(child: Center(child: Wrap(spacing: 12, runSpacing: 12, alignment: WrapAlignment.center,
-            children: List.generate(cards.length, (i) {
-              final c = cards[i] as Map;
-              final selected = _selectedCard == i;
-              final dimmed = _selectedCard != null && !selected;
-              return GestureDetector(
-                onTap: _selectedCard == null ? () => _selectCard(i, (c['axis'] ?? c['court'] ?? 'power') as String) : null,
-                child: AnimatedContainer(duration: const Duration(milliseconds: 300),
-                  width: cards.length <= 4 ? 140.0 : 110.0,
-                  padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
-                  decoration: BoxDecoration(borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: selected ? const Color(0xFFF9D976) : const Color(0x33FFFFFF), width: selected ? 2 : 1),
-                    color: selected ? const Color(0x1AF9D976) : const Color(0x08FFFFFF),
-                    boxShadow: selected ? [const BoxShadow(color: Color(0x66F9D976), blurRadius: 20)] : null),
-                  child: AnimatedOpacity(duration: const Duration(milliseconds: 300), opacity: dimmed ? 0.25 : 1.0,
-                    // HTML: <img src="card-images/XX.png"> — show card image
-                    child: c['img'] != null
-                      ? ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
-                          child: Image.asset('assets/card-images/${c['img']}', fit: BoxFit.cover))
-                      : Column(mainAxisSize: MainAxisSize.min, children: [
-                          Text(c['emoji'] as String? ?? '', style: const TextStyle(fontSize: 32)),
-                          const SizedBox(height: 8),
-                          Text(c['name'] as String? ?? '', style: const TextStyle(fontSize: 15, color: Color(0xFFEAEAEA), fontWeight: FontWeight.w600), textAlign: TextAlign.center),
-                        ])),
-                ),
-              );
-            })))),
-        ])),
+      Padding(padding: const EdgeInsets.fromLTRB(20, 18, 20, 20),
+        child: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          child: Column(children: [
+            Text('${_roundIdx + 1} / ${_rounds.length}',
+              style: const TextStyle(fontSize: 15, color: Color(0xCCF9D976), letterSpacing: 2, fontWeight: FontWeight.w600)),
+            const SizedBox(height: 4),
+            Text(_partNames[r['part']] ?? '', style: const TextStyle(fontSize: 15, color: Color(0xB3F9D976), letterSpacing: 2)),
+            const SizedBox(height: 16),
+            Text(r['q'] as String, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: Color(0xFFEAEAEA), height: 1.5), textAlign: TextAlign.center),
+            const SizedBox(height: 4),
+            Text(r['qen'] as String, style: const TextStyle(fontSize: 15, color: Color(0x80ACACAC)), textAlign: TextAlign.center),
+            const SizedBox(height: 28),
+            Wrap(spacing: 12, runSpacing: 12, alignment: WrapAlignment.center,
+              children: List.generate(cards.length, (i) {
+                final c = cards[i] as Map;
+                final selected = _selectedCard == i;
+                final dimmed = _selectedCard != null && !selected;
+                return GestureDetector(
+                  onTap: _selectedCard == null ? () => _selectCard(i, (c['axis'] ?? c['court'] ?? 'power') as String) : null,
+                  child: AnimatedContainer(duration: const Duration(milliseconds: 300),
+                    width: cards.length <= 4 ? 140.0 : 110.0,
+                    padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
+                    decoration: BoxDecoration(borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: selected ? const Color(0xFFF9D976) : const Color(0x33FFFFFF), width: selected ? 2 : 1),
+                      color: selected ? const Color(0x1AF9D976) : const Color(0x08FFFFFF),
+                      boxShadow: selected ? [const BoxShadow(color: Color(0x66F9D976), blurRadius: 20)] : null),
+                    child: AnimatedOpacity(duration: const Duration(milliseconds: 300), opacity: dimmed ? 0.25 : 1.0,
+                      // HTML: <img src="card-images/XX.png"> — show card image
+                      child: c['img'] != null
+                        ? ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: Image.asset('assets/card-images/${c['img']}', fit: BoxFit.cover))
+                        : Column(mainAxisSize: MainAxisSize.min, children: [
+                            Text(c['emoji'] as String? ?? '', style: const TextStyle(fontSize: 32)),
+                            const SizedBox(height: 8),
+                            Text(c['name'] as String? ?? '', style: const TextStyle(fontSize: 15, color: Color(0xFFEAEAEA), fontWeight: FontWeight.w600), textAlign: TextAlign.center),
+                          ])),
+                  ),
+                );
+              })),
+            // 下端余白 (スクロール末尾でカード下に少し空間を確保)
+            const SizedBox(height: 24),
+          ]))),
     ]);
   }
 
