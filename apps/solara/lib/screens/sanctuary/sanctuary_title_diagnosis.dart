@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -21,7 +23,9 @@ class SanctuaryTitleDiagnosisPage extends StatefulWidget {
 class _SanctuaryTitleDiagnosisPageState extends State<SanctuaryTitleDiagnosisPage>
     with TickerProviderStateMixin {
   // HTML exact: 28 rounds, 3 parts
-  static const _rounds = <Map<String, dynamic>>[
+  // 元データ (不変). 実際の表示は initState で各 round の cards を
+  // シャッフルした _rounds (instance) を使う。
+  static const _baseRounds = <Map<String, dynamic>>[
     // HTML: TD_ROUNDS — Part 1 Minor Arcana (img = card-images/ filename)
     {'part':1,'q':'新しい何かが始まるとき、あなたが最初に手に取るのは？','qen':'When something new begins, what do you reach for first?',
      'cards':[{'img':'W01.webp','axis':'power'},{'img':'C01.webp','axis':'heart'},{'img':'S01.webp','axis':'mind'},{'img':'P01.webp','axis':'spirit'}]},
@@ -84,6 +88,10 @@ class _SanctuaryTitleDiagnosisPageState extends State<SanctuaryTitleDiagnosisPag
   ];
   static const _partNames = {1:'PART 1: MINOR ARCANA',2:'PART 2: MAJOR ARCANA',3:'PART 3: COURT CARDS'};
 
+  // 表示用ラウンド (各 round の cards を毎回シャッフル)
+  late List<Map<String, dynamic>> _rounds;
+  final _rng = math.Random();
+
   int _roundIdx = 0;
   final Map<String, int> _scores = {'power':0,'mind':0,'spirit':0,'shadow':0,'heart':0};
   // HTML: TD.courtSelections — Part 3 で選ばれた court type を記録
@@ -104,9 +112,23 @@ class _SanctuaryTitleDiagnosisPageState extends State<SanctuaryTitleDiagnosisPag
   String _revealLightJP = '', _revealShadowJP = '', _revealAxis = '', _revealCourt = '';
   String _revealClsLightJP = ''; // クラス Light テキスト (cls.lightJP)
 
+  /// 各ラウンドの cards を毎回シャッフルした _rounds を生成する。
+  /// PART の順番 (1→2→3) と質問順は元データのまま、選択肢の左右配置だけ
+  /// ランダム化することで「常に左の選択肢を選ぶ」等の癖バイアスを軽減する。
+  void _shuffleCards() {
+    _rounds = _baseRounds.map<Map<String, dynamic>>((r) {
+      final cards = List<Map<String, dynamic>>.from(
+        (r['cards'] as List).cast<Map<String, dynamic>>(),
+      );
+      cards.shuffle(_rng);
+      return {...r, 'cards': cards};
+    }).toList();
+  }
+
   @override
   void initState() {
     super.initState();
+    _shuffleCards();
     _revealCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 7000));
     _summoningCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 4400));
     _forgingCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 4000));
@@ -1100,7 +1122,7 @@ class _SanctuaryTitleDiagnosisPageState extends State<SanctuaryTitleDiagnosisPag
                 decoration: BoxDecoration(borderRadius: BorderRadius.circular(14), gradient: const LinearGradient(colors: [Color(0xFFF9D976), Color(0xFFE8A840)])),
                 child: const Center(child: Text('これでいく', style: TextStyle(color: Color(0xFF0A0A14), fontSize: 15, fontWeight: FontWeight.w700))))),
               const SizedBox(height: 12),
-              GestureDetector(onTap: () => setState(() { _roundIdx = 0; _scores.updateAll((_, v) => 0); _courtSelections.clear(); _selections.clear(); _selectedCard = null; _screen = 'intro'; _revealCtrl.reset(); _flipCtrl.reset(); _showShadowSide = false; }),
+              GestureDetector(onTap: () => setState(() { _roundIdx = 0; _scores.updateAll((_, v) => 0); _courtSelections.clear(); _selections.clear(); _selectedCard = null; _screen = 'intro'; _revealCtrl.reset(); _flipCtrl.reset(); _showShadowSide = false; _shuffleCards(); }),
                 child: const Text('もう一度診断する', style: TextStyle(fontSize: 15, color: Color(0xFFACACAC), decoration: TextDecoration.underline))),
             ])),
         ]))),
@@ -1155,7 +1177,7 @@ class _SanctuaryTitleDiagnosisPageState extends State<SanctuaryTitleDiagnosisPag
               decoration: BoxDecoration(borderRadius: BorderRadius.circular(14), gradient: const LinearGradient(colors: [Color(0xFFC9A8E0), Color(0xFF8C5BC0)])),
               child: const Center(child: Text('これでいく', style: TextStyle(color: Color(0xFF0A0A14), fontSize: 15, fontWeight: FontWeight.w700))))),
             const SizedBox(height: 12),
-            GestureDetector(onTap: () => setState(() { _roundIdx = 0; _scores.updateAll((_, v) => 0); _courtSelections.clear(); _selections.clear(); _selectedCard = null; _screen = 'intro'; _revealCtrl.reset(); _flipCtrl.reset(); _showShadowSide = false; }),
+            GestureDetector(onTap: () => setState(() { _roundIdx = 0; _scores.updateAll((_, v) => 0); _courtSelections.clear(); _selections.clear(); _selectedCard = null; _screen = 'intro'; _revealCtrl.reset(); _flipCtrl.reset(); _showShadowSide = false; _shuffleCards(); }),
               child: const Text('もう一度診断する', style: TextStyle(fontSize: 15, color: Color(0xFFACACAC), decoration: TextDecoration.underline))),
           ]),
         ]))),
