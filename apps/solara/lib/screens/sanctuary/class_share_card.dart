@@ -65,8 +65,8 @@ class _ClassShareCardPageState extends State<ClassShareCardPage> {
       // Shadow: 深いアメジスト (現状維持)
       return const [Color(0xFF1A0828), Color(0xFF050208)];
     }
-    // Light: 暖かいアンバー/アンティーク・ゴールドのダーク基調
-    return const [Color(0xFF3E2A14), Color(0xFF18100A)];
+    // Light: 暖かいアンバー/アンティーク・ゴールド (明るめ)
+    return const [Color(0xFF7A5028), Color(0xFF3A2616)];
   }
 
   /// Light/Shadow 面のアクセント色
