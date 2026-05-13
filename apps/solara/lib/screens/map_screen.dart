@@ -1369,6 +1369,7 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
       if (!mounted) return;
       try {
         _mapCtrl.move(LatLng(viewLat, centerLng), 2.5);
+        _kickPaintInvalidation();
       } catch (_) {/* 初期化中は無視 */}
     });
   }
@@ -1407,6 +1408,7 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
       if (!mounted) return;
       try {
         _mapCtrl.move(restoreCenter, restoreZoom);
+        _kickPaintInvalidation();
       } catch (_) {/* 無視 */}
     });
   }
