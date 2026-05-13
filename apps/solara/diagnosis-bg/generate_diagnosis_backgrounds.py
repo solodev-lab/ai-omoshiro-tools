@@ -78,6 +78,25 @@ TECHNICAL:
 # ============================================================
 
 BACKGROUNDS = [
+    ("share_card_bg", """
+SUBJECT — SHARE CARD ELEGANT BACKDROP (汎用フレーム、全クラス共通):
+A subtle universal Art Nouveau (Mucha) decorative composition for a share card backdrop.
+COMPOSITION:
+- 9:16 portrait orientation
+- Deep velvet midnight background (almost pure black) covering the entire canvas
+- Discrete Mucha-style gold filigree borders along all four edges (thin elegant lines)
+- Stylized botanical garlands (laurel, vines, lily silhouettes) curling subtly at the four corners only
+- Very faint floating gold particles / dust scattered throughout at low opacity
+- A dim radial halo of warm gold at the absolute center, very soft, low contrast
+- The entire interior (about 75%-80% of the canvas) MUST BE VISUALLY EMPTY — no figures, no specific symbols, only the faint center halo and edge ornaments
+- NO HUMAN FIGURES, NO ZODIAC SYMBOLS, NO CLASS-SPECIFIC MOTIFS — must be universal so it works with any of the 25 class cards
+PALETTE:
+- Almost pure black / midnight black base
+- Soft warm gold accents on borders and particles (low saturation)
+- A whisper of dim amber at the center halo
+- Overall feeling: 神秘的、上品、ニュートラル、汎用的、どのクラスにも合う中性色
+"""),
+
     ("ceremony", """
 SUBJECT — THE CEREMONY (召喚演出: 暗黒の中に金色の粒子と神秘):
 A pure darkness composition with subtle gold particles and mystical lighting.
