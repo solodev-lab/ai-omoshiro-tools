@@ -1835,6 +1835,21 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
           ),
         ),
 
+        // ── 右下「現在地に移動」ボタン ──
+        // 下部チップバー (高さ 72: _kChipHeight 60 + container padding 12) の
+        // 直上 8px gap、Forecast チップの上に重ねる位置。
+        // 右端寄せ (right: 12) でタップしやすさ重視。
+        // チップバー非表示の条件と完全に揃える (同じ理由で隠す)。
+        if (!_astroCartoMode && !_fortuneSheetOpen && !_viewpointMenuOpen) Positioned(
+          right: 12,
+          bottom: 80,
+          child: MapBtn(
+            onTap: _geolocate,
+            child: const Icon(Icons.my_location,
+                size: 20, color: Color(0xFFC9A84C)),
+          ),
+        ),
+
         // ── Fortune Sheet ──
         if (!_noProfile && _fortuneSheetOpen && !_astroCartoMode) Positioned(
           bottom: 0, left: 0, right: 0,
