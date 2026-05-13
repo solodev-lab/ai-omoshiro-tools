@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -462,6 +463,49 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
               ),
             );
           }),
+          // 🔧 開発デバッグ用: redoCount リセットボタン
+          // kDebugMode が true (debug build) の時のみ表示、release build では消える
+          if (kDebugMode && _titleRedoCount > 0) ...[
+            const SizedBox(height: 6),
+            GestureDetector(
+              onTap: () async {
+                final td = await SolaraStorage.loadTitleData();
+                if (td != null) {
+                  final updated = <String, dynamic>{
+                    ...td,
+                    'redoCount': 0,
+                  };
+                  await SolaraStorage.saveTitleData(updated);
+                  if (mounted) {
+                    setState(() => _titleRedoCount = 0);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('🔧 redoCount=0 にリセットしました (dev only)'),
+                        duration: Duration(seconds: 2),
+                      ),
+                    );
+                  }
+                }
+              },
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: const Color(0x44FF6B6B)),
+                ),
+                child: const Center(
+                  child: Text(
+                    '🔧 dev: 再診断カウントをリセット',
+                    style: TextStyle(
+                      color: Color(0xAAFF8888),
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
         ],
         // HTML: #titleNeedProfile { display:none; text-align:center; color:#ACACAC; font-size:13px; padding:10px; }
         if (!hasProfile) ...[
