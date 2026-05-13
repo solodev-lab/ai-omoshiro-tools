@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show Clipboard, ClipboardData;
 import 'package:flutter_map/flutter_map.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
 import '../utils/solara_api.dart' show solaraWorkerBase;
 import '../utils/solara_storage.dart';
@@ -1297,12 +1298,56 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     });
   }
 
-  /// HTML: vpGeo() — GPS現在地に移動（geolocatorパッケージ未導入のため仮実装）
-  void _geolocate() {
-    // TODO: geolocator パッケージ追加後に実装
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('GPS機能は今後実装予定です'), duration: Duration(seconds: 2)),
-    );
+  /// GPS で現在地を取得し、地図中心をその位置に移動。
+  /// 内部で _rebuild を呼ぶので VP Pin (_center) も GPS 位置になる。
+  /// 「この地点を保存」と組合せれば現在地を VP として登録可能。
+  ///
+  /// エラー処理:
+  ///   - 位置情報サービス OFF → SnackBar 案内
+  ///   - 権限拒否 → 権限リクエスト → 再拒否なら案内
+  ///   - 永久拒否 → 設定アプリから許可するよう案内
+  ///   - 取得タイムアウト / 例外 → SnackBar
+  Future<void> _geolocate() async {
+    void snack(String msg, {int seconds = 3}) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(msg), duration: Duration(seconds: seconds)),
+      );
+    }
+
+    final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      snack('端末の位置情報サービスが OFF です。設定からONにしてください。');
+      return;
+    }
+
+    var permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+    }
+    if (permission == LocationPermission.deniedForever) {
+      snack('位置情報の利用が永久拒否されています。設定アプリから許可してください。',
+          seconds: 4);
+      return;
+    }
+    if (permission == LocationPermission.denied) {
+      snack('位置情報の利用が拒否されました。');
+      return;
+    }
+
+    snack('現在地を取得中…', seconds: 2);
+    try {
+      final pos = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+          timeLimit: Duration(seconds: 10),
+        ),
+      );
+      if (!mounted) return;
+      _rebuild(LatLng(pos.latitude, pos.longitude));
+    } catch (e) {
+      snack('現在地の取得に失敗しました: $e');
+    }
   }
 
   // ══════════════════════════════════════════════
