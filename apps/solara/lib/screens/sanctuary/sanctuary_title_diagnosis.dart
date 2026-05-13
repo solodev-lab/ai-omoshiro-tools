@@ -162,7 +162,7 @@ class _SanctuaryTitleDiagnosisPageState extends State<SanctuaryTitleDiagnosisPag
           }
           final minAxes =
               allAxes.where((k) => _scores[k] == minVal).toList();
-          final pick = _pickByBirthHash(minAxes);
+          final pick = _pickByAstroSeed(minAxes);
           _scores[pick] = (_scores[pick] ?? 0) + 1;
         } else {
           _scores[axis] = (_scores[axis] ?? 0) + 1;
@@ -252,7 +252,7 @@ class _SanctuaryTitleDiagnosisPageState extends State<SanctuaryTitleDiagnosisPag
           .map((e) => e.key)
           .toList();
       court =
-          maxCourts.length == 1 ? maxCourts.first : _pickByBirthHash(maxCourts);
+          maxCourts.length == 1 ? maxCourts.first : _pickByAstroSeed(maxCourts);
     }
 
     // ── デバッグ: 最終決定の各段階を出力 ──
@@ -308,14 +308,28 @@ class _SanctuaryTitleDiagnosisPageState extends State<SanctuaryTitleDiagnosisPag
 
   SolaraProfile? get _profile => widget.profile;
 
-  /// 同点解消用: 候補リストから生年月日ハッシュで 1 つ決定的に選ぶ。
+  /// 同点解消用: 太陽星座 × 月星座から決定的に 1 つ選ぶ。
+  /// - 占星術的シード (12 × 12 = 144 通り)
   /// - 順序バイアス (page > knight ... や power > mind ...) を回避
-  /// - 同じ生年月日の人は同じ結果になる (占いの再現性)
-  /// - 候補が空ならフォールバックとして先頭 (実用上は呼び出し側で保証)
-  String _pickByBirthHash(List<String> candidates) {
+  /// - 同じ太陽×月星座の人は同じ結果 (占いの再現性 + 一貫性)
+  /// - title_data の sunAdj/moonNoun と同じ zodiac 順を採用
+  /// - 候補が空なら空文字 (実用上は呼び出し側で保証)
+  static const _zodiacOrder = [
+    'aries', 'taurus', 'gemini', 'cancer',
+    'leo', 'virgo', 'libra', 'scorpio',
+    'sagittarius', 'capricorn', 'aquarius', 'pisces',
+  ];
+
+  String _pickByAstroSeed(List<String> candidates) {
     if (candidates.isEmpty) return '';
     if (candidates.length == 1) return candidates.first;
-    final seed = (_profile?.birthDate ?? '').hashCode.abs();
+    final sun = title_data.getSunSign(_profile?.birthDate ?? '');
+    final moon = title_data.getMoonSign(
+        _profile?.birthDate ?? '', _profile?.birthTime ?? '');
+    final sunIdx = _zodiacOrder.indexOf(sun);
+    final moonIdx = _zodiacOrder.indexOf(moon);
+    // sun を 12 進数の上位桁、moon を下位桁にして 144 通りの seed を作る
+    final seed = (sunIdx >= 0 ? sunIdx : 0) * 12 + (moonIdx >= 0 ? moonIdx : 0);
     return candidates[seed % candidates.length];
   }
 
