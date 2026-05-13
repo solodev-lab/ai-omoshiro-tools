@@ -74,10 +74,15 @@ class SolaraNavBar extends StatelessWidget {
           BoxShadow(color: Color(0x66000000), blurRadius: 30, offset: Offset(0, -4)),
         ],
       ),
+      // Expanded で 5 等分割。固定 width:64 の SizedBox を使うと
+      // 狭い端末/表示サイズ大の時に 5×64=320 が画面幅(padding控除後)を
+      // 超えて RIGHT OVERFLOWED が発生していた。
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: List.generate(5, (i) => _buildItem(i)),
+        children: List.generate(
+          5,
+          (i) => Expanded(child: _buildItem(i)),
+        ),
       ),
     );
   }
@@ -87,14 +92,14 @@ class SolaraNavBar extends StatelessWidget {
     final color = active ? _gold : _inactiveColor;
     final iconWidget = _iconForIndex(index, color);
 
+    // SizedBox(width:64) を撤去。親 Row が Expanded で幅を与えるので
+    // タップ領域はそのセル幅いっぱい (HitTestBehavior.opaque で透明部もタップ可)。
     return GestureDetector(
       onTap: () => onTap(index),
       behavior: HitTestBehavior.opaque,
-      child: SizedBox(
-        width: 64,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
             const SizedBox(height: 6),
             // Icon with glow for active
             if (active)
@@ -142,7 +147,6 @@ class SolaraNavBar extends StatelessWidget {
               const SizedBox(height: 4),
           ],
         ),
-      ),
     );
   }
 
