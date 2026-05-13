@@ -11,6 +11,7 @@ import '../utils/solara_api.dart' show solaraWorkerBase;
 import '../utils/solara_storage.dart';
 import '../utils/tile_http_client.dart' show sharedTileHttpClient;
 import '../widgets/dominant_fortune_overlay.dart';
+import '../widgets/info_popup.dart';
 import 'map/map_daily_transit_screen.dart';
 import 'map/map_constants.dart';
 import 'map/map_styles.dart';
@@ -913,6 +914,23 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
       // 複数候補: zoom 13 で表示域中心の周辺、中心をリスト上部へずらす
       _frameSearchArea(searchOrigin);
     }
+    // 検索後に VP Pin が画面外なら 3 秒ガイダンス。
+    // 16方位扇状の起点が見えていない状態 → ユーザーが混乱しないよう案内。
+    // _frameSearchArea で地図が動いた後の visibleBounds で判定するため
+    // postFrame で次フレーム以降に評価する。
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      try {
+        final visible = _mapCtrl.camera.visibleBounds;
+        if (!visible.contains(_center)) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text(
+                'VIEWPOINT が画面外です。ズームアウト、または左上スコアバーから 16 方位の状況を確認できます。'),
+            duration: Duration(seconds: 3),
+          ));
+        }
+      } catch (_) {/* camera 未確定なら無視 */}
+    });
   }
 
   /// 検索結果リストが画面下半分を覆う前提で、マップ中心を「南」にずらして
@@ -1189,6 +1207,64 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     });
     // 中心が変われば検索結果の方位/距離/スコアも変わる
     _reannotateSearchResults();
+  }
+
+  /// VP (_center) のみ更新。地図表示は動かさない。
+  /// 検索チップから VP 切替する用途 (ユーザーが検索したい地域に地図を
+  /// パンしている時、チップ選択で VP だけ変える)。
+  void _setVpOnly(LatLng newCenter) {
+    setState(() {
+      _center = newCenter;
+      if (_chartResult != null) {
+        _planetLines = buildPlanetLineData(center: newCenter, chart: _chartResult!);
+      }
+    });
+    _reannotateSearchResults();
+  }
+
+  /// 現在地 (GPS) で VP のみ更新。地図は動かさない。
+  /// 検索チップ「📍 現在地」用。取得中は「現在地取得中…」snackbar を出す。
+  Future<void> _setVpToCurrentLocationOnly() async {
+    void snack(String msg, {int seconds = 3}) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(msg), duration: Duration(seconds: seconds)),
+      );
+    }
+
+    final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      snack('端末の位置情報サービスが OFF です。設定からONにしてください。');
+      return;
+    }
+
+    var permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+    }
+    if (permission == LocationPermission.deniedForever) {
+      snack('位置情報の利用が永久拒否されています。設定アプリから許可してください。',
+          seconds: 4);
+      return;
+    }
+    if (permission == LocationPermission.denied) {
+      snack('位置情報の利用が拒否されました。');
+      return;
+    }
+
+    snack('現在地取得中…', seconds: 2);
+    try {
+      final pos = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+          timeLimit: Duration(seconds: 10),
+        ),
+      );
+      if (!mounted) return;
+      _setVpOnly(LatLng(pos.latitude, pos.longitude));
+    } catch (e) {
+      snack('現在地の取得に失敗しました: $e');
+    }
   }
 
   /// Astro*Carto*Graphy モード起動。
@@ -1816,15 +1892,31 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
         // ── Search Bar ──
         if (_searchOpen) Positioned(
           top: topPad + 152, left: 16, right: 16,
-          child: SearchBarOverlay(
-            controller: _searchCtrl,
-            onSubmitted: _doSearch,
-            // ✕ は明示的閉じ = テキストもクリア。Android back (PopScope) は
-            // _clearAllSearch 経由でテキスト保持されるので別経路。
-            onClose: () => setState(() {
-              _searchOpen = false;
-              _searchCtrl.clear();
-            }),
+          // 検索バー + VP チップ列 を縦 Column。VP チップは「16方位の基準
+          // 点をどこにするか」を検索前に明示する UI。タップで VP のみ更新
+          // (_setVpOnly) し地図は動かさない。
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SearchBarOverlay(
+                controller: _searchCtrl,
+                onSubmitted: _doSearch,
+                // ✕ は明示的閉じ = テキストもクリア。Android back (PopScope) は
+                // _clearAllSearch 経由でテキスト保持されるので別経路。
+                onClose: () => setState(() {
+                  _searchOpen = false;
+                  _searchCtrl.clear();
+                }),
+              ),
+              const SizedBox(height: 6),
+              SearchVpChipRow(
+                vpSlots: _vpSlotsCache,
+                currentVp: _center,
+                onCurrentLocationTap: _setVpToCurrentLocationOnly,
+                onSlotTap: _setVpOnly,
+                onHelpTap: () => _showSearchVpHelpPopup(context),
+              ),
+            ],
           ),
         ),
 
@@ -2433,4 +2525,103 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     );
   }
 
+}
+
+/// 検索チップ列の ? から開く: VP (16方位基準) の選び方ガイド。
+/// 自宅 / 現在地 / 登録 VP のどれを選ぶかは占星術的に「観測点」の議論で、
+/// ユーザー次第であることを伝える。
+void _showSearchVpHelpPopup(BuildContext context) {
+  showInfoPopup(
+    context: context,
+    child: Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: const [
+        Text(
+          'VIEWPOINT (16方位の基準点) の選び方',
+          style: TextStyle(
+              color: Color(0xFFC9A84C), fontSize: 14, letterSpacing: 1),
+        ),
+        SizedBox(height: 10),
+        Text(
+          'チップをタップすると 16 方位スコアの基準点 (VP) が\n'
+          'その地点に切替わります。地図の表示は動きません。\n'
+          '検索バーで地名を入れずに検索すると、地図中心の\n'
+          '周辺から候補が返ります (VP は別軸)。',
+          style: TextStyle(
+              color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
+        ),
+        SizedBox(height: 14),
+        Text(
+          '【📍 現在地】',
+          style: TextStyle(
+              color: Color(0xFFC9A84C),
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.5),
+        ),
+        SizedBox(height: 4),
+        Text(
+          '「今この瞬間、どちらに向かうべきか」を見たい時。\n'
+          'GPS で現在地を取得し、その場を観測点にします。\n'
+          '移動中・旅先での「今ここの方角」用途。',
+          style: TextStyle(
+              color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
+        ),
+        SizedBox(height: 10),
+        Text(
+          '【🏠 自宅 / 登録 VP】',
+          style: TextStyle(
+              color: Color(0xFFC9A84C),
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.5),
+        ),
+        SizedBox(height: 4),
+        Text(
+          '自分の拠点 (自宅・職場など) を観測点にする使い方。\n'
+          '「自宅から見て今日の追い風はどっち」と読む、\n'
+          '日常生活で最も使われる基準。',
+          style: TextStyle(
+              color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
+        ),
+        SizedBox(height: 14),
+        Text(
+          'どちらを選ぶかはユーザー次第',
+          style: TextStyle(
+              color: Color(0xFFC9A84C),
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.5),
+        ),
+        SizedBox(height: 4),
+        Text(
+          '占星術で「観測点をどこに置くか」は、見たいテーマで\n'
+          '変わります。日常の指針なら自宅、いま動く瞬間の判断\n'
+          'なら現在地、旅先で根を張る場所を考えるならその土地。\n'
+          '使い分けで「方角の意味」が立体的に見えてきます。',
+          style: TextStyle(
+              color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
+        ),
+        SizedBox(height: 14),
+        Text(
+          'VP が画面外に出た時',
+          style: TextStyle(
+              color: Color(0xFFC9A84C),
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.5),
+        ),
+        SizedBox(height: 4),
+        Text(
+          '検索地と VP が大きく離れていると、16 方位の扇状が\n'
+          '画面外に出てしまい見えません。ズームアウトするか、\n'
+          '左上のスコアバー (帯) をタップすると、画面外でも\n'
+          '今日の方位状況が確認できます。',
+          style: TextStyle(
+              color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
+        ),
+      ],
+    ),
+  );
 }

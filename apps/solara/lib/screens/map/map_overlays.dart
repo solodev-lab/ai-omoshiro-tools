@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
+import 'map_vp_panel.dart' show VPSlot;
 import 'map_widgets.dart';
 
 /// VP Pin (ドラッグ可能な中央の金色ピン) の Marker を生成する。
@@ -66,16 +67,18 @@ class MapSideButtons extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // 検索中は左サイド全ボタン非表示 (検索バー + VP チップ列が
+    // 横幅をフル使うため)。検索が閉じれば 3 ボタン復帰。
+    if (searchOpen) return const SizedBox.shrink();
     return Stack(children: [
-      if (!searchOpen)
-        Positioned(
-          top: topPad + 152,
-          left: 16,
-          child: MapBtn(
-            onTap: onSearchTap,
-            child: const Icon(Icons.search, size: 18, color: Color(0x99C9A84C)),
-          ),
+      Positioned(
+        top: topPad + 152,
+        left: 16,
+        child: MapBtn(
+          onTap: onSearchTap,
+          child: const Icon(Icons.search, size: 18, color: Color(0x99C9A84C)),
         ),
+      ),
       // ☰ 表示メニュートリガー (3本ライン = レイヤー切替の象徴)
       Positioned(
         top: topPad + 200,
@@ -180,6 +183,133 @@ class _SearchBarOverlayState extends State<SearchBarOverlay> {
           ),
         ),
       ]),
+    );
+  }
+}
+
+/// 検索バー直上に出す VIEWPOINT (16方位基準) 選択チップ列。
+///
+/// チップ：[📍 現在地] [🏠 自宅 (or HOMEスロット)] [⭐ VP1...]
+/// タップで VP のみ更新 (地図は動かさない)。検索バー自体は閉じない。
+///
+/// active 表示: VP の lat/lng が現在の _center と近いチップを金色で強調。
+/// 現在地チップは active 検出不可なので常に非選択スタイル (押下トリガー扱い)。
+class SearchVpChipRow extends StatelessWidget {
+  final List<VPSlot> vpSlots;
+  /// 現在の VP 位置 (_center)。チップの active 強調判定に使う。
+  final LatLng currentVp;
+  final VoidCallback onCurrentLocationTap;
+  final void Function(LatLng) onSlotTap;
+  final VoidCallback onHelpTap;
+
+  const SearchVpChipRow({
+    super.key,
+    required this.vpSlots,
+    required this.currentVp,
+    required this.onCurrentLocationTap,
+    required this.onSlotTap,
+    required this.onHelpTap,
+  });
+
+  bool _isActive(VPSlot s) {
+    // 1e-4 ≈ 11m。VP Pin ドラッグの微小差は許容して active 判定。
+    return (s.lat - currentVp.latitude).abs() < 1e-4 &&
+        (s.lng - currentVp.longitude).abs() < 1e-4;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xE60F0F1E),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: const Color(0x26FFFFFF)),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+      child: Row(
+        children: [
+          // 「VP:」ラベル + ? アイコン (使い方説明 popup を開く)
+          const Text(
+            'VP:',
+            style: TextStyle(
+                fontSize: 12,
+                color: Color(0xFF888888),
+                letterSpacing: 0.5),
+          ),
+          const SizedBox(width: 4),
+          GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: onHelpTap,
+            child: const Padding(
+              padding: EdgeInsets.all(2),
+              child: Icon(Icons.help_outline,
+                  size: 13, color: Color(0xFF888888)),
+            ),
+          ),
+          const SizedBox(width: 6),
+          Expanded(
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(children: [
+                _Chip(
+                  label: '📍 現在地',
+                  active: false,
+                  onTap: onCurrentLocationTap,
+                ),
+                for (final s in vpSlots) ...[
+                  const SizedBox(width: 6),
+                  _Chip(
+                    label: '${s.icon} ${s.isHome ? '自宅' : s.name}',
+                    active: _isActive(s),
+                    onTap: () => onSlotTap(LatLng(s.lat, s.lng)),
+                  ),
+                ],
+              ]),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _Chip extends StatelessWidget {
+  final String label;
+  final bool active;
+  final VoidCallback onTap;
+  const _Chip({required this.label, required this.active, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        decoration: BoxDecoration(
+          color: active
+              ? const Color(0x33C9A84C)
+              : const Color(0x14C9A84C),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+              color: active
+                  ? const Color(0xFFC9A84C)
+                  : const Color(0x33C9A84C),
+              width: active ? 1.2 : 1),
+        ),
+        child: Text(
+          label,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            fontSize: 12,
+            color: active
+                ? const Color(0xFFE8E0D0)
+                : const Color(0xFFB8B0A0),
+            fontWeight: active ? FontWeight.w600 : FontWeight.w400,
+          ),
+        ),
+      ),
     );
   }
 }
