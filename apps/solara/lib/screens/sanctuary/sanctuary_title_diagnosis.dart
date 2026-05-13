@@ -15,7 +15,19 @@ import '../../widgets/info_popup.dart';
 
 class SanctuaryTitleDiagnosisPage extends StatefulWidget {
   final SolaraProfile? profile;
-  const SanctuaryTitleDiagnosisPage({super.key, this.profile});
+
+  /// やり直し診断の場合は、現在保存されているクラスデータを渡す。
+  /// Reveal 画面で「前のクラスと比較」できるようにする。
+  /// 初回診断 (まだ称号を持たない) の場合は null。
+  /// 含むキー: lightJP, shadowJP, classEN, classJP, axis, court
+  final Map<String, String>? previousResult;
+
+  const SanctuaryTitleDiagnosisPage({
+    super.key,
+    this.profile,
+    this.previousResult,
+  });
+
   @override
   State<SanctuaryTitleDiagnosisPage> createState() => _SanctuaryTitleDiagnosisPageState();
 }
@@ -385,6 +397,152 @@ class _SanctuaryTitleDiagnosisPageState extends State<SanctuaryTitleDiagnosisPag
       'axis': _revealAxis, 'court': _revealCourt,
       'titleJP': _revealTitleJP, 'titleEN': _revealTitleEN,
     });
+  }
+
+  /// 前のクラス (やり直し前) を採用して終了する。
+  void _acceptPrevious() {
+    final prev = widget.previousResult;
+    if (prev == null) return;
+    HapticFeedback.mediumImpact();
+    Navigator.of(context).pop({
+      'lightJP': prev['lightJP'] ?? '',
+      'shadowJP': prev['shadowJP'] ?? '',
+      'classEN': prev['classEN'] ?? '',
+      'classJP': prev['classJP'] ?? '',
+      'axis': prev['axis'] ?? '',
+      'court': prev['court'] ?? '',
+    });
+  }
+
+  /// 「前のクラス」確認 popup を表示し、ユーザー確認後に採用する。
+  void _showPreviousComparison(BuildContext context) {
+    final prev = widget.previousResult;
+    if (prev == null) return;
+    final prevCls = title_data.getClassByAxisCourt(
+      prev['axis'] ?? '',
+      prev['court'] ?? '',
+    );
+    showInfoPopup(
+      context: context,
+      borderColor: const Color(0xFFC9A8E0),
+      child: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              '✦ 前のクラスに戻る?',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: Color(0xFFC9A8E0),
+                letterSpacing: 2,
+              ),
+            ),
+            const SizedBox(height: 14),
+            if (prevCls != null) ...[
+              Center(
+                child: ClassCard(
+                  classData: prevCls,
+                  width: 180,
+                  mode: ClassCardMode.none,
+                  showGlow: true,
+                ),
+              ),
+              const SizedBox(height: 14),
+              Center(
+                child: Text(
+                  prevCls.nameJP,
+                  style: const TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFFEAEAEA),
+                    letterSpacing: 4,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 2),
+              Center(
+                child: Text(
+                  prevCls.nameEN,
+                  style: const TextStyle(
+                    fontSize: 11,
+                    color: Color(0x99EAEAEA),
+                    letterSpacing: 3,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                '✦ ${prevCls.lightJP}',
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 13,
+                  color: Color(0xFFF9D976),
+                  height: 1.6,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                '✦ ${prevCls.shadowJP}',
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 13,
+                  color: Color(0xFFC9A8E0),
+                  height: 1.6,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ],
+            const SizedBox(height: 20),
+            // 採用ボタン
+            GestureDetector(
+              onTap: () {
+                Navigator.of(context).pop(); // popup 閉じる
+                _acceptPrevious();
+              },
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFFC9A8E0), Color(0xFF8C5BC0)],
+                  ),
+                ),
+                child: const Center(
+                  child: Text(
+                    '✦ 前のクラスを採用する',
+                    style: TextStyle(
+                      color: Color(0xFF0A0A14),
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Center(
+              child: GestureDetector(
+                onTap: () => Navigator.of(context).pop(),
+                child: const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 6),
+                  child: Text(
+                    '新しいクラスのままにする',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Color(0xFFACACAC),
+                      decoration: TextDecoration.underline,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
@@ -1122,8 +1280,24 @@ class _SanctuaryTitleDiagnosisPageState extends State<SanctuaryTitleDiagnosisPag
                 decoration: BoxDecoration(borderRadius: BorderRadius.circular(14), gradient: const LinearGradient(colors: [Color(0xFFF9D976), Color(0xFFE8A840)])),
                 child: const Center(child: Text('これでいく', style: TextStyle(color: Color(0xFF0A0A14), fontSize: 15, fontWeight: FontWeight.w700))))),
               const SizedBox(height: 12),
-              GestureDetector(onTap: () => setState(() { _roundIdx = 0; _scores.updateAll((_, v) => 0); _courtSelections.clear(); _selections.clear(); _selectedCard = null; _screen = 'intro'; _revealCtrl.reset(); _flipCtrl.reset(); _showShadowSide = false; _shuffleCards(); }),
-                child: const Text('もう一度診断する', style: TextStyle(fontSize: 15, color: Color(0xFFACACAC), decoration: TextDecoration.underline))),
+              // やり直し診断時は「前のクラスに戻す」、初回診断時のみ「もう一度診断する」
+              if (widget.previousResult != null)
+                GestureDetector(
+                  onTap: () => _showPreviousComparison(context),
+                  child: const Text(
+                    '✦ 前のクラスと比較する',
+                    style: TextStyle(
+                      fontSize: 15,
+                      color: Color(0xFFC9A8E0),
+                      decoration: TextDecoration.underline,
+                    ),
+                  ),
+                )
+              else
+                GestureDetector(
+                  onTap: () => setState(() { _roundIdx = 0; _scores.updateAll((_, v) => 0); _courtSelections.clear(); _selections.clear(); _selectedCard = null; _screen = 'intro'; _revealCtrl.reset(); _flipCtrl.reset(); _showShadowSide = false; _shuffleCards(); }),
+                  child: const Text('もう一度診断する', style: TextStyle(fontSize: 15, color: Color(0xFFACACAC), decoration: TextDecoration.underline)),
+                ),
             ])),
         ]))),
     );
@@ -1177,8 +1351,24 @@ class _SanctuaryTitleDiagnosisPageState extends State<SanctuaryTitleDiagnosisPag
               decoration: BoxDecoration(borderRadius: BorderRadius.circular(14), gradient: const LinearGradient(colors: [Color(0xFFC9A8E0), Color(0xFF8C5BC0)])),
               child: const Center(child: Text('これでいく', style: TextStyle(color: Color(0xFF0A0A14), fontSize: 15, fontWeight: FontWeight.w700))))),
             const SizedBox(height: 12),
-            GestureDetector(onTap: () => setState(() { _roundIdx = 0; _scores.updateAll((_, v) => 0); _courtSelections.clear(); _selections.clear(); _selectedCard = null; _screen = 'intro'; _revealCtrl.reset(); _flipCtrl.reset(); _showShadowSide = false; _shuffleCards(); }),
-              child: const Text('もう一度診断する', style: TextStyle(fontSize: 15, color: Color(0xFFACACAC), decoration: TextDecoration.underline))),
+            // やり直し診断時は「前のクラスに戻す」、初回診断時のみ「もう一度診断する」
+            if (widget.previousResult != null)
+              GestureDetector(
+                onTap: () => _showPreviousComparison(context),
+                child: const Text(
+                  '✦ 前のクラスと比較する',
+                  style: TextStyle(
+                    fontSize: 15,
+                    color: Color(0xFFEFE5F5),
+                    decoration: TextDecoration.underline,
+                  ),
+                ),
+              )
+            else
+              GestureDetector(
+                onTap: () => setState(() { _roundIdx = 0; _scores.updateAll((_, v) => 0); _courtSelections.clear(); _selections.clear(); _selectedCard = null; _screen = 'intro'; _revealCtrl.reset(); _flipCtrl.reset(); _showShadowSide = false; _shuffleCards(); }),
+                child: const Text('もう一度診断する', style: TextStyle(fontSize: 15, color: Color(0xFFACACAC), decoration: TextDecoration.underline)),
+              ),
           ]),
         ]))),
     );
