@@ -63,16 +63,6 @@ const angleFilterShortMeaning = <AngleFilter, String>{
       '24時間の全イベント。アングルごとに異なる性質を持つ',
 };
 
-/// 個別アングル (asc/mc/dsc/ic) ⇔ 複合相 (ascMc/dscIc) の対応マップ。
-/// 個別アングル選択時、 _buildCategoryTips が tipsAscMc / tipsDscIc を
-/// fallback として使うときに参照する。
-const angleIndividualToPhase = <AngleFilter, AngleFilter>{
-  AngleFilter.asc: AngleFilter.ascMc,
-  AngleFilter.mc: AngleFilter.ascMc,
-  AngleFilter.dsc: AngleFilter.dscIc,
-  AngleFilter.ic: AngleFilter.dscIc,
-};
-
 /// カテゴリ × アングル別の「行動の参考になる事柄」。
 /// Solara 設計思想に従い「こうすると良い」ではなく
 /// 「○○を意識する／整える」など中立的な表現で記述。

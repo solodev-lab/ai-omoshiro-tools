@@ -305,7 +305,7 @@ Map / Galaxy も同様に SolaraStorage 経由で読み込み
 - 2プリセット: `osmHotLight` / `osmHotDark` (CyclOSM は 2026-05-09 削除、project_solara_map_styles.md 参照)
 - タイル源: OpenStreetMap Humanitarian (OSM France)
 - Dark版: 公式 `darkModeTilesContainerBuilder` 同等の `_darkInvertHueRotate180Matrix` 1段 ColorFiltered（Phase 3 で per-tile→container単位、saveLayer 36→1 に削減）
-- **4層防御モデル** (2026-05-09): flutter_map 8.3+ / mount delay (warmup+style 完了待ち) / TileLayer.reset Stream / settle 後の verify-recover。詳細: project_solara_map_render_protocol.md
+- **5層防御モデル** (2026-05-13): flutter_map 8.3+ / mount delay (warmup+style 完了待ち) / TileLayer.reset Stream / settle 後の verify-recover / `_kickPaintInvalidation()` (postFrame 微小パンで markNeedsPaint 強制、黒画面対策)。詳細: project_solara_map_render_protocol.md + project_solara_map_paint_invalidation.md
 - 永続化: `shared_preferences` キー `solara_map_style`
 - 選択UI: LayerPanel の STYLE セクション
 - 商用/アップデート計画: MapTiler独自スタイル（紫夜空テーマ）への移行予定（memory: project_solara_map_styles.md）

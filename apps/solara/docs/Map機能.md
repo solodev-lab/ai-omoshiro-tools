@@ -169,34 +169,67 @@ vector_map_tiles 10.0.0-beta.2 を試したが Impeller GLES シェーダ互換�
 | Top5 カテゴリ別 | Forecast 画面 | 総合＋5カテゴリの 6セグメント |
 | 年間ベスト日 | Forecast 画面基準地カード | Mapジャンプ可 |
 
-### ファイル分割（Phase 1 後）
+### ファイル分割（2026-05-13 現状）
 
-Map画面のコードは以下に分割：
+Map画面のコードは以下に分割（行数は `apps/solara/tools/code_audit/audit.py` 出力ベース）：
 
 ```
-lib/screens/map_screen.dart (803行)  ← メインStatefulWidget
+lib/screens/map_screen.dart (2696行)  ← メインStatefulWidget
+  ※ Phase 1 で 1123→803 まで圧縮した後、Daily Transit / ACG / Time slider /
+     5 層防御の導入で再膨張。さらなる分割は UI 凝集度低下リスクあり保留中。
+
 lib/screens/map/
-  ├─ map_astro.dart        (375) — fetchChart + scoreAll
-  ├─ map_constants.dart    (101) — dir16, カテゴリ色, 惑星メタデータ
-  ├─ map_fortune_sheet.dart(323) — FortuneFilterLabel + FortuneSheet
-  ├─ map_menu_chips.dart   (2026-05-09) — NavBar 直上 4 チップバー (Daily Transit/運勢方位/LOCATIONS/予報) + Daily Transit halo
-  ├─ map_display_menu.dart (2026-05-09) — ☰表示ボタン展開 3階層タブメニュー (Map/惑星/ACG)
-  ├─ map_viewpoint_menu.dart (2026-05-09) — 📍地点ボタン展開 VIEWPOINT/LOCATIONS タブパネル + スロット管理
-  ├─ map_overlays.dart     (322) — 🔍 検索ボタン + ☰表示 + 📍地点 ボタン (3個に簡素化)
-  ├─ map_planet_lines.dart (191) — 天体ライン描画
-  ├─ map_search.dart       (360) — searchPlaces / SearchResultList / SearchFocusPopup
-  ├─ map_sectors.dart      (176) — 16方位セクターポリゴン
-  ├─ map_styles.dart       (116) — MapStyle enum + タイル定義
-  ├─ map_vp_panel.dart     (短縮済) — VPSlot + SlotManager のみ (VPPanel widget は廃止)
-  └─ map_widgets.dart      ( 87) — MapBtn 共通ボタン
+  ├─ daily_transit_data.dart        (1015) — Daily Transit 用辞書 (アングル/カテゴリ tips)
+  ├─ map_aspect_chip.dart            (221) — MapAspectChip
+  ├─ map_astro.dart                  (508) — fetchChart + scoreAll
+  ├─ map_astro_carto.dart            (813) — Astro*Carto*Graphy モード専用 UI
+  ├─ map_astro_lines.dart            (588) — アスペクト線 Polyline
+  ├─ map_constants.dart              (122) — dir16, カテゴリ色, 惑星メタデータ
+  ├─ map_daily_transit_screen.dart  (1799) — Daily Transit フル画面 (本日/明日タブ)
+  ├─ map_direction_popup.dart        (374) — セクタータップ詳細 popup
+  ├─ map_display_menu.dart           (410) — ☰表示ボタン展開 3階層タブメニュー
+  ├─ map_fortune_sheet.dart          (775) — FortuneFilterLabel + FortuneSheet
+  ├─ map_line_narrative_sheet.dart   (232) — A*C*G ライン詳細 popup (静的辞書のみ)
+  ├─ map_location_markers.dart       (295) — 出生地 + VP/Locations マーカー
+  ├─ map_menu_chips.dart             (307) — NavBar 直上 4 チップバー
+  ├─ map_overlays.dart               (481) — 🔍/☰/📍 ボタン + 検索バー + バッジ群
+  ├─ map_planet_intro_popup.dart     (239) — 惑星紹介 popup
+  ├─ map_planet_lines.dart           (285) — 天体ライン描画
+  ├─ map_relocation_popup.dart       (564) — 統合タップ popup (線情報 + 12 ハウス)
+  ├─ map_search.dart                 (590) — searchPlaces / SearchResultList
+  ├─ map_sectors.dart                (173) — 16方位セクターポリゴン
+  ├─ map_styles.dart                 (152) — MapStyle enum + タイル定義
+  ├─ map_time_slider.dart            (473) — ±365日 + 時刻スライダー
+  ├─ map_viewpoint_menu.dart         (646) — 📍地点ボタン VIEWPOINT/LOCATIONS タブ
+  ├─ map_vp_panel.dart               (120) — VPSlot + SlotManager
+  └─ map_widgets.dart                 (51) — MapBtn 共通ボタン
 
 lib/screens/
-  ├─ locations_screen.dart (290) — 拠点一覧画面
-  └─ forecast_screen.dart  (720) — Forecast 画面
+  ├─ locations_screen.dart  (737) — 拠点一覧画面
+  └─ forecast_screen.dart  (1050) — Forecast 画面
 
 lib/utils/
-  └─ forecast_cache.dart   (280) — ForecastDay / ForecastCache / detectLifePeriods
+  └─ forecast_cache.dart    (462) — ForecastDay / ForecastCache / detectLifePeriods
 ```
+
+### 描画安定化 5 層防御 (2026-05-13)
+
+タイル抜け / 黒画面 / NaN 赤画面の累積対策。詳細は memory:
+- `project_solara_map_render_protocol.md` — 1〜4 層 (タイル fetch 系)
+- `project_solara_map_paint_invalidation.md` — 5 層目 (描画 pipeline invalidation 漏れ)
+- `project_solara_map_nan_red_screen.md` — ズームアウト NaN 赤画面 (3 層内部)
+
+| 層 | 内容 | 目的 |
+|---|---|---|
+| 1 | flutter_map 8.3.0 | 可視性計算修正 |
+| 2 | mount 遅延 (`_bootReady`) | cold start race 排除 |
+| 3 | TileLayer.reset Stream | State 破棄→in-flight キャンセル防止 |
+| 4 | settle 後 verify-recover | 4 秒後 unconditional reset |
+| 5 | `_kickPaintInvalidation()` | postFrame で 1e-7° 微小パン → markNeedsPaint 強制 |
+
+5 層目は `_mapCtrl.move()` を呼ぶ全箇所 (`_rebuild` / `_frameSearchArea` /
+`_restoreSearchListView` / `_selectSearchHit` / `_enterAstroCartoMode` /
+`_exitAstroCartoMode`) で直後にペア呼出し。新規 move 追加時は必ず pair で呼ぶ。
 
 ### スコア計算方針
 
