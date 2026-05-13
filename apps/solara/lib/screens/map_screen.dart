@@ -1892,12 +1892,20 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
         // ── Search Bar ──
         if (_searchOpen) Positioned(
           top: topPad + 152, left: 16, right: 16,
-          // 検索バー + VP チップ列 を縦 Column。VP チップは「16方位の基準
-          // 点をどこにするか」を検索前に明示する UI。タップで VP のみ更新
-          // (_setVpOnly) し地図は動かさない。
+          // VP チップ列 (上) + 検索バー (下) を縦 Column。
+          // 検索前に「16方位の基準点 (VP) をどこにするか」を明示選択。
+          // タップで VP のみ更新 (_setVpOnly) し地図は動かさない。
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
+              SearchVpChipRow(
+                vpSlots: _vpSlotsCache,
+                currentVp: _center,
+                onCurrentLocationTap: _setVpToCurrentLocationOnly,
+                onSlotTap: _setVpOnly,
+                onHelpTap: () => _showSearchVpHelpPopup(context),
+              ),
+              const SizedBox(height: 6),
               SearchBarOverlay(
                 controller: _searchCtrl,
                 onSubmitted: _doSearch,
@@ -1907,14 +1915,6 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                   _searchOpen = false;
                   _searchCtrl.clear();
                 }),
-              ),
-              const SizedBox(height: 6),
-              SearchVpChipRow(
-                vpSlots: _vpSlotsCache,
-                currentVp: _center,
-                onCurrentLocationTap: _setVpToCurrentLocationOnly,
-                onSlotTap: _setVpOnly,
-                onHelpTap: () => _showSearchVpHelpPopup(context),
               ),
             ],
           ),
