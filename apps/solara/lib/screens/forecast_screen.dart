@@ -393,19 +393,20 @@ class _ForecastScreenState extends State<ForecastScreen> {
                 size: 13, color: Color(0xCCAAAAAA)),
           ),
         ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Text(
-            monthRangeLabel,
-            style: const TextStyle(
-              fontSize: 11,
-              color: Color(0xFF888888),
-              letterSpacing: 0.4,
-            ),
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
       ]),
+      // 期間表示: タイトル直下の行に配置。月数字のみのラベル列とぶつからない
+      // よう、見出しと同じインデントで左寄せにする。
+      const SizedBox(height: 2),
+      Text(
+        monthRangeLabel,
+        style: const TextStyle(
+          fontSize: 11,
+          color: Color(0xFF888888),
+          letterSpacing: 0.4,
+        ),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      ),
       const SizedBox(height: 6),
       // 狭い画面でも overflow しないよう、トグル列は横スクロール可能にする
       SingleChildScrollView(
@@ -708,7 +709,9 @@ class _ForecastScreenState extends State<ForecastScreen> {
             onTap: () => _shiftSelectedDay(-1),
           ),
           const SizedBox(width: 4),
-          Flexible(
+          // 日付テキストは Expanded で横幅一杯に使い、`...` 省略を防ぐ。
+          // マップボタンは下のメトリクス行右端に移動済み。
+          Expanded(
             child: Text(dateLabel,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
@@ -721,7 +724,17 @@ class _ForecastScreenState extends State<ForecastScreen> {
             enabled: _canShiftSelectedDay(1),
             onTap: () => _shiftSelectedDay(1),
           ),
+        ]),
+        const SizedBox(height: 10),
+        Row(children: [
+          _metric('総合', d.overall.toStringAsFixed(1)),
+          const SizedBox(width: 14),
+          _metric('強運方位', dir16JP[d.topDir] ?? d.topDir),
+          const SizedBox(width: 14),
+          _metric('方位スコア', d.topDirScore.toStringAsFixed(1)),
           const Spacer(),
+          // 🗺 Mapボタン: 日付行から移動。総合/方位/スコアの数値列右側に
+          // 配置することで、日付テキストが横幅一杯使えて `...` 省略を回避。
           if (widget.onJumpToDate != null) IconButton(
             icon: const Icon(Icons.map_outlined,
                 size: 18, color: Color(0xFFC9A84C)),
@@ -734,14 +747,6 @@ class _ForecastScreenState extends State<ForecastScreen> {
               Navigator.of(context).maybePop();
             },
           ),
-        ]),
-        const SizedBox(height: 10),
-        Row(children: [
-          _metric('総合', d.overall.toStringAsFixed(1)),
-          const SizedBox(width: 14),
-          _metric('強運方位', dir16JP[d.topDir] ?? d.topDir),
-          const SizedBox(width: 14),
-          _metric('方位スコア', d.topDirScore.toStringAsFixed(1)),
         ]),
         const SizedBox(height: 12),
         const Text('カテゴリ別',
