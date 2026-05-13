@@ -1234,6 +1234,21 @@ class _HowItWorksContent extends StatelessWidget {
               gold: gold,
               bodyColor: body,
             ),
+            const SizedBox(height: 14),
+
+            // 6. 同点処理 — 占星術シード
+            _section(
+              num: '6',
+              title: '同点処理 — 占星術シード',
+              body:
+                  '軸やコートが同点になったとき、太陽星座 × 月星座'
+                  ' (144通り) から1つに決めます。\n'
+                  '判定の主役はあなたが選んだカードそのもの。違うカードを'
+                  '選べば違う結果が出ます。\n'
+                  '占星術シードは「審判が困ったときの最後の判定基準」のポジションです。',
+              gold: gold,
+              bodyColor: body,
+            ),
             const SizedBox(height: 18),
 
             // フッターメモ
