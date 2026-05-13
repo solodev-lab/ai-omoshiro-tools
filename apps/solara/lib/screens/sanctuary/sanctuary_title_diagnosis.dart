@@ -160,11 +160,21 @@ class _SanctuaryTitleDiagnosisPageState extends State<SanctuaryTitleDiagnosisPag
         } else {
           _scores[axis] = (_scores[axis] ?? 0) + 1;
         }
+        // ── デバッグ: 選択した軸と現在の累積スコア ──
+        debugPrint(
+          '[Solara Title] R${_roundIdx + 1} (Part$part) pick=$axis '
+          'scores=$_scores',
+        );
       } else if (part == 3) {
         // HTML: TD.courtSelections.push(card.court)
         final court = card['court'] as String? ?? 'page';
         _courtSelections.add(court);
         _selections.add({'court': court});
+        // ── デバッグ: 選択したコートと累積選択履歴 ──
+        debugPrint(
+          '[Solara Title] R${_roundIdx + 1} (Part$part) pick=$court '
+          'courts=$_courtSelections',
+        );
       }
 
       if (_roundIdx < _rounds.length - 1) {
@@ -225,14 +235,32 @@ class _SanctuaryTitleDiagnosisPageState extends State<SanctuaryTitleDiagnosisPag
       if ((courtCounts[t] ?? 0) >= 2) { court = t; break; }
     }
 
+    // ── デバッグ: 最終決定の各段階を出力 ──
+    debugPrint('[Solara Title] ═══ 診断結果 ═══');
+    debugPrint('[Solara Title] scores       : $_scores');
+    debugPrint('[Solara Title] selections   : $_selections');
+    debugPrint('[Solara Title] courtCounts  : $courtCounts');
+    debugPrint('[Solara Title] courtList    : $_courtSelections');
+    debugPrint('[Solara Title] → topAxis    : $topAxis (winners=$winners)');
+    debugPrint('[Solara Title] → court      : $court');
+
     // HTML: TITLE_CLASSES[axis][court]
     final cls = title_data.getClassByAxisCourt(topAxis, court);
-    if (cls == null) { Navigator.of(context).pop(null); return; }
+    if (cls == null) {
+      debugPrint('[Solara Title] ❌ getClassByAxisCourt returned null for $topAxis/$court');
+      Navigator.of(context).pop(null);
+      return;
+    }
+    debugPrint('[Solara Title] → class      : ${cls.nameJP} (${cls.nameEN})');
 
     // HTML: getSunSign/getMoonSign → TITLE_144 lookup
     final sunSign = title_data.getSunSign(_profile?.birthDate ?? '');
     final moonSign = title_data.getMoonSign(_profile?.birthDate ?? '', _profile?.birthTime ?? '');
     final t144 = title_data.title144[sunSign]?[moonSign];
+    debugPrint('[Solara Title] → sun/moon   : $sunSign × $moonSign');
+    debugPrint('[Solara Title] → t144.light : ${t144?['light']}');
+    debugPrint('[Solara Title] → t144.shadow: ${t144?['shadow']}');
+    debugPrint('[Solara Title] ═══════════════');
 
     // HTML: mainTitle = {jp: t144.shadow, en: sunAdj.en + moonNoun.en, lightJP: t144.light}
     final sunA = title_data.sunAdj[sunSign];
