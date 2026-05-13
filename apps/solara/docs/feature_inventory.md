@@ -14,8 +14,8 @@
 > **構築進捗**:
 > - [x] 層 0: Worker (バックエンド計算式) — 2026-05-14 完成
 > - [x] 層 1a: 純計算ユーティリティ — 2026-05-14 完成
-> - [ ] 層 1b: 静的データ辞書
-> - [ ] 層 1c: モデルクラス
+> - [x] 層 1b: 静的データ辞書 — 2026-05-14 完成
+> - [x] 層 1c: モデルクラス — 2026-05-14 完成
 > - [ ] 層 2a: API/Worker ラッパ
 > - [ ] 層 2b: 永続化/キャッシュ
 > - [ ] 層 2c: グローバル singleton
@@ -253,4 +253,90 @@ Solara のバックエンドは **Cloudflare Workers** で稼働。本番 URL: `
 
 ---
 
-(層 1b 以降は次セッション以降で追記)
+## 層 1b: 静的データ辞書
+
+### 1b.1 概要
+
+`lib/utils/` 配下、**静的データが主体** で関数は辞書取り出しヘルパーが中心の 5 ファイル / 計 1,418 行。
+副作用なし (= 層 1a と同じく純粋)、ただし「計算」というより「世界観テキストの貯蔵庫」。
+
+機械分類で本層に入った 5 ファイルに加え、層 1a に分類された 3 ファイル (`astro_glossary`, `celestial_event_meanings`, `planet_intro`) も意味的にはこちら寄り (= 層 1a.3 参照)。
+
+### 1b.2 ファイル別 役割 + 呼出元 (5 本)
+
+| # | ファイル | 行 | 内容 | 主要 export | 呼出元 (画面層) | 特記 |
+|---|---|---|---|---|---|---|
+| 1 | [`astro_zenith_messages.dart`](../lib/utils/astro_zenith_messages.dart) | 170 | 天頂点 (Zenith Point) 解説メッセージ辞書。MC ライン上で観測者真上に来る唯一の地点の解説 | `ZenithMessage` | [map_astro_carto](../lib/screens/map/map_astro_carto.dart) (ACG モード専用) | ACG 天頂マーカータップ時に表示 |
+| 2 | [`constellation_namer.dart`](../lib/utils/constellation_namer.dart) | 626 | 星座名生成 v2 (形容詞 × 名詞)、Prim MST 構築、エッジ生成、レア度算出、HUE シフト | `ConstellationNamer`, `buildName`, `rarityPercentage`, `hueShift`, `adjColor`, `computeMST`, `buildEdges`, `isFlipX`, `artAssetPath` | Galaxy 5 ファイル + [constellation_painter](../lib/widgets/constellation_painter.dart), [catasterism_formation_overlay](../lib/widgets/catasterism_formation_overlay.dart) | **計算ロジック比率高め** — 1a 寄りの側面あり (機械分類が辞書判定したのは形容詞/名詞テーブルの大きさ)。Galaxy の世界観 (= 月相サイクルの「刻星化」演出) の心臓 |
+| 3 | [`cycle_story_texts.dart`](../lib/utils/cycle_story_texts.dart) | 86 | 月齢サイクル (新月/満月/刻星化) のストーリーテキスト JP/EN | `CycleStoryTexts`, `getNewMoon`, `getFullMoon`, `getCatasterism` | [new_moon_overlay](../lib/widgets/new_moon_overlay.dart), [full_moon_overlay](../lib/widgets/full_moon_overlay.dart), [catasterism_overlay](../lib/widgets/catasterism_overlay.dart) | JP/EN ネイティブ別書き (翻訳ではない)。`_isJapanese()` で切替 |
+| 4 | [`solara_manifesto.dart`](../lib/utils/solara_manifesto.dart) | 141 | Solara 設計思想テキスト (3 セクション: 世界観 / 2 エネルギー / 委ねる宣言) | `SolaraManifesto`, `SolaraManifestoSection`, `getSections` | [solara_philosophy_screen](../lib/screens/solara_philosophy_screen.dart) のみ | 「占い的吉凶判定をしない」を文章化したアプリの哲学的根幹 ([project_solara_design_philosophy](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/project_solara_design_philosophy.md)) |
+| 5 | [`title_data.dart`](../lib/utils/title_data.dart) | 395 | 144 称号システムデータ (12 太陽部位 × 12 月部位 + 25 class) + 太陽/月星座近似算出 | `TitleClass`, `getSunSign`, `getMoonSign` | [class_card](../lib/widgets/class_card.dart), [sanctuary_screen](../lib/screens/sanctuary_screen.dart), [sanctuary_title_diagnosis](../lib/screens/sanctuary/sanctuary_title_diagnosis.dart), [class_share_card](../lib/screens/sanctuary/class_share_card.dart) | **EN 版 144 称号未実装** ([project_solara_title_system](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/project_solara_title_system.md)) |
+
+### 1b.3 課金検討に直結する示唆
+
+1. **`title_data.dart` の称号システムは Sanctuary タブの中核資産**
+   - 144 称号 × class 25 = ユーザーごとの「あなただけの結果」を作る差別化要素
+   - **EN 版未実装** がストア海外展開の遅延要因 ([feedback_i18n_last](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/feedback_i18n_last.md) ルールでリリース直前まで保留中)
+   - 称号関連の Pro 拡張案 (例: 称号 SHARE カードの追加デザイン、月別称号変化追跡など) は本データを土台にできる
+
+2. **`constellation_namer.dart` は Galaxy の心臓部 — Pro 候補としては弱い**
+   - 既に「2026-04-25 v2 完成」状態、Pro/Free 境界に置きづらい (= Galaxy タブの基本体験)
+   - 拡張余地: 「刻星化アルバム」「履歴の検索」など Pro 案 ([project_galaxy_spec](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/project_galaxy_spec.md))
+
+3. **`solara_manifesto.dart` の世界観テキストは「課金訴求文」と直接対応**
+   - 「占い的吉凶判定をしない、両面思想」= 既存占いアプリ群との差別化軸
+   - ストア説明文・ペイウォール訴求文・公式 LP の表現に流用可能 (= マーケ素材として価値)
+
+4. **`astro_zenith_messages.dart` は ACG モード専用 = 海外展開時の鍵**
+   - 国内: マニア向け β機能
+   - 海外: Solara のメイン売り (英米圏で A*C*G の歴史と認知あり、[`project_solara_astrocartography_m2`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/project_solara_astrocartography_m2.md))
+   - 天頂点ごとのカスタム解説は Pro 機能化候補 (例: 出生図に基づくパーソナライズ天頂点メッセージ)
+
+### 1b.4 機械抽出への参照
+
+層 1b の機械抽出 raw: [`feature_inventory/01b_static_data.md`](feature_inventory/01b_static_data.md)
+
+---
+
+## 層 1c: モデルクラス
+
+### 1c.1 概要
+
+`lib/models/` 配下の 4 ファイル / 計 337 行。永続化対象データの **plain Dart class** (Riverpod や json_serializable は未使用、手書きの `toJson` のみ)。
+**全て Observe (Tarot) または Galaxy 専用** — Map / Horo / Sanctuary タブからは参照無し。
+
+### 1c.2 ファイル別 役割 + 呼出元 (4 本)
+
+| # | ファイル | 行 | class | 用途 | 呼出元 |
+|---|---|---|---|---|---|
+| 1 | [`daily_reading.dart`](../lib/models/daily_reading.dart) | 41 | `DailyReading` | タロット 1 日 1 引きキャッシュ (cardId, reversed, reading, stella, drawnAt) | [tarot_data](../lib/utils/tarot_data.dart), [solara_storage](../lib/utils/solara_storage.dart), Observe 系 3 ファイル |
+| 2 | [`galaxy_cycle.dart`](../lib/models/galaxy_cycle.dart) | 119 | `ConstellationDot`, `GalaxyCycle` | 銀河の 1 サイクル分のデータ (新月→満月→刻星化、星座ドット配列) | [solara_storage](../lib/utils/solara_storage.dart), Galaxy 系 5 ファイル + cycle/constellation widgets |
+| 3 | [`lunar_intention.dart`](../lib/models/lunar_intention.dart) | 105 | `LunarIntention`, `MidpointCheck`, `CatasterismResult` | 新月で選んだ意図 + 満月の中間チェック + 刻星化評価 | [solara_storage](../lib/utils/solara_storage.dart), Galaxy 系 + moon overlay widgets |
+| 4 | [`tarot_card.dart`](../lib/models/tarot_card.dart) | 72 | `TarotCard` | 78 枚タロットカードの定義 (id, nameJP, keyword, element, planet, suit, number 等) | [tarot_data](../lib/utils/tarot_data.dart), Observe 系 |
+
+### 1c.3 課金検討に直結する示唆
+
+1. **永続化対象 = ユーザーの「履歴」「経験」=Solara の最大の差別化資産**
+   - DailyReading, GalaxyCycle, LunarIntention, CatasterismResult はユーザーごとの体験ログ
+   - クラウドバックアップ機能 (Pro 候補) はこれらの保存先 = どれを優先的にバックアップするかが設計判断
+   - 削除/エクスポート/インポートも本クラス群を中心に組み立てる
+
+2. **`TarotCard` は静的データ (78 枚固定) で、Pro 拡張対象ではない**
+   - Pro 拡張は「3 枚引き / 5 枚引きスプレッド」「カード履歴の検索」など別所
+   - 本 class 自体は変更不要
+
+3. **`LunarIntention` + `CatasterismResult` は Galaxy 体験の核 — 静かな差別化**
+   - 「占いをしない、意図と振り返りの記録」という Solara 独自の体験設計の中心
+   - Pro 拡張: 過去サイクルのアルバム、月別ハイライト、テキストエクスポート (`getCatasterismMD` 等) が候補
+
+4. **モデル層がここまで小さい (337 行) = 設計が素直で保守容易**
+   - 永続化スキーマ拡張の影響範囲が把握しやすい
+   - 課金で新たな永続化対象 (例: Pro 限定の有料カード履歴) を追加する場合、本層に class を 1〜2 個足すだけで済む
+
+### 1c.4 機械抽出への参照
+
+層 1c の機械抽出 raw: [`feature_inventory/01c_models.md`](feature_inventory/01c_models.md)
+
+---
+
+(層 2a 以降は次セッション以降で追記)
