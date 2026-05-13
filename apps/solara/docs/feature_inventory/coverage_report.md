@@ -37,9 +37,9 @@
 ## #1 / #2 機械抽出 ↔ feature_inventory.md (人手版) の対整合
 
 - 機械抽出した class/mixin/extension/enum: **304**
-- inventory に登場する識別子 (大文字始まり ``backtick``囲み): **19**
+- inventory に登場する識別子 (大文字始まり ``backtick``囲み): **32**
 
-### #1 機械にあるが Doc に書かれていない (292)
+### #1 機械にあるが Doc に書かれていない (279)
 
 - `AcgFrameDef`
 - `AngleFilter`
@@ -58,7 +58,6 @@
 - `BirthMarker`
 - `CatasterismFormationOverlay`
 - `CatasterismOverlay`
-- `CatasterismResult`
 - `CategoryIcon`
 - `CategoryIconKind`
 - `CelestialEvent`
@@ -70,12 +69,8 @@
 - `ClassCardMode`
 - `ClassShareCardPage`
 - `CommunicationPainterBuilder`
-- `ConstellationDot`
-- `ConstellationNamer`
 - `ConstellationPainter`
 - `CycleSpiralPainter`
-- `CycleStoryTexts`
-- `DailyReading`
 - `DailyTransitsResult`
 - `DateSlashFormatter`
 - `DominantFortuneKind`
@@ -93,7 +88,6 @@
 - `FortuneReading`
 - `FortuneSheet`
 - `FullMoonOverlay`
-- `GalaxyCycle`
 - `GalaxyReplayOverlay`
 - `GalaxyScreen`
 - `GalaxyScreenState`
@@ -127,7 +121,6 @@
 - `LocationsDateStepper`
 - `LocationsScreen`
 - `LovePainterBuilder`
-- `LunarIntention`
 - `MapAspectChip`
 - `MapBtn`
 - `MapDailyTransitScreen`
@@ -143,7 +136,6 @@
 - `MapTimeSlider`
 - `MapTimeSliderState`
 - `MapViewpointMenu`
-- `MidpointCheck`
 - `MiniConstellationPainter`
 - `MoneyPainterBuilder`
 - `MonthEvents`
@@ -181,8 +173,6 @@
 - `SolaraApp`
 - `SolaraColors`
 - `SolaraHome`
-- `SolaraManifesto`
-- `SolaraManifestoSection`
 - `SolaraNavBar`
 - `SolaraNavIcons`
 - `SolaraPhilosophyScreen`
@@ -193,17 +183,14 @@
 - `SpiralPainter`
 - `StatusBadge`
 - `TarotAltarScene`
-- `TarotCard`
 - `TarotData`
 - `TarotReading`
-- `TitleClass`
 - `TitleHowItWorksContent`
 - `TransitAspect`
 - `TransitEvent`
 - `VPSlot`
 - `VpPinVisual`
 - `WorkPainterBuilder`
-- `ZenithMessage`
 - `ZodiacImageIcon`
 - `_AcgEntryFooter`
 - `_ActionTile`
@@ -241,7 +228,20 @@
 - `_FontPreviewScreenState`
 - `_Footer`
 - `_ForecastScreenState`
-- … 残り 92 省略
+- `_FormationPainter`
+- `_FortuneRowsList`
+- `_FortuneRowsListState`
+- `_FramePill`
+- `_FullMoonOverlayState`
+- `_GADot`
+- `_GalaxyIconPainter`
+- `_Gear`
+- `_GoldDust`
+- `_GoldPalette`
+- `_GoldPiece`
+- `_Header`
+- `_HealingPainter`
+- … 残り 79 省略
 
 ### #2 Doc に書いてあるがコードに存在しない (ゴースト記述) (7)
 
