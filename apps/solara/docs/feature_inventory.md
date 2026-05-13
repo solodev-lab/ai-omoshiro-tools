@@ -16,9 +16,9 @@
 > - [x] 層 1a: 純計算ユーティリティ — 2026-05-14 完成
 > - [x] 層 1b: 静的データ辞書 — 2026-05-14 完成
 > - [x] 層 1c: モデルクラス — 2026-05-14 完成
-> - [ ] 層 2a: API/Worker ラッパ
-> - [ ] 層 2b: 永続化/キャッシュ
-> - [ ] 層 2c: グローバル singleton
+> - [x] 層 2a: API/Worker ラッパ — 2026-05-14 完成
+> - [x] 層 2b: 永続化/キャッシュ — 2026-05-14 完成
+> - [x] 層 2c: グローバル singleton — 2026-05-14 完成
 > - [ ] 層 3a: 共通ウィジェット (純粋)
 > - [ ] 層 3b: テーマ・装飾
 > - [ ] 層 3c: 演出ウィジェット (animated)
@@ -339,4 +339,171 @@ Solara のバックエンドは **Cloudflare Workers** で稼働。本番 URL: `
 
 ---
 
-(層 2a 以降は次セッション以降で追記)
+## 層 2a: API/Worker ラッパ
+
+### 2a.1 概要
+
+`lib/utils/` 配下、**http import あり** の 6 ファイル / 計 932 行。**Worker ↔ Flutter の通信境界**。
+ここを把握すれば「課金時に `/protected/*` に移すべき呼出元」が全部見える。
+
+### 2a.2 ファイル別 役割 + 呼出 endpoint + 呼出元 (6 本)
+
+| # | ファイル | 行 | 呼出先 endpoint | 呼出元 (主要) | 特記 |
+|---|---|---|---|---|---|
+| 1 | [`solara_api.dart`](../lib/utils/solara_api.dart) | 35 | `/tz` (GET) + `solaraWorkerBase` 定数 export | `sanctuary_profile_editor`, `horo_birth_panel`, Map 各所 | **`solaraWorkerBase` 定数の出元** ([`project_solara_worker_url.md`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/project_solara_worker_url.md) ハードコード禁止)。`fetchTimezoneName` 1 関数のみ |
+| 2 | [`fortune_api.dart`](../lib/utils/fortune_api.dart) | 250 | **`/fortune`, `/relocation`, `/tarot`** (POST × 3、全て Gemini 系) | [horoscope_screen](../lib/screens/horoscope_screen.dart), [observe_screen](../lib/screens/observe_screen.dart), [horo_fortune_cards](../lib/screens/horoscope/horo_fortune_cards.dart), [horo_relocation_panel](../lib/screens/horoscope/horo_relocation_panel.dart) | **課金で守るべき最大対象 = Gemini 呼出 3 系統がここに集中**。Pro 公開時に `/protected/*` 移行 + 回数制限の中心 |
+| 3 | [`daily_transits_api.dart`](../lib/utils/daily_transits_api.dart) | 241 | `/astro/daily-transits` (POST) | [map_daily_transit_screen](../lib/screens/map/map_daily_transit_screen.dart), [map_aspect_chip](../lib/screens/map/map_aspect_chip.dart) | F1 機能、課金で「無制限拠点切替」の Pro 化候補 |
+| 4 | [`celestial_events.dart`](../lib/utils/celestial_events.dart) | 314 | `/astro/events` (GET) | [main.dart](../lib/main.dart) (起動 initialize)、[new_moon_overlay](../lib/widgets/new_moon_overlay.dart)、[full_moon_overlay](../lib/widgets/full_moon_overlay.dart)、[celestial_event_bar](../lib/widgets/celestial_event_bar.dart)、[galaxy_screen](../lib/screens/galaxy_screen.dart) | **singleton 的に initialize**、機械分類は 2a だが層 2c 寄りの側面あり (= 層 2c.4 と整合) |
+| 5 | [`reverse_geocode.dart`](../lib/utils/reverse_geocode.dart) | 50 | **Nominatim 直叩き** (`nominatim.openstreetmap.org/reverse`) | [map_vp_panel](../lib/screens/map/map_vp_panel.dart)、[horo_birth_panel](../lib/screens/horoscope/horo_birth_panel.dart) | **🔴 重要**: 唯一 Worker 経由でない外部 API 呼出。Nominatim は無料 + key 不要 + 1 req/sec 制限。Pro 公開時にレートリミット遵守 + UA 設定確認が必要 |
+| 6 | [`tile_http_client.dart`](../lib/utils/tile_http_client.dart) | 42 | (Worker URL 自体は呼出さず、共有 HttpClient のみ提供) | [map_screen](../lib/screens/map_screen.dart) (`sharedTileHttpClient`)、[map_styles](../lib/screens/map/map_styles.dart) | **fd 枯渇対策** ([`feedback_http_fd_leak`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/feedback_http_fd_leak.md), [`project_solara_a101fc_fd_leak`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/project_solara_a101fc_fd_leak.md))。maxConnectionsPerHost=6, idleTimeout=15s |
+
+### 2a.3 機械分類の盲点 — `screens/map/map_astro.dart` は実態が層 2a
+
+機械分類で **`screens/map/map_astro.dart` は層 4a (Map 画面)** に入っているが、中身は:
+- `/astro/chart` (POST) を呼び出す **`fetchChart` API ラッパ関数** + レスポンス class (`ChartResult` 等)
+- Map + Horoscope 両方から呼ばれる横断利用 (Map: 直接、Horo: 同じ関数を import)
+
+意味的には「層 2a (API ラッパ)」が正しい。screens/ ディレクトリにあるため機械分類で 4a 判定されている。
+
+**改善案**: `lib/screens/map/map_astro.dart` を `lib/utils/astro_api.dart` (新規名) にリネームすれば、機械分類が正しく 2a に入り、Horoscope 側からも自然 import 可能。今は機械分類のオーバーライド対象として記録 (`extract.py` への明示テーブル化候補)。
+
+### 2a.4 Worker endpoint との対応マップ (層 0 ↔ 層 2a)
+
+| Worker endpoint | 層 2a ラッパ | Flutter 呼出元 |
+|---|---|---|
+| `/astro/chart` | `map_astro.dart`'s `fetchChart` (実態は 2a) | Map + Horoscope |
+| `/astro/forecast` | [`forecast_cache.dart`](../lib/utils/forecast_cache.dart) (機械分類 2b、永続化込み) | Forecast 画面 |
+| `/astro/predict` | **(ラッパなし)** | **死んだ endpoint** (層 0.4 で削除候補) |
+| `/astro/daily-transits` | `daily_transits_api.dart` | Map Daily Transit |
+| `/astro/events` | `celestial_events.dart` | main + Galaxy + 月相 overlay |
+| `/astro/line-narrative` | **(ラッパなし、撤去済み)** | **死んだ endpoint** (層 0.4) |
+| `/tz` | `solara_api.dart` | Sanctuary + Horo Birth |
+| `/search` | (`map_search.dart` 直叩き、層 4a 分類) | Map 検索 |
+| `/fortune` | `fortune_api.dart` | Horo + Observe |
+| `/tarot` | `fortune_api.dart` | Observe |
+| `/relocation` | `fortune_api.dart` | Horo (リロケーション) |
+| `/tiles/osm/*` | `map_styles.dart` 直叩き (4a 分類) + `tile_http_client.dart` 共有 client | Map タイル描画 |
+| `/health` | (Flutter 呼出なし) | CF が叩く |
+
+**観察**:
+- **Worker 経由でない直叩き**: `reverse_geocode.dart` (Nominatim)
+- **ラッパが層 2a の utils/ にない呼出**: `/astro/chart` (map_astro.dart)、`/search` (map_search.dart)、`/tiles/*` (map_styles.dart)
+  - = 課金実装時に「`screens/map/` 配下の Worker 呼出箇所」も同等にチェック必須
+
+### 2a.5 課金検討に直結する示唆
+
+1. **Gemini 呼出 3 系統が `fortune_api.dart` に集中** → 一括で `/protected/*` 移行可能、扱いやすい
+   - 回数制限 (Free 5/day, Pro 100/day 等) の実装も本ファイル + Worker `/fortune`, `/tarot`, `/relocation` の中央で行う
+   - **本ファイルの行数 (250 行) = Pro 課金の中心**
+
+2. **`reverse_geocode.dart` (Nominatim 直叩き) は Pro 公開時に判断が必要**
+   - 案 A: そのまま (= Nominatim 利用規約遵守、 UA 設定確認のみ)
+   - 案 B: Worker 経由化 (`/reverse-geocode` 新規) で UA / レートリミット制御を Worker 側に集約
+   - **私の推奨**: 案 B (= 攻撃面・運用面を Worker に集約)。実装コスト ~1h
+
+3. **`celestial_events.dart` の起動 initialize は Free でも稼働させる必要**
+   - main.dart で `await CelestialEvents.initialize()` = 起動時に必ず呼ばれる
+   - 「無料ユーザーも天体イベントバーは表示」想定なので、`/astro/events` は `/public/*` 配下
+
+4. **`/astro/chart` ラッパが utils/ に無いのは設計上の歪み**
+   - `screens/map/map_astro.dart` から Horoscope が import している = Map ↔ Horo の意外な結合
+   - 課金実装でリファクタする好機 (ラッパを `lib/utils/astro_chart_api.dart` に切り出し)
+
+### 2a.6 機械抽出への参照
+
+層 2a の機械抽出 raw: [`feature_inventory/02a_api_wrappers.md`](feature_inventory/02a_api_wrappers.md)
+
+---
+
+## 層 2b: 永続化/キャッシュ
+
+### 2b.1 概要
+
+`lib/utils/` 配下、**shared_preferences 等の storage import あり** の 3 ファイル / 計 907 行。
+**Solara のほぼ全画面が依存** (Grep で 25 ファイルが import) = 永続化はアプリの中央集権。
+
+### 2b.2 ファイル別 役割 + 呼出元 (3 本)
+
+| # | ファイル | 行 | 役割 | 呼出元 |
+|---|---|---|---|---|
+| 1 | [`solara_storage.dart`](../lib/utils/solara_storage.dart) | 404 | **永続化中央集権ファイル**。SolaraProfile, Reading 履歴, Intention, dailyResetHour/Minute, Map style, Forecast 設定, overlay state, notTodayCount 等 32 public 関数 | main.dart + 全画面 (Sanctuary / Map / Horo / Observe / Galaxy / Forecast / Locations) + moon overlay 系 widgets |
+| 2 | [`forecast_cache.dart`](../lib/utils/forecast_cache.dart) | 462 | **`/astro/forecast` 呼出 + 永続化キャッシュ + クールダウン + ◯◯期検出**。`ForecastDay`, `LifePeriod`, `ForecastCache`, `ForecastRepo`、`detectLifePeriods` (運勢サイクル抽出ロジック) | [forecast_screen](../lib/screens/forecast_screen.dart), [forecast_life_periods](../lib/screens/forecast/forecast_life_periods.dart), [forecast_top5](../lib/screens/forecast/forecast_top5.dart), [galaxy_screen](../lib/screens/galaxy_screen.dart) (?) |
+| 3 | [`app_locale.dart`](../lib/utils/app_locale.dart) | 41 | 言語切替 (端末/JP/EN) の global singleton。SharedPreferences で永続化 | main.dart (`AppLocale.instance.load()`) + 言語表示する全画面 |
+
+### 2b.3 機械分類の盲点 — `forecast_cache.dart` は実態が 2a/2b ハイブリッド
+
+`forecast_cache.dart` は **`/astro/forecast` 呼出 (API ラッパ) + キャッシュ (永続化) + 解析 (`detectLifePeriods`)** を 1 ファイルで全部やっている。
+本来は分けるべきだが、現状の Solara はこの一体型を採用。 機械分類は shared_preferences import を理由に 2b 判定したが、API ラッパとしての側面 (= 層 2a) も持つ。
+
+これは設計判断の話で、リファクタ候補 (分割) ではあるが、現状の 462 行で 1 ファイル管理は許容範囲。
+
+### 2b.4 課金検討に直結する示唆
+
+1. **`solara_storage.dart` がアプリ状態の全てを握っている = クラウドバックアップ Pro 候補の中心**
+   - 32 個の load/save 関数全部がバックアップ対象になりうる
+   - Pro 機能: 「設定とサイクル履歴の自動バックアップ」「機種変更時の引き継ぎ」
+   - 実装手段: 本クラスに `exportAll() / importAll()` を追加、Firebase Auth + Firestore か CF Worker KV 経由
+
+2. **`forecast_cache.dart` の KV 月次クォータ (Worker 側 60/IP/month) が Pro 課金の自然な境界**
+   - Free: 月 60 回まで (1 日 2 回程度)
+   - Pro: 無制限 (rate limit のみ)
+   - 実装は `checkKvForecastQuota` ([worker/src/index.js:73](../worker/src/index.js)) の bypass 条件追加だけ
+
+3. **`detectLifePeriods` (運勢サイクル検出) は無料機能の差別化要素**
+   - 365 日分のスコアから「◯◯期」を自動抽出する独自アルゴリズム ([architecture.md](architecture.md))
+   - Pro 機能で「過去 5 年の◯◯期一覧」「来年予測の精密化」拡張案が考えられる
+
+4. **`app_locale.dart` は i18n フェーズで本格稼働**
+   - 現状: jp/en の 2 言語 ([main.dart:42](../lib/main.dart))
+   - 実装は singleton で問題なし。Pro 公開で英語版リリース ([feedback_i18n_last](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/feedback_i18n_last.md)) と直結
+
+### 2b.5 機械抽出への参照
+
+層 2b の機械抽出 raw: [`feature_inventory/02b_persistence.md`](feature_inventory/02b_persistence.md)
+
+---
+
+## 層 2c: グローバル singleton
+
+### 2c.1 概要
+
+`lib/utils/` 配下、**initialize/load で起動時に bundled asset を読む 1 ファイル / 55 行**。
+
+機械分類は厳密には 1 ファイルだが、意味的には:
+- 層 2a の **`celestial_events.dart`** (起動 initialize、`/astro/events` キャッシュ)
+- 層 2b の **`app_locale.dart`** (起動 load、SharedPreferences)
+
+も singleton 的振る舞いで、本層と類似の役割。Solara のグローバル singleton は実質 3 つあると見るのが正確。
+
+### 2c.2 ファイル別 役割 + 呼出元 (1 + 概念上 2)
+
+| # | ファイル | 行 | 役割 | 呼出元 |
+|---|---|---|---|---|
+| 1 | [`tarot_data.dart`](../lib/utils/tarot_data.dart) | 55 | 78 枚タロットデッキを bundled JSON asset から起動時 `initialize()` で読み込む。`getCard(id)` で照会 | main.dart (`TarotData.initialize()`) + Observe 系 (tarot_card.dart 検索) |
+| (準) | [`celestial_events.dart`](../lib/utils/celestial_events.dart) | 314 | 機械分類は 2a だが singleton + initialize 構造 | (層 2a.2 参照) |
+| (準) | [`app_locale.dart`](../lib/utils/app_locale.dart) | 41 | 機械分類は 2b だが singleton 構造 | (層 2b.2 参照) |
+
+### 2c.3 main.dart 起動シーケンスとの対応
+
+[`main.dart:15-27`](../lib/main.dart) で起動時に呼ばれる 3 つ:
+1. `await TarotData.initialize()` — 78 枚 JSON 読み込み
+2. `await CelestialEvents.initialize()` — 静的天体イベント JSON + キャッシュ初期化
+3. `await AppLocale.instance.load()` — SharedPreferences から言語オーバーライド復元
+
+**起動順序のリスク**:
+- 3 つとも `await` で順次実行 (並列ではない) → 起動が約 200〜500ms 遅延
+- Pro 公開時に「初回起動 splash」(層 4e 関連 [`project_solara_stella_revival`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/project_solara_stella_revival.md)) を実装する場合、本シーケンス完了まで splash を出す形が自然
+
+### 2c.4 課金検討に直結する示唆
+
+1. **3 つの singleton は全て無料機能の前提** → Pro 公開で `/protected/*` 化対象外
+2. **`tarot_data.dart` の TarotCard データは静的固定** → Pro 化対象ではない (= 層 1c.3 と同じ)
+3. **singleton パターンの統一**: 現状 instance + Notifier (AppLocale) と static class (TarotData, CelestialEvents) が混在。Riverpod 等の状態管理導入時に整理候補
+
+### 2c.5 機械抽出への参照
+
+層 2c の機械抽出 raw: [`feature_inventory/02c_globals.md`](feature_inventory/02c_globals.md)
+
+---
+
+(層 3a 以降は次セッション以降で追記)

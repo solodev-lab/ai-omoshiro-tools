@@ -37,9 +37,9 @@
 ## #1 / #2 機械抽出 ↔ feature_inventory.md (人手版) の対整合
 
 - 機械抽出した class/mixin/extension/enum: **304**
-- inventory に登場する識別子 (大文字始まり ``backtick``囲み): **32**
+- inventory に登場する識別子 (大文字始まり ``backtick``囲み): **37**
 
-### #1 機械にあるが Doc に書かれていない (279)
+### #1 機械にあるが Doc に書かれていない (274)
 
 - `AcgFrameDef`
 - `AngleFilter`
@@ -64,7 +64,6 @@
 - `CelestialEventBar`
 - `CelestialEvents`
 - `ChartLineStyle`
-- `ChartResult`
 - `ClassCard`
 - `ClassCardMode`
 - `ClassShareCardPage`
@@ -77,10 +76,7 @@
 - `DominantFortuneKindToCategoryIcon`
 - `DominantFortuneOverlay`
 - `FontPreviewScreen`
-- `ForecastCache`
-- `ForecastDay`
 - `ForecastLifePeriodsSection`
-- `ForecastRepo`
 - `ForecastScreen`
 - `ForecastTop5Section`
 - `FortuneFilterLabel`
@@ -115,7 +111,6 @@
 - `LatitudeBand`
 - `LatitudeBandHit`
 - `LegendDot`
-- `LifePeriod`
 - `LocationMarkerPopup`
 - `LocationPickerMinimap`
 - `LocationsDateStepper`
@@ -241,7 +236,12 @@
 - `_GoldPiece`
 - `_Header`
 - `_HealingPainter`
-- … 残り 79 省略
+- `_Hero`
+- `_HoroBackdrop`
+- `_HoroBirthPanelState`
+- `_HoroBottomSheet`
+- `_HoroChartData`
+- … 残り 74 省略
 
 ### #2 Doc に書いてあるがコードに存在しない (ゴースト記述) (7)
 
