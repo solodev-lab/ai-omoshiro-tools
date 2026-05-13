@@ -6,11 +6,11 @@
 
 | 行数 | 判定 | ファイル |
 |------|------|----------|
-| 2696 | 🔴 HARD | lib/screens/map_screen.dart |
+| 2695 | 🔴 HARD | lib/screens/map_screen.dart |
 | 1799 | 🔴 HARD | lib/screens/map/map_daily_transit_screen.dart |
-| 1384 | 🔴 HARD | lib/screens/sanctuary/sanctuary_title_diagnosis.dart |
+| 1385 | 🔴 HARD | lib/screens/sanctuary/sanctuary_title_diagnosis.dart |
 | 1167 | 🔴 HARD | lib/screens/galaxy_screen.dart |
-| 1050 | 🔴 HARD | lib/screens/forecast_screen.dart |
+| 1048 | 🔴 HARD | lib/screens/forecast_screen.dart |
 | 1034 | 🔴 HARD | lib/screens/sanctuary_screen.dart |
 | 1013 | 🔴 HARD | lib/screens/map/daily_transit_data.dart |
 | 813 | 🔴 HARD | lib/screens/map/map_astro_carto.dart |
@@ -73,11 +73,11 @@
 
 ### 2. 📁 別ファイル間 (37 箇所、8 ファイル)
 
-  - lib/screens/forecast_screen.dart:840
-  - lib/screens/forecast_screen.dart:858
-  - lib/screens/forecast_screen.dart:874
-  - lib/screens/forecast_screen.dart:891
-  - lib/screens/forecast_screen.dart:907
+  - lib/screens/forecast_screen.dart:818
+  - lib/screens/forecast_screen.dart:836
+  - lib/screens/forecast_screen.dart:852
+  - lib/screens/forecast_screen.dart:869
+  - lib/screens/forecast_screen.dart:885
   ```
   style: TextStyle(
   ```
@@ -117,17 +117,6 @@
 
 ### 6. 📁 別ファイル間 (6 箇所、5 ファイル)
 
-  - lib/screens/forecast_screen.dart:918
-  - lib/screens/forecast_screen.dart:1011
-  - lib/screens/map/map_astro_carto.dart:229
-  - lib/screens/map/map_daily_transit_screen.dart:1792
-  - lib/screens/map/map_fortune_sheet.dart:732
-  ```
-  style: TextStyle(
-  ```
-
-### 7. 📁 別ファイル間 (6 箇所、5 ファイル)
-
   - lib/screens/sanctuary_screen.dart:963
   - lib/widgets/class_card.dart:289
   - lib/screens/galaxy/galaxy_star_atlas.dart:267
@@ -135,6 +124,17 @@
   - lib/screens/map/map_daily_transit_screen.dart:1390
   ```
   ],
+  ```
+
+### 7. 📁 別ファイル間 (5 箇所、5 ファイル)
+
+  - lib/screens/forecast_screen.dart:908
+  - lib/screens/map/map_astro_carto.dart:229
+  - lib/screens/map/map_daily_transit_screen.dart:1792
+  - lib/screens/map/map_fortune_sheet.dart:732
+  - lib/screens/map/map_viewpoint_menu.dart:128
+  ```
+  style: TextStyle(
   ```
 
 ### 8. 📁 別ファイル間 (5 箇所、5 ファイル)
@@ -205,17 +205,6 @@
 
 ### 14. 📁 別ファイル間 (5 箇所、4 ファイル)
 
-  - lib/screens/forecast_screen.dart:919
-  - lib/screens/forecast_screen.dart:1012
-  - lib/screens/map/map_astro_carto.dart:230
-  - lib/screens/map/map_fortune_sheet.dart:733
-  - lib/screens/map/map_viewpoint_menu.dart:129
-  ```
-  color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
-  ```
-
-### 15. 📁 別ファイル間 (5 箇所、4 ファイル)
-
   - lib/screens/sanctuary_screen.dart:1027
   - lib/widgets/info_popup.dart:106
   - lib/screens/map/map_astro_carto.dart:444
@@ -225,7 +214,7 @@
   ),
   ```
 
-### 16. 📁 別ファイル間 (5 箇所、4 ファイル)
+### 15. 📁 別ファイル間 (5 箇所、4 ファイル)
 
   - lib/widgets/catasterism_overlay.dart:187
   - lib/widgets/full_moon_overlay.dart:196
@@ -234,6 +223,16 @@
   - lib/screens/sanctuary/class_share_card.dart:210
   ```
   ),
+  ```
+
+### 16. 📁 別ファイル間 (4 箇所、4 ファイル)
+
+  - lib/screens/forecast_screen.dart:909
+  - lib/screens/map/map_astro_carto.dart:230
+  - lib/screens/map/map_fortune_sheet.dart:733
+  - lib/screens/map/map_viewpoint_menu.dart:129
+  ```
+  color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
   ```
 
 ### 17. 📁 別ファイル間 (4 箇所、4 ファイル)
@@ -261,7 +260,7 @@
   - lib/widgets/location_picker_minimap.dart:131
   - lib/widgets/new_moon_overlay.dart:420
   - lib/screens/sanctuary/class_share_card.dart:211
-  - lib/screens/sanctuary/sanctuary_title_diagnosis.dart:549
+  - lib/screens/sanctuary/sanctuary_title_diagnosis.dart:550
   ```
   ),
   ```
@@ -284,30 +283,7 @@
 
 ## 4. print()/debugPrint() 残置
 
-  - lib/screens/map_screen.dart:338 — `debugPrint('[Solara Map] 🔄 settle reset (verify-recover, 4層防御 第4層)');`
-  - lib/screens/map_screen.dart:373 — `debugPrint(`
-  - lib/screens/map_screen.dart:381 — `debugPrint(`
-  - lib/screens/map_screen.dart:400 — `debugPrint(`
-  - lib/screens/map_screen.dart:412 — `debugPrint(`
-  - lib/screens/map/map_styles.dart:132 — `debugPrint(`
-  - lib/screens/map/map_styles.dart:142 — `debugPrint('[Solara TileLayer] 🏗  build style=${cfg.id}');`
-  - lib/screens/sanctuary/sanctuary_title_diagnosis.dart:203 — `debugPrint(`
-  - lib/screens/sanctuary/sanctuary_title_diagnosis.dart:213 — `debugPrint(`
-  - lib/screens/sanctuary/sanctuary_title_diagnosis.dart:225 — `debugPrint(`
-  - lib/screens/sanctuary/sanctuary_title_diagnosis.dart:319 — `debugPrint('[Solara Title] ═══ 診断結果 ═══');`
-  - lib/screens/sanctuary/sanctuary_title_diagnosis.dart:320 — `debugPrint('[Solara Title] scores       : $_scores');`
-  - lib/screens/sanctuary/sanctuary_title_diagnosis.dart:321 — `debugPrint('[Solara Title] selections   : $_selections');`
-  - lib/screens/sanctuary/sanctuary_title_diagnosis.dart:322 — `debugPrint('[Solara Title] courtCounts  : $courtCounts');`
-  - lib/screens/sanctuary/sanctuary_title_diagnosis.dart:323 — `debugPrint('[Solara Title] courtList    : $_courtSelections');`
-  - lib/screens/sanctuary/sanctuary_title_diagnosis.dart:324 — `debugPrint(`
-  - lib/screens/sanctuary/sanctuary_title_diagnosis.dart:326 — `debugPrint('[Solara Title] → topAxis    : $topAxis (winners=$winners)');`
-  - lib/screens/sanctuary/sanctuary_title_diagnosis.dart:327 — `debugPrint('[Solara Title] → court      : $court [$courtRoute]');`
-  - lib/screens/sanctuary/sanctuary_title_diagnosis.dart:334 — `debugPrint('[Solara Title] ❌ getClassByAxisCourt returned null for $topAxis/$court');`
-  - lib/screens/sanctuary/sanctuary_title_diagnosis.dart:340 — `debugPrint('[Solara Title] → class      : ${cls.nameJP} (${cls.nameEN})');`
-  - lib/screens/sanctuary/sanctuary_title_diagnosis.dart:348 — `debugPrint('[Solara Title] → sun/moon   : $sunSign × $moonSign');`
-  - lib/screens/sanctuary/sanctuary_title_diagnosis.dart:349 — `debugPrint('[Solara Title] → t144.light : ${t144?['light']}');`
-  - lib/screens/sanctuary/sanctuary_title_diagnosis.dart:350 — `debugPrint('[Solara Title] → t144.shadow: ${t144?['shadow']}');`
-  - lib/screens/sanctuary/sanctuary_title_diagnosis.dart:351 — `debugPrint('[Solara Title] ═══════════════');`
+✅ なし
 
 ## 5. 未使用 private member 候補 (file 内 reference == 1)
 
@@ -315,4 +291,4 @@
 
 ---
 
-総計: 行数違反 51 / 重複 20 / TODO 2 / print 24 / 未使用候補 0
+総計: 行数違反 51 / 重複 20 / TODO 2 / print 0 / 未使用候補 0

@@ -96,18 +96,44 @@ def check_todos(files: list[Path]) -> list[tuple[Path, int, str]]:
 
 # ── print/debugPrint 残置 ─────────────────────────────────────
 PRINT_PAT = re.compile(r"\b(print|debugPrint)\s*\(")
+KDEBUG_GUARD = re.compile(r"\bif\s*\(\s*kDebugMode\s*\)")
 
 
 def check_prints(files: list[Path]) -> list[tuple[Path, int, str]]:
+    """`if (kDebugMode) { ... debugPrint(...) ... }` のように kDebugMode で
+    ガード済みの debugPrint は release ビルドで shake されるので除外する。
+
+    判定: debugPrint 行から遡り、ブロックの中括弧を追跡しながら
+    `if (kDebugMode)` を見つけたらガード済みとみなす。
+    最大 50 行まで遡る (それ以上ネスト深いブロックはレア)。
+    """
     out: list[tuple[Path, int, str]] = []
     for f in files:
-        for i, line in enumerate(f.open(encoding="utf-8"), 1):
+        text_lines = f.read_text(encoding="utf-8").splitlines()
+        for idx, line in enumerate(text_lines):
             stripped = line.strip()
             # コメント内は無視
             if stripped.startswith("//") or stripped.startswith("*"):
                 continue
-            if PRINT_PAT.search(line):
-                out.append((f, i, stripped))
+            if not PRINT_PAT.search(line):
+                continue
+            # 遡って kDebugMode ガードを探す。中括弧の収支を見て
+            # 「現在のスコープより外側」に出たら打切り (= ガードなし)。
+            depth = 0  # 現在行より上方向に積み増す { の数
+            guarded = False
+            start = max(0, idx - 50)
+            for j in range(idx - 1, start - 1, -1):
+                prev = text_lines[j]
+                # 行内の閉じ括弧→開き括弧 (逆順走査では効果が反転)
+                depth += prev.count("}") - prev.count("{")
+                if depth < 0 and KDEBUG_GUARD.search(prev):
+                    guarded = True
+                    break
+                if depth < -3:  # 3階層以上外に出たらガード対象外
+                    break
+            if guarded:
+                continue
+            out.append((f, idx + 1, stripped))
     return out
 
 
