@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:latlong2/latlong.dart';
 
 import '../../utils/solara_storage.dart';
+import 'map_fortune_sheet.dart' show showCategoryInfoPopup;
 import 'map_vp_panel.dart';
 
 /// 📍 地点ボタンタップで画面上部に展開するパネル (2026-05-09 第三弾)。
@@ -151,16 +152,33 @@ class _MapViewpointMenuState extends State<MapViewpointMenu> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // 現在の中心座標
-                  Text(
-                    '${widget.center.latitude.toStringAsFixed(4)}, ${widget.center.longitude.toStringAsFixed(4)}',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: Color(0xFF888888),
-                      letterSpacing: 0.5,
-                    ),
+                  // 現在の中心座標 (左に ? アイコン: 使い方 popup 起動)。
+                  // 右に置くと閉じるボタンと押し間違える懸念があるため左配置。
+                  Row(
+                    children: [
+                      GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onTap: () => showCategoryInfoPopup(context),
+                        child: const Padding(
+                          padding: EdgeInsets.all(4),
+                          child: Icon(Icons.help_outline,
+                              size: 14, color: Color(0xFF888888)),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          '${widget.center.latitude.toStringAsFixed(4)}, ${widget.center.longitude.toStringAsFixed(4)}',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Color(0xFF888888),
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 8),
                   // アクションボタン (タブ別)
