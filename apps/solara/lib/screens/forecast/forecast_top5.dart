@@ -123,8 +123,9 @@ class ForecastTop5Section extends StatelessWidget {
           SizedBox(width: 50,
               child: Text(dateLabel,
                   style: const TextStyle(fontSize: 12, color: Color(0xFFE8E0D0)))),
-          Expanded(child: Text('${dir16JP[d.topDir] ?? d.topDir}方位',
-              style: const TextStyle(fontSize: 10, color: Color(0xFF999999)))),
+          // 方位表示は撤去 (2026-05-13)。数字が「方位スコア」と誤読されるのを
+          // 防ぐため。方位情報は行タップで開く選択日詳細パネルで確認できる。
+          const Spacer(),
           Text(score.toStringAsFixed(1),
               style: TextStyle(fontSize: 11, color: modeColor, fontWeight: FontWeight.w600)),
           if (onJumpToDate != null) IconButton(
@@ -216,8 +217,9 @@ void _showTop5Info(BuildContext context) {
         ),
         SizedBox(height: 4),
         Text(
-          '日付 — その日の最強方位 — その日のスコア\n'
+          '日付 — 選択中カテゴリのその日のスコア\n'
           'タップで選択日詳細にジャンプ。\n'
+          '(その日の強運方位は選択日詳細で確認できます)\n'
           '🗺 ボタンでその日を Map で開けます。',
           style: TextStyle(
               color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
