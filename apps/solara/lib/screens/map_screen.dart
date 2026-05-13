@@ -735,12 +735,11 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   }
 
   Future<void> _openForecast() {
+    // FORECAST → Map のジャンプリンクは廃止 (2026-05-14)。
+    // 両画面は別計算 (時刻・場所依存の差) で数字が一致せず、リンクがあると
+    // 誤った同一視を招くため、画面間の暗黙的接続を切る。
     return _showSheet(
       ForecastScreen(
-        onJumpToDate: (date) {
-          setState(() => _selectedDate = date);
-          _loadProfileAndChart(targetDate: date);
-        },
         onNavigateToSanctuary: widget.onNavigateToSanctuary,
       ),
       heightFrac: 0.92,
