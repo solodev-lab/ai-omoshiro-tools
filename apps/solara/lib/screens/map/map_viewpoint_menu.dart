@@ -2,8 +2,128 @@ import 'package:flutter/material.dart';
 import 'package:latlong2/latlong.dart';
 
 import '../../utils/solara_storage.dart';
-import 'map_fortune_sheet.dart' show showCategoryInfoPopup;
+import '../../widgets/info_popup.dart';
 import 'map_vp_panel.dart';
+
+/// 地点登録パネル (VIEWPOINT / LOCATIONS) 専用の使い方 popup。
+/// 座標行の ? アイコンから開く。
+void _showViewpointHelpPopup(BuildContext context) {
+  showInfoPopup(
+    context: context,
+    child: Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: const [
+        Text(
+          'VIEWPOINT と LOCATIONS',
+          style: TextStyle(
+              color: Color(0xFFC9A84C), fontSize: 14, letterSpacing: 1),
+        ),
+        SizedBox(height: 10),
+        Text(
+          '【📍 VIEWPOINT】',
+          style: TextStyle(
+              color: Color(0xFFC9A84C),
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.5),
+        ),
+        SizedBox(height: 4),
+        Text(
+          '方位スコアを計算する基準地点 (観測点) です。\n'
+          'ここから見た 16 方位それぞれに惑星の\n'
+          'エネルギーがどう降りているかを Map に描画します。\n\n'
+          '検索結果リスト上部のプルダウンや、\n'
+          'Daily チップ画面の VIEWPOINT 切替で使われます。',
+          style: TextStyle(
+              color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
+        ),
+        SizedBox(height: 10),
+        Text(
+          '【🌐 LOCATIONS】',
+          style: TextStyle(
+              color: Color(0xFFC9A84C),
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.5),
+        ),
+        SizedBox(height: 4),
+        Text(
+          '地図上にマーカーとして表示しておく地点です\n'
+          '(よく行く場所のリスト)。\n'
+          '登録すると Map にずっとマーカーが残り、\n'
+          '位置関係を一目で確認できます。',
+          style: TextStyle(
+              color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
+        ),
+        SizedBox(height: 16),
+        Divider(color: Color(0x33C9A84C), height: 1),
+        SizedBox(height: 16),
+        Text(
+          '使い方',
+          style: TextStyle(
+              color: Color(0xFFC9A84C), fontSize: 14, letterSpacing: 1),
+        ),
+        SizedBox(height: 10),
+        Text(
+          '【登録する】',
+          style: TextStyle(
+              color: Color(0xFFC9A84C),
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.5),
+        ),
+        SizedBox(height: 4),
+        Text(
+          'VIEWPOINT / LOCATIONS とも、それぞれ 5 件まで\n'
+          '登録できます (自宅 🏠 を含む)。\n'
+          '自宅はプロフィールから自動で先頭スロットに\n'
+          '入るので、追加で登録できるのは最大 4 件です。\n\n'
+          '登録したい場所を地図中央に表示し、\n'
+          'VIEWPOINT タブなら「この地点を保存」、\n'
+          'LOCATIONS タブなら「この地点を登録」を\n'
+          'タップすると、現在のタブに保存されます。',
+          style: TextStyle(
+              color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
+        ),
+        SizedBox(height: 10),
+        Text(
+          '【アイコン・名前を変える】',
+          style: TextStyle(
+              color: Color(0xFFC9A84C),
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.5),
+        ),
+        SizedBox(height: 4),
+        Text(
+          '各スロット右端の ⋯ ボタンからサブメニューを\n'
+          '開き、名前の変更とアイコン変更ができます。\n'
+          'アイコンは 32 種類から選べます。',
+          style: TextStyle(
+              color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
+        ),
+        SizedBox(height: 10),
+        Text(
+          '【順序を変える】',
+          style: TextStyle(
+              color: Color(0xFFC9A84C),
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.5),
+        ),
+        SizedBox(height: 4),
+        Text(
+          '同じく ⋯ メニュー内の ↑ ↓ で並び替えできます。\n'
+          '上にあるスロットほど一覧で先に出ます。\n'
+          '(自宅 🏠 は先頭固定で移動・削除できません。)',
+          style: TextStyle(
+              color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
+        ),
+      ],
+    ),
+  );
+}
 
 /// 📍 地点ボタンタップで画面上部に展開するパネル (2026-05-09 第三弾)。
 ///
@@ -154,11 +274,13 @@ class _MapViewpointMenuState extends State<MapViewpointMenu> {
                 children: [
                   // 現在の中心座標 (左に ? アイコン: 使い方 popup 起動)。
                   // 右に置くと閉じるボタンと押し間違える懸念があるため左配置。
+                  // 開く popup は VIEWPOINT/LOCATIONS 登録に特化した
+                  // _showViewpointHelpPopup (Map 全体の使い方ではない)。
                   Row(
                     children: [
                       GestureDetector(
                         behavior: HitTestBehavior.opaque,
-                        onTap: () => showCategoryInfoPopup(context),
+                        onTap: () => _showViewpointHelpPopup(context),
                         child: const Padding(
                           padding: EdgeInsets.all(4),
                           child: Icon(Icons.help_outline,
