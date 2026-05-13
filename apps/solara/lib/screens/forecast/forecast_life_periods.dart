@@ -29,13 +29,9 @@ class ForecastLifePeriodsSection extends StatelessWidget {
   /// 全期間（カテゴリ混在、loadOrComputePeriods の戻り値）
   final List<LifePeriod> periods;
 
-  /// 開始日を Map で見るタップ時のコールバック（null なら Map ボタン非表示）
-  final void Function(DateTime date)? onJumpToDate;
-
   const ForecastLifePeriodsSection({
     super.key,
     required this.periods,
-    this.onJumpToDate,
   });
 
   @override
@@ -135,16 +131,6 @@ class ForecastLifePeriodsSection extends StatelessWidget {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(fontSize: 10, color: Color(0xFF888888)))),
-        if (onJumpToDate != null) IconButton(
-          icon: const Icon(Icons.map_outlined, size: 16, color: Color(0xFF888888)),
-          padding: EdgeInsets.zero,
-          constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
-          tooltip: '開始日を Map で見る',
-          onPressed: () {
-            onJumpToDate!(DateTime.utc(p.start.year, p.start.month, p.start.day, 3, 0, 0));
-            Navigator.of(context).maybePop();
-          },
-        ),
       ]),
     );
   }
@@ -214,10 +200,18 @@ void _showLifePeriodsInfo(BuildContext context) {
         SizedBox(height: 4),
         Text(
           '「いつ動くか」の長期計画に。\n'
-          '各期間の開始日を 🗺 ボタンで Map に飛ばして、\n'
-          'その日の方角・時間と組み合わせて活用できます。',
+          'その期間の中で具体的な 1 日を Map 画面で確認すると、\n'
+          'その地点・時刻での方角と時間が見えます。',
           style: TextStyle(
               color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
+        ),
+        SizedBox(height: 10),
+        Text(
+          '※ 同じ期間のスコアでも Map で開いた数字とは別の指標です\n'
+          '(場所・時刻に依存しない計算)。\n'
+          '詳細は画面上部 ❓ ボタンの「Map 画面の数字との関係」へ。',
+          style: TextStyle(
+              color: Color(0xFF999999), fontSize: 11, height: 1.5),
         ),
       ],
     ),

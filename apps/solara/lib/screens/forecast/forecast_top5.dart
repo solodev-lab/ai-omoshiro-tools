@@ -18,16 +18,12 @@ class ForecastTop5Section extends StatelessWidget {
   /// 行タップで該当日を選択するコールバック
   final ValueChanged<ForecastDay> onSelect;
 
-  /// その日を Map で見るコールバック（null なら Map ボタン非表示）
-  final void Function(DateTime date)? onJumpToDate;
-
   const ForecastTop5Section({
     super.key,
     required this.top5,
     required this.mode,
     required this.onModeChange,
     required this.onSelect,
-    this.onJumpToDate,
   });
 
   @override
@@ -101,7 +97,7 @@ class ForecastTop5Section extends StatelessWidget {
   /// 順位マーカー: 👑 / 🥈 / 🥉 / ⭐ / ✨（1位=王冠、以降はメダル→星の段階表示）
   static const _rankMarkers = ['👑', '🥈', '🥉', '⭐', '✨'];
 
-  Widget _row(BuildContext context, int rank, ForecastDay d) {
+  Widget _row(BuildContext _, int rank, ForecastDay d) {
     final parts = d.date.split('-');
     final dateLabel = '${parts[1]}/${parts[2]}';
 
@@ -128,18 +124,6 @@ class ForecastTop5Section extends StatelessWidget {
           const Spacer(),
           Text(score.toStringAsFixed(1),
               style: TextStyle(fontSize: 11, color: modeColor, fontWeight: FontWeight.w600)),
-          if (onJumpToDate != null) IconButton(
-            icon: const Icon(Icons.map_outlined, size: 16, color: Color(0xFF888888)),
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
-            tooltip: 'その日をMapで見る',
-            onPressed: () {
-              final ps = d.date.split('-').map(int.parse).toList();
-              final date = DateTime.utc(ps[0], ps[1], ps[2], 3, 0, 0);
-              onJumpToDate!(date);
-              Navigator.of(context).maybePop();
-            },
-          ),
         ]),
       ),
     );
@@ -219,8 +203,7 @@ void _showTop5Info(BuildContext context) {
         Text(
           '日付 — 選択中カテゴリのその日のスコア\n'
           'タップで選択日詳細にジャンプ。\n'
-          '(その日の強運方位は選択日詳細で確認できます)\n'
-          '🗺 ボタンでその日を Map で開けます。',
+          '(その日の強運方位は選択日詳細で確認できます)',
           style: TextStyle(
               color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
         ),
@@ -240,6 +223,14 @@ void _showTop5Info(BuildContext context) {
           '追い風が強い日です。',
           style: TextStyle(
               color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
+        ),
+        SizedBox(height: 10),
+        Text(
+          '※ 同じ日でも Map で開いた数字とは別の指標です\n'
+          '(場所・時刻に依存しない計算)。\n'
+          '詳細は画面上部 ❓ ボタンの「Map 画面の数字との関係」へ。',
+          style: TextStyle(
+              color: Color(0xFF999999), fontSize: 11, height: 1.5),
         ),
       ],
     ),

@@ -11,13 +11,16 @@ import 'map/map_constants.dart';
 /// Map画面から BottomSheet フルスクリーンで開く。
 /// 出生情報のみで決まり地点に依存しないので基準地は持たない。
 class ForecastScreen extends StatefulWidget {
-  final void Function(DateTime date)? onJumpToDate;
   /// プロフィール未設定時の案内から Sanctuary タブへ遷移させるコールバック。
   final VoidCallback? onNavigateToSanctuary;
 
+  // Map ジャンプ機能は廃止 (2026-05-14)。
+  // 理由: FORECAST と Map は別計算 (時刻・場所依存の有無) で数字が一致しない。
+  // 「Map で見る」リンクがあると「同じ数字のはず」という誤期待が生まれるため、
+  // 画面間の暗黙的な接続を切る。詳細は ❓ popup の「Map との関係」を参照。
+
   const ForecastScreen({
     super.key,
-    this.onJumpToDate,
     this.onNavigateToSanctuary,
   });
 
@@ -205,7 +208,6 @@ class _ForecastScreenState extends State<ForecastScreen> {
         const SizedBox(height: 20),
         ForecastLifePeriodsSection(
           periods: _periods,
-          onJumpToDate: widget.onJumpToDate,
         ),
         const SizedBox(height: 20),
         ForecastTop5Section(
@@ -213,7 +215,6 @@ class _ForecastScreenState extends State<ForecastScreen> {
           mode: _top5Mode,
           onModeChange: (m) => setState(() => _top5Mode = m),
           onSelect: (d) => setState(() => _selected = d),
-          onJumpToDate: widget.onJumpToDate,
         ),
         const SizedBox(height: 24),
         _buildFetchInfo(),
@@ -306,19 +307,6 @@ class _ForecastScreenState extends State<ForecastScreen> {
       const SizedBox(width: 6),
       Text(best.overall.toStringAsFixed(1),
           style: const TextStyle(fontSize: 10, color: Color(0xFFC9A84C))),
-      const Spacer(),
-      if (widget.onJumpToDate != null) IconButton(
-        icon: const Icon(Icons.map_outlined,
-            size: 14, color: Color(0xFFC9A84C)),
-        padding: EdgeInsets.zero,
-        constraints: const BoxConstraints(minWidth: 22, minHeight: 22),
-        tooltip: 'その日をMapで見る',
-        onPressed: () {
-          final ps = best.date.split('-').map(int.parse).toList();
-          widget.onJumpToDate!(DateTime.utc(ps[0], ps[1], ps[2], 3, 0, 0));
-          Navigator.of(context).maybePop();
-        },
-      ),
     ]);
   }
 
@@ -732,21 +720,6 @@ class _ForecastScreenState extends State<ForecastScreen> {
           _metric('強運方位', dir16JP[d.topDir] ?? d.topDir),
           const SizedBox(width: 14),
           _metric('方位スコア', d.topDirScore.toStringAsFixed(1)),
-          const Spacer(),
-          // 🗺 Mapボタン: 日付行から移動。総合/方位/スコアの数値列右側に
-          // 配置することで、日付テキストが横幅一杯使えて `...` 省略を回避。
-          if (widget.onJumpToDate != null) IconButton(
-            icon: const Icon(Icons.map_outlined,
-                size: 18, color: Color(0xFFC9A84C)),
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
-            tooltip: 'その日をMapで見る',
-            onPressed: () {
-              final ps = d.date.split('-').map(int.parse).toList();
-              widget.onJumpToDate!(DateTime.utc(ps[0], ps[1], ps[2], 3, 0, 0));
-              Navigator.of(context).maybePop();
-            },
-          ),
         ]),
         const SizedBox(height: 12),
         const Text('カテゴリ別',
@@ -908,7 +881,7 @@ void _showForecastUsageGuide(BuildContext context) {
         ),
         SizedBox(height: 10),
         Text(
-          '【日付ジャンプ】',
+          '【Map 画面の数字との関係】',
           style: TextStyle(
               color: Color(0xFFC9A84C),
               fontSize: 13,
@@ -917,9 +890,21 @@ void _showForecastUsageGuide(BuildContext context) {
         ),
         SizedBox(height: 4),
         Text(
-          '各リストの 🗺 ボタンで、その日を Map 画面で開けます。\n'
-          'Map のスコアバーで「方角」、Daily Transit で「時刻」を\n'
-          '組み合わせると、最適な「方角 × 時間」が見えます。',
+          'FORECAST の数字と、Map で同じ日を開いた時の数字は\n'
+          '一致しません。これは別計算だからです。\n\n'
+          '・FORECAST = あなたの出生情報のみで算出。\n'
+          '　地球のどこにいても、何時に見ても変わらない、\n'
+          '　あなた自身に流れているエネルギーを 1 年分追跡。\n\n'
+          '・Map = 今いる地点 + 今この瞬間で算出。\n'
+          '　ASC (地平線) と MC (天頂) を含むため、\n'
+          '　地点が変われば数字が変わり、同じ日でも\n'
+          '　12:00 と 19:00 で違う数字になります\n'
+          '　(ASC は 15°/時間で動くため)。\n\n'
+          'どちらが正しい・間違いではなく、別の角度から\n'
+          '同じあなたを読み取る 2 つのレンズです。\n'
+          '・FORECAST で「動きやすい時期」を掴み\n'
+          '・Map で「その地点・その時刻」を詳しく読む\n'
+          'という使い分けで両方使えます。',
           style: TextStyle(
               color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
         ),
@@ -1015,6 +1000,14 @@ void _showHeatmapInfo(BuildContext context) {
           '見えてきます。',
           style: TextStyle(
               color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
+        ),
+        SizedBox(height: 10),
+        Text(
+          '※ 同じ日でも Map で開いた数字とは別の指標です\n'
+          '(場所・時刻に依存しない計算)。\n'
+          '詳細は画面上部 ❓ ボタンの「Map 画面の数字との関係」へ。',
+          style: TextStyle(
+              color: Color(0xFF999999), fontSize: 11, height: 1.5),
         ),
       ],
     ),
