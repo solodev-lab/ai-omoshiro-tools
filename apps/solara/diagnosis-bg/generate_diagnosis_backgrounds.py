@@ -78,6 +78,26 @@ TECHNICAL:
 # ============================================================
 
 BACKGROUNDS = [
+    ("share_card_bg_shadow", """
+SUBJECT — SHARE CARD ELEGANT BACKDROP for SHADOW SIDE (シャドー面汎用フレーム):
+A subtle universal Art Nouveau (Mucha) decorative composition for the SHADOW side of a share card.
+The SAME COMPOSITION as the LIGHT share card backdrop, but with a SHADOW/AMETHYST palette.
+COMPOSITION:
+- 9:16 portrait orientation
+- Deep dark amethyst-purple background base (almost black with violet undertone) covering the entire canvas
+- Mucha-style ornate silver-amethyst filigree borders along all four edges (thin elegant lines)
+- Stylized botanical garlands (laurel, vines, lily silhouettes) curling subtly at the four corners only
+- Very faint floating violet/silver particles scattered throughout at low opacity
+- A dim radial halo of cool amethyst at the absolute center, very soft, low contrast
+- The entire interior (about 75%-80% of the canvas) MUST BE VISUALLY EMPTY — no figures, no specific symbols, only the faint center halo and edge ornaments
+- NO HUMAN FIGURES, NO ZODIAC SYMBOLS, NO CLASS-SPECIFIC MOTIFS — universal so it works with any class shadow card
+PALETTE:
+- Dark amethyst / midnight violet base (deep purple-black)
+- Cool silver-purple accents on borders and particles
+- Faint cool lavender at the center halo
+- Overall feeling: 神秘的、影のある優美さ、内省的、Shadow面に相応しい冷たい品格
+"""),
+
     ("share_card_bg", """
 SUBJECT — SHARE CARD ELEGANT BACKDROP (汎用フレーム、全クラス共通):
 A subtle universal Art Nouveau (Mucha) decorative composition for a share card backdrop.
