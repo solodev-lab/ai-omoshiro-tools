@@ -57,22 +57,16 @@ class _ClassShareCardPageState extends State<ClassShareCardPage> {
   title_data.TitleClass? get _cls =>
       title_data.getClassByAxisCourt(widget.axis, widget.court);
 
-  /// 軸別グラデーション背景 (share_card_bg.webp の下に敷く)
+  /// Light/Shadow 別グラデーション背景 (share_card_bg*.webp の下に敷く)
+  /// 旧: 軸別 (crimson/midnight blue 等の暗色) → 全カードで「Light なのに暗い」問題
+  /// 新: Light 面は warm amber / 暖かいゴールド系、Shadow 面は cool amethyst
   List<Color> get _bgGradient {
-    switch (widget.axis) {
-      case 'power':
-        return const [Color(0xFF2A0A12), Color(0xFF0A0408)];
-      case 'mind':
-        return const [Color(0xFF0A1530), Color(0xFF050818)];
-      case 'spirit':
-        return const [Color(0xFF1F0D38), Color(0xFF080414)];
-      case 'shadow':
-        return const [Color(0xFF1A0828), Color(0xFF050208)];
-      case 'heart':
-        return const [Color(0xFF2A0E1F), Color(0xFF0E0508)];
-      default:
-        return const [Color(0xFF0A1220), Color(0xFF020408)];
+    if (_showShadow) {
+      // Shadow: 深いアメジスト (現状維持)
+      return const [Color(0xFF1A0828), Color(0xFF050208)];
     }
+    // Light: 暖かいアンバー/アンティーク・ゴールドのダーク基調
+    return const [Color(0xFF3E2A14), Color(0xFF18100A)];
   }
 
   /// Light/Shadow 面のアクセント色
