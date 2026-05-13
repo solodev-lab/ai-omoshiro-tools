@@ -37,25 +37,20 @@
 ## #1 / #2 機械抽出 ↔ feature_inventory.md (人手版) の対整合
 
 - 機械抽出した class/mixin/extension/enum: **304**
-- inventory に登場する識別子 (大文字始まり ``backtick``囲み): **7**
+- inventory に登場する識別子 (大文字始まり ``backtick``囲み): **19**
 
-### #1 機械にあるが Doc に書かれていない (304)
+### #1 機械にあるが Doc に書かれていない (292)
 
 - `AcgFrameDef`
-- `AggregatedAspect`
 - `AngleFilter`
 - `AntiqueGlyph`
 - `AntiqueIcon`
 - `AppLocale`
-- `AspectContribution`
 - `AstroCartoBanner`
 - `AstroCartoCategoryPills`
 - `AstroCartoFramePills`
 - `AstroCartoSubPills`
-- `AstroFrame`
 - `AstroFrameStyle`
-- `AstroGlossaryEntry`
-- `AstroLine`
 - `AstroNadirMarker`
 - `AstroTermLabel`
 - `AstroZenithMarker`
@@ -83,11 +78,9 @@
 - `DailyReading`
 - `DailyTransitsResult`
 - `DateSlashFormatter`
-- `DirectionEnergy`
 - `DominantFortuneKind`
 - `DominantFortuneKindToCategoryIcon`
 - `DominantFortuneOverlay`
-- `EnergyMode`
 - `FontPreviewScreen`
 - `ForecastCache`
 - `ForecastDay`
@@ -125,7 +118,6 @@
 - `HoroscopeScreen`
 - `HoroscopeScreenState`
 - `HouseShift`
-- `HousesResult`
 - `LatitudeBand`
 - `LatitudeBandHit`
 - `LegendDot`
@@ -155,9 +147,7 @@
 - `MiniConstellationPainter`
 - `MoneyPainterBuilder`
 - `MonthEvents`
-- `MoonPhase`
 - `MoonScrollingStory`
-- `NearbyAstroLine`
 - `NewMoonOverlay`
 - `NoProfileGuide`
 - `Observe3DCard`
@@ -167,8 +157,6 @@
 - `ObserveHistoryPanel`
 - `ObserveScreen`
 - `PlanetDailyTransits`
-- `PlanetIntro`
-- `PlanetIntroFrame`
 - `PlanetLineData`
 - `PlanetMeta`
 - `PlanetSymbolsLayer`
@@ -241,7 +229,19 @@
 - `_ContribRow`
 - `_DailyTransitChip`
 - `_DateNumberField`
-- … 残り 104 省略
+- `_DateNumberFieldState`
+- `_DayStepperButton`
+- `_DayTab`
+- `_DayTabBar`
+- `_DominantFortuneOverlayState`
+- `_EmptyState`
+- `_EnergyBar`
+- `_FailedBody`
+- `_FontOption`
+- `_FontPreviewScreenState`
+- `_Footer`
+- `_ForecastScreenState`
+- … 残り 92 省略
 
 ### #2 Doc に書いてあるがコードに存在しない (ゴースト記述) (7)
 
