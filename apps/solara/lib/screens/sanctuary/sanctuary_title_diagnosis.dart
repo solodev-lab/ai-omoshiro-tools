@@ -1279,9 +1279,12 @@ class _SanctuaryTitleDiagnosisPageState extends State<SanctuaryTitleDiagnosisPag
               GestureDetector(onTap: _accept, child: Container(width: double.infinity, padding: const EdgeInsets.symmetric(vertical: 14),
                 decoration: BoxDecoration(borderRadius: BorderRadius.circular(14), gradient: const LinearGradient(colors: [Color(0xFFF9D976), Color(0xFFE8A840)])),
                 child: const Center(child: Text('これでいく', style: TextStyle(color: Color(0xFF0A0A14), fontSize: 15, fontWeight: FontWeight.w700))))),
-              const SizedBox(height: 12),
-              // やり直し診断時は「前のクラスに戻す」、初回診断時のみ「もう一度診断する」
-              if (widget.previousResult != null)
+              // やり直し診断時のみ「前のクラスと比較する」を表示
+              // 初回診断時はボタンなし (Free 1回上限の抜け道を作らないため、
+              // 旧「もう一度診断する」を撤去。やり直したい場合は Sanctuary 画面の
+              // 「再診断する」ボタンから redoCount++ 付きで実行する)
+              if (widget.previousResult != null) ...[
+                const SizedBox(height: 12),
                 GestureDetector(
                   onTap: () => _showPreviousComparison(context),
                   child: const Text(
@@ -1292,12 +1295,8 @@ class _SanctuaryTitleDiagnosisPageState extends State<SanctuaryTitleDiagnosisPag
                       decoration: TextDecoration.underline,
                     ),
                   ),
-                )
-              else
-                GestureDetector(
-                  onTap: () => setState(() { _roundIdx = 0; _scores.updateAll((_, v) => 0); _courtSelections.clear(); _selections.clear(); _selectedCard = null; _screen = 'intro'; _revealCtrl.reset(); _flipCtrl.reset(); _showShadowSide = false; _shuffleCards(); }),
-                  child: const Text('もう一度診断する', style: TextStyle(fontSize: 15, color: Color(0xFFACACAC), decoration: TextDecoration.underline)),
                 ),
+              ],
             ])),
         ]))),
     );
@@ -1350,9 +1349,10 @@ class _SanctuaryTitleDiagnosisPageState extends State<SanctuaryTitleDiagnosisPag
             GestureDetector(onTap: _accept, child: Container(width: double.infinity, padding: const EdgeInsets.symmetric(vertical: 14),
               decoration: BoxDecoration(borderRadius: BorderRadius.circular(14), gradient: const LinearGradient(colors: [Color(0xFFC9A8E0), Color(0xFF8C5BC0)])),
               child: const Center(child: Text('これでいく', style: TextStyle(color: Color(0xFF0A0A14), fontSize: 15, fontWeight: FontWeight.w700))))),
-            const SizedBox(height: 12),
-            // やり直し診断時は「前のクラスに戻す」、初回診断時のみ「もう一度診断する」
-            if (widget.previousResult != null)
+            // やり直し診断時のみ「前のクラスと比較する」を表示
+            // 初回診断時はボタンなし (Free 1回上限の抜け道を作らないため)
+            if (widget.previousResult != null) ...[
+              const SizedBox(height: 12),
               GestureDetector(
                 onTap: () => _showPreviousComparison(context),
                 child: const Text(
@@ -1363,12 +1363,8 @@ class _SanctuaryTitleDiagnosisPageState extends State<SanctuaryTitleDiagnosisPag
                     decoration: TextDecoration.underline,
                   ),
                 ),
-              )
-            else
-              GestureDetector(
-                onTap: () => setState(() { _roundIdx = 0; _scores.updateAll((_, v) => 0); _courtSelections.clear(); _selections.clear(); _selectedCard = null; _screen = 'intro'; _revealCtrl.reset(); _flipCtrl.reset(); _showShadowSide = false; _shuffleCards(); }),
-                child: const Text('もう一度診断する', style: TextStyle(fontSize: 15, color: Color(0xFFACACAC), decoration: TextDecoration.underline)),
               ),
+            ],
           ]),
         ]))),
     );
