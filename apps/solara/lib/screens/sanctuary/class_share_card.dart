@@ -204,45 +204,56 @@ class _ClassShareCardPageState extends State<ClassShareCardPage> {
   }
 
   /// シェア用画像の中身 (縦長 9:16、完全固定レイアウト)
+  ///
+  /// 設計論理サイズ 360×640 (9:16) で組み、FittedBox で AspectRatio 枠に
+  /// スケール表示する。これにより端末の「表示サイズ」設定(論理DPI)が
+  /// 変わってもレイアウトは絶対不変 — 画像出力(pixelRatio 3.0)も常に同じ。
   Widget _buildShareImage(title_data.TitleClass cls) {
+    // 設計論理サイズ (絶対 dp、変更不可)
+    const double designW = 360.0;
+    const double designH = 640.0; // 9:16
+
+    return FittedBox(
+      fit: BoxFit.contain,
+      child: SizedBox(
+        width: designW,
+        height: designH,
+        child: _buildShareImageInner(cls, designW, designH),
+      ),
+    );
+  }
+
+  Widget _buildShareImageInner(
+      title_data.TitleClass cls, double w, double h) {
     final accent = _accentColor;
     final titleOneLine =
         _showShadow ? widget.titleShadowJP : widget.titleLightJP;
     final classText = _showShadow ? cls.shadowJP : cls.lightJP;
 
-    return LayoutBuilder(
-      builder: (ctx, constraints) {
-        final w = constraints.maxWidth;
-        final h = constraints.maxHeight;
+    // ── 縦比率配分 (合計 1.0) ─────────────────────────
+    // 上段 0.18, カードエリア 0.46, 下段 0.36
+    final topH = h * 0.18;
+    final cardAreaH = h * 0.46;
+    final bottomH = h * 0.36;
 
-        // ── 縦比率配分 (合計 1.0) ─────────────────────────
-        // 上段 0.18, カードエリア 0.46, 下段 0.36
-        final topH = h * 0.18;
-        final cardAreaH = h * 0.46;
-        final bottomH = h * 0.36;
+    // ── フォントサイズ (設計幅 360dp 基準で絶対 dp) ──
+    final fsHeader = w * 0.045;     // 16.2
+    final fsSubtitle = w * 0.028;   // 10.1
+    final fsTitleEN = w * 0.038;    // 13.7
+    final fsTitleOne = w * 0.065;   // 23.4
+    final fsClassJP = w * 0.090;    // 32.4
+    final fsClassEN = w * 0.034;    // 12.2
+    final fsClassText = w * 0.040;  // 14.4
 
-        // ── フォントサイズ (幅比率で固定) ────────────────
-        final fsHeader = w * 0.045;        // S O L A R A
-        final fsSubtitle = w * 0.028;      // — Your Title —
-        final fsTitleEN = w * 0.038;       // Abyssal Lighthouse
-        final fsTitleOne = w * 0.065;      // 一言 (大、メイン)
-        final fsClassJP = w * 0.090;       // 騎士
-        final fsClassEN = w * 0.034;       // Knight
-        final fsClassText = w * 0.040;     // クラステキスト
+    // ── テキスト領域の固定高さ (最大行数 × 行送り) ───
+    final titleOneLineH = fsTitleOne * 1.4 * 2;
+    final classTextH = fsClassText * 1.55 * 2;
 
-        // ── テキスト領域の固定高さ (最大行数 × 行送り) ───
-        // 一言: 18文字超もあるので 2行ぶん確保
-        final titleOneLineH = fsTitleOne * 1.4 * 2;
-        // クラステキスト: 17文字超もあるので 2行ぶん確保
-        final classTextH = fsClassText * 1.55 * 2;
+    // ── カードサイズ ──
+    final maxCardW = w * 0.74;
+    final cardWidth = (cardAreaH / 1.5).clamp(80.0, maxCardW);
 
-        // ── カードサイズ (カードエリアにフィット、2:3 縦長) ──
-        // カードエリア高さから逆算: cardWidth = cardAreaH / 1.5
-        // ただし幅も超えないよう min を取る (左右余白 6%)
-        final maxCardW = w * 0.74;
-        final cardWidth = (cardAreaH / 1.5).clamp(80.0, maxCardW);
-
-        return Container(
+    return Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topCenter,
@@ -406,7 +417,5 @@ class _ClassShareCardPageState extends State<ClassShareCardPage> {
             ),
           ),
         );
-      },
-    );
   }
 }
