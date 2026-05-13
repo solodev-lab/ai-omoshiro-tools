@@ -154,7 +154,7 @@ class _SanctuaryTitleDiagnosisPageState extends State<SanctuaryTitleDiagnosisPag
         if (axis == 'wildcard') {
           // wildcard: 最低スコア軸を +1。
           // 旧実装は順序 power→mind→spirit→shadow→heart で先頭優先 → power バイアス。
-          // 新実装は同点なら生年月日ハッシュで公平に選択する。
+          // 新実装は同点なら占星術シードで公平に選択する。
           const allAxes = ['power', 'mind', 'spirit', 'shadow', 'heart'];
           int minVal = 999;
           for (final v in _scores.values) {
@@ -164,14 +164,21 @@ class _SanctuaryTitleDiagnosisPageState extends State<SanctuaryTitleDiagnosisPag
               allAxes.where((k) => _scores[k] == minVal).toList();
           final pick = _pickByAstroSeed(minAxes);
           _scores[pick] = (_scores[pick] ?? 0) + 1;
+          // ── デバッグ: wildcard の決定経路 ──
+          debugPrint(
+            '[Solara Title] R${_roundIdx + 1} (Part$part) pick=wildcard '
+            'minAxes=$minAxes → boost=$pick '
+            '(${minAxes.length > 1 ? "astro-seed" : "single"}) '
+            'scores=$_scores',
+          );
         } else {
           _scores[axis] = (_scores[axis] ?? 0) + 1;
+          // ── デバッグ: 通常選択 ──
+          debugPrint(
+            '[Solara Title] R${_roundIdx + 1} (Part$part) pick=$axis '
+            'scores=$_scores',
+          );
         }
-        // ── デバッグ: 選択した軸と現在の累積スコア ──
-        debugPrint(
-          '[Solara Title] R${_roundIdx + 1} (Part$part) pick=$axis '
-          'scores=$_scores',
-        );
       } else if (part == 3) {
         // HTML: TD.courtSelections.push(card.court)
         final court = card['court'] as String? ?? 'page';
@@ -232,7 +239,7 @@ class _SanctuaryTitleDiagnosisPageState extends State<SanctuaryTitleDiagnosisPag
       }
     }
 
-    // court 決定: 最大票数 court が単独 (>=2) なら確定、同点なら生年月日ハッシュで公平に。
+    // court 決定: 最大票数 court が単独 (>=2) なら確定、同点なら占星術シードで公平に。
     // 旧実装は順序 page→knight→queen→king で先頭優先 → king バイアス (出ない)。
     final courtCounts = {'page': 0, 'knight': 0, 'queen': 0, 'king': 0};
     for (final c in _courtSelections) {
@@ -243,26 +250,42 @@ class _SanctuaryTitleDiagnosisPageState extends State<SanctuaryTitleDiagnosisPag
       if (v > maxCourtCount) maxCourtCount = v;
     });
     String court;
+    String courtRoute; // デバッグ用: 決定経路
     if (maxCourtCount < 2) {
       // 全部 1 票 (1+1+1+1) または全部 0 → 混合型
       court = 'mixed';
+      courtRoute = 'all-tied → mixed';
     } else {
       final maxCourts = courtCounts.entries
           .where((e) => e.value == maxCourtCount)
           .map((e) => e.key)
           .toList();
-      court =
-          maxCourts.length == 1 ? maxCourts.first : _pickByAstroSeed(maxCourts);
+      if (maxCourts.length == 1) {
+        court = maxCourts.first;
+        courtRoute = 'single-max ($maxCourtCount votes)';
+      } else {
+        court = _pickByAstroSeed(maxCourts);
+        courtRoute = 'tied(${maxCourts.join(",")}) → astro-seed';
+      }
     }
 
     // ── デバッグ: 最終決定の各段階を出力 ──
+    final sunSignDbg = title_data.getSunSign(_profile?.birthDate ?? '');
+    final moonSignDbg = title_data.getMoonSign(
+        _profile?.birthDate ?? '', _profile?.birthTime ?? '');
+    final sunIdxDbg = _zodiacOrder.indexOf(sunSignDbg);
+    final moonIdxDbg = _zodiacOrder.indexOf(moonSignDbg);
+    final astroSeedDbg =
+        (sunIdxDbg >= 0 ? sunIdxDbg : 0) * 12 + (moonIdxDbg >= 0 ? moonIdxDbg : 0);
     debugPrint('[Solara Title] ═══ 診断結果 ═══');
     debugPrint('[Solara Title] scores       : $_scores');
     debugPrint('[Solara Title] selections   : $_selections');
     debugPrint('[Solara Title] courtCounts  : $courtCounts');
     debugPrint('[Solara Title] courtList    : $_courtSelections');
+    debugPrint(
+        '[Solara Title] astroSeed    : $astroSeedDbg ($sunSignDbg×$moonSignDbg)');
     debugPrint('[Solara Title] → topAxis    : $topAxis (winners=$winners)');
-    debugPrint('[Solara Title] → court      : $court');
+    debugPrint('[Solara Title] → court      : $court [$courtRoute]');
 
     // HTML: TITLE_CLASSES[axis][court]
     final cls = title_data.getClassByAxisCourt(topAxis, court);
