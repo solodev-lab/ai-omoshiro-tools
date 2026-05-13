@@ -7,7 +7,6 @@ import '../../utils/solara_api.dart' show solaraWorkerBase;
 import 'map_astro.dart';
 import 'map_constants.dart';
 import 'map_fortune_sheet.dart' show showCategoryInfoPopup;
-import 'map_vp_panel.dart' show VPSlot;
 
 const _searchApiUrl = '$solaraWorkerBase/search';
 
@@ -140,16 +139,11 @@ class SearchResultList extends StatelessWidget {
   final List<SearchHit> hits;
   final void Function(SearchHit) onTap;
   final VoidCallback onClose;
-  /// 距離km・方位計算の起点座標 (= 選択中 VIEWPOINT または地図中心)
+  /// 距離km・方位計算の起点座標 (= VIEWPOINT)。
+  /// 2026-05-13: 旧 dropdown 廃止 → VP 切替は検索バー上部のチップ列に統一。
   final LatLng center;
   /// 最大高さ (画面下まで伸ばすために呼出側で MediaQuery 連動して指定)
   final double maxHeight;
-  /// VIEWPOINT 切替プルダウン用。未指定なら dropdown 非表示。
-  final List<VPSlot>? vpSlots;
-  /// 選択中の VIEWPOINT index (-1 = 地図中心、0+ = vpSlots の index)
-  final int selectedVpIndex;
-  /// VP 選択変更コールバック
-  final ValueChanged<int>? onVpChanged;
   /// 上部スコアバーと同じ activeCategory ('all' / 'money' / 'love' / 等)。
   /// 検索結果一覧で「カテゴリ名 X.X」表示に使う。
   final String activeCategory;
@@ -161,9 +155,6 @@ class SearchResultList extends StatelessWidget {
     required this.onClose,
     required this.center,
     this.maxHeight = 320,
-    this.vpSlots,
-    this.selectedVpIndex = -1,
-    this.onVpChanged,
     this.activeCategory = 'all',
   });
 
@@ -179,25 +170,18 @@ class SearchResultList extends StatelessWidget {
       child: Column(mainAxisSize: MainAxisSize.min, children: [
         Padding(
           padding: const EdgeInsets.fromLTRB(14, 10, 10, 6),
-          // 2026-05-08: 検索アイコン削除 + タイトルと dropdown を横スクロール化。
-          // 端末フォント拡大時に '検索結果 (N)' + dropdown 内容が幅を超える事象を
-          // 横スクロールで吸収。✕ ボタンだけは右端固定でスクロール対象外。
+          // 2026-05-13: VP dropdown 撤去 → タイトルと ✕ のシンプルな構成。
+          // VP 切替は検索バー上部のチップ列に統一されたので、結果一覧内に
+          // 同機能を残すと UI 二重化。
           child: Row(children: [
             Expanded(
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(children: [
-                  Text('検索結果 (${hits.length})',
-                      style: const TextStyle(
-                          fontSize: 13,
-                          color: Color(0xFFC9A84C),
-                          letterSpacing: 1)),
-                  const SizedBox(width: 10),
-                  // ── VIEWPOINT 選択 dropdown (距離・方位・スコアの起点を切替) ──
-                  if (vpSlots != null && onVpChanged != null)
-                    _buildVpDropdown(),
-                ]),
-              ),
+              child: Text('検索結果 (${hits.length})',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                      fontSize: 13,
+                      color: Color(0xFFC9A84C),
+                      letterSpacing: 1)),
             ),
             const SizedBox(width: 6),
             GestureDetector(
@@ -325,85 +309,6 @@ class SearchResultList extends StatelessWidget {
     }
   }
 
-  /// VIEWPOINT 選択 dropdown。
-  /// -1 = 地図中心、0+ = vpSlots の index。
-  /// 距離km・方位・スコアの起点を切替えるためのもの。
-  ///
-  /// 2026-05-08: 親 Row が横スクロール対応になったので、dropdown 自体は
-  /// 内容に合わせた自然サイズ (isExpanded: false) で展開。長い slot 名でも
-  /// truncation せずフル表示。親の SingleChildScrollView が overflow を吸収。
-  /// フォントは TextStyle に fontFamily 未指定 → MaterialApp テーマの
-  /// DM Sans + Noto Sans JP fallback がそのまま継承される。
-  Widget _buildVpDropdown() {
-    final slots = vpSlots ?? const [];
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: const Color(0x33C9A84C)),
-      ),
-      child: DropdownButton<int>(
-        value: selectedVpIndex,
-        underline: const SizedBox.shrink(),
-        isDense: true,
-        // isExpanded: false (デフォルト) — 内容のサイズに合わせる
-        dropdownColor: const Color(0xF20F0F1E),
-        iconEnabledColor: const Color(0xFFC9A84C),
-        iconSize: 16,
-        style: const TextStyle(
-          fontSize: 13,
-          color: Color(0xFFE8E0D0),
-        ),
-        items: [
-          const DropdownMenuItem<int>(
-            value: -1,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.my_location, size: 12, color: Color(0xFFC9A84C)),
-                SizedBox(width: 4),
-                Text('地図中心',
-                    style: TextStyle(
-                        fontSize: 13, color: Color(0xFFE8E0D0))),
-              ],
-            ),
-          ),
-          // 2026-05-08: スロットラベルを住所→カテゴリ名に統一。
-          // - isHome=true VPSlot → 「現住所」(固定)
-          // - その他 VPSlot → slot.name (空なら VP{n})
-          // 長 VIEWPOINT 名は ellipsis で truncate (親 SingleChildScrollView
-          // が overflow を吸収する前提でも、dropdown 展開時の見やすさのため)
-          for (int i = 0; i < slots.length; i++)
-            DropdownMenuItem<int>(
-              value: i,
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(slots[i].icon,
-                      style: const TextStyle(fontSize: 13)),
-                  const SizedBox(width: 4),
-                  Text(
-                    slots[i].isHome
-                        ? '現住所'
-                        : (slots[i].name.isEmpty
-                            ? 'VP${i + 1}'
-                            : slots[i].name),
-                    style: const TextStyle(
-                        fontSize: 13, color: Color(0xFFE8E0D0)),
-                    overflow: TextOverflow.ellipsis,
-                    maxLines: 1,
-                  ),
-                ],
-              ),
-            ),
-        ],
-        onChanged: (v) {
-          if (v == null) return;
-          onVpChanged?.call(v);
-        },
-      ),
-    );
-  }
 }
 
 /// 検索候補から1件選ばれたあとの詳細ポップアップ。
