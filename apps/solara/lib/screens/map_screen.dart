@@ -767,6 +767,10 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   }
 
   void _onSearchTap() {
+    // 🔍 起動時は毎回テキスト初期化 + 即フォーカス (autofocus)。
+    // 「戻る」(PopScope) で閉じた時はテキストを残すので、_clearAllSearch では
+    // ctrl を触らない。明示的な ✕ 閉じと、再オープン時のみクリアする方針。
+    _searchCtrl.clear();
     setState(() {
       _searchOpen = true;
       _displayMenuOpen = false;
@@ -1730,7 +1734,12 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
           child: SearchBarOverlay(
             controller: _searchCtrl,
             onSubmitted: _doSearch,
-            onClose: () => setState(() => _searchOpen = false),
+            // ✕ は明示的閉じ = テキストもクリア。Android back (PopScope) は
+            // _clearAllSearch 経由でテキスト保持されるので別経路。
+            onClose: () => setState(() {
+              _searchOpen = false;
+              _searchCtrl.clear();
+            }),
           ),
         ),
 
@@ -1871,6 +1880,7 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
               _searchListCenter = null;
               _searchListZoom = null;
               _searchVpIndex = -1; // 次回検索の起点を地図中心に戻す
+              _searchCtrl.clear(); // 結果リスト ✕ も明示的閉じ扱い
             }),
             vpSlots: _vpSlotsCache,
             selectedVpIndex: _searchVpIndex,
