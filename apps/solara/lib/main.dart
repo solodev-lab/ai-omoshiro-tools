@@ -123,10 +123,12 @@ class _SolaraHomeState extends State<SolaraHome> {
       },
       child: Scaffold(
         extendBody: true,
-        // 2026-05-13: 一時的に resizeToAvoidBottomInset 全タブ true (default)。
-        // false にすると検索詳細を閉じた後 Map が黒画面化する問題が確認された
-        // (TileLayer の viewport 連続更新と相性が悪い疑い、要追加調査)。
-        // 「検索キーボードで地図が視覚シフト」問題は別解で再対処予定。
+        // 2026-05-13: Map タブ (index 0) のみ resizeToAvoidBottomInset=false。
+        // 検索バーのキーボード出現時に Scaffold body が縮むと FlutterMap も
+        // 縮んで地理中心が視覚的にシフト (「地図が動いた」見え)。
+        // Map では検索バー/チップ列を top+152〜200 配置でキーボードに隠れない。
+        // 一度撤回したが、黒画面の原因は別と判断して再適用 (2026-05-13)。
+        resizeToAvoidBottomInset: _currentIndex != 0,
         body: IndexedStack(
           index: _currentIndex,
           // 2026-05-03: TickerMode で裏画面の AnimationController.repeat() を停止。
