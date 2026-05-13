@@ -1636,24 +1636,14 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
           ],
         ),
 
-        // ── オーバーレイ全体: NavBar 上端までの領域に閉じ込める ──
-        // SafeArea で Scaffold が自動設定する body padding.bottom (= NavBar 実高、
-        // extendBody:true 時は NavBar が含まれる) を尊重する。これで端末や設定
-        // ごとに変わる NavBar 高を Scaffold 任せで処理できる (手動計算で
-        // ズレるリスクを排除)。
-        // 内側の Stack 内では bottom: 0 = NavBar 上端。手動 navInset 不要。
-        // 内側 SafeArea (popup 内等) は外側 SafeArea で消費済みのため二重 padding
-        // しない。
-        Positioned.fill(
-          child: SafeArea(
-            top: false, left: false, right: false,
-            child: Stack(children: [
-
         // ── 中央十字マーカー (常時表示) ──
-        // 画面のど真ん中に + を描画。VP Pin (金色 marker) と完全に重なる
-        // 位置に出すことで、ユーザーが「いま検索基準/VP がここ」を視認できる。
+        // 外側 Stack に直接置く (= FlutterMap と同じ全画面領域)。
+        // 旧: 下の SafeArea(bottom:true)-wrap された内側 Stack に置いていたが、
+        // SafeArea が NavBar 分の bottom padding を消費するため Center 位置が
+        // 画面中央より NavBar半分 上にズレていた。FlutterMap の VP Pin は
+        // 全画面の中央に出るので、十字も同じ全画面 Stack 階層で Center する
+        // 必要がある (2026-05-13 ユーザー指摘: + と〇 がずれてる)。
         // ACG モードでは中心の概念が薄れるため非表示。
-        // ラベル (緯度経度) は別オーバーレイ (下) で「座標取得」トグル時のみ。
         if (!_astroCartoMode)
           Positioned.fill(
             child: IgnorePointer(
@@ -1679,6 +1669,7 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
           ),
 
         // ── 座標取得ラベル (Map L2「座標取得」トグル ON 時のみ) ──
+        // 同じ理由で外側 Stack 階層に配置 (十字と同じ画面中央基準にするため)。
         // 画面中央 + の少し下に緯度経度ラベル。地図を動かすと
         // mapEventStream 経由で再描画され、リアルタイムに座標が追従。
         // タップでクリップボードにコピー。
@@ -1733,6 +1724,22 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
               },
             ),
           ),
+
+        // ── オーバーレイ全体: NavBar 上端までの領域に閉じ込める ──
+        // SafeArea で Scaffold が自動設定する body padding.bottom (= NavBar 実高、
+        // extendBody:true 時は NavBar が含まれる) を尊重する。これで端末や設定
+        // ごとに変わる NavBar 高を Scaffold 任せで処理できる (手動計算で
+        // ズレるリスクを排除)。
+        // 内側の Stack 内では bottom: 0 = NavBar 上端。手動 navInset 不要。
+        // 内側 SafeArea (popup 内等) は外側 SafeArea で消費済みのため二重 padding
+        // しない。
+        // 注: 画面正中心に出したい widget (中央十字 + 座標ラベル) はこの
+        // SafeArea-wrap の中に入れると NavBar 分上にズレるので、上の階層
+        // (= 外側 Stack 直下) に置くこと。
+        Positioned.fill(
+          child: SafeArea(
+            top: false, left: false, right: false,
+            child: Stack(children: [
 
         // ── FF Label (スコアバー) + 日付タイムスライダーを縦 stack ──
         // 2026-05-08: 端末フォントサイズ拡大でバーの高さが変わって干渉する
