@@ -245,11 +245,16 @@ class _ClassShareCardPageState extends State<ClassShareCardPage> {
         _showShadow ? widget.titleShadowJP : widget.titleLightJP;
     final classText = _showShadow ? cls.shadowJP : cls.lightJP;
 
+    // ── Padding (内側余白) ──
+    final paddingH = w * 0.06;
+    final paddingV = w * 0.05;
+
     // ── 縦比率配分 (合計 1.0) ─────────────────────────
-    // 上段 0.18, カードエリア 0.46, 下段 0.36
-    final topH = h * 0.18;
-    final cardAreaH = h * 0.46;
-    final bottomH = h * 0.36;
+    // Padding を引いた利用可能高さで再分配 (640 - 36 = 604)
+    final usableH = h - paddingV * 2;
+    final topH = usableH * 0.18;
+    final cardAreaH = usableH * 0.46;
+    final bottomH = usableH * 0.36;
 
     // ── フォントサイズ (設計幅 360dp 基準で絶対 dp) ──
     final fsHeader = w * 0.045;     // 16.2
@@ -297,8 +302,8 @@ class _ClassShareCardPageState extends State<ClassShareCardPage> {
                 // ── 中央コンテンツ (3段固定レイアウト) ──
                 Padding(
                   padding: EdgeInsets.symmetric(
-                    horizontal: w * 0.06,
-                    vertical: w * 0.05,
+                    horizontal: paddingH,
+                    vertical: paddingV,
                   ),
                   child: Column(
                     children: [
