@@ -266,8 +266,12 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   // hit を選んでズームイン後、戻るボタンで一覧画面に戻る際に復元する。
   LatLng? _searchListCenter;
   double? _searchListZoom;
+  // 検索実行時の「地図の見えている中心」を保存。
+  // VP Pin 位置 (_center) とは別物。dropdown で「地図中心」を選んだ時の
+  // 距離・方位計算の基準として使う。Phase A (2026-05-13)。
+  LatLng? _searchOriginCenter;
   // 検索結果リスト dropdown で選択中の VIEWPOINT index
-  // -1 = 地図中心、0+ = _vpSlotsCache の index
+  // -1 = 地図中心 (= _searchOriginCenter)、0+ = _vpSlotsCache の index
   int _searchVpIndex = -1;
 
   // Map style (tile source + light/dark filter)
@@ -642,13 +646,16 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   }
 
   /// 検索結果距離・方位・スコアの起点座標。
-  /// _searchVpIndex == -1: 地図中心、>= 0: 該当 VPSlot の座標。
+  /// _searchVpIndex == -1: 検索実行時の地図中心 (= _searchOriginCenter)、
+  /// >= 0: 該当 VPSlot の座標。
+  /// _searchOriginCenter が未設定 (= 検索未実行) のときは VP Pin 位置 _center
+  /// にフォールバック (旧挙動互換)。
   LatLng get _searchEffectiveCenter {
     if (_searchVpIndex >= 0 && _searchVpIndex < _vpSlotsCache.length) {
       final s = _vpSlotsCache[_searchVpIndex];
       return LatLng(s.lat, s.lng);
     }
-    return _center;
+    return _searchOriginCenter ?? _center;
   }
 
   /// 既存の検索結果（リスト + フォーカス1件）に、現在の中心・日付・カテゴリ・ソース
@@ -787,6 +794,7 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
       _searchHits = [];
       _searchListCenter = null;
       _searchListZoom = null;
+      _searchOriginCenter = null;
     });
   }
 
@@ -868,8 +876,20 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   Future<void> _doSearch(String query) async {
     if (query.trim().length < 2) return;
     setState(() => _searching = true);
-    // マップ中心 (現在の _center) を bias に渡し、Google 側で半径15kmを優先
-    final hits = await searchPlaces(query, biasCenter: _center);
+    // 検索 bias は「現在地図が見せている中心」を使う (VP Pin 位置 _center ではない)。
+    // これにより 100km 離れた地に地図をパンしてから検索 → その表示地点周辺の
+    // 結果が取れる。VP は引き続き 16 方位スコア計算の基準 (= 自宅基準) を担当。
+    // 起動直後で MapController が camera 未確定の場合は _center にフォールバック。
+    LatLng searchOrigin;
+    try {
+      searchOrigin = _mapCtrl.camera.center;
+    } catch (_) {
+      searchOrigin = _center;
+    }
+    _searchOriginCenter = searchOrigin;
+    _searchVpIndex = -1; // 新規検索なので「地図中心」(= searchOrigin) にリセット
+
+    final hits = await searchPlaces(query, biasCenter: searchOrigin);
     annotateHitsWithScores(
       hits: hits,
       center: _searchEffectiveCenter,
@@ -886,8 +906,8 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     if (hits.length == 1) {
       _selectSearchHit(hits.first);
     } else if (hits.length > 1) {
-      // 複数候補: zoom 11 で半径15km全体を見せ、中心をリスト上部へずらす
-      _frameSearchArea(_center);
+      // 複数候補: zoom 13 で表示域中心の周辺、中心をリスト上部へずらす
+      _frameSearchArea(searchOrigin);
     }
   }
 
@@ -1215,6 +1235,7 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
       _fortuneSheetOpen = false;
       _searchHits = [];
       _searchFocus = null;
+      _searchOriginCenter = null;
       _relocateTapPoint = null;
       _zenithTapInfo = null;
     });
@@ -1895,6 +1916,7 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
               _searchListCenter = null;
               _searchListZoom = null;
               _searchVpIndex = -1; // 次回検索の起点を地図中心に戻す
+              _searchOriginCenter = null;
               _searchCtrl.clear(); // 結果リスト ✕ も明示的閉じ扱い
             }),
             vpSlots: _vpSlotsCache,
@@ -1930,6 +1952,7 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                 _searchHits = [];
                 _searchListCenter = null;
                 _searchListZoom = null;
+                _searchOriginCenter = null;
               });
             },
             // VIEWPOINT スロットへ登録 (popup は閉じない: 連続で
