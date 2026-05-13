@@ -2025,7 +2025,12 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
         // 2026-05-09 第二弾: 利用頻度トップ4を下部主役チップに集約。
         // Daily Transit は未閲覧時に halo 発光 (旧右上バッジの代替)。
         // ACG モード中・運勢方位 Sheet 展開中・地点メニュー縦フル展開中は非表示。
-        if (!_astroCartoMode && !_fortuneSheetOpen && !_viewpointMenuOpen) Positioned(
+        // 2026-05-13: 検索中も非表示 (キーボード上に押し上げられて地図領域を
+        // 圧迫するため、地図を最大化する目的で隠す)。
+        if (!_astroCartoMode &&
+            !_fortuneSheetOpen &&
+            !_viewpointMenuOpen &&
+            !_searchOpen) Positioned(
           bottom: 0, left: 0, right: 0,
           child: MapMenuChips(
             dailyTransitUnseen: _dailyBadgeUnseen,
@@ -2045,7 +2050,11 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
         // 直上 8px gap、Forecast チップの上に重ねる位置。
         // 右端寄せ (right: 12) でタップしやすさ重視。
         // チップバー非表示の条件と完全に揃える (同じ理由で隠す)。
-        if (!_astroCartoMode && !_fortuneSheetOpen && !_viewpointMenuOpen) Positioned(
+        // 検索中は VP チップ列内の「📍 現在地」で代替できるため非表示。
+        if (!_astroCartoMode &&
+            !_fortuneSheetOpen &&
+            !_viewpointMenuOpen &&
+            !_searchOpen) Positioned(
           right: 12,
           bottom: 80,
           child: MapBtn(
