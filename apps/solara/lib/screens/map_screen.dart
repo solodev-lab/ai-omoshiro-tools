@@ -94,10 +94,11 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   final TextEditingController _searchCtrl = TextEditingController();
 
   // Layer visibility
-  // 'coords': 画面中央に十字 + 緯度経度を常時表示 (Map L2 メニュー「座標取得」)。
+  // 2026-05-13: 'coords' トグル廃止 → 十字 + 緯度経度を ACG モード以外で常時表示。
+  // 邪魔にならない前提でオーナー判断 (Phase A 検索の地図中心可視化用途も兼ねる)。
   final Map<String, bool> _layers = {
     'sectors': true, 'compass': true, 'transit': true,
-    'natal': false, 'progressed': false, 'coords': false,
+    'natal': false, 'progressed': false,
   };
 
   // Fortune category / source
@@ -1601,12 +1602,13 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
             top: false, left: false, right: false,
             child: Stack(children: [
 
-        // ── 座標取得オーバーレイ (Map L2「座標取得」トグル ON 時) ──
+        // ── 座標取得オーバーレイ (常時表示、2026-05-13) ──
         // 画面中央に十字 + 緯度経度ラベルを常時表示。地図を動かすと
         // mapEventStream 経由で再描画され、リアルタイムに座標が追従する。
         // ラベルタップでクリップボードにコピー。
         // ACG モードでは中心の概念が薄れるため非表示 (VP ピンと同方針)。
-        if ((_layers['coords'] ?? false) && !_astroCartoMode)
+        // (旧 'coords' トグルは廃止: 邪魔にならない前提でオーナー判断)
+        if (!_astroCartoMode)
           Positioned.fill(
             child: StreamBuilder<MapEvent>(
               stream: _mapCtrl.mapEventStream,
