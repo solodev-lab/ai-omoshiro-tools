@@ -40,6 +40,15 @@ class ClassShareCardPage extends StatefulWidget {
   State<ClassShareCardPage> createState() => _ClassShareCardPageState();
 }
 
+/// SNS シェア画像の目標出力幅 (px)。Instagram Stories / TikTok / X 全対応の 1080px。
+/// 9:16 比率を維持しているので高さは自動的に 1920px になる。
+///
+/// pixelRatio を端末固定にせず `_kTargetWidthPx / boundary.size.width` で
+/// 動的計算することで、Android Display Size 設定や端末解像度に
+/// 影響されずに常に 1080×1920 の画像が出力される。
+/// (公式: RenderRepaintBoundary.toImage は boundary.size × pixelRatio で出力)
+const double _kTargetWidthPx = 1080.0;
+
 class _ClassShareCardPageState extends State<ClassShareCardPage> {
   final GlobalKey _captureKey = GlobalKey();
   bool _showShadow = false;
@@ -78,8 +87,14 @@ class _ClassShareCardPageState extends State<ClassShareCardPage> {
           as RenderRepaintBoundary?;
       if (boundary == null) throw 'capture target not found';
 
-      // 高解像度キャプチャ（3.0x → ~1080px幅）
-      final image = await boundary.toImage(pixelRatio: 3.0);
+      // 端末の Display Size 設定や画面解像度に依存せず、常に 1080×1920 で出力。
+      // pixelRatio = 目標幅 / 現在のレンダリング幅 で動的計算する。
+      // (旧実装の pixelRatio:3.0 固定は表示サイズ大の端末で 1080px 未満になっていた)
+      final boundaryWidth = boundary.size.width;
+      final pixelRatio = boundaryWidth > 0
+          ? _kTargetWidthPx / boundaryWidth
+          : 3.0;
+      final image = await boundary.toImage(pixelRatio: pixelRatio);
       final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
       if (byteData == null) throw 'byteData null';
 
