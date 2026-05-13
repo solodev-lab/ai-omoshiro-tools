@@ -13,7 +13,7 @@
 >
 > **構築進捗**:
 > - [x] 層 0: Worker (バックエンド計算式) — 2026-05-14 完成
-> - [ ] 層 1a: 純計算ユーティリティ
+> - [x] 層 1a: 純計算ユーティリティ — 2026-05-14 完成
 > - [ ] 層 1b: 静的データ辞書
 > - [ ] 層 1c: モデルクラス
 > - [ ] 層 2a: API/Worker ラッパ
@@ -159,4 +159,98 @@ Solara のバックエンドは **Cloudflare Workers** で稼働。本番 URL: `
 
 ---
 
-(層 1a 以降は次セッション以降で追記)
+## 層 1a: 純計算ユーティリティ
+
+### 1a.1 概要
+
+`lib/utils/` 配下の 8 ファイル / 計 2,512 行。**副作用なし** (http なし、storage なし、initialize なし)。
+純数学計算と静的辞書ヘルパーが混在。
+
+**機械分類の精度メモ**: 層 1a に分類された 8 ファイルのうち、
+- `astro_glossary.dart`, `celestial_event_meanings.dart`, `planet_intro.dart` の 3 つは実態が「**大きな静的辞書 + 取得ヘルパー関数**」で、本来は層 1b (静的データ辞書) の方が意味的に適切。
+- 機械分類ヒューリスティック (`Map<>` リテラル数と関数数の比) では区別しきれず 1a に入った。これは `extract.py` の将来改善ポイント (= 機械分類のオーバーライドテーブル導入 or 静的データ判定強化)。
+- 今回は機械分類のまま記載するが、本章末尾で 5 + 3 に分けて整理する。
+
+### 1a.2 ファイル別 役割 + 呼出元 (8 本)
+
+| # | ファイル | 行 | 役割 | 主要 export | 呼出元 (画面層) | 性質 |
+|---|---|---|---|---|---|---|
+| 1 | [`astro_math.dart`](../lib/utils/astro_math.dart) | 30 | 角度の正規化 + 最小角距離。重複検出 ([code_audit](../tools/code_audit/audit.py) T1) で 4 ファイル散在を集約 | `normalize360`, `angDist` | astro_lines, astro_houses, [map_astro](../lib/screens/map/map_astro.dart), [horoscope_screen](../lib/screens/horoscope_screen.dart), [horo_pattern_logic](../lib/screens/horoscope/horo_pattern_logic.dart) | **基礎中の基礎、全層が依存** |
+| 2 | [`astro_houses.dart`](../lib/utils/astro_houses.dart) | 208 | LST 復元 + ASC/MC/Placidus 12 ハウス Dart 完結。Phase M2 (リロケーション/ACG) 用 | `HousesResult`, `calcHousesRelocate`, `cusp`, `assignPlanetHouse` | [map_relocation_popup](../lib/screens/map/map_relocation_popup.dart), [horoscope_screen](../lib/screens/horoscope_screen.dart), [horo_relocation_panel](../lib/screens/horoscope/horo_relocation_panel.dart), [horo_planet_table](../lib/screens/horoscope/horo_planet_table.dart) | **Worker `/astro/chart` と機能重複** (両方で実装あり) |
+| 3 | [`astro_lines.dart`](../lib/utils/astro_lines.dart) | 588 | 40 本アスペクト線計算 (球面三角法) + Haversine 近接検出 + GMST 計算 | `AstroFrame`, `AstroLine`, `NearbyAstroLine`, `astroFrameKey`, `gmstHoursFromUtc`, `solarArcPlanets`, `buildAstroLines`, `buildAstroLinesAt`, `findNearbyLinesScreen` | Map のみ ([map_screen](../lib/screens/map_screen.dart), map_relocation_popup, [map_line_narrative_sheet](../lib/screens/map/map_line_narrative_sheet.dart), [map_astro_lines](../lib/screens/map/map_astro_lines.dart), [map_astro_carto](../lib/screens/map/map_astro_carto.dart)) | **Pro 候補の素材** — 「アスペクトライン 120 本拡張」は本ファイル拡張で作れる (Worker 不要) |
+| 4 | [`direction_energy.dart`](../lib/utils/direction_energy.dart) | 238 | Soft/Hard 独立 2 エネルギーの中核データ構造 + アスペクト寄与の集約ロジック | `DirectionEnergy`, `EnergyMode`, `AspectContribution`, `AggregatedAspect`, `classify`, `scaledBy`, `aggregateContributions` | Map のみ ([map_screen](../lib/screens/map_screen.dart), [map_fortune_sheet](../lib/screens/map/map_fortune_sheet.dart), [map_direction_popup](../lib/screens/map/map_direction_popup.dart), [map_astro](../lib/screens/map/map_astro.dart)) | **設計思想の核** ([project_solara_design_philosophy](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/project_solara_design_philosophy.md))。`total = soft + hard` 禁止 |
+| 5 | [`moon_phase.dart`](../lib/utils/moon_phase.dart) | 360 | Jean Meeus アルゴリズム月相計算 (14 補正項、±2-3 分精度) | `MoonPhase`, `findPreviousNewMoon`, `findNextNewMoon`, `findFullMoonInCycle`, `getPhaseDay`, `isNewMoon`, `isFullMoon`, `getCycleTotalDays`, `getCurrentDayIndex`, `getCycleId`, `getIllumination` 等 | [observe_screen](../lib/screens/observe_screen.dart) (Tarot)、[galaxy_screen](../lib/screens/galaxy_screen.dart)、[galaxy_constellation_builder](../lib/screens/galaxy/galaxy_constellation_builder.dart)、[cycle_spiral_painter](../lib/widgets/cycle_spiral_painter.dart) | Map で未使用、Observe/Galaxy 専用 |
+| 6 | [`astro_glossary.dart`](../lib/utils/astro_glossary.dart) | 586 | 占星術専門用語の解説辞書 + popup 表示ヘルパー | `AstroGlossaryEntry`, `showAstroGlossaryDialog` | [astro_term_label](../lib/widgets/astro_term_label.dart), Map の各 popup 6 種 | **本来は 1b (静的辞書)** |
+| 7 | [`celestial_event_meanings.dart`](../lib/utils/celestial_event_meanings.dart) | 52 | 天体イベント (ingress/retrograde/eclipse) の占星術的意味辞書 | `getEventMeaningJP` | [celestial_event_bar](../lib/widgets/celestial_event_bar.dart) のみ | **本来は 1b (静的辞書)** |
+| 8 | [`planet_intro.dart`](../lib/utils/planet_intro.dart) | 559 | 10 惑星の Map マーカータップ説明テキスト (natal/transit/progressed 3 フレーム × 10 惑星) | `PlanetIntroFrame`, `PlanetIntro`, `frameOf` | [map_screen](../lib/screens/map_screen.dart), [map_planet_intro_popup](../lib/screens/map/map_planet_intro_popup.dart) | **本来は 1b (静的辞書)** |
+
+### 1a.3 真の純計算 vs 静的辞書ヘルパー の整理
+
+機械分類を意味的に再整理すると:
+
+#### A. 真の純計算 (5 本、計 1,424 行)
+画面間で広く共有される数学/データ変換。**Dart 完結 = Worker 呼出ゼロ**。
+
+| ファイル | 行 | 主要関数 | 性質 |
+|---|---|---|---|
+| `astro_math.dart` | 30 | `normalize360`, `angDist` | 全層の基礎 |
+| `astro_houses.dart` | 208 | `calcHousesRelocate`, `assignPlanetHouse` | Worker 重複あり、リロケーション専用 |
+| `astro_lines.dart` | 588 | `buildAstroLines`, `findNearbyLinesScreen` | Map (ACG) 専用、Pro 拡張候補 |
+| `direction_energy.dart` | 238 | `aggregateContributions`, `classify` | Map スコア計算の核 |
+| `moon_phase.dart` | 360 | `findNextNewMoon`, `getPhaseInt` | Observe/Galaxy 専用 |
+
+#### B. 静的辞書 + ヘルパー (3 本、計 1,197 行、本来は層 1b)
+データはほぼ静的、関数は「辞書から取り出すヘルパー」が主。
+
+| ファイル | 行 | 内容 |
+|---|---|---|
+| `astro_glossary.dart` | 586 | 占星術用語辞書 + popup 表示ヘルパー |
+| `celestial_event_meanings.dart` | 52 | 天体イベント意味の辞書 |
+| `planet_intro.dart` | 559 | 10 惑星 × 3 フレーム のテキスト |
+
+### 1a.4 課金検討に直結する示唆
+
+**Pro 機能の素材としての価値**:
+
+1. **`astro_lines.dart` 拡張 = Pro 機能の最有力候補** (Worker コスト 0)
+   - 現状 40 本コンジャンクション → +ハード 90° + ソフト 120°/60° 追加で 120 本に拡張可能
+   - メモリ ([project_solara_launch_checklist.md](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/project_solara_launch_checklist.md)) Phase 3 で予定済み
+   - **インパクト**: クライアント完結なので Gemini コスト無し、Worker 負荷増無し
+   - **実装範囲**: 本ファイルに新規 aspect angle 定数 + `buildAstroLines` の loop 拡張
+
+2. **`astro_houses.dart` は Worker `/astro/chart` と機能重複**
+   - 現状の Map では Worker 計算結果をそのまま使うことが多く、`astro_houses.dart` はリロケーション (本拠点 ≠ 出生地) でのみ稼働
+   - Pro 機能化するなら「無制限リロケーション」が候補だが、現状でも稼働するため Pro 化の理由は弱い
+   - **Worker 重複コードは保守コスト**: 今後どちらかに寄せる検討の余地あり (Dart 側に寄せれば Worker 軽量化 + オフライン耐性)
+
+3. **`direction_energy.dart` の設計思想は譲れない**
+   - `total` / `softRatio` 禁止 = UI で 1 軸表現に丸めない
+   - 課金訴求文で「2 エネルギー独立評価」を売りにすることは可能 (差別化軸)
+   - ただし「占い的吉凶判定をしない」のは無料機能にも適用 = Pro/Free の境界には使えない
+
+4. **`moon_phase.dart` は Galaxy/Observe 専用**
+   - Map 系の Pro 機能では使われない
+   - Observe (Tarot) の Pro 拡張 (3 枚引き/5 枚引き、[project_tarot_v2_plan](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/project_tarot_v2_plan.md)) で月相加味の占い文を Gemini に投げる場合に活用余地
+
+### 1a.5 Worker との重複コード (運用上の注意)
+
+`astro_houses.dart` と `astro_lines.dart` は Worker 側の同等機能と並行実装になっている。
+**検証済み精度** ([architecture.md](architecture.md)):
+- 引越し計算: 全 6 ペア最大誤差 0.0122° (閾値 0.5° の 1/40)
+- アスペクト線: 全 80 ケース最大誤差 0.01°
+
+二重実装の理由 (記録):
+- Phase M2 で Map タップ <50ms の高速応答を実現するため、 Worker 経由を避けて Dart 完結
+- 検証用に Worker 側を残し、結果が一致することを `worker/verify_phase_m2*.py` で確認
+
+**将来の判断ポイント**:
+- 同期し続けるコスト vs どちらかを単一実装にするメリット
+- 「Worker 純計算系を順次 Dart に寄せて Worker を AI 仲介専用にする」案は Pro 公開時のセキュリティ整理 (`/protected/*`) と整合する
+
+### 1a.6 機械抽出への参照
+
+層 1a の機械抽出 raw: [`feature_inventory/01a_pure_calc.md`](feature_inventory/01a_pure_calc.md)
+
+---
+
+(層 1b 以降は次セッション以降で追記)
