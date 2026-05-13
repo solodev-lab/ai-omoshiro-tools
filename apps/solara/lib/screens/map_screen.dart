@@ -1526,8 +1526,36 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
           mapController: _mapCtrl,
           options: MapOptions(
             initialCenter: _center, initialZoom: 14,
-            minZoom: 2, maxZoom: 19,
+            // minZoom 2.5: 過去 commit 9afde1b の ACG 緯度線 NaN 修正と同根の
+            // 対策。ズームアウト極端時に MapCamera.projectAtZoom が Mercator
+            // 投影限界 (lat ±85°) を超えて NaN を返し、TileLayer の
+            // _onTileUpdateEvent が NaN カスケードして赤画面化していた。
+            // ACG モードも zoom 2.5 を使うので最小値はそこに固定。
+            minZoom: 2.5, maxZoom: 19,
+            // cameraConstraint: 可視範囲を Mercator 安全域に閉じる。
+            // 緯度 ±85.05° は WebMercator の北南端、ここを超えると tan(lat) が
+            // 発散して NaN が出る。経度はラップ ±180° のままで OK。
+            cameraConstraint: CameraConstraint.contain(
+              bounds: LatLngBounds(
+                const LatLng(-85.0, -180.0),
+                const LatLng(85.0, 180.0),
+              ),
+            ),
             backgroundColor: mapStyleConfigs[_mapStyle]!.backgroundColor,
+            // 防御層: ジェスチャー中に万一 camera.center が NaN になったら
+            // 即座に検出して安全な状態へリセット。flutter_map 内部のピンチ
+            // ズーム math が稀に NaN を生成するケースの最終救済。
+            onPositionChanged: (camera, hasGesture) {
+              final c = camera.center;
+              if (!c.latitude.isFinite || !c.longitude.isFinite) {
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  if (!mounted) return;
+                  try {
+                    _mapCtrl.move(_center, 5);
+                  } catch (_) {/* 再帰防止 */}
+                });
+              }
+            },
             // FlutterMap 内部初期化完了通知。
             // 出生地が先に揃って _pendingInitialMove が積まれていればここで消化。
             //
