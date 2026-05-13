@@ -31,6 +31,9 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
   String? _titleAxis;
   String? _titleCourt;
   bool _titleFlipped = false;
+  // やり直し回数 (Free: 1回まで、Pro: 無制限) - Pro 判定は未実装、現状 Free 固定
+  int _titleRedoCount = 0;
+  static const int _kFreeRedoLimit = 1;
 
   // Astrology settings
   String _houseSystem = 'placidus';
@@ -91,6 +94,7 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
         _titleClassJP = td['classJP'] as String?;
         _titleAxis = td['axis'] as String?;
         _titleCourt = td['court'] as String?;
+        _titleRedoCount = (td['redoCount'] as int?) ?? 0;
       }
     });
   }
@@ -148,11 +152,37 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
   }
 
   void _startDiagnosis() async {
+    // 既に診断済み (= やり直し) なら、現在のクラスを「前の結果」として診断画面に渡す。
+    // Free プラン: redoCount >= 1 なら無効化済みなので、ここに到達する時点で redoCount == 0
+    final hasPrevious = _titleLight != null && _titleAxis != null && _titleCourt != null;
+    final isRedo = hasPrevious; // 初回 == previous なし、2回目以降 == previous あり
+    final previousResult = hasPrevious
+        ? <String, String>{
+            'lightJP': _titleLight ?? '',
+            'shadowJP': _titleShadow ?? '',
+            'classEN': _titleClassEN ?? '',
+            'classJP': _titleClassJP ?? '',
+            'axis': _titleAxis ?? '',
+            'court': _titleCourt ?? '',
+          }
+        : null;
+
     final result = await Navigator.of(context).push<Map<String, String>>(
-      MaterialPageRoute(builder: (_) => SanctuaryTitleDiagnosisPage(profile: _profile)),
+      MaterialPageRoute(
+        builder: (_) => SanctuaryTitleDiagnosisPage(
+          profile: _profile,
+          previousResult: previousResult,
+        ),
+      ),
     );
     if (result != null) {
-      await SolaraStorage.saveTitleData(result);
+      // やり直し時のみ redoCount をインクリメント (初回診断は 0 のまま)
+      final newRedoCount = isRedo ? _titleRedoCount + 1 : _titleRedoCount;
+      final dataToSave = <String, dynamic>{
+        ...result,
+        'redoCount': newRedoCount,
+      };
+      await SolaraStorage.saveTitleData(dataToSave);
       setState(() {
         _titleLight = result['lightJP'];
         _titleShadow = result['shadowJP'];
@@ -160,6 +190,7 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
         _titleClassJP = result['classJP'];
         _titleAxis = result['axis'];
         _titleCourt = result['court'];
+        _titleRedoCount = newRedoCount;
       });
     }
   }
@@ -399,24 +430,38 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
           ),
           const SizedBox(height: 8),
         ],
-        // HTML: #titleRediagnose — ghost button (shown after diagnosis)
+        // 再診断ボタン: Free プランは 1 回まで、超えたら無効化 (Cosmic Pro 誘導用)
         if (_titleLight != null) ...[
-          // HTML: border:1px solid rgba(249,217,118,0.3); background:none; color:#F9D976; font-size:13px;
-          GestureDetector(
-            onTap: _startDiagnosis,
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: const Color(0x4DF9D976)), // rgba(249,217,118,0.3)
+          Builder(builder: (ctx) {
+            final canRedo = _titleRedoCount < _kFreeRedoLimit;
+            // TODO(Pro): RevenueCat 実装後、isPro || canRedo に変更
+            return GestureDetector(
+              onTap: canRedo ? _startDiagnosis : null,
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                    color: canRedo
+                        ? const Color(0x4DF9D976)
+                        : const Color(0x22F9D976),
+                  ),
+                ),
+                child: Center(
+                  child: Text(
+                    canRedo ? '再診断する' : '再診断はCosmic Pro限定',
+                    style: TextStyle(
+                      color: canRedo
+                          ? const Color(0xFFF9D976)
+                          : const Color(0x77F9D976),
+                      fontSize: 15,
+                    ),
+                  ),
+                ),
               ),
-              child: const Center(
-                child: Text('再診断する（Cosmic Pro）',
-                  style: TextStyle(color: Color(0xFFF9D976), fontSize: 15)),
-              ),
-            ),
-          ),
+            );
+          }),
         ],
         // HTML: #titleNeedProfile { display:none; text-align:center; color:#ACACAC; font-size:13px; padding:10px; }
         if (!hasProfile) ...[
