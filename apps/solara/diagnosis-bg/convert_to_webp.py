@@ -22,7 +22,7 @@ QUALITY = 80
 
 part_pattern = re.compile(r"^part_(\d+)(?:_.*)?$")
 # シーン背景は filename と同じで OK
-SCENE_NAMES = {"ceremony", "intro", "forging", "reveal", "share_card_bg"}
+SCENE_NAMES = {"ceremony", "intro", "forging", "reveal", "share_card_bg", "share_card_bg_shadow"}
 
 converted = []
 for png in sorted(SRC_DIR.glob("*.png")):

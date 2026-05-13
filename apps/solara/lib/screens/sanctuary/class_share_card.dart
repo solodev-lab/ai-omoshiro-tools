@@ -286,12 +286,16 @@ class _ClassShareCardPageState extends State<ClassShareCardPage> {
             borderRadius: BorderRadius.circular(20),
             child: Stack(
               children: [
-                // ── 共通背景画像 (汎用 Mucha 風装飾、薄く重ねる) ──
+                // ── 装飾背景画像 (Light: gold-rose / Shadow: amethyst-silver) ──
+                // Light面は share_card_bg.webp、Shadow面は share_card_bg_shadow.webp
+                // opacity を 0.32 → 0.55 に引き上げ、装飾が読み取れる濃さに調整
                 Positioned.fill(
                   child: Opacity(
-                    opacity: 0.32,
+                    opacity: 0.55,
                     child: Image.asset(
-                      'assets/diagnosis-bg/share_card_bg.webp',
+                      _showShadow
+                          ? 'assets/diagnosis-bg/share_card_bg_shadow.webp'
+                          : 'assets/diagnosis-bg/share_card_bg.webp',
                       fit: BoxFit.cover,
                       errorBuilder: (ctx, err, stack) =>
                           const SizedBox.shrink(),
