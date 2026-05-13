@@ -107,7 +107,13 @@ class MapSideButtons extends StatelessWidget {
 }
 
 /// 検索バー（_searchOpen 時に最上部に表示）
-class SearchBarOverlay extends StatelessWidget {
+///
+/// Stateful にしている理由:
+/// `autofocus: true` だけだとアプリ起動後 Map 画面で最初に 🔍 を押した時に
+/// フォーカスが取れない (FocusScope が初回 mount で温まっておらず autofocus が
+/// 取り損なう Flutter の既知挙動)。
+/// initState の postFrame で明示 requestFocus することで初回も確実に取る。
+class SearchBarOverlay extends StatefulWidget {
   final TextEditingController controller;
   final ValueChanged<String> onSubmitted;
   final VoidCallback onClose;
@@ -118,6 +124,27 @@ class SearchBarOverlay extends StatelessWidget {
     required this.onSubmitted,
     required this.onClose,
   });
+
+  @override
+  State<SearchBarOverlay> createState() => _SearchBarOverlayState();
+}
+
+class _SearchBarOverlayState extends State<SearchBarOverlay> {
+  final FocusNode _focusNode = FocusNode();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _focusNode.requestFocus();
+    });
+  }
+
+  @override
+  void dispose() {
+    _focusNode.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -133,7 +160,9 @@ class SearchBarOverlay extends StatelessWidget {
           child: Icon(Icons.search, size: 16, color: Color(0xFF888888)),
         ),
         Expanded(child: TextField(
-          controller: controller, autofocus: true,
+          controller: widget.controller,
+          focusNode: _focusNode,
+          autofocus: true,
           style: const TextStyle(color: Color(0xFFE8E0D0), fontSize: 13),
           decoration: const InputDecoration(
             hintText: '場所を検索...',
@@ -141,10 +170,10 @@ class SearchBarOverlay extends StatelessWidget {
             border: InputBorder.none,
             contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 10),
           ),
-          onSubmitted: onSubmitted,
+          onSubmitted: widget.onSubmitted,
         )),
         GestureDetector(
-          onTap: onClose,
+          onTap: widget.onClose,
           child: const Padding(
             padding: EdgeInsets.symmetric(horizontal: 12),
             child: Icon(Icons.close, size: 16, color: Color(0xFF888888)),
