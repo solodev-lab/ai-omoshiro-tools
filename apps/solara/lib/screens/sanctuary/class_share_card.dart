@@ -69,9 +69,16 @@ class _ClassShareCardPageState extends State<ClassShareCardPage> {
     return const [Color(0xFF7A5028), Color(0xFF3A2616)];
   }
 
-  /// Light/Shadow 面のアクセント色
+  /// Light/Shadow 面のアクセント色 (大きい/太い文字用)
+  /// Light=ゴールド、Shadow=アメジスト紫
   Color get _accentColor =>
       _showShadow ? const Color(0xFFC9A8E0) : const Color(0xFFF9D976);
+
+  /// 小さい/細い文字用の「読みやすい色」。
+  /// Shadow面ではアクセント(紫)と背景(紫)のコントラストが弱く読みにくいため、
+  /// 明るいクリーム/ラベンダー寄りの色を使う。Light面はゴールドのままで読める。
+  Color get _readableAccent =>
+      _showShadow ? const Color(0xFFEFE5F5) : _accentColor;
 
   Future<void> _share() async {
     if (_sharing) return;
@@ -234,7 +241,8 @@ class _ClassShareCardPageState extends State<ClassShareCardPage> {
 
   Widget _buildShareImageInner(
       title_data.TitleClass cls, double w, double h) {
-    final accent = _accentColor;
+    final accent = _accentColor;            // 大きい/太字 (一言、クラス名JP) 用
+    final readable = _readableAccent;       // 小さい文字 (SOLARA/サブ/EN等) 用
     final titleOneLine =
         _showShadow ? widget.titleShadowJP : widget.titleLightJP;
     final classText = _showShadow ? cls.shadowJP : cls.lightJP;
@@ -314,7 +322,7 @@ class _ClassShareCardPageState extends State<ClassShareCardPage> {
                             Text(
                               'S O L A R A',
                               style: TextStyle(
-                                color: accent,
+                                color: readable,
                                 fontSize: fsHeader,
                                 letterSpacing: 7,
                                 fontWeight: FontWeight.w300,
@@ -324,7 +332,7 @@ class _ClassShareCardPageState extends State<ClassShareCardPage> {
                             Text(
                               _showShadow ? '— Shadow Title —' : '— Your Title —',
                               style: TextStyle(
-                                color: accent.withValues(alpha: 0.55),
+                                color: readable.withValues(alpha: 0.70),
                                 fontSize: fsSubtitle,
                                 letterSpacing: 3,
                               ),
@@ -334,7 +342,7 @@ class _ClassShareCardPageState extends State<ClassShareCardPage> {
                               widget.titleEN,
                               textAlign: TextAlign.center,
                               style: TextStyle(
-                                color: accent.withValues(alpha: 0.7),
+                                color: readable.withValues(alpha: 0.88),
                                 fontSize: fsTitleEN,
                                 letterSpacing: 2,
                                 fontStyle: FontStyle.italic,
@@ -398,7 +406,7 @@ class _ClassShareCardPageState extends State<ClassShareCardPage> {
                             Text(
                               cls.nameEN,
                               style: TextStyle(
-                                color: const Color(0x80EAEAEA),
+                                color: readable.withValues(alpha: 0.75),
                                 fontSize: fsClassEN,
                                 letterSpacing: 3,
                               ),
@@ -412,7 +420,7 @@ class _ClassShareCardPageState extends State<ClassShareCardPage> {
                                   classText,
                                   textAlign: TextAlign.center,
                                   style: TextStyle(
-                                    color: accent.withValues(alpha: 0.78),
+                                    color: readable.withValues(alpha: 0.95),
                                     fontSize: fsClassText,
                                     height: 1.55,
                                     fontStyle: _showShadow
