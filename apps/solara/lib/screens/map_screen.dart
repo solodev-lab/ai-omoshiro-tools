@@ -95,11 +95,13 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   final TextEditingController _searchCtrl = TextEditingController();
 
   // Layer visibility
-  // 2026-05-13: 'coords' トグル廃止 → 十字 + 緯度経度を ACG モード以外で常時表示。
-  // 邪魔にならない前提でオーナー判断 (Phase A 検索の地図中心可視化用途も兼ねる)。
+  // 'coords': 緯度経度ラベルを表示 (Map L2 メニュー「座標取得」)。
+  //          十字 (+) は常時表示 (VP Pin 中心の視覚化用途で邪魔にならない)、
+  //          ラベルだけはトグル ON 時のみ (常時表示は地図が見にくくなるため、
+  //          2026-05-13 ユーザー判断で復活)。
   final Map<String, bool> _layers = {
     'sectors': true, 'compass': true, 'transit': true,
-    'natal': false, 'progressed': false,
+    'natal': false, 'progressed': false, 'coords': false,
   };
 
   // Fortune category / source
@@ -1647,13 +1649,41 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
             top: false, left: false, right: false,
             child: Stack(children: [
 
-        // ── 座標取得オーバーレイ (常時表示、2026-05-13) ──
-        // 画面中央に十字 + 緯度経度ラベルを常時表示。地図を動かすと
-        // mapEventStream 経由で再描画され、リアルタイムに座標が追従する。
-        // ラベルタップでクリップボードにコピー。
-        // ACG モードでは中心の概念が薄れるため非表示 (VP ピンと同方針)。
-        // (旧 'coords' トグルは廃止: 邪魔にならない前提でオーナー判断)
+        // ── 中央十字マーカー (常時表示) ──
+        // 画面のど真ん中に + を描画。VP Pin (金色 marker) と完全に重なる
+        // 位置に出すことで、ユーザーが「いま検索基準/VP がここ」を視認できる。
+        // ACG モードでは中心の概念が薄れるため非表示。
+        // ラベル (緯度経度) は別オーバーレイ (下) で「座標取得」トグル時のみ。
         if (!_astroCartoMode)
+          Positioned.fill(
+            child: IgnorePointer(
+              child: Center(
+                child: SizedBox(
+                  width: 28, height: 28,
+                  child: Stack(children: [
+                    Center(child: Container(
+                      width: 2, height: 28,
+                      color: const Color(0xCCC9A84C))),
+                    Center(child: Container(
+                      width: 28, height: 2,
+                      color: const Color(0xCCC9A84C))),
+                    Center(child: Container(
+                      width: 6, height: 6,
+                      decoration: const BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Color(0xFFC9A84C)))),
+                  ]),
+                ),
+              ),
+            ),
+          ),
+
+        // ── 座標取得ラベル (Map L2「座標取得」トグル ON 時のみ) ──
+        // 画面中央 + の少し下に緯度経度ラベル。地図を動かすと
+        // mapEventStream 経由で再描画され、リアルタイムに座標が追従。
+        // タップでクリップボードにコピー。
+        // 常時表示は地図が見にくいのでトグル制 (2026-05-13)。
+        if (!_astroCartoMode && (_layers['coords'] ?? false))
           Positioned.fill(
             child: StreamBuilder<MapEvent>(
               stream: _mapCtrl.mapEventStream,
@@ -1662,62 +1692,42 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                 final coordsText =
                     '${c.latitude.toStringAsFixed(5)}, ${c.longitude.toStringAsFixed(5)}';
                 return Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // 十字マーカー (タップ通す: 地図ドラッグ可能)
-                      IgnorePointer(
-                        child: SizedBox(
-                          width: 28, height: 28,
-                          child: Stack(children: [
-                            Center(child: Container(
-                              width: 2, height: 28,
-                              color: const Color(0xCCC9A84C))),
-                            Center(child: Container(
-                              width: 28, height: 2,
-                              color: const Color(0xCCC9A84C))),
-                            Center(child: Container(
-                              width: 6, height: 6,
-                              decoration: const BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: Color(0xFFC9A84C)))),
-                          ]),
+                  // 十字 (28px) の下端 + gap でラベルを置く。
+                  // Stack 中央 (= 画面中央) から 14 (十字半分) + 4 (gap) +
+                  // ~12 (ラベル半分) = 30px 下にラベル中心を持っていく。
+                  child: Transform.translate(
+                    offset: const Offset(0, 30),
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: () async {
+                        await Clipboard.setData(
+                            ClipboardData(text: coordsText));
+                        if (!ctx.mounted) return;
+                        ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(
+                          content: Text('座標をコピー: $coordsText'),
+                          duration: const Duration(seconds: 2),
+                        ));
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: const Color(0xCC0C0C16),
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(
+                              color: const Color(0x66C9A84C)),
                         ),
-                      ),
-                      const SizedBox(height: 4),
-                      // 座標ラベル (タップでコピー)
-                      GestureDetector(
-                        behavior: HitTestBehavior.opaque,
-                        onTap: () async {
-                          await Clipboard.setData(
-                              ClipboardData(text: coordsText));
-                          if (!ctx.mounted) return;
-                          ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(
-                            content: Text('座標をコピー: $coordsText'),
-                            duration: const Duration(seconds: 2),
-                          ));
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: const Color(0xCC0C0C16),
-                            borderRadius: BorderRadius.circular(6),
-                            border: Border.all(
-                                color: const Color(0x66C9A84C)),
-                          ),
-                          child: Text(
-                            coordsText,
-                            style: const TextStyle(
-                              fontSize: 12,
-                              color: Color(0xFFE9D29A),
-                              fontFamily: 'monospace',
-                              letterSpacing: 0.4,
-                            ),
+                        child: Text(
+                          coordsText,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Color(0xFFE9D29A),
+                            fontFamily: 'monospace',
+                            letterSpacing: 0.4,
                           ),
                         ),
                       ),
-                    ],
+                    ),
                   ),
                 );
               },
