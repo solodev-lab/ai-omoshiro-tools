@@ -958,6 +958,7 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     _searchListZoom = zoom;
     try {
       _mapCtrl.move(shifted, zoom);
+      _kickPaintInvalidation(); // 5層目: 描画 invalidation 漏れ対策
     } catch (_) {/* 初期化中は無視 */}
   }
 
@@ -970,6 +971,7 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     if (c == null || z == null) return;
     try {
       _mapCtrl.move(c, z);
+      _kickPaintInvalidation(); // 5層目: 描画 invalidation 漏れ対策
     } catch (_) {/* 初期化中は無視 */}
   }
 
@@ -977,6 +979,7 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     final pos = LatLng(hit.lat, hit.lng);
     // Step 1: まず通常通り中央へ移動・ズーム (既存のレベル維持)
     _mapCtrl.move(pos, 15);
+    _kickPaintInvalidation(); // 5層目: 描画 invalidation 漏れ対策
     setState(() {
       _searchFocus = hit;
       // _searchHits は維持。focus を閉じるとリストが復帰する。
@@ -1198,6 +1201,7 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   /// HTML: rebuild(nc, fly) — center変更 + flyTo + セクター再計算 + 天体ライン再構築
   void _rebuild(LatLng newCenter) {
     _mapCtrl.move(newCenter, _mapCtrl.camera.zoom.clamp(12, 18).toDouble());
+    _kickPaintInvalidation(); // 5層目: 描画 invalidation 漏れ対策
     setState(() {
       _center = newCenter;
       // 天体ラインは中心点から描画するので再構築
@@ -1207,6 +1211,37 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     });
     // 中心が変われば検索結果の方位/距離/スコアも変わる
     _reannotateSearchResults();
+  }
+
+  /// flutter_map TileLayer の描画 invalidation 漏れ既知問題への対症療法。
+  ///
+  /// 症状: 検索詳細を 2-3 個開閉、または地図タップで移動した直後、
+  /// マップが黒画面化する。エラーログは一切出ない。微小なパン操作で
+  /// 即座に既存タイルが現れる (= タイルはキャッシュ済、描画だけ止まっている)。
+  ///
+  /// 原因 (推定): widget tree の連続変化で Flutter element reconcile が走るが、
+  /// TileLayer の RenderObject に paint invalidation が伝わらない瞬間がある。
+  /// 4 層防御 (mount 遅延 / reset Stream / settle reset 等) は fetch エラー
+  /// 系の Case C 対策で、paint 系には効かない。
+  ///
+  /// 対策: postFrame で camera.center を 1e-7° (≈ 11mm) ずらして戻す。
+  /// flutter_map がカメライベントを検知 → markNeedsPaint → 即再描画。
+  /// ユーザーが手動でやってる「微小パン」を自動化したもの。
+  ///
+  /// 適用箇所: _mapCtrl.move を呼ぶ全ての location (_rebuild / _selectSearchHit /
+  /// _frameSearchArea / _restoreSearchListView)。
+  ///
+  /// 副作用: 地理座標が 11mm ずれて戻るだけ、視覚的に検知不可能。
+  /// 記録: memory/project_solara_map_paint_invalidation.md
+  void _kickPaintInvalidation() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      try {
+        final c = _mapCtrl.camera.center;
+        final z = _mapCtrl.camera.zoom;
+        _mapCtrl.move(LatLng(c.latitude + 1e-7, c.longitude), z);
+      } catch (_) {/* 初期化中は無視 */}
+    });
   }
 
   /// VP (_center) のみ更新。地図表示は動かさない。
