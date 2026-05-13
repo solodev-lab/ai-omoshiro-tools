@@ -2103,12 +2103,7 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
               _searchOriginCenter = null;
               _searchCtrl.clear(); // 結果リスト ✕ も明示的閉じ扱い
             }),
-            vpSlots: _vpSlotsCache,
-            selectedVpIndex: _searchVpIndex,
-            onVpChanged: (idx) {
-              setState(() => _searchVpIndex = idx);
-              _reannotateSearchResults();
-            },
+            // 2026-05-13: VP dropdown 廃止 → 検索バー上部チップ列に統一
             activeCategory: _activeCategory,
           ),
         ),
@@ -2607,9 +2602,9 @@ void _showSearchVpHelpPopup(BuildContext context) {
         ),
         SizedBox(height: 4),
         Text(
-          '自分の拠点 (自宅・職場など) を観測点にする使い方。\n'
-          '「自宅から見て今日の追い風はどっち」と読む、\n'
-          '日常生活で最も使われる基準。',
+          '自分の拠点 (自宅・学校・職場など) を観測点にする使い方。\n'
+          '「自宅や学校、職場から見てこの検索地は\n'
+          '何のエネルギーを受けているのか」と読む使い方があります。',
           style: TextStyle(
               color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
         ),
