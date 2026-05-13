@@ -152,12 +152,18 @@ class _SanctuaryTitleDiagnosisPageState extends State<SanctuaryTitleDiagnosisPag
         final axis = card['axis'] as String? ?? axisOrCourt;
         _selections.add({'axis': axis});
         if (axis == 'wildcard') {
-          // HTML: applyWildcard() — boost lowest axis
+          // wildcard: 最低スコア軸を +1。
+          // 旧実装は順序 power→mind→spirit→shadow→heart で先頭優先 → power バイアス。
+          // 新実装は同点なら生年月日ハッシュで公平に選択する。
+          const allAxes = ['power', 'mind', 'spirit', 'shadow', 'heart'];
           int minVal = 999;
-          for (final v in _scores.values) { if (v < minVal) minVal = v; }
-          for (final k in ['power','mind','spirit','shadow','heart']) {
-            if (_scores[k] == minVal) { _scores[k] = _scores[k]! + 1; break; }
+          for (final v in _scores.values) {
+            if (v < minVal) minVal = v;
           }
+          final minAxes =
+              allAxes.where((k) => _scores[k] == minVal).toList();
+          final pick = _pickByBirthHash(minAxes);
+          _scores[pick] = (_scores[pick] ?? 0) + 1;
         } else {
           _scores[axis] = (_scores[axis] ?? 0) + 1;
         }
@@ -226,14 +232,27 @@ class _SanctuaryTitleDiagnosisPageState extends State<SanctuaryTitleDiagnosisPag
       }
     }
 
-    // HTML: determineCourt() — tally Part 3 courtSelections, >=2 wins, else 'mixed'
-    final courtCounts = {'page':0,'knight':0,'queen':0,'king':0};
+    // court 決定: 最大票数 court が単独 (>=2) なら確定、同点なら生年月日ハッシュで公平に。
+    // 旧実装は順序 page→knight→queen→king で先頭優先 → king バイアス (出ない)。
+    final courtCounts = {'page': 0, 'knight': 0, 'queen': 0, 'king': 0};
     for (final c in _courtSelections) {
       courtCounts[c] = (courtCounts[c] ?? 0) + 1;
     }
-    String court = 'mixed';
-    for (final t in ['page','knight','queen','king']) {
-      if ((courtCounts[t] ?? 0) >= 2) { court = t; break; }
+    int maxCourtCount = 0;
+    courtCounts.forEach((_, v) {
+      if (v > maxCourtCount) maxCourtCount = v;
+    });
+    String court;
+    if (maxCourtCount < 2) {
+      // 全部 1 票 (1+1+1+1) または全部 0 → 混合型
+      court = 'mixed';
+    } else {
+      final maxCourts = courtCounts.entries
+          .where((e) => e.value == maxCourtCount)
+          .map((e) => e.key)
+          .toList();
+      court =
+          maxCourts.length == 1 ? maxCourts.first : _pickByBirthHash(maxCourts);
     }
 
     // ── デバッグ: 最終決定の各段階を出力 ──
@@ -288,6 +307,17 @@ class _SanctuaryTitleDiagnosisPageState extends State<SanctuaryTitleDiagnosisPag
   }
 
   SolaraProfile? get _profile => widget.profile;
+
+  /// 同点解消用: 候補リストから生年月日ハッシュで 1 つ決定的に選ぶ。
+  /// - 順序バイアス (page > knight ... や power > mind ...) を回避
+  /// - 同じ生年月日の人は同じ結果になる (占いの再現性)
+  /// - 候補が空ならフォールバックとして先頭 (実用上は呼び出し側で保証)
+  String _pickByBirthHash(List<String> candidates) {
+    if (candidates.isEmpty) return '';
+    if (candidates.length == 1) return candidates.first;
+    final seed = (_profile?.birthDate ?? '').hashCode.abs();
+    return candidates[seed % candidates.length];
+  }
 
   void _accept() {
     Navigator.of(context).pop({
