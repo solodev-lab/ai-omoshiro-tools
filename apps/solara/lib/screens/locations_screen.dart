@@ -649,7 +649,12 @@ void _showLocationsUsageGuide(BuildContext context) {
           'みた、LOCATION（登録地点）のエネルギーを\n'
           '一覧で確認できます。\n'
           '気になるところをLOCATIONとして登録しておけば、\n'
-          '一目で今日のエネルギーを知る事ができます。',
+          '一目で今日のエネルギーを知る事ができます。\n\n'
+          'よく行く場所を登録しておくと、\n'
+          '今日この公園は癒しスコアが高い、\n'
+          '今日このカフェは恋愛スコアが高い、\n'
+          'というように、登録地ごとの今日のエネルギー\n'
+          '強弱が一目で分かる便利機能です。',
           style: TextStyle(
               color: Color(0xFFE8E0D0),
               fontSize: 13,
