@@ -107,8 +107,7 @@ class _MapDisplayMenuState extends State<MapDisplayMenu> {
               () => widget.onLayerToggle('sectors')),
           _toggleBtn('コンパス', widget.layers['compass'] ?? false,
               () => widget.onLayerToggle('compass')),
-          _toggleBtn('座標取得', widget.layers['coords'] ?? false,
-              () => widget.onLayerToggle('coords')),
+          // 2026-05-13: 「座標取得」トグル廃止 → 十字 + 緯度経度は常時表示。
         ];
       case _MainTab.planet:
         // L2 ラベル (2026-05-09 リネーム): 旧 CHART/PG/FORTUNE は日本語として
@@ -220,7 +219,6 @@ class _MapDisplayMenuState extends State<MapDisplayMenu> {
           ('Map / MapDark', '通常マップとダークマップを切替。視認性の好みで選択。'),
           ('運勢方位', '自分の運勢を 16 方位の扇形で地図上に表示。色が濃い方位ほど追い風。タップでカテゴリ別に絞り込める。'),
           ('コンパス', '中心地点から見た方位線 (N / E / S / W)。距離感の把握に。'),
-          ('座標取得', '画面中央に十字と緯度経度を常時表示。地図を動かすと中心の座標がリアルタイムで更新される。座標ラベルをタップするとクリップボードにコピーされる。場所登録の事前確認や任意地点の座標確認に。'),
         ];
         break;
       case _MainTab.planet:
