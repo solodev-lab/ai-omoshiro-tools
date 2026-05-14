@@ -383,7 +383,28 @@ Solara のバックエンドは **Cloudflare Workers** で稼働。本番 URL: `
    - オーバーライドで層 2a に明示移動済だが、**物理 path は未移動** = リファクタ余地あり
    - 課金実装でリファクタする好機 (ラッパを `lib/utils/astro_chart_api.dart` に切り出し)
 
-### 2a.5 機械抽出への参照
+### 2a.5 API レスポンスモデル一覧 (Worker JSON ↔ Dart 型の境界)
+
+層 2a の各ラッパが返す **レスポンス型 / 中間モデル**。Worker の JSON をデコードした Dart 側の正規型で、画面層 (4a〜4f) はこれらを受け取って描画する。Pro 化で Worker レスポンスにフィールドを足すときは、この型も同時に更新する。
+
+| モデル | 定義ファイル | 役割 |
+|---|---|---|
+| `ChartResult` | `map_astro.dart` | `/astro/chart` のレスポンス。natal + transit + progressed + ASC/MC/DSC/IC + 全アスペクト |
+| `ScoreResult` | `map_astro.dart` | `ChartResult` → 16 方位 × 5 カテゴリ × Soft/Hard スコア (Map 描画用) |
+| `CelestialEvents` | `celestial_events.dart` | `/astro/events` の取得 + キャッシュを担う singleton 的サービス (起動時 `initialize`) |
+| `MonthEvents` | `celestial_events.dart` | 1 ヶ月分の天体イベント集合。`copyWithEvents` で API 実計算結果に差し替え可 |
+| `CelestialEvent` | `celestial_events.dart` | 1 イベント (ingress / retrograde / eclipse 等) |
+| `TransitAspect` | `daily_transits_api.dart` | その瞬間にトランジット惑星が natal 惑星と作るアスペクト |
+| `TransitEvent` | `daily_transits_api.dart` | ある惑星が 4 アングル (ASC/MC/DSC/IC) のどれか 1 つを通過した瞬間 |
+| `PlanetDailyTransits` | `daily_transits_api.dart` | 1 惑星 × 1 日分の通過イベント (最大 4 個) |
+| `LatitudeBandHit` | `daily_transits_api.dart` | 緯度帯ヒット惑星 (Lewis 流の緯度効果) |
+| `LatitudeBand` | `daily_transits_api.dart` | 観測時刻における緯度帯セクション (zenith / nadir のヒット惑星 + オーブ) |
+| `DailyTransitsResult` | `daily_transits_api.dart` | `/astro/daily-transits` の完全レスポンス (`flatTimeline` で時刻順フラット化可) |
+| `FortuneReading` | `fortune_api.dart` | `/fortune` のレスポンス (Gemini 生成の占い文) |
+| `RelocationNarrative` | `fortune_api.dart` | `/relocation` のレスポンス (リロケーション解説) |
+| `TarotReading` | `fortune_api.dart` | `/tarot` のレスポンス (1 枚引き Reading) |
+
+### 2a.6 機械抽出への参照
 
 層 2a の機械抽出 raw: [`feature_inventory/02a_api_wrappers.md`](feature_inventory/02a_api_wrappers.md)
 
@@ -431,7 +452,16 @@ Solara のバックエンドは **Cloudflare Workers** で稼働。本番 URL: `
    - 現状: jp/en の 2 言語 ([main.dart:42](../lib/main.dart))
    - 実装は singleton で問題なし。Pro 公開で英語版リリース ([feedback_i18n_last](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/feedback_i18n_last.md)) と直結
 
-### 2b.5 機械抽出への参照
+### 2b.5 主要モデル — `SolaraProfile`
+
+`SolaraProfile` は Solara の**中核データモデル** (出生情報 = 生年月日時 + 出生地緯度経度 + 名前 + 称号結果等)。
+ほぼ全画面がこれを起点に動く (未設定なら占い系オーバーレイは全て非表示)。
+
+**機械分類の盲点**: `SolaraProfile` は `models/` (層 1c) ではなく **`solara_storage.dart` (層 2b) 内に定義**されている。永続化ロジックとモデル定義が同一ファイルに同居している状態。リファクタするなら `models/solara_profile.dart` への切り出し候補だが、現状 storage と密結合で運用問題はないため放置許容。
+
+関連モデル: `forecast_cache.dart` 内の `ForecastDay` / `LifePeriod` / `ForecastCache` / `ForecastRepo` も同様に「永続化ファイル内にモデル定義」パターン (2b.3 で既述のハイブリッド構造の一部)。
+
+### 2b.6 機械抽出への参照
 
 層 2b の機械抽出 raw: [`feature_inventory/02b_persistence.md`](feature_inventory/02b_persistence.md)
 
@@ -522,7 +552,7 @@ Solara のバックエンドは **Cloudflare Workers** で稼働。本番 URL: `
 | ファイル | 行 | 主要 export | 呼出元 | 役割 |
 |---|---|---|---|---|
 | [`solara_nav_bar.dart`](../lib/widgets/solara_nav_bar.dart) | 163 | `SolaraNavBar` (+ `baseHeight`, `totalHeight`, `systemNavInset` static) | [main.dart](../lib/main.dart) (`SolaraHome` 直配置)、[map_planet_lines.dart](../lib/screens/map/map_planet_lines.dart) (`totalHeight` で bottom 位置計算) | HTML `shared/styles.css` に正確に合わせる bottom NavBar (h=80 + 5 タブ Expanded 分割)。**2026-04-29 Android systemNav (3 ボタン △〇□) 対応**: 閾値 30px で 3 ボタン/ジェスチャー判定、3 ボタン時のみ追加高 (`systemNav - 12`) を加算。**2026-05-03 BackdropFilter 撤去**で alpha 高めの gradient に置換 (glass_panel と同じ Adreno 対策) |
-| [`nav_icons.dart`](../lib/widgets/nav_icons.dart) | 218 | `SolaraNavIcons.map/horo/tarot/galaxy/sanctuary` (static factory) + 5 `_*IconPainter` (CustomPainter) | `solara_nav_bar.dart` のみ | 5 タブ用ベクター SVG 互換アイコン (HTML `shared/icons.js` exact)。Map = circle + cross-hairs + diamond、Horo = 同心円 + 十字、Tarot = card + star、Galaxy = ellipse + spiral arms + dots、Sanctuary = temple + door + circle window |
+| [`nav_icons.dart`](../lib/widgets/nav_icons.dart) | 218 | `SolaraNavIcons` クラス — `SolaraNavIcons.map/horo/tarot/galaxy/sanctuary` (static factory) + 5 `_*IconPainter` (CustomPainter) | `solara_nav_bar.dart` のみ | 5 タブ用ベクター SVG 互換アイコン (HTML `shared/icons.js` exact)。Map = circle + cross-hairs + diamond、Horo = 同心円 + 十字、Tarot = card + star、Galaxy = ellipse + spiral arms + dots、Sanctuary = temple + door + circle window |
 
 #### C. カテゴリアイコン (1 本、80 行)
 
@@ -662,7 +692,7 @@ Solara のバックエンドは **Cloudflare Workers** で稼働。本番 URL: `
 - `planetColor(String planet)` → 10 惑星色テーブル参照、未知文字列なら `solaraGold` フォールバック
 - `elementColor(String element)` → 4 元素色テーブル参照、未知なら `textSecondary` フォールバック (`planetColor`/`elementColor` は Map 系・Observe 系・Galaxy 系 10 ファイルで使用)
 
-### 3b.4 SolaraTheme の構造
+### 3b.4 `SolaraTheme` の構造
 
 `SolaraTheme.dark` (ThemeData) は以下を設定:
 
