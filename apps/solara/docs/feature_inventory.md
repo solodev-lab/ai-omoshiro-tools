@@ -1647,7 +1647,7 @@ Text('$49.99/year · Cancel anytime')  // 年額 + キャンセル可
 |---|---|---|---|
 | **Forecast** (運勢予報) | 3 / 1,505 行 | 1 年予測ヒートマップ + 強運 Top5 + ◯◯期サイクル | Map `_openForecast` 経由 |
 | **Locations** (拠点管理) | 2 / 1,128 行 | 登録拠点を 16 方位スコア付きで一覧管理 | Map `_openLocations` 経由 |
-| **Philosophy** (設計思想) | 1 / 159 行 | Solara 設計思想ガイド (静的、章 0) | Sanctuary 設定から開く |
+| **Philosophy** (設計思想) | 1 / 159 行 | Solara 設計思想ガイド (静的、章 0) | 🔴 導線なし (未配線・#5c 孤立ファイル — オーナー判断待ち) |
 | **Font Preview** (開発用) | 1 / 138 行 | フォント候補 8 種の比較画面 | (開発者専用、ユーザー導線なし) |
 
 ### 4f.2 Forecast 群 (3 ファイル / 1,505 行)
@@ -1681,7 +1681,7 @@ Text('$49.99/year · Cancel anytime')  // 年額 + キャンセル可
 
 | # | ファイル | 行 | 主要 export | 役割 |
 |---|---|---|---|---|
-| 1 | [`solara_philosophy_screen.dart`](../lib/screens/solara_philosophy_screen.dart) | 159 | `SolaraPhilosophyScreen` (Stateless)、`_Hero`、`_SectionCard`、`_Footer` | **🔴 Solara 設計思想ガイド** (章 0)。`solara_manifesto.dart` (1b) のテキスト 3 セクション (世界観 / 2 エネルギー / 委ねる宣言) を表示。Sanctuary 設定からアクセス。**「占い的吉凶判定をしない」を文章化** ([`project_solara_design_philosophy`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/project_solara_design_philosophy.md)) |
+| 1 | [`solara_philosophy_screen.dart`](../lib/screens/solara_philosophy_screen.dart) | 159 | `SolaraPhilosophyScreen` (Stateless)、`_Hero`、`_SectionCard`、`_Footer` | **🔴 Solara 設計思想ガイド** (章 0)。`solara_manifesto.dart` (1b) のテキスト 3 セクション (世界観 / 2 エネルギー / 委ねる宣言) を表示。**🔴 導線未配線** — 画面は完成しているが Sanctuary 等からの `Navigator.push` が存在せず #5c 孤立ファイル検出 (作成コミット `fd6ed2f` 時点から未配線、過去にも導線実績なし)。オーナー判断待ち (Sanctuary「✦ App」セクションへ導線追加 or 削除)。**「占い的吉凶判定をしない」を文章化** ([`project_solara_design_philosophy`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/project_solara_design_philosophy.md)) |
 
 ### 4f.5 Font Preview 群 (1 ファイル / 138 行)
 

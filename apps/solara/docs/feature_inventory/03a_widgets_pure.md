@@ -5,9 +5,9 @@
 
 ## サマリ
 
-- ファイル数: 23 / 総行数: 5907
-- class/mixin/extension/enum: 68
-- 関数 (top-level + method の素拾い): 155
+- ファイル数: 21 / 総行数: 5735
+- class/mixin/extension/enum: 66
+- 関数 (top-level + method の素拾い): 152
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 3
 - Worker URL リテラル: 0
@@ -615,33 +615,4 @@ Re-export split overlay files for backward compatibility
   - L153 `_iconForIndex()`
 
   </details>
-
-
-### `lib/widgets/solara_safe_text.dart` (81 行)
-
-**imports:** dart=0 / package=1 / relative=0
-
-**型定義 (1):**
-
-- L24 `class SolaraSafeText : StatelessWidget`
-
-**関数 (1 public + 0 private):**
-
-- L63 `build()`
-
-
-### `lib/widgets/spiral_painter.dart` (91 行)
-
-**imports:** dart=1 / package=1 / relative=1
-
-- relative: `../theme/solara_colors.dart`
-
-**型定義 (1):**
-
-- L5 `class SpiralPainter : CustomPainter`
-
-**関数 (2 public + 0 private):**
-
-- L15 `paint()`
-- L88 `shouldRepaint()`
 
