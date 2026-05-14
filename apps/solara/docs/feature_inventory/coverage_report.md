@@ -37,9 +37,9 @@
 ## #1 / #2 機械抽出 ↔ feature_inventory.md (人手版) の対整合
 
 - 機械抽出した class/mixin/extension/enum: **304**
-- inventory に登場する識別子 (大文字始まり ``backtick``囲み): **167**
+- inventory に登場する識別子 (大文字始まり ``backtick``囲み): **172**
 
-### #1 機械にあるが Doc に書かれていない (167)
+### #1 機械にあるが Doc に書かれていない (162)
 
 - `AppLocale`
 - `CelestialEvents`
@@ -51,10 +51,6 @@
 - `ForecastScreen`
 - `ForecastTop5Section`
 - `FortuneReading`
-- `GalaxyReplayOverlay`
-- `GalaxyScreen`
-- `GalaxyScreenState`
-- `GalaxyStarAtlasTab`
 - `LatitudeBand`
 - `LatitudeBandHit`
 - `LocationsDateStepper`
@@ -73,7 +69,6 @@
 - `SolaraNavIcons`
 - `SolaraPhilosophyScreen`
 - `SolaraProfile`
-- `SolaraStorage`
 - `SolaraTheme`
 - `TarotData`
 - `TarotReading`
