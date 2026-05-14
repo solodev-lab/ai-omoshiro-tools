@@ -37,12 +37,10 @@
 ## #1 / #2 機械抽出 ↔ feature_inventory.md (人手版) の対整合
 
 - 機械抽出した class/mixin/extension/enum: **304**
-- inventory に登場する識別子 (大文字始まり ``backtick``囲み): **136**
+- inventory に登場する識別子 (大文字始まり ``backtick``囲み): **159**
 
-### #1 機械にあるが Doc に書かれていない (196)
+### #1 機械にあるが Doc に書かれていない (174)
 
-- `AntiqueGlyph`
-- `AntiqueIcon`
 - `AppLocale`
 - `CelestialEvents`
 - `ClassShareCardPage`
@@ -57,24 +55,6 @@
 - `GalaxyScreen`
 - `GalaxyScreenState`
 - `GalaxyStarAtlasTab`
-- `HoroAspectCheckmark`
-- `HoroAspectList`
-- `HoroAstrologyView`
-- `HoroBirthPanel`
-- `HoroChartWheelPainter`
-- `HoroDescSection`
-- `HoroFilterPanel`
-- `HoroHourMinuteDropdown`
-- `HoroInfoRow`
-- `HoroLegendItem`
-- `HoroOrnamentPainter`
-- `HoroPlanetTable`
-- `HoroPredictionPanel`
-- `HoroRelocationPanel`
-- `HoroTransitPanel`
-- `HoroscopeScreen`
-- `HoroscopeScreenState`
-- `HouseShift`
 - `LatitudeBand`
 - `LatitudeBandHit`
 - `LocationsDateStepper`
@@ -88,7 +68,6 @@
 - `ObserveHistoryPanel`
 - `ObserveScreen`
 - `PlanetDailyTransits`
-- `PlanetVectorIcon`
 - `RelocationNarrative`
 - `SanctuaryHomeEditorPage`
 - `SanctuaryOrbOverlay`
@@ -108,7 +87,6 @@
 - `TitleHowItWorksContent`
 - `TransitAspect`
 - `TransitEvent`
-- `ZodiacImageIcon`
 - `_AcgEntryFooter`
 - `_ActionTile`
 - `_AggBuilder`
@@ -238,7 +216,7 @@
 - `_WidgetOpacity`
 - `_WorkPainter`
 
-### #2 Doc に書いてあるがコードに存在しない (ゴースト記述) (28)
+### #2 Doc に書いてあるがコードに存在しない (ゴースト記述) (29)
 
 > 注: Flutter SDK や外部ライブラリの型もここに乗る (誤検出)。
 > 真のゴーストはアプリ独自型のみ。実際の Doc 修正対象は手で絞り込む。
@@ -262,6 +240,7 @@
 - `IgnorePointer`
 - `ListView`
 - `NOUN_SHAPES`
+- `PATH_OVERRIDES`
 - `RawScrollbar`
 - `ScrollController`
 - `SearchHourAngle`
@@ -283,7 +262,7 @@
 
 ### 層 4b: Horoscope 画面
 
-- ファイル数: 25
+- ファイル数: 22
 - Worker URL 呼出: (なし)
 - Popup/Dialog: `showInfoPopup`×2
 - Navigator.push 等: 0 箇所

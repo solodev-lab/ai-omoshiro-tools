@@ -5,14 +5,49 @@
 
 ## サマリ
 
-- ファイル数: 22 / 総行数: 5612
-- class/mixin/extension/enum: 65
-- 関数 (top-level + method の素拾い): 140
+- ファイル数: 23 / 総行数: 5907
+- class/mixin/extension/enum: 68
+- 関数 (top-level + method の素拾い): 155
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 3
 - Worker URL リテラル: 0
 
 ## ファイル別
+
+### `lib/screens/horoscope/horo_antique_icons.dart` (295 行)
+
+**imports:** dart=1 / package=1 / relative=0
+
+**型定義 (3):**
+
+- L9 `enum AntiqueIcon`
+- L23 `class AntiqueGlyph : StatelessWidget`
+  - Widget to render an antique icon at given size and color.
+- L47 `class _AntiqueIconPainter : CustomPainter`
+
+**関数 (3 public + 12 private):**
+
+- L37 `build()`
+- L54 `paint()`
+- L293 `shouldRepaint()`
+
+  <details><summary>private 関数 12 件</summary>
+
+  - L90 `_buildPath()`
+  - L105 `_buildFills()`
+  - L119 `_birthStar()`
+  - L142 `_crescent()`
+  - L157 `_compassStar()`
+  - L177 `_sunRays()`
+  - L192 `_asterisk()`
+  - L211 `_triangleOrnate()`
+  - L228 `_eightPointStar()`
+  - L241 `_ornateStarCrescent()`
+  - L257 `_cycleSpiral()`
+  - L278 `_flourishKey()`
+
+  </details>
+
 
 ### `lib/widgets/astro_term_label.dart` (85 行)
 

@@ -167,6 +167,10 @@ PATH_OVERRIDES: dict[str, str] = {
     "screens/map/map_astro.dart": "2a",          # /astro/chart ラッパ + scoreAll、Map+Horo 共用
     "screens/map/map_constants.dart": "3b",      # HTML CHART_STYLE / PlanetMeta 純定数
     "screens/map/daily_transit_data.dart": "1b", # AngleFilter + 静的テキスト辞書 1,013 行
+    # screens/horoscope/ 配下だが cross-cutting (4b 検出だが本来 3a/1b、層 4b 着手時指摘)
+    "screens/horoscope/horo_antique_icons.dart": "3a",      # AntiqueGlyph widget、16 ファイル横断 (Map/Galaxy/no_profile_guide も)
+    "screens/horoscope/horo_constants.dart": "1b",          # signs/planetGlyphs/aspectSymbol/fortunePlanets 等静的辞書、13 ファイル横断
+    "screens/horoscope/horo_aspect_description.dart": "1b", # planetInfo/aspectInfo 静的辞書 + buildAspectDescription 1 関数、Map+Horo 共用
 }
 
 

@@ -5,65 +5,14 @@
 
 ## サマリ
 
-- ファイル数: 25 / 総行数: 5754
-- class/mixin/extension/enum: 33
-- 関数 (top-level + method の素拾い): 152
+- ファイル数: 22 / 総行数: 5257
+- class/mixin/extension/enum: 30
+- 関数 (top-level + method の素拾い): 136
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 2
 - Worker URL リテラル: 0
 
 ## ファイル別
-
-### `lib/screens/horoscope/horo_antique_icons.dart` (295 行)
-
-**imports:** dart=1 / package=1 / relative=0
-
-**型定義 (3):**
-
-- L9 `enum AntiqueIcon`
-- L23 `class AntiqueGlyph : StatelessWidget`
-  - Widget to render an antique icon at given size and color.
-- L47 `class _AntiqueIconPainter : CustomPainter`
-
-**関数 (3 public + 12 private):**
-
-- L37 `build()`
-- L54 `paint()`
-- L293 `shouldRepaint()`
-
-  <details><summary>private 関数 12 件</summary>
-
-  - L90 `_buildPath()`
-  - L105 `_buildFills()`
-  - L119 `_birthStar()`
-  - L142 `_crescent()`
-  - L157 `_compassStar()`
-  - L177 `_sunRays()`
-  - L192 `_asterisk()`
-  - L211 `_triangleOrnate()`
-  - L228 `_eightPointStar()`
-  - L241 `_ornateStarCrescent()`
-  - L257 `_cycleSpiral()`
-  - L278 `_flourishKey()`
-
-  </details>
-
-
-### `lib/screens/horoscope/horo_aspect_description.dart` (116 行)
-
-**ファイル先頭コメント:**
-
-```
-══════════════════════════════════════════════════════════════
-Aspect Description Data
-惑星の意味 + アスペクトの性質 を組み合わせて読める文章を生成
-══════════════════════════════════════════════════════════════
-```
-
-**関数 (1 public + 0 private):**
-
-- L94 `buildAspectDescription()` — アスペクト説明を生成 (3セクション)
-
 
 ### `lib/screens/horoscope/horo_aspect_list.dart` (184 行)
 
@@ -273,11 +222,6 @@ ignore_for_file: invalid_use_of_protected_member
   - L170 `_buildChartLegend()`
 
   </details>
-
-
-### `lib/screens/horoscope/horo_constants.dart` (86 行)
-
-**imports:** dart=0 / package=1 / relative=0
 
 
 ### `lib/screens/horoscope/horo_desc_section.dart` (31 行)

@@ -23,7 +23,7 @@
 > - [x] 層 3b: テーマ・装飾 — 2026-05-14 完成
 > - [x] 層 3c: 演出ウィジェット (animated) — 2026-05-14 完成
 > - [x] 層 4a: Map 画面 — 2026-05-14 完成
-> - [ ] 層 4b: Horoscope 画面
+> - [x] 層 4b: Horoscope 画面 — 2026-05-14 完成
 > - [ ] 層 4c: Observe (Tarot) 画面
 > - [ ] 層 4d: Galaxy 画面
 > - [ ] 層 4e: Sanctuary 画面
@@ -229,13 +229,13 @@ Solara のバックエンドは **Cloudflare Workers** で稼働。本番 URL: `
 
 ### 1b.1 概要
 
-`lib/utils/` 配下と `screens/map/` 由来の 9 ファイル / 計 3,628 行。**静的データが主体** で関数は辞書取り出しヘルパーが中心。副作用なし (= 層 1a と同じく純粋)、ただし「計算」というより「世界観テキストの貯蔵庫」。
+`lib/utils/` 配下 + `screens/map/` + `screens/horoscope/` 由来の **11 ファイル / 計 3,830 行**。**静的データが主体** で関数は辞書取り出しヘルパーが中心。副作用なし (= 層 1a と同じく純粋)、ただし「計算」というより「世界観テキストの貯蔵庫」。
 
 **機械分類の精度** (✅ 2026-05-14 オーバーライド適用済):
-- ヒューリスティック検出だけだと 5 ファイルだったが、`PATH_OVERRIDES` で 1a → 1b に 3 本、4a → 1b に 1 本を明示移動 = 計 9 本
-- 移動した 4 本: `astro_glossary.dart` / `celestial_event_meanings.dart` / `planet_intro.dart` (1a 由来) + `daily_transit_data.dart` (4a 由来)
+- ヒューリスティック検出だけだと 5 ファイルだったが、`PATH_OVERRIDES` で 1a → 1b に 3 本、4a → 1b に 1 本、4b → 1b に 2 本を明示移動 = 計 11 本
+- 移動した 6 本: `astro_glossary.dart` / `celestial_event_meanings.dart` / `planet_intro.dart` (1a 由来) + `daily_transit_data.dart` (4a 由来) + `horo_constants.dart` / `horo_aspect_description.dart` (4b 由来)
 
-### 1b.2 ファイル別 役割 + 呼出元 (9 本)
+### 1b.2 ファイル別 役割 + 呼出元 (11 本)
 
 | # | ファイル | 行 | 内容 | 主要 export | 呼出元 (画面層) | 特記 |
 |---|---|---|---|---|---|---|
@@ -248,6 +248,8 @@ Solara のバックエンドは **Cloudflare Workers** で稼働。本番 URL: `
 | 7 | [`celestial_event_meanings.dart`](../lib/utils/celestial_event_meanings.dart) | 52 | 天体イベント (ingress/retrograde/eclipse/conjunction/node_shift) の占星術的意味辞書 | `getEventMeaningJP` | [celestial_event_bar](../lib/widgets/celestial_event_bar.dart) のみ | (1a→1b オーバーライド済) `/astro/events` 取得結果の表示用 |
 | 8 | [`planet_intro.dart`](../lib/utils/planet_intro.dart) | 559 | 10 惑星の Map マーカータップ説明テキスト (natal/transit/progressed 3 フレーム × 10 惑星 = 30 パターン) | `PlanetIntroFrame`, `PlanetIntro`, `frameOf` | [map_screen](../lib/screens/map_screen.dart)、[map_planet_intro_popup](../lib/screens/map/map_planet_intro_popup.dart) | (1a→1b オーバーライド済) Map 惑星マーカータップ時の説明源 |
 | 9 | [`daily_transit_data.dart`](../lib/screens/map/daily_transit_data.dart) | 1,013 | Daily Transit 画面用 静的データ大容量: `AngleFilter` enum + ラベル/セット/意味マップ + `CategoryFilterTips` (5 カテゴリ × 外向き/内向き各 4 tips) + `planetAngleBaseText` (10 惑星 × 4 アングル = 40 パターン基本意味) + `categoryAppendix` + `categoryPlanetSets` | `AngleFilter`、`angleFilterLabel/Set/Meaning`、`CategoryFilterTips`、`planetAngleBaseText`、`categoryAppendix`、`categoryPlanetSets` | [map_daily_transit_screen](../lib/screens/map/map_daily_transit_screen.dart) のみ | (4a→1b オーバーライド済) 物理的には `screens/map/` 配下だが、実態は静的辞書。Worker `fortune.js` の `categoryPlanetSets` と一致 (要同期保守) |
+| 10 | [`horo_constants.dart`](../lib/screens/horoscope/horo_constants.dart) | 86 | Horoscope 系の共有静的データ: `signs` (12 星座記号)、`signNames`、`signColors`、`planetGlyphs` (10 惑星 Unicode 記号)、`planetNamesJP`、`fortuneCategories` (5 カテゴリ)、`aspectSymbol`、`aspectTypes` (8 種 × angle/orb/quality/color)、`planetGroups` (personal/social/generational/angle)、`angleNamesJP`、`patternOrbSettings`、`patternStyles`、`fortunePlanets` | (上記全部 const) | **13 ファイル横断** ([map_relocation_popup](../lib/screens/map/map_relocation_popup.dart), [map_line_narrative_sheet](../lib/screens/map/map_line_narrative_sheet.dart), Horo 系 9 ファイル, [galaxy_screen](../lib/screens/galaxy_screen.dart) ほか) | (4b→1b オーバーライド済) 物理的には `screens/horoscope/` 配下だが、実態は cross-screen 静的辞書。`fortunePlanets` は UI フィルタチップ用 (Fortune API 用は別) |
+| 11 | [`horo_aspect_description.dart`](../lib/screens/horoscope/horo_aspect_description.dart) | 116 | アスペクト説明生成: `planetInfo` (14 惑星/アングル × theme/keywords) + `aspectInfo` (8 アスペクト × name/angle/quality/summary) 静的辞書 + `buildAspectDescription` 1 関数 (惑星 + アスペクトから 3 セクション解説生成) | `planetInfo`, `aspectInfo`, `buildAspectDescription` | [map_aspect_chip](../lib/screens/map/map_aspect_chip.dart) (Daily Transit)、[horo_aspect_list](../lib/screens/horoscope/horo_aspect_list.dart)、[horo_prediction_panel](../lib/screens/horoscope/horo_prediction_panel.dart) | (4b→1b オーバーライド済) Map+Horo 共用、`buildAspectDescription` は純関数 |
 
 ### 1b.3 課金検討に直結する示唆
 
@@ -482,14 +484,16 @@ Solara のバックエンドは **Cloudflare Workers** で稼働。本番 URL: `
 
 ### 3a.1 概要
 
-`lib/widgets/` 配下の 22 ファイル / 計 5,612 行。**`AnimationController` を持たない** widget 群 (= 機械分類のヒューリスティック)。
-ただし `StatefulWidget` であっても `ScrollController` 等の純粋な state のみのもの (例: `MoonScrollingStory`, `LocationPickerMinimap`, `MoonScrollingStory`) は本層に含まれる。
+`lib/widgets/` 配下 + `screens/horoscope/horo_antique_icons.dart` (オーバーライド経由) の **23 ファイル / 計 5,907 行**。**`AnimationController` を持たない** widget 群 (= 機械分類のヒューリスティック)。
+ただし `StatefulWidget` であっても `ScrollController` 等の純粋な state のみのもの (例: `MoonScrollingStory`, `LocationPickerMinimap`) は本層に含まれる。
 
-22 ファイルは性質が大きく異なるので、本章では **機能群** 単位で整理する。
+**機械分類の精度** (✅ 2026-05-14 オーバーライド適用済): `screens/horoscope/horo_antique_icons.dart` (295 行、`AntiqueGlyph` widget + `_AntiqueIconPainter` CustomPainter) は cross-screen で 16 ファイルから参照 (Map / Galaxy / Horo / no_profile_guide / galaxy_star_atlas)。物理 path は `screens/horoscope/` 配下のままだが、`PATH_OVERRIDES` で 3a に明示移動。
+
+23 ファイルは性質が大きく異なるので、本章では **機能群** 単位で整理する。
 
 | 群 | 役割 | ファイル数 | 行 |
 |---|---|---|---|
-| A 基礎レイアウト/装飾 | popup・glass・overflow ・用語ラベル | 4 | 314 |
+| A 基礎レイアウト/装飾 | popup・glass・overflow ・用語ラベル + アンティークアイコン | 5 | 609 |
 | B ナビゲーション | bottom NavBar + 5 nav icon CustomPainter | 2 | 381 |
 | C カテゴリアイコン | 6 種カテゴリの Gemini WebP アイコン | 1 | 80 |
 | D 空状態/案内 | プロフィール未設定時のガイドカード | 1 | 51 |
@@ -499,11 +503,11 @@ Solara のバックエンドは **Cloudflare Workers** で稼働。本番 URL: `
 | H Cycle 天体イベント表示 | 月別イベント横スクロールバー (Galaxy 下部) | 1 | 129 |
 | I Map fortune オーバーレイ painter | 5 カテゴリ × CustomPainter + 共通 builder | 6 | 3,212 |
 
-**合計**: 22 ファイル / 5,616 行 (機械抽出は 5,612、+4 は moon_overlay.dart の re-export ヘッダ)
+**合計**: 23 ファイル / 5,911 行 (機械抽出 5,907 + 4 は moon_overlay.dart の re-export ヘッダ)
 
 ### 3a.2 群別 ファイル一覧 + 呼出元 + 役割
 
-#### A. 基礎レイアウト/装飾 (4 本、計 314 行)
+#### A. 基礎レイアウト/装飾 (5 本、計 609 行)
 
 | ファイル | 行 | 主要 export | 呼出元 | 役割 |
 |---|---|---|---|---|
@@ -511,6 +515,7 @@ Solara のバックエンドは **Cloudflare Workers** で稼働。本番 URL: `
 | [`glass_panel.dart`](../lib/widgets/glass_panel.dart) | 31 | `GlassPanel` | `map_daily_transit_screen`, `full_moon_overlay`, `new_moon_overlay`, `catasterism_overlay`, `map_direction_popup`, `solara_philosophy_screen` | 半透明暗パネル容器 (`color: 0xE60A0A14` + `glassBorder` 枠)。**2026-05-03 BackdropFilter 撤去** (Adreno saveLayer leak の Critical 対策 = [`feedback_html_costly_widgets`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/feedback_html_costly_widgets.md))。blur なしで後ろがうっすら透けるだけ |
 | [`solara_safe_text.dart`](../lib/widgets/solara_safe_text.dart) | 81 | `SolaraSafeText` | (現状は本ファイルから他へ未利用、規約用ボイラープレート) | **🔴 Row/Column 内 Text の overflow 安全ラッパ** ([`feedback_text_overflow`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/feedback_text_overflow.md))。`Flexible(flex/fit, child: Text(maxLines, overflow:ellipsis))` をワンライナー化 |
 | [`astro_term_label.dart`](../lib/widgets/astro_term_label.dart) | 85 | `AstroTermLabel` | `map_relocation_popup` + 各種 popup 内 (Map / Horo) | 用語 i ボタン (タップで `showAstroGlossaryDialog` 呼出 = 層 1a `astro_glossary.dart`)。`termKey` が辞書未登録なら i アイコン非表示。2026-05-11 child を Flexible でラップする overflow 修正済 |
+| [`screens/horoscope/horo_antique_icons.dart`](../lib/screens/horoscope/horo_antique_icons.dart) | 295 | `AntiqueIcon` enum (12 種: reading/birthStar/crescent/compassStar/sunRays/asterisk/triangleOrnate/eightPointStar/ornateStarCrescent/cycleSpiral/flourishKey/forecast 等)、`AntiqueGlyph` widget、`_AntiqueIconPainter` CustomPainter (12 個の `_buildPath` / `_buildFills` 個別描画) | **16 ファイル横断** (Map: map_screen / map_relocation_popup 等、Horo: 11 ファイル、Galaxy: 2 ファイル、widgets/no_profile_guide ほか) | (4b→3a オーバーライド済) **アンティーク神秘画調アイコン集**。NoProfileGuide のアイコン、Horoscope 各 panel ヘッダ、Galaxy アトラス、Map ガイド等で使用 |
 
 #### B. ナビゲーション (2 本、計 381 行)
 
@@ -1005,4 +1010,178 @@ Map 関連の確定仕様 / 注意点 / 過去教訓を保持するメモリ:
 
 ---
 
-(層 4b 以降は次セッション以降で追記。層 4 は 1 セッション 1 画面の予定)
+## 層 4b: Horoscope 画面
+
+### 4b.1 概要
+
+`lib/screens/horoscope/` 配下 + `lib/screens/horoscope_screen.dart` の **22 ファイル / 計 5,257 行** (オーバーライド適用後)。Map (4a) と並ぶ大規模画面だが、規模は約 4 割 (Map = 13,926 行 vs Horo = 5,257 行)。
+
+**機械分類の精度** (✅ 2026-05-14 オーバーライド適用済): 当初は 25 ファイル / 5,754 行だったが、`PATH_OVERRIDES` で 3 本を他層に明示移動:
+- `horo_antique_icons.dart` (295) → 層 3a (16 ファイル横断のアンティークアイコン widget)
+- `horo_constants.dart` (86) → 層 1b (signs/planetGlyphs/aspectSymbol/aspectTypes/fortunePlanets 等、13 ファイル横断)
+- `horo_aspect_description.dart` (116) → 層 1b (planetInfo/aspectInfo 静的辞書 + `buildAspectDescription` 関数、Map+Horo 共用)
+
+Horoscope の機能領域:
+
+| 機能領域 | 概要 |
+|---|---|
+| 出生図表示 | 12 星座輪 + 10 惑星 + 4 アングル + アスペクト線描画 (HoroChartWheelPainter) |
+| 占いカード生成 | Gemini `/fortune` 経由でカテゴリ別占い文を表示 (5 カテゴリ: 恋愛/豊かさ/仕事/対話/全体) |
+| アスペクト一覧 + 解説 | 全アスペクトをリスト表示、タップで `buildAspectDescription` (1b) で解説生成 |
+| パターン予測 | Grand Trine / T-Square / Yod の検出 (`detectPatterns`) + 未来予測 (`predictPatternCompletions`) |
+| リロケーション | 出生地 → 現住所のチャートを Dart で再計算 + Phase A 静的テンプレ + Phase B Gemini `/relocation` |
+| Transit / Progressed 切替 | 現在の星位を natal に重ねる、または進行宮を表示 |
+| 出生情報編集 | 地名・日時・座標を直接入力 + reverse geocoding 連動 |
+
+**Pro 公開時の最大対象**: `/fortune` と `/relocation` (Gemini) 呼出が本層に集中。Pro 化候補は **占いカード回数制限 + リロケーション無制限**。
+
+### 4b.2 機能群別ファイル分類 (22 本)
+
+22 ファイルを 8 機能群に整理:
+
+| 群 | 役割 | 数 | 行 |
+|---|---|---|---|
+| A 統合ハブ | horoscope_screen.dart (24 関数、12 import) | 1 | 754 |
+| B 画面分割 extension | `_HoroBackdrop` / `_HoroBottomSheet` / `_HoroChartView` (HoroscopeScreenState 拡張) | 3 | 529 |
+| C チャート描画 | チャート輪 + 装飾リング + 惑星グリフ | 3 | 1,014 |
+| D データ生成ロジック | `_HoroChartData` extension + pattern_logic 純関数 | 2 | 410 |
+| E 共有 UI 部品 | 惑星アイコン / 星座アイコン / アスペクトチェック / 時分ドロップダウン / 情報行 / 解説セクション | 3 | 373 |
+| F パネル群 | 出生情報 / リロケーション / 占いカード / パターン予測 / Transit / フィルタ / 惑星表 / アスペクト一覧 | 8 | 1,967 |
+| G 静的データ (Horo 内部) | リロケーション解説テンプレ (Phase A) | 1 | 196 |
+| H barrel | bottom_panels barrel (旧 1,282 行ファイル分割の互換) | 1 | 14 |
+
+### 4b.3 群 A: 統合ハブ (1 本、754 行)
+
+| ファイル | 行 | 主要 export | 役割 |
+|---|---|---|---|
+| [`horoscope_screen.dart`](../lib/screens/horoscope_screen.dart) | 754 | `HoroscopeScreen` (Stateful)、`HoroscopeScreenState` (public state、`wakeAnimations` / `pauseAnimations` / `loadProfile` を外部公開) | **Horoscope 統合ハブ**。24 関数 (public 7 + private 17)、12 import (Horo 内 7 + utils 4 + map_astro 1)。Map と同じ `/astro/chart` を `map_astro.dart` の `fetchChart` 経由で呼ぶ (= 層 2a で記述した Map+Horo 共用境界)。`pauseAnimations` で Anim + 寿命タイマー停止 = raster 0% (タブ離脱時の負荷低減) |
+
+主要な `_*` 関数群:
+- ライフサイクル: `_resetAnimLifeTimer`, `_stopAnimations`, `_startRotTimer`, `_syncRotationByMode`
+- データ取得: `_currentCacheKey`, `_refreshCacheKey`, `_fetchRealChart` (map_astro の fetchChart を呼ぶ), `_loadFortunes` (fortune_api.dart の fortune fetch)
+- 状態管理: `_applyWorkingProfile`, `_resetWorkingProfile`, `_profilesEqual`, `_onTransitUpdate`
+- UI ヘルパー: `_planetHouse`, `_menuItem`, `_buildHouseModeToggle`, `_toggleSegment`, `_setRelocateMode`
+
+### 4b.4 群 B: 画面分割 extension (3 本、529 行)
+
+`HoroscopeScreenState` を Dart の `extension` 構文で 3 ファイルに分割。各 extension は同じ State インスタンスにアクセスする (analyzer 抑制コメント `invalid_use_of_protected_member` 付き)。
+
+| ファイル | 行 | extension | 役割 |
+|---|---|---|---|
+| [`horo_backdrop.dart`](../lib/screens/horoscope/horo_backdrop.dart) | 114 | `_HoroBackdrop` | 神秘的背景 (`_mysticalBackdrop`) + プロフィール未設定ガイド (`_buildNoProfile`) |
+| [`horo_bottom_sheet.dart`](../lib/screens/horoscope/horo_bottom_sheet.dart) | 224 | `_HoroBottomSheet` | bottom sheet 高さ算出 + タブ切替 + content build (Aspect/Pattern/Transit/Relocate 4 タブ) |
+| [`horo_chart_view.dart`](../lib/screens/horoscope/horo_chart_view.dart) | 191 | `_HoroChartView` | 12 星座画像配置 + チャート横スクロール (ピンチズーム) + レジェンド |
+
+### 4b.5 群 C: チャート描画 (3 本、1,014 行)
+
+| ファイル | 行 | 主要 export | 役割 |
+|---|---|---|---|
+| [`horo_chart_painter.dart`](../lib/screens/horoscope/horo_chart_painter.dart) | 702 | `HoroChartWheelPainter`、`HoroLegendItem`、`_SpreadItem` | **🔴 Horoscope のメイン描画**。12 星座輪 + 10 惑星配置 + 4 アングル + アスペクト線 + ハウス分割。`_spreadOverlappingPlanets` で密集惑星の自動スプレッド (重なり回避)、`_drawVectorGlyph` でベクター惑星グリフ描画 |
+| [`horo_ornament_painter.dart`](../lib/screens/horoscope/horo_ornament_painter.dart) | 139 | `HoroOrnamentPainter` | チャート外周の装飾リング + 6 芒星マーカー + 内側ハロ |
+| [`horo_astro_glyphs.dart`](../lib/screens/horoscope/horo_astro_glyphs.dart) | 173 | `planetGlyph(String key)` + 10 惑星 private path builder | 10 惑星のベクター Path (`_sun`〜`_pluto`)。チャート描画と panel_shared から使用 |
+
+### 4b.6 群 D: データ生成ロジック (2 本、410 行)
+
+| ファイル | 行 | 主要 export | 役割 |
+|---|---|---|---|
+| [`horo_chart_data.dart`](../lib/screens/horoscope/horo_chart_data.dart) | 214 | `_HoroChartData` extension | モックチャート生成 + transit/progressed 惑星算出 + アスペクト再計算 (`_recalcAspects`、`_addAspect`、`_approxSunLon`、`_aspectPassesFilter`) |
+| [`horo_pattern_logic.dart`](../lib/screens/horoscope/horo_pattern_logic.dart) | 196 | `hasPersonal`、`enoughNatal`、`triKey`、`mockLon` | パターン検出ロジックの純関数。Grand Trine / T-Square / Yod の検出 + パターン完了予測 |
+
+### 4b.7 群 E: 共有 UI 部品 (3 本、373 行)
+
+| ファイル | 行 | 主要 export | 役割 |
+|---|---|---|---|
+| [`horo_panel_shared.dart`](../lib/screens/horoscope/horo_panel_shared.dart) | 307 | `PlanetVectorIcon`、`ZodiacImageIcon`、`HoroAspectCheckmark`、`HoroHourMinuteDropdown`、`horoAntiqueHeader`、`horoPlanetOrAngleName`、`horoActivePatternKey`、`horoPredictionKey` | Horo panel 系の共有部品集。`PlanetVectorIcon` (惑星グリフ表示)、`ZodiacImageIcon` (星座 webp + 黒透過)、`HoroAspectCheckmark` (☑ 描画)、`HoroHourMinuteDropdown` (時分入力 dropdown) |
+| [`horo_desc_section.dart`](../lib/screens/horoscope/horo_desc_section.dart) | 31 | `HoroDescSection` | 「ラベル + 本文」セクション共通枠 (アスペクト/パターン解説で使用) |
+| [`horo_info_row.dart`](../lib/screens/horoscope/horo_info_row.dart) | 35 | `HoroInfoRow` | 「ラベル + 値」情報行 (panel 共通) |
+
+### 4b.8 群 F: パネル群 (8 本、1,967 行)
+
+| ファイル | 行 | 主要 export | 役割 |
+|---|---|---|---|
+| [`horo_birth_panel.dart`](../lib/screens/horoscope/horo_birth_panel.dart) | 435 | `HoroBirthPanel` (Stateful) | **🔴 出生情報入力フォーム** (インライン化済 [`project_solara_horo_birth_inline_form`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/project_solara_horo_birth_inline_form.md))。地名・日時・座標 + reverse geocoding 連動 (`_scheduleGeoLookup` / `_runGeoLookup`)。Sanctuary editor と分離 |
+| [`horo_relocation_panel.dart`](../lib/screens/horoscope/horo_relocation_panel.dart) | 422 | `HouseShift`、`HoroRelocationPanel` (Stateful) | **🔴 リロケーション panel** ([`project_solara_relocation_m0`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/project_solara_relocation_m0.md))。Dart `astro_houses.dart` で現住所チャート再計算 + Phase A 静的テンプレ (`horo_relocation_templates.dart`) + Phase B Gemini `/relocation` (`fortune_api.dart`)。ASC/MC 変化 + 12 ハウス全惑星のシフト表示 |
+| [`horo_fortune_cards.dart`](../lib/screens/horoscope/horo_fortune_cards.dart) | 240 | `HoroAstrologyView` | **🔴 Gemini 占いカード表示**。`fortune_api.dart` 経由 `/fortune` で 5 カテゴリ占い文取得 + skeleton loading + error/edit バナー |
+| [`horo_prediction_panel.dart`](../lib/screens/horoscope/horo_prediction_panel.dart) | 235 | `HoroPredictionPanel` | パターン予測 panel。アクティブなパターン + 未来予測を `buildAspectDescription` (1b) で解説生成、`showInfoPopup` で詳細表示 |
+| [`horo_transit_panel.dart`](../lib/screens/horoscope/horo_transit_panel.dart) | 157 | `HoroTransitPanel` (Stateful) | Transit (現在の星位) を natal に重ねる panel |
+| [`horo_planet_table.dart`](../lib/screens/horoscope/horo_planet_table.dart) | 160 | `HoroPlanetTable` | 10 惑星 + ASC/MC + 12 ハウス一覧表 (`_planetHouse` で位置算出) |
+| [`horo_aspect_list.dart`](../lib/screens/horoscope/horo_aspect_list.dart) | 184 | `HoroAspectList` | 全アスペクト一覧。タップで `_showAspectDescription` → `buildAspectDescription` (1b) 解説 popup |
+| [`horo_filter_panel.dart`](../lib/screens/horoscope/horo_filter_panel.dart) | 134 | `HoroFilterPanel` | アスペクト/パターン絞込チップ (フィルタ + exclusive chip 排他選択) |
+
+### 4b.9 群 G: 静的データ (Horo 内部) (1 本、196 行)
+
+| ファイル | 行 | 主要 export | 役割 |
+|---|---|---|---|
+| [`horo_relocation_templates.dart`](../lib/screens/horoscope/horo_relocation_templates.dart) | 196 | (惑星 × ハウス) 解説テンプレ const Map | Phase A 静的テンプレ (将来 Gemini 動的生成と同データ構造で互換)。`horo_relocation_panel.dart` のみが import (`fortune_api.dart` はコメント参照のみ) = Horoscope-only 静的データ |
+
+### 4b.10 群 H: barrel (1 本、14 行)
+
+| ファイル | 行 | 役割 |
+|---|---|---|
+| [`horo_bottom_panels.dart`](../lib/screens/horoscope/horo_bottom_panels.dart) | 14 | 旧 1,282 行 `horo_bottom_panels.dart` の分割互換 barrel。既存 import 互換のため残置 |
+
+### 4b.11 Worker / 外部呼出
+
+**本層は直接の Worker URL リテラルを持たない** (機械抽出で 0 リテラル確認済)。経由する Worker は層 2a 経由:
+
+| 経由 | endpoint | 用途 |
+|---|---|---|
+| `map_astro.dart` (2a) | `/astro/chart` | natal+transit+progressed+ASC/MC/DSC/IC + 全アスペクト取得 (Map と同じ fetcher) |
+| `fortune_api.dart` (2a) | `/fortune` (Gemini) | 5 カテゴリ占い文生成 |
+| `fortune_api.dart` (2a) | `/relocation` (Gemini) | リロケーション解説生成 (Phase B) |
+| `solara_api.dart` (2a) | `/tz` | 出生地のタイムゾーン解決 (horo_birth_panel) |
+| `reverse_geocode.dart` (2a) | Nominatim 直叩き | 出生地座標→地名 (horo_birth_panel) |
+
+= **Gemini 呼出 2 系統 (`/fortune` + `/relocation`) が Horoscope に集中**。Map (4a) は Gemini ゼロ、Horoscope が Gemini 中央。
+
+### 4b.12 機械分類の盲点 + 重要な実態 (✅ オーバーライド適用済)
+
+1. ~~**`horo_antique_icons.dart` は実態が層 3a**~~ — ✅ 2026-05-14 `PATH_OVERRIDES` で 3a に明示移動済。16 ファイル cross-cutting (Map/Galaxy/Horo/no_profile_guide/galaxy_star_atlas)
+2. ~~**`horo_constants.dart` は実態が層 1b**~~ — ✅ 同オーバーライドで 1b に明示移動済。13 ファイル cross-screen (Map relocation/line_narrative + Horo 9 + Galaxy も)
+3. ~~**`horo_aspect_description.dart` は実態が層 1b**~~ — ✅ 同オーバーライドで 1b に明示移動済。Map (map_aspect_chip) + Horo (3 ファイル) 共用
+4. **`horoscope_screen.dart` 754 行は code_audit の WARN 範囲** (HARD 閾値 500 行は超える) — pre-existing で別タスク
+5. **`horo_chart_painter.dart` 702 行も WARN/HARD 境界** — チャート描画は責任明確で許容範囲。分割すると `_spreadOverlappingPlanets` 等の連携が複雑化
+
+### 4b.13 重要な仕様メモリへの参照
+
+| メモリ | 内容 |
+|---|---|
+| [`project_solara_horo_birth_inline_form`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/project_solara_horo_birth_inline_form.md) | Horo Birth Panel インライン入力フォーム化 (Sanctuary と完全分離・別画面 push 廃止) |
+| [`project_solara_relocation_m0`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/project_solara_relocation_m0.md) | Phase M0 リロケーション + Phase A 静的解説完成状態 |
+| [`project_solara_message_tone`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/project_solara_message_tone.md) | Solara 世界観テキスト文体ルール (Stella=ですます / 真理=体言止) — Horoscope 占いカードに適用 |
+
+### 4b.14 課金検討に直結する示唆
+
+1. **🔴 Gemini 呼出 2 系統が本層に集中 = 課金で守るべき中央**
+   - `/fortune` (5 カテゴリ占い文) + `/relocation` (引越し解説) は両方とも `fortune_api.dart` (2a) 経由
+   - **回数制限の自然な実装ポイント**: Free は 1 日 1 回 (全カテゴリ一括)、Pro は無制限再生成 + 過去履歴閲覧
+   - 既存 KV 月次クォータ (`forecast` だけ実装) と同様の per-IP/per-user カウンタを `/fortune` + `/relocation` にも導入
+
+2. **リロケーション Pro 化候補**
+   - Phase A 静的テンプレは無料、Phase B Gemini 動的解説は Pro 限定
+   - 既に Phase A/B 並走実装済 ([`project_solara_relocation_m0`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/project_solara_relocation_m0.md)) なので、Pro ゲートだけ追加すれば差別化が成立
+   - 「無料は型通りの解説、Pro はあなた専用の AI 解説」が訴求しやすい
+
+3. **パターン検出 (`horo_pattern_logic.dart`) は Solara 独自の差別化**
+   - Grand Trine / T-Square / Yod 検出 + 未来予測は商用占いアプリでも珍しい
+   - 無料機能の魅力強化に投資する箇所 = Pro 化対象としては弱い
+
+4. **`horo_chart_painter.dart` の HoroChartWheelPainter は Horoscope の心臓**
+   - 12 星座輪 + 惑星スプレッド (`_spreadOverlappingPlanets`) は HTML 移植完了済
+   - **Pro 拡張案**: 星座 + 惑星のカスタム配色 (デフォルト + Pro 限定 5 テーマ)、12 星座 webp 高精細版差し替え
+
+5. **占いカード (`horo_fortune_cards.dart`) の skeleton loading は UX 投資**
+   - Gemini 応答 3〜5 秒待機中に skeleton 表示で離脱率低減
+   - Pro 機能で「カード保存 / シェア / 過去履歴閲覧」を追加すると価値が上がる
+
+6. **`horoscope_screen.dart` 754 行は分割候補だが緊急度低**
+   - 既に `_HoroBackdrop` / `_HoroBottomSheet` / `_HoroChartView` extension で 519 行を切り出し済 (本来は 1,273 行相当)
+   - さらに分割するなら `_HoroFortune` (fortune loading) / `_HoroAnim` (lifecycle) 追加が候補
+
+### 4b.15 機械抽出への参照
+
+層 4b の機械抽出 raw: [`feature_inventory/04b_horoscope.md`](feature_inventory/04b_horoscope.md)
+
+---
+
+(層 4c 以降は次セッション以降で追記。層 4 は 1 セッション 1 画面の予定)
