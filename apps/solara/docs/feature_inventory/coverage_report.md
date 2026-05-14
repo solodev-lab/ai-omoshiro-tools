@@ -37,15 +37,13 @@
 ## #1 / #2 機械抽出 ↔ feature_inventory.md (人手版) の対整合
 
 - 機械抽出した class/mixin/extension/enum: **304**
-- inventory に登場する識別子 (大文字始まり ``backtick``囲み): **172**
+- inventory に登場する識別子 (大文字始まり ``backtick``囲み): **182**
 
-### #1 機械にあるが Doc に書かれていない (162)
+### #1 機械にあるが Doc に書かれていない (153)
 
 - `AppLocale`
 - `CelestialEvents`
-- `ClassShareCardPage`
 - `DailyTransitsResult`
-- `DateSlashFormatter`
 - `FontPreviewScreen`
 - `ForecastLifePeriodsSection`
 - `ForecastScreen`
@@ -59,12 +57,6 @@
 - `MonthEvents`
 - `PlanetDailyTransits`
 - `RelocationNarrative`
-- `SanctuaryHomeEditorPage`
-- `SanctuaryOrbOverlay`
-- `SanctuaryProfileEditorPage`
-- `SanctuaryResetHourPicker`
-- `SanctuaryScreen`
-- `SanctuaryTitleDiagnosisPage`
 - `SolaraApp`
 - `SolaraNavIcons`
 - `SolaraPhilosophyScreen`
@@ -72,7 +64,6 @@
 - `SolaraTheme`
 - `TarotData`
 - `TarotReading`
-- `TitleHowItWorksContent`
 - `TransitAspect`
 - `TransitEvent`
 - `_AcgEntryFooter`
@@ -204,7 +195,7 @@
 - `_WidgetOpacity`
 - `_WorkPainter`
 
-### #2 Doc に書いてあるがコードに存在しない (ゴースト記述) (30)
+### #2 Doc に書いてあるがコードに存在しない (ゴースト記述) (31)
 
 > 注: Flutter SDK や外部ライブラリの型もここに乗る (誤検出)。
 > 真のゴーストはアプリ独自型のみ。実際の Doc 修正対象は手で絞り込む。
@@ -231,6 +222,7 @@
 - `NOUN_SHAPES`
 - `PATH_OVERRIDES`
 - `RawScrollbar`
+- `RepaintBoundary`
 - `ScrollController`
 - `SearchHourAngle`
 - `SearchRiseSet`

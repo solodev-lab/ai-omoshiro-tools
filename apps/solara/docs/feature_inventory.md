@@ -26,7 +26,7 @@
 > - [x] 層 4b: Horoscope 画面 — 2026-05-14 完成
 > - [x] 層 4c: Observe (Tarot) 画面 — 2026-05-14 完成
 > - [x] 層 4d: Galaxy 画面 — 2026-05-14 完成
-> - [ ] 層 4e: Sanctuary 画面
+> - [x] 層 4e: Sanctuary 画面 — 2026-05-14 完成
 > - [ ] 層 4f: サブ画面 (Forecast / Locations / Philosophy / Font Preview)
 > - [ ] 層 5: 連携層 (main / PopScope / IndexedStack)
 
@@ -1440,4 +1440,167 @@ Galaxy は 1b/1c/2a/2b/3a/3c に強く依存:
 
 ---
 
-(層 4e 以降は次セッション以降で追記。層 4 は 1 セッション 1 画面の予定)
+## 層 4e: Sanctuary 画面
+
+### 4e.1 概要
+
+`lib/screens/sanctuary/` 配下 + `lib/screens/sanctuary_screen.dart` の **8 ファイル / 計 4,335 行**。Solara の Sanctuary タブ = **アプリ設定 + プロフィール + 144 称号診断儀式 + Pro アップグレード UI**。
+
+**機械分類の精度** (✅ オーバーライド不要): 8 ファイル全て Sanctuary 専用。`sanctuary_profile_editor.dart` は Horoscope (2 ファイル) から `Navigator.push` で遷移されるが、これは画面遷移であって cross-cutting widget ではない (= 層維持)。
+
+Sanctuary の機能領域:
+
+| 機能領域 | 概要 |
+|---|---|
+| プロフィール編集 | 名前・出生情報 (日時・座標・地名)・言語切替・場所検索 + reverse geocoding |
+| ホーム地点設定 | 現住所の座標 + 地名 (Map VP slot と同期) |
+| 🔴 144 称号診断儀式 | 25 クラス × Light/Shadow 両面の診断、3 ラウンドカード選択 + Forging 演出 + Reveal |
+| クラスカードシェア | 診断結果カードを画像生成して シェア (`_buildShareImage` + share_plus) |
+| Orb 設定 | アスペクトオーブ (天体間角度の許容範囲) 8 種カスタマイズ |
+| デイリーリセット時刻 | 日次タロット引きの基準時刻 (時:分、1 分単位) |
+| 🔴 Cosmic Pro アップグレード UI | **既に UI 実装済**: $9.99/月 + $49.99/年、訴求文「Aether shaders · Galaxy Archive · Advanced astrology」 |
+| アプリ設定 | 言語切替、ハウスシステム選択、利用規約等 |
+
+### 4e.2 ファイル別 役割 + 呼出元 (8 本)
+
+| # | ファイル | 行 | 主要 export | 役割 |
+|---|---|---|---|---|
+| 1 | [`sanctuary_screen.dart`](../lib/screens/sanctuary_screen.dart) | 1,034 | `SanctuaryScreen` (Stateful)、`_SanctuaryScreenState`、`_SettingsGroup`、`_SettingsItem`、`_SettingsItemWithToggle`、`_WidgetOpacity` extension | **🔴 Sanctuary 統合ハブ**。27 関数 (public 7 + private 20)、9 import (内部 + utils + widgets)。Settings 構造: プロフィール / 称号診断 / **Cosmic Pro** / 占星術 / アプリ設定 の 5 セクション。`_buildCosmicProSection` (L653-724) が Pro 訴求 UI |
+| 2 | [`sanctuary_title_diagnosis.dart`](../lib/screens/sanctuary/sanctuary_title_diagnosis.dart) | **1,385** | `SanctuaryTitleDiagnosisPage` (Stateful)、`_SanctuaryTitleDiagnosisPageState` | **🔴 144 称号診断儀式** (本層最大ファイル)。22 関数 (public 4 + private 18)。フェーズ: `_buildSummoning` → `_buildIntro` → `_buildRound` (3 ラウンド) → `_buildPartTrans` → `_buildForging` → `_buildReveal` (Light + Shadow 両面)。出生情報からの astro seed (`_pickByAstroSeed`) + ユーザー選択カードの組合せで 144 称号を確定 |
+| 3 | [`sanctuary_profile_editor.dart`](../lib/screens/sanctuary/sanctuary_profile_editor.dart) | 585 | `SanctuaryProfileEditorPage` (Stateful)、`_SanctuaryProfileEditorPageState`、`DateSlashFormatter` (TextInputFormatter) | プロフィール編集ページ。Place search (`/search` 経由) + 言語切替ボタン + 出生情報 (日時 YYYY/MM/DD + HH:MM + 座標) + `_resolveTimezone` で `/tz` 呼出 + `LocationPickerMinimap` (3a) で座標微調整。Horo (horo_birth_panel, horo_transit_panel) から `Navigator.push` で遷移される |
+| 4 | [`class_share_card.dart`](../lib/screens/sanctuary/class_share_card.dart) | 447 | `ClassShareCardPage` (Stateful)、`_ClassShareCardPageState` | クラスカードシェア用ページ。`_buildShareImage` で `RepaintBoundary` から画像生成 → `share_plus` で OS 共有シート。`ClassCard` widget (3a) を使ってカード表示 |
+| 5 | [`sanctuary_orb_overlay.dart`](../lib/screens/sanctuary/sanctuary_orb_overlay.dart) | 266 | `SanctuaryOrbOverlay` (Stateful)、`_OrbSectionLabel` | アスペクトオーブ設定 overlay。8 アスペクト (合/衝/三/矩/六/Qx/SemiSx/SemiSq) × オーブ値 (0-3°)。+/- ボタンで 0.1° 単位調整、リセット可能 |
+| 6 | [`sanctuary_home_editor.dart`](../lib/screens/sanctuary/sanctuary_home_editor.dart) | 227 | `SanctuaryHomeEditorPage` (Stateful)、`_SanctuaryHomeEditorPageState` | ホーム地点 (現住所) 編集ページ。`_search` (Worker `/search`) + `LocationPickerMinimap` (3a) で座標微調整 + 保存時 Map VP slot と同期 |
+| 7 | [`title_how_it_works.dart`](../lib/screens/sanctuary/title_how_it_works.dart) | 201 | `TitleHowItWorksContent` (Stateless) | 称号システムの仕組み説明 popup の中身 (HTML移植)。`showInfoPopup` (3a) 経由で表示、25 クラス × Light/Shadow の概念説明 |
+| 8 | [`sanctuary_reset_hour_picker.dart`](../lib/screens/sanctuary/sanctuary_reset_hour_picker.dart) | 190 | `SanctuaryResetHourPicker` (Stateful)、`_SanctuaryResetHourPickerState` | 時:分 ピッカー widget。時 dropdown + 分 dropdown (1 分単位、24h)。日次タロット引きの基準時刻設定 |
+
+### 4e.3 🔴 Cosmic Pro UI 既存実装の発見 (sanctuary_screen.dart `_buildCosmicProSection`、L653-724)
+
+**重要**: Sanctuary 設定画面に **Cosmic Pro アップグレード UI が既に実装済**。HTML mockup 移植由来。
+
+```dart
+// 訴求バナー
+Text('Upgrade to Cosmic Pro')  // gradient gold
+Text('Aether shaders · Galaxy Archive · Advanced astrology')  // 訴求 3 機能
+Row(['$9.99', '/month'])       // 価格
+Container('Unlock Cosmic Pro ✦')  // CTA ボタン
+Text('$49.99/year · Cancel anytime')  // 年額 + キャンセル可
+```
+
+**確定済の Pro 訴求要素**:
+- 価格: **$9.99/月** または **$49.99/年** (= 月換算 $4.16)
+- キャンセル可
+- 訴求 3 機能:
+  1. **Aether shaders** — 演出強化系 (本層 3a/3c での painter テーマ拡張と整合)
+  2. **Galaxy Archive** — 過去サイクルアルバム ([`project_galaxy_spec`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/project_galaxy_spec.md) + 層 4d.8 で提案した Pro 拡張 (a) と完全一致)
+  3. **Advanced astrology** — アスペクトライン拡張 + ACG 4 frame (層 4a.17 で提案した Pro 候補 (a)(c) と完全一致)
+
+**実装状態**: UI のみ実装、機能ゲート (`isPro` 判定 / RevenueCat 連携 / Apple In-App Purchase / Google Play Billing) は未実装。Pro 機能の本実装は [`project_solara_security_principles`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/project_solara_security_principles.md) + [`project_solara_launch_checklist`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/project_solara_launch_checklist.md) で計画済。
+
+**示唆**: 訴求文 3 機能が **本人手版インベントリで導出した Pro 候補と完全に一致** = 当初の設計意図と機能インベントリの方向性が整合している証拠。
+
+### 4e.4 144 称号診断儀式 (`sanctuary_title_diagnosis.dart`、1,385 行)
+
+本層の最大ファイル、Sanctuary の中核体験。
+
+**儀式フェーズ** (sanctuary_screen `_startDiagnosis` 経由で起動):
+
+| フェーズ | 関数 | 内容 |
+|---|---|---|
+| 召喚 | `_buildSummoning` | 出生情報から astro seed を生成 (`_pickByAstroSeed`)、神秘的演出 |
+| 序章 | `_buildIntro` | 儀式の世界観説明 + 開始ボタン |
+| 3 ラウンド | `_beginRounds` → `_buildRound` | ユーザーが 3 ラウンドで 1 枚ずつカード選択 (`_selectCard`) |
+| 移行 | `_buildPartTrans` | ラウンド間の演出 |
+| 鍛造 | `_buildForging` | 選んだカードと astro seed を組合せて称号を「鍛造」する演出 |
+| Reveal | `_buildReveal` → `_buildRevealLightSide` / `_buildRevealShadowSide` | Light 面 + Shadow 面の両面表示、`_toggleShadowSide` で切替 |
+
+**永続化**: `_finishDiagnosis` で `SolaraStorage` に保存。診断結果は再診断 (`_acceptPrevious` で前回結果比較可) もできる。
+
+**設計思想**: 25 クラス × Light/Shadow (両面) = 25 × 2 = 50 の表示パターン + 144 称号 (12 太陽部位 × 12 月部位) ([`project_solara_title_system`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/project_solara_title_system.md))。
+
+### 4e.5 Worker / 外部呼出
+
+| 経由 | endpoint | 用途 |
+|---|---|---|
+| `solara_api.dart` (2a) | `/tz` (GET) | 出生地のタイムゾーン解決 (`sanctuary_profile_editor._resolveTimezone`) |
+| Worker `/search` (4a `map_search.dart` 経由ではなく直接) | `/search` (GET) | プロフィール編集 + ホーム編集の場所検索 (`_searchPlace` / `_search`) |
+| `reverse_geocode.dart` (2a) | Nominatim 直叩き | (`location_picker_minimap` 3a 内部で使用) |
+
+**Gemini 呼出 0** — Sanctuary は AI 解説を使わない設定画面。
+
+### 4e.6 依存関係 (層を跨ぐ参照)
+
+| 依存先 | 用途 |
+|---|---|
+| 1b 静的辞書 | `title_data.dart` (144 称号データ + 25 class + `getSunSign` / `getMoonSign`) |
+| 2a API | `solara_api.dart` (`/tz`)、`solara_storage` 経由間接 |
+| 2b 永続化 | `solara_storage.dart` (SolaraProfile + dailyResetHour/Minute + 称号結果 + Map style + Orb 設定) |
+| 2a (準) | `app_locale.dart` (言語切替) |
+| 3a 共通 widget | `class_card.dart` (144 称号カード)、`location_picker_minimap.dart` (座標選択)、`info_popup.dart` |
+
+### 4e.7 機械分類の盲点 + 重要な実態
+
+1. **8 ファイル全て Sanctuary-only = 機械分類が正しい状態**
+   - `sanctuary_profile_editor` は Horo 2 ファイルから `Navigator.push` 遷移されるが、これは画面遷移であって widget 共有ではない
+2. **`sanctuary_title_diagnosis.dart` 1,385 行は最大 HARD 違反** — pre-existing
+   - 候補: フェーズごとに切り出し (`title_diagnosis_summoning.dart` / `_rounds.dart` / `_forging.dart` / `_reveal.dart`)
+   - 緊急度低 (動作には影響なし)、リファクタは Pro 機能本実装と同時推奨
+3. **`sanctuary_screen.dart` 1,034 行も HARD** — 5 セクション (`_buildStellarProfileSection` / `_buildTitleDiagnosisSection` / `_buildCosmicProSection` / `_buildAstrologySection` / `_buildAppSection`) を切り出すと 600 行台に減らせる
+4. **`class_share_card.dart` 447 行は WARN 範囲** — `_buildShareImage` の `RepaintBoundary` + 画像保存は責任明確、許容範囲
+
+### 4e.8 重要な仕様メモリへの参照
+
+| メモリ | 内容 |
+|---|---|
+| [`project_solara_title_system`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/project_solara_title_system.md) | **🔴 称号未実装タスク**: EN 版 144 称号 + 言語切替機能 (現状 JP のみ) |
+| [`project_solara_launch_checklist`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/project_solara_launch_checklist.md) | **🔴 Solara 公開前チェックリスト** (永続タスク管理、Phase 0 アカウント/法務 〜 Phase 6 段階リリース) |
+| [`project_solara_security_principles`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/project_solara_security_principles.md) | **🔴 Solara Pro 公開時セキュリティ多層防御原則** (RevenueCat Trusted Entitlements + App Attest / Play Integrity + `/protected/*` 物理分離) |
+| [`project_appstore_small_business`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/project_appstore_small_business.md) | **🔴 公開前必須**: Apple/Google Small Business Program 申請 (手数料 30→15%) |
+| [`feedback_i18n_last`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/feedback_i18n_last.md) | i18n は公開直前まで保留 (EN 称号は保留中) |
+
+### 4e.9 課金検討に直結する示唆
+
+層 4e は **Pro 公開時の UI ハブ + 課金訴求の中央**。
+
+1. **🔴 Cosmic Pro UI 既存実装 = 公開時の最大資産**
+   - 価格 $9.99/月 + $49.99/年は既決定 (年額は月換算 $4.16 で 58% off = アンカリング有効)
+   - 訴求 3 機能 (Aether shaders / Galaxy Archive / Advanced astrology) は他層で導出した Pro 候補と完全一致 = **設計意図と機能インベントリが整合**
+   - **残作業**: RevenueCat 連携 + Apple/Google IAP 連携 + `isPro` 判定 + `/protected/*` ルート分離
+   - 公開前チェックリスト ([`project_solara_launch_checklist`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/project_solara_launch_checklist.md)) の Phase 3〜5 で実装
+
+2. **🔴 144 称号診断儀式 = 無料機能の最大差別化**
+   - 25 クラス × Light/Shadow + 144 細分化 = 「あなただけの結果」を作る独自体験
+   - **Pro 化対象としては不適切** (これを Pro 化すると初期体験ができなくなる)
+   - 代わりに **Pro 拡張案**: シェアカードの追加デザイン、月別称号変化追跡、図鑑/コレクション
+
+3. **EN 版 144 称号未実装 = 海外展開のボトルネック**
+   - 現状 JP のみ ([`project_solara_title_system`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/project_solara_title_system.md))
+   - i18n は公開直前まで保留 ([`feedback_i18n_last`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/feedback_i18n_last.md))
+   - EN 称号を Pro 限定 / 無料の境界に置くかどうかは戦略判断 — **私の推奨は無料**(海外初期体験を阻害しないため)
+
+4. **`class_share_card.dart` (シェア機能) = Pro 拡張に直結**
+   - 現状はデフォルトカード 1 種のみ
+   - Pro 拡張案: カードデザイン 5 種 + 背景パターン + フォント + Light/Shadow 切替
+   - シェア時の「Solara」ブランド表示 = 無料機能としてのバイラル効果
+
+5. **`sanctuary_orb_overlay.dart` (Orb 設定) = Advanced astrology の核**
+   - 8 アスペクト × オーブ値カスタマイズは商用占いアプリでも珍しい
+   - **Pro 限定機能**にする候補 (Advanced astrology 訴求の一部)
+   - 現状全員アクセス可、Pro ゲート追加で差別化成立
+
+6. **`sanctuary_profile_editor.dart` の言語切替 = i18n 連携**
+   - `app_locale.dart` (2b 準) + `_langBtn` で JP/EN 切替
+   - EN 版完成時に活用、現状は表示テキストの一部のみ EN 化
+
+7. **App Store Small Business Program 申請** ([`project_appstore_small_business`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/project_appstore_small_business.md))
+   - Apple/Google 両方 = 手数料 30%→15% (= 公開前必須)
+   - $9.99/月 のうち実収益: 通常 $7.00 → SBP 適用後 $8.49 (= +$1.49/月/ユーザー)
+   - 1,000 Pro ユーザーで月 $1,490 の差 = SBP 申請は必須
+
+### 4e.10 機械抽出への参照
+
+層 4e の機械抽出 raw: [`feature_inventory/04e_sanctuary.md`](feature_inventory/04e_sanctuary.md)
+
+---
+
+(層 4f 以降は次セッション以降で追記。層 4 は 1 セッション 1 画面の予定)
