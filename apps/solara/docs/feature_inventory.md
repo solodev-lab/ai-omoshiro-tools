@@ -28,7 +28,7 @@
 > - [x] 層 4d: Galaxy 画面 — 2026-05-14 完成
 > - [x] 層 4e: Sanctuary 画面 — 2026-05-14 完成
 > - [x] 層 4f: サブ画面 (Forecast / Locations / Philosophy / Font Preview) — 2026-05-14 完成
-> - [ ] 層 5: 連携層 (main / PopScope / IndexedStack)
+> - [x] 層 5: 連携層 (main / PopScope / IndexedStack) — 2026-05-14 完成 ← **全 17 層完了**
 
 ---
 
@@ -1740,4 +1740,268 @@ Text('$49.99/year · Cancel anytime')  // 年額 + キャンセル可
 
 ---
 
-(層 5 以降は次セッション以降で追記)
+## 層 5: 連携層 (main / PopScope / IndexedStack)
+
+### 5.1 概要
+
+`lib/main.dart` **1 ファイル / 149 行**。Solara アプリ全体の **起動・配線・タブ調停** だけに責務を絞った最小レイヤ。
+画面 (4a〜4f)・状態 (1c)・データ (1a/1b)・サービス (2a〜2c)・テーマ (3b)・widget (3a/3c) を **「組み立てるだけ」**。
+
+**機械分類の精度** (✅ オーバーライド不要): 1 ファイルのみ、cross-cutting なし、`screens/` 直下でないため誤分類リスクもなし。
+
+**この層の特徴**:
+
+| 観点 | 値 | 意味 |
+|---|---|---|
+| Navigator.push 等 | **0** | 画面遷移は持たない (IndexedStack で常駐) |
+| Popup/Dialog 呼出 | **0** | UI ロジックなし |
+| Worker URL リテラル | **0** | API 呼出なし、純配線 |
+| AnimationController | **0** | アニメは下位に委譲 |
+| クラス | 3 (`SolaraApp` / `SolaraHome` / `_SolaraHomeState`) | 最小 |
+| 関数 | 5 (`main` / `build`×2 / `createState` / `_onTabTap`) | 最小 |
+
+### 5.2 ファイル構成
+
+| # | ファイル | 行 | 主要 export | 役割 |
+|---|---|---|---|---|
+| 1 | [`main.dart`](../lib/main.dart) | 149 | `main()`、`SolaraApp` (Stateless)、`SolaraHome` (Stateful)、`_SolaraHomeState` | アプリ起動 + ルート widget + 5 タブ調停 + Android back button 配線 |
+
+### 5.3 `main()` ブートストラップ (L15-L28)
+
+起動シーケンス **5 ステップ**:
+
+| 順 | 処理 | 目的 |
+|---|---|---|
+| 1 | `WidgetsFlutterBinding.ensureInitialized()` | async 起動前提 |
+| 2 | `SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge)` | edge-to-edge レイアウト (Android 12+) |
+| 3 | `SystemChrome.setSystemUIOverlayStyle(...)` | systemNav / statusBar 透明化 |
+| 4 | **`await TarotData.initialize()`** | 1b → 2c. タロット 78 枚静的データロード ([utils/tarot_data.dart](../lib/utils/tarot_data.dart)) |
+| 5 | **`await CelestialEvents.initialize()`** | 2a/2c. `/astro/events` から月別天体イベント取得 + キャッシュ ([utils/celestial_events.dart](../lib/utils/celestial_events.dart)) |
+| 6 | **`await AppLocale.instance.load()`** | 2b/2c. SharedPreferences から言語 override 復元 ([utils/app_locale.dart](../lib/utils/app_locale.dart)) |
+| 7 | `runApp(const SolaraApp())` | 起動 |
+
+**重要**: ステップ 4〜6 は **直列 await**。`CelestialEvents.initialize()` は Worker 呼出を含むためネットワーク待ち発生 ([`celestial_events.dart`](../lib/utils/celestial_events.dart))。起動時間に直接影響する唯一のネットワーク I/O。
+
+### 5.4 `SolaraApp` (StatelessWidget, L30-L64)
+
+`MaterialApp` のラッパ。`AppLocale.instance.notifier` (`ValueNotifier<Locale?>`) を `ValueListenableBuilder` で購読し、言語切替時に **全画面再 build** をトリガ。
+
+| 設定項目 | 値 | 備考 |
+|---|---|---|
+| `title` | `'Solara'` | OS タスク表示名 |
+| `debugShowCheckedModeBanner` | `false` | デバッグバナー非表示 |
+| `theme` | `SolaraTheme.dark` | 3b 層 |
+| `locale` | `AppLocale.instance.notifier.value` | null=端末設定従、`ja`/`en` で強制 |
+| `supportedLocales` | `[Locale('ja'), Locale('en')]` | 2 言語のみ |
+| `localizationsDelegates` | Material/Widgets/Cupertino 3 種 | DatePicker 等 OS 言語化用 |
+| `builder` | `MediaQuery.withClampedTextScaling(min: 1.0, max: 1.5, child)` | **🔴 端末フォントサイズ 200% 設定時のレイアウト崩壊対策** (L48-L59) |
+| `home` | `SolaraHome()` | 5 タブのルート |
+
+**🔴 textScaler クランプ 1.5x** (L55-L59) — 業界標準 1.2〜1.5 の上限値採用。`TextScaler.noScaling` (= 完全無効化) は Apple HIG 違反 + ストア審査リスクで禁止。スコアバー / 16方位 / 天頂マーカー等のタイトレイアウトを守りつつアクセシビリティ確保。Column 化済みのため 1.5 まで耐えられる ([`feedback_text_overflow`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/feedback_text_overflow.md))。
+
+### 5.5 `SolaraHome` / `_SolaraHomeState` — 5 タブ調停 (L66-L149)
+
+#### 5.5.1 タブ管理 (L73-L85)
+
+| index | タブ名 | 画面 widget | GlobalKey | 層 |
+|---|---|---|---|---|
+| 0 | Map | `MapScreen` | `_mapKey: GlobalKey<MapScreenState>` | 4a |
+| 1 | Horo | `HoroscopeScreen` | `_horoKey: GlobalKey<HoroscopeScreenState>` | 4b |
+| 2 | Tarot | `ObserveScreen` | (key なし) | 4c |
+| 3 | Galaxy | `GalaxyScreen` | `_galaxyKey: GlobalKey<GalaxyScreenState>` | 4d |
+| 4 | Sanctuary | `SanctuaryScreen` | (key なし) | 4e |
+
+**🔴 GlobalKey は 3 画面のみ** (Map / Horo / Galaxy) — タブ切替時にライフサイクル制御が必要な画面に限定。Tarot / Sanctuary は state リセット不要。
+
+**Map / Horo の `onNavigateToSanctuary` コールバック** (L80-L81) — 「プロフィール未設定ガイド」から Sanctuary を開く動線を、画面遷移ではなく **同インスタンス内のタブ切替** (`_onTabTap(4)`) として実装。Navigator.push しない設計。
+
+#### 5.5.2 `_onTabTap(int i)` — タブ切替時のライフサイクル調停 (L87-L107)
+
+**🔴 Solara のパフォーマンス設計の中核**。タブ切替前後の状態差分を捕捉し、各 State にメソッド呼出してアニメ / Timer / プロフィール再読込を制御。
+
+| 条件 | 呼出メソッド | 目的 |
+|---|---|---|
+| `i == 0` (Map 入室) | `_mapKey.currentState?.reloadProfile()` | Sanctuary で編集された profile を Map に反映 |
+| `i == 1` (Horo 入室) | `_horoKey.currentState?.loadProfile()` + `wakeAnimations()` | profile 反映 + Horo アニメ起動 (30s 寿命タイマー fresh start) |
+| `i == 3` & 前 ≠ 3 (Galaxy 入室) | `_galaxyKey.currentState?.regenerateBackground()` | 背景星空再生成 + motion fresh 40s lifecycle |
+| `i != 3` & 前 == 3 (Galaxy 離脱) | `_galaxyKey.currentState?.pauseMotion()` | Galaxy motion Timer.periodic 明示停止 |
+| `i != 1` & 前 == 1 (Horo 離脱) | `_horoKey.currentState?.pauseAnimations()` | Horo アニメ Timer 明示停止 |
+
+**🔴 設計上の注意** (L97-L101 コメント): Horo の `wakeAnimations` は **`initState` ではなくここで呼ぶ**。IndexedStack は全画面の `initState` を app 起動時に走らせるため、裏タブでも `initState` が走り CPU 浪費 + 寿命タイマーが消化されてしまう (Solara で 2026-05-03 確定の設計)。
+
+**`pauseMotion()` / `pauseAnimations()` を明示呼出する理由** (L104): `TickerMode.enabled=false` で `AnimationController.repeat()` は自動停止するが、`Timer.periodic` は `TickerMode` の対象外。明示停止しないと裏タブで Timer が動き続ける。
+
+#### 5.5.3 `build()` — Scaffold + PopScope + IndexedStack (L109-L148)
+
+##### PopScope (L116-L123) — Android back button 配線
+
+| `_currentIndex` | `canPop` | 挙動 |
+|---|---|---|
+| 0 (Map) | `true` | OS 標準 root pop = `SystemNavigator.pop` = アプリ閉じる |
+| 1〜4 | `false` | `_onTabTap(0)` で Map に戻す |
+
+**🔴 PopScope の階層**: タブ内 overlay (Daily Transit dialog 等) は `map_screen.dart` の PopScope で先に消化される (Flutter は AND 評価で最下位の `canPop=false` を優先) ([L114-L115 コメント]、[`feedback_android_back_popscope`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/feedback_android_back_popscope.md))。
+
+##### Scaffold (L124-L146)
+
+| プロパティ | 値 | 備考 |
+|---|---|---|
+| `extendBody` | `true` | body を NavBar 背面まで延ばす (Map / Galaxy の没入用) |
+| `resizeToAvoidBottomInset` | `_currentIndex != 0` | **🔴 Map タブのみ false** (L126-L131): 検索バーキーボード出現時に FlutterMap が縮んで地理中心がシフトする問題を回避 (2026-05-13 再適用、撤回禁止) |
+| `body` | `IndexedStack(index, children: [TickerMode(enabled, child)]×5)` | 5 画面常駐 + 裏タブ AnimationController 停止 |
+| `bottomNavigationBar` | `SolaraNavBar(currentIndex, onTap: _onTabTap)` | 3a / 3b widget (height 80 + systemNav inset 動的) |
+
+##### IndexedStack + TickerMode (L132-L141) — Solara 性能の心臓
+
+**🔴 2026-05-03 確定の設計** (L134-L136 コメント):
+
+```dart
+IndexedStack(
+  index: _currentIndex,
+  children: [
+    for (int i = 0; i < _screens.length; i++)
+      TickerMode(enabled: i == _currentIndex, child: _screens[i]),
+  ],
+)
+```
+
+- **IndexedStack**: 5 画面の state を保持したまま「表示する画面だけ切り替え」(= Navigator.push と違いタブ間の state リセットなし)
+- **TickerMode(enabled: false)**: 裏タブの `AnimationController.repeat()` を停止 (Galaxy 星空回転 / Horoscope 円 / Tarot Altar 等が常時 tick すると SurfaceFlinger の release タイミングを乱して Map 画面の点滅を引き起こす問題への対処)
+- **Timer.periodic は TickerMode 対象外** → `_onTabTap` の `pauseMotion` / `pauseAnimations` で明示停止
+
+### 5.6 依存関係 (層を跨ぐ参照)
+
+main.dart は **層 0 (Worker) と層 1c (モデル) 以外の全層** に依存する。Solara で唯一全層に触れるファイル。
+
+| 依存先 | 用途 |
+|---|---|
+| **1a 純計算** | (直接依存なし、下位 widget が利用) |
+| **1b 静的辞書** | `TarotData` (起動時 initialize) |
+| **2a API** | `CelestialEvents` (起動時 initialize、`/astro/events` 呼出) |
+| **2b 永続化** | `AppLocale` (起動時 load) |
+| **2c グローバル singleton** | `TarotData.initialize` / `CelestialEvents.initialize` / `AppLocale.instance.load` |
+| **3b テーマ** | `SolaraTheme.dark` (MaterialApp.theme) |
+| **3a 共通 widget** | `SolaraNavBar` (bottomNavigationBar) |
+| **4a Map 画面** | `MapScreen` + `MapScreenState` (tab 0, reloadProfile) |
+| **4b Horo 画面** | `HoroscopeScreen` + `HoroscopeScreenState` (tab 1, loadProfile / wakeAnimations / pauseAnimations) |
+| **4c Observe 画面** | `ObserveScreen` (tab 2、state 操作なし) |
+| **4d Galaxy 画面** | `GalaxyScreen` + `GalaxyScreenState` (tab 3, regenerateBackground / pauseMotion) |
+| **4e Sanctuary 画面** | `SanctuaryScreen` (tab 4、state 操作なし) |
+
+### 5.7 機械分類の盲点 + 重要な実態
+
+1. **1 ファイル / 149 行 = Solara で最も小さい責務単位の層** — `_onTabTap` ですら 21 行。配線以外を持たない設計が徹底
+2. **`createState` の戻り値は `_SolaraHomeState`** — private クラスのため #1 漏れリスト (146 件) に含まれる (機械検出済、Doc 露出不要)
+3. **`SolaraApp` も #1 漏れに含まれる** — 層 5 が未着手だったため。本層追記で本ドキュメントに登場 = 漏れ解消候補
+4. **`AppLocale` も #1 漏れに含まれる** — 2b/2c で軽く触れたが本層の起動で本格使用、本層追記で重要度可視化
+5. **Tarot / Sanctuary に GlobalKey がない** — タブ切替時の state 操作が不要 = 設計が綺麗。Pro 機能追加時に Sanctuary の state を触る必要が出たら GlobalKey 追加検討
+6. **`MaterialApp.routes` / `Navigator.push` 不使用** — 全画面 IndexedStack 常駐。サブ画面 (4f Forecast / Locations / Philosophy) のみが各タブ内で Navigator.push される構造 (= 階層は浅い)
+
+### 5.8 重要な仕様メモリへの参照
+
+| メモリ | 内容 |
+|---|---|
+| [`feedback_android_back_popscope`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/feedback_android_back_popscope.md) | 🔴 Android 13+ で PopScope が動かない時の確認手順 (MainActivity の OnBackInvokedDispatcher override 撤回必須) |
+| [`feedback_text_overflow`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/feedback_text_overflow.md) | 🔴 textScaler クランプ 1.5x の根拠 + Row/Column 内 Text の overflow 規約 |
+| [`feedback_blast_warning_known_issue`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/feedback_blast_warning_known_issue.md) | BLAST Faking 警告 = Flutter Engine 既知問題 (アプリ側で消せない) |
+| [`project_solara_a101fc_fd_leak`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/project_solara_a101fc_fd_leak.md) | 🟢 解決 🟢 fd 枯渇 → Impeller ON で完全リーク 0 確認、最新 Flutter で sync_file leak 修正済 |
+| [`feedback_http_fd_leak`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/feedback_http_fd_leak.md) | Flutter fd 枯渇対策は HttpOverrides で全 HttpClient 一括制御 (本層への将来追加候補) |
+
+### 5.9 課金検討に直結する示唆
+
+層 5 は **Pro 化の挿入点が物理的に集中する層**。コード量は小さいが Pro 公開時の改修ハブになる。
+
+1. **🔴 Pro 化挿入点 (本層から導出)**
+
+   - **(a) `main()` ブートストラップに RevenueCat 初期化追加**
+     - `await Purchases.configure(...)` を `runApp` 前に挿入 ([`project_solara_security_principles`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/project_solara_security_principles.md))
+     - Apple/Google 両方の SDK 初期化 + entitlement 取得 + isPro singleton 起動
+     - 起動時間に 200〜500ms 追加見込 (network 待ち)
+   - **(b) `main()` に Auth/Sign in チェック追加**
+     - Sign in 必須化 ([`project_solara_security_principles`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/project_solara_security_principles.md))
+     - 未サインインなら Sanctuary タブ強制 = 本層の `_currentIndex = 0` を `_currentIndex = 4` に分岐
+   - **(c) `SolaraApp` に initialRoute 分岐追加**
+     - Pro/Free で起動画面を変える場合、`home` を条件分岐 (例: Pro は Galaxy Archive、Free は Map)
+     - 現状は全員 Map スタートだが、Pro 訴求のためファーストビュー変更案あり
+   - **(d) `_onTabTap` に Pro ゲートチェック挿入**
+     - 例: Galaxy Archive (Pro 限定) を Tab に追加する場合、`if (i == n && !isPro) → showPaywall()` を本メソッドに 1 行追加
+     - = Pro 化が最小コードで実装可能な設計になっている (= 既に Pro Ready)
+
+2. **🔴 起動時間 = Free / Pro 共通の体験ボトルネック**
+
+   - 現状 `CelestialEvents.initialize` は Worker 呼出を含む直列 await (= 初回起動時にネットワーク待ち)
+   - キャッシュヒット時は SharedPreferences 即返却で問題なし
+   - Pro 機能 (Aether shaders 等) をロード時 await すると更に遅くなる → Pro asset は **lazy load** 必須
+
+3. **🔴 IndexedStack + TickerMode = Pro 機能追加時の重要制約**
+
+   - 5 画面常駐前提で 8 ヶ月運用 = 「Pro 専用画面を 6 枚目として追加」は性能リスク (常時 5 画面でも GPU/CPU が攻める設計)
+   - **推奨**: Pro 機能は既存 5 タブ内の overlay / dialog として実装 (= 既存 Tab を拡張するパターン)
+   - 例外: Galaxy Archive を 6 枚目として追加するなら、IndexedStack ではなく Navigator.push で表示する設計に切替
+
+4. **言語 (`AppLocale`) は **Pro/Free 共通**で残す**
+
+   - i18n は公開直前まで保留 ([`feedback_i18n_last`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/feedback_i18n_last.md))
+   - EN 切替を Pro 限定にする案は **却下推奨** — 海外初期体験を阻害する (4e.9 #3 と整合)
+   - 言語切替は `AppLocale.instance.setOverride('en')` で完結 (本層は購読のみ)
+
+5. **PopScope の階層設計 = Pro 機能追加時に再検討**
+
+   - 現状 2 階層 (root SolaraHome + 各 Map/Horo 内 overlay)
+   - Pro 専用 dialog (Paywall 等) を追加する場合、PopScope の優先度設計を確認
+   - AND 評価で最下位 `canPop=false` 優先 = Paywall を一番下に置けば正しく back で閉じる
+
+6. **`screens/` 直接 import が 5 個 = 画面追加時の change point が本層に集中**
+
+   - L5-L9 の relative import = 画面追加時に本層も編集必須
+   - **Pro 用画面追加時の安全策**: `screens/` を group import (`screens.dart` で re-export) する案 — ただし現状 5 画面で運用問題なし、Premature optimization
+
+7. **本層に Worker / Gemini / Auth / IAP 呼出が 0 件 = Pro 公開時の最大の改修ターゲット**
+
+   - 現状の純配線設計は良い (= ロジックが下位に隠蔽されている)
+   - Pro 公開時に `main()` が ~~149 行~~ → 200〜250 行に増える見込
+   - 増えるのは: ① RevenueCat 初期化、② FlutterError.onError (Sentry/Crashlytics)、③ HttpOverrides グローバル設定 ([`feedback_http_fd_leak`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/feedback_http_fd_leak.md))、④ Firebase initializeApp (Auth 用)
+
+### 5.10 機械抽出への参照
+
+層 5 の機械抽出 raw: [`feature_inventory/05_main.md`](feature_inventory/05_main.md)
+
+---
+
+## 🎉 全 17 層完成 (2026-05-14)
+
+| 層 | 名称 | ファイル数 | 行数 | 状態 |
+|---|---|---|---|---|
+| 0 | Worker | 9 | (Worker JS) | ✅ |
+| 1a | 純計算 | 5 | — | ✅ |
+| 1b | 静的データ辞書 | 11 | — | ✅ |
+| 1c | モデルクラス | 4 | — | ✅ |
+| 2a | API ラッパ | 7 | — | ✅ |
+| 2b | 永続化 | 3 | — | ✅ |
+| 2c | グローバル singleton | 1 | — | ✅ |
+| 3a | 共通ウィジェット (純粋) | 23 | — | ✅ |
+| 3b | テーマ・装飾 | 3 | — | ✅ |
+| 3c | 演出ウィジェット (animated) | 5 | — | ✅ |
+| 4a | Map 画面 | 22 | 12,283 | ✅ |
+| 4b | Horoscope 画面 | 22 | — | ✅ |
+| 4c | Observe (Tarot) 画面 | 5 | — | ✅ |
+| 4d | Galaxy 画面 | 5 | 1,857 | ✅ |
+| 4e | Sanctuary 画面 | 8 | — | ✅ |
+| 4f | サブ画面 | 7 | 2,930 | ✅ |
+| 5 | 連携層 | 1 | 149 | ✅ |
+| **計** | **Dart 132 + Worker 9 = 141** | — | — | **100%** |
+
+**達成内容** (2026-05-14 オーナー指摘の構造的解決):
+
+- 機械抽出スクリプト `extract.py` で **対整合チェック #1〜#4** 実装済
+- `feature_inventory.md` (人手版) で全 17 層を **同一の章構造** (概要 / ファイル / 依存 / 機械分類盲点 / メモリ参照 / 課金示唆 / raw 参照) で記述
+- 累計 9 件の PATH_OVERRIDES で機械分類の盲点を明示テーブル化 ([`extract.py:161-180`](../tools/feature_extractor/extract.py))
+- Worker 死んだ endpoint (`/astro/predict` / `/astro/line-narrative`) 2 件を機械検出
+- Cosmic Pro UI 既存実装 (Sanctuary L653-724: $9.99/月 + $49.99/年 + 3 訴求機能) を発見、Pro 候補と完全一致を確認
+
+**残作業 (オプション、次セッション以降)**:
+
+- 既存メモリ「廃止済」記述照合 ([`project_solara_horoscope_spec`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/project_solara_horoscope_spec.md) / [`project_solara_geo_sector`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/project_solara_geo_sector.md) 等を新インベントリと突合)
+- 未実装対整合チェック実装: **#5 call graph** (誰が誰を呼ぶか、Pro 化影響範囲特定に必要) / **#6 ハッシュ stamp** (ファイル変更検知) / **#7 astro_glossary 用語辞書対整合**
+- 機能インベントリ運用ガイド更新 (CLAUDE.md / メモリ)
+- **#1 漏れ 146 件の選択的解消** (private state class は不要、`AppLocale` / `SolaraApp` 等の重要 public 識別子に絞って Doc 追記)
