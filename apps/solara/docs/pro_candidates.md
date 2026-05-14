@@ -172,11 +172,16 @@ Sanctuary に既に実装済の Cosmic Pro UI（$9.99/月・$49.99/年）の訴�
 6. **D3「姓名 × タロット」の優先度** — 集客フックとして先に作るか、Pro 機能の 1 つとして後回しか
 7. **無料トライアル** — launch_checklist は「Free Trial 7 日」を想定。攻めた境界 + 7 日トライアルの組合せが妥当か
 8. **段階リリースとの整合** — launch_checklist Phase 6 は「Stage 1 = JP 無料機能のみ公開」。攻めた境界だと「無料機能のみ」期間に何を見せるか
+9. **🔴 サブスク単独 vs 消費型併設**（競合分析で新規発見） — JP 占い市場の主流は月額サブスクではなく従量課金（ポイント制）。JP 先行リリースで月額サブスクが想定通り転換するとは限らない。消費型（クレジット/都度課金）は JP の課金習慣 + Gemini の従量コスト構造の両方に合う。併設するか否か
+
+> **段階 B 進捗**: 競合分析（段階 B の入口）完了 → [`competitive_analysis.md`](competitive_analysis.md)。
+> 上記 1〜9 の論点への **暫定回答**は competitive_analysis.md §5 にある。確定はオーナーとの論点ウォークスルー待ち。
 
 ---
 
 ## 6. 関連ドキュメント
 
+- [`competitive_analysis.md`](competitive_analysis.md) — **段階 B 入口の競合分析**（価格・フリーミアム境界・JP 市場ミスマッチ・§5 論点への暫定回答）
 - [`feature_inventory.md`](feature_inventory.md) — 全 17 層アーキテクチャ（各層に「課金検討に直結する示唆」あり）
 - [`how_solara_works.md`](how_solara_works.md) — 体験視点の機能ガイド
 - メモリ `project_solara_launch_checklist.md` — 公開までの全タスク（Phase 3 = Pro 機能実装）
