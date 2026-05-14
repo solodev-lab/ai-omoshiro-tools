@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 
+import '../../theme/solara_colors.dart';
 import '../../utils/astro_lines.dart';
 import 'map_constants.dart';
 
@@ -112,10 +113,23 @@ Color _lerpColor(Color a, Color b, double t) {
   );
 }
 
-/// アスペクトラインを Polyline[] に変換。
+/// B1: アスペクト線の Soft/Hard エネルギー色。
+/// Solara 設計思想 = 吉凶判定しない。square=Hard、trine/sextile=Soft の
+/// 独立2エネルギーとして色分けする (赤緑の吉凶色にしない)。
+Color _aspectEnergyColor(String aspect) => switch (aspect) {
+      'square' => SolaraColors.energyHard,
+      'trine' || 'sextile' => SolaraColors.energySoft,
+      _ => SolaraColors.energySoft,
+    };
+
+/// アストロラインを Polyline[] に変換。
 ///
 /// [activeCategory] は 'all' / 'love' / 'money' 等。
 /// [allPlanetMode] が true なら category 連動を無視して全表示。
+///
+/// アスペクト線 (line.isAspectLine) は本線より細く・薄く・破線で描画し、
+/// 色を Soft/Hard エネルギー色へ寄せる。表示 ON/OFF は呼出側 (_visibleAstroLines)
+/// が制御するため、本関数は渡された線をすべて描画する。
 List<Polyline> buildAstroPolylines({
   required List<AstroLine> lines,
   required String activeCategory,
@@ -134,23 +148,37 @@ List<Polyline> buildAstroPolylines({
     final frameStyle = astroFrameStyles[line.frame] ?? astroFrameStyles[AstroFrame.natal]!;
 
     final isHighlighted = highlightSet == null || highlightSet.contains(line.planet);
-    final opacity = (isHighlighted
-            ? style.opacity
-            : style.opacity * _dimMultiplier) *
+
+    // B1: アスペクト線 (square/trine/sextile) は本線より控えめ。
+    //   太さ細く・不透明度低め (本線が主役)、細かい破線で本線と区別、
+    //   色は惑星色を Soft/Hard エネルギー色へ寄せる (吉凶判定しない)。
+    final isAspect = line.isAspectLine;
+    final weight = isAspect ? 1.3 : style.weight;
+    final baseOpacity = isAspect ? style.opacity * 0.55 : style.opacity;
+    final opacity = (isHighlighted ? baseOpacity : baseOpacity * _dimMultiplier) *
         frameStyle.opacityMul;
-    // 惑星色をフレームaccentに向けて tint mix → 識別性UP (Natal は tint=0)
-    final tinted = _lerpColor(meta.color, frameStyle.accent, frameStyle.tintMix);
-    final color = tinted.withAlpha((opacity * 255).round());
+
+    // 本線: 惑星色をフレームaccentへ tint mix (Natal は tint=0)。
+    // アスペクト線: さらに Soft/Hard エネルギー色へ寄せる。
+    var base = _lerpColor(meta.color, frameStyle.accent, frameStyle.tintMix);
+    if (isAspect) {
+      base = _lerpColor(base, _aspectEnergyColor(line.aspect), 0.5);
+    }
+    final color = base.withAlpha((opacity * 255).round());
+
+    final pattern = isAspect
+        ? StrokePattern.dashed(segments: const [3.0, 4.0])
+        : (style.dashPattern != null
+            ? StrokePattern.dashed(segments: style.dashPattern!)
+            : const StrokePattern.solid());
 
     for (final segment in line.segments) {
       if (segment.length < 2) continue;
       polylines.add(Polyline(
         points: segment,
         color: color,
-        strokeWidth: style.weight,
-        pattern: style.dashPattern != null
-            ? StrokePattern.dashed(segments: style.dashPattern!)
-            : const StrokePattern.solid(),
+        strokeWidth: weight,
+        pattern: pattern,
       ));
     }
   }

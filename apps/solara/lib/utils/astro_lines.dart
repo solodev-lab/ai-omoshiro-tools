@@ -8,7 +8,8 @@ import 'astro_math.dart';
 /// ============================================================
 /// Solara Astro Lines — Phase M2 論点3 (アスペクト線 / アストロカートグラフィ)
 ///
-/// 各惑星 × 4アングル (MC/IC/ASC/DSC) = 40本のラインを地球曲面上に計算する。
+/// 各惑星 × 4アングル (MC/IC/ASC/DSC) × 3アスペクトパス = 120本のラインを
+/// 地球曲面上に計算する (B1: コンジャンクション40本 + スクエア/トライン/セクスタイル80本)。
 ///
 /// アストロカートグラフィ (Jim Lewis, 1970年代) の標準実装:
 ///   - MC line: その惑星が天頂 (子午線通過) する地点。経度固定の縦直線。
@@ -22,8 +23,9 @@ import 'astro_math.dart';
 ///     ↑ ここから GMST と惑星赤道座標が逆算可能
 ///
 /// 出力:
-///   `List<AstroLine>`: 40本 (惑星10 × 4アングル)
+///   `List<AstroLine>`: 120本 (惑星10 × 4アングル × 3アスペクトパス)
 ///     各 line.points は地球曲面上の経度緯度サンプル列
+///     line.aspect で conjunction / square / trine / sextile を区別
 ///
 /// 設計: project_solara_astrocartography_m2.md 論点3 (M2 に含める 確定)
 /// ============================================================
@@ -63,6 +65,11 @@ double _clamp(double v, double lo, double hi) =>
 class AstroLine {
   final String planet; // 'sun' | 'moon' | ...
   final String angle;  // 'mc' | 'ic' | 'asc' | 'dsc'
+  /// アスペクト種別 (B1)。
+  /// 'conjunction' = 惑星がアングルに重なる本線 (既存40本、天頂/天底マーカー付き)。
+  /// 'square'(90°) / 'trine'(120°) / 'sextile'(60°) = アスペクト線 (追加80本)。
+  /// 後方互換: 既存呼出は省略時 'conjunction'。
+  final String aspect;
   final AstroFrame frame; // natal | transit | progressed | solarArc
   final List<List<LatLng>> segments; // 子午線跨ぎで区切ったセグメント
 
@@ -83,14 +90,22 @@ class AstroLine {
   AstroLine({
     required this.planet,
     required this.angle,
+    this.aspect = 'conjunction',
     required this.segments,
     this.frame = AstroFrame.natal,
     this.zenith,
     this.nadir,
   });
 
-  /// 線のキー (UI から参照しやすいように) "natal_venus_asc" 等
-  String get key => '${astroFrameKey(frame)}_${planet}_$angle';
+  /// アスペクト線か (コンジャンクション本線以外)。表示トグルのフィルタ用。
+  bool get isAspectLine => aspect != 'conjunction';
+
+  /// 線のキー (UI から参照しやすいように)。
+  /// コンジャンクション本線は従来形式を維持 (後方互換) "natal_venus_asc"、
+  /// アスペクト線は aspect を付与 "natal_venus_mc_square"。
+  String get key => aspect == 'conjunction'
+      ? '${astroFrameKey(frame)}_${planet}_$angle'
+      : '${astroFrameKey(frame)}_${planet}_${angle}_$aspect';
 }
 
 /// chart.mc + chart fetch時の lng から GMST_hours を逆算。
@@ -220,7 +235,26 @@ List<List<LatLng>> _horizonLine({
   return segments;
 }
 
-/// 全 40本のアストロラインを計算 (natal フレーム)。
+/// B1 アスペクトラインのパス定義。
+/// 惑星黄経を [shift]° ずらした点が「アングルに重なる」位置を計算する =
+/// 実惑星はそのアングルから [shift]° 離れている = アスペクト線。
+/// 4アングル (mc/ic/asc/dsc) ごとのアスペクト種別を保持する。
+///   shift 0   → 全アングル conjunction (既存40本、天頂/天底マーカー付き)
+///   shift +90 → 全アングル square (ic/dsc は mc/asc の反対側スクエア)
+///   shift +120→ mc/asc=trine, ic/dsc=sextile (ic=mc+180° のため 120°→60° 側になる)
+class _AspectPass {
+  final double shift;
+  final String mc, ic, asc, dsc;
+  const _AspectPass(this.shift, this.mc, this.ic, this.asc, this.dsc);
+}
+
+const _aspectPasses = <_AspectPass>[
+  _AspectPass(0.0, 'conjunction', 'conjunction', 'conjunction', 'conjunction'),
+  _AspectPass(90.0, 'square', 'square', 'square', 'square'),
+  _AspectPass(120.0, 'trine', 'sextile', 'trine', 'sextile'),
+];
+
+/// 全 120本のアストロラインを計算 (natal フレーム)。
 ///
 /// [natal] は 10惑星の黄経 (度)。
 /// [baselineMc] / [baselineLng] は chart fetch時の MC と地点経度
@@ -249,7 +283,7 @@ List<AstroLine> buildAstroLines({
   );
 }
 
-/// 任意フレーム × 任意 GMST のアスペクト線 40本を計算 (Tier A #5 / CCG 汎用)。
+/// 任意フレーム × 任意 GMST のアストロライン 120本を計算 (Tier A #5 / CCG 汎用)。
 ///
 /// [planets]   フレームに対応する10惑星の黄経マップ
 ///   - natal:      chart.natal (出生時の固定値)
@@ -273,62 +307,73 @@ List<AstroLine> buildAstroLinesAt({
   for (final planet in _planetKeys) {
     final lon = planets[planet];
     if (lon == null) continue;
-    final coord = _eclipticToEquatorial(lon);
 
-    // MC line + zenith point
-    // zenith: 緯度=惑星赤緯δ、経度=MC line の固定経度
-    // δ が描画緯度範囲外でも理論値として保持(マーカー表示時にクランプ判定)。
-    final mcLng = _normLng(coord.ra - gmstHours * 15);
-    lines.add(AstroLine(
-      planet: planet,
-      angle: 'mc',
-      frame: frame,
-      segments: _meridianLine(coord.ra, gmstHours,
-          antiMeridian: false, latMin: latMin, latMax: latMax),
-      zenith: LatLng(coord.dec, mcLng),
-    ));
-    // IC line + nadir point
-    // nadir: 緯度=-δ (天頂の南北対称)、経度=IC line の固定経度 (= mcLng+180°)
-    // 天頂と地球中心を挟んで完全に対称、Lewis 理論で「裏側に在る天体」を示す。
-    final icLng = _normLng(mcLng + 180);
-    lines.add(AstroLine(
-      planet: planet,
-      angle: 'ic',
-      frame: frame,
-      segments: _meridianLine(coord.ra, gmstHours,
-          antiMeridian: true, latMin: latMin, latMax: latMax),
-      nadir: LatLng(-coord.dec, icLng),
-    ));
-    // ASC line
-    lines.add(AstroLine(
-      planet: planet,
-      angle: 'asc',
-      frame: frame,
-      segments: _horizonLine(
-        raDeg: coord.ra,
-        decDeg: coord.dec,
-        gmstHours: gmstHours,
-        ascending: true,
-        latMin: latMin,
-        latMax: latMax,
-        latStep: latStep,
-      ),
-    ));
-    // DSC line
-    lines.add(AstroLine(
-      planet: planet,
-      angle: 'dsc',
-      frame: frame,
-      segments: _horizonLine(
-        raDeg: coord.ra,
-        decDeg: coord.dec,
-        gmstHours: gmstHours,
-        ascending: false,
-        latMin: latMin,
-        latMax: latMax,
-        latStep: latStep,
-      ),
-    ));
+    // B1: 各惑星3パス (conjunction 0° / square +90° / trine+sextile +120°)。
+    // 黄経をシフトした点を「アングルに重なる」よう計算 → 実惑星はそのアングルから
+    // シフト分だけ離れている = アスペクト線。1惑星 4アングル×3パス = 12本、×10惑星 = 120本。
+    for (final pass in _aspectPasses) {
+      final coord = _eclipticToEquatorial((lon + pass.shift) % 360);
+      final isConj = pass.shift == 0;
+
+      // MC line + zenith point (zenith はコンジャンクション本線のみ)
+      // zenith: 緯度=惑星赤緯δ、経度=MC line の固定経度
+      // δ が描画緯度範囲外でも理論値として保持(マーカー表示時にクランプ判定)。
+      final mcLng = _normLng(coord.ra - gmstHours * 15);
+      lines.add(AstroLine(
+        planet: planet,
+        angle: 'mc',
+        aspect: pass.mc,
+        frame: frame,
+        segments: _meridianLine(coord.ra, gmstHours,
+            antiMeridian: false, latMin: latMin, latMax: latMax),
+        zenith: isConj ? LatLng(coord.dec, mcLng) : null,
+      ));
+      // IC line + nadir point (nadir はコンジャンクション本線のみ)
+      // nadir: 緯度=-δ (天頂の南北対称)、経度=IC line の固定経度 (= mcLng+180°)
+      // 天頂と地球中心を挟んで完全に対称、Lewis 理論で「裏側に在る天体」を示す。
+      final icLng = _normLng(mcLng + 180);
+      lines.add(AstroLine(
+        planet: planet,
+        angle: 'ic',
+        aspect: pass.ic,
+        frame: frame,
+        segments: _meridianLine(coord.ra, gmstHours,
+            antiMeridian: true, latMin: latMin, latMax: latMax),
+        nadir: isConj ? LatLng(-coord.dec, icLng) : null,
+      ));
+      // ASC line
+      lines.add(AstroLine(
+        planet: planet,
+        angle: 'asc',
+        aspect: pass.asc,
+        frame: frame,
+        segments: _horizonLine(
+          raDeg: coord.ra,
+          decDeg: coord.dec,
+          gmstHours: gmstHours,
+          ascending: true,
+          latMin: latMin,
+          latMax: latMax,
+          latStep: latStep,
+        ),
+      ));
+      // DSC line
+      lines.add(AstroLine(
+        planet: planet,
+        angle: 'dsc',
+        aspect: pass.dsc,
+        frame: frame,
+        segments: _horizonLine(
+          raDeg: coord.ra,
+          decDeg: coord.dec,
+          gmstHours: gmstHours,
+          ascending: false,
+          latMin: latMin,
+          latMax: latMax,
+          latStep: latStep,
+        ),
+      ));
+    }
   }
   return lines;
 }

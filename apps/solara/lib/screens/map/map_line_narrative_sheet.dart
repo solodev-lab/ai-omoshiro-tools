@@ -59,9 +59,21 @@ class _MapLineNarrativeSheetState extends State<MapLineNarrativeSheet> {
   String get _glyph => planetGlyphs[_planet] ?? '';
   String get _planetJp => planetNamesJP[_planet] ?? _planet;
 
-  /// 静的辞書のキー (frame 別に切り替え)
-  String get _glossaryKey =>
-      widget.frame == 'transit' ? 'transit_acg' : 'aspect_lines';
+  /// 静的辞書のキー。
+  /// アスペクト線 (B1: square/trine/sextile) は aspect 種別ごと、
+  /// コンジャンクション本線は従来どおり frame 別 (natal/transit) に切り替え。
+  String get _glossaryKey {
+    switch (widget.nearby.line.aspect) {
+      case 'square':
+        return 'aspect_square';
+      case 'trine':
+        return 'aspect_trine';
+      case 'sextile':
+        return 'aspect_sextile';
+      default:
+        return widget.frame == 'transit' ? 'transit_acg' : 'aspect_lines';
+    }
+  }
 
   @override
   Widget build(BuildContext context) {

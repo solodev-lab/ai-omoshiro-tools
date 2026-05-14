@@ -138,6 +138,7 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     'aspectProgressed': false, // CCG progressed
     'aspectSolarArc': false, // CCG solar arc
     'aspectAll': false,      // 全惑星モード (FORTUNE フィルタ無視)
+    'aspectLines': false,    // B1: アスペクト線 (square/trine/sextile) 表示。OFF=本線のみ
     // ── 第2層: フレーム別の天頂/天底/天頂帯/天底帯 (2026-05-11 ACG 2層メニュー化) ──
     // 各 frame の線が ON のときのみ第2層メニューに表示される (アコーディオン)。
     // キー組立規約: '<subKey>_<frameSuffix>'
@@ -547,7 +548,8 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
       _chartResult = chart;
       final result = scoreAll(chart);
       final lines = buildPlanetLineData(center: _center, chart: chart);
-      // Phase M2 論点3: アスペクト線 40本を build (Worker呼出ゼロ)
+      // Phase M2 論点3 + B1: アストロライン 120本を build (Worker呼出ゼロ)
+      // = コンジャンクション本線40本 + アスペクト線80本 (square/trine/sextile)
       // 比較ベースは relocate=home優先・未設定なら出生地 (chart fetch と同じ)
       final baselineLng = useRelocate ? p.homeLng : p.birthLng;
       // Tier A #5 (CCG): 4フレーム同時計算
@@ -2557,8 +2559,13 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
       visibleFrames.add(astro_lines.AstroFrame.solarArc);
     }
     if (visibleFrames.isEmpty) return const [];
+    // B1: アスペクト線 (square/trine/sextile) は専用トグル ON のときのみ。
+    // デフォルト OFF → 既存どおりコンジャンクション本線のみ表示・タップ対象。
+    final showAspects = _astroLayers['aspectLines'] == true;
     return _astroLinesCache
-        .where((l) => visibleFrames.contains(l.frame))
+        .where((l) =>
+            visibleFrames.contains(l.frame) &&
+            (showAspects || !l.isAspectLine))
         .toList();
   }
 

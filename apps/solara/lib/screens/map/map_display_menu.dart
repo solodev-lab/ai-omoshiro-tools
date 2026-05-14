@@ -131,6 +131,9 @@ class _MapDisplayMenuState extends State<MapDisplayMenu> {
               () => widget.onAstroToggle('aspectProgressed')),
           _toggleBtn('S.Arc線', widget.astroLayers['aspectSolarArc'] ?? false,
               () => widget.onAstroToggle('aspectSolarArc')),
+          // B1: アスペクト線 (square/trine/sextile)。全フレーム共通トグル、デフォルト OFF。
+          _toggleBtn('アスペクト線', widget.astroLayers['aspectLines'] ?? false,
+              () => widget.onAstroToggle('aspectLines')),
           // 2026-05-11 「天頂帯」を ACG モード下部の 2 層メニュー (各フレーム配下) に移動。
           // フレーム別に独立 (zenithBand_natal / nadirBand_transit 等) なので
           // ここの共通トグルは廃止。
