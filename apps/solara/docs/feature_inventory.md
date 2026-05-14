@@ -25,7 +25,7 @@
 > - [x] 層 4a: Map 画面 — 2026-05-14 完成
 > - [x] 層 4b: Horoscope 画面 — 2026-05-14 完成
 > - [x] 層 4c: Observe (Tarot) 画面 — 2026-05-14 完成
-> - [ ] 層 4d: Galaxy 画面
+> - [x] 層 4d: Galaxy 画面 — 2026-05-14 完成
 > - [ ] 層 4e: Sanctuary 画面
 > - [ ] 層 4f: サブ画面 (Forecast / Locations / Philosophy / Font Preview)
 > - [ ] 層 5: 連携層 (main / PopScope / IndexedStack)
@@ -1290,4 +1290,154 @@ Observe の機能領域:
 
 ---
 
-(層 4d 以降は次セッション以降で追記。層 4 は 1 セッション 1 画面の予定)
+## 層 4d: Galaxy 画面
+
+### 4d.1 概要
+
+`lib/screens/galaxy/` 配下 + `lib/screens/galaxy_screen.dart` の **5 ファイル / 計 1,857 行**。Solara の Galaxy タブ = **「占いをしない、節目で自己と対話する」体験の心臓部**。
+
+**機械分類の精度** (✅ オーバーライド不要): 5 ファイル全て Galaxy 専用、cross-cutting なし。
+
+Galaxy の機能領域:
+
+| 機能領域 | 概要 |
+|---|---|
+| 月相サイクル可視化 | 新月→満月→刻星化 (catasterism) の 1 サイクル全日数を 3 層スパイラルで表示 |
+| Stella メッセージ | 月相連動の詩的メッセージ表示 (新月時刻 + 満月時刻 + 3 日以内告知優先) |
+| 意図と振り返り記録 | 新月で `LunarIntention` 入力 → 満月で `MidpointCheck` → 刻星化で `CatasterismResult` |
+| 星座生成 (= 刻星化) | サイクル完了時に MST edges + 形容詞 × 名詞で星座生成 (`constellation_namer`) |
+| Star Atlas (図鑑) | 過去刻星化した星座コレクション (61 星座まで) |
+| 天体イベントバー | `/astro/events` 取得結果を画面下部に常時横スクロール表示 |
+| Replay overlay | 過去サイクルの星座を再生表示 |
+
+**Pro 公開時の立場**: 本層は **Solara の最大差別化体験 = Pro 化対象として不適切**。Pro 化すると独自性が消える。代わりに「過去サイクルアルバム」「形成演出の任意再生」「カスタム背景画像」が Pro 拡張案 ([`project_galaxy_spec`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/project_galaxy_spec.md))。
+
+### 4d.2 ファイル別 役割 + 呼出元 (5 本)
+
+| # | ファイル | 行 | 主要 export | 役割 |
+|---|---|---|---|---|
+| 1 | [`galaxy_screen.dart`](../lib/screens/galaxy_screen.dart) | 1,167 | `GalaxyScreen` (Stateful)、`GalaxyScreenState` (public state、`regenerateBackground` / `pauseMotion` を外部公開) | **🔴 Galaxy 統合ハブ**。41 関数 (public 9 + private 32)、18 import (層 1a/1b/1c/2a/2b/3a/3c/widgets + galaxy 内 4)。本層で最大規模、画面のほぼ全部の状態とロジックが集中 |
+| 2 | [`galaxy_star_atlas.dart`](../lib/screens/galaxy/galaxy_star_atlas.dart) | 317 | `GalaxyStarAtlasTab`、`_AtlasHeader`、`_ConstellationCard`、`_EmptyState` | **STAR ATLAS タブ** (HTML `.atlas-content` 移植)。過去刻星化した星座のグリッドコレクション (最大 61 星座 = `constellation_namer` の名詞テーブル数)。`MiniConstellationPainter` (3a) で各カード描画 |
+| 3 | [`galaxy_replay_overlay.dart`](../lib/screens/galaxy/galaxy_replay_overlay.dart) | 148 | `GalaxyReplayOverlay` (Stateless) | 過去サイクルの星座を再生表示する overlay。`ConstellationPainter` (3a) で full-size 描画、`cameraAngle` 制御で anamorphic 3D 効果 |
+| 4 | [`galaxy_constellation_builder.dart`](../lib/screens/galaxy/galaxy_constellation_builder.dart) | 124 | (関数のみ、class なし) | サイクル完了時の星座構築ヘルパー。`daily_reading` 履歴 + `moon_phase` + `tarot_data` + `constellation_namer` を組み合わせて 1 サイクル分の `GalaxyCycle` (1c) を生成 |
+| 5 | [`galaxy_sample_data.dart`](../lib/screens/galaxy/galaxy_sample_data.dart) | 101 | `injectGalaxySampleData`、`_buildSampleFromTemplate` | **デモ用サンプルデータ注入**。Cycle に 25 個の星 + Star Atlas に 61 全星座を仮データで埋める。開発・デモ用 (本番ユーザーには表示されない) |
+
+### 4d.3 `galaxy_screen.dart` の主要関数 (41 関数)
+
+最大規模の単一ファイル (1,167 行) の中身を把握:
+
+**ライフサイクル + 状態**
+- `regenerateBackground` (public) — タブ切替時にネビュラ位置/色/星を再生成
+- `pauseMotion` (public) — タブ離脱時 Timer 即停止 = raster 0%
+- `_wakeMotion` / `_onMotionTick` — モーション再開と tick 処理
+- `_loadData` — `SolaraStorage` から `LunarIntention` / `CatasterismResult` / 履歴を読込
+- `_loadArtImage` — 星座イラスト画像の preload
+- `_initNebulaPositions` / `jitter` — 背景のランダム配置
+
+**月相 overlay 制御 (4d → 3c の連携)**
+- `_checkMoonOverlay` — 月相日判定 → 新月 / 満月 / 刻星化 overlay 表示
+- `_buildMoonOverlay` — NewMoonOverlay / FullMoonOverlay / CatasterismOverlay (3c) 分岐
+- `_onCatasterismResult` — 刻星化結果保存 → 次画面 (`CatasterismFormationOverlay` 3c) へ
+- `_onFormationComplete` — 形成演出完了 → 次サイクル開始
+
+**Cycle タブ (= メイン表示)**
+- `_buildCycleTab` — 3 層スパイラル (`CycleSpiralPainter` 3a) + Stella メッセージ + バッジ
+- `_buildDayBadge` / `_buildMoonBadge` — サイクル日カウント + 月相バッジ
+- `_buildStellaMessage` — 月相連動の詩的メッセージ (新月/満月時刻 + 3 日以内告知優先)
+- `_moonPhaseDescription` — 月相の文字列表現
+
+**ドット タップ / ドラッグ (= スパイラル操作)**
+- `_onDragStart` / `_onDragUpdate` / `_onDragEnd` / `_onTapUp` — ジェスチャー処理
+- `_showDotPopup` / `_hideDotPopup` / `_buildDotPopup` — タップ詳細 popup
+
+**Replay**
+- `_openReplay` / `_closeReplay` — Replay overlay の表示制御
+
+**デバッグトリガ** (オーナー検証用)
+- `_buildDebugTriggerRow` / `_buildDebugBtn` — 4 ボタン (新月 / 満月 / 刻星化 / サイクル完了)
+- `_debugTriggerNewMoon` / `_debugTriggerFullMoon` / `_debugTriggerCatasterism` / `_debugTriggerCycleCompletion`
+
+**ヘルプ**
+- `_showGalaxyUsageGuide` — `showInfoPopup` で使い方説明
+
+### 4d.4 依存関係 (層を跨ぐ参照)
+
+Galaxy は 1b/1c/2a/2b/3a/3c に強く依存:
+
+| 依存先層 | ファイル | 用途 |
+|---|---|---|
+| 1a 純計算 | `moon_phase.dart` | 月相計算 (Jean Meeus アルゴリズム、新月時刻 + 満月時刻 + サイクル日数) |
+| 1b 静的辞書 | `constellation_namer.dart` (Galaxy の心臓的 dictionary)、`cycle_story_texts.dart`、`horo_constants.dart` | 星座名生成 + 月相ストーリー + 共有定数 |
+| 1c モデル | `galaxy_cycle.dart`、`lunar_intention.dart`、`daily_reading.dart` | 永続化対象 3 種 |
+| 2a API | `celestial_events.dart` | `/astro/events` で天体イベント取得 |
+| 2b 永続化 | `solara_storage.dart` | `LunarIntention` / `MidpointCheck` / `CatasterismResult` / 履歴の保存 |
+| 2c global | `tarot_data.dart` | 78 枚デッキ起動時 initialize singleton (Galaxy はカード履歴と組合せる) |
+| 3a 共通 widget | `cycle_spiral_painter.dart`、`constellation_painter.dart` (full + mini)、`celestial_event_bar.dart`、`info_popup.dart`、`horo_antique_icons.dart` (4b→3a override 経由) | スパイラル描画 + 星座描画 + 天体イベントバー + popup + アイコン |
+| 3c 演出 | `catasterism_formation_overlay.dart`、`moon_overlay.dart` (re-export = NewMoon / FullMoon / Catasterism 3 種) | 月 overlay 4 種の駆動主 |
+
+### 4d.5 Worker / 外部呼出
+
+| 経由 | endpoint | 用途 |
+|---|---|---|
+| `celestial_events.dart` (2a) | `/astro/events` (GET) | 月別天体イベント (ingress / retrograde / eclipse) を画面下部バーに表示 |
+
+**Gemini 呼出は 0** — Galaxy は AI 解説を使わない、純粋な可視化 + 自己対話の場 ([`project_solara_design_philosophy`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/project_solara_design_philosophy.md))。
+
+### 4d.6 機械分類の盲点 + 重要な実態
+
+1. **5 ファイル全て Galaxy-only = 機械分類が正しい状態**
+2. **`galaxy_screen.dart` 1,167 行は HARD 違反** (`code_audit/audit.py` の 500 行閾値超過) — pre-existing
+   - 候補: Replay 制御 (`_openReplay` / `_closeReplay` / `_buildReplayOverlay`) を `galaxy_replay_controller.dart` へ
+   - 候補: デバッグトリガ 4 関数 (`_debugTrigger*`) を `galaxy_debug.dart` へ (現状本番でも `_buildDebugTriggerRow` ボタン残置)
+   - 候補: タップ/ドラッグ 4 関数を `galaxy_gesture.dart` へ
+   - **緊急度低 (動作には影響なし)**、Pro 公開前のリファクタ候補
+3. **デバッグトリガ 4 ボタンは本番にも残置** — オーナーが新月/満月/刻星化体験をすぐ確認できるよう保持。`kDebugMode` ガード未適用 (将来検討)
+
+### 4d.7 重要な仕様メモリへの参照
+
+| メモリ | 内容 |
+|---|---|
+| [`project_galaxy_spec`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/project_galaxy_spec.md) | **🔴 Galaxy 未実装タスク**: 星座イラスト未生成 (61 種のうち未生成あり) + Flutter 移植進捗 + 天体イベント 2027+ 対応 |
+| [`project_solara_design_philosophy`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/project_solara_design_philosophy.md) | 🔴 Solara 全機能上位ルール: Soft/Hard 独立 2 エネルギー、吉凶判定禁止、total/ratio/赤緑色分け禁止 — **Galaxy は本ルールに忠実な実装** |
+| [`project_solara_message_tone`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/project_solara_message_tone.md) | Solara 世界観テキスト文体ルール (Stella=ですます / 真理=体言止) — Galaxy Stella メッセージに適用 |
+
+### 4d.8 課金検討に直結する示唆
+
+層 4d は **Solara の独自性の心臓 = Pro 化対象として不適切**。代わりに「体験の深さ」を強化する Pro 拡張が向く。
+
+1. **🔴 Galaxy 本体は Pro 化しない**
+   - 月相サイクル + 新月意図 + 満月チェック + 刻星化 = Solara の最大差別化体験
+   - 「占いをしない、節目で自己と対話する」哲学を体現
+   - Pro 化すると Solara の独自性が見えなくなる = **無料機能の中心として保護**
+
+2. **Pro 拡張案 (Galaxy 周辺)**
+   - **(a) 過去サイクルアルバム**: `GalaxyCycle` 履歴の長期保存 + 検索 + 月別ハイライト
+   - **(b) 形成演出 (`CatasterismFormationOverlay`) の任意再生**: 「お気に入りの刻星化体験を見返す」
+   - **(c) カスタム背景画像**: Galaxy 背景ネビュラを Pro 限定 5 種から選択
+   - **(d) 星座テキストエクスポート**: `CatasterismResult` を Markdown / 画像で書き出し (シェア)
+   - **(e) 星座イラスト高精細版差し替え**: ([`project_galaxy_spec`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/project_galaxy_spec.md)) Pro 限定で 61 種完全版アクセス
+
+3. **`constellation_namer.dart` (1b) は Galaxy の心臓**
+   - 形容詞 × 名詞テーブル + MST 構築 + レア度算出
+   - 既に「2026-04-25 v2 完成」状態、Pro/Free 境界に置きづらい
+   - Pro 拡張は「希少星座出現確率」を Pro で表示するくらい (= 訴求弱め)
+
+4. **`LunarIntention` / `MidpointCheck` / `CatasterismResult` のクラウドバックアップ Pro**
+   - 過去サイクルの意図と振り返りはユーザー最大の体験ログ
+   - 機種変更時消失で離脱リスク = **Pro 課金で守る最優先データ**
+   - 既出 ([`solara_storage.dart`](../lib/utils/solara_storage.dart) 層 2b で議論)
+
+5. **`/astro/events` 呼出は無料機能の差別化要素**
+   - 月別天体イベントバーは商用占いアプリでも珍しい
+   - Pro 化対象としては弱い、無料層の魅力強化に投資
+
+6. **Galaxy 1,167 行のリファクタは Pro 公開前のクリーンアップ**
+   - 緊急度低だが、Pro 機能追加時 (例: アルバム panel 追加) で衝突回避のため事前分割推奨
+
+### 4d.9 機械抽出への参照
+
+層 4d の機械抽出 raw: [`feature_inventory/04d_galaxy.md`](feature_inventory/04d_galaxy.md)
+
+---
+
+(層 4e 以降は次セッション以降で追記。層 4 は 1 セッション 1 画面の予定)
