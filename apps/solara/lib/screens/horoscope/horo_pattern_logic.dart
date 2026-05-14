@@ -40,7 +40,10 @@ Map<String, List<Map<String, dynamic>>> detectPatterns(
     return keys.join(',');
   }
 
-  final po = patternOrbSettings;
+  // Sanctuary「ホロスコープのオーブ設定」を反映 (未設定なら patternOrbSettings デフォルト)。
+  final po = {
+    for (final k in patternOrbSettings.keys) k: horoPatternOrb(k),
+  };
   final seen = <String>{};
 
   for (int i = 0; i < pool.length; i++) {
@@ -116,6 +119,12 @@ List<Map<String, dynamic>> predictPatternCompletions(Map<String, double> natal, 
   final now = DateTime.now();
   final sourceLabel = chartMode == 'np' ? 'P' : 'T';
 
+  // Sanctuary「ホロスコープのオーブ設定」を反映。
+  // 予測の許容角はパターン成立の主アスペクト orb に対応させる:
+  //   Grand Trine → grandtrine / T-Square → tsquare_opp / Yod → yod_sextile
+  final gtOrb = horoPatternOrb('grandtrine');
+  final tsOrb = horoPatternOrb('tsquare_opp');
+  final yodOrb = horoPatternOrb('yod_sextile');
 
   // Transit: approximate daily motion
   // Progressed (1day=1year): divide transit speed by 365.25
@@ -133,12 +142,12 @@ List<Map<String, dynamic>> predictPatternCompletions(Map<String, double> natal, 
       final dij = angDist(natal[keys[i]]!, natal[keys[j]]!);
 
       // Grand Trine completion
-      if ((dij - 120).abs() <= 3) {
+      if ((dij - 120).abs() <= gtOrb) {
         final target = normalize360(natal[keys[i]]! + 120);
         for (int body = 0; body < 10; body++) {
           for (int day = 1; day <= daysAhead; day++) {
             final tLon = mockLon(body, day);
-            if (angDist(tLon, target) <= 3) {
+            if (angDist(tLon, target) <= gtOrb) {
               predictions.add({
                 'type': 'grandtrine', 'natalPair': [keys[i], keys[j]],
                 'transitBody': keys.length > body ? keys[body] : 'sun', 'source': sourceLabel,
@@ -152,12 +161,12 @@ List<Map<String, dynamic>> predictPatternCompletions(Map<String, double> natal, 
       }
 
       // T-Square completion
-      if ((dij - 180).abs() <= 3) {
+      if ((dij - 180).abs() <= tsOrb) {
         final target = normalize360((natal[keys[i]]! + natal[keys[j]]!) / 2);
         for (int body = 0; body < 10; body++) {
           for (int day = 1; day <= daysAhead; day++) {
             final tLon = mockLon(body, day);
-            if (angDist(tLon, target) <= 3 || angDist(tLon, normalize360(target + 180)) <= 3) {
+            if (angDist(tLon, target) <= tsOrb || angDist(tLon, normalize360(target + 180)) <= tsOrb) {
               predictions.add({
                 'type': 'tsquare', 'natalPair': [keys[i], keys[j]],
                 'transitBody': keys.length > body ? keys[body] : 'sun', 'source': sourceLabel,
@@ -171,12 +180,12 @@ List<Map<String, dynamic>> predictPatternCompletions(Map<String, double> natal, 
       }
 
       // Yod completion
-      if ((dij - 60).abs() <= 2.5) {
+      if ((dij - 60).abs() <= yodOrb) {
         final target = normalize360(natal[keys[i]]! + 150);
         for (int body = 0; body < 10; body++) {
           for (int day = 1; day <= daysAhead; day++) {
             final tLon = mockLon(body, day);
-            if (angDist(tLon, target) <= 2.5) {
+            if (angDist(tLon, target) <= yodOrb) {
               predictions.add({
                 'type': 'yod', 'natalPair': [keys[i], keys[j]],
                 'transitBody': keys.length > body ? keys[body] : 'sun', 'source': sourceLabel,

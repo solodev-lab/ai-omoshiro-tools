@@ -96,7 +96,8 @@ extension _HoroChartData on HoroscopeScreenState {
     final diff = angDist(lon1, lon2);
     for (final asp in aspectTypes) {
       final aspAngle = asp['angle'] as double;
-      final aspOrb = asp['orb'] as double;
+      // Sanctuary「ホロスコープのオーブ設定」を反映 (未設定なら aspectTypes デフォルト)。
+      final aspOrb = horoAspectOrb(asp['key'] as String, asp['orb'] as double);
       if ((diff - aspAngle).abs() <= aspOrb) {
         _aspects.add({
           'p1': p1, 'p2': p2, 'type': asp['key'], 'diff': diff,

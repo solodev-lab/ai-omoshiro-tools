@@ -131,7 +131,7 @@ final _dir16Ang = <String, double>{
 
 /// Map画面用アスペクト定義（HTML: index.html ASPECTS — Horo画面とはorb値が異なる）
 const _mapAspects = [
-  {'name':'conjunction','angle':0.0,'orb':8.0,'quality':'neutral','weight':0.6},
+  {'name':'conjunction','angle':0.0,'orb':6.0,'quality':'neutral','weight':0.6},
   {'name':'sextile','angle':60.0,'orb':4.0,'quality':'soft','weight':0.8},
   {'name':'square','angle':90.0,'orb':5.0,'quality':'hard','weight':1.0},
   {'name':'trine','angle':120.0,'orb':5.0,'quality':'soft','weight':1.0},

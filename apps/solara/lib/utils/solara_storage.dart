@@ -335,17 +335,23 @@ class SolaraStorage {
     await prefs.setInt(_dailyResetMinuteKey, minute.clamp(0, 59));
   }
 
-  /// Sanctuary で設定されたアスペクトオーブ値を読み込む。
+  /// Sanctuary「ホロスコープのオーブ設定」で設定されたアスペクト/パターンの
+  /// オーブ値を読み込む。
   /// SharedPreferences key: 'solara_orb_settings' (JSON)
-  /// 戻り値: {conjunction, opposition, trine, square, sextile, quincunx,
-  ///         semisextile, semisquare} の各 orb（°）。
+  /// 戻り値: アスペクト 8 種 {conjunction, opposition, trine, square, sextile,
+  ///         quincunx, semisextile, semisquare} + パターン 5 種 {grandtrine,
+  ///         tsquare_opp, tsquare_sq, yod_sextile, yod_quincunx} の各 orb（°）。
   /// 未保存時はデフォルト値（Sanctuary の初期値と同じ）を返す。
   static Future<Map<String, double>> loadOrbSettings() async {
     final prefs = await SharedPreferences.getInstance();
     final raw = prefs.getString('solara_orb_settings');
     final defaults = <String, double>{
+      // アスペクト 8 種
       'conjunction': 2, 'opposition': 2, 'trine': 2, 'square': 2,
       'sextile': 2, 'quincunx': 2, 'semisextile': 1, 'semisquare': 1,
+      // パターン 5 種 (horo_constants.dart patternOrbSettings と一致)
+      'grandtrine': 3, 'tsquare_opp': 3, 'tsquare_sq': 2.5,
+      'yod_sextile': 2.5, 'yod_quincunx': 1.5,
     };
     if (raw == null) return defaults;
     try {

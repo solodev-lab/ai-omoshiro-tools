@@ -45,10 +45,14 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
   int _dailyResetHour = 0;
   int _dailyResetMinute = 0;
 
-  // Orb values
+  // Orb values (アスペクト 8 種 + パターン 5 種)。
+  // パターン 5 種を含めないと _loadSettings の containsKey ガードで
+  // 保存済みパターンオーブが読み戻されない (overlay 再表示でデフォルトに戻る)。
   final Map<String, double> _orbValues = {
     'conjunction': 2, 'opposition': 2, 'trine': 2, 'square': 2, 'sextile': 2,
     'quincunx': 2, 'semisextile': 1, 'semisquare': 1,
+    'grandtrine': 3, 'tsquare_opp': 3, 'tsquare_sq': 2.5,
+    'yod_sextile': 2.5, 'yod_quincunx': 1.5,
   };
 
   @override
@@ -743,10 +747,10 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
             const SizedBox(height: 6),
             _buildHouseOption('Whole Sign', 'whole_sign'),
           ]),
-        // Aspect Orbs
+        // ホロスコープのオーブ設定 (Horoscope 画面のアスペクト/パターン検出にのみ反映)
         _SettingsItem(
           icon: Icons.adjust,
-          text: 'Aspect Orbs',
+          text: 'ホロスコープのオーブ',
           value: _orbSummary(),
           onTap: _openOrbOverlay,
         ),
@@ -789,9 +793,16 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
   }
 
   String _orbSummary() {
-    final vals = _orbValues.values.toSet();
-    if (vals.length == 1) return 'All ${vals.first.toStringAsFixed(0)}° ›';
-    return 'Custom ›';
+    // アスペクト 8 + パターン 5 のデフォルト値。全て一致なら「標準」。
+    const defaults = {
+      'conjunction': 2.0, 'opposition': 2.0, 'trine': 2.0, 'square': 2.0,
+      'sextile': 2.0, 'quincunx': 2.0, 'semisextile': 1.0, 'semisquare': 1.0,
+      'grandtrine': 3.0, 'tsquare_opp': 3.0, 'tsquare_sq': 2.5,
+      'yod_sextile': 2.5, 'yod_quincunx': 1.5,
+    };
+    final isDefault =
+        _orbValues.entries.every((e) => defaults[e.key] == e.value);
+    return isDefault ? '標準 ›' : 'カスタム ›';
   }
 
   void _openOrbOverlay() async {
