@@ -27,7 +27,7 @@
 > - [x] 層 4c: Observe (Tarot) 画面 — 2026-05-14 完成
 > - [x] 層 4d: Galaxy 画面 — 2026-05-14 完成
 > - [x] 層 4e: Sanctuary 画面 — 2026-05-14 完成
-> - [ ] 層 4f: サブ画面 (Forecast / Locations / Philosophy / Font Preview)
+> - [x] 層 4f: サブ画面 (Forecast / Locations / Philosophy / Font Preview) — 2026-05-14 完成
 > - [ ] 層 5: 連携層 (main / PopScope / IndexedStack)
 
 ---
@@ -1603,4 +1603,141 @@ Text('$49.99/year · Cancel anytime')  // 年額 + キャンセル可
 
 ---
 
-(層 4f 以降は次セッション以降で追記。層 4 は 1 セッション 1 画面の予定)
+## 層 4f: サブ画面 (Forecast / Locations / Philosophy / Font Preview)
+
+### 4f.1 概要
+
+`lib/screens/` 配下の **7 ファイル / 計 2,930 行**。Map (4a) / Horoscope (4b) / Observe (4c) / Galaxy (4d) / Sanctuary (4e) のメインタブに属さない補助画面群。
+
+**機械分類の精度** (✅ オーバーライド不要): 7 ファイル全てサブ画面専用、cross-cutting なし。
+
+サブ画面 4 種:
+
+| サブ画面 | ファイル数 | 役割 | 起動元 |
+|---|---|---|---|
+| **Forecast** (運勢予報) | 3 / 1,505 行 | 1 年予測ヒートマップ + 強運 Top5 + ◯◯期サイクル | Map `_openForecast` 経由 |
+| **Locations** (拠点管理) | 2 / 1,128 行 | 登録拠点を 16 方位スコア付きで一覧管理 | Map `_openLocations` 経由 |
+| **Philosophy** (設計思想) | 1 / 159 行 | Solara 設計思想ガイド (静的、章 0) | Sanctuary 設定から開く |
+| **Font Preview** (開発用) | 1 / 138 行 | フォント候補 8 種の比較画面 | (開発者専用、ユーザー導線なし) |
+
+### 4f.2 Forecast 群 (3 ファイル / 1,505 行)
+
+**🔴 Worker `/astro/forecast` (KV 月次クォータ 60 req/IP/month) を呼ぶ唯一の機能** = Pro 化の自然な境界。
+
+| # | ファイル | 行 | 主要 export | 役割 |
+|---|---|---|---|---|
+| 1 | [`forecast_screen.dart`](../lib/screens/forecast_screen.dart) | **1,048** | `ForecastScreen` (Stateful)、`_ForecastScreenState`、`_DayStepperButton` | **🔴 Forecast 統合画面**。34 関数 (public 4 + private 30)。1 年ヒートマップ (`_buildHeatmap`) + 選択日詳細 (`_buildSelectedDayDetail`) + 強運 Top5 (子 widget) + ◯◯期 (子 widget) + year selector (現在年 + 過去 4 年)。`_setColorMode` で gradient/カテゴリ色 切替、`_setHighColor` で高得点強調色切替 |
+| 2 | [`forecast/forecast_top5.dart`](../lib/screens/forecast/forecast_top5.dart) | 238 | `ForecastTop5Section` (Stateless) | **強運 Top5 セクション**。永続保存された Top5 を mode 別 (overall / 5 カテゴリ) で表示。`_modeSelector` でカテゴリ切替、`_row` で順位 + 日付 + スコア表示 |
+| 3 | [`forecast/forecast_life_periods.dart`](../lib/screens/forecast/forecast_life_periods.dart) | 219 | `ForecastLifePeriodsSection` (Stateless) | **◯◯期セクション**。`detectLifePeriods` (2b `forecast_cache.dart`) で抽出された連続高スコア期 (恋愛期 / 仕事期 等) を表示。`_periodRow` で期間バー + 期間名 + スコアレンジ |
+
+**Forecast の課金との関係**:
+- Worker 側の **KV 月次クォータ 60 req/IP/month** ([`worker/src/index.js:73`](../worker/src/index.js)) = 既に Free の上限が物理的に存在
+- Pro は `checkKvForecastQuota` の bypass 条件追加だけで「無制限予報」差別化が成立
+- 1 回の forecast 計算 = 1 年分 365 日のスコア時系列 = Worker 側の計算コスト最大
+
+### 4f.3 Locations 群 (2 ファイル / 1,128 行)
+
+| # | ファイル | 行 | 主要 export | 役割 |
+|---|---|---|---|---|
+| 1 | [`locations_screen.dart`](../lib/screens/locations_screen.dart) | 737 | `LocationsScreen` (Stateful)、`_LocationsScreenState`、`_SlotStats` | **拠点一覧画面**。21 関数 (public 3 + private 18)。VP スロットを 16 方位スコア付きで管理、`map_astro.dart` (2a) の `fetchChart` + `scoreAll` を各拠点ごとに呼出。`_buildList` でスコア順 / 距離順表示、`_buildRefPointSelector` で基準点 (現在地 / 出生地) 切替、`_buildCategorySelector` で 5 カテゴリ絞込 |
+| 2 | [`locations/locations_date_stepper.dart`](../lib/screens/locations/locations_date_stepper.dart) | 391 | `LocationsDateStepper`、`_DateNumberField` (Stateful)、`_HourNumberField` (Stateful) | **日付ステッパー widget**。年▲▼ / 月▲▼ / 日▲▼ / 時▲▼ + 「今日」リセット + 数値直接入力 (`_commit` で確定)。Locations 画面でスコア計算日時を変更する用 |
+
+**Locations の課金との関係**:
+- 拠点数 ≦ `SlotManager.slots` で制限 (Map VP slot と同期)
+- Pro は無制限スロット (4a.17 で既出 Pro 候補 (b))
+- 1 拠点ごとに `/astro/chart` 呼出 → Free の現状 KV 制限内で問題なし
+
+### 4f.4 Philosophy 群 (1 ファイル / 159 行)
+
+| # | ファイル | 行 | 主要 export | 役割 |
+|---|---|---|---|---|
+| 1 | [`solara_philosophy_screen.dart`](../lib/screens/solara_philosophy_screen.dart) | 159 | `SolaraPhilosophyScreen` (Stateless)、`_Hero`、`_SectionCard`、`_Footer` | **🔴 Solara 設計思想ガイド** (章 0)。`solara_manifesto.dart` (1b) のテキスト 3 セクション (世界観 / 2 エネルギー / 委ねる宣言) を表示。Sanctuary 設定からアクセス。**「占い的吉凶判定をしない」を文章化** ([`project_solara_design_philosophy`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/project_solara_design_philosophy.md)) |
+
+### 4f.5 Font Preview 群 (1 ファイル / 138 行)
+
+| # | ファイル | 行 | 主要 export | 役割 |
+|---|---|---|---|---|
+| 1 | [`font_preview_screen.dart`](../lib/screens/font_preview_screen.dart) | 138 | `FontPreviewScreen` (Stateful)、`_FontPreviewScreenState`、`_FontOption` | **開発者用フォント比較画面**。候補フォント 8 種を Horo と同じコンテキストで並列表示。`_buildSample` で各フォントのサンプル描画。**ユーザー導線なし** (本番ではアクセス不可、開発ビルドのみ) |
+
+### 4f.6 Worker / 外部呼出
+
+| 経由 | endpoint | 用途 | 呼出元 |
+|---|---|---|---|
+| `forecast_cache.dart` (2b、API+永続化ハイブリッド) | `/astro/forecast` (POST) | 1 年予測時系列計算 (KV 月次クォータあり) | Forecast 群 3 ファイル |
+| `map_astro.dart` (2a) `fetchChart` | `/astro/chart` (POST) | 各拠点の出生図計算 | Locations 画面 |
+| `map_search.dart` (4a `screens/map/`) `searchPlace` | `/search` (GET) | 拠点追加時の場所検索 | Locations 画面 (Map との依存) |
+
+**Gemini 呼出 0** — サブ画面は AI 解説を使わない (Forecast は数値スコアのみ、Locations は拠点リストのみ)。
+
+### 4f.7 依存関係 (層を跨ぐ参照)
+
+| 依存先 | 用途 |
+|---|---|
+| 1b 静的辞書 | `solara_manifesto.dart` (Philosophy) |
+| 2a API | `map_astro.dart` (Locations が `/astro/chart` 共用)、`map_search.dart` (4a → Locations) |
+| 2b 永続化 | `forecast_cache.dart` (Forecast `/astro/forecast` + 月次クォータ + `detectLifePeriods`)、`solara_storage.dart` (Locations VP slot + 設定) |
+| 3a 共通 widget | `info_popup.dart` (5 popup 呼出)、`no_profile_guide.dart` (Forecast / Locations 共通)、`map_constants.dart` (3b、Locations + Forecast 両方が import) |
+| 3b テーマ | `solara_colors.dart` (Philosophy)、`glass_panel.dart` (3a、Philosophy) |
+| 4a (`screens/map/`) | `map_vp_panel.dart` (`VPSlot`、Locations 直接 import)、`map_search.dart` (Locations が拠点追加で使用) |
+
+### 4f.8 機械分類の盲点 + 重要な実態
+
+1. **7 ファイル全てサブ画面専用 = 機械分類が正しい状態**
+   - `_classify_screen` で `screens/forecast/` / `screens/locations/` / `solara_philosophy_screen.dart` / `font_preview_screen.dart` を全て 4f に振り分け
+2. **`forecast_screen.dart` 1,048 行は HARD 違反** — pre-existing
+   - 候補: ヒートマップ描画 (`_buildHeatmap` / `_dayCell` / `_cellColor` 等 7 関数) を `forecast_heatmap.dart` へ
+   - 候補: 選択日詳細 (`_buildSelectedDayDetail` / `_metric` / `_catBar` 3 関数) を `forecast_day_detail.dart` へ
+3. **`locations_screen.dart` 737 行も HARD 違反** — pre-existing
+   - 候補: 日付制御 (`_shiftDate` / `_setYmd` / `_setHour` 等 5 関数) を controller 化 (既に `locations_date_stepper.dart` 391 行があるが連携のみ)
+4. **`font_preview_screen.dart` はユーザー導線なし** — 開発者専用。本番ビルドからの除外候補だが、影響範囲小なので残置許容
+5. **Locations と Map の意外な結合** — `locations_screen.dart` が `screens/map/` から 3 ファイル直接 import (`map_astro` 2a override 済 / `map_constants` 3b override 済 / `map_search` 4a / `map_vp_panel` 4a)。Map と Locations は機能的に強く結合
+
+### 4f.9 重要な仕様メモリへの参照
+
+| メモリ | 内容 |
+|---|---|
+| [`feedback_forecast_map_separate`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/feedback_forecast_map_separate.md) | **🔴 FORECAST と Map のスコアは別計算で意図的に一致しない** (統合改修・Map ジャンプリンク追加しない) |
+| [`project_solara_design_philosophy`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/project_solara_design_philosophy.md) | 🔴 Solara 全機能上位ルール (Soft/Hard 独立、吉凶禁止) — Philosophy 画面で文章化 |
+| [`project_solara_security_principles`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/project_solara_security_principles.md) | Pro 公開時セキュリティ (`/astro/forecast` を `/protected/*` に置くか `/public/*` のままにするかの判断材料) |
+
+### 4f.10 課金検討に直結する示唆
+
+層 4f は **既存の課金境界を持つ唯一の層 = `/astro/forecast` KV 月次クォータ**。Pro 化が技術的に最も容易。
+
+1. **🔴 Pro 機能の最有力候補 (本層から導出)**
+   - **(a) Forecast 無制限予報** — 現状 KV 月次クォータ 60 req/IP/month = 既に Free の物理上限が存在 ([`worker/src/index.js:73`](../worker/src/index.js))。Pro は `checkKvForecastQuota` の bypass 条件追加だけで実装可。**最も実装コストが低い Pro 機能**
+   - **(b) Forecast 5 年予測** — 現状 1 年 (365 日) のみ、Pro で 5 年 (1,825 日) 拡張。Worker 側の `computeForecast` で `dayCount` 引数増やすだけ
+   - **(c) ◯◯期サイクル過去 5 年一覧** — `detectLifePeriods` を過去 5 年分実行 + 集約。`forecast_life_periods.dart` 拡張で実装
+
+2. **Locations 拠点数の Pro 化** (4a.17 で既出)
+   - Free は home + 現在地 + 任意 3 = 5 拠点
+   - Pro は無制限 (`SlotManager.slots` 上限解除)
+   - Locations 画面 (`_addCurrent` / `_buildList`) で上限チェックを isPro 判定に置換
+
+3. **`solara_philosophy_screen.dart` の世界観テキスト = マーケ素材**
+   - 「占い的吉凶判定をしない、両面思想」= 既存占いアプリ群との差別化軸
+   - ストア説明文 + ペイウォール訴求文 + 公式 LP に流用可 (= マーケ素材として価値)
+   - Pro 化対象ではないが、本層の存在自体が **「Solara が何を提供しないか」を明示**する重要 UI
+
+4. **`font_preview_screen.dart` (開発者用) は公開前に判断**
+   - ユーザー導線なし = 本番ビルドからの除外候補
+   - **影響範囲小** (138 行、import ゼロ from production code) のため残置許容
+   - 公開時に `kReleaseMode` で除外する選択肢あり
+
+5. **Locations + Forecast の併用が「拠点最適化体験」**
+   - 「拠点 A は今月どの日に良いか」を計算する組合せ
+   - Pro 拡張案: 「拠点 A × Forecast 1 年スコア」のマトリックス可視化 (= Locations 一覧 × 365 日ヒートマップ)
+   - 現状未実装、Pro 訴求として強力
+
+6. **Forecast と Map のスコア不一致** ([`feedback_forecast_map_separate`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/feedback_forecast_map_separate.md))
+   - Forecast (出生情報のみ、場所/時刻非依存) vs Map (拠点 + 瞬時時刻、ASC/MC 含む)
+   - 意図的な別計算 = 統合しない / Map ジャンプリンクも追加しない (2026-05-14 確定)
+   - Forecast の ❓ popup で説明 (`_showForecastUsageGuide`)
+
+### 4f.11 機械抽出への参照
+
+層 4f の機械抽出 raw: [`feature_inventory/04f_subscreens.md`](feature_inventory/04f_subscreens.md)
+
+---
+
+(層 5 以降は次セッション以降で追記)
