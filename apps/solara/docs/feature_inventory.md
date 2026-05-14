@@ -22,7 +22,7 @@
 > - [x] 層 3a: 共通ウィジェット (純粋) — 2026-05-14 完成
 > - [x] 層 3b: テーマ・装飾 — 2026-05-14 完成
 > - [x] 層 3c: 演出ウィジェット (animated) — 2026-05-14 完成
-> - [ ] 層 4a: Map 画面
+> - [x] 層 4a: Map 画面 — 2026-05-14 完成
 > - [ ] 層 4b: Horoscope 画面
 > - [ ] 層 4c: Observe (Tarot) 画面
 > - [ ] 層 4d: Galaxy 画面
@@ -812,4 +812,215 @@ Solara のバックエンドは **Cloudflare Workers** で稼働。本番 URL: `
 
 ---
 
-(層 4a 以降は次セッション以降で追記。層 4 は 1 セッション 1 画面の予定)
+## 層 4a: Map 画面
+
+### 4a.1 概要
+
+`lib/screens/map/` 配下 24 ファイル + `lib/screens/map_screen.dart` 1 本 = 計 **25 ファイル / 13,926 行**。Solara で**最大規模の画面**であり、**Pro 機能の核が最も集中する層**。
+
+Map 画面は単に「地図を表示する」だけでなく、以下の機能を全部内包する複合体:
+
+| 機能領域 | 概要 |
+|---|---|
+| 地図描画 | 4 種タイル切替 (OSM hot/standard/cyclosm Light/Dark)、ズーム制御、タイル fd 制御 |
+| 16 方位スコア計算 | `/astro/chart` から取った出生図 + 拠点 + 時刻で 16 方位 × 5 カテゴリ Soft/Hard スコアを計算 |
+| アスペクトラインオーバーレイ | 4 frame (natal/transit/progressed/solarArc) × 40 本コンジャンクションライン (= ACG モード) |
+| Daily Transit (F1-c) | 「今日の動き」= 10 惑星 × 4 アングル (ASC/MC/DSC/IC) 通過時刻 + natal アスペクト併記 |
+| 検索 + 拠点管理 | Google Places 検索 → スコア注入 → 候補から拠点保存 (`VPSlot`)、独立 `📍 地点メニュー` |
+| 詳細 popup 群 | 方角タップ / 惑星マーカータップ / 引越し popup / ACG ライン popup |
+| 時間操作 | ±365 日 + 時分のタイムスライダー、LIVE ボタン |
+
+**Pro 公開時の最大対象 = `/fortune` (Gemini) + `/relocation` (Gemini) を呼ぶラッパが本層内に複数あり**。
+
+### 4a.2 機能群別ファイル分類 (25 本)
+
+25 ファイルを 11 群に整理:
+
+| 群 | 役割 | 数 | 行 |
+|---|---|---|---|
+| A 計算データ | Worker レスポンス受け + 16 方位スコア計算 + 描画定数 | 2 | 630 |
+| B UI 基礎部品 | 円形ボタン、Legend、タイル選択、扇状セクター | 3 | 376 |
+| C HUD オーバーレイ | 左サイド 3 ボタン、検索バー、選択日バッジ、VP Pin、下部チップバー、時刻スライダー | 3 | 1,261 |
+| D 検索系 | Google Places 検索 + 結果リスト + フォーカス popup + スコア注入 | 1 | 590 |
+| E アスペクトライン + ACG | 4 frame × 40 本ライン + 天頂/天底マーカー + ACG モード UI | 3 | 1,686 |
+| F マーカー + ロケーション | 出生地/スロットマーカー + VP Slot 永続化 + 📍 地点メニュー | 3 | 1,061 |
+| G 表示メニュー | ☰ 表示ボタン展開、L1/L2 タブ、4 frame ON/OFF | 1 | 410 |
+| H 詳細 popup | 方角 / 惑星 / 引越し / ACG ライン 4 種 | 4 | 1,409 |
+| I 運勢シート | カテゴリスコア表示 + sources × categories グリッド | 1 | 775 |
+| J Daily Transit (別画面) | F1-c タイムライン + データ定義 + アスペクトチップ | 3 | 3,033 |
+| K 統合ハブ | map_screen.dart (56 関数、25 ファイルを統合) | 1 | 2,695 |
+
+### 4a.3 群 A: 計算データ + 描画定数 (2 本、630 行)
+
+| ファイル | 行 | 主要 export | 役割 |
+|---|---|---|---|
+| [`map_astro.dart`](../lib/screens/map/map_astro.dart) | 508 | `ChartResult`、`ScoreResult`、`fetchChart`、`scoreAll`、`isAngle`、`addT/addP/addCT/addCP` | **🔴 Worker `/astro/chart` ラッパ + 16 方位スコア計算の中核**。本ファイルは機械分類 4a だが実態は層 2a 寄り (Map + Horoscope 共用)。`fetchChart()` で natal+transit+progressed+ASC/MC/DSC/IC 全アスペクト取得、`scoreAll()` で 16 方位 × 5 カテゴリ Soft/Hard スコア算出 ([`feedback_forecast_map_separate`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/feedback_forecast_map_separate.md): Forecast と Map は別計算で意図的に一致しない) |
+| [`map_constants.dart`](../lib/screens/map/map_constants.dart) | 122 | `ChartLineStyle`、`PlanetMeta` | HTML `CHART_STYLE` の Dart 移植定数 (natal/progressed/transit の線スタイル) + HTML `TAROT.planets` の惑星シンボル+色マッピング |
+
+### 4a.4 群 B: UI 基礎部品 (3 本、376 行)
+
+| ファイル | 行 | 主要 export | 役割 |
+|---|---|---|---|
+| [`map_widgets.dart`](../lib/screens/map/map_widgets.dart) | 51 | `MapBtn`、`LegendDot` | 円形ボタン (search/layer/vp) + Legend ドット。HTML `.search-trigger / .layer-btn / .vp-btn` 一致 |
+| [`map_styles.dart`](../lib/screens/map/map_styles.dart) | 152 | `MapStyle` enum、`MapStyleConfig`、`mapStyleFromId`、`buildStyledTileLayer` | **🔴 タイル 4 種切替** ([`project_solara_map_styles`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/project_solara_map_styles.md))。`/tiles/osm/hot/*` の Worker 経由 + `sharedTileHttpClient` 使用 ([`feedback_http_fd_leak`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/feedback_http_fd_leak.md) 対策) |
+| [`map_sectors.dart`](../lib/screens/map/map_sectors.dart) | 173 | `buildSectors`、`buildCompass`、`buildDirLabels` | **16 方位扇状セクター + 8 方向コンパス + 方位ラベル** ([`project_solara_geo_sector`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/project_solara_geo_sector.md))。`activeCategory` の色 1 色 + alpha のみ可変、red/green 吉凶塗りは禁止 |
+
+### 4a.5 群 C: HUD オーバーレイ (3 本、1,261 行)
+
+| ファイル | 行 | 主要 export | 役割 |
+|---|---|---|---|
+| [`map_overlays.dart`](../lib/screens/map/map_overlays.dart) | 481 | `MapSideButtons`、`SearchBarOverlay`、`SearchVpChipRow`、`SelectedDateBadge`、`StatusBadge`、`VpPinVisual`、`RestOverlay`、`buildVpPinMarker`、`showSolaraDatePicker` | Map の HUD 集 9 種。左サイド 3 ボタン (🔍 検索 / ☰ 表示 / 📍 地点) は 2026-05-09 第二弾で配置確定 |
+| [`map_menu_chips.dart`](../lib/screens/map/map_menu_chips.dart) | 307 | `MapMenuChips`、`_StaticChip`、`_DailyTransitChip`、`_ChipHalo` | **下部 4 チップ** (Daily / Fortune / Locations / Forecast)。Daily Transit チップは未開封状態判定あり (`_DailyTransitChip`) |
+| [`map_time_slider.dart`](../lib/screens/map/map_time_slider.dart) | 473 | `MapTimeSlider` (Stateful) + public `MapTimeSliderState.closeTimeRow` | **タイムスライダー** ±365 日 (1 日刻み) + 時分 (10 分 grid step、表示は実分、`_displayMinuteJst` / `_committedMinuteJst` 分離 = 2026-05-12 Daily Transit 拡張)。LIVE ボタンで今日復帰。PopScope から `closeTimeRow` を呼ばれる |
+
+### 4a.6 群 D: 検索系 (1 本、590 行)
+
+| ファイル | 行 | 主要 export | 役割 |
+|---|---|---|---|
+| [`map_search.dart`](../lib/screens/map/map_search.dart) | 590 | `SearchHit`、`SearchResultList`、`SearchFocusPopup`、`directionFrom`、`distanceKmFrom`、`annotateHitsWithScores` | **🔴 Worker `/search` 呼出** (Google Places primary + Nominatim fallback)。検索結果に「現在中心からの方位スコア + 支配カテゴリ」を `annotateHitsWithScores` で注入してから表示。`SearchFocusPopup` で VIEWPOINT / LOCATION 個別登録ボタン |
+
+### 4a.7 群 E: アスペクトライン + ACG モード (3 本、1,686 行)
+
+| ファイル | 行 | 主要 export | 役割 |
+|---|---|---|---|
+| [`map_planet_lines.dart`](../lib/screens/map/map_planet_lines.dart) | 285 | `PlanetLineData`、`PlanetSymbolsLayer`、`buildPlanetLineData`、`buildPlanetPolylines` | 10 惑星の MC ライン (経度線) 計算 + 描画。`PlanetSymbolsLayer` は HTML `updateSymPos` の edge tracking 再現 (惑星シンボルが画面端で追従) |
+| [`map_astro_lines.dart`](../lib/screens/map/map_astro_lines.dart) | 588 | `AstroFrameStyle`、`astroFrameStyles`、`AstroNadirMarker`、`AstroZenithMarker`、`buildAstroPolylines`、`buildAstroLatitudeBandPolylines`、`buildAstroZenithMarkers`、`buildAstroNadirMarkers` | **4 frame style 定義** (Natal=ゴールド、Transit=オレンジ、Prog=緑、SArc=紫) + アスペクトライン → Polyline 変換 + 天頂帯/天底帯 (latitude band) 描画 + 装飾マーカー (Lewis 理論天頂/天底点) |
+| [`map_astro_carto.dart`](../lib/screens/map/map_astro_carto.dart) | 813 | `AstroCartoBanner`、`AcgFrameDef`、`AstroCartoFramePills`、`AstroCartoSubPills`、`_FramePill`、`_SubPill`、`_ScrollableRowPanel`、`AstroCartoCategoryPills`、`AstroZenithPopup` | **🔴 ACG (A*C*G) モード UI**。第 1 層 4 frame ピル + 第 2 層 sub ピル (天頂/天底/天頂帯/天底帯) + カテゴリピル + 天頂点詳細 popup。Astrocarto モードは Solara の海外市場向け売り ([`project_solara_astrocartography_m2`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/project_solara_astrocartography_m2.md), [`project_solara_lewis_full_impl_plan`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/project_solara_lewis_full_impl_plan.md)) |
+
+### 4a.8 群 F: マーカー + ロケーション (3 本、1,061 行)
+
+| ファイル | 行 | 主要 export | 役割 |
+|---|---|---|---|
+| [`map_location_markers.dart`](../lib/screens/map/map_location_markers.dart) | 295 | `BirthMarker`、`SlotMarker`、`LocationMarkerPopup`、`buildLocationMarkers`、`slotMarker` | 出生地 🌟 (多層グロー) + VP / Locations スロットマーカー + タップ詳細 bottom sheet |
+| [`map_vp_panel.dart`](../lib/screens/map/map_vp_panel.dart) | 120 | `VPSlot`、`SlotManager` (singleton 的) | **🔴 VP スロット永続化**。HTML `SlotManager` の Dart 移植 + `syncHome` (プロフィール home を先頭スロットに同期) + `saveCurrentLocation` (reverse geocoding で地名取得) |
+| [`map_viewpoint_menu.dart`](../lib/screens/map/map_viewpoint_menu.dart) | 646 | `MapViewpointMenu` (Stateful) | 📍 地点ボタン展開メニュー (2026-05-09 第三弾)。スロット一覧 + 保存 + リネーム + アイコン変更 + 並べ替え + 削除 |
+
+### 4a.9 群 G: 表示メニュー (1 本、410 行)
+
+| ファイル | 行 | 主要 export | 役割 |
+|---|---|---|---|
+| [`map_display_menu.dart`](../lib/screens/map/map_display_menu.dart) | 410 | `MapDisplayMenu` (Stateful)、`_MainTab` / `_PlanetSub` enum、`_MenuInfoRow`、`_ChipButton` | **☰ 表示メニュー** (2026-05-09 確定)。L1 タブ (Map/Planet/Astro) × L2 ボタン群 (16 方位/コンパス/MAPSTYLE / 惑星選択 / 4 frame ON/OFF / aspectAll / CHART / FORTUNE)。i ボタン付きで各カテゴリ説明 popup |
+
+### 4a.10 群 H: 詳細 popup (4 本、1,409 行)
+
+| ファイル | 行 | 主要 export | 役割 |
+|---|---|---|---|
+| [`map_direction_popup.dart`](../lib/screens/map/map_direction_popup.dart) | 374 | `showDirectionEnergyPopup`、`_PopupBody`、`_EnergyBar`、`_ContribRow` | **🔴 方角タップ詳細 popup**。Soft / Hard 独立 2 バー + 主要寄与アスペクト attribution ([`project_solara_design_philosophy`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/project_solara_design_philosophy.md) 中核実装、吉凶判定なし) |
+| [`map_planet_intro_popup.dart`](../lib/screens/map/map_planet_intro_popup.dart) | 239 | `showPlanetIntroPopup`、`_PlanetIntroBody` | 惑星マーカータップ説明 (層 1a `planet_intro.dart` 辞書 = 10 惑星 × 3 frame の説明テキスト) |
+| [`map_relocation_popup.dart`](../lib/screens/map/map_relocation_popup.dart) | 564 | `MapRelocationPopup` | **🔴 引越し popup** (Phase M0 完成、[`project_solara_relocation_m0`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/project_solara_relocation_m0.md))。Dart 完結 (`astro_houses.dart` + `astro_lines.dart`)。出生地 → タップ地点の ASC/MC + 12 ハウス + アスペクトライン詳細 |
+| [`map_line_narrative_sheet.dart`](../lib/screens/map/map_line_narrative_sheet.dart) | 232 | `MapLineNarrativeSheet`、`showLineNarrativeSheet` | ACG ライン (natal/transit) タップ詳細。**Gemini AI 解説は 2026-05-11 撤去**、静的辞書 (`aspect_lines`、`transit_acg`) ベースに統一 ([`project_solara_v7_integration`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/project_solara_v7_integration.md)) |
+
+### 4a.11 群 I: 運勢シート (1 本、775 行)
+
+| ファイル | 行 | 主要 export | 役割 |
+|---|---|---|---|
+| [`map_fortune_sheet.dart`](../lib/screens/map/map_fortune_sheet.dart) | 775 | `FortuneFilterLabel`、`FortuneSheet`、`pctValue`、`showCategoryInfoPopup`、`_FortuneRowsList` (Stateful) | **下部運勢シート** = カテゴリスコアの sources × categories グリッド。`RawScrollbar` + `ListView` で `ScrollController` 共有。`showCategoryInfoPopup` で Map の使い方 + カテゴリ × 関連惑星ペアの説明 |
+
+### 4a.12 群 J: Daily Transit (別画面、3 本、3,033 行)
+
+| ファイル | 行 | 主要 export | 役割 |
+|---|---|---|---|
+| [`map_daily_transit_screen.dart`](../lib/screens/map/map_daily_transit_screen.dart) | 1,799 | `MapDailyTransitScreen` (Stateful) + 14 内部 widget (タブバー / ヘッダ / カテゴリ tips / タイムライン本体 / 行 / 高度バッジ / 緯度帯ボックス…)、`showDailyUsageGuidePopup` | **🔴 F1-c フル UI** (2026-04-29 オーナー設計)。10 惑星 × 4 アングル (ASC/MC/DSC/IC) のタイムライン + 各行 🗺 ジャンプ + 「今日の TOP」カテゴリ表示 + L3 Lewis 高度バッジ / 緯度帯。**HARD ファイル分割対象**だが pre-existing |
+| [`daily_transit_data.dart`](../lib/screens/map/daily_transit_data.dart) | 1,013 | `AngleFilter` enum + `angleFilterLabel/Set/Meaning`、`CategoryFilterTips` (5 カテゴリ × 外向き/内向き各 4 tips)、`planetAngleBaseText` (40 パターン)、`categoryAppendix`、`categoryPlanetSets` | Daily Transit 画面用の **静的テキストデータ大容量**。Worker `fortune.js` の `categoryPlanetSets` と一致 (要同期保守) |
+| [`map_aspect_chip.dart`](../lib/screens/map/map_aspect_chip.dart) | 221 | `MapAspectChip` | Daily Transit 行内の compact アスペクトチップ。soft=銀月色 / hard=金陽色 / tense=金陽色 / neutral=金色。タップで Horo 相タブ相当の詳細解説 popup |
+
+### 4a.13 群 K: 統合ハブ (1 本、2,695 行)
+
+| ファイル | 行 | 主要 export | 役割 |
+|---|---|---|---|
+| [`map_screen.dart`](../lib/screens/map_screen.dart) | 2,695 | `MapScreen` (Stateful)、`MapScreenState` (public state, GlobalKey 経由 `reloadProfile` 公開) | **🔴 Map 統合ハブ**。56 関数 (public 8 + private 48)。30 ファイル import (Map 内 25 + utils 5 + screens 3)。Daily Transit / Forecast / Locations から呼ばれる onClose / onJumpToTime / onJumpToDate コールバックも全て本ファイルで配線。**HARD ファイル分割対象** (pre-existing、別タスク) |
+
+主要な `_*` 関数群:
+- ライフサイクル: `_bootstrap`, `_warmupTileConnection`, `_onTileError`, `_loadMapStyle`, `_loadProfileAndChart`, `_moveToInitialCenter`
+- 検索: `_doSearch`, `_frameSearchArea`, `_restoreSearchListView`, `_selectSearchHit`, `_buildFocusedHitMarker`, `_buildSearchHitMarkers`, `_reannotateSearchResults`, `_clearAllSearch`
+- スコア表示: `_displayScores`, `_sectorRankAlphaMul`, `_cycleActiveCategory`
+- ACG モード: `_enterAstroCartoMode`, `_exitAstroCartoMode`, `_filteredFrames`, `_visibleAstroLines`, `_zenith/nadirMarkerFrames`, `_zenith/nadirBandFrames`
+- 描画再構築: `_rebuild`, `_kickPaintInvalidation` (= [`project_solara_map_paint_invalidation`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/project_solara_map_paint_invalidation.md) 必須対策)
+- popup ヘルパー: `_buildZenithPopup`, `_buildRelocationPopup`, `_buildNoProfileGuide`, `_showSearchVpHelpPopup`
+- メニュー連携: `_onDisplayMenuTap`, `_onViewpointMenuTap`, `_onSearchTap`, `_onDailyBadgeTap`, `_onOverlayComplete`, `_onDailyTransitClose`
+- VP / 拠点: `_setVpOnly`, `_setVpToCurrentLocationOnly`, `_reloadLocationSlots`, `_findNearbyAstroLines`, `_geolocate`
+
+### 4a.14 Worker / 外部呼出 (5 endpoint)
+
+| endpoint | ファイル | 用途 |
+|---|---|---|
+| `/astro/chart` | [`map_astro.dart:17`](../lib/screens/map/map_astro.dart) | natal+transit+progressed+ASC/MC/DSC/IC + 全アスペクト計算 |
+| `/search` | [`map_search.dart:11`](../lib/screens/map/map_search.dart) | Google Places primary + Nominatim fallback |
+| `/tiles/osm/hot/*` | [`map_styles.dart:60,69`](../lib/screens/map/map_styles.dart) (2 リテラル — `osmHot` Light/Dark で別 URL) | OSM Worker 中継タイル (`/tiles/osm/hot/{z}/{x}/{y}.png`) |
+| `/tiles/osm/hot/0/0/0.png` | [`map_screen.dart:368`](../lib/screens/map_screen.dart) | `_warmupTileConnection` で起動時 1 枚 prefetch |
+
+**`/fortune` (Gemini) は本層では呼ばない** — Map から触れるのは Forecast / Horoscope 経由のみ。本層の Worker 呼出は天体計算 + 検索 + タイルの 3 種で全部 ([`project_solara_security_principles`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/project_solara_security_principles.md) の `/public/*` 配下想定)。
+
+### 4a.15 機械分類の盲点 + 重要な実態
+
+1. **`screens/map/map_astro.dart` は実態が層 2a** (API ラッパ) — 既出 (層 2a.3 で記述)。Map + Horoscope 両方から `fetchChart` を呼ぶ横断利用 = 機械分類は 4a に入っているが、リファクタ時に `lib/utils/astro_chart_api.dart` への移動が自然
+2. **`map_constants.dart` は実態が層 3b 寄り** (純定数のみ)
+3. **`map_screen.dart` 2,695 行 + `map_daily_transit_screen.dart` 1,799 行は HARD 違反** (`code_audit/audit.py` の 500 行閾値超過) — pre-existing で別タスク
+4. **`daily_transit_data.dart` 1,013 行も静的テキスト辞書なので実態は層 1b 寄り** — ただし Daily Transit 専用なので機械分類 4a で許容
+5. **Stella 枠は撤去済** ([`project_solara_stella_revival`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/project_solara_stella_revival.md)) — `map_overlays.dart` の `RestOverlay` のみ残置。常駐再追加禁止
+
+### 4a.16 重要な仕様メモリへの参照 (確定仕様は HTML が正)
+
+Map 関連の確定仕様 / 注意点 / 過去教訓を保持するメモリ:
+
+| メモリ | 内容 |
+|---|---|
+| [`project_solara_geo_sector`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/project_solara_geo_sector.md) | やってはいけないこと・廃止済み仕組み (16 方位扇状セクター、red/green 吉凶塗り禁止) |
+| [`project_solara_map_render_protocol`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/project_solara_map_render_protocol.md) | **🔴 Map 描画エラー対処プロトコル**。タイル抜け/未表示の対応、公式機構、アンチパターン |
+| [`project_solara_map_nan_red_screen`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/project_solara_map_nan_red_screen.md) | **🔴 Map ズームアウト時の赤画面 (LatLng NaN) 対策** 3 層防御 (minZoom 2.5 + cameraConstraint + onPositionChanged 検知) |
+| [`project_solara_map_paint_invalidation`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/project_solara_map_paint_invalidation.md) | **🔴 Map 黒画面対策**。5 層目 `_kickPaintInvalidation` (新規 `_mapCtrl.move` には必ずペアで呼ぶ、撤回禁止) |
+| [`project_solara_map_styles`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/project_solara_map_styles.md) | マップタイル 4 種切替実装済 + 将来 MapTiler 独自紫夜空テーマ計画 |
+| [`project_solara_a101fc_fd_leak`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/project_solara_a101fc_fd_leak.md) | 🟢 A101FC fd 枯渇問題は 2026-05-06 Impeller ON で完全解消 |
+| [`project_solara_lewis_full_impl_plan`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/project_solara_lewis_full_impl_plan.md) | ACG/CCG Lewis 理論完全実装ロードマップ 6 フェーズ、合計 26-34h |
+| [`project_solara_astrocartography_m2`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/project_solara_astrocartography_m2.md) | Phase M2 真のアストロカートグラフィー設計 (議論スターター) |
+| [`project_solara_relocation_m0`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/project_solara_relocation_m0.md) | Phase M0 リロケーション + Phase A 静的解説完成状態 |
+| [`feedback_forecast_map_separate`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/feedback_forecast_map_separate.md) | FORECAST と Map スコアは別計算、Map ジャンプリンク追加しない |
+| [`project_solara_i18n_score_bar_labels`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/project_solara_i18n_score_bar_labels.md) | i18n フェーズで Map スコアバー srcLabels/categoryLabels を英訳する確定案 (B 案) |
+
+### 4a.17 課金検討に直結する示唆
+
+層 4a は **Solara で Pro 機能が最も集中する層**。Map 全体が「無料で見える基盤 + Pro で深まる体験」の戦略の中心。
+
+1. **🔴 Pro 機能の最有力候補ベスト 3 (本層から導出)**
+   - **(a) アスペクトライン拡張 (40 → 120 本)** — 層 1a `astro_lines.dart` + 本層 `map_astro_lines.dart` を拡張。Worker コスト 0、クライアント完結。ハード 90° + ソフト 120°/60° 追加で 3 倍
+   - **(b) Daily Transit (F1-c) 無制限拠点切替** — 現状 `_selectVp` で `vpSlot` 切替時に再 fetch。Free は home + 現在地 2 拠点制限、Pro は無制限スロット (`SlotManager.slots` 上限解除)
+   - **(c) ACG モード 4 frame 同時表示 = Pro 限定** — 現状全員見えているが、Pro 化候補。`map_screen.dart._enterAstroCartoMode` で isPro チェック追加
+
+2. **Gemini 呼出は本層に無いが、Forecast/Horoscope から本層に戻ってくる連携あり**
+   - `_openForecast`, `_openLocations` で別画面遷移 → そこから `/fortune`, `/relocation` を呼ぶ
+   - **Map 単体は `/public/*` で十分**、Pro ゲートは Forecast/Horoscope 側に置く
+
+3. **タイル消費 = 月額コスト要因**
+   - `/tiles/osm/hot/*` は edge cache 24h で抑えられるが、ヘビーユーザーは月数千 req
+   - Free は標準 OSM のみ、Pro は MapTiler 独自紫夜空テーマ ([`project_solara_map_styles`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/project_solara_map_styles.md) 将来計画) で差別化 = MapTiler 月額の Pro 課金で回収
+
+4. **永続化 (`VPSlot` / `SlotManager`) はクラウドバックアップ Pro の中心 (Map 側)**
+   - 拠点 (出生地 / 自宅 / 旅行先) は **ユーザーの最大の個人データ** = 引越し時の引き継ぎ需要
+   - `solara_storage.dart` (層 2b) の `exportAll/importAll` 拡張時に本層の `SlotManager` も含める
+
+5. **`map_screen.dart` 2,695 行 + 56 関数の HARD 違反は Pro 公開前に分割推奨**
+   - 候補: ACG モード制御 (`_enterAstroCartoMode` 周辺) を `map_acg_controller.dart` へ
+   - 候補: 検索系 (`_doSearch`, `_frameSearchArea`, `_restoreSearchListView`...) を `map_search_controller.dart` へ
+   - 候補: build subtree (`_buildBody` 880 行) を分割
+   - **緊急度低 (動作には影響なし)**、保守性向上の課金実装段階で着手
+
+6. **Phase M2 残作業の Pro 化判断**
+   - [`project_solara_lewis_full_impl_plan`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/project_solara_lewis_full_impl_plan.md) の L1〜L6 のうち、L3 Lewis 緯度帯 + L4 オーブ塗り は実装済 (`map_astro_lines.dart` + Daily Transit `_LatitudeBandBox`)
+   - 残作業 L5/L6 (惑星イベント深化 + オーブ深化) は **Pro 限定で追加**する選択肢あり
+   - 「無料は基本 ACG、Pro は Lewis 完全実装 (オーブ塗り / 緯度帯重畳)」の差別化が成立
+
+7. **`map_planet_lines.dart` の `PlanetSymbolsLayer` は HTML 移植が完了済 = 独自性源**
+   - 惑星シンボル edge tracking (画面端で惑星が追従) は商用 ACG アプリでも珍しい実装
+   - Pro 訴求文素材として価値
+
+8. **検索 (`map_search.dart`) の `annotateHitsWithScores` は無料機能の差別化**
+   - Google Places の検索結果に「現在中心からの方位スコア + 支配カテゴリ」を自動注入
+   - 競合の地図アプリ + 占いアプリには無い体験 = 無料層の魅力強化に投資する箇所
+
+### 4a.18 機械抽出への参照
+
+層 4a の機械抽出 raw: [`feature_inventory/04a_map.md`](feature_inventory/04a_map.md)
+
+---
+
+(層 4b 以降は次セッション以降で追記。層 4 は 1 セッション 1 画面の予定)

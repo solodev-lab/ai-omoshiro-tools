@@ -37,26 +37,14 @@
 ## #1 / #2 機械抽出 ↔ feature_inventory.md (人手版) の対整合
 
 - 機械抽出した class/mixin/extension/enum: **304**
-- inventory に登場する識別子 (大文字始まり ``backtick``囲み): **86**
+- inventory に登場する識別子 (大文字始まり ``backtick``囲み): **136**
 
-### #1 機械にあるが Doc に書かれていない (242)
+### #1 機械にあるが Doc に書かれていない (196)
 
-- `AcgFrameDef`
-- `AngleFilter`
 - `AntiqueGlyph`
 - `AntiqueIcon`
 - `AppLocale`
-- `AstroCartoBanner`
-- `AstroCartoCategoryPills`
-- `AstroCartoFramePills`
-- `AstroCartoSubPills`
-- `AstroFrameStyle`
-- `AstroNadirMarker`
-- `AstroZenithMarker`
-- `AstroZenithPopup`
-- `BirthMarker`
 - `CelestialEvents`
-- `ChartLineStyle`
 - `ClassShareCardPage`
 - `DailyTransitsResult`
 - `DateSlashFormatter`
@@ -64,9 +52,7 @@
 - `ForecastLifePeriodsSection`
 - `ForecastScreen`
 - `ForecastTop5Section`
-- `FortuneFilterLabel`
 - `FortuneReading`
-- `FortuneSheet`
 - `GalaxyReplayOverlay`
 - `GalaxyScreen`
 - `GalaxyScreenState`
@@ -91,25 +77,9 @@
 - `HouseShift`
 - `LatitudeBand`
 - `LatitudeBandHit`
-- `LegendDot`
-- `LocationMarkerPopup`
 - `LocationsDateStepper`
 - `LocationsScreen`
-- `MapAspectChip`
-- `MapBtn`
-- `MapDailyTransitScreen`
-- `MapDisplayMenu`
-- `MapLineNarrativeSheet`
-- `MapMenuChips`
-- `MapRelocationPopup`
-- `MapScreen`
-- `MapScreenState`
-- `MapSideButtons`
-- `MapStyle`
-- `MapStyleConfig`
-- `MapTimeSlider`
 - `MapTimeSliderState`
-- `MapViewpointMenu`
 - `MonthEvents`
 - `Observe3DCard`
 - `ObserveCardBack`
@@ -118,42 +88,26 @@
 - `ObserveHistoryPanel`
 - `ObserveScreen`
 - `PlanetDailyTransits`
-- `PlanetLineData`
-- `PlanetMeta`
-- `PlanetSymbolsLayer`
 - `PlanetVectorIcon`
 - `RelocationNarrative`
-- `RestOverlay`
 - `SanctuaryHomeEditorPage`
 - `SanctuaryOrbOverlay`
 - `SanctuaryProfileEditorPage`
 - `SanctuaryResetHourPicker`
 - `SanctuaryScreen`
 - `SanctuaryTitleDiagnosisPage`
-- `ScoreResult`
-- `SearchBarOverlay`
-- `SearchFocusPopup`
-- `SearchHit`
-- `SearchResultList`
-- `SearchVpChipRow`
-- `SelectedDateBadge`
-- `SlotManager`
-- `SlotMarker`
 - `SolaraApp`
 - `SolaraNavIcons`
 - `SolaraPhilosophyScreen`
 - `SolaraProfile`
 - `SolaraStorage`
 - `SolaraTheme`
-- `StatusBadge`
 - `TarotAltarScene`
 - `TarotData`
 - `TarotReading`
 - `TitleHowItWorksContent`
 - `TransitAspect`
 - `TransitEvent`
-- `VPSlot`
-- `VpPinVisual`
 - `ZodiacImageIcon`
 - `_AcgEntryFooter`
 - `_ActionTile`
@@ -241,9 +195,50 @@
 - `_ObserveHistoryPanelState`
 - `_ObserveScreenState`
 - `_OrbSectionLabel`
-- … 残り 42 省略
+- `_Petal`
+- `_PetalPalette`
+- `_PlanetDef`
+- `_PlanetGlyphPainter`
+- `_PlanetIntroBody`
+- `_PlanetSub`
+- `_PopupBody`
+- `_RankedLine`
+- `_Ray`
+- `_RosePetal`
+- `_SanctuaryHomeEditorPageState`
+- `_SanctuaryIconPainter`
+- `_SanctuaryOrbOverlayState`
+- `_SanctuaryProfileEditorPageState`
+- `_SanctuaryResetHourPickerState`
+- `_SanctuaryScreenState`
+- `_SanctuaryTitleDiagnosisPageState`
+- `_ScrollableRowPanel`
+- `_SearchBarOverlayState`
+- `_SectionCard`
+- `_SettingsGroup`
+- `_SettingsItem`
+- `_SettingsItemWithToggle`
+- `_SlotStats`
+- `_SolaraHomeState`
+- `_Spark`
+- `_Sparkle`
+- `_SpiralDot`
+- `_SpreadItem`
+- `_StaticChip`
+- `_Stream`
+- `_SubPill`
+- `_SyncInput`
+- `_SyncInputState`
+- `_TarotAltarSceneState`
+- `_TarotIconPainter`
+- `_TimelineBody`
+- `_TimelineRow`
+- `_Vec3`
+- `_Vine`
+- `_WidgetOpacity`
+- `_WorkPainter`
 
-### #2 Doc に書いてあるがコードに存在しない (ゴースト記述) (24)
+### #2 Doc に書いてあるがコードに存在しない (ゴースト記述) (28)
 
 > 注: Flutter SDK や外部ライブラリの型もここに乗る (誤検出)。
 > 真のゴーストはアプリ独自型のみ。実際の Doc 修正対象は手で絞り込む。
@@ -252,6 +247,8 @@
 - `AnimationController`
 - `BottomNavigationBar`
 - `C8D4E8`
+- `CHART_STYLE`
+- `CategoryFilterTips`
 - `CustomPaint`
 - `D6915C`
 - `EAEAEA`
@@ -263,7 +260,9 @@
 - `GOOGLE_PLACES_KEY`
 - `GlobalKey`
 - `IgnorePointer`
+- `ListView`
 - `NOUN_SHAPES`
+- `RawScrollbar`
 - `ScrollController`
 - `SearchHourAngle`
 - `SearchRiseSet`
