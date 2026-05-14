@@ -276,8 +276,8 @@
 
 ### 層 4a: Map 画面
 
-- ファイル数: 25
-- Worker URL 呼出: ['/astro/chart', '/search', '/tiles/osm/hot/', '/tiles/osm/hot/0/0/0']
+- ファイル数: 22
+- Worker URL 呼出: ['/search', '/tiles/osm/hot/', '/tiles/osm/hot/0/0/0']
 - Popup/Dialog: `showInfoPopup`×14, `showLineNarrativeSheet`×3, `showSolaraDatePicker`×1
 - Navigator.push 等: 0 箇所
 

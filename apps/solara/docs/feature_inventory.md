@@ -163,15 +163,12 @@ Solara のバックエンドは **Cloudflare Workers** で稼働。本番 URL: `
 
 ### 1a.1 概要
 
-`lib/utils/` 配下の 8 ファイル / 計 2,512 行。**副作用なし** (http なし、storage なし、initialize なし)。
-純数学計算と静的辞書ヘルパーが混在。
+`lib/utils/` 配下の 5 ファイル / 計 1,424 行。**副作用なし** (http なし、storage なし、initialize なし)。
+画面間で広く共有される数学・データ変換のみ。**Dart 完結 = Worker 呼出ゼロ**。
 
-**機械分類の精度メモ**: 層 1a に分類された 8 ファイルのうち、
-- `astro_glossary.dart`, `celestial_event_meanings.dart`, `planet_intro.dart` の 3 つは実態が「**大きな静的辞書 + 取得ヘルパー関数**」で、本来は層 1b (静的データ辞書) の方が意味的に適切。
-- 機械分類ヒューリスティック (`Map<>` リテラル数と関数数の比) では区別しきれず 1a に入った。これは `extract.py` の将来改善ポイント (= 機械分類のオーバーライドテーブル導入 or 静的データ判定強化)。
-- 今回は機械分類のまま記載するが、本章末尾で 5 + 3 に分けて整理する。
+**機械分類の精度** (✅ 2026-05-14 オーバーライド適用済): 当初は静的辞書ヘルパー 3 本 (`astro_glossary.dart`, `celestial_event_meanings.dart`, `planet_intro.dart`) も `Map<>` リテラル数ヒューリスティックで 1a に入っていたが、`extract.py` の `PATH_OVERRIDES` で 1b に明示移動。これにより 1a は「真の純計算ユーティリティのみ」を保持する状態に整理された。
 
-### 1a.2 ファイル別 役割 + 呼出元 (8 本)
+### 1a.2 ファイル別 役割 + 呼出元 (5 本)
 
 | # | ファイル | 行 | 役割 | 主要 export | 呼出元 (画面層) | 性質 |
 |---|---|---|---|---|---|---|
@@ -180,35 +177,10 @@ Solara のバックエンドは **Cloudflare Workers** で稼働。本番 URL: `
 | 3 | [`astro_lines.dart`](../lib/utils/astro_lines.dart) | 588 | 40 本アスペクト線計算 (球面三角法) + Haversine 近接検出 + GMST 計算 | `AstroFrame`, `AstroLine`, `NearbyAstroLine`, `astroFrameKey`, `gmstHoursFromUtc`, `solarArcPlanets`, `buildAstroLines`, `buildAstroLinesAt`, `findNearbyLinesScreen` | Map のみ ([map_screen](../lib/screens/map_screen.dart), map_relocation_popup, [map_line_narrative_sheet](../lib/screens/map/map_line_narrative_sheet.dart), [map_astro_lines](../lib/screens/map/map_astro_lines.dart), [map_astro_carto](../lib/screens/map/map_astro_carto.dart)) | **Pro 候補の素材** — 「アスペクトライン 120 本拡張」は本ファイル拡張で作れる (Worker 不要) |
 | 4 | [`direction_energy.dart`](../lib/utils/direction_energy.dart) | 238 | Soft/Hard 独立 2 エネルギーの中核データ構造 + アスペクト寄与の集約ロジック | `DirectionEnergy`, `EnergyMode`, `AspectContribution`, `AggregatedAspect`, `classify`, `scaledBy`, `aggregateContributions` | Map のみ ([map_screen](../lib/screens/map_screen.dart), [map_fortune_sheet](../lib/screens/map/map_fortune_sheet.dart), [map_direction_popup](../lib/screens/map/map_direction_popup.dart), [map_astro](../lib/screens/map/map_astro.dart)) | **設計思想の核** ([project_solara_design_philosophy](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/project_solara_design_philosophy.md))。`total = soft + hard` 禁止 |
 | 5 | [`moon_phase.dart`](../lib/utils/moon_phase.dart) | 360 | Jean Meeus アルゴリズム月相計算 (14 補正項、±2-3 分精度) | `MoonPhase`, `findPreviousNewMoon`, `findNextNewMoon`, `findFullMoonInCycle`, `getPhaseDay`, `isNewMoon`, `isFullMoon`, `getCycleTotalDays`, `getCurrentDayIndex`, `getCycleId`, `getIllumination` 等 | [observe_screen](../lib/screens/observe_screen.dart) (Tarot)、[galaxy_screen](../lib/screens/galaxy_screen.dart)、[galaxy_constellation_builder](../lib/screens/galaxy/galaxy_constellation_builder.dart)、[cycle_spiral_painter](../lib/widgets/cycle_spiral_painter.dart) | Map で未使用、Observe/Galaxy 専用 |
-| 6 | [`astro_glossary.dart`](../lib/utils/astro_glossary.dart) | 586 | 占星術専門用語の解説辞書 + popup 表示ヘルパー | `AstroGlossaryEntry`, `showAstroGlossaryDialog` | [astro_term_label](../lib/widgets/astro_term_label.dart), Map の各 popup 6 種 | **本来は 1b (静的辞書)** |
-| 7 | [`celestial_event_meanings.dart`](../lib/utils/celestial_event_meanings.dart) | 52 | 天体イベント (ingress/retrograde/eclipse) の占星術的意味辞書 | `getEventMeaningJP` | [celestial_event_bar](../lib/widgets/celestial_event_bar.dart) のみ | **本来は 1b (静的辞書)** |
-| 8 | [`planet_intro.dart`](../lib/utils/planet_intro.dart) | 559 | 10 惑星の Map マーカータップ説明テキスト (natal/transit/progressed 3 フレーム × 10 惑星) | `PlanetIntroFrame`, `PlanetIntro`, `frameOf` | [map_screen](../lib/screens/map_screen.dart), [map_planet_intro_popup](../lib/screens/map/map_planet_intro_popup.dart) | **本来は 1b (静的辞書)** |
 
-### 1a.3 真の純計算 vs 静的辞書ヘルパー の整理
+(旧 6〜8 行: `astro_glossary.dart` / `celestial_event_meanings.dart` / `planet_intro.dart` は層 1b にオーバーライド移動済 = 1b.2 表参照)
 
-機械分類を意味的に再整理すると:
-
-#### A. 真の純計算 (5 本、計 1,424 行)
-画面間で広く共有される数学/データ変換。**Dart 完結 = Worker 呼出ゼロ**。
-
-| ファイル | 行 | 主要関数 | 性質 |
-|---|---|---|---|
-| `astro_math.dart` | 30 | `normalize360`, `angDist` | 全層の基礎 |
-| `astro_houses.dart` | 208 | `calcHousesRelocate`, `assignPlanetHouse` | Worker 重複あり、リロケーション専用 |
-| `astro_lines.dart` | 588 | `buildAstroLines`, `findNearbyLinesScreen` | Map (ACG) 専用、Pro 拡張候補 |
-| `direction_energy.dart` | 238 | `aggregateContributions`, `classify` | Map スコア計算の核 |
-| `moon_phase.dart` | 360 | `findNextNewMoon`, `getPhaseInt` | Observe/Galaxy 専用 |
-
-#### B. 静的辞書 + ヘルパー (3 本、計 1,197 行、本来は層 1b)
-データはほぼ静的、関数は「辞書から取り出すヘルパー」が主。
-
-| ファイル | 行 | 内容 |
-|---|---|---|
-| `astro_glossary.dart` | 586 | 占星術用語辞書 + popup 表示ヘルパー |
-| `celestial_event_meanings.dart` | 52 | 天体イベント意味の辞書 |
-| `planet_intro.dart` | 559 | 10 惑星 × 3 フレーム のテキスト |
-
-### 1a.4 課金検討に直結する示唆
+### 1a.3 課金検討に直結する示唆
 
 **Pro 機能の素材としての価値**:
 
@@ -232,7 +204,7 @@ Solara のバックエンドは **Cloudflare Workers** で稼働。本番 URL: `
    - Map 系の Pro 機能では使われない
    - Observe (Tarot) の Pro 拡張 (3 枚引き/5 枚引き、[project_tarot_v2_plan](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/project_tarot_v2_plan.md)) で月相加味の占い文を Gemini に投げる場合に活用余地
 
-### 1a.5 Worker との重複コード (運用上の注意)
+### 1a.4 Worker との重複コード (運用上の注意)
 
 `astro_houses.dart` と `astro_lines.dart` は Worker 側の同等機能と並行実装になっている。
 **検証済み精度** ([architecture.md](architecture.md)):
@@ -247,7 +219,7 @@ Solara のバックエンドは **Cloudflare Workers** で稼働。本番 URL: `
 - 同期し続けるコスト vs どちらかを単一実装にするメリット
 - 「Worker 純計算系を順次 Dart に寄せて Worker を AI 仲介専用にする」案は Pro 公開時のセキュリティ整理 (`/protected/*`) と整合する
 
-### 1a.6 機械抽出への参照
+### 1a.5 機械抽出への参照
 
 層 1a の機械抽出 raw: [`feature_inventory/01a_pure_calc.md`](feature_inventory/01a_pure_calc.md)
 
@@ -257,12 +229,13 @@ Solara のバックエンドは **Cloudflare Workers** で稼働。本番 URL: `
 
 ### 1b.1 概要
 
-`lib/utils/` 配下、**静的データが主体** で関数は辞書取り出しヘルパーが中心の 5 ファイル / 計 1,418 行。
-副作用なし (= 層 1a と同じく純粋)、ただし「計算」というより「世界観テキストの貯蔵庫」。
+`lib/utils/` 配下と `screens/map/` 由来の 9 ファイル / 計 3,628 行。**静的データが主体** で関数は辞書取り出しヘルパーが中心。副作用なし (= 層 1a と同じく純粋)、ただし「計算」というより「世界観テキストの貯蔵庫」。
 
-機械分類で本層に入った 5 ファイルに加え、層 1a に分類された 3 ファイル (`astro_glossary`, `celestial_event_meanings`, `planet_intro`) も意味的にはこちら寄り (= 層 1a.3 参照)。
+**機械分類の精度** (✅ 2026-05-14 オーバーライド適用済):
+- ヒューリスティック検出だけだと 5 ファイルだったが、`PATH_OVERRIDES` で 1a → 1b に 3 本、4a → 1b に 1 本を明示移動 = 計 9 本
+- 移動した 4 本: `astro_glossary.dart` / `celestial_event_meanings.dart` / `planet_intro.dart` (1a 由来) + `daily_transit_data.dart` (4a 由来)
 
-### 1b.2 ファイル別 役割 + 呼出元 (5 本)
+### 1b.2 ファイル別 役割 + 呼出元 (9 本)
 
 | # | ファイル | 行 | 内容 | 主要 export | 呼出元 (画面層) | 特記 |
 |---|---|---|---|---|---|---|
@@ -271,6 +244,10 @@ Solara のバックエンドは **Cloudflare Workers** で稼働。本番 URL: `
 | 3 | [`cycle_story_texts.dart`](../lib/utils/cycle_story_texts.dart) | 86 | 月齢サイクル (新月/満月/刻星化) のストーリーテキスト JP/EN | `CycleStoryTexts`, `getNewMoon`, `getFullMoon`, `getCatasterism` | [new_moon_overlay](../lib/widgets/new_moon_overlay.dart), [full_moon_overlay](../lib/widgets/full_moon_overlay.dart), [catasterism_overlay](../lib/widgets/catasterism_overlay.dart) | JP/EN ネイティブ別書き (翻訳ではない)。`_isJapanese()` で切替 |
 | 4 | [`solara_manifesto.dart`](../lib/utils/solara_manifesto.dart) | 141 | Solara 設計思想テキスト (3 セクション: 世界観 / 2 エネルギー / 委ねる宣言) | `SolaraManifesto`, `SolaraManifestoSection`, `getSections` | [solara_philosophy_screen](../lib/screens/solara_philosophy_screen.dart) のみ | 「占い的吉凶判定をしない」を文章化したアプリの哲学的根幹 ([project_solara_design_philosophy](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/project_solara_design_philosophy.md)) |
 | 5 | [`title_data.dart`](../lib/utils/title_data.dart) | 395 | 144 称号システムデータ (12 太陽部位 × 12 月部位 + 25 class) + 太陽/月星座近似算出 | `TitleClass`, `getSunSign`, `getMoonSign` | [class_card](../lib/widgets/class_card.dart), [sanctuary_screen](../lib/screens/sanctuary_screen.dart), [sanctuary_title_diagnosis](../lib/screens/sanctuary/sanctuary_title_diagnosis.dart), [class_share_card](../lib/screens/sanctuary/class_share_card.dart) | **EN 版 144 称号未実装** ([project_solara_title_system](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/project_solara_title_system.md)) |
+| 6 | [`astro_glossary.dart`](../lib/utils/astro_glossary.dart) | 586 | 占星術専門用語の解説辞書 + popup 表示ヘルパー (50+ エントリ: asc/mc/house/aspect/relocation/transit_acg 等) | `AstroGlossaryEntry`, `astroGlossary`, `showAstroGlossaryDialog` | [astro_term_label](../lib/widgets/astro_term_label.dart)、Map の popup 6 種、[map_relocation_popup](../lib/screens/map/map_relocation_popup.dart)、[map_line_narrative_sheet](../lib/screens/map/map_line_narrative_sheet.dart) | (1a→1b オーバーライド済) `showInfoPopup` 経由で説明 popup を表示 |
+| 7 | [`celestial_event_meanings.dart`](../lib/utils/celestial_event_meanings.dart) | 52 | 天体イベント (ingress/retrograde/eclipse/conjunction/node_shift) の占星術的意味辞書 | `getEventMeaningJP` | [celestial_event_bar](../lib/widgets/celestial_event_bar.dart) のみ | (1a→1b オーバーライド済) `/astro/events` 取得結果の表示用 |
+| 8 | [`planet_intro.dart`](../lib/utils/planet_intro.dart) | 559 | 10 惑星の Map マーカータップ説明テキスト (natal/transit/progressed 3 フレーム × 10 惑星 = 30 パターン) | `PlanetIntroFrame`, `PlanetIntro`, `frameOf` | [map_screen](../lib/screens/map_screen.dart)、[map_planet_intro_popup](../lib/screens/map/map_planet_intro_popup.dart) | (1a→1b オーバーライド済) Map 惑星マーカータップ時の説明源 |
+| 9 | [`daily_transit_data.dart`](../lib/screens/map/daily_transit_data.dart) | 1,013 | Daily Transit 画面用 静的データ大容量: `AngleFilter` enum + ラベル/セット/意味マップ + `CategoryFilterTips` (5 カテゴリ × 外向き/内向き各 4 tips) + `planetAngleBaseText` (10 惑星 × 4 アングル = 40 パターン基本意味) + `categoryAppendix` + `categoryPlanetSets` | `AngleFilter`、`angleFilterLabel/Set/Meaning`、`CategoryFilterTips`、`planetAngleBaseText`、`categoryAppendix`、`categoryPlanetSets` | [map_daily_transit_screen](../lib/screens/map/map_daily_transit_screen.dart) のみ | (4a→1b オーバーライド済) 物理的には `screens/map/` 配下だが、実態は静的辞書。Worker `fortune.js` の `categoryPlanetSets` と一致 (要同期保守) |
 
 ### 1b.3 課金検討に直結する示唆
 
@@ -343,10 +320,12 @@ Solara のバックエンドは **Cloudflare Workers** で稼働。本番 URL: `
 
 ### 2a.1 概要
 
-`lib/utils/` 配下、**http import あり** の 6 ファイル / 計 932 行。**Worker ↔ Flutter の通信境界**。
+`lib/utils/` 配下 + `screens/map/map_astro.dart` (オーバーライド経由) の **7 ファイル / 計 1,440 行**。**Worker ↔ Flutter の通信境界**。
 ここを把握すれば「課金時に `/protected/*` に移すべき呼出元」が全部見える。
 
-### 2a.2 ファイル別 役割 + 呼出 endpoint + 呼出元 (6 本)
+**機械分類の精度** (✅ 2026-05-14 オーバーライド適用済): `screens/map/map_astro.dart` (508 行、`/astro/chart` ラッパ) は当初 4a 検出だったが `PATH_OVERRIDES` で 2a に明示移動。Map と Horoscope が両方 import する横断利用ファイルが本層に正しく入る状態に整理された。
+
+### 2a.2 ファイル別 役割 + 呼出 endpoint + 呼出元 (7 本)
 
 | # | ファイル | 行 | 呼出先 endpoint | 呼出元 (主要) | 特記 |
 |---|---|---|---|---|---|
@@ -356,22 +335,13 @@ Solara のバックエンドは **Cloudflare Workers** で稼働。本番 URL: `
 | 4 | [`celestial_events.dart`](../lib/utils/celestial_events.dart) | 314 | `/astro/events` (GET) | [main.dart](../lib/main.dart) (起動 initialize)、[new_moon_overlay](../lib/widgets/new_moon_overlay.dart)、[full_moon_overlay](../lib/widgets/full_moon_overlay.dart)、[celestial_event_bar](../lib/widgets/celestial_event_bar.dart)、[galaxy_screen](../lib/screens/galaxy_screen.dart) | **singleton 的に initialize**、機械分類は 2a だが層 2c 寄りの側面あり (= 層 2c.4 と整合) |
 | 5 | [`reverse_geocode.dart`](../lib/utils/reverse_geocode.dart) | 50 | **Nominatim 直叩き** (`nominatim.openstreetmap.org/reverse`) | [map_vp_panel](../lib/screens/map/map_vp_panel.dart)、[horo_birth_panel](../lib/screens/horoscope/horo_birth_panel.dart) | **🔴 重要**: 唯一 Worker 経由でない外部 API 呼出。Nominatim は無料 + key 不要 + 1 req/sec 制限。Pro 公開時にレートリミット遵守 + UA 設定確認が必要 |
 | 6 | [`tile_http_client.dart`](../lib/utils/tile_http_client.dart) | 42 | (Worker URL 自体は呼出さず、共有 HttpClient のみ提供) | [map_screen](../lib/screens/map_screen.dart) (`sharedTileHttpClient`)、[map_styles](../lib/screens/map/map_styles.dart) | **fd 枯渇対策** ([`feedback_http_fd_leak`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/feedback_http_fd_leak.md), [`project_solara_a101fc_fd_leak`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/project_solara_a101fc_fd_leak.md))。maxConnectionsPerHost=6, idleTimeout=15s |
+| 7 | [`screens/map/map_astro.dart`](../lib/screens/map/map_astro.dart) | 508 | **`/astro/chart`** (POST) + 16 方位スコア計算 | [map_screen](../lib/screens/map_screen.dart) (Map 描画の心臓)、[horoscope_screen](../lib/screens/horoscope_screen.dart) (`fetchChart` 共用) | (4a→2a オーバーライド済) **🔴 Map+Horo 共用の chart fetcher**。`ChartResult` (natal+transit+progressed+ASC/MC/DSC/IC + 全アスペクト)、`ScoreResult` (16 方位 × 5 カテゴリ Soft/Hard)、`fetchChart`、`scoreAll`、`isAngle`、`addT/addP/addCT/addCP`。リファクタ候補 (将来 `lib/utils/astro_chart_api.dart` への移動) |
 
-### 2a.3 機械分類の盲点 — `screens/map/map_astro.dart` は実態が層 2a
-
-機械分類で **`screens/map/map_astro.dart` は層 4a (Map 画面)** に入っているが、中身は:
-- `/astro/chart` (POST) を呼び出す **`fetchChart` API ラッパ関数** + レスポンス class (`ChartResult` 等)
-- Map + Horoscope 両方から呼ばれる横断利用 (Map: 直接、Horo: 同じ関数を import)
-
-意味的には「層 2a (API ラッパ)」が正しい。screens/ ディレクトリにあるため機械分類で 4a 判定されている。
-
-**改善案**: `lib/screens/map/map_astro.dart` を `lib/utils/astro_api.dart` (新規名) にリネームすれば、機械分類が正しく 2a に入り、Horoscope 側からも自然 import 可能。今は機械分類のオーバーライド対象として記録 (`extract.py` への明示テーブル化候補)。
-
-### 2a.4 Worker endpoint との対応マップ (層 0 ↔ 層 2a)
+### 2a.3 Worker endpoint との対応マップ (層 0 ↔ 層 2a)
 
 | Worker endpoint | 層 2a ラッパ | Flutter 呼出元 |
 |---|---|---|
-| `/astro/chart` | `map_astro.dart`'s `fetchChart` (実態は 2a) | Map + Horoscope |
+| `/astro/chart` | `screens/map/map_astro.dart`'s `fetchChart` (2a オーバーライド済) | Map + Horoscope |
 | `/astro/forecast` | [`forecast_cache.dart`](../lib/utils/forecast_cache.dart) (機械分類 2b、永続化込み) | Forecast 画面 |
 | `/astro/predict` | **(ラッパなし)** | **死んだ endpoint** (層 0.4 で削除候補) |
 | `/astro/daily-transits` | `daily_transits_api.dart` | Map Daily Transit |
@@ -387,10 +357,11 @@ Solara のバックエンドは **Cloudflare Workers** で稼働。本番 URL: `
 
 **観察**:
 - **Worker 経由でない直叩き**: `reverse_geocode.dart` (Nominatim)
-- **ラッパが層 2a の utils/ にない呼出**: `/astro/chart` (map_astro.dart)、`/search` (map_search.dart)、`/tiles/*` (map_styles.dart)
+- **ラッパが `lib/utils/` にない呼出**: `/search` (map_search.dart は 4a)、`/tiles/*` (map_styles.dart は 4a)
   - = 課金実装時に「`screens/map/` 配下の Worker 呼出箇所」も同等にチェック必須
+- **オーバーライドで 2a 入りした例外**: `/astro/chart` (map_astro.dart) は物理的に `screens/map/` だが層は 2a
 
-### 2a.5 課金検討に直結する示唆
+### 2a.4 課金検討に直結する示唆
 
 1. **Gemini 呼出 3 系統が `fortune_api.dart` に集中** → 一括で `/protected/*` 移行可能、扱いやすい
    - 回数制限 (Free 5/day, Pro 100/day 等) の実装も本ファイル + Worker `/fortune`, `/tarot`, `/relocation` の中央で行う
@@ -405,11 +376,12 @@ Solara のバックエンドは **Cloudflare Workers** で稼働。本番 URL: `
    - main.dart で `await CelestialEvents.initialize()` = 起動時に必ず呼ばれる
    - 「無料ユーザーも天体イベントバーは表示」想定なので、`/astro/events` は `/public/*` 配下
 
-4. **`/astro/chart` ラッパが utils/ に無いのは設計上の歪み**
+4. **`/astro/chart` ラッパが `screens/map/` に物理的にある = 設計上の歪み**
    - `screens/map/map_astro.dart` から Horoscope が import している = Map ↔ Horo の意外な結合
+   - オーバーライドで層 2a に明示移動済だが、**物理 path は未移動** = リファクタ余地あり
    - 課金実装でリファクタする好機 (ラッパを `lib/utils/astro_chart_api.dart` に切り出し)
 
-### 2a.6 機械抽出への参照
+### 2a.5 機械抽出への参照
 
 層 2a の機械抽出 raw: [`feature_inventory/02a_api_wrappers.md`](feature_inventory/02a_api_wrappers.md)
 
@@ -652,17 +624,20 @@ Solara のバックエンドは **Cloudflare Workers** で稼働。本番 URL: `
 
 ### 3b.1 概要
 
-`lib/theme/` 配下の 2 ファイル / 計 178 行。**色定数と ThemeData の貯蔵庫**。
-他層 (widgets / screens / painters) は本層を import して色を引く構造で、Solara の見た目の **唯一の源泉**。
+`lib/theme/` 配下 2 本 + `screens/map/map_constants.dart` (オーバーライド経由) の **3 ファイル / 計 300 行**。**色定数と HTML 一致定数の貯蔵庫**。
+他層 (widgets / screens / painters) は本層を import して色 / 線スタイル / 惑星シンボルを引く構造で、Solara の見た目の **唯一の源泉**。
 
-**機械分類メモ**: 当初プラン ([`project_solara_feature_extractor`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/project_solara_feature_extractor.md)) では「theme/ + antique_icons + astro_glyphs 2 本」とあったが、現状の repo に `antique_icons.dart` / `astro_glyphs.dart` 単体ファイルは存在しない (`antique_icons` は [horo_antique_icons.dart](../lib/screens/horoscope/horo_antique_icons.dart) として Horoscope 画面層に内包)。よって本層は実態 **2 ファイル / 純テーマのみ**。
+**機械分類の精度** (✅ 2026-05-14 オーバーライド適用済):
+- 当初プラン ([`project_solara_feature_extractor`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/project_solara_feature_extractor.md)) では「theme/ + antique_icons + astro_glyphs 2 本」とあったが、`antique_icons.dart` / `astro_glyphs.dart` 単体ファイルは存在しない (`antique_icons` は [horo_antique_icons.dart](../lib/screens/horoscope/horo_antique_icons.dart) として Horoscope 画面層 4b に内包)
+- `screens/map/map_constants.dart` (122 行、HTML `CHART_STYLE` + `TAROT.planets` 純定数) は当初 4a 検出だったが `PATH_OVERRIDES` で 3b に明示移動
 
-### 3b.2 ファイル別 役割 + 呼出元 (2 本)
+### 3b.2 ファイル別 役割 + 呼出元 (3 本)
 
 | # | ファイル | 行 | 主要 export | 呼出元 (画面層) | 性質 |
 |---|---|---|---|---|---|
 | 1 | [`solara_colors.dart`](../lib/theme/solara_colors.dart) | 110 | `SolaraColors` (static const Color 群 + `planetColor`, `elementColor` ヘルパー) | **19 ファイル** (widgets 9 + screens 9 + theme 1) で 143 occurrences | **色の唯一の源泉**。Soft/Hard 独立 2 エネルギー色、惑星 10 色、エレメント 4 色、月相、glass、spiral 全て格納 |
 | 2 | [`solara_theme.dart`](../lib/theme/solara_theme.dart) | 68 | `SolaraTheme.dark` (ThemeData) + `_textTheme` (DM Sans + Noto Sans JP fallback) | [main.dart:40](../lib/main.dart) のみ (`MaterialApp.theme: SolaraTheme.dark`) | アプリ全体の ThemeData。**日本語フォールバック規約あり**: `fontFamilyFallback: [Noto Sans JP]` を `TextTheme.apply` で全 TextStyle に伝搬 |
+| 3 | [`screens/map/map_constants.dart`](../lib/screens/map/map_constants.dart) | 122 | `ChartLineStyle` (natal/progressed/transit の線スタイル)、`PlanetMeta` (惑星シンボル + 色) | Map 系 (map_screen, map_astro_lines, map_planet_lines, map_relocation_popup, map_line_narrative_sheet, map_direction_popup ほか) | (4a→3b オーバーライド済) HTML `CHART_STYLE` と `TAROT.planets` の Dart 移植純定数。物理的には `screens/map/` 配下 |
 
 ### 3b.3 SolaraColors 色定数の構造 (`planetColor`, `elementColor`)
 
@@ -816,7 +791,12 @@ Solara のバックエンドは **Cloudflare Workers** で稼働。本番 URL: `
 
 ### 4a.1 概要
 
-`lib/screens/map/` 配下 24 ファイル + `lib/screens/map_screen.dart` 1 本 = 計 **25 ファイル / 13,926 行**。Solara で**最大規模の画面**であり、**Pro 機能の核が最も集中する層**。
+`lib/screens/map/` 配下 + `lib/screens/map_screen.dart` の **22 ファイル / 計 12,283 行** (オーバーライド適用後)。Solara で**最大規模の画面**であり、**Pro 機能の核が最も集中する層**。
+
+**機械分類の精度** (✅ 2026-05-14 オーバーライド適用済): 当初は 25 ファイル / 13,926 行だったが、`PATH_OVERRIDES` で 3 本を他層に明示移動:
+- `map_astro.dart` (508) → 層 2a (`/astro/chart` ラッパ、Map+Horo 共用)
+- `map_constants.dart` (122) → 層 3b (HTML 一致純定数)
+- `daily_transit_data.dart` (1,013) → 層 1b (静的テキスト辞書)
 
 Map 画面は単に「地図を表示する」だけでなく、以下の機能を全部内包する複合体:
 
@@ -832,13 +812,13 @@ Map 画面は単に「地図を表示する」だけでなく、以下の機能�
 
 **Pro 公開時の最大対象 = `/fortune` (Gemini) + `/relocation` (Gemini) を呼ぶラッパが本層内に複数あり**。
 
-### 4a.2 機能群別ファイル分類 (25 本)
+### 4a.2 機能群別ファイル分類 (22 本)
 
-25 ファイルを 11 群に整理:
+22 ファイルを 10 群に整理 (旧 A は全削除、旧 J は 2 本に減):
 
 | 群 | 役割 | 数 | 行 |
 |---|---|---|---|
-| A 計算データ | Worker レスポンス受け + 16 方位スコア計算 + 描画定数 | 2 | 630 |
+| ~~A~~ | ~~計算データ + 描画定数~~ — オーバーライドで層 2a/3b へ移動 | 0 | 0 |
 | B UI 基礎部品 | 円形ボタン、Legend、タイル選択、扇状セクター | 3 | 376 |
 | C HUD オーバーレイ | 左サイド 3 ボタン、検索バー、選択日バッジ、VP Pin、下部チップバー、時刻スライダー | 3 | 1,261 |
 | D 検索系 | Google Places 検索 + 結果リスト + フォーカス popup + スコア注入 | 1 | 590 |
@@ -847,15 +827,16 @@ Map 画面は単に「地図を表示する」だけでなく、以下の機能�
 | G 表示メニュー | ☰ 表示ボタン展開、L1/L2 タブ、4 frame ON/OFF | 1 | 410 |
 | H 詳細 popup | 方角 / 惑星 / 引越し / ACG ライン 4 種 | 4 | 1,409 |
 | I 運勢シート | カテゴリスコア表示 + sources × categories グリッド | 1 | 775 |
-| J Daily Transit (別画面) | F1-c タイムライン + データ定義 + アスペクトチップ | 3 | 3,033 |
-| K 統合ハブ | map_screen.dart (56 関数、25 ファイルを統合) | 1 | 2,695 |
+| J Daily Transit (別画面) | F1-c タイムライン + アスペクトチップ (daily_transit_data は 1b に移動) | 2 | 2,020 |
+| K 統合ハブ | map_screen.dart (56 関数、本層 22 ファイル + 他層 ラッパを統合) | 1 | 2,695 |
 
-### 4a.3 群 A: 計算データ + 描画定数 (2 本、630 行)
+### 4a.3 群 A: 計算データ + 描画定数 (オーバーライド済、0 本)
 
-| ファイル | 行 | 主要 export | 役割 |
-|---|---|---|---|
-| [`map_astro.dart`](../lib/screens/map/map_astro.dart) | 508 | `ChartResult`、`ScoreResult`、`fetchChart`、`scoreAll`、`isAngle`、`addT/addP/addCT/addCP` | **🔴 Worker `/astro/chart` ラッパ + 16 方位スコア計算の中核**。本ファイルは機械分類 4a だが実態は層 2a 寄り (Map + Horoscope 共用)。`fetchChart()` で natal+transit+progressed+ASC/MC/DSC/IC 全アスペクト取得、`scoreAll()` で 16 方位 × 5 カテゴリ Soft/Hard スコア算出 ([`feedback_forecast_map_separate`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/feedback_forecast_map_separate.md): Forecast と Map は別計算で意図的に一致しない) |
-| [`map_constants.dart`](../lib/screens/map/map_constants.dart) | 122 | `ChartLineStyle`、`PlanetMeta` | HTML `CHART_STYLE` の Dart 移植定数 (natal/progressed/transit の線スタイル) + HTML `TAROT.planets` の惑星シンボル+色マッピング |
+旧群 A の 2 ファイルは ✅ 2026-05-14 オーバーライドで他層に明示移動済:
+- `map_astro.dart` (508 行) → 層 2a (`/astro/chart` ラッパ + scoreAll、Map+Horo 共用) — 詳細は [`2a.2 表`](#2a.2) 行 7
+- `map_constants.dart` (122 行) → 層 3b (HTML `CHART_STYLE` + `PlanetMeta` 純定数) — 詳細は [`3b.2 表`](#3b.2) 行 3
+
+これにより本層 4a は「真の Map 画面 UI のみ」を保持する状態に整理された。
 
 ### 4a.4 群 B: UI 基礎部品 (3 本、376 行)
 
@@ -916,13 +897,14 @@ Map 画面は単に「地図を表示する」だけでなく、以下の機能�
 |---|---|---|---|
 | [`map_fortune_sheet.dart`](../lib/screens/map/map_fortune_sheet.dart) | 775 | `FortuneFilterLabel`、`FortuneSheet`、`pctValue`、`showCategoryInfoPopup`、`_FortuneRowsList` (Stateful) | **下部運勢シート** = カテゴリスコアの sources × categories グリッド。`RawScrollbar` + `ListView` で `ScrollController` 共有。`showCategoryInfoPopup` で Map の使い方 + カテゴリ × 関連惑星ペアの説明 |
 
-### 4a.12 群 J: Daily Transit (別画面、3 本、3,033 行)
+### 4a.12 群 J: Daily Transit (別画面、2 本、2,020 行)
 
 | ファイル | 行 | 主要 export | 役割 |
 |---|---|---|---|
 | [`map_daily_transit_screen.dart`](../lib/screens/map/map_daily_transit_screen.dart) | 1,799 | `MapDailyTransitScreen` (Stateful) + 14 内部 widget (タブバー / ヘッダ / カテゴリ tips / タイムライン本体 / 行 / 高度バッジ / 緯度帯ボックス…)、`showDailyUsageGuidePopup` | **🔴 F1-c フル UI** (2026-04-29 オーナー設計)。10 惑星 × 4 アングル (ASC/MC/DSC/IC) のタイムライン + 各行 🗺 ジャンプ + 「今日の TOP」カテゴリ表示 + L3 Lewis 高度バッジ / 緯度帯。**HARD ファイル分割対象**だが pre-existing |
-| [`daily_transit_data.dart`](../lib/screens/map/daily_transit_data.dart) | 1,013 | `AngleFilter` enum + `angleFilterLabel/Set/Meaning`、`CategoryFilterTips` (5 カテゴリ × 外向き/内向き各 4 tips)、`planetAngleBaseText` (40 パターン)、`categoryAppendix`、`categoryPlanetSets` | Daily Transit 画面用の **静的テキストデータ大容量**。Worker `fortune.js` の `categoryPlanetSets` と一致 (要同期保守) |
 | [`map_aspect_chip.dart`](../lib/screens/map/map_aspect_chip.dart) | 221 | `MapAspectChip` | Daily Transit 行内の compact アスペクトチップ。soft=銀月色 / hard=金陽色 / tense=金陽色 / neutral=金色。タップで Horo 相タブ相当の詳細解説 popup |
+
+(旧 `daily_transit_data.dart` 1,013 行は ✅ オーバーライドで層 1b に移動済 — 詳細は [`1b.2 表`](#1b.2) 行 9)
 
 ### 4a.13 群 K: 統合ハブ (1 本、2,695 行)
 
@@ -944,19 +926,19 @@ Map 画面は単に「地図を表示する」だけでなく、以下の機能�
 
 | endpoint | ファイル | 用途 |
 |---|---|---|
-| `/astro/chart` | [`map_astro.dart:17`](../lib/screens/map/map_astro.dart) | natal+transit+progressed+ASC/MC/DSC/IC + 全アスペクト計算 |
+| `/astro/chart` | [`screens/map/map_astro.dart:17`](../lib/screens/map/map_astro.dart) (2a オーバーライド済) | natal+transit+progressed+ASC/MC/DSC/IC + 全アスペクト計算 |
 | `/search` | [`map_search.dart:11`](../lib/screens/map/map_search.dart) | Google Places primary + Nominatim fallback |
 | `/tiles/osm/hot/*` | [`map_styles.dart:60,69`](../lib/screens/map/map_styles.dart) (2 リテラル — `osmHot` Light/Dark で別 URL) | OSM Worker 中継タイル (`/tiles/osm/hot/{z}/{x}/{y}.png`) |
 | `/tiles/osm/hot/0/0/0.png` | [`map_screen.dart:368`](../lib/screens/map_screen.dart) | `_warmupTileConnection` で起動時 1 枚 prefetch |
 
 **`/fortune` (Gemini) は本層では呼ばない** — Map から触れるのは Forecast / Horoscope 経由のみ。本層の Worker 呼出は天体計算 + 検索 + タイルの 3 種で全部 ([`project_solara_security_principles`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/project_solara_security_principles.md) の `/public/*` 配下想定)。
 
-### 4a.15 機械分類の盲点 + 重要な実態
+### 4a.15 機械分類の盲点 + 重要な実態 (✅ オーバーライド適用済)
 
-1. **`screens/map/map_astro.dart` は実態が層 2a** (API ラッパ) — 既出 (層 2a.3 で記述)。Map + Horoscope 両方から `fetchChart` を呼ぶ横断利用 = 機械分類は 4a に入っているが、リファクタ時に `lib/utils/astro_chart_api.dart` への移動が自然
-2. **`map_constants.dart` は実態が層 3b 寄り** (純定数のみ)
+1. ~~**`screens/map/map_astro.dart` は実態が層 2a**~~ — ✅ 2026-05-14 `PATH_OVERRIDES` で 2a に明示移動済。物理 path は `screens/map/` 配下のまま、リファクタ時に `lib/utils/astro_chart_api.dart` へ移すと自然
+2. ~~**`map_constants.dart` は実態が層 3b 寄り**~~ — ✅ 同オーバーライドで 3b に明示移動済
 3. **`map_screen.dart` 2,695 行 + `map_daily_transit_screen.dart` 1,799 行は HARD 違反** (`code_audit/audit.py` の 500 行閾値超過) — pre-existing で別タスク
-4. **`daily_transit_data.dart` 1,013 行も静的テキスト辞書なので実態は層 1b 寄り** — ただし Daily Transit 専用なので機械分類 4a で許容
+4. ~~**`daily_transit_data.dart` 1,013 行は静的テキスト辞書、実態は層 1b 寄り**~~ — ✅ 同オーバーライドで 1b に明示移動済
 5. **Stella 枠は撤去済** ([`project_solara_stella_revival`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/project_solara_stella_revival.md)) — `map_overlays.dart` の `RestOverlay` のみ残置。常駐再追加禁止
 
 ### 4a.16 重要な仕様メモリへの参照 (確定仕様は HTML が正)
@@ -981,7 +963,7 @@ Map 関連の確定仕様 / 注意点 / 過去教訓を保持するメモリ:
 
 層 4a は **Solara で Pro 機能が最も集中する層**。Map 全体が「無料で見える基盤 + Pro で深まる体験」の戦略の中心。
 
-1. **🔴 Pro 機能の最有力候補ベスト 3 (本層から導出)**
+1. **🔴 Pro 機能の最有力候補ベスト 3 (本層 + 関連層から導出)**
    - **(a) アスペクトライン拡張 (40 → 120 本)** — 層 1a `astro_lines.dart` + 本層 `map_astro_lines.dart` を拡張。Worker コスト 0、クライアント完結。ハード 90° + ソフト 120°/60° 追加で 3 倍
    - **(b) Daily Transit (F1-c) 無制限拠点切替** — 現状 `_selectVp` で `vpSlot` 切替時に再 fetch。Free は home + 現在地 2 拠点制限、Pro は無制限スロット (`SlotManager.slots` 上限解除)
    - **(c) ACG モード 4 frame 同時表示 = Pro 限定** — 現状全員見えているが、Pro 化候補。`map_screen.dart._enterAstroCartoMode` で isPro チェック追加
