@@ -5,9 +5,9 @@
 
 ## サマリ
 
-- ファイル数: 22 / 総行数: 5257
-- class/mixin/extension/enum: 30
-- 関数 (top-level + method の素拾い): 136
+- ファイル数: 21 / 総行数: 5222
+- class/mixin/extension/enum: 29
+- 関数 (top-level + method の素拾い): 135
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 2
 - Worker URL リテラル: 0
@@ -284,20 +284,6 @@ ignore_for_file: invalid_use_of_protected_member
   - L232 `_skeletonBar()`
 
   </details>
-
-
-### `lib/screens/horoscope/horo_info_row.dart` (35 行)
-
-**imports:** dart=0 / package=1 / relative=0
-
-**型定義 (1):**
-
-- L9 `class HoroInfoRow : StatelessWidget`
-  - 「ラベル + 値」情報行 (horo 系 panel 共通)。
-
-**関数 (1 public + 0 private):**
-
-- L16 `build()`
 
 
 ### `lib/screens/horoscope/horo_ornament_painter.dart` (139 行)

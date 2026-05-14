@@ -36,7 +36,7 @@
 
 ## #1 / #2 機械抽出 ↔ feature_inventory.md (人手版) の対整合
 
-- 機械抽出した class/mixin/extension/enum: **304**
+- 機械抽出した class/mixin/extension/enum: **301**
 - inventory に登場する識別子 (大文字始まり ``backtick``囲み): **209**
 
 ### #1 機械にあるが Doc に書かれていない (129)
@@ -171,7 +171,7 @@
 - `_WidgetOpacity`
 - `_WorkPainter`
 
-### #2 Doc に書いてあるがコードに存在しない (ゴースト記述) (34)
+### #2 Doc に書いてあるがコードに存在しない (ゴースト記述) (37)
 
 > 注: Flutter SDK や外部ライブラリの型もここに乗る (誤検出)。
 > 真のゴーストはアプリ独自型のみ。実際の Doc 修正対象は手で絞り込む。
@@ -193,6 +193,7 @@
 - `GEMINI_API_KEY`
 - `GOOGLE_PLACES_KEY`
 - `GlobalKey`
+- `HoroInfoRow`
 - `IgnorePointer`
 - `ListView`
 - `MaterialApp`
@@ -203,6 +204,8 @@
 - `ScrollController`
 - `SearchHourAngle`
 - `SearchRiseSet`
+- `SolaraSafeText`
+- `SpiralPainter`
 - `StatefulWidget`
 - `TAROT_MODEL_FALLBACK`
 - `TAROT_MODEL_PRIMARY`
@@ -222,7 +225,7 @@
 
 ### 層 4b: Horoscope 画面
 
-- ファイル数: 22
+- ファイル数: 21
 - Worker URL 呼出: (なし)
 - Popup/Dialog: `showInfoPopup`×2
 - Navigator.push 等: 0 箇所
@@ -272,7 +275,7 @@
 | 2a | 2 | · | · | 4 | · | · | · | 1 | · | · | · | · | · | · | · | · |
 | 2b | · | · | 3 | 1 | 1 | · | · | · | · | · | · | · | · | · | · | · |
 | 2c | · | · | 1 | · | · | · | · | · | · | · | · | · | · | · | · | · |
-| 3a | 1 | 4 | 2 | 1 | · | 1 | 8 | 6 | 4 | 1 | · | · | · | · | · | · |
+| 3a | 1 | 4 | 2 | 1 | · | 1 | 8 | 5 | 4 | 1 | · | · | · | · | · | · |
 | 3b | · | · | · | · | · | · | · | 1 | · | · | · | · | · | · | · | · |
 | 3c | · | 4 | 4 | 2 | 3 | · | 12 | 4 | · | · | · | · | · | · | · | · |
 | 4a | 9 | 11 | · | 11 | 5 | · | 16 | 20 | 3 | 30 | 2 | · | · | · | 2 | · |
@@ -295,7 +298,7 @@
 | `lib/utils/solara_storage.dart` | 2b | 20 |
 | `lib/widgets/info_popup.dart` | 3a | 20 |
 | `lib/screens/map/map_constants.dart` | 3b | 19 |
-| `lib/theme/solara_colors.dart` | 3b | 18 |
+| `lib/theme/solara_colors.dart` | 3b | 17 |
 | `lib/screens/horoscope/horo_antique_icons.dart` | 3a | 13 |
 | `lib/screens/horoscope/horo_constants.dart` | 1b | 10 |
 | `lib/utils/solara_api.dart` | 2a | 10 |
@@ -313,25 +316,26 @@
 | `lib/utils/astro_math.dart` | 1a | 5 |
 | `lib/utils/celestial_events.dart` | 2a | 5 |
 
-### #5c 孤立ファイル (5) — 誰からも import されない
+### #5c 孤立ファイル (2) — 誰からも import されない
 
 > `lib/main.dart` (エントリ点) は除外済。残りは「画面のトップ」か
 > 「死蔵コード候補」。後者なら削除候補。
 
 - `lib/screens/font_preview_screen.dart` (層 4f)
-- `lib/screens/horoscope/horo_info_row.dart` (層 4b)
 - `lib/screens/solara_philosophy_screen.dart` (層 4f)
-- `lib/widgets/solara_safe_text.dart` (層 3a)
-- `lib/widgets/spiral_painter.dart` (層 3a)
 
 ## #6 ハッシュ stamp — 前回 extract.py 実行からの変更ファイル
 
 > 各ソースの SHA1 を `_stamps.json` に記録し、差分を検出。
 > 変更されたファイルが属する層は、人手版インベントリ章の見直し対象。
 
-- 追加: **0** / 削除: **0** / 変更: **0**
+- 追加: **0** / 削除: **3** / 変更: **0**
 
-- 変更なし — 全インベントリ章は最新。
+### 削除されたファイル
+
+- `lib/screens/horoscope/horo_info_row.dart`
+- `lib/widgets/solara_safe_text.dart`
+- `lib/widgets/spiral_painter.dart`
 
 ## #7 astro_glossary 用語辞書対整合
 
