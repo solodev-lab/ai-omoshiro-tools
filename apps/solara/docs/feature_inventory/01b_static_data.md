@@ -5,14 +5,75 @@
 
 ## サマリ
 
-- ファイル数: 5 / 総行数: 1418
-- class/mixin/extension/enum: 6
-- 関数 (top-level + method の素拾い): 19
+- ファイル数: 9 / 総行数: 3628
+- class/mixin/extension/enum: 10
+- 関数 (top-level + method の素拾い): 22
 - Navigator.push 等: 0
-- Popup/Dialog 呼出: 0
+- Popup/Dialog 呼出: 1
 - Worker URL リテラル: 0
 
 ## ファイル別
+
+### `lib/screens/map/daily_transit_data.dart` (1013 行)
+
+**ファイル先頭コメント:**
+
+```
+============================================================
+Daily Transit 画面用 データ定義
+元: map_daily_transit_screen.dart 内の private const 群
+2026-04-30 セッション最終整理でファイル分割（約220行）
+
+含むもの:
+  - AngleFilter enum + ラベル/セット/意味マップ
+  - CategoryFilterTips (5カテゴリ × 外向き/内向き各4tips)
+  - planetAngleBaseText (10惑星 × 4アングル = 40パターン基本意味)
+  - categoryAppendix (5カテゴリ × カテゴリ別補足文)
+  - categoryPlanetSets (worker と同一の担当惑星セット)
+
+Solara 設計思想: project_solara_design_philosophy.md
+  両面思想・吉凶判定なし・ユーザーが読み取って判断
+============================================================
+```
+
+**型定義 (1):**
+
+- L23 `enum AngleFilter`
+  - アングルフィルタ識別子。
+
+
+### `lib/utils/astro_glossary.dart` (586 行)
+
+**ファイル先頭コメント:**
+
+```
+============================================================
+Solara Astro Glossary — Phase M2 論点4 (β案 確定)
+
+占星術専門用語の解説辞書。AstroTermLabel widget と組み合わせて、
+用語の横にiアイコンを置き、タップでグラスモーフィズム解説を出す。
+
+設計: project_solara_astrocartography_m2.md 論点4
+  全て専門用語表記 + iアイコンで補助。
+============================================================
+```
+
+**imports:** dart=0 / package=1 / relative=1
+
+- relative: `../widgets/info_popup.dart`
+
+**型定義 (1):**
+
+- L15 `class AstroGlossaryEntry`
+
+**関数 (1 public + 0 private):**
+
+- L550 `showAstroGlossaryDialog()` — 用語解説 popup を表示する共通ヘルパー。
+
+**Popup/Dialog 呼出 (1):**
+
+- 集計: `showInfoPopup`×1
+
 
 ### `lib/utils/astro_zenith_messages.dart` (170 行)
 
@@ -29,6 +90,21 @@ Astro*Carto*Graphy モードで天頂点マーカータップ時に表示。
 **型定義 (1):**
 
 - L7 `class ZenithMessage`
+
+
+### `lib/utils/celestial_event_meanings.dart` (52 行)
+
+**ファイル先頭コメント:**
+
+```
+天体イベントの占星術的意味辞書
+key: "${type}_${planet}" or "${type}_${planet}_${sign}"
+惑星×タイプで汎用解説。星座固有の意味が必要な場合は planet_sign キーで上書き。
+```
+
+**関数 (1 public + 0 private):**
+
+- L49 `getEventMeaningJP()` — CelestialEvent から意味を取得するヘルパー
 
 
 ### `lib/utils/constellation_namer.dart` (626 行)
@@ -84,6 +160,42 @@ Astro*Carto*Graphy モードで天頂点マーカータップ時に表示。
   - L69 `_isJapanese()`
 
   </details>
+
+
+### `lib/utils/planet_intro.dart` (559 行)
+
+**ファイル先頭コメント:**
+
+```
+============================================================
+Solara Planet Introduction — Map 画面の惑星マーカータップ説明
+
+Phase: 2026-05-07 全 10 惑星対応完了
+  第1弾: 月 / 金星 / 木星 / 土星
+  第2弾: 太陽 / 水星 / 火星 / 天王星 / 海王星 / 冥王星
+
+トーン規約 (Solara らしさ):
+  - 詩的な短文と改行のリズム
+  - 「あなた」呼称・優しく語りかける
+  - 占星術用語より、体験的な比喩 (光・風・種・地層など)
+  - 「司る」「課題」より「授ける」「贈る」「灯す」
+  - 静かな伴走感 (Stella/Solara が見守っているニュアンス)
+
+フレームの定義:
+  natal      = 出生時のホロスコープ → 生まれ持って授かったもの
+  transit    = 今この瞬間の空 → 訪れる風・潮の流れ
+  progressed = 内なる暦 (1日=1年法) → ゆっくり熟成する内面
+============================================================
+```
+
+**型定義 (2):**
+
+- L21 `class PlanetIntroFrame`
+- L31 `class PlanetIntro`
+
+**関数 (1 public + 0 private):**
+
+- L56 `frameOf()` — frame キー ('natal' / 'transit' / 'progressed') から該当 frame を返す。
 
 
 ### `lib/utils/solara_manifesto.dart` (141 行)

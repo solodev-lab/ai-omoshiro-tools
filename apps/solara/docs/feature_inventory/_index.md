@@ -9,16 +9,16 @@
 | 層 | 名称 | ファイル数 | Markdown |
 | --- | --- | --- | --- |
 | 0 | Worker (バックエンド計算式) | 9 | [00_worker.md](00_worker.md) |
-| 1a | 純計算ユーティリティ | 8 | [01a_pure_calc.md](01a_pure_calc.md) |
-| 1b | 静的データ辞書 | 5 | [01b_static_data.md](01b_static_data.md) |
+| 1a | 純計算ユーティリティ | 5 | [01a_pure_calc.md](01a_pure_calc.md) |
+| 1b | 静的データ辞書 | 9 | [01b_static_data.md](01b_static_data.md) |
 | 1c | モデルクラス | 4 | [01c_models.md](01c_models.md) |
-| 2a | API/Worker ラッパ | 6 | [02a_api_wrappers.md](02a_api_wrappers.md) |
+| 2a | API/Worker ラッパ | 7 | [02a_api_wrappers.md](02a_api_wrappers.md) |
 | 2b | 永続化/キャッシュ | 3 | [02b_persistence.md](02b_persistence.md) |
 | 2c | グローバル singleton | 1 | [02c_globals.md](02c_globals.md) |
 | 3a | 共通ウィジェット (純粋) | 22 | [03a_widgets_pure.md](03a_widgets_pure.md) |
-| 3b | テーマ・装飾 | 2 | [03b_theme.md](03b_theme.md) |
+| 3b | テーマ・装飾 | 3 | [03b_theme.md](03b_theme.md) |
 | 3c | 演出ウィジェット (animated) | 5 | [03c_widgets_anim.md](03c_widgets_anim.md) |
-| 4a | Map 画面 | 25 | [04a_map.md](04a_map.md) |
+| 4a | Map 画面 | 22 | [04a_map.md](04a_map.md) |
 | 4b | Horoscope 画面 | 25 | [04b_horoscope.md](04b_horoscope.md) |
 | 4c | Observe (Tarot) 画面 | 5 | [04c_observe.md](04c_observe.md) |
 | 4d | Galaxy 画面 | 5 | [04d_galaxy.md](04d_galaxy.md) |

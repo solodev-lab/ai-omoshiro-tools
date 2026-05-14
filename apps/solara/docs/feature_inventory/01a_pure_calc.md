@@ -5,47 +5,14 @@
 
 ## サマリ
 
-- ファイル数: 8 / 総行数: 2512
-- class/mixin/extension/enum: 14
-- 関数 (top-level + method の素拾い): 53
+- ファイル数: 5 / 総行数: 1315
+- class/mixin/extension/enum: 11
+- 関数 (top-level + method の素拾い): 50
 - Navigator.push 等: 0
-- Popup/Dialog 呼出: 1
+- Popup/Dialog 呼出: 0
 - Worker URL リテラル: 0
 
 ## ファイル別
-
-### `lib/utils/astro_glossary.dart` (586 行)
-
-**ファイル先頭コメント:**
-
-```
-============================================================
-Solara Astro Glossary — Phase M2 論点4 (β案 確定)
-
-占星術専門用語の解説辞書。AstroTermLabel widget と組み合わせて、
-用語の横にiアイコンを置き、タップでグラスモーフィズム解説を出す。
-
-設計: project_solara_astrocartography_m2.md 論点4
-  全て専門用語表記 + iアイコンで補助。
-============================================================
-```
-
-**imports:** dart=0 / package=1 / relative=1
-
-- relative: `../widgets/info_popup.dart`
-
-**型定義 (1):**
-
-- L15 `class AstroGlossaryEntry`
-
-**関数 (1 public + 0 private):**
-
-- L550 `showAstroGlossaryDialog()` — 用語解説 popup を表示する共通ヘルパー。
-
-**Popup/Dialog 呼出 (1):**
-
-- 集計: `showInfoPopup`×1
-
 
 ### `lib/utils/astro_houses.dart` (208 行)
 
@@ -147,21 +114,6 @@ Astro 数学ユーティリティ
 - L27 `angDist()` — 2 つの角度の最小角距離 (0..180)。
 
 
-### `lib/utils/celestial_event_meanings.dart` (52 行)
-
-**ファイル先頭コメント:**
-
-```
-天体イベントの占星術的意味辞書
-key: "${type}_${planet}" or "${type}_${planet}_${sign}"
-惑星×タイプで汎用解説。星座固有の意味が必要な場合は planet_sign キーで上書き。
-```
-
-**関数 (1 public + 0 private):**
-
-- L49 `getEventMeaningJP()` — CelestialEvent から意味を取得するヘルパー
-
-
 ### `lib/utils/direction_energy.dart` (238 行)
 
 **ファイル先頭コメント:**
@@ -255,40 +207,4 @@ Uses 14 correction terms for New Moon and Full Moon.
   - L187 `_localDateAsUtc()`
 
   </details>
-
-
-### `lib/utils/planet_intro.dart` (559 行)
-
-**ファイル先頭コメント:**
-
-```
-============================================================
-Solara Planet Introduction — Map 画面の惑星マーカータップ説明
-
-Phase: 2026-05-07 全 10 惑星対応完了
-  第1弾: 月 / 金星 / 木星 / 土星
-  第2弾: 太陽 / 水星 / 火星 / 天王星 / 海王星 / 冥王星
-
-トーン規約 (Solara らしさ):
-  - 詩的な短文と改行のリズム
-  - 「あなた」呼称・優しく語りかける
-  - 占星術用語より、体験的な比喩 (光・風・種・地層など)
-  - 「司る」「課題」より「授ける」「贈る」「灯す」
-  - 静かな伴走感 (Stella/Solara が見守っているニュアンス)
-
-フレームの定義:
-  natal      = 出生時のホロスコープ → 生まれ持って授かったもの
-  transit    = 今この瞬間の空 → 訪れる風・潮の流れ
-  progressed = 内なる暦 (1日=1年法) → ゆっくり熟成する内面
-============================================================
-```
-
-**型定義 (2):**
-
-- L21 `class PlanetIntroFrame`
-- L31 `class PlanetIntro`
-
-**関数 (1 public + 0 private):**
-
-- L56 `frameOf()` — frame キー ('natal' / 'transit' / 'progressed') から該当 frame を返す。
 

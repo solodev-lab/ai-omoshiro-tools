@@ -5,14 +5,50 @@
 
 ## サマリ
 
-- ファイル数: 6 / 総行数: 932
-- class/mixin/extension/enum: 12
-- 関数 (top-level + method の素拾い): 11
+- ファイル数: 7 / 総行数: 1440
+- class/mixin/extension/enum: 14
+- 関数 (top-level + method の素拾い): 22
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 0
-- Worker URL リテラル: 7
+- Worker URL リテラル: 8
 
 ## ファイル別
+
+### `lib/screens/map/map_astro.dart` (508 行)
+
+**imports:** dart=2 / package=1 / relative=4
+
+- relative: `../../utils/astro_math.dart`, `../../utils/direction_energy.dart`, `../../utils/solara_api.dart`, `map_constants.dart`
+
+**型定義 (2):**
+
+- L20 `class ChartResult`
+  - CF Worker /astro/chart のレスポンス
+- L187 `class ScoreResult`
+
+**関数 (8 public + 3 private):**
+
+- L66 `fetchChart()` — CF Worker にチャートを要求
+- L259 `scoreAll()` — ChartResult → Map画面用16方位スコア
+- L288 `getAB()`
+- L297 `addT()`
+- L299 `addP()`
+- L326 `isAngle()`
+- L411 `addCT()`
+- L413 `addCP()`
+
+  <details><summary>private 関数 3 件</summary>
+
+  - L121 `_cosFall()`
+  - L162 `_emptyComp()`
+  - L234 `_addAspectComp()`
+
+  </details>
+
+**Worker URL リテラル (1):**
+
+- L17: `'$solaraWorkerBase/astro/chart'`
+
 
 ### `lib/utils/celestial_events.dart` (314 行)
 

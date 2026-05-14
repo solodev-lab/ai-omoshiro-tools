@@ -150,8 +150,31 @@ class WorkerFile:
     exports: list[str] = field(default_factory=list)
 
 # ── 層分類 ────────────────────────────────────────────────────
+#
+# PATH_OVERRIDES — ヒューリスティック誤分類の手動オーバーライド。
+#
+# 機能インベントリ構築 (2026-05-14) の過程で蓄積された機械分類の盲点を反映。
+# 各エントリは「人手版でオーナーが指摘した実態の層」に上書きする。
+#
+# 追加するときは inventory の該当層「機械分類の盲点」セクションに「解消済」
+# と書き、それを根拠にここに足す (= 人手版とツールを必ず同期させる)。
+PATH_OVERRIDES: dict[str, str] = {
+    # 静的辞書ヘルパー (1a 検出だが本来 1b、層 1a.3 で指摘)
+    "utils/astro_glossary.dart": "1b",
+    "utils/celestial_event_meanings.dart": "1b",
+    "utils/planet_intro.dart": "1b",
+    # screens/map/ 配下だが横断 utils 層と機能が同じ (4a 検出だが本来 2a/3b/1b)
+    "screens/map/map_astro.dart": "2a",          # /astro/chart ラッパ + scoreAll、Map+Horo 共用
+    "screens/map/map_constants.dart": "3b",      # HTML CHART_STYLE / PlanetMeta 純定数
+    "screens/map/daily_transit_data.dart": "1b", # AngleFilter + 静的テキスト辞書 1,013 行
+}
+
+
 def classify_dart(path: Path, content: str) -> str:
     rel = path.relative_to(LIB).as_posix()
+    # オーバーライド (最優先)
+    if rel in PATH_OVERRIDES:
+        return PATH_OVERRIDES[rel]
     if rel == "main.dart":
         return "5"
     if rel.startswith("models/"):

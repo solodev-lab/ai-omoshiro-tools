@@ -5,42 +5,14 @@
 
 ## サマリ
 
-- ファイル数: 25 / 総行数: 13926
-- class/mixin/extension/enum: 87
-- 関数 (top-level + method の素拾い): 283
+- ファイル数: 22 / 総行数: 12283
+- class/mixin/extension/enum: 82
+- 関数 (top-level + method の素拾い): 272
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 18
-- Worker URL リテラル: 5
+- Worker URL リテラル: 4
 
 ## ファイル別
-
-### `lib/screens/map/daily_transit_data.dart` (1013 行)
-
-**ファイル先頭コメント:**
-
-```
-============================================================
-Daily Transit 画面用 データ定義
-元: map_daily_transit_screen.dart 内の private const 群
-2026-04-30 セッション最終整理でファイル分割（約220行）
-
-含むもの:
-  - AngleFilter enum + ラベル/セット/意味マップ
-  - CategoryFilterTips (5カテゴリ × 外向き/内向き各4tips)
-  - planetAngleBaseText (10惑星 × 4アングル = 40パターン基本意味)
-  - categoryAppendix (5カテゴリ × カテゴリ別補足文)
-  - categoryPlanetSets (worker と同一の担当惑星セット)
-
-Solara 設計思想: project_solara_design_philosophy.md
-  両面思想・吉凶判定なし・ユーザーが読み取って判断
-============================================================
-```
-
-**型定義 (1):**
-
-- L23 `enum AngleFilter`
-  - アングルフィルタ識別子。
-
 
 ### `lib/screens/map/map_aspect_chip.dart` (221 行)
 
@@ -92,42 +64,6 @@ MapAspectChip — Daily Transit V2 用 1アスペクトチップ
 **Popup/Dialog 呼出 (1):**
 
 - 集計: `showInfoPopup`×1
-
-
-### `lib/screens/map/map_astro.dart` (508 行)
-
-**imports:** dart=2 / package=1 / relative=4
-
-- relative: `../../utils/astro_math.dart`, `../../utils/direction_energy.dart`, `../../utils/solara_api.dart`, `map_constants.dart`
-
-**型定義 (2):**
-
-- L20 `class ChartResult`
-  - CF Worker /astro/chart のレスポンス
-- L187 `class ScoreResult`
-
-**関数 (8 public + 3 private):**
-
-- L66 `fetchChart()` — CF Worker にチャートを要求
-- L259 `scoreAll()` — ChartResult → Map画面用16方位スコア
-- L288 `getAB()`
-- L297 `addT()`
-- L299 `addP()`
-- L326 `isAngle()`
-- L411 `addCT()`
-- L413 `addCP()`
-
-  <details><summary>private 関数 3 件</summary>
-
-  - L121 `_cosFall()`
-  - L162 `_emptyComp()`
-  - L234 `_addAspectComp()`
-
-  </details>
-
-**Worker URL リテラル (1):**
-
-- L17: `'$solaraWorkerBase/astro/chart'`
 
 
 ### `lib/screens/map/map_astro_carto.dart` (813 行)
@@ -211,18 +147,6 @@ MapAspectChip — Daily Transit V2 用 1アスペクトチップ
   - L175 `_latitudePolylinePoints()`
 
   </details>
-
-
-### `lib/screens/map/map_constants.dart` (122 行)
-
-**imports:** dart=0 / package=1 / relative=0
-
-**型定義 (2):**
-
-- L50 `class ChartLineStyle`
-  - HTML: CHART_STYLE — natal/progressed/transit の線スタイル
-- L85 `class PlanetMeta`
-  - HTML: TAROT.planets — 惑星シンボルと色
 
 
 ### `lib/screens/map/map_daily_transit_screen.dart` (1799 行)
