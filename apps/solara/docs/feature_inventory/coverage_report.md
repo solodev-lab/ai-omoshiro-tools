@@ -267,3 +267,135 @@
 - Worker URL 呼出: (なし)
 - Popup/Dialog: `showInfoPopup`×5
 - Navigator.push 等: 0 箇所
+
+## #5 import 依存グラフ (Pro 化影響範囲特定用)
+
+> 正規表現ベースのため関数単位の call graph は作れない。
+> 代わりに **ファイル単位の import 依存グラフ** を構築。
+> 「あるファイルを変更したら誰が影響を受けるか」(= 逆依存) が分かれば
+> Pro ゲート挿入の影響範囲は特定できる。
+
+### #5a 層間依存マトリクス (行 = import する側、列 = される側)
+
+| from\to | 1a | 1b | 1c | 2a | 2b | 2c | 3a | 3b | 3c | 4a | 4b | 4c | 4d | 4e | 4f | 5 |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1a | 2 | · | · | · | · | · | · | · | · | · | · | · | · | · | · | · |
+| 1b | · | · | · | · | · | · | 1 | · | · | · | · | · | · | · | · | · |
+| 1c | · | · | 1 | · | · | · | · | · | · | · | · | · | · | · | · | · |
+| 2a | 2 | · | · | 4 | · | · | · | 1 | · | · | · | · | · | · | · | · |
+| 2b | · | · | 3 | 1 | 1 | · | · | · | · | · | · | · | · | · | · | · |
+| 2c | · | · | 1 | · | · | · | · | · | · | · | · | · | · | · | · | · |
+| 3a | 1 | 4 | 2 | 1 | · | 1 | 8 | 6 | 4 | 1 | · | · | · | · | · | · |
+| 3b | · | · | · | · | · | · | · | 1 | · | · | · | · | · | · | · | · |
+| 3c | · | 4 | 4 | 2 | 3 | · | 12 | 4 | · | · | · | · | · | · | · | · |
+| 4a | 9 | 11 | · | 11 | 5 | · | 16 | 20 | 3 | 30 | 2 | · | · | · | 2 | · |
+| 4b | 5 | 10 | · | 6 | 2 | · | 11 | · | · | · | 28 | · | · | 2 | · | · |
+| 4c | 1 | · | 5 | 1 | 2 | 2 | · | · | · | · | · | 6 | · | · | · | · |
+| 4d | 2 | 5 | 9 | 1 | 1 | 2 | 8 | · | 1 | · | · | · | 4 | · | · | · |
+| 4e | · | 3 | · | 1 | 5 | · | 6 | · | · | · | · | · | · | 7 | · | · |
+| 4f | · | 1 | · | 1 | 5 | · | 7 | 5 | · | 2 | · | · | · | · | 3 | · |
+| 5 | · | · | · | 1 | 1 | 1 | 1 | 1 | · | 1 | 1 | 1 | 1 | 1 | · | · |
+
+> 健全な依存方向は「番号が大きい層 → 小さい層」(上位が下位に依存)。
+> 番号が小さい層から大きい層への矢印 (左下三角) は逆流依存の疑い。
+
+### #5b ハブファイル Top 20 (逆依存が多い = 変更影響大)
+
+> これらを Pro ゲート化・改修するときは影響範囲が広い。慎重に。
+
+| ファイル | 層 | 被 import 数 |
+| --- | --- | --- |
+| `lib/utils/solara_storage.dart` | 2b | 20 |
+| `lib/widgets/info_popup.dart` | 3a | 20 |
+| `lib/screens/map/map_constants.dart` | 3b | 19 |
+| `lib/theme/solara_colors.dart` | 3b | 18 |
+| `lib/screens/horoscope/horo_antique_icons.dart` | 3a | 13 |
+| `lib/screens/horoscope/horo_constants.dart` | 1b | 10 |
+| `lib/utils/solara_api.dart` | 2a | 10 |
+| `lib/screens/horoscope/horo_panel_shared.dart` | 4b | 9 |
+| `lib/models/daily_reading.dart` | 1c | 8 |
+| `lib/models/galaxy_cycle.dart` | 1c | 8 |
+| `lib/utils/constellation_namer.dart` | 1b | 7 |
+| `lib/screens/map/map_vp_panel.dart` | 4a | 6 |
+| `lib/utils/astro_glossary.dart` | 1b | 6 |
+| `lib/utils/tarot_data.dart` | 2c | 6 |
+| `lib/widgets/fortune_overlays/_common.dart` | 3a | 6 |
+| `lib/models/lunar_intention.dart` | 1c | 5 |
+| `lib/screens/map/map_astro.dart` | 2a | 5 |
+| `lib/utils/astro_lines.dart` | 1a | 5 |
+| `lib/utils/astro_math.dart` | 1a | 5 |
+| `lib/utils/celestial_events.dart` | 2a | 5 |
+
+### #5c 孤立ファイル (5) — 誰からも import されない
+
+> `lib/main.dart` (エントリ点) は除外済。残りは「画面のトップ」か
+> 「死蔵コード候補」。後者なら削除候補。
+
+- `lib/screens/font_preview_screen.dart` (層 4f)
+- `lib/screens/horoscope/horo_info_row.dart` (層 4b)
+- `lib/screens/solara_philosophy_screen.dart` (層 4f)
+- `lib/widgets/solara_safe_text.dart` (層 3a)
+- `lib/widgets/spiral_painter.dart` (層 3a)
+
+## #6 ハッシュ stamp — 前回 extract.py 実行からの変更ファイル
+
+> 各ソースの SHA1 を `_stamps.json` に記録し、差分を検出。
+> 変更されたファイルが属する層は、人手版インベントリ章の見直し対象。
+
+- 追加: **0** / 削除: **0** / 変更: **0**
+
+- 変更なし — 全インベントリ章は最新。
+
+## #7 astro_glossary 用語辞書対整合
+
+> `astro_glossary.dart` の定義キー ↔ コード内の参照 (`termKey:` /
+> `astroGlossary[...]`) を突合。死蔵エントリと壊れた用語ラベルを検出。
+
+- 定義キー数: **42** / 参照キー数 (リテラルのみ): **10**
+
+> ⚠️ 検出できるのは **リテラル参照のみ** (`termKey: 'asc'` / `astroGlossary['asc']`)。
+> 次のケースは検出不可なので #7a を「確定した死蔵」と即断しないこと:
+>  - `map_line_narrative_sheet.dart` の `_glossaryKey` getter (動的計算)
+>  - `AstroTermLabel(termKey: someVariable)` のような変数渡し
+> #7a は **死蔵候補** であり、削除前に grep で変数経由参照を確認すること。
+
+### #7a 定義済みだが未参照 (32) — 死蔵 glossary エントリ候補
+
+> 上記⚠️の通り、変数経由参照は検出できていない。確定前に要 grep。
+
+- `altitude_event`
+- `category_tips_intent`
+- `dsc`
+- `fortune_all`
+- `fortune_communication`
+- `fortune_healing`
+- `fortune_love`
+- `fortune_money`
+- `fortune_work`
+- `house_1`
+- `house_10`
+- `house_11`
+- `house_12`
+- `house_2`
+- `house_3`
+- `house_4`
+- `house_5`
+- `house_6`
+- `house_7`
+- `house_8`
+- `house_9`
+- `ic`
+- `latitude_band_now`
+- `mc`
+- `placidus`
+- `planet_lines`
+- `relocate_layer`
+- `relocation`
+- `sector_score_16`
+- `top_category_logic`
+- `transit_angles`
+- `two_energies`
+
+### #7b 参照されているが未定義 (0) — 壊れた用語ラベル
+
+- (該当なし)

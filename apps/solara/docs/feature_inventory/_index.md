@@ -38,6 +38,7 @@
 
 - [coverage_report.md](coverage_report.md) を参照。
 - #1 機械 → Doc / #2 Doc → 機械 / #3 Worker ↔ Flutter / #4 画面 ↔ 機能 を集計済み。
+- #5 import 依存グラフ / #6 ハッシュ stamp / #7 astro_glossary 対整合 も集計済み。
 
 ## 未分類ファイル (要 override)
 
