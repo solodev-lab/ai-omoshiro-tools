@@ -12,9 +12,19 @@ Solara の Dart / Worker JS ソースから以下を機械抽出し、層別 raw
   - Worker URL リテラル (Flutter 側)
   - Worker JS のルート定義 / Gemini 呼出 / KV/DO 使用
 
+対整合チェック (coverage_report.md 内):
+  #1 機械 → Doc        : 機械抽出したクラスが人手版に未記述
+  #2 Doc → 機械        : 人手版にあるがコードに存在しない (ゴースト)
+  #3 Worker ↔ Flutter  : エンドポイント対整合
+  #4 画面 ↔ 機能集合   : 画面別の Worker URL / Popup / Navigator
+  #5 import 依存グラフ : 層間依存マトリクス + ハブ + 孤立ファイル (Pro 化影響範囲)
+  #6 ハッシュ stamp    : 前回実行からの変更ファイル検知 (_stamps.json)
+  #7 astro_glossary    : 用語辞書の定義 ↔ 参照 対整合
+
 出力:
   apps/solara/docs/feature_inventory/
     _index.md              # 全体ナビゲーション
+    _stamps.json           # #6 用 ファイルハッシュ台帳 (機械生成)
     00_worker.md           # 層 0: Worker
     01a_pure_calc.md       # 層 1a: 純計算
     01b_static_data.md     # 層 1b: 静的データ辞書
@@ -43,11 +53,13 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import hashlib
 import io
+import json
 import re
 import sys
 from dataclasses import dataclass, field
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Optional
 
 # ── Windows 文字化け対策 ────────────────────────────────────────
@@ -130,6 +142,11 @@ class DartFile:
     navigator_pushes: list[tuple[int, str]] = field(default_factory=list)
     popup_calls: list[tuple[int, str, str]] = field(default_factory=list)  # (line, fn, snippet)
     worker_urls: list[tuple[int, str]] = field(default_factory=list)
+    parts: list[str] = field(default_factory=list)              # #5 part 'xxx.dart' ディレクティブ
+    exports: list[str] = field(default_factory=list)            # #5 export 'xxx.dart' (barrel 再エクスポート)
+    content_sha: str = ""                                       # #6 ハッシュ stamp 用
+    glossary_defs: list[str] = field(default_factory=list)       # #7 astro_glossary キー定義
+    glossary_refs: list[tuple[int, str]] = field(default_factory=list)  # #7 用語キー参照 (line, key)
 
 @dataclass
 class WorkerEndpoint:
@@ -148,6 +165,7 @@ class WorkerFile:
     kv_uses: list[tuple[int, str]] = field(default_factory=list)
     do_uses: list[tuple[int, str]] = field(default_factory=list)
     exports: list[str] = field(default_factory=list)
+    content_sha: str = ""  # #6 ハッシュ stamp 用
 
 # ── 層分類 ────────────────────────────────────────────────────
 #
@@ -250,6 +268,8 @@ DOC_LINE = re.compile(r"^\s*///\s?(.*)$")
 SLASH_COMMENT = re.compile(r"^\s*//\s?(.*)$")
 IMPORT_RE = re.compile(r"^\s*import\s+['\"]([^'\"]+)['\"]")
 EXPORT_RE = re.compile(r"^\s*export\s+['\"]([^'\"]+)['\"]")
+# part 'xxx.dart' — ただし `part of 'xxx.dart'` は除外 (こちらは子→親の宣言)
+PART_RE = re.compile(r"^\s*part\s+(?!of\b)['\"]([^'\"]+)['\"]")
 
 CLASS_RE = re.compile(
     r"^\s*(?:abstract\s+|sealed\s+|base\s+|interface\s+|final\s+|mixin\s+)*"
@@ -301,12 +321,22 @@ WORKER_URL_RE = re.compile(
 # Worker URL の中から path 部分のみを抽出する用 (coverage report 用)
 WORKER_URL_PATH_RE = re.compile(r"""[Ww]orkerBase[^/\w]*(/[A-Za-z0-9_/\-]+)""")
 
+# #7 astro_glossary 用語辞書対整合 用:
+#   定義: 'asc': AstroGlossaryEntry(   (astro_glossary.dart 内のみ)
+#   参照: termKey: 'asc'  /  astroGlossary['asc']
+GLOSSARY_DEF_RE = re.compile(r"""^\s*['"]([a-z][\w\-]*)['"]\s*:\s*AstroGlossaryEntry\(""")
+GLOSSARY_REF_RE = re.compile(
+    r"""termKey\s*:\s*['"]([a-z][\w\-]*)['"]"""
+    r"""|astroGlossary\[\s*['"]([a-z][\w\-]*)['"]\s*\]"""
+)
+
 def extract_dart(path: Path) -> DartFile:
     text = path.read_text(encoding="utf-8", errors="replace")
     lines = text.splitlines()
     rel_to_solara = path.relative_to(ROOT).as_posix()
     layer = classify_dart(path, text)
     df = DartFile(path=rel_to_solara, layer=layer, line_count=len(lines))
+    df.content_sha = hashlib.sha1(text.encode("utf-8", errors="replace")).hexdigest()
 
     # ── ファイル先頭の doc comment ──
     head = []
@@ -322,11 +352,19 @@ def extract_dart(path: Path) -> DartFile:
             break
     df.file_doc = "\n".join(head).strip()
 
-    # ── import ──
-    for ln in lines[:120]:
+    # ── import / part / export ──
+    for ln in lines[:150]:
         m = IMPORT_RE.match(ln)
         if m:
             df.imports.append(m.group(1))
+            continue
+        pm = PART_RE.match(ln)
+        if pm:
+            df.parts.append(pm.group(1))
+            continue
+        em = EXPORT_RE.match(ln)
+        if em:
+            df.exports.append(em.group(1))
 
     # ── class / mixin / extension / enum ──
     pending_doc: list[str] = []
@@ -379,7 +417,8 @@ def extract_dart(path: Path) -> DartFile:
             continue
         pending_doc = []
 
-    # ── Navigator / popup ──
+    # ── Navigator / popup / Worker URL / 用語キー ──
+    is_glossary_file = rel_to_solara.endswith("utils/astro_glossary.dart")
     for i, raw in enumerate(lines):
         for m in NAV_PUSH_RE.finditer(raw):
             df.navigator_pushes.append((i + 1, raw.strip()[:160]))
@@ -387,6 +426,16 @@ def extract_dart(path: Path) -> DartFile:
             df.popup_calls.append((i + 1, m.group(1), raw.strip()[:160]))
         for m in WORKER_URL_RE.finditer(raw):
             df.worker_urls.append((i + 1, m.group(0)[:120]))
+        # #7 用語キー参照 (termKey: '...' / astroGlossary['...'])
+        for m in GLOSSARY_REF_RE.finditer(raw):
+            key = m.group(1) or m.group(2)
+            if key:
+                df.glossary_refs.append((i + 1, key))
+        # #7 用語キー定義 (astro_glossary.dart 内のみ)
+        if is_glossary_file:
+            dm = GLOSSARY_DEF_RE.match(raw)
+            if dm:
+                df.glossary_defs.append(dm.group(1))
 
     return df
 
@@ -420,6 +469,7 @@ def extract_worker(path: Path) -> WorkerFile:
     lines = text.splitlines()
     rel_to_solara = path.relative_to(ROOT).as_posix()
     wf = WorkerFile(path=rel_to_solara, line_count=len(lines))
+    wf.content_sha = hashlib.sha1(text.encode("utf-8", errors="replace")).hexdigest()
 
     # 先頭 JSDoc or // コメントを拾う
     head: list[str] = []
@@ -472,6 +522,84 @@ def extract_worker(path: Path) -> WorkerFile:
     wf.endpoints = deduped
 
     return wf
+
+# ── #5 import 依存グラフ ──────────────────────────────────────
+#
+# AST を持たない正規表現ベースなので「関数単位の call graph」は作れない。
+# 代わりに **ファイル単位の import 依存グラフ** を構築する。
+# Pro 化影響範囲特定には「あるファイルを変更したら誰が影響を受けるか」
+# (= 逆依存) が分かれば十分なので、これで実用上の目的は満たせる。
+def resolve_import(importer_rel: str, imp: str) -> Optional[str]:
+    """relative import を ROOT 相対パスに解決。
+       importer_rel: 'lib/screens/map_screen.dart' (ROOT 相対)
+       imp: 'map/map_astro.dart' や '../utils/foo.dart' 等
+       package:/dart: import は None を返す。"""
+    if imp.startswith("package:") or imp.startswith("dart:"):
+        return None
+    importer_dir = PurePosixPath(importer_rel).parent
+    combined = importer_dir / imp
+    parts: list[str] = []
+    for part in combined.as_posix().split("/"):
+        if part == "..":
+            if parts:
+                parts.pop()
+        elif part in ("", "."):
+            continue
+        else:
+            parts.append(part)
+    return "/".join(parts)
+
+def build_import_graph(
+    dart_files: list[DartFile],
+) -> tuple[dict[str, set[str]], dict[str, set[str]]]:
+    """forward[path] = そのファイルが import / part / export する ROOT 相対パス集合 (lib 内のみ)
+       reverse[path] = そのファイルを import / part / export しているファイル集合
+       part / export ディレクティブも edge として扱う
+       (part file や barrel 経由ファイルが誤って孤立判定されるのを防ぐ)。"""
+    by_path = {df.path: df for df in dart_files}
+    forward: dict[str, set[str]] = {df.path: set() for df in dart_files}
+    reverse: dict[str, set[str]] = {df.path: set() for df in dart_files}
+    for df in dart_files:
+        for ref in list(df.imports) + list(df.parts) + list(df.exports):
+            resolved = resolve_import(df.path, ref)
+            if resolved and resolved in by_path:
+                forward[df.path].add(resolved)
+                reverse[resolved].add(df.path)
+    return forward, reverse
+
+# ── #6 ハッシュ stamp (ファイル変更検知) ──────────────────────
+def compute_stamp_diff(
+    dart_files: list[DartFile],
+    worker_files: list[WorkerFile],
+) -> tuple[list[str], list[str], list[str], bool]:
+    """前回 extract.py 実行時からの変更ファイルを検出。
+       戻り値: (added, removed, changed, had_previous_stamps)
+       _stamps.json を新しい内容で上書きする。"""
+    stamp_path = OUT_DIR / "_stamps.json"
+    new_stamps: dict[str, str] = {}
+    for df in dart_files:
+        new_stamps[df.path] = df.content_sha
+    for wf in worker_files:
+        new_stamps[wf.path] = wf.content_sha
+    old_stamps: dict[str, str] = {}
+    if stamp_path.exists():
+        try:
+            old_stamps = json.loads(stamp_path.read_text(encoding="utf-8"))
+        except Exception:
+            old_stamps = {}
+    had_previous = bool(old_stamps)
+    added = sorted(set(new_stamps) - set(old_stamps))
+    removed = sorted(set(old_stamps) - set(new_stamps))
+    changed = sorted(
+        p for p in new_stamps
+        if p in old_stamps and new_stamps[p] != old_stamps[p]
+    )
+    OUT_DIR.mkdir(parents=True, exist_ok=True)
+    stamp_path.write_text(
+        json.dumps(new_stamps, indent=2, ensure_ascii=False, sort_keys=True),
+        encoding="utf-8",
+    )
+    return added, removed, changed, had_previous
 
 # ── レポート生成 ──────────────────────────────────────────────
 def md_table(headers: list[str], rows: list[list[str]]) -> str:
@@ -610,6 +738,7 @@ def build_coverage_report(
     dart_files: list[DartFile],
     worker_files: list[WorkerFile],
     inventory_md_text: Optional[str],
+    stamp_diff: Optional[tuple[list[str], list[str], list[str], bool]] = None,
 ) -> str:
     out: list[str] = []
     out.append("# Solara feature inventory — Coverage Report")
@@ -761,6 +890,163 @@ def build_coverage_report(
         out.append(f"- Navigator.push 等: {nav_pushes} 箇所")
         out.append("")
 
+    # ── #5 import 依存グラフ (ファイル単位の call graph 代替) ──
+    out.append("## #5 import 依存グラフ (Pro 化影響範囲特定用)")
+    out.append("")
+    out.append("> 正規表現ベースのため関数単位の call graph は作れない。")
+    out.append("> 代わりに **ファイル単位の import 依存グラフ** を構築。")
+    out.append("> 「あるファイルを変更したら誰が影響を受けるか」(= 逆依存) が分かれば")
+    out.append("> Pro ゲート挿入の影響範囲は特定できる。")
+    out.append("")
+    forward, reverse = build_import_graph(dart_files)
+    layer_of = {df.path: df.layer for df in dart_files}
+
+    # #5a 層間依存マトリクス
+    out.append("### #5a 層間依存マトリクス (行 = import する側、列 = される側)")
+    out.append("")
+    edge_layers = [l for l in LAYER_ORDER if l != "0"]
+    matrix: dict[tuple[str, str], int] = {}
+    for src, deps in forward.items():
+        sl = layer_of.get(src, "?")
+        for dst in deps:
+            dl = layer_of.get(dst, "?")
+            matrix[(sl, dl)] = matrix.get((sl, dl), 0) + 1
+    header = ["from\\to"] + edge_layers
+    rows: list[list[str]] = []
+    for sl in edge_layers:
+        row = [sl]
+        for dl in edge_layers:
+            cnt = matrix.get((sl, dl), 0)
+            row.append(str(cnt) if cnt else "·")
+        rows.append(row)
+    out.append(md_table(header, rows))
+    out.append("")
+    out.append("> 健全な依存方向は「番号が大きい層 → 小さい層」(上位が下位に依存)。")
+    out.append("> 番号が小さい層から大きい層への矢印 (左下三角) は逆流依存の疑い。")
+    out.append("")
+
+    # #5b ハブファイル (逆依存が多い = 変更リスク大)
+    hub_ranked = sorted(
+        ((p, len(rev)) for p, rev in reverse.items() if rev),
+        key=lambda x: -x[1],
+    )
+    out.append("### #5b ハブファイル Top 20 (逆依存が多い = 変更影響大)")
+    out.append("")
+    out.append("> これらを Pro ゲート化・改修するときは影響範囲が広い。慎重に。")
+    out.append("")
+    rows = [
+        [f"`{p}`", layer_of.get(p, "?"), str(cnt)]
+        for p, cnt in hub_ranked[:20]
+    ]
+    out.append(md_table(["ファイル", "層", "被 import 数"], rows))
+    out.append("")
+
+    # #5c 孤立ファイル (誰からも import されない = エントリ点 or 死蔵候補)
+    orphans = sorted(
+        df.path for df in dart_files
+        if not reverse.get(df.path) and df.path != "lib/main.dart"
+    )
+    out.append(f"### #5c 孤立ファイル ({len(orphans)}) — 誰からも import されない")
+    out.append("")
+    out.append("> `lib/main.dart` (エントリ点) は除外済。残りは「画面のトップ」か")
+    out.append("> 「死蔵コード候補」。後者なら削除候補。")
+    out.append("")
+    if orphans:
+        for p in orphans:
+            out.append(f"- `{p}` (層 {layer_of.get(p, '?')})")
+    else:
+        out.append("- (該当なし)")
+    out.append("")
+
+    # ── #6 ハッシュ stamp (ファイル変更検知) ──
+    out.append("## #6 ハッシュ stamp — 前回 extract.py 実行からの変更ファイル")
+    out.append("")
+    out.append("> 各ソースの SHA1 を `_stamps.json` に記録し、差分を検出。")
+    out.append("> 変更されたファイルが属する層は、人手版インベントリ章の見直し対象。")
+    out.append("")
+    if stamp_diff is None:
+        out.append("> (stamp 情報が渡されていない — 全層生成時のみ計算)")
+    else:
+        added, removed, changed, had_previous = stamp_diff
+        if not had_previous:
+            out.append("- 初回実行: `_stamps.json` のベースラインを作成した。")
+            out.append("  次回実行時から変更ファイルがここに表示される。")
+        else:
+            stamp_layer = {**layer_of}
+            for wf in worker_files:
+                stamp_layer[wf.path] = "0"
+            out.append(f"- 追加: **{len(added)}** / 削除: **{len(removed)}** / 変更: **{len(changed)}**")
+            out.append("")
+            if changed:
+                out.append("### 変更されたファイル (層別)")
+                out.append("")
+                by_layer: dict[str, list[str]] = {}
+                for p in changed:
+                    by_layer.setdefault(stamp_layer.get(p, "?"), []).append(p)
+                for layer in LAYER_ORDER + ["?"]:
+                    if layer in by_layer:
+                        out.append(f"- **層 {layer}**: " + ", ".join(f"`{p}`" for p in sorted(by_layer[layer])))
+                out.append("")
+            if added:
+                out.append("### 追加されたファイル")
+                out.append("")
+                for p in added:
+                    out.append(f"- `{p}` (層 {stamp_layer.get(p, '?')})")
+                out.append("")
+            if removed:
+                out.append("### 削除されたファイル")
+                out.append("")
+                for p in removed:
+                    out.append(f"- `{p}`")
+                out.append("")
+            if not (added or removed or changed):
+                out.append("- 変更なし — 全インベントリ章は最新。")
+                out.append("")
+
+    # ── #7 astro_glossary 用語辞書対整合 ──
+    out.append("## #7 astro_glossary 用語辞書対整合")
+    out.append("")
+    out.append("> `astro_glossary.dart` の定義キー ↔ コード内の参照 (`termKey:` /")
+    out.append("> `astroGlossary[...]`) を突合。死蔵エントリと壊れた用語ラベルを検出。")
+    out.append("")
+    defined_keys: set[str] = set()
+    for df in dart_files:
+        defined_keys.update(df.glossary_defs)
+    ref_locations: dict[str, list[str]] = {}
+    for df in dart_files:
+        for line, key in df.glossary_refs:
+            ref_locations.setdefault(key, []).append(f"{df.path}:{line}")
+    referenced_keys = set(ref_locations)
+    unused = sorted(defined_keys - referenced_keys)
+    undefined = sorted(referenced_keys - defined_keys)
+    out.append(f"- 定義キー数: **{len(defined_keys)}** / 参照キー数 (リテラルのみ): **{len(referenced_keys)}**")
+    out.append("")
+    out.append("> ⚠️ 検出できるのは **リテラル参照のみ** (`termKey: 'asc'` / `astroGlossary['asc']`)。")
+    out.append("> 次のケースは検出不可なので #7a を「確定した死蔵」と即断しないこと:")
+    out.append(">  - `map_line_narrative_sheet.dart` の `_glossaryKey` getter (動的計算)")
+    out.append(">  - `AstroTermLabel(termKey: someVariable)` のような変数渡し")
+    out.append("> #7a は **死蔵候補** であり、削除前に grep で変数経由参照を確認すること。")
+    out.append("")
+    out.append(f"### #7a 定義済みだが未参照 ({len(unused)}) — 死蔵 glossary エントリ候補")
+    out.append("")
+    out.append("> 上記⚠️の通り、変数経由参照は検出できていない。確定前に要 grep。")
+    out.append("")
+    if unused:
+        for k in unused:
+            out.append(f"- `{k}`")
+    else:
+        out.append("- (該当なし)")
+    out.append("")
+    out.append(f"### #7b 参照されているが未定義 ({len(undefined)}) — 壊れた用語ラベル")
+    out.append("")
+    if undefined:
+        for k in undefined:
+            locs = ", ".join(ref_locations.get(k, [])[:5])
+            out.append(f"- `{k}` — 参照元: {locs}")
+    else:
+        out.append("- (該当なし)")
+    out.append("")
+
     return "\n".join(out)
 
 # ── 層別レポート出力 ──────────────────────────────────────────
@@ -853,6 +1139,7 @@ def emit_index_md(dart_files: list[DartFile], worker_files: list[WorkerFile]) ->
     out.append("")
     out.append("- [coverage_report.md](coverage_report.md) を参照。")
     out.append("- #1 機械 → Doc / #2 Doc → 機械 / #3 Worker ↔ Flutter / #4 画面 ↔ 機能 を集計済み。")
+    out.append("- #5 import 依存グラフ / #6 ハッシュ stamp / #7 astro_glossary 対整合 も集計済み。")
     out.append("")
     out.append("## 未分類ファイル (要 override)")
     out.append("")
@@ -943,8 +1230,18 @@ def main() -> int:
     if not target_layers:
         inventory_path = ROOT / "docs" / "feature_inventory.md"
         inventory_text = inventory_path.read_text(encoding="utf-8") if inventory_path.exists() else None
+        # #6 ハッシュ stamp: 前回実行からの変更を検出 (_stamps.json を更新)
+        stamp_diff = compute_stamp_diff(dart_files, worker_files)
+        added, removed, changed, had_previous = stamp_diff
+        if had_previous:
+            print(f"[extract] stamp diff: +{len(added)} -{len(removed)} ~{len(changed)}")
+        else:
+            print(f"[extract] stamp: baseline created (_stamps.json)")
         cov_path = OUT_DIR / "coverage_report.md"
-        cov_path.write_text(build_coverage_report(dart_files, worker_files, inventory_text), encoding="utf-8")
+        cov_path.write_text(
+            build_coverage_report(dart_files, worker_files, inventory_text, stamp_diff),
+            encoding="utf-8",
+        )
         print(f"[extract] wrote {cov_path}")
 
     return 0
