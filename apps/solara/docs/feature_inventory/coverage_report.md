@@ -37,9 +37,9 @@
 ## #1 / #2 機械抽出 ↔ feature_inventory.md (人手版) の対整合
 
 - 機械抽出した class/mixin/extension/enum: **304**
-- inventory に登場する識別子 (大文字始まり ``backtick``囲み): **79**
+- inventory に登場する識別子 (大文字始まり ``backtick``囲み): **86**
 
-### #1 機械にあるが Doc に書かれていない (246)
+### #1 機械にあるが Doc に書かれていない (242)
 
 - `AcgFrameDef`
 - `AngleFilter`
@@ -55,8 +55,6 @@
 - `AstroZenithMarker`
 - `AstroZenithPopup`
 - `BirthMarker`
-- `CatasterismFormationOverlay`
-- `CatasterismOverlay`
 - `CelestialEvents`
 - `ChartLineStyle`
 - `ClassShareCardPage`
@@ -69,7 +67,6 @@
 - `FortuneFilterLabel`
 - `FortuneReading`
 - `FortuneSheet`
-- `FullMoonOverlay`
 - `GalaxyReplayOverlay`
 - `GalaxyScreen`
 - `GalaxyScreenState`
@@ -114,7 +111,6 @@
 - `MapTimeSliderState`
 - `MapViewpointMenu`
 - `MonthEvents`
-- `NewMoonOverlay`
 - `Observe3DCard`
 - `ObserveCardBack`
 - `ObserveCardFront`
@@ -241,9 +237,13 @@
 - `_Mulberry32`
 - `_NewMoonOverlayState`
 - `_Note`
-- … 残り 46 省略
+- `_NotePair`
+- `_ObserveHistoryPanelState`
+- `_ObserveScreenState`
+- `_OrbSectionLabel`
+- … 残り 42 省略
 
-### #2 Doc に書いてあるがコードに存在しない (ゴースト記述) (21)
+### #2 Doc に書いてあるがコードに存在しない (ゴースト記述) (24)
 
 > 注: Flutter SDK や外部ライブラリの型もここに乗る (誤検出)。
 > 真のゴーストはアプリ独自型のみ。実際の Doc 修正対象は手で絞り込む。
@@ -252,6 +252,7 @@
 - `AnimationController`
 - `BottomNavigationBar`
 - `C8D4E8`
+- `CustomPaint`
 - `D6915C`
 - `EAEAEA`
 - `F6BD60`
@@ -260,6 +261,7 @@
 - `FlutterMap`
 - `GEMINI_API_KEY`
 - `GOOGLE_PLACES_KEY`
+- `GlobalKey`
 - `IgnorePointer`
 - `NOUN_SHAPES`
 - `ScrollController`
@@ -269,6 +271,7 @@
 - `TAROT_MODEL_FALLBACK`
 - `TAROT_MODEL_PRIMARY`
 - `ThemeData`
+- `Timer`
 
 ## #4 画面 ↔ 機能集合
 

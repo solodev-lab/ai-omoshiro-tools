@@ -21,7 +21,7 @@
 > - [x] 層 2c: グローバル singleton — 2026-05-14 完成
 > - [x] 層 3a: 共通ウィジェット (純粋) — 2026-05-14 完成
 > - [x] 層 3b: テーマ・装飾 — 2026-05-14 完成
-> - [ ] 層 3c: 演出ウィジェット (animated)
+> - [x] 層 3c: 演出ウィジェット (animated) — 2026-05-14 完成
 > - [ ] 層 4a: Map 画面
 > - [ ] 層 4b: Horoscope 画面
 > - [ ] 層 4c: Observe (Tarot) 画面
@@ -733,4 +733,83 @@ Solara のバックエンドは **Cloudflare Workers** で稼働。本番 URL: `
 
 ---
 
-(層 3c 以降は次セッション以降で追記)
+## 層 3c: 演出ウィジェット (animated)
+
+### 3c.1 概要
+
+`lib/widgets/` 配下、**`AnimationController` を持つ** 5 ファイル / 計 2,160 行。
+全画面 overlay として「**特定の瞬間にだけ被さる演出 widget**」を担う。本層には 2 系統が共存:
+
+| 系統 | 用途 | 出現条件 | ファイル |
+|---|---|---|---|
+| **Map fortune 演出** | 今日の最高スコアカテゴリに応じた全画面演出 | Map 画面で 1 日の最初のタップ時 (4 秒間) | `dominant_fortune_overlay.dart` |
+| **Galaxy moon 演出** | サイクル節目 (新月/満月/刻星化) の体験画面 | Galaxy 画面で月相が新月/満月/刻星化日に当たる時 | `new_moon_overlay.dart`, `full_moon_overlay.dart`, `catasterism_overlay.dart`, `catasterism_formation_overlay.dart` |
+
+層 3a の moon overlay 共通部品 ([`moon_overlay_shared.dart`](../lib/widgets/moon_overlay_shared.dart)) と層 3a の 5 fortune painter (`fortune_overlays/*`) を **本層 5 widget が AnimationController + StatefulWidget でラップ駆動** している関係。
+
+### 3c.2 ファイル別 役割 + AnimationController 数 + 呼出元 (5 本)
+
+| # | ファイル | 行 | AnimCtrl 数 | 主要 export | 呼出元 | 性質 |
+|---|---|---|---|---|---|---|
+| 1 | [`dominant_fortune_overlay.dart`](../lib/widgets/dominant_fortune_overlay.dart) | 85 | **1** (4 秒) | `DominantFortuneKind` enum (love/money/healing/communication/work)、`DominantFortuneOverlay`、`kindFromKey` | [map_screen.dart](../lib/screens/map_screen.dart) (`_activeOverlay` で表示制御 + `_debugCycleOrder` で 5 種循環テスト) + 補助で [map_menu_chips](../lib/screens/map/map_menu_chips.dart), [map_daily_transit_screen](../lib/screens/map/map_daily_transit_screen.dart), [category_icon](../lib/widgets/category_icon.dart) (enum import のみ) | 層 3a `fortune_overlays/*` 5 painter のディスパッチャ。`_createBuilder(kind)` で 5 種 builder を切替、`AnimationController` の値を `CustomPaint` に渡す。`IgnorePointer` で gesture 透過。完了で `onComplete` callback (= 通常 4s) |
+| 2 | [`new_moon_overlay.dart`](../lib/widgets/new_moon_overlay.dart) | 564 | **6** (fade/page/reveal/message/events/action) | `NewMoonOverlay` (`month`, `cycleId`, `onDismiss`, `onIntentionSet` 引数) | [galaxy_screen](../lib/screens/galaxy_screen.dart) (月相が新月日に当たる時) + 再 export 経由 [moon_overlay.dart](../lib/widgets/moon_overlay.dart) | **3 フェーズ** (物語 → 4 択選択 → 詩的リビール)。`LunarIntention` を `SolaraStorage.setLunarIntention` で永続化、`CelestialEvents.fetchCycleEvents` で当該サイクル天体イベントも取得 |
+| 3 | [`full_moon_overlay.dart`](../lib/widgets/full_moon_overlay.dart) | 481 | **4** (fade/page/reveal/message) + `Timer` 自動クローズ | `FullMoonOverlay` (`intention`, `month`, `onDismiss` 引数) | [galaxy_screen](../lib/screens/galaxy_screen.dart) (月相が満月日に当たる時) + 再 export 経由 | **3 フェーズ** (物語 → 3 段階評価 → 詩的リビール → 3 秒余韻で自動確定)。新月で設定した `intention.choice` の中間チェック (🌊 まだ取り組み中 / ✨ 進展あり / 🌟 軽くなった) を `SolaraStorage.setMidpointCheck` で永続化 |
+| 4 | [`catasterism_overlay.dart`](../lib/widgets/catasterism_overlay.dart) | 445 | **4** (fade/page/exit/glow) | `CatasterismOverlay` (`intention`, `totalDays`, `onDismiss`, `onResult?` 引数) | [galaxy_screen](../lib/screens/galaxy_screen.dart) (新月前日 = サイクル終端日) + 再 export 経由 | **3 フェーズ** (物語 → 2 択選択 → グロウパルス → フェードアウト)。「手放せた / まだ途中」の 2 値判定を `_glowCtl` で発光演出 + 600ms forward + 100ms peak + 600ms reverse で表現。次画面 `CatasterismFormationOverlay` への切替トリガを発火 |
+| 5 | [`catasterism_formation_overlay.dart`](../lib/widgets/catasterism_formation_overlay.dart) | 585 | **2** (main 8 秒 / fade 1ms 値 1.0) + `_FormationPainter` CustomPainter | `CatasterismFormationOverlay` (`cycle`, `artImage?`, `onComplete` 引数)、`_FormationPainter` | [galaxy_screen](../lib/screens/galaxy_screen.dart) (catasterism_overlay の完了直後) | **🌟 8 秒 4 ステージ演出** (`SPEC.md` 準拠): CONVERGENCE 0-2s 集来 / IGNITION 2-3s 点灯 / LINKING 3-5s 連結 / COMPLETE 5-8s 完成。12 星座シンボル (`assets/zodiac-symbols/*.webp`) + 背景 (`assets/catasterism_bg.webp`) を preload、`GalaxyCycle` の MST edges を漸進描画 |
+
+### 3c.3 共通設計パターン (4 系 moon/catasterism overlay)
+
+`new_moon` / `full_moon` / `catasterism` 3 widget は **同形のフェーズ構造** を持ち、層 3a [`moon_overlay_shared.dart`](../lib/widgets/moon_overlay_shared.dart) の共通部品で集約済 (2026-05-06 audit T2/T7):
+
+| 段階 | 内容 | 使用部品 |
+|---|---|---|
+| 物語 | 縦スクロール詩的テキスト (30 px/s 自動 + 手動で中断可) | `MoonScrollingStory` (3a) |
+| 遷移 | 中点 (`_pageCtl.value >= 0.5`) で `_showStory=false` クロスフェード | `moonOverlayPageStructure` (3a) |
+| 選択 | カード列タップ (new_moon=4 択 / full_moon=3 段階 / catasterism=2 値) | `moonOverlaySelectableCard` (3a) |
+| 幾何測定 | `GlobalKey` から `localToGlobal` + size 取得 | `measureMoonOverlayTapGeometry` (3a) |
+| リビール | 詩的メッセージ fadeIn | `revealPoeticMessage` (3a) |
+| 永続化 | `LunarIntention` / `MidpointCheck` / `CatasterismResult` モデル (層 1c) | `SolaraStorage.*` (層 2b) |
+
+**= 4 系 overlay の保守性が高い** 構造。新規 overlay 追加 (例: Pro 限定「半月チェック」) も本パターンに従えば既存部品で 80% 賄える。
+
+### 3c.4 機械分類の精度 + 課金検討に直結する示唆
+
+1. **`DominantFortuneOverlay` は層 3a の 5 painter 駆動主**
+   - 機械分類は `AnimationController` 有無で正しく 3c
+   - 実装上は 85 行と最も薄いが、3a 5 painter (3,212 行) を起動するキーストーン
+   - **Pro 拡張案**: 演出を「毎回再生」設定 (Free は 1 日 1 回固定) は本ファイルの `onComplete` トリガを `map_screen` 側で制御変更すれば実装可
+
+2. **🔴 Galaxy moon 演出 4 種 = Solara の最大差別化体験**
+   - 「占いをしない、節目で自己と対話する」体験 ([`project_solara_design_philosophy`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/project_solara_design_philosophy.md)) を体現
+   - 新月で意図を立てる → 満月で中間チェック → 刻星化 (新月前日) で完了判定 → 形成演出 (星座) の 4 段サイクル
+   - **無料機能の心臓部** = Pro 化対象としては不適切 (これを Pro 化すると Solara の独自性が見えなくなる)
+   - 代わりに「過去サイクルアルバム」「履歴の検索」「カスタム背景画像」が Pro 拡張案 ([`project_galaxy_spec`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/project_galaxy_spec.md))
+
+3. **`CatasterismFormationOverlay` の 8 秒演出は最も重い**
+   - 12 星座シンボル + 背景画像を preload、`AnimationController` 60fps で 8s = 480 frame 描画
+   - `_FormationPainter` (252 行) の `paint` 関数が重い可能性 ([`todo_solara_perf_audit`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/todo_solara_perf_audit.md))
+   - **「サイクル完了の最大ご褒美」演出**として演出投資に値する重み
+   - Pro 拡張案: 「形成演出を任意のタイミングで再生 (履歴アルバム)」
+
+4. **3 系 moon overlay の AnimationController 数 (6+4+4) = メモリ・GPU 負荷**
+   - `dispose()` 漏れがあれば fd 枯渇等の致命傷 ([`feedback_http_fd_leak`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/feedback_http_fd_leak.md) / [`project_solara_a101fc_fd_leak`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/project_solara_a101fc_fd_leak.md))
+   - 各 widget の `dispose()` で全 controller 解放を確認済 (本セッション読み合わせで確認、漏れなし)
+   - Pro 拡張で AnimationController を増やす場合は dispose 必須
+
+5. **永続化が層 2b `solara_storage.dart` に集中**
+   - new_moon: `setLunarIntention`, `setNotTodayCount`
+   - full_moon: `setMidpointCheck`
+   - catasterism: `setCatasterismResult`
+   - **クラウドバックアップ Pro** ([`solara_storage.dart`](../lib/utils/solara_storage.dart) で議論) のバックアップ対象としてこれらが最優先候補
+
+6. **`DominantFortuneOverlay` の `kindFromKey` 関数は柔軟性源**
+   - 文字列 → enum 変換ヘルパー、外部入力 (例: notification payload) からの起動を想定
+   - **Pro 公開時の deep link 対応**: 「Pro 限定 push 通知から特定 overlay 起動」は本関数で実装容易
+
+### 3c.5 機械抽出への参照
+
+層 3c の機械抽出 raw: [`feature_inventory/03c_widgets_anim.md`](feature_inventory/03c_widgets_anim.md)
+
+---
+
+(層 4a 以降は次セッション以降で追記。層 4 は 1 セッション 1 画面の予定)
