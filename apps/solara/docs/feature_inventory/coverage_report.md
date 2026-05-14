@@ -37,9 +37,9 @@
 ## #1 / #2 機械抽出 ↔ feature_inventory.md (人手版) の対整合
 
 - 機械抽出した class/mixin/extension/enum: **304**
-- inventory に登場する識別子 (大文字始まり ``backtick``囲み): **37**
+- inventory に登場する識別子 (大文字始まり ``backtick``囲み): **70**
 
-### #1 機械にあるが Doc に書かれていない (274)
+### #1 機械にあるが Doc に書かれていない (247)
 
 - `AcgFrameDef`
 - `AngleFilter`
@@ -52,35 +52,21 @@
 - `AstroCartoSubPills`
 - `AstroFrameStyle`
 - `AstroNadirMarker`
-- `AstroTermLabel`
 - `AstroZenithMarker`
 - `AstroZenithPopup`
 - `BirthMarker`
 - `CatasterismFormationOverlay`
 - `CatasterismOverlay`
-- `CategoryIcon`
-- `CategoryIconKind`
-- `CelestialEvent`
-- `CelestialEventBar`
 - `CelestialEvents`
 - `ChartLineStyle`
-- `ClassCard`
-- `ClassCardMode`
 - `ClassShareCardPage`
-- `CommunicationPainterBuilder`
-- `ConstellationPainter`
-- `CycleSpiralPainter`
 - `DailyTransitsResult`
 - `DateSlashFormatter`
-- `DominantFortuneKind`
-- `DominantFortuneKindToCategoryIcon`
-- `DominantFortuneOverlay`
 - `FontPreviewScreen`
 - `ForecastLifePeriodsSection`
 - `ForecastScreen`
 - `ForecastTop5Section`
 - `FortuneFilterLabel`
-- `FortunePainterBuilder`
 - `FortuneReading`
 - `FortuneSheet`
 - `FullMoonOverlay`
@@ -88,8 +74,6 @@
 - `GalaxyScreen`
 - `GalaxyScreenState`
 - `GalaxyStarAtlasTab`
-- `GlassPanel`
-- `HealingPainterBuilder`
 - `HoroAspectCheckmark`
 - `HoroAspectList`
 - `HoroAstrologyView`
@@ -112,10 +96,8 @@
 - `LatitudeBandHit`
 - `LegendDot`
 - `LocationMarkerPopup`
-- `LocationPickerMinimap`
 - `LocationsDateStepper`
 - `LocationsScreen`
-- `LovePainterBuilder`
 - `MapAspectChip`
 - `MapBtn`
 - `MapDailyTransitScreen`
@@ -131,12 +113,8 @@
 - `MapTimeSlider`
 - `MapTimeSliderState`
 - `MapViewpointMenu`
-- `MiniConstellationPainter`
-- `MoneyPainterBuilder`
 - `MonthEvents`
-- `MoonScrollingStory`
 - `NewMoonOverlay`
-- `NoProfileGuide`
 - `Observe3DCard`
 - `ObserveCardBack`
 - `ObserveCardFront`
@@ -167,15 +145,11 @@
 - `SlotMarker`
 - `SolaraApp`
 - `SolaraColors`
-- `SolaraHome`
-- `SolaraNavBar`
 - `SolaraNavIcons`
 - `SolaraPhilosophyScreen`
 - `SolaraProfile`
-- `SolaraSafeText`
 - `SolaraStorage`
 - `SolaraTheme`
-- `SpiralPainter`
 - `StatusBadge`
 - `TarotAltarScene`
 - `TarotData`
@@ -185,7 +159,6 @@
 - `TransitEvent`
 - `VPSlot`
 - `VpPinVisual`
-- `WorkPainterBuilder`
 - `ZodiacImageIcon`
 - `_AcgEntryFooter`
 - `_ActionTile`
@@ -241,18 +214,51 @@
 - `_HoroBirthPanelState`
 - `_HoroBottomSheet`
 - `_HoroChartData`
-- … 残り 74 省略
+- `_HoroChartView`
+- `_HoroIconPainter`
+- `_HoroRelocationPanelState`
+- `_HoroTransitPanelState`
+- `_HourNumberField`
+- `_HourNumberFieldState`
+- `_InfoPopupShell`
+- `_LatitudeBandBox`
+- `_LatitudeBandRow`
+- `_LightMote`
+- `_LoadingBody`
+- `_LocationPickerMinimapState`
+- `_LocationsScreenState`
+- `_LovePainter`
+- `_MainTab`
+- `_MapDailyTransitScreenState`
+- `_MapDisplayMenuState`
+- `_MapIconPainter`
+- `_MapLineNarrativeSheetState`
+- `_MapViewpointMenuState`
+- `_MedalPalette`
+- `_Medallion`
+- `_MenuInfoRow`
+- `_MoneyPainter`
+- `_MoonScrollingStoryState`
+- `_Mulberry32`
+- `_NewMoonOverlayState`
+- … 残り 47 省略
 
-### #2 Doc に書いてあるがコードに存在しない (ゴースト記述) (7)
+### #2 Doc に書いてあるがコードに存在しない (ゴースト記述) (13)
 
 > 注: Flutter SDK や外部ライブラリの型もここに乗る (誤検出)。
 > 真のゴーストはアプリ独自型のみ。実際の Doc 修正対象は手で絞り込む。
 
+- `AnimationController`
 - `FORECAST_KV`
+- `FlutterMap`
 - `GEMINI_API_KEY`
 - `GOOGLE_PLACES_KEY`
+- `IgnorePointer`
+- `NOUN_SHAPES`
+- `ScrollController`
 - `SearchHourAngle`
 - `SearchRiseSet`
+- `StatefulWidget`
 - `TAROT_MODEL_FALLBACK`
 - `TAROT_MODEL_PRIMARY`
 

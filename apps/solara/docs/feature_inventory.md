@@ -19,7 +19,7 @@
 > - [x] 層 2a: API/Worker ラッパ — 2026-05-14 完成
 > - [x] 層 2b: 永続化/キャッシュ — 2026-05-14 完成
 > - [x] 層 2c: グローバル singleton — 2026-05-14 完成
-> - [ ] 層 3a: 共通ウィジェット (純粋)
+> - [x] 層 3a: 共通ウィジェット (純粋) — 2026-05-14 完成
 > - [ ] 層 3b: テーマ・装飾
 > - [ ] 層 3c: 演出ウィジェット (animated)
 > - [ ] 層 4a: Map 画面
@@ -506,4 +506,146 @@ Solara のバックエンドは **Cloudflare Workers** で稼働。本番 URL: `
 
 ---
 
-(層 3a 以降は次セッション以降で追記)
+## 層 3a: 共通ウィジェット (純粋)
+
+### 3a.1 概要
+
+`lib/widgets/` 配下の 22 ファイル / 計 5,612 行。**`AnimationController` を持たない** widget 群 (= 機械分類のヒューリスティック)。
+ただし `StatefulWidget` であっても `ScrollController` 等の純粋な state のみのもの (例: `MoonScrollingStory`, `LocationPickerMinimap`, `MoonScrollingStory`) は本層に含まれる。
+
+22 ファイルは性質が大きく異なるので、本章では **機能群** 単位で整理する。
+
+| 群 | 役割 | ファイル数 | 行 |
+|---|---|---|---|
+| A 基礎レイアウト/装飾 | popup・glass・overflow ・用語ラベル | 4 | 314 |
+| B ナビゲーション | bottom NavBar + 5 nav icon CustomPainter | 2 | 381 |
+| C カテゴリアイコン | 6 種カテゴリの Gemini WebP アイコン | 1 | 80 |
+| D 空状態/案内 | プロフィール未設定時のガイドカード | 1 | 51 |
+| E Sanctuary 用 | 144 称号カード + ミニマップ座標選択 | 2 | 447 |
+| F 月オーバーレイ共通部 | 新月/満月/刻星化 overlay の共通 building blocks | 2 | 266 |
+| G Galaxy ペインター | 星座 + サイクルスパイラル + 装飾スパイラル | 3 | 736 |
+| H Cycle 天体イベント表示 | 月別イベント横スクロールバー (Galaxy 下部) | 1 | 129 |
+| I Map fortune オーバーレイ painter | 5 カテゴリ × CustomPainter + 共通 builder | 6 | 3,212 |
+
+**合計**: 22 ファイル / 5,616 行 (機械抽出は 5,612、+4 は moon_overlay.dart の re-export ヘッダ)
+
+### 3a.2 群別 ファイル一覧 + 呼出元 + 役割
+
+#### A. 基礎レイアウト/装飾 (4 本、計 314 行)
+
+| ファイル | 行 | 主要 export | 呼出元 | 役割 |
+|---|---|---|---|---|
+| [`info_popup.dart`](../lib/widgets/info_popup.dart) | 113 | `showInfoPopup`, `_InfoPopupShell` | 22 ファイル (Map / Horo / Forecast / Sanctuary / Galaxy / `astro_glossary.dart` 等) | **🔴 統一 popup ヘルパー** ([`project_solara_popup_pattern`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/project_solara_popup_pattern.md))。新規 popup は必ず本関数経由 (AlertDialog/showModalBottomSheet 直書き禁止)。barrierDismissible + 右上 × + GlassPanel 互換 + 高さ画面-120px 上限 |
+| [`glass_panel.dart`](../lib/widgets/glass_panel.dart) | 31 | `GlassPanel` | `map_daily_transit_screen`, `full_moon_overlay`, `new_moon_overlay`, `catasterism_overlay`, `map_direction_popup`, `solara_philosophy_screen` | 半透明暗パネル容器 (`color: 0xE60A0A14` + `glassBorder` 枠)。**2026-05-03 BackdropFilter 撤去** (Adreno saveLayer leak の Critical 対策 = [`feedback_html_costly_widgets`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/feedback_html_costly_widgets.md))。blur なしで後ろがうっすら透けるだけ |
+| [`solara_safe_text.dart`](../lib/widgets/solara_safe_text.dart) | 81 | `SolaraSafeText` | (現状は本ファイルから他へ未利用、規約用ボイラープレート) | **🔴 Row/Column 内 Text の overflow 安全ラッパ** ([`feedback_text_overflow`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/feedback_text_overflow.md))。`Flexible(flex/fit, child: Text(maxLines, overflow:ellipsis))` をワンライナー化 |
+| [`astro_term_label.dart`](../lib/widgets/astro_term_label.dart) | 85 | `AstroTermLabel` | `map_relocation_popup` + 各種 popup 内 (Map / Horo) | 用語 i ボタン (タップで `showAstroGlossaryDialog` 呼出 = 層 1a `astro_glossary.dart`)。`termKey` が辞書未登録なら i アイコン非表示。2026-05-11 child を Flexible でラップする overflow 修正済 |
+
+#### B. ナビゲーション (2 本、計 381 行)
+
+| ファイル | 行 | 主要 export | 呼出元 | 役割 |
+|---|---|---|---|---|
+| [`solara_nav_bar.dart`](../lib/widgets/solara_nav_bar.dart) | 163 | `SolaraNavBar` (+ `baseHeight`, `totalHeight`, `systemNavInset` static) | [main.dart](../lib/main.dart) (`SolaraHome` 直配置)、[map_planet_lines.dart](../lib/screens/map/map_planet_lines.dart) (`totalHeight` で bottom 位置計算) | HTML `shared/styles.css` に正確に合わせる bottom NavBar (h=80 + 5 タブ Expanded 分割)。**2026-04-29 Android systemNav (3 ボタン △〇□) 対応**: 閾値 30px で 3 ボタン/ジェスチャー判定、3 ボタン時のみ追加高 (`systemNav - 12`) を加算。**2026-05-03 BackdropFilter 撤去**で alpha 高めの gradient に置換 (glass_panel と同じ Adreno 対策) |
+| [`nav_icons.dart`](../lib/widgets/nav_icons.dart) | 218 | `SolaraNavIcons.map/horo/tarot/galaxy/sanctuary` (static factory) + 5 `_*IconPainter` (CustomPainter) | `solara_nav_bar.dart` のみ | 5 タブ用ベクター SVG 互換アイコン (HTML `shared/icons.js` exact)。Map = circle + cross-hairs + diamond、Horo = 同心円 + 十字、Tarot = card + star、Galaxy = ellipse + spiral arms + dots、Sanctuary = temple + door + circle window |
+
+#### C. カテゴリアイコン (1 本、80 行)
+
+| ファイル | 行 | 主要 export | 呼出元 | 役割 |
+|---|---|---|---|---|
+| [`category_icon.dart`](../lib/widgets/category_icon.dart) | 80 | `CategoryIconKind` enum、`CategoryIcon` widget、`DominantFortuneKindToCategoryIcon` extension、`_CategoryIconKindAsset` extension | `map_menu_chips`, `map_daily_transit_screen` | 6 種 (all/love/money/work/healing/communication) の Gemini 生成 WebP アンティーク神秘画 (`assets/menu_icons/{kind}.webp`)。**2026-05-10 CustomPaint (Style D) → WebP に置換** (ベクター描画は git history 復元可能)。`DominantFortuneKind` (層 3c) → `CategoryIconKind` への変換 extension あり |
+
+#### D. 空状態/案内 (1 本、51 行)
+
+| ファイル | 行 | 主要 export | 呼出元 | 役割 |
+|---|---|---|---|---|
+| [`no_profile_guide.dart`](../lib/widgets/no_profile_guide.dart) | 51 | `NoProfileGuide` | [forecast_screen](../lib/screens/forecast_screen.dart), [locations_screen](../lib/screens/locations_screen.dart), [map_screen](../lib/screens/map_screen.dart) | プロフィール未設定時 (SolaraProfile が null) のガイドカード。「設定する→」タップで `maybePop()` (シート閉) + `onNavigateToSanctuary?.call()`。**2026-05-04 集約**: Forecast/Locations にあった 1,195 char コピペを抽出 (map_screen / horo_backdrop は装飾異なるため別実装で残存) |
+
+#### E. Sanctuary 用 (2 本、計 447 行)
+
+| ファイル | 行 | 主要 export | 呼出元 | 役割 |
+|---|---|---|---|---|
+| [`class_card.dart`](../lib/widgets/class_card.dart) | 306 | `ClassCard`, `ClassCardMode` enum | [sanctuary_screen](../lib/screens/sanctuary_screen.dart), [sanctuary_title_diagnosis](../lib/screens/sanctuary/sanctuary_title_diagnosis.dart), [class_share_card](../lib/screens/sanctuary/class_share_card.dart) | 25 クラスのアール・ヌーヴォー画風カード表示 (`assets/class-cards/<axis>_<court>_<nameen>.webp`)。Light/Shadow 両面、`titleLightJP` / `titleShadowJP` で「省察に長けた / 騎士」のように一言＋クラス名表示。軸別 5 色グロー (power=crimson, mind=sapphire, spirit=violet, shadow=amethyst, heart=rose-pink)。診断 reveal + シェアカード + 将来図鑑用 |
+| [`location_picker_minimap.dart`](../lib/widgets/location_picker_minimap.dart) | 141 | `LocationPickerMinimap` | [sanctuary_profile_editor](../lib/screens/sanctuary/sanctuary_profile_editor.dart), [sanctuary_home_editor](../lib/screens/sanctuary/sanctuary_home_editor.dart) | Sanctuary 出生地/現住所入力で検索後の微調整用ミニマップ。**中央固定ピン + マップパン**で座標選択 (ピンドラッグでない = `IgnorePointer` で gesture を `FlutterMap` へ通す)。`didUpdateWidget` で親側 lat/lng が大きく変わったら map も追従 (≤ 0.0001 はループ防止で無視) |
+
+#### F. 月オーバーレイ共通部 (2 本、計 266 行)
+
+| ファイル | 行 | 主要 export | 呼出元 | 役割 |
+|---|---|---|---|---|
+| [`moon_overlay.dart`](../lib/widgets/moon_overlay.dart) | 4 | (re-export のみ) | [galaxy_screen](../lib/screens/galaxy_screen.dart) | 後方互換用 re-export ファイル。`new_moon_overlay` / `full_moon_overlay` / `catasterism_overlay` (3 つとも層 3c) を `export 'xxx.dart'` で集約 |
+| [`moon_overlay_shared.dart`](../lib/widgets/moon_overlay_shared.dart) | 262 | `revealPoeticMessage`, `moonOverlaySelectableCard`, `moonOverlayPageStructure`, `measureMoonOverlayTapGeometry`, `mysticalMoonBackdrop`, `MoonScrollingStory` (Stateful) | `new_moon_overlay`, `full_moon_overlay`, `catasterism_overlay` (層 3c の月 overlay 3 種) | **月 / 刻星化 overlay の共通 building blocks** (2026-05-06 audit T2/T7 で集約)。詩的メッセージ + 選択カード + ページ構造 (story/selection/reveal 3 段 fade) + 幾何測定 + 神秘背景 + 自動スクロール物語 (30px/s, ShaderMask フェード) |
+
+#### G. Galaxy ペインター (3 本、計 736 行)
+
+| ファイル | 行 | 主要 export | 呼出元 | 役割 |
+|---|---|---|---|---|
+| [`cycle_spiral_painter.dart`](../lib/widgets/cycle_spiral_painter.dart) | 396 | `CycleSpiralPainter`, `_Vec3`, `_SpiralDot`, `_GADot`, `_Mulberry32` | [galaxy_screen](../lib/screens/galaxy_screen.dart) | **Galaxy 画面のメインペインター** — HTML `galaxy.html renderSpiral3D()` を Dart 移植。3 層 (Ghost spiral path / spiral anchor dots / reading dots at Golden Angle 55° anamorphic camera) + `_drawBackgroundStars` + `_drawStellaCore` + 接続スレッド + `hitTestDot` (タップ判定)。`breathPhase` で呼吸アニメ受け取り (本ファイルに AnimationController なし、親 galaxy_screen 側で駆動) |
+| [`constellation_painter.dart`](../lib/widgets/constellation_painter.dart) | 249 | `ConstellationPainter`, `MiniConstellationPainter` | [galaxy_replay_overlay](../lib/screens/galaxy/galaxy_replay_overlay.dart), [galaxy_star_atlas](../lib/screens/galaxy/galaxy_star_atlas.dart), [catasterism_formation_overlay](../lib/widgets/catasterism_formation_overlay.dart) | 星座描画ペインター v2 (anamorphic 3D)。Major Arcana = MST edges + `NOUN_SHAPES`、Minor Arcana = field stars (独立浮遊)。`cameraAngle` 55°=分散 / 0°=整列、`progress` で漸進描画、`artImage` で星座イラスト合成、`flipX` で左右反転。`MiniConstellationPainter` は Star Atlas grid card 用の小型版 |
+| [`spiral_painter.dart`](../lib/widgets/spiral_painter.dart) | 91 | `SpiralPainter` | [galaxy_screen](../lib/screens/galaxy_screen.dart) | シンプル 3 周スパイラル + 日数ドット (active/inactive) + Stella 中心グロー の装飾ペインター。`CycleSpiralPainter` (本格 3D 版) とは別の軽量版。**`MaskFilter.blur` を使うため** GPU 負荷あり ([`todo_solara_perf_audit`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/todo_solara_perf_audit.md) の監査候補) |
+
+#### H. Cycle 天体イベント表示 (1 本、129 行)
+
+| ファイル | 行 | 主要 export | 呼出元 | 役割 |
+|---|---|---|---|---|
+| [`celestial_event_bar.dart`](../lib/widgets/celestial_event_bar.dart) | 129 | `CelestialEventBar` | [galaxy_screen](../lib/screens/galaxy_screen.dart) | Galaxy/Cycle 画面下部に常時表示する天体イベント横スクロールバー。`/astro/events` から取った `CelestialEvent` リストを chip 表示、タップで `showInfoPopup` 経由でイベント占星術的意味を表示 (層 1a `celestial_event_meanings.dart` 参照)。イベント type → アイコン記号テーブル: ingress=➜, retrograde=℞, retrograde_end=↻, eclipse=◑, conjunction=☌, node_shift=☊ |
+
+#### I. Map fortune オーバーレイ painter (6 本、計 3,212 行)
+
+[`dominant_fortune_overlay.dart`](../lib/widgets/dominant_fortune_overlay.dart) (層 3c、`AnimationController` あり) が「今日の最高スコアカテゴリ」に応じて 5 painter を切り替え、**1 日の最初のタップで約 4 秒間** 全画面演出。本層 3a にあるのは Painter 本体 (state 持たない CustomPainter) + 共通 builder。
+
+| ファイル | 行 | 主要 export | 呼出元 | 役割 |
+|---|---|---|---|---|
+| [`fortune_overlays/_common.dart`](../lib/widgets/fortune_overlays/_common.dart) | 40 | `FortunePainterBuilder` (abstract)、`easeOutCubic`, `easeOutBack`, `easeInOutQuad`, `stageAlpha` | 5 painter + `dominant_fortune_overlay` | 5 painter の親契約 + 共通イージング関数 (減速 / バウンド / 二次 / 3 段階 α カーブ) |
+| [`fortune_overlays/communication_painter.dart`](../lib/widgets/fortune_overlays/communication_painter.dart) | 642 | `CommunicationPainterBuilder`、`_CommunicationPainter`、`_NotePair`, `_Note`, `_Stream`, `_Spark`, `_Sparkle` | `dominant_fortune_overlay` | **コミュニケーション**: ルーン文字・占星術記号・ラテン語片が羊皮紙の上を流れ、ノート pair が衝突して spark + sparkle |
+| [`fortune_overlays/healing_painter.dart`](../lib/widgets/fortune_overlays/healing_painter.dart) | 498 | `HealingPainterBuilder`、`_HealingPainter`、`_PetalPalette`, `_Petal`, `_LightMote`, `_Sparkle` | `dominant_fortune_overlay` | **癒し**: 月桂樹とオリーブの葉が下→上へ螺旋で舞い上がり、aurora band + light mote |
+| [`fortune_overlays/love_painter.dart`](../lib/widgets/fortune_overlays/love_painter.dart) | 581 | `LovePainterBuilder`、`_LovePainter`、`_PetalPalette`, `_RosePetal`, `_Sparkle`, `_Ray`, `_Vine` | `dominant_fortune_overlay` | **恋愛**: 中心に金の魔法陣 (sigil) が開き、薔薇の花弁が放射 + 蔓 vine + god rays |
+| [`fortune_overlays/money_painter.dart`](../lib/widgets/fortune_overlays/money_painter.dart) | 693 | `MoneyPainterBuilder`、`_MoneyPainter`、`_GoldPalette`, `_GoldPiece`, `_GoldDust`, `_Sparkle` | `dominant_fortune_overlay` | **金運**: 金貨・金箔 (coin + flake) が上から落ちて積み上がる落ち物ゲーム風 + dust + sparkle |
+| [`fortune_overlays/work_painter.dart`](../lib/widgets/fortune_overlays/work_painter.dart) | 758 | `WorkPainterBuilder`、`_WorkPainter`、`_MedalPalette`, `_Medallion`, `_Gear`, `_GoldDust`, `_Sparkle` | `dominant_fortune_overlay` | **仕事**: 金の勲章 medallion が回転浮遊 + 歯車 gear + final moment 演出 |
+
+### 3a.3 機械分類の盲点
+
+1. **`AnimationController` 有無での 3a / 3c 振り分けは概ね妥当**だが、`MoonScrollingStory` (3a) は `ScrollController.animateTo` で時間連動の動きがある (= 厳密には演出寄りの State)。それでも `AnimationController` でない点で本層採用は許容範囲。
+
+2. **fortune_overlays/ 5 painter は CustomPainter で state を持たないため正しく 3a**。親の `DominantFortuneOverlay` (3c) が `AnimationController` の `t` を渡して描画させる構造。**画面演出として一塊で動く** = 課金検討では「動く演出」として 3c と一緒に扱う方が自然 (層 3c 章でも言及予定)。
+
+3. **`category_icon.dart` の `DominantFortuneKindToCategoryIcon` extension** は `dominant_fortune_overlay.dart` (3c) の enum を変換するため、3a → 3c の依存方向で参照している。逆 (3c → 3a) は問題ないが、3a 同士で共有された enum を 3c に置くより `direction_energy.dart` (層 1a) に寄せる選択肢もある (将来検討)。
+
+### 3a.4 課金検討に直結する示唆
+
+1. **`showInfoPopup` (info_popup.dart) は全画面の説明 UX を握る中央集権ポイント**
+   - 22 ファイルが本関数経由で popup を出す = ここを改修すれば全画面の popup 体験が一括で変わる
+   - **Pro 機能の説明 UX** (例: 「この機能は Pro 限定」「アップグレード」訴求) は本 helper を拡張する形が自然 (新引数 `proGate: true` で「Pro バッジ + アップグレード CTA」を追加する案など)
+   - barrier dismissible でユーザー摩擦少ない = ペイウォール訴求にも向いている
+
+2. **`solara_nav_bar.dart` + `nav_icons.dart` = アプリの第一印象**
+   - 5 タブ全部が無料層から見える状態 = どのタブも「初期体験」になる
+   - Pro 機能をタブ単位で分けない設計 (タブは全員見えて、中の一部機能が Pro) は実装コスト低 + 訴求柔軟
+   - **タブ内に「Pro バッジ」を出すなら本 widget の拡張が必要** (現状は 5 タブのみ、Pro バッジ表示の枠なし)
+
+3. **`category_icon.dart` の WebP アセットは Pro 拡張の素材として強力**
+   - Gemini 生成のアンティーク神秘画 = ストア訴求素材としての価値高
+   - **Pro 限定カテゴリ追加** (例: career, family, spiritual, etc.) は本 widget + WebP アセット 1 枚追加で済む = 拡張容易
+
+4. **`class_card.dart` (Sanctuary 144 称号) は無料機能の差別化の中心**
+   - 25 クラス × 144 タイトルカード = ユーザー独自の「あなただけの結果」
+   - **Pro 拡張案**: シェアカード追加デザイン、月別称号変化追跡、図鑑/コレクション (将来)
+   - **EN 版未実装** ([`project_solara_title_system`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/project_solara_title_system.md)) が海外展開のボトルネック
+
+5. **fortune_overlays/ 5 painter (合計 3,212 行) は Solara 演出の半分を占める = リソース集中分野**
+   - 5 カテゴリの「1 日 1 回演出」は無料機能で十分インパクトあり、Pro 化対象としては弱い
+   - **Pro 拡張案**: 演出のバリエーション追加 (例: 月別テーマ painter)、または「演出を毎回再生」設定の Pro 化 (Free は 1 日 1 回固定)
+   - **保守性**: 5 painter が各 500〜750 行で類似構造 = 共通 builder ([`_common.dart`](../lib/widgets/fortune_overlays/_common.dart)) が抽象化できる余地は残存
+
+6. **`solara_safe_text.dart` は overflow 対策の規約ファイル**
+   - 現状他ファイルから参照ゼロだが、これは「規約として置いてある」状態 ([`feedback_text_overflow`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/feedback_text_overflow.md))
+   - i18n フェーズ ([`feedback_i18n_last`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/feedback_i18n_last.md)) で EN テキスト追加時に活用すべき (英語は日本語より長くなる傾向 = overflow 再発リスク)
+
+7. **`glass_panel.dart` + `solara_nav_bar.dart` の Adreno saveLayer leak 対策は Pro 公開前提**
+   - 2026-05-03 に BackdropFilter 撤去済 = 公開時の Critical 安定性問題は解消済
+   - 将来 BackdropFilter を再導入する場合は本ファイル経由で集中管理 (= 散発再導入で同じバグ再発を防げる)
+
+### 3a.5 機械抽出への参照
+
+層 3a の機械抽出 raw: [`feature_inventory/03a_widgets_pure.md`](feature_inventory/03a_widgets_pure.md)
+
+---
+
+(層 3b 以降は次セッション以降で追記)
