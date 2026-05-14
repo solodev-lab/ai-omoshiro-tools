@@ -20,7 +20,7 @@
 > - [x] 層 2b: 永続化/キャッシュ — 2026-05-14 完成
 > - [x] 層 2c: グローバル singleton — 2026-05-14 完成
 > - [x] 層 3a: 共通ウィジェット (純粋) — 2026-05-14 完成
-> - [ ] 層 3b: テーマ・装飾
+> - [x] 層 3b: テーマ・装飾 — 2026-05-14 完成
 > - [ ] 層 3c: 演出ウィジェット (animated)
 > - [ ] 層 4a: Map 画面
 > - [ ] 層 4b: Horoscope 画面
@@ -648,4 +648,89 @@ Solara のバックエンドは **Cloudflare Workers** で稼働。本番 URL: `
 
 ---
 
-(層 3b 以降は次セッション以降で追記)
+## 層 3b: テーマ・装飾
+
+### 3b.1 概要
+
+`lib/theme/` 配下の 2 ファイル / 計 178 行。**色定数と ThemeData の貯蔵庫**。
+他層 (widgets / screens / painters) は本層を import して色を引く構造で、Solara の見た目の **唯一の源泉**。
+
+**機械分類メモ**: 当初プラン ([`project_solara_feature_extractor`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/project_solara_feature_extractor.md)) では「theme/ + antique_icons + astro_glyphs 2 本」とあったが、現状の repo に `antique_icons.dart` / `astro_glyphs.dart` 単体ファイルは存在しない (`antique_icons` は [horo_antique_icons.dart](../lib/screens/horoscope/horo_antique_icons.dart) として Horoscope 画面層に内包)。よって本層は実態 **2 ファイル / 純テーマのみ**。
+
+### 3b.2 ファイル別 役割 + 呼出元 (2 本)
+
+| # | ファイル | 行 | 主要 export | 呼出元 (画面層) | 性質 |
+|---|---|---|---|---|---|
+| 1 | [`solara_colors.dart`](../lib/theme/solara_colors.dart) | 110 | `SolaraColors` (static const Color 群 + `planetColor`, `elementColor` ヘルパー) | **19 ファイル** (widgets 9 + screens 9 + theme 1) で 143 occurrences | **色の唯一の源泉**。Soft/Hard 独立 2 エネルギー色、惑星 10 色、エレメント 4 色、月相、glass、spiral 全て格納 |
+| 2 | [`solara_theme.dart`](../lib/theme/solara_theme.dart) | 68 | `SolaraTheme.dark` (ThemeData) + `_textTheme` (DM Sans + Noto Sans JP fallback) | [main.dart:40](../lib/main.dart) のみ (`MaterialApp.theme: SolaraTheme.dark`) | アプリ全体の ThemeData。**日本語フォールバック規約あり**: `fontFamilyFallback: [Noto Sans JP]` を `TextTheme.apply` で全 TextStyle に伝搬 |
+
+### 3b.3 SolaraColors 色定数の構造 (`planetColor`, `elementColor`)
+
+| 群 | 色定数 | 用途 |
+|---|---|---|
+| **Primary** | `solaraGoldLight` (`F9D976`), `solaraGold` (`F6BD60`), `celestialBlueLight`, `celestialBlueDark` | アプリのブランド 4 色。Gold は強調・active、Blue は背景 |
+| **Typography** | `textPrimary` (`EAEAEA`), `textSecondary` (`ACACAC`) | 本文・補助文字色 |
+| **🔴 Energy 2 軸** | `energySoft` (銀月色 `C8D4E8`) + `Light/Dark/Glow` 計 4 色、`energyHard` (金陽色 `D6915C`) + `Light/Dark/Glow` 計 4 色 | [`project_solara_design_philosophy`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/project_solara_design_philosophy.md) の独立 2 エネルギーを色で表現。**赤=悪 / 緑=良 を絶対回避**。両方とも「正のエネルギー」 |
+| **Frosted Glass** | `glassFill` (5% 白)、`glassBorder` (10% 白) | popup / panel の半透明境界 |
+| **Elements** | `fire/water/air/earth` × `Start/End/Glow` 計 12 色 | 4 元素の gradient 用 |
+| **Spiral** | `spiralLine`、`spiralDotActive/Inactive/Dim` | Galaxy スパイラル装飾 |
+| **Planet (10 色)** | `planetSun`〜`planetPluto` | 10 惑星色。`planetColor('sun')` ヘルパーで文字列→Color |
+| **Element (4 色)** | `elementWands/Cups/Swords/Pentacles` | Tarot 78 枚デッキ用。`elementColor('fire')` ヘルパーで文字列→Color (Wands ↔ fire マッピング) |
+| **Moon event** | `fullMoonRing`、`newMoonCore` | 満月リング光・新月コア紫 |
+
+**ヘルパー関数 2 本** (関数として export されている数少ない要素):
+- `planetColor(String planet)` → 10 惑星色テーブル参照、未知文字列なら `solaraGold` フォールバック
+- `elementColor(String element)` → 4 元素色テーブル参照、未知なら `textSecondary` フォールバック (`planetColor`/`elementColor` は Map 系・Observe 系・Galaxy 系 10 ファイルで使用)
+
+### 3b.4 SolaraTheme の構造
+
+`SolaraTheme.dark` (ThemeData) は以下を設定:
+
+| プロパティ | 値 |
+|---|---|
+| `brightness` | `Brightness.dark` (全画面 dark mode 固定) |
+| `scaffoldBackgroundColor` | `celestialBlueDark` (`0xFF080C14`) |
+| `textTheme` | DM Sans (latin) + Noto Sans JP fallback、5 段階 (headlineLarge/Medium、bodyLarge/Medium、labelSmall) |
+| `bottomNavigationBarTheme` | active=`F9D976` Gold、inactive=`rgba(255,255,255,0.35)`、label fontSize 9 + letterSpacing 0.5 (HTML 一致) |
+| `colorScheme` | primary=`solaraGold`、surface=`celestialBlueDark`、onSurface=`textPrimary` |
+
+**日本語フォールバック規約**: Latin は DM Sans、それ以外 (日本語) は Noto Sans JP。`TextTheme.apply(fontFamilyFallback: [japaneseFallback])` で 5 段階全てに伝搬。個別の Text/RichText で `fontFamily` を明示しても日本語文字は自動で Noto Sans JP に切替。
+
+### 3b.5 機械分類の精度 + 課金検討に直結する示唆
+
+1. **層 3b は機械分類どおり「ほぼ全画面が依存する基礎」**
+   - `solara_colors.dart` は 19 ファイルから 143 回参照。グローバル定数ファイルとして適切な位置にある
+   - `solara_theme.dart` は main.dart 1 箇所からの参照だが、`ThemeData` 経由で全 Widget に行き渡る
+
+2. **Pro 機能の境界とは独立 = 「無料公開層」**
+   - 色とテーマは Free/Pro 共通の UI 基盤
+   - **Pro バッジ専用色** (例: `proGold`, `proGlow`) を本ファイルに追加するなら本層が自然な置き場所
+   - 同様に「Pro 限定演出のアクセント色」も `solara_colors.dart` に集中させると保守が楽
+
+3. **🔴 Soft/Hard 2 エネルギー色は譲れない世界観 — 課金訴求にも使える**
+   - 「赤=悪 緑=良」回避の独自設計 ([`project_solara_design_philosophy`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/project_solara_design_philosophy.md))
+   - ストア説明文や Pro 訴求文に「両面評価 — 銀月色と金陽色の独立 2 エネルギー」と書くと既存占いアプリ群との差別化軸として効く
+   - 色定数で表現されているので、Marketing 素材 (LP、ストア screenshot) で同じ色を使えば一貫性出る
+
+4. **`SolaraTheme.dark` のみで `light` テーマは未実装**
+   - 全画面 dark mode 固定 = アプリの世界観 (= 夜空、星座、月相)
+   - **Pro 機能で `light` テーマ追加は世界観と齟齬** = 推奨しない
+   - 代わりに「Pro 限定: シーズン別アクセント (Spring/Autumn/Winter)」のような派生 dark テーマなら拡張可能
+
+5. **i18n フェーズで `Noto Sans JP fallback` の追加検討**
+   - EN リリース時、英語 latin は DM Sans のみで完結する
+   - 中国語・韓国語など他言語展開時は本ファイルに `Noto Sans SC/KR` fallback 追加が必要
+   - ただし [`feedback_i18n_last`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/feedback_i18n_last.md) の規約で、i18n は公開直前まで保留
+
+6. **`bottomNavigationBarTheme` 設定は実質未使用**
+   - 現状の bottom NavBar は層 3a `SolaraNavBar` (カスタム widget) で描画していて、Material の `BottomNavigationBar` は使っていない
+   - `ThemeData.bottomNavigationBarTheme` 設定は HTML 一致目的で残しているが、実用上は dead 設定
+   - **削除しても害なし**だが、将来 Material BottomNavigationBar を使う可能性があれば残置可
+
+### 3b.6 機械抽出への参照
+
+層 3b の機械抽出 raw: [`feature_inventory/03b_theme.md`](feature_inventory/03b_theme.md)
+
+---
+
+(層 3c 以降は次セッション以降で追記)
