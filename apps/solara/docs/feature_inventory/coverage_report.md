@@ -37,29 +37,22 @@
 ## #1 / #2 機械抽出 ↔ feature_inventory.md (人手版) の対整合
 
 - 機械抽出した class/mixin/extension/enum: **304**
-- inventory に登場する識別子 (大文字始まり ``backtick``囲み): **182**
+- inventory に登場する識別子 (大文字始まり ``backtick``囲み): **189**
 
-### #1 機械にあるが Doc に書かれていない (153)
+### #1 機械にあるが Doc に書かれていない (146)
 
 - `AppLocale`
 - `CelestialEvents`
 - `DailyTransitsResult`
-- `FontPreviewScreen`
-- `ForecastLifePeriodsSection`
-- `ForecastScreen`
-- `ForecastTop5Section`
 - `FortuneReading`
 - `LatitudeBand`
 - `LatitudeBandHit`
-- `LocationsDateStepper`
-- `LocationsScreen`
 - `MapTimeSliderState`
 - `MonthEvents`
 - `PlanetDailyTransits`
 - `RelocationNarrative`
 - `SolaraApp`
 - `SolaraNavIcons`
-- `SolaraPhilosophyScreen`
 - `SolaraProfile`
 - `SolaraTheme`
 - `TarotData`
