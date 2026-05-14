@@ -16,7 +16,6 @@ import 'package:latlong2/latlong.dart';
 import '../../theme/solara_colors.dart';
 import '../../utils/astro_glossary.dart';
 import '../../utils/daily_transits_api.dart';
-import '../../utils/solara_storage.dart';
 import '../../widgets/category_icon.dart';
 import '../../widgets/dominant_fortune_overlay.dart' show DominantFortuneKind;
 import '../../widgets/glass_panel.dart';
@@ -92,9 +91,6 @@ class _MapDailyTransitScreenState extends State<MapDailyTransitScreen>
   AngleFilter _angleFilter = AngleFilter.ascMc;
   String _categoryFilter = 'all';
 
-  // Sanctuary で設定された orb 値（読込が完了するまで null）
-  Map<String, double>? _orbs;
-
   /// 現在選択中の VIEWPOINT ラベル。
   String get _currentLocationLabel {
     if (_vpIndex >= 0 && _vpIndex < widget.vpSlots.length) {
@@ -126,12 +122,8 @@ class _MapDailyTransitScreenState extends State<MapDailyTransitScreen>
       vsync: this,
       duration: const Duration(milliseconds: 350),
     )..forward();
-    _loadOrbsAndStart();
-  }
-
-  Future<void> _loadOrbsAndStart() async {
-    _orbs = await SolaraStorage.loadOrbSettings();
-    if (!mounted) return;
+    // Daily Transit は Worker daily_transits.js の自前デフォルト orb を使う。
+    // Sanctuary の Orb 設定は Horoscope 専用で、本画面には連携しない。
     _loadTab(_DayTab.today, _vpIndex);
   }
 
@@ -167,7 +159,6 @@ class _MapDailyTransitScreenState extends State<MapDailyTransitScreen>
       lng: loc.longitude,
       startTime: _tabStartTime(tab),
       natal: widget.natal,
-      orbs: _orbs,
     );
     if (!mounted) return;
     setState(() {

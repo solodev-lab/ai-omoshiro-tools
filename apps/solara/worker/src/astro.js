@@ -478,7 +478,7 @@ export function computePredictions(params) {
 
 // Map用アスペクト定義（apps/solara/lib/screens/map/map_astro.dart:_mapAspects と同じ）
 const MAP_ASPECTS = [
-  { name:'conjunction', angle:0,   orb:8, quality:'neutral', weight:0.6 },
+  { name:'conjunction', angle:0,   orb:6, quality:'neutral', weight:0.6 },
   { name:'sextile',     angle:60,  orb:4, quality:'soft',    weight:0.8 },
   { name:'square',      angle:90,  orb:5, quality:'hard',    weight:1.0 },
   { name:'trine',       angle:120, orb:5, quality:'soft',    weight:1.0 },

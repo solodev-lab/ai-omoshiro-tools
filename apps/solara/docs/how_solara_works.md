@@ -265,7 +265,8 @@ Map の扇状セクターが「合算 1 色」で大まかにしか見せない�
 3. **🔴 Cosmic Pro アップグレード UI**（既に実装済、`_buildCosmicProSection` L653-724）:
    $9.99/月 または $49.99/年、訴求 3 機能「Aether shaders · Galaxy Archive · Advanced astrology」。
    ※ UI のみ実装、機能ゲート（`isPro` 判定 / RevenueCat / IAP）は未実装。
-4. **占星術設定**: Orb 設定（8 アスペクトの角度許容範囲を 0.1° 単位でカスタマイズ）、ハウスシステム選択。
+4. **占星術設定**: **ホロスコープのオーブ**設定（アスペクト 8 種 + パターン 5 種の角度許容範囲を
+   0.1° 単位でカスタマイズ。**Horoscope 画面専用** — Map・Daily Transit には影響しない）、ハウスシステム選択。
 5. **アプリ設定**: 言語切替、利用規約等。
 
 ### 5.6 サブ画面（各タブ内から push で開く）
@@ -312,9 +313,17 @@ Map の扇状セクターが「合算 1 色」で大まかにしか見せない�
     「neutral aspect (conjunction) は両方非0」）。
   - これは設計思想（§2）に忠実: コンジャンクション = 2 惑星が重なって溶け合う配置で、流れ（Soft）にも
     摩擦（Hard）にも転びうる。「どちらか」を判定せず、両エネルギーが同時に在る状態として記録する。
-  - Map の 16 方位スコア計算ではコンジャンクションの **orb は 8.0°**（全アスペクト中で最も広い）、
-    weight は 0.6（トライン/スクエアの 1.0 より控えめ）。
+  - Map の 16 方位スコア計算ではコンジャンクションの **orb は 6.0°**（opposition と並んで最も広い）、
+    weight は 0.6（トライン/スクエアの 1.0 より控えめ）。2026-05-14 に 8.0°→6.0° に調整 — 8° は
+    neutral 配分（soft/hard 半々）で全方位を底上げしすぎ、方位コントラストを弱めていたため。
   - 方角タップ popup の attribution でも、コンジャンクション由来の寄与は Soft 欄・Hard 欄の両方に現れる。
+- **オーブ値の出どころ（2026-05-14 整理）**:
+  - **Map / Forecast の 16 方位スコア**: `map_astro.dart` の `_mapAspects`（および Worker `astro.js` の
+    `MAP_ASPECTS` — 2 箇所コピー）にハードコード。合 6° / 矩 5° / トライン 5° / 六分 4° / 補 3° / 衝 6°。
+  - **Daily Transit**: Worker `daily_transits.js` の自前デフォルト（合 4° 等）。
+  - **Horoscope**: Sanctuary の「ホロスコープのオーブ」設定（`solara_orb_settings`）が**反映される**。
+    ユーザーがオーブを変えると Horoscope のアスペクト線とパターン検出（Grand Trine / T-Square / Yod）が
+    再計算される。Map・Daily Transit には影響しない（Horoscope 専用設定）。
 - `direction_energy.dart` の `aggregateContributions` が「どのアスペクトがどれだけ寄与したか」を保持
   → 方角タップ popup の attribution 表示に使う。
 - スコアソースは `combined`（合計）/ `transit`（TR）/ `progressed`（PR）の 3 種。

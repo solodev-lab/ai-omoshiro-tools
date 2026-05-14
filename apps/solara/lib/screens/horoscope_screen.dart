@@ -152,6 +152,9 @@ class HoroscopeScreenState extends State<HoroscopeScreen>
       sb.write('|');
     }
     sb.write(_chartMode);
+    // オーブ設定が変わったらパターンキャッシュを無効化する。
+    sb.write('|');
+    sb.write(horoOrbSignature());
     return sb.toString();
   }
 
@@ -273,6 +276,10 @@ class HoroscopeScreenState extends State<HoroscopeScreen>
 
   Future<void> loadProfile() async {
     final p = await SolaraStorage.loadProfile();
+    // Sanctuary「ホロスコープのオーブ設定」を反映。タブ入室のたび (main.dart の
+    // _onTabTap → loadProfile) に再ロードするので、Sanctuary で変更したら次の
+    // Horo タブ入室時にアスペクト/パターンが再計算される。
+    applyHoroOrbSettings(await SolaraStorage.loadOrbSettings());
     if (p != null && p.isComplete) {
       _birthTimeUnknown = p.birthTimeUnknown;
       // 現住所が登録されていればデフォルトで現実モード(リロケーション)を使う

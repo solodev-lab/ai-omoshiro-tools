@@ -67,6 +67,39 @@ const patternOrbSettings = {
   'yod_quincunx': 1.5,
 };
 
+// ══════════════════════════════════════════════════
+// ── ホロスコープのオーブ override ──
+// Sanctuary「ホロスコープのオーブ設定」(SanctuaryOrbOverlay) で設定された値。
+// horoscope_screen が loadProfile() 時に SolaraStorage.loadOrbSettings() の
+// 結果でこれを更新する。Map/Daily Transit には影響しない (Horoscope 専用)。
+//
+// 空 Map = 未ロード → aspectTypes / patternOrbSettings のデフォルト値を使う。
+// ══════════════════════════════════════════════════
+Map<String, double> _horoOrbOverride = {};
+
+/// Sanctuary のオーブ設定を適用する。horoscope_screen から呼ばれる。
+void applyHoroOrbSettings(Map<String, double> orbs) {
+  _horoOrbOverride = Map<String, double>.from(orbs);
+}
+
+/// アスペクト種別キー (conjunction/trine/...) の有効 orb。
+/// override があればそれ、無ければ [fallback] (= aspectTypes のデフォルト)。
+double horoAspectOrb(String aspectKey, double fallback) =>
+    _horoOrbOverride[aspectKey] ?? fallback;
+
+/// パターン orb キー (grandtrine/tsquare_opp/...) の有効 orb。
+double horoPatternOrb(String key) =>
+    _horoOrbOverride[key] ?? patternOrbSettings[key]!;
+
+/// 現在のオーブ override の状態を表す署名文字列。
+/// horoscope_screen の `_currentCacheKey()` に混ぜてパターンキャッシュを
+/// オーブ変更時に無効化するために使う。
+String horoOrbSignature() {
+  if (_horoOrbOverride.isEmpty) return 'def';
+  final keys = _horoOrbOverride.keys.toList()..sort();
+  return keys.map((k) => '$k:${_horoOrbOverride[k]}').join(',');
+}
+
 // HTML: PATTERN_STYLES
 const patternStyles = {
   'grandtrine': {'label': 'Grand Trine', 'labelJP': 'グランドトライン', 'color': 0xFFC9A84C},

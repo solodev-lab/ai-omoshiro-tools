@@ -87,7 +87,7 @@ class _SanctuaryOrbOverlayState extends State<SanctuaryOrbOverlay> {
                     Icon(Icons.tune, size: 18, color: Color(0xFFF9D976)),
                     SizedBox(width: 8),
                     Flexible(
-                      child: Text('Aspect Orbs',
+                      child: Text('ホロスコープのオーブ',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Color(0xFFF9D976), letterSpacing: 1)),
@@ -121,6 +121,12 @@ class _SanctuaryOrbOverlayState extends State<SanctuaryOrbOverlay> {
                   ),
                 ),
               ],
+            ),
+            const SizedBox(height: 8),
+            // この設定が効く範囲を明示 (Map / Daily Transit には影響しない)。
+            const Text(
+              'この設定はホロスコープ画面のアスペクト・パターン検出に反映されます。Map の方位スコアや Daily Transit には影響しません。',
+              style: TextStyle(fontSize: 12, color: Color(0xCCACACAC), height: 1.5),
             ),
             const SizedBox(height: 20),
 
