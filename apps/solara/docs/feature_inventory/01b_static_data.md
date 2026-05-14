@@ -5,14 +5,35 @@
 
 ## サマリ
 
-- ファイル数: 9 / 総行数: 3628
+- ファイル数: 11 / 総行数: 3830
 - class/mixin/extension/enum: 10
-- 関数 (top-level + method の素拾い): 22
+- 関数 (top-level + method の素拾い): 23
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 1
 - Worker URL リテラル: 0
 
 ## ファイル別
+
+### `lib/screens/horoscope/horo_aspect_description.dart` (116 行)
+
+**ファイル先頭コメント:**
+
+```
+══════════════════════════════════════════════════════════════
+Aspect Description Data
+惑星の意味 + アスペクトの性質 を組み合わせて読める文章を生成
+══════════════════════════════════════════════════════════════
+```
+
+**関数 (1 public + 0 private):**
+
+- L94 `buildAspectDescription()` — アスペクト説明を生成 (3セクション)
+
+
+### `lib/screens/horoscope/horo_constants.dart` (86 行)
+
+**imports:** dart=0 / package=1 / relative=0
+
 
 ### `lib/screens/map/daily_transit_data.dart` (1013 行)
 
