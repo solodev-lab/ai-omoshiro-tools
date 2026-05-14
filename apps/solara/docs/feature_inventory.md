@@ -24,7 +24,7 @@
 > - [x] 層 3c: 演出ウィジェット (animated) — 2026-05-14 完成
 > - [x] 層 4a: Map 画面 — 2026-05-14 完成
 > - [x] 層 4b: Horoscope 画面 — 2026-05-14 完成
-> - [ ] 層 4c: Observe (Tarot) 画面
+> - [x] 層 4c: Observe (Tarot) 画面 — 2026-05-14 完成
 > - [ ] 層 4d: Galaxy 画面
 > - [ ] 層 4e: Sanctuary 画面
 > - [ ] 層 4f: サブ画面 (Forecast / Locations / Philosophy / Font Preview)
@@ -1184,4 +1184,110 @@ Horoscope の機能領域:
 
 ---
 
-(層 4c 以降は次セッション以降で追記。層 4 は 1 セッション 1 画面の予定)
+## 層 4c: Observe (Tarot) 画面
+
+### 4c.1 概要
+
+`lib/screens/observe/` 配下 + `lib/screens/observe_screen.dart` の **5 ファイル / 計 1,564 行**。Solara の Tarot タブ (画面名 "Observe" = HTML `tarot.html` の Dart 移植)。
+
+**機械分類の精度** (✅ オーバーライド不要): 5 ファイル全て Observe-only、cross-cutting なし。`observe_constants.dart` (TAROT_READINGS templates、要素別 4 種) も Observe 内のみで参照 = 層維持。
+
+Observe の機能領域:
+
+| 機能領域 | 概要 |
+|---|---|
+| 1 日 1 引きタロット | 78 枚デッキから 1 枚引き、`DailyReading` (層 1c) に永続化 |
+| カード表示演出 | 3D 反転 (`Observe3DCard`)、要素別タロット解説 (火/水/風/地) |
+| Gemini 解説生成 | `/tarot` 経由でカードに応じた解説文を生成 (Phase A、要素別テンプレ fallback) |
+| 履歴閲覧 | 過去引いたカードの一覧 (`ObserveHistoryPanel`) + 同期入力 |
+| 占卓演出 | 5 惑星配置 + 流れ星 + 太陽 blaze の背景シーン (`TarotAltarScene`) |
+
+**Pro 公開時の最大対象**: `/tarot` (Gemini) 呼出が本層に集中、現状は 1 日 1 回固定 = 永続化規律。Pro 化候補は **3 枚引き / 5 枚引きスプレッド** ([`project_tarot_v2_plan`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/project_tarot_v2_plan.md))。
+
+### 4c.2 ファイル別 役割 + 呼出元 (5 本)
+
+| # | ファイル | 行 | 主要 export | 役割 |
+|---|---|---|---|---|
+| 1 | [`observe_screen.dart`](../lib/screens/observe_screen.dart) | 524 | `ObserveScreen` (Stateful)、`_ObserveScreenState` | **🔴 Observe 統合ハブ**。17 関数 (public 4 + private 13)、10 import (utils 4 + models 2 + observe 内 4)。`/tarot` (Gemini) を `fortune_api.dart` の `fetchTarotReading` 経由で呼出、失敗時は `_generateReadingStatic` (要素別テンプレ fallback)。`_startTypewriter` で解説文を typewriter 演出 |
+| 2 | [`tarot_altar_scene.dart`](../lib/screens/observe/tarot_altar_scene.dart) | 500 | `TarotAltarScene` (Stateful、TickerProvider)、`_TarotAltarSceneState`、`_PlanetDef`、`_AltarLayout` | **占卓背景シーン** ([`project_solara_tarot_altar`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/project_solara_tarot_altar.md))。5 惑星楕円配置 (北=Moon / 東=Venus 等)、`_scheduleNextMeteor` / `_triggerMeteor` で流れ星演出、`_buildSunBlaze` で太陽光、`_planetSprite` で惑星描画 |
+| 3 | [`observe_history.dart`](../lib/screens/observe/observe_history.dart) | 287 | `ObserveHistoryPanel` (Stateful)、`_SyncInput` (Stateful) | 過去引いたタロット履歴 panel。`_confirmClearHistory` で全消去、`_buildHistoryCard` / `_buildHistoryDetail` でカード一覧。`_SyncInput` は同期コード入力用 (将来の引き継ぎ機能用) |
+| 4 | [`observe_card_widgets.dart`](../lib/screens/observe/observe_card_widgets.dart) | 198 | `Observe3DCard`、`ObserveCardBack`、`ObserveCardFront`、`ObserveCardInfo` | **3D カード演出 4 種**。`Observe3DCard` は Y 軸反転 (flip) widget、`ObserveCardBack` / `Front` は表裏、`ObserveCardInfo` は要素 + 惑星 + 番号表示 |
+| 5 | [`observe_constants.dart`](../lib/screens/observe/observe_constants.dart) | 55 | `tarotReadings` (要素別 4 種 × 2 テンプレ = 8 文)、`planetInfo` (10 惑星 × symbol/nameJP/color)、`elementColors` / `elementNames` / `elementEmojis` (4 元素 × 3 表現) | **静的データ**。Gemini fallback 用のテンプレ文 + 4 元素テーブル。`observe_screen` のみが参照 = Observe-only |
+
+### 4c.3 Worker / 外部呼出
+
+| endpoint | ファイル | 用途 |
+|---|---|---|
+| `/tarot` (POST、Gemini) | 経由: [`fortune_api.dart`](../lib/utils/fortune_api.dart) (2a) → `fetchTarotReading` | カード + 要素 + 月相 + Stella コンテキストから Gemini で解説文生成。失敗時 null fallback → 要素別テンプレ |
+
+**本層は直接の Worker URL リテラルなし** (機械抽出で 0 リテラル確認済)。Map (4a) は Worker 5 リテラル / Horo (4b) は 0 / Observe (4c) も 0 = Gemini 呼出は全て `fortune_api.dart` (2a) 経由で統一。
+
+### 4c.4 依存関係 (層を跨ぐ参照)
+
+| 依存先 | 用途 |
+|---|---|
+| `models/tarot_card.dart` (1c) | 78 枚カード定義 (`TarotCard`) |
+| `models/daily_reading.dart` (1c) | 1 日 1 引きキャッシュ (`DailyReading`) |
+| `utils/tarot_data.dart` (2c) | 78 枚デッキ起動時 initialize singleton |
+| `utils/fortune_api.dart` (2a) | `/tarot` Gemini 呼出 |
+| `utils/moon_phase.dart` (1a) | カード解説生成時の月相コンテキスト |
+| `utils/solara_storage.dart` (2b) | 履歴永続化 (`getDailyReading` / `saveDailyReading` / `clearReadingHistory`) |
+
+### 4c.5 機械分類の盲点 + 重要な実態
+
+1. **5 ファイル全て Observe-only = 機械分類が正しい状態** — `_classify_screen` で `screens/observe/` → 4c 判定が機能している
+2. **`tarot_altar_scene.dart` (500 行) は AnimationController あり** だが、画面専用の演出シーンなので 4c が正しい (= 3c 横断 widget とは異なる)
+3. **`observe_screen.dart` 524 行は code_audit の WARN 範囲**だが、`_buildDrawPanel` / `_buildReadingPanel` / `_buildLoadingIndicator` 3 build subtree でちょうど 500 行を超えるレベル。許容範囲
+
+### 4c.6 重要な仕様メモリへの参照
+
+| メモリ | 内容 |
+|---|---|
+| [`project_tarot_v2_plan`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/project_tarot_v2_plan.md) | タロットアプリ v2 計画 (本格占いプラットフォーム化、カード画像生成、選択式 UI、複合占術) — **Pro 拡張の主要設計** |
+| [`project_solara_tarot_cards`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/project_solara_tarot_cards.md) | Tarot 未実装 Phase 2 (トランジットタロット・拠点設定 UI) |
+| [`project_solara_tarot_altar`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/project_solara_tarot_altar.md) | Tarot 占卓シーン現状設定 (5 惑星配置・楕円半径・流れ星仕様・生成スクリプト) |
+| [`project_seimei_tarot`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/project_seimei_tarot.md) | 独自占術「姓名×タロット」設計 (母音重視 9 分類、変換テーブル、動画集客構想) |
+
+### 4c.7 課金検討に直結する示唆
+
+層 4c は **Pro 機能の差別化最有力候補**。Tarot は商用占いアプリで最も人気のジャンル、Solara はここで独自路線 (両面思想 + AI 解説 + 月相連動) を打ち出せる位置。
+
+1. **🔴 Pro 機能の最有力候補ベスト 3 (本層から導出)**
+   - **(a) 3 枚引き / 5 枚引きスプレッド** ([`project_tarot_v2_plan`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/project_tarot_v2_plan.md)) — Free は 1 日 1 引き、Pro は無制限 + 多枚引き。`_drawCard` の枚数制御 + UI 追加で実装可
+   - **(b) 任意カード手動選択 (選択式 UI)** — 同上 v2 計画。「気になるカードを選んで読む」体験は商用差別化軸
+   - **(c) 過去履歴の検索 + フィルタ** — 現状 `ObserveHistoryPanel` は時系列のみ。Pro は要素別 / 期間別 / キーワード検索追加
+
+2. **`/tarot` Gemini 呼出の回数制限 = Free/Pro の自然な境界**
+   - 現状 1 日 1 回固定 (`_checkTodayReading` で永続化)
+   - Free は 1 日 1 回維持、Pro は無制限再生成 (= 引き直し)
+   - `fortune_api.dart` の Gemini 呼出に per-IP/per-user カウンタを追加 (Horoscope の `/fortune` と同じ仕組み)
+
+3. **独自占術「姓名 × タロット」** ([`project_seimei_tarot`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/project_seimei_tarot.md))
+   - 母音重視 9 分類 + 変換テーブルで姓名と日付からカードを推定
+   - 動画集客構想付き = **Pro 限定の独自占術** として位置付ければ集客効果も
+   - 現状未実装、新規 panel + utils 関数で実装可
+
+4. **`tarot_altar_scene.dart` の占卓背景は無料機能の魅力源**
+   - 5 惑星 + 流れ星 + 太陽 blaze の演出は商用 Tarot アプリでも珍しい
+   - Pro 化対象としては弱いが、無料層の魅力強化に投資する箇所
+   - Pro 拡張案: 「占卓を月相 / 時刻で変える」(満月時は満月、新月時は新月の背景)
+
+5. **`tarotReadings` 静的テンプレは「Gemini 失敗時の fallback」**
+   - 要素別 4 種 × 2 テンプレ = 8 文のみ、繰り返し感あり
+   - **Pro 拡張案**: テンプレ拡張 (要素 × 月相 × 引き枚数で多様化)、または Pro は常に Gemini 動的、Free は静的テンプレ + Gemini 1 日 1 回
+
+6. **`Observe3DCard` の 3D flip は HTML 移植完了済 = 独自性源**
+   - Y 軸反転 + perspective transform で物理感のあるカードフリップ
+   - Pro 拡張案: 反転速度 / 効果音 / カード素材 (デフォルト + Pro 5 種) のカスタマイズ
+
+7. **`DailyReading` モデル (1c) のクラウドバックアップ Pro**
+   - 過去履歴は **ユーザーの最大の体験ログ** = 引き継ぎ需要
+   - 機種変更時に履歴消失すると離脱リスク = Pro 課金で守る価値
+
+### 4c.8 機械抽出への参照
+
+層 4c の機械抽出 raw: [`feature_inventory/04c_observe.md`](feature_inventory/04c_observe.md)
+
+---
+
+(層 4d 以降は次セッション以降で追記。層 4 は 1 セッション 1 画面の予定)
