@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import '../utils/forecast_cache.dart';
+import '../utils/pro_status.dart';
 import '../utils/solara_storage.dart';
 import '../widgets/info_popup.dart';
 import '../widgets/no_profile_guide.dart';
+import '../widgets/pro_unlock_dialog.dart';
 import 'forecast/forecast_life_periods.dart';
 import 'forecast/forecast_top5.dart';
 import 'map/map_constants.dart';
@@ -74,7 +76,13 @@ class _ForecastScreenState extends State<ForecastScreen> {
   Future<void> _loadSettings() async {
     final mode = await SolaraStorage.loadForecastColorMode();
     final high = await SolaraStorage.loadForecastHighColor();
-    final year = await SolaraStorage.loadForecastYearOffset();
+    var year = await SolaraStorage.loadForecastYearOffset();
+    // Phase 2-8: Pro→Free 降格時は永続化された year > 0 を 0 に巻き戻す。
+    // Free が起動した瞬間に Pro 限定の年データを見るのを防ぐ。
+    if (year > 0 && !ProStatus.instance.isPro) {
+      year = 0;
+      await SolaraStorage.saveForecastYearOffset(0);
+    }
     if (!mounted) return;
     setState(() { _colorMode = mode; _highColor = high; _yearOffset = year; });
   }
@@ -121,6 +129,17 @@ class _ForecastScreenState extends State<ForecastScreen> {
 
   Future<void> _setYearOffset(int offset) async {
     if (_yearOffset == offset) return;
+    // Phase 2-8: 年オフセット >= 1 (翌年以降) は Pro 機能 (5 年予測 = F3)。
+    // 既に閲覧中の年から戻る場合はゲートしない (削減方向は常に許可)。
+    if (offset > 0 && !ProStatus.instance.isPro) {
+      await showProUnlockDialog(
+        context,
+        featureLabel: '5 年予測',
+        description: '今年だけでなく翌年・来々年も含めた 5 年分のヒートマップで、'
+            '人生の大きな流れを先取りします。',
+      );
+      return;
+    }
     setState(() => _yearOffset = offset);
     await SolaraStorage.saveForecastYearOffset(offset);
     // 切替時のみ1回フェッチ（キャッシュがあれば API 呼び出しなし）

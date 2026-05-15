@@ -233,11 +233,11 @@ Sanctuary に既に実装済の Cosmic Pro UI（$9.99/月・$49.99/年）の訴�
 | 天頂/天底点 | 表示 | 天頂帯・天底帯のオーブ塗りマークアップ（Lewis L5/L6、公開後） | 公開後 |
 | 引越し | — | Pro | ✅ 2-7 |
 | アスペクトライン | 40 本 (conjunction) | 120 本（**B1**、square/trine/sextile を追加） | ✅ 2-7 (aspectLines) |
-| 時計スライダー | 10 分刻み（現状維持） | 1 分刻み | 未配線 |
-| LOCATION 枠 | 3〜5 個 | 10 個（無制限は不採用＝UI 上 10 が実用上限） | 未配線 |
+| 時計スライダー | 10 分刻み（タップ）| 1 分刻み（長押し） | ✅ 2-8 (`_stepperBtn.onLongPress` + Pro ダイアログ) |
+| LOCATION 枠 | 5 個 (Free 上限) | 10 個 | ✅ 2-8 (`SlotManager.maxSlots` getter で ProStatus 参照) |
 | オーブ設定 | **Free**（「読み取りツールを自分で調整する」思想を優先） | — | (Free 確定) |
-| Forecast 期間 | 1 年 | 5 年（F3） | 未配線 |
-| Forecast 回数 | KV 月次クォータ | 無制限（F2。実装タダなので入れるが「価値」としては脚注） | 未配線 |
+| Forecast 期間 | 1 年（year offset 0 のみ） | 5 年（F3、year offset 0〜4） | ✅ 2-8 (`_setYearOffset` で year>0 を Free gate) |
+| Forecast 回数 | KV 月次クォータ | 無制限（F2。実装タダなので入れるが「価値」としては脚注） | 公開後 (Worker 側、本実装は不要) |
 
 **(ii) Stella による ACG/CCG 相談** ← 柱2 の本当の看板
 
@@ -264,7 +264,10 @@ Sanctuary に既に実装済の Cosmic Pro UI（$9.99/月・$49.99/年）の訴�
 **Phase 2-7 で柱2 残り Pro ゲート配線完了** — ACG 4 フレーム (transit/prog/solarArc) / アスペクト
 ライン (aspectLines) / 引越し (relocate) の 5 キーを `map_screen._onAstroToggle` で gate、
 ACG モード入時の自動 ON も Pro 判定で振り分け（Free = natal、Pro = transit）。
-**残る Pro ゲート未配線**: 時計スライダー 1 分刻み / LOCATION 枠 上限 / Forecast 期間 5 年 / Forecast 回数無制限。
+**Phase 2-8 で残り 3 機能の Pro ゲート配線完了** — 時計スライダー 1 分刻み（長押し時 Pro チェック） /
+LOCATION 枠 (Free 5 / Pro 10、`SlotManager.maxSlots` を ProStatus 参照 getter 化) /
+Forecast 期間 (Free 1 年 / Pro 5 年、`_setYearOffset` で year>0 を Free gate)。
+**残る Pro ゲート未配線**: Forecast 回数無制限 (KV 月次クォータ自体が未実装、F2 は脚注扱いのため公開後)。
 
 ---
 
@@ -450,6 +453,7 @@ ACG モード入時の自動 ON も Pro 判定で振り分け（Free = natal、P
 | 2-6a | Pro ゲート UI 配線（`ProStatus` + `showProUnlockDialog` + Sanctuary DEV トグル） | — | ✅ 完了 (RevenueCat 未配線) |
 | 2-6b | RevenueCat / StoreKit 配線（実購入導線） | — | 公開前必須 |
 | 2-7 | 柱2 残り Pro ゲート配線（ACG 4 フレーム / アスペクト 120 本 / 引越し） | — | ✅ 完了 (`map_screen._onAstroToggle` で 5 キー gate、ACG モード入時自動 ON も Pro 判定) |
+| 2-8 | 柱2 残り 3 機能 Pro ゲート（時計スライダー 1 分刻み / LOCATION 枠 5→10 / Forecast 期間 1 年→5 年） | — | ✅ 完了 (時計=長押しゲート / SlotManager.maxSlots getter / `_setYearOffset` year>0 gate + 降格時 0 巻き戻し) |
 
 **前提**：課金基盤（launch_checklist Phase 1-2）なしで全部作れる（機能のみ、Pro ゲートは課金基盤実装後に配線）。
 
