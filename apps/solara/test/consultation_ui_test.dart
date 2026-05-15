@@ -149,6 +149,67 @@ void main() {
     expect(find.text('範囲は？'), findsNothing);
   });
 
+  testWidgets(
+      'Specific scope without preset shows inline picker and gates submit until point chosen',
+      (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: ConsultationInputScreen(
+          astroLines: _buildSyntheticLines(),
+          // currentLocation はあえて null。Daily Transit 目的起点で具体地点を
+          // 選ぶフローを模擬する。
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // テーマを選んでも、specific スコープにすると地点未選択で submit 不可になる。
+    await tester.tap(find.text('恋愛・関係'));
+    await tester.pumpAndSettle();
+
+    // 「具体地点」スコープを選択
+    await tester.tap(find.text('具体地点'));
+    await tester.pumpAndSettle();
+
+    // 「地点を選ぶ」 inline picker セクションが出る
+    expect(find.text('地点を選ぶ'), findsOneWidget);
+    // 「地図で選ぶ」 ボタン (B picker への push)
+    expect(find.widgetWithText(OutlinedButton, '地図で選ぶ'), findsOneWidget);
+    // 検索フィールド
+    expect(find.text('住所 / 店名で検索'), findsOneWidget);
+
+    // 地点未選択なので submit 不可
+    final submitBtn = tester.widget<ElevatedButton>(
+      find.widgetWithText(ElevatedButton, '相談を始める'),
+    );
+    expect(submitBtn.onPressed, isNull,
+        reason: 'specific スコープ + 地点未選択は submit 不可');
+  });
+
+  testWidgets('Inline picker is NOT shown when presetTarget is provided',
+      (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: ConsultationInputScreen(
+          astroLines: _buildSyntheticLines(),
+          presetTarget: const ConsultationPresetTarget(
+            position: LatLng(35.0, 135.7),
+            nameJP: '京都',
+            nameEN: 'Kyoto',
+            country: 'JP',
+            region: '京都府',
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // preset があるので picker は出ず、preset カード (✓ ... を見ます) が出る
+    expect(find.text('地点を選ぶ'), findsNothing);
+    expect(find.textContaining('京都'), findsWidgets);
+    expect(find.textContaining('を見ます'), findsOneWidget);
+  });
+
   testWidgets('Result screen shows mock reading and PageView',
       (tester) async {
     final lines = filterThemeLines(_buildSyntheticLines(), 'love');
