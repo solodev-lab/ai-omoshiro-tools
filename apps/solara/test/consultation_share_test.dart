@@ -8,11 +8,13 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:solara/screens/consultation/consultation_result_screen.dart';
 import 'package:solara/utils/consultation_api.dart';
 import 'package:solara/utils/consultation_engine.dart';
 import 'package:solara/utils/consultation_share.dart';
+import 'package:solara/utils/pro_status.dart';
 
 ConsultationReading _sampleReading() {
   return const ConsultationReading(
@@ -153,6 +155,11 @@ void main() {
   });
 
   group('ConsultationResultScreen share action', () {
+    setUp(() async {
+      SharedPreferences.setMockInitialValues({});
+      await ProStatus.instance.resetForTest(isPro: true);
+    });
+
     testWidgets('結果ロード完了後、AppBar の share アイコンが活性化する',
         (tester) async {
       await tester.pumpWidget(
@@ -219,6 +226,50 @@ void main() {
 
       expect(find.text('テキストをコピー'), findsOneWidget);
       expect(find.text('画像で共有'), findsOneWidget);
+    });
+  });
+
+  group('ConsultationResultScreen share Pro gate', () {
+    testWidgets('Free ユーザーは share タップで Pro 案内が出る (bottom sheet は出ない)',
+        (tester) async {
+      SharedPreferences.setMockInitialValues({});
+      await ProStatus.instance.resetForTest(isPro: false);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: ConsultationResultScreen(
+            theme: 'love',
+            mode: 'travel',
+            scope: 'world',
+            initialCandidates: [_sampleCand('京都')],
+            fetchOverride: ({
+              required theme,
+              required mode,
+              required scope,
+              required candidates,
+              String freeText = '',
+              List<String> excluded = const [],
+            }) async =>
+                _sampleReading(),
+            autoSave: false,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final shareIconBtnFinder = find.ancestor(
+        of: find.byIcon(Icons.ios_share),
+        matching: find.byType(IconButton),
+      );
+      await tester.tap(shareIconBtnFinder);
+      await tester.pumpAndSettle();
+
+      // Pro 案内ダイアログが出る (bottom sheet ではない)
+      expect(find.text('✦ Cosmic Pro'), findsOneWidget);
+      expect(find.textContaining('Pro 機能'), findsOneWidget);
+      // bottom sheet の項目は出ない
+      expect(find.text('テキストをコピー'), findsNothing);
+      expect(find.text('画像で共有'), findsNothing);
     });
   });
 }

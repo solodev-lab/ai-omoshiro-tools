@@ -26,8 +26,10 @@ import '../../utils/consultation_api.dart';
 import '../../utils/consultation_engine.dart';
 import '../../utils/consultation_record.dart';
 import '../../utils/consultation_share.dart';
+import '../../utils/pro_status.dart';
 import '../../utils/solara_storage.dart';
 import '../../widgets/glass_panel.dart';
+import '../../widgets/pro_unlock_dialog.dart';
 
 class ConsultationResultScreen extends StatefulWidget {
   final String theme;
@@ -232,10 +234,22 @@ class _ConsultationResultScreenState extends State<ConsultationResultScreen> {
   }
 
   /// Phase 2-5: シェアシートを開く (テキスト / 画像 2 択)。
+  /// Phase 2-6a: シェア機能は Pro 限定。Free はアップグレード案内のみ。
   Future<void> _openShareSheet() async {
     final reading = _reading;
     if (reading == null) return;
     if (_sharing) return;
+
+    // Pro ゲート
+    if (!ProStatus.instance.isPro) {
+      await showProUnlockDialog(
+        context,
+        featureLabel: '相談結果のシェア',
+        description: 'Stella の読みをテキスト/画像で書き出して、近しい人と共有できます。',
+      );
+      return;
+    }
+
     final choice = await showModalBottomSheet<_ShareChoice>(
       context: context,
       backgroundColor: SolaraColors.celestialBlueLight,

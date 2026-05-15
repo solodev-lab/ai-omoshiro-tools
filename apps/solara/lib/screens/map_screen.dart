@@ -34,7 +34,9 @@ import 'map/map_time_slider.dart';
 import 'map/map_widgets.dart';
 import '../utils/astro_lines.dart' as astro_lines;
 import '../utils/direction_energy.dart';
+import '../utils/pro_status.dart';
 import '../utils/reverse_geocode.dart';
+import '../widgets/pro_unlock_dialog.dart';
 import 'consultation/consultation_input_screen.dart';
 import 'forecast_screen.dart';
 import 'horoscope/horo_antique_icons.dart';
@@ -2503,13 +2505,27 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   /// Phase 2-3c: Daily Transit popup 内 CTA 「Stella に相談」のハンドラ。
   /// 目的起点 (入口 2) — preset 無しで `ConsultationInputScreen` を push する。
   /// 1) Daily Transit popup を閉じる
-  /// 2) natal-frame conjunction 本線を取り出す
-  /// 3) `ConsultationInputScreen` を preset 無しで push (scope はユーザーが選ぶ)
+  /// 2) Phase 2-6a Pro ゲート: Free ならアップグレード案内 → return
+  /// 3) natal-frame conjunction 本線を取り出す
+  /// 4) `ConsultationInputScreen` を preset 無しで push (scope はユーザーが選ぶ)
   ///
   /// 設計: pro_candidates.md §7.2 Stage 1 入口 (2) — 目的起点。
   Future<void> _enterConsultationFromDaily() async {
     // Daily Transit popup を閉じる
     setState(() => _dailyTransitOpen = false);
+
+    if (!mounted) return;
+
+    // Phase 2-6a: Pro ゲート
+    if (!ProStatus.instance.isPro) {
+      await showProUnlockDialog(
+        context,
+        featureLabel: 'Stella 相談',
+        description: '悩みやテーマを伝えると、Stella が候補地点のエネルギーを '
+            'アストロカートグラフィを土台に読み解きます。',
+      );
+      return;
+    }
 
     if (!mounted) return;
 
@@ -2535,14 +2551,27 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
 
   /// Phase 2-3b: relocation popup 内 CTA 「この場所で相談」のハンドラ。
   /// 1) popup を閉じる
-  /// 2) reverse_geocode で地名取得 (5s timeout、失敗時は「タップ地点」フォールバック)
-  /// 3) ConsultationPresetTarget を作って ConsultationInputScreen を push
+  /// 2) Phase 2-6a Pro ゲート: Free ならアップグレード案内 → return
+  /// 3) reverse_geocode で地名取得 (5s timeout、失敗時は「タップ地点」フォールバック)
+  /// 4) ConsultationPresetTarget を作って ConsultationInputScreen を push
   ///
   /// 渡す astroLines は natal-frame の conjunction 本線のみ (v1)。
   /// 設計: pro_candidates.md §7.2 Stage 2 ③ で conjunction 本線 40 を使う仕様。
   Future<void> _launchConsultation(LatLng tap) async {
     // popup を閉じる
     setState(() => _relocateTapPoint = null);
+
+    // Phase 2-6a: Pro ゲート
+    if (!ProStatus.instance.isPro) {
+      if (!mounted) return;
+      await showProUnlockDialog(
+        context,
+        featureLabel: 'Stella 相談',
+        description: 'タップした地点について、悩みやテーマに照らして Stella が '
+            '「在るエネルギー」を読み解きます。',
+      );
+      return;
+    }
 
     // reverse_geocode (失敗時は coordinate 文字列)
     String? placeName;

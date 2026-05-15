@@ -9,6 +9,7 @@ import 'screens/galaxy_screen.dart';
 import 'screens/sanctuary_screen.dart';
 import 'utils/app_locale.dart';
 import 'utils/celestial_events.dart';
+import 'utils/pro_status.dart';
 import 'utils/tarot_data.dart';
 import 'widgets/solara_nav_bar.dart';
 
@@ -24,6 +25,7 @@ void main() async {
   await TarotData.initialize();
   await CelestialEvents.initialize();
   await AppLocale.instance.load();
+  await ProStatus.instance.load();
   runApp(const SolaraApp());
 }
 

@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../utils/pro_status.dart';
 import '../utils/solara_storage.dart';
 import '../utils/title_data.dart' as title_data;
 import '../widgets/class_card.dart';
@@ -753,7 +754,64 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
               style: TextStyle(fontSize: 15, color: Color(0x73ACACAC))),
           ]),
         ),
+        // ── [DEV] Pro 状態切替 (Phase 2-6a 暫定、課金基盤未配線) ──
+        // kDebugMode のみ表示。リリースビルドでは消える。
+        if (kDebugMode) _buildDevProToggle(),
       ],
+    );
+  }
+
+  /// [DEV] Pro 状態切替トグル。Phase 2-6a で Pro ゲートの動作確認用。
+  /// Phase 2-6b で RevenueCat 接続したら撤去する。
+  Widget _buildDevProToggle() {
+    return AnimatedBuilder(
+      animation: ProStatus.instance,
+      builder: (ctx, _) {
+        final isPro = ProStatus.instance.isPro;
+        return Container(
+          margin: const EdgeInsets.only(top: 12),
+          padding:
+              const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          decoration: BoxDecoration(
+            color: const Color(0x14D6915C),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: const Color(0x44D6915C)),
+          ),
+          child: Row(
+            children: [
+              const Icon(Icons.bug_report_outlined,
+                  size: 16, color: Color(0xFFE8B080)),
+              const SizedBox(width: 8),
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '[DEV] Pro 状態切替',
+                      style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFFE8B080)),
+                    ),
+                    Text(
+                      'リリースビルドでは表示されません',
+                      style: TextStyle(
+                          fontSize: 10, color: Color(0xFFA56838)),
+                    ),
+                  ],
+                ),
+              ),
+              Switch.adaptive(
+                value: isPro,
+                onChanged: (v) {
+                  ProStatus.instance.setPro(v);
+                },
+                activeThumbColor: const Color(0xFFF9D976),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 
