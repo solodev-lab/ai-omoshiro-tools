@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/daily_reading.dart';
 import '../models/galaxy_cycle.dart';
 import '../models/lunar_intention.dart';
+import 'consultation_record.dart';
 
 /// User profile data.
 class SolaraProfile {
@@ -108,6 +109,12 @@ class SolaraStorage {
   static const _forecastColorModeKey = 'solara_forecast_color_mode';
   static const _forecastHighColorKey = 'solara_forecast_high_color';
   static const _forecastYearOffsetKey = 'solara_forecast_year_offset';
+  static const _consultationHistoryKey = 'solara_consultation_history';
+
+  /// 相談履歴の上限 (Free / Pro 共通)。柱 3 の原則「Free でも自分の記録を永久に
+  /// 失わない」を満たす範囲で、ストレージ肥大を抑える上限。
+  /// 1 件 ~3KB 想定 × 200 件 = ~600KB、SharedPreferences で十分。
+  static const consultationHistoryMax = 200;
 
   // --- Forecast heatmap display settings ---
 
@@ -406,5 +413,60 @@ class SolaraStorage {
     final prefs = await SharedPreferences.getInstance();
     final count = prefs.getInt('not_today_count_$cycleId') ?? 0;
     await prefs.setInt('not_today_count_$cycleId', count + 1);
+  }
+
+  // ─── Consultation History (Phase 2-4) ────────────────────────
+  // 設計: docs/pro_candidates.md §7.2 Stage 4 + §7.3 柱3
+  // Free でも自分の記録を永久に失わない。Pro 機能は検索・フィルタ (記録を使う道具)。
+
+  /// 履歴全件を新しい順 (savedAt 降順) で読込む。
+  static Future<List<ConsultationRecord>> loadConsultationHistory() async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString(_consultationHistoryKey);
+    if (raw == null || raw.isEmpty) return const [];
+    try {
+      final list = json.decode(raw) as List;
+      final records = list
+          .map((e) =>
+              ConsultationRecord.fromJson(e as Map<String, dynamic>))
+          .toList();
+      records.sort((a, b) => b.savedAt.compareTo(a.savedAt));
+      return records;
+    } catch (_) {
+      // 破損データは捨てて空に戻す (ユーザーの記録より整合性を優先)。
+      return const [];
+    }
+  }
+
+  /// 履歴を 1 件追加 (新しい順で先頭、上限超過分は古いものから削除)。
+  static Future<void> addConsultationRecord(ConsultationRecord record) async {
+    final list = (await loadConsultationHistory()).toList();
+    // id 重複は新規で上書き (再保存のケース対策)。
+    list.removeWhere((r) => r.id == record.id);
+    list.insert(0, record);
+    if (list.length > consultationHistoryMax) {
+      list.removeRange(consultationHistoryMax, list.length);
+    }
+    await _writeConsultationHistory(list);
+  }
+
+  /// id 指定で 1 件削除。見つからない場合は no-op。
+  static Future<void> deleteConsultationRecord(String id) async {
+    final list = (await loadConsultationHistory()).toList();
+    list.removeWhere((r) => r.id == id);
+    await _writeConsultationHistory(list);
+  }
+
+  /// 履歴全削除 (Sanctuary 設定からの「すべて削除」用)。
+  static Future<void> clearConsultationHistory() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_consultationHistoryKey);
+  }
+
+  static Future<void> _writeConsultationHistory(
+      List<ConsultationRecord> list) async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = json.encode(list.map((r) => r.toJson()).toList());
+    await prefs.setString(_consultationHistoryKey, raw);
   }
 }

@@ -24,6 +24,8 @@ import 'package:flutter/services.dart';
 import '../../theme/solara_colors.dart';
 import '../../utils/consultation_api.dart';
 import '../../utils/consultation_engine.dart';
+import '../../utils/consultation_record.dart';
+import '../../utils/solara_storage.dart';
 import '../../widgets/glass_panel.dart';
 
 class ConsultationResultScreen extends StatefulWidget {
@@ -34,7 +36,7 @@ class ConsultationResultScreen extends StatefulWidget {
   final List<CandidateLocation> initialCandidates;
 
   /// Refresh callback: 既出名のリストを受け取り、新規候補を返す。
-  /// null = リフレッシュ不可 (specific スコープ等 1 候補のケース)。
+  /// null = リフレッシュ不可 (specific スコープ等 1 候補のケース、または履歴モード)。
   final Future<List<CandidateLocation>> Function(List<String> excludeNames)?
       regenerateCandidates;
 
@@ -48,6 +50,14 @@ class ConsultationResultScreen extends StatefulWidget {
     List<String> excluded,
   })? fetchOverride;
 
+  /// 履歴モード用: 既に保存済の reading を渡すと AI を呼ばず直接表示する。
+  /// 通常 (新規相談) は null で fetch する。
+  /// 履歴モード時は `autoSave: false` と `regenerateCandidates: null` も合わせる。
+  final ConsultationReading? initialReading;
+
+  /// 履歴に自動保存するか (default true)。履歴詳細表示時は false。
+  final bool autoSave;
+
   const ConsultationResultScreen({
     super.key,
     required this.theme,
@@ -57,6 +67,8 @@ class ConsultationResultScreen extends StatefulWidget {
     this.freeText = '',
     this.regenerateCandidates,
     this.fetchOverride,
+    this.initialReading,
+    this.autoSave = true,
   });
 
   @override
@@ -82,7 +94,13 @@ class _ConsultationResultScreenState extends State<ConsultationResultScreen> {
     super.initState();
     _pageCtrl = PageController();
     _candidates = List.of(widget.initialCandidates);
-    _fetch();
+    if (widget.initialReading != null) {
+      // 履歴モード: 即時表示、AI は呼ばない、auto-save も走らない。
+      _reading = widget.initialReading;
+      _loading = false;
+    } else {
+      _fetch();
+    }
   }
 
   @override
@@ -136,6 +154,7 @@ class _ConsultationResultScreenState extends State<ConsultationResultScreen> {
       _reading = reading;
       _loading = false;
     });
+    _maybePersist(reading, _candidates);
   }
 
   Future<void> _refresh() async {
@@ -179,6 +198,31 @@ class _ConsultationResultScreenState extends State<ConsultationResultScreen> {
     });
     if (_pageCtrl.hasClients) {
       _pageCtrl.jumpToPage(0);
+    }
+    _maybePersist(reading, newCands);
+  }
+
+  /// 自動保存 (auto-save)。ConsultationRecord を solara_storage に追記する。
+  /// 履歴モード (initialReading != null) や auto-save 無効時は no-op。
+  Future<void> _maybePersist(
+    ConsultationReading reading,
+    List<CandidateLocation> candidates,
+  ) async {
+    if (!widget.autoSave) return;
+    if (widget.initialReading != null) return;
+    try {
+      final record = ConsultationRecord.create(
+        theme: widget.theme,
+        mode: widget.mode,
+        scope: widget.scope,
+        freeText: widget.freeText,
+        candidates: candidates,
+        reading: reading,
+      );
+      await SolaraStorage.addConsultationRecord(record);
+    } catch (_) {
+      // 保存失敗は UX を妨げない (toast 等は出さない)。
+      // 柱 3 の原則: 失敗してもユーザーは結果を読める。
     }
   }
 

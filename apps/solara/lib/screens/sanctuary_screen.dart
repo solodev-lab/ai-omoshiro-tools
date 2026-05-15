@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../utils/solara_storage.dart';
 import '../utils/title_data.dart' as title_data;
 import '../widgets/class_card.dart';
+import 'consultation/consultation_history_screen.dart';
 import 'sanctuary/sanctuary_orb_overlay.dart';
 import 'sanctuary/sanctuary_profile_editor.dart';
 import 'sanctuary/sanctuary_reset_hour_picker.dart';
@@ -268,6 +269,12 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
 
                   // ── ✦ Title Diagnosis ──
                   _buildTitleDiagnosisSection(hasProfile),
+                  const SizedBox(height: 20),
+
+                  // ── ✦ Records (Phase 2-4) ──
+                  // 相談履歴の閲覧エントリ。新規相談の入口ではない (それは
+                  // Map / Daily Transit popup 側、§7.2 Stage 1 入口 1/2)。
+                  _buildRecordsSection(),
                   const SizedBox(height: 20),
 
                   // ── ✦ Cosmic Pro ──
@@ -650,6 +657,29 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
           ],
         ],
       ),
+    );
+  }
+
+  // ── ✦ Records Section (Phase 2-4) ──
+  /// 相談履歴の閲覧エントリ (柱 3 = 記録庫)。
+  /// 新規相談は Map / Daily Transit popup 側の入口から (§7.2 Stage 1)。
+  Widget _buildRecordsSection() {
+    return _SettingsGroup(
+      label: '✦ Records',
+      children: [
+        _SettingsItem(
+          icon: Icons.auto_stories_outlined,
+          text: '相談履歴',
+          value: '›',
+          onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => const ConsultationHistoryScreen(),
+              ),
+            );
+          },
+        ),
+      ],
     );
   }
 

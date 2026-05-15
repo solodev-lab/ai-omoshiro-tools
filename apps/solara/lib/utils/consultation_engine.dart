@@ -79,6 +79,15 @@ class CandidateNearLine {
         'aspect': aspect,
         'distanceKm': distanceKm.round(),
       };
+
+  /// 履歴保存 (consultation_record) から復元する。
+  factory CandidateNearLine.fromJson(Map<String, dynamic> j) =>
+      CandidateNearLine(
+        planet: j['planet'] as String? ?? '',
+        angle: j['angle'] as String? ?? '',
+        aspect: j['aspect'] as String? ?? 'conjunction',
+        distanceKm: (j['distanceKm'] as num?)?.toDouble() ?? 0.0,
+      );
 }
 
 /// 候補地点。Stage 3 AI プロンプトに渡す JSON の Dart 表現。
@@ -115,9 +124,28 @@ class CandidateLocation {
         'lng': lng,
         'country': country,
         'region': region,
+        'population': population,
         if (bearing != null) 'bearing': bearing,
         'nearLines': nearLines.map((l) => l.toJson()).toList(),
       };
+
+  /// 履歴保存 (consultation_record) から復元する。
+  factory CandidateLocation.fromJson(Map<String, dynamic> j) =>
+      CandidateLocation(
+        nameJP: j['name'] as String? ?? j['nameJP'] as String? ?? '',
+        nameEN: j['nameEN'] as String? ?? '',
+        lat: (j['lat'] as num?)?.toDouble() ?? 0.0,
+        lng: (j['lng'] as num?)?.toDouble() ?? 0.0,
+        country: j['country'] as String? ?? '',
+        region: j['region'] as String? ?? '',
+        population: (j['population'] as num?)?.toInt() ?? 0,
+        bearing: j['bearing'] as String?,
+        nearLines: (j['nearLines'] as List?)
+                ?.map((e) =>
+                    CandidateNearLine.fromJson(e as Map<String, dynamic>))
+                .toList(growable: false) ??
+            const [],
+      );
 }
 
 /// テーマ → 関係惑星セット (astro_lines.dart の astroLineFortunePlanets を流用)。

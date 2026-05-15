@@ -34,6 +34,13 @@ class ConsultationCandidateReading {
             const [],
         narrative: j['narrative'] as String? ?? '',
       );
+
+  /// 履歴保存 (consultation_record) 用シリアライズ。
+  Map<String, dynamic> toJson() => {
+        'name': name,
+        'energyLabels': energyLabels,
+        'narrative': narrative,
+      };
 }
 
 /// API レスポンス全体。
@@ -68,6 +75,15 @@ class ConsultationReading {
         model: j['model'] as String? ?? '',
         fallback: j['fallback'] == true,
       );
+
+  /// 履歴保存 (consultation_record) 用シリアライズ。
+  Map<String, dynamic> toJson() => {
+        'intro': intro,
+        'candidates': candidates.map((c) => c.toJson()).toList(),
+        'outro': outro,
+        'model': model,
+        'fallback': fallback,
+      };
 }
 
 /// /astro/consultation を呼んで AI 解釈を取得する。
