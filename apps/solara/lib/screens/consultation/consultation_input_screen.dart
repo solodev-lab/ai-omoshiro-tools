@@ -345,13 +345,17 @@ class _ConsultationInputScreenState extends State<ConsultationInputScreen> {
                         controller: _freeTextCtrl,
                       ),
                     ),
-                    // 相談例 (テーマ × モードで 3 つ提示、タップで自由記述に反映)。
-                    // daily モードでも mode='daily' のキーで取得できる。
+                    // 相談例 (テーマ × モード × スコープで 3 つ提示、タップで自由記述に反映)。
+                    // scope 別に文脈が変わる:
+                    //   specific = 具体地名が決まっている前提
+                    //   region/world = 範囲は決まっているが場所はまだ
+                    //   bearings (daily 専用) = 行き先を決め打たず方角を相談
                     _Section(
                       label: 'こんな相談ができそう',
                       child: _ConsultExamples(
                         theme: _theme,
                         mode: _mode,
+                        scope: _scope,
                         onPick: (text) => setState(() {
                           _freeTextCtrl.text = text;
                           _freeTextCtrl.selection = TextSelection.fromPosition(
