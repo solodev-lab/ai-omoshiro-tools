@@ -390,6 +390,9 @@ const Map<String, Set<String>> astroLineFortunePlanets = {
   'work': {'saturn', 'mars', 'jupiter', 'sun'},
   'communication': {'mercury', 'venus', 'moon'},
   'healing': {'moon', 'neptune', 'venus'},
+  /// 「変化・新たな出発」(pro_candidates.md §7.2 Stage 1、6番目チップ)。
+  /// 天王星=変化、太陽=自己軸、木星=拡張。「(ii) AI 相談」エンジン用。
+  'newStart': {'uranus', 'sun', 'jupiter'},
 };
 
 // ── 論点10 統合 popup 用: 近接線の検出 ──
@@ -424,6 +427,14 @@ class NearbyAstroLine {
   final double distanceKm;
   const NearbyAstroLine(this.line, this.distanceKm);
 }
+
+/// 2 点の Haversine 距離 (km)。consultation_engine.dart 等の再利用用 public。
+double haversineKm(LatLng a, LatLng b) => _haversineKm(a, b);
+
+/// 1 本の AstroLine 上の最近接点までの最短 Haversine 距離 (km)。
+/// consultation_engine.dart の候補生成 (都市 → 最近接 theme 線) に使う。
+double minDistanceKmToLine(LatLng p, AstroLine line) =>
+    _minDistanceKmToLine(p, line);
 
 // ── Tier A #3: 画面pixel距離による線タップ判定 ──
 //
