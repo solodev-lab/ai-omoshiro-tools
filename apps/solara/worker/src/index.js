@@ -10,6 +10,7 @@ import { handleFortune } from './fortune.js';
 import { handleTarot } from './tarot.js';
 import { handleRelocation } from './relocation.js';
 import { handleLineNarrative } from './line_narrative.js';
+import { handleConsultation } from './consultation.js';
 
 // ── CORS ──
 const ALLOWED_ORIGINS = [
@@ -360,6 +361,24 @@ export default {
         } catch (err) {
           console.error('LineNarrative error:', err);
           return jsonError(500, err.message || 'Line narrative generation failed', origin);
+        }
+      }
+
+      // ── (ii) AI 相談 (Stage 3) ──
+      // POST /astro/consultation
+      // 入力: { theme, mode, scope, freeText?, candidates[], excluded?, lang }
+      // 出力: { intro, candidates: [{name, energyLabels[], narrative}], outro, model, fallback? }
+      // 設計: docs/pro_candidates.md §7.2 Stage 3 (吉凶禁止/awareness 開く outro/
+      //       Flash thinking budget 1024 / 9 項目プロンプト規則)。
+      // 失敗時は静的テンプレで近接線の客観情報を返す (fallback:true)。
+      if (path === '/astro/consultation' && request.method === 'POST') {
+        const body = await request.json();
+        try {
+          const result = await handleConsultation(body, env);
+          return jsonOk(result, origin);
+        } catch (err) {
+          console.error('Consultation error:', err);
+          return jsonError(500, err.message || 'Consultation generation failed', origin);
         }
       }
 

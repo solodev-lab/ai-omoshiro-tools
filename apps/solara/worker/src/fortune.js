@@ -78,24 +78,41 @@ export function computeCategoryScore(category, aspects) {
 
 // ── Gemini API 呼び出し (503時はリトライ、404はモデル廃止扱いで即fallback) ──
 // models: 試行順の配列。先頭が PRIMARY、それ以降が FALLBACK チェーン。
-// export: relocation.js など他モジュールから再利用するため。
-export async function callGemini(apiKey, prompt, models, { retries = 2 } = {}) {
+// export: relocation.js / consultation.js など他モジュールから再利用するため。
+//
+// opts:
+//   retries          : per-model リトライ回数 (default 2)
+//   thinkingBudget   : 設定時 generationConfig.thinkingConfig.thinkingBudget で深い思考。
+//                      Gemini 2.5 Flash / Pro thinking モード用 (1024 等)。null=無効。
+//   maxOutputTokens  : 出力上限 (default 2048)。深い読み物は 4096 等に拡張可。
+//   temperature      : 生成温度 (default 0.9)
+export async function callGemini(apiKey, prompt, models, opts = {}) {
+  const {
+    retries = 2,
+    thinkingBudget = null,
+    maxOutputTokens = 2048,
+    temperature = 0.9,
+  } = opts;
   let lastErr;
   for (const model of models) {
     for (let attempt = 0; attempt <= retries; attempt++) {
       try {
         const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+        const generationConfig = {
+          temperature,
+          topP: 0.95,
+          maxOutputTokens,
+          responseMimeType: 'application/json',
+        };
+        if (thinkingBudget != null) {
+          generationConfig.thinkingConfig = { thinkingBudget };
+        }
         const res = await fetch(url, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             contents: [{ parts: [{ text: prompt }] }],
-            generationConfig: {
-              temperature: 0.9,
-              topP: 0.95,
-              maxOutputTokens: 2048, // JSON truncation回避
-              responseMimeType: 'application/json',
-            },
+            generationConfig,
           }),
         });
         if (res.status === 503 || res.status === 429) {
