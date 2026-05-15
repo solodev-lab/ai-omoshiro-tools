@@ -275,135 +275,200 @@ class _HistoryCard extends StatelessWidget {
     return '${first.nameJP} ほか ${record.candidates.length - 1} 件';
   }
 
+  /// 履歴画面の compact 表示用。テーマラベルから「・」の前の部分のみ抽出。
+  /// 例: 恋愛・関係 → 恋愛、豊かさ・お金 → 豊かさ。
+  /// 結果画面ではフルラベルを使うので、この prefix 化は履歴画面ローカル。
+  String get _themePrefix {
+    final label = _themeLabel[record.theme] ?? record.theme;
+    final idx = label.indexOf('・');
+    return idx > 0 ? label.substring(0, idx) : label;
+  }
+
+  /// モード (移住/旅行/おでかけ) → アイコン (履歴画面のみ)。
+  IconData get _modeIcon {
+    switch (record.mode) {
+      case 'migration':
+        return Icons.maps_home_work_outlined; // 引越し
+      case 'travel':
+        return Icons.flight_outlined; // 旅行
+      case 'daily':
+        return Icons.directions_walk; // おでかけ
+      default:
+        return Icons.more_horiz;
+    }
+  }
+
+  /// スコープ (具体地点/範囲指定/世界全体/方角別) → アイコン (履歴画面のみ)。
+  IconData get _scopeIcon {
+    switch (record.scope) {
+      case 'specific':
+        return Icons.location_on_outlined;
+      case 'region':
+        return Icons.crop_din_outlined;
+      case 'world':
+        return Icons.public;
+      case 'bearings':
+        return Icons.explore_outlined;
+      default:
+        return Icons.more_horiz;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final themeJp = _themeLabel[record.theme] ?? record.theme;
     final modeJp = _modeLabel[record.mode] ?? record.mode;
     final scopeJp = _scopeLabel[record.scope] ?? record.scope;
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
       child: GlassPanel(
-        padding: const EdgeInsets.fromLTRB(16, 14, 8, 14),
-        child: Row(
+        padding: const EdgeInsets.fromLTRB(14, 10, 6, 12),
+        child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Text(
-                        _dateLabel,
-                        style: TextStyle(
-                          color: SolaraColors.textSecondary,
-                          fontSize: 11,
-                          letterSpacing: 0.4,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      _MetaChip(label: themeJp),
-                      const SizedBox(width: 4),
-                      _MetaChip(label: modeJp, dim: true),
-                      const SizedBox(width: 4),
-                      _MetaChip(label: scopeJp, dim: true),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    _firstCandidateLabel,
-                    style: const TextStyle(
-                      color: SolaraColors.textPrimary,
-                      fontSize: 15,
-                      letterSpacing: 0.3,
-                      fontWeight: FontWeight.w500,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  if (record.freeText.isNotEmpty) ...[
-                    const SizedBox(height: 4),
-                    Text(
-                      record.freeText,
-                      style: TextStyle(
+            // Row 1: 日付 (横スクロール safety) + 右端ゴミ箱アイコン
+            Row(
+              children: [
+                Expanded(
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Text(
+                      _dateLabel,
+                      style: const TextStyle(
                         color: SolaraColors.textSecondary,
-                        fontSize: 12,
-                        height: 1.4,
+                        fontSize: 11,
+                        letterSpacing: 0.4,
                       ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
                     ),
-                  ],
+                  ),
+                ),
+                SizedBox(
+                  width: 32,
+                  height: 32,
+                  child: IconButton(
+                    icon: const Icon(
+                      Icons.delete_outline,
+                      size: 18,
+                      color: Color(0x99ACACAC),
+                    ),
+                    padding: EdgeInsets.zero,
+                    visualDensity: VisualDensity.compact,
+                    tooltip: '削除',
+                    onPressed: () => _confirmDelete(context),
+                  ),
+                ),
+              ],
+            ),
+            // Row 2: テーマ prefix + モードアイコン + スコープアイコン
+            Padding(
+              padding: const EdgeInsets.only(top: 2),
+              child: Row(
+                children: [
+                  _MetaChip(label: _themePrefix),
+                  const SizedBox(width: 8),
+                  Tooltip(
+                    message: modeJp,
+                    child: Icon(
+                      _modeIcon,
+                      size: 16,
+                      color: SolaraColors.textSecondary,
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Tooltip(
+                    message: scopeJp,
+                    child: Icon(
+                      _scopeIcon,
+                      size: 16,
+                      color: SolaraColors.textSecondary,
+                    ),
+                  ),
                 ],
               ),
             ),
-            IconButton(
-              icon: const Icon(
-                Icons.delete_outline,
-                size: 18,
-                color: Color(0x99ACACAC),
+            const SizedBox(height: 8),
+            Padding(
+              padding: const EdgeInsets.only(right: 10),
+              child: Text(
+                _firstCandidateLabel,
+                style: const TextStyle(
+                  color: SolaraColors.textPrimary,
+                  fontSize: 15,
+                  letterSpacing: 0.3,
+                  fontWeight: FontWeight.w500,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
-              tooltip: '削除',
-              onPressed: () async {
-                final ok = await showDialog<bool>(
-                  context: context,
-                  builder: (ctx) => AlertDialog(
-                    backgroundColor: SolaraColors.celestialBlueLight,
-                    title: const Text(
-                      'この記録を削除しますか？',
-                      style: TextStyle(
-                          color: SolaraColors.textPrimary, fontSize: 15),
-                    ),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.of(ctx).pop(false),
-                        child: const Text('キャンセル'),
-                      ),
-                      TextButton(
-                        onPressed: () => Navigator.of(ctx).pop(true),
-                        style: TextButton.styleFrom(
-                          foregroundColor: SolaraColors.energyHardLight,
-                        ),
-                        child: const Text('削除'),
-                      ),
-                    ],
-                  ),
-                );
-                if (ok == true) onDelete();
-              },
             ),
+            if (record.freeText.isNotEmpty) ...[
+              const SizedBox(height: 4),
+              Padding(
+                padding: const EdgeInsets.only(right: 10),
+                child: Text(
+                  record.freeText,
+                  style: const TextStyle(
+                    color: SolaraColors.textSecondary,
+                    fontSize: 12,
+                    height: 1.4,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
           ],
         ),
       ),
     );
   }
+
+  Future<void> _confirmDelete(BuildContext context) async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: SolaraColors.celestialBlueLight,
+        title: const Text(
+          'この記録を削除しますか？',
+          style: TextStyle(
+              color: SolaraColors.textPrimary, fontSize: 15),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('キャンセル'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            style: TextButton.styleFrom(
+              foregroundColor: SolaraColors.energyHardLight,
+            ),
+            child: const Text('削除'),
+          ),
+        ],
+      ),
+    );
+    if (ok == true) onDelete();
+  }
 }
 
 class _MetaChip extends StatelessWidget {
   final String label;
-  final bool dim;
-  const _MetaChip({required this.label, this.dim = false});
+  const _MetaChip({required this.label});
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        color: dim ? const Color(0x12FFFFFF) : const Color(0x22F6BD60),
+        color: const Color(0x22F6BD60),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: dim
-              ? SolaraColors.glassBorder
-              : const Color(0x44F6BD60),
-        ),
+        border: Border.all(color: const Color(0x44F6BD60)),
       ),
       child: Text(
         label,
-        style: TextStyle(
-          color: dim
-              ? SolaraColors.textSecondary
-              : SolaraColors.solaraGoldLight,
+        style: const TextStyle(
+          color: SolaraColors.solaraGoldLight,
           fontSize: 10,
           letterSpacing: 0.3,
         ),

@@ -240,7 +240,7 @@ void main() {
     expect(find.text('まだ相談履歴はありません'), findsOneWidget);
   });
 
-  testWidgets('History screen lists records with theme/mode/scope chips',
+  testWidgets('History screen lists records with theme prefix + mode/scope icons',
       (tester) async {
     final rec1 = _sampleRecord(id: '1', firstName: '京都');
     final rec2 = _sampleRecord(
@@ -263,9 +263,16 @@ void main() {
     expect(find.text('札幌'), findsOneWidget);
     expect(find.text('京都'), findsOneWidget);
 
-    // テーマ chip
-    expect(find.text('恋愛・関係'), findsOneWidget);
-    expect(find.text('仕事・キャリア'), findsOneWidget);
+    // テーマ chip は「・」の前の prefix だけ表示 (履歴画面ローカル仕様)
+    expect(find.text('恋愛'), findsOneWidget);
+    expect(find.text('仕事'), findsOneWidget);
+    // 「・」を含むフルラベルは表示されない (履歴画面の compact 表示)
+    expect(find.text('恋愛・関係'), findsNothing);
+    expect(find.text('仕事・キャリア'), findsNothing);
+
+    // モード/スコープはアイコン化されている (mode='travel' / scope='specific')
+    expect(find.byIcon(Icons.flight_outlined), findsNWidgets(2));
+    expect(find.byIcon(Icons.location_on_outlined), findsNWidgets(2));
   });
 
   testWidgets('History screen tap opens result screen in read-only mode',
