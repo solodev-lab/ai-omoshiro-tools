@@ -339,6 +339,13 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
         debugPrint('[Solara Map] 🔄 settle reset (verify-recover, 4層防御 第4層)');
       }
       _tileResetCtrl.add(null);
+      // 5層目: 初期ブート経路 (_bootstrap → mount → onMapReady → settle reset) は
+      // _mapCtrl.move を一切経由しないため paint invalidation kick が抜けていた。
+      // settle reset (fetch 系 Case C 救済) だけでは markNeedsPaint が立たず、
+      // タイルは fetch 済なのに描画されないまま固着する (paint 系 Case C)。
+      // reset とペアで微小パン kick を打ち、paint pipe を確実に起こす。
+      // 詳細: memory/project_solara_map_paint_invalidation.md
+      _kickPaintInvalidation();
     });
     // FlutterMap が mount された後にこれらを開始 (mount は build() 内で _bootReady true 化により発生)
     _loadProfileAndChart();
@@ -623,6 +630,12 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
         _topCategory = topKey != null ? kindFromKey(topKey) : null;
         _loadingChart = false;
       });
+      // 5層目: この setState はブート中で最大の widget tree churn (セクター +
+      // 最大480本のアストロライン構築 + 惑星線)。paint invalidation 漏れ
+      // (タイルは fetch 済なのに描画 pipe が止まる) が最も起きやすい瞬間。
+      // settle reset (4秒後) を待たず、ここで微小パン kick を打って即回復させる。
+      // 詳細: memory/project_solara_map_paint_invalidation.md
+      _kickPaintInvalidation();
       // トップカテゴリが確定したので Daily Transit Badge の状態を再評価
       await _checkDailyBadgeState();
       // 検索結果が残っていれば、新しい日付のスコアで再注入
