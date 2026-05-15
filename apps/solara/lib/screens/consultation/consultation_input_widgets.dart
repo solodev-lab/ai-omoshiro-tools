@@ -372,11 +372,17 @@ class _SpecificPicker extends StatefulWidget {
   final VoidCallback onClear;
   final Future<_PickedSpecific?> Function() onOpenMapPicker;
 
+  /// 検索時の bias center (Google Places の locationBias 15km、Nominatim には影響なし)。
+  /// 現在地 or プリセットの座標を渡すと、曖昧クエリ ('スターバックス' 等) が
+  /// その周辺に寄る。null なら従来の bias 無し検索。
+  final LatLng? biasCenter;
+
   const _SpecificPicker({
     required this.selected,
     required this.onSelect,
     required this.onClear,
     required this.onOpenMapPicker,
+    this.biasCenter,
   });
 
   @override
@@ -432,7 +438,11 @@ class _SpecificPickerState extends State<_SpecificPicker> {
 
   Future<void> _runSearch(String q) async {
     setState(() => _searching = true);
-    final hits = await map_search.searchPlaces(q);
+    // biasCenter があれば Google Places 経由で周辺優先 (Nominatim 経由は無視される)。
+    // Daily Transit 起点で具体地点を選ぶときは「現在地周辺」のクエリが多いため、
+    // 現在地を bias に使うことで「スタバ」「コンビニ」のような曖昧語が地理的に絞れる。
+    final hits =
+        await map_search.searchPlaces(q, biasCenter: widget.biasCenter);
     if (!mounted) return;
     setState(() {
       _hits = hits;
@@ -634,9 +644,19 @@ class _SearchHitRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final parts = hit.name.split(',').map((s) => s.trim()).toList();
-    final short = parts.isNotEmpty ? parts.first : hit.name;
-    final sub = parts.length > 1 ? parts.skip(1).join(', ') : '';
+    // 場所名 + 住所行を組み立てる。
+    // Google Places 経路: hit.name = 短い場所名 (例 'Tokyo Tower')、hit.address に formattedAddress
+    // Nominatim 経路: hit.name = 'A, B, C, D, ...' の display_name、hit.address は null
+    final String short;
+    final String sub;
+    if (hit.address != null && hit.address!.isNotEmpty) {
+      short = hit.name;
+      sub = hit.address!;
+    } else {
+      final parts = hit.name.split(',').map((s) => s.trim()).toList();
+      short = parts.isNotEmpty ? parts.first : hit.name;
+      sub = parts.length > 1 ? parts.skip(1).join(', ') : '';
+    }
     return InkWell(
       onTap: onTap,
       child: Padding(

@@ -112,7 +112,16 @@ class _ConsultationPlacePickerScreenState
 
   Future<void> _runSearch(String q) async {
     setState(() => _searching = true);
-    final hits = await searchPlaces(q);
+    // 現在のマップ中心を bias center にする (Google Places の locationBias 15km)。
+    // ユーザーが見ている範囲のクエリ ('スターバックス' 等) が周辺優先になる。
+    LatLng? bias;
+    try {
+      bias = _mapCtrl.camera.center;
+    } catch (_) {
+      // map がまだ build されていないケース (実質ありえないが防御)
+      bias = widget.initialCenter;
+    }
+    final hits = await searchPlaces(q, biasCenter: bias);
     if (!mounted) return;
     setState(() {
       _hits = hits;
@@ -425,11 +434,20 @@ class _SearchBar extends StatelessWidget {
                   const Divider(height: 1, color: Color(0x11FFFFFF)),
               itemBuilder: (ctx, i) {
                 final h = hits[i];
-                final parts = h.name.split(',');
-                final short = parts.isNotEmpty ? parts.first.trim() : h.name;
-                final sub = parts.length > 1
-                    ? parts.skip(1).map((s) => s.trim()).join(', ')
-                    : '';
+                // Google Places (hit.address あり) と Nominatim (display_name comma 連結) を
+                // 両対応。a と同じ振り分けロジック (consultation_input_widgets._SearchHitRow)。
+                final String short;
+                final String sub;
+                if (h.address != null && h.address!.isNotEmpty) {
+                  short = h.name;
+                  sub = h.address!;
+                } else {
+                  final parts = h.name.split(',');
+                  short = parts.isNotEmpty ? parts.first.trim() : h.name;
+                  sub = parts.length > 1
+                      ? parts.skip(1).map((s) => s.trim()).join(', ')
+                      : '';
+                }
                 return InkWell(
                   onTap: () => onHitTap(h),
                   child: Padding(

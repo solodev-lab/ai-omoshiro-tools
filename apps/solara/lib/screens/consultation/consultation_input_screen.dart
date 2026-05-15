@@ -322,6 +322,7 @@ class _ConsultationInputScreenState extends State<ConsultationInputScreen> {
                         label: '地点を選ぶ',
                         child: _SpecificPicker(
                           selected: _specificPick,
+                          biasCenter: widget.currentLocation,
                           onSelect: (p) =>
                               setState(() => _specificPick = p),
                           onClear: () =>
