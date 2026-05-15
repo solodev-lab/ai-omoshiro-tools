@@ -170,7 +170,7 @@ class HoroscopeScreenState extends State<HoroscopeScreen>
     }
   }
 
-  // Fortune readings (Gemini経由取得 / カテゴリ別キャッシュ)
+  // Fortune readings (Stella の声 / カテゴリ別キャッシュ)
   final Map<String, FortuneReading?> _fortunes = {};
   bool _fortuneLoading = false;
   String? _fortuneError;
@@ -479,7 +479,7 @@ class HoroscopeScreenState extends State<HoroscopeScreen>
   // main.dart の _onTabTap が loadProfile() を呼び、_workingProfile が
   // _baseProfile で上書きされることで自動的にリセットされる)
 
-  /// 全5カテゴリの占い文を並列取得 (Gemini API経由)
+  /// 全5カテゴリの占い文を並列取得 (Stella の声)
   /// 同日中は再取得しない (キャッシュ)
   Future<void> _loadFortunes({bool force = false}) async {
     if (_fortuneLoading) return;

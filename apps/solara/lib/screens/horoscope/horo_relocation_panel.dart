@@ -11,7 +11,7 @@ import 'horo_relocation_templates.dart';
 // 出生地ハウス vs 現住所ハウス の差分を比較形式で解説する。
 // 1重円モード + home有効 + houses取得済みの時のみ表示 (Bottom Sheet 拠点タブ)。
 //
-// Phase B: Gemini API 経由で動的解説を取得し、静的テンプレートを上書き表示。
+// Phase B: Stella の動的解説を取得し、静的テンプレートを上書き表示。
 //   - 取得成功 → narrative.planetNarratives[planet] を「現住所」行に表示
 //   - 取得中/失敗 → 静的テンプレ (planetInHouseMessages 等) にフォールバック
 //   - 「変化なし」項目は API に投げず、静的テンプレが残る（情報量維持）
@@ -32,7 +32,7 @@ class HoroRelocationPanel extends StatefulWidget {
   final double relocateAsc, relocateMc;
   final String? birthPlaceName;            // 出生地名 (任意)
   final String? homeName;                  // 現住所名 (任意)
-  final String? userName;                  // 対象者名 (Gemini プロンプトに渡す)
+  final String? userName;                  // 対象者名 (Stella プロンプトに渡す)
 
   const HoroRelocationPanel({
     super.key,
@@ -205,7 +205,7 @@ class _HoroRelocationPanelState extends State<HoroRelocationPanel> {
     );
   }
 
-  /// 動的サマリー（Gemini が生成した1〜2文）
+  /// 動的サマリー（Stella が生成した1〜2文）
   Widget _buildSummaryBlock(String summary) {
     return Container(
       padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),

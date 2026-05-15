@@ -1,8 +1,10 @@
 /**
- * Astro*Carto*Graphy Line Narrative — Gemini API
+ * Astro*Carto*Graphy Line Narrative — Stella の線解説 (Gemini API バックエンド)
  *
  * A*C*G ライン（natal / transit 2フレーム × 10惑星 × 4アングル）の
- * タップ詳細解説を Gemini で動的生成する。
+ * タップ詳細解説を Stella が動的生成する。
+ *
+ * 注: 2026-05-11 撤去済 (クライアント呼出なし)。ファイルは互換のため残置。
  *
  * 入力:
  *   {

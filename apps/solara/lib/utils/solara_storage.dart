@@ -225,7 +225,7 @@ class SolaraStorage {
   }
 
   /// Update an existing reading (matched by date) with new reading text.
-  /// 用途: /tarot API 応答後に Gemini 生成テキストを保存する。
+  /// 用途: /tarot API 応答後に Stella の生成テキストを保存する。
   static Future<void> updateReading(DailyReading updated) async {
     final readings = await loadCurrentReadings();
     for (final r in readings) {

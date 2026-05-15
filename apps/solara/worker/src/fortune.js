@@ -1,5 +1,5 @@
 /**
- * Fortune Reading — Gemini API を用いた占い文生成
+ * Fortune Reading — Stella の占い文生成 (Gemini API バックエンド)
  *
  * 入力: category, natal, transit?, aspects, patterns, lang('ja'|'en')
  * 出力: { reading, advice, direction }

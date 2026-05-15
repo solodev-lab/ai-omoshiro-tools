@@ -308,7 +308,7 @@ export default {
         return jsonOk(results, origin);
       }
 
-      // ── Fortune (Gemini-powered reading) ──
+      // ── Fortune (Stella の声、Gemini-powered) ──
       if (path === '/fortune' && request.method === 'POST') {
         const body = await request.json();
         try {
@@ -320,7 +320,7 @@ export default {
         }
       }
 
-      // ── Tarot (Gemini-powered tarot reading + Stella message) ──
+      // ── Tarot (Stella のタロット reading、Gemini-powered) ──
       if (path === '/tarot' && request.method === 'POST') {
         const body = await request.json();
         try {
@@ -332,7 +332,7 @@ export default {
         }
       }
 
-      // ── Relocation (Gemini-powered relocation chart narrative) ──
+      // ── Relocation (Stella のリロケーション narrative、Gemini-powered) ──
       // Phase B: 静的テンプレート (horo_relocation_templates.dart) を動的解説で上書き。
       // 失敗時は呼出側 (Dart) で null を受けて静的テンプレ表示にフォールバック。
       if (path === '/relocation' && request.method === 'POST') {

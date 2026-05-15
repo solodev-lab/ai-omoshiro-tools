@@ -1,5 +1,5 @@
 /**
- * Relocation Narrative — Gemini API を用いたリロケーション解説生成
+ * Relocation Narrative — Stella のリロケーション解説生成 (Gemini API バックエンド)
  *
  * 入力: { shifts: [{planet, fromHouse, toHouse}],
  *         ascChange: {fromSign, toSign} | null,

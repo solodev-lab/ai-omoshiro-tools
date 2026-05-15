@@ -1,4 +1,4 @@
-// Fortune API - /fortune エンドポイント (Gemini生成の占い文取得)
+// Fortune API - /fortune エンドポイント (Stella の声を取得)
 // 関連: worker/src/fortune.js
 import 'dart:convert';
 import 'package:http/http.dart' as http;
@@ -77,7 +77,7 @@ Future<FortuneReading?> fetchFortune({
 }
 
 // ──────────────────────────────────────────────────
-// Relocation API — /relocation エンドポイント (Gemini生成のリロケーション解説)
+// Relocation API — /relocation エンドポイント (Stella によるリロケーション解説)
 // 関連: worker/src/relocation.js
 // Phase B: 静的テンプレート (horo_relocation_templates.dart) を動的解説で上書き。
 // 失敗時は null fallback、呼出側 (horo_relocation_panel.dart) で静的テンプレ表示。
@@ -172,7 +172,7 @@ Future<RelocationNarrative?> fetchRelocationNarrative({
 }
 
 // ──────────────────────────────────────────────────
-// Tarot API — /tarot エンドポイント (Gemini生成のタロット占い文)
+// Tarot API — /tarot エンドポイント (Stella によるタロット占い文)
 // 関連: worker/src/tarot.js
 // ──────────────────────────────────────────────────
 

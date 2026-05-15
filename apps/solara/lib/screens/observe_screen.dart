@@ -29,7 +29,7 @@ class _ObserveScreenState extends State<ObserveScreen>
   bool _drawnReversed = false; // 正逆位置（true=逆位置）
   bool _alreadyDrawnToday = false;
   bool _readingLoading = false; // /tarot 呼び出し中
-  bool _readingFromApi = false; // true=Gemini生成 / false=静的fallback
+  bool _readingFromApi = false; // true=Stella の声 / false=静的fallback
 
   // ローディング演出: 4つのメッセージを4秒ごとに切り替え
   static const _loadingMessages = [
@@ -185,7 +185,7 @@ class _ObserveScreenState extends State<ObserveScreen>
 
     _stopLoadingMessageRotation();
     if (tarotResult != null && tarotResult.reading.isNotEmpty) {
-      // API成功: Gemini生成テキストを表示・保存
+      // API成功: Stella の声を表示・保存
       setState(() {
         _readingText = tarotResult.reading;
         _readingLoading = false;

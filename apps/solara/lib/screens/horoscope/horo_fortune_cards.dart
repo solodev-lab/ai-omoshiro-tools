@@ -41,7 +41,7 @@ class HoroAstrologyView extends StatelessWidget {
   final Map<String, List<Map<String, dynamic>>> transitPatterns;  // nt (N-T)
   final Map<String, List<Map<String, dynamic>>> progressedPatterns; // np (N-P)
 
-  /// Gemini API で生成された占い文 (カテゴリ別) — nullの場合はmockにfallback
+  /// Stella が生成した占い文 (カテゴリ別) — nullの場合はmockにfallback
   final Map<String, FortuneReading?> fortunes;
   final bool fortuneLoading;
   final String? fortuneError;
@@ -193,7 +193,7 @@ class HoroAstrologyView extends StatelessWidget {
       SizedBox(width: 16, height: 16,
         child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFFF6BD60))),
       SizedBox(width: 10),
-      Expanded(child: Text('Gemini AIが占い文を生成中…',
+      Expanded(child: Text('Stella が読み解いています…',
         style: TextStyle(fontSize: 12, color: Color(0xFFF6BD60)))),
     ]),
   );
@@ -209,7 +209,7 @@ class HoroAstrologyView extends StatelessWidget {
     child: Row(children: [
       const Icon(Icons.cloud_off, size: 14, color: Color(0xFFFF9E9E)),
       const SizedBox(width: 8),
-      const Expanded(child: Text('AI占い文の取得に失敗。仮テキストを表示中',
+      const Expanded(child: Text('Stella の声が届きませんでした。仮テキストを表示中',
         style: TextStyle(fontSize: 11, color: Color(0xFFFF9E9E)))),
       if (onRetry != null)
         GestureDetector(

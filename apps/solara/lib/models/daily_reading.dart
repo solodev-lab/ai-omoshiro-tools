@@ -4,7 +4,7 @@ class DailyReading {
   final bool isMajor;
   final double moonPhase; // 0.0-29.53
   final bool reversed; // 正逆位置（false=正位置, true=逆位置）
-  String reading; // Gemini /tarot 生成のリーディング本文
+  String reading; // Stella による /tarot リーディング本文
   String synchronicity; // HTML: sync-input textarea (editable)
 
   DailyReading({

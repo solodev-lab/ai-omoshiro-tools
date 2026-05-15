@@ -1,5 +1,5 @@
 /**
- * Tarot Reading — Gemini API を用いたタロット占い文生成
+ * Tarot Reading — Stella のタロット占い文生成 (Gemini API バックエンド)
  *
  * 入力:
  *   cardId (0-77), reversed (bool), nameJP, keyword, element, planet?,
