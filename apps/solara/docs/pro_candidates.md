@@ -226,18 +226,18 @@ Sanctuary に既に実装済の Cosmic Pro UI（$9.99/月・$49.99/年）の訴�
 
 ### 7.2 柱2 — アドバンスト占星術 & Map（差別化の見せ場）
 
-| 項目 | Free | Pro |
-|---|---|---|
-| ACG | 基本ライン表示（natal） | 4 フレーム深度（natal/transit/prog/solarArc） |
-| CCG | 閲覧可（現住所基準。今すでに動作） | Pro ゲートは「転居先・遠隔地から見る」= 引越し |
-| 天頂/天底点 | 表示 | 天頂帯・天底帯のオーブ塗りマークアップ（Lewis L5/L6、公開後） |
-| 引越し | — | Pro |
-| アスペクトライン | 40 本 | 120 本（**B1 = 唯一の未実装項目**） |
-| 時計スライダー | 10 分刻み（現状維持） | 1 分刻み |
-| LOCATION 枠 | 3〜5 個 | 10 個（無制限は不採用＝UI 上 10 が実用上限） |
-| オーブ設定 | **Free**（「読み取りツールを自分で調整する」思想を優先） | — |
-| Forecast 期間 | 1 年 | 5 年（F3） |
-| Forecast 回数 | KV 月次クォータ | 無制限（F2。実装タダなので入れるが「価値」としては脚注） |
+| 項目 | Free | Pro | ゲート状態 |
+|---|---|---|---|
+| ACG | 基本ライン表示（natal） | 4 フレーム深度（natal/transit/prog/solarArc） | ✅ 2-7 (transit/prog/solarArc) |
+| CCG | 閲覧可（現住所基準。今すでに動作） | Pro ゲートは「転居先・遠隔地から見る」= 引越し | ✅ 2-7 (relocate) |
+| 天頂/天底点 | 表示 | 天頂帯・天底帯のオーブ塗りマークアップ（Lewis L5/L6、公開後） | 公開後 |
+| 引越し | — | Pro | ✅ 2-7 |
+| アスペクトライン | 40 本 (conjunction) | 120 本（**B1**、square/trine/sextile を追加） | ✅ 2-7 (aspectLines) |
+| 時計スライダー | 10 分刻み（現状維持） | 1 分刻み | 未配線 |
+| LOCATION 枠 | 3〜5 個 | 10 個（無制限は不採用＝UI 上 10 が実用上限） | 未配線 |
+| オーブ設定 | **Free**（「読み取りツールを自分で調整する」思想を優先） | — | (Free 確定) |
+| Forecast 期間 | 1 年 | 5 年（F3） | 未配線 |
+| Forecast 回数 | KV 月次クォータ | 無制限（F2。実装タダなので入れるが「価値」としては脚注） | 未配線 |
 
 **(ii) Stella による ACG/CCG 相談** ← 柱2 の本当の看板
 
@@ -259,8 +259,12 @@ Sanctuary に既に実装済の Cosmic Pro UI（$9.99/月・$49.99/年）の訴�
   **捨てず (ii) の土台に転用**。
 
 **実装状態（確認済 2026-05-15）**: ACG/CCG・4 フレーム・天頂天底点・MapLineNarrativeSheet（静的辞書版）
-は実装済。**B1（40→120 本）= 2026-05-15 機能実装完了**（commit `2e312af`、Pro ゲートのみ未配線）。
-**残る未実装は (ii) Stella 相談のみ**（詳細設計は直下）。
+は実装済。**B1（40→120 本）= 2026-05-15 機能実装完了**（commit `2e312af`）。
+**(ii) Stella 相談 = Phase 2-6a まで完了**（UI ゲート配線済、RevenueCat は Phase 2-6b で配線）。
+**Phase 2-7 で柱2 残り Pro ゲート配線完了** — ACG 4 フレーム (transit/prog/solarArc) / アスペクト
+ライン (aspectLines) / 引越し (relocate) の 5 キーを `map_screen._onAstroToggle` で gate、
+ACG モード入時の自動 ON も Pro 判定で振り分け（Free = natal、Pro = transit）。
+**残る Pro ゲート未配線**: 時計スライダー 1 分刻み / LOCATION 枠 上限 / Forecast 期間 5 年 / Forecast 回数無制限。
 
 ---
 
@@ -445,6 +449,7 @@ Sanctuary に既に実装済の Cosmic Pro UI（$9.99/月・$49.99/年）の訴�
 | 2-5b | シェアエクスポート (テキスト + PNG 画像 1080px) | — | ✅ 完了 |
 | 2-6a | Pro ゲート UI 配線（`ProStatus` + `showProUnlockDialog` + Sanctuary DEV トグル） | — | ✅ 完了 (RevenueCat 未配線) |
 | 2-6b | RevenueCat / StoreKit 配線（実購入導線） | — | 公開前必須 |
+| 2-7 | 柱2 残り Pro ゲート配線（ACG 4 フレーム / アスペクト 120 本 / 引越し） | — | ✅ 完了 (`map_screen._onAstroToggle` で 5 キー gate、ACG モード入時自動 ON も Pro 判定) |
 
 **前提**：課金基盤（launch_checklist Phase 1-2）なしで全部作れる（機能のみ、Pro ゲートは課金基盤実装後に配線）。
 

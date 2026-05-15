@@ -1351,14 +1351,21 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
       // Natal/Progressed/SolarArc は Pills UI で個別切替可能。
       // aspectAll は強制 ON しない (FORTUNE Pills でカテゴリ絞込みする UX 用)。
       // 「総合」タップで activeCategory='all' → 自動で全惑星 100% になる。
-      _astroLayers['aspect'] = false;
-      _astroLayers['aspectTransit'] = true;
-      // 2026-05-11 2 層メニュー化: Transit 線 ON と同時に Transit の天頂も自動 ON。
+      //
+      // Phase 2-7: Transit は Pro 機能のため、Free ユーザーには natal を初期表示。
+      // Pro になったら次回入時から Transit が初期表示に戻る。
+      final isPro = ProStatus.instance.isPro;
+      _astroLayers['aspect'] = !isPro;
+      _astroLayers['aspectTransit'] = isPro;
+      // 2026-05-11 2 層メニュー化: フレーム線 ON と同時に同フレームの天頂も自動 ON。
       // モード入時に第2層 4 トグル全 OFF だと「ラインだけで天頂マーカー無し」となり、
       // 旧仕様 (天頂自動表示) からの体験劣化を防ぐ。天底/天頂帯/天底帯は OFF のまま
       // (ユーザーが意識して ON する段階的 UX)。
-      _astroLayers['zenith_transit'] = true;
-      _activeAstroFrame = astro_lines.AstroFrame.transit; // 初期 active
+      _astroLayers['zenith_natal'] = !isPro;
+      _astroLayers['zenith_transit'] = isPro;
+      _activeAstroFrame = isPro
+          ? astro_lines.AstroFrame.transit
+          : astro_lines.AstroFrame.natal;
       _acgMenuOpen = false; // モード入時はバーガー閉、地図最大表示
       _mapStyle = MapStyle.osmHotDark;
       // 既存メニュー/シート/ピンを片付け、世界規模ビューにフォーカス
@@ -2025,12 +2032,7 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
               mapStyle: _mapStyle,
               onLayerToggle: (k) => setState(() => _layers[k] = !(_layers[k] ?? false)),
               onPlanetGroupToggle: (k) => setState(() => _planetGroups[k] = !(_planetGroups[k] ?? false)),
-              onAstroToggle: (k) => setState(() {
-                _astroLayers[k] = !(_astroLayers[k] ?? false);
-                if (k == 'relocate' && !(_astroLayers[k] ?? false)) {
-                  _relocateTapPoint = null;
-                }
-              }),
+              onAstroToggle: _onAstroToggle,
               // 惑星>テーマ は惑星フィルタのみを更新 (扇状非干渉)
               onPlanetFilterChanged: (k) => setState(() => _planetFilterCategory = k),
               onMapStyleChanged: _onMapStyleChanged,
@@ -2500,6 +2502,85 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
       onClose: () => setState(() => _relocateTapPoint = null),
       onConsult: () => _launchConsultation(tap),
     );
+  }
+
+  /// Phase 2-7: ACG / アスペクト / 引越し系の Pro ゲート対象キー。
+  ///
+  /// 設計: pro_candidates.md §7.2 — ACG 4 フレーム / アスペクト 120 本 / 引越しは Pro。
+  /// natal フレーム (`aspect`) は Free のままで残す。
+  ///
+  /// 「OFF にする」操作はゲート対象外 (元 Pro が降格しても片付けられるように)。
+  static const Set<String> _proGatedAstroKeys = {
+    'aspectTransit',
+    'aspectProgressed',
+    'aspectSolarArc',
+    'aspectLines',
+    'relocate',
+  };
+
+  /// Pro ゲートで表示する機能名 (showProUnlockDialog の featureLabel)。
+  String _proLabelForAstroKey(String k) {
+    switch (k) {
+      case 'aspectTransit':
+        return 'Transit フレーム';
+      case 'aspectProgressed':
+        return 'Progressed フレーム';
+      case 'aspectSolarArc':
+        return 'Solar Arc フレーム';
+      case 'aspectLines':
+        return 'アスペクトライン (120 本)';
+      case 'relocate':
+        return '引越しシミュレーション';
+      default:
+        return '高度な ACG';
+    }
+  }
+
+  /// Pro ゲートで表示する機能説明 (吉凶禁止、寄り添い文体)。
+  String _proDescForAstroKey(String k) {
+    switch (k) {
+      case 'aspectTransit':
+        return '今この瞬間の惑星配置で ACG 線を引き直し、現在の流れを '
+            '地図上で読み解きます。';
+      case 'aspectProgressed':
+        return 'Secondary Progression の進行図で ACG 線を引き直し、'
+            '内的成長の流れを地図に重ねます。';
+      case 'aspectSolarArc':
+        return 'Solar Arc 進行で ACG 線を引き直し、人生のターニングポイントを '
+            '地理的に追跡します。';
+      case 'aspectLines':
+        return 'コンジャンクション 40 本に加え、スクエア / トライン / セクスタイル '
+            'を含む全 120 本のアスペクトラインを表示します。';
+      case 'relocate':
+        return '地図タップ地点を引越し先として ASC / MC / 12 ハウスを '
+            '再計算し、現住所と並べて比較します。';
+      default:
+        return 'Cosmic Pro で解放される機能です。';
+    }
+  }
+
+  /// MapDisplayMenu からの ACG / アスペクト / 引越し系トグル処理。
+  ///
+  /// 既に ON のものを OFF にする時はゲート不要 (Pro→Free 降格後も片付けられるように)。
+  /// OFF → ON で Pro 限定キーなら、`showProUnlockDialog` を出してトグル自体は行わない。
+  void _onAstroToggle(String k) {
+    final wasOn = _astroLayers[k] ?? false;
+    if (!wasOn &&
+        _proGatedAstroKeys.contains(k) &&
+        !ProStatus.instance.isPro) {
+      showProUnlockDialog(
+        context,
+        featureLabel: _proLabelForAstroKey(k),
+        description: _proDescForAstroKey(k),
+      );
+      return;
+    }
+    setState(() {
+      _astroLayers[k] = !wasOn;
+      if (k == 'relocate' && !(_astroLayers[k] ?? false)) {
+        _relocateTapPoint = null;
+      }
+    });
   }
 
   /// Phase 2-3c: Daily Transit popup 内 CTA 「Stella に相談」のハンドラ。
