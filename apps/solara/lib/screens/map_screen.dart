@@ -2248,6 +2248,7 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
             natal: _chartResult?.natal,
             onClose: _onDailyTransitClose,
             onEnterAcg: _enterAstroCartoMode,
+            onEnterConsultation: _enterConsultationFromDaily,
             // 2026-05-12: 各行の地図マークでイベント時刻 (1 分単位) を
             // Map に飛ばす。MapTimeSlider 側は実分表示 → step 操作で
             // 10 分 grid に合流するように変更済み。
@@ -2496,6 +2497,39 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
       userName: p.name.isNotEmpty ? p.name : null,
       onClose: () => setState(() => _relocateTapPoint = null),
       onConsult: () => _launchConsultation(tap),
+    );
+  }
+
+  /// Phase 2-3c: Daily Transit popup 内 CTA 「AI に相談」のハンドラ。
+  /// 目的起点 (入口 2) — preset 無しで `ConsultationInputScreen` を push する。
+  /// 1) Daily Transit popup を閉じる
+  /// 2) natal-frame conjunction 本線を取り出す
+  /// 3) `ConsultationInputScreen` を preset 無しで push (scope はユーザーが選ぶ)
+  ///
+  /// 設計: pro_candidates.md §7.2 Stage 1 入口 (2) — 目的起点。
+  Future<void> _enterConsultationFromDaily() async {
+    // Daily Transit popup を閉じる
+    setState(() => _dailyTransitOpen = false);
+
+    if (!mounted) return;
+
+    final natalLines = _astroLinesCache
+        .where((l) =>
+            l.frame == astro_lines.AstroFrame.natal && !l.isAspectLine)
+        .toList(growable: false);
+
+    final p = _profile;
+    final hasHome = p != null && !(p.homeLat == 0 && p.homeLng == 0);
+    final currentLoc = hasHome ? LatLng(p.homeLat, p.homeLng) : null;
+
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => ConsultationInputScreen(
+          astroLines: natalLines,
+          currentLocation: currentLoc,
+          // preset 無し: ユーザーが scope を選ぶ (世界全体 / 範囲指定 / おでかけ等)
+        ),
+      ),
     );
   }
 

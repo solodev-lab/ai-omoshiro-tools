@@ -42,6 +42,11 @@ class MapDailyTransitScreen extends StatefulWidget {
   /// リンクが現れる (2026-05-09: 旧 🌐 サイドボタンの代替動線)。
   final VoidCallback? onEnterAcg;
 
+  /// 「🔮 AI に相談」フッターリンクのハンドラ (Phase 2-3c、目的起点入口)。
+  /// null なら表示しない。設定するとフッターが 2 分割され、ACG モードの隣に
+  /// AI 相談入口が並ぶ (設計: pro_candidates.md §7.2 Stage 1 入口 2)。
+  final VoidCallback? onEnterConsultation;
+
   /// イベント時刻を Map に飛ばすハンドラ (各タイムライン行の地図マーク用)。
   /// null なら地図マーク非表示。
   /// 渡された DateTime はそのイベントの瞬時時刻 (1 分単位)。
@@ -58,6 +63,7 @@ class MapDailyTransitScreen extends StatefulWidget {
     this.natal,
     required this.onClose,
     this.onEnterAcg,
+    this.onEnterConsultation,
     this.onJumpToTime,
   });
 
@@ -235,15 +241,16 @@ class _MapDailyTransitScreenState extends State<MapDailyTransitScreen>
                               )
                             : const _LoadingBody(),
               ),
-              // ACG モード起動フッター (旧🌐ボタンの代替動線、2026-05-09)。
-              // 「今日の動き → 世界規模に投影して見る」自然な文脈接続。
-              // POPUP のクローズは親の _enterAstroCartoMode 内 setState
-              // (_dailyTransitOpen = false) でまとめて行う。
-              // 旧: ここで _close() を呼んでフェード reverse を待たずに
-              // onEnterAcg を呼んでいたため、ACG 切り替え後も POPUP が
-              // 数百 ms 残って「裏で切り替わる」違和感があった。
-              if (widget.onEnterAcg != null)
-                _AcgEntryFooter(onTap: () => widget.onEnterAcg!()),
+              // フッター動線 (2026-05-09: ACG / 2026-05-15: + AI 相談)。
+              // 「今日の動き → 世界規模に投影して見る (ACG)」
+              //  または 「→ 悩みに合った場所を AI に相談する」を並べる。
+              // POPUP のクローズは親の handler 内 setState でまとめて行う
+              // (旧: ここで _close() してフェード途中で切替えると違和感が出る)。
+              if (widget.onEnterAcg != null || widget.onEnterConsultation != null)
+                _FooterActions(
+                  onEnterAcg: widget.onEnterAcg,
+                  onEnterConsultation: widget.onEnterConsultation,
+                ),
             ],
           ),
         ),
@@ -252,34 +259,160 @@ class _MapDailyTransitScreenState extends State<MapDailyTransitScreen>
   }
 }
 
-/// Daily Transit popup 下部に表示する「🌐 世界規模で見る (ACG)」リンク行。
-class _AcgEntryFooter extends StatelessWidget {
-  final VoidCallback onTap;
-  const _AcgEntryFooter({required this.onTap});
+/// Daily Transit popup 下部の動線フッター。
+///
+/// 2026-05-15: 旧 `_AcgEntryFooter` (full-width ACG リンクのみ) を 2 分割。
+/// 左 = ACG モード起動、右 = AI 相談 (目的起点入口、Phase 2-3c)。
+/// 片方のみ非 null の場合はもう片方の領域も空欄表示せず、単独表示にフォールバック。
+class _FooterActions extends StatelessWidget {
+  final VoidCallback? onEnterAcg;
+  final VoidCallback? onEnterConsultation;
+
+  const _FooterActions({
+    required this.onEnterAcg,
+    required this.onEnterConsultation,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final hasAcg = onEnterAcg != null;
+    final hasConsult = onEnterConsultation != null;
+    final showSplit = hasAcg && hasConsult;
+
+    return Container(
+      decoration: const BoxDecoration(
+        border: Border(top: BorderSide(color: Color(0x22C9A84C))),
+      ),
+      child: IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (hasAcg)
+              Expanded(
+                child: _FooterButton(
+                  emoji: '🌐',
+                  title: '世界規模で見る',
+                  subtitle: 'Astro*Carto*Graphy',
+                  onTap: onEnterAcg!,
+                  compact: showSplit,
+                ),
+              ),
+            if (showSplit)
+              const VerticalDivider(
+                width: 1,
+                thickness: 1,
+                color: Color(0x22C9A84C),
+              ),
+            if (hasConsult)
+              Expanded(
+                child: _FooterButton(
+                  emoji: '🔮',
+                  title: 'AI に相談',
+                  subtitle: '悩みから場所を読む',
+                  onTap: onEnterConsultation!,
+                  compact: showSplit,
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// フッター内の 1 つのアクションボタン (絵文字 + タイトル + サブタイトル)。
+/// `compact` = 2 分割表示時の縦組レイアウト、それ以外は横一列。
+class _FooterButton extends StatelessWidget {
+  final String emoji;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+  final bool compact;
+
+  const _FooterButton({
+    required this.emoji,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+    required this.compact,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (compact) {
+      // 2 分割表示: 縦組 (絵文字 → タイトル → サブタイトル)
+      return InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Text(emoji, style: const TextStyle(fontSize: 20)),
+              const SizedBox(height: 4),
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 13,
+                  color: Color(0xFFC9A84C),
+                  letterSpacing: 0.4,
+                  fontWeight: FontWeight.w600,
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 2),
+              Text(
+                subtitle,
+                style: const TextStyle(
+                  fontSize: 11,
+                  color: Color(0x99C9A84C),
+                  letterSpacing: 0.2,
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+    // 単独表示: 旧 _AcgEntryFooter 互換の横一列レイアウト
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: onTap,
-      child: Container(
+      child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-        decoration: const BoxDecoration(
-          border: Border(top: BorderSide(color: Color(0x22C9A84C))),
-        ),
         child: Row(
           children: [
-            const Text('🌐', style: TextStyle(fontSize: 18)),
+            Text(emoji, style: const TextStyle(fontSize: 18)),
             const SizedBox(width: 10),
-            const Expanded(
-              child: Text(
-                '世界規模で見る (Astro*Carto*Graphy)',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Color(0xFFC9A84C),
-                  letterSpacing: 0.4,
-                  fontWeight: FontWeight.w500,
-                ),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: Color(0xFFC9A84C),
+                      letterSpacing: 0.4,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  Text(
+                    subtitle,
+                    style: const TextStyle(
+                      fontSize: 11,
+                      color: Color(0x99C9A84C),
+                      letterSpacing: 0.2,
+                    ),
+                  ),
+                ],
               ),
             ),
             const Icon(Icons.chevron_right, size: 18, color: Color(0x99C9A84C)),
