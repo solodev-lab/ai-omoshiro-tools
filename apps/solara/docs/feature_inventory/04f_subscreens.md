@@ -5,14 +5,447 @@
 
 ## サマリ
 
-- ファイル数: 7 / 総行数: 2930
-- class/mixin/extension/enum: 20
-- 関数 (top-level + method の素拾い): 88
+- ファイル数: 16 / 総行数: 6936
+- class/mixin/extension/enum: 63
+- 関数 (top-level + method の素拾い): 167
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 5
 - Worker URL リテラル: 0
 
 ## ファイル別
+
+### `lib/screens/consultation/consultation_history_screen.dart` (518 行)
+
+**ファイル先頭コメント:**
+
+```
+Consultation History Screen — Phase 2-4
+
+設計: apps/solara/docs/pro_candidates.md §7.2 Stage 4 + §7.3 柱3
+
+レイアウト:
+  - AppBar (戻る / すべて削除)
+  - ListView (新しい順、savedAt 降順)
+  - 各行: 保存日時 + テーマ + モード + scope + 最初の候補名 + 自由記述抜粋
+  - 行タップ → ConsultationResultScreen を読込み専用 (initialReading) で開く
+
+柱 3 の原則:
+  - Free でも全件閲覧できる (件数上限 200 は技術的フェイルセーフ)
+  - 検索・フィルタは Pro 機能 (本画面では UI のみプレースホルダ、ゲートは課金後)
+```
+
+**imports:** dart=0 / package=1 / relative=5
+
+- relative: `../../theme/solara_colors.dart`, `../../utils/consultation_record.dart`, `../../utils/solara_storage.dart`, `../../widgets/glass_panel.dart`, `consultation_result_screen.dart`
+
+**型定義 (5):**
+
+- L45 `class ConsultationHistoryScreen : StatefulWidget`
+- L63 `class _ConsultationHistoryScreenState : State`
+- L207 `class _EmptyState : StatelessWidget`
+- L252 `class _HistoryCard : StatelessWidget`
+- L495 `class _MetaChip : StatelessWidget`
+
+**関数 (6 public + 5 private):**
+
+- L59 `createState()`
+- L68 `initState()`
+- L135 `build()`
+- L211 `build()`
+- L342 `build()`
+- L500 `build()`
+
+  <details><summary>private 関数 5 件</summary>
+
+  - L73 `_load()`
+  - L85 `_delete()`
+  - L94 `_confirmDeleteAll()`
+  - L187 `_openDetail()`
+  - L466 `_confirmDelete()`
+
+  </details>
+
+
+### `lib/screens/consultation/consultation_input_examples.dart` (451 行)
+
+**ファイル先頭コメント:**
+
+```
+Consultation Input Screen — 相談例セクション
+(part of 'consultation_input_screen.dart')
+
+テーマ × モード × スコープで 3 例文を提示する _ConsultExamples 部品 +
+例文データ (_consultExamples)。元 consultation_input_widgets.dart から
+L393-834 を切り出し (ファイル肥大化対策、2026-05-16)。
+```
+
+**型定義 (2):**
+
+- L353 `class _ConsultExamples : StatelessWidget`
+- L401 `class _ExampleRow : StatelessWidget`
+
+**関数 (2 public + 0 private):**
+
+- L367 `build()`
+- L407 `build()`
+
+
+### `lib/screens/consultation/consultation_input_picker.dart` (484 行)
+
+**ファイル先頭コメント:**
+
+```
+Consultation Input Screen — 具体地点ピッカー部品
+(part of 'consultation_input_screen.dart')
+
+scope='specific' 専用の inline 地点ピッカー (A) を提供する。
+検索 + LOCATION quick-pick + 「地図で選ぶ」(B) を 1 ユニットに集約。
+元 consultation_input_widgets.dart から L11-23 (_PickedSpecific) と
+L836-1295 (_SpecificPicker 系) を切り出し (ファイル肥大化対策、2026-05-16)。
+```
+
+**型定義 (6):**
+
+- L12 `class _PickedSpecific`
+  - _SpecificPicker からの選択結果を持ち回す軽量レコード。
+- L29 `class _SpecificPicker : StatefulWidget`
+  - inline 地点ピッカー (A)。検索 + LOCATION quick-pick + 「地図で選ぶ」(B) を集約。
+- L52 `class _SpecificPickerState : State`
+- L298 `class _SearchHitRow : StatelessWidget`
+- L382 `class _LocationChip : StatelessWidget`
+- L417 `class _SelectedSpecificCard : StatelessWidget`
+
+**関数 (7 public + 6 private):**
+
+- L49 `createState()`
+- L65 `initState()`
+- L71 `dispose()`
+- L143 `build()`
+- L306 `build()`
+- L388 `build()`
+- L431 `build()`
+
+  <details><summary>private 関数 6 件</summary>
+
+  - L77 `_loadSlots()`
+  - L86 `_onSearchChanged()`
+  - L99 `_runSearch()`
+  - L113 `_onHitTap()`
+  - L128 `_onSlotTap()`
+  - L135 `_openMapPicker()`
+
+  </details>
+
+
+### `lib/screens/consultation/consultation_input_screen.dart` (396 行)
+
+**ファイル先頭コメント:**
+
+```
+Consultation Input Screen — Stage 1 UI
+
+設計: apps/solara/docs/pro_candidates.md §7.2 Stage 1
+
+入力フォーム:
+  - モード 3 択 (migration / travel / daily=おでかけ)
+  - テーマ 6 チップ単一選択 (love/money/work/communication/healing/newStart)
+  - 地理スコープ 3 択 (specific / region / world)
+    ※ daily モードは scope=bearings に自動固定
+  - 範囲指定モード時: 大ブロック region picker (日本/北米/ヨーロッパ/...)
+  - 自由記述 (任意、テキストエリア)
+  - 「相談を始める」ボタン
+
+入力完了 → Stage 2 エンジンで候補生成 → ConsultationResultScreen を push。
+
+ファイル分割 (Solara の horoscope_screen.dart と同じ part-of パターン):
+  - 本ファイル: orchestration + state management
+  - consultation_input_widgets.dart:  選択肢定数 + Choice classes + 基本サブウィジェット
+  - consultation_input_examples.dart: 相談例 (theme × mode × scope = 54 例文)
+  - consultation_input_picker.dart:   _PickedSpecific + _SpecificPicker 系
+```
+
+**imports:** dart=1 / package=2 / relative=8
+
+- relative: `../../theme/solara_colors.dart`, `../../utils/astro_lines.dart`, `../../utils/consultation_engine.dart`, `../../utils/world_cities.dart`, `../map/map_search.dart`, `../map/map_vp_panel.dart`, `consultation_place_picker_screen.dart`, `consultation_result_screen.dart`
+
+**型定義 (3):**
+
+- L41 `class ConsultationPresetTarget`
+  - Map から「📍この場所で相談」で起動した時の preset (specific scope 用)。
+- L57 `class ConsultationInputScreen : StatefulWidget`
+- L80 `class _ConsultationInputScreenState : State`
+
+**関数 (4 public + 4 private):**
+
+- L76 `createState()`
+- L93 `initState()`
+- L103 `dispose()`
+- L274 `build()`
+
+  <details><summary>private 関数 4 件</summary>
+
+  - L108 `_onModeChanged()`
+  - L134 `_resolveRegionCountries()`
+  - L218 `_openMapPicker()`
+  - L237 `_submit()`
+
+  </details>
+
+
+### `lib/screens/consultation/consultation_input_widgets.dart` (461 行)
+
+**ファイル先頭コメント:**
+
+```
+Consultation Input Screen — 基本サブウィジェット + 選択肢定数
+(part of 'consultation_input_screen.dart')
+
+Stage 1 入力画面の基本ウィジェット (テーマ/モード/スコープ選択 + 自由記述 +
+自動補完カード + 送信ボタン) と、テーマ/モード/スコープ定数。
+巨大化した相談例 (_consultExamples) と地点ピッカー (_SpecificPicker) は
+別 part ファイルに分割した。
+
+  consultation_input_screen.dart        ← orchestration + state
+  consultation_input_widgets.dart       ← 本ファイル: 基本ウィジェット
+  consultation_input_examples.dart      ← 例文 (theme×mode×scope=54)
+  consultation_input_picker.dart        ← _PickedSpecific + _SpecificPicker
+
+(Solara は horoscope_screen.dart と同じ part-of パターンを採用)
+```
+
+**型定義 (11):**
+
+- L67 `class _ThemeChoice`
+- L74 `class _ModeChoice`
+- L81 `class _ScopeChoice`
+- L90 `class _Section : StatelessWidget`
+- L118 `class _ThemeGrid : StatelessWidget`
+- L161 `class _ModeRow : StatelessWidget`
+- L227 `class _ScopeRow : StatelessWidget`
+- L301 `class _RegionPicker : StatelessWidget`
+- L343 `class _FreeTextField : StatelessWidget`
+- L386 `class _PresetLocationCard : StatelessWidget`
+- L423 `class _SubmitBar : StatelessWidget`
+
+**関数 (8 public + 1 private):**
+
+- L96 `build()`
+- L124 `build()`
+- L167 `build()`
+- L239 `build()`
+- L307 `build()`
+- L348 `build()`
+- L391 `build()`
+- L429 `build()`
+
+  <details><summary>private 関数 1 件</summary>
+
+  - L52 `_scopeChoicesFor()`
+
+  </details>
+
+
+### `lib/screens/consultation/consultation_place_picker_screen.dart` (348 行)
+
+**ファイル先頭コメント:**
+
+```
+Consultation Place Picker Screen — Stage 1 「地図で選ぶ」 (Hybrid B)
+
+設計: apps/solara/docs/pro_candidates.md §7.2 Stage 1
+       + chat 議論 (2026-05-16) 「A + B ハイブリッド」案
+
+役割:
+  - Consultation Input 画面の inline picker (A) から「🗺 地図で選ぶ」で push
+  - flutter_map で全画面の地図を表示し、検索 / マップタップで地点選択
+  - 決定で ConsultationPresetTarget を返す (Navigator.pop の引数)
+  - キャンセル / 戻る で null を返す
+
+map_screen との関係:
+  - map_screen.dart (~2700 行) は触らない (独立画面)
+  - flutter_map package を直接使い、Solara の地図テーマ (osmHotDark) と
+    共通の TileLayer ビルダ (buildStyledTileLayer) のみ流用
+  - 検索は map_search.dart の searchPlaces / SearchHit を流用
+  - 逆ジオコーディングは reverse_geocode.dart の reverseGeocodeDetail を使う
+
+UI 構造:
+  ┌─ AppBar (戻る / タイトル) ────────────────────┐
+  │  [検索 ____________________]  ✕              │
+  │  [候補1] [候補2] [候補3]                      │  ← suggestions overlay
+  ├──────────────────────────────────────────────┤
+  │                                              │
+  │     flutter_map (全画面、osmHotDark)         │
+  │       タップで点選択 → ピン                   │
+  │       検索結果は番号付きピン                  │
+  │                                              │
+  ├──────────────────────────────────────────────┤
+  │  ✓ 京都 (京都府 / JP)                        │  ← 選択中カード
+  │  35.011°N, 135.768°E                         │
+  │  [ キャンセル ]   [ ✓ この地点で相談 ]       │
+  └──────────────────────────────────────────────┘
+```
+
+**imports:** dart=1 / package=3 / relative=5
+
+- relative: `../../theme/solara_colors.dart`, `../../utils/reverse_geocode.dart`, `../map/map_search.dart`, `../map/map_styles.dart`, `consultation_input_screen.dart`
+
+**型定義 (1):**
+
+- L52 `class ConsultationPlacePickerScreen : StatefulWidget`
+  - 地点選択画面 (B、フルスクリーン)。
+
+**関数 (3 public + 8 private):**
+
+- L66 `createState()`
+- L97 `dispose()`
+- L231 `build()`
+
+  <details><summary>private 関数 8 件</summary>
+
+  - L106 `_onSearchChanged()`
+  - L119 `_runSearch()`
+  - L142 `_onHitTap()`
+  - L156 `_shortName()`
+  - L166 `_selectPoint()`
+  - L198 `_onMapTap()`
+  - L203 `_clearSelection()`
+  - L214 `_confirm()`
+
+  </details>
+
+
+### `lib/screens/consultation/consultation_place_picker_widgets.dart` (411 行)
+
+**ファイル先頭コメント:**
+
+```
+Consultation Place Picker — サブウィジェット
+(part of 'consultation_place_picker_screen.dart')
+
+flutter_map ベースの地点選択画面のサブウィジェット群:
+  - _SearchBar: 検索ボックス + サジェスト一覧 (番号バッジ付き)
+  - _NumberedPin: 検索結果の地図上ピン
+  - _SelectionCard: 画面下の選択中カード ＋ キャンセル / 確定ボタン
+
+親 consultation_place_picker_screen.dart は orchestration + State + map 配置のみ
+担う (ファイル肥大化対策、2026-05-16 分割)。
+```
+
+**型定義 (3):**
+
+- L14 `class _SearchBar : StatelessWidget`
+- L196 `class _NumberedPin : StatelessWidget`
+- L221 `class _SelectionCard : StatelessWidget`
+
+**関数 (3 public + 1 private):**
+
+- L32 `build()`
+- L201 `build()`
+- L264 `build()`
+
+  <details><summary>private 関数 1 件</summary>
+
+  - L247 `_coordLabel()`
+
+  </details>
+
+
+### `lib/screens/consultation/consultation_result_screen.dart` (472 行)
+
+**ファイル先頭コメント:**
+
+```
+Consultation Result Screen — Stage 4 UI
+
+設計: apps/solara/docs/pro_candidates.md §7.2 Stage 4
+
+レイアウト:
+  - AppBar (戻る / share プレースホルダ / 閉じる)
+  - intro (固定、上部)
+  - PageView × N 候補 (横スワイプ + HapticFeedback.selectionClick)
+    候補カード: 名前 + energyLabels chips + narrative (縦スクロール)
+  - outro (固定、下部)
+  - 「もう一度候補を出す」ボタン (refresh callback がある場合のみ)
+
+状態: loading / loaded / error / refreshing
+
+Phase 2-4 で対応:
+  - 自動保存 (solara_storage に request + response 永続化)
+  - 履歴閲覧画面
+  - 「📍地図で確認」連動 (公開後 v1.x)
+  - share ボタンの実体化
+```
+
+**imports:** dart=0 / package=2 / relative=9
+
+- relative: `../../theme/solara_colors.dart`, `../../utils/consultation_api.dart`, `../../utils/consultation_engine.dart`, `../../utils/consultation_record.dart`, `../../utils/consultation_share.dart`, `../../utils/pro_status.dart`, `../../utils/solara_storage.dart`, `../../widgets/glass_panel.dart`, `../../widgets/pro_unlock_dialog.dart`
+
+**型定義 (2):**
+
+- L36 `class ConsultationResultScreen : StatefulWidget`
+- L89 `class _ConsultationResultScreenState : State`
+
+**関数 (4 public + 8 private):**
+
+- L85 `createState()`
+- L107 `initState()`
+- L121 `dispose()`
+- L372 `build()`
+
+  <details><summary>private 関数 8 件</summary>
+
+  - L126 `_runFetch()`
+  - L150 `_fetch()`
+  - L174 `_refresh()`
+  - L221 `_maybePersist()`
+  - L246 `_openShareSheet()`
+  - L332 `_copyText()`
+  - L350 `_shareImage()`
+  - L426 `_buildBody()`
+
+  </details>
+
+
+### `lib/screens/consultation/consultation_result_widgets.dart` (446 行)
+
+**ファイル先頭コメント:**
+
+```
+Consultation Result Screen — Stage 4 サブウィジェット部
+(part of '../consultation_result_screen.dart')
+
+Stage 4 結果画面の内部ウィジェットを分離。consultation_result_screen.dart は
+orchestration + state management 専担、本ファイルは presentation を担当する。
+(Solara は horoscope_screen.dart と同じ part-of パターンを採用)
+```
+
+**型定義 (10):**
+
+- L11 `enum _ShareChoice`
+  - シェアシートで選ばれた選択肢。
+- L15 `class _LoadingSkeleton : StatelessWidget`
+- L43 `class _ErrorBox : StatelessWidget`
+- L90 `class _IntroBlock : StatelessWidget`
+- L136 `class _OutroBlock : StatelessWidget`
+- L166 `class _PageIndicator : StatelessWidget`
+- L198 `class _RefreshButton : StatelessWidget`
+- L239 `class _CandidateCard : StatelessWidget`
+- L347 `class _EnergyChip : StatelessWidget`
+- L375 `class _CandidateKindBadge : StatelessWidget`
+  - 候補種別バッジ (方角 / 場所)。
+
+**関数 (9 public + 0 private):**
+
+- L19 `build()`
+- L49 `build()`
+- L96 `build()`
+- L141 `build()`
+- L172 `build()`
+- L204 `build()`
+- L267 `build()`
+- L352 `build()`
+- L384 `build()`
+
 
 ### `lib/screens/font_preview_screen.dart` (138 行)
 
@@ -93,59 +526,59 @@
 - 集計: `showInfoPopup`×1
 
 
-### `lib/screens/forecast_screen.dart` (1048 行)
+### `lib/screens/forecast_screen.dart` (1067 行)
 
-**imports:** dart=0 / package=1 / relative=7
+**imports:** dart=0 / package=1 / relative=9
 
-- relative: `../utils/forecast_cache.dart`, `../utils/solara_storage.dart`, `../widgets/info_popup.dart`, `../widgets/no_profile_guide.dart`, `forecast/forecast_life_periods.dart`, `forecast/forecast_top5.dart`, `map/map_constants.dart`
+- relative: `../utils/forecast_cache.dart`, `../utils/pro_status.dart`, `../utils/solara_storage.dart`, `../widgets/info_popup.dart`, `../widgets/no_profile_guide.dart`, `../widgets/pro_unlock_dialog.dart`, `forecast/forecast_life_periods.dart`, `forecast/forecast_top5.dart`, `map/map_constants.dart`
 
 **型定義 (3):**
 
-- L13 `class ForecastScreen : StatefulWidget`
+- L15 `class ForecastScreen : StatefulWidget`
   - Forecast 画面 — 1年予測（ヒートマップ + 選択日詳細 + 強運Top5）
-- L31 `class _ForecastScreenState : State`
-- L1019 `class _DayStepperButton : StatelessWidget`
+- L33 `class _ForecastScreenState : State`
+- L1038 `class _DayStepperButton : StatelessWidget`
   - 選択日詳細パネルの △ ボタン (左右で 1 日前後に動かす)。
 
 **関数 (4 public + 30 private):**
 
-- L28 `createState()`
-- L63 `initState()`
-- L131 `build()`
-- L1030 `build()`
+- L30 `createState()`
+- L65 `initState()`
+- L150 `build()`
+- L1049 `build()`
 
   <details><summary>private 関数 30 件</summary>
 
-  - L68 `_initialize()`
-  - L74 `_loadSettings()`
-  - L82 `_setColorMode()`
-  - L87 `_setHighColor()`
-  - L92 `_load()`
-  - L122 `_setYearOffset()`
-  - L173 `_buildBody()`
-  - L227 `_buildBasisCard()`
-  - L278 `_fmt()`
-  - L281 `_buildBestChip()`
-  - L315 `_yearSeg()`
-  - L339 `_buildHeatmap()`
-  - L415 `_buildColorModeToggle()`
-  - L456 `_rankSeg()`
-  - L486 `_segment()`
-  - L507 `_buildLegend()`
-  - L534 `_catColorChips()`
-  - L548 `_monthRow()`
-  - L577 `_dayCell()`
-  - L608 `_cellColor()`
-  - L625 `_gradientColor()`
-  - L636 `_categoryColor()`
-  - L652 `_canShiftSelectedDay()`
-  - L663 `_shiftSelectedDay()`
-  - L670 `_buildSelectedDayDetail()`
-  - L733 `_metric()`
-  - L741 `_catBar()`
-  - L778 `_buildFetchInfo()`
-  - L792 `_showForecastUsageGuide()`
-  - L918 `_showHeatmapInfo()`
+  - L70 `_initialize()`
+  - L76 `_loadSettings()`
+  - L90 `_setColorMode()`
+  - L95 `_setHighColor()`
+  - L100 `_load()`
+  - L130 `_setYearOffset()`
+  - L192 `_buildBody()`
+  - L246 `_buildBasisCard()`
+  - L297 `_fmt()`
+  - L300 `_buildBestChip()`
+  - L334 `_yearSeg()`
+  - L358 `_buildHeatmap()`
+  - L434 `_buildColorModeToggle()`
+  - L475 `_rankSeg()`
+  - L505 `_segment()`
+  - L526 `_buildLegend()`
+  - L553 `_catColorChips()`
+  - L567 `_monthRow()`
+  - L596 `_dayCell()`
+  - L627 `_cellColor()`
+  - L644 `_gradientColor()`
+  - L655 `_categoryColor()`
+  - L671 `_canShiftSelectedDay()`
+  - L682 `_shiftSelectedDay()`
+  - L689 `_buildSelectedDayDetail()`
+  - L752 `_metric()`
+  - L760 `_catBar()`
+  - L797 `_buildFetchInfo()`
+  - L811 `_showForecastUsageGuide()`
+  - L937 `_showHeatmapInfo()`
 
   </details>
 

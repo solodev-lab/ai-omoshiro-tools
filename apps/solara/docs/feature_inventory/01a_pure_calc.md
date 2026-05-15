@@ -5,9 +5,9 @@
 
 ## サマリ
 
-- ファイル数: 5 / 総行数: 1315
-- class/mixin/extension/enum: 11
-- 関数 (top-level + method の素拾い): 50
+- ファイル数: 6 / 総行数: 1793
+- class/mixin/extension/enum: 19
+- 関数 (top-level + method の素拾い): 63
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 0
 - Worker URL リテラル: 0
@@ -45,42 +45,46 @@
   </details>
 
 
-### `lib/utils/astro_lines.dart` (479 行)
+### `lib/utils/astro_lines.dart` (535 行)
 
 **imports:** dart=2 / package=1 / relative=1
 
 - relative: `astro_math.dart`
 
-**型定義 (4):**
+**型定義 (5):**
 
-- L41 `enum AstroFrame`
+- L43 `enum AstroFrame`
   - アストロカートグラフィの惑星フレーム (Tier A #5 / CCG)。
-- L63 `class AstroLine`
+- L65 `class AstroLine`
   - アストロカートグラフィの 1 本のライン。
-- L377 `class NearbyAstroLine`
+- L245 `class _AspectPass`
+  - B1 アスペクトラインのパス定義。
+- L425 `class NearbyAstroLine`
   - 近接ラインの結果。距離付き。
-- L442 `class _RankedLine`
+- L498 `class _RankedLine`
 
-**関数 (6 public + 9 private):**
+**関数 (8 public + 9 private):**
 
-- L43 `astroFrameKey()`
-- L115 `gmstHoursFromUtc()` — 任意UTC時刻から GMST (時間, 0..24) を計算。Tier A #5 / CCG 用。
-- L126 `solarArcPlanets()` — natal + progressed から Solar Arc (ソーラーアーク方向) の惑星位置を導出。
-- L233 `buildAstroLines()` — 全 40本のアストロラインを計算 (natal フレーム)。
-- L263 `buildAstroLinesAt()` — 任意フレーム × 任意 GMST のアスペクト線 40本を計算 (Tier A #5 / CCG 汎用)。
-- L458 `findNearbyLinesScreen()` — 画面pixel距離で近接アスペクト線を検出する (Astro*Carto*Graphy モード専用)。
+- L45 `astroFrameKey()`
+- L130 `gmstHoursFromUtc()` — 任意UTC時刻から GMST (時間, 0..24) を計算。Tier A #5 / CCG 用。
+- L141 `solarArcPlanets()` — natal + progressed から Solar Arc (ソーラーアーク方向) の惑星位置を導出。
+- L267 `buildAstroLines()` — 全 120本のアストロラインを計算 (natal フレーム)。
+- L297 `buildAstroLinesAt()` — 任意フレーム × 任意 GMST のアストロライン 120本を計算 (Tier A #5 / CCG 汎用)。
+- L432 `haversineKm()` — 2 点の Haversine 距離 (km)。consultation_engine.dart 等の再利用用 public。
+- L436 `minDistanceKmToLine()` — 1 本の AstroLine 上の最近接点までの最短 Haversine 距離 (km)。
+- L514 `findNearbyLinesScreen()` — 画面pixel距離で近接アスペクト線を検出する (Astro*Carto*Graphy モード専用)。
 
   <details><summary>private 関数 9 件</summary>
 
-  - L50 `_toRad()`
-  - L51 `_toDeg()`
-  - L54 `_normLng()`
-  - L59 `_clamp()`
-  - L98 `_gmstHoursFromBaseline()`
-  - L353 `_haversineKm()`
-  - L365 `_minDistanceKmToLine()`
-  - L397 `_pointToSegmentPx()`
-  - L418 `_minPixelDistanceToLine()`
+  - L52 `_toRad()`
+  - L53 `_toDeg()`
+  - L56 `_normLng()`
+  - L61 `_clamp()`
+  - L113 `_gmstHoursFromBaseline()`
+  - L401 `_haversineKm()`
+  - L413 `_minDistanceKmToLine()`
+  - L453 `_pointToSegmentPx()`
+  - L474 `_minPixelDistanceToLine()`
 
   </details>
 
@@ -112,6 +116,46 @@ Astro 数学ユーティリティ
 
 - L20 `normalize360()` — 角度 d を 0..360 に正規化する。
 - L27 `angDist()` — 2 つの角度の最小角距離 (0..180)。
+
+
+### `lib/utils/consultation_engine.dart` (422 行)
+
+**imports:** dart=1 / package=1 / relative=2
+
+- relative: `astro_lines.dart`, `world_cities.dart`
+
+**型定義 (7):**
+
+- L26 `enum ConsultationMode`
+  - 相談モード。pro_candidates.md §7.2 Stage 1 の 3 モードに対応。
+- L38 `enum ConsultationScope`
+  - 相談スコープ。candidate 数と生成ロジックが変わる。
+- L63 `class CandidateNearLine`
+  - 候補地点に紐づく近接 theme 線。
+- L94 `class CandidateLocation`
+  - 候補地点。Stage 3 Stella プロンプトに渡す JSON の Dart 表現。
+- L330 `class _ScoredCity`
+- L388 `class _BearingDef`
+- L395 `class _ScoredBearing`
+
+**関数 (8 public + 3 private):**
+
+- L76 `toJson()`
+- L120 `toJson()`
+- L152 `themePlanets()` — テーマ → 関係惑星セット (astro_lines.dart の astroLineFortunePlanets を流用)。
+- L159 `filterThemeLines()` — 全 AstroLine から theme 該当の conjunction 本線のみを抽出 (v1)。
+- L178 `candidateForSpecific()` — (1) 具体地点候補。1 件返す。
+- L204 `candidatesForRegion()` — (2) 範囲指定候補。3 件。
+- L231 `candidatesForWorld()` — (3) 世界全体候補。3 件。人口バイアスを軽くかけて知名度の高い都市を優先。
+- L253 `candidatesForDaily()` — (4) おでかけ候補。3 件。
+
+  <details><summary>private 関数 3 件</summary>
+
+  - L305 `_nearestLinesFor()`
+  - L342 `_rankCitiesByLineProximity()`
+  - L404 `_offsetByBearing()`
+
+  </details>
 
 
 ### `lib/utils/direction_energy.dart` (238 行)

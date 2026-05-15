@@ -13,10 +13,11 @@
 //
 // 入力完了 → Stage 2 エンジンで候補生成 → ConsultationResultScreen を push。
 //
-// ファイル分割:
+// ファイル分割 (Solara の horoscope_screen.dart と同じ part-of パターン):
 //   - 本ファイル: orchestration + state management
-//   - consultation_input_widgets.dart: 選択肢定数 + Choice classes + サブウィジェット
-//   (Solara の horoscope_screen.dart と同じ part-of パターン)
+//   - consultation_input_widgets.dart:  選択肢定数 + Choice classes + 基本サブウィジェット
+//   - consultation_input_examples.dart: 相談例 (theme × mode × scope = 54 例文)
+//   - consultation_input_picker.dart:   _PickedSpecific + _SpecificPicker 系
 
 import 'dart:async';
 
@@ -33,6 +34,8 @@ import 'consultation_place_picker_screen.dart';
 import 'consultation_result_screen.dart';
 
 part 'consultation_input_widgets.dart';
+part 'consultation_input_examples.dart';
+part 'consultation_input_picker.dart';
 
 /// Map から「📍この場所で相談」で起動した時の preset (specific scope 用)。
 class ConsultationPresetTarget {

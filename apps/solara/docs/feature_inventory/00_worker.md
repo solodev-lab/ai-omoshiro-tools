@@ -5,8 +5,8 @@
 
 ## サマリ
 
-- ファイル数: 9
-- エンドポイント総数: 15
+- ファイル数: 10
+- エンドポイント総数: 16
 - Gemini 呼出箇所: 2
 - KV 使用: 4 行 / Durable Object 使用: 0 行
 
@@ -23,6 +23,53 @@ Dependency: astronomy-engine (npm)
 ```
 
 **export (4):** `computeChart`, `computePredictions`, `computeForecast`, `computeMonthEvents`
+
+
+### `worker/src/consultation.js` (330 行)
+
+**ファイル先頭コメント:**
+
+```
+Solara (ii) Stella 相談 — Stage 3 (Gemini API バックエンド)
+
+設計: apps/solara/docs/pro_candidates.md §7.2 Stage 3
+
+クライアント (Stage 2 = consultation_engine.dart) が組み立てた候補リストを
+受け取り、Gemini Flash を裏方として Stella が「悩み (テーマ + 自由記述) に
+照らした解釈」を生成して返す。Stella は方角・エネルギーだけ示す。
+店舗名・固有名詞は返さない。
+
+注: Gemini はあくまでバックエンドの実装で、ユーザーには「Stella」として
+振る舞う。プロンプトでも Stella と自称する。
+
+入力 body:
+{
+theme: 'love'|'money'|'work'|'communication'|'healing'|'newStart',
+mode:  'migration'|'travel'|'daily',
+scope: 'specific'|'region'|'world'|'bearings',
+freeText?: string,                       // 任意。自由記述 (悩み詳細)
+candidates: [{                            // 1..3 件、Stage 2 出力
+name, nameEN, lat, lng, country, region,
+bearing?: 'N'|'NE'|...,                // daily モード時のみ
+nearLines: [{planet, angle, aspect, distanceKm}, ...]
+}],
+excluded?: string[],                      // リフレッシュ用、既出候補名
+lang?: 'ja'                               // v1 は ja 固定
+}
+
+出力:
+{
+intro: string,                            // 50-100 字
+candidates: [{ name, energyLabels[], narrative }],
+outro: string,                            // 100-130 字
+model: string,                            // 実際に使ったモデル名
+fallback?: boolean                        // Stella が届かない時 true (静的テンプレ)
+}
+
+設計思想ガー
+```
+
+**export (1):** `handleConsultation`
 
 
 ### `worker/src/daily_transits.js` (273 行)
@@ -54,12 +101,12 @@ astronomy-engine API:
 **export (1):** `computeDailyTransits`
 
 
-### `worker/src/fortune.js` (294 行)
+### `worker/src/fortune.js` (311 行)
 
 **ファイル先頭コメント:**
 
 ```
-Fortune Reading — Gemini API を用いた占い文生成
+Fortune Reading — Stella の占い文生成 (Gemini API バックエンド)
 
 入力: category, natal, transit?, aspects, patterns, lang('ja'|'en')
 出力: { reading, advice, direction }
@@ -76,12 +123,12 @@ houses: そのカテゴリで重視する伝統占星術のハウス番号
 
 **Gemini API 呼出 (1):**
 
-- L87: `generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;`
+- L100: `generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;`
 
 **export (3):** `computeCategoryScore`, `callGemini`, `handleFortune`
 
 
-### `worker/src/index.js` (373 行)
+### `worker/src/index.js` (392 行)
 
 **ファイル先頭コメント:**
 
@@ -90,40 +137,43 @@ Solara API — Cloudflare Worker
 Endpoints: /astro/chart, /astro/predict, /search, /fortune, /health
 ```
 
-**エンドポイント / ルート (15):**
+**エンドポイント / ルート (16):**
 
 | method | path | line |
 | --- | --- | --- |
-| ? | /astro/forecast | L194 |
-| ? | /tiles/* | L196 |
-| ? | /health | L207 |
-| GET | /tiles/osm/* | L215 |
-| POST | /astro/chart | L220 |
-| POST | /astro/forecast | L230 |
-| POST | /astro/predict | L246 |
-| POST | /astro/daily-transits | L260 |
-| GET | /tz | L270 |
-| GET | /astro/events | L281 |
-| GET | /search | L294 |
-| POST | /fortune | L311 |
-| POST | /tarot | L323 |
-| POST | /relocation | L337 |
-| POST | /astro/line-narrative | L355 |
+| ? | /astro/forecast | L195 |
+| ? | /tiles/* | L197 |
+| ? | /health | L208 |
+| GET | /tiles/osm/* | L216 |
+| POST | /astro/chart | L221 |
+| POST | /astro/forecast | L231 |
+| POST | /astro/predict | L247 |
+| POST | /astro/daily-transits | L261 |
+| GET | /tz | L271 |
+| GET | /astro/events | L282 |
+| GET | /search | L295 |
+| POST | /fortune | L312 |
+| POST | /tarot | L324 |
+| POST | /relocation | L338 |
+| POST | /astro/line-narrative | L356 |
+| POST | /astro/consultation | L374 |
 
 **KV 使用 (4 行):**
 
-- 出現行: L74, L77, L82, L144
+- 出現行: L75, L78, L83, L145
 
 
-### `worker/src/line_narrative.js` (266 行)
+### `worker/src/line_narrative.js` (268 行)
 
 **ファイル先頭コメント:**
 
 ```
-Astro*Carto*Graphy Line Narrative — Gemini API
+Astro*Carto*Graphy Line Narrative — Stella の線解説 (Gemini API バックエンド)
 
 A*C*G ライン（natal / transit 2フレーム × 10惑星 × 4アングル）の
-タップ詳細解説を Gemini で動的生成する。
+タップ詳細解説を Stella が動的生成する。
+
+注: 2026-05-11 撤去済 (クライアント呼出なし)。ファイルは互換のため残置。
 
 入力:
 {
@@ -159,7 +209,7 @@ title, narrative, softNote, hardNote, lang
 **ファイル先頭コメント:**
 
 ```
-Relocation Narrative — Gemini API を用いたリロケーション解説生成
+Relocation Narrative — Stella のリロケーション解説生成 (Gemini API バックエンド)
 
 入力: { shifts: [{planet, fromHouse, toHouse}],
 ascChange: {fromSign, toSign} | null,
@@ -205,7 +255,7 @@ Nominatim: https://nominatim.openstreetmap.org/search
 **ファイル先頭コメント:**
 
 ```
-Tarot Reading — Gemini API を用いたタロット占い文生成
+Tarot Reading — Stella のタロット占い文生成 (Gemini API バックエンド)
 
 入力:
 cardId (0-77), reversed (bool), nameJP, keyword, element, planet?,

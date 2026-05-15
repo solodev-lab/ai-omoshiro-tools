@@ -5,8 +5,8 @@
 
 ## #3 Worker ↔ Flutter エンドポイント対整合
 
-- Worker 側に定義された path: **14**
-- Flutter から呼ばれている path リテラル: **11**
+- Worker 側に定義された path: **15**
+- Flutter から呼ばれている path リテラル: **12**
 
 ### Worker → Flutter 漏れ (Worker にあるが Flutter から呼出無し)
 
@@ -23,6 +23,7 @@
 ### 一致 (= 健全)
 
 - `/astro/chart`
+- `/astro/consultation`
 - `/astro/daily-transits`
 - `/astro/events`
 - `/astro/forecast`
@@ -36,20 +37,39 @@
 
 ## #1 / #2 機械抽出 ↔ feature_inventory.md (人手版) の対整合
 
-- 機械抽出した class/mixin/extension/enum: **301**
+- 機械抽出した class/mixin/extension/enum: **361**
 - inventory に登場する識別子 (大文字始まり ``backtick``囲み): **209**
 
-### #1 機械にあるが Doc に書かれていない (129)
+### #1 機械にあるが Doc に書かれていない (189)
 
+- `CandidateLocation`
+- `CandidateNearLine`
+- `CityEntry`
+- `ConsultEntryPopup`
+- `ConsultationCandidateReading`
+- `ConsultationHistoryScreen`
+- `ConsultationInputScreen`
+- `ConsultationMode`
+- `ConsultationPlacePickerScreen`
+- `ConsultationPresetTarget`
+- `ConsultationReading`
+- `ConsultationRecord`
+- `ConsultationResultScreen`
+- `ConsultationScope`
 - `MapTimeSliderState`
-- `_AcgEntryFooter`
+- `ProStatus`
+- `ReverseGeocodeResult`
 - `_ActionTile`
 - `_AggBuilder`
 - `_AltarLayout`
 - `_AltitudeBadge`
 - `_AngleStyle`
 - `_AntiqueIconPainter`
+- `_AspectPass`
 - `_AtlasHeader`
+- `_BearingDef`
+- `_CandidateCard`
+- `_CandidateKindBadge`
 - `_CatChip`
 - `_CatasterismOverlayState`
 - `_CategoryIconKindAsset`
@@ -63,6 +83,11 @@
 - `_ClassShareCardPageState`
 - `_CommunicationPainter`
 - `_ConstellationCard`
+- `_ConsultEntryPopupState`
+- `_ConsultExamples`
+- `_ConsultationHistoryScreenState`
+- `_ConsultationInputScreenState`
+- `_ConsultationResultScreenState`
 - `_ContribRow`
 - `_DailyTransitChip`
 - `_DateNumberField`
@@ -73,15 +98,21 @@
 - `_DominantFortuneOverlayState`
 - `_EmptyState`
 - `_EnergyBar`
+- `_EnergyChip`
+- `_ErrorBox`
+- `_ExampleRow`
 - `_FailedBody`
 - `_FontOption`
 - `_FontPreviewScreenState`
 - `_Footer`
+- `_FooterActions`
+- `_FooterButton`
 - `_ForecastScreenState`
 - `_FormationPainter`
 - `_FortuneRowsList`
 - `_FortuneRowsListState`
 - `_FramePill`
+- `_FreeTextField`
 - `_FullMoonOverlayState`
 - `_GADot`
 - `_GalaxyIconPainter`
@@ -92,6 +123,7 @@
 - `_Header`
 - `_HealingPainter`
 - `_Hero`
+- `_HistoryCard`
 - `_HoroBackdrop`
 - `_HoroBirthPanelState`
 - `_HoroBottomSheet`
@@ -103,10 +135,13 @@
 - `_HourNumberField`
 - `_HourNumberFieldState`
 - `_InfoPopupShell`
+- `_IntroBlock`
 - `_LatitudeBandBox`
 - `_LatitudeBandRow`
 - `_LightMote`
 - `_LoadingBody`
+- `_LoadingSkeleton`
+- `_LocationChip`
 - `_LocationPickerMinimapState`
 - `_LocationsScreenState`
 - `_LovePainter`
@@ -119,24 +154,35 @@
 - `_MedalPalette`
 - `_Medallion`
 - `_MenuInfoRow`
+- `_MetaChip`
+- `_ModeChoice`
+- `_ModeRow`
 - `_MoneyPainter`
 - `_MoonScrollingStoryState`
 - `_Mulberry32`
+- `_NearestLineRow`
 - `_NewMoonOverlayState`
 - `_Note`
 - `_NotePair`
+- `_NumberedPin`
 - `_ObserveHistoryPanelState`
 - `_ObserveScreenState`
 - `_OrbSectionLabel`
+- `_OutroBlock`
+- `_PageIndicator`
 - `_Petal`
 - `_PetalPalette`
+- `_PickedSpecific`
 - `_PlanetDef`
 - `_PlanetGlyphPainter`
 - `_PlanetIntroBody`
 - `_PlanetSub`
 - `_PopupBody`
+- `_PresetLocationCard`
 - `_RankedLine`
 - `_Ray`
+- `_RefreshButton`
+- `_RegionPicker`
 - `_RosePetal`
 - `_SanctuaryHomeEditorPageState`
 - `_SanctuaryIconPainter`
@@ -145,25 +191,40 @@
 - `_SanctuaryResetHourPickerState`
 - `_SanctuaryScreenState`
 - `_SanctuaryTitleDiagnosisPageState`
+- `_ScopeChoice`
+- `_ScopeRow`
+- `_ScoredBearing`
+- `_ScoredCity`
 - `_ScrollableRowPanel`
+- `_SearchBar`
 - `_SearchBarOverlayState`
+- `_SearchHitRow`
+- `_Section`
 - `_SectionCard`
+- `_SelectedSpecificCard`
+- `_SelectionCard`
 - `_SettingsGroup`
 - `_SettingsItem`
 - `_SettingsItemWithToggle`
+- `_ShareChoice`
 - `_SlotStats`
 - `_SolaraHomeState`
 - `_Spark`
 - `_Sparkle`
+- `_SpecificPicker`
+- `_SpecificPickerState`
 - `_SpiralDot`
 - `_SpreadItem`
 - `_StaticChip`
 - `_Stream`
 - `_SubPill`
+- `_SubmitBar`
 - `_SyncInput`
 - `_SyncInputState`
 - `_TarotAltarSceneState`
 - `_TarotIconPainter`
+- `_ThemeChoice`
+- `_ThemeGrid`
 - `_TimelineBody`
 - `_TimelineRow`
 - `_Vec3`
@@ -218,9 +279,9 @@
 
 ### 層 4a: Map 画面
 
-- ファイル数: 22
+- ファイル数: 23
 - Worker URL 呼出: ['/search', '/tiles/osm/hot/', '/tiles/osm/hot/0/0/0']
-- Popup/Dialog: `showInfoPopup`×14, `showLineNarrativeSheet`×3, `showSolaraDatePicker`×1
+- Popup/Dialog: `showInfoPopup`×15, `showLineNarrativeSheet`×3, `showSolaraDatePicker`×1
 - Navigator.push 等: 0 箇所
 
 ### 層 4b: Horoscope 画面
@@ -253,7 +314,7 @@
 
 ### 層 4f: サブ画面 (Forecast / Locations / Philosophy / Font Preview)
 
-- ファイル数: 7
+- ファイル数: 16
 - Worker URL 呼出: (なし)
 - Popup/Dialog: `showInfoPopup`×5
 - Navigator.push 等: 0 箇所
@@ -269,22 +330,22 @@
 
 | from\to | 1a | 1b | 1c | 2a | 2b | 2c | 3a | 3b | 3c | 4a | 4b | 4c | 4d | 4e | 4f | 5 |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1a | 2 | · | · | · | · | · | · | · | · | · | · | · | · | · | · | · |
-| 1b | · | · | · | · | · | · | 1 | · | · | · | · | · | · | · | · | · |
+| 1a | 3 | 1 | · | · | · | · | · | · | · | · | · | · | · | · | · | · |
+| 1b | 1 | · | · | 1 | · | · | 1 | · | · | · | · | · | · | · | · | · |
 | 1c | · | · | 1 | · | · | · | · | · | · | · | · | · | · | · | · | · |
-| 2a | 2 | · | · | 4 | · | · | · | 1 | · | · | · | · | · | · | · | · |
-| 2b | · | · | 3 | 1 | 1 | · | · | · | · | · | · | · | · | · | · | · |
+| 2a | 3 | · | · | 5 | · | · | · | 1 | · | · | · | · | · | · | · | · |
+| 2b | · | 1 | 3 | 2 | 1 | · | · | · | · | · | · | · | · | · | · | · |
 | 2c | · | · | 1 | · | · | · | · | · | · | · | · | · | · | · | · | · |
-| 3a | 1 | 4 | 2 | 1 | · | 1 | 8 | 5 | 4 | 1 | · | · | · | · | · | · |
+| 3a | 1 | 4 | 2 | 1 | · | 1 | 8 | 6 | 4 | 1 | · | · | · | · | · | · |
 | 3b | · | · | · | · | · | · | · | 1 | · | · | · | · | · | · | · | · |
 | 3c | · | 4 | 4 | 2 | 3 | · | 12 | 4 | · | · | · | · | · | · | · | · |
-| 4a | 9 | 11 | · | 11 | 5 | · | 16 | 20 | 3 | 30 | 2 | · | · | · | 2 | · |
+| 4a | 10 | 11 | · | 13 | 7 | · | 18 | 23 | 3 | 31 | 2 | · | · | · | 3 | · |
 | 4b | 5 | 10 | · | 6 | 2 | · | 11 | · | · | · | 28 | · | · | 2 | · | · |
 | 4c | 1 | · | 5 | 1 | 2 | 2 | · | · | · | · | · | 6 | · | · | · | · |
 | 4d | 2 | 5 | 9 | 1 | 1 | 2 | 8 | · | 1 | · | · | · | 4 | · | · | · |
-| 4e | · | 3 | · | 1 | 5 | · | 6 | · | · | · | · | · | · | 7 | · | · |
-| 4f | · | 1 | · | 1 | 5 | · | 7 | 5 | · | 2 | · | · | · | · | 3 | · |
-| 5 | · | · | · | 1 | 1 | 1 | 1 | 1 | · | 1 | 1 | 1 | 1 | 1 | · | · |
+| 4e | · | 3 | · | 1 | 6 | · | 6 | · | · | · | · | · | · | 7 | 1 | · |
+| 4f | 3 | 4 | · | 3 | 10 | · | 11 | 9 | · | 6 | · | · | · | · | 12 | · |
+| 5 | · | · | · | 1 | 2 | 1 | 1 | 1 | · | 1 | 1 | 1 | 1 | 1 | · | · |
 
 > 健全な依存方向は「番号が大きい層 → 小さい層」(上位が下位に依存)。
 > 番号が小さい層から大きい層への矢印 (左下三角) は逆流依存の疑い。
@@ -295,26 +356,26 @@
 
 | ファイル | 層 | 被 import 数 |
 | --- | --- | --- |
-| `lib/utils/solara_storage.dart` | 2b | 20 |
+| `lib/theme/solara_colors.dart` | 3b | 24 |
+| `lib/utils/solara_storage.dart` | 2b | 21 |
+| `lib/screens/map/map_constants.dart` | 3b | 20 |
 | `lib/widgets/info_popup.dart` | 3a | 20 |
-| `lib/screens/map/map_constants.dart` | 3b | 19 |
-| `lib/theme/solara_colors.dart` | 3b | 17 |
 | `lib/screens/horoscope/horo_antique_icons.dart` | 3a | 13 |
+| `lib/utils/solara_api.dart` | 2a | 11 |
 | `lib/screens/horoscope/horo_constants.dart` | 1b | 10 |
-| `lib/utils/solara_api.dart` | 2a | 10 |
 | `lib/screens/horoscope/horo_panel_shared.dart` | 4b | 9 |
 | `lib/models/daily_reading.dart` | 1c | 8 |
 | `lib/models/galaxy_cycle.dart` | 1c | 8 |
+| `lib/utils/astro_lines.dart` | 1a | 8 |
+| `lib/screens/map/map_vp_panel.dart` | 4a | 7 |
 | `lib/utils/constellation_namer.dart` | 1b | 7 |
-| `lib/screens/map/map_vp_panel.dart` | 4a | 6 |
+| `lib/utils/pro_status.dart` | 2b | 7 |
+| `lib/widgets/glass_panel.dart` | 3a | 7 |
 | `lib/utils/astro_glossary.dart` | 1b | 6 |
 | `lib/utils/tarot_data.dart` | 2c | 6 |
 | `lib/widgets/fortune_overlays/_common.dart` | 3a | 6 |
 | `lib/models/lunar_intention.dart` | 1c | 5 |
 | `lib/screens/map/map_astro.dart` | 2a | 5 |
-| `lib/utils/astro_lines.dart` | 1a | 5 |
-| `lib/utils/astro_math.dart` | 1a | 5 |
-| `lib/utils/celestial_events.dart` | 2a | 5 |
 
 ### #5c 孤立ファイル (2) — 誰からも import されない
 
@@ -329,20 +390,24 @@
 > 各ソースの SHA1 を `_stamps.json` に記録し、差分を検出。
 > 変更されたファイルが属する層は、人手版インベントリ章の見直し対象。
 
-- 追加: **0** / 削除: **3** / 変更: **0**
+- 追加: **3** / 削除: **0** / 変更: **3**
 
-### 削除されたファイル
+### 変更されたファイル (層別)
 
-- `lib/screens/horoscope/horo_info_row.dart`
-- `lib/widgets/solara_safe_text.dart`
-- `lib/widgets/spiral_painter.dart`
+- **層 4f**: `lib/screens/consultation/consultation_input_screen.dart`, `lib/screens/consultation/consultation_input_widgets.dart`, `lib/screens/consultation/consultation_place_picker_screen.dart`
+
+### 追加されたファイル
+
+- `lib/screens/consultation/consultation_input_examples.dart` (層 4f)
+- `lib/screens/consultation/consultation_input_picker.dart` (層 4f)
+- `lib/screens/consultation/consultation_place_picker_widgets.dart` (層 4f)
 
 ## #7 astro_glossary 用語辞書対整合
 
 > `astro_glossary.dart` の定義キー ↔ コード内の参照 (`termKey:` /
 > `astroGlossary[...]`) を突合。死蔵エントリと壊れた用語ラベルを検出。
 
-- 定義キー数: **42** / 参照キー数 (リテラルのみ): **10**
+- 定義キー数: **45** / 参照キー数 (リテラルのみ): **10**
 
 > ⚠️ 検出できるのは **リテラル参照のみ** (`termKey: 'asc'` / `astroGlossary['asc']`)。
 > 次のケースは検出不可なので #7a を「確定した死蔵」と即断しないこと:
@@ -350,11 +415,14 @@
 >  - `AstroTermLabel(termKey: someVariable)` のような変数渡し
 > #7a は **死蔵候補** であり、削除前に grep で変数経由参照を確認すること。
 
-### #7a 定義済みだが未参照 (32) — 死蔵 glossary エントリ候補
+### #7a 定義済みだが未参照 (35) — 死蔵 glossary エントリ候補
 
 > 上記⚠️の通り、変数経由参照は検出できていない。確定前に要 grep。
 
 - `altitude_event`
+- `aspect_sextile`
+- `aspect_square`
+- `aspect_trine`
 - `category_tips_intent`
 - `dsc`
 - `fortune_all`
