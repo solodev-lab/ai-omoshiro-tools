@@ -13,6 +13,7 @@ import '../utils/tile_http_client.dart' show sharedTileHttpClient;
 import '../widgets/dominant_fortune_overlay.dart';
 import '../widgets/info_popup.dart';
 import 'map/map_daily_transit_screen.dart';
+import 'map/consult_entry_popup.dart';
 import 'map/map_constants.dart';
 import 'map/map_styles.dart';
 import 'map/map_sectors.dart';
@@ -136,6 +137,10 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   final Map<String, bool> _astroLayers = {
     'planetLines': true,
     'relocate': false,
+    // ACG モード「相談」モードトグル (Phase: 2026-05-16)
+    // ON のとき空地点タップで ConsultEntryPopup を出す (相談エントリー)。
+    // relocate と排他: 両方 ON にできない。
+    'consult': false,
     // ── 第1層: フレーム線 ON/OFF ──
     'aspect': false,         // natal フレーム
     'aspectTransit': false,  // CCG transit
@@ -180,6 +185,13 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
 
   // 引越しレイヤー ON時のタップ詳細ポップアップ用
   LatLng? _relocateTapPoint;
+
+  // 「相談」popup 表示用のタップ地点 (A + B + C(ii) 共通)。
+  //   A:    ACG モード「相談」モードトグル ON でタップした地点
+  //   C(ii): 非 ACG Map モード + Pro ユーザー + 空地点タップで設定
+  //   B 経由 (line/zenith popup の CTA) では直接 _launchConsultation を呼ぶので
+  //         こちらは経由しない。
+  LatLng? _consultTapPoint;
 
   // Astro*Carto*Graphy モード: 天頂点マーカータップ詳細用
   // 値が入っていれば下部 popup を表示する。
@@ -1377,6 +1389,7 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
       _searchFocus = null;
       _searchOriginCenter = null;
       _relocateTapPoint = null;
+      _consultTapPoint = null;
       _zenithTapInfo = null;
     });
     SolaraStorage.saveMapStyleId(mapStyleConfigs[MapStyle.osmHotDark]!.id);
@@ -1418,6 +1431,7 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
         ..addAll(restoreAstroLayers);
       _mapStyle = restoreStyle;
       _relocateTapPoint = null;
+      _consultTapPoint = null;
       _zenithTapInfo = null;
       _activeAstroFrame = null;
       _acgMenuOpen = false;
@@ -1538,6 +1552,8 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
           setState(() => _zenithTapInfo = null);
         } else if (_relocateTapPoint != null) {
           setState(() => _relocateTapPoint = null);
+        } else if (_consultTapPoint != null) {
+          setState(() => _consultTapPoint = null);
         } else if (_timeRowExpanded) {
           _timeSliderKey.currentState?.closeTimeRow();
         } else if (_acgMenuOpen) {
@@ -1651,25 +1667,49 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
             //   マーカー側の onTap も relocate 中は null を渡して抑制 (下記参照)。
             onTap: (tapPos, latlng) {
               if (_chartResult == null) return;
-              final relocateOn = _astroLayers['relocate'] == true;
-              if (relocateOn) {
+              // ① ACG モード「相談」ON: 任意地点タップで consult popup (排他)
+              if (_astroLayers['consult'] == true) {
                 setState(() {
-                  _relocateTapPoint = latlng;
+                  _consultTapPoint = latlng;
+                  _relocateTapPoint = null;
                   _zenithTapInfo = null;
                 });
                 return;
               }
+              // ② 引越し ON: 任意地点タップで relocate popup (排他)
+              if (_astroLayers['relocate'] == true) {
+                setState(() {
+                  _relocateTapPoint = latlng;
+                  _consultTapPoint = null;
+                  _zenithTapInfo = null;
+                });
+                return;
+              }
+              // ③ 線が表示中で近接線あり: line popup (= MapRelocationPopup 経由)
               final aspectOn = _astroLayers['aspect'] == true ||
                   _astroLayers['aspectTransit'] == true ||
                   _astroLayers['aspectProgressed'] == true ||
                   _astroLayers['aspectSolarArc'] == true;
-              if (!aspectOn) return;
-              final near = _findNearbyAstroLines(latlng);
-              if (near.isEmpty) return;
-              setState(() {
-                _relocateTapPoint = latlng;
-                _zenithTapInfo = null;
-              });
+              if (aspectOn) {
+                final near = _findNearbyAstroLines(latlng);
+                if (near.isNotEmpty) {
+                  setState(() {
+                    _relocateTapPoint = latlng;
+                    _consultTapPoint = null;
+                    _zenithTapInfo = null;
+                  });
+                  return;
+                }
+              }
+              // ④ C(ii): 非 ACG モード + Pro ユーザーは空地点タップで consult popup
+              //    Free ユーザーは何も起きない (アップセル連打を避ける)
+              if (!_astroCartoMode && ProStatus.instance.isPro) {
+                setState(() {
+                  _consultTapPoint = latlng;
+                  _relocateTapPoint = null;
+                  _zenithTapInfo = null;
+                });
+              }
             },
           ),
           children: [
@@ -2389,6 +2429,25 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
             ),
           ),
 
+        // ── 相談 popup (ACG 相談モード ON + 任意地点タップ / 非 ACG Pro Map タップ) ──
+        // 設計: A + B + C(ii) ハイブリッド (chat 議論 2026-05-16)
+        // _relocateTapPoint と排他 (onTap 側で互いに片付ける)。
+        if (_consultTapPoint != null && _chartResult != null)
+          Positioned(
+            left: 16,
+            right: 16,
+            bottom: 16,
+            child: SafeArea(
+              top: false,
+              child: ConsultEntryPopup(
+                tapPoint: _consultTapPoint!,
+                nearestLines: _nearestNatalConjunctions(_consultTapPoint!),
+                onClose: () => setState(() => _consultTapPoint = null),
+                onConsult: () => _launchConsultation(_consultTapPoint!),
+              ),
+            ),
+          ),
+
         // ── 天頂点タップ詳細 popup (CCG: 全フレーム対応) ──
         // 線+ハウス popup と排他 (どちらか片方のみ表示)。
         // 2026-04-30: 画面中央付近まで浮上させ、視認性を高める (オーナー要望)。
@@ -2448,6 +2507,12 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
       frame: info.frame,
       isNadir: info.isNadir,
       onClose: () => setState(() => _zenithTapInfo = null),
+      // Phase 2026-05-16 (B): 天頂/天底 popup から相談を起動。
+      // 渡す preset 座標は zenith point (惑星が真上 / 真下を通る地点)。
+      onConsult: () {
+        setState(() => _zenithTapInfo = null);
+        _launchConsultation(info.point);
+      },
     );
   }
 
@@ -2516,6 +2581,7 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     'aspectSolarArc',
     'aspectLines',
     'relocate',
+    'consult',
   };
 
   /// Pro ゲートで表示する機能名 (showProUnlockDialog の featureLabel)。
@@ -2531,6 +2597,8 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
         return 'アスペクトライン (120 本)';
       case 'relocate':
         return '引越しシミュレーション';
+      case 'consult':
+        return 'タップで Stella 相談';
       default:
         return '高度な ACG';
     }
@@ -2554,6 +2622,9 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
       case 'relocate':
         return '地図タップ地点を引越し先として ASC / MC / 12 ハウスを '
             '再計算し、現住所と並べて比較します。';
+      case 'consult':
+        return '地図上のどこをタップしても、その地点で Stella に相談を始める '
+            '入口が開きます。最寄りラインの情報も一緒に表示されます。';
       default:
         return 'Cosmic Pro で解放される機能です。';
     }
@@ -2577,8 +2648,20 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     }
     setState(() {
       _astroLayers[k] = !wasOn;
+      // relocate / consult は排他: 一方 ON で他方を強制 OFF + 関連 popup をクリア。
+      if (k == 'relocate' && _astroLayers[k] == true) {
+        _astroLayers['consult'] = false;
+        _consultTapPoint = null;
+      } else if (k == 'consult' && _astroLayers[k] == true) {
+        _astroLayers['relocate'] = false;
+        _relocateTapPoint = null;
+      }
+      // OFF 時の popup クリア
       if (k == 'relocate' && !(_astroLayers[k] ?? false)) {
         _relocateTapPoint = null;
+      }
+      if (k == 'consult' && !(_astroLayers[k] ?? false)) {
+        _consultTapPoint = null;
       }
     });
   }
@@ -2639,8 +2722,11 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   /// 渡す astroLines は natal-frame の conjunction 本線のみ (v1)。
   /// 設計: pro_candidates.md §7.2 Stage 2 ③ で conjunction 本線 40 を使う仕様。
   Future<void> _launchConsultation(LatLng tap) async {
-    // popup を閉じる
-    setState(() => _relocateTapPoint = null);
+    // popup を閉じる (relocate / consult 両方)
+    setState(() {
+      _relocateTapPoint = null;
+      _consultTapPoint = null;
+    });
 
     // Phase 2-6a: Pro ゲート
     if (!ProStatus.instance.isPro) {
@@ -2717,6 +2803,33 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   /// camera は1度だけキャプチャして project に渡す
   /// (camera ゲッタを毎呼出すとインスタンス再生成のリスクがあるため)。
   /// CCG: 表示中の全フレームを跨いで近接判定する (Natal + Transit + ...)。
+  /// `_astroLinesCache` から natal-frame conjunction 線のみを取り出して、
+  /// [tap] からの haversine 距離で上位 [max] 本を返す。
+  ///
+  /// ConsultEntryPopup 用 (Stella 相談エンジンと同じ材料を popup に出す)。
+  /// 既存 `_findNearbyAstroLines` は screen-px 閾値でフィルタするため
+  /// 「近接線が無い空地点」では空配列を返す。こちらは閾値なしで常に上位 N 本を返す。
+  List<astro_lines.NearbyAstroLine> _nearestNatalConjunctions(
+    LatLng tap, {
+    int max = 3,
+  }) {
+    final natalLines = _astroLinesCache
+        .where((l) =>
+            l.frame == astro_lines.AstroFrame.natal && !l.isAspectLine)
+        .toList(growable: false);
+    if (natalLines.isEmpty) return const [];
+    final scored = <(astro_lines.AstroLine, double)>[];
+    for (final line in natalLines) {
+      final d = astro_lines.minDistanceKmToLine(tap, line);
+      scored.add((line, d));
+    }
+    scored.sort((a, b) => a.$2.compareTo(b.$2));
+    return scored
+        .take(max)
+        .map((s) => astro_lines.NearbyAstroLine(s.$1, s.$2))
+        .toList(growable: false);
+  }
+
   List<astro_lines.NearbyAstroLine> _findNearbyAstroLines(LatLng tap) {
     final visible = _visibleAstroLines();
     if (visible.isEmpty) return const [];

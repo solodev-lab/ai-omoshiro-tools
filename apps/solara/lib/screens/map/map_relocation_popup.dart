@@ -328,6 +328,9 @@ class MapRelocationPopup extends StatelessWidget {
       frame: frameKey,
       tappedLat: tapLat,
       tappedLng: tapLng,
+      // Phase 2026-05-16 (B): 線説明 sheet 内からも「この地点で相談」可能に。
+      // 親 popup の onConsult をそのまま伝搬 (タップ座標 = 元のマップタップ座標)。
+      onConsult: onConsult,
     );
   }
 

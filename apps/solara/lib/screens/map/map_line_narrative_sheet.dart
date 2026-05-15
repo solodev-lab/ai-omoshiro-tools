@@ -37,12 +37,19 @@ class MapLineNarrativeSheet extends StatefulWidget {
   final double tappedLat;
   final double tappedLng;
 
+  /// 「この地点で相談する」CTA タップ時のハンドラ。
+  /// 非 null のときシート内に CTA ボタンが表示される。caller (map_screen) が
+  /// タップ座標を preset として `_launchConsultation` を呼ぶ。
+  /// Phase: 2026-05-16 (A + B + C(ii) ハイブリッド)。
+  final VoidCallback? onConsult;
+
   const MapLineNarrativeSheet({
     super.key,
     required this.nearby,
     required this.frame,
     required this.tappedLat,
     required this.tappedLng,
+    this.onConsult,
   });
 
   @override
@@ -87,7 +94,49 @@ class _MapLineNarrativeSheetState extends State<MapLineNarrativeSheet> {
         _buildHeader(),
         const SizedBox(height: 12),
         _buildStaticSection(),
+        if (widget.onConsult != null) ...[
+          const SizedBox(height: 12),
+          _buildConsultCta(),
+        ],
       ],
+    );
+  }
+
+  /// 「この地点で相談する」 CTA (B 経路、Phase 2026-05-16)。
+  /// onConsult 非 null のときのみ表示。
+  /// タップで sheet を pop してから onConsult を呼ぶ (sheet 残置を防ぐ)。
+  Widget _buildConsultCta() {
+    return InkWell(
+      onTap: () {
+        Navigator.of(context).pop();
+        widget.onConsult?.call();
+      },
+      borderRadius: BorderRadius.circular(10),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 11, horizontal: 12),
+        decoration: BoxDecoration(
+          color: const Color(0x33F6BD60),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: const Color(0x88F6BD60)),
+        ),
+        child: const Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.auto_awesome,
+                size: 16, color: SolaraColors.solaraGoldLight),
+            SizedBox(width: 8),
+            Text(
+              'この地点で相談する',
+              style: TextStyle(
+                color: SolaraColors.solaraGoldLight,
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.4,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -231,6 +280,7 @@ Future<void> showLineNarrativeSheet(
   required String frame,
   required double tappedLat,
   required double tappedLng,
+  VoidCallback? onConsult,
 }) {
   return showInfoPopup(
     context: context,
@@ -239,6 +289,7 @@ Future<void> showLineNarrativeSheet(
       frame: frame,
       tappedLat: tappedLat,
       tappedLng: tappedLng,
+      onConsult: onConsult,
     ),
   );
 }
