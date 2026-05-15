@@ -40,11 +40,24 @@ const _modeChoices = <_ModeChoice>[
   _ModeChoice('daily', 'おでかけ', '今日の現在地周辺・方角ベース'),
 ];
 
-const _scopeChoices = <_ScopeChoice>[
+// scope 選択肢はモード別に異なる:
+//   - migration / travel: specific / region / world (世界全体まで含める)
+//   - daily (おでかけ):    specific / bearings / region (世界全体は対象外)
+// daily だけ bearings (現在地からの方角別) が選べる代わりに world が外れる。
+const _scopeChoicesNonDaily = <_ScopeChoice>[
   _ScopeChoice('specific', '具体地点', '特定の場所を 1 つ吟味'),
   _ScopeChoice('region', '範囲指定', '地域ブロックから 3 候補'),
   _ScopeChoice('world', '世界全体', '地球規模で 3 候補'),
 ];
+
+const _scopeChoicesDaily = <_ScopeChoice>[
+  _ScopeChoice('specific', '具体地点', '行きたい場所を 1 つ'),
+  _ScopeChoice('bearings', '方角ベース', '現在地から方角別 3 候補'),
+  _ScopeChoice('region', '範囲指定', '地域ブロックから 3 候補'),
+];
+
+List<_ScopeChoice> _scopeChoicesFor(String mode) =>
+    mode == 'daily' ? _scopeChoicesDaily : _scopeChoicesNonDaily;
 
 // 大ブロック region picker (worldCityRegionGroups の値で識別)
 const _regionPickerGroups = <String>[
@@ -221,9 +234,12 @@ class _ModeRow extends StatelessWidget {
 class _ScopeRow extends StatelessWidget {
   final String selected;
   final ValueChanged<String> onSelect;
+  /// モード別の scope 選択肢。caller が `_scopeChoicesFor(mode)` で渡す。
+  final List<_ScopeChoice> choices;
   const _ScopeRow({
     required this.selected,
     required this.onSelect,
+    required this.choices,
   });
 
   @override
@@ -232,11 +248,11 @@ class _ScopeRow extends StatelessWidget {
     // 地点選択できるようになったので「disabled」状態は廃止。
     //
     // IntrinsicHeight + Column.mainAxisSize.max でタイル高さを最高にそろえる。
-    // 「世界全体だけ hint が短くて低い」凸凹を防ぐ。
+    // hint テキスト長の差で発生する縦方向の凸凹を防ぐ。
     return IntrinsicHeight(
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: _scopeChoices.map((s) {
+        children: choices.map((s) {
           final active = selected == s.id;
           return Expanded(
             child: GestureDetector(

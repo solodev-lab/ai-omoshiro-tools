@@ -129,7 +129,9 @@ void main() {
         reason: 'テーマ選択後は enable');
   });
 
-  testWidgets('Daily mode hides scope row (auto bearings)', (tester) async {
+  testWidgets(
+      'Daily mode shows scope row with daily-specific choices (specific/bearings/region)',
+      (tester) async {
     await tester.pumpWidget(
       MaterialApp(
         home: ConsultationInputScreen(
@@ -140,15 +142,22 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    // 初期は 範囲は？ が見える
+    // 初期 (migration): 範囲は？ + 具体地点/範囲指定/世界全体 が見える
     expect(find.text('範囲は？'), findsOneWidget);
+    expect(find.text('世界全体'), findsOneWidget);
+    expect(find.text('方角ベース'), findsNothing);
 
     // 「おでかけ」をタップ
     await tester.tap(find.text('おでかけ'));
     await tester.pumpAndSettle();
 
-    // 範囲は？ セクション消える (daily=bearings 自動)
-    expect(find.text('範囲は？'), findsNothing);
+    // 範囲は？ セクションは残るが、選択肢が daily 用に切替わる:
+    //   具体地点 / 方角ベース / 範囲指定 (世界全体は外れる)
+    expect(find.text('範囲は？'), findsOneWidget);
+    expect(find.text('世界全体'), findsNothing);
+    expect(find.text('方角ベース'), findsOneWidget);
+    expect(find.text('具体地点'), findsOneWidget);
+    expect(find.text('範囲指定'), findsOneWidget);
   });
 
   testWidgets(
