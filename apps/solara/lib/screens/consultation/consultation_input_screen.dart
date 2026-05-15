@@ -213,6 +213,8 @@ class _ConsultationInputScreenState extends State<ConsultationInputScreen> {
           freeText: _freeTextCtrl.text.trim(),
           initialCandidates: initial,
           regenerateCandidates: regenForResult,
+          // 履歴カードのスコープ横ラベル用に「範囲指定」の大ブロック名を持ち回す。
+          scopeDetail: _scope == 'region' ? _regionGroup : null,
         ),
       ),
     );

@@ -195,6 +195,7 @@ class _ConsultationHistoryScreenState extends State<ConsultationHistoryScreen> {
           initialCandidates: r.candidates,
           initialReading: r.reading,
           autoSave: false,
+          scopeDetail: r.scopeDetail,
         ),
       ),
     );
@@ -314,6 +315,29 @@ class _HistoryCard extends StatelessWidget {
     }
   }
 
+  /// スコープアイコン横に表示する補足ラベル。
+  /// - region: scopeDetail (大ブロック名、例 '日本' / '北米')
+  /// - specific: candidates[0] の region と country (例 '京都府 / JP')
+  /// - world / bearings / 不明: null (アイコンだけで十分)
+  /// 旧データで scopeDetail / region / country が全て空の場合も null。
+  String? get _scopeLocationLabel {
+    switch (record.scope) {
+      case 'region':
+        final d = record.scopeDetail;
+        return (d == null || d.isEmpty) ? null : d;
+      case 'specific':
+        if (record.candidates.isEmpty) return null;
+        final c = record.candidates.first;
+        final parts = <String>[
+          if (c.region.isNotEmpty) c.region,
+          if (c.country.isNotEmpty) c.country,
+        ];
+        return parts.isEmpty ? null : parts.join(' / ');
+      default:
+        return null;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final modeJp = _modeLabel[record.mode] ?? record.mode;
@@ -359,31 +383,47 @@ class _HistoryCard extends StatelessWidget {
                 ),
               ],
             ),
-            // Row 2: テーマ prefix + モードアイコン + スコープアイコン
+            // Row 2: テーマ prefix + モードアイコン + スコープアイコン (+ スコープ補足ラベル)
+            // 全体を SingleChildScrollView でラップして、長い region 名や住所が
+            // 入っても overflow せず右スワイプで全体を確認できるようにする。
             Padding(
-              padding: const EdgeInsets.only(top: 4),
-              child: Row(
-                children: [
-                  _MetaChip(label: _themePrefix),
-                  const SizedBox(width: 14),
-                  Tooltip(
-                    message: modeJp,
-                    child: Icon(
-                      _modeIcon,
-                      size: 22,
-                      color: SolaraColors.textSecondary,
+              padding: const EdgeInsets.only(top: 4, right: 6),
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    _MetaChip(label: _themePrefix),
+                    const SizedBox(width: 14),
+                    Tooltip(
+                      message: modeJp,
+                      child: Icon(
+                        _modeIcon,
+                        size: 22,
+                        color: SolaraColors.textSecondary,
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  Tooltip(
-                    message: scopeJp,
-                    child: Icon(
-                      _scopeIcon,
-                      size: 22,
-                      color: SolaraColors.textSecondary,
+                    const SizedBox(width: 12),
+                    Tooltip(
+                      message: scopeJp,
+                      child: Icon(
+                        _scopeIcon,
+                        size: 22,
+                        color: SolaraColors.textSecondary,
+                      ),
                     ),
-                  ),
-                ],
+                    if (_scopeLocationLabel != null) ...[
+                      const SizedBox(width: 6),
+                      Text(
+                        _scopeLocationLabel!,
+                        style: const TextStyle(
+                          color: SolaraColors.textSecondary,
+                          fontSize: 12,
+                          letterSpacing: 0.3,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
               ),
             ),
             const SizedBox(height: 8),
