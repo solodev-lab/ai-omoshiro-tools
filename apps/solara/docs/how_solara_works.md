@@ -279,6 +279,46 @@ Map の扇状セクターが「合算 1 色」で大まかにしか見せない�
 | **Daily Transit** | 今日の惑星 × アングル通過タイムライン | Worker `/astro/daily-transits` |
 | **Font Preview** | フォント比較（開発者用、ユーザー導線なし） | — |
 
+### 5.7 Stella 相談（Consultation）— 悩み起点の ACG/CCG 解釈
+
+**Pro 看板機能のひとつ。Map の「16 方位スコア」が「**俯瞰**」なら、こちらは「**特定の悩みに対する解釈**」を返す。**
+
+**ユーザー体験**（`screens/consultation/` に実装、4 ファイル構成）:
+- 入口は 2 つ:
+  1. **Map 上の `MapRelocationPopup`** から「📍 この場所で相談する」CTA（specific scope 固定で起動）
+  2. **Daily Transit popup 下部**から「🔮 Stella に相談する」CTA（scope は入力で選ぶ）
+- Stage 1（入力フォーム、`consultation_input_screen.dart`）:
+  - **テーマ 6 択**（恋愛・お金・仕事・対話学び・癒し・新たな出発）
+  - **モード 3 択**（移住 / 旅行 / おでかけ）— 使う AstroLine フレームを決定（natal/transit/progressed/solarArc）
+  - **スコープ 3 択**（具体地点 / 範囲指定 / 世界全体）— ※ daily モードは bearings に自動固定
+  - 自由記述（任意 200 字）
+- Stage 2（候補生成、`consultation_engine.dart`）:
+  - テーマ→関係惑星マッピング（love→venus/mars/moon 等、`FORTUNE_CATEGORIES` 流用）
+  - 関係惑星に該当する `AstroLine` を抽出 → 4 種の生成関数で候補地点を出す:
+    `candidateForSpecific` / `candidatesForRegion` / `candidatesForWorld` / `candidatesForDaily`
+  - 候補は近接線リスト + アングル + オーブ + bearing 情報を伴って返る（**世界を「検索」しない、計算済の線から「最寄り」を返す**）
+- Stage 3（Stella 解釈、Worker `/astro/consultation`）:
+  - Gemini 2.5 Flash に「候補構造 + テーマ + 自由記述」を渡す。**プロンプトに 9 項目の強制制約**:
+    吉凶禁止 / 店舗名禁止 / 無いものを在ると言わない / awareness を開く outro / 文体ハイブリッド（観察=だである / 寄り添い=ですます）等
+  - 返却: `{ intro, candidates[].narrative, candidates[].energyLabels, outro }`
+  - Gemini 失敗時は静的 fallback（候補位置 + 近接線の客観情報）+ リトライ
+- Stage 4（結果表示、`consultation_result_screen.dart` + `consultation_result_widgets.dart`）:
+  - `PageView` 1 個・最大 3 枚カードを横スワイプ（`HapticFeedback.selectionClick` 触覚）
+  - 各カード = 候補名 + energyLabels チップ + narrative（縦スクロール対応）
+  - intro/outro は固定上下、ページャは `_PageIndicator`、refresh は `_RefreshButton`（既出除外で再生成）
+  - シェアボタン（AppBar `Icons.ios_share`）= テキスト / PNG 画像 1080px 選択（RepaintBoundary capture）
+- **永続化と Pro ゲート**:
+  - 全相談は `SolaraStorage` に自動保存（200 件キャップ）→ 別画面（`consultation_history_screen.dart`）で履歴閲覧
+  - Free でも履歴は永久保持（柱3 の核原則）
+  - シェアは Pro ゲート（Free タップ → `showProUnlockDialog`、DEV では Sanctuary トグルで Pro 切替可）
+
+**裏で何が起きるか**:
+- ① テーマ→関係惑星 / ② モード→フレーム / ③ theme 線抽出 / ④ 候補生成 — の **①〜④ は全部 Flutter クライアント**で完結
+- Worker は Stella 呼出（Gemini）のみ。クライアントから渡るのは候補構造 + テーマ + 自由記述のみで、**ユーザー名・誕生日・現在地座標は Stella に渡らない**（自由記述の中身はユーザー本人が書いたものなので別）
+- ファイル分割（2026-05-15）: 入力/結果いずれも part-of パターン で orchestration と presentation を分離（`horoscope_screen.dart` 同様）
+
+**設計根拠**: `docs/pro_candidates.md §7.2 (ii)`。
+
 ---
 
 ## 6. 横断的な仕組み
