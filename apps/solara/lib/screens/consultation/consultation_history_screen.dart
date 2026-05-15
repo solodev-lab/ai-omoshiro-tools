@@ -336,7 +336,7 @@ class _HistoryCard extends StatelessWidget {
                       _dateLabel,
                       style: const TextStyle(
                         color: SolaraColors.textSecondary,
-                        fontSize: 11,
+                        fontSize: 14,
                         letterSpacing: 0.4,
                       ),
                     ),
@@ -361,25 +361,25 @@ class _HistoryCard extends StatelessWidget {
             ),
             // Row 2: テーマ prefix + モードアイコン + スコープアイコン
             Padding(
-              padding: const EdgeInsets.only(top: 2),
+              padding: const EdgeInsets.only(top: 4),
               child: Row(
                 children: [
                   _MetaChip(label: _themePrefix),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 14),
                   Tooltip(
                     message: modeJp,
                     child: Icon(
                       _modeIcon,
-                      size: 16,
+                      size: 22,
                       color: SolaraColors.textSecondary,
                     ),
                   ),
-                  const SizedBox(width: 6),
+                  const SizedBox(width: 12),
                   Tooltip(
                     message: scopeJp,
                     child: Icon(
                       _scopeIcon,
-                      size: 16,
+                      size: 22,
                       color: SolaraColors.textSecondary,
                     ),
                   ),
