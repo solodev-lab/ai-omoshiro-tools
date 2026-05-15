@@ -2,7 +2,7 @@
 //
 // 設計: apps/solara/docs/pro_candidates.md §7.2 Stage 4 + §7.3 柱3
 //
-// 1 件の相談 = 入力 (theme/mode/scope/freeText/候補) + 出力 (AI reading)
+// 1 件の相談 = 入力 (theme/mode/scope/freeText/候補) + 出力 (Stella reading)
 // + メタ (id, savedAt) を 1 つにまとめた永続化単位。
 //
 // 柱 3 の原則: Free でも自分の記録を永久に失わない。
@@ -24,10 +24,10 @@ class ConsultationRecord {
   final String scope;
   final String freeText;
 
-  // Stage 2 出力 (AI に渡した候補)
+  // Stage 2 出力 (Stella に渡した候補)
   final List<CandidateLocation> candidates;
 
-  // Stage 3 出力 (AI reading or static fallback)
+  // Stage 3 出力 (Stella の reading or 静的 fallback)
   final ConsultationReading reading;
 
   const ConsultationRecord({

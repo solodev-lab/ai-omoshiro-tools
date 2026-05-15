@@ -1,11 +1,15 @@
 /**
- * Solara (ii) AI 相談 — Stage 3 (Gemini API)
+ * Solara (ii) Stella 相談 — Stage 3 (Gemini API バックエンド)
  *
  * 設計: apps/solara/docs/pro_candidates.md §7.2 Stage 3
  *
  * クライアント (Stage 2 = consultation_engine.dart) が組み立てた候補リストを
- * 受け取り、Gemini Flash で「悩み (テーマ + 自由記述) に照らした解釈」を
- * 生成して返す。AI は方角・エネルギーだけ示す。店舗名・固有名詞は返さない。
+ * 受け取り、Gemini Flash を裏方として Stella が「悩み (テーマ + 自由記述) に
+ * 照らした解釈」を生成して返す。Stella は方角・エネルギーだけ示す。
+ * 店舗名・固有名詞は返さない。
+ *
+ * 注: Gemini はあくまでバックエンドの実装で、ユーザーには「Stella」として
+ * 振る舞う。プロンプトでも Stella と自称する。
  *
  * 入力 body:
  *   {
@@ -28,7 +32,7 @@
  *     candidates: [{ name, energyLabels[], narrative }],
  *     outro: string,                            // 100-130 字
  *     model: string,                            // 実際に使ったモデル名
- *     fallback?: boolean                        // AI 失敗時 true (静的テンプレ)
+ *     fallback?: boolean                        // Stella が届かない時 true (静的テンプレ)
  *   }
  *
  * 設計思想ガード:
@@ -38,7 +42,7 @@
  *   - awareness を開く outro (候補は世界の全部じゃない / 見えていない最高がある /
  *     予想外も気づきに変えうる)
  *   - 文体ハイブリッド: エネルギー描写=観察、相談者語りかけ=ですます
- *   - 名前ルール: ユーザー名はシステムから渡さない。AI も呼びかけない
+ *   - 名前ルール: ユーザー名はシステムから渡さない。Stella も呼びかけない
  */
 
 import { callGemini } from './fortune.js';
@@ -127,8 +131,9 @@ function buildPrompt({ theme, mode, scope, freeText, candidates, excluded }) {
     ? `\n【相談者の自由記述】\n${freeText.trim()}`
     : '\n【相談者の自由記述】(なし)';
 
-  return `あなたは Solara の AI 相談役です。アストロカートグラフィ (Jim Lewis 流) を土台に、
+  return `あなたは Solara の声 Stella です。アストロカートグラフィ (Jim Lewis 流) を土台に、
 相談者の悩みに照らして、提示された候補地点それぞれの「在るエネルギー」を読み解きます。
+自分のことは「Stella」と呼ぶか、人称は省略します。「AI」「人工知能」とは決して名乗りません。
 
 【相談メタ】
 - テーマ: ${themeJp} (${theme})
@@ -169,7 +174,7 @@ ${candidateBlock}
    1 段落の中で混ぜず、ブロックで切り替える。
 
 8. energyLabels フォーマット: 候補ごとに「{惑星名} {アングル}・{5〜15 字の性格}」の配列。
-   入力の nearLines を全部展開する (AI が勝手に間引かない)。例:
+   入力の nearLines を全部展開する (Stella が勝手に間引かない)。例:
      "金星 MC (天頂)・愛と調和の軸が立つ"
      "火星 ASC (上昇)・突破の身体性"
 
@@ -178,9 +183,9 @@ ${candidateBlock}
    「関係+名前」併記しない。複数の同じ関係 (息子 A と息子 B 等) の区別が必要な場合のみ、
    自由記述中で本人が書いた名前を引用してよい。
 
-【AI 出力に関する追加ガード】
+【Stella 出力に関する追加ガード】
 - 店舗名・施設名・固有名詞 (レストラン名・カフェ名等) を返さない。
-  AI は「方角・エリア・エネルギーの質」だけを示す。
+  Stella は「方角・エリア・エネルギーの質」だけを示す。
 - 候補名そのもの (都市名・方角ラベル) と、Solara が認識している土地のごく一般的な
   特徴 (例: 京都=古都、釧路=湿原) は使ってよい。
 - moderate / extreme / 強い / 弱い は OK だが、Soft/Hard を優劣で語らない。
@@ -202,7 +207,7 @@ ${candidateBlock}
 入力の順序を保持してください。`;
 }
 
-// ── Static fallback (AI 失敗時) ─────────────────────────────
+// ── Static fallback (Stella が届かない時) ───────────────────
 
 function staticFallback({ theme, mode, scope, candidates }) {
   const themeJp = THEME_JP[theme] || theme;
@@ -210,7 +215,7 @@ function staticFallback({ theme, mode, scope, candidates }) {
 
   const out = {
     intro: `${themeJp} のテーマで、${modeJp} の候補を整理しました。`
-      + `今は AI 解釈が届きませんでしたが、各候補の客観情報をお渡しします。`,
+      + `今は Stella の声が届きませんでしたが、各候補の客観情報をお渡しします。`,
     candidates: candidates.map((c) => {
       const near = Array.isArray(c.nearLines) ? c.nearLines : [];
       const labels = near.map((nl) => {

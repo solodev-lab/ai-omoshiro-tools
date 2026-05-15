@@ -42,9 +42,9 @@ class MapDailyTransitScreen extends StatefulWidget {
   /// リンクが現れる (2026-05-09: 旧 🌐 サイドボタンの代替動線)。
   final VoidCallback? onEnterAcg;
 
-  /// 「🔮 AI に相談」フッターリンクのハンドラ (Phase 2-3c、目的起点入口)。
+  /// 「🔮 Stella に相談」フッターリンクのハンドラ (Phase 2-3c、目的起点入口)。
   /// null なら表示しない。設定するとフッターが 2 分割され、ACG モードの隣に
-  /// AI 相談入口が並ぶ (設計: pro_candidates.md §7.2 Stage 1 入口 2)。
+  /// Stella 相談入口が並ぶ (設計: pro_candidates.md §7.2 Stage 1 入口 2)。
   final VoidCallback? onEnterConsultation;
 
   /// イベント時刻を Map に飛ばすハンドラ (各タイムライン行の地図マーク用)。
@@ -241,9 +241,9 @@ class _MapDailyTransitScreenState extends State<MapDailyTransitScreen>
                               )
                             : const _LoadingBody(),
               ),
-              // フッター動線 (2026-05-09: ACG / 2026-05-15: + AI 相談)。
+              // フッター動線 (2026-05-09: ACG / 2026-05-15: + Stella 相談)。
               // 「今日の動き → 世界規模に投影して見る (ACG)」
-              //  または 「→ 悩みに合った場所を AI に相談する」を並べる。
+              //  または 「→ 悩みに合った場所を Stella に相談する」を並べる。
               // POPUP のクローズは親の handler 内 setState でまとめて行う
               // (旧: ここで _close() してフェード途中で切替えると違和感が出る)。
               if (widget.onEnterAcg != null || widget.onEnterConsultation != null)
@@ -262,7 +262,7 @@ class _MapDailyTransitScreenState extends State<MapDailyTransitScreen>
 /// Daily Transit popup 下部の動線フッター。
 ///
 /// 2026-05-15: 旧 `_AcgEntryFooter` (full-width ACG リンクのみ) を 2 分割。
-/// 左 = ACG モード起動、右 = AI 相談 (目的起点入口、Phase 2-3c)。
+/// 左 = ACG モード起動、右 = Stella 相談 (目的起点入口、Phase 2-3c)。
 /// 片方のみ非 null の場合はもう片方の領域も空欄表示せず、単独表示にフォールバック。
 class _FooterActions extends StatelessWidget {
   final VoidCallback? onEnterAcg;
@@ -307,7 +307,7 @@ class _FooterActions extends StatelessWidget {
               Expanded(
                 child: _FooterButton(
                   emoji: '🔮',
-                  title: 'AI に相談',
+                  title: 'Stella に相談',
                   subtitle: '悩みから場所を読む',
                   onTap: onEnterConsultation!,
                   compact: showSplit,

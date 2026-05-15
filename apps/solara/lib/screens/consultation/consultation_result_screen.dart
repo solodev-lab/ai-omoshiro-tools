@@ -50,7 +50,7 @@ class ConsultationResultScreen extends StatefulWidget {
     List<String> excluded,
   })? fetchOverride;
 
-  /// 履歴モード用: 既に保存済の reading を渡すと AI を呼ばず直接表示する。
+  /// 履歴モード用: 既に保存済の reading を渡すと Stella を呼ばず直接表示する。
   /// 通常 (新規相談) は null で fetch する。
   /// 履歴モード時は `autoSave: false` と `regenerateCandidates: null` も合わせる。
   final ConsultationReading? initialReading;
@@ -95,7 +95,7 @@ class _ConsultationResultScreenState extends State<ConsultationResultScreen> {
     _pageCtrl = PageController();
     _candidates = List.of(widget.initialCandidates);
     if (widget.initialReading != null) {
-      // 履歴モード: 即時表示、AI は呼ばない、auto-save も走らない。
+      // 履歴モード: 即時表示、Stella は呼ばない、auto-save も走らない。
       _reading = widget.initialReading;
       _loading = false;
     } else {
@@ -319,7 +319,7 @@ class _LoadingSkeleton extends StatelessWidget {
           ),
           const SizedBox(height: 20),
           Text(
-            'Gemini が解釈中…',
+            'Stella が読み解いています…',
             style: TextStyle(
               color: SolaraColors.textSecondary,
               fontSize: 14,
@@ -400,7 +400,7 @@ class _IntroBlock extends StatelessWidget {
                 border: Border.all(color: SolaraColors.energyHardDark),
               ),
               child: Text(
-                'AI が届きませんでした (静的表示)',
+                'Stella の声が届きませんでした (静的表示)',
                 style: TextStyle(
                   color: SolaraColors.energyHardLight,
                   fontSize: 11,

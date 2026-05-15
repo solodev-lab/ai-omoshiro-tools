@@ -6,15 +6,15 @@ import 'astro_lines.dart' as al;
 import 'world_cities.dart';
 
 /// ============================================================
-/// Solara (ii) AI 相談 — Stage 2 計算エンジン
+/// Solara (ii) Stella 相談 — Stage 2 計算エンジン
 ///
 /// 設計: apps/solara/docs/pro_candidates.md §7.2 Stage 2
 ///
 /// 役割:
 ///   入力 (テーマ + モード + スコープ + 地理情報) → AstroLine 群を絞り込み
-///   → 候補地点を生成 → AI (Stage 3) に渡せる JSON 構造で返す。
+///   → 候補地点を生成 → Stella (Stage 3) に渡せる JSON 構造で返す。
 ///
-/// クライアント側で完結 (Worker は Stage 3 AI 呼出のみ担当)。
+/// クライアント側で完結 (Worker は Stage 3 Stella 呼出のみ担当)。
 ///
 /// v1 制約:
 ///   - theme 線フィルタは conjunction 本線のみ (40 本中の theme 該当)。
@@ -90,7 +90,7 @@ class CandidateNearLine {
       );
 }
 
-/// 候補地点。Stage 3 AI プロンプトに渡す JSON の Dart 表現。
+/// 候補地点。Stage 3 Stella プロンプトに渡す JSON の Dart 表現。
 class CandidateLocation {
   final String nameJP;
   final String nameEN;

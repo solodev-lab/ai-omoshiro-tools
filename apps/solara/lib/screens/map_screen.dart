@@ -2500,7 +2500,7 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     );
   }
 
-  /// Phase 2-3c: Daily Transit popup 内 CTA 「AI に相談」のハンドラ。
+  /// Phase 2-3c: Daily Transit popup 内 CTA 「Stella に相談」のハンドラ。
   /// 目的起点 (入口 2) — preset 無しで `ConsultationInputScreen` を push する。
   /// 1) Daily Transit popup を閉じる
   /// 2) natal-frame conjunction 本線を取り出す

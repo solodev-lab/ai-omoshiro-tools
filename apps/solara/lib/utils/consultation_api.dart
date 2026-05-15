@@ -4,7 +4,7 @@
 // Worker 側: apps/solara/worker/src/consultation.js
 //
 // Stage 2 (consultation_engine.dart) が組み立てた候補リストを送信し、
-// AI 解釈 (intro / candidates[].narrative / outro) を受け取る。
+// Stella の解釈 (intro / candidates[].narrative / outro) を受け取る。
 
 import 'dart:convert';
 
@@ -13,7 +13,7 @@ import 'package:http/http.dart' as http;
 import 'consultation_engine.dart' show CandidateLocation;
 import 'solara_api.dart' show solaraWorkerBase;
 
-/// API レスポンス内の候補別 AI 解釈。
+/// API レスポンス内の候補別 Stella の解釈。
 class ConsultationCandidateReading {
   final String name;
   final List<String> energyLabels;
@@ -50,8 +50,8 @@ class ConsultationReading {
   final String outro;
   final String model;
 
-  /// AI 失敗時の静的 fallback の場合 true。クライアント UI で
-  /// 「AI が届きませんでした」バナー等を表示する。
+  /// Stella が届かない時の静的 fallback の場合 true。クライアント UI で
+  /// 「Stella の声が届きませんでした」バナー等を表示する。
   final bool fallback;
 
   const ConsultationReading({
@@ -86,7 +86,7 @@ class ConsultationReading {
       };
 }
 
-/// /astro/consultation を呼んで AI 解釈を取得する。
+/// /astro/consultation を呼んで Stella の解釈を取得する。
 ///
 /// [theme]      テーマキー (consultationThemes のいずれか)
 /// [mode]       'migration' | 'travel' | 'daily'
@@ -96,7 +96,7 @@ class ConsultationReading {
 /// [excluded]   リフレッシュ時に既出候補名を除外する場合 (narrative で名前を引用しない指示)
 ///
 /// 戻り: 成功時 [ConsultationReading]、ネットワーク/解析失敗時 null。
-/// ※ Worker 側で AI 失敗しても static fallback が返るので、null は
+/// ※ Worker 側で Stella が届かなくても static fallback が返るので、null は
 ///   「クライアント側で接続自体失敗」のケースのみ。
 Future<ConsultationReading?> fetchConsultation({
   required String theme,

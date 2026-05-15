@@ -2,7 +2,7 @@
 // Source: apps/solara/tools/generate_world_cities.py
 // Regenerate: python apps/solara/tools/generate_world_cities.py
 //
-// Solara (ii) AI 相談 Stage 2 用 キュレート都市リスト。
+// Solara (ii) Stella 相談 Stage 2 用 キュレート都市リスト。
 // 設計: docs/pro_candidates.md §7.2 Stage 2
 //
 // 各 CityEntry は consultation_engine.dart の候補生成に使う。

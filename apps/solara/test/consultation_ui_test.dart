@@ -177,7 +177,7 @@ void main() {
     );
     // 非同期完了まで pump
     await tester.pumpAndSettle();
-    expect(find.text('Gemini が解釈中…'), findsNothing);
+    expect(find.text('Stella が読み解いています…'), findsNothing);
     expect(find.textContaining('モック intro'), findsOneWidget);
     expect(find.textContaining('世界の全部ではありません'), findsOneWidget);
 
@@ -220,7 +220,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('AI が届きませんでした (静的表示)'), findsOneWidget);
+    expect(find.text('Stella の声が届きませんでした (静的表示)'), findsOneWidget);
   });
 
   testWidgets('Result screen shows error UI when API returns null',

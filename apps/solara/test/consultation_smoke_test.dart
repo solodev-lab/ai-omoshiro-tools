@@ -156,7 +156,7 @@ void main() {
     expect(us, greaterThanOrEqualTo(50));
   });
 
-  test('CandidateLocation.toJson: AI に渡す形に変換できる', () {
+  test('CandidateLocation.toJson: Stella に渡す形に変換できる', () {
     final lines = ce.filterThemeLines(
       _buildSyntheticLoveLines(),
       'love',

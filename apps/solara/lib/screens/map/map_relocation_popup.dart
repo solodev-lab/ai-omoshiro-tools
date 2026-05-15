@@ -162,8 +162,8 @@ class MapRelocationPopup extends StatelessWidget {
     );
   }
 
-  // ── Phase 2-3b: (ii) AI 相談 CTA ──
-  /// タップ地点を起点に AI 相談を開始するエントリーボタン。
+  // ── Phase 2-3b: (ii) Stella 相談 CTA ──
+  /// タップ地点を起点に Stella 相談を開始するエントリーボタン。
   /// onConsult 非 null のときのみ表示される (map_screen 側で配線)。
   Widget _buildConsultCta() {
     return InkWell(
@@ -258,7 +258,7 @@ class MapRelocationPopup extends StatelessWidget {
         : '${dist.round()}km';
 
     // 静的解説のみなので natalSummary 等の文脈に関わらず常にタップ可能。
-    // 旧: natalSummary != null (AI 用文脈) で判定していたが、AI 解説は
+    // 旧: natalSummary != null (Stella 用文脈) で判定していたが、Stella の解説は
     // 2026-05-11 撤去済み。
     return InkWell(
       onTap: () => _openLineSheet(context, n),

@@ -364,7 +364,7 @@ export default {
         }
       }
 
-      // ── (ii) AI 相談 (Stage 3) ──
+      // ── (ii) Stella 相談 (Stage 3) ──
       // POST /astro/consultation
       // 入力: { theme, mode, scope, freeText?, candidates[], excluded?, lang }
       // 出力: { intro, candidates: [{name, energyLabels[], narrative}], outro, model, fallback? }

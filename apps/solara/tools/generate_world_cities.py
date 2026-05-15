@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""generate_world_cities.py — Solara (ii) AI 相談 Stage 2 用 都市リスト生成スクリプト
+"""generate_world_cities.py — Solara (ii) Stella 相談 Stage 2 用 都市リスト生成スクリプト
 
 出力: ../lib/utils/world_cities.dart (Dart 定数ファイル、手書き禁止・要再生成)
 
@@ -962,7 +962,7 @@ DART_HEADER = '''// GENERATED FILE — DO NOT EDIT BY HAND
 // Source: apps/solara/tools/generate_world_cities.py
 // Regenerate: python apps/solara/tools/generate_world_cities.py
 //
-// Solara (ii) AI 相談 Stage 2 用 キュレート都市リスト。
+// Solara (ii) Stella 相談 Stage 2 用 キュレート都市リスト。
 // 設計: docs/pro_candidates.md §7.2 Stage 2
 //
 // 各 CityEntry は consultation_engine.dart の候補生成に使う。

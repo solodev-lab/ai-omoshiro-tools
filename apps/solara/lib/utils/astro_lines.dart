@@ -391,7 +391,7 @@ const Map<String, Set<String>> astroLineFortunePlanets = {
   'communication': {'mercury', 'venus', 'moon'},
   'healing': {'moon', 'neptune', 'venus'},
   /// 「変化・新たな出発」(pro_candidates.md §7.2 Stage 1、6番目チップ)。
-  /// 天王星=変化、太陽=自己軸、木星=拡張。「(ii) AI 相談」エンジン用。
+  /// 天王星=変化、太陽=自己軸、木星=拡張。「(ii) Stella 相談」エンジン用。
   'newStart': {'uranus', 'sun', 'jupiter'},
 };
 
