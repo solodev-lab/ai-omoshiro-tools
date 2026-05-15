@@ -18,6 +18,8 @@
 //   - consultation_input_widgets.dart: 選択肢定数 + Choice classes + サブウィジェット
 //   (Solara の horoscope_screen.dart と同じ part-of パターン)
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:latlong2/latlong.dart';
 
@@ -25,6 +27,9 @@ import '../../theme/solara_colors.dart';
 import '../../utils/astro_lines.dart' as al;
 import '../../utils/consultation_engine.dart' as ce;
 import '../../utils/world_cities.dart';
+import '../map/map_search.dart' as map_search;
+import '../map/map_vp_panel.dart';
+import 'consultation_place_picker_screen.dart';
 import 'consultation_result_screen.dart';
 
 part 'consultation_input_widgets.dart';
@@ -75,6 +80,10 @@ class _ConsultationInputScreenState extends State<ConsultationInputScreen> {
   String _scope = 'world';
   String _regionGroup = '日本';
 
+  /// 具体地点スコープでユーザーが picker (inline / Map) から選んだ地点。
+  /// presetTarget があるときはそちらを優先し、本フィールドは無視する。
+  _PickedSpecific? _specificPick;
+
   final TextEditingController _freeTextCtrl = TextEditingController();
 
   @override
@@ -116,14 +125,15 @@ class _ConsultationInputScreenState extends State<ConsultationInputScreen> {
 
   /// Submit 可否。
   /// - theme 必須
-  /// - specific スコープ時は presetTarget も currentLocation も無ければ不可
-  /// - daily モード時は currentLocation 必須
+  /// - specific スコープ時は presetTarget OR _specificPick が必須 (currentLocation の
+  ///   自動採用は廃止。明示選択を要求して「勝手に現在地が選ばれている」UX を排除)
+  /// - daily モード時は currentLocation 必須 (scope=bearings の起点)
   bool get _canSubmit {
     if (_theme == null) return false;
     if (_mode == 'daily' && widget.currentLocation == null) return false;
     if (_scope == 'specific' &&
         widget.presetTarget == null &&
-        widget.currentLocation == null) {
+        _specificPick == null) {
       return false;
     }
     return true;
@@ -135,6 +145,7 @@ class _ConsultationInputScreenState extends State<ConsultationInputScreen> {
     switch (_scope) {
       case 'specific':
         final pt = widget.presetTarget;
+        final pick = _specificPick;
         return (_) async {
           if (pt != null) {
             return [
@@ -148,17 +159,20 @@ class _ConsultationInputScreenState extends State<ConsultationInputScreen> {
               ),
             ];
           }
-          final cur = widget.currentLocation!;
-          return [
-            ce.candidateForSpecific(
-              target: cur,
-              nameJP: '現在地',
-              nameEN: 'Current Location',
-              country: '',
-              region: '',
-              themeLines: themeLines,
-            ),
-          ];
+          if (pick != null) {
+            return [
+              ce.candidateForSpecific(
+                target: pick.position,
+                nameJP: pick.name,
+                nameEN: pick.name,
+                country: pick.country,
+                region: pick.region,
+                themeLines: themeLines,
+              ),
+            ];
+          }
+          // ここに到達するのは _canSubmit が間違ったときだけ。空配列で UI 側のエラー表示に委ねる。
+          return const [];
         };
       case 'region':
         final countries = _resolveRegionCountries(_regionGroup);
@@ -182,6 +196,27 @@ class _ConsultationInputScreenState extends State<ConsultationInputScreen> {
       default:
         return (_) async => const [];
     }
+  }
+
+  /// 「🗺 地図で選ぶ」 → B = ConsultationPlacePickerScreen を push し、選択結果を取得する。
+  /// キャンセル時は null を返す。
+  Future<_PickedSpecific?> _openMapPicker() async {
+    final initialCenter = widget.currentLocation ??
+        (widget.presetTarget?.position);
+    final result = await Navigator.of(context).push<ConsultationPresetTarget>(
+      MaterialPageRoute(
+        builder: (_) => ConsultationPlacePickerScreen(
+          initialCenter: initialCenter,
+        ),
+      ),
+    );
+    if (result == null) return null;
+    return _PickedSpecific(
+      position: result.position,
+      name: result.nameJP,
+      region: result.region,
+      country: result.country,
+    );
   }
 
   Future<void> _submit() async {
@@ -267,8 +302,6 @@ class _ConsultationInputScreenState extends State<ConsultationInputScreen> {
                         child: _ScopeRow(
                           selected: _scope,
                           onSelect: (id) => setState(() => _scope = id),
-                          hasPreset: widget.presetTarget != null,
-                          hasCurrent: widget.currentLocation != null,
                         ),
                       ),
                     if (_mode != 'daily' && _scope == 'region')
@@ -278,6 +311,22 @@ class _ConsultationInputScreenState extends State<ConsultationInputScreen> {
                           selected: _regionGroup,
                           onSelect: (g) =>
                               setState(() => _regionGroup = g),
+                        ),
+                      ),
+                    // 具体地点ピッカー (A inline): preset がない specific スコープ専用。
+                    // preset があるときは下の _PresetLocationCard で「✓ ... を見ます」を出す。
+                    if (_mode != 'daily' &&
+                        _scope == 'specific' &&
+                        widget.presetTarget == null)
+                      _Section(
+                        label: '地点を選ぶ',
+                        child: _SpecificPicker(
+                          selected: _specificPick,
+                          onSelect: (p) =>
+                              setState(() => _specificPick = p),
+                          onClear: () =>
+                              setState(() => _specificPick = null),
+                          onOpenMapPicker: _openMapPicker,
                         ),
                       ),
                     _Section(
