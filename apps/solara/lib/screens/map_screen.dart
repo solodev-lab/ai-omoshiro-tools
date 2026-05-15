@@ -34,6 +34,8 @@ import 'map/map_time_slider.dart';
 import 'map/map_widgets.dart';
 import '../utils/astro_lines.dart' as astro_lines;
 import '../utils/direction_energy.dart';
+import '../utils/reverse_geocode.dart';
+import 'consultation/consultation_input_screen.dart';
 import 'forecast_screen.dart';
 import 'horoscope/horo_antique_icons.dart';
 import 'locations_screen.dart';
@@ -2493,6 +2495,59 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
       natalSummary: natalSummary,
       userName: p.name.isNotEmpty ? p.name : null,
       onClose: () => setState(() => _relocateTapPoint = null),
+      onConsult: () => _launchConsultation(tap),
+    );
+  }
+
+  /// Phase 2-3b: relocation popup 内 CTA 「この場所で相談」のハンドラ。
+  /// 1) popup を閉じる
+  /// 2) reverse_geocode で地名取得 (5s timeout、失敗時は「タップ地点」フォールバック)
+  /// 3) ConsultationPresetTarget を作って ConsultationInputScreen を push
+  ///
+  /// 渡す astroLines は natal-frame の conjunction 本線のみ (v1)。
+  /// 設計: pro_candidates.md §7.2 Stage 2 ③ で conjunction 本線 40 を使う仕様。
+  Future<void> _launchConsultation(LatLng tap) async {
+    // popup を閉じる
+    setState(() => _relocateTapPoint = null);
+
+    // reverse_geocode (失敗時は coordinate 文字列)
+    String? placeName;
+    try {
+      placeName = await reverseGeocode(tap.latitude, tap.longitude);
+    } catch (_) {
+      placeName = null;
+    }
+    if (!mounted) return;
+
+    final coordLabel =
+        '${tap.latitude.toStringAsFixed(2)}°, ${tap.longitude.toStringAsFixed(2)}°';
+    final nameJP = placeName ?? 'タップ地点';
+    final preset = ConsultationPresetTarget(
+      position: tap,
+      nameJP: nameJP,
+      nameEN: nameJP,
+      country: '',
+      region: placeName != null ? '' : coordLabel,
+    );
+
+    // natal-frame conjunction 本線のみを渡す。
+    final natalLines = _astroLinesCache
+        .where((l) =>
+            l.frame == astro_lines.AstroFrame.natal && !l.isAspectLine)
+        .toList(growable: false);
+
+    final p = _profile;
+    final hasHome = p != null && !(p.homeLat == 0 && p.homeLng == 0);
+    final currentLoc = hasHome ? LatLng(p.homeLat, p.homeLng) : null;
+
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => ConsultationInputScreen(
+          astroLines: natalLines,
+          currentLocation: currentLoc,
+          presetTarget: preset,
+        ),
+      ),
     );
   }
 

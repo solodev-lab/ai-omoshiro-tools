@@ -69,6 +69,12 @@ class MapRelocationPopup extends StatelessWidget {
 
   final VoidCallback onClose;
 
+  /// 「📍この場所で相談」エントリ (Phase 2-3b)。
+  /// 設定すると popup ヘッダ下に CTA ボタンが現れ、タップで onConsult が発火する。
+  /// 呼出側 (map_screen) で popup 閉 → reverse_geocode → 入力画面 push を行う。
+  /// null の場合はボタン非表示。
+  final VoidCallback? onConsult;
+
   const MapRelocationPopup({
     super.key,
     required this.tapLat,
@@ -86,6 +92,7 @@ class MapRelocationPopup extends StatelessWidget {
     this.transitDate,
     this.lang = 'ja',
     this.userName,
+    this.onConsult,
   });
 
   @override
@@ -130,6 +137,10 @@ class MapRelocationPopup extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildHeader(context, showHouses: showHouses, hasLines: hasLines),
+            if (onConsult != null) ...[
+              const SizedBox(height: 10),
+              _buildConsultCta(),
+            ],
             if (hasLines) ...[
               const SizedBox(height: 10),
               _buildLinesSection(context, nearbyLines!),
@@ -145,6 +156,45 @@ class MapRelocationPopup extends StatelessWidget {
               const Divider(color: Color(0x22FFFFFF), height: 18),
               _buildPlanetGrid(relocated.houses),
             ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ── Phase 2-3b: (ii) AI 相談 CTA ──
+  /// タップ地点を起点に AI 相談を開始するエントリーボタン。
+  /// onConsult 非 null のときのみ表示される (map_screen 側で配線)。
+  Widget _buildConsultCta() {
+    return InkWell(
+      onTap: onConsult,
+      borderRadius: BorderRadius.circular(10),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          color: const Color(0x22F6BD60),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: const Color(0x66F6BD60)),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.auto_awesome,
+                size: 14, color: Color(0xFFF9D976)),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'この場所で相談する',
+                style: GoogleFonts.notoSansJp(
+                  fontSize: 13,
+                  color: const Color(0xFFF9D976),
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.4,
+                ),
+              ),
+            ),
+            const Icon(Icons.chevron_right,
+                size: 14, color: Color(0xFFF9D976)),
           ],
         ),
       ),
