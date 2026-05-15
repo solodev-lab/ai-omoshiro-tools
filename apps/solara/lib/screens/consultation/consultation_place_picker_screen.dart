@@ -87,6 +87,10 @@ class _ConsultationPlacePickerScreenState
   String? _pickedCountry; // ISO code (JP/US)
   bool _resolvingName = false;
 
+  /// 検索結果から選んだ時の番号 (1〜)。マップタップで選んだ時は null。
+  /// 検索結果リストの行頭・地図上のピン番号と完全に一致する。
+  int? _pickedHitIndex;
+
   @override
   void dispose() {
     _debounce?.cancel();
@@ -135,10 +139,14 @@ class _ConsultationPlacePickerScreenState
 
   void _onHitTap(SearchHit h) {
     _searchFocus.unfocus();
+    // 検索結果リスト・地図ピン上の番号 = リスト index + 1。
+    // hit と _hits は同一インスタンスのはず (indexOf で同期取得)。
+    final idx = _hits.indexOf(h);
     _selectPoint(
       LatLng(h.lat, h.lng),
       initialName: _shortName(h.name),
       initialCountryCode: h.country?.toUpperCase(),
+      hitIndex: idx >= 0 ? idx + 1 : null,
     );
     _mapCtrl.move(LatLng(h.lat, h.lng), 10);
   }
@@ -152,10 +160,12 @@ class _ConsultationPlacePickerScreenState
 
   /// マップタップ / 検索結果タップで地点を確定。
   /// reverse geocode を非同期で走らせて region/country/name を埋める。
+  /// [hitIndex] は検索結果リストの順位 (1〜)。マップタップ起点なら null。
   Future<void> _selectPoint(
     LatLng latLng, {
     String? initialName,
     String? initialCountryCode,
+    int? hitIndex,
   }) async {
     setState(() {
       _picked = latLng;
@@ -163,6 +173,7 @@ class _ConsultationPlacePickerScreenState
       _pickedCountry = initialCountryCode;
       _pickedRegion = null;
       _resolvingName = true;
+      _pickedHitIndex = hitIndex;
     });
     final detail = await reverseGeocodeDetail(latLng.latitude, latLng.longitude);
     if (!mounted) return;
@@ -194,6 +205,7 @@ class _ConsultationPlacePickerScreenState
       _pickedRegion = null;
       _pickedCountry = null;
       _resolvingName = false;
+      _pickedHitIndex = null;
     });
   }
 
@@ -319,6 +331,7 @@ class _ConsultationPlacePickerScreenState
                 name: _pickedName,
                 region: _pickedRegion,
                 countryCode: _pickedCountry,
+                hitIndex: _pickedHitIndex,
                 resolving: _resolvingName,
                 onClear: _clearSelection,
                 onConfirm: _confirm,
@@ -546,6 +559,10 @@ class _SelectionCard extends StatelessWidget {
   final String? name;
   final String? region;
   final String? countryCode;
+  /// 検索結果リストでの順位 (1〜)。マップタップ起点なら null。
+  /// 非 null のときは選択カード行頭に同じ番号バッジを出す
+  /// (リストの番号・地図ピンの番号と同期させる視覚連動)。
+  final int? hitIndex;
   final bool resolving;
   final VoidCallback onClear;
   final VoidCallback onConfirm;
@@ -556,6 +573,7 @@ class _SelectionCard extends StatelessWidget {
     required this.name,
     required this.region,
     required this.countryCode,
+    required this.hitIndex,
     required this.resolving,
     required this.onClear,
     required this.onConfirm,
@@ -607,9 +625,30 @@ class _SelectionCard extends StatelessWidget {
           else ...[
             Row(
               children: [
-                const Icon(Icons.place,
-                    size: 18, color: SolaraColors.solaraGold),
-                const SizedBox(width: 6),
+                // 番号バッジ (検索結果から選んだ時のみ) / なければ 📍 アイコン
+                if (hitIndex != null)
+                  Container(
+                    width: 22,
+                    height: 22,
+                    decoration: const BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: SolaraColors.solaraGold,
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      '$hitIndex',
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: SolaraColors.celestialBlueDark,
+                        fontWeight: FontWeight.bold,
+                        height: 1.0,
+                      ),
+                    ),
+                  )
+                else
+                  const Icon(Icons.place,
+                      size: 18, color: SolaraColors.solaraGold),
+                const SizedBox(width: 8),
                 Expanded(
                   child: SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
