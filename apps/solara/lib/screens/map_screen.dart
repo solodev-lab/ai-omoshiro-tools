@@ -1668,25 +1668,9 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
             //   ON 中: ライン/天頂/天底タップは反応しない (引越し popup のみ)。
             //   マーカー側の onTap も relocate 中は null を渡して抑制 (下記参照)。
             onTap: (tapPos, latlng) {
-              // 🔍 診断ログ (2026-05-16): ACG 相談モードで popup が出ない問題の調査用。
-              // ユーザー確認後に削除する。
-              debugPrint(
-                '[Solara onTap] '
-                'chart=${_chartResult != null} '
-                'consult=${_astroLayers['consult']} '
-                'relocate=${_astroLayers['relocate']} '
-                'acg=$_astroCartoMode '
-                'pro=${ProStatus.instance.isPro} '
-                'lat=${latlng.latitude.toStringAsFixed(2)} '
-                'lng=${latlng.longitude.toStringAsFixed(2)}',
-              );
-              if (_chartResult == null) {
-                debugPrint('[Solara onTap] → return: chart null');
-                return;
-              }
+              if (_chartResult == null) return;
               // ① ACG モード「相談」ON: 任意地点タップで consult popup (排他)
               if (_astroLayers['consult'] == true) {
-                debugPrint('[Solara onTap] → branch ①: consult popup');
                 setState(() {
                   _consultTapPoint = latlng;
                   _relocateTapPoint = null;
@@ -2480,27 +2464,20 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
         // 設計: A + B + C(ii) ハイブリッド (chat 議論 2026-05-16)
         // _relocateTapPoint と排他 (onTap 側で互いに片付ける)。
         if (_consultTapPoint != null && _chartResult != null)
-          () {
-            debugPrint(
-              '[Solara render] consult popup: '
-              'tapPoint=${_consultTapPoint!.latitude.toStringAsFixed(2)},${_consultTapPoint!.longitude.toStringAsFixed(2)} '
-              'lines=${_astroLinesCache.length}',
-            );
-            return Positioned(
-              left: 16,
-              right: 16,
-              bottom: 16,
-              child: SafeArea(
-                top: false,
-                child: ConsultEntryPopup(
-                  tapPoint: _consultTapPoint!,
-                  nearestLines: _nearestNatalConjunctions(_consultTapPoint!),
-                  onClose: () => setState(() => _consultTapPoint = null),
-                  onConsult: () => _launchConsultation(_consultTapPoint!),
-                ),
+          Positioned(
+            left: 16,
+            right: 16,
+            bottom: 16,
+            child: SafeArea(
+              top: false,
+              child: ConsultEntryPopup(
+                tapPoint: _consultTapPoint!,
+                nearestLines: _nearestNatalConjunctions(_consultTapPoint!),
+                onClose: () => setState(() => _consultTapPoint = null),
+                onConsult: () => _launchConsultation(_consultTapPoint!),
               ),
-            );
-          }(),
+            ),
+          ),
 
         // ── 天頂点タップ詳細 popup (CCG: 全フレーム対応) ──
         // 線+ハウス popup と排他 (どちらか片方のみ表示)。

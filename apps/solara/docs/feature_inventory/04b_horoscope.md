@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 21 / 総行数: 5222
+- ファイル数: 21 / 総行数: 5239
 - class/mixin/extension/enum: 29
 - 関数 (top-level + method の素拾い): 135
 - Navigator.push 等: 0
@@ -153,7 +153,7 @@ ignore_for_file: invalid_use_of_protected_member
   </details>
 
 
-### `lib/screens/horoscope/horo_chart_data.dart` (214 行)
+### `lib/screens/horoscope/horo_chart_data.dart` (215 行)
 
 **型定義 (1):**
 
@@ -169,8 +169,8 @@ ignore_for_file: invalid_use_of_protected_member
   - L41 `_generateProgressedPlanets()`
   - L60 `_recalcAspects()`
   - L95 `_addAspect()`
-  - L112 `_approxSunLon()`
-  - L118 `_aspectPassesFilter()`
+  - L113 `_approxSunLon()`
+  - L119 `_aspectPassesFilter()`
 
   </details>
 
@@ -349,7 +349,7 @@ ignore_for_file: invalid_use_of_protected_member
   </details>
 
 
-### `lib/screens/horoscope/horo_pattern_logic.dart` (196 行)
+### `lib/screens/horoscope/horo_pattern_logic.dart` (205 行)
 
 **imports:** dart=0 / package=0 / relative=2
 
@@ -360,7 +360,7 @@ ignore_for_file: invalid_use_of_protected_member
 - L33 `hasPersonal()`
 - L36 `enoughNatal()`
 - L38 `triKey()`
-- L122 `mockLon()`
+- L131 `mockLon()`
 
 
 ### `lib/screens/horoscope/horo_planet_table.dart` (160 行)
@@ -455,7 +455,7 @@ ignore_for_file: invalid_use_of_protected_member
 ```
 リロケーション解説テンプレート
 (惑星 × 移動先ハウス) の組み合わせから「現住所で活性化する側面」を生成。
-Phase A: 静的テンプレート (将来 Gemini 動的生成に切替予定 → 同データ構造で互換)。
+Phase A: 静的テンプレート (将来 Stella 動的生成に切替予定 → 同データ構造で互換)。
 惑星日本語名は horo_constants.dart の planetNamesJP を使用。
 ```
 
@@ -479,7 +479,7 @@ Phase A: 静的テンプレート (将来 Gemini 動的生成に切替予定 →
 - L61 `build()`
 
 
-### `lib/screens/horoscope_screen.dart` (754 行)
+### `lib/screens/horoscope_screen.dart` (761 行)
 
 **imports:** dart=2 / package=2 / relative=12
 
@@ -493,32 +493,32 @@ Phase A: 静的テンプレート (将来 Gemini 動的生成に切替予定 →
 **関数 (7 public + 17 private):**
 
 - L30 `createState()`
-- L177 `initState()`
-- L199 `dispose()`
-- L229 `wakeAnimations()` — 「再覚醒」: anim 再開 + 30s タイマー再起動。
-- L243 `pauseAnimations()` — main.dart からタブ離脱時に呼ばれる。Anim + 寿命タイマー両方停止 = raster 0%。
-- L274 `loadProfile()`
-- L568 `build()`
+- L180 `initState()`
+- L202 `dispose()`
+- L232 `wakeAnimations()` — 「再覚醒」: anim 再開 + 30s タイマー再起動。
+- L246 `pauseAnimations()` — main.dart からタブ離脱時に呼ばれる。Anim + 寿命タイマー両方停止 = raster 0%。
+- L277 `loadProfile()`
+- L575 `build()`
 
   <details><summary>private 関数 17 件</summary>
 
   - L124 `_planetHouse()`
   - L143 `_currentCacheKey()`
-  - L159 `_refreshCacheKey()`
-  - L210 `_resetAnimLifeTimer()`
-  - L220 `_stopAnimations()`
-  - L252 `_startRotTimer()`
-  - L265 `_syncRotationByMode()`
-  - L295 `_onTransitUpdate()`
-  - L306 `_applyWorkingProfile()`
-  - L324 `_fetchRealChart()`
-  - L452 `_resetWorkingProfile()`
-  - L459 `_profilesEqual()`
-  - L477 `_loadFortunes()`
-  - L668 `_menuItem()`
-  - L681 `_buildHouseModeToggle()`
-  - L709 `_toggleSegment()`
-  - L744 `_setRelocateMode()`
+  - L162 `_refreshCacheKey()`
+  - L213 `_resetAnimLifeTimer()`
+  - L223 `_stopAnimations()`
+  - L255 `_startRotTimer()`
+  - L268 `_syncRotationByMode()`
+  - L302 `_onTransitUpdate()`
+  - L313 `_applyWorkingProfile()`
+  - L331 `_fetchRealChart()`
+  - L459 `_resetWorkingProfile()`
+  - L466 `_profilesEqual()`
+  - L484 `_loadFortunes()`
+  - L675 `_menuItem()`
+  - L688 `_buildHouseModeToggle()`
+  - L716 `_toggleSegment()`
+  - L751 `_setRelocateMode()`
 
   </details>
 

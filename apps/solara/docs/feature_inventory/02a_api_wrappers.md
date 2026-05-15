@@ -5,12 +5,12 @@
 
 ## サマリ
 
-- ファイル数: 7 / 総行数: 1440
-- class/mixin/extension/enum: 14
-- 関数 (top-level + method の素拾い): 22
+- ファイル数: 8 / 総行数: 1631
+- class/mixin/extension/enum: 17
+- 関数 (top-level + method の素拾い): 26
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 0
-- Worker URL リテラル: 8
+- Worker URL リテラル: 9
 
 ## ファイル別
 
@@ -80,6 +80,42 @@
 - L42: `'$_workerBase/astro/events?year=$year&month=$month'`
 
 
+### `lib/utils/consultation_api.dart` (141 行)
+
+**ファイル先頭コメント:**
+
+```
+Consultation API — POST /astro/consultation (Stage 3)
+
+設計: apps/solara/docs/pro_candidates.md §7.2 Stage 3
+Worker 側: apps/solara/worker/src/consultation.js
+
+Stage 2 (consultation_engine.dart) が組み立てた候補リストを送信し、
+Stella の解釈 (intro / candidates[].narrative / outro) を受け取る。
+```
+
+**imports:** dart=1 / package=1 / relative=2
+
+- relative: `consultation_engine.dart`, `solara_api.dart`
+
+**型定義 (2):**
+
+- L17 `class ConsultationCandidateReading`
+  - API レスポンス内の候補別 Stella の解釈。
+- L47 `class ConsultationReading`
+  - API レスポンス全体。
+
+**関数 (3 public + 0 private):**
+
+- L39 `toJson()` — 履歴保存 (consultation_record) 用シリアライズ。
+- L80 `toJson()` — 履歴保存 (consultation_record) 用シリアライズ。
+- L101 `fetchConsultation()` — /astro/consultation を呼んで Stella の解釈を取得する。
+
+**Worker URL リテラル (1):**
+
+- L125: `'$solaraWorkerBase/astro/consultation'`
+
+
 ### `lib/utils/daily_transits_api.dart` (241 行)
 
 **ファイル先頭コメント:**
@@ -130,7 +166,7 @@ Worker: /astro/daily-transits (POST)
 **ファイル先頭コメント:**
 
 ```
-Fortune API - /fortune エンドポイント (Gemini生成の占い文取得)
+Fortune API - /fortune エンドポイント (Stella の声を取得)
 関連: worker/src/fortune.js
 ```
 
@@ -158,13 +194,19 @@ Fortune API - /fortune エンドポイント (Gemini生成の占い文取得)
 - L231: `'$solaraWorkerBase/tarot'`
 
 
-### `lib/utils/reverse_geocode.dart` (50 行)
+### `lib/utils/reverse_geocode.dart` (100 行)
 
 **imports:** dart=1 / package=1 / relative=0
 
-**関数 (1 public + 0 private):**
+**型定義 (1):**
+
+- L35 `class ReverseGeocodeResult`
+  - Nominatim Reverse の結果から取り出した詳細レコード。
+
+**関数 (2 public + 0 private):**
 
 - L23 `reverseGeocode()` — 緯度経度から地名（市町村名）を逆ジオコーディングで取得する。
+- L68 `reverseGeocodeDetail()` — 緯度経度から逆ジオコーディングで region / country まで含む詳細を取得する。
 
 
 ### `lib/utils/solara_api.dart` (35 行)

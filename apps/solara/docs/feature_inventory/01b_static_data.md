@@ -5,9 +5,9 @@
 
 ## サマリ
 
-- ファイル数: 11 / 総行数: 3830
-- class/mixin/extension/enum: 10
-- 関数 (top-level + method の素拾い): 23
+- ファイル数: 13 / 総行数: 4956
+- class/mixin/extension/enum: 12
+- 関数 (top-level + method の素拾い): 28
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 1
 - Worker URL リテラル: 0
@@ -30,9 +30,16 @@ Aspect Description Data
 - L94 `buildAspectDescription()` — アスペクト説明を生成 (3セクション)
 
 
-### `lib/screens/horoscope/horo_constants.dart` (86 行)
+### `lib/screens/horoscope/horo_constants.dart` (119 行)
 
 **imports:** dart=0 / package=1 / relative=0
+
+**関数 (4 public + 0 private):**
+
+- L81 `applyHoroOrbSettings()` — Sanctuary のオーブ設定を適用する。horoscope_screen から呼ばれる。
+- L87 `horoAspectOrb()` — アスペクト種別キー (conjunction/trine/...) の有効 orb。
+- L91 `horoPatternOrb()` — パターン orb キー (grandtrine/tsquare_opp/...) の有効 orb。
+- L97 `horoOrbSignature()` — 現在のオーブ override の状態を表す署名文字列。
 
 
 ### `lib/screens/map/daily_transit_data.dart` (1013 行)
@@ -63,7 +70,7 @@ Solara 設計思想: project_solara_design_philosophy.md
   - アングルフィルタ識別子。
 
 
-### `lib/utils/astro_glossary.dart` (586 行)
+### `lib/utils/astro_glossary.dart` (626 行)
 
 **ファイル先頭コメント:**
 
@@ -89,7 +96,7 @@ Solara Astro Glossary — Phase M2 論点4 (β案 確定)
 
 **関数 (1 public + 0 private):**
 
-- L550 `showAstroGlossaryDialog()` — 用語解説 popup を表示する共通ヘルパー。
+- L590 `showAstroGlossaryDialog()` — 用語解説 popup を表示する共通ヘルパー。
 
 **Popup/Dialog 呼出 (1):**
 
@@ -153,6 +160,35 @@ key: "${type}_${planet}" or "${type}_${planet}_${sign}"
   - L248 `_hash()`
 
   </details>
+
+
+### `lib/utils/consultation_record.dart` (109 行)
+
+**ファイル先頭コメント:**
+
+```
+Consultation Record — Phase 2-4 自動保存 + 履歴
+
+設計: apps/solara/docs/pro_candidates.md §7.2 Stage 4 + §7.3 柱3
+
+1 件の相談 = 入力 (theme/mode/scope/freeText/候補) + 出力 (Stella reading)
++ メタ (id, savedAt) を 1 つにまとめた永続化単位。
+
+柱 3 の原則: Free でも自分の記録を永久に失わない。
+検索・フィルタ等の「記録を使う道具」は Pro 機能。
+```
+
+**imports:** dart=0 / package=0 / relative=2
+
+- relative: `consultation_api.dart`, `consultation_engine.dart`
+
+**型定義 (1):**
+
+- L14 `class ConsultationRecord`
+
+**関数 (1 public + 0 private):**
+
+- L76 `toJson()`
 
 
 ### `lib/utils/cycle_story_texts.dart` (86 行)
@@ -276,4 +312,24 @@ Solara Title System data — matches SPEC.md exactly.
 
 - L361 `getSunSign()` — HTML: getSunSign(dateStr) — birthDate → 太陽星座
 - L375 `getMoonSign()` — HTML: getMoonSign(dateStr, timeStr) — birthDate+Time → 月星座（近似計算）
+
+
+### `lib/utils/world_cities.dart` (944 行)
+
+**ファイル先頭コメント:**
+
+```
+GENERATED FILE — DO NOT EDIT BY HAND
+Source: apps/solara/tools/generate_world_cities.py
+Regenerate: python apps/solara/tools/generate_world_cities.py
+
+Solara (ii) Stella 相談 Stage 2 用 キュレート都市リスト。
+設計: docs/pro_candidates.md §7.2 Stage 2
+
+各 CityEntry は consultation_engine.dart の候補生成に使う。
+```
+
+**型定義 (1):**
+
+- L10 `class CityEntry`
 

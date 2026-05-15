@@ -278,11 +278,17 @@ Forecast 期間 (Free 1 年 / Pro 5 年、`_setYearOffset` で year>0 を Free g
 
 #### Stage 1 — 入力（1 枚スクロールシート）
 
-**入口 2 つ・エンジン 1 つ**（2026-05-15 確定）：
-- **タップ起点**：Map 上の任意地点タップで開く `MapRelocationPopup` ヘッダ直下に
+**入口 3 つ・エンジン 1 つ**（2026-05-16 拡張、A+B+C(ii) ハイブリッド確定）：
+- **タップ起点 A**：Map 上の任意地点タップで開く `MapRelocationPopup` ヘッダ直下に
   「この場所で相談する」CTA。地理スコープ「具体地点」固定で `ConsultationInputScreen` 起動。
-  **採用理由**: 線タップ起点 (`MapLineNarrativeSheet`) より任意地点タップの方が自由度が高い。
-  実装済（commit `6f10c6c`、Phase 2-3b）。
+  実装済（Phase 2-3b、`MapLineNarrativeSheet` 内 CTA も同 preset で共通）。
+- **タップ起点 B**：ACG モード時の**🔮 相談ピル**（`map_astro_carto._FramePillRow`）。
+  ピル ON で `_consultTapPoint` モードに入り、空地点タップで `ConsultEntryPopup`
+  (近接 3 conjunction line 表示) を経由して `ConsultationInputScreen` 起動。
+  - 線タップ・天頂 popup 内からも同 preset で起動可能（重複ハンドラ衝突は `onTap` を
+    nullable 化 + relocate/consult モード時に marker `IgnorePointer` 化することで解消）。
+  - 非 ACG Map で空地点をタップしても Pro ユーザーは同 popup から起動できる（C(ii) 経路）。
+  実装済（Phase 2026-05-16）。
 - **目的起点**：Daily Transit popup 内に「🔮 Stella に相談」CTA 追加（ACG モード起動ボタンと並べる）→
   `ConsultationInputScreen` 起動。preset 無し、scope はユーザーが選ぶ。**未実装（Phase 2-3c 予定）**。
 
@@ -457,13 +463,20 @@ Forecast 期間 (Free 1 年 / Pro 5 年、`_setYearOffset` で year>0 を Free g
 
 **前提**：課金基盤（launch_checklist Phase 1-2）なしで全部作れる（機能のみ、Pro ゲートは課金基盤実装後に配線）。
 
-**ファイル分割（2026-05-15）**：`consultation_input_screen.dart` (725行) と `consultation_result_screen.dart` (791行) は part-of パターン (`horoscope_screen.dart` と同様) で分割済：
-- `consultation_input_screen.dart` (308行) — orchestration + state
-- `consultation_input_widgets.dart` (435行) — 選択肢定数 + Choice classes + サブウィジェット
-- `consultation_result_screen.dart` (466行) — orchestration + state + シェア導線
-- `consultation_result_widgets.dart` (342行) — 状態別パネル + 候補カード等
+**ファイル分割（2026-05-15 → 2026-05-16 で再分割）**：consultation 系の肥大化に伴い、part-of パターン (`horoscope_screen.dart` と同様) で 4 → 7 ファイルに再分割。HARD threshold (500 行) 違反は全消化：
 
-全 4 consultation テスト (history/share/smoke/ui) は 34/34 pass を維持。
+| ファイル | 行数 | 役割 |
+| --- | ---: | --- |
+| `consultation_input_screen.dart` | 396 | orchestration + state |
+| `consultation_input_widgets.dart` | 461 | 選択肢定数 + 基本サブウィジェット (`_Section` / `_ThemeGrid` / `_ModeRow` / `_ScopeRow` / `_RegionPicker` / `_FreeTextField` / `_PresetLocationCard` / `_SubmitBar`) |
+| `consultation_input_examples.dart` | 451 | 相談例 (theme × mode × scope = 54 例文) + `_ConsultExamples` + `_ExampleRow` |
+| `consultation_input_picker.dart` | 484 | `_PickedSpecific` + `_SpecificPicker` 系 (`_SearchHitRow` / `_LocationChip` / `_SelectedSpecificCard`) |
+| `consultation_result_screen.dart` | 472 | orchestration + state + シェア導線 |
+| `consultation_result_widgets.dart` | 446 | 状態別パネル + 候補カード等 |
+| `consultation_place_picker_screen.dart` | 348 | flutter_map B picker — orchestration + State + map 配置 |
+| `consultation_place_picker_widgets.dart` | 411 | B picker サブウィジェット (`_SearchBar` / `_NumberedPin` / `_SelectionCard`) |
+
+全 5 consultation 系テスト (history/share/smoke/ui + pro_status) は 44/44 pass を維持。
 
 ### 7.3 柱3 — あなたの記録庫（定着）
 

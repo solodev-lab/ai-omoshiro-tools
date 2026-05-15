@@ -5,14 +5,61 @@
 
 ## サマリ
 
-- ファイル数: 22 / 総行数: 12283
-- class/mixin/extension/enum: 82
-- 関数 (top-level + method の素拾い): 272
+- ファイル数: 23 / 総行数: 13366
+- class/mixin/extension/enum: 86
+- 関数 (top-level + method の素拾い): 289
 - Navigator.push 等: 0
-- Popup/Dialog 呼出: 18
+- Popup/Dialog 呼出: 19
 - Worker URL リテラル: 4
 
 ## ファイル別
+
+### `lib/screens/map/consult_entry_popup.dart` (293 行)
+
+**ファイル先頭コメント:**
+
+```
+Consult Entry Popup — A + B + C(ii) 共通 popup
+
+設計議論 2026-05-16:
+  - 「Stella に相談」開始 popup として 3 経路で共通利用:
+    A: ACG モード「🔮 相談」ピル ON 状態でタップ → この popup
+    B: 線/天頂/天底 popup 内 CTA 「この地点で相談」→ この popup
+       (の代わりに直接 ConsultationInputScreen を push してもよい)
+    C(ii): 非 ACG Map モード + Pro ユーザー + 空地点タップ → この popup
+
+表示内容 (吉凶禁止原則を守るため Map の sector スコアは出さない):
+  - 地名 (reverse geocode 結果、失敗時は「タップ地点」)
+  - 座標 (lat°/lng°)
+  - 最寄りの natal-frame conjunction line 3 本 (Stella 相談エンジンと同じ材料)
+  - 「この場所で相談する」CTA
+
+工数注: 最寄り線計算は呼出側で済ませて [nearestLines] として渡す。
+```
+
+**imports:** dart=0 / package=2 / relative=4
+
+- relative: `../../theme/solara_colors.dart`, `../../utils/astro_lines.dart`, `../../utils/reverse_geocode.dart`, `map_constants.dart`
+
+**型定義 (3):**
+
+- L34 `class ConsultEntryPopup : StatefulWidget`
+- L61 `class _ConsultEntryPopupState : State`
+- L240 `class _NearestLineRow : StatelessWidget`
+
+**関数 (4 public + 1 private):**
+
+- L58 `createState()`
+- L68 `initState()`
+- L104 `build()`
+- L245 `build()`
+
+  <details><summary>private 関数 1 件</summary>
+
+  - L73 `_resolveName()`
+
+  </details>
+
 
 ### `lib/screens/map/map_aspect_chip.dart` (221 行)
 
@@ -66,7 +113,7 @@ MapAspectChip — Daily Transit V2 用 1アスペクトチップ
 - 集計: `showInfoPopup`×1
 
 
-### `lib/screens/map/map_astro_carto.dart` (813 行)
+### `lib/screens/map/map_astro_carto.dart` (901 行)
 
 **imports:** dart=0 / package=2 / relative=6
 
@@ -79,77 +126,79 @@ MapAspectChip — Daily Transit V2 用 1アスペクトチップ
 - L250 `class AcgFrameDef`
 - L293 `class AstroCartoFramePills : StatelessWidget`
   - 第1層: フレーム切替ピル (横並び 4 ピル + i)。
-- L346 `class AstroCartoSubPills : StatelessWidget`
+- L392 `class AstroCartoSubPills : StatelessWidget`
   - 第2層: active frame のサブトグル 4 つ (横並び)。
-- L385 `class _FramePill : StatelessWidget`
+- L431 `class _FramePill : StatelessWidget`
   - 第1層の個別ピル (ラベル + i)。active 時はリング glow で強調。
-- L454 `class _SubPill : StatelessWidget`
+- L500 `class _SubPill : StatelessWidget`
   - 第2層の個別小ピル (天頂 / 天底 / 天頂帯 / 天底帯)。
-- L521 `class _ScrollableRowPanel : StatelessWidget`
+- L567 `class _ScrollableRowPanel : StatelessWidget`
   - ピル列の overflow 対策ラッパー。
-- L556 `class AstroCartoCategoryPills : StatelessWidget`
+- L602 `class AstroCartoCategoryPills : StatelessWidget`
   - Astro*Carto*Graphy モード中のカテゴリピル。
-- L629 `class AstroZenithPopup : StatelessWidget`
+- L675 `class AstroZenithPopup : StatelessWidget`
   - 天頂・天底点タップ詳細 popup。
-
-**関数 (8 public + 1 private):**
-
-- L33 `build()`
-- L306 `build()`
-- L359 `build()`
-- L402 `build()`
-- L469 `build()`
-- L532 `build()`
-- L566 `build()`
-- L646 `build()`
-
-  <details><summary>private 関数 1 件</summary>
-
-  - L94 `_showAcgUsageGuide()`
-
-  </details>
-
-**Popup/Dialog 呼出 (1):**
-
-- 集計: `showInfoPopup`×1
-
-
-### `lib/screens/map/map_astro_lines.dart` (588 行)
-
-**imports:** dart=0 / package=3 / relative=2
-
-- relative: `../../utils/astro_lines.dart`, `map_constants.dart`
-
-**型定義 (4):**
-
-- L32 `class _AngleStyle`
-- L58 `class AstroFrameStyle`
-  - フレーム別の視覚プリセット。Tier A #5 で4フレーム同時描画する際の
-- L386 `class AstroNadirMarker : StatelessWidget`
-  - 装飾的な天底点マーカー (Lewis 理論: 裏側に在る天体)。
-- L494 `class AstroZenithMarker : StatelessWidget`
-  - 装飾的な天頂点マーカー (frame で見た目を切替):
 
 **関数 (8 public + 2 private):**
 
-- L119 `buildAstroPolylines()` — アスペクトラインを Polyline[] に変換。
-- L193 `buildAstroLatitudeBandPolylines()` — 天頂帯・天底帯 (latitude bands) の緯度線を Polyline[] に変換する。
-- L270 `buildAstroZenithMarkers()` — 各惑星の天頂点 (= AstroLine.zenith) に装飾マーカーを生成。
-- L275 `Function()`
-- L332 `buildAstroNadirMarkers()` — 各惑星の天底点 (= AstroLine.nadir) に装飾マーカーを生成。
-- L337 `Function()`
-- L407 `build()`
-- L507 `build()`
+- L33 `build()`
+- L306 `build()`
+- L405 `build()`
+- L448 `build()`
+- L515 `build()`
+- L578 `build()`
+- L612 `build()`
+- L699 `build()`
 
   <details><summary>private 関数 2 件</summary>
 
-  - L104 `_lerpColor()`
-  - L175 `_latitudePolylinePoints()`
+  - L94 `_showAcgUsageGuide()`
+  - L360 `_showConsultModeInfo()`
+
+  </details>
+
+**Popup/Dialog 呼出 (2):**
+
+- 集計: `showInfoPopup`×2
+
+
+### `lib/screens/map/map_astro_lines.dart` (616 行)
+
+**imports:** dart=0 / package=3 / relative=3
+
+- relative: `../../theme/solara_colors.dart`, `../../utils/astro_lines.dart`, `map_constants.dart`
+
+**型定義 (4):**
+
+- L33 `class _AngleStyle`
+- L59 `class AstroFrameStyle`
+  - フレーム別の視覚プリセット。Tier A #5 で4フレーム同時描画する際の
+- L414 `class AstroNadirMarker : StatelessWidget`
+  - 装飾的な天底点マーカー (Lewis 理論: 裏側に在る天体)。
+- L522 `class AstroZenithMarker : StatelessWidget`
+  - 装飾的な天頂点マーカー (frame で見た目を切替):
+
+**関数 (8 public + 3 private):**
+
+- L133 `buildAstroPolylines()` — アストロラインを Polyline[] に変換。
+- L221 `buildAstroLatitudeBandPolylines()` — 天頂帯・天底帯 (latitude bands) の緯度線を Polyline[] に変換する。
+- L298 `buildAstroZenithMarkers()` — 各惑星の天頂点 (= AstroLine.zenith) に装飾マーカーを生成。
+- L303 `Function()`
+- L360 `buildAstroNadirMarkers()` — 各惑星の天底点 (= AstroLine.nadir) に装飾マーカーを生成。
+- L365 `Function()`
+- L435 `build()`
+- L535 `build()`
+
+  <details><summary>private 関数 3 件</summary>
+
+  - L105 `_lerpColor()`
+  - L119 `_aspectEnergyColor()`
+  - L203 `_latitudePolylinePoints()`
 
   </details>
 
 
-### `lib/screens/map/map_daily_transit_screen.dart` (1799 行)
+### `lib/screens/map/map_daily_transit_screen.dart` (1923 行)
 
 **ファイル先頭コメント:**
 
@@ -168,76 +217,78 @@ F1-c (2026-04-29 オーナー設計):
 ============================================================
 ```
 
-**imports:** dart=0 / package=2 / relative=12
+**imports:** dart=0 / package=2 / relative=11
 
-- relative: `../../theme/solara_colors.dart`, `../../utils/astro_glossary.dart`, `../../utils/daily_transits_api.dart`, `../../utils/solara_storage.dart`, `../../widgets/category_icon.dart`, `../../widgets/dominant_fortune_overlay.dart`, `../../widgets/glass_panel.dart`, `../../widgets/info_popup.dart`, `daily_transit_data.dart`, `map_aspect_chip.dart`, `map_constants.dart`, `map_vp_panel.dart`
+- relative: `../../theme/solara_colors.dart`, `../../utils/astro_glossary.dart`, `../../utils/daily_transits_api.dart`, `../../widgets/category_icon.dart`, `../../widgets/dominant_fortune_overlay.dart`, `../../widgets/glass_panel.dart`, `../../widgets/info_popup.dart`, `daily_transit_data.dart`, `map_aspect_chip.dart`, `map_constants.dart`, `map_vp_panel.dart`
 
-**型定義 (14):**
+**型定義 (15):**
 
-- L29 `class MapDailyTransitScreen : StatefulWidget`
-- L70 `enum _DayTab`
+- L28 `class MapDailyTransitScreen : StatefulWidget`
+- L75 `enum _DayTab`
   - タブ識別子。
-- L74 `class _MapDailyTransitScreenState : State`
-- L265 `class _AcgEntryFooter : StatelessWidget`
-  - Daily Transit popup 下部に表示する「🌐 世界規模で見る (ACG)」リンク行。
-- L304 `class _DayTabBar : StatelessWidget`
-- L521 `class _Header : StatelessWidget`
-- L774 `class _CategoryTipsBox : StatelessWidget`
-- L947 `class _LoadingBody : StatelessWidget`
-- L977 `class _FailedBody : StatelessWidget`
-- L1022 `class _TimelineBody : StatelessWidget`
-- L1122 `class _TimelineRow : StatelessWidget`
-- L1349 `class _AltitudeBadge : StatelessWidget`
+- L79 `class _MapDailyTransitScreenState : State`
+- L267 `class _FooterActions : StatelessWidget`
+  - Daily Transit popup 下部の動線フッター。
+- L325 `class _FooterButton : StatelessWidget`
+  - フッター内の 1 つのアクションボタン (絵文字 + タイトル + サブタイトル)。
+- L428 `class _DayTabBar : StatelessWidget`
+- L645 `class _Header : StatelessWidget`
+- L898 `class _CategoryTipsBox : StatelessWidget`
+- L1071 `class _LoadingBody : StatelessWidget`
+- L1101 `class _FailedBody : StatelessWidget`
+- L1146 `class _TimelineBody : StatelessWidget`
+- L1246 `class _TimelineRow : StatelessWidget`
+- L1473 `class _AltitudeBadge : StatelessWidget`
   - L3 Lewis 高度バッジ。
-- L1400 `class _LatitudeBandBox : StatelessWidget`
+- L1524 `class _LatitudeBandBox : StatelessWidget`
   - L3 Lewis 緯度帯ボックス。
-- L1450 `class _LatitudeBandRow : StatelessWidget`
+- L1574 `class _LatitudeBandRow : StatelessWidget`
 
-**関数 (19 public + 21 private):**
+**関数 (20 public + 20 private):**
 
-- L66 `createState()`
-- L122 `initState()`
-- L139 `dispose()`
-- L204 `build()`
-- L270 `build()`
-- L322 `build()`
-- L541 `build()`
-- L681 `labelFor()`
-- L690 `iconFor()`
-- L696 `itemRow()`
-- L784 `build()`
-- L950 `build()`
-- L981 `build()`
-- L1037 `build()`
-- L1139 `build()`
-- L1355 `build()`
-- L1405 `build()`
-- L1457 `build()`
-- L1686 `showDailyUsageGuidePopup()` — 「今日の動き」画面の使い方 popup。
+- L71 `createState()`
+- L124 `initState()`
+- L137 `dispose()`
+- L201 `build()`
+- L277 `build()`
+- L341 `build()`
+- L446 `build()`
+- L665 `build()`
+- L805 `labelFor()`
+- L814 `iconFor()`
+- L820 `itemRow()`
+- L908 `build()`
+- L1074 `build()`
+- L1105 `build()`
+- L1161 `build()`
+- L1263 `build()`
+- L1479 `build()`
+- L1529 `build()`
+- L1581 `build()`
+- L1810 `showDailyUsageGuidePopup()` — 「今日の動き」画面の使い方 popup。
 
-  <details><summary>private 関数 21 件</summary>
+  <details><summary>private 関数 20 件</summary>
 
-  - L110 `_cacheKey()`
-  - L116 `_resolveInitialVpIndex()`
-  - L132 `_loadOrbsAndStart()`
-  - L146 `_tabStartTime()`
-  - L153 `_loadTab()`
-  - L183 `_selectTab()`
-  - L190 `_selectVp()`
-  - L197 `_close()`
-  - L399 `_tabBtn()`
-  - L432 `_angleDropdown()`
-  - L466 `_categoryDropdown()`
-  - L507 `_filterPill()`
-  - L650 `_tagline()`
-  - L679 `_buildVpDropdownWithGuide()`
-  - L1310 `_angleLabel()`
-  - L1320 `_angleHint()`
-  - L1330 `_azimuthToCompass()`
-  - L1507 `_showEventDetailDialog()`
-  - L1539 `_showCategoryTipsIntent()`
-  - L1579 `_showAngleDetailPopup()`
-  - L1615 `_showPlanetAngleDetail()`
+  - L112 `_cacheKey()`
+  - L118 `_resolveInitialVpIndex()`
+  - L144 `_tabStartTime()`
+  - L151 `_loadTab()`
+  - L180 `_selectTab()`
+  - L187 `_selectVp()`
+  - L194 `_close()`
+  - L523 `_tabBtn()`
+  - L556 `_angleDropdown()`
+  - L590 `_categoryDropdown()`
+  - L631 `_filterPill()`
+  - L774 `_tagline()`
+  - L803 `_buildVpDropdownWithGuide()`
+  - L1434 `_angleLabel()`
+  - L1444 `_angleHint()`
+  - L1454 `_azimuthToCompass()`
+  - L1631 `_showEventDetailDialog()`
+  - L1663 `_showCategoryTipsIntent()`
+  - L1703 `_showAngleDetailPopup()`
+  - L1739 `_showPlanetAngleDetail()`
 
   </details>
 
@@ -295,7 +346,7 @@ E4 (2026-04-29): 設計思想に基づく「両エネルギー事実提示」型
 - 集計: `showInfoPopup`×1
 
 
-### `lib/screens/map/map_display_menu.dart` (410 行)
+### `lib/screens/map/map_display_menu.dart` (413 行)
 
 **imports:** dart=0 / package=1 / relative=3
 
@@ -308,31 +359,31 @@ E4 (2026-04-29): 設計思想に基づく「両エネルギー事実提示」型
 - L61 `enum _MainTab`
 - L62 `enum _PlanetSub`
 - L64 `class _MapDisplayMenuState : State`
-- L342 `class _MenuInfoRow : StatelessWidget`
+- L345 `class _MenuInfoRow : StatelessWidget`
   - 説明 popup 用の項目行 (見出し + 本文)。
-- L369 `class _ChipButton : StatelessWidget`
+- L372 `class _ChipButton : StatelessWidget`
   - 共通のチップ風ボタン (active 状態で塗りつぶし変化)。
 
 **関数 (5 public + 10 private):**
 
 - L58 `createState()`
 - L69 `build()`
-- L232 `planetsJp()`
-- L348 `build()`
-- L384 `build()`
+- L235 `planetsJp()`
+- L351 `build()`
+- L387 `build()`
 
   <details><summary>private 関数 10 件</summary>
 
   - L98 `_l2Buttons()`
-  - L144 `_l3Buttons()`
-  - L177 `_toggleSub()`
-  - L185 `_tabBtn()`
-  - L197 `_tabBtnWithInfo()`
-  - L215 `_showTabInfo()`
-  - L295 `_subTabBtn()`
-  - L305 `_toggleBtn()`
-  - L315 `_radioBtn()`
-  - L325 `_scrollRow()`
+  - L147 `_l3Buttons()`
+  - L180 `_toggleSub()`
+  - L188 `_tabBtn()`
+  - L200 `_tabBtnWithInfo()`
+  - L218 `_showTabInfo()`
+  - L298 `_subTabBtn()`
+  - L308 `_toggleBtn()`
+  - L318 `_radioBtn()`
+  - L328 `_scrollRow()`
 
   </details>
 
@@ -380,7 +431,7 @@ E4 (2026-04-29): 設計思想に基づく「両エネルギー事実提示」型
 - 集計: `showInfoPopup`×1
 
 
-### `lib/screens/map/map_line_narrative_sheet.dart` (232 行)
+### `lib/screens/map/map_line_narrative_sheet.dart` (299 行)
 
 **ファイル先頭コメント:**
 
@@ -395,7 +446,7 @@ A*C*G ライン (natal / transit) のタップ詳細 popup。
 
 設計思想: project_solara_design_philosophy.md (Soft/Hard 独立2エネルギー)
 
-旧実装にあった Gemini AI 解説機能 (詳しく読むボタン → 動的生成) は
+旧実装にあった Stella による線解説機能 (詳しく読むボタン → 動的生成) は
 2026-05-11 撤去。静的辞書ベースの解説のみに統一。
 
 関連:
@@ -411,18 +462,19 @@ A*C*G ライン (natal / transit) のタップ詳細 popup。
 **型定義 (2):**
 
 - L29 `class MapLineNarrativeSheet : StatefulWidget`
-- L52 `class _MapLineNarrativeSheetState : State`
+- L59 `class _MapLineNarrativeSheetState : State`
 
-**関数 (3 public + 2 private):**
+**関数 (3 public + 3 private):**
 
-- L49 `createState()`
-- L67 `build()`
-- L216 `showLineNarrativeSheet()` — 共通呼び出しヘルパー: タップから直接 説明 popup を表示。
+- L56 `createState()`
+- L86 `build()`
+- L281 `showLineNarrativeSheet()` — 共通呼び出しヘルパー: タップから直接 説明 popup を表示。
 
-  <details><summary>private 関数 2 件</summary>
+  <details><summary>private 関数 3 件</summary>
 
-  - L85 `_buildHeader()`
-  - L169 `_buildStaticSection()`
+  - L112 `_buildConsultCta()`
+  - L150 `_buildHeader()`
+  - L234 `_buildStaticSection()`
 
   </details>
 
@@ -431,7 +483,7 @@ A*C*G ライン (natal / transit) のタップ詳細 popup。
 - 集計: `showLineNarrativeSheet`×1, `showInfoPopup`×1
 
 
-### `lib/screens/map/map_location_markers.dart` (295 行)
+### `lib/screens/map/map_location_markers.dart` (304 行)
 
 **imports:** dart=0 / package=4 / relative=2
 
@@ -443,20 +495,21 @@ A*C*G ライン (natal / transit) のタップ詳細 popup。
   - 出生地マーカー: 🌟 + 多層グロー (静止)。
 - L69 `class SlotMarker : StatelessWidget`
   - 通常スロット (VP / Locations) マーカー。
-- L190 `class LocationMarkerPopup : StatelessWidget`
+- L199 `class LocationMarkerPopup : StatelessWidget`
   - マーカータップ詳細 popup (画面下部の bottom sheet)。
 
-**関数 (5 public + 1 private):**
+**関数 (6 public + 1 private):**
 
 - L29 `build()`
 - L76 `build()`
 - L132 `buildLocationMarkers()` — 登録地マーカー群を構築。
-- L140 `slotMarker()`
-- L205 `build()`
+- L139 `Function()` — null 指定でタップを完全に透過する (排他モード用)。
+- L143 `slotMarker()`
+- L214 `build()`
 
   <details><summary>private 関数 1 件</summary>
 
-  - L286 `_fmtCoord()`
+  - L295 `_fmtCoord()`
 
   </details>
 
@@ -605,7 +658,7 @@ A*C*G ライン (natal / transit) のタップ詳細 popup。
   </details>
 
 
-### `lib/screens/map/map_relocation_popup.dart` (564 行)
+### `lib/screens/map/map_relocation_popup.dart` (617 行)
 
 **imports:** dart=0 / package=2 / relative=7
 
@@ -615,23 +668,24 @@ A*C*G ライン (natal / transit) のタップ詳細 popup。
 
 - L40 `class MapRelocationPopup : StatelessWidget`
 
-**関数 (1 public + 11 private):**
+**関数 (1 public + 12 private):**
 
-- L92 `build()`
+- L99 `build()`
 
-  <details><summary>private 関数 11 件</summary>
+  <details><summary>private 関数 12 件</summary>
 
-  - L155 `_buildLinesSection()`
-  - L198 `_buildLineRow()`
-  - L272 `_openLineSheet()`
-  - L286 `_buildTitleArea()`
-  - L319 `_buildHeader()`
-  - L390 `_buildAngleRow()`
-  - L452 `_buildPlanetGrid()`
-  - L461 `_buildPlanetRow()`
-  - L549 `_recoverBaselineAsc()`
-  - L554 `_signOf()`
-  - L559 `_fmtCoord()`
+  - L168 `_buildConsultCta()`
+  - L205 `_buildLinesSection()`
+  - L248 `_buildLineRow()`
+  - L322 `_openLineSheet()`
+  - L339 `_buildTitleArea()`
+  - L372 `_buildHeader()`
+  - L443 `_buildAngleRow()`
+  - L505 `_buildPlanetGrid()`
+  - L514 `_buildPlanetRow()`
+  - L602 `_recoverBaselineAsc()`
+  - L607 `_signOf()`
+  - L612 `_fmtCoord()`
 
   </details>
 
@@ -724,45 +778,48 @@ A*C*G ライン (natal / transit) のタップ詳細 popup。
 - L69: `'$solaraWorkerBase/tiles/osm/hot/{z}/{x}/{y}.png'`
 
 
-### `lib/screens/map/map_time_slider.dart` (473 行)
+### `lib/screens/map/map_time_slider.dart` (508 行)
 
-**imports:** dart=0 / package=1 / relative=0
+**imports:** dart=0 / package=1 / relative=2
+
+- relative: `../../utils/pro_status.dart`, `../../widgets/pro_unlock_dialog.dart`
 
 **型定義 (2):**
 
-- L17 `class MapTimeSlider : StatefulWidget`
+- L20 `class MapTimeSlider : StatefulWidget`
   - ============================================================
-- L39 `class MapTimeSliderState : State`
+- L42 `class MapTimeSliderState : State`
   - public State: GlobalKey 経由で map_screen.dart の PopScope から
 
-**関数 (3 public + 20 private):**
+**関数 (3 public + 21 private):**
 
-- L34 `createState()`
-- L45 `closeTimeRow()` — 時刻行が開いていれば閉じる。 開いていなければ何もしない。
-- L226 `build()`
+- L37 `createState()`
+- L48 `closeTimeRow()` — 時刻行が開いていれば閉じる。 開いていなければ何もしない。
+- L229 `build()`
 
-  <details><summary>private 関数 20 件</summary>
+  <details><summary>private 関数 21 件</summary>
 
-  - L52 `_setTimeRowExpanded()`
-  - L70 `_committedDays()`
-  - L81 `_committedHourJst()`
-  - L89 `_committedMinuteJst()`
-  - L100 `_displayMinuteJst()`
-  - L108 `_previewDateJst()`
-  - L119 `_commitDays()`
-  - L138 `_commitHour()`
-  - L148 `_commitDayShiftAndTime()`
-  - L158 `_isLive()`
-  - L161 `_isLiveHour()`
-  - L168 `_stepDay()`
-  - L175 `_stepHour()`
-  - L191 `_stepMinute()`
-  - L214 `_fmtDate()`
-  - L221 `_fmtTime()`
-  - L270 `_buildDayRow()`
-  - L389 `_buildHourRow()`
-  - L439 `_sliderTheme()`
-  - L453 `_stepperBtn()`
+  - L55 `_setTimeRowExpanded()`
+  - L73 `_committedDays()`
+  - L84 `_committedHourJst()`
+  - L92 `_committedMinuteJst()`
+  - L103 `_displayMinuteJst()`
+  - L111 `_previewDateJst()`
+  - L122 `_commitDays()`
+  - L141 `_commitHour()`
+  - L151 `_commitDayShiftAndTime()`
+  - L161 `_isLive()`
+  - L164 `_isLiveHour()`
+  - L171 `_stepDay()`
+  - L178 `_stepHour()`
+  - L194 `_stepMinute()`
+  - L217 `_fmtDate()`
+  - L224 `_fmtTime()`
+  - L273 `_buildDayRow()`
+  - L392 `_buildHourRow()`
+  - L456 `_stepMinuteFine()`
+  - L469 `_sliderTheme()`
+  - L483 `_stepperBtn()`
 
   </details>
 
@@ -807,29 +864,29 @@ A*C*G ライン (natal / transit) のタップ詳細 popup。
 - 集計: `showInfoPopup`×1
 
 
-### `lib/screens/map/map_vp_panel.dart` (120 行)
+### `lib/screens/map/map_vp_panel.dart` (140 行)
 
-**imports:** dart=1 / package=2 / relative=2
+**imports:** dart=1 / package=2 / relative=3
 
-- relative: `../../utils/reverse_geocode.dart`, `../../utils/solara_storage.dart`
+- relative: `../../utils/pro_status.dart`, `../../utils/reverse_geocode.dart`, `../../utils/solara_storage.dart`
 
 **型定義 (2):**
 
-- L17 `class VPSlot`
+- L18 `class VPSlot`
   - スロット1件分のデータ
-- L35 `class SlotManager`
+- L41 `class SlotManager`
   - HTML: SlotManager — SharedPreferencesでスロットを永続化
 
 **関数 (8 public + 0 private):**
 
-- L26 `toJson()`
-- L50 `save()`
-- L56 `syncHome()` — HTML: syncHome — プロフィールのホーム地点を先頭スロットに同期
-- L73 `saveCurrentLocation()` — HTML: saveCurrentLocation — reverse geocodingで地名取得して保存
-- L91 `moveSlot()`
-- L100 `renameSlot()`
-- L107 `deleteSlot()`
-- L114 `changeIcon()`
+- L27 `toJson()`
+- L62 `save()`
+- L68 `syncHome()` — HTML: syncHome — プロフィールのホーム地点を先頭スロットに同期
+- L88 `saveCurrentLocation()` — HTML: saveCurrentLocation — reverse geocodingで地名取得して保存
+- L111 `moveSlot()`
+- L120 `renameSlot()`
+- L127 `deleteSlot()`
+- L134 `changeIcon()`
 
 
 ### `lib/screens/map/map_widgets.dart` (51 行)
@@ -849,78 +906,84 @@ A*C*G ライン (natal / transit) のタップ詳細 popup。
 - L40 `build()`
 
 
-### `lib/screens/map_screen.dart` (2695 行)
+### `lib/screens/map_screen.dart` (3058 行)
 
-**imports:** dart=2 / package=6 / relative=30
+**imports:** dart=2 / package=6 / relative=35
 
-- relative: `../utils/solara_api.dart`, `../utils/solara_storage.dart`, `../utils/tile_http_client.dart`, `../widgets/dominant_fortune_overlay.dart`, `../widgets/info_popup.dart`, `map/map_daily_transit_screen.dart`, `map/map_constants.dart`, `map/map_styles.dart`, `map/map_sectors.dart`, `map/map_fortune_sheet.dart`, `map/map_vp_panel.dart`, `map/map_menu_chips.dart`, `map/map_display_menu.dart`, `map/map_viewpoint_menu.dart`, `map/map_astro.dart`, `map/map_astro_carto.dart`, `map/map_astro_lines.dart`, `map/map_location_markers.dart`, `map/map_planet_intro_popup.dart`, `map/map_planet_lines.dart`, `map/map_relocation_popup.dart`, `map/map_search.dart`, `map/map_overlays.dart`, `map/map_time_slider.dart`, `map/map_widgets.dart`, `../utils/astro_lines.dart`, `../utils/direction_energy.dart`, `forecast_screen.dart`, `horoscope/horo_antique_icons.dart`, `locations_screen.dart`
+- relative: `../utils/solara_api.dart`, `../utils/solara_storage.dart`, `../utils/tile_http_client.dart`, `../widgets/dominant_fortune_overlay.dart`, `../widgets/info_popup.dart`, `map/map_daily_transit_screen.dart`, `map/consult_entry_popup.dart`, `map/map_constants.dart`, `map/map_styles.dart`, `map/map_sectors.dart`, `map/map_fortune_sheet.dart`, `map/map_vp_panel.dart`, `map/map_menu_chips.dart`, `map/map_display_menu.dart`, `map/map_viewpoint_menu.dart`, `map/map_astro.dart`, `map/map_astro_carto.dart`, `map/map_astro_lines.dart`, `map/map_location_markers.dart`, `map/map_planet_intro_popup.dart`, `map/map_planet_lines.dart`, `map/map_relocation_popup.dart`, `map/map_search.dart`, `map/map_overlays.dart`, `map/map_time_slider.dart`, `map/map_widgets.dart`, `../utils/astro_lines.dart`, `../utils/direction_energy.dart`, `../utils/pro_status.dart`, `../utils/reverse_geocode.dart`, `../widgets/pro_unlock_dialog.dart`, `consultation/consultation_input_screen.dart`, `forecast_screen.dart`, `horoscope/horo_antique_icons.dart`, `locations_screen.dart`
 
 **型定義 (2):**
 
-- L69 `class MapScreen : StatefulWidget`
-- L79 `class MapScreenState : State`
+- L74 `class MapScreen : StatefulWidget`
+- L84 `class MapScreenState : State`
 
-**関数 (8 public + 48 private):**
+**関数 (8 public + 54 private):**
 
-- L76 `createState()`
-- L317 `initState()`
-- L348 `dispose()`
-- L456 `reloadProfile()` — 外部（main.dart のタブ切替）から呼ばれる公開リロード。
-- L1262 `snack()`
-- L1425 `snack()`
-- L1471 `build()`
-- L2455 `signOf()`
+- L81 `createState()`
+- L334 `initState()`
+- L372 `dispose()`
+- L480 `reloadProfile()` — 外部（main.dart のタブ切替）から呼ばれる公開リロード。
+- L1293 `snack()`
+- L1467 `snack()`
+- L1513 `build()`
+- L2573 `signOf()`
 
-  <details><summary>private 関数 48 件</summary>
+  <details><summary>private 関数 54 件</summary>
 
-  - L326 `_bootstrap()`
-  - L362 `_warmupTileConnection()`
-  - L397 `_onTileError()`
-  - L424 `_checkDailyBadgeState()`
-  - L442 `_loadMapStyle()`
-  - L448 `_onMapStyleChanged()`
-  - L463 `_moveToInitialCenter()`
-  - L471 `_loadProfileAndChart()`
-  - L641 `_cycleActiveCategory()`
-  - L668 `_reannotateSearchResults()`
-  - L700 `_showSheet()`
-  - L720 `_openLocations()`
-  - L737 `_openForecast()`
-  - L756 `_onDisplayMenuTap()`
-  - L766 `_onViewpointMenuTap()`
-  - L780 `_onSearchTap()`
-  - L794 `_clearAllSearch()`
-  - L811 `_onDailyBadgeTap()`
-  - L858 `_onOverlayComplete()`
-  - L868 `_onDailyTransitClose()`
-  - L880 `_doSearch()`
-  - L941 `_frameSearchArea()`
-  - L967 `_restoreSearchListView()`
-  - L977 `_selectSearchHit()`
-  - L1007 `_buildFocusedHitMarker()`
-  - L1049 `_buildSearchHitMarkers()`
-  - L1122 `_displayScores()`
-  - L1183 `_sectorRankAlphaMul()`
-  - L1201 `_rebuild()`
-  - L1235 `_kickPaintInvalidation()`
-  - L1249 `_setVpOnly()`
-  - L1261 `_setVpToCurrentLocationOnly()`
-  - L1307 `_enterAstroCartoMode()`
-  - L1377 `_exitAstroCartoMode()`
-  - L1424 `_geolocate()`
-  - L1534 `_buildBody()`
-  - L2422 `_buildZenithPopup()`
-  - L2435 `_buildRelocationPopup()`
-  - L2488 `_reloadLocationSlots()`
-  - L2506 `_findNearbyAstroLines()`
-  - L2524 `_zenithMarkerFrames()`
-  - L2525 `_nadirMarkerFrames()`
-  - L2526 `_zenithBandFrames()`
-  - L2527 `_nadirBandFrames()`
-  - L2531 `_filteredFrames()`
-  - L2544 `_visibleAstroLines()`
-  - L2567 `_buildNoProfileGuide()`
-  - L2601 `_showSearchVpHelpPopup()`
+  - L343 `_bootstrap()`
+  - L386 `_warmupTileConnection()`
+  - L421 `_onTileError()`
+  - L448 `_checkDailyBadgeState()`
+  - L466 `_loadMapStyle()`
+  - L472 `_onMapStyleChanged()`
+  - L487 `_moveToInitialCenter()`
+  - L495 `_loadProfileAndChart()`
+  - L672 `_cycleActiveCategory()`
+  - L699 `_reannotateSearchResults()`
+  - L731 `_showSheet()`
+  - L751 `_openLocations()`
+  - L768 `_openForecast()`
+  - L787 `_onDisplayMenuTap()`
+  - L797 `_onViewpointMenuTap()`
+  - L811 `_onSearchTap()`
+  - L825 `_clearAllSearch()`
+  - L842 `_onDailyBadgeTap()`
+  - L889 `_onOverlayComplete()`
+  - L899 `_onDailyTransitClose()`
+  - L911 `_doSearch()`
+  - L972 `_frameSearchArea()`
+  - L998 `_restoreSearchListView()`
+  - L1008 `_selectSearchHit()`
+  - L1038 `_buildFocusedHitMarker()`
+  - L1080 `_buildSearchHitMarkers()`
+  - L1153 `_displayScores()`
+  - L1214 `_sectorRankAlphaMul()`
+  - L1232 `_rebuild()`
+  - L1266 `_kickPaintInvalidation()`
+  - L1280 `_setVpOnly()`
+  - L1292 `_setVpToCurrentLocationOnly()`
+  - L1338 `_enterAstroCartoMode()`
+  - L1418 `_exitAstroCartoMode()`
+  - L1466 `_geolocate()`
+  - L1578 `_buildBody()`
+  - L2534 `_buildZenithPopup()`
+  - L2553 `_buildRelocationPopup()`
+  - L2619 `_proLabelForAstroKey()`
+  - L2639 `_proDescForAstroKey()`
+  - L2668 `_onAstroToggle()`
+  - L2708 `_enterConsultationFromDaily()`
+  - L2755 `_launchConsultation()`
+  - L2819 `_reloadLocationSlots()`
+  - L2843 `_nearestNatalConjunctions()`
+  - L2864 `_findNearbyAstroLines()`
+  - L2882 `_zenithMarkerFrames()`
+  - L2883 `_nadirMarkerFrames()`
+  - L2884 `_zenithBandFrames()`
+  - L2885 `_nadirBandFrames()`
+  - L2889 `_filteredFrames()`
+  - L2902 `_visibleAstroLines()`
+  - L2930 `_buildNoProfileGuide()`
+  - L2964 `_showSearchVpHelpPopup()`
 
   </details>
 
@@ -930,5 +993,5 @@ A*C*G ライン (natal / transit) のタップ詳細 popup。
 
 **Worker URL リテラル (1):**
 
-- L368: `'$solaraWorkerBase/tiles/osm/hot/0/0/0.png'`
+- L392: `'$solaraWorkerBase/tiles/osm/hot/0/0/0.png'`
 
