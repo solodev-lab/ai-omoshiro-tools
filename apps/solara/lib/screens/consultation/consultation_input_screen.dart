@@ -290,7 +290,10 @@ class _ConsultationInputScreenState extends State<ConsultationInputScreen> {
                       ),
                     ),
                     _Section(
-                      label: 'どの距離感で？',
+                      // サブタイトル変更 (2026-05-16):
+                      // 旧「どの距離感で？」は 3 モード (移住/旅行/おでかけ) が
+                      // 「距離」というより「場面」を指すので、より直感的な文言へ。
+                      label: 'どんな場面で？',
                       child: _ModeRow(
                         selected: _mode,
                         onSelect: _onModeChanged,
@@ -334,11 +337,21 @@ class _ConsultationInputScreenState extends State<ConsultationInputScreen> {
                       label: '自由記述（任意）',
                       child: _FreeTextField(
                         controller: _freeTextCtrl,
-                        hint: _theme != null
-                            ? _themeChoices
-                                .firstWhere((t) => t.id == _theme)
-                                .hint
-                            : 'いま気になっていること',
+                      ),
+                    ),
+                    // 相談例 (テーマ × モードで 3 つ提示、タップで自由記述に反映)。
+                    // daily モードでも mode='daily' のキーで取得できる。
+                    _Section(
+                      label: 'こんな相談ができそう',
+                      child: _ConsultExamples(
+                        theme: _theme,
+                        mode: _mode,
+                        onPick: (text) => setState(() {
+                          _freeTextCtrl.text = text;
+                          _freeTextCtrl.selection = TextSelection.fromPosition(
+                            TextPosition(offset: text.length),
+                          );
+                        }),
                       ),
                     ),
                     if (widget.presetTarget != null && _scope == 'specific')

@@ -159,53 +159,61 @@ class _ModeRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: _modeChoices.map((m) {
-        final active = selected == m.id;
-        return Expanded(
-          child: GestureDetector(
-            onTap: () => onSelect(m.id),
-            child: Container(
-              margin: const EdgeInsets.symmetric(horizontal: 4),
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              decoration: BoxDecoration(
-                color:
-                    active ? const Color(0x33F6BD60) : const Color(0x10FFFFFF),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(
+    // IntrinsicHeight + Column.mainAxisSize.max でタイル高さを最高にそろえる。
+    // hint の文字数差で「おでかけだけ低い / 移住だけ高い」等の凸凹を防ぐ。
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: _modeChoices.map((m) {
+          final active = selected == m.id;
+          return Expanded(
+            child: GestureDetector(
+              onTap: () => onSelect(m.id),
+              child: Container(
+                margin: const EdgeInsets.symmetric(horizontal: 4),
+                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
+                decoration: BoxDecoration(
                   color: active
-                      ? SolaraColors.solaraGold
-                      : SolaraColors.glassBorder,
+                      ? const Color(0x33F6BD60)
+                      : const Color(0x10FFFFFF),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: active
+                        ? SolaraColors.solaraGold
+                        : SolaraColors.glassBorder,
+                  ),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.max,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      m.label,
+                      style: TextStyle(
+                        color: active
+                            ? SolaraColors.solaraGoldLight
+                            : SolaraColors.textPrimary,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      m.hint,
+                      style: const TextStyle(
+                        color: SolaraColors.textSecondary,
+                        fontSize: 10,
+                        letterSpacing: 0.3,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
                 ),
               ),
-              child: Column(
-                children: [
-                  Text(
-                    m.label,
-                    style: TextStyle(
-                      color: active
-                          ? SolaraColors.solaraGoldLight
-                          : SolaraColors.textPrimary,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    m.hint,
-                    style: TextStyle(
-                      color: SolaraColors.textSecondary,
-                      fontSize: 10,
-                      letterSpacing: 0.3,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ],
-              ),
             ),
-          ),
-        );
-      }).toList(growable: false),
+          );
+        }).toList(growable: false),
+      ),
     );
   }
 }
@@ -222,53 +230,61 @@ class _ScopeRow extends StatelessWidget {
   Widget build(BuildContext context) {
     // Phase: specific スコープも常時選択可。preset が無くても inline picker で
     // 地点選択できるようになったので「disabled」状態は廃止。
-    return Row(
-      children: _scopeChoices.map((s) {
-        final active = selected == s.id;
-        return Expanded(
-          child: GestureDetector(
-            onTap: () => onSelect(s.id),
-            child: Container(
-              margin: const EdgeInsets.symmetric(horizontal: 4),
-              padding: const EdgeInsets.symmetric(vertical: 10),
-              decoration: BoxDecoration(
-                color: active
-                    ? const Color(0x33F6BD60)
-                    : const Color(0x10FFFFFF),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(
+    //
+    // IntrinsicHeight + Column.mainAxisSize.max でタイル高さを最高にそろえる。
+    // 「世界全体だけ hint が短くて低い」凸凹を防ぐ。
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: _scopeChoices.map((s) {
+          final active = selected == s.id;
+          return Expanded(
+            child: GestureDetector(
+              onTap: () => onSelect(s.id),
+              child: Container(
+                margin: const EdgeInsets.symmetric(horizontal: 4),
+                padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
+                decoration: BoxDecoration(
                   color: active
-                      ? SolaraColors.solaraGold
-                      : SolaraColors.glassBorder,
+                      ? const Color(0x33F6BD60)
+                      : const Color(0x10FFFFFF),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: active
+                        ? SolaraColors.solaraGold
+                        : SolaraColors.glassBorder,
+                  ),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.max,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      s.label,
+                      style: TextStyle(
+                        color: active
+                            ? SolaraColors.solaraGoldLight
+                            : SolaraColors.textPrimary,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      s.hint,
+                      style: const TextStyle(
+                        color: SolaraColors.textSecondary,
+                        fontSize: 10,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
                 ),
               ),
-              child: Column(
-                children: [
-                  Text(
-                    s.label,
-                    style: TextStyle(
-                      color: active
-                          ? SolaraColors.solaraGoldLight
-                          : SolaraColors.textPrimary,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    s.hint,
-                    style: const TextStyle(
-                      color: SolaraColors.textSecondary,
-                      fontSize: 10,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ],
-              ),
             ),
-          ),
-        );
-      }).toList(growable: false),
+          );
+        }).toList(growable: false),
+      ),
     );
   }
 }
@@ -317,8 +333,7 @@ class _RegionPicker extends StatelessWidget {
 
 class _FreeTextField extends StatelessWidget {
   final TextEditingController controller;
-  final String hint;
-  const _FreeTextField({required this.controller, required this.hint});
+  const _FreeTextField({required this.controller});
 
   @override
   Widget build(BuildContext context) {
@@ -332,11 +347,8 @@ class _FreeTextField extends StatelessWidget {
         height: 1.6,
       ),
       decoration: InputDecoration(
-        hintText: '例: $hint',
-        hintStyle: TextStyle(
-          color: SolaraColors.textSecondary.withValues(alpha: 0.6),
-          fontSize: 12,
-        ),
+        // hintText は出さない (オーナー指示 2026-05-16)。
+        // 例文は _ConsultExamples セクションで自由記述の下に独立表示する。
         filled: true,
         fillColor: const Color(0x10FFFFFF),
         contentPadding:
@@ -356,6 +368,201 @@ class _FreeTextField extends StatelessWidget {
         counterStyle: TextStyle(
           color: SolaraColors.textSecondary.withValues(alpha: 0.6),
           fontSize: 10,
+        ),
+      ),
+    );
+  }
+}
+
+// ── 相談例 (テーマ × モードで 3 つ提示) ─────────────────────────
+//
+// テキスト方針 (project_solara_message_tone + design philosophy):
+// - 「したい」「ほしい」など 1 人称の願望文 (吉凶/良し悪し言及なし)
+// - モード別に粒度を変える (移住=年単位/旅行=期間/おでかけ=今日)
+// - 18 通り全てを Solara 世界観に合わせる (Stella 文体ではなくユーザー声)
+
+const Map<String, Map<String, List<String>>> _consultExamples = {
+  'love': {
+    'migration': [
+      'パートナーと長く一緒に暮らせる場所を探したい',
+      '家族や子どもとの時間を大切にできる土地は？',
+      '人との縁が自然に育つ街がいい',
+    ],
+    'travel': [
+      '次の旅で誰かと心が通う出会いがあったら',
+      'カップルで穏やかに過ごせる旅先を知りたい',
+      '人とのつながりが深まる旅にしたい',
+    ],
+    'daily': [
+      '今日は誰かと心が近づく方角に動きたい',
+      '気になる人と自然に会えそうな場所は？',
+      'ひと息つきながら愛情を感じたい',
+    ],
+  },
+  'money': {
+    'migration': [
+      '収入の流れを変えられる土地を探している',
+      '経済的に自立しやすい街は？',
+      '事業や仕事がうまく回りそうな場所',
+    ],
+    'travel': [
+      '次の旅で金運をリセットしたい',
+      '自分への投資にいい旅先を知りたい',
+      '豊かさが動きそうな場所はある？',
+    ],
+    'daily': [
+      '今日のお金回りがよくなる方角は？',
+      'チャンスが向かってきそうな方向',
+      '無駄な出費を避けたい',
+    ],
+  },
+  'work': {
+    'migration': [
+      'キャリアを伸ばせる都市に住みたい',
+      '自分の専門に合う仕事環境がある場所',
+      '仕事と暮らしのバランスが取れる土地',
+    ],
+    'travel': [
+      '仕事の方向性を見つける旅にしたい',
+      '新しい挑戦のヒントが得られる場所',
+      'リフレッシュして仕事に戻れる旅先',
+    ],
+    'daily': [
+      '今日の打合せに向く方角は？',
+      '仕事の流れが進みそうな方向',
+      '集中して作業できそうな場所',
+    ],
+  },
+  'communication': {
+    'migration': [
+      '学びの機会が多い街に住みたい',
+      '新しい人と話しやすい土地は？',
+      '言葉や文化を深められる場所',
+    ],
+    'travel': [
+      '次の旅で言葉や学びの機会がほしい',
+      '人と話す楽しさを思い出せる場所',
+      '自分の表現が広がる旅先',
+    ],
+    'daily': [
+      '今日は話が弾みそうな方角は？',
+      '学びにつながる場所を選びたい',
+      '思いがけない出会いの方向',
+    ],
+  },
+  'healing': {
+    'migration': [
+      '心と体を休められる土地に移りたい',
+      '自然に囲まれて暮らせる場所',
+      '静かに自分を整え直せる街は？',
+    ],
+    'travel': [
+      '心が緩む旅先を探したい',
+      '温泉や自然で深く休める場所',
+      '次の旅は何もせず過ごしたい',
+    ],
+    'daily': [
+      '今日は心を癒す方角に向かいたい',
+      'ふと立ち止まれる場所',
+      '自分を労れる方向に動きたい',
+    ],
+  },
+  'newStart': {
+    'migration': [
+      'ここではない場所で再出発したい',
+      '気持ちを切り替えられる土地は？',
+      '自分を一新できる街を探している',
+    ],
+    'travel': [
+      '次の旅でリセットしたい',
+      '新しい自分に出会える旅先',
+      '区切りをつけるための旅にしたい',
+    ],
+    'daily': [
+      '今日、新しい一歩を踏み出す方角',
+      '気分転換になる場所を選びたい',
+      'これまでと違うルートで動いてみたい',
+    ],
+  },
+};
+
+class _ConsultExamples extends StatelessWidget {
+  final String? theme;
+  final String mode;
+  final ValueChanged<String> onPick;
+
+  const _ConsultExamples({
+    required this.theme,
+    required this.mode,
+    required this.onPick,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final t = theme;
+    if (t == null) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 4),
+        child: Text(
+          'テーマを選ぶと、こんな相談ができる例が出てきます',
+          style: TextStyle(
+            color: SolaraColors.textSecondary,
+            fontSize: 11,
+            height: 1.5,
+          ),
+        ),
+      );
+    }
+    final list = _consultExamples[t]?[mode] ?? const <String>[];
+    if (list.isEmpty) return const SizedBox.shrink();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        for (int i = 0; i < list.length; i++) ...[
+          if (i > 0) const SizedBox(height: 6),
+          _ExampleRow(text: list[i], onTap: () => onPick(list[i])),
+        ],
+      ],
+    );
+  }
+}
+
+class _ExampleRow extends StatelessWidget {
+  final String text;
+  final VoidCallback onTap;
+  const _ExampleRow({required this.text, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(10),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          color: const Color(0x0CFFFFFF),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: SolaraColors.glassBorder),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.auto_awesome,
+                size: 14, color: SolaraColors.solaraGoldLight),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                text,
+                style: const TextStyle(
+                  color: SolaraColors.textPrimary,
+                  fontSize: 12,
+                  height: 1.45,
+                  letterSpacing: 0.2,
+                ),
+              ),
+            ),
+            const Icon(Icons.arrow_forward,
+                size: 12, color: SolaraColors.textSecondary),
+          ],
         ),
       ),
     );
