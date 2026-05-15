@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:latlong2/latlong.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../utils/pro_status.dart';
 import '../../utils/reverse_geocode.dart';
 import '../../utils/solara_storage.dart';
 
@@ -32,12 +33,23 @@ class VPSlot {
 }
 
 /// HTML: SlotManager — SharedPreferencesでスロットを永続化
+///
+/// Phase 2-8: 上限 `maxSlots` を Free 5 / Pro 10 で振り分ける。
+/// `ProStatus.instance.isPro` を runtime で参照するため、Pro 切替時に
+/// 即座に新しい上限が効く (SharedPreferences に既に保存された 6 件目以降は
+/// load 時にそのまま読み込まれるが、新規 add は新しい上限で gate される)。
 class SlotManager {
+  static const int kMaxSlotsFree = 5;
+  static const int kMaxSlotsPro = 10;
+
   final String storageKey;
-  final int maxSlots;
   final List<String> defaultNames;
 
-  SlotManager({required this.storageKey, this.maxSlots = 5, this.defaultNames = const ['職場','お気に入り','スポット','場所']});
+  /// 現在の上限。`ProStatus` を runtime 参照するため、Pro 切替時に動的に変化する。
+  int get maxSlots =>
+      ProStatus.instance.isPro ? kMaxSlotsPro : kMaxSlotsFree;
+
+  SlotManager({required this.storageKey, this.defaultNames = const ['職場','お気に入り','スポット','場所']});
 
   Future<List<VPSlot>> load() async {
     final prefs = await SharedPreferences.getInstance();
@@ -61,7 +73,10 @@ class SlotManager {
       slots[0] = h;
     } else {
       slots.insert(0, h);
-      if (slots.length > maxSlots) slots.length = maxSlots;
+      // Phase 2-8: 旧仕様は超過分を truncate していたが、Pro→Free 降格時に
+      // ユーザー保存地点を失うのを避けるため、超過は許容する (柱3 原則
+      // 「自分の記録を永久に失わない」)。新規追加は saveCurrentLocation 側で
+      // 上限到達時に gate される。
     }
     await save(slots);
   }
@@ -74,6 +89,11 @@ class SlotManager {
     final slots = await load();
     final homeCount = (slots.isNotEmpty && slots[0].isHome) ? 1 : 0;
     if (slots.length >= maxSlots) {
+      // Phase 2-8: Free 上限到達時は Pro アップグレード案内も含める。
+      if (!ProStatus.instance.isPro) {
+        return '保存は${kMaxSlotsFree - homeCount}件までです。\n'
+            'Cosmic Pro なら${kMaxSlotsPro - homeCount}件まで保存できます。';
+      }
       return '保存は${maxSlots - homeCount}件までです。\n不要な地点を削除してから追加してください。';
     }
     final userIdx = slots.length - homeCount;

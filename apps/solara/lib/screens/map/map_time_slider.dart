@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../../utils/pro_status.dart';
+import '../../widgets/pro_unlock_dialog.dart';
+
 /// ============================================================
 /// Time Slider — Tier A #5 / CCG (Cyclo*Carto*Graphy)
 ///
@@ -428,12 +431,39 @@ class MapTimeSliderState extends State<MapTimeSlider> {
       // 上段スペーサー (LIVE 44 + gap 4 + ⏰ 28 = 76) の真下に
       // 分用 ◀▶ (10 分刻み) を 2 個配置:
       //   gap 4 + ◀ 32 + gap 4 + ▶ 32 + gap 4 = 76 (ぴったり一致)
+      //
+      // Phase 2-8: 長押しで Pro 1 分刻みステップ。Free 長押し → Pro ダイアログ。
       const SizedBox(width: 4),
-      _stepperBtn(icon: Icons.arrow_left, onTap: () => _stepMinute(-10)),
+      _stepperBtn(
+        icon: Icons.arrow_left,
+        onTap: () => _stepMinute(-10),
+        onLongPress: () => _stepMinuteFine(-1),
+      ),
       const SizedBox(width: 4),
-      _stepperBtn(icon: Icons.arrow_right, onTap: () => _stepMinute(10)),
+      _stepperBtn(
+        icon: Icons.arrow_right,
+        onTap: () => _stepMinute(10),
+        onLongPress: () => _stepMinuteFine(1),
+      ),
       const SizedBox(width: 4),
     ]);
+  }
+
+  /// Phase 2-8: 1 分刻みの分ステップ (Pro 限定)。
+  ///
+  /// Free ユーザーが長押しすると Pro 案内ダイアログを表示し、ステップ自体は行わない。
+  /// Pro ユーザーは長押しで ±1 分シフト (通常タップの ±10 分より精度が高い)。
+  void _stepMinuteFine(int delta) {
+    if (!ProStatus.instance.isPro) {
+      showProUnlockDialog(
+        context,
+        featureLabel: '1 分刻みスライダー',
+        description: '長押しで時刻を 1 分単位で進めます。アスペクトの正確時刻や '
+            '天頂通過の瞬間を細かく追跡するための高精度モードです。',
+      );
+      return;
+    }
+    _stepMinute(delta);
   }
 
   SliderThemeData _sliderTheme({bool green = false}) {
@@ -450,9 +480,14 @@ class MapTimeSliderState extends State<MapTimeSlider> {
     );
   }
 
-  Widget _stepperBtn({required IconData icon, required VoidCallback onTap}) {
+  Widget _stepperBtn({
+    required IconData icon,
+    required VoidCallback onTap,
+    VoidCallback? onLongPress,
+  }) {
     return GestureDetector(
       onTap: onTap,
+      onLongPress: onLongPress,
       behavior: HitTestBehavior.opaque,
       child: SizedBox(
         width: 32, height: 32,
