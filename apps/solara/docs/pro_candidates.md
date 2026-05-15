@@ -271,10 +271,15 @@ Sanctuary に既に実装済の Cosmic Pro UI（$9.99/月・$49.99/年）の訴�
 
 #### Stage 1 — 入力（1 枚スクロールシート）
 
-**入口 2 つ・エンジン 1 つ**：
-- **タップ起点**：既存 `MapLineNarrativeSheet` に「この場所について相談する」ボタン追加 →
-  地理スコープ「具体地点」固定で同じシート起動
-- **目的起点**：Daily Transit popup 内に「🔮 AI に相談」CTA 追加（ACG モード起動ボタンと並べる）→ シート起動
+**入口 2 つ・エンジン 1 つ**（2026-05-15 確定）：
+- **タップ起点**：Map 上の任意地点タップで開く `MapRelocationPopup` ヘッダ直下に
+  「この場所で相談する」CTA。地理スコープ「具体地点」固定で `ConsultationInputScreen` 起動。
+  **採用理由**: 線タップ起点 (`MapLineNarrativeSheet`) より任意地点タップの方が自由度が高い。
+  実装済（commit `6f10c6c`、Phase 2-3b）。
+- **目的起点**：Daily Transit popup 内に「🔮 AI に相談」CTA 追加（ACG モード起動ボタンと並べる）→
+  `ConsultationInputScreen` 起動。preset 無し、scope はユーザーが選ぶ。**未実装（Phase 2-3c 予定）**。
+
+🔴 **Sanctuary 画面は入口にしない**（オーナー判断 2026-05-15）。
 
 **入力項目**（5 つ）：
 
