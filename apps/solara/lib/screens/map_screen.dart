@@ -1772,14 +1772,18 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                 nadirFrames: _nadirBandFrames(),
               )),
             // 天頂点マーカー (CCG): zenith_<frame> ON のフレームのみ描画。
-            // relocate 排他モード中はマーカー onTap を null にして反応抑制。
+            // relocate / consult 排他モード中はマーカー onTap を null にして反応抑制。
+            // (Phase 2026-05-16: consult を追加 — マーカータップで zenith popup が
+            // 開いてしまい、ACG 相談モードで空地点タップしても popup が出ない
+            // 不具合の原因だった)
             if (_zenithMarkerFrames().isNotEmpty && _astroLinesCache.isNotEmpty)
               MarkerLayer(markers: buildAstroZenithMarkers(
                 lines: _astroLinesCache,
                 activeCategory: _planetFilterCategory,
                 allPlanetMode: _astroLayers['aspectAll'] ?? false,
                 framesWithZenith: _zenithMarkerFrames(),
-                onTap: (_astroLayers['relocate'] == true)
+                onTap: (_astroLayers['relocate'] == true ||
+                        _astroLayers['consult'] == true)
                     ? null
                     : (planetKey, frame, point) => setState(() {
                           _zenithTapInfo = (planet: planetKey, frame: frame, point: point, isNadir: false);
@@ -1793,7 +1797,8 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                 activeCategory: _planetFilterCategory,
                 allPlanetMode: _astroLayers['aspectAll'] ?? false,
                 framesWithNadir: _nadirMarkerFrames(),
-                onTap: (_astroLayers['relocate'] == true)
+                onTap: (_astroLayers['relocate'] == true ||
+                        _astroLayers['consult'] == true)
                     ? null
                     : (planetKey, frame, point) => setState(() {
                           _zenithTapInfo = (planet: planetKey, frame: frame, point: point, isNadir: true);
@@ -1805,14 +1810,22 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
               MarkerLayer(markers: buildDirLabels(center: _center)),
             // 登録地マーカー (出生地🌟+グロー / VP slots / Locations slots)
             // 通常Map / Astro*Carto*Graphy モード共通で表示。
+            // Phase 2026-05-16: relocate / consult 排他モード中は onTap を抑制
+            // (排他モードはタップで何が起きるかが決まっている、location 名 popup が
+            // 割り込むと UX がぶれる)。
             if (!_noProfile)
               MarkerLayer(markers: buildLocationMarkers(
                 profile: _profile,
                 vpSlots: _vpSlotsCache,
                 locationSlots: _locSlotsCache,
-                onTap: (name, point, isBirth) => setState(() {
-                  _locationTapInfo = (name: name, point: point, isBirth: isBirth);
-                }),
+                // 排他モード中は null → markers の GestureDetector を外して
+                // タップを map onTap に透過させる。
+                onTap: (_astroLayers['relocate'] == true ||
+                        _astroLayers['consult'] == true)
+                    ? null
+                    : (name, point, isBirth) => setState(() {
+                          _locationTapInfo = (name: name, point: point, isBirth: isBirth);
+                        }),
               )),
             // 検索結果リスト中: 各 hit に番号マーカー (1〜20) を描画。
             // タップで _selectSearchHit (= 該当 hit にズームイン + Focus popup)。
