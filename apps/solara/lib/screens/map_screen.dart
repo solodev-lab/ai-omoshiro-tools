@@ -2373,20 +2373,36 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                   child: AstroCartoFramePills(
                     astroLayers: _astroLayers,
                     activeFrame: active,
-                    onToggle: (k) => setState(() {
-                      final nowOn = !(_astroLayers[k] ?? false);
-                      _astroLayers[k] = nowOn;
-                      for (final def in acgFrameDefs) {
-                        if (def.layerKey == k) {
-                          if (nowOn) {
-                            _activeAstroFrame = def.frame;
-                          } else if (_activeAstroFrame == def.frame) {
-                            _activeAstroFrame = null;
+                    // ACG framer の onToggle:
+                    // 1. consult / relocate / aspect 系 Pro 限定キーは
+                    //    `_onAstroToggle` 経由で Pro ゲート + 排他 + popup クリア
+                    // 2. その上で frame キー (aspect/aspectTransit 等) の場合は
+                    //    _activeAstroFrame を同期更新
+                    //
+                    // 旧仕様 (2026-05-16 修正前) では setState 内で `_astroLayers[k]`
+                    // を直接トグルしていたため、'相談' ON ↔ '引越し' OFF の排他処理
+                    // が動かず、ピル表示は ON でも tap 検出側で意図通りに動かない
+                    // ケースがあった。
+                    onToggle: (k) {
+                      final wasOn = _astroLayers[k] ?? false;
+                      _onAstroToggle(k);
+                      // Pro ゲートで弾かれた場合 (フラグ変化なし) は active 更新もスキップ
+                      final isOnNow = _astroLayers[k] ?? false;
+                      if (isOnNow == wasOn) return;
+                      // フレームキーの active 同期 (consult / relocate は frame 非該当)
+                      setState(() {
+                        for (final def in acgFrameDefs) {
+                          if (def.layerKey == k) {
+                            if (isOnNow) {
+                              _activeAstroFrame = def.frame;
+                            } else if (_activeAstroFrame == def.frame) {
+                              _activeAstroFrame = null;
+                            }
+                            break;
                           }
-                          break;
                         }
-                      }
-                    }),
+                      });
+                    },
                   ),
                 ),
                 const SizedBox(height: 1),

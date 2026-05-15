@@ -92,12 +92,16 @@ class _MapLineNarrativeSheetState extends State<MapLineNarrativeSheet> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildHeader(),
-        const SizedBox(height: 12),
-        _buildStaticSection(),
+        // CTA はヘッダー直下に置く (静的解説の前)。
+        // 旧仕様 (2026-05-16 修正前) では最下段に置いていたが、解説が長いと
+        // スクロールが必要で発見しづらかった。Phase 2-3b の MapRelocationPopup
+        // と同じ「ヘッダー直下 CTA」パターンに統一。
         if (widget.onConsult != null) ...[
           const SizedBox(height: 12),
           _buildConsultCta(),
         ],
+        const SizedBox(height: 12),
+        _buildStaticSection(),
       ],
     );
   }
