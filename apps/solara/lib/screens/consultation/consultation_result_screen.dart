@@ -25,6 +25,7 @@ import '../../theme/solara_colors.dart';
 import '../../utils/consultation_api.dart';
 import '../../utils/consultation_engine.dart';
 import '../../utils/consultation_record.dart';
+import '../../utils/consultation_share.dart';
 import '../../utils/solara_storage.dart';
 import '../../widgets/glass_panel.dart';
 
@@ -84,10 +85,14 @@ class _ConsultationResultScreenState extends State<ConsultationResultScreen> {
   ConsultationReading? _reading;
   bool _loading = true;
   bool _refreshing = false;
+  bool _sharing = false;
   String? _error;
 
   /// リフレッシュで除外する候補名 (累積)。
   final Set<String> _excludedNames = <String>{};
+
+  /// Phase 2-5: 画像エクスポート用、結果領域をラップする RepaintBoundary キー。
+  final GlobalKey _shareBoundaryKey = GlobalKey();
 
   @override
   void initState() {
@@ -226,8 +231,124 @@ class _ConsultationResultScreenState extends State<ConsultationResultScreen> {
     }
   }
 
+  /// Phase 2-5: シェアシートを開く (テキスト / 画像 2 択)。
+  Future<void> _openShareSheet() async {
+    final reading = _reading;
+    if (reading == null) return;
+    if (_sharing) return;
+    final choice = await showModalBottomSheet<_ShareChoice>(
+      context: context,
+      backgroundColor: SolaraColors.celestialBlueLight,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 36,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 12),
+                decoration: BoxDecoration(
+                  color: SolaraColors.glassBorder,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              ListTile(
+                leading: const Icon(
+                  Icons.copy_outlined,
+                  color: SolaraColors.solaraGold,
+                ),
+                title: const Text(
+                  'テキストをコピー',
+                  style: TextStyle(color: SolaraColors.textPrimary),
+                ),
+                subtitle: const Text(
+                  '相談結果を clipboard に整形してコピー',
+                  style: TextStyle(
+                    color: SolaraColors.textSecondary,
+                    fontSize: 11,
+                  ),
+                ),
+                onTap: () => Navigator.of(ctx).pop(_ShareChoice.text),
+              ),
+              ListTile(
+                leading: const Icon(
+                  Icons.image_outlined,
+                  color: SolaraColors.solaraGold,
+                ),
+                title: const Text(
+                  '画像で共有',
+                  style: TextStyle(color: SolaraColors.textPrimary),
+                ),
+                subtitle: const Text(
+                  '結果画面を PNG にして OS 標準シェアで共有',
+                  style: TextStyle(
+                    color: SolaraColors.textSecondary,
+                    fontSize: 11,
+                  ),
+                ),
+                onTap: () => Navigator.of(ctx).pop(_ShareChoice.image),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    if (choice == null) return;
+    if (!mounted) return;
+    if (choice == _ShareChoice.text) {
+      await _copyText(reading);
+    } else {
+      await _shareImage(reading);
+    }
+  }
+
+  Future<void> _copyText(ConsultationReading reading) async {
+    final text = formatConsultationAsText(
+      theme: widget.theme,
+      mode: widget.mode,
+      scope: widget.scope,
+      freeText: widget.freeText,
+      reading: reading,
+    );
+    await Clipboard.setData(ClipboardData(text: text));
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('テキストをコピーしました'),
+        duration: Duration(seconds: 2),
+      ),
+    );
+  }
+
+  Future<void> _shareImage(ConsultationReading reading) async {
+    setState(() => _sharing = true);
+    try {
+      final caption = formatConsultationCaption(
+        theme: widget.theme,
+        reading: reading,
+      );
+      await shareConsultationImage(
+        boundaryKey: _shareBoundaryKey,
+        shareText: caption,
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('シェアに失敗しました: $e')),
+      );
+    } finally {
+      if (mounted) setState(() => _sharing = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final canShare = _reading != null && !_loading;
     return Scaffold(
       backgroundColor: SolaraColors.celestialBlueDark,
       appBar: AppBar(
@@ -247,10 +368,35 @@ class _ConsultationResultScreenState extends State<ConsultationResultScreen> {
           ),
         ),
         centerTitle: true,
+        actions: [
+          IconButton(
+            icon: _sharing
+                ? const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(
+                      color: SolaraColors.solaraGold,
+                      strokeWidth: 2,
+                    ),
+                  )
+                : const Icon(
+                    Icons.ios_share,
+                    color: SolaraColors.textPrimary,
+                  ),
+            tooltip: 'シェア',
+            onPressed: canShare && !_sharing ? _openShareSheet : null,
+          ),
+        ],
       ),
       body: SafeArea(
         top: false,
-        child: _buildBody(),
+        child: RepaintBoundary(
+          key: _shareBoundaryKey,
+          child: ColoredBox(
+            color: SolaraColors.celestialBlueDark,
+            child: _buildBody(),
+          ),
+        ),
       ),
     );
   }
@@ -301,6 +447,9 @@ class _ConsultationResultScreenState extends State<ConsultationResultScreen> {
     );
   }
 }
+
+/// シェアシートで選ばれた選択肢。
+enum _ShareChoice { text, image }
 
 // ── サブウィジェット ───────────────────────────────────────
 
