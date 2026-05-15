@@ -104,15 +104,25 @@ class _ConsultationInputScreenState extends State<ConsultationInputScreen> {
 
   void _onModeChanged(String id) {
     setState(() {
-      final wasDaily = _mode == 'daily';
       _mode = id;
-      // mode 切替時の scope 補正:
-      //   非 daily → daily: bearings を初期選択 (おでかけは現在地基点が主流)
-      //   daily → 非 daily: bearings は非 daily で使えないので world に戻す
-      if (id == 'daily' && !wasDaily) {
-        _scope = 'bearings';
-      } else if (id != 'daily' && _scope == 'bearings') {
-        _scope = 'world';
+      // mode 切替時の scope 補正は「新モードで使えない scope なら有効値へ」
+      // のみ。それ以外 (specific / region) は現状維持し、ユーザーの選択を尊重する。
+      //
+      // 旧仕様 (2026-05-16 修正前) では非 daily→daily で常に bearings に強制
+      // 切替していたが、Map タップで preset 入りの specific スコープに来た
+      // ユーザーが mode を「おでかけ」に変えると地点選択が消える UX 上の問題が
+      // あり撤回。preset がある時は specific を尊重する。
+      final validScopes =
+          _scopeChoicesFor(id).map((c) => c.id).toSet();
+      if (validScopes.contains(_scope)) return;
+
+      // 現 scope が新モードで使えない場合のフォールバック:
+      //   preset/specificPick があるなら specific を最優先
+      //   それ以外は: daily ← bearings (現在地基点が主流) / 非 daily ← world (世界規模が広い)
+      if (widget.presetTarget != null || _specificPick != null) {
+        _scope = 'specific';
+      } else {
+        _scope = id == 'daily' ? 'bearings' : 'world';
       }
     });
   }
