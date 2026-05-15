@@ -435,15 +435,26 @@ Sanctuary に既に実装済の Cosmic Pro UI（$9.99/月・$49.99/年）の訴�
 
 #### 実装フェーズ見積もり
 
-| Phase | 内容 | 工数目安 |
-|---|---|---|
-| 2-1 | Stage 2 エンジン（キュレート都市リスト生成、候補生成ロジック、`_findNearbyAstroLines` 統合） | 中（2-3 セッション） |
-| 2-2 | Stage 3 Worker `/astro/consultation` エンドポイント（`line_narrative.js` リネーム + 新プロンプト + fallback） | 中（1-2 セッション） |
-| 2-3 | Stage 1 入力シート UI + Stage 4 結果表示画面（PageView + cards + states + haptic） | 大（3-4 セッション） |
-| 2-4 | 自動保存 + 履歴閲覧画面（柱3 タロット履歴と同パターン） | 中（1-2 セッション） |
-| 2-5 | 「📍地図で確認」連動 | 公開後 |
+| Phase | 内容 | 工数目安 | 状態 |
+|---|---|---|---|
+| 2-1 | Stage 2 エンジン（キュレート都市リスト生成、候補生成ロジック、`_findNearbyAstroLines` 統合） | 中（2-3 セッション） | ✅ 完了 |
+| 2-2 | Stage 3 Worker `/astro/consultation` エンドポイント（`line_narrative.js` リネーム + 新プロンプト + fallback） | 中（1-2 セッション） | ✅ 完了 (Version 78f9a7b5 deployed) |
+| 2-3 | Stage 1 入力シート UI + Stage 4 結果表示画面（PageView + cards + states + haptic） | 大（3-4 セッション） | ✅ 完了 (入口 1=MapRelocationPopup / 2=Daily Transit popup) |
+| 2-4 | 自動保存 + 履歴閲覧画面（柱3 タロット履歴と同パターン） | 中（1-2 セッション） | ✅ 完了 |
+| 2-5 | 「📍地図で確認」連動 | 公開後 | 公開後 |
+| 2-5b | シェアエクスポート (テキスト + PNG 画像 1080px) | — | ✅ 完了 |
+| 2-6a | Pro ゲート UI 配線（`ProStatus` + `showProUnlockDialog` + Sanctuary DEV トグル） | — | ✅ 完了 (RevenueCat 未配線) |
+| 2-6b | RevenueCat / StoreKit 配線（実購入導線） | — | 公開前必須 |
 
 **前提**：課金基盤（launch_checklist Phase 1-2）なしで全部作れる（機能のみ、Pro ゲートは課金基盤実装後に配線）。
+
+**ファイル分割（2026-05-15）**：`consultation_input_screen.dart` (725行) と `consultation_result_screen.dart` (791行) は part-of パターン (`horoscope_screen.dart` と同様) で分割済：
+- `consultation_input_screen.dart` (308行) — orchestration + state
+- `consultation_input_widgets.dart` (435行) — 選択肢定数 + Choice classes + サブウィジェット
+- `consultation_result_screen.dart` (466行) — orchestration + state + シェア導線
+- `consultation_result_widgets.dart` (342行) — 状態別パネル + 候補カード等
+
+全 4 consultation テスト (history/share/smoke/ui) は 34/34 pass を維持。
 
 ### 7.3 柱3 — あなたの記録庫（定着）
 
