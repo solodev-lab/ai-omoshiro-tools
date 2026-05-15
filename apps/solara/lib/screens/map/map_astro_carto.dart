@@ -305,6 +305,7 @@ class AstroCartoFramePills extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final relocateOn = astroLayers['relocate'] ?? false;
+    final consultOn = astroLayers['consult'] ?? false;
     return _ScrollableRowPanel(
       borderRadius: 16,
       maxWidthMargin: 16,
@@ -335,10 +336,55 @@ class AstroCartoFramePills extends StatelessWidget {
             onTap: () => onToggle('relocate'),
             onInfoTap: () => showAstroGlossaryDialog(context, 'relocate_layer'),
           ),
+          // 「相談」ピル (Phase 2026-05-16、A + B + C(ii) ハイブリッド):
+          // ON で地点タップ → ConsultEntryPopup → Stella 相談へ。
+          // relocate と排他 (map_screen._onAstroToggle 側で強制 OFF)。
+          // 排他制御: 「いまタップで何が起きるか」がぶれない UX を担保。
+          _FramePill(
+            label: '相談',
+            accent: const Color(0xFFF6BD60),
+            on: consultOn,
+            active: false,
+            onTap: () => onToggle('consult'),
+            onInfoTap: () => _showConsultModeInfo(context),
+          ),
         ],
       ),
     );
   }
+}
+
+/// 「相談」モードピルの i ボタンで開く説明 popup。
+/// glossary には登録せず、モードトグル固有の説明として直接表示する
+/// (relocate の関連で astro_glossary に置くと用語と紛らわしくなる)。
+void _showConsultModeInfo(BuildContext context) {
+  showInfoPopup(
+    context: context,
+    child: Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: const [
+        Text(
+          '相談モード',
+          style: TextStyle(
+              color: Color(0xFFF6BD60), fontSize: 14, letterSpacing: 1),
+        ),
+        SizedBox(height: 10),
+        Text(
+          'ON にすると、地図上の任意の地点をタップして '
+          'その場所で Stella に相談を始められます。\n\n'
+          'タップ popup には、その地点に最も近い '
+          'ACG ライン 3 本も一緒に表示されます。\n\n'
+          '相談モード ON 中は、ライン・天頂・天底のタップは '
+          '反応しなくなります (排他モード)。\n'
+          '引越しモードとも排他で、片方を ON にするともう片方は '
+          '自動 OFF になります。',
+          style: TextStyle(
+              color: Color(0xFFE8E0D0), fontSize: 13, height: 1.7),
+        ),
+      ],
+    ),
+  );
 }
 
 /// 第2層: active frame のサブトグル 4 つ (横並び)。
@@ -633,6 +679,12 @@ class AstroZenithPopup extends StatelessWidget {
   final bool isNadir;
   final VoidCallback onClose;
 
+  /// 「この地点で相談する」CTA タップ時のハンドラ。
+  /// 非 null のとき popup 内にボタンが表示される。caller (map_screen) が
+  /// zenith 座標を preset として `_launchConsultation` を呼ぶ。
+  /// Phase: 2026-05-16 (A + B + C(ii) ハイブリッド)。
+  final VoidCallback? onConsult;
+
   const AstroZenithPopup({
     super.key,
     required this.planetKey,
@@ -640,6 +692,7 @@ class AstroZenithPopup extends StatelessWidget {
     required this.onClose,
     this.frame = AstroFrame.natal,
     this.isNadir = false,
+    this.onConsult,
   });
 
   @override
@@ -805,6 +858,41 @@ class AstroZenithPopup extends StatelessWidget {
                 ),
               ],
             ),
+            // 「この地点で相談する」CTA (Phase 2026-05-16、B 経路)。
+            // onConsult 非 null のときのみ表示。zenith 座標を preset として渡す。
+            if (onConsult != null) ...[
+              const SizedBox(height: 14),
+              InkWell(
+                onTap: onConsult,
+                borderRadius: BorderRadius.circular(10),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                      vertical: 11, horizontal: 12),
+                  decoration: BoxDecoration(
+                    color: const Color(0x33F6BD60),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: const Color(0x88F6BD60)),
+                  ),
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.auto_awesome,
+                          size: 16, color: Color(0xFFE9D29A)),
+                      SizedBox(width: 8),
+                      Text(
+                        'この地点で相談する',
+                        style: TextStyle(
+                          color: Color(0xFFE9D29A),
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 0.4,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ],
         ),
       ),
