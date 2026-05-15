@@ -133,7 +133,10 @@ List<Marker> buildLocationMarkers({
   required SolaraProfile? profile,
   required List<VPSlot> vpSlots,
   required List<VPSlot> locationSlots,
-  required void Function(String name, LatLng point, bool isBirth) onTap,
+  /// null 指定でタップを完全に透過する (排他モード用)。
+  /// Phase 2026-05-16: relocate / consult モード中は markers の GestureDetector
+  /// 自体を外して、map の onTap にイベントを届ける。
+  void Function(String name, LatLng point, bool isBirth)? onTap,
 }) {
   final markers = <Marker>[];
 
@@ -144,11 +147,15 @@ List<Marker> buildLocationMarkers({
       width: 40,
       height: 40,
       alignment: Alignment.center,
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: () => onTap(slot.name, point, false),
-        child: SlotMarker(icon: slot.icon, isHome: slot.isHome),
-      ),
+      child: onTap != null
+          ? GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () => onTap(slot.name, point, false),
+              child: SlotMarker(icon: slot.icon, isHome: slot.isHome),
+            )
+          : IgnorePointer(
+              child: SlotMarker(icon: slot.icon, isHome: slot.isHome),
+            ),
     );
   }
 
@@ -174,11 +181,13 @@ List<Marker> buildLocationMarkers({
       width: 60,
       height: 60,
       alignment: Alignment.center,
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: () => onTap(name, point, true),
-        child: const BirthMarker(),
-      ),
+      child: onTap != null
+          ? GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () => onTap(name, point, true),
+              child: const BirthMarker(),
+            )
+          : const IgnorePointer(child: BirthMarker()),
     ));
   }
 
