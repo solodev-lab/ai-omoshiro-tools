@@ -76,11 +76,13 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    // セクション見出し
+    // セクション見出し (2026-05-16: 「どの距離感で？」→「どんな場面で？」、
+    // 自由記述の下に「こんな相談ができそう」セクション追加)
     expect(find.text('何のテーマで観たい？'), findsOneWidget);
-    expect(find.text('どの距離感で？'), findsOneWidget);
+    expect(find.text('どんな場面で？'), findsOneWidget);
     expect(find.text('範囲は？'), findsOneWidget);
     expect(find.text('自由記述（任意）'), findsOneWidget);
+    expect(find.text('こんな相談ができそう'), findsOneWidget);
 
     // テーマ 6 チップ
     expect(find.text('恋愛・関係'), findsOneWidget);
