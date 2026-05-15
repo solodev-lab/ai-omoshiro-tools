@@ -245,14 +245,23 @@ class _CandidateCard extends StatelessWidget {
     required this.reading,
   });
 
+  /// 候補タイプ: 方角 (bearings) か 場所 (specific/region/world) か。
+  bool get _isBearing => candidate.bearing != null;
+
   String get _subtitle {
     final parts = <String>[];
     if (candidate.region.isNotEmpty) parts.add(candidate.region);
-    if (candidate.country.isNotEmpty && candidate.bearing == null) {
+    if (candidate.country.isNotEmpty && !_isBearing) {
       parts.add(candidate.country);
     }
     return parts.join(' · ');
   }
+
+  /// 候補タイプを示すラベル (アイコン横に小さく表示)。
+  String get _kindLabel => _isBearing ? '方角' : '場所';
+
+  /// 方角コード (N/NE/E/...) → 大きく表示する記号。null なら場所候補。
+  String? get _bearingBadgeText => candidate.bearing;
 
   @override
   Widget build(BuildContext context) {
@@ -267,6 +276,25 @@ class _CandidateCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // 候補タイプバッジ + 種別ラベル (方角 / 場所)
+              Row(
+                children: [
+                  _CandidateKindBadge(
+                    isBearing: _isBearing,
+                    bearingText: _bearingBadgeText,
+                  ),
+                  const SizedBox(width: 10),
+                  Text(
+                    _kindLabel,
+                    style: const TextStyle(
+                      color: SolaraColors.textSecondary,
+                      fontSize: 11,
+                      letterSpacing: 1.0,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
               Text(
                 candidate.nameJP,
                 style: const TextStyle(
@@ -336,6 +364,82 @@ class _EnergyChip extends StatelessWidget {
           fontSize: 11,
           letterSpacing: 0.4,
         ),
+      ),
+    );
+  }
+}
+
+/// 候補種別バッジ (方角 / 場所)。
+/// - bearings: コンパスアイコン + 方位コード (N / NE / ...) を内側に
+/// - place:    ピンアイコン (シンプル)
+class _CandidateKindBadge extends StatelessWidget {
+  final bool isBearing;
+  final String? bearingText; // 'N' / 'NE' 等。null なら場所
+  const _CandidateKindBadge({
+    required this.isBearing,
+    required this.bearingText,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (isBearing) {
+      return Container(
+        width: 40,
+        height: 40,
+        decoration: BoxDecoration(
+          color: const Color(0x22F6BD60),
+          shape: BoxShape.circle,
+          border: Border.all(color: const Color(0x66F6BD60), width: 1.2),
+        ),
+        alignment: Alignment.center,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            const Icon(
+              Icons.explore_outlined,
+              size: 28,
+              color: SolaraColors.solaraGoldLight,
+            ),
+            if (bearingText != null && bearingText!.isNotEmpty)
+              // 方位コードをアイコン上に小さくオーバーレイ
+              Positioned(
+                bottom: 4,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 4, vertical: 1),
+                  decoration: BoxDecoration(
+                    color: SolaraColors.celestialBlueDark,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    bearingText!,
+                    style: const TextStyle(
+                      color: SolaraColors.solaraGoldLight,
+                      fontSize: 9,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 0.4,
+                      height: 1.0,
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      );
+    }
+    return Container(
+      width: 40,
+      height: 40,
+      decoration: BoxDecoration(
+        color: const Color(0x22F6BD60),
+        shape: BoxShape.circle,
+        border: Border.all(color: const Color(0x66F6BD60), width: 1.2),
+      ),
+      alignment: Alignment.center,
+      child: const Icon(
+        Icons.place,
+        size: 24,
+        color: SolaraColors.solaraGoldLight,
       ),
     );
   }

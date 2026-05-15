@@ -104,12 +104,14 @@ class _ConsultationInputScreenState extends State<ConsultationInputScreen> {
 
   void _onModeChanged(String id) {
     setState(() {
+      final wasDaily = _mode == 'daily';
       _mode = id;
-      // daily を選んだ瞬間に scope は bearings 専用
-      if (id == 'daily') {
+      // mode 切替時の scope 補正:
+      //   非 daily → daily: bearings を初期選択 (おでかけは現在地基点が主流)
+      //   daily → 非 daily: bearings は非 daily で使えないので world に戻す
+      if (id == 'daily' && !wasDaily) {
         _scope = 'bearings';
-      } else if (_scope == 'bearings') {
-        // 他モードに戻ったら scope をデフォルトの world に
+      } else if (id != 'daily' && _scope == 'bearings') {
         _scope = 'world';
       }
     });
@@ -127,10 +129,10 @@ class _ConsultationInputScreenState extends State<ConsultationInputScreen> {
   /// - theme 必須
   /// - specific スコープ時は presetTarget OR _specificPick が必須 (currentLocation の
   ///   自動採用は廃止。明示選択を要求して「勝手に現在地が選ばれている」UX を排除)
-  /// - daily モード時は currentLocation 必須 (scope=bearings の起点)
+  /// - bearings スコープ時は currentLocation 必須 (現在地が方角計算の起点)
   bool get _canSubmit {
     if (_theme == null) return false;
-    if (_mode == 'daily' && widget.currentLocation == null) return false;
+    if (_scope == 'bearings' && widget.currentLocation == null) return false;
     if (_scope == 'specific' &&
         widget.presetTarget == null &&
         _specificPick == null) {
@@ -299,15 +301,19 @@ class _ConsultationInputScreenState extends State<ConsultationInputScreen> {
                         onSelect: _onModeChanged,
                       ),
                     ),
-                    if (_mode != 'daily')
-                      _Section(
-                        label: '範囲は？',
-                        child: _ScopeRow(
-                          selected: _scope,
-                          onSelect: (id) => setState(() => _scope = id),
-                        ),
+                    // 範囲 (scope) 選択: モード別に選択肢を切替
+                    //   - daily:     具体地点 / 方角ベース / 範囲指定
+                    //   - 他モード:   具体地点 / 範囲指定 / 世界全体
+                    _Section(
+                      label: '範囲は？',
+                      child: _ScopeRow(
+                        selected: _scope,
+                        onSelect: (id) => setState(() => _scope = id),
+                        choices: _scopeChoicesFor(_mode),
                       ),
-                    if (_mode != 'daily' && _scope == 'region')
+                    ),
+                    // 地域ブロックピッカーは scope='region' のとき (mode 関係なく)
+                    if (_scope == 'region')
                       _Section(
                         label: '地域ブロック',
                         child: _RegionPicker(
@@ -318,8 +324,8 @@ class _ConsultationInputScreenState extends State<ConsultationInputScreen> {
                       ),
                     // 具体地点ピッカー (A inline): preset がない specific スコープ専用。
                     // preset があるときは下の _PresetLocationCard で「✓ ... を見ます」を出す。
-                    if (_mode != 'daily' &&
-                        _scope == 'specific' &&
+                    // mode に依存せず scope='specific' なら表示 (daily も対応)。
+                    if (_scope == 'specific' &&
                         widget.presetTarget == null)
                       _Section(
                         label: '地点を選ぶ',
