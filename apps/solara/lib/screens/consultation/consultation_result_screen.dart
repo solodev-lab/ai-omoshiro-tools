@@ -63,6 +63,10 @@ class ConsultationResultScreen extends StatefulWidget {
   /// 履歴に自動保存するか (default true)。履歴詳細表示時は false。
   final bool autoSave;
 
+  /// スコープ詳細 (scope='region' の大ブロック名 '日本', '北米' 等)。
+  /// 履歴カードでスコープアイコン横にラベル表示する用途で持ち回る。
+  final String? scopeDetail;
+
   const ConsultationResultScreen({
     super.key,
     required this.theme,
@@ -74,6 +78,7 @@ class ConsultationResultScreen extends StatefulWidget {
     this.fetchOverride,
     this.initialReading,
     this.autoSave = true,
+    this.scopeDetail,
   });
 
   @override
@@ -227,6 +232,7 @@ class _ConsultationResultScreenState extends State<ConsultationResultScreen> {
         freeText: widget.freeText,
         candidates: candidates,
         reading: reading,
+        scopeDetail: widget.scopeDetail,
       );
       await SolaraStorage.addConsultationRecord(record);
     } catch (_) {

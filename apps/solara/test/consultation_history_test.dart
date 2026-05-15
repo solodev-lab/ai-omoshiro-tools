@@ -34,6 +34,10 @@ ConsultationRecord _sampleRecord({
   String id = '1',
   String theme = 'love',
   String firstName = '京都',
+  String country = 'JP',
+  String region = '京都府',
+  String scope = 'specific',
+  String? scopeDetail,
   DateTime? savedAt,
 }) {
   final cand = CandidateLocation(
@@ -41,8 +45,8 @@ ConsultationRecord _sampleRecord({
     nameEN: 'Kyoto',
     lat: 35.0,
     lng: 135.7,
-    country: 'JP',
-    region: '京都府',
+    country: country,
+    region: region,
     population: 1463000,
     nearLines: const [
       CandidateNearLine(
@@ -71,7 +75,8 @@ ConsultationRecord _sampleRecord({
     savedAt: savedAt ?? DateTime.utc(2026, 5, 15, 10),
     theme: theme,
     mode: 'travel',
-    scope: 'specific',
+    scope: scope,
+    scopeDetail: scopeDetail,
     freeText: '',
     candidates: [cand],
     reading: reading,
@@ -273,6 +278,62 @@ void main() {
     // モード/スコープはアイコン化されている (mode='travel' / scope='specific')
     expect(find.byIcon(Icons.flight_outlined), findsNWidgets(2));
     expect(find.byIcon(Icons.location_on_outlined), findsNWidgets(2));
+  });
+
+  testWidgets('History card shows region scopeDetail next to scope icon',
+      (tester) async {
+    final rec = _sampleRecord(
+      scope: 'region',
+      scopeDetail: '日本',
+      // region scope では候補は複数だが、テストでは 1 件で十分。
+      // scopeDetail のラベル表示を確認するのが主目的。
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: ConsultationHistoryScreen(
+          loadOverride: () async => [rec],
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byIcon(Icons.crop_din_outlined), findsOneWidget);
+    expect(find.text('日本'), findsOneWidget);
+  });
+
+  testWidgets('History card shows specific address (region/country) next to scope icon',
+      (tester) async {
+    final rec = _sampleRecord(
+      scope: 'specific',
+      country: 'JP',
+      region: '京都府',
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: ConsultationHistoryScreen(
+          loadOverride: () async => [rec],
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byIcon(Icons.location_on_outlined), findsOneWidget);
+    // candidates[0].region と country が " / " 区切りで表示される
+    expect(find.text('京都府 / JP'), findsOneWidget);
+  });
+
+  test('ConsultationRecord scopeDetail JSON roundtrip', () {
+    final original = _sampleRecord(scope: 'region', scopeDetail: '北米');
+    final restored = ConsultationRecord.fromJson(original.toJson());
+    expect(restored.scopeDetail, '北米');
+
+    // 旧データ互換: scopeDetail を含まない JSON は null で復元
+    final legacyJson = Map<String, dynamic>.from(original.toJson())
+      ..remove('scopeDetail');
+    final legacy = ConsultationRecord.fromJson(legacyJson);
+    expect(legacy.scopeDetail, isNull);
   });
 
   testWidgets('History screen tap opens result screen in read-only mode',

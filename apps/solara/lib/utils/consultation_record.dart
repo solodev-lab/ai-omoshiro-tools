@@ -24,6 +24,12 @@ class ConsultationRecord {
   final String scope;
   final String freeText;
 
+  /// スコープに付随する詳細ラベル。
+  /// - scope='region' の場合: 大ブロック名 (例: '日本', '北米')
+  /// - その他のスコープでは null (specific は candidates[0] から、world/bearings は不要)。
+  /// 旧データには存在しないため fromJson は null 許容。
+  final String? scopeDetail;
+
   // Stage 2 出力 (Stella に渡した候補)
   final List<CandidateLocation> candidates;
 
@@ -39,6 +45,7 @@ class ConsultationRecord {
     required this.freeText,
     required this.candidates,
     required this.reading,
+    this.scopeDetail,
   });
 
   /// 新規レコード生成 (id は savedAt から自動採番)。
@@ -50,6 +57,7 @@ class ConsultationRecord {
     required List<CandidateLocation> candidates,
     required ConsultationReading reading,
     DateTime? savedAt,
+    String? scopeDetail,
   }) {
     final now = savedAt ?? DateTime.now().toUtc();
     return ConsultationRecord(
@@ -61,6 +69,7 @@ class ConsultationRecord {
       freeText: freeText,
       candidates: candidates,
       reading: reading,
+      scopeDetail: scopeDetail,
     );
   }
 
@@ -71,6 +80,7 @@ class ConsultationRecord {
         'mode': mode,
         'scope': scope,
         'freeText': freeText,
+        if (scopeDetail != null) 'scopeDetail': scopeDetail,
         'candidates': candidates.map((c) => c.toJson()).toList(),
         'reading': reading.toJson(),
       };
@@ -85,6 +95,7 @@ class ConsultationRecord {
       mode: j['mode'] as String? ?? '',
       scope: j['scope'] as String? ?? '',
       freeText: j['freeText'] as String? ?? '',
+      scopeDetail: j['scopeDetail'] as String?,
       candidates: (j['candidates'] as List?)
               ?.map((e) =>
                   CandidateLocation.fromJson(e as Map<String, dynamic>))
