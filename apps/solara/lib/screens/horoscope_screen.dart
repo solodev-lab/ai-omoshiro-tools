@@ -4,8 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../utils/astro_houses.dart' show assignPlanetHouse;
 import '../utils/astro_math.dart';
+import '../utils/pro_status.dart';
 import '../utils/solara_storage.dart';
 import '../utils/fortune_api.dart';
+import '../widgets/pro_unlock_dialog.dart';
 
 import 'horoscope/horo_constants.dart';
 import 'horoscope/horo_chart_painter.dart';
@@ -195,7 +197,39 @@ class HoroscopeScreenState extends State<HoroscopeScreen>
     _readingScrollCtl.addListener(() {
       _readingParallax.value = _readingScrollCtl.offset * 0.15;
     });
+    // Phase A1 (2026-05-17): Pro 状態変更 (Sanctuary DEV toggle / RevenueCat)
+    // に追従して fortunes を再 fetch。Free→Pro で残り 4 カテゴリを取りに行く
+    // / Pro→Free で殻ティーザーに戻す (UI 側は isPro 判定で自動的に切り替わる
+    // が、Free→Pro のとき 4 カテゴリの reading が空のままなので force 再 fetch)。
+    ProStatus.instance.addListener(_onProStatusChanged);
     loadProfile();
+  }
+
+  void _onProStatusChanged() {
+    if (!mounted) return;
+    // Pro になったら残り 4 カテゴリ取りに行く / Pro じゃなくなったら UI が
+    // 殻ティーザーに自動的に切り替わる (_fortunes に残っていても表示しない)。
+    if (ProStatus.instance.isPro) {
+      _loadFortunes(force: true);
+    } else {
+      // Free に戻ったら殻ティーザー表示 + キャッシュは残しておく
+      // (再度 Pro に戻ったときの即時表示用)。setState で UI 再描画のみ。
+      setState(() {});
+    }
+  }
+
+  /// Phase A1: Free ユーザーが殻ティーザーカード (overall 以外の 4 カテゴリ)
+  /// をタップしたときに Pro Unlock dialog を出すハンドラ。
+  /// カテゴリ名を渡して dialog の文言をカテゴリに合わせる。
+  void _showFortuneProUnlock(Map<String, dynamic> category) {
+    final nameJP = category['nameJP'] as String? ?? 'この運勢';
+    showProUnlockDialog(
+      context,
+      featureLabel: '$nameJP の Stella の読み',
+      description: '今日の星配置から「$nameJP」のテーマで Stella が読み解きます。'
+          '全 5 カテゴリの読みと、より深く考えた thinking モード ON の解釈は '
+          'Cosmic Pro で解放されます。',
+    );
   }
 
   @override
@@ -206,6 +240,7 @@ class HoroscopeScreenState extends State<HoroscopeScreen>
     _rotCtl.dispose();
     _readingScrollCtl.dispose();
     _readingParallax.dispose();
+    ProStatus.instance.removeListener(_onProStatusChanged);
     super.dispose();
   }
 
@@ -479,18 +514,30 @@ class HoroscopeScreenState extends State<HoroscopeScreen>
   // main.dart の _onTabTap が loadProfile() を呼び、_workingProfile が
   // _baseProfile で上書きされることで自動的にリセットされる)
 
-  /// 全5カテゴリの占い文を並列取得 (Stella の声)
-  /// 同日中は再取得しない (キャッシュ)
+  /// Phase A1 (2026-05-17): Pro 状態に応じて fetch するカテゴリを決める。
+  /// Free=overall のみ (4 カテゴリは殻ティーザーで Gemini 呼ばない、コスト 80% 削減)。
+  /// Pro=全 5 カテゴリ + thinking モード ON。
+  List<Map<String, dynamic>> _categoriesToFetch() {
+    if (ProStatus.instance.isPro) return fortuneCategories;
+    // Free: overall のみ。「全体運」は柱1 で唯一無料で読める核体験。
+    return fortuneCategories.where((c) => c['id'] == 'overall').toList();
+  }
+
+  /// Pro 状態に応じた占い文を並列取得 (Stella の声)
+  /// 同日中は再取得しない (キャッシュ)。
+  /// 🔴 Free ユーザーは overall (1 件) のみ取りに行き、Gemini 呼び出しを 80% 削減。
+  /// 残り 4 カテゴリは殻ティーザーで表示する (`HoroAstrologyView` の isPro 分岐)。
   Future<void> _loadFortunes({bool force = false}) async {
     if (_fortuneLoading) return;
     final today = DateTime.now();
+    final categories = _categoriesToFetch();
     if (!force &&
         _fortuneFetchedAt != null &&
         _fortuneFetchedAt!.year == today.year &&
         _fortuneFetchedAt!.month == today.month &&
         _fortuneFetchedAt!.day == today.day &&
-        _fortunes.length == fortuneCategories.length) {
-      return; // 同日キャッシュ有効
+        _fortunes.length >= categories.length) {
+      return; // 同日キャッシュ有効 (Pro 化で カテゴリ数が増えた場合のみ再 fetch)
     }
     setState(() {
       _fortuneLoading = true;
@@ -531,8 +578,9 @@ class HoroscopeScreenState extends State<HoroscopeScreen>
     }
 
     try {
-      // 並列fetch
-      final futures = fortuneCategories.map((cat) async {
+      // 並列fetch — Free=overall のみ、Pro=全 5 カテゴリ (thinking ON)。
+      final isPro = ProStatus.instance.isPro;
+      final futures = categories.map((cat) async {
         final id = cat['id'] as String;
         final reading = await fetchFortune(
           category: id,
@@ -543,6 +591,7 @@ class HoroscopeScreenState extends State<HoroscopeScreen>
           patterns: patternsPayload,
           date: dateStr,
           userName: _profile?.name,
+          thinking: isPro,
         );
         return MapEntry(id, reading);
       }).toList();
@@ -660,6 +709,10 @@ class HoroscopeScreenState extends State<HoroscopeScreen>
                   onRetry: () => _loadFortunes(force: true),
                   birthEdited: _isEdited,
                   scrollController: _readingScrollCtl,
+                  // Phase A1: Free=overall のみ表示、残り 4 カテゴリは殻ティーザー。
+                  // タップで Pro Unlock dialog。
+                  isPro: ProStatus.instance.isPro,
+                  onLockedCategoryTap: _showFortuneProUnlock,
                 )
               : _buildChartScrollView(),
             ),
