@@ -3,8 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../models/galaxy_cycle.dart';
 import '../../utils/constellation_namer.dart';
+import '../../utils/pro_status.dart';
 import '../../widgets/constellation_painter.dart';
 import '../horoscope/horo_antique_icons.dart';
+import 'galaxy_archive_filter.dart';
 
 // ══════════════════════════════════════════════════════════════════════════
 // STAR ATLAS TAB
@@ -15,77 +17,143 @@ import '../horoscope/horo_antique_icons.dart';
 
 /// STAR ATLAS タブ本体。HTML の `.atlas-content` と中のグリッドを描画する。
 /// `.stella-msg` は親 (galaxy_screen.dart) 側で描画されるためここには含めない。
-class GalaxyStarAtlasTab extends StatelessWidget {
+///
+/// C2/C5 (柱 3) 統合:
+///   - 上部に [GalaxyArchiveFilterBar] (検索/レアリティ/ソート、Pro 限定)
+///   - カード長押しで [onLongPressCard] を呼ぶ (親側で形成演出再生 + エクスポート
+///     メニューを開く、いずれも Pro 機能)
+class GalaxyStarAtlasTab extends StatefulWidget {
   final List<GalaxyCycle> completedCycles;
   final Map<int, ui.Image> artImages;
   final ValueChanged<GalaxyCycle> onOpenReplay;
+
+  /// カードを長押しした時に呼ばれる (省略可)。Pro 機能メニューの起点。
+  final ValueChanged<GalaxyCycle>? onLongPressCard;
 
   const GalaxyStarAtlasTab({
     super.key,
     required this.completedCycles,
     required this.artImages,
     required this.onOpenReplay,
+    this.onLongPressCard,
   });
+
+  @override
+  State<GalaxyStarAtlasTab> createState() => _GalaxyStarAtlasTabState();
+}
+
+class _GalaxyStarAtlasTabState extends State<GalaxyStarAtlasTab> {
+  GalaxyArchiveFilter _filter = const GalaxyArchiveFilter();
+
+  @override
+  void initState() {
+    super.initState();
+    ProStatus.instance.addListener(_onProChanged);
+  }
+
+  @override
+  void dispose() {
+    ProStatus.instance.removeListener(_onProChanged);
+    super.dispose();
+  }
+
+  void _onProChanged() {
+    if (!mounted) return;
+    // Free に降格された時はフィルタを初期状態に戻して結果が消えないようにする
+    // (柱 3 原則: Free の記録閲覧を阻害しない)。
+    if (!ProStatus.instance.isPro && _filter.isActive) {
+      setState(() => _filter = const GalaxyArchiveFilter());
+    } else {
+      setState(() {}); // バー UI の文言を切替させる
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     // 空状態: HTMLにはグリッド空の状態は明示されていないので、案内のみ出す。
-    if (completedCycles.isEmpty) {
+    if (widget.completedCycles.isEmpty) {
       return _EmptyState();
     }
 
-    // HTML: .atlas-content { padding: 0 16px 100px; gap:20px; overflow-y:auto; }
-    // ※bottom:100px は Stella + Bottom Nav のぶんを予約。
-    // Stella は親側で別途描画されるので、ここは単にその 100px を空けるだけ。
-    // (Flutter側では親Column末尾にStellaが追加されるため、100pxは過剰になる。)
-    // → HTMLと等価に保つため、ここでは bottom:16px (atlas-contentの内側余白) にとどめ、
-    //   残り 84px (= Stella分) は親側でStellaを配置することで確保する。
-    const double hPad = 16; // .atlas-content horizontal padding
-    const double bPad = 16; // 下余白 (Stella は親側)
-    const double headerInset = 4; // ヘッダーdivのインラインstyle: padding:0 4px
-    const double gap = 20; // .atlas-content gap
+    final isPro = ProStatus.instance.isPro;
+    // completedCycles は呼出側で「古い順」のことが多いため、Filter 内で
+    // sort を再適用してから表示する。
+    final visible = _filter.apply(widget.completedCycles);
+
+    const double hPad = 16;
+    const double bPad = 16;
+    const double headerInset = 4;
+    const double gap = 12;
 
     return CustomScrollView(
-      // HTML: .atlas-content::-webkit-scrollbar { display:none; }
       physics: const BouncingScrollPhysics(),
       slivers: [
-        // ─── Header ────────────────────────────────────────────────────────
-        // HTML: <div style="padding:0 4px;"> screen-h1 / screen-h2 </div>
         SliverPadding(
           padding: const EdgeInsets.fromLTRB(hPad + headerInset, 0, hPad + headerInset, 0),
           sliver: const SliverToBoxAdapter(child: _AtlasHeader()),
         ),
-        // HTML: .atlas-content gap:20px (ヘッダーとグリッドの間)
-        const SliverToBoxAdapter(child: SizedBox(height: gap)),
-
-        // ─── Constellation Grid ────────────────────────────────────────────
-        // HTML: .constellation-grid {
-        //   display:grid;
-        //   grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-        //   gap: 12px;
-        // }
+        // ─── Filter Bar (C2 Pro) ────────────────────────────────────────────
         SliverPadding(
-          padding: const EdgeInsets.fromLTRB(hPad, 0, hPad, bPad),
-          sliver: SliverGrid(
-            gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-              maxCrossAxisExtent: 200, // minmax(160px, 1fr) を近似
-              crossAxisSpacing: 12, // HTML: gap:12px
-              mainAxisSpacing: 12,
-              childAspectRatio: 0.75, // HTML: .const-card { aspect-ratio: 0.75 }
-            ),
-            delegate: SliverChildBuilderDelegate(
-              (context, index) {
-                final cycle = completedCycles[completedCycles.length - 1 - index];
-                return _ConstellationCard(
-                  cycle: cycle,
-                  artImage: artImages[cycle.nounIdx],
-                  onTap: () => onOpenReplay(cycle),
-                );
-              },
-              childCount: completedCycles.length,
+          padding: const EdgeInsets.fromLTRB(hPad, 0, hPad, 0),
+          sliver: SliverToBoxAdapter(
+            child: GalaxyArchiveFilterBar(
+              filter: _filter,
+              isPro: isPro,
+              onChanged: (f) => setState(() => _filter = f),
             ),
           ),
         ),
+        const SliverToBoxAdapter(child: SizedBox(height: gap)),
+
+        // ─── Result count notice (絞込結果) ─────────────────────────────────
+        if (_filter.isActive)
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(hPad + 4, 0, hPad, 6),
+            sliver: SliverToBoxAdapter(
+              child: Text(
+                '${visible.length} 件 / 全 ${widget.completedCycles.length} 件',
+                style: const TextStyle(
+                  fontFamily: 'DMSans',
+                  color: Color(0xFF999999),
+                  fontSize: 11,
+                  letterSpacing: 0.4,
+                ),
+              ),
+            ),
+          ),
+
+        // ─── Constellation Grid ─────────────────────────────────────────────
+        if (visible.isEmpty)
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(hPad, 16, hPad, bPad),
+            sliver: const SliverToBoxAdapter(child: _NoMatchState()),
+          )
+        else
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(hPad, 0, hPad, bPad),
+            sliver: SliverGrid(
+              gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                maxCrossAxisExtent: 200,
+                crossAxisSpacing: 12,
+                mainAxisSpacing: 12,
+                childAspectRatio: 0.75,
+              ),
+              delegate: SliverChildBuilderDelegate(
+                (context, index) {
+                  final cycle = visible[index];
+                  return _ConstellationCard(
+                    cycle: cycle,
+                    artImage: widget.artImages[cycle.nounIdx],
+                    onTap: () => widget.onOpenReplay(cycle),
+                    onLongPress: widget.onLongPressCard != null
+                        ? () => widget.onLongPressCard!(cycle)
+                        : null,
+                  );
+                },
+                childCount: visible.length,
+              ),
+            ),
+          ),
       ],
     );
   }
@@ -134,11 +202,13 @@ class _ConstellationCard extends StatelessWidget {
   final GalaxyCycle cycle;
   final ui.Image? artImage;
   final VoidCallback onTap;
+  final VoidCallback? onLongPress;
 
   const _ConstellationCard({
     required this.cycle,
     required this.artImage,
     required this.onTap,
+    this.onLongPress,
   });
 
   @override
@@ -170,6 +240,7 @@ class _ConstellationCard extends StatelessWidget {
 
     return GestureDetector(
       onTap: onTap,
+      onLongPress: onLongPress,
       behavior: HitTestBehavior.opaque,
       child: Container(
         // HTML: .const-card { border-radius:20px; padding:14px; }
@@ -265,6 +336,31 @@ class _ConstellationCard extends StatelessWidget {
               maxLines: 1,
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// NO MATCH STATE (フィルタ結果 0 件)
+// ══════════════════════════════════════════════════════════════════════════
+
+class _NoMatchState extends StatelessWidget {
+  const _NoMatchState();
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 24),
+      child: Center(
+        child: Text(
+          '条件に合うサイクルはありません',
+          style: GoogleFonts.cinzel(
+            color: const Color(0xFFACACAC),
+            fontSize: 13,
+            letterSpacing: 1.0,
+          ),
         ),
       ),
     );

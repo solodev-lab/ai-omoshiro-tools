@@ -7,6 +7,7 @@ import '../utils/pro_status.dart';
 import '../utils/solara_storage.dart';
 import '../utils/title_data.dart' as title_data;
 import '../widgets/class_card.dart';
+import '../widgets/pro_unlock_dialog.dart';
 import 'consultation/consultation_history_screen.dart';
 import 'sanctuary/sanctuary_orb_overlay.dart';
 import 'sanctuary/sanctuary_profile_editor.dart';
@@ -14,6 +15,7 @@ import 'sanctuary/sanctuary_reset_hour_picker.dart';
 import 'sanctuary/sanctuary_title_diagnosis.dart';
 import 'sanctuary/class_share_card.dart';
 import 'sanctuary/sanctuary_home_editor.dart';
+import 'sanctuary/title_history_screen.dart';
 
 class SanctuaryScreen extends StatefulWidget {
   const SanctuaryScreen({super.key});
@@ -190,6 +192,15 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
         'redoCount': newRedoCount,
       };
       await SolaraStorage.saveTitleData(dataToSave);
+      // C4 (柱 3): クラス変遷履歴に追記する。axis+court が同一なら storage 側で skip。
+      await SolaraStorage.addTitleHistoryEntry(
+        axis: result['axis'] ?? '',
+        court: result['court'] ?? '',
+        classEN: result['classEN'] ?? '',
+        classJP: result['classJP'] ?? '',
+        lightJP: result['lightJP'] ?? '',
+        shadowJP: result['shadowJP'] ?? '',
+      );
       setState(() {
         _titleLight = result['lightJP'];
         _titleShadow = result['shadowJP'];
@@ -443,38 +454,54 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
           ),
           const SizedBox(height: 8),
         ],
-        // 再診断ボタン: Free プランは 1 回まで、超えたら無効化 (Cosmic Pro 誘導用)
+        // 再診断ボタン: Free=1 回まで、Pro=無制限。
+        // C4 (柱 3): クラスは「今の自分」クイズなので Pro 限定で取り直せる。
+        // 二つ名は出生固定で取り直し不可 (これは別仕様、生年月日変更時のみ更新)。
         if (_titleLight != null) ...[
-          Builder(builder: (ctx) {
-            final canRedo = _titleRedoCount < _kFreeRedoLimit;
-            // TODO(Pro): RevenueCat 実装後、isPro || canRedo に変更
-            return GestureDetector(
-              onTap: canRedo ? _startDiagnosis : null,
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(
-                    color: canRedo
-                        ? const Color(0x4DF9D976)
-                        : const Color(0x22F9D976),
-                  ),
-                ),
-                child: Center(
-                  child: Text(
-                    canRedo ? '再診断する' : '再診断はCosmic Pro限定',
-                    style: TextStyle(
+          AnimatedBuilder(
+            animation: ProStatus.instance,
+            builder: (ctx, _) {
+              final isPro = ProStatus.instance.isPro;
+              final canRedoFree = _titleRedoCount < _kFreeRedoLimit;
+              final canRedo = isPro || canRedoFree;
+              final showProLabel = !canRedo;
+              return GestureDetector(
+                onTap: canRedo
+                    ? _startDiagnosis
+                    : () => showProUnlockDialog(
+                          ctx,
+                          featureLabel: 'クラスの取り直し',
+                          description:
+                              '「今の自分」は変わっていきます。\n'
+                              'Cosmic Pro なら何度でも診断を受け直せ、\n'
+                              '変遷ギャラリーで過去のクラスを並べて見返せます。',
+                        ),
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
                       color: canRedo
-                          ? const Color(0xFFF9D976)
-                          : const Color(0x77F9D976),
-                      fontSize: 15,
+                          ? const Color(0x4DF9D976)
+                          : const Color(0x22F9D976),
+                    ),
+                  ),
+                  child: Center(
+                    child: Text(
+                      showProLabel ? '再診断はCosmic Pro限定' : '再診断する',
+                      style: TextStyle(
+                        color: canRedo
+                            ? const Color(0xFFF9D976)
+                            : const Color(0x77F9D976),
+                        fontSize: 15,
+                      ),
                     ),
                   ),
                 ),
-              ),
-            );
-          }),
+              );
+            },
+          ),
           // 🔧 開発デバッグ用: redoCount リセットボタン
           // kDebugMode が true (debug build) の時のみ表示、release build では消える
           if (kDebugMode && _titleRedoCount > 0) ...[
@@ -676,6 +703,19 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
             Navigator.of(context).push(
               MaterialPageRoute(
                 builder: (_) => const ConsultationHistoryScreen(),
+              ),
+            );
+          },
+        ),
+        // C4 (柱 3): クラス変遷ギャラリー。Free でも閲覧可能。
+        _SettingsItem(
+          icon: Icons.history_edu_outlined,
+          text: '称号 変遷',
+          value: '›',
+          onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => const TitleHistoryScreen(),
               ),
             );
           },

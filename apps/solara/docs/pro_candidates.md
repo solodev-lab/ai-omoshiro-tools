@@ -516,12 +516,52 @@ Forecast 期間 (Free 1 年 / Pro 5 年、`_setYearOffset` で year>0 を Free g
   エクスポート・バックアップ）。ローカル保存なのでストレージコストはほぼゼロ。これで「自分の日記を
   人質に取られた」反発を回避。
 
-| 層 | 項目 |
-|---|---|
-| 看板（ローンチ） | 称号ギャラリー（変遷の可視化）/ Galaxy アーカイブ（閲覧ビュー） |
-| 同梱（ローンチ） | タロット履歴の検索・フィルタ / 形成演出の再生 + エクスポート |
-| 公開後 | C1 クラウドバックアップ・機種変更引き継ぎ（唯一の大コスト項目） |
-| 候補（公開後） | Stella による履歴リフレクション（蓄積記録から「あなたの流れ」を映し返す。記録が増えるほど価値＝解約ブレーキ） |
+| 層 | 項目 | ゲート状態 |
+|---|---|---|
+| 看板（ローンチ） | 称号ギャラリー（C4、変遷の可視化）/ Galaxy アーカイブ（C2、閲覧ビュー） | ✅ 柱3-A (2026-05-17) |
+| 同梱（ローンチ） | タロット履歴の検索・フィルタ（C3）/ 形成演出の再生 + エクスポート（C5） | ✅ 柱3-A (2026-05-17) |
+| 公開後 | C1 クラウドバックアップ・機種変更引き継ぎ（唯一の大コスト項目） | 公開後 |
+| 候補（公開後） | Stella による履歴リフレクション（蓄積記録から「あなたの流れ」を映し返す。記録が増えるほど価値＝解約ブレーキ） | 公開後 |
+
+**柱3-A 実装状態（2026-05-17）**:
+
+- **C2 Galaxy Archive**: `galaxy_archive_filter.dart` 新規。Star Atlas タブ上部に検索バー +
+  レアリティチップ + ソートメニュー。Free は AbsorbPointer + Pro Unlock dialog 誘導、
+  Pro は実フィルタ。`GalaxyStarAtlasTab` を `StatefulWidget` 化し ProStatus listener で
+  Free 降格時に自動リセット (柱3 原則: Free 閲覧を阻害しない)。
+- **C3 タロット履歴 検索・フィルタ**: `observe_history_filter.dart` 新規。
+  `ObserveHistoryPanel` 冒頭にフィルタバー (キーワード / 大小アルカナ / エレメント 4 種 /
+  正逆位置)。Free 操作で Pro Unlock dialog、Pro はフィルタ実行。元 list は古い順 → 表示は
+  新しい順に反転して filter 適用。
+- **C4 称号変遷ギャラリー**: `solara_storage` に `solara_title_history` キー追加
+  (60 件上限・連続同一クラス skip)、`sanctuary_screen._startDiagnosis` で診断結果を履歴に
+  自動追記。`title_history_screen.dart` 新規 (NOW バッジ + 時系列カード + chain connector)。
+  Sanctuary > Records から導線。再診断ボタンを ProStatus + Free 1 回まで のロジックに変更
+  (Pro=無制限、Free 超過→Pro Unlock dialog)。
+- **C5 形成演出再生 + エクスポート**: Star Atlas カード長押しで
+  `galaxy_cycle_actions_sheet.dart` の bottom sheet (通常再生 / 形成演出 / Markdown コピー)。
+  形成演出は既存 `CatasterismFormationOverlay` を `_activeOverlay = 'formation'` で再利用、
+  Markdown 整形は `galaxy_cycle_export.dart` (intention の刻星化結果も併記)。
+  Pro 限定 2 項目は Free タップで Pro Unlock dialog。
+
+**ファイル新規/変更**:
+- new: `lib/screens/galaxy/galaxy_archive_filter.dart` / `galaxy_cycle_actions_sheet.dart`
+- new: `lib/screens/observe/observe_history_filter.dart`
+- new: `lib/screens/sanctuary/title_history_screen.dart`
+- new: `lib/utils/galaxy_cycle_export.dart`
+- mod: `solara_storage.dart` (title history methods)
+- mod: `galaxy_star_atlas.dart` (Stateful + filter integration + onLongPress)
+- mod: `galaxy_screen.dart` (`_openCycleActions`)
+- mod: `observe_history.dart` (filter bar + Pro listener + 件数表示)
+- mod: `sanctuary_screen.dart` (history append + ProStatus 再診断ゲート + Records エントリ)
+
+**テスト**: 4 ファイル新規 / 25 テスト全 PASS
+- `test/galaxy_archive_filter_test.dart` (8 tests)
+- `test/galaxy_cycle_export_test.dart` (4 tests)
+- `test/observe_history_filter_test.dart` (7 tests)
+- `test/title_history_test.dart` (6 tests = 5 storage + 2 widget、5 テストは shared mock を共有)
+
+flutter analyze lib clean / audit.py HARD violations 既存のみ (新規ファイルは全て 500 行未満)。
 
 **④ 称号の取り直し（確定）**:
 - 称号診断は 2 つでできている — **二つ名**（生まれた日時のみ・一生変わらない）と

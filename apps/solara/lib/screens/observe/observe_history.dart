@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import '../../models/daily_reading.dart';
 import '../../models/tarot_card.dart';
+import '../../utils/pro_status.dart';
 import '../../utils/solara_storage.dart';
 import '../../utils/tarot_data.dart';
 import 'observe_constants.dart';
+import 'observe_history_filter.dart';
 
 // ══════════════════════════════════════════════════
 // History Panel
@@ -21,6 +23,30 @@ class ObserveHistoryPanel extends StatefulWidget {
 
 class _ObserveHistoryPanelState extends State<ObserveHistoryPanel> {
   String? _expandedHistory; // date string of expanded card
+  ObserveHistoryFilter _filter = const ObserveHistoryFilter();
+
+  @override
+  void initState() {
+    super.initState();
+    ProStatus.instance.addListener(_onProChanged);
+  }
+
+  @override
+  void dispose() {
+    ProStatus.instance.removeListener(_onProChanged);
+    super.dispose();
+  }
+
+  void _onProChanged() {
+    if (!mounted) return;
+    // Free に降格された時はフィルタを初期状態に戻して結果が消えないようにする
+    // (柱 3 原則: Free の記録閲覧を阻害しない)。
+    if (!ProStatus.instance.isPro && _filter.isActive) {
+      setState(() => _filter = const ObserveHistoryFilter());
+    } else {
+      setState(() {});
+    }
+  }
 
   // HTML: confirm('履歴をすべて削除しますか？')
   Future<void> _confirmClearHistory() async {
@@ -48,6 +74,10 @@ class _ObserveHistoryPanelState extends State<ObserveHistoryPanel> {
 
   @override
   Widget build(BuildContext context) {
+    // 履歴は新しい順で並べてから filter を適用 (元 list は古い順)。
+    final ordered = widget.history.reversed.toList();
+    final visible = _filter.apply(ordered);
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 30),
       child: Column(children: [
@@ -72,6 +102,31 @@ class _ObserveHistoryPanelState extends State<ObserveHistoryPanel> {
             style: TextStyle(fontSize: 9, color: Color(0xFF444444))),
         const SizedBox(height: 10),
 
+        // ── C3 (Pro) フィルタバー: 履歴がある時のみ表示 ──
+        if (widget.history.isNotEmpty) ...[
+          ObserveHistoryFilterBar(
+            filter: _filter,
+            isPro: ProStatus.instance.isPro,
+            onChanged: (f) => setState(() => _filter = f),
+          ),
+          const SizedBox(height: 10),
+          if (_filter.isActive)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 6, left: 4),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  '${visible.length} 件 / 全 ${widget.history.length} 件',
+                  style: const TextStyle(
+                    color: Color(0xFF666666),
+                    fontSize: 10,
+                    letterSpacing: 0.3,
+                  ),
+                ),
+              ),
+            ),
+        ],
+
         if (widget.history.isEmpty)
           const Padding(
             padding: EdgeInsets.symmetric(vertical: 60, horizontal: 20),
@@ -80,12 +135,21 @@ class _ObserveHistoryPanelState extends State<ObserveHistoryPanel> {
                 textAlign: TextAlign.center,
                 style: TextStyle(color: Color(0xFF444444), fontSize: 13, height: 1.8)),
           )
+        else if (visible.isEmpty)
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 32, horizontal: 20),
+            child: Text(
+              '条件に合うカードはありません',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Color(0xFF666666), fontSize: 12, height: 1.6),
+            ),
+          )
         else
           Expanded(
               child: ListView.builder(
-            itemCount: widget.history.length,
+            itemCount: visible.length,
             itemBuilder: (ctx, i) {
-              final r = widget.history[widget.history.length - 1 - i];
+              final r = visible[i];
               return _buildHistoryCard(r);
             },
           )),
