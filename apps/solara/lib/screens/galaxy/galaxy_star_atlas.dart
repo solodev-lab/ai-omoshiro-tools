@@ -225,15 +225,13 @@ class _ConstellationCard extends StatelessWidget {
     final bgBottom = lightBase.withAlpha((0.03 * 255).round());
     final borderColor = lightBase.withAlpha((0.30 * 255).round());
 
-    // (shapeType 変数は UI 表示を削除したため除去済み)
     // HTML: rarityStarsHTML(cycle.stars) — color by rarity
     final rarity = cycle.rarity;
     final starColor = rarity >= 4
         ? const Color(0xFFF9D976)
         : rarity >= 3
             ? const Color(0xFFB080FF)
-            : const Color(0xFF888888);
-    final rarityText = '${'★' * rarity}${'☆' * (5 - rarity)}';
+            : const Color(0xFFBFBFBF);
 
     // HTML: anchors = dots.filter(d => d.isMajor).length
     final anchorCount = cycle.dots.where((d) => d.isMajor).length;
@@ -315,29 +313,50 @@ class _ConstellationCard extends StatelessWidget {
                 fontWeight: FontWeight.w500,
                 color: Color(0xFFB8B8B8),
                 letterSpacing: 0.5,
-                height: 1.0, // meta2 に近づけるため詰める
+                height: 1.0,
               ),
               overflow: TextOverflow.ellipsis,
               maxLines: 1,
             ),
-            // Meta line 2: rarityLabel + star rating — meta1 にピッタリ寄せる
-            const SizedBox(height: 1),
-            Text(
-              '${cycle.rarityLabel}  $rarityText',
-              style: TextStyle(
-                fontFamily: 'DMSans',
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: starColor,
-                letterSpacing: 1.2,
-                height: 1.1,
-              ),
-              overflow: TextOverflow.ellipsis,
-              maxLines: 1,
-            ),
+            // Meta line 2: ★★★☆☆ レアリティ星
+            // 🔴 端末のフォントサイズ/表示サイズに左右されないよう Icon ベース。
+            //    rarityLabel (Common / Rare 等) は冗長なので削除 (2026-05-17)。
+            //    Row 内 Icon は textScaleFactor の影響を受けない & 必ず 5 つ並ぶ。
+            const SizedBox(height: 4),
+            _RarityStarRow(rarity: rarity, color: starColor),
           ],
         ),
       ),
+    );
+  }
+}
+
+/// 5 つの星アイコンで rarity を表示する Row。
+/// Icon は textScaleFactor の影響を受けないため、端末設定に関係なく
+/// 同じ見た目で 5 つ並ぶ。文字より輪郭が太く視認性も高い。
+class _RarityStarRow extends StatelessWidget {
+  final int rarity;
+  final Color color;
+  const _RarityStarRow({required this.rarity, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    const double starSize = 14;
+    const double gap = 1.5;
+    final emptyColor = color.withValues(alpha: 0.28);
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        for (int i = 0; i < 5; i++) ...[
+          Icon(
+            i < rarity ? Icons.star_rounded : Icons.star_border_rounded,
+            size: starSize,
+            color: i < rarity ? color : emptyColor,
+          ),
+          if (i < 4) const SizedBox(width: gap),
+        ],
+      ],
     );
   }
 }
