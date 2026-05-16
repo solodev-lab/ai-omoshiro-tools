@@ -5,9 +5,9 @@
 
 ## サマリ
 
-- ファイル数: 21 / 総行数: 5402
+- ファイル数: 21 / 総行数: 5525
 - class/mixin/extension/enum: 29
-- 関数 (top-level + method の素拾い): 138
+- 関数 (top-level + method の素拾い): 141
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 2
 - Worker URL リテラル: 0
@@ -414,37 +414,40 @@ ignore_for_file: invalid_use_of_protected_member
 - 集計: `showInfoPopup`×1
 
 
-### `lib/screens/horoscope/horo_relocation_panel.dart` (422 行)
+### `lib/screens/horoscope/horo_relocation_panel.dart` (545 行)
 
-**imports:** dart=0 / package=2 / relative=4
+**imports:** dart=0 / package=2 / relative=6
 
-- relative: `../../utils/astro_houses.dart`, `../../utils/fortune_api.dart`, `horo_constants.dart`, `horo_relocation_templates.dart`
+- relative: `../../utils/astro_houses.dart`, `../../utils/fortune_api.dart`, `../../utils/pro_status.dart`, `../../widgets/pro_unlock_dialog.dart`, `horo_constants.dart`, `horo_relocation_templates.dart`
 
 **型定義 (3):**
 
-- L20 `class HouseShift`
-- L27 `class HoroRelocationPanel : StatefulWidget`
-- L55 `class _HoroRelocationPanelState : State`
+- L28 `class HouseShift`
+- L35 `class HoroRelocationPanel : StatefulWidget`
+- L63 `class _HoroRelocationPanelState : State`
 
-**関数 (4 public + 10 private):**
+**関数 (5 public + 12 private):**
 
-- L52 `createState()`
-- L62 `initState()`
-- L68 `didUpdateWidget()`
-- L143 `build()`
+- L60 `createState()`
+- L70 `initState()`
+- L77 `dispose()`
+- L100 `didUpdateWidget()`
+- L177 `build()`
 
-  <details><summary>private 関数 10 件</summary>
+  <details><summary>private 関数 12 件</summary>
 
-  - L75 `_buildFetchKey()`
-  - L84 `_maybeFetch()`
-  - L93 `_computeAllPositions()`
-  - L114 `_fetchNarrative()`
-  - L180 `_buildHeader()`
-  - L209 `_buildSummaryBlock()`
-  - L233 `_buildLoadingHint()`
-  - L258 `_buildAngleBlock()`
-  - L322 `_buildShiftBlock()`
-  - L396 `_buildCompareRow()`
+  - L83 `_onProStatusChanged()`
+  - L107 `_buildFetchKey()`
+  - L116 `_maybeFetch()`
+  - L127 `_computeAllPositions()`
+  - L148 `_fetchNarrative()`
+  - L221 `_buildHeader()`
+  - L250 `_buildSummaryBlock()`
+  - L276 `_buildProTeaser()`
+  - L356 `_buildLoadingHint()`
+  - L381 `_buildAngleBlock()`
+  - L445 `_buildShiftBlock()`
+  - L519 `_buildCompareRow()`
 
   </details>
 

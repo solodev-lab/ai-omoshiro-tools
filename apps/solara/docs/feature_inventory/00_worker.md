@@ -250,7 +250,7 @@ Nominatim: https://nominatim.openstreetmap.org/search
 **export (1):** `searchPlace`
 
 
-### `worker/src/tarot.js` (200 行)
+### `worker/src/tarot.js` (252 行)
 
 **ファイル先頭コメント:**
 

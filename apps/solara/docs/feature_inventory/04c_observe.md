@@ -5,9 +5,9 @@
 
 ## サマリ
 
-- ファイル数: 5 / 総行数: 1564
+- ファイル数: 5 / 総行数: 1763
 - class/mixin/extension/enum: 14
-- 関数 (top-level + method の素拾い): 41
+- 関数 (top-level + method の素拾い): 44
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 0
 - Worker URL リテラル: 0
@@ -109,40 +109,43 @@ Shared constants for Observe (Tarot) screen
   </details>
 
 
-### `lib/screens/observe_screen.dart` (524 行)
+### `lib/screens/observe_screen.dart` (723 行)
 
-**imports:** dart=2 / package=1 / relative=10
+**imports:** dart=2 / package=1 / relative=12
 
-- relative: `../models/daily_reading.dart`, `../models/tarot_card.dart`, `../utils/fortune_api.dart`, `../utils/moon_phase.dart`, `../utils/solara_storage.dart`, `../utils/tarot_data.dart`, `observe/observe_constants.dart`, `observe/observe_card_widgets.dart`, `observe/observe_history.dart`, `observe/tarot_altar_scene.dart`
+- relative: `../models/daily_reading.dart`, `../models/tarot_card.dart`, `../utils/fortune_api.dart`, `../utils/moon_phase.dart`, `../utils/pro_status.dart`, `../utils/solara_storage.dart`, `../utils/tarot_data.dart`, `../widgets/pro_unlock_dialog.dart`, `observe/observe_constants.dart`, `observe/observe_card_widgets.dart`, `observe/observe_history.dart`, `observe/tarot_altar_scene.dart`
 
 **型定義 (2):**
 
-- L18 `class ObserveScreen : StatefulWidget`
+- L20 `class ObserveScreen : StatefulWidget`
   - Tarot Draw screen — matches tarot.html exactly.
-- L24 `class _ObserveScreenState : State`
+- L26 `class _ObserveScreenState : State`
 
-**関数 (4 public + 13 private):**
+**関数 (4 public + 16 private):**
 
-- L21 `createState()`
-- L88 `initState()`
-- L96 `dispose()`
-- L268 `build()`
+- L23 `createState()`
+- L95 `initState()`
+- L110 `dispose()`
+- L290 `build()`
 
-  <details><summary>private 関数 13 件</summary>
+  <details><summary>private 関数 16 件</summary>
 
-  - L44 `_startLoadingMessageRotation()`
-  - L56 `_stopLoadingMessageRotation()`
-  - L103 `_checkTodayReading()`
-  - L128 `_loadHistory()`
-  - L133 `_drawCard()`
-  - L212 `_resetTodayReading()`
-  - L236 `_generateReadingStatic()`
-  - L253 `_startTypewriter()`
-  - L288 `_buildInnerTabs()`
-  - L302 `_innerTabBtn()`
-  - L323 `_buildDrawPanel()`
-  - L407 `_buildLoadingIndicator()`
-  - L482 `_buildReadingPanel()`
+  - L46 `_startLoadingMessageRotation()`
+  - L58 `_stopLoadingMessageRotation()`
+  - L103 `_onProStatusChanged()`
+  - L119 `_checkTodayReading()`
+  - L144 `_loadHistory()`
+  - L149 `_drawCard()`
+  - L234 `_resetTodayReading()`
+  - L258 `_generateReadingStatic()`
+  - L275 `_startTypewriter()`
+  - L310 `_buildInnerTabs()`
+  - L324 `_innerTabBtn()`
+  - L345 `_buildDrawPanel()`
+  - L440 `_buildQuestionField()`
+  - L524 `_buildQuestionFieldTeaser()`
+  - L606 `_buildLoadingIndicator()`
+  - L681 `_buildReadingPanel()`
 
   </details>
 
