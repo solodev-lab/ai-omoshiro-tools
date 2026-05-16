@@ -171,13 +171,19 @@ class _ObserveScreenState extends State<ObserveScreen>
 
     _flipCtrl.forward();
 
+    // Pro なら質問欄をここで先に評価 (一時保存にも反映するため、API 前に取得)。
+    final isPro = ProStatus.instance.isPro;
+    final question = isPro ? _questionController.text.trim() : '';
+
     // 一時保存（後で API 応答で更新）
+    // Pro: 質問内容も合わせて保存しておく (柱 3 = 自分の記録は永久に残る)。
     final reading = DailyReading(
       date: dateStr,
       cardId: card.id,
       isMajor: card.isMajor,
       moonPhase: moonPhase,
       reversed: reversed,
+      question: question.isEmpty ? null : question,
     );
     await SolaraStorage.addReading(reading);
     _loadHistory();
@@ -189,8 +195,6 @@ class _ObserveScreenState extends State<ObserveScreen>
     final profile = await SolaraStorage.loadProfile();
     // A3: Pro なら thinking ON + 質問欄の内容を「テーマ」として渡す。
     // Free なら thinking OFF + question 未送信 (Free は質問欄自体が出ない)。
-    final isPro = ProStatus.instance.isPro;
-    final question = isPro ? _questionController.text.trim() : '';
     final tarotResult = await fetchTarotReading(
       cardId: card.id,
       reversed: reversed,

@@ -175,8 +175,9 @@ class _ObserveHistoryPanelState extends State<ObserveHistoryPanel> {
         border: Border(left: BorderSide(color: elColor, width: 3)),
       ),
       child: Column(children: [
-        GestureDetector(
+        InkWell(
           onTap: () => setState(() => _expandedHistory = expanded ? null : r.date),
+          borderRadius: BorderRadius.circular(14),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
             child: Row(children: [
@@ -207,9 +208,26 @@ class _ObserveHistoryPanelState extends State<ObserveHistoryPanel> {
                     Text('自宅', style: TextStyle(fontSize: 10, color: Color(0xFF555555))),
                   ]),
                   Text(r.date, style: const TextStyle(fontSize: 10, color: Color(0xFF555555))),
+                  if (r.question != null && r.question!.isNotEmpty)
+                    const Row(mainAxisSize: MainAxisSize.min, children: [
+                      Icon(Icons.help_outline, size: 11, color: Color(0xFF888888)),
+                      SizedBox(width: 3),
+                      Text('質問あり', style: TextStyle(fontSize: 10, color: Color(0xFF888888))),
+                    ]),
                 ]),
               ])),
-              Icon(expanded ? Icons.expand_less : Icons.expand_more, size: 16, color: const Color(0xFF555555)),
+              // 詳細展開ボタン: タップ領域を 32px (Material 推奨 minimum tap target)
+              // 確保しつつ、アイコン自体を 28px に拡大 (元 16px、視認性向上)。
+              Container(
+                width: 32,
+                height: 32,
+                alignment: Alignment.center,
+                child: Icon(
+                  expanded ? Icons.expand_less : Icons.expand_more,
+                  size: 28,
+                  color: const Color(0xFFC9A84C),
+                ),
+              ),
             ]),
           ),
         ),
@@ -239,6 +257,20 @@ class _ObserveHistoryPanelState extends State<ObserveHistoryPanel> {
             padding: const EdgeInsets.only(bottom: 12),
             child: Text(planetDisplay, style: const TextStyle(fontSize: 11, color: Color(0xFF999999))),
           ),
+        // 質問欄 (Pro 引き時のみ保存される)
+        if (r.question != null && r.question!.isNotEmpty) ...[
+          const Row(children: [
+            Text('❓', style: TextStyle(fontSize: 10, color: Color(0xFFC9A84C))),
+            SizedBox(width: 4),
+            Text('QUESTION', style: TextStyle(fontSize: 10, color: Color(0xFFC9A84C), letterSpacing: 1)),
+          ]),
+          const SizedBox(height: 6),
+          Text(
+            r.question!,
+            style: const TextStyle(fontSize: 12, color: Color(0xCCE8E0D0), height: 1.6),
+          ),
+          const SizedBox(height: 12),
+        ],
         if (r.reading.isNotEmpty) ...[
           const Row(children: [
             Text('🔮', style: TextStyle(fontSize: 10, color: Color(0xFFC9A84C))),
