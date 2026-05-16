@@ -21,6 +21,7 @@ import '../widgets/cycle_spiral_painter.dart';
 import '../widgets/info_popup.dart';
 import '../widgets/moon_overlay.dart';
 
+import 'galaxy/constellation_share_card_page.dart';
 import 'galaxy/galaxy_constellation_builder.dart';
 import 'galaxy/galaxy_cycle_actions_sheet.dart';
 import 'galaxy/galaxy_sample_data.dart';
@@ -812,6 +813,20 @@ class GalaxyScreenState extends State<GalaxyScreen>
     setState(() => _replayCycle = null);
   }
 
+  /// 星座カード共有画面を開く (Free 機能、柱 3)。
+  /// 刻星化 formation overlay 完了時の「共有」ボタンと、
+  /// 将来 Star Atlas カード ⋯ メニューからも呼べる導線。
+  void _openConstellationShare(GalaxyCycle cycle) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => ConstellationShareCardPage(
+          cycle: cycle,
+          artImage: _artImages[cycle.nounIdx],
+        ),
+      ),
+    );
+  }
+
   // ====================== C5: Cycle Actions (long-press) ======================
 
   /// Star Atlas カード長押しで開く Pro メニュー (通常再生 / 形成演出 / エクスポート)。
@@ -1002,6 +1017,7 @@ class GalaxyScreenState extends State<GalaxyScreen>
               cycle: _formationCycle!,
               artImage: _artImages[_formationCycle!.nounIdx],
               onComplete: _onFormationComplete,
+              onShare: () => _openConstellationShare(_formationCycle!),
             ),
           );
         }
