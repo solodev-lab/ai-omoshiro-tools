@@ -5,8 +5,8 @@
 
 ## サマリ
 
-- ファイル数: 21 / 総行数: 5525
-- class/mixin/extension/enum: 29
+- ファイル数: 22 / 総行数: 5543
+- class/mixin/extension/enum: 30
 - 関数 (top-level + method の素拾い): 141
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 2
@@ -414,7 +414,7 @@ ignore_for_file: invalid_use_of_protected_member
 - 集計: `showInfoPopup`×1
 
 
-### `lib/screens/horoscope/horo_relocation_panel.dart` (545 行)
+### `lib/screens/horoscope/horo_relocation_panel.dart` (467 行)
 
 **imports:** dart=0 / package=2 / relative=6
 
@@ -422,34 +422,44 @@ ignore_for_file: invalid_use_of_protected_member
 
 **型定義 (3):**
 
-- L28 `class HouseShift`
-- L35 `class HoroRelocationPanel : StatefulWidget`
-- L63 `class _HoroRelocationPanelState : State`
+- L31 `class HouseShift`
+- L38 `class HoroRelocationPanel : StatefulWidget`
+- L66 `class _HoroRelocationPanelState : State`
 
-**関数 (5 public + 12 private):**
+**関数 (5 public + 11 private):**
 
-- L60 `createState()`
-- L70 `initState()`
-- L77 `dispose()`
-- L100 `didUpdateWidget()`
-- L177 `build()`
+- L63 `createState()`
+- L73 `initState()`
+- L80 `dispose()`
+- L103 `didUpdateWidget()`
+- L180 `build()`
 
-  <details><summary>private 関数 12 件</summary>
+  <details><summary>private 関数 11 件</summary>
 
-  - L83 `_onProStatusChanged()`
-  - L107 `_buildFetchKey()`
-  - L116 `_maybeFetch()`
-  - L127 `_computeAllPositions()`
-  - L148 `_fetchNarrative()`
-  - L221 `_buildHeader()`
-  - L250 `_buildSummaryBlock()`
-  - L276 `_buildProTeaser()`
-  - L356 `_buildLoadingHint()`
-  - L381 `_buildAngleBlock()`
-  - L445 `_buildShiftBlock()`
-  - L519 `_buildCompareRow()`
+  - L86 `_onProStatusChanged()`
+  - L110 `_buildFetchKey()`
+  - L119 `_maybeFetch()`
+  - L130 `_computeAllPositions()`
+  - L151 `_fetchNarrative()`
+  - L225 `_buildHeader()`
+  - L254 `_buildSummaryBlock()`
+  - L278 `_buildLoadingHint()`
+  - L303 `_buildAngleBlock()`
+  - L367 `_buildShiftBlock()`
+  - L441 `_buildCompareRow()`
 
   </details>
+
+
+### `lib/screens/horoscope/horo_relocation_pro_teaser.dart` (96 行)
+
+**型定義 (1):**
+
+- L14 `extension _RelocationProTeaser : _HoroRelocationPanelState`
+
+**関数 (1 public + 0 private):**
+
+- L18 `buildProTeaser()` — Free ユーザー向け Pro 誘導カード。
 
 
 ### `lib/screens/horoscope/horo_relocation_templates.dart` (196 行)

@@ -5,8 +5,8 @@
 
 ## サマリ
 
-- ファイル数: 5 / 総行数: 1763
-- class/mixin/extension/enum: 14
+- ファイル数: 6 / 総行数: 1777
+- class/mixin/extension/enum: 15
 - 関数 (top-level + method の素拾い): 44
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 0
@@ -78,6 +78,18 @@ Shared constants for Observe (Tarot) screen
   </details>
 
 
+### `lib/screens/observe/observe_question_field.dart` (181 行)
+
+**型定義 (1):**
+
+- L15 `extension _QuestionFieldWidgets : _ObserveScreenState`
+
+**関数 (2 public + 0 private):**
+
+- L20 `buildQuestionField()` — Pro 専用: 「相談者のテーマ」入力欄。
+- L104 `buildQuestionFieldTeaser()` — Free 向け誘導: 質問欄を見せず、「Pro でテーマを添えられる」と説明する CTA。
+
+
 ### `lib/screens/observe/tarot_altar_scene.dart` (500 行)
 
 **imports:** dart=1 / package=1 / relative=0
@@ -109,7 +121,7 @@ Shared constants for Observe (Tarot) screen
   </details>
 
 
-### `lib/screens/observe_screen.dart` (723 行)
+### `lib/screens/observe_screen.dart` (556 行)
 
 **imports:** dart=2 / package=1 / relative=12
 
@@ -117,35 +129,33 @@ Shared constants for Observe (Tarot) screen
 
 **型定義 (2):**
 
-- L20 `class ObserveScreen : StatefulWidget`
+- L22 `class ObserveScreen : StatefulWidget`
   - Tarot Draw screen — matches tarot.html exactly.
-- L26 `class _ObserveScreenState : State`
+- L28 `class _ObserveScreenState : State`
 
-**関数 (4 public + 16 private):**
+**関数 (4 public + 14 private):**
 
-- L23 `createState()`
-- L95 `initState()`
-- L110 `dispose()`
-- L290 `build()`
+- L25 `createState()`
+- L97 `initState()`
+- L112 `dispose()`
+- L292 `build()`
 
-  <details><summary>private 関数 16 件</summary>
+  <details><summary>private 関数 14 件</summary>
 
-  - L46 `_startLoadingMessageRotation()`
-  - L58 `_stopLoadingMessageRotation()`
-  - L103 `_onProStatusChanged()`
-  - L119 `_checkTodayReading()`
-  - L144 `_loadHistory()`
-  - L149 `_drawCard()`
-  - L234 `_resetTodayReading()`
-  - L258 `_generateReadingStatic()`
-  - L275 `_startTypewriter()`
-  - L310 `_buildInnerTabs()`
-  - L324 `_innerTabBtn()`
-  - L345 `_buildDrawPanel()`
-  - L440 `_buildQuestionField()`
-  - L524 `_buildQuestionFieldTeaser()`
-  - L606 `_buildLoadingIndicator()`
-  - L681 `_buildReadingPanel()`
+  - L48 `_startLoadingMessageRotation()`
+  - L60 `_stopLoadingMessageRotation()`
+  - L105 `_onProStatusChanged()`
+  - L121 `_checkTodayReading()`
+  - L146 `_loadHistory()`
+  - L151 `_drawCard()`
+  - L236 `_resetTodayReading()`
+  - L260 `_generateReadingStatic()`
+  - L277 `_startTypewriter()`
+  - L312 `_buildInnerTabs()`
+  - L326 `_innerTabBtn()`
+  - L347 `_buildDrawPanel()`
+  - L439 `_buildLoadingIndicator()`
+  - L514 `_buildReadingPanel()`
 
   </details>
 
