@@ -249,6 +249,12 @@ class SolaraStorage {
   // --- Title Diagnosis persistence ---
 
   static const _titleKey = 'solara_title_data';
+  static const _titleHistoryKey = 'solara_title_history';
+
+  /// クラス変遷履歴の上限 (柱 3 原則: Free でも自分の記録を失わない、
+  /// 上限はストレージ肥大を抑える技術フェイルセーフ)。
+  /// 月 1 回取り直し前提で 60 件 = 5 年分。
+  static const titleHistoryMax = 60;
 
   static Future<Map<String, dynamic>?> loadTitleData() async {
     final prefs = await SharedPreferences.getInstance();
@@ -260,6 +266,69 @@ class SolaraStorage {
   static Future<void> saveTitleData(Map<String, dynamic> data) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_titleKey, json.encode(data));
+  }
+
+  /// クラス変遷履歴を新しい順 (savedAt 降順) で読込む。
+  /// 各エントリ: {savedAt, axis, court, classEN, classJP, lightJP, shadowJP}
+  static Future<List<Map<String, dynamic>>> loadTitleHistory() async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString(_titleHistoryKey);
+    if (raw == null || raw.isEmpty) return const [];
+    try {
+      final list = json.decode(raw) as List;
+      final records = list
+          .map((e) => Map<String, dynamic>.from(e as Map))
+          .toList();
+      records.sort((a, b) {
+        final ta = DateTime.tryParse(a['savedAt'] as String? ?? '');
+        final tb = DateTime.tryParse(b['savedAt'] as String? ?? '');
+        if (ta == null || tb == null) return 0;
+        return tb.compareTo(ta);
+      });
+      return records;
+    } catch (_) {
+      return const [];
+    }
+  }
+
+  /// 称号診断結果を履歴に追加する。
+  /// 同じ axis+court は「変遷ではない」のでスキップ (連続同一クラス防止)。
+  /// 上限超過は古いものから削除。
+  static Future<void> addTitleHistoryEntry({
+    required String axis,
+    required String court,
+    required String classEN,
+    required String classJP,
+    required String lightJP,
+    required String shadowJP,
+  }) async {
+    final list = (await loadTitleHistory()).toList();
+    // 直近 (新しい順 1 件目) と同じクラスなら skip。
+    if (list.isNotEmpty &&
+        list.first['axis'] == axis &&
+        list.first['court'] == court) {
+      return;
+    }
+    list.insert(0, {
+      'savedAt': DateTime.now().toIso8601String(),
+      'axis': axis,
+      'court': court,
+      'classEN': classEN,
+      'classJP': classJP,
+      'lightJP': lightJP,
+      'shadowJP': shadowJP,
+    });
+    if (list.length > titleHistoryMax) {
+      list.removeRange(titleHistoryMax, list.length);
+    }
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_titleHistoryKey, json.encode(list));
+  }
+
+  /// 履歴全削除 (Sanctuary 設定からの「すべて削除」用)。
+  static Future<void> clearTitleHistory() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_titleHistoryKey);
   }
 
   static Future<DailyReading?> getTodayReading() async {

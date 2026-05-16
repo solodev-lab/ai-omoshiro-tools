@@ -22,6 +22,7 @@ import '../widgets/info_popup.dart';
 import '../widgets/moon_overlay.dart';
 
 import 'galaxy/galaxy_constellation_builder.dart';
+import 'galaxy/galaxy_cycle_actions_sheet.dart';
 import 'galaxy/galaxy_sample_data.dart';
 import 'galaxy/galaxy_star_atlas.dart';
 import 'galaxy/galaxy_replay_overlay.dart';
@@ -396,6 +397,7 @@ class GalaxyScreenState extends State<GalaxyScreen>
                           completedCycles: _completedCycles,
                           artImages: _artImages,
                           onOpenReplay: _openReplay,
+                          onLongPressCard: _openCycleActions,
                         ),
                 ),
                 // 天体イベントバー（Cycleタブのみ、Stellaの上）
@@ -775,6 +777,26 @@ class GalaxyScreenState extends State<GalaxyScreen>
     _replayController?.dispose();
     _replayController = null;
     setState(() => _replayCycle = null);
+  }
+
+  // ====================== C5: Cycle Actions (long-press) ======================
+
+  /// Star Atlas カード長押しで開く Pro メニュー (通常再生 / 形成演出 / エクスポート)。
+  /// `pro_candidates.md` §7.3 「形成演出の再生 + エクスポート」(C5) の入口。
+  void _openCycleActions(GalaxyCycle cycle) {
+    showGalaxyCycleActionsSheet(
+      context: context,
+      cycle: cycle,
+      onReplay: () => _openReplay(cycle),
+      onPlayFormation: (c) {
+        _loadArtImage(c.nounIdx);
+        setState(() {
+          _activeOverlay = 'formation';
+          _formationCycle = c;
+        });
+      },
+      intentionLoader: SolaraStorage.loadIntention,
+    );
   }
 
   // ====================== DEBUG TRIGGERS ======================
