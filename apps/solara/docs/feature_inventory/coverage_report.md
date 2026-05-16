@@ -37,10 +37,10 @@
 
 ## #1 / #2 機械抽出 ↔ feature_inventory.md (人手版) の対整合
 
-- 機械抽出した class/mixin/extension/enum: **361**
+- 機械抽出した class/mixin/extension/enum: **363**
 - inventory に登場する識別子 (大文字始まり ``backtick``囲み): **209**
 
-### #1 機械にあるが Doc に書かれていない (189)
+### #1 機械にあるが Doc に書かれていない (191)
 
 - `CandidateLocation`
 - `CandidateNearLine`
@@ -179,10 +179,12 @@
 - `_PlanetSub`
 - `_PopupBody`
 - `_PresetLocationCard`
+- `_QuestionFieldWidgets`
 - `_RankedLine`
 - `_Ray`
 - `_RefreshButton`
 - `_RegionPicker`
+- `_RelocationProTeaser`
 - `_RosePetal`
 - `_SanctuaryHomeEditorPageState`
 - `_SanctuaryIconPainter`
@@ -286,14 +288,14 @@
 
 ### 層 4b: Horoscope 画面
 
-- ファイル数: 21
+- ファイル数: 22
 - Worker URL 呼出: (なし)
 - Popup/Dialog: `showInfoPopup`×2
 - Navigator.push 等: 0 箇所
 
 ### 層 4c: Observe (Tarot) 画面
 
-- ファイル数: 5
+- ファイル数: 6
 - Worker URL 呼出: (なし)
 - Popup/Dialog: (なし)
 - Navigator.push 等: 0 箇所
@@ -340,8 +342,8 @@
 | 3b | · | · | · | · | · | · | · | 1 | · | · | · | · | · | · | · | · |
 | 3c | · | 4 | 4 | 2 | 3 | · | 12 | 4 | · | · | · | · | · | · | · | · |
 | 4a | 10 | 11 | · | 13 | 7 | · | 18 | 23 | 3 | 31 | 2 | · | · | · | 3 | · |
-| 4b | 5 | 10 | · | 6 | 4 | · | 13 | · | · | · | 28 | · | · | 2 | · | · |
-| 4c | 1 | · | 5 | 1 | 3 | 2 | 1 | · | · | · | · | 6 | · | · | · | · |
+| 4b | 5 | 10 | · | 6 | 4 | · | 13 | · | · | · | 29 | · | · | 2 | · | · |
+| 4c | 1 | · | 5 | 1 | 3 | 2 | 1 | · | · | · | · | 7 | · | · | · | · |
 | 4d | 2 | 5 | 9 | 1 | 1 | 2 | 8 | · | 1 | · | · | · | 4 | · | · | · |
 | 4e | · | 3 | · | 1 | 6 | · | 6 | · | · | · | · | · | · | 7 | 1 | · |
 | 4f | 3 | 4 | · | 3 | 10 | · | 11 | 9 | · | 6 | · | · | · | · | 12 | · |
@@ -390,14 +392,17 @@
 > 各ソースの SHA1 を `_stamps.json` に記録し、差分を検出。
 > 変更されたファイルが属する層は、人手版インベントリ章の見直し対象。
 
-- 追加: **0** / 削除: **0** / 変更: **4**
+- 追加: **2** / 削除: **0** / 変更: **2**
 
 ### 変更されたファイル (層別)
 
-- **層 0**: `worker/src/tarot.js`
-- **層 2a**: `lib/utils/fortune_api.dart`
 - **層 4b**: `lib/screens/horoscope/horo_relocation_panel.dart`
 - **層 4c**: `lib/screens/observe_screen.dart`
+
+### 追加されたファイル
+
+- `lib/screens/horoscope/horo_relocation_pro_teaser.dart` (層 4b)
+- `lib/screens/observe/observe_question_field.dart` (層 4c)
 
 ## #7 astro_glossary 用語辞書対整合
 
