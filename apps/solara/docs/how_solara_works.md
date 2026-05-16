@@ -284,10 +284,9 @@ Map の扇状セクターが「合算 1 色」で大まかにしか見せない�
 **Pro 看板機能のひとつ。Map の「16 方位スコア」が「**俯瞰**」なら、こちらは「**特定の悩みに対する解釈**」を返す。**
 
 **ユーザー体験**（`screens/consultation/` に実装、part-of パターンで 7 ファイル構成）:
-- 入口は 3 つ（A+B+C(ii) ハイブリッド、2026-05-16 確定）:
-  1. **タップ起点 A**: Map 上の任意地点タップで開く `MapRelocationPopup` ヘッダ直下の「📍 この場所で相談する」CTA（specific scope 固定）。線タップ shseet（`MapLineNarrativeSheet`）からも同 CTA で起動可能
-  2. **タップ起点 B**: ACG モードの「🔮 相談ピル」（`map_astro_carto._FramePillRow`）。ON で空地点タップ → `ConsultEntryPopup`（近接 3 conjunction line 表示）→ 相談画面
-  3. **目的起点**: Daily Transit popup の「🔮 Stella に相談する」CTA（scope は入力で選ぶ、Phase 2-3c 予定）
+- 入口は 2 つ（2026-05-17 簡素化、ACG/非 ACG 共通ルールに統合）:
+  1. **タップ起点**: Map 上の任意地点タップで Pro ユーザーは `ConsultEntryPopup`（近接 3 conjunction line 表示）→「📍 この場所で相談する」CTA（specific scope 固定）。線にヒットしたタップは `MapRelocationPopup` / `MapLineNarrativeSheet` ヘッダ直下 CTA、天頂/天底マーカータップは `AstroZenithPopup` CTA から zenith 座標 preset で起動。空地点タップは ACG/非 ACG どちらでも、relocate ピル OFF + 線非ヒットなら Pro に popup（Free は何も起きない）。旧 ACG 専用「🔮 相談ピル」（Phase 2026-05-16）は撤去
+  2. **目的起点**: Daily Transit popup の「🔮 Stella に相談する」CTA（scope は入力で選ぶ、Phase 2-3c 予定）
 - Stage 1（入力フォーム、`consultation_input_screen.dart` + 3 つの part ファイル）:
   - **テーマ 6 択**（恋愛・お金・仕事・対話学び・癒し・新たな出発）
   - **モード 3 択**（移住 / 旅行 / おでかけ）— 使う AstroLine フレームを決定（natal/transit/progressed/solarArc）

@@ -137,10 +137,6 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   final Map<String, bool> _astroLayers = {
     'planetLines': true,
     'relocate': false,
-    // ACG モード「相談」モードトグル (Phase: 2026-05-16)
-    // ON のとき空地点タップで ConsultEntryPopup を出す (相談エントリー)。
-    // relocate と排他: 両方 ON にできない。
-    'consult': false,
     // ── 第1層: フレーム線 ON/OFF ──
     'aspect': false,         // natal フレーム
     'aspectTransit': false,  // CCG transit
@@ -186,11 +182,14 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   // 引越しレイヤー ON時のタップ詳細ポップアップ用
   LatLng? _relocateTapPoint;
 
-  // 「相談」popup 表示用のタップ地点 (A + B + C(ii) 共通)。
-  //   A:    ACG モード「相談」モードトグル ON でタップした地点
-  //   C(ii): 非 ACG Map モード + Pro ユーザー + 空地点タップで設定
-  //   B 経由 (line/zenith popup の CTA) では直接 _launchConsultation を呼ぶので
-  //         こちらは経由しない。
+  // 「相談」popup 表示用のタップ地点 (Phase 2026-05-16 → 2026-05-17 簡素化)。
+  //
+  // 2026-05-17: ACG モード専用「🔮 相談」ピル (A 経路) を撤去し、
+  // 「Pro なら Map のどこでも空地点タップで相談 popup」という単一ルールに統合。
+  // ACG/非 ACG どちらでも、relocate ピル OFF + 線非ヒットの空地点タップで設定。
+  //
+  // B 経路 (line/zenith popup の CTA) は直接 `_launchConsultation` を呼ぶので
+  // こちらは経由しない。
   LatLng? _consultTapPoint;
 
   // Astro*Carto*Graphy モード: 天頂点マーカータップ詳細用
@@ -1357,8 +1356,6 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
       // ON のとき: 地点タップで引越し popup のみ、他のタップ反応は抑制。
       // OFF のとき: 線/天頂/天底タップが従来通り反応。
       _astroLayers['relocate'] = false;
-      // 同様に「相談」モードも ACG 入時は OFF で開始 (排他モードの初期状態)。
-      _astroLayers['consult'] = false;
       // CCG (D2): モード入時は Transit を強制 ON (2026-05-08 ユーザー要望で
       // 旧 Natal → Transit に変更)。Transit は「今この瞬間」のラインで
       // 一番直感的に効果を実感できるため、初期表示として最適。
@@ -1659,26 +1656,20 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
             ),
             // HTML: long-press 600ms → rebuild(nc, fly:true)
             onLongPress: (tapPos, latlng) => _rebuild(latlng),
-            // タップ動作の二択:
-            //   ① relocate ON (排他モード) → 地点タップで必ず引越し popup を出す
-            //   ② relocate OFF + aspect 系 ON → 近接線があれば線 popup
-            //   いずれにも当てはまらないタップは無視。
+            // タップ動作の優先順位 (2026-05-17 簡素化、ACG/非 ACG 統一ルール):
+            //   ① 引越し ピル ON (排他モード) → 地点タップで必ず引越し popup
+            //   ② 線が表示中で近接線あり → MapRelocationPopup (line popup)
+            //   ③ Pro ユーザーで空地点タップ → ConsultEntryPopup (相談エントリー)
+            //   Free ユーザーかつ ①②③ 全て当てはまらないタップは無視。
             //
-            // 2026-05-11: 「引越し」トグルを排他モードに変更。
-            //   ON 中: ライン/天頂/天底タップは反応しない (引越し popup のみ)。
-            //   マーカー側の onTap も relocate 中は null を渡して抑制 (下記参照)。
+            // 旧 ACG 専用「🔮 相談」ピル (Phase 2026-05-16) は撤去。「Pro なら
+            // Map のどこでも空地点タップで相談 popup」という単一ルールに統合し、
+            // ピル ON という前置操作を不要にした。線/天頂/天底のタップは B 経路
+            // (popup 内 CTA) で相談に進めるため、空地点タップが consult に
+            // 直結しても干渉しない。
             onTap: (tapPos, latlng) {
               if (_chartResult == null) return;
-              // ① ACG モード「相談」ON: 任意地点タップで consult popup (排他)
-              if (_astroLayers['consult'] == true) {
-                setState(() {
-                  _consultTapPoint = latlng;
-                  _relocateTapPoint = null;
-                  _zenithTapInfo = null;
-                });
-                return;
-              }
-              // ② 引越し ON: 任意地点タップで relocate popup (排他)
+              // ① 引越し ON: 任意地点タップで relocate popup (排他)
               if (_astroLayers['relocate'] == true) {
                 setState(() {
                   _relocateTapPoint = latlng;
@@ -1687,7 +1678,7 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                 });
                 return;
               }
-              // ③ 線が表示中で近接線あり: line popup (= MapRelocationPopup 経由)
+              // ② 線が表示中で近接線あり: line popup (= MapRelocationPopup 経由)
               final aspectOn = _astroLayers['aspect'] == true ||
                   _astroLayers['aspectTransit'] == true ||
                   _astroLayers['aspectProgressed'] == true ||
@@ -1703,9 +1694,9 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                   return;
                 }
               }
-              // ④ C(ii): 非 ACG モード + Pro ユーザーは空地点タップで consult popup
-              //    Free ユーザーは何も起きない (アップセル連打を避ける)
-              if (!_astroCartoMode && ProStatus.instance.isPro) {
+              // ③ Pro ユーザーは空地点タップで consult popup
+              //    (ACG/非 ACG 共通、Free は何も起きない = アップセル連打を避ける)
+              if (ProStatus.instance.isPro) {
                 setState(() {
                   _consultTapPoint = latlng;
                   _relocateTapPoint = null;
@@ -1774,18 +1765,15 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                 nadirFrames: _nadirBandFrames(),
               )),
             // 天頂点マーカー (CCG): zenith_<frame> ON のフレームのみ描画。
-            // relocate / consult 排他モード中はマーカー onTap を null にして反応抑制。
-            // (Phase 2026-05-16: consult を追加 — マーカータップで zenith popup が
-            // 開いてしまい、ACG 相談モードで空地点タップしても popup が出ない
-            // 不具合の原因だった)
+            // relocate 排他モード中はマーカー onTap を null にして反応抑制
+            // (引越し popup のみが出る単一ルールを守る)。
             if (_zenithMarkerFrames().isNotEmpty && _astroLinesCache.isNotEmpty)
               MarkerLayer(markers: buildAstroZenithMarkers(
                 lines: _astroLinesCache,
                 activeCategory: _planetFilterCategory,
                 allPlanetMode: _astroLayers['aspectAll'] ?? false,
                 framesWithZenith: _zenithMarkerFrames(),
-                onTap: (_astroLayers['relocate'] == true ||
-                        _astroLayers['consult'] == true)
+                onTap: _astroLayers['relocate'] == true
                     ? null
                     : (planetKey, frame, point) => setState(() {
                           _zenithTapInfo = (planet: planetKey, frame: frame, point: point, isNadir: false);
@@ -1799,8 +1787,7 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                 activeCategory: _planetFilterCategory,
                 allPlanetMode: _astroLayers['aspectAll'] ?? false,
                 framesWithNadir: _nadirMarkerFrames(),
-                onTap: (_astroLayers['relocate'] == true ||
-                        _astroLayers['consult'] == true)
+                onTap: _astroLayers['relocate'] == true
                     ? null
                     : (planetKey, frame, point) => setState(() {
                           _zenithTapInfo = (planet: planetKey, frame: frame, point: point, isNadir: true);
@@ -1812,9 +1799,7 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
               MarkerLayer(markers: buildDirLabels(center: _center)),
             // 登録地マーカー (出生地🌟+グロー / VP slots / Locations slots)
             // 通常Map / Astro*Carto*Graphy モード共通で表示。
-            // Phase 2026-05-16: relocate / consult 排他モード中は onTap を抑制
-            // (排他モードはタップで何が起きるかが決まっている、location 名 popup が
-            // 割り込むと UX がぶれる)。
+            // relocate 排他モード中は onTap を抑制 (引越し popup 単一ルール保護)。
             if (!_noProfile)
               MarkerLayer(markers: buildLocationMarkers(
                 profile: _profile,
@@ -1822,8 +1807,7 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                 locationSlots: _locSlotsCache,
                 // 排他モード中は null → markers の GestureDetector を外して
                 // タップを map onTap に透過させる。
-                onTap: (_astroLayers['relocate'] == true ||
-                        _astroLayers['consult'] == true)
+                onTap: _astroLayers['relocate'] == true
                     ? null
                     : (name, point, isBirth) => setState(() {
                           _locationTapInfo = (name: name, point: point, isBirth: isBirth);
@@ -2389,22 +2373,17 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                     astroLayers: _astroLayers,
                     activeFrame: active,
                     // ACG framer の onToggle:
-                    // 1. consult / relocate / aspect 系 Pro 限定キーは
-                    //    `_onAstroToggle` 経由で Pro ゲート + 排他 + popup クリア
+                    // 1. relocate / aspect 系 Pro 限定キーは `_onAstroToggle` 経由で
+                    //    Pro ゲート + popup クリア
                     // 2. その上で frame キー (aspect/aspectTransit 等) の場合は
                     //    _activeAstroFrame を同期更新
-                    //
-                    // 旧仕様 (2026-05-16 修正前) では setState 内で `_astroLayers[k]`
-                    // を直接トグルしていたため、'相談' ON ↔ '引越し' OFF の排他処理
-                    // が動かず、ピル表示は ON でも tap 検出側で意図通りに動かない
-                    // ケースがあった。
                     onToggle: (k) {
                       final wasOn = _astroLayers[k] ?? false;
                       _onAstroToggle(k);
                       // Pro ゲートで弾かれた場合 (フラグ変化なし) は active 更新もスキップ
                       final isOnNow = _astroLayers[k] ?? false;
                       if (isOnNow == wasOn) return;
-                      // フレームキーの active 同期 (consult / relocate は frame 非該当)
+                      // フレームキーの active 同期 (relocate は frame 非該当)
                       setState(() {
                         for (final def in acgFrameDefs) {
                           if (def.layerKey == k) {
@@ -2460,8 +2439,8 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
             ),
           ),
 
-        // ── 相談 popup (ACG 相談モード ON + 任意地点タップ / 非 ACG Pro Map タップ) ──
-        // 設計: A + B + C(ii) ハイブリッド (chat 議論 2026-05-16)
+        // ── 相談 popup (Pro ユーザーが空地点をタップしたとき) ──
+        // 設計: Map のどこでも空地点タップで相談 popup (2026-05-17 簡素化)
         // _relocateTapPoint と排他 (onTap 側で互いに片付ける)。
         if (_consultTapPoint != null && _chartResult != null)
           Positioned(
@@ -2612,7 +2591,6 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     'aspectSolarArc',
     'aspectLines',
     'relocate',
-    'consult',
   };
 
   /// Pro ゲートで表示する機能名 (showProUnlockDialog の featureLabel)。
@@ -2628,8 +2606,6 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
         return 'アスペクトライン (120 本)';
       case 'relocate':
         return '引越しシミュレーション';
-      case 'consult':
-        return 'タップで Stella 相談';
       default:
         return '高度な ACG';
     }
@@ -2653,9 +2629,6 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
       case 'relocate':
         return '地図タップ地点を引越し先として ASC / MC / 12 ハウスを '
             '再計算し、現住所と並べて比較します。';
-      case 'consult':
-        return '地図上のどこをタップしても、その地点で Stella に相談を始める '
-            '入口が開きます。最寄りラインの情報も一緒に表示されます。';
       default:
         return 'Cosmic Pro で解放される機能です。';
     }
@@ -2679,20 +2652,9 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     }
     setState(() {
       _astroLayers[k] = !wasOn;
-      // relocate / consult は排他: 一方 ON で他方を強制 OFF + 関連 popup をクリア。
-      if (k == 'relocate' && _astroLayers[k] == true) {
-        _astroLayers['consult'] = false;
-        _consultTapPoint = null;
-      } else if (k == 'consult' && _astroLayers[k] == true) {
-        _astroLayers['relocate'] = false;
-        _relocateTapPoint = null;
-      }
-      // OFF 時の popup クリア
+      // relocate OFF 時に残っていた引越し popup を片付ける。
       if (k == 'relocate' && !(_astroLayers[k] ?? false)) {
         _relocateTapPoint = null;
-      }
-      if (k == 'consult' && !(_astroLayers[k] ?? false)) {
-        _consultTapPoint = null;
       }
     });
   }

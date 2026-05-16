@@ -40,7 +40,6 @@ class MapLineNarrativeSheet extends StatefulWidget {
   /// 「この地点で相談する」CTA タップ時のハンドラ。
   /// 非 null のときシート内に CTA ボタンが表示される。caller (map_screen) が
   /// タップ座標を preset として `_launchConsultation` を呼ぶ。
-  /// Phase: 2026-05-16 (A + B + C(ii) ハイブリッド)。
   final VoidCallback? onConsult;
 
   const MapLineNarrativeSheet({

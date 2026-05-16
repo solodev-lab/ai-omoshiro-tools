@@ -281,7 +281,7 @@
 
 - ファイル数: 23
 - Worker URL 呼出: ['/search', '/tiles/osm/hot/', '/tiles/osm/hot/0/0/0']
-- Popup/Dialog: `showInfoPopup`×15, `showLineNarrativeSheet`×3, `showSolaraDatePicker`×1
+- Popup/Dialog: `showInfoPopup`×14, `showLineNarrativeSheet`×3, `showSolaraDatePicker`×1
 - Navigator.push 等: 0 箇所
 
 ### 層 4b: Horoscope 画面
@@ -390,17 +390,11 @@
 > 各ソースの SHA1 を `_stamps.json` に記録し、差分を検出。
 > 変更されたファイルが属する層は、人手版インベントリ章の見直し対象。
 
-- 追加: **3** / 削除: **0** / 変更: **3**
+- 追加: **0** / 削除: **0** / 変更: **4**
 
 ### 変更されたファイル (層別)
 
-- **層 4f**: `lib/screens/consultation/consultation_input_screen.dart`, `lib/screens/consultation/consultation_input_widgets.dart`, `lib/screens/consultation/consultation_place_picker_screen.dart`
-
-### 追加されたファイル
-
-- `lib/screens/consultation/consultation_input_examples.dart` (層 4f)
-- `lib/screens/consultation/consultation_input_picker.dart` (層 4f)
-- `lib/screens/consultation/consultation_place_picker_widgets.dart` (層 4f)
+- **層 4a**: `lib/screens/map/consult_entry_popup.dart`, `lib/screens/map/map_astro_carto.dart`, `lib/screens/map/map_line_narrative_sheet.dart`, `lib/screens/map_screen.dart`
 
 ## #7 astro_glossary 用語辞書対整合
 
