@@ -338,9 +338,41 @@ class GalaxyScreenState extends State<GalaxyScreen>
     }
   }
 
+  /// 画面内で active な overlay (replay / formation / moon)。
+  /// Android の back キー処理 (PopScope) で「閉じるべき overlay があるか」を判定する。
+  bool get _hasActiveOverlay =>
+      _replayCycle != null ||
+      _activeOverlay == 'formation' ||
+      _activeOverlay == 'catasterism' ||
+      _activeOverlay == 'new_moon' ||
+      _activeOverlay == 'full_moon';
+
+  /// PopScope の onPopInvokedWithResult から呼ばれる。active な overlay を
+  /// 1 段ずつ閉じる (最後に閉じきると main.dart の PopScope に処理が落ちる)。
+  void _dismissTopOverlay() {
+    if (_replayCycle != null) {
+      _closeReplay();
+      return;
+    }
+    if (_activeOverlay != null) {
+      setState(() {
+        _activeOverlay = null;
+        _formationCycle = null;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return PopScope(
+      // overlay がある間は back を Galaxy 内で消化する。
+      // overlay が無い時は main.dart の PopScope (Map タブへ戻る) に委ねる。
+      canPop: !_hasActiveOverlay,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        _dismissTopOverlay();
+      },
+      child: Container(
       decoration: const BoxDecoration(
         gradient: RadialGradient(
           center: Alignment(0, -1), radius: 1.1,
@@ -426,6 +458,7 @@ class GalaxyScreenState extends State<GalaxyScreen>
             if (_activeOverlay != null) _buildMoonOverlay(),
           ],
         ),
+      ),
       ),
     );
   }

@@ -30,10 +30,22 @@ class GalaxyReplayOverlay extends StatelessWidget {
 
   static const double _cameraAngle55 = 55 * pi / 180; // ~0.96 rad
 
+  /// 画面タップ時のハンドラ:
+  ///   - アニメーション中 (value < 1.0) → value = 1.0 にジャンプして演出スキップ
+  ///   - アニメーション完了後 → onClose で Star Atlas に戻る
+  void _handleTap() {
+    if (controller.value < 1.0) {
+      controller.value = 1.0;
+    } else {
+      onClose();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: onClose,
+      onTap: _handleTap,
+      behavior: HitTestBehavior.opaque,
       child: Container(
         color: const Color(0xF5020408), // rgba(2,4,10,0.96)
         child: Center(
