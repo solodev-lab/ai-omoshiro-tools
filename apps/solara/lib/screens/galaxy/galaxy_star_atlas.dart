@@ -236,11 +236,13 @@ class _ConstellationCard extends StatelessWidget {
     // HTML: anchors = dots.filter(d => d.isMajor).length
     final anchorCount = cycle.dots.where((d) => d.isMajor).length;
 
-    return GestureDetector(
-      onTap: onTap,
-      onLongPress: onLongPress,
-      behavior: HitTestBehavior.opaque,
-      child: Container(
+    return Stack(
+      children: [
+        GestureDetector(
+          onTap: onTap,
+          onLongPress: onLongPress,
+          behavior: HitTestBehavior.opaque,
+          child: Container(
         // HTML: .const-card { border-radius:20px; padding:14px; }
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
@@ -327,6 +329,32 @@ class _ConstellationCard extends StatelessWidget {
           ],
         ),
       ),
+        ),
+        // ⋯ メニューボタン (右上)。長押しと同じ bottom sheet を開く。
+        // 長押しが分かりにくいというフィードバックへの対応 (2026-05-17)。
+        if (onLongPress != null)
+          Positioned(
+            top: 4,
+            right: 4,
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: onLongPress,
+                borderRadius: BorderRadius.circular(18),
+                child: Container(
+                  width: 32,
+                  height: 32,
+                  alignment: Alignment.center,
+                  child: const Icon(
+                    Icons.more_horiz,
+                    size: 20,
+                    color: Color(0xCCEAEAEA),
+                  ),
+                ),
+              ),
+            ),
+          ),
+      ],
     );
   }
 }
