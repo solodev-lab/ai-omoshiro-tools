@@ -1,21 +1,23 @@
-// Pro 案内ダイアログ — Phase 2-6a
+// Pro 案内ダイアログ — Phase 2-6a / Phase 2-6b
 //
 // 設計: pro_candidates.md §7 + project_solara_security_principles.md
 //
 // 役割:
 //   - Free ユーザーが Pro 限定機能をタップした時に表示する案内ダイアログ
 //   - 「Pro でロック解除」の文体は Solara 世界観に揃える (吉凶禁止・寄り添い)
-//   - Phase 2-6a (現在): ボタンは「準備中」表示 (RevenueCat 未配線)
-//   - Phase 2-6b 以降: ボタンが本物のアップグレード導線になる
+//   - Phase 2-6b 以降: 「Pro にアップグレード」ボタンが PaywallScreen を開く
+//     (Offerings 未配信時は PaywallScreen 側で「ストア準備中」表示)
 //
 // 利用箇所:
 //   - Map「この場所で相談する」CTA タップ (Free)
 //   - Daily Transit「Stella に相談」CTA タップ (Free)
 //   - 結果画面のシェアアイコン タップ (Free)
+//   - その他 Pro ゲート対象機能のタップ (Phase 2-7 / 2-8 で配線)
 
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 
+import '../screens/paywall_screen.dart';
 import '../theme/solara_colors.dart';
 
 /// Pro 限定機能の案内ダイアログを表示する。
@@ -109,19 +111,25 @@ Future<void> showProUnlockDialog(
                 ),
                 const SizedBox(height: 16),
               ],
-              // Phase 2-6a: アップグレードボタンは disabled (準備中)。
+              // Phase 2-6b: アップグレードボタン → PaywallScreen を push。
               // 縦並びで overflow 回避 (380px 幅でも入りきる)。
               SizedBox(
                 width: double.infinity,
                 child: TextButton(
-                  onPressed: null, // Phase 2-6b で課金導線を配線
+                  onPressed: () {
+                    Navigator.of(ctx).pop();
+                    Navigator.of(context).push<void>(
+                      MaterialPageRoute(
+                        builder: (_) => const PaywallScreen(),
+                        fullscreenDialog: true,
+                      ),
+                    );
+                  },
                   style: TextButton.styleFrom(
                     foregroundColor: SolaraColors.solaraGold,
-                    disabledForegroundColor:
-                        SolaraColors.solaraGold.withValues(alpha: 0.5),
                     padding: const EdgeInsets.symmetric(vertical: 10),
                   ),
-                  child: const Text('Pro にアップグレード (準備中)'),
+                  child: const Text('Pro にアップグレード'),
                 ),
               ),
               Align(

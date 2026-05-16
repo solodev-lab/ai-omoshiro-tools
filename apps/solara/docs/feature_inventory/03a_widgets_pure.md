@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 22 / 総行数: 5878
+- ファイル数: 22 / 総行数: 5886
 - class/mixin/extension/enum: 66
 - 関数 (top-level + method の素拾い): 153
 - Navigator.push 等: 0
@@ -592,34 +592,35 @@ Re-export split overlay files for backward compatibility
 - L20 `build()`
 
 
-### `lib/widgets/pro_unlock_dialog.dart` (143 行)
+### `lib/widgets/pro_unlock_dialog.dart` (151 行)
 
 **ファイル先頭コメント:**
 
 ```
-Pro 案内ダイアログ — Phase 2-6a
+Pro 案内ダイアログ — Phase 2-6a / Phase 2-6b
 
 設計: pro_candidates.md §7 + project_solara_security_principles.md
 
 役割:
   - Free ユーザーが Pro 限定機能をタップした時に表示する案内ダイアログ
   - 「Pro でロック解除」の文体は Solara 世界観に揃える (吉凶禁止・寄り添い)
-  - Phase 2-6a (現在): ボタンは「準備中」表示 (RevenueCat 未配線)
-  - Phase 2-6b 以降: ボタンが本物のアップグレード導線になる
+  - Phase 2-6b 以降: 「Pro にアップグレード」ボタンが PaywallScreen を開く
+    (Offerings 未配信時は PaywallScreen 側で「ストア準備中」表示)
 
 利用箇所:
   - Map「この場所で相談する」CTA タップ (Free)
   - Daily Transit「Stella に相談」CTA タップ (Free)
   - 結果画面のシェアアイコン タップ (Free)
+  - その他 Pro ゲート対象機能のタップ (Phase 2-7 / 2-8 で配線)
 ```
 
-**imports:** dart=0 / package=2 / relative=1
+**imports:** dart=0 / package=2 / relative=2
 
-- relative: `../theme/solara_colors.dart`
+- relative: `../screens/paywall_screen.dart`, `../theme/solara_colors.dart`
 
 **関数 (1 public + 0 private):**
 
-- L27 `showProUnlockDialog()` — Pro 限定機能の案内ダイアログを表示する。
+- L29 `showProUnlockDialog()` — Pro 限定機能の案内ダイアログを表示する。
 
 
 ### `lib/widgets/solara_nav_bar.dart` (163 行)

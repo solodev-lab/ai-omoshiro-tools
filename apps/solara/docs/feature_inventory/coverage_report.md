@@ -37,10 +37,10 @@
 
 ## #1 / #2 機械抽出 ↔ feature_inventory.md (人手版) の対整合
 
-- 機械抽出した class/mixin/extension/enum: **387**
+- 機械抽出した class/mixin/extension/enum: **392**
 - inventory に登場する識別子 (大文字始まり ``backtick``囲み): **209**
 
-### #1 機械にあるが Doc に書かれていない (215)
+### #1 機械にあるが Doc に書かれていない (220)
 
 - `CandidateLocation`
 - `CandidateNearLine`
@@ -61,10 +61,13 @@
 - `GalaxyArchiveFilterBar`
 - `GalaxyArchiveSort`
 - `GalaxyArchiveSortLabel`
+- `LegalUrls`
 - `MapTimeSliderState`
 - `ObserveHistoryFilter`
 - `ObserveHistoryFilterBar`
+- `PaywallScreen`
 - `ProStatus`
+- `PurchasesService`
 - `ReverseGeocodeResult`
 - `TitleHistoryScreen`
 - `_ActionTile`
@@ -186,6 +189,8 @@
 - `_OrbSectionLabel`
 - `_OutroBlock`
 - `_PageIndicator`
+- `_PaywallScreenState`
+- `_PaywallWidgets`
 - `_Petal`
 - `_PetalPalette`
 - `_PickedSpecific`
@@ -237,12 +242,7 @@
 - `_Sparkle`
 - `_SpecificPicker`
 - `_SpecificPickerState`
-- `_SpiralDot`
-- `_SpreadItem`
-- `_StaticChip`
-- `_Stream`
-- `_SubPill`
-- … 残り 15 省略
+- … 残り 20 省略
 
 ### #2 Doc に書いてあるがコードに存在しない (ゴースト記述) (37)
 
@@ -326,7 +326,7 @@
 
 ### 層 4f: サブ画面 (Forecast / Locations / Philosophy / Font Preview)
 
-- ファイル数: 16
+- ファイル数: 18
 - Worker URL 呼出: (なし)
 - Popup/Dialog: `showInfoPopup`×5
 - Navigator.push 等: 0 箇所
@@ -342,22 +342,22 @@
 
 | from\to | 1a | 1b | 1c | 2a | 2b | 2c | 3a | 3b | 3c | 4a | 4b | 4c | 4d | 4e | 4f | 5 |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1a | 3 | 1 | · | · | · | · | · | · | · | · | · | · | · | · | · | · |
+| 1a | 3 | 1 | · | · | 1 | · | · | · | · | · | · | · | · | · | · | · |
 | 1b | 1 | · | · | 1 | · | · | 1 | · | · | · | · | · | · | · | · | · |
 | 1c | · | · | 1 | · | · | · | · | · | · | · | · | · | · | · | · | · |
 | 2a | 3 | · | · | 5 | · | · | · | 1 | · | · | · | · | · | · | · | · |
 | 2b | · | 1 | 5 | 2 | 1 | · | · | · | · | · | · | · | · | · | · | · |
 | 2c | · | · | 1 | · | · | · | · | · | · | · | · | · | · | · | · | · |
-| 3a | 1 | 4 | 2 | 1 | · | 1 | 8 | 6 | 4 | 1 | · | · | · | · | · | · |
+| 3a | 1 | 4 | 2 | 1 | · | 1 | 8 | 6 | 4 | 1 | · | · | · | · | 1 | · |
 | 3b | · | · | · | · | · | · | · | 1 | · | · | · | · | · | · | · | · |
 | 3c | · | 4 | 4 | 2 | 3 | · | 12 | 4 | · | · | · | · | · | · | · | · |
 | 4a | 10 | 11 | · | 13 | 7 | · | 18 | 23 | 3 | 31 | 2 | · | · | · | 3 | · |
 | 4b | 5 | 10 | · | 6 | 4 | · | 13 | · | · | · | 29 | · | · | 2 | · | · |
 | 4c | 1 | · | 7 | 1 | 5 | 3 | 2 | · | · | · | · | 9 | · | · | · | · |
 | 4d | 2 | 6 | 13 | 1 | 5 | 2 | 11 | 2 | 1 | · | · | · | 8 | · | · | · |
-| 4e | · | 4 | · | 1 | 7 | · | 7 | 1 | · | · | · | · | · | 8 | 1 | · |
-| 4f | 3 | 4 | · | 3 | 10 | · | 11 | 9 | · | 6 | · | · | · | · | 12 | · |
-| 5 | · | · | · | 1 | 2 | 1 | 1 | 1 | · | 1 | 1 | 1 | 1 | 1 | · | · |
+| 4e | 1 | 4 | · | 1 | 7 | · | 7 | 1 | · | · | · | · | · | 8 | 2 | · |
+| 4f | 5 | 4 | · | 3 | 11 | · | 11 | 10 | · | 6 | · | · | · | · | 13 | · |
+| 5 | 1 | · | · | 1 | 2 | 1 | 1 | 1 | · | 1 | 1 | 1 | 1 | 1 | · | · |
 
 > 健全な依存方向は「番号が大きい層 → 小さい層」(上位が下位に依存)。
 > 番号が小さい層から大きい層への矢印 (左下三角) は逆流依存の疑い。
@@ -368,11 +368,11 @@
 
 | ファイル | 層 | 被 import 数 |
 | --- | --- | --- |
-| `lib/theme/solara_colors.dart` | 3b | 27 |
+| `lib/theme/solara_colors.dart` | 3b | 28 |
 | `lib/utils/solara_storage.dart` | 2b | 22 |
 | `lib/screens/map/map_constants.dart` | 3b | 20 |
 | `lib/widgets/info_popup.dart` | 3a | 20 |
-| `lib/utils/pro_status.dart` | 2b | 15 |
+| `lib/utils/pro_status.dart` | 2b | 17 |
 | `lib/screens/horoscope/horo_antique_icons.dart` | 3a | 13 |
 | `lib/models/galaxy_cycle.dart` | 1c | 12 |
 | `lib/utils/solara_api.dart` | 2a | 11 |
@@ -402,26 +402,20 @@
 > 各ソースの SHA1 を `_stamps.json` に記録し、差分を検出。
 > 変更されたファイルが属する層は、人手版インベントリ章の見直し対象。
 
-- 追加: **7** / 削除: **0** / 変更: **9**
+- 追加: **4** / 削除: **0** / 変更: **3**
 
 ### 変更されたファイル (層別)
 
-- **層 1c**: `lib/models/daily_reading.dart`
-- **層 2b**: `lib/utils/solara_storage.dart`
-- **層 3c**: `lib/widgets/catasterism_formation_overlay.dart`
-- **層 4c**: `lib/screens/observe/observe_history.dart`, `lib/screens/observe_screen.dart`
-- **層 4d**: `lib/screens/galaxy/galaxy_replay_overlay.dart`, `lib/screens/galaxy/galaxy_star_atlas.dart`, `lib/screens/galaxy_screen.dart`
+- **層 3a**: `lib/widgets/pro_unlock_dialog.dart`
 - **層 4e**: `lib/screens/sanctuary_screen.dart`
+- **層 5**: `lib/main.dart`
 
 ### 追加されたファイル
 
-- `lib/screens/galaxy/constellation_share_card_page.dart` (層 4d)
-- `lib/screens/galaxy/galaxy_archive_filter.dart` (層 4d)
-- `lib/screens/galaxy/galaxy_archive_filter_chips.dart` (層 4d)
-- `lib/screens/galaxy/galaxy_cycle_actions_sheet.dart` (層 4d)
-- `lib/screens/observe/observe_history_filter.dart` (層 4c)
-- `lib/screens/sanctuary/title_history_screen.dart` (層 4e)
-- `lib/utils/galaxy_cycle_export.dart` (層 2b)
+- `lib/screens/paywall_screen.dart` (層 4f)
+- `lib/screens/paywall_widgets.dart` (層 4f)
+- `lib/utils/legal_urls.dart` (層 1a)
+- `lib/utils/purchases_service.dart` (層 1a)
 
 ## #7 astro_glossary 用語辞書対整合
 

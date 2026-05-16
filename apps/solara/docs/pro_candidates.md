@@ -488,7 +488,7 @@ Forecast 期間 (Free 1 年 / Pro 5 年、`_setYearOffset` で year>0 を Free g
 | 2-5 | 「📍地図で確認」連動 | 公開後 | 公開後 |
 | 2-5b | シェアエクスポート (テキスト + PNG 画像 1080px) | — | ✅ 完了 |
 | 2-6a | Pro ゲート UI 配線（`ProStatus` + `showProUnlockDialog` + Sanctuary DEV トグル） | — | ✅ 完了 (RevenueCat 未配線) |
-| 2-6b | RevenueCat / StoreKit 配線（実購入導線） | — | 公開前必須 |
+| 2-6b | RevenueCat / StoreKit 配線（実購入導線） | — | ✅ 完了 (`PurchasesService` + `PaywallScreen` + 復元ボタン、`--dart-define` で API キー注入、Offerings 未配信時は「ストア準備中」表示) |
 | 2-7 | 柱2 残り Pro ゲート配線（ACG 4 フレーム / アスペクト 120 本 / 引越し） | — | ✅ 完了 (`map_screen._onAstroToggle` で 5 キー gate、ACG モード入時自動 ON も Pro 判定) |
 | 2-8 | 柱2 残り 3 機能 Pro ゲート（時計スライダー 1 分刻み / LOCATION 枠 5→10 / Forecast 期間 1 年→5 年） | — | ✅ 完了 (時計=長押しゲート / SlotManager.maxSlots getter / `_setYearOffset` year>0 gate + 降格時 0 巻き戻し) |
 
@@ -508,6 +508,23 @@ Forecast 期間 (Free 1 年 / Pro 5 年、`_setYearOffset` で year>0 を Free g
 | `consultation_place_picker_widgets.dart` | 411 | B picker サブウィジェット (`_SearchBar` / `_NumberedPin` / `_SelectionCard`) |
 
 全 5 consultation 系テスト (history/share/smoke/ui + pro_status) は 44/44 pass を維持。
+
+**Phase 2-6b 追加ファイル (2026-05-16)**：RevenueCat 配線で 4 ファイル追加。HARD threshold (500 行) 内に収めるため `paywall_screen.dart` は `part 'paywall_widgets.dart';` で 2 分割。
+
+| ファイル | 行数 | 役割 |
+| --- | ---: | --- |
+| `lib/utils/legal_urls.dart` | 49 | 法的書類 URL 定数 (`privacyPolicy` / `termsOfService` / `specifiedCommercialTransactions` / 解約 deeplink) |
+| `lib/utils/purchases_service.dart` | 216 | RevenueCat 10.x ラッパー (`init` / `getOfferings` / `purchasePackage` / `restorePurchases` / `logIn` / `logOut` + `isEntitledFrom` 純粋関数) |
+| `lib/screens/paywall_screen.dart` | 220 | orchestration + state + build() |
+| `lib/screens/paywall_widgets.dart` | 443 | `extension _PaywallWidgets on _PaywallScreenState` (Hero / FeatureList / Plans / 法的リンク / 復元) |
+
+**API キー注入**：`--dart-define=SOLARA_RC_IOS_KEY=appl_xxx --dart-define=SOLARA_RC_ANDROID_KEY=goog_xxx`。未設定 / 非対応 OS (Windows/macOS/Linux/Web) では `configure` をスキップし、Pro 切替は Sanctuary DEV トグルで動作。
+
+**security_principles 原則 1 (クライアント単独 isPro 禁止) 対応**：RevenueCat 10.x には `.enforced` モードが存在しないため `EntitlementVerificationMode.informational` で SDK 検証を有効化し、`PurchasesService.isEntitledFrom` で `VerificationResult.failed` を Free に倒すロジックを担保。Worker `/auth/whoami` 二重チェックは Phase 1 の Worker 基盤実装で別途配線予定。
+
+**Sign in with Apple/Google 統合 (uid を `Purchases.logIn` に渡す) は未実装**：当面 anonymous appUserID。launch_checklist Phase 2「Sign in 統合」で `PurchasesService.logIn(uid)` を呼ぶ箇所を配線する。
+
+テスト：`test/purchases_service_test.dart` 10 件全 PASS (静的状態 + `isEntitledFrom` 6 verification 分岐 + `hasApiKeyForCurrentPlatform`)。`test/pro_status_test.dart` の「準備中」アサートを Phase 2-6b 仕様に更新。
 
 ### 7.3 柱3 — あなたの記録庫（定着）
 

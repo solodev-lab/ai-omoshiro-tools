@@ -9,7 +9,7 @@
 | 層 | 名称 | ファイル数 | Markdown |
 | --- | --- | --- | --- |
 | 0 | Worker (バックエンド計算式) | 10 | [00_worker.md](00_worker.md) |
-| 1a | 純計算ユーティリティ | 6 | [01a_pure_calc.md](01a_pure_calc.md) |
+| 1a | 純計算ユーティリティ | 8 | [01a_pure_calc.md](01a_pure_calc.md) |
 | 1b | 静的データ辞書 | 13 | [01b_static_data.md](01b_static_data.md) |
 | 1c | モデルクラス | 4 | [01c_models.md](01c_models.md) |
 | 2a | API/Worker ラッパ | 8 | [02a_api_wrappers.md](02a_api_wrappers.md) |
@@ -23,16 +23,16 @@
 | 4c | Observe (Tarot) 画面 | 7 | [04c_observe.md](04c_observe.md) |
 | 4d | Galaxy 画面 | 9 | [04d_galaxy.md](04d_galaxy.md) |
 | 4e | Sanctuary 画面 | 9 | [04e_sanctuary.md](04e_sanctuary.md) |
-| 4f | サブ画面 (Forecast / Locations / Philosophy / Font Preview) | 16 | [04f_subscreens.md](04f_subscreens.md) |
+| 4f | サブ画面 (Forecast / Locations / Philosophy / Font Preview) | 18 | [04f_subscreens.md](04f_subscreens.md) |
 | 5 | 連携層 (main.dart / PopScope / IndexedStack) | 1 | [05_main.md](05_main.md) |
 
 ## 全体統計
 
-- Dart ファイル: 155
+- Dart ファイル: 159
 - Worker JS ファイル: 10
 - Worker エンドポイント総数: 16
-- Dart class/mixin/extension/enum 総数: 396
-- Dart 関数総数 (素拾い): 1254
+- Dart class/mixin/extension/enum 総数: 401
+- Dart 関数総数 (素拾い): 1292
 
 ## 対整合チェック
 

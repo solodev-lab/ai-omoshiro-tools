@@ -4,11 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../utils/pro_status.dart';
+import '../utils/purchases_service.dart';
 import '../utils/solara_storage.dart';
 import '../utils/title_data.dart' as title_data;
 import '../widgets/class_card.dart';
 import '../widgets/pro_unlock_dialog.dart';
 import 'consultation/consultation_history_screen.dart';
+import 'paywall_screen.dart';
 import 'sanctuary/sanctuary_orb_overlay.dart';
 import 'sanctuary/sanctuary_profile_editor.dart';
 import 'sanctuary/sanctuary_reset_hour_picker.dart';
@@ -729,76 +731,178 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
     return _SettingsGroup(
       label: '✦ Cosmic Pro',
       children: [
-        // HTML: .pro-banner { padding:22px; background:linear-gradient(135deg,rgba(249,217,118,0.09),rgba(249,217,118,0.04));
-        //   border:1px solid rgba(249,217,118,0.18); border-radius:22px;
-        //   display:flex; flex-direction:column; gap:12px; align-items:center; text-align:center; }
-        // HTML inline: style="padding:16px;gap:10px;" (overrides .pro-banner padding:22px)
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(22),
-            gradient: const LinearGradient(
-              begin: Alignment.topLeft, end: Alignment.bottomRight,
-              colors: [Color(0x17F9D976), Color(0x0AF9D976)], // rgba(249,217,118,0.09/0.04)
-            ),
-            border: Border.all(color: const Color(0x2EF9D976)), // rgba(249,217,118,0.18)
-          ),
-          child: Column(children: [
-            // .pro-title gradient: ShaderMask の saveLayer を避けるため foreground Paint で実現。
-            Text('Upgrade to Cosmic Pro',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
-                foreground: Paint()
-                  ..shader = const LinearGradient(
-                    begin: Alignment.topLeft, end: Alignment.bottomRight,
-                    colors: [Color(0xFFF9D976), Color(0xFFF6BD60)],
-                  ).createShader(const Rect.fromLTWH(0, 0, 220, 24)),
-              )),
-            const SizedBox(height: 12),
-            // HTML: .pro-sub { font-size:13px; color:var(--text-secondary); line-height:1.55; }
-            const Text('Aether shaders · Galaxy Archive · Advanced astrology',
-              style: TextStyle(fontSize: 15, color: Color(0xFFACACAC), height: 1.55),
-              textAlign: TextAlign.center),
-            const SizedBox(height: 12),
-            // Price row (from sanctuary.html inline styles)
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.baseline,
-              textBaseline: TextBaseline.alphabetic,
-              children: const [
-                Text('\$9.99', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700, color: Color(0xFFF9D976))),
-                SizedBox(width: 6),
-                Text('/month', style: TextStyle(fontSize: 15, color: Color(0xFFACACAC))),
+        // Phase 2-6b: AnimatedBuilder で ProStatus を購読し Pro/Free 状態で表示を切替え
+        AnimatedBuilder(
+          animation: ProStatus.instance,
+          builder: (ctx, _) {
+            final isPro = ProStatus.instance.isPro;
+            return Column(
+              children: [
+                isPro ? _buildProActiveBanner() : _buildProUpgradeBanner(),
+                const SizedBox(height: 10),
+                _buildRestoreRow(),
               ],
-            ),
-            const SizedBox(height: 12),
-            // HTML: .pro-btn { background:linear-gradient(135deg,var(--gold),var(--gold-end)); border-radius:14px;
-            //   padding:13px 30px; font-size:14px; font-weight:700; color:var(--bg-mid); }
-            Container(
-              padding: const EdgeInsets.symmetric(vertical: 13, horizontal: 30),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(14),
-                gradient: const LinearGradient(
-                  begin: Alignment.topLeft, end: Alignment.bottomRight,
-                  colors: [Color(0xFFF9D976), Color(0xFFF6BD60)],
-                ),
-              ),
-              child: const Text('Unlock Cosmic Pro ✦',
-                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Color(0xFF0C1D3A))),
-            ),
-            const SizedBox(height: 12),
-            // HTML inline: font-size:11px; color:rgba(172,172,172,0.45)
-            const Text('\$49.99/year · Cancel anytime',
-              style: TextStyle(fontSize: 15, color: Color(0x73ACACAC))),
-          ]),
+            );
+          },
         ),
-        // ── [DEV] Pro 状態切替 (Phase 2-6a 暫定、課金基盤未配線) ──
+        // ── [DEV] Pro 状態切替 (動作確認用、課金基盤と並走) ──
         // kDebugMode のみ表示。リリースビルドでは消える。
         if (kDebugMode) _buildDevProToggle(),
       ],
     );
+  }
+
+  /// Free 向け: PaywallScreen へ誘導するバナー。タップでペイウォール画面へ。
+  Widget _buildProUpgradeBanner() {
+    return InkWell(
+      onTap: _openPaywall,
+      borderRadius: BorderRadius.circular(22),
+      child: Ink(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(22),
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft, end: Alignment.bottomRight,
+            colors: [Color(0x17F9D976), Color(0x0AF9D976)],
+          ),
+          border: Border.all(color: const Color(0x2EF9D976)),
+        ),
+        child: Column(children: [
+          Text('Upgrade to Cosmic Pro',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+              foreground: Paint()
+                ..shader = const LinearGradient(
+                  begin: Alignment.topLeft, end: Alignment.bottomRight,
+                  colors: [Color(0xFFF9D976), Color(0xFFF6BD60)],
+                ).createShader(const Rect.fromLTWH(0, 0, 220, 24)),
+            )),
+          const SizedBox(height: 12),
+          const Text(
+            'Stella 相談 · ACG 4 フレーム · 記録庫の道具',
+            style: TextStyle(fontSize: 15, color: Color(0xFFACACAC), height: 1.55),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.symmetric(vertical: 13, horizontal: 30),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(14),
+              gradient: const LinearGradient(
+                begin: Alignment.topLeft, end: Alignment.bottomRight,
+                colors: [Color(0xFFF9D976), Color(0xFFF6BD60)],
+              ),
+            ),
+            child: const Text('Unlock Cosmic Pro ✦',
+              style: TextStyle(
+                fontSize: 15, fontWeight: FontWeight.w700, color: Color(0xFF0C1D3A))),
+          ),
+          const SizedBox(height: 12),
+          const Text(
+            'プランと価格はペイウォールでご確認ください · いつでも解約可能',
+            style: TextStyle(fontSize: 12, color: Color(0x99ACACAC)),
+          ),
+        ]),
+      ),
+    );
+  }
+
+  /// Pro 加入済向け: 「Cosmic Pro 加入中」を伝えるバナー (購入不要)。
+  Widget _buildProActiveBanner() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(22),
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft, end: Alignment.bottomRight,
+          colors: [Color(0x22F9D976), Color(0x11F9D976)],
+        ),
+        border: Border.all(color: const Color(0x66F9D976)),
+      ),
+      child: Column(children: [
+        const Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.auto_awesome, color: Color(0xFFF9D976), size: 18),
+            SizedBox(width: 8),
+            Text(
+              'Cosmic Pro 加入中',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: Color(0xFFF9D976),
+                letterSpacing: 0.6,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        const Text(
+          'すべての機能が解放されています。\n更新と解約は端末のサブスクリプション設定から。',
+          textAlign: TextAlign.center,
+          style: TextStyle(fontSize: 12, color: Color(0xFFACACAC), height: 1.6),
+        ),
+      ]),
+    );
+  }
+
+  /// 復元ボタン + ペイウォール再表示ボタン (Pro でも開ける = 解約導線 / 法務リンク確認)。
+  Widget _buildRestoreRow() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        TextButton.icon(
+          onPressed: _restorePurchases,
+          icon: const Icon(Icons.restore, size: 16),
+          label: const Text('購入を復元'),
+          style: TextButton.styleFrom(
+            foregroundColor: const Color(0xFFACACAC),
+          ),
+        ),
+        TextButton.icon(
+          onPressed: _openPaywall,
+          icon: const Icon(Icons.receipt_long_outlined, size: 16),
+          label: const Text('プラン・規約'),
+          style: TextButton.styleFrom(
+            foregroundColor: const Color(0xFFACACAC),
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _openPaywall() {
+    Navigator.of(context).push<void>(
+      MaterialPageRoute(
+        builder: (_) => const PaywallScreen(),
+        fullscreenDialog: true,
+      ),
+    );
+  }
+
+  Future<void> _restorePurchases() async {
+    if (!mounted) return;
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      final info = await PurchasesService.instance.restorePurchases();
+      if (!mounted) return;
+      if (info == null || !ProStatus.instance.isPro) {
+        messenger.showSnackBar(const SnackBar(
+          content: Text('復元する購入が見つかりませんでした。'),
+        ));
+      } else {
+        messenger.showSnackBar(const SnackBar(
+          content: Text('購入を復元しました。'),
+        ));
+      }
+    } catch (e) {
+      if (!mounted) return;
+      messenger.showSnackBar(SnackBar(
+        content: Text('復元中にエラーが発生しました: $e'),
+      ));
+    }
   }
 
   /// [DEV] Pro 状態切替トグル。Phase 2-6a で Pro ゲートの動作確認用。

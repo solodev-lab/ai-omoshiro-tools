@@ -74,11 +74,11 @@ void main() {
       expect(find.textContaining('Pro 機能'), findsOneWidget);
       expect(find.textContaining('これはテスト用の説明'), findsOneWidget);
       expect(find.text('閉じる'), findsOneWidget);
-      // Phase 2-6a: アップグレードボタンは disabled (準備中)
+      // Phase 2-6b: アップグレードボタンは enabled (PaywallScreen を push)
       final upgradeBtn = tester.widget<TextButton>(
-        find.widgetWithText(TextButton, 'Pro にアップグレード (準備中)'),
+        find.widgetWithText(TextButton, 'Pro にアップグレード'),
       );
-      expect(upgradeBtn.onPressed, isNull, reason: '課金導線は Phase 2-6b で配線');
+      expect(upgradeBtn.onPressed, isNotNull, reason: '課金導線は Phase 2-6b で配線済');
     });
 
     testWidgets('「閉じる」をタップするとダイアログが消える', (tester) async {

@@ -10,6 +10,7 @@ import 'screens/sanctuary_screen.dart';
 import 'utils/app_locale.dart';
 import 'utils/celestial_events.dart';
 import 'utils/pro_status.dart';
+import 'utils/purchases_service.dart';
 import 'utils/tarot_data.dart';
 import 'widgets/solara_nav_bar.dart';
 
@@ -26,6 +27,9 @@ void main() async {
   await CelestialEvents.initialize();
   await AppLocale.instance.load();
   await ProStatus.instance.load();
+  // Phase 2-6b: RevenueCat 配線。API キー未設定 / 未対応 OS では no-op。
+  // 設定済なら entitlement listener が ProStatus を上書きするので load() の後に呼ぶ順序。
+  await PurchasesService.instance.init();
   runApp(const SolaraApp());
 }
 
