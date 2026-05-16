@@ -124,11 +124,10 @@ void main() {
   });
 
   // ──────────────────────────────────────────────────────────────
-  // Filter bar widget: 単一選択 rarity チップの挙動
-  // (2026-05-17: multi-select 廃止後の回帰防止)
+  // Filter bar widget: rarity multi-select チップの挙動
   // ──────────────────────────────────────────────────────────────
 
-  group('GalaxyArchiveFilterBar — rarity 単一選択', () {
+  group('GalaxyArchiveFilterBar — rarity multi-select', () {
     testWidgets('★5 タップ → rarities={5}', (tester) async {
       var captured = const GalaxyArchiveFilter();
       await tester.pumpWidget(
@@ -147,7 +146,7 @@ void main() {
       expect(captured.rarities, {5});
     });
 
-    testWidgets('★5 → ★3 タップ → rarities={3} に切替 (multi にならない)',
+    testWidgets('★5 → ★3 タップ → rarities={3, 5} (multi-select)',
         (tester) async {
       var captured = const GalaxyArchiveFilter();
       Widget build() => MaterialApp(
@@ -168,12 +167,12 @@ void main() {
 
       await tester.tap(find.text('★3'));
       await tester.pump();
-      expect(captured.rarities, {3},
-          reason: '★3 タップ後は ★5 が外れて ★3 だけが残るべき');
+      expect(captured.rarities, {3, 5},
+          reason: 'multi-select: ★5 を残したまま ★3 を追加');
     });
 
-    testWidgets('★3 同じチップ再タップ → クリア', (tester) async {
-      var captured = const GalaxyArchiveFilter(rarities: {3});
+    testWidgets('選択済みチップ再タップ → 外れる (toggle off)', (tester) async {
+      var captured = const GalaxyArchiveFilter(rarities: {3, 5});
       Widget build() => MaterialApp(
             home: Scaffold(
               body: StatefulBuilder(
@@ -188,7 +187,8 @@ void main() {
       await tester.pumpWidget(build());
       await tester.tap(find.text('★3'));
       await tester.pump();
-      expect(captured.rarities, isEmpty);
+      expect(captured.rarities, {5},
+          reason: '★3 を外した後は ★5 だけ残る');
     });
 
     testWidgets('Free 状態ではタップが無効 (Pro Unlock dialog 表示)', (tester) async {
@@ -209,6 +209,20 @@ void main() {
       // Pro Unlock dialog が出るので onChanged は呼ばれない
       expect(captured.rarities, isEmpty);
       expect(find.text('✦ Cosmic Pro'), findsOneWidget);
+    });
+
+    // ───────────────────────────────────────────────────
+    // 報告された事象の回帰防止 (2026-05-17):
+    // 「★5 だけタップしたのに rarity 3 のサイクルが表示される」
+    // → apply の rarity フィルタは単純な Set.contains。
+    //   apply 単体で原因が無いことを明示的に確認する。
+    // ───────────────────────────────────────────────────
+    test('rarities={5} 適用 → rarity 3 のサイクルは絶対に含まれない', () {
+      const filter = GalaxyArchiveFilter(rarities: {5});
+      final result = filter.apply([a, b, c]); // a=5, b=3, c=1
+      expect(result.length, 1);
+      expect(result.first.rarity, 5);
+      expect(result.where((c) => c.rarity == 3), isEmpty);
     });
   });
 }
