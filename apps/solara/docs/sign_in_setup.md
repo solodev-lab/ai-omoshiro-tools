@@ -19,7 +19,7 @@ Phase 2-9 (Sign in 統合) で実装した `SolaraAuth` を本番で動かすた
 
 ### 1-1. Apple Developer Portal
 
-1. [Identifiers](https://developer.apple.com/account/resources/identifiers/list) → 既存の App ID `com.solodev.solara` を開く
+1. [Identifiers](https://developer.apple.com/account/resources/identifiers/list) → 既存の App ID `com.solodevlab.solara` を開く
 2. **Capabilities** タブで **Sign In with Apple** を有効化 → Save
 3. 関連する Provisioning Profile を再生成 (古い Profile では Capabilities 不一致でビルド失敗)
 
@@ -49,8 +49,8 @@ Phase 2-9 (Sign in 統合) で実装した `SolaraAuth` を本番で動かすた
 1. [Google Cloud Console](https://console.cloud.google.com/) で新規プロジェクト or 既存 Solara プロジェクトを開く
 2. **APIs & Services** → **Credentials** → **+ CREATE CREDENTIALS** → **OAuth client ID**
 3. 以下 3 種類を作成:
-   - **iOS**: Bundle ID `com.solodev.solara` を入力 → クライアント ID 発行
-   - **Android**: パッケージ名 `com.solodev.solara` + SHA-1 (debug / release 両方) → クライアント ID 発行
+   - **iOS**: Bundle ID `com.solodevlab.solara` を入力 → クライアント ID 発行
+   - **Android**: パッケージ名 `com.solodevlab.solara` + SHA-1 (debug / release 両方) → クライアント ID 発行
    - **Web** (Android backend 兼用): server client ID として使う場合 → クライアント ID 発行
 4. OAuth 同意画面: アプリ名 / サポートメール / スコープ (email, profile) を設定 → 公開 (External, Testing)
 
