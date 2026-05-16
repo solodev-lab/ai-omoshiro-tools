@@ -544,24 +544,31 @@ Forecast 期間 (Free 1 年 / Pro 5 年、`_setYearOffset` で year>0 を Free g
   Markdown 整形は `galaxy_cycle_export.dart` (intention の刻星化結果も併記)。
   Pro 限定 2 項目は Free タップで Pro Unlock dialog。
 
-**ファイル新規/変更**:
-- new: `lib/screens/galaxy/galaxy_archive_filter.dart` / `galaxy_cycle_actions_sheet.dart`
-- new: `lib/screens/observe/observe_history_filter.dart`
-- new: `lib/screens/sanctuary/title_history_screen.dart`
-- new: `lib/utils/galaxy_cycle_export.dart`
-- mod: `solara_storage.dart` (title history methods)
-- mod: `galaxy_star_atlas.dart` (Stateful + filter integration + onLongPress)
-- mod: `galaxy_screen.dart` (`_openCycleActions`)
-- mod: `observe_history.dart` (filter bar + Pro listener + 件数表示)
+**ファイル新規/変更** (2026-05-17 セッション総括):
+- new: `lib/screens/galaxy/galaxy_archive_filter.dart` (312 行) + part `galaxy_archive_filter_chips.dart` (199 行)
+- new: `lib/screens/galaxy/galaxy_cycle_actions_sheet.dart` (272 行)
+- new: `lib/screens/galaxy/constellation_share_card_page.dart` (387 行、Free 共有)
+- new: `lib/screens/observe/observe_history_filter.dart` (397 行)
+- new: `lib/screens/sanctuary/title_history_screen.dart` (385 行)
+- new: `lib/utils/galaxy_cycle_export.dart` (126 行)
+- mod: `solara_storage.dart` (+title history methods)
+- mod: `galaxy_star_atlas.dart` (Stateful + filter integration + onLongPress + ⋯メニュー + Icon ベース★)
+- mod: `galaxy_screen.dart` (`_openCycleActions` + `_openConstellationShare` + PopScope)
+- mod: `galaxy_replay_overlay.dart` (タップでスキップ + HitTestBehavior.opaque)
+- mod: `catasterism_formation_overlay.dart` (onShare コールバック追加、Free 共有ボタン)
+- mod: `observe_history.dart` (filter bar + Pro listener + 件数表示 + 詳細トグル拡大)
+- mod: `observe_screen.dart` (DailyReading.question 保存)
+- mod: `daily_reading.dart` (question?: String 追加、JSON 互換維持)
 - mod: `sanctuary_screen.dart` (history append + ProStatus 再診断ゲート + Records エントリ)
 
-**テスト**: 4 ファイル新規 / 25 テスト全 PASS
-- `test/galaxy_archive_filter_test.dart` (8 tests)
+**テスト**: 5 ファイル新規 / 37 テスト全 PASS
+- `test/galaxy_archive_filter_test.dart` (13 tests; apply + multi-select widget + 回帰防止)
 - `test/galaxy_cycle_export_test.dart` (4 tests)
-- `test/observe_history_filter_test.dart` (7 tests)
-- `test/title_history_test.dart` (6 tests = 5 storage + 2 widget、5 テストは shared mock を共有)
+- `test/observe_history_filter_test.dart` (11 tests; filter + question 検索 + JSON 互換)
+- `test/title_history_test.dart` (6 tests)
+- `test/constellation_share_card_test.dart` (2 tests; rendering smoke)
 
-flutter analyze lib clean / audit.py HARD violations 既存のみ (新規ファイルは全て 500 行未満)。
+flutter analyze lib clean / audit.py 新規ファイル全 HARD 500 行未満 (最大 460 行 = galaxy_star_atlas.dart WARN)。
 
 **④ 称号の取り直し（確定）**:
 - 称号診断は 2 つでできている — **二つ名**（生まれた日時のみ・一生変わらない）と

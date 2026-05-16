@@ -5,9 +5,9 @@
 
 ## サマリ
 
-- ファイル数: 5 / 総行数: 1204
+- ファイル数: 6 / 総行数: 1399
 - class/mixin/extension/enum: 8
-- 関数 (top-level + method の素拾い): 61
+- 関数 (top-level + method の素拾い): 67
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 0
 - Worker URL リテラル: 1
@@ -102,6 +102,42 @@ Phase 2-6 (課金基盤後): Pro チェックで非 Pro はゲートする。
 - L177: `'$solaraWorkerBase/astro/forecast'`
 
 
+### `lib/utils/galaxy_cycle_export.dart` (126 行)
+
+**ファイル先頭コメント:**
+
+```
+Galaxy Cycle エクスポート — C5 (Pro 機能、柱 3)
+
+設計: apps/solara/docs/pro_candidates.md §7.3 + §3 C5
+
+役割:
+  - 完了した [GalaxyCycle] を Markdown / 画像で外部書き出し
+  - LunarIntention (内包する CatasterismResult) があれば併記
+  - 画像は RepaintBoundary → PNG 1080px (consultation_share と同パターン)
+
+柱 3 原則: 「記録は Free でも全件閲覧」「Pro が売るのは記録を使う道具」。
+エクスポートは「記録を使う道具」側なので Pro ゲート対象。
+(ゲート自体は呼出側で showProUnlockDialog 経由で済ませる、本ファイルは pure utility。)
+```
+
+**imports:** dart=2 / package=4 / relative=2
+
+- relative: `../models/galaxy_cycle.dart`, `../models/lunar_intention.dart`
+
+**関数 (3 public + 1 private):**
+
+- L27 `formatGalaxyCycleAsMarkdown()` — 1 サイクルを Markdown に整形する。Stella や Solara 内で完結する書式で、
+- L75 `formatGalaxyCycleCaption()` — シェア用の短いキャプション (画像と一緒に添える text)。
+- L89 `shareGalaxyCycleImage()` — RepaintBoundary を PNG 化して OS 標準シェアシートで共有する。
+
+  <details><summary>private 関数 1 件</summary>
+
+  - L120 `_isoDate()`
+
+  </details>
+
+
 ### `lib/utils/pro_status.dart` (75 行)
 
 **ファイル先頭コメント:**
@@ -144,7 +180,7 @@ Phase 2-6b 以降 (RevenueCat 接続後):
 - L68 `resetForTest()`
 
 
-### `lib/utils/solara_storage.dart` (472 行)
+### `lib/utils/solara_storage.dart` (541 行)
 
 **imports:** dart=1 / package=1 / relative=4
 
@@ -157,7 +193,7 @@ Phase 2-6b 以降 (RevenueCat 接続後):
 - L100 `class SolaraStorage`
   - Persistence wrapper for Solara data.
 
-**関数 (35 public + 2 private):**
+**関数 (37 public + 2 private):**
 
 - L40 `toJson()`
 - L70 `copyWith()`
@@ -177,28 +213,30 @@ Phase 2-6b 以降 (RevenueCat 接続後):
 - L216 `updateSynchronicity()` — Update synchronicity text for a specific reading date.
 - L229 `updateReading()` — Update an existing reading (matched by date) with new reading text.
 - L243 `removeReadingByDate()` — Remove a reading by date (used for the dev "reset today" button).
-- L260 `saveTitleData()`
-- L265 `getTodayReading()`
-- L288 `saveCompletedCycle()`
-- L296 `clearCurrentReadings()`
-- L303 `loadIntention()`
-- L311 `saveIntention()`
-- L321 `loadDailyResetHour()` — 1日の基準時刻（0-23時）。この時刻を跨ぐと「今日」が更新される。
-- L327 `saveDailyResetHour()`
-- L334 `loadDailyResetMinute()` — 1日の基準時刻 (分、0-59)。1 分単位ピッカーの導入で追加。
-- L340 `saveDailyResetMinute()`
-- L392 `wasOverlayShownToday()` — Track which overlay was shown today to avoid re-showing.
-- L399 `markOverlayShown()`
-- L407 `getNotTodayCount()` — Not today 押下回数（サイクルID単位で保存）
-- L412 `incrementNotTodayCount()`
-- L442 `addConsultationRecord()` — 履歴を 1 件追加 (新しい順で先頭、上限超過分は古いものから削除)。
-- L454 `deleteConsultationRecord()` — id 指定で 1 件削除。見つからない場合は no-op。
-- L461 `clearConsultationHistory()` — 履歴全削除 (Sanctuary 設定からの「すべて削除」用)。
+- L266 `saveTitleData()`
+- L297 `addTitleHistoryEntry()` — 称号診断結果を履歴に追加する。
+- L329 `clearTitleHistory()` — 履歴全削除 (Sanctuary 設定からの「すべて削除」用)。
+- L334 `getTodayReading()`
+- L357 `saveCompletedCycle()`
+- L365 `clearCurrentReadings()`
+- L372 `loadIntention()`
+- L380 `saveIntention()`
+- L390 `loadDailyResetHour()` — 1日の基準時刻（0-23時）。この時刻を跨ぐと「今日」が更新される。
+- L396 `saveDailyResetHour()`
+- L403 `loadDailyResetMinute()` — 1日の基準時刻 (分、0-59)。1 分単位ピッカーの導入で追加。
+- L409 `saveDailyResetMinute()`
+- L461 `wasOverlayShownToday()` — Track which overlay was shown today to avoid re-showing.
+- L468 `markOverlayShown()`
+- L476 `getNotTodayCount()` — Not today 押下回数（サイクルID単位で保存）
+- L481 `incrementNotTodayCount()`
+- L511 `addConsultationRecord()` — 履歴を 1 件追加 (新しい順で先頭、上限超過分は古いものから削除)。
+- L523 `deleteConsultationRecord()` — id 指定で 1 件削除。見つからない場合は no-op。
+- L530 `clearConsultationHistory()` — 履歴全削除 (Sanctuary 設定からの「すべて削除」用)。
 
   <details><summary>private 関数 2 件</summary>
 
-  - L379 `_logicalTodayKey()`
-  - L466 `_writeConsultationHistory()`
+  - L448 `_logicalTodayKey()`
+  - L535 `_writeConsultationHistory()`
 
   </details>
 

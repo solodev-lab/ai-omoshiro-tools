@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 4 / 総行数: 337
+- ファイル数: 4 / 総行数: 344
 - class/mixin/extension/enum: 7
 - 関数 (top-level + method の素拾い): 8
 - Navigator.push 等: 0
@@ -14,7 +14,7 @@
 
 ## ファイル別
 
-### `lib/models/daily_reading.dart` (41 行)
+### `lib/models/daily_reading.dart` (48 行)
 
 **型定義 (1):**
 
@@ -22,7 +22,7 @@
 
 **関数 (1 public + 0 private):**
 
-- L20 `toJson()`
+- L25 `toJson()`
 
 
 ### `lib/models/galaxy_cycle.dart` (119 行)
