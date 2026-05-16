@@ -1,0 +1,357 @@
+// Solara 認証サービス — Phase 2-9 Sign in 統合
+//
+// 設計:
+//   - launch_checklist Phase 2「Sign in 統合」
+//   - project_solara_security_principles 原則 3「App User ID は Sign in with Apple/Google の uid」
+//   - Apple Guideline 5.4: Google 提供時は Apple 必須 (iOS のみ)
+//
+// 役割:
+//   - Sign in with Apple / Google を抽象化し、現在のアカウント情報を提供
+//   - 成功時に PurchasesService.logIn(uid) を呼び、RevenueCat の appUserID を切替え
+//   - サインアウト時に PurchasesService.logOut を呼ぶ
+//   - ChangeNotifier で UI に反映
+//
+// 設計判断:
+//   - Sign in は **任意**。Free ユーザーは未サインインのまま全機能使える
+//   - Pro 購入も anonymous appUserID で可能 (StoreKit/Play Billing が紐付け、復元は OS が担保)
+//   - サインインで端末跨ぎ復元が安定する旨を UI で案内し、推奨に留める
+//   - Android では Apple Sign in は不可 (service ID + redirect URI が必要、本フェーズでは非対応)。
+//     Apple 公式パッケージは Android 対応だが、サーバー側 service 設定が必要なため初期は iOS のみ
+//
+// 🔴 API キー注入 (--dart-define):
+//   --dart-define=SOLARA_GOOGLE_IOS_CLIENT_ID=xxxxx.apps.googleusercontent.com
+//   --dart-define=SOLARA_GOOGLE_SERVER_CLIENT_ID=xxxxx.apps.googleusercontent.com
+//   未設定でも GoogleSignIn.initialize() は呼ばれるが、ネイティブ設定 (GoogleService-Info.plist /
+//   google-services.json) があれば動く。クライアント ID を渡すと優先される
+
+import 'dart:async';
+import 'dart:convert';
+import 'dart:io' show Platform;
+
+import 'package:flutter/foundation.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
+
+import 'purchases_service.dart';
+
+enum SolaraAuthProvider { apple, google }
+
+/// 認証済アカウント情報。
+class SolaraAuthAccount {
+  final SolaraAuthProvider provider;
+
+  /// RevenueCat appUserID として使う一意 ID。
+  /// 形式: "apple:{userIdentifier}" / "google:{user.id}"
+  /// プロバイダ間で衝突せず、同じプロバイダ間では端末を跨いで同じ値になる。
+  final String uid;
+
+  /// 表示名 (Apple の場合、初回のみ取得。以降は SharedPreferences から復元)。
+  final String? displayName;
+
+  /// メール (Apple の場合、初回のみ。Apple のリレーアドレスもありうる)。
+  final String? email;
+
+  const SolaraAuthAccount({
+    required this.provider,
+    required this.uid,
+    this.displayName,
+    this.email,
+  });
+
+  Map<String, dynamic> toJson() => {
+        'provider': provider.name,
+        'uid': uid,
+        'displayName': displayName,
+        'email': email,
+      };
+
+  static SolaraAuthAccount? fromJson(Map<String, dynamic>? json) {
+    if (json == null) return null;
+    final providerStr = json['provider'] as String?;
+    final uid = json['uid'] as String?;
+    if (providerStr == null || uid == null) return null;
+    final provider = SolaraAuthProvider.values.firstWhere(
+      (p) => p.name == providerStr,
+      orElse: () => SolaraAuthProvider.google,
+    );
+    return SolaraAuthAccount(
+      provider: provider,
+      uid: uid,
+      displayName: json['displayName'] as String?,
+      email: json['email'] as String?,
+    );
+  }
+
+  String get displayLabel => displayName?.isNotEmpty == true
+      ? displayName!
+      : email?.isNotEmpty == true
+          ? email!
+          : provider == SolaraAuthProvider.apple
+              ? 'Apple アカウント'
+              : 'Google アカウント';
+}
+
+/// 認証エラー (UI が型で分岐できるよう薄い wrapper)。
+class SolaraAuthException implements Exception {
+  final String message;
+  final Object? cause;
+  SolaraAuthException(this.message, [this.cause]);
+  @override
+  String toString() => 'SolaraAuthException: $message';
+}
+
+class SolaraAuth extends ChangeNotifier {
+  SolaraAuth._();
+
+  static final SolaraAuth instance = SolaraAuth._();
+
+  static const String _kPrefsKey = 'solara_auth_account';
+
+  static const String _googleIosClientId =
+      String.fromEnvironment('SOLARA_GOOGLE_IOS_CLIENT_ID', defaultValue: '');
+  static const String _googleServerClientId =
+      String.fromEnvironment('SOLARA_GOOGLE_SERVER_CLIENT_ID',
+          defaultValue: '');
+
+  SolaraAuthAccount? _account;
+  bool _googleInitialized = false;
+  bool _loaded = false;
+  StreamSubscription<GoogleSignInAuthenticationEvent>? _googleEventsSub;
+
+  SolaraAuthAccount? get account => _account;
+  bool get isSignedIn => _account != null;
+  bool get loaded => _loaded;
+
+  /// 起動時に 1 度呼ぶ。SharedPreferences から復元 + provider 別の silent restore。
+  Future<void> load() async {
+    if (_loaded) return;
+    _loaded = true;
+
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString(_kPrefsKey);
+    if (raw != null && raw.isNotEmpty) {
+      try {
+        final decoded = jsonDecode(raw);
+        if (decoded is Map<String, dynamic>) {
+          _account = SolaraAuthAccount.fromJson(decoded);
+        }
+      } catch (_) {
+        // 破損 JSON は捨てる
+      }
+    }
+
+    // 起動時の検証 (provider 別)。失敗時は local state をクリア。
+    if (_account != null) {
+      await _verifyOrClear();
+    }
+
+    notifyListeners();
+  }
+
+  Future<void> _verifyOrClear() async {
+    final acc = _account;
+    if (acc == null) return;
+    try {
+      if (acc.provider == SolaraAuthProvider.apple) {
+        if (!_isApplePlatform) return; // Apple 端末でなければスキップ
+        final userIdentifier = _stripPrefix(acc.uid, 'apple:');
+        if (userIdentifier == null) {
+          await _clearLocalSession();
+          return;
+        }
+        final state = await SignInWithApple.getCredentialState(userIdentifier);
+        if (state != CredentialState.authorized) {
+          await _clearLocalSession();
+        }
+      } else {
+        // Google: silent restore を試みる
+        await _ensureGoogleInitialized();
+        final user =
+            await GoogleSignIn.instance.attemptLightweightAuthentication();
+        if (user == null) {
+          await _clearLocalSession();
+        } else {
+          // user.id が一致するか確認 (端末で別アカウントになってる可能性)
+          if (user.id != _stripPrefix(acc.uid, 'google:')) {
+            // アカウント切替が発生 → 新しいアカウントを採用
+            await _adoptGoogleAccount(user);
+          }
+        }
+      }
+    } catch (_) {
+      // 検証失敗は安全側で local だけクリア (UI で「再サインインしてください」案内)
+      await _clearLocalSession();
+    }
+  }
+
+  /// Apple サインイン (iOS / macOS 推奨)。
+  Future<SolaraAuthAccount> signInWithApple() async {
+    if (!_isApplePlatform) {
+      throw SolaraAuthException(
+          'Sign in with Apple は iOS / macOS でのみご利用いただけます');
+    }
+    final available = await SignInWithApple.isAvailable();
+    if (!available) {
+      throw SolaraAuthException(
+          'この端末では Sign in with Apple が利用できません');
+    }
+
+    final credential = await SignInWithApple.getAppleIDCredential(
+      scopes: const [
+        AppleIDAuthorizationScopes.email,
+        AppleIDAuthorizationScopes.fullName,
+      ],
+    );
+
+    final userIdentifier = credential.userIdentifier;
+    if (userIdentifier == null) {
+      throw SolaraAuthException('Apple ユーザー ID を取得できませんでした');
+    }
+
+    // 表示名 / email は初回のみ来る → 既存と merge
+    final existingDisplayName = _account?.displayName;
+    final existingEmail = _account?.email;
+    final givenName = credential.givenName;
+    final familyName = credential.familyName;
+    final fullName = (givenName != null || familyName != null)
+        ? [givenName, familyName].whereType<String>().join(' ').trim()
+        : null;
+
+    final account = SolaraAuthAccount(
+      provider: SolaraAuthProvider.apple,
+      uid: 'apple:$userIdentifier',
+      displayName: (fullName?.isNotEmpty == true)
+          ? fullName
+          : existingDisplayName,
+      email: credential.email ?? existingEmail,
+    );
+
+    await _commitAccount(account);
+    return account;
+  }
+
+  /// Google サインイン (iOS / Android / macOS / Web)。
+  Future<SolaraAuthAccount> signInWithGoogle() async {
+    await _ensureGoogleInitialized();
+    try {
+      final user = await GoogleSignIn.instance.authenticate();
+      final account = SolaraAuthAccount(
+        provider: SolaraAuthProvider.google,
+        uid: 'google:${user.id}',
+        displayName: user.displayName,
+        email: user.email,
+      );
+      await _commitAccount(account);
+      return account;
+    } on GoogleSignInException catch (e) {
+      // canceled / unknownError 等は SDK 仕様のまま投げ直し
+      throw SolaraAuthException('Google サインインに失敗しました', e);
+    }
+  }
+
+  /// 現在のアカウントを取り外す。
+  Future<void> signOut() async {
+    final provider = _account?.provider;
+    try {
+      if (provider == SolaraAuthProvider.google && _googleInitialized) {
+        await GoogleSignIn.instance.signOut();
+      }
+      // Apple は dedicated sign out API がない (Apple ID 設定で revoke するしかない)。
+      // ローカル状態だけクリアして再サインインの導線を出す。
+    } catch (_) {
+      // SDK 例外は無視してローカルクリアは続行 (UX: 出口は常に開けておく)
+    }
+    await _clearLocalSession();
+  }
+
+  // ── 内部処理 ────────────────────────────────────────────
+
+  bool get _isApplePlatform {
+    if (kIsWeb) return false;
+    return Platform.isIOS || Platform.isMacOS;
+  }
+
+  Future<void> _ensureGoogleInitialized() async {
+    if (_googleInitialized) return;
+    await GoogleSignIn.instance.initialize(
+      clientId: _googleIosClientId.isNotEmpty ? _googleIosClientId : null,
+      serverClientId:
+          _googleServerClientId.isNotEmpty ? _googleServerClientId : null,
+    );
+    _googleInitialized = true;
+
+    // アカウント切替・暗黙的サインアウトをストリーム購読 (二重サブスクは弾く)
+    _googleEventsSub ??=
+        GoogleSignIn.instance.authenticationEvents.listen(_onGoogleEvent);
+  }
+
+  void _onGoogleEvent(GoogleSignInAuthenticationEvent event) {
+    switch (event) {
+      case GoogleSignInAuthenticationEventSignIn(:final user):
+        if (_account == null ||
+            _account?.uid != 'google:${user.id}') {
+          // 別アカウントになった場合は採用
+          unawaited(_adoptGoogleAccount(user));
+        }
+      case GoogleSignInAuthenticationEventSignOut():
+        // SDK 側で signOut された (revoke 等) → ローカル同期
+        if (_account?.provider == SolaraAuthProvider.google) {
+          unawaited(_clearLocalSession());
+        }
+    }
+  }
+
+  Future<void> _adoptGoogleAccount(GoogleSignInAccount user) async {
+    final account = SolaraAuthAccount(
+      provider: SolaraAuthProvider.google,
+      uid: 'google:${user.id}',
+      displayName: user.displayName,
+      email: user.email,
+    );
+    await _commitAccount(account);
+  }
+
+  Future<void> _commitAccount(SolaraAuthAccount account) async {
+    _account = account;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_kPrefsKey, jsonEncode(account.toJson()));
+    // RevenueCat に uid を渡す。configured されていなければ no-op。
+    try {
+      await PurchasesService.instance.logIn(account.uid);
+    } catch (_) {
+      // 失敗してもサインイン自体は成立とみなす (Pro 復元は次回起動で再試行)
+    }
+    notifyListeners();
+  }
+
+  Future<void> _clearLocalSession() async {
+    _account = null;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_kPrefsKey);
+    try {
+      await PurchasesService.instance.logOut();
+    } catch (_) {
+      // 同上
+    }
+    notifyListeners();
+  }
+
+  String? _stripPrefix(String uid, String prefix) {
+    if (!uid.startsWith(prefix)) return null;
+    return uid.substring(prefix.length);
+  }
+
+  /// テスト用: SharedPreferences とキャッシュ両方をリセット。
+  @visibleForTesting
+  Future<void> resetForTest() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_kPrefsKey);
+    _account = null;
+    _loaded = true;
+    _googleInitialized = false;
+    await _googleEventsSub?.cancel();
+    _googleEventsSub = null;
+    notifyListeners();
+  }
+}

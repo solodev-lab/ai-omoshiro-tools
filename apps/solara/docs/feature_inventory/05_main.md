@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 1 / 総行数: 155
+- ファイル数: 1 / 総行数: 159
 - class/mixin/extension/enum: 3
 - 関数 (top-level + method の素拾い): 5
 - Navigator.push 等: 0
@@ -14,28 +14,28 @@
 
 ## ファイル別
 
-### `lib/main.dart` (155 行)
+### `lib/main.dart` (159 行)
 
-**imports:** dart=0 / package=3 / relative=12
+**imports:** dart=0 / package=3 / relative=13
 
-- relative: `theme/solara_theme.dart`, `screens/map_screen.dart`, `screens/horoscope_screen.dart`, `screens/observe_screen.dart`, `screens/galaxy_screen.dart`, `screens/sanctuary_screen.dart`, `utils/app_locale.dart`, `utils/celestial_events.dart`, `utils/pro_status.dart`, `utils/purchases_service.dart`, `utils/tarot_data.dart`, `widgets/solara_nav_bar.dart`
+- relative: `theme/solara_theme.dart`, `screens/map_screen.dart`, `screens/horoscope_screen.dart`, `screens/observe_screen.dart`, `screens/galaxy_screen.dart`, `screens/sanctuary_screen.dart`, `utils/app_locale.dart`, `utils/celestial_events.dart`, `utils/pro_status.dart`, `utils/purchases_service.dart`, `utils/solara_auth.dart`, `utils/tarot_data.dart`, `widgets/solara_nav_bar.dart`
 
 **型定義 (3):**
 
-- L36 `class SolaraApp : StatelessWidget`
-- L72 `class SolaraHome : StatefulWidget`
-- L79 `class _SolaraHomeState : State`
+- L40 `class SolaraApp : StatelessWidget`
+- L76 `class SolaraHome : StatefulWidget`
+- L83 `class _SolaraHomeState : State`
 
 **関数 (4 public + 1 private):**
 
-- L17 `main()`
-- L40 `build()`
-- L76 `createState()`
-- L116 `build()`
+- L18 `main()`
+- L44 `build()`
+- L80 `createState()`
+- L120 `build()`
 
   <details><summary>private 関数 1 件</summary>
 
-  - L93 `_onTabTap()`
+  - L97 `_onTabTap()`
 
   </details>
 

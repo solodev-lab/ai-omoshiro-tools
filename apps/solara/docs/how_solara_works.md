@@ -283,7 +283,16 @@ Map の扇状セクターが「合算 1 色」で大まかにしか見せない�
    - 同点時は **占星術シード**（太陽 × 月星座 144 通り）で 1 つに決定
    - Light 面 = 長所 / Shadow 面 = ユーモア混じりの「あるある」、結果画面タップで切替
    診断結果はカード画像にして OS シェア可能。いつでも再診断できる。
-3. **🟢 Cosmic Pro アップグレード**（Phase 2-6b 配線完了、2026-05-16）:
+3. **🟢 Account (Sign in、Phase 2-9 配線完了、2026-05-16)**:
+   `✦ Account` セクション (Cosmic Pro の真上) に Apple / Google サインインボタンを設置。
+   サインインは **任意**。サインインすると RevenueCat appUserID が `apple:{id}` / `google:{id}` 形式の
+   固定 uid に切替わり、機種変更や端末追加でも Cosmic Pro の復元が安定する。サインアウト後も記録庫
+   (相談履歴 / 称号変遷 / Galaxy Archive) は端末内にすべて残る (柱 3 原則「記録は人質にしない」)。
+   サインインを経由しても Free 機能の挙動は変わらず、Pro 購入も anonymous appUserID で可能 (StoreKit/Play
+   Billing が紐付けを担保)。iOS は Apple + Google、Android は Google のみ表示 (Apple Guideline 5.4 遵守 +
+   Apple Android サインインの service ID 設定回避)。起動時に `getCredentialState` /
+   `attemptLightweightAuthentication` で silent restore する。
+4. **🟢 Cosmic Pro アップグレード**（Phase 2-6b 配線完了、2026-05-16）:
    Cosmic Pro バナータップで `PaywallScreen` (fullscreenDialog) を push。
    ペイウォールでは Stella 相談 / ACG 4 フレーム / リロケーション / 記録庫 / 時刻スライダーの 5 機能を
    icon + 説明で提示し、`Offerings.current` の年額・月額パッケージをカード表示。タップで
@@ -296,12 +305,12 @@ Map の扇状セクターが「合算 1 色」で大まかにしか見せない�
      を Free に倒すロジックで security_principles 原則 1 を担保。
    - **Sanctuary**: Pro 加入時はバナーを「Cosmic Pro 加入中」表示に切替え、復元ボタン + 「プラン・規約」ボタン
      (ペイウォール再表示) も提示。DEV ビルドでは `kDebugMode` 限定の Pro トグルが並走。
-4. **🟢 Records セクション**（柱 3、2026-05-17）:
+5. **🟢 Records セクション**（柱 3、2026-05-17）:
    - **相談履歴** → `ConsultationHistoryScreen` (Phase 2-4 で実装、Free 全件閲覧可)
    - **称号 変遷** → `TitleHistoryScreen` (C4、Free 閲覧可、Pro が「クラスを取り直して履歴を増やす」道具)
-5. **占星術設定**: **ホロスコープのオーブ**設定（アスペクト 8 種 + パターン 5 種の角度許容範囲を
+6. **占星術設定**: **ホロスコープのオーブ**設定（アスペクト 8 種 + パターン 5 種の角度許容範囲を
    0.1° 単位でカスタマイズ。**Horoscope 画面専用** — Map・Daily Transit には影響しない）、ハウスシステム選択。
-6. **アプリ設定**: 言語切替、利用規約等。
+7. **アプリ設定**: 言語切替、利用規約等。
 
 **🔴 C4 称号 (クラス) 変遷ギャラリー** (2026-05-17):
 - 二つ名 (太陽 × 月 144 通り) = 出生固定・永久不変・取り直し不可

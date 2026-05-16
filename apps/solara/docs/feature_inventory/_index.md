@@ -13,9 +13,9 @@
 | 1b | 静的データ辞書 | 13 | [01b_static_data.md](01b_static_data.md) |
 | 1c | モデルクラス | 4 | [01c_models.md](01c_models.md) |
 | 2a | API/Worker ラッパ | 8 | [02a_api_wrappers.md](02a_api_wrappers.md) |
-| 2b | 永続化/キャッシュ | 6 | [02b_persistence.md](02b_persistence.md) |
+| 2b | 永続化/キャッシュ | 7 | [02b_persistence.md](02b_persistence.md) |
 | 2c | グローバル singleton | 1 | [02c_globals.md](02c_globals.md) |
-| 3a | 共通ウィジェット (純粋) | 22 | [03a_widgets_pure.md](03a_widgets_pure.md) |
+| 3a | 共通ウィジェット (純粋) | 23 | [03a_widgets_pure.md](03a_widgets_pure.md) |
 | 3b | テーマ・装飾 | 3 | [03b_theme.md](03b_theme.md) |
 | 3c | 演出ウィジェット (animated) | 5 | [03c_widgets_anim.md](03c_widgets_anim.md) |
 | 4a | Map 画面 | 23 | [04a_map.md](04a_map.md) |
@@ -28,11 +28,11 @@
 
 ## 全体統計
 
-- Dart ファイル: 159
+- Dart ファイル: 161
 - Worker JS ファイル: 10
 - Worker エンドポイント総数: 16
-- Dart class/mixin/extension/enum 総数: 401
-- Dart 関数総数 (素拾い): 1292
+- Dart class/mixin/extension/enum 総数: 407
+- Dart 関数総数 (素拾い): 1312
 
 ## 対整合チェック
 

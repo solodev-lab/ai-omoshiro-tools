@@ -9,6 +9,7 @@ import '../utils/solara_storage.dart';
 import '../utils/title_data.dart' as title_data;
 import '../widgets/class_card.dart';
 import '../widgets/pro_unlock_dialog.dart';
+import '../widgets/sanctuary_account_section.dart';
 import 'consultation/consultation_history_screen.dart';
 import 'paywall_screen.dart';
 import 'sanctuary/sanctuary_orb_overlay.dart';
@@ -289,6 +290,12 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
                   // 相談履歴の閲覧エントリ。新規相談の入口ではない (それは
                   // Map / Daily Transit popup 側、§7.2 Stage 1 入口 1/2)。
                   _buildRecordsSection(),
+                  const SizedBox(height: 20),
+
+                  // ── ✦ Account (Phase 2-9 Sign in 統合) ──
+                  // Sign in は任意。サインインで RevenueCat appUserID が
+                  // 固定 uid になり端末間 Pro 復元が安定する。
+                  const SanctuaryAccountSection(),
                   const SizedBox(height: 20),
 
                   // ── ✦ Cosmic Pro ──
@@ -725,6 +732,8 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
       ],
     );
   }
+
+  // ── ✦ Account Section は widgets/sanctuary_account_section.dart に分離 (Phase 2-9) ──
 
   // ── ✦ Cosmic Pro Section ──
   Widget _buildCosmicProSection() {

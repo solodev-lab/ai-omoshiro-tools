@@ -11,6 +11,7 @@ import 'utils/app_locale.dart';
 import 'utils/celestial_events.dart';
 import 'utils/pro_status.dart';
 import 'utils/purchases_service.dart';
+import 'utils/solara_auth.dart';
 import 'utils/tarot_data.dart';
 import 'widgets/solara_nav_bar.dart';
 
@@ -30,6 +31,9 @@ void main() async {
   // Phase 2-6b: RevenueCat 配線。API キー未設定 / 未対応 OS では no-op。
   // 設定済なら entitlement listener が ProStatus を上書きするので load() の後に呼ぶ順序。
   await PurchasesService.instance.init();
+  // Phase 2-9: Sign in 統合。SharedPreferences から復元 + provider 別 silent restore。
+  // PurchasesService.init より後でないと、復元時の logIn が configure 前に走ってしまう。
+  await SolaraAuth.instance.load();
   runApp(const SolaraApp());
 }
 
