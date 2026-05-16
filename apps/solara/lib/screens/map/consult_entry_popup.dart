@@ -1,11 +1,10 @@
-// Consult Entry Popup — A + B + C(ii) 共通 popup
+// Consult Entry Popup — Stella 相談の共通入口 popup
 //
-// 設計議論 2026-05-16:
-//   - 「Stella に相談」開始 popup として 3 経路で共通利用:
-//     A: ACG モード「🔮 相談」ピル ON 状態でタップ → この popup
-//     B: 線/天頂/天底 popup 内 CTA 「この地点で相談」→ この popup
-//        (の代わりに直接 ConsultationInputScreen を push してもよい)
-//     C(ii): 非 ACG Map モード + Pro ユーザー + 空地点タップ → この popup
+// 設計議論 2026-05-16 → 2026-05-17 簡素化:
+//   - 「Stella に相談」開始 popup として複数経路で共通利用:
+//     - 空地点タップ (ACG/非 ACG 共通、Pro ユーザーのみ): map_screen.onTap から
+//     - 線/天頂/天底 popup 内 CTA 「この地点で相談」: 直接 ConsultationInputScreen
+//       を push する経路で、この popup は経由しない
 //
 // 表示内容 (吉凶禁止原則を守るため Map の sector スコアは出さない):
 //   - 地名 (reverse geocode 結果、失敗時は「タップ地点」)

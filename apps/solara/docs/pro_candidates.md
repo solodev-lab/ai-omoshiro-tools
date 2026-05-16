@@ -278,17 +278,18 @@ Forecast 期間 (Free 1 年 / Pro 5 年、`_setYearOffset` で year>0 を Free g
 
 #### Stage 1 — 入力（1 枚スクロールシート）
 
-**入口 3 つ・エンジン 1 つ**（2026-05-16 拡張、A+B+C(ii) ハイブリッド確定）：
-- **タップ起点 A**：Map 上の任意地点タップで開く `MapRelocationPopup` ヘッダ直下に
-  「この場所で相談する」CTA。地理スコープ「具体地点」固定で `ConsultationInputScreen` 起動。
-  実装済（Phase 2-3b、`MapLineNarrativeSheet` 内 CTA も同 preset で共通）。
-- **タップ起点 B**：ACG モード時の**🔮 相談ピル**（`map_astro_carto._FramePillRow`）。
-  ピル ON で `_consultTapPoint` モードに入り、空地点タップで `ConsultEntryPopup`
-  (近接 3 conjunction line 表示) を経由して `ConsultationInputScreen` 起動。
-  - 線タップ・天頂 popup 内からも同 preset で起動可能（重複ハンドラ衝突は `onTap` を
-    nullable 化 + relocate/consult モード時に marker `IgnorePointer` 化することで解消）。
-  - 非 ACG Map で空地点をタップしても Pro ユーザーは同 popup から起動できる（C(ii) 経路）。
-  実装済（Phase 2026-05-16）。
+**入口 2 つ・エンジン 1 つ**（2026-05-17 簡素化、ACG/非 ACG 共通ルールに統合）：
+- **タップ起点**：Map 上の任意地点タップで Pro ユーザーは `ConsultEntryPopup`
+  （近接 3 conjunction line 表示）→ 「この場所で相談する」CTA → `ConsultationInputScreen`
+  起動。地理スコープ「具体地点」固定。
+  - **線にヒットしたタップ**: `MapRelocationPopup` / `MapLineNarrativeSheet` のヘッダ直下
+    CTA から起動（preset は同じ、線情報も持ち回し）。
+  - **天頂/天底マーカータップ**: `AstroZenithPopup` の CTA から zenith 座標 preset で起動。
+  - **空地点タップ**: ACG/非 ACG どちらでも、relocate ピル OFF + 線非ヒットなら
+    Pro ユーザーに `ConsultEntryPopup`。Free は何も起きない（アップセル連打を避ける）。
+  - 旧 ACG 専用「🔮 相談」ピル（Phase 2026-05-16）は撤去。「Pro なら Map のどこでも
+    空地点タップで相談 popup」という単一ルールに統合し、ピル ON という前置操作を不要にした。
+  実装済（Phase 2026-05-17）。
 - **目的起点**：Daily Transit popup 内に「🔮 Stella に相談」CTA 追加（ACG モード起動ボタンと並べる）→
   `ConsultationInputScreen` 起動。preset 無し、scope はユーザーが選ぶ。**未実装（Phase 2-3c 予定）**。
 
