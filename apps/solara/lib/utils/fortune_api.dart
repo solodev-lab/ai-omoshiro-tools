@@ -47,6 +47,9 @@ Future<FortuneReading?> fetchFortune({
   Map<String, List<Map<String, dynamic>>>? patterns,
   String? date,
   String? userName,
+  // Phase A1 (2026-05-17): Pro=true で Worker 側が Gemini thinking モード ON
+  // (thinkingBudget 1024) で深い読みを返す。Free=false で thinking OFF。
+  bool thinking = false,
 }) async {
   try {
     final body = <String, dynamic>{
@@ -58,6 +61,7 @@ Future<FortuneReading?> fetchFortune({
       'patterns': ?patterns,
       'date': ?date,
       if (userName != null && userName.isNotEmpty) 'userName': userName,
+      if (thinking) 'thinking': true,
     };
     final res = await http.post(
       Uri.parse('$solaraWorkerBase/fortune'),

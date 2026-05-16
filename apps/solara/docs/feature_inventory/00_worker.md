@@ -101,7 +101,7 @@ astronomy-engine API:
 **export (1):** `computeDailyTransits`
 
 
-### `worker/src/fortune.js` (311 行)
+### `worker/src/fortune.js` (318 行)
 
 **ファイル先頭コメント:**
 

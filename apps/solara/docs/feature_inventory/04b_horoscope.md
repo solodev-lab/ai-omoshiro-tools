@@ -5,9 +5,9 @@
 
 ## サマリ
 
-- ファイル数: 21 / 総行数: 5239
+- ファイル数: 21 / 総行数: 5402
 - class/mixin/extension/enum: 29
-- 関数 (top-level + method の素拾い): 135
+- 関数 (top-level + method の素拾い): 138
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 2
 - Worker URL リテラル: 0
@@ -261,7 +261,7 @@ ignore_for_file: invalid_use_of_protected_member
   </details>
 
 
-### `lib/screens/horoscope/horo_fortune_cards.dart` (240 行)
+### `lib/screens/horoscope/horo_fortune_cards.dart` (350 行)
 
 **imports:** dart=0 / package=2 / relative=3
 
@@ -271,17 +271,18 @@ ignore_for_file: invalid_use_of_protected_member
 
 - L38 `class HoroAstrologyView : StatelessWidget`
 
-**関数 (1 public + 5 private):**
+**関数 (1 public + 6 private):**
 
-- L68 `build()`
+- L80 `build()`
 
-  <details><summary>private 関数 5 件</summary>
+  <details><summary>private 関数 6 件</summary>
 
-  - L167 `_birthEditedBanner()`
-  - L184 `_loadingBanner()`
-  - L201 `_errorBanner()`
-  - L224 `_skeletonLine()`
-  - L232 `_skeletonBar()`
+  - L187 `_birthEditedBanner()`
+  - L204 `_loadingBanner()`
+  - L221 `_errorBanner()`
+  - L244 `_skeletonLine()`
+  - L252 `_skeletonBar()`
+  - L264 `_lockedTeaserCard()`
 
   </details>
 
@@ -479,46 +480,48 @@ Phase A: 静的テンプレート (将来 Stella 動的生成に切替予定 →
 - L61 `build()`
 
 
-### `lib/screens/horoscope_screen.dart` (761 行)
+### `lib/screens/horoscope_screen.dart` (814 行)
 
-**imports:** dart=2 / package=2 / relative=12
+**imports:** dart=2 / package=2 / relative=14
 
-- relative: `../utils/astro_houses.dart`, `../utils/astro_math.dart`, `../utils/solara_storage.dart`, `../utils/fortune_api.dart`, `horoscope/horo_constants.dart`, `horoscope/horo_chart_painter.dart`, `horoscope/horo_fortune_cards.dart`, `horoscope/horo_bottom_panels.dart`, `horoscope/horo_ornament_painter.dart`, `horoscope/horo_antique_icons.dart`, `horoscope/horo_relocation_panel.dart`, `map/map_astro.dart`
+- relative: `../utils/astro_houses.dart`, `../utils/astro_math.dart`, `../utils/pro_status.dart`, `../utils/solara_storage.dart`, `../utils/fortune_api.dart`, `../widgets/pro_unlock_dialog.dart`, `horoscope/horo_constants.dart`, `horoscope/horo_chart_painter.dart`, `horoscope/horo_fortune_cards.dart`, `horoscope/horo_bottom_panels.dart`, `horoscope/horo_ornament_painter.dart`, `horoscope/horo_antique_icons.dart`, `horoscope/horo_relocation_panel.dart`, `map/map_astro.dart`
 
 **型定義 (2):**
 
-- L26 `class HoroscopeScreen : StatefulWidget`
-- L39 `class HoroscopeScreenState : State`
+- L28 `class HoroscopeScreen : StatefulWidget`
+- L41 `class HoroscopeScreenState : State`
 
-**関数 (7 public + 17 private):**
+**関数 (7 public + 19 private):**
 
-- L30 `createState()`
-- L180 `initState()`
-- L202 `dispose()`
-- L232 `wakeAnimations()` — 「再覚醒」: anim 再開 + 30s タイマー再起動。
-- L246 `pauseAnimations()` — main.dart からタブ離脱時に呼ばれる。Anim + 寿命タイマー両方停止 = raster 0%。
-- L277 `loadProfile()`
-- L575 `build()`
+- L32 `createState()`
+- L182 `initState()`
+- L236 `dispose()`
+- L267 `wakeAnimations()` — 「再覚醒」: anim 再開 + 30s タイマー再起動。
+- L281 `pauseAnimations()` — main.dart からタブ離脱時に呼ばれる。Anim + 寿命タイマー両方停止 = raster 0%。
+- L312 `loadProfile()`
+- L624 `build()`
 
-  <details><summary>private 関数 17 件</summary>
+  <details><summary>private 関数 19 件</summary>
 
-  - L124 `_planetHouse()`
-  - L143 `_currentCacheKey()`
-  - L162 `_refreshCacheKey()`
-  - L213 `_resetAnimLifeTimer()`
-  - L223 `_stopAnimations()`
-  - L255 `_startRotTimer()`
-  - L268 `_syncRotationByMode()`
-  - L302 `_onTransitUpdate()`
-  - L313 `_applyWorkingProfile()`
-  - L331 `_fetchRealChart()`
-  - L459 `_resetWorkingProfile()`
-  - L466 `_profilesEqual()`
-  - L484 `_loadFortunes()`
-  - L675 `_menuItem()`
-  - L688 `_buildHouseModeToggle()`
-  - L716 `_toggleSegment()`
-  - L751 `_setRelocateMode()`
+  - L126 `_planetHouse()`
+  - L145 `_currentCacheKey()`
+  - L164 `_refreshCacheKey()`
+  - L208 `_onProStatusChanged()`
+  - L224 `_showFortuneProUnlock()`
+  - L248 `_resetAnimLifeTimer()`
+  - L258 `_stopAnimations()`
+  - L290 `_startRotTimer()`
+  - L303 `_syncRotationByMode()`
+  - L337 `_onTransitUpdate()`
+  - L348 `_applyWorkingProfile()`
+  - L366 `_fetchRealChart()`
+  - L494 `_resetWorkingProfile()`
+  - L501 `_profilesEqual()`
+  - L530 `_loadFortunes()`
+  - L728 `_menuItem()`
+  - L741 `_buildHouseModeToggle()`
+  - L769 `_toggleSegment()`
+  - L804 `_setRelocateMode()`
 
   </details>
 

@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 8 / 総行数: 1631
+- ファイル数: 8 / 総行数: 1635
 - class/mixin/extension/enum: 17
 - 関数 (top-level + method の素拾い): 26
 - Navigator.push 等: 0
@@ -161,7 +161,7 @@ Worker: /astro/daily-transits (POST)
 - L14: `'$solaraWorkerBase/astro/daily-transits'`
 
 
-### `lib/utils/fortune_api.dart` (250 行)
+### `lib/utils/fortune_api.dart` (254 行)
 
 **ファイル先頭コメント:**
 
@@ -178,20 +178,20 @@ Fortune API - /fortune エンドポイント (Stella の声を取得)
 
 - L8 `class FortuneReading`
   - Fortune APIレスポンス
-- L86 `class RelocationNarrative`
-- L179 `class TarotReading`
+- L90 `class RelocationNarrative`
+- L183 `class TarotReading`
 
 **関数 (3 public + 0 private):**
 
 - L41 `fetchFortune()` — /fortune を叩いて占い文を取得
-- L138 `fetchRelocationNarrative()` — /relocation を叩いてリロケーション解説を取得。
-- L205 `fetchTarotReading()` — /tarot を叩いて1枚引きの Reading を生成する。
+- L142 `fetchRelocationNarrative()` — /relocation を叩いてリロケーション解説を取得。
+- L209 `fetchTarotReading()` — /tarot を叩いて1枚引きの Reading を生成する。
 
 **Worker URL リテラル (3):**
 
-- L63: `'$solaraWorkerBase/fortune'`
-- L158: `'$solaraWorkerBase/relocation'`
-- L231: `'$solaraWorkerBase/tarot'`
+- L67: `'$solaraWorkerBase/fortune'`
+- L162: `'$solaraWorkerBase/relocation'`
+- L235: `'$solaraWorkerBase/tarot'`
 
 
 ### `lib/utils/reverse_geocode.dart` (100 行)

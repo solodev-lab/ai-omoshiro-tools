@@ -266,6 +266,11 @@ export async function handleFortune(body, env) {
     patterns = {},
     date,
     userName,
+    // Phase A1 (2026-05-17): Pro ユーザーには thinking モード ON で深い読み。
+    // Free は thinking OFF。Worker 側で本物の判定はせず、クライアントが
+    // ProStatus から isPro を渡してくる (Phase 2-6b で Sign in + サーバ側
+    // Pro 検証を追加して二重防御に格上げ予定)。
+    thinking = false,
   } = body;
 
   if (!FORTUNE_CATEGORIES[category]) {
@@ -285,7 +290,9 @@ export async function handleFortune(body, env) {
   const models = primary === fallback ? [primary] : [primary, fallback];
 
   const prompt = buildPrompt({ category, lang, natal, planetHouses, aspects, patterns, date, userName });
-  const raw = await callGemini(env.GEMINI_API_KEY, prompt, models);
+  const raw = await callGemini(env.GEMINI_API_KEY, prompt, models, {
+    thinkingBudget: thinking ? 1024 : null,
+  });
 
   // 3. JSON抽出 (Geminiは基本JSON返すが念のためfallback)
   let parsed;

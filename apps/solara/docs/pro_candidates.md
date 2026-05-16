@@ -211,11 +211,11 @@ Sanctuary に既に実装済の Cosmic Pro UI（$9.99/月・$49.99/年）の訴�
 
 ### 7.1 柱1 — Stella 占い使い放題（事業の核）
 
-| | Free | Pro |
-|---|---|---|
-| Horo 星読み | 全体運のみ・Stella の読み・thinking OFF。残り 4 カテゴリは**殻ティーザー**（タイトル/アイコン/スケルトン/🔒、**生成は呼ばない**） | 全 5 カテゴリ・Stella の読み・thinking ON |
-| タロット | 1 枚引き・Stella の読み・1 日 1 回・thinking OFF | 1 枚引き + **質問入力欄**・thinking ON |
-| タロット（将来） | — | 3 枚引き（統合解釈） |
+| | Free | Pro | ゲート状態 |
+|---|---|---|---|
+| Horo 星読み | 全体運のみ・Stella の読み・thinking OFF。残り 4 カテゴリは**殻ティーザー**（タイトル/アイコン/スケルトン/🔒、**生成は呼ばない**） | 全 5 カテゴリ・Stella の読み・thinking ON | ✅ A1 (2026-05-17) |
+| タロット | 1 枚引き・Stella の読み・1 日 1 回・thinking OFF | 1 枚引き + **質問入力欄**・thinking ON | 未着手 (A3) |
+| タロット（将来） | — | 3 枚引き（統合解釈） | 未着手 (D1) |
 
 - **モデル**: ローンチは全部 thinking モード Flash（Free=thinkingBudget 0、Pro=ON）。Claude Sonnet は
   公開後に実出力を見比べて判断する実験案件、ローンチには持ち込まない。
@@ -223,6 +223,15 @@ Sanctuary に既に実装済の Cosmic Pro UI（$9.99/月・$49.99/年）の訴�
   + コンテンツ安全性（医療・法律・自傷に断定助言させない）が必須。
 - 🔴 殻ティーザーは Free ユーザーで Gemini を 1 回も呼ばないこと。部分的に本物を見せると 5 呼び出しに
   逆戻り＝コスト削減が消える。
+
+**A1 実装状態 (2026-05-17)**: 
+- `horoscope_screen._loadFortunes` で `_categoriesToFetch()` が Free=overall 1 件 / Pro=5 件を返し、fetch 自体をゲート (Gemini 呼出を 80% 削減)。
+- `horo_fortune_cards.HoroAstrologyView` に `isPro` + `onLockedCategoryTap` を追加、Free は overall 以外を `_lockedTeaserCard` (🔒 + Pro バッジ + skeleton 3 行 + 静かな誘導文) で表示。
+- タップで `_showFortuneProUnlock` → `showProUnlockDialog` (カテゴリ名ごとに文言)。
+- `fortune_api.fetchFortune` に `thinking: bool` 引数追加、`isPro` を渡す。
+- Worker `fortune.js handleFortune` が `thinking` を body から受け取り `callGemini({thinkingBudget: thinking ? 1024 : null})` へ伝播。
+- `ProStatus.addListener(_onProStatusChanged)` で Free→Pro に切り替わると `_loadFortunes(force: true)` で残り 4 カテゴリを即取得 (Sanctuary DEV toggle 即時反映)。
+- `_fortunes.length >= categories.length` のキャッシュ判定で Pro→Free 後に再 fetch しない (コスト保護)。
 
 ### 7.2 柱2 — アドバンスト占星術 & Map（差別化の見せ場）
 

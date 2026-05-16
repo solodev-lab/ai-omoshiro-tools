@@ -340,7 +340,7 @@
 | 3b | · | · | · | · | · | · | · | 1 | · | · | · | · | · | · | · | · |
 | 3c | · | 4 | 4 | 2 | 3 | · | 12 | 4 | · | · | · | · | · | · | · | · |
 | 4a | 10 | 11 | · | 13 | 7 | · | 18 | 23 | 3 | 31 | 2 | · | · | · | 3 | · |
-| 4b | 5 | 10 | · | 6 | 2 | · | 11 | · | · | · | 28 | · | · | 2 | · | · |
+| 4b | 5 | 10 | · | 6 | 3 | · | 12 | · | · | · | 28 | · | · | 2 | · | · |
 | 4c | 1 | · | 5 | 1 | 2 | 2 | · | · | · | · | · | 6 | · | · | · | · |
 | 4d | 2 | 5 | 9 | 1 | 1 | 2 | 8 | · | 1 | · | · | · | 4 | · | · | · |
 | 4e | · | 3 | · | 1 | 6 | · | 6 | · | · | · | · | · | · | 7 | 1 | · |
@@ -367,9 +367,9 @@
 | `lib/models/daily_reading.dart` | 1c | 8 |
 | `lib/models/galaxy_cycle.dart` | 1c | 8 |
 | `lib/utils/astro_lines.dart` | 1a | 8 |
+| `lib/utils/pro_status.dart` | 2b | 8 |
 | `lib/screens/map/map_vp_panel.dart` | 4a | 7 |
 | `lib/utils/constellation_namer.dart` | 1b | 7 |
-| `lib/utils/pro_status.dart` | 2b | 7 |
 | `lib/widgets/glass_panel.dart` | 3a | 7 |
 | `lib/utils/astro_glossary.dart` | 1b | 6 |
 | `lib/utils/tarot_data.dart` | 2c | 6 |
@@ -390,12 +390,14 @@
 > 各ソースの SHA1 を `_stamps.json` に記録し、差分を検出。
 > 変更されたファイルが属する層は、人手版インベントリ章の見直し対象。
 
-- 追加: **0** / 削除: **0** / 変更: **2**
+- 追加: **0** / 削除: **0** / 変更: **5**
 
 ### 変更されたファイル (層別)
 
+- **層 0**: `worker/src/fortune.js`
 - **層 1b**: `lib/utils/astro_glossary.dart`
-- **層 4a**: `lib/screens/map/map_astro_carto.dart`
+- **層 2a**: `lib/utils/fortune_api.dart`
+- **層 4b**: `lib/screens/horoscope/horo_fortune_cards.dart`, `lib/screens/horoscope_screen.dart`
 
 ## #7 astro_glossary 用語辞書対整合
 
