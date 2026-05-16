@@ -29,12 +29,8 @@ class GalaxyArchiveFilter {
   final String query;
 
   /// 表示する rarity の集合 (空 = 全件)。値は 1〜5。
-  ///
-  /// **UI 上は単一選択**: チップは 1 つしか同時選択できない設計
-  /// (2026-05-17 multi-select 廃止)。Set 型を維持しているのは
-  /// `apply` の絞込ロジックと将来の multi 復活に備えた API 互換のため。
-  /// 初期化時に複数値を入れた場合は `apply` が正しく動作する
-  /// (テスト用途で利用可能)。
+  /// multi-select: 複数 rarity を同時に表示できる (例: `{3, 5}` で
+  /// rarity 3 と 5 の両方を表示)。チップタップで個別に on/off。
   final Set<int> rarities;
 
   /// 並び順。
@@ -168,20 +164,20 @@ class _GalaxyArchiveFilterBarState extends State<GalaxyArchiveFilterBar> {
     widget.onChanged(widget.filter.copyWith(query: v));
   }
 
-  /// レアリティチップを単一選択で切替える。
+  /// レアリティチップを multi-select で切替える (オーナー指定 2026-05-17)。
+  /// 既に選択されていれば外す、未選択なら追加する。
   ///
-  /// 仕様 (2026-05-17 multi-select 廃止):
-  ///   - 何も選ばれていない → タップで `{r}` を選択
-  ///   - 同じ rarity が選ばれている → タップで `{}` にクリア
-  ///   - 違う rarity が選ばれている → タップで `{r}` に切替
-  ///
-  /// 旧 multi-select だと「★5 をタップしたのに ★3 のサイクルが出る」
-  /// (= 直前タップの ★3 が残っている) という UX 混乱があった。
+  /// 過去履歴:
+  ///   - 一時的に single-select 化したが、オーナー要望で multi-select 復帰。
+  ///   - 「★5 だけタップしたのに ★3 が表示される」事象が報告されたが
+  ///     widget test + closure capture test では再現せず。直接の Set 操作
+  ///     ロジックは元から正しい。視覚的に分かりにくかった可能性に絞り、
+  ///     選択中チップは `Selected:` バナーで明示するように UI を強化する。
   void _toggleRarity(int r) {
-    final current = widget.filter.rarities;
-    final next = (current.length == 1 && current.contains(r))
-        ? <int>{}
-        : <int>{r};
+    final next = Set<int>.from(widget.filter.rarities);
+    if (!next.add(r)) {
+      next.remove(r);
+    }
     widget.onChanged(widget.filter.copyWith(rarities: next));
   }
 
@@ -268,7 +264,7 @@ class _GalaxyArchiveFilterBarState extends State<GalaxyArchiveFilterBar> {
           const SizedBox(height: 8),
           // レアリティチップ + ソートメニュー
           SizedBox(
-            height: 32,
+            height: 36,
             child: ListView(
               scrollDirection: Axis.horizontal,
               children: [
@@ -281,6 +277,7 @@ class _GalaxyArchiveFilterBarState extends State<GalaxyArchiveFilterBar> {
                 const SizedBox(width: 8),
                 for (int r = 5; r >= 1; r--) ...[
                   _RarityChip(
+                    key: ValueKey('rarity-chip-$r'),
                     rarity: r,
                     selected: widget.filter.rarities.contains(r),
                     isPro: isPro,
@@ -291,8 +288,71 @@ class _GalaxyArchiveFilterBarState extends State<GalaxyArchiveFilterBar> {
               ],
             ),
           ),
+          // 選択中の rarity を明示するバナー (タップ事象の不可視化対策)。
+          if (widget.filter.rarities.isNotEmpty) ...[
+            const SizedBox(height: 6),
+            _SelectedRarityBanner(
+              rarities: widget.filter.rarities,
+              onClear: () => widget.onChanged(
+                widget.filter.copyWith(rarities: const <int>{}),
+              ),
+            ),
+          ],
         ],
       ),
+    );
+  }
+}
+
+class _SelectedRarityBanner extends StatelessWidget {
+  final Set<int> rarities;
+  final VoidCallback onClear;
+  const _SelectedRarityBanner({
+    required this.rarities,
+    required this.onClear,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final sorted = rarities.toList()..sort((a, b) => b.compareTo(a));
+    return Row(
+      children: [
+        const Text(
+          '選択中:',
+          style: TextStyle(
+            color: SolaraColors.textSecondary,
+            fontSize: 11,
+            letterSpacing: 0.4,
+          ),
+        ),
+        const SizedBox(width: 6),
+        Text(
+          sorted.map((r) => '★$r').join(' '),
+          style: const TextStyle(
+            color: SolaraColors.solaraGoldLight,
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 0.6,
+          ),
+        ),
+        const Spacer(),
+        GestureDetector(
+          onTap: onClear,
+          behavior: HitTestBehavior.opaque,
+          child: const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+            child: Text(
+              'クリア',
+              style: TextStyle(
+                color: SolaraColors.textSecondary,
+                fontSize: 11,
+                letterSpacing: 0.4,
+                decoration: TextDecoration.underline,
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
@@ -303,6 +363,7 @@ class _RarityChip extends StatelessWidget {
   final bool isPro;
   final VoidCallback onTap;
   const _RarityChip({
+    super.key,
     required this.rarity,
     required this.selected,
     required this.isPro,
@@ -319,12 +380,23 @@ class _RarityChip extends StatelessWidget {
     final bg = selected
         ? SolaraColors.solaraGoldLight
         : Colors.transparent;
+    // 🔴 HitTestBehavior.opaque + 透明 fill (0x00...) でチップ余白も
+    // 確実にヒットさせる。報告事象: 「★5 をタップしたつもりが反応しない
+    // → フィルタ空のまま全件表示 → rarity 3 が紛れて見える」を回避。
+    // (Container with `color: Colors.transparent` は本来 hit-test を
+    // 通すはずだが、PaddingChild との組み合わせで透明部分が deferred
+    // となる端末/レイアウトを観測したため、両側から保証する)
     return GestureDetector(
       onTap: onTap,
+      behavior: HitTestBehavior.opaque,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        // 最小タップ領域 (Material 推奨 48dp 弱だが、横並び制約で 32 高さ
+        // を確保。横幅は内容に応じて伸びる。constraints で minWidth を確保)。
+        constraints: const BoxConstraints(minWidth: 44, minHeight: 32),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: bg,
+          color: bg == Colors.transparent ? const Color(0x01FFFFFF) : bg,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: isPro
@@ -336,9 +408,9 @@ class _RarityChip extends StatelessWidget {
           '★$rarity',
           style: TextStyle(
             color: fg,
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-            letterSpacing: 0.4,
+            fontSize: 13,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 0.6,
           ),
         ),
       ),
