@@ -97,5 +97,62 @@ void main() {
       expect(r.length, 1);
       expect(r.first.cardId, 22);
     });
+
+    test('質問欄 (question) も検索対象に含まれる', () {
+      final withQ = _reading(
+        date: '2026-05-04',
+        cardId: 0,
+        isMajor: true,
+        reading: 'なし',
+      )..question = '転職について悩んでいます';
+
+      const ff = ObserveHistoryFilter(query: '転職');
+      final r = ff.apply([m, f, withQ]);
+      expect(r.length, 1);
+      expect(r.first.question, contains('転職'));
+    });
+
+    test('question が null でも他のフィールドは検索できる', () {
+      final r = _reading(
+        date: '2026-05-05',
+        cardId: 0,
+        isMajor: true,
+        reading: 'シンクロ無し',
+      );
+      expect(r.question, isNull);
+      const ff = ObserveHistoryFilter(query: 'シンクロ');
+      expect(ff.apply([r]).length, 1);
+    });
+  });
+
+  group('DailyReading question persistence', () {
+    test('toJson/fromJson で question を保持', () {
+      final r = DailyReading(
+        date: '2026-05-10',
+        cardId: 5,
+        isMajor: true,
+        moonPhase: 10.0,
+        question: 'Pro 質問テスト',
+      );
+      final json = r.toJson();
+      expect(json['question'], 'Pro 質問テスト');
+
+      final restored = DailyReading.fromJson(json);
+      expect(restored.question, 'Pro 質問テスト');
+    });
+
+    test('question が null/空なら toJson に含めない (旧データ互換)', () {
+      final r = DailyReading(
+        date: '2026-05-11',
+        cardId: 5,
+        isMajor: true,
+        moonPhase: 10.0,
+      );
+      final json = r.toJson();
+      expect(json.containsKey('question'), isFalse);
+
+      final restored = DailyReading.fromJson(json);
+      expect(restored.question, isNull);
+    });
   });
 }

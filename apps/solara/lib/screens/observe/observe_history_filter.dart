@@ -72,12 +72,15 @@ class ObserveHistoryFilter {
       if (elements.isNotEmpty && !elements.contains(card.element)) return false;
       if (onlyReversed != null && r.reversed != onlyReversed) return false;
       if (q.isNotEmpty) {
+        // パフォーマンス: 履歴上限 50 件 × 数百字の文字列連結 = 1 回 ~数十μs。
+        // 検索は textChanged ごとに走るが、ListView の rebuild より遥かに軽い。
         final haystack = <String>[
           card.nameJP,
           card.nameEN,
           card.keyword,
           r.reading,
           r.synchronicity,
+          r.question ?? '',
         ].map((s) => s.toLowerCase()).join(' / ');
         if (!haystack.contains(q)) return false;
       }
@@ -212,7 +215,7 @@ class _ObserveHistoryFilterBarState extends State<ObserveHistoryFilterBar> {
                         isCollapsed: true,
                         border: InputBorder.none,
                         hintText: isPro
-                            ? 'カード名・読み・シンクロを検索'
+                            ? 'カード名・読み・質問・シンクロを検索'
                             : '検索 — Cosmic Pro',
                         hintStyle: TextStyle(
                           color: isPro

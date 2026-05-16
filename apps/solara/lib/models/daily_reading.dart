@@ -7,6 +7,10 @@ class DailyReading {
   String reading; // Stella による /tarot リーディング本文
   String synchronicity; // HTML: sync-input textarea (editable)
 
+  /// A3 で追加した質問入力欄 (Pro のみ送信、最大 200 字)。
+  /// 旧データには無いので nullable、未保存時は null。
+  String? question;
+
   DailyReading({
     required this.date,
     required this.cardId,
@@ -15,6 +19,7 @@ class DailyReading {
     this.reversed = false,
     this.reading = '',
     this.synchronicity = '',
+    this.question,
   });
 
   Map<String, dynamic> toJson() => {
@@ -25,6 +30,7 @@ class DailyReading {
         'reversed': reversed,
         'reading': reading,
         'synchronicity': synchronicity,
+        if (question != null && question!.isNotEmpty) 'question': question,
       };
 
   factory DailyReading.fromJson(Map<String, dynamic> json) {
@@ -36,6 +42,7 @@ class DailyReading {
       reversed: json['reversed'] as bool? ?? false,
       reading: json['reading'] as String? ?? '',
       synchronicity: json['synchronicity'] as String? ?? '',
+      question: json['question'] as String?,
     );
   }
 }
