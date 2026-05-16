@@ -5,9 +5,9 @@
 
 ## サマリ
 
-- ファイル数: 16 / 総行数: 6936
-- class/mixin/extension/enum: 63
-- 関数 (top-level + method の素拾い): 167
+- ファイル数: 18 / 総行数: 7599
+- class/mixin/extension/enum: 66
+- 関数 (top-level + method の素拾い): 191
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 5
 - Worker URL リテラル: 0
@@ -674,6 +674,107 @@ orchestration + state management 専担、本ファイルは presentation を担
 **Popup/Dialog 呼出 (1):**
 
 - 集計: `showInfoPopup`×1
+
+
+### `lib/screens/paywall_screen.dart` (220 行)
+
+**ファイル先頭コメント:**
+
+```
+Solara ペイウォール画面 — Phase 2-6b
+
+設計:
+  - launch_checklist Phase 2「ペイウォール UI 🚨 公開ブロッカー B5 (3.1.2 全項目 + 特商法 5 項目必須)」
+  - project_solara_security_principles 原則 4「公開前必須の法務 3 点セット」
+  - feedback_i18n_last: 当面 ja-JP のみ。EN 版はストアアップ前最終工程
+
+必須項目 (B5):
+  ✦ サブスクタイトル ✦ 期間 (月額/年額) ✦ 価格 (税込) ✦ コンテンツ概要
+  ✦ 自動更新明記 ✦ 解約方法リンク ✦ EULA ✦ プライバシーポリシー
+  ✦ Free Trial 明記 ✦ 購入を復元
+
+振舞:
+  - Offerings 取得成功 → 月額 / 年額の 2 カード、タップで購入
+  - Offerings 取得失敗 (API キー未設定 / 未配信 / オフライン) → 「ストア準備中」案内
+  - 購入完了 → entitlement listener が ProStatus 更新 → pop で前画面に戻る
+```
+
+**imports:** dart=1 / package=4 / relative=4
+
+- relative: `../theme/solara_colors.dart`, `../utils/legal_urls.dart`, `../utils/pro_status.dart`, `../utils/purchases_service.dart`
+
+**型定義 (2):**
+
+- L32 `class PaywallScreen : StatefulWidget`
+- L39 `class _PaywallScreenState : State`
+
+**関数 (4 public + 7 private):**
+
+- L36 `createState()`
+- L47 `initState()`
+- L54 `dispose()`
+- L168 `build()`
+
+  <details><summary>private 関数 7 件</summary>
+
+  - L59 `_onProStatusChanged()`
+  - L66 `_loadOfferings()`
+  - L79 `_purchase()`
+  - L111 `_restore()`
+  - L135 `_showSnack()`
+  - L145 `_openUrl()`
+  - L153 `_openCancelGuide()`
+
+  </details>
+
+
+### `lib/screens/paywall_widgets.dart` (443 行)
+
+**ファイル先頭コメント:**
+
+```
+Paywall Screen — プラン表示 / 機能リスト / 法的リンク のサブウィジェット
+(part of 'paywall_screen.dart')
+
+役割:
+  - Stage 1 ペイウォール画面の表示パーツを分割保管
+  - 親 (`_PaywallScreenState`) のメソッドとしてアクセス可能 (part-of)
+
+内訳:
+  - _buildHero                : ゴールドグラデのタイトル + 一文紹介
+  - _buildFeatureList         : Pro で開く 5 機能の icon + 説明
+  - _buildPlansSection        : Loading / 配信あり (月額/年額) / 配信無し
+  - _buildStoreUnavailable    : Offerings 未配信 / 取得失敗時の準備中バナー
+  - _buildPlanCard            : 単一プラン (年額 / 月額) のカード UI + 購入導線
+  - _periodLabel / _introPeriodLabel : PackageType / PeriodUnit → 日本語ラベル
+
+(Solara は consultation_input_screen.dart と同じ part-of パターンを採用)
+```
+
+**型定義 (1):**
+
+- L20 `extension _PaywallWidgets : _PaywallScreenState`
+
+**関数 (0 public + 13 private):**
+
+
+  <details><summary>private 関数 13 件</summary>
+
+  - L21 `_buildHero()`
+  - L56 `_buildFeatureList()`
+  - L76 `_featureRow()`
+  - L122 `_buildPlansSection()`
+  - L154 `_buildStoreUnavailable()`
+  - L198 `_buildPlanCard()`
+  - L309 `_periodLabel()`
+  - L330 `_introPeriodLabel()`
+  - L346 `_buildErrorPanel()`
+  - L375 `_buildAutoRenewNotice()`
+  - L391 `_buildLegalLinks()`
+  - L407 `_legalLink()`
+  - L422 `_buildRestoreButton()`
+
+  </details>
 
 
 ### `lib/screens/solara_philosophy_screen.dart` (159 行)

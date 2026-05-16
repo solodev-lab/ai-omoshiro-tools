@@ -283,9 +283,19 @@ Map の扇状セクターが「合算 1 色」で大まかにしか見せない�
    - 同点時は **占星術シード**（太陽 × 月星座 144 通り）で 1 つに決定
    - Light 面 = 長所 / Shadow 面 = ユーモア混じりの「あるある」、結果画面タップで切替
    診断結果はカード画像にして OS シェア可能。いつでも再診断できる。
-3. **🔴 Cosmic Pro アップグレード UI**（既に実装済、`_buildCosmicProSection` L653-724）:
-   $9.99/月 または $49.99/年、訴求 3 機能「Aether shaders · Galaxy Archive · Advanced astrology」。
-   ※ UI のみ実装、機能ゲート（`isPro` 判定 / RevenueCat / IAP）は未実装。
+3. **🟢 Cosmic Pro アップグレード**（Phase 2-6b 配線完了、2026-05-16）:
+   Cosmic Pro バナータップで `PaywallScreen` (fullscreenDialog) を push。
+   ペイウォールでは Stella 相談 / ACG 4 フレーム / リロケーション / 記録庫 / 時刻スライダーの 5 機能を
+   icon + 説明で提示し、`Offerings.current` の年額・月額パッケージをカード表示。タップで
+   `Purchases.purchase(PurchaseParams.package(...))` を呼び、購入完了は `CustomerInfo` listener が
+   `ProStatus.setPro(true)` で全画面に伝播。Offerings 未配信 / API キー未設定時は「ストアの準備中です」
+   バナーで graceful degrade。法的書類 (利用規約 / プライバシーポリシー / 特定商取引法 / 解約方法 deeplink)
+   と「購入を復元」ボタンを内蔵 (B5 公開ブロッカー 11 項目をすべて満たす)。
+   - **API キー注入**: `--dart-define=SOLARA_RC_IOS_KEY=appl_xxx --dart-define=SOLARA_RC_ANDROID_KEY=goog_xxx`
+   - **検証**: `EntitlementVerificationMode.informational` で SDK 検証を有効化し、`VerificationResult.failed`
+     を Free に倒すロジックで security_principles 原則 1 を担保。
+   - **Sanctuary**: Pro 加入時はバナーを「Cosmic Pro 加入中」表示に切替え、復元ボタン + 「プラン・規約」ボタン
+     (ペイウォール再表示) も提示。DEV ビルドでは `kDebugMode` 限定の Pro トグルが並走。
 4. **🟢 Records セクション**（柱 3、2026-05-17）:
    - **相談履歴** → `ConsultationHistoryScreen` (Phase 2-4 で実装、Free 全件閲覧可)
    - **称号 変遷** → `TitleHistoryScreen` (C4、Free 閲覧可、Pro が「クラスを取り直して履歴を増やす」道具)

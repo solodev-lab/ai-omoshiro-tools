@@ -5,12 +5,12 @@
 
 ## サマリ
 
-- ファイル数: 6 / 総行数: 1793
-- class/mixin/extension/enum: 19
-- 関数 (top-level + method の素拾い): 63
+- ファイル数: 8 / 総行数: 2058
+- class/mixin/extension/enum: 21
+- 関数 (top-level + method の素拾い): 72
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 0
-- Worker URL リテラル: 0
+- Worker URL リテラル: 4
 
 ## ファイル別
 
@@ -208,6 +208,45 @@ Solara DirectionEnergy — Soft/Hard 独立2エネルギー
 - L228 `build()`
 
 
+### `lib/utils/legal_urls.dart` (49 行)
+
+**ファイル先頭コメント:**
+
+```
+Solara 法務リンク定数 — Phase 2-6b
+
+設計: docs/legal.md + launch_checklist Phase 0 (法的書類)
+
+役割:
+  - プライバシーポリシー / 利用規約 (EULA) / 特定商取引法に基づく表記 / 解約案内 の URL を一元化
+  - 公開ブロッカー B5 (3.1.2): ペイウォールから EULA / プライバシーをクリック可能リンクで提示するため
+
+現状 (2026-05-16):
+  - 3 文書は solodev-lab.com 配下に静的公開予定 (Phase 0 オーナー作業)
+  - 公開前に同じ URL に本物を up すれば、コード変更ゼロで反映される
+  - 「解約方法」は iOS=設定アプリ deep link / Android=Play Store 該当ページ
+    (どちらも `url_launcher.launchUrl(mode: externalApplication)` で開く)
+
+🔴 launch_checklist 連動:
+  - Phase 0 完了時に同 URL に文書を公開してから審査提出する
+  - Phase 0 未完で本番ビルドを出すと審査リジェクト (B5)、絶対に飛ばさない
+
+🔴 i18n:
+  - 当面 ja-JP のみ。ストアアップ前最終工程で EN 版 URL を追加 (feedback_i18n_last)
+```
+
+**型定義 (1):**
+
+- L22 `class LegalUrls`
+
+**Worker URL リテラル (4):**
+
+- L26: `'https://solodev-lab.com/legal/solara/privacy.html'`
+- L31: `'https://solodev-lab.com/legal/solara/terms.html'`
+- L35: `'https://solodev-lab.com/legal/solara/scta.html'`
+- L39: `'https://solodev-lab.com/legal/solara/cancel.html'`
+
+
 ### `lib/utils/moon_phase.dart` (360 行)
 
 **ファイル先頭コメント:**
@@ -249,6 +288,63 @@ Uses 14 correction terms for New Moon and Full Moon.
   - L162 `_dateTimeToDecimalYear()`
   - L171 `_deg2rad()`
   - L187 `_localDateAsUtc()`
+
+  </details>
+
+
+### `lib/utils/purchases_service.dart` (216 行)
+
+**ファイル先頭コメント:**
+
+```
+Solara RevenueCat ラッパー — Phase 2-6b
+
+設計:
+  - launch_checklist Phase 2「サブスク基盤」
+  - project_solara_security_principles 原則 1「クライアント単独 isPro 禁止」
+  - pro_candidates §7.2 Phase 2-6b
+
+役割:
+  - purchases_flutter 10.x を init し、entitlement 更新で ProStatus.setPro を呼ぶ
+  - Offerings / 購入 / 復元 の API を 1 箇所に集約
+  - API キー未設定 / 未対応 OS では no-op (DEV トグルにフォールバック)
+
+🔴 RevenueCat 「.enforced」モードは現行 SDK には無い (.disabled / .informational のみ)。
+   本クラスでは informational で SDK 検証を有効化し、`verification == failed` の時は
+   Pro 判定しない方式で security_principles 原則 1 を担保する。
+   将来 Worker 側 /auth/whoami が出来たら、API 呼出時にサーバ再検証で二重チェックする。
+
+🔴 Sign in with Apple/Google の uid 連携 (Purchases.logIn) は Phase 2「Sign in 統合」で実装。
+   本フェーズでは anonymous appUserID で運用 (公開前に必ず Sign in を入れる)。
+
+🔴 API キーは --dart-define で渡す (リポジトリにコミットしない):
+   --dart-define=SOLARA_RC_IOS_KEY=appl_xxxx
+   --dart-define=SOLARA_RC_ANDROID_KEY=goog_xxxx
+   未設定なら configure をスキップし `isConfigured = false`。
+```
+
+**imports:** dart=0 / package=3 / relative=1
+
+- relative: `pro_status.dart`
+
+**型定義 (1):**
+
+- L32 `class PurchasesService`
+
+**関数 (8 public + 1 private):**
+
+- L72 `init()` — 起動時に 1 度だけ呼ぶ。
+- L135 `isEntitledFrom()`
+- L145 `getOfferings()` — 配信中の Offerings を取得。未配信 / オフライン時は null。
+- L159 `purchasePackage()` — パッケージを購入。成功時は listener 経由で ProStatus が更新される。
+- L180 `restorePurchases()` — 復元。RevenueCat が同一 appUserID 配下の過去購入を再リンクする。
+- L194 `logIn()` — Sign in 完了後に uid を渡す (Phase 2「Sign in 統合」で配線予定)。
+- L200 `logOut()` — サインアウト時に呼ぶ (Phase 2「Sign in 統合」で配線予定)。
+- L208 `disposeForTest()`
+
+  <details><summary>private 関数 1 件</summary>
+
+  - L120 `_onCustomerInfo()`
 
   </details>
 
