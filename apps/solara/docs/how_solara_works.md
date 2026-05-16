@@ -219,6 +219,14 @@ Map の扇状セクターが「合算 1 色」で大まかにしか見せない�
   翌日まで同じカードが表示される。
 - Gemini 失敗時は要素別（火/水/風/地）の静的テンプレ文で fallback（「⚠ オフラインモード」表示）。
 - HISTORY タブで過去に引いたカードの一覧を見られる。
+  - **C3 履歴 Pro フィルタ** (2026-05-17): キーワード検索 / 大小アルカナ /
+    エレメント 4 種 (火水風地) / 正逆位置の絞込チップ。Free 操作で Pro Unlock
+    dialog、Pro は実フィルタ。
+  - **A3 Pro 質問欄の保存** (2026-05-17): Pro 引き時の質問入力 (200 字 cap)
+    は `DailyReading.question` に永続化。HISTORY 検索の対象にも含まれる。
+    詳細展開時に「QUESTION」セクションで表示。
+  - 詳細展開トグル (下三角アイコン) は 28px / 32×32 タップ領域 / ゴールド色
+    で視認性確保 (2026-05-17 改善)。
 - 背景は「占卓シーン」（5 惑星の楕円配置 + 流れ星 + 太陽光の演出）。
 - ⚠️ コードに `_resetTodayReading`（[DEV] ボタン）あり = 本番リリース時に削除予定。
 
@@ -238,8 +246,21 @@ Map の扇状セクターが「合算 1 色」で大まかにしか見せない�
    その人だけの星座名・形が生成される（`constellation_namer.dart`）。
 - 通常画面（Cycle タブ）は 3 層スパイラルでサイクル全日数を可視化 + 月相連動の Stella 詩的メッセージ。
 - **Star Atlas タブ**: 過去に刻星化した星座のコレクション（最大 61 種の図鑑）。
+  - **C2 Galaxy Archive Pro フィルタ** (2026-05-17): タブ上部に検索バー +
+    レアリティチップ (multi-select) + ソートメニュー。Free は AbsorbPointer
+    + Pro Unlock dialog 誘導、Pro は実フィルタ。レアリティ星は Icon ベース
+    (textScaler 不変) で必ず 5 つ並ぶ。
+  - **C5 形成演出再生 + エクスポート** (2026-05-17): カード長押し or
+    右上 ⋯ メニューで bottom sheet (通常再生 Free / 形成演出 Pro /
+    Markdown コピー Pro)。形成演出は既存 `CatasterismFormationOverlay`
+    再利用。
 - 画面下部に天体イベントバー（ingress / retrograde / eclipse を横スクロール表示）。
-- Replay overlay で過去サイクルの星座を再生表示。
+- Replay overlay で過去サイクルの星座を再生表示。タップでアニメスキップ、
+  Android 戻るキーで Star Atlas に戻る (PopScope で消化、Map には飛ばない)。
+- **刻星化 formation 完了時の共有ボタン** (Free、2026-05-17、柱 3):
+  `CatasterismFormationOverlay` の View ボタン横に小さい円形シェアボタン →
+  `ConstellationShareCardPage` を push (Sanctuary 称号カードと同じ
+  1080×1920 9:16 設計、`ConstellationPainter(progress=1.0)` で完成星座描画)。
 
 **裏で何が起きるか**:
 - 月相計算は `moon_phase.dart`（Jean Meeus アルゴリズム、±2-3 分精度）。Worker 不要。
@@ -265,9 +286,19 @@ Map の扇状セクターが「合算 1 色」で大まかにしか見せない�
 3. **🔴 Cosmic Pro アップグレード UI**（既に実装済、`_buildCosmicProSection` L653-724）:
    $9.99/月 または $49.99/年、訴求 3 機能「Aether shaders · Galaxy Archive · Advanced astrology」。
    ※ UI のみ実装、機能ゲート（`isPro` 判定 / RevenueCat / IAP）は未実装。
-4. **占星術設定**: **ホロスコープのオーブ**設定（アスペクト 8 種 + パターン 5 種の角度許容範囲を
+4. **🟢 Records セクション**（柱 3、2026-05-17）:
+   - **相談履歴** → `ConsultationHistoryScreen` (Phase 2-4 で実装、Free 全件閲覧可)
+   - **称号 変遷** → `TitleHistoryScreen` (C4、Free 閲覧可、Pro が「クラスを取り直して履歴を増やす」道具)
+5. **占星術設定**: **ホロスコープのオーブ**設定（アスペクト 8 種 + パターン 5 種の角度許容範囲を
    0.1° 単位でカスタマイズ。**Horoscope 画面専用** — Map・Daily Transit には影響しない）、ハウスシステム選択。
-5. **アプリ設定**: 言語切替、利用規約等。
+6. **アプリ設定**: 言語切替、利用規約等。
+
+**🔴 C4 称号 (クラス) 変遷ギャラリー** (2026-05-17):
+- 二つ名 (太陽 × 月 144 通り) = 出生固定・永久不変・取り直し不可
+- クラス (25 種) = 「今の自分」クイズで取り直し可能。Free は 1 回、**Pro は無制限**
+- `_startDiagnosis` 完了時に `SolaraStorage.addTitleHistoryEntry` で履歴自動追記
+  (連続同一 axis+court は skip、上限 60 件 = 5 年分)
+- Records から `TitleHistoryScreen` で NOW バッジ + 時系列 chain で変遷を可視化
 
 ### 5.6 サブ画面（各タブ内から push で開く）
 

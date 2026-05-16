@@ -5,9 +5,9 @@
 
 ## サマリ
 
-- ファイル数: 6 / 総行数: 1777
-- class/mixin/extension/enum: 15
-- 関数 (top-level + method の素拾い): 44
+- ファイル数: 7 / 総行数: 2274
+- class/mixin/extension/enum: 21
+- 関数 (top-level + method の素拾い): 63
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 0
 - Worker URL リテラル: 0
@@ -46,34 +46,93 @@ Shared constants for Observe (Tarot) screen
 ```
 
 
-### `lib/screens/observe/observe_history.dart` (287 行)
+### `lib/screens/observe/observe_history.dart` (383 行)
 
-**imports:** dart=0 / package=1 / relative=5
+**imports:** dart=0 / package=1 / relative=7
 
-- relative: `../../models/daily_reading.dart`, `../../models/tarot_card.dart`, `../../utils/solara_storage.dart`, `../../utils/tarot_data.dart`, `observe_constants.dart`
+- relative: `../../models/daily_reading.dart`, `../../models/tarot_card.dart`, `../../utils/pro_status.dart`, `../../utils/solara_storage.dart`, `../../utils/tarot_data.dart`, `observe_constants.dart`, `observe_history_filter.dart`
 
 **型定義 (4):**
 
-- L13 `class ObserveHistoryPanel : StatefulWidget`
-- L22 `class _ObserveHistoryPanelState : State`
-- L223 `class _SyncInput : StatefulWidget`
-- L233 `class _SyncInputState : State`
+- L15 `class ObserveHistoryPanel : StatefulWidget`
+- L24 `class _ObserveHistoryPanelState : State`
+- L319 `class _SyncInput : StatefulWidget`
+- L329 `class _SyncInputState : State`
 
-**関数 (6 public + 4 private):**
+**関数 (8 public + 5 private):**
 
-- L19 `createState()`
-- L50 `build()`
-- L230 `createState()`
-- L238 `initState()`
-- L244 `dispose()`
-- L258 `build()`
+- L21 `createState()`
+- L29 `initState()`
+- L35 `dispose()`
+- L76 `build()`
+- L326 `createState()`
+- L334 `initState()`
+- L340 `dispose()`
+- L354 `build()`
 
-  <details><summary>private 関数 4 件</summary>
+  <details><summary>private 関数 5 件</summary>
 
-  - L26 `_confirmClearHistory()`
-  - L101 `_buildHistoryCard()`
-  - L161 `_buildHistoryDetail()`
-  - L249 `_onChanged()`
+  - L40 `_onProChanged()`
+  - L52 `_confirmClearHistory()`
+  - L165 `_buildHistoryCard()`
+  - L243 `_buildHistoryDetail()`
+  - L345 `_onChanged()`
+
+  </details>
+
+
+### `lib/screens/observe/observe_history_filter.dart` (397 行)
+
+**ファイル先頭コメント:**
+
+```
+Natal Tarot 履歴フィルタ — C3 (Pro 機能、柱 3)
+
+設計: apps/solara/docs/pro_candidates.md §7.3 + §3 C3
+
+役割:
+  - ObserveHistoryPanel 上部に置く検索 + フィルタチップ
+  - Pro: キーワード検索 / アルカナ (Major/Minor) / エレメント / 正逆位置
+  - Free: バー自体は表示するが操作で showProUnlockDialog
+  - フィルタ適用ロジックは `ObserveHistoryFilter.apply` で集中管理
+```
+
+**imports:** dart=0 / package=1 / relative=6
+
+- relative: `../../models/daily_reading.dart`, `../../models/tarot_card.dart`, `../../utils/pro_status.dart`, `../../utils/tarot_data.dart`, `../../widgets/pro_unlock_dialog.dart`, `observe_constants.dart`
+
+**型定義 (6):**
+
+- L21 `class ObserveHistoryFilter`
+  - 履歴フィルタ状態 (immutable)。
+- L92 `class _Sentinel`
+- L100 `class ObserveHistoryFilterBar : StatefulWidget`
+  - Natal Tarot 履歴フィルタバー。
+- L117 `class _ObserveHistoryFilterBarState : State`
+- L298 `class _ChipBtn : StatelessWidget`
+- L343 `class _ElementChipBtn : StatelessWidget`
+
+**関数 (11 public + 5 private):**
+
+- L41 `copyWith()`
+- L66 `apply()` — DailyReading の list を絞り込む。順序は元の list の通り。
+- L113 `createState()`
+- L121 `initState()`
+- L127 `didUpdateWidget()`
+- L136 `dispose()`
+- L173 `build()`
+- L311 `build()`
+- L356 `build()`
+- L392 `observeHistoryIsPro()` — 外部からも参照しやすいよう pro 状態を取れるショートカット (テストで mock しやすい)。
+- L397 `cardForId()`
+
+  <details><summary>private 関数 5 件</summary>
+
+  - L141 `_proGuard()`
+  - L148 `_setQuery()`
+  - L150 `_toggleElement()`
+  - L156 `_toggleMajor()`
+  - L164 `_toggleReversed()`
 
   </details>
 
@@ -121,7 +180,7 @@ Shared constants for Observe (Tarot) screen
   </details>
 
 
-### `lib/screens/observe_screen.dart` (556 行)
+### `lib/screens/observe_screen.dart` (560 行)
 
 **imports:** dart=2 / package=1 / relative=12
 
@@ -138,7 +197,7 @@ Shared constants for Observe (Tarot) screen
 - L25 `createState()`
 - L97 `initState()`
 - L112 `dispose()`
-- L292 `build()`
+- L296 `build()`
 
   <details><summary>private 関数 14 件</summary>
 
@@ -148,14 +207,14 @@ Shared constants for Observe (Tarot) screen
   - L121 `_checkTodayReading()`
   - L146 `_loadHistory()`
   - L151 `_drawCard()`
-  - L236 `_resetTodayReading()`
-  - L260 `_generateReadingStatic()`
-  - L277 `_startTypewriter()`
-  - L312 `_buildInnerTabs()`
-  - L326 `_innerTabBtn()`
-  - L347 `_buildDrawPanel()`
-  - L439 `_buildLoadingIndicator()`
-  - L514 `_buildReadingPanel()`
+  - L240 `_resetTodayReading()`
+  - L264 `_generateReadingStatic()`
+  - L281 `_startTypewriter()`
+  - L316 `_buildInnerTabs()`
+  - L330 `_innerTabBtn()`
+  - L351 `_buildDrawPanel()`
+  - L443 `_buildLoadingIndicator()`
+  - L518 `_buildReadingPanel()`
 
   </details>
 

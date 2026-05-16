@@ -37,14 +37,15 @@
 
 ## #1 / #2 機械抽出 ↔ feature_inventory.md (人手版) の対整合
 
-- 機械抽出した class/mixin/extension/enum: **363**
+- 機械抽出した class/mixin/extension/enum: **387**
 - inventory に登場する識別子 (大文字始まり ``backtick``囲み): **209**
 
-### #1 機械にあるが Doc に書かれていない (191)
+### #1 機械にあるが Doc に書かれていない (215)
 
 - `CandidateLocation`
 - `CandidateNearLine`
 - `CityEntry`
+- `ConstellationShareCardPage`
 - `ConsultEntryPopup`
 - `ConsultationCandidateReading`
 - `ConsultationHistoryScreen`
@@ -56,9 +57,16 @@
 - `ConsultationRecord`
 - `ConsultationResultScreen`
 - `ConsultationScope`
+- `GalaxyArchiveFilter`
+- `GalaxyArchiveFilterBar`
+- `GalaxyArchiveSort`
+- `GalaxyArchiveSortLabel`
 - `MapTimeSliderState`
+- `ObserveHistoryFilter`
+- `ObserveHistoryFilterBar`
 - `ProStatus`
 - `ReverseGeocodeResult`
+- `TitleHistoryScreen`
 - `_ActionTile`
 - `_AggBuilder`
 - `_AltarLayout`
@@ -74,9 +82,11 @@
 - `_CatasterismOverlayState`
 - `_CategoryIconKindAsset`
 - `_CategoryTipsBox`
+- `_ChainConnector`
 - `_CheckmarkPainter`
 - `_Chip`
 - `_ChipBody`
+- `_ChipBtn`
 - `_ChipButton`
 - `_ChipColumn`
 - `_ChipHalo`
@@ -89,6 +99,7 @@
 - `_ConsultationInputScreenState`
 - `_ConsultationResultScreenState`
 - `_ContribRow`
+- `_CycleActionsSheet`
 - `_DailyTransitChip`
 - `_DateNumberField`
 - `_DateNumberFieldState`
@@ -96,6 +107,7 @@
 - `_DayTab`
 - `_DayTabBar`
 - `_DominantFortuneOverlayState`
+- `_ElementChipBtn`
 - `_EmptyState`
 - `_EnergyBar`
 - `_EnergyChip`
@@ -115,7 +127,9 @@
 - `_FreeTextField`
 - `_FullMoonOverlayState`
 - `_GADot`
+- `_GalaxyArchiveFilterBarState`
 - `_GalaxyIconPainter`
+- `_GalaxyStarAtlasTabState`
 - `_Gear`
 - `_GoldDust`
 - `_GoldPalette`
@@ -162,9 +176,11 @@
 - `_Mulberry32`
 - `_NearestLineRow`
 - `_NewMoonOverlayState`
+- `_NoMatchState`
 - `_Note`
 - `_NotePair`
 - `_NumberedPin`
+- `_ObserveHistoryFilterBarState`
 - `_ObserveHistoryPanelState`
 - `_ObserveScreenState`
 - `_OrbSectionLabel`
@@ -181,6 +197,8 @@
 - `_PresetLocationCard`
 - `_QuestionFieldWidgets`
 - `_RankedLine`
+- `_RarityChip`
+- `_RarityStarRow`
 - `_Ray`
 - `_RefreshButton`
 - `_RegionPicker`
@@ -203,14 +221,18 @@
 - `_SearchHitRow`
 - `_Section`
 - `_SectionCard`
+- `_SelectedRarityBanner`
 - `_SelectedSpecificCard`
 - `_SelectionCard`
+- `_Sentinel`
 - `_SettingsGroup`
 - `_SettingsItem`
 - `_SettingsItemWithToggle`
+- `_ShareCardRarityStars`
 - `_ShareChoice`
 - `_SlotStats`
 - `_SolaraHomeState`
+- `_SortChip`
 - `_Spark`
 - `_Sparkle`
 - `_SpecificPicker`
@@ -220,19 +242,7 @@
 - `_StaticChip`
 - `_Stream`
 - `_SubPill`
-- `_SubmitBar`
-- `_SyncInput`
-- `_SyncInputState`
-- `_TarotAltarSceneState`
-- `_TarotIconPainter`
-- `_ThemeChoice`
-- `_ThemeGrid`
-- `_TimelineBody`
-- `_TimelineRow`
-- `_Vec3`
-- `_Vine`
-- `_WidgetOpacity`
-- `_WorkPainter`
+- … 残り 15 省略
 
 ### #2 Doc に書いてあるがコードに存在しない (ゴースト記述) (37)
 
@@ -295,21 +305,21 @@
 
 ### 層 4c: Observe (Tarot) 画面
 
-- ファイル数: 6
+- ファイル数: 7
 - Worker URL 呼出: (なし)
 - Popup/Dialog: (なし)
 - Navigator.push 等: 0 箇所
 
 ### 層 4d: Galaxy 画面
 
-- ファイル数: 5
+- ファイル数: 9
 - Worker URL 呼出: (なし)
 - Popup/Dialog: `showInfoPopup`×1
 - Navigator.push 等: 0 箇所
 
 ### 層 4e: Sanctuary 画面
 
-- ファイル数: 8
+- ファイル数: 9
 - Worker URL 呼出: (なし)
 - Popup/Dialog: `showInfoPopup`×3
 - Navigator.push 等: 0 箇所
@@ -336,16 +346,16 @@
 | 1b | 1 | · | · | 1 | · | · | 1 | · | · | · | · | · | · | · | · | · |
 | 1c | · | · | 1 | · | · | · | · | · | · | · | · | · | · | · | · | · |
 | 2a | 3 | · | · | 5 | · | · | · | 1 | · | · | · | · | · | · | · | · |
-| 2b | · | 1 | 3 | 2 | 1 | · | · | · | · | · | · | · | · | · | · | · |
+| 2b | · | 1 | 5 | 2 | 1 | · | · | · | · | · | · | · | · | · | · | · |
 | 2c | · | · | 1 | · | · | · | · | · | · | · | · | · | · | · | · | · |
 | 3a | 1 | 4 | 2 | 1 | · | 1 | 8 | 6 | 4 | 1 | · | · | · | · | · | · |
 | 3b | · | · | · | · | · | · | · | 1 | · | · | · | · | · | · | · | · |
 | 3c | · | 4 | 4 | 2 | 3 | · | 12 | 4 | · | · | · | · | · | · | · | · |
 | 4a | 10 | 11 | · | 13 | 7 | · | 18 | 23 | 3 | 31 | 2 | · | · | · | 3 | · |
 | 4b | 5 | 10 | · | 6 | 4 | · | 13 | · | · | · | 29 | · | · | 2 | · | · |
-| 4c | 1 | · | 5 | 1 | 3 | 2 | 1 | · | · | · | · | 7 | · | · | · | · |
-| 4d | 2 | 5 | 9 | 1 | 1 | 2 | 8 | · | 1 | · | · | · | 4 | · | · | · |
-| 4e | · | 3 | · | 1 | 6 | · | 6 | · | · | · | · | · | · | 7 | 1 | · |
+| 4c | 1 | · | 7 | 1 | 5 | 3 | 2 | · | · | · | · | 9 | · | · | · | · |
+| 4d | 2 | 6 | 13 | 1 | 5 | 2 | 11 | 2 | 1 | · | · | · | 8 | · | · | · |
+| 4e | · | 4 | · | 1 | 7 | · | 7 | 1 | · | · | · | · | · | 8 | 1 | · |
 | 4f | 3 | 4 | · | 3 | 10 | · | 11 | 9 | · | 6 | · | · | · | · | 12 | · |
 | 5 | · | · | · | 1 | 2 | 1 | 1 | 1 | · | 1 | 1 | 1 | 1 | 1 | · | · |
 
@@ -358,26 +368,26 @@
 
 | ファイル | 層 | 被 import 数 |
 | --- | --- | --- |
-| `lib/theme/solara_colors.dart` | 3b | 24 |
-| `lib/utils/solara_storage.dart` | 2b | 21 |
+| `lib/theme/solara_colors.dart` | 3b | 27 |
+| `lib/utils/solara_storage.dart` | 2b | 22 |
 | `lib/screens/map/map_constants.dart` | 3b | 20 |
 | `lib/widgets/info_popup.dart` | 3a | 20 |
+| `lib/utils/pro_status.dart` | 2b | 15 |
 | `lib/screens/horoscope/horo_antique_icons.dart` | 3a | 13 |
+| `lib/models/galaxy_cycle.dart` | 1c | 12 |
 | `lib/utils/solara_api.dart` | 2a | 11 |
+| `lib/widgets/pro_unlock_dialog.dart` | 3a | 11 |
 | `lib/screens/horoscope/horo_constants.dart` | 1b | 10 |
-| `lib/utils/pro_status.dart` | 2b | 10 |
+| `lib/models/daily_reading.dart` | 1c | 9 |
 | `lib/screens/horoscope/horo_panel_shared.dart` | 4b | 9 |
-| `lib/models/daily_reading.dart` | 1c | 8 |
-| `lib/models/galaxy_cycle.dart` | 1c | 8 |
 | `lib/utils/astro_lines.dart` | 1a | 8 |
+| `lib/utils/constellation_namer.dart` | 1b | 8 |
+| `lib/models/lunar_intention.dart` | 1c | 7 |
 | `lib/screens/map/map_vp_panel.dart` | 4a | 7 |
-| `lib/utils/constellation_namer.dart` | 1b | 7 |
+| `lib/utils/tarot_data.dart` | 2c | 7 |
 | `lib/widgets/glass_panel.dart` | 3a | 7 |
-| `lib/widgets/pro_unlock_dialog.dart` | 3a | 7 |
 | `lib/utils/astro_glossary.dart` | 1b | 6 |
-| `lib/utils/tarot_data.dart` | 2c | 6 |
 | `lib/widgets/fortune_overlays/_common.dart` | 3a | 6 |
-| `lib/models/lunar_intention.dart` | 1c | 5 |
 
 ### #5c 孤立ファイル (2) — 誰からも import されない
 
@@ -392,17 +402,26 @@
 > 各ソースの SHA1 を `_stamps.json` に記録し、差分を検出。
 > 変更されたファイルが属する層は、人手版インベントリ章の見直し対象。
 
-- 追加: **2** / 削除: **0** / 変更: **2**
+- 追加: **7** / 削除: **0** / 変更: **9**
 
 ### 変更されたファイル (層別)
 
-- **層 4b**: `lib/screens/horoscope/horo_relocation_panel.dart`
-- **層 4c**: `lib/screens/observe_screen.dart`
+- **層 1c**: `lib/models/daily_reading.dart`
+- **層 2b**: `lib/utils/solara_storage.dart`
+- **層 3c**: `lib/widgets/catasterism_formation_overlay.dart`
+- **層 4c**: `lib/screens/observe/observe_history.dart`, `lib/screens/observe_screen.dart`
+- **層 4d**: `lib/screens/galaxy/galaxy_replay_overlay.dart`, `lib/screens/galaxy/galaxy_star_atlas.dart`, `lib/screens/galaxy_screen.dart`
+- **層 4e**: `lib/screens/sanctuary_screen.dart`
 
 ### 追加されたファイル
 
-- `lib/screens/horoscope/horo_relocation_pro_teaser.dart` (層 4b)
-- `lib/screens/observe/observe_question_field.dart` (層 4c)
+- `lib/screens/galaxy/constellation_share_card_page.dart` (層 4d)
+- `lib/screens/galaxy/galaxy_archive_filter.dart` (層 4d)
+- `lib/screens/galaxy/galaxy_archive_filter_chips.dart` (層 4d)
+- `lib/screens/galaxy/galaxy_cycle_actions_sheet.dart` (層 4d)
+- `lib/screens/observe/observe_history_filter.dart` (層 4c)
+- `lib/screens/sanctuary/title_history_screen.dart` (層 4e)
+- `lib/utils/galaxy_cycle_export.dart` (層 2b)
 
 ## #7 astro_glossary 用語辞書対整合
 

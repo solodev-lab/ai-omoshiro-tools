@@ -5,9 +5,9 @@
 
 ## サマリ
 
-- ファイル数: 8 / 総行数: 4440
-- class/mixin/extension/enum: 21
-- 関数 (top-level + method の素拾い): 90
+- ファイル数: 9 / 総行数: 4865
+- class/mixin/extension/enum: 26
+- 関数 (top-level + method の素拾い): 99
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 3
 - Worker URL リテラル: 0
@@ -198,6 +198,60 @@
 - 集計: `showInfoPopup`×2
 
 
+### `lib/screens/sanctuary/title_history_screen.dart` (385 行)
+
+**ファイル先頭コメント:**
+
+```
+称号 (クラス) 変遷ギャラリー — C4 (Pro 機能、柱 3)
+
+設計: apps/solara/docs/pro_candidates.md §7.3 + §3 C4
+
+役割:
+  - 過去に診断された「クラス」(axis × court) の変遷を時系列で並べる
+  - 二つ名 (出生固定・永久・取り直し不可) は表示しない、ここはクラス専用
+  - Free でも閲覧可能 (柱 3 原則「Free でも記録は永久」)
+  - 「取り直し」自体の Pro 化は Sanctuary 画面側で別ゲート
+
+ストレージ:
+  - SolaraStorage.loadTitleHistory() / clearTitleHistory()
+  - 60 件上限 (月 1 回前提で 5 年分)
+
+思想ガード:
+  - 「吉凶判定しない」(project_solara_design_philosophy)
+    → 旧クラスを「以前は…」と弱めて表示しない、現在と等価に並べる
+```
+
+**imports:** dart=0 / package=2 / relative=3
+
+- relative: `../../theme/solara_colors.dart`, `../../utils/solara_storage.dart`, `../../utils/title_data.dart`
+
+**型定義 (5):**
+
+- L26 `class TitleHistoryScreen : StatefulWidget`
+- L36 `class _TitleHistoryScreenState : State`
+- L147 `class _EmptyState : StatelessWidget`
+- L190 `class _ChainConnector : StatelessWidget`
+- L208 `class _TitleChainRow : StatelessWidget`
+
+**関数 (6 public + 3 private):**
+
+- L33 `createState()`
+- L41 `initState()`
+- L93 `build()`
+- L151 `build()`
+- L194 `build()`
+- L222 `build()`
+
+  <details><summary>private 関数 3 件</summary>
+
+  - L46 `_load()`
+  - L58 `_confirmClearAll()`
+  - L213 `_formatDate()`
+
+  </details>
+
+
 ### `lib/screens/sanctuary/title_how_it_works.dart` (201 行)
 
 **imports:** dart=0 / package=1 / relative=0
@@ -222,55 +276,55 @@
 - 集計: `showInfoPopup`×1
 
 
-### `lib/screens/sanctuary_screen.dart` (1133 行)
+### `lib/screens/sanctuary_screen.dart` (1173 行)
 
-**imports:** dart=1 / package=3 / relative=11
+**imports:** dart=1 / package=3 / relative=13
 
-- relative: `../utils/pro_status.dart`, `../utils/solara_storage.dart`, `../utils/title_data.dart`, `../widgets/class_card.dart`, `consultation/consultation_history_screen.dart`, `sanctuary/sanctuary_orb_overlay.dart`, `sanctuary/sanctuary_profile_editor.dart`, `sanctuary/sanctuary_reset_hour_picker.dart`, `sanctuary/sanctuary_title_diagnosis.dart`, `sanctuary/class_share_card.dart`, `sanctuary/sanctuary_home_editor.dart`
+- relative: `../utils/pro_status.dart`, `../utils/solara_storage.dart`, `../utils/title_data.dart`, `../widgets/class_card.dart`, `../widgets/pro_unlock_dialog.dart`, `consultation/consultation_history_screen.dart`, `sanctuary/sanctuary_orb_overlay.dart`, `sanctuary/sanctuary_profile_editor.dart`, `sanctuary/sanctuary_reset_hour_picker.dart`, `sanctuary/sanctuary_title_diagnosis.dart`, `sanctuary/class_share_card.dart`, `sanctuary/sanctuary_home_editor.dart`, `sanctuary/title_history_screen.dart`
 
 **型定義 (6):**
 
-- L18 `class SanctuaryScreen : StatefulWidget`
-- L25 `class _SanctuaryScreenState : State`
-- L981 `extension _WidgetOpacity : Widget`
-- L990 `class _SettingsGroup : StatelessWidget`
-- L1023 `class _SettingsItem : StatelessWidget`
-- L1071 `class _SettingsItemWithToggle : StatelessWidget`
+- L20 `class SanctuaryScreen : StatefulWidget`
+- L27 `class _SanctuaryScreenState : State`
+- L1021 `extension _WidgetOpacity : Widget`
+- L1030 `class _SettingsGroup : StatelessWidget`
+- L1063 `class _SettingsItem : StatelessWidget`
+- L1111 `class _SettingsItemWithToggle : StatelessWidget`
 
 **関数 (7 public + 22 private):**
 
-- L22 `createState()`
-- L61 `initState()`
-- L240 `build()`
-- L982 `withOpacity()`
-- L996 `build()`
-- L1031 `build()`
-- L1079 `build()`
+- L24 `createState()`
+- L63 `initState()`
+- L251 `build()`
+- L1022 `withOpacity()`
+- L1036 `build()`
+- L1071 `build()`
+- L1119 `build()`
 
   <details><summary>private 関数 22 件</summary>
 
-  - L67 `_loadSettings()`
-  - L91 `_loadProfile()`
-  - L109 `_openProfileEditor()`
-  - L141 `_openShareCard()`
-  - L161 `_startDiagnosis()`
-  - L205 `_openHomeEditor()`
-  - L222 `_syncHomeToVP()`
-  - L310 `_buildProfileRow()`
-  - L352 `_buildStellarProfileSection()`
-  - L378 `_buildTitleDiagnosisSection()`
-  - L537 `_buildTitleFlipCard()`
-  - L578 `_buildLegacyVCard()`
-  - L601 `_buildTitleVCard()`
-  - L667 `_buildRecordsSection()`
-  - L688 `_buildCosmicProSection()`
-  - L766 `_buildDevProToggle()`
-  - L819 `_buildAstrologySection()`
-  - L849 `_buildHouseOption()`
-  - L883 `_orbSummary()`
-  - L896 `_openOrbOverlay()`
-  - L912 `_buildAppSection()`
-  - L948 `_pickDailyResetHour()`
+  - L69 `_loadSettings()`
+  - L93 `_loadProfile()`
+  - L111 `_openProfileEditor()`
+  - L143 `_openShareCard()`
+  - L163 `_startDiagnosis()`
+  - L216 `_openHomeEditor()`
+  - L233 `_syncHomeToVP()`
+  - L321 `_buildProfileRow()`
+  - L363 `_buildStellarProfileSection()`
+  - L389 `_buildTitleDiagnosisSection()`
+  - L564 `_buildTitleFlipCard()`
+  - L605 `_buildLegacyVCard()`
+  - L628 `_buildTitleVCard()`
+  - L694 `_buildRecordsSection()`
+  - L728 `_buildCosmicProSection()`
+  - L806 `_buildDevProToggle()`
+  - L859 `_buildAstrologySection()`
+  - L889 `_buildHouseOption()`
+  - L923 `_orbSummary()`
+  - L936 `_openOrbOverlay()`
+  - L952 `_buildAppSection()`
+  - L988 `_pickDailyResetHour()`
 
   </details>
 
