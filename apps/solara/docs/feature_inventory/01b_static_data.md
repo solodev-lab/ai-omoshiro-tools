@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 13 / 総行数: 4956
+- ファイル数: 13 / 総行数: 4974
 - class/mixin/extension/enum: 12
 - 関数 (top-level + method の素拾い): 28
 - Navigator.push 等: 0
@@ -70,7 +70,7 @@ Solara 設計思想: project_solara_design_philosophy.md
   - アングルフィルタ識別子。
 
 
-### `lib/utils/astro_glossary.dart` (626 行)
+### `lib/utils/astro_glossary.dart` (644 行)
 
 **ファイル先頭コメント:**
 
@@ -96,7 +96,7 @@ Solara Astro Glossary — Phase M2 論点4 (β案 確定)
 
 **関数 (1 public + 0 private):**
 
-- L590 `showAstroGlossaryDialog()` — 用語解説 popup を表示する共通ヘルパー。
+- L608 `showAstroGlossaryDialog()` — 用語解説 popup を表示する共通ヘルパー。
 
 **Popup/Dialog 呼出 (1):**
 

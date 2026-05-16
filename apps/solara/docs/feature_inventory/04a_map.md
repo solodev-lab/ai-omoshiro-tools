@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 23 / 総行数: 13279
+- ファイル数: 23 / 総行数: 13293
 - class/mixin/extension/enum: 86
 - 関数 (top-level + method の素拾い): 288
 - Navigator.push 等: 0
@@ -112,7 +112,7 @@ MapAspectChip — Daily Transit V2 用 1アスペクトチップ
 - 集計: `showInfoPopup`×1
 
 
-### `lib/screens/map/map_astro_carto.dart` (854 行)
+### `lib/screens/map/map_astro_carto.dart` (868 行)
 
 **imports:** dart=0 / package=2 / relative=6
 
@@ -125,29 +125,29 @@ MapAspectChip — Daily Transit V2 用 1アスペクトチップ
 - L250 `class AcgFrameDef`
 - L293 `class AstroCartoFramePills : StatelessWidget`
   - 第1層: フレーム切替ピル (横並び 4 ピル + i)。
-- L346 `class AstroCartoSubPills : StatelessWidget`
+- L360 `class AstroCartoSubPills : StatelessWidget`
   - 第2層: active frame のサブトグル 4 つ (横並び)。
-- L385 `class _FramePill : StatelessWidget`
+- L399 `class _FramePill : StatelessWidget`
   - 第1層の個別ピル (ラベル + i)。active 時はリング glow で強調。
-- L454 `class _SubPill : StatelessWidget`
+- L468 `class _SubPill : StatelessWidget`
   - 第2層の個別小ピル (天頂 / 天底 / 天頂帯 / 天底帯)。
-- L521 `class _ScrollableRowPanel : StatelessWidget`
+- L535 `class _ScrollableRowPanel : StatelessWidget`
   - ピル列の overflow 対策ラッパー。
-- L556 `class AstroCartoCategoryPills : StatelessWidget`
+- L570 `class AstroCartoCategoryPills : StatelessWidget`
   - Astro*Carto*Graphy モード中のカテゴリピル。
-- L629 `class AstroZenithPopup : StatelessWidget`
+- L643 `class AstroZenithPopup : StatelessWidget`
   - 天頂・天底点タップ詳細 popup。
 
 **関数 (8 public + 1 private):**
 
 - L33 `build()`
 - L306 `build()`
-- L359 `build()`
-- L402 `build()`
-- L469 `build()`
-- L532 `build()`
-- L566 `build()`
-- L652 `build()`
+- L373 `build()`
+- L416 `build()`
+- L483 `build()`
+- L546 `build()`
+- L580 `build()`
+- L666 `build()`
 
   <details><summary>private 関数 1 件</summary>
 
