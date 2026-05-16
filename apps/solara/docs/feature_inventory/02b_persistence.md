@@ -5,9 +5,9 @@
 
 ## サマリ
 
-- ファイル数: 6 / 総行数: 1399
-- class/mixin/extension/enum: 8
-- 関数 (top-level + method の素拾い): 67
+- ファイル数: 7 / 総行数: 1756
+- class/mixin/extension/enum: 12
+- 関数 (top-level + method の素拾い): 80
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 0
 - Worker URL リテラル: 1
@@ -178,6 +178,73 @@ Phase 2-6b 以降 (RevenueCat 接続後):
 - L45 `load()` — SharedPreferences から読み出して内部キャッシュを更新する。
 - L57 `setPro()` — Pro 状態を更新する。永続化 + リスナー通知。
 - L68 `resetForTest()`
+
+
+### `lib/utils/solara_auth.dart` (357 行)
+
+**ファイル先頭コメント:**
+
+```
+Solara 認証サービス — Phase 2-9 Sign in 統合
+
+設計:
+  - launch_checklist Phase 2「Sign in 統合」
+  - project_solara_security_principles 原則 3「App User ID は Sign in with Apple/Google の uid」
+  - Apple Guideline 5.4: Google 提供時は Apple 必須 (iOS のみ)
+
+役割:
+  - Sign in with Apple / Google を抽象化し、現在のアカウント情報を提供
+  - 成功時に PurchasesService.logIn(uid) を呼び、RevenueCat の appUserID を切替え
+  - サインアウト時に PurchasesService.logOut を呼ぶ
+  - ChangeNotifier で UI に反映
+
+設計判断:
+  - Sign in は **任意**。Free ユーザーは未サインインのまま全機能使える
+  - Pro 購入も anonymous appUserID で可能 (StoreKit/Play Billing が紐付け、復元は OS が担保)
+  - サインインで端末跨ぎ復元が安定する旨を UI で案内し、推奨に留める
+  - Android では Apple Sign in は不可 (service ID + redirect URI が必要、本フェーズでは非対応)。
+    Apple 公式パッケージは Android 対応だが、サーバー側 service 設定が必要なため初期は iOS のみ
+
+🔴 API キー注入 (--dart-define):
+  --dart-define=SOLARA_GOOGLE_IOS_CLIENT_ID=xxxxx.apps.googleusercontent.com
+  --dart-define=SOLARA_GOOGLE_SERVER_CLIENT_ID=xxxxx.apps.googleusercontent.com
+  未設定でも GoogleSignIn.initialize() は呼ばれるが、ネイティブ設定 (GoogleService-Info.plist /
+  google-services.json) があれば動く。クライアント ID を渡すと優先される
+```
+
+**imports:** dart=3 / package=4 / relative=1
+
+- relative: `purchases_service.dart`
+
+**型定義 (4):**
+
+- L38 `enum SolaraAuthProvider`
+- L41 `class SolaraAuthAccount`
+  - 認証済アカウント情報。
+- L96 `class SolaraAuthException : Exception`
+  - 認証エラー (UI が型で分岐できるよう薄い wrapper)。
+- L104 `class SolaraAuth : ChangeNotifier`
+
+**関数 (7 public + 6 private):**
+
+- L62 `toJson()`
+- L101 `toString()`
+- L127 `load()` — 起動時に 1 度呼ぶ。SharedPreferences から復元 + provider 別の silent restore。
+- L189 `signInWithApple()` — Apple サインイン (iOS / macOS 推奨)。
+- L235 `signInWithGoogle()` — Google サインイン (iOS / Android / macOS / Web)。
+- L254 `signOut()` — 現在のアカウントを取り外す。
+- L347 `resetForTest()`
+
+  <details><summary>private 関数 6 件</summary>
+
+  - L152 `_verifyOrClear()`
+  - L275 `_ensureGoogleInitialized()`
+  - L289 `_onGoogleEvent()`
+  - L305 `_adoptGoogleAccount()`
+  - L315 `_commitAccount()`
+  - L328 `_clearLocalSession()`
+
+  </details>
 
 
 ### `lib/utils/solara_storage.dart` (541 行)

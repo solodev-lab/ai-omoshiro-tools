@@ -5,9 +5,9 @@
 
 ## サマリ
 
-- ファイル数: 22 / 総行数: 5886
-- class/mixin/extension/enum: 66
-- 関数 (top-level + method の素拾い): 153
+- ファイル数: 23 / 総行数: 6124
+- class/mixin/extension/enum: 68
+- 関数 (top-level + method の素拾い): 160
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 3
 - Worker URL リテラル: 0
@@ -621,6 +621,48 @@ Pro 案内ダイアログ — Phase 2-6a / Phase 2-6b
 **関数 (1 public + 0 private):**
 
 - L29 `showProUnlockDialog()` — Pro 限定機能の案内ダイアログを表示する。
+
+
+### `lib/widgets/sanctuary_account_section.dart` (238 行)
+
+**ファイル先頭コメント:**
+
+```
+Sanctuary ✦ Account セクション — Phase 2-9 Sign in 統合
+
+役割:
+  - Sanctuary 内のアカウントセクション (Sign in / 表示 / Sign out) を独立ウィジェット化
+  - sanctuary_screen.dart の肥大化を避けるための分離 (既存 _SettingsGroup と同じ視覚)
+
+振舞:
+  - 未サインイン: Apple (iOS/macOS のみ) + Google ボタン
+  - サインイン済: provider + displayName/email + サインアウトボタン
+  - SolaraAuth を ChangeNotifier として購読し、状態変化で再描画
+```
+
+**imports:** dart=0 / package=2 / relative=1
+
+- relative: `../utils/solara_auth.dart`
+
+**型定義 (2):**
+
+- L18 `class SanctuaryAccountSection : StatefulWidget`
+- L26 `class _SanctuaryAccountSectionState : State`
+
+**関数 (2 public + 5 private):**
+
+- L22 `createState()`
+- L28 `build()`
+
+  <details><summary>private 関数 5 件</summary>
+
+  - L55 `_buildSignedOutBlock()`
+  - L108 `_buildSignedInBlock()`
+  - L171 `_signInButton()`
+  - L214 `_signIn()`
+  - L231 `_signOut()`
+
+  </details>
 
 
 ### `lib/widgets/solara_nav_bar.dart` (163 行)

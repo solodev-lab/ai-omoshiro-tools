@@ -46,7 +46,11 @@ dependencies:
   # Phase 2-6b: RevenueCat 配線 (サブスク + Trusted Entitlements informational)
   purchases_flutter: ^10.1.0
   # Phase 2-6b: ペイウォール内の利用規約 / プライバシー / 解約案内リンクを開く
-  url_launcher: ^6.3.1
+  url_launcher: ^6.3.2
+  # Phase 2-9: Sign in 統合 (Apple Guideline 5.4 — Google 提供時は Apple 必須)
+  # Solara は anonymous 購入も許容するが、Sign in で端末跨ぎ復元が安定する
+  sign_in_with_apple: ^8.0.0
+  google_sign_in: ^7.2.0
 
 dev_dependencies:
   flutter_test:

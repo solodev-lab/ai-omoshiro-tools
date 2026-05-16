@@ -489,6 +489,7 @@ Forecast 期間 (Free 1 年 / Pro 5 年、`_setYearOffset` で year>0 を Free g
 | 2-5b | シェアエクスポート (テキスト + PNG 画像 1080px) | — | ✅ 完了 |
 | 2-6a | Pro ゲート UI 配線（`ProStatus` + `showProUnlockDialog` + Sanctuary DEV トグル） | — | ✅ 完了 (RevenueCat 未配線) |
 | 2-6b | RevenueCat / StoreKit 配線（実購入導線） | — | ✅ 完了 (`PurchasesService` + `PaywallScreen` + 復元ボタン、`--dart-define` で API キー注入、Offerings 未配信時は「ストア準備中」表示) |
+| 2-9 | Sign in 統合 (Apple/Google + `Purchases.logIn(uid)`) | — | ✅ 完了 (`SolaraAuth` + `SanctuaryAccountSection`、Sign in は任意、uid 形式 `apple:{id}`/`google:{id}`、iOS Capabilities はオーナー作業 `docs/sign_in_setup.md`) |
 | 2-7 | 柱2 残り Pro ゲート配線（ACG 4 フレーム / アスペクト 120 本 / 引越し） | — | ✅ 完了 (`map_screen._onAstroToggle` で 5 キー gate、ACG モード入時自動 ON も Pro 判定) |
 | 2-8 | 柱2 残り 3 機能 Pro ゲート（時計スライダー 1 分刻み / LOCATION 枠 5→10 / Forecast 期間 1 年→5 年） | — | ✅ 完了 (時計=長押しゲート / SlotManager.maxSlots getter / `_setYearOffset` year>0 gate + 降格時 0 巻き戻し) |
 
@@ -508,6 +509,14 @@ Forecast 期間 (Free 1 年 / Pro 5 年、`_setYearOffset` で year>0 を Free g
 | `consultation_place_picker_widgets.dart` | 411 | B picker サブウィジェット (`_SearchBar` / `_NumberedPin` / `_SelectionCard`) |
 
 全 5 consultation 系テスト (history/share/smoke/ui + pro_status) は 44/44 pass を維持。
+
+**Phase 2-9 追加ファイル (2026-05-16)**：Sign in 統合で 2 ファイル追加。Sanctuary 内に Account セクションを `SanctuaryAccountSection` ウィジェットとして独立化 (sanctuary_screen.dart の更なる肥大化を避ける)。
+
+| ファイル | 行数 | 役割 |
+| --- | ---: | --- |
+| `lib/utils/solara_auth.dart` | 357 | SolaraAuth 単体 (Apple/Google サインイン + `Purchases.logIn` 自動配線 + Silent restore) |
+| `lib/widgets/sanctuary_account_section.dart` | 238 | `✦ Account` セクション ウィジェット (signed in/out 2 状態のレイアウト) |
+| `docs/sign_in_setup.md` | — | iOS Capabilities / Google Cloud Console / OAuth クライアント ID 設定手順 (オーナー作業) |
 
 **Phase 2-6b 追加ファイル (2026-05-16)**：RevenueCat 配線で 4 ファイル追加。HARD threshold (500 行) 内に収めるため `paywall_screen.dart` は `part 'paywall_widgets.dart';` で 2 分割。
 

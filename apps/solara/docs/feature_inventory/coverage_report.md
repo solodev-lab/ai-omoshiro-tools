@@ -37,10 +37,10 @@
 
 ## #1 / #2 機械抽出 ↔ feature_inventory.md (人手版) の対整合
 
-- 機械抽出した class/mixin/extension/enum: **392**
+- 機械抽出した class/mixin/extension/enum: **398**
 - inventory に登場する識別子 (大文字始まり ``backtick``囲み): **209**
 
-### #1 機械にあるが Doc に書かれていない (220)
+### #1 機械にあるが Doc に書かれていない (226)
 
 - `CandidateLocation`
 - `CandidateNearLine`
@@ -69,6 +69,11 @@
 - `ProStatus`
 - `PurchasesService`
 - `ReverseGeocodeResult`
+- `SanctuaryAccountSection`
+- `SolaraAuth`
+- `SolaraAuthAccount`
+- `SolaraAuthException`
+- `SolaraAuthProvider`
 - `TitleHistoryScreen`
 - `_ActionTile`
 - `_AggBuilder`
@@ -209,6 +214,7 @@
 - `_RegionPicker`
 - `_RelocationProTeaser`
 - `_RosePetal`
+- `_SanctuaryAccountSectionState`
 - `_SanctuaryHomeEditorPageState`
 - `_SanctuaryIconPainter`
 - `_SanctuaryOrbOverlayState`
@@ -236,13 +242,7 @@
 - `_ShareCardRarityStars`
 - `_ShareChoice`
 - `_SlotStats`
-- `_SolaraHomeState`
-- `_SortChip`
-- `_Spark`
-- `_Sparkle`
-- `_SpecificPicker`
-- `_SpecificPickerState`
-- … 残り 20 省略
+- … 残り 26 省略
 
 ### #2 Doc に書いてあるがコードに存在しない (ゴースト記述) (37)
 
@@ -346,18 +346,18 @@
 | 1b | 1 | · | · | 1 | · | · | 1 | · | · | · | · | · | · | · | · | · |
 | 1c | · | · | 1 | · | · | · | · | · | · | · | · | · | · | · | · | · |
 | 2a | 3 | · | · | 5 | · | · | · | 1 | · | · | · | · | · | · | · | · |
-| 2b | · | 1 | 5 | 2 | 1 | · | · | · | · | · | · | · | · | · | · | · |
+| 2b | 1 | 1 | 5 | 2 | 1 | · | · | · | · | · | · | · | · | · | · | · |
 | 2c | · | · | 1 | · | · | · | · | · | · | · | · | · | · | · | · | · |
-| 3a | 1 | 4 | 2 | 1 | · | 1 | 8 | 6 | 4 | 1 | · | · | · | · | 1 | · |
+| 3a | 1 | 4 | 2 | 1 | 1 | 1 | 8 | 6 | 4 | 1 | · | · | · | · | 1 | · |
 | 3b | · | · | · | · | · | · | · | 1 | · | · | · | · | · | · | · | · |
 | 3c | · | 4 | 4 | 2 | 3 | · | 12 | 4 | · | · | · | · | · | · | · | · |
 | 4a | 10 | 11 | · | 13 | 7 | · | 18 | 23 | 3 | 31 | 2 | · | · | · | 3 | · |
 | 4b | 5 | 10 | · | 6 | 4 | · | 13 | · | · | · | 29 | · | · | 2 | · | · |
 | 4c | 1 | · | 7 | 1 | 5 | 3 | 2 | · | · | · | · | 9 | · | · | · | · |
 | 4d | 2 | 6 | 13 | 1 | 5 | 2 | 11 | 2 | 1 | · | · | · | 8 | · | · | · |
-| 4e | 1 | 4 | · | 1 | 7 | · | 7 | 1 | · | · | · | · | · | 8 | 2 | · |
+| 4e | 1 | 4 | · | 1 | 7 | · | 8 | 1 | · | · | · | · | · | 8 | 2 | · |
 | 4f | 5 | 4 | · | 3 | 11 | · | 11 | 10 | · | 6 | · | · | · | · | 13 | · |
-| 5 | 1 | · | · | 1 | 2 | 1 | 1 | 1 | · | 1 | 1 | 1 | 1 | 1 | · | · |
+| 5 | 1 | · | · | 1 | 3 | 1 | 1 | 1 | · | 1 | 1 | 1 | 1 | 1 | · | · |
 
 > 健全な依存方向は「番号が大きい層 → 小さい層」(上位が下位に依存)。
 > 番号が小さい層から大きい層への矢印 (左下三角) は逆流依存の疑い。
@@ -402,20 +402,17 @@
 > 各ソースの SHA1 を `_stamps.json` に記録し、差分を検出。
 > 変更されたファイルが属する層は、人手版インベントリ章の見直し対象。
 
-- 追加: **4** / 削除: **0** / 変更: **3**
+- 追加: **2** / 削除: **0** / 変更: **2**
 
 ### 変更されたファイル (層別)
 
-- **層 3a**: `lib/widgets/pro_unlock_dialog.dart`
 - **層 4e**: `lib/screens/sanctuary_screen.dart`
 - **層 5**: `lib/main.dart`
 
 ### 追加されたファイル
 
-- `lib/screens/paywall_screen.dart` (層 4f)
-- `lib/screens/paywall_widgets.dart` (層 4f)
-- `lib/utils/legal_urls.dart` (層 1a)
-- `lib/utils/purchases_service.dart` (層 1a)
+- `lib/utils/solara_auth.dart` (層 2b)
+- `lib/widgets/sanctuary_account_section.dart` (層 3a)
 
 ## #7 astro_glossary 用語辞書対整合
 
