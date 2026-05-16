@@ -25,11 +25,16 @@ class CatasterismFormationOverlay extends StatefulWidget {
   final ui.Image? artImage;
   final VoidCallback onComplete;
 
+  /// 完了時の「共有」ボタンタップ。null なら共有ボタンを出さない。
+  /// (2026-05-17 Free 機能として追加。柱 3 = 自分の記録の道具)
+  final VoidCallback? onShare;
+
   const CatasterismFormationOverlay({
     super.key,
     required this.cycle,
     this.artImage,
     required this.onComplete,
+    this.onShare,
   });
 
   @override
@@ -250,7 +255,9 @@ class _CatasterismFormationOverlayState
                       ),
                     ),
                   ),
-                  // "View in Star Atlas" button (fade in when finished)
+                  // \u5b8c\u4e86\u30dc\u30bf\u30f3\u9818\u57df (fade in when finished)
+                  // \u5171\u6709\u30dc\u30bf\u30f3 (\u4efb\u610f) + View in Star Atlas \u3092\u6a2a\u4e26\u3073\u3067\u914d\u7f6e\u3002
+                  // \u5171\u6709\u30dc\u30bf\u30f3\u306f Free \u6a5f\u80fd (\u67f1 3 = \u8a18\u9332\u3092\u6b8b\u3059\u9053\u5177)\u3002
                   Positioned(
                     bottom: 32,
                     left: 32,
@@ -258,39 +265,78 @@ class _CatasterismFormationOverlayState
                     child: AnimatedOpacity(
                       duration: const Duration(milliseconds: 600),
                       opacity: isFinished ? 1.0 : 0.0,
-                      child: GestureDetector(
-                        onTap: isFinished ? widget.onComplete : null,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [
-                                Color(0xFFF9D976),
-                                Color(0xFFC4923A),
-                              ],
-                            ),
-                            borderRadius: BorderRadius.circular(12),
-                            boxShadow: [
-                              BoxShadow(
-                                color: SolaraColors.solaraGold
-                                    .withAlpha((0.4 * 255).round()),
-                                blurRadius: 16,
-                                spreadRadius: 1,
+                      child: Row(
+                        children: [
+                          if (widget.onShare != null) ...[
+                            // \u5171\u6709\u30dc\u30bf\u30f3 (icon-only\u3001\u5186\u5f62\u3001\u30b4\u30fc\u30eb\u30c9\u67a0)
+                            GestureDetector(
+                              onTap: isFinished ? widget.onShare : null,
+                              child: Container(
+                                width: 48,
+                                height: 48,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: SolaraColors.solaraGold
+                                        .withAlpha((0.6 * 255).round()),
+                                    width: 1.5,
+                                  ),
+                                  color: const Color(0x44060A12),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: SolaraColors.solaraGold
+                                          .withAlpha((0.2 * 255).round()),
+                                      blurRadius: 10,
+                                    ),
+                                  ],
+                                ),
+                                child: const Icon(
+                                  Icons.ios_share,
+                                  color: SolaraColors.solaraGoldLight,
+                                  size: 22,
+                                ),
                               ),
-                            ],
-                          ),
-                          child: const Center(
-                            child: Text(
-                              'View in Star Atlas \u2728',
-                              style: TextStyle(
-                                color: Color(0xFF1A0F00),
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                                letterSpacing: 2,
+                            ),
+                            const SizedBox(width: 12),
+                          ],
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: isFinished ? widget.onComplete : null,
+                              child: Container(
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 14),
+                                decoration: BoxDecoration(
+                                  gradient: const LinearGradient(
+                                    colors: [
+                                      Color(0xFFF9D976),
+                                      Color(0xFFC4923A),
+                                    ],
+                                  ),
+                                  borderRadius: BorderRadius.circular(12),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: SolaraColors.solaraGold
+                                          .withAlpha((0.4 * 255).round()),
+                                      blurRadius: 16,
+                                      spreadRadius: 1,
+                                    ),
+                                  ],
+                                ),
+                                child: const Center(
+                                  child: Text(
+                                    'View in Star Atlas \u2728',
+                                    style: TextStyle(
+                                      color: Color(0xFF1A0F00),
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                      letterSpacing: 2,
+                                    ),
+                                  ),
+                                ),
                               ),
                             ),
                           ),
-                        ),
+                        ],
                       ),
                     ),
                   ),
