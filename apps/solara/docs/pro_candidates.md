@@ -232,7 +232,7 @@ Sanctuary に既に実装済の Cosmic Pro UI（$9.99/月・$49.99/年）の訴�
 | CCG | 閲覧可（現住所基準。今すでに動作） | Pro ゲートは「転居先・遠隔地から見る」= 引越し | ✅ 2-7 (relocate) |
 | 天頂/天底点 | 表示 | 天頂帯・天底帯のオーブ塗りマークアップ（Lewis L5/L6、公開後） | 公開後 |
 | 引越し | — | Pro | ✅ 2-7 |
-| アスペクトライン | 40 本 (conjunction) | 120 本（**B1**、square/trine/sextile を追加） | ✅ 2-7 (aspectLines) |
+| アスペクトライン | 40 本 (conjunction) | 120 本（**B1**、square/trine/sextile を追加） | ✅ 2-7 (aspectLines)、UI トグルは非 ACG=`MapDisplayMenu`、ACG=`AstroCartoFramePills` 第1層末尾 (2026-05-17 追加) |
 | 時計スライダー | 10 分刻み（タップ）| 1 分刻み（長押し） | ✅ 2-8 (`_stepperBtn.onLongPress` + Pro ダイアログ) |
 | LOCATION 枠 | 5 個 (Free 上限) | 10 個 | ✅ 2-8 (`SlotManager.maxSlots` getter で ProStatus 参照) |
 | オーブ設定 | **Free**（「読み取りツールを自分で調整する」思想を優先） | — | (Free 確定) |

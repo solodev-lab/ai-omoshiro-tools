@@ -335,6 +335,20 @@ class AstroCartoFramePills extends StatelessWidget {
             onTap: () => onToggle('relocate'),
             onInfoTap: () => showAstroGlossaryDialog(context, 'relocate_layer'),
           ),
+          // 「アスペクト」ピル (Phase 2026-05-17 追加、Pro 機能):
+          // ON で本線 40 → 全 120 本 (square/trine/sextile を追加) 表示。
+          // 全フレーム横断のグローバルトグル (`aspectLines` 単一フラグ)。
+          // 旧 UI では MapDisplayMenu (非 ACG モードのバーガー) にのみ存在し、
+          // ACG モード下部ピルには乗っていなかった (設計の見落とし)。
+          _FramePill(
+            label: 'アスペクト',
+            accent: const Color(0xFFB59CFF),
+            on: astroLayers['aspectLines'] ?? false,
+            active: false,
+            onTap: () => onToggle('aspectLines'),
+            onInfoTap: () =>
+                showAstroGlossaryDialog(context, 'aspect_lines_full'),
+          ),
         ],
       ),
     );

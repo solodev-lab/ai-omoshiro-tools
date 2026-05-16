@@ -390,18 +390,19 @@
 > 各ソースの SHA1 を `_stamps.json` に記録し、差分を検出。
 > 変更されたファイルが属する層は、人手版インベントリ章の見直し対象。
 
-- 追加: **0** / 削除: **0** / 変更: **4**
+- 追加: **0** / 削除: **0** / 変更: **2**
 
 ### 変更されたファイル (層別)
 
-- **層 4a**: `lib/screens/map/consult_entry_popup.dart`, `lib/screens/map/map_astro_carto.dart`, `lib/screens/map/map_line_narrative_sheet.dart`, `lib/screens/map_screen.dart`
+- **層 1b**: `lib/utils/astro_glossary.dart`
+- **層 4a**: `lib/screens/map/map_astro_carto.dart`
 
 ## #7 astro_glossary 用語辞書対整合
 
 > `astro_glossary.dart` の定義キー ↔ コード内の参照 (`termKey:` /
 > `astroGlossary[...]`) を突合。死蔵エントリと壊れた用語ラベルを検出。
 
-- 定義キー数: **45** / 参照キー数 (リテラルのみ): **10**
+- 定義キー数: **46** / 参照キー数 (リテラルのみ): **10**
 
 > ⚠️ 検出できるのは **リテラル参照のみ** (`termKey: 'asc'` / `astroGlossary['asc']`)。
 > 次のケースは検出不可なので #7a を「確定した死蔵」と即断しないこと:
@@ -409,11 +410,12 @@
 >  - `AstroTermLabel(termKey: someVariable)` のような変数渡し
 > #7a は **死蔵候補** であり、削除前に grep で変数経由参照を確認すること。
 
-### #7a 定義済みだが未参照 (35) — 死蔵 glossary エントリ候補
+### #7a 定義済みだが未参照 (36) — 死蔵 glossary エントリ候補
 
 > 上記⚠️の通り、変数経由参照は検出できていない。確定前に要 grep。
 
 - `altitude_event`
+- `aspect_lines_full`
 - `aspect_sextile`
 - `aspect_square`
 - `aspect_trine`
