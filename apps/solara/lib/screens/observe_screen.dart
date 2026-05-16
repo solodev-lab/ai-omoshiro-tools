@@ -5,8 +5,10 @@ import '../models/daily_reading.dart';
 import '../models/tarot_card.dart';
 import '../utils/fortune_api.dart';
 import '../utils/moon_phase.dart';
+import '../utils/pro_status.dart';
 import '../utils/solara_storage.dart';
 import '../utils/tarot_data.dart';
+import '../widgets/pro_unlock_dialog.dart';
 
 import 'observe/observe_constants.dart';
 import 'observe/observe_card_widgets.dart';
@@ -84,12 +86,24 @@ class _ObserveScreenState extends State<ObserveScreen>
   // History
   List<DailyReading> _history = [];
 
+  // A3 (2026-05-17): Pro 専用「相談者のテーマ」入力欄。Free では表示しない。
+  // 200 字 cap (Worker 側でも防御的に再 cap)。引き済み (_alreadyDrawnToday) の
+  // ときは UI を disabled にする (1 日 1 回ルールを守る)。
+  final TextEditingController _questionController = TextEditingController();
+
   @override
   void initState() {
     super.initState();
     _flipAnimation.addListener(() => setState(() {}));
+    ProStatus.instance.addListener(_onProStatusChanged);
     _checkTodayReading();
     _loadHistory();
+  }
+
+  void _onProStatusChanged() {
+    if (!mounted) return;
+    // Pro 切替で質問欄の表示が変わる。引きすでに済みなら次回の引きで反映。
+    setState(() {});
   }
 
   @override
@@ -97,6 +111,8 @@ class _ObserveScreenState extends State<ObserveScreen>
     _loadingMsgTimer?.cancel();
     _pulseCtrl.dispose();
     _flipCtrl.dispose();
+    _questionController.dispose();
+    ProStatus.instance.removeListener(_onProStatusChanged);
     super.dispose();
   }
 
@@ -169,6 +185,10 @@ class _ObserveScreenState extends State<ObserveScreen>
     if (!mounted) return;
 
     final profile = await SolaraStorage.loadProfile();
+    // A3: Pro なら thinking ON + 質問欄の内容を「テーマ」として渡す。
+    // Free なら thinking OFF + question 未送信 (Free は質問欄自体が出ない)。
+    final isPro = ProStatus.instance.isPro;
+    final question = isPro ? _questionController.text.trim() : '';
     final tarotResult = await fetchTarotReading(
       cardId: card.id,
       reversed: reversed,
@@ -179,6 +199,8 @@ class _ObserveScreenState extends State<ObserveScreen>
       planet: card.planet,
       moonPhase: moonPhase,
       userName: profile?.name,
+      thinking: isPro,
+      question: question.isEmpty ? null : question,
     );
 
     if (!mounted) return;
@@ -321,9 +343,16 @@ class _ObserveScreenState extends State<ObserveScreen>
   // ========================================
 
   Widget _buildDrawPanel() {
+    final isPro = ProStatus.instance.isPro;
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 30),
       child: Column(children: [
+        // A3: 質問入力欄 (Pro 専用) / 誘導カード (Free)
+        if (isPro)
+          _buildQuestionField()
+        else
+          _buildQuestionFieldTeaser(),
+        const SizedBox(height: 16),
         GestureDetector(
           onTap: _drawCard,
           child: AnimatedBuilder(
@@ -397,6 +426,176 @@ class _ObserveScreenState extends State<ObserveScreen>
         if (_readingLoading) _buildLoadingIndicator(),
         if (_readingText.isNotEmpty) _buildReadingPanel(),
       ]),
+    );
+  }
+
+  // ========================================
+  // A3: Question Field (Pro / Free)
+  // ========================================
+
+  /// Pro 専用: 「相談者のテーマ」入力欄。
+  /// 200 字 cap (内部・Worker 側でも cap)。引き済みなら disabled。
+  /// 入力内容は fetchTarotReading の `question` パラメータで Worker に送られ、
+  /// プロンプトに「テーマ」として埋め込まれる (注入指示には従わない設計)。
+  Widget _buildQuestionField() {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0x44C9A84C)),
+        color: const Color(0x14C9A84C),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(children: [
+            const Icon(Icons.auto_awesome, size: 14, color: Color(0xFFE9D29A)),
+            const SizedBox(width: 6),
+            const Text(
+              '今日のテーマ',
+              style: TextStyle(
+                fontSize: 12,
+                color: Color(0xFFE9D29A),
+                fontWeight: FontWeight.w600,
+                letterSpacing: 1.2,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(color: const Color(0x66F6BD60)),
+              ),
+              child: const Text('Pro',
+                  style: TextStyle(
+                      fontSize: 9,
+                      color: Color(0xFFF6BD60),
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 0.4)),
+            ),
+            const Spacer(),
+            const Text('(任意・200字)',
+                style: TextStyle(fontSize: 10, color: Color(0xFF888888))),
+          ]),
+          const SizedBox(height: 8),
+          TextField(
+            controller: _questionController,
+            enabled: !_alreadyDrawnToday,
+            maxLength: 200,
+            maxLines: 2,
+            minLines: 1,
+            style: const TextStyle(fontSize: 13, color: Color(0xFFE8E0D0)),
+            decoration: InputDecoration(
+              hintText: _alreadyDrawnToday
+                  ? '本日は引き済みです (明日また)'
+                  : '例: 新しいプロジェクトを始めるべきか迷っている',
+              hintStyle: const TextStyle(
+                  fontSize: 12, color: Color(0xFF666666), height: 1.4),
+              counterText: '',
+              filled: true,
+              fillColor: const Color(0x220C0C1A),
+              contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 12, vertical: 10),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: const BorderSide(color: Color(0x33C9A84C)),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: const BorderSide(color: Color(0x33C9A84C)),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: const BorderSide(color: Color(0x66F6BD60)),
+              ),
+              disabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: const BorderSide(color: Color(0x22444444)),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Free 向け誘導: 質問欄を見せず、「Pro でテーマを添えられる」と説明する CTA。
+  Widget _buildQuestionFieldTeaser() {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () => showProUnlockDialog(
+        context,
+        featureLabel: '質問つきタロット',
+        description: '「今日のテーマ」を 200 字以内で添えると、Stella がそのテーマに'
+            '寄り添ってカードを読み解きます。Cosmic Pro で thinking モード ON の '
+            '深い読みも一緒に解放されます。',
+      ),
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0x33C9A84C), Color(0x14C9A84C)],
+            begin: Alignment.topLeft, end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: const Color(0x55C9A84C)),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Icon(Icons.auto_awesome, size: 14, color: Color(0xFFE9D29A)),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: const [
+                  Text(
+                    '今日のテーマを添えて引く',
+                    style: TextStyle(
+                      fontSize: 12.5,
+                      color: Color(0xFFE9D29A),
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 0.4,
+                    ),
+                  ),
+                  SizedBox(height: 3),
+                  Text(
+                    'Cosmic Pro でテーマ欄が開き、Stella がそれに寄り添って読みます。',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: Color(0xCCE8E0D0),
+                      height: 1.45,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: const Color(0x66F6BD60)),
+                color: const Color(0x22F6BD60),
+              ),
+              child: const Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.lock_outline, size: 10, color: Color(0xFFF6BD60)),
+                  SizedBox(width: 3),
+                  Text('Pro',
+                      style: TextStyle(
+                          fontSize: 9,
+                          color: Color(0xFFF6BD60),
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 0.4)),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 

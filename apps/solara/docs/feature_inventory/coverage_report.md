@@ -340,8 +340,8 @@
 | 3b | · | · | · | · | · | · | · | 1 | · | · | · | · | · | · | · | · |
 | 3c | · | 4 | 4 | 2 | 3 | · | 12 | 4 | · | · | · | · | · | · | · | · |
 | 4a | 10 | 11 | · | 13 | 7 | · | 18 | 23 | 3 | 31 | 2 | · | · | · | 3 | · |
-| 4b | 5 | 10 | · | 6 | 3 | · | 12 | · | · | · | 28 | · | · | 2 | · | · |
-| 4c | 1 | · | 5 | 1 | 2 | 2 | · | · | · | · | · | 6 | · | · | · | · |
+| 4b | 5 | 10 | · | 6 | 4 | · | 13 | · | · | · | 28 | · | · | 2 | · | · |
+| 4c | 1 | · | 5 | 1 | 3 | 2 | 1 | · | · | · | · | 6 | · | · | · | · |
 | 4d | 2 | 5 | 9 | 1 | 1 | 2 | 8 | · | 1 | · | · | · | 4 | · | · | · |
 | 4e | · | 3 | · | 1 | 6 | · | 6 | · | · | · | · | · | · | 7 | 1 | · |
 | 4f | 3 | 4 | · | 3 | 10 | · | 11 | 9 | · | 6 | · | · | · | · | 12 | · |
@@ -363,19 +363,19 @@
 | `lib/screens/horoscope/horo_antique_icons.dart` | 3a | 13 |
 | `lib/utils/solara_api.dart` | 2a | 11 |
 | `lib/screens/horoscope/horo_constants.dart` | 1b | 10 |
+| `lib/utils/pro_status.dart` | 2b | 10 |
 | `lib/screens/horoscope/horo_panel_shared.dart` | 4b | 9 |
 | `lib/models/daily_reading.dart` | 1c | 8 |
 | `lib/models/galaxy_cycle.dart` | 1c | 8 |
 | `lib/utils/astro_lines.dart` | 1a | 8 |
-| `lib/utils/pro_status.dart` | 2b | 8 |
 | `lib/screens/map/map_vp_panel.dart` | 4a | 7 |
 | `lib/utils/constellation_namer.dart` | 1b | 7 |
 | `lib/widgets/glass_panel.dart` | 3a | 7 |
+| `lib/widgets/pro_unlock_dialog.dart` | 3a | 7 |
 | `lib/utils/astro_glossary.dart` | 1b | 6 |
 | `lib/utils/tarot_data.dart` | 2c | 6 |
 | `lib/widgets/fortune_overlays/_common.dart` | 3a | 6 |
 | `lib/models/lunar_intention.dart` | 1c | 5 |
-| `lib/screens/map/map_astro.dart` | 2a | 5 |
 
 ### #5c 孤立ファイル (2) — 誰からも import されない
 
@@ -390,14 +390,14 @@
 > 各ソースの SHA1 を `_stamps.json` に記録し、差分を検出。
 > 変更されたファイルが属する層は、人手版インベントリ章の見直し対象。
 
-- 追加: **0** / 削除: **0** / 変更: **5**
+- 追加: **0** / 削除: **0** / 変更: **4**
 
 ### 変更されたファイル (層別)
 
-- **層 0**: `worker/src/fortune.js`
-- **層 1b**: `lib/utils/astro_glossary.dart`
+- **層 0**: `worker/src/tarot.js`
 - **層 2a**: `lib/utils/fortune_api.dart`
-- **層 4b**: `lib/screens/horoscope/horo_fortune_cards.dart`, `lib/screens/horoscope_screen.dart`
+- **層 4b**: `lib/screens/horoscope/horo_relocation_panel.dart`
+- **層 4c**: `lib/screens/observe_screen.dart`
 
 ## #7 astro_glossary 用語辞書対整合
 

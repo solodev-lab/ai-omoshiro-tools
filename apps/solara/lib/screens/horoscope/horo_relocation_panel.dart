@@ -3,6 +3,8 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../utils/astro_houses.dart' show assignPlanetHouse;
 import '../../utils/fortune_api.dart' show RelocationNarrative, fetchRelocationNarrative;
+import '../../utils/pro_status.dart';
+import '../../widgets/pro_unlock_dialog.dart';
 import 'horo_constants.dart' show planetNamesJP, signNames;
 import 'horo_relocation_templates.dart';
 
@@ -11,10 +13,16 @@ import 'horo_relocation_templates.dart';
 // 出生地ハウス vs 現住所ハウス の差分を比較形式で解説する。
 // 1重円モード + home有効 + houses取得済みの時のみ表示 (Bottom Sheet 拠点タブ)。
 //
-// Phase B: Stella の動的解説を取得し、静的テンプレートを上書き表示。
+// Phase A (Free): 静的テンプレート (horo_relocation_templates) のみ表示。
+//   Gemini を呼ばないのでコスト 0。
+// Phase B (Pro): Stella の動的解説 (/relocation 経由) を取得し、静的テンプレを上書き。
 //   - 取得成功 → narrative.planetNarratives[planet] を「現住所」行に表示
 //   - 取得中/失敗 → 静的テンプレ (planetInHouseMessages 等) にフォールバック
 //   - 「変化なし」項目は API に投げず、静的テンプレが残る（情報量維持）
+//
+// A2 ゲート (2026-05-17): Pro じゃなければ `_fetchNarrative` を呼ばない
+// (Gemini 0 回呼出)。Free には Phase A テンプレ + Pro 誘導 CTA を表示。
+// ProStatus listener で Free→Pro に切り替わると即時に Phase B を取得。
 // ══════════════════════════════════════════════════
 
 class HouseShift {
@@ -61,7 +69,31 @@ class _HoroRelocationPanelState extends State<HoroRelocationPanel> {
   @override
   void initState() {
     super.initState();
+    ProStatus.instance.addListener(_onProStatusChanged);
     _maybeFetch();
+  }
+
+  @override
+  void dispose() {
+    ProStatus.instance.removeListener(_onProStatusChanged);
+    super.dispose();
+  }
+
+  /// Pro 状態変化に追従。Free→Pro で動的解説を取得、Pro→Free で破棄。
+  void _onProStatusChanged() {
+    if (!mounted) return;
+    if (ProStatus.instance.isPro) {
+      // Free→Pro: 動的解説を取りに行く。`_lastFetchKey` を null にして
+      // `_maybeFetch` が必ず動くようにする。
+      _lastFetchKey = null;
+      _maybeFetch();
+    } else {
+      // Pro→Free: 動的解説を破棄。静的テンプレ表示に戻る。
+      setState(() {
+        _narrative = null;
+        _loading = false;
+      });
+    }
   }
 
   @override
@@ -83,6 +115,8 @@ class _HoroRelocationPanelState extends State<HoroRelocationPanel> {
 
   void _maybeFetch() {
     if (widget.natalHouses.length != 12 || widget.relocateHouses.length != 12) return;
+    // A2 ゲート: Free ユーザーは Phase B (Gemini) を呼ばない。Phase A 静的テンプレで表示。
+    if (!ProStatus.instance.isPro) return;
     final key = _buildFetchKey();
     if (key == _lastFetchKey) return; // 同じパラメータなら再fetch不要
     _lastFetchKey = key;
@@ -151,6 +185,7 @@ class _HoroRelocationPanelState extends State<HoroRelocationPanel> {
     final mcFromIdx = (widget.natalMc / 30).floor() % 12;
     final mcToIdx = (widget.relocateMc / 30).floor() % 12;
 
+    final isPro = ProStatus.instance.isPro;
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(12, 8, 12, 24),
       child: Column(
@@ -158,7 +193,13 @@ class _HoroRelocationPanelState extends State<HoroRelocationPanel> {
         children: [
           _buildHeader(),
           const SizedBox(height: 14),
-          // 動的サマリーがあれば最上部に表示
+          // A2: Free ユーザーには Pro 誘導 CTA を最上部に表示。
+          // 「Phase A 静的解説でも十分使える + Pro でパーソナル解説に化ける」を示す。
+          if (!isPro) ...[
+            _buildProTeaser(),
+            const SizedBox(height: 14),
+          ],
+          // 動的サマリーがあれば最上部に表示 (Pro のみ)
           if (_narrative != null && _narrative!.summary.isNotEmpty) ...[
             _buildSummaryBlock(_narrative!.summary),
             const SizedBox(height: 14),
@@ -224,6 +265,88 @@ class _HoroRelocationPanelState extends State<HoroRelocationPanel> {
           color: const Color(0xFFE8E0D0),
           height: 1.6,
           fontWeight: FontWeight.w500,
+        ),
+      ),
+    );
+  }
+
+  /// A2: Free ユーザー向け Pro 誘導カード。
+  /// 「下の解説は静的テンプレ、Pro で Stella のパーソナル解説に変わる」と説明し、
+  /// タップで Pro Unlock dialog を出す。
+  Widget _buildProTeaser() {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () => showProUnlockDialog(
+        context,
+        featureLabel: 'リロケーション パーソナル解説',
+        description: '下の解説は出生地→現住所のハウス変化に対する一般的な説明です。'
+            'Cosmic Pro にすると、Stella があなたの出生地名・住所名・全惑星の'
+            '変化を読み込み、ASC/MC + 全惑星のパーソナル解説に書き換えます。',
+      ),
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0x33C9A84C), Color(0x14C9A84C)],
+            begin: Alignment.topLeft, end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: const Color(0x55C9A84C)),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Icon(Icons.auto_awesome, size: 16, color: Color(0xFFE9D29A)),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Stella のパーソナル解説を開く',
+                    style: GoogleFonts.notoSansJp(
+                      fontSize: 12.5,
+                      color: const Color(0xFFE9D29A),
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 0.4,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '下の解説は一般的なテンプレートです。Cosmic Pro で '
+                    'あなたの出生地・現住所に合わせた読みに書き換わります。',
+                    style: GoogleFonts.notoSansJp(
+                      fontSize: 11,
+                      color: const Color(0xCCE8E0D0),
+                      height: 1.55,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: const Color(0x66F6BD60)),
+                color: const Color(0x22F6BD60),
+              ),
+              child: const Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.lock_outline, size: 11, color: Color(0xFFF6BD60)),
+                  SizedBox(width: 4),
+                  Text('Pro',
+                      style: TextStyle(
+                          fontSize: 10,
+                          color: Color(0xFFF6BD60),
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 0.4)),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );

@@ -217,8 +217,14 @@ Future<TarotReading?> fetchTarotReading({
   double? moonPhase,
   String? userName,
   String lang = 'ja',
+  // A3 (2026-05-17): Pro 専用フィールド。
+  //   thinking=true で Worker 側 Gemini thinking モード ON (深い読み)。
+  //   question (任意) で「相談者のテーマ」をプロンプトに織り込む (200 字 cap)。
+  bool thinking = false,
+  String? question,
 }) async {
   try {
+    final cleanQuestion = question?.trim();
     final body = <String, dynamic>{
       'cardId': cardId,
       'reversed': reversed,
@@ -230,6 +236,11 @@ Future<TarotReading?> fetchTarotReading({
       'moonPhase': ?moonPhase,
       if (userName != null && userName.isNotEmpty) 'userName': userName,
       'lang': lang,
+      if (thinking) 'thinking': true,
+      if (cleanQuestion != null && cleanQuestion.isNotEmpty)
+        'question': cleanQuestion.length > 200
+            ? cleanQuestion.substring(0, 200)
+            : cleanQuestion,
     };
     final res = await http.post(
       Uri.parse('$solaraWorkerBase/tarot'),

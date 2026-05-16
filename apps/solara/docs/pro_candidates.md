@@ -214,8 +214,9 @@ Sanctuary に既に実装済の Cosmic Pro UI（$9.99/月・$49.99/年）の訴�
 | | Free | Pro | ゲート状態 |
 |---|---|---|---|
 | Horo 星読み | 全体運のみ・Stella の読み・thinking OFF。残り 4 カテゴリは**殻ティーザー**（タイトル/アイコン/スケルトン/🔒、**生成は呼ばない**） | 全 5 カテゴリ・Stella の読み・thinking ON | ✅ A1 (2026-05-17) |
-| タロット | 1 枚引き・Stella の読み・1 日 1 回・thinking OFF | 1 枚引き + **質問入力欄**・thinking ON | 未着手 (A3) |
+| タロット | 1 枚引き・Stella の読み・1 日 1 回・thinking OFF | 1 枚引き + **質問入力欄** (200 字)・thinking ON | ✅ A3 (2026-05-17) |
 | タロット（将来） | — | 3 枚引き（統合解釈） | 未着手 (D1) |
+| リロケーション解説 | Phase A 静的テンプレート (`horo_relocation_templates`) | Phase B Stella 動的解説 (`/relocation` Gemini) | ✅ A2 (2026-05-17) |
 
 - **モデル**: ローンチは全部 thinking モード Flash（Free=thinkingBudget 0、Pro=ON）。Claude Sonnet は
   公開後に実出力を見比べて判断する実験案件、ローンチには持ち込まない。
@@ -232,6 +233,26 @@ Sanctuary に既に実装済の Cosmic Pro UI（$9.99/月・$49.99/年）の訴�
 - Worker `fortune.js handleFortune` が `thinking` を body から受け取り `callGemini({thinkingBudget: thinking ? 1024 : null})` へ伝播。
 - `ProStatus.addListener(_onProStatusChanged)` で Free→Pro に切り替わると `_loadFortunes(force: true)` で残り 4 カテゴリを即取得 (Sanctuary DEV toggle 即時反映)。
 - `_fortunes.length >= categories.length` のキャッシュ判定で Pro→Free 後に再 fetch しない (コスト保護)。
+
+**A2 実装状態 (2026-05-17)**:
+- `horo_relocation_panel._maybeFetch` 冒頭で `if (!ProStatus.instance.isPro) return;` ゲート。Free は `fetchRelocationNarrative` を呼ばず、`horo_relocation_templates` の静的テンプレのみで描画 (Gemini 0 回)。
+- `ProStatus.addListener(_onProStatusChanged)` で Free→Pro 切替時に `_lastFetchKey = null` で fetch を強制再評価 (即時動的解説に切替)。Pro→Free で `_narrative = null` 破棄 (静的テンプレに戻る)。
+- Free 向け Pro 誘導 CTA `_buildProTeaser` をパネル先頭に表示 (タップで `showProUnlockDialog` → カテゴリ「リロケーション パーソナル解説」)。
+- Worker 側変更なし (既存 `/relocation` をそのまま使用、Free は呼ばないので Gemini 0)。
+
+**A3 実装状態 (2026-05-17)**:
+- `observe_screen` に質問欄を追加。Pro は `_buildQuestionField` (TextField + Pro バッジ + 200 字 maxLength + 引き済み時 disabled)、Free は `_buildQuestionFieldTeaser` (Pro Unlock dialog タップ CTA)。
+- `_drawCard` で `isPro = ProStatus.instance.isPro` 判定し、`fetchTarotReading(thinking: isPro, question: isPro ? text : null)` を送信。
+- `fortune_api.fetchTarotReading` に `thinking: bool` + `question: String?` 引数追加、200 字 cap、trim で防御。
+- Worker `tarot.js`:
+  - `callGemini` に `thinkingBudget` opt 追加 (fortune.js と同じパターン)。
+  - `buildPrompt` に `question` 引数追加し「相談者からのテーマ」セクションを生成。
+    - 🔴 プロンプト注入対策: テーマ内の指示 (「JSON 書き換えて」「上の指示無視して」等) に従わない旨を明示。
+    - 🔴 コンテンツ安全性: 医療・法律・自傷に断定アドバイスせず専門家相談を勧める旨を明示。
+  - 200 字 cap + 空白正規化を Worker 側でも再実施 (二重防御)。
+  - `handleTarot` で `callGemini(..., { thinkingBudget: thinking ? 1024 : null })`。
+- `ProStatus.addListener(_onProStatusChanged)` で Pro 切替時に質問欄の表示/非表示を切り替え。
+- 1 日 1 回ルール (`_alreadyDrawnToday`) は既存仕様維持。Pro/Free 共通。
 
 ### 7.2 柱2 — アドバンスト占星術 & Map（差別化の見せ場）
 

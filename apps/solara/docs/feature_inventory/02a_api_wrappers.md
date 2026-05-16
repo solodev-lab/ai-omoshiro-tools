@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 8 / 総行数: 1635
+- ファイル数: 8 / 総行数: 1646
 - class/mixin/extension/enum: 17
 - 関数 (top-level + method の素拾い): 26
 - Navigator.push 等: 0
@@ -161,7 +161,7 @@ Worker: /astro/daily-transits (POST)
 - L14: `'$solaraWorkerBase/astro/daily-transits'`
 
 
-### `lib/utils/fortune_api.dart` (254 行)
+### `lib/utils/fortune_api.dart` (265 行)
 
 **ファイル先頭コメント:**
 
@@ -191,7 +191,7 @@ Fortune API - /fortune エンドポイント (Stella の声を取得)
 
 - L67: `'$solaraWorkerBase/fortune'`
 - L162: `'$solaraWorkerBase/relocation'`
-- L235: `'$solaraWorkerBase/tarot'`
+- L246: `'$solaraWorkerBase/tarot'`
 
 
 ### `lib/utils/reverse_geocode.dart` (100 行)
