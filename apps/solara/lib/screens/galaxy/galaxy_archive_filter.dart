@@ -29,6 +29,12 @@ class GalaxyArchiveFilter {
   final String query;
 
   /// 表示する rarity の集合 (空 = 全件)。値は 1〜5。
+  ///
+  /// **UI 上は単一選択**: チップは 1 つしか同時選択できない設計
+  /// (2026-05-17 multi-select 廃止)。Set 型を維持しているのは
+  /// `apply` の絞込ロジックと将来の multi 復活に備えた API 互換のため。
+  /// 初期化時に複数値を入れた場合は `apply` が正しく動作する
+  /// (テスト用途で利用可能)。
   final Set<int> rarities;
 
   /// 並び順。
@@ -162,11 +168,20 @@ class _GalaxyArchiveFilterBarState extends State<GalaxyArchiveFilterBar> {
     widget.onChanged(widget.filter.copyWith(query: v));
   }
 
+  /// レアリティチップを単一選択で切替える。
+  ///
+  /// 仕様 (2026-05-17 multi-select 廃止):
+  ///   - 何も選ばれていない → タップで `{r}` を選択
+  ///   - 同じ rarity が選ばれている → タップで `{}` にクリア
+  ///   - 違う rarity が選ばれている → タップで `{r}` に切替
+  ///
+  /// 旧 multi-select だと「★5 をタップしたのに ★3 のサイクルが出る」
+  /// (= 直前タップの ★3 が残っている) という UX 混乱があった。
   void _toggleRarity(int r) {
-    final next = Set<int>.from(widget.filter.rarities);
-    if (!next.add(r)) {
-      next.remove(r);
-    }
+    final current = widget.filter.rarities;
+    final next = (current.length == 1 && current.contains(r))
+        ? <int>{}
+        : <int>{r};
     widget.onChanged(widget.filter.copyWith(rarities: next));
   }
 

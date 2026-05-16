@@ -1,8 +1,9 @@
 // Unit test: GalaxyArchiveFilter — C2 (柱 3)
 //
-// 検索 / レアリティ / ソートの絞込ロジックのみを検証する。
-// UI 部分 (ProUnlockDialog 連動) は別途 widget test で扱う。
+// 検索 / レアリティ / ソートの絞込ロジックと、
+// レアリティチップの単一選択挙動 (2026-05-17 回帰防止) を検証する。
 
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:solara/models/daily_reading.dart';
@@ -119,6 +120,95 @@ void main() {
       expect(f2.query, 'a');
       expect(f2.rarities, {1});
       expect(f2.sort, GalaxyArchiveSort.rarityHighFirst);
+    });
+  });
+
+  // ──────────────────────────────────────────────────────────────
+  // Filter bar widget: 単一選択 rarity チップの挙動
+  // (2026-05-17: multi-select 廃止後の回帰防止)
+  // ──────────────────────────────────────────────────────────────
+
+  group('GalaxyArchiveFilterBar — rarity 単一選択', () {
+    testWidgets('★5 タップ → rarities={5}', (tester) async {
+      var captured = const GalaxyArchiveFilter();
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: GalaxyArchiveFilterBar(
+              filter: captured,
+              isPro: true,
+              onChanged: (f) => captured = f,
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('★5'));
+      await tester.pump();
+      expect(captured.rarities, {5});
+    });
+
+    testWidgets('★5 → ★3 タップ → rarities={3} に切替 (multi にならない)',
+        (tester) async {
+      var captured = const GalaxyArchiveFilter();
+      Widget build() => MaterialApp(
+            home: Scaffold(
+              body: StatefulBuilder(
+                builder: (ctx, setState) => GalaxyArchiveFilterBar(
+                  filter: captured,
+                  isPro: true,
+                  onChanged: (f) => setState(() => captured = f),
+                ),
+              ),
+            ),
+          );
+      await tester.pumpWidget(build());
+      await tester.tap(find.text('★5'));
+      await tester.pump();
+      expect(captured.rarities, {5});
+
+      await tester.tap(find.text('★3'));
+      await tester.pump();
+      expect(captured.rarities, {3},
+          reason: '★3 タップ後は ★5 が外れて ★3 だけが残るべき');
+    });
+
+    testWidgets('★3 同じチップ再タップ → クリア', (tester) async {
+      var captured = const GalaxyArchiveFilter(rarities: {3});
+      Widget build() => MaterialApp(
+            home: Scaffold(
+              body: StatefulBuilder(
+                builder: (ctx, setState) => GalaxyArchiveFilterBar(
+                  filter: captured,
+                  isPro: true,
+                  onChanged: (f) => setState(() => captured = f),
+                ),
+              ),
+            ),
+          );
+      await tester.pumpWidget(build());
+      await tester.tap(find.text('★3'));
+      await tester.pump();
+      expect(captured.rarities, isEmpty);
+    });
+
+    testWidgets('Free 状態ではタップが無効 (Pro Unlock dialog 表示)', (tester) async {
+      var captured = const GalaxyArchiveFilter();
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: GalaxyArchiveFilterBar(
+              filter: captured,
+              isPro: false,
+              onChanged: (f) => captured = f,
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('★5'));
+      await tester.pumpAndSettle();
+      // Pro Unlock dialog が出るので onChanged は呼ばれない
+      expect(captured.rarities, isEmpty);
+      expect(find.text('✦ Cosmic Pro'), findsOneWidget);
     });
   });
 }
