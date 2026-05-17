@@ -42,10 +42,10 @@
 
 ## #1 / #2 機械抽出 ↔ feature_inventory.md (人手版) の対整合
 
-- 機械抽出した class/mixin/extension/enum: **398**
+- 機械抽出した class/mixin/extension/enum: **399**
 - inventory に登場する識別子 (大文字始まり ``backtick``囲み): **209**
 
-### #1 機械にあるが Doc に書かれていない (226)
+### #1 機械にあるが Doc に書かれていない (227)
 
 - `CandidateLocation`
 - `CandidateNearLine`
@@ -165,6 +165,7 @@
 - `_IntroBlock`
 - `_LatitudeBandBox`
 - `_LatitudeBandRow`
+- `_LegalRow`
 - `_LightMote`
 - `_LoadingBody`
 - `_LoadingSkeleton`
@@ -246,8 +247,7 @@
 - `_SettingsItemWithToggle`
 - `_ShareCardRarityStars`
 - `_ShareChoice`
-- `_SlotStats`
-- … 残り 26 省略
+- … 残り 27 省略
 
 ### #2 Doc に書いてあるがコードに存在しない (ゴースト記述) (37)
 
@@ -324,9 +324,9 @@
 
 ### 層 4e: Sanctuary 画面
 
-- ファイル数: 9
+- ファイル数: 10
 - Worker URL 呼出: (なし)
-- Popup/Dialog: `showInfoPopup`×3
+- Popup/Dialog: `showInfoPopup`×4
 - Navigator.push 等: 0 箇所
 
 ### 層 4f: サブ画面 (Forecast / Locations / Philosophy / Font Preview)
@@ -360,7 +360,7 @@
 | 4b | 5 | 10 | · | 6 | 4 | · | 13 | · | · | · | 29 | · | · | 2 | · | · |
 | 4c | 1 | · | 7 | 1 | 5 | 3 | 2 | · | · | · | · | 9 | · | · | · | · |
 | 4d | 2 | 6 | 13 | 1 | 5 | 2 | 11 | 2 | 1 | · | · | · | 8 | · | · | · |
-| 4e | 1 | 4 | · | 1 | 7 | · | 8 | 1 | · | · | · | · | · | 8 | 2 | · |
+| 4e | 2 | 4 | · | 1 | 7 | · | 9 | 1 | · | · | · | · | · | 9 | 2 | · |
 | 4f | 5 | 4 | · | 3 | 11 | · | 11 | 10 | · | 6 | · | · | · | · | 13 | · |
 | 5 | 1 | · | · | 1 | 3 | 1 | 1 | 1 | · | 1 | 1 | 1 | 1 | 1 | · | · |
 
@@ -375,8 +375,8 @@
 | --- | --- | --- |
 | `lib/theme/solara_colors.dart` | 3b | 28 |
 | `lib/utils/solara_storage.dart` | 2b | 22 |
+| `lib/widgets/info_popup.dart` | 3a | 21 |
 | `lib/screens/map/map_constants.dart` | 3b | 20 |
-| `lib/widgets/info_popup.dart` | 3a | 20 |
 | `lib/utils/pro_status.dart` | 2b | 17 |
 | `lib/screens/horoscope/horo_antique_icons.dart` | 3a | 13 |
 | `lib/models/galaxy_cycle.dart` | 1c | 12 |
@@ -407,14 +407,15 @@
 > 各ソースの SHA1 を `_stamps.json` に記録し、差分を検出。
 > 変更されたファイルが属する層は、人手版インベントリ章の見直し対象。
 
-- 追加: **0** / 削除: **0** / 変更: **11**
+- 追加: **1** / 削除: **0** / 変更: **1**
 
 ### 変更されたファイル (層別)
 
-- **層 0**: `worker/src/index.js`
-- **層 2a**: `lib/screens/map/map_astro.dart`, `lib/utils/celestial_events.dart`, `lib/utils/consultation_api.dart`, `lib/utils/daily_transits_api.dart`, `lib/utils/fortune_api.dart`, `lib/utils/solara_api.dart`
-- **層 2b**: `lib/utils/forecast_cache.dart`
-- **層 4a**: `lib/screens/map/map_search.dart`, `lib/screens/map/map_styles.dart`, `lib/screens/map_screen.dart`
+- **層 4e**: `lib/screens/sanctuary_screen.dart`
+
+### 追加されたファイル
+
+- `lib/screens/sanctuary/sanctuary_legal_menu.dart` (層 4e)
 
 ## #7 astro_glossary 用語辞書対整合
 
