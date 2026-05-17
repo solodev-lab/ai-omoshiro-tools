@@ -51,8 +51,14 @@ android {
             } else {
                 signingConfigs.getByName("debug")
             }
-            // MainActivity の override が R8 に剥ぎ取られないよう keep ルール追加。
-            // optimize 版は Log.w 呼び出しまで no-op 化する場合があるため標準を使用。
+            // 🔴 R8 minify + リソース shrink を release build で有効化
+            // (launch_checklist Phase 2 残)。各 Flutter プラグインの
+            // consumer-rules.pro が AAR から自動取り込みされるが、
+            // proguard-rules.pro で防御的に keep を追加。
+            // optimize 版は Log.w 呼び出しまで no-op 化する場合があるため
+            // proguard-android.txt (非 optimize) を使用。
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android.txt"),
                 "proguard-rules.pro",
