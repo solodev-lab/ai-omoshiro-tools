@@ -5,11 +5,11 @@
 
 ## サマリ
 
-- ファイル数: 9 / 総行数: 4978
-- class/mixin/extension/enum: 26
-- 関数 (top-level + method の素拾い): 104
+- ファイル数: 10 / 総行数: 5124
+- class/mixin/extension/enum: 27
+- 関数 (top-level + method の素拾い): 108
 - Navigator.push 等: 0
-- Popup/Dialog 呼出: 3
+- Popup/Dialog 呼出: 4
 - Worker URL リテラル: 0
 
 ## ファイル別
@@ -66,6 +66,53 @@
   - L209 `_readonlyField()`
 
   </details>
+
+
+### `lib/screens/sanctuary/sanctuary_legal_menu.dart` (144 行)
+
+**ファイル先頭コメント:**
+
+```
+Solara Sanctuary 法務リンクメニュー (Phase 2 launch_checklist)
+
+役割:
+  Sanctuary > ✦ App セクションの「Terms & Privacy」エントリから開く法務情報 popup。
+  ペイウォール外からも EULA / プライバシー / 特商法 / 解約方法へアクセス可能にする。
+
+設計:
+  - popup は project_solara_popup_pattern.md の統一仕様に従い `showInfoPopup` 経由
+  - URL は LegalUrls (utils/legal_urls.dart) 単一情報源を参照、ハードコード禁止
+  - 解約方法のみ iOS/Android で deep link 切替 (PaywallScreen と同じロジック)
+
+設計思想:
+  launch_checklist Phase 2 残: プライバシー/EULA/特商法 Sanctuary 単独リンク [WIP] → [x]
+  公開ブロッカー B5 (Apple Review 3.1.2) は Paywall 内 4 リンクで充足済。本ファイルは
+  ストア公開後の継続アクセス手段 (ユーザーが Paywall 通らなくなっても法務情報を見られる) の確保。
+```
+
+**imports:** dart=1 / package=3 / relative=2
+
+- relative: `../../utils/legal_urls.dart`, `../../widgets/info_popup.dart`
+
+**型定義 (1):**
+
+- L110 `class _LegalRow : StatelessWidget`
+
+**関数 (2 public + 2 private):**
+
+- L32 `showSanctuaryLegalMenu()` — Sanctuary > ✦ App の「Terms & Privacy」エントリから開く法務情報 popup。
+- L116 `build()`
+
+  <details><summary>private 関数 2 件</summary>
+
+  - L77 `_openUrl()`
+  - L98 `_openCancelGuide()`
+
+  </details>
+
+**Popup/Dialog 呼出 (1):**
+
+- 集計: `showInfoPopup`×1
 
 
 ### `lib/screens/sanctuary/sanctuary_orb_overlay.dart` (272 行)
@@ -276,60 +323,60 @@
 - 集計: `showInfoPopup`×1
 
 
-### `lib/screens/sanctuary_screen.dart` (1286 行)
+### `lib/screens/sanctuary_screen.dart` (1288 行)
 
-**imports:** dart=1 / package=3 / relative=16
+**imports:** dart=1 / package=3 / relative=17
 
-- relative: `../utils/pro_status.dart`, `../utils/purchases_service.dart`, `../utils/solara_storage.dart`, `../utils/title_data.dart`, `../widgets/class_card.dart`, `../widgets/pro_unlock_dialog.dart`, `../widgets/sanctuary_account_section.dart`, `consultation/consultation_history_screen.dart`, `paywall_screen.dart`, `sanctuary/sanctuary_orb_overlay.dart`, `sanctuary/sanctuary_profile_editor.dart`, `sanctuary/sanctuary_reset_hour_picker.dart`, `sanctuary/sanctuary_title_diagnosis.dart`, `sanctuary/class_share_card.dart`, `sanctuary/sanctuary_home_editor.dart`, `sanctuary/title_history_screen.dart`
+- relative: `../utils/pro_status.dart`, `../utils/purchases_service.dart`, `../utils/solara_storage.dart`, `../utils/title_data.dart`, `../widgets/class_card.dart`, `../widgets/pro_unlock_dialog.dart`, `../widgets/sanctuary_account_section.dart`, `consultation/consultation_history_screen.dart`, `paywall_screen.dart`, `sanctuary/sanctuary_orb_overlay.dart`, `sanctuary/sanctuary_profile_editor.dart`, `sanctuary/sanctuary_reset_hour_picker.dart`, `sanctuary/sanctuary_title_diagnosis.dart`, `sanctuary/class_share_card.dart`, `sanctuary/sanctuary_home_editor.dart`, `sanctuary/sanctuary_legal_menu.dart`, `sanctuary/title_history_screen.dart`
 
 **型定義 (6):**
 
-- L23 `class SanctuaryScreen : StatefulWidget`
-- L30 `class _SanctuaryScreenState : State`
-- L1134 `extension _WidgetOpacity : Widget`
-- L1143 `class _SettingsGroup : StatelessWidget`
-- L1176 `class _SettingsItem : StatelessWidget`
-- L1224 `class _SettingsItemWithToggle : StatelessWidget`
+- L24 `class SanctuaryScreen : StatefulWidget`
+- L31 `class _SanctuaryScreenState : State`
+- L1136 `extension _WidgetOpacity : Widget`
+- L1145 `class _SettingsGroup : StatelessWidget`
+- L1178 `class _SettingsItem : StatelessWidget`
+- L1226 `class _SettingsItemWithToggle : StatelessWidget`
 
 **関数 (7 public + 27 private):**
 
-- L27 `createState()`
-- L66 `initState()`
-- L254 `build()`
-- L1135 `withOpacity()`
-- L1149 `build()`
-- L1184 `build()`
-- L1232 `build()`
+- L28 `createState()`
+- L67 `initState()`
+- L255 `build()`
+- L1137 `withOpacity()`
+- L1151 `build()`
+- L1186 `build()`
+- L1234 `build()`
 
   <details><summary>private 関数 27 件</summary>
 
-  - L72 `_loadSettings()`
-  - L96 `_loadProfile()`
-  - L114 `_openProfileEditor()`
-  - L146 `_openShareCard()`
-  - L166 `_startDiagnosis()`
-  - L219 `_openHomeEditor()`
-  - L236 `_syncHomeToVP()`
-  - L330 `_buildProfileRow()`
-  - L372 `_buildStellarProfileSection()`
-  - L398 `_buildTitleDiagnosisSection()`
-  - L573 `_buildTitleFlipCard()`
-  - L614 `_buildLegacyVCard()`
-  - L637 `_buildTitleVCard()`
-  - L703 `_buildRecordsSection()`
-  - L739 `_buildCosmicProSection()`
-  - L765 `_buildProUpgradeBanner()`
-  - L821 `_buildProActiveBanner()`
-  - L861 `_buildRestoreRow()`
-  - L885 `_openPaywall()`
-  - L894 `_restorePurchases()`
-  - L919 `_buildDevProToggle()`
-  - L972 `_buildAstrologySection()`
-  - L1002 `_buildHouseOption()`
-  - L1036 `_orbSummary()`
-  - L1049 `_openOrbOverlay()`
-  - L1065 `_buildAppSection()`
-  - L1101 `_pickDailyResetHour()`
+  - L73 `_loadSettings()`
+  - L97 `_loadProfile()`
+  - L115 `_openProfileEditor()`
+  - L147 `_openShareCard()`
+  - L167 `_startDiagnosis()`
+  - L220 `_openHomeEditor()`
+  - L237 `_syncHomeToVP()`
+  - L331 `_buildProfileRow()`
+  - L373 `_buildStellarProfileSection()`
+  - L399 `_buildTitleDiagnosisSection()`
+  - L574 `_buildTitleFlipCard()`
+  - L615 `_buildLegacyVCard()`
+  - L638 `_buildTitleVCard()`
+  - L704 `_buildRecordsSection()`
+  - L740 `_buildCosmicProSection()`
+  - L766 `_buildProUpgradeBanner()`
+  - L822 `_buildProActiveBanner()`
+  - L862 `_buildRestoreRow()`
+  - L886 `_openPaywall()`
+  - L895 `_restorePurchases()`
+  - L920 `_buildDevProToggle()`
+  - L973 `_buildAstrologySection()`
+  - L1003 `_buildHouseOption()`
+  - L1037 `_orbSummary()`
+  - L1050 `_openOrbOverlay()`
+  - L1066 `_buildAppSection()`
+  - L1103 `_pickDailyResetHour()`
 
   </details>
 

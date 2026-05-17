@@ -18,6 +18,7 @@ import 'sanctuary/sanctuary_reset_hour_picker.dart';
 import 'sanctuary/sanctuary_title_diagnosis.dart';
 import 'sanctuary/class_share_card.dart';
 import 'sanctuary/sanctuary_home_editor.dart';
+import 'sanctuary/sanctuary_legal_menu.dart';
 import 'sanctuary/title_history_screen.dart';
 
 class SanctuaryScreen extends StatefulWidget {
@@ -1087,12 +1088,13 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
           value: '${_dailyResetHour.toString().padLeft(2, '0')}:${_dailyResetMinute.toString().padLeft(2, '0')} ›',
           onTap: _pickDailyResetHour,
         ),
-        // Terms & Privacy
+        // Terms & Privacy — 4 法務リンク popup (sanctuary_legal_menu.dart)
+        // launch_checklist Phase 2 残: Sanctuary 単独リンク [WIP] → [x]
         _SettingsItem(
           icon: Icons.description_outlined,
           text: 'Terms & Privacy',
           value: '›',
-          onTap: () {},
+          onTap: () => showSanctuaryLegalMenu(context),
         ),
       ],
     );
