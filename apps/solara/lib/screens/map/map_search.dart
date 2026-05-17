@@ -3,12 +3,12 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:latlong2/latlong.dart';
-import '../../utils/solara_api.dart' show solaraWorkerBase;
+import '../../utils/solara_api.dart' show solaraSearchUrl;
 import 'map_astro.dart';
 import 'map_constants.dart';
 import 'map_fortune_sheet.dart' show showCategoryInfoPopup;
 
-const _searchApiUrl = '$solaraWorkerBase/search';
+const _searchApiUrl = solaraSearchUrl;
 
 /// 検索結果1件分
 class SearchHit {

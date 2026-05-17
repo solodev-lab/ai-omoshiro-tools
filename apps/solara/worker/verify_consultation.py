@@ -10,7 +10,7 @@ Solara (ii) AI 相談 Stage 3 (Phase 2-2) 静的検証スクリプト
        文体ハイブリッド / energyLabels / 名前ルール) のキーワードが含まれる
     4. staticFallback が export されているか、または handleConsultation 内で
        AI 失敗時に呼ばれている
-    5. index.js で /astro/consultation ルートが POST 登録されている
+    5. index.js で /protected/astro/consultation ルートが POST 登録されている
     6. fortune.js callGemini が thinkingBudget opt を受け取れる
 
 flutter analyze や Gemini 実呼出は別工程。このスクリプトは静的構造のみ確認。
@@ -134,12 +134,12 @@ check(
     "handleConsultation import MISSING in index.js",
 )
 route_re = re.compile(
-    r"path\s*===\s*'/astro/consultation'\s*&&\s*request\.method\s*===\s*'POST'",
+    r"path\s*===\s*'/protected/astro/consultation'\s*&&\s*request\.method\s*===\s*'POST'",
 )
 check(
     bool(route_re.search(index)),
-    "/astro/consultation POST route registered",
-    "/astro/consultation route NOT found in index.js",
+    "/protected/astro/consultation POST route registered",
+    "/protected/astro/consultation route NOT found in index.js",
 )
 
 # ── 3. fortune.js callGemini opts ────────────────────────────

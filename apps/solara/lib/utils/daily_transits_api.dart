@@ -9,9 +9,9 @@
 // ============================================================
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'solara_api.dart' show solaraWorkerBase;
+import 'solara_api.dart' show solaraDailyTransitsUrl;
 
-const _dailyTransitsUrl = '$solaraWorkerBase/astro/daily-transits';
+const _dailyTransitsUrl = solaraDailyTransitsUrl;
 
 /// V2: その瞬間にトランジット惑星が natal 惑星と作るアスペクト。
 class TransitAspect {

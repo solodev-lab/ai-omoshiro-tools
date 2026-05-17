@@ -3,18 +3,18 @@ import 'dart:math';
 import 'package:http/http.dart' as http;
 import '../../utils/astro_math.dart';
 import '../../utils/direction_energy.dart';
-import '../../utils/solara_api.dart' show solaraWorkerBase;
+import '../../utils/solara_api.dart' show solaraChartUrl;
 import 'map_constants.dart';
 
 /// ============================================================
 /// Solara Astro — CF Worker API 経由の天体計算
-/// Worker: /astro/chart (POST)
+/// Worker: /public/astro/chart (POST)
 /// 方針: project_flutter_native.md 2026-04-07確定
 ///   サーバーサイド計算（CF Worker + astronomy-engine.js）
 /// ============================================================
 
-// Worker URL は solara_api.dart の solaraWorkerBase（単一情報源）から合成
-const _astroApiUrl = '$solaraWorkerBase/astro/chart';
+// Worker URL は solara_api.dart の solaraChartUrl（単一情報源）を import
+const _astroApiUrl = solaraChartUrl;
 
 /// CF Worker /astro/chart のレスポンス
 class ChartResult {

@@ -2,7 +2,8 @@
 // 関連: worker/src/fortune.js
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'solara_api.dart' show solaraWorkerBase;
+import 'solara_api.dart'
+    show solaraFortuneUrl, solaraRelocationUrl, solaraTarotUrl;
 
 /// Fortune APIレスポンス
 class FortuneReading {
@@ -64,7 +65,7 @@ Future<FortuneReading?> fetchFortune({
       if (thinking) 'thinking': true,
     };
     final res = await http.post(
-      Uri.parse('$solaraWorkerBase/fortune'),
+      Uri.parse(solaraFortuneUrl),
       headers: {'Content-Type': 'application/json'},
       body: json.encode(body),
     ).timeout(const Duration(seconds: 60)); // LLM生成は数秒〜30秒。死神等の強烈カードは安全フィルターで遅い
@@ -159,7 +160,7 @@ Future<RelocationNarrative?> fetchRelocationNarrative({
       'lang': lang,
     };
     final res = await http.post(
-      Uri.parse('$solaraWorkerBase/relocation'),
+      Uri.parse(solaraRelocationUrl),
       headers: {'Content-Type': 'application/json'},
       body: json.encode(body),
     ).timeout(const Duration(seconds: 60)); // LLM生成は数秒〜30秒
@@ -243,7 +244,7 @@ Future<TarotReading?> fetchTarotReading({
             : cleanQuestion,
     };
     final res = await http.post(
-      Uri.parse('$solaraWorkerBase/tarot'),
+      Uri.parse(solaraTarotUrl),
       headers: {'Content-Type': 'application/json'},
       body: json.encode(body),
     ).timeout(const Duration(seconds: 60)); // 死神等の強烈カードは安全フィルターで遅延

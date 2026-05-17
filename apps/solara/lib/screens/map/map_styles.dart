@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
-import '../../utils/solara_api.dart' show solaraWorkerBase;
+import '../../utils/solara_api.dart' show solaraOsmTileBase;
 import '../../utils/tile_http_client.dart';
 
 /// マップスタイルの種類。LayerPanel から切替可。
@@ -57,7 +57,7 @@ const Map<MapStyle, MapStyleConfig> mapStyleConfigs = {
   MapStyle.osmHotLight: MapStyleConfig(
     id: 'osm_hot_light',
     label: 'Map',
-    urlTemplate: '$solaraWorkerBase/tiles/osm/hot/{z}/{x}/{y}.png',
+    urlTemplate: '$solaraOsmTileBase/hot/{z}/{x}/{y}.png',
     subdomains: [],
     maxZoom: 19,
     dark: false,
@@ -66,7 +66,7 @@ const Map<MapStyle, MapStyleConfig> mapStyleConfigs = {
   MapStyle.osmHotDark: MapStyleConfig(
     id: 'osm_hot_dark',
     label: 'MapDark',
-    urlTemplate: '$solaraWorkerBase/tiles/osm/hot/{z}/{x}/{y}.png',
+    urlTemplate: '$solaraOsmTileBase/hot/{z}/{x}/{y}.png',
     subdomains: [],
     maxZoom: 19,
     dark: true,
