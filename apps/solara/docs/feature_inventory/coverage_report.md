@@ -407,17 +407,9 @@
 > 各ソースの SHA1 を `_stamps.json` に記録し、差分を検出。
 > 変更されたファイルが属する層は、人手版インベントリ章の見直し対象。
 
-- 追加: **1** / 削除: **0** / 変更: **3**
+- 追加: **0** / 削除: **0** / 変更: **0**
 
-### 変更されたファイル (層別)
-
-- **層 2b**: `lib/utils/pro_status.dart`
-- **層 3a**: `lib/widgets/pro_unlock_dialog.dart`
-- **層 5**: `lib/main.dart`
-
-### 追加されたファイル
-
-- `lib/utils/device_security_status.dart` (層 2a)
+- 変更なし — 全インベントリ章は最新。
 
 ## #7 astro_glossary 用語辞書対整合
 
