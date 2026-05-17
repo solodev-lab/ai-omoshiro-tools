@@ -1,6 +1,15 @@
 /**
  * Solara API — Cloudflare Worker
- * Endpoints: /astro/chart, /astro/predict, /search, /fortune, /health
+ *
+ * 🔴 ルート物理分離 (project_solara_security_principles.md §2):
+ *   /public/*     誰でも OK    純数学計算 (`/astro/chart` 等)、マップタイル、検索
+ *   /auth/*       Sign in 系   whoami / App Attest 登録 (現状 stub)
+ *   /protected/*  重防御       Gemini 呼び出し全部 (`/fortune`/`/tarot`/`/relocation`/
+ *                              `/astro/consultation`/`/astro/line-narrative`)。
+ *                              将来 attestation + entitlement + per-user rate limit。
+ *
+ * 旧 top-level ルート (`/fortune` `/astro/chart` 等) は撤廃。Flutter クライアント側も
+ * 同セッションで新 path に書き換え済（`apps/solara/lib/utils/solara_api.dart` 参照）。
  */
 import { computeChart, computePredictions, computeMonthEvents, computeForecast } from './astro.js';
 import { computeDailyTransits } from './daily_transits.js';
@@ -37,8 +46,9 @@ function corsHeaders(origin) {
 
 // ── Rate Limit (memory-based, per-endpoint) ──
 // memory は CF Worker インスタンスローカル（cold start で消える）。
-// /astro/forecast は計算コストが高いので厳しめ。
+// `/public/astro/forecast` は計算コストが高いので厳しめ。
 // 永続化は後段の KV 側で追加する（checkKvQuota）。
+// 将来: `/protected/*` 配下は per-appUserId rate limit に置き換える（Phase 1 残）。
 const rateLimitMap = new Map();
 const RATE_WINDOW = 60000; // 1分
 const RATE_DEFAULT_MAX = 30;
@@ -99,7 +109,7 @@ function jsonError(status, message, origin) {
 }
 
 // ── OSM tile proxy ──
-// クライアントから /tiles/osm/<source>/<z>/<x>/<y>.png で来たリクエストを
+// クライアントから /public/tiles/osm/<source>/<z>/<x>/<y>.png で来たリクエストを
 // 各 OSM ソース（OSM France HOT / 標準 OSM / CyclOSM）に中継する。
 // アプリから直接叩くと UA 不足で 403 を食らうため、Worker 側で
 // 識別可能な User-Agent を設定し、edge cache（24h）で OSM 側負荷も最小化する。
@@ -115,10 +125,12 @@ const OSM_SOURCE_TARGETS = {
 
 const OSM_USER_AGENT = 'Solara/1.0 (https://solodev-lab.com; kojifo369@gmail.com)';
 
-async function handleOsmTile(request, url) {
-  const prefix = '/tiles/osm/';
-  const rest = url.pathname.slice(prefix.length);
-  const parts = rest.split('/');
+/**
+ * /public/tiles/osm/<source>/<z>/<x>/<y>.png を OSM 系へ中継。
+ * tilePathTail はプレフィックス除去後の `<source>/<z>/<x>/<y>.png` 部分。
+ */
+async function handleOsmTile(request, tilePathTail) {
+  const parts = tilePathTail.split('/');
   if (parts.length !== 4) {
     return new Response('Bad tile path', { status: 400 });
   }
@@ -175,6 +187,234 @@ async function handleOsmTile(request, url) {
   return response;
 }
 
+// ── /protected/* middleware (no-op placeholder) ──
+//
+// Phase 1 残: ここに App Attest 検証 + RevenueCat entitlement 検証 +
+// per-appUserId rate limit を実装する。現状は **no-op** で素通し
+// (本物の防御は Webhook 受信エンドポイント + 認証ミドルウェア実装と同時に有効化)。
+//
+// 仕様 (将来):
+//   1. Header `X-Assertion` (Base64 App Attest assertion) を取り出して検証
+//   2. Header `X-App-User-Id` (RevenueCat ログイン uid) を取り出して KV/Worker から
+//      isPro を再取得し、Pro 限定機能 (relocation 等) をゲート
+//   3. per-appUserId rate limit (Free=5/日, Pro=100/日 等)
+//
+// 戻り値: null なら通過、Response を返したらブロック (即レスポンス)。
+async function protectedMiddleware(_request, _env) {
+  // TODO(Phase 1 残, 明日以降): attestation + entitlement + rate limit
+  return null;
+}
+
+// ── /auth/* stub handlers ──
+//
+// Phase 1 残: 本物の Sign in / App Attest 登録ロジックを入れる。今は API 契約だけ
+// 確定させて Flutter 側のコード骨組みが先に書けるようにする。
+
+/**
+ * GET /auth/whoami
+ * 認証セッションの現状を返す (Phase 2-9 Sign in 統合と連動)。
+ * Phase 1 残: 本実装で `Authorization: Bearer <id_token>` を検証 → uid 復元 →
+ * RevenueCat 経由 isPro 再検証 → KV キャッシュへ書込み。
+ */
+function handleWhoamiStub(_request, origin) {
+  return jsonOk({
+    anonymous: true,
+    isPro: false,
+    stub: true,
+    note: 'Phase 1 残: 本実装は明日以降の Webhook 統合と同時。',
+  }, origin);
+}
+
+/**
+ * POST /auth/attest
+ * App Attest / Play Integrity の attestation 登録 (端末初回起動時)。
+ * Phase 1 残: keyId 受領 → Apple CA / Google Play Integrity API 検証 →
+ * Durable Object `AttestationState` に counter 永続化。
+ */
+function handleAttestStub(_request, origin) {
+  return jsonOk({
+    ok: true,
+    stub: true,
+    note: 'Phase 1 残: App Attest / Play Integrity 検証は明日以降。',
+  }, origin);
+}
+
+// ── Rate limit bucket dispatch ──
+//
+// path → (bucket_name, max_per_minute)。bucket はメモリ内マップのキー prefix。
+function pickRateBucket(path) {
+  if (path === '/public/astro/forecast') return { bucket: 'forecast', max: RATE_FORECAST_MAX };
+  if (path.startsWith('/public/tiles/')) return { bucket: 'tiles', max: RATE_TILES_MAX };
+  return { bucket: 'default', max: RATE_DEFAULT_MAX };
+}
+
+// ── /public/* dispatcher ──
+async function dispatchPublic(request, env, url, origin) {
+  const path = url.pathname;
+
+  if (path === '/public/health') {
+    return jsonOk({ status: 'ok', service: 'solara-api' }, origin);
+  }
+
+  // GET /public/tiles/osm/<source>/<z>/<x>/<y>.png
+  if (path.startsWith('/public/tiles/osm/') && request.method === 'GET') {
+    const tail = path.slice('/public/tiles/osm/'.length);
+    return await handleOsmTile(request, tail);
+  }
+
+  if (path === '/public/astro/chart' && request.method === 'POST') {
+    const body = await request.json();
+    if (!body.birthDate || !body.birthTime || body.birthLat == null || body.birthLng == null) {
+      return jsonError(400, 'Missing required fields: birthDate, birthTime, birthLat, birthLng', origin);
+    }
+    return jsonOk(computeChart(body), origin);
+  }
+
+  if (path === '/public/astro/forecast' && request.method === 'POST') {
+    const body = await request.json();
+    if (!body.birthDate || !body.birthTime) {
+      return jsonError(400, 'Missing required fields: birthDate, birthTime', origin);
+    }
+    const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
+    const q = await checkKvForecastQuota(env, ip);
+    if (!q.ok) {
+      return jsonError(429, 'Monthly forecast quota exceeded', origin);
+    }
+    const result = computeForecast(body);
+    if (q.remaining >= 0) result.quotaRemaining = q.remaining;
+    return jsonOk(result, origin);
+  }
+
+  if (path === '/public/astro/predict' && request.method === 'POST') {
+    const body = await request.json();
+    if (!body.birthDate || !body.birthTime) {
+      return jsonError(400, 'Missing required fields: birthDate, birthTime', origin);
+    }
+    return jsonOk(computePredictions(body), origin);
+  }
+
+  if (path === '/public/astro/daily-transits' && request.method === 'POST') {
+    const body = await request.json();
+    if (typeof body.lat !== 'number' || typeof body.lng !== 'number') {
+      return jsonError(400, 'lat / lng required (numbers)', origin);
+    }
+    return jsonOk(computeDailyTransits(body), origin);
+  }
+
+  if (path === '/public/tz' && request.method === 'GET') {
+    const lat = parseFloat(url.searchParams.get('lat'));
+    const lng = parseFloat(url.searchParams.get('lng'));
+    if (isNaN(lat) || isNaN(lng)) {
+      return jsonError(400, 'Query parameters "lat" and "lng" required', origin);
+    }
+    return jsonOk(lookupTimezone(lat, lng), origin);
+  }
+
+  if (path === '/public/astro/events' && request.method === 'GET') {
+    const year = parseInt(url.searchParams.get('year'), 10);
+    const month = parseInt(url.searchParams.get('month'), 10);
+    if (!year || !month || month < 1 || month > 12) {
+      return jsonError(400, 'Query parameters "year" and "month" (1-12) required', origin);
+    }
+    return jsonOk(computeMonthEvents(year, month), origin);
+  }
+
+  // /public/search — Google Places 経由。コストはかかるが Free 機能のため public に置く
+  // (Gemini ではない、IP rate limit + Google 側 quota で防御)。
+  if (path === '/public/search' && request.method === 'GET') {
+    const q = url.searchParams.get('q');
+    if (!q || q.length < 2) {
+      return jsonError(400, 'Query parameter "q" required (min 2 chars)', origin);
+    }
+    const latParam = parseFloat(url.searchParams.get('lat'));
+    const lngParam = parseFloat(url.searchParams.get('lng'));
+    const options = {};
+    if (!isNaN(latParam) && !isNaN(lngParam)) {
+      options.lat = latParam;
+      options.lng = lngParam;
+    }
+    const results = await searchPlace(q, env, options);
+    return jsonOk(results, origin);
+  }
+
+  return null; // 未マッチ
+}
+
+// ── /auth/* dispatcher ──
+async function dispatchAuth(request, _env, url, origin) {
+  const path = url.pathname;
+  if (path === '/auth/whoami' && request.method === 'GET') {
+    return handleWhoamiStub(request, origin);
+  }
+  if (path === '/auth/attest' && request.method === 'POST') {
+    return handleAttestStub(request, origin);
+  }
+  return null;
+}
+
+// ── /protected/* dispatcher ──
+async function dispatchProtected(request, env, url, origin) {
+  // ★ middleware (現状 no-op、Phase 1 残で attestation + entitlement)
+  const blocked = await protectedMiddleware(request, env);
+  if (blocked) return blocked;
+
+  const path = url.pathname;
+
+  if (path === '/protected/fortune' && request.method === 'POST') {
+    const body = await request.json();
+    try {
+      return jsonOk(await handleFortune(body, env), origin);
+    } catch (err) {
+      console.error('Fortune error:', err);
+      return jsonError(500, err.message || 'Fortune generation failed', origin);
+    }
+  }
+
+  if (path === '/protected/tarot' && request.method === 'POST') {
+    const body = await request.json();
+    try {
+      return jsonOk(await handleTarot(body, env), origin);
+    } catch (err) {
+      console.error('Tarot error:', err);
+      return jsonError(500, err.message || 'Tarot generation failed', origin);
+    }
+  }
+
+  if (path === '/protected/relocation' && request.method === 'POST') {
+    const body = await request.json();
+    try {
+      return jsonOk(await handleRelocation(body, env), origin);
+    } catch (err) {
+      console.error('Relocation error:', err);
+      return jsonError(500, err.message || 'Relocation generation failed', origin);
+    }
+  }
+
+  // 旧 /astro/line-narrative。Flutter 現役呼出なし (consultation に置換済) だが
+  // Worker 側ハンドラは temp 残置 (将来再利用余地)。
+  if (path === '/protected/astro/line-narrative' && request.method === 'POST') {
+    const body = await request.json();
+    try {
+      return jsonOk(await handleLineNarrative(body, env), origin);
+    } catch (err) {
+      console.error('LineNarrative error:', err);
+      return jsonError(500, err.message || 'Line narrative generation failed', origin);
+    }
+  }
+
+  if (path === '/protected/astro/consultation' && request.method === 'POST') {
+    const body = await request.json();
+    try {
+      return jsonOk(await handleConsultation(body, env), origin);
+    } catch (err) {
+      console.error('Consultation error:', err);
+      return jsonError(500, err.message || 'Consultation generation failed', origin);
+    }
+  }
+
+  return null;
+}
+
 // ── Main Handler ──
 export default {
   async fetch(request, env) {
@@ -188,202 +428,24 @@ export default {
       return new Response(null, { status: 204, headers: corsHeaders(origin) });
     }
 
-    // Rate limit (per-endpoint bucket)
+    // Rate limit
     const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
-    let bucket;
-    let max;
-    if (path === '/astro/forecast') {
-      bucket = 'forecast'; max = RATE_FORECAST_MAX;
-    } else if (path.startsWith('/tiles/')) {
-      bucket = 'tiles'; max = RATE_TILES_MAX;
-    } else {
-      bucket = 'default'; max = RATE_DEFAULT_MAX;
-    }
+    const { bucket, max } = pickRateBucket(path);
     if (!checkRateLimit(ip, bucket, max)) {
       return jsonError(429, 'Rate limit exceeded', origin);
     }
 
     try {
-      // ── Health ──
-      if (path === '/health') {
-        return jsonOk({ status: 'ok', service: 'solara-api' }, origin);
+      let res = null;
+      if (path.startsWith('/public/')) {
+        res = await dispatchPublic(request, env, url, origin);
+      } else if (path.startsWith('/auth/')) {
+        res = await dispatchAuth(request, env, url, origin);
+      } else if (path.startsWith('/protected/')) {
+        res = await dispatchProtected(request, env, url, origin);
       }
-
-      // ── OSM tile proxy ──
-      // GET /tiles/osm/<source>/<z>/<x>/<y>.png
-      // OSM 系（hot/standard/cyclosm）に Worker 側 UA で中継。
-      // 直叩きで 403 を食らうのを回避し、edge cache で OSM 負荷も最小化。
-      if (path.startsWith('/tiles/osm/') && request.method === 'GET') {
-        return await handleOsmTile(request, url);
-      }
-
-      // ── Astro Chart ──
-      if (path === '/astro/chart' && request.method === 'POST') {
-        const body = await request.json();
-        if (!body.birthDate || !body.birthTime || body.birthLat == null || body.birthLng == null) {
-          return jsonError(400, 'Missing required fields: birthDate, birthTime, birthLat, birthLng', origin);
-        }
-        const result = computeChart(body);
-        return jsonOk(result, origin);
-      }
-
-      // ── Astro Forecast (日次スコアの時系列) ──
-      if (path === '/astro/forecast' && request.method === 'POST') {
-        const body = await request.json();
-        if (!body.birthDate || !body.birthTime) {
-          return jsonError(400, 'Missing required fields: birthDate, birthTime', origin);
-        }
-        // KV 月次クォータ（binding 未設定なら no-op）
-        const q = await checkKvForecastQuota(env, ip);
-        if (!q.ok) {
-          return jsonError(429, 'Monthly forecast quota exceeded', origin);
-        }
-        const result = computeForecast(body);
-        if (q.remaining >= 0) result.quotaRemaining = q.remaining;
-        return jsonOk(result, origin);
-      }
-
-      // ── Astro Predict ──
-      if (path === '/astro/predict' && request.method === 'POST') {
-        const body = await request.json();
-        if (!body.birthDate || !body.birthTime) {
-          return jsonError(400, 'Missing required fields: birthDate, birthTime', origin);
-        }
-        const result = computePredictions(body);
-        return jsonOk(result, origin);
-      }
-
-      // ── Daily Transits (F1: 拠点での1日のトランジット通過時刻) ──
-      // POST /astro/daily-transits { lat, lng, date?, natal? }
-      // V2: natal {sun, moon, ...} を渡すと各イベントに aspects 配列を併記。
-      // 各惑星 × 4アングル(ASC/MC/DSC/IC) の通過時刻を返す。
-      // 設計思想: project_solara_design_philosophy.md 参照。
-      if (path === '/astro/daily-transits' && request.method === 'POST') {
-        const body = await request.json();
-        if (typeof body.lat !== 'number' || typeof body.lng !== 'number') {
-          return jsonError(400, 'lat / lng required (numbers)', origin);
-        }
-        const result = computeDailyTransits(body);
-        return jsonOk(result, origin);
-      }
-
-      // ── Timezone Lookup ──
-      if (path === '/tz' && request.method === 'GET') {
-        const lat = parseFloat(url.searchParams.get('lat'));
-        const lng = parseFloat(url.searchParams.get('lng'));
-        if (isNaN(lat) || isNaN(lng)) {
-          return jsonError(400, 'Query parameters "lat" and "lng" required', origin);
-        }
-        const result = lookupTimezone(lat, lng);
-        return jsonOk(result, origin);
-      }
-
-      // ── Astro Events (ingress / retrograde / eclipse) ──
-      if (path === '/astro/events' && request.method === 'GET') {
-        const year = parseInt(url.searchParams.get('year'), 10);
-        const month = parseInt(url.searchParams.get('month'), 10);
-        if (!year || !month || month < 1 || month > 12) {
-          return jsonError(400, 'Query parameters "year" and "month" (1-12) required', origin);
-        }
-        const result = computeMonthEvents(year, month);
-        return jsonOk(result, origin);
-      }
-
-      // ── Search ──
-      // 任意で lat/lng を受取り Google Places の locationBias.circle (15km) に渡す
-      // → マップ中心付近のカフェ等POIを優先表示。
-      if (path === '/search' && request.method === 'GET') {
-        const q = url.searchParams.get('q');
-        if (!q || q.length < 2) {
-          return jsonError(400, 'Query parameter "q" required (min 2 chars)', origin);
-        }
-        const latParam = parseFloat(url.searchParams.get('lat'));
-        const lngParam = parseFloat(url.searchParams.get('lng'));
-        const options = {};
-        if (!isNaN(latParam) && !isNaN(lngParam)) {
-          options.lat = latParam;
-          options.lng = lngParam;
-        }
-        const results = await searchPlace(q, env, options);
-        return jsonOk(results, origin);
-      }
-
-      // ── Fortune (Stella の声、Gemini-powered) ──
-      if (path === '/fortune' && request.method === 'POST') {
-        const body = await request.json();
-        try {
-          const result = await handleFortune(body, env);
-          return jsonOk(result, origin);
-        } catch (err) {
-          console.error('Fortune error:', err);
-          return jsonError(500, err.message || 'Fortune generation failed', origin);
-        }
-      }
-
-      // ── Tarot (Stella のタロット reading、Gemini-powered) ──
-      if (path === '/tarot' && request.method === 'POST') {
-        const body = await request.json();
-        try {
-          const result = await handleTarot(body, env);
-          return jsonOk(result, origin);
-        } catch (err) {
-          console.error('Tarot error:', err);
-          return jsonError(500, err.message || 'Tarot generation failed', origin);
-        }
-      }
-
-      // ── Relocation (Stella のリロケーション narrative、Gemini-powered) ──
-      // Phase B: 静的テンプレート (horo_relocation_templates.dart) を動的解説で上書き。
-      // 失敗時は呼出側 (Dart) で null を受けて静的テンプレ表示にフォールバック。
-      if (path === '/relocation' && request.method === 'POST') {
-        const body = await request.json();
-        try {
-          const result = await handleRelocation(body, env);
-          return jsonOk(result, origin);
-        } catch (err) {
-          console.error('Relocation error:', err);
-          return jsonError(500, err.message || 'Relocation generation failed', origin);
-        }
-      }
-
-      // ── Astro*Carto*Graphy Line Narrative (Tier S #2) ──
-      // POST /astro/line-narrative
-      // 入力: { frame:'natal'|'transit', planet, angle:'ASC|MC|DSC|IC',
-      //        tappedLat, tappedLng, tappedPlaceName?, natalSummary?, transitDate?, userName?, lang? }
-      // 出力: { title, narrative, softNote, hardNote, lang }
-      // 設計思想: project_solara_design_philosophy.md（Soft/Hard 独立2エネルギー、吉凶禁止）。
-      // 失敗時は Dart 側で静的辞書 (astro_glossary aspect_lines) にフォールバック。
-      if (path === '/astro/line-narrative' && request.method === 'POST') {
-        const body = await request.json();
-        try {
-          const result = await handleLineNarrative(body, env);
-          return jsonOk(result, origin);
-        } catch (err) {
-          console.error('LineNarrative error:', err);
-          return jsonError(500, err.message || 'Line narrative generation failed', origin);
-        }
-      }
-
-      // ── (ii) Stella 相談 (Stage 3) ──
-      // POST /astro/consultation
-      // 入力: { theme, mode, scope, freeText?, candidates[], excluded?, lang }
-      // 出力: { intro, candidates: [{name, energyLabels[], narrative}], outro, model, fallback? }
-      // 設計: docs/pro_candidates.md §7.2 Stage 3 (吉凶禁止/awareness 開く outro/
-      //       Flash thinking budget 1024 / 9 項目プロンプト規則)。
-      // 失敗時は静的テンプレで近接線の客観情報を返す (fallback:true)。
-      if (path === '/astro/consultation' && request.method === 'POST') {
-        const body = await request.json();
-        try {
-          const result = await handleConsultation(body, env);
-          return jsonOk(result, origin);
-        } catch (err) {
-          console.error('Consultation error:', err);
-          return jsonError(500, err.message || 'Consultation generation failed', origin);
-        }
-      }
-
+      if (res) return res;
       return jsonError(404, 'Not found', origin);
-
     } catch (err) {
       console.error('Worker error:', err);
       return jsonError(500, err.message || 'Internal server error', origin);

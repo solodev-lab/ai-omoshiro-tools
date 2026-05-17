@@ -5,12 +5,12 @@
 
 ## サマリ
 
-- ファイル数: 8 / 総行数: 1646
+- ファイル数: 8 / 総行数: 1680
 - class/mixin/extension/enum: 17
 - 関数 (top-level + method の素拾い): 26
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 0
-- Worker URL リテラル: 9
+- Worker URL リテラル: 14
 
 ## ファイル別
 
@@ -45,12 +45,8 @@
 
   </details>
 
-**Worker URL リテラル (1):**
 
-- L17: `'$solaraWorkerBase/astro/chart'`
-
-
-### `lib/utils/celestial_events.dart` (314 行)
+### `lib/utils/celestial_events.dart` (313 行)
 
 **imports:** dart=1 / package=2 / relative=1
 
@@ -60,24 +56,20 @@
 
 - L14 `class CelestialEvents`
   - Loads and provides celestial event data for intention generation.
-- L151 `class MonthEvents`
-- L220 `class CelestialEvent`
+- L150 `class MonthEvents`
+- L219 `class CelestialEvent`
 
 **関数 (3 public + 1 private):**
 
-- L19 `initialize()`
-- L196 `eventSummary()` — Format active events as a summary string.
-- L204 `copyWithEvents()` — API経由のリアル計算eventsで置換した新MonthEventsを返す
+- L18 `initialize()`
+- L195 `eventSummary()` — Format active events as a summary string.
+- L203 `copyWithEvents()` — API経由のリアル計算eventsで置換した新MonthEventsを返す
 
   <details><summary>private 関数 1 件</summary>
 
-  - L65 `_getNewMoonDate()`
+  - L64 `_getNewMoonDate()`
 
   </details>
-
-**Worker URL リテラル (1):**
-
-- L42: `'$_workerBase/astro/events?year=$year&month=$month'`
 
 
 ### `lib/utils/consultation_api.dart` (141 行)
@@ -110,10 +102,6 @@ Stella の解釈 (intro / candidates[].narrative / outro) を受け取る。
 - L39 `toJson()` — 履歴保存 (consultation_record) 用シリアライズ。
 - L80 `toJson()` — 履歴保存 (consultation_record) 用シリアライズ。
 - L101 `fetchConsultation()` — /astro/consultation を呼んで Stella の解釈を取得する。
-
-**Worker URL リテラル (1):**
-
-- L125: `'$solaraWorkerBase/astro/consultation'`
 
 
 ### `lib/utils/daily_transits_api.dart` (241 行)
@@ -156,12 +144,8 @@ Worker: /astro/daily-transits (POST)
 - L188 `flatTimeline()` — 全惑星の全イベントを時刻順にフラット化したリストを返す。
 - L208 `fetchDailyTransits()` — 拠点における今日のトランジット通過時刻を取得する。
 
-**Worker URL リテラル (1):**
 
-- L14: `'$solaraWorkerBase/astro/daily-transits'`
-
-
-### `lib/utils/fortune_api.dart` (265 行)
+### `lib/utils/fortune_api.dart` (266 行)
 
 **ファイル先頭コメント:**
 
@@ -176,22 +160,16 @@ Fortune API - /fortune エンドポイント (Stella の声を取得)
 
 **型定義 (3):**
 
-- L8 `class FortuneReading`
+- L9 `class FortuneReading`
   - Fortune APIレスポンス
-- L90 `class RelocationNarrative`
-- L183 `class TarotReading`
+- L91 `class RelocationNarrative`
+- L184 `class TarotReading`
 
 **関数 (3 public + 0 private):**
 
-- L41 `fetchFortune()` — /fortune を叩いて占い文を取得
-- L142 `fetchRelocationNarrative()` — /relocation を叩いてリロケーション解説を取得。
-- L209 `fetchTarotReading()` — /tarot を叩いて1枚引きの Reading を生成する。
-
-**Worker URL リテラル (3):**
-
-- L67: `'$solaraWorkerBase/fortune'`
-- L162: `'$solaraWorkerBase/relocation'`
-- L246: `'$solaraWorkerBase/tarot'`
+- L42 `fetchFortune()` — /fortune を叩いて占い文を取得
+- L143 `fetchRelocationNarrative()` — /relocation を叩いてリロケーション解説を取得。
+- L210 `fetchTarotReading()` — /tarot を叩いて1枚引きの Reading を生成する。
 
 
 ### `lib/utils/reverse_geocode.dart` (100 行)
@@ -209,25 +187,37 @@ Fortune API - /fortune エンドポイント (Stella の声を取得)
 - L68 `reverseGeocodeDetail()` — 緯度経度から逆ジオコーディングで region / country まで含む詳細を取得する。
 
 
-### `lib/utils/solara_api.dart` (35 行)
+### `lib/utils/solara_api.dart` (69 行)
 
 **ファイル先頭コメント:**
 
 ```
 Solara CF Worker API - 軽量なユーティリティ呼び出し
-(チャート/イベント系は別ファイルに既存。ここは補助エンドポイント用)
+(チャート/イベント系は別ファイルに既存。ここは補助エンドポイント + URL 集約)
 ```
 
 **imports:** dart=1 / package=1 / relative=0
 
 **関数 (1 public + 0 private):**
 
-- L22 `fetchTimezoneName()` — 緯度経度から IANA TZ名 (DST対応の基準) を取得。
+- L56 `fetchTimezoneName()` — 緯度経度から IANA TZ名 (DST対応の基準) を取得。
 
-**Worker URL リテラル (2):**
+**Worker URL リテラル (14):**
 
 - L17: `'https://solara-api.solodev-lab.com'`
-- L24: `'$solaraWorkerBase/tz?lat=$lat&lng=$lng'`
+- L29: `'$solaraWorkerBase/public/tz'`
+- L30: `'$solaraWorkerBase/public/astro/chart'`
+- L31: `'$solaraWorkerBase/public/astro/events'`
+- L32: `'$solaraWorkerBase/public/astro/forecast'`
+- L34: `'$solaraWorkerBase/public/astro/daily-transits'`
+- L35: `'$solaraWorkerBase/public/search'`
+- L40: `'$solaraWorkerBase/public/tiles/osm'`
+- L43: `'$solaraWorkerBase/auth/whoami'`
+- L44: `'$solaraWorkerBase/auth/attest'`
+- L47: `'$solaraWorkerBase/protected/fortune'`
+- L48: `'$solaraWorkerBase/protected/tarot'`
+- L49: `'$solaraWorkerBase/protected/relocation'`
+- L51: `'$solaraWorkerBase/protected/astro/consultation'`
 
 
 ### `lib/utils/tile_http_client.dart` (42 行)

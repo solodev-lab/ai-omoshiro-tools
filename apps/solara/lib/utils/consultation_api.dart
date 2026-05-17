@@ -11,7 +11,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 import 'consultation_engine.dart' show CandidateLocation;
-import 'solara_api.dart' show solaraWorkerBase;
+import 'solara_api.dart' show solaraConsultationUrl;
 
 /// API レスポンス内の候補別 Stella の解釈。
 class ConsultationCandidateReading {
@@ -122,7 +122,7 @@ Future<ConsultationReading?> fetchConsultation({
     };
     final res = await c
         .post(
-          Uri.parse('$solaraWorkerBase/astro/consultation'),
+          Uri.parse(solaraConsultationUrl),
           headers: const {'Content-Type': 'application/json'},
           body: json.encode(body),
         )

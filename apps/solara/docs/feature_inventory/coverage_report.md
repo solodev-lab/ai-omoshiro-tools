@@ -5,14 +5,15 @@
 
 ## #3 Worker ↔ Flutter エンドポイント対整合
 
-- Worker 側に定義された path: **15**
-- Flutter から呼ばれている path リテラル: **12**
+- Worker 側に定義された path: **20**
+- Flutter から呼ばれている path リテラル: **13**
 
 ### Worker → Flutter 漏れ (Worker にあるが Flutter から呼出無し)
 
-- `/astro/line-narrative`
-- `/astro/predict`
-- `/health`
+- `/protected/astro/line-narrative`
+- `/public/astro/predict`
+- `/public/health`
+- `/public/tiles/osm/*`
 
 ### Flutter → Worker 漏れ (Flutter が呼ぶが Worker に定義無し)
 
@@ -22,18 +23,22 @@
 
 ### 一致 (= 健全)
 
-- `/astro/chart`
-- `/astro/consultation`
-- `/astro/daily-transits`
-- `/astro/events`
-- `/astro/forecast`
-- `/fortune`
-- `/relocation`
-- `/search`
-- `/tarot`
-- `/tiles/*`
-- `/tiles/osm/*`
-- `/tz`
+- `/auth/*`
+- `/auth/attest`
+- `/auth/whoami`
+- `/protected/*`
+- `/protected/astro/consultation`
+- `/protected/fortune`
+- `/protected/relocation`
+- `/protected/tarot`
+- `/public/*`
+- `/public/astro/chart`
+- `/public/astro/daily-transits`
+- `/public/astro/events`
+- `/public/astro/forecast`
+- `/public/search`
+- `/public/tiles/*`
+- `/public/tz`
 
 ## #1 / #2 機械抽出 ↔ feature_inventory.md (人手版) の対整合
 
@@ -292,7 +297,7 @@
 ### 層 4a: Map 画面
 
 - ファイル数: 23
-- Worker URL 呼出: ['/search', '/tiles/osm/hot/', '/tiles/osm/hot/0/0/0']
+- Worker URL 呼出: (なし)
 - Popup/Dialog: `showInfoPopup`×14, `showLineNarrativeSheet`×3, `showSolaraDatePicker`×1
 - Navigator.push 等: 0 箇所
 
@@ -402,9 +407,14 @@
 > 各ソースの SHA1 を `_stamps.json` に記録し、差分を検出。
 > 変更されたファイルが属する層は、人手版インベントリ章の見直し対象。
 
-- 追加: **0** / 削除: **0** / 変更: **0**
+- 追加: **0** / 削除: **0** / 変更: **11**
 
-- 変更なし — 全インベントリ章は最新。
+### 変更されたファイル (層別)
+
+- **層 0**: `worker/src/index.js`
+- **層 2a**: `lib/screens/map/map_astro.dart`, `lib/utils/celestial_events.dart`, `lib/utils/consultation_api.dart`, `lib/utils/daily_transits_api.dart`, `lib/utils/fortune_api.dart`, `lib/utils/solara_api.dart`
+- **層 2b**: `lib/utils/forecast_cache.dart`
+- **層 4a**: `lib/screens/map/map_search.dart`, `lib/screens/map/map_styles.dart`, `lib/screens/map_screen.dart`
 
 ## #7 astro_glossary 用語辞書対整合
 

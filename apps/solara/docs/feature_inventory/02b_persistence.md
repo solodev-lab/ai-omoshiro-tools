@@ -10,7 +10,7 @@
 - 関数 (top-level + method の素拾い): 80
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 0
-- Worker URL リテラル: 1
+- Worker URL リテラル: 0
 
 ## ファイル別
 
@@ -96,10 +96,6 @@ Phase 2-6 (課金基盤後): Pro チェックで非 Pro はゲートする。
   - L458 `_todayKey()`
 
   </details>
-
-**Worker URL リテラル (1):**
-
-- L177: `'$solaraWorkerBase/astro/forecast'`
 
 
 ### `lib/utils/galaxy_cycle_export.dart` (126 行)

@@ -10,7 +10,7 @@
 - 関数 (top-level + method の素拾い): 288
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 18
-- Worker URL リテラル: 4
+- Worker URL リテラル: 0
 
 ## ファイル別
 
@@ -728,10 +728,6 @@ A*C*G ライン (natal / transit) のタップ詳細 popup。
 
   </details>
 
-**Worker URL リテラル (1):**
-
-- L11: `'$solaraWorkerBase/search'`
-
 
 ### `lib/screens/map/map_sectors.dart` (173 行)
 
@@ -769,11 +765,6 @@ A*C*G ライン (natal / transit) のタップ詳細 popup。
 - L79 `mapStyleFromId()` — id 文字列から MapStyle を復元。
 - L98 `buildStyledTileLayer()` — 選択スタイルに応じた TileLayer を返す。
 - L101 `Function()`
-
-**Worker URL リテラル (2):**
-
-- L60: `'$solaraWorkerBase/tiles/osm/hot/{z}/{x}/{y}.png'`
-- L69: `'$solaraWorkerBase/tiles/osm/hot/{z}/{x}/{y}.png'`
 
 
 ### `lib/screens/map/map_time_slider.dart` (508 行)
@@ -988,8 +979,4 @@ A*C*G ライン (natal / transit) のタップ詳細 popup。
 **Popup/Dialog 呼出 (2):**
 
 - 集計: `showLineNarrativeSheet`×1, `showInfoPopup`×1
-
-**Worker URL リテラル (1):**
-
-- L391: `'$solaraWorkerBase/tiles/osm/hot/0/0/0.png'`
 

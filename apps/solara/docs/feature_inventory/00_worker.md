@@ -6,7 +6,7 @@
 ## サマリ
 
 - ファイル数: 10
-- エンドポイント総数: 16
+- エンドポイント総数: 21
 - Gemini 呼出箇所: 2
 - KV 使用: 4 行 / Durable Object 使用: 0 行
 
@@ -128,39 +128,53 @@ houses: そのカテゴリで重視する伝統占星術のハウス番号
 **export (3):** `computeCategoryScore`, `callGemini`, `handleFortune`
 
 
-### `worker/src/index.js` (392 行)
+### `worker/src/index.js` (454 行)
 
 **ファイル先頭コメント:**
 
 ```
 Solara API — Cloudflare Worker
-Endpoints: /astro/chart, /astro/predict, /search, /fortune, /health
+
+🔴 ルート物理分離 (project_solara_security_principles.md §2):
+public/*     誰でも OK    純数学計算 (`/astro/chart` 等)、マップタイル、検索
+auth/*       Sign in 系   whoami / App Attest 登録 (現状 stub)
+protected/*  重防御       Gemini 呼び出し全部 (`/fortune`/`/tarot`/`/relocation`
+`/astro/consultation`/`/astro/line-narrative`)。
+将来 attestation + entitlement + per-user rate limit。
+
+旧 top-level ルート (`/fortune` `/astro/chart` 等) は撤廃。Flutter クライアント側も
+同セッションで新 path に書き換え済（`apps/solara/lib/utils/solara_api.dart` 参照）。
 ```
 
-**エンドポイント / ルート (16):**
+**エンドポイント / ルート (21):**
 
 | method | path | line |
 | --- | --- | --- |
-| ? | /astro/forecast | L195 |
-| ? | /tiles/* | L197 |
-| ? | /health | L208 |
-| GET | /tiles/osm/* | L216 |
-| POST | /astro/chart | L221 |
-| POST | /astro/forecast | L231 |
-| POST | /astro/predict | L247 |
-| POST | /astro/daily-transits | L261 |
-| GET | /tz | L271 |
-| GET | /astro/events | L282 |
-| GET | /search | L295 |
-| POST | /fortune | L312 |
-| POST | /tarot | L324 |
-| POST | /relocation | L338 |
-| POST | /astro/line-narrative | L356 |
-| POST | /astro/consultation | L374 |
+| ? | /public/astro/forecast | L246 |
+| ? | /public/tiles/* | L247 |
+| ? | /public/health | L255 |
+| GET | /public/tiles/osm/* | L260 |
+| POST | /public/astro/chart | L265 |
+| POST | /public/astro/forecast | L273 |
+| POST | /public/astro/predict | L288 |
+| POST | /public/astro/daily-transits | L296 |
+| GET | /public/tz | L304 |
+| GET | /public/astro/events | L313 |
+| GET | /public/search | L324 |
+| GET | /auth/whoami | L346 |
+| POST | /auth/attest | L349 |
+| POST | /protected/fortune | L363 |
+| POST | /protected/tarot | L373 |
+| POST | /protected/relocation | L383 |
+| POST | /protected/astro/line-narrative | L395 |
+| POST | /protected/astro/consultation | L405 |
+| ? | /public/* | L440 |
+| ? | /auth/* | L442 |
+| ? | /protected/* | L444 |
 
 **KV 使用 (4 行):**
 
-- 出現行: L75, L78, L83, L145
+- 出現行: L85, L88, L93, L157
 
 
 ### `worker/src/line_narrative.js` (268 行)

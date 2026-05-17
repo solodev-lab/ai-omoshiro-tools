@@ -7,7 +7,7 @@ import 'package:flutter/services.dart' show Clipboard, ClipboardData;
 import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
-import '../utils/solara_api.dart' show solaraWorkerBase;
+import '../utils/solara_api.dart' show solaraOsmTileBase;
 import '../utils/solara_storage.dart';
 import '../utils/tile_http_client.dart' show sharedTileHttpClient;
 import '../widgets/dominant_fortune_overlay.dart';
@@ -388,7 +388,7 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
       // z=0/x=0/y=0 は世界全体を 1 枚で表す最小タイル (約 5-15KB)。
       // sharedTileHttpClient と同じ HTTP プールを使うので、
       // ここで握った keep-alive socket が直後の本番 tile fetch に再利用される。
-      final url = Uri.parse('$solaraWorkerBase/tiles/osm/hot/0/0/0.png');
+      final url = Uri.parse('$solaraOsmTileBase/hot/0/0/0.png');
       final response = await sharedTileHttpClient
           .get(url)
           .timeout(const Duration(seconds: 8));

@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'solara_api.dart' show solaraWorkerBase;
+import 'solara_api.dart' show solaraForecastUrl;
 import 'solara_storage.dart';
 
 /// Forecast 1日分のスコア。Worker `/astro/forecast` の day item と同形。
@@ -174,7 +174,7 @@ class ForecastCache {
   );
 }
 
-const _forecastApiUrl = '$solaraWorkerBase/astro/forecast';
+const _forecastApiUrl = solaraForecastUrl;
 const _cacheKeyPrefix = 'solara_forecast_cache_';
 const _cooldownKey = 'solara_forecast_last_fetch';
 // 運勢サイクル（LifePeriod）専用の永続キャッシュ。日次データの 6h cooldown とは独立。
