@@ -5,9 +5,9 @@
 
 ## サマリ
 
-- ファイル数: 23 / 総行数: 6124
+- ファイル数: 23 / 総行数: 6204
 - class/mixin/extension/enum: 68
-- 関数 (top-level + method の素拾い): 160
+- 関数 (top-level + method の素拾い): 162
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 3
 - Worker URL リテラル: 0
@@ -592,12 +592,12 @@ Re-export split overlay files for backward compatibility
 - L20 `build()`
 
 
-### `lib/widgets/pro_unlock_dialog.dart` (151 行)
+### `lib/widgets/pro_unlock_dialog.dart` (231 行)
 
 **ファイル先頭コメント:**
 
 ```
-Pro 案内ダイアログ — Phase 2-6a / Phase 2-6b
+Pro 案内ダイアログ — Phase 2-6a / Phase 2-6b + Phase 2 RASP 連携
 
 設計: pro_candidates.md §7 + project_solara_security_principles.md
 
@@ -606,6 +606,8 @@ Pro 案内ダイアログ — Phase 2-6a / Phase 2-6b
   - 「Pro でロック解除」の文体は Solara 世界観に揃える (吉凶禁止・寄り添い)
   - Phase 2-6b 以降: 「Pro にアップグレード」ボタンが PaywallScreen を開く
     (Offerings 未配信時は PaywallScreen 側で「ストア準備中」表示)
+  - Phase 2 RASP: 端末が改変検知された場合 (`DeviceSecurityStatus.isCompromised`)
+    はアップグレード CTA を出さず、セキュリティ通知に切り替える
 
 利用箇所:
   - Map「この場所で相談する」CTA タップ (Free)
@@ -614,13 +616,20 @@ Pro 案内ダイアログ — Phase 2-6a / Phase 2-6b
   - その他 Pro ゲート対象機能のタップ (Phase 2-7 / 2-8 で配線)
 ```
 
-**imports:** dart=0 / package=2 / relative=2
+**imports:** dart=0 / package=2 / relative=3
 
-- relative: `../screens/paywall_screen.dart`, `../theme/solara_colors.dart`
+- relative: `../screens/paywall_screen.dart`, `../theme/solara_colors.dart`, `../utils/device_security_status.dart`
 
-**関数 (1 public + 0 private):**
+**関数 (1 public + 2 private):**
 
-- L29 `showProUnlockDialog()` — Pro 限定機能の案内ダイアログを表示する。
+- L36 `showProUnlockDialog()` — Pro 限定機能の案内ダイアログを表示する。
+
+  <details><summary>private 関数 2 件</summary>
+
+  - L75 `_buildProUpsellContent()`
+  - L176 `_buildCompromisedContent()`
+
+  </details>
 
 
 ### `lib/widgets/sanctuary_account_section.dart` (238 行)

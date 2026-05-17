@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 7 / 総行数: 1756
+- ファイル数: 7 / 総行数: 1777
 - class/mixin/extension/enum: 12
 - 関数 (top-level + method の素拾い): 80
 - Navigator.push 等: 0
@@ -134,18 +134,25 @@ Galaxy Cycle エクスポート — C5 (Pro 機能、柱 3)
   </details>
 
 
-### `lib/utils/pro_status.dart` (75 行)
+### `lib/utils/pro_status.dart` (96 行)
 
 **ファイル先頭コメント:**
 
 ```
-Solara Pro 状態管理 — Phase 2-6a (暫定)
+Solara Pro 状態管理 — Phase 2-6a (暫定) + Phase 2 RASP 連携
 
 設計: apps/solara/docs/pro_candidates.md §7 + project_solara_security_principles.md
 
 役割:
   - SharedPreferences に Pro フラグを保存し、UI が同期で参照できる cache を持つ
   - ChangeNotifier 経由で Pro 切替を全画面に即時反映
+  - DeviceSecurityStatus と連動: 端末セキュリティ侵害時は **isPro を false に倒す**
+
+状態の二段構え:
+  `isPro`     = effective state (UI 表示・ゲート判定で使う)
+                = `_isPro && !DeviceSecurityStatus.instance.isCompromised`
+  `isProRaw`  = RC エンタイトルメント生の値 (Sanctuary DEV toggle / Paywall 内
+                「現在 Pro 中」表示で使う、セキュリティ侵害判定を含まない)
 
 現状 (Phase 2-6a):
   - 暫定的にクライアント単独でフラグ管理 (DEV ビルドでは Sanctuary から toggle 可能)
@@ -163,17 +170,19 @@ Phase 2-6b 以降 (RevenueCat 接続後):
   - 本ファイルは「UI の出し分け」までを担当する
 ```
 
-**imports:** dart=0 / package=2 / relative=0
+**imports:** dart=0 / package=2 / relative=1
+
+- relative: `device_security_status.dart`
 
 **型定義 (1):**
 
-- L27 `class ProStatus : ChangeNotifier`
+- L36 `class ProStatus : ChangeNotifier`
 
 **関数 (3 public + 0 private):**
 
-- L45 `load()` — SharedPreferences から読み出して内部キャッシュを更新する。
-- L57 `setPro()` — Pro 状態を更新する。永続化 + リスナー通知。
-- L68 `resetForTest()`
+- L66 `load()` — SharedPreferences から読み出して内部キャッシュを更新する。
+- L78 `setPro()` — Pro 状態を更新する。永続化 + リスナー通知。
+- L89 `resetForTest()`
 
 
 ### `lib/utils/solara_auth.dart` (357 行)

@@ -18,6 +18,30 @@ python tools/build_release.py ios --release-mode
 
 `--release-mode` を付けないと dry-run（コマンド表示のみ）。
 
+## 🔴 RASP 設定値の注入 (--dart-define、release build 必須)
+
+freerasp による改変検知を有効にするには、リリースビルド時に署名証明書ハッシュを
+`--dart-define` で渡す必要がある。未設定なら `DeviceSecurityStatus.start()` は
+no-op (Pro 機能は通常動作、改変検知は効かない)。
+
+```powershell
+# Android (release keystore 作成後に取得した SHA-256 を base64 化)
+keytool -list -v -keystore <path-to-release.keystore> | findstr "SHA-256"
+# → 16 進数を base64 化 (PowerShell の場合):
+$bytes = [byte[]]@(0xAA,0xBB, ...)  # SHA-256 を 32 byte に
+[Convert]::ToBase64String($bytes)
+
+flutter build aab --release `
+  --obfuscate `
+  --split-debug-info=build/symbols/aab/1.0.0+1 `
+  --dart-define=SOLARA_FREERASP_ANDROID_HASH=<base64-hash> `
+  --dart-define=SOLARA_FREERASP_IOS_TEAM_ID=<Apple_Team_ID>
+```
+
+`build_release.py` から自動で渡すのは将来対応 (TODO)。現状はオーナーが手動で
+`--dart-define` を flutter build に付与するか、`tools/build_release.py` の
+`build_command()` を編集して恒久化する。
+
 ## 仕組み
 
 1. **`--obfuscate`**: Dart 関数名/クラス名をランダム化。アプリ改変による Pro 解放（`isPro=true` 直書き）の難易度を上げる

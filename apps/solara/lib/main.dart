@@ -9,6 +9,7 @@ import 'screens/galaxy_screen.dart';
 import 'screens/sanctuary_screen.dart';
 import 'utils/app_locale.dart';
 import 'utils/celestial_events.dart';
+import 'utils/device_security_status.dart';
 import 'utils/pro_status.dart';
 import 'utils/purchases_service.dart';
 import 'utils/solara_auth.dart';
@@ -28,6 +29,13 @@ void main() async {
   await CelestialEvents.initialize();
   await AppLocale.instance.load();
   await ProStatus.instance.load();
+  // Phase 2 RASP: freerasp で root/Frida/エミュレータ等を検知 → 検知時は
+  // ProStatus.isPro が effective false を返すので Pro ゲートが自動的に発火。
+  // debug/Web/desktop/設定値不足ではいずれも no-op (Free 動作は不変)。
+  // ProStatus が DeviceSecurityStatus を listen するため、ProStatus.load() の
+  // 後に start を呼んでも順序問題なし (listener は遅延でも発火する)。
+  // ignore: unawaited_futures
+  DeviceSecurityStatus.instance.start();
   // Phase 2-6b: RevenueCat 配線。API キー未設定 / 未対応 OS では no-op。
   // 設定済なら entitlement listener が ProStatus を上書きするので load() の後に呼ぶ順序。
   await PurchasesService.instance.init();
