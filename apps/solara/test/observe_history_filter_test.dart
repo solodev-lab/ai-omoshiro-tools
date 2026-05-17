@@ -4,7 +4,6 @@
 // TarotData は asset 依存なので、test では `flutter_test`
 // + TarotData の初期化を済ませる必要がある。
 
-import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:solara/models/daily_reading.dart';
