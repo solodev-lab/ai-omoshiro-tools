@@ -492,6 +492,7 @@ Forecast 期間 (Free 1 年 / Pro 5 年、`_setYearOffset` で year>0 を Free g
 | 2-9 | Sign in 統合 (Apple/Google + `Purchases.logIn(uid)`) | — | ✅ 完了 (`SolaraAuth` + `SanctuaryAccountSection`、Sign in は任意、uid 形式 `apple:{id}`/`google:{id}`、iOS Capabilities はオーナー作業 `docs/sign_in_setup.md`) |
 | 2-7 | 柱2 残り Pro ゲート配線（ACG 4 フレーム / アスペクト 120 本 / 引越し） | — | ✅ 完了 (`map_screen._onAstroToggle` で 5 キー gate、ACG モード入時自動 ON も Pro 判定) |
 | 2-8 | 柱2 残り 3 機能 Pro ゲート（時計スライダー 1 分刻み / LOCATION 枠 5→10 / Forecast 期間 1 年→5 年） | — | ✅ 完了 (時計=長押しゲート / SlotManager.maxSlots getter / `_setYearOffset` year>0 gate + 降格時 0 巻き戻し) |
+| F (2026-05-17) | B1 アスペクトライン 120 本 = 検証 + 回帰テスト 11 本追加 (`test/astro_lines_test.dart`) | — | ✅ 完了 (Pro 訴求「120 本」 = 10 惑星 × 4 アングル × 3 パスを契約としてロック、Free=40 / Pro=120 の差分も検証、4 フレーム全てで 120 本保持) |
 
 **前提**：課金基盤（launch_checklist Phase 1-2）なしで全部作れる（機能のみ、Pro ゲートは課金基盤実装後に配線）。
 
