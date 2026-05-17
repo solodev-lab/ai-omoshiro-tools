@@ -51,6 +51,10 @@ dependencies:
   # Solara は anonymous 購入も許容するが、Sign in で端末跨ぎ復元が安定する
   sign_in_with_apple: ^8.0.0
   google_sign_in: ^7.2.0
+  # Phase 2 RASP: root/jailbreak/debugger/emulator/hook 検知 (talsec)
+  # security_principles 原則「クライアント改変対策」。検知時は Pro 機能のみ
+  # disable、Free 機能は使えるまま (ストア審査対応)。
+  freerasp: ^7.5.1
 
 dev_dependencies:
   flutter_test:

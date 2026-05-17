@@ -5,9 +5,9 @@
 
 ## サマリ
 
-- ファイル数: 8 / 総行数: 1680
-- class/mixin/extension/enum: 17
-- 関数 (top-level + method の素拾い): 26
+- ファイル数: 9 / 総行数: 1908
+- class/mixin/extension/enum: 18
+- 関数 (top-level + method の素拾い): 32
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 0
 - Worker URL リテラル: 14
@@ -143,6 +143,63 @@ Worker: /astro/daily-transits (POST)
 
 - L188 `flatTimeline()` — 全惑星の全イベントを時刻順にフラット化したリストを返す。
 - L208 `fetchDailyTransits()` — 拠点における今日のトランジット通過時刻を取得する。
+
+
+### `lib/utils/device_security_status.dart` (228 行)
+
+**ファイル先頭コメント:**
+
+```
+Solara 端末セキュリティ状態 (RASP) — Phase 2 launch_checklist
+
+設計:
+  - launch_checklist Phase 2「RASP」3 項目
+  - project_solara_security_principles 5 原則の補強
+  - freerasp ^7.5.1 (talsec) を使用
+
+役割:
+  - 起動時に freerasp を init し、root/jailbreak/hook/debugger/emulator 等を
+    継続監視するリスナーを attach する
+  - 重大な脅威 (`_severeThreats`) を検知したら `isCompromised = true` で
+    ChangeNotifier listener に通知する
+  - 軽微な脅威 (devMode/screenshot 等) は記録のみで Pro 無効化はしない
+
+🔴 Apple/Google ストア審査対応:
+  - **無料機能はそのまま使える**ように設計する (Free を block すると審査でリジェクト)
+  - Pro 機能のみ disable する (showProUnlockDialog 経由で「セキュリティ確認に
+    失敗」表示、Pro 購入導線も出さない = 課金後 block で User trust 失う事を避ける)
+
+🔴 設定値 (--dart-define、CI/local の双方で):
+  --dart-define=SOLARA_FREERASP_ANDROID_HASH=<base64-sha256>  (release keystore cert hash)
+  --dart-define=SOLARA_FREERASP_IOS_TEAM_ID=<TEAM>            (Apple Developer Team ID)
+  --dart-define=SOLARA_FREERASP_WATCHER_MAIL=<email>          (任意、talsec backend reports)
+  いずれか未設定で current platform を満たせない場合は **start をスキップ** (no-op)。
+
+🔴 検証手順:
+  - debug build: kDebugMode で start() を skip するため発火しない (テスト noise 回避)
+  - 実 release build (R8 + obfuscate + 署名済) を root 化端末/Frida/emulator で
+    起動 → 各 threat callback が発火することを実機確認 (TestFlight 配信前必須)
+```
+
+**imports:** dart=1 / package=2 / relative=0
+
+**型定義 (1):**
+
+- L36 `class DeviceSecurityStatus : ChangeNotifier`
+
+**関数 (3 public + 3 private):**
+
+- L106 `start()` — 起動時に 1 度だけ呼ぶ。
+- L210 `resetForTest()`
+- L225 `debugTriggerCompromised()`
+
+  <details><summary>private 関数 3 件</summary>
+
+  - L138 `_buildConfig()`
+  - L163 `_buildCallback()`
+  - L190 `_onThreat()`
+
+  </details>
 
 
 ### `lib/utils/fortune_api.dart` (266 行)

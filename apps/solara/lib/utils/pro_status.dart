@@ -1,10 +1,17 @@
-// Solara Pro 状態管理 — Phase 2-6a (暫定)
+// Solara Pro 状態管理 — Phase 2-6a (暫定) + Phase 2 RASP 連携
 //
 // 設計: apps/solara/docs/pro_candidates.md §7 + project_solara_security_principles.md
 //
 // 役割:
 //   - SharedPreferences に Pro フラグを保存し、UI が同期で参照できる cache を持つ
 //   - ChangeNotifier 経由で Pro 切替を全画面に即時反映
+//   - DeviceSecurityStatus と連動: 端末セキュリティ侵害時は **isPro を false に倒す**
+//
+// 状態の二段構え:
+//   `isPro`     = effective state (UI 表示・ゲート判定で使う)
+//                 = `_isPro && !DeviceSecurityStatus.instance.isCompromised`
+//   `isProRaw`  = RC エンタイトルメント生の値 (Sanctuary DEV toggle / Paywall 内
+//                 「現在 Pro 中」表示で使う、セキュリティ侵害判定を含まない)
 //
 // 現状 (Phase 2-6a):
 //   - 暫定的にクライアント単独でフラグ管理 (DEV ビルドでは Sanctuary から toggle 可能)
@@ -24,8 +31,14 @@
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'device_security_status.dart';
+
 class ProStatus extends ChangeNotifier {
-  ProStatus._();
+  ProStatus._() {
+    // DeviceSecurityStatus が compromised に転じた時、ProStatus の listener も
+    // 即時通知 (Pro 機能を UI 上から消すため)。逆向きの依存はない (循環なし)。
+    DeviceSecurityStatus.instance.addListener(notifyListeners);
+  }
 
   /// アプリ全体で 1 つのインスタンスを共有する。
   static final ProStatus instance = ProStatus._();
@@ -35,7 +48,15 @@ class ProStatus extends ChangeNotifier {
   bool _isPro = false;
   bool _loaded = false;
 
-  bool get isPro => _isPro;
+  /// Effective Pro state. 端末セキュリティ侵害時は false を返す。
+  /// 全 Pro ゲート (showProUnlockDialog 呼出箇所) はこれを参照する。
+  bool get isPro =>
+      _isPro && !DeviceSecurityStatus.instance.isCompromised;
+
+  /// RC エンタイトルメント生の値。compromised 判定を含まない。
+  /// Paywall 内「現在 Pro 中ですが…」のような **本人状態表示** や、
+  /// Sanctuary DEV toggle の表示同期で使う。
+  bool get isProRaw => _isPro;
 
   /// 初回 load 完了したか。`false` の間は default (`false`) を返す。
   bool get loaded => _loaded;
