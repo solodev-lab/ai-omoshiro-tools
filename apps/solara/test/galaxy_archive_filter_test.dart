@@ -16,11 +16,13 @@ GalaxyCycle _cycle({
   required String nameEN,
   required String nameJP,
   required int rarity,
+  DateTime? formedAt,
 }) {
   return GalaxyCycle(
     id: id,
     cycleStart: start,
     cycleEnd: start.add(const Duration(days: 28)),
+    formedAt: formedAt,
     readings: const <DailyReading>[],
     seedCardId: 0,
     nameEN: nameEN,
@@ -92,6 +94,86 @@ void main() {
     test('sort: rarityHighFirst', () {
       const f = GalaxyArchiveFilter(sort: GalaxyArchiveSort.rarityHighFirst);
       expect(f.apply(all).map((c) => c.id), ['a', 'b', 'c']);
+    });
+
+    // ───────────────────────────────────────────────────
+    // 回帰防止 (2026-05-19):
+    // 「debug で過去サイクルを後から作ると、 cycleStart は古くなるが
+    //  実際に刻星化したのは今 → newestFirst で先頭に来てほしい」事象。
+    // ソートは cycleStart ではなく effectiveFormedAt (= formedAt 優先、
+    // 無ければ id を ms としてパース、それも無ければ cycleStart) で
+    // 行うことを確認する。
+    // ───────────────────────────────────────────────────
+    test('sort は formedAt 優先 (cycleStart が古くても formedAt が新しいと先頭)', () {
+      final old = _cycle(
+        id: 'old-id',
+        start: DateTime.utc(2020, 1, 1),
+        nameEN: 'Old',
+        nameJP: '旧',
+        rarity: 3,
+        formedAt: DateTime.utc(2026, 5, 19, 10), // 刻星化は最近
+      );
+      final mid = _cycle(
+        id: 'mid-id',
+        start: DateTime.utc(2026, 1, 1),
+        nameEN: 'Mid',
+        nameJP: '中',
+        rarity: 3,
+        formedAt: DateTime.utc(2026, 5, 19, 9), // 1時間前
+      );
+      final older = _cycle(
+        id: 'older-id',
+        start: DateTime.utc(2026, 4, 1), // cycleStart は new だが
+        nameEN: 'Older',
+        nameJP: '古',
+        rarity: 3,
+        formedAt: DateTime.utc(2026, 5, 19, 8), // formedAt は 2 時間前
+      );
+      const f = GalaxyArchiveFilter();
+      final r = f.apply([older, mid, old]);
+      expect(r.map((c) => c.id), ['old-id', 'mid-id', 'older-id'],
+          reason: '新しい順: formedAt 降順 (cycleStart は無視される)');
+    });
+
+    test('formedAt が null でも id (ms) で順序が保たれる', () {
+      // id = millisecondsSinceEpoch.toString() の旧データ想定
+      final t1 = DateTime.utc(2026, 5, 1).millisecondsSinceEpoch;
+      final t2 = DateTime.utc(2026, 5, 10).millisecondsSinceEpoch;
+      final t3 = DateTime.utc(2026, 5, 19).millisecondsSinceEpoch;
+      final older = _cycle(
+        id: '$t1', start: DateTime.utc(2020, 1, 1),
+        nameEN: 'A', nameJP: 'a', rarity: 1,
+      );
+      final mid = _cycle(
+        id: '$t2', start: DateTime.utc(2020, 1, 1),
+        nameEN: 'B', nameJP: 'b', rarity: 1,
+      );
+      final latest = _cycle(
+        id: '$t3', start: DateTime.utc(2020, 1, 1),
+        nameEN: 'C', nameJP: 'c', rarity: 1,
+      );
+      const f = GalaxyArchiveFilter();
+      final r = f.apply([older, mid, latest]);
+      expect(r.map((c) => c.id), ['$t3', '$t2', '$t1'],
+          reason: '旧データ: formedAt 無し → id を ms としてパース');
+    });
+
+    test('id も ms でない旧データは cycleStart にフォールバック', () {
+      final a2 = _cycle(
+        id: 'non-numeric-id',
+        start: DateTime.utc(2026, 1, 1),
+        nameEN: 'A', nameJP: 'a', rarity: 1,
+      );
+      final b2 = _cycle(
+        id: 'another-non-numeric',
+        start: DateTime.utc(2026, 3, 1),
+        nameEN: 'B', nameJP: 'b', rarity: 1,
+      );
+      const f = GalaxyArchiveFilter();
+      final r = f.apply([a2, b2]);
+      expect(r.map((c) => c.id),
+          ['another-non-numeric', 'non-numeric-id'],
+          reason: 'フォールバック: cycleStart 降順');
     });
 
     test('query + rarities + sort 複合', () {

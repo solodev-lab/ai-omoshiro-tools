@@ -42,6 +42,18 @@ class GalaxyCycle {
   final String id;
   final DateTime cycleStart;
   final DateTime cycleEnd;
+
+  /// 刻星化 (formation) を実行した時刻。
+  /// 🔴 (2026-05-19) 新規追加: Star Atlas の「新しい順 / 古い順」ソートは
+  /// この値を使う。 cycleStart はサイクルの**開始日**であって「刻星化した日」
+  /// ではない (debug 経由で過去サイクルを後から作ったり、 同月内に複数 cycle
+  /// が並ぶケースで時系列バラバラになっていた)。
+  ///
+  /// 旧データ (このフィールドが無い JSON) では null が入る。
+  /// その場合 [effectiveFormedAt] が id (millisecondsSinceEpoch 文字列) から
+  /// 復元する。
+  final DateTime? formedAt;
+
   final List<DailyReading> readings;
   final int seedCardId;
   final String nameEN;
@@ -61,11 +73,25 @@ class GalaxyCycle {
     required this.nameEN,
     required this.nameJP,
     required this.dots,
+    this.formedAt,
     this.rarity = 1,
     this.rarityLabel = 'Common',
     this.adjIdx = 0,
     this.nounIdx = 0,
   });
+
+  /// Star Atlas のソートに使う「刻星化日時」。
+  /// 優先順位: 1) formedAt があればそれ / 2) id が millisecondsSinceEpoch 文字列
+  /// として解釈できればそれ / 3) フォールバックで cycleStart。
+  /// 旧データを破壊せず、新規データは厳密、 全データで単調に並ぶことを保証する。
+  DateTime get effectiveFormedAt {
+    if (formedAt != null) return formedAt!;
+    final ms = int.tryParse(id);
+    if (ms != null && ms > 0) {
+      return DateTime.fromMillisecondsSinceEpoch(ms);
+    }
+    return cycleStart;
+  }
 
   String get dateRangeLabel {
     final s = cycleStart;
@@ -85,6 +111,7 @@ class GalaxyCycle {
         'id': id,
         'cycleStart': cycleStart.toIso8601String(),
         'cycleEnd': cycleEnd.toIso8601String(),
+        if (formedAt != null) 'formedAt': formedAt!.toIso8601String(),
         'readings': readings.map((r) => r.toJson()).toList(),
         'seedCardId': seedCardId,
         'nameEN': nameEN,
@@ -97,10 +124,13 @@ class GalaxyCycle {
       };
 
   factory GalaxyCycle.fromJson(Map<String, dynamic> json) {
+    final formedAtRaw = json['formedAt'] as String?;
     return GalaxyCycle(
       id: json['id'] as String,
       cycleStart: DateTime.parse(json['cycleStart'] as String),
       cycleEnd: DateTime.parse(json['cycleEnd'] as String),
+      formedAt:
+          formedAtRaw != null ? DateTime.tryParse(formedAtRaw) : null,
       readings: (json['readings'] as List)
           .map((r) => DailyReading.fromJson(r as Map<String, dynamic>))
           .toList(),
