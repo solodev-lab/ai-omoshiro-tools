@@ -450,12 +450,21 @@ class GalaxyScreenState extends State<GalaxyScreen>
               ],
             ),
             if (_popupDayIndex >= 0) _buildDotPopup(),
-            if (_replayCycle != null) GalaxyReplayOverlay(
-              cycle: _replayCycle!,
-              controller: _replayController!,
-              artImage: _artImages[_replayCycle!.nounIdx],
-              onClose: _closeReplay,
-            ),
+            // 🔴 内側 PopScope で二重防御 (formation と同じ理由、2026-05-19)
+            if (_replayCycle != null)
+              PopScope(
+                canPop: false,
+                onPopInvokedWithResult: (didPop, _) {
+                  if (didPop) return;
+                  _closeReplay();
+                },
+                child: GalaxyReplayOverlay(
+                  cycle: _replayCycle!,
+                  controller: _replayController!,
+                  artImage: _artImages[_replayCycle!.nounIdx],
+                  onClose: _closeReplay,
+                ),
+              ),
             if (_activeOverlay != null) _buildMoonOverlay(),
           ],
         ),
@@ -1012,12 +1021,25 @@ class GalaxyScreenState extends State<GalaxyScreen>
         return const SizedBox.shrink();
       case 'formation':
         if (_formationCycle != null) {
+          // 🔴 内側 PopScope で二重防御 (2026-05-19):
+          // Galaxy 画面の root PopScope だけでは「完了演出表示中に back →
+          // Map タブへ飛ぶ」事象が再発する報告あり (オーナー、2 回目)。
+          // Positioned.fill 直下に PopScope を入れ、formation overlay が
+          // 出ている間の back キーは必ずここで消化して overlay を閉じる。
+          // canPop=false なので親 (main.dart) の PopScope へは伝播しない。
           return Positioned.fill(
-            child: CatasterismFormationOverlay(
-              cycle: _formationCycle!,
-              artImage: _artImages[_formationCycle!.nounIdx],
-              onComplete: _onFormationComplete,
-              onShare: () => _openConstellationShare(_formationCycle!),
+            child: PopScope(
+              canPop: false,
+              onPopInvokedWithResult: (didPop, _) {
+                if (didPop) return;
+                _dismissTopOverlay();
+              },
+              child: CatasterismFormationOverlay(
+                cycle: _formationCycle!,
+                artImage: _artImages[_formationCycle!.nounIdx],
+                onComplete: _onFormationComplete,
+                onShare: () => _openConstellationShare(_formationCycle!),
+              ),
             ),
           );
         }
