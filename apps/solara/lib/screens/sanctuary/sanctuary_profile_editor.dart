@@ -7,6 +7,7 @@ import '../../utils/app_locale.dart';
 import '../../utils/solara_storage.dart';
 import '../../utils/solara_api.dart';
 import '../../widgets/location_picker_minimap.dart';
+import '../../widgets/tap_to_unfocus.dart';
 
 // ══════════════════════════════════════════════════
 // ── Profile Editor Page ──
@@ -171,7 +172,8 @@ class _SanctuaryProfileEditorPageState extends State<SanctuaryProfileEditorPage>
   Widget build(BuildContext context) {
     // HTML: .birth-overlay { background:rgba(4,8,16,0.95); backdrop-filter:blur(12px); }
     // HTML: .birth-card { max-width:420px; width:92%; padding:24px 20px 32px; border-radius:24px; }
-    return Scaffold(
+    return TapToUnfocus(
+      child: Scaffold(
       backgroundColor: const Color(0xFF020408),
       body: SafeArea(
         child: Center(
@@ -473,6 +475,7 @@ class _SanctuaryProfileEditorPageState extends State<SanctuaryProfileEditorPage>
             ),
           ),
         ),
+      ),
       ),
     );
   }

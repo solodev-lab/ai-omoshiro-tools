@@ -12,6 +12,7 @@ import '../utils/solara_storage.dart';
 import '../utils/tile_http_client.dart' show sharedTileHttpClient;
 import '../widgets/dominant_fortune_overlay.dart';
 import '../widgets/info_popup.dart';
+import '../widgets/tap_to_unfocus.dart';
 import 'map/map_daily_transit_screen.dart';
 import 'map/consult_entry_popup.dart';
 import 'map/map_constants.dart';
@@ -1568,7 +1569,7 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
           _clearAllSearch();
         }
       },
-      child: _buildBody(context),
+      child: TapToUnfocus(child: _buildBody(context)),
     );
   }
 

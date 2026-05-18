@@ -9,6 +9,7 @@ import '../utils/pro_status.dart';
 import '../utils/solara_storage.dart';
 import '../utils/tarot_data.dart';
 import '../widgets/pro_unlock_dialog.dart';
+import '../widgets/tap_to_unfocus.dart';
 
 import 'observe/observe_constants.dart';
 import 'observe/observe_card_widgets.dart';
@@ -299,14 +300,9 @@ class _ObserveScreenState extends State<ObserveScreen>
 
   @override
   Widget build(BuildContext context) {
-    // 🔴 (2026-05-19) Tarot 画面内の全 TextField (Pro テーマ欄 / HISTORY メモ /
-    // 過去サイクルメモ) に対して、 入力欄外をタップしたらフォーカスを外す
-    // (= 入力確定してキーボードを閉じる) 統一挙動を提供する。
-    // HitTestBehavior.translucent で子の GestureDetector / TextField は通常通り
-    // 反応しつつ、 空いた領域のタップだけここで拾う。
-    return GestureDetector(
-      behavior: HitTestBehavior.translucent,
-      onTap: () => FocusScope.of(context).unfocus(),
+    // 🔴 (2026-05-19) 全 TextField (Pro テーマ欄 / 現在&過去 HISTORY メモ) で
+    // 入力欄外タップ → 入力確定 + キーボード閉じる、 を TapToUnfocus 共通 widget で実現。
+    return TapToUnfocus(
       child: TarotAltarScene(
         child: SafeArea(
           child: Column(children: [

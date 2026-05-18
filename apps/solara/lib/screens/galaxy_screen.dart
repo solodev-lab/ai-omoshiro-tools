@@ -20,6 +20,7 @@ import '../widgets/celestial_event_bar.dart';
 import '../widgets/cycle_spiral_painter.dart';
 import '../widgets/info_popup.dart';
 import '../widgets/moon_overlay.dart';
+import '../widgets/tap_to_unfocus.dart';
 
 import 'galaxy/constellation_share_card_page.dart';
 import 'galaxy/galaxy_constellation_builder.dart';
@@ -399,7 +400,8 @@ class GalaxyScreenState extends State<GalaxyScreen>
         if (didPop) return;
         _dismissTopOverlay();
       },
-      child: Container(
+      child: TapToUnfocus(
+        child: Container(
       decoration: const BoxDecoration(
         gradient: RadialGradient(
           center: Alignment(0, -1), radius: 1.1,
@@ -494,6 +496,7 @@ class GalaxyScreenState extends State<GalaxyScreen>
             if (_activeOverlay != null) _buildMoonOverlay(),
           ],
         ),
+      ),
       ),
       ),
     );

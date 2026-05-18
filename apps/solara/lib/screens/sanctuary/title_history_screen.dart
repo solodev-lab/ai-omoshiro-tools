@@ -23,6 +23,7 @@ import '../../theme/solara_colors.dart';
 import '../../utils/solara_storage.dart';
 import '../../utils/title_data.dart' as title_data;
 import '../../widgets/memo_text_field.dart';
+import '../../widgets/tap_to_unfocus.dart';
 
 class TitleHistoryScreen extends StatefulWidget {
   /// テスト用 hook (デフォルト null で SolaraStorage を読む)。
@@ -92,7 +93,8 @@ class _TitleHistoryScreenState extends State<TitleHistoryScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return TapToUnfocus(
+      child: Scaffold(
       backgroundColor: SolaraColors.celestialBlueDark,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
@@ -140,6 +142,7 @@ class _TitleHistoryScreenState extends State<TitleHistoryScreen> {
                       );
                     },
                   ),
+      ),
       ),
     );
   }

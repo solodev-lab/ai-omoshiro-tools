@@ -8,6 +8,7 @@ import '../utils/pro_status.dart';
 import '../utils/solara_storage.dart';
 import '../utils/fortune_api.dart';
 import '../widgets/pro_unlock_dialog.dart';
+import '../widgets/tap_to_unfocus.dart';
 
 import 'horoscope/horo_constants.dart';
 import 'horoscope/horo_chart_painter.dart';
@@ -629,7 +630,8 @@ class HoroscopeScreenState extends State<HoroscopeScreen>
     }
     if (!(_profile?.isComplete ?? false)) return _buildNoProfile();
 
-    return Scaffold(
+    return TapToUnfocus(
+      child: Scaffold(
       backgroundColor: Colors.transparent,
       body: _mysticalBackdrop(
         child: SafeArea(
@@ -721,6 +723,7 @@ class HoroscopeScreenState extends State<HoroscopeScreen>
             if (_chartMode != 'astrology') _buildBottomSheet(),
           ]),
         ),
+      ),
       ),
     );
   }
