@@ -5,12 +5,12 @@
 
 ## サマリ
 
-- ファイル数: 8 / 総行数: 2058
-- class/mixin/extension/enum: 21
+- ファイル数: 7 / 総行数: 2009
+- class/mixin/extension/enum: 20
 - 関数 (top-level + method の素拾い): 72
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 0
-- Worker URL リテラル: 4
+- Worker URL リテラル: 0
 
 ## ファイル別
 
@@ -206,45 +206,6 @@ Solara DirectionEnergy — Soft/Hard 独立2エネルギー
 - L182 `aggregateContributions()` — 寄与アスペクトリストを groupKey で集約し、magnitude の降順でソート。
 - L222 `merge()`
 - L228 `build()`
-
-
-### `lib/utils/legal_urls.dart` (49 行)
-
-**ファイル先頭コメント:**
-
-```
-Solara 法務リンク定数 — Phase 2-6b
-
-設計: docs/legal.md + launch_checklist Phase 0 (法的書類)
-
-役割:
-  - プライバシーポリシー / 利用規約 (EULA) / 特定商取引法に基づく表記 / 解約案内 の URL を一元化
-  - 公開ブロッカー B5 (3.1.2): ペイウォールから EULA / プライバシーをクリック可能リンクで提示するため
-
-現状 (2026-05-16):
-  - 3 文書は solodev-lab.com 配下に静的公開予定 (Phase 0 オーナー作業)
-  - 公開前に同じ URL に本物を up すれば、コード変更ゼロで反映される
-  - 「解約方法」は iOS=設定アプリ deep link / Android=Play Store 該当ページ
-    (どちらも `url_launcher.launchUrl(mode: externalApplication)` で開く)
-
-🔴 launch_checklist 連動:
-  - Phase 0 完了時に同 URL に文書を公開してから審査提出する
-  - Phase 0 未完で本番ビルドを出すと審査リジェクト (B5)、絶対に飛ばさない
-
-🔴 i18n:
-  - 当面 ja-JP のみ。ストアアップ前最終工程で EN 版 URL を追加 (feedback_i18n_last)
-```
-
-**型定義 (1):**
-
-- L22 `class LegalUrls`
-
-**Worker URL リテラル (4):**
-
-- L26: `'https://solodev-lab.com/legal/solara/privacy.html'`
-- L31: `'https://solodev-lab.com/legal/solara/terms.html'`
-- L35: `'https://solodev-lab.com/legal/solara/scta.html'`
-- L39: `'https://solodev-lab.com/legal/solara/cancel.html'`
 
 
 ### `lib/utils/moon_phase.dart` (360 行)
