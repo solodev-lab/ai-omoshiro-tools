@@ -1669,6 +1669,10 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
             // (popup 内 CTA) で相談に進めるため、空地点タップが consult に
             // 直結しても干渉しない。
             onTap: (tapPos, latlng) {
+              // 🔴 (2026-05-19) 地図領域タップで TextField (検索バー等) の
+              // フォーカスを外す。 FlutterMap が onTap を消化してしまうため、
+              // ルートの TapToUnfocus には届かない。 ここで明示的に unfocus。
+              FocusScope.of(context).unfocus();
               if (_chartResult == null) return;
               // ① 引越し ON: 任意地点タップで relocate popup (排他)
               if (_astroLayers['relocate'] == true) {
