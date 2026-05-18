@@ -162,12 +162,15 @@ class _SolaraHomeState extends State<SolaraHome> {
       },
       child: Scaffold(
         extendBody: true,
-        // 2026-05-13: Map タブ (index 0) のみ resizeToAvoidBottomInset=false。
-        // 検索バーのキーボード出現時に Scaffold body が縮むと FlutterMap も
-        // 縮んで地理中心が視覚的にシフト (「地図が動いた」見え)。
-        // Map では検索バー/チップ列を top+152〜200 配置でキーボードに隠れない。
-        // 一度撤回したが、黒画面の原因は別と判断して再適用 (2026-05-13)。
-        resizeToAvoidBottomInset: _currentIndex != 0,
+        // 🔴 (2026-05-19) 全タブで resizeToAvoidBottomInset=false に統一。
+        // オーナー要望: 「TextField 選択でキーボードが出るとき背景もずれる」 を
+        // 解消する。 キーボードは body の上に被さるだけで、 背景 (Tarot 占卓 /
+        // Galaxy 星空 / Horoscope シャート等) はそのまま固定。
+        // 旧設計 (Map のみ false): 検索バー位置が固定で、 キーボードで FlutterMap
+        // が縮むと地理中心が視覚的にシフトする問題から導入。 今回その挙動を全タブに
+        // 統一する。 各 TextField は SingleChildScrollView or
+        // bottomSheet 内に配置されているので、 隠れる場合は自然にスクロールできる。
+        resizeToAvoidBottomInset: false,
         body: IndexedStack(
           index: _currentIndex,
           // 2026-05-03: TickerMode で裏画面の AnimationController.repeat() を停止。

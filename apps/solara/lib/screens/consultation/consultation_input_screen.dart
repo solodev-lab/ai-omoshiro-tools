@@ -276,6 +276,8 @@ class _ConsultationInputScreenState extends State<ConsultationInputScreen> {
     return TapToUnfocus(
       child: Scaffold(
       backgroundColor: SolaraColors.celestialBlueDark,
+      // 🔴 (2026-05-19) キーボードで背景がずれないよう false 統一。
+      resizeToAvoidBottomInset: false,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,

@@ -175,6 +175,8 @@ class _SanctuaryProfileEditorPageState extends State<SanctuaryProfileEditorPage>
     return TapToUnfocus(
       child: Scaffold(
       backgroundColor: const Color(0xFF020408),
+      // 🔴 (2026-05-19) キーボードで背景がずれないよう false 統一。
+      resizeToAvoidBottomInset: false,
       body: SafeArea(
         child: Center(
           child: ConstrainedBox(

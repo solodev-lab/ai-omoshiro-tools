@@ -92,6 +92,8 @@ class _SanctuaryHomeEditorPageState extends State<SanctuaryHomeEditorPage> {
     return TapToUnfocus(
       child: Scaffold(
       backgroundColor: const Color(0xFF020408),
+      // 🔴 (2026-05-19) キーボードで背景がずれないよう false 統一。
+      resizeToAvoidBottomInset: false,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
