@@ -98,25 +98,66 @@ class _CatasterismFormationOverlayState
 
   /// レアリティ × ユーザー太陽星座 × 形容詞グループ から背景アセットパスを解決。
   /// 候補リスト形式で返し、見つからなければ次を試す (最後は固定 fallback)。
+  ///
+  /// 🔴 (2026-05-19) 仕様改訂:
+  ///   - ★5 のみ: bright/bright_{adjGroup}_{userZodiac}.webp (120 枚、太陽星座 × 形容詞色)
+  ///   - ★4: variants_leo or variants_virgo (形容詞色テーマ星座 × 2 ベース、決定論的に A/B)
+  ///   - ★3: variants_scorpio or variants_aquarius
+  ///   - ★1-2: variants_pisces or variants_aries
+  /// 旧 mystical/ と lite/ は廃止。
+  ///
+  /// 決定論的 A/B 選択:
+  ///   cycle.id (millisecondsSinceEpoch 文字列) を seed にして 0/1 を決める。
+  ///   同じサイクルなら毎回同じ画像が選ばれるので、 Star Atlas で再表示しても
+  ///   背景が揺らがない。
+  ///
+  /// 形容詞によっては片方のフォルダしか画像が無いケース ([baseZodiac]_[themeZodiac]
+  /// で themeZodiac == baseZodiac は存在しない):
+  ///   ★4: golden (leo) → virgo_leo のみ / infinite (virgo) → leo_virgo のみ
+  ///   ★3: mystic (scorpio) → aquarius_scorpio のみ / frozen (aquarius) → scorpio_aquarius のみ
+  ///   ★1-2: crimson (aries) → pisces_aries のみ
+  /// この場合は自動的に存在する側を優先順位先頭に置く。
   List<String> _resolveBgCandidates(int rarity, String? userZodiac, int adjIdx) {
     final group = (adjIdx ~/ 2).clamp(0, _adjGroupNames.length - 1);
     final groupName = _adjGroupNames[group];
-    final zodiac = userZodiac ?? 'aries';
+    final themeZodiac = _liteZodiacByGroup[group];
 
     final candidates = <String>[];
-    if (rarity >= 4) {
-      // ★4-5 Legendary/Mythic — bright (11 visible zodiacs + scorpio_bright abstract)
-      candidates.add('assets/catasterism-bg/bright/bright_${groupName}_$zodiac.webp');
-    } else if (rarity == 3) {
-      // ★3 Rare — mystical (12 zodiac-specific abstract, no creature)
-      candidates.add('assets/catasterism-bg/mystical/$zodiac.webp');
+    if (rarity >= 5) {
+      // ★5 Mythic — bright (太陽星座 × 形容詞色 = 120 枚)
+      final zodiac = userZodiac ?? 'aries';
+      candidates.add(
+          'assets/catasterism-bg/bright/bright_${groupName}_$zodiac.webp');
     } else {
-      // ★1-2 Common/Uncommon — lite (pisces_variants picked by color group)
-      candidates.add('assets/catasterism-bg/lite/pisces_${_liteZodiacByGroup[group]}.webp');
+      // ★4 / ★3 / ★1-2 — variants A/B から決定論的ランダム
+      final (baseA, baseB) = _variantBasesFor(rarity);
+      // cycle.id を seed に A/B を決定 (id は millisecondsSinceEpoch 文字列)
+      final seed = int.tryParse(widget.cycle.id) ?? widget.cycle.nounIdx;
+      // 上位ビットを使うことで隣接サイクル同士で A/B が偏らないように
+      final pick = ((seed ~/ 1000) ^ adjIdx) & 1; // 0 or 1
+      final firstBase = pick == 0 ? baseA : baseB;
+      final secondBase = pick == 0 ? baseB : baseA;
+      // 自身対応 (baseZodiac == themeZodiac) は欠落しているのでスキップ
+      if (themeZodiac != firstBase) {
+        candidates.add(
+            'assets/catasterism-bg/variants_$firstBase/${firstBase}_$themeZodiac.webp');
+      }
+      if (themeZodiac != secondBase) {
+        candidates.add(
+            'assets/catasterism-bg/variants_$secondBase/${secondBase}_$themeZodiac.webp');
+      }
     }
     // Fallback: 旧 catasterism_bg.webp (アセットが欠けていてもクラッシュさせない)
     candidates.add('assets/catasterism_bg.webp');
     return candidates;
+  }
+
+  /// レアリティ → variants の (A, B) ベース星座ペア。
+  /// ★4: (leo, virgo) / ★3: (scorpio, aquarius) / ★1-2: (pisces, aries)
+  (String, String) _variantBasesFor(int rarity) {
+    if (rarity == 4) return ('leo', 'virgo');
+    if (rarity == 3) return ('scorpio', 'aquarius');
+    return ('pisces', 'aries'); // 1-2
   }
 
   Future<void> _loadBgImage() async {
@@ -492,12 +533,11 @@ class _FormationPainter extends CustomPainter {
     final complete = ((progress - 0.625) / 0.375).clamp(0.0, 1.0);
 
     // ── 背景画像 (COMPLETE 段階でフェードイン) ──
-    // ★4-5 (bright/) は scene 豊かな高品質画像なので濃く出す。★3 中、★1-2 控えめ。
-    // 🔴 (2026-05-19) ★4-5 だけ 0.70 → 0.55 に下げてもう少し暗く
-    // (オーナー要望: 完成画面の雰囲気を深くしたい、★3/★1-2 はそのまま)。
-    final bgAlphaMax = cycle.rarity >= 4 ? 0.55
-        : cycle.rarity == 3 ? 0.50
-        : 0.30;
+    // 🔴 (2026-05-19) 全レアリティ 0.55 一律に統一。
+    // 仕様改訂で variants_* は形容詞色 × ベース星座のリッチ画像 (旧 mystical
+    // ほど抽象でも lite ほど控えめでもない)、 ★5 bright と同じ濃度感が自然。
+    // レアリティ差別化はカード名・★星数・画像内容で行い、 濃度では行わない。
+    const bgAlphaMax = 0.55;
     if (bgImage != null) {
       final bgAlpha = ((progress - 0.625) / 0.375).clamp(0.0, 1.0) * bgAlphaMax;
       if (bgAlpha > 0) {
