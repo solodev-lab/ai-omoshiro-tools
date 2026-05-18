@@ -39,6 +39,22 @@ ASSETS_OUT = WORKTREE_MOCKUP.parent / "assets" / "catasterism-bg"
 
 WEBP_QUALITY = 85  # subjectively indistinguishable from PNG at this quality, ~10% size
 
+# Scorpio per-color source preference. The user mixes:
+# - "old"/abstract (only 3 gas curls, no scorpion body) from backgrounds_scorpio_bright/
+# - "new"/visible (subtle tail+claws with scene) from backgrounds_scorpio_bright_visible/
+SCORPIO_SOURCE = {
+    "golden": "new",
+    "silver": "new",
+    "crimson": "old",
+    "ethereal": "new",
+    "mystic": "new",
+    "silent": "old",
+    "frozen": "old",
+    "ancient": "old",
+    "infinite": "new",
+    "radiant": "old",
+}
+
 
 def _read_png(src: Path) -> Image.Image | None:
     try:
@@ -82,11 +98,27 @@ def main():
     for zodiac in ZODIACS:
         for color in COLORS:
             filename = f"bright_{color}_{zodiac}.png"
-            src = find_source(
-                filename,
-                WORKTREE_SHARE / f"backgrounds_{zodiac}_bright" / filename,
-                MAIN_SHARE / f"backgrounds_{zodiac}_bright" / filename,
-            )
+            # Scorpio uses a per-color source map (SCORPIO_SOURCE):
+            # "new" -> backgrounds_scorpio_bright_visible/ (subtle tail+claws + scene)
+            # "old" -> backgrounds_scorpio_bright/ (abstract 3 gas curls, no body)
+            if zodiac == "scorpio":
+                pick = SCORPIO_SOURCE.get(color, "new")
+                if pick == "new":
+                    src_candidates = [
+                        WORKTREE_SHARE / "backgrounds_scorpio_bright_visible" / filename,
+                        MAIN_SHARE / "backgrounds_scorpio_bright_visible" / filename,
+                    ]
+                else:  # "old"
+                    src_candidates = [
+                        WORKTREE_SHARE / "backgrounds_scorpio_bright" / filename,
+                        MAIN_SHARE / "backgrounds_scorpio_bright" / filename,
+                    ]
+            else:
+                src_candidates = [
+                    WORKTREE_SHARE / f"backgrounds_{zodiac}_bright" / filename,
+                    MAIN_SHARE / f"backgrounds_{zodiac}_bright" / filename,
+                ]
+            src = find_source(filename, *src_candidates)
             if src is None:
                 fail += 1
                 continue

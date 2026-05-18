@@ -160,6 +160,13 @@ ZODIAC_DATA = {
         "a centaur archer with drawn bow silhouette aiming a glowing arrow toward distant galaxies and star clusters",
         "expansive adventurous",
     ),
+    # Scorpio: VISIBLE-style scene BUT scorpion intentionally subtle —
+    # only tail swirl and two pincer claws softly suggested, NO body, NO legs,
+    # NO head, NO eyes. Aim is "claws and tail barely discernible from gas".
+    "scorpio": (
+        "a subtle scorpion's curving tail swirl and two pincer claw curves silhouette barely discernible amid swirling cosmic gas in a deep abyssal nebula with dark matter streams and obsidian undertones, NO scorpion body, NO legs, NO head, NO eyes, NO segments visible — only tail swirl and pincer claw curves softly emerging from the abstract nebula",
+        "mysterious transformative",
+    ),
     # Capricorn: NO fish tail. Mountain goat on stone peak (matches
     # backgrounds_original SIGN_BACKGROUNDS["capricorn"] which used
     # "ancient stone and starlight" with mountain peak imagery).
@@ -285,7 +292,12 @@ def main():
             print(f"Valid: {', '.join(COLORS.keys())}")
             return
 
-    out_dir = Path(__file__).parent / "share-assets" / f"backgrounds_{zodiac}_bright"
+    # Scorpio uses a dedicated `_visible` dir so the existing abstract set in
+    # main's backgrounds_scorpio_bright/ is preserved (画像消すなルール).
+    if zodiac == "scorpio":
+        out_dir = Path(__file__).parent / "share-assets" / "backgrounds_scorpio_bright_visible"
+    else:
+        out_dir = Path(__file__).parent / "share-assets" / f"backgrounds_{zodiac}_bright"
     out_dir.mkdir(parents=True, exist_ok=True)
 
     print(f"\n=== Generating {len(colors)} bright {zodiac} variants ===")
