@@ -29,7 +29,12 @@ android {
 
     defaultConfig {
         applicationId = "com.solodevlab.solara"
-        minSdk = flutter.minSdkVersion
+        // 🔴 minSdk = 31 (Android 12) に固定。
+        // 理由: Solara のテスト範囲は A101FC エミュレーター (Android 12) 以上のみ。
+        // それより古い端末ではテスト未実施のため、Play Store 配信を制限。
+        // 市場カバー率は ~75% (2026-05 時点)、占い系アプリの主流ユーザー層を網羅。
+        // 動作環境は scta-android.html / how_solara_works.md と整合。
+        minSdk = 31
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName

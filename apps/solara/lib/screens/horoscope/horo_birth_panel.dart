@@ -213,8 +213,8 @@ class _HoroBirthPanelState extends State<HoroBirthPanel> {
       ]),
       const SizedBox(height: 10),
 
-      // ── 氏名 ──
-      _labeled('氏名 NAME', _textField(
+      // ── お名前 ──
+      _labeled('お名前 NAME', _textField(
         controller: _nameCtrl,
         hint: '友人Aの名前 (任意)',
       )),
