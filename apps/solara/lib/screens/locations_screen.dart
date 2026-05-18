@@ -4,6 +4,7 @@ import 'package:latlong2/latlong.dart';
 import '../utils/solara_storage.dart';
 import '../widgets/info_popup.dart';
 import '../widgets/no_profile_guide.dart';
+import '../widgets/tap_to_unfocus.dart';
 import 'locations/locations_date_stepper.dart';
 import 'map/map_astro.dart';
 import 'map/map_constants.dart';
@@ -273,11 +274,8 @@ class _LocationsScreenState extends State<LocationsScreen> {
   @override
   Widget build(BuildContext context) {
     final topPad = MediaQuery.of(context).padding.top;
-    return GestureDetector(
+    return TapToUnfocus(
       // 日付フィールド外をタップしたら defocus → _DateNumberField の onFocusChange で自動 commit。
-      // Locations 全体をヒット対象にし、子の TextField/IconButton 等のタップは透過する。
-      behavior: HitTestBehavior.opaque,
-      onTap: () => FocusScope.of(context).unfocus(),
       child: Container(
       color: const Color(0xFF0A0A14),
       child: Column(children: [

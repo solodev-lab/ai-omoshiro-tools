@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 
 import '../../utils/solara_storage.dart';
 import '../../widgets/location_picker_minimap.dart';
+import '../../widgets/tap_to_unfocus.dart';
 
 // ══════════════════════════════════════════════════
 // ── Home Info Editor Page ──
@@ -88,7 +89,8 @@ class _SanctuaryHomeEditorPageState extends State<SanctuaryHomeEditorPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return TapToUnfocus(
+      child: Scaffold(
       backgroundColor: const Color(0xFF020408),
       body: SafeArea(
         child: Center(
@@ -187,6 +189,7 @@ class _SanctuaryHomeEditorPageState extends State<SanctuaryHomeEditorPage> {
             ),
           ),
         ),
+      ),
       ),
     );
   }

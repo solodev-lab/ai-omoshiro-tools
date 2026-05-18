@@ -28,6 +28,7 @@ import '../../theme/solara_colors.dart';
 import '../../utils/astro_lines.dart' as al;
 import '../../utils/consultation_engine.dart' as ce;
 import '../../utils/world_cities.dart';
+import '../../widgets/tap_to_unfocus.dart';
 import '../map/map_search.dart' as map_search;
 import '../map/map_vp_panel.dart';
 import 'consultation_place_picker_screen.dart';
@@ -272,7 +273,8 @@ class _ConsultationInputScreenState extends State<ConsultationInputScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return TapToUnfocus(
+      child: Scaffold(
       backgroundColor: SolaraColors.celestialBlueDark,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
@@ -390,6 +392,7 @@ class _ConsultationInputScreenState extends State<ConsultationInputScreen> {
             ),
           ],
         ),
+      ),
       ),
     );
   }

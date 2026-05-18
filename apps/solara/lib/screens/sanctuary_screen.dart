@@ -10,6 +10,7 @@ import '../utils/title_data.dart' as title_data;
 import '../widgets/class_card.dart';
 import '../widgets/pro_unlock_dialog.dart';
 import '../widgets/sanctuary_account_section.dart';
+import '../widgets/tap_to_unfocus.dart';
 import 'consultation/consultation_history_screen.dart';
 import 'paywall_screen.dart';
 import 'sanctuary/sanctuary_orb_overlay.dart';
@@ -263,7 +264,8 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
     final hasProfile = _profile?.isComplete ?? false;
     final profileName = _profile?.name ?? '';
 
-    return Container(
+    return TapToUnfocus(
+      child: Container(
       decoration: _bgDecoration,
       child: SafeArea(
         child: SingleChildScrollView(
@@ -322,6 +324,7 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
             ),
           ),
         ),
+      ),
       ),
     );
   }

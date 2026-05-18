@@ -40,6 +40,7 @@ import 'package:latlong2/latlong.dart';
 
 import '../../theme/solara_colors.dart';
 import '../../utils/reverse_geocode.dart';
+import '../../widgets/tap_to_unfocus.dart';
 import '../map/map_search.dart';
 import '../map/map_styles.dart';
 import 'consultation_input_screen.dart' show ConsultationPresetTarget;
@@ -232,7 +233,8 @@ class _ConsultationPlacePickerScreenState
     final initialCenter = widget.initialCenter ?? _defaultCenter;
     final initialZoom = widget.initialZoom ?? _defaultZoom;
 
-    return Scaffold(
+    return TapToUnfocus(
+      child: Scaffold(
       backgroundColor: SolaraColors.celestialBlueDark,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
@@ -342,6 +344,7 @@ class _ConsultationPlacePickerScreenState
             ),
           ],
         ),
+      ),
       ),
     );
   }
