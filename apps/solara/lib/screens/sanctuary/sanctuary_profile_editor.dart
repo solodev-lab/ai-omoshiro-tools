@@ -210,11 +210,11 @@ class _SanctuaryProfileEditorPageState extends State<SanctuaryProfileEditorPage>
                     ),
                     const SizedBox(height: 20),
 
-                    // 氏名
-                    _birthSection('氏名', TextField(
+                    // ニックネーム
+                    _birthSection('ニックネーム', TextField(
                       controller: _nameCtrl,
                       style: const TextStyle(color: Color(0xFFEAEAEA), fontSize: 15),
-                      decoration: _inputDecoration('氏名を入力'),
+                      decoration: _inputDecoration('ニックネームを入力'),
                     )),
 
                     // 生年月日 — auto-format: 19901231 → 1990/12/31
