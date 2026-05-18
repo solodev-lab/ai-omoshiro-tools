@@ -97,6 +97,34 @@ void main() {
       expect(list.length, SolaraStorage.titleHistoryMax);
     });
 
+    test('updateTitleHistoryNote で note が書き込める / 200 字 cap が効く / 未一致は no-op', () async {
+      await SolaraStorage.addTitleHistoryEntry(
+        axis: 'power',
+        court: 'page',
+        classEN: 'Knight',
+        classJP: '騎士',
+        lightJP: '',
+        shadowJP: '',
+      );
+      final savedAt = (await SolaraStorage.loadTitleHistory()).first['savedAt'] as String;
+
+      // 書き込み
+      await SolaraStorage.updateTitleHistoryNote(savedAt, '心境を残す');
+      var list = await SolaraStorage.loadTitleHistory();
+      expect(list.first['note'], '心境を残す');
+
+      // 200 字 cap (grapheme cluster 数)
+      final long = '心' * 250;
+      await SolaraStorage.updateTitleHistoryNote(savedAt, long);
+      list = await SolaraStorage.loadTitleHistory();
+      expect((list.first['note'] as String).characters.length, 200);
+
+      // 未一致 savedAt は no-op (既存 note が壊れない)
+      await SolaraStorage.updateTitleHistoryNote('not-exist-iso', 'x');
+      list = await SolaraStorage.loadTitleHistory();
+      expect((list.first['note'] as String).characters.length, 200);
+    });
+
     test('clearTitleHistory で空になる', () async {
       await SolaraStorage.addTitleHistoryEntry(
         axis: 'power',

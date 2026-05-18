@@ -17,6 +17,12 @@ extension _QuestionFieldWidgets on _ObserveScreenState {
   /// 200 字 cap (内部・Worker 側でも cap)。引き済みなら disabled。
   /// 入力内容は fetchTarotReading の `question` パラメータで Worker に送られ、
   /// プロンプトに「テーマ」として埋め込まれる (注入指示には従わない設計)。
+  ///
+  /// 表示:
+  ///   - ヘッダー右肩に「任意・N/200」リアルタイム文字数
+  ///   - 入力欄は 5 行までは見せ、超過分は内部スクロール (引いた後に
+  ///     テーマ全文が確認できるよう、十分な視認領域を確保)
+  ///   - 入力欄の fillColor を深く落として自分の文字が背景に同化しないように
   Widget buildQuestionField() {
     return Container(
       padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
@@ -55,15 +61,28 @@ extension _QuestionFieldWidgets on _ObserveScreenState {
                       letterSpacing: 0.4)),
             ),
             const Spacer(),
-            const Text('(任意・200字)',
-                style: TextStyle(fontSize: 10, color: Color(0xFF888888))),
+            ValueListenableBuilder<TextEditingValue>(
+              valueListenable: _questionController,
+              builder: (_, value, _) {
+                final n = value.text.characters.length;
+                return Text(
+                  '任意・$n/200',
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: n >= 200
+                        ? const Color(0xFFF6BD60)
+                        : const Color(0xFF888888),
+                  ),
+                );
+              },
+            ),
           ]),
           const SizedBox(height: 8),
           TextField(
             controller: _questionController,
             enabled: !_alreadyDrawnToday,
             maxLength: 200,
-            maxLines: 2,
+            maxLines: 5,
             minLines: 1,
             style: const TextStyle(fontSize: 13, color: Color(0xFFE8E0D0)),
             decoration: InputDecoration(
@@ -74,7 +93,7 @@ extension _QuestionFieldWidgets on _ObserveScreenState {
                   fontSize: 12, color: Color(0xFF666666), height: 1.4),
               counterText: '',
               filled: true,
-              fillColor: const Color(0x220C0C1A),
+              fillColor: const Color(0xCC050510),
               contentPadding: const EdgeInsets.symmetric(
                   horizontal: 12, vertical: 10),
               border: OutlineInputBorder(
