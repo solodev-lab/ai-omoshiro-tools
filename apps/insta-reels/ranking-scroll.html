@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ランキングリール - スクロール型</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #000;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+    font-family: 'Noto Sans JP', 'Hiragino Kaku Gothic ProN', 'Yu Gothic', 'Meiryo', sans-serif;
+    overflow: hidden;
+  }
+
+  /* === 9:16 リールフレーム === */
+  .reel-frame {
+    width: 390px;
+    height: 693px;
+    position: relative;
+    overflow: hidden;
+    border-radius: 12px;
+    background: #000;
+  }
+
+  /* === 背景画像 === */
+  .bg-image {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    filter: brightness(0.45);
+    z-index: 0;
+  }
+
+  /* === スクロールするコンテンツ === */
+  .scroll-content {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%;
+    z-index: 1;
+    padding: 60px 20px 200px;
+  }
+
+  .scroll-content.animating {
+    animation: scrollUp var(--scroll-duration) linear forwards;
+  }
+
+  @keyframes scrollUp {
+    0% { transform: translateY(30%); }
+    100% { transform: translateY(var(--scroll-end)); }
+  }
+
+  /* === タイトル === */
+  .title {
+    font-size: 36px;
+    font-weight: 900;
+    color: #ffd700;
+    text-align: center;
+    line-height: 1.35;
+    margin-bottom: 36px;
+    text-shadow:
+      3px 3px 0 #000,
+      -3px -3px 0 #000,
+      3px -3px 0 #000,
+      -3px 3px 0 #000,
+      0 3px 0 #000,
+      0 -3px 0 #000,
+      3px 0 0 #000,
+      -3px 0 0 #000,
+      0 0 20px rgba(0,0,0,0.8);
+  }
+
+  /* === ランキング行 === */
+  .rank-row {
+    margin-bottom: 22px;
+  }
+
+  .rank-main {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+  }
+
+  .rank-num {
+    font-size: 36px;
+    font-weight: 900;
+    color: #ffd700;
+    min-width: 65px;
+    text-align: right;
+    text-shadow:
+      3px 3px 0 #000,
+      -3px -3px 0 #000,
+      3px -3px 0 #000,
+      -3px 3px 0 #000,
+      0 0 15px rgba(0,0,0,0.8);
+  }
+
+  .rank-text {
+    font-size: 30px;
+    font-weight: 900;
+    color: #fff;
+    text-shadow:
+      2px 2px 0 #000,
+      -2px -2px 0 #000,
+      2px -2px 0 #000,
+      -2px 2px 0 #000,
+      0 0 15px rgba(0,0,0,0.8);
+    line-height: 1.3;
+  }
+
+  /* === 説明文（各ランキングの下に表示） === */
+  .rank-desc {
+    font-size: 18px;
+    font-weight: 700;
+    color: #ffd700;
+    margin-left: 77px;
+    margin-top: 2px;
+    text-shadow:
+      2px 2px 0 #000,
+      -2px -2px 0 #000,
+      2px -2px 0 #000,
+      -2px 2px 0 #000,
+      0 0 10px rgba(0,0,0,0.8);
+  }
+
+  /* === 1位特別強調 === */
+  .rank-row.rank-1 .rank-num {
+    font-size: 42px;
+  }
+
+  .rank-row.rank-1 .rank-text {
+    font-size: 34px;
+    color: #ffd700;
+    text-shadow:
+      3px 3px 0 #000,
+      -3px -3px 0 #000,
+      3px -3px 0 #000,
+      -3px 3px 0 #000,
+      0 0 25px rgba(255, 215, 0, 0.4),
+      0 0 15px rgba(0,0,0,0.8);
+  }
+
+  .rank-row.rank-1 .rank-desc {
+    font-size: 20px;
+  }
+
+  /* === 上下グラデーション === */
+  .fade-top, .fade-bottom {
+    position: absolute;
+    left: 0; width: 100%;
+    z-index: 2;
+    pointer-events: none;
+  }
+
+  .fade-top {
+    top: 0; height: 40px;
+    background: linear-gradient(to bottom, rgba(0,0,0,0.5), transparent);
+  }
+
+  .fade-bottom {
+    bottom: 0; height: 80px;
+    background: linear-gradient(to top, rgba(0,0,0,0.7), transparent);
+  }
+
+  /* === CTA === */
+  .cta-overlay {
+    position: absolute;
+    bottom: 16px;
+    left: 0; right: 0;
+    text-align: center;
+    z-index: 3;
+    pointer-events: none;
+  }
+
+  .cta-text {
+    font-size: 13px;
+    color: #ffd700;
+    font-weight: 700;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.9);
+    letter-spacing: 1px;
+  }
+
+  /* === コントロール === */
+  .controls {
+    position: fixed;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 8px;
+    z-index: 100;
+    flex-wrap: wrap;
+    justify-content: center;
+    max-width: 500px;
+  }
+
+  .controls button {
+    padding: 6px 14px;
+    background: #333;
+    color: #fff;
+    border: 1px solid #555;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    font-family: 'Noto Sans JP', sans-serif;
+  }
+
+  .controls button:hover { background: #555; }
+
+  /* === 録画用フルスクリーン === */
+  .reel-frame.fullscreen {
+    width: 100vw;
+    height: 100vh;
+    border-radius: 0;
+  }
+
+  /* === 背景選択パネル === */
+  .bg-selector {
+    position: fixed;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 6px;
+    z-index: 100;
+    flex-wrap: wrap;
+    justify-content: center;
+    max-width: 600px;
+  }
+
+  .bg-selector button {
+    padding: 4px 10px;
+    background: #222;
+    color: #ccc;
+    border: 1px solid #444;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 11px;
+  }
+
+  .bg-selector button.selected { background: #ffd700; color: #000; font-weight: 700; }
+
+  /* === 速度スライダー === */
+  .speed-control {
+    position: fixed;
+    right: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    z-index: 100;
+  }
+
+  .speed-control label {
+    color: #888;
+    font-size: 11px;
+    writing-mode: vertical-rl;
+  }
+
+  .speed-control input[type="range"] {
+    writing-mode: vertical-lr;
+    height: 120px;
+  }
+
+  .speed-control .speed-val {
+    color: #ffd700;
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  /* === 明るさスライダー === */
+  .brightness-control {
+    position: fixed;
+    left: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    z-index: 100;
+  }
+
+  .brightness-control label {
+    color: #888;
+    font-size: 11px;
+    writing-mode: vertical-rl;
+  }
+
+  .brightness-control input[type="range"] {
+    writing-mode: vertical-lr;
+    height: 120px;
+  }
+
+  .brightness-control .bright-val {
+    color: #ffd700;
+    font-size: 12px;
+    font-weight: 700;
+  }
+</style>
+</head>
+<body>
+
+<div class="reel-frame" id="reelFrame">
+  <div class="bg-image" id="bgImage"></div>
+  <div class="scroll-content" id="scrollContent"></div>
+  <div class="fade-top"></div>
+  <div class="fade-bottom"></div>
+  <div class="cta-overlay">
+    <div class="cta-text" id="ctaText"></div>
+  </div>
+</div>
+
+<!-- 背景選択 -->
+<div class="bg-selector" id="bgSelector"></div>
+
+<!-- 明るさ調整（左） -->
+<div class="brightness-control" id="brightnessControl">
+  <div class="bright-val" id="brightVal">45%</div>
+  <input type="range" id="brightSlider" min="10" max="80" value="45" step="5">
+  <label>背景の明るさ</label>
+</div>
+
+<!-- 速度調整（右） -->
+<div class="speed-control" id="speedControl">
+  <div class="speed-val" id="speedVal">15秒</div>
+  <input type="range" id="speedSlider" min="8" max="30" value="15" step="1">
+  <label>スクロール速度</label>
+</div>
+
+<!-- 操作パネル -->
+<div class="controls" id="controlPanel">
+  <button onclick="startScroll()">▶ 再生</button>
+  <button onclick="pauseScroll()">⏸ 停止</button>
+  <button onclick="resetScroll()">↺ 最初から</button>
+  <button onclick="toggleFullscreen()">⛶ 全画面（録画用）</button>
+</div>
+
+<script>
+// ============================================================
+// ★★★ ここを編集するだけでコンテンツを変更 ★★★
+// ============================================================
+const CONFIG = {
+  // タイトル（改行は \n）
+  title: "本当は親から\n一番愛されている人",
+
+  // CTA（画面下部に常時表示）
+  cta: "▶ プロフィールから無料鑑定",
+
+  // ランキングデータ（1位から順に）
+  // desc: 各順位の説明文（省略可能）
+  rankings: [
+    { rank: 1,  text: "17日生まれ", desc: "愛情を一身に受ける星" },
+    { rank: 2,  text: "25日生まれ", desc: "守られる運命の人" },
+    { rank: 3,  text: "9日生まれ",  desc: "情熱で信頼得る" },
+    { rank: 4,  text: "15日生まれ", desc: "素直さが魅力に" },
+    { rank: 5,  text: "3日生まれ",  desc: "安心感を与える" },
+    { rank: 6,  text: "30日生まれ", desc: "家族に癒しを与える" },
+  ]
+};
+
+// 背景画像（Pixabay フリー素材 - bgフォルダに保存済み）
+const BACKGROUNDS = [
+  { name: "⛩️ 神社鳥居",     url: "./bg/shrine-torii.jpg" },
+  { name: "⛩️ 伏見稲荷",     url: "./bg/fushimi-inari.jpg" },
+  { name: "🌅 夕焼けビーチ",  url: "./bg/sunset-beach.jpg" },
+  { name: "🌴 夕焼けヤシ",    url: "./bg/sunset-palm.jpg" },
+  { name: "🌸 桜",           url: "./bg/cherry-blossom.jpg" },
+  { name: "🌲 神秘の森",      url: "./bg/forest-mystical.jpg" },
+  { name: "🌲 暗い森",        url: "./bg/dark-forest.jpg" },
+  { name: "🌌 星空",          url: "./bg/starry-night.jpg" },
+  { name: "🌌 オーロラ",      url: "./bg/aurora.jpg" },
+  { name: "🌙 月夜",          url: "./bg/moon-night.jpg" },
+  { name: "🕯️ キャンドル",    url: "./bg/candle.jpg" },
+  { name: "💜 ラベンダー",     url: "./bg/lavender.jpg" },
+  { name: "🌹 バラ",          url: "./bg/rose-petals.jpg" },
+];
+
+// ============================================================
+// 以下は変更不要
+// ============================================================
+
+let currentBg = 0;
+
+function buildContent() {
+  const container = document.getElementById('scrollContent');
+  let html = `<div class="title">${CONFIG.title.replace(/\n/g, '<br>')}</div>`;
+
+  CONFIG.rankings.forEach(item => {
+    const isFirst = item.rank === 1;
+    html += `<div class="rank-row ${isFirst ? 'rank-1' : ''}">`;
+    html += `<div class="rank-main">`;
+    html += `<span class="rank-num">${item.rank}位</span>`;
+    html += `<span class="rank-text">${item.text}</span>`;
+    html += `</div>`;
+    if (item.desc) {
+      html += `<div class="rank-desc">${item.desc}</div>`;
+    }
+    html += `</div>`;
+  });
+
+  container.innerHTML = html;
+  document.getElementById('ctaText').textContent = CONFIG.cta;
+}
+
+function buildBgSelector() {
+  const selector = document.getElementById('bgSelector');
+  let html = '<button onclick="promptCustomBg()">📁 自分の画像</button>';
+  BACKGROUNDS.forEach((bg, i) => {
+    html += `<button class="${i === 0 ? 'selected' : ''}" onclick="setBg(${i})" data-bg="${i}">${bg.name}</button>`;
+  });
+  selector.innerHTML = html;
+}
+
+function setBg(index) {
+  currentBg = index;
+  const bg = BACKGROUNDS[index];
+  const el = document.getElementById('bgImage');
+
+  // 背景画像を設定（バグ修正: background shorthandではなくbackgroundImageのみ操作）
+  el.style.backgroundImage = `url('${bg.url}')`;
+
+  // ボタンのselected更新
+  document.querySelectorAll('#bgSelector button[data-bg]').forEach((btn, i) => {
+    btn.classList.toggle('selected', i === index);
+  });
+}
+
+function promptCustomBg() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+  input.onchange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const url = URL.createObjectURL(file);
+    document.getElementById('bgImage').style.backgroundImage = `url('${url}')`;
+  };
+  input.click();
+}
+
+function startScroll() {
+  const content = document.getElementById('scrollContent');
+  const frame = document.getElementById('reelFrame');
+  const duration = parseInt(document.getElementById('speedSlider').value);
+
+  const contentH = content.scrollHeight;
+  const frameH = frame.clientHeight;
+  const scrollNeeded = contentH - frameH + 100;
+  const scrollPercent = -(scrollNeeded / frameH) * 100;
+
+  content.style.setProperty('--scroll-duration', duration + 's');
+  content.style.setProperty('--scroll-end', scrollPercent + '%');
+
+  content.classList.remove('animating');
+  void content.offsetWidth;
+  content.classList.add('animating');
+}
+
+function pauseScroll() {
+  const content = document.getElementById('scrollContent');
+  const matrix = getComputedStyle(content).transform;
+  content.classList.remove('animating');
+  content.style.transform = matrix;
+}
+
+function resetScroll() {
+  const content = document.getElementById('scrollContent');
+  content.classList.remove('animating');
+  content.style.transform = '';
+}
+
+function toggleFullscreen() {
+  const frame = document.getElementById('reelFrame');
+  frame.classList.toggle('fullscreen');
+  const isFull = frame.classList.contains('fullscreen');
+
+  ['controlPanel', 'bgSelector', 'speedControl', 'brightnessControl'].forEach(id => {
+    document.getElementById(id).style.display = isFull ? 'none' : '';
+  });
+}
+
+// 速度スライダー
+document.getElementById('speedSlider').addEventListener('input', (e) => {
+  document.getElementById('speedVal').textContent = e.target.value + '秒';
+});
+
+// 明るさスライダー
+document.getElementById('brightSlider').addEventListener('input', (e) => {
+  const val = e.target.value;
+  document.getElementById('brightVal').textContent = val + '%';
+  document.getElementById('bgImage').style.filter = `brightness(${val / 100})`;
+});
+
+// キーボード操作
+document.addEventListener('keydown', (e) => {
+  if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); startScroll(); }
+  if (e.key === 'p') { e.preventDefault(); pauseScroll(); }
+  if (e.key === 'r') { e.preventDefault(); resetScroll(); }
+  if (e.key === 'f') { e.preventDefault(); toggleFullscreen(); }
+  if (e.key === 'Escape') {
+    const frame = document.getElementById('reelFrame');
+    if (frame.classList.contains('fullscreen')) toggleFullscreen();
+  }
+});
+
+// 初期化
+buildContent();
+buildBgSelector();
+setBg(0);
+</script>
+
+</body>
+</html>

@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AIタロット占い v2 - 神秘のカードがあなたの運命を読み解く</title>
+
+    <!-- AdSense -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1896365115623823" crossorigin="anonymous"></script>
+
+    <!-- Google Analytics GA4 -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-JX7SCK9ECB"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-JX7SCK9ECB');
+    </script>
+
+    <!-- OGP -->
+    <meta property="og:title" content="AIタロット占い - 神秘のカードがあなたの運命を読み解く">
+    <meta property="og:description" content="78枚のタロットカードからAIが深い鑑定。相談内容に合わせた本格占い。">
+    <meta property="og:image" content="https://solodev-lab.github.io/ai-omoshiro-tools/apps/tarot-reading/ogp.png">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://solodev-lab.com/apps/tarot-v2/">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="https://solodev-lab.github.io/ai-omoshiro-tools/apps/tarot-reading/ogp.png">
+
+    <!-- PWA -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0a0a1a">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css?v=20260318a">
+</head>
+<body>
+    <div class="container">
+        <!-- ホームボタン -->
+        <a href="../../" class="home-btn" style="display:inline-block;margin:8px 0 0;padding:6px 16px;border-radius:20px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:#999;text-decoration:none;font-size:0.8rem;transition:all 0.2s;"
+           onmouseover="this.style.color='#9b59b6';this.style.borderColor='#9b59b6'"
+           onmouseout="this.style.color='#999';this.style.borderColor='rgba(255,255,255,0.15)'">
+            &lt; ツール一覧に戻る
+        </a>
+
+        <header>
+            <h1>🔮 AIタロット占い</h1>
+            <p class="subtitle">神秘のカードがあなたの運命を読み解く</p>
+        </header>
+
+        <main>
+            <!-- モード選択セクション -->
+            <section class="mode-section" id="modeSection">
+                <div class="mode-card">
+                    <p style="font-size:3rem;margin-bottom:12px;">🔮✨🃏</p>
+                    <p style="color:#ccc;font-size:0.9rem;margin-bottom:20px;">
+                        78枚のタロットカードから<br>AIがあなただけの鑑定を行います
+                    </p>
+                    <div class="mode-grid">
+                        <button class="mode-btn" data-mode="one-card">
+                            <div class="mode-emoji">🎴</div>
+                            <div class="mode-name">1枚引き（ワンオラクル）</div>
+                            <div class="mode-desc">今日の運勢やYes/Noをシンプルに占う</div>
+                        </button>
+                        <button class="mode-btn" data-mode="three-card">
+                            <div class="mode-emoji">🎴🎴🎴</div>
+                            <div class="mode-name">3枚引き（過去・現在・未来）</div>
+                            <div class="mode-desc">時間軸に沿って流れを読み解く</div>
+                        </button>
+                        <button class="mode-btn premium" data-mode="five-card">
+                            <div class="mode-emoji">🎴🎴🎴🎴🎴</div>
+                            <div class="mode-name">5枚引き（ケルト十字簡易版）<span class="price-tag">¥300</span></div>
+                            <div class="mode-desc">現状・障害・過去・未来・結論を徹底鑑定</div>
+                        </button>
+                        <button class="mode-btn" data-mode="two-card">
+                            <div class="mode-emoji">🎴🎴</div>
+                            <div class="mode-name">2枚引き（ツーカード）</div>
+                            <div class="mode-desc">現状と対策をシンプルに読み解く</div>
+                        </button>
+                        <button class="mode-btn" data-mode="two-choice">
+                            <div class="mode-emoji">🅰️🅱️</div>
+                            <div class="mode-name">2者択一（6枚V字配置）</div>
+                            <div class="mode-desc">2つの選択肢、どちらが有利か占う</div>
+                        </button>
+                        <button class="mode-btn premium" data-mode="hexagram">
+                            <div class="mode-emoji">✡️</div>
+                            <div class="mode-name">ヘキサグラム（7枚・六芒星）<span class="price-tag">¥500</span></div>
+                            <div class="mode-desc">過去・現在・未来・対策・環境・本心・最終結果を徹底鑑定</div>
+                        </button>
+                        <button class="mode-btn" data-mode="horseshoe">
+                            <div class="mode-emoji">🧲</div>
+                            <div class="mode-name">ホースシュー（7枚・馬蹄形）</div>
+                            <div class="mode-desc">U字型に7枚展開。過去→現在→未来→障害→最終結果</div>
+                        </button>
+                        <button class="mode-btn" data-mode="rel-cross">
+                            <div class="mode-emoji">💕</div>
+                            <div class="mode-name">リレーションシップクロス（5枚・恋愛）</div>
+                            <div class="mode-desc">あなた・お相手・過去・現在・未来を十字に展開</div>
+                        </button>
+                        <button class="mode-btn" data-mode="rel-mirror">
+                            <div class="mode-emoji">🪞</div>
+                            <div class="mode-name">ミラースプレッド（7枚・恋愛深層）</div>
+                            <div class="mode-desc">思考・感情・行動を左右対称に映し出す鏡像鑑定</div>
+                        </button>
+                        <button class="mode-btn" data-mode="yesno">
+                            <div class="mode-emoji">⭕❌</div>
+                            <div class="mode-name">Yes/Noスプレッド（3枚）</div>
+                            <div class="mode-desc">迷っている質問にYes/Noをズバリ回答</div>
+                        </button>
+                    </div>
+                    <button class="history-btn" id="historyBtn">📜 過去の鑑定を見る</button>
+                </div>
+            </section>
+
+            <!-- 相談内容セクション -->
+            <section class="consult-section" id="consultSection" style="display:none;">
+                <div id="consultSteps"></div>
+            </section>
+
+            <!-- カードシャッフルセクション -->
+            <section class="shuffle-section" id="shuffleSection" style="display:none;">
+                <h2 style="font-size:1.1rem;color:#c89cf5;margin-bottom:8px;" id="shuffleTitle">カードをシャッフル中...</h2>
+                <div class="shuffle-area" id="shuffleArea"></div>
+                <!-- 3枚引き用カード置き場 -->
+                <div id="cardSlots" style="display:none;margin:20px auto 0;max-width:400px;justify-content:center;gap:16px;">
+                    <div style="text-align:center;flex:1;">
+                        <div style="font-size:0.8rem;color:#c89cf5;margin-bottom:8px;font-weight:700;">⏪ 過去</div>
+                        <div id="slotCard0" style="width:80px;height:120px;margin:0 auto;border:2px dashed rgba(155,89,182,0.4);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(255,255,255,0.03);transition:all 0.4s ease;"></div>
+                    </div>
+                    <div style="text-align:center;flex:1;">
+                        <div style="font-size:0.8rem;color:#c89cf5;margin-bottom:8px;font-weight:700;">🔵 現在</div>
+                        <div id="slotCard1" style="width:80px;height:120px;margin:0 auto;border:2px dashed rgba(155,89,182,0.4);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(255,255,255,0.03);transition:all 0.4s ease;"></div>
+                    </div>
+                    <div style="text-align:center;flex:1;">
+                        <div style="font-size:0.8rem;color:#c89cf5;margin-bottom:8px;font-weight:700;">⏩ 未来</div>
+                        <div id="slotCard2" style="width:80px;height:120px;margin:0 auto;border:2px dashed rgba(155,89,182,0.4);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(255,255,255,0.03);transition:all 0.4s ease;"></div>
+                    </div>
+                </div>
+                <!-- 5枚引き用カード置き場 -->
+                <div id="fiveCardSlots" style="display:none;margin:20px auto 0;max-width:360px;">
+                    <div style="text-align:center;margin-bottom:12px;">
+                        <div style="font-size:0.75rem;color:#f1c40f;margin-bottom:6px;font-weight:700;">⭐ 最終結論</div>
+                        <div id="slotFive4" style="width:72px;height:108px;margin:0 auto;border:2px dashed rgba(241,196,15,0.3);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(255,255,255,0.03);transition:all 0.4s ease;"></div>
+                    </div>
+                    <div style="display:flex;justify-content:center;align-items:center;gap:12px;">
+                        <div style="text-align:center;">
+                            <div style="font-size:0.75rem;color:#c89cf5;margin-bottom:6px;font-weight:700;">⏪ 過去</div>
+                            <div id="slotFive2" style="width:72px;height:108px;margin:0 auto;border:2px dashed rgba(155,89,182,0.4);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(255,255,255,0.03);transition:all 0.4s ease;"></div>
+                        </div>
+                        <div style="text-align:center;position:relative;">
+                            <div style="font-size:0.75rem;color:#c89cf5;margin-bottom:6px;font-weight:700;">🔵 現在 / 🔴 障害</div>
+                            <div style="position:relative;width:90px;height:120px;margin:0 auto;">
+                                <div id="slotFive0" style="position:absolute;left:5px;top:6px;width:72px;height:108px;border:2px dashed rgba(155,89,182,0.4);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(255,255,255,0.03);transition:all 0.4s ease;z-index:1;"></div>
+                                <div id="slotFive1" style="position:absolute;left:12px;top:0;width:72px;height:108px;border:2px dashed rgba(231,76,60,0.4);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(255,255,255,0.03);transition:all 0.4s ease;z-index:2;transform:rotate(-12deg);"></div>
+                            </div>
+                        </div>
+                        <div style="text-align:center;">
+                            <div style="font-size:0.75rem;color:#c89cf5;margin-bottom:6px;font-weight:700;">⏩ 未来</div>
+                            <div id="slotFive3" style="width:72px;height:108px;margin:0 auto;border:2px dashed rgba(155,89,182,0.4);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(255,255,255,0.03);transition:all 0.4s ease;"></div>
+                        </div>
+                    </div>
+                </div>
+                <!-- ツーカード用カード置き場 -->
+                <div id="twoCardSlots" style="display:none;margin:20px auto 0;max-width:300px;justify-content:center;gap:24px;">
+                    <div style="text-align:center;flex:1;">
+                        <div style="font-size:0.8rem;color:#c89cf5;margin-bottom:8px;font-weight:700;">🔵 現在の状況</div>
+                        <div id="slotTwoCard0" style="width:80px;height:120px;margin:0 auto;border:2px dashed rgba(155,89,182,0.4);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(255,255,255,0.03);transition:all 0.4s ease;"></div>
+                    </div>
+                    <div style="text-align:center;flex:1;">
+                        <div style="font-size:0.8rem;color:#f1c40f;margin-bottom:8px;font-weight:700;">💡 対策・アドバイス</div>
+                        <div id="slotTwoCard1" style="width:80px;height:120px;margin:0 auto;border:2px dashed rgba(241,196,15,0.3);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(255,255,255,0.03);transition:all 0.4s ease;"></div>
+                    </div>
+                </div>
+                <!-- ヘキサグラム用カード置き場（六芒星配置）
+                     △上三角: ①過去(top) ②現在(右下) ③近未来(左下)
+                     ▽下三角: ④対策(bottom) ⑤お相手(左上) ⑥本人(右上)
+                     中央: ⑦最終結果 -->
+                <div id="hexagramSlots" style="display:none;position:relative;margin:20px auto 0;width:360px;height:410px;">
+                    <!-- ① 過去: △top center -->
+                    <div style="position:absolute;top:0;left:50%;transform:translateX(-50%);text-align:center;z-index:2;">
+                        <div style="font-size:0.7rem;color:#c89cf5;margin-bottom:4px;font-weight:700;">⏪ 過去</div>
+                        <div id="slotHex0" style="width:68px;height:102px;border:2px dashed rgba(155,89,182,0.4);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(255,255,255,0.03);transition:all 0.4s ease;"></div>
+                    </div>
+                    <!-- ⑤ お相手の気持ち: ▽upper-left -->
+                    <div style="position:absolute;top:68px;left:50%;transform:translateX(calc(-50% - 105px));text-align:center;z-index:2;">
+                        <div style="font-size:0.65rem;color:#2ecc71;margin-bottom:4px;font-weight:700;">🌍 お相手</div>
+                        <div id="slotHex4" style="width:68px;height:102px;border:2px dashed rgba(46,204,113,0.4);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(255,255,255,0.03);transition:all 0.4s ease;"></div>
+                    </div>
+                    <!-- ⑥ 本人の気持ち: ▽upper-right -->
+                    <div style="position:absolute;top:68px;left:50%;transform:translateX(calc(-50% + 105px));text-align:center;z-index:2;">
+                        <div style="font-size:0.65rem;color:#e67e22;margin-bottom:4px;font-weight:700;">💜 本人</div>
+                        <div id="slotHex5" style="width:68px;height:102px;border:2px dashed rgba(230,126,34,0.4);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(255,255,255,0.03);transition:all 0.4s ease;"></div>
+                    </div>
+                    <!-- ⑦ 最終結果: center -->
+                    <div style="position:absolute;top:143px;left:50%;transform:translateX(-50%);text-align:center;z-index:5;">
+                        <div style="font-size:0.7rem;color:#f1c40f;margin-bottom:4px;font-weight:700;">⭐ 最終結果</div>
+                        <div id="slotHex6" style="width:68px;height:102px;border:2px dashed rgba(241,196,15,0.3);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(255,255,255,0.03);transition:all 0.4s ease;"></div>
+                    </div>
+                    <!-- ③ 近未来: △lower-left -->
+                    <div style="position:absolute;top:195px;left:50%;transform:translateX(calc(-50% - 105px));text-align:center;z-index:2;">
+                        <div style="font-size:0.7rem;color:#c89cf5;margin-bottom:4px;font-weight:700;">⏩ 近未来</div>
+                        <div id="slotHex2" style="width:68px;height:102px;border:2px dashed rgba(155,89,182,0.4);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(255,255,255,0.03);transition:all 0.4s ease;"></div>
+                    </div>
+                    <!-- ② 現在: △lower-right -->
+                    <div style="position:absolute;top:195px;left:50%;transform:translateX(calc(-50% + 105px));text-align:center;z-index:2;">
+                        <div style="font-size:0.7rem;color:#c89cf5;margin-bottom:4px;font-weight:700;">🔵 現在</div>
+                        <div id="slotHex1" style="width:68px;height:102px;border:2px dashed rgba(155,89,182,0.4);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(255,255,255,0.03);transition:all 0.4s ease;"></div>
+                    </div>
+                    <!-- ④ アドバイス・対策: ▽bottom center -->
+                    <div style="position:absolute;top:290px;left:50%;transform:translateX(-50%);text-align:center;z-index:2;">
+                        <div style="font-size:0.65rem;color:#3498db;margin-bottom:4px;font-weight:700;">🔑 対策</div>
+                        <div id="slotHex3" style="width:68px;height:102px;border:2px dashed rgba(52,152,219,0.4);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(255,255,255,0.03);transition:all 0.4s ease;"></div>
+                    </div>
+                </div>
+                <!-- ホースシュー用カード置き場（U字配置 ∪）
+                     左上:過去→左中:現在→左下:未来→中央下:アドバイス→右下:周囲→右中:障害→右上:最終結果 -->
+                <div id="horseshoeSlots" style="display:none;position:relative;margin:20px auto 0;width:360px;height:380px;">
+                    <!-- ① 過去: 左上 -->
+                    <div style="position:absolute;top:0;left:0;text-align:center;z-index:2;">
+                        <div style="font-size:0.7rem;color:#c89cf5;margin-bottom:4px;font-weight:700;">⏪ 過去</div>
+                        <div id="slotHorse0" style="width:68px;height:102px;border:2px dashed rgba(155,89,182,0.4);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(255,255,255,0.03);transition:all 0.4s ease;"></div>
+                    </div>
+                    <!-- ② 現在: 左中 -->
+                    <div style="position:absolute;top:50%;left:0;transform:translateY(-50%);text-align:center;z-index:2;">
+                        <div style="font-size:0.7rem;color:#c89cf5;margin-bottom:4px;font-weight:700;">🔵 現在</div>
+                        <div id="slotHorse1" style="width:68px;height:102px;border:2px dashed rgba(155,89,182,0.4);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(255,255,255,0.03);transition:all 0.4s ease;"></div>
+                    </div>
+                    <!-- ③ 未来: 左下 -->
+                    <div style="position:absolute;bottom:0;left:0;text-align:center;z-index:2;">
+                        <div style="font-size:0.7rem;color:#c89cf5;margin-bottom:4px;font-weight:700;">⏩ 未来</div>
+                        <div id="slotHorse2" style="width:68px;height:102px;border:2px dashed rgba(155,89,182,0.4);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(255,255,255,0.03);transition:all 0.4s ease;"></div>
+                    </div>
+                    <!-- ④ アドバイス: 中央下 -->
+                    <div style="position:absolute;bottom:0;left:50%;transform:translateX(-50%);text-align:center;z-index:2;">
+                        <div style="font-size:0.7rem;color:#f1c40f;margin-bottom:4px;font-weight:700;">💡 アドバイス</div>
+                        <div id="slotHorse3" style="width:68px;height:102px;border:2px dashed rgba(241,196,15,0.3);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(255,255,255,0.03);transition:all 0.4s ease;"></div>
+                    </div>
+                    <!-- ⑤ 周囲の影響: 右下 -->
+                    <div style="position:absolute;bottom:0;right:0;text-align:center;z-index:2;">
+                        <div style="font-size:0.65rem;color:#2ecc71;margin-bottom:4px;font-weight:700;">🌍 周囲</div>
+                        <div id="slotHorse4" style="width:68px;height:102px;border:2px dashed rgba(46,204,113,0.4);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(255,255,255,0.03);transition:all 0.4s ease;"></div>
+                    </div>
+                    <!-- ⑥ 障害・課題: 右中 -->
+                    <div style="position:absolute;top:50%;right:0;transform:translateY(-50%);text-align:center;z-index:2;">
+                        <div style="font-size:0.65rem;color:#e74c3c;margin-bottom:4px;font-weight:700;">🔴 障害</div>
+                        <div id="slotHorse5" style="width:68px;height:102px;border:2px dashed rgba(231,76,60,0.4);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(255,255,255,0.03);transition:all 0.4s ease;"></div>
+                    </div>
+                    <!-- ⑦ 最終結果: 右上 -->
+                    <div style="position:absolute;top:0;right:0;text-align:center;z-index:2;">
+                        <div style="font-size:0.7rem;color:#f1c40f;margin-bottom:4px;font-weight:700;">⭐ 最終結果</div>
+                        <div id="slotHorse6" style="width:68px;height:102px;border:2px dashed rgba(241,196,15,0.3);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(255,255,255,0.03);transition:all 0.4s ease;"></div>
+                    </div>
+                </div>
+                <!-- リレーションシップクロス用カード置き場（十字配置）
+                     上:過去 / 左:自分 中央:現在 右:相手 / 下:未来 -->
+                <div id="relCrossSlots" style="display:none;position:relative;margin:20px auto 0;width:360px;height:350px;">
+                    <!-- ③ 過去・基盤: top center -->
+                    <div style="position:absolute;top:0;left:50%;transform:translateX(-50%);text-align:center;z-index:2;">
+                        <div style="font-size:0.7rem;color:#e67e22;margin-bottom:4px;font-weight:700;">⏪ 過去・基盤</div>
+                        <div id="slotRC2" style="width:68px;height:102px;border:2px dashed rgba(230,126,34,0.4);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(255,255,255,0.03);transition:all 0.4s ease;"></div>
+                    </div>
+                    <!-- ① あなた: middle-left -->
+                    <div style="position:absolute;top:115px;left:50%;transform:translateX(calc(-50% - 100px));text-align:center;z-index:2;">
+                        <div style="font-size:0.65rem;color:#9b59b6;margin-bottom:4px;font-weight:700;">💜 あなた</div>
+                        <div id="slotRC0" style="width:68px;height:102px;border:2px dashed rgba(155,89,182,0.4);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(255,255,255,0.03);transition:all 0.4s ease;"></div>
+                    </div>
+                    <!-- ④ 現在の関係: center -->
+                    <div style="position:absolute;top:115px;left:50%;transform:translateX(-50%);text-align:center;z-index:3;">
+                        <div style="font-size:0.65rem;color:#e67e22;margin-bottom:4px;font-weight:700;">🔗 現在の関係</div>
+                        <div id="slotRC3" style="width:68px;height:102px;border:2px dashed rgba(230,126,34,0.4);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(255,255,255,0.03);transition:all 0.4s ease;"></div>
+                    </div>
+                    <!-- ② お相手: middle-right -->
+                    <div style="position:absolute;top:115px;left:50%;transform:translateX(calc(-50% + 100px));text-align:center;z-index:2;">
+                        <div style="font-size:0.65rem;color:#3498db;margin-bottom:4px;font-weight:700;">💙 お相手</div>
+                        <div id="slotRC1" style="width:68px;height:102px;border:2px dashed rgba(52,152,219,0.4);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(255,255,255,0.03);transition:all 0.4s ease;"></div>
+                    </div>
+                    <!-- ⑤ 未来の方向: bottom center -->
+                    <div style="position:absolute;bottom:0;left:50%;transform:translateX(-50%);text-align:center;z-index:2;">
+                        <div style="font-size:0.7rem;color:#f1c40f;margin-bottom:4px;font-weight:700;">⭐ 未来の方向</div>
+                        <div id="slotRC4" style="width:68px;height:102px;border:2px dashed rgba(241,196,15,0.3);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(255,255,255,0.03);transition:all 0.4s ease;"></div>
+                    </div>
+                </div>
+                <!-- ミラースプレッド用カード置き場（鏡像配置）
+                     中央上:テーマ / 左列:自分(思考・感情・行動) / 右列:相手(思考・感情・行動) -->
+                <div id="relMirrorSlots" style="display:none;position:relative;margin:20px auto 0;width:360px;height:430px;">
+                    <!-- ① 関係のテーマ: top center -->
+                    <div style="position:absolute;top:0;left:50%;transform:translateX(-50%);text-align:center;z-index:3;">
+                        <div style="font-size:0.7rem;color:#e67e22;margin-bottom:4px;font-weight:700;">🔗 テーマ</div>
+                        <div id="slotRM0" style="width:68px;height:102px;border:2px dashed rgba(230,126,34,0.4);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(255,255,255,0.03);transition:all 0.4s ease;"></div>
+                    </div>
+                    <!-- ② あなたの思考: left-top -->
+                    <div style="position:absolute;top:100px;left:50%;transform:translateX(calc(-50% - 100px));text-align:center;z-index:2;">
+                        <div style="font-size:0.6rem;color:#9b59b6;margin-bottom:4px;font-weight:700;">💭 あなたの思考</div>
+                        <div id="slotRM1" style="width:68px;height:102px;border:2px dashed rgba(155,89,182,0.4);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(255,255,255,0.03);transition:all 0.4s ease;"></div>
+                    </div>
+                    <!-- ⑤ お相手の思考: right-top -->
+                    <div style="position:absolute;top:100px;left:50%;transform:translateX(calc(-50% + 100px));text-align:center;z-index:2;">
+                        <div style="font-size:0.6rem;color:#3498db;margin-bottom:4px;font-weight:700;">💭 相手の思考</div>
+                        <div id="slotRM4" style="width:68px;height:102px;border:2px dashed rgba(52,152,219,0.4);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(255,255,255,0.03);transition:all 0.4s ease;"></div>
+                    </div>
+                    <!-- ③ あなたの感情: left-middle -->
+                    <div style="position:absolute;top:210px;left:50%;transform:translateX(calc(-50% - 100px));text-align:center;z-index:2;">
+                        <div style="font-size:0.6rem;color:#9b59b6;margin-bottom:4px;font-weight:700;">💜 あなたの感情</div>
+                        <div id="slotRM2" style="width:68px;height:102px;border:2px dashed rgba(155,89,182,0.4);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(255,255,255,0.03);transition:all 0.4s ease;"></div>
+                    </div>
+                    <!-- ⑥ お相手の感情: right-middle -->
+                    <div style="position:absolute;top:210px;left:50%;transform:translateX(calc(-50% + 100px));text-align:center;z-index:2;">
+                        <div style="font-size:0.6rem;color:#3498db;margin-bottom:4px;font-weight:700;">💙 相手の感情</div>
+                        <div id="slotRM5" style="width:68px;height:102px;border:2px dashed rgba(52,152,219,0.4);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(255,255,255,0.03);transition:all 0.4s ease;"></div>
+                    </div>
+                    <!-- ④ あなたの行動: left-bottom -->
+                    <div style="position:absolute;top:320px;left:50%;transform:translateX(calc(-50% - 100px));text-align:center;z-index:2;">
+                        <div style="font-size:0.6rem;color:#9b59b6;margin-bottom:4px;font-weight:700;">🌸 あなたの行動</div>
+                        <div id="slotRM3" style="width:68px;height:102px;border:2px dashed rgba(155,89,182,0.4);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(255,255,255,0.03);transition:all 0.4s ease;"></div>
+                    </div>
+                    <!-- ⑦ お相手の行動: right-bottom -->
+                    <div style="position:absolute;top:320px;left:50%;transform:translateX(calc(-50% + 100px));text-align:center;z-index:2;">
+                        <div style="font-size:0.6rem;color:#3498db;margin-bottom:4px;font-weight:700;">🌊 相手の行動</div>
+                        <div id="slotRM6" style="width:68px;height:102px;border:2px dashed rgba(52,152,219,0.4);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(255,255,255,0.03);transition:all 0.4s ease;"></div>
+                    </div>
+                </div>
+                <!-- Yes/Noスプレッド用カード置き場 -->
+                <div id="yesnoSlots" style="display:none;margin:20px auto 0;max-width:400px;justify-content:center;gap:16px;">
+                    <div style="text-align:center;flex:1;">
+                        <div style="font-size:0.8rem;color:#2ecc71;margin-bottom:8px;font-weight:700;">⭕ 賛成の力</div>
+                        <div id="slotYesno0" style="width:80px;height:120px;margin:0 auto;border:2px dashed rgba(46,204,113,0.4);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(255,255,255,0.03);transition:all 0.4s ease;"></div>
+                    </div>
+                    <div style="text-align:center;flex:1;">
+                        <div style="font-size:0.8rem;color:#e74c3c;margin-bottom:8px;font-weight:700;">❌ 反対の力</div>
+                        <div id="slotYesno1" style="width:80px;height:120px;margin:0 auto;border:2px dashed rgba(231,76,60,0.4);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(255,255,255,0.03);transition:all 0.4s ease;"></div>
+                    </div>
+                    <div style="text-align:center;flex:1;">
+                        <div style="font-size:0.8rem;color:#f1c40f;margin-bottom:8px;font-weight:700;">⚖️ 結論</div>
+                        <div id="slotYesno2" style="width:80px;height:120px;margin:0 auto;border:2px dashed rgba(241,196,15,0.3);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(255,255,255,0.03);transition:all 0.4s ease;"></div>
+                    </div>
+                </div>
+                <!-- 2者択一用カード置き場（V字配置） -->
+                <div id="twoChoiceSlots" style="display:none;position:relative;margin:20px auto 0;width:360px;height:310px;">
+                    <!-- アドバイス: top center -->
+                    <div style="position:absolute;top:0;left:50%;transform:translateX(-50%);text-align:center;z-index:1;">
+                        <div style="font-size:0.75rem;color:#f1c40f;margin-bottom:4px;font-weight:700;">💡 アドバイス</div>
+                        <div id="slotTwo5" style="width:72px;height:108px;border:2px dashed rgba(241,196,15,0.3);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(255,255,255,0.03);transition:all 0.4s ease;"></div>
+                    </div>
+                    <!-- A最終結果: upper-left -->
+                    <div style="position:absolute;top:58px;left:50%;transform:translateX(calc(-50% - 120px));text-align:center;z-index:2;">
+                        <div style="font-size:0.75rem;color:#3498db;margin-bottom:4px;font-weight:700;">🅰️ 最終結果</div>
+                        <div id="slotTwo3" style="width:72px;height:108px;border:2px dashed rgba(52,152,219,0.4);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(255,255,255,0.03);transition:all 0.4s ease;"></div>
+                    </div>
+                    <!-- B最終結果: upper-right -->
+                    <div style="position:absolute;top:58px;left:50%;transform:translateX(calc(-50% + 120px));text-align:center;z-index:2;">
+                        <div style="font-size:0.75rem;color:#e74c3c;margin-bottom:4px;font-weight:700;">🅱️ 最終結果</div>
+                        <div id="slotTwo4" style="width:72px;height:108px;border:2px dashed rgba(231,76,60,0.4);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(255,255,255,0.03);transition:all 0.4s ease;"></div>
+                    </div>
+                    <!-- A近未来: middle-left -->
+                    <div style="position:absolute;top:116px;left:50%;transform:translateX(calc(-50% - 60px));text-align:center;z-index:3;">
+                        <div style="font-size:0.75rem;color:#3498db;margin-bottom:4px;font-weight:700;">🅰️ 近未来</div>
+                        <div id="slotTwo1" style="width:72px;height:108px;border:2px dashed rgba(52,152,219,0.4);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(255,255,255,0.03);transition:all 0.4s ease;"></div>
+                    </div>
+                    <!-- B近未来: middle-right -->
+                    <div style="position:absolute;top:116px;left:50%;transform:translateX(calc(-50% + 60px));text-align:center;z-index:3;">
+                        <div style="font-size:0.75rem;color:#e74c3c;margin-bottom:4px;font-weight:700;">🅱️ 近未来</div>
+                        <div id="slotTwo2" style="width:72px;height:108px;border:2px dashed rgba(231,76,60,0.4);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(255,255,255,0.03);transition:all 0.4s ease;"></div>
+                    </div>
+                    <!-- 現在: bottom center -->
+                    <div style="position:absolute;top:174px;left:50%;transform:translateX(-50%);text-align:center;z-index:4;">
+                        <div style="font-size:0.75rem;color:#c89cf5;margin-bottom:4px;font-weight:700;">🔵 現在</div>
+                        <div id="slotTwo0" style="width:72px;height:108px;border:2px dashed rgba(155,89,182,0.4);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(255,255,255,0.03);transition:all 0.4s ease;"></div>
+                    </div>
+                </div>
+                <p class="shuffle-instruction" id="shuffleInstruction">カードをタップして選んでください</p>
+                <p class="shuffle-status" id="shuffleStatus"></p>
+            </section>
+
+            <!-- 分析中セクション -->
+            <section class="analyzing-section" id="analyzingSection" style="display:none;">
+                <div class="crystal-ball">🔮</div>
+                <p class="analyzing-text">カードの意味を読み解いています...</p>
+                <p class="analyzing-status" id="analyzingStatus">星の配置を確認中...</p>
+                <div class="analyzing-dots">
+                    <span></span><span></span><span></span>
+                </div>
+            </section>
+
+            <!-- 結果セクション -->
+            <section class="result-section" id="resultSection" style="display:none;">
+                <div class="result-card">
+                    <div class="result-header">
+                        <div class="result-mode-label" id="resultModeLabel"></div>
+                        <div class="result-title" id="resultTitle">タロット鑑定結果</div>
+                    </div>
+                    <div class="drawn-cards" id="drawnCards"></div>
+                    <div class="reading-section" id="readingSection"></div>
+                    <div class="overall-reading" id="overallReading"></div>
+                    <div class="advice-box" id="adviceBox"></div>
+                    <div class="lucky-items" id="luckyItems"></div>
+                </div>
+                <div class="share-buttons">
+                    <button class="share-btn share-x" id="shareXBtn">𝕏 でシェア</button>
+                    <button class="share-btn share-line" id="shareLINEBtn">LINE</button>
+                    <button class="share-btn share-copy" id="copyBtn">📸 保存</button>
+                </div>
+                <button class="retry-btn" id="retryBtn">🔮 もう一度占う</button>
+            </section>
+
+            <!-- 履歴セクション -->
+            <section class="history-section" id="historySection" style="display:none;">
+                <h2 style="text-align:center;font-size:1.1rem;color:#c89cf5;margin-bottom:16px;">📜 鑑定履歴</h2>
+                <div id="historyList"></div>
+                <button class="retry-btn" id="historyBackBtn" style="margin-top:20px;">← モード選択に戻る</button>
+            </section>
+        </main>
+
+        <footer>
+            <p>※ 占い結果を保証することはできません。重要な判断にはご自身の意思を優先してください。</p>
+            <p class="copyright">© 2026 SoloDev Lab</p>
+            <div class="footer-nav" style="margin-top:12px;font-size:0.75rem;">
+                <a href="../../index.html" style="color:#888;text-decoration:none;margin:0 6px;">トップ</a>
+                <a href="../../privacy.html" style="color:#888;text-decoration:none;margin:0 6px;">プライバシーポリシー</a>
+                <a href="../../contact.html" style="color:#888;text-decoration:none;margin:0 6px;">お問い合わせ</a>
+            </div>
+        </footer>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <script src="cards.js?v=20260318a"></script>
+    <script src="app.js?v=20260318a"></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('./sw.js');
+        }
+    </script>
+</body>
+</html>

@@ -19,12 +19,12 @@
 | 775 | 🔴 HARD | lib/screens/map/map_fortune_sheet.dart |
 | 758 | 🔴 HARD | lib/widgets/fortune_overlays/work_painter.dart |
 | 737 | 🔴 HARD | lib/screens/locations_screen.dart |
+| 703 | 🔴 HARD | lib/widgets/catasterism_formation_overlay.dart |
 | 702 | 🔴 HARD | lib/screens/horoscope/horo_chart_painter.dart |
 | 693 | 🔴 HARD | lib/widgets/fortune_overlays/money_painter.dart |
 | 647 | 🔴 HARD | lib/utils/astro_glossary.dart |
 | 646 | 🔴 HARD | lib/screens/map/map_viewpoint_menu.dart |
 | 642 | 🔴 HARD | lib/widgets/fortune_overlays/communication_painter.dart |
-| 631 | 🔴 HARD | lib/widgets/catasterism_formation_overlay.dart |
 | 626 | 🔴 HARD | lib/utils/constellation_namer.dart |
 | 617 | 🔴 HARD | lib/screens/map/map_relocation_popup.dart |
 | 616 | 🔴 HARD | lib/screens/map/map_astro_lines.dart |
@@ -203,7 +203,7 @@
 
 ### 12. 📁 別ファイル間 (7 箇所、6 ファイル)
 
-  - lib/widgets/catasterism_formation_overlay.dart:333
+  - lib/widgets/catasterism_formation_overlay.dart:401
   - lib/widgets/catasterism_overlay.dart:187
   - lib/widgets/full_moon_overlay.dart:196
   - lib/widgets/new_moon_overlay.dart:216
@@ -236,7 +236,7 @@
 
 ### 15. 📁 別ファイル間 (6 箇所、6 ファイル)
 
-  - lib/widgets/catasterism_formation_overlay.dart:334
+  - lib/widgets/catasterism_formation_overlay.dart:402
   - lib/widgets/location_picker_minimap.dart:131
   - lib/widgets/new_moon_overlay.dart:420
   - lib/screens/galaxy/constellation_share_card_page.dart:161

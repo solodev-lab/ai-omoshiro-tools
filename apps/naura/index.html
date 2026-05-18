@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>名占（なうら）— 名前で知る、あなたの守護タロット</title>
+
+    <!-- AdSense -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1896365115623823" crossorigin="anonymous"></script>
+
+    <!-- Google Analytics GA4 -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-JX7SCK9ECB"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-JX7SCK9ECB');
+    </script>
+
+    <!-- OGP -->
+    <meta property="og:title" content="名占（なうら）— 名前で知る、あなたの守護タロット">
+    <meta property="og:description" content="名前のひらがなから守護タロットカードと18タイプの性格を鑑定。恋愛運・仕事運・金運もわかる！">
+    <meta property="og:image" content="https://solodev-lab.github.io/ai-omoshiro-tools/apps/naura/ogp.png">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://solodev-lab.com/apps/naura/">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="https://solodev-lab.github.io/ai-omoshiro-tools/apps/naura/ogp.png">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Hina+Mincho&family=Noto+Sans+JP:wght@400;700;900&family=Sawarabi+Mincho&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css?v=20260322d">
+</head>
+<body>
+    <div class="container">
+        <!-- ホームボタン -->
+        <a href="../../" class="home-btn">&lt; ツール一覧に戻る</a>
+
+        <header>
+            <h1>名占（なうら）</h1>
+            <p class="subtitle">名前で知る、あなたの守護タロット</p>
+        </header>
+
+        <main>
+            <!-- 入力セクション -->
+            <section id="inputSection">
+                <div class="input-card">
+                    <p style="text-align:center;font-size:2.5rem;margin-bottom:16px;">🔮✨🃏</p>
+                    <p style="text-align:center;color:#ccc;font-size:0.9rem;margin-bottom:24px;">
+                        あなたの名前に宿る<br>守護タロットカードを鑑定します
+                    </p>
+
+                    <div class="input-group">
+                        <label for="seiInput">姓（せい）</label>
+                        <input type="text" id="seiInput" placeholder="たなか" autocomplete="off">
+                        <p class="input-hint">※旧姓ではなく、現在お使いの姓をお勧めします。ご自身で姓を決める事が重要です。</p>
+                    </div>
+                    <div class="input-group">
+                        <label for="meiInput">名（めい）</label>
+                        <input type="text" id="meiInput" placeholder="はなこ" autocomplete="off">
+                    </div>
+
+                    <p class="input-hint" style="margin-bottom:16px;text-align:center;">ひらがなで入力してください（カタカナも自動変換されます）</p>
+
+                    <button type="button" class="uranau-btn" id="uranauBtn">🔮 占う</button>
+                    <p class="error-msg" id="errorMsg"></p>
+                </div>
+
+                <!-- 広告枠 -->
+                <div class="ad-space">
+                    <ins class="adsbygoogle"
+                         style="display:block"
+                         data-ad-client="ca-pub-1896365115623823"
+                         data-ad-slot="auto"
+                         data-ad-format="auto"
+                         data-full-width-responsive="true"></ins>
+                    <script>try{(adsbygoogle = window.adsbygoogle || []).push({});}catch(e){}</script>
+                </div>
+
+                <!-- 名占とは -->
+                <div class="detail-box" style="margin-top:16px;">
+                    <h3>名占（なうら）とは？</h3>
+                    <p style="color:#ccc;font-size:0.85rem;line-height:1.8;">
+                        名占は、名前の「音」に着目した独自占術です。日本語の50音それぞれが持つ数秘的な力を読み解き、あなたの守護タロットカードを導き出します。<br><br>
+                        9つの数字×陰陽＝全18タイプ。あなたの名前に宿る本質的な性格・強み・弱み、そして恋愛運・仕事運・金運を鑑定します。
+                    </p>
+                </div>
+            </section>
+
+            <!-- 分析中セクション -->
+            <section class="analyzing-section" id="analyzingSection">
+                <div class="analyzing-icon">🔮</div>
+                <p class="analyzing-text">名前の音を読み解いています...</p>
+                <div class="analyzing-dots">
+                    <span></span><span></span><span></span>
+                </div>
+            </section>
+
+            <!-- 結果セクション -->
+            <section class="result-section fade-in" id="resultSection">
+                <!-- 守護カード＋タイプ -->
+                <div id="resultCard"></div>
+
+                <!-- 広告枠（動的push） -->
+                <div class="ad-space ad-deferred">
+                    <ins class="adsbygoogle"
+                         style="display:block"
+                         data-ad-client="ca-pub-1896365115623823"
+                         data-ad-slot="auto"
+                         data-ad-format="auto"
+                         data-full-width-responsive="true"></ins>
+                </div>
+
+                <!-- 守護カード専用セクション -->
+                <div class="guardian-block" id="guardianSection"></div>
+
+                <!-- 数値内訳 -->
+                <div class="detail-box">
+                    <h3>📊 数値内訳</h3>
+                    <div id="nameBreakdown"></div>
+                </div>
+
+                <!-- 外面・内面タイプ -->
+                <div class="detail-box">
+                    <h3>🎭 外面と内面</h3>
+                    <div id="subTypes"></div>
+                </div>
+
+                <!-- 基本性格 -->
+                <div class="detail-box">
+                    <h3>🧠 総合性格</h3>
+                    <div id="personality"></div>
+                </div>
+
+                <!-- 強み・弱み -->
+                <div class="detail-box">
+                    <div id="strengths"></div>
+                </div>
+
+                <!-- 運勢 -->
+                <div class="detail-box">
+                    <h3>🌟 運勢</h3>
+                    <div id="fortunes"></div>
+                </div>
+
+                <!-- 広告枠（動的push） -->
+                <div class="ad-space ad-deferred">
+                    <ins class="adsbygoogle"
+                         style="display:block"
+                         data-ad-client="ca-pub-1896365115623823"
+                         data-ad-slot="auto"
+                         data-ad-format="auto"
+                         data-full-width-responsive="true"></ins>
+                </div>
+
+                <!-- アクション -->
+                <div class="action-btns">
+                    <div class="share-row">
+                        <button class="share-btn" id="shareXBtn">𝕏 でシェア</button>
+                        <button class="share-btn" id="shareLINEBtn">LINEで送る</button>
+                        <button class="share-btn" id="copyBtn">📋 コピー</button>
+                    </div>
+                    <button class="retry-btn" id="retryBtn">🔮 もう一度占う</button>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>&copy; 2026 <a href="../../">AIおもしろツール集</a></p>
+        </footer>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script src="types.js?v=20260322d"></script>
+    <script src="app.js?v=20260322d"></script>
+</body>
+</html>

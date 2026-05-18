@@ -1,0 +1,2277 @@
+Threads: 30 total,   1 running,  29 sleeping,   0 stopped,   0 zombie
+  Mem:  3892048K total,  3850976K used,    41072K free,    35960K buffers
+ Swap:  2140092K total,   898860K used,  1241232K free,  1765316K cached
+800%cpu 137%user   0%nice  69%sys 591%idle   0%iow   0%irq   3%sirq   0%host
+%CPU]  TID NAME
+88.5 23832 com.solodevlab.solara
+40.0 23812 com.solodevlab.solara
+ 5.7 30603 com.solodevlab.solara
+ 2.8 24063 com.solodevlab.solara
+ 0.0 30622 com.solodevlab.solara
+ 0.0 25642 com.solodevlab.solara
+ 0.0 25359 com.solodevlab.solara
+ 0.0 25348 com.solodevlab.solara
+ 0.0 23935 com.solodevlab.solara
+ 0.0 23934 com.solodevlab.solara
+ 0.0 23909 com.solodevlab.solara
+ 0.0 23907 com.solodevlab.solara
+ 0.0 23840 com.solodevlab.solara
+ 0.0 23839 com.solodevlab.solara
+ 0.0 23837 com.solodevlab.solara
+ 0.0 23835 com.solodevlab.solara
+ 0.0 23836 com.solodevlab.solara
+ 0.0 23834 com.solodevlab.solara
+ 0.0 23833 com.solodevlab.solara
+ 0.0 23827 com.solodevlab.solara
+ 0.0 23824 com.solodevlab.solara
+ 0.0 23821 com.solodevlab.solara
+ 0.0 23822 com.solodevlab.solara
+ 0.0 23814 com.solodevlab.solara
+ 0.0 23819 com.solodevlab.solara
+ 0.0 23820 com.solodevlab.solara
+ 0.0 23817 com.solodevlab.solara
+ 0.0 23816 com.solodevlab.solara
+ 0.0 23815 com.solodevlab.solara
+ 0.0 23818 com.solodevlab.solara
+
+
+
+Threads: 30 total,   2 running,  28 sleeping,   0 stopped,   0 zombie
+  Mem:  3892048K total,  3853080K used,    38968K free,    35996K buffers
+ Swap:  2140092K total,   898860K used,  1241232K free,  1763708K cached
+800%cpu 143%user   0%nice  78%sys 574%idle   0%iow   0%irq   4%sirq   0%host
+%CPU]  TID NAME
+93.7 23832 com.solodevlab.solara
+37.6 23812 com.solodevlab.solara
+ 8.0 30603 com.solodevlab.solara
+ 3.9 24063 com.solodevlab.solara
+ 1.2 23837 com.solodevlab.solara
+ 0.6 23907 com.solodevlab.solara
+ 0.3 30622 com.solodevlab.solara
+ 0.0 25642 com.solodevlab.solara
+ 0.0 25359 com.solodevlab.solara
+ 0.0 25348 com.solodevlab.solara
+ 0.0 23935 com.solodevlab.solara
+ 0.0 23934 com.solodevlab.solara
+ 0.0 23909 com.solodevlab.solara
+ 0.0 23840 com.solodevlab.solara
+ 0.0 23839 com.solodevlab.solara
+ 0.0 23836 com.solodevlab.solara
+ 0.0 23834 com.solodevlab.solara
+ 0.0 23835 com.solodevlab.solara
+ 0.0 23833 com.solodevlab.solara
+ 0.0 23827 com.solodevlab.solara
+ 0.0 23824 com.solodevlab.solara
+ 0.0 23822 com.solodevlab.solara
+ 0.0 23821 com.solodevlab.solara
+ 0.0 23814 com.solodevlab.solara
+ 0.0 23819 com.solodevlab.solara
+ 0.0 23818 com.solodevlab.solara
+ 0.0 23817 com.solodevlab.solara
+ 0.0 23816 com.solodevlab.solara
+ 0.0 23815 com.solodevlab.solara
+ 0.0 23820 com.solodevlab.solara
+
+
+
+Threads: 30 total,   2 running,  28 sleeping,   0 stopped,   0 zombie
+  Mem:  3892048K total,  3853072K used,    38976K free,    35996K buffers
+ Swap:  2140092K total,   898860K used,  1241232K free,  1763708K cached
+800%cpu 157%user   0%nice  91%sys 545%idle   0%iow   0%irq   6%sirq   0%host
+%CPU]  TID NAME
+90.8 23832 com.solodevlab.solara
+38.1 23812 com.solodevlab.solara
+ 8.0 30603 com.solodevlab.solara
+ 4.0 24063 com.solodevlab.solara
+ 1.1 23837 com.solodevlab.solara
+ 0.6 23907 com.solodevlab.solara
+ 0.4 30622 com.solodevlab.solara
+ 0.0 25642 com.solodevlab.solara
+ 0.0 25359 com.solodevlab.solara
+ 0.0 25348 com.solodevlab.solara
+ 0.0 23935 com.solodevlab.solara
+ 0.0 23934 com.solodevlab.solara
+ 0.0 23909 com.solodevlab.solara
+ 0.0 23840 com.solodevlab.solara
+ 0.0 23839 com.solodevlab.solara
+ 0.0 23836 com.solodevlab.solara
+ 0.0 23834 com.solodevlab.solara
+ 0.0 23835 com.solodevlab.solara
+ 0.0 23833 com.solodevlab.solara
+ 0.0 23827 com.solodevlab.solara
+ 0.0 23824 com.solodevlab.solara
+ 0.0 23822 com.solodevlab.solara
+ 0.0 23821 com.solodevlab.solara
+ 0.0 23814 com.solodevlab.solara
+ 0.0 23819 com.solodevlab.solara
+ 0.0 23818 com.solodevlab.solara
+ 0.0 23817 com.solodevlab.solara
+ 0.0 23816 com.solodevlab.solara
+ 0.0 23815 com.solodevlab.solara
+ 0.0 23820 com.solodevlab.solara
+
+
+
+Threads: 30 total,   1 running,  29 sleeping,   0 stopped,   0 zombie
+  Mem:  3892048K total,  3854152K used,    37896K free,    36028K buffers
+ Swap:  2140092K total,   898860K used,  1241232K free,  1763708K cached
+800%cpu 143%user   0%nice  78%sys 575%idle   0%iow   0%irq   4%sirq   0%host
+%CPU]  TID NAME
+93.7 23832 com.solodevlab.solara
+37.7 23812 com.solodevlab.solara
+ 8.5 30603 com.solodevlab.solara
+ 4.1 24063 com.solodevlab.solara
+ 1.2 23837 com.solodevlab.solara
+ 0.5 23907 com.solodevlab.solara
+ 0.3 30622 com.solodevlab.solara
+ 0.0 25642 com.solodevlab.solara
+ 0.0 25359 com.solodevlab.solara
+ 0.0 25348 com.solodevlab.solara
+ 0.0 23935 com.solodevlab.solara
+ 0.0 23934 com.solodevlab.solara
+ 0.0 23909 com.solodevlab.solara
+ 0.0 23840 com.solodevlab.solara
+ 0.0 23839 com.solodevlab.solara
+ 0.0 23836 com.solodevlab.solara
+ 0.0 23834 com.solodevlab.solara
+ 0.0 23835 com.solodevlab.solara
+ 0.0 23833 com.solodevlab.solara
+ 0.0 23827 com.solodevlab.solara
+ 0.0 23824 com.solodevlab.solara
+ 0.0 23822 com.solodevlab.solara
+ 0.0 23821 com.solodevlab.solara
+ 0.0 23814 com.solodevlab.solara
+ 0.0 23819 com.solodevlab.solara
+ 0.0 23818 com.solodevlab.solara
+ 0.0 23817 com.solodevlab.solara
+ 0.0 23816 com.solodevlab.solara
+ 0.0 23815 com.solodevlab.solara
+ 0.0 23820 com.solodevlab.solara
+
+
+
+Threads: 30 total,   2 running,  28 sleeping,   0 stopped,   0 zombie
+  Mem:  3892048K total,  3837064K used,    54984K free,    36052K buffers
+ Swap:  2140092K total,   898860K used,  1241232K free,  1748756K cached
+800%cpu 145%user   4%nice  84%sys 562%idle   0%iow   0%irq   5%sirq   0%host
+%CPU]  TID NAME
+94.1 23832 com.solodevlab.solara
+38.3 23812 com.solodevlab.solara
+ 7.9 30603 com.solodevlab.solara
+ 4.0 24063 com.solodevlab.solara
+ 1.2 23837 com.solodevlab.solara
+ 0.6 23907 com.solodevlab.solara
+ 0.5 30622 com.solodevlab.solara
+ 0.0 25642 com.solodevlab.solara
+ 0.0 25359 com.solodevlab.solara
+ 0.0 25348 com.solodevlab.solara
+ 0.0 23935 com.solodevlab.solara
+ 0.0 23934 com.solodevlab.solara
+ 0.0 23909 com.solodevlab.solara
+ 0.0 23840 com.solodevlab.solara
+ 0.0 23839 com.solodevlab.solara
+ 0.0 23836 com.solodevlab.solara
+ 0.0 23834 com.solodevlab.solara
+ 0.0 23835 com.solodevlab.solara
+ 0.0 23833 com.solodevlab.solara
+ 0.0 23827 com.solodevlab.solara
+ 0.0 23824 com.solodevlab.solara
+ 0.0 23822 com.solodevlab.solara
+ 0.0 23821 com.solodevlab.solara
+ 0.0 23814 com.solodevlab.solara
+ 0.0 23819 com.solodevlab.solara
+ 0.0 23818 com.solodevlab.solara
+ 0.0 23817 com.solodevlab.solara
+ 0.0 23816 com.solodevlab.solara
+ 0.0 23815 com.solodevlab.solara
+ 0.0 23820 com.solodevlab.solara
+
+
+
+Threads: 30 total,   2 running,  28 sleeping,   0 stopped,   0 zombie
+  Mem:  3892048K total,  3831972K used,    60076K free,    36060K buffers
+ Swap:  2140092K total,   898860K used,  1241232K free,  1748764K cached
+800%cpu 156%user   4%nice  96%sys 539%idle   0%iow   0%irq   5%sirq   0%host
+%CPU]  TID NAME
+92.1 23832 com.solodevlab.solara
+37.8 23812 com.solodevlab.solara
+ 8.0 30603 com.solodevlab.solara
+ 4.0 24063 com.solodevlab.solara
+ 1.1 23837 com.solodevlab.solara
+ 0.5 23907 com.solodevlab.solara
+ 0.4 30622 com.solodevlab.solara
+ 0.0 25642 com.solodevlab.solara
+ 0.0 25359 com.solodevlab.solara
+ 0.0 25348 com.solodevlab.solara
+ 0.0 23935 com.solodevlab.solara
+ 0.0 23934 com.solodevlab.solara
+ 0.0 23909 com.solodevlab.solara
+ 0.0 23840 com.solodevlab.solara
+ 0.0 23839 com.solodevlab.solara
+ 0.0 23836 com.solodevlab.solara
+ 0.0 23834 com.solodevlab.solara
+ 0.0 23835 com.solodevlab.solara
+ 0.0 23833 com.solodevlab.solara
+ 0.0 23827 com.solodevlab.solara
+ 0.0 23824 com.solodevlab.solara
+ 0.0 23822 com.solodevlab.solara
+ 0.0 23821 com.solodevlab.solara
+ 0.0 23814 com.solodevlab.solara
+ 0.0 23819 com.solodevlab.solara
+ 0.0 23818 com.solodevlab.solara
+ 0.0 23817 com.solodevlab.solara
+ 0.0 23816 com.solodevlab.solara
+ 0.0 23815 com.solodevlab.solara
+ 0.0 23820 com.solodevlab.solara
+
+
+
+Threads: 30 total,   1 running,  29 sleeping,   0 stopped,   0 zombie
+  Mem:  3892048K total,  3834832K used,    57216K free,    36124K buffers
+ Swap:  2140092K total,   898604K used,  1241488K free,  1748964K cached
+800%cpu 147%user   0%nice  76%sys 572%idle   0%iow   0%irq   5%sirq   0%host
+%CPU]  TID NAME
+94.3 23832 com.solodevlab.solara
+38.6 23812 com.solodevlab.solara
+ 8.3 30603 com.solodevlab.solara
+ 4.0 24063 com.solodevlab.solara
+ 1.2 23837 com.solodevlab.solara
+ 0.6 23907 com.solodevlab.solara
+ 0.3 30622 com.solodevlab.solara
+ 0.0 25642 com.solodevlab.solara
+ 0.0 25359 com.solodevlab.solara
+ 0.0 25348 com.solodevlab.solara
+ 0.0 23935 com.solodevlab.solara
+ 0.0 23934 com.solodevlab.solara
+ 0.0 23909 com.solodevlab.solara
+ 0.0 23840 com.solodevlab.solara
+ 0.0 23839 com.solodevlab.solara
+ 0.0 23836 com.solodevlab.solara
+ 0.0 23834 com.solodevlab.solara
+ 0.0 23835 com.solodevlab.solara
+ 0.0 23833 com.solodevlab.solara
+ 0.0 23827 com.solodevlab.solara
+ 0.0 23824 com.solodevlab.solara
+ 0.0 23822 com.solodevlab.solara
+ 0.0 23821 com.solodevlab.solara
+ 0.0 23814 com.solodevlab.solara
+ 0.0 23819 com.solodevlab.solara
+ 0.0 23818 com.solodevlab.solara
+ 0.0 23817 com.solodevlab.solara
+ 0.0 23816 com.solodevlab.solara
+ 0.0 23815 com.solodevlab.solara
+ 0.0 23820 com.solodevlab.solara
+
+
+
+Threads: 30 total,   2 running,  28 sleeping,   0 stopped,   0 zombie
+  Mem:  3892048K total,  3833556K used,    58492K free,    36132K buffers
+ Swap:  2140092K total,   898604K used,  1241488K free,  1748964K cached
+800%cpu 140%user   0%nice  81%sys 578%idle   0%iow   0%irq   1%sirq   0%host
+%CPU]  TID NAME
+92.2 23832 com.solodevlab.solara
+40.5 23812 com.solodevlab.solara
+ 2.0 30603 com.solodevlab.solara
+ 1.7 23837 com.solodevlab.solara
+ 1.5 23909 com.solodevlab.solara
+ 1.1 25359 com.solodevlab.solara
+ 1.0 24063 com.solodevlab.solara
+ 0.5 23907 com.solodevlab.solara
+ 0.4 30622 com.solodevlab.solara
+ 0.0 25642 com.solodevlab.solara
+ 0.0 25348 com.solodevlab.solara
+ 0.0 23935 com.solodevlab.solara
+ 0.0 23934 com.solodevlab.solara
+ 0.0 23840 com.solodevlab.solara
+ 0.0 23839 com.solodevlab.solara
+ 0.0 23834 com.solodevlab.solara
+ 0.0 23835 com.solodevlab.solara
+ 0.0 23836 com.solodevlab.solara
+ 0.0 23833 com.solodevlab.solara
+ 0.0 23827 com.solodevlab.solara
+ 0.0 23824 com.solodevlab.solara
+ 0.0 23822 com.solodevlab.solara
+ 0.0 23821 com.solodevlab.solara
+ 0.0 23816 com.solodevlab.solara
+ 0.0 23817 com.solodevlab.solara
+ 0.0 23819 com.solodevlab.solara
+ 0.0 23818 com.solodevlab.solara
+ 0.0 23820 com.solodevlab.solara
+ 0.0 23815 com.solodevlab.solara
+ 0.0 23814 com.solodevlab.solara
+
+
+
+Threads: 30 total,   2 running,  28 sleeping,   0 stopped,   0 zombie
+  Mem:  3892048K total,  3835712K used,    56336K free,    36148K buffers
+ Swap:  2140092K total,   898092K used,  1242000K free,  1748964K cached
+800%cpu 157%user   0%nice  79%sys 562%idle   0%iow   0%irq   1%sirq   0%host
+%CPU]  TID NAME
+84.1 23832 com.solodevlab.solara
+39.3 23812 com.solodevlab.solara
+ 1.9 23837 com.solodevlab.solara
+ 1.6 23909 com.solodevlab.solara
+ 1.4 30603 com.solodevlab.solara
+ 1.4 24063 com.solodevlab.solara
+ 0.6 25359 com.solodevlab.solara
+ 0.5 23907 com.solodevlab.solara
+ 0.4 30622 com.solodevlab.solara
+ 0.0 25642 com.solodevlab.solara
+ 0.0 25348 com.solodevlab.solara
+ 0.0 23935 com.solodevlab.solara
+ 0.0 23934 com.solodevlab.solara
+ 0.0 23840 com.solodevlab.solara
+ 0.0 23839 com.solodevlab.solara
+ 0.0 23834 com.solodevlab.solara
+ 0.0 23835 com.solodevlab.solara
+ 0.0 23836 com.solodevlab.solara
+ 0.0 23833 com.solodevlab.solara
+ 0.0 23827 com.solodevlab.solara
+ 0.0 23824 com.solodevlab.solara
+ 0.0 23822 com.solodevlab.solara
+ 0.0 23821 com.solodevlab.solara
+ 0.0 23816 com.solodevlab.solara
+ 0.0 23817 com.solodevlab.solara
+ 0.0 23819 com.solodevlab.solara
+ 0.0 23818 com.solodevlab.solara
+ 0.0 23820 com.solodevlab.solara
+ 0.0 23815 com.solodevlab.solara
+ 0.0 23814 com.solodevlab.solara
+
+
+
+Threads: 30 total,   1 running,  29 sleeping,   0 stopped,   0 zombie
+  Mem:  3892048K total,  3825824K used,    66224K free,    36164K buffers
+ Swap:  2140092K total,   898092K used,  1242000K free,  1748244K cached
+800%cpu 139%user  44%nice  62%sys 551%idle   0%iow   0%irq   4%sirq   0%host
+%CPU]  TID NAME
+85.3 23832 com.solodevlab.solara
+37.6 23812 com.solodevlab.solara
+ 2.2 23909 com.solodevlab.solara
+ 1.9 23837 com.solodevlab.solara
+ 1.5 30603 com.solodevlab.solara
+ 1.4 24063 com.solodevlab.solara
+ 0.6 23907 com.solodevlab.solara
+ 0.5 25359 com.solodevlab.solara
+ 0.4 30622 com.solodevlab.solara
+ 0.0 25642 com.solodevlab.solara
+ 0.0 25348 com.solodevlab.solara
+ 0.0 23935 com.solodevlab.solara
+ 0.0 23934 com.solodevlab.solara
+ 0.0 23840 com.solodevlab.solara
+ 0.0 23839 com.solodevlab.solara
+ 0.0 23834 com.solodevlab.solara
+ 0.0 23835 com.solodevlab.solara
+ 0.0 23836 com.solodevlab.solara
+ 0.0 23833 com.solodevlab.solara
+ 0.0 23827 com.solodevlab.solara
+ 0.0 23824 com.solodevlab.solara
+ 0.0 23822 com.solodevlab.solara
+ 0.0 23821 com.solodevlab.solara
+ 0.0 23816 com.solodevlab.solara
+ 0.0 23817 com.solodevlab.solara
+ 0.0 23819 com.solodevlab.solara
+ 0.0 23818 com.solodevlab.solara
+ 0.0 23820 com.solodevlab.solara
+ 0.0 23815 com.solodevlab.solara
+ 0.0 23814 com.solodevlab.solara
+
+
+
+Threads: 30 total,   1 running,  29 sleeping,   0 stopped,   0 zombie
+  Mem:  3892048K total,  3828432K used,    63616K free,    36252K buffers
+ Swap:  2140092K total,   898092K used,  1242000K free,  1748324K cached
+800%cpu 121%user  67%nice  77%sys 531%idle   0%iow   0%irq   4%sirq   0%host
+%CPU]  TID NAME
+75.1 23832 com.solodevlab.solara
+34.2 23812 com.solodevlab.solara
+ 4.0 23909 com.solodevlab.solara
+ 2.1 23837 com.solodevlab.solara
+ 0.6 23907 com.solodevlab.solara
+ 0.4 30622 com.solodevlab.solara
+ 0.4 30603 com.solodevlab.solara
+ 0.0 25642 com.solodevlab.solara
+ 0.0 25359 com.solodevlab.solara
+ 0.0 25348 com.solodevlab.solara
+ 0.0 24063 com.solodevlab.solara
+ 0.0 23935 com.solodevlab.solara
+ 0.0 23934 com.solodevlab.solara
+ 0.0 23840 com.solodevlab.solara
+ 0.0 23839 com.solodevlab.solara
+ 0.0 23834 com.solodevlab.solara
+ 0.0 23835 com.solodevlab.solara
+ 0.0 23836 com.solodevlab.solara
+ 0.0 23833 com.solodevlab.solara
+ 0.0 23827 com.solodevlab.solara
+ 0.0 23824 com.solodevlab.solara
+ 0.0 23822 com.solodevlab.solara
+ 0.0 23821 com.solodevlab.solara
+ 0.0 23814 com.solodevlab.solara
+ 0.0 23820 com.solodevlab.solara
+ 0.0 23818 com.solodevlab.solara
+ 0.0 23817 com.solodevlab.solara
+ 0.0 23816 com.solodevlab.solara
+ 0.0 23815 com.solodevlab.solara
+ 0.0 23819 com.solodevlab.solara
+
+
+
+Threads: 30 total,   1 running,  29 sleeping,   0 stopped,   0 zombie
+  Mem:  3892048K total,  3828252K used,    63796K free,    36292K buffers
+ Swap:  2140092K total,   898092K used,  1242000K free,  1748324K cached
+800%cpu 159%user   0%nice  82%sys 557%idle   0%iow   0%irq   1%sirq   0%host
+%CPU]  TID NAME
+88.9 23832 com.solodevlab.solara
+41.3 23812 com.solodevlab.solara
+ 1.8 23909 com.solodevlab.solara
+ 1.8 23837 com.solodevlab.solara
+ 1.6 30603 com.solodevlab.solara
+ 1.6 25359 com.solodevlab.solara
+ 0.5 23907 com.solodevlab.solara
+ 0.3 30622 com.solodevlab.solara
+ 0.0 25642 com.solodevlab.solara
+ 0.0 25348 com.solodevlab.solara
+ 0.0 24063 com.solodevlab.solara
+ 0.0 23935 com.solodevlab.solara
+ 0.0 23934 com.solodevlab.solara
+ 0.0 23840 com.solodevlab.solara
+ 0.0 23839 com.solodevlab.solara
+ 0.0 23834 com.solodevlab.solara
+ 0.0 23835 com.solodevlab.solara
+ 0.0 23836 com.solodevlab.solara
+ 0.0 23833 com.solodevlab.solara
+ 0.0 23827 com.solodevlab.solara
+ 0.0 23824 com.solodevlab.solara
+ 0.0 23821 com.solodevlab.solara
+ 0.0 23822 com.solodevlab.solara
+ 0.0 23816 com.solodevlab.solara
+ 0.0 23818 com.solodevlab.solara
+ 0.0 23819 com.solodevlab.solara
+ 0.0 23817 com.solodevlab.solara
+ 0.0 23820 com.solodevlab.solara
+ 0.0 23815 com.solodevlab.solara
+ 0.0 23814 com.solodevlab.solara
+
+
+
+Threads: 30 total,   1 running,  29 sleeping,   0 stopped,   0 zombie
+  Mem:  3892048K total,  3831684K used,    60364K free,    36316K buffers
+ Swap:  2140092K total,   898092K used,  1242000K free,  1748324K cached
+800%cpu 145%user   0%nice  60%sys 594%idle   0%iow   0%irq   1%sirq   0%host
+%CPU]  TID NAME
+92.1 23832 com.solodevlab.solara
+40.0 23812 com.solodevlab.solara
+ 2.2 30603 com.solodevlab.solara
+ 1.7 23837 com.solodevlab.solara
+ 1.6 25359 com.solodevlab.solara
+ 1.4 23909 com.solodevlab.solara
+ 0.6 24063 com.solodevlab.solara
+ 0.6 23907 com.solodevlab.solara
+ 0.4 30622 com.solodevlab.solara
+ 0.0 25642 com.solodevlab.solara
+ 0.0 25348 com.solodevlab.solara
+ 0.0 23935 com.solodevlab.solara
+ 0.0 23934 com.solodevlab.solara
+ 0.0 23840 com.solodevlab.solara
+ 0.0 23839 com.solodevlab.solara
+ 0.0 23834 com.solodevlab.solara
+ 0.0 23835 com.solodevlab.solara
+ 0.0 23836 com.solodevlab.solara
+ 0.0 23833 com.solodevlab.solara
+ 0.0 23827 com.solodevlab.solara
+ 0.0 23824 com.solodevlab.solara
+ 0.0 23822 com.solodevlab.solara
+ 0.0 23821 com.solodevlab.solara
+ 0.0 23816 com.solodevlab.solara
+ 0.0 23817 com.solodevlab.solara
+ 0.0 23819 com.solodevlab.solara
+ 0.0 23818 com.solodevlab.solara
+ 0.0 23820 com.solodevlab.solara
+ 0.0 23815 com.solodevlab.solara
+ 0.0 23814 com.solodevlab.solara
+
+
+
+Threads: 30 total,   1 running,  29 sleeping,   0 stopped,   0 zombie
+  Mem:  3892048K total,  3832412K used,    59636K free,    36324K buffers
+ Swap:  2140092K total,   898092K used,  1242000K free,  1748324K cached
+800%cpu 139%user   0%nice  81%sys 577%idle   0%iow   0%irq   3%sirq   0%host
+%CPU]  TID NAME
+93.6 23832 com.solodevlab.solara
+38.8 23812 com.solodevlab.solara
+ 6.4 30603 com.solodevlab.solara
+ 3.4 24063 com.solodevlab.solara
+ 1.3 23837 com.solodevlab.solara
+ 0.5 23907 com.solodevlab.solara
+ 0.3 25359 com.solodevlab.solara
+ 0.2 30622 com.solodevlab.solara
+ 0.0 25642 com.solodevlab.solara
+ 0.0 25348 com.solodevlab.solara
+ 0.0 23934 com.solodevlab.solara
+ 0.0 23935 com.solodevlab.solara
+ 0.0 23909 com.solodevlab.solara
+ 0.0 23840 com.solodevlab.solara
+ 0.0 23839 com.solodevlab.solara
+ 0.0 23834 com.solodevlab.solara
+ 0.0 23835 com.solodevlab.solara
+ 0.0 23836 com.solodevlab.solara
+ 0.0 23833 com.solodevlab.solara
+ 0.0 23827 com.solodevlab.solara
+ 0.0 23824 com.solodevlab.solara
+ 0.0 23821 com.solodevlab.solara
+ 0.0 23822 com.solodevlab.solara
+ 0.0 23816 com.solodevlab.solara
+ 0.0 23817 com.solodevlab.solara
+ 0.0 23819 com.solodevlab.solara
+ 0.0 23818 com.solodevlab.solara
+ 0.0 23820 com.solodevlab.solara
+ 0.0 23815 com.solodevlab.solara
+ 0.0 23814 com.solodevlab.solara
+
+
+
+Threads: 30 total,   1 running,  29 sleeping,   0 stopped,   0 zombie
+  Mem:  3892048K total,  3832632K used,    59416K free,    36328K buffers
+ Swap:  2140092K total,   898092K used,  1242000K free,  1748324K cached
+800%cpu 155%user   0%nice  89%sys 551%idle   0%iow   0%irq   5%sirq   0%host
+%CPU]  TID NAME
+92.3 23832 com.solodevlab.solara
+37.5 23812 com.solodevlab.solara
+ 8.0 30603 com.solodevlab.solara
+ 4.0 24063 com.solodevlab.solara
+ 1.2 23837 com.solodevlab.solara
+ 0.6 23907 com.solodevlab.solara
+ 0.4 30622 com.solodevlab.solara
+ 0.0 25642 com.solodevlab.solara
+ 0.0 25359 com.solodevlab.solara
+ 0.0 25348 com.solodevlab.solara
+ 0.0 23935 com.solodevlab.solara
+ 0.0 23934 com.solodevlab.solara
+ 0.0 23909 com.solodevlab.solara
+ 0.0 23840 com.solodevlab.solara
+ 0.0 23839 com.solodevlab.solara
+ 0.0 23836 com.solodevlab.solara
+ 0.0 23834 com.solodevlab.solara
+ 0.0 23835 com.solodevlab.solara
+ 0.0 23833 com.solodevlab.solara
+ 0.0 23827 com.solodevlab.solara
+ 0.0 23824 com.solodevlab.solara
+ 0.0 23822 com.solodevlab.solara
+ 0.0 23821 com.solodevlab.solara
+ 0.0 23814 com.solodevlab.solara
+ 0.0 23819 com.solodevlab.solara
+ 0.0 23818 com.solodevlab.solara
+ 0.0 23817 com.solodevlab.solara
+ 0.0 23816 com.solodevlab.solara
+ 0.0 23815 com.solodevlab.solara
+ 0.0 23820 com.solodevlab.solara
+
+
+
+Threads: 30 total,   2 running,  28 sleeping,   0 stopped,   0 zombie
+  Mem:  3892048K total,  3833948K used,    58100K free,    36360K buffers
+ Swap:  2140092K total,   898092K used,  1242000K free,  1749136K cached
+800%cpu 143%user   0%nice  73%sys 580%idle   0%iow   0%irq   4%sirq   0%host
+%CPU]  TID NAME
+93.7 23832 com.solodevlab.solara
+38.2 23812 com.solodevlab.solara
+ 8.2 30603 com.solodevlab.solara
+ 4.1 24063 com.solodevlab.solara
+ 1.2 23837 com.solodevlab.solara
+ 0.6 23907 com.solodevlab.solara
+ 0.4 30622 com.solodevlab.solara
+ 0.0 25642 com.solodevlab.solara
+ 0.0 25359 com.solodevlab.solara
+ 0.0 25348 com.solodevlab.solara
+ 0.0 23935 com.solodevlab.solara
+ 0.0 23934 com.solodevlab.solara
+ 0.0 23909 com.solodevlab.solara
+ 0.0 23840 com.solodevlab.solara
+ 0.0 23839 com.solodevlab.solara
+ 0.0 23836 com.solodevlab.solara
+ 0.0 23834 com.solodevlab.solara
+ 0.0 23835 com.solodevlab.solara
+ 0.0 23833 com.solodevlab.solara
+ 0.0 23827 com.solodevlab.solara
+ 0.0 23824 com.solodevlab.solara
+ 0.0 23822 com.solodevlab.solara
+ 0.0 23821 com.solodevlab.solara
+ 0.0 23814 com.solodevlab.solara
+ 0.0 23819 com.solodevlab.solara
+ 0.0 23818 com.solodevlab.solara
+ 0.0 23817 com.solodevlab.solara
+ 0.0 23816 com.solodevlab.solara
+ 0.0 23815 com.solodevlab.solara
+ 0.0 23820 com.solodevlab.solara
+
+
+
+Threads: 30 total,   1 running,  29 sleeping,   0 stopped,   0 zombie
+  Mem:  3892048K total,  3834880K used,    57168K free,    36376K buffers
+ Swap:  2140092K total,   898092K used,  1242000K free,  1749136K cached
+800%cpu 148%user   0%nice  82%sys 565%idle   0%iow   0%irq   5%sirq   0%host
+%CPU]  TID NAME
+94.2 23832 com.solodevlab.solara
+39.1 23812 com.solodevlab.solara
+ 8.2 30603 com.solodevlab.solara
+ 4.0 24063 com.solodevlab.solara
+ 1.2 23837 com.solodevlab.solara
+ 0.5 23907 com.solodevlab.solara
+ 0.4 30622 com.solodevlab.solara
+ 0.0 25642 com.solodevlab.solara
+ 0.0 25359 com.solodevlab.solara
+ 0.0 25348 com.solodevlab.solara
+ 0.0 23935 com.solodevlab.solara
+ 0.0 23934 com.solodevlab.solara
+ 0.0 23909 com.solodevlab.solara
+ 0.0 23840 com.solodevlab.solara
+ 0.0 23839 com.solodevlab.solara
+ 0.0 23836 com.solodevlab.solara
+ 0.0 23834 com.solodevlab.solara
+ 0.0 23835 com.solodevlab.solara
+ 0.0 23833 com.solodevlab.solara
+ 0.0 23827 com.solodevlab.solara
+ 0.0 23824 com.solodevlab.solara
+ 0.0 23822 com.solodevlab.solara
+ 0.0 23821 com.solodevlab.solara
+ 0.0 23814 com.solodevlab.solara
+ 0.0 23819 com.solodevlab.solara
+ 0.0 23818 com.solodevlab.solara
+ 0.0 23817 com.solodevlab.solara
+ 0.0 23816 com.solodevlab.solara
+ 0.0 23815 com.solodevlab.solara
+ 0.0 23820 com.solodevlab.solara
+
+
+
+Threads: 30 total,   2 running,  28 sleeping,   0 stopped,   0 zombie
+  Mem:  3892048K total,  3837052K used,    54996K free,    36384K buffers
+ Swap:  2140092K total,   898092K used,  1242000K free,  1749136K cached
+800%cpu 157%user   0%nice  93%sys 546%idle   0%iow   0%irq   4%sirq   0%host
+%CPU]  TID NAME
+93.3 23832 com.solodevlab.solara
+37.7 23812 com.solodevlab.solara
+ 7.9 30603 com.solodevlab.solara
+ 4.0 24063 com.solodevlab.solara
+ 1.3 23837 com.solodevlab.solara
+ 0.6 23907 com.solodevlab.solara
+ 0.4 30622 com.solodevlab.solara
+ 0.0 25642 com.solodevlab.solara
+ 0.0 25359 com.solodevlab.solara
+ 0.0 25348 com.solodevlab.solara
+ 0.0 23935 com.solodevlab.solara
+ 0.0 23934 com.solodevlab.solara
+ 0.0 23909 com.solodevlab.solara
+ 0.0 23840 com.solodevlab.solara
+ 0.0 23839 com.solodevlab.solara
+ 0.0 23836 com.solodevlab.solara
+ 0.0 23834 com.solodevlab.solara
+ 0.0 23835 com.solodevlab.solara
+ 0.0 23833 com.solodevlab.solara
+ 0.0 23827 com.solodevlab.solara
+ 0.0 23824 com.solodevlab.solara
+ 0.0 23822 com.solodevlab.solara
+ 0.0 23821 com.solodevlab.solara
+ 0.0 23814 com.solodevlab.solara
+ 0.0 23819 com.solodevlab.solara
+ 0.0 23818 com.solodevlab.solara
+ 0.0 23817 com.solodevlab.solara
+ 0.0 23816 com.solodevlab.solara
+ 0.0 23815 com.solodevlab.solara
+ 0.0 23820 com.solodevlab.solara
+
+
+
+Threads: 30 total,   2 running,  28 sleeping,   0 stopped,   0 zombie
+  Mem:  3892048K total,  3836160K used,    55888K free,    36408K buffers
+ Swap:  2140092K total,   898092K used,  1242000K free,  1749136K cached
+800%cpu 144%user   0%nice  70%sys 582%idle   0%iow   0%irq   4%sirq   0%host
+%CPU]  TID NAME
+93.9 23832 com.solodevlab.solara
+37.9 23812 com.solodevlab.solara
+ 8.4 30603 com.solodevlab.solara
+ 4.1 24063 com.solodevlab.solara
+ 1.1 23837 com.solodevlab.solara
+ 0.6 23907 com.solodevlab.solara
+ 0.5 30622 com.solodevlab.solara
+ 0.0 25642 com.solodevlab.solara
+ 0.0 25359 com.solodevlab.solara
+ 0.0 25348 com.solodevlab.solara
+ 0.0 23935 com.solodevlab.solara
+ 0.0 23934 com.solodevlab.solara
+ 0.0 23909 com.solodevlab.solara
+ 0.0 23840 com.solodevlab.solara
+ 0.0 23839 com.solodevlab.solara
+ 0.0 23836 com.solodevlab.solara
+ 0.0 23834 com.solodevlab.solara
+ 0.0 23835 com.solodevlab.solara
+ 0.0 23833 com.solodevlab.solara
+ 0.0 23827 com.solodevlab.solara
+ 0.0 23824 com.solodevlab.solara
+ 0.0 23822 com.solodevlab.solara
+ 0.0 23821 com.solodevlab.solara
+ 0.0 23814 com.solodevlab.solara
+ 0.0 23819 com.solodevlab.solara
+ 0.0 23818 com.solodevlab.solara
+ 0.0 23817 com.solodevlab.solara
+ 0.0 23816 com.solodevlab.solara
+ 0.0 23815 com.solodevlab.solara
+ 0.0 23820 com.solodevlab.solara
+
+
+
+Threads: 30 total,   1 running,  29 sleeping,   0 stopped,   0 zombie
+  Mem:  3892048K total,  3837864K used,    54184K free,    36416K buffers
+ Swap:  2140092K total,   898092K used,  1242000K free,  1749136K cached
+800%cpu 147%user   0%nice  81%sys 567%idle   0%iow   0%irq   6%sirq   0%host
+%CPU]  TID NAME
+93.9 23832 com.solodevlab.solara
+38.8 23812 com.solodevlab.solara
+ 8.0 30603 com.solodevlab.solara
+ 4.1 24063 com.solodevlab.solara
+ 1.1 23837 com.solodevlab.solara
+ 0.6 23907 com.solodevlab.solara
+ 0.4 30622 com.solodevlab.solara
+ 0.0 25642 com.solodevlab.solara
+ 0.0 25359 com.solodevlab.solara
+ 0.0 25348 com.solodevlab.solara
+ 0.0 23935 com.solodevlab.solara
+ 0.0 23934 com.solodevlab.solara
+ 0.0 23909 com.solodevlab.solara
+ 0.0 23840 com.solodevlab.solara
+ 0.0 23839 com.solodevlab.solara
+ 0.0 23836 com.solodevlab.solara
+ 0.0 23834 com.solodevlab.solara
+ 0.0 23835 com.solodevlab.solara
+ 0.0 23833 com.solodevlab.solara
+ 0.0 23827 com.solodevlab.solara
+ 0.0 23824 com.solodevlab.solara
+ 0.0 23822 com.solodevlab.solara
+ 0.0 23821 com.solodevlab.solara
+ 0.0 23814 com.solodevlab.solara
+ 0.0 23819 com.solodevlab.solara
+ 0.0 23818 com.solodevlab.solara
+ 0.0 23817 com.solodevlab.solara
+ 0.0 23816 com.solodevlab.solara
+ 0.0 23815 com.solodevlab.solara
+ 0.0 23820 com.solodevlab.solara
+
+
+
+Threads: 30 total,   1 running,  29 sleeping,   0 stopped,   0 zombie
+  Mem:  3892048K total,  3837968K used,    54080K free,    36464K buffers
+ Swap:  2140092K total,   898092K used,  1242000K free,  1749136K cached
+800%cpu 162%user   0%nice  92%sys 541%idle   0%iow   0%irq   4%sirq   0%host
+%CPU]  TID NAME
+93.5 23832 com.solodevlab.solara
+38.5 23812 com.solodevlab.solara
+ 8.0 30603 com.solodevlab.solara
+ 3.9 24063 com.solodevlab.solara
+ 1.2 23837 com.solodevlab.solara
+ 0.5 23907 com.solodevlab.solara
+ 0.3 30622 com.solodevlab.solara
+ 0.0 25642 com.solodevlab.solara
+ 0.0 25359 com.solodevlab.solara
+ 0.0 25348 com.solodevlab.solara
+ 0.0 23935 com.solodevlab.solara
+ 0.0 23934 com.solodevlab.solara
+ 0.0 23909 com.solodevlab.solara
+ 0.0 23840 com.solodevlab.solara
+ 0.0 23839 com.solodevlab.solara
+ 0.0 23836 com.solodevlab.solara
+ 0.0 23834 com.solodevlab.solara
+ 0.0 23835 com.solodevlab.solara
+ 0.0 23833 com.solodevlab.solara
+ 0.0 23827 com.solodevlab.solara
+ 0.0 23824 com.solodevlab.solara
+ 0.0 23822 com.solodevlab.solara
+ 0.0 23821 com.solodevlab.solara
+ 0.0 23814 com.solodevlab.solara
+ 0.0 23819 com.solodevlab.solara
+ 0.0 23818 com.solodevlab.solara
+ 0.0 23817 com.solodevlab.solara
+ 0.0 23816 com.solodevlab.solara
+ 0.0 23815 com.solodevlab.solara
+ 0.0 23820 com.solodevlab.solara
+
+
+
+Threads: 30 total,   1 running,  29 sleeping,   0 stopped,   0 zombie
+  Mem:  3892048K total,  3840508K used,    51540K free,    36464K buffers
+ Swap:  2140092K total,   898092K used,  1242000K free,  1749136K cached
+800%cpu 144%user   0%nice  74%sys 577%idle   0%iow   0%irq   5%sirq   0%host
+%CPU]  TID NAME
+93.6 23832 com.solodevlab.solara
+39.1 23812 com.solodevlab.solara
+ 8.0 30603 com.solodevlab.solara
+ 4.1 24063 com.solodevlab.solara
+ 1.3 23837 com.solodevlab.solara
+ 0.6 23907 com.solodevlab.solara
+ 0.5 30622 com.solodevlab.solara
+ 0.0 25642 com.solodevlab.solara
+ 0.0 25359 com.solodevlab.solara
+ 0.0 25348 com.solodevlab.solara
+ 0.0 23935 com.solodevlab.solara
+ 0.0 23934 com.solodevlab.solara
+ 0.0 23909 com.solodevlab.solara
+ 0.0 23840 com.solodevlab.solara
+ 0.0 23839 com.solodevlab.solara
+ 0.0 23836 com.solodevlab.solara
+ 0.0 23834 com.solodevlab.solara
+ 0.0 23835 com.solodevlab.solara
+ 0.0 23833 com.solodevlab.solara
+ 0.0 23827 com.solodevlab.solara
+ 0.0 23824 com.solodevlab.solara
+ 0.0 23822 com.solodevlab.solara
+ 0.0 23821 com.solodevlab.solara
+ 0.0 23814 com.solodevlab.solara
+ 0.0 23819 com.solodevlab.solara
+ 0.0 23818 com.solodevlab.solara
+ 0.0 23817 com.solodevlab.solara
+ 0.0 23816 com.solodevlab.solara
+ 0.0 23815 com.solodevlab.solara
+ 0.0 23820 com.solodevlab.solara
+
+
+
+Threads: 30 total,   2 running,  28 sleeping,   0 stopped,   0 zombie
+  Mem:  3892048K total,  3842244K used,    49804K free,    36504K buffers
+ Swap:  2140092K total,   898092K used,  1242000K free,  1749128K cached
+800%cpu 148%user   0%nice  80%sys 567%idle   0%iow   0%irq   4%sirq   0%host
+%CPU]  TID NAME
+94.1 23832 com.solodevlab.solara
+37.7 23812 com.solodevlab.solara
+ 8.1 30603 com.solodevlab.solara
+ 4.0 24063 com.solodevlab.solara
+ 1.1 23837 com.solodevlab.solara
+ 0.6 30622 com.solodevlab.solara
+ 0.6 23907 com.solodevlab.solara
+ 0.0 25642 com.solodevlab.solara
+ 0.0 25359 com.solodevlab.solara
+ 0.0 25348 com.solodevlab.solara
+ 0.0 23935 com.solodevlab.solara
+ 0.0 23934 com.solodevlab.solara
+ 0.0 23909 com.solodevlab.solara
+ 0.0 23840 com.solodevlab.solara
+ 0.0 23839 com.solodevlab.solara
+ 0.0 23836 com.solodevlab.solara
+ 0.0 23834 com.solodevlab.solara
+ 0.0 23835 com.solodevlab.solara
+ 0.0 23833 com.solodevlab.solara
+ 0.0 23827 com.solodevlab.solara
+ 0.0 23824 com.solodevlab.solara
+ 0.0 23822 com.solodevlab.solara
+ 0.0 23821 com.solodevlab.solara
+ 0.0 23814 com.solodevlab.solara
+ 0.0 23820 com.solodevlab.solara
+ 0.0 23818 com.solodevlab.solara
+ 0.0 23817 com.solodevlab.solara
+ 0.0 23816 com.solodevlab.solara
+ 0.0 23815 com.solodevlab.solara
+ 0.0 23819 com.solodevlab.solara
+
+
+
+Threads: 30 total,   2 running,  28 sleeping,   0 stopped,   0 zombie
+  Mem:  3892048K total,  3841396K used,    50652K free,    36520K buffers
+ Swap:  2140092K total,   898092K used,  1242000K free,  1749136K cached
+800%cpu 162%user   0%nice  93%sys 541%idle   0%iow   0%irq   4%sirq   0%host
+%CPU]  TID NAME
+94.3 23832 com.solodevlab.solara
+38.7 23812 com.solodevlab.solara
+ 8.2 30603 com.solodevlab.solara
+ 4.1 24063 com.solodevlab.solara
+ 1.2 23837 com.solodevlab.solara
+ 0.6 23907 com.solodevlab.solara
+ 0.4 30622 com.solodevlab.solara
+ 0.0 25642 com.solodevlab.solara
+ 0.0 25359 com.solodevlab.solara
+ 0.0 25348 com.solodevlab.solara
+ 0.0 23935 com.solodevlab.solara
+ 0.0 23934 com.solodevlab.solara
+ 0.0 23909 com.solodevlab.solara
+ 0.0 23840 com.solodevlab.solara
+ 0.0 23839 com.solodevlab.solara
+ 0.0 23836 com.solodevlab.solara
+ 0.0 23834 com.solodevlab.solara
+ 0.0 23835 com.solodevlab.solara
+ 0.0 23833 com.solodevlab.solara
+ 0.0 23827 com.solodevlab.solara
+ 0.0 23824 com.solodevlab.solara
+ 0.0 23822 com.solodevlab.solara
+ 0.0 23821 com.solodevlab.solara
+ 0.0 23814 com.solodevlab.solara
+ 0.0 23819 com.solodevlab.solara
+ 0.0 23818 com.solodevlab.solara
+ 0.0 23817 com.solodevlab.solara
+ 0.0 23816 com.solodevlab.solara
+ 0.0 23815 com.solodevlab.solara
+ 0.0 23820 com.solodevlab.solara
+
+
+
+Threads: 30 total,   1 running,  29 sleeping,   0 stopped,   0 zombie
+  Mem:  3892048K total,  3842856K used,    49192K free,    36536K buffers
+ Swap:  2140092K total,   898092K used,  1242000K free,  1749136K cached
+800%cpu 143%user   0%nice  71%sys 581%idle   0%iow   0%irq   4%sirq   0%host
+%CPU]  TID NAME
+93.9 23832 com.solodevlab.solara
+37.7 23812 com.solodevlab.solara
+ 8.3 30603 com.solodevlab.solara
+ 4.2 24063 com.solodevlab.solara
+ 1.1 23837 com.solodevlab.solara
+ 0.5 30622 com.solodevlab.solara
+ 0.5 23907 com.solodevlab.solara
+ 0.0 25642 com.solodevlab.solara
+ 0.0 25359 com.solodevlab.solara
+ 0.0 25348 com.solodevlab.solara
+ 0.0 23935 com.solodevlab.solara
+ 0.0 23934 com.solodevlab.solara
+ 0.0 23909 com.solodevlab.solara
+ 0.0 23840 com.solodevlab.solara
+ 0.0 23839 com.solodevlab.solara
+ 0.0 23836 com.solodevlab.solara
+ 0.0 23834 com.solodevlab.solara
+ 0.0 23835 com.solodevlab.solara
+ 0.0 23833 com.solodevlab.solara
+ 0.0 23827 com.solodevlab.solara
+ 0.0 23824 com.solodevlab.solara
+ 0.0 23822 com.solodevlab.solara
+ 0.0 23821 com.solodevlab.solara
+ 0.0 23814 com.solodevlab.solara
+ 0.0 23820 com.solodevlab.solara
+ 0.0 23818 com.solodevlab.solara
+ 0.0 23817 com.solodevlab.solara
+ 0.0 23816 com.solodevlab.solara
+ 0.0 23815 com.solodevlab.solara
+ 0.0 23819 com.solodevlab.solara
+
+
+
+Threads: 30 total,   2 running,  28 sleeping,   0 stopped,   0 zombie
+  Mem:  3892048K total,  3843336K used,    48712K free,    36544K buffers
+ Swap:  2140092K total,   898092K used,  1242000K free,  1749136K cached
+800%cpu 143%user   0%nice  80%sys 574%idle   0%iow   0%irq   4%sirq   0%host
+%CPU]  TID NAME
+94.1 23832 com.solodevlab.solara
+38.0 23812 com.solodevlab.solara
+ 8.1 30603 com.solodevlab.solara
+ 4.0 24063 com.solodevlab.solara
+ 1.3 23837 com.solodevlab.solara
+ 0.6 23907 com.solodevlab.solara
+ 0.3 30622 com.solodevlab.solara
+ 0.0 25642 com.solodevlab.solara
+ 0.0 25359 com.solodevlab.solara
+ 0.0 25348 com.solodevlab.solara
+ 0.0 23935 com.solodevlab.solara
+ 0.0 23934 com.solodevlab.solara
+ 0.0 23909 com.solodevlab.solara
+ 0.0 23840 com.solodevlab.solara
+ 0.0 23839 com.solodevlab.solara
+ 0.0 23836 com.solodevlab.solara
+ 0.0 23834 com.solodevlab.solara
+ 0.0 23835 com.solodevlab.solara
+ 0.0 23833 com.solodevlab.solara
+ 0.0 23827 com.solodevlab.solara
+ 0.0 23824 com.solodevlab.solara
+ 0.0 23822 com.solodevlab.solara
+ 0.0 23821 com.solodevlab.solara
+ 0.0 23814 com.solodevlab.solara
+ 0.0 23819 com.solodevlab.solara
+ 0.0 23818 com.solodevlab.solara
+ 0.0 23817 com.solodevlab.solara
+ 0.0 23816 com.solodevlab.solara
+ 0.0 23815 com.solodevlab.solara
+ 0.0 23820 com.solodevlab.solara
+
+
+
+Threads: 30 total,   1 running,  29 sleeping,   0 stopped,   0 zombie
+  Mem:  3892048K total,  3843100K used,    48948K free,    36544K buffers
+ Swap:  2140092K total,   898092K used,  1242000K free,  1749136K cached
+800%cpu 159%user   0%nice  92%sys 544%idle   0%iow   0%irq   5%sirq   0%host
+%CPU]  TID NAME
+94.2 23832 com.solodevlab.solara
+38.3 23812 com.solodevlab.solara
+ 8.1 30603 com.solodevlab.solara
+ 4.1 24063 com.solodevlab.solara
+ 1.1 23837 com.solodevlab.solara
+ 0.6 23907 com.solodevlab.solara
+ 0.5 30622 com.solodevlab.solara
+ 0.0 25642 com.solodevlab.solara
+ 0.0 25359 com.solodevlab.solara
+ 0.0 25348 com.solodevlab.solara
+ 0.0 23935 com.solodevlab.solara
+ 0.0 23934 com.solodevlab.solara
+ 0.0 23909 com.solodevlab.solara
+ 0.0 23840 com.solodevlab.solara
+ 0.0 23839 com.solodevlab.solara
+ 0.0 23836 com.solodevlab.solara
+ 0.0 23834 com.solodevlab.solara
+ 0.0 23835 com.solodevlab.solara
+ 0.0 23833 com.solodevlab.solara
+ 0.0 23827 com.solodevlab.solara
+ 0.0 23824 com.solodevlab.solara
+ 0.0 23822 com.solodevlab.solara
+ 0.0 23821 com.solodevlab.solara
+ 0.0 23814 com.solodevlab.solara
+ 0.0 23819 com.solodevlab.solara
+ 0.0 23818 com.solodevlab.solara
+ 0.0 23817 com.solodevlab.solara
+ 0.0 23816 com.solodevlab.solara
+ 0.0 23815 com.solodevlab.solara
+ 0.0 23820 com.solodevlab.solara
+
+
+
+Threads: 30 total,   1 running,  29 sleeping,   0 stopped,   0 zombie
+  Mem:  3892048K total,  3842848K used,    49200K free,    36560K buffers
+ Swap:  2140092K total,   898092K used,  1242000K free,  1749136K cached
+800%cpu 145%user   1%nice  71%sys 578%idle   0%iow   0%irq   5%sirq   0%host
+%CPU]  TID NAME
+93.9 23832 com.solodevlab.solara
+38.4 23812 com.solodevlab.solara
+ 8.2 30603 com.solodevlab.solara
+ 4.0 24063 com.solodevlab.solara
+ 1.2 23837 com.solodevlab.solara
+ 0.6 23907 com.solodevlab.solara
+ 0.4 30622 com.solodevlab.solara
+ 0.0 25642 com.solodevlab.solara
+ 0.0 25359 com.solodevlab.solara
+ 0.0 25348 com.solodevlab.solara
+ 0.0 23935 com.solodevlab.solara
+ 0.0 23934 com.solodevlab.solara
+ 0.0 23909 com.solodevlab.solara
+ 0.0 23840 com.solodevlab.solara
+ 0.0 23839 com.solodevlab.solara
+ 0.0 23836 com.solodevlab.solara
+ 0.0 23834 com.solodevlab.solara
+ 0.0 23835 com.solodevlab.solara
+ 0.0 23833 com.solodevlab.solara
+ 0.0 23827 com.solodevlab.solara
+ 0.0 23824 com.solodevlab.solara
+ 0.0 23822 com.solodevlab.solara
+ 0.0 23821 com.solodevlab.solara
+ 0.0 23814 com.solodevlab.solara
+ 0.0 23819 com.solodevlab.solara
+ 0.0 23818 com.solodevlab.solara
+ 0.0 23817 com.solodevlab.solara
+ 0.0 23816 com.solodevlab.solara
+ 0.0 23815 com.solodevlab.solara
+ 0.0 23820 com.solodevlab.solara
+
+
+
+Threads: 30 total,   2 running,  28 sleeping,   0 stopped,   0 zombie
+  Mem:  3892048K total,  3849064K used,    42984K free,    36584K buffers
+ Swap:  2140092K total,   898092K used,  1242000K free,  1749136K cached
+800%cpu 149%user   0%nice  85%sys 561%idle   0%iow   0%irq   5%sirq   0%host
+%CPU]  TID NAME
+94.1 23832 com.solodevlab.solara
+38.6 23812 com.solodevlab.solara
+ 8.1 30603 com.solodevlab.solara
+ 4.1 24063 com.solodevlab.solara
+ 1.1 23837 com.solodevlab.solara
+ 0.5 23907 com.solodevlab.solara
+ 0.3 30622 com.solodevlab.solara
+ 0.0 25642 com.solodevlab.solara
+ 0.0 25359 com.solodevlab.solara
+ 0.0 25348 com.solodevlab.solara
+ 0.0 23935 com.solodevlab.solara
+ 0.0 23934 com.solodevlab.solara
+ 0.0 23909 com.solodevlab.solara
+ 0.0 23840 com.solodevlab.solara
+ 0.0 23839 com.solodevlab.solara
+ 0.0 23836 com.solodevlab.solara
+ 0.0 23834 com.solodevlab.solara
+ 0.0 23835 com.solodevlab.solara
+ 0.0 23833 com.solodevlab.solara
+ 0.0 23827 com.solodevlab.solara
+ 0.0 23824 com.solodevlab.solara
+ 0.0 23822 com.solodevlab.solara
+ 0.0 23821 com.solodevlab.solara
+ 0.0 23814 com.solodevlab.solara
+ 0.0 23819 com.solodevlab.solara
+ 0.0 23818 com.solodevlab.solara
+ 0.0 23817 com.solodevlab.solara
+ 0.0 23816 com.solodevlab.solara
+ 0.0 23815 com.solodevlab.solara
+ 0.0 23820 com.solodevlab.solara
+
+
+
+Threads: 30 total,   2 running,  28 sleeping,   0 stopped,   0 zombie
+  Mem:  3892048K total,  3849040K used,    43008K free,    36592K buffers
+ Swap:  2140092K total,   898092K used,  1242000K free,  1749136K cached
+800%cpu 160%user   0%nice  93%sys 542%idle   0%iow   0%irq   5%sirq   0%host
+%CPU]  TID NAME
+94.0 23832 com.solodevlab.solara
+39.3 23812 com.solodevlab.solara
+ 7.8 30603 com.solodevlab.solara
+ 4.0 24063 com.solodevlab.solara
+ 1.2 23837 com.solodevlab.solara
+ 0.6 30622 com.solodevlab.solara
+ 0.6 23907 com.solodevlab.solara
+ 0.0 25642 com.solodevlab.solara
+ 0.0 25359 com.solodevlab.solara
+ 0.0 25348 com.solodevlab.solara
+ 0.0 23935 com.solodevlab.solara
+ 0.0 23934 com.solodevlab.solara
+ 0.0 23909 com.solodevlab.solara
+ 0.0 23840 com.solodevlab.solara
+ 0.0 23839 com.solodevlab.solara
+ 0.0 23836 com.solodevlab.solara
+ 0.0 23834 com.solodevlab.solara
+ 0.0 23835 com.solodevlab.solara
+ 0.0 23833 com.solodevlab.solara
+ 0.0 23827 com.solodevlab.solara
+ 0.0 23824 com.solodevlab.solara
+ 0.0 23822 com.solodevlab.solara
+ 0.0 23821 com.solodevlab.solara
+ 0.0 23814 com.solodevlab.solara
+ 0.0 23820 com.solodevlab.solara
+ 0.0 23818 com.solodevlab.solara
+ 0.0 23817 com.solodevlab.solara
+ 0.0 23816 com.solodevlab.solara
+ 0.0 23815 com.solodevlab.solara
+ 0.0 23819 com.solodevlab.solara
+
+
+
+Threads: 30 total,   2 running,  28 sleeping,   0 stopped,   0 zombie
+  Mem:  3892048K total,  3848076K used,    43972K free,    36592K buffers
+ Swap:  2140092K total,   898092K used,  1242000K free,  1749136K cached
+800%cpu 143%user   0%nice  71%sys 582%idle   0%iow   0%irq   4%sirq   0%host
+%CPU]  TID NAME
+94.1 23832 com.solodevlab.solara
+39.7 23812 com.solodevlab.solara
+ 8.3 30603 com.solodevlab.solara
+ 4.0 24063 com.solodevlab.solara
+ 1.2 23837 com.solodevlab.solara
+ 0.6 23907 com.solodevlab.solara
+ 0.4 30622 com.solodevlab.solara
+ 0.0 25642 com.solodevlab.solara
+ 0.0 25359 com.solodevlab.solara
+ 0.0 25348 com.solodevlab.solara
+ 0.0 23935 com.solodevlab.solara
+ 0.0 23934 com.solodevlab.solara
+ 0.0 23909 com.solodevlab.solara
+ 0.0 23840 com.solodevlab.solara
+ 0.0 23839 com.solodevlab.solara
+ 0.0 23836 com.solodevlab.solara
+ 0.0 23834 com.solodevlab.solara
+ 0.0 23835 com.solodevlab.solara
+ 0.0 23833 com.solodevlab.solara
+ 0.0 23827 com.solodevlab.solara
+ 0.0 23824 com.solodevlab.solara
+ 0.0 23822 com.solodevlab.solara
+ 0.0 23821 com.solodevlab.solara
+ 0.0 23814 com.solodevlab.solara
+ 0.0 23819 com.solodevlab.solara
+ 0.0 23818 com.solodevlab.solara
+ 0.0 23817 com.solodevlab.solara
+ 0.0 23816 com.solodevlab.solara
+ 0.0 23815 com.solodevlab.solara
+ 0.0 23820 com.solodevlab.solara
+
+
+
+Threads: 30 total,   2 running,  28 sleeping,   0 stopped,   0 zombie
+  Mem:  3892048K total,  3850296K used,    41752K free,    36592K buffers
+ Swap:  2140092K total,   898092K used,  1242000K free,  1749136K cached
+800%cpu 148%user   0%nice  84%sys 563%idle   0%iow   0%irq   4%sirq   0%host
+%CPU]  TID NAME
+93.0 23832 com.solodevlab.solara
+37.7 23812 com.solodevlab.solara
+ 8.0 30603 com.solodevlab.solara
+ 4.0 24063 com.solodevlab.solara
+ 1.2 23837 com.solodevlab.solara
+ 0.5 30622 com.solodevlab.solara
+ 0.5 23907 com.solodevlab.solara
+ 0.0 25642 com.solodevlab.solara
+ 0.0 25359 com.solodevlab.solara
+ 0.0 25348 com.solodevlab.solara
+ 0.0 23935 com.solodevlab.solara
+ 0.0 23934 com.solodevlab.solara
+ 0.0 23909 com.solodevlab.solara
+ 0.0 23840 com.solodevlab.solara
+ 0.0 23839 com.solodevlab.solara
+ 0.0 23836 com.solodevlab.solara
+ 0.0 23834 com.solodevlab.solara
+ 0.0 23835 com.solodevlab.solara
+ 0.0 23833 com.solodevlab.solara
+ 0.0 23827 com.solodevlab.solara
+ 0.0 23824 com.solodevlab.solara
+ 0.0 23822 com.solodevlab.solara
+ 0.0 23821 com.solodevlab.solara
+ 0.0 23814 com.solodevlab.solara
+ 0.0 23820 com.solodevlab.solara
+ 0.0 23818 com.solodevlab.solara
+ 0.0 23817 com.solodevlab.solara
+ 0.0 23816 com.solodevlab.solara
+ 0.0 23815 com.solodevlab.solara
+ 0.0 23819 com.solodevlab.solara
+
+
+
+Threads: 30 total,   2 running,  28 sleeping,   0 stopped,   0 zombie
+  Mem:  3892048K total,  3852500K used,    39548K free,    36616K buffers
+ Swap:  2140092K total,   898092K used,  1242000K free,  1749136K cached
+800%cpu 160%user   0%nice  95%sys 541%idle   0%iow   0%irq   5%sirq   0%host
+%CPU]  TID NAME
+94.3 23832 com.solodevlab.solara
+38.6 23812 com.solodevlab.solara
+ 7.9 30603 com.solodevlab.solara
+ 4.1 24063 com.solodevlab.solara
+ 1.3 23837 com.solodevlab.solara
+ 0.6 23907 com.solodevlab.solara
+ 0.5 30622 com.solodevlab.solara
+ 0.0 25642 com.solodevlab.solara
+ 0.0 25359 com.solodevlab.solara
+ 0.0 25348 com.solodevlab.solara
+ 0.0 23935 com.solodevlab.solara
+ 0.0 23934 com.solodevlab.solara
+ 0.0 23909 com.solodevlab.solara
+ 0.0 23840 com.solodevlab.solara
+ 0.0 23839 com.solodevlab.solara
+ 0.0 23836 com.solodevlab.solara
+ 0.0 23834 com.solodevlab.solara
+ 0.0 23835 com.solodevlab.solara
+ 0.0 23833 com.solodevlab.solara
+ 0.0 23827 com.solodevlab.solara
+ 0.0 23824 com.solodevlab.solara
+ 0.0 23822 com.solodevlab.solara
+ 0.0 23821 com.solodevlab.solara
+ 0.0 23814 com.solodevlab.solara
+ 0.0 23819 com.solodevlab.solara
+ 0.0 23818 com.solodevlab.solara
+ 0.0 23817 com.solodevlab.solara
+ 0.0 23816 com.solodevlab.solara
+ 0.0 23815 com.solodevlab.solara
+ 0.0 23820 com.solodevlab.solara
+
+
+
+Threads: 30 total,   2 running,  28 sleeping,   0 stopped,   0 zombie
+  Mem:  3892048K total,  3852784K used,    39264K free,    36624K buffers
+ Swap:  2140092K total,   898092K used,  1242000K free,  1749136K cached
+800%cpu 144%user   0%nice  71%sys 580%idle   0%iow   0%irq   4%sirq   0%host
+%CPU]  TID NAME
+94.1 23832 com.solodevlab.solara
+38.2 23812 com.solodevlab.solara
+ 8.3 30603 com.solodevlab.solara
+ 4.0 24063 com.solodevlab.solara
+ 1.1 23837 com.solodevlab.solara
+ 0.6 23907 com.solodevlab.solara
+ 0.4 30622 com.solodevlab.solara
+ 0.0 25642 com.solodevlab.solara
+ 0.0 25359 com.solodevlab.solara
+ 0.0 25348 com.solodevlab.solara
+ 0.0 23935 com.solodevlab.solara
+ 0.0 23934 com.solodevlab.solara
+ 0.0 23909 com.solodevlab.solara
+ 0.0 23840 com.solodevlab.solara
+ 0.0 23839 com.solodevlab.solara
+ 0.0 23836 com.solodevlab.solara
+ 0.0 23834 com.solodevlab.solara
+ 0.0 23835 com.solodevlab.solara
+ 0.0 23833 com.solodevlab.solara
+ 0.0 23827 com.solodevlab.solara
+ 0.0 23824 com.solodevlab.solara
+ 0.0 23822 com.solodevlab.solara
+ 0.0 23821 com.solodevlab.solara
+ 0.0 23814 com.solodevlab.solara
+ 0.0 23819 com.solodevlab.solara
+ 0.0 23818 com.solodevlab.solara
+ 0.0 23817 com.solodevlab.solara
+ 0.0 23816 com.solodevlab.solara
+ 0.0 23815 com.solodevlab.solara
+ 0.0 23820 com.solodevlab.solara
+
+
+
+Threads: 30 total,   1 running,  29 sleeping,   0 stopped,   0 zombie
+  Mem:  3892048K total,  3853580K used,    38468K free,    36624K buffers
+ Swap:  2140092K total,   898092K used,  1242000K free,  1749136K cached
+800%cpu 147%user   0%nice  89%sys 558%idle   0%iow   0%irq   5%sirq   0%host
+%CPU]  TID NAME
+94.2 23832 com.solodevlab.solara
+39.0 23812 com.solodevlab.solara
+ 8.0 30603 com.solodevlab.solara
+ 4.1 24063 com.solodevlab.solara
+ 1.3 23837 com.solodevlab.solara
+ 0.7 23907 com.solodevlab.solara
+ 0.4 30622 com.solodevlab.solara
+ 0.0 25642 com.solodevlab.solara
+ 0.0 25359 com.solodevlab.solara
+ 0.0 25348 com.solodevlab.solara
+ 0.0 23935 com.solodevlab.solara
+ 0.0 23934 com.solodevlab.solara
+ 0.0 23909 com.solodevlab.solara
+ 0.0 23840 com.solodevlab.solara
+ 0.0 23839 com.solodevlab.solara
+ 0.0 23836 com.solodevlab.solara
+ 0.0 23834 com.solodevlab.solara
+ 0.0 23835 com.solodevlab.solara
+ 0.0 23833 com.solodevlab.solara
+ 0.0 23827 com.solodevlab.solara
+ 0.0 23824 com.solodevlab.solara
+ 0.0 23822 com.solodevlab.solara
+ 0.0 23821 com.solodevlab.solara
+ 0.0 23814 com.solodevlab.solara
+ 0.0 23819 com.solodevlab.solara
+ 0.0 23818 com.solodevlab.solara
+ 0.0 23817 com.solodevlab.solara
+ 0.0 23816 com.solodevlab.solara
+ 0.0 23815 com.solodevlab.solara
+ 0.0 23820 com.solodevlab.solara
+
+
+
+Threads: 30 total,   2 running,  28 sleeping,   0 stopped,   0 zombie
+  Mem:  3892048K total,  3853260K used,    38788K free,    36656K buffers
+ Swap:  2140092K total,   898092K used,  1242000K free,  1749136K cached
+800%cpu 160%user   1%nice  91%sys 543%idle   0%iow   0%irq   6%sirq   0%host
+%CPU]  TID NAME
+94.1 23832 com.solodevlab.solara
+37.6 23812 com.solodevlab.solara
+ 8.1 30603 com.solodevlab.solara
+ 4.0 24063 com.solodevlab.solara
+ 1.1 23837 com.solodevlab.solara
+ 0.5 23907 com.solodevlab.solara
+ 0.4 30622 com.solodevlab.solara
+ 0.0 25642 com.solodevlab.solara
+ 0.0 25359 com.solodevlab.solara
+ 0.0 25348 com.solodevlab.solara
+ 0.0 23935 com.solodevlab.solara
+ 0.0 23934 com.solodevlab.solara
+ 0.0 23909 com.solodevlab.solara
+ 0.0 23840 com.solodevlab.solara
+ 0.0 23839 com.solodevlab.solara
+ 0.0 23836 com.solodevlab.solara
+ 0.0 23834 com.solodevlab.solara
+ 0.0 23835 com.solodevlab.solara
+ 0.0 23833 com.solodevlab.solara
+ 0.0 23827 com.solodevlab.solara
+ 0.0 23824 com.solodevlab.solara
+ 0.0 23822 com.solodevlab.solara
+ 0.0 23821 com.solodevlab.solara
+ 0.0 23814 com.solodevlab.solara
+ 0.0 23819 com.solodevlab.solara
+ 0.0 23818 com.solodevlab.solara
+ 0.0 23817 com.solodevlab.solara
+ 0.0 23816 com.solodevlab.solara
+ 0.0 23815 com.solodevlab.solara
+ 0.0 23820 com.solodevlab.solara
+
+
+
+Threads: 30 total,   1 running,  29 sleeping,   0 stopped,   0 zombie
+  Mem:  3892048K total,  3857176K used,    34872K free,    36696K buffers
+ Swap:  2140092K total,   898092K used,  1242000K free,  1749136K cached
+800%cpu 142%user   0%nice  71%sys 583%idle   0%iow   0%irq   4%sirq   0%host
+%CPU]  TID NAME
+93.4 23832 com.solodevlab.solara
+39.4 23812 com.solodevlab.solara
+ 6.2 30603 com.solodevlab.solara
+ 2.7 24063 com.solodevlab.solara
+ 1.5 23837 com.solodevlab.solara
+ 0.7 25359 com.solodevlab.solara
+ 0.5 23907 com.solodevlab.solara
+ 0.4 23909 com.solodevlab.solara
+ 0.3 30622 com.solodevlab.solara
+ 0.0 25642 com.solodevlab.solara
+ 0.0 25348 com.solodevlab.solara
+ 0.0 23935 com.solodevlab.solara
+ 0.0 23934 com.solodevlab.solara
+ 0.0 23840 com.solodevlab.solara
+ 0.0 23839 com.solodevlab.solara
+ 0.0 23834 com.solodevlab.solara
+ 0.0 23835 com.solodevlab.solara
+ 0.0 23836 com.solodevlab.solara
+ 0.0 23833 com.solodevlab.solara
+ 0.0 23827 com.solodevlab.solara
+ 0.0 23824 com.solodevlab.solara
+ 0.0 23822 com.solodevlab.solara
+ 0.0 23821 com.solodevlab.solara
+ 0.0 23816 com.solodevlab.solara
+ 0.0 23817 com.solodevlab.solara
+ 0.0 23819 com.solodevlab.solara
+ 0.0 23818 com.solodevlab.solara
+ 0.0 23820 com.solodevlab.solara
+ 0.0 23815 com.solodevlab.solara
+ 0.0 23814 com.solodevlab.solara
+
+
+
+Threads: 30 total,   1 running,  29 sleeping,   0 stopped,   0 zombie
+  Mem:  3892048K total,  3858860K used,    33188K free,    36768K buffers
+ Swap:  2140092K total,   898092K used,  1242000K free,  1749096K cached
+800%cpu 143%user   1%nice  84%sys 567%idle   0%iow   0%irq   5%sirq   0%host
+%CPU]  TID NAME
+94.1 23832 com.solodevlab.solara
+37.9 23812 com.solodevlab.solara
+ 7.8 30603 com.solodevlab.solara
+ 3.9 24063 com.solodevlab.solara
+ 1.1 23837 com.solodevlab.solara
+ 0.6 30622 com.solodevlab.solara
+ 0.6 23907 com.solodevlab.solara
+ 0.0 25642 com.solodevlab.solara
+ 0.0 25359 com.solodevlab.solara
+ 0.0 25348 com.solodevlab.solara
+ 0.0 23935 com.solodevlab.solara
+ 0.0 23934 com.solodevlab.solara
+ 0.0 23909 com.solodevlab.solara
+ 0.0 23840 com.solodevlab.solara
+ 0.0 23839 com.solodevlab.solara
+ 0.0 23836 com.solodevlab.solara
+ 0.0 23834 com.solodevlab.solara
+ 0.0 23835 com.solodevlab.solara
+ 0.0 23833 com.solodevlab.solara
+ 0.0 23827 com.solodevlab.solara
+ 0.0 23824 com.solodevlab.solara
+ 0.0 23822 com.solodevlab.solara
+ 0.0 23821 com.solodevlab.solara
+ 0.0 23814 com.solodevlab.solara
+ 0.0 23820 com.solodevlab.solara
+ 0.0 23818 com.solodevlab.solara
+ 0.0 23817 com.solodevlab.solara
+ 0.0 23816 com.solodevlab.solara
+ 0.0 23815 com.solodevlab.solara
+ 0.0 23819 com.solodevlab.solara
+
+
+
+Threads: 30 total,   1 running,  29 sleeping,   0 stopped,   0 zombie
+  Mem:  3892048K total,  3859908K used,    32140K free,    36792K buffers
+ Swap:  2140092K total,   898092K used,  1242000K free,  1749140K cached
+800%cpu 159%user   0%nice  92%sys 545%idle   0%iow   0%irq   4%sirq   0%host
+%CPU]  TID NAME
+93.1 23832 com.solodevlab.solara
+39.0 23812 com.solodevlab.solara
+ 7.9 30603 com.solodevlab.solara
+ 4.0 24063 com.solodevlab.solara
+ 1.2 23837 com.solodevlab.solara
+ 0.5 23907 com.solodevlab.solara
+ 0.3 30622 com.solodevlab.solara
+ 0.0 25642 com.solodevlab.solara
+ 0.0 25359 com.solodevlab.solara
+ 0.0 25348 com.solodevlab.solara
+ 0.0 23935 com.solodevlab.solara
+ 0.0 23934 com.solodevlab.solara
+ 0.0 23909 com.solodevlab.solara
+ 0.0 23840 com.solodevlab.solara
+ 0.0 23839 com.solodevlab.solara
+ 0.0 23836 com.solodevlab.solara
+ 0.0 23834 com.solodevlab.solara
+ 0.0 23835 com.solodevlab.solara
+ 0.0 23833 com.solodevlab.solara
+ 0.0 23827 com.solodevlab.solara
+ 0.0 23824 com.solodevlab.solara
+ 0.0 23822 com.solodevlab.solara
+ 0.0 23821 com.solodevlab.solara
+ 0.0 23814 com.solodevlab.solara
+ 0.0 23819 com.solodevlab.solara
+ 0.0 23818 com.solodevlab.solara
+ 0.0 23817 com.solodevlab.solara
+ 0.0 23816 com.solodevlab.solara
+ 0.0 23815 com.solodevlab.solara
+ 0.0 23820 com.solodevlab.solara
+
+
+
+Threads: 30 total,   1 running,  29 sleeping,   0 stopped,   0 zombie
+  Mem:  3892048K total,  3856592K used,    35456K free,    36796K buffers
+ Swap:  2140092K total,   898092K used,  1242000K free,  1745616K cached
+800%cpu 144%user   0%nice  73%sys 578%idle   0%iow   0%irq   5%sirq   0%host
+%CPU]  TID NAME
+94.2 23832 com.solodevlab.solara
+38.6 23812 com.solodevlab.solara
+ 8.3 30603 com.solodevlab.solara
+ 4.0 24063 com.solodevlab.solara
+ 1.3 23837 com.solodevlab.solara
+ 0.6 23907 com.solodevlab.solara
+ 0.5 30622 com.solodevlab.solara
+ 0.0 25642 com.solodevlab.solara
+ 0.0 25359 com.solodevlab.solara
+ 0.0 25348 com.solodevlab.solara
+ 0.0 23935 com.solodevlab.solara
+ 0.0 23934 com.solodevlab.solara
+ 0.0 23909 com.solodevlab.solara
+ 0.0 23840 com.solodevlab.solara
+ 0.0 23839 com.solodevlab.solara
+ 0.0 23836 com.solodevlab.solara
+ 0.0 23834 com.solodevlab.solara
+ 0.0 23835 com.solodevlab.solara
+ 0.0 23833 com.solodevlab.solara
+ 0.0 23827 com.solodevlab.solara
+ 0.0 23824 com.solodevlab.solara
+ 0.0 23822 com.solodevlab.solara
+ 0.0 23821 com.solodevlab.solara
+ 0.0 23814 com.solodevlab.solara
+ 0.0 23819 com.solodevlab.solara
+ 0.0 23818 com.solodevlab.solara
+ 0.0 23817 com.solodevlab.solara
+ 0.0 23816 com.solodevlab.solara
+ 0.0 23815 com.solodevlab.solara
+ 0.0 23820 com.solodevlab.solara
+
+
+
+Threads: 30 total,   3 running,  27 sleeping,   0 stopped,   0 zombie
+  Mem:  3892048K total,  3854392K used,    37656K free,    36828K buffers
+ Swap:  2140092K total,   898092K used,  1242000K free,  1745592K cached
+800%cpu 149%user   0%nice  86%sys 560%idle   0%iow   0%irq   5%sirq   0%host
+%CPU]  TID NAME
+94.0 23832 com.solodevlab.solara
+37.9 23812 com.solodevlab.solara
+ 8.2 30603 com.solodevlab.solara
+ 4.0 24063 com.solodevlab.solara
+ 1.1 23837 com.solodevlab.solara
+ 0.6 23907 com.solodevlab.solara
+ 0.5 30622 com.solodevlab.solara
+ 0.0 25642 com.solodevlab.solara
+ 0.0 25359 com.solodevlab.solara
+ 0.0 25348 com.solodevlab.solara
+ 0.0 23935 com.solodevlab.solara
+ 0.0 23934 com.solodevlab.solara
+ 0.0 23909 com.solodevlab.solara
+ 0.0 23840 com.solodevlab.solara
+ 0.0 23839 com.solodevlab.solara
+ 0.0 23836 com.solodevlab.solara
+ 0.0 23834 com.solodevlab.solara
+ 0.0 23835 com.solodevlab.solara
+ 0.0 23833 com.solodevlab.solara
+ 0.0 23827 com.solodevlab.solara
+ 0.0 23824 com.solodevlab.solara
+ 0.0 23822 com.solodevlab.solara
+ 0.0 23821 com.solodevlab.solara
+ 0.0 23814 com.solodevlab.solara
+ 0.0 23819 com.solodevlab.solara
+ 0.0 23818 com.solodevlab.solara
+ 0.0 23817 com.solodevlab.solara
+ 0.0 23816 com.solodevlab.solara
+ 0.0 23815 com.solodevlab.solara
+ 0.0 23820 com.solodevlab.solara
+
+
+
+Threads: 30 total,   1 running,  29 sleeping,   0 stopped,   0 zombie
+  Mem:  3892048K total,  3857520K used,    34528K free,    36836K buffers
+ Swap:  2140092K total,   898092K used,  1242000K free,  1745592K cached
+800%cpu 158%user   0%nice  90%sys 548%idle   0%iow   0%irq   4%sirq   0%host
+%CPU]  TID NAME
+94.1 23832 com.solodevlab.solara
+38.4 23812 com.solodevlab.solara
+ 8.1 30603 com.solodevlab.solara
+ 4.1 24063 com.solodevlab.solara
+ 1.1 23837 com.solodevlab.solara
+ 0.5 23907 com.solodevlab.solara
+ 0.3 30622 com.solodevlab.solara
+ 0.0 25642 com.solodevlab.solara
+ 0.0 25359 com.solodevlab.solara
+ 0.0 25348 com.solodevlab.solara
+ 0.0 23935 com.solodevlab.solara
+ 0.0 23934 com.solodevlab.solara
+ 0.0 23909 com.solodevlab.solara
+ 0.0 23840 com.solodevlab.solara
+ 0.0 23839 com.solodevlab.solara
+ 0.0 23836 com.solodevlab.solara
+ 0.0 23834 com.solodevlab.solara
+ 0.0 23835 com.solodevlab.solara
+ 0.0 23833 com.solodevlab.solara
+ 0.0 23827 com.solodevlab.solara
+ 0.0 23824 com.solodevlab.solara
+ 0.0 23822 com.solodevlab.solara
+ 0.0 23821 com.solodevlab.solara
+ 0.0 23814 com.solodevlab.solara
+ 0.0 23819 com.solodevlab.solara
+ 0.0 23818 com.solodevlab.solara
+ 0.0 23817 com.solodevlab.solara
+ 0.0 23816 com.solodevlab.solara
+ 0.0 23815 com.solodevlab.solara
+ 0.0 23820 com.solodevlab.solara
+
+
+
+Threads: 30 total,   1 running,  29 sleeping,   0 stopped,   0 zombie
+  Mem:  3892048K total,  3857628K used,    34420K free,    36836K buffers
+ Swap:  2140092K total,   898092K used,  1242000K free,  1745592K cached
+800%cpu 142%user   0%nice  72%sys 582%idle   0%iow   0%irq   5%sirq   0%host
+%CPU]  TID NAME
+94.2 23832 com.solodevlab.solara
+38.1 23812 com.solodevlab.solara
+ 8.2 30603 com.solodevlab.solara
+ 4.2 24063 com.solodevlab.solara
+ 1.3 23837 com.solodevlab.solara
+ 0.7 23907 com.solodevlab.solara
+ 0.4 30622 com.solodevlab.solara
+ 0.0 25642 com.solodevlab.solara
+ 0.0 25359 com.solodevlab.solara
+ 0.0 25348 com.solodevlab.solara
+ 0.0 23935 com.solodevlab.solara
+ 0.0 23934 com.solodevlab.solara
+ 0.0 23909 com.solodevlab.solara
+ 0.0 23840 com.solodevlab.solara
+ 0.0 23839 com.solodevlab.solara
+ 0.0 23836 com.solodevlab.solara
+ 0.0 23834 com.solodevlab.solara
+ 0.0 23835 com.solodevlab.solara
+ 0.0 23833 com.solodevlab.solara
+ 0.0 23827 com.solodevlab.solara
+ 0.0 23824 com.solodevlab.solara
+ 0.0 23822 com.solodevlab.solara
+ 0.0 23821 com.solodevlab.solara
+ 0.0 23814 com.solodevlab.solara
+ 0.0 23819 com.solodevlab.solara
+ 0.0 23818 com.solodevlab.solara
+ 0.0 23817 com.solodevlab.solara
+ 0.0 23816 com.solodevlab.solara
+ 0.0 23815 com.solodevlab.solara
+ 0.0 23820 com.solodevlab.solara
+
+
+
+Threads: 30 total,   3 running,  27 sleeping,   0 stopped,   0 zombie
+  Mem:  3892048K total,  3856892K used,    35156K free,    36844K buffers
+ Swap:  2140092K total,   898092K used,  1242000K free,  1745592K cached
+800%cpu 147%user   0%nice  83%sys 566%idle   0%iow   0%irq   4%sirq   0%host
+%CPU]  TID NAME
+93.9 23832 com.solodevlab.solara
+38.2 23812 com.solodevlab.solara
+ 8.2 30603 com.solodevlab.solara
+ 4.1 24063 com.solodevlab.solara
+ 1.1 23837 com.solodevlab.solara
+ 0.6 23907 com.solodevlab.solara
+ 0.4 30622 com.solodevlab.solara
+ 0.0 25642 com.solodevlab.solara
+ 0.0 25359 com.solodevlab.solara
+ 0.0 25348 com.solodevlab.solara
+ 0.0 23935 com.solodevlab.solara
+ 0.0 23934 com.solodevlab.solara
+ 0.0 23909 com.solodevlab.solara
+ 0.0 23840 com.solodevlab.solara
+ 0.0 23839 com.solodevlab.solara
+ 0.0 23836 com.solodevlab.solara
+ 0.0 23834 com.solodevlab.solara
+ 0.0 23835 com.solodevlab.solara
+ 0.0 23833 com.solodevlab.solara
+ 0.0 23827 com.solodevlab.solara
+ 0.0 23824 com.solodevlab.solara
+ 0.0 23822 com.solodevlab.solara
+ 0.0 23821 com.solodevlab.solara
+ 0.0 23814 com.solodevlab.solara
+ 0.0 23819 com.solodevlab.solara
+ 0.0 23818 com.solodevlab.solara
+ 0.0 23817 com.solodevlab.solara
+ 0.0 23816 com.solodevlab.solara
+ 0.0 23815 com.solodevlab.solara
+ 0.0 23820 com.solodevlab.solara
+
+
+
+Threads: 30 total,   2 running,  28 sleeping,   0 stopped,   0 zombie
+  Mem:  3892048K total,  3858044K used,    34004K free,    36852K buffers
+ Swap:  2140092K total,   898092K used,  1242000K free,  1745592K cached
+800%cpu 159%user   0%nice  91%sys 546%idle   0%iow   0%irq   4%sirq   0%host
+%CPU]  TID NAME
+93.0 23832 com.solodevlab.solara
+38.9 23812 com.solodevlab.solara
+ 8.1 30603 com.solodevlab.solara
+ 4.1 24063 com.solodevlab.solara
+ 1.3 23837 com.solodevlab.solara
+ 0.5 23907 com.solodevlab.solara
+ 0.4 30622 com.solodevlab.solara
+ 0.0 25642 com.solodevlab.solara
+ 0.0 25359 com.solodevlab.solara
+ 0.0 25348 com.solodevlab.solara
+ 0.0 23935 com.solodevlab.solara
+ 0.0 23934 com.solodevlab.solara
+ 0.0 23909 com.solodevlab.solara
+ 0.0 23840 com.solodevlab.solara
+ 0.0 23839 com.solodevlab.solara
+ 0.0 23836 com.solodevlab.solara
+ 0.0 23834 com.solodevlab.solara
+ 0.0 23835 com.solodevlab.solara
+ 0.0 23833 com.solodevlab.solara
+ 0.0 23827 com.solodevlab.solara
+ 0.0 23824 com.solodevlab.solara
+ 0.0 23822 com.solodevlab.solara
+ 0.0 23821 com.solodevlab.solara
+ 0.0 23814 com.solodevlab.solara
+ 0.0 23819 com.solodevlab.solara
+ 0.0 23818 com.solodevlab.solara
+ 0.0 23817 com.solodevlab.solara
+ 0.0 23816 com.solodevlab.solara
+ 0.0 23815 com.solodevlab.solara
+ 0.0 23820 com.solodevlab.solara
+
+
+
+Threads: 30 total,   1 running,  29 sleeping,   0 stopped,   0 zombie
+  Mem:  3892048K total,  3856360K used,    35688K free,    36852K buffers
+ Swap:  2140092K total,   898092K used,  1242000K free,  1745592K cached
+800%cpu 144%user   0%nice  72%sys 580%idle   0%iow   0%irq   5%sirq   0%host
+%CPU]  TID NAME
+94.3 23832 com.solodevlab.solara
+38.7 23812 com.solodevlab.solara
+ 8.1 30603 com.solodevlab.solara
+ 4.1 24063 com.solodevlab.solara
+ 1.2 23837 com.solodevlab.solara
+ 0.6 23907 com.solodevlab.solara
+ 0.5 30622 com.solodevlab.solara
+ 0.0 25642 com.solodevlab.solara
+ 0.0 25359 com.solodevlab.solara
+ 0.0 25348 com.solodevlab.solara
+ 0.0 23935 com.solodevlab.solara
+ 0.0 23934 com.solodevlab.solara
+ 0.0 23909 com.solodevlab.solara
+ 0.0 23840 com.solodevlab.solara
+ 0.0 23839 com.solodevlab.solara
+ 0.0 23836 com.solodevlab.solara
+ 0.0 23834 com.solodevlab.solara
+ 0.0 23835 com.solodevlab.solara
+ 0.0 23833 com.solodevlab.solara
+ 0.0 23827 com.solodevlab.solara
+ 0.0 23824 com.solodevlab.solara
+ 0.0 23822 com.solodevlab.solara
+ 0.0 23821 com.solodevlab.solara
+ 0.0 23814 com.solodevlab.solara
+ 0.0 23819 com.solodevlab.solara
+ 0.0 23818 com.solodevlab.solara
+ 0.0 23817 com.solodevlab.solara
+ 0.0 23816 com.solodevlab.solara
+ 0.0 23815 com.solodevlab.solara
+ 0.0 23820 com.solodevlab.solara
+
+
+
+Threads: 30 total,   1 running,  29 sleeping,   0 stopped,   0 zombie
+  Mem:  3892048K total,  3844232K used,    47816K free,    36384K buffers
+ Swap:  2140092K total,   898092K used,  1242000K free,  1732524K cached
+800%cpu 147%user   0%nice  85%sys 563%idle   0%iow   0%irq   5%sirq   0%host
+%CPU]  TID NAME
+94.0 23832 com.solodevlab.solara
+38.6 23812 com.solodevlab.solara
+ 8.2 30603 com.solodevlab.solara
+ 3.9 24063 com.solodevlab.solara
+ 1.2 23837 com.solodevlab.solara
+ 0.6 23907 com.solodevlab.solara
+ 0.4 30622 com.solodevlab.solara
+ 0.0 25642 com.solodevlab.solara
+ 0.0 25359 com.solodevlab.solara
+ 0.0 25348 com.solodevlab.solara
+ 0.0 23935 com.solodevlab.solara
+ 0.0 23934 com.solodevlab.solara
+ 0.0 23909 com.solodevlab.solara
+ 0.0 23840 com.solodevlab.solara
+ 0.0 23839 com.solodevlab.solara
+ 0.0 23836 com.solodevlab.solara
+ 0.0 23834 com.solodevlab.solara
+ 0.0 23835 com.solodevlab.solara
+ 0.0 23833 com.solodevlab.solara
+ 0.0 23827 com.solodevlab.solara
+ 0.0 23824 com.solodevlab.solara
+ 0.0 23822 com.solodevlab.solara
+ 0.0 23821 com.solodevlab.solara
+ 0.0 23814 com.solodevlab.solara
+ 0.0 23819 com.solodevlab.solara
+ 0.0 23818 com.solodevlab.solara
+ 0.0 23817 com.solodevlab.solara
+ 0.0 23816 com.solodevlab.solara
+ 0.0 23815 com.solodevlab.solara
+ 0.0 23820 com.solodevlab.solara
+
+
+
+Threads: 30 total,   2 running,  28 sleeping,   0 stopped,   0 zombie
+  Mem:  3892048K total,  3844900K used,    47148K free,    36416K buffers
+ Swap:  2140092K total,   898092K used,  1242000K free,  1732524K cached
+800%cpu 158%user   0%nice  94%sys 543%idle   0%iow   0%irq   5%sirq   0%host
+%CPU]  TID NAME
+93.7 23832 com.solodevlab.solara
+37.1 23812 com.solodevlab.solara
+ 8.0 30603 com.solodevlab.solara
+ 4.2 24063 com.solodevlab.solara
+ 1.2 23837 com.solodevlab.solara
+ 0.6 23907 com.solodevlab.solara
+ 0.4 30622 com.solodevlab.solara
+ 0.0 25642 com.solodevlab.solara
+ 0.0 25359 com.solodevlab.solara
+ 0.0 25348 com.solodevlab.solara
+ 0.0 23935 com.solodevlab.solara
+ 0.0 23934 com.solodevlab.solara
+ 0.0 23909 com.solodevlab.solara
+ 0.0 23840 com.solodevlab.solara
+ 0.0 23839 com.solodevlab.solara
+ 0.0 23836 com.solodevlab.solara
+ 0.0 23834 com.solodevlab.solara
+ 0.0 23835 com.solodevlab.solara
+ 0.0 23833 com.solodevlab.solara
+ 0.0 23827 com.solodevlab.solara
+ 0.0 23824 com.solodevlab.solara
+ 0.0 23822 com.solodevlab.solara
+ 0.0 23821 com.solodevlab.solara
+ 0.0 23814 com.solodevlab.solara
+ 0.0 23819 com.solodevlab.solara
+ 0.0 23818 com.solodevlab.solara
+ 0.0 23817 com.solodevlab.solara
+ 0.0 23816 com.solodevlab.solara
+ 0.0 23815 com.solodevlab.solara
+ 0.0 23820 com.solodevlab.solara
+
+
+
+Threads: 30 total,   3 running,  27 sleeping,   0 stopped,   0 zombie
+  Mem:  3892048K total,  3846820K used,    45228K free,    36448K buffers
+ Swap:  2140092K total,   898092K used,  1242000K free,  1732524K cached
+800%cpu 145%user   0%nice  70%sys 580%idle   0%iow   0%irq   4%sirq   0%host
+%CPU]  TID NAME
+94.4 23832 com.solodevlab.solara
+38.8 23812 com.solodevlab.solara
+ 8.3 30603 com.solodevlab.solara
+ 4.0 24063 com.solodevlab.solara
+ 1.1 23837 com.solodevlab.solara
+ 0.6 23907 com.solodevlab.solara
+ 0.4 30622 com.solodevlab.solara
+ 0.0 25642 com.solodevlab.solara
+ 0.0 25359 com.solodevlab.solara
+ 0.0 25348 com.solodevlab.solara
+ 0.0 23935 com.solodevlab.solara
+ 0.0 23934 com.solodevlab.solara
+ 0.0 23909 com.solodevlab.solara
+ 0.0 23840 com.solodevlab.solara
+ 0.0 23839 com.solodevlab.solara
+ 0.0 23836 com.solodevlab.solara
+ 0.0 23834 com.solodevlab.solara
+ 0.0 23835 com.solodevlab.solara
+ 0.0 23833 com.solodevlab.solara
+ 0.0 23827 com.solodevlab.solara
+ 0.0 23824 com.solodevlab.solara
+ 0.0 23822 com.solodevlab.solara
+ 0.0 23821 com.solodevlab.solara
+ 0.0 23814 com.solodevlab.solara
+ 0.0 23819 com.solodevlab.solara
+ 0.0 23818 com.solodevlab.solara
+ 0.0 23817 com.solodevlab.solara
+ 0.0 23816 com.solodevlab.solara
+ 0.0 23815 com.solodevlab.solara
+ 0.0 23820 com.solodevlab.solara
+
+
+
+Threads: 30 total,   1 running,  29 sleeping,   0 stopped,   0 zombie
+  Mem:  3892048K total,  3847008K used,    45040K free,    36456K buffers
+ Swap:  2140092K total,   897836K used,  1242256K free,  1732524K cached
+800%cpu 141%user   0%nice  86%sys 567%idle   0%iow   0%irq   6%sirq   0%host
+%CPU]  TID NAME
+92.7 23832 com.solodevlab.solara
+38.0 23812 com.solodevlab.solara
+ 7.9 30603 com.solodevlab.solara
+ 4.0 24063 com.solodevlab.solara
+ 1.3 23837 com.solodevlab.solara
+ 0.5 30622 com.solodevlab.solara
+ 0.5 23907 com.solodevlab.solara
+ 0.0 25642 com.solodevlab.solara
+ 0.0 25359 com.solodevlab.solara
+ 0.0 25348 com.solodevlab.solara
+ 0.0 23935 com.solodevlab.solara
+ 0.0 23934 com.solodevlab.solara
+ 0.0 23909 com.solodevlab.solara
+ 0.0 23840 com.solodevlab.solara
+ 0.0 23839 com.solodevlab.solara
+ 0.0 23836 com.solodevlab.solara
+ 0.0 23834 com.solodevlab.solara
+ 0.0 23835 com.solodevlab.solara
+ 0.0 23833 com.solodevlab.solara
+ 0.0 23827 com.solodevlab.solara
+ 0.0 23824 com.solodevlab.solara
+ 0.0 23822 com.solodevlab.solara
+ 0.0 23821 com.solodevlab.solara
+ 0.0 23814 com.solodevlab.solara
+ 0.0 23820 com.solodevlab.solara
+ 0.0 23818 com.solodevlab.solara
+ 0.0 23817 com.solodevlab.solara
+ 0.0 23816 com.solodevlab.solara
+ 0.0 23815 com.solodevlab.solara
+ 0.0 23819 com.solodevlab.solara
+
+
+
+Threads: 30 total,   1 running,  29 sleeping,   0 stopped,   0 zombie
+  Mem:  3892048K total,  3846316K used,    45732K free,    36464K buffers
+ Swap:  2140092K total,   897836K used,  1242256K free,  1732524K cached
+800%cpu 162%user   0%nice  93%sys 541%idle   0%iow   0%irq   4%sirq   0%host
+%CPU]  TID NAME
+94.4 23832 com.solodevlab.solara
+39.0 23812 com.solodevlab.solara
+ 7.9 30603 com.solodevlab.solara
+ 4.1 24063 com.solodevlab.solara
+ 1.2 23837 com.solodevlab.solara
+ 0.5 23907 com.solodevlab.solara
+ 0.3 30622 com.solodevlab.solara
+ 0.0 25642 com.solodevlab.solara
+ 0.0 25359 com.solodevlab.solara
+ 0.0 25348 com.solodevlab.solara
+ 0.0 23935 com.solodevlab.solara
+ 0.0 23934 com.solodevlab.solara
+ 0.0 23909 com.solodevlab.solara
+ 0.0 23840 com.solodevlab.solara
+ 0.0 23839 com.solodevlab.solara
+ 0.0 23836 com.solodevlab.solara
+ 0.0 23834 com.solodevlab.solara
+ 0.0 23835 com.solodevlab.solara
+ 0.0 23833 com.solodevlab.solara
+ 0.0 23827 com.solodevlab.solara
+ 0.0 23824 com.solodevlab.solara
+ 0.0 23822 com.solodevlab.solara
+ 0.0 23821 com.solodevlab.solara
+ 0.0 23814 com.solodevlab.solara
+ 0.0 23819 com.solodevlab.solara
+ 0.0 23818 com.solodevlab.solara
+ 0.0 23817 com.solodevlab.solara
+ 0.0 23816 com.solodevlab.solara
+ 0.0 23815 com.solodevlab.solara
+ 0.0 23820 com.solodevlab.solara
+
+
+
+Threads: 30 total,   1 running,  29 sleeping,   0 stopped,   0 zombie
+  Mem:  3892048K total,  3848440K used,    43608K free,    36496K buffers
+ Swap:  2140092K total,   897836K used,  1242256K free,  1732524K cached
+800%cpu 142%user   0%nice  71%sys 582%idle   0%iow   0%irq   4%sirq   0%host
+%CPU]  TID NAME
+94.0 23832 com.solodevlab.solara
+38.6 23812 com.solodevlab.solara
+ 8.2 30603 com.solodevlab.solara
+ 4.0 24063 com.solodevlab.solara
+ 1.2 23837 com.solodevlab.solara
+ 0.6 23907 com.solodevlab.solara
+ 0.5 30622 com.solodevlab.solara
+ 0.0 25642 com.solodevlab.solara
+ 0.0 25359 com.solodevlab.solara
+ 0.0 25348 com.solodevlab.solara
+ 0.0 23935 com.solodevlab.solara
+ 0.0 23934 com.solodevlab.solara
+ 0.0 23909 com.solodevlab.solara
+ 0.0 23840 com.solodevlab.solara
+ 0.0 23839 com.solodevlab.solara
+ 0.0 23836 com.solodevlab.solara
+ 0.0 23834 com.solodevlab.solara
+ 0.0 23835 com.solodevlab.solara
+ 0.0 23833 com.solodevlab.solara
+ 0.0 23827 com.solodevlab.solara
+ 0.0 23824 com.solodevlab.solara
+ 0.0 23822 com.solodevlab.solara
+ 0.0 23821 com.solodevlab.solara
+ 0.0 23814 com.solodevlab.solara
+ 0.0 23819 com.solodevlab.solara
+ 0.0 23818 com.solodevlab.solara
+ 0.0 23817 com.solodevlab.solara
+ 0.0 23816 com.solodevlab.solara
+ 0.0 23815 com.solodevlab.solara
+ 0.0 23820 com.solodevlab.solara
+
+
+
+Threads: 30 total,   1 running,  29 sleeping,   0 stopped,   0 zombie
+  Mem:  3892048K total,  3849408K used,    42640K free,    36504K buffers
+ Swap:  2140092K total,   897836K used,  1242256K free,  1732524K cached
+800%cpu 144%user   3%nice  86%sys 564%idle   0%iow   0%irq   4%sirq   0%host
+%CPU]  TID NAME
+92.2 23832 com.solodevlab.solara
+37.5 23812 com.solodevlab.solara
+ 8.0 30603 com.solodevlab.solara
+ 3.9 24063 com.solodevlab.solara
+ 1.1 23837 com.solodevlab.solara
+ 0.6 30622 com.solodevlab.solara
+ 0.6 23907 com.solodevlab.solara
+ 0.0 25642 com.solodevlab.solara
+ 0.0 25359 com.solodevlab.solara
+ 0.0 25348 com.solodevlab.solara
+ 0.0 23935 com.solodevlab.solara
+ 0.0 23934 com.solodevlab.solara
+ 0.0 23909 com.solodevlab.solara
+ 0.0 23840 com.solodevlab.solara
+ 0.0 23839 com.solodevlab.solara
+ 0.0 23836 com.solodevlab.solara
+ 0.0 23834 com.solodevlab.solara
+ 0.0 23835 com.solodevlab.solara
+ 0.0 23833 com.solodevlab.solara
+ 0.0 23827 com.solodevlab.solara
+ 0.0 23824 com.solodevlab.solara
+ 0.0 23822 com.solodevlab.solara
+ 0.0 23821 com.solodevlab.solara
+ 0.0 23814 com.solodevlab.solara
+ 0.0 23820 com.solodevlab.solara
+ 0.0 23818 com.solodevlab.solara
+ 0.0 23817 com.solodevlab.solara
+ 0.0 23816 com.solodevlab.solara
+ 0.0 23815 com.solodevlab.solara
+ 0.0 23819 com.solodevlab.solara
+
+
+
+Threads: 30 total,   2 running,  28 sleeping,   0 stopped,   0 zombie
+  Mem:  3892048K total,  3832656K used,    59392K free,    36536K buffers
+ Swap:  2140092K total,   897836K used,  1242256K free,  1719124K cached
+800%cpu 156%user   4%nice  91%sys 545%idle   0%iow   0%irq   5%sirq   0%host
+%CPU]  TID NAME
+93.4 23832 com.solodevlab.solara
+38.7 23812 com.solodevlab.solara
+ 7.9 30603 com.solodevlab.solara
+ 4.0 24063 com.solodevlab.solara
+ 1.2 23837 com.solodevlab.solara
+ 0.6 23907 com.solodevlab.solara
+ 0.4 30622 com.solodevlab.solara
+ 0.0 25642 com.solodevlab.solara
+ 0.0 25359 com.solodevlab.solara
+ 0.0 25348 com.solodevlab.solara
+ 0.0 23935 com.solodevlab.solara
+ 0.0 23934 com.solodevlab.solara
+ 0.0 23909 com.solodevlab.solara
+ 0.0 23840 com.solodevlab.solara
+ 0.0 23839 com.solodevlab.solara
+ 0.0 23836 com.solodevlab.solara
+ 0.0 23834 com.solodevlab.solara
+ 0.0 23835 com.solodevlab.solara
+ 0.0 23833 com.solodevlab.solara
+ 0.0 23827 com.solodevlab.solara
+ 0.0 23824 com.solodevlab.solara
+ 0.0 23822 com.solodevlab.solara
+ 0.0 23821 com.solodevlab.solara
+ 0.0 23814 com.solodevlab.solara
+ 0.0 23819 com.solodevlab.solara
+ 0.0 23818 com.solodevlab.solara
+ 0.0 23817 com.solodevlab.solara
+ 0.0 23816 com.solodevlab.solara
+ 0.0 23815 com.solodevlab.solara
+ 0.0 23820 com.solodevlab.solara
+
+
+
+Threads: 30 total,   2 running,  28 sleeping,   0 stopped,   0 zombie
+  Mem:  3892048K total,  3833872K used,    58176K free,    36536K buffers
+ Swap:  2140092K total,   897836K used,  1242256K free,  1719124K cached
+800%cpu 142%user   0%nice  70%sys 582%idle   0%iow   0%irq   5%sirq   0%host
+%CPU]  TID NAME
+94.0 23832 com.solodevlab.solara
+38.2 23812 com.solodevlab.solara
+ 8.3 30603 com.solodevlab.solara
+ 4.1 24063 com.solodevlab.solara
+ 1.1 23837 com.solodevlab.solara
+ 0.6 23907 com.solodevlab.solara
+ 0.4 30622 com.solodevlab.solara
+ 0.0 25642 com.solodevlab.solara
+ 0.0 25359 com.solodevlab.solara
+ 0.0 25348 com.solodevlab.solara
+ 0.0 23935 com.solodevlab.solara
+ 0.0 23934 com.solodevlab.solara
+ 0.0 23909 com.solodevlab.solara
+ 0.0 23840 com.solodevlab.solara
+ 0.0 23839 com.solodevlab.solara
+ 0.0 23836 com.solodevlab.solara
+ 0.0 23834 com.solodevlab.solara
+ 0.0 23835 com.solodevlab.solara
+ 0.0 23833 com.solodevlab.solara
+ 0.0 23827 com.solodevlab.solara
+ 0.0 23824 com.solodevlab.solara
+ 0.0 23822 com.solodevlab.solara
+ 0.0 23821 com.solodevlab.solara
+ 0.0 23814 com.solodevlab.solara
+ 0.0 23819 com.solodevlab.solara
+ 0.0 23818 com.solodevlab.solara
+ 0.0 23817 com.solodevlab.solara
+ 0.0 23816 com.solodevlab.solara
+ 0.0 23815 com.solodevlab.solara
+ 0.0 23820 com.solodevlab.solara
+
+
+
+Threads: 30 total,   1 running,  29 sleeping,   0 stopped,   0 zombie
+  Mem:  3892048K total,  3835968K used,    56080K free,    36552K buffers
+ Swap:  2140092K total,   897836K used,  1242256K free,  1719128K cached
+800%cpu 150%user   0%nice  87%sys 558%idle   0%iow   0%irq   4%sirq   0%host
+%CPU]  TID NAME
+94.4 23832 com.solodevlab.solara
+38.6 23812 com.solodevlab.solara
+ 8.1 30603 com.solodevlab.solara
+ 4.0 24063 com.solodevlab.solara
+ 1.3 23837 com.solodevlab.solara
+ 0.5 23907 com.solodevlab.solara
+ 0.4 30622 com.solodevlab.solara
+ 0.0 25642 com.solodevlab.solara
+ 0.0 25359 com.solodevlab.solara
+ 0.0 25348 com.solodevlab.solara
+ 0.0 23935 com.solodevlab.solara
+ 0.0 23934 com.solodevlab.solara
+ 0.0 23909 com.solodevlab.solara
+ 0.0 23840 com.solodevlab.solara
+ 0.0 23839 com.solodevlab.solara
+ 0.0 23836 com.solodevlab.solara
+ 0.0 23834 com.solodevlab.solara
+ 0.0 23835 com.solodevlab.solara
+ 0.0 23833 com.solodevlab.solara
+ 0.0 23827 com.solodevlab.solara
+ 0.0 23824 com.solodevlab.solara
+ 0.0 23822 com.solodevlab.solara
+ 0.0 23821 com.solodevlab.solara
+ 0.0 23814 com.solodevlab.solara
+ 0.0 23819 com.solodevlab.solara
+ 0.0 23818 com.solodevlab.solara
+ 0.0 23817 com.solodevlab.solara
+ 0.0 23816 com.solodevlab.solara
+ 0.0 23815 com.solodevlab.solara
+ 0.0 23820 com.solodevlab.solara
+
+
+
+Threads: 30 total,   1 running,  29 sleeping,   0 stopped,   0 zombie
+  Mem:  3892048K total,  3837820K used,    54228K free,    36576K buffers
+ Swap:  2140092K total,   897836K used,  1242256K free,  1719128K cached
+800%cpu 160%user   0%nice  92%sys 543%idle   0%iow   0%irq   5%sirq   0%host
+%CPU]  TID NAME
+93.0 23832 com.solodevlab.solara
+39.0 23812 com.solodevlab.solara
+ 8.2 30603 com.solodevlab.solara
+ 4.1 24063 com.solodevlab.solara
+ 1.1 23837 com.solodevlab.solara
+ 0.6 23907 com.solodevlab.solara
+ 0.4 30622 com.solodevlab.solara
+ 0.0 25642 com.solodevlab.solara
+ 0.0 25359 com.solodevlab.solara
+ 0.0 25348 com.solodevlab.solara
+ 0.0 23935 com.solodevlab.solara
+ 0.0 23934 com.solodevlab.solara
+ 0.0 23909 com.solodevlab.solara
+ 0.0 23840 com.solodevlab.solara
+ 0.0 23839 com.solodevlab.solara
+ 0.0 23836 com.solodevlab.solara
+ 0.0 23834 com.solodevlab.solara
+ 0.0 23835 com.solodevlab.solara
+ 0.0 23833 com.solodevlab.solara
+ 0.0 23827 com.solodevlab.solara
+ 0.0 23824 com.solodevlab.solara
+ 0.0 23822 com.solodevlab.solara
+ 0.0 23821 com.solodevlab.solara
+ 0.0 23814 com.solodevlab.solara
+ 0.0 23819 com.solodevlab.solara
+ 0.0 23818 com.solodevlab.solara
+ 0.0 23817 com.solodevlab.solara
+ 0.0 23816 com.solodevlab.solara
+ 0.0 23815 com.solodevlab.solara
+ 0.0 23820 com.solodevlab.solara
+
+
+
+Threads: 30 total,   1 running,  29 sleeping,   0 stopped,   0 zombie
+  Mem:  3892048K total,  3838896K used,    53152K free,    36600K buffers
+ Swap:  2140092K total,   897836K used,  1242256K free,  1719128K cached
+800%cpu 142%user   0%nice  73%sys 581%idle   0%iow   0%irq   4%sirq   0%host
+%CPU]  TID NAME
+93.7 23832 com.solodevlab.solara
+38.5 23812 com.solodevlab.solara
+ 8.3 30603 com.solodevlab.solara
+ 4.1 24063 com.solodevlab.solara
+ 1.2 23837 com.solodevlab.solara
+ 0.6 30622 com.solodevlab.solara
+ 0.6 23907 com.solodevlab.solara
+ 0.0 25642 com.solodevlab.solara
+ 0.0 25359 com.solodevlab.solara
+ 0.0 25348 com.solodevlab.solara
+ 0.0 23935 com.solodevlab.solara
+ 0.0 23934 com.solodevlab.solara
+ 0.0 23909 com.solodevlab.solara
+ 0.0 23840 com.solodevlab.solara
+ 0.0 23839 com.solodevlab.solara
+ 0.0 23836 com.solodevlab.solara
+ 0.0 23834 com.solodevlab.solara
+ 0.0 23835 com.solodevlab.solara
+ 0.0 23833 com.solodevlab.solara
+ 0.0 23827 com.solodevlab.solara
+ 0.0 23824 com.solodevlab.solara
+ 0.0 23822 com.solodevlab.solara
+ 0.0 23821 com.solodevlab.solara
+ 0.0 23814 com.solodevlab.solara
+ 0.0 23820 com.solodevlab.solara
+ 0.0 23818 com.solodevlab.solara
+ 0.0 23817 com.solodevlab.solara
+ 0.0 23816 com.solodevlab.solara
+ 0.0 23815 com.solodevlab.solara
+ 0.0 23819 com.solodevlab.solara
+
+
+
+Threads: 30 total,   0 running,  30 sleeping,   0 stopped,   0 zombie
+  Mem:  3892048K total,  3838600K used,    53448K free,    36608K buffers
+ Swap:  2140092K total,   897836K used,  1242256K free,  1719128K cached
+800%cpu 152%user   0%nice  83%sys 560%idle   0%iow   0%irq   6%sirq   0%host
+%CPU]  TID NAME
+94.7 23832 com.solodevlab.solara
+39.7 23812 com.solodevlab.solara
+ 8.0 30603 com.solodevlab.solara
+ 4.0 24063 com.solodevlab.solara
+ 1.3 23837 com.solodevlab.solara
+ 0.5 23907 com.solodevlab.solara
+ 0.4 30622 com.solodevlab.solara
+ 0.0 25642 com.solodevlab.solara
+ 0.0 25359 com.solodevlab.solara
+ 0.0 25348 com.solodevlab.solara
+ 0.0 23935 com.solodevlab.solara
+ 0.0 23934 com.solodevlab.solara
+ 0.0 23909 com.solodevlab.solara
+ 0.0 23840 com.solodevlab.solara
+ 0.0 23839 com.solodevlab.solara
+ 0.0 23836 com.solodevlab.solara
+ 0.0 23834 com.solodevlab.solara
+ 0.0 23835 com.solodevlab.solara
+ 0.0 23833 com.solodevlab.solara
+ 0.0 23827 com.solodevlab.solara
+ 0.0 23824 com.solodevlab.solara
+ 0.0 23822 com.solodevlab.solara
+ 0.0 23821 com.solodevlab.solara
+ 0.0 23814 com.solodevlab.solara
+ 0.0 23819 com.solodevlab.solara
+ 0.0 23818 com.solodevlab.solara
+ 0.0 23817 com.solodevlab.solara
+ 0.0 23816 com.solodevlab.solara
+ 0.0 23815 com.solodevlab.solara
+ 0.0 23820 com.solodevlab.solara
+
+
+
+Threads: 30 total,   1 running,  29 sleeping,   0 stopped,   0 zombie
+  Mem:  3892048K total,  3840716K used,    51332K free,    36608K buffers
+ Swap:  2140092K total,   897836K used,  1242256K free,  1719128K cached
+800%cpu 161%user   0%nice  90%sys 545%idle   0%iow   0%irq   5%sirq   0%host
+%CPU]  TID NAME
+94.5 23832 com.solodevlab.solara
+38.8 23812 com.solodevlab.solara
+ 8.0 30603 com.solodevlab.solara
+ 4.2 24063 com.solodevlab.solara
+ 1.1 23837 com.solodevlab.solara
+ 0.6 23907 com.solodevlab.solara
+ 0.4 30622 com.solodevlab.solara
+ 0.0 25642 com.solodevlab.solara
+ 0.0 25359 com.solodevlab.solara
+ 0.0 25348 com.solodevlab.solara
+ 0.0 23935 com.solodevlab.solara
+ 0.0 23934 com.solodevlab.solara
+ 0.0 23909 com.solodevlab.solara
+ 0.0 23840 com.solodevlab.solara
+ 0.0 23839 com.solodevlab.solara
+ 0.0 23836 com.solodevlab.solara
+ 0.0 23834 com.solodevlab.solara
+ 0.0 23835 com.solodevlab.solara
+ 0.0 23833 com.solodevlab.solara
+ 0.0 23827 com.solodevlab.solara
+ 0.0 23824 com.solodevlab.solara
+ 0.0 23822 com.solodevlab.solara
+ 0.0 23821 com.solodevlab.solara
+ 0.0 23814 com.solodevlab.solara
+ 0.0 23819 com.solodevlab.solara
+ 0.0 23818 com.solodevlab.solara
+ 0.0 23817 com.solodevlab.solara
+ 0.0 23816 com.solodevlab.solara
+ 0.0 23815 com.solodevlab.solara
+ 0.0 23820 com.solodevlab.solara

@@ -1,0 +1,738 @@
+--------- beginning of main
+05-04 20:25:40.439   970   970 I BufferQueueProducer: [SurfaceView[com.solodevlab.solara/com.solodevlab.solara.MainActivity](BLAST)#2134](this:0xb400007e34bd49c0,id:-1,api:0,p:-1,c:970) queueBuffer: fps=30.76 dur=1007.88 max=48.18 min=31.66
+05-04 20:25:40.442   921  1162 I hwcomposer: [HWCDisplay] [Display_0 (type:1)] fps:30.755407,dur:1007.95,max:48.36,min:31.05  
+05-04 20:25:41.176   937   995 I libPerfCtl: xgfGetFPS pid:31488 fps:31
+05-04 20:25:41.316  1735  1735 I WifiHAL : Get link layer stats
+05-04 20:25:41.317  1735  1735 I WifiHAL : GetLinkStatsCommand::create
+05-04 20:25:41.317  1735  1735 D android.hardware.wifi@1.0-service-lazy: WifiRequest::create vendor command to iface 31, vendor_id=0x1a11, subcmd=0x1200, res=0
+05-04 20:25:41.317  1735  1735 I android.hardware.wifi@1.0-service-lazy: WifiCommand::requestResponse err=-14
+05-04 20:25:41.317  1735  1735 I WifiHAL : wifi_get_link_stats: result=-1
+05-04 20:25:41.319  1555  1672 E WifiVendorHal: getWifiLinkLayerStats_1_5_Internal(l.1176) failed {.code = ERROR_UNKNOWN, .description = unknown}
+05-04 20:25:41.383   970   970 I BufferQueueProducer: [StatusBar#80](this:0xb400007e34b62b40,id:-1,api:0,p:-1,c:970) queueBuffer: fps=0.33 dur=3007.93 max=3007.93 min=3007.93
+05-04 20:25:41.447   970   970 I BufferQueueProducer: [SurfaceView[com.solodevlab.solara/com.solodevlab.solara.MainActivity](BLAST)#2134](this:0xb400007e34bd49c0,id:-1,api:0,p:-1,c:970) queueBuffer: fps=30.76 dur=1007.88 max=48.11 min=31.60
+05-04 20:25:41.450   921  1162 I hwcomposer: [HWCDisplay] [Display_0 (type:1)] fps:30.764156,dur:1007.67,max:48.39,min:30.79  
+05-04 20:25:42.176   937   995 I libPerfCtl: xgfGetFPS pid:31488 fps:30
+05-04 20:25:42.471   970   970 I BufferQueueProducer: [SurfaceView[com.solodevlab.solara/com.solodevlab.solara.MainActivity](BLAST)#2134](this:0xb400007e34bd49c0,id:-1,api:0,p:-1,c:970) queueBuffer: fps=31.25 dur=1023.94 max=32.41 min=31.69
+05-04 20:25:42.473   921  1162 I hwcomposer: [HWCDisplay] [Display_0 (type:1)] fps:31.256565,dur:1023.78,max:32.70,min:31.50  
+05-04 20:25:42.776  1555  2813 D AlarmManagerService: inside native alarm timerfd set Alarm Type = 2
+05-04 20:25:42.777  1555  2813 D AlarmManagerService: inside native alarm timerfd set Alarm Type = 3
+05-04 20:25:42.872  1555  2813 D AlarmManagerService: inside native alarm timerfd set Alarm Type = 2
+05-04 20:25:42.872  1555  2813 D AlarmManagerService: inside native alarm timerfd set Alarm Type = 3
+05-04 20:25:42.892 18409 31444 I NetworkScheduler.Stats: (REDACTED) Task %s/%s started execution. cause:%s exec_start_elapsed_seconds: %s
+05-04 20:25:42.905 18409 31445 I NetworkScheduler.Stats: (REDACTED) Task %s/%s finished executing. cause:%s result: %s elapsed_millis: %s uptime_millis: %s exec_start_elapsed_seconds: %s
+05-04 20:25:42.934  1555  2798 D AlarmManagerService: inside native alarm timerfd set Alarm Type = 2
+05-04 20:25:42.935  1555  2798 D AlarmManagerService: inside native alarm timerfd set Alarm Type = 3
+05-04 20:25:42.939  1555  2798 D AlarmManagerService: inside native alarm timerfd set Alarm Type = 2
+05-04 20:25:42.939  1555  2798 D AlarmManagerService: inside native alarm timerfd set Alarm Type = 3
+05-04 20:25:43.177   937   995 I libPerfCtl: xgfGetFPS pid:31488 fps:31
+05-04 20:25:43.495   970   970 I BufferQueueProducer: [SurfaceView[com.solodevlab.solara/com.solodevlab.solara.MainActivity](BLAST)#2134](this:0xb400007e34bd49c0,id:-1,api:0,p:-1,c:970) queueBuffer: fps=31.26 dur=1023.81 max=32.36 min=31.62
+05-04 20:25:43.498   921  1162 I hwcomposer: [HWCDisplay] [Display_0 (type:1)] fps:31.236547,dur:1024.44,max:33.34,min:31.13  
+05-04 20:25:44.178   937   995 I libPerfCtl: xgfGetFPS pid:31488 fps:30
+05-04 20:25:44.344  1735  1735 I WifiHAL : Get link layer stats
+05-04 20:25:44.344  1735  1735 I WifiHAL : GetLinkStatsCommand::create
+05-04 20:25:44.344  1735  1735 D android.hardware.wifi@1.0-service-lazy: WifiRequest::create vendor command to iface 31, vendor_id=0x1a11, subcmd=0x1200, res=0
+05-04 20:25:44.345  1735  1735 I android.hardware.wifi@1.0-service-lazy: WifiCommand::requestResponse err=-14
+05-04 20:25:44.345  1735  1735 I WifiHAL : wifi_get_link_stats: result=-1
+05-04 20:25:44.347  1555  1672 E WifiVendorHal: getWifiLinkLayerStats_1_5_Internal(l.1176) failed {.code = ERROR_UNKNOWN, .description = unknown}
+05-04 20:25:44.502   970   970 I BufferQueueProducer: [SurfaceView[com.solodevlab.solara/com.solodevlab.solara.MainActivity](BLAST)#2134](this:0xb400007e34bd49c0,id:-1,api:0,p:-1,c:970) queueBuffer: fps=30.76 dur=1007.81 max=48.14 min=16.40
+05-04 20:25:44.505   921  1162 I hwcomposer: [HWCDisplay] [Display_0 (type:1)] fps:30.779440,dur:1007.17,max:48.69,min:16.20  
+05-04 20:25:45.179   937   995 I libPerfCtl: xgfGetFPS pid:31488 fps:29
+05-04 20:25:45.511   970   970 I BufferQueueProducer: [SurfaceView[com.solodevlab.solara/com.solodevlab.solara.MainActivity](BLAST)#2134](this:0xb400007e34bd49c0,id:-1,api:0,p:-1,c:970) queueBuffer: fps=31.74 dur=1008.20 max=79.62 min=15.53
+05-04 20:25:45.514   921  1162 I hwcomposer: [HWCDisplay] [Display_0 (type:1)] fps:31.710287,dur:1009.14,max:79.16,min:14.96  
+05-04 20:25:45.920  1555  4785 D AlarmManagerService: inside native alarm timerfd set Alarm Type = 2
+05-04 20:25:45.920  1555  4785 D AlarmManagerService: inside native alarm timerfd set Alarm Type = 3
+05-04 20:25:46.179   937   995 I libPerfCtl: xgfGetFPS pid:31488 fps:37
+05-04 20:25:46.518   970   970 I BufferQueueProducer: [SurfaceView[com.solodevlab.solara/com.solodevlab.solara.MainActivity](BLAST)#2134](this:0xb400007e34bd49c0,id:-1,api:0,p:-1,c:970) queueBuffer: fps=34.73 dur=1007.71 max=48.02 min=15.78
+05-04 20:25:46.521   921  1162 I hwcomposer: [HWCDisplay] [Display_0 (type:1)] fps:34.767696,dur:1006.68,max:48.70,min:15.49  
+05-04 20:25:47.179   937   995 I libPerfCtl: xgfGetFPS pid:31488 fps:30
+05-04 20:25:47.317   915  2633 D [BT]    : mtk_bt_op: BT_VND_OP_LPM_WAKE_SET_STATE
+05-04 20:25:47.363  1735  1735 I WifiHAL : Get link layer stats
+05-04 20:25:47.363  1735  1735 I WifiHAL : GetLinkStatsCommand::create
+05-04 20:25:47.363  1735  1735 D android.hardware.wifi@1.0-service-lazy: WifiRequest::create vendor command to iface 31, vendor_id=0x1a11, subcmd=0x1200, res=0
+05-04 20:25:47.363  1735  1735 I android.hardware.wifi@1.0-service-lazy: WifiCommand::requestResponse err=-14
+05-04 20:25:47.363  1735  1735 I WifiHAL : wifi_get_link_stats: result=-1
+05-04 20:25:47.365  1555  1672 E WifiVendorHal: getWifiLinkLayerStats_1_5_Internal(l.1176) failed {.code = ERROR_UNKNOWN, .description = unknown}
+05-04 20:25:47.431   970   970 I BufferQueueProducer: [StatusBar#80](this:0xb400007e34b62b40,id:-1,api:0,p:-1,c:970) queueBuffer: fps=0.17 dur=6047.31 max=6047.31 min=6047.31
+05-04 20:25:47.526   970   970 I BufferQueueProducer: [SurfaceView[com.solodevlab.solara/com.solodevlab.solara.MainActivity](BLAST)#2134](this:0xb400007e34bd49c0,id:-1,api:0,p:-1,c:970) queueBuffer: fps=30.76 dur=1007.66 max=47.77 min=16.03
+05-04 20:25:47.528   921  1162 I hwcomposer: [HWCDisplay] [Display_0 (type:1)] fps:30.762642,dur:1007.72,max:47.94,min:16.19  
+05-04 20:25:47.692  1233  1233 I thermal_repeater: [recvMdThermalInfo] ret=30, strLen=127,  3, 35, -127, -28404, 32767, 0
+05-04 20:25:48.179   937   995 I libPerfCtl: xgfGetFPS pid:31488 fps:31
+05-04 20:25:48.550   970   970 I BufferQueueProducer: [SurfaceView[com.solodevlab.solara/com.solodevlab.solara.MainActivity](BLAST)#2134](this:0xb400007e34bd49c0,id:-1,api:0,p:-1,c:970) queueBuffer: fps=31.26 dur=1023.83 max=32.51 min=31.46
+05-04 20:25:48.552   921  1162 I hwcomposer: [HWCDisplay] [Display_0 (type:1)] fps:31.259695,dur:1023.68,max:33.17,min:30.96  
+05-04 20:25:49.056 18269 18269 W ThreadPoolForeg: type=1400 audit(0.0:33390): avc: denied { write } for name="traced_producer" dev="tmpfs" ino=15146 scontext=u:r:gmscore_app:s0:c512,c768 tcontext=u:object_r:traced_producer_socket:s0 tclass=sock_file permissive=0 app=com.google.android.gms
+05-04 20:25:49.179   937   995 I libPerfCtl: xgfGetFPS pid:31488 fps:31
+05-04 20:25:49.186   932   932 I android.hardware.thermal@2.0-service.mtk: fill_temperatures filterType1 name: SKIN type: SKIN throttlingStatus: NONE value: 33 ret_temps size 0
+--------- beginning of system
+05-04 20:25:49.188  1555  1810 D ThermalManagerService: getCurrentTemprature Temperature{mValue=33.0, mType=3, mName=SKIN, mStatus=0}
+05-04 20:25:49.188  1555  1810 D ThermalManagerService: stopHotsport >=55
+05-04 20:25:49.188  1555  1810 D ThermalManagerService: turnDownBrightness >=55
+05-04 20:25:49.188  1555  1810 D ThermalManagerService: turnDownBrightness >=57
+05-04 20:25:49.503  1555  1608 I DisplayPowerController[0]: BrightnessEvent: disp=0, brt=0.1267681, rcmdBrt=0.1267681, preBrt=0.095620796, lux=52.14025, preLux=36.823467, hbmMax=1.0, hbmMode=off, thrmMax=1.0, flags=, reason=automatic
+05-04 20:25:49.507  1555  1555 V SettingsProvider: name : screen_brightness appId : 1000
+05-04 20:25:49.508   936   936 D android.hardware.lights-service.mediatek: write 26 to /sys/class/leds/lcd-backlight/brightness
+05-04 20:25:49.508  1555  1555 I BrightnessSynchronizer: [875] New Update 0.1267681(f) set brightness values:  33(i)
+05-04 20:25:49.508   936   936 D android.hardware.lights-service.mediatek: write 26 to /sys/class/leds/lcd-backlight/brightness, result: 0
+05-04 20:25:49.508  1555  1555 I BrightnessSynchronizer: New PendingUpdate: {[876] 0.1267681(f), mUpdatedTypes=0, mConfirmedTypes=0, mTimeUpdated=0}, prev=null
+05-04 20:25:49.508  1245  1348 D AAL     : onBacklightChanged: 100/1023 -> 104/1023(phy:416/4095)
+05-04 20:25:49.510  1555  1555 I BrightnessSynchronizer: Swallowing update of 33(i) by update: {[875] 0.1267681(f), mUpdatedTypes=1, mConfirmedTypes=1, mTimeUpdated=138592319}
+05-04 20:25:49.510  1555  1555 I BrightnessSynchronizer: Completed Update: {[875] 0.1267681(f), mUpdatedTypes=1, mConfirmedTypes=1, mTimeUpdated=138592319}
+05-04 20:25:49.524   936   936 D android.hardware.lights-service.mediatek: write 27 to /sys/class/leds/lcd-backlight/brightness
+05-04 20:25:49.524   936   936 D android.hardware.lights-service.mediatek: write 27 to /sys/class/leds/lcd-backlight/brightness, result: 0
+05-04 20:25:49.537  1245  1348 D AAL     : onBacklightChanged: 104/1023 -> 108/1023(phy:432/4095)
+05-04 20:25:49.542   936   936 D android.hardware.lights-service.mediatek: write 28 to /sys/class/leds/lcd-backlight/brightness
+05-04 20:25:49.542   936   936 D android.hardware.lights-service.mediatek: write 28 to /sys/class/leds/lcd-backlight/brightness, result: 0
+05-04 20:25:49.553  1245  1348 D AAL     : onBacklightChanged: 108/1023 -> 112/1023(phy:448/4095)
+05-04 20:25:49.558   970   970 I BufferQueueProducer: [SurfaceView[com.solodevlab.solara/com.solodevlab.solara.MainActivity](BLAST)#2134](this:0xb400007e34bd49c0,id:-1,api:0,p:-1,c:970) queueBuffer: fps=30.75 dur=1008.22 max=48.29 min=16.51
+05-04 20:25:49.561   921  1162 I hwcomposer: [HWCDisplay] [Display_0 (type:1)] fps:30.730637,dur:1008.77,max:48.83,min:16.16  
+05-04 20:25:49.572   936   936 D android.hardware.lights-service.mediatek: write 29 to /sys/class/leds/lcd-backlight/brightness
+05-04 20:25:49.573   936   936 D android.hardware.lights-service.mediatek: write 29 to /sys/class/leds/lcd-backlight/brightness, result: 0
+05-04 20:25:49.585  1245  1348 D AAL     : onBacklightChanged: 112/1023 -> 116/1023(phy:464/4095)
+05-04 20:25:49.590   936   936 D android.hardware.lights-service.mediatek: write 30 to /sys/class/leds/lcd-backlight/brightness
+05-04 20:25:49.591   936   936 D android.hardware.lights-service.mediatek: write 30 to /sys/class/leds/lcd-backlight/brightness, result: 0
+05-04 20:25:49.600  1245  1348 D AAL     : onBacklightChanged: 116/1023 -> 120/1023(phy:480/4095)
+05-04 20:25:49.602  1245  1348 D AAL     : 05-04 08:25:49.538 BL=  79,ESS= 256, 05-04 08:25:49.554 BL=  82,ESS= 256, 05-04 08:25:49.570 BL=  85,ESS= 256, 05-04 08:25:49.586 BL=  89,ESS= 256, 05-04 08:25:49.601 BL=  92,ESS= 256, 
+05-04 20:25:49.604   936   936 D android.hardware.lights-service.mediatek: write 31 to /sys/class/leds/lcd-backlight/brightness
+05-04 20:25:49.604   936   936 D android.hardware.lights-service.mediatek: write 31 to /sys/class/leds/lcd-backlight/brightness, result: 0
+05-04 20:25:49.616  1245  1348 D AAL     : onBacklightChanged: 120/1023 -> 124/1023(phy:496/4095)
+05-04 20:25:49.621   936   936 D android.hardware.lights-service.mediatek: write 32 to /sys/class/leds/lcd-backlight/brightness
+05-04 20:25:49.622   936   936 D android.hardware.lights-service.mediatek: write 32 to /sys/class/leds/lcd-backlight/brightness, result: 0
+05-04 20:25:49.633  1245  1348 D AAL     : onBacklightChanged: 124/1023 -> 128/1023(phy:512/4095)
+05-04 20:25:49.639   936   936 D android.hardware.lights-service.mediatek: write 33 to /sys/class/leds/lcd-backlight/brightness
+05-04 20:25:49.645   936   936 D android.hardware.lights-service.mediatek: write 33 to /sys/class/leds/lcd-backlight/brightness, result: 0
+05-04 20:25:49.648  1245  1348 D AAL     : onBacklightChanged: 128/1023 -> 132/1023(phy:528/4095)
+05-04 20:25:49.665  1245  1348 D AAL     : 05-04 08:25:49.617 BL=  95,ESS= 256, 05-04 08:25:49.634 BL=  98,ESS= 256, 05-04 08:25:49.649 BL= 102,ESS= 256, 
+05-04 20:25:50.181   937   995 I libPerfCtl: xgfGetFPS pid:31488 fps:30
+05-04 20:25:50.384  1735  1735 I WifiHAL : Get link layer stats
+05-04 20:25:50.384  1735  1735 I WifiHAL : GetLinkStatsCommand::create
+05-04 20:25:50.384  1735  1735 D android.hardware.wifi@1.0-service-lazy: WifiRequest::create vendor command to iface 31, vendor_id=0x1a11, subcmd=0x1200, res=0
+05-04 20:25:50.384  1735  1735 I android.hardware.wifi@1.0-service-lazy: WifiCommand::requestResponse err=-14
+05-04 20:25:50.384  1735  1735 I WifiHAL : wifi_get_link_stats: result=-1
+05-04 20:25:50.388  1555  1672 E WifiVendorHal: getWifiLinkLayerStats_1_5_Internal(l.1176) failed {.code = ERROR_UNKNOWN, .description = unknown}
+05-04 20:25:50.454   970   970 I BufferQueueProducer: [StatusBar#80](this:0xb400007e34b62b40,id:-1,api:0,p:-1,c:970) queueBuffer: fps=0.33 dur=3023.15 max=3023.15 min=3023.15
+05-04 20:25:50.566   970   970 I BufferQueueProducer: [SurfaceView[com.solodevlab.solara/com.solodevlab.solara.MainActivity](BLAST)#2134](this:0xb400007e34bd49c0,id:-1,api:0,p:-1,c:970) queueBuffer: fps=30.76 dur=1007.70 max=48.56 min=15.88
+05-04 20:25:50.568   921  1162 I hwcomposer: [HWCDisplay] [Display_0 (type:1)] fps:30.776047,dur:1007.28,max:49.19,min:15.74  
+05-04 20:25:51.181   937   995 I libPerfCtl: xgfGetFPS pid:31488 fps:31
+05-04 20:25:51.590   970   970 I BufferQueueProducer: [SurfaceView[com.solodevlab.solara/com.solodevlab.solara.MainActivity](BLAST)#2134](this:0xb400007e34bd49c0,id:-1,api:0,p:-1,c:970) queueBuffer: fps=31.25 dur=1024.13 max=48.33 min=15.91
+05-04 20:25:51.593   921  1162 I hwcomposer: [HWCDisplay] [Display_0 (type:1)] fps:31.237411,dur:1024.41,max:49.28,min:15.75  
+05-04 20:25:52.181   937   995 I libPerfCtl: xgfGetFPS pid:31488 fps:31
+05-04 20:25:52.614   970   970 I BufferQueueProducer: [SurfaceView[com.solodevlab.solara/com.solodevlab.solara.MainActivity](BLAST)#2134](this:0xb400007e34bd49c0,id:-1,api:0,p:-1,c:970) queueBuffer: fps=31.25 dur=1024.08 max=48.10 min=15.92
+05-04 20:25:52.616   921  1162 I hwcomposer: [HWCDisplay] [Display_0 (type:1)] fps:31.275028,dur:1023.18,max:48.65,min:15.14  
+05-04 20:25:52.690  1555  1584 D AES     : AEEIOCTL_GET/SET_SF_STATE IOCTL,cmd= 1074294797, lParam=0. 
+05-04 20:25:52.691  1555  1584 D AES     : AEEIOCTL_RT_MON_Kick IOCTL,cmd= 2147774474, lParam=300. 
+05-04 20:25:52.793   978   990 D ccci_mdinit: (1):monitor_time_update_thread round:33946 ########
+05-04 20:25:52.980  1555  4785 D AlarmManagerService: inside native alarm timerfd set Alarm Type = 2
+05-04 20:25:52.980  1555  4785 D AlarmManagerService: inside native alarm timerfd set Alarm Type = 3
+05-04 20:25:53.101  1555  1608 I DisplayPowerController[0]: BrightnessEvent: disp=0, brt=0.18150191, rcmdBrt=0.18150191, preBrt=0.1267681, lux=82.84032, preLux=52.14025, hbmMax=1.0, hbmMode=off, thrmMax=1.0, flags=, reason=automatic
+05-04 20:25:53.102  1555  1555 V SettingsProvider: name : screen_brightness appId : 1000
+05-04 20:25:53.103  1555  1555 I BrightnessSynchronizer: [877] New Update 0.18150191(f) set brightness values:  47(i)
+05-04 20:25:53.104  1555  1555 I BrightnessSynchronizer: New PendingUpdate: {[878] 0.18150191(f), mUpdatedTypes=0, mConfirmedTypes=0, mTimeUpdated=0}, prev=null
+05-04 20:25:53.105  1555  1555 I BrightnessSynchronizer: Swallowing update of 47(i) by update: {[877] 0.18150191(f), mUpdatedTypes=1, mConfirmedTypes=1, mTimeUpdated=138595914}
+05-04 20:25:53.106  1555  1555 I BrightnessSynchronizer: Completed Update: {[877] 0.18150191(f), mUpdatedTypes=1, mConfirmedTypes=1, mTimeUpdated=138595914}
+05-04 20:25:53.107   936   936 D android.hardware.lights-service.mediatek: write 34 to /sys/class/leds/lcd-backlight/brightness
+05-04 20:25:53.108   936   936 D android.hardware.lights-service.mediatek: write 34 to /sys/class/leds/lcd-backlight/brightness, result: 0
+05-04 20:25:53.120  1245  1348 D AAL     : onBacklightChanged: 132/1023 -> 136/1023(phy:544/4095)
+05-04 20:25:53.123   936   936 D android.hardware.lights-service.mediatek: write 35 to /sys/class/leds/lcd-backlight/brightness
+05-04 20:25:53.124   936   936 D android.hardware.lights-service.mediatek: write 35 to /sys/class/leds/lcd-backlight/brightness, result: 0
+05-04 20:25:53.136  1245  1348 D AAL     : onBacklightChanged: 136/1023 -> 140/1023(phy:560/4095)
+05-04 20:25:53.155   936   936 D android.hardware.lights-service.mediatek: write 36 to /sys/class/leds/lcd-backlight/brightness
+05-04 20:25:53.156   936   936 D android.hardware.lights-service.mediatek: write 36 to /sys/class/leds/lcd-backlight/brightness, result: 0
+05-04 20:25:53.168  1245  1348 D AAL     : onBacklightChanged: 140/1023 -> 144/1023(phy:576/4095)
+05-04 20:25:53.171   936   936 D android.hardware.lights-service.mediatek: write 37 to /sys/class/leds/lcd-backlight/brightness
+05-04 20:25:53.172   936   936 D android.hardware.lights-service.mediatek: write 37 to /sys/class/leds/lcd-backlight/brightness, result: 0
+05-04 20:25:53.181   937   995 I libPerfCtl: xgfGetFPS pid:31488 fps:30
+05-04 20:25:53.184  1245  1348 D AAL     : onBacklightChanged: 144/1023 -> 148/1023(phy:592/4095)
+05-04 20:25:53.188   936   936 D android.hardware.lights-service.mediatek: write 38 to /sys/class/leds/lcd-backlight/brightness
+05-04 20:25:53.190   936   936 D android.hardware.lights-service.mediatek: write 38 to /sys/class/leds/lcd-backlight/brightness, result: 0
+05-04 20:25:53.200  1245  1348 D AAL     : onBacklightChanged: 148/1023 -> 152/1023(phy:608/4095)
+05-04 20:25:53.201  1245  1348 D AAL     : 05-04 08:25:53.137 BL= 105,ESS= 256, 05-04 08:25:53.154 BL= 108,ESS= 256, 05-04 08:25:53.169 BL= 109,ESS= 256, 05-04 08:25:53.185 BL= 113,ESS= 256, 05-04 08:25:53.201 BL= 116,ESS= 256, 
+05-04 20:25:53.203   936   936 D android.hardware.lights-service.mediatek: write 39 to /sys/class/leds/lcd-backlight/brightness
+05-04 20:25:53.204   936   936 D android.hardware.lights-service.mediatek: write 39 to /sys/class/leds/lcd-backlight/brightness, result: 0
+05-04 20:25:53.216  1245  1348 D AAL     : onBacklightChanged: 152/1023 -> 156/1023(phy:624/4095)
+05-04 20:25:53.220   936   936 D android.hardware.lights-service.mediatek: write 40 to /sys/class/leds/lcd-backlight/brightness
+05-04 20:25:53.220   936   936 D android.hardware.lights-service.mediatek: write 40 to /sys/class/leds/lcd-backlight/brightness, result: 0
+05-04 20:25:53.232  1245  1348 D AAL     : onBacklightChanged: 156/1023 -> 160/1023(phy:640/4095)
+05-04 20:25:53.235   936   936 D android.hardware.lights-service.mediatek: write 41 to /sys/class/leds/lcd-backlight/brightness
+05-04 20:25:53.236   936   936 D android.hardware.lights-service.mediatek: write 41 to /sys/class/leds/lcd-backlight/brightness, result: 0
+05-04 20:25:53.248  1245  1348 D AAL     : onBacklightChanged: 160/1023 -> 164/1023(phy:656/4095)
+05-04 20:25:53.254   936   936 D android.hardware.lights-service.mediatek: write 42 to /sys/class/leds/lcd-backlight/brightness
+05-04 20:25:53.256   936   936 D android.hardware.lights-service.mediatek: write 42 to /sys/class/leds/lcd-backlight/brightness, result: 0
+05-04 20:25:53.264  1245  1348 D AAL     : onBacklightChanged: 164/1023 -> 168/1023(phy:672/4095)
+05-04 20:25:53.267   936   936 D android.hardware.lights-service.mediatek: write 43 to /sys/class/leds/lcd-backlight/brightness
+05-04 20:25:53.269   936   936 D android.hardware.lights-service.mediatek: write 43 to /sys/class/leds/lcd-backlight/brightness, result: 0
+05-04 20:25:53.280  1245  1348 D AAL     : onBacklightChanged: 168/1023 -> 173/1023(phy:692/4095)
+05-04 20:25:53.282  1245  1348 D AAL     : 05-04 08:25:53.217 BL= 119,ESS= 256, 05-04 08:25:53.232 BL= 122,ESS= 256, 05-04 08:25:53.249 BL= 126,ESS= 256, 05-04 08:25:53.265 BL= 129,ESS= 256, 05-04 08:25:53.282 BL= 133,ESS= 256, 
+05-04 20:25:53.286   936   936 D android.hardware.lights-service.mediatek: write 44 to /sys/class/leds/lcd-backlight/brightness
+05-04 20:25:53.288   936   936 D android.hardware.lights-service.mediatek: write 44 to /sys/class/leds/lcd-backlight/brightness, result: 0
+05-04 20:25:53.296  1245  1348 D AAL     : onBacklightChanged: 173/1023 -> 177/1023(phy:708/4095)
+05-04 20:25:53.301   936   936 D android.hardware.lights-service.mediatek: write 45 to /sys/class/leds/lcd-backlight/brightness
+05-04 20:25:53.303   936   936 D android.hardware.lights-service.mediatek: write 45 to /sys/class/leds/lcd-backlight/brightness, result: 0
+05-04 20:25:53.312  1245  1348 D AAL     : onBacklightChanged: 177/1023 -> 181/1023(phy:724/4095)
+05-04 20:25:53.317   936   936 D android.hardware.lights-service.mediatek: write 46 to /sys/class/leds/lcd-backlight/brightness
+05-04 20:25:53.318   936   936 D android.hardware.lights-service.mediatek: write 46 to /sys/class/leds/lcd-backlight/brightness, result: 0
+05-04 20:25:53.328  1245  1348 D AAL     : onBacklightChanged: 181/1023 -> 185/1023(phy:740/4095)
+05-04 20:25:53.332   936   936 D android.hardware.lights-service.mediatek: write 47 to /sys/class/leds/lcd-backlight/brightness
+05-04 20:25:53.335   936   936 D android.hardware.lights-service.mediatek: write 47 to /sys/class/leds/lcd-backlight/brightness, result: 0
+05-04 20:25:53.344  1245  1348 D AAL     : onBacklightChanged: 185/1023 -> 189/1023(phy:756/4095)
+05-04 20:25:53.360  1245  1348 D AAL     : 05-04 08:25:53.297 BL= 136,ESS= 256, 05-04 08:25:53.313 BL= 140,ESS= 256, 05-04 08:25:53.329 BL= 143,ESS= 256, 05-04 08:25:53.345 BL= 146,ESS= 256, 
+05-04 20:25:53.412  1735  1735 I WifiHAL : Get link layer stats
+05-04 20:25:53.412  1735  1735 I WifiHAL : GetLinkStatsCommand::create
+05-04 20:25:53.412  1735  1735 D android.hardware.wifi@1.0-service-lazy: WifiRequest::create vendor command to iface 31, vendor_id=0x1a11, subcmd=0x1200, res=0
+05-04 20:25:53.413  1735  1735 I android.hardware.wifi@1.0-service-lazy: WifiCommand::requestResponse err=-14
+05-04 20:25:53.413  1735  1735 I WifiHAL : wifi_get_link_stats: result=-1
+05-04 20:25:53.415  1555  1672 E WifiVendorHal: getWifiLinkLayerStats_1_5_Internal(l.1176) failed {.code = ERROR_UNKNOWN, .description = unknown}
+05-04 20:25:53.477   970   970 I BufferQueueProducer: [StatusBar#80](this:0xb400007e34b62b40,id:-1,api:0,p:-1,c:970) queueBuffer: fps=0.33 dur=3023.71 max=3023.71 min=3023.71
+05-04 20:25:53.653   970   970 I BufferQueueProducer: [SurfaceView[com.solodevlab.solara/com.solodevlab.solara.MainActivity](BLAST)#2134](this:0xb400007e34bd49c0,id:-1,api:0,p:-1,c:970) queueBuffer: fps=30.79 dur=1039.24 max=47.85 min=15.86
+05-04 20:25:53.656   921  1162 I hwcomposer: [HWCDisplay] [Display_0 (type:1)] fps:31.724913,dur:1040.19,max:48.97,min:14.37  
+05-04 20:25:54.182   937   995 I libPerfCtl: xgfGetFPS pid:31488 fps:31
+05-04 20:25:54.677   970   970 I BufferQueueProducer: [SurfaceView[com.solodevlab.solara/com.solodevlab.solara.MainActivity](BLAST)#2134](this:0xb400007e34bd49c0,id:-1,api:0,p:-1,c:970) queueBuffer: fps=31.24 dur=1024.24 max=48.07 min=15.96
+05-04 20:25:54.680   921  1162 I hwcomposer: [HWCDisplay] [Display_0 (type:1)] fps:31.251568,dur:1023.95,max:48.72,min:15.43  
+05-04 20:25:55.182   937   995 I libPerfCtl: xgfGetFPS pid:31488 fps:31
+05-04 20:25:55.701   970   970 I BufferQueueProducer: [SurfaceView[com.solodevlab.solara/com.solodevlab.solara.MainActivity](BLAST)#2134](this:0xb400007e34bd49c0,id:-1,api:0,p:-1,c:970) queueBuffer: fps=31.25 dur=1023.87 max=48.19 min=16.05
+05-04 20:25:55.704   921  1162 I hwcomposer: [HWCDisplay] [Display_0 (type:1)] fps:31.248121,dur:1024.06,max:48.59,min:15.26  
+05-04 20:25:56.183   937   995 I libPerfCtl: xgfGetFPS pid:31488 fps:31
+05-04 20:25:56.418  1555  2522 D WifiService: thread start to send msg to get the temperature
+05-04 20:25:56.416  1555  1555 W system_server: type=1400 audit(0.0:33391): avc: denied { read } for name="temp" dev="sysfs" ino=54321 scontext=u:r:system_server:s0 tcontext=u:object_r:sysfs_therm:s0 tclass=file permissive=0
+05-04 20:25:56.420  1555  1555 D WifiService: can't find file /sys/class/thermal/thermal_zone1/temp
+05-04 20:25:56.420  1555  1555 D WifiService:  get thermal zone88 temper=null
+05-04 20:25:56.432  1735  1735 I WifiHAL : Get link layer stats
+05-04 20:25:56.432  1735  1735 I WifiHAL : GetLinkStatsCommand::create
+05-04 20:25:56.432  1735  1735 D android.hardware.wifi@1.0-service-lazy: WifiRequest::create vendor command to iface 31, vendor_id=0x1a11, subcmd=0x1200, res=0
+05-04 20:25:56.432  1735  1735 I android.hardware.wifi@1.0-service-lazy: WifiCommand::requestResponse err=-14
+05-04 20:25:56.432  1735  1735 I WifiHAL : wifi_get_link_stats: result=-1
+05-04 20:25:56.434  1555  1672 E WifiVendorHal: getWifiLinkLayerStats_1_5_Internal(l.1176) failed {.code = ERROR_UNKNOWN, .description = unknown}
+05-04 20:25:56.725   970   970 I BufferQueueProducer: [SurfaceView[com.solodevlab.solara/com.solodevlab.solara.MainActivity](BLAST)#2134](this:0xb400007e34bd49c0,id:-1,api:0,p:-1,c:970) queueBuffer: fps=31.26 dur=1023.62 max=48.40 min=15.95
+05-04 20:25:56.728   921  1162 I hwcomposer: [HWCDisplay] [Display_0 (type:1)] fps:31.259512,dur:1023.69,max:48.85,min:15.52  
+05-04 20:25:57.183   937   995 I libPerfCtl: xgfGetFPS pid:31488 fps:30
+05-04 20:25:57.714  1233  1233 I thermal_repeater: [recvMdThermalInfo] ret=30, strLen=127,  3, 35, -127, -28404, 32767, 0
+05-04 20:25:57.733   970   970 I BufferQueueProducer: [SurfaceView[com.solodevlab.solara/com.solodevlab.solara.MainActivity](BLAST)#2134](this:0xb400007e34bd49c0,id:-1,api:0,p:-1,c:970) queueBuffer: fps=30.77 dur=1007.62 max=48.20 min=15.99
+05-04 20:25:57.735   921  1162 I hwcomposer: [HWCDisplay] [Display_0 (type:1)] fps:30.763800,dur:1007.68,max:49.15,min:15.68  
+05-04 20:25:58.183   937   995 I libPerfCtl: xgfGetFPS pid:31488 fps:31
+05-04 20:25:58.741   970   970 I BufferQueueProducer: [SurfaceView[com.solodevlab.solara/com.solodevlab.solara.MainActivity](BLAST)#2134](this:0xb400007e34bd49c0,id:-1,api:0,p:-1,c:970) queueBuffer: fps=30.75 dur=1008.21 max=48.16 min=16.04
+05-04 20:25:58.744   921  1162 I hwcomposer: [HWCDisplay] [Display_0 (type:1)] fps:30.718994,dur:1009.15,max:48.52,min:15.64  
+05-04 20:25:59.183   937   995 I libPerfCtl: xgfGetFPS pid:31488 fps:30
+05-04 20:25:59.451  1735  1735 I WifiHAL : Get link layer stats
+05-04 20:25:59.452  1735  1735 I WifiHAL : GetLinkStatsCommand::create
+05-04 20:25:59.452  1735  1735 D android.hardware.wifi@1.0-service-lazy: WifiRequest::create vendor command to iface 31, vendor_id=0x1a11, subcmd=0x1200, res=0
+05-04 20:25:59.452  1735  1735 I android.hardware.wifi@1.0-service-lazy: WifiCommand::requestResponse err=-14
+05-04 20:25:59.452  1735  1735 I WifiHAL : wifi_get_link_stats: result=-1
+05-04 20:25:59.454  1555  1672 E WifiVendorHal: getWifiLinkLayerStats_1_5_Internal(l.1176) failed {.code = ERROR_UNKNOWN, .description = unknown}
+05-04 20:25:59.513  1555  1705 D AgpsApn : mDefaultNetworkcallback onCapabilitiesChanged: network=100, nc=[ Transports: WIFI Capabilities: NOT_METERED&INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VPN&VALIDATED&NOT_ROAMING&FOREGROUND&NOT_CONGESTED&NOT_SUSPENDED&NOT_VCN_MANAGED LinkUpBandwidth>=12000Kbps LinkDnBandwidth>=60000Kbps TransportInfo: <SSID: <unknown ssid>, BSSID: 02:00:00:00:00:00, MAC: 02:00:00:00:00:00, IP: /192.168.1.23, Security type: 2, Supplicant state: COMPLETED, Wi-Fi standard: 5, RSSI: -55, Link speed: 390Mbps, Tx Link speed: 390Mbps, Max Supported Tx Link speed: 433Mbps, Rx Link speed: 6Mbps, Max Supported Rx Link speed: 433Mbps, Frequency: 5220MHz, Net ID: -1, Metered hint: false, score: 60, isUsable: true, CarrierMerged: false, SubscriptionId: -1, IsPrimary: 1, Trusted: true, Restricted: false, Ephemeral: false, OEM paid: false, OEM private: false, OSU AP: false, FQDN: <none>, Provider friendly name: <none>, Requesting package name: <none><none>MLO Information: , AP MLD Address: <none>, AP MLO Link Id: <none>, AP MLO Affiliated links: <none>> SignalStrength: -55 AdminUids: [1000] SSID: "HG8045-2A9F-a" UnderlyingNetworks: Null]
+05-04 20:25:59.516  1555  1705 D AgpsApn : onCapabilitiesChanged: mDefaultNetHasInt=true
+05-04 20:25:59.533 18409 18422 I NullBinder: NullBinder for android.net.action.RECOMMEND_NETWORKS triggering remote TransactionTooLargeException due to Service without Chimera impl, calling uid: 1000, calling pid: 0
+05-04 20:25:59.535 18409 18422 W .gms.persistent: Large reply transaction of 1056768 bytes, interface descriptor , code 1
+05-04 20:25:59.573   970   970 I BufferQueueProducer: [StatusBar#80](this:0xb400007e34b62b40,id:-1,api:0,p:-1,c:970) queueBuffer: fps=0.16 dur=6095.34 max=6095.34 min=6095.34
+05-04 20:25:59.765   970   970 I BufferQueueProducer: [SurfaceView[com.solodevlab.solara/com.solodevlab.solara.MainActivity](BLAST)#2134](this:0xb400007e34bd49c0,id:-1,api:0,p:-1,c:970) queueBuffer: fps=32.23 dur=1023.75 max=48.16 min=15.83
+05-04 20:25:59.768   921  1162 I hwcomposer: [HWCDisplay] [Display_0 (type:1)] fps:32.238186,dur:1023.63,max:48.23,min:15.12  
+05-04 20:25:59.977  1555  4785 W BatteryExternalStatsWorker: error reading Bluetooth stats: 11
+05-04 20:26:00.001  1555  1649 D AlarmManagerService: inside native alarm timerfd set Alarm Type = 2
+05-04 20:26:00.002  1555  1649 D AlarmManagerService: inside native alarm timerfd set Alarm Type = 3
+05-04 20:26:00.007  1555  1649 D AlarmManagerService: inside native alarm timerfd set Alarm Type = 2
+05-04 20:26:00.008  1555  1649 D AlarmManagerService: inside native alarm timerfd set Alarm Type = 3
+05-04 20:26:00.026  1555  2798 D TelephonyManager: requestModemActivityInfo: Sending result to app: ModemActivityInfo{ mTimestamp=496349647 mSleepTimeMs=273331050 mIdleTimeMs=222543272 mActivityStatsTechSpecificInfo=[{mRat=UNKNOWN,mFrequencyRange=UNKNOWN,mTxTimeMs[]=[0, 0, 0, 0, 0],mRxTimeMs=395384}]}
+05-04 20:26:00.084  1555  1596 E KernelCpuSpeedReader: Failed to read cpu-freq: /sys/devices/system/cpu/cpu4/cpufreq/stats/time_in_state: open failed: ENOENT (No such file or directory)
+05-04 20:26:00.087  1555  1596 E KernelCpuSpeedReader: Failed to read cpu-freq: /sys/devices/system/cpu/cpu0/cpufreq/stats/time_in_state: open failed: ENOENT (No such file or directory)
+05-04 20:26:00.183   937   995 I libPerfCtl: xgfGetFPS pid:31488 fps:32
+05-04 20:26:00.237   538  1464 E android.system.suspend@1.0-service: Error opening kernel wakelock stats for: wakeup135 (../../devices/platform/1100f000.i2c3/i2c-3/3-0028/wakeup/wakeup135): Permission denied
+05-04 20:26:00.232   538   538 W binder:538_4: type=1400 audit(0.0:33392): avc: denied { read } for name="wakeup135" dev="sysfs" ino=48330 scontext=u:r:system_suspend:s0 tcontext=u:object_r:sysfs:s0 tclass=dir permissive=0
+05-04 20:26:00.772   970   970 I BufferQueueProducer: [SurfaceView[com.solodevlab.solara/com.solodevlab.solara.MainActivity](BLAST)#2134](this:0xb400007e34bd49c0,id:-1,api:0,p:-1,c:970) queueBuffer: fps=46.64 dur=1007.76 max=48.08 min=15.66
+05-04 20:26:00.775   921  1162 I hwcomposer: [HWCDisplay] [Display_0 (type:1)] fps:46.686966,dur:1006.70,max:48.96,min:14.60  
+05-04 20:26:01.108 18409 18409 W ThreadPoolForeg: type=1400 audit(0.0:33393): avc: denied { write } for name="traced_producer" dev="tmpfs" ino=15146 scontext=u:r:gmscore_app:s0:c512,c768 tcontext=u:object_r:traced_producer_socket:s0 tclass=sock_file permissive=0 app=com.google.android.gms
+05-04 20:26:01.184   937   995 I libPerfCtl: xgfGetFPS pid:31488 fps:51
+05-04 20:26:01.780   970   970 I BufferQueueProducer: [SurfaceView[com.solodevlab.solara/com.solodevlab.solara.MainActivity](BLAST)#2134](this:0xb400007e34bd49c0,id:-1,api:0,p:-1,c:970) queueBuffer: fps=47.62 dur=1008.01 max=80.47 min=15.48
+05-04 20:26:01.784   921  1162 I hwcomposer: [HWCDisplay] [Display_0 (type:1)] fps:47.543900,dur:1009.59,max:81.66,min:14.38  
+05-04 20:26:01.848 18269 18269 D BoundBrokerSvc: onUnbind: Intent { act=com.google.android.gms.common.BIND_SHARED_PREFS pkg=com.google.android.gms }
+05-04 20:26:01.873  1555  3464 I AppSearchIcing: icing-search-engine.cc:2474: Persisting data to disk with mode 3
+05-04 20:26:01.885  1555  3464 I AppSearchIcing: icing-search-engine.cc:2489: PersistToDisk completed.
+05-04 20:26:02.186   937   995 I libPerfCtl: xgfGetFPS pid:31488 fps:49
+05-04 20:26:02.483  1735  1735 I WifiHAL : Get link layer stats
+05-04 20:26:02.483  1735  1735 I WifiHAL : GetLinkStatsCommand::create
+05-04 20:26:02.483  1735  1735 D android.hardware.wifi@1.0-service-lazy: WifiRequest::create vendor command to iface 31, vendor_id=0x1a11, subcmd=0x1200, res=0
+05-04 20:26:02.483  1735  1735 I android.hardware.wifi@1.0-service-lazy: WifiCommand::requestResponse err=-14
+05-04 20:26:02.483  1735  1735 I WifiHAL : wifi_get_link_stats: result=-1
+05-04 20:26:02.485  1555  1672 E WifiVendorHal: getWifiLinkLayerStats_1_5_Internal(l.1176) failed {.code = ERROR_UNKNOWN, .description = unknown}
+05-04 20:26:02.513  1555  1705 D AgpsApn : mDefaultNetworkcallback onCapabilitiesChanged: network=100, nc=[ Transports: WIFI Capabilities: NOT_METERED&INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VPN&VALIDATED&NOT_ROAMING&FOREGROUND&NOT_CONGESTED&NOT_SUSPENDED&NOT_VCN_MANAGED LinkUpBandwidth>=12000Kbps LinkDnBandwidth>=60000Kbps TransportInfo: <SSID: <unknown ssid>, BSSID: 02:00:00:00:00:00, MAC: 02:00:00:00:00:00, IP: /192.168.1.23, Security type: 2, Supplicant state: COMPLETED, Wi-Fi standard: 5, RSSI: -57, Link speed: 390Mbps, Tx Link speed: 390Mbps, Max Supported Tx Link speed: 433Mbps, Rx Link speed: 6Mbps, Max Supported Rx Link speed: 433Mbps, Frequency: 5220MHz, Net ID: -1, Metered hint: false, score: 60, isUsable: true, CarrierMerged: false, SubscriptionId: -1, IsPrimary: 1, Trusted: true, Restricted: false, Ephemeral: false, OEM paid: false, OEM private: false, OSU AP: false, FQDN: <none>, Provider friendly name: <none>, Requesting package name: <none><none>MLO Information: , AP MLD Address: <none>, AP MLO Link Id: <none>, AP MLO Affiliated links: <none>> SignalStrength: -57 AdminUids: [1000] SSID: "HG8045-2A9F-a" UnderlyingNetworks: Null]
+05-04 20:26:02.514  1555  1705 D AgpsApn : onCapabilitiesChanged: mDefaultNetHasInt=true
+05-04 20:26:02.537 18409 18422 I NullBinder: NullBinder for android.net.action.RECOMMEND_NETWORKS triggering remote TransactionTooLargeException due to Service without Chimera impl, calling uid: 1000, calling pid: 0
+05-04 20:26:02.538 18409 18422 W .gms.persistent: Large reply transaction of 1056768 bytes, interface descriptor , code 1
+05-04 20:26:02.564   970   970 I BufferQueueProducer: [StatusBar#80](this:0xb400007e34b62b40,id:-1,api:0,p:-1,c:970) queueBuffer: fps=0.67 dur=2991.79 max=2495.82 min=495.98
+05-04 20:26:02.804   970   970 I BufferQueueProducer: [SurfaceView[com.solodevlab.solara/com.solodevlab.solara.MainActivity](BLAST)#2134](this:0xb400007e34bd49c0,id:-1,api:0,p:-1,c:970) queueBuffer: fps=40.05 dur=1023.65 max=32.66 min=15.66
+05-04 20:26:02.806   921  1162 I hwcomposer: [HWCDisplay] [Display_0 (type:1)] fps:41.094837,dur:1022.03,max:33.00,min:14.16  
+05-04 20:26:02.997   970   970 D SurfaceFlinger: backpressure
+05-04 20:26:03.185   937   995 I libPerfCtl: xgfGetFPS pid:1813 fps:61
+05-04 20:26:03.185   937   995 I libPerfCtl: xgfGetFPS pid:31488 fps:35
+05-04 20:26:03.812   970   970 I BufferQueueProducer: [SurfaceView[com.solodevlab.solara/com.solodevlab.solara.MainActivity](BLAST)#2134](this:0xb400007e34bd49c0,id:-1,api:0,p:-1,c:970) queueBuffer: fps=39.68 dur=1008.14 max=63.87 min=15.49
+05-04 20:26:03.816   921  1162 I hwcomposer: [HWCDisplay] [Display_0 (type:1)] fps:39.626881,dur:1009.42,max:64.01,min:14.04  
+05-04 20:26:04.186   937   995 I libPerfCtl: xgfGetFPS pid:31488 fps:43
+05-04 20:26:04.836   970   970 I BufferQueueProducer: [SurfaceView[com.solodevlab.solara/com.solodevlab.solara.MainActivity](BLAST)#2134](this:0xb400007e34bd49c0,id:-1,api:0,p:-1,c:970) queueBuffer: fps=38.07 dur=1024.33 max=32.68 min=15.70
+05-04 20:26:04.839   921  1162 I hwcomposer: [HWCDisplay] [Display_0 (type:1)] fps:38.119869,dur:1023.09,max:33.23,min:14.96  
+05-04 20:26:05.186   937   995 I libPerfCtl: xgfGetFPS pid:31488 fps:36
+05-04 20:26:05.383  1555  1649 D AlarmManagerService: inside native alarm timerfd set Alarm Type = 2
+05-04 20:26:05.384  1555  1649 D AlarmManagerService: inside native alarm timerfd set Alarm Type = 3
+05-04 20:26:05.393  1555  1649 D AlarmManagerService: inside native alarm timerfd set Alarm Type = 2
+05-04 20:26:05.395  1555  1649 D AlarmManagerService: inside native alarm timerfd set Alarm Type = 3
+05-04 20:26:05.397  1555  1555 D AlarmManagerService: inside native alarm timerfd set Alarm Type = 2
+05-04 20:26:05.397  1555  1555 D AlarmManagerService: inside native alarm timerfd set Alarm Type = 3
+05-04 20:26:05.445 30834 30834 I Finsky  : [2] SCH: job service start with id 9956.
+05-04 20:26:05.468 29789 29829 I TRuntime.CctTransportBackend: Making request to: https://firebaselogging-pa.googleapis.com/v1/firelog/legacy/batchlog
+05-04 20:26:05.473 30834 31754 I Finsky  : [247] SCH: Satisfied jobs for 9956 are: 12-1
+05-04 20:26:05.481 30834 31753 I Finsky  : [246] SCH: Job 12-1 starting
+05-04 20:26:05.484 30834 30834 I Finsky  : [2] WM::SCH: Logging work start for 12-1
+05-04 20:26:05.484 30834 30834 I Finsky  : [2] [ContentSync] job started
+05-04 20:26:05.512  1735  1735 I WifiHAL : Get link layer stats
+05-04 20:26:05.512  1735  1735 I WifiHAL : GetLinkStatsCommand::create
+05-04 20:26:05.512  1735  1735 D android.hardware.wifi@1.0-service-lazy: WifiRequest::create vendor command to iface 31, vendor_id=0x1a11, subcmd=0x1200, res=0
+05-04 20:26:05.512  1735  1735 I android.hardware.wifi@1.0-service-lazy: WifiCommand::requestResponse err=-14
+05-04 20:26:05.512  1735  1735 I WifiHAL : wifi_get_link_stats: result=-1
+05-04 20:26:05.514  1555  1672 E WifiVendorHal: getWifiLinkLayerStats_1_5_Internal(l.1176) failed {.code = ERROR_UNKNOWN, .description = unknown}
+05-04 20:26:05.555   970   970 I BufferQueueProducer: [StatusBar#80](this:0xb400007e34b62b40,id:-1,api:0,p:-1,c:970) queueBuffer: fps=0.67 dur=2990.72 max=2975.03 min=15.69
+05-04 20:26:05.844   970   970 I BufferQueueProducer: [SurfaceView[com.solodevlab.solara/com.solodevlab.solara.MainActivity](BLAST)#2134](this:0xb400007e34bd49c0,id:-1,api:0,p:-1,c:970) queueBuffer: fps=30.77 dur=1007.50 max=240.48 min=15.66
+05-04 20:26:05.847   921  1162 I hwcomposer: [HWCDisplay] [Display_0 (type:1)] fps:30.766457,dur:1007.59,max:240.77,min:14.58  
+05-04 20:26:06.150 30834 30834 W Finsky  : [2] STU: Failed to get storage stats for package 'com.google.mainline.primary.libs' (1601: Error getting stats: android.content.pm.PackageManager.NameNotFoundException)
+05-04 20:26:06.186   937   995 I libPerfCtl: xgfGetFPS pid:31488 fps:41
+05-04 20:26:06.221 30834 30834 W Finsky  : [2] STU: Failed to get storage stats for package 'com.google.android.tzdata4' (1601: Error getting stats: android.content.pm.PackageManager.NameNotFoundException)
+05-04 20:26:06.304 30834 30834 W Finsky  : [2] STU: Failed to get storage stats for package 'com.google.android.permission' (1601: Error getting stats: android.content.pm.PackageManager.NameNotFoundException)
+05-04 20:26:06.839 29789 29829 I TRuntime.CctTransportBackend: Status Code: 200
+05-04 20:26:06.851   970   970 I BufferQueueProducer: [SurfaceView[com.solodevlab.solara/com.solodevlab.solara.MainActivity](BLAST)#2134](this:0xb400007e34bd49c0,id:-1,api:0,p:-1,c:970) queueBuffer: fps=56.59 dur=1007.32 max=32.30 min=15.62
+05-04 20:26:06.853   921  1162 I hwcomposer: [HWCDisplay] [Display_0 (type:1)] fps:56.622135,dur:1006.67,max:32.77,min:14.82  
+05-04 20:26:07.186   937   995 I libPerfCtl: xgfGetFPS pid:31488 fps:60
+05-04 20:26:07.203 30834 30834 W Finsky  : [2] STU: Failed to get storage stats for package 'com.google.android.appsearch' (1601: Error getting stats: android.content.pm.PackageManager.NameNotFoundException)
+05-04 20:26:07.206 30834 30834 W Finsky  : [2] STU: Failed to get storage stats for package 'com.google.android.media.swcodec' (1601: Error getting stats: android.content.pm.PackageManager.NameNotFoundException)
+05-04 20:26:07.215 30834 30834 W Finsky  : [2] STU: Failed to get storage stats for package 'com.google.android.art' (1601: Error getting stats: android.content.pm.PackageManager.NameNotFoundException)
+05-04 20:26:07.309 30834 30834 W Finsky  : [2] STU: Failed to get storage stats for package 'com.google.android.mediaprovider' (1601: Error getting stats: android.content.pm.PackageManager.NameNotFoundException)
+05-04 20:26:07.421 30834 30834 W Finsky  : [2] STU: Failed to get storage stats for package 'com.google.android.adbd' (1601: Error getting stats: android.content.pm.PackageManager.NameNotFoundException)
+05-04 20:26:07.428 30834 30834 W Finsky  : [2] STU: Failed to get storage stats for package 'com.google.android.resolv' (1601: Error getting stats: android.content.pm.PackageManager.NameNotFoundException)
+05-04 20:26:07.538 30834 30834 W Finsky  : [2] STU: Failed to get storage stats for package 'com.google.android.media' (1601: Error getting stats: android.content.pm.PackageManager.NameNotFoundException)
+05-04 20:26:07.541 30834 30834 W Finsky  : [2] STU: Failed to get storage stats for package 'com.google.android.conscrypt' (1601: Error getting stats: android.content.pm.PackageManager.NameNotFoundException)
+05-04 20:26:07.618 30834 30834 W Finsky  : [2] STU: Failed to get storage stats for package 'com.google.android.neuralnetworks' (1601: Error getting stats: android.content.pm.PackageManager.NameNotFoundException)
+05-04 20:26:07.661 30834 30834 W Finsky  : [2] STU: Failed to get storage stats for package 'com.google.android.ipsec' (1601: Error getting stats: android.content.pm.PackageManager.NameNotFoundException)
+05-04 20:26:07.729  1233  1233 I thermal_repeater: [recvMdThermalInfo] ret=30, strLen=127,  3, 35, -127, -28404, 32767, 0
+05-04 20:26:07.743 30834 30834 W Finsky  : [2] STU: Failed to get storage stats for package 'com.google.android.ondevicepersonalization' (1601: Error getting stats: android.content.pm.PackageManager.NameNotFoundException)
+05-04 20:26:07.758 30834 30834 W Finsky  : [2] STU: Failed to get storage stats for package 'com.google.android.sdkext' (1601: Error getting stats: android.content.pm.PackageManager.NameNotFoundException)
+05-04 20:26:07.860   970   970 I BufferQueueProducer: [SurfaceView[com.solodevlab.solara/com.solodevlab.solara.MainActivity](BLAST)#2134](this:0xb400007e34bd49c0,id:-1,api:0,p:-1,c:970) queueBuffer: fps=60.49 dur=1008.50 max=32.13 min=15.58
+05-04 20:26:07.862   921  1162 I hwcomposer: [HWCDisplay] [Display_0 (type:1)] fps:60.470608,dur:1008.75,max:32.10,min:14.23  
+05-04 20:26:07.879 30834 30834 W Finsky  : [2] STU: Failed to get storage stats for package 'com.google.android.adservices' (1601: Error getting stats: android.content.pm.PackageManager.NameNotFoundException)
+05-04 20:26:07.881 30834 30834 W Finsky  : [2] STU: Failed to get storage stats for package 'com.google.android.tethering' (1601: Error getting stats: android.content.pm.PackageManager.NameNotFoundException)
+05-04 20:26:07.921 30834 30834 W Finsky  : [2] STU: Failed to get storage stats for package 'com.google.android.extservices' (1601: Error getting stats: android.content.pm.PackageManager.NameNotFoundException)
+05-04 20:26:08.067 30834 30834 W Finsky  : [2] STU: Failed to get storage stats for package 'com.google.android.os.statsd' (1601: Error getting stats: android.content.pm.PackageManager.NameNotFoundException)
+05-04 20:26:08.142 30834 30834 W Finsky  : [2] STU: Failed to get storage stats for package 'com.google.android.cellbroadcast' (1601: Error getting stats: android.content.pm.PackageManager.NameNotFoundException)
+05-04 20:26:08.186   937   995 I libPerfCtl: xgfGetFPS pid:31488 fps:60
+05-04 20:26:08.263 30834 30834 W Finsky  : [2] STU: Failed to get storage stats for package 'com.google.android.scheduling' (1601: Error getting stats: android.content.pm.PackageManager.NameNotFoundException)
+05-04 20:26:08.324 30834 30834 I Finsky  : [2] App states replicator found 47 unowned apps
+05-04 20:26:08.349 30834 30885 I Finsky  : [155] Completed 0 account content syncs with 0 successful.
+05-04 20:26:08.351 30834 30834 I Finsky  : [2] [ContentSync] Installation state replication succeeded.
+05-04 20:26:08.352 30834 30834 I Finsky  : [2] SCH: jobFinished: 12-1. TimeElapsed: 2868ms.
+05-04 20:26:08.353 30834 30834 I Finsky  : [2] WM::SCH: Logging work end for 12-1
+05-04 20:26:08.387 30834 30885 I Finsky  : [155] SCH: Scheduling phonesky job Id: 1-1337, CT: 1777864073818, Constraints: [{ L: 42645340, D: 85845340, C: CHARGING_NONE, I: IDLE_NONE, N: NET_ANY, B: BATTERY_ANY }]
+05-04 20:26:08.389 30834 30885 I Finsky  : [155] SCH: Scheduling phonesky job Id: 34-1432, CT: 1777864076871, Constraints: [{ L: 604800000, D: 2447819645, C: CHARGING_NONE, I: IDLE_NONE, N: NET_ANY, B: BATTERY_ANY }]
+05-04 20:26:08.392 30834 30885 I Finsky  : [155] SCH: Scheduling phonesky job Id: 34-1436, CT: 1777864076872, Constraints: [{ L: 604800000, D: 2525125350, C: CHARGING_NONE, I: IDLE_NONE, N: NET_ANY, B: BATTERY_ANY }]
+05-04 20:26:08.393 30834 30885 I Finsky  : [155] SCH: Scheduling phonesky job Id: 34-1439, CT: 1777877279044, Constraints: [{ L: 79199353, D: 1375199353, C: CHARGING_NONE, I: IDLE_NONE, N: NET_ANY, B: BATTERY_ANY }]
+05-04 20:26:08.394 30834 30885 I Finsky  : [155] SCH: Scheduling phonesky job Id: 34-1440, CT: 1777877281684, Constraints: [{ L: 604800000, D: 2591997658, C: CHARGING_NONE, I: IDLE_NONE, N: NET_ANY, B: BATTERY_ANY }]
+05-04 20:26:08.412 30834 30887 I Finsky  : [157] SCH: Scheduling 1 system job(s)
+05-04 20:26:08.416 30834 30887 I Finsky  : [157] SCH: Scheduling system job Id: 9963, L: 12750746, D: 55950746, C: false, I: false, N: 1
+05-04 20:26:08.434 30834 31753 I Finsky  : [246] SCH: job service finished with id 9956.
+05-04 20:26:08.525  1735  1735 I WifiHAL : Get link layer stats
+05-04 20:26:08.526  1735  1735 I WifiHAL : GetLinkStatsCommand::create
+05-04 20:26:08.526  1735  1735 D android.hardware.wifi@1.0-service-lazy: WifiRequest::create vendor command to iface 31, vendor_id=0x1a11, subcmd=0x1200, res=0
+05-04 20:26:08.526  1735  1735 I android.hardware.wifi@1.0-service-lazy: WifiCommand::requestResponse err=-14
+05-04 20:26:08.526  1735  1735 I WifiHAL : wifi_get_link_stats: result=-1
+05-04 20:26:08.529  1555  1672 E WifiVendorHal: getWifiLinkLayerStats_1_5_Internal(l.1176) failed {.code = ERROR_UNKNOWN, .description = unknown}
+05-04 20:26:08.883   970   970 I BufferQueueProducer: [SurfaceView[com.solodevlab.solara/com.solodevlab.solara.MainActivity](BLAST)#2134](this:0xb400007e34bd49c0,id:-1,api:0,p:-1,c:970) queueBuffer: fps=51.78 dur=1023.60 max=47.65 min=15.32
+05-04 20:26:08.886   921  1162 I hwcomposer: [HWCDisplay] [Display_0 (type:1)] fps:51.779163,dur:1023.58,max:46.78,min:14.48  
+05-04 20:26:09.187   937   995 I libPerfCtl: xgfGetFPS pid:31488 fps:47
+05-04 20:26:09.891   970   970 I BufferQueueProducer: [SurfaceView[com.solodevlab.solara/com.solodevlab.solara.MainActivity](BLAST)#2134](this:0xb400007e34bd49c0,id:-1,api:0,p:-1,c:970) queueBuffer: fps=44.66 dur=1007.64 max=48.11 min=15.59
+05-04 20:26:09.894   921  1162 I hwcomposer: [HWCDisplay] [Display_0 (type:1)] fps:44.636288,dur:1008.15,max:48.64,min:14.79  
+05-04 20:26:10.154  2023  2232 D IpClient/wlan0: interfaceLinkStateChanged: ifindex 31 up
+05-04 20:26:10.189   937   995 I libPerfCtl: xgfGetFPS pid:31488 fps:46
+05-04 20:26:10.899   970   970 I BufferQueueProducer: [SurfaceView[com.solodevlab.solara/com.solodevlab.solara.MainActivity](BLAST)#2134](this:0xb400007e34bd49c0,id:-1,api:0,p:-1,c:970) queueBuffer: fps=51.58 dur=1008.20 max=32.40 min=15.39
+05-04 20:26:10.902   921  1162 I hwcomposer: [HWCDisplay] [Display_0 (type:1)] fps:51.580002,dur:1008.14,max:33.59,min:14.43  
+05-04 20:26:11.190   937   995 I libPerfCtl: xgfGetFPS pid:31488 fps:49
+05-04 20:26:11.549  1735  1735 I WifiHAL : Get link layer stats
+05-04 20:26:11.550  1735  1735 I WifiHAL : GetLinkStatsCommand::create
+05-04 20:26:11.551  1735  1735 D android.hardware.wifi@1.0-service-lazy: WifiRequest::create vendor command to iface 31, vendor_id=0x1a11, subcmd=0x1200, res=0
+05-04 20:26:11.551  1735  1735 I android.hardware.wifi@1.0-service-lazy: WifiCommand::requestResponse err=-14
+05-04 20:26:11.552  1735  1735 I WifiHAL : wifi_get_link_stats: result=-1
+05-04 20:26:11.555  1555  1672 E WifiVendorHal: getWifiLinkLayerStats_1_5_Internal(l.1176) failed {.code = ERROR_UNKNOWN, .description = unknown}
+05-04 20:26:11.619   970   970 I BufferQueueProducer: [StatusBar#80](this:0xb400007e34b62b40,id:-1,api:0,p:-1,c:970) queueBuffer: fps=0.16 dur=6064.18 max=6064.18 min=6064.18
+05-04 20:26:11.923   970   970 I BufferQueueProducer: [SurfaceView[com.solodevlab.solara/com.solodevlab.solara.MainActivity](BLAST)#2134](this:0xb400007e34bd49c0,id:-1,api:0,p:-1,c:970) queueBuffer: fps=50.80 dur=1023.55 max=64.26 min=15.50
+05-04 20:26:11.925   921  1162 I hwcomposer: [HWCDisplay] [Display_0 (type:1)] fps:50.810837,dur:1023.40,max:64.19,min:14.16  
+05-04 20:26:12.191   937   995 I libPerfCtl: xgfGetFPS pid:31488 fps:50
+05-04 20:26:12.593  2440  4072 W com.nttdocomo.android.idmanager: ga4.notifyError: unknown notification id: 0
+05-04 20:26:12.655  2440  4071 W com.nttdocomo.android.idmanager: ga4.notifyError: unknown notification id: 0
+05-04 20:26:12.931   970   970 I BufferQueueProducer: [SurfaceView[com.solodevlab.solara/com.solodevlab.solara.MainActivity](BLAST)#2134](this:0xb400007e34bd49c0,id:-1,api:0,p:-1,c:970) queueBuffer: fps=53.58 dur=1007.90 max=32.16 min=15.51
+05-04 20:26:12.932   921  1162 I hwcomposer: [HWCDisplay] [Display_0 (type:1)] fps:53.620399,dur:1007.08,max:33.28,min:14.69  
+05-04 20:26:13.191   937   995 I libPerfCtl: xgfGetFPS pid:31488 fps:57
+05-04 20:26:13.939   970   970 I BufferQueueProducer: [SurfaceView[com.solodevlab.solara/com.solodevlab.solara.MainActivity](BLAST)#2134](this:0xb400007e34bd49c0,id:-1,api:0,p:-1,c:970) queueBuffer: fps=57.53 dur=1008.13 max=32.21 min=15.35
+05-04 20:26:13.942   921  1162 I hwcomposer: [HWCDisplay] [Display_0 (type:1)] fps:57.448990,dur:1009.59,max:32.83,min:13.87  
+05-04 20:26:14.191   937   995 I libPerfCtl: xgfGetFPS pid:31488 fps:57
+05-04 20:26:14.576  1735  1735 I WifiHAL : Get link layer stats
+05-04 20:26:14.576  1735  1735 I WifiHAL : GetLinkStatsCommand::create
+05-04 20:26:14.576  1735  1735 D android.hardware.wifi@1.0-service-lazy: WifiRequest::create vendor command to iface 31, vendor_id=0x1a11, subcmd=0x1200, res=0
+05-04 20:26:14.577  1735  1735 I android.hardware.wifi@1.0-service-lazy: WifiCommand::requestResponse err=-14
+05-04 20:26:14.577  1735  1735 I WifiHAL : wifi_get_link_stats: result=-1
+05-04 20:26:14.581  1555  1672 E WifiVendorHal: getWifiLinkLayerStats_1_5_Internal(l.1176) failed {.code = ERROR_UNKNOWN, .description = unknown}
+05-04 20:26:14.947   970   970 I BufferQueueProducer: [SurfaceView[com.solodevlab.solara/com.solodevlab.solara.MainActivity](BLAST)#2134](this:0xb400007e34bd49c0,id:-1,api:0,p:-1,c:970) queueBuffer: fps=57.55 dur=1007.83 max=32.26 min=15.27
+05-04 20:26:14.949   921  1162 I hwcomposer: [HWCDisplay] [Display_0 (type:1)] fps:57.582340,dur:1007.25,max:32.68,min:14.36  
+05-04 20:26:15.191   937   995 I libPerfCtl: xgfGetFPS pid:31488 fps:57
+05-04 20:26:15.954   970   970 I BufferQueueProducer: [SurfaceView[com.solodevlab.solara/com.solodevlab.solara.MainActivity](BLAST)#2134](this:0xb400007e34bd49c0,id:-1,api:0,p:-1,c:970) queueBuffer: fps=54.58 dur=1007.77 max=32.31 min=15.59
+05-04 20:26:15.958   921  1162 I hwcomposer: [HWCDisplay] [Display_0 (type:1)] fps:54.533627,dur:1008.55,max:33.70,min:14.43  
+05-04 20:26:16.192   937   995 I libPerfCtl: xgfGetFPS pid:31488 fps:53
+05-04 20:26:16.419  1555  2522 D WifiService: thread start to send msg to get the temperature
+05-04 20:26:16.416  1555  1555 W system_server: type=1400 audit(0.0:33394): avc: denied { read } for name="temp" dev="sysfs" ino=54321 scontext=u:r:system_server:s0 tcontext=u:object_r:sysfs_therm:s0 tclass=file permissive=0
+05-04 20:26:16.421  1555  1555 D WifiService: can't find file /sys/class/thermal/thermal_zone1/temp
+05-04 20:26:16.421  1555  1555 D WifiService:  get thermal zone88 temper=null
+05-04 20:26:16.978   970   970 I BufferQueueProducer: [SurfaceView[com.solodevlab.solara/com.solodevlab.solara.MainActivity](BLAST)#2134](this:0xb400007e34bd49c0,id:-1,api:0,p:-1,c:970) queueBuffer: fps=45.90 dur=1023.89 max=32.59 min=15.47
+05-04 20:26:16.981   921  1162 I hwcomposer: [HWCDisplay] [Display_0 (type:1)] fps:45.917915,dur:1023.57,max:34.47,min:13.69  
+05-04 20:26:17.192   937   995 I libPerfCtl: xgfGetFPS pid:31488 fps:42
+05-04 20:26:17.596  1735  1735 I WifiHAL : Get link layer stats
+05-04 20:26:17.596  1735  1735 I WifiHAL : GetLinkStatsCommand::create
+05-04 20:26:17.596  1735  1735 D android.hardware.wifi@1.0-service-lazy: WifiRequest::create vendor command to iface 31, vendor_id=0x1a11, subcmd=0x1200, res=0
+05-04 20:26:17.598  1735  1735 I android.hardware.wifi@1.0-service-lazy: WifiCommand::requestResponse err=-14
+05-04 20:26:17.599  1735  1735 I WifiHAL : wifi_get_link_stats: result=-1
+05-04 20:26:17.601  1555  1672 E WifiVendorHal: getWifiLinkLayerStats_1_5_Internal(l.1176) failed {.code = ERROR_UNKNOWN, .description = unknown}
+05-04 20:26:17.749  1233  1233 I thermal_repeater: [recvMdThermalInfo] ret=30, strLen=127,  3, 36, -127, -28404, 32767, 0
+05-04 20:26:17.986   970   970 I BufferQueueProducer: [SurfaceView[com.solodevlab.solara/com.solodevlab.solara.MainActivity](BLAST)#2134](this:0xb400007e34bd49c0,id:-1,api:0,p:-1,c:970) queueBuffer: fps=39.69 dur=1007.71 max=48.48 min=15.69
+05-04 20:26:17.988   921  1162 I hwcomposer: [HWCDisplay] [Display_0 (type:1)] fps:39.718246,dur:1007.09,max:48.05,min:15.22  
+05-04 20:26:18.192   937   995 I libPerfCtl: xgfGetFPS pid:31488 fps:40
+05-04 20:26:18.994   970   970 I BufferQueueProducer: [SurfaceView[com.solodevlab.solara/com.solodevlab.solara.MainActivity](BLAST)#2134](this:0xb400007e34bd49c0,id:-1,api:0,p:-1,c:970) queueBuffer: fps=37.70 dur=1007.95 max=32.44 min=15.53
+05-04 20:26:18.997   921  1162 I hwcomposer: [HWCDisplay] [Display_0 (type:1)] fps:37.685898,dur:1008.33,max:33.60,min:15.17  
+05-04 20:26:19.064 18269 18269 W ThreadPoolForeg: type=1400 audit(0.0:33395): avc: denied { write } for name="traced_producer" dev="tmpfs" ino=15146 scontext=u:r:gmscore_app:s0:c512,c768 tcontext=u:object_r:traced_producer_socket:s0 tclass=sock_file permissive=0 app=com.google.android.gms
+05-04 20:26:19.193   937   995 I libPerfCtl: xgfGetFPS pid:31488 fps:37
+05-04 20:26:20.002   970   970 I BufferQueueProducer: [SurfaceView[com.solodevlab.solara/com.solodevlab.solara.MainActivity](BLAST)#2134](this:0xb400007e34bd49c0,id:-1,api:0,p:-1,c:970) queueBuffer: fps=35.72 dur=1007.87 max=48.05 min=15.68
+05-04 20:26:20.004   921  1162 I hwcomposer: [HWCDisplay] [Display_0 (type:1)] fps:35.733170,dur:1007.47,max:48.10,min:15.14  
+05-04 20:26:20.193   937   995 I libPerfCtl: xgfGetFPS pid:31488 fps:33
+05-04 20:26:20.615  1735  1735 I WifiHAL : Get link layer stats
+05-04 20:26:20.616  1735  1735 I WifiHAL : GetLinkStatsCommand::create
+05-04 20:26:20.616  1735  1735 D android.hardware.wifi@1.0-service-lazy: WifiRequest::create vendor command to iface 31, vendor_id=0x1a11, subcmd=0x1200, res=0
+05-04 20:26:20.616  1735  1735 I android.hardware.wifi@1.0-service-lazy: WifiCommand::requestResponse err=-14
+05-04 20:26:20.616  1735  1735 I WifiHAL : wifi_get_link_stats: result=-1
+05-04 20:26:20.618  1555  1672 E WifiVendorHal: getWifiLinkLayerStats_1_5_Internal(l.1176) failed {.code = ERROR_UNKNOWN, .description = unknown}
+05-04 20:26:20.690   970   970 I BufferQueueProducer: [StatusBar#80](this:0xb400007e34b62b40,id:-1,api:0,p:-1,c:970) queueBuffer: fps=0.11 dur=9070.61 max=9070.61 min=9070.61
+05-04 20:26:21.026   970   970 I BufferQueueProducer: [SurfaceView[com.solodevlab.solara/com.solodevlab.solara.MainActivity](BLAST)#2134](this:0xb400007e34bd49c0,id:-1,api:0,p:-1,c:970) queueBuffer: fps=33.20 dur=1024.08 max=48.36 min=15.62
+05-04 20:26:21.029   921  1162 I hwcomposer: [HWCDisplay] [Display_0 (type:1)] fps:34.160217,dur:1024.58,max:49.01,min:13.43  
+05-04 20:26:21.195   937   995 I libPerfCtl: xgfGetFPS pid:31488 fps:35
+05-04 20:26:22.034   970   970 I BufferQueueProducer: [SurfaceView[com.solodevlab.solara/com.solodevlab.solara.MainActivity](BLAST)#2134](this:0xb400007e34bd49c0,id:-1,api:0,p:-1,c:970) queueBuffer: fps=36.71 dur=1007.95 max=32.45 min=15.68
+05-04 20:26:22.036   921  1162 I hwcomposer: [HWCDisplay] [Display_0 (type:1)] fps:36.724518,dur:1007.50,max:33.69,min:14.58  
+05-04 20:26:22.196   937   995 I libPerfCtl: xgfGetFPS pid:31488 fps:33
+05-04 20:26:22.691  1555  1584 D AES     : AEEIOCTL_GET/SET_SF_STATE IOCTL,cmd= 1074294797, lParam=0. 
+05-04 20:26:22.692  1555  1584 D AES     : AEEIOCTL_RT_MON_Kick IOCTL,cmd= 2147774474, lParam=300. 
+05-04 20:26:22.821   978   990 D ccci_mdinit: (1):monitor_time_update_thread round:33947 ########
+05-04 20:26:23.042   970   970 I BufferQueueProducer: [SurfaceView[com.solodevlab.solara/com.solodevlab.solara.MainActivity](BLAST)#2134](this:0xb400007e34bd49c0,id:-1,api:0,p:-1,c:970) queueBuffer: fps=36.71 dur=1007.89 max=47.98 min=15.59
+05-04 20:26:23.044   921  1162 I hwcomposer: [HWCDisplay] [Display_0 (type:1)] fps:36.710228,dur:1007.89,max:47.98,min:14.56  
+05-04 20:26:23.197   937   995 I libPerfCtl: xgfGetFPS pid:31488 fps:37
+05-04 20:26:23.639  1735  1735 I WifiHAL : Get link layer stats
+05-04 20:26:23.639  1735  1735 I WifiHAL : GetLinkStatsCommand::create
+05-04 20:26:23.639  1735  1735 D android.hardware.wifi@1.0-service-lazy: WifiRequest::create vendor command to iface 31, vendor_id=0x1a11, subcmd=0x1200, res=0
+05-04 20:26:23.640  1735  1735 I android.hardware.wifi@1.0-service-lazy: WifiCommand::requestResponse err=-14
+05-04 20:26:23.640  1735  1735 I WifiHAL : wifi_get_link_stats: result=-1
+05-04 20:26:23.642  1555  1672 E WifiVendorHal: getWifiLinkLayerStats_1_5_Internal(l.1176) failed {.code = ERROR_UNKNOWN, .description = unknown}
+05-04 20:26:24.049   970   970 I BufferQueueProducer: [SurfaceView[com.solodevlab.solara/com.solodevlab.solara.MainActivity](BLAST)#2134](this:0xb400007e34bd49c0,id:-1,api:0,p:-1,c:970) queueBuffer: fps=34.74 dur=1007.43 max=47.68 min=15.47
+05-04 20:26:24.052   921  1162 I hwcomposer: [HWCDisplay] [Display_0 (type:1)] fps:34.734787,dur:1007.64,max:47.59,min:14.88  
+05-04 20:26:24.197   937   995 I libPerfCtl: xgfGetFPS pid:31488 fps:36
+05-04 20:26:25.058   970   970 I BufferQueueProducer: [SurfaceView[com.solodevlab.solara/com.solodevlab.solara.MainActivity](BLAST)#2134](this:0xb400007e34bd49c0,id:-1,api:0,p:-1,c:970) queueBuffer: fps=33.71 dur=1008.54 max=48.19 min=15.64
+05-04 20:26:25.061   921  1162 I hwcomposer: [HWCDisplay] [Display_0 (type:1)] fps:33.686436,dur:1009.31,max:49.76,min:15.19  
+05-04 20:26:25.204   937   995 I libPerfCtl: xgfGetFPS pid:31488 fps:34
+05-04 20:26:26.065   970   970 I BufferQueueProducer: [SurfaceView[com.solodevlab.solara/com.solodevlab.solara.MainActivity](BLAST)#2134](this:0xb400007e34bd49c0,id:-1,api:0,p:-1,c:970) queueBuffer: fps=43.68 dur=1007.26 max=32.42 min=15.41
+05-04 20:26:26.068   921  1162 I hwcomposer: [HWCDisplay] [Display_0 (type:1)] fps:43.705803,dur:1006.73,max:33.63,min:15.20  
+05-04 20:26:26.105  1555  1608 I DisplayPowerController[0]: BrightnessEvent: disp=0, brt=0.08097623, rcmdBrt=0.08097623, preBrt=0.18150191, lux=29.949308, preLux=82.84032, hbmMax=1.0, hbmMode=off, thrmMax=1.0, flags=, reason=automatic
+05-04 20:26:26.108  1555  1555 V SettingsProvider: name : screen_brightness appId : 1000
+05-04 20:26:26.109  1555  1555 I BrightnessSynchronizer: [879] New Update 0.08097623(f) set brightness values:  22(i)
+05-04 20:26:26.110  1555  1555 I BrightnessSynchronizer: New PendingUpdate: {[880] 0.08097623(f), mUpdatedTypes=0, mConfirmedTypes=0, mTimeUpdated=0}, prev=null
+05-04 20:26:26.112  1555  1555 I BrightnessSynchronizer: Swallowing update of 22(i) by update: {[879] 0.08097623(f), mUpdatedTypes=1, mConfirmedTypes=1, mTimeUpdated=138628920}
+05-04 20:26:26.112  1555  1555 I BrightnessSynchronizer: Completed Update: {[879] 0.08097623(f), mUpdatedTypes=1, mConfirmedTypes=1, mTimeUpdated=138628920}
+05-04 20:26:26.127   936   936 D android.hardware.lights-service.mediatek: write 46 to /sys/class/leds/lcd-backlight/brightness
+05-04 20:26:26.127   936   936 D android.hardware.lights-service.mediatek: write 46 to /sys/class/leds/lcd-backlight/brightness, result: 0
+05-04 20:26:26.127  1245  1348 D AAL     : onBacklightChanged: 189/1023 -> 185/1023(phy:740/4095)
+05-04 20:26:26.143   936   936 D android.hardware.lights-service.mediatek: write 45 to /sys/class/leds/lcd-backlight/brightness
+05-04 20:26:26.144   936   936 D android.hardware.lights-service.mediatek: write 45 to /sys/class/leds/lcd-backlight/brightness, result: 0
+05-04 20:26:26.155  1245  1348 D AAL     : onBacklightChanged: 185/1023 -> 181/1023(phy:724/4095)
+05-04 20:26:26.159   936   936 D android.hardware.lights-service.mediatek: write 44 to /sys/class/leds/lcd-backlight/brightness
+05-04 20:26:26.160   936   936 D android.hardware.lights-service.mediatek: write 44 to /sys/class/leds/lcd-backlight/brightness, result: 0
+05-04 20:26:26.171  1245  1348 D AAL     : onBacklightChanged: 181/1023 -> 177/1023(phy:708/4095)
+05-04 20:26:26.175   936   936 D android.hardware.lights-service.mediatek: write 43 to /sys/class/leds/lcd-backlight/brightness
+05-04 20:26:26.177   936   936 D android.hardware.lights-service.mediatek: write 43 to /sys/class/leds/lcd-backlight/brightness, result: 0
+05-04 20:26:26.188  1245  1348 D AAL     : onBacklightChanged: 177/1023 -> 173/1023(phy:692/4095)
+05-04 20:26:26.191   936   936 D android.hardware.lights-service.mediatek: write 42 to /sys/class/leds/lcd-backlight/brightness
+05-04 20:26:26.192   936   936 D android.hardware.lights-service.mediatek: write 42 to /sys/class/leds/lcd-backlight/brightness, result: 0
+05-04 20:26:26.203  1245  1348 D AAL     : onBacklightChanged: 173/1023 -> 168/1023(phy:672/4095)
+05-04 20:26:26.204   937   995 I libPerfCtl: xgfGetFPS pid:31488 fps:42
+05-04 20:26:26.207   936   936 D android.hardware.lights-service.mediatek: write 41 to /sys/class/leds/lcd-backlight/brightness
+05-04 20:26:26.208   936   936 D android.hardware.lights-service.mediatek: write 41 to /sys/class/leds/lcd-backlight/brightness, result: 0
+05-04 20:26:26.219  1245  1348 D AAL     : onBacklightChanged: 168/1023 -> 164/1023(phy:656/4095)
+05-04 20:26:26.220  1245  1348 D AAL     : 05-04 08:26:26.156 BL= 144,ESS= 256, 05-04 08:26:26.172 BL= 141,ESS= 256, 05-04 08:26:26.189 BL= 137,ESS= 256, 05-04 08:26:26.204 BL= 133,ESS= 256, 05-04 08:26:26.220 BL= 129,ESS= 256, 
+05-04 20:26:26.223   936   936 D android.hardware.lights-service.mediatek: write 40 to /sys/class/leds/lcd-backlight/brightness
+05-04 20:26:26.223   936   936 D android.hardware.lights-service.mediatek: write 40 to /sys/class/leds/lcd-backlight/brightness, result: 0
+05-04 20:26:26.235  1245  1348 D AAL     : onBacklightChanged: 164/1023 -> 160/1023(phy:640/4095)
+05-04 20:26:26.240   936   936 D android.hardware.lights-service.mediatek: write 39 to /sys/class/leds/lcd-backlight/brightness
+05-04 20:26:26.240   936   936 D android.hardware.lights-service.mediatek: write 39 to /sys/class/leds/lcd-backlight/brightness, result: 0
+05-04 20:26:26.251  1245  1348 D AAL     : onBacklightChanged: 160/1023 -> 156/1023(phy:624/4095)
+05-04 20:26:26.255   936   936 D android.hardware.lights-service.mediatek: write 38 to /sys/class/leds/lcd-backlight/brightness
+05-04 20:26:26.256   936   936 D android.hardware.lights-service.mediatek: write 38 to /sys/class/leds/lcd-backlight/brightness, result: 0
+05-04 20:26:26.267  1245  1348 D AAL     : onBacklightChanged: 156/1023 -> 152/1023(phy:608/4095)
+05-04 20:26:26.272   936   936 D android.hardware.lights-service.mediatek: write 37 to /sys/class/leds/lcd-backlight/brightness
+05-04 20:26:26.273   936   936 D android.hardware.lights-service.mediatek: write 37 to /sys/class/leds/lcd-backlight/brightness, result: 0
+05-04 20:26:26.284  1245  1348 D AAL     : onBacklightChanged: 152/1023 -> 148/1023(phy:592/4095)
+05-04 20:26:26.291   936   936 D android.hardware.lights-service.mediatek: write 36 to /sys/class/leds/lcd-backlight/brightness
+05-04 20:26:26.293   936   936 D android.hardware.lights-service.mediatek: write 36 to /sys/class/leds/lcd-backlight/brightness, result: 0
+05-04 20:26:26.300  1245  1348 D AAL     : onBacklightChanged: 148/1023 -> 144/1023(phy:576/4095)
+05-04 20:26:26.301  1245  1348 D AAL     : 05-04 08:26:26.236 BL= 125,ESS= 256, 05-04 08:26:26.252 BL= 121,ESS= 256, 05-04 08:26:26.268 BL= 117,ESS= 256, 05-04 08:26:26.285 BL= 114,ESS= 256, 05-04 08:26:26.300 BL= 111,ESS= 256, 
+05-04 20:26:26.304   936   936 D android.hardware.lights-service.mediatek: write 35 to /sys/class/leds/lcd-backlight/brightness
+05-04 20:26:26.306   936   936 D android.hardware.lights-service.mediatek: write 35 to /sys/class/leds/lcd-backlight/brightness, result: 0
+05-04 20:26:26.315  1245  1348 D AAL     : onBacklightChanged: 144/1023 -> 140/1023(phy:560/4095)
+05-04 20:26:26.321   936   936 D android.hardware.lights-service.mediatek: write 34 to /sys/class/leds/lcd-backlight/brightness
+05-04 20:26:26.323   936   936 D android.hardware.lights-service.mediatek: write 34 to /sys/class/leds/lcd-backlight/brightness, result: 0
+05-04 20:26:26.332  1245  1348 D AAL     : onBacklightChanged: 140/1023 -> 136/1023(phy:544/4095)
+05-04 20:26:26.335   936   936 D android.hardware.lights-service.mediatek: write 33 to /sys/class/leds/lcd-backlight/brightness
+05-04 20:26:26.336   936   936 D android.hardware.lights-service.mediatek: write 33 to /sys/class/leds/lcd-backlight/brightness, result: 0
+05-04 20:26:26.347  1245  1348 D AAL     : onBacklightChanged: 136/1023 -> 132/1023(phy:528/4095)
+05-04 20:26:26.351   936   936 D android.hardware.lights-service.mediatek: write 32 to /sys/class/leds/lcd-backlight/brightness
+05-04 20:26:26.359   936   936 D android.hardware.lights-service.mediatek: write 32 to /sys/class/leds/lcd-backlight/brightness, result: 0
+05-04 20:26:26.363  1245  1348 D AAL     : onBacklightChanged: 132/1023 -> 128/1023(phy:512/4095)
+05-04 20:26:26.368   936   936 D android.hardware.lights-service.mediatek: write 31 to /sys/class/leds/lcd-backlight/brightness
+05-04 20:26:26.369   936   936 D android.hardware.lights-service.mediatek: write 31 to /sys/class/leds/lcd-backlight/brightness, result: 0
+05-04 20:26:26.380  1245  1348 D AAL     : onBacklightChanged: 128/1023 -> 124/1023(phy:496/4095)
+05-04 20:26:26.381  1245  1348 D AAL     : 05-04 08:26:26.317 BL= 108,ESS= 256, 05-04 08:26:26.333 BL= 105,ESS= 256, 05-04 08:26:26.348 BL= 102,ESS= 256, 05-04 08:26:26.366 BL=  99,ESS= 256, 05-04 08:26:26.381 BL=  95,ESS= 256, 
+05-04 20:26:26.399   936   936 D android.hardware.lights-service.mediatek: write 30 to /sys/class/leds/lcd-backlight/brightness
+05-04 20:26:26.400   936   936 D android.hardware.lights-service.mediatek: write 30 to /sys/class/leds/lcd-backlight/brightness, result: 0
+05-04 20:26:26.412  1245  1348 D AAL     : onBacklightChanged: 124/1023 -> 120/1023(phy:480/4095)
+05-04 20:26:26.422   936   936 D android.hardware.lights-service.mediatek: write 29 to /sys/class/leds/lcd-backlight/brightness
+05-04 20:26:26.423   936   936 D android.hardware.lights-service.mediatek: write 29 to /sys/class/leds/lcd-backlight/brightness, result: 0
+05-04 20:26:26.428  1245  1348 D AAL     : onBacklightChanged: 120/1023 -> 116/1023(phy:464/4095)
+05-04 20:26:26.430   936   936 D android.hardware.lights-service.mediatek: write 28 to /sys/class/leds/lcd-backlight/brightness
+05-04 20:26:26.431   936   936 D android.hardware.lights-service.mediatek: write 28 to /sys/class/leds/lcd-backlight/brightness, result: 0
+05-04 20:26:26.443  1245  1348 D AAL     : onBacklightChanged: 116/1023 -> 112/1023(phy:448/4095)
+05-04 20:26:26.448   936   936 D android.hardware.lights-service.mediatek: write 27 to /sys/class/leds/lcd-backlight/brightness
+05-04 20:26:26.457   936   936 D android.hardware.lights-service.mediatek: write 27 to /sys/class/leds/lcd-backlight/brightness, result: 0
+05-04 20:26:26.460  1245  1348 D AAL     : onBacklightChanged: 112/1023 -> 108/1023(phy:432/4095)
+05-04 20:26:26.463   936   936 D android.hardware.lights-service.mediatek: write 26 to /sys/class/leds/lcd-backlight/brightness
+05-04 20:26:26.464   936   936 D android.hardware.lights-service.mediatek: write 26 to /sys/class/leds/lcd-backlight/brightness, result: 0
+05-04 20:26:26.476  1245  1348 D AAL     : onBacklightChanged: 108/1023 -> 104/1023(phy:416/4095)
+05-04 20:26:26.477  1245  1348 D AAL     : 05-04 08:26:26.412 BL=  94,ESS= 256, 05-04 08:26:26.428 BL=  91,ESS= 256, 05-04 08:26:26.444 BL=  87,ESS= 256, 05-04 08:26:26.460 BL=  84,ESS= 256, 05-04 08:26:26.477 BL=  81,ESS= 256, 
+05-04 20:26:26.479   936   936 D android.hardware.lights-service.mediatek: write 25 to /sys/class/leds/lcd-backlight/brightness
+05-04 20:26:26.480   936   936 D android.hardware.lights-service.mediatek: write 25 to /sys/class/leds/lcd-backlight/brightness, result: 0
+05-04 20:26:26.491  1245  1348 D AAL     : onBacklightChanged: 104/1023 -> 100/1023(phy:400/4095)
+05-04 20:26:26.496   936   936 D android.hardware.lights-service.mediatek: write 24 to /sys/class/leds/lcd-backlight/brightness
+05-04 20:26:26.497   936   936 D android.hardware.lights-service.mediatek: write 24 to /sys/class/leds/lcd-backlight/brightness, result: 0
+05-04 20:26:26.507  1245  1348 D AAL     : onBacklightChanged: 100/1023 -> 96/1023(phy:384/4095)
+05-04 20:26:26.511   936   936 D android.hardware.lights-service.mediatek: write 23 to /sys/class/leds/lcd-backlight/brightness
+05-04 20:26:26.512   936   936 D android.hardware.lights-service.mediatek: write 23 to /sys/class/leds/lcd-backlight/brightness, result: 0
+05-04 20:26:26.523  1245  1348 D AAL     : onBacklightChanged: 96/1023 -> 92/1023(phy:368/4095)
+05-04 20:26:26.528   936   936 D android.hardware.lights-service.mediatek: write 22 to /sys/class/leds/lcd-backlight/brightness
+05-04 20:26:26.529   936   936 D android.hardware.lights-service.mediatek: write 22 to /sys/class/leds/lcd-backlight/brightness, result: 0
+05-04 20:26:26.539  1245  1348 D AAL     : onBacklightChanged: 92/1023 -> 88/1023(phy:352/4095)
+05-04 20:26:26.572  1245  1348 D AAL     : 05-04 08:26:26.492 BL=  78,ESS= 256, 05-04 08:26:26.508 BL=  75,ESS= 256, 05-04 08:26:26.525 BL=  71,ESS= 256, 05-04 08:26:26.540 BL=  68,ESS= 256, 
+05-04 20:26:26.662  1735  1735 I WifiHAL : Get link layer stats
+05-04 20:26:26.662  1735  1735 I WifiHAL : GetLinkStatsCommand::create
+05-04 20:26:26.662  1735  1735 D android.hardware.wifi@1.0-service-lazy: WifiRequest::create vendor command to iface 31, vendor_id=0x1a11, subcmd=0x1200, res=0
+05-04 20:26:26.662  1735  1735 I android.hardware.wifi@1.0-service-lazy: WifiCommand::requestResponse err=-14
+05-04 20:26:26.662  1735  1735 I WifiHAL : wifi_get_link_stats: result=-1
+05-04 20:26:26.664  1555  1672 E WifiVendorHal: getWifiLinkLayerStats_1_5_Internal(l.1176) failed {.code = ERROR_UNKNOWN, .description = unknown}
+05-04 20:26:27.089   970   970 I BufferQueueProducer: [SurfaceView[com.solodevlab.solara/com.solodevlab.solara.MainActivity](BLAST)#2134](this:0xb400007e34bd49c0,id:-1,api:0,p:-1,c:970) queueBuffer: fps=37.10 dur=1024.33 max=47.69 min=15.46
+05-04 20:26:27.092   921  1162 I hwcomposer: [HWCDisplay] [Display_0 (type:1)] fps:37.106411,dur:1024.08,max:47.61,min:13.93  
+05-04 20:26:27.204   937   995 I libPerfCtl: xgfGetFPS pid:31488 fps:36
+05-04 20:26:27.769  1233  1233 I thermal_repeater: [recvMdThermalInfo] ret=30, strLen=127,  3, 36, -127, -28404, 32767, 0
+05-04 20:26:27.853   937   967 D power@timer: [mtkPowerTimer] visRead:0
+05-04 20:26:28.097   970   970 I BufferQueueProducer: [SurfaceView[com.solodevlab.solara/com.solodevlab.solara.MainActivity](BLAST)#2134](this:0xb400007e34bd49c0,id:-1,api:0,p:-1,c:970) queueBuffer: fps=40.70 dur=1007.30 max=32.32 min=15.89
+05-04 20:26:28.099   921  1162 I hwcomposer: [HWCDisplay] [Display_0 (type:1)] fps:40.690811,dur:1007.60,max:33.03,min:15.06  
+05-04 20:26:28.205   937   995 I libPerfCtl: xgfGetFPS pid:31488 fps:41
+05-04 20:26:29.137   970   970 I BufferQueueProducer: [SurfaceView[com.solodevlab.solara/com.solodevlab.solara.MainActivity](BLAST)#2134](this:0xb400007e34bd49c0,id:-1,api:0,p:-1,c:970) queueBuffer: fps=37.50 dur=1040.12 max=48.11 min=15.38
+05-04 20:26:29.140   921  1162 I hwcomposer: [HWCDisplay] [Display_0 (type:1)] fps:37.471085,dur:1040.80,max:49.32,min:14.45  
+05-04 20:26:29.206   937   995 I libPerfCtl: xgfGetFPS pid:31488 fps:39
+05-04 20:26:29.685  1735  1735 I WifiHAL : Get link layer stats
+05-04 20:26:29.685  1735  1735 I WifiHAL : GetLinkStatsCommand::create
+05-04 20:26:29.685  1735  1735 D android.hardware.wifi@1.0-service-lazy: WifiRequest::create vendor command to iface 31, vendor_id=0x1a11, subcmd=0x1200, res=0
+05-04 20:26:29.685  1735  1735 I android.hardware.wifi@1.0-service-lazy: WifiCommand::requestResponse err=-14
+05-04 20:26:29.686  1735  1735 I WifiHAL : wifi_get_link_stats: result=-1
+05-04 20:26:29.688  1555  1672 E WifiVendorHal: getWifiLinkLayerStats_1_5_Internal(l.1176) failed {.code = ERROR_UNKNOWN, .description = unknown}
+05-04 20:26:30.144   970   970 I BufferQueueProducer: [SurfaceView[com.solodevlab.solara/com.solodevlab.solara.MainActivity](BLAST)#2134](this:0xb400007e34bd49c0,id:-1,api:0,p:-1,c:970) queueBuffer: fps=45.65 dur=1007.64 max=32.38 min=15.53
+05-04 20:26:30.147   921  1162 I hwcomposer: [HWCDisplay] [Display_0 (type:1)] fps:45.711330,dur:1006.32,max:33.40,min:14.36  
+05-04 20:26:30.206   937   995 I libPerfCtl: xgfGetFPS pid:31488 fps:44
+05-04 20:26:31.116 18409 18409 W ThreadPoolForeg: type=1400 audit(0.0:33396): avc: denied { write } for name="traced_producer" dev="tmpfs" ino=15146 scontext=u:r:gmscore_app:s0:c512,c768 tcontext=u:object_r:traced_producer_socket:s0 tclass=sock_file permissive=0 app=com.google.android.gms
+05-04 20:26:31.152   970   970 I BufferQueueProducer: [SurfaceView[com.solodevlab.solara/com.solodevlab.solara.MainActivity](BLAST)#2134](this:0xb400007e34bd49c0,id:-1,api:0,p:-1,c:970) queueBuffer: fps=47.64 dur=1007.61 max=32.19 min=15.56
+05-04 20:26:31.154   921  1162 I hwcomposer: [HWCDisplay] [Display_0 (type:1)] fps:47.633968,dur:1007.68,max:32.87,min:14.45  
+05-04 20:26:31.206   937   995 I libPerfCtl: xgfGetFPS pid:31488 fps:48
+05-04 20:26:32.160   970   970 I BufferQueueProducer: [SurfaceView[com.solodevlab.solara/com.solodevlab.solara.MainActivity](BLAST)#2134](this:0xb400007e34bd49c0,id:-1,api:0,p:-1,c:970) queueBuffer: fps=49.59 dur=1008.25 max=32.34 min=15.36
+05-04 20:26:32.164   921  1162 I hwcomposer: [HWCDisplay] [Display_0 (type:1)] fps:49.534889,dur:1009.39,max:33.12,min:13.98  
+05-04 20:26:32.206   937   995 I libPerfCtl: xgfGetFPS pid:31488 fps:50
+05-04 20:26:32.709  1735  1735 I WifiHAL : Get link layer stats
+05-04 20:26:32.709  1735  1735 I WifiHAL : GetLinkStatsCommand::create
+05-04 20:26:32.709  1735  1735 D android.hardware.wifi@1.0-service-lazy: WifiRequest::create vendor command to iface 31, vendor_id=0x1a11, subcmd=0x1200, res=0
+05-04 20:26:32.709  1735  1735 I android.hardware.wifi@1.0-service-lazy: WifiCommand::requestResponse err=-14
+05-04 20:26:32.709  1735  1735 I WifiHAL : wifi_get_link_stats: result=-1
+05-04 20:26:32.711  1555  1672 E WifiVendorHal: getWifiLinkLayerStats_1_5_Internal(l.1176) failed {.code = ERROR_UNKNOWN, .description = unknown}
+05-04 20:26:33.168   970   970 I BufferQueueProducer: [SurfaceView[com.solodevlab.solara/com.solodevlab.solara.MainActivity](BLAST)#2134](this:0xb400007e34bd49c0,id:-1,api:0,p:-1,c:970) queueBuffer: fps=49.60 dur=1008.01 max=32.20 min=15.48
+05-04 20:26:33.172   921  1162 I hwcomposer: [HWCDisplay] [Display_0 (type:1)] fps:49.587021,dur:1008.33,max:33.26,min:13.83  
+05-04 20:26:33.207   937   995 I libPerfCtl: xgfGetFPS pid:31488 fps:49
+05-04 20:26:33.301  1555  1608 I DisplayPowerController[0]: BrightnessEvent: disp=0, brt=0.061267726, rcmdBrt=0.061267726, preBrt=0.08097623, lux=21.0, preLux=29.949308, hbmMax=1.0, hbmMode=off, thrmMax=1.0, flags=, reason=automatic
+05-04 20:26:33.303  1555  1555 V SettingsProvider: name : screen_brightness appId : 1000
+05-04 20:26:33.304  1555  1555 I BrightnessSynchronizer: [881] New Update 0.061267726(f) set brightness values:  17(i)
+05-04 20:26:33.305  1555  1555 I BrightnessSynchronizer: New PendingUpdate: {[882] 0.061267726(f), mUpdatedTypes=0, mConfirmedTypes=0, mTimeUpdated=0}, prev=null
+05-04 20:26:33.309  1555  1555 I BrightnessSynchronizer: Swallowing update of 17(i) by update: {[881] 0.061267726(f), mUpdatedTypes=1, mConfirmedTypes=1, mTimeUpdated=138636115}
+05-04 20:26:33.310  1555  1555 I BrightnessSynchronizer: Completed Update: {[881] 0.061267726(f), mUpdatedTypes=1, mConfirmedTypes=1, mTimeUpdated=138636115}
+05-04 20:26:33.312   936   936 D android.hardware.lights-service.mediatek: write 21 to /sys/class/leds/lcd-backlight/brightness
+05-04 20:26:33.312   936   936 D android.hardware.lights-service.mediatek: write 21 to /sys/class/leds/lcd-backlight/brightness, result: 0
+05-04 20:26:33.323  1245  1348 D AAL     : onBacklightChanged: 88/1023 -> 84/1023(phy:336/4095)
+05-04 20:26:33.326   936   936 D android.hardware.lights-service.mediatek: write 20 to /sys/class/leds/lcd-backlight/brightness
+05-04 20:26:33.327   936   936 D android.hardware.lights-service.mediatek: write 20 to /sys/class/leds/lcd-backlight/brightness, result: 0
+05-04 20:26:33.339  1245  1348 D AAL     : onBacklightChanged: 84/1023 -> 80/1023(phy:320/4095)
+05-04 20:26:33.342   936   936 D android.hardware.lights-service.mediatek: write 19 to /sys/class/leds/lcd-backlight/brightness
+05-04 20:26:33.342   936   936 D android.hardware.lights-service.mediatek: write 19 to /sys/class/leds/lcd-backlight/brightness, result: 0
+05-04 20:26:33.354  1245  1348 D AAL     : onBacklightChanged: 80/1023 -> 76/1023(phy:304/4095)
+05-04 20:26:33.358   936   936 D android.hardware.lights-service.mediatek: write 18 to /sys/class/leds/lcd-backlight/brightness
+05-04 20:26:33.358   936   936 D android.hardware.lights-service.mediatek: write 18 to /sys/class/leds/lcd-backlight/brightness, result: 0
+05-04 20:26:33.371  1245  1348 D AAL     : onBacklightChanged: 76/1023 -> 72/1023(phy:288/4095)
+05-04 20:26:33.374   936   936 D android.hardware.lights-service.mediatek: write 17 to /sys/class/leds/lcd-backlight/brightness
+05-04 20:26:33.374   936   936 D android.hardware.lights-service.mediatek: write 17 to /sys/class/leds/lcd-backlight/brightness, result: 0
+05-04 20:26:33.387  1245  1348 D AAL     : onBacklightChanged: 72/1023 -> 68/1023(phy:272/4095)
+05-04 20:26:33.388  1245  1348 D AAL     : 05-04 08:26:33.324 BL=  67,ESS= 256, 05-04 08:26:33.339 BL=  64,ESS= 256, 05-04 08:26:33.355 BL=  61,ESS= 256, 05-04 08:26:33.371 BL=  58,ESS= 256, 05-04 08:26:33.388 BL=  55,ESS= 256, 
+05-04 20:26:33.419  1245  1348 D AAL     : 05-04 08:26:33.403 BL=  52,ESS= 256, 
+05-04 20:26:34.081   970   970 D SurfaceFlinger: backpressure
+05-04 20:26:34.180   970   970 I BufferQueueProducer: [SurfaceView[com.solodevlab.solara/com.solodevlab.solara.MainActivity](BLAST)#2134](this:0xb400007e34bd49c0,id:-1,api:0,p:-1,c:970) queueBuffer: fps=45.48 dur=1011.46 max=64.21 min=15.40
+05-04 20:26:34.183   921  1162 I hwcomposer: [HWCDisplay] [Display_0 (type:1)] fps:45.504337,dur:1010.89,max:64.95,min:14.14  
+05-04 20:26:34.207   937   995 I libPerfCtl: xgfGetFPS pid:31488 fps:45
+05-04 20:26:35.184   970   970 I BufferQueueProducer: [SurfaceView[com.solodevlab.solara/com.solodevlab.solara.MainActivity](BLAST)#2134](this:0xb400007e34bd49c0,id:-1,api:0,p:-1,c:970) queueBuffer: fps=60.72 dur=1004.62 max=31.93 min=15.64
+05-04 20:26:35.188   921  1162 I hwcomposer: [HWCDisplay] [Display_0 (type:1)] fps:60.678837,dur:1005.29,max:32.71,min:15.02  
+05-04 20:26:35.209   937   995 I libPerfCtl: xgfGetFPS pid:31488 fps:60
+05-04 20:26:35.726  1735  1735 I WifiHAL : Get link layer stats
+05-04 20:26:35.727  1735  1735 I WifiHAL : GetLinkStatsCommand::create
+05-04 20:26:35.728  1735  1735 D android.hardware.wifi@1.0-service-lazy: WifiRequest::create vendor command to iface 31, vendor_id=0x1a11, subcmd=0x1200, res=0
+05-04 20:26:35.728  1735  1735 I android.hardware.wifi@1.0-service-lazy: WifiCommand::requestResponse err=-14
+05-04 20:26:35.728  1735  1735 I WifiHAL : wifi_get_link_stats: result=-1
+05-04 20:26:35.730  1555  1672 E WifiVendorHal: getWifiLinkLayerStats_1_5_Internal(l.1176) failed {.code = ERROR_UNKNOWN, .description = unknown}
+05-04 20:26:35.792   970   970 I BufferQueueProducer: [StatusBar#80](this:0xb400007e34b62b40,id:-1,api:0,p:-1,c:970) queueBuffer: fps=0.07 dur=15102.02 max=15102.02 min=15102.02
+05-04 20:26:36.192   970   970 I BufferQueueProducer: [SurfaceView[com.solodevlab.solara/com.solodevlab.solara.MainActivity](BLAST)#2134](this:0xb400007e34bd49c0,id:-1,api:0,p:-1,c:970) queueBuffer: fps=61.53 dur=1007.66 max=32.22 min=15.09
+05-04 20:26:36.194   921  1162 I hwcomposer: [HWCDisplay] [Display_0 (type:1)] fps:61.649132,dur:1005.69,max:31.74,min:14.57  
+05-04 20:26:36.210   937   995 I libPerfCtl: xgfGetFPS pid:31488 fps:62
+05-04 20:26:36.419  1555  2522 D WifiService: thread start to send msg to get the temperature
+05-04 20:26:36.416  1555  1555 W system_server: type=1400 audit(0.0:33397): avc: denied { read } for name="temp" dev="sysfs" ino=54321 scontext=u:r:system_server:s0 tcontext=u:object_r:sysfs_therm:s0 tclass=file permissive=0
+05-04 20:26:36.420  1555  1555 D WifiService: can't find file /sys/class/thermal/thermal_zone1/temp
+05-04 20:26:36.420  1555  1555 D WifiService:  get thermal zone88 temper=null
+05-04 20:26:37.200   970   970 I BufferQueueProducer: [SurfaceView[com.solodevlab.solara/com.solodevlab.solara.MainActivity](BLAST)#2134](this:0xb400007e34bd49c0,id:-1,api:0,p:-1,c:970) queueBuffer: fps=61.51 dur=1007.92 max=31.69 min=15.34
+05-04 20:26:37.203   921  1162 I hwcomposer: [HWCDisplay] [Display_0 (type:1)] fps:61.413994,dur:1009.54,max:30.92,min:14.27  
+05-04 20:26:37.210   937   995 I libPerfCtl: xgfGetFPS pid:31488 fps:61
+05-04 20:26:37.789  1233  1233 I thermal_repeater: [recvMdThermalInfo] ret=30, strLen=127,  3, 35, -127, -28404, 32767, 0
+05-04 20:26:38.212   937   995 I libPerfCtl: xgfGetFPS pid:31488 fps:60
+05-04 20:26:38.223   970   970 I BufferQueueProducer: [SurfaceView[com.solodevlab.solara/com.solodevlab.solara.MainActivity](BLAST)#2134](this:0xb400007e34bd49c0,id:-1,api:0,p:-1,c:970) queueBuffer: fps=60.58 dur=1023.46 max=31.80 min=15.47
+05-04 20:26:38.227   921  1162 I hwcomposer: [HWCDisplay] [Display_0 (type:1)] fps:60.582081,dur:1023.40,max:33.53,min:14.10  
+05-04 20:26:38.703  1555  1608 I DisplayPowerController[0]: BrightnessEvent: disp=0, brt=0.16981825, rcmdBrt=0.16981825, preBrt=0.061267726, lux=75.83547, preLux=21.0, hbmMax=1.0, hbmMode=off, thrmMax=1.0, flags=, reason=automatic
+05-04 20:26:38.708  1555  1555 V SettingsProvider: name : screen_brightness appId : 1000
+05-04 20:26:38.710  1555  1555 I BrightnessSynchronizer: [883] New Update 0.16981825(f) set brightness values:  44(i)
+05-04 20:26:38.711  1555  1555 I BrightnessSynchronizer: New PendingUpdate: {[884] 0.16981825(f), mUpdatedTypes=0, mConfirmedTypes=0, mTimeUpdated=0}, prev=null
+05-04 20:26:38.712  1555  1555 I BrightnessSynchronizer: Swallowing update of 44(i) by update: {[883] 0.16981825(f), mUpdatedTypes=1, mConfirmedTypes=1, mTimeUpdated=138641521}
+05-04 20:26:38.712  1555  1555 I BrightnessSynchronizer: Completed Update: {[883] 0.16981825(f), mUpdatedTypes=1, mConfirmedTypes=1, mTimeUpdated=138641521}
+05-04 20:26:38.733   936   936 D android.hardware.lights-service.mediatek: write 18 to /sys/class/leds/lcd-backlight/brightness
+05-04 20:26:38.734   936   936 D android.hardware.lights-service.mediatek: write 18 to /sys/class/leds/lcd-backlight/brightness, result: 0
+05-04 20:26:38.746  1245  1348 D AAL     : onBacklightChanged: 68/1023 -> 72/1023(phy:288/4095)
+05-04 20:26:38.749  1735  1735 I WifiHAL : Get link layer stats
+05-04 20:26:38.750  1735  1735 I WifiHAL : GetLinkStatsCommand::create
+05-04 20:26:38.750  1735  1735 D android.hardware.wifi@1.0-service-lazy: WifiRequest::create vendor command to iface 31, vendor_id=0x1a11, subcmd=0x1200, res=0
+05-04 20:26:38.750   936   936 D android.hardware.lights-service.mediatek: write 19 to /sys/class/leds/lcd-backlight/brightness
+05-04 20:26:38.750  1735  1735 I android.hardware.wifi@1.0-service-lazy: WifiCommand::requestResponse err=-14
+05-04 20:26:38.750  1735  1735 I WifiHAL : wifi_get_link_stats: result=-1
+05-04 20:26:38.750   936   936 D android.hardware.lights-service.mediatek: write 19 to /sys/class/leds/lcd-backlight/brightness, result: 0
+05-04 20:26:38.754  1555  1672 E WifiVendorHal: getWifiLinkLayerStats_1_5_Internal(l.1176) failed {.code = ERROR_UNKNOWN, .description = unknown}
+05-04 20:26:38.762  1245  1348 D AAL     : onBacklightChanged: 72/1023 -> 76/1023(phy:304/4095)
+05-04 20:26:38.766   936   936 D android.hardware.lights-service.mediatek: write 20 to /sys/class/leds/lcd-backlight/brightness
+05-04 20:26:38.766   936   936 D android.hardware.lights-service.mediatek: write 20 to /sys/class/leds/lcd-backlight/brightness, result: 0
+05-04 20:26:38.778  1245  1348 D AAL     : onBacklightChanged: 76/1023 -> 80/1023(phy:320/4095)
+05-04 20:26:38.782   936   936 D android.hardware.lights-service.mediatek: write 21 to /sys/class/leds/lcd-backlight/brightness
+05-04 20:26:38.784   936   936 D android.hardware.lights-service.mediatek: write 21 to /sys/class/leds/lcd-backlight/brightness, result: 0
+05-04 20:26:38.794  1245  1348 D AAL     : onBacklightChanged: 80/1023 -> 84/1023(phy:336/4095)
+05-04 20:26:38.798   936   936 D android.hardware.lights-service.mediatek: write 22 to /sys/class/leds/lcd-backlight/brightness
+05-04 20:26:38.799   936   936 D android.hardware.lights-service.mediatek: write 22 to /sys/class/leds/lcd-backlight/brightness, result: 0
+05-04 20:26:38.810  1245  1348 D AAL     : onBacklightChanged: 84/1023 -> 88/1023(phy:352/4095)
+05-04 20:26:38.814   936   936 D android.hardware.lights-service.mediatek: write 23 to /sys/class/leds/lcd-backlight/brightness
+05-04 20:26:38.815   936   936 D android.hardware.lights-service.mediatek: write 23 to /sys/class/leds/lcd-backlight/brightness, result: 0
+05-04 20:26:38.826  1245  1348 D AAL     : onBacklightChanged: 88/1023 -> 92/1023(phy:368/4095)
+05-04 20:26:38.828  1245  1348 D AAL     : 05-04 08:26:38.763 BL=  55,ESS= 256, 05-04 08:26:38.779 BL=  59,ESS= 256, 05-04 08:26:38.795 BL=  62,ESS= 256, 05-04 08:26:38.811 BL=  65,ESS= 256, 05-04 08:26:38.828 BL=  68,ESS= 256, 
+05-04 20:26:38.830   936   936 D android.hardware.lights-service.mediatek: write 24 to /sys/class/leds/lcd-backlight/brightness
+05-04 20:26:38.831   936   936 D android.hardware.lights-service.mediatek: write 24 to /sys/class/leds/lcd-backlight/brightness, result: 0
+05-04 20:26:38.842  1245  1348 D AAL     : onBacklightChanged: 92/1023 -> 96/1023(phy:384/4095)
+05-04 20:26:38.845   936   936 D android.hardware.lights-service.mediatek: write 25 to /sys/class/leds/lcd-backlight/brightness
+05-04 20:26:38.846   936   936 D android.hardware.lights-service.mediatek: write 25 to /sys/class/leds/lcd-backlight/brightness, result: 0
+05-04 20:26:38.858  1245  1348 D AAL     : onBacklightChanged: 96/1023 -> 100/1023(phy:400/4095)
+05-04 20:26:38.861   936   936 D android.hardware.lights-service.mediatek: write 26 to /sys/class/leds/lcd-backlight/brightness
+05-04 20:26:38.863   936   936 D android.hardware.lights-service.mediatek: write 26 to /sys/class/leds/lcd-backlight/brightness, result: 0
+05-04 20:26:38.874  1245  1348 D AAL     : onBacklightChanged: 100/1023 -> 104/1023(phy:416/4095)
+05-04 20:26:38.877   936   936 D android.hardware.lights-service.mediatek: write 27 to /sys/class/leds/lcd-backlight/brightness
+05-04 20:26:38.878   936   936 D android.hardware.lights-service.mediatek: write 27 to /sys/class/leds/lcd-backlight/brightness, result: 0
+05-04 20:26:38.890  1245  1348 D AAL     : onBacklightChanged: 104/1023 -> 108/1023(phy:432/4095)
+05-04 20:26:38.894   936   936 D android.hardware.lights-service.mediatek: write 28 to /sys/class/leds/lcd-backlight/brightness
+05-04 20:26:38.894   936   936 D android.hardware.lights-service.mediatek: write 28 to /sys/class/leds/lcd-backlight/brightness, result: 0
+05-04 20:26:38.906  1245  1348 D AAL     : onBacklightChanged: 108/1023 -> 112/1023(phy:448/4095)
+05-04 20:26:38.907  1245  1348 D AAL     : 05-04 08:26:38.843 BL=  72,ESS= 256, 05-04 08:26:38.860 BL=  75,ESS= 256, 05-04 08:26:38.875 BL=  78,ESS= 256, 05-04 08:26:38.891 BL=  82,ESS= 256, 05-04 08:26:38.907 BL=  85,ESS= 256, 
+05-04 20:26:38.911   936   936 D android.hardware.lights-service.mediatek: write 29 to /sys/class/leds/lcd-backlight/brightness
+05-04 20:26:38.912   936   936 D android.hardware.lights-service.mediatek: write 29 to /sys/class/leds/lcd-backlight/brightness, result: 0
+05-04 20:26:38.922  1245  1348 D AAL     : onBacklightChanged: 112/1023 -> 116/1023(phy:464/4095)
+05-04 20:26:38.926   936   936 D android.hardware.lights-service.mediatek: write 30 to /sys/class/leds/lcd-backlight/brightness
+05-04 20:26:38.927   936   936 D android.hardware.lights-service.mediatek: write 30 to /sys/class/leds/lcd-backlight/brightness, result: 0
+05-04 20:26:38.938  1245  1348 D AAL     : onBacklightChanged: 116/1023 -> 120/1023(phy:480/4095)
+05-04 20:26:38.942   936   936 D android.hardware.lights-service.mediatek: write 31 to /sys/class/leds/lcd-backlight/brightness
+05-04 20:26:38.943   936   936 D android.hardware.lights-service.mediatek: write 31 to /sys/class/leds/lcd-backlight/brightness, result: 0
+05-04 20:26:38.954  1245  1348 D AAL     : onBacklightChanged: 120/1023 -> 124/1023(phy:496/4095)
+05-04 20:26:38.958   936   936 D android.hardware.lights-service.mediatek: write 32 to /sys/class/leds/lcd-backlight/brightness
+05-04 20:26:38.960   936   936 D android.hardware.lights-service.mediatek: write 32 to /sys/class/leds/lcd-backlight/brightness, result: 0
+05-04 20:26:38.970  1245  1348 D AAL     : onBacklightChanged: 124/1023 -> 128/1023(phy:512/4095)
+05-04 20:26:38.986  1245  1348 D AAL     : 05-04 08:26:38.923 BL=  89,ESS= 256, 05-04 08:26:38.939 BL=  92,ESS= 256, 05-04 08:26:38.955 BL=  95,ESS= 256, 05-04 08:26:38.971 BL=  99,ESS= 256, 
+05-04 20:26:38.991   936   936 D android.hardware.lights-service.mediatek: write 33 to /sys/class/leds/lcd-backlight/brightness
+05-04 20:26:38.992   936   936 D android.hardware.lights-service.mediatek: write 33 to /sys/class/leds/lcd-backlight/brightness, result: 0
+05-04 20:26:39.002  1245  1348 D AAL     : onBacklightChanged: 128/1023 -> 132/1023(phy:528/4095)
+05-04 20:26:39.005   936   936 D android.hardware.lights-service.mediatek: write 34 to /sys/class/leds/lcd-backlight/brightness
+05-04 20:26:39.006   936   936 D android.hardware.lights-service.mediatek: write 34 to /sys/class/leds/lcd-backlight/brightness, result: 0
+05-04 20:26:39.020  1245  1348 D AAL     : onBacklightChanged: 132/1023 -> 136/1023(phy:544/4095)
+05-04 20:26:39.025   936   936 D android.hardware.lights-service.mediatek: write 35 to /sys/class/leds/lcd-backlight/brightness
+05-04 20:26:39.027   936   936 D android.hardware.lights-service.mediatek: write 35 to /sys/class/leds/lcd-backlight/brightness, result: 0
+05-04 20:26:39.034  1245  1348 D AAL     : onBacklightChanged: 136/1023 -> 140/1023(phy:560/4095)
+05-04 20:26:39.038   936   936 D android.hardware.lights-service.mediatek: write 36 to /sys/class/leds/lcd-backlight/brightness
+05-04 20:26:39.040   936   936 D android.hardware.lights-service.mediatek: write 36 to /sys/class/leds/lcd-backlight/brightness, result: 0
+05-04 20:26:39.050  1245  1348 D AAL     : onBacklightChanged: 140/1023 -> 144/1023(phy:576/4095)
+05-04 20:26:39.054   936   936 D android.hardware.lights-service.mediatek: write 37 to /sys/class/leds/lcd-backlight/brightness
+05-04 20:26:39.055   936   936 D android.hardware.lights-service.mediatek: write 37 to /sys/class/leds/lcd-backlight/brightness, result: 0
+05-04 20:26:39.066  1245  1348 D AAL     : onBacklightChanged: 144/1023 -> 148/1023(phy:592/4095)
+05-04 20:26:39.067  1245  1348 D AAL     : 05-04 08:26:39.003 BL= 100,ESS= 256, 05-04 08:26:39.021 BL= 103,ESS= 256, 05-04 08:26:39.035 BL= 107,ESS= 256, 05-04 08:26:39.051 BL= 110,ESS= 256, 05-04 08:26:39.067 BL= 114,ESS= 256, 
+05-04 20:26:39.070   936   936 D android.hardware.lights-service.mediatek: write 38 to /sys/class/leds/lcd-backlight/brightness
+05-04 20:26:39.072   936   936 D android.hardware.lights-service.mediatek: write 38 to /sys/class/leds/lcd-backlight/brightness, result: 0
+05-04 20:26:39.082  1245  1348 D AAL     : onBacklightChanged: 148/1023 -> 152/1023(phy:608/4095)
+05-04 20:26:39.085   936   936 D android.hardware.lights-service.mediatek: write 39 to /sys/class/leds/lcd-backlight/brightness
+05-04 20:26:39.085   936   936 D android.hardware.lights-service.mediatek: write 39 to /sys/class/leds/lcd-backlight/brightness, result: 0
+05-04 20:26:39.098  1245  1348 D AAL     : onBacklightChanged: 152/1023 -> 156/1023(phy:624/4095)
+05-04 20:26:39.103   936   936 D android.hardware.lights-service.mediatek: write 40 to /sys/class/leds/lcd-backlight/brightness
+05-04 20:26:39.103   936   936 D android.hardware.lights-service.mediatek: write 40 to /sys/class/leds/lcd-backlight/brightness, result: 0
+05-04 20:26:39.114  1245  1348 D AAL     : onBacklightChanged: 156/1023 -> 160/1023(phy:640/4095)
+05-04 20:26:39.118   936   936 D android.hardware.lights-service.mediatek: write 41 to /sys/class/leds/lcd-backlight/brightness
+05-04 20:26:39.118   936   936 D android.hardware.lights-service.mediatek: write 41 to /sys/class/leds/lcd-backlight/brightness, result: 0
+05-04 20:26:39.130  1245  1348 D AAL     : onBacklightChanged: 160/1023 -> 164/1023(phy:656/4095)
+05-04 20:26:39.133   936   936 D android.hardware.lights-service.mediatek: write 42 to /sys/class/leds/lcd-backlight/brightness
+05-04 20:26:39.134   936   936 D android.hardware.lights-service.mediatek: write 42 to /sys/class/leds/lcd-backlight/brightness, result: 0
+05-04 20:26:39.146  1245  1348 D AAL     : onBacklightChanged: 164/1023 -> 168/1023(phy:672/4095)
+05-04 20:26:39.148  1245  1348 D AAL     : 05-04 08:26:39.082 BL= 117,ESS= 256, 05-04 08:26:39.099 BL= 120,ESS= 256, 05-04 08:26:39.115 BL= 123,ESS= 256, 05-04 08:26:39.131 BL= 126,ESS= 256, 05-04 08:26:39.147 BL= 129,ESS= 256, 
+05-04 20:26:39.150   936   936 D android.hardware.lights-service.mediatek: write 43 to /sys/class/leds/lcd-backlight/brightness
+05-04 20:26:39.151   936   936 D android.hardware.lights-service.mediatek: write 43 to /sys/class/leds/lcd-backlight/brightness, result: 0
+05-04 20:26:39.162  1245  1348 D AAL     : onBacklightChanged: 168/1023 -> 173/1023(phy:692/4095)
+05-04 20:26:39.165   936   936 D android.hardware.lights-service.mediatek: write 44 to /sys/class/leds/lcd-backlight/brightness
+05-04 20:26:39.166   936   936 D android.hardware.lights-service.mediatek: write 44 to /sys/class/leds/lcd-backlight/brightness, result: 0
+05-04 20:26:39.178  1245  1348 D AAL     : onBacklightChanged: 173/1023 -> 177/1023(phy:708/4095)
+05-04 20:26:39.194  1245  1348 D AAL     : 05-04 08:26:39.163 BL= 133,ESS= 256, 05-04 08:26:39.179 BL= 136,ESS= 256, 
+05-04 20:26:39.212   937   995 I libPerfCtl: xgfGetFPS pid:31488 fps:60
+05-04 20:26:39.231   970   970 I BufferQueueProducer: [SurfaceView[com.solodevlab.solara/com.solodevlab.solara.MainActivity](BLAST)#2134](this:0xb400007e34bd49c0,id:-1,api:0,p:-1,c:970) queueBuffer: fps=60.51 dur=1008.13 max=32.34 min=15.32
+05-04 20:26:39.235   921  1162 I hwcomposer: [HWCDisplay] [Display_0 (type:1)] fps:60.481350,dur:1008.58,max:33.12,min:14.28  
+05-04 20:26:40.212   937   995 I libPerfCtl: xgfGetFPS pid:31488 fps:58
+05-04 20:26:40.239   970   970 I BufferQueueProducer: [SurfaceView[com.solodevlab.solara/com.solodevlab.solara.MainActivity](BLAST)#2134](this:0xb400007e34bd49c0,id:-1,api:0,p:-1,c:970) queueBuffer: fps=58.56 dur=1007.45 max=32.44 min=15.31
+05-04 20:26:40.241   921  1162 I hwcomposer: [HWCDisplay] [Display_0 (type:1)] fps:58.652702,dur:1005.92,max:33.38,min:14.01  
+05-04 20:26:41.213   937   995 I libPerfCtl: xgfGetFPS pid:31488 fps:61
+05-04 20:26:41.247   970   970 I BufferQueueProducer: [SurfaceView[com.solodevlab.solara/com.solodevlab.solara.MainActivity](BLAST)#2134](this:0xb400007e34bd49c0,id:-1,api:0,p:-1,c:970) queueBuffer: fps=61.49 dur=1008.30 max=32.08 min=15.06
+05-04 20:26:41.251   921  1162 I hwcomposer: [HWCDisplay] [Display_0 (type:1)] fps:61.420959,dur:1009.43,max:33.47,min:14.00  
+05-04 20:26:41.771  1735  1735 I WifiHAL : Get link layer stats
+05-04 20:26:41.771  1735  1735 I WifiHAL : GetLinkStatsCommand::create
+05-04 20:26:41.772  1735  1735 D android.hardware.wifi@1.0-service-lazy: WifiRequest::create vendor command to iface 31, vendor_id=0x1a11, subcmd=0x1200, res=0
+05-04 20:26:41.772  1735  1735 I android.hardware.wifi@1.0-service-lazy: WifiCommand::requestResponse err=-14
+05-04 20:26:41.772  1735  1735 I WifiHAL : wifi_get_link_stats: result=-1
+05-04 20:26:41.776  1555  1672 E WifiVendorHal: getWifiLinkLayerStats_1_5_Internal(l.1176) failed {.code = ERROR_UNKNOWN, .description = unknown}
+05-04 20:26:42.213   937   995 I libPerfCtl: xgfGetFPS pid:31488 fps:58
+05-04 20:26:42.255   970   970 I BufferQueueProducer: [SurfaceView[com.solodevlab.solara/com.solodevlab.solara.MainActivity](BLAST)#2134](this:0xb400007e34bd49c0,id:-1,api:0,p:-1,c:970) queueBuffer: fps=58.54 dur=1007.94 max=32.30 min=15.61
+05-04 20:26:42.258   921  1162 I hwcomposer: [HWCDisplay] [Display_0 (type:1)] fps:58.558224,dur:1007.54,max:33.40,min:14.38  
+05-04 20:26:43.214   937   995 I libPerfCtl: xgfGetFPS pid:31488 fps:61
+05-04 20:26:43.263   970   970 I BufferQueueProducer: [SurfaceView[com.solodevlab.solara/com.solodevlab.solara.MainActivity](BLAST)#2134](this:0xb400007e34bd49c0,id:-1,api:0,p:-1,c:970) queueBuffer: fps=61.52 dur=1007.83 max=32.00 min=15.76
+05-04 20:26:43.266   921  1162 I hwcomposer: [HWCDisplay] [Display_0 (type:1)] fps:61.547634,dur:1007.35,max:32.60,min:14.92  
+05-04 20:26:44.217   937   995 I libPerfCtl: xgfGetFPS pid:31488 fps:59
+05-04 20:26:44.271   970   970 I BufferQueueProducer: [SurfaceView[com.solodevlab.solara/com.solodevlab.solara.MainActivity](BLAST)#2134](this:0xb400007e34bd49c0,id:-1,api:0,p:-1,c:970) queueBuffer: fps=59.53 dur=1007.82 max=31.94 min=15.62
+05-04 20:26:44.274   921  1162 I hwcomposer: [HWCDisplay] [Display_0 (type:1)] fps:59.505028,dur:1008.32,max:32.30,min:14.32  

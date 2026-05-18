@@ -1,0 +1,36 @@
+05-03 15:12:08.446 E/libsigchain(20014):   #26 pc 000ec8d4  /system/lib64/libandroid_runtime.so (android::AndroidRuntime::start(char const*, android::Vector<android::String8> const&, bool)+844) (BuildId: eefa064df1f6ec6fae8a62c22ed700b3)
+05-03 15:49:13.763 E/libsigchain(20598):   #26 pc 000ec8d4  /system/lib64/libandroid_runtime.so (android::AndroidRuntime::start(char const*, android::Vector<android::String8> const&, bool)+844) (BuildId: eefa064df1f6ec6fae8a62c22ed700b3)
+05-03 15:51:24.556 E/libsigchain(20928):   #26 pc 000ec8d4  /system/lib64/libandroid_runtime.so (android::AndroidRuntime::start(char const*, android::Vector<android::String8> const&, bool)+844) (BuildId: eefa064df1f6ec6fae8a62c22ed700b3)
+05-03 16:37:20.599 E/libsigchain(21889):   #26 pc 000ec8d4  /system/lib64/libandroid_runtime.so (android::AndroidRuntime::start(char const*, android::Vector<android::String8> const&, bool)+844) (BuildId: eefa064df1f6ec6fae8a62c22ed700b3)
+05-03 17:39:16.474 E/libsigchain(22618):   #26 pc 000ec8d4  /system/lib64/libandroid_runtime.so (android::AndroidRuntime::start(char const*, android::Vector<android::String8> const&, bool)+844) (BuildId: eefa064df1f6ec6fae8a62c22ed700b3)
+05-03 18:25:19.521 E/libsigchain(23572):   #26 pc 000ec8d4  /system/lib64/libandroid_runtime.so (android::AndroidRuntime::start(char const*, android::Vector<android::String8> const&, bool)+844) (BuildId: eefa064df1f6ec6fae8a62c22ed700b3)
+05-03 19:09:06.447 E/libsigchain(24370):   #26 pc 000ec8d4  /system/lib64/libandroid_runtime.so (android::AndroidRuntime::start(char const*, android::Vector<android::String8> const&, bool)+844) (BuildId: eefa064df1f6ec6fae8a62c22ed700b3)
+05-03 19:54:09.078 E/libsigchain(27823):   #26 pc 000ec8d4  /system/lib64/libandroid_runtime.so (android::AndroidRuntime::start(char const*, android::Vector<android::String8> const&, bool)+844) (BuildId: eefa064df1f6ec6fae8a62c22ed700b3)
+05-03 20:11:41.959 E/libsigchain(29484):   #26 pc 000ec8d4  /system/lib64/libandroid_runtime.so (android::AndroidRuntime::start(char const*, android::Vector<android::String8> const&, bool)+844) (BuildId: eefa064df1f6ec6fae8a62c22ed700b3)
+05-03 20:26:47.732 E/libsigchain(31901):   #26 pc 000ec8d4  /system/lib64/libandroid_runtime.so (android::AndroidRuntime::start(char const*, android::Vector<android::String8> const&, bool)+844) (BuildId: eefa064df1f6ec6fae8a62c22ed700b3)
+05-03 20:48:05.038 I/AndroidRuntime(31685): VM exiting with result code 0, cleanup skipped.
+05-03 21:00:12.485 E/libsigchain( 6540):   #26 pc 000ec8d4  /system/lib64/libandroid_runtime.so (android::AndroidRuntime::start(char const*, android::Vector<android::String8> const&, bool)+844) (BuildId: eefa064df1f6ec6fae8a62c22ed700b3)
+05-03 22:00:11.682 E/libsigchain(12888):   #26 pc 000ec8d4  /system/lib64/libandroid_runtime.so (android::AndroidRuntime::start(char const*, android::Vector<android::String8> const&, bool)+844) (BuildId: eefa064df1f6ec6fae8a62c22ed700b3)
+05-03 22:06:55.246 E/libsigchain(16627):   #26 pc 000ec8d4  /system/lib64/libandroid_runtime.so (android::AndroidRuntime::start(char const*, android::Vector<android::String8> const&, bool)+844) (BuildId: eefa064df1f6ec6fae8a62c22ed700b3)
+05-03 22:37:28.523 E/libsigchain(18709):   #26 pc 000ec8d4  /system/lib64/libandroid_runtime.so (android::AndroidRuntime::start(char const*, android::Vector<android::String8> const&, bool)+844) (BuildId: eefa064df1f6ec6fae8a62c22ed700b3)
+05-03 23:19:22.097 E/libsigchain(19636):   #26 pc 000ec8d4  /system/lib64/libandroid_runtime.so (android::AndroidRuntime::start(char const*, android::Vector<android::String8> const&, bool)+844) (BuildId: eefa064df1f6ec6fae8a62c22ed700b3)
+05-03 23:50:23.638 D/AndroidRuntime(26976): >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+05-03 23:50:23.647 I/AndroidRuntime(26976): Using default boot image
+05-03 23:50:23.647 I/AndroidRuntime(26976): Leaving lock profiling enabled
+05-03 23:50:23.950 D/AndroidRuntime(26976): Calling main entry com.android.commands.monkey.Monkey
+05-03 23:50:24.173 I/AndroidRuntime(26976): VM exiting with result code 0.
+05-03 23:50:28.614 E/libsigchain(27085):   #26 pc 000ec8d4  /system/lib64/libandroid_runtime.so (android::AndroidRuntime::start(char const*, android::Vector<android::String8> const&, bool)+844) (BuildId: eefa064df1f6ec6fae8a62c22ed700b3)
+05-03 23:51:41.093 D/AndroidRuntime(27251): >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+05-03 23:51:41.101 I/AndroidRuntime(27251): Using default boot image
+05-03 23:51:41.101 I/AndroidRuntime(27251): Leaving lock profiling enabled
+05-03 23:51:41.304 D/AndroidRuntime(27251): Calling main entry com.android.commands.monkey.Monkey
+05-03 23:51:41.386 I/AndroidRuntime(27251): VM exiting with result code 0.
+05-03 23:52:06.041 D/AndroidRuntime(27322): >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+05-03 23:52:06.046 I/AndroidRuntime(27322): Using default boot image
+05-03 23:52:06.046 I/AndroidRuntime(27322): Leaving lock profiling enabled
+05-03 23:52:06.181 D/AndroidRuntime(27322): Calling main entry com.android.commands.monkey.Monkey
+05-03 23:52:06.257 I/AndroidRuntime(27322): VM exiting with result code 0.
+05-04 00:30:58.934 E/libsigchain(32311):   #26 pc 000ec8d4  /system/lib64/libandroid_runtime.so (android::AndroidRuntime::start(char const*, android::Vector<android::String8> const&, bool)+844) (BuildId: eefa064df1f6ec6fae8a62c22ed700b3)
+05-04 01:01:19.358 E/libsigchain( 3831):   #26 pc 000ec8d4  /system/lib64/libandroid_runtime.so (android::AndroidRuntime::start(char const*, android::Vector<android::String8> const&, bool)+844) (BuildId: eefa064df1f6ec6fae8a62c22ed700b3)
+05-04 01:57:25.017 E/libsigchain( 9485):   #26 pc 000ec8d4  /system/lib64/libandroid_runtime.so (android::AndroidRuntime::start(char const*, android::Vector<android::String8> const&, bool)+844) (BuildId: eefa064df1f6ec6fae8a62c22ed700b3)
+05-04 02:47:44.364 E/libsigchain(13020):   #26 pc 000ec8d4  /system/lib64/libandroid_runtime.so (android::AndroidRuntime::start(char const*, android::Vector<android::String8> const&, bool)+844) (BuildId: eefa064df1f6ec6fae8a62c22ed700b3)

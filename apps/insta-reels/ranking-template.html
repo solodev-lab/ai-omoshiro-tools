@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>インスタリール ランキングテンプレート</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    font-family: 'Noto Sans JP', sans-serif;
+    overflow: hidden;
+  }
+
+  /* === 9:16 リールフレーム === */
+  .reel-frame {
+    width: 390px;
+    height: 693px;
+    position: relative;
+    overflow: hidden;
+    border-radius: 12px;
+  }
+
+  /* === スライド共通 === */
+  .slide {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 30px 24px;
+    opacity: 0;
+    transform: scale(0.95);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+    pointer-events: none;
+    text-align: center;
+  }
+
+  .slide.active {
+    opacity: 1;
+    transform: scale(1);
+    pointer-events: auto;
+  }
+
+  /* === 背景パターン === */
+  .bg-dark-gold {
+    background: linear-gradient(160deg, #0a0a1a 0%, #1a1030 40%, #2a1040 70%, #0a0a1a 100%);
+  }
+
+  .bg-cosmic {
+    background: linear-gradient(180deg, #0d0221 0%, #1a0533 30%, #2d1b69 60%, #150630 100%);
+  }
+
+  .bg-fire {
+    background: linear-gradient(180deg, #1a0000 0%, #3d0c02 30%, #5c1a0a 60%, #1a0000 100%);
+  }
+
+  /* === スライドコンテンツをbg-media-layerより前面に === */
+  .slide > *:not(.bg-media-layer):not(.particles) {
+    position: relative;
+    z-index: 2;
+  }
+
+  /* === キラキラパーティクル === */
+  .particles {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+    overflow: hidden;
+    z-index: 1;
+  }
+
+  .particle {
+    position: absolute;
+    width: 4px; height: 4px;
+    background: #ffd700;
+    border-radius: 50%;
+    box-shadow: 0 0 6px #ffd700, 0 0 12px #ffd70088;
+    animation: sparkle 2s ease-in-out infinite;
+  }
+
+  @keyframes sparkle {
+    0%, 100% { opacity: 0; transform: translateY(0) scale(0.5); }
+    50% { opacity: 1; transform: translateY(-20px) scale(1); }
+  }
+
+  /* === タイトルスライド === */
+  .title-slide .hook-text {
+    font-size: 15px;
+    color: #ffcc00;
+    font-weight: 700;
+    letter-spacing: 2px;
+    margin-bottom: 16px;
+    text-shadow: 0 0 20px #ffcc0066;
+  }
+
+  .title-slide .main-title {
+    font-size: 36px;
+    font-weight: 900;
+    color: #fff;
+    line-height: 1.3;
+    margin-bottom: 20px;
+    text-shadow: 0 0 30px rgba(255, 200, 50, 0.3);
+  }
+
+  .title-slide .main-title .highlight {
+    color: #ffd700;
+    display: block;
+  }
+
+  .title-slide .sub-text {
+    font-size: 14px;
+    color: #aaa;
+    margin-top: 8px;
+  }
+
+  .title-slide .category-label {
+    display: inline-block;
+    padding: 6px 20px;
+    background: linear-gradient(135deg, #ffd700, #ff8c00);
+    color: #000;
+    font-weight: 900;
+    font-size: 13px;
+    border-radius: 20px;
+    margin-top: 20px;
+    letter-spacing: 1px;
+  }
+
+  /* === ランキングスライド === */
+  .ranking-slide .rank-number {
+    font-size: 100px;
+    font-weight: 900;
+    line-height: 1;
+    margin-bottom: 8px;
+    animation: rankPop 0.6s ease-out;
+  }
+
+  .rank-gold {
+    background: linear-gradient(180deg, #ffd700, #ff8c00);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 0 30px #ffd70088);
+  }
+
+  .rank-silver {
+    background: linear-gradient(180deg, #e0e0e0, #8a8a8a);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 0 20px #ffffff44);
+  }
+
+  .rank-bronze {
+    background: linear-gradient(180deg, #cd7f32, #8b4513);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 0 20px #cd7f3244);
+  }
+
+  .rank-normal {
+    color: #888;
+    text-shadow: 0 0 10px #ffffff22;
+  }
+
+  @keyframes rankPop {
+    0% { transform: scale(0.3); opacity: 0; }
+    60% { transform: scale(1.15); }
+    100% { transform: scale(1); opacity: 1; }
+  }
+
+  .ranking-slide .rank-label {
+    font-size: 14px;
+    color: #999;
+    letter-spacing: 3px;
+    margin-bottom: 4px;
+  }
+
+  .ranking-slide .rank-content {
+    margin-top: 16px;
+    animation: slideUp 0.5s ease-out 0.3s both;
+  }
+
+  @keyframes slideUp {
+    0% { transform: translateY(30px); opacity: 0; }
+    100% { transform: translateY(0); opacity: 1; }
+  }
+
+  .rank-content .birth-month {
+    font-size: 48px;
+    font-weight: 900;
+    color: #fff;
+    line-height: 1.2;
+  }
+
+  .rank-content .zodiac {
+    font-size: 20px;
+    color: #ccc;
+    margin-top: 4px;
+  }
+
+  .rank-content .description {
+    font-size: 15px;
+    color: #bbb;
+    margin-top: 16px;
+    line-height: 1.6;
+    max-width: 300px;
+  }
+
+  .rank-content .emoji-icon {
+    font-size: 50px;
+    margin-bottom: 8px;
+    animation: floatEmoji 2s ease-in-out infinite;
+  }
+
+  @keyframes floatEmoji {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+  }
+
+  /* === 1位特別演出 === */
+  .slide.rank-1-special .crown {
+    position: absolute;
+    top: 30px;
+    font-size: 60px;
+    animation: crownBounce 0.8s ease-out;
+    z-index: 3;
+  }
+
+  @keyframes crownBounce {
+    0% { transform: translateY(-50px) scale(0); opacity: 0; }
+    60% { transform: translateY(5px) scale(1.1); }
+    100% { transform: translateY(0) scale(1); opacity: 1; }
+  }
+
+  .glow-ring {
+    position: absolute;
+    width: 250px; height: 250px;
+    border-radius: 50%;
+    border: 2px solid #ffd70044;
+    box-shadow: 0 0 40px #ffd70033, inset 0 0 40px #ffd70022;
+    animation: pulseRing 2s ease-in-out infinite;
+  }
+
+  @keyframes pulseRing {
+    0%, 100% { transform: scale(0.9); opacity: 0.5; }
+    50% { transform: scale(1.1); opacity: 1; }
+  }
+
+  /* === CTAスライド === */
+  .cta-slide .cta-text {
+    font-size: 22px;
+    font-weight: 900;
+    color: #fff;
+    line-height: 1.5;
+    margin-bottom: 24px;
+  }
+
+  .cta-slide .cta-button {
+    display: inline-block;
+    padding: 14px 40px;
+    background: linear-gradient(135deg, #ffd700, #ff8c00);
+    color: #000;
+    font-size: 16px;
+    font-weight: 900;
+    border-radius: 30px;
+    letter-spacing: 1px;
+    animation: ctaPulse 1.5s ease-in-out infinite;
+  }
+
+  @keyframes ctaPulse {
+    0%, 100% { transform: scale(1); box-shadow: 0 0 20px #ffd70044; }
+    50% { transform: scale(1.05); box-shadow: 0 0 40px #ffd70088; }
+  }
+
+  .cta-slide .cta-sub {
+    font-size: 13px;
+    color: #888;
+    margin-top: 16px;
+  }
+
+  /* === 上部オーバーレイ（アカウント名等） === */
+  .overlay-top {
+    position: absolute;
+    top: 16px; left: 20px; right: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 10;
+    pointer-events: none;
+  }
+
+  .overlay-top .account-name {
+    font-size: 11px;
+    color: #fff8;
+    font-weight: 700;
+  }
+
+  .overlay-top .page-indicator {
+    font-size: 11px;
+    color: #fff6;
+  }
+
+  /* === プログレスバー === */
+  .progress-bar {
+    position: absolute;
+    bottom: 0; left: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #ffd700, #ff8c00);
+    transition: width 0.3s linear;
+    z-index: 10;
+  }
+
+  /* === 背景画像/動画レイヤー === */
+  .bg-media-layer {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  .bg-media-layer img,
+  .bg-media-layer video {
+    width: 100%; height: 100%;
+    object-fit: cover;
+  }
+
+  .bg-media-overlay {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+  }
+
+  /* スライドにbg-media使用時はグラデーション背景を透明に */
+  .slide.bg-media-active {
+    background: transparent !important;
+  }
+
+  /* === コントロールUI === */
+  .controls {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 12px;
+    z-index: 100;
+    flex-wrap: wrap;
+    justify-content: center;
+    max-width: 90vw;
+  }
+
+  .controls button {
+    padding: 8px 20px;
+    background: #333;
+    color: #fff;
+    border: 1px solid #555;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    font-family: 'Noto Sans JP', sans-serif;
+  }
+
+  .controls button:hover { background: #555; }
+  .controls button.active-btn { background: #ffd700; color: #000; font-weight: 700; }
+
+  /* === 背景選択パネル === */
+  .bg-picker-panel {
+    position: fixed;
+    top: 0; right: 0;
+    width: 260px; height: 100vh;
+    background: #1a1a2e;
+    border-left: 1px solid #333;
+    z-index: 200;
+    overflow-y: auto;
+    transform: translateX(100%);
+    transition: transform 0.3s ease;
+    padding: 16px;
+  }
+
+  .bg-picker-panel.open { transform: translateX(0); }
+
+  .bg-picker-panel h3 {
+    color: #ffd700;
+    font-size: 14px;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #333;
+  }
+
+  .bg-picker-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  .bg-thumb {
+    width: 100%; aspect-ratio: 9/16;
+    object-fit: cover;
+    border-radius: 6px;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: border-color 0.2s, transform 0.2s;
+  }
+
+  .bg-thumb:hover { transform: scale(1.05); }
+  .bg-thumb.selected { border-color: #ffd700; }
+
+  .bg-option-label {
+    font-size: 10px;
+    color: #aaa;
+    text-align: center;
+    margin-top: 2px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .bg-option-item {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .bg-gradient-thumb {
+    width: 100%; aspect-ratio: 9/16;
+    border-radius: 6px;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: border-color 0.2s, transform 0.2s;
+  }
+
+  .bg-gradient-thumb:hover { transform: scale(1.05); }
+  .bg-gradient-thumb.selected { border-color: #ffd700; }
+
+  .bg-section-label {
+    font-size: 12px;
+    color: #888;
+    margin: 12px 0 6px;
+    font-weight: 700;
+  }
+
+  .bg-upload-btn {
+    width: 100%;
+    padding: 10px;
+    background: #333;
+    color: #fff;
+    border: 1px dashed #666;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    text-align: center;
+    margin-top: 8px;
+    font-family: 'Noto Sans JP', sans-serif;
+  }
+
+  .bg-upload-btn:hover { background: #444; }
+
+  .bg-overlay-control {
+    margin-top: 12px;
+  }
+
+  .bg-overlay-control label {
+    font-size: 11px;
+    color: #aaa;
+    display: block;
+    margin-bottom: 4px;
+  }
+
+  .bg-overlay-control input[type="range"] {
+    width: 100%;
+    accent-color: #ffd700;
+  }
+
+  /* === 録画用: フルスクリーンモード === */
+  .reel-frame.fullscreen {
+    width: 100vw;
+    height: 100vh;
+    border-radius: 0;
+  }
+
+  /* === 装飾ライン === */
+  .deco-line {
+    width: 60px;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, #ffd700, transparent);
+    margin: 12px auto;
+  }
+</style>
+</head>
+<body>
+
+<div class="reel-frame" id="reelFrame">
+
+  <!-- オーバーレイ -->
+  <div class="overlay-top">
+    <span class="account-name">@your_account</span>
+    <span class="page-indicator" id="pageIndicator">1 / 8</span>
+  </div>
+
+  <!-- プログレスバー -->
+  <div class="progress-bar" id="progressBar"></div>
+
+  <!-- スライドはJSで動的生成 -->
+  <div id="slidesContainer"></div>
+
+</div>
+
+<!-- 操作パネル（録画時は画面外） -->
+<div class="controls" id="controlPanel">
+  <button onclick="prevSlide()">◀ 前</button>
+  <button onclick="toggleAutoPlay()" id="autoPlayBtn">▶ 自動再生</button>
+  <button onclick="nextSlide()">次 ▶</button>
+  <button onclick="toggleFullscreen()">⛶ 全画面</button>
+  <button onclick="resetSlides()">↺ 最初から</button>
+  <button onclick="toggleBgPicker()">🖼 背景</button>
+</div>
+
+<!-- 背景選択パネル -->
+<div class="bg-picker-panel" id="bgPickerPanel">
+  <h3>背景を選択</h3>
+
+  <div class="bg-section-label">グラデーション</div>
+  <div class="bg-picker-grid" id="gradientGrid"></div>
+
+  <div class="bg-section-label">画像</div>
+  <div class="bg-picker-grid" id="imageGrid"></div>
+
+  <div class="bg-section-label">ファイルから追加</div>
+  <input type="file" id="bgFileInput" accept="image/*,video/*" style="display:none" multiple>
+  <button class="bg-upload-btn" onclick="document.getElementById('bgFileInput').click()">📁 画像・動画を選択</button>
+
+  <div class="bg-overlay-control">
+    <label>暗さ調整: <span id="overlayValue">50</span>%</label>
+    <input type="range" id="overlaySlider" min="0" max="90" value="50" oninput="updateOverlay(this.value)">
+  </div>
+</div>
+
+<script>
+// ============================================================
+// ★★★ ここを編集するだけでコンテンツを変更できます ★★★
+// ============================================================
+const CONFIG = {
+  // アカウント名
+  accountName: "@your_account",
+
+  // 背景テーマ: "dark-gold", "cosmic", "fire"
+  bgTheme: "dark-gold",
+
+  // 自動再生の間隔（ミリ秒）
+  slideInterval: 3000,
+
+  // タイトルスライド
+  title: {
+    hook: "※ 閲覧注意",
+    main: "金運最強",
+    highlight: "誕生月TOP5",
+    sub: "あなたの誕生月は何位？",
+    category: "2026年下半期"
+  },
+
+  // ランキングデータ（下位→上位の順で並べる）
+  rankings: [
+    {
+      rank: 5,
+      emoji: "💰",
+      label: "5月生まれ",
+      zodiac: "♉ 牡牛座",
+      description: "コツコツ貯める才能が\n開花する半年に"
+    },
+    {
+      rank: 4,
+      emoji: "💎",
+      label: "11月生まれ",
+      zodiac: "♏ 蠍座",
+      description: "眠っていた財運が\n一気に目覚める"
+    },
+    {
+      rank: 3,
+      emoji: "🔥",
+      label: "8月生まれ",
+      zodiac: "♌ 獅子座",
+      description: "大きな臨時収入の\n予感あり"
+    },
+    {
+      rank: 2,
+      emoji: "⭐",
+      label: "3月生まれ",
+      zodiac: "♓ 魚座",
+      description: "直感で選んだ投資が\n大当たりの暗示"
+    },
+    {
+      rank: 1,
+      emoji: "👑",
+      label: "9月生まれ",
+      zodiac: "♍ 乙女座",
+      description: "全誕生月の中で\n最も強力な金運の持ち主"
+    }
+  ],
+
+  // CTAスライド
+  cta: {
+    text: "あなたの誕生月は\n入ってましたか？",
+    button: "もっと詳しく占う ▶",
+    sub: "プロフィールのリンクから"
+  }
+};
+
+// ============================================================
+// 以下は変更不要（スライド生成・アニメーション制御）
+// ============================================================
+
+let currentSlide = 0;
+let autoPlayTimer = null;
+let isAutoPlaying = false;
+const bgClass = `bg-${CONFIG.bgTheme}`;
+
+// === 背景管理 ===
+let currentBgType = 'gradient'; // 'gradient' or 'media'
+let currentBgSrc = null;
+let overlayOpacity = 0.5;
+
+const BG_IMAGES = [
+  'aurora.jpg', 'candle.jpg', 'cherry-blossom.jpg', 'dark-forest.jpg',
+  'forest-mystical.jpg', 'fushimi-inari.jpg', 'lavender.jpg', 'moon-night.jpg',
+  'rose-petals.jpg', 'shrine-torii.jpg', 'starry-night.jpg', 'sunset-beach.jpg',
+  'sunset-palm.jpg'
+];
+
+const GRADIENTS = [
+  { name: 'Dark Gold', class: 'bg-dark-gold', css: 'linear-gradient(160deg, #0a0a1a 0%, #1a1030 40%, #2a1040 70%, #0a0a1a 100%)' },
+  { name: 'Cosmic', class: 'bg-cosmic', css: 'linear-gradient(180deg, #0d0221 0%, #1a0533 30%, #2d1b69 60%, #150630 100%)' },
+  { name: 'Fire', class: 'bg-fire', css: 'linear-gradient(180deg, #1a0000 0%, #3d0c02 30%, #5c1a0a 60%, #1a0000 100%)' }
+];
+
+function initBgPicker() {
+  const gradientGrid = document.getElementById('gradientGrid');
+  GRADIENTS.forEach((g, i) => {
+    const item = document.createElement('div');
+    item.className = 'bg-option-item';
+    item.innerHTML = `
+      <div class="bg-gradient-thumb ${i === 0 ? 'selected' : ''}" style="background:${g.css}" data-gradient="${i}" onclick="selectGradient(${i})"></div>
+      <div class="bg-option-label">${g.name}</div>
+    `;
+    gradientGrid.appendChild(item);
+  });
+
+  const imageGrid = document.getElementById('imageGrid');
+  BG_IMAGES.forEach((img) => {
+    const item = document.createElement('div');
+    item.className = 'bg-option-item';
+    const name = img.replace(/\.[^.]+$/, '').replace(/-/g, ' ');
+    item.innerHTML = `
+      <img class="bg-thumb" src="bg/${img}" data-src="bg/${img}" onclick="selectImageBg(this, 'bg/${img}')" loading="lazy">
+      <div class="bg-option-label">${name}</div>
+    `;
+    imageGrid.appendChild(item);
+  });
+
+  document.getElementById('bgFileInput').addEventListener('change', handleBgFileUpload);
+}
+
+function toggleBgPicker() {
+  document.getElementById('bgPickerPanel').classList.toggle('open');
+}
+
+function clearBgSelection() {
+  document.querySelectorAll('.bg-thumb, .bg-gradient-thumb').forEach(el => el.classList.remove('selected'));
+}
+
+function selectGradient(index) {
+  clearBgSelection();
+  document.querySelector(`.bg-gradient-thumb[data-gradient="${index}"]`).classList.add('selected');
+  currentBgType = 'gradient';
+
+  const slides = document.querySelectorAll('.slide');
+  slides.forEach(s => {
+    s.classList.remove('bg-media-active', 'bg-dark-gold', 'bg-cosmic', 'bg-fire');
+    s.classList.add(GRADIENTS[index].class);
+    const mediaLayer = s.querySelector('.bg-media-layer');
+    if (mediaLayer) mediaLayer.remove();
+  });
+}
+
+function selectImageBg(thumbEl, src) {
+  clearBgSelection();
+  thumbEl.classList.add('selected');
+  currentBgType = 'media';
+  currentBgSrc = src;
+  applyMediaBg(src, 'image');
+}
+
+function applyMediaBg(src, type) {
+  const slides = document.querySelectorAll('.slide');
+  slides.forEach(s => {
+    s.classList.add('bg-media-active');
+    let layer = s.querySelector('.bg-media-layer');
+    if (layer) layer.remove();
+
+    layer = document.createElement('div');
+    layer.className = 'bg-media-layer';
+
+    if (type === 'video') {
+      layer.innerHTML = `<video src="${src}" autoplay loop muted playsinline></video><div class="bg-media-overlay" style="opacity:${overlayOpacity}"></div>`;
+    } else {
+      layer.innerHTML = `<img src="${src}" alt="bg"><div class="bg-media-overlay" style="opacity:${overlayOpacity}"></div>`;
+    }
+
+    s.insertBefore(layer, s.firstChild);
+  });
+}
+
+function handleBgFileUpload(e) {
+  const files = e.target.files;
+  if (!files.length) return;
+
+  const imageGrid = document.getElementById('imageGrid');
+
+  Array.from(files).forEach(file => {
+    const url = URL.createObjectURL(file);
+    const isVideo = file.type.startsWith('video/');
+
+    const item = document.createElement('div');
+    item.className = 'bg-option-item';
+
+    if (isVideo) {
+      item.innerHTML = `
+        <video class="bg-thumb" src="${url}" muted data-src="${url}" data-type="video" onclick="selectVideoBg(this, '${url}')" style="pointer-events:auto"></video>
+        <div class="bg-option-label">${file.name}</div>
+      `;
+    } else {
+      item.innerHTML = `
+        <img class="bg-thumb" src="${url}" data-src="${url}" onclick="selectImageBg(this, '${url}')">
+        <div class="bg-option-label">${file.name}</div>
+      `;
+    }
+
+    imageGrid.appendChild(item);
+  });
+
+  e.target.value = '';
+}
+
+function selectVideoBg(thumbEl, src) {
+  clearBgSelection();
+  thumbEl.classList.add('selected');
+  currentBgType = 'media';
+  currentBgSrc = src;
+  applyMediaBg(src, 'video');
+}
+
+function updateOverlay(val) {
+  overlayOpacity = val / 100;
+  document.getElementById('overlayValue').textContent = val;
+  document.querySelectorAll('.bg-media-overlay').forEach(el => {
+    el.style.opacity = overlayOpacity;
+  });
+}
+
+function createParticles(count) {
+  let html = '<div class="particles">';
+  for (let i = 0; i < count; i++) {
+    const left = Math.random() * 100;
+    const top = Math.random() * 100;
+    const delay = Math.random() * 3;
+    const size = 2 + Math.random() * 4;
+    html += `<div class="particle" style="left:${left}%;top:${top}%;animation-delay:${delay}s;width:${size}px;height:${size}px;"></div>`;
+  }
+  html += '</div>';
+  return html;
+}
+
+function getRankClass(rank) {
+  if (rank === 1) return 'rank-gold';
+  if (rank === 2) return 'rank-silver';
+  if (rank === 3) return 'rank-bronze';
+  return 'rank-normal';
+}
+
+function buildSlides() {
+  const container = document.getElementById('slidesContainer');
+  let html = '';
+
+  // タイトルスライド
+  html += `
+    <div class="slide title-slide ${bgClass}" data-index="0">
+      ${createParticles(20)}
+      <div class="hook-text">${CONFIG.title.hook}</div>
+      <div class="main-title">
+        ${CONFIG.title.main}
+        <span class="highlight">${CONFIG.title.highlight}</span>
+      </div>
+      <div class="deco-line"></div>
+      <div class="sub-text">${CONFIG.title.sub}</div>
+      <div class="category-label">${CONFIG.title.category}</div>
+    </div>
+  `;
+
+  // ランキングスライド
+  CONFIG.rankings.forEach((item, i) => {
+    const isFirst = item.rank === 1;
+    const specialClass = isFirst ? 'rank-1-special' : '';
+    const particles = isFirst ? 30 : 15;
+
+    html += `
+      <div class="slide ranking-slide ${bgClass} ${specialClass}" data-index="${i + 1}">
+        ${createParticles(particles)}
+        ${isFirst ? '<div class="crown">👑</div>' : ''}
+        <div class="rank-label">━━ RANK ━━</div>
+        <div class="rank-number ${getRankClass(item.rank)}">${item.rank}</div>
+        <div class="rank-content">
+          <div class="emoji-icon">${item.emoji}</div>
+          <div class="birth-month">${item.label}</div>
+          <div class="zodiac">${item.zodiac}</div>
+          <div class="description">${item.description}</div>
+        </div>
+      </div>
+    `;
+  });
+
+  // CTAスライド
+  html += `
+    <div class="slide cta-slide ${bgClass}" data-index="${CONFIG.rankings.length + 1}">
+      ${createParticles(15)}
+      <div class="cta-text">${CONFIG.cta.text}</div>
+      <div class="deco-line"></div>
+      <div class="cta-button">${CONFIG.cta.button}</div>
+      <div class="cta-sub">${CONFIG.cta.sub}</div>
+    </div>
+  `;
+
+  container.innerHTML = html;
+
+  // アカウント名を反映
+  document.querySelector('.account-name').textContent = CONFIG.accountName;
+
+  // 最初のスライドをアクティブに
+  showSlide(0);
+}
+
+function getTotalSlides() {
+  return CONFIG.rankings.length + 2; // title + rankings + cta
+}
+
+function showSlide(index) {
+  const slides = document.querySelectorAll('.slide');
+  const total = getTotalSlides();
+
+  if (index < 0) index = 0;
+  if (index >= total) index = total - 1;
+
+  currentSlide = index;
+
+  slides.forEach((s, i) => {
+    s.classList.toggle('active', i === index);
+  });
+
+  document.getElementById('pageIndicator').textContent = `${index + 1} / ${total}`;
+  document.getElementById('progressBar').style.width = `${((index + 1) / total) * 100}%`;
+}
+
+function nextSlide() {
+  if (currentSlide < getTotalSlides() - 1) {
+    showSlide(currentSlide + 1);
+  } else if (isAutoPlaying) {
+    toggleAutoPlay();
+  }
+}
+
+function prevSlide() {
+  showSlide(currentSlide - 1);
+}
+
+function toggleAutoPlay() {
+  const btn = document.getElementById('autoPlayBtn');
+  if (isAutoPlaying) {
+    clearInterval(autoPlayTimer);
+    isAutoPlaying = false;
+    btn.textContent = '▶ 自動再生';
+    btn.classList.remove('active-btn');
+  } else {
+    isAutoPlaying = true;
+    btn.textContent = '⏸ 停止';
+    btn.classList.add('active-btn');
+    autoPlayTimer = setInterval(nextSlide, CONFIG.slideInterval);
+  }
+}
+
+function resetSlides() {
+  if (isAutoPlaying) toggleAutoPlay();
+  showSlide(0);
+}
+
+function toggleFullscreen() {
+  const frame = document.getElementById('reelFrame');
+  const controls = document.getElementById('controlPanel');
+  frame.classList.toggle('fullscreen');
+
+  if (frame.classList.contains('fullscreen')) {
+    controls.style.display = 'none';
+    // フルスクリーン時はキーボード操作のみ
+  } else {
+    controls.style.display = 'flex';
+  }
+}
+
+// キーボード操作
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); nextSlide(); }
+  if (e.key === 'ArrowLeft') { e.preventDefault(); prevSlide(); }
+  if (e.key === 'Enter') { e.preventDefault(); toggleAutoPlay(); }
+  if (e.key === 'f') { e.preventDefault(); toggleFullscreen(); }
+  if (e.key === 'r') { e.preventDefault(); resetSlides(); }
+  if (e.key === 'Escape') {
+    const frame = document.getElementById('reelFrame');
+    if (frame.classList.contains('fullscreen')) toggleFullscreen();
+  }
+});
+
+// 初期化
+buildSlides();
+initBgPicker();
+</script>
+
+</body>
+</html>

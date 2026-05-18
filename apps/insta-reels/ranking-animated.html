@@ -1,0 +1,1683 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ランキングリール - アニメーション型</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #111;
+    font-family: 'Yu Gothic', 'Hiragino Kaku Gothic ProN', 'Meiryo', sans-serif;
+    overflow-y: auto;
+  }
+
+  /* === フレーム === */
+  .reel-frame {
+    width: 675px;
+    height: 1200px;
+    position: relative;
+    overflow: hidden;
+    border-radius: 12px;
+    background: #000;
+    flex-shrink: 0;
+  }
+
+  .bg-image {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background-size: cover;
+    background-position: center;
+    filter: brightness(0.4);
+    z-index: 0;
+  }
+
+  /* === スライド === */
+  .slide {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 30px 24px;
+    z-index: 1;
+    opacity: 0;
+    pointer-events: none;
+    text-align: center;
+  }
+
+  .slide.active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  /* === テキストの黒縁取り共通 === */
+  .stroke-text {
+    text-shadow:
+      3px 3px 0 #000, -3px -3px 0 #000,
+      3px -3px 0 #000, -3px 3px 0 #000,
+      0 3px 0 #000, 0 -3px 0 #000,
+      3px 0 0 #000, -3px 0 0 #000,
+      0 0 20px rgba(0,0,0,0.8);
+  }
+
+  .title-text {
+    font-size: 52px;
+    font-weight: 900;
+    color: #ffd700;
+    line-height: 1.35;
+  }
+
+  .rank-number {
+    font-size: 160px;
+    font-weight: 900;
+    color: #ffd700;
+    line-height: 1;
+  }
+
+  .rank-label {
+    font-size: 20px;
+    color: #aaa;
+    letter-spacing: 5px;
+    margin-bottom: 10px;
+  }
+
+  .rank-main-text {
+    font-size: 48px;
+    font-weight: 900;
+    color: #fff;
+    margin-top: 16px;
+    line-height: 1.3;
+  }
+
+  .rank-desc-text {
+    font-size: 26px;
+    font-weight: 700;
+    color: #ffd700;
+    margin-top: 10px;
+  }
+
+  .cta-text-main {
+    font-size: 30px;
+    font-weight: 900;
+    color: #fff;
+    line-height: 1.5;
+  }
+
+  .cta-button {
+    display: inline-block;
+    margin-top: 24px;
+    padding: 18px 44px;
+    background: linear-gradient(135deg, #ffd700, #ff8c00);
+    color: #000;
+    font-size: 20px;
+    font-weight: 900;
+    border-radius: 30px;
+  }
+
+  /* === 上下フェード === */
+  .fade-top, .fade-bottom {
+    position: absolute; left: 0; width: 100%;
+    z-index: 5; pointer-events: none;
+  }
+  .fade-top { top: 0; height: 30px; background: linear-gradient(to bottom, rgba(0,0,0,0.4), transparent); }
+  .fade-bottom { bottom: 0; height: 60px; background: linear-gradient(to top, rgba(0,0,0,0.6), transparent); }
+
+  /* ============================================================
+     アニメーションパターン（20種類）
+     ============================================================ */
+
+  /* 1. フェードイン（基本） */
+  .anim-fade .anim-target {
+    opacity: 0;
+    animation: fadeIn 0.8s ease forwards;
+  }
+  @keyframes fadeIn { to { opacity: 1; } }
+
+  /* 2. 右からスライド（テロップ） */
+  .anim-slide-right .anim-target {
+    opacity: 0;
+    transform: translateX(100%);
+    animation: slideRight 0.6s ease-out forwards;
+  }
+  @keyframes slideRight { to { opacity: 1; transform: translateX(0); } }
+
+  /* 3. 左からスライド */
+  .anim-slide-left .anim-target {
+    opacity: 0;
+    transform: translateX(-100%);
+    animation: slideLeft 0.6s ease-out forwards;
+  }
+  @keyframes slideLeft { to { opacity: 1; transform: translateX(0); } }
+
+  /* 4. 下から浮き上がり */
+  .anim-float-up .anim-target {
+    opacity: 0;
+    transform: translateY(60px);
+    animation: floatUp 0.7s ease-out forwards;
+  }
+  @keyframes floatUp { to { opacity: 1; transform: translateY(0); } }
+
+  /* 5. じわっと浮き出る（ブラーから鮮明に） */
+  .anim-blur-in .anim-target {
+    opacity: 0;
+    filter: blur(20px);
+    animation: blurIn 0.8s ease-out forwards;
+  }
+  @keyframes blurIn { to { opacity: 1; filter: blur(0); } }
+
+  /* 6. 爆発ズームイン */
+  .anim-explode .anim-target {
+    opacity: 0;
+    transform: scale(3);
+    animation: explode 0.5s ease-out forwards;
+  }
+  @keyframes explode { to { opacity: 1; transform: scale(1); } }
+
+  /* 7. バウンスイン（かわいい系） */
+  .anim-bounce .anim-target {
+    opacity: 0;
+    transform: scale(0.3);
+    animation: bounceIn 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards;
+  }
+  @keyframes bounceIn { to { opacity: 1; transform: scale(1); } }
+
+  /* 8. 回転して登場 */
+  .anim-spin .anim-target {
+    opacity: 0;
+    transform: rotate(-180deg) scale(0.5);
+    animation: spinIn 0.7s ease-out forwards;
+  }
+  @keyframes spinIn { to { opacity: 1; transform: rotate(0) scale(1); } }
+
+  /* 9. キラキラ登場 */
+  .anim-sparkle .anim-target {
+    opacity: 0;
+    transform: scale(0.8);
+    animation: sparkleIn 0.8s ease-out forwards;
+  }
+  .anim-sparkle .sparkle-container {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: 10;
+  }
+  .anim-sparkle .spark {
+    position: absolute;
+    width: 8px; height: 8px;
+    background: #ffd700;
+    border-radius: 50%;
+    box-shadow: 0 0 10px #ffd700, 0 0 20px #ffd700;
+    animation: sparkBurst 1s ease-out forwards;
+  }
+  @keyframes sparkleIn {
+    0% { opacity: 0; transform: scale(0.8); }
+    50% { opacity: 1; transform: scale(1.05); }
+    100% { opacity: 1; transform: scale(1); }
+  }
+  @keyframes sparkBurst {
+    0% { opacity: 1; transform: translate(0, 0) scale(1); }
+    100% { opacity: 0; transform: translate(var(--sx), var(--sy)) scale(0); }
+  }
+
+  /* 10. タイプライター */
+  .anim-typewriter .anim-target {
+    overflow: hidden;
+    white-space: nowrap;
+    border-right: 3px solid #ffd700;
+    width: 0;
+    animation: typewriter 1.2s steps(20) forwards, blink 0.5s step-end infinite alternate;
+  }
+  @keyframes typewriter { to { width: 100%; } }
+  @keyframes blink { 50% { border-color: transparent; } }
+
+  /* 11. 弾むドロップ（上から落ちる） */
+  .anim-drop .anim-target {
+    opacity: 0;
+    transform: translateY(-200px);
+    animation: dropBounce 0.7s cubic-bezier(0.25, 0.46, 0.45, 1.2) forwards;
+  }
+  @keyframes dropBounce {
+    0% { opacity: 0; transform: translateY(-200px); }
+    60% { opacity: 1; transform: translateY(10px); }
+    80% { transform: translateY(-5px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+
+  /* 12. フリップ（カードめくり） */
+  .anim-flip .anim-target {
+    opacity: 0;
+    transform: perspective(600px) rotateY(90deg);
+    animation: flipIn 0.6s ease-out forwards;
+  }
+  @keyframes flipIn { to { opacity: 1; transform: perspective(600px) rotateY(0); } }
+
+  /* 13. ゴムみたいに伸びる（ぷにっと系） */
+  .anim-elastic .anim-target {
+    opacity: 0;
+    transform: scaleX(0);
+    animation: elasticIn 0.8s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards;
+  }
+  @keyframes elasticIn { to { opacity: 1; transform: scaleX(1); } }
+
+  /* 14. グリッチ（デジタルノイズ） */
+  .anim-glitch .anim-target {
+    animation: glitch 0.4s steps(2) forwards;
+  }
+  @keyframes glitch {
+    0% { opacity: 0; transform: translate(0); }
+    20% { opacity: 0.8; transform: translate(-5px, 3px); color: #ff0040; }
+    40% { opacity: 0.9; transform: translate(5px, -3px); color: #00ffff; }
+    60% { opacity: 0.95; transform: translate(-3px, 5px); }
+    80% { opacity: 1; transform: translate(3px, -5px); }
+    100% { opacity: 1; transform: translate(0); color: inherit; }
+  }
+
+  /* 15. 光の筋が通過 */
+  .anim-light-sweep .anim-target {
+    opacity: 0;
+    animation: lightFadeIn 0.5s ease forwards;
+  }
+  .anim-light-sweep .light-bar {
+    position: absolute;
+    top: 0; left: -100%;
+    width: 60%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,215,0,0.3), transparent);
+    animation: lightSweep 0.8s ease-out 0.2s forwards;
+    pointer-events: none;
+    z-index: 10;
+  }
+  @keyframes lightFadeIn { to { opacity: 1; } }
+  @keyframes lightSweep { to { left: 200%; } }
+
+  /* 16. パーティクルシャワー */
+  .anim-particles .anim-target {
+    opacity: 0;
+    animation: fadeIn 0.6s ease 0.3s forwards;
+  }
+
+  /* 17. 文字が1つずつ登場（ポップ） */
+  .anim-char-pop .anim-target span {
+    display: inline-block;
+    opacity: 0;
+    transform: translateY(20px) scale(0.5);
+    animation: charPop 0.4s ease forwards;
+  }
+  @keyframes charPop {
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  /* 18. 波打ち（ウェーブ） */
+  .anim-wave .anim-target span {
+    display: inline-block;
+    opacity: 0;
+    animation: waveIn 0.6s ease forwards;
+  }
+  @keyframes waveIn {
+    0% { opacity: 0; transform: translateY(30px) rotate(10deg); }
+    60% { transform: translateY(-5px) rotate(-2deg); }
+    100% { opacity: 1; transform: translateY(0) rotate(0); }
+  }
+
+  /* 19. ハート散らし（かわいい系） */
+  .anim-hearts .anim-target {
+    opacity: 0;
+    transform: scale(0.8);
+    animation: heartsIn 0.6s ease-out forwards;
+  }
+  .anim-hearts .heart {
+    position: absolute;
+    font-size: 24px;
+    animation: heartFloat 1.5s ease-out forwards;
+    pointer-events: none;
+    z-index: 10;
+  }
+  @keyframes heartsIn { to { opacity: 1; transform: scale(1); } }
+  @keyframes heartFloat {
+    0% { opacity: 1; transform: translate(0, 0) scale(1); }
+    100% { opacity: 0; transform: translate(var(--hx), var(--hy)) scale(0.3); }
+  }
+
+  /* 20. シャッター（上下から閉じて開く） */
+  .anim-shutter .shutter-top, .anim-shutter .shutter-bottom {
+    position: absolute; left: 0; width: 100%; height: 50%;
+    background: #000; z-index: 10;
+    animation: shutterOpen 0.6s ease-out 0.3s forwards;
+  }
+  .anim-shutter .shutter-top { top: 0; transform-origin: top; }
+  .anim-shutter .shutter-bottom { bottom: 0; transform-origin: bottom; }
+  @keyframes shutterOpen { to { transform: scaleY(0); } }
+  .anim-shutter .anim-target {
+    opacity: 0;
+    animation: fadeIn 0.3s ease 0.3s forwards;
+  }
+
+  /* ============================================================
+     フォントスタイル（8種類）
+     ============================================================ */
+
+  /* 1. ネオングロー（ピンク） */
+  .fontstyle-neon-pink .title-text,
+  .fontstyle-neon-pink .rank-main-text {
+    color: #ff00ff;
+    text-shadow: 0 0 10px #ff00ff, 0 0 20px #ff00ff, 0 0 40px #ff00ff, 0 0 80px #ff00ff, 3px 3px 0 #000, -2px -2px 0 #000;
+  }
+  .fontstyle-neon-pink .rank-number {
+    color: #ff69b4;
+    text-shadow: 0 0 10px #ff69b4, 0 0 30px #ff69b4, 0 0 60px #ff69b4, 3px 3px 0 #000;
+  }
+  .fontstyle-neon-pink .rank-desc-text { color: #ffb6c1; text-shadow: 0 0 10px #ff69b4, 3px 3px 0 #000; }
+
+  /* 2. ネオングロー（ブルー） */
+  .fontstyle-neon-blue .title-text,
+  .fontstyle-neon-blue .rank-main-text {
+    color: #00ffff;
+    text-shadow: 0 0 10px #00ffff, 0 0 20px #00ffff, 0 0 40px #0088ff, 0 0 80px #0088ff, 3px 3px 0 #000, -2px -2px 0 #000;
+  }
+  .fontstyle-neon-blue .rank-number {
+    color: #00d4ff;
+    text-shadow: 0 0 10px #00d4ff, 0 0 30px #0088ff, 0 0 60px #0044ff, 3px 3px 0 #000;
+  }
+  .fontstyle-neon-blue .rank-desc-text { color: #88ddff; text-shadow: 0 0 10px #0088ff, 3px 3px 0 #000; }
+
+  /* 3. ネオングロー（グリーン） */
+  .fontstyle-neon-green .title-text,
+  .fontstyle-neon-green .rank-main-text {
+    color: #00ff88;
+    text-shadow: 0 0 10px #00ff88, 0 0 20px #00ff88, 0 0 40px #00cc66, 0 0 80px #00cc66, 3px 3px 0 #000, -2px -2px 0 #000;
+  }
+  .fontstyle-neon-green .rank-number {
+    color: #00ff66;
+    text-shadow: 0 0 10px #00ff66, 0 0 30px #00cc44, 0 0 60px #009933, 3px 3px 0 #000;
+  }
+  .fontstyle-neon-green .rank-desc-text { color: #88ffaa; text-shadow: 0 0 10px #00cc66, 3px 3px 0 #000; }
+
+  /* 4. メタリックゴールド（グラデーション金属） */
+  .fontstyle-metal-gold .stroke-text { text-shadow: none; }
+  .fontstyle-metal-gold .title-text,
+  .fontstyle-metal-gold .rank-main-text {
+    background: linear-gradient(180deg, #ffd700 0%, #ffaa00 30%, #fff8dc 50%, #daa520 70%, #b8860b 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(3px 3px 0 #000) drop-shadow(-2px -2px 0 #000);
+  }
+  .fontstyle-metal-gold .rank-number {
+    background: linear-gradient(180deg, #fff8dc 0%, #ffd700 25%, #ff8c00 50%, #ffd700 75%, #fff8dc 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(3px 3px 0 #000) drop-shadow(0 0 20px rgba(255,215,0,0.5));
+  }
+  .fontstyle-metal-gold .rank-desc-text {
+    background: linear-gradient(180deg, #ffd700, #ffaa00);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(2px 2px 0 #000);
+  }
+  .fontstyle-metal-gold .rank-label {
+    color: #daa520;
+    text-shadow: 0 0 10px rgba(255,215,0,0.4), 2px 2px 0 #000;
+  }
+
+  /* 5. メタリックシルバー */
+  .fontstyle-metal-silver .stroke-text { text-shadow: none; }
+  .fontstyle-metal-silver .title-text,
+  .fontstyle-metal-silver .rank-main-text {
+    background: linear-gradient(180deg, #ffffff 0%, #c0c0c0 30%, #ffffff 50%, #a0a0a0 70%, #808080 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(3px 3px 0 #000) drop-shadow(-2px -2px 0 #000);
+  }
+  .fontstyle-metal-silver .rank-number {
+    background: linear-gradient(180deg, #ffffff 0%, #e0e0e0 25%, #a0a0a0 50%, #e0e0e0 75%, #ffffff 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(3px 3px 0 #000) drop-shadow(0 0 20px rgba(200,200,200,0.4));
+  }
+  .fontstyle-metal-silver .rank-desc-text {
+    background: linear-gradient(180deg, #e0e0e0, #808080);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(2px 2px 0 #000);
+  }
+  .fontstyle-metal-silver .rank-label {
+    color: #c0c0c0;
+    text-shadow: 0 0 10px rgba(255,255,255,0.3), 2px 2px 0 #000;
+  }
+
+  /* 6. 炎グロー */
+  .fontstyle-fire-glow .stroke-text { text-shadow: none; }
+  .fontstyle-fire-glow .title-text,
+  .fontstyle-fire-glow .rank-main-text {
+    background: linear-gradient(180deg, #ffff00 0%, #ff8800 40%, #ff4400 70%, #cc0000 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(3px 3px 0 #000) drop-shadow(0 0 15px rgba(255,100,0,0.7));
+  }
+  .fontstyle-fire-glow .rank-number {
+    background: linear-gradient(180deg, #ffff44 0%, #ff8800 50%, #ff2200 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(3px 3px 0 #000) drop-shadow(0 0 30px rgba(255,68,0,0.8));
+  }
+  .fontstyle-fire-glow .rank-desc-text {
+    background: linear-gradient(180deg, #ffff00, #ff4400);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(2px 2px 0 #000) drop-shadow(0 0 10px rgba(255,68,0,0.5));
+  }
+  .fontstyle-fire-glow .rank-label {
+    color: #ff6600;
+    text-shadow: 0 0 10px rgba(255,68,0,0.5), 2px 2px 0 #000;
+  }
+
+  /* 7. レインボーグラデーション */
+  .fontstyle-rainbow .stroke-text { text-shadow: none; }
+  .fontstyle-rainbow .title-text,
+  .fontstyle-rainbow .rank-main-text {
+    background: linear-gradient(90deg, #ff0000, #ff8800, #ffff00, #00ff00, #00ffff, #0088ff, #ff00ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(3px 3px 0 #000) drop-shadow(-2px -2px 0 #000);
+  }
+  .fontstyle-rainbow .rank-number {
+    background: linear-gradient(90deg, #ff0000, #ff8800, #ffff00, #00ff00, #00ffff, #8800ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(3px 3px 0 #000) drop-shadow(0 0 20px rgba(255,255,255,0.3));
+  }
+  .fontstyle-rainbow .rank-desc-text {
+    background: linear-gradient(90deg, #ff8800, #ffff00, #00ff88);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(2px 2px 0 #000);
+  }
+  .fontstyle-rainbow .rank-label {
+    background: linear-gradient(90deg, #ff0000, #ffff00, #00ffff, #ff00ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(2px 2px 0 #000);
+  }
+
+  /* 8. ホワイトグロー（光る白文字） */
+  .fontstyle-white-glow .title-text,
+  .fontstyle-white-glow .rank-main-text {
+    color: #ffffff;
+    text-shadow: 0 0 10px #fff, 0 0 20px #fff, 0 0 40px rgba(255,255,255,0.5), 3px 3px 0 #000, -2px -2px 0 #000;
+  }
+  .fontstyle-white-glow .rank-number {
+    color: #ffffff;
+    text-shadow: 0 0 15px #fff, 0 0 30px #fff, 0 0 60px rgba(255,255,255,0.4), 3px 3px 0 #000;
+  }
+  .fontstyle-white-glow .rank-desc-text { color: #ffffff; text-shadow: 0 0 10px rgba(255,255,255,0.6), 3px 3px 0 #000; }
+
+  /* === 順位の色パレット === */
+  .rank-1-color .rank-number { color: #ffd700; }
+  .rank-2-color .rank-number { color: #c0c0c0; }
+  .rank-3-color .rank-number { color: #cd7f32; }
+
+  /* === かわいいテーマ === */
+  .theme-cute .rank-number {
+    color: #ff69b4;
+    text-shadow: 3px 3px 0 #c71585, -2px -2px 0 #c71585, 2px -2px 0 #c71585, -2px 2px 0 #c71585, 0 0 30px rgba(255,105,180,0.5);
+  }
+  .theme-cute .rank-main-text { color: #fff0f5; }
+  .theme-cute .rank-desc-text { color: #ff69b4; }
+  .theme-cute .title-text { color: #ff69b4; }
+  .theme-cute .rank-label { color: #ff69b4; letter-spacing: 2px; }
+
+  /* === クールテーマ === */
+  .theme-cool .rank-number {
+    color: #00d4ff;
+    text-shadow: 3px 3px 0 #004466, -2px -2px 0 #004466, 2px -2px 0 #004466, -2px 2px 0 #004466, 0 0 30px rgba(0,212,255,0.5);
+  }
+  .theme-cool .rank-desc-text { color: #00d4ff; }
+  .theme-cool .title-text { color: #00d4ff; }
+
+  /* === 炎テーマ === */
+  .theme-fire .rank-number {
+    color: #ff4500;
+    text-shadow: 3px 3px 0 #8b0000, -2px -2px 0 #8b0000, 2px -2px 0 #8b0000, -2px 2px 0 #8b0000, 0 0 30px rgba(255,69,0,0.5);
+  }
+  .theme-fire .rank-desc-text { color: #ff6347; }
+  .theme-fire .title-text { color: #ff4500; }
+
+  /* ============================================================
+     リストモード
+     ============================================================ */
+  .list-container {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 1;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    padding: 12px 16px;
+  }
+
+  .list-title {
+    text-align: center;
+    font-size: 28px;
+    font-weight: 900;
+    color: #ffd700;
+    margin-bottom: 8px;
+    line-height: 1.2;
+  }
+
+  .list-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 3px 10px;
+  }
+
+  .list-rank {
+    font-size: 26px;
+    font-weight: 900;
+    color: #ffd700;
+    min-width: 45px;
+    text-align: center;
+  }
+
+  .list-rank-1 { color: #ffd700; }
+  .list-rank-2 { color: #c0c0c0; }
+  .list-rank-3 { color: #cd7f32; }
+
+  .list-text {
+    font-size: 18px;
+    font-weight: 900;
+    color: #fff;
+  }
+
+  .list-desc {
+    font-size: 11px;
+    color: #ffd700;
+    opacity: 0.8;
+  }
+
+  .list-cta {
+    text-align: center;
+    margin-top: 8px;
+  }
+
+  /* リストアニメーション（JS制御のみ） */
+  .list-hidden { opacity: 0 !important; }
+  @keyframes listDrop { from { opacity:0; transform:translateY(-60px); } to { opacity:1; transform:translateY(0); } }
+  @keyframes listRise { from { opacity:0; transform:translateY(60px); } to { opacity:1; transform:translateY(0); } }
+  @keyframes listSlideR { from { opacity:0; transform:translateX(100%); } to { opacity:1; transform:translateX(0); } }
+  @keyframes listSlideL { from { opacity:0; transform:translateX(-100%); } to { opacity:1; transform:translateX(0); } }
+  @keyframes listFade { from { opacity:0; } to { opacity:1; } }
+  @keyframes listScale { from { opacity:0; transform:scale(0); } to { opacity:1; transform:scale(1); } }
+
+  /* フォントスタイルをリストにも適用 */
+  .fontstyle-neon-pink .list-title, .fontstyle-neon-pink .list-text { color: #ff00ff; text-shadow: 0 0 10px #ff00ff, 0 0 20px #ff00ff, 0 0 40px #ff00ff, 3px 3px 0 #000; }
+  .fontstyle-neon-pink .list-rank { color: #ff69b4; text-shadow: 0 0 10px #ff69b4, 0 0 30px #ff69b4, 3px 3px 0 #000; }
+  .fontstyle-neon-blue .list-title, .fontstyle-neon-blue .list-text { color: #00ffff; text-shadow: 0 0 10px #00ffff, 0 0 20px #00ffff, 0 0 40px #0088ff, 3px 3px 0 #000; }
+  .fontstyle-neon-blue .list-rank { color: #00d4ff; text-shadow: 0 0 10px #00d4ff, 0 0 30px #0088ff, 3px 3px 0 #000; }
+  .fontstyle-neon-green .list-title, .fontstyle-neon-green .list-text { color: #00ff88; text-shadow: 0 0 10px #00ff88, 0 0 20px #00ff88, 3px 3px 0 #000; }
+  .fontstyle-neon-green .list-rank { color: #00ff66; text-shadow: 0 0 10px #00ff66, 0 0 30px #00cc44, 3px 3px 0 #000; }
+  .fontstyle-metal-gold .list-container .stroke-text, .fontstyle-metal-silver .list-container .stroke-text, .fontstyle-fire-glow .list-container .stroke-text, .fontstyle-rainbow .list-container .stroke-text { text-shadow: none; }
+  .fontstyle-metal-gold .list-title, .fontstyle-metal-gold .list-text { background: linear-gradient(180deg, #ffd700, #ff8c00); -webkit-background-clip: text; -webkit-text-fill-color: transparent; filter: drop-shadow(3px 3px 0 #000); }
+  .fontstyle-metal-gold .list-rank { background: linear-gradient(180deg, #fff8dc, #ffd700, #ff8c00); -webkit-background-clip: text; -webkit-text-fill-color: transparent; filter: drop-shadow(3px 3px 0 #000); }
+  .fontstyle-metal-silver .list-title, .fontstyle-metal-silver .list-text { background: linear-gradient(180deg, #fff, #c0c0c0, #808080); -webkit-background-clip: text; -webkit-text-fill-color: transparent; filter: drop-shadow(3px 3px 0 #000); }
+  .fontstyle-metal-silver .list-rank { background: linear-gradient(180deg, #fff, #a0a0a0); -webkit-background-clip: text; -webkit-text-fill-color: transparent; filter: drop-shadow(3px 3px 0 #000); }
+  .fontstyle-fire-glow .list-title, .fontstyle-fire-glow .list-text { background: linear-gradient(180deg, #ffff00, #ff4400); -webkit-background-clip: text; -webkit-text-fill-color: transparent; filter: drop-shadow(3px 3px 0 #000) drop-shadow(0 0 15px rgba(255,100,0,0.7)); }
+  .fontstyle-fire-glow .list-rank { background: linear-gradient(180deg, #ffff44, #ff2200); -webkit-background-clip: text; -webkit-text-fill-color: transparent; filter: drop-shadow(3px 3px 0 #000); }
+  .fontstyle-rainbow .list-title, .fontstyle-rainbow .list-text { background: linear-gradient(90deg, #ff0000, #ff8800, #ffff00, #00ff00, #00ffff, #0088ff, #ff00ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; filter: drop-shadow(3px 3px 0 #000); }
+  .fontstyle-rainbow .list-rank { background: linear-gradient(90deg, #ff0000, #ffff00, #00ff00, #00ffff, #8800ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; filter: drop-shadow(3px 3px 0 #000); }
+  .fontstyle-white-glow .list-title, .fontstyle-white-glow .list-text { color: #fff; text-shadow: 0 0 10px #fff, 0 0 20px #fff, 3px 3px 0 #000; }
+  .fontstyle-white-glow .list-rank { color: #fff; text-shadow: 0 0 15px #fff, 0 0 30px #fff, 3px 3px 0 #000; }
+
+  /* ============================================================
+     コントロールパネル
+     ============================================================ */
+  .panel {
+    flex: 1;
+    background: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 12px;
+    padding: 12px 16px;
+    color: #ccc;
+    font-size: 12px;
+    flex-shrink: 1;
+    max-height: calc(100vh - 32px);
+    overflow-y: auto;
+  }
+
+  .panel h3 {
+    color: #ffd700;
+    font-size: 13px;
+    margin: 10px 0 5px;
+    padding-bottom: 3px;
+    border-bottom: 1px solid #333;
+  }
+
+  .panel h3:first-child { margin-top: 0; }
+
+  .anim-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 5px;
+  }
+
+  .anim-btn {
+    padding: 6px 4px;
+    background: #2a2a2a;
+    border: 1px solid #444;
+    border-radius: 4px;
+    color: #ccc;
+    font-size: 12px;
+    cursor: pointer;
+    text-align: center;
+    font-family: inherit;
+  }
+
+  .anim-btn:hover { background: #3a3a3a; }
+  .anim-btn.selected { background: #ffd700; color: #000; font-weight: 700; border-color: #ffd700; }
+
+  .theme-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 5px;
+  }
+
+  .theme-btn {
+    padding: 6px 8px;
+    background: #2a2a2a;
+    border: 1px solid #444;
+    border-radius: 4px;
+    color: #ccc;
+    font-size: 13px;
+    cursor: pointer;
+    font-family: inherit;
+  }
+
+  .theme-btn:hover { background: #3a3a3a; }
+  .theme-btn.selected { background: #ffd700; color: #000; font-weight: 700; }
+
+  .bg-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 5px;
+  }
+
+  .bg-btn {
+    padding: 6px 4px;
+    background: #2a2a2a;
+    border: 1px solid #444;
+    border-radius: 4px;
+    color: #ccc;
+    font-size: 12px;
+    cursor: pointer;
+    font-family: inherit;
+  }
+
+  .bg-btn:hover { background: #3a3a3a; }
+  .bg-btn.selected { background: #ffd700; color: #000; font-weight: 700; }
+
+  .ctrl-row {
+    display: flex;
+    gap: 4px;
+    margin: 4px 0;
+  }
+
+  .ctrl-btn {
+    flex: 1;
+    padding: 5px;
+    background: #333;
+    color: #fff;
+    border: 1px solid #555;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 11px;
+    font-family: inherit;
+    text-align: center;
+  }
+
+  .ctrl-btn:hover { background: #555; }
+  .ctrl-btn.primary { background: #ffd700; color: #000; font-weight: 700; }
+
+  .slider-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 3px 0;
+  }
+
+  .slider-row label { min-width: 60px; font-size: 11px; }
+  .slider-row input[type="range"] { flex: 1; }
+  .slider-row .val { min-width: 35px; text-align: right; color: #ffd700; font-weight: 700; }
+
+  /* === フルスクリーン === */
+  .reel-frame.fullscreen {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw; height: 100vh;
+    border-radius: 0;
+    z-index: 999;
+  }
+
+  .main-area {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: flex-start;
+    gap: 24px;
+    padding: 16px 16px 16px 24px;
+    min-height: 100vh;
+  }
+</style>
+</head>
+<body>
+
+<div class="main-area">
+  <div class="reel-frame" id="reelFrame">
+    <div class="bg-image" id="bgImage"></div>
+    <div id="slidesContainer"></div>
+    <div class="fade-top"></div>
+    <div class="fade-bottom"></div>
+  </div>
+
+  <!-- コントロールパネル（リールの下） -->
+  <div class="panel" id="panel">
+
+  <h3>📊 ランキング選択</h3>
+  <div class="ctrl-row">
+    <button class="ctrl-btn" id="rc1" onclick="setRankingCount(1)" style="background:#ffd700;color:#000;font-weight:700">1個</button>
+    <button class="ctrl-btn" id="rc2" onclick="setRankingCount(2)">2個</button>
+    <button class="ctrl-btn" id="rc3" onclick="setRankingCount(3)">3個</button>
+    <button class="ctrl-btn" id="rc4" onclick="setRankingCount(4)">4個</button>
+    <button class="ctrl-btn" id="rc5" onclick="setRankingCount(5)">5個</button>
+  </div>
+  <div id="rankingList" style="margin:4px 0;"></div>
+  <h3>🔢 表示順位数</h3>
+  <div class="ctrl-row">
+    <button class="ctrl-btn" id="rl6" onclick="setRankLimit(6)" style="background:#ffd700;color:#000;font-weight:700">6位</button>
+    <button class="ctrl-btn" id="rl9" onclick="setRankLimit(9)">9位</button>
+    <button class="ctrl-btn" id="rl10" onclick="setRankLimit(10)">10位</button>
+    <button class="ctrl-btn" id="rl15" onclick="setRankLimit(15)">15位</button>
+    <button class="ctrl-btn" id="rl20" onclick="setRankLimit(20)">20位</button>
+  </div>
+
+  <h3>▶ 再生コントロール</h3>
+  <div class="ctrl-row">
+    <button class="ctrl-btn primary" onclick="playAll()">▶ 自動再生</button>
+    <button class="ctrl-btn" onclick="stopPlay()">⏸ 停止</button>
+  </div>
+  <div class="ctrl-row">
+    <button class="ctrl-btn" onclick="prevSlide()">◀ 前</button>
+    <button class="ctrl-btn" onclick="nextSlide()">次 ▶</button>
+    <button class="ctrl-btn" onclick="resetAll()">↺</button>
+  </div>
+  <div class="slider-row">
+    <label>表示間隔</label>
+    <input type="range" id="intervalSlider" min="1" max="5" value="2.5" step="0.5">
+    <span class="val" id="intervalVal">2.5秒</span>
+  </div>
+
+  <h3>📋 表示設定</h3>
+  <div class="ctrl-row">
+    <button class="ctrl-btn" id="btnModeSlide" onclick="setDisplayMode('slide')" style="background:#ffd700;color:#000;font-weight:700">1つずつ</button>
+    <button class="ctrl-btn" id="btnModeList" onclick="setDisplayMode('list')">リスト一覧</button>
+  </div>
+  <div class="ctrl-row">
+    <button class="ctrl-btn" id="btnOrderAsc" onclick="setOrder('asc')" style="background:#ffd700;color:#000;font-weight:700">1位→下位</button>
+    <button class="ctrl-btn" id="btnOrderDesc" onclick="setOrder('desc')">下位→1位</button>
+  </div>
+
+  <h3 id="animHeader">🎬 アニメーション（20種）</h3>
+  <div class="anim-grid" id="animGrid"></div>
+
+  <div id="listAnimSection" style="display:none;">
+    <h3>🎬 リストアニメーション</h3>
+    <div class="anim-grid" id="listAnimGrid"></div>
+  </div>
+
+  <h3>🎨 カラーテーマ</h3>
+  <div class="theme-grid" id="themeGrid"></div>
+
+  <h3>✨ フォントスタイル（9種）</h3>
+  <div class="anim-grid" id="fontStyleGrid"></div>
+
+  <h3>🎯 個別スタイル設定</h3>
+  <p style="color:#888;font-size:10px;margin-bottom:6px;">上の全体設定に加え、特定スライドだけ別テーマ・フォントに変更できます</p>
+  <div style="display:flex;flex-direction:column;gap:6px;">
+    <div style="display:flex;gap:6px;align-items:center;">
+      <label style="min-width:50px;font-size:11px;font-weight:700;color:#ffd700;">タイトル</label>
+      <select id="titleTheme" onchange="onPerElementChange()" style="flex:1;font-size:11px;padding:2px 4px;background:#333;color:#fff;border:1px solid #555;border-radius:4px;"></select>
+      <select id="titleFontStyle" onchange="onPerElementChange()" style="flex:1;font-size:11px;padding:2px 4px;background:#333;color:#fff;border:1px solid #555;border-radius:4px;"></select>
+    </div>
+    <div style="display:flex;gap:6px;align-items:center;">
+      <label style="min-width:50px;font-size:11px;font-weight:700;color:#ff4444;">1位専用</label>
+      <select id="rank1Theme" onchange="onPerElementChange()" style="flex:1;font-size:11px;padding:2px 4px;background:#333;color:#fff;border:1px solid #555;border-radius:4px;"></select>
+      <select id="rank1FontStyle" onchange="onPerElementChange()" style="flex:1;font-size:11px;padding:2px 4px;background:#333;color:#fff;border:1px solid #555;border-radius:4px;"></select>
+    </div>
+    <div style="display:flex;gap:6px;align-items:center;">
+      <label style="min-width:50px;font-size:11px;font-weight:700;color:#888;">最下位</label>
+      <select id="lastTheme" onchange="onPerElementChange()" style="flex:1;font-size:11px;padding:2px 4px;background:#333;color:#fff;border:1px solid #555;border-radius:4px;"></select>
+      <select id="lastFontStyle" onchange="onPerElementChange()" style="flex:1;font-size:11px;padding:2px 4px;background:#333;color:#fff;border:1px solid #555;border-radius:4px;"></select>
+    </div>
+  </div>
+
+  <h3>🖼️ 背景画像</h3>
+  <div class="bg-grid" id="bgGrid"></div>
+  <div class="slider-row" style="margin-top:8px;">
+    <label>明るさ</label>
+    <input type="range" id="brightSlider" min="10" max="70" value="40" step="5">
+    <span class="val" id="brightVal">40%</span>
+  </div>
+
+  <h3>⛶ 録画</h3>
+  <div class="ctrl-row">
+    <button class="ctrl-btn" onclick="toggleFullscreen()">全画面ON/OFF</button>
+  </div>
+  <p style="color:#888;font-size:10px;margin-top:4px;">全画面→Win+Gで録画→スペースで再生</p>
+</div>
+</div><!-- /main-area -->
+
+<script>
+// ============================================================
+// ★★★ コンテンツ設定 ★★★
+// ============================================================
+// ★ ランキングデータ（5セット・各20位）
+const RANKING_DATA = [
+  {
+    title: "本当は親から\n一番愛されている人",
+    cta: { text: "あなたは\n入ってましたか？", button: "もっと詳しく占う ▶" },
+    rankings: [
+      { rank: 1,  text: "17日生まれ", desc: "愛情を一身に受ける星" },
+      { rank: 2,  text: "25日生まれ", desc: "守られる運命の人" },
+      { rank: 3,  text: "9日生まれ",  desc: "情熱で信頼を得る" },
+      { rank: 4,  text: "15日生まれ", desc: "素直さが魅力に" },
+      { rank: 5,  text: "3日生まれ",  desc: "安心感を与える" },
+      { rank: 6,  text: "30日生まれ", desc: "家族に癒しを与える" },
+      { rank: 7,  text: "21日生まれ", desc: "笑顔で家庭を照らす" },
+      { rank: 8,  text: "12日生まれ", desc: "甘え上手な愛され体質" },
+      { rank: 9,  text: "7日生まれ",  desc: "黙っていても伝わる絆" },
+      { rank: 10, text: "28日生まれ", desc: "感謝を言葉にできる人" },
+      { rank: 11, text: "1日生まれ",  desc: "長男長女の責任感" },
+      { rank: 12, text: "19日生まれ", desc: "困った時に頼られる存在" },
+      { rank: 13, text: "5日生まれ",  desc: "親の期待に応え続ける" },
+      { rank: 14, text: "23日生まれ", desc: "家族思いの行動派" },
+      { rank: 15, text: "11日生まれ", desc: "記念日を忘れない" },
+      { rank: 16, text: "26日生まれ", desc: "優しさが空回りしがち" },
+      { rank: 17, text: "8日生まれ",  desc: "不器用だけど一途" },
+      { rank: 18, text: "14日生まれ", desc: "照れ屋の愛情表現" },
+      { rank: 19, text: "2日生まれ",  desc: "心配性ゆえの深い愛" },
+      { rank: 20, text: "31日生まれ", desc: "自由すぎて心配される" },
+    ]
+  },
+  {
+    title: "前世で一番\n強い力を持っていた人",
+    cta: { text: "あなたの前世は？", button: "前世を詳しく診断 ▶" },
+    rankings: [
+      { rank: 1,  text: "7日生まれ",  desc: "国を動かす王の魂" },
+      { rank: 2,  text: "22日生まれ", desc: "神に仕えた巫女の力" },
+      { rank: 3,  text: "11日生まれ", desc: "戦場を制した将軍" },
+      { rank: 4,  text: "29日生まれ", desc: "民を癒した治療師" },
+      { rank: 5,  text: "4日生まれ",  desc: "真実を見抜く賢者" },
+      { rank: 6,  text: "18日生まれ", desc: "異国を渡った冒険者" },
+      { rank: 7,  text: "1日生まれ",  desc: "革命を起こした指導者" },
+      { rank: 8,  text: "15日生まれ", desc: "芸術で時代を変えた天才" },
+      { rank: 9,  text: "27日生まれ", desc: "星を読む占星術師" },
+      { rank: 10, text: "9日生まれ",  desc: "伝説の鍛冶師" },
+      { rank: 11, text: "13日生まれ", desc: "闇を祓う退魔師" },
+      { rank: 12, text: "31日生まれ", desc: "海を制した海賊王" },
+      { rank: 13, text: "6日生まれ",  desc: "薬草の知識を持つ魔女" },
+      { rank: 14, text: "20日生まれ", desc: "民に慕われた村長" },
+      { rank: 15, text: "3日生まれ",  desc: "交渉術に長けた商人" },
+      { rank: 16, text: "24日生まれ", desc: "秘密を守る忍び" },
+      { rank: 17, text: "16日生まれ", desc: "言葉で人を動かす詩人" },
+      { rank: 18, text: "10日生まれ", desc: "動物と話せる牧人" },
+      { rank: 19, text: "8日生まれ",  desc: "石橋を叩いて渡る官吏" },
+      { rank: 20, text: "26日生まれ", desc: "前世の記憶が薄い凡人" },
+    ]
+  },
+  {
+    title: "実は周りから\n一番嫉妬されている人",
+    cta: { text: "あなたは\n狙われてる？", button: "嫉妬度を診断 ▶" },
+    rankings: [
+      { rank: 1,  text: "1日生まれ",  desc: "存在感が圧倒的すぎる" },
+      { rank: 2,  text: "24日生まれ", desc: "何をしても成功に見える" },
+      { rank: 3,  text: "12日生まれ", desc: "異性にモテすぎる" },
+      { rank: 4,  text: "8日生まれ",  desc: "才能が隠しきれない" },
+      { rank: 5,  text: "20日生まれ", desc: "幸せオーラが眩しい" },
+      { rank: 6,  text: "5日生まれ",  desc: "努力なしで結果を出す" },
+      { rank: 7,  text: "17日生まれ", desc: "上司に可愛がられる" },
+      { rank: 8,  text: "29日生まれ", desc: "SNSが常にキラキラ" },
+      { rank: 9,  text: "3日生まれ",  desc: "友達が多すぎる" },
+      { rank: 10, text: "14日生まれ", desc: "恋愛が常に順調" },
+      { rank: 11, text: "22日生まれ", desc: "高収入を隠せない" },
+      { rank: 12, text: "10日生まれ", desc: "肌がきれいすぎる" },
+      { rank: 13, text: "27日生まれ", desc: "天然で得してる" },
+      { rank: 14, text: "6日生まれ",  desc: "何でも器用にこなす" },
+      { rank: 15, text: "19日生まれ", desc: "スタイルが良すぎる" },
+      { rank: 16, text: "31日生まれ", desc: "自由に生きてて羨ましい" },
+      { rank: 17, text: "15日生まれ", desc: "実家が裕福そう" },
+      { rank: 18, text: "9日生まれ",  desc: "褒められ慣れてる" },
+      { rank: 19, text: "25日生まれ", desc: "悩みがなさそうに見える" },
+      { rank: 20, text: "2日生まれ",  desc: "地味に見えて実は充実" },
+    ]
+  },
+  {
+    title: "2026年後半に\n奇跡が起きる人",
+    cta: { text: "あなたに奇跡は\n訪れる？", button: "運命を占う ▶" },
+    rankings: [
+      { rank: 1,  text: "13日生まれ", desc: "人生が激変する転機" },
+      { rank: 2,  text: "27日生まれ", desc: "運命の出会いが待つ" },
+      { rank: 3,  text: "6日生まれ",  desc: "金運が爆発的に上昇" },
+      { rank: 4,  text: "19日生まれ", desc: "長年の夢が叶う" },
+      { rank: 5,  text: "2日生まれ",  desc: "隠れた才能が開花" },
+      { rank: 6,  text: "31日生まれ", desc: "予想外の幸運が到来" },
+      { rank: 7,  text: "8日生まれ",  desc: "転職が大当たり" },
+      { rank: 8,  text: "23日生まれ", desc: "復縁・再会の奇跡" },
+      { rank: 9,  text: "15日生まれ", desc: "宝くじ運が急上昇" },
+      { rank: 10, text: "4日生まれ",  desc: "引っ越しで運気一変" },
+      { rank: 11, text: "17日生まれ", desc: "SNSがバズって人生変わる" },
+      { rank: 12, text: "11日生まれ", desc: "健康の悩みが解消" },
+      { rank: 13, text: "29日生まれ", desc: "思わぬ遺産や臨時収入" },
+      { rank: 14, text: "7日生まれ",  desc: "海外でチャンスを掴む" },
+      { rank: 15, text: "20日生まれ", desc: "資格取得で道が開ける" },
+      { rank: 16, text: "1日生まれ",  desc: "新しい趣味が副業に" },
+      { rank: 17, text: "26日生まれ", desc: "人間関係が一新される" },
+      { rank: 18, text: "14日生まれ", desc: "小さな幸運が積み重なる" },
+      { rank: 19, text: "10日生まれ", desc: "地道な努力が実る年" },
+      { rank: 20, text: "22日生まれ", desc: "来年に持ち越しの暗示" },
+    ]
+  },
+  {
+    title: "性格が良すぎて\n神様に好かれる人",
+    cta: { text: "あなたは\n選ばれた？", button: "神様診断する ▶" },
+    rankings: [
+      { rank: 1,  text: "10日生まれ", desc: "魂が最も清らかな人" },
+      { rank: 2,  text: "23日生まれ", desc: "無意識に人を救っている" },
+      { rank: 3,  text: "14日生まれ", desc: "見返りを求めない優しさ" },
+      { rank: 4,  text: "28日生まれ", desc: "誰にでも平等に接する" },
+      { rank: 5,  text: "16日生まれ", desc: "感謝を忘れない心" },
+      { rank: 6,  text: "21日生まれ", desc: "困った人を放っておけない" },
+      { rank: 7,  text: "5日生まれ",  desc: "小さな命も大切にする" },
+      { rank: 8,  text: "30日生まれ", desc: "裏表がない正直者" },
+      { rank: 9,  text: "2日生まれ",  desc: "誰の悪口も言わない" },
+      { rank: 10, text: "18日生まれ", desc: "許す心を持っている" },
+      { rank: 11, text: "9日生まれ",  desc: "損得で人を選ばない" },
+      { rank: 12, text: "25日生まれ", desc: "約束を必ず守る" },
+      { rank: 13, text: "7日生まれ",  desc: "弱い人の味方をする" },
+      { rank: 14, text: "13日生まれ", desc: "自分より他人を優先" },
+      { rank: 15, text: "20日生まれ", desc: "ありがとうが口癖" },
+      { rank: 16, text: "4日生まれ",  desc: "怒りを人にぶつけない" },
+      { rank: 17, text: "11日生まれ", desc: "陰で人を支える" },
+      { rank: 18, text: "26日生まれ", desc: "お節介だけど憎めない" },
+      { rank: 19, text: "17日生まれ", desc: "優しすぎて損しがち" },
+      { rank: 20, text: "31日生まれ", desc: "神様も苦笑いする自由人" },
+    ]
+  },
+];
+
+let selectedRankingCount = 1;
+let selectedRankLimit = 6; // 表示する順位数（6,9,10,15,20）
+let CONFIG = RANKING_DATA[0];
+
+// アニメーション一覧
+const ANIMATIONS = [
+  { id: "fade",        name: "フェードイン" },
+  { id: "slide-right", name: "→ 右から" },
+  { id: "slide-left",  name: "← 左から" },
+  { id: "float-up",    name: "↑ 浮き上がり" },
+  { id: "blur-in",     name: "じわっと浮き出る" },
+  { id: "explode",     name: "💥 爆発ズーム" },
+  { id: "bounce",      name: "🎀 バウンス" },
+  { id: "spin",        name: "🔄 回転登場" },
+  { id: "sparkle",     name: "✨ キラキラ" },
+  { id: "typewriter",  name: "⌨️ タイプライター" },
+  { id: "drop",        name: "⬇️ 落下バウンド" },
+  { id: "flip",        name: "🃏 カードめくり" },
+  { id: "elastic",     name: "🫧 ぷにっと伸縮" },
+  { id: "glitch",      name: "⚡ グリッチ" },
+  { id: "light-sweep", name: "💫 光の筋" },
+  { id: "particles",   name: "🎆 パーティクル" },
+  { id: "char-pop",    name: "🔤 1文字ずつポップ" },
+  { id: "wave",        name: "🌊 ウェーブ" },
+  { id: "hearts",      name: "💕 ハート散らし" },
+  { id: "shutter",     name: "📷 シャッター" },
+];
+
+const THEMES = [
+  { id: "",      name: "🌟 ゴールド" },
+  { id: "cute",  name: "🎀 かわいい" },
+  { id: "cool",  name: "❄️ クール" },
+  { id: "fire",  name: "🔥 炎" },
+];
+
+const FONT_STYLES = [
+  { id: "",             name: "標準（縁取り）" },
+  { id: "neon-pink",    name: "ネオン桃" },
+  { id: "neon-blue",    name: "ネオン青" },
+  { id: "neon-green",   name: "ネオン緑" },
+  { id: "metal-gold",   name: "メタル金" },
+  { id: "metal-silver", name: "メタル銀" },
+  { id: "fire-glow",    name: "炎グロー" },
+  { id: "rainbow",      name: "レインボー" },
+  { id: "white-glow",   name: "光る白" },
+];
+
+const BACKGROUNDS = [
+  { name: "⛩️ 神社鳥居",     url: "./bg/shrine-torii.jpg" },
+  { name: "⛩️ 伏見稲荷",     url: "./bg/fushimi-inari.jpg" },
+  { name: "🌅 夕焼けビーチ",  url: "./bg/sunset-beach.jpg" },
+  { name: "🌴 夕焼けヤシ",    url: "./bg/sunset-palm.jpg" },
+  { name: "🌸 桜",           url: "./bg/cherry-blossom.jpg" },
+  { name: "🌲 神秘の森",      url: "./bg/forest-mystical.jpg" },
+  { name: "🌲 暗い森",        url: "./bg/dark-forest.jpg" },
+  { name: "🌌 星空",          url: "./bg/starry-night.jpg" },
+  { name: "🌌 オーロラ",      url: "./bg/aurora.jpg" },
+  { name: "🌙 月夜",          url: "./bg/moon-night.jpg" },
+  { name: "🕯️ キャンドル",    url: "./bg/candle.jpg" },
+  { name: "💜 ラベンダー",     url: "./bg/lavender.jpg" },
+  { name: "🌹 バラ",          url: "./bg/rose-petals.jpg" },
+];
+
+// ============================================================
+// 状態
+// ============================================================
+let currentSlide = 0;
+let currentAnim = "fade";
+let currentTheme = "";
+let currentFontStyle = "";
+// 個別スタイル（"_default"=全体設定に従う、それ以外=個別指定）
+let titleTheme = "_default";
+let titleFontStyle = "_default";
+let rank1Theme = "_default";
+let rank1FontStyle = "_default";
+let lastTheme = "_default";
+let lastFontStyle = "_default";
+let displayMode = "slide"; // "slide" or "list"
+let displayOrder = "asc";  // "asc" (1→下位) or "desc" (下位→1)
+let autoTimer = null;
+let totalSlides = 0;
+
+// ============================================================
+// スライド生成
+// ============================================================
+function buildSlides() {
+  const c = document.getElementById('slidesContainer');
+  let html = '';
+  let idx = 0;
+
+  const configs = RANKING_DATA.slice(0, selectedRankingCount);
+  configs.forEach((cfg, ci) => {
+    // タイトル
+    html += `<div class="slide title-slide" data-index="${idx}">
+      <div class="rank-label stroke-text">━━ RANKING${configs.length > 1 ? ' ' + (ci + 1) : ''} ━━</div>
+      <div class="title-text stroke-text anim-target">${cfg.title.replace(/\n/g,'<br>')}</div>
+    </div>`;
+    idx++;
+
+    // ランキング（selectedRankLimitで制限）
+    const limitedRankings = cfg.rankings.filter(r => r.rank <= selectedRankLimit);
+    const sorted = displayOrder === 'desc' ? [...limitedRankings].reverse() : [...limitedRankings];
+    const maxRank = Math.max(...limitedRankings.map(r => r.rank));
+    sorted.forEach(item => {
+      let colorClass = item.rank <= 3 ? `rank-${item.rank}-color` : '';
+      if (item.rank === maxRank) colorClass += ' rank-last-color';
+      html += `<div class="slide ${colorClass}" data-index="${idx}">
+        <div class="rank-label stroke-text">━━ RANK ━━</div>
+        <div class="rank-number stroke-text anim-target">${item.rank}</div>
+        <div class="rank-main-text stroke-text anim-target">${item.text}</div>
+        ${item.desc ? `<div class="rank-desc-text stroke-text anim-target">${item.desc}</div>` : ''}
+      </div>`;
+      idx++;
+    });
+
+    // CTA
+    html += `<div class="slide" data-index="${idx}">
+      <div class="cta-text-main stroke-text anim-target">${cfg.cta.text.replace(/\n/g,'<br>')}</div>
+      <div class="cta-button anim-target">${cfg.cta.button}</div>
+    </div>`;
+    idx++;
+  });
+
+  c.innerHTML = html;
+  totalSlides = idx;
+}
+
+// ============================================================
+// アニメーション適用
+// ============================================================
+function getSlideStyle(slideEl) {
+  const isTitle = slideEl.classList.contains('title-slide');
+  const isRank1 = slideEl.classList.contains('rank-1-color');
+  const isLast = slideEl.classList.contains('rank-last-color');
+  let theme = currentTheme;
+  let fontStyle = currentFontStyle;
+  if (isTitle && titleTheme !== '_default') theme = titleTheme;
+  if (isTitle && titleFontStyle !== '_default') fontStyle = titleFontStyle;
+  if (isRank1 && rank1Theme !== '_default') theme = rank1Theme;
+  if (isRank1 && rank1FontStyle !== '_default') fontStyle = rank1FontStyle;
+  if (isLast && !isRank1 && lastTheme !== '_default') theme = lastTheme;
+  if (isLast && !isRank1 && lastFontStyle !== '_default') fontStyle = lastFontStyle;
+  return { theme, fontStyle };
+}
+
+function applyAnimation(slideEl) {
+  const cls = `anim-${currentAnim}`;
+  const style = getSlideStyle(slideEl);
+  // テーマ
+  slideEl.className = slideEl.className.replace(/theme-\w+/g, '');
+  if (style.theme) slideEl.classList.add(`theme-${style.theme}`);
+  // フォントスタイル
+  slideEl.className = slideEl.className.replace(/fontstyle-[\w-]+/g, '');
+  if (style.fontStyle) slideEl.classList.add(`fontstyle-${style.fontStyle}`);
+
+  // アニメーションクラスをリセット
+  slideEl.className = slideEl.className.replace(/anim-[\w-]+/g, '');
+  // reflow
+  void slideEl.offsetWidth;
+  slideEl.classList.add(cls);
+
+  // 特殊エフェクト生成
+  if (currentAnim === 'sparkle') addSparkles(slideEl);
+  if (currentAnim === 'hearts') addHearts(slideEl);
+  if (currentAnim === 'particles') addParticleShower(slideEl);
+  if (currentAnim === 'light-sweep') addLightBar(slideEl);
+  if (currentAnim === 'shutter') addShutter(slideEl);
+  if (currentAnim === 'char-pop' || currentAnim === 'wave') wrapChars(slideEl);
+}
+
+function addSparkles(el) {
+  let container = el.querySelector('.sparkle-container');
+  if (!container) {
+    container = document.createElement('div');
+    container.className = 'sparkle-container';
+    el.appendChild(container);
+  }
+  container.innerHTML = '';
+  for (let i = 0; i < 20; i++) {
+    const s = document.createElement('div');
+    s.className = 'spark';
+    s.style.left = Math.random() * 100 + '%';
+    s.style.top = Math.random() * 100 + '%';
+    s.style.setProperty('--sx', (Math.random()-0.5)*100 + 'px');
+    s.style.setProperty('--sy', (Math.random()-0.5)*100 + 'px');
+    s.style.animationDelay = Math.random() * 0.5 + 's';
+    container.appendChild(s);
+  }
+}
+
+function addHearts(el) {
+  el.querySelectorAll('.heart').forEach(h => h.remove());
+  const emojis = ['💖','💕','💗','💓','🩷','✨'];
+  for (let i = 0; i < 15; i++) {
+    const h = document.createElement('div');
+    h.className = 'heart';
+    h.textContent = emojis[Math.floor(Math.random()*emojis.length)];
+    h.style.left = Math.random() * 100 + '%';
+    h.style.top = Math.random() * 100 + '%';
+    h.style.setProperty('--hx', (Math.random()-0.5)*150 + 'px');
+    h.style.setProperty('--hy', -(50 + Math.random()*100) + 'px');
+    h.style.animationDelay = Math.random() * 0.8 + 's';
+    el.appendChild(h);
+  }
+}
+
+function addParticleShower(el) {
+  el.querySelectorAll('.particle-el').forEach(p => p.remove());
+  for (let i = 0; i < 30; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle-el';
+    p.style.cssText = `
+      position:absolute; width:4px; height:4px;
+      background:#ffd700; border-radius:50%;
+      box-shadow: 0 0 6px #ffd700;
+      left:${Math.random()*100}%; top:-5%;
+      animation: particleFall ${1+Math.random()*2}s linear ${Math.random()*0.5}s forwards;
+      pointer-events:none; z-index:10;
+    `;
+    el.appendChild(p);
+  }
+  if (!document.getElementById('particleFallStyle')) {
+    const style = document.createElement('style');
+    style.id = 'particleFallStyle';
+    style.textContent = `@keyframes particleFall { to { top: 110%; opacity: 0; } }`;
+    document.head.appendChild(style);
+  }
+}
+
+function addLightBar(el) {
+  el.querySelectorAll('.light-bar').forEach(l => l.remove());
+  const bar = document.createElement('div');
+  bar.className = 'light-bar';
+  el.appendChild(bar);
+}
+
+function addShutter(el) {
+  el.querySelectorAll('.shutter-top,.shutter-bottom').forEach(s => s.remove());
+  const t = document.createElement('div'); t.className = 'shutter-top';
+  const b = document.createElement('div'); b.className = 'shutter-bottom';
+  el.appendChild(t);
+  el.appendChild(b);
+}
+
+function wrapChars(el) {
+  el.querySelectorAll('.anim-target').forEach(target => {
+    const text = target.textContent;
+    if (target.querySelector('span')) return;
+    target.innerHTML = '';
+    [...text].forEach((ch, i) => {
+      const span = document.createElement('span');
+      span.textContent = ch === ' ' ? '\u00A0' : ch;
+      span.style.animationDelay = (i * 0.06) + 's';
+      target.appendChild(span);
+    });
+  });
+}
+
+// ============================================================
+// スライド操作
+// ============================================================
+function showSlide(index) {
+  if (index < 0 || index >= totalSlides) return;
+  currentSlide = index;
+
+  document.querySelectorAll('.slide').forEach((s, i) => {
+    s.classList.remove('active');
+    s.className = s.className.replace(/anim-[\w-]+/g, '').replace(/theme-\w+/g, '').replace(/fontstyle-[\w-]+/g, '');
+    // 特殊要素除去
+    s.querySelectorAll('.sparkle-container,.heart,.particle-el,.light-bar,.shutter-top,.shutter-bottom').forEach(x => x.remove());
+  });
+
+  const slide = document.querySelectorAll('.slide')[index];
+  slide.classList.add('active');
+  applyAnimation(slide);
+}
+
+function prevSlide() {
+  if (displayMode === 'list') { listPrev(); return; }
+  if (currentSlide > 0) showSlide(currentSlide - 1);
+}
+
+function nextSlide() {
+  if (displayMode === 'list') { listNext(); return; }
+  if (currentSlide < totalSlides - 1) showSlide(currentSlide + 1);
+  else if (autoTimer) stopPlay();
+}
+
+function playAll() {
+  if (displayMode === 'list') { listPlayAll(); return; }
+  stopPlay();
+  showSlide(0);
+  const interval = parseFloat(document.getElementById('intervalSlider').value) * 1000;
+  autoTimer = setInterval(() => {
+    if (currentSlide < totalSlides - 1) showSlide(currentSlide + 1);
+    else stopPlay();
+  }, interval);
+}
+
+function stopPlay() {
+  if (displayMode === 'list') { listStopPlay(); return; }
+  if (autoTimer) { clearInterval(autoTimer); autoTimer = null; }
+}
+
+function resetAll() {
+  if (displayMode === 'list') { listReset(); return; }
+  stopPlay();
+  showSlide(0);
+}
+
+function toggleFullscreen() {
+  const frame = document.getElementById('reelFrame');
+  const panel = document.getElementById('panel');
+  frame.classList.toggle('fullscreen');
+  const isFull = frame.classList.contains('fullscreen');
+  panel.style.display = isFull ? 'none' : '';
+}
+
+// ============================================================
+// パネル生成
+// ============================================================
+function buildAnimGrid() {
+  const grid = document.getElementById('animGrid');
+  grid.innerHTML = ANIMATIONS.map(a =>
+    `<button class="anim-btn ${a.id === currentAnim ? 'selected' : ''}" data-anim="${a.id}" onclick="selectAnim('${a.id}')">${a.name}</button>`
+  ).join('');
+}
+
+function selectAnim(id) {
+  currentAnim = id;
+  document.querySelectorAll('.anim-btn').forEach(b => b.classList.toggle('selected', b.dataset.anim === id));
+  // プレビュー: 現在のスライドにアニメーション再適用
+  showSlide(currentSlide);
+}
+
+function buildThemeGrid() {
+  const grid = document.getElementById('themeGrid');
+  grid.innerHTML = THEMES.map(t =>
+    `<button class="theme-btn ${t.id === currentTheme ? 'selected' : ''}" data-theme="${t.id}" onclick="selectTheme('${t.id}')">${t.name}</button>`
+  ).join('');
+}
+
+function selectTheme(id) {
+  currentTheme = id;
+  document.querySelectorAll('.theme-btn').forEach(b => b.classList.toggle('selected', b.dataset.theme === id));
+  showSlide(currentSlide);
+}
+
+function buildFontStyleGrid() {
+  const grid = document.getElementById('fontStyleGrid');
+  grid.innerHTML = FONT_STYLES.map(f =>
+    `<button class="anim-btn ${f.id === currentFontStyle ? 'selected' : ''}" data-fs="${f.id}" onclick="selectFontStyle('${f.id}')">${f.name}</button>`
+  ).join('');
+}
+
+function selectFontStyle(id) {
+  currentFontStyle = id;
+  document.querySelectorAll('#fontStyleGrid .anim-btn').forEach(b => b.classList.toggle('selected', b.dataset.fs === id));
+  showSlide(currentSlide);
+}
+
+// ============================================================
+// 個別スタイル設定（タイトル・1位・最下位）
+// ============================================================
+function buildPerElementSelects() {
+  const themeOpts = '<option value="_default">全体と同じ</option>' +
+    THEMES.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
+  const fontOpts = '<option value="_default">全体と同じ</option>' +
+    FONT_STYLES.map(f => `<option value="${f.id}">${f.name}</option>`).join('');
+  ['titleTheme','rank1Theme','lastTheme'].forEach(id => {
+    document.getElementById(id).innerHTML = themeOpts;
+  });
+  ['titleFontStyle','rank1FontStyle','lastFontStyle'].forEach(id => {
+    document.getElementById(id).innerHTML = fontOpts;
+  });
+}
+
+function onPerElementChange() {
+  titleTheme = document.getElementById('titleTheme').value;
+  titleFontStyle = document.getElementById('titleFontStyle').value;
+  rank1Theme = document.getElementById('rank1Theme').value;
+  rank1FontStyle = document.getElementById('rank1FontStyle').value;
+  lastTheme = document.getElementById('lastTheme').value;
+  lastFontStyle = document.getElementById('lastFontStyle').value;
+  if (displayMode === 'slide') {
+    showSlide(currentSlide);
+  } else {
+    buildListView();
+  }
+}
+
+// ============================================================
+// 表示モード・順番
+// ============================================================
+const LIST_ANIMS = [
+  { id: "drop",        name: "上から落下" },
+  { id: "rise",        name: "下から浮上" },
+  { id: "slide-right", name: "右からスライド" },
+  { id: "slide-left",  name: "左からスライド" },
+  { id: "fade",        name: "フェードイン" },
+  { id: "scale",       name: "ポップアップ" },
+];
+let currentListAnim = "drop";
+
+function setRankingCount(n) {
+  selectedRankingCount = n;
+  for (let i = 1; i <= 5; i++) {
+    const btn = document.getElementById('rc' + i);
+    btn.style.cssText = i === n ? 'background:#ffd700;color:#000;font-weight:700' : '';
+  }
+  updateRankingList();
+  rebuildDisplay();
+}
+
+function setRankLimit(n) {
+  selectedRankLimit = n;
+  [6,9,10,15,20].forEach(v => {
+    const btn = document.getElementById('rl' + v);
+    btn.style.cssText = v === n ? 'background:#ffd700;color:#000;font-weight:700' : '';
+  });
+  rebuildDisplay();
+}
+
+function updateRankingList() {
+  const list = document.getElementById('rankingList');
+  const configs = RANKING_DATA.slice(0, selectedRankingCount);
+  list.innerHTML = configs.map((cfg, i) =>
+    `<div style="font-size:11px;color:#aaa;padding:2px 0;">${i + 1}. ${cfg.title.replace(/\n/g, '')}</div>`
+  ).join('');
+}
+
+function setDisplayMode(mode) {
+  displayMode = mode;
+  document.getElementById('btnModeSlide').style.cssText = mode === 'slide' ? 'background:#ffd700;color:#000;font-weight:700' : '';
+  document.getElementById('btnModeList').style.cssText = mode === 'list' ? 'background:#ffd700;color:#000;font-weight:700' : '';
+  document.getElementById('animHeader').style.display = mode === 'slide' ? '' : 'none';
+  document.getElementById('animGrid').style.display = mode === 'slide' ? '' : 'none';
+  document.getElementById('listAnimSection').style.display = mode === 'list' ? '' : 'none';
+  rebuildDisplay();
+}
+
+function setOrder(order) {
+  displayOrder = order;
+  document.getElementById('btnOrderAsc').style.cssText = order === 'asc' ? 'background:#ffd700;color:#000;font-weight:700' : '';
+  document.getElementById('btnOrderDesc').style.cssText = order === 'desc' ? 'background:#ffd700;color:#000;font-weight:700' : '';
+  rebuildDisplay();
+}
+
+function buildListAnimGrid() {
+  const grid = document.getElementById('listAnimGrid');
+  grid.innerHTML = LIST_ANIMS.map(a =>
+    `<button class="anim-btn ${a.id === currentListAnim ? 'selected' : ''}" data-la="${a.id}" onclick="selectListAnim('${a.id}')">${a.name}</button>`
+  ).join('');
+}
+
+function selectListAnim(id) {
+  currentListAnim = id;
+  document.querySelectorAll('#listAnimGrid .anim-btn').forEach(b => b.classList.toggle('selected', b.dataset.la === id));
+  rebuildDisplay();
+}
+
+function rebuildDisplay() {
+  stopPlay();
+  if (displayMode === 'slide') {
+    document.getElementById('slidesContainer').style.display = '';
+    let existing = document.getElementById('listContainer');
+    if (existing) existing.remove();
+    buildSlides();
+    showSlide(0);
+  } else {
+    document.getElementById('slidesContainer').style.display = 'none';
+    buildListView();
+  }
+}
+
+let listTimer = null;
+let listCurrentItem = -1;
+
+function buildListView() {
+  let existing = document.getElementById('listContainer');
+  if (existing) existing.remove();
+  listCurrentItem = -1;
+
+  const frame = document.getElementById('reelFrame');
+  const container = document.createElement('div');
+  container.id = 'listContainer';
+  container.className = 'list-container';
+  if (currentFontStyle) container.classList.add(`fontstyle-${currentFontStyle}`);
+  if (currentTheme) container.classList.add(`theme-${currentTheme}`);
+
+  let html = '';
+  const configs = RANKING_DATA.slice(0, selectedRankingCount);
+  configs.forEach((cfg, ci) => {
+    const limitedRankings = cfg.rankings.filter(r => r.rank <= selectedRankLimit);
+    const maxRank = Math.max(...limitedRankings.map(r => r.rank));
+    // タイトル個別スタイル
+    let titleClasses = 'list-title stroke-text';
+    if (titleTheme !== '_default' && titleTheme) titleClasses += ` theme-${titleTheme}`;
+    if (titleFontStyle !== '_default' && titleFontStyle) titleClasses += ` fontstyle-${titleFontStyle}`;
+    html += `<div class="${titleClasses} list-hidden">${ci > 0 ? '<hr style="border-color:#555;margin:6px 0;">' : ''}${cfg.title.replace(/\n/g,'<br>')}</div>`;
+
+    let rankings = displayOrder === 'desc' ? [...limitedRankings].reverse() : [...limitedRankings];
+
+    rankings.forEach((item, i) => {
+      const rankColorClass = item.rank <= 3 ? `list-rank-${item.rank}` : '';
+      const isRank1 = item.rank === 1;
+      const isLast = item.rank === maxRank;
+      let extraClass = '';
+      if (isRank1 && rank1Theme !== '_default' && rank1Theme) extraClass += ` theme-${rank1Theme}`;
+      if (isRank1 && rank1FontStyle !== '_default' && rank1FontStyle) extraClass += ` fontstyle-${rank1FontStyle}`;
+      if (isLast && !isRank1 && lastTheme !== '_default' && lastTheme) extraClass += ` theme-${lastTheme}`;
+      if (isLast && !isRank1 && lastFontStyle !== '_default' && lastFontStyle) extraClass += ` fontstyle-${lastFontStyle}`;
+      html += `<div class="list-item stroke-text${extraClass} list-hidden">
+        <span class="list-rank ${rankColorClass}">${item.rank}</span>
+        <span>
+          <span class="list-text">${item.text}</span>
+          ${item.desc ? `<span class="list-desc"> ${item.desc}</span>` : ''}
+        </span>
+      </div>`;
+    });
+
+    html += `<div class="list-cta stroke-text list-hidden">
+      <div class="cta-text-main" style="font-size:22px;">${cfg.cta.text.replace(/\n/g,'<br>')}</div>
+      <div class="cta-button" style="font-size:14px;padding:10px 24px;">${cfg.cta.button}</div>
+    </div>`;
+  });
+
+  container.innerHTML = html;
+  frame.appendChild(container);
+}
+
+function listPlayAll() {
+  listStopPlay();
+  const container = document.getElementById('listContainer');
+  if (!container) return;
+  const items = container.querySelectorAll('.list-title, .list-item, .list-cta');
+  // リセット
+  items.forEach(el => { el.classList.add('list-hidden'); el.style.animation = ''; });
+  listCurrentItem = -1;
+  const interval = parseFloat(document.getElementById('intervalSlider').value) * 1000;
+  listShowNext(items, interval);
+}
+
+function listRevealItem(el) {
+  el.classList.remove('list-hidden');
+  el.style.animation = 'none';
+  void el.offsetWidth;
+  el.style.animation = `${getListAnimName()} 0.5s ease-out forwards`;
+}
+
+function listShowNext(items, interval) {
+  listCurrentItem++;
+  if (listCurrentItem >= items.length) { listStopPlay(); return; }
+  listRevealItem(items[listCurrentItem]);
+  listTimer = setTimeout(() => listShowNext(items, interval), interval);
+}
+
+function listStopPlay() {
+  if (listTimer) { clearTimeout(listTimer); listTimer = null; }
+}
+
+function listReset() {
+  listStopPlay();
+  const container = document.getElementById('listContainer');
+  if (!container) return;
+  container.querySelectorAll('.list-title, .list-item, .list-cta').forEach(el => {
+    el.classList.add('list-hidden');
+    el.style.animation = '';
+  });
+  listCurrentItem = -1;
+}
+
+function listPrev() {
+  const container = document.getElementById('listContainer');
+  if (!container) return;
+  const items = container.querySelectorAll('.list-title, .list-item, .list-cta');
+  if (listCurrentItem > 0) {
+    items[listCurrentItem].classList.add('list-hidden');
+    items[listCurrentItem].style.animation = '';
+    listCurrentItem--;
+  }
+}
+
+function getListAnimName() {
+  return currentListAnim === 'drop' ? 'listDrop' :
+         currentListAnim === 'rise' ? 'listRise' :
+         currentListAnim === 'slide-right' ? 'listSlideR' :
+         currentListAnim === 'slide-left' ? 'listSlideL' :
+         currentListAnim === 'scale' ? 'listScale' : 'listFade';
+}
+
+function listNext() {
+  const container = document.getElementById('listContainer');
+  if (!container) return;
+  const items = container.querySelectorAll('.list-title, .list-item, .list-cta');
+  if (listCurrentItem < items.length - 1) {
+    listCurrentItem++;
+    listRevealItem(items[listCurrentItem]);
+  }
+}
+
+function buildBgGrid() {
+  const grid = document.getElementById('bgGrid');
+  grid.innerHTML = '<button class="bg-btn" onclick="promptCustomBg()">📁 自分の画像</button>' +
+    BACKGROUNDS.map((b, i) =>
+      `<button class="bg-btn ${i===0?'selected':''}" data-bg="${i}" onclick="setBg(${i})">${b.name}</button>`
+    ).join('');
+}
+
+function setBg(index) {
+  document.getElementById('bgImage').style.backgroundImage = `url('${BACKGROUNDS[index].url}')`;
+  document.querySelectorAll('.bg-btn[data-bg]').forEach((b, i) => b.classList.toggle('selected', i === index));
+}
+
+function promptCustomBg() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+  input.onchange = (e) => {
+    const file = e.target.files[0];
+    if (file) document.getElementById('bgImage').style.backgroundImage = `url('${URL.createObjectURL(file)}')`;
+  };
+  input.click();
+}
+
+// スライダー
+document.getElementById('intervalSlider').addEventListener('input', (e) => {
+  document.getElementById('intervalVal').textContent = e.target.value + '秒';
+});
+
+document.getElementById('brightSlider').addEventListener('input', (e) => {
+  document.getElementById('brightVal').textContent = e.target.value + '%';
+  document.getElementById('bgImage').style.filter = `brightness(${e.target.value/100})`;
+});
+
+// キーボード
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); nextSlide(); }
+  if (e.key === 'ArrowLeft') { e.preventDefault(); prevSlide(); }
+  if (e.key === 'Enter') { e.preventDefault(); playAll(); }
+  if (e.key === 'f') { e.preventDefault(); toggleFullscreen(); }
+  if (e.key === 'r') { e.preventDefault(); resetAll(); }
+  if (e.key === 'Escape') {
+    const frame = document.getElementById('reelFrame');
+    if (frame.classList.contains('fullscreen')) toggleFullscreen();
+  }
+});
+
+// 初期化
+updateRankingList();
+buildSlides();
+buildAnimGrid();
+buildListAnimGrid();
+buildThemeGrid();
+buildFontStyleGrid();
+buildPerElementSelects();
+buildBgGrid();
+setBg(0);
+showSlide(0);
+</script>
+
+</body>
+</html>

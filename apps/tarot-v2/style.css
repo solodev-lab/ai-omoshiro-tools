@@ -1,0 +1,1300 @@
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { overscroll-behavior: none; }
+
+body {
+    font-family: 'Noto Sans JP', sans-serif;
+    background: linear-gradient(135deg, #0a0a1a, #1a0a2a, #0a0a2a);
+    color: #e0e0e0;
+    min-height: 100vh;
+    line-height: 1.7;
+    overscroll-behavior-y: contain;
+}
+
+.container {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 20px 16px;
+}
+
+header { text-align: center; margin-bottom: 24px; }
+
+h1 {
+    font-size: 1.8rem;
+    font-weight: 900;
+    background: linear-gradient(90deg, #9b59b6, #f1c40f);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 8px;
+}
+
+.subtitle {
+    color: #aaa;
+    font-size: 0.9rem;
+}
+
+/* モード選択 */
+.mode-section { text-align: center; }
+
+.mode-card {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 20px;
+    padding: 32px 24px;
+    margin-bottom: 20px;
+}
+
+.mode-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-top: 20px;
+}
+
+.mode-btn {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(155, 89, 182, 0.3);
+    border-radius: 16px;
+    padding: 20px;
+    cursor: pointer;
+    transition: all 0.3s;
+    text-align: left;
+    color: #e0e0e0;
+}
+
+.mode-btn:hover {
+    background: rgba(155, 89, 182, 0.15);
+    border-color: rgba(155, 89, 182, 0.6);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(155, 89, 182, 0.2);
+}
+
+.mode-btn .mode-emoji { font-size: 2rem; margin-bottom: 8px; }
+.mode-btn .mode-name { font-size: 1.1rem; font-weight: 700; margin-bottom: 4px; }
+.mode-btn .mode-desc { font-size: 0.8rem; color: #999; }
+
+.mode-btn.premium {
+    border-color: rgba(241, 196, 15, 0.4);
+    background: linear-gradient(135deg, rgba(155, 89, 182, 0.08), rgba(241, 196, 15, 0.08));
+}
+
+.mode-btn.premium:hover {
+    border-color: rgba(241, 196, 15, 0.7);
+    box-shadow: 0 8px 24px rgba(241, 196, 15, 0.15);
+}
+
+.price-tag {
+    display: inline-block;
+    background: linear-gradient(90deg, #9b59b6, #f1c40f);
+    color: #fff;
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 2px 10px;
+    border-radius: 12px;
+    margin-left: 8px;
+}
+
+/* 履歴ボタン */
+.history-btn {
+    display: block;
+    width: 100%;
+    margin-top: 20px;
+    padding: 12px;
+    background: transparent;
+    border: 1px solid rgba(155, 89, 182, 0.25);
+    border-radius: 12px;
+    color: #999;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.history-btn:hover {
+    color: #c89cf5;
+    border-color: rgba(155, 89, 182, 0.5);
+    background: rgba(155, 89, 182, 0.08);
+}
+
+/* ========== 相談内容の選択式UI ========== */
+.consult-section {
+    text-align: center;
+}
+
+.consult-step {
+    animation: fadeInUp 0.4s ease;
+}
+
+.consult-step-label {
+    display: inline-block;
+    background: rgba(155, 89, 182, 0.2);
+    color: #c89cf5;
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 4px 14px;
+    border-radius: 20px;
+    margin-bottom: 12px;
+}
+
+.consult-step-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #e0e0e0;
+    margin-bottom: 20px;
+}
+
+.consult-btn-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+.consult-btn {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(155, 89, 182, 0.25);
+    border-radius: 12px;
+    padding: 14px 10px;
+    color: #e0e0e0;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.consult-btn:hover {
+    background: rgba(155, 89, 182, 0.15);
+    border-color: rgba(155, 89, 182, 0.6);
+    transform: translateY(-1px);
+}
+
+.consult-btn:active {
+    transform: scale(0.97);
+}
+
+.consult-summary {
+    color: #999;
+    font-size: 0.8rem;
+    margin-bottom: 16px;
+}
+
+.consult-note {
+    width: 100%;
+    max-width: 400px;
+    padding: 12px;
+    border: 1px solid rgba(155, 89, 182, 0.3);
+    border-radius: 10px;
+    background: rgba(255,255,255,0.04);
+    color: #e0e0e0;
+    font-size: 0.9rem;
+    font-family: inherit;
+    resize: none;
+    height: 60px;
+    outline: none;
+    transition: border-color 0.3s;
+}
+
+.consult-note:focus {
+    border-color: rgba(155, 89, 182, 0.6);
+}
+
+.consult-note-count {
+    text-align: right;
+    max-width: 400px;
+    margin: 4px auto 16px;
+    font-size: 0.7rem;
+    color: #666;
+}
+
+.consult-start-btn {
+    display: block;
+    width: 100%;
+    max-width: 300px;
+    margin: 0 auto 12px;
+    padding: 16px;
+    background: linear-gradient(135deg, #9b59b6, #8e44ad);
+    border: none;
+    border-radius: 50px;
+    color: #fff;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s;
+    box-shadow: 0 4px 15px rgba(155, 89, 182, 0.3);
+}
+
+.consult-start-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(155, 89, 182, 0.4);
+}
+
+.consult-start-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.consult-back-btn {
+    display: inline-block;
+    margin-top: 16px;
+    padding: 8px 20px;
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 20px;
+    color: #999;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.consult-back-btn:hover {
+    color: #c89cf5;
+    border-color: rgba(155, 89, 182, 0.4);
+}
+
+/* 2者択一入力 */
+.two-choice-inputs {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-width: 400px;
+    margin: 0 auto 20px;
+}
+
+.choice-input-group {
+    text-align: left;
+}
+
+.choice-label {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 700;
+    margin-bottom: 6px;
+}
+
+.choice-label.choice-a { color: #3498db; }
+.choice-label.choice-b { color: #e74c3c; }
+
+.choice-input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid rgba(155, 89, 182, 0.3);
+    border-radius: 10px;
+    background: rgba(255,255,255,0.04);
+    color: #e0e0e0;
+    font-size: 0.9rem;
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.3s;
+}
+
+.choice-input:focus {
+    border-color: rgba(155, 89, 182, 0.6);
+}
+
+.choice-examples {
+    max-width: 400px;
+    margin: 0 auto 16px;
+    text-align: left;
+}
+
+.choice-examples-label {
+    font-size: 0.75rem;
+    color: #a080c0;
+    margin-bottom: 6px;
+}
+
+.choice-example-item {
+    font-size: 0.75rem;
+    color: #8a70a0;
+    padding: 2px 0;
+    line-height: 1.5;
+}
+
+/* ========== カードシャッフル演出 ========== */
+.shuffle-section { text-align: center; }
+
+.shuffle-area {
+    position: relative;
+    height: 280px;
+    margin: 30px auto;
+    max-width: 400px;
+}
+
+.tarot-card-back {
+    position: absolute;
+    width: 70px;
+    height: 105px;
+    background: linear-gradient(135deg, #2c1654, #4a1a7a);
+    border: 2px solid rgba(241, 196, 15, 0.4);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+}
+
+.tarot-card-back::after {
+    content: '✦';
+    color: rgba(241, 196, 15, 0.6);
+    font-size: 2rem;
+}
+
+.tarot-card-back:hover {
+    box-shadow: 0 8px 24px rgba(155, 89, 182, 0.4);
+    border-color: rgba(241, 196, 15, 0.8);
+}
+
+.tarot-card-back.selected {
+    background: linear-gradient(135deg, #4a1a7a, #9b59b6);
+    border-color: #f1c40f;
+    box-shadow: 0 8px 24px rgba(241, 196, 15, 0.4);
+    transform: translateY(-20px) scale(1.05);
+}
+
+.shuffle-instruction {
+    color: #ccc;
+    font-size: 0.95rem;
+    margin-top: 16px;
+    animation: pulse 2s infinite;
+}
+
+.shuffle-status {
+    color: #9b59b6;
+    font-size: 0.85rem;
+    margin-top: 8px;
+}
+
+/* ========== 分析中 ========== */
+.analyzing-section { text-align: center; padding: 60px 20px; }
+
+.crystal-ball {
+    font-size: 5rem;
+    animation: float 3s ease-in-out infinite;
+    margin-bottom: 24px;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-15px); }
+}
+
+.analyzing-text {
+    font-size: 1.1rem;
+    color: #ccc;
+    margin-bottom: 12px;
+}
+
+.analyzing-status {
+    color: #9b59b6;
+    font-size: 0.9rem;
+    animation: pulse 1.5s infinite;
+}
+
+.analyzing-dots {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 20px;
+}
+
+.analyzing-dots span {
+    width: 10px;
+    height: 10px;
+    background: #9b59b6;
+    border-radius: 50%;
+    animation: dotBounce 1.4s ease-in-out infinite;
+}
+
+.analyzing-dots span:nth-child(2) { animation-delay: 0.2s; }
+.analyzing-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes dotBounce {
+    0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+    40% { transform: scale(1); opacity: 1; }
+}
+
+/* ========== 結果セクション ========== */
+.result-section { animation: fadeInUp 0.6s ease; }
+
+.result-card {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(155, 89, 182, 0.3);
+    border-radius: 20px;
+    padding: 32px 24px;
+    margin-bottom: 20px;
+}
+
+.result-header {
+    text-align: center;
+    margin-bottom: 24px;
+}
+
+.result-mode-label {
+    display: inline-block;
+    background: rgba(155, 89, 182, 0.2);
+    color: #c89cf5;
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 4px 12px;
+    border-radius: 12px;
+    margin-bottom: 12px;
+}
+
+.result-title {
+    font-size: 1.3rem;
+    font-weight: 900;
+    background: linear-gradient(90deg, #9b59b6, #f1c40f);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* ========== カードフリップアニメーション ========== */
+.drawn-cards {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: center;
+    margin-bottom: 24px;
+}
+
+.drawn-card-flip {
+    text-align: center;
+    min-width: 110px;
+    flex: 1;
+    max-width: 160px;
+    animation: fadeInUp 0.5s ease;
+    animation-fill-mode: both;
+}
+
+.drawn-card-flip .position-label {
+    font-size: 0.7rem;
+    color: #999;
+    margin-bottom: 6px;
+}
+
+.flip-card {
+    width: 100%;
+    aspect-ratio: 2/3;
+    perspective: 800px;
+    cursor: pointer;
+}
+
+.flip-card-inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    transition: transform 0.6s ease;
+    transform-style: preserve-3d;
+}
+
+.flip-card.flipped .flip-card-inner {
+    transform: rotateY(180deg);
+}
+
+.flip-card-front,
+.flip-card-back {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    backface-visibility: hidden;
+    border-radius: 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 8px;
+}
+
+.flip-card-back {
+    background: linear-gradient(135deg, #2c1654, #4a1a7a);
+    border: 2px solid rgba(241, 196, 15, 0.4);
+}
+
+.flip-back-symbol {
+    color: rgba(241, 196, 15, 0.6);
+    font-size: 2.5rem;
+}
+
+.flip-card-front {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(155, 89, 182, 0.25);
+    transform: rotateY(180deg);
+}
+
+.flip-card-front .card-emoji {
+    font-size: 2rem;
+    margin-bottom: 6px;
+}
+
+.flip-card-front .card-name {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #e0e0e0;
+    margin-bottom: 4px;
+}
+
+.flip-card-front .card-direction {
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 8px;
+    display: inline-block;
+}
+
+.flip-card-front .card-direction.upright {
+    background: rgba(46, 204, 113, 0.2);
+    color: #2ecc71;
+}
+
+.flip-card-front .card-direction.reversed {
+    background: rgba(231, 76, 60, 0.2);
+    color: #e74c3c;
+}
+
+.flip-card-front .card-meaning {
+    font-size: 0.72rem;
+    color: #999;
+    margin-top: 6px;
+    line-height: 1.4;
+}
+
+/* ========== AI鑑定結果 ========== */
+.reading-section {
+    margin-top: 24px;
+}
+
+.reading-block {
+    background: rgba(255,255,255,0.03);
+    border-left: 3px solid #9b59b6;
+    border-radius: 0 12px 12px 0;
+    padding: 16px;
+    margin-bottom: 12px;
+}
+
+.reading-block .block-title {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #c89cf5;
+    margin-bottom: 6px;
+}
+
+.reading-block .block-text {
+    font-size: 0.9rem;
+    color: #ddd;
+    line-height: 1.7;
+}
+
+.overall-reading {
+    background: linear-gradient(135deg, rgba(155, 89, 182, 0.1), rgba(241, 196, 15, 0.05));
+    border: 1px solid rgba(155, 89, 182, 0.3);
+    border-radius: 16px;
+    padding: 20px;
+    margin-top: 20px;
+    text-align: center;
+}
+
+.overall-reading .overall-title {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #f1c40f;
+    margin-bottom: 8px;
+}
+
+.overall-reading .overall-text {
+    font-size: 0.95rem;
+    color: #e0e0e0;
+    line-height: 1.8;
+}
+
+.advice-box {
+    background: rgba(241, 196, 15, 0.08);
+    border: 1px solid rgba(241, 196, 15, 0.2);
+    border-radius: 12px;
+    padding: 16px;
+    margin-top: 16px;
+    text-align: center;
+}
+
+.advice-box .advice-label {
+    font-size: 0.75rem;
+    color: #f1c40f;
+    font-weight: 700;
+    margin-bottom: 6px;
+}
+
+.advice-box .advice-text {
+    font-size: 0.9rem;
+    color: #ddd;
+}
+
+.lucky-items {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    margin-top: 16px;
+    flex-wrap: wrap;
+}
+
+.lucky-item {
+    background: rgba(255,255,255,0.04);
+    border-radius: 10px;
+    padding: 10px 16px;
+    text-align: center;
+    font-size: 0.8rem;
+}
+
+.lucky-item .lucky-label { color: #999; font-size: 0.7rem; }
+.lucky-item .lucky-value { color: #f1c40f; font-weight: 700; margin-top: 2px; }
+
+/* ========== シェアボタン ========== */
+.share-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 24px;
+    flex-wrap: wrap;
+}
+
+.share-btn {
+    padding: 10px 20px;
+    border-radius: 50px;
+    border: none;
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s;
+    color: #fff;
+}
+
+.share-btn:hover { transform: translateY(-2px); }
+
+.share-x { background: #000; border: 1px solid #333; }
+.share-line { background: #06C755; }
+.share-copy { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); }
+
+.retry-btn {
+    display: block;
+    width: 100%;
+    max-width: 300px;
+    margin: 20px auto 0;
+    padding: 14px;
+    background: transparent;
+    border: 2px solid rgba(155, 89, 182, 0.4);
+    border-radius: 50px;
+    color: #c89cf5;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.retry-btn:hover {
+    background: rgba(155, 89, 182, 0.15);
+    border-color: #9b59b6;
+}
+
+/* ========== 鑑定履歴 ========== */
+.history-section {
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+.history-item {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(155, 89, 182, 0.2);
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.history-item:hover {
+    background: rgba(155, 89, 182, 0.1);
+    border-color: rgba(155, 89, 182, 0.4);
+}
+
+.history-date {
+    font-size: 0.7rem;
+    color: #888;
+    margin-bottom: 4px;
+}
+
+.history-info {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 4px;
+}
+
+.history-mode {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #c89cf5;
+    background: rgba(155, 89, 182, 0.15);
+    padding: 2px 8px;
+    border-radius: 8px;
+}
+
+.history-cat {
+    font-size: 0.75rem;
+    color: #f1c40f;
+    background: rgba(241, 196, 15, 0.1);
+    padding: 2px 8px;
+    border-radius: 8px;
+}
+
+.history-card {
+    font-size: 0.85rem;
+    color: #e0e0e0;
+}
+
+/* ========== トースト ========== */
+.toast {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: rgba(155, 89, 182, 0.9);
+    color: #fff;
+    padding: 12px 24px;
+    border-radius: 50px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    opacity: 0;
+    transition: all 0.4s;
+    z-index: 1000;
+    backdrop-filter: blur(10px);
+}
+
+.toast.show {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+}
+
+/* 広告枠 */
+.ad-slot {
+    margin: 12px 0;
+    min-height: 50px;
+    text-align: center;
+    overflow: hidden;
+}
+
+/* Footer */
+footer {
+    text-align: center;
+    padding: 30px 0 20px;
+    color: #666;
+    font-size: 0.75rem;
+}
+
+footer .copyright { margin-top: 8px; }
+
+/* アニメーション */
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+/* ========== 2者択一 V字レイアウト ========== */
+.drawn-cards.v-shape-layout {
+    display: block;
+    position: relative;
+    width: 100%;
+    max-width: 460px;
+    height: 520px;
+    margin: 0 auto 24px;
+}
+.drawn-cards.v-shape-layout .drawn-card-flip {
+    position: absolute;
+    min-width: 0;
+    max-width: none;
+    width: 100px;
+    flex: none;
+    animation: none !important;
+    opacity: 1;
+}
+/* 現在: bottom center */
+.drawn-cards.v-shape-layout .drawn-card-flip:nth-child(1) {
+    bottom: 0;
+    left: calc(50% - 50px);
+    z-index: 4;
+}
+/* A近未来: middle-left */
+.drawn-cards.v-shape-layout .drawn-card-flip:nth-child(2) {
+    bottom: 100px;
+    left: calc(50% - 50px - 80px);
+    z-index: 3;
+}
+/* B近未来: middle-right */
+.drawn-cards.v-shape-layout .drawn-card-flip:nth-child(3) {
+    bottom: 100px;
+    left: calc(50% - 50px + 80px);
+    z-index: 3;
+}
+/* A最終結果: upper-left */
+.drawn-cards.v-shape-layout .drawn-card-flip:nth-child(4) {
+    bottom: 200px;
+    left: calc(50% - 50px - 160px);
+    z-index: 2;
+}
+/* B最終結果: upper-right */
+.drawn-cards.v-shape-layout .drawn-card-flip:nth-child(5) {
+    bottom: 200px;
+    left: calc(50% - 50px + 160px);
+    z-index: 2;
+}
+/* アドバイス: top center */
+.drawn-cards.v-shape-layout .drawn-card-flip:nth-child(6) {
+    bottom: 300px;
+    left: calc(50% - 50px);
+    z-index: 1;
+}
+
+@media (max-width: 600px) {
+    .drawn-cards.v-shape-layout {
+        max-width: 340px;
+        height: 440px;
+    }
+    .drawn-cards.v-shape-layout .drawn-card-flip {
+        width: 80px;
+    }
+    .drawn-cards.v-shape-layout .drawn-card-flip:nth-child(1) {
+        left: calc(50% - 40px);
+    }
+    .drawn-cards.v-shape-layout .drawn-card-flip:nth-child(2) {
+        left: calc(50% - 40px - 60px);
+        bottom: 80px;
+    }
+    .drawn-cards.v-shape-layout .drawn-card-flip:nth-child(3) {
+        left: calc(50% - 40px + 60px);
+        bottom: 80px;
+    }
+    .drawn-cards.v-shape-layout .drawn-card-flip:nth-child(4) {
+        left: calc(50% - 40px - 120px);
+        bottom: 160px;
+    }
+    .drawn-cards.v-shape-layout .drawn-card-flip:nth-child(5) {
+        left: calc(50% - 40px + 120px);
+        bottom: 160px;
+    }
+    .drawn-cards.v-shape-layout .drawn-card-flip:nth-child(6) {
+        left: calc(50% - 40px);
+        bottom: 240px;
+    }
+}
+
+/* ========== ヘキサグラム 六芒星レイアウト（結果表示） ==========
+   △上三角: ①過去(top) ②現在(右下) ③近未来(左下)
+   ▽下三角: ④対策(bottom) ⑤お相手(左上) ⑥本人(右上)
+   中央: ⑦最終結果 */
+.drawn-cards.hexagram-layout {
+    display: block;
+    position: relative;
+    width: 100%;
+    max-width: 460px;
+    height: 600px;
+    margin: 0 auto 24px;
+}
+.drawn-cards.hexagram-layout .drawn-card-flip {
+    position: absolute;
+    min-width: 0;
+    max-width: none;
+    width: 100px;
+    flex: none;
+    animation: none !important;
+    opacity: 1;
+}
+/* ① 過去: △top center */
+.drawn-cards.hexagram-layout .drawn-card-flip:nth-child(1) {
+    top: 0;
+    left: calc(50% - 50px);
+    z-index: 2;
+}
+/* ② 現在: △lower-right */
+.drawn-cards.hexagram-layout .drawn-card-flip:nth-child(2) {
+    top: 275px;
+    left: calc(50% - 50px + 130px);
+    z-index: 2;
+}
+/* ③ 近未来: △lower-left */
+.drawn-cards.hexagram-layout .drawn-card-flip:nth-child(3) {
+    top: 275px;
+    left: calc(50% - 50px - 130px);
+    z-index: 2;
+}
+/* ④ 対策: ▽bottom center */
+.drawn-cards.hexagram-layout .drawn-card-flip:nth-child(4) {
+    top: 420px;
+    left: calc(50% - 50px);
+    z-index: 2;
+}
+/* ⑤ お相手: ▽upper-left */
+.drawn-cards.hexagram-layout .drawn-card-flip:nth-child(5) {
+    top: 100px;
+    left: calc(50% - 50px - 130px);
+    z-index: 2;
+}
+/* ⑥ 本人: ▽upper-right */
+.drawn-cards.hexagram-layout .drawn-card-flip:nth-child(6) {
+    top: 100px;
+    left: calc(50% - 50px + 130px);
+    z-index: 2;
+}
+/* ⑦ 最終結果: center */
+.drawn-cards.hexagram-layout .drawn-card-flip:nth-child(7) {
+    top: 195px;
+    left: calc(50% - 50px);
+    z-index: 5;
+}
+
+@media (max-width: 600px) {
+    .drawn-cards.hexagram-layout {
+        max-width: 340px;
+        height: 500px;
+    }
+    .drawn-cards.hexagram-layout .drawn-card-flip {
+        width: 80px;
+    }
+    /* ① 過去: top */
+    .drawn-cards.hexagram-layout .drawn-card-flip:nth-child(1) {
+        top: 0;
+        left: calc(50% - 40px);
+    }
+    /* ② 現在: lower-right */
+    .drawn-cards.hexagram-layout .drawn-card-flip:nth-child(2) {
+        top: 225px;
+        left: calc(50% - 40px + 100px);
+    }
+    /* ③ 近未来: lower-left */
+    .drawn-cards.hexagram-layout .drawn-card-flip:nth-child(3) {
+        top: 225px;
+        left: calc(50% - 40px - 100px);
+    }
+    /* ④ 対策: bottom */
+    .drawn-cards.hexagram-layout .drawn-card-flip:nth-child(4) {
+        top: 345px;
+        left: calc(50% - 40px);
+    }
+    /* ⑤ お相手: upper-left */
+    .drawn-cards.hexagram-layout .drawn-card-flip:nth-child(5) {
+        top: 80px;
+        left: calc(50% - 40px - 100px);
+    }
+    /* ⑥ 本人: upper-right */
+    .drawn-cards.hexagram-layout .drawn-card-flip:nth-child(6) {
+        top: 80px;
+        left: calc(50% - 40px + 100px);
+    }
+    /* ⑦ 最終結果: center */
+    .drawn-cards.hexagram-layout .drawn-card-flip:nth-child(7) {
+        top: 160px;
+        left: calc(50% - 40px);
+    }
+}
+
+/* ========== ホースシュー U字レイアウト（結果表示） ==========
+   左下→左中→左上→中央上→右上→右中→右下 */
+.drawn-cards.horseshoe-layout {
+    display: block;
+    position: relative;
+    width: 100%;
+    max-width: 460px;
+    height: 560px;
+    margin: 0 auto 24px;
+}
+.drawn-cards.horseshoe-layout .drawn-card-flip {
+    position: absolute;
+    min-width: 0;
+    max-width: none;
+    width: 100px;
+    flex: none;
+    animation: none !important;
+    opacity: 1;
+}
+/* ① 過去: 左上 */
+.drawn-cards.horseshoe-layout .drawn-card-flip:nth-child(1) {
+    top: 0;
+    left: 0;
+    z-index: 2;
+}
+/* ② 現在: 左中 */
+.drawn-cards.horseshoe-layout .drawn-card-flip:nth-child(2) {
+    top: 50%;
+    transform: translateY(-50%);
+    left: 0;
+    z-index: 2;
+}
+/* ③ 未来: 左下 */
+.drawn-cards.horseshoe-layout .drawn-card-flip:nth-child(3) {
+    bottom: 0;
+    left: 0;
+    z-index: 2;
+}
+/* ④ アドバイス: 中央下 */
+.drawn-cards.horseshoe-layout .drawn-card-flip:nth-child(4) {
+    bottom: 0;
+    left: calc(50% - 50px);
+    z-index: 3;
+}
+/* ⑤ 周囲の影響: 右下 */
+.drawn-cards.horseshoe-layout .drawn-card-flip:nth-child(5) {
+    bottom: 0;
+    right: 0;
+    z-index: 2;
+}
+/* ⑥ 障害・課題: 右中 */
+.drawn-cards.horseshoe-layout .drawn-card-flip:nth-child(6) {
+    top: 50%;
+    transform: translateY(-50%);
+    right: 0;
+    z-index: 2;
+}
+/* ⑦ 最終結果: 右上 */
+.drawn-cards.horseshoe-layout .drawn-card-flip:nth-child(7) {
+    top: 0;
+    right: 0;
+    z-index: 2;
+}
+
+@media (max-width: 600px) {
+    .drawn-cards.horseshoe-layout {
+        max-width: 340px;
+        height: 460px;
+    }
+    .drawn-cards.horseshoe-layout .drawn-card-flip {
+        width: 80px;
+    }
+}
+
+/* ========== リレーションシップクロス 十字レイアウト（結果表示） ==========
+   上:過去 / 左:自分 中央:現在 右:相手 / 下:未来 */
+.drawn-cards.rel-cross-layout {
+    display: block;
+    position: relative;
+    width: 100%;
+    max-width: 460px;
+    height: 480px;
+    margin: 0 auto 24px;
+}
+.drawn-cards.rel-cross-layout .drawn-card-flip {
+    position: absolute;
+    min-width: 0;
+    max-width: none;
+    width: 100px;
+    flex: none;
+    animation: none !important;
+    opacity: 1;
+}
+/* ① あなた: middle-left */
+.drawn-cards.rel-cross-layout .drawn-card-flip:nth-child(1) {
+    top: 160px;
+    left: calc(50% - 50px - 130px);
+    z-index: 2;
+}
+/* ② お相手: middle-right */
+.drawn-cards.rel-cross-layout .drawn-card-flip:nth-child(2) {
+    top: 160px;
+    left: calc(50% - 50px + 130px);
+    z-index: 2;
+}
+/* ③ 過去・基盤: top center */
+.drawn-cards.rel-cross-layout .drawn-card-flip:nth-child(3) {
+    top: 0;
+    left: calc(50% - 50px);
+    z-index: 3;
+}
+/* ④ 現在の関係: center */
+.drawn-cards.rel-cross-layout .drawn-card-flip:nth-child(4) {
+    top: 160px;
+    left: calc(50% - 50px);
+    z-index: 3;
+}
+/* ⑤ 未来の方向: bottom center */
+.drawn-cards.rel-cross-layout .drawn-card-flip:nth-child(5) {
+    top: 320px;
+    left: calc(50% - 50px);
+    z-index: 3;
+}
+
+@media (max-width: 600px) {
+    .drawn-cards.rel-cross-layout {
+        max-width: 340px;
+        height: 400px;
+    }
+    .drawn-cards.rel-cross-layout .drawn-card-flip {
+        width: 80px;
+    }
+    .drawn-cards.rel-cross-layout .drawn-card-flip:nth-child(1) {
+        top: 130px;
+        left: calc(50% - 40px - 100px);
+    }
+    .drawn-cards.rel-cross-layout .drawn-card-flip:nth-child(2) {
+        top: 130px;
+        left: calc(50% - 40px + 100px);
+    }
+    .drawn-cards.rel-cross-layout .drawn-card-flip:nth-child(3) {
+        top: 0;
+        left: calc(50% - 40px);
+    }
+    .drawn-cards.rel-cross-layout .drawn-card-flip:nth-child(4) {
+        top: 130px;
+        left: calc(50% - 40px);
+    }
+    .drawn-cards.rel-cross-layout .drawn-card-flip:nth-child(5) {
+        top: 260px;
+        left: calc(50% - 40px);
+    }
+}
+
+/* ========== ミラースプレッド 鏡像レイアウト（結果表示） ==========
+   上中央:テーマ / 左列:自分(思考・感情・行動) / 右列:相手(思考・感情・行動) */
+.drawn-cards.rel-mirror-layout {
+    display: block;
+    position: relative;
+    width: 100%;
+    max-width: 460px;
+    height: 620px;
+    margin: 0 auto 24px;
+}
+.drawn-cards.rel-mirror-layout .drawn-card-flip {
+    position: absolute;
+    min-width: 0;
+    max-width: none;
+    width: 100px;
+    flex: none;
+    animation: none !important;
+    opacity: 1;
+}
+/* ① 関係のテーマ: top center */
+.drawn-cards.rel-mirror-layout .drawn-card-flip:nth-child(1) {
+    top: 0;
+    left: calc(50% - 50px);
+    z-index: 3;
+}
+/* ② あなたの思考: left-top */
+.drawn-cards.rel-mirror-layout .drawn-card-flip:nth-child(2) {
+    top: 140px;
+    left: calc(50% - 50px - 130px);
+    z-index: 2;
+}
+/* ③ あなたの感情: left-middle */
+.drawn-cards.rel-mirror-layout .drawn-card-flip:nth-child(3) {
+    top: 290px;
+    left: calc(50% - 50px - 130px);
+    z-index: 2;
+}
+/* ④ あなたの行動: left-bottom */
+.drawn-cards.rel-mirror-layout .drawn-card-flip:nth-child(4) {
+    top: 440px;
+    left: calc(50% - 50px - 130px);
+    z-index: 2;
+}
+/* ⑤ お相手の思考: right-top */
+.drawn-cards.rel-mirror-layout .drawn-card-flip:nth-child(5) {
+    top: 140px;
+    left: calc(50% - 50px + 130px);
+    z-index: 2;
+}
+/* ⑥ お相手の感情: right-middle */
+.drawn-cards.rel-mirror-layout .drawn-card-flip:nth-child(6) {
+    top: 290px;
+    left: calc(50% - 50px + 130px);
+    z-index: 2;
+}
+/* ⑦ お相手の行動: right-bottom */
+.drawn-cards.rel-mirror-layout .drawn-card-flip:nth-child(7) {
+    top: 440px;
+    left: calc(50% - 50px + 130px);
+    z-index: 2;
+}
+
+@media (max-width: 600px) {
+    .drawn-cards.rel-mirror-layout {
+        max-width: 340px;
+        height: 520px;
+    }
+    .drawn-cards.rel-mirror-layout .drawn-card-flip {
+        width: 80px;
+    }
+    .drawn-cards.rel-mirror-layout .drawn-card-flip:nth-child(1) {
+        top: 0;
+        left: calc(50% - 40px);
+    }
+    .drawn-cards.rel-mirror-layout .drawn-card-flip:nth-child(2) {
+        top: 110px;
+        left: calc(50% - 40px - 100px);
+    }
+    .drawn-cards.rel-mirror-layout .drawn-card-flip:nth-child(3) {
+        top: 230px;
+        left: calc(50% - 40px - 100px);
+    }
+    .drawn-cards.rel-mirror-layout .drawn-card-flip:nth-child(4) {
+        top: 350px;
+        left: calc(50% - 40px - 100px);
+    }
+    .drawn-cards.rel-mirror-layout .drawn-card-flip:nth-child(5) {
+        top: 110px;
+        left: calc(50% - 40px + 100px);
+    }
+    .drawn-cards.rel-mirror-layout .drawn-card-flip:nth-child(6) {
+        top: 230px;
+        left: calc(50% - 40px + 100px);
+    }
+    .drawn-cards.rel-mirror-layout .drawn-card-flip:nth-child(7) {
+        top: 350px;
+        left: calc(50% - 40px + 100px);
+    }
+}
+
+/* Yes/No判定バナー */
+.yesno-verdict {
+    text-align: center;
+    padding: 20px;
+    border-radius: 16px;
+    margin-bottom: 16px;
+}
+.yesno-verdict.yes {
+    background: linear-gradient(135deg, rgba(46,204,113,0.15), rgba(46,204,113,0.05));
+    border: 2px solid rgba(46,204,113,0.4);
+}
+.yesno-verdict.no {
+    background: linear-gradient(135deg, rgba(231,76,60,0.15), rgba(231,76,60,0.05));
+    border: 2px solid rgba(231,76,60,0.4);
+}
+.yesno-verdict.maybe {
+    background: linear-gradient(135deg, rgba(241,196,15,0.15), rgba(241,196,15,0.05));
+    border: 2px solid rgba(241,196,15,0.4);
+}
+.yesno-verdict .verdict-label {
+    font-size: 2.5rem;
+    font-weight: 900;
+    margin-bottom: 4px;
+}
+.yesno-verdict.yes .verdict-label { color: #2ecc71; }
+.yesno-verdict.no .verdict-label { color: #e74c3c; }
+.yesno-verdict.maybe .verdict-label { color: #f1c40f; }
+.yesno-verdict .verdict-reason {
+    font-size: 0.9rem;
+    color: #ccc;
+    line-height: 1.7;
+}
+
+/* ========== レスポンシブ ========== */
+@media (max-width: 600px) {
+    .container { padding: 16px 12px; }
+    h1 { font-size: 1.4rem; }
+    .drawn-card-flip { min-width: 80px; }
+    .flip-card-front .card-emoji { font-size: 1.5rem; }
+    .shuffle-area { height: 240px; }
+    .tarot-card-back { width: 55px; height: 85px; }
+    .consult-btn-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    .consult-btn { padding: 12px 8px; font-size: 0.8rem; }
+}
