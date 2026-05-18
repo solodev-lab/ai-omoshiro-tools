@@ -94,6 +94,9 @@ flutter:
     - assets/menu_icons/
     - assets/catasterism_bg.webp
     - assets/catasterism_bg_void2.webp
+    - assets/catasterism-bg/bright/
+    - assets/catasterism-bg/mystical/
+    - assets/catasterism-bg/lite/
     - assets/horo-bg/
     - assets/tarot_scene/
     - assets/tarot_scene/planets/

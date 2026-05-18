@@ -5,6 +5,33 @@ import 'package:flutter/services.dart' show rootBundle;
 import '../models/galaxy_cycle.dart';
 import '../theme/solara_colors.dart';
 import '../utils/constellation_namer.dart';
+import '../utils/solara_storage.dart';
+import '../utils/title_data.dart' as title_data;
+
+// ─────────────────────────────────────────────────────────
+// 刻星化背景アセット解決テーブル (★4-5 / ★3 / ★1-2 の3層)
+//
+// adjGroup = adjIdx ~/ 2 (20形容詞 → 10色グループ)
+// 0:golden 1:silver 2:crimson 3:ethereal 4:mystic
+// 5:silent 6:frozen 7:ancient 8:infinite 9:radiant
+const _adjGroupNames = [
+  'golden', 'silver', 'crimson', 'ethereal', 'mystic',
+  'silent', 'frozen', 'ancient', 'infinite', 'radiant',
+];
+// ★1-2 (lite tier) は pisces_variants から色テーマでマッチした星座を選ぶ。
+// adjGroup index → pisces_{X}.webp の X 値マップ。
+const _liteZodiacByGroup = [
+  'leo',       // 0 golden     → leo (gold/amber)
+  'gemini',    // 1 silver     → gemini (silver/sapphire)
+  'aries',     // 2 crimson    → aries (crimson/orange fire)
+  'cancer',    // 3 ethereal   → cancer (pearlescent silver-blue)
+  'scorpio',   // 4 mystic     → scorpio (deep crimson/purple)
+  'capricorn', // 5 silent     → capricorn (slate grey/icy)
+  'aquarius',  // 6 frozen     → aquarius (electric cyan/blue)
+  'taurus',    // 7 ancient    → taurus (emerald/copper)
+  'virgo',     // 8 infinite   → virgo (sage/wheat-gold near-white)
+  'libra',     // 9 radiant    → libra (rose pink/lavender pastel)
+];
 
 // 12星座シンボル画像のファイル名 (assets/zodiac-symbols/*.webp)
 const _zodiacFiles = [
@@ -69,13 +96,54 @@ class _CatasterismFormationOverlayState
     _loadBgImage();
   }
 
+  /// レアリティ × ユーザー太陽星座 × 形容詞グループ から背景アセットパスを解決。
+  /// 候補リスト形式で返し、見つからなければ次を試す (最後は固定 fallback)。
+  List<String> _resolveBgCandidates(int rarity, String? userZodiac, int adjIdx) {
+    final group = (adjIdx ~/ 2).clamp(0, _adjGroupNames.length - 1);
+    final groupName = _adjGroupNames[group];
+    final zodiac = userZodiac ?? 'aries';
+
+    final candidates = <String>[];
+    if (rarity >= 4) {
+      // ★4-5 Legendary/Mythic — bright (11 visible zodiacs + scorpio_bright abstract)
+      candidates.add('assets/catasterism-bg/bright/bright_${groupName}_$zodiac.webp');
+    } else if (rarity == 3) {
+      // ★3 Rare — mystical (12 zodiac-specific abstract, no creature)
+      candidates.add('assets/catasterism-bg/mystical/$zodiac.webp');
+    } else {
+      // ★1-2 Common/Uncommon — lite (pisces_variants picked by color group)
+      candidates.add('assets/catasterism-bg/lite/pisces_${_liteZodiacByGroup[group]}.webp');
+    }
+    // Fallback: 旧 catasterism_bg.webp (アセットが欠けていてもクラッシュさせない)
+    candidates.add('assets/catasterism_bg.webp');
+    return candidates;
+  }
+
   Future<void> _loadBgImage() async {
+    String? userZodiac;
     try {
-      final data = await rootBundle.load('assets/catasterism_bg.webp');
-      final codec = await ui.instantiateImageCodec(data.buffer.asUint8List());
-      final frame = await codec.getNextFrame();
-      if (mounted) setState(() => _bgImage = frame.image);
+      final profile = await SolaraStorage.loadProfile();
+      if (profile != null && profile.birthDate.isNotEmpty) {
+        userZodiac = title_data.getSunSign(profile.birthDate);
+      }
     } catch (_) {}
+
+    final candidates = _resolveBgCandidates(
+      widget.cycle.rarity,
+      userZodiac,
+      widget.cycle.adjIdx,
+    );
+    for (final path in candidates) {
+      try {
+        final data = await rootBundle.load(path);
+        final codec = await ui.instantiateImageCodec(data.buffer.asUint8List());
+        final frame = await codec.getNextFrame();
+        if (mounted) setState(() => _bgImage = frame.image);
+        return;
+      } catch (_) {
+        // try next candidate
+      }
+    }
   }
 
   Future<void> _preloadZodiacImages() async {
@@ -423,9 +491,13 @@ class _FormationPainter extends CustomPainter {
     final linking = ((progress - 0.375) / 0.25).clamp(0.0, 1.0);
     final complete = ((progress - 0.625) / 0.375).clamp(0.0, 1.0);
 
-    // ── 背景画像 (2秒目からフェードイン、最大50%) ──
+    // ── 背景画像 (COMPLETE 段階でフェードイン) ──
+    // ★4-5 (bright/) は scene 豊かな高品質画像なので濃く出す。★3 中、★1-2 控えめ。
+    final bgAlphaMax = cycle.rarity >= 4 ? 0.70
+        : cycle.rarity == 3 ? 0.50
+        : 0.30;
     if (bgImage != null) {
-      final bgAlpha = ((progress - 0.625) / 0.375).clamp(0.0, 1.0) * 0.25;
+      final bgAlpha = ((progress - 0.625) / 0.375).clamp(0.0, 1.0) * bgAlphaMax;
       if (bgAlpha > 0) {
         canvas.drawImageRect(
           bgImage!,
