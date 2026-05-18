@@ -493,7 +493,9 @@ class _FormationPainter extends CustomPainter {
 
     // ── 背景画像 (COMPLETE 段階でフェードイン) ──
     // ★4-5 (bright/) は scene 豊かな高品質画像なので濃く出す。★3 中、★1-2 控えめ。
-    final bgAlphaMax = cycle.rarity >= 4 ? 0.70
+    // 🔴 (2026-05-19) ★4-5 だけ 0.70 → 0.55 に下げてもう少し暗く
+    // (オーナー要望: 完成画面の雰囲気を深くしたい、★3/★1-2 はそのまま)。
+    final bgAlphaMax = cycle.rarity >= 4 ? 0.55
         : cycle.rarity == 3 ? 0.50
         : 0.30;
     if (bgImage != null) {
