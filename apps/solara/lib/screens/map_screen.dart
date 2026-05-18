@@ -1672,6 +1672,18 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
               // 🔴 (2026-05-19) 地図領域タップで TextField (検索バー等) の
               // フォーカスを外す。 FlutterMap が onTap を消化してしまうため、
               // ルートの TapToUnfocus には届かない。 ここで明示的に unfocus。
+              //
+              // 検索 UI が開いている時 (検索ボックス展開 / 入力中 / 結果リスト表示
+              // / 選択済み focus) は、 ユーザーは popup ではなく「検索を閉じたい」
+              // 意図なので、 検索 UI をクリアして popup ロジックには進まない。
+              final hasSearchUi = _searchOpen ||
+                  _searchFocus != null ||
+                  _searchHits.isNotEmpty;
+              if (hasSearchUi) {
+                FocusScope.of(context).unfocus();
+                _clearAllSearch();
+                return;
+              }
               FocusScope.of(context).unfocus();
               if (_chartResult == null) return;
               // ① 引越し ON: 任意地点タップで relocate popup (排他)
