@@ -533,11 +533,12 @@ class _FormationPainter extends CustomPainter {
     final complete = ((progress - 0.625) / 0.375).clamp(0.0, 1.0);
 
     // ── 背景画像 (COMPLETE 段階でフェードイン) ──
-    // 🔴 (2026-05-19) 全レアリティ 0.55 一律に統一。
+    // 🔴 (2026-05-19) 全レアリティ 0.45 一律に統一。
     // 仕様改訂で variants_* は形容詞色 × ベース星座のリッチ画像 (旧 mystical
     // ほど抽象でも lite ほど控えめでもない)、 ★5 bright と同じ濃度感が自然。
     // レアリティ差別化はカード名・★星数・画像内容で行い、 濃度では行わない。
-    const bgAlphaMax = 0.55;
+    // オーナー要望で 0.55 → 0.45 に下げてさらに暗く。
+    const bgAlphaMax = 0.45;
     if (bgImage != null) {
       final bgAlpha = ((progress - 0.625) / 0.375).clamp(0.0, 1.0) * bgAlphaMax;
       if (bgAlpha > 0) {
