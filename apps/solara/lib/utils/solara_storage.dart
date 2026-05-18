@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:characters/characters.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/daily_reading.dart';
 import '../models/galaxy_cycle.dart';
@@ -329,6 +330,23 @@ class SolaraStorage {
   static Future<void> clearTitleHistory() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_titleHistoryKey);
+  }
+
+  /// 指定 savedAt のエントリにメモを書き込む (200 字 cap、超過は切詰)。
+  /// savedAt が一致するレコードが無ければ no-op (履歴削除後の遅延書込みを許容)。
+  /// 称号変遷ギャラリーで「商号変更時の心境」を残す用途。
+  static Future<void> updateTitleHistoryNote(
+      String savedAt, String note) async {
+    final list = (await loadTitleHistory()).toList();
+    final idx = list.indexWhere((e) => e['savedAt'] == savedAt);
+    if (idx < 0) return;
+    final trimmed = note.characters.take(200).toString();
+    list[idx] = {
+      ...list[idx],
+      'note': trimmed,
+    };
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_titleHistoryKey, json.encode(list));
   }
 
   static Future<DailyReading?> getTodayReading() async {

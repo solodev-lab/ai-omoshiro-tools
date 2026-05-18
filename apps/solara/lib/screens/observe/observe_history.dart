@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import '../../models/daily_reading.dart';
 import '../../models/tarot_card.dart';
+import '../../theme/solara_colors.dart';
 import '../../utils/pro_status.dart';
 import '../../utils/solara_storage.dart';
 import '../../utils/tarot_data.dart';
+import '../../widgets/memo_text_field.dart';
+import '../../widgets/pro_unlock_dialog.dart';
 import 'observe_constants.dart';
 import 'observe_history_filter.dart';
+import 'observe_reading_sheet.dart';
 
 // ══════════════════════════════════════════════════
 // History Panel
@@ -279,6 +283,8 @@ class _ObserveHistoryPanelState extends State<ObserveHistoryPanel> {
           ]),
           const SizedBox(height: 6),
           Text(r.reading, style: const TextStyle(fontSize: 12, color: Color(0xD9E8E0D0), height: 1.7)),
+          const SizedBox(height: 8),
+          _FullReadingButton(card: card, reading: r),
           const SizedBox(height: 12),
         ],
         Container(
@@ -298,8 +304,9 @@ class _ObserveHistoryPanelState extends State<ObserveHistoryPanel> {
               ),
             ]),
             const SizedBox(height: 6),
-            _SyncInput(
+            MemoTextField(
               initialText: r.synchronicity,
+              hintText: '偶然の一致や気づきをメモ...',
               onChanged: (text) {
                 r.synchronicity = text;
                 SolaraStorage.updateSynchronicity(r.date, text);
@@ -313,71 +320,76 @@ class _ObserveHistoryPanelState extends State<ObserveHistoryPanel> {
 }
 
 // ══════════════════════════════════════════════════
-// Synchronicity Input (separate StatefulWidget for TextField state)
+// Pro 限定: READING 本文を独立シートで読みやすく表示するボタン
+// 一覧で全文がだーっと出るのを避け、希望者だけ集中して読める導線。
 // ══════════════════════════════════════════════════
 
-class _SyncInput extends StatefulWidget {
-  final String initialText;
-  final ValueChanged<String> onChanged;
-
-  const _SyncInput({required this.initialText, required this.onChanged});
-
-  @override
-  State<_SyncInput> createState() => _SyncInputState();
-}
-
-class _SyncInputState extends State<_SyncInput> {
-  late final TextEditingController _ctrl;
-  bool _showSaved = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _ctrl = TextEditingController(text: widget.initialText);
-  }
-
-  @override
-  void dispose() {
-    _ctrl.dispose();
-    super.dispose();
-  }
-
-  void _onChanged(String text) {
-    widget.onChanged(text);
-    setState(() => _showSaved = true);
-    Future.delayed(const Duration(milliseconds: 1500), () {
-      if (mounted) setState(() => _showSaved = false);
-    });
-  }
+class _FullReadingButton extends StatelessWidget {
+  final TarotCard card;
+  final DailyReading reading;
+  const _FullReadingButton({required this.card, required this.reading});
 
   @override
   Widget build(BuildContext context) {
-    return Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
-      TextField(
-        controller: _ctrl,
-        onChanged: _onChanged,
-        maxLines: null,
-        minLines: 2,
-        style: const TextStyle(fontSize: 12, color: Color(0xFFE8E0D0)),
-        decoration: InputDecoration(
-          hintText: '偶然の一致や気づきをメモ...',
-          hintStyle: const TextStyle(color: Color(0xFF444444)),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-          filled: true,
-          fillColor: const Color(0x990F0F1E),
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: Color(0x1FC9A84C))),
-          enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: Color(0x1FC9A84C))),
-          focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: Color(0x4DC9A84C))),
+    final isPro = ProStatus.instance.isPro;
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () {
+        if (isPro) {
+          showObserveReadingSheet(context, card: card, reading: reading);
+        } else {
+          showProUnlockDialog(
+            context,
+            featureLabel: '占いの全文を読み返す',
+            description: '過去にカードを引いたときの Stella の言葉を、'
+                '読書するように 1 枚画面に集中して読み返せます。',
+          );
+        }
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: isPro
+                ? const Color(0x66F6BD60)
+                : const Color(0x33F6BD60),
+          ),
+          color: isPro ? const Color(0x14F6BD60) : const Color(0x08F6BD60),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('📖',
+                style: TextStyle(fontSize: 11)),
+            const SizedBox(width: 6),
+            const Flexible(
+              child: Text(
+                '全文を読みやすく表示',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 11,
+                  color: SolaraColors.solaraGoldLight,
+                  letterSpacing: 0.4,
+                ),
+              ),
+            ),
+            if (!isPro) ...[
+              const SizedBox(width: 6),
+              const Icon(Icons.lock_outline,
+                  size: 11, color: Color(0xFFF6BD60)),
+              const SizedBox(width: 3),
+              const Text('Pro',
+                  style: TextStyle(
+                      fontSize: 9,
+                      color: Color(0xFFF6BD60),
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 0.4)),
+            ],
+          ],
         ),
       ),
-      AnimatedOpacity(
-        opacity: _showSaved ? 1.0 : 0.0,
-        duration: const Duration(milliseconds: 300),
-        child: const Padding(
-          padding: EdgeInsets.only(top: 4),
-          child: Text('saved', style: TextStyle(fontSize: 9, color: Color(0xFFC9A84C))),
-        ),
-      ),
-    ]);
+    );
   }
 }

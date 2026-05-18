@@ -232,6 +232,11 @@ class _ObserveScreenState extends State<ObserveScreen>
         _readingFromApi = false;
       });
       _generateReadingStatic(card, reversed);
+      // 履歴閲覧時にも READING が見えるよう、fallback 文章も永続化する
+      // (柱3 原則: 自分の記録は失わない)。API 成功時の `reading.reading = ...`
+      // と対になるバグ修正 (2026-05-18)。
+      reading.reading = _readingText;
+      await SolaraStorage.updateReading(reading);
     }
   }
 

@@ -22,6 +22,7 @@ import 'package:flutter/material.dart';
 import '../../theme/solara_colors.dart';
 import '../../utils/solara_storage.dart';
 import '../../utils/title_data.dart' as title_data;
+import '../../widgets/memo_text_field.dart';
 
 class TitleHistoryScreen extends StatefulWidget {
   /// テスト用 hook (デフォルト null で SolaraStorage を読む)。
@@ -230,6 +231,7 @@ class _TitleChainRow extends StatelessWidget {
     final classEN = record['classEN'] as String? ?? '';
     final lightJP = record['lightJP'] as String? ?? '';
     final shadowJP = record['shadowJP'] as String? ?? '';
+    final note = record['note'] as String? ?? '';
 
     final cls = (axis.isNotEmpty && court.isNotEmpty)
         ? title_data.getClassByAxisCourt(axis, court)
@@ -376,6 +378,18 @@ class _TitleChainRow extends StatelessWidget {
                   ),
                 ),
               ],
+            ),
+          ],
+          if (savedAtRaw.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            MemoTextField(
+              initialText: note,
+              label: 'NOTE',
+              labelIcon: '✎',
+              hintText: '商号が変わったときの状況や心境を、自分のために残す',
+              onChanged: (text) {
+                SolaraStorage.updateTitleHistoryNote(savedAtRaw, text);
+              },
             ),
           ],
         ],
