@@ -5,44 +5,45 @@
 
 ## サマリ
 
-- ファイル数: 5 / 総行数: 2206
+- ファイル数: 5 / 総行数: 2278
 - class/mixin/extension/enum: 11
-- 関数 (top-level + method の素拾い): 57
+- 関数 (top-level + method の素拾い): 58
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 0
 - Worker URL リテラル: 0
 
 ## ファイル別
 
-### `lib/widgets/catasterism_formation_overlay.dart` (631 行)
+### `lib/widgets/catasterism_formation_overlay.dart` (703 行)
 
-**imports:** dart=2 / package=2 / relative=3
+**imports:** dart=2 / package=2 / relative=5
 
-- relative: `../models/galaxy_cycle.dart`, `../theme/solara_colors.dart`, `../utils/constellation_namer.dart`
+- relative: `../models/galaxy_cycle.dart`, `../theme/solara_colors.dart`, `../utils/constellation_namer.dart`, `../utils/solara_storage.dart`, `../utils/title_data.dart`
 
 **型定義 (2):**
 
-- L23 `class CatasterismFormationOverlay : StatefulWidget`
+- L50 `class CatasterismFormationOverlay : StatefulWidget`
   - 刻星化 (Catasterism) 完了演出オーバーレイ
-- L377 `class _FormationPainter : CustomPainter`
+- L445 `class _FormationPainter : CustomPainter`
   - 4ステージ専用Painter
 
-**関数 (7 public + 4 private):**
+**関数 (7 public + 5 private):**
 
-- L41 `createState()`
-- L55 `initState()`
-- L97 `dispose()`
-- L118 `build()`
-- L405 `paint()`
-- L417 `toScreen()`
-- L629 `shouldRepaint()`
+- L68 `createState()`
+- L82 `initState()`
+- L165 `dispose()`
+- L186 `build()`
+- L473 `paint()`
+- L485 `toScreen()`
+- L701 `shouldRepaint()`
 
-  <details><summary>private 関数 4 件</summary>
+  <details><summary>private 関数 5 件</summary>
 
-  - L72 `_loadBgImage()`
-  - L81 `_preloadZodiacImages()`
-  - L103 `_stageLabel()`
-  - L110 `_stageLabelJP()`
+  - L101 `_resolveBgCandidates()`
+  - L122 `_loadBgImage()`
+  - L149 `_preloadZodiacImages()`
+  - L171 `_stageLabel()`
+  - L178 `_stageLabelJP()`
 
   </details>
 

@@ -355,7 +355,7 @@
 | 2c | · | · | 1 | · | · | · | · | · | · | · | · | · | · | · | · | · |
 | 3a | 1 | 4 | 2 | 2 | 1 | 1 | 8 | 6 | 4 | 1 | · | · | · | · | 1 | · |
 | 3b | · | · | · | · | · | · | · | 1 | · | · | · | · | · | · | · | · |
-| 3c | · | 4 | 4 | 2 | 3 | · | 12 | 4 | · | · | · | · | · | · | · | · |
+| 3c | · | 5 | 4 | 2 | 4 | · | 12 | 4 | · | · | · | · | · | · | · | · |
 | 4a | 10 | 11 | · | 13 | 7 | · | 18 | 23 | 3 | 31 | 2 | · | · | · | 3 | · |
 | 4b | 5 | 10 | · | 6 | 4 | · | 13 | · | · | · | 29 | · | · | 2 | · | · |
 | 4c | 1 | · | 7 | 1 | 5 | 3 | 2 | · | · | · | · | 9 | · | · | · | · |
@@ -374,7 +374,7 @@
 | ファイル | 層 | 被 import 数 |
 | --- | --- | --- |
 | `lib/theme/solara_colors.dart` | 3b | 28 |
-| `lib/utils/solara_storage.dart` | 2b | 22 |
+| `lib/utils/solara_storage.dart` | 2b | 23 |
 | `lib/widgets/info_popup.dart` | 3a | 21 |
 | `lib/screens/map/map_constants.dart` | 3b | 20 |
 | `lib/utils/pro_status.dart` | 2b | 17 |
@@ -392,7 +392,7 @@
 | `lib/utils/tarot_data.dart` | 2c | 7 |
 | `lib/widgets/glass_panel.dart` | 3a | 7 |
 | `lib/utils/astro_glossary.dart` | 1b | 6 |
-| `lib/widgets/fortune_overlays/_common.dart` | 3a | 6 |
+| `lib/utils/title_data.dart` | 1b | 6 |
 
 ### #5c 孤立ファイル (2) — 誰からも import されない
 
@@ -407,9 +407,11 @@
 > 各ソースの SHA1 を `_stamps.json` に記録し、差分を検出。
 > 変更されたファイルが属する層は、人手版インベントリ章の見直し対象。
 
-- 追加: **0** / 削除: **0** / 変更: **0**
+- 追加: **0** / 削除: **0** / 変更: **1**
 
-- 変更なし — 全インベントリ章は最新。
+### 変更されたファイル (層別)
+
+- **層 3c**: `lib/widgets/catasterism_formation_overlay.dart`
 
 ## #7 astro_glossary 用語辞書対整合
 
