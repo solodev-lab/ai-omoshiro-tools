@@ -146,8 +146,24 @@ CyclOSM は 2026-05-09 にクライアント側から撤去（OSM usage policy �
 
 ## TODO
 
-- [ ] プライバシーポリシーのHTMLを solodev-lab.com に設置
-- [ ] アプリ内 Sanctuary画面の Privacy Policy リンクを接続
-- [ ] 星読み結果画面に免責文言を表示
-- [ ] 初回起動時の同意画面（オプション）
+- [x] プライバシーポリシーのHTMLを solodev-lab.com に設置 (2026-05-18 `legal/solara/privacy.html`)
+- [x] EULA / 利用規約のHTMLを solodev-lab.com に設置 (2026-05-18 `legal/solara/terms.html`)
+- [x] 特定商取引法表記のHTMLを solodev-lab.com に設置 (2026-05-18 `legal/solara/scta-ios.html` + `scta-android.html`、Platform 分岐)
+- [x] 解約方法案内ページを solodev-lab.com に設置 (2026-05-18 `legal/solara/cancel.html`)
+- [x] アプリ内 Sanctuary画面の Privacy/Terms/特商法/解約 リンクを接続 (2026-05-17 `sanctuary_legal_menu.dart` + 5-18 Platform 分岐 `legal_urls.dart`)
+- [x] 星読み結果画面に免責文言を表示 (terms 第 4 条 + privacy 第 7 章 + 各 scta 内に明記)
+- [ ] 初回起動時の同意画面（オプション、未実装）
 - [ ] Map画面に OSM HOT の Attribution 表記を追加（ストア公開前 必須）
+- [ ] 英語版法務文書作成 (i18n フェーズ、ストアアップ前最終工程)
+
+## 事業者名義 (確定 2026-05-18)
+
+- **App Store 版**: 個人事業主 林宏治 (Apple Developer Individual)
+  - 連絡先: 〒450-0002 愛知県名古屋市中村区名駅4丁目24番5号 第2森ビル401 (名古屋オフィス・バーチャル)
+  - 電話: 090-9207-6232 / メール: usin.kodima@gmail.com
+- **Google Play 版**: 法人 arrayu 株式会社 (Google Play Console Organization)
+  - 代表取締役: 林 明美 / 法人番号: 6200001034302
+  - 本店: 岐阜県岐阜市上土居787番地5 / 営業所: 名古屋オフィス
+  - DUNS 番号: 693478707 (D&B 経由で住所連動)
+- **特商法表記**: Platform 分岐 (`LegalUrls.specifiedCommercialTransactions` が iOS=scta-ios, Android=scta-android を返す)
+- **将来検討**: Stage 2 以降で住所公開リスク顕在化時、法人本店移転登記 or 個人事業主 + 新規 DUNS 取得を再検討

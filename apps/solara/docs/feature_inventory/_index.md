@@ -9,10 +9,10 @@
 | 層 | 名称 | ファイル数 | Markdown |
 | --- | --- | --- | --- |
 | 0 | Worker (バックエンド計算式) | 10 | [00_worker.md](00_worker.md) |
-| 1a | 純計算ユーティリティ | 8 | [01a_pure_calc.md](01a_pure_calc.md) |
+| 1a | 純計算ユーティリティ | 7 | [01a_pure_calc.md](01a_pure_calc.md) |
 | 1b | 静的データ辞書 | 13 | [01b_static_data.md](01b_static_data.md) |
 | 1c | モデルクラス | 4 | [01c_models.md](01c_models.md) |
-| 2a | API/Worker ラッパ | 9 | [02a_api_wrappers.md](02a_api_wrappers.md) |
+| 2a | API/Worker ラッパ | 10 | [02a_api_wrappers.md](02a_api_wrappers.md) |
 | 2b | 永続化/キャッシュ | 7 | [02b_persistence.md](02b_persistence.md) |
 | 2c | グローバル singleton | 1 | [02c_globals.md](02c_globals.md) |
 | 3a | 共通ウィジェット (純粋) | 23 | [03a_widgets_pure.md](03a_widgets_pure.md) |
