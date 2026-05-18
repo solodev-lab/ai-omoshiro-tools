@@ -633,6 +633,8 @@ class HoroscopeScreenState extends State<HoroscopeScreen>
     return TapToUnfocus(
       child: Scaffold(
       backgroundColor: Colors.transparent,
+      // 🔴 (2026-05-19) キーボードで背景がずれないよう false 統一。
+      resizeToAvoidBottomInset: false,
       body: _mysticalBackdrop(
         child: SafeArea(
           child: Column(children: [
