@@ -299,17 +299,26 @@ class _ObserveScreenState extends State<ObserveScreen>
 
   @override
   Widget build(BuildContext context) {
-    return TarotAltarScene(
-      child: SafeArea(
-        child: Column(children: [
-          _buildInnerTabs(),
-          Expanded(
-            child: _innerTab == 0 ? _buildDrawPanel() : ObserveHistoryPanel(
-              history: _history,
-              onCleared: _loadHistory,
+    // 🔴 (2026-05-19) Tarot 画面内の全 TextField (Pro テーマ欄 / HISTORY メモ /
+    // 過去サイクルメモ) に対して、 入力欄外をタップしたらフォーカスを外す
+    // (= 入力確定してキーボードを閉じる) 統一挙動を提供する。
+    // HitTestBehavior.translucent で子の GestureDetector / TextField は通常通り
+    // 反応しつつ、 空いた領域のタップだけここで拾う。
+    return GestureDetector(
+      behavior: HitTestBehavior.translucent,
+      onTap: () => FocusScope.of(context).unfocus(),
+      child: TarotAltarScene(
+        child: SafeArea(
+          child: Column(children: [
+            _buildInnerTabs(),
+            Expanded(
+              child: _innerTab == 0 ? _buildDrawPanel() : ObserveHistoryPanel(
+                history: _history,
+                onCleared: _loadHistory,
+              ),
             ),
-          ),
-        ]),
+          ]),
+        ),
       ),
     );
   }
