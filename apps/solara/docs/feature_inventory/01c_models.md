@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 4 / 総行数: 344
+- ファイル数: 4 / 総行数: 374
 - class/mixin/extension/enum: 7
 - 関数 (top-level + method の素拾い): 8
 - Navigator.push 等: 0
@@ -25,7 +25,7 @@
 - L25 `toJson()`
 
 
-### `lib/models/galaxy_cycle.dart` (119 行)
+### `lib/models/galaxy_cycle.dart` (149 行)
 
 **imports:** dart=0 / package=0 / relative=1
 
@@ -39,11 +39,11 @@
 **関数 (2 public + 1 private):**
 
 - L20 `toJson()`
-- L84 `toJson()`
+- L110 `toJson()`
 
   <details><summary>private 関数 1 件</summary>
 
-  - L76 `_monthName()`
+  - L102 `_monthName()`
 
   </details>
 

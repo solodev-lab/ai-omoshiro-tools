@@ -5,9 +5,9 @@
 
 ## サマリ
 
-- ファイル数: 7 / 総行数: 2274
-- class/mixin/extension/enum: 21
-- 関数 (top-level + method の素拾い): 63
+- ファイル数: 10 / 総行数: 2929
+- class/mixin/extension/enum: 23
+- 関数 (top-level + method の素拾い): 72
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 0
 - Worker URL リテラル: 0
@@ -46,37 +46,35 @@ Shared constants for Observe (Tarot) screen
 ```
 
 
-### `lib/screens/observe/observe_history.dart` (383 行)
+### `lib/screens/observe/observe_history.dart` (423 行)
 
-**imports:** dart=0 / package=1 / relative=7
+**imports:** dart=0 / package=1 / relative=12
 
-- relative: `../../models/daily_reading.dart`, `../../models/tarot_card.dart`, `../../utils/pro_status.dart`, `../../utils/solara_storage.dart`, `../../utils/tarot_data.dart`, `observe_constants.dart`, `observe_history_filter.dart`
+- relative: `../../models/daily_reading.dart`, `../../models/galaxy_cycle.dart`, `../../models/tarot_card.dart`, `../../theme/solara_colors.dart`, `../../utils/pro_status.dart`, `../../utils/solara_storage.dart`, `../../utils/tarot_data.dart`, `../../widgets/memo_text_field.dart`, `observe_constants.dart`, `observe_history_filter.dart`, `observe_history_past.dart`, `observe_reading_button.dart`
 
-**型定義 (4):**
+**型定義 (2):**
 
-- L15 `class ObserveHistoryPanel : StatefulWidget`
-- L24 `class _ObserveHistoryPanelState : State`
-- L319 `class _SyncInput : StatefulWidget`
-- L329 `class _SyncInputState : State`
+- L20 `class ObserveHistoryPanel : StatefulWidget`
+- L29 `class _ObserveHistoryPanelState : State`
 
-**関数 (8 public + 5 private):**
+**関数 (4 public + 9 private):**
 
-- L21 `createState()`
-- L29 `initState()`
-- L35 `dispose()`
-- L76 `build()`
-- L326 `createState()`
-- L334 `initState()`
-- L340 `dispose()`
-- L354 `build()`
+- L26 `createState()`
+- L41 `initState()`
+- L58 `dispose()`
+- L99 `build()`
 
-  <details><summary>private 関数 5 件</summary>
+  <details><summary>private 関数 9 件</summary>
 
-  - L40 `_onProChanged()`
-  - L52 `_confirmClearHistory()`
-  - L165 `_buildHistoryCard()`
-  - L243 `_buildHistoryDetail()`
-  - L345 `_onChanged()`
+  - L46 `_ensurePastCyclesLoaded()`
+  - L63 `_onProChanged()`
+  - L75 `_confirmClearHistory()`
+  - L145 `_buildInnerTabBar()`
+  - L156 `_innerTabBtn()`
+  - L188 `_buildCurrentTabContent()`
+  - L249 `_buildPastTabContent()`
+  - L269 `_buildHistoryCard()`
+  - L347 `_buildHistoryDetail()`
 
   </details>
 
@@ -137,7 +135,51 @@ Natal Tarot 履歴フィルタ — C3 (Pro 機能、柱 3)
   </details>
 
 
-### `lib/screens/observe/observe_question_field.dart` (181 行)
+### `lib/screens/observe/observe_history_past.dart` (313 行)
+
+**ファイル先頭コメント:**
+
+```
+過去サイクル履歴パネル — 月サイクルをまたいで GalaxyCycle に取り込まれた
+過去 readings を、 cycle 別にグルーピングして閲覧する。
+
+設計 (2026-05-19、 オーナー要望):
+- 柱3 原則「Free でも自分の記録は永久に残る」徹底
+- 現在サイクルの readings は ObserveHistoryPanel で見える
+- 過去サイクルの readings は GalaxyCycle.readings に取り込まれて
+  通常の HISTORY 画面からは見えなくなっていた → 本 widget で復活
+
+注: MVP として SYNCHRONICITY メモは表示のみ (編集は後フェーズ)。
+完了サイクルに含まれる reading の synchronicity は cycle.readings 内に
+凍結状態で残るため、 編集には completed_cycles 全体の再書込が必要で、
+オペレーションコストが高い。 まずは閲覧から。
+```
+
+**imports:** dart=0 / package=1 / relative=9
+
+- relative: `../../models/daily_reading.dart`, `../../models/galaxy_cycle.dart`, `../../models/tarot_card.dart`, `../../theme/solara_colors.dart`, `../../utils/solara_storage.dart`, `../../utils/tarot_data.dart`, `../../widgets/memo_text_field.dart`, `observe_constants.dart`, `observe_reading_button.dart`
+
+**型定義 (2):**
+
+- L27 `class ObserveHistoryPastPanel : StatefulWidget`
+- L36 `class _ObserveHistoryPastPanelState : State`
+
+**関数 (2 public + 4 private):**
+
+- L32 `createState()`
+- L44 `build()`
+
+  <details><summary>private 関数 4 件</summary>
+
+  - L68 `_buildCycleCard()`
+  - L147 `_buildReadingsList()`
+  - L174 `_buildReadingRow()`
+  - L244 `_buildReadingDetail()`
+
+  </details>
+
+
+### `lib/screens/observe/observe_question_field.dart` (200 行)
 
 **型定義 (1):**
 
@@ -145,8 +187,67 @@ Natal Tarot 履歴フィルタ — C3 (Pro 機能、柱 3)
 
 **関数 (2 public + 0 private):**
 
-- L20 `buildQuestionField()` — Pro 専用: 「相談者のテーマ」入力欄。
-- L104 `buildQuestionFieldTeaser()` — Free 向け誘導: 質問欄を見せず、「Pro でテーマを添えられる」と説明する CTA。
+- L26 `buildQuestionField()` — Pro 専用: 「相談者のテーマ」入力欄。
+- L123 `buildQuestionFieldTeaser()` — Free 向け誘導: 質問欄を見せず、「Pro でテーマを添えられる」と説明する CTA。
+
+
+### `lib/screens/observe/observe_reading_button.dart` (90 行)
+
+**ファイル先頭コメント:**
+
+```
+「📖 占いの全文を読みやすく表示」ボタン共通実装 (2026-05-19)。
+
+observe_history.dart (現在サイクル HISTORY) と observe_history_past.dart
+(過去サイクル HISTORY) の両方で使うため、 重複コードを 1 つに集約。
+
+役割:
+  - Pro: タップで observe_reading_sheet を起動 (READING 全文を独立シート表示)
+  - Free: タップで Pro Unlock dialog 表示
+```
+
+**imports:** dart=0 / package=1 / relative=6
+
+- relative: `../../models/daily_reading.dart`, `../../models/tarot_card.dart`, `../../theme/solara_colors.dart`, `../../utils/pro_status.dart`, `../../widgets/pro_unlock_dialog.dart`, `observe_reading_sheet.dart`
+
+**型定義 (1):**
+
+- L19 `class ObserveFullReadingButton : StatelessWidget`
+
+**関数 (1 public + 0 private):**
+
+- L29 `build()`
+
+
+### `lib/screens/observe/observe_reading_sheet.dart` (183 行)
+
+**ファイル先頭コメント:**
+
+```
+タロット履歴 — 「📖 占いの全文を読みやすく表示」シート (Pro 限定)
+
+設計:
+  - HISTORY 詳細展開でも READING 本文は表示されるが、一覧で全文を見ると
+    圧迫感がある。希望者だけ集中して読める読書モードを提供する。
+  - 縦スクロール 1 ページ、フォント大きめ・行間広め。
+  - 装飾は最小限 (カード名 + 日付ヘッダ + READING 本文 + close)。
+
+呼出: observe/observe_history.dart の _FullReadingButton から
+      showObserveReadingSheet(context, card, reading) で起動。
+```
+
+**imports:** dart=0 / package=1 / relative=4
+
+- relative: `../../models/daily_reading.dart`, `../../models/tarot_card.dart`, `../../theme/solara_colors.dart`, `observe_constants.dart`
+
+**型定義 (1):**
+
+- L33 `class _ReadingSheet : StatelessWidget`
+
+**関数 (2 public + 0 private):**
+
+- L19 `showObserveReadingSheet()`
+- L39 `build()`
 
 
 ### `lib/screens/observe/tarot_altar_scene.dart` (500 行)
@@ -180,41 +281,41 @@ Natal Tarot 履歴フィルタ — C3 (Pro 機能、柱 3)
   </details>
 
 
-### `lib/screens/observe_screen.dart` (560 行)
+### `lib/screens/observe_screen.dart` (570 行)
 
-**imports:** dart=2 / package=1 / relative=12
+**imports:** dart=2 / package=1 / relative=13
 
-- relative: `../models/daily_reading.dart`, `../models/tarot_card.dart`, `../utils/fortune_api.dart`, `../utils/moon_phase.dart`, `../utils/pro_status.dart`, `../utils/solara_storage.dart`, `../utils/tarot_data.dart`, `../widgets/pro_unlock_dialog.dart`, `observe/observe_constants.dart`, `observe/observe_card_widgets.dart`, `observe/observe_history.dart`, `observe/tarot_altar_scene.dart`
+- relative: `../models/daily_reading.dart`, `../models/tarot_card.dart`, `../utils/fortune_api.dart`, `../utils/moon_phase.dart`, `../utils/pro_status.dart`, `../utils/solara_storage.dart`, `../utils/tarot_data.dart`, `../widgets/pro_unlock_dialog.dart`, `../widgets/tap_to_unfocus.dart`, `observe/observe_constants.dart`, `observe/observe_card_widgets.dart`, `observe/observe_history.dart`, `observe/tarot_altar_scene.dart`
 
 **型定義 (2):**
 
-- L22 `class ObserveScreen : StatefulWidget`
+- L23 `class ObserveScreen : StatefulWidget`
   - Tarot Draw screen — matches tarot.html exactly.
-- L28 `class _ObserveScreenState : State`
+- L29 `class _ObserveScreenState : State`
 
 **関数 (4 public + 14 private):**
 
-- L25 `createState()`
-- L97 `initState()`
-- L112 `dispose()`
-- L296 `build()`
+- L26 `createState()`
+- L98 `initState()`
+- L113 `dispose()`
+- L302 `build()`
 
   <details><summary>private 関数 14 件</summary>
 
-  - L48 `_startLoadingMessageRotation()`
-  - L60 `_stopLoadingMessageRotation()`
-  - L105 `_onProStatusChanged()`
-  - L121 `_checkTodayReading()`
-  - L146 `_loadHistory()`
-  - L151 `_drawCard()`
-  - L240 `_resetTodayReading()`
-  - L264 `_generateReadingStatic()`
-  - L281 `_startTypewriter()`
-  - L316 `_buildInnerTabs()`
-  - L330 `_innerTabBtn()`
-  - L351 `_buildDrawPanel()`
-  - L443 `_buildLoadingIndicator()`
-  - L518 `_buildReadingPanel()`
+  - L49 `_startLoadingMessageRotation()`
+  - L61 `_stopLoadingMessageRotation()`
+  - L106 `_onProStatusChanged()`
+  - L122 `_checkTodayReading()`
+  - L147 `_loadHistory()`
+  - L152 `_drawCard()`
+  - L246 `_resetTodayReading()`
+  - L270 `_generateReadingStatic()`
+  - L287 `_startTypewriter()`
+  - L326 `_buildInnerTabs()`
+  - L340 `_innerTabBtn()`
+  - L361 `_buildDrawPanel()`
+  - L453 `_buildLoadingIndicator()`
+  - L528 `_buildReadingPanel()`
 
   </details>
 

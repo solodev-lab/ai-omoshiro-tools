@@ -5,12 +5,12 @@
 
 ## サマリ
 
-- ファイル数: 9 / 総行数: 1908
-- class/mixin/extension/enum: 18
+- ファイル数: 10 / 総行数: 1964
+- class/mixin/extension/enum: 19
 - 関数 (top-level + method の素拾い): 32
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 0
-- Worker URL リテラル: 14
+- Worker URL リテラル: 15
 
 ## ファイル別
 
@@ -227,6 +227,49 @@ Fortune API - /fortune エンドポイント (Stella の声を取得)
 - L42 `fetchFortune()` — /fortune を叩いて占い文を取得
 - L143 `fetchRelocationNarrative()` — /relocation を叩いてリロケーション解説を取得。
 - L210 `fetchTarotReading()` — /tarot を叩いて1枚引きの Reading を生成する。
+
+
+### `lib/utils/legal_urls.dart` (56 行)
+
+**ファイル先頭コメント:**
+
+```
+Solara 法務リンク定数 — Phase 2-6b
+
+設計: docs/legal.md + launch_checklist Phase 0 (法的書類)
+
+役割:
+  - プライバシーポリシー / 利用規約 (EULA) / 特定商取引法に基づく表記 / 解約案内 の URL を一元化
+  - 公開ブロッカー B5 (3.1.2): ペイウォールから EULA / プライバシーをクリック可能リンクで提示するため
+
+現状 (2026-05-18):
+  - 3 文書は solodev-lab.com 配下に静的公開 (legal/solara/ 配下)
+  - 公開前に同じ URL に本物を up すれば、コード変更ゼロで反映される
+  - 「解約方法」は iOS=設定アプリ deep link / Android=Play Store 該当ページ
+    (どちらも `url_launcher.launchUrl(mode: externalApplication)` で開く)
+
+🔴 特商法表記は Platform 分岐:
+  - iOS = 個人事業主 林宏治 名義 (scta-ios.html)
+  - Android = 法人 arrayu 株式会社 名義 (scta-android.html)
+  - App Store と Google Play Developer Program の登録名義が異なるため両ストア審査の整合を取る
+
+🔴 launch_checklist 連動:
+  - Phase 0 完了時に同 URL に文書を公開してから審査提出する
+  - Phase 0 未完で本番ビルドを出すと審査リジェクト (B5)、絶対に飛ばさない
+
+🔴 i18n:
+  - 当面 ja-JP のみ。ストアアップ前最終工程で EN 版 URL を追加 (feedback_i18n_last)
+```
+
+**imports:** dart=1 / package=0 / relative=0
+
+**型定義 (1):**
+
+- L29 `class LegalUrls`
+
+**Worker URL リテラル (1):**
+
+- L30: `'https://solodev-lab.com/legal/solara'`
 
 
 ### `lib/utils/reverse_geocode.dart` (100 行)
