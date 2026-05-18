@@ -94,11 +94,25 @@ class _SolaraHomeState extends State<SolaraHome> {
   final _horoKey = GlobalKey<HoroscopeScreenState>();
   final _galaxyKey = GlobalKey<GalaxyScreenState>();
 
+  /// Galaxy 画面が overlay (replay / formation / moon 系) を表示中かどうか。
+  /// 🔴 (2026-05-19) Flutter PopScope は階層を持たず、本 PopScope の
+  /// onPopInvokedWithResult が Galaxy 内 PopScope と **同時に** 呼ばれる。
+  /// Galaxy が overlay を出している間は Map タブへの戻しを抑止して、
+  /// 内側 PopScope の overlay 閉じる処理だけを動かす。
+  bool _galaxyHasOverlay = false;
+
+  void _onGalaxyOverlayChanged(bool active) {
+    if (!mounted) return;
+    if (_galaxyHasOverlay != active) {
+      setState(() => _galaxyHasOverlay = active);
+    }
+  }
+
   late final _screens = <Widget>[
     MapScreen(key: _mapKey, onNavigateToSanctuary: () => _onTabTap(4)),
     HoroscopeScreen(key: _horoKey, onNavigateToSanctuary: () => _onTabTap(4)),
     const ObserveScreen(),
-    GalaxyScreen(key: _galaxyKey),
+    GalaxyScreen(key: _galaxyKey, onOverlayChanged: _onGalaxyOverlayChanged),
     const SanctuaryScreen(),
   ];
 
@@ -131,10 +145,17 @@ class _SolaraHomeState extends State<SolaraHome> {
     //   - Map タブ → アプリを閉じる (= 通常の root pop = SystemNavigator.pop)
     // タブ内 overlay (Daily Transit 等) は map_screen.dart の PopScope で
     // 先に消化される (AND 評価で本 PopScope より下位)。
+    //
+    // 🔴 (2026-05-19) Galaxy overlay 表示中 (_galaxyHasOverlay=true) は
+    // Map タブへの戻し処理を抑止する。Flutter PopScope は階層を持たず、
+    // 内側 (Galaxy 内 overlay PopScope) と外側 (本 PopScope) の
+    // onPopInvokedWithResult が同時に呼ばれる仕様のため、ここで明示的に
+    // 「Galaxy が overlay 処理中なら触らない」と宣言する必要がある。
     return PopScope(
       canPop: _currentIndex == 0,
       onPopInvokedWithResult: (didPop, result) {
         if (didPop) return;
+        if (_galaxyHasOverlay) return; // Galaxy 内 PopScope に任せる
         if (_currentIndex != 0) {
           _onTabTap(0);
         }

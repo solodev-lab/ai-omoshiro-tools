@@ -29,7 +29,18 @@ import 'galaxy/galaxy_star_atlas.dart';
 import 'galaxy/galaxy_replay_overlay.dart';
 
 class GalaxyScreen extends StatefulWidget {
-  const GalaxyScreen({super.key});
+  /// Galaxy 内に表示中の overlay (replay / formation / moon) の有無が
+  /// 変化するたびに呼ばれる。
+  ///
+  /// 🔴 用途 (2026-05-19、PopScope 二重防御の親側ガード):
+  /// Flutter の PopScope は階層を持たず、ルート (main.dart) と Galaxy 内
+  /// PopScope の onPopInvokedWithResult が **同時に** 呼ばれる。
+  /// そのため main.dart 側で「Galaxy が overlay を持っているか」を知り、
+  /// 持っている時は `_onTabTap(0)` (= Map タブへ戻す) を抑止する必要がある。
+  /// 本コールバックでその情報を親 (SolaraHome) に押し上げる。
+  final ValueChanged<bool>? onOverlayChanged;
+
+  const GalaxyScreen({super.key, this.onOverlayChanged});
 
   @override
   State<GalaxyScreen> createState() => GalaxyScreenState();
@@ -37,6 +48,9 @@ class GalaxyScreen extends StatefulWidget {
 
 class GalaxyScreenState extends State<GalaxyScreen>
     with TickerProviderStateMixin {
+  /// `_hasActiveOverlay` の直近の通知値。build のたびにチェックし、
+  /// 変化していれば onOverlayChanged を呼ぶ。
+  bool? _lastReportedOverlay;
   // Tab
   int _activeTab = 0; // 0=Cycle, 1=Star Atlas
 
@@ -365,6 +379,18 @@ class GalaxyScreenState extends State<GalaxyScreen>
 
   @override
   Widget build(BuildContext context) {
+    // 🔴 overlay 状態を親 (SolaraHome) に伝える (2026-05-19)。
+    // Flutter PopScope は階層を持たないため、本画面の PopScope と main.dart の
+    // PopScope の onPopInvokedWithResult が同時に呼ばれてしまう。親側で
+    // 「Galaxy が overlay 中なら _onTabTap(0) を抑止」するために値を押し上げる。
+    final hasOverlay = _hasActiveOverlay;
+    if (_lastReportedOverlay != hasOverlay) {
+      _lastReportedOverlay = hasOverlay;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        widget.onOverlayChanged?.call(hasOverlay);
+      });
+    }
     return PopScope(
       // overlay がある間は back を Galaxy 内で消化する。
       // overlay が無い時は main.dart の PopScope (Map タブへ戻る) に委ねる。
