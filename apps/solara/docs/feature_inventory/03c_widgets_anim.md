@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 5 / 総行数: 2278
+- ファイル数: 5 / 総行数: 2321
 - class/mixin/extension/enum: 11
 - 関数 (top-level + method の素拾い): 58
 - Navigator.push 等: 0
@@ -14,7 +14,7 @@
 
 ## ファイル別
 
-### `lib/widgets/catasterism_formation_overlay.dart` (703 行)
+### `lib/widgets/catasterism_formation_overlay.dart` (746 行)
 
 **imports:** dart=2 / package=2 / relative=5
 
@@ -24,26 +24,26 @@
 
 - L50 `class CatasterismFormationOverlay : StatefulWidget`
   - 刻星化 (Catasterism) 完了演出オーバーレイ
-- L445 `class _FormationPainter : CustomPainter`
+- L486 `class _FormationPainter : CustomPainter`
   - 4ステージ専用Painter
 
 **関数 (7 public + 5 private):**
 
 - L68 `createState()`
 - L82 `initState()`
-- L165 `dispose()`
-- L186 `build()`
-- L473 `paint()`
-- L485 `toScreen()`
-- L701 `shouldRepaint()`
+- L206 `dispose()`
+- L227 `build()`
+- L514 `paint()`
+- L526 `toScreen()`
+- L744 `shouldRepaint()`
 
   <details><summary>private 関数 5 件</summary>
 
-  - L101 `_resolveBgCandidates()`
-  - L122 `_loadBgImage()`
-  - L149 `_preloadZodiacImages()`
-  - L171 `_stageLabel()`
-  - L178 `_stageLabelJP()`
+  - L120 `_resolveBgCandidates()`
+  - L163 `_loadBgImage()`
+  - L190 `_preloadZodiacImages()`
+  - L212 `_stageLabel()`
+  - L219 `_stageLabelJP()`
 
   </details>
 

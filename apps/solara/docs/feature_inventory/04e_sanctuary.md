@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 10 / 総行数: 5124
+- ファイル数: 10 / 総行数: 5156
 - class/mixin/extension/enum: 27
 - 関数 (top-level + method の素拾い): 108
 - Navigator.push 等: 0
@@ -40,30 +40,30 @@
   </details>
 
 
-### `lib/screens/sanctuary/sanctuary_home_editor.dart` (227 行)
+### `lib/screens/sanctuary/sanctuary_home_editor.dart` (232 行)
 
-**imports:** dart=1 / package=2 / relative=2
+**imports:** dart=1 / package=2 / relative=3
 
-- relative: `../../utils/solara_storage.dart`, `../../widgets/location_picker_minimap.dart`
+- relative: `../../utils/solara_storage.dart`, `../../widgets/location_picker_minimap.dart`, `../../widgets/tap_to_unfocus.dart`
 
 **型定義 (2):**
 
-- L13 `class SanctuaryHomeEditorPage : StatefulWidget`
-- L21 `class _SanctuaryHomeEditorPageState : State`
+- L14 `class SanctuaryHomeEditorPage : StatefulWidget`
+- L22 `class _SanctuaryHomeEditorPageState : State`
 
 **関数 (4 public + 4 private):**
 
-- L18 `createState()`
-- L29 `initState()`
-- L38 `dispose()`
-- L90 `build()`
+- L19 `createState()`
+- L30 `initState()`
+- L39 `dispose()`
+- L91 `build()`
 
   <details><summary>private 関数 4 件</summary>
 
-  - L43 `_search()`
-  - L68 `_save()`
-  - L194 `_input()`
-  - L209 `_readonlyField()`
+  - L44 `_search()`
+  - L69 `_save()`
+  - L199 `_input()`
+  - L214 `_readonlyField()`
 
   </details>
 
@@ -141,37 +141,37 @@ Solara Sanctuary 法務リンクメニュー (Phase 2 launch_checklist)
   </details>
 
 
-### `lib/screens/sanctuary/sanctuary_profile_editor.dart` (585 行)
+### `lib/screens/sanctuary/sanctuary_profile_editor.dart` (590 行)
 
-**imports:** dart=1 / package=3 / relative=4
+**imports:** dart=1 / package=3 / relative=5
 
-- relative: `../../utils/app_locale.dart`, `../../utils/solara_storage.dart`, `../../utils/solara_api.dart`, `../../widgets/location_picker_minimap.dart`
+- relative: `../../utils/app_locale.dart`, `../../utils/solara_storage.dart`, `../../utils/solara_api.dart`, `../../widgets/location_picker_minimap.dart`, `../../widgets/tap_to_unfocus.dart`
 
 **型定義 (3):**
 
-- L16 `class SanctuaryProfileEditorPage : StatefulWidget`
-- L24 `class _SanctuaryProfileEditorPageState : State`
-- L559 `class DateSlashFormatter : TextInputFormatter`
+- L17 `class SanctuaryProfileEditorPage : StatefulWidget`
+- L25 `class _SanctuaryProfileEditorPageState : State`
+- L564 `class DateSlashFormatter : TextInputFormatter`
   - Auto-inserts `/` after YYYY and MM for date input (YYYY/MM/DD format).
 
 **関数 (5 public + 8 private):**
 
-- L21 `createState()`
-- L42 `initState()`
-- L67 `dispose()`
-- L171 `build()`
-- L561 `formatEditUpdate()`
+- L22 `createState()`
+- L43 `initState()`
+- L68 `dispose()`
+- L172 `build()`
+- L566 `formatEditUpdate()`
 
   <details><summary>private 関数 8 件</summary>
 
-  - L78 `_searchPlace()`
-  - L106 `_selectPlace()`
-  - L120 `_resolveTimezone()`
-  - L133 `_save()`
-  - L481 `_langBtn()`
-  - L516 `_birthSection()`
-  - L534 `_inputDecoration()`
-  - L545 `_readonlyField()`
+  - L79 `_searchPlace()`
+  - L107 `_selectPlace()`
+  - L121 `_resolveTimezone()`
+  - L134 `_save()`
+  - L486 `_langBtn()`
+  - L521 `_birthSection()`
+  - L539 `_inputDecoration()`
+  - L550 `_readonlyField()`
 
   </details>
 
@@ -245,7 +245,7 @@ Solara Sanctuary 法務リンクメニュー (Phase 2 launch_checklist)
 - 集計: `showInfoPopup`×2
 
 
-### `lib/screens/sanctuary/title_history_screen.dart` (385 行)
+### `lib/screens/sanctuary/title_history_screen.dart` (404 行)
 
 **ファイル先頭コメント:**
 
@@ -269,32 +269,32 @@ Solara Sanctuary 法務リンクメニュー (Phase 2 launch_checklist)
     → 旧クラスを「以前は…」と弱めて表示しない、現在と等価に並べる
 ```
 
-**imports:** dart=0 / package=2 / relative=3
+**imports:** dart=0 / package=2 / relative=5
 
-- relative: `../../theme/solara_colors.dart`, `../../utils/solara_storage.dart`, `../../utils/title_data.dart`
+- relative: `../../theme/solara_colors.dart`, `../../utils/solara_storage.dart`, `../../utils/title_data.dart`, `../../widgets/memo_text_field.dart`, `../../widgets/tap_to_unfocus.dart`
 
 **型定義 (5):**
 
-- L26 `class TitleHistoryScreen : StatefulWidget`
-- L36 `class _TitleHistoryScreenState : State`
-- L147 `class _EmptyState : StatelessWidget`
-- L190 `class _ChainConnector : StatelessWidget`
-- L208 `class _TitleChainRow : StatelessWidget`
+- L28 `class TitleHistoryScreen : StatefulWidget`
+- L38 `class _TitleHistoryScreenState : State`
+- L153 `class _EmptyState : StatelessWidget`
+- L196 `class _ChainConnector : StatelessWidget`
+- L214 `class _TitleChainRow : StatelessWidget`
 
 **関数 (6 public + 3 private):**
 
-- L33 `createState()`
-- L41 `initState()`
-- L93 `build()`
-- L151 `build()`
-- L194 `build()`
-- L222 `build()`
+- L35 `createState()`
+- L43 `initState()`
+- L95 `build()`
+- L157 `build()`
+- L200 `build()`
+- L228 `build()`
 
   <details><summary>private 関数 3 件</summary>
 
-  - L46 `_load()`
-  - L58 `_confirmClearAll()`
-  - L213 `_formatDate()`
+  - L48 `_load()`
+  - L60 `_confirmClearAll()`
+  - L219 `_formatDate()`
 
   </details>
 
@@ -323,60 +323,60 @@ Solara Sanctuary 法務リンクメニュー (Phase 2 launch_checklist)
 - 集計: `showInfoPopup`×1
 
 
-### `lib/screens/sanctuary_screen.dart` (1288 行)
+### `lib/screens/sanctuary_screen.dart` (1291 行)
 
-**imports:** dart=1 / package=3 / relative=17
+**imports:** dart=1 / package=3 / relative=18
 
-- relative: `../utils/pro_status.dart`, `../utils/purchases_service.dart`, `../utils/solara_storage.dart`, `../utils/title_data.dart`, `../widgets/class_card.dart`, `../widgets/pro_unlock_dialog.dart`, `../widgets/sanctuary_account_section.dart`, `consultation/consultation_history_screen.dart`, `paywall_screen.dart`, `sanctuary/sanctuary_orb_overlay.dart`, `sanctuary/sanctuary_profile_editor.dart`, `sanctuary/sanctuary_reset_hour_picker.dart`, `sanctuary/sanctuary_title_diagnosis.dart`, `sanctuary/class_share_card.dart`, `sanctuary/sanctuary_home_editor.dart`, `sanctuary/sanctuary_legal_menu.dart`, `sanctuary/title_history_screen.dart`
+- relative: `../utils/pro_status.dart`, `../utils/purchases_service.dart`, `../utils/solara_storage.dart`, `../utils/title_data.dart`, `../widgets/class_card.dart`, `../widgets/pro_unlock_dialog.dart`, `../widgets/sanctuary_account_section.dart`, `../widgets/tap_to_unfocus.dart`, `consultation/consultation_history_screen.dart`, `paywall_screen.dart`, `sanctuary/sanctuary_orb_overlay.dart`, `sanctuary/sanctuary_profile_editor.dart`, `sanctuary/sanctuary_reset_hour_picker.dart`, `sanctuary/sanctuary_title_diagnosis.dart`, `sanctuary/class_share_card.dart`, `sanctuary/sanctuary_home_editor.dart`, `sanctuary/sanctuary_legal_menu.dart`, `sanctuary/title_history_screen.dart`
 
 **型定義 (6):**
 
-- L24 `class SanctuaryScreen : StatefulWidget`
-- L31 `class _SanctuaryScreenState : State`
-- L1136 `extension _WidgetOpacity : Widget`
-- L1145 `class _SettingsGroup : StatelessWidget`
-- L1178 `class _SettingsItem : StatelessWidget`
-- L1226 `class _SettingsItemWithToggle : StatelessWidget`
+- L25 `class SanctuaryScreen : StatefulWidget`
+- L32 `class _SanctuaryScreenState : State`
+- L1139 `extension _WidgetOpacity : Widget`
+- L1148 `class _SettingsGroup : StatelessWidget`
+- L1181 `class _SettingsItem : StatelessWidget`
+- L1229 `class _SettingsItemWithToggle : StatelessWidget`
 
 **関数 (7 public + 27 private):**
 
-- L28 `createState()`
-- L67 `initState()`
-- L255 `build()`
-- L1137 `withOpacity()`
-- L1151 `build()`
-- L1186 `build()`
-- L1234 `build()`
+- L29 `createState()`
+- L68 `initState()`
+- L256 `build()`
+- L1140 `withOpacity()`
+- L1154 `build()`
+- L1189 `build()`
+- L1237 `build()`
 
   <details><summary>private 関数 27 件</summary>
 
-  - L73 `_loadSettings()`
-  - L97 `_loadProfile()`
-  - L115 `_openProfileEditor()`
-  - L147 `_openShareCard()`
-  - L167 `_startDiagnosis()`
-  - L220 `_openHomeEditor()`
-  - L237 `_syncHomeToVP()`
-  - L331 `_buildProfileRow()`
-  - L373 `_buildStellarProfileSection()`
-  - L399 `_buildTitleDiagnosisSection()`
-  - L574 `_buildTitleFlipCard()`
-  - L615 `_buildLegacyVCard()`
-  - L638 `_buildTitleVCard()`
-  - L704 `_buildRecordsSection()`
-  - L740 `_buildCosmicProSection()`
-  - L766 `_buildProUpgradeBanner()`
-  - L822 `_buildProActiveBanner()`
-  - L862 `_buildRestoreRow()`
-  - L886 `_openPaywall()`
-  - L895 `_restorePurchases()`
-  - L920 `_buildDevProToggle()`
-  - L973 `_buildAstrologySection()`
-  - L1003 `_buildHouseOption()`
-  - L1037 `_orbSummary()`
-  - L1050 `_openOrbOverlay()`
-  - L1066 `_buildAppSection()`
-  - L1103 `_pickDailyResetHour()`
+  - L74 `_loadSettings()`
+  - L98 `_loadProfile()`
+  - L116 `_openProfileEditor()`
+  - L148 `_openShareCard()`
+  - L168 `_startDiagnosis()`
+  - L221 `_openHomeEditor()`
+  - L238 `_syncHomeToVP()`
+  - L334 `_buildProfileRow()`
+  - L376 `_buildStellarProfileSection()`
+  - L402 `_buildTitleDiagnosisSection()`
+  - L577 `_buildTitleFlipCard()`
+  - L618 `_buildLegacyVCard()`
+  - L641 `_buildTitleVCard()`
+  - L707 `_buildRecordsSection()`
+  - L743 `_buildCosmicProSection()`
+  - L769 `_buildProUpgradeBanner()`
+  - L825 `_buildProActiveBanner()`
+  - L865 `_buildRestoreRow()`
+  - L889 `_openPaywall()`
+  - L898 `_restorePurchases()`
+  - L923 `_buildDevProToggle()`
+  - L976 `_buildAstrologySection()`
+  - L1006 `_buildHouseOption()`
+  - L1040 `_orbSummary()`
+  - L1053 `_openOrbOverlay()`
+  - L1069 `_buildAppSection()`
+  - L1106 `_pickDailyResetHour()`
 
   </details>
 

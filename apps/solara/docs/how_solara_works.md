@@ -227,6 +227,16 @@ Map の扇状セクターが「合算 1 色」で大まかにしか見せない�
     詳細展開時に「QUESTION」セクションで表示。
   - 詳細展開トグル (下三角アイコン) は 28px / 32×32 タップ領域 / ゴールド色
     で視認性確保 (2026-05-17 改善)。
+  - **HISTORY 内部タブ 2 つ** (2026-05-19): 「今のサイクル / 過去のサイクル」。
+    過去サイクルタブは完了サイクル別の折りたたみ表示 → reading 一覧 → reading
+    詳細展開 (現在タブと同じ) + メモも編集可能 (柱3 原則「自分の記録は永久」)。
+  - **Pro 限定「📖 全文を読みやすく表示」ボタン** (2026-05-19): 各 reading
+    の READING 本文を独立シート (縦長タイポ・行間広め・選択可能テキスト)
+    で集中して読み返せる。 一覧で全文がだーっと出るのを避けつつ、
+    読みたい人だけアクセスできる。
+  - **SYNCHRONICITY メモは 200 字制限 + カウンタ表示** (2026-05-19): 共通
+    MemoTextField を採用し、 Stella 相談欄と同じ「N/200」リアルタイム表示。
+    過去サイクルのメモも編集可能。
 - 背景は「占卓シーン」（5 惑星の楕円配置 + 流れ星 + 太陽光の演出）。
 - ⚠️ コードに `_resetTodayReading`（[DEV] ボタン）あり = 本番リリース時に削除予定。
 
@@ -257,6 +267,20 @@ Map の扇状セクターが「合算 1 色」で大まかにしか見せない�
 - 画面下部に天体イベントバー（ingress / retrograde / eclipse を横スクロール表示）。
 - Replay overlay で過去サイクルの星座を再生表示。タップでアニメスキップ、
   Android 戻るキーで Star Atlas に戻る (PopScope で消化、Map には飛ばない)。
+  - **PopScope 親側ガード** (2026-05-19): Flutter PopScope は階層を持たず
+    内側 / 外側の onPopInvokedWithResult が同時発火する仕様のため、
+    GalaxyScreen が onOverlayChanged callback で main.dart に overlay 状態を
+    押し上げ、 main.dart root PopScope で `if (_galaxyHasOverlay) return;`
+    ガード。 これで「内側 PopScope が overlay 閉じる + 外側は Map に戻さない」
+    が両立。
+- **Star Atlas ソートは「刻星化日時」基準** (2026-05-19): GalaxyCycle.formedAt
+  (DateTime?、 後方互換: id を ms としてパース → cycleStart にフォールバック)
+  ベース。 cycleStart (サイクル開始日) ではないので、 debug で過去サイクルを
+  後から作っても新規が一覧の先頭に来る。
+- **刻星化背景の 4 層仕様** (2026-05-19 改訂): ★5 のみ太陽星座 × 形容詞色
+  (bright/ 120 枚)、 ★4 = leo+virgo variants、 ★3 = scorpio+aquarius
+  variants、 ★1-2 = pisces+aries variants の A/B 決定論的ランダム選択
+  (cycle.id を seed)。 詳細は memory `project_solara_catasterism_bg.md`。
 - **刻星化 formation 完了時の共有ボタン** (Free、2026-05-17、柱 3):
   `CatasterismFormationOverlay` の View ボタン横に小さい円形シェアボタン →
   `ConstellationShareCardPage` を push (Sanctuary 称号カードと同じ

@@ -18,13 +18,11 @@ import '../../models/daily_reading.dart';
 import '../../models/galaxy_cycle.dart';
 import '../../models/tarot_card.dart';
 import '../../theme/solara_colors.dart';
-import '../../utils/pro_status.dart';
 import '../../utils/solara_storage.dart';
 import '../../utils/tarot_data.dart';
 import '../../widgets/memo_text_field.dart';
-import '../../widgets/pro_unlock_dialog.dart';
 import 'observe_constants.dart';
-import 'observe_reading_sheet.dart';
+import 'observe_reading_button.dart';
 
 class ObserveHistoryPastPanel extends StatefulWidget {
   final List<GalaxyCycle> cycles;
@@ -279,7 +277,7 @@ class _ObserveHistoryPastPanelState extends State<ObserveHistoryPastPanel> {
               style: const TextStyle(
                   fontSize: 11, color: Color(0xD9E8E0D0), height: 1.7)),
           const SizedBox(height: 6),
-          _FullReadingButton(card: card, reading: r),
+          ObserveFullReadingButton(card: card, reading: r),
           const SizedBox(height: 10),
         ],
         // 🔴 (2026-05-19) 過去サイクルのメモも編集可能に変更。
@@ -311,74 +309,5 @@ class _ObserveHistoryPastPanelState extends State<ObserveHistoryPastPanel> {
   }
 }
 
-/// observe_history.dart の _FullReadingButton と同等。 part-of だと再利用
-/// しづらいので過去パネル側にも同等実装を置く (UI コード重複だが、 振る舞いは
-/// 同一)。 重複が大きくなったら _FullReadingButton を共通化する。
-class _FullReadingButton extends StatelessWidget {
-  final TarotCard card;
-  final DailyReading reading;
-  const _FullReadingButton({required this.card, required this.reading});
-
-  @override
-  Widget build(BuildContext context) {
-    final isPro = ProStatus.instance.isPro;
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: () {
-        if (isPro) {
-          showObserveReadingSheet(context, card: card, reading: reading);
-        } else {
-          showProUnlockDialog(
-            context,
-            featureLabel: '占いの全文を読み返す',
-            description: '過去にカードを引いたときの Stella の言葉を、'
-                '読書するように 1 枚画面に集中して読み返せます。',
-          );
-        }
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-            color: isPro
-                ? const Color(0x66F6BD60)
-                : const Color(0x33F6BD60),
-          ),
-          color: isPro ? const Color(0x14F6BD60) : const Color(0x08F6BD60),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text('📖', style: TextStyle(fontSize: 11)),
-            const SizedBox(width: 6),
-            const Flexible(
-              child: Text(
-                '全文を読みやすく表示',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: 11,
-                  color: SolaraColors.solaraGoldLight,
-                  letterSpacing: 0.4,
-                ),
-              ),
-            ),
-            if (!isPro) ...[
-              const SizedBox(width: 6),
-              const Icon(Icons.lock_outline,
-                  size: 11, color: Color(0xFFF6BD60)),
-              const SizedBox(width: 3),
-              const Text('Pro',
-                  style: TextStyle(
-                      fontSize: 9,
-                      color: Color(0xFFF6BD60),
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: 0.4)),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-}
+// _FullReadingButton は observe_reading_button.dart の ObserveFullReadingButton
+// に統合 (2026-05-19、 observe_history.dart 側との重複を解消)。

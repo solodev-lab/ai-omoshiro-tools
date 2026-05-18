@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 18 / 総行数: 7599
+- ファイル数: 18 / 総行数: 7607
 - class/mixin/extension/enum: 66
 - 関数 (top-level + method の素拾い): 191
 - Navigator.push 等: 0
@@ -137,7 +137,7 @@ L836-1295 (_SpecificPicker 系) を切り出し (ファイル肥大化対策、2
   </details>
 
 
-### `lib/screens/consultation/consultation_input_screen.dart` (396 行)
+### `lib/screens/consultation/consultation_input_screen.dart` (401 行)
 
 **ファイル先頭コメント:**
 
@@ -164,30 +164,30 @@ Consultation Input Screen — Stage 1 UI
   - consultation_input_picker.dart:   _PickedSpecific + _SpecificPicker 系
 ```
 
-**imports:** dart=1 / package=2 / relative=8
+**imports:** dart=1 / package=2 / relative=9
 
-- relative: `../../theme/solara_colors.dart`, `../../utils/astro_lines.dart`, `../../utils/consultation_engine.dart`, `../../utils/world_cities.dart`, `../map/map_search.dart`, `../map/map_vp_panel.dart`, `consultation_place_picker_screen.dart`, `consultation_result_screen.dart`
+- relative: `../../theme/solara_colors.dart`, `../../utils/astro_lines.dart`, `../../utils/consultation_engine.dart`, `../../utils/world_cities.dart`, `../../widgets/tap_to_unfocus.dart`, `../map/map_search.dart`, `../map/map_vp_panel.dart`, `consultation_place_picker_screen.dart`, `consultation_result_screen.dart`
 
 **型定義 (3):**
 
-- L41 `class ConsultationPresetTarget`
+- L42 `class ConsultationPresetTarget`
   - Map から「📍この場所で相談」で起動した時の preset (specific scope 用)。
-- L57 `class ConsultationInputScreen : StatefulWidget`
-- L80 `class _ConsultationInputScreenState : State`
+- L58 `class ConsultationInputScreen : StatefulWidget`
+- L81 `class _ConsultationInputScreenState : State`
 
 **関数 (4 public + 4 private):**
 
-- L76 `createState()`
-- L93 `initState()`
-- L103 `dispose()`
-- L274 `build()`
+- L77 `createState()`
+- L94 `initState()`
+- L104 `dispose()`
+- L275 `build()`
 
   <details><summary>private 関数 4 件</summary>
 
-  - L108 `_onModeChanged()`
-  - L134 `_resolveRegionCountries()`
-  - L218 `_openMapPicker()`
-  - L237 `_submit()`
+  - L109 `_onModeChanged()`
+  - L135 `_resolveRegionCountries()`
+  - L219 `_openMapPicker()`
+  - L238 `_submit()`
 
   </details>
 
@@ -245,7 +245,7 @@ Stage 1 入力画面の基本ウィジェット (テーマ/モード/スコー�
   </details>
 
 
-### `lib/screens/consultation/consultation_place_picker_screen.dart` (348 行)
+### `lib/screens/consultation/consultation_place_picker_screen.dart` (353 行)
 
 **ファイル先頭コメント:**
 
@@ -285,31 +285,31 @@ UI 構造:
   └──────────────────────────────────────────────┘
 ```
 
-**imports:** dart=1 / package=3 / relative=5
+**imports:** dart=1 / package=3 / relative=6
 
-- relative: `../../theme/solara_colors.dart`, `../../utils/reverse_geocode.dart`, `../map/map_search.dart`, `../map/map_styles.dart`, `consultation_input_screen.dart`
+- relative: `../../theme/solara_colors.dart`, `../../utils/reverse_geocode.dart`, `../../widgets/tap_to_unfocus.dart`, `../map/map_search.dart`, `../map/map_styles.dart`, `consultation_input_screen.dart`
 
 **型定義 (1):**
 
-- L52 `class ConsultationPlacePickerScreen : StatefulWidget`
+- L53 `class ConsultationPlacePickerScreen : StatefulWidget`
   - 地点選択画面 (B、フルスクリーン)。
 
 **関数 (3 public + 8 private):**
 
-- L66 `createState()`
-- L97 `dispose()`
-- L231 `build()`
+- L67 `createState()`
+- L98 `dispose()`
+- L232 `build()`
 
   <details><summary>private 関数 8 件</summary>
 
-  - L106 `_onSearchChanged()`
-  - L119 `_runSearch()`
-  - L142 `_onHitTap()`
-  - L156 `_shortName()`
-  - L166 `_selectPoint()`
-  - L198 `_onMapTap()`
-  - L203 `_clearSelection()`
-  - L214 `_confirm()`
+  - L107 `_onSearchChanged()`
+  - L120 `_runSearch()`
+  - L143 `_onHitTap()`
+  - L157 `_shortName()`
+  - L167 `_selectPoint()`
+  - L199 `_onMapTap()`
+  - L204 `_clearSelection()`
+  - L215 `_confirm()`
 
   </details>
 
@@ -629,45 +629,45 @@ orchestration + state management 専担、本ファイルは presentation を担
   </details>
 
 
-### `lib/screens/locations_screen.dart` (737 行)
+### `lib/screens/locations_screen.dart` (735 行)
 
-**imports:** dart=1 / package=2 / relative=8
+**imports:** dart=1 / package=2 / relative=9
 
-- relative: `../utils/solara_storage.dart`, `../widgets/info_popup.dart`, `../widgets/no_profile_guide.dart`, `locations/locations_date_stepper.dart`, `map/map_astro.dart`, `map/map_constants.dart`, `map/map_search.dart`, `map/map_vp_panel.dart`
+- relative: `../utils/solara_storage.dart`, `../widgets/info_popup.dart`, `../widgets/no_profile_guide.dart`, `../widgets/tap_to_unfocus.dart`, `locations/locations_date_stepper.dart`, `map/map_astro.dart`, `map/map_constants.dart`, `map/map_search.dart`, `map/map_vp_panel.dart`
 
 **型定義 (3):**
 
-- L15 `class LocationsScreen : StatefulWidget`
+- L16 `class LocationsScreen : StatefulWidget`
   - Locations 一覧画面 — 登録済み拠点を16方位スコア付きで管理。
-- L38 `class _LocationsScreenState : State`
-- L624 `class _SlotStats`
+- L39 `class _LocationsScreenState : State`
+- L622 `class _SlotStats`
 
 **関数 (3 public + 18 private):**
 
-- L35 `createState()`
-- L66 `initState()`
-- L274 `build()`
+- L36 `createState()`
+- L67 `initState()`
+- L275 `build()`
 
   <details><summary>private 関数 18 件</summary>
 
-  - L71 `_load()`
-  - L131 `_shiftDate()`
-  - L141 `_setYmd()`
-  - L160 `_setHour()`
-  - L168 `_shiftHour()`
-  - L175 `_resetToday()`
-  - L185 `_setDate()`
-  - L218 `_addCurrent()`
-  - L230 `_delete()`
-  - L235 `_rename()`
-  - L344 `_buildRefPointSelector()`
-  - L424 `_buildCategorySelector()`
-  - L468 `_emptyState()`
-  - L493 `_buildList()`
-  - L502 `_buildRow()`
-  - L582 `_scoreBar()`
-  - L618 `_fmtKm()`
-  - L634 `_showLocationsUsageGuide()`
+  - L72 `_load()`
+  - L132 `_shiftDate()`
+  - L142 `_setYmd()`
+  - L161 `_setHour()`
+  - L169 `_shiftHour()`
+  - L176 `_resetToday()`
+  - L186 `_setDate()`
+  - L219 `_addCurrent()`
+  - L231 `_delete()`
+  - L236 `_rename()`
+  - L342 `_buildRefPointSelector()`
+  - L422 `_buildCategorySelector()`
+  - L466 `_emptyState()`
+  - L491 `_buildList()`
+  - L500 `_buildRow()`
+  - L580 `_scoreBar()`
+  - L616 `_fmtKm()`
+  - L632 `_showLocationsUsageGuide()`
 
   </details>
 

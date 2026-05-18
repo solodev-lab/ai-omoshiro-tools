@@ -5,9 +5,9 @@
 
 ## サマリ
 
-- ファイル数: 23 / 総行数: 6204
-- class/mixin/extension/enum: 68
-- 関数 (top-level + method の素拾い): 162
+- ファイル数: 25 / 総行数: 6416
+- class/mixin/extension/enum: 71
+- 関数 (top-level + method の素拾い): 168
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 3
 - Worker URL リテラル: 0
@@ -504,6 +504,48 @@ LocationPickerMinimap — 中央固定ピン + マップパンで座標選択
 - L66 `build()`
 
 
+### `lib/widgets/memo_text_field.dart` (181 行)
+
+**ファイル先頭コメント:**
+
+```
+共通メモ入力欄 — 200 字 cap + 自前カウンタ「N/200」+ saved 通知
+
+利用箇所:
+  - タロット HISTORY の SYNCHRONICITY メモ (observe_history.dart)
+  - 称号変遷の各エントリのメモ (title_history_screen.dart)
+
+Stella 相談の自由記述 (_FreeTextField) は Flutter の counterText を
+そのまま使っているが、本 widget はラベル右肩にリアルタイム表示する
+用途のため、TextField.counterText='' で抑止して自前で出す。
+
+親側で onChanged を受け、永続化 (SharedPreferences 等) する責務を持つ。
+本 widget 自体は「saved」通知アニメだけ担当 (1500ms 表示)。
+```
+
+**imports:** dart=0 / package=1 / relative=1
+
+- relative: `../theme/solara_colors.dart`
+
+**型定義 (2):**
+
+- L17 `class MemoTextField : StatefulWidget`
+- L58 `class _MemoTextFieldState : State`
+
+**関数 (4 public + 1 private):**
+
+- L55 `createState()`
+- L64 `initState()`
+- L71 `dispose()`
+- L88 `build()`
+
+  <details><summary>private 関数 1 件</summary>
+
+  - L76 `_onChanged()`
+
+  </details>
+
+
 ### `lib/widgets/moon_overlay.dart` (4 行)
 
 **ファイル先頭コメント:**
@@ -697,4 +739,37 @@ Sanctuary ✦ Account セクション — Phase 2-9 Sign in 統合
   - L153 `_iconForIndex()`
 
   </details>
+
+
+### `lib/widgets/tap_to_unfocus.dart` (31 行)
+
+**ファイル先頭コメント:**
+
+```
+子 widget の TextField 外をタップしたら全フォーカスを外す共通 widget。
+
+用途 (2026-05-19、 オーナー要望):
+  全画面の TextField (Pro テーマ欄 / 各種メモ / プロフィール入力 / 検索バー 等)
+  に対して「入力欄外タップで決定 (キーボード閉じる)」挙動を統一する。
+
+仕組み:
+  HitTestBehavior.translucent で子の GestureDetector / TextField は通常通り
+  反応しつつ、 子のどれにも当たらない空き領域のタップだけここで拾って
+  `FocusScope.of(context).unfocus()` で全フォーカスを解除する。
+
+適用方針:
+  各画面の build 最上層をこれでラップする (Scaffold より外側 OR Scaffold body
+  側 = どちらでも動くが、 タブ切替 / NavigationBar も対象にしたいなら最上層)。
+  既に PopScope や他のラッパがある画面は、 その内側に置く方が干渉しにくい。
+```
+
+**imports:** dart=0 / package=1 / relative=0
+
+**型定義 (1):**
+
+- L19 `class TapToUnfocus : StatelessWidget`
+
+**関数 (1 public + 0 private):**
+
+- L24 `build()`
 

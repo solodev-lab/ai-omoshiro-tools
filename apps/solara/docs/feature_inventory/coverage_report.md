@@ -42,10 +42,10 @@
 
 ## #1 / #2 機械抽出 ↔ feature_inventory.md (人手版) の対整合
 
-- 機械抽出した class/mixin/extension/enum: **400**
+- 機械抽出した class/mixin/extension/enum: **405**
 - inventory に登場する識別子 (大文字始まり ``backtick``囲み): **209**
 
-### #1 機械にあるが Doc に書かれていない (228)
+### #1 機械にあるが Doc に書かれていない (233)
 
 - `CandidateLocation`
 - `CandidateNearLine`
@@ -69,8 +69,11 @@
 - `GalaxyArchiveSortLabel`
 - `LegalUrls`
 - `MapTimeSliderState`
+- `MemoTextField`
+- `ObserveFullReadingButton`
 - `ObserveHistoryFilter`
 - `ObserveHistoryFilterBar`
+- `ObserveHistoryPastPanel`
 - `PaywallScreen`
 - `ProStatus`
 - `PurchasesService`
@@ -80,6 +83,7 @@
 - `SolaraAuthAccount`
 - `SolaraAuthException`
 - `SolaraAuthProvider`
+- `TapToUnfocus`
 - `TitleHistoryScreen`
 - `_ActionTile`
 - `_AggBuilder`
@@ -182,6 +186,7 @@
 - `_MapViewpointMenuState`
 - `_MedalPalette`
 - `_Medallion`
+- `_MemoTextFieldState`
 - `_MenuInfoRow`
 - `_MetaChip`
 - `_ModeChoice`
@@ -197,6 +202,7 @@
 - `_NumberedPin`
 - `_ObserveHistoryFilterBarState`
 - `_ObserveHistoryPanelState`
+- `_ObserveHistoryPastPanelState`
 - `_ObserveScreenState`
 - `_OrbSectionLabel`
 - `_OutroBlock`
@@ -217,6 +223,7 @@
 - `_RarityChip`
 - `_RarityStarRow`
 - `_Ray`
+- `_ReadingSheet`
 - `_RefreshButton`
 - `_RegionPicker`
 - `_RelocationProTeaser`
@@ -240,14 +247,7 @@
 - `_Section`
 - `_SectionCard`
 - `_SelectedRarityBanner`
-- `_SelectedSpecificCard`
-- `_SelectionCard`
-- `_Sentinel`
-- `_SettingsGroup`
-- `_SettingsItem`
-- `_SettingsItemWithToggle`
-- `_ShareCardRarityStars`
-- … 残り 28 省略
+- … 残り 33 省略
 
 ### #2 Doc に書いてあるがコードに存在しない (ゴースト記述) (37)
 
@@ -310,7 +310,7 @@
 
 ### 層 4c: Observe (Tarot) 画面
 
-- ファイル数: 7
+- ファイル数: 10
 - Worker URL 呼出: (なし)
 - Popup/Dialog: (なし)
 - Navigator.push 等: 0 箇所
@@ -353,15 +353,15 @@
 | 2a | 3 | · | · | 5 | · | · | · | 1 | · | · | · | · | · | · | · | · |
 | 2b | 1 | 1 | 5 | 3 | 1 | · | · | · | · | · | · | · | · | · | · | · |
 | 2c | · | · | 1 | · | · | · | · | · | · | · | · | · | · | · | · | · |
-| 3a | 1 | 4 | 2 | 2 | 1 | 1 | 8 | 6 | 4 | 1 | · | · | · | · | 1 | · |
+| 3a | 1 | 4 | 2 | 2 | 1 | 1 | 8 | 7 | 4 | 1 | · | · | · | · | 1 | · |
 | 3b | · | · | · | · | · | · | · | 1 | · | · | · | · | · | · | · | · |
 | 3c | · | 5 | 4 | 2 | 4 | · | 12 | 4 | · | · | · | · | · | · | · | · |
-| 4a | 10 | 11 | · | 13 | 7 | · | 18 | 23 | 3 | 31 | 2 | · | · | · | 3 | · |
-| 4b | 5 | 10 | · | 6 | 4 | · | 13 | · | · | · | 29 | · | · | 2 | · | · |
-| 4c | 1 | · | 7 | 1 | 5 | 3 | 2 | · | · | · | · | 9 | · | · | · | · |
-| 4d | 2 | 6 | 13 | 1 | 5 | 2 | 11 | 2 | 1 | · | · | · | 8 | · | · | · |
-| 4e | 1 | 4 | · | 2 | 7 | · | 9 | 1 | · | · | · | · | · | 9 | 2 | · |
-| 4f | 4 | 4 | · | 4 | 11 | · | 11 | 10 | · | 6 | · | · | · | · | 13 | · |
+| 4a | 10 | 11 | · | 13 | 7 | · | 19 | 23 | 3 | 31 | 2 | · | · | · | 3 | · |
+| 4b | 5 | 10 | · | 6 | 4 | · | 14 | · | · | · | 29 | · | · | 2 | · | · |
+| 4c | 1 | · | 15 | 1 | 7 | 4 | 6 | 4 | · | · | · | 15 | · | · | · | · |
+| 4d | 2 | 6 | 13 | 1 | 5 | 2 | 12 | 2 | 1 | · | · | · | 8 | · | · | · |
+| 4e | 1 | 4 | · | 2 | 7 | · | 14 | 1 | · | · | · | · | · | 9 | 2 | · |
+| 4f | 4 | 4 | · | 4 | 11 | · | 14 | 10 | · | 6 | · | · | · | · | 13 | · |
 | 5 | 1 | · | · | 2 | 3 | 1 | 1 | 1 | · | 1 | 1 | 1 | 1 | 1 | · | · |
 
 > 健全な依存方向は「番号が大きい層 → 小さい層」(上位が下位に依存)。
@@ -373,26 +373,26 @@
 
 | ファイル | 層 | 被 import 数 |
 | --- | --- | --- |
-| `lib/theme/solara_colors.dart` | 3b | 28 |
-| `lib/utils/solara_storage.dart` | 2b | 23 |
+| `lib/theme/solara_colors.dart` | 3b | 33 |
+| `lib/utils/solara_storage.dart` | 2b | 24 |
 | `lib/widgets/info_popup.dart` | 3a | 21 |
 | `lib/screens/map/map_constants.dart` | 3b | 20 |
-| `lib/utils/pro_status.dart` | 2b | 17 |
+| `lib/utils/pro_status.dart` | 2b | 18 |
+| `lib/models/galaxy_cycle.dart` | 1c | 14 |
 | `lib/screens/horoscope/horo_antique_icons.dart` | 3a | 13 |
-| `lib/models/galaxy_cycle.dart` | 1c | 12 |
+| `lib/models/daily_reading.dart` | 1c | 12 |
+| `lib/widgets/pro_unlock_dialog.dart` | 3a | 12 |
 | `lib/utils/solara_api.dart` | 2a | 11 |
-| `lib/widgets/pro_unlock_dialog.dart` | 3a | 11 |
+| `lib/widgets/tap_to_unfocus.dart` | 3a | 11 |
 | `lib/screens/horoscope/horo_constants.dart` | 1b | 10 |
-| `lib/models/daily_reading.dart` | 1c | 9 |
 | `lib/screens/horoscope/horo_panel_shared.dart` | 4b | 9 |
+| `lib/models/tarot_card.dart` | 1c | 8 |
 | `lib/utils/astro_lines.dart` | 1a | 8 |
 | `lib/utils/constellation_namer.dart` | 1b | 8 |
+| `lib/utils/tarot_data.dart` | 2c | 8 |
 | `lib/models/lunar_intention.dart` | 1c | 7 |
 | `lib/screens/map/map_vp_panel.dart` | 4a | 7 |
-| `lib/utils/tarot_data.dart` | 2c | 7 |
 | `lib/widgets/glass_panel.dart` | 3a | 7 |
-| `lib/utils/astro_glossary.dart` | 1b | 6 |
-| `lib/utils/title_data.dart` | 1b | 6 |
 
 ### #5c 孤立ファイル (2) — 誰からも import されない
 
@@ -407,13 +407,9 @@
 > 各ソースの SHA1 を `_stamps.json` に記録し、差分を検出。
 > 変更されたファイルが属する層は、人手版インベントリ章の見直し対象。
 
-- 追加: **0** / 削除: **0** / 変更: **3**
+- 追加: **0** / 削除: **0** / 変更: **0**
 
-### 変更されたファイル (層別)
-
-- **層 2a**: `lib/utils/legal_urls.dart`
-- **層 4b**: `lib/screens/horoscope/horo_birth_panel.dart`
-- **層 4e**: `lib/screens/sanctuary/sanctuary_profile_editor.dart`
+- 変更なし — 全インベントリ章は最新。
 
 ## #7 astro_glossary 用語辞書対整合
 
