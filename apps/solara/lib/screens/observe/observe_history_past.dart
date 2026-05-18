@@ -19,7 +19,9 @@ import '../../models/galaxy_cycle.dart';
 import '../../models/tarot_card.dart';
 import '../../theme/solara_colors.dart';
 import '../../utils/pro_status.dart';
+import '../../utils/solara_storage.dart';
 import '../../utils/tarot_data.dart';
+import '../../widgets/memo_text_field.dart';
 import '../../widgets/pro_unlock_dialog.dart';
 import 'observe_constants.dart';
 import 'observe_reading_sheet.dart';
@@ -236,12 +238,12 @@ class _ObserveHistoryPastPanelState extends State<ObserveHistoryPastPanel> {
             ]),
           ),
         ),
-        if (expanded) _buildReadingDetail(card, r),
+        if (expanded) _buildReadingDetail(cycle, card, r),
       ]),
     );
   }
 
-  Widget _buildReadingDetail(TarotCard card, DailyReading r) {
+  Widget _buildReadingDetail(GalaxyCycle cycle, TarotCard card, DailyReading r) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(12, 4, 12, 12),
@@ -280,22 +282,30 @@ class _ObserveHistoryPastPanelState extends State<ObserveHistoryPastPanel> {
           _FullReadingButton(card: card, reading: r),
           const SizedBox(height: 10),
         ],
-        if (r.synchronicity.isNotEmpty) ...[
-          const Row(children: [
-            Text('🔗', style: TextStyle(fontSize: 10, color: Color(0xFF888888))),
-            SizedBox(width: 4),
-            Text('SYNCHRONICITY',
-                style: TextStyle(
-                    fontSize: 10,
-                    color: Color(0xFF888888),
-                    letterSpacing: 1)),
-          ]),
-          const SizedBox(height: 4),
-          // MVP では編集不可で表示のみ (cycle.readings 内の不変表現として残す)。
-          Text(r.synchronicity,
-              style: const TextStyle(
-                  fontSize: 11, color: Color(0xAAE8E0D0), height: 1.6)),
-        ],
+        // 🔴 (2026-05-19) 過去サイクルのメモも編集可能に変更。
+        // SolaraStorage.updateCompletedCycleReadingSynchronicity で完了サイクル
+        // 内の reading.synchronicity を直接書き換える (全 cycles 書き戻し)。
+        // ローカル DailyReading も同期して再描画時に最新値が見えるようにする。
+        const Row(children: [
+          Text('🔗', style: TextStyle(fontSize: 10, color: Color(0xFF888888))),
+          SizedBox(width: 4),
+          Text('SYNCHRONICITY',
+              style: TextStyle(
+                  fontSize: 10,
+                  color: Color(0xFF888888),
+                  letterSpacing: 1)),
+        ]),
+        const SizedBox(height: 4),
+        MemoTextField(
+          key: ValueKey('past-memo-${cycle.id}-${r.date}'),
+          initialText: r.synchronicity,
+          hintText: '当時の気づきをメモ...',
+          onChanged: (text) {
+            r.synchronicity = text;
+            SolaraStorage.updateCompletedCycleReadingSynchronicity(
+                cycle.id, r.date, text);
+          },
+        ),
       ]),
     );
   }

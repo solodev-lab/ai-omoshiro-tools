@@ -380,6 +380,31 @@ class SolaraStorage {
     await prefs.setString(_completedCyclesKey, raw);
   }
 
+  /// 過去サイクルに含まれる reading の synchronicity (自由メモ) を更新する。
+  ///
+  /// 🔴 (2026-05-19) 過去 HISTORY のメモ編集用。
+  /// GalaxyCycle 自体は刻星化後ほぼ不変だが、 ユーザー視点ではメモだけは
+  /// 後から書き足したい — 「自分の記録は永久」原則を維持しつつ、 体験を
+  /// 自然にするため。 構造的にはネストが深いが、 完了サイクルは実用上
+  /// 数十件 (60 件 cap) で各 cycle も数 KB なので、 全 cycles を書き戻して
+  /// も実害は無い (100ms 以内)。
+  ///
+  /// 該当 cycle / reading が見つからない場合は no-op (silent)。
+  static Future<void> updateCompletedCycleReadingSynchronicity(
+      String cycleId, String readingDate, String text) async {
+    final cycles = await loadCompletedCycles();
+    final cycleIdx = cycles.indexWhere((c) => c.id == cycleId);
+    if (cycleIdx < 0) return;
+    final cycle = cycles[cycleIdx];
+    final readingIdx =
+        cycle.readings.indexWhere((r) => r.date == readingDate);
+    if (readingIdx < 0) return;
+    cycle.readings[readingIdx].synchronicity = text;
+    final prefs = await SharedPreferences.getInstance();
+    final raw = json.encode(cycles.map((c) => c.toJson()).toList());
+    await prefs.setString(_completedCyclesKey, raw);
+  }
+
   static Future<void> clearCurrentReadings() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_currentReadingsKey);
