@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../models/daily_reading.dart';
+import '../../models/galaxy_cycle.dart';
 import '../../models/tarot_card.dart';
 import '../../theme/solara_colors.dart';
 import '../../utils/pro_status.dart';
@@ -9,6 +10,7 @@ import '../../widgets/memo_text_field.dart';
 import '../../widgets/pro_unlock_dialog.dart';
 import 'observe_constants.dart';
 import 'observe_history_filter.dart';
+import 'observe_history_past.dart';
 import 'observe_reading_sheet.dart';
 
 // ══════════════════════════════════════════════════
@@ -29,10 +31,28 @@ class _ObserveHistoryPanelState extends State<ObserveHistoryPanel> {
   String? _expandedHistory; // date string of expanded card
   ObserveHistoryFilter _filter = const ObserveHistoryFilter();
 
+  /// 内部タブ: 0=現在サイクル / 1=過去サイクル (柱3 原則「記録は永久」)
+  int _historyTab = 0;
+
+  /// 過去サイクル一覧 (タブ切替時に loadCompletedCycles で取得)
+  List<GalaxyCycle>? _pastCycles;
+  bool _loadingPastCycles = false;
+
   @override
   void initState() {
     super.initState();
     ProStatus.instance.addListener(_onProChanged);
+  }
+
+  Future<void> _ensurePastCyclesLoaded() async {
+    if (_pastCycles != null || _loadingPastCycles) return;
+    setState(() => _loadingPastCycles = true);
+    final cycles = await SolaraStorage.loadCompletedCycles();
+    if (!mounted) return;
+    setState(() {
+      _pastCycles = cycles;
+      _loadingPastCycles = false;
+    });
   }
 
   @override
@@ -82,6 +102,11 @@ class _ObserveHistoryPanelState extends State<ObserveHistoryPanel> {
     final ordered = widget.history.reversed.toList();
     final visible = _filter.apply(ordered);
 
+    // 過去サイクルタブを開いた時にロード (一度ロードしたらキャッシュ)
+    if (_historyTab == 1) {
+      _ensurePastCyclesLoaded();
+    }
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 30),
       child: Column(children: [
@@ -95,70 +120,146 @@ class _ObserveHistoryPanelState extends State<ObserveHistoryPanel> {
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(fontSize: 12, color: Color(0xFF666666), letterSpacing: 1.5)),
             ),
-            GestureDetector(
-              onTap: _confirmClearHistory,
-              child: const Text('CLEAR', style: TextStyle(fontSize: 10, color: Color(0xFF444444))),
-            ),
+            // CLEAR は現在サイクルのみ削除 (過去サイクルは星座として永久)
+            if (_historyTab == 0)
+              GestureDetector(
+                onTap: _confirmClearHistory,
+                child: const Text('CLEAR', style: TextStyle(fontSize: 10, color: Color(0xFF444444))),
+              ),
           ],
         ),
-        const SizedBox(height: 6),
-        const Text('※ 履歴は50件までです。古い履歴から自動的に削除されます。',
-            style: TextStyle(fontSize: 9, color: Color(0xFF444444))),
+        const SizedBox(height: 8),
+        // ── 内部タブ: 現在サイクル / 過去サイクル ──
+        _buildInnerTabBar(),
         const SizedBox(height: 10),
 
-        // ── C3 (Pro) フィルタバー: 履歴がある時のみ表示 ──
-        if (widget.history.isNotEmpty) ...[
-          ObserveHistoryFilterBar(
-            filter: _filter,
-            isPro: ProStatus.instance.isPro,
-            onChanged: (f) => setState(() => _filter = f),
+        if (_historyTab == 0) ..._buildCurrentTabContent(visible),
+        if (_historyTab == 1)
+          Expanded(child: _buildPastTabContent()),
+      ]),
+    );
+  }
+
+  // ══════════════════════════════════════════════════
+  // Inner tab bar (現在 / 過去)
+  // ══════════════════════════════════════════════════
+  Widget _buildInnerTabBar() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        _innerTabBtn(0, '今のサイクル'),
+        const SizedBox(width: 4),
+        _innerTabBtn(1, '過去のサイクル'),
+      ],
+    );
+  }
+
+  Widget _innerTabBtn(int idx, String label) {
+    final active = _historyTab == idx;
+    return GestureDetector(
+      onTap: () => setState(() => _historyTab = idx),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(14),
+          color: active ? const Color(0x33C9A84C) : const Color(0x10FFFFFF),
+          border: Border.all(
+            color: active
+                ? const Color(0x88C9A84C)
+                : SolaraColors.glassBorder,
           ),
-          const SizedBox(height: 10),
-          if (_filter.isActive)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 6, left: 4),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  '${visible.length} 件 / 全 ${widget.history.length} 件',
-                  style: const TextStyle(
-                    color: Color(0xFF666666),
-                    fontSize: 10,
-                    letterSpacing: 0.3,
-                  ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            color: active
+                ? SolaraColors.solaraGoldLight
+                : SolaraColors.textSecondary,
+            letterSpacing: 0.6,
+            fontWeight: active ? FontWeight.w600 : FontWeight.w400,
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// 現在タブの中身 (旧 build の主要部分)。 Column の children として展開する
+  /// ので List of Widget で返す。
+  List<Widget> _buildCurrentTabContent(List<DailyReading> visible) {
+    return [
+      const Text('※ 履歴は50件までです。古い履歴から自動的に削除されます。',
+          style: TextStyle(fontSize: 9, color: Color(0xFF444444))),
+      const SizedBox(height: 10),
+
+      // ── C3 (Pro) フィルタバー: 履歴がある時のみ表示 ──
+      if (widget.history.isNotEmpty) ...[
+        ObserveHistoryFilterBar(
+          filter: _filter,
+          isPro: ProStatus.instance.isPro,
+          onChanged: (f) => setState(() => _filter = f),
+        ),
+        const SizedBox(height: 10),
+        if (_filter.isActive)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 6, left: 4),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                '${visible.length} 件 / 全 ${widget.history.length} 件',
+                style: const TextStyle(
+                  color: Color(0xFF666666),
+                  fontSize: 10,
+                  letterSpacing: 0.3,
                 ),
               ),
             ),
-        ],
+          ),
+      ],
 
-        if (widget.history.isEmpty)
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: 60, horizontal: 20),
-            child: Text(
-                'まだ履歴がありません\n\nTAROT DRAW タブでカードを引くと\nここに記録されます',
-                textAlign: TextAlign.center,
-                style: TextStyle(color: Color(0xFF444444), fontSize: 13, height: 1.8)),
-          )
-        else if (visible.isEmpty)
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: 32, horizontal: 20),
-            child: Text(
-              '条件に合うカードはありません',
+      if (widget.history.isEmpty)
+        const Padding(
+          padding: EdgeInsets.symmetric(vertical: 60, horizontal: 20),
+          child: Text(
+              'まだ履歴がありません\n\nTAROT DRAW タブでカードを引くと\nここに記録されます',
               textAlign: TextAlign.center,
-              style: TextStyle(color: Color(0xFF666666), fontSize: 12, height: 1.6),
-            ),
-          )
-        else
-          Expanded(
-              child: ListView.builder(
-            itemCount: visible.length,
-            itemBuilder: (ctx, i) {
-              final r = visible[i];
-              return _buildHistoryCard(r);
-            },
-          )),
-      ]),
-    );
+              style: TextStyle(color: Color(0xFF444444), fontSize: 13, height: 1.8)),
+        )
+      else if (visible.isEmpty)
+        const Padding(
+          padding: EdgeInsets.symmetric(vertical: 32, horizontal: 20),
+          child: Text(
+            '条件に合うカードはありません',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: Color(0xFF666666), fontSize: 12, height: 1.6),
+          ),
+        )
+      else
+        Expanded(
+            child: ListView.builder(
+          itemCount: visible.length,
+          itemBuilder: (ctx, i) {
+            final r = visible[i];
+            return _buildHistoryCard(r);
+          },
+        )),
+    ];
+  }
+
+  /// 過去タブの中身: ロード中はスピナー、ロード後は ObserveHistoryPastPanel。
+  Widget _buildPastTabContent() {
+    if (_pastCycles == null) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.symmetric(vertical: 40),
+          child: CircularProgressIndicator(
+            color: SolaraColors.solaraGold,
+            strokeWidth: 2,
+          ),
+        ),
+      );
+    }
+    return ObserveHistoryPastPanel(cycles: _pastCycles!);
   }
 
   // ══════════════════════════════════════════════════
