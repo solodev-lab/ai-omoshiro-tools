@@ -107,10 +107,16 @@ GalaxyCycle? formConstellation(
     ));
   }
 
+  // 🔴 (2026-05-19) id と formedAt は **必ず同じ now() インスタンス**を使う。
+  // Star Atlas のソートは effectiveFormedAt 経由でこの値を読む。
+  // id を別タイミングで生成すると、 後で id を milliseconds としてパースする
+  // フォールバックも狂うため、 1 度だけ now() を呼んで両方に流す。
+  final now = DateTime.now();
   return GalaxyCycle(
-    id: DateTime.now().millisecondsSinceEpoch.toString(),
+    id: now.millisecondsSinceEpoch.toString(),
     cycleStart: prevStart,
     cycleEnd: prevEnd,
+    formedAt: now,
     readings: readings, // ユーザーの実readingsは履歴として保持
     seedCardId: seedCardId,
     nameEN: nameResult.en,

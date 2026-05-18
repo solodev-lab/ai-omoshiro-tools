@@ -76,12 +76,19 @@ class GalaxyArchiveFilter {
       filtered = filtered.where((c) => rarities.contains(c.rarity)).toList();
     }
     final list = filtered.toList();
+    // 🔴 (2026-05-19) ソート基準を cycleStart → effectiveFormedAt に変更。
+    // cycleStart は「サイクルの開始日」であって「刻星化した日時」ではない。
+    // debug で過去サイクルを後から作ったり、同月内に複数 cycle を並べると
+    // cycleStart は順序を保証しない (オーナー報告)。effectiveFormedAt は
+    // formedAt → id(ms) → cycleStart の優先で「刻星化された時刻」を返す。
     switch (sort) {
       case GalaxyArchiveSort.newestFirst:
-        list.sort((a, b) => b.cycleStart.compareTo(a.cycleStart));
+        list.sort(
+            (a, b) => b.effectiveFormedAt.compareTo(a.effectiveFormedAt));
         break;
       case GalaxyArchiveSort.oldestFirst:
-        list.sort((a, b) => a.cycleStart.compareTo(b.cycleStart));
+        list.sort(
+            (a, b) => a.effectiveFormedAt.compareTo(b.effectiveFormedAt));
         break;
       case GalaxyArchiveSort.rarityHighFirst:
         list.sort((a, b) => b.rarity.compareTo(a.rarity));
