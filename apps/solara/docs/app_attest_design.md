@@ -1,6 +1,6 @@
 # App Attest サーバー検証 設計ドキュメント
 
-**ステータス**: ドラフト v1.1 (2026-05-19 起案、同日 R2-R5/R7/R8 確定で大幅更新)
+**ステータス**: ドラフト v1.2 (2026-05-19 起案、同日 R2-R5/R7/R8 確定 + Q1-Q5 オーナー判断確定)
 **対象**: Cloudflare Worker `solara-api` の `/auth/attest` + `/protected/*` ミドルウェア
 **前提**: `project_solara_launch_checklist.md` Phase 1 認証ミドルウェア
 **関連**: `project_solara_security_principles.md` 原則 1〜3
@@ -14,6 +14,11 @@
 - R8 clientDataHash 定義確定 (attestation: SHA-256(challenge) / assertion: caller が SHA-256(payload))
 - **§6.4 ECDSA 検証**: `nodejs_compat` + `node:crypto.createVerify` を使えば **DER→IEEE-P1363 変換不要** (実装簡素化)
 - **§13 新規追加**: 実装方針 2 択 (自前 vs npm 流用) を提示
+
+### v1.1 → v1.2 の変更点 (2026-05-19)
+- Q1-Q5 オーナー判断確定 (§11 を「決着済み」に置換):
+  - Q1: 詳細エラーコード採用 / Q2: 5min TTL / Q3: **初回公開から middleware ON** (Stage 1 スキップ確定) / Q4: production only / Q5: Root CA 更新不要 (v1.1 で解決済)
+- Q3 波及: launch_checklist.md Phase 6 Stage 1/Stage 2 を **「初回から Pro 解禁付き JP 公開」に統合**。Pro 無効化フラグ実装不要、`/protected/*` middleware は初日から本実装
 
 ---
 
@@ -428,22 +433,22 @@ v1.1 のロールアウト計画は §14 を参照。本セクションは履歴
 
 ---
 
-## 11. オープン課題 (オーナー判断必要)
+## 11. 決着済み判断 (オーナー確定 2026-05-19)
 
-| # | 課題 | 案 |
-|---|---|---|
-| Q1 | 検証失敗時のレスポンス | 401 単一 vs 詳細エラーコード (`{error: 'nonce_mismatch'}`)。後者はデバッグ便利だが攻撃者にもヒント |
-| Q2 | challenge の TTL | 5 分 vs 10 分。長くすると盗難リスク、短いと iOS 側 attestation 生成遅延でタイムアウト |
-| Q3 | 段階リリース時の grace period | 既存ユーザーは attestation なしで一定期間素通し? 即拒否? |
-| Q4 | development AAGUID の受け入れ | 本番 Worker は production AAGUID のみ受け入れ (現状方針)。ただし TestFlight 内部テスターも production になるはずなので問題なし ★ |
-| Q5 | Apple Root CA 更新 | 半年に 1 回手動チェック vs 自動 fetch + cache |
+| # | 項目 | 確定内容 | 実装影響 |
+|---|---|---|---|
+| **Q1** | 検証失敗時のレスポンス | **詳細エラーコード** (`{error: 'nonce_mismatch'}` 形式) | `verifyAttestation` の `VerifyAttestationError` enum 11 種をそのままレスポンス body に格納。HTTP status は一律 401 |
+| **Q2** | challenge の TTL | **5 分** (Apple Sample Code 推奨に準拠) | `/auth/challenge` で発行する random 32B を Workers KV に `expirationTtl: 300` で保存 |
+| **Q3** | リリース時の middleware ON/OFF | **初回公開から ON** ★ (Stage 1 スキップ確定 — 「すぐ Pro 解禁する」オーナー判断) | Pro 無効化フラグ実装不要、`/protected/*` middleware は初日から本実装で稼働。launch_checklist Phase 6 も同時更新 |
+| **Q4** | development AAGUID 受け入れ | **production only** | `appInfo.developmentEnv = false` 固定で deploy。TestFlight 内部テスターも production AAGUID で問題なし |
+| **Q5** | Apple Root CA 更新運用 | **不要** (v1.1 で R2 確定により解決済) | 有効期限 2045-03-15 で 19 年放置可能。release_checklist への追加タスクなし。Apple が前倒し失効した場合のみ wrangler deploy で差し替え |
 
-**推奨**:
-- Q1: 詳細エラーコード (社内デバッグ価値 > 攻撃者ヒント)
-- Q2: 5 分 (Apple Sample Code 推奨)
-- Q3: Stage 1 (JP・無料機能のみ) は middleware OFF、Stage 2 (Pro 解禁) で ON
-- Q4: production only
-- Q5: 手動 + release_checklist に半年タスク追加
+### Q3 (初回 ON) の波及
+
+- launch_checklist.md Phase 6 を「Stage 1 = JP 無料機能のみ 2 週間 + Stage 2 = JP Pro 解禁アップデート」から「**Stage 1 = JP Pro 解禁付き初回公開**」に統合
+- メリット: Pro 機能アップデート審査が不要、収益化早期化、Pro 無効化フラグ実装不要
+- リスク: 初回審査で paywall 全 9 項目 + 自動更新表記 + 法務 3 点が一斉チェック → リジェクト確率上がる
+- 対応: TestFlight 内部テストで paywall フロー全パスを通してから本申請
 
 ---
 
@@ -577,10 +582,9 @@ v1 の 12-18h より短縮 (R2-R8 確定 + 案A 採用で)。
 
 ---
 
-## 15. 承認
+## 15. 承認状態
 
-- [ ] オーナーレビュー
-  - Q1-Q5 (§11) の判断
-  - 案A (推奨) vs 案B の選択
-  - ロールアウト計画 v1.1 の承認
-- [ ] 実装着手 → セッション 2 開始 (R1 検証 + DO 実装)
+- [x] **Q1-Q5 オーナー判断確定** (2026-05-19、§11 参照)
+- [ ] 案A (推奨) vs 案B の選択 → **R1 検証 (セッション 2 冒頭) の結果で自動決定** (動けば案A、ダメなら案B)
+- [ ] ロールアウト計画 v1.1 (§14) の最終承認
+- [ ] 実装着手 → セッション 2 開始 (R1 検証 + DO 実装 + Q3 反映で middleware 本実装)
