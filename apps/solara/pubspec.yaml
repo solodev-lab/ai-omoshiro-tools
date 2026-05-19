@@ -58,6 +58,13 @@ dependencies:
   # security_principles 原則「クライアント改変対策」。検知時は Pro 機能のみ
   # disable、Free 機能は使えるまま (ストア審査対応)。
   freerasp: ^7.5.1
+  # Phase 1 App Attest (Solara worker /protected/* middleware と対応)
+  # iOS 14+ 実機のみ、bam.tech 製、pub points 150/150
+  # Worker 側: apps/solara/worker/src/auth/app_attest.js (verifyAttestation/verifyAssertion)
+  # 設計: apps/solara/docs/app_attest_design.md (v2.0+)
+  app_attest_integrity: ^1.0.0
+  # crypto: SHA-256 で payload hash 計算 (X-AppAttest-Assertion 生成時)
+  crypto: ^3.0.6
 
 dev_dependencies:
   flutter_test:

@@ -7,6 +7,7 @@ import 'screens/horoscope_screen.dart';
 import 'screens/observe_screen.dart';
 import 'screens/galaxy_screen.dart';
 import 'screens/sanctuary_screen.dart';
+import 'utils/app_attest_client.dart';
 import 'utils/app_locale.dart';
 import 'utils/celestial_events.dart';
 import 'utils/device_security_status.dart';
@@ -42,6 +43,11 @@ void main() async {
   // Phase 2-9: Sign in 統合。SharedPreferences から復元 + provider 別 silent restore。
   // PurchasesService.init より後でないと、復元時の logIn が configure 前に走ってしまう。
   await SolaraAuth.instance.load();
+  // Phase 1 App Attest (設計 v2.0): keyId 復元 or 初回 attest。失敗してもアプリ
+  // 起動は止めない (= bypass モードで通過、Worker 側 log_only モードで動く)。
+  // 実機 release のみ有効、Simulator/debug/Android/Web は bypass。
+  // ignore: unawaited_futures
+  AppAttestClient.instance.initialize();
   runApp(const SolaraApp());
 }
 
