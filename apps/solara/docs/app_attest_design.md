@@ -1,6 +1,6 @@
 # App Attest サーバー検証 設計ドキュメント
 
-**ステータス**: ドラフト v1.6 (2026-05-19 起案、同日 R2-R5/R7/R8 確定 + Q1-Q5 確定 + 案 B' + challenge race 解決 + Team ID 確定 + セッション 2 (R1 + cbor.js 26/26) + **セッション 3: verifyAttestation 実装 + Workers 上 R3 確認 + 17/17 test PASS**)
+**ステータス**: ドラフト v1.7 (2026-05-19 起案、同日 R2-R5/R7/R8 確定 + Q1-Q5 + 案 B' + challenge race 解決 + Team ID + S2 (cbor 26/26) + S3 (verifyAttestation 17/17 + Workers R3) + **時刻チェック C+D 追加 (未来発行 block + expired warning) 20/20 PASS**)
 **対象**: Cloudflare Worker `solara-api` の `/auth/attest` + `/protected/*` ミドルウェア
 **前提**: `project_solara_launch_checklist.md` Phase 1 認証ミドルウェア
 **関連**: `project_solara_security_principles.md` 原則 1〜3
@@ -28,6 +28,26 @@
 - R5 OID ASN.1 ネスト深さは **3 段** で確定 (node-app-attest 実装 `value[0].value[0].valueHex` + Apple Forum C++ Botan 実装と一致 ★★★)
 - production 知見追加 (adjoe blog): DCError.invalidInput/invalidKey 時の Flutter 側リトライ要件、challenge 5 分 TTL 実運用根拠
 - §13 実装方針 §14 ロールアウトを案 B' 前提に書き換え
+
+### v1.6 → v1.7 の変更点 (2026-05-19、時刻チェック C+D 追加 + 私の誤記訂正)
+
+オーナー指摘「signatureOnly: true は問題ある?対策できる?」を受けて再評価:
+
+**誤記訂正 (v1.6 → v1.7)**:
+- v1.6 で「node-app-attest と appattest-checker-node は両方 signature only」と書いたが、これは半分嘘
+  - node-app-attest: `node:crypto.X509.verify(publicKey)` → 確かに signature only ✅
+  - appattest-checker-node: `@peculiar/x509` の `cert.verify({publicKey})` を **デフォルト動作のまま使用** → 時刻チェック ON ❌ (私の v1.6 記述ミス)
+- つまり私の `signatureOnly: true` 採用は **業界標準を半分しか満たしておらず**、appattest-checker-node より「ゆるい」設定だった
+
+**案 C+D 採用 (Step 1.5 新規)**:
+- (C) 未来発行 credCert/subCa を block: `notBefore > now + 5分 skew` → `fail_credcert_future_issued` / `fail_subca_future_issued` で 401 (= 偽証明書の兆候を捕まえる)
+- (D) 期限切れ credCert/subCa は通すが `console.warn` で警告ログ: Cloudflare Workers ログから本番監視で異常検知可能。Firebase + App Check の 0% verified 障害パターンを避けつつ運用観測点を残す
+- clock skew 許容 5 分 (時計ズレで偽陽性を防ぐ)
+- これで appattest-checker-node より「未来発行 block」分だけ厳しく、「expired を通す」分はゆるい (が監視可能) という中間地点に到達
+
+**実装**: `app_attest.js` Step 1 直後に Step 1.5 セクション追加 (16 行)、`verifyAttestation` に optional `now` パラメータ追加 (テスト時刻 mock 用、本番は `Date.now()` default)
+
+**テスト追加**: 17/17 → **20/20 PASS** (`時刻チェック C` 未来発行 block、clock skew 5 分許容、`時刻チェック D` expired credCert で console.warn 発火確認)
 
 ### v1.5 → v1.6 の変更点 (2026-05-19、セッション 3 verifyAttestation 実装)
 - **auth/app_attest.js verifyAttestation 実装完了** (~210 行、9 step、node-app-attest 写経パターンを @peculiar/x509 で書き直し)

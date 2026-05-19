@@ -103,6 +103,7 @@ function extractEcUncompressedPoint(publicKey) {
  * @param {string}     params.bundleIdentifier             `com.solodevlab.solara`
  * @param {string}     params.teamIdentifier               `TY5JW393Q5`
  * @param {boolean}    [params.allowDevelopmentEnvironment=false]
+ * @param {number}     [params.now=Date.now()]             optional、テスト用 (時刻ベース判定の基準)
  * @returns {Promise<
  *   {ok: true, publicKeyPem: string, environment: 'production'|'development', receipt: Uint8Array}
  *   | {ok: false, error: string}>}
@@ -115,6 +116,7 @@ export async function verifyAttestation(params) {
     bundleIdentifier,
     teamIdentifier,
     allowDevelopmentEnvironment = false,
+    now = Date.now(), // optional、テスト用 (production は default の Date.now())
   } = params;
 
   // 入力バリデーション (caller のバグを早期検出)
@@ -160,11 +162,8 @@ export async function verifyAttestation(params) {
   if (!credCert) return { ok: false, error: 'fail_no_credcert' };
 
   // ── Step 1: 証明書チェーン検証 (credCert → subCA → Apple Root CA) ──
-  // signatureOnly: true → notBefore/notAfter の時刻チェックをスキップ (= 署名のみ検証)
-  // 理由: Apple credCert の有効期限は ~7 ヶ月で、Apple 側で attestation 取り直しを
-  // 強制するメカニズムが iOS 側 (DCAppAttestService) 側にあるため、サーバー側で時刻
-  // を再チェックする実利は薄い。さらに node-app-attest が使う node:crypto.X509.verify は
-  // 元から signature only (時刻を見ない)。本実装も同じ動作を踏襲。
+  // signatureOnly: true → @peculiar/x509 デフォルトの notBefore/notAfter 時刻チェック
+  // をスキップ (= 署名のみ検証)。時刻は §1.5 で自前判定する (理由は §1.5 コメント参照)。
   let subCaOk = false;
   let credCertOk = false;
   try {
@@ -175,6 +174,33 @@ export async function verifyAttestation(params) {
   }
   if (!subCaOk) return { ok: false, error: 'fail_subca_not_signed_by_root' };
   if (!credCertOk) return { ok: false, error: 'fail_credcert_not_signed_by_subca' };
+
+  // ── Step 1.5: 時刻ベースの追加検証 (案 C+D、設計 v1.7 で追加) ──
+  // node-app-attest / appattest-checker-node 等はここを実装していないが、Solara は:
+  //   (C) notBefore > now + skew → 未来発行 = 偽証明書の兆候 → 拒否
+  //   (D) notAfter < now           → 期限切れ = 監視対象だが通す + warning ログ
+  // (D) を「通す」根拠: Apple iOS 側で attestation 再取得を強制する機構があるため
+  //                     サーバー側時刻ブロックの実利は薄く、Firebase + App Check の
+  //                     7 日 TTL 0% verified 障害と同パターンを避ける。
+  // ただし完全無視ではなく Cloudflare Workers ログに warning を残し、本番監視で
+  // 異常傾向 (= 攻撃の兆候) を検知できるようにする。
+  const SKEW_MS = 5 * 60 * 1000; // clock skew 許容 5 分
+  if (subCa.notBefore.getTime() > now + SKEW_MS) {
+    return { ok: false, error: 'fail_subca_future_issued' };
+  }
+  if (credCert.notBefore.getTime() > now + SKEW_MS) {
+    return { ok: false, error: 'fail_credcert_future_issued' };
+  }
+  if (subCa.notAfter.getTime() < now) {
+    console.warn(
+      `[app_attest] subCa expired at ${subCa.notAfter.toISOString()} (now=${new Date(now).toISOString()}), accepting (signature OK)`,
+    );
+  }
+  if (credCert.notAfter.getTime() < now) {
+    console.warn(
+      `[app_attest] credCert expired at ${credCert.notAfter.toISOString()} for keyId=${keyId.slice(0, 8)}... (now=${new Date(now).toISOString()}), accepting (signature OK)`,
+    );
+  }
 
   // ── Step 2-3: clientDataHash = SHA-256(challenge), nonce = SHA-256(authData || clientDataHash) ──
   const clientDataHash = sha256(challenge);
