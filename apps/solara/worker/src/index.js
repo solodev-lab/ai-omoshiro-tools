@@ -20,6 +20,10 @@ import { handleTarot } from './tarot.js';
 import { handleRelocation } from './relocation.js';
 import { handleLineNarrative } from './line_narrative.js';
 import { handleConsultation } from './consultation.js';
+import { verifyAttestation, verifyAssertion } from './auth/app_attest.js';
+
+// Durable Object 本体は worker entry から re-export 必須 (wrangler が class を解決するため)
+export { AttestationState } from './auth/attestation_state.js';
 
 // ── CORS ──
 const ALLOWED_ORIGINS = [
@@ -187,56 +191,209 @@ async function handleOsmTile(request, tilePathTail) {
   return response;
 }
 
-// ── /protected/* middleware (no-op placeholder) ──
-//
-// Phase 1 残: ここに App Attest 検証 + RevenueCat entitlement 検証 +
-// per-appUserId rate limit を実装する。現状は **no-op** で素通し
-// (本物の防御は Webhook 受信エンドポイント + 認証ミドルウェア実装と同時に有効化)。
-//
-// 仕様 (将来):
-//   1. Header `X-Assertion` (Base64 App Attest assertion) を取り出して検証
-//   2. Header `X-App-User-Id` (RevenueCat ログイン uid) を取り出して KV/Worker から
-//      isPro を再取得し、Pro 限定機能 (relocation 等) をゲート
-//   3. per-appUserId rate limit (Free=5/日, Pro=100/日 等)
-//
-// 戻り値: null なら通過、Response を返したらブロック (即レスポンス)。
-async function protectedMiddleware(_request, _env) {
-  // TODO(Phase 1 残, 明日以降): attestation + entitlement + rate limit
-  return null;
+// ──────────────────────────────────────────────────────────
+// App Attest middleware & handlers (設計 v1.9、セッション 5 で本実装)
+// ──────────────────────────────────────────────────────────
+
+/**
+ * Durable Object (AttestationState) を呼ぶ薄いラッパー。
+ * 全 keyId を 1 instance ('global') に集約する設計 (設計 v1.8 §6.1)。
+ */
+async function callDo(env, path, body) {
+  const stub = env.ATTESTATION_DO.get(env.ATTESTATION_DO.idFromName('global'));
+  const res = await stub.fetch(`https://do${path}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  const json = await res.json().catch(() => ({}));
+  return { status: res.status, body: json };
 }
 
-// ── /auth/* stub handlers ──
-//
-// Phase 1 残: 本物の Sign in / App Attest 登録ロジックを入れる。今は API 契約だけ
-// 確定させて Flutter 側のコード骨組みが先に書けるようにする。
+/**
+ * APP_ATTEST_ENFORCEMENT の評価。
+ * - "disabled" : middleware 完全スキップ (kill switch)
+ * - "log_only" : 検証は走るが失敗しても通す + console.warn
+ * - "enforced" : 検証失敗で 401 (本番想定)
+ * 未設定時は "log_only" を default に倒す (= 初回 deploy は壊れない)
+ */
+function getEnforcement(env) {
+  const v = (env.APP_ATTEST_ENFORCEMENT || 'log_only').toLowerCase();
+  if (v === 'disabled' || v === 'log_only' || v === 'enforced') return v;
+  return 'log_only';
+}
 
 /**
  * GET /auth/whoami
- * 認証セッションの現状を返す (Phase 2-9 Sign in 統合と連動)。
- * Phase 1 残: 本実装で `Authorization: Bearer <id_token>` を検証 → uid 復元 →
- * RevenueCat 経由 isPro 再検証 → KV キャッシュへ書込み。
+ * 現状 stub のまま (Phase 2 Sign in + RevenueCat Webhook 統合時に本実装、
+ * App Attest とは独立タスクなのでセッション 5 のスコープ外)。
  */
-function handleWhoamiStub(_request, origin) {
+function handleWhoami(_request, origin) {
+  return jsonOk({ anonymous: true, isPro: false, stub: true }, origin);
+}
+
+/**
+ * POST /auth/challenge
+ * App Attest 用 random 32B を発行 → DO に 5 分 TTL で INSERT → クライアントへ返却。
+ * Flutter 側はこの challenge を `DCAppAttestService.attestKey` の clientDataHash
+ * (= SHA-256(challenge)) として渡す。
+ */
+async function handleAuthChallenge(env, origin) {
+  const challengeId = crypto.randomUUID();
+  const challengeBytes = Array.from(crypto.getRandomValues(new Uint8Array(32)));
+  const ttlSec = parseInt(env.APP_ATTEST_CHALLENGE_TTL_SEC || '300', 10);
+  const expiresAt = Date.now() + ttlSec * 1000;
+  const result = await callDo(env, '/challenge-create', { challengeId, challengeBytes, expiresAt });
+  if (result.status !== 200) {
+    return jsonError(500, `challenge-create failed: ${result.body?.error || 'unknown'}`, origin);
+  }
+  // クライアントへは challenge bytes を base64 で返す (Flutter で base64 decode 後 SHA-256)
   return jsonOk({
-    anonymous: true,
-    isPro: false,
-    stub: true,
-    note: 'Phase 1 残: 本実装は明日以降の Webhook 統合と同時。',
+    challengeId,
+    challenge: btoa(String.fromCharCode(...challengeBytes)),
+    ttlSec,
   }, origin);
 }
 
 /**
  * POST /auth/attest
- * App Attest / Play Integrity の attestation 登録 (端末初回起動時)。
- * Phase 1 残: keyId 受領 → Apple CA / Google Play Integrity API 検証 →
- * Durable Object `AttestationState` に counter 永続化。
+ * 端末初回起動時 attestation 登録。
+ * Body: { keyId: <base64>, challengeId: <uuid>, attestation: <base64 CBOR> }
  */
-function handleAttestStub(_request, origin) {
-  return jsonOk({
-    ok: true,
-    stub: true,
-    note: 'Phase 1 残: App Attest / Play Integrity 検証は明日以降。',
-  }, origin);
+async function handleAuthAttest(request, env, origin) {
+  let body;
+  try {
+    body = await request.json();
+  } catch (_e) {
+    return jsonError(400, 'invalid_json', origin);
+  }
+  const { keyId, challengeId, attestation: attB64 } = body;
+  if (typeof keyId !== 'string' || !keyId) return jsonError(400, 'missing_key_id', origin);
+  if (typeof challengeId !== 'string' || !challengeId) return jsonError(400, 'missing_challenge_id', origin);
+  if (typeof attB64 !== 'string' || !attB64) return jsonError(400, 'missing_attestation', origin);
+
+  // 1. DO から challenge を取り出して consume (one-time use、replay 防止)
+  const ch = await callDo(env, '/challenge-consume', { challengeId });
+  if (ch.status !== 200) {
+    return jsonError(401, `invalid_challenge: ${ch.body?.error || 'unknown'}`, origin);
+  }
+  const challengeBytes = new Uint8Array(ch.body.challengeBytes);
+
+  // 2. attestation 検証 (9 step + Step 1.5 時刻チェック)
+  let attResult;
+  try {
+    attResult = await verifyAttestation({
+      attestation: new Uint8Array(Buffer.from(attB64, 'base64')),
+      challenge: challengeBytes,
+      keyId,
+      bundleIdentifier: env.APPLE_BUNDLE_ID,
+      teamIdentifier: env.APPLE_TEAM_ID,
+      allowDevelopmentEnvironment: false, // 設計 Q4 production only
+    });
+  } catch (err) {
+    console.error('[auth/attest] verifyAttestation threw:', err.stack || err.message);
+    return jsonError(500, 'attestation_verify_exception', origin);
+  }
+  if (!attResult.ok) {
+    return jsonError(401, attResult.error, origin);
+  }
+
+  // 3. DO に永続化
+  const rpId = `${env.APPLE_TEAM_ID}.${env.APPLE_BUNDLE_ID}`;
+  const store = await callDo(env, '/attestation-store', {
+    keyId,
+    publicKeyPem: attResult.publicKeyPem,
+    rpId,
+    aaguid: attResult.environment,
+  });
+  if (store.status !== 200) {
+    return jsonError(500, `attestation-store failed: ${store.body?.error || 'unknown'}`, origin);
+  }
+  return jsonOk({ ok: true, environment: attResult.environment }, origin);
+}
+
+/**
+ * /protected/* middleware (本実装、設計 v1.9)。
+ *
+ * 戻り値: null なら通過、Response を返したらブロック (即レスポンス)。
+ * 返り値の Response は Worker entry がそのままクライアントへ返す。
+ *
+ * `APP_ATTEST_ENFORCEMENT` の値で挙動切替:
+ *   - "disabled" : 即通過 (kill switch)
+ *   - "log_only" : 検証は走るが失敗しても通す + warning ログ (移行期間)
+ *   - "enforced" : 失敗時 401
+ *
+ * 戻り値が `null` なら通過。通過時に、handler 側で再度 body を読めるよう、
+ * middleware は `request.clone()` ではなく Worker entry 側で arrayBuffer を
+ * 取って context に積む形にする (= middleware 内では body を一度読むだけ)。
+ */
+async function protectedMiddleware(request, env) {
+  const mode = getEnforcement(env);
+  if (mode === 'disabled') return null;
+
+  const fail = (status, error) => {
+    if (mode === 'log_only') {
+      console.warn(`[middleware:log_only] would block ${status} ${error}`);
+      return null; // 通過
+    }
+    return jsonError(status, error, getAllowedOrigin(request));
+  };
+
+  const keyId = request.headers.get('X-AppAttest-KeyId');
+  const assertionB64 = request.headers.get('X-AppAttest-Assertion');
+  if (!keyId || !assertionB64) return fail(401, 'missing_attestation_headers');
+
+  // 1. DO から公開鍵 + 前回 signCount 取得
+  const att = await callDo(env, '/attestation-get', { keyId });
+  if (att.status !== 200) return fail(401, 'attestation_not_registered');
+  const { publicKeyPem, counter: prevSignCount } = att.body;
+
+  // 2. payload (request body raw bytes) を取得して payload SHA-256 計算用
+  // 設計 v1.8 §16.2 規約: Flutter は jsonEncode → utf8.encode → そのまま POST body
+  // request.clone() で stream を分岐 (= handler 側で request.json() がそのまま動く)
+  let payloadBytes;
+  try {
+    const cloned = request.clone();
+    payloadBytes = new Uint8Array(await cloned.arrayBuffer());
+  } catch (err) {
+    console.error('[middleware] body read error:', err.message);
+    return fail(400, 'body_read_error');
+  }
+
+  // 3. assertion 検証
+  let result;
+  try {
+    result = verifyAssertion({
+      assertion: new Uint8Array(Buffer.from(assertionB64, 'base64')),
+      payload: payloadBytes,
+      publicKeyPem,
+      bundleIdentifier: env.APPLE_BUNDLE_ID,
+      teamIdentifier: env.APPLE_TEAM_ID,
+    });
+  } catch (err) {
+    console.error('[middleware] verifyAssertion threw:', err.stack || err.message);
+    return fail(500, 'assertion_verify_exception');
+  }
+  if (!result.ok) return fail(401, result.error);
+
+  // 4. signCount monotonic bump (DO 内で race-free)
+  const bump = await callDo(env, '/attestation-bump-counter', {
+    keyId,
+    signCount: result.signCount,
+  });
+  if (bump.status === 409) return fail(401, 'sign_count_not_greater'); // replay
+  if (bump.status !== 200) return fail(500, `bump-counter failed: ${bump.body?.error || 'unknown'}`);
+
+  // 5. per-user quota check (Layer C、Free=5/日 Pro=100/日)
+  // 当面は isPro を判定する RevenueCat 経路がないので Free 想定 (= 厳しい上限)。
+  // 後続セッションで Sign in + RevenueCat 配線時に isPro 判定して Pro 上限へ切替。
+  const limit = parseInt(env.APP_ATTEST_QUOTA_FREE || '5', 10);
+  const dayBucket = new Date().toISOString().slice(0, 10);
+  const quota = await callDo(env, '/quota-check-and-bump', { keyId, dayBucket, limit });
+  if (quota.status === 429) return fail(429, 'quota_exceeded');
+  if (quota.status !== 200) return fail(500, `quota-check failed: ${quota.body?.error || 'unknown'}`);
+
+  return null; // 通過
 }
 
 // ── Rate limit bucket dispatch ──
@@ -341,13 +498,16 @@ async function dispatchPublic(request, env, url, origin) {
 }
 
 // ── /auth/* dispatcher ──
-async function dispatchAuth(request, _env, url, origin) {
+async function dispatchAuth(request, env, url, origin) {
   const path = url.pathname;
   if (path === '/auth/whoami' && request.method === 'GET') {
-    return handleWhoamiStub(request, origin);
+    return handleWhoami(request, origin);
+  }
+  if (path === '/auth/challenge' && request.method === 'POST') {
+    return await handleAuthChallenge(env, origin);
   }
   if (path === '/auth/attest' && request.method === 'POST') {
-    return handleAttestStub(request, origin);
+    return await handleAuthAttest(request, env, origin);
   }
   return null;
 }
