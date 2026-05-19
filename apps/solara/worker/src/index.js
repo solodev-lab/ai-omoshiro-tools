@@ -23,6 +23,12 @@ import { handleRelocation } from './relocation.js';
 import { handleLineNarrative } from './line_narrative.js';
 import { handleConsultation } from './consultation.js';
 import { verifyAttestation, verifyAssertion } from './auth/app_attest.js';
+// Play Integrity (Android) — 設計 v0.7 §4 + §8
+import {
+  diagnoseKeys,
+  decodeIntegrityToken,
+  verifyPlayIntegrityFlow,
+} from './auth/play_integrity.js';
 import {
   getCachedEntitlement,
   setCachedEntitlement,
@@ -238,6 +244,17 @@ function getEnforcement(env) {
 }
 
 /**
+ * PLAY_INTEGRITY_ENFORCEMENT (Android 経路) の評価。
+ * App Attest と同じ semantics、独立 env var で iOS/Android のロールアウト差を吸収。
+ * 未設定時は "log_only" を default に倒す。
+ */
+function getPlayIntegrityEnforcement(env) {
+  const v = (env.PLAY_INTEGRITY_ENFORCEMENT || 'log_only').toLowerCase();
+  if (v === 'disabled' || v === 'log_only' || v === 'enforced') return v;
+  return 'log_only';
+}
+
+/**
  * GET /auth/whoami
  * 現状 stub のまま (Phase 2 Sign in + RevenueCat Webhook 統合時に本実装、
  * App Attest とは独立タスクなのでセッション 5 のスコープ外)。
@@ -267,6 +284,34 @@ async function handleAuthChallenge(env, origin) {
     challenge: btoa(String.fromCharCode(...challengeBytes)),
     ttlSec,
   }, origin);
+}
+
+/**
+ * POST /auth/integrity/challenge
+ * Play Integrity Standard request 用 random 32B nonce を発行 → DO に 5 分 TTL で INSERT
+ * → クライアントへ {nonceId, nonce(base64), ttlSec} を返却。
+ *
+ * Flutter (Android) 側は受け取った nonce を `clientData = JSON({nonce, uid, ts})` に
+ * 埋込み、`AppAttestIntegrity().verify(clientData: jsonEncode(...))` の引数として渡す。
+ * plugin が内部で `requestHash = base64(sha256(clientData))` を計算 → Standard token 取得。
+ *
+ * 設計: apps/solara/docs/play_integrity_design.md §4 Step 1 + §7.2
+ */
+async function handleIntegrityChallenge(env, origin) {
+  const nonceId = crypto.randomUUID();
+  const nonceBytes = crypto.getRandomValues(new Uint8Array(32));
+  // 標準 base64 (RFC 4648 §4、`=` パディングあり、URL-safe ではない)
+  // = app_attest_integrity plugin の CryptoUtils.sha256HashBase64 と同形式
+  let bin = '';
+  for (let i = 0; i < nonceBytes.length; i++) bin += String.fromCharCode(nonceBytes[i]);
+  const nonceB64 = btoa(bin);
+  const ttlSec = parseInt(env.PLAY_INTEGRITY_NONCE_TTL_SEC || '300', 10);
+  const expiresAt = Date.now() + ttlSec * 1000;
+  const result = await callDo(env, '/integrity-nonce-create', { nonceId, nonceB64, expiresAt });
+  if (result.status !== 200) {
+    return jsonError(500, `integrity-nonce-create failed: ${result.body?.error || 'unknown'}`, origin);
+  }
+  return jsonOk({ nonceId, nonce: nonceB64, ttlSec }, origin);
 }
 
 /**
@@ -382,59 +427,122 @@ async function lookupIsPro(env, appUserId) {
 }
 
 /**
- * /protected/* middleware (本実装、設計 v2.2)。
+ * /protected/* middleware (本実装、設計 v0.7 — iOS App Attest + Android Play Integrity 統合)。
  *
  * 戻り値: null なら通過、Response を返したらブロック (即レスポンス)。
  * 返り値の Response は Worker entry がそのままクライアントへ返す。
  *
- * `APP_ATTEST_ENFORCEMENT` の値で挙動切替:
- *   - "disabled" : 即通過 (kill switch)
- *   - "log_only" : 検証は走るが失敗しても通す + warning ログ (移行期間)
- *   - "enforced" : 失敗時 401
+ * 経路分岐 (S4 で追加):
+ *   - X-AppAttest-KeyId ヘッダー → iOS App Attest
+ *   - X-PlayIntegrity-Token ヘッダー → Android Play Integrity
+ *   - 両方欠落 → 401 missing_attestation_headers
+ *   - 両方同時 → 400 both_attest_headers (= クライアントバグ検出)
  *
- * 戻り値が `null` なら通過。通過時に、handler 側で再度 body を読めるよう、
- * middleware は `request.clone()` ではなく Worker entry 側で arrayBuffer を
- * 取って context に積む形にする (= middleware 内では body を一度読むだけ)。
+ * Enforcement 切替 (env で OS 別独立):
+ *   - APP_ATTEST_ENFORCEMENT (iOS): disabled | log_only | enforced
+ *   - PLAY_INTEGRITY_ENFORCEMENT (Android): 同 semantics、別 var
+ *   - 両方とも "disabled" → 即通過 (kill switch)
  *
- * v2.2 追加:
- *   - body 内 `__appUserId` を entitlement lookup に使う (RevenueCat 連動)
- *   - Pro=APP_ATTEST_QUOTA_PRO (100/日) / Free=APP_ATTEST_QUOTA_FREE (5/日) で
- *     per-user quota を切替
+ * 経路依存処理:
+ *   - iOS: DO 公開鍵 取得 → assertion 検証 → signCount bump → keyId を quota key に使う
+ *   - Android: clientData parse → DO nonce consume → token decode/verify → verdict
+ *               → uid を quota key に使う (端末 binding が弱いため、攻撃者には DAU 単位の負荷)
+ *
+ * 共通処理:
+ *   - body 取得 (request.clone().arrayBuffer())
+ *   - appUserId 抽出 (body.__appUserId) + entitlement (RC) 参照
+ *   - Pro / Free quota (Layer C、Free=5/日 Pro=100/日)
+ *   - Step 12 (iOS は body 全体に署名済、Android は uid と __appUserId の equality 確認)
  */
 async function protectedMiddleware(request, env) {
-  const mode = getEnforcement(env);
-  if (mode === 'disabled') return null;
+  const iosMode = getEnforcement(env);
+  const androidMode = getPlayIntegrityEnforcement(env);
+  if (iosMode === 'disabled' && androidMode === 'disabled') return null;
 
-  const fail = (status, error) => {
-    if (mode === 'log_only') {
+  // 経路判定 (ヘッダー存在で OS を識別)
+  const hasApple = !!request.headers.get('X-AppAttest-KeyId');
+  const hasAndroid = !!request.headers.get('X-PlayIntegrity-Token');
+
+  // どちらの mode に従うかは経路で決まる。経路未確定時 (両欠落) は iOS mode に倒す
+  const activeMode = hasAndroid ? androidMode : iosMode;
+  const failResponder = (status, error) => {
+    if (activeMode === 'log_only') {
       console.warn(`[middleware:log_only] would block ${status} ${error}`);
       return null; // 通過
     }
     return jsonError(status, error, getAllowedOrigin(request));
   };
 
-  const keyId = request.headers.get('X-AppAttest-KeyId');
-  const assertionB64 = request.headers.get('X-AppAttest-Assertion');
-  if (!keyId || !assertionB64) return fail(401, 'missing_attestation_headers');
+  if (hasApple && hasAndroid) return failResponder(400, 'both_attest_headers');
+  if (!hasApple && !hasAndroid) return failResponder(401, 'missing_attestation_headers');
 
-  // 1. DO から公開鍵 + 前回 signCount 取得
-  const att = await callDo(env, '/attestation-get', { keyId });
-  if (att.status !== 200) return fail(401, 'attestation_not_registered');
-  const { publicKeyPem } = att.body;
-
-  // 2. payload (request body raw bytes) を取得して payload SHA-256 計算用
-  // 設計 v1.8 §16.2 規約: Flutter は jsonEncode → utf8.encode → そのまま POST body
-  // request.clone() で stream を分岐 (= handler 側で request.json() がそのまま動く)
+  // body 取得 (両経路共通)
   let payloadBytes;
   try {
     const cloned = request.clone();
     payloadBytes = new Uint8Array(await cloned.arrayBuffer());
   } catch (err) {
     console.error('[middleware] body read error:', err.message);
-    return fail(400, 'body_read_error');
+    return failResponder(400, 'body_read_error');
   }
 
-  // 3. assertion 検証
+  let quotaKey;     // per-user quota の key (iOS=keyId / Android=uid)
+  let verifiedUid;  // Android のみ。Step 12 で __appUserId と一致確認
+
+  // ── 経路 1: iOS App Attest ──
+  if (hasApple) {
+    const r = await verifyAppleAssertionFlow(request, env, payloadBytes, failResponder);
+    if (r === null || r instanceof Response) return r;
+    quotaKey = r.keyId;
+  }
+
+  // ── 経路 2: Android Play Integrity ──
+  if (hasAndroid) {
+    const r = await verifyPlayIntegrityRoute(request, env, failResponder);
+    if (r === null || r instanceof Response) return r;
+    quotaKey = `play:${r.uid}`;
+    verifiedUid = r.uid;
+  }
+
+  // ── 共通: entitlement lookup ──
+  const appUserId = extractAppUserId(payloadBytes);
+
+  // Android のみ: clientData.uid と body.__appUserId の一致確認 (Step 12)
+  if (verifiedUid !== undefined && appUserId !== null && verifiedUid !== appUserId) {
+    return failResponder(401, 'uid_mismatch');
+  }
+
+  const isPro = await lookupIsPro(env, appUserId);
+
+  // ── 共通: per-user quota (Layer C、Free=5/日 Pro=100/日) ──
+  const freeLimit = parseInt(env.APP_ATTEST_QUOTA_FREE || '5', 10);
+  const proLimit = parseInt(env.APP_ATTEST_QUOTA_PRO || '100', 10);
+  const limit = isPro ? proLimit : freeLimit;
+  const dayBucket = new Date().toISOString().slice(0, 10);
+  const quota = await callDo(env, '/quota-check-and-bump', { keyId: quotaKey, dayBucket, limit });
+  if (quota.status === 429) {
+    return failResponder(429, isPro ? 'quota_exceeded_pro' : 'quota_exceeded_free');
+  }
+  if (quota.status !== 200) {
+    return failResponder(500, `quota-check failed: ${quota.body?.error || 'unknown'}`);
+  }
+
+  return null; // 通過
+}
+
+/**
+ * iOS App Attest 経路: 既存ロジックを関数抽出。
+ * 戻り値: Response (ブロック) / null (log_only 通過) / {keyId} (検証 OK)
+ */
+async function verifyAppleAssertionFlow(request, env, payloadBytes, fail) {
+  const keyId = request.headers.get('X-AppAttest-KeyId');
+  const assertionB64 = request.headers.get('X-AppAttest-Assertion');
+  if (!keyId || !assertionB64) return fail(401, 'missing_apple_attest_headers');
+
+  const att = await callDo(env, '/attestation-get', { keyId });
+  if (att.status !== 200) return fail(401, 'attestation_not_registered');
+  const { publicKeyPem } = att.body;
+
   let result;
   try {
     result = verifyAssertion({
@@ -450,31 +558,43 @@ async function protectedMiddleware(request, env) {
   }
   if (!result.ok) return fail(401, result.error);
 
-  // 4. signCount monotonic bump (DO 内で race-free)
+  // signCount monotonic bump (DO 内で race-free)
   const bump = await callDo(env, '/attestation-bump-counter', {
     keyId,
     signCount: result.signCount,
   });
-  if (bump.status === 409) return fail(401, 'sign_count_not_greater'); // replay
+  if (bump.status === 409) return fail(401, 'sign_count_not_greater');
   if (bump.status !== 200) return fail(500, `bump-counter failed: ${bump.body?.error || 'unknown'}`);
 
-  // 5. entitlement lookup → Free/Pro quota 切替 (RevenueCat 連動)
-  // appUserId が無い (= 旧クライアント or 非 JSON body) は Free 扱い
-  const appUserId = extractAppUserId(payloadBytes);
-  const isPro = await lookupIsPro(env, appUserId);
+  return { keyId };
+}
 
-  // 6. per-user quota check (Layer C、Free=5/日 Pro=100/日)
-  const freeLimit = parseInt(env.APP_ATTEST_QUOTA_FREE || '5', 10);
-  const proLimit = parseInt(env.APP_ATTEST_QUOTA_PRO || '100', 10);
-  const limit = isPro ? proLimit : freeLimit;
-  const dayBucket = new Date().toISOString().slice(0, 10);
-  const quota = await callDo(env, '/quota-check-and-bump', { keyId, dayBucket, limit });
-  if (quota.status === 429) {
-    return fail(429, isPro ? 'quota_exceeded_pro' : 'quota_exceeded_free');
+/**
+ * Android Play Integrity 経路: verifyPlayIntegrityFlow を呼出し、DO consume を実装側に注入。
+ * 戻り値: Response (ブロック) / null (log_only 通過) / {uid} (検証 OK)
+ */
+async function verifyPlayIntegrityRoute(request, env, fail) {
+  // DO consume の注入: verifyPlayIntegrityFlow に Step 5 の DO 呼出を委譲する
+  const consumeNonce = async (nonceId) => {
+    const r = await callDo(env, '/integrity-nonce-consume', { nonceId });
+    if (r.status !== 200) {
+      return { ok: false, error: 'nonce_invalid' };
+    }
+    return { ok: true, nonceB64: r.body.nonceB64 };
+  };
+
+  let result;
+  try {
+    result = await verifyPlayIntegrityFlow(request, env, consumeNonce);
+  } catch (err) {
+    console.error('[middleware] verifyPlayIntegrityFlow threw:', err.stack || err.message);
+    return fail(500, 'play_integrity_verify_exception');
   }
-  if (quota.status !== 200) return fail(500, `quota-check failed: ${quota.body?.error || 'unknown'}`);
-
-  return null; // 通過
+  if (!result.ok) {
+    const code = result.detail ? `${result.error}:${result.detail}` : result.error;
+    return fail(result.status || 401, code);
+  }
+  return { uid: result.uid };
 }
 
 // ── Rate limit bucket dispatch ──
@@ -591,7 +711,47 @@ async function dispatchAuth(request, env, url, origin) {
   if (path === '/auth/attest' && request.method === 'POST') {
     return await handleAuthAttest(request, env, origin);
   }
+  // Play Integrity Standard request 用 nonce 発行 (S4、設計 v0.7 §4 Step 1)
+  if (path === '/auth/integrity/challenge' && request.method === 'POST') {
+    return await handleIntegrityChallenge(env, origin);
+  }
+  // Play Integrity 診断 endpoint (S2 minimal worker、設計 v0.3 §13 + S6 本番ガード)
+  // R7 (base64 SPKI import) + R8 (Self-managed key が Standard 応答に適用されるか) を実証。
+  //
+  // 🔒 S6 本番ガード: PLAY_INTEGRITY_ENFORCEMENT === 'enforced' 時は 404 化
+  // (本番でデバッグ口を露出しない。`disabled`/`log_only` 期間中のみアクセス可)。
+  // 切替は wrangler.toml の PLAY_INTEGRITY_ENFORCEMENT を変えるだけで反映。
+  if (path === '/auth/integrity/diagnose' && request.method === 'GET') {
+    if (isDiagnosticsBlocked(env)) {
+      return jsonError(404, 'not_found', origin);
+    }
+    const keys = await diagnoseKeys(env);
+    return jsonOk(keys, origin);
+  }
+  if (path === '/auth/integrity/decode-test' && request.method === 'POST') {
+    if (isDiagnosticsBlocked(env)) {
+      return jsonError(404, 'not_found', origin);
+    }
+    const body = await request.json().catch(() => ({}));
+    if (!body.token) return jsonError(400, 'token required', origin);
+    const result = await decodeIntegrityToken(body.token, env);
+    return jsonOk(result, origin);
+  }
   return null;
+}
+
+/**
+ * 診断 endpoint (/auth/integrity/diagnose + /auth/integrity/decode-test) を
+ * 本番モードでブロックする判定。
+ *
+ * - PLAY_INTEGRITY_ENFORCEMENT === 'enforced' → 404 で完全隠蔽
+ * - それ以外 (disabled / log_only / 未設定) → アクセス可 (S5 オーナー実機作業中)
+ *
+ * 検証用の最後の砦として log_only の間は active のまま残す。enforced 切替と
+ * 同時に本ガードが発火、攻撃者がデバッグ口を発見できないようにする。
+ */
+function isDiagnosticsBlocked(env) {
+  return getPlayIntegrityEnforcement(env) === 'enforced';
 }
 
 // ── /protected/* dispatcher ──
@@ -656,6 +816,17 @@ async function dispatchProtected(request, env, url, origin) {
 
   return null;
 }
+
+// テスト用エクスポート (Cloudflare runtime 非依存の関数のみ)
+// 既存ロジック (handleAuthChallenge / handleAuthAttest 等) は callDo 経由で env.ATTESTATION_DO に
+// 依存するため、env を mock することで Node から直接呼出してテスト可能。
+export const _internal = {
+  handleIntegrityChallenge,
+  getEnforcement,
+  getPlayIntegrityEnforcement,
+  extractAppUserId,
+  isDiagnosticsBlocked,
+};
 
 // ── Main Handler ──
 export default {

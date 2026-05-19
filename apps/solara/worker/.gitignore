@@ -7,3 +7,4 @@ node_modules/
 # wrangler deploy --dry-run の一時出力 (Phase C bundle size 計測等で生成)
 .dry-run-output/
 */.dry-run-output/
+dist-*/

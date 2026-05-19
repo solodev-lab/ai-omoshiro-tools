@@ -44,6 +44,9 @@ const String solaraWhoamiUrl = '$solaraWorkerBase/auth/whoami';
 const String solaraAttestUrl = '$solaraWorkerBase/auth/attest';
 // v2.0 追加: /auth/challenge は random 32B + DO 5min TTL を発行
 const String solaraChallengeUrl = '$solaraWorkerBase/auth/challenge';
+// S4 追加: Play Integrity Standard request 用 nonce 発行 (Android 経路、設計 v0.7 §4 Step 1)
+const String solaraIntegrityChallengeUrl =
+    '$solaraWorkerBase/auth/integrity/challenge';
 
 // /protected/* — Gemini 系、attestation + entitlement 必須 (Phase 1 残で middleware 配線)
 const String solaraFortuneUrl = '$solaraWorkerBase/protected/fortune';
