@@ -1,6 +1,6 @@
 # App Attest サーバー検証 設計ドキュメント
 
-**ステータス**: ドラフト v1.2 (2026-05-19 起案、同日 R2-R5/R7/R8 確定 + Q1-Q5 オーナー判断確定)
+**ステータス**: ドラフト v1.3 (2026-05-19 起案、同日 R2-R5/R7/R8 確定 + Q1-Q5 オーナー判断確定 + 案 B' ハイブリッド確定)
 **対象**: Cloudflare Worker `solara-api` の `/auth/attest` + `/protected/*` ミドルウェア
 **前提**: `project_solara_launch_checklist.md` Phase 1 認証ミドルウェア
 **関連**: `project_solara_security_principles.md` 原則 1〜3
@@ -19,6 +19,15 @@
 - Q1-Q5 オーナー判断確定 (§11 を「決着済み」に置換):
   - Q1: 詳細エラーコード採用 / Q2: 5min TTL / Q3: **初回公開から middleware ON** (Stage 1 スキップ確定) / Q4: production only / Q5: Root CA 更新不要 (v1.1 で解決済)
 - Q3 波及: launch_checklist.md Phase 6 Stage 1/Stage 2 を **「初回から Pro 解禁付き JP 公開」に統合**。Pro 無効化フラグ実装不要、`/protected/*` middleware は初日から本実装
+
+### v1.2 → v1.3 の変更点 (2026-05-19、徹底再調査の結果)
+- 案 A/B 評価が **二重に間違っていたことを発見**:
+  - node-app-attest は **Workers 非対応** (`node:crypto.X509Certificate` 使用、workerd issue #1304 で未サポート確定)
+  - appattest-checker-node は Workers 互換だが 1.5 年メンテ停止
+- **案 B' ハイブリッド** (= @peculiar/x509 のみ npm、CBOR + 検証ロジック + DO は自前 = node-app-attest 写経) を新規追加 → オーナー判断で確定
+- R5 OID ASN.1 ネスト深さは **3 段** で確定 (node-app-attest 実装 `value[0].value[0].valueHex` + Apple Forum C++ Botan 実装と一致 ★★★)
+- production 知見追加 (adjoe blog): DCError.invalidInput/invalidKey 時の Flutter 側リトライ要件、challenge 5 分 TTL 実運用根拠
+- §13 実装方針 §14 ロールアウトを案 B' 前提に書き換え
 
 ---
 
@@ -254,30 +263,34 @@ const ok = await crypto.subtle.verify({name: 'ECDSA', hash: 'SHA-256'}, key, raw
 - **DO 名前空間**: 全 keyId を 1 DO instance に詰める案 (`namespace.idFromName('global')`) vs keyId ごとに分ける案 (`namespace.idFromName(keyId)`)。前者はシンプルだが contention、後者は完全分散だが 1 keyId あたり DO instance が立つコスト。
   - **決定: 前者 (`global`)**。理由: Solara の同時刻 attestation 件数は <100/sec 想定、single DO で捌ける。後者は DO instance 数が DAU 規模に比例して billing リスク。
 
-### 6.2 CBOR ライブラリ: 自前実装 (Apple subset のみ) ★
+### 6.2 CBOR ライブラリ: 自前実装 (Apple subset のみ) ★★
 
 - **理由**:
-  - `cbor` npm パッケージは Node.js Buffer 前提でサイズも大きい (~150KB)。Workers でも動くが Buffer polyfill が要る。
-  - App Attest が使う CBOR は限られた subset (map / array / bytes / text / unsigned int) のみ。
-  - 自前で書けば ~80 行、Workers bundle size 最小、polyfill 不要。
-- **代替**: もし自前実装で詰まったら `cbor-x` (Workers 動作報告あり★) にスイッチ
-- **比較**: `appattest-checker-node` は `cbor@9` を使用 (Buffer 前提 → Workers では `nodejs_compat` 必要)
+  - npm の `cbor` は Node.js Buffer 前提でサイズ ~150KB、Workers でも動くが Buffer polyfill 要
+  - App Attest CBOR は限定 subset (map / array / byte string / text string / unsigned int の 5 型) のみ
+  - 自前で書けば ~80 行、Workers bundle 最小、polyfill 不要、全 logic 把握
+- **テスト**: node-app-attest tests/fixtures の attestation/assertion 実バイトで decode 結果一致確認
 
-### 6.3 X.509 / ASN.1: ハイブリッド ★
+### 6.3 X.509 / ASN.1: @peculiar/x509 (案 B' 採用部分) ★★★
 
-- **選択肢A**: `@peculiar/x509@1.9.6` (appattest-checker-node が使用) → WebCrypto ベースで Workers 互換性高い。bundle ~120KB。
-- **選択肢B**: `pkijs@3.3.3` + `asn1js@3.0.7` (node-app-attest が使用) → 同じく WebCrypto ベース、Workers OK 報告あり。
-- **選択肢C**: 自前 ASN.1 パーサー (~150 行)
-- **決定 (暫定)**: **@peculiar/x509** を採用。理由:
-  - 1 ライブラリで証明書チェーン検証 + 公開鍵抽出 + 拡張パースが全部できる
-  - PeculiarVentures はブラウザ前提設計で Workers でも動作実績多数 (Web Crypto Pure)
-  - appattest-checker-node が 1 年以上本番運用している実績
-- **実装時の確認**: Wrangler dev で実 attestation バイトを通して E2E テスト、X.509 verify が成功するか
-- **fallback**: もし `@peculiar/x509` で Workers 起動できなければ `pkijs` に切り替え
+- **採用**: `@peculiar/x509@^1.9.6` (Cloudflare 自身が PeculiarVentures ライブラリのユーザー、Workers 互換性事実上保証)
+- **役割**:
+  - 証明書チェーン検証 (`cert.verify({publicKey: issuer.publicKey}, crypto)`)
+  - credCert からの公開鍵抽出 (PEM/SPKI format)
+  - 拡張 OID 取得 (`getExtension('1.2.840.113635.100.8.2').toString('asn')`)
+- **bundle 推定**: ~120KB (gzip)
+- **fallback**: 動かなければ `pkijs + asn1js` (MIERUNE fork で Workers 動作実績)
+- **NG な選択肢**: `node:crypto.X509Certificate` (Workers 未対応) → 故に node-app-attest 直接利用は不可
 
-### 6.4 ECDSA 検証: WebCrypto + DER→P1363 ヘルパー ★★★
+### 6.4 ECDSA 検証: `node:crypto.createVerify` (DER 変換不要) ★★★
 
-- Workers `crypto.subtle.verify` は IEEE-P1363 raw 64B のみ → 自前変換ヘルパー必須
+- `wrangler.toml` に `compatibility_flags = ["nodejs_compat"]` を入れる
+- `createVerify('SHA256').update(nonce).verify(publicKeyPem, derSig)` で **DER 署名を直接 verify** 可能
+- 公開鍵タイプ (ECDSA P-256) と署名フォーマット (DER) を Node 内部で自動判定
+- v1 で書いた「DER→IEEE-P1363 64B 変換ヘルパー (40 行)」は **不要**
+
+**代替** (純 WebCrypto ルート、`nodejs_compat` で `createVerify` が想定外動作した場合のみ):
+- 自前 DER→P1363 変換 (~40 行) + `crypto.subtle.verify({name: 'ECDSA', hash: 'SHA-256'}, key, rawSig, nonce)`
 
 ### 6.5 Apple Root CA の持ち方: コード埋め込み ★★★
 
@@ -292,27 +305,35 @@ const ok = await crypto.subtle.verify({name: 'ECDSA', hash: 'SHA-256'}, key, raw
 
 ---
 
-## 7. ファイル構成
+## 7. ファイル構成 (案 B' 確定版)
 
 ```
 apps/solara/worker/
 ├── src/
 │   ├── index.js                      (既存、middleware 配線追加のみ)
 │   ├── auth/                         (新設ディレクトリ)
-│   │   ├── app_attest.js             (公開 API: verifyAttestation, verifyAssertion)
-│   │   ├── cbor.js                   (Apple subset CBOR デコーダー ~80行)
-│   │   ├── ecdsa_der.js              (DER → P1363 変換ヘルパー ~40行)
-│   │   ├── apple_root_ca.js          (PEM/DER 定数 + 公開鍵 ~30行)
-│   │   └── attestation_state.js      (Durable Object クラス)
+│   │   ├── app_attest.js             (公開 API: verifyAttestation, verifyAssertion、~200 行
+│   │   │                              node-app-attest 写経パターンを @peculiar/x509 で書き直し)
+│   │   ├── cbor.js                   (Apple subset CBOR デコーダー ~80行、Buffer 非依存)
+│   │   ├── apple_root_ca.js          (PEM 定数 + AAGUID 定数 ~30行)
+│   │   └── attestation_state.js      (Durable Object クラス、~80行)
 │   └── (既存ファイル群)
-├── wrangler.toml                     (durable_objects + migrations 追記)
-├── package.json                      (@peculiar/x509 追加)
+├── wrangler.toml                     (durable_objects + migrations + nodejs_compat フラグ追記)
+├── package.json                      (@peculiar/x509 のみ追加)
 └── test/
-    ├── app_attest_attestation.test.js  (Apple サンプル attestation で検証)
+    ├── app_attest_attestation.test.js  (node-app-attest fixtures 流用)
     ├── app_attest_assertion.test.js
-    ├── cbor.test.js
-    └── ecdsa_der.test.js
+    └── cbor.test.js
 ```
+
+**合計実装規模**: ~390 行 (テスト除く)
+- app_attest.js: ~200 行
+- cbor.js: ~80 行
+- attestation_state.js: ~80 行
+- apple_root_ca.js: ~30 行
+
+**依存追加**: `@peculiar/x509@^1.9.6` のみ (推移依存 `@peculiar/asn1-schema` + `@peculiar/asn1-x509` も同 org)
+**bundle 増加**: ~120KB (gzip)
 
 ### 既存 `index.js` の変更ポイント
 
@@ -369,9 +390,9 @@ new_sqlite_classes = ["AttestationState"]   # SQLite-backed
 
 ---
 
-## 9. ロールアウト計画 (旧 v1、§14 で v1.1 に置換済)
+## 9. ロールアウト計画 (旧 v1、§14 で v1.3 に置換済)
 
-v1.1 のロールアウト計画は §14 を参照。本セクションは履歴目的で残置。
+ロールアウト計画は §14 を参照。本セクションは履歴目的で残置。
 
 ---
 
@@ -396,11 +417,15 @@ v1.1 のロールアウト計画は §14 を参照。本セクションは履歴
 - development = `'appattestdevelop'` (16B ASCII)
 - 実装は production 時 authData[37..45] (9B) だけ照合すれば OK ([appattest-checker-node attestation.ts:117-122](https://github.com/srinivas1729/appattest-checker-node/blob/main/src/attestation.ts))
 
-### ✅ R5 [確定 2026-05-19]: OID ASN.1 ネスト深さ問題は実装パターンで回避
+### ✅ R5 [確定 2026-05-19]: OID ASN.1 ネスト深さ = **3 段**
 
-- `@peculiar/x509` の `getExtension(oid).toString('asn')` 出力末尾の `"OCTET STRING : <hex>"` を suffix 比較
-- ネスト 2 段でも 3 段でも 4 段でも同じコードで通る ([attestation.ts:165-176](https://github.com/srinivas1729/appattest-checker-node/blob/main/src/attestation.ts))
-- 自前 ASN.1 パーサールートを採用する場合のみ要注意 → 採用しないので問題なし
+- node-app-attest 実装で明示: `extension.parsedValue.valueBlock.value[0].valueBlock.value[0].valueBlock.valueHex` ([verifyAttestation.js:138-141](https://github.com/uebelack/node-app-attest/blob/main/src/verifyAttestation.js))
+- 構造: `SEQUENCE { [0] EXPLICIT SEQUENCE { OCTET STRING nonce } }` = 3 段
+- Apple Forum の C++ Botan 実装 (3 段、`decoder.get_next_object()` × 3) とも一致 ★★★
+- 案 B' 採用なら **2 つの実装手** から選択可能:
+  - **(a) 3 段直接アクセス**: pkijs 流 `value[0].value[0].valueHex` パス
+  - **(b) suffix 比較**: `@peculiar/x509` の `getExtension(oid).toString('asn')` 末尾を `"OCTET STRING : <hex>"` で `endsWith` (appattest-checker-node 流、より堅牢)
+- **採用**: (b) suffix 比較 (ネスト深さの将来変更にも追随、コード短い)
 
 ### ✅ R7 [確定 2026-05-19]: テスト fixtures 入手元
 
@@ -415,14 +440,15 @@ v1.1 のロールアウト計画は §14 を参照。本セクションは履歴
 - 根拠: [attestation.ts:172](https://github.com/srinivas1729/appattest-checker-node/blob/main/src/attestation.ts) `const clientDataHash = await getSHA256(inputs.challenge);` + [assertion.ts README](https://github.com/srinivas1729/appattest-checker-node) `clientDataHash = // SHA-256 of request contents including challenge provided to client`
 - 注意点: assertion 時、challenge をリクエスト payload に含めるかどうかは設計判断 (含めるべき。replay 防止のため)
 
-### 🔴 R1 [未確定]: @peculiar/x509 + cbor + node:crypto の Workers 実機動作
+### 🟡 R1 [部分確認済 2026-05-19、最終検証はセッション 2]: @peculiar/x509 + node:crypto の Workers 動作
 
-- npm の README には Workers 言及なし
-- 全部 WebCrypto / 純 JS ベースなので動くはず、ただし `nodejs_compat` フラグ + Buffer polyfill が必要
-- **検証方法**: セッション 2 冒頭で minimal Worker (`@peculiar/x509` で 1 本 verify + `cbor.decodeFirst` で 1 件 + `createVerify` で ECDSA verify) を `wrangler dev` で動かす
-- **代替プラン**:
-  - A. `pkijs + asn1js` (uebelack/node-app-attest が使う組合せ) に切り替え
-  - B. 自前 ASN.1 + 自前 cbor (~250 行) に切り替え
+- **間接的確認済**:
+  - Cloudflare 自身が PeculiarVentures ライブラリのユーザーとして明記 ([PeculiarVentures GitHub org page](https://github.com/peculiarventures))
+  - [MIERUNE/firebase-auth-cloudflare-workers-x509](https://github.com/MIERUNE/firebase-auth-cloudflare-workers-x509) が pkijs を Workers で本番稼働
+  - Cloudflare 公式 [crypto docs](https://developers.cloudflare.com/workers/runtime-apis/nodejs/crypto/) で `node:crypto` 大半サポート (ただし `X509Certificate` クラスは未対応)
+- **最終検証**: セッション 2 冒頭で minimal Worker (`@peculiar/x509` で証明書 1 本 verify + 自前 CBOR で 1 件 decode + `createVerify('SHA256').verify(pemKey, derSig)`) を `wrangler dev` で起動
+- **代替プラン (フォールバック)**:
+  - X.509 だけ → `pkijs + asn1js` (node-app-attest と同じ組合せ、Workers 動作実績は MIERUNE fork で確認済)
 
 ### 🔴 R6 [実装後計測]: Workers Free プラン 10ms CPU 制限
 
@@ -468,123 +494,140 @@ v1.1 のロールアウト計画は §14 を参照。本セクションは履歴
 - workerd issue #1304 (X509Certificate): https://github.com/cloudflare/workerd/issues/1304
 
 ### 参考 OSS 実装
-- appattest-checker-node (v1.0.3, Apache-2.0): https://github.com/srinivas1729/appattest-checker-node
-  - 依存: @peculiar/x509@^1.9.6 + cbor@^9.0.1 + json-stable-stringify
-- uebelack/node-app-attest (44 stars, JS): https://github.com/uebelack/node-app-attest
-  - 依存: asn1js@^3.0.7 + cbor@^10.0.11 + pkijs@^3.3.3
+- **node-app-attest** (44 stars, MIT, **写経元・実装パターンの原典**): https://github.com/uebelack/node-app-attest
+  - 依存: asn1js@^3.0.7 + cbor@^10.0.11 + pkijs@^3.3.3 + `node:crypto.X509Certificate`
+  - メンテ状況: 🟢 活発 (2026-03 最新 commit、dependabot active、coverage 100%、Node 24 CI)
+  - Workers 直接利用: ❌ 不可 (`node:crypto.X509Certificate` 未対応)
+  - **本実装は node-app-attest 写経パターンを @peculiar/x509 で書き換え (Apache-2.0 ライセンス互換、要 LICENSE 表記)**
+- appattest-checker-node (v1.0.3 = 2024-10、Apache-2.0、参考): https://github.com/srinivas1729/appattest-checker-node
+  - 依存: @peculiar/x509@^1.9.6 + cbor@^9.0.1
+  - メンテ状況: 🟡 1.5 年停止 (採用却下、設計参考として残置)
+  - Workers 互換: ⭕ @peculiar/x509 + webcrypto 採用
+- webauthn4j-appattest (Java、設計参考): https://github.com/webauthn4j/webauthn4j/pull/326
+  - Apple App Attest を WebAuthn と分離する設計判断の根拠
+- bas-d/appattest (Go、設計参考): https://github.com/bas-d/appattest
+- @peculiar/x509 (採用 npm 依存): https://github.com/PeculiarVentures/x509
+- MIERUNE/firebase-auth-cloudflare-workers-x509 (Workers + PKI.js 本番運用実績): https://github.com/MIERUNE/firebase-auth-cloudflare-workers-x509
 
 ### 二次ソース (詳細手順解説)
+- adjoe Engineering blog (production 知見): https://adjoe.io/company/engineer-blog/prevent-fraud-on-ios-with-apple-devicecheck-and-app-attest/
 - Restless Labs blog: https://blog.restlesslabs.com/john/ios-app-attest
 - Medium (abhishek kureriya): https://abhishek-kureriya.medium.com/part2-validating-apps-integrity-key-in-backend-3775009f5dc7
+- Medium (Wesley Matlock): https://medium.com/@wesleymatlock/%EF%B8%8F-ios-app-attest-devicecheck-building-real-trust-into-your-app-without-losing-your-mind-c98bc39eb142
+
+### 既知の本番障害事例
+- Firebase + App Check: 7日 TTL 後に全 device 0% verified に崩壊 → 中間トークン方式の地雷
+- Apple infrastructure 障害 (2025-07-25): attestation サイズ膨張で firewall ブロック → max request length 設定要注意
 
 ---
 
-## 13. 実装方針: 自前 vs npm 流用 (v1.1 で新規追加)
+## 13. 実装方針 (v1.3 確定: 案 B' ハイブリッド)
 
-R2-R8 確定で「appattest-checker-node が Solara で要る機能をほぼそのまま実装している」ことが判明。実装方針として 2 つの選択肢:
+### 経緯
 
-### 案A: appattest-checker-node を npm 依存として導入 ★推奨
+| 版 | 推奨 | 評価 |
+|---|---|---|
+| v1.1 | 案A (appattest-checker-node そのまま npm 流用) | メンテ停止リスクを過小評価していた |
+| v1.2 | 同上 | Q1-Q5 確定のみ、方針未変更 |
+| **v1.3** | **案 B' (ハイブリッド)** | 徹底再調査で 2 つの誤評価発覚 → 是正 |
 
-```bash
-cd apps/solara/worker
-npm install appattest-checker-node@^1.0.3
-```
+### v1.3 の決定根拠 (徹底調査 2026-05-19)
 
-Worker 実装は ~50 行で済む:
+| ライブラリ | メンテ状況 | Workers 互換 | 採否 |
+|---|---|---|---|
+| `appattest-checker-node` | 1.5 年停止 (2024-10 で commit 止まり、stars 20、fork 1) | ⭕ `@peculiar/x509` 採用 | ❌ 不採用 (メンテ停止) |
+| `node-app-attest` | 🟢 活発 (2026-03 dependabot active、stars 44、coverage 100%) | **❌ `node:crypto.X509Certificate` 使用、Workers 未対応** | ❌ 不採用 (Workers 非対応) |
+| `@peculiar/x509` | 🟢 活発 (PeculiarVentures org、Cloudflare 等の大手採用) | ⭕ Workers 動作実績 (MIERUNE firebase-auth fork) | ✅ 採用 (案 B' の唯一の npm 依存) |
+
+### 案 B' = 「X.509 だけ枯れた library に任せ、残り全部 self-contained」
+
+**npm 依存**: `@peculiar/x509@^1.9.6` 1 本のみ
+**自前実装**: CBOR デコーダー + Attestation 9 step + Assertion 6 step + Durable Object + Apple Root CA 定数
+
+### 実装パターン (node-app-attest 写経、Apache-2.0)
 
 ```js
-import { verifyAttestation, verifyAssertion, setAppAttestRootCertificate } from 'appattest-checker-node';
-// 起動時に Apple Root CA 差し替え (ライブラリ同梱版が古い時の保険)
-setAppAttestRootCertificate(APPLE_ROOT_CA_PEM);
+// auth/app_attest.js (~200 行)
+import { X509Certificate } from '@peculiar/x509';
+import { decodeCbor } from './cbor.js';
+import { APPLE_ROOT_CA_PEM, APPATTEST_PROD_HEX, APPATTEST_DEV_HEX } from './apple_root_ca.js';
+import { createHash, createVerify, webcrypto } from 'node:crypto';
 
-async function protectedMiddleware(request, env) {
-  const keyId = request.headers.get('X-AppAttest-KeyId');
-  const assertionB64 = request.headers.get('X-AppAttest-Assertion');
-  if (!keyId || !assertionB64) return jsonError(401, 'missing_attestation', origin);
+const APPLE_ROOT_CA = new X509Certificate(APPLE_ROOT_CA_PEM);
 
-  const record = await getAttestation(env, keyId); // DO から
-  if (!record) return jsonError(401, 'unregistered_key', origin);
+export async function verifyAttestation({attestation, challenge, keyId, bundleIdentifier, teamIdentifier, allowDevelopmentEnvironment}) {
+  // 1. CBOR decode
+  const decoded = decodeCbor(attestation);
+  if (decoded.fmt !== 'apple-appattest') throw new Error('fail_fmt');
+  const { x5c, receipt } = decoded.attStmt;
+  const { authData } = decoded;
 
-  const bodyBytes = new Uint8Array(await request.clone().arrayBuffer());
-  const clientDataHash = await sha256(bodyBytes);
+  // 2. Certificate chain verify
+  const credCert = new X509Certificate(x5c[0]);
+  const intermediate = new X509Certificate(x5c[1]);
+  if (!await intermediate.verify({publicKey: APPLE_ROOT_CA.publicKey}, webcrypto)) throw new Error('fail_intermediate_cert');
+  if (!await credCert.verify({publicKey: intermediate.publicKey}, webcrypto)) throw new Error('fail_credcert');
 
-  const result = await verifyAssertion(
-    Buffer.from(clientDataHash),
-    record.publicKeyPem,
-    APP_ID,  // "<teamId>.<bundleId>"
-    Buffer.from(assertionB64, 'base64'),
-  );
-  if ('verifyError' in result) return jsonError(401, result.verifyError, origin);
-  if (result.signCount <= record.signCount) return jsonError(401, 'replay', origin);
+  // 3. Nonce verify (clientDataHash = SHA256(challenge), nonce = SHA256(authData || clientDataHash))
+  const clientDataHash = createHash('sha256').update(challenge).digest();
+  const nonce = createHash('sha256').update(Buffer.concat([authData, clientDataHash])).digest('hex');
+  const extAsn = credCert.getExtension('1.2.840.113635.100.8.2').toString('asn');
+  if (!extAsn.endsWith(`OCTET STRING : ${nonce}`)) throw new Error('fail_nonce');
 
-  await updateSignCount(env, keyId, result.signCount); // DO 更新
-  return null; // 通過
+  // 4-9. rpId / signCount / AAGUID / credentialId verify ...
+  // (node-app-attest verifyAttestation.js:148-200 を写経、@peculiar/x509 API に合わせて書き換え)
+
+  return { publicKeyPem: credCert.publicKey.export('pem'), receipt };
 }
 ```
 
-**メリット**:
-- 実装行数 ~50 行で済む (自前なら ~400 行)
-- メンテナンス負荷ゼロ (security patch も npm update)
-- Apple/iOS の細かい仕様変更に追随済み
-- テストも流用可能
+### 案 B' を選ぶ 5 つの理由 (オーナー判断確定)
 
-**デメリット**:
-- 依存追加 (`@peculiar/x509` + `cbor` + 推移依存)
-- Workers 動作確認 (R1) が必要
-- bundle size 増 (推定 +200-300KB)
-- ライブラリのメンテが止まったら自分でフォーク必要
+1. **「確実に安全に」哲学に合致**: X.509 という地雷地帯だけ枯れた library に任せ、残り全部は自分で読んで自分で書く
+2. **依存停止リスク最小**: `@peculiar/x509` は PeculiarVentures org の中核プロジェクトで、Microsoft/Google/Cloudflare 採用、長期サポート確実
+3. **Workers 互換性確実**: 同 org のライブラリは MIERUNE fork で本番運用実績
+4. **node-app-attest 実装パターン (production-grade、Apache-2.0) を写経できる**: 自前バグ混入リスク低減
+5. **debugging 容易**: 自前部分 ~390 行は全把握、X.509 だけ既知の library
 
-**前提**: R1 (Workers 動作) クリアが必要。**セッション 2 冒頭で minimal Worker (3 関数だけ呼ぶ) を `wrangler dev` で起動できれば案A 確定**。
-
-### 案B: 自前実装 (v1 計画通り)
-
-```
-auth/cbor.js              ~80 行
-auth/ecdsa_der.js         (案A なら不要、案B でも nodejs_compat なら不要)
-auth/apple_root_ca.js     ~30 行
-auth/app_attest.js        ~250 行
-auth/attestation_state.js ~80 行 (DO)
-合計                       ~440 行 (テスト除く)
-```
-
-**メリット**:
-- 依存ゼロ、bundle 最小
-- 全ロジック自分でコントロール
-- ライブラリ消失リスクなし
-
-**デメリット**:
-- 実装工数 5-6 セッション → 7 セッション
-- 自前バグ混入リスク (App Attest は地雷多)
-- メンテ負荷
-
-### 推奨: 案A を試して、ダメだったら案B にフォールバック
-
-理由:
-1. **オーナーの「確実に安全に」と「時間かけて良い」の両立**: 案A は確実 (本番稼働実績ある実装) + 時間短縮
-2. 案A の失敗パターンは限定的 (Workers で `@peculiar/x509` か `cbor@9` か `node:crypto.createVerify` のどれかが落ちる)。各々スワップ可能
-3. 案B は案A のソース読解で既に手書きパターンを得ており、いつでもフォールバック可能
 
 ---
 
-## 14. ロールアウト計画 v1.1 (案A 採用前提、案B なら +2 セッション)
+## 14. ロールアウト計画 v1.3 (案 B' 確定版)
 
 ```
-セッション 1 ✅ (今回): 設計ドキュメント + R2-R8 確定 + Apple Root CA 取得
-セッション 2: R1 検証 (minimal Worker で 3 関数動作確認) + Durable Object 実装 + apps/solara/worker/package.json に依存追加
-セッション 3: /auth/challenge + /auth/attest 本実装 + 単体テスト (fixtures 流用)
-セッション 4: /protected/* middleware 配線 + 既存 endpoint 連動テスト
-セッション 5: TestFlight 実 iOS E2E (オーナー作業含む)
-セッション 6: ドキュメント整理 + launch_checklist 更新 + メモリ更新
+セッション 1 ✅ (今回): 設計ドキュメント v1.3 + R2-R8 確定 + Apple Root CA 取得 +
+                       案 B' (ハイブリッド) 確定
+セッション 2: R1 検証 (minimal Worker で @peculiar/x509 + 自前 CBOR + createVerify
+              の 3 操作動作確認、~30 行) → 動けば案 B' 確定、ダメなら pkijs に
+              フォールバック検討 + auth/cbor.js 単体実装 + テスト (node-app-attest
+              fixtures 流用)
+セッション 3: auth/app_attest.js verifyAttestation 実装 (~150 行、node-app-attest
+              写経パターン) + 単体テスト全 9 step
+セッション 4: auth/app_attest.js verifyAssertion 実装 (~50 行) + auth/
+              attestation_state.js Durable Object 実装 (~80 行) + DO migration +
+              単体テスト
+セッション 5: /auth/challenge + /auth/attest + /protected/* middleware 配線 +
+              index.js 更新 + 既存 endpoint 連動テスト
+セッション 6: TestFlight 実 iOS E2E (オーナー作業含む) + 本番 deploy + 1 週間モニタ
+              (R6 = 10ms CPU 制限確認)
+セッション 7: ドキュメント整理 + launch_checklist 更新 + メモリ更新
 ```
 
-**累積工数見積もり (v1.1)**: 5 セッション × 2-3h = **10-15h** (案A) / 12-18h (案B)
-v1 の 12-18h より短縮 (R2-R8 確定 + 案A 採用で)。
+**累積工数見積もり**: 6 セッション × 2-3h = **12-18h** (R1 が一発で通れば 5 セッションも可)
+
+セッション 2 で R1 を実機検証することで、案 B' でいくか、案 B' fallback (pkijs) でいくか早期決定。それ以降のセッションは確実に進む。
 
 ---
 
-## 15. 承認状態
+## 15. 承認状態 v1.3
 
 - [x] **Q1-Q5 オーナー判断確定** (2026-05-19、§11 参照)
-- [ ] 案A (推奨) vs 案B の選択 → **R1 検証 (セッション 2 冒頭) の結果で自動決定** (動けば案A、ダメなら案B)
-- [ ] ロールアウト計画 v1.1 (§14) の最終承認
-- [ ] 実装着手 → セッション 2 開始 (R1 検証 + DO 実装 + Q3 反映で middleware 本実装)
+- [x] **案 B' ハイブリッド確定** (2026-05-19、§13 参照、徹底再調査の結果)
+- [x] ロールアウト計画 v1.3 (§14) 承認待ち → オーナーレビューで OK なら確定
+- [ ] 実装着手 → セッション 2 開始 (R1 検証 + auth/cbor.js 実装 + 単体テスト)
+
+### セッション 2 開始前のチェックリスト
+- [ ] オーナー: Apple Team ID を確認・共有 (`<teamId>.com.solodevlab.solara` 形式の rpId 構築用)
+- [ ] オーナー: Solara Flutter 側 freerasp の release keystore SHA-256 投入 (App Attest 検証とは独立だが Phase 2 RASP の懸案)
+- [ ] 私: minimal Worker のサンプルコード準備 (R1 検証用、~30 行)
+- [ ] 私: node-app-attest tests/fixtures ファイル一覧抽出 + ライセンス確認 (Apache-2.0)
