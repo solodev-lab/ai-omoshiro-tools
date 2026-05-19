@@ -623,11 +623,56 @@ export async function verifyAttestation({attestation, challenge, keyId, bundleId
 
 - [x] **Q1-Q5 オーナー判断確定** (2026-05-19、§11 参照)
 - [x] **案 B' ハイブリッド確定** (2026-05-19、§13 参照、徹底再調査の結果)
+- [x] **Apple Team ID + Bundle ID 取得済** (2026-05-19、§16 参照)
 - [x] ロールアウト計画 v1.3 (§14) 承認待ち → オーナーレビューで OK なら確定
 - [ ] 実装着手 → セッション 2 開始 (R1 検証 + auth/cbor.js 実装 + 単体テスト)
 
 ### セッション 2 開始前のチェックリスト
-- [ ] オーナー: Apple Team ID を確認・共有 (`<teamId>.com.solodevlab.solara` 形式の rpId 構築用)
+- [x] オーナー: Apple Team ID 共有 (`TY5JW393Q5`)
 - [ ] オーナー: Solara Flutter 側 freerasp の release keystore SHA-256 投入 (App Attest 検証とは独立だが Phase 2 RASP の懸案)
 - [ ] 私: minimal Worker のサンプルコード準備 (R1 検証用、~30 行)
-- [ ] 私: node-app-attest tests/fixtures ファイル一覧抽出 + ライセンス確認 (Apache-2.0)
+- [ ] 私: node-app-attest tests/fixtures ファイル一覧抽出 + ライセンス確認 (MIT、設計v1.3 誤記訂正)
+- [ ] 私: challenge race condition の解決を設計に追記 (v1.4、challenge も DO で管理)
+
+---
+
+## 16. 確定値 (実装で使う定数)
+
+### Apple Developer 情報
+| 項目 | 値 | 確認元 |
+|---|---|---|
+| Apple Team ID | **`TY5JW393Q5`** | オーナー確認 (Apple Developer Portal) 2026-05-19 |
+| Bundle ID | **`com.solodevlab.solara`** | `ios/Runner.xcodeproj/project.pbxproj:375` + `apps/solara/docs/store_products_setup.md` |
+| App ID (rpId 文字列) | **`TY5JW393Q5.com.solodevlab.solara`** | 上記の連結、32 バイト UTF-8 |
+
+### rpId テストベクトル (Attestation/Assertion Step 5 で使用)
+| 形式 | 値 |
+|---|---|
+| SHA-256(rpId) hex | `1d3d5f939a468294cb3577c05efb50c00effbea231245d237945367ccb29aa19` |
+| SHA-256(rpId) base64 | `HT1fk5pGgpTLNXfAXvtQwA7/vqIxJF0jeUU2fMspqhk=` |
+
+実 iOS から取得した attestation の `authData[0..31]` (= 32 バイト) と上記が**バイト完全一致**するはず。一致しなければ rpId 計算が間違っている (Step 5 失敗)。単体テストにこの値を hardcode する。
+
+### Apple Root CA
+| 項目 | 値 |
+|---|---|
+| SHA-256(DER) | `1CB9823BA28BA6AD2D33A006941DE2AE4F513EF1D4E831B9F7E0FA7B6242C932` |
+| 取得元 | `https://www.apple.com/certificateauthority/Apple_App_Attestation_Root_CA.pem` |
+| 保存場所 | `apps/solara/docs/Apple_App_Attestation_Root_CA.pem` (798B) |
+| 有効期限 | 2045-03-15 (19 年放置可能) |
+
+### AAGUID
+| 環境 | バイト列 (hex) | UTF-8 解釈 |
+|---|---|---|
+| production | `61707061747465737400000000000000` | `appattest\x00\x00\x00\x00\x00\x00\x00` |
+| development | `617070617474657374646576656c6f70` | `appattestdevelop` |
+
+### 実装時の保管方針
+- `apps/solara/worker/wrangler.toml` の `[vars]` セクションに記載 (Team ID/Bundle ID は public 情報):
+  ```toml
+  [vars]
+  APPLE_TEAM_ID = "TY5JW393Q5"
+  APPLE_BUNDLE_ID = "com.solodevlab.solara"
+  ```
+- Worker コード内では `env.APPLE_TEAM_ID` で参照、各 verify 呼び出しに渡す
+- Apple Root CA PEM は `apps/solara/worker/src/auth/apple_root_ca.js` 内に **コード hardcode** (~10 行の template string)
