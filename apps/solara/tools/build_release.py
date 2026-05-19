@@ -62,7 +62,7 @@ def symbols_dir(platform: str, version: str) -> Path:
     return SOLARA / "build" / "symbols" / platform / version
 
 
-def build_command(platform: str, version: str) -> list[str]:
+def build_command(platform: str, version: str, gcp_project_number: int | None) -> list[str]:
     """flutter build コマンドを構築。"""
     target_arg = {
         "apk": "apk",
@@ -81,9 +81,29 @@ def build_command(platform: str, version: str) -> list[str]:
         "--obfuscate",
         f"--split-debug-info={sym_dir}",
     ]
+    # Android/AAB のみ: Play Integrity 用 Cloud Project Number を dart-define で注入
+    # (= AppAttestClient._kCloudProjectNumber、設計 v0.7 §7.3)。
+    # 0 / 未指定 → AppAttestClient は Android 経路を bypass (= Worker log_only で通過)。
+    if platform in ("apk", "aab") and gcp_project_number is not None and gcp_project_number > 0:
+        cmd.append(f"--dart-define=SOLARA_GCP_PROJECT_NUMBER={gcp_project_number}")
     # iOS は App Store Connect 経由 dSYM 別アップなので --no-codesign しない。
     # AAB は Play Console 提出時に R8 ProGuard map も自動取り込みされる。
     return cmd
+
+
+def resolve_gcp_project_number(arg_value: int | None) -> int | None:
+    """Cloud Project Number を解決。優先順位: CLI > env SOLARA_GCP_PROJECT_NUMBER > None。"""
+    if arg_value is not None and arg_value > 0:
+        return arg_value
+    env_val = os.environ.get("SOLARA_GCP_PROJECT_NUMBER")
+    if env_val:
+        try:
+            n = int(env_val)
+            if n > 0:
+                return n
+        except ValueError:
+            pass
+    return None
 
 
 def main() -> int:
@@ -95,17 +115,33 @@ def main() -> int:
         action="store_true",
         help="実際にビルドする (省略時は dry-run)",
     )
+    parser.add_argument(
+        "--gcp-project-number",
+        type=int,
+        default=None,
+        help=(
+            "Play Integrity 用 Cloud Project Number (12 桁数字)。Android/AAB のみ。"
+            " 未指定時は env SOLARA_GCP_PROJECT_NUMBER を見る。"
+            " どちらも未設定なら Android 経路は bypass で release ビルド (= Worker log_only で通過)。"
+        ),
+    )
     args = parser.parse_args()
 
     version = args.version or read_version()
     sym_dir = symbols_dir(args.platform, version)
+    gcp = resolve_gcp_project_number(args.gcp_project_number)
 
-    cmd = build_command(args.platform, version)
+    cmd = build_command(args.platform, version, gcp)
 
     print("┌─ Solara Release Build ─────────────────────────────")
     print(f"│ platform   : {args.platform}")
     print(f"│ version    : {version}")
     print(f"│ symbols    : {sym_dir.relative_to(SOLARA)}")
+    if args.platform in ("apk", "aab"):
+        if gcp is None:
+            print(f"│ GCP project: (未設定 = Play Integrity bypass)")
+        else:
+            print(f"│ GCP project: {gcp}")
     print(f"│ command    : {' '.join(cmd)}")
     print(f"│ mode       : {'EXECUTE' if args.release_mode else 'DRY RUN'}")
     print("└────────────────────────────────────────────────────")

@@ -1,6 +1,6 @@
 # Play Integrity サーバー検証 設計ドキュメント
 
-**ステータス**: 設計 v0.7 (2026-05-19、S4 完成 — DO `integrity_nonces` + `/auth/integrity/challenge` + middleware OS 経路分岐、worker 121/121 PASS、S5 Flutter 実装着手準備完了)
+**ステータス**: 設計 v0.8 (2026-05-19、S5 Flutter 実装完成 — `AppAttestClient` Android 分岐 + `--dart-define=SOLARA_GCP_PROJECT_NUMBER` 配線 + Flutter 単体テスト追加、実機テスト + R8 最終確認はオーナー作業へ)
 **対象**: Cloudflare Worker `solara-api` の `/auth/integrity/*` + `/protected/*` middleware の Android 経路
 **前提**: `project_solara_launch_checklist.md` Phase 1 認証ミドルウェア + Phase 2 Flutter クライアント
 **関連**:
@@ -10,6 +10,33 @@
 - `../../docs/app_development_lessons.md` §1.3 ケーススタディ + §5.6 鍵交換ハイブリッド方式 + §5.7 設計と公式 UI 乖離
 
 ## 変更履歴
+
+### v0.8 (2026-05-19、S5 Flutter 実装完成)
+- **`lib/utils/app_attest_client.dart` v2.0 拡張** (~290 行、+140 行):
+  - クラス全体を OS 分岐対応に refactor:
+    - `_initializeIos()` (既存ロジックを関数抽出) / `_initializeAndroid()` (新規、`androidPrepareIntegrityServer(_kCloudProjectNumber)` warmup)
+    - `_addIosHeaders()` (既存) / `_addAndroidHeaders()` (新規、challenge 取得 → clientData 構築 → verify → 3 ヘッダー注入)
+  - 起動時 (`initialize()`): プラットフォームで自動分岐、Android で warmup 失敗してもアプリ起動継続 (致命的でない)
+  - `addHeaders()` / `postProtected()`: プラットフォーム判定でヘッダー注入経路を自動切替
+  - `reattestOnFailure()`: iOS=keyId 再生成、Android=`_initializeAndroid()` 再呼出 (plugin 側の auto-retry とは別の保険)
+  - `_shouldBypass`: 4 条件 (kIsWeb / kDebugMode / iOS Simulator / Android で `_kCloudProjectNumber == 0`) で bypass、Worker `*_ENFORCEMENT=log_only` で通過させる前提
+  - `forTesting` factory + 4 `@visibleForTesting` hook (`addAndroidHeadersForTest` / `initializeAndroidForTest` / `resetForTest` / `androidPreparedForTest`) で flutter test (host OS) からも Android logic を検証可能に
+- **`SOLARA_GCP_PROJECT_NUMBER` 配線** (`const int.fromEnvironment(..., defaultValue: 0)`):
+  - release build 時に `--dart-define=SOLARA_GCP_PROJECT_NUMBER=<12 桁>` で注入
+  - 0 (= 未注入) なら Android 経路は完全 bypass
+  - public 情報なので secret 不要 (Play Console の Cloud Project Number は推測可能)
+- **`solara_api.dart`**: `solaraIntegrityChallengeUrl` 定数追加 (`/auth/integrity/challenge`)
+- **`tools/build_release.py` 拡張**:
+  - `--gcp-project-number <int>` CLI 引数 + `SOLARA_GCP_PROJECT_NUMBER` env 解釈 (CLI > env > 未設定 = bypass)
+  - Android (apk/aab) のみ自動で `--dart-define` 注入、iOS は無視
+  - dry-run 表示に GCP project 状態を反映
+- **Flutter テスト 9 ケース追加** (`test/app_attest_client_android_test.dart` 新規):
+  - `initializeAndroidForTest`: prepare 呼出 + cloudProjectNumber 渡し + 例外時の致命的でない動作
+  - `addAndroidHeadersForTest`: 正常系 (3 ヘッダー + clientData JSON 形式) + challenge 500 → 注入なし + verify 例外 → 注入なし + verify empty → 注入なし + malformed challenge response → 注入なし
+  - `cloudProjectNumberForTest`: dart-define 未指定時 0
+  - `withAppUserIdMerged`: 元 Map 不変 + copy 返却
+  - mock 戦略: `AppAttestIntegrityPlatform.instance` を `_MockIntegrityPlatform` (継承クラス) に差替、`http_testing.MockClient` で /auth/integrity/challenge を mock
+- **R8 最終確認 + cert SHA-256 採取はオーナー作業 (§11.3 追記)**: 実機 Android で release build → `/auth/integrity/decode-test` 経由で実 token decode 確認 → cert allowlist 投入 → wrangler deploy
 
 ### v0.7 (2026-05-19、S4 完成 — DO + endpoint + middleware 統合)
 - **DO `AttestationState` に `integrity_nonces` 表追加** (`src/auth/attestation_state.js`):
@@ -518,15 +545,45 @@ PLAY_INTEGRITY_ENFORCEMENT = "disabled" | "log_only" | "enforced"
 - [x] **wrangler secret 投入**: `PLAY_INTEGRITY_ENCRYPTION_KEY` (44 char) + `PLAY_INTEGRITY_VERIFICATION_KEY` (124 char)
 - [x] **平文鍵削除**: `api_keys.txt` + `com.solodevlab.solara.enc` 削除、`private.pem` (passphrase 暗号化済) と passphrase のみ保管
 
-### 11.2 残作業 (S2 以降)
-- [ ] wrangler.toml に vars 追加 (S2 で実装と同時):
+### 11.2 残作業 (S2-S4 で実装済)
+- [x] wrangler.toml に vars 追加 (S4 で実装と同時):
   ```toml
   PLAY_INTEGRITY_ENFORCEMENT = "log_only"
   PLAY_INTEGRITY_NONCE_TTL_SEC = "300"
   ANDROID_PACKAGE_NAME = "com.solodevlab.solara"
+  ANDROID_CERT_SHA256_ALLOWLIST = ""
   ```
 - [ ] S2-S6 実装後、`PLAY_INTEGRITY_ENFORCEMENT = "log_only"` で初回 deploy → 1 週間モニタ → `enforced` 切替
 - [ ] **API quota** 初期 10k/day を確認、必要に応じて増量申請 (公開後、R3 計測結果次第)
+
+### 11.3 S5 後オーナー作業 (実機テスト + R8 最終確認 + cert SHA-256 採取) 🚨
+
+S5 で Flutter 側コードまで完成、以下はオーナー実機作業:
+
+1. **Cloud Project Number 確認**:
+   - Play Console > Solara > アプリの完全性 > Play Integrity API > リンク済 Cloud project の **Cloud Project Number** (12 桁) を控える
+   - `tools/build_release.py aab --gcp-project-number <12桁> --release-mode` で release AAB ビルド
+   - または `export SOLARA_GCP_PROJECT_NUMBER=<12桁>; python tools/build_release.py aab --release-mode`
+2. **TestFlight 経路 (Android Internal Testing) で実機配信**:
+   - Play Console > Testing > Internal Testing にビルド upload
+   - 自身の Google アカウントで実機 (Pixel/Galaxy 等) にインストール
+3. **`wrangler deploy` (`PLAY_INTEGRITY_ENFORCEMENT=log_only` のまま)**:
+   - `cd apps/solara/worker && npx wrangler deploy`
+4. **🔴 R8 最終確認 (実機 token decode テスト)**:
+   - 実機で Solara 起動 → 例: Cosmic Pro 機能を 1 回叩く (Fortune 等)
+   - `wrangler tail` で `[middleware:log_only] would block` 警告を観察
+   - Worker logs から token を取得 or 専用デバッグエンドポイント `/auth/integrity/decode-test` に POST して `{"ok": true, "payload": {...}}` が返ることを確認
+   - payload に `appRecognitionVerdict: "PLAY_RECOGNIZED"` + `deviceRecognitionVerdict: [..., "MEETS_DEVICE_INTEGRITY"]` が含まれる
+5. **🔴 cert SHA-256 採取 → allowlist 投入**:
+   - 上記 decode 結果の `appIntegrity.certificateSha256Digest` 配列 (通常 1 個、Play App Signing の場合は 2 個 = upload key + signing key) を控える
+   - `wrangler.toml` の `ANDROID_CERT_SHA256_ALLOWLIST = "<値1>,<値2>"` に投入
+   - `npx wrangler deploy` で反映
+6. **1 週間ログモニタ後、enforced 切替**:
+   - 異常な `[middleware:log_only] would block` 警告が出ていなければ
+   - `wrangler.toml` の `PLAY_INTEGRITY_ENFORCEMENT = "enforced"` に書き換え
+   - `npx wrangler deploy`
+7. **診断 endpoint の本番ガード** (S6 タスク):
+   - `enforced` 切替と同時に `/auth/integrity/diagnose` + `/auth/integrity/decode-test` を 404 化 (= 本番でデバッグ口を露出しない)
 
 ## 12. 実装ロードマップ (S2-S6、約 6-8 セッション)
 
@@ -535,14 +592,12 @@ S1 ✅: 本設計ドキュメント完成 + Q1-Q4 確定 + R1-R6 明示
 S2 ✅: R4 解決 (Standard 訂正 v0.3) + jose v6 追加 + minimal worker (R7) +
        bundle 計測 (R6) + decode pipeline 単体テスト 9/9 PASS + R1 概算解決
        (R8 は実機 token 必要 → S5 残置)
-S3 🔵: auth/play_integrity.js 本実装 (Step 3-11 = clientData parse + DO consume +
-       decode + verify + binding + verdict)
-       + 既存 diagnoseKeys/decodeIntegrityToken をベースに verifyPlayIntegrityFlow 拡張
-       + 単体テスト追加 (clientData 改竄、requestHash 不一致、verdict 不足、etc.)
-S4  : DO integrity_nonces 表 (TEXT base64 形式 v0.3) +
-      /auth/integrity/challenge POST 実装 (existing AttestationState DO 拡張)
-      + middleware 統合 (経路分岐 + 共通フロー保持、AppAttest と非排他)
-      + 単体テスト
+S3 ✅: verifyPlayIntegrityFlow v1.0 (Step 2-11、11 種 error code) + 28/28 PASS
+S4 ✅: DO integrity_nonces 表 + /auth/integrity/challenge POST + middleware
+       OS 経路分岐 + wrangler vars + endpoint テスト 14 ケース (worker 121/121 PASS)
+S5 ✅: Flutter AppAttestClient Android 分岐 + dart-define 配線 + build_release.py 拡張 +
+       Flutter テスト 9 ケース追加 + R8 概算解決 (公式 docs)、実機確認は §11.3 オーナー作業へ
+S6 🔵: 診断 endpoint 本番ガード + docs 仕上げ + メモリ整理 + 本番 deploy
 S5  : Flutter AppAttestClient を OS 分岐対応に拡張
       + cloudProjectNumber を --dart-define で配線
       + Android 実機テスト (or Android Emulator + Play services)
@@ -558,24 +613,16 @@ S6  : docs 仕上げ (deploy 手順 §13 + 運用ガイド §14)
 
 App Attest と同等の重さを想定 (6-8 セッション、計 15-20h)、現実績 S1+S2=2 セッション。
 
-## 13. v0.7 から v0.8 への次タスク (S5 Flutter Android 実装 + 実機テスト)
+## 13. v0.8 から v1.0 への次タスク (S6 仕上げ + 本番 deploy)
 
-S4 ✅ 完了。S5 のスコープ:
-1. **`lib/utils/app_attest_client.dart` Android 分岐拡張**:
-   - 起動時: `Platform.isAndroid` で `AppAttestIntegrity().androidPrepareIntegrityServer(_cloudProjectNumber)` を 1 回呼出 (warmup)
-   - `postProtected` / `addHeaders` を OS 分岐:
-     - iOS: 既存 (X-AppAttest-KeyId + X-AppAttest-Assertion)
-     - Android: `/auth/integrity/challenge` で nonce 取得 → `clientData = jsonEncode({nonce, uid: appUserId, ts: now})` → `verify(clientData: ...)` で token 取得 → X-PlayIntegrity-Token / X-PlayIntegrity-ClientData / X-PlayIntegrity-NonceId をヘッダー注入
-   - kDebugMode / Android Emulator は自動 bypass (実機 release のみ有効)
-2. **`--dart-define=SOLARA_GCP_PROJECT_NUMBER=<number>`** で Cloud Project Number (Play Console > Solara > アプリの完全性 > リンク済 Cloud project の 12 桁) を release ビルドに注入
-3. **Flutter 単体テスト**: AppAttestClient の Android 分岐 (mock 用 mock-token を返す `AppAttestIntegrity` を注入してロジック検証)
-4. **Android 実機テスト**:
-   - `flutter run --release` (Android device with Google Play Services + Play Store 経由配信)
-   - `/protected/fortune` 呼出が 200 で通る (log_only 期間中なので token 検証失敗でも警告ログ + 通過)
-   - Worker logs で「`[middleware:log_only] would block 401 ...`」が出ないことを確認 (= 検証成功)
-5. **🔴 R8 最終確認**: 実機採取 token を `/auth/integrity/decode-test` に POST、Self-managed key で decode 成功 + payload が PLAY_RECOGNIZED + MEETS_DEVICE_INTEGRITY を含むことを確認
-6. **🔴 cert SHA-256 採取 → allowlist 設定**: 実機 token の `appIntegrity.certificateSha256Digest` 値を `wrangler` の `ANDROID_CERT_SHA256_ALLOWLIST` に投入 (deploy 必要)
-7. **設計 v0.8 にバンプ**: 実機検証結果 + R8 確証 + cert allowlist 確定値
+S5 Flutter 実装 ✅ 完了。S6 のスコープ:
+1. **オーナー作業 (§11.3)**: 実機 Android テスト + R8 最終確認 + cert SHA-256 採取 → `ANDROID_CERT_SHA256_ALLOWLIST` 投入 → 1 週間モニタ → `enforced` 切替
+2. **診断 endpoint の本番ガード**: `/auth/integrity/diagnose` + `/auth/integrity/decode-test` を `PLAY_INTEGRITY_ENFORCEMENT==='enforced'` 時に 404 化 (本番でデバッグ口を露出しない)
+3. **docs 仕上げ**:
+   - launch_checklist の Play Integrity 行を `[x]` に更新
+   - 運用ガイド §14 追加: 端末ブロック警告の対応 / cert rotation 手順 / quota 増量申請手順
+4. **メモリ整理**: `project_solara_play_integrity.md` を本番反映状態に更新
+5. **設計 v1.0 にバンプ**: 本番 deploy + 1 週間モニタ後の最終確認、S5/S6 全項目 `[x]` で固定
 
 ## 関連ドキュメント
 
