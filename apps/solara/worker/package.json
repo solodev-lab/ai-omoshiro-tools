@@ -8,6 +8,7 @@
     "deploy": "npx wrangler deploy"
   },
   "dependencies": {
+    "@peculiar/x509": "^1.14.3",
     "astronomy-engine": "^2.1.19"
   },
   "devDependencies": {

@@ -1,6 +1,6 @@
 # App Attest サーバー検証 設計ドキュメント
 
-**ステータス**: ドラフト v1.4 (2026-05-19 起案、同日 R2-R5/R7/R8 確定 + Q1-Q5 確定 + 案 B' ハイブリッド + challenge race condition 解決 + Team ID 確定)
+**ステータス**: ドラフト v1.5 (2026-05-19 起案、同日 R2-R5/R7/R8 確定 + Q1-Q5 確定 + 案 B' ハイブリッド + challenge race 解決 + Team ID 確定 + **セッション 2 着手: R1 実機検証通過 + bundle 9% + cbor.js 実装 + 26/26 test PASS**)
 **対象**: Cloudflare Worker `solara-api` の `/auth/attest` + `/protected/*` ミドルウェア
 **前提**: `project_solara_launch_checklist.md` Phase 1 認証ミドルウェア
 **関連**: `project_solara_security_principles.md` 原則 1〜3
@@ -28,6 +28,15 @@
 - R5 OID ASN.1 ネスト深さは **3 段** で確定 (node-app-attest 実装 `value[0].value[0].valueHex` + Apple Forum C++ Botan 実装と一致 ★★★)
 - production 知見追加 (adjoe blog): DCError.invalidInput/invalidKey 時の Flutter 側リトライ要件、challenge 5 分 TTL 実運用根拠
 - §13 実装方針 §14 ロールアウトを案 B' 前提に書き換え
+
+### v1.4 → v1.5 の変更点 (2026-05-19、セッション 2 実機検証)
+- **R1 突破**: minimal Worker (`apps/solara/worker/r1_check/`) で `@peculiar/x509` + 自前 CBOR + `node:crypto.createVerify` の 3 操作が wrangler dev で動作確認 → 案 B' 確定 (フォールバック pkijs 不要)
+- **bundle 実測**: 既存 worker 229 KiB → R1 + @peculiar/x509 込み 540 KiB / gzip 86 KiB = **Workers Free 1MB 制限の 9%** (R6 から bundle 部分を切り出し、R6' = CPU 制限のみ残オープン)
+- **auth/cbor.js 実装**: 119 行 Apple subset デコーダ (major 0/2/3/4/5、length encoding 0..2^32)、Buffer 非依存
+- **cbor 単体テスト 26/26 PASS**: 基本 + length encoding + エラー 7 種 + 実 attestation fixture (production/development) の AAGUID バイト一致 + assertion fixture の DER 署名 SEQUENCE marker 確認
+- 設計 §10 R1 を `✅ 実機検証通過`、R6 を bundle 部分 (✅) と CPU 部分 (R6' 🔴) に分割
+- 新ファイル: `worker/src/auth/cbor.js`、`worker/test/cbor.test.js`、`worker/test/fixtures/{attestation-production.json, attestation-development.json, assertion.json, NODE_APP_ATTEST_LICENSE}`、`worker/r1_check/{src/index.js, wrangler.toml, README.md}`、`worker/.gitignore`
+- 依存追加: `@peculiar/x509@^1.14.3` (worker/package.json + package-lock.json)
 
 ### v1.3 → v1.4 の変更点 (2026-05-19、challenge race condition 解決 + Team ID 確定)
 - **🔴 challenge 保管を KV → DO に変更** (Firebase + App Check の 0% verified 障害と同じ構造的バグを未然回避):
@@ -476,17 +485,22 @@ new_sqlite_classes = ["AttestationState"]   # SQLite-backed
 - 根拠: [attestation.ts:172](https://github.com/srinivas1729/appattest-checker-node/blob/main/src/attestation.ts) `const clientDataHash = await getSHA256(inputs.challenge);` + [assertion.ts README](https://github.com/srinivas1729/appattest-checker-node) `clientDataHash = // SHA-256 of request contents including challenge provided to client`
 - 注意点: assertion 時、challenge をリクエスト payload に含めるかどうかは設計判断 (含めるべき。replay 防止のため)
 
-### 🟡 R1 [部分確認済 2026-05-19、最終検証はセッション 2]: @peculiar/x509 + node:crypto の Workers 動作
+### ✅ R1 [実機検証通過 2026-05-19 セッション 2]: @peculiar/x509 + 自前CBOR + node:crypto.createVerify は Workers で動作
 
-- **間接的確認済**:
-  - Cloudflare 自身が PeculiarVentures ライブラリのユーザーとして明記 ([PeculiarVentures GitHub org page](https://github.com/peculiarventures))
-  - [MIERUNE/firebase-auth-cloudflare-workers-x509](https://github.com/MIERUNE/firebase-auth-cloudflare-workers-x509) が pkijs を Workers で本番稼働
-  - Cloudflare 公式 [crypto docs](https://developers.cloudflare.com/workers/runtime-apis/nodejs/crypto/) で `node:crypto` 大半サポート (ただし `X509Certificate` クラスは未対応)
-- **最終検証**: セッション 2 冒頭で minimal Worker (`@peculiar/x509` で証明書 1 本 verify + 自前 CBOR で 1 件 decode + `createVerify('SHA256').verify(pemKey, derSig)`) を `wrangler dev` で起動
-- **代替プラン (フォールバック)**:
-  - X.509 だけ → `pkijs + asn1js` (node-app-attest と同じ組合せ、Workers 動作実績は MIERUNE fork で確認済)
+- **minimal Worker** (`apps/solara/worker/r1_check/`) を wrangler 4.92.0 + @peculiar/x509@1.14.3 で `wrangler dev --local` 起動 → `curl /r1/all` で 3 操作全パス確認
+- **X.509**: `@peculiar/x509` で Apple Root CA を parse + 自己署名 verify 成功 (subject=issuer 一致、公開鍵アルゴリズム = ECDSA P-384 ★★★ 設計推測と一致)
+- **CBOR**: 自前デコーダ 15 行が `{a:1, b:[2,3]}` を正しく decode
+- **createVerify**: `createSign('SHA256').sign(privKey)` で **71 バイト DER 署名** (`0x30` SEQUENCE で始まる) → `createVerify('SHA256').verify(pubKey, derSig)` で `verifyOk: true`
+- **結論**: 案 B' のすべての中核操作が `nodejs_compat` 下で動作。フォールバック (pkijs) は不要
 
-### 🔴 R6 [実装後計測]: Workers Free プラン 10ms CPU 制限
+### ✅ R6 [初期計測通過 2026-05-19 セッション 2]: bundle size は Workers Free 1MB 制限の 8.5%
+
+- 既存 worker (`src/index.js` + astronomy-engine 等): **229.58 KiB / gzip 65.46 KiB**
+- R1 minimal Worker (@peculiar/x509 + 自前 cbor + node:crypto): **540.05 KiB / gzip 85.78 KiB**
+- 本実装後の予想合計: ~540 KiB / gzip ~90 KiB = Workers Free 1MB 制限 (圧縮後) の **~9%**
+- 残課題: 10ms CPU 制限は本番 deploy 後 1 週間モニタ (再ラベル R6')
+
+### 🔴 R6' [実装後計測]: Workers Free プラン 10ms CPU 制限 (R6 から bundle 部分を切り出し)
 
 - 証明書チェーン検証 (P-384 × 1 + P-256 × 1 = 2 段) + ECDSA verify + SHA-256 数回 = 1-5ms 想定
 - DO への DB 操作は別 CPU 時間で計上
