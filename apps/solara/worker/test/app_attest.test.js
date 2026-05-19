@@ -299,6 +299,66 @@ test('invalid: 空 teamIdentifier → invalid_team_id', async () => {
   assert.equal(result.error, 'invalid_team_id');
 });
 
+// ── 時刻チェック (案 C+D) ────────────────────────────────
+
+test('時刻チェック C: now が credCert の notBefore より過去 → fail_credcert_future_issued', async () => {
+  // fixture credCert は notBefore = 2024-02-06。now を 2023 にすると未来発行扱い。
+  const fx = loadFixture('attestation-production.json');
+  const result = await verifyAttestation({
+    attestation: b64ToBytes(fx.attestation),
+    challenge: b64ToBytes(fx.challenge),
+    keyId: fx.keyId,
+    bundleIdentifier: FIXTURE_BUNDLE,
+    teamIdentifier: FIXTURE_TEAM,
+    now: new Date('2023-01-01T00:00:00Z').getTime(), // fixture より過去
+  });
+  assert.equal(result.ok, false);
+  // subCa の notBefore は 2020-03-18 なので、subCa は未来扱いにならず credCert で落ちる
+  assert.equal(result.error, 'fail_credcert_future_issued');
+});
+
+test('時刻チェック C: clock skew 5 分は許容 (skew 内なら通る)', async () => {
+  const fx = loadFixture('attestation-production.json');
+  // fixture credCert notBefore = 2024-02-06T21:08:56Z、その 3 分前 (skew 5 分内)
+  const credCertNotBefore = new Date('2024-02-06T21:08:56Z').getTime();
+  const result = await verifyAttestation({
+    attestation: b64ToBytes(fx.attestation),
+    challenge: b64ToBytes(fx.challenge),
+    keyId: fx.keyId,
+    bundleIdentifier: FIXTURE_BUNDLE,
+    teamIdentifier: FIXTURE_TEAM,
+    now: credCertNotBefore - 3 * 60 * 1000, // 3 分前 (skew 5 分内なので通る)
+  });
+  assert.equal(result.ok, true, `expected ok with 3min skew, got ${JSON.stringify(result)}`);
+});
+
+test('時刻チェック D: expired credCert は通すが console.warn を出す', async () => {
+  // production fixture credCert notAfter = 2024-12-21、現在は 2026-05-19 で expired
+  // → ok: true を返しつつ console.warn でログ出力
+  const fx = loadFixture('attestation-production.json');
+  const warnMessages = [];
+  const origWarn = console.warn;
+  console.warn = (msg) => warnMessages.push(msg);
+  try {
+    const result = await verifyAttestation({
+      attestation: b64ToBytes(fx.attestation),
+      challenge: b64ToBytes(fx.challenge),
+      keyId: fx.keyId,
+      bundleIdentifier: FIXTURE_BUNDLE,
+      teamIdentifier: FIXTURE_TEAM,
+      // now: default (Date.now())
+    });
+    assert.equal(result.ok, true);
+    // credCert expired の warning が 1 件以上
+    assert.ok(
+      warnMessages.some((m) => m.includes('credCert expired')),
+      `expected credCert expired warning, got: ${warnMessages.join(' | ')}`,
+    );
+  } finally {
+    console.warn = origWarn;
+  }
+});
+
 // ── 戻り値の構造確認 ────────────────────────────────────
 
 test('publicKeyPem が PEM 形式で createPublicKey 可能 (assertion 検証の前提)', async () => {
