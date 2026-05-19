@@ -1,6 +1,6 @@
 # Play Integrity サーバー検証 設計ドキュメント
 
-**ステータス**: 設計 v0.5 (2026-05-19、S3 前最終チェック — 公式 verdict 仕様反映、R8 概算解決、payload 型訂正 8 件)
+**ステータス**: 設計 v0.6 (2026-05-19、S3 本実装完成 — verifyPlayIntegrityFlow v1.0 + 28/28 PASS、S4 着手準備完了)
 **対象**: Cloudflare Worker `solara-api` の `/auth/integrity/*` + `/protected/*` middleware の Android 経路
 **前提**: `project_solara_launch_checklist.md` Phase 1 認証ミドルウェア + Phase 2 Flutter クライアント
 **関連**:
@@ -10,6 +10,18 @@
 - `../../docs/app_development_lessons.md` §1.3 ケーススタディ + §5.6 鍵交換ハイブリッド方式 + §5.7 設計と公式 UI 乖離
 
 ## 変更履歴
+
+### v0.6 (2026-05-19、S3 本実装完成)
+- **`verifyPlayIntegrityFlow(request, env, consumeNonce)` v1.0 実装** (`src/auth/play_integrity.js` +260 行)
+  - Step 2-11 を一括検証 (Step 5 DO consume は注入関数で抽象化、S4 で実 DO 呼出に置換)
+  - 全 11 種の失敗 error code を返す: `missing_token` / `missing_clientdata` / `missing_nonceid` / `clientdata_malformed` / `clientdata_nonce_invalid` / `clientdata_uid_invalid` / `clientdata_ts_invalid` / `client_clock_drift` / `nonce_consume_failed` (任意 detail) / `nonce_mismatch` / `decode_failed` / `payload_invalid` / `payload_request_details_missing` / `requesthash_mismatch` / `token_ts_invalid` / `token_ts_drift` / `package_mismatch` / `app_not_recognized` (detail=verdict 値) / `app_package_mismatch` / `cert_not_allowlisted` / `device_verdict_empty` / `device_integrity_missing`
+  - 成功時は `{ok:true, payload, uid}` を返却 (Step 12 = uid と body.__appUserId 一致確認は middleware 側)
+  - `ANDROID_CERT_SHA256_ALLOWLIST` env (CSV) で cert allowlist を制御、空なら check skip (log_only 期間で実機 cert 採取まで)
+  - 標準 base64 (RFC 4648 §4、`=` パディング) で SHA-256 を計算: `btoa(String.fromCharCode(...new Uint8Array(crypto.subtle.digest('SHA-256', clientDataBytes))))`
+- **テスト 19 ケース追加 (合計 28、全 PASS)**: happy path + 18 失敗パス。clientData 欠落 / 改竄 / ts drift / nonce mismatch / requestHash mismatch / token ts drift / package mismatch / verdict 3 パターン (UNRECOGNIZED_VERSION / 空配列 / MEETS_DEVICE_INTEGRITY 不在) / cert allowlist mismatch + match + skip
+- **bundle 計測**: gzip 171.76 → 171.89 KiB (+0.13 KiB、本実装ロジック追加分、Workers Free 1MB 残 83% 維持)
+- Worker 全テスト 79 → 107 PASS (S2 9 + S3 19 = 28 新規追加)
+- **§13 を S4 着手前提に書き換え**: DO `integrity_nonces` 表 + `/auth/integrity/challenge` + middleware 統合
 
 ### v0.5 (2026-05-19、S3 前最終チェック — 公式 verdict 仕様反映)
 S3 着手前に最新の公式 Android Developer docs (`/google/play/integrity/standard` + `/verdicts`) を読み直して 8 件の重要訂正を反映:
@@ -496,25 +508,29 @@ S6  : docs 仕上げ (deploy 手順 §13 + 運用ガイド §14)
 
 App Attest と同等の重さを想定 (6-8 セッション、計 15-20h)、現実績 S1+S2=2 セッション。
 
-## 13. v0.5 から v1.0 への次タスク (S3 本実装)
+## 13. v0.6 から v0.7 への次タスク (S4 DO + middleware 統合)
 
-S3 のスコープ:
-1. **`auth/play_integrity.js` を v1.0 本実装**: 既存の `decodeIntegrityToken` を起点に `verifyPlayIntegrityFlow(request, env, body)` を組み立て:
-   - Step 3 (clientData parse、必須キー `nonce/uid/ts` 検証、ts は number)
-   - Step 4 (clientData.ts ±5min)
-   - Step 5 (DO `integrity_nonces` consume → nonce 一致)
-   - Step 6 (JWE A256KW decode)
-   - Step 7 (JWS ES256 verify)
-   - Step 8 (payload parse — **timestampMillis/versionCode は string、defensive parse**)
-   - Step 9 (requestHash binding = `base64.encode(sha256(clientData))` で再計算)
-   - Step 10 (`Number(payload.requestDetails.timestampMillis)` ±5min + packageName)
-   - Step 11 (PLAY_RECOGNIZED + Array.isArray チェック + MEETS_DEVICE_INTEGRITY + cert allowlist)
-   - Step 12 (uid binding + entitlement / quota は middleware 側に委譲)
-2. **単体テスト拡張**: 既存 9 ケースに以下を追加 — clientData 必須キー欠落 / 改竄 / requestHash 不一致 / appRecognitionVerdict=UNRECOGNIZED_VERSION / appRecognitionVerdict=UNEVALUATED / deviceRecognitionVerdict 空配列 / MEETS_DEVICE_INTEGRITY 不在 / token ts drift / clientData ts drift / uid mismatch / packageName 不一致 / certificateSha256 不一致 (合計 +12 ケース、計 21 想定)
-3. **R 項目最終確認**:
-   - R5: ❌ 撤回 (Standard 採用で不要)
-   - R8: ✅ 概算解決 (公式 docs)、実機 token は S5 で確認
-4. **(将来) v1.0 にバンプ**: S3 本実装完成後の API 仕様、test カバレッジ実数値を反映
+S3 ✅ 完了。S4 のスコープ:
+1. **DO `AttestationState` に `integrity_nonces` 表追加** (`src/auth/attestation_state.js` 拡張):
+   - schema (v0.3 §5): `nonce_id TEXT PRIMARY KEY, nonce_b64 TEXT NOT NULL, expires_at INTEGER NOT NULL, consumed_at INTEGER`
+   - API: `POST /integrity-nonce-create body: {nonceId, nonceB64, expiresAt}` + `POST /integrity-nonce-consume body: {nonceId, now} → {ok, nonceB64}` (consumed/expired は ok:false)
+   - migration 不要 (CREATE TABLE IF NOT EXISTS)
+2. **`/auth/integrity/challenge` POST endpoint 実装** (`src/index.js`):
+   - 32 random bytes 生成 → base64 → DO に INSERT (expires_at = now + 300_000)
+   - 返却: `{nonceId: uuid, nonce: base64, ttlSec: 300}`
+3. **`/protected/*` middleware 統合** (`src/index.js`):
+   - OS 判定で iOS = `verifyAppleAssertionFlow` / Android = `verifyPlayIntegrityFlow` に分岐
+   - 共通: entitlement (RC) + uid binding (Step 12) + per-user quota
+   - `PLAY_INTEGRITY_ENFORCEMENT` env (`disabled|log_only|enforced`) で段階リリース
+4. **wrangler.toml に vars 追加**:
+   - `PLAY_INTEGRITY_ENFORCEMENT = "log_only"` (初期値)
+   - `PLAY_INTEGRITY_NONCE_TTL_SEC = "300"`
+   - `ANDROID_PACKAGE_NAME = "com.solodevlab.solara"` (DEFAULT_ANDROID_PACKAGE_NAME と同値、wrangler 上書き用)
+   - `ANDROID_CERT_SHA256_ALLOWLIST = ""` (空、S5 で実機 cert 採取後に設定)
+5. **S4 テスト追加**:
+   - DO integrity_nonces 操作 (create/consume 正常 + 期限切れ + 重複 consume)
+   - middleware の OS 経路分岐 + ENFORCEMENT 切替
+6. **設計 v0.7 にバンプ**: middleware 統合完了後の挙動を §8 に反映
 
 ## 関連ドキュメント
 
