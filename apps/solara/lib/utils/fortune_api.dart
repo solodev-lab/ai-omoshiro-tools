@@ -1,7 +1,10 @@
 // Fortune API - /fortune エンドポイント (Stella の声を取得)
 // 関連: worker/src/fortune.js
-import 'dart:convert';
-import 'package:http/http.dart' as http;
+//
+// /protected/* 呼び出しは AppAttestClient.postProtected 経由 (設計 v2.1)。
+// middleware が log_only モードなら bypass、enforced モードなら attestation 必須。
+import 'dart:convert' show json;
+import 'app_attest_client.dart';
 import 'solara_api.dart'
     show solaraFortuneUrl, solaraRelocationUrl, solaraTarotUrl;
 
@@ -64,10 +67,9 @@ Future<FortuneReading?> fetchFortune({
       if (userName != null && userName.isNotEmpty) 'userName': userName,
       if (thinking) 'thinking': true,
     };
-    final res = await http.post(
-      Uri.parse(solaraFortuneUrl),
-      headers: {'Content-Type': 'application/json'},
-      body: json.encode(body),
+    final res = await AppAttestClient.instance.postProtected(
+      solaraFortuneUrl,
+      payload: body,
     ).timeout(const Duration(seconds: 60)); // LLM生成は数秒〜30秒。死神等の強烈カードは安全フィルターで遅い
 
     if (res.statusCode == 200) {
@@ -159,10 +161,9 @@ Future<RelocationNarrative?> fetchRelocationNarrative({
       if (userName != null && userName.isNotEmpty) 'userName': userName,
       'lang': lang,
     };
-    final res = await http.post(
-      Uri.parse(solaraRelocationUrl),
-      headers: {'Content-Type': 'application/json'},
-      body: json.encode(body),
+    final res = await AppAttestClient.instance.postProtected(
+      solaraRelocationUrl,
+      payload: body,
     ).timeout(const Duration(seconds: 60)); // LLM生成は数秒〜30秒
 
     if (res.statusCode == 200) {
@@ -243,10 +244,9 @@ Future<TarotReading?> fetchTarotReading({
             ? cleanQuestion.substring(0, 200)
             : cleanQuestion,
     };
-    final res = await http.post(
-      Uri.parse(solaraTarotUrl),
-      headers: {'Content-Type': 'application/json'},
-      body: json.encode(body),
+    final res = await AppAttestClient.instance.postProtected(
+      solaraTarotUrl,
+      payload: body,
     ).timeout(const Duration(seconds: 60)); // 死神等の強烈カードは安全フィルターで遅延
 
     if (res.statusCode == 200) {

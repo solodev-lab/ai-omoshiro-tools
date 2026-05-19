@@ -11,6 +11,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 import 'consultation_engine.dart' show CandidateLocation;
+import 'app_attest_client.dart';
 import 'solara_api.dart' show solaraConsultationUrl;
 
 /// API レスポンス内の候補別 Stella の解釈。
@@ -120,11 +121,17 @@ Future<ConsultationReading?> fetchConsultation({
       if (excluded.isNotEmpty) 'excluded': excluded,
       'lang': lang,
     };
+    // 設計 v1.8 §16.2: bytes を確定して両側で同一 SHA-256 を保証
+    final bodyString = json.encode(body);
+    final bodyBytes = utf8.encode(bodyString);
+    final headers = <String, String>{'Content-Type': 'application/json'};
+    // App Attest assertion header 注入 (bypass モードでは no-op)
+    await AppAttestClient.instance.addHeaders(headers, bodyBytes);
     final res = await c
         .post(
           Uri.parse(solaraConsultationUrl),
-          headers: const {'Content-Type': 'application/json'},
-          body: json.encode(body),
+          headers: headers,
+          body: bodyBytes, // String ではなく bytes (addHeaders と同一参照)
         )
         .timeout(timeout);
     if (res.statusCode == 200) {
