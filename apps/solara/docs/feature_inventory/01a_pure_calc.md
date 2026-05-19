@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 7 / 総行数: 2009
+- ファイル数: 7 / 総行数: 2035
 - class/mixin/extension/enum: 20
 - 関数 (top-level + method の素拾い): 72
 - Navigator.push 等: 0
@@ -253,7 +253,7 @@ Uses 14 correction terms for New Moon and Full Moon.
   </details>
 
 
-### `lib/utils/purchases_service.dart` (216 行)
+### `lib/utils/purchases_service.dart` (242 行)
 
 **ファイル先頭コメント:**
 
@@ -294,18 +294,18 @@ Solara RevenueCat ラッパー — Phase 2-6b
 
 **関数 (8 public + 1 private):**
 
-- L72 `init()` — 起動時に 1 度だけ呼ぶ。
-- L135 `isEntitledFrom()`
-- L145 `getOfferings()` — 配信中の Offerings を取得。未配信 / オフライン時は null。
-- L159 `purchasePackage()` — パッケージを購入。成功時は listener 経由で ProStatus が更新される。
-- L180 `restorePurchases()` — 復元。RevenueCat が同一 appUserID 配下の過去購入を再リンクする。
-- L194 `logIn()` — Sign in 完了後に uid を渡す (Phase 2「Sign in 統合」で配線予定)。
-- L200 `logOut()` — サインアウト時に呼ぶ (Phase 2「Sign in 統合」で配線予定)。
-- L208 `disposeForTest()`
+- L84 `init()` — 起動時に 1 度だけ呼ぶ。
+- L154 `isEntitledFrom()`
+- L164 `getOfferings()` — 配信中の Offerings を取得。未配信 / オフライン時は null。
+- L178 `purchasePackage()` — パッケージを購入。成功時は listener 経由で ProStatus が更新される。
+- L199 `restorePurchases()` — 復元。RevenueCat が同一 appUserID 配下の過去購入を再リンクする。
+- L214 `logIn()` — Sign in 完了後に uid を渡す (`SolaraAuth._commitAccount` から呼ばれる)。
+- L221 `logOut()` — サインアウト時に呼ぶ。SDK が新しい anonymous uid を発行するので再 cache。
+- L234 `disposeForTest()`
 
   <details><summary>private 関数 1 件</summary>
 
-  - L120 `_onCustomerInfo()`
+  - L139 `_onCustomerInfo()`
 
   </details>
 

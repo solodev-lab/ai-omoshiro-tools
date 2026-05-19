@@ -121,8 +121,10 @@ Future<ConsultationReading?> fetchConsultation({
       if (excluded.isNotEmpty) 'excluded': excluded,
       'lang': lang,
     };
+    // 設計 v2.2: __appUserId を body に merge (Worker 側 RevenueCat 連動 Pro 判定)
+    final merged = AppAttestClient.withAppUserIdMerged(body);
     // 設計 v1.8 §16.2: bytes を確定して両側で同一 SHA-256 を保証
-    final bodyString = json.encode(body);
+    final bodyString = json.encode(merged);
     final bodyBytes = utf8.encode(bodyString);
     final headers = <String, String>{'Content-Type': 'application/json'};
     // App Attest assertion header 注入 (bypass モードでは no-op)

@@ -50,6 +50,18 @@ class PurchasesService {
   bool _initStarted = false;
   CustomerInfoUpdateListener? _listener;
 
+  /// 現在の RevenueCat appUserID。configure 後に cache、logIn/logOut で更新。
+  /// 未 configure or 取得失敗時は null。
+  ///
+  /// 形式:
+  ///   - sign in 済み: "apple:xxx" / "google:xxx" (SolaraAuth が `Purchases.logIn` 経由でセット)
+  ///   - anonymous   : "$RCAnonymousID:xxxx" (RevenueCat SDK が自動発行)
+  ///
+  /// この値が Worker 側 /protected/* 呼出時に body `__appUserId` として送られ、
+  /// middleware が DO `user_entitlements` から Pro 状態を引き当てる。
+  String? _currentAppUserId;
+  String? get appUserId => _currentAppUserId;
+
   /// `Purchases.configure` 済かどうか。UI 側で「ストア準備中」表示の分岐に使う。
   bool get isConfigured => _configured;
 
@@ -94,6 +106,13 @@ class PurchasesService {
 
       await Purchases.configure(config);
       _configured = true;
+
+      // anonymous appUserID を cache (SDK が "$RCAnonymousID:xxx" を発行している)
+      try {
+        _currentAppUserId = await Purchases.appUserID;
+      } catch (_) {
+        _currentAppUserId = null;
+      }
 
       _listener = _onCustomerInfo;
       Purchases.addCustomerInfoUpdateListener(_listener!);
@@ -189,17 +208,24 @@ class PurchasesService {
     }
   }
 
-  /// Sign in 完了後に uid を渡す (Phase 2「Sign in 統合」で配線予定)。
-  /// 現状は呼び出し箇所なし。
+  /// Sign in 完了後に uid を渡す (`SolaraAuth._commitAccount` から呼ばれる)。
+  /// RevenueCat 側で anonymous → 永続 uid に切替わり、Worker 側 entitlement の
+  /// キーも切替わる。
   Future<void> logIn(String uid) async {
     if (!_configured) return;
     await Purchases.logIn(uid);
+    _currentAppUserId = uid;
   }
 
-  /// サインアウト時に呼ぶ (Phase 2「Sign in 統合」で配線予定)。
+  /// サインアウト時に呼ぶ。SDK が新しい anonymous uid を発行するので再 cache。
   Future<void> logOut() async {
     if (!_configured) return;
     await Purchases.logOut();
+    try {
+      _currentAppUserId = await Purchases.appUserID;
+    } catch (_) {
+      _currentAppUserId = null;
+    }
   }
 
   /// テスト用: 純粋関数 `isEntitledFrom` は静的なので直接呼べる。
