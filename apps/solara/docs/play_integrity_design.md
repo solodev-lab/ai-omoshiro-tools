@@ -1,6 +1,6 @@
 # Play Integrity サーバー検証 設計ドキュメント
 
-**ステータス**: 設計 v0.6 (2026-05-19、S3 本実装完成 — verifyPlayIntegrityFlow v1.0 + 28/28 PASS、S4 着手準備完了)
+**ステータス**: 設計 v0.6.1 (2026-05-19、S3 完成 + S4 前最新仕様再確認 — Play Integrity 2026 changes / Workers SQLite billing / DO 集約パターン全部確証)
 **対象**: Cloudflare Worker `solara-api` の `/auth/integrity/*` + `/protected/*` middleware の Android 経路
 **前提**: `project_solara_launch_checklist.md` Phase 1 認証ミドルウェア + Phase 2 Flutter クライアント
 **関連**:
@@ -10,6 +10,20 @@
 - `../../docs/app_development_lessons.md` §1.3 ケーススタディ + §5.6 鍵交換ハイブリッド方式 + §5.7 設計と公式 UI 乖離
 
 ## 変更履歴
+
+### v0.6.1 (2026-05-19、S4 前最新仕様再確認 — patch、内容追加のみ)
+S4 着手前にオーナーから「最新情報で心配点点検」依頼。Cloudflare Durable Object + Play Integrity API 公式の最新仕様を再確認、以下を確証:
+
+- **DO migration 不要**: 既存 `AttestationState` は `new_sqlite_classes` で SQLite-backed 化済。`CREATE TABLE IF NOT EXISTS integrity_nonces` で第 6 表追加するだけ
+- **`integrity_nonces.nonce_b64` 選択理由を §5 に明記**: 既存 `challenges` 表は BLOB だが Play Integrity の nonce は plugin 側で base64 文字列、`consumeResult.nonceB64 === clientData.nonce` の string compare が最速。一貫性より処理効率優先 (用途が違う)
+- **Play Integrity 2026 変更**: ① minSdk 23 (Solara 31 で余裕) ② `showDialog` 経路を `IntegrityManager` 側に移動 (Solara は使わない、Pro UX 強化の将来課題) ③ GET_INTEGRITY / GET_STRONG_INTEGRITY remediation dialog (v1.5.0+) は不要 (= Pro 未取得時は単に「Pro 機能オフ」)
+- **Workers SQLite storage billing (2026-01-07 開始)**: Solara nonce 容量 <1MB のため料金影響実質ゼロ
+- **DO sequential write 保証**: Workers input gate により default で同 DO への requests は順次処理、明示的トランザクション不要。one-time consume は SELECT WHERE consumed_at IS NULL → UPDATE consumed_at の 2 statement で完結
+- **`/auth/integrity/challenge` DoS 耐性**: `default` rate limit bucket (30/min/IP) + `_integrityNonceCreate` で `DELETE FROM integrity_nonces WHERE expires_at <` を毎回実施で問題なし
+- **Buffer / btoa / performance.now / nodejs_compat**: 既存 worker で動作確認済、S3 で実証
+- **既存 `protectedMiddleware` が完璧な手本**: Step 1-6 (DO 取得 → body 取得 → 検証 → signCount bump → entitlement → quota) を Play Integrity 経路にも踏襲
+
+S4 の設計は v0.6 のまま、新規発見はゼロ。実装に進める状態。
 
 ### v0.6 (2026-05-19、S3 本実装完成)
 - **`verifyPlayIntegrityFlow(request, env, consumeNonce)` v1.0 実装** (`src/auth/play_integrity.js` +260 行)
@@ -262,6 +276,12 @@ API (App Attest `challenges` と並列):
 - `POST /integrity-nonce-consume body: {nonceId, now} → {nonceB64} (consumed_at マーク) or 404`
 
 注意: v0.2 では BLOB を提案したが、v0.3 では JSON シリアライズ容易性とログ可読性のため TEXT (base64) で保管。32B × ~10k/day × 5min TTL = ピーク 2-3MB なので容量は問題なし。
+
+🔴 v0.6.1 補足 — TEXT 選択理由 (既存 `challenges` BLOB との不一致):
+- 既存 `challenges` (App Attest) は raw bytes 用途 (= challenge → SHA-256(challengeHash) → attest) で BLOB が自然
+- 新規 `integrity_nonces` (Play Integrity) は **base64 string 用途** (= plugin が string ↔ Worker が string compare) で TEXT が自然
+- 用途が違うため一貫性犠牲は許容、処理効率優先
+- `consumeResult.nonceB64 === clientData.nonce` が単純 string equality でも O(1)、BLOB → base64 変換のオーバーヘッドなし
 
 ## 6. Self-managed key 管理
 
