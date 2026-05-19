@@ -1,6 +1,6 @@
 # App Attest サーバー検証 設計ドキュメント
 
-**ステータス**: ドラフト v1.7 (2026-05-19 起案、同日 R2-R5/R7/R8 確定 + Q1-Q5 + 案 B' + challenge race 解決 + Team ID + S2 (cbor 26/26) + S3 (verifyAttestation 17/17 + Workers R3) + **時刻チェック C+D 追加 (未来発行 block + expired warning) 20/20 PASS**)
+**ステータス**: ドラフト v1.8 (S1 設計確定 → S2 cbor 26/26 → S3 verifyAttestation 20/20 + Workers R3 → **S4 着手前: payload 正規化規約 / Apple step 6 維持理由 / Layer C per-user rate limit 統合方針を確定 + Firebase 代替案検討 → 現状継続**)
 **対象**: Cloudflare Worker `solara-api` の `/auth/attest` + `/protected/*` ミドルウェア
 **前提**: `project_solara_launch_checklist.md` Phase 1 認証ミドルウェア
 **関連**: `project_solara_security_principles.md` 原則 1〜3
@@ -28,6 +28,32 @@
 - R5 OID ASN.1 ネスト深さは **3 段** で確定 (node-app-attest 実装 `value[0].value[0].valueHex` + Apple Forum C++ Botan 実装と一致 ★★★)
 - production 知見追加 (adjoe blog): DCError.invalidInput/invalidKey 時の Flutter 側リトライ要件、challenge 5 分 TTL 実運用根拠
 - §13 実装方針 §14 ロールアウトを案 B' 前提に書き換え
+
+### v1.7 → v1.8 の変更点 (2026-05-19、S4 着手前の追加設計判断)
+
+**Firebase App Check 代替案検討 → 不採用 (現状継続)**:
+オーナー指示で「もっと簡潔で画期的な方法」を公式情報中心に再調査。Firebase App Check が実装大幅簡素化 (Worker 50 行 + Flutter 30 行) の候補として有力だったが、**Apple サーバー依存頻度が逆転する点** (現状: 1 端末 1 回 / Firebase: 毎時 30 分) + 7 日 TTL 0% verified 障害事例 + ロックインリスクで不採用。
+
+**§16.2 payload 正規化規約 新設 (= verifyAssertion の信頼性根幹)**:
+Flutter ↔ Worker で SHA-256 する bytes が完全一致しないと assertion 検証が全失敗する (Firebase 0% verified の構造類似)。規約:
+1. Flutter: `jsonEncode(map) → utf8.encode → Uint8List` で payload bytes を確定、その bytes をそのまま HTTP body に
+2. Worker middleware: `request.arrayBuffer()` で raw bytes を取得 (`request.json()` でも同等のはずだが念のため raw)
+3. middleware → handler への passing は bodyBytes を context に積んで再利用 (二重 read 禁止)
+4. CI チェック: 既知 JSON 文字列で Dart 側と JS 側の SHA-256 hex が完全一致することを Flutter test + Node test 両方で確認
+
+**§16.3 Apple step 6 (challenge inclusion) 不採用の根拠を明文化**:
+Apple 公式 step 6 「embedded challenge in client data == earlier challenge」を厳格に満たさない (= payload に server-issued challenge を含めない、signCount monotonic + DO consume で replay 防止)。理由:
+- step 6 の脅威モデルは「中間者が challenge を盗み別 payload で assertion 生成」だが、これは **Secure Enclave 内 private key へのアクセスが前提**で実質不可能。攻撃成功時は challenge inclusion でも防げない
+- 既存防御 (signCount monotonic + DO consume + signature verify) で replay は完全防御
+- latency +1 round-trip を引き換えに防げる攻撃が存在しないので **UX 悪化のみが残るアンチパターン**
+- Apple 審査リジェクト時の応答テンプレ: payload に request 固有 nonce (タイムスタンプ + UUID) を含めて step 6 を満たす実装に切替可能 (~1 セッション対応)
+
+**Layer C: per-user rate limit を S4 統合 (オーナー判断 2026-05-19)**:
+DO に `user_quota` 表を追加。attestations + challenges + user_quota の 3 表を 1 DO instance (`idFromName('global')`) で管理。Free=日 5 リクエスト / Pro=日 100 リクエスト等の上限。launch_checklist Phase 1 別タスクから S4 統合へ前倒し (= attestation 突破時の被害最大化を防ぐ最重要層)。Layer A (Apple step 6 厳格) と比べて ROI 圧倒的高い。
+
+**Layer D / Layer E (オーナー側 / 後続セッション)**:
+- Layer D (Cloudflare Bot Fight Mode): オーナー Cloudflare Dashboard で 1 クリック有効化 (リスクゼロ、効果大)
+- Layer E (異常検知アラート): launch_checklist Phase 6 に追加、本番 deploy 後の運用
 
 ### v1.6 → v1.7 の変更点 (2026-05-19、時刻チェック C+D 追加 + 私の誤記訂正)
 
@@ -308,7 +334,7 @@ const ok = await crypto.subtle.verify({name: 'ECDSA', hash: 'SHA-256'}, key, raw
 
 - **理由**: counter の単調増加チェックに race-free な single-threaded actor が必須。KV は eventual consistency で最大 60 秒の伝播遅延 → replay attack 窓ができる (Cloudflare 公式)。
 - **Free プラン**: SQLite-backed DO は 2025 GA、Free で 1GB / DO まで使える。Solara DAU 1500 想定でも 1 DO で十分。
-- **スキーマ (v1.4 で challenges 表追加)**:
+- **スキーマ (v1.8 で user_quota 表追加、計 3 表)**:
   ```sql
   -- 端末ごとの attestation 永続化 (1 端末 1 行、書き込み = 初回 attest 時のみ)
   CREATE TABLE attestations (
@@ -331,6 +357,19 @@ const ok = await crypto.subtle.verify({name: 'ECDSA', hash: 'SHA-256'}, key, raw
     consumed_at INTEGER                   -- 使用済み記録 (replay 防止)、NULL=未使用
   );
   CREATE INDEX idx_challenges_expires ON challenges(expires_at);
+
+  -- v1.8 追加: Layer C per-user rate limit (attestation 突破時の被害最大化防止)
+  -- key_id ごとに day_bucket (YYYY-MM-DD) 単位でカウント。
+  -- Free=5/日、Pro=100/日 (Worker 側で isPro を判定して上限値選択)。
+  -- 月跨ぎで自動 cleanup (毎回 INSERT 時に古い day_bucket を DELETE)。
+  CREATE TABLE user_quota (
+    key_id TEXT NOT NULL,
+    day_bucket TEXT NOT NULL,             -- 'YYYY-MM-DD' (UTC)
+    count INTEGER NOT NULL DEFAULT 0,
+    last_used_at INTEGER NOT NULL,
+    PRIMARY KEY (key_id, day_bucket)
+  );
+  CREATE INDEX idx_user_quota_day ON user_quota(day_bucket);
   ```
 - **challenge cleanup**: `/auth/challenge` の INSERT 前に `DELETE FROM challenges WHERE expires_at < ?` を実行 (毎リクエスト cleanup、DO alarm 不要)
   - 大量の expired 行が溜まる懸念は、5 分 TTL × 1500 DAU の challenge 発行頻度なら最大 ~50 行で無視可能
