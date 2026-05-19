@@ -14,6 +14,7 @@
  */
 import { X509Certificate } from '@peculiar/x509';
 import { createVerify, createSign, generateKeyPairSync } from 'node:crypto';
+import { verifyAttestation } from '../../src/auth/app_attest.js';
 
 // Apple App Attestation Root CA (DER → PEM、apps/solara/docs/ の保存版と一致)
 const APPLE_ROOT_PEM = `-----BEGIN CERTIFICATE-----
@@ -122,6 +123,29 @@ export default {
       if (path === '/r1/createverify') {
         return Response.json({ ok: true, ...checkCreateVerify() });
       }
+      if (path === '/r1/verify_attestation' && request.method === 'POST') {
+        // body: { attestation: b64, challenge: b64, keyId, bundleIdentifier, teamIdentifier, allowDevelopmentEnvironment }
+        const body = await request.json();
+        const result = await verifyAttestation({
+          attestation: new Uint8Array(Buffer.from(body.attestation, 'base64')),
+          challenge: new Uint8Array(Buffer.from(body.challenge, 'base64')),
+          keyId: body.keyId,
+          bundleIdentifier: body.bundleIdentifier,
+          teamIdentifier: body.teamIdentifier,
+          allowDevelopmentEnvironment: body.allowDevelopmentEnvironment === true,
+        });
+        // receipt が Uint8Array だと JSON.stringify で {} になるので長さだけ返す
+        if (result.ok) {
+          return Response.json({
+            ok: true,
+            environment: result.environment,
+            publicKeyPemPrefix: result.publicKeyPem.slice(0, 50),
+            receiptLength: result.receipt.length,
+          });
+        }
+        return Response.json(result);
+      }
+
       if (path === '/r1/all') {
         const x509 = await checkX509();
         const cbor = checkCbor();

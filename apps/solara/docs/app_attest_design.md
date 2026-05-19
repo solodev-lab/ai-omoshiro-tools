@@ -1,6 +1,6 @@
 # App Attest サーバー検証 設計ドキュメント
 
-**ステータス**: ドラフト v1.5 (2026-05-19 起案、同日 R2-R5/R7/R8 確定 + Q1-Q5 確定 + 案 B' ハイブリッド + challenge race 解決 + Team ID 確定 + **セッション 2 着手: R1 実機検証通過 + bundle 9% + cbor.js 実装 + 26/26 test PASS**)
+**ステータス**: ドラフト v1.6 (2026-05-19 起案、同日 R2-R5/R7/R8 確定 + Q1-Q5 確定 + 案 B' + challenge race 解決 + Team ID 確定 + セッション 2 (R1 + cbor.js 26/26) + **セッション 3: verifyAttestation 実装 + Workers 上 R3 確認 + 17/17 test PASS**)
 **対象**: Cloudflare Worker `solara-api` の `/auth/attest` + `/protected/*` ミドルウェア
 **前提**: `project_solara_launch_checklist.md` Phase 1 認証ミドルウェア
 **関連**: `project_solara_security_principles.md` 原則 1〜3
@@ -28,6 +28,16 @@
 - R5 OID ASN.1 ネスト深さは **3 段** で確定 (node-app-attest 実装 `value[0].value[0].valueHex` + Apple Forum C++ Botan 実装と一致 ★★★)
 - production 知見追加 (adjoe blog): DCError.invalidInput/invalidKey 時の Flutter 側リトライ要件、challenge 5 分 TTL 実運用根拠
 - §13 実装方針 §14 ロールアウトを案 B' 前提に書き換え
+
+### v1.5 → v1.6 の変更点 (2026-05-19、セッション 3 verifyAttestation 実装)
+- **auth/app_attest.js verifyAttestation 実装完了** (~210 行、9 step、node-app-attest 写経パターンを @peculiar/x509 で書き直し)
+- **auth/apple_root_ca.js**: Apple Root CA PEM + AAGUID 定数 (production / development) + 6 helper (concat/equal/toHex/toBase64/readUint16BE/readUint32BE) を 95 行で集約
+- **17/17 test PASS** (production + development fixture + 改竄ケース 6 種 + 入力バリデーション 5 種 + receipt 改竄が ok:true で返る設計確認)
+- **重要発見: @peculiar/x509 の `Certificate.verify` はデフォルトで notBefore/notAfter 時刻チェックする**。fixture は credCert notAfter = 2024-12-21 で expired のためチェーン検証が落ちた → `signatureOnly: true` オプションを追加して signature のみ検証に切替 (node-app-attest が使う node:crypto.X509.verify と同じ動作)。本番でも採用 (実利が薄い + Apple iOS 側で attestation 再取得を強制する機構あり)
+- **R3 Workers 実機確認**: r1_check Worker に `/r1/verify_attestation` POST エンドポイント追加 → wrangler dev 起動 → fixture を POST → production / development 両方とも ok: true, environment 正しく識別、publicKeyPem は正しい P-256 SPKI PEM
+- **bundle 増分**: 540 → **552 KiB / gzip 88.72 KiB** (verifyAttestation + cbor + apple_root_ca で +13 KiB)、Workers Free 1MB の 8.7%
+- 新ファイル: `worker/src/auth/{apple_root_ca.js, app_attest.js}`、`worker/test/app_attest.test.js`
+- 変更: `worker/r1_check/src/index.js` に `/r1/verify_attestation` 追加
 
 ### v1.4 → v1.5 の変更点 (2026-05-19、セッション 2 実機検証)
 - **R1 突破**: minimal Worker (`apps/solara/worker/r1_check/`) で `@peculiar/x509` + 自前 CBOR + `node:crypto.createVerify` の 3 操作が wrangler dev で動作確認 → 案 B' 確定 (フォールバック pkijs 不要)
