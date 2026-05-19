@@ -1,12 +1,26 @@
 # Play Integrity サーバー検証 設計ドキュメント
 
-**ステータス**: 設計 v0.1 (2026-05-19、S1 完了)
+**ステータス**: 設計 v0.2 (2026-05-19、S1 完了 + オーナー作業全 7 項目完了、S2 着手準備完了)
 **対象**: Cloudflare Worker `solara-api` の `/auth/integrity/*` + `/protected/*` middleware の Android 経路
 **前提**: `project_solara_launch_checklist.md` Phase 1 認証ミドルウェア + Phase 2 Flutter クライアント
 **関連**:
 - `app_attest_design.md` v3.0 (iOS 側、Apple App Attest)
 - `revenuecat_webhook.md` v2.2 (RC エンタイトルメント検証 middleware、Play Integrity 統合後も互換)
 - `project_solara_security_principles.md` 原則 1〜3
+- `../../docs/app_development_lessons.md` §1.3 ケーススタディ + §5.6 鍵交換ハイブリッド方式 + §5.7 設計と公式 UI 乖離
+
+## 変更履歴
+
+### v0.2 (2026-05-19、S1 オーナー作業完了)
+- §6 Self-managed key 管理を **実際の Play Console フローに更新** (ハイブリッド方式: RSA 鍵ペア生成 → public.pem upload → 暗号化応答鍵 download → 復号)
+- §6.1 verification key 形式を **PEM 想定 → base64 (DER SubjectPublicKeyInfo) に訂正** (実 UI で確認、`crypto.subtle.importKey('spki', ...)` で扱う)
+- §11 オーナー作業を全 7 項目チェック付きに展開、完了マークと作業時の TIPS を追加
+- §10 R 項目: R2 (Play Console 鍵取得) を ✅ 解決済、R5 (Classic payload 仕様) を「公式 doc 再読 + S2 で確証」に維持
+
+### v0.1 (2026-05-19、S1 完了)
+- Q1-Q4 オーナー判断確定 (Classic + Self-managed + DEVICE + PLAY_RECOGNIZED)
+- R1-R6 を「実装中 / 計測後確定」3 分類で明示
+- 10-step 検証フロー + DO スキーマ追加 + middleware 統合 + 段階リリース機構 + 6 セッションロードマップ
 
 ## 0. なぜ Play Integrity か
 
@@ -155,25 +169,68 @@ API (App Attest `challenges` と並列):
 
 ## 6. Self-managed key 管理
 
-### 6.1 key 種別
-| 鍵 | 形式 | 用途 |
-|---|---|---|
-| Encryption key | AES-256-KW (Base64) | JWE A256KW decode |
-| Verification key | ECDSA P-256 公開鍵 (PEM) | JWS ES256 verify |
+### 6.1 key 種別 (v0.2 実 Play Console 確認後)
+| 鍵 | 形式 | 取得値 | Worker 側 import |
+|---|---|---|---|
+| Encryption key (DECRYPTION_KEY) | AES-256 base64 | 44 char (末尾 `=` パディング 1) | `crypto.subtle.importKey('raw', base64Decode(key), 'AES-KW', ...)` |
+| Verification key (VERIFICATION_KEY) | ECDSA P-256 公開鍵 **base64 (DER SubjectPublicKeyInfo)** | 124 char (末尾 `=` パディング 1) | `crypto.subtle.importKey('spki', base64Decode(key), {name:'ECDSA',namedCurve:'P-256'}, ...)` |
 
-両方 Play Console > App integrity > Settings > "Manage and download my keys" から取得。
+🔴 **v0.1 からの訂正**: Verification key は PEM 形式と想定していたが、**実際の Play Console は base64 (DER SubjectPublicKeyInfo) で出力**。PEM ヘッダー (`-----BEGIN PUBLIC KEY-----`) は付かない。Workers Web Crypto では `format: 'spki'` で扱う (PEM の場合は手動で base64 decode + headers strip が必要だったが不要に)。
 
-### 6.2 Workers での保管
-- **Encryption key**: secret 必須 (= 漏れたら任意の偽 token を作られる)
-  - `wrangler secret put PLAY_INTEGRITY_ENCRYPTION_KEY`
-- **Verification key**: public 情報だが頻繁に変わらないため `vars` で十分
-  - `wrangler.toml` の `[vars]` に直書き、または別 secret として管理
-  - Solara は secret 管理を簡素化するため両方 secret に統一
+両方 Play Console > **アプリの完全性 > Play Integrity API の設定 > クラシック リクエスト > レスポンスの暗号化 > 鉛筆アイコンで編集 > 「レスポンスの暗号鍵を自分で管理、ダウンロードする」を選択** から取得。
 
-### 6.3 key rotation
+### 6.2 取得手順 (Self-managed key、ハイブリッド方式)
+
+Google は AES-256 + ECDSA 鍵を直接ダウンロードさせず、クライアント側で生成した RSA 公開鍵で暗号化したファイルを返す (= 「Google サーバー保管中の漏洩を排除する」追加層、`app_development_lessons.md` §5.6 ハイブリッド方式)。
+
+```powershell
+# Step 1: クライアント側で RSA 2048-bit 鍵ペア生成
+mkdir C:\Users\<user>\solara-integrity-keys
+cd C:\Users\<user>\solara-integrity-keys
+& "C:\Program Files\Git\usr\bin\openssl.exe" genrsa -aes128 -out private.pem 2048
+# → passphrase 入力 (2 回)、忘れないものをパスワードマネージャー保管
+
+& "C:\Program Files\Git\usr\bin\openssl.exe" rsa -in private.pem -pubout -out public.pem
+# → passphrase 入力 (1 回)、public.pem 451B + private.pem 1886B 生成
+
+# Step 2: public.pem を Play Console にアップロード (UI でファイル選択)
+# Play Console が暗号化応答ファイル (例: com.solodevlab.solara.enc) を自動 download
+# Move-Item で作業ディレクトリに移動
+
+# Step 3: 復号して平文鍵を取り出す
+& "C:\Program Files\Git\usr\bin\openssl.exe" pkeyutl -decrypt -inkey private.pem `
+  -pkeyopt rsa_padding_mode:oaep -in com.solodevlab.solara.enc -out api_keys.txt
+# → passphrase 入力、api_keys.txt に
+#   DECRYPTION_KEY=<44 char base64>
+#   VERIFICATION_KEY=<124 char base64>
+
+# Step 4: Worker secret に投入
+cd E:\AppCreate\apps\solara\worker
+npx wrangler secret put PLAY_INTEGRITY_ENCRYPTION_KEY  # DECRYPTION_KEY の右辺のみ貼り付け
+npx wrangler secret put PLAY_INTEGRITY_VERIFICATION_KEY  # VERIFICATION_KEY の右辺のみ貼り付け
+
+# Step 5: 平文鍵を削除 (= Worker 投入後は不要、Play Console から再復号可能)
+Remove-Item api_keys.txt
+Remove-Item com.solodevlab.solara.enc
+
+# 保管するもの: private.pem (passphrase 暗号化済) + passphrase のみ
+```
+
+### 6.3 Workers での保管
+- **Encryption key (PLAY_INTEGRITY_ENCRYPTION_KEY)**: secret 必須 (= 漏れたら任意の偽 token を作られる)
+- **Verification key (PLAY_INTEGRITY_VERIFICATION_KEY)**: public 情報だが secret 管理に統一 (= 漏洩リスクなし、運用簡素化)
+
+### 6.4 key rotation
 - Play Console で key 再生成可能 (= attacker が encryption key を入手したら必須)
-- rotation 手順: `wrangler secret put` で上書き → Play Console 側も同じ値に更新 → 既存 token は invalid 化
+- rotation 手順: Play Console で「キーをダウンロード」再実行 → private.pem で復号 → `wrangler secret put` で上書き
+- 既存 token は invalid 化 (= rotation 時はクライアント側も再 attest 必要)
 - 平常時は **rotation 不要** (Apple Root CA と同じく長期固定で OK)
+
+### 6.5 重要な落とし穴
+- **PowerShell `>` リダイレクトは UTF-16LE になる罠**: `openssl ... > file.txt` ではなく `openssl ... -out file.txt` (openssl 自身) で ASCII 出力させる
+- **OpenSSL 単体インストール不要**: Git for Windows 同梱の `C:\Program Files\Git\usr\bin\openssl.exe` で十分 (PowerShell からは `&` call operator + フルパス実行)
+- **平文鍵をローカルに残さない**: `api_keys.txt` は wrangler secret 投入後即削除。Play Console から何度でも再ダウンロード + 復号可能なため、平文を残すリスク > 失うリスク
+- **base64 末尾 `=` パディングは必須**: 抜くと復号失敗、必ず含めて貼り付け
 
 ## 7. Flutter 側実装
 
@@ -262,38 +319,36 @@ PLAY_INTEGRITY_ENFORCEMENT = "disabled" | "log_only" | "enforced"
 
 ## 10. R 項目 (実装中 / 実装後計測)
 
-| # | 項目 | 解決時期 |
-|---|---|---|
-| R1 | Workers Web Crypto JWE A256KW + JWS ES256 decode のパフォーマンス (Workers Free 10ms 制限内?) | 実装直後 (S2 で minimal Worker 検証) |
-| R2 | Play Console > App integrity > Settings > "Manage and download my keys" 手順 (オーナー作業、鍵取得確証) | S2 着手前 (オーナー) |
-| R3 | Free 10k/day で Solara Android DAU 跳ね返り (実 traffic で確認) | 本番 deploy 後 1 週間モニタ |
-| R4 | `app_attest_integrity` v1.0.0 の `androidPrepareIntegrityServer` 実 API + 戻り値構造 (= JWE+JWS compact string か?) | S2 で GitHub ソース確認 + 実機検証 |
-| R5 | requestHash の Standard 仕様で Classic は何を渡すか (公式仕様で nonce のみ使用、requestHash は Standard 限定) | S2 docs §16 で payload spec 確証 |
-| R6 | Workers bundle 増加実測 (jose v6 追加で gzip 24% 想定が実際の値) | S2 deploy 後計測 |
+| # | 項目 | 解決時期 | 状態 |
+|---|---|---|---|
+| R1 | Workers Web Crypto JWE A256KW + JWS ES256 decode のパフォーマンス (Workers Free 10ms 制限内?) | 実装直後 (S2 で minimal Worker 検証) | ⏳ S2 |
+| R2 | Play Console > アプリの完全性 > Play Integrity API > クラシック リクエスト > レスポンスの暗号化 > 自分で管理 切替 + 鍵取得 (オーナー作業) | S2 着手前 | ✅ **解決 2026-05-19** (DECRYPTION_KEY 44 char + VERIFICATION_KEY 124 char、wrangler secret 投入完了) |
+| R3 | Free 10k/day で Solara Android DAU 跳ね返り (実 traffic で確認) | 本番 deploy 後 1 週間モニタ | ⏳ deploy 後 |
+| R4 | `app_attest_integrity` v1.0.0 の `androidPrepareIntegrityServer` 実 API + 戻り値構造 (= JWE+JWS compact string か?) | S2 で GitHub ソース確認 + 実機検証 | ⏳ S2 |
+| R5 | Classic payload 仕様 (requestHash は Standard 限定、Classic では nonce のみ。公式 doc 再読 + S2 で確証) | S2 docs §16 で payload spec 確証 | ⏳ S2 |
+| R6 | Workers bundle 増加実測 (jose v6 追加で gzip 24% 想定が実際の値) | S2 deploy 後計測 | ⏳ S2 |
+| R7 (新規) | base64 (DER SubjectPublicKeyInfo) verification key の `crypto.subtle.importKey('spki', ...)` で正常 import できるか | S2 minimal worker | ⏳ S2 |
 
-## 11. オーナー作業 (S2 着手前に必要なもの)
+## 11. オーナー作業 (チェックリスト、2026-05-19 S1 完了)
 
-### 11.1 Play Console 設定 (公開前必須)
-1. Play Console > Solara アプリ > **App integrity** > **App integrity settings**
-2. **Integrity API responses (Classic + Standard)** セクション
-3. **Response encryption** を **Manage and download my response encryption keys** に切替
-4. Encryption key (AES-256, base64) と Verification key (ECDSA P-256, PEM) を生成 → ローカル保存
-5. **Google Cloud project link** を確認 (Cloud Console で同一プロジェクトに connect 済か)
-6. **API quota** 初期 10k/day を確認、必要に応じて増量申請 (公開後)
+### 11.1 Play Console 設定
+- [x] **Cloud project link**: Play Console > Solara > アプリの完全性 > Play Integrity API > Cloud プロジェクトをリンク → 既存 `Solara-api` を選択
+- [x] **Response encryption 切替**: クラシック リクエスト > レスポンスの暗号化 > 鉛筆アイコン > 「レスポンスの暗号鍵を自分で管理、ダウンロードする」を選択
+- [x] **RSA 鍵ペア生成**: `openssl genrsa -aes128 -out private.pem 2048` + `openssl rsa -in private.pem -pubout -out public.pem` (Git for Windows 同梱の openssl で実行)
+- [x] **public.pem upload**: Play Console UI で公開鍵をアップロード → 暗号化応答ファイル (com.solodevlab.solara.enc) 自動 download
+- [x] **復号**: `openssl pkeyutl -decrypt -inkey private.pem -pkeyopt rsa_padding_mode:oaep -in com.solodevlab.solara.enc -out api_keys.txt` で DECRYPTION_KEY / VERIFICATION_KEY 取出
+- [x] **wrangler secret 投入**: `PLAY_INTEGRITY_ENCRYPTION_KEY` (44 char) + `PLAY_INTEGRITY_VERIFICATION_KEY` (124 char)
+- [x] **平文鍵削除**: `api_keys.txt` + `com.solodevlab.solara.enc` 削除、`private.pem` (passphrase 暗号化済) と passphrase のみ保管
 
-### 11.2 Worker secret 投入
-```powershell
-cd apps/solara/worker
-echo "<encryption key base64>" | npx wrangler secret put PLAY_INTEGRITY_ENCRYPTION_KEY
-echo "<verification key PEM (one line)>" | npx wrangler secret put PLAY_INTEGRITY_VERIFICATION_KEY
-```
-
-### 11.3 wrangler.toml に追加 vars
-```toml
-PLAY_INTEGRITY_ENFORCEMENT = "log_only"
-PLAY_INTEGRITY_NONCE_TTL_SEC = "300"
-ANDROID_PACKAGE_NAME = "com.solodevlab.solara"
-```
+### 11.2 残作業 (S2 以降)
+- [ ] wrangler.toml に vars 追加 (S2 で実装と同時):
+  ```toml
+  PLAY_INTEGRITY_ENFORCEMENT = "log_only"
+  PLAY_INTEGRITY_NONCE_TTL_SEC = "300"
+  ANDROID_PACKAGE_NAME = "com.solodevlab.solara"
+  ```
+- [ ] S2-S6 実装後、`PLAY_INTEGRITY_ENFORCEMENT = "log_only"` で初回 deploy → 1 週間モニタ → `enforced` 切替
+- [ ] **API quota** 初期 10k/day を確認、必要に応じて増量申請 (公開後、R3 計測結果次第)
 
 ## 12. 実装ロードマップ (S2-S6、約 6-8 セッション)
 
@@ -317,12 +372,16 @@ S6  : docs 仕上げ (deploy 手順 §13 + 運用ガイド §14)
 
 App Attest と同等の重さを想定 (6-8 セッション、計 15-20h)。
 
-## 13. v0.1 から v0.2 への次タスク
+## 13. v0.2 から v0.3 への次タスク (S2 着手)
 
-S1 完了直後:
-1. 本ドキュメントへのオーナー review (Q1-Q4 確定、R1-R6 確認)
-2. R2 (Play Console 鍵取得) のオーナー手元確認 → blockerなければ S2 着手
-3. S2: jose v6 動作確認 + Web Crypto 互換性検証 (minimal Worker)
+S2 のスコープ:
+1. **R4 解決**: `app_attest_integrity` (bam.tech) GitHub ソース確認で `androidPrepareIntegrityServer(nonce)` の戻り値構造 + token 取得タイミング確証
+2. **jose v6 を Worker package.json に追加** → `npm install` → bundle 増加実測 (R6)
+3. **minimal Worker** で JWE A256KW decode + JWS ES256 verify の round-trip 検証 (R1 + R7):
+   - 既知の token (= Google 公式 sample or 実機採取) を decode して期待値と比較
+   - Workers Free 10ms CPU 制限内に収まるか計測
+   - base64 (DER SubjectPublicKeyInfo) verification key で `crypto.subtle.importKey('spki', ...)` が動くか確認
+4. **設計 v0.3 にバンプ**: R1/R4/R6/R7 解決後の実数値を反映、S3 着手前提整える
 
 ## 関連ドキュメント
 
