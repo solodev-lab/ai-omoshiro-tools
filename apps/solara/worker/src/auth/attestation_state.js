@@ -1,13 +1,14 @@
 /**
- * Apple App Attest + RevenueCat エンタイトルメント用 Durable Object (SQLite-backed)。
+ * Apple App Attest + RevenueCat エンタイトルメント + Play Integrity 用 Durable Object (SQLite-backed)。
  *
- * 設計 v1.8 §6.1 + v2.2 (RevenueCat Webhook 統合) に従い、1 instance
- * (`idFromName('global')`) に 5 表を集約:
+ * 設計 v1.8 §6.1 + v2.2 (RevenueCat Webhook 統合) + Play Integrity v0.6 §5 に従い、
+ * 1 instance (`idFromName('global')`) に 6 表を集約:
  *   - attestations:      端末ごとの公開鍵 + counter (App Attest)
- *   - challenges:        server 発行 challenge の強整合管理 (one-time use)
+ *   - challenges:        App Attest 用 server 発行 challenge の強整合管理 (one-time use、BLOB)
  *   - user_quota:        per-user rate limit (Layer C、Free=5/日 Pro=100/日)
  *   - user_entitlements: appUserId × entitlementId の Pro 状態 (RevenueCat Webhook で書込)
  *   - webhook_events:    Webhook event_id の idempotent 受信ログ (重複送信耐性)
+ *   - integrity_nonces:  Play Integrity Standard request 用 nonce (one-time use、TEXT base64)
  *
  * 単一 DO instance への集約理由:
  *   - DAU 1,500 想定で同時刻書き込み <100/sec → DO の sequential write 内に余裕で収まる
@@ -29,6 +30,9 @@
  *   POST /entitlement-get   body: {appUserId, entitlementId, now}
  *                                                       → {isActive, expiresAt, environment, ...}
  *                                                         or 404 (record なし or 期限切れで自然失効)
+ *   POST /integrity-nonce-create  body: {nonceId, nonceB64, expiresAt}
+ *                                                       → {ok} or 409 {nonce_id_conflict}
+ *   POST /integrity-nonce-consume body: {nonceId, now}  → {nonceB64} or 404 (一致+consume)
  *
  * Caller (Worker middleware) はこれらを順番に叩いて検証する。
  */
@@ -112,6 +116,19 @@ export class AttestationState {
       );
     `);
     this.sql.exec(`CREATE INDEX IF NOT EXISTS idx_webhook_events_received ON webhook_events(received_at);`);
+    // integrity_nonces: Play Integrity Standard request 用 nonce (one-time use)
+    // 設計 v0.6.1 §5: TEXT (base64) で保管 — plugin 側の clientData.nonce が
+    // base64 文字列のため、`consumed === clientData.nonce` の string compare が最速。
+    // 既存 `challenges` 表 (BLOB、App Attest の raw bytes 用途) とは用途が違うため不一致は許容。
+    this.sql.exec(`
+      CREATE TABLE IF NOT EXISTS integrity_nonces (
+        nonce_id TEXT PRIMARY KEY,
+        nonce_b64 TEXT NOT NULL,
+        expires_at INTEGER NOT NULL,
+        consumed_at INTEGER
+      );
+    `);
+    this.sql.exec(`CREATE INDEX IF NOT EXISTS idx_integrity_nonces_expires ON integrity_nonces(expires_at);`);
     this._initialized = true;
   }
 
@@ -347,6 +364,62 @@ export class AttestationState {
     };
   }
 
+  // ── /integrity-nonce-create ──
+  //
+  // Play Integrity Standard request 用の server-issued nonce を発行・保存。
+  // Apple App Attest の /challenge-create と対称 (BLOB ではなく TEXT で保管)。
+  async _integrityNonceCreate({ nonceId, nonceB64, expiresAt }) {
+    if (typeof nonceId !== 'string' || !nonceId) {
+      return { status: 400, body: { error: 'invalid_nonce_id' } };
+    }
+    if (typeof nonceB64 !== 'string' || nonceB64.length < 32) {
+      return { status: 400, body: { error: 'invalid_nonce_b64' } };
+    }
+    if (typeof expiresAt !== 'number' || expiresAt <= Date.now()) {
+      return { status: 400, body: { error: 'invalid_expires_at' } };
+    }
+    // expired 行 cleanup を毎回実施 (DAU 1500 想定で行数が爆発しない、challenges と同パターン)
+    this.sql.exec(`DELETE FROM integrity_nonces WHERE expires_at < ?`, Date.now());
+    try {
+      this.sql.exec(
+        `INSERT INTO integrity_nonces (nonce_id, nonce_b64, expires_at) VALUES (?, ?, ?)`,
+        nonceId,
+        nonceB64,
+        expiresAt,
+      );
+    } catch (_e) {
+      return { status: 409, body: { error: 'nonce_id_conflict' } };
+    }
+    return { status: 200, body: { ok: true } };
+  }
+
+  // ── /integrity-nonce-consume ──
+  //
+  // 一度きりの consume。expired / consumed / 未存在は 404。
+  // 成功時は nonce_b64 を返却 → middleware が clientData.nonce と一致確認。
+  async _integrityNonceConsume({ nonceId, now = Date.now() }) {
+    if (typeof nonceId !== 'string' || !nonceId) {
+      return { status: 400, body: { error: 'invalid_nonce_id' } };
+    }
+    const rows = this.sql
+      .exec(
+        `SELECT nonce_b64 FROM integrity_nonces
+           WHERE nonce_id = ? AND expires_at > ? AND consumed_at IS NULL`,
+        nonceId,
+        now,
+      )
+      .toArray();
+    if (rows.length === 0) {
+      return { status: 404, body: { error: 'nonce_not_found_or_consumed_or_expired' } };
+    }
+    this.sql.exec(
+      `UPDATE integrity_nonces SET consumed_at = ? WHERE nonce_id = ?`,
+      now,
+      nonceId,
+    );
+    return { status: 200, body: { nonceB64: rows[0].nonce_b64 } };
+  }
+
   // ── HTTP entry ──
   async fetch(request) {
     this._ensureSchema();
@@ -373,6 +446,8 @@ export class AttestationState {
       '/quota-check-and-bump': () => this._quotaCheckAndBump(body),
       '/entitlement-upsert': () => this._entitlementUpsert(body),
       '/entitlement-get': () => this._entitlementGet(body),
+      '/integrity-nonce-create': () => this._integrityNonceCreate(body),
+      '/integrity-nonce-consume': () => this._integrityNonceConsume(body),
     };
     const handler = dispatch[path];
     if (!handler) return new Response('not found', { status: 404 });

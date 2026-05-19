@@ -1,6 +1,6 @@
 # Play Integrity サーバー検証 設計ドキュメント
 
-**ステータス**: 設計 v0.6.1 (2026-05-19、S3 完成 + S4 前最新仕様再確認 — Play Integrity 2026 changes / Workers SQLite billing / DO 集約パターン全部確証)
+**ステータス**: 設計 v0.7 (2026-05-19、S4 完成 — DO `integrity_nonces` + `/auth/integrity/challenge` + middleware OS 経路分岐、worker 121/121 PASS、S5 Flutter 実装着手準備完了)
 **対象**: Cloudflare Worker `solara-api` の `/auth/integrity/*` + `/protected/*` middleware の Android 経路
 **前提**: `project_solara_launch_checklist.md` Phase 1 認証ミドルウェア + Phase 2 Flutter クライアント
 **関連**:
@@ -10,6 +10,36 @@
 - `../../docs/app_development_lessons.md` §1.3 ケーススタディ + §5.6 鍵交換ハイブリッド方式 + §5.7 設計と公式 UI 乖離
 
 ## 変更履歴
+
+### v0.7 (2026-05-19、S4 完成 — DO + endpoint + middleware 統合)
+- **DO `AttestationState` に `integrity_nonces` 表追加** (`src/auth/attestation_state.js`):
+  - schema: `nonce_id TEXT PRIMARY KEY, nonce_b64 TEXT NOT NULL, expires_at INTEGER NOT NULL, consumed_at INTEGER` + `idx_integrity_nonces_expires`
+  - 既存 SQLite-backed DO に CREATE TABLE IF NOT EXISTS で追加 (migration 不要)
+  - `_integrityNonceCreate({nonceId, nonceB64, expiresAt})` + `_integrityNonceConsume({nonceId, now})` API 追加
+  - 既存 `_challengeConsume` と同じ SELECT WHERE consumed_at IS NULL → UPDATE consumed_at の 2 statement パターンを踏襲
+  - dispatch に `/integrity-nonce-create` + `/integrity-nonce-consume` 追加
+- **`/auth/integrity/challenge` POST endpoint 実装** (`src/index.js`):
+  - `handleIntegrityChallenge(env, origin)` で 32B random nonce 生成 → 標準 base64 → DO INSERT (TTL 300s)
+  - 返却: `{nonceId, nonce(base64), ttlSec}`
+- **`protectedMiddleware` OS 経路分岐** (`src/index.js`):
+  - ヘッダー判定: `X-AppAttest-KeyId` → iOS、`X-PlayIntegrity-Token` → Android、両方 → 400 `both_attest_headers`、両欠落 → 401 `missing_attestation_headers`
+  - 既存 iOS ロジックを `verifyAppleAssertionFlow(request, env, payloadBytes, fail)` に関数抽出
+  - 新規 `verifyPlayIntegrityRoute(request, env, fail)` で `verifyPlayIntegrityFlow` を呼出、DO consume を注入関数で渡す
+  - 共通: body 取得 (request.clone().arrayBuffer()) → entitlement (RC) → uid binding (Step 12、Android のみ `clientData.uid === body.__appUserId`) → quota
+  - quota key は経路依存: iOS=`keyId` / Android=`play:${uid}` (App Attest 端末 binding は強、Play Integrity は uid binding でしか縛れないため別 namespace)
+  - enforcement は OS 別独立 (App Attest と Play Integrity の roll-out 差を吸収)
+- **wrangler.toml に Play Integrity vars 追加**:
+  - `PLAY_INTEGRITY_ENFORCEMENT = "log_only"` (初期値、Flutter Android 実装 + 1 週間モニタ後に `enforced` 切替)
+  - `PLAY_INTEGRITY_NONCE_TTL_SEC = "300"`
+  - `ANDROID_PACKAGE_NAME = "com.solodevlab.solara"`
+  - `ANDROID_CERT_SHA256_ALLOWLIST = ""` (空、S5 で実機 cert 採取後に設定)
+- **テスト 14 ケース追加 (合計 121 PASS)**: `test/integrity_endpoints.test.js`
+  - `handleIntegrityChallenge`: 正常系 + base64 形式検証 (URL-safe ではない `=` パディング) + uniqueness + DO エラー応答 + TTL env 上書き
+  - `getPlayIntegrityEnforcement`: env 解釈 + App Attest と独立性
+  - `extractAppUserId`: body parse の defensive ケース
+  - DO 単体テストは Cloudflare runtime 依存のため Node から直接 import せず、`env.ATTESTATION_DO.fetch` を mock する既存パターン (revenuecat_webhook.test.js) を踏襲
+- **bundle**: gzip 171.89 → **173.99 KiB** (+2.10 KiB、middleware OS 分岐 + endpoint 追加分。Workers Free 1MB に対し残 83%)
+- **§13 を S5 着手前提に書き換え**
 
 ### v0.6.1 (2026-05-19、S4 前最新仕様再確認 — patch、内容追加のみ)
 S4 着手前にオーナーから「最新情報で心配点点検」依頼。Cloudflare Durable Object + Play Integrity API 公式の最新仕様を再確認、以下を確証:
@@ -528,29 +558,24 @@ S6  : docs 仕上げ (deploy 手順 §13 + 運用ガイド §14)
 
 App Attest と同等の重さを想定 (6-8 セッション、計 15-20h)、現実績 S1+S2=2 セッション。
 
-## 13. v0.6 から v0.7 への次タスク (S4 DO + middleware 統合)
+## 13. v0.7 から v0.8 への次タスク (S5 Flutter Android 実装 + 実機テスト)
 
-S3 ✅ 完了。S4 のスコープ:
-1. **DO `AttestationState` に `integrity_nonces` 表追加** (`src/auth/attestation_state.js` 拡張):
-   - schema (v0.3 §5): `nonce_id TEXT PRIMARY KEY, nonce_b64 TEXT NOT NULL, expires_at INTEGER NOT NULL, consumed_at INTEGER`
-   - API: `POST /integrity-nonce-create body: {nonceId, nonceB64, expiresAt}` + `POST /integrity-nonce-consume body: {nonceId, now} → {ok, nonceB64}` (consumed/expired は ok:false)
-   - migration 不要 (CREATE TABLE IF NOT EXISTS)
-2. **`/auth/integrity/challenge` POST endpoint 実装** (`src/index.js`):
-   - 32 random bytes 生成 → base64 → DO に INSERT (expires_at = now + 300_000)
-   - 返却: `{nonceId: uuid, nonce: base64, ttlSec: 300}`
-3. **`/protected/*` middleware 統合** (`src/index.js`):
-   - OS 判定で iOS = `verifyAppleAssertionFlow` / Android = `verifyPlayIntegrityFlow` に分岐
-   - 共通: entitlement (RC) + uid binding (Step 12) + per-user quota
-   - `PLAY_INTEGRITY_ENFORCEMENT` env (`disabled|log_only|enforced`) で段階リリース
-4. **wrangler.toml に vars 追加**:
-   - `PLAY_INTEGRITY_ENFORCEMENT = "log_only"` (初期値)
-   - `PLAY_INTEGRITY_NONCE_TTL_SEC = "300"`
-   - `ANDROID_PACKAGE_NAME = "com.solodevlab.solara"` (DEFAULT_ANDROID_PACKAGE_NAME と同値、wrangler 上書き用)
-   - `ANDROID_CERT_SHA256_ALLOWLIST = ""` (空、S5 で実機 cert 採取後に設定)
-5. **S4 テスト追加**:
-   - DO integrity_nonces 操作 (create/consume 正常 + 期限切れ + 重複 consume)
-   - middleware の OS 経路分岐 + ENFORCEMENT 切替
-6. **設計 v0.7 にバンプ**: middleware 統合完了後の挙動を §8 に反映
+S4 ✅ 完了。S5 のスコープ:
+1. **`lib/utils/app_attest_client.dart` Android 分岐拡張**:
+   - 起動時: `Platform.isAndroid` で `AppAttestIntegrity().androidPrepareIntegrityServer(_cloudProjectNumber)` を 1 回呼出 (warmup)
+   - `postProtected` / `addHeaders` を OS 分岐:
+     - iOS: 既存 (X-AppAttest-KeyId + X-AppAttest-Assertion)
+     - Android: `/auth/integrity/challenge` で nonce 取得 → `clientData = jsonEncode({nonce, uid: appUserId, ts: now})` → `verify(clientData: ...)` で token 取得 → X-PlayIntegrity-Token / X-PlayIntegrity-ClientData / X-PlayIntegrity-NonceId をヘッダー注入
+   - kDebugMode / Android Emulator は自動 bypass (実機 release のみ有効)
+2. **`--dart-define=SOLARA_GCP_PROJECT_NUMBER=<number>`** で Cloud Project Number (Play Console > Solara > アプリの完全性 > リンク済 Cloud project の 12 桁) を release ビルドに注入
+3. **Flutter 単体テスト**: AppAttestClient の Android 分岐 (mock 用 mock-token を返す `AppAttestIntegrity` を注入してロジック検証)
+4. **Android 実機テスト**:
+   - `flutter run --release` (Android device with Google Play Services + Play Store 経由配信)
+   - `/protected/fortune` 呼出が 200 で通る (log_only 期間中なので token 検証失敗でも警告ログ + 通過)
+   - Worker logs で「`[middleware:log_only] would block 401 ...`」が出ないことを確認 (= 検証成功)
+5. **🔴 R8 最終確認**: 実機採取 token を `/auth/integrity/decode-test` に POST、Self-managed key で decode 成功 + payload が PLAY_RECOGNIZED + MEETS_DEVICE_INTEGRITY を含むことを確認
+6. **🔴 cert SHA-256 採取 → allowlist 設定**: 実機 token の `appIntegrity.certificateSha256Digest` 値を `wrangler` の `ANDROID_CERT_SHA256_ALLOWLIST` に投入 (deploy 必要)
+7. **設計 v0.8 にバンプ**: 実機検証結果 + R8 確証 + cert allowlist 確定値
 
 ## 関連ドキュメント
 

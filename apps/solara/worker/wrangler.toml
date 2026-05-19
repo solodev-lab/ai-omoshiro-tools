@@ -49,6 +49,32 @@ APP_ATTEST_QUOTA_PRO = "100"
 # Challenge TTL (設計 v1.8 §11 Q2、Apple Sample Code 推奨 5 分)
 APP_ATTEST_CHALLENGE_TTL_SEC = "300"
 
+# ── Play Integrity 設定 (設計 v0.7、apps/solara/docs/play_integrity_design.md) ──
+#
+# 鍵 (PLAY_INTEGRITY_ENCRYPTION_KEY / VERIFICATION_KEY) は wrangler secret put 済
+# (S1 オーナー作業完了 2026-05-19、DECRYPTION 44 char / VERIFICATION 124 char)。
+#
+# Android 経路の段階的有効化スイッチ (App Attest と独立、iOS/Android のロールアウト差を吸収):
+#   "disabled" - middleware Android 経路スキップ (緊急時 kill switch)
+#   "log_only" - 検証走るが失敗しても通す + console.warn (初回 Android deploy 推奨)
+#   "enforced" - 検証失敗で 401 (Flutter Android 実装 + 1 週間モニタ後に切替)
+# 初期値 log_only。
+PLAY_INTEGRITY_ENFORCEMENT = "log_only"
+
+# Play Integrity Standard nonce TTL (= /auth/integrity/challenge で発行する nonce の DO 寿命)
+PLAY_INTEGRITY_NONCE_TTL_SEC = "300"
+
+# Android のパッケージ名 (DEFAULT_ANDROID_PACKAGE_NAME と同値、wrangler で上書きする用)
+# Play Integrity payload の requestDetails.requestPackageName + appIntegrity.packageName と一致確認
+ANDROID_PACKAGE_NAME = "com.solodevlab.solara"
+
+# Play 配信用 cert SHA-256 の allowlist (CSV、=サイドロード排除の最終層)。
+# 空 → cert check skip (log_only 期間で実機 cert SHA-256 を採取するまでこの状態)。
+# S5 で実機 token 採取 → certificateSha256Digest の値を確認 → ここに反映 (例:
+#   ANDROID_CERT_SHA256_ALLOWLIST = "AbCdEf...,XyZ123..."
+# )
+ANDROID_CERT_SHA256_ALLOWLIST = ""
+
 # ── RevenueCat Webhook 設定 (設計 v2.2 §B、apps/solara/docs/revenuecat_webhook.md) ──
 #
 # REVENUECAT_WEBHOOK_AUTH は wrangler secret に入れる (vars に書かない):
