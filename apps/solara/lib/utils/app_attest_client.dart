@@ -125,7 +125,9 @@ class AppAttestClient {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_kPrefsKeyId, newKeyId);
     _keyId = newKeyId;
-    debugPrint('[AppAttest] new keyId stored (prefix=${newKeyId.substring(0, 8)}...)');
+    if (kDebugMode) {
+      debugPrint('[AppAttest] new keyId stored (prefix=${newKeyId.substring(0, 8)}...)');
+    }
   }
 
   /// /protected/* 呼び出し直前に header を注入。
@@ -154,7 +156,9 @@ class AppAttestClient {
       headers['X-AppAttest-KeyId'] = _keyId!;
       headers['X-AppAttest-Assertion'] = assertionB64; // 既に base64
     } catch (e) {
-      debugPrint('[AppAttest] addHeaders failed: $e');
+      if (kDebugMode) {
+        debugPrint('[AppAttest] addHeaders failed: $e');
+      }
       // 失敗時は headers に何も追加しない → Worker 側 enforced なら 401、log_only なら通過
       // (DCError.invalidKey 時の再 attest は呼び出し側のリトライ責任、
       //  Solara では 401 で initialize 再実行 + リトライする設計を別途配線)
@@ -198,7 +202,9 @@ class AppAttestClient {
       await _attestNewKey();
       return _keyId != null;
     } catch (e) {
-      debugPrint('[AppAttest] reattest failed: $e');
+      if (kDebugMode) {
+        debugPrint('[AppAttest] reattest failed: $e');
+      }
       return false;
     }
   }

@@ -5,10 +5,10 @@
 
 ## サマリ
 
-- ファイル数: 10
-- エンドポイント総数: 21
+- ファイル数: 14
+- エンドポイント総数: 22
 - Gemini 呼出箇所: 2
-- KV 使用: 4 行 / Durable Object 使用: 0 行
+- KV 使用: 4 行 / Durable Object 使用: 4 行
 
 ## ファイル別
 
@@ -23,6 +23,112 @@ Dependency: astronomy-engine (npm)
 ```
 
 **export (4):** `computeChart`, `computePredictions`, `computeForecast`, `computeMonthEvents`
+
+
+### `worker/src/auth/app_attest.js` (360 行)
+
+**ファイル先頭コメント:**
+
+```
+Apple App Attest サーバー検証。
+
+Reference implementation: node-app-attest (MIT, Copyright (c) 2024 David Übelacker)
+https://github.com/uebelack/node-app-attest
+Apple X509Certificate を @peculiar/x509 に置き換え、Buffer/Node 依存を Workers
+(nodejs_compat) 互換に整理した派生実装。
+
+Apple 公式仕様:
+https://developer.apple.com/documentation/devicecheck/validating-apps-that-connect-to-your-server
+
+戻り値の方針:
+- 成功時: { ok: true, publicKeyPem, environment, receipt }
+- 失敗時: { ok: false, error: '<verify_error_code>' } を return (例外を投げない)
+設計 v1.4 Q1 (詳細エラーコード) に合致。
+```
+
+**export (2):** `verifyAttestation`, `verifyAssertion`
+
+
+### `worker/src/auth/apple_root_ca.js` (109 行)
+
+**ファイル先頭コメント:**
+
+```
+Apple App Attest 検証で使う定数とヘルパー。
+
+- APPLE_ROOT_CA_PEM: 2045-03-15 まで有効な Apple App Attestation Root CA (ECDSA P-384 self-signed)
+フィンガープリント SHA-256(DER) = 1CB9823BA28BA6AD2D33A006941DE2AE4F513EF1D4E831B9F7E0FA7B6242C932
+原本: apps/solara/docs/Apple_App_Attestation_Root_CA.pem
+- AAGUID_PRODUCTION / AAGUID_DEVELOPMENT: authData[37..52] と比較する 16 バイト
+- APPLE_NONCE_OID: credCert の Apple 独自拡張 OID
+- SUB_CA_SUBJECT_HINT: 中間 CA の subject に必ず含まれる文字列
+```
+
+**export (12):** `APPLE_ROOT_CA_PEM`, `AAGUID_PRODUCTION`, `AAGUID_DEVELOPMENT`, `APPLE_NONCE_OID`, `SUB_CA_SUBJECT_HINT`, `concatBytes`, `bytesEqual`, `bytesToHex`, `bytesToBase64`, `base64ToBytes`, `readUint32BE`, `readUint16BE`
+
+
+### `worker/src/auth/attestation_state.js` (225 行)
+
+**ファイル先頭コメント:**
+
+```
+Apple App Attest 用 Durable Object (SQLite-backed)。
+
+設計 v1.8 §6.1 に従い、1 instance (`idFromName('global')`) に 3 表を集約:
+- attestations: 端末ごとの公開鍵 + counter
+- challenges:   server 発行 challenge の強整合管理 (one-time use)
+- user_quota:   per-user rate limit (Layer C、Free=5/日 Pro=100/日)
+
+単一 DO instance への集約理由:
+- DAU 1,500 想定で同時刻書き込み <100/sec → DO の sequential write 内に余裕で収まる
+- 複数 instance に sharding すると billing と運用コスト上昇
+- 将来バズった場合のみ keyId-prefix sharding に切替 (= 256 instance に分散)
+
+外部 HTTP API (`fetch(request)`):
+POST /challenge-create  body: {challengeId, challengeBytes, expiresAt}
+POST /challenge-consume body: {challengeId, now}  → {challengeBytes} or 404
+POST /attestation-store body: {keyId, publicKeyPem, rpId, aaguid, now}
+POST /attestation-get   body: {keyId}              → {publicKeyPem, counter} or 404
+POST /attestation-bump-counter body: {keyId, signCount, now}  → {ok} or 409 (signCount <= prev)
+POST /quota-check-and-bump body: {keyId, dayBucket, limit, now}
+→ {ok: true, remaining} or 429 {remaining: 0}
+
+Caller (Worker middleware) はこれらを順番に叩いて検証する。
+```
+
+**Durable Object 使用 (1 行):**
+
+- 出現行: L4
+
+**export (1):** `AttestationState`
+
+
+### `worker/src/auth/cbor.js` (131 行)
+
+**ファイル先頭コメント:**
+
+```
+Apple App Attest CBOR subset デコーダ。
+
+App Attest が使う CBOR は以下に限定されるので、フル仕様 (RFC 8949) は実装しない:
+- major 0: unsigned int (0..2^32-1)
+- major 2: byte string (Uint8Array で返す、最大 2^32 bytes)
+- major 3: text string (string で返す、UTF-8)
+- major 4: array (Array で返す)
+- major 5: map (plain object で返す、key は string のみサポート)
+
+不要 (App Attest で出現しない):
+- major 1 (negative int) / 6 (tag) / 7 (special: float, true/false, null)
+- 2^32 を超える長さの byte/text (App Attest の receipt は ~5KB、cert ~1KB、authData ~200B)
+- 8 byte length encoding (additional info 27)
+
+Reference implementation: node-app-attest (MIT, Copyright (c) 2024 David Übelacker)
+https://github.com/uebelack/node-app-attest
+
+Buffer 非依存 (Workers 互換、Uint8Array のみ)。
+```
+
+**export (2):** `CborError`, `decodeFirst`
 
 
 ### `worker/src/consultation.js` (330 行)
@@ -128,7 +234,7 @@ houses: そのカテゴリで重視する伝統占星術のハウス番号
 **export (3):** `computeCategoryScore`, `callGemini`, `handleFortune`
 
 
-### `worker/src/index.js` (454 行)
+### `worker/src/index.js` (614 行)
 
 **ファイル先頭コメント:**
 
@@ -146,35 +252,40 @@ protected/*  重防御       Gemini 呼び出し全部 (`/fortune`/`/tarot`/`/re
 同セッションで新 path に書き換え済（`apps/solara/lib/utils/solara_api.dart` 参照）。
 ```
 
-**エンドポイント / ルート (21):**
+**エンドポイント / ルート (22):**
 
 | method | path | line |
 | --- | --- | --- |
-| ? | /public/astro/forecast | L246 |
-| ? | /public/tiles/* | L247 |
-| ? | /public/health | L255 |
-| GET | /public/tiles/osm/* | L260 |
-| POST | /public/astro/chart | L265 |
-| POST | /public/astro/forecast | L273 |
-| POST | /public/astro/predict | L288 |
-| POST | /public/astro/daily-transits | L296 |
-| GET | /public/tz | L304 |
-| GET | /public/astro/events | L313 |
-| GET | /public/search | L324 |
-| GET | /auth/whoami | L346 |
-| POST | /auth/attest | L349 |
-| POST | /protected/fortune | L363 |
-| POST | /protected/tarot | L373 |
-| POST | /protected/relocation | L383 |
-| POST | /protected/astro/line-narrative | L395 |
-| POST | /protected/astro/consultation | L405 |
-| ? | /public/* | L440 |
-| ? | /auth/* | L442 |
-| ? | /protected/* | L444 |
+| ? | /public/astro/forecast | L403 |
+| ? | /public/tiles/* | L404 |
+| ? | /public/health | L412 |
+| GET | /public/tiles/osm/* | L417 |
+| POST | /public/astro/chart | L422 |
+| POST | /public/astro/forecast | L430 |
+| POST | /public/astro/predict | L445 |
+| POST | /public/astro/daily-transits | L453 |
+| GET | /public/tz | L461 |
+| GET | /public/astro/events | L470 |
+| GET | /public/search | L481 |
+| GET | /auth/whoami | L503 |
+| POST | /auth/challenge | L506 |
+| POST | /auth/attest | L509 |
+| POST | /protected/fortune | L523 |
+| POST | /protected/tarot | L533 |
+| POST | /protected/relocation | L543 |
+| POST | /protected/astro/line-narrative | L555 |
+| POST | /protected/astro/consultation | L565 |
+| ? | /public/* | L600 |
+| ? | /auth/* | L602 |
+| ? | /protected/* | L604 |
 
 **KV 使用 (4 行):**
 
-- 出現行: L85, L88, L93, L157
+- 出現行: L89, L92, L97, L161
+
+**Durable Object 使用 (3 行):**
+
+- 出現行: L203, L203, L203
 
 
 ### `worker/src/line_narrative.js` (268 行)

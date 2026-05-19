@@ -8,12 +8,12 @@
 
 | 層 | 名称 | ファイル数 | Markdown |
 | --- | --- | --- | --- |
-| 0 | Worker (バックエンド計算式) | 10 | [00_worker.md](00_worker.md) |
+| 0 | Worker (バックエンド計算式) | 14 | [00_worker.md](00_worker.md) |
 | 1a | 純計算ユーティリティ | 7 | [01a_pure_calc.md](01a_pure_calc.md) |
-| 1b | 静的データ辞書 | 13 | [01b_static_data.md](01b_static_data.md) |
+| 1b | 静的データ辞書 | 14 | [01b_static_data.md](01b_static_data.md) |
 | 1c | モデルクラス | 4 | [01c_models.md](01c_models.md) |
-| 2a | API/Worker ラッパ | 10 | [02a_api_wrappers.md](02a_api_wrappers.md) |
-| 2b | 永続化/キャッシュ | 7 | [02b_persistence.md](02b_persistence.md) |
+| 2a | API/Worker ラッパ | 9 | [02a_api_wrappers.md](02a_api_wrappers.md) |
+| 2b | 永続化/キャッシュ | 8 | [02b_persistence.md](02b_persistence.md) |
 | 2c | グローバル singleton | 1 | [02c_globals.md](02c_globals.md) |
 | 3a | 共通ウィジェット (純粋) | 25 | [03a_widgets_pure.md](03a_widgets_pure.md) |
 | 3b | テーマ・装飾 | 3 | [03b_theme.md](03b_theme.md) |
@@ -28,11 +28,11 @@
 
 ## 全体統計
 
-- Dart ファイル: 168
-- Worker JS ファイル: 10
-- Worker エンドポイント総数: 21
-- Dart class/mixin/extension/enum 総数: 414
-- Dart 関数総数 (素拾い): 1343
+- Dart ファイル: 169
+- Worker JS ファイル: 14
+- Worker エンドポイント総数: 22
+- Dart class/mixin/extension/enum 総数: 415
+- Dart 関数総数 (素拾い): 1349
 
 ## 対整合チェック
 

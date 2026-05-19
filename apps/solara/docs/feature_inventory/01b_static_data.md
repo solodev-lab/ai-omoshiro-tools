@@ -5,9 +5,9 @@
 
 ## サマリ
 
-- ファイル数: 13 / 総行数: 4977
-- class/mixin/extension/enum: 12
-- 関数 (top-level + method の素拾い): 28
+- ファイル数: 14 / 総行数: 5243
+- class/mixin/extension/enum: 15
+- 関数 (top-level + method の素拾い): 31
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 1
 - Worker URL リテラル: 0
@@ -217,6 +217,36 @@ Consultation Record — Phase 2-4 自動保存 + 履歴
   - L69 `_isJapanese()`
 
   </details>
+
+
+### `lib/utils/fortune_api.dart` (266 行)
+
+**ファイル先頭コメント:**
+
+```
+Fortune API - /fortune エンドポイント (Stella の声を取得)
+関連: worker/src/fortune.js
+
+/protected/* 呼び出しは AppAttestClient.postProtected 経由 (設計 v2.1)。
+middleware が log_only モードなら bypass、enforced モードなら attestation 必須。
+```
+
+**imports:** dart=1 / package=0 / relative=2
+
+- relative: `app_attest_client.dart`, `solara_api.dart`
+
+**型定義 (3):**
+
+- L12 `class FortuneReading`
+  - Fortune APIレスポンス
+- L93 `class RelocationNarrative`
+- L185 `class TarotReading`
+
+**関数 (3 public + 0 private):**
+
+- L45 `fetchFortune()` — /fortune を叩いて占い文を取得
+- L145 `fetchRelocationNarrative()` — /relocation を叩いてリロケーション解説を取得。
+- L211 `fetchTarotReading()` — /tarot を叩いて1枚引きの Reading を生成する。
 
 
 ### `lib/utils/planet_intro.dart` (559 行)

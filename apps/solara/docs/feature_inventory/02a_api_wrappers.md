@@ -5,12 +5,12 @@
 
 ## サマリ
 
-- ファイル数: 10 / 総行数: 1964
-- class/mixin/extension/enum: 19
-- 関数 (top-level + method の素拾い): 32
+- ファイル数: 9 / 総行数: 1707
+- class/mixin/extension/enum: 16
+- 関数 (top-level + method の素拾い): 29
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 0
-- Worker URL リテラル: 15
+- Worker URL リテラル: 16
 
 ## ファイル別
 
@@ -72,7 +72,7 @@
   </details>
 
 
-### `lib/utils/consultation_api.dart` (141 行)
+### `lib/utils/consultation_api.dart` (148 行)
 
 **ファイル先頭コメント:**
 
@@ -86,22 +86,22 @@ Stage 2 (consultation_engine.dart) が組み立てた候補リストを送信し
 Stella の解釈 (intro / candidates[].narrative / outro) を受け取る。
 ```
 
-**imports:** dart=1 / package=1 / relative=2
+**imports:** dart=1 / package=1 / relative=3
 
-- relative: `consultation_engine.dart`, `solara_api.dart`
+- relative: `consultation_engine.dart`, `app_attest_client.dart`, `solara_api.dart`
 
 **型定義 (2):**
 
-- L17 `class ConsultationCandidateReading`
+- L18 `class ConsultationCandidateReading`
   - API レスポンス内の候補別 Stella の解釈。
-- L47 `class ConsultationReading`
+- L48 `class ConsultationReading`
   - API レスポンス全体。
 
 **関数 (3 public + 0 private):**
 
-- L39 `toJson()` — 履歴保存 (consultation_record) 用シリアライズ。
-- L80 `toJson()` — 履歴保存 (consultation_record) 用シリアライズ。
-- L101 `fetchConsultation()` — /astro/consultation を呼んで Stella の解釈を取得する。
+- L40 `toJson()` — 履歴保存 (consultation_record) 用シリアライズ。
+- L81 `toJson()` — 履歴保存 (consultation_record) 用シリアライズ。
+- L102 `fetchConsultation()` — /astro/consultation を呼んで Stella の解釈を取得する。
 
 
 ### `lib/utils/daily_transits_api.dart` (241 行)
@@ -202,33 +202,6 @@ Solara 端末セキュリティ状態 (RASP) — Phase 2 launch_checklist
   </details>
 
 
-### `lib/utils/fortune_api.dart` (266 行)
-
-**ファイル先頭コメント:**
-
-```
-Fortune API - /fortune エンドポイント (Stella の声を取得)
-関連: worker/src/fortune.js
-```
-
-**imports:** dart=1 / package=1 / relative=1
-
-- relative: `solara_api.dart`
-
-**型定義 (3):**
-
-- L9 `class FortuneReading`
-  - Fortune APIレスポンス
-- L91 `class RelocationNarrative`
-- L184 `class TarotReading`
-
-**関数 (3 public + 0 private):**
-
-- L42 `fetchFortune()` — /fortune を叩いて占い文を取得
-- L143 `fetchRelocationNarrative()` — /relocation を叩いてリロケーション解説を取得。
-- L210 `fetchTarotReading()` — /tarot を叩いて1枚引きの Reading を生成する。
-
-
 ### `lib/utils/legal_urls.dart` (56 行)
 
 **ファイル先頭コメント:**
@@ -287,7 +260,7 @@ Solara 法務リンク定数 — Phase 2-6b
 - L68 `reverseGeocodeDetail()` — 緯度経度から逆ジオコーディングで region / country まで含む詳細を取得する。
 
 
-### `lib/utils/solara_api.dart` (69 行)
+### `lib/utils/solara_api.dart` (71 行)
 
 **ファイル先頭コメント:**
 
@@ -300,9 +273,9 @@ Solara CF Worker API - 軽量なユーティリティ呼び出し
 
 **関数 (1 public + 0 private):**
 
-- L56 `fetchTimezoneName()` — 緯度経度から IANA TZ名 (DST対応の基準) を取得。
+- L58 `fetchTimezoneName()` — 緯度経度から IANA TZ名 (DST対応の基準) を取得。
 
-**Worker URL リテラル (14):**
+**Worker URL リテラル (15):**
 
 - L17: `'https://solara-api.solodev-lab.com'`
 - L29: `'$solaraWorkerBase/public/tz'`
@@ -314,10 +287,11 @@ Solara CF Worker API - 軽量なユーティリティ呼び出し
 - L40: `'$solaraWorkerBase/public/tiles/osm'`
 - L43: `'$solaraWorkerBase/auth/whoami'`
 - L44: `'$solaraWorkerBase/auth/attest'`
-- L47: `'$solaraWorkerBase/protected/fortune'`
-- L48: `'$solaraWorkerBase/protected/tarot'`
-- L49: `'$solaraWorkerBase/protected/relocation'`
-- L51: `'$solaraWorkerBase/protected/astro/consultation'`
+- L46: `'$solaraWorkerBase/auth/challenge'`
+- L49: `'$solaraWorkerBase/protected/fortune'`
+- L50: `'$solaraWorkerBase/protected/tarot'`
+- L51: `'$solaraWorkerBase/protected/relocation'`
+- L53: `'$solaraWorkerBase/protected/astro/consultation'`
 
 
 ### `lib/utils/tile_http_client.dart` (42 行)
