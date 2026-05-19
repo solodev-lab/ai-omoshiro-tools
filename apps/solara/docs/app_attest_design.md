@@ -1,6 +1,6 @@
 # App Attest サーバー検証 設計ドキュメント
 
-**ステータス**: ドラフト v2.0 (S1-S4 完了 → **S5 完了: 本番 worker 配線 (/auth/challenge + /auth/attest + /protected/* middleware) + wrangler.toml DO binding + nodejs_compat + APP_ATTEST_ENFORCEMENT log_only 段階リリース機構、bundle gzip 156 KiB = 1MB の 16%**)
+**ステータス**: ドラフト v2.1 (S1-S5 完了 → **S6-A 完了: Flutter `AppAttestClient` 基盤実装 + pubspec.yaml に app_attest_integrity 1.0.0 + crypto 3.0.6 追加 + flutter analyze clean、残: 既存 4 endpoint 呼び出しの置換 (段階的) + TestFlight 実機 E2E + 本番 deploy**)
 **対象**: Cloudflare Worker `solara-api` の `/auth/attest` + `/protected/*` ミドルウェア
 **前提**: `project_solara_launch_checklist.md` Phase 1 認証ミドルウェア
 **関連**: `project_solara_security_principles.md` 原則 1〜3
@@ -28,6 +28,39 @@
 - R5 OID ASN.1 ネスト深さは **3 段** で確定 (node-app-attest 実装 `value[0].value[0].valueHex` + Apple Forum C++ Botan 実装と一致 ★★★)
 - production 知見追加 (adjoe blog): DCError.invalidInput/invalidKey 時の Flutter 側リトライ要件、challenge 5 分 TTL 実運用根拠
 - §13 実装方針 §14 ロールアウトを案 B' 前提に書き換え
+
+### v2.0 → v2.1 の変更点 (2026-05-19、S6-A 完了: Flutter `AppAttestClient` 基盤)
+
+**`apps/solara/pubspec.yaml` 追加**:
+- `app_attest_integrity: ^1.0.0` (bam.tech、pub points 150、stable 1.0.0 採用。memory `^2.0.0-dev.1` は古情報で訂正)
+- `crypto: ^3.0.6` (Flutter 側 payload SHA-256 計算用、debug 確認も含む)
+
+**`apps/solara/lib/utils/solara_api.dart` 追加**:
+- `solaraChallengeUrl = '$solaraWorkerBase/auth/challenge'`
+
+**`apps/solara/lib/utils/app_attest_client.dart` 新規** (~200 行):
+- `AppAttestClient` シングルトン (`AppAttestClient.instance`)
+- `initialize()`: SharedPreferences (`solara_appattest_key_id_v1`) から keyId 復元 or 新規 attest
+- `_attestNewKey()`: Worker `/auth/challenge` → `iOSgenerateAttestation(String challengeB64)` → Worker `/auth/attest`
+  - 設計訂正: package API は `String` 引数 (Uint8List 不可)、戻り値も `String` (base64)
+- `addHeaders(headers, payloadBytes)`: `verify(clientData: base64(bytes), iOSkeyID: keyId)` → `X-AppAttest-{KeyId,Assertion}` ヘッダ注入
+- `postProtected(url, payload)`: jsonEncode → utf8.encode で bytes 確定 → addHeaders + http.post (設計 v1.8 §16.2 規約準拠)
+- `reattestOnFailure()`: DCError.invalidKey 等の 401 リトライ用、SharedPreferences 削除 + 新規 attest
+- `_shouldBypass`: kIsWeb || !Platform.isIOS || kDebugMode で bypass (実機 release のみ有効)
+
+**`apps/solara/lib/main.dart` 統合**:
+- `AppAttestClient.instance.initialize()` を SolaraAuth.load() 直後に unawaited で呼ぶ
+- 失敗してもアプリ起動は止めない (= bypass モードで通過、Worker side log_only で何とかなる)
+
+**flutter analyze**: No issues found! (型チェック clean)
+
+**残作業 (= 別 commit で段階的)**:
+- 既存 4 protected/* endpoint 呼び出し置換 (fortune/tarot/relocation/consultation の各 dart file) を `postProtected()` wrapper 経由に書き換え
+  - 一括置換だと既存動作を壊すリスクあるので、1 endpoint ずつテスト + commit 推奨
+  - middleware が log_only モードなので、ヘッダ無しでも当面動く (= 順序を急がない)
+
+**実機テスト未確認の懸念**:
+- `app_attest_integrity` package が `clientData` (base64 string) を **base64 decode → SHA-256** するか、**生 string を SHA-256** するか pub.dev README で明示なし。前者前提で実装、後者ならズレる。**TestFlight 実機テスト (S6-B) で実際の assertion verify 通過するか必須確認**
 
 ### v1.9 → v2.0 の変更点 (2026-05-19、S5 完了: 本番 worker 配線)
 
