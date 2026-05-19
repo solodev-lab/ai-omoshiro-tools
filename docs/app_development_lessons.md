@@ -1,7 +1,10 @@
 # アプリ開発の知見集 — セキュリティクリティカル機能の設計から本番投入まで
 
 **対象**: 個人開発者 / 小規模チームが、Apple/Google ストア向けのアプリで認証・課金・サーバー検証など「失敗が許されない」機能を実装するときの方法論
-**ケーススタディ**: Solara (Flutter + Cloudflare Workers) の Apple App Attest 実装 (2026-05、7 セッション、~12-15h、累計コード ~1100 行 + テスト 64 ケース全 PASS)
+**ケーススタディ**:
+- Solara Apple App Attest 実装 (2026-05、7 セッション、~12-15h、Worker ~700 行 + Flutter ~210 行 + テスト 64 ケース全 PASS)
+- Solara RevenueCat Webhook + Pro エンタイトルメント検証 middleware 統合 (2026-05、1 セッション、Worker +700 行 + Flutter +50 行 + テスト 26 ケース PASS、累計 79/79)
+- Solara Play Integrity (Android) 設計 v0.1 + Play Console 鍵取得 (2026-05、S1 = 1 セッション、設計 docs 331 行 + オーナー作業 (RSA 鍵生成 + Cloud project link + self-managed key + wrangler secret 投入) 完了)
 **反対側**: このドキュメントは「動くコードの書き方」ではなく「**判断ミスをどう減らすか**」の話
 
 ---
@@ -20,9 +23,9 @@
 
 ---
 
-## 1. ケーススタディ: Solara App Attest 7 セッション
+## 1. ケーススタディ
 
-### 当初の見積もり vs 実績
+### 1.1 Solara Apple App Attest (7 セッション)
 
 | 項目 | 当初見積もり | 実績 |
 |---|---|---|
@@ -32,7 +35,7 @@
 | テストケース | 想定なし | 64 ケース全 PASS |
 | ドキュメント | 設計書 1 つ | 設計書 v3.0 + 汎用ノウハウ集 (本書) |
 
-### セッション構成 (= 設計を先に固めた効果で工数 50% 短縮)
+セッション構成 (= 設計を先に固めた効果で工数 50% 短縮):
 
 | # | 内容 | 教訓 |
 |---|---|---|
@@ -43,6 +46,48 @@
 | 5 | 本番統合 + 段階リリース機構 (log_only) | 本番化前の安全装置を必ず入れる |
 | 6 | クライアント側統合 + 既存コード置換 | 既存テストが壊れないか毎回確認 |
 | 7 | ドキュメント整理 + 運用ガイド + メモリ最終化 | 「将来の自分」のための再利用性確保 |
+
+### 1.2 Solara RevenueCat Webhook + Pro エンタイトルメント検証 middleware (1 セッション)
+
+App Attest 完成後、その middleware を拡張して RC エンタイトルメント連動の Free/Pro quota 切替を実装。設計が先に固まっていたため 1 セッションで完了。
+
+| 項目 | 実績 |
+|---|---|
+| 期間 | 1 セッション (~2.5h) |
+| Worker 追加 | +700 行 (`webhooks/revenuecat.js` 268 行 / `auth/entitlement_cache.js` 80 行 / `attestation_state.js` +171 行 / `index.js` 拡張) |
+| Flutter 追加 | +50 行 (`purchases_service.dart` getter / `app_attest_client.dart` body 注入) |
+| テスト | 26 ケース PASS (timing-safe + event 種別マップ + auth 分岐 + DO 連動 + cache TTL) |
+| 累計 Worker テスト | 79/79 PASS |
+| 設計判断 (D1-D10) | constant-time Bearer + DO 統合 + 60s メモリ cache + body `__appUserId` + Webhook 単独 + Pro/Free quota 切替 + event 種別 4 マップ + 未知=inactive + 冪等性 + out-of-order ガード |
+
+得た知見:
+- **DO 表追加は migration 不要** (`CREATE TABLE IF NOT EXISTS` で自動)、SQLite-backed DO の強み
+- **App Attest assertion は payload SHA-256 で署名する** → body の予約フィールドに任意の管理用 ID を入れると改ざん耐性を持つ
+- **Webhook 冪等性は event_id 単位の INSERT OR IGNORE** で実現、`alreadyProcessed: true` を伝搬
+- **out-of-order ガード**: `last_event_at > now` の event は無視 (RC は順序保証しない)
+- **secret 未設定で 503** = 公開前ガード (= 想定外 deploy で偽 webhook を通さない)
+- **Worker instance メモリ cache 60s TTL** で DO 連打抑制、Webhook 受信 instance は INSERT 直後 clear、cross-instance は eventual
+
+### 1.3 Solara Play Integrity (Android) 設計 + Play Console 鍵取得 (S1 = 1 セッション)
+
+Apple App Attest と対称の Android セキュリティ層。設計フェーズで Q1-Q4 を先にオーナー判断、R 項目を 3 分類した結果、S1 で設計確定 + オーナー作業 (Cloud project link + 鍵取得 + secret 投入) まで一気に完了。
+
+| 項目 | 実績 |
+|---|---|
+| 期間 | S1 = 1 セッション (~2h) |
+| 設計 docs | `apps/solara/docs/play_integrity_design.md` 331 行 (Q1-Q4 確定、R1-R6 明示、6-step ロードマップ) |
+| ライブラリ調査 | Flutter `app_attest_integrity` (iOS+Android 統一 API) / Worker `jose` v6.2.3 採用、`play_integrity_flutter` (3 年放置) 不採用 |
+| Q1-Q4 オーナー判断 | Classic request + Self-managed key + DEVICE_INTEGRITY + PLAY_RECOGNIZED |
+| オーナー作業 | Cloud project link (Solara-api) + RSA 2048 鍵生成 + public.pem upload + RSA-OAEP 復号 + AES-256/ECDSA P-256 鍵を wrangler secret 投入 |
+| S2 以降 | Worker `jose` 統合 + `auth/play_integrity.js` 実装 + DO `integrity_nonces` + middleware 統合 + Flutter OS 分岐 (5-6 セッション想定) |
+
+得た知見:
+- **Apple App Attest と Play Integrity は middleware で経路分岐できる**: header の有無 (`X-AppAttest-KeyId` / `X-PlayIntegrity-Token`) で iOS/Android 自動判定、検証関数だけ切替、entitlement lookup + quota は共通フロー
+- **設計の言葉と公式 UI の実際は乖離することがある**: 設計で「Verification key = ECDSA P-256 **PEM** 形式」と想定したが、実際の Play Console は **base64 (DER SubjectPublicKeyInfo)** で出力。R 項目に「実 UI / 一次ソースで取得形式を確認」を必ず入れる
+- **鍵交換のハイブリッド方式**: Google の Self-managed key 設定は「直接 AES-256 をダウンロード」ではなく、「クライアント側で RSA 鍵ペア生成 → 公開鍵を Google に upload → AES-256 + ECDSA 鍵を RSA で暗号化されたファイルとしてダウンロード → クライアント側 RSA 秘密鍵で復号」。これは Google サーバー保管中の漏洩リスクを排除する追加層
+- **クライアント側 OpenSSL 実行は Git for Windows 同梱で十分**: `C:\Program Files\Git\usr\bin\openssl.exe` (Win 単体インストール不要)。PowerShell からは `&` call operator + フルパスで実行
+- **PowerShell `>` リダイレクトは UTF-16LE になる罠**: openssl の base64 出力をファイル保存する際は `-out` オプション (openssl 自身) で ASCII 保存させる
+- **平文鍵はローカルに残さない**: `wrangler secret put` 投入後は `api_keys.txt` を削除、`private.pem` (passphrase 暗号化済) のみ保管。Play Console から何度でも再ダウンロード + 復号可能なため、平文を残すリスク > 失うリスク
 
 ---
 
@@ -168,17 +213,24 @@ Solara では Firebase App Check が「Worker 50 行で済む」魅力的候補�
 | 偽陽性リスク | ほぼゼロ / 中 / 高 |
 | 運用負荷 | 設定のみ / 監視必要 / 常時調整 |
 
-Solara で検討した層 (App Attest 文脈):
+Solara で検討した層 (App Attest + RC + Play Integrity 統合後):
 
 | 層 | 防御効果 | 実装 | 偽陽性 | ROI | 採否 |
 |---|---|---|---|---|---|
-| App Attest assertion 検証 | 🟢 curl 直叩き全防御 | 高 (~700 行) | 低 | 🟢 最高 | ✅ 採用 |
-| per-user rate limit (Layer C) | 🟢 突破時の被害最大化防止 | 低 | 低 | 🟢 高 | ✅ 採用 |
+| App Attest assertion 検証 (iOS) | 🟢 curl 直叩き全防御 | 高 (~700 行) | 低 | 🟢 最高 | ✅ 採用 |
+| Play Integrity verdict 検証 (Android) | 🟢 同上 | 高 (S2-S6 で ~800 行見込み) | 低 | 🟢 最高 | ✅ 採用 |
+| body `__appUserId` 注入 + 改ざん耐性 (RC 連動) | 🟢 uid 詐称防御 | 低 (~30 行追加) | ほぼゼロ | 🟢 最高 | ✅ 採用 |
+| RevenueCat Webhook (Pro 状態の真の出所) | 🟢 クライアント側 isPro 詐称防御 | 中 (~270 行) | 低 | 🟢 最高 | ✅ 採用 |
+| per-user rate limit (Layer C、Pro/Free 切替) | 🟢 突破時の被害最大化防止 | 低 | 低 | 🟢 高 | ✅ 採用 |
+| Worker メモリ cache 60s TTL (entitlement) | 🟡 DO 連打抑制 + 即時 invalidate | 低 (~80 行) | 60s 遅延受容 | 🟢 高 | ✅ 採用 |
 | Bot Fight Mode (Cloudflare) | 🟢 補助的 | 設定 1 クリック | ほぼゼロ | 🟢 最高 | ✅ 採用 |
 | 異常検知アラート | 🟢 リアルタイム発見 | 中 | 低 | 🟡 中 | ✅ 採用 (後続) |
 | Apple step 6 (challenge inclusion 厳格) | 🔴 Secure Enclave 突破前提でしか効果なし | 中 (latency +1RTT) | 中 | 🔴 低 | ❌ **不採用** |
+| Google decode 経由 verdict | 🟢 同等の検証効果 | 低 (~50 行) | Google 障害連鎖 / レイテンシ 100-300ms / 10k/day quota 消費 | 🔴 低 | ❌ **不採用** (Self-managed key 採用) |
+| Trusted Entitlements REST API 二重チェック | 🟡 補助的 (Webhook 取りこぼし時) | 中 | 中 | 🟡 中 | ⏳ 公開後検討 |
+| App Attest device check API | 🟡 receipt 検証 | 中 (Apple サーバー API call) | Apple 障害連鎖 | 🔴 低 | ❌ **不採用** (sign count 検証で十分) |
 
-「ROI 低い層は採用しない」勇気が大事。
+「ROI 低い層は採用しない」勇気が大事。同時に「ROI 評価表は機能追加のたびに更新する」(2026-05 で 5 行追加した実例)。
 
 ### 4.3 段階リリース機構を必ず入れる
 
@@ -245,22 +297,104 @@ Solara では `request.clone()` パターン採用 (handler 側コードを変�
 - レスポンス形式 (成功 / 失敗時のエラーコード一覧)
 - リトライ policy
 
+### 5.4 Webhook 受信の冪等性 + out-of-order ガード
+
+外部 SaaS (RevenueCat、Stripe、Slack 等) からの Webhook は:
+- **同 event が何度も再送される**: SaaS 側の SLA 上、200 を返すまで指数バックオフで再送する
+- **順序保証されない**: 後発 event が先発より先に届くことがある
+- **偽 event のリプレイ攻撃**: 攻撃者が認証 secret を入手したら、過去 event を任意に流せる
+
+これらに耐える共通パターン:
+
+```js
+// 冪等性: event_id 単位の INSERT OR IGNORE
+const before = sql.exec(`SELECT 1 FROM webhook_events WHERE event_id = ?`, eventId).toArray();
+if (before.length > 0) return { ok: true, alreadyProcessed: true };
+sql.exec(`INSERT INTO webhook_events (event_id, received_at, event_type, ...) VALUES (?, ?, ?, ...)`, ...);
+
+// out-of-order: last_event_at > now なら無視
+const existing = sql.exec(`SELECT last_event_at FROM ... WHERE ...`, ...).toArray();
+if (existing.length > 0 && existing[0].last_event_at > now) {
+  return { ok: true, skippedOutOfOrder: true };
+}
+```
+
+未知 event 種別 → 安全側 (= Pro 維持しない / 権限付与しない) に倒す:
+
+```js
+// 既知 event は明示的にマップ、未知は inactive 扱い (= 権限を維持しない)
+if (ACTIVE_EVENT_TYPES.has(eventType)) isActive = true;
+else if (GRACE_EVENT_TYPES.has(eventType)) isActive = true; // 期限まで維持
+else if (INACTIVE_EVENT_TYPES.has(eventType)) isActive = false;
+else isActive = false; // 未知 → 安全側
+```
+
+### 5.5 認証 secret は constant-time + 未設定で 503
+
+Webhook 認証で **timing-safe な文字列比較** (`===` ではなく `XOR` 累積) を必ず使う。長さ違いは即 false、内容違いも全バイト比較する:
+
+```js
+function timingSafeEqualString(a, b) {
+  if (typeof a !== 'string' || typeof b !== 'string') return false;
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) {
+    diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  }
+  return diff === 0;
+}
+```
+
+secret 未設定時は **503 を返す** (200 や 401 ではない、= 公開前ガード)。これで、想定外環境 (= secret 未投入の staging 等) で本物の event を誤って処理する事故を防ぐ。
+
+### 5.6 鍵交換のハイブリッド方式 (Self-managed key)
+
+外部 SaaS から AES-256 や ECDSA 鍵を取得する設定で、サーバー保管中の漏洩を排除する公式パターン:
+
+1. クライアント側で **RSA 2048-bit 鍵ペアを生成** (`openssl genrsa -aes128 -out private.pem 2048`)
+2. 公開鍵 `public.pem` を SaaS にアップロード
+3. SaaS は実際の暗号化鍵 (AES-256 + ECDSA 等) を **その公開鍵で暗号化したファイル** で返す
+4. クライアント側 RSA 秘密鍵で復号 (`openssl pkeyutl -decrypt -pkeyopt rsa_padding_mode:oaep`)
+5. 復号後の平文鍵を deploy 環境 (= Worker secret 等) に投入
+6. 平文鍵をローカルに残さない (= 再復号は同じ private.pem で何度でも可能なため)
+
+Google Play Integrity API の Self-managed key 設定で実例 (2026-05)。**「直接 AES を流通させない」追加の安全層**として、攻撃者が SaaS サーバー側に侵入しても、RSA 秘密鍵を持たない限り decode できない。
+
+クライアント側で必要なツール: `openssl` (Windows なら Git for Windows 同梱の `C:\Program Files\Git\usr\bin\openssl.exe` で十分、単体インストール不要)。
+
+PowerShell 注意点:
+- `>` リダイレクトは UTF-16LE になる罠 → `openssl ... -out file.txt` (openssl 自身) で ASCII 出力させる
+- フルパス実行は `&` call operator: `& "C:\Program Files\Git\usr\bin\openssl.exe" genrsa ...`
+- backtick `` ` `` で line continuation (bash の `\` ではない)
+
+### 5.7 設計の言葉と公式 UI の実際は乖離することがある
+
+事前調査で「Verification key = ECDSA P-256 **PEM 形式**」と公式 docs から読み取ったが、実際の Play Console UI で取得すると **base64 (DER SubjectPublicKeyInfo) 形式**で出力される。docs は最新の UI 仕様を反映していないことがある。
+
+対策:
+- R 項目に「**公式 UI / 一次出力で取得形式を実際に確認**」を必ず入れる
+- 実装段階で形式が違ったときに `crypto.subtle.importKey(format, ...)` の format 引数を `'spki'` (DER) vs `'jwk'` vs `'raw'` で切替できる柔軟性を持たせる
+- 鍵の長さで判別: AES-256 → 32 bytes → base64 44 char / ECDSA P-256 SPKI → 91 bytes → base64 124 char (どちらも末尾 `=` パディングあり)
+
 ---
 
 ## 6. AI アシスタントとの協働パターン
 
 ### 6.1 AI の「楽な選択」傾向を警戒する
 
-Solara App Attest で、AI (= 私) が 4 回オーナーに修正された:
+Solara App Attest + RC Webhook + Play Integrity S1 で、AI (= 私) が 5+ 回オーナーに修正された:
 
-| # | AI の素案 | オーナーの問いかけ | 結論 |
-|---|---|---|---|
-| 1 | R1-R8 を一括「実機検証必要」と並べた | 「未確認は今調べて確定できないか?」 | 6/8 即時確定 |
-| 2 | appattest-checker-node 推奨 | 「もっと簡潔な方法はないか?」 | 詳細調査で案 B' (ハイブリッド) に変更 |
-| 3 | Layer C を後回し | 「2/3 重チェック必要?」 | S4 統合へ前倒し |
-| 4 | `signatureOnly: true` で時刻チェック OFF | 「これは問題ある?」 | 時刻チェック C+D 追加 |
+| # | 機能 | AI の素案 | オーナーの問いかけ | 結論 |
+|---|---|---|---|---|
+| 1 | App Attest | R1-R8 を一括「実機検証必要」と並べた | 「未確認は今調べて確定できないか?」 | 6/8 即時確定 |
+| 2 | App Attest | appattest-checker-node 推奨 | 「もっと簡潔な方法はないか?」 | 詳細調査で案 B' (ハイブリッド) に変更 |
+| 3 | App Attest | Layer C を後回し | 「2/3 重チェック必要?」 | S4 統合へ前倒し |
+| 4 | App Attest | `signatureOnly: true` で時刻チェック OFF | 「これは問題ある?」 | 時刻チェック C+D 追加 |
+| 5 | Play Integrity | STRONG_INTEGRITY で区切る選択肢 | 「OS 対応下限と Play Integrity 閾値を揃える」 | minSdk 31 + STRONG は乖離 (= 古いパッチ端末を弾く) → DEVICE_INTEGRITY で区切る (オーナー誤解を正しく訂正できた逆ケース) |
 
 **パターン**: AI は「実装量が少ない選択」「既存コードに優しい選択」「変更が小さい選択」に流れる傾向。オーナーが**能動的に問いかけないと、素案で固まる**。
+
+逆ケース (#5) も大事: オーナーの問いかけが間違っていても、AI が一次資料を再確認して**「OS 対応下限と STRONG_INTEGRITY 閾値は別軸」**と説明できれば、誤った決断を未然に防げる。AI 側で「オーナーの意図は理解、ただし事実は違う」と区別する。
 
 ### 6.2 オーナーが投げるべき問いかけ集
 
@@ -357,21 +491,66 @@ Solara App Attest で、AI (= 私) が 4 回オーナーに修正された:
 - [ ] 障害時の連絡先 / 復旧手順を docs に書いた
 - [ ] オーナーが deploy 手順を理解した (= 自分一人で実行できる)
 
+### 8.4 Webhook 受信実装のチェックリスト
+
+- [ ] 認証方式は constant-time 比較 (`===` ではない)
+- [ ] secret は wrangler/環境変数 secret 管理 (vars に書かない)
+- [ ] secret 未設定時は 503 (公開前ガード)
+- [ ] event_id 単位の冪等性 (INSERT OR IGNORE)
+- [ ] out-of-order ガード (last_event_at 比較)
+- [ ] 未知 event は安全側に倒す (Pro 維持しない / 権限付与しない)
+- [ ] cache invalidate (受信 instance で即時、cross-instance は TTL eventual)
+- [ ] rate limit bucket を専用に高めに設定 (SaaS 突発バーストで弾かない)
+- [ ] CORS 不要 (外部 POST、ブラウザ起点ではない)
+- [ ] 単体テストで全 event 種別をカバー
+- [ ] 設計 docs に event 種別マップ + エラーコード一覧 + Deploy 手順を明記
+
+### 8.5 外部 SaaS から鍵を取得する公式手順チェックリスト (Self-managed key)
+
+- [ ] 公式手順を SaaS UI で実際に確認 (docs と実 UI が乖離していないか)
+- [ ] 鍵取得形式を確定 (PEM vs base64 DER vs JWK)
+- [ ] ハイブリッド方式なら RSA 鍵ペアをクライアント側で生成 (Git 配下に置かない)
+- [ ] passphrase をパスワードマネージャー保管
+- [ ] 公開鍵をアップロード、暗号化応答ファイルダウンロード
+- [ ] 復号して deploy 環境 (Worker secret 等) に投入
+- [ ] 平文鍵をローカルに残さない (`api_keys.txt` 削除)
+- [ ] private.pem (passphrase 暗号化済) のみ保管 (rotation 時に再使用)
+- [ ] 鍵 rotation 手順を docs に書いた
+- [ ] 漏洩時の対応 (再生成 + secret 上書き + SaaS UI 同期) を docs に書いた
+
 ---
 
-## 9. 参考: Solara App Attest 関連ファイル
+## 9. 参考: Solara セキュリティ層関連ファイル
 
 このドキュメントの元になった実装:
 
-- `apps/solara/docs/app_attest_design.md` — 設計ドキュメント v3.0 確定版
+### Apple App Attest (iOS、v3.0 完成)
+- `apps/solara/docs/app_attest_design.md` — 設計ドキュメント v3.0 + v2.2 統合変更点
 - `apps/solara/docs/Apple_App_Attestation_Root_CA.pem` — Apple 公式 Root CA (取得日: 2026-05-19)
-- `apps/solara/worker/src/auth/` — Worker 側実装 (cbor.js / apple_root_ca.js / app_attest.js / attestation_state.js)
+- `apps/solara/worker/src/auth/` — Worker 側実装 (cbor.js / apple_root_ca.js / attestation.js / assertion.js / app_attest.js / attestation_state.js)
 - `apps/solara/worker/src/index.js` — Worker entry + middleware 配線
 - `apps/solara/worker/wrangler.toml` — DO binding + nodejs_compat + env vars
-- `apps/solara/worker/test/` — 単体テスト + fixtures
+- `apps/solara/worker/test/` — 単体テスト + fixtures (cbor.test 26 + app_attest.test 27)
 - `apps/solara/worker/r1_check/` — 実機検証用 minimal Worker
 - `apps/solara/lib/utils/app_attest_client.dart` — Flutter 側クライアント
 - `apps/solara/lib/main.dart` — initialize 配線
+
+### RevenueCat Webhook + Pro エンタイトルメント (v2.2 完成)
+- `apps/solara/docs/revenuecat_webhook.md` — 設計 D1-D10 + アーキ図 + event 種別マップ + 運用手順
+- `apps/solara/worker/src/webhooks/revenuecat.js` — Webhook handler (268 行、Bearer 認証 + event 種別分類 + DO upsert + cache invalidate)
+- `apps/solara/worker/src/auth/entitlement_cache.js` — Worker メモリ 60s TTL cache (80 行)
+- `apps/solara/worker/src/auth/attestation_state.js` — DO に `user_entitlements` + `webhook_events` 2 表追加 + 2 endpoint
+- `apps/solara/worker/test/revenuecat_webhook.test.js` — 26 ケース PASS
+- `apps/solara/lib/utils/purchases_service.dart` — RevenueCat SDK ラッパー + `appUserId` getter
+- `apps/solara/lib/utils/app_attest_client.dart` — body `__appUserId` 自動注入 (改ざん耐性 + Worker entitlement lookup キー)
+
+### Play Integrity (Android、設計 v0.1 完成、S2-S6 で実装)
+- `apps/solara/docs/play_integrity_design.md` — 設計 v0.1 (Q1-Q4 確定、R1-R6 明示、10-step 検証、Deploy 手順、6 セッションロードマップ)
+- (実装ファイルは S2-S6 で作成: `auth/play_integrity.js` / `auth/google_play_keys.js` / `auth/jose_wrapper.js` + DO `integrity_nonces` 表追加)
+
+### 横断参照
+- `lessons_security_critical_features.md` (memory 側、AI 自省用) — 私の判断ミス 4-5 パターン + オーナー問いかけ 6 パターン + 安全装置
+- `project_solara_launch_checklist.md` (memory 側) — Phase 0-6 全タスク管理
 
 ---
 
@@ -382,5 +561,6 @@ Solara App Attest で、AI (= 私) が 4 回オーナーに修正された:
 - 新しい有用な問いかけが見つかったら §6.2 に追加
 - 新しい外部 SaaS の評価事例が出たら §3.3 に追加
 - テンプレが古くなったら §8 を更新
+- 多層防御の ROI 評価表 (§4.2) は機能追加のたびに行追加 (Solara で 5 行追加した実例)
 
-最終更新: 2026-05-19 (Solara App Attest 7 セッション完了直後)
+最終更新: 2026-05-19 (Solara RevenueCat Webhook + Play Integrity S1 完了直後、累計 3 機能のケーススタディ)

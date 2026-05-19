@@ -8,7 +8,7 @@
 
 | ファイル | 内容 |
 |---|---|
-| [app_development_lessons.md](app_development_lessons.md) | アプリ開発の知見集 — セキュリティクリティカル機能の設計から本番投入まで。Solara App Attest 実装 (2026-05) をケーススタディに、設計フェーズ方法論 / ライブラリ評価 / 多層防御 ROI / Client-Server 統合の落とし穴 / AI アシスタント協働 / テンプレ集をまとめている。新しいアプリで認証・課金・サーバー検証など重要機能を実装するときの初期チェックリストとして使う。 |
+| [app_development_lessons.md](app_development_lessons.md) | アプリ開発の知見集 — セキュリティクリティカル機能の設計から本番投入まで。Solara の 3 機能 (Apple App Attest / RevenueCat Webhook + Pro エンタイトルメント / Play Integrity 設計) をケーススタディに、設計フェーズ方法論 / ライブラリ評価 / 多層防御 ROI / Client-Server 統合の落とし穴 (payload 規約 / Webhook 冪等性 / 鍵交換ハイブリッド方式 / 公式 UI と docs の乖離) / AI アシスタント協働 / テンプレ集をまとめている。新しいアプリで認証・課金・サーバー検証など重要機能を実装するときの初期チェックリストとして使う。 |
 
 ## 追加方針
 
