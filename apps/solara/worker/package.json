@@ -9,7 +9,8 @@
   },
   "dependencies": {
     "@peculiar/x509": "^1.14.3",
-    "astronomy-engine": "^2.1.19"
+    "astronomy-engine": "^2.1.19",
+    "jose": "^6.2.3"
   },
   "devDependencies": {
     "wrangler": "^4.80.0"

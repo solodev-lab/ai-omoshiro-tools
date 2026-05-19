@@ -23,6 +23,8 @@ import { handleRelocation } from './relocation.js';
 import { handleLineNarrative } from './line_narrative.js';
 import { handleConsultation } from './consultation.js';
 import { verifyAttestation, verifyAssertion } from './auth/app_attest.js';
+// Play Integrity (Android) S2 スケルトン — 設計 v0.3 §4、bundle 計測 (R6) + S3 で展開
+import { diagnoseKeys, decodeIntegrityToken } from './auth/play_integrity.js';
 import {
   getCachedEntitlement,
   setCachedEntitlement,
@@ -590,6 +592,19 @@ async function dispatchAuth(request, env, url, origin) {
   }
   if (path === '/auth/attest' && request.method === 'POST') {
     return await handleAuthAttest(request, env, origin);
+  }
+  // Play Integrity 診断 endpoint (S2 minimal worker、設計 v0.3 §13)
+  // R7 (base64 SPKI import) + R8 (Self-managed key が Standard 応答に適用されるか) を実証
+  if (path === '/auth/integrity/diagnose' && request.method === 'GET') {
+    const keys = await diagnoseKeys(env);
+    return jsonOk(keys, origin);
+  }
+  // 実 token decode 試験 (S5 で実機採取 token を POST して R8 確証)
+  if (path === '/auth/integrity/decode-test' && request.method === 'POST') {
+    const body = await request.json().catch(() => ({}));
+    if (!body.token) return jsonError(400, 'token required', origin);
+    const result = await decodeIntegrityToken(body.token, env);
+    return jsonOk(result, origin);
   }
   return null;
 }

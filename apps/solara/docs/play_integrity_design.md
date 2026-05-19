@@ -1,6 +1,6 @@
 # Play Integrity サーバー検証 設計ドキュメント
 
-**ステータス**: 設計 v0.2 (2026-05-19、S1 完了 + オーナー作業全 7 項目完了、S2 着手準備完了)
+**ステータス**: 設計 v0.4 (2026-05-19、S2 完了 — R1/R6/R7 解決 + R8 のみ実機採取まで保留、S3 本実装着手準備完了)
 **対象**: Cloudflare Worker `solara-api` の `/auth/integrity/*` + `/protected/*` middleware の Android 経路
 **前提**: `project_solara_launch_checklist.md` Phase 1 認証ミドルウェア + Phase 2 Flutter クライアント
 **関連**:
@@ -10,6 +10,24 @@
 - `../../docs/app_development_lessons.md` §1.3 ケーススタディ + §5.6 鍵交換ハイブリッド方式 + §5.7 設計と公式 UI 乖離
 
 ## 変更履歴
+
+### v0.4 (2026-05-19、S2 完了 — R1/R6/R7 解決)
+- **R6 ✅ 解決**: jose v6.2.3 追加で bundle gzip **+11.95 KiB (+7.5%、171.76 KiB)**。Workers Free 1MB 制限 (gzip) に対し残 83%。v0.3 想定 24% より大幅に少 (= jose の tree-shaking 良好)
+- **R7 ✅ 解決**: base64 DER SPKI verification key を `crypto.subtle.importKey('spki', verBytes, {name:'ECDSA',namedCurve:'P-256'}, false, ['verify'])` で正常 import 確証。AES-256 raw も `importKey('raw', encBytes, {name:'AES-KW'}, ...)` で問題なし
+- **R1 ✅ 概算解決**: Node.js (`node --test`) 計測で平均 1.73ms / 最大 4.32ms (warmup 後)。Workers Free 10ms CPU 制限に対し十分余裕。**確証はステージング deploy 後の本番計測**
+- **`src/auth/play_integrity.js` 骨格追加**: `diagnoseKeys(env)` + `decodeIntegrityToken(token, env)` + jose v6 import (compactDecrypt / compactVerify / importSPKI)。S3 で `verifyPlayIntegrityFlow(request, env, body)` に拡張
+- **`test/play_integrity.test.js` 追加**: 9 ケース全 PASS (R7 4 + decode pipeline 4 + R1 概算 1)
+- **R8 残置**: Self-managed key が Standard 応答に適用されるかは実機採取 token が必要 → S5 (Flutter Android 実装) で `/auth/integrity/decode-test` を実機 token で叩いて確証
+
+### v0.3 (2026-05-19、R4 解決 — Classic→Standard アーキテクチャ訂正)
+- **🔴 Q1 訂正: Classic request → Standard request**: `app_attest_integrity` v1.0.0 は `StandardIntegrityManager` 専用実装と判明。Classic 用 API は提供されない (`androidPrepareIntegrityServer(int cloudProjectNumber)` warmup + `verify({clientData})` per request)
+- **Binding 方式変更**: payload の `requestDetails.nonce` 一致確認 → `requestDetails.requestHash == base64(SHA-256(clientData))` 一致確認 (Standard 形式)
+- **`clientData` 埋込ハイブリッド**: README で推奨される「server-issued challenge を clientData JSON に埋め込み + nonce TTL 2-5min」を採用 = DO `integrity_nonces` 表 + `/auth/integrity/challenge` endpoint は維持 (one-time consume による replay 防止)
+- **§4 検証 step 更新**: Step 6/7 を Standard payload (requestHash) + clientData parse + DO consume の 3 段に再構成
+- **§7 Flutter 側 API 更新**: `prepareTokenProvider(cloudProjectNumber)` を起動時 1 回、`verify(clientData: jsonEncode({nonce, uid, ts}))` を `/protected/*` 呼出ごと
+- **新 R8 追加**: Standard request 応答に Self-managed key (Classic 用 UI で設定) が適用されるか実機 token で確証 (= R7 の前提条件)
+- **R5 撤回**: Classic payload 仕様は S2 範囲外 (Standard 採用で不要)
+- **base64 形式注意**: `sha256HashBase64` は **標準 base64 (RFC 4648 §4)**、URL-safe ではない、`=` パディングあり
 
 ### v0.2 (2026-05-19、S1 オーナー作業完了)
 - §6 Self-managed key 管理を **実際の Play Console フローに更新** (ハイブリッド方式: RSA 鍵ペア生成 → public.pem upload → 暗号化応答鍵 download → 復号)
@@ -32,35 +50,54 @@ Apple App Attest と対称的な検証層を Android にも置く = **Play Integ
 
 | # | 項目 | 確定 | 理由 |
 |---|---|---|---|
-| Q1 | request 種別 | **Classic request** | server-issued nonce で App Attest の challenge と同形パターン、replay 防止が DO で素直、middleware ロジック共通化 |
-| Q2 | decode 方式 | **Self-managed key (Workers 自前 JWE A256KW + JWS ES256 decode)** | Google サーバー decode は ① 障害連鎖 ② 100-300ms レイテンシ ③ 10k/day quota 消費。Apple App Attest と同じ「Workers 完結」哲学 |
+| Q1 | request 種別 | **Standard request (ハイブリッド)** ※v0.3 訂正 | `app_attest_integrity` v1.0.0 が Standard 専用。`clientData` JSON に server-issued nonce を埋込み + DO で one-time consume = Classic 同等の replay 防止を Standard 上で実装 |
+| Q2 | decode 方式 | **Self-managed key (Workers 自前 JWE A256KW + JWS ES256 decode)** | Google サーバー decode は ① 障害連鎖 ② 100-300ms レイテンシ ③ 10k/day quota 消費。Apple App Attest と同じ「Workers 完結」哲学。**前提: Self-managed key が Standard 応答にも適用される (R8 で確証)** |
 | Q3 | deviceIntegrity 閾値 | **`MEETS_DEVICE_INTEGRITY` 必須** | minSdk 31 (Android 12) 下限維持。STRONG は「セキュリティパッチ 1 年以内」要件で古いパッチ端末を追加で弾き、サポート負荷増 |
 | Q4 | appIntegrity 閾値 | **`PLAY_RECOGNIZED` 必須** | サイドロード排除、Pro 機能ゲートの基本要件 |
 
-## 2. アーキテクチャ概要
+## 2. アーキテクチャ概要 (v0.3 Standard 方式)
 
 ```
-Flutter (Android 端末)
+Flutter 起動時 (Android のみ、1 回)
+    │ app_attest_integrity.androidPrepareIntegrityServer(cloudProjectNumber)
+    │ → StandardIntegrityTokenProvider 取得 (warmup、~1 時間有効)
+    ▼
+
+Flutter /protected/* 呼出ごと (Android)
     │
     │ ① POST /auth/integrity/challenge
     ▼
 Worker /auth/integrity/challenge
-    └─ DO IntegrityNonce 表に random 32B INSERT (TTL 5min) → base64url で返却
+    └─ DO IntegrityNonce 表に random 32B INSERT (TTL 5min)
+       → {nonceId, nonce} を base64 で返却
     │
     │ ② nonce 受領
     ▼
 Flutter
-    │ app_attest_integrity.androidPrepareIntegrityServer(nonce)
-    │ → IntegrityTokenResponse (JWE+JWS 形式)
+    │ clientData = jsonEncode({nonce, uid: appUserId, ts: now})
+    │ token = app_attest_integrity.verify(clientData: clientData)
+    │ → 内部で requestHash = base64(sha256(clientData)) 計算
+    │   StandardIntegrityTokenProvider.request(requestHash) で token 取得
+    │   token = JWE A256KW( JWS ES256(payload) )  ※Self-managed key 前提
     │
-    │ ③ POST /protected/* with X-PlayIntegrity-Token + body __appUserId
+    │ ③ POST /protected/* with:
+    │   X-PlayIntegrity-Token: <token>
+    │   X-PlayIntegrity-ClientData: <clientData JSON>
+    │   X-PlayIntegrity-NonceId: <nonceId>
     ▼
 Worker /protected/* middleware (Android 経路)
-    ├─ DO IntegrityNonce から該当 nonce を consume (one-time)
+    ├─ X-PlayIntegrity-ClientData parse → {nonce, uid, ts}
+    ├─ ts ±5min 確認 (client clock)
+    ├─ DO IntegrityNonce から nonceId で nonce を consume (one-time)
+    ├─ consumed nonce == clientData.nonce 一致
     ├─ JWE A256KW decode (Worker Web Crypto)
-    ├─ JWS ES256 verify (Google 公開鍵で署名検証)
-    ├─ verdict (appIntegrity/deviceIntegrity/accountDetails) 評価
-    ├─ requestHash == SHA256(body) 一致確認
+    ├─ JWS ES256 verify (Google ECDSA P-256 公開鍵)
+    ├─ payload.requestDetails.requestHash == base64(sha256(clientData)) 一致 (binding)
+    ├─ payload.requestDetails.timestampMillis ±5min 確認 (server clock)
+    ├─ payload.requestDetails.requestPackageName == "com.solodevlab.solara"
+    ├─ payload.appIntegrity.appRecognitionVerdict == "PLAY_RECOGNIZED"
+    ├─ "MEETS_DEVICE_INTEGRITY" ∈ payload.deviceIntegrity.deviceRecognitionVerdict
+    ├─ clientData.uid == body.__appUserId 一致 (token swap 防止)
     └─ RevenueCat entitlement lookup → Free/Pro quota (App Attest と完全共通)
 ```
 
@@ -82,39 +119,50 @@ apps/solara/docs/
   play_integrity_design.md # 本ドキュメント
 ```
 
-## 4. Worker 検証フロー (10 step、Apple App Attest 9 step に対応)
+## 4. Worker 検証フロー (12 step、Standard 方式 v0.3)
 
 ### Step 1: Client → Worker `/auth/integrity/challenge` (POST)
-- Worker: `crypto.getRandomValues(Uint8Array(32))` で nonce 生成
-- DO `integrity_nonces` 表に INSERT (`expires_at = now + 5min`)
-- 返却: `{ nonceId: <uuid>, nonce: <base64url 32B>, ttlSec: 300 }`
-- Flutter は `nonce` を `androidPrepareIntegrityServer(nonce)` に渡す
+- Worker: `crypto.getRandomValues(Uint8Array(32))` で nonce 生成 (32 random bytes)
+- DO `integrity_nonces` 表に INSERT (`nonce_id = uuidv4`, `nonce_bytes`, `expires_at = now + 300_000ms`)
+- 返却: `{ nonceId: <uuid>, nonce: <base64 32B>, ttlSec: 300 }`
+- Flutter は `nonce` を `clientData` JSON に埋め込んで `verify(clientData: ...)` に渡す
 
-### Step 2: Worker `/protected/*` middleware で token 受領
+### Step 2: Worker `/protected/*` middleware で token + clientData + nonceId 受領
 - HTTP header `X-PlayIntegrity-Token: <jwe.jws compact form>`
+- HTTP header `X-PlayIntegrity-ClientData: <utf-8 JSON string of clientData>`
 - HTTP header `X-PlayIntegrity-NonceId: <uuid>` (DO 検索キー)
 
-### Step 3: nonce consume (one-time use、Apple challenge と同様)
-- DO `integrity_nonces` から `nonceId` で SELECT (expired/consumed なら 404 → 401)
-- consumed_at をマーク
+### Step 3: clientData parse + 形式検証
+- `X-PlayIntegrity-ClientData` を UTF-8 JSON parse
+- 期待 schema: `{ nonce: string, uid: string, ts: number }` (将来拡張可能)
+- 必須キー欠落なら 401 + `clientdata_malformed`
 
-### Step 4: JWE A256KW decode (encryption key で復号)
+### Step 4: clientData.ts ±5min 確認 (client clock drift 検出)
+- `Math.abs(now - clientData.ts) < 300_000` (5 分窓)
+- 失敗なら 401 + `client_clock_drift` (= 端末時刻偽装の早期検知)
+
+### Step 5: DO nonce consume (one-time use、Apple challenge と同様)
+- DO `integrity_nonces` から `nonceId` で SELECT (expired/consumed なら 401 + `nonce_invalid`)
+- `clientData.nonce` と DO の `nonce_bytes` (base64) を一致確認 → 失敗なら 401 + `nonce_mismatch`
+- `consumed_at` をマーク
+
+### Step 6: JWE A256KW decode (encryption key で復号)
 - `jose.compactDecrypt(jweToken, ENCRYPTION_KEY)` で plaintext (= JWS compact) を取り出す
 - `ENCRYPTION_KEY` は Play Console > App integrity > Settings からダウンロードした AES-256 鍵 (Base64)
 - Workers 内で `crypto.subtle.importKey('raw', keyBytes, 'AES-KW', ...)` で読み込み
 
-### Step 5: JWS ES256 verify (Google ECDSA 公開鍵で署名検証)
+### Step 7: JWS ES256 verify (Google ECDSA 公開鍵で署名検証)
 - `jose.compactVerify(jwsToken, VERIFICATION_KEY)` で payload を取り出す
-- `VERIFICATION_KEY` は Play Console から取得した ECDSA P-256 公開鍵 (PEM)
-- Workers 内で `crypto.subtle.importKey('spki', keyBytes, {name: 'ECDSA', namedCurve: 'P-256'}, ...)` で読み込み
+- `VERIFICATION_KEY` は Play Console から取得した ECDSA P-256 公開鍵 (base64 DER SPKI、v0.2 §6.1)
+- Workers 内で `crypto.subtle.importKey('spki', base64Decode(key), {name: 'ECDSA', namedCurve: 'P-256'}, true, ['verify'])` で読み込み
 
-### Step 6: payload (verdict) parse
+### Step 8: payload parse
 ```json
 {
   "requestDetails": {
     "requestPackageName": "com.solodevlab.solara",
     "timestampMillis": 1700000000000,
-    "nonce": "<base64url 32B>"   // Step 1 で発行した値
+    "requestHash": "<base64(sha256(clientData))>"   // Standard 形式、Classic の nonce フィールドではない
   },
   "appIntegrity": {
     "appRecognitionVerdict": "PLAY_RECOGNIZED",
@@ -131,22 +179,24 @@ apps/solara/docs/
 }
 ```
 
-### Step 7: nonce 一致 + timestamp ±5min
-- `payload.requestDetails.nonce` が Step 1 で発行した値と一致
-- `Math.abs(now - payload.requestDetails.timestampMillis) < 300_000` (5 分窓)
+### Step 9: requestHash binding 確認 (Standard 方式の核)
+- `expectedHash = base64.encode(sha256(utf8Bytes(clientData)))` を Worker 側で再計算 (**標準 base64 / RFC 4648 §4 / `=` パディングあり、URL-safe ではない**)
+- `payload.requestDetails.requestHash === expectedHash` 必須 → 失敗なら 401 + `requesthash_mismatch`
+- これにより token が `clientData` (= nonce + uid + ts) と暗号学的にバインド = 改ざん検出
+
+### Step 10: timestamp + package 確認 (server clock + パッケージ偽装)
+- `Math.abs(now - payload.requestDetails.timestampMillis) < 300_000`
 - `payload.requestDetails.requestPackageName === "com.solodevlab.solara"`
 
-### Step 8: appIntegrity 評価
-- `appRecognitionVerdict === "PLAY_RECOGNIZED"` 必須 (Q4)
-- `packageName === "com.solodevlab.solara"` 必須
-- `certificateSha256Digest` に Play 配信用 SHA-256 が含まれる (= 自前署名・サイドロード排除)
+### Step 11: verdict 評価 (Q4 + Q3)
+- `payload.appIntegrity.appRecognitionVerdict === "PLAY_RECOGNIZED"` 必須 (Q4)
+- `payload.appIntegrity.packageName === "com.solodevlab.solara"` 必須
+- `payload.appIntegrity.certificateSha256Digest` に Play 配信用 SHA-256 が含まれる (= サイドロード排除)
+- `"MEETS_DEVICE_INTEGRITY" ∈ payload.deviceIntegrity.deviceRecognitionVerdict` 必須 (Q3)
 
-### Step 9: deviceIntegrity 評価
-- `deviceRecognitionVerdict` に `"MEETS_DEVICE_INTEGRITY"` が含まれる (Q3)
-- 不在なら → root/エミュ/未承認端末 → 401
-
-### Step 10: 既存 entitlement / quota フロー (RevenueCat 連動、App Attest と完全共通)
-- body `__appUserId` 抽出 → DO `user_entitlements` lookup → Pro/Free quota 切替
+### Step 12: uid binding + entitlement / quota (RevenueCat 連動)
+- `clientData.uid === body.__appUserId` 一致確認 (= token swap 防止)
+- DO `user_entitlements` lookup → Pro/Free quota 切替
 - App Attest 経路と middleware ロジック共通化 (= 統合 middleware で OS 判定 + 検証関数だけ切替)
 
 ## 5. Durable Object スキーマ追加
@@ -156,16 +206,18 @@ apps/solara/docs/
 ```sql
 CREATE TABLE IF NOT EXISTS integrity_nonces (
   nonce_id TEXT PRIMARY KEY,
-  nonce_bytes BLOB NOT NULL,
-  expires_at INTEGER NOT NULL,
-  consumed_at INTEGER
+  nonce_b64 TEXT NOT NULL,           -- 標準 base64 (RFC 4648 §4、=パディングあり) 32B → 44 char
+  expires_at INTEGER NOT NULL,        -- unix ms
+  consumed_at INTEGER                 -- one-time consume marker (NULL = 未使用)
 );
 CREATE INDEX IF NOT EXISTS idx_integrity_nonces_expires ON integrity_nonces(expires_at);
 ```
 
 API (App Attest `challenges` と並列):
-- `POST /integrity-nonce-create body: {nonceId, nonceBytes, expiresAt}`
-- `POST /integrity-nonce-consume body: {nonceId, now} → {nonceBytes} or 404`
+- `POST /integrity-nonce-create body: {nonceId, nonceB64, expiresAt}`
+- `POST /integrity-nonce-consume body: {nonceId, now} → {nonceB64} (consumed_at マーク) or 404`
+
+注意: v0.2 では BLOB を提案したが、v0.3 では JSON シリアライズ容易性とログ可読性のため TEXT (base64) で保管。32B × ~10k/day × 5min TTL = ピーク 2-3MB なので容量は問題なし。
 
 ## 6. Self-managed key 管理
 
@@ -232,50 +284,78 @@ Remove-Item com.solodevlab.solara.enc
 - **平文鍵をローカルに残さない**: `api_keys.txt` は wrangler secret 投入後即削除。Play Console から何度でも再ダウンロード + 復号可能なため、平文を残すリスク > 失うリスク
 - **base64 末尾 `=` パディングは必須**: 抜くと復号失敗、必ず含めて貼り付け
 
-## 7. Flutter 側実装
+## 7. Flutter 側実装 (v0.3 Standard 方式)
 
-### 7.1 `app_attest_integrity` 拡張
-既存の `AppAttestClient` (lib/utils/app_attest_client.dart) を OS 判定で分岐:
+### 7.1 `app_attest_integrity` v1.0.0 の実 API (R4 確証済)
 
+`app_attest_integrity` v1.0.0 (`bamlab/app_attest_integrity`) の Dart 公開 API:
 ```dart
-// 既存 (iOS only)
-if (Platform.isIOS) {
-  await _attest.iOSgenerateAttestation(challengeB64);
-}
-
-// 新規 (Android only)
-if (Platform.isAndroid) {
-  // app_attest_integrity の Android API (R4 で実 API 確証)
-  await _attest.androidPrepareIntegrityServer(nonceB64);
+class AppAttestIntegrity {
+  Future<void> androidPrepareIntegrityServer(int cloudProjectNumber);  // 起動時 1 回、warmup
+  Future<GenerateAttestationResponse?> iOSgenerateAttestation(String challenge);
+  Future<String> verify({
+    required String clientData,
+    String? iOSkeyID,                 // iOS のみ必須
+    int? androidCloudProjectNumber,   // Android で prepareTokenProvider 未呼出時のみ
+  });
 }
 ```
 
-ヘッダー注入も OS 判定:
+内部実装 (Android、`StandardIntegrityManager`):
+1. `prepareIntegrityToken(cloudProjectNumber)` → `StandardIntegrityTokenProvider` を保持 (≈1 時間有効)
+2. `verify(clientData)` 内で `requestHash = base64(sha256(clientData))` を計算 (= 標準 base64、URL-safe ではない)
+3. `provider.request(requestHash)` → token (JWE A256KW(JWS ES256(payload))) を返却
+
+### 7.2 既存 `AppAttestClient` の OS 分岐 (lib/utils/app_attest_client.dart)
+
 ```dart
-if (Platform.isIOS) {
-  headers['X-AppAttest-KeyId'] = _keyId!;
-  headers['X-AppAttest-Assertion'] = assertionB64;
-}
+// 起動時 (initialize 内、Android のみ 1 回)
 if (Platform.isAndroid) {
-  headers['X-PlayIntegrity-Token'] = jweJwsToken;
-  headers['X-PlayIntegrity-NonceId'] = _nonceId!;
+  await _attest.androidPrepareIntegrityServer(_cloudProjectNumber);
+}
+
+// /protected/* 呼出ごと (postProtected/addHeaders 内)
+if (Platform.isIOS) {
+  // 既存
+  final assertion = await _attest.verify(clientData: bodyJson, iOSkeyID: _keyId);
+  headers['X-AppAttest-KeyId'] = _keyId!;
+  headers['X-AppAttest-Assertion'] = assertion;
+} else if (Platform.isAndroid) {
+  // 新規 (v0.3)
+  final ch = await http.post('/auth/integrity/challenge');
+  final nonceId = ch['nonceId'];
+  final nonce = ch['nonce'];
+  final clientData = jsonEncode({
+    'nonce': nonce,
+    'uid': appUserId,
+    'ts': DateTime.now().millisecondsSinceEpoch,
+  });
+  final token = await _attest.verify(clientData: clientData);
+  headers['X-PlayIntegrity-Token'] = token;
+  headers['X-PlayIntegrity-ClientData'] = clientData;
+  headers['X-PlayIntegrity-NonceId'] = nonceId;
 }
 ```
 
 リネーム候補: `AppAttestClient` → `IntegrityClient`、ただし変更影響を最小化するため **本実装フェーズ後に decide** (今は API 互換維持で OS 分岐だけ追加)。
 
-### 7.2 nonce ライフサイクル
+### 7.3 cloudProjectNumber の取得
+- Play Console > Solara > アプリの完全性 > Play Integrity API > リンク済 Cloud project の **Cloud Project Number** (= 数字 12 桁前後)
+- `--dart-define=SOLARA_GCP_PROJECT_NUMBER=<number>` で release ビルド時に注入 (= public 情報、secret 不要)
+
+### 7.4 nonce / token ライフサイクル
 - iOS: keyId は端末永続 (SharedPreferences、1 端末 1 keyId)
-- Android: nonce は呼出ごと使い捨て (= 毎回 Worker `/auth/integrity/challenge` を叩く)
+- Android: nonce は呼出ごと使い捨て (毎回 `/auth/integrity/challenge`)、token も毎回新規 (Standard `provider.request(requestHash)` は per-call)
 
-iOS は起動時 1 回 attest、Android は **毎回 token 取得**。これは Play Integrity の仕様 (短命 token + Google サーバー側 quota) で、Apple App Attest との大きな違い。
+iOS は起動時 1 回 attest、Android は **毎回 token 取得 + nonce 取得**。これは Play Integrity Standard の仕様 (短命 token + Google サーバー側 quota) で、Apple App Attest との大きな違い。
 
-### 7.3 quota への影響
+### 7.5 quota への影響
 Solara `/protected/*` 1 呼出につき:
 - iOS: assertion 生成 (端末ローカル、Apple サーバー不要)
-- Android: token 生成 (Google サーバー 1 req 消費、10k/day quota)
+- Android: token 生成 (Google サーバー 1 req 消費、Standard request は **10k/day quota 共通**)
+- Standard は warmup の `prepareTokenProvider` だけは追加 1 req/起動 (≈ DAU 数と等価)
 
-Free 5/日、Pro 100/日想定なら Android DAU 1500 × 平均 2 req = 3,000/day → 10k quota 内で十分余裕。ただし Pro ユーザーが 100/日上限まで使うと quota 圧迫リスク → R3 で実装後計測。
+Free 5/日、Pro 100/日想定なら Android DAU 1500 × 平均 3 req (warmup + 2 protected) = 4,500/day → 10k quota 内で十分余裕。ただし Pro ユーザーが 100/日上限まで使うと quota 圧迫リスク → R3 で実装後計測。
 
 ## 8. middleware 統合 (iOS/Android 自動切替)
 
@@ -321,13 +401,14 @@ PLAY_INTEGRITY_ENFORCEMENT = "disabled" | "log_only" | "enforced"
 
 | # | 項目 | 解決時期 | 状態 |
 |---|---|---|---|
-| R1 | Workers Web Crypto JWE A256KW + JWS ES256 decode のパフォーマンス (Workers Free 10ms 制限内?) | 実装直後 (S2 で minimal Worker 検証) | ⏳ S2 |
+| R1 | Workers Web Crypto JWE A256KW + JWS ES256 decode のパフォーマンス (Workers Free 10ms 制限内?) | 実装直後 (S2 で minimal Worker 検証) | ✅ **概算解決 2026-05-19** (Node.js 平均 1.73ms / 最大 4.32ms、Workers 制限 10ms に十分余裕。本番計測はステージング deploy 後) |
 | R2 | Play Console > アプリの完全性 > Play Integrity API > クラシック リクエスト > レスポンスの暗号化 > 自分で管理 切替 + 鍵取得 (オーナー作業) | S2 着手前 | ✅ **解決 2026-05-19** (DECRYPTION_KEY 44 char + VERIFICATION_KEY 124 char、wrangler secret 投入完了) |
 | R3 | Free 10k/day で Solara Android DAU 跳ね返り (実 traffic で確認) | 本番 deploy 後 1 週間モニタ | ⏳ deploy 後 |
-| R4 | `app_attest_integrity` v1.0.0 の `androidPrepareIntegrityServer` 実 API + 戻り値構造 (= JWE+JWS compact string か?) | S2 で GitHub ソース確認 + 実機検証 | ⏳ S2 |
-| R5 | Classic payload 仕様 (requestHash は Standard 限定、Classic では nonce のみ。公式 doc 再読 + S2 で確証) | S2 docs §16 で payload spec 確証 | ⏳ S2 |
-| R6 | Workers bundle 増加実測 (jose v6 追加で gzip 24% 想定が実際の値) | S2 deploy 後計測 | ⏳ S2 |
-| R7 (新規) | base64 (DER SubjectPublicKeyInfo) verification key の `crypto.subtle.importKey('spki', ...)` で正常 import できるか | S2 minimal worker | ⏳ S2 |
+| R4 | `app_attest_integrity` v1.0.0 の Android API + 戻り値構造 + Standard/Classic 選択肢 | S2 で GitHub ソース確認 | ✅ **解決 2026-05-19** (bamlab/app_attest_integrity v1.0.0: `StandardIntegrityManager` 専用、`verify(clientData)` 内で `requestHash=base64(sha256(clientData))` を計算 → `provider.request(requestHash)` で token 取得。Standard request 専用と判明 → Q1 訂正) |
+| R5 | ~~Classic payload 仕様 (requestHash は Standard 限定、Classic では nonce のみ)~~ | ❌ **撤回** | ❌ Standard 採用で不要 (R4 解決) |
+| R6 | Workers bundle 増加実測 (jose v6 追加で gzip 24% 想定が実際の値) | S2 deploy 後計測 | ✅ **解決 2026-05-19** (gzip 159.81→171.76 KiB、+7.5% で想定 24% より大幅に少。Workers Free 1MB に対し残 83%) |
+| R7 | base64 (DER SubjectPublicKeyInfo) verification key の `crypto.subtle.importKey('spki', ...)` で正常 import できるか | S2 minimal worker | ✅ **解決 2026-05-19** (`test/play_integrity.test.js` 9/9 PASS、ECDSA P-256 + AES-KW 両 import 確証) |
+| R8 (新規 v0.3) | Self-managed key (Classic request 用 UI で設定) が **Standard request** 応答にも適用されるか (= Workers が自前 decode できるか、Google decode API 呼び出し不要か) | **S5** で実機採取 token を `/auth/integrity/decode-test` に POST して確証 | ⏳ S5 残置 (synthetic token では実証不能) |
 
 ## 11. オーナー作業 (チェックリスト、2026-05-19 S1 完了)
 
@@ -354,34 +435,38 @@ PLAY_INTEGRITY_ENFORCEMENT = "disabled" | "log_only" | "enforced"
 
 ```
 S1 ✅: 本設計ドキュメント完成 + Q1-Q4 確定 + R1-R6 明示
-S2  : R4 解決 (app_attest_integrity の Android API 実コード確認 + 戻り値型)
-      + jose v6 を package.json 追加 + minimal Worker で JWE+JWS round-trip 検証
-      + bundle 計測 (R6)
-S3  : auth/play_integrity.js 実装 (Step 4-9 = decode + verify + verdict 評価)
-      + 単体テスト (fixtures は Play Integrity 公式 sample から流用 or 実機 token 採取)
-S4  : DO integrity_nonces 表 + /auth/integrity/challenge 実装
-      + middleware 統合 (経路分岐 + 共通フロー保持)
+S2 ✅: R4 解決 (Standard 訂正 v0.3) + jose v6 追加 + minimal worker (R7) +
+       bundle 計測 (R6) + decode pipeline 単体テスト 9/9 PASS + R1 概算解決
+       (R8 は実機 token 必要 → S5 残置)
+S3 🔵: auth/play_integrity.js 本実装 (Step 3-11 = clientData parse + DO consume +
+       decode + verify + binding + verdict)
+       + 既存 diagnoseKeys/decodeIntegrityToken をベースに verifyPlayIntegrityFlow 拡張
+       + 単体テスト追加 (clientData 改竄、requestHash 不一致、verdict 不足、etc.)
+S4  : DO integrity_nonces 表 (TEXT base64 形式 v0.3) +
+      /auth/integrity/challenge POST 実装 (existing AttestationState DO 拡張)
+      + middleware 統合 (経路分岐 + 共通フロー保持、AppAttest と非排他)
       + 単体テスト
 S5  : Flutter AppAttestClient を OS 分岐対応に拡張
+      + cloudProjectNumber を --dart-define で配線
       + Android 実機テスト (or Android Emulator + Play services)
       + flutter analyze + 既存 test 維持
+      + 🔴 R8 確証 — 実機 token を `/auth/integrity/decode-test` に POST して
+        Self-managed key で decode 成功するか確認
 S6  : docs 仕上げ (deploy 手順 §13 + 運用ガイド §14)
       + launch_checklist 更新 + メモリ整理
-      + オーナー作業 (Play Console + Worker secret) → 本番 deploy
+      + オーナー作業 (Cloud Project Number 取得 + Worker vars 投入) → 本番 deploy
+      + 診断 endpoint (/auth/integrity/diagnose, /auth/integrity/decode-test) を
+        ENFORCEMENT==='enforced' 時に 404 化 (= 本番でデバッグ口を露出しない)
 ```
 
-App Attest と同等の重さを想定 (6-8 セッション、計 15-20h)。
+App Attest と同等の重さを想定 (6-8 セッション、計 15-20h)、現実績 S1+S2=2 セッション。
 
-## 13. v0.2 から v0.3 への次タスク (S2 着手)
+## 13. v0.4 から v0.5 への次タスク (S3 本実装)
 
-S2 のスコープ:
-1. **R4 解決**: `app_attest_integrity` (bam.tech) GitHub ソース確認で `androidPrepareIntegrityServer(nonce)` の戻り値構造 + token 取得タイミング確証
-2. **jose v6 を Worker package.json に追加** → `npm install` → bundle 増加実測 (R6)
-3. **minimal Worker** で JWE A256KW decode + JWS ES256 verify の round-trip 検証 (R1 + R7):
-   - 既知の token (= Google 公式 sample or 実機採取) を decode して期待値と比較
-   - Workers Free 10ms CPU 制限内に収まるか計測
-   - base64 (DER SubjectPublicKeyInfo) verification key で `crypto.subtle.importKey('spki', ...)` が動くか確認
-4. **設計 v0.3 にバンプ**: R1/R4/R6/R7 解決後の実数値を反映、S3 着手前提整える
+S3 のスコープ:
+1. **`auth/play_integrity.js` を v1.0 本実装**: 既存の `decodeIntegrityToken` を起点に、Step 3-11 (clientData parse → DO consume → requestHash binding → verdict 評価) を組み立てた `verifyPlayIntegrityFlow(request, env, body)` を実装
+2. **単体テスト拡張**: 既存 9 ケースに以下を追加 — clientData 改竄、requestHash 不一致、verdict 不足 (no PLAY_RECOGNIZED / no MEETS_DEVICE_INTEGRITY)、timestamp drift、uid mismatch、未来時刻 ts
+3. **(将来) v0.5 にバンプ**: S3 本実装完成後の API 仕様、test カバレッジ実数値を反映
 
 ## 関連ドキュメント
 
