@@ -5,14 +5,60 @@
 
 ## サマリ
 
-- ファイル数: 7 / 総行数: 1820
-- class/mixin/extension/enum: 12
-- 関数 (top-level + method の素拾い): 82
+- ファイル数: 8 / 総行数: 2030
+- class/mixin/extension/enum: 13
+- 関数 (top-level + method の素拾い): 88
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 0
 - Worker URL リテラル: 0
 
 ## ファイル別
+
+### `lib/utils/app_attest_client.dart` (210 行)
+
+**ファイル先頭コメント:**
+
+```
+Solara App Attest クライアント (Flutter ↔ Worker /auth/* /protected/*)
+
+役割:
+  - 起動時に keyId を SharedPreferences から復元、なければ Worker で attest
+  - /protected/* 呼び出し時の HTTP header に X-AppAttest-KeyId/Assertion を付与
+  - DCError.invalidInput/invalidKey 時の key 再生成リトライ
+  - iOS Simulator / Android / Web / kDebugMode では bypass (= ヘッダ無し、
+    Worker 側 APP_ATTEST_ENFORCEMENT=log_only で通過させる前提)
+
+Worker 側仕様: apps/solara/worker/src/index.js
+  POST /auth/challenge   → {challengeId, challenge: base64(32B), ttlSec}
+  POST /auth/attest      body: {keyId, challengeId, attestation: base64}
+  /protected/* headers: X-AppAttest-KeyId, X-AppAttest-Assertion: base64
+
+設計: apps/solara/docs/app_attest_design.md (v2.0+)
+```
+
+**imports:** dart=2 / package=5 / relative=1
+
+- relative: `solara_api.dart`
+
+**型定義 (1):**
+
+- L35 `class AppAttestClient`
+  - AppAttestClient シングルトン。
+
+**関数 (5 public + 1 private):**
+
+- L61 `initialize()` — 起動時 1 回だけ呼ぶ。keyId を復元 or 新規 attest する。
+- L140 `addHeaders()` — /protected/* 呼び出し直前に header を注入。
+- L172 `postProtected()` — `/protected/*` への POST を attestation header 付きで送る wrapper。
+- L190 `reattestOnFailure()` — 401 で middleware に弾かれた時のリトライ用: key 再生成 + 再 attest。
+- L207 `debugPayloadSha256()` — payload bytes の SHA-256 (debug 用、Worker 側計算値との一致確認に使う)。
+
+  <details><summary>private 関数 1 件</summary>
+
+  - L90 `_attestNewKey()`
+
+  </details>
+
 
 ### `lib/utils/app_locale.dart` (41 行)
 

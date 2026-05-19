@@ -507,35 +507,44 @@ const ok = await crypto.subtle.verify({name: 'ECDSA', hash: 'SHA-256'}, key, raw
 
 ---
 
-## 7. ファイル構成 (案 B' 確定版)
+## 7. ファイル構成 (S7 後最終形、v3.0 分割実施後)
 
 ```
 apps/solara/worker/
 ├── src/
-│   ├── index.js                      (既存、middleware 配線追加のみ)
-│   ├── auth/                         (新設ディレクトリ)
-│   │   ├── app_attest.js             (公開 API: verifyAttestation, verifyAssertion、~200 行
-│   │   │                              node-app-attest 写経パターンを @peculiar/x509 で書き直し)
-│   │   ├── cbor.js                   (Apple subset CBOR デコーダー ~80行、Buffer 非依存)
-│   │   ├── apple_root_ca.js          (PEM 定数 + AAGUID 定数 ~30行)
-│   │   └── attestation_state.js      (Durable Object クラス、~80行)
+│   ├── index.js                      (middleware 配線 + handlers、~600 行)
+│   ├── auth/                         (新設ディレクトリ、合計 843 行)
+│   │   ├── app_attest.js             (14 行、barrel re-export)
+│   │   ├── attestation.js            (274 行、verifyAttestation 9 step + 時刻 C+D)
+│   │   ├── assertion.js              (90 行、verifyAssertion 4 step)
+│   │   ├── cbor.js                   (131 行、Apple subset CBOR デコーダー、Buffer 非依存)
+│   │   ├── apple_root_ca.js          (109 行、PEM + AAGUID 定数 + 6 helper)
+│   │   └── attestation_state.js      (225 行、Durable Object、3 表 + 6 endpoint)
 │   └── (既存ファイル群)
-├── wrangler.toml                     (durable_objects + migrations + nodejs_compat フラグ追記)
-├── package.json                      (@peculiar/x509 のみ追加)
+├── wrangler.toml                     (durable_objects + migrations + nodejs_compat フラグ)
+├── package.json                      (@peculiar/x509 追加)
 └── test/
-    ├── app_attest_attestation.test.js  (node-app-attest fixtures 流用)
-    ├── app_attest_assertion.test.js
-    └── cbor.test.js
+    ├── app_attest.test.js            (27 ケース、verifyAttestation 20 + verifyAssertion 7)
+    ├── cbor.test.js                  (26 ケース)
+    └── fixtures/
+        ├── attestation-production.json  (node-app-attest 流用、MIT)
+        ├── attestation-development.json
+        ├── assertion.json
+        └── NODE_APP_ATTEST_LICENSE      (MIT クレジット)
+
+apps/solara/lib/utils/
+├── app_attest_client.dart            (210 行、Flutter シングルトン)
+└── (既存)
 ```
 
-**合計実装規模**: ~390 行 (テスト除く)
-- app_attest.js: ~200 行
-- cbor.js: ~80 行
-- attestation_state.js: ~80 行
-- apple_root_ca.js: ~30 行
+**合計実装規模**: 843 行 (worker auth/) + 210 行 (Flutter) + 600 行 (worker index 追加分) = ~1650 行
+**テスト**: 64 ケース全 PASS (cbor 26 + app_attest 27 + DO smoke 11)
+**ファイル分割**: 全ファイル 300 行以下 (audit.py WARN 範囲外)
 
-**依存追加**: `@peculiar/x509@^1.9.6` のみ (推移依存 `@peculiar/asn1-schema` + `@peculiar/asn1-x509` も同 org)
-**bundle 増加**: ~120KB (gzip)
+**依存追加**:
+- Worker: `@peculiar/x509@^1.9.6` (推移依存込み +12 packages)
+- Flutter: `app_attest_integrity ^1.0.0` + `crypto ^3.0.6`
+**bundle 増加**: gzip 156 KiB = Workers Free 1MB の 16%
 
 ### 既存 `index.js` の変更ポイント
 
