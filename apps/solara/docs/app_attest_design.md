@@ -1,6 +1,6 @@
 # App Attest サーバー検証 設計ドキュメント
 
-**ステータス**: ドラフト v1.9 (S1 設計確定 → S2 cbor 26/26 → S3 verifyAttestation 20/20 → S3+ 時刻 C+D → S4 設計確定 → **S4 完了: verifyAssertion 7 テスト + DO 3 表 + DO smoke 11 操作 Workers 実機 PASS、累計 cbor 26 + app_attest 27 = 53/53 + DO 11/11、bundle gzip 91 KiB = 1MB の 9%**)
+**ステータス**: ドラフト v2.0 (S1-S4 完了 → **S5 完了: 本番 worker 配線 (/auth/challenge + /auth/attest + /protected/* middleware) + wrangler.toml DO binding + nodejs_compat + APP_ATTEST_ENFORCEMENT log_only 段階リリース機構、bundle gzip 156 KiB = 1MB の 16%**)
 **対象**: Cloudflare Worker `solara-api` の `/auth/attest` + `/protected/*` ミドルウェア
 **前提**: `project_solara_launch_checklist.md` Phase 1 認証ミドルウェア
 **関連**: `project_solara_security_principles.md` 原則 1〜3
@@ -28,6 +28,40 @@
 - R5 OID ASN.1 ネスト深さは **3 段** で確定 (node-app-attest 実装 `value[0].value[0].valueHex` + Apple Forum C++ Botan 実装と一致 ★★★)
 - production 知見追加 (adjoe blog): DCError.invalidInput/invalidKey 時の Flutter 側リトライ要件、challenge 5 分 TTL 実運用根拠
 - §13 実装方針 §14 ロールアウトを案 B' 前提に書き換え
+
+### v1.9 → v2.0 の変更点 (2026-05-19、S5 完了: 本番 worker 配線)
+
+**`apps/solara/worker/wrangler.toml` 更新**:
+- `compatibility_flags = ["nodejs_compat"]` 追加 (node:crypto createHash/createVerify 用)
+- `[[durable_objects.bindings]]` + `[[migrations]]` で `AttestationState` を SQLite-backed DO として登録 (tag v1)
+- `[vars]` に追加: APPLE_TEAM_ID, APPLE_BUNDLE_ID (両方 public 情報), APP_ATTEST_ENFORCEMENT (`log_only` default), APP_ATTEST_QUOTA_FREE (5), APP_ATTEST_QUOTA_PRO (100), APP_ATTEST_CHALLENGE_TTL_SEC (300)
+
+**`apps/solara/worker/src/index.js` 更新** (+~200 行):
+- `import { verifyAttestation, verifyAssertion } from './auth/app_attest.js'`
+- `export { AttestationState } from './auth/attestation_state.js'` (Worker entry から DO class を re-export)
+- `callDo(env, path, body)` ヘルパー追加 (DO 6 endpoint への共通呼び出し)
+- `getEnforcement(env)` helper (disabled/log_only/enforced)
+- `handleAuthChallenge(env, origin)`: random 32B 生成 → DO INSERT → `{challengeId, challenge: base64, ttlSec}` 返却
+- `handleAuthAttest(request, env, origin)`: 4 step (challenge consume → verifyAttestation → DO 永続化)
+- `protectedMiddleware(request, env)` 本実装: 5 step (DO から公開鍵取得 → body clone で payload bytes 取得 → verifyAssertion → signCount bump → quota check)
+- `dispatchAuth` を `(request, env, url, origin)` シグネチャに変更、`/auth/challenge` 追加、stub 関数を本実装に置換
+
+**`APP_ATTEST_ENFORCEMENT` 段階リリース機構**:
+- `"disabled"`: middleware 完全スキップ (緊急 kill switch)
+- `"log_only"`: 検証走るが失敗しても通す + `console.warn` (初回 deploy 推奨、Flutter 側未対応時の安全運用)
+- `"enforced"`: 失敗時 401 (Flutter 側完成 + 1 週間モニタ後に切替)
+
+**実機検証 (wrangler dev local)**:
+- `/public/health` → 200 ✅
+- `/auth/whoami` → 200 stub ✅
+- `/auth/challenge` → 200 `{challengeId, challenge: base64, ttlSec: 300}` ✅ (DO INSERT 成功確認)
+- `/auth/attest` with 不在 challengeId → 401 `invalid_challenge` ✅ (DO consume 404)
+- `/auth/attest` with 実 challenge + 不正 attestation → 401 (verifyAttestation fail) ✅
+- `/protected/fortune` with no headers → log_only モードで通過 + `[middleware:log_only] would block 401 missing_attestation_headers` warning ✅ (fortune は GEMINI_API_KEY 未設定で 500 だが middleware 配線とは無関係)
+
+**bundle 増分**: R1 minimal 565 KiB → **本番 worker 794 KiB / gzip 156.29 KiB = Workers Free 1MB の 16%** (既存 worker handler 群 + astronomy-engine 込みで +230 KiB、依然超余裕)
+
+**bindings 全 登録確認**: ATTESTATION_DO (Durable Object) + 6 env vars (APPLE_TEAM_ID / APPLE_BUNDLE_ID / APP_ATTEST_ENFORCEMENT / QUOTA_FREE / QUOTA_PRO / 既存)
 
 ### v1.8 → v1.9 の変更点 (2026-05-19、S4 完了: verifyAssertion + DO)
 

@@ -1,6 +1,8 @@
 name = "solara-api"
 main = "src/index.js"
 compatibility_date = "2024-12-01"
+# nodejs_compat: App Attest 検証で node:crypto (createHash/createVerify) が必要
+compatibility_flags = ["nodejs_compat"]
 
 # カスタムドメイン (solodev-lab.com は Cloudflare で DNS 管理中)
 # custom_domain = true で Cloudflare が DNS + SSL を全自動発行
@@ -27,6 +29,26 @@ TAROT_MODEL_FALLBACK = "gemini-flash-latest"
 FORTUNE_MODEL_PRIMARY = "gemini-2.5-flash"
 FORTUNE_MODEL_FALLBACK = "gemini-flash-latest"
 
+# ── App Attest 設定 (設計 v1.9 §16 確定値) ──────────
+# どちらも public 情報 (Bundle ID から推測可能、Team ID も同じ)、secret 不要
+APPLE_TEAM_ID = "TY5JW393Q5"
+APPLE_BUNDLE_ID = "com.solodevlab.solara"
+
+# App Attest middleware の段階的有効化スイッチ:
+#   "disabled"  - middleware 完全スキップ (緊急時 kill switch)
+#   "log_only"  - 検証は走るが失敗しても通す + console.warn (初回 deploy 推奨)
+#   "enforced"  - 検証失敗で 401 (本番想定、Flutter 側準備完了後)
+# 初期値は log_only。Flutter 側の attestation 実装 + 1 週間モニタ後に enforced へ。
+APP_ATTEST_ENFORCEMENT = "log_only"
+
+# Per-user quota (Layer C、設計 v1.8 §13)
+# Free=日 5 リクエスト / Pro=日 100 リクエスト (Solara DAU 1500 想定で十分)
+APP_ATTEST_QUOTA_FREE = "5"
+APP_ATTEST_QUOTA_PRO = "100"
+
+# Challenge TTL (設計 v1.8 §11 Q2、Apple Sample Code 推奨 5 分)
+APP_ATTEST_CHALLENGE_TTL_SEC = "300"
+
 # KV: /astro/forecast の月次クォータ用。
 # 有効化手順:
 #   1. wrangler kv namespace create FORECAST_KV
@@ -36,3 +58,14 @@ FORTUNE_MODEL_FALLBACK = "gemini-flash-latest"
 # [[kv_namespaces]]
 # binding = "FORECAST_KV"
 # id = "<namespace_id>"
+
+# ── Durable Object (App Attest 用、設計 v1.8 §6.1) ──
+# 全 keyId を 1 instance に集約 (idFromName('global'))。
+# 初回 deploy 時に migration tag v1 が走り SQLite-backed DO が作成される。
+[[durable_objects.bindings]]
+name = "ATTESTATION_DO"
+class_name = "AttestationState"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["AttestationState"]
