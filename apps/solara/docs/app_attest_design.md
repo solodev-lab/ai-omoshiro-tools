@@ -1,6 +1,6 @@
 # App Attest サーバー検証 設計ドキュメント
 
-**ステータス**: ドラフト v1.3 (2026-05-19 起案、同日 R2-R5/R7/R8 確定 + Q1-Q5 オーナー判断確定 + 案 B' ハイブリッド確定)
+**ステータス**: ドラフト v1.4 (2026-05-19 起案、同日 R2-R5/R7/R8 確定 + Q1-Q5 確定 + 案 B' ハイブリッド + challenge race condition 解決 + Team ID 確定)
 **対象**: Cloudflare Worker `solara-api` の `/auth/attest` + `/protected/*` ミドルウェア
 **前提**: `project_solara_launch_checklist.md` Phase 1 認証ミドルウェア
 **関連**: `project_solara_security_principles.md` 原則 1〜3
@@ -28,6 +28,19 @@
 - R5 OID ASN.1 ネスト深さは **3 段** で確定 (node-app-attest 実装 `value[0].value[0].valueHex` + Apple Forum C++ Botan 実装と一致 ★★★)
 - production 知見追加 (adjoe blog): DCError.invalidInput/invalidKey 時の Flutter 側リトライ要件、challenge 5 分 TTL 実運用根拠
 - §13 実装方針 §14 ロールアウトを案 B' 前提に書き換え
+
+### v1.3 → v1.4 の変更点 (2026-05-19、challenge race condition 解決 + Team ID 確定)
+- **🔴 challenge 保管を KV → DO に変更** (Firebase + App Check の 0% verified 障害と同じ構造的バグを未然回避):
+  - KV は eventual consistency 最大 60 秒 → クライアントが challenge 受け取り直後 (1-2秒) に別 PoP 経由で `/auth/attest` を叩くと「書き込みがまだ伝播していない」事故
+  - DO は single-threaded actor で強整合性 → write 直後の read で必ず取れる
+  - 同じ DO instance (`idFromName('global')`) に counter と challenge を統合管理 (追加コストゼロ)
+  - **consumed マーク**で replay 防止も自然成立
+- §6.1 DO スキーマに `challenges` テーブル追加
+- §3 データフロー図の `/auth/challenge` を KV → DO に書き換え
+- §11 に Q6 「challenge 保管方法」決着 (DO 採用、KV 不採用)
+- §16 確定値に Apple Team ID `TY5JW393Q5` + Bundle ID + rpId テストベクトル追加 (前 commit、v1.3 範囲)
+- §15 セッション 2 開始前チェックリストの Team ID 共有を完了マーク (前 commit)
+- §15 fixture ライセンス確認漏れ (MIT、v1.3 の Apache-2.0 誤記訂正) を追記 (前 commit)
 
 ---
 
@@ -88,9 +101,10 @@
 │            │ ────────────────────────►   │                  │
 │  iOS App   │                              │  Worker          │
 │  (Solara)  │ ◄────────────────────────   │  /auth/challenge │
-│            │  ② 32B random challenge      │                  │
-└────┬───────┘    (KV 5分 TTL)              └──────┬───────────┘
-     │                                              │
+│            │  ② { challengeId,            │  → DO INSERT:    │
+└────┬───────┘     challenge: base64(32B) } │   challenges 表  │
+     │            (DO 強整合、5分 TTL)       │   (5min 後 expire)│
+     │                                      └──────┬───────────┘
      │ DCAppAttestService.generateKey() → keyId    │
      │ DCAppAttestService.attestKey(keyId,         │
      │   SHA256(challenge))                        │
@@ -99,10 +113,17 @@
         { keyId, challengeId,              │ Worker           │
           attestation_b64 }                │ /auth/attest     │
      ───────────────────────────────────►  │                  │
-                                            │ 9 ステップ検証   │
-                                            │ → DO 保存:       │
-                                            │  {keyId, pubKey, │
-                                            │   counter:0}     │
+                                            │ a. DO から       │
+                                            │    challenge 取得 │
+                                            │    (consumed=NULL)│
+                                            │ b. 9 ステップ検証 │
+                                            │ c. DO 更新:       │
+                                            │   - attestations  │
+                                            │     {keyId,pubKey,│
+                                            │      counter:0}   │
+                                            │   - challenges    │
+                                            │     consumed_at   │
+                                            │     (replay 防止) │
      ◄───────────────────────────────────  │                  │
      ④ { ok: true }                        └──────────────────┘
 
@@ -248,18 +269,33 @@ const ok = await crypto.subtle.verify({name: 'ECDSA', hash: 'SHA-256'}, key, raw
 
 - **理由**: counter の単調増加チェックに race-free な single-threaded actor が必須。KV は eventual consistency で最大 60 秒の伝播遅延 → replay attack 窓ができる (Cloudflare 公式)。
 - **Free プラン**: SQLite-backed DO は 2025 GA、Free で 1GB / DO まで使える。Solara DAU 1500 想定でも 1 DO で十分。
-- **スキーマ**:
+- **スキーマ (v1.4 で challenges 表追加)**:
   ```sql
+  -- 端末ごとの attestation 永続化 (1 端末 1 行、書き込み = 初回 attest 時のみ)
   CREATE TABLE attestations (
     key_id TEXT PRIMARY KEY,
-    public_key_jwk TEXT NOT NULL,
+    public_key_pem TEXT NOT NULL,
     counter INTEGER NOT NULL DEFAULT 0,
     rp_id TEXT NOT NULL,
     aaguid TEXT NOT NULL,  -- 'production' or 'development'
     created_at INTEGER NOT NULL,
     last_used_at INTEGER NOT NULL
   );
+
+  -- v1.4 追加: server 発行 challenge の強整合性管理
+  -- KV だと eventual consistency 60s でクライアントが受け取った直後の検証が失敗する
+  -- (Firebase + App Check の 0% verified 障害事例と同じパターン)
+  CREATE TABLE challenges (
+    challenge_id TEXT PRIMARY KEY,        -- UUID v4
+    challenge_bytes BLOB NOT NULL,        -- 32B random
+    expires_at INTEGER NOT NULL,          -- unix ms、now() + 300_000
+    consumed_at INTEGER                   -- 使用済み記録 (replay 防止)、NULL=未使用
+  );
+  CREATE INDEX idx_challenges_expires ON challenges(expires_at);
   ```
+- **challenge cleanup**: `/auth/challenge` の INSERT 前に `DELETE FROM challenges WHERE expires_at < ?` を実行 (毎リクエスト cleanup、DO alarm 不要)
+  - 大量の expired 行が溜まる懸念は、5 分 TTL × 1500 DAU の challenge 発行頻度なら最大 ~50 行で無視可能
+  - 万一の暴走対策として `idx_challenges_expires` インデックスで DELETE 高速化
 - **DO 名前空間**: 全 keyId を 1 DO instance に詰める案 (`namespace.idFromName('global')`) vs keyId ごとに分ける案 (`namespace.idFromName(keyId)`)。前者はシンプルだが contention、後者は完全分散だが 1 keyId あたり DO instance が立つコスト。
   - **決定: 前者 (`global`)**。理由: Solara の同時刻 attestation 件数は <100/sec 想定、single DO で捌ける。後者は DO instance 数が DAU 規模に比例して billing リスク。
 
@@ -468,6 +504,7 @@ new_sqlite_classes = ["AttestationState"]   # SQLite-backed
 | **Q3** | リリース時の middleware ON/OFF | **初回公開から ON** ★ (Stage 1 スキップ確定 — 「すぐ Pro 解禁する」オーナー判断) | Pro 無効化フラグ実装不要、`/protected/*` middleware は初日から本実装で稼働。launch_checklist Phase 6 も同時更新 |
 | **Q4** | development AAGUID 受け入れ | **production only** | `appInfo.developmentEnv = false` 固定で deploy。TestFlight 内部テスターも production AAGUID で問題なし |
 | **Q5** | Apple Root CA 更新運用 | **不要** (v1.1 で R2 確定により解決済) | 有効期限 2045-03-15 で 19 年放置可能。release_checklist への追加タスクなし。Apple が前倒し失効した場合のみ wrangler deploy で差し替え |
+| **Q6** (v1.4 追加) | challenge 保管方法 | **Durable Object** (KV 不採用) | KV の eventual consistency 60s で「クライアント受け取り直後の検証失敗」事故を構造的に回避 (Firebase + App Check の 0% verified 障害と同じパターン)。同一 DO instance に counter と統合管理、追加コストゼロ。`consumed_at` マークで replay 防止が自然成立 |
 
 ### Q3 (初回 ON) の波及
 
@@ -581,6 +618,84 @@ export async function verifyAttestation({attestation, challenge, keyId, bundleId
 }
 ```
 
+### challenge ライフサイクル擬似コード (v1.4 で確定)
+
+```js
+// POST /auth/challenge
+async function handleChallenge(env) {
+  const challengeId = crypto.randomUUID();
+  const challengeBytes = crypto.getRandomValues(new Uint8Array(32));
+  const expiresAt = Date.now() + 5 * 60 * 1000;  // 5 min
+
+  const doStub = env.ATTESTATION_DO.get(env.ATTESTATION_DO.idFromName('global'));
+  await doStub.fetch('https://do/challenge-create', {
+    method: 'POST',
+    body: JSON.stringify({ challengeId, challengeBytes: [...challengeBytes], expiresAt }),
+  });
+  return jsonOk({ challengeId, challenge: btoa(String.fromCharCode(...challengeBytes)) });
+}
+
+// Durable Object 側 (擬似)
+async function challengeCreate(req) {
+  const { challengeId, challengeBytes, expiresAt } = await req.json();
+  // 毎回 cleanup (expired 行削除)
+  this.sql.exec('DELETE FROM challenges WHERE expires_at < ?', Date.now());
+  // INSERT 新 challenge
+  this.sql.exec(
+    'INSERT INTO challenges (challenge_id, challenge_bytes, expires_at) VALUES (?, ?, ?)',
+    challengeId, new Uint8Array(challengeBytes), expiresAt,
+  );
+  return new Response('ok');
+}
+
+// POST /auth/attest (該当部分のみ)
+async function handleAttest(req, env) {
+  const { challengeId, attestation: attB64, keyId } = await req.json();
+  const doStub = env.ATTESTATION_DO.get(env.ATTESTATION_DO.idFromName('global'));
+
+  // 1. challenge を DO から取得 (consumed_at IS NULL 確認、replay 防止)
+  const chRes = await doStub.fetch('https://do/challenge-consume', {
+    method: 'POST',
+    body: JSON.stringify({ challengeId }),
+  });
+  if (!chRes.ok) return jsonError(401, 'invalid_challenge', origin);
+  const { challengeBytes } = await chRes.json();
+
+  // 2. attestation 検証 (9 step)
+  const result = await verifyAttestation({
+    attestation: base64ToBytes(attB64),
+    challenge: new Uint8Array(challengeBytes),
+    keyId,
+    bundleIdentifier: env.APPLE_BUNDLE_ID,
+    teamIdentifier: env.APPLE_TEAM_ID,
+    allowDevelopmentEnvironment: false,  // Q4 production only
+  });
+  if (result.verifyError) return jsonError(401, result.verifyError, origin);
+
+  // 3. attestation を DO に永続化
+  await doStub.fetch('https://do/attestation-store', {
+    method: 'POST',
+    body: JSON.stringify({ keyId, publicKeyPem: result.publicKeyPem }),
+  });
+  return jsonOk({ ok: true }, origin);
+}
+
+// DO 側 challenge-consume (single-threaded、race condition なし)
+async function challengeConsume(req) {
+  const { challengeId } = await req.json();
+  const row = this.sql.exec(
+    'SELECT challenge_bytes FROM challenges WHERE challenge_id = ? AND expires_at > ? AND consumed_at IS NULL',
+    challengeId, Date.now(),
+  ).one();
+  if (!row) return new Response('not found', { status: 404 });
+  this.sql.exec(
+    'UPDATE challenges SET consumed_at = ? WHERE challenge_id = ?',
+    Date.now(), challengeId,
+  );
+  return Response.json({ challengeBytes: [...new Uint8Array(row.challenge_bytes)] });
+}
+```
+
 ### 案 B' を選ぶ 5 つの理由 (オーナー判断確定)
 
 1. **「確実に安全に」哲学に合致**: X.509 という地雷地帯だけ枯れた library に任せ、残り全部は自分で読んで自分で書く
@@ -629,10 +744,10 @@ export async function verifyAttestation({attestation, challenge, keyId, bundleId
 
 ### セッション 2 開始前のチェックリスト
 - [x] オーナー: Apple Team ID 共有 (`TY5JW393Q5`)
+- [x] 私: challenge race condition の解決を設計に追記 (v1.4、challenge も DO で管理) ← 本 commit で対応
 - [ ] オーナー: Solara Flutter 側 freerasp の release keystore SHA-256 投入 (App Attest 検証とは独立だが Phase 2 RASP の懸案)
 - [ ] 私: minimal Worker のサンプルコード準備 (R1 検証用、~30 行)
 - [ ] 私: node-app-attest tests/fixtures ファイル一覧抽出 + ライセンス確認 (MIT、設計v1.3 誤記訂正)
-- [ ] 私: challenge race condition の解決を設計に追記 (v1.4、challenge も DO で管理)
 
 ---
 
