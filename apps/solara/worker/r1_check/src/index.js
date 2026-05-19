@@ -15,6 +15,7 @@
 import { X509Certificate } from '@peculiar/x509';
 import { createVerify, createSign, generateKeyPairSync } from 'node:crypto';
 import { verifyAttestation } from '../../src/auth/app_attest.js';
+export { AttestationState } from '../../src/auth/attestation_state.js';
 
 // Apple App Attestation Root CA (DER → PEM、apps/solara/docs/ の保存版と一致)
 const APPLE_ROOT_PEM = `-----BEGIN CERTIFICATE-----
@@ -109,7 +110,7 @@ function checkCreateVerify() {
 }
 
 export default {
-  async fetch(request) {
+  async fetch(request, env) {
     const url = new URL(request.url);
     const path = url.pathname;
 
@@ -144,6 +145,90 @@ export default {
           });
         }
         return Response.json(result);
+      }
+
+      if (path === '/r1/do_smoke' && env.ATTESTATION_DO) {
+        // DO 6 endpoint smoke test。順番に叩いて全 PASS/FAIL を返す。
+        const stub = env.ATTESTATION_DO.get(env.ATTESTATION_DO.idFromName('global'));
+        const callDo = async (p, body) => {
+          const res = await stub.fetch(`https://do${p}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body),
+          });
+          return { status: res.status, body: await res.json() };
+        };
+
+        const results = [];
+        const testKeyId = `r1test-${crypto.randomUUID()}`;
+        const testChallengeId = crypto.randomUUID();
+        const testChallengeBytes = Array.from(crypto.getRandomValues(new Uint8Array(32)));
+        const expiresAt = Date.now() + 5 * 60 * 1000;
+        const today = new Date().toISOString().slice(0, 10);
+
+        // 1. challenge-create
+        results.push({ step: 'challenge-create', ...(await callDo('/challenge-create', {
+          challengeId: testChallengeId, challengeBytes: testChallengeBytes, expiresAt,
+        })) });
+
+        // 2. challenge-consume (1 回目: 成功、challengeBytes 返ってくる)
+        results.push({ step: 'challenge-consume-1st', ...(await callDo('/challenge-consume', {
+          challengeId: testChallengeId,
+        })) });
+
+        // 3. challenge-consume (2 回目: 404 = consumed 済み確認)
+        results.push({ step: 'challenge-consume-2nd', ...(await callDo('/challenge-consume', {
+          challengeId: testChallengeId,
+        })) });
+
+        // 4. attestation-store
+        results.push({ step: 'attestation-store', ...(await callDo('/attestation-store', {
+          keyId: testKeyId,
+          publicKeyPem: '-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEXXXX==\n-----END PUBLIC KEY-----',
+          rpId: 'TY5JW393Q5.com.solodevlab.solara',
+          aaguid: 'production',
+        })) });
+
+        // 5. attestation-get
+        results.push({ step: 'attestation-get', ...(await callDo('/attestation-get', { keyId: testKeyId })) });
+
+        // 6. attestation-bump-counter (signCount = 5、前回 0 → OK)
+        results.push({ step: 'bump-counter-5', ...(await callDo('/attestation-bump-counter', {
+          keyId: testKeyId, signCount: 5,
+        })) });
+
+        // 7. attestation-bump-counter (signCount = 3、前回 5 → 409 = replay 防止確認)
+        results.push({ step: 'bump-counter-3-replay', ...(await callDo('/attestation-bump-counter', {
+          keyId: testKeyId, signCount: 3,
+        })) });
+
+        // 8. quota-check-and-bump (limit 3、3 回叩く: OK / OK / OK)
+        for (let i = 1; i <= 3; i++) {
+          results.push({ step: `quota-${i}`, ...(await callDo('/quota-check-and-bump', {
+            keyId: testKeyId, dayBucket: today, limit: 3,
+          })) });
+        }
+        // 9. quota-check-and-bump (4 回目: 429 = 上限超 確認)
+        results.push({ step: 'quota-4-over', ...(await callDo('/quota-check-and-bump', {
+          keyId: testKeyId, dayBucket: today, limit: 3,
+        })) });
+
+        // 期待値判定
+        const expectations = {
+          'challenge-create': 200,
+          'challenge-consume-1st': 200,
+          'challenge-consume-2nd': 404,
+          'attestation-store': 200,
+          'attestation-get': 200,
+          'bump-counter-5': 200,
+          'bump-counter-3-replay': 409,
+          'quota-1': 200,
+          'quota-2': 200,
+          'quota-3': 200,
+          'quota-4-over': 429,
+        };
+        const allPass = results.every((r) => r.status === expectations[r.step]);
+        return Response.json({ allPass, results, expectations });
       }
 
       if (path === '/r1/all') {

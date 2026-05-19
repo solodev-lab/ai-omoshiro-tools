@@ -17,7 +17,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
-import { verifyAttestation } from '../src/auth/app_attest.js';
+import { verifyAttestation, verifyAssertion } from '../src/auth/app_attest.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -376,4 +376,122 @@ test('publicKeyPem が PEM 形式で createPublicKey 可能 (assertion 検証の
   const pk = createPublicKey(result.publicKeyPem);
   assert.equal(pk.asymmetricKeyType, 'ec');
   assert.equal(pk.asymmetricKeyDetails.namedCurve, 'prime256v1'); // = P-256
+});
+
+// ───────────────────────────────────────────────────────
+// verifyAssertion テスト (assertion fixture は node-app-attest の inline 値)
+// ───────────────────────────────────────────────────────
+
+test('verifyAssertion: 正常系 fixture で ok + signCount 抽出', () => {
+  const fx = loadFixture('assertion.json');
+  const result = verifyAssertion({
+    assertion: b64ToBytes(fx.assertion),
+    payload: new TextEncoder().encode(fx.payload),
+    publicKeyPem: fx.publicKey,
+    bundleIdentifier: fx.bundleIdentifier,
+    teamIdentifier: fx.teamIdentifier,
+  });
+  assert.equal(result.ok, true, `expected ok, got ${JSON.stringify(result)}`);
+  // assertion fixture の signCount は最初のリクエスト = 1 と推定 (前回 0、incremented)
+  assert.equal(typeof result.signCount, 'number');
+  assert.ok(result.signCount >= 0);
+});
+
+test('verifyAssertion: payload 1 ビット改竄 → fail_signature_invalid', () => {
+  const fx = loadFixture('assertion.json');
+  const payload = new TextEncoder().encode(fx.payload);
+  payload[5] ^= 0xff; // 改竄
+  const result = verifyAssertion({
+    assertion: b64ToBytes(fx.assertion),
+    payload,
+    publicKeyPem: fx.publicKey,
+    bundleIdentifier: fx.bundleIdentifier,
+    teamIdentifier: fx.teamIdentifier,
+  });
+  assert.equal(result.ok, false);
+  assert.equal(result.error, 'fail_signature_invalid');
+});
+
+test('verifyAssertion: bundleIdentifier 違い → fail_rpid_mismatch', () => {
+  const fx = loadFixture('assertion.json');
+  const result = verifyAssertion({
+    assertion: b64ToBytes(fx.assertion),
+    payload: new TextEncoder().encode(fx.payload),
+    publicKeyPem: fx.publicKey,
+    bundleIdentifier: 'com.solodevlab.solara',
+    teamIdentifier: fx.teamIdentifier,
+  });
+  assert.equal(result.ok, false);
+  assert.equal(result.error, 'fail_rpid_mismatch');
+});
+
+test('verifyAssertion: teamIdentifier 違い → fail_rpid_mismatch', () => {
+  const fx = loadFixture('assertion.json');
+  const result = verifyAssertion({
+    assertion: b64ToBytes(fx.assertion),
+    payload: new TextEncoder().encode(fx.payload),
+    publicKeyPem: fx.publicKey,
+    bundleIdentifier: fx.bundleIdentifier,
+    teamIdentifier: 'TY5JW393Q5',
+  });
+  assert.equal(result.ok, false);
+  assert.equal(result.error, 'fail_rpid_mismatch');
+});
+
+test('verifyAssertion: 別の公開鍵で verify → fail_signature_invalid', async () => {
+  // 自前で生成した別 P-256 公開鍵 (PEM) で verify → signature 検証失敗
+  const fx = loadFixture('assertion.json');
+  const { generateKeyPairSync } = await import('node:crypto');
+  const { publicKey } = generateKeyPairSync('ec', { namedCurve: 'P-256' });
+  const wrongPem = publicKey.export({ type: 'spki', format: 'pem' });
+  const result = verifyAssertion({
+    assertion: b64ToBytes(fx.assertion),
+    payload: new TextEncoder().encode(fx.payload),
+    publicKeyPem: wrongPem,
+    bundleIdentifier: fx.bundleIdentifier,
+    teamIdentifier: fx.teamIdentifier,
+  });
+  assert.equal(result.ok, false);
+  assert.equal(result.error, 'fail_signature_invalid');
+});
+
+test('verifyAssertion: 不正な CBOR → fail_cbor_decode', () => {
+  const result = verifyAssertion({
+    assertion: new Uint8Array([0xff, 0xff, 0xff]), // 不正 CBOR
+    payload: new Uint8Array([1, 2, 3]),
+    publicKeyPem: '-----BEGIN PUBLIC KEY-----\nMFkw...\n-----END PUBLIC KEY-----',
+    bundleIdentifier: 'b',
+    teamIdentifier: 't',
+  });
+  assert.equal(result.ok, false);
+  assert.ok(['fail_cbor_decode', 'fail_signature_missing', 'fail_authdata_missing'].includes(result.error));
+});
+
+test('verifyAssertion: 入力バリデーション 5 種', () => {
+  const fx = loadFixture('assertion.json');
+  // assertion 型
+  assert.equal(
+    verifyAssertion({ assertion: 'str', payload: new Uint8Array(0), publicKeyPem: 'p', bundleIdentifier: 'b', teamIdentifier: 't' }).error,
+    'invalid_assertion_type',
+  );
+  // payload 型
+  assert.equal(
+    verifyAssertion({ assertion: new Uint8Array(0), payload: 'str', publicKeyPem: 'p', bundleIdentifier: 'b', teamIdentifier: 't' }).error,
+    'invalid_payload_type',
+  );
+  // publicKeyPem 形式 (PEM ヘッダーなし)
+  assert.equal(
+    verifyAssertion({ assertion: new Uint8Array(0), payload: new Uint8Array(0), publicKeyPem: 'not pem', bundleIdentifier: 'b', teamIdentifier: 't' }).error,
+    'invalid_publickey_pem',
+  );
+  // bundleIdentifier 空
+  assert.equal(
+    verifyAssertion({ assertion: new Uint8Array(0), payload: new Uint8Array(0), publicKeyPem: fx.publicKey, bundleIdentifier: '', teamIdentifier: 't' }).error,
+    'invalid_bundle_id',
+  );
+  // teamIdentifier 空
+  assert.equal(
+    verifyAssertion({ assertion: new Uint8Array(0), payload: new Uint8Array(0), publicKeyPem: fx.publicKey, bundleIdentifier: 'b', teamIdentifier: '' }).error,
+    'invalid_team_id',
+  );
 });
