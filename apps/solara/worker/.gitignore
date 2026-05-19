@@ -1,0 +1,9 @@
+# Cloudflare Workers ローカル成果物
+node_modules/
+.wrangler/
+.dev.vars
+.dev.vars.local
+
+# wrangler deploy --dry-run の一時出力 (Phase C bundle size 計測等で生成)
+.dry-run-output/
+*/.dry-run-output/
