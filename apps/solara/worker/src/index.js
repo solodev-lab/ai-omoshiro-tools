@@ -715,20 +715,43 @@ async function dispatchAuth(request, env, url, origin) {
   if (path === '/auth/integrity/challenge' && request.method === 'POST') {
     return await handleIntegrityChallenge(env, origin);
   }
-  // Play Integrity 診断 endpoint (S2 minimal worker、設計 v0.3 §13)
-  // R7 (base64 SPKI import) + R8 (Self-managed key が Standard 応答に適用されるか) を実証
+  // Play Integrity 診断 endpoint (S2 minimal worker、設計 v0.3 §13 + S6 本番ガード)
+  // R7 (base64 SPKI import) + R8 (Self-managed key が Standard 応答に適用されるか) を実証。
+  //
+  // 🔒 S6 本番ガード: PLAY_INTEGRITY_ENFORCEMENT === 'enforced' 時は 404 化
+  // (本番でデバッグ口を露出しない。`disabled`/`log_only` 期間中のみアクセス可)。
+  // 切替は wrangler.toml の PLAY_INTEGRITY_ENFORCEMENT を変えるだけで反映。
   if (path === '/auth/integrity/diagnose' && request.method === 'GET') {
+    if (isDiagnosticsBlocked(env)) {
+      return jsonError(404, 'not_found', origin);
+    }
     const keys = await diagnoseKeys(env);
     return jsonOk(keys, origin);
   }
-  // 実 token decode 試験 (S5 で実機採取 token を POST して R8 確証)
   if (path === '/auth/integrity/decode-test' && request.method === 'POST') {
+    if (isDiagnosticsBlocked(env)) {
+      return jsonError(404, 'not_found', origin);
+    }
     const body = await request.json().catch(() => ({}));
     if (!body.token) return jsonError(400, 'token required', origin);
     const result = await decodeIntegrityToken(body.token, env);
     return jsonOk(result, origin);
   }
   return null;
+}
+
+/**
+ * 診断 endpoint (/auth/integrity/diagnose + /auth/integrity/decode-test) を
+ * 本番モードでブロックする判定。
+ *
+ * - PLAY_INTEGRITY_ENFORCEMENT === 'enforced' → 404 で完全隠蔽
+ * - それ以外 (disabled / log_only / 未設定) → アクセス可 (S5 オーナー実機作業中)
+ *
+ * 検証用の最後の砦として log_only の間は active のまま残す。enforced 切替と
+ * 同時に本ガードが発火、攻撃者がデバッグ口を発見できないようにする。
+ */
+function isDiagnosticsBlocked(env) {
+  return getPlayIntegrityEnforcement(env) === 'enforced';
 }
 
 // ── /protected/* dispatcher ──
@@ -802,6 +825,7 @@ export const _internal = {
   getEnforcement,
   getPlayIntegrityEnforcement,
   extractAppUserId,
+  isDiagnosticsBlocked,
 };
 
 // ── Main Handler ──

@@ -14,8 +14,13 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { _internal } from '../src/index.js';
 
-const { handleIntegrityChallenge, getEnforcement, getPlayIntegrityEnforcement, extractAppUserId } =
-  _internal;
+const {
+  handleIntegrityChallenge,
+  getEnforcement,
+  getPlayIntegrityEnforcement,
+  extractAppUserId,
+  isDiagnosticsBlocked,
+} = _internal;
 
 // ── env mock ───────────────────────────────────────────────
 
@@ -183,4 +188,28 @@ test('extractAppUserId: 非 JSON / 空 bytes で null (例外を投げない)', 
   assert.equal(extractAppUserId(new TextEncoder().encode('not json')), null);
   assert.equal(extractAppUserId(new Uint8Array(0)), null);
   assert.equal(extractAppUserId(null), null);
+});
+
+// ── isDiagnosticsBlocked (S6 本番ガード) ────────────────────
+
+test('isDiagnosticsBlocked: enforced のみ true (= 診断 endpoint を 404 化)', () => {
+  assert.equal(isDiagnosticsBlocked({ PLAY_INTEGRITY_ENFORCEMENT: 'enforced' }), true);
+});
+
+test('isDiagnosticsBlocked: disabled / log_only / 未設定 で false (= 診断 endpoint 開放)', () => {
+  assert.equal(isDiagnosticsBlocked({ PLAY_INTEGRITY_ENFORCEMENT: 'disabled' }), false);
+  assert.equal(isDiagnosticsBlocked({ PLAY_INTEGRITY_ENFORCEMENT: 'log_only' }), false);
+  assert.equal(isDiagnosticsBlocked({}), false);
+});
+
+test('isDiagnosticsBlocked: 大文字小文字を正規化 (ENFORCED でも true)', () => {
+  assert.equal(isDiagnosticsBlocked({ PLAY_INTEGRITY_ENFORCEMENT: 'ENFORCED' }), true);
+  assert.equal(isDiagnosticsBlocked({ PLAY_INTEGRITY_ENFORCEMENT: 'Enforced' }), true);
+});
+
+test('isDiagnosticsBlocked: 不明値は log_only にフォールバック (= 開放、安全側)', () => {
+  // getPlayIntegrityEnforcement が不明値を log_only に正規化するので、開放のまま
+  // (= 設定ミスで意図せず本番モードに倒れない、フェイルセーフ)
+  assert.equal(isDiagnosticsBlocked({ PLAY_INTEGRITY_ENFORCEMENT: 'invalid' }), false);
+  assert.equal(isDiagnosticsBlocked({ PLAY_INTEGRITY_ENFORCEMENT: '' }), false);
 });

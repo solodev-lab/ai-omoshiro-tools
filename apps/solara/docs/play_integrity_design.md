@@ -1,6 +1,6 @@
 # Play Integrity サーバー検証 設計ドキュメント
 
-**ステータス**: 設計 v0.8 (2026-05-19、S5 Flutter 実装完成 — `AppAttestClient` Android 分岐 + `--dart-define=SOLARA_GCP_PROJECT_NUMBER` 配線 + Flutter 単体テスト追加、実機テスト + R8 最終確認はオーナー作業へ)
+**ステータス**: 設計 v1.0 (2026-05-19、Phase 1 コード側完成 — 6 セッションで Worker 125/125 + Flutter 9/9 PASS、診断 endpoint 本番ガード + 運用ガイド完成、残はオーナー実機 deploy + 1 週間モニタ + enforced 切替のみ)
 **対象**: Cloudflare Worker `solara-api` の `/auth/integrity/*` + `/protected/*` middleware の Android 経路
 **前提**: `project_solara_launch_checklist.md` Phase 1 認証ミドルウェア + Phase 2 Flutter クライアント
 **関連**:
@@ -10,6 +10,25 @@
 - `../../docs/app_development_lessons.md` §1.3 ケーススタディ + §5.6 鍵交換ハイブリッド方式 + §5.7 設計と公式 UI 乖離
 
 ## 変更履歴
+
+### v1.0 (2026-05-19、S6 仕上げ — Phase 1 コード側完成)
+- **診断 endpoint 本番ガード** (`src/index.js`):
+  - `isDiagnosticsBlocked(env)` helper 追加 (`PLAY_INTEGRITY_ENFORCEMENT === 'enforced'` で true)
+  - `/auth/integrity/diagnose` + `/auth/integrity/decode-test` を enforced 時に 404 化 (本番でデバッグ口を露出しない)
+  - `log_only` / `disabled` / 未設定 / 不明値は開放継続 (フェイルセーフ = 設定ミスで意図せず本番モードに倒れない)
+  - 切替は wrangler.toml の `PLAY_INTEGRITY_ENFORCEMENT` を変えるだけで反映 (deploy 1 回)
+- **§14 運用ガイド新設** (5 サブセクション、約 130 行):
+  - §14.1 端末ブロック警告対応: error code 7 種の原因と対応表
+  - §14.2 cert SHA-256 rotation 手順: Play Console での fingerprint 確認 + HEX→base64 変換 + 新旧両方 allowlist + 1 週間後旧削除の手順
+  - §14.3 Play Integrity API quota 増量申請: Google Cloud Console での edit quotas + 緊急避難 (log_only への倒し方)
+  - §14.4 wrangler tail で実機 token 採取: R8 / cert 採取 / トラブルシュート用、curl で decode-test に POST する手順
+  - §14.5 監視メトリクス: 401 率 / device_integrity_missing 比率 / challenge:protected 比率 / bundle サイズ
+- **endpoint テスト 4 ケース追加** (`test/integrity_endpoints.test.js`):
+  - isDiagnosticsBlocked: enforced で true / 他で false / 大文字小文字 / 不明値フォールバック
+  - Worker 全テスト 121 → **125 PASS**
+- **bundle gzip 173.99 → 174.04 KiB** (+0.05 KiB、ガード 1 行 + isDiagnosticsBlocked 関数追加分)
+- **§12 ロードマップ S6 ✅**: 6 セッション全完了、残はオーナー実機作業 (§11.3) のみ
+- **メモリ整理**: project_solara_play_integrity.md + MEMORY.md + project_solara_launch_checklist.md を Phase 1 コード側完了状態に更新
 
 ### v0.8 (2026-05-19、S5 Flutter 実装完成)
 - **`lib/utils/app_attest_client.dart` v2.0 拡張** (~290 行、+140 行):
@@ -598,31 +617,125 @@ S4 ✅: DO integrity_nonces 表 + /auth/integrity/challenge POST + middleware
 S5 ✅: Flutter AppAttestClient Android 分岐 + dart-define 配線 + build_release.py 拡張 +
        Flutter テスト 9 ケース追加 + R8 概算解決 (公式 docs)、実機確認は §11.3 オーナー作業へ
 S6 🔵: 診断 endpoint 本番ガード + docs 仕上げ + メモリ整理 + 本番 deploy
-S5  : Flutter AppAttestClient を OS 分岐対応に拡張
-      + cloudProjectNumber を --dart-define で配線
-      + Android 実機テスト (or Android Emulator + Play services)
-      + flutter analyze + 既存 test 維持
-      + 🔴 R8 確証 — 実機 token を `/auth/integrity/decode-test` に POST して
-        Self-managed key で decode 成功するか確認
-S6  : docs 仕上げ (deploy 手順 §13 + 運用ガイド §14)
-      + launch_checklist 更新 + メモリ整理
-      + オーナー作業 (Cloud Project Number 取得 + Worker vars 投入) → 本番 deploy
-      + 診断 endpoint (/auth/integrity/diagnose, /auth/integrity/decode-test) を
-        ENFORCEMENT==='enforced' 時に 404 化 (= 本番でデバッグ口を露出しない)
+S6 ✅: 診断 endpoint 本番ガード (enforced で 404 化) +
+       運用ガイド §14 (端末ブロック / cert rotation / quota 増量) +
+       launch_checklist 更新 + 設計 v1.0 にバンプ。
+       本番 deploy + 1 週間モニタ + enforced 切替はオーナー作業 (§11.3)
 ```
 
-App Attest と同等の重さを想定 (6-8 セッション、計 15-20h)、現実績 S1+S2=2 セッション。
+App Attest と同等の重さ想定 (6-8 セッション、計 15-20h)。実績 S1-S6 = 6 セッション。
 
-## 13. v0.8 から v1.0 への次タスク (S6 仕上げ + 本番 deploy)
+## 13. Phase 1 コード側完成 — 残はオーナー実機作業のみ (§11.3)
 
-S5 Flutter 実装 ✅ 完了。S6 のスコープ:
-1. **オーナー作業 (§11.3)**: 実機 Android テスト + R8 最終確認 + cert SHA-256 採取 → `ANDROID_CERT_SHA256_ALLOWLIST` 投入 → 1 週間モニタ → `enforced` 切替
-2. **診断 endpoint の本番ガード**: `/auth/integrity/diagnose` + `/auth/integrity/decode-test` を `PLAY_INTEGRITY_ENFORCEMENT==='enforced'` 時に 404 化 (本番でデバッグ口を露出しない)
-3. **docs 仕上げ**:
-   - launch_checklist の Play Integrity 行を `[x]` に更新
-   - 運用ガイド §14 追加: 端末ブロック警告の対応 / cert rotation 手順 / quota 増量申請手順
-4. **メモリ整理**: `project_solara_play_integrity.md` を本番反映状態に更新
-5. **設計 v1.0 にバンプ**: 本番 deploy + 1 週間モニタ後の最終確認、S5/S6 全項目 `[x]` で固定
+S6 ✅ 完了で本設計は v1.0 fix、Phase 1 の Worker / Flutter コードはすべて
+完成して **125/125 worker + 9/9 flutter PASS** 状態。残作業は実機での
+deploy → モニタ → enforced 切替のみ:
+
+1. **オーナー実機作業 (§11.3、推定 1-2h + 1 週間モニタ)**:
+   - Cloud Project Number (12 桁) を `--dart-define=SOLARA_GCP_PROJECT_NUMBER=...` で release ビルドに注入 (`tools/build_release.py aab --gcp-project-number <12桁> --release-mode`)
+   - Play Console > Internal Testing で配信、実機で Cosmic Pro 1 回叩く
+   - `wrangler tail` で X-PlayIntegrity-Token 採取 → `/auth/integrity/decode-test` に POST して **R8 最終確認** + `appIntegrity.certificateSha256Digest` 値採取
+   - `ANDROID_CERT_SHA256_ALLOWLIST` に投入 → `wrangler deploy`
+   - 1 週間モニタ (§14.5 監視メトリクス参照) で異常なければ `PLAY_INTEGRITY_ENFORCEMENT = "enforced"` に切替 → `wrangler deploy` (= 診断 endpoint も同時に 404 化、§14.4 参照)
+2. **公開後の運用**: §14 運用ガイド (端末ブロック対応 / cert rotation / quota 増量) を参照
+3. **将来の拡張余地**:
+   - `environmentDetails` opt-in による Play Protect / 危険アプリ検知の参照 (= Pro 機能の弱信号として活用)
+   - GET_INTEGRITY remediation dialog 表示 (= 改造端末ユーザーに修復手順を提示、Plugin v1.5+ に依存)
+   - Trusted Entitlements REST fallback (= RC Webhook 遅延吸収、Phase 後半で検討)
+
+## 14. 運用ガイド (本番稼働後のサポート手順)
+
+S6 で本番 deploy 完了 + `enforced` 切替後の運用手順。
+
+### 14.1 端末ブロック警告対応 (= 正規ユーザーが 401 を受ける場合)
+
+**症状**: 実機 Android で `/protected/fortune` 等が 401 を返す、または Pro 機能が動かない。
+
+**原因切り分け**:
+1. `wrangler tail` でリアルタイムログを確認:
+   ```bash
+   cd apps/solara/worker && npx wrangler tail
+   ```
+2. 401 と一緒に返る `error` フィールド (`app_not_recognized` / `device_integrity_missing` / `cert_not_allowlisted` 等) で原因特定。
+
+| error | 原因 | 対応 |
+|---|---|---|
+| `app_not_recognized:UNRECOGNIZED_VERSION` | Play Store 経由以外の install (サイドロード) | ユーザーに Play Store からの install を案内 |
+| `app_not_recognized:UNEVALUATED` | 端末が検証不能 (古い OS / 改造) | 仕様外として 401 維持 (Solara minSdk 31 = Android 12 以降) |
+| `device_integrity_missing` | root 化 / unlocked bootloader / Magisk 等 | 仕様外として 401 維持 |
+| `device_verdict_empty` | 端末が攻撃検知された | 仕様外として 401 維持 |
+| `cert_not_allowlisted` | Play Console で署名鍵 rotation 後に allowlist 未更新 | §14.2 cert rotation 手順 |
+| `requesthash_mismatch` | 攻撃 or 端末時刻ずれ / clientData 改竄 | 端末時刻同期確認、頻発時は調査 |
+| `client_clock_drift` / `token_ts_drift` | 端末時刻が ±5min を超えてずれている | ユーザーに端末時刻自動同期を案内 |
+| `nonce_consume_failed:*` | nonce の重複/期限切れ (= 同 token を 2 回送信) | 通常はクライアントバグ。仕様通り 401 で OK |
+
+**一時的に「Pro 機能ゲートだけ解除」したい緊急時**: `wrangler.toml` の `PLAY_INTEGRITY_ENFORCEMENT = "log_only"` に書き戻し → `wrangler deploy`。検証ログは出続けるが Worker は通過する (= 緊急 kill switch)。
+
+### 14.2 cert SHA-256 rotation 手順
+
+**発生タイミング**:
+- Play App Signing を有効にすると Google が **upload key** + **signing key** の 2 つの SHA-256 を管理 (通常はどちらも `ANDROID_CERT_SHA256_ALLOWLIST` に登録)。
+- Google が internal rotation する場合がある (頻度は低い、年 0-1 回)。
+- 自前 signing key を再生成した場合 (基本やらない、必要なら fresh upload 必要)。
+
+**手順**:
+1. Play Console > Solara > App Signing で現在の **App signing key fingerprint (SHA-256)** + **Upload key fingerprint (SHA-256)** を確認 (HEX 形式)
+2. HEX → base64 変換 (例 Python: `base64.b64encode(bytes.fromhex(hex_str)).decode()`)
+3. `wrangler.toml` の `ANDROID_CERT_SHA256_ALLOWLIST` に **新旧両方** を残す形で更新 (CSV):
+   ```toml
+   ANDROID_CERT_SHA256_ALLOWLIST = "<旧 base64>,<新 base64>"
+   ```
+4. `npx wrangler deploy`
+5. 1 週間モニタ後、旧鍵経由のリクエストが完全に消えたことを確認 → 旧 base64 を削除して再 deploy
+
+🚨 **rotation 中は必ず旧鍵を残す**: 既存ユーザーの端末は古い token をキャッシュしている可能性、旧鍵を即削除すると正規ユーザーが 401 を受ける。
+
+### 14.3 Play Integrity API quota 増量申請
+
+**発生タイミング**: `wrangler tail` で Google decode API 由来のエラーが頻発し始めた、または Google Cloud Console で `playintegrity.googleapis.com` の "Quota exceeded" 警告。
+
+Solara の **Self-managed key + Standard request** モードでは Google decode API を直接呼ばないため、quota は `prepareTokenProvider` + `requestToken` の 2 操作のみ消費する。Free tier 10k/day で DAU 1500 × 平均 3 req = 4,500/day は十分余裕だが、バズや攻撃で超過する可能性あり。
+
+**手順**:
+1. Google Cloud Console > APIs & Services > Quotas で `playintegrity.googleapis.com` を検索
+2. "Quota exceeded" 警告が出ている quota (通常 `Token requests per day` か `Prepare requests per day`) を選択
+3. "EDIT QUOTAS" → 増量申請フォーム入力:
+   - Solara DAU と Play Integrity 利用形態を簡単に記載 (Pro エンタイトルメント検証用)
+   - 希望 quota (例: 100k/day)
+   - 必要なら Google の追加質問に英語で返信
+4. 通常 1-3 営業日で承認 (商用利用かつ自然なトラフィックなら拒絶されない)
+
+**緊急避難**: 申請承認待ちの間は `PLAY_INTEGRITY_ENFORCEMENT = "log_only"` に倒すと、検証は走るが失敗しても通過 (= quota 枯渇でも Solara が止まらない、ただし Pro ゲート無効化)。
+
+### 14.4 wrangler tail で実機 token 採取 (R8 / cert 採取 / トラブルシュート)
+
+実機 Android からの `/protected/*` リクエストの中身を見る一般手順:
+```bash
+cd apps/solara/worker
+npx wrangler tail --format pretty
+# 別端末で実機の Solara を起動 → Pro 機能を 1 回叩く
+# ログに 401 ${error code} ... が出る (log_only の場合は warning のみ)
+```
+
+**実機 token を採取して decode-test に投げる手順** (R8 確認 / cert SHA-256 採取):
+1. `wrangler tail` で実機からのリクエストヘッダー `X-PlayIntegrity-Token: <長い JWE>` を確認
+2. curl で `/auth/integrity/decode-test` に POST:
+   ```bash
+   curl -X POST https://solara-api.solodev-lab.com/auth/integrity/decode-test \
+     -H 'Content-Type: application/json' \
+     -d '{"token": "<採取した JWE>"}'
+   ```
+3. 戻り値 `{"ok": true, "payload": {...}}` で R8 確認 + `payload.appIntegrity.certificateSha256Digest` 値を採取 → `ANDROID_CERT_SHA256_ALLOWLIST` 投入
+
+🚨 **`/auth/integrity/decode-test` は `PLAY_INTEGRITY_ENFORCEMENT === "enforced"` で 404 になる** (S6 ガード)。本番切替後は採取できないので、log_only 期間中に確実に採取しておく。
+
+### 14.5 監視メトリクス (Cloudflare Workers Analytics)
+
+公開後 1 週間のモニタで以下を確認:
+- **401 率**: `/protected/*` の 401 が DAU の何 % か。1% 超なら原因調査 (端末固有問題 / 端末時刻ずれ / Google API 仕様変更)
+- **`device_integrity_missing` 比率**: 端末改造ユーザー比率。3% 超なら一部地域での root 文化対応を検討 (= log_only 維持 + Pro 課金フローだけ有効化)
+- **`/auth/integrity/challenge` 呼出数 vs `/protected/*` 呼出数**: 比率が 1:1 でないと配線バグ (1 protected ごとに 1 challenge が正常)
+- **bundle gzip サイズ**: 何らかの理由で 250 KiB 超えたら調査 (jose や CBOR の依存追加で予期せぬ膨張)
 
 ## 関連ドキュメント
 
