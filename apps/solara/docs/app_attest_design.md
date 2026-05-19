@@ -1,9 +1,9 @@
 # App Attest サーバー検証 設計ドキュメント
 
-**ステータス**: 確定 v3.0 (S1-S6 全完了、Flutter + Worker 両側コード完成、残: TestFlight 実機 E2E + 本番 deploy のオーナー作業のみ。詳細は §17/§18)
-**対象**: Cloudflare Worker `solara-api` の `/auth/attest` + `/protected/*` ミドルウェア
-**前提**: `project_solara_launch_checklist.md` Phase 1 認証ミドルウェア
-**関連**: `project_solara_security_principles.md` 原則 1〜3
+**ステータス**: 確定 v3.0 (App Attest 単体完了) → **v2.2 で RevenueCat 統合** (2026-05-19、`apps/solara/docs/revenuecat_webhook.md` を併読)
+**対象**: Cloudflare Worker `solara-api` の `/auth/attest` + `/protected/*` ミドルウェア + `/webhooks/revenuecat`
+**前提**: `project_solara_launch_checklist.md` Phase 1 認証ミドルウェア + Webhook 受信
+**関連**: `project_solara_security_principles.md` 原則 1〜3、`revenuecat_webhook.md` (entitlement 連動の詳細はこちら)
 
 ### v1 → v1.1 の変更点 (2026-05-19)
 - R2 Apple Root CA フィンガープリント確定 (`1CB9823BA28BA6AD2D33A006941DE2AE4F513EF1D4E831B9F7E0FA7B6242C932`、**有効期限 2045-03-15** → 半年更新タスク削除)
@@ -28,6 +28,23 @@
 - R5 OID ASN.1 ネスト深さは **3 段** で確定 (node-app-attest 実装 `value[0].value[0].valueHex` + Apple Forum C++ Botan 実装と一致 ★★★)
 - production 知見追加 (adjoe blog): DCError.invalidInput/invalidKey 時の Flutter 側リトライ要件、challenge 5 分 TTL 実運用根拠
 - §13 実装方針 §14 ロールアウトを案 B' 前提に書き換え
+
+### v3.0 → v2.2 RevenueCat 統合 (2026-05-19、Phase 1 Webhook 残対応)
+
+App Attest 単体は v3.0 で完成。同 middleware に RevenueCat エンタイトルメント連動を追加し、Worker 側で「クライアント単独 isPro 禁止」原則を完全成立させた。詳細は **`apps/solara/docs/revenuecat_webhook.md`** を併読。
+
+主要変更:
+- middleware に entitlement lookup を追加 (body `__appUserId` → DO `user_entitlements` lookup)
+- Pro/Free で `quota-check-and-bump` の `limit` を切替 (Pro=100/日 / Free=5/日)
+- 新規 `/webhooks/revenuecat` ルートで RC 公式 webhook を受信、Bearer 認証 + event 種別マップで DO に upsert
+- AttestationState DO に `user_entitlements` + `webhook_events` 2 表追加 (migration 不要、`CREATE TABLE IF NOT EXISTS` で自動)
+- Worker メモリ Map 60s TTL の `auth/entitlement_cache.js` で DO 連打抑制
+- Flutter `AppAttestClient.postProtected` が body に `__appUserId` を自動注入 (`PurchasesService.appUserId` 経由)
+- assertion が body 全体を SHA-256 署名するため `__appUserId` は改ざん耐性あり
+
+未着手:
+- Trusted Entitlements REST API による fallback (公開後の精度向上候補)
+- anonymous → authenticated alias 結合の cleanup ジョブ (実害なしのため公開後検討)
 
 ### v2.0 → v2.1 の変更点 (2026-05-19、S6-A 完了: Flutter `AppAttestClient` 基盤)
 

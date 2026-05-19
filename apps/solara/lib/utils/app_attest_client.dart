@@ -23,9 +23,19 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'purchases_service.dart';
 import 'solara_api.dart';
 
 const String _kPrefsKeyId = 'solara_appattest_key_id_v1';
+
+/// /protected/* body 内で Worker に App User ID を伝える予約フィールド名
+/// (Worker `index.js` の `APP_USER_ID_FIELD` と完全一致)。
+///
+/// 値の出所:
+///   - Sign in 済み: `PurchasesService.appUserId` = "apple:xxx" / "google:xxx"
+///   - 未 sign in : `PurchasesService.appUserId` = RC SDK の "$RCAnonymousID:xxx"
+///   - DEV ビルド / 未 configure: null → body に注入しない (Worker 側 Free 扱い)
+const String _kAppUserIdField = '__appUserId';
 
 /// AppAttestClient シングルトン。
 ///
@@ -165,6 +175,28 @@ class AppAttestClient {
     }
   }
 
+  /// payload に App User ID を merge した新しい Map を返す (元 Map は破壊しない)。
+  ///
+  /// `PurchasesService.appUserId` が取得できない場合 (DEV ビルド / 未 configure)
+  /// は merge せず元 Map のコピーを返す → Worker 側 middleware は Free として扱う。
+  ///
+  /// この uid は assertion で payload SHA-256 署名されるため改ざん耐性がある
+  /// (設計 v2.2 §A: 詐称しても Worker 側で signature mismatch → 401)。
+  static Map<String, dynamic> _withAppUserId(Map<String, dynamic> payload) {
+    final merged = <String, dynamic>{...payload};
+    final uid = PurchasesService.instance.appUserId;
+    if (uid != null && uid.isNotEmpty) {
+      merged[_kAppUserIdField] = uid;
+    }
+    return merged;
+  }
+
+  /// 呼び出し側で body Map を構築している場合 (consultation_api 等の
+  /// `addHeaders` 経路) に使う公開 helper。bytes 化前に Map に uid を merge する。
+  static Map<String, dynamic> withAppUserIdMerged(Map<String, dynamic> payload) {
+    return _withAppUserId(payload);
+  }
+
   /// `/protected/*` への POST を attestation header 付きで送る wrapper。
   /// 既存 http.post 呼び出しを置換する形で使う:
   ///   旧: await http.post(Uri.parse(solaraFortuneUrl), headers: {...}, body: body);
@@ -173,12 +205,17 @@ class AppAttestClient {
   /// payload は `Map<String, dynamic>` を渡す (内部で jsonEncode する)。
   /// 設計 v1.8 §16.2 規約: 必ず jsonEncode → utf8.encode で bytes を確定し、
   /// その bytes をそのまま HTTP body にする (中間で変換しない)。
+  ///
+  /// v2.2 追加:
+  ///   - body に `__appUserId` を自動注入 (RevenueCat 連動の Pro 判定キー)。
+  ///     呼び出し側は uid を明示渡しする必要なし。
   Future<http.Response> postProtected(
     String url, {
     required Map<String, dynamic> payload,
     Map<String, String>? extraHeaders,
   }) async {
-    final bodyString = json.encode(payload);
+    final merged = _withAppUserId(payload);
+    final bodyString = json.encode(merged);
     final bodyBytes = utf8.encode(bodyString);
     final headers = <String, String>{
       'Content-Type': 'application/json',

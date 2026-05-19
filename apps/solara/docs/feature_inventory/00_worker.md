@@ -5,10 +5,10 @@
 
 ## サマリ
 
-- ファイル数: 14
-- エンドポイント総数: 22
+- ファイル数: 18
+- エンドポイント総数: 24
 - Gemini 呼出箇所: 2
-- KV 使用: 4 行 / Durable Object 使用: 4 行
+- KV 使用: 4 行 / Durable Object 使用: 7 行
 
 ## ファイル別
 
@@ -25,28 +25,22 @@ Dependency: astronomy-engine (npm)
 **export (4):** `computeChart`, `computePredictions`, `computeForecast`, `computeMonthEvents`
 
 
-### `worker/src/auth/app_attest.js` (360 行)
+### `worker/src/auth/app_attest.js` (14 行)
 
 **ファイル先頭コメント:**
 
 ```
-Apple App Attest サーバー検証。
+Apple App Attest 検証 — barrel re-export (設計 v3.0)。
 
-Reference implementation: node-app-attest (MIT, Copyright (c) 2024 David Übelacker)
-https://github.com/uebelack/node-app-attest
-Apple X509Certificate を @peculiar/x509 に置き換え、Buffer/Node 依存を Workers
-(nodejs_compat) 互換に整理した派生実装。
+旧 app_attest.js (360 行、verifyAttestation + verifyAssertion 同居) を
+役割別に分割した結果のエントリポイント:
+- attestation.js (~270 行): 端末初回登録、9 step + 時刻チェック
+- assertion.js   (~80 行):  毎リクエスト署名検証、4 step + signCount 抽出
 
-Apple 公式仕様:
-https://developer.apple.com/documentation/devicecheck/validating-apps-that-connect-to-your-server
-
-戻り値の方針:
-- 成功時: { ok: true, publicKeyPem, environment, receipt }
-- 失敗時: { ok: false, error: '<verify_error_code>' } を return (例外を投げない)
-設計 v1.4 Q1 (詳細エラーコード) に合致。
+既存の import 文 (`import { verifyAttestation, verifyAssertion } from
+'./auth/app_attest.js'`) を壊さないため、本ファイルは re-export のみ。
+新規追加時は直接 attestation.js / assertion.js から import しても OK。
 ```
-
-**export (2):** `verifyAttestation`, `verifyAssertion`
 
 
 ### `worker/src/auth/apple_root_ca.js` (109 行)
@@ -67,17 +61,74 @@ Apple App Attest 検証で使う定数とヘルパー。
 **export (12):** `APPLE_ROOT_CA_PEM`, `AAGUID_PRODUCTION`, `AAGUID_DEVELOPMENT`, `APPLE_NONCE_OID`, `SUB_CA_SUBJECT_HINT`, `concatBytes`, `bytesEqual`, `bytesToHex`, `bytesToBase64`, `base64ToBytes`, `readUint32BE`, `readUint16BE`
 
 
-### `worker/src/auth/attestation_state.js` (225 行)
+### `worker/src/auth/assertion.js` (90 行)
 
 **ファイル先頭コメント:**
 
 ```
-Apple App Attest 用 Durable Object (SQLite-backed)。
+Apple App Attest 「assertion」 検証 (4 step + Step 5/6 caller 責任、設計 v3.0)。
 
-設計 v1.8 §6.1 に従い、1 instance (`idFromName('global')`) に 3 表を集約:
-- attestations: 端末ごとの公開鍵 + counter
-- challenges:   server 発行 challenge の強整合管理 (one-time use)
-- user_quota:   per-user rate limit (Layer C、Free=5/日 Pro=100/日)
+protected/* リクエスト時に DCAppAttestService.generateAssertion() で生成された
+CBOR を受け取り、署名検証 + rpId 一致 + signCount 抽出。
+
+設計 v1.8 §16.2 payload 正規化規約に従い、caller (Worker middleware) が
+`request.arrayBuffer()` で取得した raw bytes を payload としてそのまま渡す。
+Flutter 側は `jsonEncode(map) → utf8.encode → Uint8List` で同一 bytes を生成して
+HTTP body に置く契約 (これがズレると全 assertion 失敗 = Firebase 0% verified pattern)。
+
+Step 5 (signCount monotonic) と Step 6 (challenge inclusion) の扱い:
+- Step 5: 本関数が `signCount` (= 受信した assertion 内の値) を返すので、
+caller が DO の前回値と比較して strictly greater を確認 + DO 更新
+- Step 6: 設計 v1.8 §16.3 で不採用 (signCount monotonic + DO consume で代替)
+
+Reference implementation: node-app-attest (MIT, Copyright (c) 2024 David Übelacker)
+https://github.com/uebelack/node-app-attest
+```
+
+**export (1):** `verifyAssertion`
+
+
+### `worker/src/auth/attestation.js` (274 行)
+
+**ファイル先頭コメント:**
+
+```
+Apple App Attest 「attestation」 検証 (9 step、設計 v3.0)。
+
+端末初回起動時に DCAppAttestService.attestKey() で生成された CBOR を受け取り、
+9 step で検証 → 成功時 publicKeyPem を返す (caller は DO 永続化)。
+
+Reference implementation: node-app-attest (MIT, Copyright (c) 2024 David Übelacker)
+https://github.com/uebelack/node-app-attest
+Apple X509Certificate を @peculiar/x509 に置き換え、Buffer/Node 依存を Workers
+(nodejs_compat) 互換に整理した派生実装。
+
+Apple 公式仕様:
+https://developer.apple.com/documentation/devicecheck/validating-apps-that-connect-to-your-server
+
+戻り値の方針:
+- 成功時: { ok: true, publicKeyPem, environment, receipt }
+- 失敗時: { ok: false, error: '<verify_error_code>' } を return (例外を投げない)
+設計 v1.4 Q1 (詳細エラーコード) に合致。
+```
+
+**export (1):** `verifyAttestation`
+
+
+### `worker/src/auth/attestation_state.js` (386 行)
+
+**ファイル先頭コメント:**
+
+```
+Apple App Attest + RevenueCat エンタイトルメント用 Durable Object (SQLite-backed)。
+
+設計 v1.8 §6.1 + v2.2 (RevenueCat Webhook 統合) に従い、1 instance
+(`idFromName('global')`) に 5 表を集約:
+- attestations:      端末ごとの公開鍵 + counter (App Attest)
+- challenges:        server 発行 challenge の強整合管理 (one-time use)
+- user_quota:        per-user rate limit (Layer C、Free=5/日 Pro=100/日)
+- user_entitlements: appUserId × entitlementId の Pro 状態 (RevenueCat Webhook で書込)
+- webhook_events:    Webhook event_id の idempotent 受信ログ (重複送信耐性)
 
 単一 DO instance への集約理由:
 - DAU 1,500 想定で同時刻書き込み <100/sec → DO の sequential write 内に余裕で収まる
@@ -91,14 +142,12 @@ POST /attestation-store body: {keyId, publicKeyPem, rpId, aaguid, now}
 POST /attestation-get   body: {keyId}              → {publicKeyPem, counter} or 404
 POST /attestation-bump-counter body: {keyId, signCount, now}  → {ok} or 409 (signCount <= prev)
 POST /quota-check-and-bump body: {keyId, dayBucket, limit, now}
-→ {ok: true, remaining} or 429 {remaining: 0}
-
-Caller (Worker middleware) はこれらを順番に叩いて検証する。
+→ {ok: tru
 ```
 
 **Durable Object 使用 (1 行):**
 
-- 出現行: L4
+- 出現行: L5
 
 **export (1):** `AttestationState`
 
@@ -129,6 +178,32 @@ Buffer 非依存 (Workers 互換、Uint8Array のみ)。
 ```
 
 **export (2):** `CborError`, `decodeFirst`
+
+
+### `worker/src/auth/entitlement_cache.js` (80 行)
+
+**ファイル先頭コメント:**
+
+```
+Worker instance ローカルの entitlement キャッシュ。
+
+目的:
+protected/* 1 リクエストごとに DO へ entitlement-get する代わりに、
+60s TTL のメモリ Map で間引く (= DO billing と latency 両方を下げる)。
+
+整合性:
+- cold start ごとに空。Worker instance が短命のため十分。
+- Webhook 受信 instance は INSERT 直後に clearMemoryEntitlementCache を呼ぶ。
+- 他 instance は最悪 60s で次回 read 時に DO から最新を取得 (eventual)。
+- false positive (Pro じゃないのに Pro 判定) は最大 60s 発生し得る。
+refund/cancellation 直後 60s は Pro 維持 = 攻撃には使えない、UX 影響だけ。
+
+形状: Map<appUserId, {snapshot, fetchedAt}>
+snapshot: {isActive, expiresAt, environment, productId, periodType} or null (= 404)
+fetchedAt: ms
+```
+
+**export (4):** `getCachedEntitlement`, `setCachedEntitlement`, `clearMemoryEntitlementCache`, `_resetEntitlementCacheForTest`
 
 
 ### `worker/src/consultation.js` (330 行)
@@ -234,7 +309,7 @@ houses: そのカテゴリで重視する伝統占星術のハウス番号
 **export (3):** `computeCategoryScore`, `callGemini`, `handleFortune`
 
 
-### `worker/src/index.js` (614 行)
+### `worker/src/index.js` (700 行)
 
 **ファイル先頭コメント:**
 
@@ -243,49 +318,53 @@ Solara API — Cloudflare Worker
 
 🔴 ルート物理分離 (project_solara_security_principles.md §2):
 public/*     誰でも OK    純数学計算 (`/astro/chart` 等)、マップタイル、検索
-auth/*       Sign in 系   whoami / App Attest 登録 (現状 stub)
+auth/*       Sign in 系   whoami / App Attest 登録
 protected/*  重防御       Gemini 呼び出し全部 (`/fortune`/`/tarot`/`/relocation`
 `/astro/consultation`/`/astro/line-narrative`)。
-将来 attestation + entitlement + per-user rate limit。
+attestation + entitlement (RevenueCat 連携) +
+per-user rate limit (Free=5 Pro=100 /日)。
+webhooks/*   外部連携      RevenueCat Webhook (Pro 状態の真の出所)。
 
 旧 top-level ルート (`/fortune` `/astro/chart` 等) は撤廃。Flutter クライアント側も
 同セッションで新 path に書き換え済（`apps/solara/lib/utils/solara_api.dart` 参照）。
 ```
 
-**エンドポイント / ルート (22):**
+**エンドポイント / ルート (24):**
 
 | method | path | line |
 | --- | --- | --- |
-| ? | /public/astro/forecast | L403 |
-| ? | /public/tiles/* | L404 |
-| ? | /public/health | L412 |
-| GET | /public/tiles/osm/* | L417 |
-| POST | /public/astro/chart | L422 |
-| POST | /public/astro/forecast | L430 |
-| POST | /public/astro/predict | L445 |
-| POST | /public/astro/daily-transits | L453 |
-| GET | /public/tz | L461 |
-| GET | /public/astro/events | L470 |
-| GET | /public/search | L481 |
-| GET | /auth/whoami | L503 |
-| POST | /auth/challenge | L506 |
-| POST | /auth/attest | L509 |
-| POST | /protected/fortune | L523 |
-| POST | /protected/tarot | L533 |
-| POST | /protected/relocation | L543 |
-| POST | /protected/astro/line-narrative | L555 |
-| POST | /protected/astro/consultation | L565 |
-| ? | /public/* | L600 |
-| ? | /auth/* | L602 |
-| ? | /protected/* | L604 |
+| ? | /public/astro/forecast | L484 |
+| ? | /public/tiles/* | L485 |
+| ? | /webhooks/* | L486 |
+| ? | /public/health | L494 |
+| GET | /public/tiles/osm/* | L499 |
+| POST | /public/astro/chart | L504 |
+| POST | /public/astro/forecast | L512 |
+| POST | /public/astro/predict | L527 |
+| POST | /public/astro/daily-transits | L535 |
+| GET | /public/tz | L543 |
+| GET | /public/astro/events | L552 |
+| GET | /public/search | L563 |
+| GET | /auth/whoami | L585 |
+| POST | /auth/challenge | L588 |
+| POST | /auth/attest | L591 |
+| POST | /protected/fortune | L605 |
+| POST | /protected/tarot | L615 |
+| POST | /protected/relocation | L625 |
+| POST | /protected/astro/line-narrative | L637 |
+| POST | /protected/astro/consultation | L647 |
+| ? | /public/* | L682 |
+| ? | /auth/* | L684 |
+| ? | /protected/* | L686 |
+| ? | /webhooks/revenuecat | L688 |
 
 **KV 使用 (4 行):**
 
-- 出現行: L89, L92, L97, L161
+- 出現行: L103, L106, L111, L175
 
 **Durable Object 使用 (3 行):**
 
-- 出現行: L203, L203, L203
+- 出現行: L217, L217, L217
 
 
 ### `worker/src/line_narrative.js` (268 行)
@@ -419,4 +498,57 @@ Uses bounding-box heuristic for common regions, falls back to longitude-based of
 ```
 
 **export (1):** `lookupTimezone`
+
+
+### `worker/src/webhooks/revenuecat.js` (268 行)
+
+**ファイル先頭コメント:**
+
+```
+RevenueCat Webhook 受信 (`POST /webhooks/revenuecat`)
+
+設計:
+- apps/solara/docs/revenuecat_webhook.md (本実装と同時新規)
+- project_solara_launch_checklist.md Phase 1 「Webhook 受信」
+- project_solara_security_principles.md 原則 1「クライアント単独 isPro 禁止」
+
+認証:
+- `Authorization: Bearer <REVENUECAT_WEBHOOK_AUTH>` を constant-time 比較
+- 値は RevenueCat ダッシュボード Integrations → Webhooks で Solara が設定する任意文字列
+
+状態管理:
+- Pro エンタイトルメント状態は `AttestationState` Durable Object に統合
+(1 instance 集約、`webhook_events` 表で event_id 冪等性保証)
+
+イベント体系 (RevenueCat 公式 + サブスクライフサイクル):
+active 化:
+INITIAL_PURCHASE / RENEWAL / PRODUCT_CHANGE / UNCANCELLATION
+NON_RENEWING_PURCHASE / TEMPORARY_ENTITLEMENT_GRANT
+active 維持 (キャンセル予約 / 課金問題は期限内有効):
+CANCELLATION (auto_renew=false だが expiration まで有効)
+BILLING_ISSUE (grace period 内)
+inactive 化:
+EXPIRATION / REFUND
+旧 user 失効 + 新 user に付与:
+TRANSFER
+何もしない:
+SUBSCRIBER_ALIAS (anonymous→authenticated alias 通知、entitlement は別 event で来る)
+TEST (RC ダッシュボードのテスト送信)
+
+戻り値:
+200 {ok: true, ...}        正常処理
+200 {ok: true, ignored: …} 未知 event / Solara entitlement 対象外
+401 {error: 'unauthorized'} Bearer 認証失敗
+400 {error: 'invalid_…'}   Body 形式異常
+500 ...                    DO エラー (RC は失敗時に再送する)
+
+🔴 Cache invalidation:
+middleware 
+```
+
+**Durable Object 使用 (3 行):**
+
+- 出現行: L105, L105, L105
+
+**export (2):** `handleRevenueCatWebhook`, `_internal`
 

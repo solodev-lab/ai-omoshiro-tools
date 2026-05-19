@@ -49,6 +49,17 @@ APP_ATTEST_QUOTA_PRO = "100"
 # Challenge TTL (設計 v1.8 §11 Q2、Apple Sample Code 推奨 5 分)
 APP_ATTEST_CHALLENGE_TTL_SEC = "300"
 
+# ── RevenueCat Webhook 設定 (設計 v2.2 §B、apps/solara/docs/revenuecat_webhook.md) ──
+#
+# REVENUECAT_WEBHOOK_AUTH は wrangler secret に入れる (vars に書かない):
+#   wrangler secret put REVENUECAT_WEBHOOK_AUTH
+#     → 長さ 32B 以上のランダム文字列を入力
+#     → 同じ値を RevenueCat ダッシュボード Project settings → Integrations → Webhooks
+#        の Authorization header に "Bearer <value>" の形で貼る
+#
+# 未設定時、/webhooks/revenuecat は 503 を返して受信を拒絶する (公開前ガード)。
+# 値が漏れた場合は wrangler secret put で上書きし、RC dashboard 側も同時更新。
+
 # KV: /astro/forecast の月次クォータ用。
 # 有効化手順:
 #   1. wrangler kv namespace create FORECAST_KV

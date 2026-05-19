@@ -1,10 +1,13 @@
 /**
- * Apple App Attest 用 Durable Object (SQLite-backed)。
+ * Apple App Attest + RevenueCat エンタイトルメント用 Durable Object (SQLite-backed)。
  *
- * 設計 v1.8 §6.1 に従い、1 instance (`idFromName('global')`) に 3 表を集約:
- *   - attestations: 端末ごとの公開鍵 + counter
- *   - challenges:   server 発行 challenge の強整合管理 (one-time use)
- *   - user_quota:   per-user rate limit (Layer C、Free=5/日 Pro=100/日)
+ * 設計 v1.8 §6.1 + v2.2 (RevenueCat Webhook 統合) に従い、1 instance
+ * (`idFromName('global')`) に 5 表を集約:
+ *   - attestations:      端末ごとの公開鍵 + counter (App Attest)
+ *   - challenges:        server 発行 challenge の強整合管理 (one-time use)
+ *   - user_quota:        per-user rate limit (Layer C、Free=5/日 Pro=100/日)
+ *   - user_entitlements: appUserId × entitlementId の Pro 状態 (RevenueCat Webhook で書込)
+ *   - webhook_events:    Webhook event_id の idempotent 受信ログ (重複送信耐性)
  *
  * 単一 DO instance への集約理由:
  *   - DAU 1,500 想定で同時刻書き込み <100/sec → DO の sequential write 内に余裕で収まる
@@ -19,6 +22,13 @@
  *   POST /attestation-bump-counter body: {keyId, signCount, now}  → {ok} or 409 (signCount <= prev)
  *   POST /quota-check-and-bump body: {keyId, dayBucket, limit, now}
  *                                                       → {ok: true, remaining} or 429 {remaining: 0}
+ *   POST /entitlement-upsert body: {appUserId, entitlementId, isActive, expiresAt,
+ *                                   environment, store, productId, periodType,
+ *                                   eventType, eventId, now}
+ *                                                       → {ok, alreadyProcessed?}
+ *   POST /entitlement-get   body: {appUserId, entitlementId, now}
+ *                                                       → {isActive, expiresAt, environment, ...}
+ *                                                         or 404 (record なし or 期限切れで自然失効)
  *
  * Caller (Worker middleware) はこれらを順番に叩いて検証する。
  */
@@ -71,6 +81,37 @@ export class AttestationState {
       );
     `);
     this.sql.exec(`CREATE INDEX IF NOT EXISTS idx_user_quota_day ON user_quota(day_bucket);`);
+    // user_entitlements: appUserId × entitlementId → 現在の Pro 状態 (RevenueCat Webhook で書込)
+    // expires_at null は lifetime (現状は subscription のみのため実際は常に値あり)
+    // last_event_at は同 (appUserId, entitlementId) に対する out-of-order Webhook の排除に使う
+    this.sql.exec(`
+      CREATE TABLE IF NOT EXISTS user_entitlements (
+        app_user_id TEXT NOT NULL,
+        entitlement_id TEXT NOT NULL,
+        is_active INTEGER NOT NULL DEFAULT 0,
+        expires_at INTEGER,
+        environment TEXT NOT NULL,
+        store TEXT,
+        product_id TEXT,
+        period_type TEXT,
+        last_event_type TEXT,
+        last_event_id TEXT,
+        last_event_at INTEGER NOT NULL,
+        PRIMARY KEY (app_user_id, entitlement_id)
+      );
+    `);
+    this.sql.exec(`CREATE INDEX IF NOT EXISTS idx_user_entitlements_expires ON user_entitlements(expires_at);`);
+    // webhook_events: event_id 単位の冪等性保証 (同 event_id 再送で副作用を起こさない)
+    this.sql.exec(`
+      CREATE TABLE IF NOT EXISTS webhook_events (
+        event_id TEXT PRIMARY KEY,
+        received_at INTEGER NOT NULL,
+        event_type TEXT NOT NULL,
+        app_user_id TEXT,
+        entitlement_id TEXT
+      );
+    `);
+    this.sql.exec(`CREATE INDEX IF NOT EXISTS idx_webhook_events_received ON webhook_events(received_at);`);
     this._initialized = true;
   }
 
@@ -188,6 +229,124 @@ export class AttestationState {
     return { status: 200, body: { ok: true, remaining: limit - next, used: next, limit } };
   }
 
+  // ── /entitlement-upsert ──
+  //
+  // RevenueCat Webhook handler から呼ばれる。1 event = 1 upsert。
+  //
+  // 冪等性保証:
+  //   1. webhook_events に event_id INSERT OR IGNORE。既存なら {alreadyProcessed: true}
+  //      を即返して副作用なし (Webhook 再送 / リプレイ攻撃の二重課金検知)
+  //   2. last_event_at が DB 内 last_event_at より小さい (= out-of-order) なら無視
+  //      (RevenueCat は順序保証しないため、古い event で新しい状態を上書きしない)
+  //
+  // is_active と expires_at の意味:
+  //   - is_active=1, expires_at=X: 期限 X まで Pro
+  //   - is_active=0: 期限切れ確定 (EXPIRATION / REFUND / TRANSFER 旧側)
+  //   - is_active=1, expires_at<now: graceful (BILLING_ISSUE 等)、middleware が
+  //     最終的に expires_at >= now でも判定する (Layer 2 防御)
+  async _entitlementUpsert({
+    appUserId, entitlementId, isActive, expiresAt,
+    environment, store, productId, periodType,
+    eventType, eventId, now = Date.now(),
+  }) {
+    if (typeof appUserId !== 'string' || !appUserId) return { status: 400, body: { error: 'invalid_app_user_id' } };
+    if (typeof entitlementId !== 'string' || !entitlementId) return { status: 400, body: { error: 'invalid_entitlement_id' } };
+    if (typeof isActive !== 'boolean') return { status: 400, body: { error: 'invalid_is_active' } };
+    if (expiresAt !== null && (typeof expiresAt !== 'number' || !Number.isFinite(expiresAt))) {
+      return { status: 400, body: { error: 'invalid_expires_at' } };
+    }
+    if (typeof environment !== 'string' || !environment) return { status: 400, body: { error: 'invalid_environment' } };
+    if (typeof eventType !== 'string' || !eventType) return { status: 400, body: { error: 'invalid_event_type' } };
+    if (typeof eventId !== 'string' || !eventId) return { status: 400, body: { error: 'invalid_event_id' } };
+
+    // 1. event_id idempotent ガード (INSERT OR IGNORE)
+    const before = this.sql.exec(
+      `SELECT 1 FROM webhook_events WHERE event_id = ?`,
+      eventId,
+    ).toArray();
+    if (before.length > 0) {
+      return { status: 200, body: { ok: true, alreadyProcessed: true } };
+    }
+    this.sql.exec(
+      `INSERT INTO webhook_events (event_id, received_at, event_type, app_user_id, entitlement_id)
+       VALUES (?, ?, ?, ?, ?)`,
+      eventId, now, eventType, appUserId, entitlementId,
+    );
+
+    // 2. out-of-order ガード (last_event_at 比較)
+    const existing = this.sql.exec(
+      `SELECT last_event_at FROM user_entitlements WHERE app_user_id = ? AND entitlement_id = ?`,
+      appUserId, entitlementId,
+    ).toArray();
+    if (existing.length > 0 && existing[0].last_event_at > now) {
+      // 古い event は無視 (event 自体は idempotent log に残す)
+      return { status: 200, body: { ok: true, skippedOutOfOrder: true } };
+    }
+
+    // 3. INSERT OR REPLACE
+    this.sql.exec(
+      `INSERT INTO user_entitlements (
+         app_user_id, entitlement_id, is_active, expires_at,
+         environment, store, product_id, period_type,
+         last_event_type, last_event_id, last_event_at
+       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+       ON CONFLICT(app_user_id, entitlement_id) DO UPDATE SET
+         is_active = excluded.is_active,
+         expires_at = excluded.expires_at,
+         environment = excluded.environment,
+         store = excluded.store,
+         product_id = excluded.product_id,
+         period_type = excluded.period_type,
+         last_event_type = excluded.last_event_type,
+         last_event_id = excluded.last_event_id,
+         last_event_at = excluded.last_event_at`,
+      appUserId, entitlementId, isActive ? 1 : 0, expiresAt,
+      environment, store ?? null, productId ?? null, periodType ?? null,
+      eventType, eventId, now,
+    );
+    return { status: 200, body: { ok: true } };
+  }
+
+  // ── /entitlement-get ──
+  //
+  // middleware から /protected/* ごとに呼ばれる。
+  // 戻り値: {isActive, expiresAt, environment, productId, periodType} or 404
+  //
+  // expires_at < now なら自動的に 404 を返す (= 期限切れ自然失効、Webhook 遅延吸収)。
+  // ただし expires_at が null の lifetime (NON_RENEWING_PURCHASE 等) は失効しない。
+  async _entitlementGet({ appUserId, entitlementId, now = Date.now() }) {
+    if (typeof appUserId !== 'string' || !appUserId) return { status: 400, body: { error: 'invalid_app_user_id' } };
+    if (typeof entitlementId !== 'string' || !entitlementId) return { status: 400, body: { error: 'invalid_entitlement_id' } };
+    const rows = this.sql.exec(
+      `SELECT is_active, expires_at, environment, product_id, period_type, last_event_type
+       FROM user_entitlements
+       WHERE app_user_id = ? AND entitlement_id = ?`,
+      appUserId, entitlementId,
+    ).toArray();
+    if (rows.length === 0) return { status: 404, body: { error: 'entitlement_not_found' } };
+    const r = rows[0];
+    const isActive = r.is_active === 1;
+    const expiresAt = r.expires_at;
+    // expires_at が今より過去 → 自然失効
+    if (expiresAt !== null && typeof expiresAt === 'number' && expiresAt < now) {
+      return { status: 404, body: { error: 'entitlement_expired', expiresAt } };
+    }
+    if (!isActive) {
+      return { status: 404, body: { error: 'entitlement_inactive', expiresAt } };
+    }
+    return {
+      status: 200,
+      body: {
+        isActive: true,
+        expiresAt,
+        environment: r.environment,
+        productId: r.product_id,
+        periodType: r.period_type,
+        lastEventType: r.last_event_type,
+      },
+    };
+  }
+
   // ── HTTP entry ──
   async fetch(request) {
     this._ensureSchema();
@@ -212,6 +371,8 @@ export class AttestationState {
       '/attestation-get': () => this._attestationGet(body),
       '/attestation-bump-counter': () => this._attestationBumpCounter(body),
       '/quota-check-and-bump': () => this._quotaCheckAndBump(body),
+      '/entitlement-upsert': () => this._entitlementUpsert(body),
+      '/entitlement-get': () => this._entitlementGet(body),
     };
     const handler = dispatch[path];
     if (!handler) return new Response('not found', { status: 404 });

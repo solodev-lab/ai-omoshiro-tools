@@ -3,10 +3,12 @@
  *
  * 🔴 ルート物理分離 (project_solara_security_principles.md §2):
  *   /public/*     誰でも OK    純数学計算 (`/astro/chart` 等)、マップタイル、検索
- *   /auth/*       Sign in 系   whoami / App Attest 登録 (現状 stub)
+ *   /auth/*       Sign in 系   whoami / App Attest 登録
  *   /protected/*  重防御       Gemini 呼び出し全部 (`/fortune`/`/tarot`/`/relocation`/
  *                              `/astro/consultation`/`/astro/line-narrative`)。
- *                              将来 attestation + entitlement + per-user rate limit。
+ *                              attestation + entitlement (RevenueCat 連携) +
+ *                              per-user rate limit (Free=5 Pro=100 /日)。
+ *   /webhooks/*   外部連携      RevenueCat Webhook (Pro 状態の真の出所)。
  *
  * 旧 top-level ルート (`/fortune` `/astro/chart` 等) は撤廃。Flutter クライアント側も
  * 同セッションで新 path に書き換え済（`apps/solara/lib/utils/solara_api.dart` 参照）。
@@ -21,6 +23,17 @@ import { handleRelocation } from './relocation.js';
 import { handleLineNarrative } from './line_narrative.js';
 import { handleConsultation } from './consultation.js';
 import { verifyAttestation, verifyAssertion } from './auth/app_attest.js';
+import {
+  getCachedEntitlement,
+  setCachedEntitlement,
+} from './auth/entitlement_cache.js';
+import { handleRevenueCatWebhook } from './webhooks/revenuecat.js';
+
+/** Solara の Pro エンタイトルメント ID (`purchases_service.dart` と一致) */
+const SOLARA_ENTITLEMENT_ID = 'cosmic_pro';
+
+/** /protected/* body 内で Flutter が送る予約フィールド名 (App User ID 受け渡し) */
+const APP_USER_ID_FIELD = '__appUserId';
 
 // Durable Object 本体は worker entry から re-export 必須 (wrangler が class を解決するため)
 export { AttestationState } from './auth/attestation_state.js';
@@ -58,6 +71,7 @@ const RATE_WINDOW = 60000; // 1分
 const RATE_DEFAULT_MAX = 30;
 const RATE_FORECAST_MAX = 6;   // 1分あたり6req
 const RATE_TILES_MAX = 600;    // 1分あたり600タイル（1ユーザーの地図操作を想定、5-10セッション/分）
+const RATE_WEBHOOK_MAX = 600;  // 1分あたり600 (RevenueCat 突発バースト想定、Bearer 認証で守る前提)
 
 function rateLimitKey(ip, bucket) { return `${bucket}:${ip}`; }
 
@@ -313,7 +327,62 @@ async function handleAuthAttest(request, env, origin) {
 }
 
 /**
- * /protected/* middleware (本実装、設計 v1.9)。
+ * Body から `__appUserId` 予約フィールドを取り出す。
+ *
+ * 設計 (v2.2):
+ *   - Flutter `AppAttestClient.postProtected` が body に自動注入する。
+ *   - assertion が body 全体 (raw bytes) を payload SHA-256 で署名するため、
+ *     middleware で署名検証を通過した時点で `__appUserId` は端末固有の値として
+ *     改ざんされていないことが保証される (詐称しても assertion mismatch で 401)。
+ *   - 値の形状: Sign in 済み = `apple:xxx` / `google:xxx`、anonymous = RC 発行の
+ *     `$RCAnonymousID:xxx`。
+ *
+ * 戻り値: appUserId string or null (未注入 / 非 JSON body)。
+ */
+function extractAppUserId(payloadBytes) {
+  if (!(payloadBytes instanceof Uint8Array) || payloadBytes.length === 0) return null;
+  try {
+    const text = new TextDecoder('utf-8').decode(payloadBytes);
+    const obj = JSON.parse(text);
+    if (!obj || typeof obj !== 'object') return null;
+    const v = obj[APP_USER_ID_FIELD];
+    return typeof v === 'string' && v.length > 0 ? v : null;
+  } catch (_e) {
+    return null;
+  }
+}
+
+/**
+ * appUserId から Pro エンタイトルメント有効性を取得 (cache → DO の二段)。
+ * 戻り値: true = Pro / false = Free (未登録 or 期限切れ含む)
+ */
+async function lookupIsPro(env, appUserId) {
+  if (typeof appUserId !== 'string' || !appUserId) return false;
+  const cached = getCachedEntitlement(appUserId);
+  if (cached !== undefined) {
+    return cached !== null && cached.isActive === true;
+  }
+  const res = await callDo(env, '/entitlement-get', {
+    appUserId,
+    entitlementId: SOLARA_ENTITLEMENT_ID,
+  });
+  if (res.status === 200 && res.body && res.body.isActive === true) {
+    setCachedEntitlement(appUserId, {
+      isActive: true,
+      expiresAt: res.body.expiresAt ?? null,
+      environment: res.body.environment,
+      productId: res.body.productId,
+      periodType: res.body.periodType,
+    });
+    return true;
+  }
+  // 404 or inactive: null を memoize (= 60s は DO に問い合わせない)
+  setCachedEntitlement(appUserId, null);
+  return false;
+}
+
+/**
+ * /protected/* middleware (本実装、設計 v2.2)。
  *
  * 戻り値: null なら通過、Response を返したらブロック (即レスポンス)。
  * 返り値の Response は Worker entry がそのままクライアントへ返す。
@@ -326,6 +395,11 @@ async function handleAuthAttest(request, env, origin) {
  * 戻り値が `null` なら通過。通過時に、handler 側で再度 body を読めるよう、
  * middleware は `request.clone()` ではなく Worker entry 側で arrayBuffer を
  * 取って context に積む形にする (= middleware 内では body を一度読むだけ)。
+ *
+ * v2.2 追加:
+ *   - body 内 `__appUserId` を entitlement lookup に使う (RevenueCat 連動)
+ *   - Pro=APP_ATTEST_QUOTA_PRO (100/日) / Free=APP_ATTEST_QUOTA_FREE (5/日) で
+ *     per-user quota を切替
  */
 async function protectedMiddleware(request, env) {
   const mode = getEnforcement(env);
@@ -346,7 +420,7 @@ async function protectedMiddleware(request, env) {
   // 1. DO から公開鍵 + 前回 signCount 取得
   const att = await callDo(env, '/attestation-get', { keyId });
   if (att.status !== 200) return fail(401, 'attestation_not_registered');
-  const { publicKeyPem, counter: prevSignCount } = att.body;
+  const { publicKeyPem } = att.body;
 
   // 2. payload (request body raw bytes) を取得して payload SHA-256 計算用
   // 設計 v1.8 §16.2 規約: Flutter は jsonEncode → utf8.encode → そのまま POST body
@@ -384,13 +458,20 @@ async function protectedMiddleware(request, env) {
   if (bump.status === 409) return fail(401, 'sign_count_not_greater'); // replay
   if (bump.status !== 200) return fail(500, `bump-counter failed: ${bump.body?.error || 'unknown'}`);
 
-  // 5. per-user quota check (Layer C、Free=5/日 Pro=100/日)
-  // 当面は isPro を判定する RevenueCat 経路がないので Free 想定 (= 厳しい上限)。
-  // 後続セッションで Sign in + RevenueCat 配線時に isPro 判定して Pro 上限へ切替。
-  const limit = parseInt(env.APP_ATTEST_QUOTA_FREE || '5', 10);
+  // 5. entitlement lookup → Free/Pro quota 切替 (RevenueCat 連動)
+  // appUserId が無い (= 旧クライアント or 非 JSON body) は Free 扱い
+  const appUserId = extractAppUserId(payloadBytes);
+  const isPro = await lookupIsPro(env, appUserId);
+
+  // 6. per-user quota check (Layer C、Free=5/日 Pro=100/日)
+  const freeLimit = parseInt(env.APP_ATTEST_QUOTA_FREE || '5', 10);
+  const proLimit = parseInt(env.APP_ATTEST_QUOTA_PRO || '100', 10);
+  const limit = isPro ? proLimit : freeLimit;
   const dayBucket = new Date().toISOString().slice(0, 10);
   const quota = await callDo(env, '/quota-check-and-bump', { keyId, dayBucket, limit });
-  if (quota.status === 429) return fail(429, 'quota_exceeded');
+  if (quota.status === 429) {
+    return fail(429, isPro ? 'quota_exceeded_pro' : 'quota_exceeded_free');
+  }
   if (quota.status !== 200) return fail(500, `quota-check failed: ${quota.body?.error || 'unknown'}`);
 
   return null; // 通過
@@ -402,6 +483,7 @@ async function protectedMiddleware(request, env) {
 function pickRateBucket(path) {
   if (path === '/public/astro/forecast') return { bucket: 'forecast', max: RATE_FORECAST_MAX };
   if (path.startsWith('/public/tiles/')) return { bucket: 'tiles', max: RATE_TILES_MAX };
+  if (path.startsWith('/webhooks/')) return { bucket: 'webhook', max: RATE_WEBHOOK_MAX };
   return { bucket: 'default', max: RATE_DEFAULT_MAX };
 }
 
@@ -603,6 +685,10 @@ export default {
         res = await dispatchAuth(request, env, url, origin);
       } else if (path.startsWith('/protected/')) {
         res = await dispatchProtected(request, env, url, origin);
+      } else if (path === '/webhooks/revenuecat') {
+        // 外部 (RevenueCat) からの通信。CORS 不要 (ブラウザ起点ではない、Origin null)。
+        // 認証は RevenueCat ダッシュボード設定の Bearer (REVENUECAT_WEBHOOK_AUTH)。
+        res = await handleRevenueCatWebhook(request, env);
       }
       if (res) return res;
       return jsonError(404, 'Not found', origin);

@@ -5,7 +5,7 @@
 
 ## #3 Worker ↔ Flutter エンドポイント対整合
 
-- Worker 側に定義された path: **21**
+- Worker 側に定義された path: **23**
 - Flutter から呼ばれている path リテラル: **14**
 
 ### Worker → Flutter 漏れ (Worker にあるが Flutter から呼出無し)
@@ -14,6 +14,8 @@
 - `/public/astro/predict`
 - `/public/health`
 - `/public/tiles/osm/*`
+- `/webhooks/*`
+- `/webhooks/revenuecat`
 
 ### Flutter → Worker 漏れ (Flutter が呼ぶが Worker に定義無し)
 
@@ -352,7 +354,7 @@
 | 1b | 1 | · | · | 2 | 1 | · | 1 | · | · | · | · | · | · | · | · | · |
 | 1c | · | · | 1 | · | · | · | · | · | · | · | · | · | · | · | · | · |
 | 2a | 3 | · | · | 4 | 1 | · | · | 1 | · | · | · | · | · | · | · | · |
-| 2b | 1 | 1 | 5 | 4 | 1 | · | · | · | · | · | · | · | · | · | · | · |
+| 2b | 2 | 1 | 5 | 4 | 1 | · | · | · | · | · | · | · | · | · | · | · |
 | 2c | · | · | 1 | · | · | · | · | · | · | · | · | · | · | · | · | · |
 | 3a | 1 | 4 | 2 | 2 | 1 | 1 | 8 | 7 | 4 | 1 | · | · | · | · | 1 | · |
 | 3b | · | · | · | · | · | · | · | 1 | · | · | · | · | · | · | · | · |
@@ -408,9 +410,21 @@
 > 各ソースの SHA1 を `_stamps.json` に記録し、差分を検出。
 > 変更されたファイルが属する層は、人手版インベントリ章の見直し対象。
 
-- 追加: **0** / 削除: **0** / 変更: **0**
+- 追加: **4** / 削除: **0** / 変更: **6**
 
-- 変更なし — 全インベントリ章は最新。
+### 変更されたファイル (層別)
+
+- **層 0**: `worker/src/auth/app_attest.js`, `worker/src/auth/attestation_state.js`, `worker/src/index.js`
+- **層 1a**: `lib/utils/purchases_service.dart`
+- **層 2a**: `lib/utils/consultation_api.dart`
+- **層 2b**: `lib/utils/app_attest_client.dart`
+
+### 追加されたファイル
+
+- `worker/src/auth/assertion.js` (層 0)
+- `worker/src/auth/attestation.js` (層 0)
+- `worker/src/auth/entitlement_cache.js` (層 0)
+- `worker/src/webhooks/revenuecat.js` (層 0)
 
 ## #7 astro_glossary 用語辞書対整合
 

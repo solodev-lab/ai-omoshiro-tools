@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 9 / 総行数: 1707
+- ファイル数: 9 / 総行数: 1709
 - class/mixin/extension/enum: 16
 - 関数 (top-level + method の素拾い): 29
 - Navigator.push 等: 0
@@ -72,7 +72,7 @@
   </details>
 
 
-### `lib/utils/consultation_api.dart` (148 行)
+### `lib/utils/consultation_api.dart` (150 行)
 
 **ファイル先頭コメント:**
 
