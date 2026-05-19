@@ -5,3 +5,12 @@ main = "src/index.js"
 compatibility_date = "2024-12-01"
 compatibility_flags = ["nodejs_compat"]
 workers_dev = false
+
+# DO binding (セッション 4 で attestation_state.js を R3 検証するため)
+[[durable_objects.bindings]]
+name = "ATTESTATION_DO"
+class_name = "AttestationState"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["AttestationState"]

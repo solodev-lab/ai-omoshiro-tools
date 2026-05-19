@@ -1,6 +1,6 @@
 # App Attest サーバー検証 設計ドキュメント
 
-**ステータス**: ドラフト v1.8 (S1 設計確定 → S2 cbor 26/26 → S3 verifyAttestation 20/20 + Workers R3 → **S4 着手前: payload 正規化規約 / Apple step 6 維持理由 / Layer C per-user rate limit 統合方針を確定 + Firebase 代替案検討 → 現状継続**)
+**ステータス**: ドラフト v1.9 (S1 設計確定 → S2 cbor 26/26 → S3 verifyAttestation 20/20 → S3+ 時刻 C+D → S4 設計確定 → **S4 完了: verifyAssertion 7 テスト + DO 3 表 + DO smoke 11 操作 Workers 実機 PASS、累計 cbor 26 + app_attest 27 = 53/53 + DO 11/11、bundle gzip 91 KiB = 1MB の 9%**)
 **対象**: Cloudflare Worker `solara-api` の `/auth/attest` + `/protected/*` ミドルウェア
 **前提**: `project_solara_launch_checklist.md` Phase 1 認証ミドルウェア
 **関連**: `project_solara_security_principles.md` 原則 1〜3
@@ -28,6 +28,27 @@
 - R5 OID ASN.1 ネスト深さは **3 段** で確定 (node-app-attest 実装 `value[0].value[0].valueHex` + Apple Forum C++ Botan 実装と一致 ★★★)
 - production 知見追加 (adjoe blog): DCError.invalidInput/invalidKey 時の Flutter 側リトライ要件、challenge 5 分 TTL 実運用根拠
 - §13 実装方針 §14 ロールアウトを案 B' 前提に書き換え
+
+### v1.8 → v1.9 の変更点 (2026-05-19、S4 完了: verifyAssertion + DO)
+
+**実装完了**:
+- `src/auth/app_attest.js` に `verifyAssertion` 追加 (~80 行):
+  - CBOR decode → ECDSA P-256 DER signature verify (`createVerify('SHA256').update(nonce).verify(pem, derSig)`) → rpId 一致 → signCount 抽出
+  - Step 5/6 は caller 責任 (DO で signCount monotonic 比較、Apple step 6 は v1.8 §16.3 で不採用)
+  - 失敗時は throw せず `{ok: false, error: '<code>'}` を return (Q1 詳細エラーコード)
+- `src/auth/attestation_state.js` 新規 (~190 行): SQLite-backed Durable Object
+  - 3 表 (attestations + challenges + user_quota) を 1 instance に集約
+  - 6 endpoint (`/challenge-{create,consume}` `/attestation-{store,get,bump-counter}` `/quota-check-and-bump`)
+  - challenge consume / signCount monotonic / quota limit はすべて DO の single-thread で race-free
+
+**テスト**:
+- `test/app_attest.test.js` verifyAssertion 7 テスト追加 (正常系 + payload 改竄 + bundle/team 改竄 + 別公開鍵 + 不正 CBOR + 入力バリデーション 5 種) → **app_attest 27/27 PASS**
+- r1_check に DO 統合 smoke test endpoint 追加 → wrangler dev 経由で **11 操作全 PASS**:
+  - challenge 1 回限り使用 (404 で replay 防止確認)
+  - signCount monotonic (409 で後退拒否確認)
+  - per-user rate limit 上限 3 で 4 回目 429 (Layer C 動作確認)
+
+**bundle 増分**: 552 → **565 KiB / gzip 91.62 KiB** = Workers Free 1MB の 9.0% (verifyAssertion + DO で +13 KiB)
 
 ### v1.7 → v1.8 の変更点 (2026-05-19、S4 着手前の追加設計判断)
 
