@@ -1,6 +1,6 @@
 # Play Integrity サーバー検証 設計ドキュメント
 
-**ステータス**: 設計 v0.4 (2026-05-19、S2 完了 — R1/R6/R7 解決 + R8 のみ実機採取まで保留、S3 本実装着手準備完了)
+**ステータス**: 設計 v0.5 (2026-05-19、S3 前最終チェック — 公式 verdict 仕様反映、R8 概算解決、payload 型訂正 8 件)
 **対象**: Cloudflare Worker `solara-api` の `/auth/integrity/*` + `/protected/*` middleware の Android 経路
 **前提**: `project_solara_launch_checklist.md` Phase 1 認証ミドルウェア + Phase 2 Flutter クライアント
 **関連**:
@@ -10,6 +10,18 @@
 - `../../docs/app_development_lessons.md` §1.3 ケーススタディ + §5.6 鍵交換ハイブリッド方式 + §5.7 設計と公式 UI 乖離
 
 ## 変更履歴
+
+### v0.5 (2026-05-19、S3 前最終チェック — 公式 verdict 仕様反映)
+S3 着手前に最新の公式 Android Developer docs (`/google/play/integrity/standard` + `/verdicts`) を読み直して 8 件の重要訂正を反映:
+- **🔴 `timestampMillis` は STRING 型** (例 `"1675655009345"`): §4 Step 10 で `Number(payload.requestDetails.timestampMillis)` 明示変換必須。JS の `-` 演算子は coerce するが、`Math.abs(now - String)` を意図せず動作させるのは fragile
+- **🔴 `versionCode` も STRING** (例 `"42"`): §8 payload schema 記載修正、必要なら `parseInt` で扱う
+- **🔴 `appRecognitionVerdict` は 3 値** (PLAY_RECOGNIZED / UNRECOGNIZED_VERSION / UNEVALUATED): §4 Step 11 で PLAY_RECOGNIZED 以外を明示拒否、UNEVALUATED は端末側問題のため log_only 期間中に検出
+- **🔴 `deviceRecognitionVerdict` は空配列 `[]` 可能性あり** (= 端末攻撃検知): §4 Step 11 で `Array.isArray(...) && length > 0` を明示
+- **🔴 `environmentDetails` は OPTIONAL** (Play Console で opt-in 必須): defensive parse、未存在で 401 にしない (v0.5 では使わない、将来 Pro 機能で参照)
+- **🔴 Standard の自動 replay 保護は Google decode API 経由でのみ有効**: Self-managed key を使う Solara では DO `integrity_nonces` consume が **必須** (= v0.4 設計と整合、改めて明記)
+- **🟢 R8 概算解決**: 公式 docs で「Self-managed: ... You must update your backend server logic to use the keys to decrypt responses」と明記、Self-managed は decode layer (request 種別非依存) と確証。**実機 token での最終確認は S5 で維持** (実装ミスのリスクは残る)
+- **Standard vs Classic payload 差分確認**: `requestDetails.requestHash` (Standard) vs `requestDetails.nonce` (Classic) のみ。他は完全同一 (= v0.4 設計と整合)
+- **test fixture 修正**: `SAMPLE_PAYLOAD.requestDetails.timestampMillis` を `Date.now()` (number) → `String(Date.now())` (string) に変更、実 token 仕様と一致
 
 ### v0.4 (2026-05-19、S2 完了 — R1/R6/R7 解決)
 - **R6 ✅ 解決**: jose v6.2.3 追加で bundle gzip **+11.95 KiB (+7.5%、171.76 KiB)**。Workers Free 1MB 制限 (gzip) に対し残 83%。v0.3 想定 24% より大幅に少 (= jose の tree-shaking 良好)
@@ -157,24 +169,34 @@ apps/solara/docs/
 - Workers 内で `crypto.subtle.importKey('spki', base64Decode(key), {name: 'ECDSA', namedCurve: 'P-256'}, true, ['verify'])` で読み込み
 
 ### Step 8: payload parse
+
+🔴 **重要 (v0.5)**: `timestampMillis` と `versionCode` は **string 型** (公式 docs `/verdicts` 確証)。数値比較する場合は明示的に `Number()` 変換すること。
+
 ```json
 {
   "requestDetails": {
     "requestPackageName": "com.solodevlab.solara",
-    "timestampMillis": 1700000000000,
-    "requestHash": "<base64(sha256(clientData))>"   // Standard 形式、Classic の nonce フィールドではない
+    "timestampMillis": "1700000000000",                  // ⚠️ string!
+    "requestHash": "<base64(sha256(clientData))>"        // Standard 形式 (Classic の nonce ではない)
   },
   "appIntegrity": {
-    "appRecognitionVerdict": "PLAY_RECOGNIZED",
+    "appRecognitionVerdict": "PLAY_RECOGNIZED",          // 3 値: PLAY_RECOGNIZED / UNRECOGNIZED_VERSION / UNEVALUATED
     "packageName": "com.solodevlab.solara",
     "certificateSha256Digest": ["..."],
-    "versionCode": "..."
+    "versionCode": "1"                                   // ⚠️ string!
   },
   "deviceIntegrity": {
-    "deviceRecognitionVerdict": ["MEETS_DEVICE_INTEGRITY", ...]
+    "deviceRecognitionVerdict": ["MEETS_DEVICE_INTEGRITY", "MEETS_BASIC_INTEGRITY", ...]
+    // 可能値: MEETS_DEVICE_INTEGRITY / MEETS_VIRTUAL_INTEGRITY / MEETS_BASIC_INTEGRITY / MEETS_STRONG_INTEGRITY
+    // 空配列 [] = 端末攻撃検知 (root/emulator/compromised)、必ず拒否
   },
   "accountDetails": {
-    "appLicensingVerdict": "LICENSED"
+    "appLicensingVerdict": "LICENSED"                    // 3 値: LICENSED / UNLICENSED / UNEVALUATED
+  },
+  // ↓ 任意フィールド (Play Console で opt-in 必須、v0.5 では参照しない)
+  "environmentDetails": {                                // OPTIONAL — 未存在で 401 にしない
+    "appAccessRiskVerdict": {"appsDetected": [...]},
+    "playProtectVerdict": "NO_ISSUES"
   }
 }
 ```
@@ -185,14 +207,24 @@ apps/solara/docs/
 - これにより token が `clientData` (= nonce + uid + ts) と暗号学的にバインド = 改ざん検出
 
 ### Step 10: timestamp + package 確認 (server clock + パッケージ偽装)
-- `Math.abs(now - payload.requestDetails.timestampMillis) < 300_000`
-- `payload.requestDetails.requestPackageName === "com.solodevlab.solara"`
+🔴 v0.5: `timestampMillis` は **string** なので `Number()` で明示変換:
+```js
+const tokenTs = Number(payload.requestDetails.timestampMillis);
+if (Number.isNaN(tokenTs)) return fail(401, 'token_ts_invalid');
+if (Math.abs(Date.now() - tokenTs) >= 300_000) return fail(401, 'token_ts_drift');
+if (payload.requestDetails.requestPackageName !== 'com.solodevlab.solara') return fail(401, 'package_mismatch');
+```
 
 ### Step 11: verdict 評価 (Q4 + Q3)
-- `payload.appIntegrity.appRecognitionVerdict === "PLAY_RECOGNIZED"` 必須 (Q4)
-- `payload.appIntegrity.packageName === "com.solodevlab.solara"` 必須
-- `payload.appIntegrity.certificateSha256Digest` に Play 配信用 SHA-256 が含まれる (= サイドロード排除)
-- `"MEETS_DEVICE_INTEGRITY" ∈ payload.deviceIntegrity.deviceRecognitionVerdict` 必須 (Q3)
+🔴 v0.5: 公式 verdict 3 値を意識した defensive チェック:
+- `payload.appIntegrity?.appRecognitionVerdict === "PLAY_RECOGNIZED"` 必須 (Q4)
+  - 拒否対象: `UNRECOGNIZED_VERSION` (= サイドロード) / `UNEVALUATED` (= 端末検証不能)
+  - log_only 期間中はカウント記録して傾向把握
+- `payload.appIntegrity?.packageName === "com.solodevlab.solara"` 必須
+- `Array.isArray(payload.appIntegrity?.certificateSha256Digest)` で Play 配信用 SHA-256 を allowlist 比較 (= 自前署名・サイドロード排除)
+- `Array.isArray(payload.deviceIntegrity?.deviceRecognitionVerdict) && payload.deviceIntegrity.deviceRecognitionVerdict.includes("MEETS_DEVICE_INTEGRITY")` 必須 (Q3)
+  - 空配列 `[]` = 端末攻撃検知 (root/emulator/未署名 ROM) → 拒否
+- `environmentDetails` は v0.5 では参照しない (Play Console opt-in 必須、将来 Pro 機能で `playProtectVerdict` を弱信号として参照する可能性)
 
 ### Step 12: uid binding + entitlement / quota (RevenueCat 連動)
 - `clientData.uid === body.__appUserId` 一致確認 (= token swap 防止)
@@ -357,6 +389,9 @@ Solara `/protected/*` 1 呼出につき:
 
 Free 5/日、Pro 100/日想定なら Android DAU 1500 × 平均 3 req (warmup + 2 protected) = 4,500/day → 10k quota 内で十分余裕。ただし Pro ユーザーが 100/日上限まで使うと quota 圧迫リスク → R3 で実装後計測。
 
+### 7.6 Standard の自動 replay 保護 (v0.5 補足)
+公式 docs `/google/play/integrity/standard` によれば、Standard request は **Google decode API で復号する場合に限り** 自動 replay 保護がかかる (= 同 token を 2 回復号するとブランクな verdict を返す)。**Solara は Self-managed key で自前 decode するためこの保護は無効**。よって DO `integrity_nonces` での one-time consume が必須 (= v0.4 設計と整合、改めて明記)。
+
 ## 8. middleware 統合 (iOS/Android 自動切替)
 
 `apps/solara/worker/src/index.js` の `protectedMiddleware` を OS 判定で 2 経路分岐:
@@ -408,7 +443,7 @@ PLAY_INTEGRITY_ENFORCEMENT = "disabled" | "log_only" | "enforced"
 | R5 | ~~Classic payload 仕様 (requestHash は Standard 限定、Classic では nonce のみ)~~ | ❌ **撤回** | ❌ Standard 採用で不要 (R4 解決) |
 | R6 | Workers bundle 増加実測 (jose v6 追加で gzip 24% 想定が実際の値) | S2 deploy 後計測 | ✅ **解決 2026-05-19** (gzip 159.81→171.76 KiB、+7.5% で想定 24% より大幅に少。Workers Free 1MB に対し残 83%) |
 | R7 | base64 (DER SubjectPublicKeyInfo) verification key の `crypto.subtle.importKey('spki', ...)` で正常 import できるか | S2 minimal worker | ✅ **解決 2026-05-19** (`test/play_integrity.test.js` 9/9 PASS、ECDSA P-256 + AES-KW 両 import 確証) |
-| R8 (新規 v0.3) | Self-managed key (Classic request 用 UI で設定) が **Standard request** 応答にも適用されるか (= Workers が自前 decode できるか、Google decode API 呼び出し不要か) | **S5** で実機採取 token を `/auth/integrity/decode-test` に POST して確証 | ⏳ S5 残置 (synthetic token では実証不能) |
+| R8 (新規 v0.3) | Self-managed key (Classic request 用 UI で設定) が **Standard request** 応答にも適用されるか (= Workers が自前 decode できるか、Google decode API 呼び出し不要か) | 公式 docs 確認 (v0.5) | ✅ **概算解決 2026-05-19** (公式 docs で「Self-managed は decode layer、request 種別非依存」と明記)。実機 token での最終確認は S5 で維持 (実装ミスのリスク残) |
 
 ## 11. オーナー作業 (チェックリスト、2026-05-19 S1 完了)
 
@@ -461,12 +496,25 @@ S6  : docs 仕上げ (deploy 手順 §13 + 運用ガイド §14)
 
 App Attest と同等の重さを想定 (6-8 セッション、計 15-20h)、現実績 S1+S2=2 セッション。
 
-## 13. v0.4 から v0.5 への次タスク (S3 本実装)
+## 13. v0.5 から v1.0 への次タスク (S3 本実装)
 
 S3 のスコープ:
-1. **`auth/play_integrity.js` を v1.0 本実装**: 既存の `decodeIntegrityToken` を起点に、Step 3-11 (clientData parse → DO consume → requestHash binding → verdict 評価) を組み立てた `verifyPlayIntegrityFlow(request, env, body)` を実装
-2. **単体テスト拡張**: 既存 9 ケースに以下を追加 — clientData 改竄、requestHash 不一致、verdict 不足 (no PLAY_RECOGNIZED / no MEETS_DEVICE_INTEGRITY)、timestamp drift、uid mismatch、未来時刻 ts
-3. **(将来) v0.5 にバンプ**: S3 本実装完成後の API 仕様、test カバレッジ実数値を反映
+1. **`auth/play_integrity.js` を v1.0 本実装**: 既存の `decodeIntegrityToken` を起点に `verifyPlayIntegrityFlow(request, env, body)` を組み立て:
+   - Step 3 (clientData parse、必須キー `nonce/uid/ts` 検証、ts は number)
+   - Step 4 (clientData.ts ±5min)
+   - Step 5 (DO `integrity_nonces` consume → nonce 一致)
+   - Step 6 (JWE A256KW decode)
+   - Step 7 (JWS ES256 verify)
+   - Step 8 (payload parse — **timestampMillis/versionCode は string、defensive parse**)
+   - Step 9 (requestHash binding = `base64.encode(sha256(clientData))` で再計算)
+   - Step 10 (`Number(payload.requestDetails.timestampMillis)` ±5min + packageName)
+   - Step 11 (PLAY_RECOGNIZED + Array.isArray チェック + MEETS_DEVICE_INTEGRITY + cert allowlist)
+   - Step 12 (uid binding + entitlement / quota は middleware 側に委譲)
+2. **単体テスト拡張**: 既存 9 ケースに以下を追加 — clientData 必須キー欠落 / 改竄 / requestHash 不一致 / appRecognitionVerdict=UNRECOGNIZED_VERSION / appRecognitionVerdict=UNEVALUATED / deviceRecognitionVerdict 空配列 / MEETS_DEVICE_INTEGRITY 不在 / token ts drift / clientData ts drift / uid mismatch / packageName 不一致 / certificateSha256 不一致 (合計 +12 ケース、計 21 想定)
+3. **R 項目最終確認**:
+   - R5: ❌ 撤回 (Standard 採用で不要)
+   - R8: ✅ 概算解決 (公式 docs)、実機 token は S5 で確認
+4. **(将来) v1.0 にバンプ**: S3 本実装完成後の API 仕様、test カバレッジ実数値を反映
 
 ## 関連ドキュメント
 

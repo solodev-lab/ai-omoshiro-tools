@@ -77,17 +77,22 @@ async function buildSelfManagedToken(payload, keys) {
   return jwe;
 }
 
+// 公式 verdict 仕様 (developer.android.com/google/play/integrity/verdicts):
+// - timestampMillis: STRING (例 "1675655009345")
+// - versionCode: STRING (例 "42")
+// - deviceRecognitionVerdict: 配列、空配列 [] は端末攻撃検知
+// - environmentDetails: 任意 (Play Console opt-in、本 fixture では含めない)
 const SAMPLE_PAYLOAD = {
   requestDetails: {
     requestPackageName: 'com.solodevlab.solara',
-    timestampMillis: Date.now(),
+    timestampMillis: String(Date.now()),               // ⚠️ string (v0.5 訂正)
     requestHash: 'PLACEHOLDER_BASE64_SHA256',
   },
   appIntegrity: {
     appRecognitionVerdict: 'PLAY_RECOGNIZED',
     packageName: 'com.solodevlab.solara',
     certificateSha256Digest: ['REPLACE_WITH_REAL_FP'],
-    versionCode: '1',
+    versionCode: '1',                                   // ⚠️ string (公式仕様)
   },
   deviceIntegrity: {
     deviceRecognitionVerdict: ['MEETS_DEVICE_INTEGRITY'],
