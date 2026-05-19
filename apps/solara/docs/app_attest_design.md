@@ -1,6 +1,6 @@
 # App Attest サーバー検証 設計ドキュメント
 
-**ステータス**: ドラフト v2.1 (S1-S5 完了 → **S6-A 完了: Flutter `AppAttestClient` 基盤実装 + pubspec.yaml に app_attest_integrity 1.0.0 + crypto 3.0.6 追加 + flutter analyze clean、残: 既存 4 endpoint 呼び出しの置換 (段階的) + TestFlight 実機 E2E + 本番 deploy**)
+**ステータス**: 確定 v3.0 (S1-S6 全完了、Flutter + Worker 両側コード完成、残: TestFlight 実機 E2E + 本番 deploy のオーナー作業のみ。詳細は §17/§18)
 **対象**: Cloudflare Worker `solara-api` の `/auth/attest` + `/protected/*` ミドルウェア
 **前提**: `project_solara_launch_checklist.md` Phase 1 認証ミドルウェア
 **関連**: `project_solara_security_principles.md` 原則 1〜3
@@ -962,3 +962,139 @@ async function challengeConsume(req) {
   ```
 - Worker コード内では `env.APPLE_TEAM_ID` で参照、各 verify 呼び出しに渡す
 - Apple Root CA PEM は `apps/solara/worker/src/auth/apple_root_ca.js` 内に **コード hardcode** (~10 行の template string)
+
+---
+
+## 17. Deploy 手順 (オーナー作業)
+
+### 前提
+- Apple Developer Program 加入済 (法人 arrayu 株式会社、Team ID `TY5JW393Q5`)
+- Cloudflare アカウント設定済 (`solara-api.solodev-lab.com` カスタムドメイン)
+- `wrangler login` 済 (`npx wrangler whoami` で確認)
+- `apps/solara/worker/node_modules/` が `npm install` 済 (S2 で確認)
+
+### Step 1: Apple Developer Portal で App Attest entitlement 追加 🚨 必須
+
+App Attest を iOS 側で使うには、Bundle ID の **App Attest capability** を有効化する必要。これがないと `DCAppAttestService.attestKey()` が `DCError.featureUnsupported` を返す。
+
+1. https://developer.apple.com/account → Certificates, Identifiers & Profiles → Identifiers
+2. `com.solodevlab.solara` を選択
+3. Capabilities セクションで **App Attest** にチェック
+4. Save
+5. 既存の provisioning profile を Update / 再生成 (Xcode の Signing & Capabilities でも自動で再生成可)
+
+### Step 2: Worker 本番 deploy
+
+```bash
+cd apps/solara/worker
+npx wrangler deploy
+```
+
+初回 deploy で:
+- DO migration v1 が走り `AttestationState` SQLite クラスが作成される
+- `APP_ATTEST_ENFORCEMENT = "log_only"` で起動 (= attestation 失敗しても通過 + warning)
+- 既存の `/public/*` `/auth/*` 動作は不変
+
+確認:
+```bash
+curl https://solara-api.solodev-lab.com/public/health
+# → {"status":"ok","service":"solara-api"}
+
+curl -X POST https://solara-api.solodev-lab.com/auth/challenge
+# → {"challengeId":"...","challenge":"<base64>","ttlSec":300}
+```
+
+### Step 3: Flutter TestFlight ビルド + 配信
+
+```bash
+cd apps/solara
+flutter build ipa --release --obfuscate --split-debug-info=build/symbols/ios/$(grep version pubspec.yaml | head -1 | awk '{print $2}')
+```
+
+Xcode で `apps/solara/build/ios/archive/Runner.xcarchive` を Organizer → Distribute App → TestFlight & App Store。
+
+TestFlight で実機テスター 3-5 人にインストール。
+
+### Step 4: 実機 E2E 確認
+
+TestFlight アプリで以下を確認:
+1. **初回起動**: SharedPreferences に keyId 保存 (Console.app で `[AppAttest] new keyId stored` ログ確認)
+2. **/protected/fortune 等の Pro 機能 (or Free でも Fortune は通る)** を叩く
+3. Cloudflare Workers Real-time Logs で:
+   - `[middleware:log_only] would block` warning が出ていない (= attestation 通過)
+   - もしくは出ていても 200 で fortune の結果が返っている
+
+### Step 5: 1 週間モニタ後 enforced へ切替
+
+```bash
+# wrangler.toml の [vars] APP_ATTEST_ENFORCEMENT を "enforced" に書き換え + deploy
+# または:
+npx wrangler deploy --var APP_ATTEST_ENFORCEMENT:enforced
+```
+
+切替後、Cloudflare Workers Logs を 24 時間モニタ。401 急増があれば即時 `disabled` で kill switch。
+
+---
+
+## 18. 運用ガイド
+
+### 監視すべきログ
+- `[middleware:log_only] would block 401 <error>` ← log_only 期間中の attestation 失敗カウント。多すぎたら Flutter 側未対応 / 古いアプリ version が混ざってる
+- `[app_attest] subCa expired` / `credCert expired` warning ← Apple Root CA 失効疑い (極稀)、有効期限と照合
+- 500 `attestation_verify_exception` / `assertion_verify_exception` ← @peculiar/x509 / node:crypto の throw。これが頻発したら Apple SDK 変更疑い
+
+### kill switch 操作
+攻撃 / 障害時の緊急対応:
+```bash
+npx wrangler deploy --var APP_ATTEST_ENFORCEMENT:disabled
+```
+即時 middleware OFF。状況落ち着いたら log_only → enforced に戻す。
+
+### Apple Root CA の更新
+- 2045-03-15 まで有効、それまで何もしなくて良い
+- 万一 Apple が前倒し失効した場合:
+  1. https://www.apple.com/certificateauthority/Apple_App_Attestation_Root_CA.pem から新 PEM 取得
+  2. `apps/solara/worker/src/auth/apple_root_ca.js` の `APPLE_ROOT_CA_PEM` 定数差し替え
+  3. SHA-256 フィンガープリント値を `apps/solara/worker/test/cbor.test.js` 等で hardcode していたら更新
+  4. `npx wrangler deploy`
+
+### DO データの cleanup
+- challenges 表は INSERT 時に毎回 `expired_at < now()` 行を DELETE するので放置可
+- user_quota 表も 7 日より古い day_bucket を毎回 cleanup するので放置可
+- attestations 表は端末ごとに 1 行、放置可 (= 端末アンインストール後も残るが影響なし)
+- 万一 DO の SQLite が肥大化した場合は Cloudflare Dashboard から DO instance を delete + 次回 attest で復元される
+
+### 端末側 attestation の失効
+- `DCError.invalidKey` が iOS 側で発生したら `AppAttestClient.reattestOnFailure()` を呼ぶ
+- これで keyId 再生成 + Worker /auth/attest 再登録 (= DO の attestations 表に INSERT OR REPLACE で上書き)
+
+### per-user quota の調整
+```bash
+# Free 上限を 10 に引き上げる例
+npx wrangler deploy --var APP_ATTEST_QUOTA_FREE:10
+```
+深夜帯にバズって全 user の quota 枯渇等の事象観測時に動的調整。
+
+---
+
+## 19. 累計サマリー (S1-S6 全完了)
+
+### Worker 側
+- `apps/solara/worker/src/auth/`: cbor.js (119) + apple_root_ca.js (95) + app_attest.js (290) + attestation_state.js (190) = **694 行**
+- `apps/solara/worker/test/`: cbor.test.js (26) + app_attest.test.js (27) + DO smoke 11 = **64 ケース全 PASS**
+- `apps/solara/worker/src/index.js`: middleware 配線 + 段階リリース機構 (+~200 行)
+- `apps/solara/worker/wrangler.toml`: DO binding + nodejs_compat + 6 env vars
+- bundle: 794 KiB / **gzip 156 KiB** = Workers Free 1MB の 16%
+
+### Flutter 側
+- `apps/solara/lib/utils/app_attest_client.dart`: AppAttestClient シングルトン (~200 行)
+- `apps/solara/lib/main.dart`: initialize() 配線
+- `apps/solara/lib/utils/{fortune,consultation}_api.dart`: 既存 4 endpoint 置換
+- pubspec.yaml: `app_attest_integrity ^1.0.0` + `crypto ^3.0.6` 追加
+- flutter analyze: clean / flutter test consultation: 30/30 PASS
+
+### 残作業 (オーナー)
+1. Apple Developer Portal で App Attest entitlement 追加
+2. `cd apps/solara/worker && npx wrangler deploy` (本番 deploy)
+3. TestFlight 実機 E2E
+4. 1 週間モニタ後 enforced 切替
