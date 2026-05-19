@@ -1,9 +1,19 @@
 # App Attest サーバー検証 設計ドキュメント
 
-**ステータス**: ドラフト v1 (2026-05-19 起案)
+**ステータス**: ドラフト v1.1 (2026-05-19 起案、同日 R2-R5/R7/R8 確定で大幅更新)
 **対象**: Cloudflare Worker `solara-api` の `/auth/attest` + `/protected/*` ミドルウェア
 **前提**: `project_solara_launch_checklist.md` Phase 1 認証ミドルウェア
 **関連**: `project_solara_security_principles.md` 原則 1〜3
+
+### v1 → v1.1 の変更点 (2026-05-19)
+- R2 Apple Root CA フィンガープリント確定 (`1CB9823BA28BA6AD2D33A006941DE2AE4F513EF1D4E831B9F7E0FA7B6242C932`、**有効期限 2045-03-15** → 半年更新タスク削除)
+- R3 rpId 式確定 (`SHA-256("<teamId>.<bundleId>")` ★★★)
+- R4 AAGUID 確定 (production = `'appattest'`+NULL×7、development = `'appattestdevelop'`)
+- R5 OID ASN.1 ネスト深さの懸念は実装パターン (`getExtension().toString('asn')` 末尾 suffix 比較) で **回避** ★★★
+- R7 テスト fixtures 入手元確定 (appattest-checker-node の `tests/` ディレクトリ、Apache-2.0 流用可)
+- R8 clientDataHash 定義確定 (attestation: SHA-256(challenge) / assertion: caller が SHA-256(payload))
+- **§6.4 ECDSA 検証**: `nodejs_compat` + `node:crypto.createVerify` を使えば **DER→IEEE-P1363 変換不要** (実装簡素化)
+- **§13 新規追加**: 実装方針 2 択 (自前 vs npm 流用) を提示
 
 ---
 
@@ -52,8 +62,8 @@
 | **clientDataHash** | サーバーが発行した challenge (またはリクエスト payload) の SHA-256 |
 | **authData / authenticatorData** | WebAuthn 流の認証データバイト列 (rpIdHash 32 + flags 1 + signCount 4 + AAGUID 16 + ...) |
 | **credCert** | x5c[0]、Apple App Attest CA 発行の端末用証明書、公開鍵を含む |
-| **rpId** | Relying Party ID = `<teamId>.<bundleId>` (例: `XXXXXXX.com.solodevlab.solara`) ❓ |
-| **AAGUID** | 認証器種別 GUID。development = `appattestdevelop` (16B UTF-8), production = `appattest` + 7 NULL バイト (16B) ★★ |
+| **rpId** | Relying Party ID = `"<teamId>.<bundleId>"` 文字列 (例: `"XXXXXXX.com.solodevlab.solara"`)。authData[0..31] = SHA-256(rpId) ★★★ (`appattest-checker-node` README + 実装で確定) |
+| **AAGUID** | 認証器種別 GUID (16B)。development = `appattestdevelop` (16B UTF-8) / production = `'appattest'` (9B) + NULL バイト 7 個 ★★★ |
 
 ---
 
@@ -133,13 +143,13 @@ Apple `Validating apps that connect to your server` ★★ + appattest-checker-n
 
 | オフセット | 長さ | 内容 |
 |---|---|---|
-| 0..31 | 32 | rpIdHash = SHA-256(`<teamId>.<bundleId>`) ❓ |
+| 0..31 | 32 | rpIdHash = SHA-256(`"<teamId>.<bundleId>"` UTF-8) ★★★ |
 | 32 | 1 | flags |
-| 33..36 | 4 | signCount (big-endian uint32) |
-| 37..52 | 16 | AAGUID |
-| 53..54 | 2 | credentialId length (big-endian uint16) |
-| 55..(55+len-1) | var | credentialId (= SHA-256(publicKey)) |
-| (残り) | var | credentialPublicKey (COSE_Key, CBOR) |
+| 33..36 | 4 | signCount (big-endian uint32) ← `Buffer.readInt32BE(33)` ★★★ |
+| 37..52 | 16 | AAGUID (production = `appattest`+NULL×7、development = `appattestdevelop`) ★★★ |
+| 53..54 | 2 | credentialId length (big-endian uint16、必ず `0x00 0x20` = 32) ★★★ |
+| 55..86 | 32 | credentialId (= SHA-256(uncompressed P-256 public key 65B)) ★★★ |
+| 87.. | var | credentialPublicKey (COSE_Key, CBOR) |
 
 ### 9 ステップ
 
@@ -147,19 +157,19 @@ Apple `Validating apps that connect to your server` ★★ + appattest-checker-n
 |---|---|---|
 | 1 | x5c[0] と x5c[1] を Apple App Attest Root CA でチェーン検証 | 400 invalid_cert_chain |
 | 2 | clientDataHash = SHA-256(challenge), nonce = SHA-256(authData ‖ clientDataHash) | (計算のみ) |
-| 3 | credCert の拡張 OID `1.2.840.113635.100.8.2` を抽出 → DER の SEQUENCE → \[0\] OCTET STRING を取り出し、上記 nonce と バイト一致 ★★ | 400 nonce_mismatch |
-| 4 | credCert から公開鍵抽出 → DER (SPKI) → SHA-256(uncompressed EC point) = keyId と一致 | 400 keyid_mismatch |
-| 5 | authData の rpIdHash == SHA-256(`<teamId>.<bundleId>`) | 400 rpid_mismatch |
-| 6 | authData.signCount == 0 ★★ | 400 counter_not_zero |
-| 7 | authData.AAGUID == (production: `appattest\x00\x00\x00\x00\x00\x00\x00` / development: `appattestdevelop`) ★★ | 400 aaguid_mismatch |
-| 8 | authData.credentialId == keyId ★★ | 400 credential_id_mismatch |
-| 9 | 公開鍵 (P-256 EC) を JWK 形式で抽出して DO に永続化 `{keyId → {publicKeyJwk, counter: 0, createdAt}}` | (成功時) |
+| 3 | credCert の拡張 OID `1.2.840.113635.100.8.2` を抽出。`@peculiar/x509` の場合は `getExtension(OID).toString('asn')` の末尾が `"OCTET STRING : <nonce hex>"` と suffix 一致するかチェック ★★★ (ネスト深さを気にしなくて済む実装パターン) | 400 nonce_mismatch |
+| 4 | credCert.publicKey.rawData の末尾 65B (= uncompressed EC point `0x04 ‖ X ‖ Y`) を SHA-256 → keyId (base64) と一致 ★★★ | 400 keyid_mismatch |
+| 5 | authData[0..31] == SHA-256(UTF-8(`"<teamId>.<bundleId>"`)) ★★★ | 400 rpid_mismatch |
+| 6 | authData.signCount (readInt32BE@33) == 0 ★★★ | 400 counter_not_zero |
+| 7 | authData[37..52] のうち production なら最初 9B が `'appattest'` / development なら全 16B が `'appattestdevelop'` ★★★ | 400 aaguid_mismatch |
+| 8 | authData[53..54] == `0x00 0x20` (len=32) かつ authData[55..86] == keyId (base64 decode) ★★★ | 400 credential_id_mismatch |
+| 9 | credCert.publicKey を PEM/SPKI で抽出し DO に永続化 `{keyId → {publicKeyPem, counter: 0, createdAt}}` | (成功時) |
 
-### 地雷ポイント
+### 地雷ポイント (確定情報で更新)
 
-- **★ OID 値の二重ネスト**: SEQUENCE の中にさらに SEQUENCE があり、その中に OCTET STRING がある場合と、SEQUENCE 直下に OCTET STRING がある場合の両方が観測されている (Apple Developer Forums の C++ Botan 実装は 3 段ネストで decoder.get_next_object() を 3 回呼んでいる)。実装時は両方のパスを試すか、ASN.1 dumper で実 attestation を見る。
-- **★★ Receipt は今回保存しない**: 初回実装では受領した receipt をそのまま DO に保存する想定だが、Apple Server-to-Server API (App Store Receipt 検証) は別仕事なので Phase 2 で。Receipt サイズは ~5KB なので 1GB DO で問題なし。
-- **❓ rpId の正確な式**: 公式ドキュメントの直接確認はできず。**Apple Developer Forum + 二次ソースでは `<teamId>.<bundleId>` 形式が一般的**だが、bundleId 単体説もある。実装時に SHA-256 を両方計算して照合する単体テストを書く。
+- **★★★ OID ネスト深さ問題は実装パターンで回避**: `@peculiar/x509` の `getExtension(oid).toString('asn')` で ASN.1 を文字列展開し、`endsWith("OCTET STRING : <hex>")` で suffix 比較する [appattest-checker-node 実装パターン](https://github.com/srinivas1729/appattest-checker-node/blob/main/src/attestation.ts) を採用。これによりネストが 2 段でも 3 段でも 4 段でも同じコードで通る。自前 ASN.1 パース時は要注意。
+- **★★ Receipt は当面保存しない**: Apple Server-to-Server API (App Store Receipt 検証) は別仕事なので Phase 2 で。Receipt は ~5KB なので将来 DO 保存に余裕あり。
+- **★★ keyId は base64 (not base64url)**: `appattest-checker-node` の実装は `Buffer.toString('base64')` で比較。Apple iOS が `base64EncodedString()` で返す形式と一致 ★★★。
 
 ---
 
@@ -174,8 +184,8 @@ Apple `Validating apps that connect to your server` ★★ + appattest-checker-n
 
 ```js
 {
-  signature: <bytes>,           // ECDSA P-256 SHA-256, DER 形式 ★
-  authenticatorData: <bytes>,   // rpIdHash 32 + flags 1 + signCount 4 (= 37B)
+  signature: <bytes>,           // ECDSA P-256 SHA-256, DER 形式 ★★★
+  authenticatorData: <bytes>,   // rpIdHash 32 + flags 1 + signCount 4 (= 37B 以上)
 }
 ```
 
@@ -183,25 +193,32 @@ Apple `Validating apps that connect to your server` ★★ + appattest-checker-n
 
 | # | 内容 |
 |---|---|
-| 1 | DO から `{publicKeyJwk, lastCounter}` を keyId で取得。なければ 401 unregistered_key |
-| 2 | clientDataHash = SHA-256(payload), nonce = SHA-256(authenticatorData ‖ clientDataHash) |
-| 3 | nonce を ECDSA-P256-SHA256 で publicKey + signature で verify ★ |
-| 4 | authenticatorData の rpIdHash == 期待値 |
-| 5 | authenticatorData.signCount > lastCounter (strict greater) |
-| 6 | DO の counter を新値で更新 (transaction) |
+| 1 | DO から `{publicKeyPem, lastCounter}` を keyId で取得。なければ 401 unregistered_key |
+| 2 | clientDataHash = SHA-256(payload) (caller 責任、本 Worker では request body raw bytes を SHA-256) ★★★ |
+| 3 | nonce = SHA-256(authenticatorData ‖ clientDataHash) ★★★ |
+| 4 | `createVerify('SHA256').update(nonce).verify(publicKeyPem, signature)` で ECDSA verify ★★★ ([appattest-checker-node assertion.ts:106-119](https://github.com/srinivas1729/appattest-checker-node/blob/main/src/assertion.ts) で `'RSA-SHA256'` 指定だが、Node は鍵タイプから ECDSA を自動判定) |
+| 5 | authenticatorData[0..31] == SHA-256(`"<teamId>.<bundleId>"`) ★★★ |
+| 6 | authenticatorData.signCount > lastCounter (strict greater) → DO の counter を新値で更新 (transaction) |
 
-### 大地雷: 署名フォーマット変換 ★★
+### 推奨実装: `nodejs_compat` + `createVerify` (DER 変換不要) ★★★
 
-- **Apple は DER (SEQUENCE { r INTEGER, s INTEGER })** で署名 (libfido / WebAuthn と同じ)
-- **WebCrypto `subtle.verify` は IEEE-P1363 raw 64B (r ‖ s) のみ** 受け付ける (W3C 仕様準拠)
-- → **DER → raw 64B の変換ヘルパーを自前実装** か、`node:crypto.createVerify('SHA256').verify(pubKeyPem, sig, 'der')` を `nodejs_compat` 経由で使う
+- Apple は **DER (SEQUENCE { r INTEGER, s INTEGER })** で署名 (WebAuthn と同じ)
+- Workers の **WebCrypto `subtle.verify` は IEEE-P1363 raw 64B のみ** 受け付ける (W3C 仕様準拠)
+- ただし `wrangler.toml` に `compatibility_flags = ["nodejs_compat"]` を入れて **`node:crypto.createVerify('SHA256').verify(pubKeyPem, sig)` を使えば DER 署名を直接 verify できる** (Node の `dsaEncoding: 'der'` がデフォルト)
+- → **v1 で書いた「DER→raw 64B 変換ヘルパー必須」は撤回**。`createVerify` 採用で 40 行不要に
 
-ヘルパー実装案 (40 行):
+### 代替実装 (純 WebCrypto ルート、念のため)
+
+`nodejs_compat` が想定通り動かない場合の fallback として:
+
 ```js
 function derToP1363(derSig) {
   // SEQUENCE 0x30, len, INTEGER 0x02, len_r, r..., INTEGER 0x02, len_s, s...
   // r, s をそれぞれ左 0 埋めで 32B にして連結 (= 64B)
 }
+const rawSig = derToP1363(sig);
+const key = await crypto.subtle.importKey('spki', pubKeyDer, {name: 'ECDSA', namedCurve: 'P-256'}, false, ['verify']);
+const ok = await crypto.subtle.verify({name: 'ECDSA', hash: 'SHA-256'}, key, rawSig, nonce);
 ```
 
 ### Race condition
@@ -257,14 +274,16 @@ function derToP1363(derSig) {
 
 - Workers `crypto.subtle.verify` は IEEE-P1363 raw 64B のみ → 自前変換ヘルパー必須
 
-### 6.5 Apple Root CA の持ち方: コード埋め込み ★★
+### 6.5 Apple Root CA の持ち方: コード埋め込み ★★★
 
-- `https://www.apple.com/certificateauthority/Apple_App_Attestation_Root_CA.pem` を取得 → DER 化 → JS 定数として埋め込み
-- **理由**:
-  - Root CA は ~10年単位で安定 (Apple 公開鍵証明書方針)
-  - fetch すると Worker cold start が遅くなる + 失敗時の fallback 設計が複雑
-  - 失効時は wrangler deploy で即差し替え可能
-- **更新監視**: 半年に 1 回 Apple Certificate Authority ページを目視確認 (release_checklist に追加)
+- `https://www.apple.com/certificateauthority/Apple_App_Attestation_Root_CA.pem` から取得 → コード定数として埋め込み
+- **取得済証明書情報** (2026-05-19 取得、`apps/solara/docs/Apple_App_Attestation_Root_CA.pem` に保存):
+  - Subject = Issuer = `CN=Apple App Attestation Root CA, O=Apple Inc., ST=California` (self-signed)
+  - **SHA-256 (DER) = `1CB9823BA28BA6AD2D33A006941DE2AE4F513EF1D4E831B9F7E0FA7B6242C932`** (テストで hardcode 検証)
+  - **notBefore = 2020-03-18, notAfter = 2045-03-15 (19 年有効)** → v1 で書いた「半年に1回手動更新」は **不要**、リリース後 2045 年まで放置可能
+  - 公開鍵: ECDSA P-384 (`ecdsa-with-SHA384` 署名アルゴリズム想定)
+- **更新監視**: release_checklist 追加は不要。**2044 年頃に Apple が次世代 Root を公開したら差し替え** (= 20 年スパン)
+- **失効リスク**: Apple が前倒し失効した場合 → wrangler deploy で即差し替え可能
 
 ---
 
@@ -345,74 +364,67 @@ new_sqlite_classes = ["AttestationState"]   # SQLite-backed
 
 ---
 
-## 9. ロールアウト計画
+## 9. ロールアウト計画 (旧 v1、§14 で v1.1 に置換済)
 
-```
-セッション 1 (今回): 設計ドキュメント (このファイル) ← 完了
-セッション 2: CBOR デコーダー + DER→P1363 ヘルパー + Apple Root CA 定数 + 単体テスト
-              (純粋関数のみ、外部依存なし、テストファースト)
-セッション 3: @peculiar/x509 導入 + 証明書チェーン検証 + nonce 抽出 + 単体テスト
-              (npm 依存追加、Wrangler dev 起動確認)
-セッション 4: Durable Object 実装 + attestation 永続化 + /auth/attest 本実装
-              (DO migration 検証、wrangler deploy --dry-run)
-セッション 5: assertion verify + protectedMiddleware 配線 + 既存 endpoint 連動テスト
-              (本番 deploy 一歩手前、staging 環境想定)
-セッション 6: TestFlight 連動 E2E (オーナー作業含む、実 iOS から attestation 取得)
-              実 attestation で各ステップ通過確認、本番 deploy
-セッション 7: ドキュメント整理、メモリ更新、launch_checklist 更新
-```
-
-**累積工数見積もり**: 5-6 セッション × 2-3h = **12-18h** (security_principles の「4日 = 32h」より楽観だが、設計を先に固めた効果で短縮可能と判断。地雷で延びたら最大 24h まで許容)
+v1.1 のロールアウト計画は §14 を参照。本セクションは履歴目的で残置。
 
 ---
 
-## 10. リスクと未確認項目 🔴
+## 10. リスクと未確認項目 🔴 (v1.1 で R2-R5/R7/R8 を確定済)
 
-### R1: @peculiar/x509 の Workers 実機動作 ★
+### ✅ R2 [確定 2026-05-19]: Apple Root CA フィンガープリント
+
+- **SHA-256 (DER) = `1CB9823BA28BA6AD2D33A006941DE2AE4F513EF1D4E831B9F7E0FA7B6242C932`**
+- 取得元: `https://www.apple.com/certificateauthority/Apple_App_Attestation_Root_CA.pem`
+- 保存場所: `apps/solara/docs/Apple_App_Attestation_Root_CA.pem`
+- 有効期限 2045-03-15
+
+### ✅ R3 [確定 2026-05-19]: rpId 式
+
+- **`SHA-256(UTF-8("<teamId>.<bundleId>"))`** で確定
+- 根拠: [appattest-checker-node README + attestation.ts](https://github.com/srinivas1729/appattest-checker-node) の `appId: '<team-id>.<bundle-id>'`
+- Solara の場合: `"<APPLE_TEAM_ID>.com.solodevlab.solara"` (TEAM_ID はオーナーが App Store Connect で確認)
+
+### ✅ R4 [確定 2026-05-19]: AAGUID
+
+- production = `'appattest'` (9B ASCII) + NULL バイト 7 個 = 16B
+- development = `'appattestdevelop'` (16B ASCII)
+- 実装は production 時 authData[37..45] (9B) だけ照合すれば OK ([appattest-checker-node attestation.ts:117-122](https://github.com/srinivas1729/appattest-checker-node/blob/main/src/attestation.ts))
+
+### ✅ R5 [確定 2026-05-19]: OID ASN.1 ネスト深さ問題は実装パターンで回避
+
+- `@peculiar/x509` の `getExtension(oid).toString('asn')` 出力末尾の `"OCTET STRING : <hex>"` を suffix 比較
+- ネスト 2 段でも 3 段でも 4 段でも同じコードで通る ([attestation.ts:165-176](https://github.com/srinivas1729/appattest-checker-node/blob/main/src/attestation.ts))
+- 自前 ASN.1 パーサールートを採用する場合のみ要注意 → 採用しないので問題なし
+
+### ✅ R7 [確定 2026-05-19]: テスト fixtures 入手元
+
+- [appattest-checker-node の `tests/` ディレクトリ](https://github.com/srinivas1729/appattest-checker-node/tree/main/tests) (Apache-2.0)
+- `tests/assertion.test.ts` + `tests/attestation.test.ts` から fixture バイト列を抽出可能
+- セッション 2 で `tools/extract_fixtures.py` を作って一括取得
+
+### ✅ R8 [確定 2026-05-19]: clientDataHash 定義
+
+- **Attestation**: `clientDataHash = SHA-256(challenge)` (challenge は server 発行の random 32B、それを SHA-256 する) ★★★
+- **Assertion**: caller が `SHA-256(request payload bytes)` を計算してライブラリに渡す ★★★
+- 根拠: [attestation.ts:172](https://github.com/srinivas1729/appattest-checker-node/blob/main/src/attestation.ts) `const clientDataHash = await getSHA256(inputs.challenge);` + [assertion.ts README](https://github.com/srinivas1729/appattest-checker-node) `clientDataHash = // SHA-256 of request contents including challenge provided to client`
+- 注意点: assertion 時、challenge をリクエスト payload に含めるかどうかは設計判断 (含めるべき。replay 防止のため)
+
+### 🔴 R1 [未確定]: @peculiar/x509 + cbor + node:crypto の Workers 実機動作
 
 - npm の README には Workers 言及なし
-- 内部実装は WebCrypto + asn1js なので動くはず
-- **検証方法**: セッション 3 冒頭で minimal Worker (証明書 verify 1 行) を Wrangler dev で動かす
-- **代替**: pkijs に切り替え (同じ作者の PeculiarVentures)
+- 全部 WebCrypto / 純 JS ベースなので動くはず、ただし `nodejs_compat` フラグ + Buffer polyfill が必要
+- **検証方法**: セッション 2 冒頭で minimal Worker (`@peculiar/x509` で 1 本 verify + `cbor.decodeFirst` で 1 件 + `createVerify` で ECDSA verify) を `wrangler dev` で動かす
+- **代替プラン**:
+  - A. `pkijs + asn1js` (uebelack/node-app-attest が使う組合せ) に切り替え
+  - B. 自前 ASN.1 + 自前 cbor (~250 行) に切り替え
 
-### R2: Apple Root CA のフィンガープリント未確定 ★
+### 🔴 R6 [実装後計測]: Workers Free プラン 10ms CPU 制限
 
-- 二次ソースで URL は `Apple_App_Attestation_Root_CA.pem` と確認できたが、SHA-256 フィンガープリントを公式から直接引用できていない
-- **検証方法**: セッション 2 で curl で取得 → openssl x509 -fingerprint で計算 → 単体テストに hardcode
-
-### R3: rpId の正確な式 (teamId.bundleId vs bundleId 単体) ❓
-
-- 二次ソース (Medium 等) は teamId.bundleId 派が多いが Apple 公式の本文を直接読めず
-- **検証方法**: 実 attestation の authData[0..31] を SHA256(候補) と比較する単体テストを両パターンで書く
-
-### R4: AAGUID production の正確なバイト列 ★★
-
-- 二次ソースで `appattest` + 7 NULL バイト = 16B と確認
-- ただし「7 NULL」と「9 NULL」のソース両方を見かけた疑念
-- **検証方法**: `Buffer.from('appattest').length` = 9 → 残り 7 = 16B で確定 ★★★ (これは計算で確定できる)
-
-### R5: OID 1.2.840.113635.100.8.2 の ASN.1 ネスト深さ ❓
-
-- Apple Forum の C++ Botan 実装は 3 段ネスト (`SEQUENCE → CONSTRUCTED → OCTET STRING`)
-- 一方 Medium 解説では 2 段 (`SEQUENCE → OCTET STRING`)
-- **検証方法**: 実 credCert を OpenSSL `asn1parse` で dump → 実装に反映
-
-### R6: Workers Free プラン 10ms CPU 制限 ★★
-
-- 証明書チェーン検証 (RSA 2048 or ECDSA P-256 × 2 段) + ECDSA verify は 1-3ms 想定
+- 証明書チェーン検証 (P-384 × 1 + P-256 × 1 = 2 段) + ECDSA verify + SHA-256 数回 = 1-5ms 想定
 - DO への DB 操作は別 CPU 時間で計上
-- **検証方法**: Wrangler dev でログ計測、本番 deploy 後 1 週間モニタ
+- **検証方法**: 本番 deploy 後 1 週間モニタ
 - **対応**: 10ms 超過頻発なら Paid プラン $5/月 移行 (launch_checklist Phase 0 で記載済)
-
-### R7: テスト用 attestation 入手 ★
-
-- 開発初期は実 iOS デバイスがない時点で単体テストを書きたい
-- **対策**: appattest-checker-node の fixtures (Apache-2.0) を流用、後で実機データに差し替え
-
-### R8: clientDataHash の正確な定義 ★
-
-- 「サーバー発行 challenge の SHA-256」というのが本ドキュメントの理解だが、Apple の "client data" は WebAuthn 由来で JSON 形式の可能性もある
-- **検証方法**: appattest-checker-node のソース実装で確認 (`SHA256(rawChallenge)` で良いはず)
 
 ---
 
@@ -462,9 +474,113 @@ new_sqlite_classes = ["AttestationState"]   # SQLite-backed
 
 ---
 
-## 13. 承認
+## 13. 実装方針: 自前 vs npm 流用 (v1.1 で新規追加)
 
-- [ ] オーナーレビュー (Q1〜Q5 の判断、ロールアウト計画の承認)
-- [ ] 実装着手 → セッション 2 開始
+R2-R8 確定で「appattest-checker-node が Solara で要る機能をほぼそのまま実装している」ことが判明。実装方針として 2 つの選択肢:
 
-オーナーが承認 (or 修正指示) したら、次セッションで `auth/cbor.js` + `auth/ecdsa_der.js` + `auth/apple_root_ca.js` の 3 ファイル + それぞれの単体テストから着手する。
+### 案A: appattest-checker-node を npm 依存として導入 ★推奨
+
+```bash
+cd apps/solara/worker
+npm install appattest-checker-node@^1.0.3
+```
+
+Worker 実装は ~50 行で済む:
+
+```js
+import { verifyAttestation, verifyAssertion, setAppAttestRootCertificate } from 'appattest-checker-node';
+// 起動時に Apple Root CA 差し替え (ライブラリ同梱版が古い時の保険)
+setAppAttestRootCertificate(APPLE_ROOT_CA_PEM);
+
+async function protectedMiddleware(request, env) {
+  const keyId = request.headers.get('X-AppAttest-KeyId');
+  const assertionB64 = request.headers.get('X-AppAttest-Assertion');
+  if (!keyId || !assertionB64) return jsonError(401, 'missing_attestation', origin);
+
+  const record = await getAttestation(env, keyId); // DO から
+  if (!record) return jsonError(401, 'unregistered_key', origin);
+
+  const bodyBytes = new Uint8Array(await request.clone().arrayBuffer());
+  const clientDataHash = await sha256(bodyBytes);
+
+  const result = await verifyAssertion(
+    Buffer.from(clientDataHash),
+    record.publicKeyPem,
+    APP_ID,  // "<teamId>.<bundleId>"
+    Buffer.from(assertionB64, 'base64'),
+  );
+  if ('verifyError' in result) return jsonError(401, result.verifyError, origin);
+  if (result.signCount <= record.signCount) return jsonError(401, 'replay', origin);
+
+  await updateSignCount(env, keyId, result.signCount); // DO 更新
+  return null; // 通過
+}
+```
+
+**メリット**:
+- 実装行数 ~50 行で済む (自前なら ~400 行)
+- メンテナンス負荷ゼロ (security patch も npm update)
+- Apple/iOS の細かい仕様変更に追随済み
+- テストも流用可能
+
+**デメリット**:
+- 依存追加 (`@peculiar/x509` + `cbor` + 推移依存)
+- Workers 動作確認 (R1) が必要
+- bundle size 増 (推定 +200-300KB)
+- ライブラリのメンテが止まったら自分でフォーク必要
+
+**前提**: R1 (Workers 動作) クリアが必要。**セッション 2 冒頭で minimal Worker (3 関数だけ呼ぶ) を `wrangler dev` で起動できれば案A 確定**。
+
+### 案B: 自前実装 (v1 計画通り)
+
+```
+auth/cbor.js              ~80 行
+auth/ecdsa_der.js         (案A なら不要、案B でも nodejs_compat なら不要)
+auth/apple_root_ca.js     ~30 行
+auth/app_attest.js        ~250 行
+auth/attestation_state.js ~80 行 (DO)
+合計                       ~440 行 (テスト除く)
+```
+
+**メリット**:
+- 依存ゼロ、bundle 最小
+- 全ロジック自分でコントロール
+- ライブラリ消失リスクなし
+
+**デメリット**:
+- 実装工数 5-6 セッション → 7 セッション
+- 自前バグ混入リスク (App Attest は地雷多)
+- メンテ負荷
+
+### 推奨: 案A を試して、ダメだったら案B にフォールバック
+
+理由:
+1. **オーナーの「確実に安全に」と「時間かけて良い」の両立**: 案A は確実 (本番稼働実績ある実装) + 時間短縮
+2. 案A の失敗パターンは限定的 (Workers で `@peculiar/x509` か `cbor@9` か `node:crypto.createVerify` のどれかが落ちる)。各々スワップ可能
+3. 案B は案A のソース読解で既に手書きパターンを得ており、いつでもフォールバック可能
+
+---
+
+## 14. ロールアウト計画 v1.1 (案A 採用前提、案B なら +2 セッション)
+
+```
+セッション 1 ✅ (今回): 設計ドキュメント + R2-R8 確定 + Apple Root CA 取得
+セッション 2: R1 検証 (minimal Worker で 3 関数動作確認) + Durable Object 実装 + apps/solara/worker/package.json に依存追加
+セッション 3: /auth/challenge + /auth/attest 本実装 + 単体テスト (fixtures 流用)
+セッション 4: /protected/* middleware 配線 + 既存 endpoint 連動テスト
+セッション 5: TestFlight 実 iOS E2E (オーナー作業含む)
+セッション 6: ドキュメント整理 + launch_checklist 更新 + メモリ更新
+```
+
+**累積工数見積もり (v1.1)**: 5 セッション × 2-3h = **10-15h** (案A) / 12-18h (案B)
+v1 の 12-18h より短縮 (R2-R8 確定 + 案A 採用で)。
+
+---
+
+## 15. 承認
+
+- [ ] オーナーレビュー
+  - Q1-Q5 (§11) の判断
+  - 案A (推奨) vs 案B の選択
+  - ロールアウト計画 v1.1 の承認
+- [ ] 実装着手 → セッション 2 開始 (R1 検証 + DO 実装)
