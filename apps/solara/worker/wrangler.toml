@@ -13,6 +13,16 @@ routes = [
 # workers.dev サブドメイン も有効化 (デバッグ用 fallback)
 workers_dev = true
 
+# ── Observability (Workers Logs) ──────────────────────────────
+# enabled=true で全リクエストのログ (console.warn 含む) をサーバー側に自動保存。
+# CF ダッシュボード Workers & Pages > solara-api > Logs/Observability で後から
+# 検索・絞り込み可能 (例: "would block" 検索で Play Integrity 誤ブロック有無を確認)。
+# wrangler tail を開きっぱなしにしなくてよくなる。保存期間は概ね Free=3日/Paid=7日。
+# head_sampling_rate=1 → 100% 記録 (低トラフィックなので全件保存で問題なし)。
+[observability]
+enabled = true
+head_sampling_rate = 1
+
 [vars]
 # GEMINI_API_KEY は wrangler secret put GEMINI_API_KEY で設定
 # GOOGLE_PLACES_KEY は wrangler secret put GOOGLE_PLACES_KEY で設定
