@@ -4,7 +4,7 @@
 **ケーススタディ**:
 - Solara Apple App Attest 実装 (2026-05、7 セッション、~12-15h、Worker ~700 行 + Flutter ~210 行 + テスト 64 ケース全 PASS)
 - Solara RevenueCat Webhook + Pro エンタイトルメント検証 middleware 統合 (2026-05、1 セッション、Worker +700 行 + Flutter +50 行 + テスト 26 ケース PASS、累計 79/79)
-- Solara Play Integrity (Android) 設計 v0.1 + Play Console 鍵取得 (2026-05、S1 = 1 セッション、設計 docs 331 行 + オーナー作業 (RSA 鍵生成 + Cloud project link + self-managed key + wrangler secret 投入) 完了)
+- Solara Play Integrity (Android) 実装 v1.1 完成 (2026-05、S1-S7 = 7 セッション、Worker `auth/play_integrity.js` + DO `integrity_nonces` + middleware OS 分岐 + Flutter OS 分岐、worker 126/126 PASS、**実機 R8 突破**)。S7 で「Standard request の token は Self-managed key で復号できない」と実機判明し、Google `decodeIntegrityToken` API 方式に方針転換 (= §4.2 ROI 表の判定逆転、本書最大の訂正)
 **反対側**: このドキュメントは「動くコードの書き方」ではなく「**判断ミスをどう減らすか**」の話
 
 ---
@@ -68,26 +68,47 @@ App Attest 完成後、その middleware を拡張して RC エンタイトル�
 - **secret 未設定で 503** = 公開前ガード (= 想定外 deploy で偽 webhook を通さない)
 - **Worker instance メモリ cache 60s TTL** で DO 連打抑制、Webhook 受信 instance は INSERT 直後 clear、cross-instance は eventual
 
-### 1.3 Solara Play Integrity (Android) 設計 + Play Console 鍵取得 (S1 = 1 セッション)
+### 1.3 Solara Play Integrity (Android) 実装 v1.1 完成 (S1-S7 = 7 セッション、実機 R8 突破)
 
-Apple App Attest と対称の Android セキュリティ層。設計フェーズで Q1-Q4 を先にオーナー判断、R 項目を 3 分類した結果、S1 で設計確定 + オーナー作業 (Cloud project link + 鍵取得 + secret 投入) まで一気に完了。
+Apple App Attest と対称の Android セキュリティ層。設計フェーズで Q1-Q4 を先にオーナー判断、R 項目を 3 分類して S1 で設計確定 + 鍵取得まで完了。S2-S6 で実装、**S7 で実機検証中に設計の中核 (decode 方式) が崩れ、方針転換して R8 突破**した。
 
 | 項目 | 実績 |
 |---|---|
-| 期間 | S1 = 1 セッション (~2h) |
-| 設計 docs | `apps/solara/docs/play_integrity_design.md` 331 行 (Q1-Q4 確定、R1-R6 明示、6-step ロードマップ) |
-| ライブラリ調査 | Flutter `app_attest_integrity` (iOS+Android 統一 API) / Worker `jose` v6.2.3 採用、`play_integrity_flutter` (3 年放置) 不採用 |
-| Q1-Q4 オーナー判断 | Classic request + Self-managed key + DEVICE_INTEGRITY + PLAY_RECOGNIZED |
-| オーナー作業 | Cloud project link (Solara-api) + RSA 2048 鍵生成 + public.pem upload + RSA-OAEP 復号 + AES-256/ECDSA P-256 鍵を wrangler secret 投入 |
-| S2 以降 | Worker `jose` 統合 + `auth/play_integrity.js` 実装 + DO `integrity_nonces` + middleware 統合 + Flutter OS 分岐 (5-6 セッション想定) |
+| 期間 | S1-S7 = 7 セッション |
+| 設計 docs | `apps/solara/docs/play_integrity_design.md` v1.1 (Q1-Q4 確定、R1-R8、12-step 検証、Deploy 手順) |
+| ライブラリ | Flutter `app_attest_integrity` v1.0.0 (StandardIntegrityManager 専用) / Worker `jose` v6.2.3 |
+| Q1-Q4 オーナー判断 | **Standard request** (※当初 Classic から訂正) + DEVICE_INTEGRITY + PLAY_RECOGNIZED |
+| decode 方式 | **Google `decodeIntegrityToken` API** (※当初 Self-managed key から S7 で訂正) |
+| 実装 | Worker `auth/play_integrity.js` (12-step verify + SA JWT 署名 + OAuth2 + decode) + DO `integrity_nonces` 表 + middleware OS 分岐 + Flutter `app_attest_client.dart` Android 分岐 |
+| テスト | worker 126/126 PASS (Google decode mock + SA JWT 経路 29 ケース) |
+| 実機検証 | decode-test で `ok:true` / PLAY_RECOGNIZED / MEETS_DEVICE_INTEGRITY / LICENSED 確認 = **R8 突破** |
+| bundle | gzip 171.34 KiB (Workers Free 1MB に対し残 83%) |
 
-得た知見:
+#### 🔴 最重要教訓: Play Integrity の「request 種別」と「decode 方式」は密結合 (S7 の方針転換)
+
+**起きたこと**: 設計 v0.5 まで「Self-managed encryption key を Workers で持てば、Classic でも Standard でも token を自前 decode できる」と公式 docs を読んで判断していた。S7 の実機検証で、採取した token は `CqUC...` で始まる **Google 独自 protobuf** で、`jose.compactDecrypt` が `JWEInvalid: Invalid Compact JWE` を返した。
+
+**正しい事実 (公式 docs 再読で確定)**:
+- **Classic request** の token → JWE (暗号化 JWT)。Self-managed key で **local decode 可能**
+- **Standard request** の token → Google 独自 protobuf。**Google `decodeIntegrityToken` API でのみ復号可能** (Self-managed key は無関係)
+- Flutter プラグイン `app_attest_integrity` v1.0.0 が **Standard 専用** だったため、token は必然的に Standard 形式 = 自前 decode 不可能だった
+
+**なぜ気づけなかったか**: 「Self-managed key」の docs ページ (= Classic 文脈) と「Standard request」の docs ページが別々で、前者を読んで「decode は request 種別に依存しない」と誤って一般化した。R8 を「概算解決」とラベルし、実機確認を S5 まで先送りしていた。
+
+**修正の判断 (= オーナーの介入が効いた)**: エラーを見て即「設計を捨てて作り直す」のではなく、オーナーが「**今までの調査は効率のために行ったもの。すぐ捨てず、まず原因と最新情報を調べろ**」と制止。調査の結果、既存の枠組み (middleware OS 分岐 / DO nonce / clientData binding / Step 8-12) は**全て再利用でき、decode 部分だけ差し替えれば済む**と判明。`jose` も捨てず、用途を `compactDecrypt` → `SignJWT`+`importPKCS8` (Service Account JWT 署名) に転用した。結果、書き直しは最小限で R8 突破。
+
+**横展開する教訓**:
+1. **「概算解決」「実機確認は後で」とラベルした R 項目は、本番化前に必ず実物で潰す** (先送りすると最も高くつく所で崩れる)
+2. **公式 docs が機能ごとにページ分割されている時、「このページの説明が他機能にも適用される」と一般化しない** (= §2.4 業界標準を言い訳にしないの変種)
+3. **エラーが出ても既存設計を即破棄しない**: 既存の調査・設計は理由があって積まれている。差分で直せる範囲を見極めてから判断する (memory: `feedback_investigate_before_discard.md`)
+
+得た知見 (S1-S6 から継続):
 - **Apple App Attest と Play Integrity は middleware で経路分岐できる**: header の有無 (`X-AppAttest-KeyId` / `X-PlayIntegrity-Token`) で iOS/Android 自動判定、検証関数だけ切替、entitlement lookup + quota は共通フロー
-- **設計の言葉と公式 UI の実際は乖離することがある**: 設計で「Verification key = ECDSA P-256 **PEM** 形式」と想定したが、実際の Play Console は **base64 (DER SubjectPublicKeyInfo)** で出力。R 項目に「実 UI / 一次ソースで取得形式を確認」を必ず入れる
-- **鍵交換のハイブリッド方式**: Google の Self-managed key 設定は「直接 AES-256 をダウンロード」ではなく、「クライアント側で RSA 鍵ペア生成 → 公開鍵を Google に upload → AES-256 + ECDSA 鍵を RSA で暗号化されたファイルとしてダウンロード → クライアント側 RSA 秘密鍵で復号」。これは Google サーバー保管中の漏洩リスクを排除する追加層
-- **クライアント側 OpenSSL 実行は Git for Windows 同梱で十分**: `C:\Program Files\Git\usr\bin\openssl.exe` (Win 単体インストール不要)。PowerShell からは `&` call operator + フルパスで実行
-- **PowerShell `>` リダイレクトは UTF-16LE になる罠**: openssl の base64 出力をファイル保存する際は `-out` オプション (openssl 自身) で ASCII 保存させる
-- **平文鍵はローカルに残さない**: `wrangler secret put` 投入後は `api_keys.txt` を削除、`private.pem` (passphrase 暗号化済) のみ保管。Play Console から何度でも再ダウンロード + 復号可能なため、平文を残すリスク > 失うリスク
+- **Standard request でも server-issued nonce は使える (ハイブリッド)**: プラグインが Standard 専用でも、自前 nonce を `clientData` JSON に埋め込み DO で one-time consume すれば Classic 同等の replay 防止になる。token の `requestHash` = `base64(sha256(clientData))` で clientData との束縛を検証
+- **verdict payload の型は STRING に注意**: `timestampMillis` / `versionCode` は文字列、`Number()` 明示変換。`deviceRecognitionVerdict` は空配列 `[]` あり得る (= 端末攻撃検知)、`Array.isArray && length>0 && includes` の 3 段防御
+- **`jose` は decode 専用ライブラリではない**: Self-managed decode を捨てても、Service Account の RS256 JWT 署名 (OAuth2 token 取得) に同じ lib を転用できた = ライブラリは「目的」でなく「機能」で評価すると無駄が減る
+- **設計の言葉と公式 UI の実際は乖離する**: Verification key を「PEM」と想定したが実際は base64 (DER SPKI)。R 項目に「実 UI / 一次出力で形式を確認」を必ず入れる
+- **Self-managed key 鍵交換ハイブリッド** (Classic 用に取得した分は将来の保険で wrangler secret に残置): クライアント RSA 鍵生成 → 公開鍵 upload → 暗号化応答 download → RSA-OAEP 復号 → secret 投入。OpenSSL は Git for Windows 同梱で十分、平文鍵はローカルに残さない
 
 ---
 
@@ -226,11 +247,11 @@ Solara で検討した層 (App Attest + RC + Play Integrity 統合後):
 | Bot Fight Mode (Cloudflare) | 🟢 補助的 | 設定 1 クリック | ほぼゼロ | 🟢 最高 | ✅ 採用 |
 | 異常検知アラート | 🟢 リアルタイム発見 | 中 | 低 | 🟡 中 | ✅ 採用 (後続) |
 | Apple step 6 (challenge inclusion 厳格) | 🔴 Secure Enclave 突破前提でしか効果なし | 中 (latency +1RTT) | 中 | 🔴 低 | ❌ **不採用** |
-| Google decode 経由 verdict | 🟢 同等の検証効果 | 低 (~50 行) | Google 障害連鎖 / レイテンシ 100-300ms / 10k/day quota 消費 | 🔴 低 | ❌ **不採用** (Self-managed key 採用) |
+| Google `decodeIntegrityToken` 経由 verdict (Android Standard) | 🟢 唯一の復号手段 (Standard token は protobuf、自前 decode 不可) | 低 (~50 行、SA JWT + OAuth2) | Google 障害連鎖 / レイテンシ ~200ms / quota 消費 (access token 50min cache で緩和) | 🟢 **必須** | ✅ **採用に逆転** (S7) |
 | Trusted Entitlements REST API 二重チェック | 🟡 補助的 (Webhook 取りこぼし時) | 中 | 中 | 🟡 中 | ⏳ 公開後検討 |
 | App Attest device check API | 🟡 receipt 検証 | 中 (Apple サーバー API call) | Apple 障害連鎖 | 🔴 低 | ❌ **不採用** (sign count 検証で十分) |
 
-「ROI 低い層は採用しない」勇気が大事。同時に「ROI 評価表は機能追加のたびに更新する」(2026-05 で 5 行追加した実例)。
+「ROI 低い層は採用しない」勇気が大事。同時に「ROI 評価表は機能追加のたびに更新する」(2026-05 で 5 行追加した実例)。**そして「実物で前提が崩れたら判定を逆転させる」**: Google decode 経由 verdict は当初「Self-managed key で代替できるから不採用」だったが、Standard request では自前 decode が物理的に不可能と S7 実機で判明し「必須」に逆転した。ROI 表の前提 (= 各層の防御効果や代替可能性) も、実機検証で覆ることがある。
 
 ### 4.3 段階リリース機構を必ず入れる
 
@@ -367,6 +388,48 @@ PowerShell 注意点:
 - フルパス実行は `&` call operator: `& "C:\Program Files\Git\usr\bin\openssl.exe" genrsa ...`
 - backtick `` ` `` で line continuation (bash の `\` ではない)
 
+### 5.8 Service Account 経由の Google API 呼び出し (wrangler secret + JWT 署名)
+
+外部 SaaS の「自前 decode」が不可能で、SaaS 公式 API (例: Google `decodeIntegrityToken`) を Worker から叩く場合の定番パターン。Solara Play Integrity S7 で実装。
+
+**Service Account JWT → OAuth2 access token フロー** (Cloudflare Workers、`jose` v6 使用):
+
+```js
+import { SignJWT, importPKCS8 } from 'jose';
+// 1. SA JSON (private_key PEM PKCS8 + client_email) を JSON.parse
+// 2. importPKCS8(sa.private_key, 'RS256') で署名鍵に変換
+// 3. SignJWT で {scope, iss=client_email, sub=client_email, aud=token_url, iat, exp} を RS256 署名
+// 4. POST oauth2.googleapis.com/token (grant_type=jwt-bearer, assertion=<JWT>) → access_token
+// 5. access_token を Worker メモリに 50min cache (Google は 3600s 有効、cold start で消えても次回再署名)
+// 6. Authorization: Bearer <access_token> で対象 API を呼ぶ
+```
+
+**ハマりどころ (実機で潰した)**:
+
+- **`wrangler secret put` は対話式だと 1 行しか受け付けない**: 複数行 JSON (private_key に `\n` を含む) を貼り付けると最初の改行で切れ、残りが shell プロンプトに漏れる。診断で `Unterminated string in JSON at position XXXX` が出たらこれ。
+  ```powershell
+  # ❌ 対話式貼り付け (multiline JSON が切れる + private_key が画面に露出)
+  npx wrangler secret put GOOGLE_PLAY_INTEGRITY_SA_JSON   # ← ここに JSON 貼り付け = 罠
+
+  # ✅ ファイルを 1 文字列として渡す (画面非表示 + 完全投入)
+  Get-Content "path\to\sa.json" -Raw | npx wrangler secret put GOOGLE_PLAY_INTEGRITY_SA_JSON
+  ```
+  PowerShell では `|` の直後で改行すると「空のパイプ要素」エラー → **1 行で実行**。失敗するなら `$sa = Get-Content ... -Raw; $sa | npx wrangler secret put ...` と変数経由。
+
+- **診断 endpoint を必ず用意する**: secret が正しく入ったかを `{saConfigured, accessTokenOk, accessTokenLen}` で返す GET を作る (access token の値そのものは返さない)。これで「鍵が効いているか」を deploy 直後に 1 コマンドで確認できる。本番化 (enforced) 時は同 endpoint を 404 化するガードも入れる。
+
+- **decode-test endpoint で実機 token を検証する**: 実機から採取した本物の token を POST し、API の生レスポンス (payload) を返す診断口を作る。これが §1.3 の R8 突破に直結した (= 実物 token がないと「自前 decode 不可」に気づけなかった)。
+
+**鍵 (Service Account key) の rotation 手順** (漏洩時 / 定期):
+
+1. Cloud Console > IAM > サービスアカウント > 該当 SA > キー で**新キーを先に作成** (JSON download)
+2. `Get-Content 新キー.json -Raw | npx wrangler secret put ...` → `wrangler deploy` → 診断で `accessTokenOk:true` 確認
+3. **新キー稼働を確認してから**旧キーを Console で削除 (先に消すと投入失敗時に詰む)
+4. ローカルの旧 JSON ファイルを削除
+
+> ⚠️ deploy は Worker を新バージョン (cold start) にするので、メモリ上の access token cache がリセットされる。つまり deploy 直後の診断 `accessTokenOk:true` は「新キーで署名成功」を確実に意味する。
+> ⚠️ 対話式貼り付けで private_key が画面表示されてしまったら、ターミナル履歴に残る前提で rotation する。Console で旧キーを削除すれば、履歴に残った鍵も JWT 署名に使えなくなる (= 無効化される)。
+
 ### 5.7 設計の言葉と公式 UI の実際は乖離することがある
 
 事前調査で「Verification key = ECDSA P-256 **PEM 形式**」と公式 docs から読み取ったが、実際の Play Console UI で取得すると **base64 (DER SubjectPublicKeyInfo) 形式**で出力される。docs は最新の UI 仕様を反映していないことがある。
@@ -391,6 +454,7 @@ Solara App Attest + RC Webhook + Play Integrity S1 で、AI (= 私) が 5+ 回�
 | 3 | App Attest | Layer C を後回し | 「2/3 重チェック必要?」 | S4 統合へ前倒し |
 | 4 | App Attest | `signatureOnly: true` で時刻チェック OFF | 「これは問題ある?」 | 時刻チェック C+D 追加 |
 | 5 | Play Integrity | STRONG_INTEGRITY で区切る選択肢 | 「OS 対応下限と Play Integrity 閾値を揃える」 | minSdk 31 + STRONG は乖離 (= 古いパッチ端末を弾く) → DEVICE_INTEGRITY で区切る (オーナー誤解を正しく訂正できた逆ケース) |
+| 6 | Play Integrity | R8 (Self-managed key が Standard でも使えるか) を「概算解決」とラベルし実機確認を先送り | 「エラーが出ても今までの調査をすぐ捨てるな。原因と最新情報を先に調べろ」 | S7 実機で `JWEInvalid` → Standard は Google decode API 必須と判明。だが既存枠組みは再利用でき decode だけ差し替えで R8 突破。**先送りした R 項目が最も高くつく所で崩れた**典型 |
 
 **パターン**: AI は「実装量が少ない選択」「既存コードに優しい選択」「変更が小さい選択」に流れる傾向。オーナーが**能動的に問いかけないと、素案で固まる**。
 
@@ -544,9 +608,16 @@ Solara App Attest + RC Webhook + Play Integrity S1 で、AI (= 私) が 5+ 回�
 - `apps/solara/lib/utils/purchases_service.dart` — RevenueCat SDK ラッパー + `appUserId` getter
 - `apps/solara/lib/utils/app_attest_client.dart` — body `__appUserId` 自動注入 (改ざん耐性 + Worker entitlement lookup キー)
 
-### Play Integrity (Android、設計 v0.1 完成、S2-S6 で実装)
-- `apps/solara/docs/play_integrity_design.md` — 設計 v0.1 (Q1-Q4 確定、R1-R6 明示、10-step 検証、Deploy 手順、6 セッションロードマップ)
-- (実装ファイルは S2-S6 で作成: `auth/play_integrity.js` / `auth/google_play_keys.js` / `auth/jose_wrapper.js` + DO `integrity_nonces` 表追加)
+### Play Integrity (Android、実装 v1.1 完成、S1-S7、実機 R8 突破)
+- `apps/solara/docs/play_integrity_design.md` — 設計 v1.1 (Q1-Q4 確定、R1-R8、12-step 検証、Deploy 手順、Google decode API 方式)
+- `apps/solara/worker/src/auth/play_integrity.js` — 12-step verify + `getGoogleAccessToken` (SA JWT→OAuth2) + `decodeIntegrityToken` (Google decode API) + `verifyPlayIntegrityFlow` (decodeFn DI)
+- `apps/solara/worker/src/auth/attestation_state.js` — DO に `integrity_nonces` 表 + create/consume endpoint 追加
+- `apps/solara/worker/src/index.js` — middleware OS 経路分岐 + `/auth/integrity/challenge` + 診断 endpoint (`/diagnose` SA 健全性 + `/decode-test` 実機 token 検証、enforced 時 404)
+- `apps/solara/worker/wrangler.toml` — `GOOGLE_PLAY_INTEGRITY_SA_JSON` secret + `PLAY_INTEGRITY_ENFORCEMENT` (log_only/enforced) + `ANDROID_CERT_SHA256_ALLOWLIST` (実機採取 cert)
+- `apps/solara/worker/test/play_integrity.test.js` — Google decode mock + SA JWT 経路 29 ケース (worker 累計 126/126)
+- `apps/solara/lib/utils/app_attest_client.dart` — Android 経路 (nonce 取得→clientData{nonce,uid,ts}→`verify()`→3 ヘッダー注入)
+- `apps/solara/tools/build_release.py` — `--gcp-project-number` で `SOLARA_GCP_PROJECT_NUMBER` を dart-define 注入
+- 旧 Self-managed key (`PLAY_INTEGRITY_ENCRYPTION_KEY` / `VERIFICATION_KEY`) は wrangler secret に残置 (将来 Classic に戻す保険、v1.1 では未使用)
 
 ### 横断参照
 - `lessons_security_critical_features.md` (memory 側、AI 自省用) — 私の判断ミス 4-5 パターン + オーナー問いかけ 6 パターン + 安全装置
@@ -563,4 +634,4 @@ Solara App Attest + RC Webhook + Play Integrity S1 で、AI (= 私) が 5+ 回�
 - テンプレが古くなったら §8 を更新
 - 多層防御の ROI 評価表 (§4.2) は機能追加のたびに行追加 (Solara で 5 行追加した実例)
 
-最終更新: 2026-05-19 (Solara RevenueCat Webhook + Play Integrity S1 完了直後、累計 3 機能のケーススタディ)
+最終更新: 2026-05-20 (Solara Play Integrity S7 = 実装 v1.1 完成 + 実機 R8 突破直後。S7 で「Standard token は Self-managed key で decode 不可、Google decodeIntegrityToken API 必須」と実機判明し方針転換、§1.3 / §4.2 / §5.8 / §6.1 を更新。累計 3 機能 + 実機ハマり知見)
