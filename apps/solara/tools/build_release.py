@@ -63,7 +63,13 @@ def symbols_dir(platform: str, version: str) -> Path:
     return SOLARA / "build" / "symbols" / platform / version
 
 
-def build_command(platform: str, version: str, gcp_project_number: int | None) -> list[str]:
+def build_command(
+    platform: str,
+    version: str,
+    gcp_project_number: int | None,
+    rc_android_key: str | None,
+    rc_ios_key: str | None,
+) -> list[str]:
     """flutter build コマンドを構築。"""
     target_arg = {
         "apk": "apk",
@@ -87,6 +93,14 @@ def build_command(platform: str, version: str, gcp_project_number: int | None) -
     # 0 / 未指定 → AppAttestClient は Android 経路を bypass (= Worker log_only で通過)。
     if platform in ("apk", "aab") and gcp_project_number is not None and gcp_project_number > 0:
         cmd.append(f"--dart-define=SOLARA_GCP_PROJECT_NUMBER={gcp_project_number}")
+    # RevenueCat Public SDK key を dart-define で注入 (= PurchasesService._iosApiKey /
+    # _androidApiKey)。未注入だと release で Purchases.configure が skip され appUserId が
+    # null になり、Play Integrity middleware Step 3 が clientdata_uid_invalid で弾く
+    # (enforced だと全 Android Pro が 401)。キーは公開 SDK key だがコミットせず CLI/env で渡す。
+    if platform in ("apk", "aab") and rc_android_key:
+        cmd.append(f"--dart-define=SOLARA_RC_ANDROID_KEY={rc_android_key}")
+    if platform == "ios" and rc_ios_key:
+        cmd.append(f"--dart-define=SOLARA_RC_IOS_KEY={rc_ios_key}")
     # iOS は App Store Connect 経由 dSYM 別アップなので --no-codesign しない。
     # AAB は Play Console 提出時に R8 ProGuard map も自動取り込みされる。
     return cmd
@@ -105,6 +119,25 @@ def resolve_gcp_project_number(arg_value: int | None) -> int | None:
         except ValueError:
             pass
     return None
+
+
+def resolve_rc_key(arg_value: str | None, env_name: str) -> str | None:
+    """RevenueCat Public SDK key を解決。優先順位: CLI > env > None。"""
+    if arg_value:
+        return arg_value.strip()
+    env_val = os.environ.get(env_name)
+    if env_val and env_val.strip():
+        return env_val.strip()
+    return None
+
+
+def mask_key(key: str | None) -> str:
+    """SDK key を表示用にマスク (先頭プレフィックスのみ残す)。"""
+    if not key:
+        return "(未設定)"
+    if len(key) <= 8:
+        return key[:2] + "…"
+    return key[:8] + "…" + f"({len(key)} chars)"
 
 
 def main() -> int:
@@ -126,13 +159,33 @@ def main() -> int:
             " どちらも未設定なら Android 経路は bypass で release ビルド (= Worker log_only で通過)。"
         ),
     )
+    parser.add_argument(
+        "--rc-android-key",
+        default=None,
+        help=(
+            "RevenueCat Android Public SDK key (goog_xxx)。Android/AAB のみ。"
+            " 未指定時は env SOLARA_RC_ANDROID_KEY を見る。"
+            " 未設定だと release で Purchases.configure が skip され appUserId=null となり"
+            " Play Integrity が clientdata_uid_invalid で弾く。キーはコミットしないこと。"
+        ),
+    )
+    parser.add_argument(
+        "--rc-ios-key",
+        default=None,
+        help=(
+            "RevenueCat iOS Public SDK key (appl_xxx)。iOS のみ。"
+            " 未指定時は env SOLARA_RC_IOS_KEY を見る。キーはコミットしないこと。"
+        ),
+    )
     args = parser.parse_args()
 
     version = args.version or read_version()
     sym_dir = symbols_dir(args.platform, version)
     gcp = resolve_gcp_project_number(args.gcp_project_number)
+    rc_android_key = resolve_rc_key(args.rc_android_key, "SOLARA_RC_ANDROID_KEY")
+    rc_ios_key = resolve_rc_key(args.rc_ios_key, "SOLARA_RC_IOS_KEY")
 
-    cmd = build_command(args.platform, version, gcp)
+    cmd = build_command(args.platform, version, gcp, rc_android_key, rc_ios_key)
 
     print("┌─ Solara Release Build ─────────────────────────────")
     print(f"│ platform   : {args.platform}")
@@ -143,7 +196,18 @@ def main() -> int:
             print(f"│ GCP project: (未設定 = Play Integrity bypass)")
         else:
             print(f"│ GCP project: {gcp}")
-    print(f"│ command    : {' '.join(cmd)}")
+        if rc_android_key is None:
+            print(f"│ RC android : (未設定 = configure skip / appUserId=null)")
+        else:
+            print(f"│ RC android : {mask_key(rc_android_key)}")
+    if args.platform == "ios":
+        print(f"│ RC ios     : {mask_key(rc_ios_key)}")
+    # command 表示はキーをマスクして漏洩を防ぐ (ログ/スクショ対策)。
+    masked_cmd = [
+        re.sub(r"(SOLARA_RC_(?:ANDROID|IOS)_KEY=)(\S+)", r"\1***", part)
+        for part in cmd
+    ]
+    print(f"│ command    : {' '.join(masked_cmd)}")
     print(f"│ mode       : {'EXECUTE' if args.release_mode else 'DRY RUN'}")
     print("└────────────────────────────────────────────────────")
 
@@ -160,7 +224,7 @@ def main() -> int:
     # 実行
     sym_dir.mkdir(parents=True, exist_ok=True)
     print(f"[build_release] {sym_dir} ensured")
-    print(f"[build_release] running: {' '.join(cmd)}")
+    print(f"[build_release] running: {' '.join(masked_cmd)}")
     print()
 
     # Windows では `flutter` は `flutter.bat`。Python 3.13+ の subprocess.run は

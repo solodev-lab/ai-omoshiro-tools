@@ -42,6 +42,49 @@ flutter build aab --release `
 `--dart-define` を flutter build に付与するか、`tools/build_release.py` の
 `build_command()` を編集して恒久化する。
 
+## 🔴 RevenueCat Public SDK key の注入 (--dart-define、release build 必須)
+
+release build で RevenueCat の Public SDK key を渡さないと `PurchasesService.init()` が
+`Purchases.configure` を skip し、`appUserId` が `null` になる。すると Android では
+`AppAttestClient._addAndroidHeaders` の `clientData.uid` が空文字になり、Worker の
+Play Integrity middleware Step 3 が `clientdata_uid_invalid` で弾く
+(現在 log_only なので通過するが、**enforced に上げると全 Android Pro リクエストが 401**)。
+
+`build_release.py` は専用フラグでこのキーを `--dart-define` に注入する
+(キーはコミットしない。CLI 引数 or 環境変数のみ。表示・ログ出力ではマスクされる)。
+
+```powershell
+# Android (AAB) — RC Android Public SDK key (goog_xxx) を注入
+cd apps/solara
+python tools/build_release.py aab `
+  --gcp-project-number 986678972112 `
+  --rc-android-key goog_xxxxxxxxxxxxxxxx `
+  --release-mode
+
+# 環境変数経由 (キーをコマンド履歴に残したくない場合)
+$env:SOLARA_RC_ANDROID_KEY = "goog_xxxxxxxxxxxxxxxx"
+python tools/build_release.py aab --gcp-project-number 986678972112 --release-mode
+
+# iOS — RC iOS Public SDK key (appl_xxx)
+python tools/build_release.py ios --rc-ios-key appl_xxxxxxxxxxxxxxxx --release-mode
+```
+
+| フラグ | 環境変数 fallback | 対象 |
+|---|---|---|
+| `--rc-android-key goog_xxx` | `SOLARA_RC_ANDROID_KEY` | apk / aab |
+| `--rc-ios-key appl_xxx` | `SOLARA_RC_IOS_KEY` | ios |
+
+未指定なら configure が skip され、`│ RC android : (未設定 = configure skip / appUserId=null)`
+と表示される。anonymous appUserID で十分 (RC dashboard に products/offering が未設定でも
+`Purchases.configure` 成功時点で `$RCAnonymousID:xxx` が発行され clientData.uid が非空になる)。
+
+### 検証 (Play Integrity unblock の確認)
+1. 上記で AAB ビルド → Play Console Internal Testing → 実機 install
+2. `cd apps/solara/worker && npx wrangler tail --format pretty`
+3. 実機で Pro 経路を操作 → middleware ログから `clientdata_uid_invalid` /
+   `would block ... clientdata_uid_invalid` が消えれば成功
+   (clientData.uid が `$RCAnonymousID:...` になっている)
+
 ## 仕組み
 
 1. **`--obfuscate`**: Dart 関数名/クラス名をランダム化。アプリ改変による Pro 解放（`isPro=true` 直書き）の難易度を上げる
