@@ -29,6 +29,7 @@
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import { generateKeyPair, exportPKCS8 } from 'jose';
 import {
   getGoogleAccessToken,
@@ -533,6 +534,25 @@ test('Step9: payload.requestHash が clientData の SHA-256 と不一致 → req
 
   assert.equal(result.ok, false);
   assert.equal(result.error, 'requesthash_mismatch');
+});
+
+// plugin 互換: app_attest_integrity v1.0.0 Android getToken() は
+//   Base64.encodeToString(sha256(clientData), Base64.NO_WRAP or Base64.NO_PADDING)
+// を requestHash に使う (標準アルファベット・`=` パディング無し)。Standard Integrity API
+// は requestHash を不透明文字列として echo するため、Worker の sha256Base64 がこれと
+// 完全一致しないと実機で requesthash_mismatch になる (2026-05-20 log_only で検出)。
+// この test は Worker の関数ではなく node:crypto で plugin の算法を独立再現して照合する。
+test('Step9: sha256Base64 は plugin の Base64.NO_PADDING と完全一致 (末尾 = 無し)', async () => {
+  const clientDataStr = JSON.stringify({ nonce: 'n', uid: 'u', ts: 123 });
+  const expected = createHash('sha256')
+    .update(clientDataStr, 'utf8')
+    .digest('base64')
+    .replace(/=+$/, '');
+  const actual = await __test.sha256Base64(clientDataStr);
+  assert.equal(actual, expected);
+  assert.ok(!actual.endsWith('='), 'requestHash は padding を含んではいけない');
+  // SHA-256 (32B) の base64 は padding 無しで 43 文字。
+  assert.equal(actual.length, 43);
 });
 
 // ── token timestamp + package (Step 10) ──────────────────────────

@@ -297,12 +297,17 @@ function fail(error, detail) {
 }
 
 /**
- * 標準 base64 (RFC 4648 §4、=パディングあり) で SHA-256 を計算。
+ * SHA-256 → base64 (標準アルファベット、**`=` パディング無し / NO_WRAP**) で計算。
  * Workers の crypto.subtle.digest + Web 標準 btoa を利用 (Node 18+ も互換)。
  *
- * 🔴 重要 (v0.5): `app_attest_integrity` v1.0.0 の `CryptoUtils.sha256HashBase64` は
- *    base64.encode (URL-safe ではない、`=` パディングあり) を使う。
- *    Standard request の payload.requestDetails.requestHash も同形式。
+ * 🔴 重要 (v1.2 修正): `app_attest_integrity` v1.0.0 の Android 実装 (getToken) は
+ *    `Base64.encodeToString(sha256(clientData), Base64.NO_WRAP or Base64.NO_PADDING)`
+ *    を requestHash に使う (= 標準アルファベット・**`=` パディング無し**)。
+ *    Standard Integrity API は requestHash を不透明文字列としてそのまま echo するので、
+ *    Worker 側も padding を除去しないと SHA-256 の末尾 `=` 分だけ一致せず
+ *    requesthash_mismatch になる。
+ *    (旧コメントは「CryptoUtils.sha256HashBase64 = パディングあり」と誤記していた。
+ *     実際の plugin v1.0.0 Android 経路は NO_PADDING。これが log_only で検出された)
  */
 async function sha256Base64(input) {
   const bytes = new TextEncoder().encode(input);
@@ -310,7 +315,8 @@ async function sha256Base64(input) {
   const arr = new Uint8Array(hash);
   let bin = '';
   for (let i = 0; i < arr.length; i++) bin += String.fromCharCode(arr[i]);
-  return btoa(bin);
+  // plugin の Base64.NO_PADDING に合わせて末尾 `=` を除去 (標準アルファベットは btoa と同一)。
+  return btoa(bin).replace(/=+$/, '');
 }
 
 /**
