@@ -39,6 +39,7 @@ from __future__ import annotations
 import argparse
 import os
 import re
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -161,6 +162,17 @@ def main() -> int:
     print(f"[build_release] {sym_dir} ensured")
     print(f"[build_release] running: {' '.join(cmd)}")
     print()
+
+    # Windows では `flutter` は `flutter.bat`。Python 3.13+ の subprocess.run は
+    # shell=False で .bat 拡張子を自動解決しないため、shutil.which() でフルパスに
+    # 展開してから渡す (Mac/Linux でも shutil.which が動くので両対応)。
+    resolved = shutil.which(cmd[0])
+    if resolved:
+        cmd[0] = resolved
+    elif os.name == 'nt':
+        # which が見つけられない異常系: cmd 経由 fallback (PATH に flutter.bat があれば動く)
+        print(f"[build_release] ⚠ shutil.which('{cmd[0]}') が None、shell 経由 fallback")
+        cmd = ["cmd", "/c", *cmd]
 
     env = os.environ.copy()
     result = subprocess.run(cmd, cwd=SOLARA, env=env)

@@ -49,10 +49,23 @@ APP_ATTEST_QUOTA_PRO = "100"
 # Challenge TTL (設計 v1.8 §11 Q2、Apple Sample Code 推奨 5 分)
 APP_ATTEST_CHALLENGE_TTL_SEC = "300"
 
-# ── Play Integrity 設定 (設計 v0.7、apps/solara/docs/play_integrity_design.md) ──
+# ── Play Integrity 設定 (設計 v1.1、apps/solara/docs/play_integrity_design.md) ──
 #
-# 鍵 (PLAY_INTEGRITY_ENCRYPTION_KEY / VERIFICATION_KEY) は wrangler secret put 済
-# (S1 オーナー作業完了 2026-05-19、DECRYPTION 44 char / VERIFICATION 124 char)。
+# 🚨 v1.1 訂正 (2026-05-20、R8 実機失敗): Standard request の token は JWE ではなく
+#    Google 独自 protobuf 形式で、Self-managed key で local decode 不可と判明。
+#    → Google decodeIntegrityToken API 経由に変更。Service Account credentials が必要。
+#
+# GOOGLE_PLAY_INTEGRITY_SA_JSON は wrangler secret に入れる (vars に書かない):
+#   wrangler secret put GOOGLE_PLAY_INTEGRITY_SA_JSON
+#     → Google Cloud Console > Solara-api project > IAM > Service Accounts で作成した
+#        SA の JSON credentials (private_key + client_email を含む) を貼り付け
+#     → SA に「Play Integrity API ユーザー」role 付与必須
+#   Worker は private_key で RS256 JWT 署名 → OAuth2 access token 取得 →
+#   playintegrity.googleapis.com/v1/<pkg>:decodeIntegrityToken で token 復号
+#
+# 旧 Self-managed key (PLAY_INTEGRITY_ENCRYPTION_KEY / VERIFICATION_KEY) は
+# wrangler secret に残置 (将来 Classic request に戻す場合の保険、削除しない)。
+# v1.1 では未使用。
 #
 # Android 経路の段階的有効化スイッチ (App Attest と独立、iOS/Android のロールアウト差を吸収):
 #   "disabled" - middleware Android 経路スキップ (緊急時 kill switch)
@@ -69,11 +82,13 @@ PLAY_INTEGRITY_NONCE_TTL_SEC = "300"
 ANDROID_PACKAGE_NAME = "com.solodevlab.solara"
 
 # Play 配信用 cert SHA-256 の allowlist (CSV、=サイドロード排除の最終層)。
-# 空 → cert check skip (log_only 期間で実機 cert SHA-256 を採取するまでこの状態)。
-# S5 で実機 token 採取 → certificateSha256Digest の値を確認 → ここに反映 (例:
-#   ANDROID_CERT_SHA256_ALLOWLIST = "AbCdEf...,XyZ123..."
-# )
-ANDROID_CERT_SHA256_ALLOWLIST = ""
+# 空 → cert check skip。
+# 2026-05-20 (R8 突破時、S7): 実機 decode-test で Play App Signing cert を採取し反映。
+#   payload.appIntegrity.certificateSha256Digest = "-XyvOn4yrVJdrby9VfkwejUq7Zt4431y4QC-r8raucY"
+#   (URL-safe base64 / padding なし。Step 11 は文字列完全一致で評価)
+# 将来 Play App Signing の key rotation や別トラック cert 追加時は CSV で並べる:
+#   ANDROID_CERT_SHA256_ALLOWLIST = "-XyvOn...,AbCdEf..."
+ANDROID_CERT_SHA256_ALLOWLIST = "-XyvOn4yrVJdrby9VfkwejUq7Zt4431y4QC-r8raucY"
 
 # ── RevenueCat Webhook 設定 (設計 v2.2 §B、apps/solara/docs/revenuecat_webhook.md) ──
 #

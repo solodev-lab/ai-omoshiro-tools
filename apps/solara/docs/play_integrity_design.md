@@ -1,6 +1,6 @@
 # Play Integrity サーバー検証 設計ドキュメント
 
-**ステータス**: 設計 v1.0 (2026-05-19、Phase 1 コード側完成 — 6 セッションで Worker 125/125 + Flutter 9/9 PASS、診断 endpoint 本番ガード + 運用ガイド完成、残はオーナー実機 deploy + 1 週間モニタ + enforced 切替のみ)
+**ステータス**: 設計 v1.1 (2026-05-20、🚨 R8 実機失敗による Q2 訂正 — Self-managed key (Standard 非対応) → Google decodeIntegrityToken API。Worker 126/126 PASS、残はオーナー Service Account 作成 + 実機再テスト)
 **対象**: Cloudflare Worker `solara-api` の `/auth/integrity/*` + `/protected/*` middleware の Android 経路
 **前提**: `project_solara_launch_checklist.md` Phase 1 認証ミドルウェア + Phase 2 Flutter クライアント
 **関連**:
@@ -10,6 +10,52 @@
 - `../../docs/app_development_lessons.md` §1.3 ケーススタディ + §5.6 鍵交換ハイブリッド方式 + §5.7 設計と公式 UI 乖離
 
 ## 変更履歴
+
+### v1.1 (2026-05-20、🚨 R8 実機失敗 — Q2 訂正: Self-managed → Google decode API)
+
+**実機検証で設計の根本前提が崩れた**。S5/S6 のオーナー実機作業中に判明:
+
+#### R8 失敗の経緯
+1. release AAB (`--dart-define=SOLARA_GCP_PROJECT_NUMBER` 注入) を Internal Testing 配信 → 実機 install
+2. wrangler tail + 実機操作で X-PlayIntegrity-Token 採取成功
+3. 採取 token を `/auth/integrity/decode-test` に POST → **`{"ok":false, "error":"JWEInvalid: Invalid Compact JWE"}`**
+4. 採取 token は `CqUC...` で始まる Base64URL encoded protobuf (= `0x0a 0xa5 0x02` protobuf field 1)、**JWE compact form (`eyJ...`) ではない**
+
+#### 公式 docs 再調査で判明した真実
+- `developer.android.com/google/play/integrity/standard`:
+  > "you must decrypt the integrity token on Google's servers"
+  > "Standard requests always require calling Google's decodeIntegrityToken API"
+- Play Console support: Self-managed response encryption は **Classic requests section にのみ存在**
+- **結論**: Self-managed key は Classic request 専用。**Standard request は常に Google decode API 経由でしか復号できない**
+
+#### v0.5 R8「概算解決」の判断ミス
+v0.5 で「公式 docs に Self-managed は decode layer (request 種別非依存) と明記」と書いた根拠は、別文脈の docs (Classic 前提) を誤読していた。実機 token で確証せずに「概算解決」とした判断ミス。
+
+#### Q2 訂正
+| | v0.4-v1.0 (誤) | v1.1 (訂正) |
+|---|---|---|
+| decode 方式 | Self-managed key で Workers 自前 JWE A256KW + JWS ES256 decode | **Google decodeIntegrityToken API 経由** |
+| 必要な credential | Encryption key + Verification key (Self-managed) | **Service Account JSON** (RS256 JWT → OAuth2 → decode API) |
+| jose の用途 | compactDecrypt / compactVerify (token 復号) | **SignJWT / importPKCS8 (Service Account JWT 署名に再利用)** |
+
+#### v1.1 実装変更 (S7、現 v1.0 枠組みの decode 部分のみ置換)
+- **`getGoogleAccessToken(env)` 追加**: Service Account `private_key` (PEM PKCS8) で RS256 JWT 署名 → `oauth2.googleapis.com/token` で access token 取得 → **50min Worker メモリ cache** (毎回 JWT 署名は重いため)
+- **`decodeIntegrityToken(token, env)` 書き換え**: `playintegrity.googleapis.com/v1/<pkg>:decodeIntegrityToken` を呼出、`tokenPayloadExternal` を payload として返却
+- **`diagnoseKeys` 撤去** (Self-managed key import 確認は不要に)
+- **`verifyPlayIntegrityFlow` に `decodeFn` DI 追加** (default = decodeIntegrityToken、テストで Google API mock 注入)
+- **middleware OS 分岐 / DO nonce / clientData binding / Step 8-12 は全て活用** (= S2-S6 の作業の大半が活きる)
+- **`/auth/integrity/diagnose`**: Self-managed key 確認 → Service Account access token 取得確認に変更
+- **wrangler.toml**: `GOOGLE_PLAY_INTEGRITY_SA_JSON` secret 前提のコメント追加、旧 Self-managed key secret は「将来 Classic 戻す保険」として残置
+- **テスト全面更新**: R7 鍵 import / JWE round-trip / R1 → getGoogleAccessToken (4) + decodeIntegrityToken Google mock (4) + verifyPlayIntegrityFlow decodeFn 注入 (21) = 29 ケース全 PASS
+- **bundle gzip 174.04 → 171.40 KiB** (-2.64 KiB、Self-managed decode 撤去で軽量化)
+- **Worker 全テスト 126/126 PASS**
+
+#### トレードオフ (Self-managed → Google decode API)
+- ❌ レイテンシ +100-300ms (decode API 往復、access token は cache で軽減)
+- ❌ Google decode API quota 10k/day 消費 (Solara DAU 1500 想定で余裕、§14.3 で増量手順)
+- ❌ Google 障害時に decode 不可 (= log_only なら通過、enforced なら一時 401。kill switch で disabled に倒せる)
+- ✅ Standard request の唯一の正規 decode 手段 (公式仕様)
+- ✅ jose 再利用で新ライブラリ不要、コード変更は decode 部分のみに局所化
 
 ### v1.0 (2026-05-19、S6 仕上げ — Phase 1 コード側完成)
 - **診断 endpoint 本番ガード** (`src/index.js`):
@@ -575,34 +621,63 @@ PLAY_INTEGRITY_ENFORCEMENT = "disabled" | "log_only" | "enforced"
 - [ ] S2-S6 実装後、`PLAY_INTEGRITY_ENFORCEMENT = "log_only"` で初回 deploy → 1 週間モニタ → `enforced` 切替
 - [ ] **API quota** 初期 10k/day を確認、必要に応じて増量申請 (公開後、R3 計測結果次第)
 
-### 11.3 S5 後オーナー作業 (実機テスト + R8 最終確認 + cert SHA-256 採取) 🚨
+### 11.3 オーナー作業 (v1.1、Service Account 作成 + 実機 R8 再確認 + cert 採取) 🚨
 
-S5 で Flutter 側コードまで完成、以下はオーナー実機作業:
+v1.1 で decode 方式が Google decode API に変わったため、**Service Account 作成が新規必須**。
+build/install/wrangler deploy は S5/S6 で実施済 (Cloud Project Number 986678972112 注入済 AAB が実機 install 済)。
 
-1. **Cloud Project Number 確認**:
-   - Play Console > Solara > アプリの完全性 > Play Integrity API > リンク済 Cloud project の **Cloud Project Number** (12 桁) を控える
-   - `tools/build_release.py aab --gcp-project-number <12桁> --release-mode` で release AAB ビルド
-   - または `export SOLARA_GCP_PROJECT_NUMBER=<12桁>; python tools/build_release.py aab --release-mode`
-2. **TestFlight 経路 (Android Internal Testing) で実機配信**:
-   - Play Console > Testing > Internal Testing にビルド upload
-   - 自身の Google アカウントで実機 (Pixel/Galaxy 等) にインストール
-3. **`wrangler deploy` (`PLAY_INTEGRITY_ENFORCEMENT=log_only` のまま)**:
-   - `cd apps/solara/worker && npx wrangler deploy`
-4. **🔴 R8 最終確認 (実機 token decode テスト)**:
-   - 実機で Solara 起動 → 例: Cosmic Pro 機能を 1 回叩く (Fortune 等)
-   - `wrangler tail` で `[middleware:log_only] would block` 警告を観察
-   - Worker logs から token を取得 or 専用デバッグエンドポイント `/auth/integrity/decode-test` に POST して `{"ok": true, "payload": {...}}` が返ることを確認
-   - payload に `appRecognitionVerdict: "PLAY_RECOGNIZED"` + `deviceRecognitionVerdict: [..., "MEETS_DEVICE_INTEGRITY"]` が含まれる
-5. **🔴 cert SHA-256 採取 → allowlist 投入**:
-   - 上記 decode 結果の `appIntegrity.certificateSha256Digest` 配列 (通常 1 個、Play App Signing の場合は 2 個 = upload key + signing key) を控える
-   - `wrangler.toml` の `ANDROID_CERT_SHA256_ALLOWLIST = "<値1>,<値2>"` に投入
-   - `npx wrangler deploy` で反映
-6. **1 週間ログモニタ後、enforced 切替**:
-   - 異常な `[middleware:log_only] would block` 警告が出ていなければ
-   - `wrangler.toml` の `PLAY_INTEGRITY_ENFORCEMENT = "enforced"` に書き換え
-   - `npx wrangler deploy`
-7. **診断 endpoint の本番ガード** (S6 タスク):
-   - `enforced` 切替と同時に `/auth/integrity/diagnose` + `/auth/integrity/decode-test` を 404 化 (= 本番でデバッグ口を露出しない)
+#### A. Service Account 作成 (新規、Google decode API 用)
+1. **Google Cloud Console** > `Solara-api` project (= Cloud Project Number 986678972112 のプロジェクト)
+2. 左メニュー **IAM と管理 > サービス アカウント** > **「サービス アカウントを作成」**
+   - 名前: 例 `play-integrity-decoder`
+   - ロール付与: **「Play Integrity API ユーザー」** (or `roles/playintegrity.user`) を選択
+   - 「完了」
+3. 作成した SA をクリック > **「キー」タブ** > **「鍵を追加」> 「新しい鍵を作成」> JSON** > ダウンロード
+   - JSON ファイルに `private_key` (PEM) + `client_email` が含まれる
+4. **Play Integrity API を有効化**: Cloud Console > APIs & Services > Library で「Play Integrity API」を検索 → 有効化 (未有効なら)
+5. **wrangler secret 投入**:
+   ```powershell
+   cd E:\AppCreate\apps\solara\worker
+   npx wrangler secret put GOOGLE_PLAY_INTEGRITY_SA_JSON
+     → ダウンロードした JSON ファイルの中身を全部貼り付け (1 行でも複数行でも OK)
+   ```
+6. **JSON ファイル削除** (= secret 投入後はローカルに残さない)
+
+#### B. deploy + 診断確認
+7. `cd apps/solara/worker && npx wrangler deploy`
+8. **診断 endpoint で SA 健全性確認**:
+   ```powershell
+   curl.exe https://solara-api.solodev-lab.com/auth/integrity/diagnose
+   ```
+   → `{"saConfigured":true,"accessTokenOk":true,"accessTokenLen":...}` なら SA OK
+
+#### C. 🔴 R8 再確認 (実機 token decode テスト)
+9. `npx wrangler tail --format pretty` で監視 + 実機で Solara の機能 (日々の運勢等) を 1 回叩く
+10. tail の `[debug:play_integrity] token=...` から token をコピー
+11. `/auth/integrity/decode-test` に POST:
+    ```powershell
+    $body = @{token="<採取 token>"} | ConvertTo-Json
+    Invoke-RestMethod -Uri "https://solara-api.solodev-lab.com/auth/integrity/decode-test" -Method POST -ContentType "application/json" -Body $body
+    ```
+    → **`{"ok":true,"payload":{...}}`** なら R8 確証完了 (Google decode API で復号成功)
+    → payload に `appIntegrity.appRecognitionVerdict: "PLAY_RECOGNIZED"` + `deviceIntegrity.deviceRecognitionVerdict: [..., "MEETS_DEVICE_INTEGRITY"]`
+
+#### D. 🔴 cert SHA-256 採取 → allowlist 投入
+12. 上記 decode 結果の `payload.appIntegrity.certificateSha256Digest` 配列 (通常 1-2 個) を控える
+13. `wrangler.toml` の `ANDROID_CERT_SHA256_ALLOWLIST = "<値1>,<値2>"` に投入 → `npx wrangler deploy`
+
+#### E. uid empty 問題の解消 (RevenueCat 連動、別タスク)
+14. 現状 release ビルドで `clientdata_uid_invalid` が出る = RevenueCat SDK が configure されていない (`appUserId == null`)
+    - これは Phase 4 ストア準備で RC API key を `--dart-define` で release build に渡せば解消
+    - log_only 期間中は問題なし (= 通過する)、enforced 切替前に RC 配線必須
+
+#### F. 1 週間モニタ後、enforced 切替
+15. `[middleware:log_only] would block` 警告が (uid 問題解消後に) 出ていなければ
+16. `wrangler.toml` の `PLAY_INTEGRITY_ENFORCEMENT = "enforced"` → `npx wrangler deploy`
+    - = 同時に診断 endpoint も 404 化 (S6 ガード) + debug log 削除済みにする
+
+#### G. debug log 削除 (enforced 前必須)
+17. `auth/play_integrity.js` の `[debug:play_integrity] token=...` console.log 2 行を削除 (= 本番で token が wrangler tail に流れるのを防ぐ)
 
 ## 12. 実装ロードマップ (S2-S6、約 6-8 セッション)
 
@@ -620,10 +695,14 @@ S6 🔵: 診断 endpoint 本番ガード + docs 仕上げ + メモリ整理 + �
 S6 ✅: 診断 endpoint 本番ガード (enforced で 404 化) +
        運用ガイド §14 (端末ブロック / cert rotation / quota 増量) +
        launch_checklist 更新 + 設計 v1.0 にバンプ。
-       本番 deploy + 1 週間モニタ + enforced 切替はオーナー作業 (§11.3)
+S7 ✅: 🚨 R8 実機失敗 → Q2 訂正 (Self-managed → Google decode API)。
+       getGoogleAccessToken (RS256 JWT + OAuth2 + 50min cache) +
+       decodeIntegrityToken を Google decode API 化 + diagnoseKeys 撤去 +
+       decodeFn DI + テスト全面更新 (29 ケース) = worker 126/126 PASS、v1.1。
+       残: オーナー Service Account 作成 + 実機 R8 再確認 + cert 採取 (§11.3)
 ```
 
-App Attest と同等の重さ想定 (6-8 セッション、計 15-20h)。実績 S1-S6 = 6 セッション。
+App Attest と同等の重さ想定 (6-8 セッション、計 15-20h)。実績 S1-S7 = 7 セッション。
 
 ## 13. Phase 1 コード側完成 — 残はオーナー実機作業のみ (§11.3)
 

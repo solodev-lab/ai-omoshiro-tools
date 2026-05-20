@@ -23,9 +23,9 @@ import { handleRelocation } from './relocation.js';
 import { handleLineNarrative } from './line_narrative.js';
 import { handleConsultation } from './consultation.js';
 import { verifyAttestation, verifyAssertion } from './auth/app_attest.js';
-// Play Integrity (Android) — 設計 v0.7 §4 + §8
+// Play Integrity (Android) — 設計 v1.1 §4 + §8 (Google decode API 方式)
 import {
-  diagnoseKeys,
+  getGoogleAccessToken,
   decodeIntegrityToken,
   verifyPlayIntegrityFlow,
 } from './auth/play_integrity.js';
@@ -715,19 +715,25 @@ async function dispatchAuth(request, env, url, origin) {
   if (path === '/auth/integrity/challenge' && request.method === 'POST') {
     return await handleIntegrityChallenge(env, origin);
   }
-  // Play Integrity 診断 endpoint (S2 minimal worker、設計 v0.3 §13 + S6 本番ガード)
-  // R7 (base64 SPKI import) + R8 (Self-managed key が Standard 応答に適用されるか) を実証。
+  // Play Integrity 診断 endpoint (設計 v1.1 §13 + 本番ガード)
+  // v1.1: Service Account credentials の健全性確認 (Google decode API 方式)。
+  //   - GOOGLE_PLAY_INTEGRITY_SA_JSON が設定され、OAuth2 access token が取れるか
   //
-  // 🔒 S6 本番ガード: PLAY_INTEGRITY_ENFORCEMENT === 'enforced' 時は 404 化
+  // 🔒 本番ガード: PLAY_INTEGRITY_ENFORCEMENT === 'enforced' 時は 404 化
   // (本番でデバッグ口を露出しない。`disabled`/`log_only` 期間中のみアクセス可)。
-  // 切替は wrangler.toml の PLAY_INTEGRITY_ENFORCEMENT を変えるだけで反映。
   if (path === '/auth/integrity/diagnose' && request.method === 'GET') {
     if (isDiagnosticsBlocked(env)) {
       return jsonError(404, 'not_found', origin);
     }
-    const keys = await diagnoseKeys(env);
-    return jsonOk(keys, origin);
+    try {
+      const tokenStr = await getGoogleAccessToken(env);
+      // access token は秘密なので値は返さず、取得成功 + 長さだけ報告
+      return jsonOk({ saConfigured: true, accessTokenOk: true, accessTokenLen: tokenStr.length }, origin);
+    } catch (e) {
+      return jsonOk({ saConfigured: !!env.GOOGLE_PLAY_INTEGRITY_SA_JSON, accessTokenOk: false, error: e.message }, origin);
+    }
   }
+  // 実 token decode 試験 (実機採取 token を POST して Google decode API 動作確認)
   if (path === '/auth/integrity/decode-test' && request.method === 'POST') {
     if (isDiagnosticsBlocked(env)) {
       return jsonError(404, 'not_found', origin);
