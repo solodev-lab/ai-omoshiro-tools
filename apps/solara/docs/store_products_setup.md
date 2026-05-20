@@ -27,7 +27,9 @@
 - RC Solara iOS に iOS 実商品 2 本を **Import** + `cosmic_pro` を Attach (各 1 Entitlements、Android と同状態)
 - Offering `default` の `$rc_monthly`/`$rc_annual` 各パッケージに iOS 実商品を追加 (Test Store + Android + iOS の 3 種が揃った)
 - ASC App Store サーバ通知: **Production / Sandbox 両 URL とも RC エンドポイントに設定済**
-  - ⚠️ 現UIに **V1/V2 セレクタは存在しない** (URL 入力欄のみ)。URL 内の `api.revenuecat.com/v1/...` の「v1」は **RC の API パス**であり Apple 通知バージョンではない (混同注意)。RC は両バージョン受信対応のため現状で問題なし
+  - ⚠️ 現UIに **V1/V2 セレクタは存在しない** (空の「URLを設定」/ URL入力後 / 既存「編集」の**全状態で確認済**。Apple Developer Forums で複数開発者も同症状を報告)。URL 内の `api.revenuecat.com/v1/...` の「v1」は **RC の API パス**であり Apple 通知バージョンではない (混同注意)
+  - 結論: **V1 非推奨化で新UIから選択肢が外れ、新規登録URLは V2 既定**と判断。RC は同一URLで V1/V2 を payload 自動判別するため手動選択は不要 (RC側URLでもバージョンは変わらない)
+  - 🔴 **実バージョンの最終確定は次セッションの Sandbox 購入後**: RC ダッシュボードの受信通知 or payload `notificationVersion` (V2=`"2.0"`/JWS署名, V1=素のJSON) で確認。万一 V1 でも RC は API キー照合でエンタイトルメントは常に正確
 - ⚠️ **Flutter コード変更ゼロで完了** (`purchases_service.dart` は `cosmic_pro` + monthly/annual を RC 経由で読むのみ。`build_release.py` は `--rc-ios-key` 対応済)
 
 ### 🔴 次セッション = iOS Sandbox 実機テスト (Mac 必須・Windows 不可)
@@ -36,6 +38,7 @@
 3. ペイウォールで月額/年額が **¥1,500 / ¥9,000 (税込)** 表示、年額に7日トライアル表示を確認
 4. テスト購入 → RC Customers で `apple:xxx` に `cosmic_pro` active 確認
 5. 解約 → RC で `expires_date` 反映確認 / アプリ削除→再インストール→「購入を復元」確認
+6. **サーバ通知の実バージョン確認**: 購入で発生した通知を RC ダッシュボード / payload `notificationVersion` で確認 (V2 想定。ASC UI に V1/V2 選択は無く新規URL=V2既定と判断済。万一 V1 でも RC は API キー照合で正確)
 
 ### 価格の確定値 (Android で確定済、iOS も合わせる)
 - 月額 USD **$9.99** / 日本 **¥1,480** (心理的価格、$9.99 自動換算の ¥1,590 から手動調整)
