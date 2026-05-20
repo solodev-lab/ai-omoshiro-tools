@@ -6,6 +6,32 @@
 
 ---
 
+## 🔴 進捗状況 (2026-05-20) と次セッション (iOS) 引き継ぎ
+
+### ✅ Android 側 完了 (エンドツーエンドのテスト購入まで確認済)
+- RC: エンタイトルメント `cosmic_pro` / Offering `default`(current) / パッケージ `$rc_monthly`・`$rc_annual` 構築済
+- Google Play 定期購入 2 本 作成・有効化:
+  - `cosmic_pro_monthly` (基本プラン `monthly-auto` / 1ヶ月自動更新 / 日本 **¥1,480**)
+  - `cosmic_pro_annual` (基本プラン `annual-auto` / 1年自動更新 / 日本 **¥8,880** = 月額×12 のちょうど半額) + **7日無料トライアル特典 `freetrial-7d`** (新規ユーザーの獲得 / この定期購入未経験)
+- RC Solara Android に実商品をインポート (`cosmic_pro_monthly:monthly-auto` / `cosmic_pro_annual:annual-auto`)、`cosmic_pro` 紐付け、Offering の `$rc_monthly`/`$rc_annual` パッケージに追加 (Test Store ダミーは併存)
+- RC ↔ Play 配線: Service Account 接続済 (Valid) + **RTDN 接続済** (§3-5 の落とし穴メモ参照)
+- 実機ライセンステスト購入 3 条件クリア: ペイウォール ¥1,480/¥8,880 表示 / 「テスト」購入シート / 購入後 Pro 有効化
+
+### 🔴 次セッション = iOS をやる
+1. **App Store Connect で iOS サブスク 2 本作成** → §2 (製品 ID `com.solodevlab.solara.cosmicpro.monthly` / `.annual`、$9.99 / $59.99、年額に 7日トライアル、Family Sharing OFF、日本価格は Android に合わせて **¥1,480 / ¥8,880** に手動調整推奨)
+2. **App Store Shared Secret + In-App Purchase Key (P8)** を RC の Solara iOS に登録 → §2-5
+3. **App Store Server Notifications V2** を RC URL に設定 → §2-6
+4. **RC Solara iOS に iOS 実商品をインポート** → `cosmic_pro` 紐付け
+5. **Offering `default` の各パッケージの「Solara iOS」行に iOS 実商品を追加** (現在は空。Android と Test Store のみ入っている)
+6. **iOS テスト購入** (Sandbox、§5-1) — ⚠️ ビルド/TestFlight は Mac 必須。ストア設定は Web で先行可能だがテスト購入は Mac 入手後
+- iOS は Windows ではビルド・テストできないため、ストア設定 (§2) を Web で進めつつ、購入テストは Mac 確保後。詳細手順は本ドキュメント §2 / §4 / §5-1。
+
+### 価格の確定値 (Android で確定済、iOS も合わせる)
+- 月額 USD **$9.99** / 日本 **¥1,480** (心理的価格、$9.99 自動換算の ¥1,590 から手動調整)
+- 年額 USD **$59.99** / 日本 **¥8,880** (月額×12 の正確に半額 = 50%OFF 訴求、$59.99 自動換算の ¥9,500 から手動調整) + 7日無料トライアル
+
+---
+
 ## 0. 確定値とプロジェクト固定値
 
 | 項目 | 値 | 出典 |
@@ -195,12 +221,19 @@
 5. RevenueCat **Project settings → Apps → Solara (Android) → Service Account credentials** に JSON を貼る
 6. Play Console 側で SA に **App アクセス権** を付与（**ユーザーと権限 → 招待 → SA メールアドレス → アプリへのアクセス → 財務、定期購入、Order の閲覧**）
 
-### 3-5. Real-time Developer Notifications
+### 3-5. Real-time Developer Notifications (RTDN) — 2026-05-20 実施済の正攻法 + 🔴落とし穴
 
-1. Play Console → **収益化 → 収益化セットアップ → Google Cloud Pub/Sub のトピック名**
-2. RevenueCat 側で表示される Pub/Sub トピック (`projects/revenuecat-xxx/topics/xxx`) を貼る
-3. SA に **Pub/Sub Subscriber** ロールが付与されていることを再確認
-4. **テスト通知を送信** → RC 側 Webhooks タブで受信を確認
+RC の Solara Android 設定画面「Google developer notifications」で **トピックを選んで "Connect to Google"** する自動フローを使う。手順と詰まりポイント:
+
+1. **GCP で Pub/Sub API を有効化** (これが無いと "Pub/Sub API must first be enabled" エラー)
+   - 対象プロジェクト = **Service Account が属するプロジェクト**。RC 設定の「View details」で Service Account の `project_id` を確認 (Solara の場合 `gen-lang-client-0359639947` = Gemini API キー作成時に自動生成された GCP プロジェクト)
+   - GCP Console → 該当プロジェクト選択 → 検索「Pub/Sub」→ Cloud Pub/Sub API → 有効にする
+2. **Pub/Sub トピックを作成** (RC のドロップダウンは既存トピックを一覧するだけで作成はしない)
+   - GCP Console → Pub/Sub → トピックを作成 → ID 例 `solara-play-rtdn` (デフォルトサブスクリプション追加でOK)
+3. 🔴 **Service Account に「Pub/Sub 管理者」ロールを付与** (これが最大の詰まり。無いと "service account does not have permissions to access Pub/Sub API" エラーで RC がトピックを一覧できず "No options" になる)
+   - GCP Console → IAM と管理 → IAM → ＋アクセスを許可 → 新しいプリンシパルに SA メール (`solara-revenuecat@<project_id>.iam.gserviceaccount.com`) → ロール「Pub/Sub 管理者」→ 保存
+4. **RC に戻り F5 → ドロップダウンで作成したトピックを選択 → "Connect to Google"** → "✓ Connected to Google" になれば完了 (RC がサブスクリプション作成 + Play への配線を自動実施)
+5. (任意) RC 側「Send a test?」で疎通確認。購入が無い間は "No notifications received" で正常
 
 ---
 

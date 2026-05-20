@@ -5,35 +5,43 @@
 
 ## サマリ
 
-- ファイル数: 8 / 総行数: 2073
+- ファイル数: 8 / 総行数: 2216
 - class/mixin/extension/enum: 13
-- 関数 (top-level + method の素拾い): 90
+- 関数 (top-level + method の素拾い): 97
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 0
 - Worker URL リテラル: 0
 
 ## ファイル別
 
-### `lib/utils/app_attest_client.dart` (253 行)
+### `lib/utils/app_attest_client.dart` (396 行)
 
 **ファイル先頭コメント:**
 
 ```
-Solara App Attest クライアント (Flutter ↔ Worker /auth/* /protected/*)
+Solara App Attest / Play Integrity クライアント (Flutter ↔ Worker /auth/* /protected/*)
 
 役割:
-  - 起動時に keyId を SharedPreferences から復元、なければ Worker で attest
-  - /protected/* 呼び出し時の HTTP header に X-AppAttest-KeyId/Assertion を付与
-  - DCError.invalidInput/invalidKey 時の key 再生成リトライ
-  - iOS Simulator / Android / Web / kDebugMode では bypass (= ヘッダ無し、
-    Worker 側 APP_ATTEST_ENFORCEMENT=log_only で通過させる前提)
+  iOS (App Attest):
+    - 起動時に keyId を SharedPreferences から復元、なければ Worker で attest
+    - /protected/* 呼び出し時の HTTP header に X-AppAttest-KeyId/Assertion を付与
+    - DCError.invalidInput/invalidKey 時の key 再生成リトライ
+  Android (Play Integrity Standard、S5 追加):
+    - 起動時に prepareTokenProvider(cloudProjectNumber) で warmup (≈1 時間有効)
+    - /protected/* 呼び出しごとに /auth/integrity/challenge で nonce 取得 →
+      clientData = {nonce, uid, ts} を JSON 化 → verify(clientData) で token 取得 →
+      X-PlayIntegrity-Token / -ClientData / -NonceId をヘッダー注入
+  - iOS Simulator / Web / kDebugMode / Cloud Project Number 未設定では bypass
 
 Worker 側仕様: apps/solara/worker/src/index.js
-  POST /auth/challenge   → {challengeId, challenge: base64(32B), ttlSec}
-  POST /auth/attest      body: {keyId, challengeId, attestation: base64}
-  /protected/* headers: X-AppAttest-KeyId, X-AppAttest-Assertion: base64
+  POST /auth/challenge            → {challengeId, challenge: base64(32B), ttlSec}
+  POST /auth/attest               body: {keyId, challengeId, attestation: base64}
+  POST /auth/integrity/challenge  → {nonceId, nonce: base64(32B), ttlSec}  (S4 追加)
+  /protected/* headers (iOS):     X-AppAttest-KeyId, X-AppAttest-Assertion
+  /protected/* headers (Android): X-PlayIntegrity-Token, X-PlayIntegrity-ClientData, X-PlayIntegrity-NonceId
 
-設計: apps/solara/docs/app_attest_design.md (v2.0+)
+設計: apps/solara/docs/app_attest_design.md (iOS v2.0+)
+     apps/solara/docs/play_integrity_design.md (Android v0.7+)
 ```
 
 **imports:** dart=2 / package=5 / relative=2
@@ -42,22 +50,29 @@ Worker 側仕様: apps/solara/worker/src/index.js
 
 **型定義 (1):**
 
-- L45 `class AppAttestClient`
+- L58 `class AppAttestClient`
   - AppAttestClient シングルトン。
 
-**関数 (6 public + 2 private):**
+**関数 (9 public + 6 private):**
 
-- L71 `initialize()` — 起動時 1 回だけ呼ぶ。keyId を復元 or 新規 attest する。
-- L152 `addHeaders()` — /protected/* 呼び出し直前に header を注入。
-- L196 `withAppUserIdMerged()` — 呼び出し側で body Map を構築している場合 (consultation_api 等の
-- L212 `postProtected()` — `/protected/*` への POST を attestation header 付きで送る wrapper。
-- L231 `reattestOnFailure()` — 401 で middleware に弾かれた時のリトライ用: key 再生成 + 再 attest。
-- L250 `debugPayloadSha256()` — payload bytes の SHA-256 (debug 用、Worker 側計算値との一致確認に使う)。
+- L112 `initialize()` — 起動時 1 回だけ呼ぶ。
+- L222 `addHeaders()` — /protected/* 呼び出し直前に header を注入。
+- L310 `withAppUserIdMerged()` — 呼び出し側で body Map を構築している場合に使う公開 helper。
+- L315 `postProtected()` — `/protected/*` への POST を attestation header 付きで送る wrapper。
+- L334 `reattestOnFailure()` — 401 で middleware に弾かれた時のリトライ用。
+- L360 `debugPayloadSha256()` — payload bytes の SHA-256 (debug 用、Worker 側計算値との一致確認に使う)。
+- L375 `addAndroidHeadersForTest()`
+- L382 `initializeAndroidForTest()`
+- L386 `resetForTest()`
 
-  <details><summary>private 関数 2 件</summary>
+  <details><summary>private 関数 6 件</summary>
 
-  - L100 `_attestNewKey()`
-  - L185 `_withAppUserId()`
+  - L132 `_initializeIos()`
+  - L150 `_attestNewKey()`
+  - L190 `_initializeAndroid()`
+  - L232 `_addIosHeaders()`
+  - L254 `_addAndroidHeaders()`
+  - L300 `_withAppUserId()`
 
   </details>
 

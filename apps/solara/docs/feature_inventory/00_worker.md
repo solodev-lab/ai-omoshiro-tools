@@ -5,10 +5,10 @@
 
 ## サマリ
 
-- ファイル数: 18
-- エンドポイント総数: 24
+- ファイル数: 19
+- エンドポイント総数: 27
 - Gemini 呼出箇所: 2
-- KV 使用: 4 行 / Durable Object 使用: 7 行
+- KV 使用: 4 行 / Durable Object 使用: 8 行
 
 ## ファイル別
 
@@ -115,20 +115,21 @@ https://developer.apple.com/documentation/devicecheck/validating-apps-that-conne
 **export (1):** `verifyAttestation`
 
 
-### `worker/src/auth/attestation_state.js` (386 行)
+### `worker/src/auth/attestation_state.js` (461 行)
 
 **ファイル先頭コメント:**
 
 ```
-Apple App Attest + RevenueCat エンタイトルメント用 Durable Object (SQLite-backed)。
+Apple App Attest + RevenueCat エンタイトルメント + Play Integrity 用 Durable Object (SQLite-backed)。
 
-設計 v1.8 §6.1 + v2.2 (RevenueCat Webhook 統合) に従い、1 instance
-(`idFromName('global')`) に 5 表を集約:
+設計 v1.8 §6.1 + v2.2 (RevenueCat Webhook 統合) + Play Integrity v0.6 §5 に従い、
+1 instance (`idFromName('global')`) に 6 表を集約:
 - attestations:      端末ごとの公開鍵 + counter (App Attest)
-- challenges:        server 発行 challenge の強整合管理 (one-time use)
+- challenges:        App Attest 用 server 発行 challenge の強整合管理 (one-time use、BLOB)
 - user_quota:        per-user rate limit (Layer C、Free=5/日 Pro=100/日)
 - user_entitlements: appUserId × entitlementId の Pro 状態 (RevenueCat Webhook で書込)
 - webhook_events:    Webhook event_id の idempotent 受信ログ (重複送信耐性)
+- integrity_nonces:  Play Integrity Standard request 用 nonce (one-time use、TEXT base64)
 
 単一 DO instance への集約理由:
 - DAU 1,500 想定で同時刻書き込み <100/sec → DO の sequential write 内に余裕で収まる
@@ -140,9 +141,7 @@ POST /challenge-create  body: {challengeId, challengeBytes, expiresAt}
 POST /challenge-consume body: {challengeId, now}  → {challengeBytes} or 404
 POST /attestation-store body: {keyId, publicKeyPem, rpId, aaguid, now}
 POST /attestation-get   body: {keyId}              → {publicKeyPem, counter} or 404
-POST /attestation-bump-counter body: {keyId, signCount, now}  → {ok} or 409 (signCount <= prev)
-POST /quota-check-and-bump body: {keyId, dayBucket, limit, now}
-→ {ok: tru
+POST /attestation-bu
 ```
 
 **Durable Object 使用 (1 行):**
@@ -204,6 +203,38 @@ fetchedAt: ms
 ```
 
 **export (4):** `getCachedEntitlement`, `setCachedEntitlement`, `clearMemoryEntitlementCache`, `_resetEntitlementCacheForTest`
+
+
+### `worker/src/auth/play_integrity.js` (336 行)
+
+**ファイル先頭コメント:**
+
+```
+Play Integrity (Android) サーバー検証 — Standard request 方式 (設計 v1.1 §4)。
+
+役割: `/protected/*` middleware の Android 経路。Apple App Attest と対称。
+
+🚨 v1.1 アーキテクチャ訂正 (2026-05-20、R8 実機失敗):
+Standard request の token は JWE ではなく Google 独自の protobuf 形式で、
+Self-managed key で local decode できない** (公式 docs 確認、JWEInvalid)。
+→ Q2 訂正: Self-managed key (Workers 自前 decode) → Google decodeIntegrityToken API。
+Self-managed key は Classic request 専用、Standard は Google decode 必須。
+
+12 step 検証フロー (詳細は apps/solara/docs/play_integrity_design.md §4):
+Step 1   /auth/integrity/challenge で nonce 発行 (本ファイル範囲外、S4 で /index.js に実装)
+Step 2   X-PlayIntegrity-Token + ClientData + NonceId 受領
+Step 3   clientData JSON parse (nonce/uid/ts 必須)
+Step 4   clientData.ts ±5min (client clock drift)
+Step 5   DO consume → clientData.nonce 一致 (S3 は注入関数で抽象化、S4 で実 DO)
+Step 6-7 Google decodeIntegrityToken API で復号 + verdict 取得 (v1.1 で jose 自前 decode から置換)
+Step 8   payload parse (timestampMillis/versionCode は string、v0.5 訂正)
+Step 9   requestHash binding = base64(sha256(clientData)) (Standard 方式の核)
+Step 10  Number(payload.timestamp) ±5min + packageName 確認
+Step 11  PLAY_RECOGNIZED + MEETS_DEVICE_INTEGRITY + cert allowlist 評価
+Step 12  uid binding (= __app
+```
+
+**export (8):** `DEFAULT_ANDROID_PACKAGE_NAME`, `TS_DRIFT_MS`, `MIN_NONCE_LENGTH`, `getGoogleAccessToken`, `decodeIntegrityToken`, `_resetAccessTokenCacheForTest`, `verifyPlayIntegrityFlow`, `__test`
 
 
 ### `worker/src/consultation.js` (330 行)
@@ -309,7 +340,7 @@ houses: そのカテゴリで重視する伝統占星術のハウス番号
 **export (3):** `computeCategoryScore`, `callGemini`, `handleFortune`
 
 
-### `worker/src/index.js` (700 行)
+### `worker/src/index.js` (877 行)
 
 **ファイル先頭コメント:**
 
@@ -329,42 +360,47 @@ webhooks/*   外部連携      RevenueCat Webhook (Pro 状態の真の出所)。
 同セッションで新 path に書き換え済（`apps/solara/lib/utils/solara_api.dart` 参照）。
 ```
 
-**エンドポイント / ルート (24):**
+**エンドポイント / ルート (27):**
 
 | method | path | line |
 | --- | --- | --- |
-| ? | /public/astro/forecast | L484 |
-| ? | /public/tiles/* | L485 |
-| ? | /webhooks/* | L486 |
-| ? | /public/health | L494 |
-| GET | /public/tiles/osm/* | L499 |
-| POST | /public/astro/chart | L504 |
-| POST | /public/astro/forecast | L512 |
-| POST | /public/astro/predict | L527 |
-| POST | /public/astro/daily-transits | L535 |
-| GET | /public/tz | L543 |
-| GET | /public/astro/events | L552 |
-| GET | /public/search | L563 |
-| GET | /auth/whoami | L585 |
-| POST | /auth/challenge | L588 |
-| POST | /auth/attest | L591 |
-| POST | /protected/fortune | L605 |
-| POST | /protected/tarot | L615 |
-| POST | /protected/relocation | L625 |
-| POST | /protected/astro/line-narrative | L637 |
-| POST | /protected/astro/consultation | L647 |
-| ? | /public/* | L682 |
-| ? | /auth/* | L684 |
-| ? | /protected/* | L686 |
-| ? | /webhooks/revenuecat | L688 |
+| ? | /public/astro/forecast | L604 |
+| ? | /public/tiles/* | L605 |
+| ? | /webhooks/* | L606 |
+| ? | /public/health | L614 |
+| GET | /public/tiles/osm/* | L619 |
+| POST | /public/astro/chart | L624 |
+| POST | /public/astro/forecast | L632 |
+| POST | /public/astro/predict | L647 |
+| POST | /public/astro/daily-transits | L655 |
+| GET | /public/tz | L663 |
+| GET | /public/astro/events | L672 |
+| GET | /public/search | L683 |
+| GET | /auth/whoami | L705 |
+| POST | /auth/challenge | L708 |
+| POST | /auth/attest | L711 |
+| POST | /auth/integrity/challenge | L715 |
+| GET | /auth/integrity/diagnose | L724 |
+| POST | /auth/integrity/decode-test | L737 |
+| POST | /protected/fortune | L771 |
+| POST | /protected/tarot | L781 |
+| POST | /protected/relocation | L791 |
+| POST | /protected/astro/line-narrative | L803 |
+| POST | /protected/astro/consultation | L813 |
+| ? | /public/* | L859 |
+| ? | /auth/* | L861 |
+| ? | /protected/* | L863 |
+| ? | /webhooks/revenuecat | L865 |
 
 **KV 使用 (4 行):**
 
-- 出現行: L103, L106, L111, L175
+- 出現行: L109, L112, L117, L181
 
-**Durable Object 使用 (3 行):**
+**Durable Object 使用 (4 行):**
 
-- 出現行: L217, L217, L217
+- 出現行: L223, L223, L223, L827
+
+**export (1):** `_internal`
 
 
 ### `worker/src/line_narrative.js` (268 行)

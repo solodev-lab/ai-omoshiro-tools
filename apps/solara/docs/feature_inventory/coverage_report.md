@@ -5,11 +5,13 @@
 
 ## #3 Worker ↔ Flutter エンドポイント対整合
 
-- Worker 側に定義された path: **23**
-- Flutter から呼ばれている path リテラル: **14**
+- Worker 側に定義された path: **26**
+- Flutter から呼ばれている path リテラル: **15**
 
 ### Worker → Flutter 漏れ (Worker にあるが Flutter から呼出無し)
 
+- `/auth/integrity/decode-test`
+- `/auth/integrity/diagnose`
 - `/protected/astro/line-narrative`
 - `/public/astro/predict`
 - `/public/health`
@@ -28,6 +30,7 @@
 - `/auth/*`
 - `/auth/attest`
 - `/auth/challenge`
+- `/auth/integrity/challenge`
 - `/auth/whoami`
 - `/protected/*`
 - `/protected/astro/consultation`
@@ -410,21 +413,17 @@
 > 各ソースの SHA1 を `_stamps.json` に記録し、差分を検出。
 > 変更されたファイルが属する層は、人手版インベントリ章の見直し対象。
 
-- 追加: **4** / 削除: **0** / 変更: **6**
+- 追加: **1** / 削除: **0** / 変更: **4**
 
 ### 変更されたファイル (層別)
 
-- **層 0**: `worker/src/auth/app_attest.js`, `worker/src/auth/attestation_state.js`, `worker/src/index.js`
-- **層 1a**: `lib/utils/purchases_service.dart`
-- **層 2a**: `lib/utils/consultation_api.dart`
+- **層 0**: `worker/src/auth/attestation_state.js`, `worker/src/index.js`
+- **層 2a**: `lib/utils/solara_api.dart`
 - **層 2b**: `lib/utils/app_attest_client.dart`
 
 ### 追加されたファイル
 
-- `worker/src/auth/assertion.js` (層 0)
-- `worker/src/auth/attestation.js` (層 0)
-- `worker/src/auth/entitlement_cache.js` (層 0)
-- `worker/src/webhooks/revenuecat.js` (層 0)
+- `worker/src/auth/play_integrity.js` (層 0)
 
 ## #7 astro_glossary 用語辞書対整合
 
