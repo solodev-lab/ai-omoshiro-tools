@@ -235,18 +235,18 @@ def main() -> int:
         cmd[0] = resolved
     elif os.name == 'nt':
         # which が見つけられない異常系: cmd 経由 fallback (PATH に flutter.bat があれば動く)
-        print(f"[build_release] ⚠ shutil.which('{cmd[0]}') が None、shell 経由 fallback")
+        print(f"[build_release] [WARN] shutil.which('{cmd[0]}') が None、shell 経由 fallback")
         cmd = ["cmd", "/c", *cmd]
 
     env = os.environ.copy()
     result = subprocess.run(cmd, cwd=SOLARA, env=env)
     if result.returncode != 0:
         print()
-        print(f"[build_release] ❌ flutter build failed (exit {result.returncode})")
+        print(f"[build_release] [FAIL] flutter build failed (exit {result.returncode})")
         return result.returncode
 
     print()
-    print("[build_release] ✅ build succeeded")
+    print("[build_release] [OK] build succeeded")
     print()
     print("次のステップ:")
     print(f"  1. シンボル退避: {sym_dir.relative_to(SOLARA)} をリリースアーカイブに保存")
