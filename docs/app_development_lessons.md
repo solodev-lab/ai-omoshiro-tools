@@ -68,6 +68,13 @@ App Attest 完成後、その middleware を拡張して RC エンタイトル�
 - **secret 未設定で 503** = 公開前ガード (= 想定外 deploy で偽 webhook を通さない)
 - **Worker instance メモリ cache 60s TTL** で DO 連打抑制、Webhook 受信 instance は INSERT 直後 clear、cross-instance は eventual
 
+**ストア設定フェーズの知見 (両ストア商品作成 + RC ダッシュボード配線、Android 1 + iOS 1 セッション)**: コード実装とは別に「アプリ外設定」が要る。手順は `apps/solara/docs/store_products_setup.md` に集約。
+- **iOS は Flutter コード変更ゼロで足りた** (Android で RC 配線済なら): `purchases_service` は entitlement (`cosmic_pro`) + `offering.monthly/annual` を RC 経由で読むだけで、**商品 ID をコードに持たず RC に置く設計**のため、ストア + RC ダッシュボード設定だけで iOS が有効化される (`build_release.py` も `--rc-ios-key` 対応済)
+- **In-App Purchase Key (P8) が StoreKit2 の正規ルート**。Shared Secret は P8 があれば不要。**App Store Connect API Key を入れると RC が商品を自動 import** できる
+- **商品ステータス「メタデータ不足」は RC import / Sandbox テストに影響しない** (審査用スクショ未入力なだけ。スクショは公開直前で可)
+- **Android の RTDN ↔ iOS の App Store サーバ通知**が対になる。RC はどちらも「RC が出す URL をストア側に貼る」方式
+- **実機購入テストは iOS だと Mac 必須**だが、**ストア設定 + RC 配線は Windows の Web だけで先行完了できる** (Mac 待ちで止めなくてよい)
+
 ### 1.3 Solara Play Integrity (Android) 実装 v1.1 完成 (S1-S7 = 7 セッション、実機 R8 突破)
 
 Apple App Attest と対称の Android セキュリティ層。設計フェーズで Q1-Q4 を先にオーナー判断、R 項目を 3 分類して S1 で設計確定 + 鍵取得まで完了。S2-S6 で実装、**S7 で実機検証中に設計の中核 (decode 方式) が崩れ、方針転換して R8 突破**した。
@@ -438,6 +445,17 @@ import { SignJWT, importPKCS8 } from 'jose';
 - R 項目に「**公式 UI / 一次出力で取得形式を実際に確認**」を必ず入れる
 - 実装段階で形式が違ったときに `crypto.subtle.importKey(format, ...)` の format 引数を `'spki'` (DER) vs `'jwk'` vs `'raw'` で切替できる柔軟性を持たせる
 - 鍵の長さで判別: AES-256 → 32 bytes → base64 44 char / ECDSA P-256 SPKI → 91 bytes → base64 124 char (どちらも末尾 `=` パディングあり)
+
+**追加事例: App Store Connect / RevenueCat ストア設定の UI 乖離 (2026-05-21, Solara iOS Layer B)**
+
+設計 doc / 英語ベースの手順書の用語と、実際の ASC (日本語 UI) が食い違った具体例:
+- **無料トライアル = 「お試しオファー」** (doc は「入門オファー (Introductory Offer)」と記載していた)。場所も「下スクロール」ではなく**サブスク価格ページ上部のタブ**。さらに**通常価格を先に保存しないと設定できない**
+- **お試しオファーの「開始日/終了日」は試用期間ではなく "オファーの掲載期間"**。無期限提供にするには**「終了日なし」**を選ぶ (7 日という試用日数は別ステップ)
+- **App Store サーバ通知に V1/V2 セレクタが存在しない** (現 UI は URL 入力欄のみ)。RC は両バージョン受信対応なので URL を貼れば足りる
+- **URL 内の `api.revenuecat.com/v1/...` の `v1` は RC の API パス**であって Apple 通知バージョンではない (= 「V1 設定になっている」と誤読しやすい罠。実際オーナーが一度誤認した)
+- **Apple は価格を「価格ポイント」から選択する方式** (自由入力不可)。Android で決めた ¥1,480 が選べず ¥1,500 になる → 両ストアで JP 価格が数十円ずれるのは仕様。±許容を前提に設計する
+
+対策: ストア設定の R 項目に「**実 UI のタブ名・選択肢・前提条件 (価格保存等) を画面で確認**」を必ず入れる。手順書 (英語語彙ベース) と現地語 UI の対応表を作っておく。一度設定済みでも、認証情報は片方だけ入っている等があるので**実画面で確認してから再発行しない** (P8 は再 DL 不可)。
 
 ---
 
