@@ -6,7 +6,7 @@
 
 ---
 
-## 🔴 進捗状況 (2026-05-20) と次セッション (iOS) 引き継ぎ
+## 🔴 進捗状況 (2026-05-21) と次セッション 引き継ぎ
 
 ### ✅ Android 側 完了 (エンドツーエンドのテスト購入まで確認済)
 - RC: エンタイトルメント `cosmic_pro` / Offering `default`(current) / パッケージ `$rc_monthly`・`$rc_annual` 構築済
@@ -17,14 +17,25 @@
 - RC ↔ Play 配線: Service Account 接続済 (Valid) + **RTDN 接続済** (§3-5 の落とし穴メモ参照)
 - 実機ライセンステスト購入 3 条件クリア: ペイウォール ¥1,480/¥8,880 表示 / 「テスト」購入シート / 購入後 Pro 有効化
 
-### 🔴 次セッション = iOS をやる
-1. **App Store Connect で iOS サブスク 2 本作成** → §2 (製品 ID `com.solodevlab.solara.cosmicpro.monthly` / `.annual`、$9.99 / $59.99、年額に 7日トライアル、Family Sharing OFF、日本価格は Android に合わせて **¥1,480 / ¥8,880** に手動調整推奨)
-2. **App Store Shared Secret + In-App Purchase Key (P8)** を RC の Solara iOS に登録 → §2-5
-3. **App Store Server Notifications V2** を RC URL に設定 → §2-6
-4. **RC Solara iOS に iOS 実商品をインポート** → `cosmic_pro` 紐付け
-5. **Offering `default` の各パッケージの「Solara iOS」行に iOS 実商品を追加** (現在は空。Android と Test Store のみ入っている)
-6. **iOS テスト購入** (Sandbox、§5-1) — ⚠️ ビルド/TestFlight は Mac 必須。ストア設定は Web で先行可能だがテスト購入は Mac 入手後
-- iOS は Windows ではビルド・テストできないため、ストア設定 (§2) を Web で進めつつ、購入テストは Mac 確保後。詳細手順は本ドキュメント §2 / §4 / §5-1。
+### ✅ iOS 側 Web/RC 設定 完了 (2026-05-21、コード変更ゼロ) — 残るは Mac での Sandbox 実機テストのみ
+- ASC: サブスクグループ `Cosmic Pro Group` + サブスク 2 本作成 (Family Sharing 既定OFF)
+  - `com.solodevlab.solara.cosmicpro.monthly` (1ヶ月 / 表示名 `Cosmic Pro (Monthly)` 英語 / 説明 日本語 / トライアル無し)
+  - `com.solodevlab.solara.cosmicpro.annual` (1年 / 表示名 `Cosmic Pro (Annual)` / **お試しオファー = 7日無料・新規登録者のみ・終了日なし**)。日本語UIでは「入門オファー」ではなく **「お試しオファー」**、サブスク価格ページ上部のタブ。通常価格を先に保存しないと設定不可
+  - 🔴 **iOS 価格 = Apple は価格ポイント選択制で ¥1,480 が選べず ¥1,500 / 年額 ¥9,000 系**になった (Android ¥1,480/¥8,880 と数十円差。doc §0 の許容範囲内・公開後調整可。年額 ¥9,000 でも「月額×12 の半額」は成立)
+  - 商品ステータス「メタデータ不足」= 審査用スクショ未入力のみ。RC import / Sandbox には影響なし (スクショは公開直前 Phase 4)
+- RC Solara iOS: **In-App Purchase Key (P8) + App Store Connect API Key 両方 Valid** (Shared Secret は P8 があるため不要。RC iOS アプリ作成時に登録済だった)
+- RC Solara iOS に iOS 実商品 2 本を **Import** + `cosmic_pro` を Attach (各 1 Entitlements、Android と同状態)
+- Offering `default` の `$rc_monthly`/`$rc_annual` 各パッケージに iOS 実商品を追加 (Test Store + Android + iOS の 3 種が揃った)
+- ASC App Store サーバ通知: **Production / Sandbox 両 URL とも RC エンドポイントに設定済**
+  - ⚠️ 現UIに **V1/V2 セレクタは存在しない** (URL 入力欄のみ)。URL 内の `api.revenuecat.com/v1/...` の「v1」は **RC の API パス**であり Apple 通知バージョンではない (混同注意)。RC は両バージョン受信対応のため現状で問題なし
+- ⚠️ **Flutter コード変更ゼロで完了** (`purchases_service.dart` は `cosmic_pro` + monthly/annual を RC 経由で読むのみ。`build_release.py` は `--rc-ios-key` 対応済)
+
+### 🔴 次セッション = iOS Sandbox 実機テスト (Mac 必須・Windows 不可)
+1. Mac で iOS ビルド (`build_release.py --rc-ios-key appl_xxx`) → TestFlight 配信 → §5-1
+2. Sandbox Apple ID 作成 (ASC ユーザーとアクセス) → 実機「設定 → App Store → サンドボックスアカウント」でサインイン
+3. ペイウォールで月額/年額が **¥1,500 / ¥9,000 (税込)** 表示、年額に7日トライアル表示を確認
+4. テスト購入 → RC Customers で `apple:xxx` に `cosmic_pro` active 確認
+5. 解約 → RC で `expires_date` 反映確認 / アプリ削除→再インストール→「購入を復元」確認
 
 ### 価格の確定値 (Android で確定済、iOS も合わせる)
 - 月額 USD **$9.99** / 日本 **¥1,480** (心理的価格、$9.99 自動換算の ¥1,590 から手動調整)
@@ -115,8 +126,8 @@
 3. **製品 ID**: `com.solodevlab.solara.cosmicpro.monthly`
 4. **登録期間**: `1 か月`
 5. **価格**:
-   - 基準国: **米国 $9.99 (Tier 10)** → 全 175 マーケットで自動換算（日本は約 ¥1,500 程度）
-   - 必要なら日本だけ手動調整（例: ¥1,500 → ¥1,480 にして psychological pricing）
+   - 基準国: **米国 $9.99 (Tier 10)** → 全 175 マーケットで自動換算（日本は約 ¥1,590）
+   - 🔴 **日本は手動で ¥1,480 に調整**（Android と統一 / psychological pricing。自動換算 ¥1,590 から下げる）
 6. **App Store でのローカリゼーション**:
    - 日本語:
      - 表示名: `Cosmic Pro (月額)`
@@ -134,7 +145,8 @@
 3. **製品 ID**: `com.solodevlab.solara.cosmicpro.annual`
 4. **登録期間**: `1 年`
 5. **価格**:
-   - 基準国: **米国 $59.99 (Tier 60)** → 全マーケットで自動換算（日本は約 ¥9,000 程度）
+   - 基準国: **米国 $59.99 (Tier 60)** → 全マーケットで自動換算（日本は約 ¥9,500）
+   - 🔴 **日本は手動で ¥8,880 に調整**（Android と統一 / 月額 ¥1,480 × 12 の正確に半額 = 50%OFF 訴求。自動換算 ¥9,500 から下げる）
 6. **App Store でのローカリゼーション**:
    - 日本語:
      - 表示名: `Cosmic Pro (年額)`
@@ -263,7 +275,7 @@ RC の Solara Android 設定画面「Google developer notifications」で **ト�
 
 1. iOS / Android 両方で `flutter run --dart-define=SOLARA_RC_IOS_KEY=... --dart-define=SOLARA_RC_ANDROID_KEY=...`
 2. Sanctuary の `✦ Cosmic Pro` バナータップ → ペイウォール表示
-3. 月額 / 年額 2 枚のカードが表示され、価格が `¥1,500 / 月 (税込)` / `¥9,000 / 年 (税込)` で出ること
+3. 月額 / 年額 2 枚のカードが表示され、価格が `¥1,480 / 月 (税込)` / `¥8,880 / 年 (税込)` で出ること
 4. 年額のみ「無料トライアル 1 週間 → 終了後に自動課金」が黄色で出ること
 
 ---
