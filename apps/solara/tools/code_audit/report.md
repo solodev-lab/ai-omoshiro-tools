@@ -62,6 +62,7 @@
 | 404 | 🟡 WARN | lib/screens/sanctuary/title_history_screen.dart |
 | 401 | 🟡 WARN | lib/screens/consultation/consultation_input_screen.dart |
 | 397 | 🟡 WARN | lib/screens/observe/observe_history_filter.dart |
+| 396 | 🟡 WARN | lib/utils/app_attest_client.dart |
 | 396 | 🟡 WARN | lib/widgets/cycle_spiral_painter.dart |
 | 395 | 🟡 WARN | lib/utils/title_data.dart |
 | 391 | 🟡 WARN | lib/screens/locations/locations_date_stepper.dart |
@@ -319,4 +320,4 @@
 
 ---
 
-総計: 行数違反 72 / 重複 20 / TODO 4 / print 0 / 未使用候補 0
+総計: 行数違反 73 / 重複 20 / TODO 4 / print 0 / 未使用候補 0
