@@ -5,12 +5,12 @@
 
 ## サマリ
 
-- ファイル数: 9 / 総行数: 1712
+- ファイル数: 9 / 総行数: 1718
 - class/mixin/extension/enum: 16
 - 関数 (top-level + method の素拾い): 29
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 0
-- Worker URL リテラル: 17
+- Worker URL リテラル: 18
 
 ## ファイル別
 
@@ -260,7 +260,7 @@ Solara 法務リンク定数 — Phase 2-6b
 - L68 `reverseGeocodeDetail()` — 緯度経度から逆ジオコーディングで region / country まで含む詳細を取得する。
 
 
-### `lib/utils/solara_api.dart` (74 行)
+### `lib/utils/solara_api.dart` (80 行)
 
 **ファイル先頭コメント:**
 
@@ -273,9 +273,9 @@ Solara CF Worker API - 軽量なユーティリティ呼び出し
 
 **関数 (1 public + 0 private):**
 
-- L61 `fetchTimezoneName()` — 緯度経度から IANA TZ名 (DST対応の基準) を取得。
+- L67 `fetchTimezoneName()` — 緯度経度から IANA TZ名 (DST対応の基準) を取得。
 
-**Worker URL リテラル (16):**
+**Worker URL リテラル (17):**
 
 - L17: `'https://solara-api.solodev-lab.com'`
 - L29: `'$solaraWorkerBase/public/tz'`
@@ -293,6 +293,7 @@ Solara CF Worker API - 軽量なユーティリティ呼び出し
 - L53: `'$solaraWorkerBase/protected/tarot'`
 - L54: `'$solaraWorkerBase/protected/relocation'`
 - L56: `'$solaraWorkerBase/protected/astro/consultation'`
+- L62: `'$solaraWorkerBase/protected/account/delete'`
 
 
 ### `lib/utils/tile_http_client.dart` (42 行)

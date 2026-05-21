@@ -5,9 +5,9 @@
 
 ## サマリ
 
-- ファイル数: 8 / 総行数: 2216
+- ファイル数: 8 / 総行数: 2276
 - class/mixin/extension/enum: 13
-- 関数 (top-level + method の素拾い): 97
+- 関数 (top-level + method の素拾い): 99
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 0
 - Worker URL リテラル: 0
@@ -248,7 +248,7 @@ Phase 2-6b 以降 (RevenueCat 接続後):
 - L89 `resetForTest()`
 
 
-### `lib/utils/solara_auth.dart` (357 行)
+### `lib/utils/solara_auth.dart` (417 行)
 
 **ファイル先頭コメント:**
 
@@ -280,37 +280,39 @@ Solara 認証サービス — Phase 2-9 Sign in 統合
   google-services.json) があれば動く。クライアント ID を渡すと優先される
 ```
 
-**imports:** dart=3 / package=4 / relative=1
+**imports:** dart=3 / package=4 / relative=3
 
-- relative: `purchases_service.dart`
+- relative: `app_attest_client.dart`, `purchases_service.dart`, `solara_api.dart`
 
 **型定義 (4):**
 
-- L38 `enum SolaraAuthProvider`
-- L41 `class SolaraAuthAccount`
+- L40 `enum SolaraAuthProvider`
+- L43 `class SolaraAuthAccount`
   - 認証済アカウント情報。
-- L96 `class SolaraAuthException : Exception`
+- L98 `class SolaraAuthException : Exception`
   - 認証エラー (UI が型で分岐できるよう薄い wrapper)。
-- L104 `class SolaraAuth : ChangeNotifier`
+- L106 `class SolaraAuth : ChangeNotifier`
 
-**関数 (7 public + 6 private):**
+**関数 (8 public + 7 private):**
 
-- L62 `toJson()`
-- L101 `toString()`
-- L127 `load()` — 起動時に 1 度呼ぶ。SharedPreferences から復元 + provider 別の silent restore。
-- L189 `signInWithApple()` — Apple サインイン (iOS / macOS 推奨)。
-- L235 `signInWithGoogle()` — Google サインイン (iOS / Android / macOS / Web)。
-- L254 `signOut()` — 現在のアカウントを取り外す。
-- L347 `resetForTest()`
+- L64 `toJson()`
+- L103 `toString()`
+- L129 `load()` — 起動時に 1 度呼ぶ。SharedPreferences から復元 + provider 別の silent restore。
+- L191 `signInWithApple()` — Apple サインイン (iOS / macOS 推奨)。
+- L237 `signInWithGoogle()` — Google サインイン (iOS / Android / macOS / Web)。
+- L256 `signOut()` — 現在のアカウントを取り外す。
+- L289 `deleteAccount()` — アカウント削除 (App Store ガイドライン 5.1.1(v) — Sign in を提供する以上、
+- L407 `resetForTest()`
 
-  <details><summary>private 関数 6 件</summary>
+  <details><summary>private 関数 7 件</summary>
 
-  - L152 `_verifyOrClear()`
-  - L275 `_ensureGoogleInitialized()`
-  - L289 `_onGoogleEvent()`
-  - L305 `_adoptGoogleAccount()`
-  - L315 `_commitAccount()`
-  - L328 `_clearLocalSession()`
+  - L154 `_verifyOrClear()`
+  - L313 `_purgeServerAccountData()`
+  - L335 `_ensureGoogleInitialized()`
+  - L349 `_onGoogleEvent()`
+  - L365 `_adoptGoogleAccount()`
+  - L375 `_commitAccount()`
+  - L388 `_clearLocalSession()`
 
   </details>
 

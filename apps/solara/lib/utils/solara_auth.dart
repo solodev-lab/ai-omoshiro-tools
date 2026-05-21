@@ -33,7 +33,9 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
+import 'app_attest_client.dart';
 import 'purchases_service.dart';
+import 'solara_api.dart';
 
 enum SolaraAuthProvider { apple, google }
 
@@ -263,6 +265,64 @@ class SolaraAuth extends ChangeNotifier {
       // SDK 例外は無視してローカルクリアは続行 (UX: 出口は常に開けておく)
     }
     await _clearLocalSession();
+  }
+
+  /// アカウント削除 (App Store ガイドライン 5.1.1(v) — Sign in を提供する以上、
+  /// アプリ内に削除手段が必須)。
+  ///
+  /// 手順:
+  ///   1. サーバー側 (Worker DO) の Pro 記録 + Webhook ログを物理削除 (best-effort)。
+  ///      まだ RevenueCat にログイン中の uid (apple:/google:) で assertion 署名する
+  ///      ため、必ず logOut より前に実行する。
+  ///   2. プロバイダ側トークン失効:
+  ///        - Google: disconnect() で付与スコープを revoke (signOut より強い)。
+  ///        - Apple : クライアント側の失効 API は無いためローカルクリアのみ。
+  ///          (option 3 / 将来: サーバーで Apple REST revoke を足す場合は、削除時に
+  ///           getAppleIDCredential を再取得して fresh authorizationCode をサーバーへ
+  ///           渡し revoke する。authorizationCode は約 5 分で失効・単回限りのため
+  ///           「サインイン時に保存」では使えない点に注意。)
+  ///   3. RevenueCat logOut + ローカルセッションクリア。
+  ///
+  /// 注意: 購読そのものの解約はしない (Apple/Google が管理)。UI 側で「有料プランは
+  /// 別途ストアで解約」を案内する。ローカル記録庫 (相談履歴 / 称号 / Galaxy) は
+  /// 端末内の個人コンテンツであり、クラウド識別子 (アカウント) とは独立に保持する。
+  Future<void> deleteAccount() async {
+    final provider = _account?.provider;
+
+    // 1. サーバー側データ削除 (logOut 前 = appUserId が apple:/google: のうちに)
+    await _purgeServerAccountData();
+
+    // 2. プロバイダ側 revoke (失敗してもローカル削除は続行)
+    try {
+      if (provider == SolaraAuthProvider.google) {
+        await _ensureGoogleInitialized();
+        await GoogleSignIn.instance.disconnect();
+      }
+      // Apple はクライアント失効 API が無いためローカルクリアのみ (上記参照)。
+    } catch (_) {
+      // 出口は常に開ける
+    }
+
+    // 3. RC logOut + ローカルクリア
+    await _clearLocalSession();
+  }
+
+  /// Worker `/protected/account/delete` を叩いて DO の Pro 記録を物理削除する。
+  /// 失敗 (オフライン / 未 attest / Worker エラー) してもアカウント削除自体は
+  /// 続行する (best-effort)。`postProtected` が body に `__appUserId` を自動注入。
+  Future<void> _purgeServerAccountData() async {
+    try {
+      final res = await AppAttestClient.instance.postProtected(
+        solaraAccountDeleteUrl,
+        payload: const <String, dynamic>{},
+      );
+      if (res.statusCode != 200 && kDebugMode) {
+        debugPrint(
+            '[SolaraAuth] server purge non-200: ${res.statusCode} ${res.body}');
+      }
+    } catch (e) {
+      if (kDebugMode) debugPrint('[SolaraAuth] server purge failed: $e');
+    }
   }
 
   // ── 内部処理 ────────────────────────────────────────────

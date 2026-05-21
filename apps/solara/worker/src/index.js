@@ -32,6 +32,7 @@ import {
 import {
   getCachedEntitlement,
   setCachedEntitlement,
+  clearMemoryEntitlementCache,
 } from './auth/entitlement_cache.js';
 import { handleRevenueCatWebhook } from './webhooks/revenuecat.js';
 
@@ -760,6 +761,40 @@ function isDiagnosticsBlocked(env) {
   return getPlayIntegrityEnforcement(env) === 'enforced';
 }
 
+/**
+ * POST /protected/account/delete
+ *
+ * アカウント削除 (App Store ガイドライン 5.1.1(v)) の「サーバー側の関連データ削除」。
+ * protectedMiddleware を通過済 = App Attest / Play Integrity 検証 OK かつ body の
+ * `__appUserId` は assertion で署名済 (転送中の改ざん不可)。その appUserId に紐づく
+ * Pro エンタイトルメント記録 + Webhook event ログを DO から物理削除する。
+ *
+ * 注意:
+ *   - 購読そのものの解約はしない (Apple/Google が管理)。ここで消すのは Worker が持つ
+ *     派生キャッシュ + 個人識別子 (apple:/google: の uid) のみ。クライアント側の UI で
+ *     「有料プランは別途ストアで解約」を案内する。
+ *   - メモリキャッシュも即時 invalidate (削除後に Pro と誤判定しないため)。
+ */
+async function handleAccountDelete(request, env, origin) {
+  let body;
+  try {
+    body = await request.json();
+  } catch (_e) {
+    return jsonError(400, 'invalid_json', origin);
+  }
+  const appUserId =
+    body && typeof body === 'object' ? body[APP_USER_ID_FIELD] : null;
+  if (typeof appUserId !== 'string' || !appUserId) {
+    return jsonError(400, 'missing_app_user_id', origin);
+  }
+  const res = await callDo(env, '/account-purge', { appUserId });
+  if (res.status !== 200) {
+    return jsonError(500, `account-purge failed: ${res.body?.error || 'unknown'}`, origin);
+  }
+  clearMemoryEntitlementCache(appUserId);
+  return jsonOk({ ok: true, ...res.body }, origin);
+}
+
 // ── /protected/* dispatcher ──
 async function dispatchProtected(request, env, url, origin) {
   // ★ middleware (現状 no-op、Phase 1 残で attestation + entitlement)
@@ -767,6 +802,10 @@ async function dispatchProtected(request, env, url, origin) {
   if (blocked) return blocked;
 
   const path = url.pathname;
+
+  if (path === '/protected/account/delete' && request.method === 'POST') {
+    return await handleAccountDelete(request, env, origin);
+  }
 
   if (path === '/protected/fortune' && request.method === 'POST') {
     const body = await request.json();
@@ -828,6 +867,7 @@ async function dispatchProtected(request, env, url, origin) {
 // 依存するため、env を mock することで Node から直接呼出してテスト可能。
 export const _internal = {
   handleIntegrityChallenge,
+  handleAccountDelete,
   getEnforcement,
   getPlayIntegrityEnforcement,
   extractAppUserId,

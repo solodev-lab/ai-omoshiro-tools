@@ -5,8 +5,8 @@
 
 ## #3 Worker ↔ Flutter エンドポイント対整合
 
-- Worker 側に定義された path: **26**
-- Flutter から呼ばれている path リテラル: **15**
+- Worker 側に定義された path: **27**
+- Flutter から呼ばれている path リテラル: **16**
 
 ### Worker → Flutter 漏れ (Worker にあるが Flutter から呼出無し)
 
@@ -33,6 +33,7 @@
 - `/auth/integrity/challenge`
 - `/auth/whoami`
 - `/protected/*`
+- `/protected/account/delete`
 - `/protected/astro/consultation`
 - `/protected/fortune`
 - `/protected/relocation`
@@ -357,7 +358,7 @@
 | 1b | 1 | · | · | 2 | 1 | · | 1 | · | · | · | · | · | · | · | · | · |
 | 1c | · | · | 1 | · | · | · | · | · | · | · | · | · | · | · | · | · |
 | 2a | 3 | · | · | 4 | 1 | · | · | 1 | · | · | · | · | · | · | · | · |
-| 2b | 2 | 1 | 5 | 4 | 1 | · | · | · | · | · | · | · | · | · | · | · |
+| 2b | 2 | 1 | 5 | 5 | 2 | · | · | · | · | · | · | · | · | · | · | · |
 | 2c | · | · | 1 | · | · | · | · | · | · | · | · | · | · | · | · | · |
 | 3a | 1 | 4 | 2 | 2 | 1 | 1 | 8 | 7 | 4 | 1 | · | · | · | · | 1 | · |
 | 3b | · | · | · | · | · | · | · | 1 | · | · | · | · | · | · | · | · |
@@ -386,8 +387,8 @@
 | `lib/utils/pro_status.dart` | 2b | 18 |
 | `lib/models/galaxy_cycle.dart` | 1c | 14 |
 | `lib/screens/horoscope/horo_antique_icons.dart` | 3a | 13 |
+| `lib/utils/solara_api.dart` | 2a | 13 |
 | `lib/models/daily_reading.dart` | 1c | 12 |
-| `lib/utils/solara_api.dart` | 2a | 12 |
 | `lib/widgets/pro_unlock_dialog.dart` | 3a | 12 |
 | `lib/widgets/tap_to_unfocus.dart` | 3a | 11 |
 | `lib/screens/horoscope/horo_constants.dart` | 1b | 10 |
@@ -413,9 +414,14 @@
 > 各ソースの SHA1 を `_stamps.json` に記録し、差分を検出。
 > 変更されたファイルが属する層は、人手版インベントリ章の見直し対象。
 
-- 追加: **0** / 削除: **0** / 変更: **0**
+- 追加: **0** / 削除: **0** / 変更: **5**
 
-- 変更なし — 全インベントリ章は最新。
+### 変更されたファイル (層別)
+
+- **層 0**: `worker/src/auth/attestation_state.js`, `worker/src/index.js`
+- **層 2a**: `lib/utils/solara_api.dart`
+- **層 2b**: `lib/utils/solara_auth.dart`
+- **層 3a**: `lib/widgets/sanctuary_account_section.dart`
 
 ## #7 astro_glossary 用語辞書対整合
 

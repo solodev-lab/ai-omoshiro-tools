@@ -13,9 +13,15 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { _internal } from '../src/index.js';
+import {
+  getCachedEntitlement,
+  setCachedEntitlement,
+  _resetEntitlementCacheForTest,
+} from '../src/auth/entitlement_cache.js';
 
 const {
   handleIntegrityChallenge,
+  handleAccountDelete,
   getEnforcement,
   getPlayIntegrityEnforcement,
   extractAppUserId,
@@ -141,6 +147,80 @@ test('handleIntegrityChallenge: TTL_SEC env で TTL 上書き可能', async () =
   assert.equal(json.ttlSec, 60);
   assert.ok(calls[0].body.expiresAt <= Date.now() + 61_000);
   assert.ok(calls[0].body.expiresAt > Date.now());
+});
+
+// ── handleAccountDelete (アカウント削除 5.1.1(v) サーバー側) ──
+
+function makeDeleteRequest(body) {
+  return new Request('https://example.com/protected/account/delete', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: typeof body === 'string' ? body : JSON.stringify(body),
+  });
+}
+
+test('handleAccountDelete: 正常系 → DO /account-purge 呼出 + counts 伝搬 + cache invalidate', async () => {
+  const { env, calls } = makeEnv(() => ({
+    status: 200,
+    body: { ok: true, deletedEntitlements: 1, deletedEvents: 3 },
+  }));
+  _resetEntitlementCacheForTest();
+  setCachedEntitlement('apple:gone', { isActive: true, expiresAt: 9999999999999 });
+
+  const res = await handleAccountDelete(
+    makeDeleteRequest({ __appUserId: 'apple:gone' }),
+    env,
+    null,
+  );
+  assert.equal(res.status, 200);
+  const json = await res.json();
+  assert.equal(json.ok, true);
+  assert.equal(json.deletedEntitlements, 1);
+  assert.equal(json.deletedEvents, 3);
+
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0].path, '/account-purge');
+  assert.equal(calls[0].body.appUserId, 'apple:gone');
+
+  // 削除後は cache から消えている (Pro 誤判定防止)
+  assert.equal(getCachedEntitlement('apple:gone'), undefined);
+});
+
+test('handleAccountDelete: __appUserId 欠落 → 400 + DO 呼ばれない', async () => {
+  const { env, calls } = makeEnv(() => ({ status: 200, body: { ok: true } }));
+  const res = await handleAccountDelete(makeDeleteRequest({ foo: 'bar' }), env, null);
+  assert.equal(res.status, 400);
+  const json = await res.json();
+  assert.equal(json.error, 'missing_app_user_id');
+  assert.equal(calls.length, 0);
+});
+
+test('handleAccountDelete: 空文字 / 非 string __appUserId → 400', async () => {
+  const { env } = makeEnv(() => ({ status: 200, body: { ok: true } }));
+  const r1 = await handleAccountDelete(makeDeleteRequest({ __appUserId: '' }), env, null);
+  assert.equal(r1.status, 400);
+  const r2 = await handleAccountDelete(makeDeleteRequest({ __appUserId: 123 }), env, null);
+  assert.equal(r2.status, 400);
+});
+
+test('handleAccountDelete: 非 JSON body → 400 invalid_json', async () => {
+  const { env } = makeEnv(() => ({ status: 200, body: { ok: true } }));
+  const res = await handleAccountDelete(makeDeleteRequest('not-json'), env, null);
+  assert.equal(res.status, 400);
+  const json = await res.json();
+  assert.equal(json.error, 'invalid_json');
+});
+
+test('handleAccountDelete: DO エラー → 500', async () => {
+  const { env } = makeEnv(() => ({ status: 500, body: { error: 'sql_failed' } }));
+  const res = await handleAccountDelete(
+    makeDeleteRequest({ __appUserId: 'google:abc' }),
+    env,
+    null,
+  );
+  assert.equal(res.status, 500);
+  const json = await res.json();
+  assert.match(json.error, /account-purge failed/);
 });
 
 // ── getPlayIntegrityEnforcement ──────────────────────────

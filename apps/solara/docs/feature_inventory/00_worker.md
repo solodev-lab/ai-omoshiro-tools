@@ -6,7 +6,7 @@
 ## サマリ
 
 - ファイル数: 19
-- エンドポイント総数: 27
+- エンドポイント総数: 28
 - Gemini 呼出箇所: 2
 - KV 使用: 4 行 / Durable Object 使用: 8 行
 
@@ -115,7 +115,7 @@ https://developer.apple.com/documentation/devicecheck/validating-apps-that-conne
 **export (1):** `verifyAttestation`
 
 
-### `worker/src/auth/attestation_state.js` (461 行)
+### `worker/src/auth/attestation_state.js` (499 行)
 
 **ファイル先頭コメント:**
 
@@ -340,7 +340,7 @@ houses: そのカテゴリで重視する伝統占星術のハウス番号
 **export (3):** `computeCategoryScore`, `callGemini`, `handleFortune`
 
 
-### `worker/src/index.js` (877 行)
+### `worker/src/index.js` (917 行)
 
 **ファイル先頭コメント:**
 
@@ -360,45 +360,46 @@ webhooks/*   外部連携      RevenueCat Webhook (Pro 状態の真の出所)。
 同セッションで新 path に書き換え済（`apps/solara/lib/utils/solara_api.dart` 参照）。
 ```
 
-**エンドポイント / ルート (27):**
+**エンドポイント / ルート (28):**
 
 | method | path | line |
 | --- | --- | --- |
-| ? | /public/astro/forecast | L604 |
-| ? | /public/tiles/* | L605 |
-| ? | /webhooks/* | L606 |
-| ? | /public/health | L614 |
-| GET | /public/tiles/osm/* | L619 |
-| POST | /public/astro/chart | L624 |
-| POST | /public/astro/forecast | L632 |
-| POST | /public/astro/predict | L647 |
-| POST | /public/astro/daily-transits | L655 |
-| GET | /public/tz | L663 |
-| GET | /public/astro/events | L672 |
-| GET | /public/search | L683 |
-| GET | /auth/whoami | L705 |
-| POST | /auth/challenge | L708 |
-| POST | /auth/attest | L711 |
-| POST | /auth/integrity/challenge | L715 |
-| GET | /auth/integrity/diagnose | L724 |
-| POST | /auth/integrity/decode-test | L737 |
-| POST | /protected/fortune | L771 |
-| POST | /protected/tarot | L781 |
-| POST | /protected/relocation | L791 |
-| POST | /protected/astro/line-narrative | L803 |
-| POST | /protected/astro/consultation | L813 |
-| ? | /public/* | L859 |
-| ? | /auth/* | L861 |
-| ? | /protected/* | L863 |
-| ? | /webhooks/revenuecat | L865 |
+| ? | /public/astro/forecast | L605 |
+| ? | /public/tiles/* | L606 |
+| ? | /webhooks/* | L607 |
+| ? | /public/health | L615 |
+| GET | /public/tiles/osm/* | L620 |
+| POST | /public/astro/chart | L625 |
+| POST | /public/astro/forecast | L633 |
+| POST | /public/astro/predict | L648 |
+| POST | /public/astro/daily-transits | L656 |
+| GET | /public/tz | L664 |
+| GET | /public/astro/events | L673 |
+| GET | /public/search | L684 |
+| GET | /auth/whoami | L706 |
+| POST | /auth/challenge | L709 |
+| POST | /auth/attest | L712 |
+| POST | /auth/integrity/challenge | L716 |
+| GET | /auth/integrity/diagnose | L725 |
+| POST | /auth/integrity/decode-test | L738 |
+| POST | /protected/account/delete | L806 |
+| POST | /protected/fortune | L810 |
+| POST | /protected/tarot | L820 |
+| POST | /protected/relocation | L830 |
+| POST | /protected/astro/line-narrative | L842 |
+| POST | /protected/astro/consultation | L852 |
+| ? | /public/* | L899 |
+| ? | /auth/* | L901 |
+| ? | /protected/* | L903 |
+| ? | /webhooks/revenuecat | L905 |
 
 **KV 使用 (4 行):**
 
-- 出現行: L109, L112, L117, L181
+- 出現行: L110, L113, L118, L182
 
 **Durable Object 使用 (4 行):**
 
-- 出現行: L223, L223, L223, L827
+- 出現行: L224, L224, L224, L866
 
 **export (1):** `_internal`
 

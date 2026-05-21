@@ -24,6 +24,8 @@ class SanctuaryAccountSection extends StatefulWidget {
 }
 
 class _SanctuaryAccountSectionState extends State<SanctuaryAccountSection> {
+  bool _deleting = false;
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -154,11 +156,31 @@ class _SanctuaryAccountSectionState extends State<SanctuaryAccountSection> {
           ),
           const SizedBox(height: 12),
           TextButton.icon(
-            onPressed: _signOut,
+            onPressed: _deleting ? null : _signOut,
             icon: const Icon(Icons.logout, size: 16),
             label: const Text('サインアウト'),
             style: TextButton.styleFrom(
               foregroundColor: const Color(0xFFACACAC),
+              alignment: Alignment.centerLeft,
+              padding: EdgeInsets.zero,
+            ),
+          ),
+          const Divider(color: Color(0x14FFFFFF), height: 18),
+          TextButton.icon(
+            onPressed: _deleting ? null : _confirmDeleteAccount,
+            icon: _deleting
+                ? const SizedBox(
+                    width: 14,
+                    height: 14,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Color(0xFFE57373),
+                    ),
+                  )
+                : const Icon(Icons.delete_outline, size: 16),
+            label: Text(_deleting ? '削除しています…' : 'アカウントを削除'),
+            style: TextButton.styleFrom(
+              foregroundColor: const Color(0xFFE57373),
               alignment: Alignment.centerLeft,
               padding: EdgeInsets.zero,
             ),
@@ -234,5 +256,79 @@ class _SanctuaryAccountSectionState extends State<SanctuaryAccountSection> {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('サインアウトしました')),
     );
+  }
+
+  /// アカウント削除の確認ダイアログ (App Store ガイドライン 5.1.1(v))。
+  /// 機能ダイアログ (削除確認) なので info_popup ではなく AlertDialog を使う
+  /// (widgets/info_popup.dart の規約: 削除確認等は対象外)。
+  Future<void> _confirmDeleteAccount() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      barrierColor: const Color(0x99000000),
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xE60A0A14),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: const BorderSide(color: Color(0x33E57373)),
+        ),
+        title: const Text(
+          'アカウントを削除しますか？',
+          style: TextStyle(
+            color: Color(0xFFEAEAEA),
+            fontSize: 16,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        content: const Text(
+          'サインイン情報と、サーバー上の購読記録を削除します。\n\n'
+          '・有料プランをご契約中の場合、解約は別途 App Store / Google Play から行ってください（削除では自動解約されません）。\n'
+          '・端末内の記録庫（相談履歴・称号・Galaxy）は、この端末に残ります。\n'
+          '・この操作は取り消せません。',
+          style: TextStyle(
+            color: Color(0xFFBFBFBF),
+            fontSize: 12.5,
+            height: 1.7,
+          ),
+        ),
+        actionsPadding: const EdgeInsets.fromLTRB(8, 0, 12, 10),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            style: TextButton.styleFrom(
+              foregroundColor: const Color(0xFFACACAC),
+            ),
+            child: const Text('キャンセル'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            style: TextButton.styleFrom(
+              foregroundColor: const Color(0xFFE57373),
+            ),
+            child: const Text('削除する'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    await _performDelete();
+  }
+
+  Future<void> _performDelete() async {
+    final messenger = ScaffoldMessenger.of(context);
+    setState(() => _deleting = true);
+    try {
+      await SolaraAuth.instance.deleteAccount();
+      if (!mounted) return;
+      messenger.showSnackBar(
+        const SnackBar(content: Text('アカウントを削除しました')),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      messenger.showSnackBar(
+        SnackBar(content: Text('削除に失敗しました: $e')),
+      );
+    } finally {
+      if (mounted) setState(() => _deleting = false);
+    }
   }
 }

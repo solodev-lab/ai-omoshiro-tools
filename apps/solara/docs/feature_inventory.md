@@ -63,6 +63,13 @@ Solara のバックエンドは **Cloudflare Workers** で稼働。本番 URL: `
 
 ### 0.3 エンドポイント一覧 (13 個)
 
+> 🔴 **この表は 2026-05-14 時点のスナップショット (旧 top-level path 表記)**。その後
+> commit `ab79bbd` で `/public/*` `/protected/*` `/auth/*` `/webhooks/*` へ物理分離され、
+> Phase 1 で App Attest / Play Integrity / RevenueCat Webhook / **アカウント削除
+> (`/protected/account/delete` → DO `/account-purge`)** 等が追加された。
+> **現在のエンドポイント全量 (機械抽出 = 28 path) は [`feature_inventory/00_worker.md`](feature_inventory/00_worker.md) が正典**。
+> 下表は「Gemini 課金対象がどれか」の歴史的整理として残す。
+
 | # | path | method | 用途 | Gemini | Flutter 呼出元 | 状態 |
 |---|---|---|---|---|---|---|
 | 1 | `/health` | GET | CF ヘルスチェック | - | (CF が叩く) | 健全・保持 |

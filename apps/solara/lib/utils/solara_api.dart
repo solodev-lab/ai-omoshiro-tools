@@ -55,6 +55,12 @@ const String solaraRelocationUrl = '$solaraWorkerBase/protected/relocation';
 const String solaraConsultationUrl =
     '$solaraWorkerBase/protected/astro/consultation';
 
+/// アカウント削除時にサーバー側 (DO) の Pro 記録 + Webhook ログを物理削除する。
+/// App Attest / Play Integrity を通すため /protected/* 配下に置く (body の
+/// `__appUserId` が assertion で署名され、削除対象が改ざんされない)。
+const String solaraAccountDeleteUrl =
+    '$solaraWorkerBase/protected/account/delete';
+
 /// 緯度経度から IANA TZ名 (DST対応の基準) を取得。
 /// 例: (35.68, 139.76) → 'Asia/Tokyo'
 /// 失敗時は null を返す (呼び出し側で birthTz 整数fallback想定)。

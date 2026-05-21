@@ -5,9 +5,9 @@
 
 ## サマリ
 
-- ファイル数: 25 / 総行数: 6416
+- ファイル数: 25 / 総行数: 6512
 - class/mixin/extension/enum: 71
-- 関数 (top-level + method の素拾い): 168
+- 関数 (top-level + method の素拾い): 170
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 3
 - Worker URL リテラル: 0
@@ -674,7 +674,7 @@ Pro 案内ダイアログ — Phase 2-6a / Phase 2-6b + Phase 2 RASP 連携
   </details>
 
 
-### `lib/widgets/sanctuary_account_section.dart` (238 行)
+### `lib/widgets/sanctuary_account_section.dart` (334 行)
 
 **ファイル先頭コメント:**
 
@@ -700,18 +700,20 @@ Sanctuary ✦ Account セクション — Phase 2-9 Sign in 統合
 - L18 `class SanctuaryAccountSection : StatefulWidget`
 - L26 `class _SanctuaryAccountSectionState : State`
 
-**関数 (2 public + 5 private):**
+**関数 (2 public + 7 private):**
 
 - L22 `createState()`
-- L28 `build()`
+- L30 `build()`
 
-  <details><summary>private 関数 5 件</summary>
+  <details><summary>private 関数 7 件</summary>
 
-  - L55 `_buildSignedOutBlock()`
-  - L108 `_buildSignedInBlock()`
-  - L171 `_signInButton()`
-  - L214 `_signIn()`
-  - L231 `_signOut()`
+  - L57 `_buildSignedOutBlock()`
+  - L110 `_buildSignedInBlock()`
+  - L193 `_signInButton()`
+  - L236 `_signIn()`
+  - L253 `_signOut()`
+  - L264 `_confirmDeleteAccount()`
+  - L316 `_performDelete()`
 
   </details>
 

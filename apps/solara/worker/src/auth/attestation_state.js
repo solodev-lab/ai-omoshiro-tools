@@ -33,6 +33,9 @@
  *   POST /integrity-nonce-create  body: {nonceId, nonceB64, expiresAt}
  *                                                       → {ok} or 409 {nonce_id_conflict}
  *   POST /integrity-nonce-consume body: {nonceId, now}  → {nonceB64} or 404 (一致+consume)
+ *   POST /account-purge     body: {appUserId}            → {ok, deletedEntitlements, deletedEvents}
+ *                                                          (アカウント削除: appUserId の Pro 記録 +
+ *                                                           Webhook event ログを物理削除)
  *
  * Caller (Worker middleware) はこれらを順番に叩いて検証する。
  */
@@ -364,6 +367,40 @@ export class AttestationState {
     };
   }
 
+  // ── /account-purge ──
+  //
+  // アカウント削除 (App Store ガイドライン 5.1.1(v)) の「サーバー側の関連データ削除」。
+  // 指定 appUserId に紐づく Pro エンタイトルメント記録と Webhook event ログを物理削除する。
+  //
+  // 注意:
+  //   - これは RevenueCat の真実 (購読そのもの) を解約するものではない。購読は
+  //     Apple/Google が管理し、解約はユーザーが各ストアで行う。ここで消すのは
+  //     Worker が保持する「派生キャッシュ + 個人識別子 (apple:/google: の uid)」のみ。
+  //   - quota 表は appUserId ではなく keyId/play:uid キーで日次ローテートするため対象外。
+  //   - 削除後に再び Webhook が届けば user_entitlements は再生成されるが、それは
+  //     ストア側の現実 (まだ購読中) を反映するだけで、個人識別子の削除義務とは独立。
+  async _accountPurge({ appUserId }) {
+    if (typeof appUserId !== 'string' || !appUserId) {
+      return { status: 400, body: { error: 'invalid_app_user_id' } };
+    }
+    const ent = this.sql.exec(
+      `DELETE FROM user_entitlements WHERE app_user_id = ?`,
+      appUserId,
+    );
+    const evt = this.sql.exec(
+      `DELETE FROM webhook_events WHERE app_user_id = ?`,
+      appUserId,
+    );
+    return {
+      status: 200,
+      body: {
+        ok: true,
+        deletedEntitlements: ent.rowsWritten ?? 0,
+        deletedEvents: evt.rowsWritten ?? 0,
+      },
+    };
+  }
+
   // ── /integrity-nonce-create ──
   //
   // Play Integrity Standard request 用の server-issued nonce を発行・保存。
@@ -448,6 +485,7 @@ export class AttestationState {
       '/entitlement-get': () => this._entitlementGet(body),
       '/integrity-nonce-create': () => this._integrityNonceCreate(body),
       '/integrity-nonce-consume': () => this._integrityNonceConsume(body),
+      '/account-purge': () => this._accountPurge(body),
     };
     const handler = dispatch[path];
     if (!handler) return new Response('not found', { status: 404 });
