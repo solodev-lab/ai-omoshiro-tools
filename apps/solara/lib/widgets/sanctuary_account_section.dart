@@ -166,23 +166,40 @@ class _SanctuaryAccountSectionState extends State<SanctuaryAccountSection> {
             ),
           ),
           const Divider(color: Color(0x14FFFFFF), height: 18),
-          TextButton.icon(
+          TextButton(
             onPressed: _deleting ? null : _confirmDeleteAccount,
-            icon: _deleting
-                ? const SizedBox(
-                    width: 14,
-                    height: 14,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: Color(0xFFE57373),
-                    ),
-                  )
-                : const Icon(Icons.delete_outline, size: 16),
-            label: Text(_deleting ? '削除しています…' : 'アカウントを削除'),
             style: TextButton.styleFrom(
               foregroundColor: const Color(0xFFE57373),
               alignment: Alignment.centerLeft,
               padding: EdgeInsets.zero,
+            ),
+            child: Row(
+              children: [
+                _deleting
+                    ? const SizedBox(
+                        width: 14,
+                        height: 14,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Color(0xFFE57373),
+                        ),
+                      )
+                    : const Icon(Icons.delete_outline, size: 16),
+                const SizedBox(width: 8),
+                // FittedBox(scaleDown) で、幅が足りない時だけ自動縮小して 1 行で全文表示
+                // (切らない / RIGHT OVERFLOWED も出ない)。Flexible で利用可能幅を与える。
+                Flexible(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      _deleting ? '削除しています…' : 'Solaraからアカウントを削除',
+                      maxLines: 1,
+                      softWrap: false,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ],
