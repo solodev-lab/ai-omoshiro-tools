@@ -728,7 +728,53 @@ Solara App Attest + RC Webhook + Play Integrity S1 で、AI (= 私) が 5+ 回�
 
 ---
 
-## 11. このドキュメント自体のメンテ
+## 11. 外部設定の実行順序と状態管理（手戻り防止）
+
+**対象**: コードではなく「外部ダッシュボード / CLI 設定」(ストア / RevenueCat / Cloudflare / Codemagic / Apple Developer / Google Play)。これらは依存関係と「やった / やってない」状態が見えにくく、別フェーズで同じ対象を二度触って手戻りしやすい。**この章は実装の知見 (§1-9) より「作業の段取り」に特化**している。
+
+### 11.1 なぜ手戻りが起きるか (実例: 2026-05-21 Solara RevenueCat Webhook)
+
+- Android ストア設定フェーズ (前半) で RevenueCat webhook を **URL だけ作成**。Authorization は Worker secret 未作成のため**空** (RC では Authorization が Optional なので空で登録できてしまう)。
+- Worker deploy フェーズ (後半) で secret を作成 → webhook の Authorization を埋める必要が出た。
+- だが「webhook 作成済 / auth 空 / secret 待ち」を**どこにも記録していなかった** → 新規作成を試みて `same url` 重複エラー → 「鍵を新しく作ったら一致しないのでは / ログが見えなくなるのでは」と不安が連鎖し、確認に時間を浪費。
+- **本質**: ① 依存関係 (secret → webhook auth) を意識しなかった ② 片方だけ先に作って放置した ③ その状態を記録しなかった、の 3 つが重なった。これは「重大なやり直し」には至らなかったが、同種の状態未記録は別の場面でも複数回起きている = **構造的問題**。
+
+### 11.2 ルール
+
+1. **依存のないものは前倒しする**。特に **`wrangler secret put` は依存ゼロ → 最初にやる**。secret を先に作っておけば、RevenueCat webhook を作るとき Authorization (`Bearer <secret>`) を**同じ操作で完成**でき、「空で作って後で戻る」分割が消える。
+2. **同じ対象を二度触らない**。secret 作成と webhook Authorization 設定は連続して 1 パスで終わらせる。
+3. **やむを得ず分割するときは「保留」を明示記録**する: 例「webhook URL 作成済 / Authorization 空 (secret 待ち) / TODO: secret 作成後に `Bearer <secret>` を埋める」。
+4. **サイト別に「やった / 保留 / 未着手」を記録**し、設定を案内・再実行する前に必ずその記録を見る + オーナーに「これ、もう作ってある?」と先に確認する (memory: `feedback_track_external_dashboard_state.md`)。
+5. **重複作成を拒否する外部 (RevenueCat webhook の URL 等) は、新規作成の前に既存有無を確認**する。「新規作成」と「既存を編集」を取り違えない。
+
+### 11.3 依存を意識した推奨実行順 (テンプレ — 新アプリで埋める)
+
+> 「番号が小さいほど依存が少ない = 先にやれる」。着手前にこの表を埋め、依存の矢印を確認してから動く。
+
+| 順 | サイト | 作業 | これが先に要る (依存) |
+|---|---|---|---|
+| 1 | Cloudflare (wrangler) | `wrangler secret put` 各種 (API キー / **webhook 認証 secret**) | — (依存なし、最初にやる) |
+| 2 | Apple Developer | App ID の capability 有効化 (Sign in with Apple 等) | — (CI 署名より前) |
+| 3 | Codemagic | ASC API キー / `CERTIFICATE_PRIVATE_KEY` / env group | ASC API キー発行 |
+| 4 | App Store Connect / Google Play | サブスク商品 / トライアル / サーバ通知・RTDN | — |
+| 5 | RevenueCat | Entitlement / Offering / 商品 import | 4 (ストア商品) |
+| 6 | RevenueCat | **Webhook URL + `Bearer <secret>`** | **1 (Worker secret)** |
+| 7 | Cloudflare (wrangler) | `wrangler deploy` | 1 + 実装完了 |
+| 8 | 実機 (TestFlight 等) | 課金 / アカウント削除 / E2E 検証 | 6 + 7 |
+
+ポイント: **6 (webhook auth) は 1 (secret) に依存する**。1 を最初にやれば 6 を 1 パスで完成できる。逆に 1 を後回しにすると、webhook を空で作って 6 で戻る = 今回の手戻り。これが「後半でやることを前半でやれるなら一気にやる」の具体形。
+
+### 11.4 状態の記録先と粒度
+
+- アプリ固有の進捗は memory の launch_checklist 等に「✅完了 (日付) / [WIP] 保留理由 / [ ] 未着手」で残す。
+- 外部で**作成済みのもの**は「サイト名・対象名・URL/ID・空欄や保留の有無」まで**具体的に**書く。
+  - ❌ 抽象的: `[ ] webhook 設定` ← 作成済みか次セッションで判別できず再発
+  - ✅ 具体的: `RC webhook 'Solara Worker' 作成済、URL .../webhooks/revenuecat、Authorization 空=secret 待ち`
+- 各フェーズ開始時にこの記録を読む。「やったことの管理」が抜けると、調査・確認だけで時間を浪費する (= リスク高 / 時間の無駄)。
+
+---
+
+## 12. このドキュメント自体のメンテ
 
 新しいアプリ開発で類似機能を実装するたびに、本ドキュメントを更新する:
 - 新しい failure pattern が見つかったら §4 に追加
@@ -736,7 +782,10 @@ Solara App Attest + RC Webhook + Play Integrity S1 で、AI (= 私) が 5+ 回�
 - 新しい外部 SaaS の評価事例が出たら §3.3 に追加
 - テンプレが古くなったら §8 を更新
 - 多層防御の ROI 評価表 (§4.2) は機能追加のたびに行追加 (Solara で 5 行追加した実例)
+- 外部設定の順序 / 依存 / 状態未記録による手戻りが出たら §11 (実行順テンプレ表 + 記録粒度) を更新
 
-最終更新: 2026-05-21 (Solara iOS を **Mac なしで Codemagic→TestFlight→iPhone 実機→Sandbox 課金テスト**まで完走。§11「Mac なしで iOS をビルド・App Store 配信する」を新規追加。署名の詰まりどころ3点 = codemagic.yaml はルート必須 / `ios_signing` ブロック不可で `fetch-signing-files --create` 方式 / `CERTIFICATE_PRIVATE_KEY` env 必須。旧 §1.2 の「実機購入テストは Mac 必須」記述を訂正)
+最終更新: 2026-05-21② (§11「外部設定の実行順序と状態管理」を新規追加。RevenueCat webhook を空 auth で先に作って後で戻り `same url` 重複エラーになった手戻りを契機に、①依存ゼロの `wrangler secret put` を最初にやれば webhook auth を 1 パスで完成できる ②同じ対象を二度触らない ③分割時は「保留」を具体記録する、を順序テンプレ表 §11.3 として一般化。memory `feedback_track_external_dashboard_state.md` と対。なお Mac なし iOS 配信は §10、本メンテ章は §12 に繰り下げ)
+
+その前: 2026-05-21① (Solara iOS を **Mac なしで Codemagic→TestFlight→iPhone 実機→Sandbox 課金テスト**まで完走。§10「Mac なしで iOS をビルド・App Store 配信する」を新規追加。署名の詰まりどころ3点 = codemagic.yaml はルート必須 / `ios_signing` ブロック不可で `fetch-signing-files --create` 方式 / `CERTIFICATE_PRIVATE_KEY` env 必須。旧 §1.2 の「実機購入テストは Mac 必須」記述を訂正)
 
 その前: 2026-05-20 (Solara Play Integrity S7 = 実装 v1.1 完成 + 実機 R8 突破。§1.3 / §4.2 / §5.8 / §6.1 更新)
