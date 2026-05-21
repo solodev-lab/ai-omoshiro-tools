@@ -87,21 +87,24 @@ class _SanctuaryAccountSectionState extends State<SanctuaryAccountSection> {
             ),
           ),
           const SizedBox(height: 14),
-          if (isApplePlatform) ...[
+          // iOS/macOS は Apple サインインのみ表示 (Google は iOS 用設定が未済のため。
+          // 公開後に iOS Google を設定したら戻す)。Android/その他は Google のみ。
+          if (isApplePlatform)
             _signInButton(
               label: ' Apple でサインイン',
               icon: Icons.apple,
-              filled: true,
+              // Google と同じ「透明背景 + 枠線 + 白文字」スタイル。
+              // filled:true (白背景+黒文字) は文字が見えにくいとの指摘で変更。
+              filled: false,
               onTap: () => _signIn(SolaraAuthProvider.apple),
+            )
+          else
+            _signInButton(
+              label: 'Google でサインイン',
+              icon: Icons.account_circle_outlined,
+              filled: false,
+              onTap: () => _signIn(SolaraAuthProvider.google),
             ),
-            const SizedBox(height: 8),
-          ],
-          _signInButton(
-            label: 'Google でサインイン',
-            icon: Icons.account_circle_outlined,
-            filled: false,
-            onTap: () => _signIn(SolaraAuthProvider.google),
-          ),
         ],
       ),
     );
