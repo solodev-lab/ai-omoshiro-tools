@@ -73,7 +73,7 @@ App Attest 完成後、その middleware を拡張して RC エンタイトル�
 - **In-App Purchase Key (P8) が StoreKit2 の正規ルート**。Shared Secret は P8 があれば不要。**App Store Connect API Key を入れると RC が商品を自動 import** できる
 - **商品ステータス「メタデータ不足」は RC import / Sandbox テストに影響しない** (審査用スクショ未入力なだけ。スクショは公開直前で可)
 - **Android の RTDN ↔ iOS の App Store サーバ通知**が対になる。RC はどちらも「RC が出す URL をストア側に貼る」方式
-- **実機購入テストは iOS だと Mac 必須**だが、**ストア設定 + RC 配線は Windows の Web だけで先行完了できる** (Mac 待ちで止めなくてよい)
+- **ストア設定 + RC 配線は Windows の Web だけで先行完了できる** (Mac 待ちで止めなくてよい)。さらに **iOS の実機購入テストも Mac 不要**で完走できると 2026-05-21 に実証した (Codemagic でビルド→TestFlight、TestFlight は本番アカウント+Sandbox 課金のハイブリッド環境なので iPhone 実機だけで課金検証可能)。詳細は §10
 
 ### 1.3 Solara Play Integrity (Android) 実装 v1.1 完成 (S1-S7 = 7 セッション、実機 R8 突破)
 
@@ -643,7 +643,92 @@ Solara App Attest + RC Webhook + Play Integrity S1 で、AI (= 私) が 5+ 回�
 
 ---
 
-## 10. このドキュメント自体のメンテ
+## 10. Mac なしで iOS をビルド・App Store 配信する (Codemagic CI/CD)
+
+**対象**: Windows / Linux だけで開発する個人開発者が、Mac を買わずに Flutter (or ネイティブ) iOS アプリを App Store まで出す方法。
+**ケーススタディ**: Solara iOS (2026-05-21、1 セッションで Codemagic セットアップ→ビルド→TestFlight→iPhone 実機インストール→Sandbox 課金テストまで完走)。
+**結論**: **Mac は1台も要らない。** 唯一の本物のハードウェア要件は iPhone 実機1台 (動作確認 + 課金テスト用)。
+
+### 10.1 何が Mac なしでできるか (実証済み)
+
+| 工程 | Mac 要否 | 代替 |
+|---|---|---|
+| iOS ビルド (IPA 作成) | ❌ 不要 | Codemagic クラウド macOS (mac_mini_m2) |
+| 署名 (証明書/プロファイル) | ❌ 不要 | App Store Connect API キー + クラウドで自動生成 |
+| TestFlight / App Store アップロード | ❌ 不要 | Codemagic publishing |
+| 審査提出 | ❌ 不要 | `submit_to_app_store: true` |
+| **Sandbox 課金 (IAP) テスト** | ❌ 不要 | **TestFlight (本番アカウント+Sandbox 課金ハイブリッド) を iPhone 実機で** |
+| 動作確認 | △ | **iPhone 実機が1台必要** (Mac ではない) |
+
+費用: Codemagic 無料枠 = macOS M2 **500 分/月** (個人アカウント限定。Team を選ぶと無料枠なし)。iOS ビルド1回 8〜15 分 → 月 30〜60 回。**通常は ¥0 で公開まで完走**。post-processing (Apple 処理待ち) は **ビルド分を消費しない** (非同期、macOS マシン解放後に実行)。
+
+### 10.2 🔴 最重要: Codemagic iOS 署名の詰まりどころ3点 (この順で必ず踏む)
+
+公式の「`ios_signing` ブロックを書けば自動署名」は**罠**。実際は以下3点を踏まないとビルドが署名で落ちる。
+
+1. **`codemagic.yaml` はリポジトリの「ルート」に置く**
+   - Codemagic はサブフォルダの yaml を検出しない。モノレポ (`apps/<name>/`) でも yaml は**ルート**に置き、`working_directory: apps/<name>` でサブフォルダを指定する。
+   - 症状: Finish 画面で「mobile application が見つからない」。
+
+2. **宣言的 `ios_signing:` ブロックを使わない → スクリプトで `--create`**
+   - `environment.ios_signing` はビルド前にプロファイルを**取得するだけ**で、無いと `No matching profiles found for bundle identifier ... distribution type app_store` で**スクリプト実行前に**落ちる (ログが空になる)。
+   - 代わりに `ios_signing` を消し、`integrations.app_store_connect: "<キー名>"` だけ残してスクリプトで生成:
+     ```yaml
+     - name: Set up code signing
+       script: |
+         keychain initialize
+         app-store-connect fetch-signing-files "<bundle-id>" --type IOS_APP_STORE --create
+         keychain add-certificates
+         xcode-project use-profiles
+     ```
+
+3. **`CERTIFICATE_PRIVATE_KEY` 環境変数 (RSA 2048 PEM) が必須**
+   - 上記でも `Cannot save signing certificates without certificate private key` で落ちる。Apple アカウントに配布証明書が既にあっても、その**秘密鍵はクラウドマシンに無い**ため使えず、新規作成にも秘密鍵が要る。
+   - 生成 (Git for Windows 同梱の ssh-keygen で可):
+     ```
+     ssh-keygen -t rsa -b 2048 -m PEM -f ios_distribution_private_key -q -N ""
+     ```
+   - 生成した秘密鍵の**全文 (`-----BEGIN RSA PRIVATE KEY-----` 〜 END まで)** を Codemagic の環境変数 **`CERTIFICATE_PRIVATE_KEY`** (Secure) に登録。Codemagic CLI が `fetch-signing-files` でこのキーを自動使用し、新規配布証明書を秘密鍵付きで作成する。yaml 変更は不要 (env 名で自動認識)。
+   - 秘密鍵ファイルはローカルに安全保管 (Git に入れない)。次回以降も同じキーで署名できる。
+
+### 10.3 Codemagic UI 側の準備 (yaml では持てない)
+
+- **App Store Connect API キー**を ASC (Users and Access > Integrations > Team Keys、**App Manager** 権限) で発行 → .p8 + Issuer ID + Key ID を控える (.p8 は**1回だけ DL 可**) → Codemagic の Integrations > Apple Developer Portal に登録。**Codemagic 側の登録名を yaml の `integrations.app_store_connect` と完全一致**させる (ASC 側のキー名とは無関係)。
+- **環境変数グループ**を作り、`--dart-define` で渡したい鍵 (例: RevenueCat 公開キー `appl_xxx`) や `CERTIFICATE_PRIVATE_KEY`、ビルド番号採番用の `APP_STORE_APP_ID` (ASC のアプリ数値 ID) を入れる。
+- **entitlement を使う機能 (Sign in with Apple 等) は、ビルド前に Apple Developer ポータルの App ID で capability を有効化**する。entitlement だけ追加して App ID 側を有効化しないと自動署名が失敗する。
+- ビルド番号は `app-store-connect get-latest-testflight-build-number "$APP_STORE_APP_ID"` + 1 で自動採番できる (iOS の CFBundleVersion は Android と独立、初回は 0→1)。
+- リポジトリ接続は**そのリポジトリを所有する GitHub アカウント**で行う。別アカウント所有の repo は「No repositories available」になる (org なら App を org にインストール、別ユーザー所有なら別 Chrome / シークレットでそのアカウントでログインして Codemagic に入り直す)。
+
+### 10.4 TestFlight + Sandbox 課金テスト (Mac なし) の要点
+
+- **TestFlight は端末の「App Store の Apple ID (設定 > 自分の名前 > メディアと購入)」のビルドだけ表示する**。内部テスターに登録する Apple ID と、iPhone の「メディアと購入」の Apple ID を**一致**させること (不一致だと TestFlight にビルドが出ない)。
+- 内部テスト = Beta 審査不要で即配信。テスターが App Store Connect チームメンバーでない場合は、ユーザを招待 (App Manager 等) → 招待メール承認 → 内部テストグループに追加 → ビルド追加。
+- **TestFlight ビルドの IAP は自動的に「無料 + Sandbox」**。購入シートに通常の Apple ID が出ても**そのまま購入してよい** (課金されない)。**Sandbox テスター account や ID 切替は TestFlight では不要** (Sandbox テスター account は Xcode/直接インストール build 用)。
+- RevenueCat ダッシュボードの Customers 一覧は**集計ラグ**で購入直後は空に見える。**Sandbox 購入は「Sandbox」リスト**に出る (本番用「Active subscription」リストには出にくい)。アプリで Pro が解放された時点で RC は検証済み。Sign in しなければ顧客は `$RCAnonymousID:...` になる。
+- 商品 ID で OS を見分けられる: Google Play = `productId:basePlanId` 形式 (`cosmic_pro_monthly:monthly-auto`)、iOS = `com.<...>.monthly` 形式。価格 (Android ¥1,480 / iOS ¥1,500) でも判別できる。
+
+### 10.5 輸出コンプライアンス (Export Compliance) の罠
+
+- アップロード後 TestFlight で「コンプライアンスがありません」→「管理」で回答。HTTPS + 標準ハッシュのみのアプリは「**標準的な暗号化アルゴリズム**」を選ぶ。
+- 次の「フランスで配信予定?」で **「はい」を選ぶとフランス向けの輸出書類アップロードが要求される**。テスト目的なら **「いいえ」で回避**できる (フランス配信地域は後から「価格と販売状況」で変更可、TestFlight テストには影響なし)。
+- 恒久対応: Info.plist に **`ITSAppUsesNonExemptEncryption = false`** を入れると、以降のビルドでこの質問が出ず、フランス含め書類不要 (= 免除対象の暗号のみ使用、の宣言)。
+
+### 10.6 再利用チェックリスト (新アプリで Mac なし iOS 公開)
+
+- [ ] Codemagic に **Individual** でサインアップ + repo 所有アカウントで接続
+- [ ] `codemagic.yaml` を**リポジトリルート**に置く (モノレポは `working_directory`)
+- [ ] `ios_signing` ブロックは使わず、`fetch-signing-files --create` スクリプト方式
+- [ ] `CERTIFICATE_PRIVATE_KEY` (ssh-keygen RSA2048 PEM) を env に登録
+- [ ] ASC API キー発行 → Codemagic に登録 (名前を yaml と一致)
+- [ ] 使う entitlement の capability を App ID で有効化 (ビルド前)
+- [ ] Info.plist に `ITSAppUsesNonExemptEncryption=false`
+- [ ] ビルド → TestFlight → 内部テスター (= iPhone の Apple ID と一致) → 実機インストール
+- [ ] TestFlight で IAP を無料テスト (ID 切替不要) → RC「Sandbox」リストで確認
+- [ ] 動作確認後 `submit_to_app_store: true` で審査提出
+
+---
+
+## 11. このドキュメント自体のメンテ
 
 新しいアプリ開発で類似機能を実装するたびに、本ドキュメントを更新する:
 - 新しい failure pattern が見つかったら §4 に追加
@@ -652,4 +737,6 @@ Solara App Attest + RC Webhook + Play Integrity S1 で、AI (= 私) が 5+ 回�
 - テンプレが古くなったら §8 を更新
 - 多層防御の ROI 評価表 (§4.2) は機能追加のたびに行追加 (Solara で 5 行追加した実例)
 
-最終更新: 2026-05-20 (Solara Play Integrity S7 = 実装 v1.1 完成 + 実機 R8 突破直後。S7 で「Standard token は Self-managed key で decode 不可、Google decodeIntegrityToken API 必須」と実機判明し方針転換、§1.3 / §4.2 / §5.8 / §6.1 を更新。累計 3 機能 + 実機ハマり知見)
+最終更新: 2026-05-21 (Solara iOS を **Mac なしで Codemagic→TestFlight→iPhone 実機→Sandbox 課金テスト**まで完走。§11「Mac なしで iOS をビルド・App Store 配信する」を新規追加。署名の詰まりどころ3点 = codemagic.yaml はルート必須 / `ios_signing` ブロック不可で `fetch-signing-files --create` 方式 / `CERTIFICATE_PRIVATE_KEY` env 必須。旧 §1.2 の「実機購入テストは Mac 必須」記述を訂正)
+
+その前: 2026-05-20 (Solara Play Integrity S7 = 実装 v1.1 完成 + 実機 R8 突破。§1.3 / §4.2 / §5.8 / §6.1 更新)
