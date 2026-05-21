@@ -1,7 +1,7 @@
 # Codemagic で Solara を Mac なしで App Store へ (オーナー手順書)
 
 > Windows のまま、Mac を一切使わずに Solara を TestFlight → App Store へ出すための手順。
-> リポジトリ側の設定 (`apps/solara/codemagic.yaml` / `Runner.entitlements` / Xcode 署名設定) は
+> リポジトリ側の設定 (`codemagic.yaml` (リポジトリルート) / `Runner.entitlements` / Xcode 署名設定) は
 > 実装済み。このドキュメントは **オーナーが Web UI で行う作業** をまとめたもの。
 >
 > 唯一必要な実機 = **iPhone 14** (iOS 18、Sandbox 課金テスト用)。Mac は不要。
@@ -20,7 +20,7 @@
 ## Step 1. Codemagic サインアップ + リポジトリ接続
 1. https://codemagic.io/ で GitHub アカウントでサインアップ (無料プラン)。
 2. Add application → GitHub → `solodev-lab/ai-omoshiro-tools` を選択。
-3. プロジェクト種別は Flutter。**codemagic.yaml を使う** を選ぶ (リポジトリ内の `apps/solara/codemagic.yaml` が自動で読まれる)。
+3. プロジェクト種別は Flutter。**codemagic.yaml を使う** を選ぶ (リポジトリ内の `codemagic.yaml` (リポジトリルート) が自動で読まれる)。
 
 > 無料枠 = macOS M2 で月500ビルド分 (個人アカウント)。iOS ビルド1回 約8〜15分なので通常は無料で完走できる。
 
@@ -34,7 +34,7 @@
 2. Codemagic → 右上のチーム/ユーザー設定 → **Integrations** → **App Store Connect** → **Add key**。
    - Issuer ID / Key ID / .p8 を登録。
    - **キー名を `Solara ASC Key` にする** (codemagic.yaml の `integrations.app_store_connect` と一致させるため)。
-   - 別名にしたい場合は `apps/solara/codemagic.yaml` の該当行も合わせて変更する。
+   - 別名にしたい場合は `codemagic.yaml` (リポジトリルート) の該当行も合わせて変更する。
 
 ---
 
@@ -88,7 +88,7 @@ Apple Developer → **Certificates, Identifiers & Profiles** → **Identifiers**
 ## Step 7. 審査提出 (TestFlight 確認後)
 1. App Store Connect でアプリの **スクリーンショット** (6.9" / 6.5")、説明、**App プライバシー** を入力。
 2. **In-App Purchase を初回バージョンと同時に審査提出** + IAP のスクショ + 審査メモを添付。
-3. `apps/solara/codemagic.yaml` の `# submit_to_app_store: true` のコメントを外して再ビルド → 自動で審査提出。
+3. `codemagic.yaml` (リポジトリルート) の `# submit_to_app_store: true` のコメントを外して再ビルド → 自動で審査提出。
    - もしくは App Store Connect から手動で「審査へ提出」。
 
 ---
@@ -110,7 +110,7 @@ Apple Developer → **Certificates, Identifiers & Profiles** → **Identifiers**
 ---
 
 ## 関連
-- ワークフロー定義: `apps/solara/codemagic.yaml`
+- ワークフロー定義: `codemagic.yaml` (リポジトリルート)
 - 署名 entitlement: `apps/solara/ios/Runner/Runner.entitlements`
 - dart-define 整合元: `apps/solara/tools/build_release.py` / `apps/solara/docs/build_release.md`
 - ストア商品設定の正典: `apps/solara/docs/store_products_setup.md`

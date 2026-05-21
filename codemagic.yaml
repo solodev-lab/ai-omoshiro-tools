@@ -5,9 +5,10 @@
 #   ビルド・自動署名し、TestFlight (→ App Store) へ提出する。Mac は一切不要。
 #
 # モノレポ注意:
-#   このリポジトリは複数アプリのモノレポ。Solara は apps/solara/ にあるため
-#   working_directory で指定する。Codemagic にはこのリポジトリ全体を接続し、
-#   codemagic.yaml は apps/solara/codemagic.yaml が使われる。
+#   このリポジトリは複数アプリのモノレポ。Solara は apps/solara/ にある。
+#   Codemagic は codemagic.yaml を「リポジトリのルート」でしか検出しないため、
+#   このファイルはルート (E:/AppCreate/codemagic.yaml) に置く。サブフォルダ
+#   (apps/solara) のビルドは下の working_directory で指定する。
 #
 # オーナーが Codemagic UI 側で事前に用意するもの (詳細は docs/codemagic_setup.md):
 #   1. App Store Connect API キーを integrations に登録。下の
