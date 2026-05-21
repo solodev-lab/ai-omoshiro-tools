@@ -284,6 +284,8 @@ if (検証失敗) {
 - 異常なければ `enforced` に切替 (deploy なしで vars update のみ)
 - 攻撃 / 障害時は `disabled` で即時 kill switch
 
+🔴 **log_only は「検証が通るか」ではなく「enforced にしたら弾かれるか」を事前に見る窓**: モニタ中にサーバーログで `would block ... missing_attestation_headers` 等が出たら、それは「**enforced 化したらそのリクエストが 401 で全滅する**」という事前警告。**クライアント側のヘッダー付与漏れ**(= 起動時 initialize 完了前の先行呼び出し / addHeaders の失敗) を enforced 前に必ず潰す。実例 (2026-05 Solara iOS): `/auth/attest` (鍵登録) は成功なのに `/protected/*` の一部で `missing_attestation_headers` が出ていた = per-request assertion の付与漏れ。log_only モニタが無ければ enforced 直後に保護機能が全滅していた。**サーバーログ (CF Observability 等) でクライアントの実挙動を確認する**のが段階リリースの主目的の一つ。
+
 ---
 
 ## 5. Worker ↔ Client 統合の落とし穴
@@ -772,6 +774,29 @@ Solara App Attest + RC Webhook + Play Integrity S1 で、AI (= 私) が 5+ 回�
   - ✅ 具体的: `RC webhook 'Solara Worker' 作成済、URL .../webhooks/revenuecat、Authorization 空=secret 待ち`
 - 各フェーズ開始時にこの記録を読む。「やったことの管理」が抜けると、調査・確認だけで時間を浪費する (= リスク高 / 時間の無駄)。
 
+### 11.5 サインイン (OAuth) のプラットフォーム別セットアップと「アカウント削除」の依存
+
+**🔴 最重要の依存**: アプリ内アカウント削除 (Apple 5.1.1(v)) は「**サインインできること**」が前提。削除ボタンはサインイン中のみ出るので、**サインイン設定が未済だと削除のテストも公開もできない**。サインインは「課金・削除」より**先に着手すべき依存項目**。新アプリでは「サインイン設定」を §11.3 の実行順表の上位に置く。
+
+**プラットフォーム別 OAuth クライアント (互いに独立・別物)**:
+
+| OS / 用途 | 必要なもの | 備考 |
+|---|---|---|
+| Android (Google) | ① Android OAuth client (package + **SHA-1**) ② Web OAuth client (= `serverClientId`) | google_sign_in 7.x は **serverClientId を渡すだけで動く** (google-services.json 不要・コード変更不要、`--dart-define` で注入) |
+| iOS (Apple) | App ID で **Sign in with Apple capability 有効化** + `Runner.entitlements` | 無いと自動署名失敗 or 実機サインイン不可 |
+| iOS (Google、任意) | **iOS OAuth client + URL scheme** (reversed client ID) | Android の SHA-1 とは無関係。別途必要 |
+| 共通 | **Web client (serverClientId) は 1 つを全 OS 共有** | プラットフォーム別 client は別々に要る |
+
+**🔴 SHA-1 は debug と release で別物**: `flutter run` テスト = **debug SHA-1**。Play 配信 = **Play App Signing / アップロード鍵の release SHA-1** を同 Android client に追加登録しないと本番で Google サインインが動かない。両方登録する。
+
+**テストユーザーの罠**: OAuth 同意画面が「Testing」の間は、**登録したテストユーザーのアカウントしかサインインできない** (それ以外は「アクセスをブロック」)。実機でサインインに使うアカウントを必ずテストユーザーに追加する。
+
+**Apple の縛り (Guideline 4.8)**: iOS で第三者サインイン (Google 等) を出すなら **Sign in with Apple も必須**。Android にこの縛りは無い。手軽な逃げ道は「**iOS は Apple のみ表示**」(Google ボタンを iOS でだけ隠す数行)。
+
+**iOS テストは Mac/Codemagic 必須**: Windows の `flutter run` は iPhone 用ビルドを作れない (Apple 制約)。iOS 実機検証は Codemagic → TestFlight。クラッシュ等の**安価な事前確認は Android `flutter run`** で (同一 Flutter コードなので削除フローのクラッシュ有無は Android で先に潰せる)。
+
+**実例 (2026-05 Solara)**: アカウント削除をテストしようとしたら Android で「Google サインイン失敗」→ 調査で google-services.json も OAuth client も無し (= サインイン完全未設定) と判明。サインインは削除の隠れた前提だった。Cloud Console で Android OAuth (debug SHA-1) + Web client を作成 → `--dart-define=SOLARA_GOOGLE_SERVER_CLIENT_ID=<web id>` で `flutter run` → 削除スモーク合格。iOS は Codemagic → TestFlight → Apple サインイン → 削除合格 + CF Observability で `do/account-purge` 実行を確認 (サーバー側削除も成立)。
+
 ---
 
 ## 12. このドキュメント自体のメンテ
@@ -783,8 +808,11 @@ Solara App Attest + RC Webhook + Play Integrity S1 で、AI (= 私) が 5+ 回�
 - テンプレが古くなったら §8 を更新
 - 多層防御の ROI 評価表 (§4.2) は機能追加のたびに行追加 (Solara で 5 行追加した実例)
 - 外部設定の順序 / 依存 / 状態未記録による手戻りが出たら §11 (実行順テンプレ表 + 記録粒度) を更新
+- サインイン / OAuth / 認証の新しい罠が出たら §11.5、log_only モニタの教訓は §4.3 を更新
 
-最終更新: 2026-05-21② (§11「外部設定の実行順序と状態管理」を新規追加。RevenueCat webhook を空 auth で先に作って後で戻り `same url` 重複エラーになった手戻りを契機に、①依存ゼロの `wrangler secret put` を最初にやれば webhook auth を 1 パスで完成できる ②同じ対象を二度触らない ③分割時は「保留」を具体記録する、を順序テンプレ表 §11.3 として一般化。memory `feedback_track_external_dashboard_state.md` と対。なお Mac なし iOS 配信は §10、本メンテ章は §12 に繰り下げ)
+最終更新: 2026-05-21③ (§11.5「サインイン (OAuth) のプラットフォーム別セットアップと『アカウント削除』の依存」を新規追加 + §4.3 に「log_only はクライアントのヘッダー付与漏れを enforced 前に検出する窓」追記。Solara アカウント削除テストで「サインインが削除の隠れた前提」「Android debug/release SHA-1 は別」「google_sign_in 7.x は serverClientId だけで動く」「iOS は Apple のみ表示で逃げられる」「CF Observability で `do/account-purge` のサーバー側削除を確認」「log_only ログの `missing_attestation_headers` が enforced 前の警告」を一般化)
+
+その前: 2026-05-21② (§11「外部設定の実行順序と状態管理」を新規追加。RevenueCat webhook を空 auth で先に作って後で戻り `same url` 重複エラーになった手戻りを契機に、①依存ゼロの `wrangler secret put` を最初にやれば webhook auth を 1 パスで完成できる ②同じ対象を二度触らない ③分割時は「保留」を具体記録する、を順序テンプレ表 §11.3 として一般化。memory `feedback_track_external_dashboard_state.md` と対。なお Mac なし iOS 配信は §10、本メンテ章は §12 に繰り下げ)
 
 その前: 2026-05-21① (Solara iOS を **Mac なしで Codemagic→TestFlight→iPhone 実機→Sandbox 課金テスト**まで完走。§10「Mac なしで iOS をビルド・App Store 配信する」を新規追加。署名の詰まりどころ3点 = codemagic.yaml はルート必須 / `ios_signing` ブロック不可で `fetch-signing-files --create` 方式 / `CERTIFICATE_PRIVATE_KEY` env 必須。旧 §1.2 の「実機購入テストは Mac 必須」記述を訂正)
 

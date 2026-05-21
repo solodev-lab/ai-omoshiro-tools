@@ -57,6 +57,7 @@
 | 435 | 🟡 WARN | lib/screens/horoscope/horo_birth_panel.dart |
 | 423 | 🟡 WARN | lib/screens/observe/observe_history.dart |
 | 422 | 🟡 WARN | lib/utils/consultation_engine.dart |
+| 417 | 🟡 WARN | lib/utils/solara_auth.dart |
 | 413 | 🟡 WARN | lib/screens/map/map_display_menu.dart |
 | 411 | 🟡 WARN | lib/screens/consultation/consultation_place_picker_widgets.dart |
 | 404 | 🟡 WARN | lib/screens/sanctuary/title_history_screen.dart |
@@ -69,7 +70,7 @@
 | 387 | 🟡 WARN | lib/screens/galaxy/constellation_share_card_page.dart |
 | 374 | 🟡 WARN | lib/screens/map/map_direction_popup.dart |
 | 360 | 🟡 WARN | lib/utils/moon_phase.dart |
-| 357 | 🟡 WARN | lib/utils/solara_auth.dart |
+| 354 | 🟡 WARN | lib/widgets/sanctuary_account_section.dart |
 | 353 | 🟡 WARN | lib/screens/consultation/consultation_place_picker_screen.dart |
 | 350 | 🟡 WARN | lib/screens/horoscope/horo_fortune_cards.dart |
 | 319 | 🟡 WARN | lib/screens/galaxy/galaxy_archive_filter.dart |
@@ -88,7 +89,7 @@
   - lib/widgets/celestial_event_bar.dart:63
   - lib/widgets/full_moon_overlay.dart:300
   - lib/widgets/new_moon_overlay.dart:313
-  - lib/widgets/sanctuary_account_section.dart:206
+  - lib/widgets/sanctuary_account_section.dart:248
   ```
   ),
   ```
@@ -312,7 +313,8 @@
 
 ## 4. print()/debugPrint() 残置
 
-✅ なし
+  - lib/utils/solara_auth.dart:320 — `debugPrint(`
+  - lib/utils/solara_auth.dart:324 — `if (kDebugMode) debugPrint('[SolaraAuth] server purge failed: $e');`
 
 ## 5. 未使用 private member 候補 (file 内 reference == 1)
 
@@ -320,4 +322,4 @@
 
 ---
 
-総計: 行数違反 73 / 重複 20 / TODO 4 / print 0 / 未使用候補 0
+総計: 行数違反 74 / 重複 20 / TODO 4 / print 2 / 未使用候補 0
