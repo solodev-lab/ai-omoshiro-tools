@@ -561,33 +561,79 @@ async function protectedMiddleware(request, env) {
 }
 
 /**
- * iOS App Attest 経路: 既存ロジックを関数抽出。
+ * iOS assertion の clientData JSON を検証 (DO/crypto 非依存の純関数 = 単体テスト可能)。
+ *
+ * clientData = JSON({challenge, uid, ts}) (Android の X-PlayIntegrity-ClientData と同形)。
+ *   - challenge: 消費した使い捨て challenge の base64 と一致するか (リプレイ防止の核)
+ *   - ts:        鮮度 (maxSkewMs 以内)
+ *   - uid:       body の __appUserId と一致するか (なりすまし防止)
+ *
+ * @returns {{ok:true}|{ok:false,error:string}}
+ */
+function validateAppleAssertionClientData({
+  clientDataStr,
+  consumedChallengeB64,
+  bodyUid,
+  now = Date.now(),
+  maxSkewMs = 5 * 60 * 1000,
+}) {
+  let cd;
+  try {
+    cd = JSON.parse(clientDataStr);
+  } catch (_e) {
+    return { ok: false, error: 'invalid_apple_clientdata' };
+  }
+  if (!cd || typeof cd !== 'object') return { ok: false, error: 'invalid_apple_clientdata' };
+  if (typeof cd.challenge !== 'string' || cd.challenge !== consumedChallengeB64) {
+    return { ok: false, error: 'challenge_mismatch' };
+  }
+  if (typeof cd.ts !== 'number' || Math.abs(now - cd.ts) > maxSkewMs) {
+    return { ok: false, error: 'clientdata_stale' };
+  }
+  const cdUid = typeof cd.uid === 'string' ? cd.uid : '';
+  if ((bodyUid || '') !== cdUid) return { ok: false, error: 'uid_mismatch' };
+  return { ok: true };
+}
+
+/**
+ * iOS App Attest 経路 (設計 v3.1 = リクエスト毎チャレンジ方式、Android と統一)。
+ *
+ * 端末は protected 呼び出しのたびに /auth/challenge で使い捨て challenge を取得し、
+ * clientData = JSON({challenge, uid, ts}) を App Attest assertion で署名 →
+ * X-AppAttest-{KeyId,Assertion,ClientData,ChallengeId} ヘッダーで送る。
+ * サーバーは assertion 署名検証 → challenge を単回消費 (リプレイ防止) →
+ * clientData の challenge/ts/uid を検証。
+ *
+ * 旧 signCount 厳密増加方式 (counter) は廃止。理由: 占い5本同時など並行リクエストで
+ * 到着順がズレて誤って 401 (sign_count_not_greater) になる盲点があったため。使い捨て
+ * challenge は各リクエストが独立した値を持つので並行でも衝突しない (2026-05-22 切替)。
+ *
+ * clientData は「受信したヘッダー文字列そのもの」を SHA256 する (Android の
+ * X-PlayIntegrity-ClientData と同方式)。サーバー側で base64 を再構築しないので、
+ * バイトズレ (= 前回の fail_nonce_mismatch の原因) が原理的に起きない。
+ *
  * 戻り値: Response (ブロック) / null (log_only 通過) / {keyId} (検証 OK)
  */
 async function verifyAppleAssertionFlow(request, env, payloadBytes, fail) {
   const keyId = request.headers.get('X-AppAttest-KeyId');
   const assertionB64 = request.headers.get('X-AppAttest-Assertion');
+  const clientDataStr = request.headers.get('X-AppAttest-ClientData');
+  const challengeId = request.headers.get('X-AppAttest-ChallengeId');
   if (!keyId || !assertionB64) return fail(401, 'missing_apple_attest_headers');
+  if (!clientDataStr || !challengeId) return fail(401, 'missing_apple_clientdata');
 
   const att = await callDo(env, '/attestation-get', { keyId });
   if (att.status !== 200) return fail(401, 'attestation_not_registered');
   const { publicKeyPem } = att.body;
 
-  // 🔴 clientDataHash 規約 (2026-05-22): プラグイン verify() は
-  //   clientDataHash = SHA256(utf8(base64(payloadBytes)))
-  //   (Flutter _addIosHeaders が base64.encode(payloadBytes) を clientData に渡し、
-  //    plugin AppAttestIntegrityPlugin.swift が SHA256(utf8(clientData)) する)。
-  //   verifyAssertion は payload を SHA256 するだけなので、ここで base64 文字列の
-  //   UTF-8 バイトを渡して端末と一致させる。生 payloadBytes だと nonce 不一致 401。
-  //   ※ extractAppUserId は生 payloadBytes を使うため、別変数にして元は壊さない。
-  const assertionClientData = new TextEncoder().encode(
-    Buffer.from(payloadBytes).toString('base64'),
-  );
+  // assertion 署名検証: clientData ヘッダー文字列の UTF-8 を payload として渡す。
+  // プラグインは clientDataHash = SHA256(utf8(clientData)) で署名するため、受信した
+  // ヘッダー文字列をそのまま hash すれば一致する (再構築のバイトズレ無し)。
   let result;
   try {
     result = verifyAssertion({
       assertion: new Uint8Array(Buffer.from(assertionB64, 'base64')),
-      payload: assertionClientData,
+      payload: new TextEncoder().encode(clientDataStr),
       publicKeyPem,
       bundleIdentifier: env.APPLE_BUNDLE_ID,
       teamIdentifier: env.APPLE_TEAM_ID,
@@ -598,13 +644,21 @@ async function verifyAppleAssertionFlow(request, env, payloadBytes, fail) {
   }
   if (!result.ok) return fail(401, result.error);
 
-  // signCount monotonic bump (DO 内で race-free)
-  const bump = await callDo(env, '/attestation-bump-counter', {
-    keyId,
-    signCount: result.signCount,
+  // 使い捨て challenge を単回消費 (リプレイ防止)。並行リクエストでも各自が別 challenge を
+  // 持つので衝突しない。署名が偽物なら上で弾かれるので、ここでは正規端末分のみ消費する。
+  const consume = await callDo(env, '/challenge-consume', { challengeId });
+  if (consume.status !== 200) {
+    return fail(401, `invalid_challenge: ${consume.body?.error || 'unknown'}`);
+  }
+  // /auth/challenge が送ったのと同じ base64 を再構築 (btoa で完全一致)。
+  const consumedB64 = btoa(String.fromCharCode(...new Uint8Array(consume.body.challengeBytes)));
+
+  const cdCheck = validateAppleAssertionClientData({
+    clientDataStr,
+    consumedChallengeB64: consumedB64,
+    bodyUid: extractAppUserId(payloadBytes),
   });
-  if (bump.status === 409) return fail(401, 'sign_count_not_greater');
-  if (bump.status !== 200) return fail(500, `bump-counter failed: ${bump.body?.error || 'unknown'}`);
+  if (!cdCheck.ok) return fail(401, cdCheck.error);
 
   return { keyId };
 }
@@ -911,6 +965,7 @@ export const _internal = {
   getPlayIntegrityEnforcement,
   extractAppUserId,
   isDiagnosticsBlocked,
+  validateAppleAssertionClientData,
 };
 
 // ── Main Handler ──

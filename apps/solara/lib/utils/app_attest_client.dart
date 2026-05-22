@@ -211,9 +211,11 @@ class AppAttestClient {
 
   /// /protected/* 呼び出し直前に header を注入。
   ///
-  /// iOS 経路:
-  ///   `payloadBytes` (= jsonEncode → utf8.encode した HTTP body そのもの) を
-  ///   base64 化して clientData として渡し、X-AppAttest-KeyId/Assertion を注入。
+  /// iOS 経路 (設計 v3.1、Android と統一):
+  ///   1. /auth/challenge で使い捨て challenge 取得
+  ///   2. clientData = jsonEncode({challenge, uid, ts}) を構築
+  ///   3. verify(clientData) で assertion 取得
+  ///   4. X-AppAttest-KeyId / -Assertion / -ClientData / -ChallengeId を注入
   ///
   /// Android 経路 (S5 追加):
   ///   1. /auth/integrity/challenge で nonce 取得
@@ -239,18 +241,55 @@ class AppAttestClient {
     }
   }
 
+  /// iOS assertion 経路 (設計 v3.1 = リクエスト毎チャレンジ方式、Android と統一)。
+  ///
+  /// 1. /auth/challenge で使い捨て challenge を取得 (Android の nonce と同方式)
+  /// 2. clientData = JSON({challenge, uid, ts}) を構築 (uid は body.__appUserId と同値)
+  /// 3. plugin.verify(clientData) で assertion 取得 (plugin が SHA256(utf8(clientData)) 署名)
+  /// 4. X-AppAttest-KeyId/Assertion/ClientData/ChallengeId を注入
+  ///
+  /// clientData は「文字列そのもの」をヘッダーで送る (Worker は再構築せずヘッダーを直接
+  /// hash する → base64 再構築のバイトズレが起きない)。旧 base64(payload) 方式 + 端末内
+  /// counter は廃止 (並行リクエストで counter 厳密増加が破綻する盲点があったため)。
   Future<void> _addIosHeaders(
       Map<String, String> headers, List<int> payloadBytes) async {
     if (_keyId == null) return;
     try {
-      final clientDataB64 = base64.encode(payloadBytes);
+      // 1. 使い捨て challenge を取得
+      final chRes = await _httpClient.post(Uri.parse(solaraChallengeUrl));
+      if (chRes.statusCode != 200) {
+        throw Exception('challenge fetch failed: ${chRes.statusCode}');
+      }
+      final chBody = json.decode(chRes.body) as Map<String, dynamic>;
+      final challengeId = chBody['challengeId'] as String;
+      final challenge = chBody['challenge'] as String;
+
+      // 2. clientData = JSON({challenge, uid, ts})。uid は body.__appUserId と同値
+      //    (Worker が一致確認 = なりすまし防止)。
+      final uid = PurchasesService.instance.appUserId ?? '';
+      final clientDataStr = json.encode(<String, dynamic>{
+        'challenge': challenge,
+        'uid': uid,
+        'ts': DateTime.now().millisecondsSinceEpoch,
+      });
+
+      // 3. assertion 生成
       final assertionB64 = await _attest.verify(
-        clientData: clientDataB64,
+        clientData: clientDataStr,
         iOSkeyID: _keyId,
       );
       if (assertionB64.isEmpty) throw Exception('verify returned empty string');
+
+      // 4. 4 ヘッダー注入
       headers['X-AppAttest-KeyId'] = _keyId!;
       headers['X-AppAttest-Assertion'] = assertionB64;
+      headers['X-AppAttest-ClientData'] = clientDataStr;
+      headers['X-AppAttest-ChallengeId'] = challengeId;
+
+      // payloadBytes は呼出側が body にそのまま使う (__appUserId は body 側に入っていて
+      // Worker が clientData.uid と一致確認する)。本関数からは参照のみ。
+      // ignore: unused_local_variable
+      final _ = payloadBytes;
     } catch (e) {
       if (kDebugMode) {
         debugPrint('[AppAttest:iOS] addHeaders failed: $e');
@@ -385,6 +424,17 @@ class AppAttestClient {
   Future<void> addAndroidHeadersForTest(
           Map<String, String> headers, List<int> payloadBytes) =>
       _addAndroidHeaders(headers, payloadBytes);
+
+  /// iOS 経路の `_addIosHeaders` を直接呼ぶ (テスト専用)。keyId を注入してから呼ぶ。
+  @visibleForTesting
+  Future<void> addIosHeadersForTest(
+    Map<String, String> headers,
+    List<int> payloadBytes, {
+    required String keyId,
+  }) {
+    _keyId = keyId;
+    return _addIosHeaders(headers, payloadBytes);
+  }
 
   /// Android 経路の `_initializeAndroid` を直接呼ぶ (テスト専用)。
   /// Cloud Project Number 0 でも呼べる (= bypass 判定を経由しない)。

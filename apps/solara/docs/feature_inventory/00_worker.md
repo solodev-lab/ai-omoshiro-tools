@@ -340,7 +340,7 @@ houses: そのカテゴリで重視する伝統占星術のハウス番号
 **export (3):** `computeCategoryScore`, `callGemini`, `handleFortune`
 
 
-### `worker/src/index.js` (917 行)
+### `worker/src/index.js` (1011 行)
 
 **ファイル先頭コメント:**
 
@@ -364,34 +364,34 @@ webhooks/*   外部連携      RevenueCat Webhook (Pro 状態の真の出所)。
 
 | method | path | line |
 | --- | --- | --- |
-| ? | /public/astro/forecast | L605 |
-| ? | /public/tiles/* | L606 |
-| ? | /webhooks/* | L607 |
-| ? | /public/health | L615 |
-| GET | /public/tiles/osm/* | L620 |
-| POST | /public/astro/chart | L625 |
-| POST | /public/astro/forecast | L633 |
-| POST | /public/astro/predict | L648 |
-| POST | /public/astro/daily-transits | L656 |
-| GET | /public/tz | L664 |
-| GET | /public/astro/events | L673 |
-| GET | /public/search | L684 |
-| GET | /auth/whoami | L706 |
-| POST | /auth/challenge | L709 |
-| POST | /auth/attest | L712 |
-| POST | /auth/integrity/challenge | L716 |
-| GET | /auth/integrity/diagnose | L725 |
-| POST | /auth/integrity/decode-test | L738 |
-| POST | /protected/account/delete | L806 |
-| POST | /protected/fortune | L810 |
-| POST | /protected/tarot | L820 |
-| POST | /protected/relocation | L830 |
-| POST | /protected/astro/line-narrative | L842 |
-| POST | /protected/astro/consultation | L852 |
-| ? | /public/* | L899 |
-| ? | /auth/* | L901 |
-| ? | /protected/* | L903 |
-| ? | /webhooks/revenuecat | L905 |
+| ? | /public/astro/forecast | L698 |
+| ? | /public/tiles/* | L699 |
+| ? | /webhooks/* | L700 |
+| ? | /public/health | L708 |
+| GET | /public/tiles/osm/* | L713 |
+| POST | /public/astro/chart | L718 |
+| POST | /public/astro/forecast | L726 |
+| POST | /public/astro/predict | L741 |
+| POST | /public/astro/daily-transits | L749 |
+| GET | /public/tz | L757 |
+| GET | /public/astro/events | L766 |
+| GET | /public/search | L777 |
+| GET | /auth/whoami | L799 |
+| POST | /auth/challenge | L802 |
+| POST | /auth/attest | L805 |
+| POST | /auth/integrity/challenge | L809 |
+| GET | /auth/integrity/diagnose | L818 |
+| POST | /auth/integrity/decode-test | L831 |
+| POST | /protected/account/delete | L899 |
+| POST | /protected/fortune | L903 |
+| POST | /protected/tarot | L913 |
+| POST | /protected/relocation | L923 |
+| POST | /protected/astro/line-narrative | L935 |
+| POST | /protected/astro/consultation | L945 |
+| ? | /public/* | L993 |
+| ? | /auth/* | L995 |
+| ? | /protected/* | L997 |
+| ? | /webhooks/revenuecat | L999 |
 
 **KV 使用 (4 行):**
 
@@ -399,7 +399,7 @@ webhooks/*   外部連携      RevenueCat Webhook (Pro 状態の真の出所)。
 
 **Durable Object 使用 (4 行):**
 
-- 出現行: L224, L224, L224, L866
+- 出現行: L224, L224, L224, L959
 
 **export (1):** `_internal`
 
