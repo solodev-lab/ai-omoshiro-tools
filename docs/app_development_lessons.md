@@ -309,6 +309,22 @@ JSON で起きる罠:
 4. CI チェック: 既知 JSON で両側の SHA-256 hex が完全一致することをテスト
 ```
 
+🔴 **実例: App Attest プラグインの clientDataHash 規約ズレ (2026-05 Solara、半日溶かした)**
+サードパーティ製の App Attest プラグイン (`app_attest_integrity`) は、challenge/clientData を
+**「base64 文字列を UTF-8 にして」SHA256** していた (`SHA256(Data(challenge.utf8))`、Swift)。
+一方サーバーは challenge/payload の**生バイト**を SHA256 していた。両者の clientDataHash が
+食い違い → nonce 不一致 → **全 attestation/assertion が `401 fail_nonce_mismatch`**。
+- 教訓 1: **プラグインの native ソース (Swift/Kotlin) を必ず読んで clientDataHash の作り方を確認する**。
+  「challenge を渡す」だけでは、それが生バイト hash か base64 文字列 hash か分からない。ドキュメントは当てにならない。
+- 教訓 2: 切り分けで **capability / 環境(prod/dev) / rpId を先に疑ったが全部ハズレ**。証明書チェーンは
+  通過していて (Step1 OK)、nonce (Step4) で落ちていた = challenge データの問題と最初から分かるべきだった。
+  **エラーコードを「具体的に」サーバーログに出す** (`fail_nonce_mismatch` 等) のが最短。`would block` の
+  汎用メッセージだけでは原因が分からず、推測で時間を溶かす。
+- 教訓 3: **サーバー側だけで直せた** (検証関数本体は触らず、呼び出し側で `base64(bytes)` の UTF-8 を渡す)。
+  プラグインに合わせる側 = サーバー。クライアント再ビルド不要だった。
+- 教訓 4: テストが node-app-attest の **生バイト規約 fixture** で書かれていたため、テストは通るのに本番で
+  落ちる状態だった。fixture と実プラグインの規約が違うと「緑なのに動かない」が起きる。
+
 ### 5.2 body 二重 read 禁止
 
 HTTP request body は ReadableStream で**一度しか読めない**。middleware で body を読み、handler でまた読もうとすると失敗する。
