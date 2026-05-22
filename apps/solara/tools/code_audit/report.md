@@ -49,6 +49,7 @@
 | 462 | 🟡 WARN | lib/utils/forecast_cache.dart |
 | 461 | 🟡 WARN | lib/screens/consultation/consultation_input_widgets.dart |
 | 460 | 🟡 WARN | lib/screens/galaxy/galaxy_star_atlas.dart |
+| 456 | 🟡 WARN | lib/utils/app_attest_client.dart |
 | 451 | 🟡 WARN | lib/screens/consultation/consultation_input_examples.dart |
 | 447 | 🟡 WARN | lib/screens/sanctuary/class_share_card.dart |
 | 446 | 🟡 WARN | lib/screens/consultation/consultation_result_widgets.dart |
@@ -63,7 +64,6 @@
 | 404 | 🟡 WARN | lib/screens/sanctuary/title_history_screen.dart |
 | 401 | 🟡 WARN | lib/screens/consultation/consultation_input_screen.dart |
 | 397 | 🟡 WARN | lib/screens/observe/observe_history_filter.dart |
-| 396 | 🟡 WARN | lib/utils/app_attest_client.dart |
 | 396 | 🟡 WARN | lib/widgets/cycle_spiral_painter.dart |
 | 395 | 🟡 WARN | lib/utils/title_data.dart |
 | 391 | 🟡 WARN | lib/screens/locations/locations_date_stepper.dart |

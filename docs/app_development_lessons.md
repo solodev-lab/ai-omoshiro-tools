@@ -813,6 +813,43 @@ Solara App Attest + RC Webhook + Play Integrity S1 で、AI (= 私) が 5+ 回�
 
 **実例 (2026-05 Solara)**: アカウント削除をテストしようとしたら Android で「Google サインイン失敗」→ 調査で google-services.json も OAuth client も無し (= サインイン完全未設定) と判明。サインインは削除の隠れた前提だった。Cloud Console で Android OAuth (debug SHA-1) + Web client を作成 → `--dart-define=SOLARA_GOOGLE_SERVER_CLIENT_ID=<web id>` で `flutter run` → 削除スモーク合格。iOS は Codemagic → TestFlight → Apple サインイン → 削除合格 + CF Observability で `do/account-purge` 実行を確認 (サーバー側削除も成立)。
 
+### 11.6 App Attest: clientDataHash の罠と signCount の並行問題
+
+**🔴 clientDataHash の型 (最重要・実機 401 の直接原因)**:
+
+Apple の assertion 検証では、クライアントが送った clientData を **server 側で同じ hash 方式** で処理しなければならない。
+`app_attest_integrity` プラグイン (bam.tech 製) の実際の処理:
+```
+clientDataHash = SHA256( utf8( base64String ) )   // ← base64文字列をhash
+```
+サーバー側で「base64 デコードして raw bytes を hash」すると **永遠に一致しない** → `fail_nonce_mismatch` で全 401。
+
+- **罠**: plugin の README には hash 方式が明記されていない。`clientData: base64String` と書いてあっても「base64 デコード後を hash するか文字列のまま hash するか」は書かれていない。
+- **確認方法**: pub.dev では分からない。**plugin の Swift ソース (`AppAttestIntegrityPlugin.swift`) を直接読む**: `Data(SHA256.hash(data: Data(challenge.utf8)))` で文字列 utf8 を hash していることが確認できる。
+- **診断の鉄則**: 実機テストで 401 が出たら、まず **CF の wrangler tail / Observability でエラーコード (`fail_nonce_mismatch` 等) を取得**してから修正する。理論で先に動くと別の原因を修正してしまう (= 今回の `ce09473` タイミング修正の過ち)。
+
+**🔴 signCount と並行リクエスト (App Attest 特有)**:
+
+Apple の signCount チェック (assertion ごとに counter が前回より大きいこと) は **並行リクエストを想定していない**:
+- 占い 5 本を同時取得すると、5 リクエストが「同じ counter 値」で Apple に届く → `sign_count_not_greater` で全滅
+- Apple 公式ドキュメントも counter チェックは任意 ("Depending on your specific use case, you can skip this step")
+
+**対策: per-request 使い捨てチャレンジ方式 (= Android と同じ)**:
+```
+iOS assertion フロー
+  1. GET /auth/challenge → {challengeId, challenge}
+  2. clientData = JSON({challenge, uid, ts})
+  3. plugin.verify(clientData: clientDataStr) → assertion bytes
+  4. 4 ヘッダーを添付: X-AppAttest-KeyId / X-AppAttest-Assertion / X-AppAttest-ClientData / X-AppAttest-ChallengeId
+  5. server: /challenge-consume で challengeId を消費 (単回使用強制) + JSON の challenge/uid/ts を検証
+```
+- この方式は replay を「challenge の単回消費」で防ぐため signCount 不要
+- iOS / Android の検証フローが統一され、デバッグしやすくなる
+
+**実例 (2026-05 Solara)**:
+1. `fail_nonce_mismatch` → CF tail でエラーコード取得 → plugin Swift ソース確認 → base64 文字列 utf8 hash と判明 → server 側を修正 (`1bf3f03`)
+2. `sign_count_not_greater` → 並行占い 5 本で counter 問題と判明 → Option B per-request に移行 (`3caa3c5`) → 解消確認
+
 ---
 
 ## 12. このドキュメント自体のメンテ
@@ -825,8 +862,11 @@ Solara App Attest + RC Webhook + Play Integrity S1 で、AI (= 私) が 5+ 回�
 - 多層防御の ROI 評価表 (§4.2) は機能追加のたびに行追加 (Solara で 5 行追加した実例)
 - 外部設定の順序 / 依存 / 状態未記録による手戻りが出たら §11 (実行順テンプレ表 + 記録粒度) を更新
 - サインイン / OAuth / 認証の新しい罠が出たら §11.5、log_only モニタの教訓は §4.3 を更新
+- App Attest / Play Integrity の新しい罠が出たら §11.6 を更新
 
-最終更新: 2026-05-21③ (§11.5「サインイン (OAuth) のプラットフォーム別セットアップと『アカウント削除』の依存」を新規追加 + §4.3 に「log_only はクライアントのヘッダー付与漏れを enforced 前に検出する窓」追記。Solara アカウント削除テストで「サインインが削除の隠れた前提」「Android debug/release SHA-1 は別」「google_sign_in 7.x は serverClientId だけで動く」「iOS は Apple のみ表示で逃げられる」「CF Observability で `do/account-purge` のサーバー側削除を確認」「log_only ログの `missing_attestation_headers` が enforced 前の警告」を一般化)
+最終更新: 2026-05-22 (§11.6「App Attest: clientDataHash の罠と signCount の並行問題」を新規追加。clientDataHash = base64文字列をutf8でhashする plugin の実挙動 / signCount+並行で全滅する罠 / per-request challenge 方式への移行 / 「エラーコードを先に取得してから修正」の鉄則を一般化。Solara実例: fail_nonce_mismatch + sign_count_not_greater → Option B で解消)
+
+その前: 2026-05-21③ (§11.5「サインイン (OAuth) のプラットフォーム別セットアップと『アカウント削除』の依存」を新規追加 + §4.3 に「log_only はクライアントのヘッダー付与漏れを enforced 前に検出する窓」追記。Solara アカウント削除テストで「サインインが削除の隠れた前提」「Android debug/release SHA-1 は別」「google_sign_in 7.x は serverClientId だけで動く」「iOS は Apple のみ表示で逃げられる」「CF Observability で `do/account-purge` のサーバー側削除を確認」「log_only ログの `missing_attestation_headers` が enforced 前の警告」を一般化)
 
 その前: 2026-05-21② (§11「外部設定の実行順序と状態管理」を新規追加。RevenueCat webhook を空 auth で先に作って後で戻り `same url` 重複エラーになった手戻りを契機に、①依存ゼロの `wrangler secret put` を最初にやれば webhook auth を 1 パスで完成できる ②同じ対象を二度触らない ③分割時は「保留」を具体記録する、を順序テンプレ表 §11.3 として一般化。memory `feedback_track_external_dashboard_state.md` と対。なお Mac なし iOS 配信は §10、本メンテ章は §12 に繰り下げ)
 

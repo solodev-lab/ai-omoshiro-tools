@@ -1,9 +1,46 @@
 # App Attest サーバー検証 設計ドキュメント
 
-**ステータス**: 確定 v3.0 (App Attest 単体完了) → **v2.2 で RevenueCat 統合** (2026-05-19、`apps/solara/docs/revenuecat_webhook.md` を併読)
+**ステータス**: 確定 **v3.1** (iOS assertion を Android と同じ使い捨てチャレンジ方式に統一、2026-05-22) → v2.2 で RevenueCat 統合
 **対象**: Cloudflare Worker `solara-api` の `/auth/attest` + `/protected/*` ミドルウェア + `/webhooks/revenuecat`
 **前提**: `project_solara_launch_checklist.md` Phase 1 認証ミドルウェア + Webhook 受信
 **関連**: `project_solara_security_principles.md` 原則 1〜3、`revenuecat_webhook.md` (entitlement 連動の詳細はこちら)
+
+### v3.0 → v3.1 の変更点 (2026-05-22、iOS/Android 統一チャレンジ方式)
+
+**背景と問題**:
+- v3.0 の iOS assertion は signCount (単調増加カウンター) で replay 防御していた
+- TestFlight 実機で `sign_count_not_greater` エラー多発: 占い 5 本を並行取得すると counter が同値のまま複数リクエストが走り、Apple 検証が「counter 増加なし → リプレイ」と判定して全滅
+- Apple 公式ドキュメントも "Depending on your specific use case, you can skip this step." と counter チェックの省略を認めている
+
+**解決策 (Option B: 使い捨てチャレンジ統一)**:
+- iOS も Android と同じ `/auth/challenge` → 署名 → 4 ヘッダー送信 → server side challenge 消費の per-request 方式に統一
+- signCount チェックを廃止 (attestKey 登録時の counter bump は維持、assertion 検証時は不使用)
+
+**Flutter クライアント (`app_attest_client.dart`) 変更**:
+```dart
+// _addIosHeaders の新フロー
+// 1. GET /auth/challenge → {challengeId, challenge}
+// 2. clientData = JSON.encode({challenge, uid, ts})  (uid = PurchasesService.instance.appUserId ?? '')
+// 3. assertion = await _attest.verify(clientData: clientDataStr, iOSkeyID: _keyId)
+// 4. headers: X-AppAttest-KeyId, X-AppAttest-Assertion, X-AppAttest-ClientData, X-AppAttest-ChallengeId
+```
+- clientDataHash は plugin 内部で `SHA256(utf8(base64String))` (raw bytes ではない) → サーバー側も同様に処理
+
+**Worker サーバー (`src/index.js` `verifyAppleAssertionFlow`) 変更**:
+- 旧: signCount 読み出し → counter bump → counter チェック
+- 新: 4 ヘッダー読み取り → `/challenge-consume` (challengeId, challengeB64, bodyUid, now の検証)
+  → `validateAppleAssertionClientData()` 純粋関数 (challenge 一致 / stale 判定 / uid 一致)
+  → `verifyAssertion({payload: TextEncoder.encode(clientDataStr), ...})` (signCount 検証スキップ)
+- テスト: `apple_assertion_clientdata.test.js` 11 件全 PASS
+
+**実機検証 (2026-05-22)**:
+- TestFlight ビルド 3 (commit `3caa3c5`) → `/protected/fortune` 5 並行 → `sign_count_not_greater` ゼロ確認
+- `/auth/challenge` + `/protected/fortune` + `challenge-consume` の全ログ info・警告なし
+
+**残作業**:
+- 🔴 オーナー作業: `npx wrangler deploy` → Codemagic 新ビルド → TestFlight → 1 週間 CF ログ確認 → `APP_ATTEST_ENFORCEMENT=enforced`
+
+---
 
 ### v1 → v1.1 の変更点 (2026-05-19)
 - R2 Apple Root CA フィンガープリント確定 (`1CB9823BA28BA6AD2D33A006941DE2AE4F513EF1D4E831B9F7E0FA7B6242C932`、**有効期限 2045-03-15** → 半年更新タスク削除)
