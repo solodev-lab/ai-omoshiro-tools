@@ -171,7 +171,7 @@
   "worker/src/astro.js": "7a12c0735fa544deadcd78bceaa6d85f1904a819",
   "worker/src/auth/app_attest.js": "90bd2f70c04a04c9309699339b54f213ddccbe90",
   "worker/src/auth/apple_root_ca.js": "3792110201f425128bae9acc433bda2c40ab12c1",
-  "worker/src/auth/assertion.js": "0629f72b19250c7528e4cd56878cd472f6b63145",
+  "worker/src/auth/assertion.js": "9ef6401de109791c2f690060d398760da59bda93",
   "worker/src/auth/attestation.js": "d144fd9adc924b73d74097247838535627d000be",
   "worker/src/auth/attestation_state.js": "b73a88f8b7a36dbdef60d4fabc1fb12f573da7b6",
   "worker/src/auth/cbor.js": "0751c73c84124f870506261bb4d426131326132d",

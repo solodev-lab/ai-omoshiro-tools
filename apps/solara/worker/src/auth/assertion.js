@@ -4,15 +4,16 @@
  * /protected/* リクエスト時に DCAppAttestService.generateAssertion() で生成された
  * CBOR を受け取り、署名検証 + rpId 一致 + signCount 抽出。
  *
- * 設計 v1.8 §16.2 payload 正規化規約に従い、caller (Worker middleware) が
- * `request.arrayBuffer()` で取得した raw bytes を payload としてそのまま渡す。
- * Flutter 側は `jsonEncode(map) → utf8.encode → Uint8List` で同一 bytes を生成して
- * HTTP body に置く契約 (これがズレると全 assertion 失敗 = Firebase 0% verified pattern)。
+ * 本関数は汎用: 渡された `payload` bytes を SHA-256 して nonce を作り署名検証する。
+ * caller (index.js verifyAppleAssertionFlow) が「何を payload として渡すか」で規約が決まる。
  *
- * Step 5 (signCount monotonic) と Step 6 (challenge inclusion) の扱い:
- *   - Step 5: 本関数が `signCount` (= 受信した assertion 内の値) を返すので、
- *             caller が DO の前回値と比較して strictly greater を確認 + DO 更新
- *   - Step 6: 設計 v1.8 §16.3 で不採用 (signCount monotonic + DO consume で代替)
+ * 🔴 設計 v3.1 (2026-05-22) でリプレイ防止を counter → リクエスト毎チャレンジに変更:
+ *   - caller は `clientData` (= JSON({challenge, uid, ts}) のヘッダー文字列) の utf8 を
+ *     payload として渡す。プラグインが SHA256(utf8(clientData)) で署名するため一致する。
+ *   - リプレイ防止は caller 側の「使い捨て challenge 単回消費」で行う (本関数が返す
+ *     signCount は参照しない = counter 厳密増加は廃止。並行リクエストで誤 401 になる盲点)。
+ *   - 旧 v1.8: payload = HTTP body raw bytes + signCount monotonic。clientDataHash の
+ *     base64/raw 取り違えで fail_nonce_mismatch、並行で sign_count_not_greater が出た。
  *
  * Reference implementation: node-app-attest (MIT, Copyright (c) 2024 David Übelacker)
  * https://github.com/uebelack/node-app-attest
