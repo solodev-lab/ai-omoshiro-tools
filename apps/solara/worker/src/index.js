@@ -335,16 +335,35 @@ async function handleAuthAttest(request, env, origin) {
   // 1. DO から challenge を取り出して consume (one-time use、replay 防止)
   const ch = await callDo(env, '/challenge-consume', { challengeId });
   if (ch.status !== 200) {
+    console.error(
+      '[auth/attest] challenge consume failed:',
+      ch.status,
+      ch.body?.error || 'unknown',
+      '| challengeId=',
+      String(challengeId).slice(0, 12),
+    );
     return jsonError(401, `invalid_challenge: ${ch.body?.error || 'unknown'}`, origin);
   }
   const challengeBytes = new Uint8Array(ch.body.challengeBytes);
+
+  // 🔴 clientDataHash 規約 (2026-05-22 実機 fail_nonce_mismatch で判明):
+  //   app_attest_integrity プラグイン (ios/Classes/AppAttestIntegrityPlugin.swift) は
+  //     clientDataHash = SHA256(utf8(challengeBase64String))
+  //   で attestKey を呼ぶ。challengeBase64String は /auth/challenge が
+  //     btoa(String.fromCharCode(...challengeBytes))  (標準 base64 + padding)
+  //   で送った文字列そのもの。verifyAttestation は渡された challenge を SHA256 する
+  //   だけなので、ここで「base64 文字列の UTF-8 バイト」を渡して nonce 規約を端末と
+  //   一致させる。生の challengeBytes を渡すと nonce 不一致で 401 になる。
+  const challengeClientData = new TextEncoder().encode(
+    Buffer.from(challengeBytes).toString('base64'),
+  );
 
   // 2. attestation 検証 (9 step + Step 1.5 時刻チェック)
   let attResult;
   try {
     attResult = await verifyAttestation({
       attestation: new Uint8Array(Buffer.from(attB64, 'base64')),
-      challenge: challengeBytes,
+      challenge: challengeClientData,
       keyId,
       bundleIdentifier: env.APPLE_BUNDLE_ID,
       teamIdentifier: env.APPLE_TEAM_ID,
@@ -355,6 +374,16 @@ async function handleAuthAttest(request, env, origin) {
     return jsonError(500, 'attestation_verify_exception', origin);
   }
   if (!attResult.ok) {
+    console.error(
+      '[auth/attest] verification rejected:',
+      attResult.error,
+      '| keyId=',
+      String(keyId).slice(0, 12),
+      '| bundle=',
+      env.APPLE_BUNDLE_ID,
+      '| team=',
+      env.APPLE_TEAM_ID,
+    );
     return jsonError(401, attResult.error, origin);
   }
 
@@ -544,11 +573,21 @@ async function verifyAppleAssertionFlow(request, env, payloadBytes, fail) {
   if (att.status !== 200) return fail(401, 'attestation_not_registered');
   const { publicKeyPem } = att.body;
 
+  // 🔴 clientDataHash 規約 (2026-05-22): プラグイン verify() は
+  //   clientDataHash = SHA256(utf8(base64(payloadBytes)))
+  //   (Flutter _addIosHeaders が base64.encode(payloadBytes) を clientData に渡し、
+  //    plugin AppAttestIntegrityPlugin.swift が SHA256(utf8(clientData)) する)。
+  //   verifyAssertion は payload を SHA256 するだけなので、ここで base64 文字列の
+  //   UTF-8 バイトを渡して端末と一致させる。生 payloadBytes だと nonce 不一致 401。
+  //   ※ extractAppUserId は生 payloadBytes を使うため、別変数にして元は壊さない。
+  const assertionClientData = new TextEncoder().encode(
+    Buffer.from(payloadBytes).toString('base64'),
+  );
   let result;
   try {
     result = verifyAssertion({
       assertion: new Uint8Array(Buffer.from(assertionB64, 'base64')),
-      payload: payloadBytes,
+      payload: assertionClientData,
       publicKeyPem,
       bundleIdentifier: env.APPLE_BUNDLE_ID,
       teamIdentifier: env.APPLE_TEAM_ID,
