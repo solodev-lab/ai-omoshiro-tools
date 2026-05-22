@@ -89,7 +89,7 @@
   "lib/screens/observe/observe_reading_sheet.dart": "e73c07abf23059c3875295cd5d5838bb9d7eab4e",
   "lib/screens/observe/tarot_altar_scene.dart": "537502010145822a9505b8ff12269f40d4ecfb11",
   "lib/screens/observe_screen.dart": "f21690cbfa431f53a24a4ac9a24f1caf4926473b",
-  "lib/screens/paywall_screen.dart": "5090d915380e2a27931aaccb8dd80717e791e4a0",
+  "lib/screens/paywall_screen.dart": "35605c41d39fbad0065d036879a09673da8e82bb",
   "lib/screens/paywall_widgets.dart": "b89cb3fc5ce5b615e7cd4fdaced040ba139e2513",
   "lib/screens/sanctuary/class_share_card.dart": "5ea58827060862b584ec3f373687c93609b62fbf",
   "lib/screens/sanctuary/sanctuary_home_editor.dart": "9e29d2bc6331d49bfcfd17de5cef6e75a09cf8a9",

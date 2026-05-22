@@ -26,6 +26,7 @@ import '../theme/solara_colors.dart';
 import '../utils/legal_urls.dart';
 import '../utils/pro_status.dart';
 import '../utils/purchases_service.dart';
+import '../utils/solara_auth.dart';
 
 part 'paywall_widgets.dart';
 
@@ -76,7 +77,78 @@ class _PaywallScreenState extends State<PaywallScreen> {
     });
   }
 
+  /// 購入 / 復元の前にサインインを強制する。
+  ///
+  /// 設計: 匿名 (未サインイン) で購入すると appUserId が端末固有の匿名 ID になり、
+  /// 再インストール / 機種変更で Pro が迷子になる (端末=Pro / サーバー=Free のズレ)。
+  /// これを防ぐため Pro 取得時のみサインインを要求する。**無料機能は匿名のまま**。
+  /// iOS/macOS = Apple、それ以外 = Google。成功で true、キャンセル/失敗で false。
+  Future<bool> _ensureSignedInForPro() async {
+    if (SolaraAuth.instance.isSignedIn) return true;
+
+    final isApple = !kIsWeb && (Platform.isIOS || Platform.isMacOS);
+    final providerLabel = isApple ? 'Apple' : 'Google';
+
+    // 確認ダイアログ (機能ダイアログ = info_popup ルールの対象外、削除確認と同様)
+    final proceed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: SolaraColors.celestialBlueDark,
+        title: const Text(
+          'サインインが必要です',
+          style: TextStyle(color: SolaraColors.textPrimary, fontSize: 16),
+        ),
+        content: Text(
+          'Cosmic Pro のご利用には $providerLabel サインインが必要です。\n\n'
+          'サインインすると、機種変更や再インストール後もご購入が引き継がれます。'
+          '無料の機能はサインインなしでお使いいただけます。',
+          style: const TextStyle(
+            color: SolaraColors.textSecondary,
+            fontSize: 13,
+            height: 1.5,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text(
+              'キャンセル',
+              style: TextStyle(color: SolaraColors.textSecondary),
+            ),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            style: FilledButton.styleFrom(
+              backgroundColor: SolaraColors.solaraGoldLight,
+              foregroundColor: SolaraColors.celestialBlueDark,
+            ),
+            child: Text('$providerLabel でサインイン'),
+          ),
+        ],
+      ),
+    );
+    if (proceed != true || !mounted) return false;
+
+    try {
+      if (isApple) {
+        await SolaraAuth.instance.signInWithApple();
+      } else {
+        await SolaraAuth.instance.signInWithGoogle();
+      }
+    } on SolaraAuthException catch (e) {
+      if (mounted) _showSnack(e.message);
+      return false;
+    } catch (e) {
+      if (mounted) _showSnack('サインインに失敗しました: $e');
+      return false;
+    }
+    return SolaraAuth.instance.isSignedIn;
+  }
+
   Future<void> _purchase(Package package) async {
+    // 🔴 購入前サインイン必須 (匿名購入による Pro 迷子 = 端末/サーバーのズレ防止)。
+    final signedIn = await _ensureSignedInForPro();
+    if (!signedIn || !mounted) return;
     setState(() {
       _purchasing = true;
       _errorMessage = null;
@@ -109,6 +181,9 @@ class _PaywallScreenState extends State<PaywallScreen> {
   }
 
   Future<void> _restore() async {
+    // 復元も同じくサインイン必須 (復元したエンタイトルメントを安定 uid に紐づける)。
+    final signedIn = await _ensureSignedInForPro();
+    if (!signedIn || !mounted) return;
     setState(() {
       _restoring = true;
       _errorMessage = null;

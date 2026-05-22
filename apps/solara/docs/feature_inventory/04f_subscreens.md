@@ -5,9 +5,9 @@
 
 ## サマリ
 
-- ファイル数: 18 / 総行数: 7607
+- ファイル数: 18 / 総行数: 7682
 - class/mixin/extension/enum: 66
-- 関数 (top-level + method の素拾い): 191
+- 関数 (top-level + method の素拾い): 192
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 5
 - Worker URL リテラル: 0
@@ -676,7 +676,7 @@ orchestration + state management 専担、本ファイルは presentation を担
 - 集計: `showInfoPopup`×1
 
 
-### `lib/screens/paywall_screen.dart` (220 行)
+### `lib/screens/paywall_screen.dart` (295 行)
 
 **ファイル先頭コメント:**
 
@@ -699,31 +699,32 @@ Solara ペイウォール画面 — Phase 2-6b
   - 購入完了 → entitlement listener が ProStatus 更新 → pop で前画面に戻る
 ```
 
-**imports:** dart=1 / package=4 / relative=4
+**imports:** dart=1 / package=4 / relative=5
 
-- relative: `../theme/solara_colors.dart`, `../utils/legal_urls.dart`, `../utils/pro_status.dart`, `../utils/purchases_service.dart`
+- relative: `../theme/solara_colors.dart`, `../utils/legal_urls.dart`, `../utils/pro_status.dart`, `../utils/purchases_service.dart`, `../utils/solara_auth.dart`
 
 **型定義 (2):**
 
-- L32 `class PaywallScreen : StatefulWidget`
-- L39 `class _PaywallScreenState : State`
+- L33 `class PaywallScreen : StatefulWidget`
+- L40 `class _PaywallScreenState : State`
 
-**関数 (4 public + 7 private):**
+**関数 (4 public + 8 private):**
 
-- L36 `createState()`
-- L47 `initState()`
-- L54 `dispose()`
-- L168 `build()`
+- L37 `createState()`
+- L48 `initState()`
+- L55 `dispose()`
+- L243 `build()`
 
-  <details><summary>private 関数 7 件</summary>
+  <details><summary>private 関数 8 件</summary>
 
-  - L59 `_onProStatusChanged()`
-  - L66 `_loadOfferings()`
-  - L79 `_purchase()`
-  - L111 `_restore()`
-  - L135 `_showSnack()`
-  - L145 `_openUrl()`
-  - L153 `_openCancelGuide()`
+  - L60 `_onProStatusChanged()`
+  - L67 `_loadOfferings()`
+  - L86 `_ensureSignedInForPro()`
+  - L148 `_purchase()`
+  - L183 `_restore()`
+  - L210 `_showSnack()`
+  - L220 `_openUrl()`
+  - L228 `_openCancelGuide()`
 
   </details>
 
