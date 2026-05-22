@@ -216,6 +216,17 @@ void main() {
       expect(headers.containsKey('X-PlayIntegrity-Token'), false);
     });
 
+    test('initialize: 複数回呼んでも同一 Future を memoize して返す', () async {
+      // 起動直後の /protected/* 呼び出し (addHeaders 内の await initialize()) が
+      // main.dart の先行 initialize() と同じ初期化完了を共有するための前提。
+      // ここが壊れると keyId/warmup 未完了でヘッダー欠落 = missing_attestation_headers。
+      final client = AppAttestClient.forTesting(attest: const AppAttestIntegrity());
+      final first = client.initialize();
+      final second = client.initialize();
+      expect(identical(first, second), true);
+      await first;
+    });
+
     test('cloudProjectNumberForTest: dart-define 未注入時は 0 (= bypass 条件)', () {
       // テスト実行時は --dart-define を指定していないので 0
       expect(AppAttestClient.cloudProjectNumberForTest, 0);

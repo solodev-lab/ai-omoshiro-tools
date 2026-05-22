@@ -418,7 +418,7 @@
 
 ### 変更されたファイル (層別)
 
-- **層 3a**: `lib/widgets/sanctuary_account_section.dart`
+- **層 2b**: `lib/utils/app_attest_client.dart`
 
 ## #7 astro_glossary 用語辞書対整合
 

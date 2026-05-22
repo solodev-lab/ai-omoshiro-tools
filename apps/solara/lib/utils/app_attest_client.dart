@@ -75,7 +75,7 @@ class AppAttestClient {
   final AppAttestIntegrity _attest;
   final http.Client _httpClient;
   String? _keyId;
-  bool _isInitialized = false;
+  Future<void>? _initFuture;
   bool _isBypassed = false;
   bool _androidPrepared = false;
 
@@ -105,14 +105,18 @@ class AppAttestClient {
     return true; // 想定外プラットフォーム (Windows/macOS/Linux 等)
   }
 
-  /// 起動時 1 回だけ呼ぶ。
+  /// 起動時 1 回だけ呼ぶ (main.dart で unawaited)。
   /// - iOS: keyId を復元 or 新規 attest
   /// - Android: prepareTokenProvider(cloudProjectNumber) で warmup
   /// 失敗してもアプリ起動は止めない (= /protected/* 呼び出し時に再試行可)。
-  Future<void> initialize() async {
-    if (_isInitialized) return;
-    _isInitialized = true;
+  ///
+  /// 初回呼び出しの Future を memoize して共有する。addHeaders/postProtected も
+  /// 内部でこれを await するため、main.dart で await し忘れても起動直後の
+  /// /protected/* 呼び出しが keyId (iOS) / warmup (Android) 完了を待ってから
+  /// ヘッダーを注入できる (= 付与漏れによる missing_attestation_headers を防ぐ)。
+  Future<void> initialize() => _initFuture ??= _doInitialize();
 
+  Future<void> _doInitialize() async {
     if (_shouldBypass) {
       _isBypassed = true;
       debugPrint(
@@ -221,6 +225,12 @@ class AppAttestClient {
   /// 何もしない → Worker 側 log_only モードで通過する想定 (enforced では 401)。
   Future<void> addHeaders(
       Map<String, String> headers, List<int> payloadBytes) async {
+    // initialize() は main.dart で unawaited に呼ばれるため、ここで完了を待つ。
+    // これがないと起動直後の /protected/* 呼び出しが keyId (iOS) / warmup (Android)
+    // 未完了のまま走り、ヘッダー欠落 → Worker で missing_attestation_headers に
+    // なる (2026-05-21 TestFlight log_only で判明)。memoize 済みなので 2 回目以降は
+    // 即 return。
+    await initialize();
     if (_isBypassed) return;
     if (_isIosPath) {
       await _addIosHeaders(headers, payloadBytes);
@@ -385,7 +395,7 @@ class AppAttestClient {
   @visibleForTesting
   void resetForTest() {
     _keyId = null;
-    _isInitialized = false;
+    _initFuture = null;
     _isBypassed = false;
     _androidPrepared = false;
   }

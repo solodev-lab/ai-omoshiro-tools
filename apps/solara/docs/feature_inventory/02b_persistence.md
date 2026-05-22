@@ -5,16 +5,16 @@
 
 ## サマリ
 
-- ファイル数: 8 / 総行数: 2276
+- ファイル数: 8 / 総行数: 2286
 - class/mixin/extension/enum: 13
-- 関数 (top-level + method の素拾い): 99
+- 関数 (top-level + method の素拾い): 100
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 0
 - Worker URL リテラル: 0
 
 ## ファイル別
 
-### `lib/utils/app_attest_client.dart` (396 行)
+### `lib/utils/app_attest_client.dart` (406 行)
 
 **ファイル先頭コメント:**
 
@@ -53,26 +53,27 @@ Worker 側仕様: apps/solara/worker/src/index.js
 - L58 `class AppAttestClient`
   - AppAttestClient シングルトン。
 
-**関数 (9 public + 6 private):**
+**関数 (9 public + 7 private):**
 
-- L112 `initialize()` — 起動時 1 回だけ呼ぶ。
-- L222 `addHeaders()` — /protected/* 呼び出し直前に header を注入。
-- L310 `withAppUserIdMerged()` — 呼び出し側で body Map を構築している場合に使う公開 helper。
-- L315 `postProtected()` — `/protected/*` への POST を attestation header 付きで送る wrapper。
-- L334 `reattestOnFailure()` — 401 で middleware に弾かれた時のリトライ用。
-- L360 `debugPayloadSha256()` — payload bytes の SHA-256 (debug 用、Worker 側計算値との一致確認に使う)。
-- L375 `addAndroidHeadersForTest()`
-- L382 `initializeAndroidForTest()`
-- L386 `resetForTest()`
+- L117 `initialize()` — 起動時 1 回だけ呼ぶ (main.dart で unawaited)。
+- L226 `addHeaders()` — /protected/* 呼び出し直前に header を注入。
+- L320 `withAppUserIdMerged()` — 呼び出し側で body Map を構築している場合に使う公開 helper。
+- L325 `postProtected()` — `/protected/*` への POST を attestation header 付きで送る wrapper。
+- L344 `reattestOnFailure()` — 401 で middleware に弾かれた時のリトライ用。
+- L370 `debugPayloadSha256()` — payload bytes の SHA-256 (debug 用、Worker 側計算値との一致確認に使う)。
+- L385 `addAndroidHeadersForTest()`
+- L392 `initializeAndroidForTest()`
+- L396 `resetForTest()`
 
-  <details><summary>private 関数 6 件</summary>
+  <details><summary>private 関数 7 件</summary>
 
-  - L132 `_initializeIos()`
-  - L150 `_attestNewKey()`
-  - L190 `_initializeAndroid()`
-  - L232 `_addIosHeaders()`
-  - L254 `_addAndroidHeaders()`
-  - L300 `_withAppUserId()`
+  - L119 `_doInitialize()`
+  - L136 `_initializeIos()`
+  - L154 `_attestNewKey()`
+  - L194 `_initializeAndroid()`
+  - L242 `_addIosHeaders()`
+  - L264 `_addAndroidHeaders()`
+  - L310 `_withAppUserId()`
 
   </details>
 

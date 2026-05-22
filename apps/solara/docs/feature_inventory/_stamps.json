@@ -104,7 +104,7 @@
   "lib/screens/solara_philosophy_screen.dart": "82a75b58baca928b507a8b9d1c094dd1d768d2f9",
   "lib/theme/solara_colors.dart": "bd5814fd788fa3614dfa55d5ceb4f7bccfa76b5c",
   "lib/theme/solara_theme.dart": "596cf63264e2973e8163a422670584a441f11cf9",
-  "lib/utils/app_attest_client.dart": "a91a2a25ee92e8ad4504b2a67dbb8e399d9bd25c",
+  "lib/utils/app_attest_client.dart": "6c99dbc1af001e3c37d2e4f23f06ee75e4c4b0b1",
   "lib/utils/app_locale.dart": "cb10a55d0349105a17510a45f5b0c2e7ff8da774",
   "lib/utils/astro_glossary.dart": "800c1df90f0deddd09f4fd98e80c0566d6823b80",
   "lib/utils/astro_houses.dart": "b022185eb2f75ac40a8dd5ddd9f843166f647063",
