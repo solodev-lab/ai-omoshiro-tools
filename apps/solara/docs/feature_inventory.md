@@ -44,7 +44,7 @@ Solara のバックエンドは **Cloudflare Workers** で稼働。本番 URL: `
 | 役割 | 例 | 設計上の特徴 |
 |---|---|---|
 | **天体計算 (純数学)** | `/astro/chart`, `/astro/forecast`, `/astro/daily-transits`, `/astro/events`, `/tz` | `astronomy-engine` npm に依存。理論上は Dart 完結も可能 (実際に `astro_houses.dart`, `astro_lines.dart` は Dart 移植済み)。**Pro 機能の境界としては「無料公開層」になりやすい** |
-| **AI narrative 仲介 (Gemini)** | `/fortune`, `/tarot`, `/relocation`, ~~`/astro/line-narrative`~~ | Gemini API key 秘匿のため Worker 必須。**課金で守るべき最大の対象** — 1 リクエスト = Gemini コスト発生 |
+| **AI narrative 仲介 (Gemini)** | `/fortune`, `/tarot`, `/relocation`, `/astro/consultation`, ~~`/astro/line-narrative`~~ | Gemini API key 秘匿のため Worker 必須。**課金で守るべき最大の対象** — 1 リクエスト = Gemini コスト発生。`/astro/consultation` は Free 試食クレジット制 (下記 0.2.1) |
 | **検索プロキシ** | `/search` | Google Places (主) + Nominatim (フォールバック)。Google Places は月 1 万 req 無料枠 |
 | **地図タイル中継** | `/tiles/osm/*` | OSM 系を Worker UA で取得、edge cache 24h。アプリ直叩きだと 403 (UA 不足) |
 
@@ -60,6 +60,47 @@ Solara のバックエンドは **Cloudflare Workers** で稼働。本番 URL: `
 - App Attest / Play Integrity でアプリ改変対策
 - RevenueCat Trusted Entitlements `.enforced` でクライアント単独 isPro 判定禁止
 - Gemini 呼出 4 系 (`/fortune`, `/tarot`, `/relocation`, future) を `/protected/*` 配下へ
+
+### 0.2.1 Stella 相談 クレジット制 (2026-05-23、設計 `project_solara_stella_free_credits.md`)
+
+`/protected/astro/consultation` は「Free に試食枠を開いた看板 Gemini 機能」。**1 クレジット = Stella 生成 1 回**
+(初回も出し直しも消費)。設計詳細は
+[`project_solara_stella_free_credits.md`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/project_solara_stella_free_credits.md)。
+
+- **品質**: Free も Pro も同等 (thinking ON・全モード・出し直し可)。違いは**回数だけ**。
+- **消費順 (非 Pro)**: 無料週次クレジット → 使い切ったら購入残高。両方尽きたら 402。
+  - **無料週次**: `CONSULTATION_FREE_WEEKLY` (default 3)、端末 ID × ISO 週 (月曜 UTC リセット)。
+    端末 ID = iOS `ios:{keyId}` / それ以外 `usr:{appUserId}` (再インストール farming 耐性)。
+  - **購入残高**: 消費型 IAP。**アカウント appUserId 紐付け** (サインイン必須、機種変で失わない)。失効しない。
+- **モード制限**: `CONSULTATION_FREE_MODES` (default 全3) = 非 Pro がアクセスできるモード。対象外は 402
+  `consultation_pro_only_mode`。env で `daily` だけ等に絞れる。
+- **Pro**: 無制限 (クレジット消費なし)。
+- **消費タイミング**: 実際に Stella 生成が成功した時だけ (静的 fallback は消費しない)。
+- **ゲート**: `index.js` `gateConsultation` (middleware 通過後・生成前)。`consultationCreditStatus` が残数を算出
+  (生成レスポンスへの添付 + 状況 endpoint で共用)。
+- **DO 表/endpoint**:
+  - `consultation_credits` (無料週次) + `/consultation-credit-get` `/consultation-credit-bump`
+  - `consultation_purchased` (購入残高) + `/consultation-purchased-get` `/consultation-purchased-spend`
+    `/consultation-credit-grant` (RC Webhook から付与、event_id 冪等)
+- **付与経路**: RC Webhook `NON_RENEWING_PURCHASE` で `product_id` が `CONSULTATION_CREDIT_PRODUCTS`
+  ("商品ID:付与数" CSV) にあれば残高 +N (`revenuecat.js`、cosmic_pro entitlement とは無関係に処理)。
+- **状況 endpoint**: `/protected/consultation/credits` → {pro, freeRemaining, freeLimit, purchasedBalance}。
+  クライアントの残数表示・購入後の残高更新に使う。
+- **コスト多層防御**: 相談は middleware の日次クォータ (Free5/Pro100) も 1 消費 (週次/購入とは別軸のバックストップ)。
+- **クライアント**: 入口 Pro ゲート撤廃 (Free も入力画面へ)、結果画面に残数バナー + 402 で
+  「追加クレジット購入 / Cosmic Pro」box、`consultation_credit_sheet.dart` が消費型購入シート
+  (3個/10個 + Pro 誘導、購入前サインイン必須、付与は Webhook ラグをポーリングで吸収)。
+
+#### タロットカテゴリ (同じクレジット財布、2026-05-23 追加)
+**1 クレジット = AI 占い 1 回**は相談とタロットで共通 (同じ財布)。`/protected/tarot` も
+共通ゲート (`consumeReadingCreditGate` / `consumeReadingCredit`) を使う:
+- **全体運 (category なし)**: 従来通り無料・1 日 1 回 (client `_alreadyDrawnToday`)。クレジット消費なし。
+- **カテゴリ指定 (love/money/work/communication/healing/newStart)**: 非 Pro は 1 クレジット消費
+  (無料週次→購入残高)。Pro は無制限。`tarot.js` がカテゴリを prompt に反映。
+- 402 (クレジット切れ) → `fortune_api.TarotReading.creditExhausted` → `observe_screen` が
+  購入/Pro シート (相談と共通の `showConsultationCreditSheet`) を出す。
+- 自由記入欄 (question) は引き続き Pro 限定 (A3、`observe_question_field`)。
+- 共通ゲートは `consultation_*` の DO 表/env をそのまま共用 (履歴的命名だが汎用「占いクレジット」)。
 
 ### 0.3 エンドポイント一覧 (13 個)
 
@@ -410,6 +451,8 @@ Solara のバックエンドは **Cloudflare Workers** で稼働。本番 URL: `
 | `FortuneReading` | `fortune_api.dart` | `/fortune` のレスポンス (Gemini 生成の占い文) |
 | `RelocationNarrative` | `fortune_api.dart` | `/relocation` のレスポンス (リロケーション解説) |
 | `TarotReading` | `fortune_api.dart` | `/tarot` のレスポンス (1 枚引き Reading) |
+| `ConsultationReading` | `consultation_api.dart` | `/astro/consultation` の Stella 解釈 (intro/candidates/outro) |
+| `ConsultationResult` | `consultation_api.dart` | `fetchConsultation` の戻り (成功 reading / 402 `ConsultationBlock` / 接続失敗を区別)。Free 残量 `freeCreditsRemaining`/`freeCreditsLimit` 同梱 (0.2.1 試食クレジット) |
 
 ### 2a.6 機械抽出への参照
 

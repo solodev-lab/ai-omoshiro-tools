@@ -188,11 +188,22 @@ class TarotReading {
   final String reading;
   final String lang;
 
+  /// カテゴリ指定でクレジットが尽きて 402 で弾かれた場合 true (reading は空)。
+  /// 呼び出し側は静的 fallback ではなく購入/Pro 導線を出す。
+  final bool creditExhausted;
+
+  /// 非 Pro のクレジット残数 (カテゴリ指定時のみ非 null)。
+  final int? freeCreditsRemaining;
+  final int? purchasedBalance;
+
   const TarotReading({
     required this.cardId,
     required this.reversed,
     required this.reading,
     required this.lang,
+    this.creditExhausted = false,
+    this.freeCreditsRemaining,
+    this.purchasedBalance,
   });
 
   factory TarotReading.fromJson(Map<String, dynamic> j) => TarotReading(
@@ -200,6 +211,8 @@ class TarotReading {
         reversed: j['reversed'] as bool? ?? false,
         reading: j['reading'] as String? ?? '',
         lang: j['lang'] as String? ?? 'ja',
+        freeCreditsRemaining: (j['freeCreditsRemaining'] as num?)?.toInt(),
+        purchasedBalance: (j['purchasedBalance'] as num?)?.toInt(),
       );
 }
 
@@ -224,6 +237,9 @@ Future<TarotReading?> fetchTarotReading({
   //   question (任意) で「相談者のテーマ」をプロンプトに織り込む (200 字 cap)。
   bool thinking = false,
   String? question,
+  // カテゴリ (overall=null。love/money/work/communication/healing/newStart)。
+  // 指定すると非 Pro は 1 クレジット消費。Pro は無制限。
+  String? category,
 }) async {
   try {
     final cleanQuestion = question?.trim();
@@ -243,6 +259,7 @@ Future<TarotReading?> fetchTarotReading({
         'question': cleanQuestion.length > 200
             ? cleanQuestion.substring(0, 200)
             : cleanQuestion,
+      if (category != null && category.isNotEmpty) 'category': category,
     };
     final res = await AppAttestClient.instance.postProtected(
       solaraTarotUrl,
@@ -252,6 +269,16 @@ Future<TarotReading?> fetchTarotReading({
     if (res.statusCode == 200) {
       return TarotReading.fromJson(
         json.decode(res.body) as Map<String, dynamic>,
+      );
+    }
+    // 402 = カテゴリ指定でクレジット切れ → 静的 fallback ではなく購入/Pro 導線へ
+    if (res.statusCode == 402) {
+      return TarotReading(
+        cardId: cardId,
+        reversed: reversed,
+        reading: '',
+        lang: lang,
+        creditExhausted: true,
       );
     }
   } catch (_) {

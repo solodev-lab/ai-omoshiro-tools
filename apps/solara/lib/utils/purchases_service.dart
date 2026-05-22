@@ -38,6 +38,10 @@ class PurchasesService {
   /// ダッシュボードで `cosmic_pro` を作成し、サブスクプロダクトを紐づける前提。
   static const String entitlementId = 'cosmic_pro';
 
+  /// 消費型 Stella クレジットの Offering 識別子 (RevenueCat ダッシュボードで作成)。
+  /// この Offering に small (3個) / large (10個) の消費型 Package を紐づける前提。
+  static const String creditsOfferingId = 'credits';
+
   /// --dart-define で渡される iOS 用 API キー (appl_ プレフィックス)。
   static const String _iosApiKey =
       String.fromEnvironment('SOLARA_RC_IOS_KEY', defaultValue: '');
@@ -168,6 +172,21 @@ class PurchasesService {
     } catch (e) {
       if (kDebugMode) {
         debugPrint('[PurchasesService] getOfferings 失敗: $e');
+      }
+      return null;
+    }
+  }
+
+  /// 消費型 Stella クレジットの Offering を取得 (未配信 / 未 configure は null)。
+  /// `creditsOfferingId` の Offering を返す。クレジット購入シートが packages を出す。
+  Future<Offering?> getCreditOffering() async {
+    if (!_configured) return null;
+    try {
+      final offerings = await Purchases.getOfferings();
+      return offerings.all[creditsOfferingId];
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('[PurchasesService] getCreditOffering 失敗: $e');
       }
       return null;
     }

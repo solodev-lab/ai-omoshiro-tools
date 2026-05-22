@@ -6,12 +6,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:solara/screens/consultation/consultation_input_screen.dart';
 import 'package:solara/screens/consultation/consultation_result_screen.dart';
 import 'package:solara/utils/astro_lines.dart' as al;
 import 'package:solara/utils/consultation_api.dart';
 import 'package:solara/utils/consultation_engine.dart';
+import 'package:solara/utils/pro_status.dart';
 
 List<al.AstroLine> _buildSyntheticLines() {
   // Venus MC (139.7E、Tokyo 直上)
@@ -65,6 +67,12 @@ ConsultationReading _mockReading(List<CandidateLocation> cands) {
 }
 
 void main() {
+  setUp(() async {
+    TestWidgetsFlutterBinding.ensureInitialized();
+    SharedPreferences.setMockInitialValues({});
+    await ProStatus.instance.resetForTest(isPro: false);
+  });
+
   testWidgets('Input screen renders all required sections', (tester) async {
     await tester.pumpWidget(
       MaterialApp(
@@ -221,8 +229,10 @@ void main() {
     expect(find.textContaining('を見ます'), findsOneWidget);
   });
 
-  testWidgets('Result screen shows mock reading and PageView',
+  testWidgets('Result screen shows mock reading and PageView (Pro: refresh visible)',
       (tester) async {
+    // 出し直しは Pro 限定なので Pro に設定
+    await ProStatus.instance.resetForTest(isPro: true);
     final lines = filterThemeLines(_buildSyntheticLines(), 'love');
     final cands = candidatesForWorld(themeLines: lines, count: 3);
     expect(cands.length, 3);
@@ -243,7 +253,7 @@ void main() {
             String freeText = '',
             List<String> excluded = const [],
           }) async =>
-              _mockReading(candidates),
+              ConsultationResult(reading: _mockReading(candidates)),
         ),
       ),
     );
@@ -256,8 +266,111 @@ void main() {
     // 最初の候補名が出ている
     expect(find.text(cands.first.nameJP), findsOneWidget);
 
-    // refresh ボタンがある (regenerateCandidates が非 null)
+    // refresh ボタンがある (Pro かつ regenerateCandidates が非 null)
     expect(find.text('もう一度候補を出す'), findsOneWidget);
+  });
+
+  testWidgets('Result screen shows refresh for Free + 残量バナー (出し直しもクレジット消費)',
+      (tester) async {
+    // Free でも出し直しボタンは出る (1 クレジット消費)
+    final lines = filterThemeLines(_buildSyntheticLines(), 'love');
+    final cands = candidatesForWorld(themeLines: lines, count: 3);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: ConsultationResultScreen(
+          theme: 'love',
+          mode: 'travel',
+          scope: 'world',
+          initialCandidates: cands,
+          regenerateCandidates: (excl) async => cands,
+          fetchOverride: ({
+            required theme,
+            required mode,
+            required scope,
+            required candidates,
+            String freeText = '',
+            List<String> excluded = const [],
+          }) async =>
+              ConsultationResult(
+            reading: _mockReading(candidates),
+            freeCreditsRemaining: 2,
+            freeCreditsLimit: 3,
+            purchasedBalance: 0,
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // 出し直しボタンは Free でも出る
+    expect(find.text('もう一度候補を出す'), findsOneWidget);
+    // 残量バナーが出る
+    expect(find.textContaining('今週の無料相談 あと2回'), findsOneWidget);
+  });
+
+  testWidgets('Result screen banner shows purchased balance',
+      (tester) async {
+    final lines = filterThemeLines(_buildSyntheticLines(), 'love');
+    final cands = candidatesForWorld(themeLines: lines, count: 3);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: ConsultationResultScreen(
+          theme: 'love',
+          mode: 'travel',
+          scope: 'world',
+          initialCandidates: cands,
+          fetchOverride: ({
+            required theme,
+            required mode,
+            required scope,
+            required candidates,
+            String freeText = '',
+            List<String> excluded = const [],
+          }) async =>
+              ConsultationResult(
+            reading: _mockReading(candidates),
+            freeCreditsRemaining: 0,
+            freeCreditsLimit: 3,
+            purchasedBalance: 7,
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.textContaining('購入残高 7回'), findsOneWidget);
+  });
+
+  testWidgets('Result screen shows credit purchase + Pro box when exhausted',
+      (tester) async {
+    final lines = filterThemeLines(_buildSyntheticLines(), 'love');
+    final cands = candidatesForWorld(themeLines: lines, count: 3);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: ConsultationResultScreen(
+          theme: 'love',
+          mode: 'travel',
+          scope: 'world',
+          initialCandidates: cands,
+          fetchOverride: ({
+            required theme,
+            required mode,
+            required scope,
+            required candidates,
+            String freeText = '',
+            List<String> excluded = const [],
+          }) async =>
+              const ConsultationResult(block: ConsultationBlock.creditExhausted),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('相談クレジットを使い切りました'), findsOneWidget);
+    expect(find.text('追加クレジットを購入'), findsOneWidget);
+    expect(find.text('✦ Cosmic Pro で無制限にする'), findsOneWidget);
   });
 
   testWidgets('Result screen shows fallback banner when API returns fallback',
@@ -280,12 +393,14 @@ void main() {
             String freeText = '',
             List<String> excluded = const [],
           }) async =>
-              ConsultationReading(
-            intro: 'fallback intro',
-            candidates: const [],
-            outro: 'fallback outro',
-            model: 'fallback',
-            fallback: true,
+              const ConsultationResult(
+            reading: ConsultationReading(
+              intro: 'fallback intro',
+              candidates: [],
+              outro: 'fallback outro',
+              model: 'fallback',
+              fallback: true,
+            ),
           ),
         ),
       ),
@@ -295,7 +410,7 @@ void main() {
     expect(find.text('Stella の声が届きませんでした (静的表示)'), findsOneWidget);
   });
 
-  testWidgets('Result screen shows error UI when API returns null',
+  testWidgets('Result screen shows error UI on network failure',
       (tester) async {
     final lines = filterThemeLines(_buildSyntheticLines(), 'love');
     final cands = candidatesForWorld(themeLines: lines, count: 3);
@@ -315,7 +430,7 @@ void main() {
             String freeText = '',
             List<String> excluded = const [],
           }) async =>
-              null,
+              const ConsultationResult(), // reading も block も無し = 接続失敗
         ),
       ),
     );

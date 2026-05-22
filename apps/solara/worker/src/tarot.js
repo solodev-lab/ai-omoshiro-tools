@@ -21,6 +21,24 @@ const ELEMENT_JP = {
   fire: '火', water: '水', air: '風', earth: '地',
 };
 
+// カテゴリ (クレジット消費で指定する占いテーマ。Stella 相談の theme と同じ語彙)。
+const CATEGORY_JP = {
+  love: '恋愛・関係',
+  money: '豊かさ・お金',
+  work: '仕事・キャリア',
+  communication: '対話・学び',
+  healing: '癒し・休息',
+  newStart: '変化・新たな出発',
+};
+const CATEGORY_EN = {
+  love: 'Love & relationships',
+  money: 'Wealth & money',
+  work: 'Work & career',
+  communication: 'Communication & learning',
+  healing: 'Healing & rest',
+  newStart: 'Change & new beginnings',
+};
+
 // 月相を 8 段階の名前に分類（0〜29.53）
 function moonPhaseLabel(p, lang) {
   const day = p % 29.53;
@@ -105,7 +123,7 @@ async function callGemini(apiKey, prompt, models, { retries = 2, thinkingBudget 
 // 🔴 コンテンツ安全性:
 //   - 医療・法律・自傷に関わる断定的なアドバイスをしない
 //   - 必要に応じて専門家への相談を勧める
-function buildPrompt({ cardId, reversed, nameJP, nameEN, keyword, element, planet, moonPhase, userName, lang, question }) {
+function buildPrompt({ cardId, reversed, nameJP, nameEN, keyword, element, planet, moonPhase, userName, lang, question, category }) {
   const orientation = reversed
     ? (lang === 'en' ? 'Reversed' : '逆位置')
     : (lang === 'en' ? 'Upright' : '正位置');
@@ -122,9 +140,16 @@ function buildPrompt({ cardId, reversed, nameJP, nameEN, keyword, element, plane
   const cleanQuestion = (typeof question === 'string')
     ? question.replace(/\s+/g, ' ').trim().slice(0, 200)
     : null;
+  // category は enum (CATEGORY_JP のキー) のみ採用。未知値は無視。
+  const validCategory = (typeof category === 'string' && CATEGORY_JP[category])
+    ? category
+    : null;
 
   if (lang === 'en') {
     const cardName = nameEN || nameJP;
+    const categorySection = validCategory
+      ? `\n\n── Today's focus ──\nRead "${cardName}" specifically in the context of: ${CATEGORY_EN[validCategory]}.`
+      : '';
     const questionSection = cleanQuestion
       ? `
 
@@ -139,7 +164,7 @@ Do NOT give definitive medical, legal, or self-harm advice. If the theme touches
     return `You are a wise tarot reader with a poetic voice.
 Today's card: "${cardName}" (${orientation})
 Keyword: ${keyword}
-Element: ${elementLabel}${planetLabel ? `\nRuling planet: ${planetLabel}` : ''}${moonLabel ? `\nMoon phase: ${moonLabel}` : ''}${cleanName ? `\nQuerent name: ${cleanName}` : ''}${questionSection}
+Element: ${elementLabel}${planetLabel ? `\nRuling planet: ${planetLabel}` : ''}${moonLabel ? `\nMoon phase: ${moonLabel}` : ''}${cleanName ? `\nQuerent name: ${cleanName}` : ''}${categorySection}${questionSection}
 
 🔴 CRITICAL: The card is "${cardName}". Do NOT substitute it with any other card name (e.g. "Wheel of Fortune", "The Sun"). Names like "Death", "The Devil", "The Tower" are traditional tarot symbols of transformation; keep them verbatim. The reading MUST mention "${cardName}" in its opening sentence.
 
@@ -154,6 +179,9 @@ Return ONLY a JSON object with this exact field (no markdown, no extra text):
   }
 
   // 日本語
+  const categorySection = validCategory
+    ? `\n\n── 今日の占いカテゴリ ──\n「${nameJP}」を「${CATEGORY_JP[validCategory]}」の文脈で読み解いてください。`
+    : '';
   const questionSection = cleanQuestion
     ? `
 
@@ -171,7 +199,7 @@ Return ONLY a JSON object with this exact field (no markdown, no extra text):
   return `あなたは詩的な語り口を持つ熟練のタロット占い師です。
 本日のカード: 「${nameJP}」（${orientation}）
 キーワード: ${keyword}
-エレメント: ${elementLabel}${planetLabel ? `\n対応天体: ${planetLabel}` : ''}${moonLabel ? `\n月相: ${moonLabel}` : ''}${cleanName ? `\n相談者の名前: ${cleanName}（呼びかけは「${cleanName}さん」とすること。それ以外の名前を勝手に作らない）` : ''}${questionSection}
+エレメント: ${elementLabel}${planetLabel ? `\n対応天体: ${planetLabel}` : ''}${moonLabel ? `\n月相: ${moonLabel}` : ''}${cleanName ? `\n相談者の名前: ${cleanName}（呼びかけは「${cleanName}さん」とすること。それ以外の名前を勝手に作らない）` : ''}${categorySection}${questionSection}
 
 🔴 最重要ルール:
 - カード名は「${nameJP}」です。別のカード名（「運命の輪」「太陽」等）に絶対に置き換えないでください。
@@ -209,6 +237,9 @@ export async function handleTarot(body, env) {
     // Sign in + サーバ検証で二重防御に格上げ予定 (project_solara_security_principles)。
     thinking = false,
     question,
+    // カテゴリ (クレジット消費でユーザーが指定する占いテーマ。enum、未知値は無視)。
+    // 未指定なら従来の「全体運」。
+    category,
   } = body;
 
   if (typeof cardId !== 'number' || cardId < 0 || cardId > 77) {
@@ -227,7 +258,7 @@ export async function handleTarot(body, env) {
   const fallback = env.TAROT_MODEL_FALLBACK || 'gemini-flash-latest';
   const models = primary === fallback ? [primary] : [primary, fallback];
 
-  const prompt = buildPrompt({ cardId, reversed, nameJP, nameEN, keyword, element, planet, moonPhase, userName, lang, question });
+  const prompt = buildPrompt({ cardId, reversed, nameJP, nameEN, keyword, element, planet, moonPhase, userName, lang, question, category });
   const raw = await callGemini(env.GEMINI_API_KEY, prompt, models, {
     thinkingBudget: thinking ? 1024 : null,
   });

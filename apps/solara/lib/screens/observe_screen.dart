@@ -11,12 +11,14 @@ import '../utils/tarot_data.dart';
 import '../widgets/pro_unlock_dialog.dart';
 import '../widgets/tap_to_unfocus.dart';
 
+import 'consultation/consultation_credit_sheet.dart';
 import 'observe/observe_constants.dart';
 import 'observe/observe_card_widgets.dart';
 import 'observe/observe_history.dart';
 import 'observe/tarot_altar_scene.dart';
 
 part 'observe/observe_question_field.dart';
+part 'observe/observe_category_selector.dart';
 
 /// Tarot Draw screen — matches tarot.html exactly.
 /// Layout: Inner tabs (TAROT DRAW / HISTORY) → Card scene → Tap hint → Reading panel
@@ -35,6 +37,19 @@ class _ObserveScreenState extends State<ObserveScreen>
   bool _alreadyDrawnToday = false;
   bool _readingLoading = false; // /tarot 呼び出し中
   bool _readingFromApi = false; // true=Stella の声 / false=静的fallback
+
+  /// 選択中の占いカテゴリ (null = 全体運。指定すると非Pro は 1 クレジット消費)。
+  String? _selectedCategory;
+
+  /// 最後の API 応答から得た残数 (非Pro のカテゴリ占い後に表示)。
+  int? _tarotFreeRemaining;
+  int? _tarotPurchased;
+  // カテゴリ選択肢 (_tarotCategories) と selector UI は
+  // observe/observe_category_selector.dart (part, extension) に分離。
+
+  /// カテゴリ選択 (part extension から setState を呼ぶための転送。
+  /// setState は @protected で extension から直接呼べないため State 本体に置く)。
+  void _selectCategory(String? key) => setState(() => _selectedCategory = key);
 
   // ローディング演出: 4つのメッセージを4秒ごとに切り替え
   static const _loadingMessages = [
@@ -150,7 +165,13 @@ class _ObserveScreenState extends State<ObserveScreen>
   }
 
   Future<void> _drawCard() async {
-    if (_alreadyDrawnToday) return;
+    if (_readingLoading) return;
+    final isPro = ProStatus.instance.isPro;
+    final category = _selectedCategory; // null = 全体運
+    final isCategoryDraw = category != null;
+
+    // 無料の全体運のみ 1 日 1 回。カテゴリ (クレジット消費) と Pro は対象外。
+    if (!isCategoryDraw && !isPro && _alreadyDrawnToday) return;
 
     final rng = Random();
     final card = TarotData.allCards[rng.nextInt(78)];
@@ -165,19 +186,17 @@ class _ObserveScreenState extends State<ObserveScreen>
       _drawnCard = card;
       _drawnReversed = reversed;
       _cardFlipped = true;
-      _alreadyDrawnToday = true;
       _readingLoading = true;
+      // 全体運(無料)のみ「本日引き済み」を立てる。カテゴリ/Pro は何度でも。
+      if (!isCategoryDraw && !isPro) _alreadyDrawnToday = true;
     });
     _startLoadingMessageRotation();
 
     _flipCtrl.forward();
 
     // Pro なら質問欄をここで先に評価 (一時保存にも反映するため、API 前に取得)。
-    final isPro = ProStatus.instance.isPro;
     final question = isPro ? _questionController.text.trim() : '';
 
-    // 一時保存（後で API 応答で更新）
-    // Pro: 質問内容も合わせて保存しておく (柱 3 = 自分の記録は永久に残る)。
     final reading = DailyReading(
       date: dateStr,
       cardId: card.id,
@@ -186,8 +205,12 @@ class _ObserveScreenState extends State<ObserveScreen>
       reversed: reversed,
       question: question.isEmpty ? null : question,
     );
-    await SolaraStorage.addReading(reading);
-    _loadHistory();
+    // 全体運(無料/Pro) は従来通り先に保存。カテゴリは 402 の可能性があるので成功後に保存
+    // (既存の全体運の保存を 402 ロールバックで壊さないため)。
+    if (!isCategoryDraw) {
+      await SolaraStorage.addReading(reading);
+      _loadHistory();
+    }
 
     // カードフリップ完了後に /tarot 呼び出し
     await Future.delayed(const Duration(milliseconds: 900));
@@ -195,7 +218,7 @@ class _ObserveScreenState extends State<ObserveScreen>
 
     final profile = await SolaraStorage.loadProfile();
     // A3: Pro なら thinking ON + 質問欄の内容を「テーマ」として渡す。
-    // Free なら thinking OFF + question 未送信 (Free は質問欄自体が出ない)。
+    // category 指定時は非 Pro は 1 クレジット消費 (Worker 側でゲート)。
     final tarotResult = await fetchTarotReading(
       cardId: card.id,
       reversed: reversed,
@@ -208,11 +231,24 @@ class _ObserveScreenState extends State<ObserveScreen>
       userName: profile?.name,
       thinking: isPro,
       question: question.isEmpty ? null : question,
+      category: category,
     );
 
     if (!mounted) return;
-
     _stopLoadingMessageRotation();
+
+    // 402 = カテゴリ占いのクレジット切れ → 引きをなかったことにして購入/Pro 導線
+    if (tarotResult != null && tarotResult.creditExhausted) {
+      setState(() {
+        _readingLoading = false;
+        _cardFlipped = false;
+        _drawnCard = null;
+      });
+      _flipCtrl.value = 0.0;
+      await _handleTarotCreditExhausted();
+      return;
+    }
+
     if (tarotResult != null && tarotResult.reading.isNotEmpty) {
       // API成功: Stella の声を表示・保存
       setState(() {
@@ -221,25 +257,36 @@ class _ObserveScreenState extends State<ObserveScreen>
         _readingFromApi = true;
         _typedChars = 0;
         _typingDone = false;
+        _tarotFreeRemaining = tarotResult.freeCreditsRemaining;
+        _tarotPurchased = tarotResult.purchasedBalance;
       });
-      // ストレージ更新
       reading.reading = _readingText;
-      await SolaraStorage.updateReading(reading);
+      // カテゴリは成功後にここで保存 (date キーで今日の表示を置換)。
+      await SolaraStorage.addReading(reading);
+      _loadHistory();
       _startTypewriter();
     } else {
-      // API失敗: 静的テンプレートで fallback
+      // API失敗 (null = network/LLM): 静的テンプレートで fallback。クレジットは消費されない。
       setState(() {
         _readingLoading = false;
         _readingFromApi = false;
       });
       _generateReadingStatic(card, reversed);
-      // 履歴閲覧時にも READING が見えるよう、fallback 文章も永続化する
-      // (柱3 原則: 自分の記録は失わない)。API 成功時の `reading.reading = ...`
-      // と対になるバグ修正 (2026-05-18)。
+      // 履歴閲覧時にも READING が見えるよう fallback 文章も永続化 (柱3 原則)。
       reading.reading = _readingText;
-      await SolaraStorage.updateReading(reading);
+      await SolaraStorage.addReading(reading);
+      _loadHistory();
     }
   }
+
+  /// カテゴリ占いのクレジット切れ時: 追加クレジット購入 / Pro 導線 (相談と共通シート)。
+  Future<void> _handleTarotCreditExhausted() async {
+    await showConsultationCreditSheet(context);
+    // 購入後はユーザーが再度カードをタップして引き直す (残数は次の引きで反映)。
+  }
+
+  // カテゴリ selector (_buildCategorySelector / _categoryChip) は
+  // observe/observe_category_selector.dart (part, extension) に分離。
 
   // テスト用: 今日の引きを削除して再抽選可能な状態に戻す
   // 🔴 本番リリース時にこのメソッドと呼び出しボタンを削除すること
@@ -369,6 +416,9 @@ class _ObserveScreenState extends State<ObserveScreen>
           buildQuestionField()
         else
           buildQuestionFieldTeaser(),
+        const SizedBox(height: 16),
+        // カテゴリ選択 (全体運=無料 / 特定カテゴリ=非Proは1クレジット)
+        _buildCategorySelector(isPro),
         const SizedBox(height: 16),
         GestureDetector(
           onTap: _drawCard,

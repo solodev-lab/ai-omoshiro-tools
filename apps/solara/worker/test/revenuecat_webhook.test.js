@@ -127,6 +127,72 @@ test('SOLARA_ENTITLEMENT_ID == cosmic_pro', () => {
   assert.equal(_internal.SOLARA_ENTITLEMENT_ID, 'cosmic_pro');
 });
 
+// ── 消費型 Stella クレジット購入 (NON_RENEWING_PURCHASE) ──────
+
+const CREDIT_ENV = {
+  CONSULTATION_CREDIT_PRODUCTS: 'com.solodevlab.solara.credits.large:10',
+};
+
+test('webhook: 消費型クレジット購入 → /consultation-credit-grant 呼出 + 残高返却', async () => {
+  _resetEntitlementCacheForTest();
+  const { env, calls } = makeEnv({
+    doImpl: (path) => {
+      if (path === '/consultation-credit-grant') {
+        return { status: 200, body: { balance: 10 } };
+      }
+      return { status: 200, body: { ok: true } };
+    },
+  });
+  Object.assign(env, CREDIT_ENV);
+  const req = makeRequest({
+    body: {
+      event: {
+        type: 'NON_RENEWING_PURCHASE',
+        id: 'evt-credit-1',
+        app_user_id: 'google:buyer1',
+        product_id: 'com.solodevlab.solara.credits.large',
+      },
+    },
+  });
+  const res = await handleRevenueCatWebhook(req, env);
+  assert.equal(res.status, 200);
+  const body = await res.json();
+  assert.equal(body.creditsGranted, 10);
+  assert.equal(body.balance, 10);
+  // grant が呼ばれ、entitlement-upsert は呼ばれない (entitlement を持たない購入)
+  const grant = calls.find((c) => c.path === '/consultation-credit-grant');
+  assert.ok(grant, 'grant should be called');
+  assert.equal(grant.body.appUserId, 'google:buyer1');
+  assert.equal(grant.body.amount, 10);
+  assert.equal(grant.body.eventId, 'evt-credit-1');
+  assert.ok(!calls.some((c) => c.path === '/entitlement-upsert'));
+});
+
+test('webhook: NON_RENEWING_PURCHASE だが credit 商品でない → 従来 entitlement 経路', async () => {
+  _resetEntitlementCacheForTest();
+  const { env, calls } = makeEnv({
+    doImpl: () => ({ status: 200, body: { ok: true } }),
+  });
+  Object.assign(env, CREDIT_ENV);
+  const req = makeRequest({
+    body: {
+      event: {
+        type: 'NON_RENEWING_PURCHASE',
+        id: 'evt-np-1',
+        app_user_id: 'google:u1',
+        product_id: 'com.solodevlab.solara.something_else',
+        entitlement_ids: ['cosmic_pro'],
+        environment: 'PRODUCTION',
+      },
+    },
+  });
+  const res = await handleRevenueCatWebhook(req, env);
+  assert.equal(res.status, 200);
+  // credit grant は呼ばれず、entitlement-upsert に進む
+  assert.ok(!calls.some((c) => c.path === '/consultation-credit-grant'));
+  assert.ok(calls.some((c) => c.path === '/entitlement-upsert'));
+});
+
 // ── handleRevenueCatWebhook 主要分岐 ─────────────────────────
 
 test('webhook: secret 未設定 → 503', async () => {

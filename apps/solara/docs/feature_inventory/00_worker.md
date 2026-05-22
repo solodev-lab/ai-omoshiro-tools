@@ -6,7 +6,7 @@
 ## サマリ
 
 - ファイル数: 19
-- エンドポイント総数: 28
+- エンドポイント総数: 29
 - Gemini 呼出箇所: 2
 - KV 使用: 4 行 / Durable Object 使用: 8 行
 
@@ -116,7 +116,7 @@ https://developer.apple.com/documentation/devicecheck/validating-apps-that-conne
 **export (1):** `verifyAttestation`
 
 
-### `worker/src/auth/attestation_state.js` (499 行)
+### `worker/src/auth/attestation_state.js` (665 行)
 
 **ファイル先頭コメント:**
 
@@ -131,6 +131,8 @@ Apple App Attest + RevenueCat エンタイトルメント + Play Integrity 用 D
 - user_entitlements: appUserId × entitlementId の Pro 状態 (RevenueCat Webhook で書込)
 - webhook_events:    Webhook event_id の idempotent 受信ログ (重複送信耐性)
 - integrity_nonces:  Play Integrity Standard request 用 nonce (one-time use、TEXT base64)
+- consultation_credits: Stella 相談の Free 試食クレジット (端末ごと週次カウンター)
+- consultation_purchased: Stella 相談の購入クレジット残高 (アカウント appUserId ごと、消費型 IAP)
 
 単一 DO instance への集約理由:
 - DAU 1,500 想定で同時刻書き込み <100/sec → DO の sequential write 内に余裕で収まる
@@ -140,9 +142,7 @@ Apple App Attest + RevenueCat エンタイトルメント + Play Integrity 用 D
 外部 HTTP API (`fetch(request)`):
 POST /challenge-create  body: {challengeId, challengeBytes, expiresAt}
 POST /challenge-consume body: {challengeId, now}  → {challengeBytes} or 404
-POST /attestation-store body: {keyId, publicKeyPem, rpId, aaguid, now}
-POST /attestation-get   body: {keyId}              → {publicKeyPem, counter} or 404
-POST /attestation-bu
+POST /attestation-store body: {keyId, 
 ```
 
 **Durable Object 使用 (1 行):**
@@ -341,7 +341,7 @@ houses: そのカテゴリで重視する伝統占星術のハウス番号
 **export (3):** `computeCategoryScore`, `callGemini`, `handleFortune`
 
 
-### `worker/src/index.js` (1011 行)
+### `worker/src/index.js` (1234 行)
 
 **ファイル先頭コメント:**
 
@@ -361,46 +361,47 @@ webhooks/*   外部連携      RevenueCat Webhook (Pro 状態の真の出所)。
 同セッションで新 path に書き換え済（`apps/solara/lib/utils/solara_api.dart` 参照）。
 ```
 
-**エンドポイント / ルート (28):**
+**エンドポイント / ルート (29):**
 
 | method | path | line |
 | --- | --- | --- |
-| ? | /public/astro/forecast | L698 |
-| ? | /public/tiles/* | L699 |
-| ? | /webhooks/* | L700 |
-| ? | /public/health | L708 |
-| GET | /public/tiles/osm/* | L713 |
-| POST | /public/astro/chart | L718 |
-| POST | /public/astro/forecast | L726 |
-| POST | /public/astro/predict | L741 |
-| POST | /public/astro/daily-transits | L749 |
-| GET | /public/tz | L757 |
-| GET | /public/astro/events | L766 |
-| GET | /public/search | L777 |
-| GET | /auth/whoami | L799 |
-| POST | /auth/challenge | L802 |
-| POST | /auth/attest | L805 |
-| POST | /auth/integrity/challenge | L809 |
-| GET | /auth/integrity/diagnose | L818 |
-| POST | /auth/integrity/decode-test | L831 |
-| POST | /protected/account/delete | L899 |
-| POST | /protected/fortune | L903 |
-| POST | /protected/tarot | L913 |
-| POST | /protected/relocation | L923 |
-| POST | /protected/astro/line-narrative | L935 |
-| POST | /protected/astro/consultation | L945 |
-| ? | /public/* | L993 |
-| ? | /auth/* | L995 |
-| ? | /protected/* | L997 |
-| ? | /webhooks/revenuecat | L999 |
+| ? | /public/astro/forecast | L869 |
+| ? | /public/tiles/* | L870 |
+| ? | /webhooks/* | L871 |
+| ? | /public/health | L879 |
+| GET | /public/tiles/osm/* | L884 |
+| POST | /public/astro/chart | L889 |
+| POST | /public/astro/forecast | L897 |
+| POST | /public/astro/predict | L912 |
+| POST | /public/astro/daily-transits | L920 |
+| GET | /public/tz | L928 |
+| GET | /public/astro/events | L937 |
+| GET | /public/search | L948 |
+| GET | /auth/whoami | L970 |
+| POST | /auth/challenge | L973 |
+| POST | /auth/attest | L976 |
+| POST | /auth/integrity/challenge | L980 |
+| GET | /auth/integrity/diagnose | L989 |
+| POST | /auth/integrity/decode-test | L1002 |
+| POST | /protected/account/delete | L1070 |
+| POST | /protected/fortune | L1074 |
+| POST | /protected/tarot | L1084 |
+| POST | /protected/relocation | L1112 |
+| POST | /protected/astro/line-narrative | L1124 |
+| POST | /protected/astro/consultation | L1134 |
+| POST | /protected/consultation/credits | L1160 |
+| ? | /public/* | L1216 |
+| ? | /auth/* | L1218 |
+| ? | /protected/* | L1220 |
+| ? | /webhooks/revenuecat | L1222 |
 
 **KV 使用 (4 行):**
 
-- 出現行: L110, L113, L118, L182
+- 出現行: L110, L113, L118, L190
 
 **Durable Object 使用 (4 行):**
 
-- 出現行: L224, L224, L224, L959
+- 出現行: L232, L232, L232, L1174
 
 **export (1):** `_internal`
 
@@ -492,7 +493,7 @@ Nominatim: https://nominatim.openstreetmap.org/search
 **export (1):** `searchPlace`
 
 
-### `worker/src/tarot.js` (252 行)
+### `worker/src/tarot.js` (283 行)
 
 **ファイル先頭コメント:**
 
@@ -512,7 +513,7 @@ GEMINI_API_KEY は wrangler secret put GEMINI_API_KEY で設定済み
 
 **Gemini API 呼出 (1):**
 
-- L44: `generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;`
+- L62: `generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;`
 
 **export (1):** `handleTarot`
 
@@ -538,7 +539,7 @@ Uses bounding-box heuristic for common regions, falls back to longitude-based of
 **export (1):** `lookupTimezone`
 
 
-### `worker/src/webhooks/revenuecat.js` (268 行)
+### `worker/src/webhooks/revenuecat.js` (318 行)
 
 **ファイル先頭コメント:**
 

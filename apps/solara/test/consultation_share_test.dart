@@ -177,7 +177,7 @@ void main() {
               String freeText = '',
               List<String> excluded = const [],
             }) async =>
-                _sampleReading(),
+                ConsultationResult(reading: _sampleReading()),
             autoSave: false,
           ),
         ),
@@ -210,7 +210,7 @@ void main() {
               String freeText = '',
               List<String> excluded = const [],
             }) async =>
-                _sampleReading(),
+                ConsultationResult(reading: _sampleReading()),
             autoSave: false,
           ),
         ),
@@ -250,7 +250,7 @@ void main() {
               String freeText = '',
               List<String> excluded = const [],
             }) async =>
-                _sampleReading(),
+                ConsultationResult(reading: _sampleReading()),
             autoSave: false,
           ),
         ),

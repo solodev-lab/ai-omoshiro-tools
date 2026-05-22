@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 14 / 総行数: 5243
+- ファイル数: 14 / 総行数: 5270
 - class/mixin/extension/enum: 15
 - 関数 (top-level + method の素拾い): 31
 - Navigator.push 等: 0
@@ -219,7 +219,7 @@ Consultation Record — Phase 2-4 自動保存 + 履歴
   </details>
 
 
-### `lib/utils/fortune_api.dart` (266 行)
+### `lib/utils/fortune_api.dart` (293 行)
 
 **ファイル先頭コメント:**
 
@@ -246,7 +246,7 @@ middleware が log_only モードなら bypass、enforced モードなら attest
 
 - L45 `fetchFortune()` — /fortune を叩いて占い文を取得
 - L145 `fetchRelocationNarrative()` — /relocation を叩いてリロケーション解説を取得。
-- L211 `fetchTarotReading()` — /tarot を叩いて1枚引きの Reading を生成する。
+- L224 `fetchTarotReading()` — /tarot を叩いて1枚引きの Reading を生成する。
 
 
 ### `lib/utils/planet_intro.dart` (559 行)

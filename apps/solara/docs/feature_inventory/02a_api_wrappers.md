@@ -5,12 +5,12 @@
 
 ## サマリ
 
-- ファイル数: 9 / 総行数: 1718
-- class/mixin/extension/enum: 16
-- 関数 (top-level + method の素拾い): 29
+- ファイル数: 9 / 総行数: 1859
+- class/mixin/extension/enum: 19
+- 関数 (top-level + method の素拾い): 31
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 0
-- Worker URL リテラル: 18
+- Worker URL リテラル: 19
 
 ## ファイル別
 
@@ -72,7 +72,7 @@
   </details>
 
 
-### `lib/utils/consultation_api.dart` (150 行)
+### `lib/utils/consultation_api.dart` (287 行)
 
 **ファイル先頭コメント:**
 
@@ -90,18 +90,31 @@ Stella の解釈 (intro / candidates[].narrative / outro) を受け取る。
 
 - relative: `consultation_engine.dart`, `app_attest_client.dart`, `solara_api.dart`
 
-**型定義 (2):**
+**型定義 (5):**
 
-- L18 `class ConsultationCandidateReading`
+- L19 `class ConsultationCandidateReading`
   - API レスポンス内の候補別 Stella の解釈。
-- L48 `class ConsultationReading`
+- L49 `class ConsultationReading`
   - API レスポンス全体。
+- L93 `enum ConsultationBlock`
+  - Free 試食クレジット切れ等で Worker が 402 を返したときのブロック理由。
+- L108 `class ConsultationResult`
+  - fetchConsultation の戻り値。成功 / ペイウォールブロック / 接続失敗 を区別する。
+- L230 `class ConsultationCreditStatus`
+  - Stella 相談クレジットの現在状況 (無料週次残 + 購入残高)。
 
-**関数 (3 public + 0 private):**
+**関数 (4 public + 1 private):**
 
-- L40 `toJson()` — 履歴保存 (consultation_record) 用シリアライズ。
-- L81 `toJson()` — 履歴保存 (consultation_record) 用シリアライズ。
-- L102 `fetchConsultation()` — /astro/consultation を呼んで Stella の解釈を取得する。
+- L41 `toJson()` — 履歴保存 (consultation_record) 用シリアライズ。
+- L82 `toJson()` — 履歴保存 (consultation_record) 用シリアライズ。
+- L164 `fetchConsultation()` — /astro/consultation を呼んで Stella の解釈を取得する。
+- L259 `fetchConsultationCredits()` — `/protected/consultation/credits` を呼んで現在のクレジット状況を取得する。
+
+  <details><summary>private 関数 1 件</summary>
+
+  - L139 `_blockFromCode()`
+
+  </details>
 
 
 ### `lib/utils/daily_transits_api.dart` (241 行)
@@ -260,7 +273,7 @@ Solara 法務リンク定数 — Phase 2-6b
 - L68 `reverseGeocodeDetail()` — 緯度経度から逆ジオコーディングで region / country まで含む詳細を取得する。
 
 
-### `lib/utils/solara_api.dart` (80 行)
+### `lib/utils/solara_api.dart` (84 行)
 
 **ファイル先頭コメント:**
 
@@ -273,9 +286,9 @@ Solara CF Worker API - 軽量なユーティリティ呼び出し
 
 **関数 (1 public + 0 private):**
 
-- L67 `fetchTimezoneName()` — 緯度経度から IANA TZ名 (DST対応の基準) を取得。
+- L71 `fetchTimezoneName()` — 緯度経度から IANA TZ名 (DST対応の基準) を取得。
 
-**Worker URL リテラル (17):**
+**Worker URL リテラル (18):**
 
 - L17: `'https://solara-api.solodev-lab.com'`
 - L29: `'$solaraWorkerBase/public/tz'`
@@ -293,7 +306,8 @@ Solara CF Worker API - 軽量なユーティリティ呼び出し
 - L53: `'$solaraWorkerBase/protected/tarot'`
 - L54: `'$solaraWorkerBase/protected/relocation'`
 - L56: `'$solaraWorkerBase/protected/astro/consultation'`
-- L62: `'$solaraWorkerBase/protected/account/delete'`
+- L60: `'$solaraWorkerBase/protected/consultation/credits'`
+- L66: `'$solaraWorkerBase/protected/account/delete'`
 
 
 ### `lib/utils/tile_http_client.dart` (42 行)

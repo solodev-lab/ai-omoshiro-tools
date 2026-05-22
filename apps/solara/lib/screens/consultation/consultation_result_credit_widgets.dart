@@ -1,0 +1,188 @@
+// Consultation Result — クレジット関連サブウィジェット (part of consultation_result_screen.dart)
+//
+// Stella 相談 クレジット制 (設計 project_solara_stella_free_credits.md) の結果画面向け
+// 表示部品を分離: 402 ブロックボックス + 残量バナー。
+// 本体 (consultation_result_widgets.dart) が 500 行 (HARD) を超えたため切り出した。
+
+part of 'consultation_result_screen.dart';
+
+/// Free 試食ゲートで 402 ブロックされた時のペイウォール誘導ボックス。
+/// 理由 (creditExhausted / proOnlyMode / proOnlyRefresh) で文言を出し分ける。
+class _ConsultationBlockedBox extends StatelessWidget {
+  final ConsultationBlock reason;
+  final VoidCallback onUpgrade;
+  final VoidCallback onBuyCredits;
+  const _ConsultationBlockedBox({
+    required this.reason,
+    required this.onUpgrade,
+    required this.onBuyCredits,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final exhausted = reason == ConsultationBlock.creditExhausted;
+    final (title, body) = switch (reason) {
+      ConsultationBlock.proOnlyMode => (
+          'このモードは Cosmic Pro で',
+          'おでかけ以外の相談 (移住・旅行) は Cosmic Pro で読み解けます。',
+        ),
+      ConsultationBlock.proOnlyRefresh => (
+          '候補の出し直しは Cosmic Pro で',
+          '別の候補を何度でも見比べられます。',
+        ),
+      _ => (
+          '相談クレジットを使い切りました',
+          '無料の Stella 相談は週ごとに補充されます。すぐ続けるなら、'
+              '追加クレジットの購入か、回数無制限の Cosmic Pro が選べます。',
+        ),
+    };
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24),
+        child: GlassPanel(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                Icons.auto_awesome,
+                color: SolaraColors.solaraGold,
+                size: 32,
+              ),
+              const SizedBox(height: 12),
+              Text(
+                title,
+                style: const TextStyle(
+                  color: SolaraColors.textPrimary,
+                  fontSize: 15,
+                  height: 1.5,
+                  fontWeight: FontWeight.w600,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                body,
+                style: const TextStyle(
+                  color: SolaraColors.textSecondary,
+                  fontSize: 13,
+                  height: 1.7,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 16),
+              // 残量切れ時のみ「クレジット購入」を主ボタンに、Pro を副ボタンに。
+              if (exhausted) ...[
+                SizedBox(
+                  width: double.infinity,
+                  child: TextButton(
+                    onPressed: onBuyCredits,
+                    style: TextButton.styleFrom(
+                      backgroundColor: const Color(0x1AF6BD60),
+                      foregroundColor: SolaraColors.solaraGold,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        side: const BorderSide(color: Color(0x44F6BD60)),
+                      ),
+                    ),
+                    child: const Text('追加クレジットを購入'),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                TextButton(
+                  onPressed: onUpgrade,
+                  style: TextButton.styleFrom(
+                    foregroundColor: SolaraColors.textSecondary,
+                  ),
+                  child: const Text('✦ Cosmic Pro で無制限にする'),
+                ),
+              ] else
+                SizedBox(
+                  width: double.infinity,
+                  child: TextButton(
+                    onPressed: onUpgrade,
+                    style: TextButton.styleFrom(
+                      backgroundColor: const Color(0x1AF6BD60),
+                      foregroundColor: SolaraColors.solaraGold,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        side: const BorderSide(color: Color(0x44F6BD60)),
+                      ),
+                    ),
+                    child: const Text('✦ Cosmic Pro を見る'),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Free ユーザー向け「今週あと N回 (+購入残高)」バナー (intro 直下)。
+class _FreeCreditsBanner extends StatelessWidget {
+  final int remaining;
+  final int? limit;
+  final int? purchasedBalance;
+  final VoidCallback onUpgrade;
+  const _FreeCreditsBanner({
+    required this.remaining,
+    required this.limit,
+    required this.purchasedBalance,
+    required this.onUpgrade,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final limitText = limit != null ? ' / $limit' : '';
+    final purchased = purchasedBalance ?? 0;
+    final purchasedText = purchased > 0 ? ' ・ 購入残高 $purchased回' : '';
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: const Color(0x14F6BD60),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: const Color(0x33F6BD60)),
+        ),
+        child: Row(
+          children: [
+            const Icon(
+              Icons.auto_awesome_outlined,
+              color: SolaraColors.solaraGoldLight,
+              size: 16,
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                '今週の無料相談 あと$remaining回$limitText$purchasedText',
+                style: const TextStyle(
+                  color: SolaraColors.textSecondary,
+                  fontSize: 12,
+                  letterSpacing: 0.3,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            const SizedBox(width: 8),
+            GestureDetector(
+              onTap: onUpgrade,
+              child: const Text(
+                '無制限に →',
+                style: TextStyle(
+                  color: SolaraColors.solaraGold,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

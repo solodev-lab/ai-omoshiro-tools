@@ -113,6 +113,24 @@ async function callDo(env, path, body) {
 }
 
 /**
+ * CONSULTATION_CREDIT_PRODUCTS ("productId:amount,productId:amount") から
+ * 該当 product_id の付与クレジット数を返す。該当なし or 未設定は 0。
+ * 消費型 Stella クレジット商品の判定に使う (Stella 相談 Free 試食クレジット設計 B 案)。
+ */
+function consultationCreditAmountForProduct(env, productId) {
+  if (typeof productId !== 'string' || !productId) return 0;
+  const raw = env.CONSULTATION_CREDIT_PRODUCTS || '';
+  for (const pair of raw.split(',')) {
+    const idx = pair.lastIndexOf(':');
+    if (idx <= 0) continue;
+    const id = pair.slice(0, idx).trim();
+    const amt = parseInt(pair.slice(idx + 1).trim(), 10);
+    if (id === productId && Number.isInteger(amt) && amt > 0) return amt;
+  }
+  return 0;
+}
+
+/**
  * 1 RevenueCat event を 1 entitlement upsert に変換。
  * 戻り値は最終的にクライアント (RC dashboard) に返す JSON。
  */
@@ -128,6 +146,37 @@ async function processEvent(env, ev) {
 
   if (IGNORE_EVENT_TYPES.has(eventType)) {
     return { status: 200, body: { ok: true, ignored: eventType } };
+  }
+
+  // ── 消費型 Stella クレジット購入 (entitlement を持たないので entitlement フィルタより前で処理) ──
+  // NON_RENEWING_PURCHASE のうち product_id が CONSULTATION_CREDIT_PRODUCTS にあれば、
+  // 購入残高に付与する (cosmic_pro エンタイトルメントとは無関係)。
+  if (eventType === 'NON_RENEWING_PURCHASE') {
+    const creditAmount = consultationCreditAmountForProduct(env, ev.product_id);
+    if (creditAmount > 0) {
+      const appUserId = ev.app_user_id;
+      if (typeof appUserId !== 'string' || !appUserId) {
+        return { status: 400, body: { error: 'invalid_app_user_id' } };
+      }
+      const grant = await callDo(env, '/consultation-credit-grant', {
+        appUserId, amount: creditAmount, eventId,
+      });
+      if (grant.status !== 200) {
+        return { status: 500, body: { error: 'credit_grant_failed', detail: grant.body } };
+      }
+      return {
+        status: 200,
+        body: {
+          ok: true,
+          eventType,
+          appUserId,
+          creditsGranted: creditAmount,
+          balance: grant.body.balance,
+          alreadyProcessed: grant.body.alreadyProcessed === true,
+        },
+      };
+    }
+    // credit 商品でない NON_RENEWING_PURCHASE は従来の entitlement 処理へ続行
   }
 
   // Solara 対象 entitlement に絡まないイベントは無視
@@ -260,6 +309,7 @@ export async function handleRevenueCatWebhook(request, env) {
 // テスト用 export (本番コードからは import しない)
 export const _internal = {
   timingSafeEqualString,
+  consultationCreditAmountForProduct,
   ACTIVE_EVENT_TYPES,
   GRACE_EVENT_TYPES,
   INACTIVE_EVENT_TYPES,

@@ -189,7 +189,7 @@ void main() {
             String freeText = '',
             List<String> excluded = const [],
           }) async =>
-              _mockReading(candidates),
+              ConsultationResult(reading: _mockReading(candidates)),
         ),
       ),
     );

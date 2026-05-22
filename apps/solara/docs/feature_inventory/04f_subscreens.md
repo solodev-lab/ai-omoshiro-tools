@@ -5,14 +5,61 @@
 
 ## サマリ
 
-- ファイル数: 18 / 総行数: 7682
-- class/mixin/extension/enum: 66
-- 関数 (top-level + method の素拾い): 192
+- ファイル数: 21 / 総行数: 8322
+- class/mixin/extension/enum: 71
+- 関数 (top-level + method の素拾い): 208
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 5
 - Worker URL リテラル: 0
 
 ## ファイル別
+
+### `lib/screens/consultation/consultation_credit_sheet.dart` (325 行)
+
+**ファイル先頭コメント:**
+
+```
+Stella 相談 追加クレジット購入シート (消費型 IAP、設計 B 案)
+
+設計: project_solara_stella_free_credits.md
+  - 無料週次クレジットを使い切った非 Pro ユーザーが、追加クレジットを購入する導線
+  - 価格は「Pro へ寄せた割高設定」(数回買うなら Pro の方が得 → 転換装置)
+  - 「Cosmic Pro なら無制限」CTA を併置して Pro へ誘導
+  - 購入はサインイン必須 (残高はアカウント appUserId に紐づく、機種変で失わない)
+  - 付与はサーバー側 (RC Webhook → DO 残高加算)。購入後に状況を再取得して反映
+
+🔴 RevenueCat に creditsOfferingId ('credits') Offering + 消費型 Package を
+   作成しておく必要がある。未配信時は「準備中」表示。
+```
+
+**imports:** dart=1 / package=3 / relative=5
+
+- relative: `../../theme/solara_colors.dart`, `../../utils/consultation_api.dart`, `../../utils/purchases_service.dart`, `../../utils/solara_auth.dart`, `../paywall_screen.dart`
+
+**型定義 (2):**
+
+- L40 `class _CreditSheet : StatefulWidget`
+- L47 `class _CreditSheetState : State`
+
+**関数 (4 public + 7 private):**
+
+- L27 `showConsultationCreditSheet()` — クレジット購入シートを開く。
+- L44 `createState()`
+- L55 `initState()`
+- L181 `build()`
+
+  <details><summary>private 関数 7 件</summary>
+
+  - L60 `_load()`
+  - L72 `_ensureSignedIn()`
+  - L123 `_buy()`
+  - L158 `_pollUntilGranted()`
+  - L170 `_openPaywall()`
+  - L252 `_buildContent()`
+  - L276 `_packageTile()`
+
+  </details>
+
 
 ### `lib/screens/consultation/consultation_history_screen.dart` (518 行)
 
@@ -137,7 +184,7 @@ L836-1295 (_SpecificPicker 系) を切り出し (ファイル肥大化対策、2
   </details>
 
 
-### `lib/screens/consultation/consultation_input_screen.dart` (401 行)
+### `lib/screens/consultation/consultation_input_screen.dart` (416 行)
 
 **ファイル先頭コメント:**
 
@@ -164,30 +211,30 @@ Consultation Input Screen — Stage 1 UI
   - consultation_input_picker.dart:   _PickedSpecific + _SpecificPicker 系
 ```
 
-**imports:** dart=1 / package=2 / relative=9
+**imports:** dart=1 / package=2 / relative=10
 
-- relative: `../../theme/solara_colors.dart`, `../../utils/astro_lines.dart`, `../../utils/consultation_engine.dart`, `../../utils/world_cities.dart`, `../../widgets/tap_to_unfocus.dart`, `../map/map_search.dart`, `../map/map_vp_panel.dart`, `consultation_place_picker_screen.dart`, `consultation_result_screen.dart`
+- relative: `../../theme/solara_colors.dart`, `../../utils/astro_lines.dart`, `../../utils/consultation_engine.dart`, `../../utils/pro_status.dart`, `../../utils/world_cities.dart`, `../../widgets/tap_to_unfocus.dart`, `../map/map_search.dart`, `../map/map_vp_panel.dart`, `consultation_place_picker_screen.dart`, `consultation_result_screen.dart`
 
 **型定義 (3):**
 
-- L42 `class ConsultationPresetTarget`
+- L43 `class ConsultationPresetTarget`
   - Map から「📍この場所で相談」で起動した時の preset (specific scope 用)。
-- L58 `class ConsultationInputScreen : StatefulWidget`
-- L81 `class _ConsultationInputScreenState : State`
+- L59 `class ConsultationInputScreen : StatefulWidget`
+- L82 `class _ConsultationInputScreenState : State`
 
 **関数 (4 public + 4 private):**
 
-- L77 `createState()`
-- L94 `initState()`
-- L104 `dispose()`
-- L275 `build()`
+- L78 `createState()`
+- L95 `initState()`
+- L105 `dispose()`
+- L276 `build()`
 
   <details><summary>private 関数 4 件</summary>
 
-  - L109 `_onModeChanged()`
-  - L135 `_resolveRegionCountries()`
-  - L219 `_openMapPicker()`
-  - L238 `_submit()`
+  - L110 `_onModeChanged()`
+  - L136 `_resolveRegionCountries()`
+  - L220 `_openMapPicker()`
+  - L239 `_submit()`
 
   </details>
 
@@ -350,7 +397,32 @@ flutter_map ベースの地点選択画面のサブウィジェット群:
   </details>
 
 
-### `lib/screens/consultation/consultation_result_screen.dart` (472 行)
+### `lib/screens/consultation/consultation_result_credit_widgets.dart` (188 行)
+
+**ファイル先頭コメント:**
+
+```
+Consultation Result — クレジット関連サブウィジェット (part of consultation_result_screen.dart)
+
+Stella 相談 クレジット制 (設計 project_solara_stella_free_credits.md) の結果画面向け
+表示部品を分離: 402 ブロックボックス + 残量バナー。
+本体 (consultation_result_widgets.dart) が 500 行 (HARD) を超えたため切り出した。
+```
+
+**型定義 (2):**
+
+- L11 `class _ConsultationBlockedBox : StatelessWidget`
+  - Free 試食ゲートで 402 ブロックされた時のペイウォール誘導ボックス。
+- L125 `class _FreeCreditsBanner : StatelessWidget`
+  - Free ユーザー向け「今週あと N回 (+購入残高)」バナー (intro 直下)。
+
+**関数 (2 public + 0 private):**
+
+- L22 `build()`
+- L138 `build()`
+
+
+### `lib/screens/consultation/consultation_result_screen.dart` (447 行)
 
 **ファイル先頭コメント:**
 
@@ -376,32 +448,61 @@ Phase 2-4 で対応:
   - share ボタンの実体化
 ```
 
-**imports:** dart=0 / package=2 / relative=9
+**imports:** dart=0 / package=2 / relative=10
 
-- relative: `../../theme/solara_colors.dart`, `../../utils/consultation_api.dart`, `../../utils/consultation_engine.dart`, `../../utils/consultation_record.dart`, `../../utils/consultation_share.dart`, `../../utils/pro_status.dart`, `../../utils/solara_storage.dart`, `../../widgets/glass_panel.dart`, `../../widgets/pro_unlock_dialog.dart`
+- relative: `../../theme/solara_colors.dart`, `../../utils/consultation_api.dart`, `../../utils/consultation_engine.dart`, `../../utils/consultation_record.dart`, `../../utils/consultation_share.dart`, `../../utils/pro_status.dart`, `../../utils/solara_storage.dart`, `../../widgets/glass_panel.dart`, `../../widgets/pro_unlock_dialog.dart`, `consultation_credit_sheet.dart`
 
 **型定義 (2):**
 
-- L36 `class ConsultationResultScreen : StatefulWidget`
-- L89 `class _ConsultationResultScreenState : State`
+- L39 `class ConsultationResultScreen : StatefulWidget`
+- L92 `class _ConsultationResultScreenState : State`
 
 **関数 (4 public + 8 private):**
 
-- L85 `createState()`
-- L107 `initState()`
-- L121 `dispose()`
-- L372 `build()`
+- L88 `createState()`
+- L125 `initState()`
+- L139 `dispose()`
+- L326 `build()`
 
   <details><summary>private 関数 8 件</summary>
 
-  - L126 `_runFetch()`
-  - L150 `_fetch()`
-  - L174 `_refresh()`
-  - L221 `_maybePersist()`
-  - L246 `_openShareSheet()`
-  - L332 `_copyText()`
-  - L350 `_shareImage()`
-  - L426 `_buildBody()`
+  - L116 `_setSharing()`
+  - L144 `_runFetch()`
+  - L168 `_fetch()`
+  - L205 `_refresh()`
+  - L269 `_showConsultationPaywall()`
+  - L289 `_onBuyCredits()`
+  - L299 `_maybePersist()`
+  - L380 `_buildBody()`
+
+  </details>
+
+
+### `lib/screens/consultation/consultation_result_share.dart` (137 行)
+
+**ファイル先頭コメント:**
+
+```
+Consultation Result — シェア機能 (part of consultation_result_screen.dart)
+
+Phase 2-5 シェアエクスポート (テキスト / 画像) を本体から分離。Pro 限定。
+本体 (consultation_result_screen.dart) が 500 行 (HARD) を超えたため切り出した。
+_ConsultationResultScreenState の private 状態 (_reading/_sharing/_shareBoundaryKey)
+に extension からアクセスする (同一ライブラリ part)。
+```
+
+**型定義 (1):**
+
+- L10 `extension _ConsultationResultShare : _ConsultationResultScreenState`
+
+**関数 (0 public + 3 private):**
+
+
+  <details><summary>private 関数 3 件</summary>
+
+  - L13 `_openShareSheet()`
+  - L99 `_copyText()`
+  - L117 `_shareImage()`
 
   </details>
 

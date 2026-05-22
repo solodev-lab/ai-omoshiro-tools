@@ -30,8 +30,11 @@ import '../../utils/pro_status.dart';
 import '../../utils/solara_storage.dart';
 import '../../widgets/glass_panel.dart';
 import '../../widgets/pro_unlock_dialog.dart';
+import 'consultation_credit_sheet.dart';
 
 part 'consultation_result_widgets.dart';
+part 'consultation_result_credit_widgets.dart';
+part 'consultation_result_share.dart';
 
 class ConsultationResultScreen extends StatefulWidget {
   final String theme;
@@ -46,7 +49,7 @@ class ConsultationResultScreen extends StatefulWidget {
       regenerateCandidates;
 
   /// テスト/モック差し替え用: 通常は null で標準 fetchConsultation を呼ぶ。
-  final Future<ConsultationReading?> Function({
+  final Future<ConsultationResult> Function({
     required String theme,
     required String mode,
     required String scope,
@@ -97,6 +100,21 @@ class _ConsultationResultScreenState extends State<ConsultationResultScreen> {
   bool _sharing = false;
   String? _error;
 
+  /// Free 試食ゲートで 402 ブロックされた理由 (creditExhausted / proOnlyMode 等)。
+  /// 非 null の間は結果ではなくペイウォール誘導ボックスを表示する。
+  ConsultationBlock? _block;
+
+  /// Free ユーザーの今週の残り無料回数 (Pro / 履歴モードは null = 非表示)。
+  int? _freeRemaining;
+  int? _freeLimit;
+
+  /// 購入クレジット残高 (Pro / 履歴モードは null)。
+  int? _purchasedBalance;
+
+  /// シェア処理中フラグの更新 (share extension から setState を呼ぶための転送。
+  /// setState は @protected で extension から直接呼べないため State 本体に置く)。
+  void _setSharing(bool v) => setState(() => _sharing = v);
+
   /// リフレッシュで除外する候補名 (累積)。
   final Set<String> _excludedNames = <String>{};
 
@@ -123,7 +141,7 @@ class _ConsultationResultScreenState extends State<ConsultationResultScreen> {
     super.dispose();
   }
 
-  Future<ConsultationReading?> _runFetch({
+  Future<ConsultationResult> _runFetch({
     required List<CandidateLocation> candidates,
     required List<String> excluded,
   }) async {
@@ -151,12 +169,22 @@ class _ConsultationResultScreenState extends State<ConsultationResultScreen> {
     setState(() {
       _loading = true;
       _error = null;
+      _block = null;
     });
-    final reading = await _runFetch(
+    final result = await _runFetch(
       candidates: _candidates,
       excluded: const [],
     );
     if (!mounted) return;
+    if (result.isBlocked) {
+      // Free 試食ゲート: 結果ではなくペイウォール誘導ボックスを出す。
+      setState(() {
+        _loading = false;
+        _block = result.block;
+      });
+      return;
+    }
+    final reading = result.reading;
     if (reading == null) {
       setState(() {
         _loading = false;
@@ -166,6 +194,9 @@ class _ConsultationResultScreenState extends State<ConsultationResultScreen> {
     }
     setState(() {
       _reading = reading;
+      _freeRemaining = result.freeCreditsRemaining;
+      _freeLimit = result.freeCreditsLimit;
+      _purchasedBalance = result.purchasedBalance;
       _loading = false;
     });
     _maybePersist(reading, _candidates);
@@ -192,11 +223,26 @@ class _ConsultationResultScreenState extends State<ConsultationResultScreen> {
       });
       return;
     }
-    final reading = await _runFetch(
+    final result = await _runFetch(
       candidates: newCands,
       excluded: excludedList,
     );
     if (!mounted) return;
+    if (result.isBlocked) {
+      // 出し直しもクレジット 1 消費。尽きていたら購入/Pro 導線。現在の結果は残す。
+      setState(() => _refreshing = false);
+      if (result.block == ConsultationBlock.creditExhausted) {
+        await _onBuyCredits();
+      } else {
+        await showProUnlockDialog(
+          context,
+          featureLabel: 'Stella 相談',
+          description: 'Cosmic Pro なら回数無制限で読み解けます。',
+        );
+      }
+      return;
+    }
+    final reading = result.reading;
     if (reading == null) {
       setState(() {
         _refreshing = false;
@@ -207,6 +253,9 @@ class _ConsultationResultScreenState extends State<ConsultationResultScreen> {
     setState(() {
       _candidates = newCands;
       _reading = reading;
+      _freeRemaining = result.freeCreditsRemaining;
+      _freeLimit = result.freeCreditsLimit;
+      _purchasedBalance = result.purchasedBalance;
       _refreshing = false;
       _pageIndex = 0;
     });
@@ -214,6 +263,35 @@ class _ConsultationResultScreenState extends State<ConsultationResultScreen> {
       _pageCtrl.jumpToPage(0);
     }
     _maybePersist(reading, newCands);
+  }
+
+  /// ペイウォール誘導ボックスの「Cosmic Pro」CTA。理由別に文言を出し分ける。
+  void _showConsultationPaywall() {
+    final (label, desc) = switch (_block) {
+      ConsultationBlock.proOnlyMode => (
+          '移住・旅行の相談',
+          'おでかけ以外の相談も、Cosmic Pro なら無制限に。',
+        ),
+      ConsultationBlock.proOnlyRefresh => (
+          '候補の出し直し',
+          '別の候補を何度でも見比べられます。',
+        ),
+      _ => (
+          'Stella 相談',
+          '今週の無料の相談を使い切りました。Cosmic Pro なら回数無制限・thinking でより深く読み解きます。',
+        ),
+    };
+    showProUnlockDialog(context, featureLabel: label, description: desc);
+  }
+
+  /// 追加クレジット購入シートを開く。購入で残高が入り、まだ結果未取得 (初回ブロック) なら
+  /// 元の相談を自動で再試行する。
+  Future<void> _onBuyCredits() async {
+    final bought = await showConsultationCreditSheet(context);
+    if (!mounted) return;
+    if (bought && _reading == null) {
+      _fetch();
+    }
   }
 
   /// 自動保存 (auto-save)。ConsultationRecord を solara_storage に追記する。
@@ -241,132 +319,8 @@ class _ConsultationResultScreenState extends State<ConsultationResultScreen> {
     }
   }
 
-  /// Phase 2-5: シェアシートを開く (テキスト / 画像 2 択)。
-  /// Phase 2-6a: シェア機能は Pro 限定。Free はアップグレード案内のみ。
-  Future<void> _openShareSheet() async {
-    final reading = _reading;
-    if (reading == null) return;
-    if (_sharing) return;
-
-    // Pro ゲート
-    if (!ProStatus.instance.isPro) {
-      await showProUnlockDialog(
-        context,
-        featureLabel: '相談結果のシェア',
-        description: 'Stella の読みをテキスト/画像で書き出して、近しい人と共有できます。',
-      );
-      return;
-    }
-
-    final choice = await showModalBottomSheet<_ShareChoice>(
-      context: context,
-      backgroundColor: SolaraColors.celestialBlueLight,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (ctx) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 36,
-                height: 4,
-                margin: const EdgeInsets.only(bottom: 12),
-                decoration: BoxDecoration(
-                  color: SolaraColors.glassBorder,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              ListTile(
-                leading: const Icon(
-                  Icons.copy_outlined,
-                  color: SolaraColors.solaraGold,
-                ),
-                title: const Text(
-                  'テキストをコピー',
-                  style: TextStyle(color: SolaraColors.textPrimary),
-                ),
-                subtitle: const Text(
-                  '相談結果を clipboard に整形してコピー',
-                  style: TextStyle(
-                    color: SolaraColors.textSecondary,
-                    fontSize: 11,
-                  ),
-                ),
-                onTap: () => Navigator.of(ctx).pop(_ShareChoice.text),
-              ),
-              ListTile(
-                leading: const Icon(
-                  Icons.image_outlined,
-                  color: SolaraColors.solaraGold,
-                ),
-                title: const Text(
-                  '画像で共有',
-                  style: TextStyle(color: SolaraColors.textPrimary),
-                ),
-                subtitle: const Text(
-                  '結果画面を PNG にして OS 標準シェアで共有',
-                  style: TextStyle(
-                    color: SolaraColors.textSecondary,
-                    fontSize: 11,
-                  ),
-                ),
-                onTap: () => Navigator.of(ctx).pop(_ShareChoice.image),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-    if (choice == null) return;
-    if (!mounted) return;
-    if (choice == _ShareChoice.text) {
-      await _copyText(reading);
-    } else {
-      await _shareImage(reading);
-    }
-  }
-
-  Future<void> _copyText(ConsultationReading reading) async {
-    final text = formatConsultationAsText(
-      theme: widget.theme,
-      mode: widget.mode,
-      scope: widget.scope,
-      freeText: widget.freeText,
-      reading: reading,
-    );
-    await Clipboard.setData(ClipboardData(text: text));
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('テキストをコピーしました'),
-        duration: Duration(seconds: 2),
-      ),
-    );
-  }
-
-  Future<void> _shareImage(ConsultationReading reading) async {
-    setState(() => _sharing = true);
-    try {
-      final caption = formatConsultationCaption(
-        theme: widget.theme,
-        reading: reading,
-      );
-      await shareConsultationImage(
-        boundaryKey: _shareBoundaryKey,
-        shareText: caption,
-      );
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('シェアに失敗しました: $e')),
-      );
-    } finally {
-      if (mounted) setState(() => _sharing = false);
-    }
-  }
+  // シェア機能 (_openShareSheet / _copyText / _shareImage) は
+  // consultation_result_share.dart (part, extension) に分離。
 
   @override
   Widget build(BuildContext context) {
@@ -425,15 +379,36 @@ class _ConsultationResultScreenState extends State<ConsultationResultScreen> {
 
   Widget _buildBody() {
     if (_loading) return const _LoadingSkeleton();
+    if (_block != null && _reading == null) {
+      return _ConsultationBlockedBox(
+        reason: _block!,
+        onUpgrade: _showConsultationPaywall,
+        onBuyCredits: _onBuyCredits,
+      );
+    }
     if (_error != null && _reading == null) {
       return _ErrorBox(message: _error!, onRetry: _fetch);
     }
     final reading = _reading;
     if (reading == null) return const _LoadingSkeleton();
 
+    // 出し直しも 1 クレジット消費 (Free も可)。Pro は無制限。
+    final canRefresh = widget.regenerateCandidates != null;
+
     return Column(
       children: [
         _IntroBlock(text: reading.intro, fallback: reading.fallback),
+        if (_freeRemaining != null || _purchasedBalance != null)
+          _FreeCreditsBanner(
+            remaining: _freeRemaining ?? 0,
+            limit: _freeLimit,
+            purchasedBalance: _purchasedBalance,
+            onUpgrade: () => showProUnlockDialog(
+              context,
+              featureLabel: 'Stella 相談',
+              description: 'Cosmic Pro なら回数無制限で読み解きます。',
+            ),
+          ),
         _PageIndicator(
           count: _candidates.length,
           index: _pageIndex,
@@ -459,7 +434,7 @@ class _ConsultationResultScreenState extends State<ConsultationResultScreen> {
           ),
         ),
         _OutroBlock(text: reading.outro),
-        if (widget.regenerateCandidates != null)
+        if (canRefresh)
           _RefreshButton(
             loading: _refreshing,
             onTap: _refreshing ? null : _refresh,

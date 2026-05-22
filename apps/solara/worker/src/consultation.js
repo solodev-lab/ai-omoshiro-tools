@@ -295,7 +295,7 @@ export async function handleConsultation(body, env) {
   let parsed;
   try {
     const raw = await callGemini(env.GEMINI_API_KEY, prompt, models, {
-      thinkingBudget: 1024,
+      thinkingBudget: 1024, // Free/Pro 同等品質 (深い読み)
       maxOutputTokens: 4096, // 3 候補 × 500 字 + intro/outro でやや余裕
       retries: 1,
     });

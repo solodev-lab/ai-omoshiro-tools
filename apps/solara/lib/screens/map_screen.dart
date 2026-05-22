@@ -1711,15 +1711,14 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                   return;
                 }
               }
-              // ③ Pro ユーザーは空地点タップで consult popup
-              //    (ACG/非 ACG 共通、Free は何も起きない = アップセル連打を避ける)
-              if (ProStatus.instance.isPro) {
-                setState(() {
-                  _consultTapPoint = latlng;
-                  _relocateTapPoint = null;
-                  _zenithTapInfo = null;
-                });
-              }
+              // ③ 空地点タップで consult popup (ACG/非 ACG 共通)。
+              //    Free も開ける = Stella 相談 Free 試食 (週N回)。実際の回数ゲートは
+              //    送信時に Worker が判定 (project_solara_stella_free_credits.md)。
+              setState(() {
+                _consultTapPoint = latlng;
+                _relocateTapPoint = null;
+                _zenithTapInfo = null;
+              });
             },
           ),
           children: [
@@ -2690,18 +2689,8 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
 
     if (!mounted) return;
 
-    // Phase 2-6a: Pro ゲート
-    if (!ProStatus.instance.isPro) {
-      await showProUnlockDialog(
-        context,
-        featureLabel: 'Stella 相談',
-        description: '悩みやテーマを伝えると、Stella が候補地点のエネルギーを '
-            'アストロカートグラフィを土台に読み解きます。',
-      );
-      return;
-    }
-
-    if (!mounted) return;
+    // Free 試食 (週N回) も入力画面へ。回数/モードゲートは送信時に Worker が判定
+    // (project_solara_stella_free_credits.md)。
 
     final natalLines = _astroLinesCache
         .where((l) =>
@@ -2738,17 +2727,8 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
       _consultTapPoint = null;
     });
 
-    // Phase 2-6a: Pro ゲート
-    if (!ProStatus.instance.isPro) {
-      if (!mounted) return;
-      await showProUnlockDialog(
-        context,
-        featureLabel: 'Stella 相談',
-        description: 'タップした地点について、悩みやテーマに照らして Stella が '
-            '「在るエネルギー」を読み解きます。',
-      );
-      return;
-    }
+    // Free 試食 (週N回) も入力画面へ。回数/モードゲートは送信時に Worker が判定
+    // (project_solara_stella_free_credits.md)。
 
     // reverse_geocode (失敗時は coordinate 文字列)
     String? placeName;

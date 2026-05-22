@@ -9,6 +9,8 @@
  *   - user_entitlements: appUserId × entitlementId の Pro 状態 (RevenueCat Webhook で書込)
  *   - webhook_events:    Webhook event_id の idempotent 受信ログ (重複送信耐性)
  *   - integrity_nonces:  Play Integrity Standard request 用 nonce (one-time use、TEXT base64)
+ *   - consultation_credits: Stella 相談の Free 試食クレジット (端末ごと週次カウンター)
+ *   - consultation_purchased: Stella 相談の購入クレジット残高 (アカウント appUserId ごと、消費型 IAP)
  *
  * 単一 DO instance への集約理由:
  *   - DAU 1,500 想定で同時刻書き込み <100/sec → DO の sequential write 内に余裕で収まる
@@ -36,6 +38,16 @@
  *   POST /account-purge     body: {appUserId}            → {ok, deletedEntitlements, deletedEvents}
  *                                                          (アカウント削除: appUserId の Pro 記録 +
  *                                                           Webhook event ログを物理削除)
+ *   POST /consultation-credit-get  body: {deviceKey, weekBucket}  → {used}
+ *                                                          (週が違えば used=0 = 自然リセット)
+ *   POST /consultation-credit-bump body: {deviceKey, weekBucket, now}  → {used}
+ *                                                          (週が違えばリセットして 1、同週なら +1)
+ *   POST /consultation-purchased-get   body: {appUserId}            → {balance}
+ *   POST /consultation-purchased-spend body: {appUserId, now}       → {balance, spent}
+ *                                                          (balance>0 なら -1 して spent:true)
+ *   POST /consultation-credit-grant    body: {appUserId, amount, eventId, now}
+ *                                                          → {balance, alreadyProcessed?}
+ *                                                          (消費型購入で残高 +amount、event_id 冪等)
  *
  * Caller (Worker middleware) はこれらを順番に叩いて検証する。
  */
@@ -132,6 +144,27 @@ export class AttestationState {
       );
     `);
     this.sql.exec(`CREATE INDEX IF NOT EXISTS idx_integrity_nonces_expires ON integrity_nonces(expires_at);`);
+    // consultation_credits: Stella 相談の Free 試食クレジット (端末ごと週次カウンター)
+    // device_key を PRIMARY KEY にするため 1 端末 = 1 行 (週が変わったら used を上書きリセット)。
+    // 行は端末ごとに使い回すので無限増殖しない (cleanup 不要、DAU 5000 で sharding 検討は他表と同じ)。
+    this.sql.exec(`
+      CREATE TABLE IF NOT EXISTS consultation_credits (
+        device_key TEXT PRIMARY KEY,
+        week_bucket TEXT NOT NULL,
+        used INTEGER NOT NULL DEFAULT 0,
+        last_used_at INTEGER NOT NULL
+      );
+    `);
+    // consultation_purchased: 消費型 IAP で買った相談クレジットの残高 (アカウント appUserId ごと)。
+    // 無料週次 (consultation_credits) を使い切った後に消費する。失効しない (購入物)。
+    // サインイン必須前提なので appUserId は apple:/google: の安定値。
+    this.sql.exec(`
+      CREATE TABLE IF NOT EXISTS consultation_purchased (
+        app_user_id TEXT PRIMARY KEY,
+        balance INTEGER NOT NULL DEFAULT 0,
+        updated_at INTEGER NOT NULL
+      );
+    `);
     this._initialized = true;
   }
 
@@ -457,6 +490,134 @@ export class AttestationState {
     return { status: 200, body: { nonceB64: rows[0].nonce_b64 } };
   }
 
+  // ── /consultation-credit-get ──
+  //
+  // Stella 相談 Free 試食クレジットの当週使用回数を返す (read-only)。
+  // 保存されている週が weekBucket と違えば used=0 (= 月曜リセットの自然失効)。
+  // limit との比較は呼び出し側 (Worker) が env の CONSULTATION_FREE_WEEKLY で行う。
+  async _consultationCreditGet({ deviceKey, weekBucket }) {
+    if (typeof deviceKey !== 'string' || !deviceKey) {
+      return { status: 400, body: { error: 'invalid_device_key' } };
+    }
+    if (typeof weekBucket !== 'string' || !/^\d{4}-W\d{2}$/.test(weekBucket)) {
+      return { status: 400, body: { error: 'invalid_week_bucket' } };
+    }
+    const rows = this.sql.exec(
+      `SELECT week_bucket, used FROM consultation_credits WHERE device_key = ?`,
+      deviceKey,
+    ).toArray();
+    if (rows.length === 0 || rows[0].week_bucket !== weekBucket) {
+      return { status: 200, body: { used: 0 } };
+    }
+    return { status: 200, body: { used: rows[0].used } };
+  }
+
+  // ── /consultation-credit-bump ──
+  //
+  // 当週の used を +1 して返す。保存週が違えば (= 別週) リセットして used=1。
+  // Worker は「Stella 生成が実際に成功した時だけ」これを呼ぶ (静的 fallback は消費しない)。
+  async _consultationCreditBump({ deviceKey, weekBucket, now = Date.now() }) {
+    if (typeof deviceKey !== 'string' || !deviceKey) {
+      return { status: 400, body: { error: 'invalid_device_key' } };
+    }
+    if (typeof weekBucket !== 'string' || !/^\d{4}-W\d{2}$/.test(weekBucket)) {
+      return { status: 400, body: { error: 'invalid_week_bucket' } };
+    }
+    const rows = this.sql.exec(
+      `SELECT week_bucket, used FROM consultation_credits WHERE device_key = ?`,
+      deviceKey,
+    ).toArray();
+    const used = (rows.length === 0 || rows[0].week_bucket !== weekBucket)
+      ? 1
+      : rows[0].used + 1;
+    this.sql.exec(
+      `INSERT INTO consultation_credits (device_key, week_bucket, used, last_used_at)
+       VALUES (?, ?, ?, ?)
+       ON CONFLICT(device_key) DO UPDATE SET week_bucket = ?, used = ?, last_used_at = ?`,
+      deviceKey, weekBucket, used, now,
+      weekBucket, used, now,
+    );
+    return { status: 200, body: { used } };
+  }
+
+  // ── /consultation-purchased-get ──
+  // 購入クレジット残高 (read-only)。未保存は 0。
+  async _consultationPurchasedGet({ appUserId }) {
+    if (typeof appUserId !== 'string' || !appUserId) {
+      return { status: 400, body: { error: 'invalid_app_user_id' } };
+    }
+    const rows = this.sql.exec(
+      `SELECT balance FROM consultation_purchased WHERE app_user_id = ?`,
+      appUserId,
+    ).toArray();
+    return { status: 200, body: { balance: rows.length > 0 ? rows[0].balance : 0 } };
+  }
+
+  // ── /consultation-purchased-spend ──
+  // 残高 > 0 なら -1 して {balance, spent:true}、0 なら {balance:0, spent:false}。
+  // Worker は「無料週次を使い切った + Stella 生成が成功した時」だけ呼ぶ。
+  async _consultationPurchasedSpend({ appUserId, now = Date.now() }) {
+    if (typeof appUserId !== 'string' || !appUserId) {
+      return { status: 400, body: { error: 'invalid_app_user_id' } };
+    }
+    const rows = this.sql.exec(
+      `SELECT balance FROM consultation_purchased WHERE app_user_id = ?`,
+      appUserId,
+    ).toArray();
+    const cur = rows.length > 0 ? rows[0].balance : 0;
+    if (cur <= 0) return { status: 200, body: { balance: 0, spent: false } };
+    const next = cur - 1;
+    this.sql.exec(
+      `UPDATE consultation_purchased SET balance = ?, updated_at = ? WHERE app_user_id = ?`,
+      next, now, appUserId,
+    );
+    return { status: 200, body: { balance: next, spent: true } };
+  }
+
+  // ── /consultation-credit-grant ──
+  // 消費型 IAP 購入で残高 +amount。RC Webhook (NON_RENEWING_PURCHASE) から呼ばれる。
+  // eventId で冪等 (webhook_events を共用、二重付与防止)。
+  async _consultationCreditGrant({ appUserId, amount, eventId, now = Date.now() }) {
+    if (typeof appUserId !== 'string' || !appUserId) {
+      return { status: 400, body: { error: 'invalid_app_user_id' } };
+    }
+    if (typeof amount !== 'number' || !Number.isInteger(amount) || amount <= 0) {
+      return { status: 400, body: { error: 'invalid_amount' } };
+    }
+    if (typeof eventId !== 'string' || !eventId) {
+      return { status: 400, body: { error: 'invalid_event_id' } };
+    }
+    // 冪等ガード (webhook_events を共用、INSERT OR IGNORE 相当)
+    const before = this.sql.exec(
+      `SELECT 1 FROM webhook_events WHERE event_id = ?`, eventId,
+    ).toArray();
+    if (before.length > 0) {
+      const cur = this.sql.exec(
+        `SELECT balance FROM consultation_purchased WHERE app_user_id = ?`, appUserId,
+      ).toArray();
+      return {
+        status: 200,
+        body: { balance: cur.length > 0 ? cur[0].balance : 0, alreadyProcessed: true },
+      };
+    }
+    this.sql.exec(
+      `INSERT INTO webhook_events (event_id, received_at, event_type, app_user_id, entitlement_id)
+       VALUES (?, ?, ?, ?, ?)`,
+      eventId, now, 'NON_RENEWING_PURCHASE', appUserId, null,
+    );
+    this.sql.exec(
+      `INSERT INTO consultation_purchased (app_user_id, balance, updated_at)
+       VALUES (?, ?, ?)
+       ON CONFLICT(app_user_id) DO UPDATE SET balance = balance + ?, updated_at = ?`,
+      appUserId, amount, now,
+      amount, now,
+    );
+    const after = this.sql.exec(
+      `SELECT balance FROM consultation_purchased WHERE app_user_id = ?`, appUserId,
+    ).toArray();
+    return { status: 200, body: { balance: after.length > 0 ? after[0].balance : amount } };
+  }
+
   // ── HTTP entry ──
   async fetch(request) {
     this._ensureSchema();
@@ -486,6 +647,11 @@ export class AttestationState {
       '/integrity-nonce-create': () => this._integrityNonceCreate(body),
       '/integrity-nonce-consume': () => this._integrityNonceConsume(body),
       '/account-purge': () => this._accountPurge(body),
+      '/consultation-credit-get': () => this._consultationCreditGet(body),
+      '/consultation-credit-bump': () => this._consultationCreditBump(body),
+      '/consultation-purchased-get': () => this._consultationPurchasedGet(body),
+      '/consultation-purchased-spend': () => this._consultationPurchasedSpend(body),
+      '/consultation-credit-grant': () => this._consultationCreditGrant(body),
     };
     const handler = dispatch[path];
     if (!handler) return new Response('not found', { status: 404 });

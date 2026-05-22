@@ -133,6 +133,14 @@ function jsonError(status, message, origin) {
   });
 }
 
+/** error コード + 追加フィールドを載せた JSON レスポンス (例: 402 paywall with remaining/limit)。 */
+function jsonStatus(status, payload, origin) {
+  return new Response(JSON.stringify(payload), {
+    status,
+    headers: { 'Content-Type': 'application/json', ...corsHeaders(origin) }
+  });
+}
+
 // ── OSM tile proxy ──
 // クライアントから /public/tiles/osm/<source>/<z>/<x>/<y>.png で来たリクエストを
 // 各 OSM ソース（OSM France HOT / 標準 OSM / CyclOSM）に中継する。
@@ -454,6 +462,169 @@ async function lookupIsPro(env, appUserId) {
   // 404 or inactive: null を memoize (= 60s は DO に問い合わせない)
   setCachedEntitlement(appUserId, null);
   return false;
+}
+
+// ──────────────────────────────────────────────────────────
+// Stella 相談 Free 試食クレジット (設計 project_solara_stella_free_credits.md)
+//
+//   - Free は週 N 回 (CONSULTATION_FREE_WEEKLY、default 3) まで Stella 相談を試食できる。
+//   - 対象モードは CONSULTATION_FREE_MODES (default "migration,travel,daily"。後から
+//     "daily" だけ等に env で変更可能、コード変更/再ビルド不要)。
+//   - Free は thinking OFF (浅い)・出し直し (excluded) 不可。Pro は無制限・thinking ON・出し直し可。
+//   - クレジットは「実際に Stella 生成が成功した時だけ」消費する (静的 fallback は消費しない)。
+//   - カウンターは端末 ID (iOS=keyId / それ以外=appUserId) × ISO 週 (月曜リセット、UTC) で DO に保持。
+//   - 相談は middleware の日次クォータ (Free5/Pro100) も 1 消費する (多層防御のバックストップ。
+//     週次 3 とは別軸)。
+// ──────────────────────────────────────────────────────────
+
+/** ISO 8601 週バケット文字列 "YYYY-Www" (週は月曜始まり、UTC 基準)。月曜リセットの key。 */
+function isoWeekBucket(date = new Date()) {
+  const d = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
+  // その週の木曜が ISO 週の年を決める (木曜へ移動)
+  const dayNum = (d.getUTCDay() + 6) % 7; // Mon=0..Sun=6
+  d.setUTCDate(d.getUTCDate() - dayNum + 3);
+  const isoYear = d.getUTCFullYear();
+  const firstThursday = new Date(Date.UTC(isoYear, 0, 4)); // 1/4 は必ず第1週
+  const firstDayNum = (firstThursday.getUTCDay() + 6) % 7;
+  firstThursday.setUTCDate(firstThursday.getUTCDate() - firstDayNum + 3);
+  const week = 1 + Math.round((d.getTime() - firstThursday.getTime()) / (7 * 24 * 3600 * 1000));
+  return `${isoYear}-W${String(week).padStart(2, '0')}`;
+}
+
+/** CONSULTATION_FREE_MODES を Set に。default は 3 モード全部。 */
+function consultationFreeModes(env) {
+  const raw = (env.CONSULTATION_FREE_MODES || 'migration,travel,daily');
+  return new Set(raw.split(',').map((s) => s.trim()).filter(Boolean));
+}
+
+/** CONSULTATION_FREE_WEEKLY を int に。default 3、不正値も 3 に倒す。 */
+function consultationFreeWeekly(env) {
+  const n = parseInt(env.CONSULTATION_FREE_WEEKLY || '3', 10);
+  return Number.isInteger(n) && n >= 0 ? n : 3;
+}
+
+/**
+ * 相談クレジットのカウンター key を決める。
+ *   - iOS: X-AppAttest-KeyId ヘッダー (端末固定、再インストールに強い) → `ios:{keyId}`
+ *   - それ以外 (Android 含む): appUserId → `usr:{appUserId}` (匿名は再インストールで farming 可、
+ *     既存日次クォータと同じ既知の限界。enforced 後の主防御は週次 + 日次の二段)
+ *   - どちらも無い (bypass/dev) → null (クレジット計上しない)
+ */
+function consultationDeviceKey(request, appUserId) {
+  const keyId = request.headers.get('X-AppAttest-KeyId');
+  if (keyId) return `ios:${keyId}`;
+  if (typeof appUserId === 'string' && appUserId) return `usr:${appUserId}`;
+  return null;
+}
+
+/** body から appUserId を取り出す (署名検証済の予約フィールド)。 */
+function consultationAppUserId(body) {
+  return (body && typeof body[APP_USER_ID_FIELD] === 'string') ? body[APP_USER_ID_FIELD] : null;
+}
+
+/**
+ * 相談クレジットの現在状況を返す (status endpoint + 生成後の残数添付で共用)。
+ * Pro は無制限 (各値 null)。非 Pro は 無料週次残 + 購入残高。
+ */
+async function consultationCreditStatus(env, request, body) {
+  const appUserId = consultationAppUserId(body);
+  const isPro = await lookupIsPro(env, appUserId);
+  if (isPro) {
+    return { pro: true, freeRemaining: null, freeLimit: null, purchasedBalance: null, weekBucket: null };
+  }
+  const deviceKey = consultationDeviceKey(request, appUserId);
+  const weekBucket = isoWeekBucket();
+  const limit = consultationFreeWeekly(env);
+  let freeRemaining = 0;
+  if (deviceKey) {
+    const got = await callDo(env, '/consultation-credit-get', { deviceKey, weekBucket });
+    const used = (got.status === 200 && typeof got.body?.used === 'number') ? got.body.used : 0;
+    freeRemaining = Math.max(0, limit - used);
+  }
+  let purchasedBalance = 0;
+  if (appUserId) {
+    const pg = await callDo(env, '/consultation-purchased-get', { appUserId });
+    purchasedBalance = (pg.status === 200 && typeof pg.body?.balance === 'number') ? pg.body.balance : 0;
+  }
+  return { pro: false, freeRemaining, freeLimit: limit, purchasedBalance, weekBucket };
+}
+
+/**
+ * 共通: 1 AI 占いクレジットの消費判定 (Stella 相談・タロットカテゴリで共用 = 同じ財布)。
+ * 1 クレジット = AI 占い 1 回。消費順 = 無料週次 → 購入残高。Pro は無制限。
+ *
+ * 戻り値:
+ *   - { block: Response }   → ブロック (402 paywall コード)
+ *   - { allow:true, isPro:true }                                  → Pro 無制限
+ *   - { allow:true, isPro:false, source:'free', deviceKey, weekBucket } → 無料週次を消費予定
+ *   - { allow:true, isPro:false, source:'purchased', appUserId }  → 購入残高を消費予定
+ *   - { allow:true, isPro:false, source:null }                    → bypass/dev (計上なし)
+ */
+async function consumeReadingCreditGate(request, env, body, origin) {
+  const appUserId = consultationAppUserId(body);
+  const isPro = await lookupIsPro(env, appUserId);
+  if (isPro) return { allow: true, isPro: true };
+
+  const deviceKey = consultationDeviceKey(request, appUserId);
+  if (!deviceKey) {
+    // bypass/dev (ヘッダーも appUserId も無い) はクレジット計上せず通す。
+    return { allow: true, isPro: false, source: null };
+  }
+
+  const weekBucket = isoWeekBucket();
+  const limit = consultationFreeWeekly(env);
+
+  // 1) 無料週次の残量
+  const got = await callDo(env, '/consultation-credit-get', { deviceKey, weekBucket });
+  const used = (got.status === 200 && typeof got.body?.used === 'number') ? got.body.used : 0;
+  if (limit - used > 0) {
+    return { allow: true, isPro: false, source: 'free', deviceKey, weekBucket };
+  }
+
+  // 2) 購入残高 (サインイン済 appUserId のみ)
+  if (appUserId) {
+    const pg = await callDo(env, '/consultation-purchased-get', { appUserId });
+    const balance = (pg.status === 200 && typeof pg.body?.balance === 'number') ? pg.body.balance : 0;
+    if (balance > 0) {
+      return { allow: true, isPro: false, source: 'purchased', appUserId };
+    }
+  }
+
+  // 3) 無料・購入とも尽きた
+  return {
+    block: jsonStatus(402, {
+      error: 'consultation_credit_exhausted', remaining: 0, limit, weekBucket,
+    }, origin),
+  };
+}
+
+/** 生成成功後に 1 クレジット消費する (free→bump / purchased→spend)。Pro / bypass は何もしない。 */
+async function consumeReadingCredit(env, gate) {
+  if (!gate || gate.isPro || !gate.source) return;
+  if (gate.source === 'free') {
+    await callDo(env, '/consultation-credit-bump', {
+      deviceKey: gate.deviceKey, weekBucket: gate.weekBucket,
+    });
+  } else if (gate.source === 'purchased') {
+    await callDo(env, '/consultation-purchased-spend', { appUserId: gate.appUserId });
+  }
+}
+
+/**
+ * Stella 相談のクレジットゲート。共通ゲート + 相談固有のモード制限 (CONSULTATION_FREE_MODES)。
+ * 1 クレジット = 相談 1 回 (初回も出し直しも消費)。Free も Pro 同等品質 (thinking ON / 出し直し可)。
+ */
+async function gateConsultation(request, env, body, origin) {
+  const appUserId = consultationAppUserId(body);
+  const isPro = await lookupIsPro(env, appUserId);
+  // 非 Pro はアクセス可能モードか (Pro は全モード)
+  if (!isPro) {
+    const mode = body && body.mode;
+    if (!consultationFreeModes(env).has(mode)) {
+      return { block: jsonStatus(402, { error: 'consultation_pro_only_mode', mode }, origin) };
+    }
+  }
+  return consumeReadingCreditGate(request, env, body, origin);
 }
 
 /**
@@ -912,8 +1083,26 @@ async function dispatchProtected(request, env, url, origin) {
 
   if (path === '/protected/tarot' && request.method === 'POST') {
     const body = await request.json();
+    // カテゴリ指定時のみクレジット消費 (相談と同じ財布)。指定なし = 従来の無料 全体運。
+    // Pro はカテゴリ指定でも消費なし (無制限)。
+    const hasCategory = typeof body.category === 'string' && body.category.length > 0;
+    let gate = null;
+    if (hasCategory) {
+      gate = await consumeReadingCreditGate(request, env, body, origin);
+      if (gate.block) return gate.block;
+    }
     try {
-      return jsonOk(await handleTarot(body, env), origin);
+      const result = await handleTarot(body, env);
+      // handleTarot は失敗時 throw (静的 fallback なし) → ここに来たら成功。消費する。
+      if (gate) await consumeReadingCredit(env, gate);
+      // 非 Pro かつカテゴリ指定時は残数を添付 (クライアント表示用)
+      if (gate && !gate.isPro) {
+        const status = await consultationCreditStatus(env, request, body);
+        result.freeCreditsRemaining = status.freeRemaining;
+        result.freeCreditsLimit = status.freeLimit;
+        result.purchasedBalance = status.purchasedBalance;
+      }
+      return jsonOk(result, origin);
     } catch (err) {
       console.error('Tarot error:', err);
       return jsonError(500, err.message || 'Tarot generation failed', origin);
@@ -944,11 +1133,37 @@ async function dispatchProtected(request, env, url, origin) {
 
   if (path === '/protected/astro/consultation' && request.method === 'POST') {
     const body = await request.json();
+    // クレジットゲート (Pro=無制限、非Pro=無料週次→購入残高、尽きたら 402 paywall)
+    const gate = await gateConsultation(request, env, body, origin);
+    if (gate.block) return gate.block;
     try {
-      return jsonOk(await handleConsultation(body, env), origin);
+      const result = await handleConsultation(body, env);
+      // 非 Pro: 実際に Stella 生成が成功 (非 fallback) した時だけ 1 クレジット消費
+      if (result && result.fallback !== true) {
+        await consumeReadingCredit(env, gate);
+      }
+      // 残数をレスポンスに添付 (消費後の正確な値、クライアント表示用)
+      if (!gate.isPro) {
+        const status = await consultationCreditStatus(env, request, body);
+        result.freeCreditsRemaining = status.freeRemaining;
+        result.freeCreditsLimit = status.freeLimit;
+        result.purchasedBalance = status.purchasedBalance;
+      }
+      return jsonOk(result, origin);
     } catch (err) {
       console.error('Consultation error:', err);
       return jsonError(500, err.message || 'Consultation generation failed', origin);
+    }
+  }
+
+  // クレジット状況 (残数表示 / 購入後の残高更新用)。middleware 通過必須。
+  if (path === '/protected/consultation/credits' && request.method === 'POST') {
+    const body = await request.json().catch(() => ({}));
+    try {
+      return jsonOk(await consultationCreditStatus(env, request, body), origin);
+    } catch (err) {
+      console.error('Consultation credits error:', err);
+      return jsonError(500, err.message || 'Consultation credits failed', origin);
     }
   }
 
@@ -966,6 +1181,14 @@ export const _internal = {
   extractAppUserId,
   isDiagnosticsBlocked,
   validateAppleAssertionClientData,
+  isoWeekBucket,
+  consultationFreeModes,
+  consultationFreeWeekly,
+  consultationDeviceKey,
+  consultationAppUserId,
+  consultationCreditStatus,
+  consumeReadingCreditGate,
+  gateConsultation,
 };
 
 // ── Main Handler ──

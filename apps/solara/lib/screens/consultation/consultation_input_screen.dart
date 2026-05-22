@@ -27,6 +27,7 @@ import 'package:latlong2/latlong.dart';
 import '../../theme/solara_colors.dart';
 import '../../utils/astro_lines.dart' as al;
 import '../../utils/consultation_engine.dart' as ce;
+import '../../utils/pro_status.dart';
 import '../../utils/world_cities.dart';
 import '../../widgets/tap_to_unfocus.dart';
 import '../map/map_search.dart' as map_search;
@@ -388,6 +389,20 @@ class _ConsultationInputScreenState extends State<ConsultationInputScreen> {
                 ),
               ),
             ),
+            if (!ProStatus.instance.isPro)
+              const Padding(
+                padding: EdgeInsets.fromLTRB(20, 0, 20, 6),
+                child: Text(
+                  '無料の Stella 相談は週 3 回まで（毎週補充）。'
+                  '使い切っても追加クレジット購入か Cosmic Pro で続けられます。',
+                  style: TextStyle(
+                    color: SolaraColors.textSecondary,
+                    fontSize: 11,
+                    height: 1.5,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
             _SubmitBar(
               enabled: _canSubmit,
               onSubmit: _submit,

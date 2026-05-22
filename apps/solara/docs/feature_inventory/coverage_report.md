@@ -5,8 +5,8 @@
 
 ## #3 Worker ↔ Flutter エンドポイント対整合
 
-- Worker 側に定義された path: **27**
-- Flutter から呼ばれている path リテラル: **16**
+- Worker 側に定義された path: **28**
+- Flutter から呼ばれている path リテラル: **17**
 
 ### Worker → Flutter 漏れ (Worker にあるが Flutter から呼出無し)
 
@@ -35,6 +35,7 @@
 - `/protected/*`
 - `/protected/account/delete`
 - `/protected/astro/consultation`
+- `/protected/consultation/credits`
 - `/protected/fortune`
 - `/protected/relocation`
 - `/protected/tarot`
@@ -49,10 +50,10 @@
 
 ## #1 / #2 機械抽出 ↔ feature_inventory.md (人手版) の対整合
 
-- 機械抽出した class/mixin/extension/enum: **406**
-- inventory に登場する識別子 (大文字始まり ``backtick``囲み): **209**
+- 機械抽出した class/mixin/extension/enum: **415**
+- inventory に登場する識別子 (大文字始まり ``backtick``囲み): **216**
 
-### #1 機械にあるが Doc に書かれていない (234)
+### #1 機械にあるが Doc に書かれていない (240)
 
 - `AppAttestClient`
 - `CandidateLocation`
@@ -61,12 +62,12 @@
 - `ConstellationShareCardPage`
 - `ConsultEntryPopup`
 - `ConsultationCandidateReading`
+- `ConsultationCreditStatus`
 - `ConsultationHistoryScreen`
 - `ConsultationInputScreen`
 - `ConsultationMode`
 - `ConsultationPlacePickerScreen`
 - `ConsultationPresetTarget`
-- `ConsultationReading`
 - `ConsultationRecord`
 - `ConsultationResultScreen`
 - `ConsultationScope`
@@ -121,10 +122,14 @@
 - `_ConstellationCard`
 - `_ConsultEntryPopupState`
 - `_ConsultExamples`
+- `_ConsultationBlockedBox`
 - `_ConsultationHistoryScreenState`
 - `_ConsultationInputScreenState`
 - `_ConsultationResultScreenState`
+- `_ConsultationResultShare`
 - `_ContribRow`
+- `_CreditSheet`
+- `_CreditSheetState`
 - `_CycleActionsSheet`
 - `_DailyTransitChip`
 - `_DateNumberField`
@@ -150,6 +155,7 @@
 - `_FortuneRowsList`
 - `_FortuneRowsListState`
 - `_FramePill`
+- `_FreeCreditsBanner`
 - `_FreeTextField`
 - `_FullMoonOverlayState`
 - `_GADot`
@@ -208,6 +214,7 @@
 - `_Note`
 - `_NotePair`
 - `_NumberedPin`
+- `_ObserveCategorySelector`
 - `_ObserveHistoryFilterBarState`
 - `_ObserveHistoryPanelState`
 - `_ObserveHistoryPastPanelState`
@@ -248,15 +255,9 @@
 - `_ScopeRow`
 - `_ScoredBearing`
 - `_ScoredCity`
-- `_ScrollableRowPanel`
-- `_SearchBar`
-- `_SearchBarOverlayState`
-- `_SearchHitRow`
-- `_Section`
-- `_SectionCard`
-- … 残り 34 省略
+- … 残り 40 省略
 
-### #2 Doc に書いてあるがコードに存在しない (ゴースト記述) (37)
+### #2 Doc に書いてあるがコードに存在しない (ゴースト記述) (41)
 
 > 注: Flutter SDK や外部ライブラリの型もここに乗る (誤検出)。
 > 真のゴーストはアプリ独自型のみ。実際の Doc 修正対象は手で絞り込む。
@@ -266,6 +267,9 @@
 - `BottomNavigationBar`
 - `C8D4E8`
 - `CHART_STYLE`
+- `CONSULTATION_CREDIT_PRODUCTS`
+- `CONSULTATION_FREE_MODES`
+- `CONSULTATION_FREE_WEEKLY`
 - `CategoryFilterTips`
 - `CustomPaint`
 - `D6915C`
@@ -282,6 +286,7 @@
 - `IgnorePointer`
 - `ListView`
 - `MaterialApp`
+- `NON_RENEWING_PURCHASE`
 - `NOUN_SHAPES`
 - `PATH_OVERRIDES`
 - `RawScrollbar`
@@ -317,7 +322,7 @@
 
 ### 層 4c: Observe (Tarot) 画面
 
-- ファイル数: 10
+- ファイル数: 11
 - Worker URL 呼出: (なし)
 - Popup/Dialog: (なし)
 - Navigator.push 等: 0 箇所
@@ -338,7 +343,7 @@
 
 ### 層 4f: サブ画面 (Forecast / Locations / Philosophy / Font Preview)
 
-- ファイル数: 18
+- ファイル数: 21
 - Worker URL 呼出: (なし)
 - Popup/Dialog: `showInfoPopup`×5
 - Navigator.push 等: 0 箇所
@@ -365,10 +370,10 @@
 | 3c | · | 5 | 4 | 2 | 4 | · | 12 | 4 | · | · | · | · | · | · | · | · |
 | 4a | 10 | 11 | · | 13 | 7 | · | 19 | 23 | 3 | 31 | 2 | · | · | · | 3 | · |
 | 4b | 5 | 13 | · | 3 | 4 | · | 14 | · | · | · | 29 | · | · | 2 | · | · |
-| 4c | 1 | 1 | 15 | · | 7 | 4 | 6 | 4 | · | · | · | 15 | · | · | · | · |
+| 4c | 1 | 1 | 15 | · | 7 | 4 | 6 | 4 | · | · | · | 16 | · | · | 1 | · |
 | 4d | 2 | 6 | 13 | 1 | 5 | 2 | 12 | 2 | 1 | · | · | · | 8 | · | · | · |
 | 4e | 1 | 4 | · | 2 | 7 | · | 14 | 1 | · | · | · | · | · | 9 | 2 | · |
-| 4f | 4 | 4 | · | 4 | 12 | · | 14 | 10 | · | 6 | · | · | · | · | 13 | · |
+| 4f | 5 | 4 | · | 5 | 14 | · | 14 | 11 | · | 6 | · | · | · | · | 17 | · |
 | 5 | 1 | · | · | 2 | 4 | 1 | 1 | 1 | · | 1 | 1 | 1 | 1 | 1 | · | · |
 
 > 健全な依存方向は「番号が大きい層 → 小さい層」(上位が下位に依存)。
@@ -380,11 +385,11 @@
 
 | ファイル | 層 | 被 import 数 |
 | --- | --- | --- |
-| `lib/theme/solara_colors.dart` | 3b | 33 |
+| `lib/theme/solara_colors.dart` | 3b | 34 |
 | `lib/utils/solara_storage.dart` | 2b | 24 |
 | `lib/widgets/info_popup.dart` | 3a | 21 |
 | `lib/screens/map/map_constants.dart` | 3b | 20 |
-| `lib/utils/pro_status.dart` | 2b | 18 |
+| `lib/utils/pro_status.dart` | 2b | 19 |
 | `lib/models/galaxy_cycle.dart` | 1c | 14 |
 | `lib/screens/horoscope/horo_antique_icons.dart` | 3a | 13 |
 | `lib/utils/solara_api.dart` | 2a | 13 |
@@ -414,9 +419,18 @@
 > 各ソースの SHA1 を `_stamps.json` に記録し、差分を検出。
 > 変更されたファイルが属する層は、人手版インベントリ章の見直し対象。
 
-- 追加: **0** / 削除: **0** / 変更: **0**
+- 追加: **3** / 削除: **0** / 変更: **3**
 
-- 変更なし — 全インベントリ章は最新。
+### 変更されたファイル (層別)
+
+- **層 4c**: `lib/screens/observe_screen.dart`
+- **層 4f**: `lib/screens/consultation/consultation_result_screen.dart`, `lib/screens/consultation/consultation_result_widgets.dart`
+
+### 追加されたファイル
+
+- `lib/screens/consultation/consultation_result_credit_widgets.dart` (層 4f)
+- `lib/screens/consultation/consultation_result_share.dart` (層 4f)
+- `lib/screens/observe/observe_category_selector.dart` (層 4c)
 
 ## #7 astro_glossary 用語辞書対整合
 

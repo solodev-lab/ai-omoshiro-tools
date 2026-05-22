@@ -39,6 +39,21 @@ TAROT_MODEL_FALLBACK = "gemini-flash-latest"
 FORTUNE_MODEL_PRIMARY = "gemini-2.5-flash"
 FORTUNE_MODEL_FALLBACK = "gemini-flash-latest"
 
+# ── Stella 相談 Free 試食クレジット (設計 project_solara_stella_free_credits.md) ──
+# Free ユーザーが Stella 相談を試食できる「無料クレジット」の設定。コード変更/再ビルド不要で
+# wrangler deploy だけで調整できる。
+#   CONSULTATION_FREE_MODES   : 無料試食できるモードの CSV。3 モード全部 or "daily" だけ等に変更可。
+#                               (migration=移住 / travel=旅行 / daily=おでかけ「今日どこ行こう」)
+#   CONSULTATION_FREE_WEEKLY  : 週あたり無料回数 (端末ごと、月曜 UTC リセット)。
+# Pro は無制限 + thinking ON + 出し直し可。Free は thinking OFF + 出し直し不可。
+CONSULTATION_FREE_MODES = "migration,travel,daily"
+CONSULTATION_FREE_WEEKLY = "3"
+# 消費型クレジット商品 (B案、有料追加クレジット)。"商品ID:付与数" を CSV で。
+# 🚨 オーナー作業: App Store Connect / Google Play / RevenueCat で同じ商品 ID の消費型 IAP を作成。
+# 価格は各ストアで設定 (提案: small=3個 $2.99/¥450、large=10個 $8.99/¥1,300、Pro へ寄せた割高設定)。
+# 商品 ID/付与数は後から変更可 (deploy のみ)。RC NON_RENEWING_PURCHASE Webhook で残高加算。
+CONSULTATION_CREDIT_PRODUCTS = "com.solodevlab.solara.credits.small:3,com.solodevlab.solara.credits.large:10"
+
 # ── App Attest 設定 (設計 v1.9 §16 確定値) ──────────
 # どちらも public 情報 (Bundle ID から推測可能、Team ID も同じ)、secret 不要
 APPLE_TEAM_ID = "TY5JW393Q5"

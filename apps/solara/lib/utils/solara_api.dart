@@ -55,6 +55,10 @@ const String solaraRelocationUrl = '$solaraWorkerBase/protected/relocation';
 const String solaraConsultationUrl =
     '$solaraWorkerBase/protected/astro/consultation';
 
+/// Stella 相談クレジット状況 (無料週次残 + 購入残高)。残数表示・購入後の更新用。
+const String solaraConsultationCreditsUrl =
+    '$solaraWorkerBase/protected/consultation/credits';
+
 /// アカウント削除時にサーバー側 (DO) の Pro 記録 + Webhook ログを物理削除する。
 /// App Attest / Play Integrity を通すため /protected/* 配下に置く (body の
 /// `__appUserId` が assertion で署名され、削除対象が改ざんされない)。
