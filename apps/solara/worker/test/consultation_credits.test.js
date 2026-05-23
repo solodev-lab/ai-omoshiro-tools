@@ -28,6 +28,7 @@ const {
   consultationCreditStatus,
   consumeReadingCreditGate,
   gateConsultation,
+  consultationConsumed,
 } = _internal;
 const { consultationCreditAmountForProduct } = rcInternal;
 
@@ -317,4 +318,18 @@ test('creditProduct: env から商品ID→付与数を引く', () => {
   assert.equal(consultationCreditAmountForProduct(env, 'com.solodevlab.solara.credits.large'), 10);
   assert.equal(consultationCreditAmountForProduct(env, 'com.solodevlab.solara.unknown'), 0);
   assert.equal(consultationCreditAmountForProduct({}, 'anything'), 0);
+});
+
+// ── consultationConsumed (V2: 1クレジット=1候補の課金判定) ──────
+
+test('consultationConsumed: 本物の候補が出た時だけ課金 (exhausted/fallback/候補なしは課金しない)', () => {
+  // 本物の候補 → 課金する
+  assert.equal(consultationConsumed({ candidate: { name: '京都' } }), true);
+  // 候補出し尽くし (excluded) → 課金しない
+  assert.equal(consultationConsumed({ exhausted: true }), false);
+  // 静的フォールバック (Stella 不通) → 課金しない (旧 consultation と同方針)
+  assert.equal(consultationConsumed({ candidate: { name: '京都' }, fallback: true }), false);
+  // 候補が無い (null) → 課金しない
+  assert.equal(consultationConsumed({ candidate: null }), false);
+  assert.equal(consultationConsumed(null), false);
 });

@@ -22,6 +22,7 @@ import { handleTarot } from './tarot.js';
 import { handleRelocation } from './relocation.js';
 import { handleLineNarrative } from './line_narrative.js';
 import { handleConsultation } from './consultation.js';
+import { handleConsultationV2 } from './consultation_v2.js';
 import { verifyAttestation, verifyAssertion } from './auth/app_attest.js';
 // Play Integrity (Android) — 設計 v1.1 §4 + §8 (Google decode API 方式)
 import {
@@ -611,8 +612,17 @@ async function consumeReadingCredit(env, gate) {
 }
 
 /**
+ * V2 相談 (1 クレジット = 1 候補) で実際に課金すべきか。
+ * 候補が無い (excluded で出し尽くした exhausted) / 静的フォールバック (Stella 不通) は課金しない。
+ * 本物の候補が生成できた時だけ true。
+ */
+function consultationConsumed(result) {
+  return !!(result && !result.exhausted && result.fallback !== true && result.candidate);
+}
+
+/**
  * Stella 相談のクレジットゲート。共通ゲート + 相談固有のモード制限 (CONSULTATION_FREE_MODES)。
- * 1 クレジット = 相談 1 回 (初回も出し直しも消費)。Free も Pro 同等品質 (thinking ON / 出し直し可)。
+ * 1 クレジット = 候補 1 つ (初回も「別の候補地」も消費)。Free も Pro 同等品質 (thinking ON / 出し直し可)。
  */
 async function gateConsultation(request, env, body, origin) {
   const appUserId = consultationAppUserId(body);
@@ -1156,6 +1166,34 @@ async function dispatchProtected(request, env, url, origin) {
     }
   }
 
+  // 相談 V2 (全要素統合: client 最小入力 → 全サーバー計算 → Stella ナレーション)。
+  // 1 クレジット = 1 候補。「別の候補地」は excluded を足して再呼び出し (= +1 クレジット)。
+  // 旧 /protected/astro/consultation は deployed app 用に温存 (後方互換)。
+  if (path === '/protected/astro/consultation2' && request.method === 'POST') {
+    const body = await request.json();
+    // クレジットゲート (Pro=無制限、非Pro=無料週次→購入残高、尽きたら 402 paywall)
+    const gate = await gateConsultation(request, env, body, origin);
+    if (gate.block) return gate.block;
+    try {
+      const result = await handleConsultationV2(body, env);
+      // 候補が生成できた時 (exhausted/fallback でない) だけ 1 クレジット消費
+      if (consultationConsumed(result)) {
+        await consumeReadingCredit(env, gate);
+      }
+      // 残数をレスポンスに添付 (消費後の正確な値、クライアント表示用)
+      if (!gate.isPro) {
+        const status = await consultationCreditStatus(env, request, body);
+        result.freeCreditsRemaining = status.freeRemaining;
+        result.freeCreditsLimit = status.freeLimit;
+        result.purchasedBalance = status.purchasedBalance;
+      }
+      return jsonOk(result, origin);
+    } catch (err) {
+      console.error('Consultation V2 error:', err);
+      return jsonError(500, err.message || 'Consultation generation failed', origin);
+    }
+  }
+
   // クレジット状況 (残数表示 / 購入後の残高更新用)。middleware 通過必須。
   if (path === '/protected/consultation/credits' && request.method === 'POST') {
     const body = await request.json().catch(() => ({}));
@@ -1189,6 +1227,7 @@ export const _internal = {
   consultationCreditStatus,
   consumeReadingCreditGate,
   gateConsultation,
+  consultationConsumed,
 };
 
 // ── Main Handler ──
