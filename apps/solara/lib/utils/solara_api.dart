@@ -55,6 +55,12 @@ const String solaraRelocationUrl = '$solaraWorkerBase/protected/relocation';
 const String solaraConsultationUrl =
     '$solaraWorkerBase/protected/astro/consultation';
 
+/// 相談 V2 (全要素統合: client 最小入力 → 全サーバー計算 → Stella ナレーション)。
+/// 1 クレジット = 1 候補。「別の候補地」は excluded を足して再呼び出し。
+/// 旧 solaraConsultationUrl は deployed app 後方互換のため温存。
+const String solaraConsultation2Url =
+    '$solaraWorkerBase/protected/astro/consultation2';
+
 /// Stella 相談クレジット状況 (無料週次残 + 購入残高)。残数表示・購入後の更新用。
 const String solaraConsultationCreditsUrl =
     '$solaraWorkerBase/protected/consultation/credits';

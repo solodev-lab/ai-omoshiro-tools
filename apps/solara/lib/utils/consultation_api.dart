@@ -136,7 +136,9 @@ class ConsultationResult {
   bool get isNetworkError => reading == null && block == null;
 }
 
-ConsultationBlock _blockFromCode(String? code) {
+/// 402 paywall レスポンスの `error` コード → [ConsultationBlock]。
+/// V2 (consultation_v2_api.dart) からも再利用する。
+ConsultationBlock consultationBlockFromCode(String? code) {
   switch (code) {
     case 'consultation_credit_exhausted':
       return ConsultationBlock.creditExhausted;
@@ -216,7 +218,7 @@ Future<ConsultationResult> fetchConsultation({
       } catch (_) {
         code = null;
       }
-      return ConsultationResult(block: _blockFromCode(code));
+      return ConsultationResult(block: consultationBlockFromCode(code));
     }
   } catch (_) {
     // network / decode error → isNetworkError
