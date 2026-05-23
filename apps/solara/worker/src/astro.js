@@ -880,3 +880,19 @@ export function computeMonthEvents(year, month) {
 
   return { year, month, newMoonDate, fullMoonDate, events };
 }
+
+// ── Internal primitives (Stella 相談 Phase 1 consultation_engine.js が再利用) ──
+// 既存エンドポイントには影響しない追加 export のみ。チャート計算の重複実装を防ぎ、
+// 相談エンジンが natal/transit/progressed 黄経・リロケハウスを同一ロジックで得る。
+export {
+  BODY_KEYS,
+  eclLon,
+  calcAllPlanets,
+  calcAllPlanetsKeyed,
+  calcAscendant,
+  calcMC,
+  calcHouses,
+  calcProgressedDate,
+  makeUTCDate,
+  makeUTCDateFromTzName,
+};

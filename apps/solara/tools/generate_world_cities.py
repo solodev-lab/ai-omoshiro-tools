@@ -1167,6 +1167,60 @@ def emit_dart(cities) -> str:
     return '\n'.join(lines)
 
 
+def escape_js(s: str) -> str:
+    return s.replace('\\', '\\\\').replace("'", "\\'")
+
+
+def parse_region_groups() -> list:
+    """DART_FOOTER から国コード→領域グループの対応を抽出する。
+    Dart 版を唯一の正典にし、JS 版が drift しないよう実行時にパースする。
+    戻り: [(country, group), ...] (出現順を保持)。"""
+    import re
+    pairs = []
+    for cc, group in re.findall(r"'([^']+)':\s*'([^']+)'", DART_FOOTER):
+        pairs.append((cc, group))
+    return pairs
+
+
+JS_HEADER = '''// GENERATED FILE — DO NOT EDIT BY HAND
+// Source: apps/solara/tools/generate_world_cities.py
+// Regenerate: python apps/solara/tools/generate_world_cities.py
+//
+// Solara (ii) Stella 相談 Phase 1 (Worker 計算パイプライン) 用 都市プール。
+// Dart 版 lib/utils/world_cities.dart と完全に同一データ (同じ生成元)。
+// consultation_engine.js の候補生成 (region/world scope ランキング) に使う。
+'''
+
+
+def emit_js(cities) -> str:
+    lines = [JS_HEADER]
+    lines.append('')
+    lines.append('/** キュレート都市リスト ({} 件)。 */'.format(len(cities)))
+    lines.append('export const worldCities = [')
+    for nameJP, nameEN, lat, lng, country, region, pop in cities:
+        lines.append(
+            "  {{ nameJP: '{}', nameEN: '{}', lat: {:.4f}, lng: {:.4f}, "
+            "country: '{}', region: '{}', population: {} }},".format(
+                escape_js(nameJP),
+                escape_js(nameEN),
+                lat,
+                lng,
+                escape_js(country),
+                escape_js(region),
+                pop,
+            )
+        )
+    lines.append('];')
+    lines.append('')
+    lines.append('/** 国コード → 領域グループ (範囲指定モードの大ブロック選択用)。 */')
+    lines.append('export const worldCityRegionGroups = {')
+    for cc, group in parse_region_groups():
+        lines.append("  '{}': '{}',".format(escape_js(cc), escape_js(group)))
+    lines.append('};')
+    lines.append('')
+    return '\n'.join(lines)
+
+
 def main():
     cities = all_cities()
     output = emit_dart(cities)
@@ -1174,6 +1228,11 @@ def main():
     here = Path(__file__).resolve().parent
     target = here.parent / 'lib' / 'utils' / 'world_cities.dart'
     target.write_text(output, encoding='utf-8')
+
+    # Worker 用 JS 版 (同一データ、Stella 相談 Phase 1)
+    js_target = here.parent / 'worker' / 'src' / 'world_cities.js'
+    js_target.write_text(emit_js(cities), encoding='utf-8')
+    print('Generated:', js_target)
 
     # 集計レポート
     by_country = {}
