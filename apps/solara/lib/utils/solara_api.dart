@@ -52,12 +52,10 @@ const String solaraIntegrityChallengeUrl =
 const String solaraFortuneUrl = '$solaraWorkerBase/protected/fortune';
 const String solaraTarotUrl = '$solaraWorkerBase/protected/tarot';
 const String solaraRelocationUrl = '$solaraWorkerBase/protected/relocation';
-const String solaraConsultationUrl =
-    '$solaraWorkerBase/protected/astro/consultation';
-
 /// 相談 V2 (全要素統合: client 最小入力 → 全サーバー計算 → Stella ナレーション)。
 /// 1 クレジット = 1 候補。「別の候補地」は excluded を足して再呼び出し。
-/// 旧 solaraConsultationUrl は deployed app 後方互換のため温存。
+/// 旧 `/protected/astro/consultation` は deployed app 後方互換のため Worker 側に温存
+/// (Flutter からの呼出は V2 に移行済み)。
 const String solaraConsultation2Url =
     '$solaraWorkerBase/protected/astro/consultation2';
 

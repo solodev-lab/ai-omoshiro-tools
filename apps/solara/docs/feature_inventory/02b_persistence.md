@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 8 / 総行数: 2336
+- ファイル数: 8 / 総行数: 2338
 - class/mixin/extension/enum: 13
 - 関数 (top-level + method の素拾い): 101
 - Navigator.push 等: 0
@@ -99,27 +99,26 @@ Worker 側仕様: apps/solara/worker/src/index.js
 **ファイル先頭コメント:**
 
 ```
-Consultation Share — Phase 2-5 シェアエクスポート
+Consultation Share — シェアエクスポート (V2: 全要素統合)
 
-設計: apps/solara/docs/pro_candidates.md §7.2 Stage 4
+設計: project_solara_consultation_full_integration.md
 
 2 つのエクスポート手段:
-  1. テキストコピー: ConsultationReading を plain text に整形 → Clipboard
+  1. テキストコピー: 蓄積した候補群を plain text に整形 → Clipboard
   2. 画像共有: 結果画面の RepaintBoundary を PNG 化 → SharePlus
 
-Phase 2-5 (v1): UI のみ、Pro ゲート未配線。設計上は Pro 機能。
-Phase 2-6 (課金基盤後): Pro チェックで非 Pro はゲートする。
+シェアは Pro 限定 (結果画面側で Pro ゲート)。
 ```
 
-**imports:** dart=2 / package=4 / relative=1
+**imports:** dart=2 / package=4 / relative=2
 
-- relative: `consultation_api.dart`
+- relative: `consultation_record.dart`, `consultation_v2_api.dart`
 
 **関数 (3 public + 0 private):**
 
-- L46 `formatConsultationAsText()` — 相談結果を plain text に整形する。
-- L105 `shareConsultationImage()` — RepaintBoundary を PNG 化して OS 標準シェアシートで共有する。
-- L140 `formatConsultationCaption()` — シェア用のキャプション短縮版 (画像と一緒に添える text)。
+- L47 `formatConsultationAsText()` — 相談結果を plain text に整形する。
+- L108 `shareConsultationImage()` — RepaintBoundary を PNG 化して OS 標準シェアシートで共有する。
+- L139 `formatConsultationCaption()` — シェア用のキャプション短縮版 (画像と一緒に添える text)。
 
 
 ### `lib/utils/forecast_cache.dart` (462 行)
@@ -319,7 +318,7 @@ Solara 認証サービス — Phase 2-9 Sign in 統合
   </details>
 
 
-### `lib/utils/solara_storage.dart` (584 行)
+### `lib/utils/solara_storage.dart` (586 行)
 
 **imports:** dart=1 / package=2 / relative=4
 
@@ -336,48 +335,48 @@ Solara 認証サービス — Phase 2-9 Sign in 統合
 
 - L41 `toJson()`
 - L71 `copyWith()`
-- L123 `loadForecastColorMode()` — ヒートマップ色モード: 'relative' | 'absolute' | 'category'
-- L128 `saveForecastColorMode()`
-- L134 `loadForecastHighColor()` — 高スコア側の色: 'green' | 'red'
-- L139 `saveForecastHighColor()`
-- L145 `loadForecastYearOffset()` — Forecast 画面で最後に見た年オフセット（0-4）
-- L150 `saveForecastYearOffset()`
-- L157 `loadMapStyleId()`
-- L162 `saveMapStyleId()`
-- L169 `loadProfile()`
-- L176 `saveProfile()`
-- L193 `saveCurrentReadings()`
-- L199 `addReading()`
-- L211 `clearReadings()`
-- L217 `updateSynchronicity()` — Update synchronicity text for a specific reading date.
-- L230 `updateReading()` — Update an existing reading (matched by date) with new reading text.
-- L244 `removeReadingByDate()` — Remove a reading by date (used for the dev "reset today" button).
-- L267 `saveTitleData()`
-- L298 `addTitleHistoryEntry()` — 称号診断結果を履歴に追加する。
-- L330 `clearTitleHistory()` — 履歴全削除 (Sanctuary 設定からの「すべて削除」用)。
-- L338 `updateTitleHistoryNote()` — 指定 savedAt のエントリにメモを書き込む (200 字 cap、超過は切詰)。
-- L352 `getTodayReading()`
-- L375 `saveCompletedCycle()`
-- L393 `updateCompletedCycleReadingSynchronicity()` — 過去サイクルに含まれる reading の synchronicity (自由メモ) を更新する。
-- L408 `clearCurrentReadings()`
-- L415 `loadIntention()`
-- L423 `saveIntention()`
-- L433 `loadDailyResetHour()` — 1日の基準時刻（0-23時）。この時刻を跨ぐと「今日」が更新される。
-- L439 `saveDailyResetHour()`
-- L446 `loadDailyResetMinute()` — 1日の基準時刻 (分、0-59)。1 分単位ピッカーの導入で追加。
-- L452 `saveDailyResetMinute()`
-- L504 `wasOverlayShownToday()` — Track which overlay was shown today to avoid re-showing.
-- L511 `markOverlayShown()`
-- L519 `getNotTodayCount()` — Not today 押下回数（サイクルID単位で保存）
-- L524 `incrementNotTodayCount()`
-- L554 `addConsultationRecord()` — 履歴を 1 件追加 (新しい順で先頭、上限超過分は古いものから削除)。
-- L566 `deleteConsultationRecord()` — id 指定で 1 件削除。見つからない場合は no-op。
-- L573 `clearConsultationHistory()` — 履歴全削除 (Sanctuary 設定からの「すべて削除」用)。
+- L125 `loadForecastColorMode()` — ヒートマップ色モード: 'relative' | 'absolute' | 'category'
+- L130 `saveForecastColorMode()`
+- L136 `loadForecastHighColor()` — 高スコア側の色: 'green' | 'red'
+- L141 `saveForecastHighColor()`
+- L147 `loadForecastYearOffset()` — Forecast 画面で最後に見た年オフセット（0-4）
+- L152 `saveForecastYearOffset()`
+- L159 `loadMapStyleId()`
+- L164 `saveMapStyleId()`
+- L171 `loadProfile()`
+- L178 `saveProfile()`
+- L195 `saveCurrentReadings()`
+- L201 `addReading()`
+- L213 `clearReadings()`
+- L219 `updateSynchronicity()` — Update synchronicity text for a specific reading date.
+- L232 `updateReading()` — Update an existing reading (matched by date) with new reading text.
+- L246 `removeReadingByDate()` — Remove a reading by date (used for the dev "reset today" button).
+- L269 `saveTitleData()`
+- L300 `addTitleHistoryEntry()` — 称号診断結果を履歴に追加する。
+- L332 `clearTitleHistory()` — 履歴全削除 (Sanctuary 設定からの「すべて削除」用)。
+- L340 `updateTitleHistoryNote()` — 指定 savedAt のエントリにメモを書き込む (200 字 cap、超過は切詰)。
+- L354 `getTodayReading()`
+- L377 `saveCompletedCycle()`
+- L395 `updateCompletedCycleReadingSynchronicity()` — 過去サイクルに含まれる reading の synchronicity (自由メモ) を更新する。
+- L410 `clearCurrentReadings()`
+- L417 `loadIntention()`
+- L425 `saveIntention()`
+- L435 `loadDailyResetHour()` — 1日の基準時刻（0-23時）。この時刻を跨ぐと「今日」が更新される。
+- L441 `saveDailyResetHour()`
+- L448 `loadDailyResetMinute()` — 1日の基準時刻 (分、0-59)。1 分単位ピッカーの導入で追加。
+- L454 `saveDailyResetMinute()`
+- L506 `wasOverlayShownToday()` — Track which overlay was shown today to avoid re-showing.
+- L513 `markOverlayShown()`
+- L521 `getNotTodayCount()` — Not today 押下回数（サイクルID単位で保存）
+- L526 `incrementNotTodayCount()`
+- L556 `addConsultationRecord()` — 履歴を 1 件追加 (新しい順で先頭、上限超過分は古いものから削除)。
+- L568 `deleteConsultationRecord()` — id 指定で 1 件削除。見つからない場合は no-op。
+- L575 `clearConsultationHistory()` — 履歴全削除 (Sanctuary 設定からの「すべて削除」用)。
 
   <details><summary>private 関数 2 件</summary>
 
-  - L491 `_logicalTodayKey()`
-  - L578 `_writeConsultationHistory()`
+  - L493 `_logicalTodayKey()`
+  - L580 `_writeConsultationHistory()`
 
   </details>
 

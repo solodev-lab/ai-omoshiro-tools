@@ -2255,6 +2255,12 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                 _searchOriginCenter = null;
               });
             },
+            // 「Stella に相談」: この検索地点 (店名+座標) を preset に相談画面へ。
+            onConsult: () {
+              final f = _searchFocus!;
+              setState(() => _searchFocus = null);
+              _launchConsultationFromSearch(f);
+            },
             // VIEWPOINT スロットへ登録 (popup は閉じない: 連続で
             // LOCATION 側にも登録したいケースに対応)。
             onSaveAsViewpoint: () async {
@@ -2750,6 +2756,36 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     final hasHome = p != null && !(p.homeLat == 0 && p.homeLng == 0);
     final currentLoc = hasHome ? LatLng(p.homeLat, p.homeLng) : null;
 
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => ConsultationInputScreen(
+          currentLocation: currentLoc,
+          presetTarget: preset,
+        ),
+      ),
+    );
+  }
+
+  /// 検索結果詳細 (SearchFocusPopup) の「Stella に相談」導線。
+  /// 検索で選んだ地点 (店名+座標) を point scope の preset として相談画面へ渡す。
+  /// 設計: 検索 → 気に入った場所をその場で相談、というユーザーの実行動に寄り添う。
+  Future<void> _launchConsultationFromSearch(SearchHit f) async {
+    final parts = f.name
+        .split(',')
+        .map((s) => s.trim())
+        .where((s) => s.isNotEmpty)
+        .toList();
+    final short = parts.isNotEmpty ? parts.first : f.name;
+    final preset = ConsultationPresetTarget(
+      position: LatLng(f.lat, f.lng),
+      nameJP: short,
+      nameEN: short,
+      country: f.country?.toUpperCase() ?? '',
+      // placeType: SearchHit に種別が無いため null (Worker は名前+座標で扱う)。
+    );
+    final p = _profile;
+    final hasHome = p != null && !(p.homeLat == 0 && p.homeLng == 0);
+    final currentLoc = hasHome ? LatLng(p.homeLat, p.homeLng) : null;
     await Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => ConsultationInputScreen(

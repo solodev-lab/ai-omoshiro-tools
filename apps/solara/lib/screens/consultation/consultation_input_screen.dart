@@ -45,6 +45,7 @@ part 'consultation_input_widgets.dart';
 part 'consultation_input_when_scope.dart';
 part 'consultation_input_examples.dart';
 part 'consultation_input_picker.dart';
+part 'consultation_input_logic.dart';
 part 'consultation_start_popup.dart';
 
 /// Map から「📍この場所で相談」で起動した時の preset (point scope 用)。
@@ -289,95 +290,9 @@ class _ConsultationInputScreenState extends State<ConsultationInputScreen> {
     return true;
   }
 
-  // ── リクエスト組み立て ──────────────────────────────────
-  ConsultationWhen? _buildWhen() {
-    switch (_whenKind) {
-      case 'date':
-        return _whenDate == null ? null : ConsultationWhen.onDate(_whenDate!);
-      case 'range':
-        return (_whenStart == null || _whenEnd == null)
-            ? null
-            : ConsultationWhen.range(_whenStart!, _whenEnd!);
-      case 'within6mo':
-      case 'within1yr':
-      case 'in3yr':
-      case 'in5yrPlus':
-        return ConsultationWhen.horizon(_whenKind!);
-      default:
-        return null; // today / undecided / null
-    }
-  }
-
-  ConsultationScope? _buildScope() {
-    switch (_scopeKind) {
-      case 'point':
-        final pt = widget.presetTarget;
-        if (pt != null) {
-          return ConsultationScope.point(ConsultationPoint(
-            lat: pt.position.latitude,
-            lng: pt.position.longitude,
-            name: pt.nameJP,
-            placeType: pt.placeType,
-          ));
-        }
-        final pick = _specificPick;
-        if (pick != null) {
-          return ConsultationScope.point(ConsultationPoint(
-            lat: pick.position.latitude,
-            lng: pick.position.longitude,
-            name: pick.name,
-          ));
-        }
-        return null;
-      case 'bearing':
-        return ConsultationScope.bearing(radiusKm: _mode == 'daily' ? 50 : 100);
-      case 'radius':
-        return ConsultationScope.radius(_radiusKm);
-      case 'region':
-        return ConsultationScope.region(_regionGroup);
-      case 'country':
-        return ConsultationScope.country();
-      default:
-        return ConsultationScope.world();
-    }
-  }
-
-  /// scope の詳細ラベル (履歴カード用)。region=グループ名 / point=地点名。
-  String? get _scopeDetail {
-    switch (_scopeKind) {
-      case 'region':
-        return _regionGroup;
-      case 'point':
-        return widget.presetTarget?.nameJP ?? _specificPick?.name;
-      default:
-        return null;
-    }
-  }
-
-  // ── 開始 ────────────────────────────────────────────────
-  Future<void> _onStartPressed() async {
-    if (ProStatus.instance.isPro || _startPopupHidden) {
-      await _runConsultation();
-      return;
-    }
-    final proceed = await _showStartPopup();
-    if (proceed) await _runConsultation();
-  }
-
-  Future<bool> _showStartPopup() async {
-    var proceed = false;
-    await showInfoPopup(
-      context: context,
-      child: _StartConsultPopup(
-        status: _creditStatus,
-        initialHide: _startPopupHidden,
-        onContinue: () => proceed = true,
-        onBuy: _handleBuyFromPopup,
-        onHideChanged: _setStartPopupHidden,
-      ),
-    );
-    return proceed;
-  }
+  // リクエスト組み立て (_buildWhen/_buildScope/_scopeDetail) と
+  // 開始フロー (_onStartPressed/_showStartPopup/_runConsultation) は
+  // consultation_input_logic.dart (extension) に分離 (HARD500 回避)。
 
   Future<void> _handleBuyFromPopup() async {
     await Future<void>.delayed(Duration.zero);
@@ -393,32 +308,6 @@ class _ConsultationInputScreenState extends State<ConsultationInputScreen> {
     _startPopupHidden = v;
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_kStartPopupHiddenKey, v);
-  }
-
-  Future<void> _runConsultation() async {
-    final profile = _profile;
-    final theme = _theme;
-    final mode = _mode;
-    if (profile == null || theme == null || mode == null) return;
-
-    final request = ConsultationRequest.fromProfile(
-      profile,
-      theme: theme,
-      mode: mode,
-      when: _buildWhen(),
-      scope: _buildScope(),
-      withWhom: _whomCtrl.text.trim(),
-      wish: _wishCtrl.text.trim(),
-    );
-
-    await Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => ConsultationResultScreen(
-          request: request,
-          scopeDetail: _scopeDetail,
-        ),
-      ),
-    );
   }
 
   @override

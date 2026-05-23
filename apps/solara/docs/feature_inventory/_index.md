@@ -8,11 +8,11 @@
 
 | 層 | 名称 | ファイル数 | Markdown |
 | --- | --- | --- | --- |
-| 0 | Worker (バックエンド計算式) | 19 | [00_worker.md](00_worker.md) |
-| 1a | 純計算ユーティリティ | 7 | [01a_pure_calc.md](01a_pure_calc.md) |
-| 1b | 静的データ辞書 | 14 | [01b_static_data.md](01b_static_data.md) |
+| 0 | Worker (バックエンド計算式) | 23 | [00_worker.md](00_worker.md) |
+| 1a | 純計算ユーティリティ | 6 | [01a_pure_calc.md](01a_pure_calc.md) |
+| 1b | 静的データ辞書 | 15 | [01b_static_data.md](01b_static_data.md) |
 | 1c | モデルクラス | 4 | [01c_models.md](01c_models.md) |
-| 2a | API/Worker ラッパ | 9 | [02a_api_wrappers.md](02a_api_wrappers.md) |
+| 2a | API/Worker ラッパ | 10 | [02a_api_wrappers.md](02a_api_wrappers.md) |
 | 2b | 永続化/キャッシュ | 8 | [02b_persistence.md](02b_persistence.md) |
 | 2c | グローバル singleton | 1 | [02c_globals.md](02c_globals.md) |
 | 3a | 共通ウィジェット (純粋) | 25 | [03a_widgets_pure.md](03a_widgets_pure.md) |
@@ -23,16 +23,16 @@
 | 4c | Observe (Tarot) 画面 | 11 | [04c_observe.md](04c_observe.md) |
 | 4d | Galaxy 画面 | 9 | [04d_galaxy.md](04d_galaxy.md) |
 | 4e | Sanctuary 画面 | 10 | [04e_sanctuary.md](04e_sanctuary.md) |
-| 4f | サブ画面 (Forecast / Locations / Philosophy / Font Preview) | 21 | [04f_subscreens.md](04f_subscreens.md) |
+| 4f | サブ画面 (Forecast / Locations / Philosophy / Font Preview) | 25 | [04f_subscreens.md](04f_subscreens.md) |
 | 5 | 連携層 (main.dart / PopScope / IndexedStack) | 1 | [05_main.md](05_main.md) |
 
 ## 全体統計
 
-- Dart ファイル: 173
-- Worker JS ファイル: 19
-- Worker エンドポイント総数: 29
-- Dart class/mixin/extension/enum 総数: 424
-- Dart 関数総数 (素拾い): 1388
+- Dart ファイル: 178
+- Worker JS ファイル: 23
+- Worker エンドポイント総数: 30
+- Dart class/mixin/extension/enum 総数: 436
+- Dart 関数総数 (素拾い): 1410
 
 ## 対整合チェック
 

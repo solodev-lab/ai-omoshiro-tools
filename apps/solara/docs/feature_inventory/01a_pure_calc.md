@@ -5,9 +5,9 @@
 
 ## サマリ
 
-- ファイル数: 7 / 総行数: 2054
-- class/mixin/extension/enum: 20
-- 関数 (top-level + method の素拾い): 73
+- ファイル数: 6 / 総行数: 1632
+- class/mixin/extension/enum: 13
+- 関数 (top-level + method の素拾い): 62
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 0
 - Worker URL リテラル: 0
@@ -116,46 +116,6 @@ Astro 数学ユーティリティ
 
 - L20 `normalize360()` — 角度 d を 0..360 に正規化する。
 - L27 `angDist()` — 2 つの角度の最小角距離 (0..180)。
-
-
-### `lib/utils/consultation_engine.dart` (422 行)
-
-**imports:** dart=1 / package=1 / relative=2
-
-- relative: `astro_lines.dart`, `world_cities.dart`
-
-**型定義 (7):**
-
-- L26 `enum ConsultationMode`
-  - 相談モード。pro_candidates.md §7.2 Stage 1 の 3 モードに対応。
-- L38 `enum ConsultationScope`
-  - 相談スコープ。candidate 数と生成ロジックが変わる。
-- L63 `class CandidateNearLine`
-  - 候補地点に紐づく近接 theme 線。
-- L94 `class CandidateLocation`
-  - 候補地点。Stage 3 Stella プロンプトに渡す JSON の Dart 表現。
-- L330 `class _ScoredCity`
-- L388 `class _BearingDef`
-- L395 `class _ScoredBearing`
-
-**関数 (8 public + 3 private):**
-
-- L76 `toJson()`
-- L120 `toJson()`
-- L152 `themePlanets()` — テーマ → 関係惑星セット (astro_lines.dart の astroLineFortunePlanets を流用)。
-- L159 `filterThemeLines()` — 全 AstroLine から theme 該当の conjunction 本線のみを抽出 (v1)。
-- L178 `candidateForSpecific()` — (1) 具体地点候補。1 件返す。
-- L204 `candidatesForRegion()` — (2) 範囲指定候補。3 件。
-- L231 `candidatesForWorld()` — (3) 世界全体候補。3 件。人口バイアスを軽くかけて知名度の高い都市を優先。
-- L253 `candidatesForDaily()` — (4) おでかけ候補。3 件。
-
-  <details><summary>private 関数 3 件</summary>
-
-  - L305 `_nearestLinesFor()`
-  - L342 `_rankCitiesByLineProximity()`
-  - L404 `_offsetByBearing()`
-
-  </details>
 
 
 ### `lib/utils/direction_energy.dart` (238 行)

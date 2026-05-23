@@ -322,6 +322,11 @@ class SearchFocusPopup extends StatelessWidget {
   final String activeSrc;
   final VoidCallback onClose;
   final VoidCallback onMoveToHit;
+
+  /// 「Stella に相談」導線。この検索地点 (店名+座標) を preset として相談画面へ。
+  /// null なら非表示。
+  final VoidCallback? onConsult;
+
   /// 上部スコアバーと同じ activeCategory ('all' / 'money' 等)。
   /// 「総合 / 豊かさ / 癒し」等のラベル動的化に使う。
   final String activeCategory;
@@ -343,6 +348,7 @@ class SearchFocusPopup extends StatelessWidget {
     required this.activeSrc,
     required this.onClose,
     required this.onMoveToHit,
+    this.onConsult,
     this.activeCategory = 'all',
     this.onSaveAsViewpoint,
     this.onSaveAsLocation,
@@ -534,6 +540,10 @@ class SearchFocusPopup extends StatelessWidget {
           const SizedBox(height: 6),
         ],
         _ActionTile(label: '✈ ここへ移動', onTap: onMoveToHit),
+        if (onConsult != null) ...[
+          const SizedBox(height: 6),
+          _ActionTile(label: '✦ Stella に相談', onTap: onConsult!),
+        ],
       ]),
     );
   }

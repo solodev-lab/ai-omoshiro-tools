@@ -5,9 +5,9 @@
 
 ## サマリ
 
-- ファイル数: 14 / 総行数: 5270
-- class/mixin/extension/enum: 15
-- 関数 (top-level + method の素拾い): 31
+- ファイル数: 15 / 総行数: 5582
+- class/mixin/extension/enum: 19
+- 関数 (top-level + method の素拾い): 38
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 1
 - Worker URL リテラル: 0
@@ -162,33 +162,67 @@ key: "${type}_${planet}" or "${type}_${planet}_${sign}"
   </details>
 
 
-### `lib/utils/consultation_record.dart` (109 行)
+### `lib/utils/consultation_record.dart` (180 行)
 
 **ファイル先頭コメント:**
 
 ```
-Consultation Record — Phase 2-4 自動保存 + 履歴
+Consultation Record — 自動保存 + 履歴 (V2: 全要素統合)
 
-設計: apps/solara/docs/pro_candidates.md §7.2 Stage 4 + §7.3 柱3
+設計: project_solara_consultation_full_integration.md
 
-1 件の相談 = 入力 (theme/mode/scope/freeText/候補) + 出力 (Stella reading)
-+ メタ (id, savedAt) を 1 つにまとめた永続化単位。
+1 件の相談 = 入力メタ (theme/mode/scope/withWhom/wish) + 枠 (innerSeason/
+intro/outro) + 蓄積した候補群 (1 枚ずつ「別の候補地」で増える) + 各候補の
+エビデンスを 1 つにまとめた永続化単位。
 
 柱 3 の原則: Free でも自分の記録を永久に失わない。
 検索・フィルタ等の「記録を使う道具」は Pro 機能。
 ```
 
-**imports:** dart=0 / package=0 / relative=2
+**imports:** dart=0 / package=0 / relative=1
 
-- relative: `consultation_api.dart`, `consultation_engine.dart`
+- relative: `consultation_v2_api.dart`
 
 **型定義 (1):**
 
 - L14 `class ConsultationRecord`
 
-**関数 (1 public + 0 private):**
+**関数 (3 public + 0 private):**
 
-- L76 `toJson()`
+- L98 `toReadings()` — 読み込み専用表示 (履歴詳細) のために reading 群を再構成する。
+- L118 `displayName()` — 履歴カード等の見出し用候補名 (方角は「○の方角」、座標のみは「この地点」)。
+- L133 `toJson()`
+
+
+### `lib/utils/consultation_v2_request.dart` (241 行)
+
+**ファイル先頭コメント:**
+
+```
+Consultation V2 リクエストモデル — consultation_v2_api.dart の part。
+
+最小入力 (約1KB): 誕生データ + 自宅座標 + 5問の答え + preset。
+Worker (consultation_engine.js runConsultationPipeline) の契約に対応する。
+```
+
+**型定義 (4):**
+
+- L10 `class ConsultationWhen`
+  - 「いつ」(when)。場面ごとに意味が変わる時間指定。
+- L40 `class ConsultationPoint`
+  - 具体地点 (具体地点スコープ)。地図タップ=座標のみ / 検索=店名+種類付き。
+- L66 `class ConsultationScope`
+  - 「どこで」(scope)。候補地点プールの作り方。
+- L114 `class ConsultationRequest`
+  - 相談リクエスト (最小入力 約1KB)。Worker が全計算する。
+
+**関数 (5 public + 0 private):**
+
+- L31 `toJson()`
+- L57 `toJson()`
+- L104 `toJson()`
+- L195 `copyWith()`
+- L220 `toJson()`
 
 
 ### `lib/utils/cycle_story_texts.dart` (86 行)

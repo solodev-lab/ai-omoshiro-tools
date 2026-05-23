@@ -5,13 +5,14 @@
 
 ## #3 Worker ↔ Flutter エンドポイント対整合
 
-- Worker 側に定義された path: **28**
+- Worker 側に定義された path: **29**
 - Flutter から呼ばれている path リテラル: **17**
 
 ### Worker → Flutter 漏れ (Worker にあるが Flutter から呼出無し)
 
 - `/auth/integrity/decode-test`
 - `/auth/integrity/diagnose`
+- `/protected/astro/consultation`
 - `/protected/astro/line-narrative`
 - `/public/astro/predict`
 - `/public/health`
@@ -34,7 +35,7 @@
 - `/auth/whoami`
 - `/protected/*`
 - `/protected/account/delete`
-- `/protected/astro/consultation`
+- `/protected/astro/consultation2`
 - `/protected/consultation/credits`
 - `/protected/fortune`
 - `/protected/relocation`
@@ -50,27 +51,33 @@
 
 ## #1 / #2 機械抽出 ↔ feature_inventory.md (人手版) の対整合
 
-- 機械抽出した class/mixin/extension/enum: **415**
+- 機械抽出した class/mixin/extension/enum: **427**
 - inventory に登場する識別子 (大文字始まり ``backtick``囲み): **216**
 
-### #1 機械にあるが Doc に書かれていない (240)
+### #1 機械にあるが Doc に書かれていない (254)
 
 - `AppAttestClient`
-- `CandidateLocation`
-- `CandidateNearLine`
 - `CityEntry`
 - `ConstellationShareCardPage`
 - `ConsultEntryPopup`
-- `ConsultationCandidateReading`
 - `ConsultationCreditStatus`
+- `ConsultationEvidence`
+- `ConsultationEvidenceKm`
 - `ConsultationHistoryScreen`
 - `ConsultationInputScreen`
-- `ConsultationMode`
 - `ConsultationPlacePickerScreen`
+- `ConsultationPoint`
 - `ConsultationPresetTarget`
 - `ConsultationRecord`
+- `ConsultationRequest`
 - `ConsultationResultScreen`
 - `ConsultationScope`
+- `ConsultationTimeWindow`
+- `ConsultationTimeWindowItem`
+- `ConsultationV2Candidate`
+- `ConsultationV2Reading`
+- `ConsultationV2Result`
+- `ConsultationWhen`
 - `DeviceSecurityStatus`
 - `GalaxyArchiveFilter`
 - `GalaxyArchiveFilterBar`
@@ -94,6 +101,7 @@
 - `SolaraAuthProvider`
 - `TapToUnfocus`
 - `TitleHistoryScreen`
+- `_AboutReadingContent`
 - `_ActionTile`
 - `_AggBuilder`
 - `_AltarLayout`
@@ -102,7 +110,6 @@
 - `_AntiqueIconPainter`
 - `_AspectPass`
 - `_AtlasHeader`
-- `_BearingDef`
 - `_CandidateCard`
 - `_CandidateKindBadge`
 - `_CatChip`
@@ -121,9 +128,9 @@
 - `_CommunicationPainter`
 - `_ConstellationCard`
 - `_ConsultEntryPopupState`
-- `_ConsultExamples`
 - `_ConsultationBlockedBox`
 - `_ConsultationHistoryScreenState`
+- `_ConsultationInputLogic`
 - `_ConsultationInputScreenState`
 - `_ConsultationResultScreenState`
 - `_ConsultationResultShare`
@@ -143,8 +150,9 @@
 - `_EnergyBar`
 - `_EnergyChip`
 - `_ErrorBox`
-- `_ExampleRow`
+- `_ExampleChips`
 - `_FailedBody`
+- `_FallbackChip`
 - `_FontOption`
 - `_FontPreviewScreenState`
 - `_Footer`
@@ -181,7 +189,7 @@
 - `_HourNumberField`
 - `_HourNumberFieldState`
 - `_InfoPopupShell`
-- `_IntroBlock`
+- `_InnerSeasonBanner`
 - `_LatitudeBandBox`
 - `_LatitudeBandRow`
 - `_LegalRow`
@@ -210,6 +218,7 @@
 - `_Mulberry32`
 - `_NearestLineRow`
 - `_NewMoonOverlayState`
+- `_NoHomeNote`
 - `_NoMatchState`
 - `_Note`
 - `_NotePair`
@@ -220,13 +229,13 @@
 - `_ObserveHistoryPastPanelState`
 - `_ObserveScreenState`
 - `_OrbSectionLabel`
-- `_OutroBlock`
 - `_PageIndicator`
 - `_PaywallScreenState`
 - `_PaywallWidgets`
 - `_Petal`
 - `_PetalPalette`
 - `_PickedSpecific`
+- `_PillChip`
 - `_PlanetDef`
 - `_PlanetGlyphPainter`
 - `_PlanetIntroBody`
@@ -234,6 +243,7 @@
 - `_PopupBody`
 - `_PresetLocationCard`
 - `_QuestionFieldWidgets`
+- `_RadiusChips`
 - `_RankedLine`
 - `_RarityChip`
 - `_RarityStarRow`
@@ -246,18 +256,9 @@
 - `_SanctuaryAccountSectionState`
 - `_SanctuaryHomeEditorPageState`
 - `_SanctuaryIconPainter`
-- `_SanctuaryOrbOverlayState`
-- `_SanctuaryProfileEditorPageState`
-- `_SanctuaryResetHourPickerState`
-- `_SanctuaryScreenState`
-- `_SanctuaryTitleDiagnosisPageState`
-- `_ScopeChoice`
-- `_ScopeRow`
-- `_ScoredBearing`
-- `_ScoredCity`
-- … 残り 40 省略
+- … 残り 54 省略
 
-### #2 Doc に書いてあるがコードに存在しない (ゴースト記述) (41)
+### #2 Doc に書いてあるがコードに存在しない (ゴースト記述) (43)
 
 > 注: Flutter SDK や外部ライブラリの型もここに乗る (誤検出)。
 > 真のゴーストはアプリ独自型のみ。実際の Doc 修正対象は手で絞り込む。
@@ -271,6 +272,8 @@
 - `CONSULTATION_FREE_MODES`
 - `CONSULTATION_FREE_WEEKLY`
 - `CategoryFilterTips`
+- `ConsultationReading`
+- `ConsultationResult`
 - `CustomPaint`
 - `D6915C`
 - `EAEAEA`
@@ -343,9 +346,9 @@
 
 ### 層 4f: サブ画面 (Forecast / Locations / Philosophy / Font Preview)
 
-- ファイル数: 21
+- ファイル数: 25
 - Worker URL 呼出: (なし)
-- Popup/Dialog: `showInfoPopup`×5
+- Popup/Dialog: `showInfoPopup`×7
 - Navigator.push 等: 0 箇所
 
 ## #5 import 依存グラフ (Pro 化影響範囲特定用)
@@ -359,11 +362,11 @@
 
 | from\to | 1a | 1b | 1c | 2a | 2b | 2c | 3a | 3b | 3c | 4a | 4b | 4c | 4d | 4e | 4f | 5 |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1a | 3 | 1 | · | · | 1 | · | · | · | · | · | · | · | · | · | · | · |
-| 1b | 1 | · | · | 2 | 1 | · | 1 | · | · | · | · | · | · | · | · | · |
+| 1a | 2 | · | · | · | 1 | · | · | · | · | · | · | · | · | · | · | · |
+| 1b | · | · | · | 2 | 1 | · | 1 | · | · | · | · | · | · | · | · | · |
 | 1c | · | · | 1 | · | · | · | · | · | · | · | · | · | · | · | · | · |
-| 2a | 3 | · | · | 4 | 1 | · | · | 1 | · | · | · | · | · | · | · | · |
-| 2b | 2 | 1 | 5 | 5 | 2 | · | · | · | · | · | · | · | · | · | · | · |
+| 2a | 2 | 1 | · | 6 | 3 | · | · | 1 | · | · | · | · | · | · | · | · |
+| 2b | 2 | 2 | 5 | 5 | 2 | · | · | · | · | · | · | · | · | · | · | · |
 | 2c | · | · | 1 | · | · | · | · | · | · | · | · | · | · | · | · | · |
 | 3a | 1 | 4 | 2 | 2 | 1 | 1 | 8 | 7 | 4 | 1 | · | · | · | · | 1 | · |
 | 3b | · | · | · | · | · | · | · | 1 | · | · | · | · | · | · | · | · |
@@ -373,7 +376,7 @@
 | 4c | 1 | 1 | 15 | · | 7 | 4 | 6 | 4 | · | · | · | 16 | · | · | 1 | · |
 | 4d | 2 | 6 | 13 | 1 | 5 | 2 | 12 | 2 | 1 | · | · | · | 8 | · | · | · |
 | 4e | 1 | 4 | · | 2 | 7 | · | 14 | 1 | · | · | · | · | · | 9 | 2 | · |
-| 4f | 5 | 4 | · | 5 | 14 | · | 14 | 11 | · | 6 | · | · | · | · | 17 | · |
+| 4f | 2 | 3 | · | 8 | 15 | · | 16 | 11 | · | 6 | · | · | · | · | 22 | · |
 | 5 | 1 | · | · | 2 | 4 | 1 | 1 | 1 | · | 1 | 1 | 1 | 1 | 1 | · | · |
 
 > 健全な依存方向は「番号が大きい層 → 小さい層」(上位が下位に依存)。
@@ -386,51 +389,50 @@
 | ファイル | 層 | 被 import 数 |
 | --- | --- | --- |
 | `lib/theme/solara_colors.dart` | 3b | 34 |
-| `lib/utils/solara_storage.dart` | 2b | 24 |
-| `lib/widgets/info_popup.dart` | 3a | 21 |
+| `lib/utils/solara_storage.dart` | 2b | 26 |
+| `lib/widgets/info_popup.dart` | 3a | 23 |
 | `lib/screens/map/map_constants.dart` | 3b | 20 |
 | `lib/utils/pro_status.dart` | 2b | 19 |
 | `lib/models/galaxy_cycle.dart` | 1c | 14 |
+| `lib/utils/solara_api.dart` | 2a | 14 |
 | `lib/screens/horoscope/horo_antique_icons.dart` | 3a | 13 |
-| `lib/utils/solara_api.dart` | 2a | 13 |
 | `lib/models/daily_reading.dart` | 1c | 12 |
 | `lib/widgets/pro_unlock_dialog.dart` | 3a | 12 |
 | `lib/widgets/tap_to_unfocus.dart` | 3a | 11 |
 | `lib/screens/horoscope/horo_constants.dart` | 1b | 10 |
 | `lib/screens/horoscope/horo_panel_shared.dart` | 4b | 9 |
 | `lib/models/tarot_card.dart` | 1c | 8 |
-| `lib/utils/astro_lines.dart` | 1a | 8 |
 | `lib/utils/constellation_namer.dart` | 1b | 8 |
 | `lib/utils/tarot_data.dart` | 2c | 8 |
 | `lib/models/lunar_intention.dart` | 1c | 7 |
 | `lib/screens/map/map_vp_panel.dart` | 4a | 7 |
 | `lib/widgets/glass_panel.dart` | 3a | 7 |
+| `lib/screens/observe/observe_constants.dart` | 4c | 6 |
 
-### #5c 孤立ファイル (2) — 誰からも import されない
+### #5c 孤立ファイル (3) — 誰からも import されない
 
 > `lib/main.dart` (エントリ点) は除外済。残りは「画面のトップ」か
 > 「死蔵コード候補」。後者なら削除候補。
 
 - `lib/screens/font_preview_screen.dart` (層 4f)
 - `lib/screens/solara_philosophy_screen.dart` (層 4f)
+- `lib/utils/world_cities.dart` (層 1b)
 
 ## #6 ハッシュ stamp — 前回 extract.py 実行からの変更ファイル
 
 > 各ソースの SHA1 を `_stamps.json` に記録し、差分を検出。
 > 変更されたファイルが属する層は、人手版インベントリ章の見直し対象。
 
-- 追加: **3** / 削除: **0** / 変更: **3**
+- 追加: **1** / 削除: **0** / 変更: **2**
 
 ### 変更されたファイル (層別)
 
-- **層 4c**: `lib/screens/observe_screen.dart`
-- **層 4f**: `lib/screens/consultation/consultation_result_screen.dart`, `lib/screens/consultation/consultation_result_widgets.dart`
+- **層 2a**: `lib/utils/solara_api.dart`
+- **層 4f**: `lib/screens/consultation/consultation_input_screen.dart`
 
 ### 追加されたファイル
 
-- `lib/screens/consultation/consultation_result_credit_widgets.dart` (層 4f)
-- `lib/screens/consultation/consultation_result_share.dart` (層 4f)
-- `lib/screens/observe/observe_category_selector.dart` (層 4c)
+- `lib/screens/consultation/consultation_input_logic.dart` (層 4f)
 
 ## #7 astro_glossary 用語辞書対整合
 

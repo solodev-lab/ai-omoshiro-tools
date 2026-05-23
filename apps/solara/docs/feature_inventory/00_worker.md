@@ -5,14 +5,14 @@
 
 ## サマリ
 
-- ファイル数: 19
-- エンドポイント総数: 29
+- ファイル数: 23
+- エンドポイント総数: 30
 - Gemini 呼出箇所: 2
 - KV 使用: 4 行 / Durable Object 使用: 8 行
 
 ## ファイル別
 
-### `worker/src/astro.js` (882 行)
+### `worker/src/astro.js` (898 行)
 
 **ファイル先頭コメント:**
 
@@ -23,6 +23,28 @@ Dependency: astronomy-engine (npm)
 ```
 
 **export (4):** `computeChart`, `computePredictions`, `computeForecast`, `computeMonthEvents`
+
+
+### `worker/src/astro_lines.js` (253 行)
+
+**ファイル先頭コメント:**
+
+```
+Solara Astro Lines (Worker port) — Stella 相談 Phase 1。
+
+lib/utils/astro_lines.dart を JS に忠実移植したもの。アストロカートグラフィ
+(Jim Lewis 流) の 4 アングル本線 + アスペクト線を地球曲面に計算する。
+数式・定数 (obliquity 23.4393 / Meeus GMST) は Dart 版と完全一致させ、
+Map が描いている線と相談エンジンの線が同一になるようにする
+(= エビデンスチップに出す占星術ファクターが画面と矛盾しない)。
+
+各惑星 × 4 アングル (mc/ic/asc/dsc) × 3 アスペクトパス (conjunction / square
+trine+sextile) = 120 本。frame (natal/transit/progressed/solarArc) ごとに呼ぶ。
+
+線オブジェクト形:
+{ planet, angle, aspect, frame, segments: [[{lat,lng},...]],
+zenith?: {lat,lng}, nadir?: {lat,lng} }
+```
 
 
 ### `worker/src/auth/app_attest.js` (14 行)
@@ -285,6 +307,71 @@ fallback?: boolean                        // Stella が届かない時 true (静
 **export (1):** `handleConsultation`
 
 
+### `worker/src/consultation_engine.js` (733 行)
+
+**ファイル先頭コメント:**
+
+```
+Solara Stella 相談 — 計算パイプライン (秘伝)。Phase 1。
+
+設計: memory project_solara_consultation_full_integration.md
+
+役割: client から「誕生データ + 自宅座標 + 5問の答え + preset」だけ (約1KB) を
+受け取り、Worker 側で**全部**計算する (秘匿アーキ最終確定 2026-05-23)。
+1. 影響プール構築 (テーマ絞り ACG 線 + 天頂/天底帯, natal+transit+progressed,
+旅行は期間内 ≤3 日サンプリング)
+2. scope 別 候補プール (具体地点 / 方角 / 半径 / 地域 / 自国内 / 世界)
+3. 候補スコアリング (近接ファクター + signature 抽出)
+4. 多様性選択 (案C + 正直フォールバック, excluded で 1 枚ずつ前進)
+5. 候補別リロケハウス (astro.js Placidus 流用, 出生時刻不明は省略)
+6. 時間帯 (現地太陽時 = UTC + 経度/15 → 朝昼夜)
+7. 内的季節 (進行の月サイン+ハウス / 進行の太陽サイン, SA は節目フラグだけ)
+8. 出生時刻不明 degrade (軽い読み禁止: データが減るだけで品質は落とさない)
+
+本モジュールは**語らない** (吉凶禁止・narrative なし)。構造化した素材を返し、
+Phase 2 (Gemini プロンプト) が Stella の言葉にする。
+
+Solara 設計思想 ([[project_solara_design_philosophy]]):
+Soft (trine/sextile) と Hard (square) は独立 2 エネルギー。total/吉凶に潰さない。
+ファクターは quality (soft/hard/neutral) を保ったまま返す。
+```
+
+**export (2):** `runConsultationPipeline`, `_internal`
+
+
+### `worker/src/consultation_v2.js` (357 行)
+
+**ファイル先頭コメント:**
+
+```
+Solara Stella 相談 V2 — Gemini ナレーション層 (Phase 2)。
+
+設計: project_solara_consultation_full_integration.md
+
+Phase 1 の秘伝計算 (consultation_engine.runConsultationPipeline) が返す
+構造化素材を、Stella の言葉 (Gemini Flash 裏方) に変換する。
+旧 consultation.js (deployed・client が候補を組む方式) には手を入れない。
+これは新方式 (client 最小入力 → 全サーバー計算) 用の新ハンドラ。
+
+出力:
+初回 (isFirst) のみ innerSeason / intro / outro。
+毎回 candidate{ name, characterHeadline, energyLabels[], narrative, timeWindow }
++ evidence{ factors[], km[], note } + model / fallback。
+1 クレジット = 1 候補。「別の候補地」は excluded を足して再呼び出し (Phase 3)。
+
+文体・表現ルール (確定 2026-05-23、全文 narrative に適用):
+- 時間 = 時計+TZ なし。現地の時間帯のみ (旅行先=旅行先の現地時間)。
+- 場所の呼び方 = 提示粒度に合わせる (座標のみ→「この地点」/ 店舗→店名+種類 / 都市→都市名)。
+- narrative 本文に km を出さない (有無・質で語る)。km はエビデンス専用。
+- 1 候補に関係し合う ~2 ファクター。可能なら Soft 1 + Hard 1 で「幅」(捏造はしない)。
+- 冒頭の呼びかけ禁止。専門用語 (進行の月/ハウス等) を出さない。
+- 読心禁止 (原則5): 他人の私的な心を断定せず「あなたの意識・動き・いつ」へ変換。
+- 吉凶禁止 (原則2/原則1): Soft/Hard 独立、good/bad/lucky を使わせない。
+```
+
+**export (2):** `handleConsultationV2`, `_internal`
+
+
 ### `worker/src/daily_transits.js` (273 行)
 
 **ファイル先頭コメント:**
@@ -341,7 +428,7 @@ houses: そのカテゴリで重視する伝統占星術のハウス番号
 **export (3):** `computeCategoryScore`, `callGemini`, `handleFortune`
 
 
-### `worker/src/index.js` (1234 行)
+### `worker/src/index.js` (1273 行)
 
 **ファイル先頭コメント:**
 
@@ -361,47 +448,48 @@ webhooks/*   外部連携      RevenueCat Webhook (Pro 状態の真の出所)。
 同セッションで新 path に書き換え済（`apps/solara/lib/utils/solara_api.dart` 参照）。
 ```
 
-**エンドポイント / ルート (29):**
+**エンドポイント / ルート (30):**
 
 | method | path | line |
 | --- | --- | --- |
-| ? | /public/astro/forecast | L869 |
-| ? | /public/tiles/* | L870 |
-| ? | /webhooks/* | L871 |
-| ? | /public/health | L879 |
-| GET | /public/tiles/osm/* | L884 |
-| POST | /public/astro/chart | L889 |
-| POST | /public/astro/forecast | L897 |
-| POST | /public/astro/predict | L912 |
-| POST | /public/astro/daily-transits | L920 |
-| GET | /public/tz | L928 |
-| GET | /public/astro/events | L937 |
-| GET | /public/search | L948 |
-| GET | /auth/whoami | L970 |
-| POST | /auth/challenge | L973 |
-| POST | /auth/attest | L976 |
-| POST | /auth/integrity/challenge | L980 |
-| GET | /auth/integrity/diagnose | L989 |
-| POST | /auth/integrity/decode-test | L1002 |
-| POST | /protected/account/delete | L1070 |
-| POST | /protected/fortune | L1074 |
-| POST | /protected/tarot | L1084 |
-| POST | /protected/relocation | L1112 |
-| POST | /protected/astro/line-narrative | L1124 |
-| POST | /protected/astro/consultation | L1134 |
-| POST | /protected/consultation/credits | L1160 |
-| ? | /public/* | L1216 |
-| ? | /auth/* | L1218 |
-| ? | /protected/* | L1220 |
-| ? | /webhooks/revenuecat | L1222 |
+| ? | /public/astro/forecast | L879 |
+| ? | /public/tiles/* | L880 |
+| ? | /webhooks/* | L881 |
+| ? | /public/health | L889 |
+| GET | /public/tiles/osm/* | L894 |
+| POST | /public/astro/chart | L899 |
+| POST | /public/astro/forecast | L907 |
+| POST | /public/astro/predict | L922 |
+| POST | /public/astro/daily-transits | L930 |
+| GET | /public/tz | L938 |
+| GET | /public/astro/events | L947 |
+| GET | /public/search | L958 |
+| GET | /auth/whoami | L980 |
+| POST | /auth/challenge | L983 |
+| POST | /auth/attest | L986 |
+| POST | /auth/integrity/challenge | L990 |
+| GET | /auth/integrity/diagnose | L999 |
+| POST | /auth/integrity/decode-test | L1012 |
+| POST | /protected/account/delete | L1080 |
+| POST | /protected/fortune | L1084 |
+| POST | /protected/tarot | L1094 |
+| POST | /protected/relocation | L1122 |
+| POST | /protected/astro/line-narrative | L1134 |
+| POST | /protected/astro/consultation | L1144 |
+| POST | /protected/astro/consultation2 | L1172 |
+| POST | /protected/consultation/credits | L1198 |
+| ? | /public/* | L1255 |
+| ? | /auth/* | L1257 |
+| ? | /protected/* | L1259 |
+| ? | /webhooks/revenuecat | L1261 |
 
 **KV 使用 (4 行):**
 
-- 出現行: L110, L113, L118, L190
+- 出現行: L111, L114, L119, L191
 
 **Durable Object 使用 (4 行):**
 
-- 出現行: L232, L232, L232, L1174
+- 出現行: L233, L233, L233, L1212
 
 **export (1):** `_internal`
 
@@ -590,4 +678,22 @@ middleware
 - 出現行: L105, L105, L105
 
 **export (2):** `handleRevenueCatWebhook`, `_internal`
+
+
+### `worker/src/world_cities.js` (921 行)
+
+**ファイル先頭コメント:**
+
+```
+GENERATED FILE — DO NOT EDIT BY HAND
+Source: apps/solara/tools/generate_world_cities.py
+Regenerate: python apps/solara/tools/generate_world_cities.py
+
+Solara (ii) Stella 相談 Phase 1 (Worker 計算パイプライン) 用 都市プール。
+Dart 版 lib/utils/world_cities.dart と完全に同一データ (同じ生成元)。
+consultation_engine.js の候補生成 (region/world scope ランキング) に使う。
+キュレート都市リスト (762 件)。
+```
+
+**export (2):** `worldCities`, `worldCityRegionGroups`
 

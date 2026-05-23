@@ -5,9 +5,9 @@
 
 ## サマリ
 
-- ファイル数: 9 / 総行数: 1859
-- class/mixin/extension/enum: 19
-- 関数 (top-level + method の素拾い): 31
+- ファイル数: 10 / 総行数: 2054
+- class/mixin/extension/enum: 23
+- 関数 (top-level + method の素拾い): 34
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 0
 - Worker URL リテラル: 19
@@ -72,49 +72,87 @@
   </details>
 
 
-### `lib/utils/consultation_api.dart` (287 行)
+### `lib/utils/consultation_api.dart` (105 行)
 
 **ファイル先頭コメント:**
 
 ```
-Consultation API — POST /astro/consultation (Stage 3)
+Consultation API — クレジット系 (V2 と共有)
 
-設計: apps/solara/docs/pro_candidates.md §7.2 Stage 3
-Worker 側: apps/solara/worker/src/consultation.js
+設計: project_solara_stella_free_credits.md
 
-Stage 2 (consultation_engine.dart) が組み立てた候補リストを送信し、
-Stella の解釈 (intro / candidates[].narrative / outro) を受け取る。
+相談の本体 (候補生成 + Stella ナレーション) は V2 (consultation_v2_api.dart) に
+移行済み。本ファイルには V2 でも使うクレジット系のみ残す:
+  - ConsultationBlock (402 paywall 理由) + consultationBlockFromCode
+  - ConsultationCreditStatus + fetchConsultationCredits
 ```
 
-**imports:** dart=1 / package=1 / relative=3
+**imports:** dart=1 / package=1 / relative=2
 
-- relative: `consultation_engine.dart`, `app_attest_client.dart`, `solara_api.dart`
+- relative: `app_attest_client.dart`, `solara_api.dart`
 
-**型定義 (5):**
+**型定義 (2):**
 
-- L19 `class ConsultationCandidateReading`
-  - API レスポンス内の候補別 Stella の解釈。
-- L49 `class ConsultationReading`
-  - API レスポンス全体。
-- L93 `enum ConsultationBlock`
+- L18 `enum ConsultationBlock`
   - Free 試食クレジット切れ等で Worker が 402 を返したときのブロック理由。
-- L108 `class ConsultationResult`
-  - fetchConsultation の戻り値。成功 / ペイウォールブロック / 接続失敗 を区別する。
-- L230 `class ConsultationCreditStatus`
+- L48 `class ConsultationCreditStatus`
   - Stella 相談クレジットの現在状況 (無料週次残 + 購入残高)。
 
-**関数 (4 public + 1 private):**
+**関数 (2 public + 0 private):**
 
-- L41 `toJson()` — 履歴保存 (consultation_record) 用シリアライズ。
-- L82 `toJson()` — 履歴保存 (consultation_record) 用シリアライズ。
-- L164 `fetchConsultation()` — /astro/consultation を呼んで Stella の解釈を取得する。
-- L259 `fetchConsultationCredits()` — `/protected/consultation/credits` を呼んで現在のクレジット状況を取得する。
+- L34 `consultationBlockFromCode()` — 402 paywall レスポンスの `error` コード → [ConsultationBlock]。
+- L77 `fetchConsultationCredits()` — `/protected/consultation/credits` を呼んで現在のクレジット状況を取得する。
 
-  <details><summary>private 関数 1 件</summary>
 
-  - L139 `_blockFromCode()`
+### `lib/utils/consultation_v2_api.dart` (373 行)
 
-  </details>
+**ファイル先頭コメント:**
+
+```
+Consultation V2 API — POST /protected/astro/consultation2
+
+設計: project_solara_consultation_full_integration.md (全要素統合)
+Worker 側: apps/solara/worker/src/{consultation_engine,consultation_v2}.js
+
+新方式: client は「誕生データ + 自宅座標 + 5問の答え + preset」(約1KB) だけ送り、
+Worker がチャート/線/sectorEnergy/候補多様性/リロケハウスを全部計算して
+Stella の言葉 (候補 1 つ + エビデンス + 初回のみ内的季節/intro/outro) を返す。
+1 クレジット = 1 候補。「別の候補地」は excluded を足した再呼び出し (= +1 クレジット)。
+
+旧 consultation_api.dart (client が候補を組む方式) は deployed app 用に温存。
+
+HARD500 回避のため part 分割: リクエストモデルは consultation_v2_request.dart。
+```
+
+**imports:** dart=1 / package=1 / relative=4
+
+- relative: `app_attest_client.dart`, `consultation_api.dart`, `solara_api.dart`, `solara_storage.dart`
+
+**型定義 (7):**
+
+- L31 `class ConsultationTimeWindowItem`
+  - 時間帯リズムの 1 項目 (旅行の朝昼夜)。
+- L48 `class ConsultationTimeWindow`
+  - 時間帯 (現地の時間帯のみ・時計表示なし)。
+- L95 `class ConsultationEvidenceKm`
+  - エビデンスの距離行 (玄人向けに km を出す。本文には出さない)。
+- L111 `class ConsultationEvidence`
+  - エビデンス (占星術ファクターのみ。重み・選び方・プロンプトは出さない)。
+- L147 `class ConsultationV2Candidate`
+  - 1 候補地の Stella の読み (構造データ + ナレーション)。
+- L212 `class ConsultationV2Reading`
+  - 相談 V2 レスポンス全体 (成功時)。
+- L275 `class ConsultationV2Result`
+  - fetchConsultationV2 の戻り値。
+
+**関数 (6 public + 0 private):**
+
+- L43 `toJson()`
+- L86 `toJson()`
+- L107 `toJson()`
+- L139 `toJson()`
+- L195 `toJson()`
+- L315 `fetchConsultationV2()` — /protected/astro/consultation2 を呼んで Stella の読み (候補 1 つ) を取得する。
 
 
 ### `lib/utils/daily_transits_api.dart` (241 行)
@@ -273,7 +311,7 @@ Solara 法務リンク定数 — Phase 2-6b
 - L68 `reverseGeocodeDetail()` — 緯度経度から逆ジオコーディングで region / country まで含む詳細を取得する。
 
 
-### `lib/utils/solara_api.dart` (84 行)
+### `lib/utils/solara_api.dart` (88 行)
 
 **ファイル先頭コメント:**
 
@@ -286,7 +324,7 @@ Solara CF Worker API - 軽量なユーティリティ呼び出し
 
 **関数 (1 public + 0 private):**
 
-- L71 `fetchTimezoneName()` — 緯度経度から IANA TZ名 (DST対応の基準) を取得。
+- L75 `fetchTimezoneName()` — 緯度経度から IANA TZ名 (DST対応の基準) を取得。
 
 **Worker URL リテラル (18):**
 
@@ -305,9 +343,9 @@ Solara CF Worker API - 軽量なユーティリティ呼び出し
 - L52: `'$solaraWorkerBase/protected/fortune'`
 - L53: `'$solaraWorkerBase/protected/tarot'`
 - L54: `'$solaraWorkerBase/protected/relocation'`
-- L56: `'$solaraWorkerBase/protected/astro/consultation'`
-- L60: `'$solaraWorkerBase/protected/consultation/credits'`
-- L66: `'$solaraWorkerBase/protected/account/delete'`
+- L60: `'$solaraWorkerBase/protected/astro/consultation2'`
+- L64: `'$solaraWorkerBase/protected/consultation/credits'`
+- L70: `'$solaraWorkerBase/protected/account/delete'`
 
 
 ### `lib/utils/tile_http_client.dart` (42 行)

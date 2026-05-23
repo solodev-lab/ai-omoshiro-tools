@@ -5,9 +5,9 @@
 
 ## サマリ
 
-- ファイル数: 23 / 総行数: 13290
+- ファイル数: 23 / 総行数: 13325
 - class/mixin/extension/enum: 86
-- 関数 (top-level + method の素拾い): 288
+- 関数 (top-level + method の素拾い): 289
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 18
 - Worker URL リテラル: 0
@@ -692,7 +692,7 @@ A*C*G ライン (natal / transit) のタップ詳細 popup。
 - 集計: `showLineNarrativeSheet`×1
 
 
-### `lib/screens/map/map_search.dart` (590 行)
+### `lib/screens/map/map_search.dart` (600 行)
 
 **imports:** dart=2 / package=3 / relative=4
 
@@ -706,8 +706,8 @@ A*C*G ライン (natal / transit) のタップ詳細 popup。
   - 検索結果リスト（スコア付き）ポップアップ
 - L316 `class SearchFocusPopup : StatelessWidget`
   - 検索候補から1件選ばれたあとの詳細ポップアップ。
-- L542 `class _CatChip : StatelessWidget`
-- L567 `class _ActionTile : StatelessWidget`
+- L552 `class _CatChip : StatelessWidget`
+- L577 `class _ActionTile : StatelessWidget`
 
 **関数 (7 public + 4 private):**
 
@@ -715,9 +715,9 @@ A*C*G ライン (natal / transit) のタップ詳細 popup。
 - L48 `distanceKmFrom()` — 中心から km 距離
 - L114 `annotateHitsWithScores()` — 検索結果に、現在中心からの方位スコアと支配カテゴリを注入する
 - L162 `build()`
-- L352 `build()`
-- L548 `build()`
-- L573 `build()`
+- L358 `build()`
+- L558 `build()`
+- L583 `build()`
 
   <details><summary>private 関数 4 件</summary>
 
@@ -895,7 +895,7 @@ A*C*G ライン (natal / transit) のタップ詳細 popup。
 - L40 `build()`
 
 
-### `lib/screens/map_screen.dart` (3017 行)
+### `lib/screens/map_screen.dart` (3042 行)
 
 **imports:** dart=2 / package=6 / relative=36
 
@@ -906,7 +906,7 @@ A*C*G ライン (natal / transit) のタップ詳細 popup。
 - L75 `class MapScreen : StatefulWidget`
 - L85 `class MapScreenState : State`
 
-**関数 (8 public + 54 private):**
+**関数 (8 public + 55 private):**
 
 - L82 `createState()`
 - L334 `initState()`
@@ -915,9 +915,9 @@ A*C*G ライン (natal / transit) のタップ詳細 popup。
 - L1293 `snack()`
 - L1465 `snack()`
 - L1511 `build()`
-- L2568 `signOf()`
+- L2574 `signOf()`
 
-  <details><summary>private 関数 54 件</summary>
+  <details><summary>private 関数 55 件</summary>
 
   - L343 `_bootstrap()`
   - L386 `_warmupTileConnection()`
@@ -955,24 +955,25 @@ A*C*G ライン (natal / transit) のタップ詳細 popup。
   - L1416 `_exitAstroCartoMode()`
   - L1464 `_geolocate()`
   - L1576 `_buildBody()`
-  - L2529 `_buildZenithPopup()`
-  - L2548 `_buildRelocationPopup()`
-  - L2613 `_proLabelForAstroKey()`
-  - L2631 `_proDescForAstroKey()`
-  - L2657 `_onAstroToggle()`
-  - L2686 `_enterConsultationFromDaily()`
-  - L2723 `_launchConsultation()`
-  - L2778 `_reloadLocationSlots()`
-  - L2802 `_nearestNatalConjunctions()`
-  - L2823 `_findNearbyAstroLines()`
-  - L2841 `_zenithMarkerFrames()`
-  - L2842 `_nadirMarkerFrames()`
-  - L2843 `_zenithBandFrames()`
-  - L2844 `_nadirBandFrames()`
-  - L2848 `_filteredFrames()`
-  - L2861 `_visibleAstroLines()`
-  - L2889 `_buildNoProfileGuide()`
-  - L2923 `_showSearchVpHelpPopup()`
+  - L2535 `_buildZenithPopup()`
+  - L2554 `_buildRelocationPopup()`
+  - L2619 `_proLabelForAstroKey()`
+  - L2637 `_proDescForAstroKey()`
+  - L2663 `_onAstroToggle()`
+  - L2692 `_enterConsultationFromDaily()`
+  - L2724 `_launchConsultation()`
+  - L2772 `_launchConsultationFromSearch()`
+  - L2803 `_reloadLocationSlots()`
+  - L2827 `_nearestNatalConjunctions()`
+  - L2848 `_findNearbyAstroLines()`
+  - L2866 `_zenithMarkerFrames()`
+  - L2867 `_nadirMarkerFrames()`
+  - L2868 `_zenithBandFrames()`
+  - L2869 `_nadirBandFrames()`
+  - L2873 `_filteredFrames()`
+  - L2886 `_visibleAstroLines()`
+  - L2914 `_buildNoProfileGuide()`
+  - L2948 `_showSearchVpHelpPopup()`
 
   </details>
 

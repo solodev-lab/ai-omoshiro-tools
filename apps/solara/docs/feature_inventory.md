@@ -44,7 +44,7 @@ Solara のバックエンドは **Cloudflare Workers** で稼働。本番 URL: `
 | 役割 | 例 | 設計上の特徴 |
 |---|---|---|
 | **天体計算 (純数学)** | `/astro/chart`, `/astro/forecast`, `/astro/daily-transits`, `/astro/events`, `/tz` | `astronomy-engine` npm に依存。理論上は Dart 完結も可能 (実際に `astro_houses.dart`, `astro_lines.dart` は Dart 移植済み)。**Pro 機能の境界としては「無料公開層」になりやすい** |
-| **AI narrative 仲介 (Gemini)** | `/fortune`, `/tarot`, `/relocation`, `/astro/consultation`, ~~`/astro/line-narrative`~~ | Gemini API key 秘匿のため Worker 必須。**課金で守るべき最大の対象** — 1 リクエスト = Gemini コスト発生。`/astro/consultation` は Free 試食クレジット制 (下記 0.2.1) |
+| **AI narrative 仲介 (Gemini)** | `/fortune`, `/tarot`, `/relocation`, `/astro/consultation2` (V2 現役), `/astro/consultation` (旧・後方互換), ~~`/astro/line-narrative`~~ | Gemini API key 秘匿のため Worker 必須。**課金で守るべき最大の対象** — 1 リクエスト = Gemini コスト発生。相談は Free 試食クレジット制 (下記 0.2.1)。**Flutter は V2 `/astro/consultation2` を呼ぶ** (全要素統合: client 最小入力→Worker 全計算、2026-05-24) |
 | **検索プロキシ** | `/search` | Google Places (主) + Nominatim (フォールバック)。Google Places は月 1 万 req 無料枠 |
 | **地図タイル中継** | `/tiles/osm/*` | OSM 系を Worker UA で取得、edge cache 24h。アプリ直叩きだと 403 (UA 不足) |
 
@@ -63,8 +63,9 @@ Solara のバックエンドは **Cloudflare Workers** で稼働。本番 URL: `
 
 ### 0.2.1 Stella 相談 クレジット制 (2026-05-23、設計 `project_solara_stella_free_credits.md`)
 
-`/protected/astro/consultation` は「Free に試食枠を開いた看板 Gemini 機能」。**1 クレジット = Stella 生成 1 回**
-(初回も出し直しも消費)。設計詳細は
+相談は「Free に試食枠を開いた看板 Gemini 機能」。**1 クレジット = Stella 生成 1 回**
+(V2 では 1 クレジット = 1 候補。「別の候補地」も 1 消費)。Flutter 現役は V2 `/astro/consultation2`
+(全要素統合)、旧 `/astro/consultation` は deployed app 後方互換で Worker 側に温存。設計詳細は
 [`project_solara_stella_free_credits.md`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/project_solara_stella_free_credits.md)。
 
 - **品質**: Free も Pro も同等 (thinking ON・全モード・出し直し可)。違いは**回数だけ**。
@@ -451,8 +452,9 @@ Solara のバックエンドは **Cloudflare Workers** で稼働。本番 URL: `
 | `FortuneReading` | `fortune_api.dart` | `/fortune` のレスポンス (Gemini 生成の占い文) |
 | `RelocationNarrative` | `fortune_api.dart` | `/relocation` のレスポンス (リロケーション解説) |
 | `TarotReading` | `fortune_api.dart` | `/tarot` のレスポンス (1 枚引き Reading) |
-| `ConsultationReading` | `consultation_api.dart` | `/astro/consultation` の Stella 解釈 (intro/candidates/outro) |
-| `ConsultationResult` | `consultation_api.dart` | `fetchConsultation` の戻り (成功 reading / 402 `ConsultationBlock` / 接続失敗を区別)。Free 残量 `freeCreditsRemaining`/`freeCreditsLimit` 同梱 (0.2.1 試食クレジット) |
+| `ConsultationRequest` | `consultation_v2_api.dart` (+`consultation_v2_request.dart` part) | `/astro/consultation2` への最小入力 (誕生+自宅+5問 theme/mode/when/scope/withWhom/wish+isFirst+excluded)。client は候補生成せず Worker が全計算 (V2 全要素統合、2026-05-24) |
+| `ConsultationV2Result` / `ConsultationV2Reading` / `ConsultationV2Candidate` / `ConsultationEvidence` / `ConsultationTimeWindow` | `consultation_v2_api.dart` | `fetchConsultationV2` の戻り。候補 1 つ + evidence + 初回のみ innerSeason/intro/outro + timeWindow + 残量。exhausted / 402 `ConsultationBlock` / 接続失敗を区別。「別の候補地」= excluded を足して再呼び出し (1 クレジット=1 候補) |
+| `ConsultationCreditStatus` / `ConsultationBlock` | `consultation_api.dart` (スリム化) | クレジット残状況 + 402 paywall 理由。V2 と共有。旧 `consultation_engine.dart` / `fetchConsultation` / `ConsultationReading` は撤去 (2026-05-24 V2 移行) |
 
 ### 2a.6 機械抽出への参照
 
