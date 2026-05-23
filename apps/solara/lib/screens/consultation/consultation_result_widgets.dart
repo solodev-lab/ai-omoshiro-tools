@@ -1,9 +1,5 @@
-// Consultation Result Screen — Stage 4 サブウィジェット部
-// (part of '../consultation_result_screen.dart')
-//
-// Stage 4 結果画面の内部ウィジェットを分離。consultation_result_screen.dart は
-// orchestration + state management 専担、本ファイルは presentation を担当する。
-// (Solara は horoscope_screen.dart と同じ part-of パターンを採用)
+// Consultation Result — 状態/バナー/ページャ ウィジェット (V2)
+// (part of 'consultation_result_screen.dart')
 
 part of 'consultation_result_screen.dart';
 
@@ -85,11 +81,7 @@ class _ErrorBox extends StatelessWidget {
   }
 }
 
-// ── 上下のブロック (intro/outro) ───────────────────────────
-
 /// 静的フォールバック時の注意チップ (Stella 応答が届かず静的表示になったことを示す)。
-/// 旧 _IntroBlock のフォールバック表示部分のみを本文に残したもの。
-/// intro/outro 本体は _AboutReadingContent (タイトルタップのポップアップ) へ移動。
 class _FallbackChip extends StatelessWidget {
   const _FallbackChip();
 
@@ -118,54 +110,157 @@ class _FallbackChip extends StatelessWidget {
   }
 }
 
-/// AppBar タイトルタップで開く「この読み解きについて」ポップアップの中身。
-/// 旧 _IntroBlock(前置き)+ _OutroBlock(注記)を 1 枚に統合 (showInfoPopup 経由)。
-class _AboutReadingContent extends StatelessWidget {
-  final String intro;
-  final String outro;
-  const _AboutReadingContent({required this.intro, required this.outro});
+/// 内的季節の一文 (3 候補共通の前提・上部に常設)。
+class _InnerSeasonBanner extends StatelessWidget {
+  final String text;
+  const _InnerSeasonBanner({required this.text});
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        const Text(
-          'この読み解きについて',
-          style: TextStyle(
-            color: SolaraColors.textPrimary,
-            fontSize: 15,
-            fontWeight: FontWeight.w600,
-            letterSpacing: 0.3,
+    return Container(
+      margin: const EdgeInsets.fromLTRB(20, 4, 20, 6),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: const Color(0x0FF6BD60),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: const Color(0x33F6BD60)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(Icons.spa_outlined,
+              size: 15, color: SolaraColors.solaraGoldLight),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              text,
+              style: const TextStyle(
+                color: SolaraColors.textSecondary,
+                fontSize: 12.5,
+                height: 1.6,
+                letterSpacing: 0.3,
+              ),
+            ),
           ),
-        ),
-        const SizedBox(height: 12),
-        Text(
-          intro,
-          style: const TextStyle(
-            color: SolaraColors.textPrimary,
-            fontSize: 14,
-            height: 1.7,
-            letterSpacing: 0.3,
-          ),
-        ),
-        const SizedBox(height: 14),
-        Container(height: 1, color: SolaraColors.glassBorder),
-        const SizedBox(height: 14),
-        Text(
-          outro,
-          style: TextStyle(
-            color: SolaraColors.textSecondary,
-            fontSize: 12.5,
-            height: 1.7,
-            letterSpacing: 0.4,
-            fontStyle: FontStyle.italic,
-          ),
-        ),
-      ],
+        ],
+      ),
     );
   }
+}
+
+/// AppBar タイトルタップで開く「この読み解きについて」ポップアップの中身。
+/// 内的季節 + 前置き + 注記 + 現在候補のエビデンス (占星術ファクター)。
+class _AboutReadingContent extends StatelessWidget {
+  final String innerSeason;
+  final String intro;
+  final String outro;
+  final ConsultationEvidence evidence;
+  const _AboutReadingContent({
+    required this.innerSeason,
+    required this.intro,
+    required this.outro,
+    required this.evidence,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Text(
+            'この読み解きについて',
+            style: TextStyle(
+              color: SolaraColors.textPrimary,
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.3,
+            ),
+          ),
+          if (innerSeason.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Text(innerSeason, style: _bodyStyle),
+          ],
+          if (intro.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Text(intro, style: _bodyStyle),
+          ],
+          if (evidence.factors.isNotEmpty) ...[
+            const SizedBox(height: 14),
+            Container(height: 1, color: SolaraColors.glassBorder),
+            const SizedBox(height: 12),
+            Text(
+              'この土地の占星術ファクター',
+              style: TextStyle(
+                color: SolaraColors.textSecondary,
+                fontSize: 11.5,
+                letterSpacing: 0.5,
+              ),
+            ),
+            const SizedBox(height: 8),
+            ...evidence.factors.map(
+              (f) => Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: Text('· $f', style: _factorStyle),
+              ),
+            ),
+            if (evidence.km.isNotEmpty) ...[
+              const SizedBox(height: 6),
+              ...evidence.km.map(
+                (k) => Padding(
+                  padding: const EdgeInsets.only(bottom: 2),
+                  child: Text('  ${k.factor}：約 ${k.km}km', style: _kmStyle),
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                '距離はエネルギーの有無を決めません。惑星ははるか遠方、地上の数百kmは'
+                '「圏内かどうか」の差にすぎません。',
+                style: _kmStyle,
+              ),
+            ],
+            if (evidence.note != null && evidence.note!.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Text(evidence.note!, style: _kmStyle),
+            ],
+          ],
+          if (outro.isNotEmpty) ...[
+            const SizedBox(height: 14),
+            Container(height: 1, color: SolaraColors.glassBorder),
+            const SizedBox(height: 12),
+            Text(
+              outro,
+              style: TextStyle(
+                color: SolaraColors.textSecondary,
+                fontSize: 12.5,
+                height: 1.7,
+                letterSpacing: 0.4,
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  static const _bodyStyle = TextStyle(
+    color: SolaraColors.textPrimary,
+    fontSize: 14,
+    height: 1.7,
+    letterSpacing: 0.3,
+  );
+  static const _factorStyle = TextStyle(
+    color: SolaraColors.solaraGoldLight,
+    fontSize: 12.5,
+    height: 1.5,
+  );
+  static final _kmStyle = TextStyle(
+    color: SolaraColors.textSecondary,
+    fontSize: 11.5,
+    height: 1.5,
+  );
 }
 
 // ── ページャ ─────────────────────────────────────────────
@@ -190,9 +285,7 @@ class _PageIndicator extends StatelessWidget {
             width: active ? 18 : 6,
             height: 6,
             decoration: BoxDecoration(
-              color: active
-                  ? SolaraColors.solaraGold
-                  : SolaraColors.glassBorder,
+              color: active ? SolaraColors.solaraGold : SolaraColors.glassBorder,
               borderRadius: BorderRadius.circular(3),
             ),
           );
@@ -202,6 +295,7 @@ class _PageIndicator extends StatelessWidget {
   }
 }
 
+/// 「別の候補地を見る」(1 クレジット消費で次の distinct 候補を 1 つ取得)。
 class _RefreshButton extends StatelessWidget {
   final bool loading;
   final VoidCallback? onTap;
@@ -233,220 +327,9 @@ class _RefreshButton extends StatelessWidget {
                     strokeWidth: 2,
                   ),
                 )
-              : const Icon(Icons.refresh, size: 18),
-          label: Text(loading ? '別の候補を探しています…' : 'もう一度候補を出す'),
+              : const Icon(Icons.travel_explore, size: 18),
+          label: Text(loading ? '別の候補地を探しています…' : '別の候補地を見る'),
         ),
-      ),
-    );
-  }
-}
-
-// ── 候補カード ──────────────────────────────────────────
-
-class _CandidateCard extends StatelessWidget {
-  final CandidateLocation candidate;
-  final ConsultationCandidateReading? reading;
-
-  const _CandidateCard({
-    required this.candidate,
-    required this.reading,
-  });
-
-  /// 候補タイプ: 方角 (bearings) か 場所 (specific/region/world) か。
-  bool get _isBearing => candidate.bearing != null;
-
-  String get _subtitle {
-    final parts = <String>[];
-    if (candidate.region.isNotEmpty) parts.add(candidate.region);
-    if (candidate.country.isNotEmpty && !_isBearing) {
-      parts.add(candidate.country);
-    }
-    return parts.join(' · ');
-  }
-
-  /// 候補タイプを示すラベル (アイコン横に小さく表示)。
-  String get _kindLabel => _isBearing ? '方角' : '場所';
-
-  /// 方角コード (N/NE/E/...) → 大きく表示する記号。null なら場所候補。
-  String? get _bearingBadgeText => candidate.bearing;
-
-  @override
-  Widget build(BuildContext context) {
-    final r = reading;
-    final energyLabels = r?.energyLabels ?? const <String>[];
-    final narrative = r?.narrative ?? '';
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      child: GlassPanel(
-        padding: const EdgeInsets.all(20),
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // 候補タイプバッジ + 種別ラベル (方角 / 場所)
-              Row(
-                children: [
-                  _CandidateKindBadge(
-                    isBearing: _isBearing,
-                    bearingText: _bearingBadgeText,
-                  ),
-                  const SizedBox(width: 10),
-                  Text(
-                    _kindLabel,
-                    style: const TextStyle(
-                      color: SolaraColors.textSecondary,
-                      fontSize: 11,
-                      letterSpacing: 1.0,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 10),
-              Text(
-                candidate.nameJP,
-                style: const TextStyle(
-                  color: SolaraColors.textPrimary,
-                  fontSize: 22,
-                  height: 1.3,
-                  letterSpacing: 0.5,
-                ),
-              ),
-              if (_subtitle.isNotEmpty) ...[
-                const SizedBox(height: 4),
-                Text(
-                  _subtitle,
-                  style: TextStyle(
-                    color: SolaraColors.textSecondary,
-                    fontSize: 12,
-                    letterSpacing: 0.4,
-                  ),
-                ),
-              ],
-              if (energyLabels.isNotEmpty) ...[
-                const SizedBox(height: 14),
-                Wrap(
-                  spacing: 6,
-                  runSpacing: 6,
-                  children: energyLabels
-                      .map((label) => _EnergyChip(label: label))
-                      .toList(growable: false),
-                ),
-              ],
-              const SizedBox(height: 18),
-              Text(
-                narrative.isNotEmpty ? narrative : '(narrative なし)',
-                style: const TextStyle(
-                  color: SolaraColors.textPrimary,
-                  fontSize: 14,
-                  height: 1.85,
-                  letterSpacing: 0.4,
-                ),
-              ),
-              const SizedBox(height: 24),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _EnergyChip extends StatelessWidget {
-  final String label;
-  const _EnergyChip({required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(
-        color: const Color(0x1AF6BD60),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0x44F6BD60)),
-      ),
-      child: Text(
-        label,
-        style: const TextStyle(
-          color: SolaraColors.solaraGoldLight,
-          fontSize: 11,
-          letterSpacing: 0.4,
-        ),
-      ),
-    );
-  }
-}
-
-/// 候補種別バッジ (方角 / 場所)。
-/// - bearings: コンパスアイコン + 方位コード (N / NE / ...) を内側に
-/// - place:    ピンアイコン (シンプル)
-class _CandidateKindBadge extends StatelessWidget {
-  final bool isBearing;
-  final String? bearingText; // 'N' / 'NE' 等。null なら場所
-  const _CandidateKindBadge({
-    required this.isBearing,
-    required this.bearingText,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    if (isBearing) {
-      return Container(
-        width: 40,
-        height: 40,
-        decoration: BoxDecoration(
-          color: const Color(0x22F6BD60),
-          shape: BoxShape.circle,
-          border: Border.all(color: const Color(0x66F6BD60), width: 1.2),
-        ),
-        alignment: Alignment.center,
-        child: Stack(
-          alignment: Alignment.center,
-          children: [
-            const Icon(
-              Icons.explore_outlined,
-              size: 28,
-              color: SolaraColors.solaraGoldLight,
-            ),
-            if (bearingText != null && bearingText!.isNotEmpty)
-              // 方位コードをアイコン上に小さくオーバーレイ
-              Positioned(
-                bottom: 4,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 4, vertical: 1),
-                  decoration: BoxDecoration(
-                    color: SolaraColors.celestialBlueDark,
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: Text(
-                    bearingText!,
-                    style: const TextStyle(
-                      color: SolaraColors.solaraGoldLight,
-                      fontSize: 9,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 0.4,
-                      height: 1.0,
-                    ),
-                  ),
-                ),
-              ),
-          ],
-        ),
-      );
-    }
-    return Container(
-      width: 40,
-      height: 40,
-      decoration: BoxDecoration(
-        color: const Color(0x22F6BD60),
-        shape: BoxShape.circle,
-        border: Border.all(color: const Color(0x66F6BD60), width: 1.2),
-      ),
-      alignment: Alignment.center,
-      child: const Icon(
-        Icons.place,
-        size: 24,
-        color: SolaraColors.solaraGoldLight,
       ),
     );
   }

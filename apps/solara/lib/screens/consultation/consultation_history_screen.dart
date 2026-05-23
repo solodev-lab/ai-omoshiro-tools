@@ -36,10 +36,12 @@ const _modeLabel = <String, String>{
 };
 
 const _scopeLabel = <String, String>{
-  'specific': '具体地点',
-  'region': '範囲指定',
+  'point': '具体地点',
+  'bearing': '方角',
+  'radius': '自宅から半径',
+  'region': '地域',
+  'country': '自国内',
   'world': '世界全体',
-  'bearings': '方角別',
 };
 
 class ConsultationHistoryScreen extends StatefulWidget {
@@ -187,16 +189,7 @@ class _ConsultationHistoryScreenState extends State<ConsultationHistoryScreen> {
   Future<void> _openDetail(ConsultationRecord r) async {
     await Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => ConsultationResultScreen(
-          theme: r.theme,
-          mode: r.mode,
-          scope: r.scope,
-          freeText: r.freeText,
-          initialCandidates: r.candidates,
-          initialReading: r.reading,
-          autoSave: false,
-          scopeDetail: r.scopeDetail,
-        ),
+        builder: (_) => ConsultationResultScreen.fromRecord(record: r),
       ),
     );
   }
@@ -269,11 +262,13 @@ class _HistoryCard extends StatelessWidget {
     return '$y/$m/$d $hh:$mm';
   }
 
-  String get _firstCandidateLabel {
-    if (record.candidates.isEmpty) return '—';
-    final first = record.candidates.first;
-    if (record.candidates.length == 1) return first.nameJP;
-    return '${first.nameJP} ほか ${record.candidates.length - 1} 件';
+  String get _firstCandidateLabel => record.firstCandidateLabel;
+
+  /// カード下部の抜粋: 願い → だれと の順で 1 行。
+  String get _excerpt {
+    if (record.wish.isNotEmpty) return record.wish;
+    if (record.withWhom.isNotEmpty) return 'だれと: ${record.withWhom}';
+    return '';
   }
 
   /// 履歴画面の compact 表示用。テーマラベルから「・」の前の部分のみ抽出。
@@ -301,14 +296,18 @@ class _HistoryCard extends StatelessWidget {
 
   /// スコープ (具体地点/範囲指定/世界全体/方角別) → アイコン (履歴画面のみ)。
   IconData get _scopeIcon {
-    switch (record.scope) {
-      case 'specific':
+    switch (record.scopeKind) {
+      case 'point':
         return Icons.location_on_outlined;
       case 'region':
         return Icons.crop_din_outlined;
+      case 'country':
+        return Icons.flag_outlined;
+      case 'radius':
+        return Icons.radar;
       case 'world':
         return Icons.public;
-      case 'bearings':
+      case 'bearing':
         return Icons.explore_outlined;
       default:
         return Icons.more_horiz;
@@ -321,16 +320,18 @@ class _HistoryCard extends StatelessWidget {
   /// - world / bearings / 不明: null (アイコンだけで十分)
   /// 旧データで scopeDetail / region / country が全て空の場合も null。
   String? get _scopeLocationLabel {
-    switch (record.scope) {
+    switch (record.scopeKind) {
       case 'region':
         final d = record.scopeDetail;
         return (d == null || d.isEmpty) ? null : d;
-      case 'specific':
+      case 'point':
+        final d = record.scopeDetail;
+        if (d != null && d.isNotEmpty) return d;
         if (record.candidates.isEmpty) return null;
         final c = record.candidates.first;
         final parts = <String>[
-          if (c.region.isNotEmpty) c.region,
-          if (c.country.isNotEmpty) c.country,
+          if ((c.region ?? '').isNotEmpty) c.region!,
+          if ((c.country ?? '').isNotEmpty) c.country!,
         ];
         return parts.isEmpty ? null : parts.join(' / ');
       default:
@@ -341,7 +342,7 @@ class _HistoryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final modeJp = _modeLabel[record.mode] ?? record.mode;
-    final scopeJp = _scopeLabel[record.scope] ?? record.scope;
+    final scopeJp = _scopeLabel[record.scopeKind] ?? record.scopeKind;
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
@@ -441,12 +442,12 @@ class _HistoryCard extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
               ),
             ),
-            if (record.freeText.isNotEmpty) ...[
+            if (_excerpt.isNotEmpty) ...[
               const SizedBox(height: 4),
               Padding(
                 padding: const EdgeInsets.only(right: 10),
                 child: Text(
-                  record.freeText,
+                  _excerpt,
                   style: const TextStyle(
                     color: SolaraColors.textSecondary,
                     fontSize: 12,

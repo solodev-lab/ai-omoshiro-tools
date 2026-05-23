@@ -2691,11 +2691,7 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
 
     // Free 試食 (週N回) も入力画面へ。回数/モードゲートは送信時に Worker が判定
     // (project_solara_stella_free_credits.md)。
-
-    final natalLines = _astroLinesCache
-        .where((l) =>
-            l.frame == astro_lines.AstroFrame.natal && !l.isAspectLine)
-        .toList(growable: false);
+    // V2: client は誕生+自宅+5問だけ送り Worker が全計算するので astroLines 不要。
 
     final p = _profile;
     final hasHome = p != null && !(p.homeLat == 0 && p.homeLng == 0);
@@ -2704,7 +2700,6 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     await Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => ConsultationInputScreen(
-          astroLines: natalLines,
           currentLocation: currentLoc,
           // preset 無し: ユーザーが scope を選ぶ (世界全体 / 範囲指定 / おでかけ等)
         ),
@@ -2750,12 +2745,7 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
       region: placeName != null ? '' : coordLabel,
     );
 
-    // natal-frame conjunction 本線のみを渡す。
-    final natalLines = _astroLinesCache
-        .where((l) =>
-            l.frame == astro_lines.AstroFrame.natal && !l.isAspectLine)
-        .toList(growable: false);
-
+    // V2: client は誕生+自宅+5問+preset だけ送り Worker が全計算 (astroLines 不要)。
     final p = _profile;
     final hasHome = p != null && !(p.homeLat == 0 && p.homeLng == 0);
     final currentLoc = hasHome ? LatLng(p.homeLat, p.homeLng) : null;
@@ -2763,7 +2753,6 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     await Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => ConsultationInputScreen(
-          astroLines: natalLines,
           currentLocation: currentLoc,
           presetTarget: preset,
         ),

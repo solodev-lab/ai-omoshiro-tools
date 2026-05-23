@@ -1,13 +1,12 @@
-// Consultation Share — Phase 2-5 シェアエクスポート
+// Consultation Share — シェアエクスポート (V2: 全要素統合)
 //
-// 設計: apps/solara/docs/pro_candidates.md §7.2 Stage 4
+// 設計: project_solara_consultation_full_integration.md
 //
 // 2 つのエクスポート手段:
-//   1. テキストコピー: ConsultationReading を plain text に整形 → Clipboard
+//   1. テキストコピー: 蓄積した候補群を plain text に整形 → Clipboard
 //   2. 画像共有: 結果画面の RepaintBoundary を PNG 化 → SharePlus
 //
-// Phase 2-5 (v1): UI のみ、Pro ゲート未配線。設計上は Pro 機能。
-// Phase 2-6 (課金基盤後): Pro チェックで非 Pro はゲートする。
+// シェアは Pro 限定 (結果画面側で Pro ゲート)。
 
 import 'dart:io';
 import 'dart:ui' as ui;
@@ -17,7 +16,8 @@ import 'package:flutter/rendering.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
-import 'consultation_api.dart';
+import 'consultation_record.dart';
+import 'consultation_v2_api.dart';
 
 const _themeLabel = <String, String>{
   'love': '恋愛・関係',
@@ -35,57 +35,65 @@ const _modeLabel = <String, String>{
 };
 
 const _scopeLabel = <String, String>{
-  'specific': '具体地点',
+  'point': '具体地点',
+  'bearing': '方角別',
+  'radius': '自宅から半径',
   'region': '範囲指定',
+  'country': '自国内',
   'world': '世界全体',
-  'bearings': '方角別',
 };
 
 /// 相談結果を plain text に整形する。
-/// 履歴詳細でも live 相談直後でも同じフォーマットで吐き出す。
 String formatConsultationAsText({
   required String theme,
   required String mode,
-  required String scope,
-  required String freeText,
-  required ConsultationReading reading,
+  required String scopeKind,
+  String withWhom = '',
+  String wish = '',
+  String innerSeason = '',
+  String intro = '',
+  String outro = '',
+  required List<ConsultationV2Candidate> candidates,
+  required List<ConsultationEvidence> evidences,
 }) {
   final themeJp = _themeLabel[theme] ?? theme;
   final modeJp = _modeLabel[mode] ?? mode;
-  final scopeJp = _scopeLabel[scope] ?? scope;
+  final scopeJp = _scopeLabel[scopeKind] ?? scopeKind;
 
   final buf = StringBuffer();
   buf.writeln('— Solara · Stella による相談 —');
   buf.writeln();
-  buf.writeln('テーマ: $themeJp / モード: $modeJp / 範囲: $scopeJp');
-  if (freeText.trim().isNotEmpty) {
-    buf.writeln('自由記述: ${freeText.trim()}');
-  }
+  buf.writeln('テーマ: $themeJp / 場面: $modeJp / 範囲: $scopeJp');
+  if (withWhom.trim().isNotEmpty) buf.writeln('だれと: ${withWhom.trim()}');
+  if (wish.trim().isNotEmpty) buf.writeln('願い: ${wish.trim()}');
   buf.writeln();
 
-  if (reading.intro.isNotEmpty) {
-    buf.writeln(reading.intro);
+  if (innerSeason.isNotEmpty) {
+    buf.writeln(innerSeason);
+    buf.writeln();
+  }
+  if (intro.isNotEmpty) {
+    buf.writeln(intro);
     buf.writeln();
   }
 
-  for (var i = 0; i < reading.candidates.length; i++) {
-    final c = reading.candidates[i];
-    buf.writeln('━━ ${c.name} ━━');
-    if (c.energyLabels.isNotEmpty) {
-      for (final label in c.energyLabels) {
-        buf.writeln('  · $label');
-      }
-      buf.writeln();
+  for (var i = 0; i < candidates.length; i++) {
+    final c = candidates[i];
+    buf.writeln('━━ ${ConsultationRecord.displayName(c)} ━━');
+    if (c.characterHeadline.isNotEmpty) buf.writeln('◆ ${c.characterHeadline}');
+    for (final label in c.energyLabels) {
+      buf.writeln('  · $label');
     }
     if (c.narrative.isNotEmpty) {
-      buf.writeln(c.narrative);
       buf.writeln();
+      buf.writeln(c.narrative);
     }
+    buf.writeln();
   }
 
-  if (reading.outro.isNotEmpty) {
+  if (outro.isNotEmpty) {
     buf.writeln('— — —');
-    buf.writeln(reading.outro);
+    buf.writeln(outro);
   }
 
   buf.writeln();
@@ -97,28 +105,20 @@ String formatConsultationAsText({
 const double _shareImageTargetWidthPx = 1080.0;
 
 /// RepaintBoundary を PNG 化して OS 標準シェアシートで共有する。
-///
-/// [boundaryKey] = ConsultationResultScreen で結果領域をラップする GlobalKey。
-/// [shareText] = シェア時に併記するキャプション (推奨: formatConsultationAsText の冒頭抜粋)。
-///
-/// 失敗時は例外を投げる。呼出側で try/catch + SnackBar 表示する。
 Future<void> shareConsultationImage({
   required GlobalKey boundaryKey,
   required String shareText,
   String filename = 'solara_stella_consultation.png',
 }) async {
-  final boundary = boundaryKey.currentContext?.findRenderObject()
-      as RenderRepaintBoundary?;
+  final boundary =
+      boundaryKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
   if (boundary == null) {
     throw StateError('capture target not found');
   }
 
-  // 端末の Display Size 設定や画面解像度に依存せず 1080px 幅で出力。
-  // (class_share_card.dart と同じ動的 pixelRatio 計算ロジック)
   final boundaryWidth = boundary.size.width;
-  final pixelRatio = boundaryWidth > 0
-      ? _shareImageTargetWidthPx / boundaryWidth
-      : 3.0;
+  final pixelRatio =
+      boundaryWidth > 0 ? _shareImageTargetWidthPx / boundaryWidth : 3.0;
   final image = await boundary.toImage(pixelRatio: pixelRatio);
   final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
   if (byteData == null) {
@@ -136,16 +136,16 @@ Future<void> shareConsultationImage({
 }
 
 /// シェア用のキャプション短縮版 (画像と一緒に添える text)。
-/// テキスト全体は長すぎるので intro + 最初の候補名 + outro 冒頭だけ。
 String formatConsultationCaption({
   required String theme,
-  required ConsultationReading reading,
+  required List<ConsultationV2Candidate> candidates,
 }) {
   final themeJp = _themeLabel[theme] ?? theme;
   final buf = StringBuffer();
   buf.writeln('Solara で「$themeJp」について Stella に相談しました。');
-  if (reading.candidates.isNotEmpty) {
-    final names = reading.candidates.map((c) => c.name).join(' / ');
+  if (candidates.isNotEmpty) {
+    final names =
+        candidates.map((c) => ConsultationRecord.displayName(c)).join(' / ');
     buf.writeln('候補: $names');
   }
   buf.writeln();

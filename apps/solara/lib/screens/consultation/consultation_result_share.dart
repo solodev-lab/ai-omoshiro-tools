@@ -1,21 +1,26 @@
 // Consultation Result — シェア機能 (part of consultation_result_screen.dart)
 //
-// Phase 2-5 シェアエクスポート (テキスト / 画像) を本体から分離。Pro 限定。
-// 本体 (consultation_result_screen.dart) が 500 行 (HARD) を超えたため切り出した。
-// _ConsultationResultScreenState の private 状態 (_reading/_sharing/_shareBoundaryKey)
-// に extension からアクセスする (同一ライブラリ part)。
+// シェアエクスポート (テキスト / 画像) を本体から分離。Pro 限定。
 
 part of 'consultation_result_screen.dart';
 
 extension _ConsultationResultShare on _ConsultationResultScreenState {
-  /// Phase 2-5: シェアシートを開く (テキスト / 画像 2 択)。
-  /// Phase 2-6a: シェア機能は Pro 限定。Free はアップグレード案内のみ。
-  Future<void> _openShareSheet() async {
-    final reading = _reading;
-    if (reading == null) return;
-    if (_sharing) return;
+  String get _shareTheme => widget.request?.theme ?? widget.record?.theme ?? '';
+  String get _shareMode => widget.request?.mode ?? widget.record?.mode ?? '';
+  String get _shareScopeKind =>
+      widget.request?.scope?.kind ?? widget.record?.scopeKind ?? 'world';
+  String get _shareWhom =>
+      widget.request?.withWhom ?? widget.record?.withWhom ?? '';
+  String get _shareWish => widget.request?.wish ?? widget.record?.wish ?? '';
 
-    // Pro ゲート
+  List<ConsultationV2Candidate> get _shareCandidates =>
+      _readings.map((r) => r.candidate).toList(growable: false);
+  List<ConsultationEvidence> get _shareEvidences =>
+      _readings.map((r) => r.evidence).toList(growable: false);
+
+  Future<void> _openShareSheet() async {
+    if (_readings.isEmpty || _sharing) return;
+
     if (!ProStatus.instance.isPro) {
       await showProUnlockDialog(
         context,
@@ -47,38 +52,26 @@ extension _ConsultationResultShare on _ConsultationResultScreenState {
                 ),
               ),
               ListTile(
-                leading: const Icon(
-                  Icons.copy_outlined,
-                  color: SolaraColors.solaraGold,
-                ),
-                title: const Text(
-                  'テキストをコピー',
-                  style: TextStyle(color: SolaraColors.textPrimary),
-                ),
+                leading: const Icon(Icons.copy_outlined,
+                    color: SolaraColors.solaraGold),
+                title: const Text('テキストをコピー',
+                    style: TextStyle(color: SolaraColors.textPrimary)),
                 subtitle: const Text(
                   '相談結果を clipboard に整形してコピー',
                   style: TextStyle(
-                    color: SolaraColors.textSecondary,
-                    fontSize: 11,
-                  ),
+                      color: SolaraColors.textSecondary, fontSize: 11),
                 ),
                 onTap: () => Navigator.of(ctx).pop(_ShareChoice.text),
               ),
               ListTile(
-                leading: const Icon(
-                  Icons.image_outlined,
-                  color: SolaraColors.solaraGold,
-                ),
-                title: const Text(
-                  '画像で共有',
-                  style: TextStyle(color: SolaraColors.textPrimary),
-                ),
+                leading: const Icon(Icons.image_outlined,
+                    color: SolaraColors.solaraGold),
+                title: const Text('画像で共有',
+                    style: TextStyle(color: SolaraColors.textPrimary)),
                 subtitle: const Text(
                   '結果画面を PNG にして OS 標準シェアで共有',
                   style: TextStyle(
-                    color: SolaraColors.textSecondary,
-                    fontSize: 11,
-                  ),
+                      color: SolaraColors.textSecondary, fontSize: 11),
                 ),
                 onTap: () => Navigator.of(ctx).pop(_ShareChoice.image),
               ),
@@ -87,22 +80,27 @@ extension _ConsultationResultShare on _ConsultationResultScreenState {
         ),
       ),
     );
-    if (choice == null) return;
-    if (!mounted) return;
+    if (choice == null || !mounted) return;
     if (choice == _ShareChoice.text) {
-      await _copyText(reading);
+      await _copyText();
     } else {
-      await _shareImage(reading);
+      await _shareImage();
     }
   }
 
-  Future<void> _copyText(ConsultationReading reading) async {
+  Future<void> _copyText() async {
+    final first = _first;
     final text = formatConsultationAsText(
-      theme: widget.theme,
-      mode: widget.mode,
-      scope: widget.scope,
-      freeText: widget.freeText,
-      reading: reading,
+      theme: _shareTheme,
+      mode: _shareMode,
+      scopeKind: _shareScopeKind,
+      withWhom: _shareWhom,
+      wish: _shareWish,
+      innerSeason: first?.innerSeason ?? '',
+      intro: first?.intro ?? '',
+      outro: first?.outro ?? '',
+      candidates: _shareCandidates,
+      evidences: _shareEvidences,
     );
     await Clipboard.setData(ClipboardData(text: text));
     if (!mounted) return;
@@ -114,12 +112,12 @@ extension _ConsultationResultShare on _ConsultationResultScreenState {
     );
   }
 
-  Future<void> _shareImage(ConsultationReading reading) async {
+  Future<void> _shareImage() async {
     _setSharing(true);
     try {
       final caption = formatConsultationCaption(
-        theme: widget.theme,
-        reading: reading,
+        theme: _shareTheme,
+        candidates: _shareCandidates,
       );
       await shareConsultationImage(
         boundaryKey: _shareBoundaryKey,

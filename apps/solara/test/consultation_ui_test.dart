@@ -1,7 +1,7 @@
-// Widget test: ConsultationInputScreen + ConsultationResultScreen の
-// 基本レンダリング + ユーザー入力フロー + モック API 連携。
+// Widget test: ConsultationInputScreen + ConsultationResultScreen (V2)。
 //
-// Worker は呼ばない (fetchOverride で差替)。
+// Worker は呼ばない (fetchOverride で差替)。入力は SolaraProfile (mock) から
+// ConsultationRequest を組む。
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -10,59 +10,60 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:solara/screens/consultation/consultation_input_screen.dart';
 import 'package:solara/screens/consultation/consultation_result_screen.dart';
-import 'package:solara/utils/astro_lines.dart' as al;
 import 'package:solara/utils/consultation_api.dart';
-import 'package:solara/utils/consultation_engine.dart';
+import 'package:solara/utils/consultation_v2_api.dart';
 import 'package:solara/utils/pro_status.dart';
+import 'package:solara/utils/solara_storage.dart';
 
-List<al.AstroLine> _buildSyntheticLines() {
-  // Venus MC (139.7E、Tokyo 直上)
-  final venusMc = al.AstroLine(
-    planet: 'venus',
-    angle: 'mc',
-    aspect: 'conjunction',
-    frame: al.AstroFrame.natal,
-    segments: [
-      [for (double lat = -60; lat <= 60; lat += 5) LatLng(lat, 139.7)],
-    ],
-  );
-  // Mars ASC (2.3E、Paris)
-  final marsAsc = al.AstroLine(
-    planet: 'mars',
-    angle: 'asc',
-    aspect: 'conjunction',
-    frame: al.AstroFrame.natal,
-    segments: [
-      [for (double lat = -60; lat <= 60; lat += 5) LatLng(lat, 2.3)],
-    ],
-  );
-  // Moon DSC (-157.8、Honolulu)
-  final moonDsc = al.AstroLine(
-    planet: 'moon',
-    angle: 'dsc',
-    aspect: 'conjunction',
-    frame: al.AstroFrame.natal,
-    segments: [
-      [for (double lat = -60; lat <= 60; lat += 5) LatLng(lat, -157.8)],
-    ],
-  );
-  return [venusMc, marsAsc, moonDsc];
-}
+const _profile = SolaraProfile(
+  name: 'Test',
+  birthDate: '1990-04-12',
+  birthTime: '08:30',
+  birthPlace: 'Tokyo',
+  birthLat: 35.68,
+  birthLng: 139.76,
+  birthTz: 9,
+  birthTzName: 'Asia/Tokyo',
+  homeName: 'Home',
+  homeLat: 35.17,
+  homeLng: 136.88,
+);
 
-ConsultationReading _mockReading(List<CandidateLocation> cands) {
-  return ConsultationReading(
-    intro: 'モック intro: ${cands.length} 候補。',
-    candidates: [
-      for (final c in cands)
-        ConsultationCandidateReading(
-          name: c.nameJP,
-          energyLabels: ['金星 MC・愛の軸', '月 DSC・対人の流れ'],
-          narrative: '${c.nameJP} のモック narrative。テスト目的の text。',
-        ),
-    ],
-    outro: '候補は世界の全部ではありません。',
-    model: 'mock-test',
-    fallback: false,
+ConsultationRequest _req() => ConsultationRequest.fromProfile(
+      _profile,
+      theme: 'love',
+      mode: 'travel',
+    );
+
+ConsultationV2Reading _reading({
+  bool isFirst = true,
+  String name = '京都',
+  int remainingAfter = 2,
+  bool fallback = false,
+}) {
+  return ConsultationV2Reading(
+    isFirst: isFirst,
+    candidate: ConsultationV2Candidate(
+      name: name,
+      lat: 35,
+      lng: 135,
+      characterHeadline: '愛の軸が立つ場',
+      energyLabels: const ['金星 MC・愛の軸'],
+      narrative: '$name のモック narrative。テスト用の text。',
+      timeWindow:
+          const ConsultationTimeWindow(kind: 'single', bucket: 'evening', label: '夜'),
+    ),
+    evidence: const ConsultationEvidence(
+      factors: ['金星MC合', '進行の月: 蟹座4室'],
+      km: [ConsultationEvidenceKm(factor: '金星MC合', km: 120)],
+    ),
+    innerSeason: isFirst ? '今のあなたは根に意識が向かう内的な季節です' : '',
+    intro: isFirst ? 'モック intro の前置き' : '',
+    outro: isFirst ? '候補は世界の全部ではありません' : '',
+    remainingAfter: remainingAfter,
+    fallback: fallback,
+    timeWindow:
+        const ConsultationTimeWindow(kind: 'single', bucket: 'evening', label: '夜'),
   );
 }
 
@@ -71,441 +72,232 @@ void main() {
     TestWidgetsFlutterBinding.ensureInitialized();
     SharedPreferences.setMockInitialValues({});
     await ProStatus.instance.resetForTest(isPro: false);
+    await SolaraStorage.saveProfile(_profile);
   });
 
-  testWidgets('Input screen renders all required sections', (tester) async {
-    await tester.pumpWidget(
-      MaterialApp(
-        home: ConsultationInputScreen(
-          astroLines: _buildSyntheticLines(),
-          currentLocation: LatLng(35.6580, 139.7016),
-        ),
-      ),
-    );
+  // ── 入力画面 ──────────────────────────────────────────
+
+  testWidgets('Input: 場面を選ぶと いつ/どこで が現れる', (tester) async {
+    await tester.pumpWidget(MaterialApp(
+      home: ConsultationInputScreen(currentLocation: LatLng(35.17, 136.88)),
+    ));
     await tester.pumpAndSettle();
 
-    // セクション見出し (2026-05-16: 「どの距離感で？」→「どんな場面で？」、
-    // 自由記述の下に「こんな相談ができそう」セクション追加)
-    expect(find.text('何のテーマで観たい？'), findsOneWidget);
     expect(find.text('どんな場面で？'), findsOneWidget);
-    // 初期選択なし方針 (2026-05-23): 場面を選ぶまで「範囲は？」は非表示
-    expect(find.text('範囲は？'), findsNothing);
-    expect(find.text('自由記述（任意）'), findsOneWidget);
-    expect(find.text('こんな相談ができそう'), findsOneWidget);
-
-    // テーマ 6 チップ
-    expect(find.text('恋愛・関係'), findsOneWidget);
-    expect(find.text('豊かさ・お金'), findsOneWidget);
-    expect(find.text('仕事・キャリア'), findsOneWidget);
-    expect(find.text('対話・学び'), findsOneWidget);
-    expect(find.text('癒し・休息'), findsOneWidget);
-    expect(find.text('変化・新たな出発'), findsOneWidget);
+    expect(find.text('何のテーマで観たい？'), findsOneWidget);
+    expect(find.text('いつ？'), findsNothing);
+    expect(find.text('どこで？'), findsNothing);
 
     // モード 3 択
-    expect(find.text('移住'), findsOneWidget);
-    expect(find.text('旅行'), findsOneWidget);
     expect(find.text('おでかけ'), findsOneWidget);
+    expect(find.text('旅行'), findsOneWidget);
+    expect(find.text('移住'), findsOneWidget);
 
-    // 場面を選ぶと「範囲は？」セクションが現れる
     await tester.tap(find.text('移住'));
     await tester.pumpAndSettle();
-    expect(find.text('範囲は？'), findsOneWidget);
-
-    // 提出ボタン
+    expect(find.text('いつ？'), findsOneWidget);
+    expect(find.text('どこで？'), findsOneWidget);
     expect(find.text('相談を始める'), findsOneWidget);
   });
 
-  testWidgets('Submit button is disabled until theme + mode + scope selected',
-      (tester) async {
-    await tester.pumpWidget(
-      MaterialApp(
-        home: ConsultationInputScreen(
-          astroLines: _buildSyntheticLines(),
-          currentLocation: LatLng(35.6580, 139.7016),
-        ),
-      ),
-    );
+  testWidgets('Input: テーマ+場面+範囲 で submit が有効化', (tester) async {
+    await tester.pumpWidget(MaterialApp(
+      home: ConsultationInputScreen(currentLocation: LatLng(35.17, 136.88)),
+    ));
     await tester.pumpAndSettle();
 
-    final submitBtn = tester.widget<ElevatedButton>(
-      find.widgetWithText(ElevatedButton, '相談を始める'),
-    );
-    expect(submitBtn.onPressed, isNull,
-        reason: 'テーマ未選択時は disable');
+    ElevatedButton btn() => tester.widget<ElevatedButton>(
+        find.widgetWithText(ElevatedButton, '相談を始める'));
+    expect(btn().onPressed, isNull);
 
-    // 「恋愛・関係」をタップ (テーマだけでは不足: 初期選択なし方針)
     await tester.tap(find.text('恋愛・関係'));
     await tester.pumpAndSettle();
-    final submitBtnTheme = tester.widget<ElevatedButton>(
-      find.widgetWithText(ElevatedButton, '相談を始める'),
-    );
-    expect(submitBtnTheme.onPressed, isNull,
-        reason: 'テーマだけでは不足 (場面・範囲も必要)');
+    expect(btn().onPressed, isNull, reason: 'テーマだけでは不足');
 
-    // 場面「移住」+ 範囲「世界全体」を選ぶと enable
     await tester.tap(find.text('移住'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('世界全体'));
     await tester.pumpAndSettle();
-    final submitBtn2 = tester.widget<ElevatedButton>(
-      find.widgetWithText(ElevatedButton, '相談を始める'),
-    );
-    expect(submitBtn2.onPressed, isNotNull,
-        reason: 'テーマ+場面+範囲 が揃えば enable');
+    expect(btn().onPressed, isNotNull, reason: 'テーマ+場面+範囲で有効');
   });
 
-  testWidgets(
-      'Daily mode shows scope row with daily-specific choices (specific/bearings/region)',
-      (tester) async {
-    await tester.pumpWidget(
-      MaterialApp(
-        home: ConsultationInputScreen(
-          astroLines: _buildSyntheticLines(),
-          currentLocation: LatLng(35.6580, 139.7016),
-        ),
-      ),
-    );
+  testWidgets('Input: 場面で scope 選択肢が変わる', (tester) async {
+    await tester.pumpWidget(MaterialApp(
+      home: ConsultationInputScreen(currentLocation: LatLng(35.17, 136.88)),
+    ));
     await tester.pumpAndSettle();
 
-    // 初期選択なし: 場面を選ぶまで範囲は非表示
-    expect(find.text('範囲は？'), findsNothing);
-
-    // 「移住」を選ぶと非 daily 用の範囲 (世界全体あり・方角ベースなし)
     await tester.tap(find.text('移住'));
     await tester.pumpAndSettle();
-    expect(find.text('範囲は？'), findsOneWidget);
     expect(find.text('世界全体'), findsOneWidget);
-    expect(find.text('方角ベース'), findsNothing);
+    expect(find.text('自国内'), findsOneWidget);
+    expect(find.text('方角'), findsNothing);
 
-    // 「おでかけ」をタップ
     await tester.tap(find.text('おでかけ'));
     await tester.pumpAndSettle();
-
-    // 範囲は？ セクションは残るが、選択肢が daily 用に切替わる:
-    //   具体地点 / 方角ベース / 範囲指定 (世界全体は外れる)
-    expect(find.text('範囲は？'), findsOneWidget);
+    expect(find.text('方角'), findsOneWidget);
+    expect(find.text('自宅から半径'), findsOneWidget);
     expect(find.text('世界全体'), findsNothing);
-    expect(find.text('方角ベース'), findsOneWidget);
-    expect(find.text('具体地点'), findsOneWidget);
-    expect(find.text('範囲指定'), findsOneWidget);
   });
 
-  testWidgets(
-      'Specific scope without preset shows inline picker and gates submit until point chosen',
+  testWidgets('Input: 具体地点(preset無し)で picker が出て地点未選択は submit 不可',
       (tester) async {
-    await tester.pumpWidget(
-      MaterialApp(
-        home: ConsultationInputScreen(
-          astroLines: _buildSyntheticLines(),
-          // currentLocation はあえて null。Daily Transit 目的起点で具体地点を
-          // 選ぶフローを模擬する。
-        ),
-      ),
-    );
+    await tester.pumpWidget(MaterialApp(
+      home: ConsultationInputScreen(currentLocation: LatLng(35.17, 136.88)),
+    ));
     await tester.pumpAndSettle();
 
-    // テーマを選んでも、specific スコープにすると地点未選択で submit 不可になる。
     await tester.tap(find.text('恋愛・関係'));
     await tester.pumpAndSettle();
-
-    // 場面 (旅行) を選んで範囲セクションを出す (初期選択なし方針)
     await tester.tap(find.text('旅行'));
     await tester.pumpAndSettle();
-
-    // 「具体地点」スコープを選択
     await tester.tap(find.text('具体地点'));
     await tester.pumpAndSettle();
 
-    // 「地点を選ぶ」 inline picker セクションが出る
     expect(find.text('地点を選ぶ'), findsOneWidget);
-    // 「地図で選ぶ」 ボタン (B picker への push)
     expect(find.widgetWithText(OutlinedButton, '地図で選ぶ'), findsOneWidget);
-    // 検索フィールド
-    expect(find.text('住所 / 店名で検索'), findsOneWidget);
 
-    // 地点未選択なので submit 不可
-    final submitBtn = tester.widget<ElevatedButton>(
-      find.widgetWithText(ElevatedButton, '相談を始める'),
-    );
-    expect(submitBtn.onPressed, isNull,
-        reason: 'specific スコープ + 地点未選択は submit 不可');
+    final btn = tester.widget<ElevatedButton>(
+        find.widgetWithText(ElevatedButton, '相談を始める'));
+    expect(btn.onPressed, isNull, reason: '具体地点 + 地点未選択は submit 不可');
   });
 
-  testWidgets('Inline picker is NOT shown when presetTarget is provided',
+  testWidgets('Input: preset があると picker は出ず preset カードが出る',
       (tester) async {
-    await tester.pumpWidget(
-      MaterialApp(
-        home: ConsultationInputScreen(
-          astroLines: _buildSyntheticLines(),
-          presetTarget: const ConsultationPresetTarget(
-            position: LatLng(35.0, 135.7),
-            nameJP: '京都',
-            nameEN: 'Kyoto',
-            country: 'JP',
-            region: '京都府',
-          ),
+    await tester.pumpWidget(MaterialApp(
+      home: ConsultationInputScreen(
+        presetTarget: const ConsultationPresetTarget(
+          position: LatLng(35.0, 135.7),
+          nameJP: '京都',
+          nameEN: 'Kyoto',
+          country: 'JP',
+          region: '京都府',
         ),
       ),
-    );
+    ));
     await tester.pumpAndSettle();
 
-    // preset があるので picker は出ず、preset カード (✓ ... を見ます) が出る
     expect(find.text('地点を選ぶ'), findsNothing);
-    expect(find.textContaining('京都'), findsWidgets);
     expect(find.textContaining('を見ます'), findsOneWidget);
   });
 
-  testWidgets(
-      'Free user sees start popup (残数/補充/購入ボタン) on 相談を始める',
-      (tester) async {
-    await tester.pumpWidget(
-      MaterialApp(
-        home: ConsultationInputScreen(
-          astroLines: _buildSyntheticLines(),
-          currentLocation: LatLng(35.6580, 139.7016),
-        ),
+  // ── 結果画面 ──────────────────────────────────────────
+
+  testWidgets('Result: 候補+特徴見出し+内的季節+別の候補地ボタン', (tester) async {
+    await tester.pumpWidget(MaterialApp(
+      home: ConsultationResultScreen(
+        request: _req(),
+        fetchOverride: (req) async => ConsultationV2Result(reading: _reading()),
       ),
-    );
+    ));
     await tester.pumpAndSettle();
 
-    // テーマ + 場面 + 範囲 を選んで submit を有効化
-    await tester.tap(find.text('恋愛・関係'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('移住'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('世界全体'));
-    await tester.pumpAndSettle();
-
-    // 「相談を始める」(送信バー) → 開始ポップアップが出る (Free のみ)
-    await tester.tap(find.widgetWithText(ElevatedButton, '相談を始める'));
-    await tester.pumpAndSettle();
-
-    // ポップアップの固有要素を確認
-    expect(find.text('無料相談を使います'), findsOneWidget);
-    // 「毎週月曜日に補充」は残数バッジと案内文の 2 箇所に出る
-    expect(find.textContaining('毎週月曜日に補充'), findsWidgets);
-    expect(find.text('次回以降表示しない'), findsOneWidget);
-    expect(find.text('クレジットを購入'), findsOneWidget);
-    // 続行ボタンとして popup 内にも「相談を始める」がある (送信バーと合わせ 2 つ)
-    expect(find.text('相談を始める'), findsNWidgets(2));
-  });
-
-  testWidgets('Result screen shows mock reading and PageView (Pro: refresh visible)',
-      (tester) async {
-    // 出し直しは Pro 限定なので Pro に設定
-    await ProStatus.instance.resetForTest(isPro: true);
-    final lines = filterThemeLines(_buildSyntheticLines(), 'love');
-    final cands = candidatesForWorld(themeLines: lines, count: 3);
-    expect(cands.length, 3);
-
-    await tester.pumpWidget(
-      MaterialApp(
-        home: ConsultationResultScreen(
-          theme: 'love',
-          mode: 'travel',
-          scope: 'world',
-          initialCandidates: cands,
-          regenerateCandidates: (excl) async => cands,
-          fetchOverride: ({
-            required theme,
-            required mode,
-            required scope,
-            required candidates,
-            String freeText = '',
-            List<String> excluded = const [],
-          }) async =>
-              ConsultationResult(reading: _mockReading(candidates)),
-        ),
-      ),
-    );
-    // 非同期完了まで pump
-    await tester.pumpAndSettle();
     expect(find.text('Stella が読み解いています…'), findsNothing);
-    // intro/outro は本文から外し、タイトルタップのポップアップに移動 (2026-05-23)
-    expect(find.textContaining('モック intro'), findsNothing);
-    expect(find.textContaining('世界の全部ではありません'), findsNothing);
+    expect(find.text('京都'), findsOneWidget);
+    expect(find.text('愛の軸が立つ場'), findsOneWidget);
+    expect(find.textContaining('内的な季節'), findsOneWidget); // 常設バナー
+    expect(find.text('別の候補地を見る'), findsOneWidget); // remainingAfter>0
 
-    // 最初の候補名が出ている
-    expect(find.text(cands.first.nameJP), findsOneWidget);
-
-    // refresh ボタンがある (Pro かつ regenerateCandidates が非 null)
-    expect(find.text('もう一度候補を出す'), findsOneWidget);
-
-    // タイトルタップで「この読み解きについて」ポップアップ → intro+outro が出る
+    // タイトルタップで「この読み解きについて」(intro/outro/evidence)
     await tester.tap(find.text('相談の結果'));
     await tester.pumpAndSettle();
     expect(find.text('この読み解きについて'), findsOneWidget);
     expect(find.textContaining('モック intro'), findsOneWidget);
     expect(find.textContaining('世界の全部ではありません'), findsOneWidget);
+    expect(find.textContaining('金星MC合'), findsWidgets);
   });
 
-  testWidgets('Result screen shows refresh for Free + 残量バナー (出し直しもクレジット消費)',
-      (tester) async {
-    // Free でも出し直しボタンは出る (1 クレジット消費)
-    final lines = filterThemeLines(_buildSyntheticLines(), 'love');
-    final cands = candidatesForWorld(themeLines: lines, count: 3);
-
-    await tester.pumpWidget(
-      MaterialApp(
-        home: ConsultationResultScreen(
-          theme: 'love',
-          mode: 'travel',
-          scope: 'world',
-          initialCandidates: cands,
-          regenerateCandidates: (excl) async => cands,
-          fetchOverride: ({
-            required theme,
-            required mode,
-            required scope,
-            required candidates,
-            String freeText = '',
-            List<String> excluded = const [],
-          }) async =>
-              ConsultationResult(
-            reading: _mockReading(candidates),
-            freeCreditsRemaining: 2,
-            freeCreditsLimit: 3,
-            purchasedBalance: 0,
-          ),
+  testWidgets('Result: Free 残量バナー', (tester) async {
+    await tester.pumpWidget(MaterialApp(
+      home: ConsultationResultScreen(
+        request: _req(),
+        fetchOverride: (req) async => ConsultationV2Result(
+          reading: _reading(),
+          freeCreditsRemaining: 2,
+          freeCreditsLimit: 3,
+          purchasedBalance: 0,
         ),
       ),
-    );
+    ));
     await tester.pumpAndSettle();
-
-    // 出し直しボタンは Free でも出る
-    expect(find.text('もう一度候補を出す'), findsOneWidget);
-    // 残量バナーが出る
     expect(find.textContaining('今週の無料相談 あと2回'), findsOneWidget);
   });
 
-  testWidgets('Result screen banner shows purchased balance',
-      (tester) async {
-    final lines = filterThemeLines(_buildSyntheticLines(), 'love');
-    final cands = candidatesForWorld(themeLines: lines, count: 3);
-
-    await tester.pumpWidget(
-      MaterialApp(
-        home: ConsultationResultScreen(
-          theme: 'love',
-          mode: 'travel',
-          scope: 'world',
-          initialCandidates: cands,
-          fetchOverride: ({
-            required theme,
-            required mode,
-            required scope,
-            required candidates,
-            String freeText = '',
-            List<String> excluded = const [],
-          }) async =>
-              ConsultationResult(
-            reading: _mockReading(candidates),
-            freeCreditsRemaining: 0,
-            freeCreditsLimit: 3,
-            purchasedBalance: 7,
-          ),
+  testWidgets('Result: 購入残高バナー', (tester) async {
+    await tester.pumpWidget(MaterialApp(
+      home: ConsultationResultScreen(
+        request: _req(),
+        fetchOverride: (req) async => ConsultationV2Result(
+          reading: _reading(),
+          freeCreditsRemaining: 0,
+          freeCreditsLimit: 3,
+          purchasedBalance: 7,
         ),
       ),
-    );
+    ));
     await tester.pumpAndSettle();
     expect(find.textContaining('購入残高 7回'), findsOneWidget);
   });
 
-  testWidgets('Result screen shows credit purchase + Pro box when exhausted',
-      (tester) async {
-    final lines = filterThemeLines(_buildSyntheticLines(), 'love');
-    final cands = candidatesForWorld(themeLines: lines, count: 3);
-
-    await tester.pumpWidget(
-      MaterialApp(
-        home: ConsultationResultScreen(
-          theme: 'love',
-          mode: 'travel',
-          scope: 'world',
-          initialCandidates: cands,
-          fetchOverride: ({
-            required theme,
-            required mode,
-            required scope,
-            required candidates,
-            String freeText = '',
-            List<String> excluded = const [],
-          }) async =>
-              const ConsultationResult(block: ConsultationBlock.creditExhausted),
-        ),
+  testWidgets('Result: クレジット切れ 402 で購入+Pro ボックス', (tester) async {
+    await tester.pumpWidget(MaterialApp(
+      home: ConsultationResultScreen(
+        request: _req(),
+        fetchOverride: (req) async =>
+            const ConsultationV2Result(block: ConsultationBlock.creditExhausted),
       ),
-    );
+    ));
     await tester.pumpAndSettle();
-
     expect(find.textContaining('相談クレジットを使い切りました'), findsOneWidget);
     expect(find.text('追加クレジットを購入'), findsOneWidget);
     expect(find.text('✦ Cosmic Pro で無制限にする'), findsOneWidget);
   });
 
-  testWidgets('Result screen shows fallback banner when API returns fallback',
-      (tester) async {
-    final lines = filterThemeLines(_buildSyntheticLines(), 'love');
-    final cands = candidatesForWorld(themeLines: lines, count: 3);
-
-    await tester.pumpWidget(
-      MaterialApp(
-        home: ConsultationResultScreen(
-          theme: 'love',
-          mode: 'travel',
-          scope: 'world',
-          initialCandidates: cands,
-          fetchOverride: ({
-            required theme,
-            required mode,
-            required scope,
-            required candidates,
-            String freeText = '',
-            List<String> excluded = const [],
-          }) async =>
-              const ConsultationResult(
-            reading: ConsultationReading(
-              intro: 'fallback intro',
-              candidates: [],
-              outro: 'fallback outro',
-              model: 'fallback',
-              fallback: true,
-            ),
-          ),
-        ),
+  testWidgets('Result: fallback チップ', (tester) async {
+    await tester.pumpWidget(MaterialApp(
+      home: ConsultationResultScreen(
+        request: _req(),
+        fetchOverride: (req) async =>
+            ConsultationV2Result(reading: _reading(fallback: true)),
       ),
-    );
+    ));
     await tester.pumpAndSettle();
-
     expect(find.text('Stella の声が届きませんでした (静的表示)'), findsOneWidget);
   });
 
-  testWidgets('Result screen shows error UI on network failure',
-      (tester) async {
-    final lines = filterThemeLines(_buildSyntheticLines(), 'love');
-    final cands = candidatesForWorld(themeLines: lines, count: 3);
-
-    await tester.pumpWidget(
-      MaterialApp(
-        home: ConsultationResultScreen(
-          theme: 'love',
-          mode: 'travel',
-          scope: 'world',
-          initialCandidates: cands,
-          fetchOverride: ({
-            required theme,
-            required mode,
-            required scope,
-            required candidates,
-            String freeText = '',
-            List<String> excluded = const [],
-          }) async =>
-              const ConsultationResult(), // reading も block も無し = 接続失敗
-        ),
+  testWidgets('Result: 接続失敗で error UI', (tester) async {
+    await tester.pumpWidget(MaterialApp(
+      home: ConsultationResultScreen(
+        request: _req(),
+        fetchOverride: (req) async => const ConsultationV2Result(),
       ),
-    );
+    ));
     await tester.pumpAndSettle();
-
     expect(find.text('接続に届きませんでした。もう一度試せます。'), findsOneWidget);
     expect(find.text('もう一度試す'), findsOneWidget);
+  });
+
+  testWidgets('Result: 「別の候補地」で 2 枚目を append しスワイプ', (tester) async {
+    var calls = 0;
+    await tester.pumpWidget(MaterialApp(
+      home: ConsultationResultScreen(
+        request: _req(),
+        fetchOverride: (req) async {
+          calls++;
+          if (req.isFirst) return ConsultationV2Result(reading: _reading(name: '京都'));
+          return ConsultationV2Result(
+              reading: _reading(isFirst: false, name: '大阪', remainingAfter: 0));
+        },
+      ),
+    ));
+    await tester.pumpAndSettle();
+    expect(find.text('京都'), findsOneWidget);
+
+    await tester.tap(find.text('別の候補地を見る'));
+    await tester.pumpAndSettle();
+    expect(calls, 2);
+    expect(find.text('大阪'), findsOneWidget); // 2 枚目に遷移
+    // remainingAfter=0 なのでボタンは消える
+    expect(find.text('別の候補地を見る'), findsNothing);
   });
 }

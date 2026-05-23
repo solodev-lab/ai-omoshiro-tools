@@ -1,31 +1,26 @@
-// Consultation Result Screen — Stage 4 UI
+// Consultation Result Screen — V2 (全要素統合)
 //
-// 設計: apps/solara/docs/pro_candidates.md §7.2 Stage 4
+// 設計: project_solara_consultation_full_integration.md
 //
 // レイアウト:
-//   - AppBar (戻る / share プレースホルダ / 閉じる)
-//   - intro (固定、上部)
-//   - PageView × N 候補 (横スワイプ + HapticFeedback.selectionClick)
-//     候補カード: 名前 + energyLabels chips + narrative (縦スクロール)
-//   - outro (固定、下部)
-//   - 「もう一度候補を出す」ボタン (refresh callback がある場合のみ)
+//   - AppBar (戻る / タイトル「相談の結果 ⌄」=この読み解きについて / share)
+//   - 内的季節バナー (初回・常設)
+//   - PageView × 蓄積候補 (横スワイプ)。候補カード: 特徴見出し + 時間帯 +
+//     energyLabels + narrative
+//   - 「別の候補地を見る」(excluded を足して次候補を 1 つ取得・1 クレジット消費)
 //
-// 状態: loading / loaded / error / refreshing
-//
-// Phase 2-4 で対応:
-//   - 自動保存 (solara_storage に request + response 永続化)
-//   - 履歴閲覧画面
-//   - 「📍地図で確認」連動 (公開後 v1.x)
-//   - share ボタンの実体化
+// 1 クレジット = 1 候補。最初の取得で見出し候補、「別の候補地」で 1 枚ずつ最大 5 枚。
+// Pro = 無制限。live モード = ConsultationRequest で fetch / 履歴モード =
+// ConsultationRecord を読み込み専用表示 (fetch なし・autosave なし・別候補なし)。
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../theme/solara_colors.dart';
-import '../../utils/consultation_api.dart';
-import '../../utils/consultation_engine.dart';
+import '../../utils/consultation_api.dart' show ConsultationBlock;
 import '../../utils/consultation_record.dart';
 import '../../utils/consultation_share.dart';
+import '../../utils/consultation_v2_api.dart';
 import '../../utils/pro_status.dart';
 import '../../utils/solara_storage.dart';
 import '../../widgets/glass_panel.dart';
@@ -34,56 +29,42 @@ import '../../widgets/pro_unlock_dialog.dart';
 import 'consultation_credit_sheet.dart';
 
 part 'consultation_result_widgets.dart';
+part 'consultation_result_card.dart';
 part 'consultation_result_credit_widgets.dart';
 part 'consultation_result_share.dart';
 
+/// 最大候補数 (Free/Pro 共通の蓄積上限。スワイプ比較の母集団)。
+const int _kMaxCandidates = 5;
+
 class ConsultationResultScreen extends StatefulWidget {
-  final String theme;
-  final String mode;
-  final String scope;
-  final String freeText;
-  final List<CandidateLocation> initialCandidates;
+  /// live モード: 相談リクエスト (fetch する)。履歴モードでは null。
+  final ConsultationRequest? request;
 
-  /// Refresh callback: 既出名のリストを受け取り、新規候補を返す。
-  /// null = リフレッシュ不可 (specific スコープ等 1 候補のケース、または履歴モード)。
-  final Future<List<CandidateLocation>> Function(List<String> excludeNames)?
-      regenerateCandidates;
+  /// 履歴モード: 保存済みレコード (読み込み専用表示)。live では null。
+  final ConsultationRecord? record;
 
-  /// テスト/モック差し替え用: 通常は null で標準 fetchConsultation を呼ぶ。
-  final Future<ConsultationResult> Function({
-    required String theme,
-    required String mode,
-    required String scope,
-    required List<CandidateLocation> candidates,
-    String freeText,
-    List<String> excluded,
-  })? fetchOverride;
-
-  /// 履歴モード用: 既に保存済の reading を渡すと Stella を呼ばず直接表示する。
-  /// 通常 (新規相談) は null で fetch する。
-  /// 履歴モード時は `autoSave: false` と `regenerateCandidates: null` も合わせる。
-  final ConsultationReading? initialReading;
-
-  /// 履歴に自動保存するか (default true)。履歴詳細表示時は false。
-  final bool autoSave;
-
-  /// スコープ詳細 (scope='region' の大ブロック名 '日本', '北米' 等)。
-  /// 履歴カードでスコープアイコン横にラベル表示する用途で持ち回る。
+  /// scope の詳細ラベル (履歴カード用、region グループ名 / 地点名)。
   final String? scopeDetail;
+
+  /// テスト用 fetch 差し替え (null で標準 fetchConsultationV2)。
+  final Future<ConsultationV2Result> Function(ConsultationRequest req)?
+      fetchOverride;
 
   const ConsultationResultScreen({
     super.key,
-    required this.theme,
-    required this.mode,
-    required this.scope,
-    required this.initialCandidates,
-    this.freeText = '',
-    this.regenerateCandidates,
-    this.fetchOverride,
-    this.initialReading,
-    this.autoSave = true,
+    required this.request,
     this.scopeDetail,
-  });
+    this.fetchOverride,
+  }) : record = null;
+
+  const ConsultationResultScreen.fromRecord({
+    super.key,
+    required this.record,
+  })  : request = null,
+        scopeDetail = null,
+        fetchOverride = null;
+
+  bool get isHistory => record != null;
 
   @override
   State<ConsultationResultScreen> createState() =>
@@ -94,43 +75,40 @@ class _ConsultationResultScreenState extends State<ConsultationResultScreen> {
   late final PageController _pageCtrl;
   int _pageIndex = 0;
 
-  late List<CandidateLocation> _candidates;
-  ConsultationReading? _reading;
+  final List<ConsultationV2Reading> _readings = [];
   bool _loading = true;
-  bool _refreshing = false;
+  bool _loadingNext = false;
   bool _sharing = false;
   String? _error;
 
-  /// Free 試食ゲートで 402 ブロックされた理由 (creditExhausted / proOnlyMode 等)。
-  /// 非 null の間は結果ではなくペイウォール誘導ボックスを表示する。
+  /// これ以上「別の候補地」が無い (excluded で出し尽くした)。
+  bool _exhausted = false;
+
+  /// 初回 fetch が 402 でブロックされた理由。非 null の間は結果ではなく誘導を出す。
   ConsultationBlock? _block;
 
-  /// Free ユーザーの今週の残り無料回数 (Pro / 履歴モードは null = 非表示)。
   int? _freeRemaining;
   int? _freeLimit;
-
-  /// 購入クレジット残高 (Pro / 履歴モードは null)。
   int? _purchasedBalance;
 
-  /// シェア処理中フラグの更新 (share extension から setState を呼ぶための転送。
-  /// setState は @protected で extension から直接呼べないため State 本体に置く)。
+  /// 自動保存レコードの id を安定させる savedAt (毎回の追記で同一レコードを上書き)。
+  DateTime? _recordSavedAt;
+
+  final GlobalKey _shareBoundaryKey = GlobalKey();
+
   void _setSharing(bool v) => setState(() => _sharing = v);
 
-  /// リフレッシュで除外する候補名 (累積)。
-  final Set<String> _excludedNames = <String>{};
-
-  /// Phase 2-5: 画像エクスポート用、結果領域をラップする RepaintBoundary キー。
-  final GlobalKey _shareBoundaryKey = GlobalKey();
+  ConsultationV2Reading? get _first =>
+      _readings.isNotEmpty ? _readings.first : null;
 
   @override
   void initState() {
     super.initState();
     _pageCtrl = PageController();
-    _candidates = List.of(widget.initialCandidates);
-    if (widget.initialReading != null) {
-      // 履歴モード: 即時表示、Stella は呼ばない、auto-save も走らない。
-      _reading = widget.initialReading;
+    if (widget.record != null) {
+      _readings.addAll(widget.record!.toReadings());
       _loading = false;
+      _exhausted = true; // 履歴は追加取得しない
     } else {
       _fetch();
     }
@@ -142,43 +120,22 @@ class _ConsultationResultScreenState extends State<ConsultationResultScreen> {
     super.dispose();
   }
 
-  Future<ConsultationResult> _runFetch({
-    required List<CandidateLocation> candidates,
-    required List<String> excluded,
-  }) async {
-    if (widget.fetchOverride != null) {
-      return widget.fetchOverride!(
-        theme: widget.theme,
-        mode: widget.mode,
-        scope: widget.scope,
-        candidates: candidates,
-        freeText: widget.freeText,
-        excluded: excluded,
-      );
-    }
-    return fetchConsultation(
-      theme: widget.theme,
-      mode: widget.mode,
-      scope: widget.scope,
-      candidates: candidates,
-      freeText: widget.freeText,
-      excluded: excluded,
-    );
+  Future<ConsultationV2Result> _runFetch(ConsultationRequest req) {
+    if (widget.fetchOverride != null) return widget.fetchOverride!(req);
+    return fetchConsultationV2(req);
   }
 
   Future<void> _fetch() async {
+    final req = widget.request;
+    if (req == null) return;
     setState(() {
       _loading = true;
       _error = null;
       _block = null;
     });
-    final result = await _runFetch(
-      candidates: _candidates,
-      excluded: const [],
-    );
+    final result = await _runFetch(req.copyWith(isFirst: true, excluded: const []));
     if (!mounted) return;
     if (result.isBlocked) {
-      // Free 試食ゲート: 結果ではなくペイウォール誘導ボックスを出す。
       setState(() {
         _loading = false;
         _block = result.block;
@@ -194,44 +151,41 @@ class _ConsultationResultScreenState extends State<ConsultationResultScreen> {
       return;
     }
     setState(() {
-      _reading = reading;
+      _readings
+        ..clear()
+        ..add(reading);
       _freeRemaining = result.freeCreditsRemaining;
       _freeLimit = result.freeCreditsLimit;
       _purchasedBalance = result.purchasedBalance;
+      _exhausted = reading.remainingAfter <= 0;
       _loading = false;
     });
-    _maybePersist(reading, _candidates);
+    _persist();
   }
 
-  Future<void> _refresh() async {
-    final gen = widget.regenerateCandidates;
-    if (gen == null) return;
+  /// 「別の候補地を見る」: excluded を足して次の候補を 1 つ取得し append する。
+  Future<void> _loadNext() async {
+    final req = widget.request;
+    if (req == null) return;
     setState(() {
-      _refreshing = true;
+      _loadingNext = true;
       _error = null;
     });
-    // 既出として今表示中の候補名を全部追加 (累積)。
-    for (final c in _candidates) {
-      _excludedNames.add(c.nameJP);
-    }
-    final excludedList = _excludedNames.toList(growable: false);
-    final newCands = await gen(excludedList);
+    final excluded = _readings
+        .map((r) => r.candidate.name)
+        .whereType<String>()
+        .where((s) => s.isNotEmpty)
+        .toList(growable: false);
+    final result = await _runFetch(req.copyWith(isFirst: false, excluded: excluded));
     if (!mounted) return;
-    if (newCands.isEmpty) {
-      setState(() {
-        _refreshing = false;
-        _error = '別の候補が見つかりませんでした。';
-      });
+    setState(() => _loadingNext = false);
+
+    if (result.isExhausted) {
+      setState(() => _exhausted = true);
+      _snack('これ以上の候補地は見つかりませんでした。');
       return;
     }
-    final result = await _runFetch(
-      candidates: newCands,
-      excluded: excludedList,
-    );
-    if (!mounted) return;
     if (result.isBlocked) {
-      // 出し直しもクレジット 1 消費。尽きていたら購入/Pro 導線。現在の結果は残す。
-      setState(() => _refreshing = false);
       if (result.block == ConsultationBlock.creditExhausted) {
         await _onBuyCredits();
       } else {
@@ -245,28 +199,46 @@ class _ConsultationResultScreenState extends State<ConsultationResultScreen> {
     }
     final reading = result.reading;
     if (reading == null) {
-      setState(() {
-        _refreshing = false;
-        _error = '接続に届きませんでした。もう一度試せます。';
-      });
+      _snack('接続に届きませんでした。もう一度試せます。');
       return;
     }
     setState(() {
-      _candidates = newCands;
-      _reading = reading;
+      _readings.add(reading);
       _freeRemaining = result.freeCreditsRemaining;
       _freeLimit = result.freeCreditsLimit;
       _purchasedBalance = result.purchasedBalance;
-      _refreshing = false;
-      _pageIndex = 0;
+      _exhausted = reading.remainingAfter <= 0 ||
+          _readings.length >= _kMaxCandidates;
+      _pageIndex = _readings.length - 1;
     });
     if (_pageCtrl.hasClients) {
-      _pageCtrl.jumpToPage(0);
+      _pageCtrl.animateToPage(
+        _pageIndex,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
     }
-    _maybePersist(reading, newCands);
+    _persist();
   }
 
-  /// ペイウォール誘導ボックスの「Cosmic Pro」CTA。理由別に文言を出し分ける。
+  void _snack(String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+  }
+
+  /// 「別の候補地」を出せるか (live・未尽き・上限未満・残りあり)。
+  bool get _canLoadNext {
+    if (widget.isHistory || _exhausted) return false;
+    if (_readings.length >= _kMaxCandidates) return false;
+    final last = _readings.isNotEmpty ? _readings.last : null;
+    return last != null && last.remainingAfter > 0;
+  }
+
+  Future<void> _onBuyCredits() async {
+    final bought = await showConsultationCreditSheet(context);
+    if (!mounted) return;
+    if (bought && _readings.isEmpty) _fetch();
+  }
+
   void _showConsultationPaywall() {
     final (label, desc) = switch (_block) {
       ConsultationBlock.proOnlyMode => (
@@ -285,58 +257,48 @@ class _ConsultationResultScreenState extends State<ConsultationResultScreen> {
     showProUnlockDialog(context, featureLabel: label, description: desc);
   }
 
-  /// 追加クレジット購入シートを開く。購入で残高が入り、まだ結果未取得 (初回ブロック) なら
-  /// 元の相談を自動で再試行する。
-  Future<void> _onBuyCredits() async {
-    final bought = await showConsultationCreditSheet(context);
-    if (!mounted) return;
-    if (bought && _reading == null) {
-      _fetch();
-    }
-  }
-
-  /// AppBar タイトルタップで intro(前置き)+outro(注記)を 1 枚のポップアップで表示。
-  /// 本文(候補カード)の縦スペースを空けるため、常設ではなくオンデマンド表示にする。
+  /// AppBar タイトルタップで「この読み解きについて」(内的季節+前置き+注記+
+  /// 現在候補のエビデンス) を 1 枚のポップアップで表示。
   void _showAboutReading() {
-    final r = _reading;
-    if (r == null) return;
+    final f = _first;
+    if (f == null) return;
+    final cur = _pageIndex < _readings.length ? _readings[_pageIndex] : f;
     showInfoPopup(
       context: context,
-      child: _AboutReadingContent(intro: r.intro, outro: r.outro),
+      child: _AboutReadingContent(
+        innerSeason: f.innerSeason,
+        intro: f.intro,
+        outro: f.outro,
+        evidence: cur.evidence,
+      ),
     );
   }
 
-  /// 自動保存 (auto-save)。ConsultationRecord を solara_storage に追記する。
-  /// 履歴モード (initialReading != null) や auto-save 無効時は no-op。
-  Future<void> _maybePersist(
-    ConsultationReading reading,
-    List<CandidateLocation> candidates,
-  ) async {
-    if (!widget.autoSave) return;
-    if (widget.initialReading != null) return;
+  Future<void> _persist() async {
+    if (widget.isHistory) return;
+    final req = widget.request;
+    if (req == null || _readings.isEmpty) return;
     try {
-      final record = ConsultationRecord.create(
-        theme: widget.theme,
-        mode: widget.mode,
-        scope: widget.scope,
-        freeText: widget.freeText,
-        candidates: candidates,
-        reading: reading,
+      _recordSavedAt ??= DateTime.now().toUtc();
+      final record = ConsultationRecord.fromReadings(
+        theme: req.theme,
+        mode: req.mode,
+        scopeKind: req.scope?.kind ?? 'world',
         scopeDetail: widget.scopeDetail,
+        withWhom: req.withWhom,
+        wish: req.wish,
+        readings: _readings,
+        savedAt: _recordSavedAt,
       );
       await SolaraStorage.addConsultationRecord(record);
     } catch (_) {
-      // 保存失敗は UX を妨げない (toast 等は出さない)。
-      // 柱 3 の原則: 失敗してもユーザーは結果を読める。
+      // 保存失敗は UX を妨げない (柱 3: 失敗してもユーザーは結果を読める)。
     }
   }
 
-  // シェア機能 (_openShareSheet / _copyText / _shareImage) は
-  // consultation_result_share.dart (part, extension) に分離。
-
   @override
   Widget build(BuildContext context) {
-    final canShare = _reading != null && !_loading;
+    final canShare = _readings.isNotEmpty && !_loading;
     return Scaffold(
       backgroundColor: SolaraColors.celestialBlueDark,
       appBar: AppBar(
@@ -347,10 +309,8 @@ class _ConsultationResultScreenState extends State<ConsultationResultScreen> {
           onPressed: () => Navigator.of(context).maybePop(),
           tooltip: '戻る',
         ),
-        // タイトルタップで「この読み解きについて」(intro+outro) をポップアップ表示。
-        // 結果がある時だけ ⌄ を出して tappable にする。
         title: GestureDetector(
-          onTap: _reading != null ? _showAboutReading : null,
+          onTap: _readings.isNotEmpty ? _showAboutReading : null,
           behavior: HitTestBehavior.opaque,
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -363,7 +323,7 @@ class _ConsultationResultScreenState extends State<ConsultationResultScreen> {
                   letterSpacing: 0.4,
                 ),
               ),
-              if (_reading != null) ...[
+              if (_readings.isNotEmpty) ...[
                 const SizedBox(width: 3),
                 const Icon(Icons.expand_more,
                     size: 18, color: SolaraColors.textPrimary),
@@ -383,10 +343,7 @@ class _ConsultationResultScreenState extends State<ConsultationResultScreen> {
                       strokeWidth: 2,
                     ),
                   )
-                : const Icon(
-                    Icons.ios_share,
-                    color: SolaraColors.textPrimary,
-                  ),
+                : const Icon(Icons.ios_share, color: SolaraColors.textPrimary),
             tooltip: 'シェア',
             onPressed: canShare && !_sharing ? _openShareSheet : null,
           ),
@@ -407,28 +364,22 @@ class _ConsultationResultScreenState extends State<ConsultationResultScreen> {
 
   Widget _buildBody() {
     if (_loading) return const _LoadingSkeleton();
-    if (_block != null && _reading == null) {
+    if (_block != null && _readings.isEmpty) {
       return _ConsultationBlockedBox(
         reason: _block!,
         onUpgrade: _showConsultationPaywall,
         onBuyCredits: _onBuyCredits,
       );
     }
-    if (_error != null && _reading == null) {
+    if (_error != null && _readings.isEmpty) {
       return _ErrorBox(message: _error!, onRetry: _fetch);
     }
-    final reading = _reading;
-    if (reading == null) return const _LoadingSkeleton();
+    final first = _first;
+    if (first == null) return const _LoadingSkeleton();
 
-    // 出し直しも 1 クレジット消費 (Free も可)。Pro は無制限。
-    final canRefresh = widget.regenerateCandidates != null;
-
-    // intro(前置き)/outro(注記)は本文から外し、AppBar タイトルタップの
-    // 「この読み解きについて」ポップアップに集約 (2026-05-23)。本文は候補カードを
-    // フル高さで読めるようにする。フォールバック時の静的表示注意だけは本文に残す。
     return Column(
       children: [
-        if (reading.fallback) const _FallbackChip(),
+        if (first.fallback) const _FallbackChip(),
         if (_freeRemaining != null || _purchasedBalance != null)
           _FreeCreditsBanner(
             remaining: _freeRemaining ?? 0,
@@ -440,38 +391,24 @@ class _ConsultationResultScreenState extends State<ConsultationResultScreen> {
               description: 'Cosmic Pro なら回数無制限で読み解きます。',
             ),
           ),
-        _PageIndicator(
-          count: _candidates.length,
-          index: _pageIndex,
-        ),
+        if (first.innerSeason.isNotEmpty)
+          _InnerSeasonBanner(text: first.innerSeason),
+        _PageIndicator(count: _readings.length, index: _pageIndex),
         Expanded(
           child: PageView.builder(
             controller: _pageCtrl,
-            itemCount: _candidates.length,
+            itemCount: _readings.length,
             onPageChanged: (i) {
               HapticFeedback.selectionClick();
               setState(() => _pageIndex = i);
             },
-            itemBuilder: (ctx, i) {
-              final cand = _candidates[i];
-              final readingForI = i < reading.candidates.length
-                  ? reading.candidates[i]
-                  : null;
-              return _CandidateCard(
-                candidate: cand,
-                reading: readingForI,
-              );
-            },
+            itemBuilder: (ctx, i) => _CandidateCard(reading: _readings[i]),
           ),
         ),
-        if (canRefresh)
-          _RefreshButton(
-            loading: _refreshing,
-            onTap: _refreshing ? null : _refresh,
-          ),
+        if (_canLoadNext)
+          _RefreshButton(loading: _loadingNext, onTap: _loadingNext ? null : _loadNext),
         const SizedBox(height: 16),
       ],
     );
   }
 }
-

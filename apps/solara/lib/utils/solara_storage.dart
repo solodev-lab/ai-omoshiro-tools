@@ -110,7 +110,9 @@ class SolaraStorage {
   static const _forecastColorModeKey = 'solara_forecast_color_mode';
   static const _forecastHighColorKey = 'solara_forecast_high_color';
   static const _forecastYearOffsetKey = 'solara_forecast_year_offset';
-  static const _consultationHistoryKey = 'solara_consultation_history';
+  // V2 (全要素統合) でレコード形式が変わったため key を更新。旧キーのデータは
+  // 互換性がないので無視 (pre-launch・内部テストのみ。実害なし)。
+  static const _consultationHistoryKey = 'solara_consultation_history_v2';
 
   /// 相談履歴の上限 (Free / Pro 共通)。柱 3 の原則「Free でも自分の記録を永久に
   /// 失わない」を満たす範囲で、ストレージ肥大を抑える上限。

@@ -39,6 +39,8 @@ class ConsultationTimeWindowItem {
         bucket: j['bucket'] as String? ?? '',
         label: j['label'] as String? ?? '',
       );
+
+  Map<String, dynamic> toJson() => {'bucket': bucket, 'label': label};
 }
 
 /// 時間帯 (現地の時間帯のみ・時計表示なし)。
@@ -80,6 +82,13 @@ class ConsultationTimeWindow {
     }
     return null;
   }
+
+  Map<String, dynamic> toJson() => {
+        'kind': kind,
+        if (bucket != null) 'bucket': bucket,
+        if (label != null) 'label': label,
+        if (items.isNotEmpty) 'items': items.map((e) => e.toJson()).toList(),
+      };
 }
 
 /// エビデンスの距離行 (玄人向けに km を出す。本文には出さない)。
@@ -94,6 +103,8 @@ class ConsultationEvidenceKm {
         factor: j['factor'] as String? ?? '',
         km: (j['km'] as num?)?.toInt() ?? 0,
       );
+
+  Map<String, dynamic> toJson() => {'factor': factor, 'km': km};
 }
 
 /// エビデンス (占星術ファクターのみ。重み・選び方・プロンプトは出さない)。
@@ -124,6 +135,12 @@ class ConsultationEvidence {
             const [],
         note: j['note'] as String?,
       );
+
+  Map<String, dynamic> toJson() => {
+        'factors': factors,
+        'km': km.map((e) => e.toJson()).toList(),
+        if (note != null) 'note': note,
+      };
 }
 
 /// 1 候補地の Stella の読み (構造データ + ナレーション)。
@@ -174,6 +191,21 @@ class ConsultationV2Candidate {
         narrative: j['narrative'] as String? ?? '',
         timeWindow: ConsultationTimeWindow.fromJsonOrNull(j['timeWindow']),
       );
+
+  Map<String, dynamic> toJson() => {
+        if (name != null) 'name': name,
+        if (nameEN != null) 'nameEN': nameEN,
+        if (bearing != null) 'bearing': bearing,
+        if (placeType != null) 'placeType': placeType,
+        'lat': lat,
+        'lng': lng,
+        if (country != null) 'country': country,
+        if (region != null) 'region': region,
+        'characterHeadline': characterHeadline,
+        'energyLabels': energyLabels,
+        'narrative': narrative,
+        if (timeWindow != null) 'timeWindow': timeWindow!.toJson(),
+      };
 }
 
 /// 相談 V2 レスポンス全体 (成功時)。
