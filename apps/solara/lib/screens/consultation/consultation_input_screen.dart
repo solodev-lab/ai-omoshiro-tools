@@ -23,21 +23,26 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../theme/solara_colors.dart';
 import '../../utils/astro_lines.dart' as al;
+import '../../utils/consultation_api.dart';
 import '../../utils/consultation_engine.dart' as ce;
 import '../../utils/pro_status.dart';
 import '../../utils/world_cities.dart';
+import '../../widgets/info_popup.dart';
 import '../../widgets/tap_to_unfocus.dart';
 import '../map/map_search.dart' as map_search;
 import '../map/map_vp_panel.dart';
+import 'consultation_credit_sheet.dart';
 import 'consultation_place_picker_screen.dart';
 import 'consultation_result_screen.dart';
 
 part 'consultation_input_widgets.dart';
 part 'consultation_input_examples.dart';
 part 'consultation_input_picker.dart';
+part 'consultation_start_popup.dart';
 
 /// Map から「📍この場所で相談」で起動した時の preset (specific scope 用)。
 class ConsultationPresetTarget {
@@ -80,14 +85,23 @@ class ConsultationInputScreen extends StatefulWidget {
 }
 
 class _ConsultationInputScreenState extends State<ConsultationInputScreen> {
-  String _mode = 'migration';
+  // mode / scope は初期選択なし (null = 未選択)。ユーザーが明示的に選ぶまで
+  // 「相談を始める」は無効。preset 起動時のみ travel / specific を初期採用する。
+  String? _mode;
   String? _theme;
-  String _scope = 'world';
+  String? _scope;
   String _regionGroup = '日本';
 
   /// 具体地点スコープでユーザーが picker (inline / Map) から選んだ地点。
   /// presetTarget があるときはそちらを優先し、本フィールドは無視する。
   _PickedSpecific? _specificPick;
+
+  /// 直近のクレジット状況 (Free のみ取得、開始ポップアップの残数表示用)。
+  ConsultationCreditStatus? _creditStatus;
+
+  /// 開始ポップアップを「次回以降表示しない」設定 (端末保存)。
+  bool _startPopupHidden = false;
+  static const _kStartPopupHiddenKey = 'consultation_start_popup_hidden';
 
   final TextEditingController _freeTextCtrl = TextEditingController();
 
@@ -99,6 +113,22 @@ class _ConsultationInputScreenState extends State<ConsultationInputScreen> {
       _scope = 'specific';
       _mode = 'travel';
     }
+    _loadPrefsAndCredits();
+  }
+
+  /// 「次回以降表示しない」設定の読込 + Free ユーザーのクレジット残数取得。
+  Future<void> _loadPrefsAndCredits() async {
+    final prefs = await SharedPreferences.getInstance();
+    final hidden = prefs.getBool(_kStartPopupHiddenKey) ?? false;
+    ConsultationCreditStatus? status;
+    if (!ProStatus.instance.isPro) {
+      status = await fetchConsultationCredits();
+    }
+    if (!mounted) return;
+    setState(() {
+      _startPopupHidden = hidden;
+      _creditStatus = status;
+    });
   }
 
   @override
@@ -110,6 +140,9 @@ class _ConsultationInputScreenState extends State<ConsultationInputScreen> {
   void _onModeChanged(String id) {
     setState(() {
       _mode = id;
+      // scope 未選択 (null) のときは触らない。ユーザーに範囲を明示選択させる
+      // (初期選択なし方針)。
+      if (_scope == null) return;
       // mode 切替時の scope 補正は「新モードで使えない scope なら有効値へ」
       // のみ。それ以外 (specific / region) は現状維持し、ユーザーの選択を尊重する。
       //
@@ -147,6 +180,9 @@ class _ConsultationInputScreenState extends State<ConsultationInputScreen> {
   /// - bearings スコープ時は currentLocation 必須 (現在地が方角計算の起点)
   bool get _canSubmit {
     if (_theme == null) return false;
+    // 初期選択なし方針: 場面 (mode) と範囲 (scope) を明示選択するまで送信不可。
+    if (_mode == null) return false;
+    if (_scope == null) return false;
     if (_scope == 'bearings' && widget.currentLocation == null) return false;
     if (_scope == 'specific' &&
         widget.presetTarget == null &&
@@ -236,7 +272,55 @@ class _ConsultationInputScreenState extends State<ConsultationInputScreen> {
     );
   }
 
-  Future<void> _submit() async {
+  /// 「相談を始める」押下時のエントリ。
+  /// Pro = 無制限なのでポップアップ無しで即実行。
+  /// Free = 開始ポップアップ (残数 + 補充案内 + 購入導線) を挟む。
+  ///        「次回以降表示しない」設定済みならスキップして即実行。
+  Future<void> _onStartPressed() async {
+    if (ProStatus.instance.isPro || _startPopupHidden) {
+      await _runConsultation();
+      return;
+    }
+    final proceed = await _showStartPopup();
+    if (proceed) await _runConsultation();
+  }
+
+  /// 開始ポップアップを表示。続行ボタンで true を返す (× / 外タップ / 購入は false)。
+  Future<bool> _showStartPopup() async {
+    var proceed = false;
+    await showInfoPopup(
+      context: context,
+      child: _StartConsultPopup(
+        status: _creditStatus,
+        initialHide: _startPopupHidden,
+        onContinue: () => proceed = true,
+        onBuy: _handleBuyFromPopup,
+        onHideChanged: _setStartPopupHidden,
+      ),
+    );
+    return proceed;
+  }
+
+  /// ポップアップの「クレジットを購入」→ 購入シートを開く (popup は閉じ済み)。
+  Future<void> _handleBuyFromPopup() async {
+    // popup の pop と購入シートの push を競合させないため次フレームへ。
+    await Future<void>.delayed(Duration.zero);
+    if (!mounted) return;
+    final changed = await showConsultationCreditSheet(context);
+    if (changed && mounted) {
+      final s = await fetchConsultationCredits();
+      if (mounted) setState(() => _creditStatus = s);
+    }
+  }
+
+  /// 「次回以降表示しない」チェックの保存。
+  Future<void> _setStartPopupHidden(bool v) async {
+    _startPopupHidden = v;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_kStartPopupHiddenKey, v);
+  }
+
+  Future<void> _runConsultation() async {
     final theme = _theme;
     if (theme == null) return;
     final themeLines = ce.filterThemeLines(widget.astroLines, theme);
@@ -260,8 +344,8 @@ class _ConsultationInputScreenState extends State<ConsultationInputScreen> {
       MaterialPageRoute(
         builder: (_) => ConsultationResultScreen(
           theme: theme,
-          mode: _mode,
-          scope: _scope,
+          mode: _mode!,
+          scope: _scope!,
           freeText: _freeTextCtrl.text.trim(),
           initialCandidates: initial,
           regenerateCandidates: regenForResult,
@@ -322,14 +406,16 @@ class _ConsultationInputScreenState extends State<ConsultationInputScreen> {
                     // 範囲 (scope) 選択: モード別に選択肢を切替
                     //   - daily:     具体地点 / 方角ベース / 範囲指定
                     //   - 他モード:   具体地点 / 範囲指定 / 世界全体
-                    _Section(
-                      label: '範囲は？',
-                      child: _ScopeRow(
-                        selected: _scope,
-                        onSelect: (id) => setState(() => _scope = id),
-                        choices: _scopeChoicesFor(_mode),
+                    // 場面 (mode) を選ぶまでは非表示 (scope 選択肢が mode 依存のため)。
+                    if (_mode != null)
+                      _Section(
+                        label: '範囲は？',
+                        child: _ScopeRow(
+                          selected: _scope,
+                          onSelect: (id) => setState(() => _scope = id),
+                          choices: _scopeChoicesFor(_mode!),
+                        ),
                       ),
-                    ),
                     // 地域ブロックピッカーは scope='region' のとき (mode 関係なく)
                     if (_scope == 'region')
                       _Section(
@@ -389,23 +475,11 @@ class _ConsultationInputScreenState extends State<ConsultationInputScreen> {
                 ),
               ),
             ),
-            if (!ProStatus.instance.isPro)
-              const Padding(
-                padding: EdgeInsets.fromLTRB(20, 0, 20, 6),
-                child: Text(
-                  '無料の Stella 相談は週 3 回まで（毎週補充）。'
-                  '使い切っても追加クレジット購入か Cosmic Pro で続けられます。',
-                  style: TextStyle(
-                    color: SolaraColors.textSecondary,
-                    fontSize: 11,
-                    height: 1.5,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ),
+            // 無料クレジットの案内は「相談を始める」押下時の開始ポップアップに集約
+            // (consultation_start_popup.dart)。画面下の常設注記は廃止。
             _SubmitBar(
               enabled: _canSubmit,
-              onSubmit: _submit,
+              onSubmit: _onStartPressed,
             ),
           ],
         ),

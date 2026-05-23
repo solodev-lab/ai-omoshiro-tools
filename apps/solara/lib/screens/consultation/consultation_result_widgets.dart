@@ -87,76 +87,83 @@ class _ErrorBox extends StatelessWidget {
 
 // ── 上下のブロック (intro/outro) ───────────────────────────
 
-class _IntroBlock extends StatelessWidget {
-  final String text;
-  final bool fallback;
-  const _IntroBlock({required this.text, required this.fallback});
+/// 静的フォールバック時の注意チップ (Stella 応答が届かず静的表示になったことを示す)。
+/// 旧 _IntroBlock のフォールバック表示部分のみを本文に残したもの。
+/// intro/outro 本体は _AboutReadingContent (タイトルタップのポップアップ) へ移動。
+class _FallbackChip extends StatelessWidget {
+  const _FallbackChip();
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (fallback)
-            Container(
-              margin: const EdgeInsets.only(bottom: 8),
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              decoration: BoxDecoration(
-                color: const Color(0x33D6915C),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: SolaraColors.energyHardDark),
-              ),
-              child: Text(
-                'Stella の声が届きませんでした (静的表示)',
-                style: TextStyle(
-                  color: SolaraColors.energyHardLight,
-                  fontSize: 11,
-                  letterSpacing: 0.4,
-                ),
-              ),
-            ),
-          Text(
-            text,
-            style: const TextStyle(
-              color: SolaraColors.textPrimary,
-              fontSize: 14,
-              height: 1.7,
-              letterSpacing: 0.3,
-            ),
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Container(
+        margin: const EdgeInsets.fromLTRB(20, 8, 20, 4),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: const Color(0x33D6915C),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: SolaraColors.energyHardDark),
+        ),
+        child: Text(
+          'Stella の声が届きませんでした (静的表示)',
+          style: TextStyle(
+            color: SolaraColors.energyHardLight,
+            fontSize: 11,
+            letterSpacing: 0.4,
           ),
-        ],
+        ),
       ),
     );
   }
 }
 
-class _OutroBlock extends StatelessWidget {
-  final String text;
-  const _OutroBlock({required this.text});
+/// AppBar タイトルタップで開く「この読み解きについて」ポップアップの中身。
+/// 旧 _IntroBlock(前置き)+ _OutroBlock(注記)を 1 枚に統合 (showInfoPopup 経由)。
+class _AboutReadingContent extends StatelessWidget {
+  final String intro;
+  final String outro;
+  const _AboutReadingContent({required this.intro, required this.outro});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
-      decoration: const BoxDecoration(
-        border: Border(
-          top: BorderSide(color: SolaraColors.glassBorder, width: 1),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const Text(
+          'この読み解きについて',
+          style: TextStyle(
+            color: SolaraColors.textPrimary,
+            fontSize: 15,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 0.3,
+          ),
         ),
-      ),
-      child: Text(
-        text,
-        style: TextStyle(
-          color: SolaraColors.textSecondary,
-          fontSize: 12.5,
-          height: 1.7,
-          letterSpacing: 0.4,
-          fontStyle: FontStyle.italic,
+        const SizedBox(height: 12),
+        Text(
+          intro,
+          style: const TextStyle(
+            color: SolaraColors.textPrimary,
+            fontSize: 14,
+            height: 1.7,
+            letterSpacing: 0.3,
+          ),
         ),
-      ),
+        const SizedBox(height: 14),
+        Container(height: 1, color: SolaraColors.glassBorder),
+        const SizedBox(height: 14),
+        Text(
+          outro,
+          style: TextStyle(
+            color: SolaraColors.textSecondary,
+            fontSize: 12.5,
+            height: 1.7,
+            letterSpacing: 0.4,
+            fontStyle: FontStyle.italic,
+          ),
+        ),
+      ],
     );
   }
 }

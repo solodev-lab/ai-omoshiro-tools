@@ -355,6 +355,9 @@ void main() {
 
     // ConsultationResultScreen が開いた
     expect(find.text('相談の結果'), findsOneWidget);
+    // intro はタイトルタップの「この読み解きについて」ポップアップへ移動 (2026-05-23)
+    await tester.tap(find.text('相談の結果'));
+    await tester.pumpAndSettle();
     expect(find.textContaining('テスト intro'), findsOneWidget);
   });
 }

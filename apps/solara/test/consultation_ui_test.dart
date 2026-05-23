@@ -88,7 +88,8 @@ void main() {
     // 自由記述の下に「こんな相談ができそう」セクション追加)
     expect(find.text('何のテーマで観たい？'), findsOneWidget);
     expect(find.text('どんな場面で？'), findsOneWidget);
-    expect(find.text('範囲は？'), findsOneWidget);
+    // 初期選択なし方針 (2026-05-23): 場面を選ぶまで「範囲は？」は非表示
+    expect(find.text('範囲は？'), findsNothing);
     expect(find.text('自由記述（任意）'), findsOneWidget);
     expect(find.text('こんな相談ができそう'), findsOneWidget);
 
@@ -105,11 +106,17 @@ void main() {
     expect(find.text('旅行'), findsOneWidget);
     expect(find.text('おでかけ'), findsOneWidget);
 
+    // 場面を選ぶと「範囲は？」セクションが現れる
+    await tester.tap(find.text('移住'));
+    await tester.pumpAndSettle();
+    expect(find.text('範囲は？'), findsOneWidget);
+
     // 提出ボタン
     expect(find.text('相談を始める'), findsOneWidget);
   });
 
-  testWidgets('Submit button is disabled until theme selected', (tester) async {
+  testWidgets('Submit button is disabled until theme + mode + scope selected',
+      (tester) async {
     await tester.pumpWidget(
       MaterialApp(
         home: ConsultationInputScreen(
@@ -126,15 +133,25 @@ void main() {
     expect(submitBtn.onPressed, isNull,
         reason: 'テーマ未選択時は disable');
 
-    // 「恋愛・関係」をタップ
+    // 「恋愛・関係」をタップ (テーマだけでは不足: 初期選択なし方針)
     await tester.tap(find.text('恋愛・関係'));
     await tester.pumpAndSettle();
+    final submitBtnTheme = tester.widget<ElevatedButton>(
+      find.widgetWithText(ElevatedButton, '相談を始める'),
+    );
+    expect(submitBtnTheme.onPressed, isNull,
+        reason: 'テーマだけでは不足 (場面・範囲も必要)');
 
+    // 場面「移住」+ 範囲「世界全体」を選ぶと enable
+    await tester.tap(find.text('移住'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('世界全体'));
+    await tester.pumpAndSettle();
     final submitBtn2 = tester.widget<ElevatedButton>(
       find.widgetWithText(ElevatedButton, '相談を始める'),
     );
     expect(submitBtn2.onPressed, isNotNull,
-        reason: 'テーマ選択後は enable');
+        reason: 'テーマ+場面+範囲 が揃えば enable');
   });
 
   testWidgets(
@@ -150,7 +167,12 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    // 初期 (migration): 範囲は？ + 具体地点/範囲指定/世界全体 が見える
+    // 初期選択なし: 場面を選ぶまで範囲は非表示
+    expect(find.text('範囲は？'), findsNothing);
+
+    // 「移住」を選ぶと非 daily 用の範囲 (世界全体あり・方角ベースなし)
+    await tester.tap(find.text('移住'));
+    await tester.pumpAndSettle();
     expect(find.text('範囲は？'), findsOneWidget);
     expect(find.text('世界全体'), findsOneWidget);
     expect(find.text('方角ベース'), findsNothing);
@@ -184,6 +206,10 @@ void main() {
 
     // テーマを選んでも、specific スコープにすると地点未選択で submit 不可になる。
     await tester.tap(find.text('恋愛・関係'));
+    await tester.pumpAndSettle();
+
+    // 場面 (旅行) を選んで範囲セクションを出す (初期選択なし方針)
+    await tester.tap(find.text('旅行'));
     await tester.pumpAndSettle();
 
     // 「具体地点」スコープを選択
@@ -229,6 +255,41 @@ void main() {
     expect(find.textContaining('を見ます'), findsOneWidget);
   });
 
+  testWidgets(
+      'Free user sees start popup (残数/補充/購入ボタン) on 相談を始める',
+      (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: ConsultationInputScreen(
+          astroLines: _buildSyntheticLines(),
+          currentLocation: LatLng(35.6580, 139.7016),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // テーマ + 場面 + 範囲 を選んで submit を有効化
+    await tester.tap(find.text('恋愛・関係'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('移住'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('世界全体'));
+    await tester.pumpAndSettle();
+
+    // 「相談を始める」(送信バー) → 開始ポップアップが出る (Free のみ)
+    await tester.tap(find.widgetWithText(ElevatedButton, '相談を始める'));
+    await tester.pumpAndSettle();
+
+    // ポップアップの固有要素を確認
+    expect(find.text('無料相談を使います'), findsOneWidget);
+    // 「毎週月曜日に補充」は残数バッジと案内文の 2 箇所に出る
+    expect(find.textContaining('毎週月曜日に補充'), findsWidgets);
+    expect(find.text('次回以降表示しない'), findsOneWidget);
+    expect(find.text('クレジットを購入'), findsOneWidget);
+    // 続行ボタンとして popup 内にも「相談を始める」がある (送信バーと合わせ 2 つ)
+    expect(find.text('相談を始める'), findsNWidgets(2));
+  });
+
   testWidgets('Result screen shows mock reading and PageView (Pro: refresh visible)',
       (tester) async {
     // 出し直しは Pro 限定なので Pro に設定
@@ -260,14 +321,22 @@ void main() {
     // 非同期完了まで pump
     await tester.pumpAndSettle();
     expect(find.text('Stella が読み解いています…'), findsNothing);
-    expect(find.textContaining('モック intro'), findsOneWidget);
-    expect(find.textContaining('世界の全部ではありません'), findsOneWidget);
+    // intro/outro は本文から外し、タイトルタップのポップアップに移動 (2026-05-23)
+    expect(find.textContaining('モック intro'), findsNothing);
+    expect(find.textContaining('世界の全部ではありません'), findsNothing);
 
     // 最初の候補名が出ている
     expect(find.text(cands.first.nameJP), findsOneWidget);
 
     // refresh ボタンがある (Pro かつ regenerateCandidates が非 null)
     expect(find.text('もう一度候補を出す'), findsOneWidget);
+
+    // タイトルタップで「この読み解きについて」ポップアップ → intro+outro が出る
+    await tester.tap(find.text('相談の結果'));
+    await tester.pumpAndSettle();
+    expect(find.text('この読み解きについて'), findsOneWidget);
+    expect(find.textContaining('モック intro'), findsOneWidget);
+    expect(find.textContaining('世界の全部ではありません'), findsOneWidget);
   });
 
   testWidgets('Result screen shows refresh for Free + 残量バナー (出し直しもクレジット消費)',

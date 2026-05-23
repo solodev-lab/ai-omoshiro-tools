@@ -29,6 +29,7 @@ import '../../utils/consultation_share.dart';
 import '../../utils/pro_status.dart';
 import '../../utils/solara_storage.dart';
 import '../../widgets/glass_panel.dart';
+import '../../widgets/info_popup.dart';
 import '../../widgets/pro_unlock_dialog.dart';
 import 'consultation_credit_sheet.dart';
 
@@ -294,6 +295,17 @@ class _ConsultationResultScreenState extends State<ConsultationResultScreen> {
     }
   }
 
+  /// AppBar タイトルタップで intro(前置き)+outro(注記)を 1 枚のポップアップで表示。
+  /// 本文(候補カード)の縦スペースを空けるため、常設ではなくオンデマンド表示にする。
+  void _showAboutReading() {
+    final r = _reading;
+    if (r == null) return;
+    showInfoPopup(
+      context: context,
+      child: _AboutReadingContent(intro: r.intro, outro: r.outro),
+    );
+  }
+
   /// 自動保存 (auto-save)。ConsultationRecord を solara_storage に追記する。
   /// 履歴モード (initialReading != null) や auto-save 無効時は no-op。
   Future<void> _maybePersist(
@@ -335,12 +347,28 @@ class _ConsultationResultScreenState extends State<ConsultationResultScreen> {
           onPressed: () => Navigator.of(context).maybePop(),
           tooltip: '戻る',
         ),
-        title: const Text(
-          '相談の結果',
-          style: TextStyle(
-            color: SolaraColors.textPrimary,
-            fontSize: 16,
-            letterSpacing: 0.4,
+        // タイトルタップで「この読み解きについて」(intro+outro) をポップアップ表示。
+        // 結果がある時だけ ⌄ を出して tappable にする。
+        title: GestureDetector(
+          onTap: _reading != null ? _showAboutReading : null,
+          behavior: HitTestBehavior.opaque,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                '相談の結果',
+                style: TextStyle(
+                  color: SolaraColors.textPrimary,
+                  fontSize: 16,
+                  letterSpacing: 0.4,
+                ),
+              ),
+              if (_reading != null) ...[
+                const SizedBox(width: 3),
+                const Icon(Icons.expand_more,
+                    size: 18, color: SolaraColors.textPrimary),
+              ],
+            ],
           ),
         ),
         centerTitle: true,
@@ -395,9 +423,12 @@ class _ConsultationResultScreenState extends State<ConsultationResultScreen> {
     // 出し直しも 1 クレジット消費 (Free も可)。Pro は無制限。
     final canRefresh = widget.regenerateCandidates != null;
 
+    // intro(前置き)/outro(注記)は本文から外し、AppBar タイトルタップの
+    // 「この読み解きについて」ポップアップに集約 (2026-05-23)。本文は候補カードを
+    // フル高さで読めるようにする。フォールバック時の静的表示注意だけは本文に残す。
     return Column(
       children: [
-        _IntroBlock(text: reading.intro, fallback: reading.fallback),
+        if (reading.fallback) const _FallbackChip(),
         if (_freeRemaining != null || _purchasedBalance != null)
           _FreeCreditsBanner(
             remaining: _freeRemaining ?? 0,
@@ -433,7 +464,6 @@ class _ConsultationResultScreenState extends State<ConsultationResultScreen> {
             },
           ),
         ),
-        _OutroBlock(text: reading.outro),
         if (canRefresh)
           _RefreshButton(
             loading: _refreshing,

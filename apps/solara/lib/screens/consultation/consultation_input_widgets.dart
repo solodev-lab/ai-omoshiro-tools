@@ -159,7 +159,7 @@ class _ThemeGrid extends StatelessWidget {
 }
 
 class _ModeRow extends StatelessWidget {
-  final String selected;
+  final String? selected;
   final ValueChanged<String> onSelect;
   const _ModeRow({required this.selected, required this.onSelect});
 
@@ -225,7 +225,7 @@ class _ModeRow extends StatelessWidget {
 }
 
 class _ScopeRow extends StatelessWidget {
-  final String selected;
+  final String? selected;
   final ValueChanged<String> onSelect;
   /// モード別の scope 選択肢。caller が `_scopeChoicesFor(mode)` で渡す。
   final List<_ScopeChoice> choices;

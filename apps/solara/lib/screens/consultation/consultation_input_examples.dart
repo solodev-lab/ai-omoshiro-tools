@@ -352,8 +352,8 @@ const Map<String, Map<String, Map<String, List<String>>>> _consultExamples = {
 
 class _ConsultExamples extends StatelessWidget {
   final String? theme;
-  final String mode;
-  final String scope;
+  final String? mode;
+  final String? scope;
   final ValueChanged<String> onPick;
 
   const _ConsultExamples({
@@ -366,11 +366,14 @@ class _ConsultExamples extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = theme;
-    if (t == null) {
+    final m = mode;
+    final s = scope;
+    // テーマ・場面・範囲が揃うまでは例文を引けないのでヒント文を出す。
+    if (t == null || m == null || s == null) {
       return const Padding(
         padding: EdgeInsets.symmetric(vertical: 4),
         child: Text(
-          'テーマを選ぶと、こんな相談ができる例が出てきます',
+          'テーマ・場面・範囲を選ぶと、こんな相談ができる例が出てきます',
           style: TextStyle(
             color: SolaraColors.textSecondary,
             fontSize: 11,
@@ -380,8 +383,8 @@ class _ConsultExamples extends StatelessWidget {
       );
     }
     // scope 別に例文を引く。データ欠落時はモード default (中点) にフォールバック。
-    final byMode = _consultExamples[t]?[mode];
-    final list = byMode?[scope] ??
+    final byMode = _consultExamples[t]?[m];
+    final list = byMode?[s] ??
         byMode?['region'] ??
         byMode?.values.firstOrNull ??
         const <String>[];
