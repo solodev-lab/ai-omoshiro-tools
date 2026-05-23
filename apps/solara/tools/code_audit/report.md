@@ -13,7 +13,6 @@
 | 1289 | 🔴 HARD | lib/screens/galaxy_screen.dart |
 | 1067 | 🔴 HARD | lib/screens/forecast_screen.dart |
 | 1013 | 🔴 HARD | lib/screens/map/daily_transit_data.dart |
-| 944 | 🔴 HARD | lib/utils/world_cities.dart |
 | 868 | 🔴 HARD | lib/screens/map/map_astro_carto.dart |
 | 819 | 🔴 HARD | lib/screens/horoscope_screen.dart |
 | 775 | 🔴 HARD | lib/screens/map/map_fortune_sheet.dart |
@@ -36,7 +35,6 @@
 | 564 | 🔴 HARD | lib/widgets/new_moon_overlay.dart |
 | 559 | 🔴 HARD | lib/utils/planet_intro.dart |
 | 535 | 🔴 HARD | lib/utils/astro_lines.dart |
-| 519 | 🔴 HARD | lib/screens/consultation/consultation_history_screen.dart |
 | 508 | 🔴 HARD | lib/screens/map/map_astro.dart |
 | 508 | 🔴 HARD | lib/screens/map/map_time_slider.dart |
 | 500 | 🔴 HARD | lib/screens/observe/tarot_altar_scene.dart |
@@ -73,6 +71,7 @@
 | 350 | 🟡 WARN | lib/screens/horoscope/horo_fortune_cards.dart |
 | 336 | 🟡 WARN | lib/screens/consultation/consultation_result_widgets.dart |
 | 325 | 🟡 WARN | lib/screens/consultation/consultation_credit_sheet.dart |
+| 324 | 🟡 WARN | lib/screens/consultation/consultation_history_widgets.dart |
 | 319 | 🟡 WARN | lib/screens/galaxy/galaxy_archive_filter.dart |
 | 313 | 🟡 WARN | lib/utils/celestial_events.dart |
 | 313 | 🟡 WARN | lib/screens/observe/observe_history_past.dart |
@@ -195,7 +194,7 @@
 
 ### 11. 📁 別ファイル間 (7 箇所、7 ファイル)
 
-  - lib/screens/consultation/consultation_history_screen.dart:236
+  - lib/screens/consultation/consultation_history_widgets.dart:43
   - lib/screens/consultation/consultation_place_picker_screen.dart:346
   - lib/screens/consultation/consultation_result_credit_widgets.dart:115
   - lib/screens/consultation/consultation_result_widgets.dart:75
@@ -272,7 +271,7 @@
 
 ### 18. 📁 別ファイル間 (6 箇所、6 ファイル)
 
-  - lib/screens/consultation/consultation_history_screen.dart:237
+  - lib/screens/consultation/consultation_history_widgets.dart:44
   - lib/screens/consultation/consultation_result_card.dart:117
   - lib/screens/consultation/consultation_result_credit_widgets.dart:116
   - lib/screens/consultation/consultation_result_widgets.dart:76
@@ -322,4 +321,4 @@
 
 ---
 
-総計: 行数違反 74 / 重複 20 / TODO 4 / print 2 / 未使用候補 0
+総計: 行数違反 73 / 重複 20 / TODO 4 / print 2 / 未使用候補 0

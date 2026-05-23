@@ -5,8 +5,8 @@
 
 ## サマリ
 
-- ファイル数: 15 / 総行数: 5582
-- class/mixin/extension/enum: 19
+- ファイル数: 14 / 総行数: 4638
+- class/mixin/extension/enum: 18
 - 関数 (top-level + method の素拾い): 38
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 1
@@ -376,24 +376,4 @@ Solara Title System data — matches SPEC.md exactly.
 
 - L361 `getSunSign()` — HTML: getSunSign(dateStr) — birthDate → 太陽星座
 - L375 `getMoonSign()` — HTML: getMoonSign(dateStr, timeStr) — birthDate+Time → 月星座（近似計算）
-
-
-### `lib/utils/world_cities.dart` (944 行)
-
-**ファイル先頭コメント:**
-
-```
-GENERATED FILE — DO NOT EDIT BY HAND
-Source: apps/solara/tools/generate_world_cities.py
-Regenerate: python apps/solara/tools/generate_world_cities.py
-
-Solara (ii) Stella 相談 Stage 2 用 キュレート都市リスト。
-設計: docs/pro_candidates.md §7.2 Stage 2
-
-各 CityEntry は consultation_engine.dart の候補生成に使う。
-```
-
-**型定義 (1):**
-
-- L10 `class CityEntry`
 

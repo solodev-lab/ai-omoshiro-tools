@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 25 / 総行数: 8555
+- ファイル数: 26 / 総行数: 8558
 - class/mixin/extension/enum: 82
 - 関数 (top-level + method の素拾い): 230
 - Navigator.push 等: 0
@@ -61,7 +61,7 @@ Stella 相談 追加クレジット購入シート (消費型 IAP、設計 B 案
   </details>
 
 
-### `lib/screens/consultation/consultation_history_screen.dart` (519 行)
+### `lib/screens/consultation/consultation_history_screen.dart` (198 行)
 
 **ファイル先頭コメント:**
 
@@ -85,30 +85,52 @@ Consultation History Screen — Phase 2-4
 
 - relative: `../../theme/solara_colors.dart`, `../../utils/consultation_record.dart`, `../../utils/solara_storage.dart`, `../../widgets/glass_panel.dart`, `consultation_result_screen.dart`
 
-**型定義 (5):**
+**型定義 (2):**
 
-- L47 `class ConsultationHistoryScreen : StatefulWidget`
-- L65 `class _ConsultationHistoryScreenState : State`
-- L200 `class _EmptyState : StatelessWidget`
-- L245 `class _HistoryCard : StatelessWidget`
-- L496 `class _MetaChip : StatelessWidget`
+- L49 `class ConsultationHistoryScreen : StatefulWidget`
+- L67 `class _ConsultationHistoryScreenState : State`
 
-**関数 (6 public + 5 private):**
+**関数 (3 public + 4 private):**
 
-- L61 `createState()`
-- L70 `initState()`
-- L137 `build()`
-- L204 `build()`
-- L343 `build()`
-- L501 `build()`
+- L63 `createState()`
+- L72 `initState()`
+- L139 `build()`
 
-  <details><summary>private 関数 5 件</summary>
+  <details><summary>private 関数 4 件</summary>
 
-  - L75 `_load()`
-  - L87 `_delete()`
-  - L96 `_confirmDeleteAll()`
-  - L189 `_openDetail()`
-  - L467 `_confirmDelete()`
+  - L77 `_load()`
+  - L89 `_delete()`
+  - L98 `_confirmDeleteAll()`
+  - L191 `_openDetail()`
+
+  </details>
+
+
+### `lib/screens/consultation/consultation_history_widgets.dart` (324 行)
+
+**ファイル先頭コメント:**
+
+```
+Consultation History — サブウィジェット (part of consultation_history_screen.dart)
+
+履歴画面の presentation 部品 (空状態 / 履歴カード / メタチップ) を分離 (HARD500 回避)。
+```
+
+**型定義 (3):**
+
+- L7 `class _EmptyState : StatelessWidget`
+- L52 `class _HistoryCard : StatelessWidget`
+- L301 `class _MetaChip : StatelessWidget`
+
+**関数 (3 public + 1 private):**
+
+- L11 `build()`
+- L149 `build()`
+- L306 `build()`
+
+  <details><summary>private 関数 1 件</summary>
+
+  - L273 `_confirmDelete()`
 
   </details>
 

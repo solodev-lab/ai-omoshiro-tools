@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""generate_world_cities.py — Solara (ii) Stella 相談 Stage 2 用 都市リスト生成スクリプト
+"""generate_world_cities.py — Solara Stella 相談 用 都市リスト生成スクリプト
 
-出力: ../lib/utils/world_cities.dart (Dart 定数ファイル、手書き禁止・要再生成)
+出力: ../worker/src/world_cities.js (JS 定数ファイル、手書き禁止・要再生成)
+  ※ Stella 相談 V2 (全要素統合) で候補生成が Worker 側に移行したため、
+    旧 client 用 Dart 版 (lib/utils/world_cities.dart) は撤去済み。
+    都市データの唯一の正典は本 script → world_cities.js。
 
 設計: docs/pro_candidates.md §7.2 Stage 2「キュレート都市リスト ~500-1000」
 
@@ -956,39 +959,10 @@ def all_cities():
 
 
 # ────────────────────────────────────────────────────────────
-# Dart 出力
+# 領域グループ定義 (DART_FOOTER 文字列を parse_region_groups が解析して
+# 国コード→領域グループの対応を抽出する。emit_js が region scope に使う)。
+# ※ 旧 Dart 出力 (DART_HEADER / emit_dart / escape_dart) は V2 移行で撤去。
 # ────────────────────────────────────────────────────────────
-DART_HEADER = '''// GENERATED FILE — DO NOT EDIT BY HAND
-// Source: apps/solara/tools/generate_world_cities.py
-// Regenerate: python apps/solara/tools/generate_world_cities.py
-//
-// Solara (ii) Stella 相談 Stage 2 用 キュレート都市リスト。
-// 設計: docs/pro_candidates.md §7.2 Stage 2
-//
-// 各 CityEntry は consultation_engine.dart の候補生成に使う。
-
-class CityEntry {
-  final String nameJP;
-  final String nameEN;
-  final double lat;
-  final double lng;
-  final String country; // ISO 2-letter
-  final String region;
-  final int population;
-
-  const CityEntry({
-    required this.nameJP,
-    required this.nameEN,
-    required this.lat,
-    required this.lng,
-    required this.country,
-    required this.region,
-    required this.population,
-  });
-}
-
-'''
-
 DART_FOOTER = '''
 /// 国コード → カバー領域 (大まかな bbox 中心、UI で region picker に使う想定)。
 /// 範囲指定モードで「JP」「US」「Europe」等の大ブロック選択を可能にする。
@@ -1140,33 +1114,6 @@ const Map<String, String> worldCityRegionGroups = {
 '''
 
 
-def escape_dart(s: str) -> str:
-    return s.replace('\\', '\\\\').replace("'", "\\'")
-
-
-def emit_dart(cities) -> str:
-    lines = [DART_HEADER]
-    lines.append('/// キュレート都市リスト ({} 件)。'.format(len(cities)))
-    lines.append('/// 生成元: apps/solara/tools/generate_world_cities.py')
-    lines.append('const List<CityEntry> worldCities = [')
-    for nameJP, nameEN, lat, lng, country, region, pop in cities:
-        lines.append(
-            "  CityEntry(nameJP: '{}', nameEN: '{}', lat: {:.4f}, lng: {:.4f}, "
-            "country: '{}', region: '{}', population: {}),".format(
-                escape_dart(nameJP),
-                escape_dart(nameEN),
-                lat,
-                lng,
-                escape_dart(country),
-                escape_dart(region),
-                pop,
-            )
-        )
-    lines.append('];')
-    lines.append(DART_FOOTER)
-    return '\n'.join(lines)
-
-
 def escape_js(s: str) -> str:
     return s.replace('\\', '\\\\').replace("'", "\\'")
 
@@ -1223,13 +1170,9 @@ def emit_js(cities) -> str:
 
 def main():
     cities = all_cities()
-    output = emit_dart(cities)
-
     here = Path(__file__).resolve().parent
-    target = here.parent / 'lib' / 'utils' / 'world_cities.dart'
-    target.write_text(output, encoding='utf-8')
 
-    # Worker 用 JS 版 (同一データ、Stella 相談 Phase 1)
+    # Worker 用 JS 版のみ生成 (V2 で候補生成は Worker 側に移行。Dart 版は撤去済み)。
     js_target = here.parent / 'worker' / 'src' / 'world_cities.js'
     js_target.write_text(emit_js(cities), encoding='utf-8')
     print('Generated:', js_target)
@@ -1240,7 +1183,6 @@ def main():
         by_country.setdefault(c[4], 0)
         by_country[c[4]] += 1
 
-    print('Generated:', target)
     print('Total cities:', len(cities))
     print('Countries:', len(by_country))
     print('Top countries (by entry count):')
