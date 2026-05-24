@@ -51,10 +51,10 @@
 
 ## #1 / #2 機械抽出 ↔ feature_inventory.md (人手版) の対整合
 
-- 機械抽出した class/mixin/extension/enum: **428**
+- 機械抽出した class/mixin/extension/enum: **427**
 - inventory に登場する識別子 (大文字始まり ``backtick``囲み): **223**
 
-### #1 機械にあるが Doc に書かれていない (247)
+### #1 機械にあるが Doc に書かれていない (246)
 
 - `AppAttestClient`
 - `ConstellationShareCardPage`
@@ -71,6 +71,7 @@
 - `ConsultationTimeWindowItem`
 - `ConsultationWhen`
 - `DeviceSecurityStatus`
+- `ForecastSectionHeader`
 - `GalaxyArchiveFilter`
 - `GalaxyArchiveFilterBar`
 - `GalaxyArchiveSort`
@@ -145,6 +146,7 @@
 - `_ExampleChips`
 - `_FailedBody`
 - `_FallbackChip`
+- `_FilterChip`
 - `_FontOption`
 - `_FontPreviewScreenState`
 - `_Footer`
@@ -179,8 +181,6 @@
 - `_HoroLocationInputState`
 - `_HoroRelocationPanelState`
 - `_HoroTransitPanelState`
-- `_HourNumberField`
-- `_HourNumberFieldState`
 - `_InfoPopupShell`
 - `_InnerSeasonBanner`
 - `_LatitudeBandBox`
@@ -256,7 +256,7 @@
 - `_SanctuaryTitleDiagnosisPageState`
 - `_ScopeChoice`
 - `_ScopeWrap`
-- … 残り 47 省略
+- … 残り 46 省略
 
 ### #2 Doc に書いてあるがコードに存在しない (ゴースト記述) (42)
 
@@ -345,7 +345,7 @@
 
 ### 層 4f: サブ画面 (Forecast / Locations / Philosophy / Font Preview)
 
-- ファイル数: 26
+- ファイル数: 27
 - Worker URL 呼出: (なし)
 - Popup/Dialog: `showInfoPopup`×7
 - Navigator.push 等: 0 箇所
@@ -364,18 +364,18 @@
 | 1a | 2 | · | · | · | 1 | · | · | · | · | · | · | · | · | · | · | · |
 | 1b | · | · | · | 2 | 1 | · | 1 | · | · | · | · | · | · | · | · | · |
 | 1c | · | · | 1 | · | · | · | · | · | · | · | · | · | · | · | · | · |
-| 2a | 2 | 1 | · | 6 | 3 | · | · | 1 | · | · | · | · | · | · | · | · |
+| 2a | 2 | 1 | · | 6 | 4 | · | · | 1 | · | · | · | · | · | · | · | · |
 | 2b | 2 | 2 | 5 | 5 | 2 | · | · | · | · | · | · | · | · | · | · | · |
 | 2c | · | · | 1 | · | · | · | · | · | · | · | · | · | · | · | · | · |
 | 3a | 1 | 4 | 2 | 2 | 1 | 1 | 8 | 7 | 4 | 1 | · | · | · | · | 1 | · |
 | 3b | · | · | · | · | · | · | · | 1 | · | · | · | · | · | · | · | · |
 | 3c | · | 5 | 4 | 2 | 4 | · | 12 | 4 | · | · | · | · | · | · | · | · |
-| 4a | 10 | 11 | · | 13 | 7 | · | 19 | 23 | 3 | 31 | 2 | · | · | · | 3 | · |
+| 4a | 10 | 11 | · | 13 | 8 | · | 19 | 23 | 3 | 30 | 2 | · | · | · | 3 | · |
 | 4b | 5 | 13 | · | 3 | 4 | · | 14 | · | · | · | 31 | · | · | 2 | · | · |
 | 4c | 1 | 1 | 15 | · | 7 | 4 | 6 | 4 | · | · | · | 16 | · | · | 1 | · |
 | 4d | 3 | 6 | 13 | 1 | 5 | 2 | 12 | 2 | 1 | · | · | · | 9 | · | · | · |
-| 4e | 1 | 4 | · | 2 | 7 | · | 14 | 1 | · | · | · | · | · | 9 | 2 | · |
-| 4f | 2 | 3 | · | 8 | 15 | · | 16 | 11 | · | 6 | · | · | · | · | 23 | · |
+| 4e | 1 | 4 | · | 3 | 7 | · | 15 | 1 | · | · | · | · | · | 9 | 2 | · |
+| 4f | 2 | 3 | · | 8 | 15 | · | 16 | 11 | · | 6 | · | · | · | · | 26 | · |
 | 5 | 1 | · | · | 2 | 4 | 1 | 1 | 1 | · | 1 | 1 | 1 | 1 | 1 | · | · |
 
 > 健全な依存方向は「番号が大きい層 → 小さい層」(上位が下位に依存)。
@@ -388,13 +388,13 @@
 | ファイル | 層 | 被 import 数 |
 | --- | --- | --- |
 | `lib/theme/solara_colors.dart` | 3b | 34 |
-| `lib/utils/solara_storage.dart` | 2b | 26 |
+| `lib/utils/solara_storage.dart` | 2b | 28 |
 | `lib/widgets/info_popup.dart` | 3a | 23 |
 | `lib/screens/map/map_constants.dart` | 3b | 20 |
 | `lib/utils/pro_status.dart` | 2b | 19 |
 | `lib/models/galaxy_cycle.dart` | 1c | 14 |
+| `lib/screens/horoscope/horo_antique_icons.dart` | 3a | 14 |
 | `lib/utils/solara_api.dart` | 2a | 14 |
-| `lib/screens/horoscope/horo_antique_icons.dart` | 3a | 13 |
 | `lib/models/daily_reading.dart` | 1c | 12 |
 | `lib/widgets/pro_unlock_dialog.dart` | 3a | 12 |
 | `lib/widgets/tap_to_unfocus.dart` | 3a | 11 |
@@ -421,15 +421,9 @@
 > 各ソースの SHA1 を `_stamps.json` に記録し、差分を検出。
 > 変更されたファイルが属する層は、人手版インベントリ章の見直し対象。
 
-- 追加: **1** / 削除: **0** / 変更: **1**
+- 追加: **0** / 削除: **0** / 変更: **0**
 
-### 変更されたファイル (層別)
-
-- **層 4d**: `lib/screens/galaxy_screen.dart`
-
-### 追加されたファイル
-
-- `lib/screens/galaxy/galaxy_stella_messages.dart` (層 4d)
+- 変更なし — 全インベントリ章は最新。
 
 ## #7 astro_glossary 用語辞書対整合
 

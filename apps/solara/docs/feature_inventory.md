@@ -95,7 +95,7 @@ Solara のバックエンドは **Cloudflare Workers** で稼働。本番 URL: `
 #### タロットカテゴリ (同じクレジット財布、2026-05-23 追加)
 **1 クレジット = AI 占い 1 回**は相談とタロットで共通 (同じ財布)。`/protected/tarot` も
 共通ゲート (`consumeReadingCreditGate` / `consumeReadingCredit`) を使う:
-- **全体運 (category なし)**: 従来通り無料・1 日 1 回 (client `_alreadyDrawnToday`)。クレジット消費なし。
+- **全体運 (category なし)**: 無料・1 日 1 回。日付境界は「1日の開始時刻」設定基準の論理日 (`SolaraStorage.logicalTodayKey`)。引いた後にリセット時刻を後ろへずらして再ドローする不正は単調ガード (`hasDrawnFreeTarotToday`/`markFreeTarotDrawn`) でブロック。クレジット消費なし。
 - **カテゴリ指定 (love/money/work/communication/healing/newStart)**: 非 Pro は 1 クレジット消費
   (無料週次→購入残高)。Pro は無制限。`tarot.js` がカテゴリを prompt に反映。
 - 402 (クレジット切れ) → `fortune_api.TarotReading.creditExhausted` → `observe_screen` が
@@ -169,6 +169,8 @@ Solara のバックエンドは **Cloudflare Workers** で稼働。本番 URL: `
 - Flutter 画面 (層 4f): 入力 `consultation_input_screen.dart` (+ widgets/when_scope/examples/picker/
   logic/start_popup part) / 結果 `consultation_result_screen.dart` (+ widgets/card/credit/share part) /
   履歴 `consultation_history_screen.dart` (+ widgets part) / レコード `consultation_record.dart`。
+  履歴は **お気に入り登録** (各カードの ★ ボタン → `ConsultationRecord.favorite` + `SolaraStorage.setConsultationFavorite`) と
+  **「すべて / ★ お気に入り」フィルタ** に対応 (favorite は JSON で true のときのみ保存)。
 
 ### 0.3 エンドポイント一覧 (13 個)
 
@@ -540,7 +542,7 @@ Solara のバックエンドは **Cloudflare Workers** で稼働。本番 URL: `
 
 | # | ファイル | 行 | 役割 | 呼出元 |
 |---|---|---|---|---|
-| 1 | [`solara_storage.dart`](../lib/utils/solara_storage.dart) | 404 | **永続化中央集権ファイル**。SolaraProfile, Reading 履歴, Intention, dailyResetHour/Minute, Map style, Forecast 設定, overlay state, notTodayCount 等 32 public 関数 | main.dart + 全画面 (Sanctuary / Map / Horo / Observe / Galaxy / Forecast / Locations) + moon overlay 系 widgets |
+| 1 | [`solara_storage.dart`](../lib/utils/solara_storage.dart) | 622 | **永続化中央集権ファイル**。SolaraProfile, Reading 履歴, Intention, dailyResetHour/Minute, Map style, Forecast 設定, overlay state, notTodayCount + 無料タロット日次ガード (`logicalTodayKey` / `hasDrawnFreeTarotToday` / `markFreeTarotDrawn`) 等 | main.dart + 全画面 (Sanctuary / Map / Horo / Observe / Galaxy / Forecast / Locations) + moon overlay 系 widgets |
 | 2 | [`forecast_cache.dart`](../lib/utils/forecast_cache.dart) | 462 | **`/astro/forecast` 呼出 + 永続化キャッシュ + クールダウン + ◯◯期検出**。`ForecastDay`, `LifePeriod`, `ForecastCache`, `ForecastRepo`、`detectLifePeriods` (運勢サイクル抽出ロジック) | [forecast_screen](../lib/screens/forecast_screen.dart), [forecast_life_periods](../lib/screens/forecast/forecast_life_periods.dart), [forecast_top5](../lib/screens/forecast/forecast_top5.dart), [galaxy_screen](../lib/screens/galaxy_screen.dart) (?) |
 | 3 | [`app_locale.dart`](../lib/utils/app_locale.dart) | 41 | 言語切替 (端末/JP/EN) の global singleton。SharedPreferences で永続化 | main.dart (`AppLocale.instance.load()`) + 言語表示する全画面 |
 
@@ -1408,7 +1410,7 @@ Observe の機能領域:
    - **(c) 過去履歴の検索 + フィルタ** — 現状 `ObserveHistoryPanel` は時系列のみ。Pro は要素別 / 期間別 / キーワード検索追加
 
 2. **`/tarot` Gemini 呼出の回数制限 = Free/Pro の自然な境界**
-   - 現状 1 日 1 回固定 (`_checkTodayReading` で永続化)
+   - 現状 1 日 1 回固定。境界は「1日の開始時刻」設定基準の論理日 + 単調ガード (`_checkTodayReading` / `hasDrawnFreeTarotToday`)
    - Free は 1 日 1 回維持、Pro は無制限再生成 (= 引き直し)
    - `fortune_api.dart` の Gemini 呼出に per-IP/per-user カウンタを追加 (Horoscope の `/fortune` と同じ仕組み)
 
@@ -1595,7 +1597,7 @@ Galaxy は 1b/1c/2a/2b/3a/3c に強く依存:
 
 ### 4e.1 概要
 
-`lib/screens/sanctuary/` 配下 + `lib/screens/sanctuary_screen.dart` の **8 ファイル / 計 4,335 行**。Solara の Sanctuary タブ = **アプリ設定 + プロフィール + 144 称号診断儀式 + Pro アップグレード UI**。
+`lib/screens/sanctuary/` 配下 + `lib/screens/sanctuary_screen.dart` の **8 ファイル / 計 4,702 行**。Solara の Sanctuary タブ = **アプリ設定 + プロフィール + 144 称号診断儀式 + Pro アップグレード UI**。
 
 **機械分類の精度** (✅ オーバーライド不要): 8 ファイル全て Sanctuary 専用。`sanctuary_profile_editor.dart` は Horoscope (2 ファイル) から `Navigator.push` で遷移されるが、これは画面遷移であって cross-cutting widget ではない (= 層維持)。
 
@@ -1603,20 +1605,22 @@ Sanctuary の機能領域:
 
 | 機能領域 | 概要 |
 |---|---|
-| プロフィール編集 | 名前・出生情報 (日時・座標・地名)・言語切替・場所検索 + reverse geocoding |
+| プロフィール編集 | 名前・出生情報 (日時・座標・地名)・言語切替・場所検索 + reverse geocoding。※ プライバシーで誕生日・住所の値は一覧非表示 (「設定済み/未設定」のみ、行はタップで編集) |
 | ホーム地点設定 | 現住所の座標 + 地名 (Map VP slot と同期) |
+| クレジット残表示 | 最上段に Stella/タロット クレジット残を 1 行表示 (`fetchConsultationCredits`)。非Pro=無料週次残+購入残、Pro=無制限 |
+| Cosmic Pro 装飾 | Pro 契約時、最上段ヘッダーをアンティーク金二重枠で囲み、画面背景に神殿画像 (`assets/sanctuary-bg/pro.webp`) を薄く (opacity 0.20) 重ねる |
 | 🔴 144 称号診断儀式 | 25 クラス × Light/Shadow 両面の診断、3 ラウンドカード選択 + Forging 演出 + Reveal |
 | クラスカードシェア | 診断結果カードを画像生成して シェア (`_buildShareImage` + share_plus) |
 | Orb 設定 | アスペクトオーブ (天体間角度の許容範囲) 8 種カスタマイズ |
-| デイリーリセット時刻 | 日次タロット引きの基準時刻 (時:分、1 分単位) |
+| デイリーリセット時刻 | 「1日の開始時刻」= 日次タロット引き + 月相 overlay の論理日の基準 (時:分、1 分単位)。Horo 星読みは0時基準で対象外 |
 | 🔴 Cosmic Pro アップグレード UI | **既に UI 実装済**: $9.99/月 + $49.99/年、訴求文「Aether shaders · Galaxy Archive · Advanced astrology」 |
-| アプリ設定 | 言語切替、ハウスシステム選択、利用規約等 |
+| アプリ設定 | 言語切替、ハウスシステム選択 (Placidus/Whole Sign — `SolaraStorage.loadHouseSystem`/`saveHouseSystem` + 同期キャッシュ `currentHouseSystem` 経由で Horo・Map・Locations のチャート計算と Map relocation popup に反映)、利用規約等 |
 
 ### 4e.2 ファイル別 役割 + 呼出元 (8 本)
 
 | # | ファイル | 行 | 主要 export | 役割 |
 |---|---|---|---|---|
-| 1 | [`sanctuary_screen.dart`](../lib/screens/sanctuary_screen.dart) | 1,034 | `SanctuaryScreen` (Stateful)、`_SanctuaryScreenState`、`_SettingsGroup`、`_SettingsItem`、`_SettingsItemWithToggle`、`_WidgetOpacity` extension | **🔴 Sanctuary 統合ハブ**。27 関数 (public 7 + private 20)、9 import (内部 + utils + widgets)。Settings 構造: プロフィール / 称号診断 / **Cosmic Pro** / 占星術 / アプリ設定 の 5 セクション。`_buildCosmicProSection` (L653-724) が Pro 訴求 UI |
+| 1 | [`sanctuary_screen.dart`](../lib/screens/sanctuary_screen.dart) | 1,400 | `SanctuaryScreen` (Stateful)、`_SanctuaryScreenState`、`_SettingsGroup`、`_SettingsItem`、`_WidgetOpacity` extension | **🔴 Sanctuary 統合ハブ**。最上段にクレジット残行 (`_buildTopHeader`/`_buildCreditRow`)、Pro 時はアンティーク金枠 + 神殿背景 (`_proBgDecoration`)。Settings 構造: プロフィール / 称号診断 / **Cosmic Pro** / 占星術 / アプリ設定。`_buildCosmicProSection` が Pro 訴求 UI |
 | 2 | [`sanctuary_title_diagnosis.dart`](../lib/screens/sanctuary/sanctuary_title_diagnosis.dart) | **1,385** | `SanctuaryTitleDiagnosisPage` (Stateful)、`_SanctuaryTitleDiagnosisPageState` | **🔴 144 称号診断儀式** (本層最大ファイル)。22 関数 (public 4 + private 18)。フェーズ: `_buildSummoning` → `_buildIntro` → `_buildRound` (3 ラウンド) → `_buildPartTrans` → `_buildForging` → `_buildReveal` (Light + Shadow 両面)。出生情報からの astro seed (`_pickByAstroSeed`) + ユーザー選択カードの組合せで 144 称号を確定 |
 | 3 | [`sanctuary_profile_editor.dart`](../lib/screens/sanctuary/sanctuary_profile_editor.dart) | 585 | `SanctuaryProfileEditorPage` (Stateful)、`_SanctuaryProfileEditorPageState`、`DateSlashFormatter` (TextInputFormatter) | プロフィール編集ページ。Place search (`/search` 経由) + 言語切替ボタン + 出生情報 (日時 YYYY/MM/DD + HH:MM + 座標) + `_resolveTimezone` で `/tz` 呼出 + `LocationPickerMinimap` (3a) で座標微調整。Horo (horo_birth_panel, horo_transit_panel) から `Navigator.push` で遷移される |
 | 4 | [`class_share_card.dart`](../lib/screens/sanctuary/class_share_card.dart) | 447 | `ClassShareCardPage` (Stateful)、`_ClassShareCardPageState` | クラスカードシェア用ページ。`_buildShareImage` で `RepaintBoundary` から画像生成 → `share_plus` で OS 共有シート。`ClassCard` widget (3a) を使ってカード表示 |
@@ -1766,20 +1770,22 @@ Text('$49.99/year · Cancel anytime')  // 年額 + キャンセル可
 
 | サブ画面 | ファイル数 | 役割 | 起動元 |
 |---|---|---|---|
-| **Forecast** (運勢予報) | 3 / 1,505 行 | 1 年予測ヒートマップ + 強運 Top5 + ◯◯期サイクル | Map `_openForecast` 経由 |
+| **Forecast** (運勢予報) | 4 ファイル | **暦年 (1/1〜12/31) 基準**の予測ヒートマップ + 強運 Top5 + ◯◯期サイクル。開くと当年・今日の日付が選択された状態で表示 | Map `_openForecast` 経由 |
 | **Locations** (拠点管理) | 2 / 1,128 行 | 登録拠点を 16 方位スコア付きで一覧管理 | Map `_openLocations` 経由 |
 | **Philosophy** (設計思想) | 1 / 159 行 | Solara 設計思想ガイド (静的、章 0) | 🔴 導線なし (未配線・#5c 孤立ファイル — オーナー判断待ち) |
 | **Font Preview** (開発用) | 1 / 138 行 | フォント候補 8 種の比較画面 | (開発者専用、ユーザー導線なし) |
 
-### 4f.2 Forecast 群 (3 ファイル / 1,505 行)
+### 4f.2 Forecast 群 (4 ファイル)
 
 **🔴 Worker `/astro/forecast` (KV 月次クォータ 60 req/IP/month) を呼ぶ唯一の機能** = Pro 化の自然な境界。
+**集計基準は暦年 (当年 1/1〜12/31)** — `forecast_cache.dart` が当年 1/1 起点で 1 年分を一括 fetch + 永続キャッシュ (キー prefix v2)。日付が進むと末尾が動くローリング窓ではないため Top5 は年内固定。全画面 1.33x の textScaler でフォント拡大。
 
 | # | ファイル | 行 | 主要 export | 役割 |
 |---|---|---|---|---|
-| 1 | [`forecast_screen.dart`](../lib/screens/forecast_screen.dart) | **1,048** | `ForecastScreen` (Stateful)、`_ForecastScreenState`、`_DayStepperButton` | **🔴 Forecast 統合画面**。34 関数 (public 4 + private 30)。1 年ヒートマップ (`_buildHeatmap`) + 選択日詳細 (`_buildSelectedDayDetail`) + 強運 Top5 (子 widget) + ◯◯期 (子 widget) + year selector (現在年 + 過去 4 年)。`_setColorMode` で gradient/カテゴリ色 切替、`_setHighColor` で高得点強調色切替 |
-| 2 | [`forecast/forecast_top5.dart`](../lib/screens/forecast/forecast_top5.dart) | 238 | `ForecastTop5Section` (Stateless) | **強運 Top5 セクション**。永続保存された Top5 を mode 別 (overall / 5 カテゴリ) で表示。`_modeSelector` でカテゴリ切替、`_row` で順位 + 日付 + スコア表示 |
-| 3 | [`forecast/forecast_life_periods.dart`](../lib/screens/forecast/forecast_life_periods.dart) | 219 | `ForecastLifePeriodsSection` (Stateless) | **◯◯期セクション**。`detectLifePeriods` (2b `forecast_cache.dart`) で抽出された連続高スコア期 (恋愛期 / 仕事期 等) を表示。`_periodRow` で期間バー + 期間名 + スコアレンジ |
+| 1 | [`forecast_screen.dart`](../lib/screens/forecast_screen.dart) | **1,084** | `ForecastScreen` (Stateful)、`_ForecastScreenState`、`_DayStepperButton` | **🔴 Forecast 統合画面**。暦年ヒートマップ (`_buildHeatmap`、開くと今日を選択) + 選択日詳細 + 強運 Top5 (子 widget・年を渡す) + ◯◯期 (子 widget) + year selector。`_setColorMode`/`_setHighColor` で配色切替 |
+| 2 | [`forecast/forecast_top5.dart`](../lib/screens/forecast/forecast_top5.dart) | 244 | `ForecastTop5Section` (Stateless) | **強運 Top5 セクション**。当年 (1/1〜12/31) の上位 5 日を mode 別 (overall / 5 カテゴリ) で表示。見出し右に集計対象の西暦年を表示。`_modeSelector` でカテゴリ切替、`_row` で順位 + 日付 (1 行) + スコア |
+| 3 | [`forecast/forecast_life_periods.dart`](../lib/screens/forecast/forecast_life_periods.dart) | 210 | `ForecastLifePeriodsSection` (Stateless) | **◯◯期セクション**。`detectLifePeriods` (2b `forecast_cache.dart`) で抽出された連続高スコア期 (恋愛期 / 仕事期 等) を表示。`_periodRow` で期間バー + 期間名 + 日数 (右揃え auto-fit) |
+| 4 | [`forecast/forecast_section_header.dart`](../lib/screens/forecast/forecast_section_header.dart) | ~30 | `ForecastSectionHeader` (Stateless) | 各セクション共通の見出し (金色アクセントバー + ラベル + 任意 trailing/info)。旧「▸」マーカーを置換 |
 
 **Forecast の課金との関係**:
 - Worker 側の **KV 月次クォータ 60 req/IP/month** ([`worker/src/index.js:73`](../worker/src/index.js)) = 既に Free の上限が物理的に存在

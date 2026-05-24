@@ -213,3 +213,58 @@ extension _HoroChartData on HoroscopeScreenState {
     };
   }
 }
+
+// ── 占い専用: 異なる2チャート間のアスペクト算出 ──
+// Natal × Transit (今日の空) / Natal × Progressed (進行) の相を求める。
+// UI 表示用 _recalcAspects とは別系統: オーブを締めて「今効いている相」だけ拾い、
+// natal(基準) と moving(動いている側) を区別したマップを返す。
+const _fortuneTransitOrbs = <String, double>{
+  'conjunction': 3.0, 'opposition': 3.0, 'trine': 3.0, 'square': 3.0, 'sextile': 2.0,
+};
+const _fortuneProgressedOrbs = <String, double>{
+  'conjunction': 1.0, 'opposition': 1.0, 'trine': 1.0, 'square': 1.0, 'sextile': 1.0,
+};
+
+const _fortuneMajorAspects = <Map<String, dynamic>>[
+  {'key': 'conjunction', 'angle': 0.0, 'quality': 'neutral'},
+  {'key': 'opposition', 'angle': 180.0, 'quality': 'hard'},
+  {'key': 'trine', 'angle': 120.0, 'quality': 'soft'},
+  {'key': 'square', 'angle': 90.0, 'quality': 'hard'},
+  {'key': 'sextile', 'angle': 60.0, 'quality': 'soft'},
+];
+
+/// natal(基準) × moving(transit/progressed) の主要アスペクトを算出。
+/// 返り値: [{natal, moving, type, quality}]。[orbs] で相ごとのオーブ(度)を指定。
+List<Map<String, dynamic>> computeFortuneCrossAspects(
+  Map<String, double> natal,
+  Map<String, double> moving,
+  Map<String, double> orbs,
+) {
+  const keys = [
+    'sun', 'moon', 'mercury', 'venus', 'mars',
+    'jupiter', 'saturn', 'uranus', 'neptune', 'pluto',
+  ];
+  final out = <Map<String, dynamic>>[];
+  for (final n in keys) {
+    final nLon = natal[n];
+    if (nLon == null) continue;
+    for (final m in keys) {
+      final mLon = moving[m];
+      if (mLon == null) continue;
+      final diff = angDist(nLon, mLon);
+      for (final asp in _fortuneMajorAspects) {
+        final orb = orbs[asp['key']] ?? 1.0;
+        if ((diff - (asp['angle'] as double)).abs() <= orb) {
+          out.add({
+            'natal': n,
+            'moving': m,
+            'type': asp['key'],
+            'quality': asp['quality'],
+          });
+          break;
+        }
+      }
+    }
+  }
+  return out;
+}

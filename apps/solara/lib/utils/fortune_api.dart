@@ -14,7 +14,6 @@ class FortuneReading {
   final int score;
   final String reading;
   final String advice;
-  final String direction;
   final String lang;
 
   const FortuneReading({
@@ -22,7 +21,6 @@ class FortuneReading {
     required this.score,
     required this.reading,
     required this.advice,
-    required this.direction,
     required this.lang,
   });
 
@@ -31,7 +29,6 @@ class FortuneReading {
     score: (j['score'] as num?)?.toInt() ?? 50,
     reading: j['reading'] as String? ?? '',
     advice: j['advice'] as String? ?? '',
-    direction: j['direction'] as String? ?? '',
     lang: j['lang'] as String? ?? 'ja',
   );
 }
@@ -48,6 +45,10 @@ Future<FortuneReading?> fetchFortune({
   Map<String, double>? natal,
   Map<String, int>? planetHouses,
   List<Map<String, dynamic>>? aspects,
+  // 3層構造 (トランジット主役): N-T = 今日の主役、N-P = 今の人生の章 (背景)。
+  // 各要素は {natal, moving, type, quality}。
+  List<Map<String, dynamic>>? transitAspects,
+  List<Map<String, dynamic>>? progressedAspects,
   Map<String, List<Map<String, dynamic>>>? patterns,
   String? date,
   String? userName,
@@ -56,12 +57,16 @@ Future<FortuneReading?> fetchFortune({
   bool thinking = false,
 }) async {
   try {
+    // userName は送る (2026-05-24): 冒頭の機械的な呼びかけは Worker プロンプト側で
+    // 禁止しつつ、本文の途中で自然に名前に触れるのは許可する (タロットと同じ扱い)。
     final body = <String, dynamic>{
       'category': category,
       'lang': lang,
       'natal': ?natal,
       'planetHouses': ?planetHouses,
       'aspects': ?aspects,
+      'transitAspects': ?transitAspects,
+      'progressedAspects': ?progressedAspects,
       'patterns': ?patterns,
       'date': ?date,
       if (userName != null && userName.isNotEmpty) 'userName': userName,
@@ -243,6 +248,8 @@ Future<TarotReading?> fetchTarotReading({
 }) async {
   try {
     final cleanQuestion = question?.trim();
+    // userName は送る (2026-05-24): 冒頭の機械的な呼びかけは Worker プロンプト側で
+    // 禁止しつつ、本文の途中で自然に名前に触れるのは許可する (カード名と同じ扱い)。
     final body = <String, dynamic>{
       'cardId': cardId,
       'reversed': reversed,

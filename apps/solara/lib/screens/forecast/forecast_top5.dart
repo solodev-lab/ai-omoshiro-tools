@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../utils/forecast_cache.dart';
 import '../../widgets/info_popup.dart';
 import '../map/map_constants.dart';
+import 'forecast_section_header.dart';
 
 /// 強運Top5 セクション — 永続保存された Top5 を mode 別に表示
 /// mode 切替で再計算しない（loadOrComputeTop5 が永続化）
@@ -11,6 +12,9 @@ class ForecastTop5Section extends StatelessWidget {
 
   /// 現在の表示 mode（'overall' | 'love' | 'money' | 'healing' | 'work' | 'communication'）
   final String mode;
+
+  /// 集計対象の暦年 (西暦)。見出し右に表示する。Top5 はこの年の 1/1〜12/31 から算出。
+  final int year;
 
   /// mode 切替コールバック
   final ValueChanged<String> onModeChange;
@@ -22,6 +26,7 @@ class ForecastTop5Section extends StatelessWidget {
     super.key,
     required this.top5,
     required this.mode,
+    required this.year,
     required this.onModeChange,
     required this.onSelect,
   });
@@ -32,21 +37,17 @@ class ForecastTop5Section extends StatelessWidget {
     if (list.isEmpty) return const SizedBox.shrink();
 
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Row(children: [
-        const Text('▸ 強運Top5',
-            style: TextStyle(fontSize: 11, color: Color(0xFFC9A84C), letterSpacing: 2)),
-        const SizedBox(width: 4),
-        // ⓘ 強運Top5 説明 popup
-        GestureDetector(
-          onTap: () => _showTop5Info(context),
-          behavior: HitTestBehavior.opaque,
-          child: const Padding(
-            padding: EdgeInsets.all(2),
-            child: Icon(Icons.info_outline,
-                size: 13, color: Color(0xCCAAAAAA)),
-          ),
-        ),
-      ]),
+      ForecastSectionHeader(
+        label: '強運Top5',
+        onInfo: () => _showTop5Info(context),
+        // 集計対象の暦年 (西暦) を右端に表示。
+        trailing: Text('$year年',
+            style: const TextStyle(
+                fontSize: 11,
+                color: Color(0xFFC9A84C),
+                letterSpacing: 1.5,
+                fontWeight: FontWeight.w600)),
+      ),
       const SizedBox(height: 8),
       _modeSelector(),
       const SizedBox(height: 10),
@@ -116,9 +117,13 @@ class ForecastTop5Section extends StatelessWidget {
           SizedBox(width: 28,
               child: Center(child: Text(marker,
                   style: const TextStyle(fontSize: 16)))),
-          SizedBox(width: 50,
-              child: Text(dateLabel,
-                  style: const TextStyle(fontSize: 12, color: Color(0xFFE8E0D0)))),
+          // アイコンと日付の間の余白を広げる。
+          const SizedBox(width: 16),
+          // 固定幅をやめ 1 行強制 (2 列しか無く余裕があるので折返し不要)。
+          Text(dateLabel,
+              maxLines: 1,
+              softWrap: false,
+              style: const TextStyle(fontSize: 14, color: Color(0xFFE8E0D0))),
           // 方位表示は撤去 (2026-05-13)。数字が「方位スコア」と誤読されるのを
           // 防ぐため。方位情報は行タップで開く選択日詳細パネルで確認できる。
           const Spacer(),
@@ -154,8 +159,8 @@ void _showTop5Info(BuildContext context) {
         ),
         SizedBox(height: 4),
         Text(
-          '今後 1 年で、選択中のカテゴリのスコアが\n'
-          '最も高い 5 日を表示します。',
+          '表示中の年 (1/1〜12/31) で、選択中の\n'
+          'カテゴリのスコアが最も高い 5 日を表示します。',
           style: TextStyle(
               color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
         ),

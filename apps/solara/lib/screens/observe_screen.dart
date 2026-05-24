@@ -135,8 +135,11 @@ class _ObserveScreenState extends State<ObserveScreen>
   }
 
   Future<void> _checkTodayReading() async {
+    // 「1日の開始時刻」基準の論理日でゲート (単調ガード)。
+    final drawn = await SolaraStorage.hasDrawnFreeTarotToday();
     final today = await SolaraStorage.getTodayReading();
-    if (today != null && mounted) {
+    if (!mounted) return;
+    if (today != null) {
       final card = TarotData.getCard(today.cardId);
       setState(() {
         _drawnCard = card;
@@ -156,6 +159,10 @@ class _ObserveScreenState extends State<ObserveScreen>
         // 旧データ（reading 無し）: 静的フォールバックで補う
         _generateReadingStatic(card, today.reversed);
       }
+    } else if (drawn) {
+      // 当日の表示カードは無いが (リセット時刻変更で論理日が過去へ戻った等)、
+      // 単調ガード上は引き済み → ドロー不可のまま「引き済み」を表示。
+      setState(() => _alreadyDrawnToday = true);
     }
   }
 
@@ -170,17 +177,25 @@ class _ObserveScreenState extends State<ObserveScreen>
     final category = _selectedCategory; // null = 全体運
     final isCategoryDraw = category != null;
 
-    // 無料の全体運のみ 1 日 1 回。カテゴリ (クレジット消費) と Pro は対象外。
-    if (!isCategoryDraw && !isPro && _alreadyDrawnToday) return;
+    // 無料の全体運のみ 1 日 1 回 (「1日の開始時刻」基準の論理日)。
+    // カテゴリ (クレジット消費) と Pro は対象外。記録ベースの単調ガードで
+    // 判定するため、リセット時刻を後ろにずらして再ドローする不正も防げる。
+    if (!isCategoryDraw && !isPro) {
+      if (await SolaraStorage.hasDrawnFreeTarotToday()) {
+        if (mounted) setState(() => _alreadyDrawnToday = true);
+        return;
+      }
+    }
 
     final rng = Random();
     final card = TarotData.allCards[rng.nextInt(78)];
     final reversed = rng.nextBool(); // 50%確率で逆位置
 
     final now = DateTime.now();
-    final dateStr =
-        '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+    // 日付キーは論理日 (リセット時刻基準)。moonPhase は実時刻 (天文計算) のまま。
+    final dateStr = await SolaraStorage.logicalTodayKey();
     final moonPhase = MoonPhase.getPhaseDay(now);
+    if (!mounted) return;
 
     setState(() {
       _drawnCard = card;
@@ -190,6 +205,10 @@ class _ObserveScreenState extends State<ObserveScreen>
       // 全体運(無料)のみ「本日引き済み」を立てる。カテゴリ/Pro は何度でも。
       if (!isCategoryDraw && !isPro) _alreadyDrawnToday = true;
     });
+    // 無料の全体運は論理日を記録 (単調ガード)。これ以降この論理日では引けない。
+    if (!isCategoryDraw && !isPro) {
+      await SolaraStorage.markFreeTarotDrawn();
+    }
     _startLoadingMessageRotation();
 
     _flipCtrl.forward();
@@ -219,6 +238,7 @@ class _ObserveScreenState extends State<ObserveScreen>
     final profile = await SolaraStorage.loadProfile();
     // A3: Pro なら thinking ON + 質問欄の内容を「テーマ」として渡す。
     // category 指定時は非 Pro は 1 クレジット消費 (Worker 側でゲート)。
+    // userName は渡すが、冒頭の呼びかけは Worker プロンプト側で禁止 (途中の使用は可)。
     final tarotResult = await fetchTarotReading(
       cardId: card.id,
       reversed: reversed,
@@ -291,10 +311,9 @@ class _ObserveScreenState extends State<ObserveScreen>
   // テスト用: 今日の引きを削除して再抽選可能な状態に戻す
   // 🔴 本番リリース時にこのメソッドと呼び出しボタンを削除すること
   Future<void> _resetTodayReading() async {
-    final now = DateTime.now();
-    final dateStr =
-        '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+    final dateStr = await SolaraStorage.logicalTodayKey();
     await SolaraStorage.removeReadingByDate(dateStr);
+    await SolaraStorage.clearFreeTarotDay();
 
     if (!mounted) return;
     _stopLoadingMessageRotation();

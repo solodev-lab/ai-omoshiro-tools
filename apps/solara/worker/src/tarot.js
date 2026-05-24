@@ -132,7 +132,8 @@ function buildPrompt({ cardId, reversed, nameJP, nameEN, keyword, element, plane
     ? (lang === 'en' ? planet : (PLANET_JP[planet] || planet))
     : null;
   const moonLabel = (typeof moonPhase === 'number') ? moonPhaseLabel(moonPhase, lang) : null;
-  // 末尾の敬称「さん」を取り除く（プロンプト側で「さん」を付けるので二重防止）
+  // 末尾の敬称「さん」を取り除く（プロンプト側で「さん」を付けるので二重防止）。
+  // 名前は冒頭の呼びかけには使わず、本文途中で自然に触れるのは可 (カード名と同じ扱い)。
   const cleanName = (typeof userName === 'string')
     ? userName.replace(/さん$/, '').trim()
     : null;
@@ -164,9 +165,11 @@ Do NOT give definitive medical, legal, or self-harm advice. If the theme touches
     return `You are a wise tarot reader with a poetic voice.
 Today's card: "${cardName}" (${orientation})
 Keyword: ${keyword}
-Element: ${elementLabel}${planetLabel ? `\nRuling planet: ${planetLabel}` : ''}${moonLabel ? `\nMoon phase: ${moonLabel}` : ''}${cleanName ? `\nQuerent name: ${cleanName}` : ''}${categorySection}${questionSection}
+Element: ${elementLabel}${planetLabel ? `\nRuling planet: ${planetLabel}` : ''}${moonLabel ? `\nMoon phase: ${moonLabel}` : ''}${cleanName ? `\nQuerent name: ${cleanName} (if you address them, use "${cleanName}"; do not invent another name)` : ''}${categorySection}${questionSection}
 
-🔴 CRITICAL: The card is "${cardName}". Do NOT substitute it with any other card name (e.g. "Wheel of Fortune", "The Sun"). Names like "Death", "The Devil", "The Tower" are traditional tarot symbols of transformation; keep them verbatim. The reading MUST mention "${cardName}" in its opening sentence.
+🔴 CRITICAL: This card is "${cardName}". Stay faithful to this card's meaning. If you name the card, use exactly "${cardName}" — do NOT substitute any other card name (e.g. "Wheel of Fortune", "The Sun"). Names like "Death", "The Devil", "The Tower" are traditional tarot symbols of transformation; keep them verbatim.
+🔴 Do NOT open the reading with a card-name announcement — the card name is already shown on screen. Avoid openings like "The card that appears for you today is ${cardName}". You MAY weave the card name naturally into the body, but never as an opening preface.
+🔴 Do NOT open by addressing the querent by name (no "Hi ${cleanName || 'there'}," greeting at the start). You MAY mention their name naturally within the body. Begin directly with imagery, feeling, or meaning.
 
 Write a tarot reading honoring the orientation:
 - Upright: bring out the card's affirming, growth-oriented meaning
@@ -174,7 +177,7 @@ Write a tarot reading honoring the orientation:
 
 Return ONLY a JSON object with this exact field (no markdown, no extra text):
 {
-  "reading": "<3-5 sentences, ~150-250 chars. Open by naming '${cardName}'. Reference keyword and orientation${cleanQuestion ? ", weave the querent's theme naturally" : ''}>"
+  "reading": "<3-5 sentences, ~150-250 chars. Do NOT begin with the card name or the querent's name; open with imagery or meaning. Reference keyword and orientation${cleanQuestion ? ", weave the querent's theme naturally" : ''}>"
 }`;
   }
 
@@ -199,12 +202,13 @@ Return ONLY a JSON object with this exact field (no markdown, no extra text):
   return `あなたは詩的な語り口を持つ熟練のタロット占い師です。
 本日のカード: 「${nameJP}」（${orientation}）
 キーワード: ${keyword}
-エレメント: ${elementLabel}${planetLabel ? `\n対応天体: ${planetLabel}` : ''}${moonLabel ? `\n月相: ${moonLabel}` : ''}${cleanName ? `\n相談者の名前: ${cleanName}（呼びかけは「${cleanName}さん」とすること。それ以外の名前を勝手に作らない）` : ''}${categorySection}${questionSection}
+エレメント: ${elementLabel}${planetLabel ? `\n対応天体: ${planetLabel}` : ''}${moonLabel ? `\n月相: ${moonLabel}` : ''}${cleanName ? `\n相談者の名前: ${cleanName}（名前を入れる場合は「${cleanName}さん」とし、それ以外の名前を勝手に作らない）` : ''}${categorySection}${questionSection}
 
 🔴 最重要ルール:
-- カード名は「${nameJP}」です。別のカード名（「運命の輪」「太陽」等）に絶対に置き換えないでください。
-- 「死神」「悪魔」「塔」等の象徴的な名前は、タロット占いにおいて成長や変容を意味する伝統的な名称です。柔らかい言葉に翻案せず、そのまま「${nameJP}」と記述してください。
-- reading の冒頭文に必ず「${nameJP}」を記述してください。
+- このカードは「${nameJP}」です。鑑定はこのカードの意味に忠実に書いてください。
+- カード名に言及する場合は必ず「${nameJP}」と正確に記し、別のカード名（「運命の輪」「太陽」等）に絶対に置き換えないでください。「死神」「悪魔」「塔」等の象徴的な名前も柔らかい言葉に翻案せず、そのまま記述してください。
+- 🔴 冒頭でカード名を読み上げる前置きは禁止です（カード名は画面に表示済み）。「今日あなたに現れたのは〜です」のようなカード名の紹介から始めないでください。本文の途中で自然に触れるのは構いません。
+- 🔴 冒頭を名前の呼びかけ（「〇〇さん、」等）から始めるのは禁止です。前置きなしで情景や意味から書き始めてください。本文の途中で自然に名前に触れるのは構いません。
 
 正逆位置の意味を尊重して鑑定文を書いてください:
 - 正位置: カードの肯定的・成長的な意味を引き出す
@@ -212,7 +216,7 @@ Return ONLY a JSON object with this exact field (no markdown, no extra text):
 
 以下のJSON形式のみで返答してください（マークダウンや余分な文言は不要）:
 {
-  "reading": "<3〜5文・約150〜250文字。冒頭で「${nameJP}」を明記し、キーワードと正逆位置を織り込む。実践的かつ神秘的に${cleanQuestion ? '。相談者のテーマも自然に織り込む' : ''}>"
+  "reading": "<3〜5文・約150〜250文字。カード名の紹介や名前の呼びかけで始めず、情景や意味から書き始める。キーワードと正逆位置を織り込む。実践的かつ神秘的に${cleanQuestion ? '。相談者のテーマも自然に織り込む' : ''}>"
 }`;
 }
 

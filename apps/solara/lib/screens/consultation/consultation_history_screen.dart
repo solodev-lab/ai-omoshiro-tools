@@ -66,6 +66,7 @@ class ConsultationHistoryScreen extends StatefulWidget {
 
 class _ConsultationHistoryScreenState extends State<ConsultationHistoryScreen> {
   bool _loading = true;
+  bool _favOnly = false;
   List<ConsultationRecord> _records = const [];
 
   @override
@@ -93,6 +94,17 @@ class _ConsultationHistoryScreenState extends State<ConsultationHistoryScreen> {
       await SolaraStorage.deleteConsultationRecord(id);
     }
     await _load();
+  }
+
+  Future<void> _toggleFavorite(ConsultationRecord r) async {
+    final newFav = !r.favorite;
+    // 楽観更新 (即時反映、再読込なし)。
+    setState(() {
+      _records = _records
+          .map((x) => x.id == r.id ? x.copyWith(favorite: newFav) : x)
+          .toList(growable: false);
+    });
+    await SolaraStorage.setConsultationFavorite(r.id, newFav);
   }
 
   Future<void> _confirmDeleteAll() async {
@@ -171,20 +183,58 @@ class _ConsultationHistoryScreenState extends State<ConsultationHistoryScreen> {
               )
             : _records.isEmpty
                 ? const _EmptyState()
-                : ListView.separated(
-                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-                    itemCount: _records.length,
-                    separatorBuilder: (_, _) => const SizedBox(height: 10),
-                    itemBuilder: (ctx, i) {
-                      final r = _records[i];
-                      return _HistoryCard(
-                        record: r,
-                        onTap: () => _openDetail(r),
-                        onDelete: () => _delete(r.id),
-                      );
-                    },
+                : Column(
+                    children: [
+                      _buildFilterBar(),
+                      Expanded(child: _buildList()),
+                    ],
                   ),
       ),
+    );
+  }
+
+  Widget _buildFilterBar() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+      child: Row(
+        children: [
+          _FilterChip(
+            label: 'すべて',
+            selected: !_favOnly,
+            onTap: () => setState(() => _favOnly = false),
+          ),
+          const SizedBox(width: 8),
+          _FilterChip(
+            label: '★ お気に入り',
+            selected: _favOnly,
+            onTap: () => setState(() => _favOnly = true),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildList() {
+    final shown = _favOnly
+        ? _records.where((r) => r.favorite).toList(growable: false)
+        : _records;
+    if (shown.isEmpty) {
+      return const _EmptyState(favOnly: true);
+    }
+    return ListView.separated(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+      itemCount: shown.length,
+      separatorBuilder: (_, _) => const SizedBox(height: 10),
+      itemBuilder: (ctx, i) {
+        final r = shown[i];
+        return _HistoryCard(
+          record: r,
+          isFavorite: r.favorite,
+          onTap: () => _openDetail(r),
+          onDelete: () => _delete(r.id),
+          onToggleFavorite: () => _toggleFavorite(r),
+        );
+      },
     );
   }
 

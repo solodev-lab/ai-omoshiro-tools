@@ -5,9 +5,9 @@
 
 ## サマリ
 
-- ファイル数: 26 / 総行数: 8561
+- ファイル数: 27 / 総行数: 8717
 - class/mixin/extension/enum: 82
-- 関数 (top-level + method の素拾い): 230
+- 関数 (top-level + method の素拾い): 231
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 7
 - Worker URL リテラル: 0
@@ -61,7 +61,7 @@ Stella 相談 追加クレジット購入シート (消費型 IAP、設計 B 案
   </details>
 
 
-### `lib/screens/consultation/consultation_history_screen.dart` (198 行)
+### `lib/screens/consultation/consultation_history_screen.dart` (248 行)
 
 **ファイル先頭コメント:**
 
@@ -90,23 +90,26 @@ Consultation History Screen — Phase 2-4
 - L49 `class ConsultationHistoryScreen : StatefulWidget`
 - L67 `class _ConsultationHistoryScreenState : State`
 
-**関数 (3 public + 4 private):**
+**関数 (3 public + 7 private):**
 
 - L63 `createState()`
-- L72 `initState()`
-- L139 `build()`
+- L73 `initState()`
+- L151 `build()`
 
-  <details><summary>private 関数 4 件</summary>
+  <details><summary>private 関数 7 件</summary>
 
-  - L77 `_load()`
-  - L89 `_delete()`
-  - L98 `_confirmDeleteAll()`
-  - L191 `_openDetail()`
+  - L78 `_load()`
+  - L90 `_delete()`
+  - L99 `_toggleFavorite()`
+  - L110 `_confirmDeleteAll()`
+  - L196 `_buildFilterBar()`
+  - L217 `_buildList()`
+  - L241 `_openDetail()`
 
   </details>
 
 
-### `lib/screens/consultation/consultation_history_widgets.dart` (324 行)
+### `lib/screens/consultation/consultation_history_widgets.dart` (389 行)
 
 **ファイル先頭コメント:**
 
@@ -116,53 +119,57 @@ Consultation History — サブウィジェット (part of consultation_history_
 履歴画面の presentation 部品 (空状態 / 履歴カード / メタチップ) を分離 (HARD500 回避)。
 ```
 
-**型定義 (3):**
+**型定義 (4):**
 
 - L7 `class _EmptyState : StatelessWidget`
-- L52 `class _HistoryCard : StatelessWidget`
-- L301 `class _MetaChip : StatelessWidget`
+- L57 `class _FilterChip : StatelessWidget`
+  - 履歴フィルタ用のトグルチップ (すべて / お気に入り)。
+- L96 `class _HistoryCard : StatelessWidget`
+- L366 `class _MetaChip : StatelessWidget`
 
-**関数 (3 public + 1 private):**
+**関数 (4 public + 1 private):**
 
-- L11 `build()`
-- L149 `build()`
-- L306 `build()`
+- L13 `build()`
+- L68 `build()`
+- L197 `build()`
+- L371 `build()`
 
   <details><summary>private 関数 1 件</summary>
 
-  - L273 `_confirmDelete()`
+  - L338 `_confirmDelete()`
 
   </details>
 
 
-### `lib/screens/consultation/consultation_input_examples.dart` (111 行)
+### `lib/screens/consultation/consultation_input_examples.dart` (106 行)
 
 **ファイル先頭コメント:**
 
 ```
-Consultation Input — だれと / 願い の記入例
+Consultation Input — だれと / 願い の記入例 (テーマ別)
 (part of 'consultation_input_screen.dart')
 
 自由記述 (⑤ だれと / ⑥ 願い) はタップで埋まる記入例を添えて誘導する。
-願いは場面 (おでかけ/旅行/移住) で軽重を変える。
+候補は選択中のテーマ (恋愛/豊かさ/仕事/対話/癒し/変化) に沿ったものだけを出す。
 ```
 
 **型定義 (3):**
 
-- L55 `class _ExampleChips : StatelessWidget`
+- L39 `class _ExampleChips : StatelessWidget`
   - タップで自由記述を埋める記入例チップ群。
-- L94 `class _WhomExamples : StatelessWidget`
-- L103 `class _WishExamples : StatelessWidget`
+- L88 `class _WhomExamples : StatelessWidget`
+- L98 `class _WishExamples : StatelessWidget`
 
-**関数 (3 public + 1 private):**
+**関数 (3 public + 2 private):**
 
-- L61 `build()`
-- L99 `build()`
-- L109 `build()`
+- L45 `build()`
+- L94 `build()`
+- L104 `build()`
 
-  <details><summary>private 関数 1 件</summary>
+  <details><summary>private 関数 2 件</summary>
 
-  - L41 `_wishExamplesFor()`
+  - L20 `_whomExamplesFor()`
+  - L34 `_wishExamplesFor()`
 
   </details>
 
@@ -247,7 +254,7 @@ L836-1295 (_SpecificPicker 系) を切り出し (ファイル肥大化対策、2
   </details>
 
 
-### `lib/screens/consultation/consultation_input_screen.dart` (471 行)
+### `lib/screens/consultation/consultation_input_screen.dart` (472 行)
 
 **ファイル先頭コメント:**
 
@@ -339,7 +346,7 @@ Consultation Input — ③ いつ / 半径 セレクタ
   </details>
 
 
-### `lib/screens/consultation/consultation_input_widgets.dart` (435 行)
+### `lib/screens/consultation/consultation_input_widgets.dart` (421 行)
 
 **ファイル先頭コメント:**
 
@@ -352,33 +359,33 @@ Consultation Input — 基本サブウィジェット + 選択肢定数
 
 - L55 `class _ThemeChoice`
 - L61 `class _ModeChoice`
-- L68 `class _ScopeChoice`
-- L77 `class _PillChip : StatelessWidget`
+- L67 `class _ScopeChoice`
+- L76 `class _PillChip : StatelessWidget`
   - 単一選択の pill チップ (Wrap 用)。
-- L117 `class _Section : StatelessWidget`
-- L145 `class _ThemeGrid : StatelessWidget`
-- L166 `class _ModeRow : StatelessWidget`
-- L231 `class _ScopeWrap : StatelessWidget`
+- L116 `class _Section : StatelessWidget`
+- L144 `class _ThemeGrid : StatelessWidget`
+- L165 `class _ModeRow : StatelessWidget`
+- L216 `class _ScopeWrap : StatelessWidget`
   - ④ どこで のスコープ選択 (Wrap、場面で 3〜5 個)。
-- L257 `class _RegionPicker : StatelessWidget`
-- L278 `class _FreeTextField : StatelessWidget`
-- L333 `class _NoHomeNote : StatelessWidget`
+- L242 `class _RegionPicker : StatelessWidget`
+- L263 `class _FreeTextField : StatelessWidget`
+- L319 `class _NoHomeNote : StatelessWidget`
   - 自宅未設定で 方角/半径/自国内 が使えないときの注記。
-- L360 `class _PresetLocationCard : StatelessWidget`
-- L397 `class _SubmitBar : StatelessWidget`
+- L346 `class _PresetLocationCard : StatelessWidget`
+- L383 `class _SubmitBar : StatelessWidget`
 
 **関数 (10 public + 1 private):**
 
-- L88 `build()`
-- L123 `build()`
-- L151 `build()`
-- L172 `build()`
-- L242 `build()`
-- L263 `build()`
-- L291 `build()`
-- L337 `build()`
-- L365 `build()`
-- L403 `build()`
+- L87 `build()`
+- L122 `build()`
+- L150 `build()`
+- L171 `build()`
+- L227 `build()`
+- L248 `build()`
+- L276 `build()`
+- L323 `build()`
+- L351 `build()`
+- L389 `build()`
 
   <details><summary>private 関数 1 件</summary>
 
@@ -709,25 +716,25 @@ showInfoPopup 経由で表示する (widgets/info_popup.dart、popup 統一規�
   </details>
 
 
-### `lib/screens/forecast/forecast_life_periods.dart` (219 行)
+### `lib/screens/forecast/forecast_life_periods.dart` (209 行)
 
-**imports:** dart=0 / package=1 / relative=3
+**imports:** dart=0 / package=1 / relative=4
 
-- relative: `../../utils/forecast_cache.dart`, `../../widgets/info_popup.dart`, `../map/map_constants.dart`
+- relative: `../../utils/forecast_cache.dart`, `../../widgets/info_popup.dart`, `../map/map_constants.dart`, `forecast_section_header.dart`
 
 **型定義 (1):**
 
-- L28 `class ForecastLifePeriodsSection : StatelessWidget`
+- L29 `class ForecastLifePeriodsSection : StatelessWidget`
   - 「◯◯期」セクション — 永続保存された運勢サイクルを表示
 
 **関数 (1 public + 2 private):**
 
-- L38 `build()`
+- L39 `build()`
 
   <details><summary>private 関数 2 件</summary>
 
-  - L88 `_periodRow()`
-  - L140 `_showLifePeriodsInfo()`
+  - L74 `_periodRow()`
+  - L130 `_showLifePeriodsInfo()`
 
   </details>
 
@@ -736,27 +743,41 @@ showInfoPopup 経由で表示する (widgets/info_popup.dart、popup 統一規�
 - 集計: `showInfoPopup`×1
 
 
-### `lib/screens/forecast/forecast_top5.dart` (238 行)
+### `lib/screens/forecast/forecast_section_header.dart` (59 行)
 
-**imports:** dart=0 / package=1 / relative=3
-
-- relative: `../../utils/forecast_cache.dart`, `../../widgets/info_popup.dart`, `../map/map_constants.dart`
+**imports:** dart=0 / package=1 / relative=0
 
 **型定義 (1):**
 
-- L8 `class ForecastTop5Section : StatelessWidget`
+- L6 `class ForecastSectionHeader : StatelessWidget`
+  - Forecast 画面のモダンなセクション見出し。
+
+**関数 (1 public + 0 private):**
+
+- L19 `build()`
+
+
+### `lib/screens/forecast/forecast_top5.dart` (243 行)
+
+**imports:** dart=0 / package=1 / relative=4
+
+- relative: `../../utils/forecast_cache.dart`, `../../widgets/info_popup.dart`, `../map/map_constants.dart`, `forecast_section_header.dart`
+
+**型定義 (1):**
+
+- L9 `class ForecastTop5Section : StatelessWidget`
   - 強運Top5 セクション — 永続保存された Top5 を mode 別に表示
 
 **関数 (1 public + 4 private):**
 
-- L30 `build()`
+- L35 `build()`
 
   <details><summary>private 関数 4 件</summary>
 
-  - L57 `_modeSelector()`
-  - L75 `_seg()`
-  - L100 `_row()`
-  - L134 `_showTop5Info()`
+  - L58 `_modeSelector()`
+  - L76 `_seg()`
+  - L101 `_row()`
+  - L139 `_showTop5Info()`
 
   </details>
 
@@ -765,59 +786,59 @@ showInfoPopup 経由で表示する (widgets/info_popup.dart、popup 統一規�
 - 集計: `showInfoPopup`×1
 
 
-### `lib/screens/forecast_screen.dart` (1067 行)
+### `lib/screens/forecast_screen.dart` (1084 行)
 
-**imports:** dart=0 / package=1 / relative=9
+**imports:** dart=0 / package=1 / relative=10
 
-- relative: `../utils/forecast_cache.dart`, `../utils/pro_status.dart`, `../utils/solara_storage.dart`, `../widgets/info_popup.dart`, `../widgets/no_profile_guide.dart`, `../widgets/pro_unlock_dialog.dart`, `forecast/forecast_life_periods.dart`, `forecast/forecast_top5.dart`, `map/map_constants.dart`
+- relative: `../utils/forecast_cache.dart`, `../utils/pro_status.dart`, `../utils/solara_storage.dart`, `../widgets/info_popup.dart`, `../widgets/no_profile_guide.dart`, `../widgets/pro_unlock_dialog.dart`, `forecast/forecast_life_periods.dart`, `forecast/forecast_section_header.dart`, `forecast/forecast_top5.dart`, `map/map_constants.dart`
 
 **型定義 (3):**
 
-- L15 `class ForecastScreen : StatefulWidget`
+- L16 `class ForecastScreen : StatefulWidget`
   - Forecast 画面 — 1年予測（ヒートマップ + 選択日詳細 + 強運Top5）
-- L33 `class _ForecastScreenState : State`
-- L1038 `class _DayStepperButton : StatelessWidget`
+- L34 `class _ForecastScreenState : State`
+- L1055 `class _DayStepperButton : StatelessWidget`
   - 選択日詳細パネルの △ ボタン (左右で 1 日前後に動かす)。
 
 **関数 (4 public + 30 private):**
 
-- L30 `createState()`
-- L65 `initState()`
-- L150 `build()`
-- L1049 `build()`
+- L31 `createState()`
+- L66 `initState()`
+- L164 `build()`
+- L1066 `build()`
 
   <details><summary>private 関数 30 件</summary>
 
-  - L70 `_initialize()`
-  - L76 `_loadSettings()`
-  - L90 `_setColorMode()`
-  - L95 `_setHighColor()`
-  - L100 `_load()`
-  - L130 `_setYearOffset()`
-  - L192 `_buildBody()`
-  - L246 `_buildBasisCard()`
-  - L297 `_fmt()`
-  - L300 `_buildBestChip()`
-  - L334 `_yearSeg()`
-  - L358 `_buildHeatmap()`
-  - L434 `_buildColorModeToggle()`
-  - L475 `_rankSeg()`
-  - L505 `_segment()`
-  - L526 `_buildLegend()`
-  - L553 `_catColorChips()`
-  - L567 `_monthRow()`
-  - L596 `_dayCell()`
-  - L627 `_cellColor()`
-  - L644 `_gradientColor()`
-  - L655 `_categoryColor()`
-  - L671 `_canShiftSelectedDay()`
-  - L682 `_shiftSelectedDay()`
-  - L689 `_buildSelectedDayDetail()`
-  - L752 `_metric()`
-  - L760 `_catBar()`
-  - L797 `_buildFetchInfo()`
-  - L811 `_showForecastUsageGuide()`
-  - L937 `_showHeatmapInfo()`
+  - L71 `_initialize()`
+  - L77 `_loadSettings()`
+  - L91 `_setColorMode()`
+  - L96 `_setHighColor()`
+  - L101 `_load()`
+  - L144 `_setYearOffset()`
+  - L215 `_buildBody()`
+  - L270 `_buildBasisCard()`
+  - L325 `_fmt()`
+  - L328 `_buildBestChip()`
+  - L362 `_yearSeg()`
+  - L386 `_buildHeatmap()`
+  - L451 `_buildColorModeToggle()`
+  - L492 `_rankSeg()`
+  - L522 `_segment()`
+  - L543 `_buildLegend()`
+  - L570 `_catColorChips()`
+  - L584 `_monthRow()`
+  - L613 `_dayCell()`
+  - L644 `_cellColor()`
+  - L661 `_gradientColor()`
+  - L672 `_categoryColor()`
+  - L688 `_canShiftSelectedDay()`
+  - L699 `_shiftSelectedDay()`
+  - L706 `_buildSelectedDayDetail()`
+  - L769 `_metric()`
+  - L777 `_catBar()`
+  - L814 `_buildFetchInfo()`
+  - L828 `_showForecastUsageGuide()`
+  - L954 `_showHeatmapInfo()`
 
   </details>
 
@@ -826,49 +847,41 @@ showInfoPopup 経由で表示する (widgets/info_popup.dart、popup 統一規�
 - 集計: `showInfoPopup`×2
 
 
-### `lib/screens/locations/locations_date_stepper.dart` (391 行)
+### `lib/screens/locations/locations_date_stepper.dart` (355 行)
 
 **imports:** dart=0 / package=2 / relative=0
 
-**型定義 (5):**
+**型定義 (3):**
 
 - L9 `class LocationsDateStepper : StatelessWidget`
   - Locations 画面の日付ステッパー（年▲▼ 月▲▼ 日▲▼ + 「今日」リセット）。
-- L206 `class _DateNumberField : StatefulWidget`
+- L261 `class _DateNumberField : StatefulWidget`
   - 数値を直接タイプして編集できるフィールド（年/月/日 共通）。
-- L223 `class _DateNumberFieldState : State`
-- L304 `class _HourNumberField : StatefulWidget`
-  - 時 (hour) を直接タイプして編集できるフィールド。
-- L314 `class _HourNumberFieldState : State`
+- L278 `class _DateNumberFieldState : State`
 
-**関数 (11 public + 7 private):**
+**関数 (6 public + 7 private):**
 
 - L53 `build()`
-- L220 `createState()`
-- L228 `initState()`
-- L236 `didUpdateWidget()`
-- L260 `dispose()`
-- L268 `build()`
-- L311 `createState()`
-- L319 `initState()`
-- L328 `didUpdateWidget()`
-- L353 `dispose()`
-- L361 `build()`
+- L275 `createState()`
+- L283 `initState()`
+- L291 `didUpdateWidget()`
+- L315 `dispose()`
+- L323 `build()`
 
   <details><summary>private 関数 7 件</summary>
 
-  - L129 `_hourStepperBlock()`
-  - L159 `_stepperBlock()`
-  - L189 `_stepBtn()`
-  - L244 `_onFocusChange()`
-  - L248 `_commit()`
-  - L336 `_onFocusChange()`
-  - L340 `_commit()`
+  - L133 `_hourStepperBlock()`
+  - L160 `_editHour()`
+  - L196 `_pickerBlock()`
+  - L227 `_dayArrowBlock()`
+  - L242 `_arrowBtn()`
+  - L299 `_onFocusChange()`
+  - L303 `_commit()`
 
   </details>
 
 
-### `lib/screens/locations_screen.dart` (735 行)
+### `lib/screens/locations_screen.dart` (759 行)
 
 **imports:** dart=1 / package=2 / relative=9
 
@@ -879,34 +892,34 @@ showInfoPopup 経由で表示する (widgets/info_popup.dart、popup 統一規�
 - L16 `class LocationsScreen : StatefulWidget`
   - Locations 一覧画面 — 登録済み拠点を16方位スコア付きで管理。
 - L39 `class _LocationsScreenState : State`
-- L622 `class _SlotStats`
+- L646 `class _SlotStats`
 
 **関数 (3 public + 18 private):**
 
 - L36 `createState()`
 - L67 `initState()`
-- L275 `build()`
+- L285 `build()`
 
   <details><summary>private 関数 18 件</summary>
 
   - L72 `_load()`
   - L132 `_shiftDate()`
-  - L142 `_setYmd()`
-  - L161 `_setHour()`
-  - L169 `_shiftHour()`
-  - L176 `_resetToday()`
-  - L186 `_setDate()`
-  - L219 `_addCurrent()`
-  - L231 `_delete()`
-  - L236 `_rename()`
-  - L342 `_buildRefPointSelector()`
-  - L422 `_buildCategorySelector()`
-  - L466 `_emptyState()`
-  - L491 `_buildList()`
-  - L500 `_buildRow()`
-  - L580 `_scoreBar()`
-  - L616 `_fmtKm()`
-  - L632 `_showLocationsUsageGuide()`
+  - L152 `_setYmd()`
+  - L171 `_setHour()`
+  - L179 `_shiftHour()`
+  - L186 `_resetToday()`
+  - L196 `_setDate()`
+  - L229 `_addCurrent()`
+  - L241 `_delete()`
+  - L246 `_rename()`
+  - L359 `_buildRefPointSelector()`
+  - L439 `_buildCategorySelector()`
+  - L483 `_emptyState()`
+  - L508 `_buildList()`
+  - L517 `_buildRow()`
+  - L604 `_scoreBar()`
+  - L640 `_fmtKm()`
+  - L656 `_showLocationsUsageGuide()`
 
   </details>
 

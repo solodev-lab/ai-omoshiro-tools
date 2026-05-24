@@ -1,8 +1,11 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'horoscope/horo_antique_icons.dart';
+import '../utils/consultation_api.dart';
 import '../utils/pro_status.dart';
 import '../utils/purchases_service.dart';
 import '../utils/solara_storage.dart';
@@ -33,6 +36,9 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
   SolaraProfile? _profile;
   bool _loading = true;
 
+  // Stella/タロット クレジット残 (最上部に表示)。null = 未取得/オフライン。
+  ConsultationCreditStatus? _credits;
+
   // Title diagnosis results
   String? _titleLight;
   String? _titleShadow;
@@ -48,9 +54,9 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
   // Astrology settings
   String _houseSystem = 'placidus';
   bool _houseSelectOpen = false;
-  bool _notificationsOn = true;
 
-  // 1日の基準時刻 (hour 0-23, minute 0-59、1 分単位)。この時刻を跨ぐと Omen ボタンがリセットされる。
+  // 1日の基準時刻 (hour 0-23, minute 0-59、1 分単位)。この時刻を跨ぐとタロットの
+  // 「1日1回」と月相 overlay の論理日が更新される (星読みは 0 時基準で本設定の対象外)。
   int _dailyResetHour = 0;
   int _dailyResetMinute = 0;
 
@@ -69,13 +75,31 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
     super.initState();
     _loadProfile();
     _loadSettings();
+    _loadCredits();
+    // Pro 切替 (購入 / DEV toggle) で背景・枠・残数表示を即時反映。
+    ProStatus.instance.addListener(_onProChanged);
+  }
+
+  @override
+  void dispose() {
+    ProStatus.instance.removeListener(_onProChanged);
+    super.dispose();
+  }
+
+  void _onProChanged() {
+    if (mounted) setState(() {});
+  }
+
+  Future<void> _loadCredits() async {
+    final c = await fetchConsultationCredits();
+    if (mounted) setState(() => _credits = c);
   }
 
   Future<void> _loadSettings() async {
     final prefs = await SharedPreferences.getInstance();
-    // HTML: localStorage('solara_house_system')
-    final house = prefs.getString('solara_house_system');
-    if (house != null && mounted) setState(() => _houseSystem = house);
+    // ハウスシステム設定 (load 経由で同期キャッシュも prime)。
+    final house = await SolaraStorage.loadHouseSystem();
+    if (mounted) setState(() => _houseSystem = house);
     // HTML: localStorage('solara_orb_settings')
     final orbRaw = prefs.getString('solara_orb_settings');
     if (orbRaw != null) {
@@ -263,10 +287,11 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
 
     final hasProfile = _profile?.isComplete ?? false;
     final profileName = _profile?.name ?? '';
+    final isPro = ProStatus.instance.isPro;
 
     return TapToUnfocus(
       child: Container(
-      decoration: _bgDecoration,
+      decoration: isPro ? _proBgDecoration : _bgDecoration,
       child: SafeArea(
         child: SingleChildScrollView(
           // HTML: .sanctuary-content { padding:56px 20px 100px } — SafeArea handles ~44px top
@@ -277,8 +302,8 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // ── Profile Row ──
-                  _buildProfileRow(profileName),
+                  // ── クレジット残 + Profile (Pro はアンティーク金枠で囲む) ──
+                  _buildTopHeader(isPro, profileName),
                   const SizedBox(height: 20),
 
                   // ── ✦ Stellar Profile ──
@@ -329,28 +354,187 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
     );
   }
 
+  // ── 最上段: クレジット残 + Profile (Cosmic Pro はアンティーク金枠で囲む) ──
+  Widget _buildTopHeader(bool isPro, String profileName) {
+    final inner = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildCreditRow(isPro),
+        const SizedBox(height: 12),
+        _buildProfileRow(profileName),
+      ],
+    );
+    if (!isPro) return inner;
+    // Cosmic Pro: 金の二重枠 (アンティーク感) + ほのかな金グロー + 四隅の星装飾。
+    final frame = Container(
+      padding: const EdgeInsets.all(5),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft, end: Alignment.bottomRight,
+          colors: [Color(0x33F9D976), Color(0x0FF9D976)],
+        ),
+        border: Border.all(color: const Color(0x80F9D976), width: 1.2),
+        boxShadow: const [
+          BoxShadow(color: Color(0x33F9D976), blurRadius: 26, spreadRadius: 1),
+        ],
+      ),
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(15),
+          border: Border.all(color: const Color(0xB3F9D976)),
+          gradient: const LinearGradient(
+            begin: Alignment.topCenter, end: Alignment.bottomCenter,
+            colors: [Color(0x14F9D976), Color(0x00F9D976)],
+          ),
+        ),
+        child: inner,
+      ),
+    );
+    // 四隅にアンティークの星 (8-point) を添えて豪華に。
+    const corner = AntiqueGlyph(
+        icon: AntiqueIcon.pattern, size: 16, color: Color(0xFFF9D976), glow: true);
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        frame,
+        const Positioned(top: 3, left: 3, child: corner),
+        const Positioned(top: 3, right: 3, child: corner),
+        const Positioned(bottom: 3, left: 3, child: corner),
+        const Positioned(bottom: 3, right: 3, child: corner),
+      ],
+    );
+  }
+
+  // クレジット残 1 行。Pro=英語でおしゃれにそっと、非Pro=無料週次残+購入残。
+  Widget _buildCreditRow(bool isPro) {
+    if (isPro) {
+      // Cosmic Pro: 「無制限」を英語でエレガントに、控えめに添える。
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          color: const Color(0x0FF9D976),
+          border: Border.all(color: const Color(0x40F9D976)),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const AntiqueGlyph(
+                icon: AntiqueIcon.pattern, size: 12, color: Color(0xCCF9D976)),
+            const SizedBox(width: 9),
+            Text(
+              'Unlimited Credits',
+              style: GoogleFonts.cormorantGaramond(
+                fontSize: 18,
+                fontStyle: FontStyle.italic,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 1.6,
+                color: const Color(0xFFF3E6C0),
+              ),
+            ),
+            const SizedBox(width: 9),
+            const AntiqueGlyph(
+                icon: AntiqueIcon.pattern, size: 12, color: Color(0xCCF9D976)),
+          ],
+        ),
+      );
+    }
+    final c = _credits;
+    if (c == null) return const SizedBox.shrink();
+    final free = c.freeRemaining ?? 0;
+    final pur = c.purchasedBalance ?? 0;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        color: const Color(0x0DFFFFFF),
+        border: Border.all(color: const Color(0x1AFFFFFF)),
+      ),
+      child: Text(
+        '✦ クレジット残 ─ 無料 $free ・ 購入 $pur',
+        style: const TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w500,
+          letterSpacing: 0.5,
+          color: Color(0xFFEAEAEA),
+        ),
+      ),
+    );
+  }
+
+  // プロフィールのオーブ。Free=金の8芒星、Pro=太陽グリフ + 二重リング + 周囲に
+  // 小さな星 (コンステレーション風) で豪華に差別化。
+  Widget _buildProfileOrb(bool isPro) {
+    if (!isPro) {
+      return Container(
+        width: 56, height: 56,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          gradient: const RadialGradient(
+            colors: [Color(0x40F9D976), Color(0x0AF9D976)],
+            stops: [0.0, 0.7],
+          ),
+          border: Border.all(color: const Color(0x40F9D976)),
+        ),
+        child: const Center(
+          child: AntiqueGlyph(
+              icon: AntiqueIcon.pattern, size: 24, color: Color(0xFFF9D976)),
+        ),
+      );
+    }
+    // Cosmic Pro: 豪華なコンステレーション・オーブ。
+    return SizedBox(
+      width: 62, height: 62,
+      child: Stack(
+        alignment: Alignment.center,
+        clipBehavior: Clip.none,
+        children: [
+          // 外周リング + グロー
+          Container(
+            width: 62, height: 62,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: const RadialGradient(
+                colors: [Color(0x59F9D976), Color(0x0AF9D976)],
+                stops: [0.0, 0.74],
+              ),
+              border: Border.all(color: const Color(0x99F9D976), width: 1.3),
+              boxShadow: const [BoxShadow(color: Color(0x4DF9D976), blurRadius: 18)],
+            ),
+          ),
+          // 内側の細いリング
+          Container(
+            width: 46, height: 46,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: const Color(0x40F9D976)),
+            ),
+          ),
+          // 中央: 太陽グリフ (光条あり)
+          const AntiqueGlyph(
+              icon: AntiqueIcon.planets, size: 30, color: Color(0xFFF9D976)),
+          // 周囲の小さな星 (さみしくないように)
+          const Positioned(top: 5, right: 11, child: AntiqueGlyph(
+              icon: AntiqueIcon.pattern, size: 8, color: Color(0xCCF9D976))),
+          const Positioned(bottom: 7, left: 9, child: AntiqueGlyph(
+              icon: AntiqueIcon.pattern, size: 6, color: Color(0x99F9D976))),
+          const Positioned(bottom: 12, right: 8, child: AntiqueGlyph(
+              icon: AntiqueIcon.pattern, size: 5, color: Color(0x80F9D976))),
+        ],
+      ),
+    );
+  }
+
   // ── Profile Row ──
   // HTML: .profile-row { display:flex; align-items:center; gap:14px; }
   Widget _buildProfileRow(String name) {
     return Row(
       children: [
-        // HTML: .profile-orb { width:56px; height:56px; border-radius:50%;
-        //   background:radial-gradient(circle,rgba(249,217,118,0.25) 0%,rgba(249,217,118,0.04) 70%);
-        //   border:1px solid rgba(249,217,118,0.25); font-size:24px; }
-        Container(
-          width: 56, height: 56,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            gradient: const RadialGradient(
-              colors: [Color(0x40F9D976), Color(0x0AF9D976)],
-              stops: [0.0, 0.7],
-            ),
-            border: Border.all(color: const Color(0x40F9D976)),
-          ),
-          child: const Center(
-            child: Text('✦', style: TextStyle(fontSize: 24, color: Color(0xFFF9D976))),
-          ),
-        ),
+        _buildProfileOrb(ProStatus.instance.isPro),
         const SizedBox(width: 14),
         Expanded(
           child: Column(
@@ -363,8 +547,14 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
               ),
               const SizedBox(height: 2),
               // HTML: .profile-tier { font-size:12px; color:#ACACAC; margin-top:2px; }
-              const Text('Free Tier · Cosmic Journey',
-                style: TextStyle(fontSize: 15, color: Color(0xFFACACAC))),
+              Text(
+                ProStatus.instance.isPro ? '✦ Cosmic Pro' : 'Free Tier · Cosmic Journey',
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: ProStatus.instance.isPro ? FontWeight.w600 : FontWeight.w400,
+                  color: ProStatus.instance.isPro ? const Color(0xFFF9D976) : const Color(0xFFACACAC),
+                ),
+              ),
             ],
           ),
         ),
@@ -374,9 +564,10 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
 
   // ── ✦ Stellar Profile Section ──
   Widget _buildStellarProfileSection(bool hasProfile) {
-    final birthVal = hasProfile
-        ? '${_profile!.birthDate.replaceAll('-', '/')} ›'
-        : '未設定 ›';
+    // プライバシー: 誕生日・住所の値は一覧に出さず「設定済み/未設定」のみ表示
+    // (行はタップで編集できるよう残す)。
+    final birthVal = hasProfile ? '設定済み ›' : '未設定 ›';
+    final homeSet = _profile != null && _profile!.homeName.isNotEmpty;
     return _SettingsGroup(
       label: '✦ Stellar Profile',
       children: [
@@ -389,9 +580,7 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
         _SettingsItem(
           icon: Icons.home_outlined,
           text: '自宅（現住所）',
-          value: _profile != null && _profile!.homeName.isNotEmpty
-              ? '${_profile!.homeName.length > 10 ? '${_profile!.homeName.substring(0, 10)}...' : _profile!.homeName} ›'
-              : '未設定 ›',
+          value: homeSet ? '設定済み ›' : '未設定 ›',
           onTap: _openHomeEditor,
         ),
       ],
@@ -1008,9 +1197,8 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
     return GestureDetector(
       onTap: () async {
         setState(() { _houseSystem = value; _houseSelectOpen = false; });
-        // HTML: localStorage.setItem('solara_house_system', val)
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('solara_house_system', value);
+        // 保存 + 同期キャッシュ更新 (Horo/Map の次回チャート計算から反映)。
+        await SolaraStorage.saveHouseSystem(value);
       },
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 8),
@@ -1077,13 +1265,6 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
           value: 'English ›',
           onTap: () {},
         ),
-        // Notifications with toggle
-        _SettingsItemWithToggle(
-          icon: Icons.notifications_outlined,
-          text: 'Notifications',
-          value: _notificationsOn,
-          onChanged: (v) => setState(() => _notificationsOn = v),
-        ),
         // Daily reset hour（今日のタップボタンのリセット時刻）
         _SettingsItem(
           icon: Icons.schedule_outlined,
@@ -1131,6 +1312,20 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
       center: Alignment(0, -1), radius: 1.1,
       colors: [Color(0xFF0F2850), Color(0xFF080C14)],
       stops: [0.0, 0.55],
+    ),
+  );
+
+  // Cosmic Pro 限定: 同じ夜空グラデの上に、神殿(アンティーク枠)背景を薄く重ねる。
+  static const _proBgDecoration = BoxDecoration(
+    gradient: RadialGradient(
+      center: Alignment(0, -1), radius: 1.1,
+      colors: [Color(0xFF0F2850), Color(0xFF080C14)],
+      stops: [0.0, 0.55],
+    ),
+    image: DecorationImage(
+      image: AssetImage('assets/sanctuary-bg/pro.webp'),
+      fit: BoxFit.cover,
+      opacity: 0.35,
     ),
   );
 }
@@ -1224,68 +1419,3 @@ class _SettingsItem extends StatelessWidget {
   }
 }
 
-// ── Settings Item with Toggle Switch ──
-
-class _SettingsItemWithToggle extends StatelessWidget {
-  final IconData icon;
-  final String text;
-  final bool value;
-  final ValueChanged<bool> onChanged;
-  const _SettingsItemWithToggle({required this.icon, required this.text, required this.value, required this.onChanged});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-      decoration: BoxDecoration(
-        color: const Color(0x0FFFFFFF), // rgba(255,255,255,0.06)
-        borderRadius: BorderRadius.circular(20), // HTML: border-radius:20px
-        border: Border.all(color: const Color(0x1AFFFFFF)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 36, height: 36,
-            decoration: BoxDecoration(
-              color: const Color(0x0DFFFFFF),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Center(
-              child: Icon(icon, size: 20, color: const Color(0xB3F9D976)),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(text, style: const TextStyle(fontSize: 15, color: Color(0xFFEAEAEA))),
-          ),
-          // HTML: .toggle { width:44px; height:26px; border-radius:13px; }
-          GestureDetector(
-            onTap: () => onChanged(!value),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 300),
-              width: 44, height: 26,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(13),
-                color: value
-                    ? const Color(0x8CF9D976) // rgba(249,217,118,0.55)
-                    : const Color(0x1FFFFFFF), // rgba(255,255,255,0.12)
-              ),
-              child: AnimatedAlign(
-                duration: const Duration(milliseconds: 300),
-                alignment: value ? Alignment.centerRight : Alignment.centerLeft,
-                child: Container(
-                  margin: const EdgeInsets.all(3),
-                  width: 20, height: 20,
-                  decoration: const BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}

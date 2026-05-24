@@ -53,8 +53,9 @@ class CatasterismFormationOverlay extends StatefulWidget {
   final VoidCallback onComplete;
 
   /// 完了時の「共有」ボタンタップ。null なら共有ボタンを出さない。
+  /// 引数に形成演出の背景画像 (_bgImage) を渡す = 共有カードに背景を載せるため。
   /// (2026-05-17 Free 機能として追加。柱 3 = 自分の記録の道具)
-  final VoidCallback? onShare;
+  final void Function(ui.Image? bgImage)? onShare;
 
   const CatasterismFormationOverlay({
     super.key,
@@ -257,6 +258,8 @@ class _CatasterismFormationOverlayState
                             letterSpacing: 3,
                           ),
                         ),
+                        // 完成 (最終画面) では日本語「刻星化」を出さない。
+                        if (!isComplete) ...[
                         const SizedBox(height: 4),
                         const Text(
                           '\u523b\u661f\u5316', // 刻星化
@@ -265,6 +268,7 @@ class _CatasterismFormationOverlayState
                             fontSize: 12,
                           ),
                         ),
+                        ],
                       ],
                     ),
                   ),
@@ -301,6 +305,8 @@ class _CatasterismFormationOverlayState
                       ),
                     ),
                   ),
+                  // 完成 (最終画面) では日本語のステージ名 (完成) を出さない。
+                  if (!isComplete)
                   Positioned(
                     top: MediaQuery.of(context).size.height * 0.18 + 22,
                     left: 0,
@@ -321,10 +327,12 @@ class _CatasterismFormationOverlayState
                     ),
                   ),
                   // Cycle info (bottom, fade in at COMPLETE)
+                  // left/right に余白を入れ、名前/レアリティが長くても画面端で
+                  // 切れず自動で折返す (横幅自動調節)。
                   Positioned(
                     bottom: 96,
-                    left: 0,
-                    right: 0,
+                    left: 24,
+                    right: 24,
                     child: AnimatedOpacity(
                       duration: const Duration(milliseconds: 600),
                       opacity: isComplete ? 1.0 : 0.0,
@@ -379,7 +387,9 @@ class _CatasterismFormationOverlayState
                           if (widget.onShare != null) ...[
                             // \u5171\u6709\u30dc\u30bf\u30f3 (icon-only\u3001\u5186\u5f62\u3001\u30b4\u30fc\u30eb\u30c9\u67a0)
                             GestureDetector(
-                              onTap: isFinished ? widget.onShare : null,
+                              onTap: isFinished
+                                  ? () => widget.onShare?.call(_bgImage)
+                                  : null,
                               child: Container(
                                 width: 48,
                                 height: 48,
@@ -431,14 +441,20 @@ class _CatasterismFormationOverlayState
                                     ),
                                   ],
                                 ),
+                                // \u5927\u30d5\u30a9\u30f3\u30c8\u3067\u3082 1 \u884c\u306b\u53ce\u3081\u308b (\u6298\u8fd4\u3057\u3067\u30dc\u30bf\u30f3\u304c
+                                // \u7e26\u306b\u4f38\u3073\u3001\u4e0a\u306e\u540d\u524d/\u30ec\u30a2\u30ea\u30c6\u30a3\u3068\u91cd\u306a\u308b\u306e\u3092\u9632\u3050)\u3002
                                 child: const Center(
-                                  child: Text(
-                                    'View in Star Atlas \u2728',
-                                    style: TextStyle(
-                                      color: Color(0xFF1A0F00),
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w600,
-                                      letterSpacing: 2,
+                                  child: FittedBox(
+                                    fit: BoxFit.scaleDown,
+                                    child: Text(
+                                      'View in Star Atlas \u2728',
+                                      maxLines: 1,
+                                      style: TextStyle(
+                                        color: Color(0xFF1A0F00),
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600,
+                                        letterSpacing: 2,
+                                      ),
                                     ),
                                   ),
                                 ),

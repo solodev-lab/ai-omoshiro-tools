@@ -5,9 +5,9 @@
 
 ## サマリ
 
-- ファイル数: 8 / 総行数: 2338
+- ファイル数: 8 / 総行数: 2344
 - class/mixin/extension/enum: 13
-- 関数 (top-level + method の素拾い): 101
+- 関数 (top-level + method の素拾い): 107
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 0
 - Worker URL リテラル: 0
@@ -121,7 +121,7 @@ Consultation Share — シェアエクスポート (V2: 全要素統合)
 - L139 `formatConsultationCaption()` — シェア用のキャプション短縮版 (画像と一緒に添える text)。
 
 
-### `lib/utils/forecast_cache.dart` (462 行)
+### `lib/utils/forecast_cache.dart` (399 行)
 
 **imports:** dart=1 / package=2 / relative=2
 
@@ -135,29 +135,28 @@ Consultation Share — シェアエクスポート (V2: 全要素統合)
   - 運勢サイクル（「◯◯期」）1件分。
 - L153 `class ForecastCache`
   - Forecast キャッシュ項目
-- L196 `class ForecastRepo`
+- L198 `class ForecastRepo`
 
-**関数 (9 public + 7 private):**
+**関数 (8 public + 7 private):**
 
 - L35 `toJson()`
 - L62 `toJson()`
 - L84 `detectLifePeriods()` — ForecastDay 列から各カテゴリの「◯◯期」を検出する。
 - L164 `toJson()`
-- L189 `profileHashOf()` — 出生情報のハッシュ。プロフィール変更を検知するために使う。
-- L284 `loadCached()` — キャッシュから読み込む（profileHash が一致する場合のみ有効）
-- L296 `cooldownRemaining()` — クールダウン残時間（0ならfetch可）。年オフセットごとに独立。
-- L324 `fetchFull()` — Worker /astro/forecast を呼び出して全365日取得。
-- L394 `refreshIncremental()` — 月次差分更新。
+- L191 `profileHashOf()` — 出生情報のハッシュ。プロフィール変更を検知するために使う。
+- L286 `loadCached()` — キャッシュから読み込む（profileHash が一致する場合のみ有効）
+- L298 `cooldownRemaining()` — クールダウン残時間（0ならfetch可）。年オフセットごとに独立。
+- L331 `fetchFull()` — Worker /astro/forecast を呼び出して暦年(1/1〜12/31)分を取得。
 
   <details><summary>private 関数 7 件</summary>
 
-  - L198 `_cKey()`
-  - L200 `_coolKey()`
-  - L202 `_periodsKey()`
-  - L204 `_top5StorageKey()`
-  - L308 `_saveCache()`
-  - L313 `_markFetched()`
-  - L458 `_todayKey()`
+  - L200 `_cKey()`
+  - L202 `_coolKey()`
+  - L204 `_periodsKey()`
+  - L206 `_top5StorageKey()`
+  - L310 `_saveCache()`
+  - L315 `_markFetched()`
+  - L321 `_daysInYear()`
 
   </details>
 
@@ -318,7 +317,7 @@ Solara 認証サービス — Phase 2-9 Sign in 統合
   </details>
 
 
-### `lib/utils/solara_storage.dart` (586 行)
+### `lib/utils/solara_storage.dart` (655 行)
 
 **imports:** dart=1 / package=2 / relative=4
 
@@ -331,52 +330,59 @@ Solara 認証サービス — Phase 2-9 Sign in 統合
 - L101 `class SolaraStorage`
   - Persistence wrapper for Solara data.
 
-**関数 (39 public + 2 private):**
+**関数 (47 public + 1 private):**
 
 - L41 `toJson()`
 - L71 `copyWith()`
-- L125 `loadForecastColorMode()` — ヒートマップ色モード: 'relative' | 'absolute' | 'category'
-- L130 `saveForecastColorMode()`
-- L136 `loadForecastHighColor()` — 高スコア側の色: 'green' | 'red'
-- L141 `saveForecastHighColor()`
-- L147 `loadForecastYearOffset()` — Forecast 画面で最後に見た年オフセット（0-4）
-- L152 `saveForecastYearOffset()`
-- L159 `loadMapStyleId()`
-- L164 `saveMapStyleId()`
-- L171 `loadProfile()`
-- L178 `saveProfile()`
-- L195 `saveCurrentReadings()`
-- L201 `addReading()`
-- L213 `clearReadings()`
-- L219 `updateSynchronicity()` — Update synchronicity text for a specific reading date.
-- L232 `updateReading()` — Update an existing reading (matched by date) with new reading text.
-- L246 `removeReadingByDate()` — Remove a reading by date (used for the dev "reset today" button).
-- L269 `saveTitleData()`
-- L300 `addTitleHistoryEntry()` — 称号診断結果を履歴に追加する。
-- L332 `clearTitleHistory()` — 履歴全削除 (Sanctuary 設定からの「すべて削除」用)。
-- L340 `updateTitleHistoryNote()` — 指定 savedAt のエントリにメモを書き込む (200 字 cap、超過は切詰)。
-- L354 `getTodayReading()`
-- L377 `saveCompletedCycle()`
-- L395 `updateCompletedCycleReadingSynchronicity()` — 過去サイクルに含まれる reading の synchronicity (自由メモ) を更新する。
-- L410 `clearCurrentReadings()`
-- L417 `loadIntention()`
-- L425 `saveIntention()`
-- L435 `loadDailyResetHour()` — 1日の基準時刻（0-23時）。この時刻を跨ぐと「今日」が更新される。
-- L441 `saveDailyResetHour()`
-- L448 `loadDailyResetMinute()` — 1日の基準時刻 (分、0-59)。1 分単位ピッカーの導入で追加。
-- L454 `saveDailyResetMinute()`
-- L506 `wasOverlayShownToday()` — Track which overlay was shown today to avoid re-showing.
-- L513 `markOverlayShown()`
-- L521 `getNotTodayCount()` — Not today 押下回数（サイクルID単位で保存）
-- L526 `incrementNotTodayCount()`
-- L556 `addConsultationRecord()` — 履歴を 1 件追加 (新しい順で先頭、上限超過分は古いものから削除)。
-- L568 `deleteConsultationRecord()` — id 指定で 1 件削除。見つからない場合は no-op。
-- L575 `clearConsultationHistory()` — 履歴全削除 (Sanctuary 設定からの「すべて削除」用)。
+- L126 `loadForecastColorMode()` — ヒートマップ色モード: 'relative' | 'absolute' | 'category'
+- L131 `saveForecastColorMode()`
+- L137 `loadForecastHighColor()` — 高スコア側の色: 'green' | 'red'
+- L142 `saveForecastHighColor()`
+- L148 `loadForecastYearOffset()` — Forecast 画面で最後に見た年オフセット（0-4）
+- L153 `saveForecastYearOffset()`
+- L160 `loadMapStyleId()`
+- L165 `saveMapStyleId()`
+- L172 `loadProfile()`
+- L179 `saveProfile()`
+- L196 `saveCurrentReadings()`
+- L202 `addReading()`
+- L214 `clearReadings()`
+- L220 `updateSynchronicity()` — Update synchronicity text for a specific reading date.
+- L233 `updateReading()` — Update an existing reading (matched by date) with new reading text.
+- L247 `removeReadingByDate()` — Remove a reading by date (used for the dev "reset today" button).
+- L270 `saveTitleData()`
+- L301 `addTitleHistoryEntry()` — 称号診断結果を履歴に追加する。
+- L333 `clearTitleHistory()` — 履歴全削除 (Sanctuary 設定からの「すべて削除」用)。
+- L341 `updateTitleHistoryNote()` — 指定 savedAt のエントリにメモを書き込む (200 字 cap、超過は切詰)。
+- L355 `getTodayReading()`
+- L365 `loadLastFreeTarotDay()` — 無料タロット (全体運) を最後に引いた「論理日」(YYYY-MM-DD)。未記録なら null。
+- L373 `markFreeTarotDrawn()` — 無料タロット (全体運) を「今日」引いたものとして記録する。
+- L386 `hasDrawnFreeTarotToday()` — 無料タロット (全体運) を「今日 (論理日)」もう引いたか。
+- L394 `clearFreeTarotDay()` — テスト用: 無料タロットの引き記録をクリア (再ドロー可能に戻す)。
+- L411 `saveCompletedCycle()`
+- L429 `updateCompletedCycleReadingSynchronicity()` — 過去サイクルに含まれる reading の synchronicity (自由メモ) を更新する。
+- L444 `clearCurrentReadings()`
+- L451 `loadIntention()`
+- L459 `saveIntention()`
+- L469 `loadDailyResetHour()` — 1日の基準時刻（0-23時）。この時刻を跨ぐと「今日」が更新される。
+- L475 `saveDailyResetHour()`
+- L482 `loadDailyResetMinute()` — 1日の基準時刻 (分、0-59)。1 分単位ピッカーの導入で追加。
+- L488 `saveDailyResetMinute()`
+- L503 `loadHouseSystem()` — ハウスシステム設定を読み込む (未保存は 'placidus')。同期キャッシュも更新。
+- L511 `saveHouseSystem()` — ハウスシステム設定を保存する。同期キャッシュも即時更新。
+- L553 `logicalTodayKey()` — リセット時刻 (「1日の開始時刻」設定) を考慮した「今日」の論理日キー
+- L566 `wasOverlayShownToday()` — Track which overlay was shown today to avoid re-showing.
+- L573 `markOverlayShown()`
+- L581 `getNotTodayCount()` — Not today 押下回数（サイクルID単位で保存）
+- L586 `incrementNotTodayCount()`
+- L616 `addConsultationRecord()` — 履歴を 1 件追加 (新しい順で先頭、上限超過分は古いものから削除)。
+- L628 `setConsultationFavorite()` — id 指定でお気に入りフラグを設定。見つからない場合は no-op。
+- L637 `deleteConsultationRecord()` — id 指定で 1 件削除。見つからない場合は no-op。
+- L644 `clearConsultationHistory()` — 履歴全削除 (Sanctuary 設定からの「すべて削除」用)。
 
-  <details><summary>private 関数 2 件</summary>
+  <details><summary>private 関数 1 件</summary>
 
-  - L493 `_logicalTodayKey()`
-  - L580 `_writeConsultationHistory()`
+  - L649 `_writeConsultationHistory()`
 
   </details>
 

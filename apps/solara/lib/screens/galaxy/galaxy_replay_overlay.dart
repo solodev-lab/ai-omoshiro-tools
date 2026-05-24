@@ -20,12 +20,17 @@ class GalaxyReplayOverlay extends StatelessWidget {
   final ui.Image? artImage;
   final VoidCallback onClose;
 
+  /// 共有ボタンタップ。null なら共有ボタンを出さない。
+  /// 通常再生は背景なし共有カード (柱 3 = 自分の記録の道具)。
+  final VoidCallback? onShare;
+
   const GalaxyReplayOverlay({
     super.key,
     required this.cycle,
     required this.controller,
     required this.artImage,
     required this.onClose,
+    this.onShare,
   });
 
   static const double _cameraAngle55 = 55 * pi / 180; // ~0.96 rad
@@ -60,9 +65,21 @@ class GalaxyReplayOverlay extends StatelessWidget {
               final fadeT = ((t - 0.69) / 0.31).clamp(0.0, 1.0);
               final painterProgress = cameraT * 0.4 + lineT * 0.6;
 
-              return SizedBox(
-                width: 340,
-                child: Column(mainAxisSize: MainAxisSize.min, children: [
+              // 画面幅・高さに合わせて自動調節 (小画面/大フォントで overflow しない)。
+              final screenW = MediaQuery.of(context).size.width;
+              final panelW = min(340.0, screenW - 32);
+              final canvasSize = min(300.0, panelW - 8);
+
+              return LayoutBuilder(builder: (ctx, constraints) {
+                return SingleChildScrollView(
+                  child: ConstrainedBox(
+                    constraints:
+                        BoxConstraints(minHeight: constraints.maxHeight),
+                    child: Center(
+                      child: SizedBox(
+                        width: panelW,
+                        child:
+                            Column(mainAxisSize: MainAxisSize.min, children: [
                   // replay title — 端末言語でEN or JP を1つだけ表示
                   Opacity(opacity: fadeT, child: Builder(builder: (ctx) {
                     final isJP = Localizations.localeOf(ctx).languageCode == 'ja';
@@ -85,7 +102,7 @@ class GalaxyReplayOverlay extends StatelessWidget {
                   const SizedBox(height: 20),
                   // HTML: #replayCanvas
                   Container(
-                    width: 300, height: 300,
+                    width: canvasSize, height: canvasSize,
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(20),
                       color: const Color(0xCC060A12),
@@ -135,6 +152,40 @@ class GalaxyReplayOverlay extends StatelessWidget {
                       letterSpacing: 1.3, fontWeight: FontWeight.w600)),
                   ])),
                   const SizedBox(height: 24),
+                  // Share ボタン (Free 機能、柱 3 = 自分の記録の道具)。
+                  // 通常再生は背景なし共有カード。fadeT でサブ情報と同調 fade-in。
+                  if (onShare != null) ...[
+                    Opacity(
+                      opacity: fadeT,
+                      child: GestureDetector(
+                        onTap: onShare,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 24, vertical: 10),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(12),
+                            color: const Color(0x22F6BD60),
+                            border: Border.all(color: const Color(0x66F6BD60)),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.ios_share,
+                                  size: 16, color: Color(0xFFF6BD60)),
+                              const SizedBox(width: 8),
+                              Text('Share',
+                                  style: GoogleFonts.cinzel(
+                                      fontSize: 13,
+                                      color: const Color(0xFFF6BD60),
+                                      letterSpacing: 1.8,
+                                      fontWeight: FontWeight.w600)),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                  ],
                   // Close ボタン
                   GestureDetector(
                     onTap: onClose,
@@ -149,8 +200,12 @@ class GalaxyReplayOverlay extends StatelessWidget {
                         letterSpacing: 1.8, fontWeight: FontWeight.w500)),
                     ),
                   ),
-                ]),
-              );
+                        ]),
+                      ),
+                    ),
+                  ),
+                );
+              });
             },
           ),
         ),

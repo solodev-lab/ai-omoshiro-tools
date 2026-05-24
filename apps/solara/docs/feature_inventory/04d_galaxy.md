@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 10 / 総行数: 3585
+- ファイル数: 10 / 総行数: 3674
 - class/mixin/extension/enum: 22
 - 関数 (top-level + method の素拾い): 86
 - Navigator.push 等: 0
@@ -14,7 +14,7 @@
 
 ## ファイル別
 
-### `lib/screens/galaxy/constellation_share_card_page.dart` (387 行)
+### `lib/screens/galaxy/constellation_share_card_page.dart` (415 行)
 
 **ファイル先頭コメント:**
 
@@ -45,19 +45,19 @@
 **型定義 (2):**
 
 - L34 `class ConstellationShareCardPage : StatefulWidget`
-- L359 `class _ShareCardRarityStars : StatelessWidget`
+- L387 `class _ShareCardRarityStars : StatelessWidget`
 
 **関数 (3 public + 3 private):**
 
-- L45 `createState()`
-- L92 `build()`
-- L365 `build()`
+- L50 `createState()`
+- L97 `build()`
+- L393 `build()`
 
   <details><summary>private 関数 3 件</summary>
 
-  - L54 `_share()`
-  - L173 `_buildShareImage()`
-  - L187 `_buildShareImageInner()`
+  - L59 `_share()`
+  - L178 `_buildShareImage()`
+  - L192 `_buildShareImageInner()`
 
   </details>
 
@@ -198,7 +198,7 @@ Free ユーザーが Pro 項目をタップしたら showProUnlockDialog で誘�
   </details>
 
 
-### `lib/screens/galaxy/galaxy_replay_overlay.dart` (160 行)
+### `lib/screens/galaxy/galaxy_replay_overlay.dart` (215 行)
 
 **imports:** dart=2 / package=2 / relative=3
 
@@ -210,11 +210,11 @@ Free ユーザーが Pro 項目をタップしたら showProUnlockDialog で誘�
 
 **関数 (1 public + 1 private):**
 
-- L45 `build()`
+- L50 `build()`
 
   <details><summary>private 関数 1 件</summary>
 
-  - L36 `_handleTap()`
+  - L41 `_handleTap()`
 
   </details>
 
@@ -284,7 +284,7 @@ Free ユーザーが Pro 項目をタップしたら showProUnlockDialog で誘�
 - L16 `moonHealingMessage()` — 月齢 (端末ローカル) を 3 日ごと 10 区分に分け、その区分の月相に沿った
 
 
-### `lib/screens/galaxy_screen.dart` (1269 行)
+### `lib/screens/galaxy_screen.dart` (1275 行)
 
 **imports:** dart=3 / package=4 / relative=22
 
@@ -304,8 +304,8 @@ Free ユーザーが Pro 項目をタップしたら showProUnlockDialog で誘�
 - L165 `jitter()`
 - L183 `dispose()`
 - L383 `build()`
-- L680 `fmtTime()`
-- L682 `fmtDate()`
+- L682 `fmtTime()`
+- L684 `fmtDate()`
 
   <details><summary>private 関数 35 件</summary>
 
@@ -316,34 +316,34 @@ Free ユーザーが Pro 項目をタップしたら showProUnlockDialog で誘�
   - L318 `_loadArtImage()`
   - L333 `_checkMoonOverlay()`
   - L369 `_dismissTopOverlay()`
-  - L507 `_buildTabBar()`
-  - L517 `_buildTab()`
-  - L560 `_buildCycleTab()`
-  - L591 `_buildDayBadge()`
-  - L615 `_buildMoonBadge()`
-  - L640 `_buildStellaMessage()`
-  - L722 `_onDragStart()`
-  - L729 `_onDragUpdate()`
-  - L740 `_onDragEnd()`
-  - L745 `_onTapUp()`
-  - L756 `_showDotPopup()`
-  - L762 `_hideDotPopup()`
-  - L766 `_buildDotPopup()`
-  - L821 `_openReplay()`
-  - L828 `_closeReplay()`
-  - L837 `_openConstellationShare()`
-  - L852 `_openCycleActions()`
-  - L871 `_buildDebugTriggerRow()`
-  - L888 `_buildDebugBtn()`
-  - L912 `_debugTriggerNewMoon()`
-  - L917 `_debugTriggerFullMoon()`
-  - L932 `_debugTriggerCatasterism()`
-  - L950 `_debugTriggerCycleCompletion()`
-  - L995 `_buildMoonOverlay()`
-  - L1063 `_onCatasterismResult()`
-  - L1078 `_onFormationComplete()`
-  - L1090 `_moonPhaseDescription()`
-  - L1133 `_showGalaxyUsageGuide()`
+  - L509 `_buildTabBar()`
+  - L519 `_buildTab()`
+  - L562 `_buildCycleTab()`
+  - L593 `_buildDayBadge()`
+  - L617 `_buildMoonBadge()`
+  - L642 `_buildStellaMessage()`
+  - L724 `_onDragStart()`
+  - L731 `_onDragUpdate()`
+  - L742 `_onDragEnd()`
+  - L747 `_onTapUp()`
+  - L758 `_showDotPopup()`
+  - L764 `_hideDotPopup()`
+  - L768 `_buildDotPopup()`
+  - L823 `_openReplay()`
+  - L830 `_closeReplay()`
+  - L841 `_openConstellationShare()`
+  - L857 `_openCycleActions()`
+  - L876 `_buildDebugTriggerRow()`
+  - L893 `_buildDebugBtn()`
+  - L917 `_debugTriggerNewMoon()`
+  - L922 `_debugTriggerFullMoon()`
+  - L937 `_debugTriggerCatasterism()`
+  - L955 `_debugTriggerCycleCompletion()`
+  - L1000 `_buildMoonOverlay()`
+  - L1069 `_onCatasterismResult()`
+  - L1084 `_onFormationComplete()`
+  - L1096 `_moonPhaseDescription()`
+  - L1139 `_showGalaxyUsageGuide()`
 
   </details>
 

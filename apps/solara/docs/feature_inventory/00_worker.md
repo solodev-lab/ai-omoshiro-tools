@@ -401,15 +401,19 @@ astronomy-engine API:
 **export (1):** `computeDailyTransits`
 
 
-### `worker/src/fortune.js` (318 行)
+### `worker/src/fortune.js` (368 行)
 
 **ファイル先頭コメント:**
 
 ```
 Fortune Reading — Stella の占い文生成 (Gemini API バックエンド)
 
-入力: category, natal, transit?, aspects, patterns, lang('ja'|'en')
-出力: { reading, advice, direction }
+入力: category, natal, planetHouses?, aspects(N-N), transitAspects(N-T),
+progressedAspects(N-P), patterns, date, userName?, lang('ja'|'en')
+出力: { reading, advice }
+
+3層構造 (トランジット主役): natal=土台(ハウス/生来の相), N-T=今日の主役,
+N-P=今の人生の章(背景)。クロス相は {natal, moving, type, quality}。
 
 GEMINI_API_KEY は wrangler secret put GEMINI_API_KEY で設定
 モデル: gemini-2.5-flash (テキスト生成、低コスト)
@@ -423,7 +427,7 @@ houses: そのカテゴリで重視する伝統占星術のハウス番号
 
 **Gemini API 呼出 (1):**
 
-- L100: `generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;`
+- L104: `generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;`
 
 **export (3):** `computeCategoryScore`, `callGemini`, `handleFortune`
 
@@ -581,7 +585,7 @@ Nominatim: https://nominatim.openstreetmap.org/search
 **export (1):** `searchPlace`
 
 
-### `worker/src/tarot.js` (283 行)
+### `worker/src/tarot.js` (287 行)
 
 **ファイル先頭コメント:**
 

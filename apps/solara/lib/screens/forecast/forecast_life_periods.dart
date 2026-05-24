@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../utils/forecast_cache.dart';
 import '../../widgets/info_popup.dart';
 import '../map/map_constants.dart';
+import 'forecast_section_header.dart';
 
 /// 期間ラベル定義（カテゴリ → (日本語名, 絵文字)）
 const Map<String, (String, String)> lifePeriodLabels = {
@@ -53,25 +54,10 @@ class ForecastLifePeriodsSection extends StatelessWidget {
     }
 
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Row(children: [
-        const Flexible(
-          child: Text('▸ あなたの運勢サイクル',
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(fontSize: 11, color: Color(0xFFC9A84C), letterSpacing: 2)),
-        ),
-        const SizedBox(width: 4),
-        // ⓘ 運勢サイクル説明 popup
-        GestureDetector(
-          onTap: () => _showLifePeriodsInfo(context),
-          behavior: HitTestBehavior.opaque,
-          child: const Padding(
-            padding: EdgeInsets.all(2),
-            child: Icon(Icons.info_outline,
-                size: 13, color: Color(0xCCAAAAAA)),
-          ),
-        ),
-      ]),
+      ForecastSectionHeader(
+        label: 'あなたの運勢サイクル',
+        onInfo: () => _showLifePeriodsInfo(context),
+      ),
       const SizedBox(height: 4),
       const Text('今日以降に到来する期間を表示（7日以上の継続）',
           style: TextStyle(fontSize: 9, color: Color(0xFF666666))),
@@ -125,12 +111,16 @@ class ForecastLifePeriodsSection extends StatelessWidget {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: const TextStyle(fontSize: 11, color: Color(0xFFE8E0D0)))),
-        SizedBox(width: 50,
+        SizedBox(
+          width: 66,
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerRight,
             child: Text(isJP ? '${p.days}日間' : '${p.days}d',
-                textAlign: TextAlign.right,
                 maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontSize: 10, color: Color(0xFF888888)))),
+                style: const TextStyle(fontSize: 10, color: Color(0xFF888888))),
+          ),
+        ),
       ]),
     );
   }

@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 23 / 総行数: 5831
+- ファイル数: 23 / 総行数: 5899
 - class/mixin/extension/enum: 32
 - 関数 (top-level + method の素拾い): 151
 - Navigator.push 等: 0
@@ -151,7 +151,7 @@ ignore_for_file: invalid_use_of_protected_member
   </details>
 
 
-### `lib/screens/horoscope/horo_chart_data.dart` (215 行)
+### `lib/screens/horoscope/horo_chart_data.dart` (270 行)
 
 **型定義 (1):**
 
@@ -259,7 +259,7 @@ ignore_for_file: invalid_use_of_protected_member
   </details>
 
 
-### `lib/screens/horoscope/horo_fortune_cards.dart` (350 行)
+### `lib/screens/horoscope/horo_fortune_cards.dart` (330 行)
 
 **imports:** dart=0 / package=2 / relative=3
 
@@ -267,20 +267,20 @@ ignore_for_file: invalid_use_of_protected_member
 
 **型定義 (1):**
 
-- L38 `class HoroAstrologyView : StatelessWidget`
+- L33 `class HoroAstrologyView : StatelessWidget`
 
 **関数 (1 public + 6 private):**
 
-- L80 `build()`
+- L75 `build()`
 
   <details><summary>private 関数 6 件</summary>
 
-  - L187 `_birthEditedBanner()`
-  - L204 `_loadingBanner()`
-  - L221 `_errorBanner()`
-  - L244 `_skeletonLine()`
-  - L252 `_skeletonBar()`
-  - L264 `_lockedTeaserCard()`
+  - L167 `_birthEditedBanner()`
+  - L184 `_loadingBanner()`
+  - L201 `_errorBanner()`
+  - L224 `_skeletonLine()`
+  - L232 `_skeletonBar()`
+  - L244 `_lockedTeaserCard()`
 
   </details>
 
@@ -523,7 +523,7 @@ Phase A: 静的テンプレート (将来 Stella 動的生成に切替予定 →
 - L78 `build()`
 
 
-### `lib/screens/horoscope_screen.dart` (879 行)
+### `lib/screens/horoscope_screen.dart` (912 行)
 
 **imports:** dart=2 / package=2 / relative=15
 
@@ -542,7 +542,7 @@ Phase A: 静的テンプレート (将来 Stella 動的生成に切替予定 →
 - L300 `wakeAnimations()` — 「再覚醒」: anim 再開 + 30s タイマー再起動。
 - L314 `pauseAnimations()` — main.dart からタブ離脱時に呼ばれる。Anim + 寿命タイマー両方停止 = raster 0%。
 - L345 `loadProfile()`
-- L676 `build()`
+- L709 `build()`
 
   <details><summary>private 関数 19 件</summary>
 
@@ -561,10 +561,10 @@ Phase A: 静的テンプレート (将来 Stella 動的生成に切替予定 →
   - L546 `_resetWorkingProfile()`
   - L553 `_profilesEqual()`
   - L582 `_loadFortunes()`
-  - L793 `_menuItem()`
-  - L806 `_buildHouseModeToggle()`
-  - L834 `_toggleSegment()`
-  - L869 `_setRelocateMode()`
+  - L826 `_menuItem()`
+  - L839 `_buildHouseModeToggle()`
+  - L867 `_toggleSegment()`
+  - L902 `_setRelocateMode()`
 
   </details>
 

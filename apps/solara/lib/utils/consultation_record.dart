@@ -46,6 +46,9 @@ class ConsultationRecord {
   /// 静的 fallback だったか。
   final bool fallback;
 
+  /// お気に入り登録フラグ。
+  final bool favorite;
+
   const ConsultationRecord({
     required this.id,
     required this.savedAt,
@@ -61,7 +64,27 @@ class ConsultationRecord {
     required this.candidates,
     required this.evidences,
     this.fallback = false,
+    this.favorite = false,
   });
+
+  /// お気に入りフラグ等を差し替えた複製を返す。
+  ConsultationRecord copyWith({bool? favorite}) => ConsultationRecord(
+        id: id,
+        savedAt: savedAt,
+        theme: theme,
+        mode: mode,
+        scopeKind: scopeKind,
+        scopeDetail: scopeDetail,
+        withWhom: withWhom,
+        wish: wish,
+        innerSeason: innerSeason,
+        intro: intro,
+        outro: outro,
+        candidates: candidates,
+        evidences: evidences,
+        fallback: fallback,
+        favorite: favorite ?? this.favorite,
+      );
 
   /// 結果画面が蓄積した reading 群からレコードを生成 (id は savedAt から自動採番)。
   factory ConsultationRecord.fromReadings({
@@ -146,6 +169,7 @@ class ConsultationRecord {
         'candidates': candidates.map((c) => c.toJson()).toList(),
         'evidences': evidences.map((e) => e.toJson()).toList(),
         'fallback': fallback,
+        if (favorite) 'favorite': true,
       };
 
   factory ConsultationRecord.fromJson(Map<String, dynamic> j) {
@@ -175,6 +199,7 @@ class ConsultationRecord {
               .toList(growable: false) ??
           const [],
       fallback: j['fallback'] == true,
+      favorite: j['favorite'] == true,
     );
   }
 }

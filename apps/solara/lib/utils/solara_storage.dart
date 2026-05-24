@@ -107,6 +107,7 @@ class SolaraStorage {
   static const _mapStyleKey = 'solara_map_style';
   static const _dailyResetHourKey = 'solara_daily_reset_hour';
   static const _dailyResetMinuteKey = 'solara_daily_reset_minute';
+  static const _lastFreeTarotDayKey = 'solara_last_free_tarot_day';
   static const _forecastColorModeKey = 'solara_forecast_color_mode';
   static const _forecastHighColorKey = 'solara_forecast_high_color';
   static const _forecastYearOffsetKey = 'solara_forecast_year_offset';
@@ -352,14 +353,47 @@ class SolaraStorage {
   }
 
   static Future<DailyReading?> getTodayReading() async {
-    final today = DateTime.now();
-    final dateStr =
-        '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
+    final dateStr = await logicalTodayKey();
     final readings = await loadCurrentReadings();
     for (final r in readings) {
       if (r.date == dateStr) return r;
     }
     return null;
+  }
+
+  /// 無料タロット (全体運) を最後に引いた「論理日」(YYYY-MM-DD)。未記録なら null。
+  static Future<String?> loadLastFreeTarotDay() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_lastFreeTarotDayKey);
+  }
+
+  /// 無料タロット (全体運) を「今日」引いたものとして記録する。
+  /// 単調更新: 既存値より新しい論理日のときだけ上書き。これにより、引いた後に
+  /// リセット時刻を後ろへずらして論理日を過去へ戻し、再ドローする不正を防ぐ。
+  static Future<void> markFreeTarotDrawn() async {
+    final prefs = await SharedPreferences.getInstance();
+    final today = await logicalTodayKey();
+    final last = prefs.getString(_lastFreeTarotDayKey);
+    if (last == null || today.compareTo(last) > 0) {
+      await prefs.setString(_lastFreeTarotDayKey, today);
+    }
+  }
+
+  /// 無料タロット (全体運) を「今日 (論理日)」もう引いたか。
+  /// 記録された論理日が現在の論理日以上なら true (= まだ同じ 1 日の中)。
+  /// リセット時刻を変えて論理日を過去へ戻しても、より新しい記録が残るため
+  /// 再ドローはブロックされる (= 論理日が前進したときだけ引ける)。
+  static Future<bool> hasDrawnFreeTarotToday() async {
+    final last = await loadLastFreeTarotDay();
+    if (last == null) return false;
+    final today = await logicalTodayKey();
+    return last.compareTo(today) >= 0;
+  }
+
+  /// テスト用: 無料タロットの引き記録をクリア (再ドロー可能に戻す)。
+  static Future<void> clearFreeTarotDay() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_lastFreeTarotDayKey);
   }
 
   // --- Completed cycles ---
@@ -456,6 +490,30 @@ class SolaraStorage {
     await prefs.setInt(_dailyResetMinuteKey, minute.clamp(0, 59));
   }
 
+  // ── ハウスシステム ('placidus' | 'whole_sign')。Sanctuary「ハウスシステム」設定。
+  static const _houseSystemKey = 'solara_house_system';
+  static String _houseSystemCache = 'placidus';
+
+  /// 直近に load/save したハウスシステムの同期キャッシュ。
+  /// チャート取得 (fetchChart) が毎回 loadHouseSystem で更新するので、
+  /// relocation popup の同期 build からも最新値を参照できる。
+  static String get currentHouseSystem => _houseSystemCache;
+
+  /// ハウスシステム設定を読み込む (未保存は 'placidus')。同期キャッシュも更新。
+  static Future<String> loadHouseSystem() async {
+    final prefs = await SharedPreferences.getInstance();
+    final v = prefs.getString(_houseSystemKey) ?? 'placidus';
+    _houseSystemCache = v;
+    return v;
+  }
+
+  /// ハウスシステム設定を保存する。同期キャッシュも即時更新。
+  static Future<void> saveHouseSystem(String system) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_houseSystemKey, system);
+    _houseSystemCache = system;
+  }
+
   /// Sanctuary「ホロスコープのオーブ設定」で設定されたアスペクト/パターンの
   /// オーブ値を読み込む。
   /// SharedPreferences key: 'solara_orb_settings' (JSON)
@@ -488,9 +546,11 @@ class SolaraStorage {
     }
   }
 
-  /// リセット時刻を考慮した「今日」の日付キー (YYYY-MM-DD)。
-  /// 現在時刻がリセット時刻 (hour:minute) より前なら、前日の日付を返す。
-  static Future<String> _logicalTodayKey() async {
+  /// リセット時刻 (「1日の開始時刻」設定) を考慮した「今日」の論理日キー
+  /// (YYYY-MM-DD)。現在時刻がリセット時刻 (hour:minute) より前なら前日を返す。
+  /// タロット日次 (getTodayReading / hasDrawnFreeTarotToday) と overlay 重複防止で使用。
+  /// ※ Horo の星読みは意図的に 0 時基準 (本キーを使わない)。
+  static Future<String> logicalTodayKey() async {
     final hour = await loadDailyResetHour();
     final minute = await loadDailyResetMinute();
     var now = DateTime.now();
@@ -505,14 +565,14 @@ class SolaraStorage {
   /// Track which overlay was shown today to avoid re-showing.
   static Future<bool> wasOverlayShownToday(String type) async {
     final prefs = await SharedPreferences.getInstance();
-    final day = await _logicalTodayKey();
+    final day = await logicalTodayKey();
     final key = '${_overlayShownKey}_${type}_$day';
     return prefs.getBool(key) ?? false;
   }
 
   static Future<void> markOverlayShown(String type) async {
     final prefs = await SharedPreferences.getInstance();
-    final day = await _logicalTodayKey();
+    final day = await logicalTodayKey();
     final key = '${_overlayShownKey}_${type}_$day';
     await prefs.setBool(key, true);
   }
@@ -561,6 +621,15 @@ class SolaraStorage {
     if (list.length > consultationHistoryMax) {
       list.removeRange(consultationHistoryMax, list.length);
     }
+    await _writeConsultationHistory(list);
+  }
+
+  /// id 指定でお気に入りフラグを設定。見つからない場合は no-op。
+  static Future<void> setConsultationFavorite(String id, bool favorite) async {
+    final list = (await loadConsultationHistory()).toList();
+    final idx = list.indexWhere((r) => r.id == id);
+    if (idx < 0) return;
+    list[idx] = list[idx].copyWith(favorite: favorite);
     await _writeConsultationHistory(list);
   }
 

@@ -423,6 +423,7 @@ class _ConsultationInputScreenState extends State<ConsultationInputScreen> {
                               maxLength: 80,
                             ),
                             _WhomExamples(
+                              theme: _theme,
                               onPick: (t) => setState(() => _whomCtrl.text = t),
                             ),
                           ],
@@ -441,7 +442,7 @@ class _ConsultationInputScreenState extends State<ConsultationInputScreen> {
                               maxLength: 200,
                             ),
                             _WishExamples(
-                              mode: _mode,
+                              theme: _theme,
                               onPick: (t) => setState(() => _wishCtrl.text = t),
                             ),
                           ],

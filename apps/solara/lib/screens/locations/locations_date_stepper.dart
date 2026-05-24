@@ -63,22 +63,24 @@ class LocationsDateStepper extends StatelessWidget {
             const Text('日付',
                 style: TextStyle(fontSize: 10, color: Color(0xFF888888), letterSpacing: 1.5)),
             const SizedBox(width: 12),
-            Expanded(child: Row(children: [
-              _stepperBlock('年', localDate.year,
-                  min: dateMin.year, max: dateMax.year,
-                  onDelta: (d) => onShift(years: d),
-                  onSet: (v) => onSetYmd(v, localDate.month, localDate.day)),
-              const SizedBox(width: 6),
-              _stepperBlock('月', localDate.month,
-                  min: 1, max: 12,
-                  onDelta: (d) => onShift(months: d),
-                  onSet: (v) => onSetYmd(localDate.year, v, localDate.day)),
-              const SizedBox(width: 6),
-              _stepperBlock('日', localDate.day,
-                  min: 1, max: DateUtils.getDaysInMonth(localDate.year, localDate.month),
-                  onDelta: (d) => onShift(days: d),
-                  onSet: (v) => onSetYmd(localDate.year, localDate.month, v)),
-            ])),
+            // 年/月/日 を枠なしで均等配置 (バランス重視)。年/月は数字タップで
+            // 縦並び選択リスト、日は ◀ ▶ で ±1 日 (月末は翌月へ繰り上げ)。
+            Expanded(child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _pickerBlock('年', localDate.year,
+                    [for (int y = dateMin.year; y <= dateMax.year; y++) y],
+                    (v) => onSetYmd(v, localDate.month, localDate.day)),
+                _pickerBlock('月', localDate.month,
+                    const [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+                    (v) => onSetYmd(localDate.year, v, localDate.day)),
+                _dayArrowBlock(localDate.day,
+                    DateUtils.getDaysInMonth(localDate.year, localDate.month),
+                    () => onShift(days: -1),
+                    () => onShift(days: 1),
+                    (v) => onSetYmd(localDate.year, localDate.month, v)),
+              ],
+            )),
             // 右端は常に 28x28 の固定枠。refetching=スピナー / 通常=「今日に戻す」ボタン（今日状態では薄色 disabled）。
             // 固定幅にすることで、年月日ボタン押下や再読込でレイアウトがブレない。
             Padding(
@@ -115,7 +117,7 @@ class LocationsDateStepper extends StatelessWidget {
             const Text('時刻',
                 style: TextStyle(fontSize: 10, color: Color(0xFF888888), letterSpacing: 1.5)),
             const SizedBox(width: 12),
-            Expanded(child: _hourStepperBlock(localDate)),
+            Expanded(child: _hourStepperBlock(context, localDate)),
             const SizedBox(width: 36),
           ]),
         ],
@@ -123,80 +125,133 @@ class LocationsDateStepper extends StatelessWidget {
     );
   }
 
-  /// 時刻ステッパーブロック (HH:00 表示 + ▲▼ ボタン)。
-  /// ▲▼ は 1 時間移動 (0 ⇄ 23 でラップ)。
-  /// HH 部分は直接タップして手入力可能 ([_HourNumberField])。
-  Widget _hourStepperBlock(DateTime localDate) {
+  /// 時刻ステッパーブロック (◀ HH:00 ▶)。
+  /// ◀ で 1 時間戻し / ▶ で 1 時間進め (0 ⇄ 23 でラップ)。
+  /// 中央は単一 Text「HH:00」(タップでダイアログ入力)。以前はインライン
+  /// TextField + ':00' Text の混在で両者の高さが揃わなかったため、1 つの
+  /// Text にまとめて高さズレを根本解消した。
+  Widget _hourStepperBlock(BuildContext context, DateTime localDate) {
+    final hh = displayHour.toString().padLeft(2, '0');
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+      padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
       decoration: BoxDecoration(
         border: Border.all(color: const Color(0x33C9A84C)),
         borderRadius: BorderRadius.circular(6),
       ),
-      child: Row(mainAxisSize: MainAxisSize.min, children: [
-        Expanded(child: Center(
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              _HourNumberField(value: displayHour, onCommit: onSetHour),
-              const Text(':00',
-                  style: TextStyle(
-                      fontSize: 12,
-                      color: Color(0xFFE8E0D0),
-                      fontWeight: FontWeight.w600)),
-            ],
+      child: Row(children: [
+        _arrowBtn(Icons.arrow_left, () => onShiftHour(-1)),
+        Expanded(child: GestureDetector(
+          onTap: () => _editHour(context),
+          behavior: HitTestBehavior.opaque,
+          child: Center(
+            child: Text('$hh:00',
+                style: const TextStyle(
+                    fontSize: 12,
+                    color: Color(0xFFE8E0D0),
+                    fontWeight: FontWeight.w600)),
           ),
         )),
-        Column(mainAxisSize: MainAxisSize.min, children: [
-          _stepBtn('▲', () => onShiftHour(1)),
-          _stepBtn('▼', () => onShiftHour(-1)),
-        ]),
+        _arrowBtn(Icons.arrow_right, () => onShiftHour(1)),
       ]),
     );
   }
 
-  Widget _stepperBlock(String unit, int value, {
-    required int min,
-    required int max,
-    required ValueChanged<int> onDelta,
-    required ValueChanged<int> onSet,
-  }) {
-    return Expanded(child: Container(
-      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-      decoration: BoxDecoration(
-        border: Border.all(color: const Color(0x33C9A84C)),
-        borderRadius: BorderRadius.circular(6),
+  /// 時刻 (0〜23) をダイアログで直接入力。◀ ▶ 以外で任意の時刻にしたいとき用。
+  Future<void> _editHour(BuildContext context) async {
+    final ctrl = TextEditingController(text: '$displayHour');
+    final result = await showDialog<int>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF14142A),
+        title: const Text('時刻 (0〜23)',
+            style: TextStyle(color: Color(0xFFE8E0D0), fontSize: 14)),
+        content: TextField(
+          controller: ctrl,
+          autofocus: true,
+          keyboardType: TextInputType.number,
+          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+          textAlign: TextAlign.center,
+          cursorColor: const Color(0xFFC9A84C),
+          style: const TextStyle(color: Color(0xFFE8E0D0), fontSize: 18),
+          decoration: const InputDecoration(suffixText: '時'),
+          onSubmitted: (_) => Navigator.pop(ctx, int.tryParse(ctrl.text)),
+        ),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('キャンセル',
+                  style: TextStyle(color: Color(0xFF888888)))),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, int.tryParse(ctrl.text)),
+              child: const Text('OK',
+                  style: TextStyle(color: Color(0xFFC9A84C)))),
+        ],
       ),
-      child: Row(mainAxisSize: MainAxisSize.min, children: [
-        Expanded(child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _DateNumberField(value: value, min: min, max: max, onCommit: onSet),
-            Text(unit,
-                style: const TextStyle(fontSize: 8, color: Color(0xFF666666))),
-          ],
-        )),
-        Column(mainAxisSize: MainAxisSize.min, children: [
-          _stepBtn('▲', () => onDelta(1)),
-          _stepBtn('▼', () => onDelta(-1)),
-        ]),
-      ]),
-    ));
+    );
+    if (result != null) onSetHour(result.clamp(0, 23));
   }
 
-  Widget _stepBtn(String label, VoidCallback onTap) {
+  /// 年/月: 枠なしのドロップダウン。数字タップで縦並びの選択リストが開く (△ なし)。
+  /// 幅は内容ぶんだけ (Expanded しない) → 余白は日(◀▶)側に回る。
+  Widget _pickerBlock(
+      String unit, int value, List<int> options, ValueChanged<int> onSet) {
+    return Column(mainAxisSize: MainAxisSize.min, children: [
+      DropdownButtonHideUnderline(
+        child: DropdownButton<int>(
+          value: value,
+          isDense: true,
+          alignment: Alignment.center,
+          dropdownColor: const Color(0xFF14142A),
+          // △(▼)は出さない。数字タップで縦並びの選択リストが開く。
+          icon: const SizedBox.shrink(),
+          style: const TextStyle(
+              fontSize: 12,
+              color: Color(0xFFE8E0D0),
+              fontWeight: FontWeight.w600),
+          items: [
+            for (final o in options)
+              DropdownMenuItem<int>(value: o, child: Text('$o')),
+          ],
+          onChanged: (v) {
+            if (v != null) onSet(v);
+          },
+        ),
+      ),
+      Text(unit,
+          style: const TextStyle(fontSize: 8, color: Color(0xFF666666))),
+    ]);
+  }
+
+  /// 日: ◀ [数値] ▶ で 1 日ずつ移動。数値タップで直接入力も可。
+  /// 年/月と同じく枠なし・コンパクト (◀ と ▶ を数値のすぐ両脇に置く)。
+  Widget _dayArrowBlock(int value, int maxDay, VoidCallback onPrev,
+      VoidCallback onNext, ValueChanged<int> onSet) {
+    return Column(mainAxisSize: MainAxisSize.min, children: [
+      Row(mainAxisSize: MainAxisSize.min, children: [
+        _arrowBtn(Icons.arrow_left, onPrev),
+        _DateNumberField(value: value, min: 1, max: maxDay, onCommit: onSet),
+        _arrowBtn(Icons.arrow_right, onNext),
+      ]),
+      const Text('日',
+          style: TextStyle(fontSize: 8, color: Color(0xFF666666))),
+    ]);
+  }
+
+  /// 左右移動ボタン (◀ / ▶ = 黄色の三角アイコン)。日付・時刻で共用。
+  /// テキスト三角は拡大時に下が切れたため Icon を使用 (size 固定で切れない)。
+  Widget _arrowBtn(IconData icon, VoidCallback onTap) {
     return InkWell(
       onTap: onTap,
+      borderRadius: BorderRadius.circular(6),
       child: Container(
-        width: 18, height: 14,
+        width: 40,
+        height: 36,
         alignment: Alignment.center,
-        child: Text(label,
-            style: const TextStyle(fontSize: 9, color: Color(0xFFC9A84C))),
+        child: Icon(icon, size: 34, color: const Color(0xFFC9A84C)),
       ),
     );
   }
+
 }
 
 /// 数値を直接タイプして編集できるフィールド（年/月/日 共通）。
@@ -268,13 +323,15 @@ class _DateNumberFieldState extends State<_DateNumberField> {
   Widget build(BuildContext context) {
     return SizedBox(
       width: 38,
-      height: 18,
+      // 1.33x スケールで 12px→16px になるため、18 だと縦に切れる。24 に拡張。
+      height: 24,
       child: TextField(
         controller: _ctrl,
         focusNode: _focus,
         keyboardType: TextInputType.number,
         textInputAction: TextInputAction.done,
         textAlign: TextAlign.center,
+        textAlignVertical: TextAlignVertical.center,
         inputFormatters: [FilteringTextInputFormatter.digitsOnly],
         cursorColor: const Color(0xFFC9A84C),
         cursorWidth: 1,
@@ -288,99 +345,6 @@ class _DateNumberFieldState extends State<_DateNumberField> {
         ),
         onTap: () => _ctrl.selection = TextSelection(
           baseOffset: 0, extentOffset: _ctrl.text.length),
-        onSubmitted: (_) {
-          _commit();
-          _focus.unfocus();
-        },
-      ),
-    );
-  }
-}
-
-/// 時 (hour) を直接タイプして編集できるフィールド。
-/// _DateNumberField と同じ仕組み (フォーカス離脱で commit、範囲外クランプ)
-/// だが、表示幅を 24px に絞り「HH:00」表示の HH 部分にちょうど収まるように
-/// している。値範囲は固定で 0..23 (時刻なので明示)。
-class _HourNumberField extends StatefulWidget {
-  final int value;
-  final ValueChanged<int> onCommit;
-
-  const _HourNumberField({required this.value, required this.onCommit});
-
-  @override
-  State<_HourNumberField> createState() => _HourNumberFieldState();
-}
-
-class _HourNumberFieldState extends State<_HourNumberField> {
-  late final TextEditingController _ctrl;
-  late final FocusNode _focus;
-
-  @override
-  void initState() {
-    super.initState();
-    _ctrl = TextEditingController(
-        text: widget.value.toString().padLeft(2, '0'));
-    _focus = FocusNode();
-    _focus.addListener(_onFocusChange);
-  }
-
-  @override
-  void didUpdateWidget(covariant _HourNumberField old) {
-    super.didUpdateWidget(old);
-    final padded = widget.value.toString().padLeft(2, '0');
-    if (!_focus.hasFocus && padded != _ctrl.text) {
-      _ctrl.text = padded;
-    }
-  }
-
-  void _onFocusChange() {
-    if (!_focus.hasFocus) _commit();
-  }
-
-  void _commit() {
-    final n = int.tryParse(_ctrl.text);
-    if (n == null) {
-      _ctrl.text = widget.value.toString().padLeft(2, '0');
-      return;
-    }
-    final clamped = n.clamp(0, 23);
-    final padded = clamped.toString().padLeft(2, '0');
-    if (padded != _ctrl.text) _ctrl.text = padded;
-    if (clamped != widget.value) widget.onCommit(clamped);
-  }
-
-  @override
-  void dispose() {
-    _focus.removeListener(_onFocusChange);
-    _focus.dispose();
-    _ctrl.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: 26,
-      height: 18,
-      child: TextField(
-        controller: _ctrl,
-        focusNode: _focus,
-        keyboardType: TextInputType.number,
-        textInputAction: TextInputAction.done,
-        textAlign: TextAlign.center,
-        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-        cursorColor: const Color(0xFFC9A84C),
-        cursorWidth: 1,
-        style: const TextStyle(
-          fontSize: 12, color: Color(0xFFE8E0D0), fontWeight: FontWeight.w600,
-        ),
-        decoration: const InputDecoration(
-          isDense: true,
-          contentPadding: EdgeInsets.zero,
-          border: InputBorder.none,
-        ),
-        onTap: () => _ctrl.selection = TextSelection(
-            baseOffset: 0, extentOffset: _ctrl.text.length),
         onSubmitted: (_) {
           _commit();
           _focus.unfocus();

@@ -1,8 +1,12 @@
 /**
  * Fortune Reading — Stella の占い文生成 (Gemini API バックエンド)
  *
- * 入力: category, natal, transit?, aspects, patterns, lang('ja'|'en')
- * 出力: { reading, advice, direction }
+ * 入力: category, natal, planetHouses?, aspects(N-N), transitAspects(N-T),
+ *        progressedAspects(N-P), patterns, date, userName?, lang('ja'|'en')
+ * 出力: { reading, advice }
+ *
+ * 3層構造 (トランジット主役): natal=土台(ハウス/生来の相), N-T=今日の主役,
+ *        N-P=今の人生の章(背景)。クロス相は {natal, moving, type, quality}。
  *
  * GEMINI_API_KEY は wrangler secret put GEMINI_API_KEY で設定
  * モデル: gemini-2.5-flash (テキスト生成、低コスト)
@@ -153,16 +157,23 @@ export async function callGemini(apiKey, prompt, models, opts = {}) {
 }
 
 // ── プロンプト生成 ──
-function buildPrompt({ category, lang, natal, planetHouses, aspects, patterns, date, userName }) {
+function buildPrompt({ category, lang, natal, planetHouses, aspects, transitAspects, progressedAspects, patterns, date, userName }) {
   const cat = FORTUNE_CATEGORIES[category] || FORTUNE_CATEGORIES.overall;
   const catName = lang === 'en' ? cat.en : cat.jp;
   const dateStr = date || new Date().toISOString().slice(0, 10);
+  // 末尾の敬称「さん」を取り除く。名前は冒頭の呼びかけには使わず、本文途中で
+  // 自然に触れるのは可 (プロンプト末尾のルールで制御)。
+  const cleanName = (typeof userName === 'string')
+    ? userName.replace(/さん$/, '').trim()
+    : null;
 
   // 関連アスペクト抽出 (関連惑星を含むもののみ)
   const relevantPlanets = new Set(cat.planets);
+
+  // 土台: 出生図 N-N アスペクト (生来の傾向)
   const relevantAspects = (aspects || []).filter(a =>
     relevantPlanets.has(a.p1) || relevantPlanets.has(a.p2)
-  ).slice(0, 8); // トークン節約
+  ).slice(0, 6); // トークン節約
 
   const aspectLines = relevantAspects.map(a => {
     const p1 = lang === 'en' ? a.p1 : (PLANET_JP[a.p1] || a.p1);
@@ -170,6 +181,24 @@ function buildPrompt({ category, lang, natal, planetHouses, aspects, patterns, d
     const type = lang === 'en' ? a.type : (ASPECT_JP[a.type] || a.type);
     return `- ${p1} × ${p2}: ${type} (${a.quality})`;
   }).join('\n');
+
+  // 主役/背景: クロスアスペクト整形 (N-T = 今日のトランジット / N-P = プログレス)。
+  // 要素は {natal, moving, type, quality}。natal か moving が関連天体なら採用。
+  const crossLines = (list, labelEn, labelJp) =>
+    (list || [])
+      .filter(a => relevantPlanets.has(a.natal) || relevantPlanets.has(a.moving))
+      .slice(0, 6)
+      .map(a => {
+        const n = lang === 'en' ? a.natal : (PLANET_JP[a.natal] || a.natal);
+        const m = lang === 'en' ? a.moving : (PLANET_JP[a.moving] || a.moving);
+        const type = lang === 'en' ? a.type : (ASPECT_JP[a.type] || a.type);
+        return lang === 'en'
+          ? `- ${labelEn} ${m} ${type} natal ${n} (${a.quality})`
+          : `- ${labelJp}${m} → 出生${n}: ${type} (${a.quality})`;
+      })
+      .join('\n');
+  const transitLines = crossLines(transitAspects, 'transiting', 'トランジット');
+  const progressedLines = crossLines(progressedAspects, 'progressed', 'プログレス');
 
   // 成立中の特殊パターン
   const patternLines = [];
@@ -208,50 +237,70 @@ function buildPrompt({ category, lang, natal, planetHouses, aspects, patterns, d
   }
 
   if (lang === 'en') {
-    return `You are an expert astrologer. Generate a personalized ${catName} fortune reading for today (${dateStr}).
+    return `You are an expert astrologer. Read today's (${dateStr}) ${catName} for this person, using their birth chart as the foundation and TODAY'S TRANSITS as the main driver.
 
-Focus planets for this category: ${cat.planets.join(', ')}
+【Foundation — natal chart (who they are)】
+Focus planets: ${cat.planets.join(', ')}
 ${categoryHousesHint ? `Houses traditionally read for ${catName}: ${categoryHousesHint}` : ''}
-${userName ? `User: ${userName}` : ''}
+${hasHouses ? `Natal house positions of focus planets:\n${houseLines || '(none mapped)'}` : '(House positions unavailable — birth time unknown)'}
+${aspectLines ? `Natal aspects (innate tendencies):\n${aspectLines}` : ''}
+${cleanName ? `Querent name: ${cleanName} (if you address them, use "${cleanName}"; do not invent another name)` : ''}
 
-${hasHouses ? `Natal house positions of focus planets:\n${houseLines || '(none mapped)'}\n` : '(House positions unavailable — birth time unknown)\n'}
-Key aspects involving these planets:
-${aspectLines || '(no significant aspects)'}
+【Main driver — today's transits (the sky activating their natal chart)】
+${transitLines || '(no notable transits to the focus planets today)'}
+
+【Background — progressions (their current life chapter)】
+${progressedLines || '(no notable progressions)'}
 
 Active special patterns:
 ${patternLines.join('\n') || '(none)'}
 
-🔴 If house positions are provided, weave them into the reading concretely (e.g. "with Venus in your 10th house of career, your love appears in professional contexts"). If unavailable, do not invent or mention houses.
+🔴 Structure rules:
+- The CORE of a daily reading is today's transits. Describe the transit aspects concretely as the main event.
+- Use the natal chart (houses, innate aspects) as the foundation: WHO receives this activation and in WHICH life area (house).
+- Add progressions lightly as the slow, current life-chapter / inner season — at most one sentence.
+- For any layer marked "(no notable ...)" or "(none)", do not force it or invent data.
+- If house positions are unavailable, do not mention houses.
+- Do NOT open by addressing the querent by name (no "Hi ${cleanName || 'there'}," greeting at the start). You MAY mention their name naturally within the body. Begin with the movement of the stars or the day's feeling.
 
 Return ONLY a JSON object with exactly these fields (no markdown, no extra text):
 {
-  "reading": "<2-3 sentence poetic reading focused on ${catName}. ~120-180 chars>",
-  "advice": "<1 sentence practical advice. ~40-80 chars>",
-  "direction": "<cardinal direction (N/NE/E/SE/S/SW/W/NW) + brief reason. ~30-60 chars>"
+  "reading": "<2-3 sentence poetic reading focused on ${catName}, led by today's transits. ~120-180 chars>",
+  "advice": "<1 sentence practical advice. ~40-80 chars>"
 }`;
   }
 
   // 日本語
-  return `あなたは経験豊かな占星術師です。今日 (${dateStr}) の${catName}について、パーソナライズされた占い文を生成してください。
+  return `あなたは経験豊かな占星術師です。今日 (${dateStr}) の${catName}を、出生図を土台に、今日のトランジットを主役として読み解いてください。
 
-このカテゴリの主要天体: ${cat.planets.map(p => PLANET_JP[p]).join('、')}
+【土台 — 出生図(あなたの性質)】
+主要天体: ${cat.planets.map(p => PLANET_JP[p]).join('、')}
 ${categoryHousesHint ? `${catName}で重視するハウス: ${categoryHousesHint}` : ''}
-${userName ? `対象者: ${userName}さん` : ''}
+${hasHouses ? `主要天体の出生ハウス位置:\n${houseLines || '(なし)'}` : '(ハウス位置は不明 — 出生時刻が登録されていません)'}
+${aspectLines ? `出生図のアスペクト(生来の傾向):\n${aspectLines}` : ''}
+${cleanName ? `相談者の名前: ${cleanName}（名前を入れる場合は「${cleanName}さん」とし、それ以外の名前を勝手に作らない）` : ''}
 
-${hasHouses ? `主要天体の出生ハウス位置:\n${houseLines || '(なし)'}\n` : '(ハウス位置は不明 — 出生時刻が登録されていません)\n'}
-主要天体に関わる現在のアスペクト:
-${aspectLines || '(顕著なアスペクトなし)'}
+【主役 — 今日のトランジット(今日の空が出生天体を刺激)】
+${transitLines || '(今日、主要天体に目立つトランジットはなし)'}
+
+【背景 — プログレス(今の人生の章)】
+${progressedLines || '(目立つ進行はなし)'}
 
 成立中の特殊パターン:
 ${patternLines.join('\n') || '(なし)'}
 
-🔴 ハウス位置が与えられている場合は、それを具体的に織り込んでください（例:「金星が10ハウス（社会的地位）にあるあなたの恋愛運は、職場や公的な場での出会いから訪れる」）。ハウス位置が「不明」の場合は、ハウスについて捏造したり言及したりしないでください。
+🔴 構成ルール:
+- 「今日の運勢」の中心は今日のトランジットです。トランジットの相を主役として具体的に描写してください。
+- 出生図(ハウス・生来のアスペクト)は「どんなあなたが・どの人生領域(ハウス)で」その刺激を受けるかの土台として織り込んでください。
+- プログレスは今のゆっくりした人生の章・内的な季節として、多くても1文だけそっと添えてください。
+- 「なし」と書かれた層は無理に触れず、捏造しないでください。
+- ハウス位置が「不明」の場合は、ハウスについて言及しないでください。
+- 冒頭を名前の呼びかけ（「〇〇さん、」等）から始めないでください。星の動きやその日の雰囲気から書き始め、本文の途中で自然に名前に触れるのは構いません。
 
 以下のJSON形式のみで返答してください (マークダウンや余分な文言は不要):
 {
-  "reading": "<${catName}にフォーカスした詩的な2〜3文の鑑定。120〜200文字程度>",
-  "advice": "<実践的なアドバイス1文。40〜80文字>",
-  "direction": "<吉方位(東/西/南/北/北東/北西/南東/南西のいずれか)と簡潔な理由。30〜60文字>"
+  "reading": "<${catName}にフォーカスし、今日のトランジットを主役にした詩的な2〜3文の鑑定。120〜200文字程度>",
+  "advice": "<実践的なアドバイス1文。40〜80文字>"
 }`;
 }
 
@@ -263,6 +312,8 @@ export async function handleFortune(body, env) {
     natal = {},
     planetHouses = null,
     aspects = [],
+    transitAspects = [],
+    progressedAspects = [],
     patterns = {},
     date,
     userName,
@@ -289,7 +340,7 @@ export async function handleFortune(body, env) {
   const fallback = env.FORTUNE_MODEL_FALLBACK || 'gemini-flash-latest';
   const models = primary === fallback ? [primary] : [primary, fallback];
 
-  const prompt = buildPrompt({ category, lang, natal, planetHouses, aspects, patterns, date, userName });
+  const prompt = buildPrompt({ category, lang, natal, planetHouses, aspects, transitAspects, progressedAspects, patterns, date, userName });
   const raw = await callGemini(env.GEMINI_API_KEY, prompt, models, {
     thinkingBudget: thinking ? 1024 : null,
   });
@@ -312,7 +363,6 @@ export async function handleFortune(body, env) {
     score,
     reading: parsed.reading || '',
     advice: parsed.advice || '',
-    direction: parsed.direction || '',
     lang,
   };
 }

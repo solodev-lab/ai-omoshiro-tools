@@ -25,7 +25,8 @@ class SanctuaryResetHourPicker extends StatefulWidget {
     required this.initialHour,
     this.initialMinute = 0,
     this.title = '✦ 1日の開始時刻',
-    this.subtitle = 'この時刻を跨ぐと「今日のタップボタン」がリセットされます',
+    this.subtitle = 'タロットの「1日1回」は、この時刻を跨ぐと新しい1日になります。\n'
+        '（星読みは0時で切り替わります）',
   });
 
   @override

@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../utils/astro_glossary.dart' show showAstroGlossaryDialog;
 import '../../utils/astro_houses.dart';
 import '../../utils/astro_lines.dart';
+import '../../utils/solara_storage.dart';
 import '../../widgets/astro_term_label.dart';
 import '../horoscope/horo_constants.dart' show planetGlyphs, planetNamesJP, signNames;
 import 'map_constants.dart' show planetMeta;
@@ -109,6 +110,9 @@ class MapRelocationPopup extends StatelessWidget {
         natalLng: baselineLng,
         tapLat: tapLat,
         tapLng: tapLng,
+        // Sanctuary「ハウスシステム」設定に従う (placidus/whole_sign)。
+        // fetchChart が毎回キャッシュを更新するため popup 表示時点で最新。
+        houseSystem: SolaraStorage.currentHouseSystem,
       );
       ascSignFrom = _signOf(_recoverBaselineAsc());
       ascSignTo = _signOf(relocated.asc);

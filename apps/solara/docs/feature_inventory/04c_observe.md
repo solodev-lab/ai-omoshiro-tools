@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 11 / 総行数: 3072
+- ファイル数: 11 / 総行数: 3091
 - class/mixin/extension/enum: 24
 - 関数 (top-level + method の素拾い): 76
 - Navigator.push 等: 0
@@ -298,7 +298,7 @@ observe_history.dart (現在サイクル HISTORY) と observe_history_past.dart
   </details>
 
 
-### `lib/screens/observe_screen.dart` (620 行)
+### `lib/screens/observe_screen.dart` (639 行)
 
 **imports:** dart=2 / package=1 / relative=14
 
@@ -315,7 +315,7 @@ observe_history.dart (現在サイクル HISTORY) と observe_history_past.dart
 - L28 `createState()`
 - L113 `initState()`
 - L128 `dispose()`
-- L349 `build()`
+- L368 `build()`
 
   <details><summary>private 関数 16 件</summary>
 
@@ -324,17 +324,17 @@ observe_history.dart (現在サイクル HISTORY) と observe_history_past.dart
   - L76 `_stopLoadingMessageRotation()`
   - L121 `_onProStatusChanged()`
   - L137 `_checkTodayReading()`
-  - L162 `_loadHistory()`
-  - L167 `_drawCard()`
-  - L283 `_handleTarotCreditExhausted()`
-  - L293 `_resetTodayReading()`
-  - L317 `_generateReadingStatic()`
-  - L334 `_startTypewriter()`
-  - L373 `_buildInnerTabs()`
-  - L387 `_innerTabBtn()`
-  - L408 `_buildDrawPanel()`
-  - L503 `_buildLoadingIndicator()`
-  - L578 `_buildReadingPanel()`
+  - L169 `_loadHistory()`
+  - L174 `_drawCard()`
+  - L303 `_handleTarotCreditExhausted()`
+  - L313 `_resetTodayReading()`
+  - L336 `_generateReadingStatic()`
+  - L353 `_startTypewriter()`
+  - L392 `_buildInnerTabs()`
+  - L406 `_innerTabBtn()`
+  - L427 `_buildDrawPanel()`
+  - L522 `_buildLoadingIndicator()`
+  - L597 `_buildReadingPanel()`
 
   </details>
 

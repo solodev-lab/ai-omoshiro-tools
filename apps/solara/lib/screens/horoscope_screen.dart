@@ -438,14 +438,14 @@ class HoroscopeScreenState extends State<HoroscopeScreen>
           birthDate: p.birthDate, birthTime: birthTime,
           birthLat: p.birthLat, birthLng: p.birthLng,
           birthTz: p.birthTz, birthTzName: p.birthTzName,
-          mode: mode, houseSystem: 'placidus',
+          mode: mode, // houseSystem は Sanctuary 設定に従う (fetchChart 内で解決)
           targetDate: targetDate,
         ),
         fetchChart(
           birthDate: p.birthDate, birthTime: birthTime,
           birthLat: p.birthLat, birthLng: p.birthLng,
           birthTz: p.birthTz, birthTzName: p.birthTzName,
-          mode: mode, houseSystem: 'placidus',
+          mode: mode, // houseSystem は Sanctuary 設定に従う (fetchChart 内で解決)
           relocateLat: p.homeLat, relocateLng: p.homeLng,
           targetDate: targetDate,
         ),
@@ -475,7 +475,7 @@ class HoroscopeScreenState extends State<HoroscopeScreen>
         birthTz: p.birthTz,
         birthTzName: p.birthTzName,
         mode: mode,
-        houseSystem: 'placidus',
+        // houseSystem は Sanctuary 設定に従う (fetchChart 内で解決)
         relocateLat: relLat,
         relocateLng: relLng,
         targetDate: targetDate,
@@ -629,6 +629,36 @@ class HoroscopeScreenState extends State<HoroscopeScreen>
       }
     }
 
+    // ── 3層構造 (トランジット主役) の追加データ ──
+    // 上の natal(土台: ハウス / N-N アスペクト) に加え、「今日のトランジット」
+    // (N-T = 主役) と「プログレス」(N-P = 今の人生の章=背景) を取得する。
+    // 占いは _baseProfile が基礎 (画面の編集は星読みに反映しない設計)。UI の
+    // chartMode に依存せず mode:'both' で natal+transit+progressed を一括取得。
+    var transitAspects = <Map<String, dynamic>>[];
+    var progressedAspects = <Map<String, dynamic>>[];
+    final fortuneBase = _baseProfile;
+    if (fortuneBase != null) {
+      final bt = fortuneBase.birthTimeUnknown ? '12:00' : fortuneBase.birthTime;
+      final fc = await fetchChart(
+        birthDate: fortuneBase.birthDate,
+        birthTime: bt,
+        birthLat: fortuneBase.birthLat,
+        birthLng: fortuneBase.birthLng,
+        birthTz: fortuneBase.birthTz,
+        birthTzName: fortuneBase.birthTzName,
+        mode: 'both',
+        targetDate: today,
+      );
+      if (fc != null && fc.transit != null) {
+        transitAspects = computeFortuneCrossAspects(
+            fc.natal, fc.transit!, _fortuneTransitOrbs);
+      }
+      if (fc != null && fc.progressed != null) {
+        progressedAspects = computeFortuneCrossAspects(
+            fc.natal, fc.progressed!, _fortuneProgressedOrbs);
+      }
+    }
+
     try {
       // 並列fetch — Free=overall のみ、Pro=全 5 カテゴリ (thinking ON)。
       final isPro = ProStatus.instance.isPro;
@@ -640,6 +670,9 @@ class HoroscopeScreenState extends State<HoroscopeScreen>
           natal: _natalPlanets,
           planetHouses: planetHouses.isEmpty ? null : planetHouses,
           aspects: aspects,
+          transitAspects: transitAspects.isEmpty ? null : transitAspects,
+          progressedAspects:
+              progressedAspects.isEmpty ? null : progressedAspects,
           patterns: patternsPayload,
           date: dateStr,
           userName: _profile?.name,

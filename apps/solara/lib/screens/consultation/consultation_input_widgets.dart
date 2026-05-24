@@ -15,9 +15,9 @@ const _themeChoices = <_ThemeChoice>[
 ];
 
 const _modeChoices = <_ModeChoice>[
-  _ModeChoice('daily', 'おでかけ', '今日・現在地周辺'),
-  _ModeChoice('travel', '旅行', '地域・都市・期間あり'),
-  _ModeChoice('migration', '移住', '大陸・国・年単位'),
+  _ModeChoice('daily', 'おでかけ'),
+  _ModeChoice('travel', '旅行'),
+  _ModeChoice('migration', '移住'),
 ];
 
 // scope 選択肢は場面別:
@@ -61,8 +61,7 @@ class _ThemeChoice {
 class _ModeChoice {
   final String id;
   final String label;
-  final String hint;
-  const _ModeChoice(this.id, this.label, this.hint);
+  const _ModeChoice(this.id, this.label);
 }
 
 class _ScopeChoice {
@@ -181,7 +180,7 @@ class _ModeRow extends StatelessWidget {
               child: Container(
                 margin: const EdgeInsets.symmetric(horizontal: 4),
                 padding:
-                    const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
+                    const EdgeInsets.symmetric(vertical: 16, horizontal: 4),
                 decoration: BoxDecoration(
                   color:
                       active ? const Color(0x33F6BD60) : const Color(0x10FFFFFF),
@@ -192,31 +191,17 @@ class _ModeRow extends StatelessWidget {
                         : SolaraColors.glassBorder,
                   ),
                 ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.max,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      m.label,
-                      style: TextStyle(
-                        color: active
-                            ? SolaraColors.solaraGoldLight
-                            : SolaraColors.textPrimary,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                      ),
+                child: Center(
+                  child: Text(
+                    m.label,
+                    style: TextStyle(
+                      color: active
+                          ? SolaraColors.solaraGoldLight
+                          : SolaraColors.textPrimary,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w500,
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      m.hint,
-                      style: const TextStyle(
-                        color: SolaraColors.textSecondary,
-                        fontSize: 10,
-                        letterSpacing: 0.3,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
+                  ),
                 ),
               ),
             ),
@@ -308,13 +293,14 @@ class _FreeTextField extends StatelessWidget {
         fillColor: const Color(0x10FFFFFF),
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        // 入力欄の枠は記入例チップ (0x14FFFFFF) より明るくして区別する。
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: SolaraColors.glassBorder),
+          borderSide: const BorderSide(color: Color(0x40FFFFFF)),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: SolaraColors.glassBorder),
+          borderSide: const BorderSide(color: Color(0x40FFFFFF)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),

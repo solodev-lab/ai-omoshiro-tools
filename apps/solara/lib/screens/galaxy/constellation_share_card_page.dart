@@ -35,10 +35,15 @@ class ConstellationShareCardPage extends StatefulWidget {
   final GalaxyCycle cycle;
   final ui.Image? artImage;
 
+  /// 形成演出と同じ神殿/星雲の背景画像。非 null のとき共有カードに敷く。
+  /// 形成演出からの共有 = 背景あり / 通常再生からの共有 = null で背景なし。
+  final ui.Image? bgImage;
+
   const ConstellationShareCardPage({
     super.key,
     required this.cycle,
     this.artImage,
+    this.bgImage,
   });
 
   @override
@@ -223,6 +228,29 @@ class _ConstellationShareCardPageState
         borderRadius: BorderRadius.circular(20),
         child: Stack(
           children: [
+            // 形成演出からの共有: 神殿/星雲の背景を敷く (背景あり版)。
+            if (widget.bgImage != null) ...[
+              Positioned.fill(
+                child: RawImage(image: widget.bgImage, fit: BoxFit.cover),
+              ),
+              // 名前/レアリティの可読性のため上下を暗くする。
+              Positioned.fill(
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: const [
+                        Color(0xD9050811),
+                        Color(0x4D050811),
+                        Color(0xE6050811),
+                      ],
+                      stops: const [0.0, 0.5, 1.0],
+                    ),
+                  ),
+                ),
+              ),
+            ],
             // 背景: 星屑 (画面全体に薄く敷くゴールドのグレア)
             Positioned.fill(
               child: DecoratedBox(

@@ -131,10 +131,20 @@ class _LocationsScreenState extends State<LocationsScreen> {
   /// .year/.month/.day を直接読むと JST 0..8 時帯で 1 日ズレる。
   Future<void> _shiftDate({int years = 0, int months = 0, int days = 0}) async {
     final base = _displayDate.toLocal();
-    int newY = base.year + years;
-    int newM = base.month + months;
-    int newD = (years != 0 || months != 0) ? base.day : base.day + days;
-    await _setYmd(newY, newM, newD);
+    // 日の移動 (◁ ▷) は実日付演算で行い、月末→翌月1日 / 月初→前月末へ
+    // 自然に繰り上げ/繰り下げる (DateTime が day 範囲外を正規化する)。
+    if (days != 0 && years == 0 && months == 0) {
+      var newLocal = DateTime(
+          base.year, base.month, base.day + days, _displayHourLocal, 0, 0);
+      if (newLocal.isBefore(_dateMin)) newLocal = _dateMin;
+      if (newLocal.isAfter(_dateMax)) newLocal = _dateMax;
+      await _setDate(newLocal.toUtc());
+      return;
+    }
+    // 年/月の移動は日を当月内にクランプ (例: 1/31 + 1ヶ月 → 2月末)。
+    final newY = base.year + years;
+    final newM = base.month + months;
+    await _setYmd(newY, newM, base.day);
   }
 
   /// 年月日を絶対値で指定（手入力用）。月の最大日や年範囲は内部でクランプ。
@@ -273,10 +283,16 @@ class _LocationsScreenState extends State<LocationsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final topPad = MediaQuery.of(context).padding.top;
+    final mq = MediaQuery.of(context);
+    final topPad = mq.padding.top;
+    // Locations 画面も Forecast と同様、端末のテキストスケールを尊重しつつ
+    // 全体を約 1.33 倍 (12/9) に底上げする。
+    final boosted = TextScaler.linear((mq.textScaler.scale(10) / 10) * (12 / 9));
     return TapToUnfocus(
       // 日付フィールド外をタップしたら defocus → _DateNumberField の onFocusChange で自動 commit。
-      child: Container(
+      child: MediaQuery(
+        data: mq.copyWith(textScaler: boosted),
+        child: Container(
       color: const Color(0xFF0A0A14),
       child: Column(children: [
         // Header
@@ -334,6 +350,7 @@ class _LocationsScreenState extends State<LocationsScreen> {
           Expanded(child: _slots.isEmpty ? _emptyState() : _buildList()),
         ],
       ]),
+      ),
       ),
     );
   }
@@ -510,13 +527,17 @@ class _LocationsScreenState extends State<LocationsScreen> {
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(children: [
-          Flexible(
+          // アイコンは固定幅。Flexible だと flex 配分で行の半分を専有し中央が
+          // 痩せていたため、固定幅にして中央 (Expanded) に最大領域を渡す。
+          SizedBox(
+            width: 34,
             child: Text(s.icon,
                 maxLines: 1,
                 overflow: TextOverflow.clip,
+                textAlign: TextAlign.center,
                 style: const TextStyle(fontSize: 22)),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 10),
           Expanded(child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
@@ -544,20 +565,23 @@ class _LocationsScreenState extends State<LocationsScreen> {
               _scoreBar(stats.score),
             ],
           )),
-          const SizedBox(width: 8),
-          // 右端 40px の固定枠 — HOME 行は HOME バッジ、他行は ⋯ メニュー。
-          // 全行同じ幅にすることでスコアバーの長さも揃う。
+          const SizedBox(width: 6),
+          // 右端は HOME バッジ / ⋯ メニューに必要な最小幅 (48px) のみ確保し、
+          // 残りを中央領域に回す。全行同幅でスコアバー右端も揃う。
           SizedBox(
-            width: 40,
+            width: 48,
             child: Center(child: s.isHome
               ? Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
                   decoration: BoxDecoration(
                     color: const Color(0x33F9D976),
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: const Text('HOME',
-                      style: TextStyle(fontSize: 8, color: Color(0xFFF9D976), letterSpacing: 1)),
+                      // 基準 9 → 1.33x で約 12px。softWrap:false で 1 行固定。
+                      maxLines: 1,
+                      softWrap: false,
+                      style: TextStyle(fontSize: 9, color: Color(0xFFF9D976), letterSpacing: 0.5)),
                 )
               : PopupMenuButton<String>(
                   icon: const Icon(Icons.more_horiz, color: Color(0xFF888888), size: 18),

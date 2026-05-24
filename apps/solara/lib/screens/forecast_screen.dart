@@ -6,6 +6,7 @@ import '../widgets/info_popup.dart';
 import '../widgets/no_profile_guide.dart';
 import '../widgets/pro_unlock_dialog.dart';
 import 'forecast/forecast_life_periods.dart';
+import 'forecast/forecast_section_header.dart';
 import 'forecast/forecast_top5.dart';
 import 'map/map_constants.dart';
 
@@ -105,10 +106,10 @@ class _ForecastScreenState extends State<ForecastScreen> {
       setState(() { _loading = false; _noProfile = true; });
       return;
     }
-    // yearOffset=0 は差分更新、>0 は単純フェッチ（未来のデータなので増分の概念なし）
-    final ForecastCache? cache = _yearOffset == 0
-        ? await ForecastRepo.refreshIncremental(profile: p)
-        : await ForecastRepo.fetchFull(profile: p, yearOffset: _yearOffset);
+    // 暦年(1/1〜12/31)分を取得 (全 yearOffset 共通)。スコアは日付ごとに確定的なので
+    // 暦年単位のキャッシュなら日付が進んでも内容は変わらない (ローリング更新は廃止)。
+    final ForecastCache? cache =
+        await ForecastRepo.fetchFull(profile: p, yearOffset: _yearOffset);
     final periods = (cache != null)
         ? await ForecastRepo.loadOrComputePeriods(cache: cache, yearOffset: _yearOffset)
         : <LifePeriod>[];
@@ -122,9 +123,22 @@ class _ForecastScreenState extends State<ForecastScreen> {
       _top5 = top5;
       _loading = false;
       _errorMsg = cache == null ? 'Forecast の取得に失敗しました。ネットワーク接続を確認してください。' : null;
-      // 初期選択: 先頭の日
-      _selected = cache != null && cache.days.isNotEmpty ? cache.days.first : null;
+      // 初期選択: 今年なら今日、過去/未来年は先頭(1/1)。
+      _selected = _initialSelectedDay(cache);
     });
+  }
+
+  /// 画面を開いたときの初期選択日: cache 内に今日があれば今日、無ければ先頭(1/1)。
+  ForecastDay? _initialSelectedDay(ForecastCache? cache) {
+    if (cache == null || cache.days.isEmpty) return null;
+    final now = DateTime.now();
+    final todayKey = '${now.year.toString().padLeft(4, "0")}'
+        '-${now.month.toString().padLeft(2, "0")}'
+        '-${now.day.toString().padLeft(2, "0")}';
+    for (final d in cache.days) {
+      if (d.date == todayKey) return d;
+    }
+    return cache.days.first;
   }
 
   Future<void> _setYearOffset(int offset) async {
@@ -148,8 +162,16 @@ class _ForecastScreenState extends State<ForecastScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final topPad = MediaQuery.of(context).padding.top;
-    return Container(
+    final mq = MediaQuery.of(context);
+    final topPad = mq.padding.top;
+    // Forecast 画面は情報密度が高く既定フォントが小さめなので、端末のテキスト
+    // スケール設定を尊重しつつ、この画面のみ底上げする。
+    // 倍率 = 12/9 ≈ 1.33 (最小 9px を 12px に引き上げる係数を全フォントに適用)。
+    // (ヒートマップのセルは色のみ=文字を持たないので拡大の影響を受けない)
+    final boosted = TextScaler.linear((mq.textScaler.scale(10) / 10) * (12 / 9));
+    return MediaQuery(
+      data: mq.copyWith(textScaler: boosted),
+      child: Container(
       color: const Color(0xFF0A0A14),
       child: Column(children: [
         // Header
@@ -186,6 +208,7 @@ class _ForecastScreenState extends State<ForecastScreen> {
         ),
         Expanded(child: _buildBody()),
       ]),
+      ),
     );
   }
 
@@ -232,6 +255,7 @@ class _ForecastScreenState extends State<ForecastScreen> {
         ForecastTop5Section(
           top5: _top5,
           mode: _top5Mode,
+          year: DateTime.now().year + _yearOffset,
           onModeChange: (m) => setState(() => _top5Mode = m),
           onSelect: (d) => setState(() => _selected = d),
         ),
@@ -244,10 +268,10 @@ class _ForecastScreenState extends State<ForecastScreen> {
   /// 表示期間 + 年間ベストの統合カード
   /// （Forecast スコアは出生情報のみで決まり地点に依存しないため基準地は表示しない）
   Widget _buildBasisCard(List<ForecastDay> days) {
-    // 表示期間
-    final now = DateTime.now();
-    final start = now.add(Duration(days: _yearOffset * 365));
-    final end = start.add(const Duration(days: 364));
+    // 表示期間 (暦年 1/1〜12/31)
+    final year = DateTime.now().year + _yearOffset;
+    final start = DateTime(year, 1, 1);
+    final end = DateTime(year, 12, 31);
     final rangeText = '${_fmt(start)} 〜 ${_fmt(end)}';
 
     // 年間ベスト
@@ -270,12 +294,16 @@ class _ForecastScreenState extends State<ForecastScreen> {
           const SizedBox(width: 8),
           const Text('表示期間',
               style: TextStyle(fontSize: 9, color: Color(0xFF999999), letterSpacing: 2)),
-          const Spacer(),
-          Flexible(
-            child: Text(rangeText,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontSize: 10, color: Color(0xFF999999))),
+          const SizedBox(width: 8),
+          // 「表示期間」のすぐ右から左寄せで表示。枠内に収まるよう自動縮小。
+          Expanded(
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
+              child: Text(rangeText,
+                  maxLines: 1,
+                  style: const TextStyle(fontSize: 10, color: Color(0xFF999999))),
+            ),
           ),
         ]),
         const SizedBox(height: 8),
@@ -386,21 +414,10 @@ class _ForecastScreenState extends State<ForecastScreen> {
       monthRangeLabel = '${fp[0]}年$fm月 〜 ${lp[0]}年$lm月';
     }
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Row(children: [
-        const Text('▸ 1年ヒートマップ',
-            style: TextStyle(fontSize: 11, color: Color(0xFFC9A84C), letterSpacing: 2)),
-        const SizedBox(width: 4),
-        // ⓘ info_outline: ヒートマップの色モード・色方向・ランクの読み方
-        GestureDetector(
-          onTap: () => _showHeatmapInfo(context),
-          behavior: HitTestBehavior.opaque,
-          child: const Padding(
-            padding: EdgeInsets.all(2),
-            child: Icon(Icons.info_outline,
-                size: 13, color: Color(0xCCAAAAAA)),
-          ),
-        ),
-      ]),
+      ForecastSectionHeader(
+        label: '1年ヒートマップ',
+        onInfo: () => _showHeatmapInfo(context),
+      ),
       // 期間表示: タイトル直下の行に配置。月数字のみのラベル列とぶつからない
       // よう、見出しと同じインデントで左寄せにする。
       const SizedBox(height: 2),

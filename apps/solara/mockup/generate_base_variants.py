@@ -49,6 +49,30 @@ BASE_SHAPES = {
         "sacred geometry composition, precise geometric star patterns with crystalline grid lines "
         "forming mathematical order, intricate constellation lattice, refined symmetric structure"
     ),
+    "taurus": (
+        "crystalline mineral formation composition, faceted gem-like crystal clusters and "
+        "mineral structures floating in space, solid grounded forms with metallic luster"
+    ),
+    "gemini": (
+        "parallel dual stream composition, two mirrored flowing streams running side by side "
+        "through space, twin ribbons of light moving in harmony, balanced duality"
+    ),
+    "cancer": (
+        "concentric ripple composition, gentle circular waves emanating outward like ripples "
+        "on a still water surface, soft nested arcs radiating from a calm center"
+    ),
+    "libra": (
+        "perfectly mirrored symmetrical composition, two balanced halves reflecting each other "
+        "across a central vertical axis, elegant equilibrium, harmonious bilateral symmetry"
+    ),
+    "sagittarius": (
+        "diagonal shooting beam composition, streaks of light arrows shooting diagonally "
+        "across space, dynamic ascending trajectories, swift directional motion"
+    ),
+    "capricorn": (
+        "crystalline mountain peak composition, sharp ascending crystal formations like "
+        "jagged mountain ridges rising through space, structured vertical pinnacles"
+    ),
 }
 
 # Each sign defines color palette, element descriptor, and mood

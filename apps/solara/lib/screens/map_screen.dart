@@ -1597,10 +1597,21 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     // 手動加算する必要がなく、新規追加時の被りリスクが原則無くなる。
     // FlutterMap だけは全画面のまま (NavBar 越しに blur が効く視覚効果を保持)。
 
+    // FortuneSheet 表示時のみ地図を ~150px 上へ視覚シフト (シート高の約半分)。
+    // camera は触らず Transform のみ。常時 AnimatedSlide でラップし offset だけ
+    // 変える → widget tree 構造不変で TileLayer State を保持 (= タイル消失 Case C
+    // を起こさない。project_solara_map_render_protocol)。閉じれば offset 0 に戻る。
+    final mapSlideOffset = Offset(0,
+        _fortuneSheetOpen ? (-150.0 / MediaQuery.of(context).size.height) : 0.0);
+
     return Stack(
       children: [
         // ── Map ──
-        FlutterMap(
+        AnimatedSlide(
+          duration: const Duration(milliseconds: 280),
+          curve: Curves.easeOutCubic,
+          offset: mapSlideOffset,
+          child: FlutterMap(
           mapController: _mapCtrl,
           options: MapOptions(
             initialCenter: _center, initialZoom: 14,
@@ -1855,7 +1866,8 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                 ),
               ]),
           ],
-        ),
+          ), // FlutterMap
+        ), // AnimatedSlide (Fortune シート時の地図上シフト)
 
         // ── 中央十字マーカー (常時表示) ──
         // 外側 Stack に直接置く (= FlutterMap と同じ全画面領域)。
@@ -1867,7 +1879,12 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
         // ACG モードでは中心の概念が薄れるため非表示。
         if (!_astroCartoMode)
           Positioned.fill(
-            child: IgnorePointer(
+            // 十字も地図と同じだけ上へスライドさせ、VP ピン (〇) と + を揃える。
+            child: AnimatedSlide(
+              duration: const Duration(milliseconds: 280),
+              curve: Curves.easeOutCubic,
+              offset: mapSlideOffset,
+              child: IgnorePointer(
               child: Center(
                 child: SizedBox(
                   width: 28, height: 28,
@@ -1886,7 +1903,8 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                   ]),
                 ),
               ),
-            ),
+              ), // IgnorePointer
+            ), // AnimatedSlide (十字も地図と同じだけ上へ)
           ),
 
         // ── 座標取得ラベル (Map L2「座標取得」トグル ON 時のみ) ──

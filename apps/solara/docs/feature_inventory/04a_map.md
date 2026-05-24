@@ -5,9 +5,9 @@
 
 ## サマリ
 
-- ファイル数: 23 / 総行数: 13396
+- ファイル数: 23 / 総行数: 13441
 - class/mixin/extension/enum: 86
-- 関数 (top-level + method の素拾い): 291
+- 関数 (top-level + method の素拾い): 292
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 18
 - Worker URL リテラル: 0
@@ -391,37 +391,38 @@ E4 (2026-04-29): 設計思想に基づく「両エネルギー事実提示」型
 - 集計: `showInfoPopup`×1
 
 
-### `lib/screens/map/map_fortune_sheet.dart` (775 行)
+### `lib/screens/map/map_fortune_sheet.dart` (798 行)
 
-**imports:** dart=0 / package=1 / relative=5
+**imports:** dart=0 / package=1 / relative=4
 
-- relative: `../../utils/direction_energy.dart`, `../../widgets/info_popup.dart`, `map_constants.dart`, `map_direction_popup.dart`, `map_widgets.dart`
+- relative: `../../utils/direction_energy.dart`, `../../widgets/info_popup.dart`, `map_constants.dart`, `map_direction_popup.dart`
 
 **型定義 (4):**
 
-- L16 `class FortuneFilterLabel : StatelessWidget`
+- L15 `class FortuneFilterLabel : StatelessWidget`
   - HTML: .ff-label { top:52px; left:16px; inline-flex row: ff-tag + ff-bars }
-- L191 `class FortuneSheet : StatelessWidget`
+- L190 `class FortuneSheet : StatelessWidget`
   - Fortune Sheet — HTML: .fs { bottom:80px; border-radius:16px 16px 0 0; }
-- L743 `class _FortuneRowsList : StatefulWidget`
+- L766 `class _FortuneRowsList : StatefulWidget`
   - `RawScrollbar` と `ListView` で同じ `ScrollController` を共有する。
-- L751 `class _FortuneRowsListState : State`
+- L774 `class _FortuneRowsListState : State`
 
-**関数 (7 public + 3 private):**
+**関数 (7 public + 4 private):**
 
-- L10 `pctValue()` — pct() from HTML: 0-5 → 0-83.3%, 5-10 → 83.3-100%
-- L33 `build()`
-- L216 `build()`
-- L466 `showCategoryInfoPopup()` — Map の使い方 + カテゴリと関連惑星ペアの説明 popup。
-- L748 `createState()`
-- L755 `dispose()`
-- L761 `build()`
+- L9 `pctValue()` — pct() from HTML: 0-5 → 0-83.3%, 5-10 → 83.3-100%
+- L32 `build()`
+- L215 `build()`
+- L489 `showCategoryInfoPopup()` — Map の使い方 + カテゴリと関連惑星ペアの説明 popup。
+- L771 `createState()`
+- L778 `dispose()`
+- L784 `build()`
 
-  <details><summary>private 関数 3 件</summary>
+  <details><summary>private 関数 4 件</summary>
 
-  - L280 `_buildSrcTabs()`
-  - L312 `_buildCatTabs()`
-  - L341 `_buildFortuneRows()`
+  - L270 `_buildSrcTabs()`
+  - L305 `_buildCatTabs()`
+  - L341 `_legendChip()`
+  - L364 `_buildFortuneRows()`
 
   </details>
 
@@ -657,35 +658,35 @@ A*C*G ライン (natal / transit) のタップ詳細 popup。
   </details>
 
 
-### `lib/screens/map/map_relocation_popup.dart` (652 行)
+### `lib/screens/map/map_relocation_popup.dart` (656 行)
 
-**imports:** dart=0 / package=3 / relative=7
+**imports:** dart=0 / package=3 / relative=8
 
-- relative: `../../utils/astro_glossary.dart`, `../../utils/astro_houses.dart`, `../../utils/astro_lines.dart`, `../../widgets/astro_term_label.dart`, `../horoscope/horo_constants.dart`, `map_constants.dart`, `map_line_narrative_sheet.dart`
+- relative: `../../utils/astro_glossary.dart`, `../../utils/astro_houses.dart`, `../../utils/astro_lines.dart`, `../../utils/solara_storage.dart`, `../../widgets/astro_term_label.dart`, `../horoscope/horo_constants.dart`, `map_constants.dart`, `map_line_narrative_sheet.dart`
 
 **型定義 (1):**
 
-- L41 `class MapRelocationPopup : StatelessWidget`
+- L42 `class MapRelocationPopup : StatelessWidget`
 
 **関数 (1 public + 13 private):**
 
-- L100 `build()`
+- L101 `build()`
 
   <details><summary>private 関数 13 件</summary>
 
-  - L169 `_buildConsultCta()`
-  - L206 `_buildLinesSection()`
-  - L249 `_buildLineRow()`
-  - L323 `_openLineSheet()`
-  - L340 `_buildTitleArea()`
-  - L373 `_buildHeader()`
-  - L467 `_buildAngleRow()`
-  - L529 `_buildPlanetGrid()`
-  - L538 `_buildPlanetRow()`
-  - L626 `_recoverBaselineAsc()`
-  - L631 `_signOf()`
-  - L636 `_fmtCoord()`
-  - L644 `_copyCoords()`
+  - L173 `_buildConsultCta()`
+  - L210 `_buildLinesSection()`
+  - L253 `_buildLineRow()`
+  - L327 `_openLineSheet()`
+  - L344 `_buildTitleArea()`
+  - L377 `_buildHeader()`
+  - L471 `_buildAngleRow()`
+  - L533 `_buildPlanetGrid()`
+  - L542 `_buildPlanetRow()`
+  - L630 `_recoverBaselineAsc()`
+  - L635 `_signOf()`
+  - L640 `_fmtCoord()`
+  - L648 `_copyCoords()`
 
   </details>
 
@@ -897,7 +898,7 @@ A*C*G ライン (natal / transit) のタップ詳細 popup。
 - L40 `build()`
 
 
-### `lib/screens/map_screen.dart` (3041 行)
+### `lib/screens/map_screen.dart` (3059 行)
 
 **imports:** dart=2 / package=6 / relative=36
 
@@ -917,7 +918,7 @@ A*C*G ライン (natal / transit) のタップ詳細 popup。
 - L1293 `snack()`
 - L1465 `snack()`
 - L1511 `build()`
-- L2573 `signOf()`
+- L2591 `signOf()`
 
   <details><summary>private 関数 55 件</summary>
 
@@ -957,25 +958,25 @@ A*C*G ライン (natal / transit) のタップ詳細 popup。
   - L1416 `_exitAstroCartoMode()`
   - L1464 `_geolocate()`
   - L1576 `_buildBody()`
-  - L2534 `_buildZenithPopup()`
-  - L2553 `_buildRelocationPopup()`
-  - L2618 `_proLabelForAstroKey()`
-  - L2636 `_proDescForAstroKey()`
-  - L2662 `_onAstroToggle()`
-  - L2691 `_enterConsultationFromDaily()`
-  - L2723 `_launchConsultation()`
-  - L2771 `_launchConsultationFromSearch()`
-  - L2802 `_reloadLocationSlots()`
-  - L2826 `_nearestNatalConjunctions()`
-  - L2847 `_findNearbyAstroLines()`
-  - L2865 `_zenithMarkerFrames()`
-  - L2866 `_nadirMarkerFrames()`
-  - L2867 `_zenithBandFrames()`
-  - L2868 `_nadirBandFrames()`
-  - L2872 `_filteredFrames()`
-  - L2885 `_visibleAstroLines()`
-  - L2913 `_buildNoProfileGuide()`
-  - L2947 `_showSearchVpHelpPopup()`
+  - L2552 `_buildZenithPopup()`
+  - L2571 `_buildRelocationPopup()`
+  - L2636 `_proLabelForAstroKey()`
+  - L2654 `_proDescForAstroKey()`
+  - L2680 `_onAstroToggle()`
+  - L2709 `_enterConsultationFromDaily()`
+  - L2741 `_launchConsultation()`
+  - L2789 `_launchConsultationFromSearch()`
+  - L2820 `_reloadLocationSlots()`
+  - L2844 `_nearestNatalConjunctions()`
+  - L2865 `_findNearbyAstroLines()`
+  - L2883 `_zenithMarkerFrames()`
+  - L2884 `_nadirMarkerFrames()`
+  - L2885 `_zenithBandFrames()`
+  - L2886 `_nadirBandFrames()`
+  - L2890 `_filteredFrames()`
+  - L2903 `_visibleAstroLines()`
+  - L2931 `_buildNoProfileGuide()`
+  - L2965 `_showSearchVpHelpPopup()`
 
   </details>
 

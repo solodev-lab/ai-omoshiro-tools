@@ -5,9 +5,9 @@
 
 ## サマリ
 
-- ファイル数: 14 / 総行数: 4638
+- ファイル数: 14 / 総行数: 4670
 - class/mixin/extension/enum: 18
-- 関数 (top-level + method の素拾い): 38
+- 関数 (top-level + method の素拾い): 39
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 1
 - Worker URL リテラル: 0
@@ -162,7 +162,7 @@ key: "${type}_${planet}" or "${type}_${planet}_${sign}"
   </details>
 
 
-### `lib/utils/consultation_record.dart` (180 行)
+### `lib/utils/consultation_record.dart` (205 行)
 
 **ファイル先頭コメント:**
 
@@ -187,11 +187,12 @@ intro/outro) + 蓄積した候補群 (1 枚ずつ「別の候補地」で増え�
 
 - L14 `class ConsultationRecord`
 
-**関数 (3 public + 0 private):**
+**関数 (4 public + 0 private):**
 
-- L98 `toReadings()` — 読み込み専用表示 (履歴詳細) のために reading 群を再構成する。
-- L118 `displayName()` — 履歴カード等の見出し用候補名 (方角は「○の方角」、座標のみは「この地点」)。
-- L133 `toJson()`
+- L71 `copyWith()` — お気に入りフラグ等を差し替えた複製を返す。
+- L121 `toReadings()` — 読み込み専用表示 (履歴詳細) のために reading 群を再構成する。
+- L141 `displayName()` — 履歴カード等の見出し用候補名 (方角は「○の方角」、座標のみは「この地点」)。
+- L156 `toJson()`
 
 
 ### `lib/utils/consultation_v2_request.dart` (241 行)
@@ -253,7 +254,7 @@ Worker (consultation_engine.js runConsultationPipeline) の契約に対応する
   </details>
 
 
-### `lib/utils/fortune_api.dart` (293 行)
+### `lib/utils/fortune_api.dart` (300 行)
 
 **ファイル先頭コメント:**
 
@@ -273,14 +274,14 @@ middleware が log_only モードなら bypass、enforced モードなら attest
 
 - L12 `class FortuneReading`
   - Fortune APIレスポンス
-- L93 `class RelocationNarrative`
-- L185 `class TarotReading`
+- L98 `class RelocationNarrative`
+- L190 `class TarotReading`
 
 **関数 (3 public + 0 private):**
 
-- L45 `fetchFortune()` — /fortune を叩いて占い文を取得
-- L145 `fetchRelocationNarrative()` — /relocation を叩いてリロケーション解説を取得。
-- L224 `fetchTarotReading()` — /tarot を叩いて1枚引きの Reading を生成する。
+- L42 `fetchFortune()` — /fortune を叩いて占い文を取得
+- L150 `fetchRelocationNarrative()` — /relocation を叩いてリロケーション解説を取得。
+- L229 `fetchTarotReading()` — /tarot を叩いて1枚引きの Reading を生成する。
 
 
 ### `lib/utils/planet_intro.dart` (559 行)

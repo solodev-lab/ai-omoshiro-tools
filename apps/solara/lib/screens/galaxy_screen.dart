@@ -492,6 +492,8 @@ class GalaxyScreenState extends State<GalaxyScreen>
                   controller: _replayController!,
                   artImage: _artImages[_replayCycle!.nounIdx],
                   onClose: _closeReplay,
+                  // 通常再生からの共有 = 背景なしカード (bgImage 渡さない)。
+                  onShare: () => _openConstellationShare(_replayCycle!),
                 ),
               ),
             if (_activeOverlay != null) _buildMoonOverlay(),
@@ -834,12 +836,15 @@ class GalaxyScreenState extends State<GalaxyScreen>
   /// 星座カード共有画面を開く (Free 機能、柱 3)。
   /// 刻星化 formation overlay 完了時の「共有」ボタンと、
   /// 将来 Star Atlas カード ⋯ メニューからも呼べる導線。
-  void _openConstellationShare(GalaxyCycle cycle) {
+  /// [bgImage] あり = 形成演出からの共有 (神殿背景つき)、
+  /// null = 通常再生からの共有 (背景なし)。
+  void _openConstellationShare(GalaxyCycle cycle, {ui.Image? bgImage}) {
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => ConstellationShareCardPage(
           cycle: cycle,
           artImage: _artImages[cycle.nounIdx],
+          bgImage: bgImage,
         ),
       ),
     );
@@ -1047,7 +1052,8 @@ class GalaxyScreenState extends State<GalaxyScreen>
                 cycle: _formationCycle!,
                 artImage: _artImages[_formationCycle!.nounIdx],
                 onComplete: _onFormationComplete,
-                onShare: () => _openConstellationShare(_formationCycle!),
+                onShare: (bgImage) =>
+                    _openConstellationShare(_formationCycle!, bgImage: bgImage),
               ),
             ),
           );

@@ -4,7 +4,6 @@ import '../../utils/direction_energy.dart';
 import '../../widgets/info_popup.dart';
 import 'map_constants.dart';
 import 'map_direction_popup.dart';
-import 'map_widgets.dart';
 
 /// pct() from HTML: 0-5 → 0-83.3%, 5-10 → 83.3-100%
 double pctValue(double v) {
@@ -223,46 +222,37 @@ class FortuneSheet extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTap: onClose,
-            onVerticalDragEnd: (details) {
-              if ((details.primaryVelocity ?? 0) > 0) onClose();
-            },
-            onVerticalDragUpdate: (details) {
-              if ((details.primaryDelta ?? 0) > 8) onClose();
-            },
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.only(top: 10, bottom: 6),
-              alignment: Alignment.center,
-              child: Container(
-                width: 36, height: 4,
-                decoration: BoxDecoration(
-                  color: const Color(0x40FFFFFF),
-                  borderRadius: BorderRadius.circular(2),
-                ),
+          // 上部: src タブ (合計/トランジット/プログレス) の右端に × を配置。
+          // 旧ドラッグバーの最上部空白 (~20px) を廃止し、その分シートを縮めて
+          // 地図を多く見せる (中の表示内容量は不変)。
+          Row(children: [
+            Expanded(child: _buildSrcTabs()),
+            GestureDetector(
+              onTap: onClose,
+              behavior: HitTestBehavior.opaque,
+              child: const Padding(
+                padding: EdgeInsets.only(left: 4, right: 10, top: 8, bottom: 8),
+                child: Icon(Icons.close, size: 22, color: Color(0xFFAAAAAA)),
               ),
             ),
-          ),
-          _buildSrcTabs(),
-          // 凡例 Row。フォント拡大時の RIGHT OVERFLOW 対策で横スクロール化
-          // (2026-05-08)。center 配置 → 左寄せ + ContentPadding に変更。
+          ]),
+          // 凡例: 4 エネルギーの色見本。モダン化で各項目を小さなチップに。
+          // 横スクロールでフォント拡大時の RIGHT OVERFLOW を回避 (2026-05-08)。
           Padding(
-            padding: const EdgeInsets.symmetric(vertical: 4),
+            padding: const EdgeInsets.only(top: 2, bottom: 6),
             child: SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 12),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  LegendDot(color: compColors['tSoft']!, label: 'Tソフト'),
-                  const SizedBox(width: 8),
-                  LegendDot(color: compColors['tHard']!, label: 'Tハード'),
-                  const SizedBox(width: 8),
-                  LegendDot(color: compColors['pSoft']!, label: 'Pソフト'),
-                  const SizedBox(width: 8),
-                  LegendDot(color: compColors['pHard']!, label: 'Pハード'),
+                  _legendChip(compColors['tSoft']!, 'Tソフト'),
+                  const SizedBox(width: 6),
+                  _legendChip(compColors['tHard']!, 'Tハード'),
+                  const SizedBox(width: 6),
+                  _legendChip(compColors['pSoft']!, 'Pソフト'),
+                  const SizedBox(width: 6),
+                  _legendChip(compColors['pHard']!, 'Pハード'),
                 ],
               ),
             ),
@@ -279,62 +269,95 @@ class FortuneSheet extends StatelessWidget {
 
   Widget _buildSrcTabs() {
     const srcs = [('combined', '合計'), ('transit', 'トランジット'), ('progressed', 'プログレス')];
-    // 2026-05-08: フォント拡大時の RIGHT OVERFLOW 対策で横スクロール化。
-    return Container(
-      decoration: const BoxDecoration(
-        border: Border(bottom: BorderSide(color: Color(0x14FFFFFF))),
-      ),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 8),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: srcs.map((s) {
-            final active = activeSrc == s.$1;
-            return GestureDetector(
+    // モダン化: 下線タブ → 角丸ピル。アクティブは金色の淡い塗り + 枠。
+    // 横スクロールでフォント拡大時の RIGHT OVERFLOW を回避 (2026-05-08)。
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.fromLTRB(12, 6, 12, 6),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: srcs.map((s) {
+          final active = activeSrc == s.$1;
+          return Padding(
+            padding: const EdgeInsets.only(right: 6),
+            child: GestureDetector(
               onTap: () => onSrcChanged(s.$1),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
                 decoration: BoxDecoration(
-                  border: Border(bottom: BorderSide(
-                    color: active ? const Color(0xFFC9A84C) : Colors.transparent, width: 2)),
+                  color: active ? const Color(0x2EC9A84C) : const Color(0x12FFFFFF),
+                  borderRadius: BorderRadius.circular(18),
+                  border: active
+                      ? Border.all(color: const Color(0x66C9A84C))
+                      : null,
                 ),
-                child: Text(s.$2, style: TextStyle(fontSize: 13,
-                  color: active ? const Color(0xFFC9A84C) : const Color(0xFF666666))),
+                child: Text(s.$2, style: TextStyle(fontSize: 12.5,
+                  color: active ? const Color(0xFFEAD9A8) : const Color(0xFF888888),
+                  fontWeight: active ? FontWeight.w600 : FontWeight.w400)),
               ),
-            );
-          }).toList(),
-        ),
+            ),
+          );
+        }).toList(),
       ),
     );
   }
 
   Widget _buildCatTabs() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8),
-      decoration: const BoxDecoration(
-        border: Border(bottom: BorderSide(color: Color(0x0FFFFFFF))),
-      ),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Row(
-          children: categoryColors.entries.map((e) {
-            final active = activeCategory == e.key;
-            return GestureDetector(
+    // モダン化: 下線タブ → 角丸ピル。アクティブはカテゴリ色の淡い塗り + 枠 + 同色文字。
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.fromLTRB(12, 2, 12, 8),
+      child: Row(
+        children: categoryColors.entries.map((e) {
+          final active = activeCategory == e.key;
+          final c = e.value;
+          return Padding(
+            padding: const EdgeInsets.only(right: 6),
+            child: GestureDetector(
               onTap: () => onCatChanged(e.key),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  border: Border(bottom: BorderSide(
-                    color: active ? const Color(0xFFC9A84C) : Colors.transparent, width: 2)),
+                  color: active
+                      ? c.withValues(alpha: 0.20)
+                      : const Color(0x12FFFFFF),
+                  borderRadius: BorderRadius.circular(16),
+                  border: active
+                      ? Border.all(color: c.withValues(alpha: 0.55))
+                      : null,
                 ),
-                child: Text(categoryLabels[e.key] ?? e.key, style: TextStyle(fontSize: 13,
-                  color: active ? const Color(0xFFC9A84C) : const Color(0xFF666666))),
+                child: Text(categoryLabels[e.key] ?? e.key, style: TextStyle(fontSize: 12.5,
+                  color: active ? c : const Color(0xFF888888),
+                  fontWeight: active ? FontWeight.w600 : FontWeight.w400)),
               ),
-            );
-          }).toList(),
-        ),
+            ),
+          );
+        }).toList(),
       ),
+    );
+  }
+
+  /// 凡例チップ: 小さな角丸ドット + ラベルを淡い角丸背景でまとめる (モダン)。
+  Widget _legendChip(Color color, String label) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: const Color(0x10FFFFFF),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Row(mainAxisSize: MainAxisSize.min, children: [
+        Container(
+          width: 8,
+          height: 8,
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(2),
+          ),
+        ),
+        const SizedBox(width: 5),
+        Text(label,
+            style: const TextStyle(fontSize: 11.5, color: Color(0xFFAAAAAA))),
+      ]),
     );
   }
 

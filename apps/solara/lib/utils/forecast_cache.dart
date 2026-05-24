@@ -175,14 +175,16 @@ class ForecastCache {
 }
 
 const _forecastApiUrl = solaraForecastUrl;
-const _cacheKeyPrefix = 'solara_forecast_cache_';
-const _cooldownKey = 'solara_forecast_last_fetch';
+// v2: 暦年(1/1〜12/31)ベースへ移行 (旧 v1 は今日起点ローリング)。プレフィックスを
+// 変えることで旧ローリングキャッシュは読まれず、暦年データで再取得される。
+const _cacheKeyPrefix = 'solara_forecast_cache_v2_';
+const _cooldownKey = 'solara_forecast_last_fetch_v2';
 // 運勢サイクル（LifePeriod）専用の永続キャッシュ。日次データの 6h cooldown とは独立。
 // 保存値は profile + yearOffset 単位。プロフィール変更で hash が変わり実質クリア。
 // 強制リフレッシュ（force=true）でのみ再計算される。
-const _periodsKeyPrefix = 'solara_forecast_periods_';
+const _periodsKeyPrefix = 'solara_forecast_periods_v2_';
 // 強運Top5 専用の永続キャッシュ。modes（overall + 5 カテゴリ）を一括保存。
-const _top5KeyPrefix = 'solara_forecast_top5_';
+const _top5KeyPrefix = 'solara_forecast_top5_v2_';
 const _top5Modes = ['overall', 'love', 'money', 'healing', 'work', 'communication'];
 
 /// 出生情報のハッシュ。プロフィール変更を検知するために使う。
@@ -315,12 +317,17 @@ class ForecastRepo {
     await prefs.setString(_coolKey(profileHash, yearOffset), DateTime.now().toIso8601String());
   }
 
-  /// Worker /astro/forecast を呼び出して全365日取得。
+  /// その年の日数 (平年365 / 閏年366)。
+  static int _daysInYear(int year) =>
+      DateTime(year + 1, 1, 1).difference(DateTime(year, 1, 1)).inDays;
+
+  /// Worker /astro/forecast を呼び出して暦年(1/1〜12/31)分を取得。
   /// 強制キャッシュ無効化時は force=true で cooldown を無視する。
-  /// yearOffset: 0=今日から1年、1=翌年、2=翌々年...4=5年目
-  /// - yearOffset>0 で startDate 未指定時は today+yearOffset*365 を自動設定
-  /// - キャッシュは yearOffset ごとに独立
-  /// - API呼び出しは yearOffset ごとに1回のみ（複数年一括フェッチはしない）
+  /// yearOffset: 0=今年、1=来年、2=再来年...4=5年目 (= 今年+yearOffset の暦年)。
+  /// - startDate 未指定時は (今年+yearOffset) の 1/1、days はその年の日数を自動設定。
+  /// - Forecast スコアは日付ごとに確定的なので、暦年単位で取得・キャッシュすれば
+  ///   日付が進んでも内容は変わらない (ローリング更新は廃止)。
+  /// - キャッシュは yearOffset ごとに独立。
   static Future<ForecastCache?> fetchFull({
     required SolaraProfile profile,
     String? startDate,
@@ -337,10 +344,11 @@ class ForecastRepo {
         if (cached != null) return cached;
       }
     }
-    // yearOffset>0 で startDate 未指定なら today+N*365日を自動セット
-    if (yearOffset > 0 && startDate == null) {
-      final start = DateTime.now().add(Duration(days: yearOffset * 365));
-      startDate = '${start.year.toString().padLeft(4, "0")}-${start.month.toString().padLeft(2, "0")}-${start.day.toString().padLeft(2, "0")}';
+    // 暦年ベース: startDate 未指定なら (今年 + yearOffset) の 1/1 から、その年の日数分。
+    if (startDate == null) {
+      final year = DateTime.now().year + yearOffset;
+      startDate = '${year.toString().padLeft(4, "0")}-01-01';
+      days = _daysInYear(year);
     }
 
     try {
@@ -356,7 +364,8 @@ class ForecastRepo {
       if (profile.birthTzName != null && profile.birthTzName!.isNotEmpty) {
         body['birthTzName'] = profile.birthTzName;
       }
-      if (startDate != null) body['startDate'] = startDate;
+      // startDate は上で暦年 1/1 を必ずセット済み。
+      body['startDate'] = startDate;
 
       final resp = await http.post(
         Uri.parse(_forecastApiUrl),
@@ -387,76 +396,4 @@ class ForecastRepo {
     return null;
   }
 
-  /// 月次差分更新。
-  /// - 既存キャッシュの最終日 +1 日から、startDate+365 日まで取得し、マージ。
-  /// - 新規取得日数 0 の場合は既存キャッシュを返す。
-  /// - キャッシュ無ければ fetchFull にフォールバック。
-  static Future<ForecastCache?> refreshIncremental({
-    required SolaraProfile profile,
-    int targetDays = 365,
-  }) async {
-    final hash = profileHashOf(profile);
-    final existing = await loadCached(hash);
-    if (existing == null) {
-      return fetchFull(profile: profile, days: targetDays);
-    }
-    // 今日をウィンドウの開始として、既存末尾までの差分を算出
-    final today = _todayKey();
-    final lastDate = existing.days.isNotEmpty ? existing.days.last.date : today;
-
-    // 既存が今日より過去で終わっているなら、その翌日以降を取得
-    final lastD = DateTime.parse('${lastDate}T00:00:00Z');
-    final todayD = DateTime.parse('${today}T00:00:00Z');
-    final desiredEnd = todayD.add(Duration(days: targetDays - 1));
-
-    if (!desiredEnd.isAfter(lastD)) {
-      // 既存で足りているので、先頭を今日以降に切り詰めて返す
-      final trimmed = existing.days.where((d) => d.date.compareTo(today) >= 0).toList();
-      return ForecastCache(
-        profileHash: hash,
-        fetchedAt: existing.fetchedAt,
-        days: trimmed,
-      );
-    }
-
-    // 差分のみ取得（翌日〜desiredEnd まで）
-    final diffStart = lastD.add(const Duration(days: 1));
-    final diffDays = desiredEnd.difference(diffStart).inDays + 1;
-    if (diffDays <= 0) return existing;
-    if (diffDays > 370) {
-      // ウィンドウ外 — fetchFull に戻す
-      return fetchFull(profile: profile, days: targetDays, force: true);
-    }
-    final diffStartKey = '${diffStart.year.toString().padLeft(4, "0")}-${diffStart.month.toString().padLeft(2, "0")}-${diffStart.day.toString().padLeft(2, "0")}';
-    final fresh = await fetchFull(
-      profile: profile,
-      startDate: diffStartKey,
-      days: diffDays,
-      force: true,
-    );
-    if (fresh == null) return existing;
-
-    // 過去分（今日より前）を切り捨ててマージ
-    final merged = <String, ForecastDay>{};
-    for (final d in existing.days) {
-      if (d.date.compareTo(today) >= 0) merged[d.date] = d;
-    }
-    for (final d in fresh.days) {
-      merged[d.date] = d;
-    }
-    final mergedList = merged.values.toList()..sort((a, b) => a.date.compareTo(b.date));
-    final capped = mergedList.take(targetDays).toList();
-    final out = ForecastCache(
-      profileHash: hash,
-      fetchedAt: DateTime.now(),
-      days: capped,
-    );
-    await _saveCache(out);
-    return out;
-  }
-
-  static String _todayKey() {
-    final now = DateTime.now();
-    return '${now.year.toString().padLeft(4, "0")}-${now.month.toString().padLeft(2, "0")}-${now.day.toString().padLeft(2, "0")}';
-  }
 }

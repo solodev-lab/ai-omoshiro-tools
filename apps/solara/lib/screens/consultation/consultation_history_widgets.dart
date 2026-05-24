@@ -5,7 +5,9 @@
 part of 'consultation_history_screen.dart';
 
 class _EmptyState extends StatelessWidget {
-  const _EmptyState();
+  /// true = 「お気に入り」フィルタ時の空状態。
+  final bool favOnly;
+  const _EmptyState({this.favOnly = false});
 
   @override
   Widget build(BuildContext context) {
@@ -16,15 +18,15 @@ class _EmptyState extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(
-                Icons.auto_stories_outlined,
+              Icon(
+                favOnly ? Icons.star_border : Icons.auto_stories_outlined,
                 color: SolaraColors.textSecondary,
                 size: 36,
               ),
               const SizedBox(height: 12),
-              const Text(
-                'まだ相談履歴はありません',
-                style: TextStyle(
+              Text(
+                favOnly ? 'お気に入りはまだありません' : 'まだ相談履歴はありません',
+                style: const TextStyle(
                   color: SolaraColors.textPrimary,
                   fontSize: 14,
                   height: 1.6,
@@ -33,8 +35,10 @@ class _EmptyState extends StatelessWidget {
               ),
               const SizedBox(height: 4),
               Text(
-                'Map で地点をタップ、または Daily Transit から相談を始めると、\nここに保存されます。',
-                style: TextStyle(
+                favOnly
+                    ? '記録の ☆ をタップすると、ここに集まります。'
+                    : 'Map で地点をタップ、または Daily Transit から相談を始めると、\nここに保存されます。',
+                style: const TextStyle(
                   color: SolaraColors.textSecondary,
                   fontSize: 12,
                   height: 1.6,
@@ -49,14 +53,58 @@ class _EmptyState extends StatelessWidget {
   }
 }
 
+/// 履歴フィルタ用のトグルチップ (すべて / お気に入り)。
+class _FilterChip extends StatelessWidget {
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+  const _FilterChip({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+        decoration: BoxDecoration(
+          color: selected ? const Color(0x33F6BD60) : const Color(0x0DFFFFFF),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: selected ? const Color(0x80F6BD60) : const Color(0x1AFFFFFF),
+          ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: selected
+                ? SolaraColors.solaraGoldLight
+                : SolaraColors.textSecondary,
+            fontSize: 13,
+            letterSpacing: 0.3,
+            fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _HistoryCard extends StatelessWidget {
   final ConsultationRecord record;
+  final bool isFavorite;
   final VoidCallback onTap;
   final VoidCallback onDelete;
+  final VoidCallback onToggleFavorite;
   const _HistoryCard({
     required this.record,
+    required this.isFavorite,
     required this.onTap,
     required this.onDelete,
+    required this.onToggleFavorite,
   });
 
   String get _dateLabel {
@@ -171,6 +219,23 @@ class _HistoryCard extends StatelessWidget {
                         letterSpacing: 0.4,
                       ),
                     ),
+                  ),
+                ),
+                SizedBox(
+                  width: 32,
+                  height: 32,
+                  child: IconButton(
+                    icon: Icon(
+                      isFavorite ? Icons.star : Icons.star_border,
+                      size: 19,
+                      color: isFavorite
+                          ? SolaraColors.solaraGold
+                          : const Color(0x99ACACAC),
+                    ),
+                    padding: EdgeInsets.zero,
+                    visualDensity: VisualDensity.compact,
+                    tooltip: isFavorite ? 'お気に入り解除' : 'お気に入り登録',
+                    onPressed: onToggleFavorite,
                   ),
                 ),
                 SizedBox(

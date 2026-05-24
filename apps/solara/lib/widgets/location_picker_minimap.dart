@@ -32,7 +32,7 @@ class LocationPickerMinimap extends StatefulWidget {
     required this.lng,
     required this.onChanged,
     this.zoom = 14,
-    this.height = 180,
+    this.height = 270, // 出生地/自宅の座標微調整がしやすいよう縦長 (旧 180 の 1.5 倍)
   });
 
   @override

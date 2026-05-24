@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import '../../utils/astro_math.dart';
 import '../../utils/direction_energy.dart';
 import '../../utils/solara_api.dart' show solaraChartUrl;
+import '../../utils/solara_storage.dart';
 import 'map_constants.dart';
 
 /// ============================================================
@@ -71,13 +72,15 @@ Future<ChartResult?> fetchChart({
   int birthTz = 9,
   String? birthTzName,
   String mode = 'both', // 'natal' | 'transit' | 'progressed' | 'both'
-  String houseSystem = 'placidus',
+  String? houseSystem, // null = Sanctuary「ハウスシステム」設定に従う
   DateTime? targetDate,
   double? relocateLat,
   double? relocateLng,
 }) async {
   try {
     final t = (targetDate ?? DateTime.now()).toUtc();
+    // 未指定なら Sanctuary「ハウスシステム」設定 (placidus/whole_sign) に従う。
+    final hs = houseSystem ?? await SolaraStorage.loadHouseSystem();
     final body = <String, dynamic>{
       'birthDate': birthDate,
       'birthTime': birthTime,
@@ -86,7 +89,7 @@ Future<ChartResult?> fetchChart({
       'birthLng': birthLng,
       'mode': mode,
       'transitDate': t.toIso8601String(),
-      'houseSystem': houseSystem,
+      'houseSystem': hs,
     };
     if (birthTzName != null && birthTzName.isNotEmpty) {
       body['birthTzName'] = birthTzName;

@@ -50,3 +50,9 @@ mockup/share-assets/tarot_scene/*/_backup/
 
 # Planet textures are large, regeneratable via generate_planet_textures.py
 mockup/share-assets/tarot_scene/planet_textures/
+
+# Generated catasterism background source images (variants / bright) — large,
+# regeneratable via mockup/generate_*.py, NOT bundled in the app
+# (the app ships a curated subset under assets/catasterism-bg/). Local only.
+mockup/share-assets/backgrounds_*_variants/
+mockup/share-assets/backgrounds_*_bright/

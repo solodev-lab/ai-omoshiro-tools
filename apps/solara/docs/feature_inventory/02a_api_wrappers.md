@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 10 / 総行数: 2054
+- ファイル数: 10 / 総行数: 2057
 - class/mixin/extension/enum: 23
 - 関数 (top-level + method の素拾い): 34
 - Navigator.push 等: 0
@@ -14,34 +14,34 @@
 
 ## ファイル別
 
-### `lib/screens/map/map_astro.dart` (508 行)
+### `lib/screens/map/map_astro.dart` (511 行)
 
-**imports:** dart=2 / package=1 / relative=4
+**imports:** dart=2 / package=1 / relative=5
 
-- relative: `../../utils/astro_math.dart`, `../../utils/direction_energy.dart`, `../../utils/solara_api.dart`, `map_constants.dart`
+- relative: `../../utils/astro_math.dart`, `../../utils/direction_energy.dart`, `../../utils/solara_api.dart`, `../../utils/solara_storage.dart`, `map_constants.dart`
 
 **型定義 (2):**
 
-- L20 `class ChartResult`
+- L21 `class ChartResult`
   - CF Worker /astro/chart のレスポンス
-- L187 `class ScoreResult`
+- L190 `class ScoreResult`
 
 **関数 (8 public + 3 private):**
 
-- L66 `fetchChart()` — CF Worker にチャートを要求
-- L259 `scoreAll()` — ChartResult → Map画面用16方位スコア
-- L288 `getAB()`
-- L297 `addT()`
-- L299 `addP()`
-- L326 `isAngle()`
-- L411 `addCT()`
-- L413 `addCP()`
+- L67 `fetchChart()` — CF Worker にチャートを要求
+- L262 `scoreAll()` — ChartResult → Map画面用16方位スコア
+- L291 `getAB()`
+- L300 `addT()`
+- L302 `addP()`
+- L329 `isAngle()`
+- L414 `addCT()`
+- L416 `addCP()`
 
   <details><summary>private 関数 3 件</summary>
 
-  - L121 `_cosFall()`
-  - L162 `_emptyComp()`
-  - L234 `_addAspectComp()`
+  - L124 `_cosFall()`
+  - L165 `_emptyComp()`
+  - L237 `_addAspectComp()`
 
   </details>
 
