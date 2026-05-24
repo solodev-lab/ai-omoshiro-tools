@@ -1,6 +1,6 @@
 # Solara Code Audit
 
-対象: lib (179 個の .dart)
+対象: lib (180 個の .dart)
 
 ## 1. ファイル行数 (>= 300 行)
 
@@ -10,7 +10,7 @@
 | 1923 | 🔴 HARD | lib/screens/map/map_daily_transit_screen.dart |
 | 1385 | 🔴 HARD | lib/screens/sanctuary/sanctuary_title_diagnosis.dart |
 | 1291 | 🔴 HARD | lib/screens/sanctuary_screen.dart |
-| 1289 | 🔴 HARD | lib/screens/galaxy_screen.dart |
+| 1269 | 🔴 HARD | lib/screens/galaxy_screen.dart |
 | 1067 | 🔴 HARD | lib/screens/forecast_screen.dart |
 | 1013 | 🔴 HARD | lib/screens/map/daily_transit_data.dart |
 | 879 | 🔴 HARD | lib/screens/horoscope_screen.dart |
@@ -84,7 +84,7 @@
 
 ### 1. 📁 別ファイル間 (14 箇所、14 ファイル)
 
-  - lib/screens/galaxy_screen.dart:549
+  - lib/screens/galaxy_screen.dart:550
   - lib/widgets/celestial_event_bar.dart:63
   - lib/widgets/full_moon_overlay.dart:300
   - lib/widgets/new_moon_overlay.dart:313
@@ -117,7 +117,7 @@
 
 ### 4. 📁 別ファイル間 (9 箇所、9 ファイル)
 
-  - lib/screens/galaxy_screen.dart:548
+  - lib/screens/galaxy_screen.dart:549
   - lib/widgets/full_moon_overlay.dart:299
   - lib/widgets/location_picker_minimap.dart:133
   - lib/screens/consultation/consultation_result_credit_widgets.dart:180
@@ -161,7 +161,7 @@
 
 ### 8. 📁 別ファイル間 (7 箇所、7 ファイル)
 
-  - lib/screens/galaxy_screen.dart:550
+  - lib/screens/galaxy_screen.dart:551
   - lib/widgets/full_moon_overlay.dart:301
   - lib/widgets/new_moon_overlay.dart:314
   - lib/screens/galaxy/constellation_share_card_page.dart:165
@@ -306,7 +306,7 @@
 ## 3. TODO/FIXME/HACK/DEBUG 残置
 
   - lib/main.dart:35 — `// debug/Web/desktop/設定値不足ではいずれも no-op (Free 動作は不変)。`
-  - lib/screens/galaxy_screen.dart:449 — `// DEBUG: Cycle完了フローの各タイミングを手動トリガー`
+  - lib/screens/galaxy_screen.dart:450 — `// DEBUG: Cycle完了フローの各タイミングを手動トリガー`
   - lib/utils/device_security_status.dart:115 — `// debug build では `Threat.debug` で常時発火 + signing cert が release と`
   - lib/screens/galaxy/galaxy_archive_filter.dart:81 — `// debug で過去サイクルを後から作ったり、同月内に複数 cycle を並べると`
 

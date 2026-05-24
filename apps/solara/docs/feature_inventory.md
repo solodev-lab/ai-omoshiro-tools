@@ -1444,16 +1444,16 @@ Observe の機能領域:
 
 ### 4d.1 概要
 
-`lib/screens/galaxy/` 配下 + `lib/screens/galaxy_screen.dart` の **5 ファイル / 計 1,857 行**。Solara の Galaxy タブ = **「占いをしない、節目で自己と対話する」体験の心臓部**。
+`lib/screens/galaxy/` 配下 + `lib/screens/galaxy_screen.dart` の **6 ファイル / 計 2,408 行**。Solara の Galaxy タブ = **「占いをしない、節目で自己と対話する」体験の心臓部**。
 
-**機械分類の精度** (✅ オーバーライド不要): 5 ファイル全て Galaxy 専用、cross-cutting なし。
+**機械分類の精度** (✅ オーバーライド不要): 6 ファイル全て Galaxy 専用、cross-cutting なし。
 
 Galaxy の機能領域:
 
 | 機能領域 | 概要 |
 |---|---|
 | 月相サイクル可視化 | 新月→満月→刻星化 (catasterism) の 1 サイクル全日数を 3 層スパイラルで表示 |
-| Stella メッセージ | 月相連動の詩的メッセージ表示 (新月時刻 + 満月時刻 + 3 日以内告知優先) |
+| Stella メッセージ | 月相連動メッセージ表示。新月/満月の当日・72h 以内は発生時刻 (端末ローカル) を告知優先、それ以外は月齢を 3 日ごと 10 区分に分けた癒しメッセージ (日英各 100・日替わりランダム、`galaxy_stella_messages.dart`) |
 | 意図と振り返り記録 | 新月で `LunarIntention` 入力 → 満月で `MidpointCheck` → 刻星化で `CatasterismResult` |
 | 星座生成 (= 刻星化) | サイクル完了時に MST edges + 形容詞 × 名詞で星座生成 (`constellation_namer`) |
 | Star Atlas (図鑑) | 過去刻星化した星座コレクション (61 星座まで) |
@@ -1462,19 +1462,20 @@ Galaxy の機能領域:
 
 **Pro 公開時の立場**: 本層は **Solara の最大差別化体験 = Pro 化対象として不適切**。Pro 化すると独自性が消える。代わりに「過去サイクルアルバム」「形成演出の任意再生」「カスタム背景画像」が Pro 拡張案 ([`project_galaxy_spec`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/project_galaxy_spec.md))。
 
-### 4d.2 ファイル別 役割 + 呼出元 (5 本)
+### 4d.2 ファイル別 役割 + 呼出元 (6 本)
 
 | # | ファイル | 行 | 主要 export | 役割 |
 |---|---|---|---|---|
-| 1 | [`galaxy_screen.dart`](../lib/screens/galaxy_screen.dart) | 1,167 | `GalaxyScreen` (Stateful)、`GalaxyScreenState` (public state、`regenerateBackground` / `pauseMotion` を外部公開) | **🔴 Galaxy 統合ハブ**。41 関数 (public 9 + private 32)、18 import (層 1a/1b/1c/2a/2b/3a/3c/widgets + galaxy 内 4)。本層で最大規模、画面のほぼ全部の状態とロジックが集中 |
-| 2 | [`galaxy_star_atlas.dart`](../lib/screens/galaxy/galaxy_star_atlas.dart) | 317 | `GalaxyStarAtlasTab`、`_AtlasHeader`、`_ConstellationCard`、`_EmptyState` | **STAR ATLAS タブ** (HTML `.atlas-content` 移植)。過去刻星化した星座のグリッドコレクション (最大 61 星座 = `constellation_namer` の名詞テーブル数)。`MiniConstellationPainter` (3a) で各カード描画 |
-| 3 | [`galaxy_replay_overlay.dart`](../lib/screens/galaxy/galaxy_replay_overlay.dart) | 148 | `GalaxyReplayOverlay` (Stateless) | 過去サイクルの星座を再生表示する overlay。`ConstellationPainter` (3a) で full-size 描画、`cameraAngle` 制御で anamorphic 3D 効果 |
-| 4 | [`galaxy_constellation_builder.dart`](../lib/screens/galaxy/galaxy_constellation_builder.dart) | 124 | (関数のみ、class なし) | サイクル完了時の星座構築ヘルパー。`daily_reading` 履歴 + `moon_phase` + `tarot_data` + `constellation_namer` を組み合わせて 1 サイクル分の `GalaxyCycle` (1c) を生成 |
+| 1 | [`galaxy_screen.dart`](../lib/screens/galaxy_screen.dart) | 1,269 | `GalaxyScreen` (Stateful)、`GalaxyScreenState` (public state、`regenerateBackground` / `pauseMotion` を外部公開) | **🔴 Galaxy 統合ハブ**。41 関数 (public 9 + private 32)、19 import (層 1a/1b/1c/2a/2b/3a/3c/widgets + galaxy 内 5)。本層で最大規模、画面のほぼ全部の状態とロジックが集中 |
+| 2 | [`galaxy_star_atlas.dart`](../lib/screens/galaxy/galaxy_star_atlas.dart) | 460 | `GalaxyStarAtlasTab`、`_AtlasHeader`、`_ConstellationCard`、`_EmptyState` | **STAR ATLAS タブ** (HTML `.atlas-content` 移植)。過去刻星化した星座のグリッドコレクション (最大 61 星座 = `constellation_namer` の名詞テーブル数)。`MiniConstellationPainter` (3a) で各カード描画 |
+| 3 | [`galaxy_replay_overlay.dart`](../lib/screens/galaxy/galaxy_replay_overlay.dart) | 160 | `GalaxyReplayOverlay` (Stateless) | 過去サイクルの星座を再生表示する overlay。`ConstellationPainter` (3a) で full-size 描画、`cameraAngle` 制御で anamorphic 3D 効果 |
+| 4 | [`galaxy_constellation_builder.dart`](../lib/screens/galaxy/galaxy_constellation_builder.dart) | 130 | (関数のみ、class なし) | サイクル完了時の星座構築ヘルパー。`daily_reading` 履歴 + `moon_phase` + `tarot_data` + `constellation_namer` を組み合わせて 1 サイクル分の `GalaxyCycle` (1c) を生成 |
 | 5 | [`galaxy_sample_data.dart`](../lib/screens/galaxy/galaxy_sample_data.dart) | 101 | `injectGalaxySampleData`、`_buildSampleFromTemplate` | **デモ用サンプルデータ注入**。Cycle に 25 個の星 + Star Atlas に 61 全星座を仮データで埋める。開発・デモ用 (本番ユーザーには表示されない) |
+| 6 | [`galaxy_stella_messages.dart`](../lib/screens/galaxy/galaxy_stella_messages.dart) | 288 | `moonHealingMessage(now, isJP)` (関数のみ、class なし) | **Stella 癒しメッセージ辞書**。月齢を 3 日ごと 10 区分に分け、各区分に月相に沿った癒しメッセージを日英各 10 個 (計 200)。日付シードで日替わりランダム選択 (再描画では固定)。文面方針: 時間帯を断定しない / 分かりにくい比喩を避ける / どんな状態も否定しない / 見守る「私たち」の声。`galaxy_screen._buildStellaMessage` が月相告知の無い日に呼ぶ |
 
 ### 4d.3 `galaxy_screen.dart` の主要関数 (41 関数)
 
-最大規模の単一ファイル (1,167 行) の中身を把握:
+最大規模の単一ファイル (1,269 行) の中身を把握:
 
 **ライフサイクル + 状態**
 - `regenerateBackground` (public) — タブ切替時にネビュラ位置/色/星を再生成
@@ -1493,7 +1494,7 @@ Galaxy の機能領域:
 **Cycle タブ (= メイン表示)**
 - `_buildCycleTab` — 3 層スパイラル (`CycleSpiralPainter` 3a) + Stella メッセージ + バッジ
 - `_buildDayBadge` / `_buildMoonBadge` — サイクル日カウント + 月相バッジ
-- `_buildStellaMessage` — 月相連動の詩的メッセージ (新月/満月時刻 + 3 日以内告知優先)
+- `_buildStellaMessage` — 月相連動メッセージ。新月/満月の当日・72h 以内は発生時刻 (端末ローカル) 告知を優先、それ以外は `moonHealingMessage` (月齢別の癒しメッセージ・日替わり) にフォールバック
 - `_moonPhaseDescription` — 月相の文字列表現
 
 **ドット タップ / ドラッグ (= スパイラル操作)**

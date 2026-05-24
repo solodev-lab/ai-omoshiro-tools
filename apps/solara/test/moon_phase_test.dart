@@ -87,7 +87,13 @@ void main() {
     test('Cycle ID matches new moon date', () {
       final date = DateTime.utc(2026, 1, 25);
       final id = MoonPhase.getCycleId(date);
-      expect(id, equals('2026-01-18'));
+      // getCycleId は端末ローカルTZでの新月日 (世界中対応・JST固定ではない)。
+      // 実行環境に依存しないよう、既知の新月を同じローカルTZへ変換して照合する。
+      final local = newMoons2026[0].toLocal();
+      final expected = '${local.year}-'
+          '${local.month.toString().padLeft(2, '0')}-'
+          '${local.day.toString().padLeft(2, '0')}';
+      expect(id, equals(expected));
     });
 
     test('Day index is within bounds', () {

@@ -21,18 +21,18 @@
 | 4a | Map 画面 | 23 | [04a_map.md](04a_map.md) |
 | 4b | Horoscope 画面 | 23 | [04b_horoscope.md](04b_horoscope.md) |
 | 4c | Observe (Tarot) 画面 | 11 | [04c_observe.md](04c_observe.md) |
-| 4d | Galaxy 画面 | 9 | [04d_galaxy.md](04d_galaxy.md) |
+| 4d | Galaxy 画面 | 10 | [04d_galaxy.md](04d_galaxy.md) |
 | 4e | Sanctuary 画面 | 10 | [04e_sanctuary.md](04e_sanctuary.md) |
 | 4f | サブ画面 (Forecast / Locations / Philosophy / Font Preview) | 26 | [04f_subscreens.md](04f_subscreens.md) |
 | 5 | 連携層 (main.dart / PopScope / IndexedStack) | 1 | [05_main.md](05_main.md) |
 
 ## 全体統計
 
-- Dart ファイル: 179
+- Dart ファイル: 180
 - Worker JS ファイル: 23
 - Worker エンドポイント総数: 30
 - Dart class/mixin/extension/enum 総数: 437
-- Dart 関数総数 (素拾い): 1422
+- Dart 関数総数 (素拾い): 1423
 
 ## 対整合チェック
 

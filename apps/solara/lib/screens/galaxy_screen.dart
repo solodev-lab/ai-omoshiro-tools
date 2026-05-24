@@ -24,6 +24,7 @@ import '../widgets/tap_to_unfocus.dart';
 
 import 'galaxy/constellation_share_card_page.dart';
 import 'galaxy/galaxy_constellation_builder.dart';
+import 'galaxy/galaxy_stella_messages.dart';
 import 'galaxy/galaxy_cycle_actions_sheet.dart';
 import 'galaxy/galaxy_sample_data.dart';
 import 'galaxy/galaxy_star_atlas.dart';
@@ -641,28 +642,9 @@ class GalaxyScreenState extends State<GalaxyScreen>
     final now = DateTime.now();
 
     // 月相連動メッセージ (当日 / 3 日以内) を最優先で表示。
-    // 該当しない場合のみ既存のカード描画進捗メッセージにフォールバック。
-    String? msg = _stellaMoonPhaseMsg(now, isJP: isJP);
-    if (msg == null) {
-      final readingCount = _cycleDays.where((d) => d != null).length;
-      if (readingCount == 0) {
-        msg = isJP
-            ? 'Observe タブでカードを引き、宇宙の螺旋を始めよう...'
-            : 'Draw a card on the Observe tab to begin your cosmic spiral...';
-      } else if (readingCount < 7) {
-        msg = isJP
-            ? 'あなたの螺旋が目覚める。$readingCount つの星が今このサイクルに灯る。'
-            : 'Your spiral awakens. $readingCount star${readingCount > 1 ? 's' : ''} now glow in this cycle.';
-      } else if (readingCount < 20) {
-        msg = isJP
-            ? '星座が形を成していく。さらにカードを引き、真の姿を顕現させよう。'
-            : 'The constellation takes shape. Keep drawing to reveal its true form.';
-      } else {
-        msg = isJP
-            ? '輝かしいサイクル。まもなくこの星々は星座となる。'
-            : 'A luminous cycle. Soon these stars will become a constellation.';
-      }
-    }
+    // 該当しない場合は、月齢に沿った癒しメッセージ (日替わり) にフォールバック。
+    final msg = _stellaMoonPhaseMsg(now, isJP: isJP) ??
+        moonHealingMessage(now, isJP: isJP);
 
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
@@ -691,7 +673,7 @@ class GalaxyScreenState extends State<GalaxyScreen>
     );
   }
 
-  /// 新月・満月の発生時刻 (JST) を Stella メッセージに告知する。
+  /// 新月・満月の発生時刻 (端末ローカル時刻) を Stella メッセージに告知する。
   /// 当日 (isFullMoon / isNewMoon) または 3 日以内 (72h) の場合のみ
   /// メッセージを返す。それ以外は null (= 既存メッセージへフォールバック)。
   String? _stellaMoonPhaseMsg(DateTime now, {required bool isJP}) {
@@ -704,35 +686,33 @@ class GalaxyScreenState extends State<GalaxyScreen>
     if (MoonPhase.isFullMoon(now)) {
       final fm = MoonPhase.findFullMoonInCycle(now).toLocal();
       return isJP
-          ? '今日 ${fmtTime(fm)} (JST) が満月のピーク。'
-          : 'Today ${fmtTime(fm)} JST is the full moon.';
+          ? '今日 ${fmtTime(fm)} が満月のピーク。'
+          : 'Today ${fmtTime(fm)} is the full moon.';
     }
     // 2. 今日が新月の日
     if (MoonPhase.isNewMoon(now)) {
       final nm = MoonPhase.findPreviousNewMoon(now).toLocal();
       return isJP
-          ? '今日 ${fmtTime(nm)} (JST) が新月のピーク。'
-          : 'Today ${fmtTime(nm)} JST is the new moon.';
+          ? '今日 ${fmtTime(nm)} が新月のピーク。'
+          : 'Today ${fmtTime(nm)} is the new moon.';
     }
     // 3. 次の新月まで 3 日以内
     final nextNew = MoonPhase.findNextNewMoon(now).toLocal();
     final hoursToNew = nextNew.difference(now).inHours;
     if (hoursToNew > 0 && hoursToNew < 72) {
-      final days = (hoursToNew / 24).ceil();
       final dt = '${fmtDate(nextNew)} ${fmtTime(nextNew)}';
       return isJP
-          ? '次の新月まであと $days 日 — $dt (JST)。'
-          : 'New moon in $days day${days > 1 ? 's' : ''} — $dt JST.';
+          ? '次の新月まであと $hoursToNew 時間 — $dt。'
+          : 'New moon in $hoursToNew hour${hoursToNew > 1 ? 's' : ''} — $dt.';
     }
     // 4. 次の満月まで 3 日以内
     final fullMoon = MoonPhase.findFullMoonInCycle(now).toLocal();
     final hoursToFull = fullMoon.difference(now).inHours;
     if (hoursToFull > 0 && hoursToFull < 72) {
-      final days = (hoursToFull / 24).ceil();
       final dt = '${fmtDate(fullMoon)} ${fmtTime(fullMoon)}';
       return isJP
-          ? '次の満月まであと $days 日 — $dt (JST)。'
-          : 'Full moon in $days day${days > 1 ? 's' : ''} — $dt JST.';
+          ? '次の満月まであと $hoursToFull 時間 — $dt。'
+          : 'Full moon in $hoursToFull hour${hoursToFull > 1 ? 's' : ''} — $dt.';
     }
     return null;
   }
