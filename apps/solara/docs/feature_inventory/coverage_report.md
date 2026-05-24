@@ -51,10 +51,10 @@
 
 ## #1 / #2 機械抽出 ↔ feature_inventory.md (人手版) の対整合
 
-- 機械抽出した class/mixin/extension/enum: **426**
+- 機械抽出した class/mixin/extension/enum: **428**
 - inventory に登場する識別子 (大文字始まり ``backtick``囲み): **222**
 
-### #1 機械にあるが Doc に書かれていない (246)
+### #1 機械にあるが Doc に書かれていない (248)
 
 - `AppAttestClient`
 - `ConstellationShareCardPage`
@@ -75,6 +75,7 @@
 - `GalaxyArchiveFilterBar`
 - `GalaxyArchiveSort`
 - `GalaxyArchiveSortLabel`
+- `HoroLocationInput`
 - `LegalUrls`
 - `MapTimeSliderState`
 - `MemoTextField`
@@ -176,6 +177,7 @@
 - `_HoroChartData`
 - `_HoroChartView`
 - `_HoroIconPainter`
+- `_HoroLocationInputState`
 - `_HoroRelocationPanelState`
 - `_HoroTransitPanelState`
 - `_HourNumberField`
@@ -254,9 +256,7 @@
 - `_SanctuaryScreenState`
 - `_SanctuaryTitleDiagnosisPageState`
 - `_ScopeChoice`
-- `_ScopeWrap`
-- `_ScrollableRowPanel`
-- … 残り 46 省略
+- … 残り 48 省略
 
 ### #2 Doc に書いてあるがコードに存在しない (ゴースト記述) (42)
 
@@ -317,7 +317,7 @@
 
 ### 層 4b: Horoscope 画面
 
-- ファイル数: 22
+- ファイル数: 23
 - Worker URL 呼出: (なし)
 - Popup/Dialog: `showInfoPopup`×2
 - Navigator.push 等: 0 箇所
@@ -371,7 +371,7 @@
 | 3b | · | · | · | · | · | · | · | 1 | · | · | · | · | · | · | · | · |
 | 3c | · | 5 | 4 | 2 | 4 | · | 12 | 4 | · | · | · | · | · | · | · | · |
 | 4a | 10 | 11 | · | 13 | 7 | · | 19 | 23 | 3 | 31 | 2 | · | · | · | 3 | · |
-| 4b | 5 | 13 | · | 3 | 4 | · | 14 | · | · | · | 29 | · | · | 2 | · | · |
+| 4b | 5 | 13 | · | 3 | 4 | · | 14 | · | · | · | 31 | · | · | 2 | · | · |
 | 4c | 1 | 1 | 15 | · | 7 | 4 | 6 | 4 | · | · | · | 16 | · | · | 1 | · |
 | 4d | 2 | 6 | 13 | 1 | 5 | 2 | 12 | 2 | 1 | · | · | · | 8 | · | · | · |
 | 4e | 1 | 4 | · | 2 | 7 | · | 14 | 1 | · | · | · | · | · | 9 | 2 | · |
@@ -421,19 +421,15 @@
 > 各ソースの SHA1 を `_stamps.json` に記録し、差分を検出。
 > 変更されたファイルが属する層は、人手版インベントリ章の見直し対象。
 
-- 追加: **1** / 削除: **1** / 変更: **1**
+- 追加: **1** / 削除: **0** / 変更: **3**
 
 ### 変更されたファイル (層別)
 
-- **層 4f**: `lib/screens/consultation/consultation_history_screen.dart`
+- **層 4b**: `lib/screens/horoscope/horo_birth_panel.dart`, `lib/screens/horoscope/horo_panel_shared.dart`, `lib/screens/horoscope/horo_transit_panel.dart`
 
 ### 追加されたファイル
 
-- `lib/screens/consultation/consultation_history_widgets.dart` (層 4f)
-
-### 削除されたファイル
-
-- `lib/utils/world_cities.dart`
+- `lib/screens/horoscope/horo_location_input.dart` (層 4b)
 
 ## #7 astro_glossary 用語辞書対整合
 

@@ -15,6 +15,7 @@
 // 工数注: 最寄り線計算は呼出側で済ませて [nearestLines] として渡す。
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:latlong2/latlong.dart';
 
 import '../../theme/solara_colors.dart';
@@ -99,6 +100,20 @@ class _ConsultEntryPopupState extends State<ConsultEntryPopup> {
     return parts.isEmpty ? null : parts.join(' / ');
   }
 
+  /// 座標を "緯度, 経度" (小数) でクリップボードへコピー。
+  /// Horo 画面の出生地/トランジット場所欄で「座標貼り付け」できる。
+  void _copyCoords() {
+    final lat = widget.tapPoint.latitude;
+    final lng = widget.tapPoint.longitude;
+    Clipboard.setData(ClipboardData(
+        text: '${lat.toStringAsFixed(6)}, ${lng.toStringAsFixed(6)}'));
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+      content: Text('座標をコピーしました'),
+      duration: Duration(seconds: 2),
+    ));
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -171,13 +186,44 @@ class _ConsultEntryPopupState extends State<ConsultEntryPopup> {
           const SizedBox(height: 2),
           Padding(
             padding: const EdgeInsets.only(left: 24),
-            child: Text(
-              _coordLabel,
-              style: const TextStyle(
-                color: SolaraColors.textSecondary,
-                fontSize: 11,
-                letterSpacing: 0.3,
-              ),
+            child: Row(
+              children: [
+                Flexible(
+                  child: Text(
+                    _coordLabel,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: SolaraColors.textSecondary,
+                      fontSize: 11,
+                      letterSpacing: 0.3,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                GestureDetector(
+                  onTap: _copyCoords,
+                  behavior: HitTestBehavior.opaque,
+                  child: Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(color: const Color(0x66F6BD60)),
+                      color: const Color(0x14F6BD60),
+                    ),
+                    child: const Row(mainAxisSize: MainAxisSize.min, children: [
+                      Icon(Icons.copy,
+                          size: 11, color: SolaraColors.solaraGoldLight),
+                      SizedBox(width: 4),
+                      Text('座標取得',
+                          style: TextStyle(
+                              fontSize: 10,
+                              color: SolaraColors.solaraGoldLight,
+                              fontWeight: FontWeight.w600)),
+                    ]),
+                  ),
+                ),
+              ],
             ),
           ),
 

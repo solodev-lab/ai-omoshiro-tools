@@ -1,35 +1,35 @@
 # Solara Code Audit
 
-対象: lib (178 個の .dart)
+対象: lib (179 個の .dart)
 
 ## 1. ファイル行数 (>= 300 行)
 
 | 行数 | 判定 | ファイル |
 |------|------|----------|
-| 3042 | 🔴 HARD | lib/screens/map_screen.dart |
+| 3041 | 🔴 HARD | lib/screens/map_screen.dart |
 | 1923 | 🔴 HARD | lib/screens/map/map_daily_transit_screen.dart |
 | 1385 | 🔴 HARD | lib/screens/sanctuary/sanctuary_title_diagnosis.dart |
 | 1291 | 🔴 HARD | lib/screens/sanctuary_screen.dart |
 | 1289 | 🔴 HARD | lib/screens/galaxy_screen.dart |
 | 1067 | 🔴 HARD | lib/screens/forecast_screen.dart |
 | 1013 | 🔴 HARD | lib/screens/map/daily_transit_data.dart |
+| 879 | 🔴 HARD | lib/screens/horoscope_screen.dart |
 | 868 | 🔴 HARD | lib/screens/map/map_astro_carto.dart |
-| 819 | 🔴 HARD | lib/screens/horoscope_screen.dart |
 | 775 | 🔴 HARD | lib/screens/map/map_fortune_sheet.dart |
 | 758 | 🔴 HARD | lib/widgets/fortune_overlays/work_painter.dart |
 | 746 | 🔴 HARD | lib/widgets/catasterism_formation_overlay.dart |
 | 735 | 🔴 HARD | lib/screens/locations_screen.dart |
 | 702 | 🔴 HARD | lib/screens/horoscope/horo_chart_painter.dart |
 | 693 | 🔴 HARD | lib/widgets/fortune_overlays/money_painter.dart |
+| 652 | 🔴 HARD | lib/screens/map/map_relocation_popup.dart |
 | 647 | 🔴 HARD | lib/utils/astro_glossary.dart |
 | 646 | 🔴 HARD | lib/screens/map/map_viewpoint_menu.dart |
 | 642 | 🔴 HARD | lib/widgets/fortune_overlays/communication_painter.dart |
 | 626 | 🔴 HARD | lib/utils/constellation_namer.dart |
 | 620 | 🔴 HARD | lib/screens/observe_screen.dart |
-| 617 | 🔴 HARD | lib/screens/map/map_relocation_popup.dart |
 | 616 | 🔴 HARD | lib/screens/map/map_astro_lines.dart |
 | 600 | 🔴 HARD | lib/screens/map/map_search.dart |
-| 590 | 🔴 HARD | lib/screens/sanctuary/sanctuary_profile_editor.dart |
+| 592 | 🔴 HARD | lib/screens/sanctuary/sanctuary_profile_editor.dart |
 | 586 | 🔴 HARD | lib/utils/solara_storage.dart |
 | 581 | 🔴 HARD | lib/widgets/fortune_overlays/love_painter.dart |
 | 564 | 🔴 HARD | lib/widgets/new_moon_overlay.dart |
@@ -42,7 +42,7 @@
 | 484 | 🟡 WARN | lib/screens/consultation/consultation_input_picker.dart |
 | 481 | 🟡 WARN | lib/widgets/full_moon_overlay.dart |
 | 481 | 🟡 WARN | lib/screens/map/map_overlays.dart |
-| 468 | 🟡 WARN | lib/screens/consultation/consultation_input_screen.dart |
+| 471 | 🟡 WARN | lib/screens/consultation/consultation_input_screen.dart |
 | 467 | 🟡 WARN | lib/screens/horoscope/horo_relocation_panel.dart |
 | 462 | 🟡 WARN | lib/utils/forecast_cache.dart |
 | 460 | 🟡 WARN | lib/screens/galaxy/galaxy_star_atlas.dart |
@@ -51,7 +51,6 @@
 | 445 | 🟡 WARN | lib/widgets/catasterism_overlay.dart |
 | 443 | 🟡 WARN | lib/screens/paywall_widgets.dart |
 | 435 | 🟡 WARN | lib/screens/consultation/consultation_input_widgets.dart |
-| 435 | 🟡 WARN | lib/screens/horoscope/horo_birth_panel.dart |
 | 423 | 🟡 WARN | lib/screens/observe/observe_history.dart |
 | 417 | 🟡 WARN | lib/utils/solara_auth.dart |
 | 414 | 🟡 WARN | lib/screens/consultation/consultation_result_screen.dart |
@@ -69,14 +68,15 @@
 | 354 | 🟡 WARN | lib/widgets/sanctuary_account_section.dart |
 | 353 | 🟡 WARN | lib/screens/consultation/consultation_place_picker_screen.dart |
 | 350 | 🟡 WARN | lib/screens/horoscope/horo_fortune_cards.dart |
+| 338 | 🟡 WARN | lib/screens/map/consult_entry_popup.dart |
 | 336 | 🟡 WARN | lib/screens/consultation/consultation_result_widgets.dart |
+| 336 | 🟡 WARN | lib/screens/horoscope/horo_birth_panel.dart |
 | 325 | 🟡 WARN | lib/screens/consultation/consultation_credit_sheet.dart |
 | 324 | 🟡 WARN | lib/screens/consultation/consultation_history_widgets.dart |
 | 319 | 🟡 WARN | lib/screens/galaxy/galaxy_archive_filter.dart |
 | 313 | 🟡 WARN | lib/utils/celestial_events.dart |
 | 313 | 🟡 WARN | lib/screens/observe/observe_history_past.dart |
-| 307 | 🟡 WARN | lib/screens/horoscope/horo_panel_shared.dart |
-| 307 | 🟡 WARN | lib/screens/map/map_menu_chips.dart |
+| 309 | 🟡 WARN | lib/screens/horoscope/horo_panel_shared.dart |
 | 306 | 🟡 WARN | lib/widgets/class_card.dart |
 | 304 | 🟡 WARN | lib/screens/map/map_location_markers.dart |
 
@@ -154,7 +154,7 @@
   - lib/widgets/info_popup.dart:106
   - lib/screens/consultation/consultation_input_widgets.dart:388
   - lib/screens/consultation/consultation_result_widgets.dart:142
-  - lib/screens/map/consult_entry_popup.dart:230
+  - lib/screens/map/consult_entry_popup.dart:276
   ```
   ),
   ```
@@ -208,7 +208,7 @@
   - lib/screens/consultation/consultation_input_widgets.dart:389
   - lib/screens/consultation/consultation_result_widgets.dart:31
   - lib/screens/consultation/consultation_result_widgets.dart:143
-  - lib/screens/map/consult_entry_popup.dart:231
+  - lib/screens/map/consult_entry_popup.dart:277
   - lib/screens/map/map_astro_carto.dart:84
   ```
   ),

@@ -1042,7 +1042,7 @@ Map 画面は単に「地図を表示する」だけでなく、以下の機能�
 |---|---|---|---|
 | [`map_direction_popup.dart`](../lib/screens/map/map_direction_popup.dart) | 374 | `showDirectionEnergyPopup`、`_PopupBody`、`_EnergyBar`、`_ContribRow` | **🔴 方角タップ詳細 popup**。Soft / Hard 独立 2 バー + 主要寄与アスペクト attribution ([`project_solara_design_philosophy`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/project_solara_design_philosophy.md) 中核実装、吉凶判定なし) |
 | [`map_planet_intro_popup.dart`](../lib/screens/map/map_planet_intro_popup.dart) | 239 | `showPlanetIntroPopup`、`_PlanetIntroBody` | 惑星マーカータップ説明 (層 1a `planet_intro.dart` 辞書 = 10 惑星 × 3 frame の説明テキスト) |
-| [`map_relocation_popup.dart`](../lib/screens/map/map_relocation_popup.dart) | 564 | `MapRelocationPopup` | **🔴 引越し popup** (Phase M0 完成、[`project_solara_relocation_m0`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/project_solara_relocation_m0.md))。Dart 完結 (`astro_houses.dart` + `astro_lines.dart`)。出生地 → タップ地点の ASC/MC + 12 ハウス + アスペクトライン詳細 |
+| [`map_relocation_popup.dart`](../lib/screens/map/map_relocation_popup.dart) | 652 | `MapRelocationPopup` | **🔴 引越し popup** (Phase M0 完成、[`project_solara_relocation_m0`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/project_solara_relocation_m0.md))。Dart 完結 (`astro_houses.dart` + `astro_lines.dart`)。出生地 → タップ地点の ASC/MC + 12 ハウス + アスペクトライン詳細。ヘッダに **「座標取得」ボタン** (2026-05-24): タップ座標を `緯度, 経度` でクリップボードへ → Horo の `HoroLocationInput` で貼り付け可。同ボタンは `consult_entry_popup.dart` にもあり |
 | [`map_line_narrative_sheet.dart`](../lib/screens/map/map_line_narrative_sheet.dart) | 232 | `MapLineNarrativeSheet`、`showLineNarrativeSheet` | ACG ライン (natal/transit) タップ詳細。**Gemini AI 解説は 2026-05-11 撤去**、静的辞書 (`aspect_lines`、`transit_acg`) ベースに統一 ([`project_solara_v7_integration`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/project_solara_v7_integration.md)) |
 
 ### 4a.11 群 I: 運勢シート (1 本、775 行)
@@ -1244,15 +1244,16 @@ Horoscope の機能領域:
 | [`horo_desc_section.dart`](../lib/screens/horoscope/horo_desc_section.dart) | 31 | `HoroDescSection` | 「ラベル + 本文」セクション共通枠 (アスペクト/パターン解説で使用) |
 | [`horo_info_row.dart`](../lib/screens/horoscope/horo_info_row.dart) | 35 | `HoroInfoRow` | 「ラベル + 値」情報行 (panel 共通) |
 
-### 4b.8 群 F: パネル群 (8 本、1,967 行)
+### 4b.8 群 F: パネル群 (9 本、2,170 行)
 
 | ファイル | 行 | 主要 export | 役割 |
 |---|---|---|---|
-| [`horo_birth_panel.dart`](../lib/screens/horoscope/horo_birth_panel.dart) | 435 | `HoroBirthPanel` (Stateful) | **🔴 出生情報入力フォーム** (インライン化済 [`project_solara_horo_birth_inline_form`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/project_solara_horo_birth_inline_form.md))。地名・日時・座標 + reverse geocoding 連動 (`_scheduleGeoLookup` / `_runGeoLookup`)。Sanctuary editor と分離 |
+| [`horo_birth_panel.dart`](../lib/screens/horoscope/horo_birth_panel.dart) | 336 | `HoroBirthPanel` (Stateful) | **🔴 出生情報入力フォーム** (インライン化済 [`project_solara_horo_birth_inline_form`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/project_solara_horo_birth_inline_form.md))。名前・日時 + 位置入力は `HoroLocationInput` (下記) に委譲。Sanctuary editor と分離 |
+| [`horo_location_input.dart`](../lib/screens/horoscope/horo_location_input.dart) | 271 | `HoroLocationInput` (Stateful) | **位置入力共通ウィジェット** (Birth/Transit 両用)。座標貼り付け (Map「座標取得」でコピーした `緯度, 経度` をクリップボードから取込) + 緯度経度横並び手入力 + reverse geocoding 連動 (地名/TZ 自動)。`showTimezone` で TZ 欄 ON/OFF |
 | [`horo_relocation_panel.dart`](../lib/screens/horoscope/horo_relocation_panel.dart) | 422 | `HouseShift`、`HoroRelocationPanel` (Stateful) | **🔴 リロケーション panel** ([`project_solara_relocation_m0`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/project_solara_relocation_m0.md))。Dart `astro_houses.dart` で現住所チャート再計算 + Phase A 静的テンプレ (`horo_relocation_templates.dart`) + Phase B Gemini `/relocation` (`fortune_api.dart`)。ASC/MC 変化 + 12 ハウス全惑星のシフト表示 |
 | [`horo_fortune_cards.dart`](../lib/screens/horoscope/horo_fortune_cards.dart) | 240 | `HoroAstrologyView` | **🔴 Gemini 占いカード表示**。`fortune_api.dart` 経由 `/fortune` で 5 カテゴリ占い文取得 + skeleton loading + error/edit バナー |
 | [`horo_prediction_panel.dart`](../lib/screens/horoscope/horo_prediction_panel.dart) | 235 | `HoroPredictionPanel` | パターン予測 panel。アクティブなパターン + 未来予測を `buildAspectDescription` (1b) で解説生成、`showInfoPopup` で詳細表示 |
-| [`horo_transit_panel.dart`](../lib/screens/horoscope/horo_transit_panel.dart) | 157 | `HoroTransitPanel` (Stateful) | Transit (現在の星位) を natal に重ねる panel |
+| [`horo_transit_panel.dart`](../lib/screens/horoscope/horo_transit_panel.dart) | 188 | `HoroTransitPanel` (Stateful) | Transit/Progress (任意日時の星位) を natal に重ねる panel。日付+時刻に加え **場所欄 (`HoroLocationInput`) を持つ** (2026-05-24, option 1)。場所は relocate ハウス=ASC/MC 計算用 (惑星は地心で場所非依存)。初期=現住所→出生地。`onUpdate(when, lat, lng)` で親へ |
 | [`horo_planet_table.dart`](../lib/screens/horoscope/horo_planet_table.dart) | 160 | `HoroPlanetTable` | 10 惑星 + ASC/MC + 12 ハウス一覧表 (`_planetHouse` で位置算出) |
 | [`horo_aspect_list.dart`](../lib/screens/horoscope/horo_aspect_list.dart) | 184 | `HoroAspectList` | 全アスペクト一覧。タップで `_showAspectDescription` → `buildAspectDescription` (1b) 解説 popup |
 | [`horo_filter_panel.dart`](../lib/screens/horoscope/horo_filter_panel.dart) | 134 | `HoroFilterPanel` | アスペクト/パターン絞込チップ (フィルタ + exclusive chip 排他選択) |
@@ -1278,8 +1279,8 @@ Horoscope の機能領域:
 | `map_astro.dart` (2a) | `/astro/chart` | natal+transit+progressed+ASC/MC/DSC/IC + 全アスペクト取得 (Map と同じ fetcher) |
 | `fortune_api.dart` (2a) | `/fortune` (Gemini) | 5 カテゴリ占い文生成 |
 | `fortune_api.dart` (2a) | `/relocation` (Gemini) | リロケーション解説生成 (Phase B) |
-| `solara_api.dart` (2a) | `/tz` | 出生地のタイムゾーン解決 (horo_birth_panel) |
-| `reverse_geocode.dart` (2a) | Nominatim 直叩き | 出生地座標→地名 (horo_birth_panel) |
+| `solara_api.dart` (2a) | `/tz` | 緯度経度→タイムゾーン解決 (`horo_location_input` 経由、Birth/Transit 両用) |
+| `reverse_geocode.dart` (2a) | Nominatim 直叩き | 緯度経度→地名 (`horo_location_input` 経由、Birth/Transit 両用) |
 
 = **Gemini 呼出 2 系統 (`/fortune` + `/relocation`) が Horoscope に集中**。Map (4a) は Gemini ゼロ、Horoscope が Gemini 中央。
 

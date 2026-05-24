@@ -5,16 +5,16 @@
 
 ## サマリ
 
-- ファイル数: 23 / 総行数: 13325
+- ファイル数: 23 / 総行数: 13396
 - class/mixin/extension/enum: 86
-- 関数 (top-level + method の素拾い): 289
+- 関数 (top-level + method の素拾い): 291
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 18
 - Worker URL リテラル: 0
 
 ## ファイル別
 
-### `lib/screens/map/consult_entry_popup.dart` (292 行)
+### `lib/screens/map/consult_entry_popup.dart` (338 行)
 
 **ファイル先頭コメント:**
 
@@ -36,26 +36,27 @@ Consult Entry Popup — Stella 相談の共通入口 popup
 工数注: 最寄り線計算は呼出側で済ませて [nearestLines] として渡す。
 ```
 
-**imports:** dart=0 / package=2 / relative=4
+**imports:** dart=0 / package=3 / relative=4
 
 - relative: `../../theme/solara_colors.dart`, `../../utils/astro_lines.dart`, `../../utils/reverse_geocode.dart`, `map_constants.dart`
 
 **型定義 (3):**
 
-- L33 `class ConsultEntryPopup : StatefulWidget`
-- L60 `class _ConsultEntryPopupState : State`
-- L239 `class _NearestLineRow : StatelessWidget`
+- L34 `class ConsultEntryPopup : StatefulWidget`
+- L61 `class _ConsultEntryPopupState : State`
+- L285 `class _NearestLineRow : StatelessWidget`
 
-**関数 (4 public + 1 private):**
+**関数 (4 public + 2 private):**
 
-- L57 `createState()`
-- L67 `initState()`
-- L103 `build()`
-- L244 `build()`
+- L58 `createState()`
+- L68 `initState()`
+- L118 `build()`
+- L290 `build()`
 
-  <details><summary>private 関数 1 件</summary>
+  <details><summary>private 関数 2 件</summary>
 
-  - L72 `_resolveName()`
+  - L73 `_resolveName()`
+  - L105 `_copyCoords()`
 
   </details>
 
@@ -512,7 +513,7 @@ A*C*G ライン (natal / transit) のタップ詳細 popup。
   </details>
 
 
-### `lib/screens/map/map_menu_chips.dart` (307 行)
+### `lib/screens/map/map_menu_chips.dart` (298 行)
 
 **imports:** dart=0 / package=1 / relative=3
 
@@ -522,29 +523,29 @@ A*C*G ライン (natal / transit) のタップ詳細 popup。
 
 - L12 `class MapMenuChips : StatelessWidget`
   - 下部チップバー (NavBar 直上、4 個: Daily / Fortune / Locations / Forecast)。
-- L89 `class _ChipBody : StatelessWidget`
+- L86 `class _ChipBody : StatelessWidget`
   - 全チップ共通の Container 外形 (高さ・border・gradient)。
-- L117 `class _ChipColumn : StatelessWidget`
+- L114 `class _ChipColumn : StatelessWidget`
   - 全チップ共通の中身 (アイコン + ラベル縦並び)。
-- L152 `class _StaticChip : StatelessWidget`
+- L149 `class _StaticChip : StatelessWidget`
   - Daily 以外の通常チップ (Fortune / Locations / Forecast)。
-- L191 `class _DailyTransitChip : StatelessWidget`
+- L187 `class _DailyTransitChip : StatelessWidget`
   - Daily Transit 専用チップ。
-- L281 `class _ChipHalo : StatelessWidget`
+- L272 `class _ChipHalo : StatelessWidget`
   - チップの周囲に静的に描画する halo。
 
 **関数 (6 public + 1 private):**
 
-- L34 `build()`
-- L101 `build()`
-- L129 `build()`
-- L160 `build()`
-- L223 `build()`
-- L285 `build()`
+- L32 `build()`
+- L98 `build()`
+- L126 `build()`
+- L157 `build()`
+- L214 `build()`
+- L276 `build()`
 
   <details><summary>private 関数 1 件</summary>
 
-  - L203 `_buildIcon()`
+  - L197 `_buildIcon()`
 
   </details>
 
@@ -656,34 +657,35 @@ A*C*G ライン (natal / transit) のタップ詳細 popup。
   </details>
 
 
-### `lib/screens/map/map_relocation_popup.dart` (617 行)
+### `lib/screens/map/map_relocation_popup.dart` (652 行)
 
-**imports:** dart=0 / package=2 / relative=7
+**imports:** dart=0 / package=3 / relative=7
 
 - relative: `../../utils/astro_glossary.dart`, `../../utils/astro_houses.dart`, `../../utils/astro_lines.dart`, `../../widgets/astro_term_label.dart`, `../horoscope/horo_constants.dart`, `map_constants.dart`, `map_line_narrative_sheet.dart`
 
 **型定義 (1):**
 
-- L40 `class MapRelocationPopup : StatelessWidget`
+- L41 `class MapRelocationPopup : StatelessWidget`
 
-**関数 (1 public + 12 private):**
+**関数 (1 public + 13 private):**
 
-- L99 `build()`
+- L100 `build()`
 
-  <details><summary>private 関数 12 件</summary>
+  <details><summary>private 関数 13 件</summary>
 
-  - L168 `_buildConsultCta()`
-  - L205 `_buildLinesSection()`
-  - L248 `_buildLineRow()`
-  - L322 `_openLineSheet()`
-  - L339 `_buildTitleArea()`
-  - L372 `_buildHeader()`
-  - L443 `_buildAngleRow()`
-  - L505 `_buildPlanetGrid()`
-  - L514 `_buildPlanetRow()`
-  - L602 `_recoverBaselineAsc()`
-  - L607 `_signOf()`
-  - L612 `_fmtCoord()`
+  - L169 `_buildConsultCta()`
+  - L206 `_buildLinesSection()`
+  - L249 `_buildLineRow()`
+  - L323 `_openLineSheet()`
+  - L340 `_buildTitleArea()`
+  - L373 `_buildHeader()`
+  - L467 `_buildAngleRow()`
+  - L529 `_buildPlanetGrid()`
+  - L538 `_buildPlanetRow()`
+  - L626 `_recoverBaselineAsc()`
+  - L631 `_signOf()`
+  - L636 `_fmtCoord()`
+  - L644 `_copyCoords()`
 
   </details>
 
@@ -895,7 +897,7 @@ A*C*G ライン (natal / transit) のタップ詳細 popup。
 - L40 `build()`
 
 
-### `lib/screens/map_screen.dart` (3042 行)
+### `lib/screens/map_screen.dart` (3041 行)
 
 **imports:** dart=2 / package=6 / relative=36
 
@@ -915,7 +917,7 @@ A*C*G ライン (natal / transit) のタップ詳細 popup。
 - L1293 `snack()`
 - L1465 `snack()`
 - L1511 `build()`
-- L2574 `signOf()`
+- L2573 `signOf()`
 
   <details><summary>private 関数 55 件</summary>
 
@@ -955,25 +957,25 @@ A*C*G ライン (natal / transit) のタップ詳細 popup。
   - L1416 `_exitAstroCartoMode()`
   - L1464 `_geolocate()`
   - L1576 `_buildBody()`
-  - L2535 `_buildZenithPopup()`
-  - L2554 `_buildRelocationPopup()`
-  - L2619 `_proLabelForAstroKey()`
-  - L2637 `_proDescForAstroKey()`
-  - L2663 `_onAstroToggle()`
-  - L2692 `_enterConsultationFromDaily()`
-  - L2724 `_launchConsultation()`
-  - L2772 `_launchConsultationFromSearch()`
-  - L2803 `_reloadLocationSlots()`
-  - L2827 `_nearestNatalConjunctions()`
-  - L2848 `_findNearbyAstroLines()`
-  - L2866 `_zenithMarkerFrames()`
-  - L2867 `_nadirMarkerFrames()`
-  - L2868 `_zenithBandFrames()`
-  - L2869 `_nadirBandFrames()`
-  - L2873 `_filteredFrames()`
-  - L2886 `_visibleAstroLines()`
-  - L2914 `_buildNoProfileGuide()`
-  - L2948 `_showSearchVpHelpPopup()`
+  - L2534 `_buildZenithPopup()`
+  - L2553 `_buildRelocationPopup()`
+  - L2618 `_proLabelForAstroKey()`
+  - L2636 `_proDescForAstroKey()`
+  - L2662 `_onAstroToggle()`
+  - L2691 `_enterConsultationFromDaily()`
+  - L2723 `_launchConsultation()`
+  - L2771 `_launchConsultationFromSearch()`
+  - L2802 `_reloadLocationSlots()`
+  - L2826 `_nearestNatalConjunctions()`
+  - L2847 `_findNearbyAstroLines()`
+  - L2865 `_zenithMarkerFrames()`
+  - L2866 `_nadirMarkerFrames()`
+  - L2867 `_zenithBandFrames()`
+  - L2868 `_nadirBandFrames()`
+  - L2872 `_filteredFrames()`
+  - L2885 `_visibleAstroLines()`
+  - L2913 `_buildNoProfileGuide()`
+  - L2947 `_showSearchVpHelpPopup()`
 
   </details>
 

@@ -1,14 +1,11 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../utils/reverse_geocode.dart';
-import '../../utils/solara_api.dart';
 import '../../utils/solara_storage.dart';
 import '../sanctuary/sanctuary_profile_editor.dart' show DateSlashFormatter;
 import 'horo_antique_icons.dart';
+import 'horo_location_input.dart' show HoroLocationInput;
 import 'horo_panel_shared.dart'
     show horoAntiqueHeader, HoroHourMinuteDropdown;
 
@@ -56,17 +53,15 @@ class HoroBirthPanel extends StatefulWidget {
 class _HoroBirthPanelState extends State<HoroBirthPanel> {
   late TextEditingController _nameCtrl;
   late TextEditingController _dateCtrl;
-  late TextEditingController _latCtrl;
-  late TextEditingController _lngCtrl;
   late int _hour;
   late int _minute;
   late bool _timeUnknown;
 
-  // 緯度経度から自動取得した結果 (read-only 表示用)
-  String? _autoPlaceName;
-  String? _autoTzName;
-  bool _geoLoading = false;
-  Timer? _geoDebounce;
+  // 位置入力 (HoroLocationInput) の現在値。試算時に使う。
+  double? _lat;
+  double? _lng;
+  String? _place;
+  String? _tz;
 
   @override
   void initState() {
@@ -88,57 +83,27 @@ class _HoroBirthPanelState extends State<HoroBirthPanel> {
     // SolaraProfile.birthDate は YYYY-MM-DD 保存だが、フォーム側は
     // DateSlashFormatter (YYYY/MM/DD 表示) を使うのでスラッシュへ変換。
     _dateCtrl = TextEditingController(text: p.birthDate.replaceAll('-', '/'));
-    _latCtrl = TextEditingController(
-        text: p.birthLat == 0 ? '' : p.birthLat.toStringAsFixed(4));
-    _lngCtrl = TextEditingController(
-        text: p.birthLng == 0 ? '' : p.birthLng.toStringAsFixed(4));
     final timeParts = p.birthTime.split(':');
     _hour = int.tryParse(timeParts.elementAtOrNull(0) ?? '12') ?? 12;
     _minute = int.tryParse(timeParts.elementAtOrNull(1) ?? '0') ?? 0;
     _timeUnknown = p.birthTimeUnknown;
-    _autoPlaceName = p.birthPlace.isEmpty ? null : p.birthPlace;
-    _autoTzName = p.birthTzName;
+    _lat = p.birthLat == 0 ? null : p.birthLat;
+    _lng = p.birthLng == 0 ? null : p.birthLng;
+    _place = p.birthPlace.isEmpty ? null : p.birthPlace;
+    _tz = p.birthTzName;
   }
 
   @override
   void dispose() {
     _nameCtrl.dispose();
     _dateCtrl.dispose();
-    _latCtrl.dispose();
-    _lngCtrl.dispose();
-    _geoDebounce?.cancel();
     super.dispose();
   }
 
-  /// 緯度経度入力後のデバウンス→ Worker /tz + Nominatim Reverse を並列取得
-  void _scheduleGeoLookup() {
-    _geoDebounce?.cancel();
-    _geoDebounce = Timer(const Duration(milliseconds: 600), _runGeoLookup);
-  }
-
-  Future<void> _runGeoLookup() async {
-    final lat = double.tryParse(_latCtrl.text);
-    final lng = double.tryParse(_lngCtrl.text);
-    if (lat == null || lng == null) return;
-    if (lat.abs() > 90 || lng.abs() > 180) return;
-    setState(() => _geoLoading = true);
-    final results = await Future.wait<String?>([
-      reverseGeocode(lat, lng),
-      fetchTimezoneName(lat, lng),
-    ]);
-    if (!mounted) return;
-    setState(() {
-      _autoPlaceName = results[0];
-      _autoTzName = results[1];
-      _geoLoading = false;
-    });
-  }
-
-
   /// 「✨ このデータで試算」押下: フォーム値から SolaraProfile を組んで親へ
   void _apply() {
-    final lat = double.tryParse(_latCtrl.text);
-    final lng = double.tryParse(_lngCtrl.text);
+    final lat = _lat;
+    final lng = _lng;
     if (lat == null || lng == null) return;
     if (lat.abs() > 90 || lng.abs() > 180) return;
 
@@ -166,8 +131,8 @@ class _HoroBirthPanelState extends State<HoroBirthPanel> {
       birthTimeUnknown: _timeUnknown,
       birthLat: lat,
       birthLng: lng,
-      birthPlace: _autoPlaceName ?? '',
-      birthTzName: _autoTzName,
+      birthPlace: _place ?? '',
+      birthTzName: _tz,
     );
     widget.onApply?.call(newProfile);
   }
@@ -272,77 +237,26 @@ class _HoroBirthPanelState extends State<HoroBirthPanel> {
         ),
       ])),
 
-      // ── 緯度 / 経度 ──
-      _labeled('緯度 LATITUDE', _textField(
-        controller: _latCtrl,
-        hint: '例: 35.6762',
-        keyboardType: const TextInputType.numberWithOptions(
-            decimal: true, signed: true),
-        inputFormatters: [
-          FilteringTextInputFormatter.allow(RegExp(r'[-0-9.]')),
-        ],
-        onChanged: (_) => _scheduleGeoLookup(),
-      )),
-      _labeled('経度 LONGITUDE', _textField(
-        controller: _lngCtrl,
-        hint: '例: 139.6503',
-        keyboardType: const TextInputType.numberWithOptions(
-            decimal: true, signed: true),
-        inputFormatters: [
-          FilteringTextInputFormatter.allow(RegExp(r'[-0-9.]')),
-        ],
-        onChanged: (_) => _scheduleGeoLookup(),
-      )),
-
-      // ── 出生地名 (緯度経度から自動取得・read-only) ──
-      _labeled('出生地名 BIRTHPLACE', _inputBox(
-        child: Row(children: [
-          if (_geoLoading)
-            const SizedBox(
-              width: 12, height: 12,
-              child: CircularProgressIndicator(
-                  strokeWidth: 1.5, color: Color(0xFFC9A84C)),
-            )
-          else
-            Expanded(child: Text(
-              _autoPlaceName ?? '— (緯度経度入力後に自動取得)',
-              style: TextStyle(
-                fontSize: 13,
-                color: _autoPlaceName == null
-                    ? const Color(0xFF666666)
-                    : const Color(0xFFE8E0D0),
-              ),
-            )),
-        ]),
-      )),
-
-      // ── タイムゾーン (緯度経度から自動取得・read-only) ──
-      _labeled('タイムゾーン TZ', _inputBox(
-        child: Text(
-          _autoTzName ?? '— (緯度経度入力後に自動取得)',
-          style: TextStyle(
-            fontSize: 12,
-            color: _autoTzName == null
-                ? const Color(0xFF666666)
-                : const Color(0xFFCCCCCC),
-            fontFamily: 'monospace',
-          ),
-        ),
-      )),
-
-      // ── 案内文 ──
-      const Padding(
-        padding: EdgeInsets.only(top: 4, bottom: 12),
-        child: Text(
-          '※ 緯度経度はMap画面で地点をタップして座標を確認できます',
-          style: TextStyle(
-            fontSize: 10,
-            color: Color(0x99888888),
-            fontStyle: FontStyle.italic,
-            height: 1.4,
-          ),
-        ),
+      // ── 位置入力 (座標貼り付け + 緯度/経度横並び + 地名/TZ 自動) ──
+      // key を profile に紐付け、リセット等で profile が差し替わったら再生成する。
+      HoroLocationInput(
+        key: ValueKey('birth_${widget.profile.birthLat}_'
+            '${widget.profile.birthLng}_${widget.profile.birthDate}_'
+            '${widget.profile.birthTime}'),
+        initialLat: _lat,
+        initialLng: _lng,
+        initialPlaceName: _place,
+        initialTzName: _tz,
+        placeLabel: '出生地名 BIRTHPLACE',
+        showTimezone: true,
+        onChanged: (lat, lng, place, tz) {
+          _lat = lat;
+          _lng = lng;
+          _place = place;
+          _tz = tz;
+        },
       ),
+      const SizedBox(height: 4),
 
       // ── 試算ボタン ──
       GestureDetector(
@@ -386,19 +300,6 @@ class _HoroBirthPanelState extends State<HoroBirthPanel> {
         const SizedBox(height: 3),
         child,
       ]),
-    );
-  }
-
-  Widget _inputBox({required Widget child}) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      decoration: BoxDecoration(
-        color: const Color(0x0DFFFFFF),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: const Color(0x1AFFFFFF)),
-      ),
-      child: child,
     );
   }
 

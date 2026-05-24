@@ -5,9 +5,9 @@
 
 ## サマリ
 
-- ファイル数: 22 / 総行数: 5548
-- class/mixin/extension/enum: 30
-- 関数 (top-level + method の素拾い): 141
+- ファイル数: 23 / 総行数: 5831
+- class/mixin/extension/enum: 32
+- 関数 (top-level + method の素拾い): 151
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 2
 - Worker URL リテラル: 0
@@ -80,34 +80,31 @@
   </details>
 
 
-### `lib/screens/horoscope/horo_birth_panel.dart` (435 行)
+### `lib/screens/horoscope/horo_birth_panel.dart` (336 行)
 
-**imports:** dart=1 / package=3 / relative=6
+**imports:** dart=0 / package=3 / relative=5
 
-- relative: `../../utils/reverse_geocode.dart`, `../../utils/solara_api.dart`, `../../utils/solara_storage.dart`, `../sanctuary/sanctuary_profile_editor.dart`, `horo_antique_icons.dart`, `horo_panel_shared.dart`
+- relative: `../../utils/solara_storage.dart`, `../sanctuary/sanctuary_profile_editor.dart`, `horo_antique_icons.dart`, `horo_location_input.dart`, `horo_panel_shared.dart`
 
 **型定義 (2):**
 
-- L30 `class HoroBirthPanel : StatefulWidget`
-- L56 `class _HoroBirthPanelState : State`
+- L27 `class HoroBirthPanel : StatefulWidget`
+- L53 `class _HoroBirthPanelState : State`
 
-**関数 (5 public + 7 private):**
+**関数 (5 public + 4 private):**
 
-- L53 `createState()`
-- L72 `initState()`
-- L78 `didUpdateWidget()`
-- L104 `dispose()`
-- L176 `build()`
+- L50 `createState()`
+- L67 `initState()`
+- L73 `didUpdateWidget()`
+- L97 `dispose()`
+- L141 `build()`
 
-  <details><summary>private 関数 7 件</summary>
+  <details><summary>private 関数 4 件</summary>
 
-  - L86 `_initFromProfile()`
-  - L114 `_scheduleGeoLookup()`
-  - L119 `_runGeoLookup()`
-  - L139 `_apply()`
-  - L377 `_labeled()`
-  - L392 `_inputBox()`
-  - L405 `_textField()`
+  - L81 `_initFromProfile()`
+  - L104 `_apply()`
+  - L291 `_labeled()`
+  - L306 `_textField()`
 
   </details>
 
@@ -125,7 +122,7 @@ continue to work after the split.
 ```
 
 
-### `lib/screens/horoscope/horo_bottom_sheet.dart` (224 行)
+### `lib/screens/horoscope/horo_bottom_sheet.dart` (242 行)
 
 **ファイル先頭コメント:**
 
@@ -139,16 +136,17 @@ ignore_for_file: invalid_use_of_protected_member
 
 - L12 `extension _HoroBottomSheet : HoroscopeScreenState`
 
-**関数 (0 public + 5 private):**
+**関数 (0 public + 6 private):**
 
 
-  <details><summary>private 関数 5 件</summary>
+  <details><summary>private 関数 6 件</summary>
 
-  - L16 `_bsHeight()`
-  - L25 `_cycleBsState()`
-  - L32 `_buildBottomSheet()`
-  - L93 `_buildBSTabs()`
-  - L151 `_buildBSContent()`
+  - L20 `_bsBottomInset()`
+  - L23 `_bsHeight()`
+  - L37 `_cycleBsState()`
+  - L44 `_buildBottomSheet()`
+  - L105 `_buildBSTabs()`
+  - L163 `_buildBSContent()`
 
   </details>
 
@@ -287,6 +285,38 @@ ignore_for_file: invalid_use_of_protected_member
   </details>
 
 
+### `lib/screens/horoscope/horo_location_input.dart` (271 行)
+
+**imports:** dart=1 / package=2 / relative=2
+
+- relative: `../../utils/reverse_geocode.dart`, `../../utils/solara_api.dart`
+
+**型定義 (2):**
+
+- L16 `class HoroLocationInput : StatefulWidget`
+- L47 `class _HoroLocationInputState : State`
+
+**関数 (4 public + 8 private):**
+
+- L44 `createState()`
+- L56 `initState()`
+- L70 `dispose()`
+- L139 `build()`
+
+  <details><summary>private 関数 8 件</summary>
+
+  - L66 `_fmtInit()`
+  - L80 `_notify()`
+  - L84 `_onManualEdit()`
+  - L90 `_runGeoLookup()`
+  - L109 `_pasteCoords()`
+  - L218 `_labeled()`
+  - L231 `_autoBox()`
+  - L244 `_coordField()`
+
+  </details>
+
+
 ### `lib/screens/horoscope/horo_ornament_painter.dart` (139 行)
 
 **imports:** dart=1 / package=1 / relative=0
@@ -311,7 +341,7 @@ ignore_for_file: invalid_use_of_protected_member
   </details>
 
 
-### `lib/screens/horoscope/horo_panel_shared.dart` (307 行)
+### `lib/screens/horoscope/horo_panel_shared.dart` (309 行)
 
 **imports:** dart=1 / package=2 / relative=3
 
@@ -474,26 +504,26 @@ Phase A: 静的テンプレート (将来 Stella 動的生成に切替予定 →
 ```
 
 
-### `lib/screens/horoscope/horo_transit_panel.dart` (157 行)
+### `lib/screens/horoscope/horo_transit_panel.dart` (188 行)
 
-**imports:** dart=0 / package=1 / relative=3
+**imports:** dart=0 / package=1 / relative=4
 
-- relative: `../sanctuary/sanctuary_profile_editor.dart`, `horo_antique_icons.dart`, `horo_panel_shared.dart`
+- relative: `../sanctuary/sanctuary_profile_editor.dart`, `horo_antique_icons.dart`, `horo_location_input.dart`, `horo_panel_shared.dart`
 
 **型定義 (2):**
 
-- L19 `class HoroTransitPanel : StatefulWidget`
-- L35 `class _HoroTransitPanelState : State`
+- L20 `class HoroTransitPanel : StatefulWidget`
+- L46 `class _HoroTransitPanelState : State`
 
 **関数 (4 public + 0 private):**
 
-- L32 `createState()`
-- L42 `initState()`
-- L55 `dispose()`
-- L61 `build()`
+- L43 `createState()`
+- L57 `initState()`
+- L72 `dispose()`
+- L78 `build()`
 
 
-### `lib/screens/horoscope_screen.dart` (819 行)
+### `lib/screens/horoscope_screen.dart` (879 行)
 
 **imports:** dart=2 / package=2 / relative=15
 
@@ -507,34 +537,34 @@ Phase A: 静的テンプレート (将来 Stella 動的生成に切替予定 →
 **関数 (7 public + 19 private):**
 
 - L33 `createState()`
-- L183 `initState()`
-- L237 `dispose()`
-- L268 `wakeAnimations()` — 「再覚醒」: anim 再開 + 30s タイマー再起動。
-- L282 `pauseAnimations()` — main.dart からタブ離脱時に呼ばれる。Anim + 寿命タイマー両方停止 = raster 0%。
-- L313 `loadProfile()`
-- L625 `build()`
+- L215 `initState()`
+- L269 `dispose()`
+- L300 `wakeAnimations()` — 「再覚醒」: anim 再開 + 30s タイマー再起動。
+- L314 `pauseAnimations()` — main.dart からタブ離脱時に呼ばれる。Anim + 寿命タイマー両方停止 = raster 0%。
+- L345 `loadProfile()`
+- L676 `build()`
 
   <details><summary>private 関数 19 件</summary>
 
-  - L127 `_planetHouse()`
-  - L146 `_currentCacheKey()`
-  - L165 `_refreshCacheKey()`
-  - L209 `_onProStatusChanged()`
-  - L225 `_showFortuneProUnlock()`
-  - L249 `_resetAnimLifeTimer()`
-  - L259 `_stopAnimations()`
-  - L291 `_startRotTimer()`
-  - L304 `_syncRotationByMode()`
-  - L338 `_onTransitUpdate()`
-  - L349 `_applyWorkingProfile()`
-  - L367 `_fetchRealChart()`
-  - L495 `_resetWorkingProfile()`
-  - L502 `_profilesEqual()`
-  - L531 `_loadFortunes()`
-  - L733 `_menuItem()`
-  - L746 `_buildHouseModeToggle()`
-  - L774 `_toggleSegment()`
-  - L809 `_setRelocateMode()`
+  - L159 `_planetHouse()`
+  - L178 `_currentCacheKey()`
+  - L197 `_refreshCacheKey()`
+  - L241 `_onProStatusChanged()`
+  - L257 `_showFortuneProUnlock()`
+  - L281 `_resetAnimLifeTimer()`
+  - L291 `_stopAnimations()`
+  - L323 `_startRotTimer()`
+  - L336 `_syncRotationByMode()`
+  - L370 `_onTransitUpdate()`
+  - L386 `_applyWorkingProfile()`
+  - L407 `_fetchRealChart()`
+  - L546 `_resetWorkingProfile()`
+  - L553 `_profilesEqual()`
+  - L582 `_loadFortunes()`
+  - L793 `_menuItem()`
+  - L806 `_buildHouseModeToggle()`
+  - L834 `_toggleSegment()`
+  - L869 `_setRelocateMode()`
 
   </details>
 

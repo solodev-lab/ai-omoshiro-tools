@@ -13,11 +13,23 @@ extension _HoroBottomSheet on HoroscopeScreenState {
   /// chart 描画域に最低限残しておきたい高さ。これ未満になる端末では sheet を縮める。
   static const double _minChartArea = 320;
 
+  /// SafeArea が既に確保する下部インセット (padding.bottom = ナビバー等) を超えて
+  /// キーボードが余分に覆う量。build 側でこの分だけ sheet を持ち上げると、
+  /// キーボード直上にぴったり乗り (背景の覗くスキマなし)、ナビバー分の二重計上も
+  /// 起きない。キーボード無し or キーボード < ナビバー時は 0 (持ち上げ不要)。
+  double _bsBottomInset(MediaQueryData mq) =>
+      max(0.0, mq.viewInsets.bottom - mq.padding.bottom);
+
   double _bsHeight(BuildContext context) {
-    final screenH = MediaQuery.of(context).size.height;
-    // sheet の上限: 「画面高 - 最低 chart 領域」 で chart に必ず読める空間を残す。
-    // 縦に短い端末でホロスコープが sheet に被って見えなくなる問題への対策 (2026-04-29)。
-    final maxH = (screenH - _minChartArea).clamp(160.0, screenH);
+    final mq = MediaQuery.of(context);
+    final screenH = mq.size.height;
+    // build 側の Padding(bottom: _bsBottomInset) で sheet を持ち上げる分、上限から
+    // 引いておき、sheet + 持ち上げ分が画面を超えない (= overflow しない) ようにする。
+    final lift = _bsBottomInset(mq);
+    // sheet の上限: 「画面高 - 最低 chart 領域 - 持ち上げ分」 で chart に必ず
+    // 読める空間を残す。 縦に短い端末でホロスコープが sheet に被って見えなくなる
+    // 問題への対策 (2026-04-29)。
+    final maxH = (screenH - _minChartArea - lift).clamp(160.0, screenH);
     if (_bsState == 2) return min(screenH * 0.65, maxH); // full
     return min(280.0, maxH); // half (default)
   }
@@ -158,10 +170,16 @@ extension _HoroBottomSheet on HoroscopeScreenState {
         onApply: _applyWorkingProfile,
         onReset: _resetWorkingProfile,
       );
-      case 'transit': return HoroTransitPanel(
-        chartMode: _chartMode,
-        onUpdate: _onTransitUpdate,
-      );
+      case 'transit': {
+        final loc = _effTransitReloc();
+        return HoroTransitPanel(
+          chartMode: _chartMode,
+          initialLat: loc?.$1,
+          initialLng: loc?.$2,
+          initialPlaceName: _effTransitPlaceName(),
+          onUpdate: _onTransitUpdate,
+        );
+      }
       case 'planets': return HoroPlanetTable(
         natalPlanets: _natalPlanets,
         asc: _asc, mc: _mc,

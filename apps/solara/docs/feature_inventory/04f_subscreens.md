@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 26 / 総行数: 8558
+- ファイル数: 26 / 総行数: 8561
 - class/mixin/extension/enum: 82
 - 関数 (top-level + method の素拾い): 230
 - Navigator.push 等: 0
@@ -247,7 +247,7 @@ L836-1295 (_SpecificPicker 系) を切り出し (ファイル肥大化対策、2
   </details>
 
 
-### `lib/screens/consultation/consultation_input_screen.dart` (468 行)
+### `lib/screens/consultation/consultation_input_screen.dart` (471 行)
 
 **ファイル先頭コメント:**
 

@@ -175,8 +175,10 @@ class _SanctuaryProfileEditorPageState extends State<SanctuaryProfileEditorPage>
     return TapToUnfocus(
       child: Scaffold(
       backgroundColor: const Color(0xFF020408),
-      // 🔴 (2026-05-19) キーボードで背景がずれないよう false 統一。
-      resizeToAvoidBottomInset: false,
+      // 背景は単色 opaque (絵なし) なので resize しても見た目は動かない。
+      // true にすると body がキーボード分縮み、フォーカスした入力欄が
+      // SingleChildScrollView 内で自動スクロールしてキーボード上に出る。
+      resizeToAvoidBottomInset: true,
       body: SafeArea(
         child: Center(
           child: ConstrainedBox(

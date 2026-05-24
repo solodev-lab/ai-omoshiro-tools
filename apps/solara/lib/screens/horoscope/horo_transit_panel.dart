@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../sanctuary/sanctuary_profile_editor.dart' show DateSlashFormatter;
 import 'horo_antique_icons.dart';
+import 'horo_location_input.dart' show HoroLocationInput;
 import 'horo_panel_shared.dart';
 
 // ══════════════════════════════════════════════════
@@ -18,13 +19,23 @@ import 'horo_panel_shared.dart';
 
 class HoroTransitPanel extends StatefulWidget {
   final String chartMode;
+
+  /// 場所欄の初期値 (現住所→出生地)。relocate (ハウス=ASC/MC) 計算に使う。
+  final double? initialLat;
+  final double? initialLng;
+  final String? initialPlaceName;
+
   /// 「トランジット/プログレス更新」ボタン押下時に呼ばれる。
-  /// 引数は編集中の日付 + 時刻を合成した DateTime (local)。
-  final ValueChanged<DateTime>? onUpdate;
+  /// 引数は編集中の日付 + 時刻を合成した DateTime (local) と、場所 (lat/lng)。
+  /// 場所は relocate ハウス計算用 (惑星は地心なので場所非依存)。
+  final void Function(DateTime when, double? lat, double? lng)? onUpdate;
 
   const HoroTransitPanel({
     super.key,
     required this.chartMode,
+    this.initialLat,
+    this.initialLng,
+    this.initialPlaceName,
     this.onUpdate,
   });
 
@@ -38,6 +49,10 @@ class _HoroTransitPanelState extends State<HoroTransitPanel> {
   late int _hour;
   late int _minute;
 
+  // 場所欄 (HoroLocationInput) の現在値。更新時に relocate として渡す。
+  double? _lat;
+  double? _lng;
+
   @override
   void initState() {
     super.initState();
@@ -49,6 +64,8 @@ class _HoroTransitPanelState extends State<HoroTransitPanel> {
       text: '${_date.year}/${_date.month.toString().padLeft(2, '0')}/'
             '${_date.day.toString().padLeft(2, '0')}',
     );
+    _lat = widget.initialLat;
+    _lng = widget.initialLng;
   }
 
   @override
@@ -128,13 +145,27 @@ class _HoroTransitPanelState extends State<HoroTransitPanel> {
         ]),
       ),
 
+      // ── 場所編集 (relocate ハウス=ASC/MC 計算用。option 1: 本質/現実トグルの代替) ──
+      // 惑星は地心なので場所では変わらない。初期=現住所→出生地。
+      HoroLocationInput(
+        initialLat: widget.initialLat,
+        initialLng: widget.initialLng,
+        initialPlaceName: widget.initialPlaceName,
+        placeLabel: '地名 PLACE',
+        showTimezone: false,
+        onChanged: (lat, lng, place, tz) {
+          _lat = lat;
+          _lng = lng;
+        },
+      ),
+
       const SizedBox(height: 8),
 
       // ── 「更新」ボタン: callback に編集日時を渡す
       GestureDetector(
         onTap: widget.onUpdate == null ? null : () {
           final when = DateTime(_date.year, _date.month, _date.day, _hour, _minute);
-          widget.onUpdate!(when);
+          widget.onUpdate!(when, _lat, _lng);
         },
         behavior: HitTestBehavior.opaque,
         child: Container(

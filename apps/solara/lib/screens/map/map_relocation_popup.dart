@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../utils/astro_glossary.dart' show showAstroGlossaryDialog;
@@ -416,6 +417,29 @@ class MapRelocationPopup extends StatelessWidget {
             // Flexible Text で長文時に省略 → overflow しない。
             Expanded(child: _buildTitleArea(context, termKey, titleText)),
             const SizedBox(width: 8),
+            // 座標取得: タップ地点の座標を "緯度, 経度" でコピー (Horo 画面で貼り付け可)。
+            GestureDetector(
+              onTap: () => _copyCoords(context),
+              behavior: HitTestBehavior.opaque,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(color: const Color(0x66C9A84C)),
+                  color: const Color(0x14C9A84C),
+                ),
+                child: const Row(mainAxisSize: MainAxisSize.min, children: [
+                  Icon(Icons.copy, size: 11, color: Color(0xFFC9A84C)),
+                  SizedBox(width: 4),
+                  Text('座標取得',
+                      style: TextStyle(
+                          fontSize: 10,
+                          color: Color(0xFFC9A84C),
+                          fontWeight: FontWeight.w600)),
+                ]),
+              ),
+            ),
+            const SizedBox(width: 8),
             GestureDetector(
               onTap: onClose,
               child: const Icon(Icons.close, size: 16, color: Color(0xFF888888)),
@@ -613,5 +637,16 @@ class MapRelocationPopup extends StatelessWidget {
     final latStr = lat >= 0 ? '${lat.toStringAsFixed(2)}°N' : '${(-lat).toStringAsFixed(2)}°S';
     final lngStr = lng >= 0 ? '${lng.toStringAsFixed(2)}°E' : '${(-lng).toStringAsFixed(2)}°W';
     return '$latStr  $lngStr';
+  }
+
+  /// 座標を "緯度, 経度" (小数) でクリップボードへコピー。
+  /// Horo 画面の出生地/トランジット場所欄で「座標貼り付け」できる。
+  void _copyCoords(BuildContext context) {
+    Clipboard.setData(ClipboardData(
+        text: '${tapLat.toStringAsFixed(6)}, ${tapLng.toStringAsFixed(6)}'));
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+      content: Text('座標をコピーしました'),
+      duration: Duration(seconds: 2),
+    ));
   }
 }

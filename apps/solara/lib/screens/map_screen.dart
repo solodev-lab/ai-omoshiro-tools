@@ -2146,7 +2146,6 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
           bottom: 0, left: 0, right: 0,
           child: MapMenuChips(
             dailyTransitUnseen: _dailyBadgeUnseen,
-            dailyTransitDisabled: _noProfile,
             topCategory: _topCategory,
             onDailyTransitTap: _onDailyBadgeTap,
             onFortuneTap: _noProfile

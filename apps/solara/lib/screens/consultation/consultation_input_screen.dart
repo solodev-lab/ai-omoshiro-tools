@@ -315,7 +315,10 @@ class _ConsultationInputScreenState extends State<ConsultationInputScreen> {
     return TapToUnfocus(
       child: Scaffold(
         backgroundColor: SolaraColors.celestialBlueDark,
-        resizeToAvoidBottomInset: false,
+        // 背景は単色なので resize しても見た目は動かない。true にすると body が
+        // キーボード分だけ縮み、フォーカスした下部入力欄 (だれと/願い) が
+        // SingleChildScrollView 内で自動スクロールしてキーボード上に出る。
+        resizeToAvoidBottomInset: true,
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           elevation: 0,

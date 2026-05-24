@@ -12,7 +12,6 @@ import '../../widgets/dominant_fortune_overlay.dart' show DominantFortuneKind;
 class MapMenuChips extends StatelessWidget {
   /// Daily Transit チップ: 未閲覧 (リセット時刻後初回) で halo 発光
   final bool dailyTransitUnseen;
-  final bool dailyTransitDisabled; // プロフィール未設定時 true
   final DominantFortuneKind? topCategory;
   final VoidCallback onDailyTransitTap;
   final VoidCallback onFortuneTap;
@@ -22,7 +21,6 @@ class MapMenuChips extends StatelessWidget {
   const MapMenuChips({
     super.key,
     required this.dailyTransitUnseen,
-    required this.dailyTransitDisabled,
     required this.topCategory,
     required this.onDailyTransitTap,
     required this.onFortuneTap,
@@ -52,7 +50,6 @@ class MapMenuChips extends StatelessWidget {
           children: [
             _DailyTransitChip(
               unseen: dailyTransitUnseen,
-              disabled: dailyTransitDisabled,
               topCategory: topCategory,
               onTap: onDailyTransitTap,
             ),
@@ -185,25 +182,19 @@ class _StaticChip extends StatelessWidget {
 /// Daily Transit 専用チップ。
 ///
 /// アイコン分岐:
-///  - disabled (プロフィール未設定): 🌱 emoji
 ///  - unseen (未開封): unsealed.webp (9芒星アンティーク章) + halo 発光
 ///  - seen (開封済): topCategory に応じた CategoryIcon
 class _DailyTransitChip extends StatelessWidget {
   final bool unseen;
-  final bool disabled;
   final DominantFortuneKind? topCategory;
   final VoidCallback onTap;
   const _DailyTransitChip({
     required this.unseen,
-    required this.disabled,
     required this.topCategory,
     required this.onTap,
   });
 
   Widget _buildIcon() {
-    if (disabled) {
-      return const Text('🌱', style: TextStyle(fontSize: _kIconSize));
-    }
     if (unseen) {
       return Image.asset(
         'assets/menu_icons/unsealed.webp',
@@ -221,7 +212,7 @@ class _DailyTransitChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final showHalo = unseen && !disabled;
+    final showHalo = unseen;
 
     Widget content = _ChipColumn(
       icon: _buildIcon(),
@@ -254,7 +245,7 @@ class _DailyTransitChip extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 4),
         child: GestureDetector(
           behavior: HitTestBehavior.opaque,
-          onTap: disabled ? null : onTap,
+          onTap: onTap,
           child: _ChipBody(
             borderColor: unseen ? const Color(0xFFFFE99A) : _kDefaultBorderColor,
             gradient: unseen

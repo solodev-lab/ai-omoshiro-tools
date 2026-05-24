@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 10 / 総行数: 5156
+- ファイル数: 10 / 総行数: 5158
 - class/mixin/extension/enum: 27
 - 関数 (top-level + method の素拾い): 108
 - Navigator.push 等: 0
@@ -141,7 +141,7 @@ Solara Sanctuary 法務リンクメニュー (Phase 2 launch_checklist)
   </details>
 
 
-### `lib/screens/sanctuary/sanctuary_profile_editor.dart` (590 行)
+### `lib/screens/sanctuary/sanctuary_profile_editor.dart` (592 行)
 
 **imports:** dart=1 / package=3 / relative=5
 
@@ -151,7 +151,7 @@ Solara Sanctuary 法務リンクメニュー (Phase 2 launch_checklist)
 
 - L17 `class SanctuaryProfileEditorPage : StatefulWidget`
 - L25 `class _SanctuaryProfileEditorPageState : State`
-- L564 `class DateSlashFormatter : TextInputFormatter`
+- L566 `class DateSlashFormatter : TextInputFormatter`
   - Auto-inserts `/` after YYYY and MM for date input (YYYY/MM/DD format).
 
 **関数 (5 public + 8 private):**
@@ -160,7 +160,7 @@ Solara Sanctuary 法務リンクメニュー (Phase 2 launch_checklist)
 - L43 `initState()`
 - L68 `dispose()`
 - L172 `build()`
-- L566 `formatEditUpdate()`
+- L568 `formatEditUpdate()`
 
   <details><summary>private 関数 8 件</summary>
 
@@ -168,10 +168,10 @@ Solara Sanctuary 法務リンクメニュー (Phase 2 launch_checklist)
   - L107 `_selectPlace()`
   - L121 `_resolveTimezone()`
   - L134 `_save()`
-  - L486 `_langBtn()`
-  - L521 `_birthSection()`
-  - L539 `_inputDecoration()`
-  - L550 `_readonlyField()`
+  - L488 `_langBtn()`
+  - L523 `_birthSection()`
+  - L541 `_inputDecoration()`
+  - L552 `_readonlyField()`
 
   </details>
 

@@ -84,6 +84,12 @@ class HoroscopeScreenState extends State<HoroscopeScreen>
   // homeLat/Lng が有効なら loadProfile() でデフォルト true にする。
   bool _relocateMode = false;
 
+  // トランジット/プログレスの relocate 場所 (option 1)。nt/np では本質/現実トグルの
+  // 代わりにこの場所でハウス(ASC/MC)を計算する。null = 既定 (現住所→出生地)。
+  // 場所欄で指定されたら保持し、以降の _fetchRealChart でも使う。
+  double? _transitRelocLat;
+  double? _transitRelocLng;
+
   /// 現住所(homeLat/Lng)が有効値か(0/0でないか)
   bool get _hasValidHome {
     final p = _profile;
@@ -120,6 +126,32 @@ class HoroscopeScreenState extends State<HoroscopeScreen>
   bool get _effectiveRelocateMode {
     if (_chartMode == 'astrology') return _hasValidHome; // 星読みは現実固定(homeあれば)
     return _relocateMode && _hasValidHome;
+  }
+
+  /// トランジット/プログレスの relocate 場所 (option 1)。
+  /// ユーザーが場所欄で指定した値を優先、なければ既定 (現住所→出生地)。
+  /// null の場合は relocate 無し (= 出生地ハウス)。
+  (double, double)? _effTransitReloc() {
+    if (_transitRelocLat != null && _transitRelocLng != null) {
+      return (_transitRelocLat!, _transitRelocLng!);
+    }
+    final p = _baseProfile ?? _workingProfile;
+    if (p == null) return null;
+    if (!(p.homeLat == 0 && p.homeLng == 0)) return (p.homeLat, p.homeLng);
+    if (p.birthLat != 0 || p.birthLng != 0) return (p.birthLat, p.birthLng);
+    return null;
+  }
+
+  /// トランジット場所欄の初期表示用の地名 (現住所名→出生地名)。
+  /// ユーザー指定後は null を返し、HoroLocationInput 側で座標から再解決させる。
+  String? _effTransitPlaceName() {
+    if (_transitRelocLat != null) return null;
+    final p = _baseProfile ?? _workingProfile;
+    if (p == null) return null;
+    if (!(p.homeLat == 0 && p.homeLng == 0)) {
+      return p.homeName.isEmpty ? null : p.homeName;
+    }
+    return p.birthPlace.isEmpty ? null : p.birthPlace;
   }
 
   /// 惑星の黄経からハウス番号(1-12)を算出。
@@ -335,9 +367,14 @@ class HoroscopeScreenState extends State<HoroscopeScreen>
 
   /// HoroTransitPanel から呼ばれる callback。任意日時で transit/progressed を再計算。
   /// 永続化なし: パネル側は毎回 `DateTime.now()` で初期化される。
-  Future<void> _onTransitUpdate(DateTime when) async {
+  Future<void> _onTransitUpdate(DateTime when, double? lat, double? lng) async {
     final p = _baseProfile;
     if (p == null || !p.isComplete) return;
+    // 場所欄の値を保持 (両方揃った時のみ採用、以降の再取得でも使う)。
+    if (lat != null && lng != null) {
+      _transitRelocLat = lat;
+      _transitRelocLng = lng;
+    }
     await _fetchRealChart(p, targetDate: when);
     if (!mounted) return;
     setState(() {
@@ -349,6 +386,9 @@ class HoroscopeScreenState extends State<HoroscopeScreen>
   Future<void> _applyWorkingProfile(SolaraProfile newProfile) async {
     if (!newProfile.isComplete) return;
     _workingProfile = newProfile;
+    // プロフィールが差し替わったらトランジット場所指定はクリア (新 profile の既定へ)。
+    _transitRelocLat = null;
+    _transitRelocLng = null;
     _birthTimeUnknown = newProfile.birthTimeUnknown;
     // チャートを再取得 (natal / secondary 両方)
     await _fetchRealChart(newProfile);
@@ -415,7 +455,18 @@ class HoroscopeScreenState extends State<HoroscopeScreen>
       chart = _effectiveRelocateMode ? relocateChart : natalChart;
     } else {
       // 単一fetch
-      final useRelocate = _effectiveRelocateMode;
+      // nt/np (トランジット/プログレス) は場所欄 (option 1) で relocate ハウス計算。
+      // それ以外 (1重円) は本質/現実トグル (_effectiveRelocateMode) に従う。
+      double? relLat;
+      double? relLng;
+      if (_chartMode == 'nt' || _chartMode == 'np') {
+        final loc = _effTransitReloc();
+        relLat = loc?.$1;
+        relLng = loc?.$2;
+      } else if (_effectiveRelocateMode) {
+        relLat = p.homeLat;
+        relLng = p.homeLng;
+      }
       chart = await fetchChart(
         birthDate: p.birthDate,
         birthTime: birthTime,
@@ -425,8 +476,8 @@ class HoroscopeScreenState extends State<HoroscopeScreen>
         birthTzName: p.birthTzName,
         mode: mode,
         houseSystem: 'placidus',
-        relocateLat: useRelocate ? p.homeLat : null,
-        relocateLng: useRelocate ? p.homeLng : null,
+        relocateLat: relLat,
+        relocateLng: relLng,
         targetDate: targetDate,
       );
       // 単一fetchの場合は natal/relocate キャッシュは更新しない
@@ -643,8 +694,9 @@ class HoroscopeScreenState extends State<HoroscopeScreen>
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               child: Row(children: [
                 // ハウス基準モードトグル(本質/現実) — 出生地ハウス vs 現住所リロケーション
-                // 星読みモードは現実固定なのでトグル非表示
-                if (_chartMode != 'astrology') _buildHouseModeToggle(),
+                // 星読みは現実固定で非表示。トランジット/プログレス(nt/np)は場所欄
+                // (option 1) でハウス枠を制御するのでトグル非表示 → 1重NATALのみ表示。
+                if (_chartMode == 'single') _buildHouseModeToggle(),
                 const Spacer(),
                 // HTML: .chart-menu-btn
                 PopupMenuButton<String>(
@@ -722,7 +774,15 @@ class HoroscopeScreenState extends State<HoroscopeScreen>
             ),
 
             // ── Bottom Sheet (HTML: 3-state, hidden when astrology mode) ──
-            if (_chartMode != 'astrology') _buildBottomSheet(),
+            // キーボード表示中は「キーボード高 − SafeArea が既に確保した下部
+            // インセット」分だけ sheet を持ち上げ、キーボード直上にぴったり乗せる
+            // (ナビバー分の二重計上を防ぎ、背景の覗くスキマを無くす)。背景は固定。
+            if (_chartMode != 'astrology')
+              Padding(
+                padding: EdgeInsets.only(
+                    bottom: _bsBottomInset(MediaQuery.of(context))),
+                child: _buildBottomSheet(),
+              ),
           ]),
         ),
       ),

@@ -305,3 +305,5 @@ class HoroHourMinuteDropdown extends StatelessWidget {
     );
   }
 }
+
+// HoroLocationInput は horo_location_input.dart に分離 (行数 HARD 回避)。
