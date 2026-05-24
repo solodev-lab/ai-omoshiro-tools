@@ -109,7 +109,7 @@ flutter:
     # 2026-05-19: ★4 / ★3 / ★1-2 を「形容詞色 × 2 ベース星座 (ランダム選択)」に
     # 仕様変更。旧 mystical/ + lite/ は廃止して新 variants_* に置換。
     - assets/catasterism-bg/variants_leo/
-    - assets/catasterism-bg/variants_virgo/
+    - assets/catasterism-bg/variants_gemini/
     - assets/catasterism-bg/variants_scorpio/
     - assets/catasterism-bg/variants_aquarius/
     - assets/catasterism-bg/variants_pisces/

@@ -3,9 +3,9 @@ Convert "variants" PNGs (mockup) -> WEBP into apps/solara/assets/catasterism-bg/
 
 Sources (each folder contains 11 PNGs, named `{base}_{themeZodiac}.png`):
   - share-assets/backgrounds_leo_variants/      (★4 layer, side A)
-  - share-assets/backgrounds_virgo_variants/    (★4 layer, side B)
+  - share-assets/backgrounds_aquarius_variants/ (★4 layer, side B)
   - share-assets/backgrounds_scorpio_variants/  (★3 layer, side A)
-  - share-assets/backgrounds_aquarius_variants/ (★3 layer, side B)
+  - share-assets/backgrounds_gemini_variants/   (★3 layer, side B)
   - share-assets/backgrounds_pisces_variants/   (★1-2 layer, side A)
   - share-assets/backgrounds_aries_variants/    (★1-2 layer, side B)
 
@@ -15,12 +15,12 @@ themeZodiac → 形容詞グループ対応:
   (sagittarius→未使用、PNG は存在しても削除される)
 
 Output:
-  apps/solara/assets/catasterism-bg/variants_leo/     (11 WEBPs)
-  apps/solara/assets/catasterism-bg/variants_virgo/   (11 WEBPs)
-  apps/solara/assets/catasterism-bg/variants_scorpio/ (11 WEBPs)
-  apps/solara/assets/catasterism-bg/variants_aquarius/(11 WEBPs)
-  apps/solara/assets/catasterism-bg/variants_pisces/  (11 WEBPs)
-  apps/solara/assets/catasterism-bg/variants_aries/   (11 WEBPs)
+  apps/solara/assets/catasterism-bg/variants_leo/     (10 WEBPs)
+  apps/solara/assets/catasterism-bg/variants_aquarius/(10 WEBPs)
+  apps/solara/assets/catasterism-bg/variants_scorpio/ (10 WEBPs)
+  apps/solara/assets/catasterism-bg/variants_gemini/  (10 WEBPs)
+  apps/solara/assets/catasterism-bg/variants_pisces/  (10 WEBPs)
+  apps/solara/assets/catasterism-bg/variants_aries/   (10 WEBPs)
 
 Usage:
   python convert_variants_to_assets.py            # convert all (skip if WEBP exists)
@@ -39,8 +39,8 @@ WEBP_QUALITY = 85
 
 # (folder_name_suffix, base_zodiac)
 BASE_ZODIACS = [
-    "leo", "virgo",      # ★4
-    "scorpio", "aquarius",  # ★3
+    "leo", "aquarius",      # ★4
+    "scorpio", "gemini",    # ★3
     "pisces", "aries",    # ★1-2
 ]
 

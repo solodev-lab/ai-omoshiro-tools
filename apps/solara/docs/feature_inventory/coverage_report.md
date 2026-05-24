@@ -52,9 +52,9 @@
 ## #1 / #2 機械抽出 ↔ feature_inventory.md (人手版) の対整合
 
 - 機械抽出した class/mixin/extension/enum: **427**
-- inventory に登場する識別子 (大文字始まり ``backtick``囲み): **223**
+- inventory に登場する識別子 (大文字始まり ``backtick``囲み): **224**
 
-### #1 機械にあるが Doc に書かれていない (246)
+### #1 機械にあるが Doc に書かれていない (245)
 
 - `AppAttestClient`
 - `ConstellationShareCardPage`
@@ -71,7 +71,6 @@
 - `ConsultationTimeWindowItem`
 - `ConsultationWhen`
 - `DeviceSecurityStatus`
-- `ForecastSectionHeader`
 - `GalaxyArchiveFilter`
 - `GalaxyArchiveFilterBar`
 - `GalaxyArchiveSort`
@@ -256,7 +255,8 @@
 - `_SanctuaryTitleDiagnosisPageState`
 - `_ScopeChoice`
 - `_ScopeWrap`
-- … 残り 46 省略
+- `_ScrollableRowPanel`
+- … 残り 45 省略
 
 ### #2 Doc に書いてあるがコードに存在しない (ゴースト記述) (42)
 
@@ -421,9 +421,11 @@
 > 各ソースの SHA1 を `_stamps.json` に記録し、差分を検出。
 > 変更されたファイルが属する層は、人手版インベントリ章の見直し対象。
 
-- 追加: **0** / 削除: **0** / 変更: **0**
+- 追加: **0** / 削除: **0** / 変更: **1**
 
-- 変更なし — 全インベントリ章は最新。
+### 変更されたファイル (層別)
+
+- **層 3c**: `lib/widgets/catasterism_formation_overlay.dart`
 
 ## #7 astro_glossary 用語辞書対整合
 

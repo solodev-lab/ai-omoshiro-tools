@@ -16,7 +16,7 @@
 | 912 | 🔴 HARD | lib/screens/horoscope_screen.dart |
 | 868 | 🔴 HARD | lib/screens/map/map_astro_carto.dart |
 | 798 | 🔴 HARD | lib/screens/map/map_fortune_sheet.dart |
-| 762 | 🔴 HARD | lib/widgets/catasterism_formation_overlay.dart |
+| 764 | 🔴 HARD | lib/widgets/catasterism_formation_overlay.dart |
 | 759 | 🔴 HARD | lib/screens/locations_screen.dart |
 | 758 | 🔴 HARD | lib/widgets/fortune_overlays/work_painter.dart |
 | 702 | 🔴 HARD | lib/screens/horoscope/horo_chart_painter.dart |
@@ -195,7 +195,7 @@
 
 ### 11. 📁 別ファイル間 (7 箇所、6 ファイル)
 
-  - lib/widgets/catasterism_formation_overlay.dart:458
+  - lib/widgets/catasterism_formation_overlay.dart:460
   - lib/widgets/catasterism_overlay.dart:187
   - lib/widgets/full_moon_overlay.dart:196
   - lib/widgets/new_moon_overlay.dart:216
@@ -250,7 +250,7 @@
 
 ### 16. 📁 別ファイル間 (6 箇所、6 ファイル)
 
-  - lib/widgets/catasterism_formation_overlay.dart:459
+  - lib/widgets/catasterism_formation_overlay.dart:461
   - lib/widgets/location_picker_minimap.dart:131
   - lib/widgets/new_moon_overlay.dart:420
   - lib/screens/galaxy/constellation_share_card_page.dart:166

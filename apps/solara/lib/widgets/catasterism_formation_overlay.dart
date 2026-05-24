@@ -102,10 +102,12 @@ class _CatasterismFormationOverlayState
   ///
   /// 🔴 (2026-05-19) 仕様改訂:
   ///   - ★5 のみ: bright/bright_{adjGroup}_{userZodiac}.webp (120 枚、太陽星座 × 形容詞色)
-  ///   - ★4: variants_leo or variants_virgo (形容詞色テーマ星座 × 2 ベース、決定論的に A/B)
-  ///   - ★3: variants_scorpio or variants_aquarius
+  ///   - ★4: variants_leo or variants_aquarius (形容詞色テーマ星座 × 2 ベース、決定論的に A/B)
+  ///   - ★3: variants_scorpio or variants_gemini
   ///   - ★1-2: variants_pisces or variants_aries
   /// 旧 mystical/ と lite/ は廃止。
+  /// 🔴 (2026-05-25) ★3/★4 ベース入替: ★4 の virgo を廃し aquarius を昇格、
+  ///   ★3 に gemini を新規追加 (オーナー指定)。
   ///
   /// 決定論的 A/B 選択:
   ///   cycle.id (millisecondsSinceEpoch 文字列) を seed にして 0/1 を決める。
@@ -114,8 +116,8 @@ class _CatasterismFormationOverlayState
   ///
   /// 形容詞によっては片方のフォルダしか画像が無いケース ([baseZodiac]_[themeZodiac]
   /// で themeZodiac == baseZodiac は存在しない):
-  ///   ★4: golden (leo) → virgo_leo のみ / infinite (virgo) → leo_virgo のみ
-  ///   ★3: mystic (scorpio) → aquarius_scorpio のみ / frozen (aquarius) → scorpio_aquarius のみ
+  ///   ★4: golden (leo) → aquarius_leo のみ / frozen (aquarius) → leo_aquarius のみ
+  ///   ★3: mystic (scorpio) → gemini_scorpio のみ / silver (gemini) → scorpio_gemini のみ
   ///   ★1-2: crimson (aries) → pisces_aries のみ
   /// この場合は自動的に存在する側を優先順位先頭に置く。
   List<String> _resolveBgCandidates(int rarity, String? userZodiac, int adjIdx) {
@@ -154,10 +156,10 @@ class _CatasterismFormationOverlayState
   }
 
   /// レアリティ → variants の (A, B) ベース星座ペア。
-  /// ★4: (leo, virgo) / ★3: (scorpio, aquarius) / ★1-2: (pisces, aries)
+  /// ★4: (leo, aquarius) / ★3: (scorpio, gemini) / ★1-2: (pisces, aries)
   (String, String) _variantBasesFor(int rarity) {
-    if (rarity == 4) return ('leo', 'virgo');
-    if (rarity == 3) return ('scorpio', 'aquarius');
+    if (rarity == 4) return ('leo', 'aquarius');
+    if (rarity == 3) return ('scorpio', 'gemini');
     return ('pisces', 'aries'); // 1-2
   }
 
