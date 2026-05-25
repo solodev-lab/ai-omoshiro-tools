@@ -45,6 +45,7 @@ part 'consultation_input_widgets.dart';
 part 'consultation_input_when_scope.dart';
 part 'consultation_input_examples.dart';
 part 'consultation_input_picker.dart';
+part 'consultation_input_picker_widgets.dart';
 part 'consultation_input_logic.dart';
 part 'consultation_start_popup.dart';
 

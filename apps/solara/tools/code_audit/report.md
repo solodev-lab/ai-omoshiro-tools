@@ -1,6 +1,6 @@
 # Solara Code Audit
 
-対象: lib (182 個の .dart)
+対象: lib (183 個の .dart)
 
 ## 1. ファイル行数 (>= 300 行)
 
@@ -35,12 +35,11 @@
 | 564 | 🔴 HARD | lib/widgets/new_moon_overlay.dart |
 | 559 | 🔴 HARD | lib/utils/planet_intro.dart |
 | 535 | 🔴 HARD | lib/utils/astro_lines.dart |
-| 523 | 🔴 HARD | lib/screens/consultation/consultation_input_picker.dart |
 | 511 | 🔴 HARD | lib/screens/map/map_astro.dart |
 | 508 | 🔴 HARD | lib/screens/map/map_time_slider.dart |
 | 500 | 🔴 HARD | lib/screens/observe/tarot_altar_scene.dart |
 | 498 | 🟡 WARN | lib/widgets/fortune_overlays/healing_painter.dart |
-| 490 | 🟡 WARN | lib/screens/consultation/consultation_input_screen.dart |
+| 491 | 🟡 WARN | lib/screens/consultation/consultation_input_screen.dart |
 | 481 | 🟡 WARN | lib/widgets/full_moon_overlay.dart |
 | 481 | 🟡 WARN | lib/screens/map/map_overlays.dart |
 | 467 | 🟡 WARN | lib/screens/horoscope/horo_relocation_panel.dart |
@@ -68,6 +67,7 @@
 | 355 | 🟡 WARN | lib/screens/locations/locations_date_stepper.dart |
 | 354 | 🟡 WARN | lib/widgets/sanctuary_account_section.dart |
 | 353 | 🟡 WARN | lib/screens/consultation/consultation_place_picker_screen.dart |
+| 338 | 🟡 WARN | lib/screens/consultation/consultation_input_picker.dart |
 | 338 | 🟡 WARN | lib/screens/map/consult_entry_popup.dart |
 | 336 | 🟡 WARN | lib/screens/consultation/consultation_result_widgets.dart |
 | 336 | 🟡 WARN | lib/screens/horoscope/horo_birth_panel.dart |
@@ -98,8 +98,8 @@
 
   - lib/widgets/class_card.dart:287
   - lib/widgets/location_picker_minimap.dart:134
-  - lib/screens/consultation/consultation_input_picker.dart:412
-  - lib/screens/consultation/consultation_input_picker.dart:447
+  - lib/screens/consultation/consultation_input_picker_widgets.dart:85
+  - lib/screens/consultation/consultation_input_picker_widgets.dart:121
   - lib/screens/consultation/consultation_result_credit_widgets.dart:181
   ```
   ),
@@ -163,7 +163,7 @@
 ### 8. 📁 別ファイル間 (7 箇所、7 ファイル)
 
   - lib/widgets/new_moon_overlay.dart:312
-  - lib/screens/consultation/consultation_input_picker.dart:411
+  - lib/screens/consultation/consultation_input_picker_widgets.dart:84
   - lib/screens/galaxy/constellation_share_card_page.dart:377
   - lib/screens/galaxy/galaxy_cycle_actions_sheet.dart:264
   - lib/screens/horoscope/horo_relocation_pro_teaser.dart:88
@@ -193,7 +193,18 @@
   ),
   ```
 
-### 11. 📁 別ファイル間 (7 箇所、6 ファイル)
+### 11. 📁 別ファイル間 (9 箇所、6 ファイル)
+
+  - lib/screens/consultation/consultation_input_picker.dart:330
+  - lib/screens/consultation/consultation_result_card.dart:174
+  - lib/screens/galaxy/galaxy_star_atlas.dart:155
+  - lib/screens/galaxy/galaxy_star_atlas.dart:189
+  - lib/screens/galaxy/galaxy_star_atlas.dart:355
+  ```
+  ),
+  ```
+
+### 12. 📁 別ファイル間 (7 箇所、6 ファイル)
 
   - lib/widgets/catasterism_formation_overlay.dart:460
   - lib/widgets/catasterism_overlay.dart:187
@@ -204,18 +215,18 @@
   ),
   ```
 
-### 12. 📁 別ファイル間 (7 箇所、6 ファイル)
+### 13. 📁 別ファイル間 (7 箇所、6 ファイル)
 
   - lib/widgets/class_card.dart:288
-  - lib/screens/consultation/consultation_input_picker.dart:413
-  - lib/screens/consultation/consultation_input_picker.dart:448
+  - lib/screens/consultation/consultation_input_picker_widgets.dart:86
+  - lib/screens/consultation/consultation_input_picker_widgets.dart:122
   - lib/screens/galaxy/constellation_share_card_page.dart:379
   - lib/screens/map/map_daily_transit_screen.dart:315
   ```
   ),
   ```
 
-### 13. 📁 別ファイル間 (7 箇所、6 ファイル)
+### 14. 📁 別ファイル間 (7 箇所、6 ファイル)
 
   - lib/widgets/info_popup.dart:106
   - lib/screens/consultation/consultation_input_widgets.dart:374
@@ -226,7 +237,7 @@
   ),
   ```
 
-### 14. 📁 別ファイル間 (7 箇所、6 ファイル)
+### 15. 📁 別ファイル間 (7 箇所、6 ファイル)
 
   - lib/screens/consultation/consultation_input_picker.dart:329
   - lib/screens/consultation/consultation_result_card.dart:173
@@ -237,7 +248,7 @@
   ),
   ```
 
-### 15. 📁 別ファイル間 (6 箇所、6 ファイル)
+### 16. 📁 別ファイル間 (6 箇所、6 ファイル)
 
   - lib/screens/paywall_widgets.dart:367
   - lib/widgets/catasterism_overlay.dart:190
@@ -248,7 +259,7 @@
   ),
   ```
 
-### 16. 📁 別ファイル間 (6 箇所、6 ファイル)
+### 17. 📁 別ファイル間 (6 箇所、6 ファイル)
 
   - lib/widgets/catasterism_formation_overlay.dart:461
   - lib/widgets/location_picker_minimap.dart:131
@@ -259,7 +270,7 @@
   ),
   ```
 
-### 17. 📁 別ファイル間 (6 箇所、6 ファイル)
+### 18. 📁 別ファイル間 (6 箇所、6 ファイル)
 
   - lib/widgets/catasterism_overlay.dart:189
   - lib/widgets/full_moon_overlay.dart:198
@@ -270,7 +281,7 @@
   ),
   ```
 
-### 18. 📁 別ファイル間 (6 箇所、6 ファイル)
+### 19. 📁 別ファイル間 (6 箇所、6 ファイル)
 
   - lib/screens/consultation/consultation_history_widgets.dart:48
   - lib/screens/consultation/consultation_result_card.dart:117
@@ -279,17 +290,6 @@
   - lib/screens/galaxy/galaxy_cycle_actions_sheet.dart:186
   ```
   ],
-  ```
-
-### 19. 📁 別ファイル間 (8 箇所、5 ファイル)
-
-  - lib/screens/consultation/consultation_result_card.dart:174
-  - lib/screens/galaxy/galaxy_star_atlas.dart:155
-  - lib/screens/galaxy/galaxy_star_atlas.dart:189
-  - lib/screens/galaxy/galaxy_star_atlas.dart:355
-  - lib/screens/map/map_astro_lines.dart:506
-  ```
-  ),
   ```
 
 ### 20. 📁 別ファイル間 (5 箇所、5 ファイル)

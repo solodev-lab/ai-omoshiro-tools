@@ -87,7 +87,7 @@ Solara のバックエンドは **Cloudflare Workers** で稼働。本番 URL: `
   ("商品ID:付与数" CSV) にあれば残高 +N (`revenuecat.js`、cosmic_pro entitlement とは無関係に処理)。
 - **状況 endpoint**: `/protected/consultation/credits` → {pro, freeRemaining, freeLimit, purchasedBalance}。
   クライアントの残数表示・購入後の残高更新に使う。
-- **コスト多層防御**: 相談は middleware の日次クォータ (Free5/Pro100) も 1 消費 (週次/購入とは別軸のバックストップ)。
+- **コスト多層防御**: 相談は middleware の日次クォータ (2026-05-25: **Free30 / Pro50**、旧 Free5/Pro100 から変更) も 1 消費 (週次/購入とは別軸のバックストップ、Pro「無制限」のテール乱用を物理遮断)。env `APP_ATTEST_QUOTA_FREE/PRO`、実ブロックは enforced 化時に発動。
 - **クライアント**: 入口 Pro ゲート撤廃 (Free も入力画面へ)、結果画面に残数バナー + 402 で
   「追加クレジット購入 / Cosmic Pro」box、`consultation_credit_sheet.dart` が消費型購入シート
   (3個/10個 + Pro 誘導、購入前サインイン必須、付与は Webhook ラグをポーリングで吸収)。
@@ -125,6 +125,21 @@ Solara のバックエンドは **Cloudflare Workers** で稼働。本番 URL: `
 - **影響プール = 全データ**: 4 アングル合線 + アスペクト線(合/トライン/スクエア/セクスタイル) +
   天頂帯/天底帯(緯度効果) を、フレーム横断(natal+transit+progressed、旅行は ≤3 日サンプリング)で集める。
 - **入口 3 導線**: Map タップ / Daily Transit / 検索結果詳細「✦ Stella に相談」。
+
+#### 2026-05-25 改善 (実機テスト起点)
+- **おでかけの時間帯指定 (任意)**: `ConsultationWhen.timeBand` (morning/midday/evening/night/lateNight)。
+  おでかけ場面のみチップ表示 (`_TimeBandSelector`)。指定時は Worker がその時間帯を語りの主役にし、
+  予定外の時間帯に逸れない。未指定時は特定時間帯を断定しない (昼の予定なのに朝/夜更けを語る白け防止)。
+  時間帯境界 (`consultation_engine.timeOfDayBucket`) は 5 帯: 朝5-10/昼10-15/夕方15-19/夜19-23/夜更け23-5
+  (日をまたぐ。明け方 dawn は廃止)。
+- **場所名の呼び方 (`ConsultationPoint.placeKind`)**: `placeReference` (consultation_v2.js) が分岐。
+  `named`=検索で選んだ具体地点 → その場所名 (店/公園/会社/学校) をそのまま使い都市名に丸めない
+  (例「JR名古屋高島屋」を「名古屋」にしない)。`saved`=ViewPoint/Locations 登録地 → 「(登録名)という場所」。
+  null=従来 (都市候補=地域/半径スコープは従来の都市名分岐を温存)。
+- **具体地点ピッカー**: 🔭ViewPoint + 📍Locations の 2 グループから保存地点を選べる (従来 Locations のみ)。
+  presentational widget は `consultation_input_picker_widgets.dart` (part) に分離。
+- **コスト**: thinking budget 1024→512 (consultation/consultation_v2/fortune/tarot、原価半減・品質維持)。
+  詳細はメモリ `project_gemini_api_cost.md`。
 
 #### 結果出力の考え方 (Stella の語りルール — 設計哲学の番人)
 - **吉凶を出さない**: Soft(流れ・調和) と Hard(摩擦・課題) は独立した 2 エネルギー。

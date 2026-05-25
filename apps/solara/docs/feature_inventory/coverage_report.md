@@ -345,7 +345,7 @@
 
 ### 層 4f: サブ画面 (Forecast / Locations / Philosophy / Font Preview)
 
-- ファイル数: 27
+- ファイル数: 28
 - Worker URL 呼出: (なし)
 - Popup/Dialog: `showInfoPopup`×7
 - Navigator.push 等: 0 箇所
@@ -375,7 +375,7 @@
 | 4c | 1 | 1 | 15 | · | 7 | 4 | 6 | 4 | · | · | · | 16 | · | · | 1 | · |
 | 4d | 3 | 6 | 13 | 1 | 5 | 2 | 12 | 2 | 1 | · | · | · | 9 | · | · | · |
 | 4e | 1 | 4 | · | 3 | 7 | · | 15 | 1 | · | · | · | · | · | 9 | 2 | · |
-| 4f | 2 | 3 | · | 8 | 15 | · | 16 | 11 | · | 6 | · | · | · | · | 26 | · |
+| 4f | 2 | 3 | · | 8 | 15 | · | 16 | 11 | · | 6 | · | · | · | · | 27 | · |
 | 5 | 1 | · | · | 2 | 4 | 1 | 1 | 1 | · | 1 | 1 | 1 | 1 | 1 | · | · |
 
 > 健全な依存方向は「番号が大きい層 → 小さい層」(上位が下位に依存)。
@@ -421,14 +421,9 @@
 > 各ソースの SHA1 を `_stamps.json` に記録し、差分を検出。
 > 変更されたファイルが属する層は、人手版インベントリ章の見直し対象。
 
-- 追加: **0** / 削除: **0** / 変更: **7**
+- 追加: **0** / 削除: **0** / 変更: **0**
 
-### 変更されたファイル (層別)
-
-- **層 0**: `worker/src/consultation_engine.js`, `worker/src/consultation_v2.js`
-- **層 1b**: `lib/utils/consultation_v2_request.dart`
-- **層 4a**: `lib/screens/map_screen.dart`
-- **層 4f**: `lib/screens/consultation/consultation_input_logic.dart`, `lib/screens/consultation/consultation_input_picker.dart`, `lib/screens/consultation/consultation_input_screen.dart`
+- 変更なし — 全インベントリ章は最新。
 
 ## #7 astro_glossary 用語辞書対整合
 

@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 27 / 総行数: 8819
+- ファイル数: 28 / 総行数: 8833
 - class/mixin/extension/enum: 83
 - 関数 (top-level + method の素拾い): 232
 - Navigator.push 等: 0
@@ -207,7 +207,7 @@ setState を呼ばない純ロジック (when/scope → ConsultationRequest、�
 - 集計: `showInfoPopup`×1
 
 
-### `lib/screens/consultation/consultation_input_picker.dart` (523 行)
+### `lib/screens/consultation/consultation_input_picker.dart` (338 行)
 
 **ファイル先頭コメント:**
 
@@ -221,26 +221,20 @@ scope='specific' 専用の inline 地点ピッカー (A) を提供する。
 L836-1295 (_SpecificPicker 系) を切り出し (ファイル肥大化対策、2026-05-16)。
 ```
 
-**型定義 (6):**
+**型定義 (3):**
 
 - L12 `class _PickedSpecific`
   - _SpecificPicker からの選択結果を持ち回す軽量レコード。
 - L34 `class _SpecificPicker : StatefulWidget`
   - inline 地点ピッカー (A)。検索 + LOCATION quick-pick + 「地図で選ぶ」(B) を集約。
 - L57 `class _SpecificPickerState : State`
-- L337 `class _SearchHitRow : StatelessWidget`
-- L421 `class _LocationChip : StatelessWidget`
-- L456 `class _SelectedSpecificCard : StatelessWidget`
 
-**関数 (7 public + 6 private):**
+**関数 (4 public + 6 private):**
 
 - L54 `createState()`
 - L73 `initState()`
 - L79 `dispose()`
 - L154 `build()`
-- L345 `build()`
-- L427 `build()`
-- L470 `build()`
 
   <details><summary>private 関数 6 件</summary>
 
@@ -254,7 +248,35 @@ L836-1295 (_SpecificPicker 系) を切り出し (ファイル肥大化対策、2
   </details>
 
 
-### `lib/screens/consultation/consultation_input_screen.dart` (490 行)
+### `lib/screens/consultation/consultation_input_picker_widgets.dart` (198 行)
+
+**ファイル先頭コメント:**
+
+```
+Consultation Input Screen — 具体地点ピッカーの presentational 部品
+(part of 'consultation_input_screen.dart')
+
+consultation_input_picker.dart の HARD500 回避のため、検索結果行・保存地点チップ・
+選択中カードの 3 widget を切り出し (2026-05-25)。ロジックは持たず描画のみ。
+```
+
+**型定義 (3):**
+
+- L10 `class _SearchHitRow : StatelessWidget`
+  - 検索結果 1 行 (番号バッジ + 場所名 + 住所サブ行)。
+- L95 `class _LocationChip : StatelessWidget`
+  - 保存地点 (ViewPoint / Locations) のチップ。アイコン + 登録名。
+- L131 `class _SelectedSpecificCard : StatelessWidget`
+  - 選択中の具体地点カード (場所名 + 住所 + 解除ボタン)。
+
+**関数 (3 public + 0 private):**
+
+- L18 `build()`
+- L101 `build()`
+- L145 `build()`
+
+
+### `lib/screens/consultation/consultation_input_screen.dart` (491 行)
 
 **ファイル先頭コメント:**
 
@@ -289,30 +311,30 @@ Consultation Input Screen — 5問モデル (V2: 全要素統合)
 
 **型定義 (3):**
 
-- L52 `class ConsultationPresetTarget`
+- L53 `class ConsultationPresetTarget`
   - Map から「📍この場所で相談」で起動した時の preset (point scope 用)。
-- L77 `class ConsultationInputScreen : StatefulWidget`
-- L95 `class _ConsultationInputScreenState : State`
+- L78 `class ConsultationInputScreen : StatefulWidget`
+- L96 `class _ConsultationInputScreenState : State`
 
 **関数 (4 public + 10 private):**
 
-- L91 `createState()`
-- L133 `initState()`
-- L159 `dispose()`
-- L321 `build()`
+- L92 `createState()`
+- L134 `initState()`
+- L160 `dispose()`
+- L322 `build()`
 
   <details><summary>private 関数 10 件</summary>
 
-  - L142 `_loadPrefsAndProfile()`
-  - L166 `_onModeChanged()`
-  - L195 `_onWhenKindTap()`
-  - L220 `_pickSingleDate()`
-  - L232 `_pickDateRange()`
-  - L244 `_ymd()`
-  - L248 `_onScopeKindTap()`
-  - L258 `_openMapPicker()`
-  - L304 `_handleBuyFromPopup()`
-  - L314 `_setStartPopupHidden()`
+  - L143 `_loadPrefsAndProfile()`
+  - L167 `_onModeChanged()`
+  - L196 `_onWhenKindTap()`
+  - L221 `_pickSingleDate()`
+  - L233 `_pickDateRange()`
+  - L245 `_ymd()`
+  - L249 `_onScopeKindTap()`
+  - L259 `_openMapPicker()`
+  - L305 `_handleBuyFromPopup()`
+  - L315 `_setStartPopupHidden()`
 
   </details>
 
