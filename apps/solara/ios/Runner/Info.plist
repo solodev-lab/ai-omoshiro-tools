@@ -8,6 +8,8 @@
 	<false/>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>現在地周辺の検索や、現在地を基準地点として登録するために使用します。</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>現在地周辺の検索や、現在地を基準地点として登録するために使用します。バックグラウンドでの位置情報の追跡は行いません。</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
