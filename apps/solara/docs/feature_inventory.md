@@ -538,13 +538,14 @@ Solara のバックエンドは **Cloudflare Workers** で稼働。本番 URL: `
 `lib/utils/` 配下、**shared_preferences 等の storage import あり** の 3 ファイル / 計 907 行。
 **Solara のほぼ全画面が依存** (Grep で 25 ファイルが import) = 永続化はアプリの中央集権。
 
-### 2b.2 ファイル別 役割 + 呼出元 (3 本)
+### 2b.2 ファイル別 役割 + 呼出元 (4 本)
 
 | # | ファイル | 行 | 役割 | 呼出元 |
 |---|---|---|---|---|
 | 1 | [`solara_storage.dart`](../lib/utils/solara_storage.dart) | 622 | **永続化中央集権ファイル**。SolaraProfile, Reading 履歴, Intention, dailyResetHour/Minute, Map style, Forecast 設定, overlay state, notTodayCount + 無料タロット日次ガード (`logicalTodayKey` / `hasDrawnFreeTarotToday` / `markFreeTarotDrawn`) 等 | main.dart + 全画面 (Sanctuary / Map / Horo / Observe / Galaxy / Forecast / Locations) + moon overlay 系 widgets |
 | 2 | [`forecast_cache.dart`](../lib/utils/forecast_cache.dart) | 462 | **`/astro/forecast` 呼出 + 永続化キャッシュ + クールダウン + ◯◯期検出**。`ForecastDay`, `LifePeriod`, `ForecastCache`, `ForecastRepo`、`detectLifePeriods` (運勢サイクル抽出ロジック) | [forecast_screen](../lib/screens/forecast_screen.dart), [forecast_life_periods](../lib/screens/forecast/forecast_life_periods.dart), [forecast_top5](../lib/screens/forecast/forecast_top5.dart), [galaxy_screen](../lib/screens/galaxy_screen.dart) (?) |
 | 3 | [`app_locale.dart`](../lib/utils/app_locale.dart) | 41 | 言語切替 (端末/JP/EN) の global singleton。SharedPreferences で永続化 | main.dart (`AppLocale.instance.load()`) + 言語表示する全画面 |
+| 4 | [`fortune_cache.dart`](../lib/utils/fortune_cache.dart) | — | **Horo「今日の占い」の永続日次キャッシュ** (`FortuneCacheRepo`)。プロフィールハッシュ + 当日日付でカテゴリ別 `FortuneReading` を保存。再起動後も同日は fetchChart/fetchFortune をスキップ = Gemini コスト削減 (2026-05-25)。`profileHashOf` は forecast_cache から流用 | [horoscope_screen](../lib/screens/horoscope_screen.dart) `_loadFortunes` |
 
 ### 2b.3 機械分類の盲点 — `forecast_cache.dart` は実態が 2a/2b ハイブリッド
 

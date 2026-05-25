@@ -264,7 +264,7 @@ export async function handleTarot(body, env) {
 
   const prompt = buildPrompt({ cardId, reversed, nameJP, nameEN, keyword, element, planet, moonPhase, userName, lang, question, category });
   const raw = await callGemini(env.GEMINI_API_KEY, prompt, models, {
-    thinkingBudget: thinking ? 1024 : null,
+    thinkingBudget: thinking ? 512 : null, // 2026-05-25 1024→512 (コスト半減・品質ほぼ維持)
   });
 
   let parsed;

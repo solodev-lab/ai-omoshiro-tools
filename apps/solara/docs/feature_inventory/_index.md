@@ -13,7 +13,7 @@
 | 1b | 静的データ辞書 | 14 | [01b_static_data.md](01b_static_data.md) |
 | 1c | モデルクラス | 4 | [01c_models.md](01c_models.md) |
 | 2a | API/Worker ラッパ | 10 | [02a_api_wrappers.md](02a_api_wrappers.md) |
-| 2b | 永続化/キャッシュ | 8 | [02b_persistence.md](02b_persistence.md) |
+| 2b | 永続化/キャッシュ | 9 | [02b_persistence.md](02b_persistence.md) |
 | 2c | グローバル singleton | 1 | [02c_globals.md](02c_globals.md) |
 | 3a | 共通ウィジェット (純粋) | 25 | [03a_widgets_pure.md](03a_widgets_pure.md) |
 | 3b | テーマ・装飾 | 3 | [03b_theme.md](03b_theme.md) |
@@ -28,11 +28,11 @@
 
 ## 全体統計
 
-- Dart ファイル: 181
+- Dart ファイル: 182
 - Worker JS ファイル: 23
 - Worker エンドポイント総数: 30
-- Dart class/mixin/extension/enum 総数: 436
-- Dart 関数総数 (素拾い): 1437
+- Dart class/mixin/extension/enum 総数: 437
+- Dart 関数総数 (素拾い): 1441
 
 ## 対整合チェック
 

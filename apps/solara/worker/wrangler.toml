@@ -67,9 +67,11 @@ APPLE_BUNDLE_ID = "com.solodevlab.solara"
 APP_ATTEST_ENFORCEMENT = "log_only"
 
 # Per-user quota (Layer C、設計 v1.8 §13)
-# Free=日 5 リクエスト / Pro=日 100 リクエスト (Solara DAU 1500 想定で十分)
-APP_ATTEST_QUOTA_FREE = "5"
-APP_ATTEST_QUOTA_PRO = "100"
+# Free=日 30 / Pro=日 50 (2026-05-25: Pro 100→50・Free 5→30。Free もクレジット購入で
+# 正規に回数が増える(消費型IAP)ため 5 では足りない。乱用ガードとしての上限。
+# 実ブロックは enforcement=enforced 時に発動、log_only 中は warn のみ)
+APP_ATTEST_QUOTA_FREE = "30"
+APP_ATTEST_QUOTA_PRO = "50"
 
 # Challenge TTL (設計 v1.8 §11 Q2、Apple Sample Code 推奨 5 分)
 APP_ATTEST_CHALLENGE_TTL_SEC = "300"

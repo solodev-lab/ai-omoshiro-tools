@@ -319,7 +319,7 @@ export async function handleConsultationV2(body, env, deps = {}) {
   let parsed;
   try {
     const raw = await callGeminiFn(env.GEMINI_API_KEY, prompt, models, {
-      thinkingBudget: 1024, // Free/Pro 同等品質 (深い読み)
+      thinkingBudget: 512, // 2026-05-25 1024→512 (コスト半減・品質ほぼ維持)。Free/Pro 同等品質
       maxOutputTokens: 2048, // 候補1つ + (初回のみ intro/outro/innerSeason)
       retries: 1,
     });

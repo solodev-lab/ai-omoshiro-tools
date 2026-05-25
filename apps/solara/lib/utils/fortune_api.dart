@@ -31,6 +31,15 @@ class FortuneReading {
     advice: j['advice'] as String? ?? '',
     lang: j['lang'] as String? ?? 'ja',
   );
+
+  // 永続キャッシュ (fortune_cache.dart) 用。アプリ再起動後も同日は API を叩かない。
+  Map<String, dynamic> toJson() => {
+    'category': category,
+    'score': score,
+    'reading': reading,
+    'advice': advice,
+    'lang': lang,
+  };
 }
 
 /// /fortune を叩いて占い文を取得

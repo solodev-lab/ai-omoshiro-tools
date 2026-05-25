@@ -5,9 +5,9 @@
 
 ## サマリ
 
-- ファイル数: 8 / 総行数: 2344
-- class/mixin/extension/enum: 13
-- 関数 (top-level + method の素拾い): 107
+- ファイル数: 9 / 総行数: 2406
+- class/mixin/extension/enum: 14
+- 関数 (top-level + method の素拾い): 110
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 0
 - Worker URL リテラル: 0
@@ -157,6 +157,29 @@ Consultation Share — シェアエクスポート (V2: 全要素統合)
   - L310 `_saveCache()`
   - L315 `_markFetched()`
   - L321 `_daysInYear()`
+
+  </details>
+
+
+### `lib/utils/fortune_cache.dart` (62 行)
+
+**imports:** dart=1 / package=1 / relative=3
+
+- relative: `fortune_api.dart`, `forecast_cache.dart`, `solara_storage.dart`
+
+**型定義 (1):**
+
+- L19 `class FortuneCacheRepo`
+  - Horo「今日の占い」の永続キャッシュ。
+
+**関数 (1 public + 2 private):**
+
+- L49 `save()` — カテゴリ別 readings を保存する (値が null のカテゴリは除外)。
+
+  <details><summary>private 関数 2 件</summary>
+
+  - L22 `_dateStr()`
+  - L25 `_key()`
 
   </details>
 

@@ -5,9 +5,9 @@
 
 ## サマリ
 
-- ファイル数: 14 / 総行数: 4670
+- ファイル数: 14 / 総行数: 4679
 - class/mixin/extension/enum: 18
-- 関数 (top-level + method の素拾い): 39
+- 関数 (top-level + method の素拾い): 40
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 1
 - Worker URL リテラル: 0
@@ -254,7 +254,7 @@ Worker (consultation_engine.js runConsultationPipeline) の契約に対応する
   </details>
 
 
-### `lib/utils/fortune_api.dart` (300 行)
+### `lib/utils/fortune_api.dart` (309 行)
 
 **ファイル先頭コメント:**
 
@@ -274,14 +274,15 @@ middleware が log_only モードなら bypass、enforced モードなら attest
 
 - L12 `class FortuneReading`
   - Fortune APIレスポンス
-- L98 `class RelocationNarrative`
-- L190 `class TarotReading`
+- L107 `class RelocationNarrative`
+- L199 `class TarotReading`
 
-**関数 (3 public + 0 private):**
+**関数 (4 public + 0 private):**
 
-- L42 `fetchFortune()` — /fortune を叩いて占い文を取得
-- L150 `fetchRelocationNarrative()` — /relocation を叩いてリロケーション解説を取得。
-- L229 `fetchTarotReading()` — /tarot を叩いて1枚引きの Reading を生成する。
+- L36 `toJson()`
+- L51 `fetchFortune()` — /fortune を叩いて占い文を取得
+- L159 `fetchRelocationNarrative()` — /relocation を叩いてリロケーション解説を取得。
+- L238 `fetchTarotReading()` — /tarot を叩いて1枚引きの Reading を生成する。
 
 
 ### `lib/utils/planet_intro.dart` (559 行)

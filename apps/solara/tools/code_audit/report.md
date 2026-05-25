@@ -1,6 +1,6 @@
 # Solara Code Audit
 
-対象: lib (181 個の .dart)
+対象: lib (182 個の .dart)
 
 ## 1. ファイル行数 (>= 300 行)
 
@@ -13,7 +13,7 @@
 | 1275 | 🔴 HARD | lib/screens/galaxy_screen.dart |
 | 1084 | 🔴 HARD | lib/screens/forecast_screen.dart |
 | 1013 | 🔴 HARD | lib/screens/map/daily_transit_data.dart |
-| 912 | 🔴 HARD | lib/screens/horoscope_screen.dart |
+| 943 | 🔴 HARD | lib/screens/horoscope_screen.dart |
 | 868 | 🔴 HARD | lib/screens/map/map_astro_carto.dart |
 | 798 | 🔴 HARD | lib/screens/map/map_fortune_sheet.dart |
 | 764 | 🔴 HARD | lib/widgets/catasterism_formation_overlay.dart |
@@ -76,10 +76,10 @@
 | 319 | 🟡 WARN | lib/screens/galaxy/galaxy_archive_filter.dart |
 | 313 | 🟡 WARN | lib/utils/celestial_events.dart |
 | 313 | 🟡 WARN | lib/screens/observe/observe_history_past.dart |
+| 309 | 🟡 WARN | lib/utils/fortune_api.dart |
 | 309 | 🟡 WARN | lib/screens/horoscope/horo_panel_shared.dart |
 | 306 | 🟡 WARN | lib/widgets/class_card.dart |
 | 304 | 🟡 WARN | lib/screens/map/map_location_markers.dart |
-| 300 | 🟡 WARN | lib/utils/fortune_api.dart |
 
 ## 2. 重複コード (>= 8 行連続一致、上位 20 件)
 

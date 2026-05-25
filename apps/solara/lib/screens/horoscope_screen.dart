@@ -7,6 +7,7 @@ import '../utils/astro_math.dart';
 import '../utils/pro_status.dart';
 import '../utils/solara_storage.dart';
 import '../utils/fortune_api.dart';
+import '../utils/fortune_cache.dart';
 import '../widgets/pro_unlock_dialog.dart';
 import '../widgets/tap_to_unfocus.dart';
 
@@ -591,6 +592,30 @@ class HoroscopeScreenState extends State<HoroscopeScreen>
         _fortunes.length >= categories.length) {
       return; // 同日キャッシュ有効 (Pro 化で カテゴリ数が増えた場合のみ再 fetch)
     }
+
+    // ── 永続キャッシュ (アプリ再起動後も同日・同プロフィールなら API を叩かない) ──
+    // in-memory キャッシュはコールドスタートで失われるため、SharedPreferences の
+    // 日次キャッシュを先に見る。必要カテゴリを網羅していれば fetchChart/fetchFortune を
+    // 完全にスキップ = Gemini コスト節約 + 即時表示。force 時 (プロフィール変更/明示更新)
+    // は無視して再 fetch。
+    final cacheBase = _baseProfile;
+    if (!force && cacheBase != null) {
+      final cached = await FortuneCacheRepo.load(cacheBase, today);
+      if (cached != null &&
+          categories.every((c) => cached.containsKey(c['id'] as String))) {
+        if (!mounted) return;
+        setState(() {
+          _fortunes
+            ..clear()
+            ..addEntries(categories.map(
+                (c) => MapEntry(c['id'] as String, cached[c['id'] as String])));
+          _fortuneFetchedAt = today;
+          _fortuneError = null;
+        });
+        return; // API 呼び出しなし
+      }
+    }
+
     setState(() {
       _fortuneLoading = true;
       _fortuneError = null;
@@ -693,6 +718,12 @@ class HoroscopeScreenState extends State<HoroscopeScreen>
           _fortuneError = 'Fortune API に接続できませんでした';
         }
       });
+      // 永続キャッシュに保存 (次回コールドスタートで即表示 + Gemini 節約)。
+      // 全 null (生成失敗) は save 側でスキップされ、失敗はキャッシュされない。
+      if (cacheBase != null) {
+        await FortuneCacheRepo.save(
+            cacheBase, today, Map.fromEntries(results));
+      }
     } catch (e) {
       if (!mounted) return;
       setState(() {

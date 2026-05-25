@@ -342,7 +342,7 @@ export async function handleFortune(body, env) {
 
   const prompt = buildPrompt({ category, lang, natal, planetHouses, aspects, transitAspects, progressedAspects, patterns, date, userName });
   const raw = await callGemini(env.GEMINI_API_KEY, prompt, models, {
-    thinkingBudget: thinking ? 1024 : null,
+    thinkingBudget: thinking ? 512 : null, // 2026-05-25 1024→512 (コスト半減・品質ほぼ維持)
   });
 
   // 3. JSON抽出 (Geminiは基本JSON返すが念のためfallback)
