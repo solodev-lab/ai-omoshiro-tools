@@ -14,11 +14,16 @@ class _PickedSpecific {
   final String name;
   final String region;
   final String country;
+
+  /// 'named' = 検索/地図で選んだ具体地点 (場所名をそのまま使う) /
+  /// 'saved' = ViewPoint/Locations の登録地 (「登録名」という場所、と呼ぶ)。
+  final String placeKind;
   const _PickedSpecific({
     required this.position,
     required this.name,
     this.region = '',
     this.country = '',
+    this.placeKind = 'named',
   });
 }
 
@@ -57,9 +62,12 @@ class _SpecificPickerState extends State<_SpecificPicker> {
 
   bool _loadingSlots = true;
   List<VPSlot> _locationSlots = const [];
+  List<VPSlot> _viewpointSlots = const [];
 
   final SlotManager _locMgr =
       SlotManager(storageKey: 'solara_locations');
+  final SlotManager _vpMgr =
+      SlotManager(storageKey: 'solara_vp_slots');
 
   @override
   void initState() {
@@ -75,10 +83,12 @@ class _SpecificPickerState extends State<_SpecificPicker> {
   }
 
   Future<void> _loadSlots() async {
-    final slots = await _locMgr.load();
+    final loc = await _locMgr.load();
+    final vp = await _vpMgr.load();
     if (!mounted) return;
     setState(() {
-      _locationSlots = slots;
+      _locationSlots = loc;
+      _viewpointSlots = vp;
       _loadingSlots = false;
     });
   }
@@ -129,6 +139,7 @@ class _SpecificPickerState extends State<_SpecificPicker> {
     widget.onSelect(_PickedSpecific(
       position: LatLng(s.lat, s.lng),
       name: s.name,
+      placeKind: 'saved', // 登録地 → Stella は「登録名」という場所、と呼ぶ
     ));
   }
 
@@ -239,11 +250,39 @@ class _SpecificPickerState extends State<_SpecificPicker> {
           ),
         ],
 
-        // LOCATION 保存地点 (chips)
-        if (_loadingSlots == false && _locationSlots.isNotEmpty) ...[
+        // VIEWPOINT 保存地点 (chips) — グループ1
+        if (_loadingSlots == false && _viewpointSlots.isNotEmpty) ...[
           const SizedBox(height: 14),
           const Text(
-            '📍 保存地点から',
+            '🔭 視点 (ViewPoint) から',
+            style: TextStyle(
+              color: SolaraColors.textSecondary,
+              fontSize: 11,
+              letterSpacing: 0.4,
+            ),
+          ),
+          const SizedBox(height: 6),
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                for (int i = 0; i < _viewpointSlots.length; i++) ...[
+                  if (i > 0) const SizedBox(width: 6),
+                  _LocationChip(
+                    slot: _viewpointSlots[i],
+                    onTap: () => _onSlotTap(_viewpointSlots[i]),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+
+        // LOCATIONS 保存地点 (chips) — グループ2
+        if (_loadingSlots == false && _locationSlots.isNotEmpty) ...[
+          const SizedBox(height: 12),
+          const Text(
+            '📍 保存地点 (Locations) から',
             style: TextStyle(
               color: SolaraColors.textSecondary,
               fontSize: 11,

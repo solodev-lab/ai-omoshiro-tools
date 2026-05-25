@@ -66,6 +66,21 @@ function placeReference(candidate) {
       guidance: 'ユーザーが選んだ実在の店舗名と種類で呼ぶ。種類の雰囲気も読んでよい。店名は発明しない。',
     };
   }
+  // 検索で選んだ具体的な場所 (店/公園/会社/学校等)。その場所名をそのまま使う。
+  if (candidate.placeKind === 'named' && candidate.name) {
+    return {
+      ref: candidate.name,
+      guidance: 'ユーザーが検索で選んだ具体的な場所名 (店・公園・会社・学校等)。この名前をそのまま使う。'
+        + '都市名・住所・地名に言い換えたり丸めたりしない (例:「JR名古屋高島屋」を「名古屋」にしない)。名前は発明しない。',
+    };
+  }
+  // ViewPoint / Locations の登録地。「登録名」という場所、と呼ぶ。
+  if (candidate.placeKind === 'saved' && candidate.name) {
+    return {
+      ref: `「${candidate.name}」という場所`,
+      guidance: `ユーザーが登録した場所。「${candidate.name}」という登録名で呼ぶ。都市名・住所に言い換えない。`,
+    };
+  }
   if (candidate.name) {
     return {
       ref: candidate.name,
@@ -129,7 +144,7 @@ function innerSeasonPromptText(is) {
 
 // ── プロンプト生成 ──────────────────────────────────────────
 
-function buildConsultationPrompt({ pipe, theme, mode, withWhom, wish }) {
+function buildConsultationPrompt({ pipe, theme, mode, withWhom, wish, userTimeBand }) {
   const themeJp = THEME_JP[theme] || theme;
   const modeJp = MODE_JP[mode] || mode;
   const c = pipe.candidate;
@@ -158,6 +173,13 @@ function buildConsultationPrompt({ pipe, theme, mode, withWhom, wish }) {
       + '「テーマの線が遠い、ニュートラルで静かな場」と正直に描く (Solara の誠実さ)。'
     : '';
 
+  // ユーザーが「おでかけ」で予定時間帯を指定したら、それを語りの主役にする
+  // (= 昼の予定なのに朝/夜更けを語る白け防止)。未指定なら従来どおりエンジン推奨。
+  const userBandJp = userTimeBand ? (BUCKET_JP[userTimeBand] || null) : null;
+  const timeSection = userBandJp
+    ? `相談者の予定時間帯: ${userBandJp} (この時間に行く予定。語りはこの時間帯を主役にする)\n  (参考・この土地で星の線が際立つ時間帯: ${timeWindowPromptText(pipe.timeWindow)})`
+    : timeWindowPromptText(pipe.timeWindow);
+
   const firstOnlySchema = isFirst
     ? `\n  "innerSeason": "<専門用語を一切使わず『今のあなたは〜の内的な季節』と一文で枠を作る。50〜90字>",`
       + `\n  "intro": "<相談者の願いを受け止める導入。テーマに触れる。冒頭呼びかけ禁止。50〜100字>",`
@@ -185,7 +207,7 @@ function buildConsultationPrompt({ pipe, theme, mode, withWhom, wish }) {
 ${factorLines}${relocLine}${quietGuidance}
 
 【時間帯 (現地の時間帯のみ。時計の数字・タイムゾーン名は禁止)】
-${timeWindowPromptText(pipe.timeWindow)}
+${timeSection}
 
 【内的季節 (進行。専門用語は narrative に出さない。枠として使う)】
 ${innerSeasonPromptText(pipe.innerSeason)}
@@ -202,8 +224,9 @@ ${innerSeasonPromptText(pipe.innerSeason)}
 
 3. narrative 本文に距離 (km・「約○km」) を一切出さない。エネルギーの有無・質で語る。
 
-4. 時間は現地の時間帯 (朝/昼/夕/夜/夜更け/明け方) だけで語る。時計の数字・「JST」等は出さない。
-   旅行先の時間帯は旅行先の現地時間で言う。
+4. 時間は現地の時間帯 (朝/昼/夕方/夜/夜更け) だけで語る。時計の数字・「JST」等は出さない。${userBandJp ? `
+   🔴 相談者の予定時間帯「${userBandJp}」を語りの主役にし、その時間に寄り添う。予定外の時間帯 (朝/夜更け等) を中心に語らない。` : `
+   旅行先の時間帯は旅行先の現地時間で言う。時間帯の指定がないので、特定の時間帯を断定して語らず、必要なら「この土地で星の線が際立つ時間帯」として案内に留める。`}
 
 5. 内的季節を土地のエネルギーに重ねる。「今のあなたは〜の季節。だからこの土地の質は今のあなたに〜」。
    「こうすべき」と指示しない。「今どこにいるか」+「土地がそれにどう出会うか」だけ。
@@ -314,7 +337,11 @@ export async function handleConsultationV2(body, env, deps = {}) {
   const fallbackModel = env.CONSULTATION_MODEL_FALLBACK || env.FORTUNE_MODEL_FALLBACK || 'gemini-flash-latest';
   const models = primary === fallbackModel ? [primary] : [primary, fallbackModel];
 
-  const prompt = buildConsultationPrompt({ pipe, theme, mode, withWhom, wish });
+  // おでかけの予定時間帯 (任意)。既知バケツのみ採用 (不正値は無視)。
+  const VALID_BANDS = ['morning', 'midday', 'evening', 'night', 'lateNight'];
+  const rawBand = body && body.when && body.when.timeBand;
+  const userTimeBand = VALID_BANDS.includes(rawBand) ? rawBand : null;
+  const prompt = buildConsultationPrompt({ pipe, theme, mode, withWhom, wish, userTimeBand });
 
   let parsed;
   try {

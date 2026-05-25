@@ -59,6 +59,10 @@ class ConsultationPresetTarget {
   /// 検索で店舗を選んだ場合の Google Places type (restaurant/cafe 等)。なければ null。
   final String? placeType;
 
+  /// 地点の種類 (Worker placeReference 用)。'named'=検索の具体地点 (名前をそのまま使う) /
+  /// 'saved'=登録地 / null=従来 (座標タップ等)。
+  final String? placeKind;
+
   const ConsultationPresetTarget({
     required this.position,
     required this.nameJP,
@@ -66,6 +70,7 @@ class ConsultationPresetTarget {
     this.country = '',
     this.region = '',
     this.placeType,
+    this.placeKind,
   });
 }
 
@@ -97,6 +102,7 @@ class _ConsultationInputScreenState extends State<ConsultationInputScreen> {
   String? _whenDate; // YYYY-MM-DD ('date')
   String? _whenStart; // YYYY-MM-DD ('range')
   String? _whenEnd; // YYYY-MM-DD ('range')
+  String? _whenTimeBand; // 時間帯 (おでかけのみ・任意): morning/midday/evening/night/lateNight
 
   // ④ どこで
   String? _scopeKind; // point / bearing / radius / region / country / world
@@ -165,6 +171,7 @@ class _ConsultationInputScreenState extends State<ConsultationInputScreen> {
       _whenDate = null;
       _whenStart = null;
       _whenEnd = null;
+      _whenTimeBand = null; // 場面変更で時間帯もリセット (おでかけ以外では非表示)
       if (widget.presetTarget != null || _specificPick != null) {
         _scopeKind = 'point';
       } else {
@@ -356,6 +363,17 @@ class _ConsultationInputScreenState extends State<ConsultationInputScreen> {
                             selectedKind: _whenKind,
                             dateLabel: _whenLabel(),
                             onTapKind: _onWhenKindTap,
+                          ),
+                        ),
+                      // ③' 時間帯 (おでかけのみ・任意)。昼の予定なのに朝/夜更けを
+                      // 語られる白けを防ぐため、行く時間帯を Stella に伝える。
+                      if (_mode == 'daily')
+                        _Section(
+                          label: '時間帯（任意）',
+                          child: _TimeBandSelector(
+                            selected: _whenTimeBand,
+                            onTap: (b) => setState(() =>
+                                _whenTimeBand = _whenTimeBand == b ? null : b),
                           ),
                         ),
                       // ④ どこで

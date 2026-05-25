@@ -2798,7 +2798,10 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
       nameJP: short,
       nameEN: short,
       country: f.country?.toUpperCase() ?? '',
-      // placeType: SearchHit に種別が無いため null (Worker は名前+座標で扱う)。
+      // placeType: SearchHit に種別が無いため null。
+      // placeKind='named': 検索で選んだ具体地点 → Stella はこの場所名 (店/公園/会社等) を
+      // そのまま使い、都市名 (例「名古屋」) に丸めない。
+      placeKind: 'named',
     );
     final p = _profile;
     final hasHome = p != null && !(p.homeLat == 0 && p.homeLng == 0);

@@ -152,7 +152,7 @@ test('handler: isFirst → candidate + intro/outro/innerSeason を返す', async
 });
 
 function BUCKET_LABEL(b) {
-  return { dawn: '明け方', morning: '朝', midday: '昼', evening: '夕方', night: '夜', lateNight: '夜更け' }[b];
+  return { morning: '朝', midday: '昼', evening: '夕方', night: '夜', lateNight: '夜更け' }[b];
 }
 
 test('handler: isFirst=false は intro/outro/innerSeason を付けない', async () => {

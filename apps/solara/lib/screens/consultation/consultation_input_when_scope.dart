@@ -91,6 +91,37 @@ class _WhenSelector extends StatelessWidget {
   }
 }
 
+/// 時間帯チップ (おでかけのみ・任意)。キーは Worker BUCKET_JP と一致させる。
+/// もう一度タップで解除 (= 未指定)。
+const _timeBandChoices = <_WhenChoice>[
+  _WhenChoice('morning', '朝'),
+  _WhenChoice('midday', '昼'),
+  _WhenChoice('evening', '夕方'),
+  _WhenChoice('night', '夜'),
+  _WhenChoice('lateNight', '夜更け'),
+];
+
+class _TimeBandSelector extends StatelessWidget {
+  final String? selected;
+  final ValueChanged<String> onTap; // 同じものを再タップで解除する判定は親側
+  const _TimeBandSelector({required this.selected, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: _timeBandChoices
+          .map((c) => _PillChip(
+                label: c.label,
+                active: selected == c.key,
+                onTap: () => onTap(c.key),
+              ))
+          .toList(growable: false),
+    );
+  }
+}
+
 /// 自宅から半径の距離選択 (場面別 km 候補)。
 class _RadiusChips extends StatelessWidget {
   final List<int> options;

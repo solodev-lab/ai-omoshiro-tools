@@ -27,21 +27,30 @@ const HOME = { lat: 35.68, lng: 139.65 };
 
 // ── 時間帯バケット ──────────────────────────────────────────
 
-test('timeOfDayBucket: 境界が設計どおり (明け方/朝/昼/夕/夜/夜更け)', () => {
-  assert.equal(timeOfDayBucket(5), 'dawn');
-  assert.equal(timeOfDayBucket(8), 'morning');
-  assert.equal(timeOfDayBucket(12), 'midday');
-  assert.equal(timeOfDayBucket(16), 'evening');
-  assert.equal(timeOfDayBucket(20), 'night');
-  assert.equal(timeOfDayBucket(0), 'lateNight');
+test('timeOfDayBucket: 境界が設計どおり (5帯: 朝5-10/昼10-15/夕方15-19/夜19-23/夜更け23-5)', () => {
+  // 夜更け 23-5 (日をまたぐ)
+  assert.equal(timeOfDayBucket(4), 'lateNight');
   assert.equal(timeOfDayBucket(23.5), 'lateNight');
+  assert.equal(timeOfDayBucket(0), 'lateNight');
+  // 朝 5-10
+  assert.equal(timeOfDayBucket(5), 'morning');
+  assert.equal(timeOfDayBucket(9.9), 'morning');
+  // 昼 10-15
+  assert.equal(timeOfDayBucket(10), 'midday');
+  assert.equal(timeOfDayBucket(12), 'midday');
+  // 夕方 15-19
+  assert.equal(timeOfDayBucket(15), 'evening');
+  assert.equal(timeOfDayBucket(18), 'evening');
+  // 夜 19-23
+  assert.equal(timeOfDayBucket(19), 'night');
+  assert.equal(timeOfDayBucket(22.9), 'night');
 });
 
 test('bucketFromUtcAt: 経度で現地時間帯がずれる (旅行先=現地時間)', () => {
-  // 12:00 UTC。経度 +135 (日本) → 現地 21:00 = 夜 / 経度 -120 (西海岸) → 現地 04:00 = 明け方
+  // 12:00 UTC。経度 +135 (日本) → 現地 21:00 = 夜 / 経度 -120 (西海岸) → 現地 04:00 = 夜更け(23-5)
   const noonUtc = new Date('2026-07-10T12:00:00Z');
   assert.equal(bucketFromUtcAt(noonUtc, 135), 'night');
-  assert.equal(bucketFromUtcAt(noonUtc, -120), 'dawn');
+  assert.equal(bucketFromUtcAt(noonUtc, -120), 'lateNight');
 });
 
 // ── houseOf ─────────────────────────────────────────────────

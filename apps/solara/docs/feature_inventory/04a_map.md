@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 23 / 総行数: 13441
+- ファイル数: 23 / 総行数: 13444
 - class/mixin/extension/enum: 86
 - 関数 (top-level + method の素拾い): 292
 - Navigator.push 等: 0
@@ -898,7 +898,7 @@ A*C*G ライン (natal / transit) のタップ詳細 popup。
 - L40 `build()`
 
 
-### `lib/screens/map_screen.dart` (3059 行)
+### `lib/screens/map_screen.dart` (3062 行)
 
 **imports:** dart=2 / package=6 / relative=36
 
@@ -966,17 +966,17 @@ A*C*G ライン (natal / transit) のタップ詳細 popup。
   - L2709 `_enterConsultationFromDaily()`
   - L2741 `_launchConsultation()`
   - L2789 `_launchConsultationFromSearch()`
-  - L2820 `_reloadLocationSlots()`
-  - L2844 `_nearestNatalConjunctions()`
-  - L2865 `_findNearbyAstroLines()`
-  - L2883 `_zenithMarkerFrames()`
-  - L2884 `_nadirMarkerFrames()`
-  - L2885 `_zenithBandFrames()`
-  - L2886 `_nadirBandFrames()`
-  - L2890 `_filteredFrames()`
-  - L2903 `_visibleAstroLines()`
-  - L2931 `_buildNoProfileGuide()`
-  - L2965 `_showSearchVpHelpPopup()`
+  - L2823 `_reloadLocationSlots()`
+  - L2847 `_nearestNatalConjunctions()`
+  - L2868 `_findNearbyAstroLines()`
+  - L2886 `_zenithMarkerFrames()`
+  - L2887 `_nadirMarkerFrames()`
+  - L2888 `_zenithBandFrames()`
+  - L2889 `_nadirBandFrames()`
+  - L2893 `_filteredFrames()`
+  - L2906 `_visibleAstroLines()`
+  - L2934 `_buildNoProfileGuide()`
+  - L2968 `_showSearchVpHelpPopup()`
 
   </details>
 

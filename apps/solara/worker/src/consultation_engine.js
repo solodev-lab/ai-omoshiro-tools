@@ -113,16 +113,16 @@ function houseOf(lon, houses) {
 /** 現地太陽時 (UTC時刻 + 経度/15) の時間帯バケット。時計表示はしない (設計: 現地の時間帯のみ)。 */
 function timeOfDayBucket(localHour) {
   const h = ((localHour % 24) + 24) % 24;
-  if (h >= 4 && h < 6) return 'dawn';      // 明け方
-  if (h >= 6 && h < 11) return 'morning';  // 朝
-  if (h >= 11 && h < 15) return 'midday';  // 昼
-  if (h >= 15 && h < 18) return 'evening'; // 夕
-  if (h >= 18 && h < 23) return 'night';   // 夜
-  return 'lateNight';                      // 夜更け (23-4)
+  // 2026-05-25 オーナー指定の 5 帯 (明け方は廃止。5 帯で 24h を隙間なくカバー)。
+  if (h >= 5 && h < 10) return 'morning';  // 朝 5-10
+  if (h >= 10 && h < 15) return 'midday';  // 昼 10-15
+  if (h >= 15 && h < 19) return 'evening'; // 夕方 15-19
+  if (h >= 19 && h < 23) return 'night';   // 夜 19-23
+  return 'lateNight';                      // 夜更け 23-5 (日をまたぐ)
 }
 
 const BUCKET_JP = {
-  dawn: '明け方', morning: '朝', midday: '昼', evening: '夕方', night: '夜', lateNight: '夜更け',
+  morning: '朝', midday: '昼', evening: '夕方', night: '夜', lateNight: '夜更け',
 };
 
 /** ある UTC 瞬間を、経度 lng の現地太陽時の時間帯バケットに変換。 */
@@ -291,6 +291,7 @@ function buildCandidatePool({ scope, home, mode }) {
       name: p.name || null, nameEN: p.name || null,
       lat: p.lat, lng: p.lng, country: null, region: null, population: 0,
       placeType: p.placeType || null, isPoint: true,
+      placeKind: p.placeKind || null, // 'named'(検索) | 'saved'(登録地) | null
     }];
   }
 

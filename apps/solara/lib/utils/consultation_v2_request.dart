@@ -15,11 +15,17 @@ class ConsultationWhen {
   final String? start; // YYYY-MM-DD ('range')
   final String? end; // YYYY-MM-DD ('range')
 
-  const ConsultationWhen({required this.kind, this.date, this.start, this.end});
+  /// 時間帯 (おでかけのみ・任意): 'morning'|'midday'|'evening'|'night'|'lateNight'。
+  /// Worker (consultation_v2.js) はこの時間帯を語りの主役にする。null = 未指定で、
+  /// 未指定時は Worker が特定の時間帯に言及しない (= 昼の予定なのに朝/夜更けを語る白け防止)。
+  final String? timeBand;
+
+  const ConsultationWhen(
+      {required this.kind, this.date, this.start, this.end, this.timeBand});
 
   /// 特定の 1 日 (おでかけ日付指定 / 旅行特定日 / 移住日付指定)。
-  factory ConsultationWhen.onDate(String date) =>
-      ConsultationWhen(kind: 'date', date: date);
+  factory ConsultationWhen.onDate(String date, {String? timeBand}) =>
+      ConsultationWhen(kind: 'date', date: date, timeBand: timeBand);
 
   /// 期間 (旅行)。Worker は最大 3 日サンプリングする。
   factory ConsultationWhen.range(String start, String end) =>
@@ -33,6 +39,7 @@ class ConsultationWhen {
         if (date != null) 'date': date,
         if (start != null) 'start': start,
         if (end != null) 'end': end,
+        if (timeBand != null) 'timeBand': timeBand,
       };
 }
 
@@ -47,11 +54,19 @@ class ConsultationPoint {
   /// Google Places のタイプ (restaurant/cafe/movie_theater 等)。店舗選択時のみ。
   final String? placeType;
 
+  /// 地点の種類。Worker (placeReference) が呼び方を変える:
+  /// 'named' = 検索で選んだ具体的な場所 → その場所名 (店/公園/会社/学校等) をそのまま使う。
+  ///           都市名・住所に丸めない (例: 「JR名古屋高島屋」を「名古屋」にしない)。
+  /// 'saved' = ViewPoint/Locations の登録地 → 「登録名」という場所、と呼ぶ。
+  /// null    = 従来 (座標タップ等)。
+  final String? placeKind;
+
   const ConsultationPoint({
     required this.lat,
     required this.lng,
     this.name,
     this.placeType,
+    this.placeKind,
   });
 
   Map<String, dynamic> toJson() => {
@@ -59,6 +74,7 @@ class ConsultationPoint {
         'lng': lng,
         if (name != null && name!.isNotEmpty) 'name': name,
         if (placeType != null && placeType!.isNotEmpty) 'placeType': placeType,
+        if (placeKind != null && placeKind!.isNotEmpty) 'placeKind': placeKind,
       };
 }
 

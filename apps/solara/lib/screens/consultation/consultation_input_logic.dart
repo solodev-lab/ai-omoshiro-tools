@@ -10,9 +10,13 @@ part of 'consultation_input_screen.dart';
 extension _ConsultationInputLogic on _ConsultationInputScreenState {
   // ── リクエスト組み立て ──────────────────────────────────
   ConsultationWhen? _buildWhen() {
+    // 時間帯はおでかけ (daily) のときだけ付ける。
+    final tb = _mode == 'daily' ? _whenTimeBand : null;
     switch (_whenKind) {
       case 'date':
-        return _whenDate == null ? null : ConsultationWhen.onDate(_whenDate!);
+        return _whenDate == null
+            ? null
+            : ConsultationWhen.onDate(_whenDate!, timeBand: tb);
       case 'range':
         return (_whenStart == null || _whenEnd == null)
             ? null
@@ -23,7 +27,15 @@ extension _ConsultationInputLogic on _ConsultationInputScreenState {
       case 'in5yrPlus':
         return ConsultationWhen.horizon(_whenKind!);
       default:
-        return null; // today / undecided / null
+        // today / undecided / null。おでかけで時間帯だけ指定されたら、今日の
+        // 日付に時間帯を載せて送る (Worker が時間帯を語りの主役にできるよう)。
+        if (_whenKind == 'today' && tb != null) {
+          final now = DateTime.now();
+          final todayStr =
+              '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+          return ConsultationWhen.onDate(todayStr, timeBand: tb);
+        }
+        return null;
     }
   }
 
@@ -37,6 +49,7 @@ extension _ConsultationInputLogic on _ConsultationInputScreenState {
             lng: pt.position.longitude,
             name: pt.nameJP,
             placeType: pt.placeType,
+            placeKind: pt.placeKind,
           ));
         }
         final pick = _specificPick;
@@ -45,6 +58,7 @@ extension _ConsultationInputLogic on _ConsultationInputScreenState {
             lat: pick.position.latitude,
             lng: pick.position.longitude,
             name: pick.name,
+            placeKind: pick.placeKind,
           ));
         }
         return null;

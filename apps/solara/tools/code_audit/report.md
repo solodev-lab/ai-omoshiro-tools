@@ -6,7 +6,7 @@
 
 | 行数 | 判定 | ファイル |
 |------|------|----------|
-| 3059 | 🔴 HARD | lib/screens/map_screen.dart |
+| 3062 | 🔴 HARD | lib/screens/map_screen.dart |
 | 1923 | 🔴 HARD | lib/screens/map/map_daily_transit_screen.dart |
 | 1421 | 🔴 HARD | lib/screens/sanctuary_screen.dart |
 | 1385 | 🔴 HARD | lib/screens/sanctuary/sanctuary_title_diagnosis.dart |
@@ -35,14 +35,14 @@
 | 564 | 🔴 HARD | lib/widgets/new_moon_overlay.dart |
 | 559 | 🔴 HARD | lib/utils/planet_intro.dart |
 | 535 | 🔴 HARD | lib/utils/astro_lines.dart |
+| 523 | 🔴 HARD | lib/screens/consultation/consultation_input_picker.dart |
 | 511 | 🔴 HARD | lib/screens/map/map_astro.dart |
 | 508 | 🔴 HARD | lib/screens/map/map_time_slider.dart |
 | 500 | 🔴 HARD | lib/screens/observe/tarot_altar_scene.dart |
 | 498 | 🟡 WARN | lib/widgets/fortune_overlays/healing_painter.dart |
-| 484 | 🟡 WARN | lib/screens/consultation/consultation_input_picker.dart |
+| 490 | 🟡 WARN | lib/screens/consultation/consultation_input_screen.dart |
 | 481 | 🟡 WARN | lib/widgets/full_moon_overlay.dart |
 | 481 | 🟡 WARN | lib/screens/map/map_overlays.dart |
-| 472 | 🟡 WARN | lib/screens/consultation/consultation_input_screen.dart |
 | 467 | 🟡 WARN | lib/screens/horoscope/horo_relocation_panel.dart |
 | 460 | 🟡 WARN | lib/screens/galaxy/galaxy_star_atlas.dart |
 | 456 | 🟡 WARN | lib/utils/app_attest_client.dart |
@@ -98,8 +98,8 @@
 
   - lib/widgets/class_card.dart:287
   - lib/widgets/location_picker_minimap.dart:134
-  - lib/screens/consultation/consultation_input_picker.dart:373
-  - lib/screens/consultation/consultation_input_picker.dart:408
+  - lib/screens/consultation/consultation_input_picker.dart:412
+  - lib/screens/consultation/consultation_input_picker.dart:447
   - lib/screens/consultation/consultation_result_credit_widgets.dart:181
   ```
   ),
@@ -163,7 +163,7 @@
 ### 8. 📁 別ファイル間 (7 箇所、7 ファイル)
 
   - lib/widgets/new_moon_overlay.dart:312
-  - lib/screens/consultation/consultation_input_picker.dart:372
+  - lib/screens/consultation/consultation_input_picker.dart:411
   - lib/screens/galaxy/constellation_share_card_page.dart:377
   - lib/screens/galaxy/galaxy_cycle_actions_sheet.dart:264
   - lib/screens/horoscope/horo_relocation_pro_teaser.dart:88
@@ -207,8 +207,8 @@
 ### 12. 📁 別ファイル間 (7 箇所、6 ファイル)
 
   - lib/widgets/class_card.dart:288
-  - lib/screens/consultation/consultation_input_picker.dart:374
-  - lib/screens/consultation/consultation_input_picker.dart:409
+  - lib/screens/consultation/consultation_input_picker.dart:413
+  - lib/screens/consultation/consultation_input_picker.dart:448
   - lib/screens/galaxy/constellation_share_card_page.dart:379
   - lib/screens/map/map_daily_transit_screen.dart:315
   ```
@@ -228,7 +228,7 @@
 
 ### 14. 📁 別ファイル間 (7 箇所、6 ファイル)
 
-  - lib/screens/consultation/consultation_input_picker.dart:290
+  - lib/screens/consultation/consultation_input_picker.dart:329
   - lib/screens/consultation/consultation_result_card.dart:173
   - lib/screens/galaxy/galaxy_archive_filter_chips.dart:58
   - lib/screens/galaxy/galaxy_star_atlas.dart:154

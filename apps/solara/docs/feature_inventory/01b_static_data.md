@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 14 / 総行数: 4679
+- ファイル数: 14 / 総行数: 4695
 - class/mixin/extension/enum: 18
 - 関数 (top-level + method の素拾い): 40
 - Navigator.push 等: 0
@@ -195,7 +195,7 @@ intro/outro) + 蓄積した候補群 (1 枚ずつ「別の候補地」で増え�
 - L156 `toJson()`
 
 
-### `lib/utils/consultation_v2_request.dart` (241 行)
+### `lib/utils/consultation_v2_request.dart` (257 行)
 
 **ファイル先頭コメント:**
 
@@ -210,20 +210,20 @@ Worker (consultation_engine.js runConsultationPipeline) の契約に対応する
 
 - L10 `class ConsultationWhen`
   - 「いつ」(when)。場面ごとに意味が変わる時間指定。
-- L40 `class ConsultationPoint`
+- L47 `class ConsultationPoint`
   - 具体地点 (具体地点スコープ)。地図タップ=座標のみ / 検索=店名+種類付き。
-- L66 `class ConsultationScope`
+- L82 `class ConsultationScope`
   - 「どこで」(scope)。候補地点プールの作り方。
-- L114 `class ConsultationRequest`
+- L130 `class ConsultationRequest`
   - 相談リクエスト (最小入力 約1KB)。Worker が全計算する。
 
 **関数 (5 public + 0 private):**
 
-- L31 `toJson()`
-- L57 `toJson()`
-- L104 `toJson()`
-- L195 `copyWith()`
-- L220 `toJson()`
+- L37 `toJson()`
+- L72 `toJson()`
+- L120 `toJson()`
+- L211 `copyWith()`
+- L236 `toJson()`
 
 
 ### `lib/utils/cycle_story_texts.dart` (86 行)

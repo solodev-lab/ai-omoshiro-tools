@@ -307,7 +307,7 @@ fallback?: boolean                        // Stella が届かない時 true (静
 **export (1):** `handleConsultation`
 
 
-### `worker/src/consultation_engine.js` (733 行)
+### `worker/src/consultation_engine.js` (734 行)
 
 **ファイル先頭コメント:**
 
@@ -339,7 +339,7 @@ Soft (trine/sextile) と Hard (square) は独立 2 エネルギー。total/吉�
 **export (2):** `runConsultationPipeline`, `_internal`
 
 
-### `worker/src/consultation_v2.js` (357 行)
+### `worker/src/consultation_v2.js` (384 行)
 
 **ファイル先頭コメント:**
 
