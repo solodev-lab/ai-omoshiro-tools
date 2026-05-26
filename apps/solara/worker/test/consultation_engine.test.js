@@ -291,6 +291,42 @@ test('pipeline point scope: 指定地点を single で返す (placeType 引き�
   assert.equal(r.candidate.name, 'カフェX');
 });
 
+// pipeline → placeReference の end-to-end 伝達 (2026-05-27 回帰防止)
+// buildCandidatePool で乗せた placeKind が runConsultationPipeline の最終 return で
+// 列挙忘れにより消えるバグの再発防止。'named'/'saved' は consultation_v2.placeReference
+// の分岐キーで、これが消えると検索の店名が「都市名で呼んでよい」分岐に丸められる。
+test('pipeline point scope: placeKind=named (検索) を candidate に保持', () => {
+  const r = runConsultationPipeline({
+    birth: BIRTH, home: HOME, theme: 'love', mode: 'daily',
+    when: { kind: 'today' },
+    scope: { kind: 'point', point: { lat: 35.17, lng: 136.88, name: 'JR名古屋高島屋', placeKind: 'named' } },
+    isFirst: true, excluded: [],
+  });
+  assert.equal(r.candidate.name, 'JR名古屋高島屋');
+  assert.equal(r.candidate.placeKind, 'named');
+});
+
+test('pipeline point scope: placeKind=saved (登録地) を candidate に保持', () => {
+  const r = runConsultationPipeline({
+    birth: BIRTH, home: HOME, theme: 'healing', mode: 'daily',
+    when: { kind: 'today' },
+    scope: { kind: 'point', point: { lat: 35.68, lng: 139.65, name: 'マイ秘密基地', placeKind: 'saved' } },
+    isFirst: true, excluded: [],
+  });
+  assert.equal(r.candidate.name, 'マイ秘密基地');
+  assert.equal(r.candidate.placeKind, 'saved');
+});
+
+test('pipeline point scope: placeKind 未指定 (従来) は null', () => {
+  const r = runConsultationPipeline({
+    birth: BIRTH, home: HOME, theme: 'love', mode: 'daily',
+    when: { kind: 'today' },
+    scope: { kind: 'point', point: { lat: 34.69, lng: 135.5, name: '地図タップ地点' } },
+    isFirst: true, excluded: [],
+  });
+  assert.equal(r.candidate.placeKind, null);
+});
+
 test('pipeline: world migration が CPU 予算内 (<3s)', () => {
   const t0 = Date.now();
   runConsultationPipeline({

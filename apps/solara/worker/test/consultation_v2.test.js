@@ -63,6 +63,26 @@ test('placeReference: 都市名 → そのまま', () => {
   assert.equal(r.ref, '京都');
 });
 
+test('placeReference: placeKind=named (検索の具体地点) → 店名そのまま、都市名に丸めない', () => {
+  const r = placeReference({ name: 'JR名古屋高島屋', placeKind: 'named' });
+  assert.equal(r.ref, 'JR名古屋高島屋');
+  assert.match(r.guidance, /そのまま使う/);
+  assert.match(r.guidance, /丸めたりしない/);
+});
+
+test('placeReference: placeKind=saved (登録地) → 「(登録名)」という場所', () => {
+  const r = placeReference({ name: 'マイ秘密基地', placeKind: 'saved' });
+  assert.equal(r.ref, '「マイ秘密基地」という場所');
+  assert.match(r.guidance, /登録名で呼ぶ/);
+});
+
+test('placeReference: placeType > placeKind=named (店舗種別がある検索結果は種類も併記)', () => {
+  // SearchHit に種別が乗ったケース (placeType も placeKind='named' も両方ある)
+  // → placeType 分岐が先で「店名 (種類)」になる。これは要望どおり (名前を捨てない)。
+  const r = placeReference({ name: '青いカフェ', placeType: 'cafe', placeKind: 'named' });
+  assert.equal(r.ref, '青いカフェ (カフェ)');
+});
+
 // ── timeWindow ──────────────────────────────────────────────
 
 test('humanizeTimeWindow: single / rhythm を JP ラベル化', () => {

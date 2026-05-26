@@ -704,6 +704,10 @@ export function runConsultationPipeline(request) {
       lat: candidate.lat, lng: candidate.lng,
       country: candidate.country, region: candidate.region,
       bearing: candidate.bearing || null, placeType: candidate.placeType || null,
+      // 'named' (検索) / 'saved' (登録地) / null。consultation_v2.placeReference の
+      // 分岐キー。buildCandidatePool で候補に乗せた placeKind を最終出力に保持する
+      // (列挙忘れで消えると、検索の店名が「都市名で呼んでよい」分岐に落ちる)。
+      placeKind: candidate.placeKind || null,
       factors: candidate.factors,
       topStrength: Math.round(candidate.topStrength * 1000) / 1000,
       honestQuiet: candidate.honestQuiet,

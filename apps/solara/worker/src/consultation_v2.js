@@ -322,6 +322,7 @@ export async function handleConsultationV2(body, env, deps = {}) {
     candidateMeta: {
       name: pipe.candidate.name, nameEN: pipe.candidate.nameEN,
       bearing: pipe.candidate.bearing, placeType: pipe.candidate.placeType,
+      placeKind: pipe.candidate.placeKind || null,
       lat: pipe.candidate.lat, lng: pipe.candidate.lng,
       country: pipe.candidate.country, region: pipe.candidate.region,
     },
