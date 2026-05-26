@@ -1,73 +1,80 @@
-// Consultation 開始確認ポップアップ (Free ユーザー向け)
-// (part of 'consultation_input_screen.dart')
+// Tarot カテゴリ選択 確認ポップアップ
 //
-// 「相談を始める」を押したとき、Free ユーザーに無料クレジットの残数・補充タイミング・
-// 追加購入導線を案内するポップアップ。Pro はスキップ、「次回以降表示しない」で抑制可能。
-// showInfoPopup 経由で表示する (widgets/info_popup.dart、popup 統一規約に準拠)。
+// 全体運以外のカテゴリ chip をタップしたときに表示する。
+// - 現在のクレジット残 (無料 / 購入) を提示
+// - 「引く」 = カテゴリ確定 (この後ユーザーがカードをタップして 1 クレジット消費)
+// - 「キャンセル」/ × / 外タップ = 全体運に戻す (呼出側で判定)
+// - 「クレジットを購入」 = 追加クレジット購入シート (呼出側で開く)
+//
+// showInfoPopup 経由 (popup 統一規約)。呼出側は returned bool で proceed/cancel を判定。
+// 設計参考: consultation_start_popup.dart
+//
+// 関連: project_solara_stella_free_credits.md (1 クレジット = AI 占い 1 回)
 
-part of 'consultation_input_screen.dart';
+import 'package:flutter/material.dart';
 
-class _StartConsultPopup extends StatefulWidget {
-  /// 「次回以降表示しない」の初期チェック状態。
-  final bool initialHide;
+import '../../theme/solara_colors.dart';
+import '../../utils/consultation_api.dart';
+import '../../widgets/info_popup.dart';
 
-  /// 「相談を始める」で続行 (呼出側で proceed フラグを立てる)。
-  final VoidCallback onContinue;
+/// カテゴリ確認ポップアップを開く。
+///
+/// 戻り値:
+///   - true  : 「引く」が押された (カテゴリを確定して Tarot 画面に戻る)
+///   - false : それ以外 (× / 外タップ / キャンセル / 購入シート遷移)
+///            呼出側は全体運に戻すか、購入シートを処理する。
+Future<bool> showTarotCategoryPopup({
+  required BuildContext context,
+  required String categoryLabel,
+  required ConsultationCreditStatus? status,
+  required VoidCallback onBuy,
+}) async {
+  var proceed = false;
+  await showInfoPopup(
+    context: context,
+    child: _TarotCategoryPopupBody(
+      categoryLabel: categoryLabel,
+      status: status,
+      onProceed: () => proceed = true,
+      onBuy: onBuy,
+    ),
+  );
+  return proceed;
+}
 
-  /// 「クレジットを購入」で購入シートを開く (呼出側 State が処理)。
+class _TarotCategoryPopupBody extends StatelessWidget {
+  final String categoryLabel;
+  final ConsultationCreditStatus? status;
+  final VoidCallback onProceed;
   final VoidCallback onBuy;
 
-  /// チェック状態が変わるたびに通知 (端末保存は呼出側 State)。
-  final ValueChanged<bool> onHideChanged;
-
-  const _StartConsultPopup({
-    required this.initialHide,
-    required this.onContinue,
+  const _TarotCategoryPopupBody({
+    required this.categoryLabel,
+    required this.status,
+    required this.onProceed,
     required this.onBuy,
-    required this.onHideChanged,
   });
 
   @override
-  State<_StartConsultPopup> createState() => _StartConsultPopupState();
-}
-
-class _StartConsultPopupState extends State<_StartConsultPopup> {
-  late bool _hide = widget.initialHide;
-
-  @override
-  void initState() {
-    super.initState();
-    // popup 表示中に値が変わったら自動更新 (購入完了ポーリングや app resume)。
-    ConsultationCredits.instance.addListener(_onCreditsChanged);
-  }
-
-  @override
-  void dispose() {
-    ConsultationCredits.instance.removeListener(_onCreditsChanged);
-    super.dispose();
-  }
-
-  void _onCreditsChanged() {
-    if (mounted) setState(() {});
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final st = ConsultationCredits.instance.status;
+    final st = status;
     final freeRemaining = st?.freeRemaining;
     final freeLimit = st?.freeLimit;
     final purchased = st?.purchasedBalance ?? 0;
     final hasFree = (freeRemaining ?? 0) > 0;
     final hasPaid = purchased > 0;
-    // タイトル: 実際に「次に消費される」種別を表示。
-    // 設計（project_solara_stella_free_credits）= 消費順は 無料週次 → 購入残高。
+    // 2026-05-26 改修: クレジット 0 (Free 試食使い切り × 購入残高 0) の場合は
+    // 「引く」ボタンを disabled にして「クレジットを購入」のみ強調する。
+    final hasAnyCredit = hasFree || hasPaid;
+
+    // タイトル: 次に消費されるクレジット種別を反映 (消費順=無料→購入)。
     final String titleText;
     if (hasFree) {
       titleText = '無料クレジットを使う';
     } else if (hasPaid) {
       titleText = '有料クレジットを使う';
     } else {
-      titleText = 'クレジットを使う';
+      titleText = 'クレジットがありません';
     }
 
     return Column(
@@ -82,11 +89,17 @@ class _StartConsultPopupState extends State<_StartConsultPopup> {
             fontWeight: FontWeight.w600,
           ),
         ),
+        const SizedBox(height: 6),
+        Text(
+          'カテゴリ: $categoryLabel',
+          style: const TextStyle(
+            color: SolaraColors.solaraGoldLight,
+            fontSize: 13,
+            fontWeight: FontWeight.w500,
+            letterSpacing: 0.5,
+          ),
+        ),
         const SizedBox(height: 14),
-        // 残数バッジ: 無料 / 有料 の両方を常に表示。
-        // 値の鮮度: 呼出側 (consultation_input_logic._showStartPopup) が直前に
-        // ConsultationCredits.instance.refresh() を await してから表示する。
-        // popup 表示中も singleton listener で自動更新される (購入完了等)。
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
           decoration: BoxDecoration(
@@ -178,45 +191,13 @@ class _StartConsultPopupState extends State<_StartConsultPopup> {
           ),
         ),
         const SizedBox(height: 14),
-        // 次回以降表示しない
-        InkWell(
-          onTap: () {
-            setState(() => _hide = !_hide);
-            widget.onHideChanged(_hide);
-          },
-          borderRadius: BorderRadius.circular(8),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 6),
-            child: Row(
-              children: [
-                Icon(
-                  _hide ? Icons.check_box : Icons.check_box_outline_blank,
-                  color: _hide
-                      ? SolaraColors.solaraGoldLight
-                      : SolaraColors.textSecondary,
-                  size: 20,
-                ),
-                const SizedBox(width: 8),
-                const Text(
-                  '次回以降表示しない',
-                  style: TextStyle(
-                    color: SolaraColors.textSecondary,
-                    fontSize: 13,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-        const SizedBox(height: 10),
-        // クレジット購入ボタン
         SizedBox(
           width: double.infinity,
           height: 44,
           child: OutlinedButton.icon(
             onPressed: () {
               Navigator.of(context).pop();
-              widget.onBuy();
+              onBuy();
             },
             style: OutlinedButton.styleFrom(
               foregroundColor: SolaraColors.solaraGoldLight,
@@ -230,29 +211,55 @@ class _StartConsultPopupState extends State<_StartConsultPopup> {
           ),
         ),
         const SizedBox(height: 8),
-        // 相談を始める (続行)
-        SizedBox(
-          width: double.infinity,
-          height: 48,
-          child: ElevatedButton(
-            onPressed: () {
-              widget.onContinue();
-              Navigator.of(context).pop();
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: SolaraColors.solaraGold,
-              foregroundColor: SolaraColors.celestialBlueDark,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              textStyle: const TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w600,
-                letterSpacing: 0.6,
+        Row(
+          children: [
+            Expanded(
+              child: SizedBox(
+                height: 48,
+                child: OutlinedButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: SolaraColors.textSecondary,
+                    side: const BorderSide(color: Color(0x33FFFFFF)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text('キャンセル'),
+                ),
               ),
             ),
-            child: const Text('相談を始める'),
-          ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: SizedBox(
+                height: 48,
+                child: ElevatedButton(
+                  // クレジット 0 個なら「引く」を disabled (= onPressed: null)。
+                  onPressed: hasAnyCredit
+                      ? () {
+                          onProceed();
+                          Navigator.of(context).pop();
+                        }
+                      : null,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: SolaraColors.solaraGold,
+                    foregroundColor: SolaraColors.celestialBlueDark,
+                    disabledBackgroundColor: const Color(0x33FFFFFF),
+                    disabledForegroundColor: SolaraColors.textSecondary,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    textStyle: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 0.6,
+                    ),
+                  ),
+                  child: const Text('引く'),
+                ),
+              ),
+            ),
+          ],
         ),
       ],
     );

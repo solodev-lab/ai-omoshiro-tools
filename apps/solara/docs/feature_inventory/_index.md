@@ -14,13 +14,13 @@
 | 1c | モデルクラス | 4 | [01c_models.md](01c_models.md) |
 | 2a | API/Worker ラッパ | 10 | [02a_api_wrappers.md](02a_api_wrappers.md) |
 | 2b | 永続化/キャッシュ | 9 | [02b_persistence.md](02b_persistence.md) |
-| 2c | グローバル singleton | 1 | [02c_globals.md](02c_globals.md) |
+| 2c | グローバル singleton | 2 | [02c_globals.md](02c_globals.md) |
 | 3a | 共通ウィジェット (純粋) | 25 | [03a_widgets_pure.md](03a_widgets_pure.md) |
 | 3b | テーマ・装飾 | 3 | [03b_theme.md](03b_theme.md) |
 | 3c | 演出ウィジェット (animated) | 5 | [03c_widgets_anim.md](03c_widgets_anim.md) |
 | 4a | Map 画面 | 23 | [04a_map.md](04a_map.md) |
 | 4b | Horoscope 画面 | 23 | [04b_horoscope.md](04b_horoscope.md) |
-| 4c | Observe (Tarot) 画面 | 11 | [04c_observe.md](04c_observe.md) |
+| 4c | Observe (Tarot) 画面 | 12 | [04c_observe.md](04c_observe.md) |
 | 4d | Galaxy 画面 | 10 | [04d_galaxy.md](04d_galaxy.md) |
 | 4e | Sanctuary 画面 | 10 | [04e_sanctuary.md](04e_sanctuary.md) |
 | 4f | サブ画面 (Forecast / Locations / Philosophy / Font Preview) | 28 | [04f_subscreens.md](04f_subscreens.md) |
@@ -28,11 +28,11 @@
 
 ## 全体統計
 
-- Dart ファイル: 183
+- Dart ファイル: 185
 - Worker JS ファイル: 23
 - Worker エンドポイント総数: 30
-- Dart class/mixin/extension/enum 総数: 437
-- Dart 関数総数 (素拾い): 1444
+- Dart class/mixin/extension/enum 総数: 438
+- Dart 関数総数 (素拾い): 1460
 
 ## 対整合チェック
 

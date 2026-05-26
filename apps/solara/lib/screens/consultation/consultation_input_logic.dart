@@ -109,16 +109,15 @@ extension _ConsultationInputLogic on _ConsultationInputScreenState {
 
   Future<bool> _showStartPopup() async {
     // 表示直前にサーバー側の最新クレジット残を取り直す（結果画面から戻った直後 /
-    // 購入直後など、_creditStatus が古いままだと「残り 0/3」のような古い数値が
-    // 出てしまう問題を回避）。setState は extension から直接呼べないため、
-    // State 本体側の _refreshCreditsFresh を経由する。
+    // 購入直後など、ConsultationCredits.status が古いままだと「残り 0/3」のような
+    // 古い数値が出てしまう問題を回避）。in-flight dedup されるので、並行画面が
+    // 同時に refresh しても HTTP は 1 本にまとまる。
     await _refreshCreditsFresh();
     if (!mounted) return false;
     var proceed = false;
     await showInfoPopup(
       context: context,
       child: _StartConsultPopup(
-        status: _creditStatus,
         initialHide: _startPopupHidden,
         onContinue: () => proceed = true,
         onBuy: _handleBuyFromPopup,

@@ -9,23 +9,14 @@
 
 import 'dart:convert';
 
-import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 import 'app_attest_client.dart';
 import 'solara_api.dart' show solaraConsultationCreditsUrl;
 
-/// クレジット残高変化のグローバル通知（singleton）。
-///
-/// - 購入完了（Webhook 反映後）/ 相談実行成功後 / タロットカテゴリ消費後など、
-///   サーバー側残高が動いた可能性がある時に `notifyChanged()` を呼ぶ。
-/// - Sanctuary / 入力画面の Start popup などが addListener して即時 refetch する。
-/// - これにより複数画面に分散したクレジット表示の更新ラグを解消する。
-class ConsultationCreditEvents extends ChangeNotifier {
-  ConsultationCreditEvents._();
-  static final ConsultationCreditEvents instance = ConsultationCreditEvents._();
-  void notifyChanged() => notifyListeners();
-}
+// 旧 ConsultationCreditEvents (notify-only ChangeNotifier) は 2026-05-26 に
+// ConsultationCredits (state-holder singleton, lib/utils/consultation_credits.dart) へ
+// 置換済み。詳細は consultation_credits.dart 冒頭のコメント参照。
 
 /// Free 試食クレジット切れ等で Worker が 402 を返したときのブロック理由。
 enum ConsultationBlock {
@@ -87,6 +78,11 @@ class ConsultationCreditStatus {
 
 /// `/protected/consultation/credits` を呼んで現在のクレジット状況を取得する。
 /// 失敗時 null (UI 側は表示を控える)。
+///
+/// 🔴 直接呼ばないこと: 必ず `ConsultationCredits.instance.refresh()` を経由する。
+/// 直接呼ぶと in-flight dedup が効かず、複数画面が同時に叩いてバーストする
+/// (2026-05-26 の 5 分間 45 回バースト問題の再発)。本関数は singleton から
+/// しか呼ばれない前提で残してある。
 Future<ConsultationCreditStatus?> fetchConsultationCredits({
   Duration timeout = const Duration(seconds: 15),
   http.Client? client,

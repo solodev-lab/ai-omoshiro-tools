@@ -11,11 +11,14 @@ import '../utils/tarot_data.dart';
 import '../widgets/pro_unlock_dialog.dart';
 import '../widgets/tap_to_unfocus.dart';
 
+import '../theme/solara_colors.dart';
+import '../utils/consultation_credits.dart';
 import 'consultation/consultation_credit_sheet.dart';
 import 'observe/observe_constants.dart';
 import 'observe/observe_card_widgets.dart';
 import 'observe/observe_history.dart';
 import 'observe/tarot_altar_scene.dart';
+import 'observe/tarot_category_popup.dart';
 
 part 'observe/observe_question_field.dart';
 part 'observe/observe_category_selector.dart';
@@ -41,15 +44,34 @@ class _ObserveScreenState extends State<ObserveScreen>
   /// 選択中の占いカテゴリ (null = 全体運。指定すると非Pro は 1 クレジット消費)。
   String? _selectedCategory;
 
+  /// 非Pro のカテゴリが POPUP「引く」で確定済かどうか。Pro は常に true 扱い。
+  /// カテゴリ確定 + カードタップ で 1 クレジット消費する。消費後 false にリセットし、
+  /// 再度引きたいときはユーザーがカテゴリ chip を再 tap → POPUP → 「引く」が必要。
+  /// 全体運 (null) のときは常に true (= タップで引ける)。
+  bool _categoryConfirmed = false;
+
   /// 最後の API 応答から得た残数 (非Pro のカテゴリ占い後に表示)。
   int? _tarotFreeRemaining;
   int? _tarotPurchased;
   // カテゴリ選択肢 (_tarotCategories) と selector UI は
   // observe/observe_category_selector.dart (part, extension) に分離。
 
-  /// カテゴリ選択 (part extension から setState を呼ぶための転送。
-  /// setState は @protected で extension から直接呼べないため State 本体に置く)。
-  void _selectCategory(String? key) => setState(() => _selectedCategory = key);
+  // ── extension から呼ぶ setState ラッパー ──
+  // setState は @protected で extension から直接呼べないため State 本体に置く
+  // (consultation_input_logic.dart と同じパターン)。
+  void _applyCategorySelection(String? key, bool confirmed) {
+    setState(() {
+      _selectedCategory = key;
+      _categoryConfirmed = confirmed;
+    });
+  }
+
+  void _applyTarotCreditBalance(int? free, int? purchased) {
+    setState(() {
+      _tarotFreeRemaining = free;
+      _tarotPurchased = purchased;
+    });
+  }
 
   // ローディング演出: 4つのメッセージを4秒ごとに切り替え
   static const _loadingMessages = [
@@ -136,6 +158,7 @@ class _ObserveScreenState extends State<ObserveScreen>
 
   Future<void> _checkTodayReading() async {
     // 「1日の開始時刻」基準の論理日でゲート (単調ガード)。
+    // 2026-05-26 改修: Tarot は Pro 含め 1日1回 → カテゴリ占いも復元対象に。
     final drawn = await SolaraStorage.hasDrawnFreeTarotToday();
     final today = await SolaraStorage.getTodayReading();
     if (!mounted) return;
@@ -147,6 +170,12 @@ class _ObserveScreenState extends State<ObserveScreen>
         _cardFlipped = true;
         _alreadyDrawnToday = true;
         _readingFromApi = today.reading.isNotEmpty;
+        // 当日引いたカテゴリを復元 (null = 全体運)。chip selected 表示用。
+        _selectedCategory = today.category;
+        // カテゴリで引いた当日は「確定済」扱い (chip 再 tap も card tap も
+        // _alreadyDrawnToday=true で先にブロックされるが、_drawCard 内の
+        // _categoryConfirmed guard との整合性のため true に揃える)。
+        _categoryConfirmed = today.category != null;
       });
       _flipCtrl.value = 1.0;
       if (today.reading.isNotEmpty) {
@@ -177,14 +206,19 @@ class _ObserveScreenState extends State<ObserveScreen>
     final category = _selectedCategory; // null = 全体運
     final isCategoryDraw = category != null;
 
-    // 無料の全体運のみ 1 日 1 回 (「1日の開始時刻」基準の論理日)。
-    // カテゴリ (クレジット消費) と Pro は対象外。記録ベースの単調ガードで
-    // 判定するため、リセット時刻を後ろにずらして再ドローする不正も防げる。
-    if (!isCategoryDraw && !isPro) {
-      if (await SolaraStorage.hasDrawnFreeTarotToday()) {
-        if (mounted) setState(() => _alreadyDrawnToday = true);
-        return;
-      }
+    // 2026-05-26 仕様変更: Tarot は Pro 含め 1日1回 (全体運/カテゴリ問わず)。
+    // 当日既に引いていればカードタップは完全無反応。
+    if (_alreadyDrawnToday) return;
+    if (await SolaraStorage.hasDrawnFreeTarotToday()) {
+      if (mounted) setState(() => _alreadyDrawnToday = true);
+      return;
+    }
+
+    // カテゴリ占いは POPUP「引く」で確定済のときだけカードタップで実行可能。
+    // (Pro は _onCategoryChipTap で popup なしで true セット済、Free は POPUP 経由)。
+    // _categoryConfirmed が false の状態でカードを連打しても無反応。
+    if (isCategoryDraw && !_categoryConfirmed) {
+      return;
     }
 
     final rng = Random();
@@ -202,13 +236,13 @@ class _ObserveScreenState extends State<ObserveScreen>
       _drawnReversed = reversed;
       _cardFlipped = true;
       _readingLoading = true;
-      // 全体運(無料)のみ「本日引き済み」を立てる。カテゴリ/Pro は何度でも。
-      if (!isCategoryDraw && !isPro) _alreadyDrawnToday = true;
+      // 2026-05-26 仕様変更: Tarot は Pro 含め 1日1回 (全体運/カテゴリ問わず)。
+      // 引いた瞬間に画面固定フラグを立てる。
+      _alreadyDrawnToday = true;
     });
-    // 無料の全体運は論理日を記録 (単調ガード)。これ以降この論理日では引けない。
-    if (!isCategoryDraw && !isPro) {
-      await SolaraStorage.markFreeTarotDrawn();
-    }
+    // 単調ガードも同時に記録。カテゴリ占いは下で 402 (クレジット切れ) になった
+    // 場合のみロールバックする。
+    await SolaraStorage.markFreeTarotDrawn();
     _startLoadingMessageRotation();
 
     _flipCtrl.forward();
@@ -223,6 +257,7 @@ class _ObserveScreenState extends State<ObserveScreen>
       moonPhase: moonPhase,
       reversed: reversed,
       question: question.isEmpty ? null : question,
+      category: category, // null = 全体運
     );
     // 全体運(無料/Pro) は従来通り先に保存。カテゴリは 402 の可能性があるので成功後に保存
     // (既存の全体運の保存を 402 ロールバックで壊さないため)。
@@ -263,8 +298,19 @@ class _ObserveScreenState extends State<ObserveScreen>
         _readingLoading = false;
         _cardFlipped = false;
         _drawnCard = null;
+        // 確定状態を解除 (再度カテゴリ tap で POPUP からやり直し)。
+        _categoryConfirmed = false;
+        _selectedCategory = null;
+        // 2026-05-26 改修: API でクレジット消費されてないので 1日1回ガードも巻き戻す
+        // (購入後 or 全体運切替なら引けるように)。
+        _alreadyDrawnToday = false;
       });
+      // 単調ガードのストレージもクリア (購入後 / 全体運切替で再ドロー可能に)。
+      await SolaraStorage.clearFreeTarotDay();
       _flipCtrl.value = 0.0;
+      // Sanctuary 等の残数表示も refetch (購入シート開いてサーバー側残が動く可能性)。
+      // ignore: unawaited_futures
+      ConsultationCredits.instance.refresh();
       await _handleTarotCreditExhausted();
       return;
     }
@@ -279,12 +325,22 @@ class _ObserveScreenState extends State<ObserveScreen>
         _typingDone = false;
         _tarotFreeRemaining = tarotResult.freeCreditsRemaining;
         _tarotPurchased = tarotResult.purchasedBalance;
+        // カテゴリ消費完了 → confirmed を false に戻す。次のカテゴリ占いは
+        // 再度 chip tap → POPUP → 「引く」が必要 (連打で複数消費を防ぐ)。
+        // _selectedCategory は表示として残す (どのカテゴリで引いたか分かるように)。
+        if (isCategoryDraw && !isPro) _categoryConfirmed = false;
       });
       reading.reading = _readingText;
       // カテゴリは成功後にここで保存 (date キーで今日の表示を置換)。
       await SolaraStorage.addReading(reading);
       _loadHistory();
       _startTypewriter();
+      // カテゴリ消費 (非Pro) のみ Sanctuary 残数バッジへ通知。
+      // Pro/全体運 は残数に影響しないのでスキップ。
+      if (isCategoryDraw && !isPro) {
+        // ignore: unawaited_futures
+        ConsultationCredits.instance.refresh();
+      }
     } else {
       // API失敗 (null = network/LLM): 静的テンプレートで fallback。クレジットは消費されない。
       setState(() {

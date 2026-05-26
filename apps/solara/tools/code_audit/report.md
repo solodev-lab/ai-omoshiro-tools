@@ -1,6 +1,6 @@
 # Solara Code Audit
 
-対象: lib (183 個の .dart)
+対象: lib (185 個の .dart)
 
 ## 1. ファイル行数 (>= 300 行)
 
@@ -8,7 +8,7 @@
 |------|------|----------|
 | 3062 | 🔴 HARD | lib/screens/map_screen.dart |
 | 1923 | 🔴 HARD | lib/screens/map/map_daily_transit_screen.dart |
-| 1459 | 🔴 HARD | lib/screens/sanctuary_screen.dart |
+| 1453 | 🔴 HARD | lib/screens/sanctuary_screen.dart |
 | 1385 | 🔴 HARD | lib/screens/sanctuary/sanctuary_title_diagnosis.dart |
 | 1275 | 🔴 HARD | lib/screens/galaxy_screen.dart |
 | 1084 | 🔴 HARD | lib/screens/forecast_screen.dart |
@@ -20,13 +20,13 @@
 | 759 | 🔴 HARD | lib/screens/locations_screen.dart |
 | 758 | 🔴 HARD | lib/widgets/fortune_overlays/work_painter.dart |
 | 702 | 🔴 HARD | lib/screens/horoscope/horo_chart_painter.dart |
+| 695 | 🔴 HARD | lib/screens/observe_screen.dart |
 | 693 | 🔴 HARD | lib/widgets/fortune_overlays/money_painter.dart |
+| 666 | 🔴 HARD | lib/utils/solara_storage.dart |
 | 656 | 🔴 HARD | lib/screens/map/map_relocation_popup.dart |
-| 655 | 🔴 HARD | lib/utils/solara_storage.dart |
 | 647 | 🔴 HARD | lib/utils/astro_glossary.dart |
 | 646 | 🔴 HARD | lib/screens/map/map_viewpoint_menu.dart |
 | 642 | 🔴 HARD | lib/widgets/fortune_overlays/communication_painter.dart |
-| 639 | 🔴 HARD | lib/screens/observe_screen.dart |
 | 626 | 🔴 HARD | lib/utils/constellation_namer.dart |
 | 616 | 🔴 HARD | lib/screens/map/map_astro_lines.dart |
 | 600 | 🔴 HARD | lib/screens/map/map_search.dart |
@@ -39,7 +39,7 @@
 | 508 | 🔴 HARD | lib/screens/map/map_time_slider.dart |
 | 500 | 🔴 HARD | lib/screens/observe/tarot_altar_scene.dart |
 | 498 | 🟡 WARN | lib/widgets/fortune_overlays/healing_painter.dart |
-| 491 | 🟡 WARN | lib/screens/consultation/consultation_input_screen.dart |
+| 483 | 🟡 WARN | lib/screens/consultation/consultation_input_screen.dart |
 | 481 | 🟡 WARN | lib/widgets/full_moon_overlay.dart |
 | 481 | 🟡 WARN | lib/screens/map/map_overlays.dart |
 | 467 | 🟡 WARN | lib/screens/horoscope/horo_relocation_panel.dart |
@@ -54,7 +54,7 @@
 | 415 | 🟡 WARN | lib/screens/galaxy/constellation_share_card_page.dart |
 | 413 | 🟡 WARN | lib/screens/map/map_display_menu.dart |
 | 411 | 🟡 WARN | lib/screens/consultation/consultation_place_picker_widgets.dart |
-| 404 | 🟡 WARN | lib/screens/consultation/consultation_result_screen.dart |
+| 407 | 🟡 WARN | lib/screens/consultation/consultation_result_screen.dart |
 | 404 | 🟡 WARN | lib/screens/sanctuary/title_history_screen.dart |
 | 399 | 🟡 WARN | lib/utils/forecast_cache.dart |
 | 397 | 🟡 WARN | lib/screens/observe/observe_history_filter.dart |
@@ -67,11 +67,11 @@
 | 355 | 🟡 WARN | lib/screens/locations/locations_date_stepper.dart |
 | 354 | 🟡 WARN | lib/widgets/sanctuary_account_section.dart |
 | 353 | 🟡 WARN | lib/screens/consultation/consultation_place_picker_screen.dart |
+| 345 | 🟡 WARN | lib/screens/consultation/consultation_credit_sheet.dart |
 | 338 | 🟡 WARN | lib/screens/consultation/consultation_input_picker.dart |
 | 338 | 🟡 WARN | lib/screens/map/consult_entry_popup.dart |
 | 336 | 🟡 WARN | lib/screens/horoscope/horo_birth_panel.dart |
 | 330 | 🟡 WARN | lib/screens/horoscope/horo_fortune_cards.dart |
-| 328 | 🟡 WARN | lib/screens/consultation/consultation_credit_sheet.dart |
 | 319 | 🟡 WARN | lib/screens/galaxy/galaxy_archive_filter.dart |
 | 313 | 🟡 WARN | lib/utils/celestial_events.dart |
 | 313 | 🟡 WARN | lib/screens/observe/observe_history_past.dart |
@@ -306,7 +306,7 @@
 
 ## 3. TODO/FIXME/HACK/DEBUG 残置
 
-  - lib/main.dart:35 — `// debug/Web/desktop/設定値不足ではいずれも no-op (Free 動作は不変)。`
+  - lib/main.dart:36 — `// debug/Web/desktop/設定値不足ではいずれも no-op (Free 動作は不変)。`
   - lib/screens/galaxy_screen.dart:450 — `// DEBUG: Cycle完了フローの各タイミングを手動トリガー`
   - lib/utils/device_security_status.dart:115 — `// debug build では `Threat.debug` で常時発火 + signing cert が release と`
   - lib/screens/galaxy/galaxy_archive_filter.dart:81 — `// debug で過去サイクルを後から作ったり、同月内に複数 cycle を並べると`

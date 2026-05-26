@@ -28,8 +28,7 @@ import 'package:latlong2/latlong.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../theme/solara_colors.dart';
-import '../../utils/consultation_api.dart'
-    show ConsultationCreditStatus, fetchConsultationCredits;
+import '../../utils/consultation_credits.dart';
 import '../../utils/consultation_v2_api.dart';
 import '../../utils/pro_status.dart';
 import '../../utils/solara_storage.dart';
@@ -117,9 +116,6 @@ class _ConsultationInputScreenState extends State<ConsultationInputScreen> {
   /// 誕生/自宅データ (相談リクエストの土台)。
   SolaraProfile? _profile;
 
-  /// 直近のクレジット状況 (Free のみ取得、開始ポップアップの残数表示用)。
-  ConsultationCreditStatus? _creditStatus;
-
   /// 開始ポップアップを「次回以降表示しない」設定 (端末保存)。
   bool _startPopupHidden = false;
   static const _kStartPopupHiddenKey = 'consultation_start_popup_hidden';
@@ -138,6 +134,8 @@ class _ConsultationInputScreenState extends State<ConsultationInputScreen> {
       _scopeKind = 'point';
     }
     _loadPrefsAndProfile();
+    // 注: 本画面は build() で ConsultationCredits を直接参照しないので listener は不要。
+    // 残数表示は開始ポップアップ (_StartConsultPopup) が自前で listener を持つ。
   }
 
   Future<void> _loadPrefsAndProfile() async {
@@ -145,15 +143,10 @@ class _ConsultationInputScreenState extends State<ConsultationInputScreen> {
     final hidden = prefs.getBool(_kStartPopupHiddenKey) ?? false;
     final profile = await SolaraStorage.loadProfile();
     if (!mounted) return;
-    // プロフィールは先に反映 (submit 可否の土台)。クレジット残は後追いで埋める。
     setState(() {
       _startPopupHidden = hidden;
       _profile = profile;
     });
-    if (!ProStatus.instance.isPro) {
-      final status = await fetchConsultationCredits();
-      if (mounted) setState(() => _creditStatus = status);
-    }
   }
 
   @override
@@ -303,13 +296,12 @@ class _ConsultationInputScreenState extends State<ConsultationInputScreen> {
   // consultation_input_logic.dart (extension) に分離 (HARD500 回避)。
 
   /// 開始ポップアップ表示直前 / 購入後など、サーバー側の最新クレジット残を取り直す。
-  /// extension からは protected setState を直接呼べないので State 本体に置く。
+  /// ConsultationCredits.instance.refresh() (in-flight dedup あり) に委譲し、
+  /// notifyListeners 経由で本 State も rebuild される。State 本体に残しているのは
+  /// 「Pro なら skip」のロジックを 1 箇所にまとめるため + 既存 API 互換維持のため。
   Future<void> _refreshCreditsFresh() async {
     if (ProStatus.instance.isPro) return;
-    final fresh = await fetchConsultationCredits();
-    if (fresh != null && mounted) {
-      setState(() => _creditStatus = fresh);
-    }
+    await ConsultationCredits.instance.refresh();
   }
 
   Future<void> _setStartPopupHidden(bool v) async {

@@ -99,11 +99,20 @@ Solara のバックエンドは **Cloudflare Workers** で稼働。本番 URL: `
   - **入力画面の開始ポップアップ** (`_StartConsultPopup`): タイトルが文脈反映
     (free>0 → 「無料クレジットを使う」/ free=0 で paid>0 → 「有料クレジットを使う」/ 両方0 → 「クレジットを使う」)、
     バッジは **無料 / 有料の 2 行**を常時表示。表示直前に `_refreshCreditsFresh` で再フェッチして古値防止。
-- **クロス画面の同期機構**: `ConsultationCreditEvents.instance` (ChangeNotifier singleton、
-  `consultation_api.dart`)。相談実行成功 / 「別の候補地を見る」/ クレジット購入完了で `notifyChanged()`
-  を発火し、Sanctuary 等の listener が即座に refetch する。
+- **クロス画面の同期機構** (2026-05-26 設計変更): `ConsultationCredits` (state-holder
+  ChangeNotifier singleton、`utils/consultation_credits.dart`)。
+  `ConsultationCredits.instance`
+  クレジット残数 (`ConsultationCreditStatus`) を 1 個だけ保持し、UI 各所 (Sanctuary 上部 /
+  開始 popup / 購入シート / Tarot カテゴリ popup) は build で `instance.status` を読む
+  (自分で fetch しない)。`refresh()` は **in-flight dedup** あり (同時複数 await でも HTTP は
+  1 本)。fetch をトリガーするのは 4 イベントのみ: ① アプリ起動 (main.dart) ② 消費直後
+  (相談実行 / Tarot draw) ③ 購入完了ポーリング (consultation_credit_sheet) ④ app resumed
+  (main.dart の SolaraHome 1 箇所に集約)。
+  設計変更前は notify-only な旧 `ConsultationCreditEvents` で各 listener が独立に fetch →
+  5 分間 45 回 (DO 内部含め 320+ 件) のバーストが CF logs で観測されたため state holder 型に
+  再設計。Sanctuary 等の listener は `setState(() {})` を呼ぶだけで自分で fetch しない。
 
-#### タロットカテゴリ (同じクレジット財布、2026-05-23 追加)
+#### タロットカテゴリ (同じクレジット財布、2026-05-23 追加 / 2026-05-26 UI 改修)
 **1 クレジット = AI 占い 1 回**は相談とタロットで共通 (同じ財布)。`/protected/tarot` も
 共通ゲート (`consumeReadingCreditGate` / `consumeReadingCredit`) を使う:
 - **全体運 (category なし)**: 無料・1 日 1 回。日付境界は「1日の開始時刻」設定基準の論理日 (`SolaraStorage.logicalTodayKey`)。引いた後にリセット時刻を後ろへずらして再ドローする不正は単調ガード (`hasDrawnFreeTarotToday`/`markFreeTarotDrawn`) でブロック。クレジット消費なし。
@@ -113,6 +122,23 @@ Solara のバックエンドは **Cloudflare Workers** で稼働。本番 URL: `
   購入/Pro シート (相談と共通の `showConsultationCreditSheet`) を出す。
 - 自由記入欄 (question) は引き続き Pro 限定 (A3、`observe_question_field`)。
 - 共通ゲートは `consultation_*` の DO 表/env をそのまま共用 (履歴的命名だが汎用「占いクレジット」)。
+
+##### 2026-05-26 UI 改修 (カテゴリ tap → 確認 POPUP)
+カテゴリ chip tap で即座にカードタップ可能だった旧 UI が「カードを何度もタップして連続消費できる」問題を持っていたため、確認 POPUP を挟む形式に再設計:
+- **新規 `_TarotCategoryPopupBody`** (`tarot_category_popup.dart`, `showTarotCategoryPopup`):
+  カテゴリ確認 popup。タイトルが次に消費されるクレジット種別 (free>0 → 「無料」/ paid>0 → 「有料」) を反映。
+  無料/有料の両方を 2 行で常時表示 (相談の `_StartConsultPopup` と同じ視覚規約)。
+  「引く」=proceed=true、「キャンセル」/×/外タップ=proceed=false、「クレジットを購入」=onBuy 呼出。
+- **`_categoryConfirmed` フラグ** (`observe_screen.dart`):
+  POPUP 「引く」で true、カードタップ + API 成功で false にリセット。`_drawCard` 冒頭で
+  `if (isCategoryDraw && !_categoryConfirmed) return;` ガード = 連打不可。
+- **`_onCategoryChipTap` ディスパッチ**:
+  全体運 tap (key=null): カテゴリ選択中なら 2 秒トースト `_showOverallNoCostToast` + 全体運化、
+  元から全体運なら無音。Pro カテゴリ tap: POPUP なしで即確定 (無制限のため摩擦不要)。
+  非 Pro カテゴリ tap: 残数 `ConsultationCredits.refresh()` → POPUP → 「引く」で確定。
+- **残数の即時反映**: 消費成功時に `ConsultationCredits.instance.refresh()` (singleton) →
+  全画面 (Sanctuary 上部 / Start popup) が listener 経由で一気に更新。
+- **テスト**: `test/tarot_category_popup_test.dart` (9 件) でタイトル切替・各ボタンの戻り値・onBuy 呼出を網羅。
 
 ### 0.2.2 Stella相談 V2 (全要素統合) — 設計ノートと気付き (2026-05-24)
 
@@ -1634,7 +1660,7 @@ Sanctuary の機能領域:
 |---|---|
 | プロフィール編集 | 名前・出生情報 (日時・座標・地名)・言語切替・場所検索 + reverse geocoding。※ プライバシーで誕生日・住所の値は一覧非表示 (「設定済み/未設定」のみ、行はタップで編集) |
 | ホーム地点設定 | 現住所の座標 + 地名 (Map VP slot と同期) |
-| クレジット残表示 | 最上段に Stella/タロット クレジット残を 1 行表示 (`fetchConsultationCredits`)。非Pro=無料週次残+購入残、Pro=無制限 |
+| クレジット残表示 | 最上段に Stella/タロット クレジット残を 1 行表示 (`ConsultationCredits.instance.status` を直接参照、自身では fetch しない)。非Pro=無料週次残+購入残、Pro=無制限 |
 | Cosmic Pro 装飾 | Pro 契約時、最上段ヘッダーをアンティーク金二重枠で囲み、画面背景に神殿画像 (`assets/sanctuary-bg/pro.webp`) を薄く (opacity 0.20) 重ねる |
 | 🔴 144 称号診断儀式 | 25 クラス × Light/Shadow 両面の診断、3 ラウンドカード選択 + Forging 演出 + Reveal |
 | クラスカードシェア | 診断結果カードを画像生成して シェア (`_buildShareImage` + share_plus) |

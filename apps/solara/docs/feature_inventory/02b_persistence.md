@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 9 / 総行数: 2406
+- ファイル数: 9 / 総行数: 2417
 - class/mixin/extension/enum: 14
 - 関数 (top-level + method の素拾い): 110
 - Navigator.push 等: 0
@@ -340,7 +340,7 @@ Solara 認証サービス — Phase 2-9 Sign in 統合
   </details>
 
 
-### `lib/utils/solara_storage.dart` (655 行)
+### `lib/utils/solara_storage.dart` (666 行)
 
 **imports:** dart=1 / package=2 / relative=4
 
@@ -378,34 +378,34 @@ Solara 認証サービス — Phase 2-9 Sign in 統合
 - L333 `clearTitleHistory()` — 履歴全削除 (Sanctuary 設定からの「すべて削除」用)。
 - L341 `updateTitleHistoryNote()` — 指定 savedAt のエントリにメモを書き込む (200 字 cap、超過は切詰)。
 - L355 `getTodayReading()`
-- L365 `loadLastFreeTarotDay()` — 無料タロット (全体運) を最後に引いた「論理日」(YYYY-MM-DD)。未記録なら null。
-- L373 `markFreeTarotDrawn()` — 無料タロット (全体運) を「今日」引いたものとして記録する。
-- L386 `hasDrawnFreeTarotToday()` — 無料タロット (全体運) を「今日 (論理日)」もう引いたか。
-- L394 `clearFreeTarotDay()` — テスト用: 無料タロットの引き記録をクリア (再ドロー可能に戻す)。
-- L411 `saveCompletedCycle()`
-- L429 `updateCompletedCycleReadingSynchronicity()` — 過去サイクルに含まれる reading の synchronicity (自由メモ) を更新する。
-- L444 `clearCurrentReadings()`
-- L451 `loadIntention()`
-- L459 `saveIntention()`
-- L469 `loadDailyResetHour()` — 1日の基準時刻（0-23時）。この時刻を跨ぐと「今日」が更新される。
-- L475 `saveDailyResetHour()`
-- L482 `loadDailyResetMinute()` — 1日の基準時刻 (分、0-59)。1 分単位ピッカーの導入で追加。
-- L488 `saveDailyResetMinute()`
-- L503 `loadHouseSystem()` — ハウスシステム設定を読み込む (未保存は 'placidus')。同期キャッシュも更新。
-- L511 `saveHouseSystem()` — ハウスシステム設定を保存する。同期キャッシュも即時更新。
-- L553 `logicalTodayKey()` — リセット時刻 (「1日の開始時刻」設定) を考慮した「今日」の論理日キー
-- L566 `wasOverlayShownToday()` — Track which overlay was shown today to avoid re-showing.
-- L573 `markOverlayShown()`
-- L581 `getNotTodayCount()` — Not today 押下回数（サイクルID単位で保存）
-- L586 `incrementNotTodayCount()`
-- L616 `addConsultationRecord()` — 履歴を 1 件追加 (新しい順で先頭、上限超過分は古いものから削除)。
-- L628 `setConsultationFavorite()` — id 指定でお気に入りフラグを設定。見つからない場合は no-op。
-- L637 `deleteConsultationRecord()` — id 指定で 1 件削除。見つからない場合は no-op。
-- L644 `clearConsultationHistory()` — 履歴全削除 (Sanctuary 設定からの「すべて削除」用)。
+- L369 `loadLastFreeTarotDay()` — タロットを最後に引いた「論理日」(YYYY-MM-DD)。未記録なら null。
+- L382 `markFreeTarotDrawn()` — タロットを「今日」引いたものとして記録する。
+- L397 `hasDrawnFreeTarotToday()` — タロットを「今日 (論理日)」もう引いたか。
+- L405 `clearFreeTarotDay()` — テスト用: 無料タロットの引き記録をクリア (再ドロー可能に戻す)。
+- L422 `saveCompletedCycle()`
+- L440 `updateCompletedCycleReadingSynchronicity()` — 過去サイクルに含まれる reading の synchronicity (自由メモ) を更新する。
+- L455 `clearCurrentReadings()`
+- L462 `loadIntention()`
+- L470 `saveIntention()`
+- L480 `loadDailyResetHour()` — 1日の基準時刻（0-23時）。この時刻を跨ぐと「今日」が更新される。
+- L486 `saveDailyResetHour()`
+- L493 `loadDailyResetMinute()` — 1日の基準時刻 (分、0-59)。1 分単位ピッカーの導入で追加。
+- L499 `saveDailyResetMinute()`
+- L514 `loadHouseSystem()` — ハウスシステム設定を読み込む (未保存は 'placidus')。同期キャッシュも更新。
+- L522 `saveHouseSystem()` — ハウスシステム設定を保存する。同期キャッシュも即時更新。
+- L564 `logicalTodayKey()` — リセット時刻 (「1日の開始時刻」設定) を考慮した「今日」の論理日キー
+- L577 `wasOverlayShownToday()` — Track which overlay was shown today to avoid re-showing.
+- L584 `markOverlayShown()`
+- L592 `getNotTodayCount()` — Not today 押下回数（サイクルID単位で保存）
+- L597 `incrementNotTodayCount()`
+- L627 `addConsultationRecord()` — 履歴を 1 件追加 (新しい順で先頭、上限超過分は古いものから削除)。
+- L639 `setConsultationFavorite()` — id 指定でお気に入りフラグを設定。見つからない場合は no-op。
+- L648 `deleteConsultationRecord()` — id 指定で 1 件削除。見つからない場合は no-op。
+- L655 `clearConsultationHistory()` — 履歴全削除 (Sanctuary 設定からの「すべて削除」用)。
 
   <details><summary>private 関数 1 件</summary>
 
-  - L649 `_writeConsultationHistory()`
+  - L660 `_writeConsultationHistory()`
 
   </details>
 

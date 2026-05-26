@@ -5,9 +5,9 @@
 
 ## サマリ
 
-- ファイル数: 10 / 総行数: 2070
-- class/mixin/extension/enum: 24
-- 関数 (top-level + method の素拾い): 35
+- ファイル数: 10 / 総行数: 2066
+- class/mixin/extension/enum: 23
+- 関数 (top-level + method の素拾い): 34
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 0
 - Worker URL リテラル: 19
@@ -72,7 +72,7 @@
   </details>
 
 
-### `lib/utils/consultation_api.dart` (118 行)
+### `lib/utils/consultation_api.dart` (114 行)
 
 **ファイル先頭コメント:**
 
@@ -87,24 +87,21 @@ Consultation API — クレジット系 (V2 と共有)
   - ConsultationCreditStatus + fetchConsultationCredits
 ```
 
-**imports:** dart=1 / package=2 / relative=2
+**imports:** dart=1 / package=1 / relative=2
 
 - relative: `app_attest_client.dart`, `solara_api.dart`
 
-**型定義 (3):**
+**型定義 (2):**
 
-- L24 `class ConsultationCreditEvents : ChangeNotifier`
-  - クレジット残高変化のグローバル通知（singleton）。
-- L31 `enum ConsultationBlock`
+- L22 `enum ConsultationBlock`
   - Free 試食クレジット切れ等で Worker が 402 を返したときのブロック理由。
-- L61 `class ConsultationCreditStatus`
+- L52 `class ConsultationCreditStatus`
   - Stella 相談クレジットの現在状況 (無料週次残 + 購入残高)。
 
-**関数 (3 public + 0 private):**
+**関数 (2 public + 0 private):**
 
-- L27 `notifyChanged()`
-- L47 `consultationBlockFromCode()` — 402 paywall レスポンスの `error` コード → [ConsultationBlock]。
-- L90 `fetchConsultationCredits()` — `/protected/consultation/credits` を呼んで現在のクレジット状況を取得する。
+- L38 `consultationBlockFromCode()` — 402 paywall レスポンスの `error` コード → [ConsultationBlock]。
+- L86 `fetchConsultationCredits()` — `/protected/consultation/credits` を呼んで現在のクレジット状況を取得する。
 
 
 ### `lib/utils/consultation_v2_api.dart` (373 行)

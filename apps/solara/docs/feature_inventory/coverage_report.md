@@ -51,15 +51,14 @@
 
 ## #1 / #2 機械抽出 ↔ feature_inventory.md (人手版) の対整合
 
-- 機械抽出した class/mixin/extension/enum: **428**
-- inventory に登場する識別子 (大文字始まり ``backtick``囲み): **225**
+- 機械抽出した class/mixin/extension/enum: **429**
+- inventory に登場する識別子 (大文字始まり ``backtick``囲み): **227**
 
 ### #1 機械にあるが Doc に書かれていない (245)
 
 - `AppAttestClient`
 - `ConstellationShareCardPage`
 - `ConsultEntryPopup`
-- `ConsultationCreditEvents`
 - `ConsultationEvidenceKm`
 - `ConsultationHistoryScreen`
 - `ConsultationInputScreen`
@@ -256,9 +255,10 @@
 - `_ScopeWrap`
 - `_ScrollableRowPanel`
 - `_SearchBar`
+- `_SearchBarOverlayState`
 - … 残り 45 省略
 
-### #2 Doc に書いてあるがコードに存在しない (ゴースト記述) (42)
+### #2 Doc に書いてあるがコードに存在しない (ゴースト記述) (43)
 
 > 注: Flutter SDK や外部ライブラリの型もここに乗る (誤検出)。
 > 真のゴーストはアプリ独自型のみ。実際の Doc 修正対象は手で絞り込む。
@@ -272,6 +272,7 @@
 - `CONSULTATION_FREE_MODES`
 - `CONSULTATION_FREE_WEEKLY`
 - `CategoryFilterTips`
+- `ConsultationCreditEvents`
 - `ConsultationReading`
 - `CustomPaint`
 - `D6915C`
@@ -324,9 +325,9 @@
 
 ### 層 4c: Observe (Tarot) 画面
 
-- ファイル数: 11
+- ファイル数: 12
 - Worker URL 呼出: (なし)
-- Popup/Dialog: (なし)
+- Popup/Dialog: `showInfoPopup`×1
 - Navigator.push 等: 0 箇所
 
 ### 層 4d: Galaxy 画面
@@ -366,17 +367,17 @@
 | 1c | · | · | 1 | · | · | · | · | · | · | · | · | · | · | · | · | · |
 | 2a | 2 | 1 | · | 6 | 4 | · | · | 1 | · | · | · | · | · | · | · | · |
 | 2b | 2 | 3 | 5 | 5 | 4 | · | · | · | · | · | · | · | · | · | · | · |
-| 2c | · | · | 1 | · | · | · | · | · | · | · | · | · | · | · | · | · |
+| 2c | · | · | 1 | 1 | · | · | · | · | · | · | · | · | · | · | · | · |
 | 3a | 1 | 4 | 2 | 2 | 1 | 1 | 8 | 7 | 4 | 1 | · | · | · | · | 1 | · |
 | 3b | · | · | · | · | · | · | · | 1 | · | · | · | · | · | · | · | · |
 | 3c | · | 5 | 4 | 2 | 4 | · | 12 | 4 | · | · | · | · | · | · | · | · |
 | 4a | 10 | 11 | · | 13 | 8 | · | 19 | 23 | 3 | 30 | 2 | · | · | · | 3 | · |
 | 4b | 5 | 13 | · | 3 | 5 | · | 14 | · | · | · | 31 | · | · | 2 | · | · |
-| 4c | 1 | 1 | 15 | · | 7 | 4 | 6 | 4 | · | · | · | 16 | · | · | 1 | · |
+| 4c | 1 | 1 | 15 | 1 | 7 | 5 | 7 | 6 | · | · | · | 17 | · | · | 1 | · |
 | 4d | 3 | 6 | 13 | 1 | 5 | 2 | 12 | 2 | 1 | · | · | · | 9 | · | · | · |
-| 4e | 1 | 4 | · | 3 | 7 | · | 15 | 1 | · | · | · | · | · | 9 | 3 | · |
-| 4f | 2 | 3 | · | 8 | 15 | · | 16 | 11 | · | 6 | · | · | · | · | 27 | · |
-| 5 | 1 | · | · | 2 | 4 | 1 | 1 | 1 | · | 1 | 1 | 1 | 1 | 1 | · | · |
+| 4e | 1 | 4 | · | 3 | 7 | 1 | 15 | 1 | · | · | · | · | · | 9 | 3 | · |
+| 4f | 2 | 3 | · | 7 | 15 | 3 | 16 | 11 | · | 6 | · | · | · | · | 27 | · |
+| 5 | 1 | · | · | 2 | 4 | 2 | 1 | 1 | · | 1 | 1 | 1 | 1 | 1 | · | · |
 
 > 健全な依存方向は「番号が大きい層 → 小さい層」(上位が下位に依存)。
 > 番号が小さい層から大きい層への矢印 (左下三角) は逆流依存の疑い。
@@ -387,9 +388,9 @@
 
 | ファイル | 層 | 被 import 数 |
 | --- | --- | --- |
-| `lib/theme/solara_colors.dart` | 3b | 34 |
+| `lib/theme/solara_colors.dart` | 3b | 36 |
 | `lib/utils/solara_storage.dart` | 2b | 29 |
-| `lib/widgets/info_popup.dart` | 3a | 23 |
+| `lib/widgets/info_popup.dart` | 3a | 24 |
 | `lib/screens/map/map_constants.dart` | 3b | 20 |
 | `lib/utils/pro_status.dart` | 2b | 19 |
 | `lib/models/galaxy_cycle.dart` | 1c | 14 |
@@ -421,11 +422,13 @@
 > 各ソースの SHA1 を `_stamps.json` に記録し、差分を検出。
 > 変更されたファイルが属する層は、人手版インベントリ章の見直し対象。
 
-- 追加: **0** / 削除: **0** / 変更: **2**
+- 追加: **0** / 削除: **0** / 変更: **5**
 
 ### 変更されたファイル (層別)
 
-- **層 4f**: `lib/screens/consultation/consultation_input_logic.dart`, `lib/screens/consultation/consultation_input_screen.dart`
+- **層 1c**: `lib/models/daily_reading.dart`
+- **層 2b**: `lib/utils/solara_storage.dart`
+- **層 4c**: `lib/screens/observe/observe_category_selector.dart`, `lib/screens/observe/tarot_category_popup.dart`, `lib/screens/observe_screen.dart`
 
 ## #7 astro_glossary 用語辞書対整合
 

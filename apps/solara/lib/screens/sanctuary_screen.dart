@@ -5,7 +5,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'horoscope/horo_antique_icons.dart';
-import '../utils/consultation_api.dart';
+import '../utils/consultation_api.dart' show ConsultationCreditStatus;
+import '../utils/consultation_credits.dart';
 import '../utils/pro_status.dart';
 import '../utils/purchases_service.dart';
 import '../utils/solara_storage.dart';
@@ -33,13 +34,13 @@ class SanctuaryScreen extends StatefulWidget {
   State<SanctuaryScreen> createState() => _SanctuaryScreenState();
 }
 
-class _SanctuaryScreenState extends State<SanctuaryScreen>
-    with WidgetsBindingObserver {
+class _SanctuaryScreenState extends State<SanctuaryScreen> {
   SolaraProfile? _profile;
   bool _loading = true;
 
-  // Stella/タロット クレジット残 (最上部に表示)。null = 未取得/オフライン。
-  ConsultationCreditStatus? _credits;
+  // Stella/タロット クレジット残は ConsultationCredits.instance.status から読む
+  // (ローカル state には持たない)。app lifecycle resume の refresh は main.dart の
+  // SolaraHome に集約 (各画面で個別 observer を持たない)。
 
   // Title diagnosis results
   String? _titleLight;
@@ -77,42 +78,35 @@ class _SanctuaryScreenState extends State<SanctuaryScreen>
     super.initState();
     _loadProfile();
     _loadSettings();
-    _loadCredits();
     // Pro 切替 (購入 / DEV toggle) で背景・枠・残数表示を即時反映。
     ProStatus.instance.addListener(_onProChanged);
-    // クレジット残のリアルタイム更新:
-    //   1. 相談実行 / 候補追加 / 購入完了で発火される ConsultationCreditEvents を購読
-    //   2. アプリ復帰 (background → foreground) でも refetch
-    ConsultationCreditEvents.instance.addListener(_loadCredits);
-    WidgetsBinding.instance.addObserver(this);
+    // ConsultationCredits singleton の更新通知を購読 (= notifyListeners で rebuild)。
+    // 自分から fetch はしない: 起動時 refresh は main.dart、消費/購入時 refresh は
+    // 各イベント側 (相談実行・Tarot 引く・購入完了ポーリング) で発火される。
+    ConsultationCredits.instance.addListener(_onCreditsChanged);
   }
 
   @override
   void dispose() {
     ProStatus.instance.removeListener(_onProChanged);
-    ConsultationCreditEvents.instance.removeListener(_loadCredits);
-    WidgetsBinding.instance.removeObserver(this);
+    ConsultationCredits.instance.removeListener(_onCreditsChanged);
     super.dispose();
-  }
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) {
-      _loadCredits();
-    }
   }
 
   void _onProChanged() {
     if (mounted) setState(() {});
   }
 
-  Future<void> _loadCredits() async {
-    final c = await fetchConsultationCredits();
-    if (mounted) setState(() => _credits = c);
+  void _onCreditsChanged() {
+    if (mounted) setState(() {});
   }
 
+  /// 現在のクレジット残 (build から参照)。null = 未取得/オフライン。
+  ConsultationCreditStatus? get _credits => ConsultationCredits.instance.status;
+
   /// クレジット残バッジタップ → 購入シートを開く。
-  /// 成功時は addListener 経由で _loadCredits が呼ばれるので、ここでは即 refetch しない。
+  /// 成功時はシート側のポーリング (consultation_credit_sheet._pollUntilGranted) が
+  /// ConsultationCredits.instance.refresh() を呼ぶので、ここでは即 refresh しない。
   Future<void> _openCreditPurchase() async {
     await showConsultationCreditSheet(context);
   }

@@ -5,16 +5,16 @@
 
 ## サマリ
 
-- ファイル数: 28 / 総行数: 8797
+- ファイル数: 28 / 総行数: 8822
 - class/mixin/extension/enum: 81
-- 関数 (top-level + method の素拾い): 231
+- 関数 (top-level + method の素拾い): 236
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 7
 - Worker URL リテラル: 0
 
 ## ファイル別
 
-### `lib/screens/consultation/consultation_credit_sheet.dart` (328 行)
+### `lib/screens/consultation/consultation_credit_sheet.dart` (345 行)
 
 **ファイル先頭コメント:**
 
@@ -32,31 +32,33 @@ Stella 相談 追加クレジット購入シート (消費型 IAP、設計 B 案
    作成しておく必要がある。未配信時は「準備中」表示。
 ```
 
-**imports:** dart=1 / package=3 / relative=5
+**imports:** dart=1 / package=3 / relative=6
 
-- relative: `../../theme/solara_colors.dart`, `../../utils/consultation_api.dart`, `../../utils/purchases_service.dart`, `../../utils/solara_auth.dart`, `../paywall_screen.dart`
+- relative: `../../theme/solara_colors.dart`, `../../utils/consultation_api.dart`, `../../utils/consultation_credits.dart`, `../../utils/purchases_service.dart`, `../../utils/solara_auth.dart`, `../paywall_screen.dart`
 
 **型定義 (2):**
 
-- L40 `class _CreditSheet : StatefulWidget`
-- L47 `class _CreditSheetState : State`
+- L41 `class _CreditSheet : StatefulWidget`
+- L48 `class _CreditSheetState : State`
 
-**関数 (4 public + 7 private):**
+**関数 (5 public + 8 private):**
 
-- L27 `showConsultationCreditSheet()` — クレジット購入シートを開く。
-- L44 `createState()`
-- L55 `initState()`
-- L184 `build()`
+- L28 `showConsultationCreditSheet()` — クレジット購入シートを開く。
+- L45 `createState()`
+- L60 `initState()`
+- L68 `dispose()`
+- L201 `build()`
 
-  <details><summary>private 関数 7 件</summary>
+  <details><summary>private 関数 8 件</summary>
 
-  - L60 `_load()`
-  - L72 `_ensureSignedIn()`
-  - L123 `_buy()`
-  - L158 `_pollUntilGranted()`
-  - L173 `_openPaywall()`
-  - L255 `_buildContent()`
-  - L279 `_packageTile()`
+  - L73 `_onCreditsChanged()`
+  - L77 `_load()`
+  - L89 `_ensureSignedIn()`
+  - L140 `_buy()`
+  - L177 `_pollUntilGranted()`
+  - L190 `_openPaywall()`
+  - L272 `_buildContent()`
+  - L296 `_packageTile()`
 
   </details>
 
@@ -174,7 +176,7 @@ Consultation Input — だれと / 願い の記入例 (テーマ別)
   </details>
 
 
-### `lib/screens/consultation/consultation_input_logic.dart` (156 行)
+### `lib/screens/consultation/consultation_input_logic.dart` (155 行)
 
 **ファイル先頭コメント:**
 
@@ -199,7 +201,7 @@ setState を呼ばない純ロジック (when/scope → ConsultationRequest、�
   - L91 `_onStartPressed()`
   - L103 `_handleBuyFromPopup()`
   - L110 `_showStartPopup()`
-  - L131 `_runConsultation()`
+  - L130 `_runConsultation()`
 
   </details>
 
@@ -277,7 +279,7 @@ consultation_input_picker.dart の HARD500 回避のため、検索結果行・�
 - L145 `build()`
 
 
-### `lib/screens/consultation/consultation_input_screen.dart` (491 行)
+### `lib/screens/consultation/consultation_input_screen.dart` (483 行)
 
 **ファイル先頭コメント:**
 
@@ -308,34 +310,34 @@ Consultation Input Screen — 5問モデル (V2: 全要素統合)
 
 **imports:** dart=1 / package=3 / relative=12
 
-- relative: `../../theme/solara_colors.dart`, `../../utils/consultation_api.dart`, `../../utils/consultation_v2_api.dart`, `../../utils/pro_status.dart`, `../../utils/solara_storage.dart`, `../../widgets/info_popup.dart`, `../../widgets/tap_to_unfocus.dart`, `../map/map_search.dart`, `../map/map_vp_panel.dart`, `consultation_credit_sheet.dart`, `consultation_place_picker_screen.dart`, `consultation_result_screen.dart`
+- relative: `../../theme/solara_colors.dart`, `../../utils/consultation_credits.dart`, `../../utils/consultation_v2_api.dart`, `../../utils/pro_status.dart`, `../../utils/solara_storage.dart`, `../../widgets/info_popup.dart`, `../../widgets/tap_to_unfocus.dart`, `../map/map_search.dart`, `../map/map_vp_panel.dart`, `consultation_credit_sheet.dart`, `consultation_place_picker_screen.dart`, `consultation_result_screen.dart`
 
 **型定義 (3):**
 
-- L53 `class ConsultationPresetTarget`
+- L52 `class ConsultationPresetTarget`
   - Map から「📍この場所で相談」で起動した時の preset (point scope 用)。
-- L78 `class ConsultationInputScreen : StatefulWidget`
-- L96 `class _ConsultationInputScreenState : State`
+- L77 `class ConsultationInputScreen : StatefulWidget`
+- L95 `class _ConsultationInputScreenState : State`
 
 **関数 (4 public + 10 private):**
 
-- L92 `createState()`
-- L134 `initState()`
-- L160 `dispose()`
-- L322 `build()`
+- L91 `createState()`
+- L130 `initState()`
+- L153 `dispose()`
+- L314 `build()`
 
   <details><summary>private 関数 10 件</summary>
 
-  - L143 `_loadPrefsAndProfile()`
-  - L167 `_onModeChanged()`
-  - L196 `_onWhenKindTap()`
-  - L221 `_pickSingleDate()`
-  - L233 `_pickDateRange()`
-  - L245 `_ymd()`
-  - L249 `_onScopeKindTap()`
-  - L259 `_openMapPicker()`
-  - L307 `_refreshCreditsFresh()`
-  - L315 `_setStartPopupHidden()`
+  - L141 `_loadPrefsAndProfile()`
+  - L160 `_onModeChanged()`
+  - L189 `_onWhenKindTap()`
+  - L214 `_pickSingleDate()`
+  - L226 `_pickDateRange()`
+  - L238 `_ymd()`
+  - L242 `_onScopeKindTap()`
+  - L252 `_openMapPicker()`
+  - L302 `_refreshCreditsFresh()`
+  - L307 `_setStartPopupHidden()`
 
   </details>
 
@@ -572,7 +574,7 @@ Stella 相談 クレジット制 (設計 project_solara_stella_free_credits.md) 
 - L22 `build()`
 
 
-### `lib/screens/consultation/consultation_result_screen.dart` (404 行)
+### `lib/screens/consultation/consultation_result_screen.dart` (407 行)
 
 **ファイル先頭コメント:**
 
@@ -593,9 +595,9 @@ Pro = 無制限。live モード = ConsultationRequest で fetch / 履歴モー�
 ConsultationRecord を読み込み専用表示 (fetch なし・autosave なし・別候補なし)。
 ```
 
-**imports:** dart=0 / package=2 / relative=11
+**imports:** dart=0 / package=2 / relative=12
 
-- relative: `../../theme/solara_colors.dart`, `../../utils/consultation_api.dart`, `../../utils/consultation_record.dart`, `../../utils/consultation_share.dart`, `../../utils/consultation_v2_api.dart`, `../../utils/pro_status.dart`, `../../utils/solara_storage.dart`, `../../widgets/glass_panel.dart`, `../../widgets/info_popup.dart`, `../../widgets/pro_unlock_dialog.dart`, `consultation_credit_sheet.dart`
+- relative: `../../theme/solara_colors.dart`, `../../utils/consultation_api.dart`, `../../utils/consultation_credits.dart`, `../../utils/consultation_record.dart`, `../../utils/consultation_share.dart`, `../../utils/consultation_v2_api.dart`, `../../utils/pro_status.dart`, `../../utils/solara_storage.dart`, `../../widgets/glass_panel.dart`, `../../widgets/info_popup.dart`, `../../widgets/pro_unlock_dialog.dart`, `consultation_credit_sheet.dart`
 
 **型定義 (2):**
 
@@ -607,20 +609,20 @@ ConsultationRecord を読み込み専用表示 (fetch なし・autosave なし�
 - L71 `createState()`
 - L106 `initState()`
 - L119 `dispose()`
-- L300 `build()`
+- L303 `build()`
 
   <details><summary>private 関数 10 件</summary>
 
   - L100 `_setSharing()`
   - L124 `_runFetch()`
   - L129 `_fetch()`
-  - L168 `_loadNext()`
-  - L224 `_snack()`
-  - L236 `_onBuyCredits()`
-  - L242 `_showConsultationPaywall()`
-  - L262 `_showAboutReading()`
-  - L277 `_persist()`
-  - L365 `_buildBody()`
+  - L170 `_loadNext()`
+  - L227 `_snack()`
+  - L239 `_onBuyCredits()`
+  - L245 `_showConsultationPaywall()`
+  - L265 `_showAboutReading()`
+  - L280 `_persist()`
+  - L368 `_buildBody()`
 
   </details>
 
@@ -688,7 +690,7 @@ Consultation Result — 状態/バナー/ページャ ウィジェット (V2)
 - L271 `build()`
 
 
-### `lib/screens/consultation/consultation_start_popup.dart` (246 行)
+### `lib/screens/consultation/consultation_start_popup.dart` (260 行)
 
 **ファイル先頭コメント:**
 
@@ -704,12 +706,20 @@ showInfoPopup 経由で表示する (widgets/info_popup.dart、popup 統一規�
 **型定義 (2):**
 
 - L10 `class _StartConsultPopup : StatefulWidget`
-- L38 `class _StartConsultPopupState : State`
+- L34 `class _StartConsultPopupState : State`
 
-**関数 (2 public + 0 private):**
+**関数 (4 public + 1 private):**
 
-- L35 `createState()`
-- L42 `build()`
+- L31 `createState()`
+- L38 `initState()`
+- L45 `dispose()`
+- L55 `build()`
+
+  <details><summary>private 関数 1 件</summary>
+
+  - L50 `_onCreditsChanged()`
+
+  </details>
 
 
 ### `lib/screens/font_preview_screen.dart` (138 行)

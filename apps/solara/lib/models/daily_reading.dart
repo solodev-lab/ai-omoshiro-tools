@@ -11,6 +11,13 @@ class DailyReading {
   /// 旧データには無いので nullable、未保存時は null。
   String? question;
 
+  /// 占いカテゴリ。null = 全体運。
+  /// 値: love / money / work / communication / healing / newStart の 6 種。
+  /// 2026-05-26 Tarot 1日1回統一改修で追加: 翌日まで引き直しできないので、
+  /// 当日の Tarot 画面復元時にこのカテゴリで chip selected 表示にする。
+  /// 旧データには無いので nullable、未保存時は null (= 全体運扱い)。
+  final String? category;
+
   DailyReading({
     required this.date,
     required this.cardId,
@@ -20,6 +27,7 @@ class DailyReading {
     this.reading = '',
     this.synchronicity = '',
     this.question,
+    this.category,
   });
 
   Map<String, dynamic> toJson() => {
@@ -31,6 +39,7 @@ class DailyReading {
         'reading': reading,
         'synchronicity': synchronicity,
         if (question != null && question!.isNotEmpty) 'question': question,
+        if (category != null && category!.isNotEmpty) 'category': category,
       };
 
   factory DailyReading.fromJson(Map<String, dynamic> json) {
@@ -43,6 +52,7 @@ class DailyReading {
       reading: json['reading'] as String? ?? '',
       synchronicity: json['synchronicity'] as String? ?? '',
       question: json['question'] as String?,
+      category: json['category'] as String?,
     );
   }
 }

@@ -17,7 +17,8 @@ import 'package:flutter/material.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 
 import '../../theme/solara_colors.dart';
-import '../../utils/consultation_api.dart';
+import '../../utils/consultation_api.dart' show ConsultationCreditStatus;
+import '../../utils/consultation_credits.dart';
 import '../../utils/purchases_service.dart';
 import '../../utils/solara_auth.dart';
 import '../paywall_screen.dart';
@@ -46,24 +47,40 @@ class _CreditSheet extends StatefulWidget {
 
 class _CreditSheetState extends State<_CreditSheet> {
   Offering? _offering;
-  ConsultationCreditStatus? _status;
   bool _loading = true;
   bool _busy = false;
   String? _message;
+
+  /// シート内のクレジット残表示は ConsultationCredits.instance.status から読む。
+  /// 自分から fetch はしない (起動時 / 消費時 / 購入完了ポーリング時に singleton 側が
+  /// 更新するため、シート open のためだけの fetch は不要)。
+  ConsultationCreditStatus? get _status => ConsultationCredits.instance.status;
 
   @override
   void initState() {
     super.initState();
     _load();
+    // 購入完了ポーリングで残数が変わった時にシート内の残数表示も更新する。
+    ConsultationCredits.instance.addListener(_onCreditsChanged);
+  }
+
+  @override
+  void dispose() {
+    ConsultationCredits.instance.removeListener(_onCreditsChanged);
+    super.dispose();
+  }
+
+  void _onCreditsChanged() {
+    if (mounted) setState(() {});
   }
 
   Future<void> _load() async {
+    // offering だけ取得 (RC SDK 経由、ネット不要・キャッシュあり)。
+    // クレジット残は singleton 経由 (起動時に refresh 済 = 高確率で hit)。
     final offering = await PurchasesService.instance.getCreditOffering();
-    final status = await fetchConsultationCredits();
     if (!mounted) return;
     setState(() {
       _offering = offering;
-      _status = status;
       _loading = false;
     });
   }
@@ -155,15 +172,15 @@ class _CreditSheetState extends State<_CreditSheet> {
   }
 
   /// 購入後、サーバー残高が増えるまで最大 ~9 秒ポーリング (Webhook ラグ吸収)。
+  /// ConsultationCredits.instance.refresh() で fetch + 全画面通知 (Sanctuary 上部 /
+  /// Start popup 等) が一気通貫で走る。
   Future<void> _pollUntilGranted(int before) async {
     for (var i = 0; i < 6; i++) {
-      final s = await fetchConsultationCredits();
+      await ConsultationCredits.instance.refresh();
       if (!mounted) return;
+      final s = ConsultationCredits.instance.status;
       if (s != null && (s.purchasedBalance ?? 0) > before) {
-        setState(() => _status = s);
-        // 残高が増えたので他画面（Sanctuary 上部 / Start popup）に通知して
-        // 表示を最新化させる。
-        ConsultationCreditEvents.instance.notifyChanged();
+        // 残高 update は singleton の notifyListeners 経由で本 sheet も再描画される。
         return;
       }
       await Future<void>.delayed(const Duration(milliseconds: 1500));

@@ -17,8 +17,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../theme/solara_colors.dart';
-import '../../utils/consultation_api.dart'
-    show ConsultationBlock, ConsultationCreditEvents;
+import '../../utils/consultation_api.dart' show ConsultationBlock;
+import '../../utils/consultation_credits.dart';
 import '../../utils/consultation_record.dart';
 import '../../utils/consultation_share.dart';
 import '../../utils/consultation_v2_api.dart';
@@ -158,9 +158,11 @@ class _ConsultationResultScreenState extends State<ConsultationResultScreen> {
       _exhausted = reading.remainingAfter <= 0;
       _loading = false;
     });
-    // クレジット消費が発生したので、他画面（Sanctuary 上部 / 入力画面の開始ポップアップ）
-    // が即座に最新残数を取り直せるよう通知（refetch トリガ）。
-    ConsultationCreditEvents.instance.notifyChanged();
+    // クレジット消費が発生したので、ConsultationCredits.refresh() で最新残数を
+    // 1 本の HTTP で取得 → singleton の notifyListeners で全画面 (Sanctuary 上部 /
+    // 入力画面の開始ポップアップ等) が一気に更新される。
+    // ignore: unawaited_futures
+    ConsultationCredits.instance.refresh();
     _persist();
   }
 
@@ -209,8 +211,9 @@ class _ConsultationResultScreenState extends State<ConsultationResultScreen> {
           _readings.length >= _kMaxCandidates;
       _pageIndex = _readings.length - 1;
     });
-    // 「別の候補地を見る」もクレジット消費なのでイベント発火（上記 _runFetch と同様）。
-    ConsultationCreditEvents.instance.notifyChanged();
+    // 「別の候補地を見る」もクレジット消費なので singleton 経由で全画面更新。
+    // ignore: unawaited_futures
+    ConsultationCredits.instance.refresh();
     if (_pageCtrl.hasClients) {
       _pageCtrl.animateToPage(
         _pageIndex,

@@ -5,11 +5,11 @@
 
 ## サマリ
 
-- ファイル数: 11 / 総行数: 3091
-- class/mixin/extension/enum: 24
-- 関数 (top-level + method の素拾い): 76
+- ファイル数: 12 / 総行数: 3520
+- class/mixin/extension/enum: 25
+- 関数 (top-level + method の素拾い): 83
 - Navigator.push 等: 0
-- Popup/Dialog 呼出: 0
+- Popup/Dialog 呼出: 1
 - Worker URL リテラル: 0
 
 ## ファイル別
@@ -35,19 +35,23 @@
 - L149 `build()`
 
 
-### `lib/screens/observe/observe_category_selector.dart` (93 行)
+### `lib/screens/observe/observe_category_selector.dart` (199 行)
 
 **型定義 (1):**
 
-- L24 `extension _ObserveCategorySelector : _ObserveScreenState`
+- L32 `extension _ObserveCategorySelector : _ObserveScreenState`
 
-**関数 (0 public + 2 private):**
+**関数 (0 public + 6 private):**
 
 
-  <details><summary>private 関数 2 件</summary>
+  <details><summary>private 関数 6 件</summary>
 
-  - L26 `_buildCategorySelector()`
-  - L59 `_categoryChip()`
+  - L34 `_buildCategorySelector()`
+  - L67 `_categoryChip()`
+  - L117 `_onCategoryChipTap()`
+  - L138 `_showOverallNoCostToast()`
+  - L165 `_showCategoryConfirmPopup()`
+  - L190 `_handleBuyFromCategoryPopup()`
 
   </details>
 
@@ -298,43 +302,81 @@ observe_history.dart (現在サイクル HISTORY) と observe_history_past.dart
   </details>
 
 
-### `lib/screens/observe_screen.dart` (639 行)
+### `lib/screens/observe/tarot_category_popup.dart` (267 行)
 
-**imports:** dart=2 / package=1 / relative=14
+**ファイル先頭コメント:**
 
-- relative: `../models/daily_reading.dart`, `../models/tarot_card.dart`, `../utils/fortune_api.dart`, `../utils/moon_phase.dart`, `../utils/pro_status.dart`, `../utils/solara_storage.dart`, `../utils/tarot_data.dart`, `../widgets/pro_unlock_dialog.dart`, `../widgets/tap_to_unfocus.dart`, `consultation/consultation_credit_sheet.dart`, `observe/observe_constants.dart`, `observe/observe_card_widgets.dart`, `observe/observe_history.dart`, `observe/tarot_altar_scene.dart`
+```
+Tarot カテゴリ選択 確認ポップアップ
+
+全体運以外のカテゴリ chip をタップしたときに表示する。
+- 現在のクレジット残 (無料 / 購入) を提示
+- 「引く」 = カテゴリ確定 (この後ユーザーがカードをタップして 1 クレジット消費)
+- 「キャンセル」/ × / 外タップ = 全体運に戻す (呼出側で判定)
+- 「クレジットを購入」 = 追加クレジット購入シート (呼出側で開く)
+
+showInfoPopup 経由 (popup 統一規約)。呼出側は returned bool で proceed/cancel を判定。
+設計参考: consultation_start_popup.dart
+
+関連: project_solara_stella_free_credits.md (1 クレジット = AI 占い 1 回)
+```
+
+**imports:** dart=0 / package=1 / relative=3
+
+- relative: `../../theme/solara_colors.dart`, `../../utils/consultation_api.dart`, `../../widgets/info_popup.dart`
+
+**型定義 (1):**
+
+- L45 `class _TarotCategoryPopupBody : StatelessWidget`
+
+**関数 (2 public + 0 private):**
+
+- L26 `showTarotCategoryPopup()` — カテゴリ確認ポップアップを開く。
+- L59 `build()`
+
+**Popup/Dialog 呼出 (1):**
+
+- 集計: `showInfoPopup`×1
+
+
+### `lib/screens/observe_screen.dart` (695 行)
+
+**imports:** dart=2 / package=1 / relative=17
+
+- relative: `../models/daily_reading.dart`, `../models/tarot_card.dart`, `../utils/fortune_api.dart`, `../utils/moon_phase.dart`, `../utils/pro_status.dart`, `../utils/solara_storage.dart`, `../utils/tarot_data.dart`, `../widgets/pro_unlock_dialog.dart`, `../widgets/tap_to_unfocus.dart`, `../theme/solara_colors.dart`, `../utils/consultation_credits.dart`, `consultation/consultation_credit_sheet.dart`, `observe/observe_constants.dart`, `observe/observe_card_widgets.dart`, `observe/observe_history.dart`, `observe/tarot_altar_scene.dart`, `observe/tarot_category_popup.dart`
 
 **型定義 (2):**
 
-- L25 `class ObserveScreen : StatefulWidget`
+- L28 `class ObserveScreen : StatefulWidget`
   - Tarot Draw screen — matches tarot.html exactly.
-- L31 `class _ObserveScreenState : State`
+- L34 `class _ObserveScreenState : State`
 
-**関数 (4 public + 16 private):**
+**関数 (4 public + 17 private):**
 
-- L28 `createState()`
-- L113 `initState()`
-- L128 `dispose()`
-- L368 `build()`
+- L31 `createState()`
+- L135 `initState()`
+- L150 `dispose()`
+- L424 `build()`
 
-  <details><summary>private 関数 16 件</summary>
+  <details><summary>private 関数 17 件</summary>
 
-  - L52 `_selectCategory()`
-  - L64 `_startLoadingMessageRotation()`
-  - L76 `_stopLoadingMessageRotation()`
-  - L121 `_onProStatusChanged()`
-  - L137 `_checkTodayReading()`
-  - L169 `_loadHistory()`
-  - L174 `_drawCard()`
-  - L303 `_handleTarotCreditExhausted()`
-  - L313 `_resetTodayReading()`
-  - L336 `_generateReadingStatic()`
-  - L353 `_startTypewriter()`
-  - L392 `_buildInnerTabs()`
-  - L406 `_innerTabBtn()`
-  - L427 `_buildDrawPanel()`
-  - L522 `_buildLoadingIndicator()`
-  - L597 `_buildReadingPanel()`
+  - L62 `_applyCategorySelection()`
+  - L69 `_applyTarotCreditBalance()`
+  - L86 `_startLoadingMessageRotation()`
+  - L98 `_stopLoadingMessageRotation()`
+  - L143 `_onProStatusChanged()`
+  - L159 `_checkTodayReading()`
+  - L198 `_loadHistory()`
+  - L203 `_drawCard()`
+  - L359 `_handleTarotCreditExhausted()`
+  - L369 `_resetTodayReading()`
+  - L392 `_generateReadingStatic()`
+  - L409 `_startTypewriter()`
+  - L448 `_buildInnerTabs()`
+  - L462 `_innerTabBtn()`
+  - L483 `_buildDrawPanel()`
+  - L578 `_buildLoadingIndicator()`
+  - L653 `_buildReadingPanel()`
 
   </details>
 

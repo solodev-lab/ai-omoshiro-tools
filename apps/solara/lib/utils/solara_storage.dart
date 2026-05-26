@@ -361,15 +361,24 @@ class SolaraStorage {
     return null;
   }
 
-  /// 無料タロット (全体運) を最後に引いた「論理日」(YYYY-MM-DD)。未記録なら null。
+  /// タロットを最後に引いた「論理日」(YYYY-MM-DD)。未記録なら null。
+  /// 2026-05-26 改修: 旧名 loadLastFreeTarotDay (全体運専用) のままだが、
+  /// 意味は「Tarot 全体 (全体運/カテゴリ/Free/Pro 問わず) で最後に引いた論理日」
+  /// に拡張。SharedPreferences キー (_lastFreeTarotDayKey) はそのまま再利用
+  /// (旧データとの互換性維持、マイグレーション不要)。
   static Future<String?> loadLastFreeTarotDay() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString(_lastFreeTarotDayKey);
   }
 
-  /// 無料タロット (全体運) を「今日」引いたものとして記録する。
+  /// タロットを「今日」引いたものとして記録する。
   /// 単調更新: 既存値より新しい論理日のときだけ上書き。これにより、引いた後に
   /// リセット時刻を後ろへずらして論理日を過去へ戻し、再ドローする不正を防ぐ。
+  ///
+  /// 2026-05-26 改修: 全 Tarot draw (全体運/カテゴリ/Free/Pro) でこの単調ガードを
+  /// 共通に使う。旧設計では「無料全体運のみ」だったが、新仕様「Tarot は Pro 含め
+  /// 1日1回」を実現するため対象を拡大。関数名 markFreeTarotDrawn は互換性のため
+  /// 維持 (内部実装と意味は『Tarot 全体』に拡張)。
   static Future<void> markFreeTarotDrawn() async {
     final prefs = await SharedPreferences.getInstance();
     final today = await logicalTodayKey();
@@ -379,10 +388,12 @@ class SolaraStorage {
     }
   }
 
-  /// 無料タロット (全体運) を「今日 (論理日)」もう引いたか。
+  /// タロットを「今日 (論理日)」もう引いたか。
   /// 記録された論理日が現在の論理日以上なら true (= まだ同じ 1 日の中)。
   /// リセット時刻を変えて論理日を過去へ戻しても、より新しい記録が残るため
   /// 再ドローはブロックされる (= 論理日が前進したときだけ引ける)。
+  ///
+  /// 2026-05-26 改修: markFreeTarotDrawn と同様、全 Tarot draw 共通の単調ガード。
   static Future<bool> hasDrawnFreeTarotToday() async {
     final last = await loadLastFreeTarotDay();
     if (last == null) return false;

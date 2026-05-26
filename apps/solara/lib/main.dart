@@ -10,6 +10,7 @@ import 'screens/sanctuary_screen.dart';
 import 'utils/app_attest_client.dart';
 import 'utils/app_locale.dart';
 import 'utils/celestial_events.dart';
+import 'utils/consultation_credits.dart';
 import 'utils/device_security_status.dart';
 import 'utils/pro_status.dart';
 import 'utils/purchases_service.dart';
@@ -48,6 +49,12 @@ void main() async {
   // 実機 release のみ有効、Simulator/debug/Android/Web は bypass。
   // ignore: unawaited_futures
   AppAttestClient.instance.initialize();
+  // Stella/Tarot クレジット残: 起動時に 1 回だけ非同期で fetch (await しない =
+  // UI 表示を待たせない)。各画面は ConsultationCredits.instance.status を
+  // 直接読むので、起動直後は null (= 「確認中」表示) で、~300ms 後に
+  // notifyListeners で更新される。詳細: utils/consultation_credits.dart
+  // ignore: unawaited_futures
+  ConsultationCredits.instance.refresh();
   runApp(const SolaraApp());
 }
 
@@ -94,11 +101,34 @@ class SolaraHome extends StatefulWidget {
   State<SolaraHome> createState() => _SolaraHomeState();
 }
 
-class _SolaraHomeState extends State<SolaraHome> {
+class _SolaraHomeState extends State<SolaraHome> with WidgetsBindingObserver {
   int _currentIndex = 0;
   final _mapKey = GlobalKey<MapScreenState>();
   final _horoKey = GlobalKey<HoroscopeScreenState>();
   final _galaxyKey = GlobalKey<GalaxyScreenState>();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // バックグラウンド復帰時にクレジット残を再取得 (別端末購入や Webhook 遅延
+    // 吸収用)。各画面で個別に observer を持たせず、SolaraHome 1 箇所に集約。
+    // 詳細: utils/consultation_credits.dart
+    if (state == AppLifecycleState.resumed) {
+      // ignore: unawaited_futures
+      ConsultationCredits.instance.refresh();
+    }
+  }
 
   /// Galaxy 画面が overlay (replay / formation / moon 系) を表示中かどうか。
   /// 🔴 (2026-05-19) Flutter PopScope は階層を持たず、本 PopScope の
