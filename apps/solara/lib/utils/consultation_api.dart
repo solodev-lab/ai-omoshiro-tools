@@ -9,10 +9,23 @@
 
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 import 'app_attest_client.dart';
 import 'solara_api.dart' show solaraConsultationCreditsUrl;
+
+/// クレジット残高変化のグローバル通知（singleton）。
+///
+/// - 購入完了（Webhook 反映後）/ 相談実行成功後 / タロットカテゴリ消費後など、
+///   サーバー側残高が動いた可能性がある時に `notifyChanged()` を呼ぶ。
+/// - Sanctuary / 入力画面の Start popup などが addListener して即時 refetch する。
+/// - これにより複数画面に分散したクレジット表示の更新ラグを解消する。
+class ConsultationCreditEvents extends ChangeNotifier {
+  ConsultationCreditEvents._();
+  static final ConsultationCreditEvents instance = ConsultationCreditEvents._();
+  void notifyChanged() => notifyListeners();
+}
 
 /// Free 試食クレジット切れ等で Worker が 402 を返したときのブロック理由。
 enum ConsultationBlock {

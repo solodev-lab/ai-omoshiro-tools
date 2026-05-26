@@ -51,14 +51,15 @@
 
 ## #1 / #2 機械抽出 ↔ feature_inventory.md (人手版) の対整合
 
-- 機械抽出した class/mixin/extension/enum: **429**
+- 機械抽出した class/mixin/extension/enum: **428**
 - inventory に登場する識別子 (大文字始まり ``backtick``囲み): **225**
 
-### #1 機械にあるが Doc に書かれていない (246)
+### #1 機械にあるが Doc に書かれていない (245)
 
 - `AppAttestClient`
 - `ConstellationShareCardPage`
 - `ConsultEntryPopup`
+- `ConsultationCreditEvents`
 - `ConsultationEvidenceKm`
 - `ConsultationHistoryScreen`
 - `ConsultationInputScreen`
@@ -156,7 +157,6 @@
 - `_FortuneRowsList`
 - `_FortuneRowsListState`
 - `_FramePill`
-- `_FreeCreditsBanner`
 - `_FreeTextField`
 - `_FullMoonOverlayState`
 - `_GADot`
@@ -181,7 +181,6 @@
 - `_HoroRelocationPanelState`
 - `_HoroTransitPanelState`
 - `_InfoPopupShell`
-- `_InnerSeasonBanner`
 - `_LatitudeBandBox`
 - `_LatitudeBandRow`
 - `_LegalRow`
@@ -256,7 +255,8 @@
 - `_ScopeChoice`
 - `_ScopeWrap`
 - `_ScrollableRowPanel`
-- … 残り 46 省略
+- `_SearchBar`
+- … 残り 45 省略
 
 ### #2 Doc に書いてあるがコードに存在しない (ゴースト記述) (42)
 
@@ -374,7 +374,7 @@
 | 4b | 5 | 13 | · | 3 | 5 | · | 14 | · | · | · | 31 | · | · | 2 | · | · |
 | 4c | 1 | 1 | 15 | · | 7 | 4 | 6 | 4 | · | · | · | 16 | · | · | 1 | · |
 | 4d | 3 | 6 | 13 | 1 | 5 | 2 | 12 | 2 | 1 | · | · | · | 9 | · | · | · |
-| 4e | 1 | 4 | · | 3 | 7 | · | 15 | 1 | · | · | · | · | · | 9 | 2 | · |
+| 4e | 1 | 4 | · | 3 | 7 | · | 15 | 1 | · | · | · | · | · | 9 | 3 | · |
 | 4f | 2 | 3 | · | 8 | 15 | · | 16 | 11 | · | 6 | · | · | · | · | 27 | · |
 | 5 | 1 | · | · | 2 | 4 | 1 | 1 | 1 | · | 1 | 1 | 1 | 1 | 1 | · | · |
 
@@ -421,9 +421,11 @@
 > 各ソースの SHA1 を `_stamps.json` に記録し、差分を検出。
 > 変更されたファイルが属する層は、人手版インベントリ章の見直し対象。
 
-- 追加: **0** / 削除: **0** / 変更: **0**
+- 追加: **0** / 削除: **0** / 変更: **2**
 
-- 変更なし — 全インベントリ章は最新。
+### 変更されたファイル (層別)
+
+- **層 4f**: `lib/screens/consultation/consultation_input_logic.dart`, `lib/screens/consultation/consultation_input_screen.dart`
 
 ## #7 astro_glossary 用語辞書対整合
 

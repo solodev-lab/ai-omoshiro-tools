@@ -41,24 +41,38 @@ class _StartConsultPopupState extends State<_StartConsultPopup> {
   @override
   Widget build(BuildContext context) {
     final st = widget.status;
-    final remaining = st?.freeRemaining;
-    final limit = st?.freeLimit;
+    final freeRemaining = st?.freeRemaining;
+    final freeLimit = st?.freeLimit;
     final purchased = st?.purchasedBalance ?? 0;
+    final hasFree = (freeRemaining ?? 0) > 0;
+    final hasPaid = purchased > 0;
+    // タイトル: 実際に「次に消費される」種別を表示。
+    // 設計（project_solara_stella_free_credits）= 消費順は 無料週次 → 購入残高。
+    final String titleText;
+    if (hasFree) {
+      titleText = '無料クレジットを使う';
+    } else if (hasPaid) {
+      titleText = '有料クレジットを使う';
+    } else {
+      titleText = 'クレジットを使う';
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        const Text(
-          '無料相談を使います',
-          style: TextStyle(
+        Text(
+          titleText,
+          style: const TextStyle(
             color: SolaraColors.textPrimary,
             fontSize: 16,
             fontWeight: FontWeight.w600,
           ),
         ),
         const SizedBox(height: 14),
-        // 残数バッジ: 「残り N/3 回」(残数ベース) + 毎週月曜日に補充
+        // 残数バッジ: 無料 / 有料 の両方を常に表示。
+        // 値が古くならないよう、呼出側（consultation_input_logic._showStartPopup）が
+        // 直前に fetchConsultationCredits を await して status を最新化してから表示する。
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
           decoration: BoxDecoration(
@@ -66,52 +80,90 @@ class _StartConsultPopupState extends State<_StartConsultPopup> {
             borderRadius: BorderRadius.circular(12),
             border: Border.all(color: const Color(0x33F6BD60)),
           ),
-          child: Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Icon(Icons.auto_awesome,
-                  color: SolaraColors.solaraGoldLight, size: 18),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      (remaining != null && limit != null)
-                          ? '今週の無料相談  残り $remaining/$limit 回'
-                          : '今週の無料相談  残り回数を確認中',
-                      style: const TextStyle(
-                        color: SolaraColors.textPrimary,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                      ),
+              // ── 無料クレジット ──
+              Row(
+                children: [
+                  const Icon(Icons.auto_awesome,
+                      color: SolaraColors.solaraGoldLight, size: 16),
+                  const SizedBox(width: 8),
+                  const Text(
+                    '無料クレジット',
+                    style: TextStyle(
+                      color: SolaraColors.textPrimary,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      purchased > 0
-                          ? '毎週月曜日に補充 ・ 購入クレジット $purchased'
-                          : '毎週月曜日に補充',
-                      style: const TextStyle(
-                        color: SolaraColors.textSecondary,
-                        fontSize: 11,
-                      ),
+                  ),
+                  const Spacer(),
+                  Text(
+                    (freeRemaining != null && freeLimit != null)
+                        ? '残り $freeRemaining / $freeLimit 回'
+                        : '残り回数を確認中',
+                    style: const TextStyle(
+                      color: SolaraColors.textPrimary,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
                     ),
-                  ],
+                  ),
+                ],
+              ),
+              const Padding(
+                padding: EdgeInsets.only(left: 24, top: 2),
+                child: Text(
+                  '毎週月曜日に補充',
+                  style: TextStyle(
+                    color: SolaraColors.textSecondary,
+                    fontSize: 11,
+                  ),
+                ),
+              ),
+              const Divider(
+                height: 16,
+                thickness: 0.6,
+                color: Color(0x22F6BD60),
+              ),
+              // ── 有料クレジット ──
+              Row(
+                children: [
+                  const Icon(Icons.add_circle_outline,
+                      color: SolaraColors.solaraGoldLight, size: 16),
+                  const SizedBox(width: 8),
+                  const Text(
+                    '有料クレジット',
+                    style: TextStyle(
+                      color: SolaraColors.textPrimary,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const Spacer(),
+                  Text(
+                    '残り $purchased 回',
+                    style: const TextStyle(
+                      color: SolaraColors.textPrimary,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+              const Padding(
+                padding: EdgeInsets.only(left: 24, top: 2),
+                child: Text(
+                  '失効なし（購入分は端末を変えても残る）',
+                  style: TextStyle(
+                    color: SolaraColors.textSecondary,
+                    fontSize: 11,
+                  ),
                 ),
               ),
             ],
           ),
         ),
         const SizedBox(height: 14),
-        const Text(
-          '無料の Stella 相談は週 3 回まで（毎週月曜日に補充）。'
-          '使い切っても追加クレジット購入か Cosmic Pro で続けられます。',
-          style: TextStyle(
-            color: SolaraColors.textSecondary,
-            fontSize: 12,
-            height: 1.6,
-          ),
-        ),
-        const SizedBox(height: 4),
         // 次回以降表示しない
         InkWell(
           onTap: () {

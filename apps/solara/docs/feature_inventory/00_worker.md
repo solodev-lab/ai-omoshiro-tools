@@ -585,7 +585,7 @@ Nominatim: https://nominatim.openstreetmap.org/search
 **export (1):** `searchPlace`
 
 
-### `worker/src/tarot.js` (287 行)
+### `worker/src/tarot.js` (290 行)
 
 **ファイル先頭コメント:**
 

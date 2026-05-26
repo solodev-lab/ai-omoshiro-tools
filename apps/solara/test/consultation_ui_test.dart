@@ -195,49 +195,23 @@ void main() {
     expect(find.text('Stella が読み解いています…'), findsNothing);
     expect(find.text('京都'), findsOneWidget);
     expect(find.text('愛の軸が立つ場'), findsOneWidget);
-    expect(find.textContaining('内的な季節'), findsOneWidget); // 常設バナー
+    // 2026-05-26: 「内的季節」常設バナーは結果画面上部から撤去。
+    // 文章は AppBar タイトルタップの「この読み解きについて」popup に残る。
     expect(find.text('別の候補地を見る'), findsOneWidget); // remainingAfter>0
 
-    // タイトルタップで「この読み解きについて」(intro/outro/evidence)
+    // タイトルタップで「この読み解きについて」(intro/outro/evidence + 内的季節)
     await tester.tap(find.text('相談の結果'));
     await tester.pumpAndSettle();
     expect(find.text('この読み解きについて'), findsOneWidget);
+    expect(find.textContaining('内的な季節'), findsOneWidget); // popup 内に残る
     expect(find.textContaining('モック intro'), findsOneWidget);
     expect(find.textContaining('世界の全部ではありません'), findsOneWidget);
     expect(find.textContaining('金星MC合'), findsWidgets);
   });
 
-  testWidgets('Result: Free 残量バナー', (tester) async {
-    await tester.pumpWidget(MaterialApp(
-      home: ConsultationResultScreen(
-        request: _req(),
-        fetchOverride: (req) async => ConsultationV2Result(
-          reading: _reading(),
-          freeCreditsRemaining: 2,
-          freeCreditsLimit: 3,
-          purchasedBalance: 0,
-        ),
-      ),
-    ));
-    await tester.pumpAndSettle();
-    expect(find.textContaining('今週の無料相談 あと2回'), findsOneWidget);
-  });
-
-  testWidgets('Result: 購入残高バナー', (tester) async {
-    await tester.pumpWidget(MaterialApp(
-      home: ConsultationResultScreen(
-        request: _req(),
-        fetchOverride: (req) async => ConsultationV2Result(
-          reading: _reading(),
-          freeCreditsRemaining: 0,
-          freeCreditsLimit: 3,
-          purchasedBalance: 7,
-        ),
-      ),
-    ));
-    await tester.pumpAndSettle();
-    expect(find.textContaining('購入残高 7回'), findsOneWidget);
-  });
+  // 2026-05-26: 「Result: Free 残量バナー」「Result: 購入残高バナー」テストは撤去。
+  // クレジット残バナーは結果画面から撤去し、Sanctuary 上部 + 入力画面の
+  // 開始ポップアップに集約したため、ここで検証する対象がなくなった。
 
   testWidgets('Result: クレジット切れ 402 で購入+Pro ボックス', (tester) async {
     await tester.pumpWidget(MaterialApp(

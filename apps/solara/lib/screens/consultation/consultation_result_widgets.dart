@@ -110,43 +110,9 @@ class _FallbackChip extends StatelessWidget {
   }
 }
 
-/// 内的季節の一文 (3 候補共通の前提・上部に常設)。
-class _InnerSeasonBanner extends StatelessWidget {
-  final String text;
-  const _InnerSeasonBanner({required this.text});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.fromLTRB(20, 4, 20, 6),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      decoration: BoxDecoration(
-        color: const Color(0x0FF6BD60),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: const Color(0x33F6BD60)),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Icon(Icons.spa_outlined,
-              size: 15, color: SolaraColors.solaraGoldLight),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              text,
-              style: const TextStyle(
-                color: SolaraColors.textSecondary,
-                fontSize: 12.5,
-                height: 1.6,
-                letterSpacing: 0.3,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
+// 2026-05-26: _InnerSeasonBanner 撤去（結果画面上部の「内的季節」常設バナー）。
+// 内的季節の文章自体は AppBar タイトルタップの「この読み解きについて」popup
+// （_AboutReadingContent）に残るので、初回のみ要覧したい人はそこで参照できる。
 
 /// AppBar タイトルタップで開く「この読み解きについて」ポップアップの中身。
 /// 内的季節 + 前置き + 注記 + 現在候補のエビデンス (占星術ファクター)。

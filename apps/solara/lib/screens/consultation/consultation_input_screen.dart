@@ -302,13 +302,13 @@ class _ConsultationInputScreenState extends State<ConsultationInputScreen> {
   // 開始フロー (_onStartPressed/_showStartPopup/_runConsultation) は
   // consultation_input_logic.dart (extension) に分離 (HARD500 回避)。
 
-  Future<void> _handleBuyFromPopup() async {
-    await Future<void>.delayed(Duration.zero);
-    if (!mounted) return;
-    final changed = await showConsultationCreditSheet(context);
-    if (changed && mounted) {
-      final s = await fetchConsultationCredits();
-      if (mounted) setState(() => _creditStatus = s);
+  /// 開始ポップアップ表示直前 / 購入後など、サーバー側の最新クレジット残を取り直す。
+  /// extension からは protected setState を直接呼べないので State 本体に置く。
+  Future<void> _refreshCreditsFresh() async {
+    if (ProStatus.instance.isPro) return;
+    final fresh = await fetchConsultationCredits();
+    if (fresh != null && mounted) {
+      setState(() => _creditStatus = fresh);
     }
   }
 

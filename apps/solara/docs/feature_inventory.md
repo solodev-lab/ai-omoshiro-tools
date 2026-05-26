@@ -88,9 +88,20 @@ Solara のバックエンドは **Cloudflare Workers** で稼働。本番 URL: `
 - **状況 endpoint**: `/protected/consultation/credits` → {pro, freeRemaining, freeLimit, purchasedBalance}。
   クライアントの残数表示・購入後の残高更新に使う。
 - **コスト多層防御**: 相談は middleware の日次クォータ (2026-05-25: **Free30 / Pro50**、旧 Free5/Pro100 から変更) も 1 消費 (週次/購入とは別軸のバックストップ、Pro「無制限」のテール乱用を物理遮断)。env `APP_ATTEST_QUOTA_FREE/PRO`、実ブロックは enforced 化時に発動。
-- **クライアント**: 入口 Pro ゲート撤廃 (Free も入力画面へ)、結果画面に残数バナー + 402 で
-  「追加クレジット購入 / Cosmic Pro」box、`consultation_credit_sheet.dart` が消費型購入シート
-  (3個/10個 + Pro 誘導、購入前サインイン必須、付与は Webhook ラグをポーリングで吸収)。
+- **クライアント**: 入口 Pro ゲート撤廃 (Free も入力画面へ)、402 で「追加クレジット購入 / Cosmic Pro」box、
+  `consultation_credit_sheet.dart` が消費型購入シート (3個/10個 + Pro 誘導、購入前サインイン必須、
+  付与は Webhook ラグをポーリングで吸収)。
+- **残数表示の集約 (2026-05-26 整理)**: 結果画面上部の残数バナー (旧 `_FreeCreditsBanner`) と
+  内的季節バナー (旧 `_InnerSeasonBanner`) は撤去 (内的季節文は AppBar の「この読み解きについて」
+  popup に残置)。クレジット残は以下 2 か所に集約:
+  - **Sanctuary 最上部**: `_credits` セル (タップで `showConsultationCreditSheet` 起動・購入導線)。
+    アプリ復帰 / 購入完了 / 相談実行で **自動再フェッチ**。
+  - **入力画面の開始ポップアップ** (`_StartConsultPopup`): タイトルが文脈反映
+    (free>0 → 「無料クレジットを使う」/ free=0 で paid>0 → 「有料クレジットを使う」/ 両方0 → 「クレジットを使う」)、
+    バッジは **無料 / 有料の 2 行**を常時表示。表示直前に `_refreshCreditsFresh` で再フェッチして古値防止。
+- **クロス画面の同期機構**: `ConsultationCreditEvents.instance` (ChangeNotifier singleton、
+  `consultation_api.dart`)。相談実行成功 / 「別の候補地を見る」/ クレジット購入完了で `notifyChanged()`
+  を発火し、Sanctuary 等の listener が即座に refetch する。
 
 #### タロットカテゴリ (同じクレジット財布、2026-05-23 追加)
 **1 クレジット = AI 占い 1 回**は相談とタロットで共通 (同じ財布)。`/protected/tarot` も

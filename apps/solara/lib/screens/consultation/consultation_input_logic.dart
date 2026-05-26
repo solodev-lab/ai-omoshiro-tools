@@ -97,7 +97,23 @@ extension _ConsultationInputLogic on _ConsultationInputScreenState {
     if (proceed) await _runConsultation();
   }
 
+  /// 開始ポップアップから「クレジットを購入」が押されたときの処理。
+  /// State 本体に置くと HARD500 を超えるため extension 側に置き、
+  /// 残数更新は _refreshCreditsFresh（State 本体・setState 持ち）に委譲する。
+  Future<void> _handleBuyFromPopup() async {
+    await Future<void>.delayed(Duration.zero);
+    if (!mounted) return;
+    final changed = await showConsultationCreditSheet(context);
+    if (changed) await _refreshCreditsFresh();
+  }
+
   Future<bool> _showStartPopup() async {
+    // 表示直前にサーバー側の最新クレジット残を取り直す（結果画面から戻った直後 /
+    // 購入直後など、_creditStatus が古いままだと「残り 0/3」のような古い数値が
+    // 出てしまう問題を回避）。setState は extension から直接呼べないため、
+    // State 本体側の _refreshCreditsFresh を経由する。
+    await _refreshCreditsFresh();
+    if (!mounted) return false;
     var proceed = false;
     await showInfoPopup(
       context: context,

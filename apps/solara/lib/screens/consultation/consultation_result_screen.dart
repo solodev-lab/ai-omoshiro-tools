@@ -17,7 +17,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../theme/solara_colors.dart';
-import '../../utils/consultation_api.dart' show ConsultationBlock;
+import '../../utils/consultation_api.dart'
+    show ConsultationBlock, ConsultationCreditEvents;
 import '../../utils/consultation_record.dart';
 import '../../utils/consultation_share.dart';
 import '../../utils/consultation_v2_api.dart';
@@ -87,9 +88,9 @@ class _ConsultationResultScreenState extends State<ConsultationResultScreen> {
   /// 初回 fetch が 402 でブロックされた理由。非 null の間は結果ではなく誘導を出す。
   ConsultationBlock? _block;
 
-  int? _freeRemaining;
-  int? _freeLimit;
-  int? _purchasedBalance;
+  // 2026-05-26: クレジット残バナー (_FreeCreditsBanner) を結果画面上部から撤去したため、
+  // _freeRemaining / _freeLimit / _purchasedBalance は不要に。サーバー応答中の残数は
+  // ConsultationCreditEvents で他画面 (Sanctuary / Start popup) に通知して反映する。
 
   /// 自動保存レコードの id を安定させる savedAt (毎回の追記で同一レコードを上書き)。
   DateTime? _recordSavedAt;
@@ -154,12 +155,12 @@ class _ConsultationResultScreenState extends State<ConsultationResultScreen> {
       _readings
         ..clear()
         ..add(reading);
-      _freeRemaining = result.freeCreditsRemaining;
-      _freeLimit = result.freeCreditsLimit;
-      _purchasedBalance = result.purchasedBalance;
       _exhausted = reading.remainingAfter <= 0;
       _loading = false;
     });
+    // クレジット消費が発生したので、他画面（Sanctuary 上部 / 入力画面の開始ポップアップ）
+    // が即座に最新残数を取り直せるよう通知（refetch トリガ）。
+    ConsultationCreditEvents.instance.notifyChanged();
     _persist();
   }
 
@@ -204,13 +205,12 @@ class _ConsultationResultScreenState extends State<ConsultationResultScreen> {
     }
     setState(() {
       _readings.add(reading);
-      _freeRemaining = result.freeCreditsRemaining;
-      _freeLimit = result.freeCreditsLimit;
-      _purchasedBalance = result.purchasedBalance;
       _exhausted = reading.remainingAfter <= 0 ||
           _readings.length >= _kMaxCandidates;
       _pageIndex = _readings.length - 1;
     });
+    // 「別の候補地を見る」もクレジット消費なのでイベント発火（上記 _runFetch と同様）。
+    ConsultationCreditEvents.instance.notifyChanged();
     if (_pageCtrl.hasClients) {
       _pageCtrl.animateToPage(
         _pageIndex,
@@ -380,19 +380,9 @@ class _ConsultationResultScreenState extends State<ConsultationResultScreen> {
     return Column(
       children: [
         if (first.fallback) const _FallbackChip(),
-        if (_freeRemaining != null || _purchasedBalance != null)
-          _FreeCreditsBanner(
-            remaining: _freeRemaining ?? 0,
-            limit: _freeLimit,
-            purchasedBalance: _purchasedBalance,
-            onUpgrade: () => showProUnlockDialog(
-              context,
-              featureLabel: 'Stella 相談',
-              description: 'Cosmic Pro なら回数無制限で読み解きます。',
-            ),
-          ),
-        if (first.innerSeason.isNotEmpty)
-          _InnerSeasonBanner(text: first.innerSeason),
+        // 2026-05-26: 「今週の無料相談…」バナー (_FreeCreditsBanner) と
+        // 「内的季節」バナー (_InnerSeasonBanner) を結果画面上部から撤去。
+        // クレジット残は Sanctuary 上部 ＋ 入力画面の開始ポップアップで提示する。
         _PageIndicator(count: _readings.length, index: _pageIndex),
         Expanded(
           child: PageView.builder(

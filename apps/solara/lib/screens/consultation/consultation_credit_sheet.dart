@@ -161,6 +161,9 @@ class _CreditSheetState extends State<_CreditSheet> {
       if (!mounted) return;
       if (s != null && (s.purchasedBalance ?? 0) > before) {
         setState(() => _status = s);
+        // 残高が増えたので他画面（Sanctuary 上部 / Start popup）に通知して
+        // 表示を最新化させる。
+        ConsultationCreditEvents.instance.notifyChanged();
         return;
       }
       await Future<void>.delayed(const Duration(milliseconds: 1500));

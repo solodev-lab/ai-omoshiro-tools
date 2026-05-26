@@ -5,16 +5,16 @@
 
 ## サマリ
 
-- ファイル数: 28 / 総行数: 8833
-- class/mixin/extension/enum: 83
-- 関数 (top-level + method の素拾い): 232
+- ファイル数: 28 / 総行数: 8797
+- class/mixin/extension/enum: 81
+- 関数 (top-level + method の素拾い): 231
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 7
 - Worker URL リテラル: 0
 
 ## ファイル別
 
-### `lib/screens/consultation/consultation_credit_sheet.dart` (325 行)
+### `lib/screens/consultation/consultation_credit_sheet.dart` (328 行)
 
 **ファイル先頭コメント:**
 
@@ -46,7 +46,7 @@ Stella 相談 追加クレジット購入シート (消費型 IAP、設計 B 案
 - L27 `showConsultationCreditSheet()` — クレジット購入シートを開く。
 - L44 `createState()`
 - L55 `initState()`
-- L181 `build()`
+- L184 `build()`
 
   <details><summary>private 関数 7 件</summary>
 
@@ -54,9 +54,9 @@ Stella 相談 追加クレジット購入シート (消費型 IAP、設計 B 案
   - L72 `_ensureSignedIn()`
   - L123 `_buy()`
   - L158 `_pollUntilGranted()`
-  - L170 `_openPaywall()`
-  - L252 `_buildContent()`
-  - L276 `_packageTile()`
+  - L173 `_openPaywall()`
+  - L255 `_buildContent()`
+  - L279 `_packageTile()`
 
   </details>
 
@@ -174,7 +174,7 @@ Consultation Input — だれと / 願い の記入例 (テーマ別)
   </details>
 
 
-### `lib/screens/consultation/consultation_input_logic.dart` (140 行)
+### `lib/screens/consultation/consultation_input_logic.dart` (156 行)
 
 **ファイル先頭コメント:**
 
@@ -191,14 +191,15 @@ setState を呼ばない純ロジック (when/scope → ConsultationRequest、�
 
 - L10 `extension _ConsultationInputLogic : _ConsultationInputScreenState`
 
-**関数 (0 public + 3 private):**
+**関数 (0 public + 4 private):**
 
 
-  <details><summary>private 関数 3 件</summary>
+  <details><summary>private 関数 4 件</summary>
 
   - L91 `_onStartPressed()`
-  - L100 `_showStartPopup()`
-  - L115 `_runConsultation()`
+  - L103 `_handleBuyFromPopup()`
+  - L110 `_showStartPopup()`
+  - L131 `_runConsultation()`
 
   </details>
 
@@ -333,7 +334,7 @@ Consultation Input Screen — 5問モデル (V2: 全要素統合)
   - L245 `_ymd()`
   - L249 `_onScopeKindTap()`
   - L259 `_openMapPicker()`
-  - L305 `_handleBuyFromPopup()`
+  - L307 `_refreshCreditsFresh()`
   - L315 `_setStartPopupHidden()`
 
   </details>
@@ -549,7 +550,7 @@ Consultation Result — 候補カード (V2)
 - L191 `build()`
 
 
-### `lib/screens/consultation/consultation_result_credit_widgets.dart` (188 行)
+### `lib/screens/consultation/consultation_result_credit_widgets.dart` (125 行)
 
 **ファイル先頭コメント:**
 
@@ -561,20 +562,17 @@ Stella 相談 クレジット制 (設計 project_solara_stella_free_credits.md) 
 本体 (consultation_result_widgets.dart) が 500 行 (HARD) を超えたため切り出した。
 ```
 
-**型定義 (2):**
+**型定義 (1):**
 
 - L11 `class _ConsultationBlockedBox : StatelessWidget`
   - Free 試食ゲートで 402 ブロックされた時のペイウォール誘導ボックス。
-- L125 `class _FreeCreditsBanner : StatelessWidget`
-  - Free ユーザー向け「今週あと N回 (+購入残高)」バナー (intro 直下)。
 
-**関数 (2 public + 0 private):**
+**関数 (1 public + 0 private):**
 
 - L22 `build()`
-- L138 `build()`
 
 
-### `lib/screens/consultation/consultation_result_screen.dart` (414 行)
+### `lib/screens/consultation/consultation_result_screen.dart` (404 行)
 
 **ファイル先頭コメント:**
 
@@ -601,22 +599,22 @@ ConsultationRecord を読み込み専用表示 (fetch なし・autosave なし�
 
 **型定義 (2):**
 
-- L39 `class ConsultationResultScreen : StatefulWidget`
-- L74 `class _ConsultationResultScreenState : State`
+- L40 `class ConsultationResultScreen : StatefulWidget`
+- L75 `class _ConsultationResultScreenState : State`
 
 **関数 (4 public + 10 private):**
 
-- L70 `createState()`
-- L105 `initState()`
-- L118 `dispose()`
+- L71 `createState()`
+- L106 `initState()`
+- L119 `dispose()`
 - L300 `build()`
 
   <details><summary>private 関数 10 件</summary>
 
-  - L99 `_setSharing()`
-  - L123 `_runFetch()`
-  - L128 `_fetch()`
-  - L167 `_loadNext()`
+  - L100 `_setSharing()`
+  - L124 `_runFetch()`
+  - L129 `_fetch()`
+  - L168 `_loadNext()`
   - L224 `_snack()`
   - L236 `_onBuyCredits()`
   - L242 `_showConsultationPaywall()`
@@ -657,7 +655,7 @@ Consultation Result — シェア機能 (part of consultation_result_screen.dart
   </details>
 
 
-### `lib/screens/consultation/consultation_result_widgets.dart` (336 行)
+### `lib/screens/consultation/consultation_result_widgets.dart` (302 行)
 
 **ファイル先頭コメント:**
 
@@ -666,7 +664,7 @@ Consultation Result — 状態/バナー/ページャ ウィジェット (V2)
 (part of 'consultation_result_screen.dart')
 ```
 
-**型定義 (8):**
+**型定義 (7):**
 
 - L7 `enum _ShareChoice`
   - シェアシートで選ばれた選択肢。
@@ -674,26 +672,23 @@ Consultation Result — 状態/バナー/ページャ ウィジェット (V2)
 - L39 `class _ErrorBox : StatelessWidget`
 - L85 `class _FallbackChip : StatelessWidget`
   - 静的フォールバック時の注意チップ (Stella 応答が届かず静的表示になったことを示す)。
-- L114 `class _InnerSeasonBanner : StatelessWidget`
-  - 内的季節の一文 (3 候補共通の前提・上部に常設)。
-- L153 `class _AboutReadingContent : StatelessWidget`
+- L119 `class _AboutReadingContent : StatelessWidget`
   - AppBar タイトルタップで開く「この読み解きについて」ポップアップの中身。
-- L268 `class _PageIndicator : StatelessWidget`
-- L299 `class _RefreshButton : StatelessWidget`
+- L234 `class _PageIndicator : StatelessWidget`
+- L265 `class _RefreshButton : StatelessWidget`
   - 「別の候補地を見る」(1 クレジット消費で次の distinct 候補を 1 つ取得)。
 
-**関数 (7 public + 0 private):**
+**関数 (6 public + 0 private):**
 
 - L15 `build()`
 - L45 `build()`
 - L89 `build()`
-- L119 `build()`
-- L166 `build()`
-- L274 `build()`
-- L305 `build()`
+- L132 `build()`
+- L240 `build()`
+- L271 `build()`
 
 
-### `lib/screens/consultation/consultation_start_popup.dart` (194 行)
+### `lib/screens/consultation/consultation_start_popup.dart` (246 行)
 
 **ファイル先頭コメント:**
 

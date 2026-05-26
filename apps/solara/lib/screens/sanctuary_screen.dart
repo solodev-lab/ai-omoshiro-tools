@@ -14,6 +14,7 @@ import '../widgets/class_card.dart';
 import '../widgets/pro_unlock_dialog.dart';
 import '../widgets/sanctuary_account_section.dart';
 import '../widgets/tap_to_unfocus.dart';
+import 'consultation/consultation_credit_sheet.dart';
 import 'consultation/consultation_history_screen.dart';
 import 'paywall_screen.dart';
 import 'sanctuary/sanctuary_orb_overlay.dart';
@@ -32,7 +33,8 @@ class SanctuaryScreen extends StatefulWidget {
   State<SanctuaryScreen> createState() => _SanctuaryScreenState();
 }
 
-class _SanctuaryScreenState extends State<SanctuaryScreen> {
+class _SanctuaryScreenState extends State<SanctuaryScreen>
+    with WidgetsBindingObserver {
   SolaraProfile? _profile;
   bool _loading = true;
 
@@ -78,12 +80,26 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
     _loadCredits();
     // Pro 切替 (購入 / DEV toggle) で背景・枠・残数表示を即時反映。
     ProStatus.instance.addListener(_onProChanged);
+    // クレジット残のリアルタイム更新:
+    //   1. 相談実行 / 候補追加 / 購入完了で発火される ConsultationCreditEvents を購読
+    //   2. アプリ復帰 (background → foreground) でも refetch
+    ConsultationCreditEvents.instance.addListener(_loadCredits);
+    WidgetsBinding.instance.addObserver(this);
   }
 
   @override
   void dispose() {
     ProStatus.instance.removeListener(_onProChanged);
+    ConsultationCreditEvents.instance.removeListener(_loadCredits);
+    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _loadCredits();
+    }
   }
 
   void _onProChanged() {
@@ -93,6 +109,12 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
   Future<void> _loadCredits() async {
     final c = await fetchConsultationCredits();
     if (mounted) setState(() => _credits = c);
+  }
+
+  /// クレジット残バッジタップ → 購入シートを開く。
+  /// 成功時は addListener 経由で _loadCredits が呼ばれるので、ここでは即 refetch しない。
+  Future<void> _openCreditPurchase() async {
+    await showConsultationCreditSheet(context);
   }
 
   Future<void> _loadSettings() async {
@@ -446,21 +468,37 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
     if (c == null) return const SizedBox.shrink();
     final free = c.freeRemaining ?? 0;
     final pur = c.purchasedBalance ?? 0;
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      decoration: BoxDecoration(
+    // タップで購入シートを開く（追加クレジットの導線）。InkWell で残バッジ全面を反応域に。
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: _openCreditPurchase,
         borderRadius: BorderRadius.circular(12),
-        color: const Color(0x0DFFFFFF),
-        border: Border.all(color: const Color(0x1AFFFFFF)),
-      ),
-      child: Text(
-        '✦ クレジット残 ─ 無料 $free ・ 購入 $pur',
-        style: const TextStyle(
-          fontSize: 14,
-          fontWeight: FontWeight.w500,
-          letterSpacing: 0.5,
-          color: Color(0xFFEAEAEA),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            color: const Color(0x0DFFFFFF),
+            border: Border.all(color: const Color(0x1AFFFFFF)),
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  '✦ クレジット残 ─ 無料 $free ・ 購入 $pur',
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    letterSpacing: 0.5,
+                    color: Color(0xFFEAEAEA),
+                  ),
+                ),
+              ),
+              const Icon(Icons.add_circle_outline,
+                  size: 18, color: Color(0xFFF9D976)),
+            ],
+          ),
         ),
       ),
     );
