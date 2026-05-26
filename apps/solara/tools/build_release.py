@@ -48,6 +48,17 @@ HERE = Path(__file__).resolve().parent
 SOLARA = HERE.parent
 PUBSPEC = SOLARA / "pubspec.yaml"
 
+# repo root の .env を環境変数へ読み込む (既存の値は setdefault で温存 = CLI/実環境変数が優先)。
+# これで .env に SOLARA_RC_ANDROID_KEY / SOLARA_RC_IOS_KEY / SOLARA_GCP_PROJECT_NUMBER を
+# 書いておくだけで、毎回 CLI で渡さなくても resolve_*() が拾う。
+# parents[3] = repo root (mockup/generate_*.py と同じ辿り方: tools→solara→apps→AppCreate)。
+_ENV_PATH = Path(__file__).resolve().parents[3] / ".env"
+if _ENV_PATH.exists():
+    for _line in _ENV_PATH.read_text(encoding="utf-8").splitlines():
+        if "=" in _line and not _line.lstrip().startswith("#"):
+            _k, _v = _line.split("=", 1)
+            os.environ.setdefault(_k.strip(), _v.strip())
+
 
 def read_version() -> str:
     """pubspec.yaml の `version: 1.0.0+1` から `1.0.0+1` を返す。"""
@@ -69,6 +80,8 @@ def build_command(
     gcp_project_number: int | None,
     rc_android_key: str | None,
     rc_ios_key: str | None,
+    google_server_client_id: str | None,
+    google_ios_client_id: str | None,
 ) -> list[str]:
     """flutter build コマンドを構築。"""
     target_arg = {
@@ -101,6 +114,20 @@ def build_command(
         cmd.append(f"--dart-define=SOLARA_RC_ANDROID_KEY={rc_android_key}")
     if platform == "ios" and rc_ios_key:
         cmd.append(f"--dart-define=SOLARA_RC_IOS_KEY={rc_ios_key}")
+    # Google Sign-In クライアント ID を dart-define で注入 (= SolaraAuth._googleServerClientId /
+    # _googleIosClientId)。🔴 google_sign_in 7.x は **Android で serverClientId 必須**
+    # (= Web OAuth client ID)。未注入だと release で
+    #   GoogleSignInException(clientConfigurationError, "serverClientId must be provided on Android")
+    # が出てサインイン不可 → Pro/クレジット購入 (サインイン必須) も検証できない。
+    # serverClientId は Web client なので全プラットフォームで有用。iosClientId は iOS のみ。
+    if google_server_client_id:
+        cmd.append(
+            f"--dart-define=SOLARA_GOOGLE_SERVER_CLIENT_ID={google_server_client_id}"
+        )
+    if platform == "ios" and google_ios_client_id:
+        cmd.append(
+            f"--dart-define=SOLARA_GOOGLE_IOS_CLIENT_ID={google_ios_client_id}"
+        )
     # iOS は App Store Connect 経由 dSYM 別アップなので --no-codesign しない。
     # AAB は Play Console 提出時に R8 ProGuard map も自動取り込みされる。
     return cmd
@@ -184,8 +211,19 @@ def main() -> int:
     gcp = resolve_gcp_project_number(args.gcp_project_number)
     rc_android_key = resolve_rc_key(args.rc_android_key, "SOLARA_RC_ANDROID_KEY")
     rc_ios_key = resolve_rc_key(args.rc_ios_key, "SOLARA_RC_IOS_KEY")
+    # Google Sign-In クライアント ID は env (.env 自動読込) からのみ解決 (CLI 引数は設けない)。
+    google_server_client_id = resolve_rc_key(None, "SOLARA_GOOGLE_SERVER_CLIENT_ID")
+    google_ios_client_id = resolve_rc_key(None, "SOLARA_GOOGLE_IOS_CLIENT_ID")
 
-    cmd = build_command(args.platform, version, gcp, rc_android_key, rc_ios_key)
+    cmd = build_command(
+        args.platform,
+        version,
+        gcp,
+        rc_android_key,
+        rc_ios_key,
+        google_server_client_id,
+        google_ios_client_id,
+    )
 
     print("┌─ Solara Release Build ─────────────────────────────")
     print(f"│ platform   : {args.platform}")
@@ -202,6 +240,13 @@ def main() -> int:
             print(f"│ RC android : {mask_key(rc_android_key)}")
     if args.platform == "ios":
         print(f"│ RC ios     : {mask_key(rc_ios_key)}")
+    # Google Sign-In: serverClientId は Android 必須。未設定だと release でサインイン不可。
+    if args.platform in ("apk", "aab") and google_server_client_id is None:
+        print("│ Google     : [NG] serverClientId 未設定 = Android サインイン不可")
+    elif google_server_client_id is not None:
+        print(f"│ Google     : serverClientId OK ({google_server_client_id[:16]}…)")
+    else:
+        print("│ Google     : serverClientId 未設定")
     # command 表示はキーをマスクして漏洩を防ぐ (ログ/スクショ対策)。
     masked_cmd = [
         re.sub(r"(SOLARA_RC_(?:ANDROID|IOS)_KEY=)(\S+)", r"\1***", part)

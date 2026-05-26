@@ -84,11 +84,30 @@ Phase 2-9 (Sign in 統合) で実装した `SolaraAuth` を本番で動かすた
 3. `android/app/google-services.json` を Firebase Console / Cloud Console からダウンロードして配置
 4. `android/app/build.gradle` で `id 'com.google.gms.google-services'` プラグインを apply (既に他で Firebase を使っていればスキップ)
 
-### 2-4. server client ID (オプション)
+### 2-4. server client ID 🔴 **Android では必須** (2026-05-26 訂正)
 
-- バックエンド (Worker) で Google ID トークンを検証したい場合のみ必要
-- `--dart-define=SOLARA_GOOGLE_SERVER_CLIENT_ID=xxxxx.apps.googleusercontent.com` で渡す
-- 未設定でも基本のサインインは動く (uid / email / displayName が取得可能)
+> 旧版では「オプション・未設定でも動く」と書いていたが、これは google_sign_in **6.x 以前**の前提。
+> 7.x からは Android で **`serverClientId` (= Web OAuth client ID) が必須**。未設定だと
+> `GoogleSignInException(clientConfigurationError, "serverClientId must be provided on Android")`
+> が出てサインインが**毎回確定的に失敗**する (公式 [google_sign_in_android README](https://pub.dev/packages/google_sign_in_android#integration) / [flutter/flutter#175704](https://github.com/flutter/flutter/issues/175704))。
+
+設定方法は **2 通り**:
+
+**A. dart-define で渡す** (Solara が採用している方式):
+- Web client ID を `--dart-define=SOLARA_GOOGLE_SERVER_CLIENT_ID=xxxxx.apps.googleusercontent.com`
+- `apps/solara/tools/build_release.py` が `.env` の `SOLARA_GOOGLE_SERVER_CLIENT_ID` を自動読込して
+  flutter build に注入する (2026-05-26 配線済)。`.env` (gitignored) に書いておけば
+  `python tools/build_release.py aab --release-mode` で自動的に渡る。
+- iOS も同じく `SOLARA_GOOGLE_IOS_CLIENT_ID` を任意で注入可 (iOS は Apple サインインを使うので
+  Solara では現状 iOS 用 Google OAuth クライアント未作成)。
+
+**B. google-services.json + Gradle プラグイン** (Solara では非採用):
+- `android/app/google-services.json` を Firebase/Cloud Console から DL → 配置
+- `android/app/build.gradle` で `id 'com.google.gms.google-services'` apply
+- Gradle が `values.xml` に Web client ID を自動展開する
+- Solara は dart-define 方式を選択 (Firebase 等を導入する場合は B に切替も可)
+
+iOS の `SOLARA_GOOGLE_IOS_CLIENT_ID` は Worker で Google ID トークン検証が必要な時のみ用意する想定 (現状は Apple サインインで完結のため未設定)。
 
 ### 2-5. 動作確認
 
