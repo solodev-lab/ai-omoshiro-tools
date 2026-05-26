@@ -665,6 +665,29 @@ async function gateConsultation(request, env, body, origin) {
  *   - Pro / Free quota (Layer C、Free=5/日 Pro=100/日)
  *   - Step 12 (iOS は body 全体に署名済、Android は uid と __appUserId の equality 確認)
  */
+/**
+ * クォータ対象外パスの判定 (2026-05-26 追加)。
+ *
+ * クォータの目的は「Gemini AI 呼出コスト乱用ガード」なので、AI 呼出を伴わない
+ * 残数照会系は対象外にする。これにより:
+ *   - 本番ユーザーが残数を頻繁にチェックしてもクォータが減らない (UX 安定)
+ *   - クォータ値が「1日の AI 占い回数の上限」として明確な意味を持つ
+ *   - Pro の「無制限」謳いと整合 (残数照会は無限に可能)
+ *
+ * 対象外:
+ *   - /protected/consultation/credits  残数照会 (AI なし、DO SELECT + JSON 返却のみ)
+ *
+ * 対象 (引き続きクォータ消費):
+ *   - /protected/astro/consultation2   Stella 相談 (Gemini 呼出)
+ *   - /protected/tarot                 Tarot リーディング (Gemini 呼出)
+ *   - /protected/fortune (Pro)         Fortune 占い (Gemini 呼出)
+ *   - /protected/relocation (Pro)      Relocation 解説 (Gemini 呼出)
+ *   - /protected/account/delete        アカウント削除 (重操作、DDoS 防護のため残す)
+ */
+export function isQuotaExemptPath(pathname) {
+  return pathname === '/protected/consultation/credits';
+}
+
 async function protectedMiddleware(request, env) {
   const iosMode = getEnforcement(env);
   const androidMode = getPlayIntegrityEnforcement(env);
@@ -725,9 +748,16 @@ async function protectedMiddleware(request, env) {
 
   const isPro = await lookupIsPro(env, appUserId);
 
-  // ── 共通: per-user quota (Layer C、Free=5/日 Pro=100/日) ──
-  const freeLimit = parseInt(env.APP_ATTEST_QUOTA_FREE || '5', 10);
-  const proLimit = parseInt(env.APP_ATTEST_QUOTA_PRO || '100', 10);
+  // ── 共通: per-user quota (Layer C、Free=30/日 Pro=200/日) ──
+  // 2026-05-26 改修: クォータの本来の目的「Gemini AI 呼出コスト乱用ガード」と
+  // 実装を整合させる。詳細は isQuotaExemptPath() 参照。
+  const url = new URL(request.url);
+  if (isQuotaExemptPath(url.pathname)) {
+    return null; // 通過 (クォータ skip)
+  }
+
+  const freeLimit = parseInt(env.APP_ATTEST_QUOTA_FREE || '30', 10);
+  const proLimit = parseInt(env.APP_ATTEST_QUOTA_PRO || '200', 10);
   const limit = isPro ? proLimit : freeLimit;
   const dayBucket = new Date().toISOString().slice(0, 10);
   const quota = await callDo(env, '/quota-check-and-bump', { keyId: quotaKey, dayBucket, limit });
