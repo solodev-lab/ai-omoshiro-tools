@@ -63,7 +63,10 @@ async function callGemini(apiKey, prompt, models, { retries = 2, thinkingBudget 
         const generationConfig = {
           temperature: 0.95,
           topP: 0.95,
-          maxOutputTokens: 1024,
+          // 2026-05-26 1024→2048: thinking(512)が maxOutputTokens に算入されるため、
+          // 1024 だと本文余地が ~512 しか残らず MAX_TOKENS で切れ 500 になっていた (CFログ実害)。
+          // キャップ拡大のみ=実生成トークン課金なので実質コスト増なし。
+          maxOutputTokens: 2048,
           responseMimeType: 'application/json',
         };
         // A3 (2026-05-17): Pro ユーザーには thinking モード ON で深い読み。
