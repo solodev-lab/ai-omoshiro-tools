@@ -426,9 +426,7 @@
 
 ### 変更されたファイル (層別)
 
-- **層 1c**: `lib/models/daily_reading.dart`
-- **層 2b**: `lib/utils/solara_storage.dart`
-- **層 4c**: `lib/screens/observe/observe_category_selector.dart`, `lib/screens/observe/tarot_category_popup.dart`, `lib/screens/observe_screen.dart`
+- **層 0**: `worker/src/auth/attestation_state.js`, `worker/src/consultation_engine.js`, `worker/src/consultation_v2.js`, `worker/src/fortune.js`, `worker/src/index.js`
 
 ## #7 astro_glossary 用語辞書対整合
 

@@ -6,9 +6,9 @@
 ## サマリ
 
 - ファイル数: 23
-- エンドポイント総数: 30
+- エンドポイント総数: 31
 - Gemini 呼出箇所: 2
-- KV 使用: 4 行 / Durable Object 使用: 8 行
+- KV 使用: 4 行 / Durable Object 使用: 12 行
 
 ## ファイル別
 
@@ -138,7 +138,7 @@ https://developer.apple.com/documentation/devicecheck/validating-apps-that-conne
 **export (1):** `verifyAttestation`
 
 
-### `worker/src/auth/attestation_state.js` (665 行)
+### `worker/src/auth/attestation_state.js` (777 行)
 
 **ファイル先頭コメント:**
 
@@ -155,6 +155,10 @@ Apple App Attest + RevenueCat エンタイトルメント + Play Integrity 用 D
 - integrity_nonces:  Play Integrity Standard request 用 nonce (one-time use、TEXT base64)
 - consultation_credits: Stella 相談の Free 試食クレジット (端末ごと週次カウンター)
 - consultation_purchased: Stella 相談の購入クレジット残高 (アカウント appUserId ごと、消費型 IAP)
+- fortune_readings:  Horo「今日の占い」の 1 日 1 回固定キャッシュ
+((appUserId, local_date, category) で一意。プロフィール変更で
+再生成されない=「変更しない事にする」設計。Free=overall 1 件、
+Pro=5 カテゴリ。日付境界はユーザの local TZ。)
 
 単一 DO instance への集約理由:
 - DAU 1,500 想定で同時刻書き込み <100/sec → DO の sequential write 内に余裕で収まる
@@ -162,9 +166,7 @@ Apple App Attest + RevenueCat エンタイトルメント + Play Integrity 用 D
 - 将来バズった場合のみ keyId-prefix sharding に切替 (= 256 instance に分散)
 
 外部 HTTP API (`fetch(request)`):
-POST /challenge-create  body: {challengeId, challengeBytes, expiresAt}
-POST /challenge-consume body: {challengeId, now}  → {challengeBytes} or 404
-POST /attestation-store body: {keyId, 
+POST /challenge
 ```
 
 **Durable Object 使用 (1 行):**
@@ -307,7 +309,7 @@ fallback?: boolean                        // Stella が届かない時 true (静
 **export (1):** `handleConsultation`
 
 
-### `worker/src/consultation_engine.js` (734 行)
+### `worker/src/consultation_engine.js` (738 行)
 
 **ファイル先頭コメント:**
 
@@ -339,7 +341,7 @@ Soft (trine/sextile) と Hard (square) は独立 2 エネルギー。total/吉�
 **export (2):** `runConsultationPipeline`, `_internal`
 
 
-### `worker/src/consultation_v2.js` (384 行)
+### `worker/src/consultation_v2.js` (385 行)
 
 **ファイル先頭コメント:**
 
@@ -401,7 +403,7 @@ astronomy-engine API:
 **export (1):** `computeDailyTransits`
 
 
-### `worker/src/fortune.js` (368 行)
+### `worker/src/fortune.js` (417 行)
 
 **ファイル先頭コメント:**
 
@@ -429,10 +431,14 @@ houses: そのカテゴリで重視する伝統占星術のハウス番号
 
 - L104: `generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;`
 
+**Durable Object 使用 (4 行):**
+
+- 出現行: L308, L310, L310, L310
+
 **export (3):** `computeCategoryScore`, `callGemini`, `handleFortune`
 
 
-### `worker/src/index.js` (1273 行)
+### `worker/src/index.js` (1303 行)
 
 **ファイル先頭コメント:**
 
@@ -452,40 +458,41 @@ webhooks/*   外部連携      RevenueCat Webhook (Pro 状態の真の出所)。
 同セッションで新 path に書き換え済（`apps/solara/lib/utils/solara_api.dart` 参照）。
 ```
 
-**エンドポイント / ルート (30):**
+**エンドポイント / ルート (31):**
 
 | method | path | line |
 | --- | --- | --- |
-| ? | /public/astro/forecast | L879 |
-| ? | /public/tiles/* | L880 |
-| ? | /webhooks/* | L881 |
-| ? | /public/health | L889 |
-| GET | /public/tiles/osm/* | L894 |
-| POST | /public/astro/chart | L899 |
-| POST | /public/astro/forecast | L907 |
-| POST | /public/astro/predict | L922 |
-| POST | /public/astro/daily-transits | L930 |
-| GET | /public/tz | L938 |
-| GET | /public/astro/events | L947 |
-| GET | /public/search | L958 |
-| GET | /auth/whoami | L980 |
-| POST | /auth/challenge | L983 |
-| POST | /auth/attest | L986 |
-| POST | /auth/integrity/challenge | L990 |
-| GET | /auth/integrity/diagnose | L999 |
-| POST | /auth/integrity/decode-test | L1012 |
-| POST | /protected/account/delete | L1080 |
-| POST | /protected/fortune | L1084 |
-| POST | /protected/tarot | L1094 |
-| POST | /protected/relocation | L1122 |
-| POST | /protected/astro/line-narrative | L1134 |
-| POST | /protected/astro/consultation | L1144 |
-| POST | /protected/astro/consultation2 | L1172 |
-| POST | /protected/consultation/credits | L1198 |
-| ? | /public/* | L1255 |
-| ? | /auth/* | L1257 |
-| ? | /protected/* | L1259 |
-| ? | /webhooks/revenuecat | L1261 |
+| ? | /protected/consultation/credits | L688 |
+| ? | /public/astro/forecast | L909 |
+| ? | /public/tiles/* | L910 |
+| ? | /webhooks/* | L911 |
+| ? | /public/health | L919 |
+| GET | /public/tiles/osm/* | L924 |
+| POST | /public/astro/chart | L929 |
+| POST | /public/astro/forecast | L937 |
+| POST | /public/astro/predict | L952 |
+| POST | /public/astro/daily-transits | L960 |
+| GET | /public/tz | L968 |
+| GET | /public/astro/events | L977 |
+| GET | /public/search | L988 |
+| GET | /auth/whoami | L1010 |
+| POST | /auth/challenge | L1013 |
+| POST | /auth/attest | L1016 |
+| POST | /auth/integrity/challenge | L1020 |
+| GET | /auth/integrity/diagnose | L1029 |
+| POST | /auth/integrity/decode-test | L1042 |
+| POST | /protected/account/delete | L1110 |
+| POST | /protected/fortune | L1114 |
+| POST | /protected/tarot | L1124 |
+| POST | /protected/relocation | L1152 |
+| POST | /protected/astro/line-narrative | L1164 |
+| POST | /protected/astro/consultation | L1174 |
+| POST | /protected/astro/consultation2 | L1202 |
+| POST | /protected/consultation/credits | L1228 |
+| ? | /public/* | L1285 |
+| ? | /auth/* | L1287 |
+| ? | /protected/* | L1289 |
+| ? | /webhooks/revenuecat | L1291 |
 
 **KV 使用 (4 行):**
 
@@ -493,9 +500,9 @@ webhooks/*   外部連携      RevenueCat Webhook (Pro 状態の真の出所)。
 
 **Durable Object 使用 (4 行):**
 
-- 出現行: L233, L233, L233, L1212
+- 出現行: L233, L233, L233, L1242
 
-**export (1):** `_internal`
+**export (2):** `isQuotaExemptPath`, `_internal`
 
 
 ### `worker/src/line_narrative.js` (268 行)

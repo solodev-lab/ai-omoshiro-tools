@@ -224,7 +224,83 @@ Solara のバックエンドは **Cloudflare Workers** で稼働。本番 URL: `
   履歴は **お気に入り登録** (各カードの ★ ボタン → `ConsultationRecord.favorite` + `SolaraStorage.setConsultationFavorite`) と
   **「すべて / ★ お気に入り」フィルタ** に対応 (favorite は JSON で true のときのみ保存)。
 
-### 0.3 エンドポイント一覧 (13 個)
+#### 2026-05-27 修正: placeKind が pipeline で消える列挙忘れバグ修正
+- **症状**: 検索詳細から相談 → 結果で「JR名古屋高島屋」が「名古屋のこの場所」に丸められた。
+- **根因**: `runConsultationPipeline` (consultation_engine.js) の最終 return で candidate を
+  再構築する際、`buildCandidatePool` で乗せた `placeKind` を列挙していなかった (`...candidate` の
+  スプレッドではなく明示列挙で書いていた)。`placeReference` (consultation_v2.js) は
+  `candidate.placeKind === 'named'` を判定するため、消えると L84 のフォールバック分岐
+  「都市名で呼んでよい・店舗名は出さない」に落ちて、店名が都市名に丸められた。
+- **修正**: candidate の return に `placeKind: candidate.placeKind || null` を 1 行追加 +
+  `candidateMeta` (consultation_v2.js) も同様。
+- **再発防止**: `consultation_engine.test.js` に end-to-end テスト 3 件追加
+  (`pipeline point scope: placeKind=named を candidate に保持` 等)。
+  `placeReference` 単体テストだけでは検出できなかった「pipeline → placeReference」の透過テストを追加。
+
+### 0.3 Horo「今日の占い」1 日 1 回固定 + プロンプト刷新 (2026-05-27)
+
+> **設計の柱**: 「30 回までは OK」のような曖昧な防衛をやめ、「**1 日 1 回・変更しない**」を
+> サーバ側で hard cap として強制する。プロフィール変更 / アプリ kill 再起動 / 出生時刻ずらし等の
+> バイパスを全て無効化する。日付境界は端末の local TZ (= JST 0 時) を使う。
+
+#### 設計判断
+- **キャッシュキー**: `(app_user_id, local_date, category, lang)` の 4 タプル。プロフィール (出生情報)
+  ハッシュは含めない = **プロフィール変更で結果は変わらない**。これが「変更しない事にする」の核心。
+- **日付境界**: 端末の local TZ (`DateTime.now()` から生成した `YYYY-MM-DD`)。UTC 0 時だと JST 9 時で
+  切替わって違和感が出るため。サーバはこの文字列をそのままキーに使う。
+- **Free → Pro 昇格**: 別カテゴリは独立キーなので、同日中でも Pro 昇格で残り 4 カテゴリ追加生成可。
+- **出生情報を誤登録していた既存ユーザ**: 翌日まで待つ (今日の reading は固定)。
+- **匿名ユーザ (`__appUserId` 無し) / 不正 date 形式**: cache スキップ (機能は壊れない)。
+
+#### プロンプト改訂 — ハウス偏重の根治
+2026-05-25 deploy `21ae8c9` の 3 層化 (土台/主役/背景) だけでは「ハウスばかり」問題が残っていた。
+実機で `wrangler tail` してデバッグログを観察した結果、`transitN=12 / progN=4 / hasHouses=true /
+patternsActive=[]` と素材は十分にあるのに、prompt の構造的偏り (土台セクションが情報量 5+ vs 主役 0-3)
++ 「ハウスを織り込め」と明示命令 + 120-200 字の狭い枠、が原因で LLM がハウス語を優先していた。
+
+**改訂内容** (fortune.js `buildPrompt`):
+- **文字数拡張**: reading 120-200 → **200-300 字** / advice 40-80 → **130-180 字**。
+- **明示指示の強化**: 「文章の中心は今日のトランジット相が出生天体をどう刺激しているか」+ 具体例
+  「水星が出生火星にオポジション → 言葉に火花が散る」を構成ルールに含める。
+- **ハウス頻度制限**: 「ハウスへの言及は任意・本文中で最大 1 回まで」「ハウス番号 (5H, 7H 等)
+  や領域名 (恋愛/家庭/職場/結婚) を 2 回以上連発しない」と明示。
+- **出生図アスペクト**: 「前提として最大 1 回・1 文以内」と縮約。
+- **ニックネーム完全禁止** (2026-05-27 オーナー決定): `userName` を一切 prompt に渡さず、
+  構成ルールに「名前・ニックネーム・敬称は冒頭も本文中も使うな・読者の呼び方は『あなた』または
+  主語省略のみ」と明示。Worker は `userName` を受け取るが build に使わない (API surface は不変)。
+
+**実機 before/after 検証**:
+| 項目 | Before (旧プロンプト) | After (新プロンプト) |
+|---|---|---|
+| reading 文字数 | 約 170 字 | 約 240 字 |
+| ハウス言及 | 3 回 (5H/8H/1H) | 1 回 (1H のみ) |
+| トランジット相 | 1 件のみ | 4 件中心 |
+| 出生図アスペクト | 多用 | 1 件のみ |
+| 連発 | 領域名 3 つ | クリア |
+
+#### 実装の所在 (層別)
+- DO (層 0): `attestation_state.js` `fortune_readings` テーブル
+  ((app_user_id, local_date, category, lang) PK + reading/advice/score/generated_at)
+  + `_fortuneReadingGet` / `_fortuneReadingSet` メソッド。
+  14 日より古い行は SET 時に毎回 cleanup (DAU 1500 × 5cat × 14日 ≒ 100K 行で頭打ち)。
+  `ON CONFLICT DO NOTHING` で並行リクエスト安全 (初回勝ち)。
+- Worker (層 0): `fortune.js` `handleFortune` が DO `/fortune-reading-get` を最初に叩き、
+  hit ならそのまま返す (Gemini 呼ばない)。miss なら Gemini 呼出 → `/fortune-reading-set` で保存。
+  `__appUserId` (middleware が注入) と `date` (端末 local) が両方揃ったときだけ cache 経由化。
+- Flutter (層 2b): `fortune_cache.dart` `FortuneCacheRepo` は **そのまま残す** (= 「即時表示」の
+  fast path として機能)。サーバ cache は「無駄な Gemini 呼出を完全に潰す」役割で、両者は補完関係。
+- 検証: `worker/test/fortune.test.js` 9 件 (cache hit/miss / 別 category・lang・date は独立 /
+  プロフィール変更でも同一結果 / appUserId 不在で cache スキップ等)。
+
+#### 知っておくべき副次効果
+- **クライアントの永続キャッシュバイパス手段**は技術的に可能 (Sanctuary で birth time を未使用値に
+  変更 → アプリ kill → Horo 開く)。ただし server cache はそれでも同じ結果を返すため**実害なし**。
+  以前は「30 回までは OK」の曖昧な防衛だったが、今は per-user per-day per-category per-lang で
+  Gemini 呼出が 1 回に固定された (Free=1/日、Pro=5/日)。コストが完全に予測可能になった。
+- **デバッグ用に「再生成したい」**: 当日中は不可 (server cache でロック)。翌日 0 時 (JST) で
+  自然解禁。緊急時のみ wrangler で DO の該当行を削除する管理者操作で対応。
+
+### 0.4 エンドポイント一覧 (13 個)
 
 > 🔴 **この表は 2026-05-14 時点のスナップショット (旧 top-level path 表記)**。その後
 > commit `ab79bbd` で `/public/*` `/protected/*` `/auth/*` `/webhooks/*` へ物理分離され、
@@ -249,7 +325,7 @@ Solara のバックエンドは **Cloudflare Workers** で稼働。本番 URL: `
 | 12 | `/tarot` | POST | タロットカード解説生成 (1 枚引き Phase A) | あり (TAROT_MODEL_PRIMARY env var) | [fortune_api.dart](../lib/utils/fortune_api.dart) | 健全 |
 | 13 | `/relocation` | POST | リロケーション (出生地 → 現住所/引越し先) 解説生成 | あり | [fortune_api.dart](../lib/utils/fortune_api.dart) | 健全 |
 
-### 0.4 死んだ endpoint の整理 (削除候補)
+### 0.5 死んだ endpoint の整理 (削除候補)
 
 **Worker 側に残骸として存在するが、Flutter 側から呼ばれていない endpoint**:
 
@@ -277,7 +353,7 @@ Solara のバックエンドは **Cloudflare Workers** で稼働。本番 URL: `
 
 **削除タイミング判断**: 課金実装 (Phase 1 Worker 物理分離) と同時に行う方が安全。それまでは「機能停止中だが Worker 側にコードが残っている」状態を許容。今すぐ削除しても害はないが、必須でもない。
 
-### 0.5 ファイル別 役割表
+### 0.6 ファイル別 役割表
 
 | ファイル | 行 | 役割 | エクスポート | 外部依存 |
 |---|---|---|---|---|
@@ -291,7 +367,7 @@ Solara のバックエンドは **Cloudflare Workers** で稼働。本番 URL: `
 | [`tzlookup.js`](../worker/src/tzlookup.js) | 90 | bbox ヒューリスティック + 経度ベース fallback の IANA tz 推定 | `lookupTimezone` | (なし、自前テーブル) |
 | ~~[`line_narrative.js`](../worker/src/line_narrative.js)~~ | 266 | ~~A*C*G ライン AI 解説~~ | ~~`handleLineNarrative`~~ | (削除候補) |
 
-### 0.6 計算系の区分け (課金検討用)
+### 0.7 計算系の区分け (課金検討用)
 
 層 0 の計算は **「Worker のみ実装」「Worker + Dart 並行実装」「Dart のみ実装」** の 3 種類が混在。Pro 機能境界を引くときに重要:
 
@@ -312,7 +388,7 @@ Solara のバックエンドは **Cloudflare Workers** で稼働。本番 URL: `
 - Pro 機能を「クライアント完結」で作れば Worker コスト = 0 (例: 追加のアスペクトライン本数 120 本へ拡張 = `astro_lines.dart` だけで作れる)
 - 一方、Pro 機能を AI narrative 拡張で作ると Gemini コスト線形増。**回数制限 (Free 5/day, Pro 100/day 等) で守らないと月額黒字化が崩れる**
 
-### 0.7 Worker 側の運用ノート (重要)
+### 0.8 Worker 側の運用ノート (重要)
 
 - **CORS**: 開発時に `localhost` が許可されているので、ローカルでテスト可能
 - **環境変数 (`wrangler secret put`)**:
@@ -322,7 +398,7 @@ Solara のバックエンドは **Cloudflare Workers** で稼働。本番 URL: `
 - **KV bindings**: `FORECAST_KV` — forecast 月次クォータ用。未設定なら `checkKvForecastQuota` は no-op
 - **テスト**: [`worker/test.js`](../worker/test.js) で `computeChart` / `computePredictions` の単体実行可能 (`node test.js`)。**ただし `/astro/predict` 用テストは死んだ endpoint のため削除推奨**
 
-### 0.8 機械抽出への参照
+### 0.9 機械抽出への参照
 
 層 0 の機械抽出 raw: [`feature_inventory/00_worker.md`](feature_inventory/00_worker.md)
 対整合チェック結果: [`feature_inventory/coverage_report.md`](feature_inventory/coverage_report.md)

@@ -11,6 +11,10 @@
  *   - integrity_nonces:  Play Integrity Standard request 用 nonce (one-time use、TEXT base64)
  *   - consultation_credits: Stella 相談の Free 試食クレジット (端末ごと週次カウンター)
  *   - consultation_purchased: Stella 相談の購入クレジット残高 (アカウント appUserId ごと、消費型 IAP)
+ *   - fortune_readings:  Horo「今日の占い」の 1 日 1 回固定キャッシュ
+ *                        ((appUserId, local_date, category) で一意。プロフィール変更で
+ *                        再生成されない=「変更しない事にする」設計。Free=overall 1 件、
+ *                        Pro=5 カテゴリ。日付境界はユーザの local TZ。)
  *
  * 単一 DO instance への集約理由:
  *   - DAU 1,500 想定で同時刻書き込み <100/sec → DO の sequential write 内に余裕で収まる
@@ -48,6 +52,14 @@
  *   POST /consultation-credit-grant    body: {appUserId, amount, eventId, now}
  *                                                          → {balance, alreadyProcessed?}
  *                                                          (消費型購入で残高 +amount、event_id 冪等)
+ *   POST /fortune-reading-get   body: {appUserId, localDate, category, lang?}
+ *                                                          → {found:true, reading, advice, score}
+ *                                                            or {found:false}
+ *   POST /fortune-reading-set   body: {appUserId, localDate, category, lang?,
+ *                                       reading, advice, score, now?}  → {ok}
+ *                                                          ((appUserId, localDate, category, lang) 一意、
+ *                                                           ON CONFLICT DO NOTHING で初回勝ち。
+ *                                                           14日より古い行を毎回 cleanup)
  *
  * Caller (Worker middleware) はこれらを順番に叩いて検証する。
  */
@@ -163,6 +175,25 @@ export class AttestationState {
         app_user_id TEXT PRIMARY KEY,
         balance INTEGER NOT NULL DEFAULT 0,
         updated_at INTEGER NOT NULL
+      );
+    `);
+    // fortune_readings: Horo「今日の占い」の 1 日 1 回固定キャッシュ。
+    // (appUserId, local_date, category, lang) で一意 = プロフィール変更で再生成されない設計。
+    // local_date は端末の local TZ (例: Asia/Tokyo 0 時境界) で YYYY-MM-DD。
+    // lang は ja/en (内容が言語で異なるため、別 language で再 fetch しても上書きしない)。
+    // SET は ON CONFLICT DO NOTHING で初回勝ち (並行リクエストでも安全)。
+    // 14 日より古い行は毎回 SET 時に cleanup (DAU 1500 × 5cat × 14日 ≒ 100K 行で頭打ち)。
+    this.sql.exec(`
+      CREATE TABLE IF NOT EXISTS fortune_readings (
+        app_user_id TEXT NOT NULL,
+        local_date  TEXT NOT NULL,
+        category    TEXT NOT NULL,
+        lang        TEXT NOT NULL DEFAULT 'ja',
+        reading     TEXT NOT NULL,
+        advice      TEXT NOT NULL,
+        score       INTEGER NOT NULL,
+        generated_at INTEGER NOT NULL,
+        PRIMARY KEY (app_user_id, local_date, category, lang)
       );
     `);
     this._initialized = true;
@@ -618,6 +649,85 @@ export class AttestationState {
     return { status: 200, body: { balance: after.length > 0 ? after[0].balance : amount } };
   }
 
+  // ── /fortune-reading-get ──
+  //
+  // Horo「今日の占い」の 1 日 1 回固定キャッシュを read-only で参照。
+  // (appUserId, local_date, category, lang) が見つかれば {found:true, reading, advice, score}、
+  // 無ければ {found:false} を 200 で返す (404 にせず、ハンドラ分岐を簡素化)。
+  async _fortuneReadingGet({ appUserId, localDate, category, lang = 'ja' }) {
+    if (typeof appUserId !== 'string' || !appUserId) {
+      return { status: 400, body: { error: 'invalid_app_user_id' } };
+    }
+    if (typeof localDate !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(localDate)) {
+      return { status: 400, body: { error: 'invalid_local_date' } };
+    }
+    if (typeof category !== 'string' || !category) {
+      return { status: 400, body: { error: 'invalid_category' } };
+    }
+    if (typeof lang !== 'string' || !lang) {
+      return { status: 400, body: { error: 'invalid_lang' } };
+    }
+    const rows = this.sql.exec(
+      `SELECT reading, advice, score FROM fortune_readings
+       WHERE app_user_id = ? AND local_date = ? AND category = ? AND lang = ?`,
+      appUserId, localDate, category, lang,
+    ).toArray();
+    if (rows.length === 0) {
+      return { status: 200, body: { found: false } };
+    }
+    return {
+      status: 200,
+      body: {
+        found: true,
+        reading: rows[0].reading,
+        advice: rows[0].advice,
+        score: rows[0].score,
+      },
+    };
+  }
+
+  // ── /fortune-reading-set ──
+  //
+  // Horo「今日の占い」を保存。(appUserId, local_date, category, lang) は ON CONFLICT DO NOTHING
+  // で初回勝ち (= プロフィール変更や並行リクエストで再生成されない)。
+  // 毎回 14 日より古い行を cleanup (テーブル肥大化防止)。
+  async _fortuneReadingSet({ appUserId, localDate, category, lang = 'ja', reading, advice, score, now = Date.now() }) {
+    if (typeof appUserId !== 'string' || !appUserId) {
+      return { status: 400, body: { error: 'invalid_app_user_id' } };
+    }
+    if (typeof localDate !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(localDate)) {
+      return { status: 400, body: { error: 'invalid_local_date' } };
+    }
+    if (typeof category !== 'string' || !category) {
+      return { status: 400, body: { error: 'invalid_category' } };
+    }
+    if (typeof lang !== 'string' || !lang) {
+      return { status: 400, body: { error: 'invalid_lang' } };
+    }
+    if (typeof reading !== 'string') {
+      return { status: 400, body: { error: 'invalid_reading' } };
+    }
+    if (typeof advice !== 'string') {
+      return { status: 400, body: { error: 'invalid_advice' } };
+    }
+    if (typeof score !== 'number' || !Number.isInteger(score)) {
+      return { status: 400, body: { error: 'invalid_score' } };
+    }
+    // 14日より古い行を cleanup (YYYY-MM-DD は辞書順比較で OK)
+    const cleanupBefore = new Date(now - 14 * 86400_000).toISOString().slice(0, 10);
+    this.sql.exec(`DELETE FROM fortune_readings WHERE local_date < ?`, cleanupBefore);
+    // ON CONFLICT DO NOTHING: 同一 (user, date, category, lang) は最初に書いた者勝ち。
+    // 並行リクエスト (2 端末同時 fetch 等) でも結果は安定。
+    this.sql.exec(
+      `INSERT INTO fortune_readings
+         (app_user_id, local_date, category, lang, reading, advice, score, generated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+       ON CONFLICT(app_user_id, local_date, category, lang) DO NOTHING`,
+      appUserId, localDate, category, lang, reading, advice, score, now,
+    );
+    return { status: 200, body: { ok: true } };
+  }
+
   // ── HTTP entry ──
   async fetch(request) {
     this._ensureSchema();
@@ -652,6 +762,8 @@ export class AttestationState {
       '/consultation-purchased-get': () => this._consultationPurchasedGet(body),
       '/consultation-purchased-spend': () => this._consultationPurchasedSpend(body),
       '/consultation-credit-grant': () => this._consultationCreditGrant(body),
+      '/fortune-reading-get': () => this._fortuneReadingGet(body),
+      '/fortune-reading-set': () => this._fortuneReadingSet(body),
     };
     const handler = dispatch[path];
     if (!handler) return new Response('not found', { status: 404 });

@@ -157,15 +157,12 @@ export async function callGemini(apiKey, prompt, models, opts = {}) {
 }
 
 // ── プロンプト生成 ──
-function buildPrompt({ category, lang, natal, planetHouses, aspects, transitAspects, progressedAspects, patterns, date, userName }) {
+// userName はオーナー決定 (2026-05-27) で星読みには一切使わない。受け取るが prompt に
+// 渡さない (API surface 維持・Tarot 等他経路は別途)。
+function buildPrompt({ category, lang, natal, planetHouses, aspects, transitAspects, progressedAspects, patterns, date, userName: _userName }) {
   const cat = FORTUNE_CATEGORIES[category] || FORTUNE_CATEGORIES.overall;
   const catName = lang === 'en' ? cat.en : cat.jp;
   const dateStr = date || new Date().toISOString().slice(0, 10);
-  // 末尾の敬称「さん」を取り除く。名前は冒頭の呼びかけには使わず、本文途中で
-  // 自然に触れるのは可 (プロンプト末尾のルールで制御)。
-  const cleanName = (typeof userName === 'string')
-    ? userName.replace(/さん$/, '').trim()
-    : null;
 
   // 関連アスペクト抽出 (関連惑星を含むもののみ)
   const relevantPlanets = new Set(cat.planets);
@@ -244,7 +241,6 @@ Focus planets: ${cat.planets.join(', ')}
 ${categoryHousesHint ? `Houses traditionally read for ${catName}: ${categoryHousesHint}` : ''}
 ${hasHouses ? `Natal house positions of focus planets:\n${houseLines || '(none mapped)'}` : '(House positions unavailable — birth time unknown)'}
 ${aspectLines ? `Natal aspects (innate tendencies):\n${aspectLines}` : ''}
-${cleanName ? `Querent name: ${cleanName} (if you address them, use "${cleanName}"; do not invent another name)` : ''}
 
 【Main driver — today's transits (the sky activating their natal chart)】
 ${transitLines || '(no notable transits to the focus planets today)'}
@@ -255,18 +251,21 @@ ${progressedLines || '(no notable progressions)'}
 Active special patterns:
 ${patternLines.join('\n') || '(none)'}
 
-🔴 Structure rules:
-- The CORE of a daily reading is today's transits. Describe the transit aspects concretely as the main event.
-- Use the natal chart (houses, innate aspects) as the foundation: WHO receives this activation and in WHICH life area (house).
-- Add progressions lightly as the slow, current life-chapter / inner season — at most one sentence.
+🔴 Structure rules (in this order of importance):
+- The CORE of the writing is the concrete description of how today's transits activate the natal planets.
+  Example: "Mercury opposes natal Mars — sparks fly in words." Always put today's movement concretely into the body.
+- House references are OPTIONAL and limited to AT MOST ONCE in the body. Phrasings like "(planet) activates the (N)th house" are fine — keep it light.
+  Do not repeat house numbers (5H, 7H, etc.) or life-area names (romance/home/career/marriage) more than once.
+- Innate natal aspects are background context — at most one mention, one sentence.
+- Add progressions lightly as the slow current life-chapter / inner season — at most one sentence.
 - For any layer marked "(no notable ...)" or "(none)", do not force it or invent data.
-- If house positions are unavailable, do not mention houses.
-- Do NOT open by addressing the querent by name (no "Hi ${cleanName || 'there'}," greeting at the start). You MAY mention their name naturally within the body. Begin with the movement of the stars or the day's feeling.
+- If house positions are unavailable, do not mention houses at all.
+- Do NOT use any name or nickname in the writing, neither in the opening nor in the body. Begin with the movement of the stars or the day's feeling, and refer to the reader only via second person ("you") or implicit subject.
 
 Return ONLY a JSON object with exactly these fields (no markdown, no extra text):
 {
-  "reading": "<2-3 sentence poetic reading focused on ${catName}, led by today's transits. ~120-180 chars>",
-  "advice": "<1 sentence practical advice. ~40-80 chars>"
+  "reading": "<3-5 sentence poetic reading focused on ${catName}, led by today's transits. ~200-300 chars>",
+  "advice": "<1-2 sentence practical advice. ~130-180 chars>"
 }`;
   }
 
@@ -278,7 +277,6 @@ Return ONLY a JSON object with exactly these fields (no markdown, no extra text)
 ${categoryHousesHint ? `${catName}で重視するハウス: ${categoryHousesHint}` : ''}
 ${hasHouses ? `主要天体の出生ハウス位置:\n${houseLines || '(なし)'}` : '(ハウス位置は不明 — 出生時刻が登録されていません)'}
 ${aspectLines ? `出生図のアスペクト(生来の傾向):\n${aspectLines}` : ''}
-${cleanName ? `相談者の名前: ${cleanName}（名前を入れる場合は「${cleanName}さん」とし、それ以外の名前を勝手に作らない）` : ''}
 
 【主役 — 今日のトランジット(今日の空が出生天体を刺激)】
 ${transitLines || '(今日、主要天体に目立つトランジットはなし)'}
@@ -289,23 +287,47 @@ ${progressedLines || '(目立つ進行はなし)'}
 成立中の特殊パターン:
 ${patternLines.join('\n') || '(なし)'}
 
-🔴 構成ルール:
-- 「今日の運勢」の中心は今日のトランジットです。トランジットの相を主役として具体的に描写してください。
-- 出生図(ハウス・生来のアスペクト)は「どんなあなたが・どの人生領域(ハウス)で」その刺激を受けるかの土台として織り込んでください。
-- プログレスは今のゆっくりした人生の章・内的な季節として、多くても1文だけそっと添えてください。
+🔴 構成ルール (この順で重要):
+- 文章の中心は「今日のトランジット相が出生天体をどう刺激しているか」の動きの描写。
+  例: 「水星が出生火星にオポジション → 言葉に火花が散る」のように、今日の動きを具体的に必ず本文に出してください。
+- ハウスへの言及は任意・本文中で最大 1 回まで。「(惑星) が (N) ハウスを刺激する」程度に控えめに。
+  ハウス番号 (5H, 7H 等) や領域名 (恋愛/家庭/職場/結婚) を 2 回以上連発しないでください。
+- 出生図のアスペクト(生来の傾向)は「前提」として最大 1 回・1 文以内で。
+- プログレスは今のゆっくりした人生の章・内的な季節として、多くても 1 文だけそっと添えてください。
 - 「なし」と書かれた層は無理に触れず、捏造しないでください。
 - ハウス位置が「不明」の場合は、ハウスについて言及しないでください。
-- 冒頭を名前の呼びかけ（「〇〇さん、」等）から始めないでください。星の動きやその日の雰囲気から書き始め、本文の途中で自然に名前に触れるのは構いません。
+- 名前・ニックネーム・敬称 (「〇〇さん」等) は冒頭も本文中も一切使わないでください。読者の呼び方は「あなた」または主語省略のみ。星の動きやその日の雰囲気から書き始めてください。
 
 以下のJSON形式のみで返答してください (マークダウンや余分な文言は不要):
 {
-  "reading": "<${catName}にフォーカスし、今日のトランジットを主役にした詩的な2〜3文の鑑定。120〜200文字程度>",
-  "advice": "<実践的なアドバイス1文。40〜80文字>"
+  "reading": "<${catName}にフォーカスし、今日のトランジットを主役にした詩的な鑑定 (3〜5 文)。200〜300 文字程度>",
+  "advice": "<実践的なアドバイス (1〜2 文)。130〜180 文字程度>"
 }`;
 }
 
+// ── DO 呼出ラッパー (deps で差し替え可能、デフォルトは env.ATTESTATION_DO 経由) ──
+async function _defaultCallDo(env, path, payload) {
+  const stub = env.ATTESTATION_DO.get(env.ATTESTATION_DO.idFromName('global'));
+  const res = await stub.fetch(`https://do${path}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  const json = await res.json().catch(() => ({}));
+  return { status: res.status, body: json };
+}
+
 // ── メインエントリ: POST /fortune ──
-export async function handleFortune(body, env) {
+//
+// 1 日 1 回固定キャッシュ ((appUserId, local_date, category, lang) で一意)。
+// プロフィール変更や端末 kill 再起動で再生成されない = 「変更しない事にする」設計。
+// 日付境界は端末の local TZ (body.date = 'YYYY-MM-DD'、Asia/Tokyo の 0 時で切替)。
+// cache miss 時のみ Gemini を叩いて DO に保存。
+//
+// appUserId が無い (= 未認証の極端ケース) ときは cache をスキップして
+// Gemini 直叩き (機能は壊れない、ただし「1日1回固定」は効かない)。
+export async function handleFortune(body, env, deps = {}) {
+  const callDoFn = deps.callDo || _defaultCallDo;
   const {
     category = 'overall',
     lang = 'ja',
@@ -322,6 +344,7 @@ export async function handleFortune(body, env) {
     // ProStatus から isPro を渡してくる (Phase 2-6b で Sign in + サーバ側
     // Pro 検証を追加して二重防御に格上げ予定)。
     thinking = false,
+    __appUserId: appUserId = null, // middleware が注入する予約フィールド
   } = body;
 
   if (!FORTUNE_CATEGORIES[category]) {
@@ -331,7 +354,28 @@ export async function handleFortune(body, env) {
   // 1. スコア計算 (LLM不要、確定的)
   const score = computeCategoryScore(category, aspects);
 
-  // 2. Gemini でテキスト生成
+  // 2. キャッシュチェック (1日1回固定)
+  // date が YYYY-MM-DD 形式で渡されているか緩く確認 (誤形式は cache スキップ)。
+  const validDate = typeof date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(date);
+  const cacheEligible = typeof appUserId === 'string' && appUserId.length > 0 && validDate;
+  if (cacheEligible) {
+    const got = await callDoFn(env, '/fortune-reading-get', {
+      appUserId, localDate: date, category, lang,
+    });
+    if (got.status === 200 && got.body && got.body.found) {
+      // 当日既に生成済 → 同じ結果を返す (Gemini 呼ばない)
+      return {
+        category,
+        score: got.body.score,
+        reading: got.body.reading,
+        advice: got.body.advice,
+        lang,
+        cached: true,
+      };
+    }
+  }
+
+  // 3. Gemini でテキスト生成 (cache miss / cache 不適格時)
   if (!env.GEMINI_API_KEY) {
     throw new Error('GEMINI_API_KEY not configured on worker');
   }
@@ -345,7 +389,7 @@ export async function handleFortune(body, env) {
     thinkingBudget: thinking ? 512 : null, // 2026-05-25 1024→512 (コスト半減・品質ほぼ維持)
   });
 
-  // 3. JSON抽出 (Geminiは基本JSON返すが念のためfallback)
+  // 4. JSON抽出 (Geminiは基本JSON返すが念のためfallback)
   let parsed;
   try {
     parsed = JSON.parse(raw);
@@ -358,11 +402,16 @@ export async function handleFortune(body, env) {
     }
   }
 
-  return {
-    category,
-    score,
-    reading: parsed.reading || '',
-    advice: parsed.advice || '',
-    lang,
-  };
+  const reading = parsed.reading || '';
+  const advice = parsed.advice || '';
+
+  // 5. DO に保存 (ON CONFLICT DO NOTHING で並行リクエストでも安全)
+  if (cacheEligible) {
+    await callDoFn(env, '/fortune-reading-set', {
+      appUserId, localDate: date, category, lang,
+      reading, advice, score,
+    }).catch((_e) => { /* 保存失敗は致命的ではない (次回再生成される) */ });
+  }
+
+  return { category, score, reading, advice, lang };
 }

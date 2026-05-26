@@ -30,7 +30,7 @@
 
 - Dart ファイル: 185
 - Worker JS ファイル: 23
-- Worker エンドポイント総数: 30
+- Worker エンドポイント総数: 31
 - Dart class/mixin/extension/enum 総数: 438
 - Dart 関数総数 (素拾い): 1460
 
