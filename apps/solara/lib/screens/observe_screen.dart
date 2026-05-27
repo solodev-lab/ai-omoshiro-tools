@@ -8,6 +8,8 @@ import '../utils/moon_phase.dart';
 import '../utils/pro_status.dart';
 import '../utils/solara_storage.dart';
 import '../utils/tarot_data.dart';
+import '../widgets/ai_disclaimer_footer.dart';
+import '../widgets/ai_report_button.dart';
 import '../widgets/pro_unlock_dialog.dart';
 import '../widgets/tap_to_unfocus.dart';
 
@@ -688,6 +690,13 @@ class _ObserveScreenState extends State<ObserveScreen>
                   style: TextStyle(fontSize: 9, color: Color(0xFF666666), letterSpacing: 0.8)),
             ),
           ]),
+        ],
+        // AI 出力ユーザー報告 (Google Gen AI Policy)。本物の Gemini 出力時のみ表示。
+        // 詳細: docs/store_compliance.md §3.1 / widgets/ai_report_button.dart
+        if (_typingDone && _readingFromApi) ...[
+          AiReportButton(feature: 'tarot', outputText: _readingText),
+          // disclaimer footer (Apple 4.0 + Google Misleading) — 報告ボタンの直下に常時。
+          const AiDisclaimerFooter(),
         ],
       ]),
     );

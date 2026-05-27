@@ -4,6 +4,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'horo_constants.dart';
 import 'horo_antique_icons.dart';
 import '../../utils/fortune_api.dart';
+import '../../widgets/ai_disclaimer_footer.dart';
+import '../../widgets/ai_report_button.dart';
 
 // ══════════════════════════════════════════════════
 // Astrology / Today View (full screen fortune reading)
@@ -153,6 +155,17 @@ class HoroAstrologyView extends StatelessWidget {
                   Expanded(child: Text(advice,
                     style: const TextStyle(fontSize: 15, color: Color(0xD9E8E0D0), height: 1.6, fontStyle: FontStyle.italic))),
                 ]),
+              ],
+              // AI 出力ユーザー報告 (Google Gen AI Policy)。本物の Gemini 出力時のみ表示。
+              // 詳細: docs/store_compliance.md §3.1 / widgets/ai_report_button.dart
+              if (useApi) ...[
+                AiReportButton(
+                  feature: 'fortune',
+                  outputText: advice.isNotEmpty ? '$text\n\n$advice' : text,
+                  padding: const EdgeInsets.only(top: 4),
+                ),
+                // disclaimer footer — 報告ボタンの直下に常時。
+                const AiDisclaimerFooter(padding: EdgeInsets.zero),
               ],
             ]),
           );

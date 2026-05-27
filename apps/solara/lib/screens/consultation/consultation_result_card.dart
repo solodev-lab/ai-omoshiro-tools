@@ -113,6 +113,17 @@ class _CandidateCard extends StatelessWidget {
                   letterSpacing: 0.4,
                 ),
               ),
+              // AI 出力ユーザー報告 (Google Gen AI Policy)。narrative がある時のみ表示。
+              // 詳細: docs/store_compliance.md §3.1 / widgets/ai_report_button.dart
+              if (_c.narrative.isNotEmpty) ...[
+                AiReportButton(
+                  feature: 'consultation',
+                  outputText: _c.narrative,
+                  padding: const EdgeInsets.only(top: 4),
+                ),
+                // disclaimer footer — 報告ボタンの直下に常時。
+                const AiDisclaimerFooter(padding: EdgeInsets.zero),
+              ],
               const SizedBox(height: 24),
             ],
           ),

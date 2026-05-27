@@ -24,6 +24,8 @@ import '../../utils/consultation_share.dart';
 import '../../utils/consultation_v2_api.dart';
 import '../../utils/pro_status.dart';
 import '../../utils/solara_storage.dart';
+import '../../widgets/ai_disclaimer_footer.dart';
+import '../../widgets/ai_report_button.dart';
 import '../../widgets/glass_panel.dart';
 import '../../widgets/info_popup.dart';
 import '../../widgets/pro_unlock_dialog.dart';

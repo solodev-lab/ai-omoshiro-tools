@@ -23,6 +23,7 @@ import { handleRelocation } from './relocation.js';
 import { handleLineNarrative } from './line_narrative.js';
 import { handleConsultation } from './consultation.js';
 import { handleConsultationV2 } from './consultation_v2.js';
+import { handleAiReport } from './ai_report.js';
 import { verifyAttestation, verifyAssertion } from './auth/app_attest.js';
 // Play Integrity (Android) — 設計 v1.1 §4 + §8 (Google decode API 方式)
 import {
@@ -1560,6 +1561,15 @@ async function dispatchProtected(request, env, url, origin) {
       console.error('Consultation credits error:', err);
       return jsonError(500, err.message || 'Consultation credits failed', origin);
     }
+  }
+
+  // ── AI 出力ユーザー報告 (Google Generative AI Apps Policy 対応) ──
+  // 3 つの AI 画面 (Tarot / Stella / Horo) に表示される「報告」ボタンの送信先。
+  // 保存先は CF Workers Logs の console.warn のみ (永続なし)。
+  // 詳細: apps/solara/docs/store_compliance.md §3.1 / src/ai_report.js
+  if (path === '/protected/report-ai-output' && request.method === 'POST') {
+    const body = await request.json().catch(() => ({}));
+    return jsonOk(handleAiReport(body), origin);
   }
 
   return null;

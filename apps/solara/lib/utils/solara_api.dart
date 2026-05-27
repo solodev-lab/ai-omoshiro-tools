@@ -69,6 +69,11 @@ const String solaraConsultationCreditsUrl =
 const String solaraAccountDeleteUrl =
     '$solaraWorkerBase/protected/account/delete';
 
+/// AI 出力ユーザー報告 (Google Generative AI Apps Policy 2026-04-15 全面施行 対応)。
+/// 詳細: docs/store_compliance.md §3.1 / worker/src/ai_report.js
+const String solaraAiReportUrl =
+    '$solaraWorkerBase/protected/report-ai-output';
+
 /// 緯度経度から IANA TZ名 (DST対応の基準) を取得。
 /// 例: (35.68, 139.76) → 'Asia/Tokyo'
 /// 失敗時は null を返す (呼び出し側で birthTz 整数fallback想定)。

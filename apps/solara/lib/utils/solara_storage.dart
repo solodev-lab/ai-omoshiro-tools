@@ -114,11 +114,40 @@ class SolaraStorage {
   // V2 (全要素統合) でレコード形式が変わったため key を更新。旧キーのデータは
   // 互換性がないので無視 (pre-launch・内部テストのみ。実害なし)。
   static const _consultationHistoryKey = 'solara_consultation_history_v2';
+  // AI 生成同意 (Apple 5.1.2(i) 2025-11-13 改定、Google Generative AI Apps policy)。
+  // 出生情報・相談内容を Google Gemini API に送る旨を明示し、初回起動時に
+  // 一度だけユーザー同意を取得する。ISO8601 文字列を保存 (null = 未同意)。
+  // 詳細: docs/store_compliance.md §2.1 / §5.2
+  static const _aiConsentAtKey = 'solara_ai_consent_at_v1';
 
   /// 相談履歴の上限 (Free / Pro 共通)。柱 3 の原則「Free でも自分の記録を永久に
   /// 失わない」を満たす範囲で、ストレージ肥大を抑える上限。
   /// 1 件 ~3KB 想定 × 200 件 = ~600KB、SharedPreferences で十分。
   static const consultationHistoryMax = 200;
+
+  // --- AI Generation Consent (Apple 5.1.2(i) / Google Gen AI Policy) ---
+
+  /// AI 生成同意の取得日時 (null = 未同意)。
+  /// Apple Reviewer は onboarding 同意とプライバシーポリシー記載の line-by-line
+  /// 一致を確認するため、同意済みかどうかを確実に永続化する。
+  static Future<DateTime?> loadAiConsentAt() async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString(_aiConsentAtKey);
+    if (raw == null) return null;
+    return DateTime.tryParse(raw);
+  }
+
+  /// 同意ボタンが押された瞬間に呼ぶ (現在時刻を ISO8601 で保存)。
+  static Future<void> saveAiConsentNow() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_aiConsentAtKey, DateTime.now().toIso8601String());
+  }
+
+  /// 主に main.dart の起動分岐用。null チェックを 1 関数に。
+  static Future<bool> hasAiConsent() async {
+    final at = await loadAiConsentAt();
+    return at != null;
+  }
 
   // --- Forecast heatmap display settings ---
 

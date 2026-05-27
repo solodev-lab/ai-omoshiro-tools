@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'theme/solara_theme.dart';
+import 'screens/ai_consent_screen.dart';
 import 'screens/map_screen.dart';
 import 'screens/horoscope_screen.dart';
 import 'screens/observe_screen.dart';
@@ -15,6 +16,7 @@ import 'utils/device_security_status.dart';
 import 'utils/pro_status.dart';
 import 'utils/purchases_service.dart';
 import 'utils/solara_auth.dart';
+import 'utils/solara_storage.dart';
 import 'utils/tarot_data.dart';
 import 'widgets/solara_nav_bar.dart';
 
@@ -64,11 +66,27 @@ void main() async {
     // ignore: discarded_futures
     ConsultationCredits.instance.refresh();
   });
-  runApp(const SolaraApp());
+  // AI 生成同意の事前判定 (Apple 5.1.2(i) / Google Generative AI Apps Policy)。
+  // 出生情報・相談内容を Google Gemini API に送信する旨を、初回起動時に明示同意。
+  // 未同意なら AiConsentScreen を最初に出し、同意済なら通常の SolaraHome を出す。
+  // 詳細: apps/solara/docs/store_compliance.md §2.1 / §5.2
+  final hasConsent = await SolaraStorage.hasAiConsent();
+  runApp(SolaraApp(initialConsented: hasConsent));
 }
 
-class SolaraApp extends StatelessWidget {
-  const SolaraApp({super.key});
+class SolaraApp extends StatefulWidget {
+  /// 起動時点で同意済みなら true (= SolaraHome を最初から表示)。
+  /// false の場合は AiConsentScreen を出し、同意後に setState で home を入れ替える。
+  /// test 用にデフォルト false (= 未同意 = ConsentScreen 表示)。
+  final bool initialConsented;
+  const SolaraApp({super.key, this.initialConsented = false});
+
+  @override
+  State<SolaraApp> createState() => _SolaraAppState();
+}
+
+class _SolaraAppState extends State<SolaraApp> {
+  late bool _consented = widget.initialConsented;
 
   @override
   Widget build(BuildContext context) {
@@ -97,7 +115,13 @@ class SolaraApp extends StatelessWidget {
           maxScaleFactor: 1.5,
           child: child!,
         ),
-        home: const SolaraHome(),
+        // AI 同意未取得時は SolaraHome の代わりに AiConsentScreen を出す。
+        // 同意完了 → setState で _consented=true → SolaraHome に差し替わる。
+        home: _consented
+            ? const SolaraHome()
+            : AiConsentScreen(
+                onConsented: () => setState(() => _consented = true),
+              ),
       ),
     );
   }

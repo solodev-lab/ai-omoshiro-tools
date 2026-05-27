@@ -45,6 +45,13 @@ abstract class LegalUrls {
   /// 「解約方法」案内ページ (アプリ内 fallback 用)。
   static const String howToCancel = '$_base/cancel.html';
 
+  /// アカウント削除のお手続き案内ページ。
+  /// Google Play Console > Data Safety form の "Account deletion URL" に
+  /// この URL を提出する (2024 から義務化)。Apple 側は別途 App Privacy 質問票で
+  /// 「アプリ内で削除可能」と申告 (実装は sanctuary_account_section.dart)。
+  /// 設計根拠: docs/store_compliance.md §3.5 / Template: docs/store_compliance_assets/delete-account.html
+  static const String accountDeletion = '$_base/delete-account.html';
+
   /// iOS Subscriptions 設定への deep link。
   /// Apple 推奨 (Apple Developer Documentation: "Subscription management URLs")。
   static const String iosSubscriptionsDeepLink =
