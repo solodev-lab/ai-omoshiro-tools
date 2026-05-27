@@ -20,7 +20,7 @@ import 'solara_api.dart' show solaraConsultationCreditsUrl;
 
 /// Free 試食クレジット切れ等で Worker が 402 を返したときのブロック理由。
 enum ConsultationBlock {
-  /// 今週の無料 Stella 相談を使い切った (Pro で無制限)。
+  /// 今週の無料 Stella 相談を使い切った (Free。購入残高も 0)。
   creditExhausted,
 
   /// このモードは無料試食の対象外 (CONSULTATION_FREE_MODES に含まれない)。
@@ -28,6 +28,10 @@ enum ConsultationBlock {
 
   /// 候補の出し直しは Pro 限定 (Free は 1 回の結果セットのみ)。
   proOnlyRefresh,
+
+  /// Pro の今週の相談上限 (CONSULTATION_PRO_WEEKLY、default 100) に到達 +
+  /// 購入残高 0 (2026-05-27 追加。月曜 UTC リセット or 追加クレジット購入を案内)。
+  proWeeklyExhausted,
 
   /// 上記以外の 402 (将来追加コード)。フォールバックでペイウォールへ。
   unknown,
@@ -43,35 +47,66 @@ ConsultationBlock consultationBlockFromCode(String? code) {
       return ConsultationBlock.proOnlyMode;
     case 'consultation_pro_only_refresh':
       return ConsultationBlock.proOnlyRefresh;
+    case 'consultation_pro_weekly_exhausted':
+      return ConsultationBlock.proWeeklyExhausted;
     default:
       return ConsultationBlock.unknown;
   }
 }
 
-/// Stella 相談クレジットの現在状況 (無料週次残 + 購入残高)。
+/// Stella 相談クレジットの現在状況。
+///
+/// - Pro: [proRemaining] / [proLimit] / [weekBucket] + [purchasedBalance]
+///        (2026-05-27 追加。Pro 週次キャップ CONSULTATION_PRO_WEEKLY=100/週)
+/// - 非 Pro: [freeRemaining] / [freeLimit] / [weekBucket] + [purchasedBalance]
+///
+/// [purchasedBalance] は Pro/非 Pro 共通。Pro が週次キャップを使い切ったときの
+/// フォールバック消費先として使われる。
 class ConsultationCreditStatus {
-  /// Pro なら true (無制限、各回数は null)。
+  /// Pro 加入中。
   final bool pro;
+
+  /// Free の今週の無料相談残数 (Pro は null)。
   final int? freeRemaining;
   final int? freeLimit;
+
+  /// Pro の今週の相談残数 (非 Pro は null)。
+  final int? proRemaining;
+  final int? proLimit;
+
+  /// ISO 週バケット "YYYY-Www" (月曜 UTC リセット境界の識別子)。
+  final String? weekBucket;
+
+  /// 購入クレジット残高 (Pro/非 Pro 共通)。
   final int? purchasedBalance;
 
   const ConsultationCreditStatus({
     required this.pro,
     this.freeRemaining,
     this.freeLimit,
+    this.proRemaining,
+    this.proLimit,
+    this.weekBucket,
     this.purchasedBalance,
   });
 
-  /// 何かしら相談できる残数があるか (Pro は常に true)。
-  bool get hasAny =>
-      pro || (freeRemaining ?? 0) > 0 || (purchasedBalance ?? 0) > 0;
+  /// 何かしら相談できる残数があるか。
+  /// Pro は週次残 or 購入残のどちらかが > 0 なら true (= 「無制限」ではなくなった)。
+  bool get hasAny {
+    if (pro) {
+      return (proRemaining ?? 0) > 0 || (purchasedBalance ?? 0) > 0;
+    }
+    return (freeRemaining ?? 0) > 0 || (purchasedBalance ?? 0) > 0;
+  }
 
   factory ConsultationCreditStatus.fromJson(Map<String, dynamic> j) =>
       ConsultationCreditStatus(
         pro: j['pro'] == true,
         freeRemaining: (j['freeRemaining'] as num?)?.toInt(),
         freeLimit: (j['freeLimit'] as num?)?.toInt(),
+        proRemaining: (j['proRemaining'] as num?)?.toInt(),
+        proLimit: (j['proLimit'] as num?)?.toInt(),
+        weekBucket: j['weekBucket'] as String?,
         purchasedBalance: (j['purchasedBalance'] as num?)?.toInt(),
       );
 }

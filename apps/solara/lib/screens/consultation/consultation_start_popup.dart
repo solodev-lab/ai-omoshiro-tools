@@ -54,21 +54,45 @@ class _StartConsultPopupState extends State<_StartConsultPopup> {
   @override
   Widget build(BuildContext context) {
     final st = ConsultationCredits.instance.status;
+    final isPro = st?.pro ?? false;
     final freeRemaining = st?.freeRemaining;
     final freeLimit = st?.freeLimit;
+    final proRemaining = st?.proRemaining;
+    final proLimit = st?.proLimit;
     final purchased = st?.purchasedBalance ?? 0;
     final hasFree = (freeRemaining ?? 0) > 0;
+    final hasPro = (proRemaining ?? 0) > 0;
     final hasPaid = purchased > 0;
     // タイトル: 実際に「次に消費される」種別を表示。
-    // 設計（project_solara_stella_free_credits）= 消費順は 無料週次 → 購入残高。
+    // 設計 (project_solara_stella_free_credits + Pro 週次キャップ 2026-05-27) =
+    // 消費順は Pro 週次 → 購入残 (Pro)、無料週次 → 購入残 (Free)。
     final String titleText;
-    if (hasFree) {
-      titleText = '無料クレジットを使う';
-    } else if (hasPaid) {
-      titleText = '有料クレジットを使う';
+    if (isPro) {
+      titleText = hasPro
+          ? 'Pro 週次クレジットを使う'
+          : (hasPaid ? '有料クレジットを使う' : 'クレジットを使う');
     } else {
-      titleText = 'クレジットを使う';
+      if (hasFree) {
+        titleText = '無料クレジットを使う';
+      } else if (hasPaid) {
+        titleText = '有料クレジットを使う';
+      } else {
+        titleText = 'クレジットを使う';
+      }
     }
+
+    // 1 行ぶんの残数バッジ。Pro/Free で項目内容と説明文だけ変える。
+    final String primaryLabel = isPro ? 'Pro 週次クレジット' : '無料クレジット';
+    final String primaryRemain = isPro
+        ? ((proRemaining != null && proLimit != null)
+            ? '残り $proRemaining / $proLimit 回'
+            : '残り回数を確認中')
+        : ((freeRemaining != null && freeLimit != null)
+            ? '残り $freeRemaining / $freeLimit 回'
+            : '残り回数を確認中');
+    final String primarySubtitle = isPro
+        ? '毎週月曜日に補充（Pro 加入中）'
+        : '毎週月曜日に補充';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -83,7 +107,7 @@ class _StartConsultPopupState extends State<_StartConsultPopup> {
           ),
         ),
         const SizedBox(height: 14),
-        // 残数バッジ: 無料 / 有料 の両方を常に表示。
+        // 残数バッジ: 主クレジット (Pro 週次 or 無料週次) + 有料の両方を常に表示。
         // 値の鮮度: 呼出側 (consultation_input_logic._showStartPopup) が直前に
         // ConsultationCredits.instance.refresh() を await してから表示する。
         // popup 表示中も singleton listener で自動更新される (購入完了等)。
@@ -97,15 +121,15 @@ class _StartConsultPopupState extends State<_StartConsultPopup> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // ── 無料クレジット ──
+              // ── 主クレジット (Pro 週次 or 無料週次) ──
               Row(
                 children: [
                   const Icon(Icons.auto_awesome,
                       color: SolaraColors.solaraGoldLight, size: 16),
                   const SizedBox(width: 8),
-                  const Text(
-                    '無料クレジット',
-                    style: TextStyle(
+                  Text(
+                    primaryLabel,
+                    style: const TextStyle(
                       color: SolaraColors.textPrimary,
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
@@ -113,9 +137,7 @@ class _StartConsultPopupState extends State<_StartConsultPopup> {
                   ),
                   const Spacer(),
                   Text(
-                    (freeRemaining != null && freeLimit != null)
-                        ? '残り $freeRemaining / $freeLimit 回'
-                        : '残り回数を確認中',
+                    primaryRemain,
                     style: const TextStyle(
                       color: SolaraColors.textPrimary,
                       fontSize: 13,
@@ -124,11 +146,11 @@ class _StartConsultPopupState extends State<_StartConsultPopup> {
                   ),
                 ],
               ),
-              const Padding(
-                padding: EdgeInsets.only(left: 24, top: 2),
+              Padding(
+                padding: const EdgeInsets.only(left: 24, top: 2),
                 child: Text(
-                  '毎週月曜日に補充',
-                  style: TextStyle(
+                  primarySubtitle,
+                  style: const TextStyle(
                     color: SolaraColors.textSecondary,
                     fontSize: 11,
                   ),

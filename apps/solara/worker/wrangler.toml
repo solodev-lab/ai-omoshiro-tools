@@ -45,9 +45,17 @@ FORTUNE_MODEL_FALLBACK = "gemini-flash-latest"
 #   CONSULTATION_FREE_MODES   : 無料試食できるモードの CSV。3 モード全部 or "daily" だけ等に変更可。
 #                               (migration=移住 / travel=旅行 / daily=おでかけ「今日どこ行こう」)
 #   CONSULTATION_FREE_WEEKLY  : 週あたり無料回数 (端末ごと、月曜 UTC リセット)。
-# Pro は無制限 + thinking ON + 出し直し可。Free は thinking OFF + 出し直し不可。
+# Pro は週 N 回 (CONSULTATION_PRO_WEEKLY、default 100) + thinking ON + 出し直し可。
+# Free は thinking OFF + 出し直し不可。
 CONSULTATION_FREE_MODES = "migration,travel,daily"
 CONSULTATION_FREE_WEEKLY = "3"
+# Pro 週次キャップ (2026-05-27 追加。Gemini API 課金破綻防止の最終線)。
+# 100/週 ≈ 月 430 回 ≈ 日平均 14 回 < 20 回/日 breakeven。バースト (1 日 100 連発) でも
+# 月平均で見れば赤字回避できる設計。Pro が 100/週 を超えたら購入クレジット消費に
+# フォールバックし、それも 0 なら 402 (consultation_pro_weekly_exhausted)。
+# Free 週次カウンタ (consultation_credits 表) とは別キー (consultation_pro_credits 表)
+# で持つため、Free→Pro upgrade 時に Pro 100 がフルで使える。
+CONSULTATION_PRO_WEEKLY = "100"
 # 消費型クレジット商品 (B案、有料追加クレジット)。"商品ID:付与数" を CSV で。
 # 🚨 オーナー作業: App Store Connect / Google Play / RevenueCat で同じ商品 ID の消費型 IAP を作成。
 # 価格は各ストアで設定 (提案: small=3個 $2.99/¥450、large=10個 $8.99/¥1,300、Pro へ寄せた割高設定)。

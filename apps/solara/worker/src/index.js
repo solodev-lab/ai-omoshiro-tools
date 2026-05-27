@@ -505,6 +505,16 @@ function consultationFreeWeekly(env) {
 }
 
 /**
+ * CONSULTATION_PRO_WEEKLY を int に。default 100、不正値も 100 に倒す。
+ * Pro 1 週あたりの Stella 相談上限 (Gemini API 課金破綻防止)。
+ * 100/週 ≈ 月 430 回 ≈ 日平均 14 回 < 20 回/日 breakeven。
+ */
+function consultationProWeekly(env) {
+  const n = parseInt(env.CONSULTATION_PRO_WEEKLY || '100', 10);
+  return Number.isInteger(n) && n >= 0 ? n : 100;
+}
+
+/**
  * 相談クレジットのカウンター key を決める。
  *   - iOS: X-AppAttest-KeyId ヘッダー (端末固定、再インストールに強い) → `ios:{keyId}`
  *   - それ以外 (Android 含む): appUserId → `usr:{appUserId}` (匿名は再インストールで farming 可、
@@ -525,16 +535,44 @@ function consultationAppUserId(body) {
 
 /**
  * 相談クレジットの現在状況を返す (status endpoint + 生成後の残数添付で共用)。
- * Pro は無制限 (各値 null)。非 Pro は 無料週次残 + 購入残高。
+ *
+ * - Pro: Pro 週次キャップの残数 (proRemaining/proLimit/weekBucket) + 購入残高。
+ *        Free フィールド (freeRemaining/freeLimit) は null。
+ *        deviceKey 無し (bypass/dev) の場合は proRemaining=proLimit を返す。
+ * - 非 Pro: 無料週次残 (freeRemaining/freeLimit/weekBucket) + 購入残高。
+ *           Pro フィールド (proRemaining/proLimit) は null。
+ *
+ * 購入残高 (purchasedBalance) は Pro/非 Pro 共通。Pro が 100 を使い切った後の
+ * フォールバック消費先として使われる。
  */
 async function consultationCreditStatus(env, request, body) {
   const appUserId = consultationAppUserId(body);
   const isPro = await lookupIsPro(env, appUserId);
-  if (isPro) {
-    return { pro: true, freeRemaining: null, freeLimit: null, purchasedBalance: null, weekBucket: null };
-  }
   const deviceKey = consultationDeviceKey(request, appUserId);
   const weekBucket = isoWeekBucket();
+
+  let purchasedBalance = 0;
+  if (appUserId) {
+    const pg = await callDo(env, '/consultation-purchased-get', { appUserId });
+    purchasedBalance = (pg.status === 200 && typeof pg.body?.balance === 'number') ? pg.body.balance : 0;
+  }
+
+  if (isPro) {
+    const proLimit = consultationProWeekly(env);
+    let proRemaining = proLimit; // bypass/dev (deviceKey 無し) は満タン扱い
+    if (deviceKey) {
+      const got = await callDo(env, '/consultation-pro-credit-get', { deviceKey, weekBucket });
+      const used = (got.status === 200 && typeof got.body?.used === 'number') ? got.body.used : 0;
+      proRemaining = Math.max(0, proLimit - used);
+    }
+    return {
+      pro: true,
+      proRemaining, proLimit, weekBucket,
+      freeRemaining: null, freeLimit: null,
+      purchasedBalance,
+    };
+  }
+
   const limit = consultationFreeWeekly(env);
   let freeRemaining = 0;
   if (deviceKey) {
@@ -542,12 +580,12 @@ async function consultationCreditStatus(env, request, body) {
     const used = (got.status === 200 && typeof got.body?.used === 'number') ? got.body.used : 0;
     freeRemaining = Math.max(0, limit - used);
   }
-  let purchasedBalance = 0;
-  if (appUserId) {
-    const pg = await callDo(env, '/consultation-purchased-get', { appUserId });
-    purchasedBalance = (pg.status === 200 && typeof pg.body?.balance === 'number') ? pg.body.balance : 0;
-  }
-  return { pro: false, freeRemaining, freeLimit: limit, purchasedBalance, weekBucket };
+  return {
+    pro: false,
+    freeRemaining, freeLimit: limit, weekBucket,
+    proRemaining: null, proLimit: null,
+    purchasedBalance,
+  };
 }
 
 /**
@@ -599,15 +637,30 @@ async function consumeReadingCreditGate(request, env, body, origin) {
   };
 }
 
-/** 生成成功後に 1 クレジット消費する (free→bump / purchased→spend)。Pro / bypass は何もしない。 */
+/**
+ * 生成成功後に 1 クレジット消費する。
+ *
+ * source 別の挙動:
+ *   - 'free'        → 無料週次カウンタを +1 (consultation_credits)
+ *   - 'purchased'   → 購入残高 -1 (consultation_purchased)
+ *   - 'pro_weekly'  → Pro 週次カウンタを +1 (consultation_pro_credits、2026-05-27 追加)
+ *   - null / 未指定 → 何もしない (bypass/dev、Pro で deviceKey 無し時)
+ *
+ * 旧 `gate.isPro` で早期 return していた条件は撤去 (Pro の 'pro_weekly' / 'purchased' を
+ * 正しく消費するため)。Pro でも source が null = bypass のときは何もしない。
+ */
 async function consumeReadingCredit(env, gate) {
-  if (!gate || gate.isPro || !gate.source) return;
+  if (!gate || !gate.source) return;
   if (gate.source === 'free') {
     await callDo(env, '/consultation-credit-bump', {
       deviceKey: gate.deviceKey, weekBucket: gate.weekBucket,
     });
   } else if (gate.source === 'purchased') {
     await callDo(env, '/consultation-purchased-spend', { appUserId: gate.appUserId });
+  } else if (gate.source === 'pro_weekly') {
+    await callDo(env, '/consultation-pro-credit-bump', {
+      deviceKey: gate.deviceKey, weekBucket: gate.weekBucket,
+    });
   }
 }
 
@@ -621,20 +674,66 @@ function consultationConsumed(result) {
 }
 
 /**
- * Stella 相談のクレジットゲート。共通ゲート + 相談固有のモード制限 (CONSULTATION_FREE_MODES)。
- * 1 クレジット = 候補 1 つ (初回も「別の候補地」も消費)。Free も Pro 同等品質 (thinking ON / 出し直し可)。
+ * Stella 相談のクレジットゲート。共通ゲート + 相談固有のモード制限 (CONSULTATION_FREE_MODES)
+ * + Pro 週次キャップ (2026-05-27 追加、CONSULTATION_PRO_WEEKLY)。
+ *
+ * 1 クレジット = 候補 1 つ (初回も「別の候補地」も消費)。Free も Pro 同等品質
+ * (thinking ON / 出し直し可)。
+ *
+ * Pro の消費順 (2026-05-27 〜):
+ *   1) Pro 週次カウンタ (CONSULTATION_PRO_WEEKLY、default 100、月曜 UTC リセット)
+ *   2) 購入クレジット残高 (Pro が 100 を使い切ったときのフォールバック)
+ *   3) 尽きたら 402 consultation_pro_weekly_exhausted
+ *
+ * Pro が deviceKey 無し (bypass/dev) の場合は週次カウントせず通す
+ * (= 既存挙動を維持。本番では必ず X-AppAttest-KeyId か appUserId が来る)。
+ *
+ * 非 Pro の消費順 (変更なし):
+ *   1) 無料週次 (CONSULTATION_FREE_WEEKLY、default 3)
+ *   2) 購入クレジット残高
+ *   3) 尽きたら 402 consultation_credit_exhausted
  */
 async function gateConsultation(request, env, body, origin) {
   const appUserId = consultationAppUserId(body);
   const isPro = await lookupIsPro(env, appUserId);
-  // 非 Pro はアクセス可能モードか (Pro は全モード)
+
+  // 非 Pro は対応モードチェック + 共通ゲート (Free 週次 → 購入 → 402)
   if (!isPro) {
     const mode = body && body.mode;
     if (!consultationFreeModes(env).has(mode)) {
       return { block: jsonStatus(402, { error: 'consultation_pro_only_mode', mode }, origin) };
     }
+    return consumeReadingCreditGate(request, env, body, origin);
   }
-  return consumeReadingCreditGate(request, env, body, origin);
+
+  // ── Pro: 週次キャップを優先消費、超過したら購入残高、それも 0 なら 402 ──
+  const deviceKey = consultationDeviceKey(request, appUserId);
+  if (!deviceKey) {
+    // bypass/dev: 計上せず通す (Pro 既存挙動の踏襲)。本番は middleware で keyId 必須。
+    return { allow: true, isPro: true, source: null };
+  }
+  const weekBucket = isoWeekBucket();
+  const proLimit = consultationProWeekly(env);
+  const got = await callDo(env, '/consultation-pro-credit-get', { deviceKey, weekBucket });
+  const proUsed = (got.status === 200 && typeof got.body?.used === 'number') ? got.body.used : 0;
+  if (proLimit - proUsed > 0) {
+    return { allow: true, isPro: true, source: 'pro_weekly', deviceKey, weekBucket };
+  }
+  // Pro 週次キャップ到達 → 購入残高へフォールバック (サインイン必須)
+  if (appUserId) {
+    const pg = await callDo(env, '/consultation-purchased-get', { appUserId });
+    const balance = (pg.status === 200 && typeof pg.body?.balance === 'number') ? pg.body.balance : 0;
+    if (balance > 0) {
+      return { allow: true, isPro: true, source: 'purchased', appUserId };
+    }
+  }
+  // Pro 週次 + 購入とも尽きた
+  return {
+    block: jsonStatus(402, {
+      error: 'consultation_pro_weekly_exhausted',
+      proRemaining: 0, proLimit, weekBucket,
+    }, origin),
+  };
 }
 
 /**
@@ -1201,22 +1300,28 @@ async function dispatchProtected(request, env, url, origin) {
   // 旧 /protected/astro/consultation は deployed app 用に温存 (後方互換)。
   if (path === '/protected/astro/consultation2' && request.method === 'POST') {
     const body = await request.json();
-    // クレジットゲート (Pro=無制限、非Pro=無料週次→購入残高、尽きたら 402 paywall)
+    // クレジットゲート:
+    //   Pro    = 週次 100 → 購入残高 → 402 consultation_pro_weekly_exhausted
+    //   非 Pro = 無料週次 → 購入残高 → 402 consultation_credit_exhausted
     const gate = await gateConsultation(request, env, body, origin);
     if (gate.block) return gate.block;
     try {
       const result = await handleConsultationV2(body, env);
       // 候補が生成できた時 (exhausted/fallback でない) だけ 1 クレジット消費
+      // Pro 週次 ('pro_weekly') / 購入 ('purchased') / 無料 ('free') を source で分岐
       if (consultationConsumed(result)) {
         await consumeReadingCredit(env, gate);
       }
-      // 残数をレスポンスに添付 (消費後の正確な値、クライアント表示用)
-      if (!gate.isPro) {
-        const status = await consultationCreditStatus(env, request, body);
-        result.freeCreditsRemaining = status.freeRemaining;
-        result.freeCreditsLimit = status.freeLimit;
-        result.purchasedBalance = status.purchasedBalance;
-      }
+      // 残数をレスポンスに添付 (消費後の正確な値、クライアント表示用)。
+      // Pro/非 Pro 両方とも添付 (Pro は proCredits* / 非 Pro は freeCredits*)。
+      const status = await consultationCreditStatus(env, request, body);
+      result.isPro = status.pro;
+      result.freeCreditsRemaining = status.freeRemaining;
+      result.freeCreditsLimit = status.freeLimit;
+      result.proCreditsRemaining = status.proRemaining;
+      result.proCreditsLimit = status.proLimit;
+      result.weekBucket = status.weekBucket;
+      result.purchasedBalance = status.purchasedBalance;
       return jsonOk(result, origin);
     } catch (err) {
       console.error('Consultation V2 error:', err);
@@ -1252,6 +1357,7 @@ export const _internal = {
   isoWeekBucket,
   consultationFreeModes,
   consultationFreeWeekly,
+  consultationProWeekly,
   consultationDeviceKey,
   consultationAppUserId,
   consultationCreditStatus,

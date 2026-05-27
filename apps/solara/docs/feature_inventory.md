@@ -75,7 +75,8 @@ Solara のバックエンドは **Cloudflare Workers** で稼働。本番 URL: `
   - **購入残高**: 消費型 IAP。**アカウント appUserId 紐付け** (サインイン必須、機種変で失わない)。失効しない。
 - **モード制限**: `CONSULTATION_FREE_MODES` (default 全3) = 非 Pro がアクセスできるモード。対象外は 402
   `consultation_pro_only_mode`。env で `daily` だけ等に絞れる。
-- **Pro**: 無制限 (クレジット消費なし)。
+- **Pro**: 当初は無制限。2026-05-27 に **Pro 週次キャップ 100 回/週** 導入 (詳細は §0.2.3)。
+  共通ゲート `consumeReadingCreditGate` を通る Tarot カテゴリは引き続き Pro 無制限 (キャップ無し)。
 - **消費タイミング**: 実際に Stella 生成が成功した時だけ (静的 fallback は消費しない)。
 - **ゲート**: `index.js` `gateConsultation` (middleware 通過後・生成前)。`consultationCreditStatus` が残数を算出
   (生成レスポンスへの添付 + 状況 endpoint で共用)。
@@ -236,6 +237,63 @@ Solara のバックエンドは **Cloudflare Workers** で稼働。本番 URL: `
 - **再発防止**: `consultation_engine.test.js` に end-to-end テスト 3 件追加
   (`pipeline point scope: placeKind=named を candidate に保持` 等)。
   `placeReference` 単体テストだけでは検出できなかった「pipeline → placeReference」の透過テストを追加。
+
+### 0.2.3 Pro 週次キャップ 100 回/週 (2026-05-27)
+
+> **設計の柱**: 「Pro 無制限」を Gemini API 課金破綻防止のために 100 回/週でハードキャップ化。
+> 100 を超えたら購入クレジットへフォールバック、それも 0 なら 402 で停止 + 月曜 UTC リセット。
+> Free との対称性 (週次キャップ + 購入残高 + 402 paywall) を保ち、消費順だけが違う。
+
+#### 設計判断
+- **値の根拠**: 100/週 ≈ 月 430 回 ≈ **日平均 14 回 < 20 回/日 breakeven**。バースト
+  (1 日 100 連発) があっても月平均で見れば赤字を回避できる。
+- **別キーで管理**: `consultation_pro_credits` 表 (`device_key` PK + `week_bucket` + `used`)
+  を `consultation_credits` (Free 週次) とは**別表**で持つ。Free → Pro upgrade した瞬間
+  Pro 100 がフルで使え、Pro → Free 失効後も対称に Free 3 がフル。共用キーだと tier 変更ごとに
+  マイグレーション挙動を考えないといけない (バグ温床) ため別表で完全分離。
+- **Pro の消費順**: ① Pro 週次カウンタ → ② 購入クレジット残高 → ③ 402
+  `consultation_pro_weekly_exhausted`。Free と完全に対称 (Free は無料週次 → 購入 → 402)。
+- **ストア表記**: 公開前なので「無制限」表記は撤去 (Sanctuary の旧 "Unlimited Credits" 表示も
+  「Pro 残 X / 100 ・ 購入 N (月曜補充)」に書き換え)。
+- **Tarot は据え置き**: 共通ゲート `consumeReadingCreditGate` は変更せず、Pro 週次キャップは
+  Stella 専用 `gateConsultation` でのみ発火。Tarot カテゴリは Pro 無制限のまま (オーナー方針)。
+
+#### 実装の所在 (層別)
+- DO (層 0): `attestation_state.js` `consultation_pro_credits` テーブル +
+  `_consultationProCreditGet` / `_consultationProCreditBump` メソッド +
+  `/consultation-pro-credit-{get,bump}` 経由 endpoint。構造は `consultation_credits` と完全対称。
+- Worker (層 0): `index.js`
+  - 新 helper `consultationProWeekly(env)` (default 100、env `CONSULTATION_PRO_WEEKLY` で上書き)
+  - `gateConsultation` の Pro 分岐を「無制限 bypass」→「週次 → 購入 → 402」に書き換え
+  - `consumeReadingCredit` に `source: 'pro_weekly'` 分岐追加 (旧 `gate.isPro` 早期 return は撤去)
+  - `consultationCreditStatus` が Pro 時に `proRemaining/proLimit/weekBucket` も返すよう拡張
+  - `/protected/astro/consultation2` レスポンスに `proCreditsRemaining/proCreditsLimit/isPro/
+    weekBucket/purchasedBalance` を必ず添付 (Pro/非 Pro 両方とも)
+- Flutter API (層 2a): `consultation_api.dart`
+  - `ConsultationCreditStatus` に `proRemaining/proLimit/weekBucket` 追加 + `hasAny` を tier-aware に
+  - `ConsultationBlock.proWeeklyExhausted` 追加 + `consultationBlockFromCode` で
+    `consultation_pro_weekly_exhausted` → 新 enum 値にマップ
+  - `consultation_v2_api.dart` `ConsultationV2Result` に `proCreditsRemaining/proCreditsLimit` 追加
+- Flutter 画面 (層 4):
+  - **Sanctuary 上部** (`sanctuary_screen.dart` `_buildCreditRow`): Pro 時は旧 "Unlimited
+    Credits" 表示を撤去し「✦ Pro 残 X / 100 ・ 購入 N （月曜補充）」に統一。タップで購入シート起動。
+  - **相談開始 popup** (`consultation_start_popup.dart` `_StartConsultPopup`): Pro でも表示対象に
+    (`_onStartPressed` の Pro auto-skip 撤去)。タイトル/バッジを tier-aware に
+    (Pro 時は「Pro 週次クレジット 残り X / 100 回 (毎週月曜日に補充・Pro 加入中)」)。
+  - **結果画面 paywall** (`consultation_result_credit_widgets.dart` `_ConsultationBlockedBox`):
+    `proWeeklyExhausted` variant 追加 (「今週の Pro 相談上限に達しました。月曜リセット or 追加
+    クレジット購入」)。「Cosmic Pro で無制限にする」サブボタンは Pro 切れには出さない (既に Pro)。
+
+#### 検証
+- worker test 全 **243/243 pass** (+5 net、Pro 99→100 ぎりぎり / 100→購入フォールバック / 100+0→402 /
+  env 上書き / Android appUserId 経由 deviceKey)。
+- flutter test 全 **238/238 pass** (1件は事前既知の `widget_test.dart` Timer pending、本変更と無関係)。
+  新規 `consultation_v2_api_test.dart`: `proWeeklyExhausted` マップ + Pro 200 解析。
+  `consultation_credits_test.dart`: `hasAny` を Pro 週次 0 + 購入 0 で false など 4 ケースに再構成。
+- flutter analyze クリーン (既存 2 件の `app_attest_client_android_test.dart` 警告は事前)。
+- extract.py 再生成: stamp diff +0 -0 ~8 (新規ファイル無し、既存改修のみ)。
+  audit.py: 新規 HARD 違反なし (`sanctuary_screen.dart` は 1459→1435 でむしろ -24、
+  `consultation_v2_api.dart` 373→388 で WARN 内)。
 
 ### 0.3 Horo「今日の占い」1 日 1 回固定 + プロンプト刷新 (2026-05-27)
 

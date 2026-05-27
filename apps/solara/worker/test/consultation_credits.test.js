@@ -24,6 +24,7 @@ const {
   isoWeekBucket,
   consultationFreeModes,
   consultationFreeWeekly,
+  consultationProWeekly,
   consultationDeviceKey,
   consultationCreditStatus,
   consumeReadingCreditGate,
@@ -63,8 +64,14 @@ function makeRequest(headers = {}) {
   return { headers: { get: (h) => (h in headers ? headers[h] : null) } };
 }
 
-/** DO handler: entitlement (Pro/Free) + 無料週次 (used) + 購入残高 (purchased) を返す合成。 */
-function doHandler({ isPro = false, used = 0, purchased = 0 } = {}) {
+/**
+ * DO handler 合成。
+ *   isPro      : entitlement-get で Pro 判定を返す
+ *   used       : 無料週次 (consultation_credits.used)
+ *   purchased  : 購入残高 (consultation_purchased.balance)
+ *   proUsed    : Pro 週次 (consultation_pro_credits.used、2026-05-27 追加)
+ */
+function doHandler({ isPro = false, used = 0, purchased = 0, proUsed = 0 } = {}) {
   return (path) => {
     if (path === '/entitlement-get') {
       if (isPro) {
@@ -77,6 +84,12 @@ function doHandler({ isPro = false, used = 0, purchased = 0 } = {}) {
     }
     if (path === '/consultation-credit-bump') {
       return { status: 200, body: { used: used + 1 } };
+    }
+    if (path === '/consultation-pro-credit-get') {
+      return { status: 200, body: { used: proUsed } };
+    }
+    if (path === '/consultation-pro-credit-bump') {
+      return { status: 200, body: { used: proUsed + 1 } };
     }
     if (path === '/consultation-purchased-get') {
       return { status: 200, body: { balance: purchased } };
@@ -135,6 +148,13 @@ test('consultationFreeWeekly: default 3 / 上書き / 不正値は 3', () => {
   assert.equal(consultationFreeWeekly({ CONSULTATION_FREE_WEEKLY: 'abc' }), 3);
 });
 
+test('consultationProWeekly: default 100 / 上書き / 不正値は 100', () => {
+  assert.equal(consultationProWeekly({}), 100);
+  assert.equal(consultationProWeekly({ CONSULTATION_PRO_WEEKLY: '50' }), 50);
+  assert.equal(consultationProWeekly({ CONSULTATION_PRO_WEEKLY: '0' }), 0);
+  assert.equal(consultationProWeekly({ CONSULTATION_PRO_WEEKLY: 'xyz' }), 100);
+});
+
 // ── consultationDeviceKey ───────────────────────────────────
 
 test('consultationDeviceKey: iOS keyId 優先 → ios:{keyId}', () => {
@@ -154,16 +174,81 @@ test('consultationDeviceKey: どちらも無し → null', () => {
 
 // ── gateConsultation ────────────────────────────────────────
 
-test('gate: Pro は無制限 + クレジット DO を呼ばない', async () => {
+test('gate: Pro + 週次キャップ未到達 → source=pro_weekly (Free 残量 DO は呼ばない)', async () => {
   _resetEntitlementCacheForTest();
-  const { env, calls } = makeEnv(doHandler({ isPro: true }));
+  const { env, calls } = makeEnv(doHandler({ isPro: true, proUsed: 50 })); // 50/100
   const req = makeRequest({ 'X-AppAttest-KeyId': 'K' });
   const body = { __appUserId: 'google:pro1', mode: 'daily' };
   const r = await gateConsultation(req, env, body, null);
   assert.equal(r.isPro, true);
   assert.equal(r.allow, true);
-  // entitlement-get は呼ぶが、credit-get は呼ばない
+  assert.equal(r.source, 'pro_weekly');
+  assert.equal(r.deviceKey, 'ios:K');
+  // Pro 週次 DO は呼ぶが、Free credit-get は呼ばない (別表)
+  assert.ok(calls.some((c) => c.path === '/consultation-pro-credit-get'));
   assert.ok(!calls.some((c) => c.path === '/consultation-credit-get'));
+});
+
+test('gate: Pro 99→100 ぎりぎり通る (proUsed=99, limit 100)', async () => {
+  _resetEntitlementCacheForTest();
+  const { env } = makeEnv(doHandler({ isPro: true, proUsed: 99 }));
+  const req = makeRequest({ 'X-AppAttest-KeyId': 'K' });
+  const r = await gateConsultation(req, env, { __appUserId: 'google:pro', mode: 'daily' }, null);
+  assert.equal(r.source, 'pro_weekly');
+});
+
+test('gate: Pro 100 到達 + 購入残あり → source=purchased (フォールバック)', async () => {
+  _resetEntitlementCacheForTest();
+  const { env } = makeEnv(doHandler({ isPro: true, proUsed: 100, purchased: 5 }));
+  const req = makeRequest({ 'X-AppAttest-KeyId': 'K' });
+  const r = await gateConsultation(req, env, { __appUserId: 'google:pro', mode: 'daily' }, null);
+  assert.equal(r.allow, true);
+  assert.equal(r.isPro, true);
+  assert.equal(r.source, 'purchased');
+  assert.equal(r.appUserId, 'google:pro');
+});
+
+test('gate: Pro 100 到達 + 購入 0 → 402 consultation_pro_weekly_exhausted', async () => {
+  _resetEntitlementCacheForTest();
+  const { env } = makeEnv(doHandler({ isPro: true, proUsed: 100, purchased: 0 }));
+  const req = makeRequest({ 'X-AppAttest-KeyId': 'K' });
+  const r = await gateConsultation(req, env, { __appUserId: 'google:pro', mode: 'daily' }, null);
+  assert.ok(r.block);
+  assert.equal(r.block.status, 402);
+  const j = await r.block.json();
+  assert.equal(j.error, 'consultation_pro_weekly_exhausted');
+  assert.equal(j.proRemaining, 0);
+  assert.equal(j.proLimit, 100);
+});
+
+test('gate: Pro + appUserId 経由の deviceKey (keyId 無し Android) → 週次キャップ適用', async () => {
+  // Android Play Integrity 経路は X-AppAttest-KeyId 無し。consultationDeviceKey は
+  // appUserId にフォールバックして 'usr:{appUserId}' を返す = Pro 週次キャップは適用される。
+  // (iOS と Android で Pro 週次の挙動が変わらないことを保証)
+  _resetEntitlementCacheForTest();
+  const { env } = makeEnv(doHandler({ isPro: true, proUsed: 50 }));
+  const req = makeRequest({}); // keyId 無し
+  const body = { __appUserId: 'google:proA', mode: 'daily' };
+  const r = await gateConsultation(req, env, body, null);
+  assert.equal(r.allow, true);
+  assert.equal(r.isPro, true);
+  assert.equal(r.source, 'pro_weekly');
+  assert.equal(r.deviceKey, 'usr:google:proA'); // appUserId フォールバック
+});
+
+test('gate: Pro CONSULTATION_PRO_WEEKLY=50 で env 上書き効く', async () => {
+  _resetEntitlementCacheForTest();
+  const { env } = makeEnv(
+    doHandler({ isPro: true, proUsed: 50 }),
+    { CONSULTATION_PRO_WEEKLY: '50' },
+  );
+  const req = makeRequest({ 'X-AppAttest-KeyId': 'K' });
+  // 50/50 = 残 0 → 402 (購入残 0)
+  const r = await gateConsultation(req, env, { __appUserId: 'google:pro', mode: 'daily' }, null);
+  assert.ok(r.block);
+  const j = await r.block.json();
+  assert.equal(j.error, 'consultation_pro_weekly_exhausted');
+  assert.equal(j.proLimit, 50);
 });
 
 test('gate: Free + 許可モード + 無料残量あり → source=free', async () => {
@@ -251,13 +336,17 @@ test('gate: 非Pro + deviceKey 無し (bypass/dev) → source=null で通過', a
 
 // ── consumeReadingCreditGate (共通ゲート、タロットカテゴリ等で共用) ──────
 
-test('共通ゲート: Pro は無制限 (credit DO 呼ばない)', async () => {
+test('共通ゲート (Tarot 等): Pro は週次キャップ無し (= 既存無制限挙動を維持)', async () => {
+  // consumeReadingCreditGate は Tarot カテゴリと共用 = Pro 週次キャップは適用しない。
+  // Pro 週次キャップは gateConsultation (Stella 専用) でのみ発火する。
+  // → Tarot は Pro 無制限のまま (オーナー方針「タロットそのまま」)。
   _resetEntitlementCacheForTest();
-  const { env, calls } = makeEnv(doHandler({ isPro: true }));
+  const { env, calls } = makeEnv(doHandler({ isPro: true, proUsed: 999 }));
   const req = makeRequest({ 'X-AppAttest-KeyId': 'K' });
   const r = await consumeReadingCreditGate(req, env, { __appUserId: 'google:pro1' }, null);
   assert.equal(r.isPro, true);
   assert.ok(!calls.some((c) => c.path === '/consultation-credit-get'));
+  assert.ok(!calls.some((c) => c.path === '/consultation-pro-credit-get'));
 });
 
 test('共通ゲート: mode 無し (タロット) でも無料残あれば source=free', async () => {
@@ -286,17 +375,21 @@ test('共通ゲート: 無料0 + 購入あり → source=purchased / 0+0 → 402
 
 // ── consultationCreditStatus ────────────────────────────────
 
-test('status: Pro は無制限 (各値 null)', async () => {
+test('status: Pro は 週次残 + 上限 + 週バケット + 購入残 (Free 項目は null)', async () => {
   _resetEntitlementCacheForTest();
-  const { env } = makeEnv(doHandler({ isPro: true }));
+  const { env } = makeEnv(doHandler({ isPro: true, proUsed: 13, purchased: 4 }));
   const req = makeRequest({ 'X-AppAttest-KeyId': 'K' });
   const s = await consultationCreditStatus(env, req, { __appUserId: 'google:pro1' });
   assert.equal(s.pro, true);
+  assert.equal(s.proRemaining, 87); // 100 - 13
+  assert.equal(s.proLimit, 100);
+  assert.match(s.weekBucket, /^\d{4}-W\d{2}$/);
+  assert.equal(s.purchasedBalance, 4); // Pro でも購入残はある (Pro 100 後のフォールバック用)
   assert.equal(s.freeRemaining, null);
-  assert.equal(s.purchasedBalance, null);
+  assert.equal(s.freeLimit, null);
 });
 
-test('status: Free は 無料残 + 上限 + 購入残高', async () => {
+test('status: Free は 無料残 + 上限 + 購入残高 (Pro 項目は null)', async () => {
   _resetEntitlementCacheForTest();
   const { env } = makeEnv(doHandler({ isPro: false, used: 1, purchased: 7 }));
   const req = makeRequest({ 'X-AppAttest-KeyId': 'K' });
@@ -305,6 +398,8 @@ test('status: Free は 無料残 + 上限 + 購入残高', async () => {
   assert.equal(s.freeRemaining, 2); // 3 - 1
   assert.equal(s.freeLimit, 3);
   assert.equal(s.purchasedBalance, 7);
+  assert.equal(s.proRemaining, null);
+  assert.equal(s.proLimit, null);
 });
 
 // ── consultationCreditAmountForProduct (revenuecat.js) ──────

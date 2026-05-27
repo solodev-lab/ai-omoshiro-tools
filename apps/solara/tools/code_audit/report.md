@@ -8,7 +8,7 @@
 |------|------|----------|
 | 3062 | 🔴 HARD | lib/screens/map_screen.dart |
 | 1923 | 🔴 HARD | lib/screens/map/map_daily_transit_screen.dart |
-| 1453 | 🔴 HARD | lib/screens/sanctuary_screen.dart |
+| 1435 | 🔴 HARD | lib/screens/sanctuary_screen.dart |
 | 1385 | 🔴 HARD | lib/screens/sanctuary/sanctuary_title_diagnosis.dart |
 | 1275 | 🔴 HARD | lib/screens/galaxy_screen.dart |
 | 1084 | 🔴 HARD | lib/screens/forecast_screen.dart |
@@ -61,8 +61,8 @@
 | 396 | 🟡 WARN | lib/widgets/cycle_spiral_painter.dart |
 | 395 | 🟡 WARN | lib/utils/title_data.dart |
 | 389 | 🟡 WARN | lib/screens/consultation/consultation_history_widgets.dart |
+| 388 | 🟡 WARN | lib/utils/consultation_v2_api.dart |
 | 374 | 🟡 WARN | lib/screens/map/map_direction_popup.dart |
-| 373 | 🟡 WARN | lib/utils/consultation_v2_api.dart |
 | 360 | 🟡 WARN | lib/utils/moon_phase.dart |
 | 355 | 🟡 WARN | lib/screens/locations/locations_date_stepper.dart |
 | 354 | 🟡 WARN | lib/widgets/sanctuary_account_section.dart |
@@ -109,7 +109,7 @@
 
   - lib/screens/consultation/consultation_history_widgets.dart:49
   - lib/screens/consultation/consultation_input_widgets.dart:107
-  - lib/screens/consultation/consultation_result_credit_widgets.dart:117
+  - lib/screens/consultation/consultation_result_credit_widgets.dart:132
   - lib/screens/consultation/consultation_result_widgets.dart:77
   - lib/screens/consultation/consultation_result_widgets.dart:106
   ```
@@ -175,7 +175,7 @@
 
   - lib/screens/consultation/consultation_history_widgets.dart:47
   - lib/screens/consultation/consultation_place_picker_screen.dart:346
-  - lib/screens/consultation/consultation_result_credit_widgets.dart:115
+  - lib/screens/consultation/consultation_result_credit_widgets.dart:130
   - lib/screens/consultation/consultation_result_widgets.dart:75
   - lib/screens/galaxy/galaxy_archive_filter_chips.dart:192
   ```
@@ -274,7 +274,7 @@
 
   - lib/screens/consultation/consultation_history_widgets.dart:48
   - lib/screens/consultation/consultation_result_card.dart:117
-  - lib/screens/consultation/consultation_result_credit_widgets.dart:116
+  - lib/screens/consultation/consultation_result_credit_widgets.dart:131
   - lib/screens/consultation/consultation_result_widgets.dart:76
   - lib/screens/galaxy/galaxy_cycle_actions_sheet.dart:186
   ```

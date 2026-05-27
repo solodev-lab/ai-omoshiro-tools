@@ -88,8 +88,11 @@ extension _ConsultationInputLogic on _ConsultationInputScreenState {
   }
 
   // ── 開始 ────────────────────────────────────────────────
+  // 2026-05-27: Pro 週次キャップ導入に合わせて Pro も popup 対象化 (旧: Pro 即時スキップ)。
+  // 「次回以降表示しない」を一度押せば以降は Pro/Free とも自動スキップ = 既存 UX を維持。
+  // 初回ユーザーや「気にしたい」Pro ユーザーには Pro 週次残 (例: 87/100) が伝わる。
   Future<void> _onStartPressed() async {
-    if (ProStatus.instance.isPro || _startPopupHidden) {
+    if (_startPopupHidden) {
       await _runConsultation();
       return;
     }

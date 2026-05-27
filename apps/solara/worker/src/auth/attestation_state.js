@@ -10,6 +10,7 @@
  *   - webhook_events:    Webhook event_id の idempotent 受信ログ (重複送信耐性)
  *   - integrity_nonces:  Play Integrity Standard request 用 nonce (one-time use、TEXT base64)
  *   - consultation_credits: Stella 相談の Free 試食クレジット (端末ごと週次カウンター)
+ *   - consultation_pro_credits: Stella 相談の Pro 週次キャップカウンター (端末ごと週次、別表)
  *   - consultation_purchased: Stella 相談の購入クレジット残高 (アカウント appUserId ごと、消費型 IAP)
  *   - fortune_readings:  Horo「今日の占い」の 1 日 1 回固定キャッシュ
  *                        ((appUserId, local_date, category) で一意。プロフィール変更で
@@ -46,6 +47,10 @@
  *                                                          (週が違えば used=0 = 自然リセット)
  *   POST /consultation-credit-bump body: {deviceKey, weekBucket, now}  → {used}
  *                                                          (週が違えばリセットして 1、同週なら +1)
+ *   POST /consultation-pro-credit-get  body: {deviceKey, weekBucket}  → {used}
+ *                                                          (Pro 週次キャップ用、別表 / 構造は credit-get と対称)
+ *   POST /consultation-pro-credit-bump body: {deviceKey, weekBucket, now}  → {used}
+ *                                                          (Pro 週次キャップ用、別表 / 構造は credit-bump と対称)
  *   POST /consultation-purchased-get   body: {appUserId}            → {balance}
  *   POST /consultation-purchased-spend body: {appUserId, now}       → {balance, spent}
  *                                                          (balance>0 なら -1 して spent:true)
@@ -175,6 +180,21 @@ export class AttestationState {
         app_user_id TEXT PRIMARY KEY,
         balance INTEGER NOT NULL DEFAULT 0,
         updated_at INTEGER NOT NULL
+      );
+    `);
+    // consultation_pro_credits: Pro 加入者の週次相談カウンター (2026-05-27 追加)。
+    // consultation_credits (Free 週次) と「別キー (別表)」で持つ理由:
+    //   - Free → Pro upgrade した瞬間、Pro 100/週 がフルで使えるべき
+    //     (Free 残量と合算しない / Free 消費分を Pro 側に持ち越さない)
+    //   - Pro → Free 失効時も対称: 失効後の翌週から Free 3/週 がフル
+    //   - 共用キーだと tier 変更ごとにマイグレーション挙動を考えないといけない (バグ温床)
+    // 構造は consultation_credits と完全に対称 (device_key PK + 週上書きリセット)。
+    this.sql.exec(`
+      CREATE TABLE IF NOT EXISTS consultation_pro_credits (
+        device_key TEXT PRIMARY KEY,
+        week_bucket TEXT NOT NULL,
+        used INTEGER NOT NULL DEFAULT 0,
+        last_used_at INTEGER NOT NULL
       );
     `);
     // fortune_readings: Horo「今日の占い」の 1 日 1 回固定キャッシュ。
@@ -571,6 +591,56 @@ export class AttestationState {
     return { status: 200, body: { used } };
   }
 
+  // ── /consultation-pro-credit-get ──
+  //
+  // Pro 加入者の当週相談回数 (read-only)。保存週が違えば used=0 (= 月曜リセット)。
+  // limit との比較は呼び出し側 (Worker) が env の CONSULTATION_PRO_WEEKLY で行う。
+  // 構造は _consultationCreditGet と完全に対称 (別表だけが違う)。
+  async _consultationProCreditGet({ deviceKey, weekBucket }) {
+    if (typeof deviceKey !== 'string' || !deviceKey) {
+      return { status: 400, body: { error: 'invalid_device_key' } };
+    }
+    if (typeof weekBucket !== 'string' || !/^\d{4}-W\d{2}$/.test(weekBucket)) {
+      return { status: 400, body: { error: 'invalid_week_bucket' } };
+    }
+    const rows = this.sql.exec(
+      `SELECT week_bucket, used FROM consultation_pro_credits WHERE device_key = ?`,
+      deviceKey,
+    ).toArray();
+    if (rows.length === 0 || rows[0].week_bucket !== weekBucket) {
+      return { status: 200, body: { used: 0 } };
+    }
+    return { status: 200, body: { used: rows[0].used } };
+  }
+
+  // ── /consultation-pro-credit-bump ──
+  //
+  // Pro 加入者の当週相談回数 +1。保存週が違えばリセットして used=1。
+  // Worker は「Stella V2 生成が成功 (非 fallback / 非 exhausted) した時だけ」呼ぶ。
+  async _consultationProCreditBump({ deviceKey, weekBucket, now = Date.now() }) {
+    if (typeof deviceKey !== 'string' || !deviceKey) {
+      return { status: 400, body: { error: 'invalid_device_key' } };
+    }
+    if (typeof weekBucket !== 'string' || !/^\d{4}-W\d{2}$/.test(weekBucket)) {
+      return { status: 400, body: { error: 'invalid_week_bucket' } };
+    }
+    const rows = this.sql.exec(
+      `SELECT week_bucket, used FROM consultation_pro_credits WHERE device_key = ?`,
+      deviceKey,
+    ).toArray();
+    const used = (rows.length === 0 || rows[0].week_bucket !== weekBucket)
+      ? 1
+      : rows[0].used + 1;
+    this.sql.exec(
+      `INSERT INTO consultation_pro_credits (device_key, week_bucket, used, last_used_at)
+       VALUES (?, ?, ?, ?)
+       ON CONFLICT(device_key) DO UPDATE SET week_bucket = ?, used = ?, last_used_at = ?`,
+      deviceKey, weekBucket, used, now,
+      weekBucket, used, now,
+    );
+    return { status: 200, body: { used } };
+  }
+
   // ── /consultation-purchased-get ──
   // 購入クレジット残高 (read-only)。未保存は 0。
   async _consultationPurchasedGet({ appUserId }) {
@@ -759,6 +829,8 @@ export class AttestationState {
       '/account-purge': () => this._accountPurge(body),
       '/consultation-credit-get': () => this._consultationCreditGet(body),
       '/consultation-credit-bump': () => this._consultationCreditBump(body),
+      '/consultation-pro-credit-get': () => this._consultationProCreditGet(body),
+      '/consultation-pro-credit-bump': () => this._consultationProCreditBump(body),
       '/consultation-purchased-get': () => this._consultationPurchasedGet(body),
       '/consultation-purchased-spend': () => this._consultationPurchasedSpend(body),
       '/consultation-credit-grant': () => this._consultationCreditGrant(body),

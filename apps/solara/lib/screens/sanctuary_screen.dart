@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'horoscope/horo_antique_icons.dart';
@@ -423,46 +422,26 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
     );
   }
 
-  // クレジット残 1 行。Pro=英語でおしゃれにそっと、非Pro=無料週次残+購入残。
+  // クレジット残 1 行。
+  // Pro: 「Pro 週次残 X/100 (月曜リセット)」+ 購入残。タップで購入シート。
+  //      (2026-05-27 〜 Pro 週次キャップ導入。旧 "Unlimited Credits" 表示は撤去)
+  // 非 Pro: 無料週次残 + 購入残。タップで購入シート。
   Widget _buildCreditRow(bool isPro) {
-    if (isPro) {
-      // Cosmic Pro: 「無制限」を英語でエレガントに、控えめに添える。
-      return Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
-          color: const Color(0x0FF9D976),
-          border: Border.all(color: const Color(0x40F9D976)),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const AntiqueGlyph(
-                icon: AntiqueIcon.pattern, size: 12, color: Color(0xCCF9D976)),
-            const SizedBox(width: 9),
-            Text(
-              'Unlimited Credits',
-              style: GoogleFonts.cormorantGaramond(
-                fontSize: 18,
-                fontStyle: FontStyle.italic,
-                fontWeight: FontWeight.w600,
-                letterSpacing: 1.6,
-                color: const Color(0xFFF3E6C0),
-              ),
-            ),
-            const SizedBox(width: 9),
-            const AntiqueGlyph(
-                icon: AntiqueIcon.pattern, size: 12, color: Color(0xCCF9D976)),
-          ],
-        ),
-      );
-    }
     final c = _credits;
     if (c == null) return const SizedBox.shrink();
-    final free = c.freeRemaining ?? 0;
     final pur = c.purchasedBalance ?? 0;
+    final String label;
+    if (isPro) {
+      final remain = c.proRemaining ?? c.proLimit ?? 0;
+      final limit = c.proLimit ?? 0;
+      // 月曜リセットを明示。Pro 100/週 を使い切っても購入残で続行可能。
+      label = '✦ Pro 残 $remain / $limit ・ 購入 $pur （月曜補充）';
+    } else {
+      final free = c.freeRemaining ?? 0;
+      label = '✦ クレジット残 ─ 無料 $free ・ 購入 $pur';
+    }
     // タップで購入シートを開く（追加クレジットの導線）。InkWell で残バッジ全面を反応域に。
+    // Pro でも購入導線を出す: 週次キャップ到達後のフォールバック消費先。
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -473,19 +452,22 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
-            color: const Color(0x0DFFFFFF),
-            border: Border.all(color: const Color(0x1AFFFFFF)),
+            color: isPro ? const Color(0x0FF9D976) : const Color(0x0DFFFFFF),
+            border: Border.all(
+                color: isPro ? const Color(0x40F9D976) : const Color(0x1AFFFFFF)),
           ),
           child: Row(
             children: [
               Expanded(
                 child: Text(
-                  '✦ クレジット残 ─ 無料 $free ・ 購入 $pur',
-                  style: const TextStyle(
+                  label,
+                  style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
                     letterSpacing: 0.5,
-                    color: Color(0xFFEAEAEA),
+                    color: isPro
+                        ? const Color(0xFFF3E6C0)
+                        : const Color(0xFFEAEAEA),
                   ),
                 ),
               ),

@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 10 / 総行数: 2066
+- ファイル数: 10 / 総行数: 2116
 - class/mixin/extension/enum: 23
 - 関数 (top-level + method の素拾い): 34
 - Navigator.push 等: 0
@@ -72,7 +72,7 @@
   </details>
 
 
-### `lib/utils/consultation_api.dart` (114 行)
+### `lib/utils/consultation_api.dart` (149 行)
 
 **ファイル先頭コメント:**
 
@@ -95,16 +95,16 @@ Consultation API — クレジット系 (V2 と共有)
 
 - L22 `enum ConsultationBlock`
   - Free 試食クレジット切れ等で Worker が 402 を返したときのブロック理由。
-- L52 `class ConsultationCreditStatus`
-  - Stella 相談クレジットの現在状況 (無料週次残 + 購入残高)。
+- L65 `class ConsultationCreditStatus`
+  - Stella 相談クレジットの現在状況。
 
 **関数 (2 public + 0 private):**
 
-- L38 `consultationBlockFromCode()` — 402 paywall レスポンスの `error` コード → [ConsultationBlock]。
-- L86 `fetchConsultationCredits()` — `/protected/consultation/credits` を呼んで現在のクレジット状況を取得する。
+- L42 `consultationBlockFromCode()` — 402 paywall レスポンスの `error` コード → [ConsultationBlock]。
+- L121 `fetchConsultationCredits()` — `/protected/consultation/credits` を呼んで現在のクレジット状況を取得する。
 
 
-### `lib/utils/consultation_v2_api.dart` (373 行)
+### `lib/utils/consultation_v2_api.dart` (388 行)
 
 **ファイル先頭コメント:**
 
@@ -152,7 +152,7 @@ HARD500 回避のため part 分割: リクエストモデルは consultation_v2
 - L107 `toJson()`
 - L139 `toJson()`
 - L195 `toJson()`
-- L315 `fetchConsultationV2()` — /protected/astro/consultation2 を呼んで Stella の読み (候補 1 つ) を取得する。
+- L324 `fetchConsultationV2()` — /protected/astro/consultation2 を呼んで Stella の読み (候補 1 つ) を取得する。
 
 
 ### `lib/utils/daily_transits_api.dart` (241 行)

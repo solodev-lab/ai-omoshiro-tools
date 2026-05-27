@@ -335,6 +335,53 @@ void main() {
       expect(res.block, ConsultationBlock.unknown);
     });
 
+    test('402: consultation_pro_weekly_exhausted を proWeeklyExhausted にマップ',
+        () async {
+      final client = _jsonClient(
+        {
+          'error': 'consultation_pro_weekly_exhausted',
+          'proRemaining': 0,
+          'proLimit': 100,
+          'weekBucket': '2026-W22',
+        },
+        status: 402,
+      );
+      final res = await fetchConsultationV2(_baseRequest(), client: client);
+      expect(res.isBlocked, isTrue);
+      expect(res.block, ConsultationBlock.proWeeklyExhausted);
+    });
+
+    test('200 Pro 成功: proCreditsRemaining/proCreditsLimit を解析', () async {
+      final client = _jsonClient({
+        'isFirst': true,
+        'candidate': {
+          'lat': 1.0,
+          'lng': 2.0,
+          'characterHeadline': 'h',
+          'energyLabels': [],
+          'narrative': 'n',
+        },
+        'evidence': {'factors': [], 'km': []},
+        'remainingAfter': 0,
+        'model': 'm',
+        // Pro レスポンス: freeCredits* は null、proCredits* に値
+        'isPro': true,
+        'freeCreditsRemaining': null,
+        'freeCreditsLimit': null,
+        'proCreditsRemaining': 87,
+        'proCreditsLimit': 100,
+        'weekBucket': '2026-W22',
+        'purchasedBalance': 4,
+      });
+      final res = await fetchConsultationV2(_baseRequest(), client: client);
+      expect(res.isSuccess, isTrue);
+      expect(res.proCreditsRemaining, 87);
+      expect(res.proCreditsLimit, 100);
+      expect(res.purchasedBalance, 4);
+      expect(res.freeCreditsRemaining, isNull);
+      expect(res.freeCreditsLimit, isNull);
+    });
+
     test('500: ネットワーク/サーバーエラーは isNetworkError', () async {
       final client = MockClient((_) async => http.Response('boom', 500));
       final res = await fetchConsultationV2(_baseRequest(), client: client);

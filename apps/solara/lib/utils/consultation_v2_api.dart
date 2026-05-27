@@ -282,9 +282,16 @@ class ConsultationV2Result {
   /// excluded で候補を出し尽くした (これ以上「別の候補地」が無い)。
   final bool exhausted;
 
-  /// Free ユーザーの今週の残り無料回数 (Pro は null)。
+  /// 非 Pro: 今週の残り無料回数 (Pro は null)。
   final int? freeCreditsRemaining;
   final int? freeCreditsLimit;
+
+  /// Pro: 今週の残り回数 (非 Pro は null、2026-05-27 追加)。
+  /// CONSULTATION_PRO_WEEKLY (default 100) - proUsed。
+  final int? proCreditsRemaining;
+  final int? proCreditsLimit;
+
+  /// Pro/非 Pro 共通の購入クレジット残高。
   final int? purchasedBalance;
 
   const ConsultationV2Result({
@@ -293,6 +300,8 @@ class ConsultationV2Result {
     this.exhausted = false,
     this.freeCreditsRemaining,
     this.freeCreditsLimit,
+    this.proCreditsRemaining,
+    this.proCreditsLimit,
     this.purchasedBalance,
   });
 
@@ -337,12 +346,16 @@ Future<ConsultationV2Result> fetchConsultationV2(
           json.decode(utf8.decode(res.bodyBytes)) as Map<String, dynamic>;
       final freeRemaining = (map['freeCreditsRemaining'] as num?)?.toInt();
       final freeLimit = (map['freeCreditsLimit'] as num?)?.toInt();
+      final proRemaining = (map['proCreditsRemaining'] as num?)?.toInt();
+      final proLimit = (map['proCreditsLimit'] as num?)?.toInt();
       final purchased = (map['purchasedBalance'] as num?)?.toInt();
       if (map['exhausted'] == true) {
         return ConsultationV2Result(
           exhausted: true,
           freeCreditsRemaining: freeRemaining,
           freeCreditsLimit: freeLimit,
+          proCreditsRemaining: proRemaining,
+          proCreditsLimit: proLimit,
           purchasedBalance: purchased,
         );
       }
@@ -350,6 +363,8 @@ Future<ConsultationV2Result> fetchConsultationV2(
         reading: ConsultationV2Reading.fromJson(map),
         freeCreditsRemaining: freeRemaining,
         freeCreditsLimit: freeLimit,
+        proCreditsRemaining: proRemaining,
+        proCreditsLimit: proLimit,
         purchasedBalance: purchased,
       );
     }

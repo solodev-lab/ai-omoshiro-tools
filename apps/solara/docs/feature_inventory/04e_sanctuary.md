@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 10 / 総行数: 5321
+- ファイル数: 10 / 総行数: 5303
 - class/mixin/extension/enum: 26
 - 関数 (top-level + method の素拾い): 114
 - Navigator.push 等: 0
@@ -323,65 +323,65 @@ Solara Sanctuary 法務リンクメニュー (Phase 2 launch_checklist)
 - 集計: `showInfoPopup`×1
 
 
-### `lib/screens/sanctuary_screen.dart` (1453 行)
+### `lib/screens/sanctuary_screen.dart` (1435 行)
 
-**imports:** dart=1 / package=4 / relative=22
+**imports:** dart=1 / package=3 / relative=22
 
 - relative: `horoscope/horo_antique_icons.dart`, `../utils/consultation_api.dart`, `../utils/consultation_credits.dart`, `../utils/pro_status.dart`, `../utils/purchases_service.dart`, `../utils/solara_storage.dart`, `../utils/title_data.dart`, `../widgets/class_card.dart`, `../widgets/pro_unlock_dialog.dart`, `../widgets/sanctuary_account_section.dart`, `../widgets/tap_to_unfocus.dart`, `consultation/consultation_credit_sheet.dart`, `consultation/consultation_history_screen.dart`, `paywall_screen.dart`, `sanctuary/sanctuary_orb_overlay.dart`, `sanctuary/sanctuary_profile_editor.dart`, `sanctuary/sanctuary_reset_hour_picker.dart`, `sanctuary/sanctuary_title_diagnosis.dart`, `sanctuary/class_share_card.dart`, `sanctuary/sanctuary_home_editor.dart`, `sanctuary/sanctuary_legal_menu.dart`, `sanctuary/title_history_screen.dart`
 
 **型定義 (5):**
 
-- L30 `class SanctuaryScreen : StatefulWidget`
-- L37 `class _SanctuaryScreenState : State`
-- L1366 `extension _WidgetOpacity : Widget`
-- L1375 `class _SettingsGroup : StatelessWidget`
-- L1408 `class _SettingsItem : StatelessWidget`
+- L29 `class SanctuaryScreen : StatefulWidget`
+- L36 `class _SanctuaryScreenState : State`
+- L1348 `extension _WidgetOpacity : Widget`
+- L1357 `class _SettingsGroup : StatelessWidget`
+- L1390 `class _SettingsItem : StatelessWidget`
 
 **関数 (7 public + 33 private):**
 
-- L34 `createState()`
-- L77 `initState()`
-- L90 `dispose()`
-- L296 `build()`
-- L1367 `withOpacity()`
-- L1381 `build()`
-- L1416 `build()`
+- L33 `createState()`
+- L76 `initState()`
+- L89 `dispose()`
+- L295 `build()`
+- L1349 `withOpacity()`
+- L1363 `build()`
+- L1398 `build()`
 
   <details><summary>private 関数 33 件</summary>
 
-  - L96 `_onProChanged()`
-  - L100 `_onCreditsChanged()`
-  - L110 `_openCreditPurchase()`
-  - L114 `_loadSettings()`
-  - L138 `_loadProfile()`
-  - L156 `_openProfileEditor()`
-  - L188 `_openShareCard()`
-  - L208 `_startDiagnosis()`
-  - L261 `_openHomeEditor()`
-  - L278 `_syncHomeToVP()`
-  - L374 `_buildTopHeader()`
-  - L427 `_buildCreditRow()`
-  - L503 `_buildProfileOrb()`
-  - L566 `_buildProfileRow()`
-  - L598 `_buildStellarProfileSection()`
-  - L623 `_buildTitleDiagnosisSection()`
-  - L798 `_buildTitleFlipCard()`
-  - L839 `_buildLegacyVCard()`
-  - L862 `_buildTitleVCard()`
-  - L928 `_buildRecordsSection()`
-  - L964 `_buildCosmicProSection()`
-  - L990 `_buildProUpgradeBanner()`
-  - L1046 `_buildProActiveBanner()`
-  - L1086 `_buildRestoreRow()`
-  - L1110 `_openPaywall()`
-  - L1119 `_restorePurchases()`
-  - L1144 `_buildDevProToggle()`
-  - L1197 `_buildAstrologySection()`
-  - L1227 `_buildHouseOption()`
-  - L1260 `_orbSummary()`
-  - L1273 `_openOrbOverlay()`
-  - L1289 `_buildAppSection()`
-  - L1319 `_pickDailyResetHour()`
+  - L95 `_onProChanged()`
+  - L99 `_onCreditsChanged()`
+  - L109 `_openCreditPurchase()`
+  - L113 `_loadSettings()`
+  - L137 `_loadProfile()`
+  - L155 `_openProfileEditor()`
+  - L187 `_openShareCard()`
+  - L207 `_startDiagnosis()`
+  - L260 `_openHomeEditor()`
+  - L277 `_syncHomeToVP()`
+  - L373 `_buildTopHeader()`
+  - L429 `_buildCreditRow()`
+  - L485 `_buildProfileOrb()`
+  - L548 `_buildProfileRow()`
+  - L580 `_buildStellarProfileSection()`
+  - L605 `_buildTitleDiagnosisSection()`
+  - L780 `_buildTitleFlipCard()`
+  - L821 `_buildLegacyVCard()`
+  - L844 `_buildTitleVCard()`
+  - L910 `_buildRecordsSection()`
+  - L946 `_buildCosmicProSection()`
+  - L972 `_buildProUpgradeBanner()`
+  - L1028 `_buildProActiveBanner()`
+  - L1068 `_buildRestoreRow()`
+  - L1092 `_openPaywall()`
+  - L1101 `_restorePurchases()`
+  - L1126 `_buildDevProToggle()`
+  - L1179 `_buildAstrologySection()`
+  - L1209 `_buildHouseOption()`
+  - L1242 `_orbSummary()`
+  - L1255 `_openOrbOverlay()`
+  - L1271 `_buildAppSection()`
+  - L1301 `_pickDailyResetHour()`
 
   </details>
 

@@ -20,7 +20,13 @@ class _ConsultationBlockedBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final exhausted = reason == ConsultationBlock.creditExhausted;
+    // 「購入導線を主ボタンに出す」ケース:
+    //   - Free 相談残切れ (creditExhausted)
+    //   - Pro 週次キャップ到達 (proWeeklyExhausted、2026-05-27 追加)
+    // → どちらも追加クレジット購入 or 月曜リセット待ち (= 共通 UX)。
+    final exhausted = reason == ConsultationBlock.creditExhausted ||
+        reason == ConsultationBlock.proWeeklyExhausted;
+    final isProExhausted = reason == ConsultationBlock.proWeeklyExhausted;
     final (title, body) = switch (reason) {
       ConsultationBlock.proOnlyMode => (
           'このモードは Cosmic Pro で',
@@ -29,6 +35,11 @@ class _ConsultationBlockedBox extends StatelessWidget {
       ConsultationBlock.proOnlyRefresh => (
           '候補の出し直しは Cosmic Pro で',
           '別の候補を何度でも見比べられます。',
+        ),
+      ConsultationBlock.proWeeklyExhausted => (
+          '今週の Pro 相談上限に達しました',
+          'Cosmic Pro は週 100 回まで Stella に相談できます。'
+              '月曜日に補充されます。すぐ続けるなら、追加クレジットの購入が選べます。',
         ),
       _ => (
           '相談クレジットを使い切りました',
@@ -70,7 +81,9 @@ class _ConsultationBlockedBox extends StatelessWidget {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 16),
-              // 残量切れ時のみ「クレジット購入」を主ボタンに、Pro を副ボタンに。
+              // 残量切れ時 (Free / Pro 週次) のみ「クレジット購入」を主ボタンに、
+              // Pro 副ボタンは Free exhausted のみ (Pro 週次 exhausted では非表示 =
+              // 既に Pro なので Pro を勧める意味がない)。
               if (exhausted) ...[
                 SizedBox(
                   width: double.infinity,
@@ -88,14 +101,16 @@ class _ConsultationBlockedBox extends StatelessWidget {
                     child: const Text('追加クレジットを購入'),
                   ),
                 ),
-                const SizedBox(height: 4),
-                TextButton(
-                  onPressed: onUpgrade,
-                  style: TextButton.styleFrom(
-                    foregroundColor: SolaraColors.textSecondary,
+                if (!isProExhausted) ...[
+                  const SizedBox(height: 4),
+                  TextButton(
+                    onPressed: onUpgrade,
+                    style: TextButton.styleFrom(
+                      foregroundColor: SolaraColors.textSecondary,
+                    ),
+                    child: const Text('✦ Cosmic Pro で無制限にする'),
                   ),
-                  child: const Text('✦ Cosmic Pro で無制限にする'),
-                ),
+                ],
               ] else
                 SizedBox(
                   width: double.infinity,

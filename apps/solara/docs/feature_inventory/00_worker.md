@@ -138,7 +138,7 @@ https://developer.apple.com/documentation/devicecheck/validating-apps-that-conne
 **export (1):** `verifyAttestation`
 
 
-### `worker/src/auth/attestation_state.js` (777 行)
+### `worker/src/auth/attestation_state.js` (849 行)
 
 **ファイル先頭コメント:**
 
@@ -154,6 +154,7 @@ Apple App Attest + RevenueCat エンタイトルメント + Play Integrity 用 D
 - webhook_events:    Webhook event_id の idempotent 受信ログ (重複送信耐性)
 - integrity_nonces:  Play Integrity Standard request 用 nonce (one-time use、TEXT base64)
 - consultation_credits: Stella 相談の Free 試食クレジット (端末ごと週次カウンター)
+- consultation_pro_credits: Stella 相談の Pro 週次キャップカウンター (端末ごと週次、別表)
 - consultation_purchased: Stella 相談の購入クレジット残高 (アカウント appUserId ごと、消費型 IAP)
 - fortune_readings:  Horo「今日の占い」の 1 日 1 回固定キャッシュ
 ((appUserId, local_date, category) で一意。プロフィール変更で
@@ -163,10 +164,7 @@ Pro=5 カテゴリ。日付境界はユーザの local TZ。)
 単一 DO instance への集約理由:
 - DAU 1,500 想定で同時刻書き込み <100/sec → DO の sequential write 内に余裕で収まる
 - 複数 instance に sharding すると billing と運用コスト上昇
-- 将来バズった場合のみ keyId-prefix sharding に切替 (= 256 instance に分散)
-
-外部 HTTP API (`fetch(request)`):
-POST /challenge
+- 将来バズった場合のみ keyId-prefix sharding に切替 (=
 ```
 
 **Durable Object 使用 (1 行):**
@@ -438,7 +436,7 @@ houses: そのカテゴリで重視する伝統占星術のハウス番号
 **export (3):** `computeCategoryScore`, `callGemini`, `handleFortune`
 
 
-### `worker/src/index.js` (1303 行)
+### `worker/src/index.js` (1409 行)
 
 **ファイル先頭コメント:**
 
@@ -462,37 +460,37 @@ webhooks/*   外部連携      RevenueCat Webhook (Pro 状態の真の出所)。
 
 | method | path | line |
 | --- | --- | --- |
-| ? | /protected/consultation/credits | L688 |
-| ? | /public/astro/forecast | L909 |
-| ? | /public/tiles/* | L910 |
-| ? | /webhooks/* | L911 |
-| ? | /public/health | L919 |
-| GET | /public/tiles/osm/* | L924 |
-| POST | /public/astro/chart | L929 |
-| POST | /public/astro/forecast | L937 |
-| POST | /public/astro/predict | L952 |
-| POST | /public/astro/daily-transits | L960 |
-| GET | /public/tz | L968 |
-| GET | /public/astro/events | L977 |
-| GET | /public/search | L988 |
-| GET | /auth/whoami | L1010 |
-| POST | /auth/challenge | L1013 |
-| POST | /auth/attest | L1016 |
-| POST | /auth/integrity/challenge | L1020 |
-| GET | /auth/integrity/diagnose | L1029 |
-| POST | /auth/integrity/decode-test | L1042 |
-| POST | /protected/account/delete | L1110 |
-| POST | /protected/fortune | L1114 |
-| POST | /protected/tarot | L1124 |
-| POST | /protected/relocation | L1152 |
-| POST | /protected/astro/line-narrative | L1164 |
-| POST | /protected/astro/consultation | L1174 |
-| POST | /protected/astro/consultation2 | L1202 |
-| POST | /protected/consultation/credits | L1228 |
-| ? | /public/* | L1285 |
-| ? | /auth/* | L1287 |
-| ? | /protected/* | L1289 |
-| ? | /webhooks/revenuecat | L1291 |
+| ? | /protected/consultation/credits | L787 |
+| ? | /public/astro/forecast | L1008 |
+| ? | /public/tiles/* | L1009 |
+| ? | /webhooks/* | L1010 |
+| ? | /public/health | L1018 |
+| GET | /public/tiles/osm/* | L1023 |
+| POST | /public/astro/chart | L1028 |
+| POST | /public/astro/forecast | L1036 |
+| POST | /public/astro/predict | L1051 |
+| POST | /public/astro/daily-transits | L1059 |
+| GET | /public/tz | L1067 |
+| GET | /public/astro/events | L1076 |
+| GET | /public/search | L1087 |
+| GET | /auth/whoami | L1109 |
+| POST | /auth/challenge | L1112 |
+| POST | /auth/attest | L1115 |
+| POST | /auth/integrity/challenge | L1119 |
+| GET | /auth/integrity/diagnose | L1128 |
+| POST | /auth/integrity/decode-test | L1141 |
+| POST | /protected/account/delete | L1209 |
+| POST | /protected/fortune | L1213 |
+| POST | /protected/tarot | L1223 |
+| POST | /protected/relocation | L1251 |
+| POST | /protected/astro/line-narrative | L1263 |
+| POST | /protected/astro/consultation | L1273 |
+| POST | /protected/astro/consultation2 | L1301 |
+| POST | /protected/consultation/credits | L1333 |
+| ? | /public/* | L1391 |
+| ? | /auth/* | L1393 |
+| ? | /protected/* | L1395 |
+| ? | /webhooks/revenuecat | L1397 |
 
 **KV 使用 (4 行):**
 
@@ -500,7 +498,7 @@ webhooks/*   外部連携      RevenueCat Webhook (Pro 状態の真の出所)。
 
 **Durable Object 使用 (4 行):**
 
-- 出現行: L233, L233, L233, L1242
+- 出現行: L233, L233, L233, L1347
 
 **export (2):** `isQuotaExemptPath`, `_internal`
 

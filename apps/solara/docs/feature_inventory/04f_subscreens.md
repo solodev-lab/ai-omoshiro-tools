@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 28 / 総行数: 8822
+- ファイル数: 28 / 総行数: 8862
 - class/mixin/extension/enum: 81
 - 関数 (top-level + method の素拾い): 236
 - Navigator.push 等: 0
@@ -176,7 +176,7 @@ Consultation Input — だれと / 願い の記入例 (テーマ別)
   </details>
 
 
-### `lib/screens/consultation/consultation_input_logic.dart` (155 行)
+### `lib/screens/consultation/consultation_input_logic.dart` (158 行)
 
 **ファイル先頭コメント:**
 
@@ -198,10 +198,10 @@ setState を呼ばない純ロジック (when/scope → ConsultationRequest、�
 
   <details><summary>private 関数 4 件</summary>
 
-  - L91 `_onStartPressed()`
-  - L103 `_handleBuyFromPopup()`
-  - L110 `_showStartPopup()`
-  - L130 `_runConsultation()`
+  - L94 `_onStartPressed()`
+  - L106 `_handleBuyFromPopup()`
+  - L113 `_showStartPopup()`
+  - L133 `_runConsultation()`
 
   </details>
 
@@ -552,7 +552,7 @@ Consultation Result — 候補カード (V2)
 - L191 `build()`
 
 
-### `lib/screens/consultation/consultation_result_credit_widgets.dart` (125 行)
+### `lib/screens/consultation/consultation_result_credit_widgets.dart` (140 行)
 
 **ファイル先頭コメント:**
 
@@ -690,7 +690,7 @@ Consultation Result — 状態/バナー/ページャ ウィジェット (V2)
 - L271 `build()`
 
 
-### `lib/screens/consultation/consultation_start_popup.dart` (260 行)
+### `lib/screens/consultation/consultation_start_popup.dart` (282 行)
 
 **ファイル先頭コメント:**
 

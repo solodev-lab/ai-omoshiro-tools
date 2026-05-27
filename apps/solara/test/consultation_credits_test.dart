@@ -91,12 +91,38 @@ void main() {
       ConsultationCredits.instance.removeListener(lc);
     });
 
-    test('hasAny: pro=true は常に true', () {
-      const s = ConsultationCreditStatus(pro: true);
+    test('hasAny: Pro + pro 週次残あり → true', () {
+      // 2026-05-27: Pro 週次キャップ導入。Pro でも proRemaining/purchasedBalance 次第。
+      const s = ConsultationCreditStatus(
+        pro: true,
+        proRemaining: 50,
+        proLimit: 100,
+        purchasedBalance: 0,
+      );
       expect(s.hasAny, isTrue);
     });
 
-    test('hasAny: free+purchased ともに 0 は false', () {
+    test('hasAny: Pro + 週次=0 + 購入残あり → true (フォールバック可能)', () {
+      const s = ConsultationCreditStatus(
+        pro: true,
+        proRemaining: 0,
+        proLimit: 100,
+        purchasedBalance: 3,
+      );
+      expect(s.hasAny, isTrue);
+    });
+
+    test('hasAny: Pro + 週次=0 + 購入=0 → false (週次キャップ + 残高ゼロ)', () {
+      const s = ConsultationCreditStatus(
+        pro: true,
+        proRemaining: 0,
+        proLimit: 100,
+        purchasedBalance: 0,
+      );
+      expect(s.hasAny, isFalse);
+    });
+
+    test('hasAny: Free + free+purchased ともに 0 は false', () {
       const s = ConsultationCreditStatus(
         pro: false,
         freeRemaining: 0,
