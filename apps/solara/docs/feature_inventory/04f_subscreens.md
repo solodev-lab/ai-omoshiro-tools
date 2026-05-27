@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 28 / 総行数: 8862
+- ファイル数: 28 / 総行数: 8885
 - class/mixin/extension/enum: 81
 - 関数 (top-level + method の素拾い): 236
 - Navigator.push 等: 0
@@ -14,7 +14,7 @@
 
 ## ファイル別
 
-### `lib/screens/consultation/consultation_credit_sheet.dart` (345 行)
+### `lib/screens/consultation/consultation_credit_sheet.dart` (348 行)
 
 **ファイル先頭コメント:**
 
@@ -47,7 +47,7 @@ Stella 相談 追加クレジット購入シート (消費型 IAP、設計 B 案
 - L45 `createState()`
 - L60 `initState()`
 - L68 `dispose()`
-- L201 `build()`
+- L204 `build()`
 
   <details><summary>private 関数 8 件</summary>
 
@@ -55,10 +55,10 @@ Stella 相談 追加クレジット購入シート (消費型 IAP、設計 B 案
   - L77 `_load()`
   - L89 `_ensureSignedIn()`
   - L140 `_buy()`
-  - L177 `_pollUntilGranted()`
-  - L190 `_openPaywall()`
-  - L272 `_buildContent()`
-  - L296 `_packageTile()`
+  - L180 `_pollUntilGranted()`
+  - L193 `_openPaywall()`
+  - L275 `_buildContent()`
+  - L299 `_packageTile()`
 
   </details>
 
@@ -552,7 +552,7 @@ Consultation Result — 候補カード (V2)
 - L191 `build()`
 
 
-### `lib/screens/consultation/consultation_result_credit_widgets.dart` (140 行)
+### `lib/screens/consultation/consultation_result_credit_widgets.dart` (152 行)
 
 **ファイル先頭コメント:**
 
@@ -1010,7 +1010,7 @@ Solara ペイウォール画面 — Phase 2-6b
   </details>
 
 
-### `lib/screens/paywall_widgets.dart` (443 行)
+### `lib/screens/paywall_widgets.dart` (451 行)
 
 **ファイル先頭コメント:**
 
@@ -1052,9 +1052,9 @@ Paywall Screen — プラン表示 / 機能リスト / 法的リンク のサブ
   - L330 `_introPeriodLabel()`
   - L346 `_buildErrorPanel()`
   - L375 `_buildAutoRenewNotice()`
-  - L391 `_buildLegalLinks()`
-  - L407 `_legalLink()`
-  - L422 `_buildRestoreButton()`
+  - L399 `_buildLegalLinks()`
+  - L415 `_legalLink()`
+  - L430 `_buildRestoreButton()`
 
   </details>
 

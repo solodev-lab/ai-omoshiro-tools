@@ -289,8 +289,20 @@ class SolaraAuth extends ChangeNotifier {
   Future<void> deleteAccount() async {
     final provider = _account?.provider;
 
+    // 0. Apple Sign In ユーザー: fresh authorizationCode を取得 (REST revoke 用)。
+    //    authorizationCode は ~5 分 / 単回限りのため「サインイン時に保存」では使えない。
+    //    削除フローの中で再度 getAppleIDCredential を呼んで取り直す必要がある。
+    //    取得失敗 (キャンセル / 端末不可) なら null を Worker に渡す = サーバー側で no-op。
+    //    DO 削除と RC 削除は別途進むので、Apple revoke 失敗でも個人識別子は消える。
+    String? appleAuthorizationCode;
+    if (provider == SolaraAuthProvider.apple) {
+      appleAuthorizationCode = await _getFreshAppleAuthorizationCode();
+    }
+
     // 1. サーバー側データ削除 (logOut 前 = appUserId が apple:/google: のうちに)
-    await _purgeServerAccountData();
+    await _purgeServerAccountData(
+      appleAuthorizationCode: appleAuthorizationCode,
+    );
 
     // 2. プロバイダ側 revoke (失敗してもローカル削除は続行)
     try {
@@ -298,7 +310,7 @@ class SolaraAuth extends ChangeNotifier {
         await _ensureGoogleInitialized();
         await GoogleSignIn.instance.disconnect();
       }
-      // Apple はクライアント失効 API が無いためローカルクリアのみ (上記参照)。
+      // Apple は上記 Step 0 + Step 1 (Worker → Apple /auth/revoke) で revoke 済。
     } catch (_) {
       // 出口は常に開ける
     }
@@ -307,14 +319,44 @@ class SolaraAuth extends ChangeNotifier {
     await _clearLocalSession();
   }
 
+  /// アカウント削除フロー中に fresh な Apple authorizationCode を取得する。
+  /// 失敗 (端末不可 / ユーザーキャンセル / Apple Sign In 利用不可) は null。
+  /// 呼出側は null でも削除フローを続行 (Worker 側で no-op、DO/RC 削除は進む)。
+  Future<String?> _getFreshAppleAuthorizationCode() async {
+    if (!_isApplePlatform) return null;
+    try {
+      if (!await SignInWithApple.isAvailable()) return null;
+      final credential = await SignInWithApple.getAppleIDCredential(
+        scopes: const [AppleIDAuthorizationScopes.email],
+      );
+      final code = credential.authorizationCode;
+      return code.isNotEmpty ? code : null;
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('[SolaraAuth] Apple authorizationCode fetch failed: $e');
+      }
+      return null;
+    }
+  }
+
   /// Worker `/protected/account/delete` を叩いて DO の Pro 記録を物理削除する。
   /// 失敗 (オフライン / 未 attest / Worker エラー) してもアカウント削除自体は
   /// 続行する (best-effort)。`postProtected` が body に `__appUserId` を自動注入。
-  Future<void> _purgeServerAccountData() async {
+  ///
+  /// [appleAuthorizationCode]: Apple Sign In ユーザーで fresh authorizationCode が
+  /// 取得できた場合に渡す。Worker 側で Apple /auth/revoke (Token Revocation) に使われる。
+  /// null/未渡しなら Worker は Apple revoke を skip し、他の削除工程は通常通り進む。
+  Future<void> _purgeServerAccountData({
+    String? appleAuthorizationCode,
+  }) async {
     try {
+      final payload = <String, dynamic>{};
+      if (appleAuthorizationCode != null && appleAuthorizationCode.isNotEmpty) {
+        payload['appleAuthorizationCode'] = appleAuthorizationCode;
+      }
       final res = await AppAttestClient.instance.postProtected(
         solaraAccountDeleteUrl,
-        payload: const <String, dynamic>{},
+        payload: payload,
       );
       if (res.statusCode != 200 && kDebugMode) {
         debugPrint(

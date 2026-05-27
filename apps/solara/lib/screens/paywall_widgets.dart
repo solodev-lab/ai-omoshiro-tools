@@ -373,12 +373,20 @@ extension _PaywallWidgets on _PaywallScreenState {
   }
 
   Widget _buildAutoRenewNotice() {
+    // Apple App Store Review Guideline 3.1.2(a) で必須となる「auto-renewable subscription」の
+    // 必須開示 3 項目を含む文言:
+    //   1. 「期間終了の 24 時間以上前に自動更新を解約しない限り更新される」
+    //   2. 「料金は期間終了の 24 時間以内に Apple ID / Google アカウントへ請求される」
+    //   3. 「自動更新の管理 / 解約はストアのアカウント設定から可能」
+    // 並びに Guideline 3.1.1 で禁止される「払い戻し不可」「all sales are final」等の文言は
+    // 含めない (Apple は払い戻し判断を保有するため、誤解を招く表現は審査リジェクト対象)。
     return const Padding(
       padding: EdgeInsets.symmetric(horizontal: 4),
       child: Text(
-        'サブスクリプションは自動更新されます。期間終了の 24 時間以上前に解約しない限り、'
-        '同じ価格で更新されます。料金は購入確定時に Apple ID / Google アカウントに請求され、'
-        '購入後の払い戻しには対応していません。',
+        'サブスクリプションは自動更新されます。期間終了の 24 時間以上前に自動更新を解約'
+        'しない限り、同じ価格で次の期間に更新されます。料金は期間終了の 24 時間以内に '
+        'Apple ID / Google アカウントへ請求されます。自動更新の管理や解約は、ご利用ストア'
+        'のアカウント設定からいつでも行えます。',
         style: TextStyle(
           color: SolaraColors.textSecondary,
           fontSize: 11,

@@ -33,11 +33,16 @@ enum ConsultationBlock {
   /// 購入残高 0 (2026-05-27 追加。月曜 UTC リセット or 追加クレジット購入を案内)。
   proWeeklyExhausted,
 
+  /// クライアント側 RC SDK は Pro と認識しているが Worker (DO) がまだ非 Pro と判定 (425 Too Early)。
+  /// RC Webhook 遅延 / 解約直後 / sandbox renewal 等の同期窓で発生し得る。
+  /// 購入クレジットは消費されていない (= 安全停止)。クライアントは数十秒後にリトライ。
+  proSyncPending,
+
   /// 上記以外の 402 (将来追加コード)。フォールバックでペイウォールへ。
   unknown,
 }
 
-/// 402 paywall レスポンスの `error` コード → [ConsultationBlock]。
+/// 402 / 425 paywall レスポンスの `error` コード → [ConsultationBlock]。
 /// V2 (consultation_v2_api.dart) からも再利用する。
 ConsultationBlock consultationBlockFromCode(String? code) {
   switch (code) {
@@ -49,6 +54,8 @@ ConsultationBlock consultationBlockFromCode(String? code) {
       return ConsultationBlock.proOnlyRefresh;
     case 'consultation_pro_weekly_exhausted':
       return ConsultationBlock.proWeeklyExhausted;
+    case 'pro_sync_pending':
+      return ConsultationBlock.proSyncPending;
     default:
       return ConsultationBlock.unknown;
   }

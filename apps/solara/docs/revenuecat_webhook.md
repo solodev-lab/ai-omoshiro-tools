@@ -1,4 +1,16 @@
-# RevenueCat Webhook + Worker エンタイトルメント検証 設計 (v2.2)
+# RevenueCat Webhook + Worker エンタイトルメント検証 設計 (v2.3)
+
+> v2.3 (2026-05-27): 課金堅牢化 5 ステップ + 監査 7 項目を反映。
+>   - Pro 同期遅延窓での購入クレジット誤消費を防ぐ **425 pro_sync_pending** 経路
+>   - grace_period_expiration_at_ms の DO 保存 + MAX(expires_at, grace_expires_at) 判定
+>   - event_timestamp_ms による out-of-order 厳密判定
+>   - TRANSFER 旧/新 owner 判定 (transferred_from/to)
+>   - SUBSCRIPTION_EXTENDED を ACTIVE に追加
+>   - 未知 event を IGNORE 倒し (副作用なし)
+>   - GDPR `DELETE /v1/subscribers/{id}` の三段削除 (DO + memory + RC + Apple revoke)
+>   - Apple Token Revocation (Service ID + Authentication Key)
+>
+> 詳細は本ファイル末尾「v2.3 変更点 (2026-05-27)」セクション参照。
 
 `launch_checklist.md` Phase 1「Webhook 受信」+「RevenueCat エンタイトルメント検証 middleware」の確定設計。`app_attest_design.md` v2.1 (App Attest) と組み合わせて、Solara の Pro ゲート 2 層目 (= Worker 側真実) を成立させる。
 
@@ -247,4 +259,126 @@ CREATE TABLE webhook_events (
 - ✅ Flutter `app_attest_client.dart` で body に `__appUserId` 自動注入
 - ✅ Flutter `consultation_api.dart` を `withAppUserIdMerged` 経由に変更
 - ✅ Worker test 26/26 PASS (webhook + cache)
+- ✅ flutter analyze clean
+
+---
+
+## v2.3 変更点 (2026-05-27) — 課金堅牢化 + 監査対応
+
+### 動機
+
+v2.2 までで Webhook 受信 + DO entitlement 真実保持 + 60s memcache は完成していたが、以下の窓で **購入クレジットが誤消費されるバグ** が発見された:
+
+- Pro サブスク renewal の数十秒 (RC Webhook 遅延)
+- 解約直後の数十秒 (RC SDK ローカルが先行)
+- Play 内部テスト sandbox の 5-10 分圧縮 renewal サイクル
+
+クライアント側 RC SDK は `cosmic_pro` active を即時認識するが、Worker DO は Webhook 着信まで「非 Pro」のまま → `consumeReadingCreditGate` が Free 経路に落ちて購入クレジットを 1 つずつ消費していく。`/protected/astro/consultation2` 12 回呼出のうち 11 回が `purchased-spend` に流れていた実例あり。
+
+### 5 ステップの堅牢化
+
+| Step | 内容 | コミット |
+|---|---|---|
+| 1 | Flutter `__clientEntitlement` snapshot を `/protected/*` body に注入 | `purchases_service.dart clientEntitlementSnapshot` + `app_attest_client.dart` |
+| 2 | Worker `gateConsultation` / `consumeReadingCreditGate` / `consultationCreditStatus` に `proSyncReconcile` 経由 | `index.js` |
+| 3 | RC REST `/v1/subscribers/{id}` で source-of-truth 再検証 (30s memcache) | 新規 `auth/rc_rest.js reverifyEntitlementViaRC` |
+| 4 | DO スキーマに `grace_expires_at` 追加 + Webhook BILLING_ISSUE で `grace_period_expiration_at_ms` を保存 + `_entitlementGet` で `MAX(expires_at, grace_expires_at)` 判定 | `attestation_state.js` migration + `webhooks/revenuecat.js` |
+| 5 | DO `last_event_timestamp_ms` 追加 + Webhook `event_timestamp_ms` で厳密 out-of-order 判定 (legacy: 受信時刻 fallback) | `attestation_state.js _entitlementUpsert` |
+
+### Pro 同期遅延の安全停止フロー
+
+```
+クライアント主張 Pro × DO 非 Pro
+        │
+        ▼
+proSyncReconcile
+        │
+        ├─ RC REST `/v1/subscribers/{id}` で再確認 (30s memcache)
+        │     │
+        │     ├─ RC も Pro と認める → memory cache 修復 + Pro 経路で処理続行
+        │     │
+        │     └─ RC も非 Pro と認める
+        │           │
+        │           ├─ verification != 'failed' (= 攻撃でない健全な状態)
+        │           │   かつ失効から 5 分以内 → 425 pro_sync_pending
+        │           │   (Retry-After: 30、購入残は触らない)
+        │           │
+        │           └─ verification == 'failed' (MITM 検出)
+        │               → 通常 Free 経路 (= 攻撃を阻止、不正に Pro 機能を使わせない)
+```
+
+セキュリティ原則: クライアント主張は **何も解放しない**。425 は「購入消費を止める安全停止」のみに使う。悪意あるクライアントが Pro を偽主張しても、サーバが認められなければ機能は使えない (攻撃面ゼロ)。
+
+### Event 種別マップ更新 (v2.3)
+
+| 分類 | Event 種別 | 挙動 |
+|---|---|---|
+| ACTIVE (isActive=true で upsert) | INITIAL_PURCHASE / RENEWAL / PRODUCT_CHANGE / UNCANCELLATION / NON_RENEWING_PURCHASE / TEMPORARY_ENTITLEMENT_GRANT / **SUBSCRIPTION_EXTENDED** (v2.3 追加) | 7 種 |
+| GRACE (期限内維持) | CANCELLATION / BILLING_ISSUE / SUBSCRIPTION_PAUSED | 3 種、`grace_period_expiration_at_ms` を `grace_expires_at` に記録 |
+| INACTIVE (isActive=false) | EXPIRATION / REFUND | 2 種 |
+| IGNORE (副作用なし 200) | SUBSCRIBER_ALIAS / TEST / INVOICE_ISSUANCE / VIRTUAL_CURRENCY_TRANSACTION | 4 種 |
+| TRANSFER | 旧 owner: `transferred_from` に appUserId あり → isActive=false / 新 owner: `transferred_to` に appUserId あり → isActive=true / 不明 → active 維持 | RC 公式: 2 通発火 |
+| 未知 event (v2.3 変更) | **副作用なしで 200 ignored 返却** (旧: isActive=false で upsert → Pro 誤失効事故あり) | DO は touch しない |
+
+### アカウント削除フロー (v2.3 拡張)
+
+`/protected/account/delete` は 4 段階削除:
+
+1. **DO 物理削除** (`/account-purge` で `user_entitlements` + `webhook_events` 行を削除) — クリティカル、失敗で 500
+2. **Worker memory cache invalidate** (`clearMemoryEntitlementCache`)
+3. **RC 本体 subscriber DELETE** (`auth/rc_rest.js deleteSubscriberViaRC`、`DELETE /v1/subscribers/{id}`) — GDPR Right to Erasure / 個人情報保護法対応。best-effort
+4. **Apple Token Revocation** (Apple Sign In ユーザーのみ、`auth/apple_revoke.js`) — fresh authorizationCode を Flutter 側で `getAppleIDCredential` 再起動で取得 → Worker が ES256 client_secret JWT を生成 → POST `https://appleid.apple.com/auth/revoke`。鍵未設定 (`secrets_missing`) は no-op skip。best-effort
+
+レスポンス:
+```json
+{
+  "ok": true,
+  "deletedEntitlements": 1,
+  "deletedEvents": 3,
+  "rcDeleted": true,
+  "rcReason": null,
+  "appleRevoked": true,
+  "appleRevokeReason": null
+}
+```
+
+### v2.3 で追加された env / secret
+
+```toml
+# wrangler.toml (public, 既存値の隣に追記)
+APPLE_SIWA_SERVICE_ID = "com.solodevlab.solara.signin"  # Apple Developer Console で発行
+APPLE_SIWA_KEY_ID     = "ABC123DEF4"                     # Authentication Key の 10 桁 ID
+# APPLE_TEAM_ID は v2.2 から既存
+```
+
+```sh
+# wrangler secret put (secret)
+APPLE_SIWA_PRIVATE_KEY  # .p8 ファイルの PEM 内容 (-----BEGIN PRIVATE KEY----- 含む)
+REVENUECAT_SECRET_KEY   # sk_xxx、reverify + DELETE で使う
+```
+
+### DO スキーマ migration (v2.3)
+
+```sql
+ALTER TABLE user_entitlements ADD COLUMN grace_expires_at INTEGER;
+ALTER TABLE user_entitlements ADD COLUMN last_event_timestamp_ms INTEGER;
+```
+
+旧 instance への migration は constructor の try/catch で冪等。新 instance は CREATE TABLE で最初から付く。
+
+### v2.3 リリース範囲
+
+- ✅ Worker `auth/rc_rest.js` (新規、reverify + DELETE)
+- ✅ Worker `auth/apple_revoke.js` (新規、ES256 client_secret JWT + /auth/revoke)
+- ✅ Worker `index.js` の `proSyncReconcile` + `handleAccountDelete` 4 段階拡張
+- ✅ Worker `webhooks/revenuecat.js` の TRANSFER 旧/新判定 + SUBSCRIPTION_EXTENDED + 未知 IGNORE
+- ✅ Worker `auth/attestation_state.js` の grace_expires_at + last_event_timestamp_ms migration + `_entitlementGet` MAX 判定 + `_entitlementUpsert` out-of-order 強化
+- ✅ Flutter `purchases_service.dart clientEntitlementSnapshot` + `app_attest_client.dart __clientEntitlement` merge
+- ✅ Flutter `solara_auth.dart deleteAccount` で Apple authorizationCode 再取得 + `_purgeServerAccountData` に渡す
+- ✅ Flutter `paywall_widgets.dart` の auto-renew 文言を Apple 3.1.1 + 3.1.2(a) 準拠に書換 (「払い戻し不可」削除)
+- ✅ Flutter `consultation_credit_sheet.dart` polling 1500ms → 500ms (購入後シート閉じる速度)
+- ✅ Flutter `main.dart` で ProStatus listener → ConsultationCredits.refresh() 自動配線 (Pro 購入直後の Sanctuary 残数即反映)
+- ✅ Flutter `sanctuary_screen.dart` の `_buildCreditRow` で proRemaining/proLimit 両 null 時に「Pro 残 確認中」表示 (= 「0/0」誤表示防止)
+- ✅ Flutter `consultation_v2_api.dart` で 425 ステータスを block として扱う
+- ✅ Worker test 295/295 PASS (新規 19 件)
 - ✅ flutter analyze clean

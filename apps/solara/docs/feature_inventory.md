@@ -295,6 +295,107 @@ Solara のバックエンドは **Cloudflare Workers** で稼働。本番 URL: `
   audit.py: 新規 HARD 違反なし (`sanctuary_screen.dart` は 1459→1435 でむしろ -24、
   `consultation_v2_api.dart` 373→388 で WARN 内)。
 
+### 0.2.4 課金堅牢化 5 ステップ + 監査対応 7 項目 (2026-05-27 夜セッション)
+
+> **設計の柱**: Pro 同期遅延の窓 (RC Webhook 遅延 / sandbox 圧縮 renewal / 解約直後 / ネットワーク断後) で
+> 購入クレジットが誤消費されるバグを潰す + RC/Apple/Google の最新公式ガイダンスへの完全準拠。
+> 詳細設計と他アプリ流用は `docs/iap_auth_revenuecat_patterns.md` (top-level)、Solara 固有実装は
+> `apps/solara/docs/revenuecat_webhook.md` v2.3。
+
+#### 課金堅牢化 5 ステップ (購入クレジット誤消費の防止)
+
+| Step | 内容 | 主な変更ファイル |
+|---|---|---|
+| 1 | クライアント entitlement snapshot を `/protected/*` body に注入 (`__clientEntitlement: {isPro, verification, expiresAtMs, productId}`) | `purchases_service.dart clientEntitlementSnapshot` + `app_attest_client.dart withAppUserIdMerged` 拡張 |
+| 2 | Worker `gateConsultation` / `consumeReadingCreditGate` / `consultationCreditStatus` に `proSyncReconcile` 経由を組込 | `index.js` |
+| 3 | RC REST `/v1/subscribers/{id}` で source-of-truth 再検証 (30s memcache) + `DELETE` も併設 | 新規 `worker/src/auth/rc_rest.js` |
+| 4 | DO スキーマに `grace_expires_at` 追加 + Webhook BILLING_ISSUE で `grace_period_expiration_at_ms` を保存 + `_entitlementGet` で `MAX(expires_at, grace_expires_at)` 判定 | `attestation_state.js` migration + `webhooks/revenuecat.js` |
+| 5 | DO `last_event_timestamp_ms` 追加 + Webhook `event_timestamp_ms` で厳密 out-of-order 判定 (legacy: 受信時刻 fallback) | `attestation_state.js _entitlementUpsert` |
+
+#### 監査対応 7 項目
+
+| # | 対応 | 主な変更ファイル |
+|---|---|---|
+| #1 | RC `DELETE /v1/subscribers/{id}` (GDPR Right to Erasure) | `rc_rest.js deleteSubscriberViaRC` + `index.js handleAccountDelete` 4 段階化 |
+| #2 | Webhook TRANSFER で `transferred_from/to` 配列を見て旧/新 owner 判定 | `webhooks/revenuecat.js` |
+| #3 | `SUBSCRIPTION_EXTENDED` を `ACTIVE_EVENT_TYPES` に追加 | `webhooks/revenuecat.js` |
+| #4 | paywall 自動更新文言を Apple 3.1.2(a) 必須 3 項目準拠に書換 (「払い戻し不可」削除 = 3.1.1 違反回避) | `paywall_widgets.dart _buildAutoRenewNotice` |
+| #5 | App Attest / Play Integrity の enforced 化リマインダー (2026-05-29 頃判断) | `MEMORY.md` |
+| #6 | 未知 webhook event を IGNORE 倒し (旧: isActive=false で upsert → 誤失効事故あり) | `webhooks/revenuecat.js` |
+| #7 | Apple Sign In Token Revocation (`auth/revoke`) — ES256 client_secret JWT + Flutter で fresh authorizationCode 再取得 | 新規 `worker/src/auth/apple_revoke.js` + `solara_auth.dart _getFreshAppleAuthorizationCode` |
+
+#### Pro 購入直後の自己治癒 (副次効果)
+
+`main.dart` に `ProStatus.instance.addListener` を新規配線し、Pro 状態変化時に `ConsultationCredits.refresh()` を自動発火。
+Worker 側 `consultationCreditStatus` も `proSyncReconcile` 経由になったため、Pro 購入直後 (RC Webhook 着信前) でも:
+1. クライアント RC SDK は即時 Pro 認識 (ProStatus listener)
+2. ConsultationCredits.refresh() が `__clientEntitlement` 付きで /protected/consultation/credits を叩く
+3. Worker reconcile が RC REST で再確認 → memory cache 修復 + Pro 経路で `proRemaining=100, proLimit=100` を返す
+4. Sanctuary 残数表示が「Pro 残 100/100」に即時更新 (~1 秒)
+
+旧バグ「Pro 購入直後 0/0 表示」は **3 層防御 (server reconcile + client trigger + UI defense「Pro 残 確認中」表示)** で完全に塞がれた。
+
+#### 実装の所在 (層別)
+
+- DO (層 0): `attestation_state.js`
+  - `user_entitlements` に `grace_expires_at` + `last_event_timestamp_ms` 列を migration で追加 (try/catch で冪等)
+  - `_entitlementGet` を `MAX(expires_at, grace_expires_at)` 判定に変更
+  - `_entitlementUpsert` を `event_timestamp_ms` 優先 + 受信時刻 fallback の out-of-order 判定に強化
+- Worker (層 0): `index.js`
+  - 新 helper `consultationClientEntitlement(body)` / `proSyncReconcile(env, appUserId, body, origin)`
+  - `gateConsultation` / `consumeReadingCreditGate` / `consultationCreditStatus` 3 ヶ所から `proSyncReconcile` 経由
+  - `handleAccountDelete` を 4 段階削除 (DO + memory + RC + Apple revoke、後 3 段は best-effort)
+  - `jsonStatus(status, payload, origin, extraHeaders?)` で `Retry-After: 30` 等を載せられるよう拡張
+- Worker (層 0): 新規 `auth/rc_rest.js`
+  - `reverifyEntitlementViaRC` (GET subscribers + grace 込み effective expiry 計算 + 30s memcache)
+  - `deleteSubscriberViaRC` (DELETE subscribers + reverify cache invalidate)
+- Worker (層 0): 新規 `auth/apple_revoke.js`
+  - `buildAppleClientSecret` (ES256 + P-256 で client_secret JWT 生成、WebCrypto API のみ使用)
+  - `revokeAppleToken` (POST `https://appleid.apple.com/auth/revoke`、鍵未設定なら `secrets_missing` で no-op)
+- Worker (層 0): `webhooks/revenuecat.js`
+  - `ACTIVE_EVENT_TYPES` に `SUBSCRIPTION_EXTENDED` 追加
+  - TRANSFER 判定を `transferred_from/to` 配列ベースに書換
+  - 未知 event 種別を「副作用なし 200 ignored 返却」に倒す (DO は touch しない)
+  - `grace_period_expiration_at_ms` / `event_timestamp_ms` を `_entitlementUpsert` に passthrough
+- Flutter API (層 2a):
+  - `purchases_service.dart` に `_lastCustomerInfo` + `clientEntitlementSnapshot` getter (Trusted Entitlements verification 込み)
+  - `app_attest_client.dart` の `_withAppUserId` を `__clientEntitlement` も merge するよう拡張
+  - `consultation_api.dart` に `ConsultationBlock.proSyncPending` + `consultationBlockFromCode` で `pro_sync_pending` マップ
+  - `consultation_v2_api.dart` で 425 ステータスを block として扱う
+  - `solara_auth.dart` `deleteAccount` で provider==apple なら `getAppleIDCredential` を再起動 → fresh authorizationCode を Worker に渡す
+- Flutter 画面 (層 4):
+  - `main.dart` に `ProStatus.instance.addListener` 新規配線 → `ConsultationCredits.refresh()` 自動発火
+  - `sanctuary_screen.dart _buildCreditRow` で proRemaining/proLimit 両 null 時に「Pro 残 確認中」表示
+  - `consultation_result_credit_widgets.dart _ConsultationBlockedBox` に `proSyncPending` ケース追加 (購入/Pro 誘導なし、「Pro 状態を同期しています」)
+  - `consultation_credit_sheet.dart _pollUntilGranted` の polling 間隔を 1500ms → 500ms に短縮 (購入後シート閉じる体感 ~0.5 秒)
+  - `paywall_widgets.dart _buildAutoRenewNotice` を Apple 3.1.2(a) 準拠文言に書換 (「払い戻し不可」削除)
+  - `sanctuary_account_section.dart` 削除確認 dialog に Apple 再認証告知を追加
+
+#### env / secret 追加 (本セッションで)
+
+| 種別 | キー | 用途 | 設定方法 |
+|---|---|---|---|
+| Secret | `REVENUECAT_SECRET_KEY` | RC REST API (reverify + DELETE) | 本セッションで `wrangler secret put` 済 |
+| Secret | `APPLE_SIWA_PRIVATE_KEY` | Apple Token Revocation の P8 鍵 | 後日 (鍵未設定なら no-op skip) |
+| Public env | `APPLE_SIWA_SERVICE_ID` | Apple Sign In Service ID | 後日 (wrangler.toml) |
+| Public env | `APPLE_SIWA_KEY_ID` | Apple Authentication Key ID (10 桁) | 後日 (wrangler.toml) |
+
+詳細手順は メモリ `project_solara_apple_siwa_revoke_setup.md` 参照。
+
+#### 検証
+- worker test **295/295 pass** (+19 net: pro_sync_pending +29 / revenuecat_webhook +5 / apple_revoke +7、回帰なし)
+- flutter test **243/244 pass** (1 件は事前既知 `widget_test.dart: Solara app launches`、本変更と無関係)
+- flutter analyze クリーン (既存 2 件の `app_attest_client_android_test.dart` 警告は事前)
+- audit.py: 新規 HARD 違反なし。本セッション変更ファイル:
+  - sanctuary_screen.dart 1441 (既存 HARD、+6 行)
+  - solara_auth.dart 459 (WARN、+27 行で Apple authorizationCode 再取得追加)
+  - paywall_widgets.dart 451 (WARN、文言書換のみ実質変化なし)
+  - purchases_service.dart 308 (WARN、+46 行で clientEntitlementSnapshot 追加)
+  - app_attest_client.dart 476 (WARN、+13 行で __clientEntitlement merge)
+  - consultation_credit_sheet.dart 348 (WARN、polling 値変更のみ)
+  - 新規ファイル 3 個: `worker/src/auth/rc_rest.js` / `worker/src/auth/apple_revoke.js` / `lib/utils/consultation_api.dart proSyncPending enum` (既存ファイルへの追加)
+- 重複コード: 装飾ボイラープレートのみ、ロジック重複 0。未使用 private 0。
+
 ### 0.3 Horo「今日の占い」1 日 1 回固定 + プロンプト刷新 (2026-05-27)
 
 > **設計の柱**: 「30 回までは OK」のような曖昧な防衛をやめ、「**1 日 1 回・変更しない**」を

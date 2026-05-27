@@ -5,16 +5,16 @@
 
 ## サマリ
 
-- ファイル数: 9 / 総行数: 2417
+- ファイル数: 9 / 総行数: 2479
 - class/mixin/extension/enum: 14
-- 関数 (top-level + method の素拾い): 110
+- 関数 (top-level + method の素拾い): 111
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 0
 - Worker URL リテラル: 0
 
 ## ファイル別
 
-### `lib/utils/app_attest_client.dart` (456 行)
+### `lib/utils/app_attest_client.dart` (476 行)
 
 **ファイル先頭コメント:**
 
@@ -50,31 +50,31 @@ Worker 側仕様: apps/solara/worker/src/index.js
 
 **型定義 (1):**
 
-- L58 `class AppAttestClient`
+- L65 `class AppAttestClient`
   - AppAttestClient シングルトン。
 
 **関数 (10 public + 7 private):**
 
-- L117 `initialize()` — 起動時 1 回だけ呼ぶ (main.dart で unawaited)。
-- L228 `addHeaders()` — /protected/* 呼び出し直前に header を注入。
-- L359 `withAppUserIdMerged()` — 呼び出し側で body Map を構築している場合に使う公開 helper。
-- L364 `postProtected()` — `/protected/*` への POST を attestation header 付きで送る wrapper。
-- L383 `reattestOnFailure()` — 401 で middleware に弾かれた時のリトライ用。
-- L409 `debugPayloadSha256()` — payload bytes の SHA-256 (debug 用、Worker 側計算値との一致確認に使う)。
-- L424 `addAndroidHeadersForTest()`
-- L430 `addIosHeadersForTest()`
-- L442 `initializeAndroidForTest()`
-- L446 `resetForTest()`
+- L124 `initialize()` — 起動時 1 回だけ呼ぶ (main.dart で unawaited)。
+- L235 `addHeaders()` — /protected/* 呼び出し直前に header を注入。
+- L379 `withAppUserIdMerged()` — 呼び出し側で body Map を構築している場合に使う公開 helper。
+- L384 `postProtected()` — `/protected/*` への POST を attestation header 付きで送る wrapper。
+- L403 `reattestOnFailure()` — 401 で middleware に弾かれた時のリトライ用。
+- L429 `debugPayloadSha256()` — payload bytes の SHA-256 (debug 用、Worker 側計算値との一致確認に使う)。
+- L444 `addAndroidHeadersForTest()`
+- L450 `addIosHeadersForTest()`
+- L462 `initializeAndroidForTest()`
+- L466 `resetForTest()`
 
   <details><summary>private 関数 7 件</summary>
 
-  - L119 `_doInitialize()`
-  - L136 `_initializeIos()`
-  - L154 `_attestNewKey()`
-  - L194 `_initializeAndroid()`
-  - L254 `_addIosHeaders()`
-  - L303 `_addAndroidHeaders()`
-  - L349 `_withAppUserId()`
+  - L126 `_doInitialize()`
+  - L143 `_initializeIos()`
+  - L161 `_attestNewKey()`
+  - L201 `_initializeAndroid()`
+  - L261 `_addIosHeaders()`
+  - L310 `_addAndroidHeaders()`
+  - L364 `_withAppUserId()`
 
   </details>
 
@@ -271,7 +271,7 @@ Phase 2-6b 以降 (RevenueCat 接続後):
 - L89 `resetForTest()`
 
 
-### `lib/utils/solara_auth.dart` (417 行)
+### `lib/utils/solara_auth.dart` (459 行)
 
 **ファイル先頭コメント:**
 
@@ -316,7 +316,7 @@ Solara 認証サービス — Phase 2-9 Sign in 統合
   - 認証エラー (UI が型で分岐できるよう薄い wrapper)。
 - L106 `class SolaraAuth : ChangeNotifier`
 
-**関数 (8 public + 7 private):**
+**関数 (8 public + 8 private):**
 
 - L64 `toJson()`
 - L103 `toString()`
@@ -325,17 +325,18 @@ Solara 認証サービス — Phase 2-9 Sign in 統合
 - L237 `signInWithGoogle()` — Google サインイン (iOS / Android / macOS / Web)。
 - L256 `signOut()` — 現在のアカウントを取り外す。
 - L289 `deleteAccount()` — アカウント削除 (App Store ガイドライン 5.1.1(v) — Sign in を提供する以上、
-- L407 `resetForTest()`
+- L449 `resetForTest()`
 
-  <details><summary>private 関数 7 件</summary>
+  <details><summary>private 関数 8 件</summary>
 
   - L154 `_verifyOrClear()`
-  - L313 `_purgeServerAccountData()`
-  - L335 `_ensureGoogleInitialized()`
-  - L349 `_onGoogleEvent()`
-  - L365 `_adoptGoogleAccount()`
-  - L375 `_commitAccount()`
-  - L388 `_clearLocalSession()`
+  - L325 `_getFreshAppleAuthorizationCode()`
+  - L349 `_purgeServerAccountData()`
+  - L377 `_ensureGoogleInitialized()`
+  - L391 `_onGoogleEvent()`
+  - L407 `_adoptGoogleAccount()`
+  - L417 `_commitAccount()`
+  - L430 `_clearLocalSession()`
 
   </details>
 

@@ -49,6 +49,13 @@ const int _kCloudProjectNumber =
 /// (Worker `index.js` の `APP_USER_ID_FIELD` と完全一致)。
 const String _kAppUserIdField = '__appUserId';
 
+/// /protected/* body 内で Worker にクライアント側 RC SDK の entitlement snapshot を
+/// 伝える予約フィールド名。Worker は **これを信じない** (Pro 解放には使わない) が、
+/// "クライアント主張 Pro × DO non-Pro" の窓で購入クレジットを誤消費しないための
+/// 安全停止 (425 pro_sync_pending) に使う。Worker `index.js` の
+/// `CLIENT_ENTITLEMENT_FIELD` と完全一致。
+const String _kClientEntitlementField = '__clientEntitlement';
+
 /// AppAttestClient シングルトン。
 ///
 /// Solara 内で 1 端末あたり 1 keyId (iOS) または warmup 済 TokenProvider (Android) を保持する。
@@ -345,17 +352,30 @@ class AppAttestClient {
     }
   }
 
-  /// payload に App User ID を merge した新しい Map を返す (元 Map は破壊しない)。
+  /// payload に App User ID と client entitlement snapshot を merge した新しい Map を返す
+  /// (元 Map は破壊しない)。
+  ///
+  /// - `__appUserId`         : RC appUserId (anonymous も含む)。Worker の middleware が
+  ///                            entitlement 引当のキーに使う (DO `user_entitlements`)。
+  /// - `__clientEntitlement` : クライアント側 RC SDK が認識している cosmic_pro 状態。
+  ///                            Worker は **Pro を解放するためには使わない** が、
+  ///                            "クライアント主張 Pro × DO non-Pro" の窓で購入クレジットを
+  ///                            誤消費しないための安全停止 (425 pro_sync_pending) に使う。
   static Map<String, dynamic> _withAppUserId(Map<String, dynamic> payload) {
     final merged = <String, dynamic>{...payload};
     final uid = PurchasesService.instance.appUserId;
     if (uid != null && uid.isNotEmpty) {
       merged[_kAppUserIdField] = uid;
     }
+    final clientEnt = PurchasesService.instance.clientEntitlementSnapshot;
+    if (clientEnt != null) {
+      merged[_kClientEntitlementField] = clientEnt;
+    }
     return merged;
   }
 
   /// 呼び出し側で body Map を構築している場合に使う公開 helper。
+  /// `__appUserId` + `__clientEntitlement` を merge する。
   static Map<String, dynamic> withAppUserIdMerged(Map<String, dynamic> payload) {
     return _withAppUserId(payload);
   }

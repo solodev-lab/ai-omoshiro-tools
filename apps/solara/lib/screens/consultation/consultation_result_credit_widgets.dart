@@ -27,6 +27,9 @@ class _ConsultationBlockedBox extends StatelessWidget {
     final exhausted = reason == ConsultationBlock.creditExhausted ||
         reason == ConsultationBlock.proWeeklyExhausted;
     final isProExhausted = reason == ConsultationBlock.proWeeklyExhausted;
+    // Pro 同期遅延 (425) は購入消費されていないので「使い切りました」UI と別物。
+    // ボタン (購入/Pro 誘導) を出さず、本文で「数十秒後に再試行」を案内する。
+    final isProSyncPending = reason == ConsultationBlock.proSyncPending;
     final (title, body) = switch (reason) {
       ConsultationBlock.proOnlyMode => (
           'このモードは Cosmic Pro で',
@@ -40,6 +43,11 @@ class _ConsultationBlockedBox extends StatelessWidget {
           '今週の Pro 相談上限に達しました',
           'Cosmic Pro は週 100 回まで Stella に相談できます。'
               '月曜日に補充されます。すぐ続けるなら、追加クレジットの購入が選べます。',
+        ),
+      ConsultationBlock.proSyncPending => (
+          'Pro 状態を同期しています',
+          'Cosmic Pro の課金状態をストアと再確認しています。クレジットは消費されていません。'
+              '数十秒待ってからもう一度お試しください。',
         ),
       _ => (
           '相談クレジットを使い切りました',
@@ -84,7 +92,11 @@ class _ConsultationBlockedBox extends StatelessWidget {
               // 残量切れ時 (Free / Pro 週次) のみ「クレジット購入」を主ボタンに、
               // Pro 副ボタンは Free exhausted のみ (Pro 週次 exhausted では非表示 =
               // 既に Pro なので Pro を勧める意味がない)。
-              if (exhausted) ...[
+              // proSyncPending (425) は同期中なのでボタン無し (本文だけで案内)。
+              if (isProSyncPending) ...const [
+                // 同期待ち。アクションボタンは出さない (リトライはユーザーが「もう一度相談」を押す)。
+                SizedBox.shrink(),
+              ] else if (exhausted) ...[
                 SizedBox(
                   width: double.infinity,
                   child: TextButton(

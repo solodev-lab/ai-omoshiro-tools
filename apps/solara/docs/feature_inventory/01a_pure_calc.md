@@ -5,9 +5,9 @@
 
 ## サマリ
 
-- ファイル数: 6 / 総行数: 1632
+- ファイル数: 6 / 総行数: 1679
 - class/mixin/extension/enum: 13
-- 関数 (top-level + method の素拾い): 62
+- 関数 (top-level + method の素拾い): 63
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 0
 - Worker URL リテラル: 0
@@ -213,7 +213,7 @@ Uses 14 correction terms for New Moon and Full Moon.
   </details>
 
 
-### `lib/utils/purchases_service.dart` (261 行)
+### `lib/utils/purchases_service.dart` (308 行)
 
 **ファイル先頭コメント:**
 
@@ -252,21 +252,22 @@ Solara RevenueCat ラッパー — Phase 2-6b
 
 - L32 `class PurchasesService`
 
-**関数 (9 public + 1 private):**
+**関数 (10 public + 1 private):**
 
-- L88 `init()` — 起動時に 1 度だけ呼ぶ。
-- L158 `isEntitledFrom()`
-- L168 `getOfferings()` — 配信中の Offerings を取得。未配信 / オフライン時は null。
-- L182 `getCreditOffering()` — 消費型 Stella クレジットの Offering を取得 (未配信 / 未 configure は null)。
-- L197 `purchasePackage()` — パッケージを購入。成功時は listener 経由で ProStatus が更新される。
-- L218 `restorePurchases()` — 復元。RevenueCat が同一 appUserID 配下の過去購入を再リンクする。
-- L233 `logIn()` — Sign in 完了後に uid を渡す (`SolaraAuth._commitAccount` から呼ばれる)。
-- L240 `logOut()` — サインアウト時に呼ぶ。SDK が新しい anonymous uid を発行するので再 cache。
-- L253 `disposeForTest()`
+- L126 `init()` — 起動時に 1 度だけ呼ぶ。
+- L198 `isEntitledFrom()`
+- L208 `getOfferings()` — 配信中の Offerings を取得。未配信 / オフライン時は null。
+- L222 `getCreditOffering()` — 消費型 Stella クレジットの Offering を取得 (未配信 / 未 configure は null)。
+- L237 `purchasePackage()` — パッケージを購入。成功時は listener 経由で ProStatus が更新される。
+- L258 `restorePurchases()` — 復元。RevenueCat が同一 appUserID 配下の過去購入を再リンクする。
+- L273 `logIn()` — Sign in 完了後に uid を渡す (`SolaraAuth._commitAccount` から呼ばれる)。
+- L280 `logOut()` — サインアウト時に呼ぶ。SDK が新しい anonymous uid を発行するので再 cache。
+- L293 `setLastCustomerInfoForTest()`
+- L300 `disposeForTest()`
 
   <details><summary>private 関数 1 件</summary>
 
-  - L143 `_onCustomerInfo()`
+  - L182 `_onCustomerInfo()`
 
   </details>
 

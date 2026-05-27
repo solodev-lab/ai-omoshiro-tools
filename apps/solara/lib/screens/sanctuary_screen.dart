@@ -432,10 +432,16 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
     final pur = c.purchasedBalance ?? 0;
     final String label;
     if (isPro) {
-      final remain = c.proRemaining ?? c.proLimit ?? 0;
-      final limit = c.proLimit ?? 0;
-      // 月曜リセットを明示。Pro 100/週 を使い切っても購入残で続行可能。
-      label = '✦ Pro 残 $remain / $limit ・ 購入 $pur （月曜補充）';
+      // クライアントは Pro と思っているが、サーバから proRemaining/proLimit が null で
+      // 返ってきているケース (Pro 購入直後の RC Webhook 反映遅延 + reconcile も間に合わず、
+      // 等) は「0/0」と誤表示せず「同期中」を出す。次の refresh() で正しい値に追従する。
+      final hasProData = c.proRemaining != null && c.proLimit != null;
+      if (hasProData) {
+        // 月曜リセットを明示。Pro 100/週 を使い切っても購入残で続行可能。
+        label = '✦ Pro 残 ${c.proRemaining} / ${c.proLimit} ・ 購入 $pur （月曜補充）';
+      } else {
+        label = '✦ Pro 残 確認中 ・ 購入 $pur';
+      }
     } else {
       final free = c.freeRemaining ?? 0;
       label = '✦ クレジット残 ─ 無料 $free ・ 購入 $pur';

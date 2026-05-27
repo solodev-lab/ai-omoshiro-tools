@@ -320,6 +320,68 @@ test('webhook: INITIAL_PURCHASE active event → DO upsert 呼出 + isActive=tru
   assert.equal(getCachedEntitlement('apple:abc'), undefined);
 });
 
+test('webhook: BILLING_ISSUE event → grace_period_expiration_at_ms を upsert に渡す + isActive=true', async () => {
+  // Apple/Google 公式: grace 期間中はサービス維持。grace_expires_at が DO に書かれ、
+  // entitlement_get が MAX(expires_at, grace_expires_at) で判定することで grace 中 Pro 維持。
+  const { env, calls } = makeEnv({
+    doImpl: async () => ({ status: 200, body: { ok: true } }),
+  });
+  const expirationMs = 1700000000000;       // 元の sub 期限
+  const graceMs = expirationMs + 16 * 86_400_000; // +16 日 (Apple billing grace)
+  const eventTsMs = expirationMs - 1000;
+  const res = await handleRevenueCatWebhook(
+    makeRequest({
+      body: {
+        event: {
+          type: 'BILLING_ISSUE',
+          id: 'evt-bi-1',
+          app_user_id: 'apple:bill',
+          entitlement_ids: ['cosmic_pro'],
+          environment: 'PRODUCTION',
+          expiration_at_ms: expirationMs,
+          grace_period_expiration_at_ms: graceMs,
+          event_timestamp_ms: eventTsMs,
+        },
+      },
+    }),
+    env,
+  );
+  assert.equal(res.status, 200);
+  const body = await res.json();
+  assert.equal(body.isActive, true, 'GRACE event は active 維持');
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0].path, '/entitlement-upsert');
+  assert.equal(calls[0].body.graceExpiresAt, graceMs, 'grace_expires_at が DO に渡される');
+  assert.equal(calls[0].body.eventTimestampMs, eventTsMs, 'event_timestamp_ms が DO に渡される');
+});
+
+test('webhook: event_timestamp_ms が無い event でも upsert は通る (legacy)', async () => {
+  const { env, calls } = makeEnv({
+    doImpl: async () => ({ status: 200, body: { ok: true } }),
+  });
+  const res = await handleRevenueCatWebhook(
+    makeRequest({
+      body: {
+        event: {
+          type: 'INITIAL_PURCHASE',
+          id: 'evt-legacy-1',
+          app_user_id: 'google:legacy',
+          entitlement_ids: ['cosmic_pro'],
+          environment: 'PRODUCTION',
+          expiration_at_ms: 1800000000000,
+          // event_timestamp_ms 無し、grace_period_expiration_at_ms 無し
+        },
+      },
+    }),
+    env,
+  );
+  assert.equal(res.status, 200);
+  assert.equal(calls.length, 1);
+  // 無いフィールドは null として渡る
+  assert.equal(calls[0].body.graceExpiresAt, null);
+  assert.equal(calls[0].body.eventTimestampMs, null);
+});
+
 test('webhook: EXPIRATION event → isActive=false', async () => {
   const { env, calls } = makeEnv({
     doImpl: async () => ({ status: 200, body: { ok: true } }),
@@ -367,6 +429,142 @@ test('webhook: CANCELLATION event → isActive=true (期限まで Pro 維持)', 
   const body = await res.json();
   assert.equal(body.isActive, true);
   assert.equal(body.expiresAt, 1700000000000);
+});
+
+test('webhook: SUBSCRIPTION_EXTENDED event → isActive=true (CS 経由の期限延長で Pro 誤失効を防ぐ)', async () => {
+  // RC が dashboard から手動延長したときに発火。ACTIVE_EVENT_TYPES に含めないと
+  // 未知 event 扱い → 旧実装では isActive=false で Pro 誤失効、新実装では ignored 200。
+  // 正しい挙動は isActive=true で期限延長を反映すること。
+  const { env, calls } = makeEnv({
+    doImpl: async () => ({ status: 200, body: { ok: true } }),
+  });
+  const res = await handleRevenueCatWebhook(
+    makeRequest({
+      body: {
+        event: {
+          type: 'SUBSCRIPTION_EXTENDED',
+          id: 'evt-ext-1',
+          app_user_id: 'google:ext1',
+          entitlement_ids: ['cosmic_pro'],
+          environment: 'PRODUCTION',
+          expiration_at_ms: 1800000000000,
+        },
+      },
+    }),
+    env,
+  );
+  assert.equal(res.status, 200);
+  const body = await res.json();
+  assert.equal(body.isActive, true);
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0].path, '/entitlement-upsert');
+  assert.equal(calls[0].body.expiresAt, 1800000000000);
+});
+
+test('webhook: TRANSFER 旧 owner (transferred_from) → isActive=false (entitlement を失う)', async () => {
+  // RC 公式: 1 transfer = 旧/新 2 通発火。旧 owner 側 event は transferred_from に
+  // 自分の appUserId が含まれる。これを isActive=false で書込み、二重 Pro を防ぐ。
+  const { env, calls } = makeEnv({
+    doImpl: async () => ({ status: 200, body: { ok: true } }),
+  });
+  const res = await handleRevenueCatWebhook(
+    makeRequest({
+      body: {
+        event: {
+          type: 'TRANSFER',
+          id: 'evt-xfer-from-1',
+          app_user_id: 'google:oldOwner',
+          entitlement_ids: ['cosmic_pro'],
+          environment: 'PRODUCTION',
+          transferred_from: ['google:oldOwner'],
+          transferred_to: ['apple:newOwner'],
+        },
+      },
+    }),
+    env,
+  );
+  assert.equal(res.status, 200);
+  const body = await res.json();
+  assert.equal(body.isActive, false, '旧 owner は entitlement を失う');
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0].body.isActive, false);
+});
+
+test('webhook: TRANSFER 新 owner (transferred_to) → isActive=true (entitlement 獲得)', async () => {
+  const { env, calls } = makeEnv({
+    doImpl: async () => ({ status: 200, body: { ok: true } }),
+  });
+  const res = await handleRevenueCatWebhook(
+    makeRequest({
+      body: {
+        event: {
+          type: 'TRANSFER',
+          id: 'evt-xfer-to-1',
+          app_user_id: 'apple:newOwner',
+          entitlement_ids: ['cosmic_pro'],
+          environment: 'PRODUCTION',
+          transferred_from: ['google:oldOwner'],
+          transferred_to: ['apple:newOwner'],
+        },
+      },
+    }),
+    env,
+  );
+  assert.equal(res.status, 200);
+  const body = await res.json();
+  assert.equal(body.isActive, true, '新 owner は entitlement を獲得');
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0].body.isActive, true);
+});
+
+test('webhook: TRANSFER で transferred_from/to 両方欠落 → 旧実装互換で active 維持', async () => {
+  const { env, calls } = makeEnv({
+    doImpl: async () => ({ status: 200, body: { ok: true } }),
+  });
+  const res = await handleRevenueCatWebhook(
+    makeRequest({
+      body: {
+        event: {
+          type: 'TRANSFER',
+          id: 'evt-xfer-unknown-1',
+          app_user_id: 'google:someone',
+          entitlement_ids: ['cosmic_pro'],
+          environment: 'PRODUCTION',
+        },
+      },
+    }),
+    env,
+  );
+  assert.equal(res.status, 200);
+  const body = await res.json();
+  assert.equal(body.isActive, true);
+});
+
+test('webhook: 未知 event 種別 → 200 ignored (DO は touch しない)', async () => {
+  // 旧実装は未知 event を isActive=false で upsert → 「未知 event で Pro 誤失効」事故あり。
+  // 新実装は副作用なしで 200 ignored 返却。RC が将来追加する event でも安全側に倒す。
+  const { env, calls } = makeEnv({
+    doImpl: async () => ({ status: 200, body: { ok: true } }),
+  });
+  const res = await handleRevenueCatWebhook(
+    makeRequest({
+      body: {
+        event: {
+          type: 'SOME_FUTURE_EVENT_TYPE',
+          id: 'evt-future-1',
+          app_user_id: 'google:future',
+          entitlement_ids: ['cosmic_pro'],
+          environment: 'PRODUCTION',
+        },
+      },
+    }),
+    env,
+  );
+  assert.equal(res.status, 200);
+  const body = await res.json();
+  assert.equal(body.ignored, 'unknown_event_type');
+  assert.equal(body.eventType, 'SOME_FUTURE_EVENT_TYPE');
+  assert.equal(calls.length, 0, '未知 event で DO upsert は呼ばれない');
 });
 
 test('webhook: alreadyProcessed=true を伝搬', async () => {

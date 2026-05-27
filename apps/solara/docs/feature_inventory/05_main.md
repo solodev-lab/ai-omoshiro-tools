@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 1 / 総行数: 227
+- ファイル数: 1 / 総行数: 236
 - class/mixin/extension/enum: 3
 - 関数 (top-level + method の素拾い): 9
 - Navigator.push 等: 0
@@ -14,7 +14,7 @@
 
 ## ファイル別
 
-### `lib/main.dart` (227 行)
+### `lib/main.dart` (236 行)
 
 **imports:** dart=0 / package=3 / relative=16
 
@@ -22,24 +22,24 @@
 
 **型定義 (3):**
 
-- L61 `class SolaraApp : StatelessWidget`
-- L97 `class SolaraHome : StatefulWidget`
-- L104 `class _SolaraHomeState : State`
+- L70 `class SolaraApp : StatelessWidget`
+- L106 `class SolaraHome : StatefulWidget`
+- L113 `class _SolaraHomeState : State`
 
 **関数 (7 public + 2 private):**
 
 - L21 `main()`
-- L65 `build()`
-- L101 `createState()`
-- L111 `initState()`
-- L117 `dispose()`
-- L123 `didChangeAppLifecycleState()`
-- L178 `build()`
+- L74 `build()`
+- L110 `createState()`
+- L120 `initState()`
+- L126 `dispose()`
+- L132 `didChangeAppLifecycleState()`
+- L187 `build()`
 
   <details><summary>private 関数 2 件</summary>
 
-  - L140 `_onGalaxyOverlayChanged()`
-  - L155 `_onTabTap()`
+  - L149 `_onGalaxyOverlayChanged()`
+  - L164 `_onTabTap()`
 
   </details>
 

@@ -368,7 +368,9 @@ Future<ConsultationV2Result> fetchConsultationV2(
         purchasedBalance: purchased,
       );
     }
-    if (res.statusCode == 402) {
+    if (res.statusCode == 402 || res.statusCode == 425) {
+      // 402: paywall (credit_exhausted / pro_only_mode 等)
+      // 425: pro_sync_pending (クライアント主張 Pro × DO 非 Pro、購入消費せず安全停止)
       String? code;
       try {
         final map =

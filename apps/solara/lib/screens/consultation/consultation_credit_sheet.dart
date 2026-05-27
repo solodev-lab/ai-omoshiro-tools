@@ -174,8 +174,11 @@ class _CreditSheetState extends State<_CreditSheet> {
   /// 購入後、サーバー残高が増えるまで最大 ~9 秒ポーリング (Webhook ラグ吸収)。
   /// ConsultationCredits.instance.refresh() で fetch + 全画面通知 (Sanctuary 上部 /
   /// Start popup 等) が一気通貫で走る。
+  ///
+  /// 間隔 500ms × 18 回 = 上限 9 秒。Webhook が即時反映されたケースで「購入完了 →
+  /// シートが 0.5 秒以内に閉じる」体感を出すため、旧 1500ms 間隔から短縮。
   Future<void> _pollUntilGranted(int before) async {
-    for (var i = 0; i < 6; i++) {
+    for (var i = 0; i < 18; i++) {
       await ConsultationCredits.instance.refresh();
       if (!mounted) return;
       final s = ConsultationCredits.instance.status;
@@ -183,7 +186,7 @@ class _CreditSheetState extends State<_CreditSheet> {
         // 残高 update は singleton の notifyListeners 経由で本 sheet も再描画される。
         return;
       }
-      await Future<void>.delayed(const Duration(milliseconds: 1500));
+      await Future<void>.delayed(const Duration(milliseconds: 500));
     }
   }
 

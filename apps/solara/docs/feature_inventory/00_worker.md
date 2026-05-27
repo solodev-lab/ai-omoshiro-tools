@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 23
+- ファイル数: 25
 - エンドポイント総数: 31
 - Gemini 呼出箇所: 2
 - KV 使用: 4 行 / Durable Object 使用: 12 行
@@ -63,6 +63,38 @@ Apple App Attest 検証 — barrel re-export (設計 v3.0)。
 './auth/app_attest.js'`) を壊さないため、本ファイルは re-export のみ。
 新規追加時は直接 attestation.js / assertion.js から import しても OK。
 ```
+
+
+### `worker/src/auth/apple_revoke.js` (182 行)
+
+**ファイル先頭コメント:**
+
+```
+Apple Sign In Token Revocation (App Store Review Guideline 5.1.1(v) 厳密解釈対応)。
+
+用途:
+ユーザーがアプリ内アカウント削除を行ったときに、Apple ID 側との連携も完全に
+失効させる (= Apple ID の「Apple ID を使用しているサインイン履歴」から Solara が消える)。
+
+Apple 公式:
+- https://developer.apple.com/documentation/sign_in_with_apple/sign_in_with_apple_rest_api/revoke_tokens
+- https://developer.apple.com/documentation/sign_in_with_apple/sign_in_with_apple_rest_api/generate_and_validate_tokens
+
+必須 secret / env (wrangler.toml + secret put):
+- APPLE_SIWA_SERVICE_ID  : Apple Developer Console で発行する Sign in with Apple
+用 Service ID (例 "com.solodevlab.solara.signin")。
+Bundle ID とは別の identifier。public。wrangler.toml vars。
+- APPLE_SIWA_KEY_ID      : Authentication Key (P8) の 10 桁 ID。public。wrangler.toml vars。
+- APPLE_TEAM_ID          : 既存。wrangler.toml vars。
+- APPLE_SIWA_PRIVATE_KEY : .p8 ファイルの中身 (PEM、"BEGIN PRIVATE KEY" 含む)。
+wrangler secret put で登録。
+
+鍵が未設定の場合は revoke を no-op で skip (= 公開前にコード先行 deploy 可能)。
+
+Apple revoke endpoint (公式固定)。
+```
+
+**export (3):** `_setFetchForTest`, `buildAppleClientSecret`, `revokeAppleToken`
 
 
 ### `worker/src/auth/apple_root_ca.js` (109 行)
@@ -138,7 +170,7 @@ https://developer.apple.com/documentation/devicecheck/validating-apps-that-conne
 **export (1):** `verifyAttestation`
 
 
-### `worker/src/auth/attestation_state.js` (849 行)
+### `worker/src/auth/attestation_state.js` (902 行)
 
 **ファイル先頭コメント:**
 
@@ -258,6 +290,39 @@ Step 12  uid binding (= __app
 ```
 
 **export (8):** `DEFAULT_ANDROID_PACKAGE_NAME`, `TS_DRIFT_MS`, `MIN_NONCE_LENGTH`, `getGoogleAccessToken`, `decodeIntegrityToken`, `_resetAccessTokenCacheForTest`, `verifyPlayIntegrityFlow`, `__test`
+
+
+### `worker/src/auth/rc_rest.js` (257 行)
+
+**ファイル先頭コメント:**
+
+```
+RevenueCat REST API クライアント (server-side source-of-truth 再検証用)。
+
+用途:
+DO `user_entitlements` 表が webhook 遅延等で古い場合に、RC 本体 API に直接問い合わせて
+entitlement 状態を取り直す。`gateConsultation` で「クライアント主張 Pro × DO non-Pro」
+のときだけ呼ぶ (= 通常リクエストには影響しない)。
+
+設計:
+- V1 API (`GET /v1/subscribers/{app_user_id}`) を使う。
+`expires_date` と `grace_period_expires_date` が entitlement 直下に出るため、
+V2 より素直に grace を扱える。
+- Bearer 認証: `REVENUECAT_SECRET_KEY` (sk_xxx)。wrangler secret put 済み。
+- 結果を 30 秒だけ Worker instance のメモリ Map に memcache する
+(= 同 appUserId への連続リクエスト時に RC API へバーストしない)。
+- 失敗時は安全側に倒す: `{ isPro: false, reason: ... }` を返し、呼び出し側は
+「再検証できなかった」と扱う (= 結果として Free 扱い経路には進まず、425 になる)。
+
+設計参考:
+- https://www.revenuecat.com/docs/api-v1#operation/get-the-latest-subscriber-info
+- https://www.revenuecat.com/docs/customers/customer-info (server fetch ガイダンス)
+- https://www.revenuecat.com/docs/subscription-guidance/how-grace-periods-work
+
+RC 公式ホスト (固定)。
+```
+
+**export (4):** `_setFetchForTest`, `_resetRcRestCacheForTest`, `reverifyEntitlementViaRC`, `deleteSubscriberViaRC`
 
 
 ### `worker/src/consultation.js` (330 行)
@@ -436,7 +501,7 @@ houses: そのカテゴリで重視する伝統占星術のハウス番号
 **export (3):** `computeCategoryScore`, `callGemini`, `handleFortune`
 
 
-### `worker/src/index.js` (1409 行)
+### `worker/src/index.js` (1633 行)
 
 **ファイル先頭コメント:**
 
@@ -460,45 +525,45 @@ webhooks/*   外部連携      RevenueCat Webhook (Pro 状態の真の出所)。
 
 | method | path | line |
 | --- | --- | --- |
-| ? | /protected/consultation/credits | L787 |
-| ? | /public/astro/forecast | L1008 |
-| ? | /public/tiles/* | L1009 |
-| ? | /webhooks/* | L1010 |
-| ? | /public/health | L1018 |
-| GET | /public/tiles/osm/* | L1023 |
-| POST | /public/astro/chart | L1028 |
-| POST | /public/astro/forecast | L1036 |
-| POST | /public/astro/predict | L1051 |
-| POST | /public/astro/daily-transits | L1059 |
-| GET | /public/tz | L1067 |
-| GET | /public/astro/events | L1076 |
-| GET | /public/search | L1087 |
-| GET | /auth/whoami | L1109 |
-| POST | /auth/challenge | L1112 |
-| POST | /auth/attest | L1115 |
-| POST | /auth/integrity/challenge | L1119 |
-| GET | /auth/integrity/diagnose | L1128 |
-| POST | /auth/integrity/decode-test | L1141 |
-| POST | /protected/account/delete | L1209 |
-| POST | /protected/fortune | L1213 |
-| POST | /protected/tarot | L1223 |
-| POST | /protected/relocation | L1251 |
-| POST | /protected/astro/line-narrative | L1263 |
-| POST | /protected/astro/consultation | L1273 |
-| POST | /protected/astro/consultation2 | L1301 |
-| POST | /protected/consultation/credits | L1333 |
-| ? | /public/* | L1391 |
-| ? | /auth/* | L1393 |
-| ? | /protected/* | L1395 |
-| ? | /webhooks/revenuecat | L1397 |
+| ? | /protected/consultation/credits | L962 |
+| ? | /public/astro/forecast | L1183 |
+| ? | /public/tiles/* | L1184 |
+| ? | /webhooks/* | L1185 |
+| ? | /public/health | L1193 |
+| GET | /public/tiles/osm/* | L1198 |
+| POST | /public/astro/chart | L1203 |
+| POST | /public/astro/forecast | L1211 |
+| POST | /public/astro/predict | L1226 |
+| POST | /public/astro/daily-transits | L1234 |
+| GET | /public/tz | L1242 |
+| GET | /public/astro/events | L1251 |
+| GET | /public/search | L1262 |
+| GET | /auth/whoami | L1284 |
+| POST | /auth/challenge | L1287 |
+| POST | /auth/attest | L1290 |
+| POST | /auth/integrity/challenge | L1294 |
+| GET | /auth/integrity/diagnose | L1303 |
+| POST | /auth/integrity/decode-test | L1316 |
+| POST | /protected/account/delete | L1431 |
+| POST | /protected/fortune | L1435 |
+| POST | /protected/tarot | L1445 |
+| POST | /protected/relocation | L1473 |
+| POST | /protected/astro/line-narrative | L1485 |
+| POST | /protected/astro/consultation | L1495 |
+| POST | /protected/astro/consultation2 | L1523 |
+| POST | /protected/consultation/credits | L1555 |
+| ? | /public/* | L1615 |
+| ? | /auth/* | L1617 |
+| ? | /protected/* | L1619 |
+| ? | /webhooks/revenuecat | L1621 |
 
 **KV 使用 (4 行):**
 
-- 出現行: L111, L114, L119, L191
+- 出現行: L131, L134, L139, L219
 
 **Durable Object 使用 (4 行):**
 
-- 出現行: L233, L233, L233, L1347
+- 出現行: L261, L261, L261, L1569
 
 **export (2):** `isQuotaExemptPath`, `_internal`
 
@@ -636,7 +701,7 @@ Uses bounding-box heuristic for common regions, falls back to longitude-based of
 **export (1):** `lookupTimezone`
 
 
-### `worker/src/webhooks/revenuecat.js` (318 行)
+### `worker/src/webhooks/revenuecat.js` (349 行)
 
 **ファイル先頭コメント:**
 
@@ -684,7 +749,7 @@ middleware
 
 **Durable Object 使用 (3 行):**
 
-- 出現行: L105, L105, L105
+- 出現行: L108, L108, L108
 
 **export (2):** `handleRevenueCatWebhook`, `_internal`
 

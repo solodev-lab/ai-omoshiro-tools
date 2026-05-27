@@ -56,6 +56,9 @@ const ACTIVE_EVENT_TYPES = new Set([
   'UNCANCELLATION',
   'NON_RENEWING_PURCHASE',
   'TEMPORARY_ENTITLEMENT_GRANT',
+  // 2024-2026 で RC が追加した期限延長イベント (CS が dashboard から手動延長 / 補填等)。
+  // ACTIVE 扱いしないと「期限延長したのに Pro が誤失効」する事故が起きる。
+  'SUBSCRIPTION_EXTENDED',
 ]);
 
 /** 期限内は active 維持 (auto_renew=false でも期限まで Pro) */
@@ -205,6 +208,21 @@ async function processEvent(env, ev) {
     expiresAt = ev.expiration_at_ms;
   }
 
+  // grace_period_expiration_at_ms (Apple/Google grace 中サービス維持の公式要件)。
+  // BILLING_ISSUE / 一部 CANCELLATION で値が入る。entitlement_get は MAX(expires_at, grace_expires_at)
+  // で失効判定するため、grace を渡すと正しく grace 期間まで Pro が維持される。
+  let graceExpiresAt = null;
+  if (typeof ev.grace_period_expiration_at_ms === 'number' && Number.isFinite(ev.grace_period_expiration_at_ms)) {
+    graceExpiresAt = ev.grace_period_expiration_at_ms;
+  }
+
+  // event_timestamp_ms (out-of-order 判定の正典、RC 公式: webhook 受信順序は保証されない)。
+  // 古い event が新しい状態を上書きする事故を防ぐため必須。
+  let eventTimestampMs = null;
+  if (typeof ev.event_timestamp_ms === 'number' && Number.isFinite(ev.event_timestamp_ms)) {
+    eventTimestampMs = ev.event_timestamp_ms;
+  }
+
   // is_active 判定
   let isActive;
   if (ACTIVE_EVENT_TYPES.has(eventType)) {
@@ -215,14 +233,25 @@ async function processEvent(env, ev) {
   } else if (INACTIVE_EVENT_TYPES.has(eventType)) {
     isActive = false;
   } else if (eventType === 'TRANSFER') {
-    // 旧 owner: transferred_from に列挙されているなら inactive 化
-    // 新 owner: transferred_to が現 app_user_id (= ev.app_user_id) なら active 化
-    // RC 仕様 v1.0: 1 transfer event = 旧側 1 通 + 新側 1 通 で 2 発火
-    isActive = true;
+    // RC 公式: 1 transfer = 旧 owner 通 + 新 owner 通 の 2 webhook 発火。
+    // 各 event の app_user_id が transferred_from / transferred_to のどちらに含まれるかで
+    // active/inactive を分岐する。両方に居ない場合 (= 不明) は安全側で active 維持
+    // (旧実装の挙動を踏襲、後方互換)。
+    // 公式: https://www.revenuecat.com/docs/integrations/webhooks/event-types-and-fields#transfer
+    const fromArr = Array.isArray(ev.transferred_from) ? ev.transferred_from : [];
+    const toArr = Array.isArray(ev.transferred_to) ? ev.transferred_to : [];
+    if (fromArr.includes(appUserId)) {
+      isActive = false; // 旧 owner: entitlement を失う
+    } else if (toArr.includes(appUserId)) {
+      isActive = true;  // 新 owner: entitlement を獲得
+    } else {
+      isActive = true;  // 判別不能: 旧実装と同じく安全側で active 維持
+    }
   } else {
-    // 未知 event は記録だけ残す (現状態保存、is_active は前回値を維持したい)
-    // → entitlement-upsert は is_active 必須なので、currently_active を取ってフォールバック
-    isActive = false;
+    // 未知 event は副作用なしで 200 ignored 返却 (DO は touch しない)。
+    // 旧実装は isActive=false で upsert して「未知 event で Pro 誤失効」事故を起こすリスクがあった。
+    // RC が将来追加する event でも、明示 ACTIVE 対応するまで DO は前回状態を維持する方が安全。
+    return { status: 200, body: { ok: true, ignored: 'unknown_event_type', eventType } };
   }
 
   const result = await callDo(env, '/entitlement-upsert', {
@@ -230,12 +259,14 @@ async function processEvent(env, ev) {
     entitlementId: SOLARA_ENTITLEMENT_ID,
     isActive,
     expiresAt,
+    graceExpiresAt,
     environment,
     store,
     productId,
     periodType,
     eventType,
     eventId,
+    eventTimestampMs,
   });
 
   if (result.status !== 200) {

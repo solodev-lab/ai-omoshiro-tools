@@ -35,6 +35,8 @@ import {
   setCachedEntitlement,
   clearMemoryEntitlementCache,
 } from './auth/entitlement_cache.js';
+import { reverifyEntitlementViaRC, deleteSubscriberViaRC } from './auth/rc_rest.js';
+import { revokeAppleToken } from './auth/apple_revoke.js';
 import { handleRevenueCatWebhook } from './webhooks/revenuecat.js';
 
 /** Solara の Pro エンタイトルメント ID (`purchases_service.dart` と一致) */
@@ -42,6 +44,24 @@ const SOLARA_ENTITLEMENT_ID = 'cosmic_pro';
 
 /** /protected/* body 内で Flutter が送る予約フィールド名 (App User ID 受け渡し) */
 const APP_USER_ID_FIELD = '__appUserId';
+
+/**
+ * /protected/* body 内で Flutter が送るクライアント entitlement snapshot のフィールド名
+ * (Flutter `app_attest_client.dart` の `_kClientEntitlementField` と完全一致)。
+ *
+ * Worker はこれを **Pro 解放には使わない** (= クライアント単独 isPro 禁止)。
+ * 用途は "client claims Pro × DO non-Pro" の窓で購入クレジットを誤消費しない
+ * 安全停止 (425 pro_sync_pending) のトリガー検出のみ。
+ *
+ * 形状:
+ *   {
+ *     "isPro": bool,
+ *     "verification": "verified"|"failed"|"verifiedOnDevice"|"notRequested",
+ *     "expiresAtMs": int|null,
+ *     "productId": string|null
+ *   }
+ */
+const CLIENT_ENTITLEMENT_FIELD = '__clientEntitlement';
 
 // Durable Object 本体は worker entry から re-export 必須 (wrangler が class を解決するため)
 export { AttestationState } from './auth/attestation_state.js';
@@ -134,11 +154,19 @@ function jsonError(status, message, origin) {
   });
 }
 
-/** error コード + 追加フィールドを載せた JSON レスポンス (例: 402 paywall with remaining/limit)。 */
-function jsonStatus(status, payload, origin) {
+/**
+ * error コード + 追加フィールドを載せた JSON レスポンス (例: 402 paywall with remaining/limit)。
+ *
+ * `extraHeaders` で `Retry-After: 30` 等を載せられる (425 pro_sync_pending のリトライ指示用)。
+ */
+function jsonStatus(status, payload, origin, extraHeaders) {
   return new Response(JSON.stringify(payload), {
     status,
-    headers: { 'Content-Type': 'application/json', ...corsHeaders(origin) }
+    headers: {
+      'Content-Type': 'application/json',
+      ...corsHeaders(origin),
+      ...(extraHeaders || {}),
+    },
   });
 }
 
@@ -534,6 +562,108 @@ function consultationAppUserId(body) {
 }
 
 /**
+ * body から `__clientEntitlement` snapshot を取り出す。
+ *
+ * 不正な形 (object でない / 必須フィールド欠落) は null を返す → 後続のロジックは
+ * 「クライアント主張なし」と同じ扱い (= 425 経路に入らない、通常 Free 経路へ)。
+ *
+ * Worker はこの値を **信用しない** — Pro 解放のキーには使わない。あくまで
+ * 「クライアントが Pro と思っている」というヒント。購入クレジット誤消費の防止に
+ * のみ使う (= "client says Pro × DO says non-Pro" → 425 で安全停止)。
+ */
+function consultationClientEntitlement(body) {
+  if (!body || typeof body !== 'object') return null;
+  const raw = body[CLIENT_ENTITLEMENT_FIELD];
+  if (!raw || typeof raw !== 'object') return null;
+  const isPro = raw.isPro === true;
+  const verification = typeof raw.verification === 'string' ? raw.verification : null;
+  const expiresAtMs = (typeof raw.expiresAtMs === 'number' && Number.isFinite(raw.expiresAtMs)) ? raw.expiresAtMs : null;
+  const productId = typeof raw.productId === 'string' ? raw.productId : null;
+  return { isPro, verification, expiresAtMs, productId };
+}
+
+/**
+ * "Client claims Pro × DO says non-Pro" 安全停止リコンサイル (gateConsultation /
+ * consumeReadingCreditGate 共通)。
+ *
+ * 背景:
+ *   クライアント側 RC SDK が「Pro active」と認識しているが Worker DO が「非 Pro」と
+ *   判定する瞬間がある (RC Webhook 遅延 / sandbox renewal / 解約直後 / ネットワーク断後)。
+ *   従来は無条件 Free 経路に落ち、購入クレジットを誤消費していた。本関数は:
+ *     1. RC REST API で source-of-truth を再確認
+ *     2. RC も Pro → memory cache を修復し effectiveIsPro=true を返す
+ *     3. RC も非 Pro + クライアント verification 強 + 失効から 5 分以内 → 425 block を返す
+ *     4. それ以外 → effectiveIsPro=false (= 従来通り Free 経路へ)
+ *
+ * セキュリティ:
+ *   クライアント主張は **何も解放しない** ("クライアント単独 isPro 禁止" 原則は維持)。
+ *   悪意クライアントが Pro 偽主張しても、サーバが Pro と認められない限り機能は使えない。
+ *   本関数は「購入クレジット誤消費の防止」だけに使う = 攻撃面ゼロの安全機構。
+ *
+ * @returns {Promise<{effectiveIsPro: boolean} | {block: Response}>}
+ */
+async function proSyncReconcile(env, appUserId, body, origin) {
+  if (!appUserId) return { effectiveIsPro: false };
+  const clientEnt = consultationClientEntitlement(body);
+  if (!clientEnt || !clientEnt.isPro) return { effectiveIsPro: false };
+
+  const reverified = await reverifyEntitlementViaRC(env, appUserId);
+  if (reverified.isPro) {
+    // RC 本体は Pro → 同 Worker instance の memory cache を修復。DO 更新は次の RC
+    // webhook (RENEWAL) に委ねる (cross-instance には 30s rc_rest cache + 60s mem cache
+    // で eventually consistent)。
+    setCachedEntitlement(appUserId, {
+      isActive: true,
+      expiresAt: reverified.expiresAt ?? null,
+      environment: reverified.environment,
+      productId: reverified.productId,
+      periodType: reverified.periodType,
+    });
+    return { effectiveIsPro: true };
+  }
+
+  // RC も非 Pro と言うケース。クライアント主張は Pro なので、悪意攻撃でない限り
+  // (= verification != 'failed') は同期遅延の可能性を見込んで 425 で安全停止する。
+  //
+  // verification の値別の扱い:
+  //   - 'failed'           : RC が MITM 攻撃を検出 → 425 出さない (= 通常 Free 経路で攻撃を阻止)
+  //   - 'verified'         : RC 鍵で署名検証 OK → 同期遅延を疑って 425
+  //   - 'verifiedOnDevice' : iOS Trusted Entitlements 検証 OK → 同上
+  //   - 'notRequested'     : RC ダッシュボードに Trusted Entitlements 鍵未設定の状態。
+  //                          設計上「検証してない」だけで「偽である」根拠はない。
+  //                          攻撃者が偽主張しても 425 で機能ブロックされるだけで利得ゼロ。
+  //                          → 善意ユーザー (= 鍵未設定でも本当に Pro) を守る方を優先し 425。
+  //
+  // 攻撃面評価: どのケースも「Pro 主張で得られる権限はゼロ、購入消費を止めるだけ」。
+  // 攻撃者は自分が機能を使えなくなるだけ = 攻撃防御は維持。
+  if (clientEnt.verification !== 'failed') {
+    const fiveMinAgo = Date.now() - 5 * 60 * 1000;
+    const expIsNullOrRecent =
+      clientEnt.expiresAtMs == null /* lifetime */ ||
+      clientEnt.expiresAtMs > fiveMinAgo;
+    if (expIsNullOrRecent) {
+      return {
+        block: jsonStatus(
+          425,
+          {
+            error: 'pro_sync_pending',
+            retryAfterSec: 30,
+            clientClaim: 'pro',
+            serverState: 'no_active_entitlement',
+            reverifyReason: reverified.reason || null,
+            clientVerification: clientEnt.verification,
+          },
+          origin,
+          { 'Retry-After': '30' },
+        ),
+      };
+    }
+  }
+  // verification=failed (MITM 検出) or 5 分超過 → 通常 Free 経路へ
+  return { effectiveIsPro: false };
+}
+
+/**
  * 相談クレジットの現在状況を返す (status endpoint + 生成後の残数添付で共用)。
  *
  * - Pro: Pro 週次キャップの残数 (proRemaining/proLimit/weekBucket) + 購入残高。
@@ -547,7 +677,34 @@ function consultationAppUserId(body) {
  */
 async function consultationCreditStatus(env, request, body) {
   const appUserId = consultationAppUserId(body);
-  const isPro = await lookupIsPro(env, appUserId);
+  let isPro = await lookupIsPro(env, appUserId);
+
+  // Pro 購入直後の自己治癒 (block しない版):
+  //   購入完了 → クライアント側 RC SDK は即時 Pro active 認識 →
+  //   __clientEntitlement で "Pro 主張" を Worker に送る →
+  //   ここで RC REST 再検証 → RC 本体も Pro と言うなら memory cache 修復 + Pro 経路へ。
+  //
+  // gateConsultation と違い 425 block は返さない (status endpoint は表示用で、ブロックすると
+  // Sanctuary の残数表示が壊れて UX が悪化する)。reverify 失敗時は素直に non-Pro レスポンス
+  // (proRemaining=null/proLimit=null) を返す = 旧挙動。クライアントは数秒後に再 fetch で
+  // Webhook 反映が間に合えば正常表示に戻る。
+  if (!isPro && appUserId) {
+    const clientEnt = consultationClientEntitlement(body);
+    if (clientEnt && clientEnt.isPro) {
+      const reverified = await reverifyEntitlementViaRC(env, appUserId);
+      if (reverified.isPro) {
+        setCachedEntitlement(appUserId, {
+          isActive: true,
+          expiresAt: reverified.expiresAt ?? null,
+          environment: reverified.environment,
+          productId: reverified.productId,
+          periodType: reverified.periodType,
+        });
+        isPro = true;
+      }
+    }
+  }
+
   const deviceKey = consultationDeviceKey(request, appUserId);
   const weekBucket = isoWeekBucket();
 
@@ -601,7 +758,17 @@ async function consultationCreditStatus(env, request, body) {
  */
 async function consumeReadingCreditGate(request, env, body, origin) {
   const appUserId = consultationAppUserId(body);
-  const isPro = await lookupIsPro(env, appUserId);
+  let isPro = await lookupIsPro(env, appUserId);
+
+  // "Client claims Pro × DO says non-Pro" 安全停止 (gateConsultation と同じロジック)。
+  // Tarot カテゴリ指定 (1 クレジット消費) でも同じ問題が起きうるので、ここでも
+  // proSyncReconcile を通す。DO 同期遅延中の誤消費を防ぐ。
+  if (!isPro) {
+    const recon = await proSyncReconcile(env, appUserId, body, origin);
+    if (recon.block) return { block: recon.block };
+    if (recon.effectiveIsPro) isPro = true;
+  }
+
   if (isPro) return { allow: true, isPro: true };
 
   const deviceKey = consultationDeviceKey(request, appUserId);
@@ -695,7 +862,15 @@ function consultationConsumed(result) {
  */
 async function gateConsultation(request, env, body, origin) {
   const appUserId = consultationAppUserId(body);
-  const isPro = await lookupIsPro(env, appUserId);
+  let isPro = await lookupIsPro(env, appUserId);
+
+  // "Client claims Pro × DO says non-Pro" の安全停止 (詳細は proSyncReconcile 参照)。
+  // 購入クレジットを誤消費しないため、Free 経路へ進む前に RC REST 再検証 + 425 ガード。
+  if (!isPro) {
+    const recon = await proSyncReconcile(env, appUserId, body, origin);
+    if (recon.block) return { block: recon.block };
+    if (recon.effectiveIsPro) isPro = true;
+  }
 
   // 非 Pro は対応モードチェック + 共通ゲート (Free 週次 → 購入 → 402)
   if (!isPro) {
@@ -1167,16 +1342,24 @@ function isDiagnosticsBlocked(env) {
 /**
  * POST /protected/account/delete
  *
- * アカウント削除 (App Store ガイドライン 5.1.1(v)) の「サーバー側の関連データ削除」。
+ * アカウント削除 (App Store ガイドライン 5.1.1(v) / GDPR Right to Erasure / 個人情報保護法)。
  * protectedMiddleware を通過済 = App Attest / Play Integrity 検証 OK かつ body の
- * `__appUserId` は assertion で署名済 (転送中の改ざん不可)。その appUserId に紐づく
- * Pro エンタイトルメント記録 + Webhook event ログを DO から物理削除する。
+ * `__appUserId` は assertion で署名済 (転送中の改ざん不可)。
+ *
+ * 三段階削除 (best-effort、致命的優先順):
+ *   1. DO `user_entitlements` + `webhook_events` を物理削除 (Solara 派生キャッシュ + 個人識別子)
+ *   2. Worker memory entitlement cache invalidate (削除後に Pro 誤判定しない)
+ *   3. RC 本体の subscriber レコード DELETE (RC マスター DB から個人識別子と購入履歴を消去)
+ *
+ * 失敗時の挙動:
+ *   - DO 削除失敗 → 500 (= ユーザーに再試行を促す。これがクリティカル)
+ *   - RC 削除失敗 → 警告ログのみ、レスポンスは ok:true (DO は既に消えているので個人識別子は
+ *     ローカルからは消えた状態。RC 側は次回 webhook 受信時に手動 / 再送で削除可能)。
  *
  * 注意:
- *   - 購読そのものの解約はしない (Apple/Google が管理)。ここで消すのは Worker が持つ
- *     派生キャッシュ + 個人識別子 (apple:/google: の uid) のみ。クライアント側の UI で
+ *   - 購読そのものの解約はしない (Apple/Google が管理)。クライアント側 UI で
  *     「有料プランは別途ストアで解約」を案内する。
- *   - メモリキャッシュも即時 invalidate (削除後に Pro と誤判定しないため)。
+ *   - Apple Sign In の場合、Apple Token Revocation (auth/revoke) は別途必要 (任意)。
  */
 async function handleAccountDelete(request, env, origin) {
   let body;
@@ -1190,12 +1373,51 @@ async function handleAccountDelete(request, env, origin) {
   if (typeof appUserId !== 'string' || !appUserId) {
     return jsonError(400, 'missing_app_user_id', origin);
   }
+
+  // 1. DO 物理削除 (クリティカル)
   const res = await callDo(env, '/account-purge', { appUserId });
   if (res.status !== 200) {
     return jsonError(500, `account-purge failed: ${res.body?.error || 'unknown'}`, origin);
   }
+
+  // 2. Worker memory cache invalidate
   clearMemoryEntitlementCache(appUserId);
-  return jsonOk({ ok: true, ...res.body }, origin);
+
+  // 3. RC 本体 subscriber DELETE (best-effort、失敗してもアカウント削除自体は成功扱い)
+  const rcResult = await deleteSubscriberViaRC(env, appUserId);
+  if (!rcResult.ok) {
+    console.warn(
+      `[account-delete] RC subscriber DELETE failed for ${appUserId}: ${rcResult.reason}`,
+    );
+  }
+
+  // 4. Apple Sign In token を revoke (best-effort)。
+  //    Apple Sign In ユーザー (= appUserId が "apple:" prefix) かつ body に fresh
+  //    authorizationCode が含まれている場合のみ実行。鍵未設定 (secrets_missing) は
+  //    no-op で skip = コード先行 deploy 可能 (Apple Developer 設定が揃うまでの間)。
+  //    Apple Token Revocation は App Store Review Guideline 5.1.1(v) 厳密解釈対応。
+  let appleRevokeResult = null;
+  if (appUserId.startsWith('apple:') && typeof body.appleAuthorizationCode === 'string'
+      && body.appleAuthorizationCode.length > 0) {
+    appleRevokeResult = await revokeAppleToken(env, body.appleAuthorizationCode);
+    if (!appleRevokeResult.ok && appleRevokeResult.reason !== 'secrets_missing') {
+      console.warn(
+        `[account-delete] Apple token revoke failed for ${appUserId}: ${appleRevokeResult.reason}`,
+      );
+    }
+  }
+
+  return jsonOk(
+    {
+      ok: true,
+      ...res.body,
+      rcDeleted: rcResult.ok,
+      rcReason: rcResult.ok ? null : rcResult.reason,
+      appleRevoked: appleRevokeResult ? appleRevokeResult.ok : null,
+      appleRevokeReason: appleRevokeResult && !appleRevokeResult.ok ? appleRevokeResult.reason : null,
+    },
+    origin,
+  );
 }
 
 // ── /protected/* dispatcher ──
@@ -1360,6 +1582,8 @@ export const _internal = {
   consultationProWeekly,
   consultationDeviceKey,
   consultationAppUserId,
+  consultationClientEntitlement,
+  proSyncReconcile,
   consultationCreditStatus,
   consumeReadingCreditGate,
   gateConsultation,

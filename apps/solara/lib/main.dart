@@ -55,6 +55,15 @@ void main() async {
   // notifyListeners で更新される。詳細: utils/consultation_credits.dart
   // ignore: unawaited_futures
   ConsultationCredits.instance.refresh();
+  // Pro 状態変化 (Free ↔ Pro / DeviceSecurity 侵害復帰等) で残数の財布構造が
+  // 変わる (Free 週次 ↔ Pro 週次)。クライアント側 RC SDK が即時 Pro 認識した直後に
+  // Sanctuary の残数表示を 0/0 から正しい値へ自己治癒させるため、ProStatus の
+  // 変化で必ず ConsultationCredits.refresh() を kick する (in-flight dedup あり)。
+  // Worker 側は __clientEntitlement + RC REST 再検証で DO 同期遅延を吸収する。
+  ProStatus.instance.addListener(() {
+    // ignore: discarded_futures
+    ConsultationCredits.instance.refresh();
+  });
   runApp(const SolaraApp());
 }
 

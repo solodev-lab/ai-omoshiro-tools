@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 10 / 総行数: 5303
+- ファイル数: 10 / 総行数: 5309
 - class/mixin/extension/enum: 26
 - 関数 (top-level + method の素拾い): 114
 - Navigator.push 等: 0
@@ -323,7 +323,7 @@ Solara Sanctuary 法務リンクメニュー (Phase 2 launch_checklist)
 - 集計: `showInfoPopup`×1
 
 
-### `lib/screens/sanctuary_screen.dart` (1435 行)
+### `lib/screens/sanctuary_screen.dart` (1441 行)
 
 **imports:** dart=1 / package=3 / relative=22
 
@@ -333,9 +333,9 @@ Solara Sanctuary 法務リンクメニュー (Phase 2 launch_checklist)
 
 - L29 `class SanctuaryScreen : StatefulWidget`
 - L36 `class _SanctuaryScreenState : State`
-- L1348 `extension _WidgetOpacity : Widget`
-- L1357 `class _SettingsGroup : StatelessWidget`
-- L1390 `class _SettingsItem : StatelessWidget`
+- L1354 `extension _WidgetOpacity : Widget`
+- L1363 `class _SettingsGroup : StatelessWidget`
+- L1396 `class _SettingsItem : StatelessWidget`
 
 **関数 (7 public + 33 private):**
 
@@ -343,9 +343,9 @@ Solara Sanctuary 法務リンクメニュー (Phase 2 launch_checklist)
 - L76 `initState()`
 - L89 `dispose()`
 - L295 `build()`
-- L1349 `withOpacity()`
-- L1363 `build()`
-- L1398 `build()`
+- L1355 `withOpacity()`
+- L1369 `build()`
+- L1404 `build()`
 
   <details><summary>private 関数 33 件</summary>
 
@@ -361,27 +361,27 @@ Solara Sanctuary 法務リンクメニュー (Phase 2 launch_checklist)
   - L277 `_syncHomeToVP()`
   - L373 `_buildTopHeader()`
   - L429 `_buildCreditRow()`
-  - L485 `_buildProfileOrb()`
-  - L548 `_buildProfileRow()`
-  - L580 `_buildStellarProfileSection()`
-  - L605 `_buildTitleDiagnosisSection()`
-  - L780 `_buildTitleFlipCard()`
-  - L821 `_buildLegacyVCard()`
-  - L844 `_buildTitleVCard()`
-  - L910 `_buildRecordsSection()`
-  - L946 `_buildCosmicProSection()`
-  - L972 `_buildProUpgradeBanner()`
-  - L1028 `_buildProActiveBanner()`
-  - L1068 `_buildRestoreRow()`
-  - L1092 `_openPaywall()`
-  - L1101 `_restorePurchases()`
-  - L1126 `_buildDevProToggle()`
-  - L1179 `_buildAstrologySection()`
-  - L1209 `_buildHouseOption()`
-  - L1242 `_orbSummary()`
-  - L1255 `_openOrbOverlay()`
-  - L1271 `_buildAppSection()`
-  - L1301 `_pickDailyResetHour()`
+  - L491 `_buildProfileOrb()`
+  - L554 `_buildProfileRow()`
+  - L586 `_buildStellarProfileSection()`
+  - L611 `_buildTitleDiagnosisSection()`
+  - L786 `_buildTitleFlipCard()`
+  - L827 `_buildLegacyVCard()`
+  - L850 `_buildTitleVCard()`
+  - L916 `_buildRecordsSection()`
+  - L952 `_buildCosmicProSection()`
+  - L978 `_buildProUpgradeBanner()`
+  - L1034 `_buildProActiveBanner()`
+  - L1074 `_buildRestoreRow()`
+  - L1098 `_openPaywall()`
+  - L1107 `_restorePurchases()`
+  - L1132 `_buildDevProToggle()`
+  - L1185 `_buildAstrologySection()`
+  - L1215 `_buildHouseOption()`
+  - L1248 `_orbSummary()`
+  - L1261 `_openOrbOverlay()`
+  - L1277 `_buildAppSection()`
+  - L1307 `_pickDailyResetHour()`
 
   </details>
 

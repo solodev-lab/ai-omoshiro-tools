@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 25 / 総行数: 6532
+- ファイル数: 25 / 総行数: 6533
 - class/mixin/extension/enum: 71
 - 関数 (top-level + method の素拾い): 170
 - Navigator.push 等: 0
@@ -674,7 +674,7 @@ Pro 案内ダイアログ — Phase 2-6a / Phase 2-6b + Phase 2 RASP 連携
   </details>
 
 
-### `lib/widgets/sanctuary_account_section.dart` (354 行)
+### `lib/widgets/sanctuary_account_section.dart` (355 行)
 
 **ファイル先頭コメント:**
 
@@ -713,7 +713,7 @@ Sanctuary ✦ Account セクション — Phase 2-9 Sign in 統合
   - L256 `_signIn()`
   - L273 `_signOut()`
   - L284 `_confirmDeleteAccount()`
-  - L336 `_performDelete()`
+  - L337 `_performDelete()`
 
   </details>
 

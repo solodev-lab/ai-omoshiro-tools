@@ -118,14 +118,23 @@ export class AttestationState {
     `);
     this.sql.exec(`CREATE INDEX IF NOT EXISTS idx_user_quota_day ON user_quota(day_bucket);`);
     // user_entitlements: appUserId × entitlementId → 現在の Pro 状態 (RevenueCat Webhook で書込)
-    // expires_at null は lifetime (現状は subscription のみのため実際は常に値あり)
-    // last_event_at は同 (appUserId, entitlementId) に対する out-of-order Webhook の排除に使う
+    //
+    // 列の意味:
+    //   expires_at              : 課金サイクル本来の失効時刻 (ms)。null は lifetime。
+    //   grace_expires_at        : BILLING_ISSUE 等の grace 期間終了時刻 (ms)。null は grace 無し。
+    //                              失効判定は MAX(expires_at, grace_expires_at) で行う
+    //                              (Apple/Google 公式: grace 中はサービス維持を要求)
+    //   last_event_at           : サーバ受信時刻 (legacy out-of-order 判定の二次 fallback)
+    //   last_event_timestamp_ms : RC payload の event_timestamp_ms (out-of-order 判定の正典)
+    //
+    // 旧 instance への migration は CREATE TABLE 後の ALTER TABLE で行う (try/catch で冪等)。
     this.sql.exec(`
       CREATE TABLE IF NOT EXISTS user_entitlements (
         app_user_id TEXT NOT NULL,
         entitlement_id TEXT NOT NULL,
         is_active INTEGER NOT NULL DEFAULT 0,
         expires_at INTEGER,
+        grace_expires_at INTEGER,
         environment TEXT NOT NULL,
         store TEXT,
         product_id TEXT,
@@ -133,10 +142,16 @@ export class AttestationState {
         last_event_type TEXT,
         last_event_id TEXT,
         last_event_at INTEGER NOT NULL,
+        last_event_timestamp_ms INTEGER,
         PRIMARY KEY (app_user_id, entitlement_id)
       );
     `);
     this.sql.exec(`CREATE INDEX IF NOT EXISTS idx_user_entitlements_expires ON user_entitlements(expires_at);`);
+    // 既存 instance の migration (新規 deploy/test 環境では CREATE TABLE が既に新スキーマで
+    // 作るので no-op になる。SQLite の ALTER TABLE は IF NOT EXISTS を持たないため try/catch
+    // で「duplicate column name」エラーを握り潰す)。
+    try { this.sql.exec(`ALTER TABLE user_entitlements ADD COLUMN grace_expires_at INTEGER`); } catch (_) {}
+    try { this.sql.exec(`ALTER TABLE user_entitlements ADD COLUMN last_event_timestamp_ms INTEGER`); } catch (_) {}
     // webhook_events: event_id 単位の冪等性保証 (同 event_id 再送で副作用を起こさない)
     this.sql.exec(`
       CREATE TABLE IF NOT EXISTS webhook_events (
@@ -349,9 +364,9 @@ export class AttestationState {
   //   - is_active=1, expires_at<now: graceful (BILLING_ISSUE 等)、middleware が
   //     最終的に expires_at >= now でも判定する (Layer 2 防御)
   async _entitlementUpsert({
-    appUserId, entitlementId, isActive, expiresAt,
+    appUserId, entitlementId, isActive, expiresAt, graceExpiresAt,
     environment, store, productId, periodType,
-    eventType, eventId, now = Date.now(),
+    eventType, eventId, eventTimestampMs, now = Date.now(),
   }) {
     if (typeof appUserId !== 'string' || !appUserId) return { status: 400, body: { error: 'invalid_app_user_id' } };
     if (typeof entitlementId !== 'string' || !entitlementId) return { status: 400, body: { error: 'invalid_entitlement_id' } };
@@ -359,9 +374,20 @@ export class AttestationState {
     if (expiresAt !== null && (typeof expiresAt !== 'number' || !Number.isFinite(expiresAt))) {
       return { status: 400, body: { error: 'invalid_expires_at' } };
     }
+    if (graceExpiresAt !== undefined && graceExpiresAt !== null
+        && (typeof graceExpiresAt !== 'number' || !Number.isFinite(graceExpiresAt))) {
+      return { status: 400, body: { error: 'invalid_grace_expires_at' } };
+    }
+    if (eventTimestampMs !== undefined && eventTimestampMs !== null
+        && (typeof eventTimestampMs !== 'number' || !Number.isFinite(eventTimestampMs))) {
+      return { status: 400, body: { error: 'invalid_event_timestamp_ms' } };
+    }
     if (typeof environment !== 'string' || !environment) return { status: 400, body: { error: 'invalid_environment' } };
     if (typeof eventType !== 'string' || !eventType) return { status: 400, body: { error: 'invalid_event_type' } };
     if (typeof eventId !== 'string' || !eventId) return { status: 400, body: { error: 'invalid_event_id' } };
+
+    const graceVal = graceExpiresAt ?? null;
+    const evTsVal = eventTimestampMs ?? null;
 
     // 1. event_id idempotent ガード (INSERT OR IGNORE)
     const before = this.sql.exec(
@@ -377,36 +403,51 @@ export class AttestationState {
       eventId, now, eventType, appUserId, entitlementId,
     );
 
-    // 2. out-of-order ガード (last_event_at 比較)
+    // 2. out-of-order ガード:
+    //    優先: RC payload の event_timestamp_ms (= RC が発行した時刻、順序保証されない event の正典)
+    //    fallback: 受信時刻 last_event_at (旧 row や legacy event 用)
+    //    RC 公式ガイダンス: webhook event の reception order は保証されない、event_timestamp_ms を比較せよ。
     const existing = this.sql.exec(
-      `SELECT last_event_at FROM user_entitlements WHERE app_user_id = ? AND entitlement_id = ?`,
+      `SELECT last_event_at, last_event_timestamp_ms FROM user_entitlements WHERE app_user_id = ? AND entitlement_id = ?`,
       appUserId, entitlementId,
     ).toArray();
-    if (existing.length > 0 && existing[0].last_event_at > now) {
-      // 古い event は無視 (event 自体は idempotent log に残す)
-      return { status: 200, body: { ok: true, skippedOutOfOrder: true } };
+    if (existing.length > 0) {
+      const prevTs = existing[0].last_event_timestamp_ms;
+      if (prevTs != null && evTsVal != null) {
+        // 両方 timestamp あり → 厳密比較
+        if (prevTs > evTsVal) {
+          return { status: 200, body: { ok: true, skippedOutOfOrder: true } };
+        }
+      } else {
+        // どちらかが timestamp 無し (旧 row or legacy event) → 受信時刻 fallback
+        if (existing[0].last_event_at > now) {
+          return { status: 200, body: { ok: true, skippedOutOfOrder: true } };
+        }
+      }
     }
 
-    // 3. INSERT OR REPLACE
+    // 3. INSERT OR REPLACE (grace_expires_at と last_event_timestamp_ms も書き込む)
     this.sql.exec(
       `INSERT INTO user_entitlements (
-         app_user_id, entitlement_id, is_active, expires_at,
+         app_user_id, entitlement_id, is_active, expires_at, grace_expires_at,
          environment, store, product_id, period_type,
-         last_event_type, last_event_id, last_event_at
-       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+         last_event_type, last_event_id, last_event_at, last_event_timestamp_ms
+       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
        ON CONFLICT(app_user_id, entitlement_id) DO UPDATE SET
          is_active = excluded.is_active,
          expires_at = excluded.expires_at,
+         grace_expires_at = excluded.grace_expires_at,
          environment = excluded.environment,
          store = excluded.store,
          product_id = excluded.product_id,
          period_type = excluded.period_type,
          last_event_type = excluded.last_event_type,
          last_event_id = excluded.last_event_id,
-         last_event_at = excluded.last_event_at`,
-      appUserId, entitlementId, isActive ? 1 : 0, expiresAt,
+         last_event_at = excluded.last_event_at,
+         last_event_timestamp_ms = excluded.last_event_timestamp_ms`,
+      appUserId, entitlementId, isActive ? 1 : 0, expiresAt, graceVal,
       environment, store ?? null, productId ?? null, periodType ?? null,
-      eventType, eventId, now,
+      eventType, eventId, now, evTsVal,
     );
     return { status: 200, body: { ok: true } };
   }
@@ -416,13 +457,17 @@ export class AttestationState {
   // middleware から /protected/* ごとに呼ばれる。
   // 戻り値: {isActive, expiresAt, environment, productId, periodType} or 404
   //
-  // expires_at < now なら自動的に 404 を返す (= 期限切れ自然失効、Webhook 遅延吸収)。
-  // ただし expires_at が null の lifetime (NON_RENEWING_PURCHASE 等) は失効しない。
+  // 失効判定は **MAX(expires_at, grace_expires_at)** で行う:
+  //   - Apple/Google 公式が「grace 期間中はサービス維持」を要求しているため
+  //   - BILLING_ISSUE 受信時に grace_expires_at に grace 期限を記録 (webhook 側で実装)
+  //   - 両方 null は lifetime (NON_RENEWING_PURCHASE 等、失効しない)
+  // 結果として返す expiresAt も effective (= MAX 後) を返す。クライアントが「次の失効時刻」
+  // として参照できる値を一意化するため。
   async _entitlementGet({ appUserId, entitlementId, now = Date.now() }) {
     if (typeof appUserId !== 'string' || !appUserId) return { status: 400, body: { error: 'invalid_app_user_id' } };
     if (typeof entitlementId !== 'string' || !entitlementId) return { status: 400, body: { error: 'invalid_entitlement_id' } };
     const rows = this.sql.exec(
-      `SELECT is_active, expires_at, environment, product_id, period_type, last_event_type
+      `SELECT is_active, expires_at, grace_expires_at, environment, product_id, period_type, last_event_type
        FROM user_entitlements
        WHERE app_user_id = ? AND entitlement_id = ?`,
       appUserId, entitlementId,
@@ -431,18 +476,26 @@ export class AttestationState {
     const r = rows[0];
     const isActive = r.is_active === 1;
     const expiresAt = r.expires_at;
-    // expires_at が今より過去 → 自然失効
-    if (expiresAt !== null && typeof expiresAt === 'number' && expiresAt < now) {
-      return { status: 404, body: { error: 'entitlement_expired', expiresAt } };
+    const graceExpiresAt = r.grace_expires_at; // legacy row では undefined/null
+    // effective expires = MAX(expires_at, grace_expires_at)。両方 null は lifetime。
+    let effectiveExpires;
+    if (expiresAt == null && graceExpiresAt == null) {
+      effectiveExpires = null;
+    } else {
+      effectiveExpires = Math.max(expiresAt ?? 0, graceExpiresAt ?? 0);
+    }
+    // effective が今より過去 → 自然失効
+    if (effectiveExpires !== null && effectiveExpires < now) {
+      return { status: 404, body: { error: 'entitlement_expired', expiresAt: effectiveExpires } };
     }
     if (!isActive) {
-      return { status: 404, body: { error: 'entitlement_inactive', expiresAt } };
+      return { status: 404, body: { error: 'entitlement_inactive', expiresAt: effectiveExpires } };
     }
     return {
       status: 200,
       body: {
         isActive: true,
-        expiresAt,
+        expiresAt: effectiveExpires,
         environment: r.environment,
         productId: r.product_id,
         periodType: r.period_type,

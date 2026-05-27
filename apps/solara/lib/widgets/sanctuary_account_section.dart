@@ -301,6 +301,7 @@ class _SanctuaryAccountSectionState extends State<SanctuaryAccountSection> {
         ),
         content: const Text(
           'サインイン情報と、サーバー上の購読記録を削除します。\n\n'
+          '・Apple サインインの場合、削除確認のため Apple サインインを再度求められます（連携を完全に解除するため）。\n'
           '・有料プランをご契約中の場合、解約は別途 App Store / Google Play から行ってください（削除では自動解約されません）。\n'
           '・端末内の記録庫（相談履歴・称号・Galaxy）は、この端末に残ります。\n'
           '・この操作は取り消せません。',

@@ -66,6 +66,44 @@ class PurchasesService {
   String? _currentAppUserId;
   String? get appUserId => _currentAppUserId;
 
+  /// 直近の CustomerInfo (entitlement listener が更新)。
+  /// `clientEntitlementSnapshot` で参照される。
+  CustomerInfo? _lastCustomerInfo;
+
+  /// クライアント側 RC SDK が今この瞬間に「Pro である」と認識している状態の snapshot。
+  /// Worker 側 `gateConsultation` が DO の entitlement と突き合わせて、Pro 認識ロスト時に
+  /// 購入クレジットを誤消費しないため使う ("クライアント主張 Pro × サーバ non-Pro" → 425)。
+  ///
+  /// 形状:
+  ///   {
+  ///     "isPro": bool,                  // cosmic_pro entitlement.isActive
+  ///     "verification": String,         // "verified" / "failed" / "verifiedOnDevice" / "notRequested"
+  ///     "expiresAtMs": int?,            // ISO 8601 → ms (lifetime/取得不能は null)
+  ///     "productId": String?,           // entitlement.productIdentifier
+  ///   }
+  ///
+  /// CustomerInfo がまだ取れていない (init 中、未 configure 等) → null。
+  /// この snapshot は **クライアントの主張** であって真実ではない (Worker は信用しない)。
+  /// Worker 側はこれを「購入消費を止める安全停止」にだけ使う。
+  Map<String, dynamic>? get clientEntitlementSnapshot {
+    final info = _lastCustomerInfo;
+    if (info == null) return null;
+    final ent = info.entitlements.all[entitlementId];
+    if (ent == null) return null;
+    int? expiresAtMs;
+    final expStr = ent.expirationDate;
+    if (expStr != null && expStr.isNotEmpty) {
+      final parsed = DateTime.tryParse(expStr);
+      if (parsed != null) expiresAtMs = parsed.millisecondsSinceEpoch;
+    }
+    return <String, dynamic>{
+      'isPro': ent.isActive,
+      'verification': ent.verification.name,
+      'expiresAtMs': expiresAtMs,
+      'productId': ent.productIdentifier,
+    };
+  }
+
   /// `Purchases.configure` 済かどうか。UI 側で「ストア準備中」表示の分岐に使う。
   bool get isConfigured => _configured;
 
@@ -139,8 +177,10 @@ class PurchasesService {
     }
   }
 
-  /// CustomerInfo の更新で呼ばれる。entitlement の有効性を ProStatus に同期。
+  /// CustomerInfo の更新で呼ばれる。entitlement の有効性を ProStatus に同期 +
+  /// 最新スナップショットを保持 (`clientEntitlementSnapshot` で参照)。
   void _onCustomerInfo(CustomerInfo info) {
+    _lastCustomerInfo = info;
     final entitled = isEntitledFrom(info);
     // ProStatus.setPro は SharedPreferences 永続化 + listener 通知 (UI 即時更新)。
     // unawaited で起動するが、setState 呼出は listener 経由で安全。
@@ -245,6 +285,13 @@ class PurchasesService {
     } catch (_) {
       _currentAppUserId = null;
     }
+  }
+
+  /// テスト用: `clientEntitlementSnapshot` を検証するために CustomerInfo を直接注入する。
+  /// 本番では listener (`_onCustomerInfo`) 経由でのみセットされる。
+  @visibleForTesting
+  void setLastCustomerInfoForTest(CustomerInfo? info) {
+    _lastCustomerInfo = info;
   }
 
   /// テスト用: 純粋関数 `isEntitledFrom` は静的なので直接呼べる。

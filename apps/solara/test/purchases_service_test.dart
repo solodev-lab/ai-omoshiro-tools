@@ -13,16 +13,18 @@ import 'package:solara/utils/purchases_service.dart';
 EntitlementInfo _buildEntitlement({
   required bool isActive,
   required VerificationResult verification,
+  String expirationDate = '2026-05-01T00:00:00Z',
 }) {
   return EntitlementInfo(
     PurchasesService.entitlementId,
     isActive,
     true,
-    '2026-05-01T00:00:00Z',
-    '2026-05-01T00:00:00Z',
+    '2026-05-01T00:00:00Z',  // latestPurchaseDate
+    '2026-05-01T00:00:00Z',  // originalPurchaseDate
     'solara_cosmic_pro_monthly',
     true,
     verification: verification,
+    expirationDate: expirationDate,
   );
 }
 
@@ -147,6 +149,95 @@ void main() {
         '2026-05-01T00:00:00Z',
       );
       expect(PurchasesService.isEntitledFrom(info), isFalse);
+    });
+  });
+
+  group('clientEntitlementSnapshot', () {
+    tearDown(() {
+      // テスト同士の干渉防止 (本テストファイル内のテストは singleton state を触る)
+      PurchasesService.instance.setLastCustomerInfoForTest(null);
+    });
+
+    test('CustomerInfo 未取得時は null', () {
+      PurchasesService.instance.setLastCustomerInfoForTest(null);
+      expect(PurchasesService.instance.clientEntitlementSnapshot, isNull);
+    });
+
+    test('entitlement なし → null', () {
+      final info = _buildCustomerInfo();
+      PurchasesService.instance.setLastCustomerInfoForTest(info);
+      expect(PurchasesService.instance.clientEntitlementSnapshot, isNull);
+    });
+
+    test('active Pro entitlement → isPro=true + verification + expiresAtMs + productId', () {
+      final info = _buildCustomerInfo(
+        entitlement: _buildEntitlement(
+          isActive: true,
+          verification: VerificationResult.verified,
+        ),
+      );
+      PurchasesService.instance.setLastCustomerInfoForTest(info);
+      final snap = PurchasesService.instance.clientEntitlementSnapshot;
+      expect(snap, isNotNull);
+      expect(snap!['isPro'], isTrue);
+      expect(snap['verification'], 'verified');
+      expect(snap['productId'], 'solara_cosmic_pro_monthly');
+      // _buildEntitlement の expirationDate = '2026-05-01T00:00:00Z'
+      final expected = DateTime.parse('2026-05-01T00:00:00Z').millisecondsSinceEpoch;
+      expect(snap['expiresAtMs'], expected);
+    });
+
+    test('inactive entitlement (期限切れ etc.) でも snapshot は返る (isPro=false)', () {
+      // クライアント主張として "過去 Pro だが今は失効" を Worker が受け取れることを担保。
+      // Worker 側は isPro=false を見て安全停止トリガーから外す。
+      final entitlement = _buildEntitlement(
+        isActive: false,
+        verification: VerificationResult.verified,
+      );
+      final info = CustomerInfo(
+        EntitlementInfos(
+          {PurchasesService.entitlementId: entitlement},
+          const <String, EntitlementInfo>{},
+        ),
+        const <String, String?>{},
+        const <String>[],
+        const <String>[],
+        const [],
+        '2026-05-01T00:00:00Z',
+        'anon-test',
+        const <String, String?>{},
+        '2026-05-01T00:00:00Z',
+      );
+      PurchasesService.instance.setLastCustomerInfoForTest(info);
+      final snap = PurchasesService.instance.clientEntitlementSnapshot;
+      expect(snap, isNotNull);
+      expect(snap!['isPro'], isFalse);
+      expect(snap['verification'], 'verified');
+    });
+
+    test('verification=failed も name で文字列化される', () {
+      final entitlement = _buildEntitlement(
+        isActive: true,
+        verification: VerificationResult.failed,
+      );
+      final info = CustomerInfo(
+        EntitlementInfos(
+          {PurchasesService.entitlementId: entitlement},
+          {PurchasesService.entitlementId: entitlement},
+        ),
+        const <String, String?>{},
+        const <String>[],
+        const <String>[],
+        const [],
+        '2026-05-01T00:00:00Z',
+        'anon-test',
+        const <String, String?>{},
+        '2026-05-01T00:00:00Z',
+      );
+      PurchasesService.instance.setLastCustomerInfoForTest(info);
+      final snap = PurchasesService.instance.clientEntitlementSnapshot;
+      expect(snap, isNotNull);
+      expect(snap!['verification'], 'failed');
     });
   });
 
