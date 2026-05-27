@@ -67,6 +67,15 @@ CONSULTATION_CREDIT_PRODUCTS = "com.solodevlab.solara.credits.small:3,com.solode
 APPLE_TEAM_ID = "TY5JW393Q5"
 APPLE_BUNDLE_ID = "com.solodevlab.solara"
 
+# ── Sign in with Apple Token Revocation (設定手順: project_solara_apple_siwa_revoke_setup.md) ──
+# Apple Sign In のトークンを Apple 側で revoke するための公開 ID 群。
+# Service ID: 専用に作った Services ID identifier (App ID com.solodevlab.solara とは別)。
+# Key ID: Sign in with Apple Authentication Key の 10 桁 ID。
+# Private key (.p8) は wrangler secret put APPLE_SIWA_PRIVATE_KEY で別途登録。
+# 鍵未設定の間は worker/src/auth/apple_revoke.js が no-op skip (reason: 'secrets_missing')。
+APPLE_SIWA_SERVICE_ID = "com.solodevlab.solara.signin"
+APPLE_SIWA_KEY_ID = "D8BGKZW2AJ"
+
 # App Attest middleware の段階的有効化スイッチ:
 #   "disabled"  - middleware 完全スキップ (緊急時 kill switch)
 #   "log_only"  - 検証は走るが失敗しても通す + console.warn (初回 deploy 推奨)
