@@ -5,9 +5,9 @@
 
 ## サマリ
 
-- ファイル数: 25 / 総行数: 6533
-- class/mixin/extension/enum: 71
-- 関数 (top-level + method の素拾い): 170
+- ファイル数: 27 / 総行数: 6878
+- class/mixin/extension/enum: 77
+- 関数 (top-level + method の素拾い): 178
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 3
 - Worker URL リテラル: 0
@@ -45,6 +45,53 @@
   - L241 `_ornateStarCrescent()`
   - L257 `_cycleSpiral()`
   - L278 `_flourishKey()`
+
+  </details>
+
+
+### `lib/widgets/ai_disclaimer_footer.dart` (37 行)
+
+**imports:** dart=0 / package=1 / relative=0
+
+**型定義 (1):**
+
+- L14 `class AiDisclaimerFooter : StatelessWidget`
+  - AI 出力 disclaimer フッター (Apple 4.0 + Google Misleading Claims policy 対応)。
+
+**関数 (1 public + 0 private):**
+
+- L22 `build()`
+
+
+### `lib/widgets/ai_report_button.dart` (307 行)
+
+**imports:** dart=0 / package=1 / relative=1
+
+- relative: `../utils/ai_report_api.dart`
+
+**型定義 (5):**
+
+- L18 `class AiReportButton : StatelessWidget`
+  - AI 出力ユーザー報告ボタン (Google Generative AI Apps Policy 対応)。
+- L85 `class _AiReportSheet : StatefulWidget`
+  - 報告 BottomSheet 内部実装。
+- L95 `class _ReportReason`
+  - 報告理由の enum (UI 側固定)。Worker は文字列として保存するだけ。
+- L113 `class _AiReportSheetState : State`
+- L248 `class _ReasonTile : StatelessWidget`
+
+**関数 (5 public + 2 private):**
+
+- L36 `build()`
+- L91 `createState()`
+- L119 `dispose()`
+- L151 `build()`
+- L259 `build()`
+
+  <details><summary>private 関数 2 件</summary>
+
+  - L68 `_openSheet()`
+  - L124 `_submit()`
 
   </details>
 
@@ -473,7 +520,7 @@ Daily 未開封チップは `unsealed.webp` を別アセット名で使う (kind
 - 集計: `showInfoPopup`×2
 
 
-### `lib/widgets/location_picker_minimap.dart` (141 行)
+### `lib/widgets/location_picker_minimap.dart` (142 行)
 
 **ファイル先頭コメント:**
 

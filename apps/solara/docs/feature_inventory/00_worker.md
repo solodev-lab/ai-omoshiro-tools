@@ -5,12 +5,51 @@
 
 ## サマリ
 
-- ファイル数: 25
-- エンドポイント総数: 31
+- ファイル数: 26
+- エンドポイント総数: 32
 - Gemini 呼出箇所: 2
 - KV 使用: 4 行 / Durable Object 使用: 12 行
 
 ## ファイル別
+
+### `worker/src/ai_report.js` (47 行)
+
+**ファイル先頭コメント:**
+
+```
+AI 出力ユーザー報告 — Google Generative AI Apps Policy (2026-04-15 全面施行) 対応。
+
+設計根拠: apps/solara/docs/store_compliance.md §3.1
+
+Google Play は「AI 生成コンテンツを出すアプリは、ユーザーが不適切な出力を
+アプリ内で** 報告できる UI を必須化」と要求。Solara は Stella 相談 / Tarot
+Horo の 3 経路で Gemini を呼び出すため、各結果画面に「報告」ボタンを設置し、
+押されたら本 endpoint へ送信する。
+
+オーナー判断 (2026-05-28):
+保存先 = console.warn 経由で Cloudflare Workers Logs のみ (永続保存はしない)。
+- CF Dashboard > Workers > solara-api > Logs で「[AI_REPORT]」で検索可
+- 保存期間: Free 3 日 / Paid 7 日。Solara 公開初期は報告量も少ない想定で十分。
+- パターン検知が必要になったら、別途 DO 保存への昇格を検討。
+
+文字数 cap:
+- feature/reason: 32 文字 (enum 想定だが防御的に切る)
+- freeText: 500 文字 (ユーザー自由記述)
+- outputText: 2000 文字 (AI 出力本体、Solara の最長 Horo/Tarot/Stella 1 回答想定)
+- 合計 ~2.5KB / 報告。CF Logs 1 行に収まる。
+
+報告された PII 保護:
+- appUserId は middleware が注入する RC 匿名 ID のみ。氏名・出生情報は送らない。
+- 結果テキスト内に AI が生成したユーザー名等が混入する可能性は残るが、
+報告経路でしか送られないため通常運用では問題なし。
+
+
+@param {object} body { feature, reason, freeText, outputText, __appUserId }
+@returns {{ok:true, ts:string}}
+```
+
+**export (1):** `handleAiReport`
+
 
 ### `worker/src/astro.js` (898 行)
 
@@ -404,7 +443,7 @@ Soft (trine/sextile) と Hard (square) は独立 2 エネルギー。total/吉�
 **export (2):** `runConsultationPipeline`, `_internal`
 
 
-### `worker/src/consultation_v2.js` (385 行)
+### `worker/src/consultation_v2.js` (391 行)
 
 **ファイル先頭コメント:**
 
@@ -466,7 +505,7 @@ astronomy-engine API:
 **export (1):** `computeDailyTransits`
 
 
-### `worker/src/fortune.js` (417 行)
+### `worker/src/fortune.js` (419 行)
 
 **ファイル先頭コメント:**
 
@@ -496,12 +535,12 @@ houses: そのカテゴリで重視する伝統占星術のハウス番号
 
 **Durable Object 使用 (4 行):**
 
-- 出現行: L308, L310, L310, L310
+- 出現行: L310, L312, L312, L312
 
 **export (3):** `computeCategoryScore`, `callGemini`, `handleFortune`
 
 
-### `worker/src/index.js` (1633 行)
+### `worker/src/index.js` (1643 行)
 
 **ファイル先頭コメント:**
 
@@ -521,49 +560,50 @@ webhooks/*   外部連携      RevenueCat Webhook (Pro 状態の真の出所)。
 同セッションで新 path に書き換え済（`apps/solara/lib/utils/solara_api.dart` 参照）。
 ```
 
-**エンドポイント / ルート (31):**
+**エンドポイント / ルート (32):**
 
 | method | path | line |
 | --- | --- | --- |
-| ? | /protected/consultation/credits | L962 |
-| ? | /public/astro/forecast | L1183 |
-| ? | /public/tiles/* | L1184 |
-| ? | /webhooks/* | L1185 |
-| ? | /public/health | L1193 |
-| GET | /public/tiles/osm/* | L1198 |
-| POST | /public/astro/chart | L1203 |
-| POST | /public/astro/forecast | L1211 |
-| POST | /public/astro/predict | L1226 |
-| POST | /public/astro/daily-transits | L1234 |
-| GET | /public/tz | L1242 |
-| GET | /public/astro/events | L1251 |
-| GET | /public/search | L1262 |
-| GET | /auth/whoami | L1284 |
-| POST | /auth/challenge | L1287 |
-| POST | /auth/attest | L1290 |
-| POST | /auth/integrity/challenge | L1294 |
-| GET | /auth/integrity/diagnose | L1303 |
-| POST | /auth/integrity/decode-test | L1316 |
-| POST | /protected/account/delete | L1431 |
-| POST | /protected/fortune | L1435 |
-| POST | /protected/tarot | L1445 |
-| POST | /protected/relocation | L1473 |
-| POST | /protected/astro/line-narrative | L1485 |
-| POST | /protected/astro/consultation | L1495 |
-| POST | /protected/astro/consultation2 | L1523 |
-| POST | /protected/consultation/credits | L1555 |
-| ? | /public/* | L1615 |
-| ? | /auth/* | L1617 |
-| ? | /protected/* | L1619 |
-| ? | /webhooks/revenuecat | L1621 |
+| ? | /protected/consultation/credits | L963 |
+| ? | /public/astro/forecast | L1184 |
+| ? | /public/tiles/* | L1185 |
+| ? | /webhooks/* | L1186 |
+| ? | /public/health | L1194 |
+| GET | /public/tiles/osm/* | L1199 |
+| POST | /public/astro/chart | L1204 |
+| POST | /public/astro/forecast | L1212 |
+| POST | /public/astro/predict | L1227 |
+| POST | /public/astro/daily-transits | L1235 |
+| GET | /public/tz | L1243 |
+| GET | /public/astro/events | L1252 |
+| GET | /public/search | L1263 |
+| GET | /auth/whoami | L1285 |
+| POST | /auth/challenge | L1288 |
+| POST | /auth/attest | L1291 |
+| POST | /auth/integrity/challenge | L1295 |
+| GET | /auth/integrity/diagnose | L1304 |
+| POST | /auth/integrity/decode-test | L1317 |
+| POST | /protected/account/delete | L1432 |
+| POST | /protected/fortune | L1436 |
+| POST | /protected/tarot | L1446 |
+| POST | /protected/relocation | L1474 |
+| POST | /protected/astro/line-narrative | L1486 |
+| POST | /protected/astro/consultation | L1496 |
+| POST | /protected/astro/consultation2 | L1524 |
+| POST | /protected/consultation/credits | L1556 |
+| POST | /protected/report-ai-output | L1570 |
+| ? | /public/* | L1625 |
+| ? | /auth/* | L1627 |
+| ? | /protected/* | L1629 |
+| ? | /webhooks/revenuecat | L1631 |
 
 **KV 使用 (4 行):**
 
-- 出現行: L131, L134, L139, L219
+- 出現行: L132, L135, L140, L220
 
 **Durable Object 使用 (4 行):**
 
-- 出現行: L261, L261, L261, L1569
+- 出現行: L262, L262, L262, L1579
 
 **export (2):** `isQuotaExemptPath`, `_internal`
 

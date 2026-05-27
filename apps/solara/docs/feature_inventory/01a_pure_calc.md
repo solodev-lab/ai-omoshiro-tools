@@ -5,14 +5,47 @@
 
 ## サマリ
 
-- ファイル数: 6 / 総行数: 1679
-- class/mixin/extension/enum: 13
-- 関数 (top-level + method の素拾い): 63
+- ファイル数: 7 / 総行数: 1731
+- class/mixin/extension/enum: 14
+- 関数 (top-level + method の素拾い): 64
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 0
 - Worker URL リテラル: 0
 
 ## ファイル別
+
+### `lib/utils/ai_report_api.dart` (52 行)
+
+**ファイル先頭コメント:**
+
+```
+AI 出力ユーザー報告 API クライアント (Google Generative AI Apps Policy 対応)。
+
+設計根拠: apps/solara/docs/store_compliance.md §3.1
+
+Worker 側 endpoint (`POST /protected/report-ai-output`) は CF Logs に
+console.warn で出力するのみ。永続保存はしない (オーナー判断 2026-05-28)。
+詳細は worker/src/ai_report.js を参照。
+
+UI 側 (widgets/ai_report_button.dart) からの呼出専用。失敗してもユーザー体験は
+致命的ではないため、bool で成否を返すのみ (例外は捕捉して false)。
+
+`/protected/*` 呼び出しは AppAttestClient.postProtected 経由 (設計 v2.1)。
+middleware が log_only モードなら bypass、enforced モードなら attestation 必須。
+```
+
+**imports:** dart=1 / package=0 / relative=2
+
+- relative: `app_attest_client.dart`, `solara_api.dart`
+
+**型定義 (1):**
+
+- L18 `class AiReportApi`
+
+**関数 (1 public + 0 private):**
+
+- L29 `reportAiOutput()` — AI 出力を運営に報告する。
+
 
 ### `lib/utils/astro_houses.dart` (208 行)
 

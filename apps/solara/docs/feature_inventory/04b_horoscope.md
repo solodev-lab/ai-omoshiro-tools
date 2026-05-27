@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 23 / 総行数: 5930
+- ファイル数: 23 / 総行数: 5943
 - class/mixin/extension/enum: 32
 - 関数 (top-level + method の素拾い): 151
 - Navigator.push 等: 0
@@ -259,28 +259,28 @@ ignore_for_file: invalid_use_of_protected_member
   </details>
 
 
-### `lib/screens/horoscope/horo_fortune_cards.dart` (330 行)
+### `lib/screens/horoscope/horo_fortune_cards.dart` (343 行)
 
-**imports:** dart=0 / package=2 / relative=3
+**imports:** dart=0 / package=2 / relative=5
 
-- relative: `horo_constants.dart`, `horo_antique_icons.dart`, `../../utils/fortune_api.dart`
+- relative: `horo_constants.dart`, `horo_antique_icons.dart`, `../../utils/fortune_api.dart`, `../../widgets/ai_disclaimer_footer.dart`, `../../widgets/ai_report_button.dart`
 
 **型定義 (1):**
 
-- L33 `class HoroAstrologyView : StatelessWidget`
+- L35 `class HoroAstrologyView : StatelessWidget`
 
 **関数 (1 public + 6 private):**
 
-- L75 `build()`
+- L77 `build()`
 
   <details><summary>private 関数 6 件</summary>
 
-  - L167 `_birthEditedBanner()`
-  - L184 `_loadingBanner()`
-  - L201 `_errorBanner()`
-  - L224 `_skeletonLine()`
-  - L232 `_skeletonBar()`
-  - L244 `_lockedTeaserCard()`
+  - L180 `_birthEditedBanner()`
+  - L197 `_loadingBanner()`
+  - L214 `_errorBanner()`
+  - L237 `_skeletonLine()`
+  - L245 `_skeletonBar()`
+  - L257 `_lockedTeaserCard()`
 
   </details>
 

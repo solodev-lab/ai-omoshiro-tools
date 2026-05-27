@@ -5,8 +5,8 @@
 
 ## #3 Worker ↔ Flutter エンドポイント対整合
 
-- Worker 側に定義された path: **29**
-- Flutter から呼ばれている path リテラル: **17**
+- Worker 側に定義された path: **30**
+- Flutter から呼ばれている path リテラル: **18**
 
 ### Worker → Flutter 漏れ (Worker にあるが Flutter から呼出無し)
 
@@ -39,6 +39,7 @@
 - `/protected/consultation/credits`
 - `/protected/fortune`
 - `/protected/relocation`
+- `/protected/report-ai-output`
 - `/protected/tarot`
 - `/public/*`
 - `/public/astro/chart`
@@ -51,11 +52,15 @@
 
 ## #1 / #2 機械抽出 ↔ feature_inventory.md (人手版) の対整合
 
-- 機械抽出した class/mixin/extension/enum: **429**
+- 機械抽出した class/mixin/extension/enum: **439**
 - inventory に登場する識別子 (大文字始まり ``backtick``囲み): **235**
 
-### #1 機械にあるが Doc に書かれていない (245)
+### #1 機械にあるが Doc に書かれていない (255)
 
+- `AiConsentScreen`
+- `AiDisclaimerFooter`
+- `AiReportApi`
+- `AiReportButton`
 - `AppAttestClient`
 - `ConstellationShareCardPage`
 - `ConsultEntryPopup`
@@ -96,6 +101,8 @@
 - `_AboutReadingContent`
 - `_ActionTile`
 - `_AggBuilder`
+- `_AiReportSheet`
+- `_AiReportSheetState`
 - `_AltarLayout`
 - `_AltitudeBadge`
 - `_AngleStyle`
@@ -220,6 +227,7 @@
 - `_ObserveScreenState`
 - `_OrbSectionLabel`
 - `_PageIndicator`
+- `_ParagraphSection`
 - `_PaywallScreenState`
 - `_PaywallWidgets`
 - `_Petal`
@@ -239,24 +247,17 @@
 - `_RarityStarRow`
 - `_Ray`
 - `_ReadingSheet`
+- `_ReasonTile`
 - `_RefreshButton`
 - `_RegionPicker`
 - `_RelocationProTeaser`
+- `_ReportReason`
 - `_RosePetal`
 - `_SanctuaryAccountSectionState`
 - `_SanctuaryHomeEditorPageState`
 - `_SanctuaryIconPainter`
 - `_SanctuaryOrbOverlayState`
-- `_SanctuaryProfileEditorPageState`
-- `_SanctuaryResetHourPickerState`
-- `_SanctuaryScreenState`
-- `_SanctuaryTitleDiagnosisPageState`
-- `_ScopeChoice`
-- `_ScopeWrap`
-- `_ScrollableRowPanel`
-- `_SearchBar`
-- `_SearchBarOverlayState`
-- … 残り 45 省略
+- … 残り 55 省略
 
 ### #2 Doc に書いてあるがコードに存在しない (ゴースト記述) (51)
 
@@ -354,7 +355,7 @@
 
 ### 層 4f: サブ画面 (Forecast / Locations / Philosophy / Font Preview)
 
-- ファイル数: 28
+- ファイル数: 29
 - Worker URL 呼出: (なし)
 - Popup/Dialog: `showInfoPopup`×7
 - Navigator.push 等: 0 箇所
@@ -370,22 +371,22 @@
 
 | from\to | 1a | 1b | 1c | 2a | 2b | 2c | 3a | 3b | 3c | 4a | 4b | 4c | 4d | 4e | 4f | 5 |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1a | 2 | · | · | · | 1 | · | · | · | · | · | · | · | · | · | · | · |
+| 1a | 2 | · | · | 1 | 2 | · | · | · | · | · | · | · | · | · | · | · |
 | 1b | · | · | · | 2 | 1 | · | 1 | · | · | · | · | · | · | · | · | · |
 | 1c | · | · | 1 | · | · | · | · | · | · | · | · | · | · | · | · | · |
 | 2a | 2 | 1 | · | 6 | 4 | · | · | 1 | · | · | · | · | · | · | · | · |
 | 2b | 2 | 3 | 5 | 5 | 4 | · | · | · | · | · | · | · | · | · | · | · |
 | 2c | · | · | 1 | 1 | · | · | · | · | · | · | · | · | · | · | · | · |
-| 3a | 1 | 4 | 2 | 2 | 1 | 1 | 8 | 7 | 4 | 1 | · | · | · | · | 1 | · |
+| 3a | 2 | 4 | 2 | 2 | 1 | 1 | 8 | 7 | 4 | 1 | · | · | · | · | 1 | · |
 | 3b | · | · | · | · | · | · | · | 1 | · | · | · | · | · | · | · | · |
 | 3c | · | 5 | 4 | 2 | 4 | · | 12 | 4 | · | · | · | · | · | · | · | · |
 | 4a | 10 | 11 | · | 13 | 8 | · | 19 | 23 | 3 | 30 | 2 | · | · | · | 3 | · |
-| 4b | 5 | 13 | · | 3 | 5 | · | 14 | · | · | · | 31 | · | · | 2 | · | · |
-| 4c | 1 | 1 | 15 | 1 | 7 | 5 | 7 | 6 | · | · | · | 17 | · | · | 1 | · |
+| 4b | 5 | 13 | · | 3 | 5 | · | 16 | · | · | · | 31 | · | · | 2 | · | · |
+| 4c | 1 | 1 | 15 | 1 | 7 | 5 | 9 | 6 | · | · | · | 17 | · | · | 1 | · |
 | 4d | 3 | 6 | 13 | 1 | 5 | 2 | 12 | 2 | 1 | · | · | · | 9 | · | · | · |
 | 4e | 1 | 4 | · | 3 | 7 | 1 | 15 | 1 | · | · | · | · | · | 9 | 3 | · |
-| 4f | 2 | 3 | · | 7 | 15 | 3 | 16 | 11 | · | 6 | · | · | · | · | 27 | · |
-| 5 | 1 | · | · | 2 | 4 | 2 | 1 | 1 | · | 1 | 1 | 1 | 1 | 1 | · | · |
+| 4f | 2 | 3 | · | 7 | 16 | 3 | 18 | 11 | · | 6 | · | · | · | · | 27 | · |
+| 5 | 1 | · | · | 2 | 5 | 2 | 1 | 1 | · | 1 | 1 | 1 | 1 | 1 | 1 | · |
 
 > 健全な依存方向は「番号が大きい層 → 小さい層」(上位が下位に依存)。
 > 番号が小さい層から大きい層への矢印 (左下三角) は逆流依存の疑い。
@@ -397,13 +398,13 @@
 | ファイル | 層 | 被 import 数 |
 | --- | --- | --- |
 | `lib/theme/solara_colors.dart` | 3b | 36 |
-| `lib/utils/solara_storage.dart` | 2b | 29 |
+| `lib/utils/solara_storage.dart` | 2b | 31 |
 | `lib/widgets/info_popup.dart` | 3a | 24 |
 | `lib/screens/map/map_constants.dart` | 3b | 20 |
 | `lib/utils/pro_status.dart` | 2b | 19 |
+| `lib/utils/solara_api.dart` | 2a | 15 |
 | `lib/models/galaxy_cycle.dart` | 1c | 14 |
 | `lib/screens/horoscope/horo_antique_icons.dart` | 3a | 14 |
-| `lib/utils/solara_api.dart` | 2a | 14 |
 | `lib/models/daily_reading.dart` | 1c | 12 |
 | `lib/widgets/pro_unlock_dialog.dart` | 3a | 12 |
 | `lib/widgets/tap_to_unfocus.dart` | 3a | 11 |
@@ -430,9 +431,27 @@
 > 各ソースの SHA1 を `_stamps.json` に記録し、差分を検出。
 > 変更されたファイルが属する層は、人手版インベントリ章の見直し対象。
 
-- 追加: **0** / 削除: **0** / 変更: **0**
+- 追加: **5** / 削除: **0** / 変更: **15**
 
-- 変更なし — 全インベントリ章は最新。
+### 変更されたファイル (層別)
+
+- **層 0**: `worker/src/consultation_v2.js`, `worker/src/fortune.js`, `worker/src/index.js`
+- **層 2a**: `lib/utils/legal_urls.dart`, `lib/utils/solara_api.dart`
+- **層 2b**: `lib/utils/solara_storage.dart`
+- **層 3a**: `lib/widgets/location_picker_minimap.dart`
+- **層 4a**: `lib/screens/map/map_styles.dart`, `lib/screens/map_screen.dart`
+- **層 4b**: `lib/screens/horoscope/horo_fortune_cards.dart`
+- **層 4c**: `lib/screens/observe_screen.dart`
+- **層 4f**: `lib/screens/consultation/consultation_place_picker_screen.dart`, `lib/screens/consultation/consultation_result_card.dart`, `lib/screens/consultation/consultation_result_screen.dart`
+- **層 5**: `lib/main.dart`
+
+### 追加されたファイル
+
+- `lib/screens/ai_consent_screen.dart` (層 4f)
+- `lib/utils/ai_report_api.dart` (層 1a)
+- `lib/widgets/ai_disclaimer_footer.dart` (層 3a)
+- `lib/widgets/ai_report_button.dart` (層 3a)
+- `worker/src/ai_report.js` (層 0)
 
 ## #7 astro_glossary 用語辞書対整合
 

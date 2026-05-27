@@ -5,12 +5,12 @@
 
 ## サマリ
 
-- ファイル数: 10 / 総行数: 2125
+- ファイル数: 10 / 総行数: 2137
 - class/mixin/extension/enum: 23
 - 関数 (top-level + method の素拾い): 34
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 0
-- Worker URL リテラル: 19
+- Worker URL リテラル: 20
 
 ## ファイル別
 
@@ -253,7 +253,7 @@ Solara 端末セキュリティ状態 (RASP) — Phase 2 launch_checklist
   </details>
 
 
-### `lib/utils/legal_urls.dart` (56 行)
+### `lib/utils/legal_urls.dart` (63 行)
 
 **ファイル先頭コメント:**
 
@@ -311,7 +311,7 @@ Solara 法務リンク定数 — Phase 2-6b
 - L68 `reverseGeocodeDetail()` — 緯度経度から逆ジオコーディングで region / country まで含む詳細を取得する。
 
 
-### `lib/utils/solara_api.dart` (88 行)
+### `lib/utils/solara_api.dart` (93 行)
 
 **ファイル先頭コメント:**
 
@@ -324,9 +324,9 @@ Solara CF Worker API - 軽量なユーティリティ呼び出し
 
 **関数 (1 public + 0 private):**
 
-- L75 `fetchTimezoneName()` — 緯度経度から IANA TZ名 (DST対応の基準) を取得。
+- L80 `fetchTimezoneName()` — 緯度経度から IANA TZ名 (DST対応の基準) を取得。
 
-**Worker URL リテラル (18):**
+**Worker URL リテラル (19):**
 
 - L17: `'https://solara-api.solodev-lab.com'`
 - L29: `'$solaraWorkerBase/public/tz'`
@@ -346,6 +346,7 @@ Solara CF Worker API - 軽量なユーティリティ呼び出し
 - L60: `'$solaraWorkerBase/protected/astro/consultation2'`
 - L64: `'$solaraWorkerBase/protected/consultation/credits'`
 - L70: `'$solaraWorkerBase/protected/account/delete'`
+- L75: `'$solaraWorkerBase/protected/report-ai-output'`
 
 
 ### `lib/utils/tile_http_client.dart` (42 行)

@@ -5,9 +5,9 @@
 
 ## サマリ
 
-- ファイル数: 23 / 総行数: 13444
+- ファイル数: 23 / 総行数: 13485
 - class/mixin/extension/enum: 86
-- 関数 (top-level + method の素拾い): 292
+- 関数 (top-level + method の素拾い): 294
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 18
 - Worker URL リテラル: 0
@@ -751,23 +751,25 @@ A*C*G ライン (natal / transit) のタップ詳細 popup。
   </details>
 
 
-### `lib/screens/map/map_styles.dart` (152 行)
+### `lib/screens/map/map_styles.dart` (190 行)
 
-**imports:** dart=0 / package=3 / relative=2
+**imports:** dart=0 / package=4 / relative=2
 
 - relative: `../../utils/solara_api.dart`, `../../utils/tile_http_client.dart`
 
 **型定義 (2):**
 
-- L15 `enum MapStyle`
+- L16 `enum MapStyle`
   - マップスタイルの種類。LayerPanel から切替可。
-- L32 `class MapStyleConfig`
+- L33 `class MapStyleConfig`
 
-**関数 (3 public + 0 private):**
+**関数 (5 public + 0 private):**
 
-- L79 `mapStyleFromId()` — id 文字列から MapStyle を復元。
-- L98 `buildStyledTileLayer()` — 選択スタイルに応じた TileLayer を返す。
-- L101 `Function()`
+- L80 `mapStyleFromId()` — id 文字列から MapStyle を復元。
+- L99 `buildStyledTileLayer()` — 選択スタイルに応じた TileLayer を返す。
+- L102 `Function()`
+- L164 `buildOsmAttribution()` — 標準サイズの attribution (Map メイン画面・候補地ピッカー用)。
+- L182 `buildOsmAttributionCompact()` — minimap (出生地入力等の小さい埋め込み地図) 用の常時表示版。
 
 
 ### `lib/screens/map/map_time_slider.dart` (508 行)
@@ -898,7 +900,7 @@ A*C*G ライン (natal / transit) のタップ詳細 popup。
 - L40 `build()`
 
 
-### `lib/screens/map_screen.dart` (3062 行)
+### `lib/screens/map_screen.dart` (3065 行)
 
 **imports:** dart=2 / package=6 / relative=36
 
@@ -918,7 +920,7 @@ A*C*G ライン (natal / transit) のタップ詳細 popup。
 - L1293 `snack()`
 - L1465 `snack()`
 - L1511 `build()`
-- L2591 `signOf()`
+- L2594 `signOf()`
 
   <details><summary>private 関数 55 件</summary>
 
@@ -958,25 +960,25 @@ A*C*G ライン (natal / transit) のタップ詳細 popup。
   - L1416 `_exitAstroCartoMode()`
   - L1464 `_geolocate()`
   - L1576 `_buildBody()`
-  - L2552 `_buildZenithPopup()`
-  - L2571 `_buildRelocationPopup()`
-  - L2636 `_proLabelForAstroKey()`
-  - L2654 `_proDescForAstroKey()`
-  - L2680 `_onAstroToggle()`
-  - L2709 `_enterConsultationFromDaily()`
-  - L2741 `_launchConsultation()`
-  - L2789 `_launchConsultationFromSearch()`
-  - L2823 `_reloadLocationSlots()`
-  - L2847 `_nearestNatalConjunctions()`
-  - L2868 `_findNearbyAstroLines()`
-  - L2886 `_zenithMarkerFrames()`
-  - L2887 `_nadirMarkerFrames()`
-  - L2888 `_zenithBandFrames()`
-  - L2889 `_nadirBandFrames()`
-  - L2893 `_filteredFrames()`
-  - L2906 `_visibleAstroLines()`
-  - L2934 `_buildNoProfileGuide()`
-  - L2968 `_showSearchVpHelpPopup()`
+  - L2555 `_buildZenithPopup()`
+  - L2574 `_buildRelocationPopup()`
+  - L2639 `_proLabelForAstroKey()`
+  - L2657 `_proDescForAstroKey()`
+  - L2683 `_onAstroToggle()`
+  - L2712 `_enterConsultationFromDaily()`
+  - L2744 `_launchConsultation()`
+  - L2792 `_launchConsultationFromSearch()`
+  - L2826 `_reloadLocationSlots()`
+  - L2850 `_nearestNatalConjunctions()`
+  - L2871 `_findNearbyAstroLines()`
+  - L2889 `_zenithMarkerFrames()`
+  - L2890 `_nadirMarkerFrames()`
+  - L2891 `_zenithBandFrames()`
+  - L2892 `_nadirBandFrames()`
+  - L2896 `_filteredFrames()`
+  - L2909 `_visibleAstroLines()`
+  - L2937 `_buildNoProfileGuide()`
+  - L2971 `_showSearchVpHelpPopup()`
 
   </details>
 

@@ -396,6 +396,80 @@ Worker 側 `consultationCreditStatus` も `proSyncReconcile` 経由になった�
   - 新規ファイル 3 個: `worker/src/auth/rc_rest.js` / `worker/src/auth/apple_revoke.js` / `lib/utils/consultation_api.dart proSyncPending enum` (既存ファイルへの追加)
 - 重複コード: 装飾ボイラープレートのみ、ロジック重複 0。未使用 private 0。
 
+### 0.2.5 Apple/Google 審査対応 G1-G11 完了 + 出荷ドラフト集約 (2026-05-28 セッション)
+
+> **設計の柱**: 公開前のリジェクト/警告リスク削減。Apple 2025-11-13 改定 (5.1.2(i) 第三者 AI 明示同意) +
+> Google 2026-04-15 Gen AI policy 施行 (in-app reporting 必須) + Privacy Manifest 必須 + 占い系 4.3(b)
+> Spam 対策の最新要件に先回りで完全準拠 + 出荷ドラフト 6 件を `docs/store_compliance_assets/` に集約。
+> 詳細: `docs/store_compliance.md` (正典) + `docs/store_compliance_assets/README.md` (作業ガイド)。
+
+#### コード変更 (G1-G3、新規 widget/screen 4 個)
+
+| Gap | 内容 | 主な変更ファイル |
+|---|---|---|
+| G1 | `AiConsentScreen` (Apple 5.1.2(i)): 初回起動時 Gemini 送信同意モーダル。SolaraStorage に永続化 (`_aiConsentAtKey`) | 新規 `lib/screens/ai_consent_screen.dart` + `solara_storage.dart {load,save,has}AiConsentAt/Now` + `main.dart SolaraApp` StatefulWidget 化 |
+| G2 | `AiReportButton` (Google Gen AI Policy 2026-04-15): Tarot/Horo/Stella 全結果画面に「不適切な内容を報告」+ 7 理由 + 自由記述 BottomSheet | 新規 `lib/widgets/ai_report_button.dart` + 新規 `lib/utils/ai_report_api.dart` (`AiReportApi.reportAiOutput`) + Worker 新規 `src/ai_report.js` (`handleAiReport`) + `src/index.js` routing |
+| G3 | `AiDisclaimerFooter` (Apple 4.0 + Google Misleading): 全 AI 結果画面常時 footer「✦ AI 生成・娯楽目的」 | 新規 `lib/widgets/ai_disclaimer_footer.dart` |
+
+#### 他コード変更 (本セッションで併発)
+
+| Gap | 内容 |
+|---|---|
+| OSM Attribution | `lib/screens/map/map_styles.dart` に `buildOsmAttribution()` + `buildOsmAttributionCompact()` ヘルパー、3 画面 (Map / consultation_place_picker / location_picker_minimap) に挿入 (OSM ODbL 必須要件) |
+| Stella V2 + Horo prompt safety guard | `worker/src/consultation_v2.js` rule #11 + `worker/src/fortune.js` ja/en 両方に medical/legal/financial/investment/self-harm 断定禁止 + 「必ず/絶対」禁止追加 (Tarot と対称化) |
+| iOS Info.plist 整理 | `ios/Runner/Info.plist` から不要な `NSLocationAlwaysAndWhenInUseUsageDescription` 削除 (Background 未使用)、`WhenInUse` 文言を具体化 |
+
+#### ドキュメント集約 (G4 / G6 / G7 / G9 / G11 / G8 / G10)
+
+| Gap | 成果物 |
+|---|---|
+| G4 | `legal/solara/delete-account.html` (本番配信、solodev-lab.com に GitHub Pages 経由 deploy 済) + `lib/utils/legal_urls.dart accountDeletion` 定数 |
+| G6+G7 | `docs/store_compliance_assets/apple_app_store_connect.md` (Apple Console コピペシート、§A-G の全画面 + URL/遷移 明記) + `google_play_console.md` (Play Console コピペシート、§A-F) |
+| G9 | `docs/store_compliance_assets/age_rating_questionnaire.md` (4+ 正解版に全面書き直し。subagent 誤情報の Fortune Telling / AI Unpredictability 項目を削除、Apple 新質問票には実在しないことを公式確認済) |
+| G11 | `docs/store_compliance_assets/data_safety_form.md` (Google Data Safety form 全項目別推奨回答) |
+| G8+G10 | `docs/store_compliance_assets/sdk_audit.md` (Privacy Manifest + 16 KB page size 監査手順、`flutter pub upgrade` + Xcode Validate App + apkanalyzer) |
+| G5 | 確認のみ (`sanctuary_account_section.dart` L58 + `paywall_screen.dart` L89 で Platform 分岐済、コード変更不要) |
+
+#### Apple SIWA Token Revocation 本稼働 (本セッション最初に並行実施)
+
+- Apple Developer Console で Service ID `com.solodevlab.solara.signin` + Authentication Key `D8BGKZW2AJ` 発行
+- `wrangler.toml` に `APPLE_SIWA_SERVICE_ID` + `APPLE_SIWA_KEY_ID` 追記
+- `wrangler secret put APPLE_SIWA_PRIVATE_KEY` で `.p8` を Cloudflare Workers secret 登録
+- Worker version `2957ebc6` で deploy 済、`apple_revoke.js` が `secrets_missing` skip から **本稼働へ遷移**
+- `.p8` 保管: `C:\Users\cojif\OneDrive\ドキュメント\Solaraファイル\App Store Connect API\AuthKey_D8BGKZW2AJ.p8` (OneDrive 同期でクラウドバックアップ)
+
+#### AAB v+13 ビルド
+
+- `apps/solara/build/app/outputs/bundle/release/app-release.aab` (111.3 MB、2026-05-28 01:22)
+- versionCode 12 → 13、`build_release.py` で全 dart-define (`SOLARA_GCP_PROJECT_NUMBER` / `SOLARA_RC_ANDROID_KEY` / `SOLARA_GOOGLE_SERVER_CLIENT_ID`) 自動注入
+- G1-G3 + OSM Attribution + safety guard + Info.plist 整理 全部反映
+- シンボル: `apps/solara/build/symbols/aab/1.0.0+13/` (arm/arm64/x64、約 13 MB)
+
+#### App Store Connect Age Rating = 4+ 確定 (2026-05-28 オーナー Console 操作)
+
+オーナーが Apple Console で新質問票 (2025-07 改訂、2026-01-31 期限) 7 ステップ全て「なし / いいえ」回答
+→ **算出 4+ で 173 国・地域に適用**。同類占星術/タロットアプリ (Co-Star / CHANI / Tarot Card Reading)
+も 4+ で運用中で実例多数あり。`age_rating_questionnaire.md` 旧版の §1.8/§1.11 が subagent 推測の
+誤情報 (Apple 新質問票に「Fortune Telling」「AI 予測不可能性」専用項目は存在しない) と公式確認済。
+
+#### 検証
+- flutter analyze: クリーン (既存 2 件のみ、新規 issue ゼロ)
+- worker test **53/53 pass** (fortune / consultation_v2 / integrity_endpoints、`ai_report` 追加で破綻なし)
+- audit.py 再生成: **189 .dart files** (新規 4 件 = `ai_consent_screen` / `ai_report_api` / `ai_report_button` / `ai_disclaimer_footer`)。新規 HARD 違反ゼロ (`ai_report_button.dart` のみ 307 行で WARN、許容範囲)。
+- 重複コード: Flutter 装飾構文 ( `),` / `],` / `style: TextStyle(` 等) のみ、ロジック重複 0。未使用 private 0。TODO/print 残置は既存のみで新規追加なし。
+- coverage_report.md 再生成: 新規クラス `AiConsentScreen` / `AiDisclaimerFooter` / `AiReportApi` / `AiReportButton` が #1 漏れリストに上がっていたが、本節への記載で解消。
+
+#### 残オーナー手作業 (次セッション以降)
+
+1. **Play Console 内部テスト** に AAB v+13 アップロード → リリースノート: 「v1.0.0 — はじめての公開バージョン...」
+2. **A101FC 実機検証**: G1 同意モーダル (初回起動) + G2 報告ボタン (Stella/Tarot/Horo 各結果末尾) + G3 disclaimer footer (同じく) + 既存 MEMORY 7 項目 (Pro 残数 / Stella 12 連発 / 削除 / 購入後シート 0.5 秒 等)
+3. **App Store Connect 入力**: `apple_app_store_connect.md` の §D (説明文 / キーワード / スクショ) + §E (Reviewer 情報) + §F (TestFlight)
+4. **Play Console 入力**: `google_play_console.md` の §A (説明文) + §C-6 (データセーフティ) + §C-7 (アカウント削除 URL = `https://solodev-lab.com/legal/solara/delete-account.html`)
+5. **スクショ撮影 (6 枚)**: 推奨内容は `apple_app_store_connect.md` §D-7 (Sanctuary / Horo / Map / Tarot / Stella / Galaxy)
+6. **SDK 監査**: `sdk_audit.md` §2 (`flutter pub upgrade` + Xcode Validate App + apkanalyzer で .so の 16 KB alignment 確認)
+7. **iOS Codemagic ビルド**: codemagic.yaml の `submit_to_testflight: true` で TestFlight 自動アップロード
+8. **クローズドテスト 12×14** (オーナーが個人 Play Console アカウントの場合のみ、法人なら不要)
+
 ### 0.3 Horo「今日の占い」1 日 1 回固定 + プロンプト刷新 (2026-05-27)
 
 > **設計の柱**: 「30 回までは OK」のような曖昧な防衛をやめ、「**1 日 1 回・変更しない**」を

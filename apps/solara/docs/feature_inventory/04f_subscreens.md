@@ -5,14 +5,39 @@
 
 ## サマリ
 
-- ファイル数: 28 / 総行数: 8885
-- class/mixin/extension/enum: 81
-- 関数 (top-level + method の素拾い): 236
+- ファイル数: 29 / 総行数: 9089
+- class/mixin/extension/enum: 83
+- 関数 (top-level + method の素拾い): 240
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 7
 - Worker URL リテラル: 0
 
 ## ファイル別
+
+### `lib/screens/ai_consent_screen.dart` (190 行)
+
+**imports:** dart=0 / package=1 / relative=1
+
+- relative: `../utils/solara_storage.dart`
+
+**型定義 (2):**
+
+- L16 `class AiConsentScreen : StatelessWidget`
+  - AI 生成同意モーダル (Apple 5.1.2(i) / Google Generative AI Apps Policy)。
+- L160 `class _ParagraphSection : StatelessWidget`
+
+**関数 (2 public + 2 private):**
+
+- L58 `build()`
+- L166 `build()`
+
+  <details><summary>private 関数 2 件</summary>
+
+  - L21 `_handleAgree()`
+  - L27 `_handleDecline()`
+
+  </details>
+
 
 ### `lib/screens/consultation/consultation_credit_sheet.dart` (348 行)
 
@@ -421,7 +446,7 @@ Consultation Input — 基本サブウィジェット + 選択肢定数
   </details>
 
 
-### `lib/screens/consultation/consultation_place_picker_screen.dart` (353 行)
+### `lib/screens/consultation/consultation_place_picker_screen.dart` (354 行)
 
 **ファイル先頭コメント:**
 
@@ -526,7 +551,7 @@ flutter_map ベースの地点選択画面のサブウィジェット群:
   </details>
 
 
-### `lib/screens/consultation/consultation_result_card.dart` (252 行)
+### `lib/screens/consultation/consultation_result_card.dart` (263 行)
 
 **ファイル先頭コメント:**
 
@@ -538,18 +563,18 @@ Consultation Result — 候補カード (V2)
 **型定義 (4):**
 
 - L6 `class _CandidateCard : StatelessWidget`
-- L125 `class _EnergyChip : StatelessWidget`
-- L151 `class _TimeWindowRow : StatelessWidget`
+- L136 `class _EnergyChip : StatelessWidget`
+- L162 `class _TimeWindowRow : StatelessWidget`
   - 時間帯 (現地の時間帯のみ・時計表示なし)。single=1 個 / rhythm=朝昼夜。
-- L182 `class _CandidateKindBadge : StatelessWidget`
+- L193 `class _CandidateKindBadge : StatelessWidget`
   - 候補種別バッジ (方角 / 場所)。
 
 **関数 (4 public + 0 private):**
 
 - L21 `build()`
-- L130 `build()`
-- L156 `build()`
-- L191 `build()`
+- L141 `build()`
+- L167 `build()`
+- L202 `build()`
 
 
 ### `lib/screens/consultation/consultation_result_credit_widgets.dart` (152 行)
@@ -574,7 +599,7 @@ Stella 相談 クレジット制 (設計 project_solara_stella_free_credits.md) 
 - L22 `build()`
 
 
-### `lib/screens/consultation/consultation_result_screen.dart` (407 行)
+### `lib/screens/consultation/consultation_result_screen.dart` (409 行)
 
 **ファイル先頭コメント:**
 
@@ -595,34 +620,34 @@ Pro = 無制限。live モード = ConsultationRequest で fetch / 履歴モー�
 ConsultationRecord を読み込み専用表示 (fetch なし・autosave なし・別候補なし)。
 ```
 
-**imports:** dart=0 / package=2 / relative=12
+**imports:** dart=0 / package=2 / relative=14
 
-- relative: `../../theme/solara_colors.dart`, `../../utils/consultation_api.dart`, `../../utils/consultation_credits.dart`, `../../utils/consultation_record.dart`, `../../utils/consultation_share.dart`, `../../utils/consultation_v2_api.dart`, `../../utils/pro_status.dart`, `../../utils/solara_storage.dart`, `../../widgets/glass_panel.dart`, `../../widgets/info_popup.dart`, `../../widgets/pro_unlock_dialog.dart`, `consultation_credit_sheet.dart`
+- relative: `../../theme/solara_colors.dart`, `../../utils/consultation_api.dart`, `../../utils/consultation_credits.dart`, `../../utils/consultation_record.dart`, `../../utils/consultation_share.dart`, `../../utils/consultation_v2_api.dart`, `../../utils/pro_status.dart`, `../../utils/solara_storage.dart`, `../../widgets/ai_disclaimer_footer.dart`, `../../widgets/ai_report_button.dart`, `../../widgets/glass_panel.dart`, `../../widgets/info_popup.dart`, `../../widgets/pro_unlock_dialog.dart`, `consultation_credit_sheet.dart`
 
 **型定義 (2):**
 
-- L40 `class ConsultationResultScreen : StatefulWidget`
-- L75 `class _ConsultationResultScreenState : State`
+- L42 `class ConsultationResultScreen : StatefulWidget`
+- L77 `class _ConsultationResultScreenState : State`
 
 **関数 (4 public + 10 private):**
 
-- L71 `createState()`
-- L106 `initState()`
-- L119 `dispose()`
-- L303 `build()`
+- L73 `createState()`
+- L108 `initState()`
+- L121 `dispose()`
+- L305 `build()`
 
   <details><summary>private 関数 10 件</summary>
 
-  - L100 `_setSharing()`
-  - L124 `_runFetch()`
-  - L129 `_fetch()`
-  - L170 `_loadNext()`
-  - L227 `_snack()`
-  - L239 `_onBuyCredits()`
-  - L245 `_showConsultationPaywall()`
-  - L265 `_showAboutReading()`
-  - L280 `_persist()`
-  - L368 `_buildBody()`
+  - L102 `_setSharing()`
+  - L126 `_runFetch()`
+  - L131 `_fetch()`
+  - L172 `_loadNext()`
+  - L229 `_snack()`
+  - L241 `_onBuyCredits()`
+  - L247 `_showConsultationPaywall()`
+  - L267 `_showAboutReading()`
+  - L282 `_persist()`
+  - L370 `_buildBody()`
 
   </details>
 
