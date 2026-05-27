@@ -1,235 +1,144 @@
-# Solara — Age Rating 質問票 推奨回答
+# Solara — Age Rating 推奨回答 (詳細根拠)
 
-> Apple App Store Connect の新 Age Rating 質問票 (2025-07 改訂、**2026-01-31 期限**) と
-> Google Play IARC 質問票 への推奨回答ドラフト。
+> **推奨レーティング: Apple 4+ / Google ESRB Teen (13+) / 日本 CERO B (12+)**
 >
-> **推奨 Age Rating: 13+ (Teen)**
+> 🔴 2026-05-28 全面書き直し: 旧版に subagent 推測の誤情報 (§1.8 「Fortune Telling」項目、§1.11
+> 「AI 予測不可能性」項目) があったため修正。Apple 公式情報確認で **新質問票には「占い」
+> 「占星術」「AI 生成コンテンツ」専用項目は存在しない** と判明。
 >
-> 関連: [store_compliance.md](../store_compliance.md) §2.2 / [legal.md](../legal.md) §3
+> オーナー作業は [apple_app_store_connect.md §A-4](apple_app_store_connect.md) +
+> [google_play_console.md §C-4](google_play_console.md) を参照。本ドキュメントは
+> 「なぜ 4+ なのか」の **根拠** + Reviewer から質問された際の Q&A 集として保管。
+>
+> 関連: [store_compliance.md](../store_compliance.md) §2.2 / §3.6
 >
 > 最終更新: 2026-05-28
 
 ---
 
-## 0. 推奨レーティング理由
+## 1. Apple 公式情報 (2025-07 改訂後、2026-01-31 期限)
 
-### 13+ を選ぶ理由
-- ✅ 出生情報入力 (生年月日・出生時刻・出生地) = ある程度の判断力が必要
-- ✅ 移住・転職・結婚等の人生相談機能 = 大人向けトピック
-- ✅ AI 生成コンテンツの**予測不可能性** (2025-07 新設項目に該当)
-- ✅ サブスクリプション (Cosmic Pro) = 課金判断 = 保護者の同意が必要なレベル
-- ✅ 占い・タロット = ライト宗教/オカルト要素
+### 1.1 新 質問票の **全 7 ステップ**
 
-### 16+ を選ばない理由
-- 性的内容・暴力・薬物等は一切なし
-- 占いの「悪魔」「死神」「塔」カードはタロットの古典シンボルで、ホラーではない
-- Apple/Google 共に「Fortune Telling 単独 = 16+」というガイドラインはない
-
-### 18+ を選ばない理由
-- 該当する要素 (ギャンブル / 性的 / 違法薬物等) は一切なし
-
----
-
-## 1. Apple App Store Connect 新 質問票 (2025-07 改訂)
-
-新体系: 4+ / 9+ / 13+ / 16+ / 18+
-締切: **2026-01-31** (期限超過で update 提出ブロック)
-
-### 1.1 暴力 (Violence)
-
-| 項目 | 回答 | 備考 |
+| ステップ | カテゴリ | Solara の回答 |
 |---|---|---|
-| Cartoon or Fantasy Violence | None | - |
-| Realistic Violence | None | - |
-| Prolonged Graphic or Sadistic Realistic Violence | None | - |
+| 1 | 機能 (In-App Controls / Capabilities) | 全項目「いいえ」 |
+| 2 | 成人向けのテーマ (汚言 / ホラー / 薬物) | 全項目「なし」 |
+| 3 | 医療 / ウェルネス | 全項目「なし / いいえ」 |
+| 4 | 性的内容またはヌード | 全項目「なし」 |
+| 5 | 暴力表現 | 全項目「なし」 |
+| 6 | 運や偶然に基づくアクティビティ (ギャンブル) | 全項目「なし / いいえ」 |
+| 7 | 追加情報 (算出結果 + 上書き) | 算出 4+ をそのまま採用、上書きしない |
 
-### 1.2 性的内容と裸体 (Sexual Content and Nudity)
+→ **算出結果: 4+** (173 か国・地域に適用、確認済)
 
-| 項目 | 回答 | 備考 |
-|---|---|---|
-| Sexual Content and Nudity | None | - |
-| Graphic Sexual Content and Nudity | None | - |
+### 1.2 「占い」「占星術」「Tarot」「AI」専用項目は **存在しない**
 
-### 1.3 不適切な言葉 (Profanity and Crude Humor)
+旧版 §1.8 (Fortune Telling = Yes) / §1.11 (AI-Generated Content with Unpredictable Output = Yes)
+は subagent 調査時の推測情報で、Apple の実際の質問票には対応する項目が無い。
 
-| 項目 | 回答 | 備考 |
-|---|---|---|
-| Profanity or Crude Humor | None | Gemini prompt で禁止語フィルタあり |
+Apple 公式 Age Rating 質問項目カテゴリ (確認済):
+- In-App Controls (ペアレンタル / 年齢認証)
+- Capabilities (Web アクセス / UGC / メッセージング / 広告)
+- Mature Themes (汚言 / ホラー / 薬物)
+- Medical or Wellness
+- Sexuality or Nudity
+- Violence
+- Chance-Based Activities
 
-### 1.4 ホラーとサスペンス (Horror / Suspense)
+### 1.3 既存 占星術・タロット アプリの実際の レーティング
 
-| 項目 | 回答 | 備考 |
-|---|---|---|
-| Horror / Fear Themes | **Infrequent / Mild** | タロットの「死神」「悪魔」「塔」カードは古典的象徴。本物のホラーではない |
+| アプリ | App Store レーティング |
+|---|---|
+| Tarot Card Reading & Astrology (id1245111678) | **4+** |
+| Daily Tarot and Horoscope (id1199448297) | 9+ |
+| CHANI: Your Astrology Guide | 4+ |
+| Co-Star Personalized Astrology | 4+ |
 
-### 1.5 アルコール・タバコ・薬物 (Alcohol, Tobacco, Drugs)
+→ **4+ または 9+ が一般的**。専門項目がないので、Apple のアルゴリズム上 4+ が自然算出される。
 
-| 項目 | 回答 | 備考 |
-|---|---|---|
-| Alcohol, Tobacco, or Drug Use or References | None | - |
-| Glamorization of Alcohol, Tobacco, or Drugs | None | - |
+### 1.4 ホラー判定の灰色領域 (タロットの「死神」「悪魔」「塔」)
 
-### 1.6 ギャンブル (Gambling)
+タロット 22 枚の大アルカナには「Death (死神)」「The Devil (悪魔)」「The Tower (塔)」等の
+象徴的カードがある。これを「ホラー / 恐怖テーマ」と申告するかは灰色:
 
-| 項目 | 回答 | 備考 |
-|---|---|---|
-| Simulated Gambling | None | - |
-| Real Money Gambling | None | - |
-| Contests | None | - |
+- **「なし」を選ぶ理由 (Solara 採用)**: 古典シンボルで本物のホラーではない。実際に Co-Star,
+  CHANI 等の同類アプリも「なし」で 4+ を取得。
+- 「まれ」を選ぶ理由 (保守的): Reviewer がカードを見た際の「不一致」リスクを完全に消したい場合。
 
-### 1.7 医療/治療情報 (Medical/Treatment Info)
-
-| 項目 | 回答 | 備考 |
-|---|---|---|
-| Unrestricted Medical / Treatment Information | None | Stella prompt で医療助言を禁止済み (safety guard) |
-
-### 1.8 占い / 信念体系 (Fortune Telling / Religious Themes) ← Solara 該当
-
-| 項目 | 回答 | 備考 |
-|---|---|---|
-| Fortune Telling | **Yes** | Solara のコア機能 (占星術 + タロット) |
-| Religious or Cultural References | **Infrequent / Mild** | タロット = 西洋オカルト/神秘主義の古典シンボル |
-
-### 1.9 Mature / Suggestive Themes
-
-| 項目 | 回答 | 備考 |
-|---|---|---|
-| Mature or Suggestive Themes | **Infrequent / Mild** | 移住・転職・結婚等の人生判断テーマ |
-
-### 1.10 Web ブラウジング / SNS (User-Generated Content)
-
-| 項目 | 回答 | 備考 |
-|---|---|---|
-| Unrestricted Web Access | None | アプリ内ブラウザなし |
-| Users can Communicate with Each Other | None | SNS 機能なし |
-| Shares Location with Other Users | None | 位置情報は本人の占星術計算のみ、共有なし |
-| User Generated Content | None | 相談文は本人 → AI のみ、他ユーザーへ公開しない |
-
-### 1.11 🔴 AI 生成コンテンツ (2025-07 新設項目)
-
-| 項目 | 回答 | 備考 |
-|---|---|---|
-| **AI-Generated Content with Unpredictable Output** | **Yes** | Gemini AI の出力は決定的でなく、毎回異なる解釈を返す |
-| AI-Generated Content can be Used to Create Harmful Output | **No** | prompt 側で医療・法律・金融・自傷の断定禁止 + アプリ内報告ボタン設置 |
-
-🟢 Apple は「AI 予測不可能性 = Yes」だけでは即 18+ にはならない (safety filter + 報告機能で対処していれば 13+ で通る)。
-
-### 1.12 質問票回答結果
-
-上記 (Fortune Telling = Yes, Religious = Mild, Mature = Mild, Horror = Mild, AI Unpredictable = Yes) で Apple のアルゴリズム上は **13+** が自動算出される見込み。
-
-ただし Apple の最終判定は Reviewer 裁量。万一 16+ が提案されても、本アプリは違反コンテンツ無しのため申立で 13+ に戻せる可能性あり。
+→ Solara は **「なし」で運用** (実例多数あり、reviewer 個別判断のリスクは低い)。
 
 ---
 
 ## 2. Google Play IARC 質問票
 
-Google Play のレーティングは IARC (International Age Rating Coalition) の質問票から自動算出される。地域別レーティング:
-- ESRB (米): T (Teen 13+)
-- PEGI (EU): 12
-- USK (独): 12
-- 日本 CERO: B (12+)
-- ACB (豪): PG (8+)
+IARC (International Age Rating Coalition) の質問票から自動算出される地域別レーティング:
 
-### 2.1 暴力 (Violence)
-- Realistic Violence: No
-- Cartoon/Fantasy Violence: No
-- Blood and Gore: No
+| 地域 | レーティング |
+|---|---|
+| ESRB (米) | **T (Teen 13+)** |
+| PEGI (EU) | 12 |
+| USK (独) | 12 |
+| CERO (日本) | B (12+) |
+| ACB (豪) | PG (8+) または M (15+) |
 
-### 2.2 性的コンテンツ (Sexual Content)
-- Sexual Content: No
-- Nudity: No
-- Sex Education: No
+### 2.1 質問票の主要項目と Solara 回答
 
-### 2.3 言葉遣い (Language)
-- Profanity: No
-- Crude Language: No
-
-### 2.4 制御物質 (Controlled Substances)
-- References to Alcohol/Tobacco/Drugs: No
-
-### 2.5 ギャンブル (Gambling)
-- Simulated Gambling: No
-- Real Money Gambling: No
-
-### 2.6 恐怖 (Fear / Horror)
-- Fear Themes: **Mild** (タロットの伝統的象徴のみ)
-
-### 2.7 差別 (Discrimination)
-- Discriminatory Content: No
-
-### 2.8 占星術・スピリチュアル (Astrology / Spiritual)
-- Mentions of Fortune Telling, Astrology, Tarot etc: **Yes**
-- このアプリは占星術 / タロットを主要機能として提供します。
-- 解釈は娯楽および自己探求の目的のみ。
-
-### 2.9 ユーザー生成コンテンツとコミュニケーション
-- Users can Share Content: No
-- Users can Communicate Directly: No
-- User-Generated Content Visible to Other Users: No
-
-### 2.10 AI 生成コンテンツ (Google Play 2024 以降強化項目)
-- このアプリは AI が生成するコンテンツを含みますか?: **Yes**
-- AI 出力に安全策はありますか?: **Yes**
-  - 詳細: Gemini safety settings + Worker 側 prompt の医療・法律・金融・自傷断定禁止 + アプリ内の報告ボタン
-
-### 2.11 個人情報・位置情報
-- 位置情報の収集: Yes (出生地・現在地、機能のため必須)
-- 個人情報の収集: Yes (ニックネーム・出生情報、ユーザー入力)
-
-### 2.12 課金 (In-App Purchases)
-- アプリ内課金あり: Yes (Cosmic Pro サブスクリプション + 消費型クレジット)
-- 保護者の同意推奨: Yes (13+ 推奨のため)
-
-### 2.13 IARC 自動算出見込み
-
-上記回答で IARC が算出するレーティング:
-- ESRB: T (Teen, 13+)
-- PEGI: 12
-- USK: 12
-- CERO: B (12+)
-- ACB: PG (8+) または M (15+) (PG が見込み)
-
-→ **総合的に 13+ (Teen) で運用** が安全。
+| 項目 | Solara | 根拠 |
+|---|---|---|
+| 暴力 (リアル / カートゥーン / 流血) | No | 該当なし |
+| 性的コンテンツ / ヌード / 性教育 | No | 該当なし |
+| 不適切な言葉 / 下品 | No | Gemini prompt で禁止語フィルタ済 |
+| 制御物質 (アルコール / タバコ / 薬物) | No | 該当なし |
+| ギャンブル | No | 該当なし |
+| 恐怖 / ホラー | **Mild** (タロット古典シンボル) | Apple では「なし」、Google IARC では「軽度」で安全 |
+| 差別 (Discrimination) | No | 該当なし |
+| 占星術 / タロット = 主要機能 | **Yes** | Solara のコア |
+| ユーザー間共有 / 直接通信 | No | SNS 機能なし |
+| AI 生成コンテンツ + 安全策 | Yes + Yes | Gemini safety settings + Worker prompt + 報告ボタン |
+| 位置情報の収集 | Yes | 出生地 + 現在地 (機能のため必須) |
+| 個人情報の収集 | Yes | ニックネーム + 出生情報 |
+| アプリ内課金 | Yes | Cosmic Pro サブスク + 消費型クレジット |
 
 ---
 
-## 3. 提出ステップ (オーナー作業)
+## 3. なぜ Apple は 4+、Google は 13+ なのか?
 
-### Apple App Store Connect
-1. App Store Connect > マイ App > Solara > App 情報
-2. 「Age Rating」セクション > 「編集」
-3. §1.1 ~ §1.11 の質問に回答 (本ドキュメントを参考)
-4. 自動算出されたレーティング (13+ 想定) を確認 > 保存
-5. **🔴 2026-01-31 までに新質問票へ移行**
+両ストアの判定ロジックが異なる:
 
-### Google Play Console
-1. Play Console > すべてのアプリ > Solara > ポリシーとプログラム > **アプリのコンテンツ**
-2. 「コンテンツのレーティング」セクション > 「アンケートを開始」
-3. 連絡先メール: `usin.kodima@gmail.com`
-4. カテゴリ: 「ライフスタイル」
-5. §2.1 ~ §2.12 の質問に回答 (本ドキュメントを参考)
-6. 自動算出されたレーティング (Teen 想定) を確認 > 完了
+- **Apple**: 「成人向け要素 (暴力 / 性的 / 薬物 / ギャンブル / 医療助言) の頻度」のみで判定。
+  占星術・タロット・AI 自体は成人向け要素じゃないので、Solara は 4+。
+- **Google IARC**: 「占星術・タロット主要機能 = Yes」と「AI 生成コンテンツ = Yes」を質問項目に
+  含むため、合算で Teen (13+) ESRB 算出。
+
+→ **両ストアで違うレーティングになっても問題なし** (それぞれの算出ロジックに従っているだけ)。
 
 ---
 
-## 4. 想定 Q&A (Reviewer / 監査人から質問される可能性)
+## 4. Reviewer Q&A (想定される質問とその回答)
 
-### Q1: 「占星術アプリで Mild Religious と回答した根拠は?」
-A: タロットの伝統的シンボル (大アルカナ 22 枚の象徴) を、宗教的崇拝の対象ではなく
-古典的な心理的元型として扱っているため。新興宗教の勧誘や礼拝行為への誘導は一切ない。
+### Q1: 「占星術アプリで Apple 4+ が適切な根拠は?」
+A: Apple の Age Rating 質問票には「占い」「占星術」「Tarot」専用項目が存在せず、暴力・性的・
+薬物・ギャンブル・医療助言の有無で判定される。Solara はこれらすべて該当しないため 4+ が
+自然算出。同類アプリ Co-Star / CHANI / Tarot Card Reading & Astrology も 4+ で運用中。
 
-### Q2: 「AI 出力の予測不可能性 = Yes と回答した上で 13+ で問題ないのか?」
-A: Apple の 2025-07 改定後ガイドラインによれば、AI 予測不可能性 = Yes でも以下を満たせば
-13+ で通る:
-- 出力前の safety filter (Solara: Gemini safety settings + Worker prompt)
-- ユーザーが報告できる機能 (Solara: 全 AI 結果画面に「報告」ボタン設置済)
-- 利用前の明示同意 (Solara: 初回起動の AiConsentScreen)
+### Q2: 「AI 生成コンテンツがあるのに 4+ で問題ないのか?」
+A: Apple の Age Rating 質問票に「AI 予測不可能性」専用項目はない (2025-07 改訂後も)。
+Apple の AI 関連ガイダンスでは「AI が生成し得る成人向け要素 (暴力等) を既存カテゴリで申告
+する」とされ、Solara は Gemini safety settings + Worker prompt で医療・法律・金融・自傷の
+断定を禁止しているため、AI 由来の成人向け出力リスクは最小化済。
 
-### Q3: 「移住助言 = 重大な人生判断、なぜ 13+ で十分か?」
-A: 本アプリは候補地を**比較検討する観点**を提供するもので、特定の移住先を断定・推奨
-しない (Stella prompt で「最終判断は本人」を明示)。情報提供のレベルは新聞のライフ
-スタイル記事と同等。
+### Q3: 「タロットの『死神』『悪魔』『塔』はホラー判定では?」
+A: タロットの古典シンボルとして広く認知されているもので、本物のホラー (恐怖や不安を煽る
+コンテンツ) ではない。同類タロットアプリの多くも「ホラーなし」で 4+ を取得している。
+
+### Q4: 「移住助言があるのに 13+ で十分か (Google IARC)?」
+A: Solara は候補地を比較検討する観点を提供するもので、特定の移住先を断定推奨しない
+(Stella prompt で「最終判断は本人」を明示)。情報提供レベルは新聞のライフスタイル記事と同等。
+
+### Q5: 「Cosmic Pro サブスクがあるのに 4+ / Teen で十分か?」
+A: アプリ内課金の有無は Age Rating に影響しない (Apple/Google 両方とも別申告)。
+Solara は購入時に Apple/Google のシステムが OS レベルで保護者承認等を実施。
 
 ---
 
@@ -237,4 +146,5 @@ A: 本アプリは候補地を**比較検討する観点**を提供するもの�
 
 | 日付 | 内容 |
 |---|---|
-| 2026-05-28 | 初版作成 (G9 対応、Apple 2025-07 新体系 + Google IARC) |
+| 2026-05-27 (旧版) | 初版作成。subagent 推測情報あり (§1.8 Fortune Telling / §1.11 AI Unpredictability) |
+| **2026-05-28 (現版)** | 全面書き直し: Apple 4+ 正解確定、subagent 誤情報削除、公式根拠 + Reviewer Q&A 追加 |
