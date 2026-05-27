@@ -90,6 +90,7 @@ class _LocationPickerMinimapState extends State<LocationPickerMinimap> {
               ),
               children: [
                 buildStyledTileLayer(MapStyle.osmHotLight),
+                buildOsmAttributionCompact(),
               ],
             ),
             // 中央固定ピン (IgnorePointer で gesture を Map に通す)。

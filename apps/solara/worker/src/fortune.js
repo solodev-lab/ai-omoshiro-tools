@@ -261,6 +261,7 @@ ${patternLines.join('\n') || '(none)'}
 - For any layer marked "(no notable ...)" or "(none)", do not force it or invent data.
 - If house positions are unavailable, do not mention houses at all.
 - Do NOT use any name or nickname in the writing, neither in the opening nor in the body. Begin with the movement of the stars or the day's feeling, and refer to the reader only via second person ("you") or implicit subject.
+- 🔴 Safety guard: Do NOT give definitive medical, legal, financial, investment, or self-harm advice. If today's themes touch these areas (health, money, contracts, crisis), stay with gentle astrological imagery only and suggest consulting an appropriate professional. Never claim certainty about future events — use "may", "could", "this energy suggests" rather than "will" or "definitely".
 
 Return ONLY a JSON object with exactly these fields (no markdown, no extra text):
 {
@@ -297,6 +298,7 @@ ${patternLines.join('\n') || '(なし)'}
 - 「なし」と書かれた層は無理に触れず、捏造しないでください。
 - ハウス位置が「不明」の場合は、ハウスについて言及しないでください。
 - 名前・ニックネーム・敬称 (「〇〇さん」等) は冒頭も本文中も一切使わないでください。読者の呼び方は「あなた」または主語省略のみ。星の動きやその日の雰囲気から書き始めてください。
+- 🔴 安全性ガイド: 医療・法律・金融・投資・自傷に関わる断定的なアドバイスをしないでください。今日のテーマがこれらの領域 (健康・お金・契約・危機) に触れる場合は、占星術的なイメージに留め、必要なら専門家への相談をやんわり勧めてください。未来の出来事を断定せず、「〜かもしれない」「〜の気配」「このエネルギーは〜を示唆する」等の表現を使い、「必ず」「絶対」は使わないでください。
 
 以下のJSON形式のみで返答してください (マークダウンや余分な文言は不要):
 {

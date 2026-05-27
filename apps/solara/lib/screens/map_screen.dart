@@ -1865,6 +1865,9 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                   },
                 ),
               ]),
+            // OSM ODbL 必須要件: "© OpenStreetMap contributors" を表示。
+            // 右下に「i」アイコン、タップで展開してフルクレジット + ライセンスへ。
+            buildOsmAttribution(),
           ],
           ), // FlutterMap
         ), // AnimatedSlide (Fortune シート時の地図上シフト)

@@ -308,6 +308,7 @@ class _ConsultationPlacePickerScreenState
                         ),
                       ),
                     ]),
+                  buildOsmAttribution(),
                 ],
               ),
             ),

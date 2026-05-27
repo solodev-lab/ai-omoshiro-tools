@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../utils/solara_api.dart' show solaraOsmTileBase;
 import '../../utils/tile_http_client.dart';
 
@@ -148,5 +149,42 @@ Widget buildStyledTileLayer(
   return ColorFiltered(
     colorFilter: const ColorFilter.matrix(_darkInvertHueRotate180Matrix),
     child: layer,
+  );
+}
+
+// ── OSM Attribution (ODbL ライセンス必須要件) ────────────────────────
+// OpenStreetMap のタイルを表示するすべての画面で必須。Apple/Google ストア
+// 審査の地図カテゴリチェックでも検出対象。"© OpenStreetMap contributors"
+// 表記 + ODbL ライセンスページへのリンクが必要。
+// (HOT タイル使用なので Humanitarian OSM Team もクレジット推奨)。
+// 通常 FlutterMap children の最後尾に追加して右下に表示する。
+
+/// 標準サイズの attribution (Map メイン画面・候補地ピッカー用)。
+/// デフォルトで右下に「i」アイコン、タップで展開して全クレジット表示。
+Widget buildOsmAttribution() {
+  return RichAttributionWidget(
+    showFlutterMapAttribution: false,
+    attributions: [
+      TextSourceAttribution(
+        'OpenStreetMap contributors',
+        onTap: () => launchUrl(
+          Uri.parse('https://www.openstreetmap.org/copyright'),
+          mode: LaunchMode.externalApplication,
+        ),
+      ),
+      const TextSourceAttribution('Humanitarian OSM Team'),
+    ],
+  );
+}
+
+/// minimap (出生地入力等の小さい埋め込み地図) 用の常時表示版。
+/// 「i」展開式は誤タップが多いため、最小限の文字列で右下固定表示。
+Widget buildOsmAttributionCompact() {
+  return const SimpleAttributionWidget(
+    source: Text(
+      '© OpenStreetMap',
+      style: TextStyle(fontSize: 9, color: Color(0xFF333333)),
+    ),
+    backgroundColor: Color(0xCCFFFFFF),
   );
 }

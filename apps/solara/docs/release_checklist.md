@@ -2,6 +2,8 @@
 
 > ストアに出す前に、このリストを上から順に全部確認する。
 > 1つでも「NO」があればリリースしない。
+>
+> 🔴 **Apple/Google 審査の最新動向と詳細な対策チェックリストは [store_compliance.md](store_compliance.md) を参照** (本ファイルは出荷時のクイックチェック用、store_compliance.md が審査対応の正典)。
 
 ---
 
