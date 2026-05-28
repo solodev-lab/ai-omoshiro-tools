@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 12 / 総行数: 3529
+- ファイル数: 12 / 総行数: 3538
 - class/mixin/extension/enum: 25
 - 関数 (top-level + method の素拾い): 83
 - Navigator.push 等: 0
@@ -302,7 +302,7 @@ observe_history.dart (現在サイクル HISTORY) と observe_history_past.dart
   </details>
 
 
-### `lib/screens/observe/tarot_category_popup.dart` (267 行)
+### `lib/screens/observe/tarot_category_popup.dart` (276 行)
 
 **ファイル先頭コメント:**
 

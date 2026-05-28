@@ -559,6 +559,197 @@ Worker 側 `consultationCreditStatus` も `proSyncReconcile` 経由になった�
 - A101FC (Android): Sanctuary > Cosmic Pro 加入中バナー > 解約方法 → Play Store の定期購入画面に直接遷移 (実機確認済)
 - iPhone (iOS): 同じ URL (`https://apps.apple.com/account/subscriptions`) で「設定アプリ → Apple ID → サブスクリプション」に自動遷移 (Apple 公式 deep link 仕様、TestFlight で実機確認予定)
 
+### 0.2.8 PaywallScreen Suno 風リデザイン (2026-05-28 セッション、§0.2.7 同日)
+
+> オーナーが提示した Suno のサブスク管理画面 (スクショ 3 枚) を参考に、Cosmic Pro ペイウォールの UX を全面刷新。
+> 「Free と Pro の違いが一目で分かる」「購入の決め手になる」を狙う。
+> **Apple 3.1.2 + B5 必須項目は完全温存** (`feedback_legal_text_no_unilateral_changes`)。
+> 設計詳細: memory `project_solara_paywall_suno_redesign.md`
+
+#### 画面構成 (上から下)
+
+1. AppBar (`✦ Cosmic Pro`)
+2. Hero (Cosmic Pro タイトル + 一文紹介、温存)
+3. **Monthly / Annual トグル** (SAVE 50% バッジ、初期選択 Annual)
+4. **Free カード** (機能 5 項目 + 「現在のプラン」バッジ、非 Pro 時のみ)
+5. **Pro カード** (ハイライト枠、選択中 billing の価格 + 月換算 + 7 日トライアル明記 + 機能 6 項目 + CTA)
+6. **比較テーブル** (Free vs Pro、3 セクション = 相談・占い / 地図機能 / 記録、合計 7 行)
+7. **FAQ アコーディオン** (5 問、ExpansionTile)
+8. **自動更新明記** (🛡 Apple 3.1.2(a) 文言、温存)
+9. **法的リンク 4 種** (🛡 解約 / 利用規約 / プライバシー / 特商法、温存)
+10. **購入を復元** (🛡 温存)
+
+#### ファイル分割 (HARD 500 行回避)
+
+旧: `paywall_screen.dart` 295 + `paywall_widgets.dart` 451 = 計 746 行 / 2 ファイル
+新: 4 ファイル構成 (全 WARN 範囲、新規 HARD ゼロ)
+
+| ファイル | 行 | 役割 |
+|---|---|---|
+| `paywall_screen.dart` | 313 (WARN) | State + Offerings 取得 + サインイン強制 + 購入 / 復元 / 解約 deep link + `BillingCycle` enum + `_setBilling` ラッパー |
+| `paywall_widgets.dart` | 413 (WARN) | Hero + トグル + Free/Pro 2 カード + 機能 bullet (Suno 風 core) |
+| `paywall_comparison.dart` | 267 (新規) | 比較テーブル + FAQ アコーディオン |
+| `paywall_legal_links.dart` | 197 (新規) | 🛡 法務必須 3 ウィジェット + 補助 (ストア準備中 / エラーパネル / 期間ラベル) |
+
+#### 技術メモ
+
+- `extension _PaywallWidgets on _PaywallScreenState` から `setState` を直接呼ぶと `invalid_use_of_protected_member` 警告。`_setBilling(BillingCycle)` ラッパーを State 内に置いて回避。
+- Pro カード CTA は ProStatus.isPro で分岐: 未加入 → `FilledButton`「年額/月額プランを始める」/ 加入中 → `OutlinedButton`「定期購入を管理」(= `_openCancelGuide` 再利用)。
+- 年額選択時の月換算ヒントは `product.price / 12` を端数丸めで「月あたり ¥750 相当」と表示 (i18n は後回し)。
+- 法務 HTML (`legal/solara/terms.html` 第 3 条 3-1 = §0.2.7 で整合済) と Pro 機能リストは一致 (Stella 100/週 / タロット特典 / 星読み 5 カテゴリ / アスペクト 120 本 / ACG 全機能 / 記録検索)。
+- FAQ 5 問は memory `project_solara_paywall_suno_redesign` ドラフトに準拠。Suno 固有の「モデル違い」は Solara に存在しないため「Free vs Pro 違い」に置き換え。
+
+#### 機械分類の盲点
+
+- `BillingCycle` enum は `paywall_screen.dart` トップレベル定義。`05_main` に分類されるが実質はペイウォール状態。`PATH_OVERRIDES` で `04f_subscreens` に明示分類予定 (次回 extract メンテで対応)。
+- 4 ファイル間で `part of` 連鎖。`feature_inventory/04f_subscreens.md` 機械抽出では `paywall_comparison.dart` / `paywall_legal_links.dart` も同じ scope。
+
+#### 検証
+
+- `flutter analyze` (4 ファイル + 全体): **No issues found** (lib/ 側新規 issue ゼロ、test 側既存 issue 2 件は変動なし)
+- `extract.py` 再生成: stamp diff `+1 -0 ~2` (paywall_comparison.dart 新規 + paywall_screen.dart / paywall_widgets.dart 更新、その後 `+0 -0 ~2` で同期完了)
+- `audit.py`: 行数違反 78 / 重複 20 / TODO 4 / print 1 / 未使用 0。前回 §0.2.7 末の 77 から +1 (= paywall_screen.dart が 295 OK → 313 WARN に昇格)。**新規 HARD ゼロ達成**。
+- paywall_widgets.dart は 537 → 413 行で HARD 退避 (`_buildStoreUnavailable` / `_buildErrorPanel` / `_periodLabel` / `_introPeriodLabel` を paywall_legal_links.dart に移動)。
+- AAB v+16 ビルドは保留 (オーナー指示、本セッションはコード実装まで)。次セッションで alpha 0.70 + Sanctuary 解約リンク + Suno リデザインを反映した v+16 を一括ビルド。
+
+### 0.2.9 Pro 再契約時の Pro 週次クレジット 100 リセット (2026-05-29 セッション)
+
+> 実機 (A101FC) で「同一週に Pro 解約 → 再契約」した結果、Pro 残数が解約前 (84/100) のまま継続する事象をオーナーが発見。
+> 「新しく支払いを行ったのだから残数は 100 にして」(オーナー指示 2026-05-29) を仕様化。
+> 実ユーザーで起きる頻度は低いが、新規 IAP 取引のたびに残数を 100 から始めるのが直感的。
+
+#### コード変更
+
+- `worker/src/auth/attestation_state.js`:
+  - `consultation_pro_credits` テーブルに `app_user_id TEXT` 列追加 + index (try/catch migration、既存行は NULL のまま残るが月曜リセットで自然解消)
+  - `_consultationProCreditBump` に `appUserId` 引数追加 (オプショナル、`COALESCE(?, app_user_id)` で既存値を保護)
+  - **新規 `_consultationProCreditResetAll({ appUserId })`**: `DELETE FROM consultation_pro_credits WHERE app_user_id = ?` で同一ユーザの全 device_key 行を消す → 次回 get は used=0 = 残 100
+  - DO dispatch に `/consultation-pro-credit-reset-all` 追加
+- `worker/src/index.js`:
+  - `consumeReadingCredit` の pro_weekly bump 呼出で `gate.appUserId` を渡す
+  - `consultationCreditsGate` の pro_weekly allow 戻り値に `appUserId` を含める
+- `worker/src/webhooks/revenuecat.js`:
+  - INITIAL_PURCHASE 受信 + entitlement-upsert 成功 + alreadyProcessed=false + skippedOutOfOrder=false の AND 条件で `/consultation-pro-credit-reset-all` を best-effort 呼出
+  - 失敗時も webhook は 200 維持 (RC リトライ不要、月曜リセットで自然解消の二段構え)
+  - response body に `proCreditReset: {ok, deleted}` を追加 (CF Logs で観察可)
+- `worker/test/revenuecat_webhook.test.js`:
+  - 既存 2 件修正: `calls.length === 1` → `=== 2` (entitlement-upsert + reset-all)
+  - **新規 5 件追加**:
+    - `INITIAL_PURCHASE で reset-all を呼ぶ (新規 IAP 取引)` — 呼出 + appUserId + deleted カウント検証
+    - `RENEWAL では reset-all を呼ばない (継続契約)`
+    - `PRODUCT_CHANGE (月額↔年額切替) では reset-all を呼ばない`
+    - `INITIAL_PURCHASE + skippedOutOfOrder=true なら reset-all をスキップ`
+    - `reset-all 失敗でも webhook は 200 (best-effort)`
+
+#### 設計判断 (オーナー決定)
+
+| 項目 | 決定 | 根拠 |
+|---|---|---|
+| リセットトリガー | **INITIAL_PURCHASE のみ** | 「新規 IAP 取引 = 新たな支払い」が要望と最も整合。RENEWAL/UNCANCELLATION/PRODUCT_CHANGE は継続なのでリセット不要 |
+| 購入クレジット (`consultation_purchased`) | **そのまま残す** | 「失効なし」規約 (`legal/solara/terms.html`) を維持。リセットすると法務リスク |
+| 既存行 (migration 前の app_user_id=NULL) | **対象外** | 月曜リセットで自然解消、強制 backfill しない (副作用回避) |
+| 冪等性 | **alreadyProcessed / skippedOutOfOrder ならスキップ** | RC が同 event_id 再送 / 古い event を新しい状態に上書きしない |
+| 失敗時の挙動 | **webhook 200 best-effort** | RC のリトライで重複リセットが起きないように。次の月曜リセットで自然解消 |
+
+#### 検証
+
+- worker テスト: **300 件全 pass** (前回 295 + 新規 5)
+- flutter analyze: No issues (lib/ 側無傷)
+- extract.py: stamp diff `+0 -0 ~5` (Flutter 側 paywall + popup 5 ファイル追従)
+- audit.py: 78 / 20 / 4 / 1 / 0 (前回と同じ、新規 HARD ゼロ)
+- 実機検証は次セッション (AAB v+16 + Worker deploy 後): 「実機で Pro 解約 → 再契約 → Sanctuary バナーが Pro 残 100 / 100 になる」
+
+#### 未実施 (次セッション)
+
+- Worker deploy (`cd apps/solara/worker && npx wrangler deploy`)
+- AAB v+16 ビルド (alpha 0.70 + Sanctuary 解約リンク + Suno リデザイン + 本変更を一括反映)
+- A101FC 実機で「同一週に Pro 解約 → 再契約 → 100/100 表示」確認
+
+### 0.2.10 Forecast 永久キャッシュ + Worker CPU 上限引き上げ (2026-05-29 セッション)
+
+> CF Logs 分析中に発見: 2026-05-28 20:01:20 に `/public/astro/forecast` で **`outcome=exceededCpu` (status=503)** が 1 件発生。
+> オーナーが「Forecast 画面で今年・来年・再来年と連続切替」した時の挙動と一致。
+> 解析した結果、デフォルト Workers CPU time per invocation (1000ms) を forecast 1 回の計算が踏み越えうると判明。
+
+#### 原因
+- `astro.js computeForecast`: 1 リクエストで 365 日分 × `scoreOneDate` (= transit × natal アスペクト計算) を実行
+- 実測 CPU: 同セッションで 3 回連続実行時に **328ms → 1017ms (503) → 924ms** と推移
+- 出生情報を元に決定論的 (= 同じ出生 + 同じ暦年 = 同じ結果)、ただし初回 fetch は重い
+
+#### 設計判断 (オーナー決定 2026-05-29)
+1. **forecast キャッシュは「永久キャッシュ」に変更**:
+   - v1 (旧): 今日起点ローリング 1 年 → 6h cooldown 必要
+   - v2 (現行): 暦年 1/1〜12/31 ベース → 結果は完全に決定論的、再 fetch 不要
+   - 出生情報変更 → profileHash 変動 → 自動的に新規 fetch (旧キャッシュは参照されないだけで残置害なし)
+   - 「force=true (UI からの強制リフレッシュ)」のときだけ再 fetch
+2. **CPU 上限引き上げ**: 永久キャッシュでも初回 fetch 1 回は走るので、`wrangler.toml [limits] cpu_ms = 30000` で Workers Standard プランの最大 30 秒に。追加課金なし。
+
+#### コード変更
+- `worker/wrangler.toml`:
+  - `[limits]` セクション新規追加 (`cpu_ms = 30000`)
+- `lib/utils/forecast_cache.dart`:
+  - `ForecastRepo.fetchFull()` 内の cooldown 判定を撤廃: `cooldownRemaining > 0` なら cached を返すロジック → `cached != null` なら常に返すロジックに
+  - `_cooldownHours = 6` 定数 / `cooldownRemaining()` / `_markFetched()` / `_coolKey()` は将来 force=true 連打抑制復活のため残置 (現状 dead code、コメントで明記)
+
+#### 効果
+
+| 項目 | Before | After |
+|---|---|---|
+| 1 ユーザ × 1 年の forecast fetch 頻度 | 6 時間ごとに 1 回 (継続使用なら無限) | **生涯 1 回** (出生情報変更まで) |
+| 503 exceededCpu 発生条件 | デフォルト 1000ms 超 (年連続切替で再現可) | デフォルト 30000ms 超 (Forecast 計算では実質起きない) |
+| クライアントコスト | 0 (端末 SharedPreferences、1 年 ≈ 180KB / 5 年 ≈ 900KB) | 同上 |
+| サーバ (CF) コスト | リクエスト課金 | **削減** (キャッシュ hit はリクエスト自体走らない) |
+
+#### 検証
+- flutter analyze: No issues found (lib/ 側無傷)
+- worker テスト: 300/300 全 pass (前回と同じ、ロジック変更なし、設定のみ追加)
+- 実機検証は Worker deploy + AAB v+16 上げ後 (次セッション)
+
+#### 未実施 (次セッション)
+- Worker deploy で cpu_ms=30000 を本番反映
+- Flutter 側は AAB v+16 で同梱
+
+### 0.2.11 map_screen の chart fetch debounce 250ms (2026-05-29 セッション)
+
+> CF Logs 分析中に発見: 20:17:55 〜 20:17:59 の 3.84 秒で `/public/astro/chart` を **13 回連続 fetch**。
+> 原因解析した結果、`MapTimeSlider` の ◀▶ 1 日ステッパ (`_stepDay`) は **即時 commit (debounce なし)** で、
+> 高速タップごとに `_loadProfileAndChart` → `fetchChart` が走る設計だった。
+> ユーザは最後のタップ結果しか見ないので、中間 12 fetch は無駄。本番 Pro 公開後の負荷対策として実装。
+
+#### 既存状況
+- map_screen の chart cache: `_chartCacheByDate` で 10 分バケットキャッシュ済 (50 件 LRU)
+- スライダー (`Slider.onChangeEnd`): リリース時のみ commit (debounce なし問題は薄い)
+- **ステッパボタン**: `_stepDay(±1)` / `_stepHour(±1)` は即 `widget.onCommit()` → 連打すると 1 タップ 1 fetch
+- サーバ rate limit: chart bucket = default = 30 req/分/IP (1 IP の極端連打は CF 側で 429、ただし本番 100 ユーザ × 各 13 連打 = 累積 1300 req/分は通る)
+
+#### 設計判断 (オーナー決定 2026-05-29)
+- **クライアント debounce 250ms** を `_loadProfileAndChart` 呼出経路に追加
+- 即時実行が必要な経路 (`initState` / `reloadProfile`) は debounce バイパスで維持
+- 体感遅延 250ms は許容 (UX 影響なし)
+
+#### コード変更
+- `lib/screens/map_screen.dart`:
+  - `_chartFetchDebounce` Timer フィールド追加
+  - `_scheduleLoadChart({DateTime? targetDate})` ラッパー追加 (250ms debounce)
+  - `MapTimeSlider.onCommit` → `_scheduleLoadChart` 経由
+  - `MapDailyTransitScreen.onJumpToTime` → `_scheduleLoadChart` 経由
+  - `dispose` で `_chartFetchDebounce?.cancel()`
+
+#### 効果
+
+| シナリオ | Before | After |
+|---|---|---|
+| ◀▶ ステッパ 13 連打 (実観測 2026-05-28) | 13 fetch | **1 fetch** (最後のタップのみ) |
+| スライダー連続 commit | 各 commit 即 fetch | 250ms 静止後に 1 fetch |
+| Forecast→Map 連続日付ジャンプ | 各ジャンプ 1 fetch | 250ms 集約 |
+| 単発タップ (普通の操作) | 1 fetch (即時) | 1 fetch (250ms 遅延、体感ほぼなし) |
+| 100 ユーザ同時 13 連打 | 累積 1300 req | **累積 100 req** (各ユーザ 1 fetch) |
+
+#### 検証
+- flutter analyze: No issues found
+- extract.py: stamp diff `+0 -0 ~1` (map_screen.dart 1 ファイル変更)
+- audit.py: 78 / 20 / 4 / 1 / 0 (前回と同じ、新規 HARD ゼロ)
+
 ### 0.3 Horo「今日の占い」1 日 1 回固定 + プロンプト刷新 (2026-05-27)
 
 > **設計の柱**: 「30 回までは OK」のような曖昧な防衛をやめ、「**1 日 1 回・変更しない**」を

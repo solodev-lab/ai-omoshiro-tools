@@ -5,9 +5,9 @@
 
 ## サマリ
 
-- ファイル数: 29 / 総行数: 9252
-- class/mixin/extension/enum: 85
-- 関数 (top-level + method の素拾い): 243
+- ファイル数: 31 / 総行数: 9706
+- class/mixin/extension/enum: 88
+- 関数 (top-level + method の素拾い): 254
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 7
 - Worker URL リテラル: 0
@@ -720,7 +720,7 @@ Consultation Result — 状態/バナー/ページャ ウィジェット (V2)
 - L271 `build()`
 
 
-### `lib/screens/consultation/consultation_start_popup.dart` (282 行)
+### `lib/screens/consultation/consultation_start_popup.dart` (292 行)
 
 **ファイル先頭コメント:**
 
@@ -987,25 +987,104 @@ showInfoPopup 経由で表示する (widgets/info_popup.dart、popup 統一規�
 - 集計: `showInfoPopup`×1
 
 
-### `lib/screens/paywall_screen.dart` (295 行)
+### `lib/screens/paywall_comparison.dart` (267 行)
 
 **ファイル先頭コメント:**
 
 ```
-Solara ペイウォール画面 — Phase 2-6b
+Paywall Screen — Free vs Pro 比較テーブル / FAQ アコーディオン
+(part of 'paywall_screen.dart')
+
+役割:
+  - Suno 風レイアウトの下半分
+  - 比較テーブル: カテゴリ別 (相談・占い / 機能 / 計算) で Free vs Pro を行ごとに ✓ × / 値
+  - FAQ: 5 問のアコーディオン (memory project_solara_paywall_suno_redesign ドラフトに準拠)
+
+行数管理:
+  - paywall_widgets.dart が大きくなりすぎないようここに分離。
+  - HARD 上限 600 行を意識し、本ファイル単体は 300 行未満を維持。
+```
+
+**型定義 (1):**
+
+- L15 `extension _PaywallComparison : _PaywallScreenState`
+
+**関数 (0 public + 6 private):**
+
+
+  <details><summary>private 関数 6 件</summary>
+
+  - L16 `_buildComparisonTable()`
+  - L54 `_comparisonHeader()`
+  - L102 `_comparisonSection()`
+  - L130 `_comparisonRow()`
+  - L177 `_buildFaqSection()`
+  - L221 `_faqItem()`
+
+  </details>
+
+
+### `lib/screens/paywall_legal_links.dart` (197 行)
+
+**ファイル先頭コメント:**
+
+```
+Paywall Screen — 法務必須項目 + 補助ウィジェット + 期間ラベル変換
+(part of 'paywall_screen.dart')
+
+法務必須 (B5 公開ブロッカー、🛡 文言・リンク先を絶対に変更しない):
+  - _buildAutoRenewNotice : Apple 3.1.2(a) 必須開示 3 項目 + 3.1.1 禁止文言回避
+  - _buildLegalLinks      : 解約方法 / 利用規約 / プライバシー / 特商法
+  - _buildRestoreButton   : 購入を復元
+
+補助ウィジェット / ユーティリティ (paywall_widgets.dart の行数 HARD 回避で集約):
+  - _buildStoreUnavailable  : Offerings 未配信時バナー
+  - _buildErrorPanel        : 購入エラー表示
+  - _periodLabel            : PackageType → 日本語期間ラベル
+  - _introPeriodLabel       : IntroductoryPrice → 日本語期間ラベル
+```
+
+**型定義 (1):**
+
+- L17 `extension _PaywallLegalLinks : _PaywallScreenState`
+
+**関数 (0 public + 8 private):**
+
+
+  <details><summary>private 関数 8 件</summary>
+
+  - L18 `_buildStoreUnavailable()`
+  - L62 `_buildErrorPanel()`
+  - L91 `_periodLabel()`
+  - L112 `_introPeriodLabel()`
+  - L128 `_buildAutoRenewNotice()`
+  - L145 `_buildLegalLinks()`
+  - L161 `_legalLink()`
+  - L176 `_buildRestoreButton()`
+
+  </details>
+
+
+### `lib/screens/paywall_screen.dart` (313 行)
+
+**ファイル先頭コメント:**
+
+```
+Solara ペイウォール画面 — Phase 2-6b + Suno 風リデザイン (2026-05-28)
 
 設計:
   - launch_checklist Phase 2「ペイウォール UI 🚨 公開ブロッカー B5 (3.1.2 全項目 + 特商法 5 項目必須)」
   - project_solara_security_principles 原則 4「公開前必須の法務 3 点セット」
   - feedback_i18n_last: 当面 ja-JP のみ。EN 版はストアアップ前最終工程
+  - project_solara_paywall_suno_redesign: Suno 風 UI (Monthly/Annual トグル / Free・Pro 2 カード / 比較テーブル / FAQ)
 
-必須項目 (B5):
+必須項目 (B5、削除厳禁):
   ✦ サブスクタイトル ✦ 期間 (月額/年額) ✦ 価格 (税込) ✦ コンテンツ概要
   ✦ 自動更新明記 ✦ 解約方法リンク ✦ EULA ✦ プライバシーポリシー
   ✦ Free Trial 明記 ✦ 購入を復元
 
 振舞:
-  - Offerings 取得成功 → 月額 / 年額の 2 カード、タップで購入
+  - Offerings 取得成功 → Free / Pro 2 カード、Pro 側に CTA、タップで購入
   - Offerings 取得失敗 (API キー未設定 / 未配信 / オフライン) → 「ストア準備中」案内
   - 購入完了 → entitlement listener が ProStatus 更新 → pop で前画面に戻る
 ```
@@ -1014,77 +1093,64 @@ Solara ペイウォール画面 — Phase 2-6b
 
 - relative: `../theme/solara_colors.dart`, `../utils/legal_urls.dart`, `../utils/pro_status.dart`, `../utils/purchases_service.dart`, `../utils/solara_auth.dart`
 
-**型定義 (2):**
+**型定義 (3):**
 
-- L33 `class PaywallScreen : StatefulWidget`
-- L40 `class _PaywallScreenState : State`
+- L37 `enum BillingCycle`
+  - 課金サイクル選択トグル用。デフォルトは Annual (SAVE 50% 訴求)。
+- L39 `class PaywallScreen : StatefulWidget`
+- L46 `class _PaywallScreenState : State`
 
-**関数 (4 public + 8 private):**
+**関数 (4 public + 9 private):**
 
-- L37 `createState()`
-- L48 `initState()`
-- L55 `dispose()`
-- L243 `build()`
+- L43 `createState()`
+- L64 `initState()`
+- L71 `dispose()`
+- L259 `build()`
 
-  <details><summary>private 関数 8 件</summary>
+  <details><summary>private 関数 9 件</summary>
 
-  - L60 `_onProStatusChanged()`
-  - L67 `_loadOfferings()`
-  - L86 `_ensureSignedInForPro()`
-  - L148 `_purchase()`
-  - L183 `_restore()`
-  - L210 `_showSnack()`
-  - L220 `_openUrl()`
-  - L228 `_openCancelGuide()`
+  - L58 `_setBilling()`
+  - L76 `_onProStatusChanged()`
+  - L83 `_loadOfferings()`
+  - L102 `_ensureSignedInForPro()`
+  - L164 `_purchase()`
+  - L199 `_restore()`
+  - L226 `_showSnack()`
+  - L236 `_openUrl()`
+  - L244 `_openCancelGuide()`
 
   </details>
 
 
-### `lib/screens/paywall_widgets.dart` (451 行)
+### `lib/screens/paywall_widgets.dart` (413 行)
 
 **ファイル先頭コメント:**
 
 ```
-Paywall Screen — プラン表示 / 機能リスト / 法的リンク のサブウィジェット
+Paywall Screen — Hero / 課金トグル / Free・Pro 2 カード (Suno 風 core)
 (part of 'paywall_screen.dart')
-
-役割:
-  - Stage 1 ペイウォール画面の表示パーツを分割保管
-  - 親 (`_PaywallScreenState`) のメソッドとしてアクセス可能 (part-of)
-
-内訳:
-  - _buildHero                : ゴールドグラデのタイトル + 一文紹介
-  - _buildFeatureList         : Pro で開く 5 機能の icon + 説明
-  - _buildPlansSection        : Loading / 配信あり (月額/年額) / 配信無し
-  - _buildStoreUnavailable    : Offerings 未配信 / 取得失敗時の準備中バナー
-  - _buildPlanCard            : 単一プラン (年額 / 月額) のカード UI + 購入導線
-  - _periodLabel / _introPeriodLabel : PackageType / PeriodUnit → 日本語ラベル
-
-(Solara は consultation_input_screen.dart と同じ part-of パターンを採用)
+比較テーブル + FAQ → paywall_comparison.dart
+法務必須項目 (B5) + 補助 (ストア準備中 / エラーパネル / 期間ラベル) → paywall_legal_links.dart
 ```
 
 **型定義 (1):**
 
-- L20 `extension _PaywallWidgets : _PaywallScreenState`
+- L8 `extension _PaywallWidgets : _PaywallScreenState`
 
-**関数 (0 public + 13 private):**
+**関数 (0 public + 9 private):**
 
 
-  <details><summary>private 関数 13 件</summary>
+  <details><summary>private 関数 9 件</summary>
 
-  - L21 `_buildHero()`
-  - L56 `_buildFeatureList()`
-  - L76 `_featureRow()`
-  - L122 `_buildPlansSection()`
-  - L154 `_buildStoreUnavailable()`
-  - L198 `_buildPlanCard()`
-  - L309 `_periodLabel()`
-  - L330 `_introPeriodLabel()`
-  - L346 `_buildErrorPanel()`
-  - L375 `_buildAutoRenewNotice()`
-  - L399 `_buildLegalLinks()`
-  - L415 `_legalLink()`
-  - L430 `_buildRestoreButton()`
+  - L9 `_buildHero()`
+  - L44 `_buildPlansSection()`
+  - L78 `_buildBillingToggle()`
+  - L97 `_toggleSegment()`
+  - L160 `_buildFreeCard()`
+  - L205 `_buildProCard()`
+  - L304 `_buildProCta()`
+  - L360 `_cardBadge()`
+  - L384 `_planBullet()`
 
   </details>
 

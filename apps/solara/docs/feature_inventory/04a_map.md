@@ -5,9 +5,9 @@
 
 ## サマリ
 
-- ファイル数: 23 / 総行数: 13485
+- ファイル数: 23 / 総行数: 13519
 - class/mixin/extension/enum: 86
-- 関数 (top-level + method の素拾い): 294
+- 関数 (top-level + method の素拾い): 295
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 18
 - Worker URL リテラル: 0
@@ -900,7 +900,7 @@ A*C*G ライン (natal / transit) のタップ詳細 popup。
 - L40 `build()`
 
 
-### `lib/screens/map_screen.dart` (3065 行)
+### `lib/screens/map_screen.dart` (3099 行)
 
 **imports:** dart=2 / package=6 / relative=36
 
@@ -911,74 +911,75 @@ A*C*G ライン (natal / transit) のタップ詳細 popup。
 - L75 `class MapScreen : StatefulWidget`
 - L85 `class MapScreenState : State`
 
-**関数 (8 public + 55 private):**
+**関数 (8 public + 56 private):**
 
 - L82 `createState()`
-- L334 `initState()`
-- L372 `dispose()`
-- L480 `reloadProfile()` — 外部（main.dart のタブ切替）から呼ばれる公開リロード。
-- L1293 `snack()`
-- L1465 `snack()`
-- L1511 `build()`
-- L2594 `signOf()`
+- L346 `initState()`
+- L384 `dispose()`
+- L493 `reloadProfile()` — 外部（main.dart のタブ切替）から呼ばれる公開リロード。
+- L1323 `snack()`
+- L1495 `snack()`
+- L1541 `build()`
+- L2628 `signOf()`
 
-  <details><summary>private 関数 55 件</summary>
+  <details><summary>private 関数 56 件</summary>
 
-  - L343 `_bootstrap()`
-  - L386 `_warmupTileConnection()`
-  - L421 `_onTileError()`
-  - L448 `_checkDailyBadgeState()`
-  - L466 `_loadMapStyle()`
-  - L472 `_onMapStyleChanged()`
-  - L487 `_moveToInitialCenter()`
-  - L495 `_loadProfileAndChart()`
-  - L672 `_cycleActiveCategory()`
-  - L699 `_reannotateSearchResults()`
-  - L731 `_showSheet()`
-  - L751 `_openLocations()`
-  - L768 `_openForecast()`
-  - L787 `_onDisplayMenuTap()`
-  - L797 `_onViewpointMenuTap()`
-  - L811 `_onSearchTap()`
-  - L825 `_clearAllSearch()`
-  - L842 `_onDailyBadgeTap()`
-  - L889 `_onOverlayComplete()`
-  - L899 `_onDailyTransitClose()`
-  - L911 `_doSearch()`
-  - L972 `_frameSearchArea()`
-  - L998 `_restoreSearchListView()`
-  - L1008 `_selectSearchHit()`
-  - L1038 `_buildFocusedHitMarker()`
-  - L1080 `_buildSearchHitMarkers()`
-  - L1153 `_displayScores()`
-  - L1214 `_sectorRankAlphaMul()`
-  - L1232 `_rebuild()`
-  - L1266 `_kickPaintInvalidation()`
-  - L1280 `_setVpOnly()`
-  - L1292 `_setVpToCurrentLocationOnly()`
-  - L1338 `_enterAstroCartoMode()`
-  - L1416 `_exitAstroCartoMode()`
-  - L1464 `_geolocate()`
-  - L1576 `_buildBody()`
-  - L2555 `_buildZenithPopup()`
-  - L2574 `_buildRelocationPopup()`
-  - L2639 `_proLabelForAstroKey()`
-  - L2657 `_proDescForAstroKey()`
-  - L2683 `_onAstroToggle()`
-  - L2712 `_enterConsultationFromDaily()`
-  - L2744 `_launchConsultation()`
-  - L2792 `_launchConsultationFromSearch()`
-  - L2826 `_reloadLocationSlots()`
-  - L2850 `_nearestNatalConjunctions()`
-  - L2871 `_findNearbyAstroLines()`
-  - L2889 `_zenithMarkerFrames()`
-  - L2890 `_nadirMarkerFrames()`
-  - L2891 `_zenithBandFrames()`
-  - L2892 `_nadirBandFrames()`
-  - L2896 `_filteredFrames()`
-  - L2909 `_visibleAstroLines()`
-  - L2937 `_buildNoProfileGuide()`
-  - L2971 `_showSearchVpHelpPopup()`
+  - L355 `_bootstrap()`
+  - L399 `_warmupTileConnection()`
+  - L434 `_onTileError()`
+  - L461 `_checkDailyBadgeState()`
+  - L479 `_loadMapStyle()`
+  - L485 `_onMapStyleChanged()`
+  - L505 `_scheduleLoadChart()`
+  - L517 `_moveToInitialCenter()`
+  - L525 `_loadProfileAndChart()`
+  - L702 `_cycleActiveCategory()`
+  - L729 `_reannotateSearchResults()`
+  - L761 `_showSheet()`
+  - L781 `_openLocations()`
+  - L798 `_openForecast()`
+  - L817 `_onDisplayMenuTap()`
+  - L827 `_onViewpointMenuTap()`
+  - L841 `_onSearchTap()`
+  - L855 `_clearAllSearch()`
+  - L872 `_onDailyBadgeTap()`
+  - L919 `_onOverlayComplete()`
+  - L929 `_onDailyTransitClose()`
+  - L941 `_doSearch()`
+  - L1002 `_frameSearchArea()`
+  - L1028 `_restoreSearchListView()`
+  - L1038 `_selectSearchHit()`
+  - L1068 `_buildFocusedHitMarker()`
+  - L1110 `_buildSearchHitMarkers()`
+  - L1183 `_displayScores()`
+  - L1244 `_sectorRankAlphaMul()`
+  - L1262 `_rebuild()`
+  - L1296 `_kickPaintInvalidation()`
+  - L1310 `_setVpOnly()`
+  - L1322 `_setVpToCurrentLocationOnly()`
+  - L1368 `_enterAstroCartoMode()`
+  - L1446 `_exitAstroCartoMode()`
+  - L1494 `_geolocate()`
+  - L1606 `_buildBody()`
+  - L2589 `_buildZenithPopup()`
+  - L2608 `_buildRelocationPopup()`
+  - L2673 `_proLabelForAstroKey()`
+  - L2691 `_proDescForAstroKey()`
+  - L2717 `_onAstroToggle()`
+  - L2746 `_enterConsultationFromDaily()`
+  - L2778 `_launchConsultation()`
+  - L2826 `_launchConsultationFromSearch()`
+  - L2860 `_reloadLocationSlots()`
+  - L2884 `_nearestNatalConjunctions()`
+  - L2905 `_findNearbyAstroLines()`
+  - L2923 `_zenithMarkerFrames()`
+  - L2924 `_nadirMarkerFrames()`
+  - L2925 `_zenithBandFrames()`
+  - L2926 `_nadirBandFrames()`
+  - L2930 `_filteredFrames()`
+  - L2943 `_visibleAstroLines()`
+  - L2971 `_buildNoProfileGuide()`
+  - L3005 `_showSearchVpHelpPopup()`
 
   </details>
 

@@ -209,7 +209,7 @@ https://developer.apple.com/documentation/devicecheck/validating-apps-that-conne
 **export (1):** `verifyAttestation`
 
 
-### `worker/src/auth/attestation_state.js` (902 行)
+### `worker/src/auth/attestation_state.js` (945 行)
 
 **ファイル先頭コメント:**
 
@@ -540,7 +540,7 @@ houses: そのカテゴリで重視する伝統占星術のハウス番号
 **export (3):** `computeCategoryScore`, `callGemini`, `handleFortune`
 
 
-### `worker/src/index.js` (1643 行)
+### `worker/src/index.js` (1648 行)
 
 **ファイル先頭コメント:**
 
@@ -564,38 +564,38 @@ webhooks/*   外部連携      RevenueCat Webhook (Pro 状態の真の出所)。
 
 | method | path | line |
 | --- | --- | --- |
-| ? | /protected/consultation/credits | L963 |
-| ? | /public/astro/forecast | L1184 |
-| ? | /public/tiles/* | L1185 |
-| ? | /webhooks/* | L1186 |
-| ? | /public/health | L1194 |
-| GET | /public/tiles/osm/* | L1199 |
-| POST | /public/astro/chart | L1204 |
-| POST | /public/astro/forecast | L1212 |
-| POST | /public/astro/predict | L1227 |
-| POST | /public/astro/daily-transits | L1235 |
-| GET | /public/tz | L1243 |
-| GET | /public/astro/events | L1252 |
-| GET | /public/search | L1263 |
-| GET | /auth/whoami | L1285 |
-| POST | /auth/challenge | L1288 |
-| POST | /auth/attest | L1291 |
-| POST | /auth/integrity/challenge | L1295 |
-| GET | /auth/integrity/diagnose | L1304 |
-| POST | /auth/integrity/decode-test | L1317 |
-| POST | /protected/account/delete | L1432 |
-| POST | /protected/fortune | L1436 |
-| POST | /protected/tarot | L1446 |
-| POST | /protected/relocation | L1474 |
-| POST | /protected/astro/line-narrative | L1486 |
-| POST | /protected/astro/consultation | L1496 |
-| POST | /protected/astro/consultation2 | L1524 |
-| POST | /protected/consultation/credits | L1556 |
-| POST | /protected/report-ai-output | L1570 |
-| ? | /public/* | L1625 |
-| ? | /auth/* | L1627 |
-| ? | /protected/* | L1629 |
-| ? | /webhooks/revenuecat | L1631 |
+| ? | /protected/consultation/credits | L968 |
+| ? | /public/astro/forecast | L1189 |
+| ? | /public/tiles/* | L1190 |
+| ? | /webhooks/* | L1191 |
+| ? | /public/health | L1199 |
+| GET | /public/tiles/osm/* | L1204 |
+| POST | /public/astro/chart | L1209 |
+| POST | /public/astro/forecast | L1217 |
+| POST | /public/astro/predict | L1232 |
+| POST | /public/astro/daily-transits | L1240 |
+| GET | /public/tz | L1248 |
+| GET | /public/astro/events | L1257 |
+| GET | /public/search | L1268 |
+| GET | /auth/whoami | L1290 |
+| POST | /auth/challenge | L1293 |
+| POST | /auth/attest | L1296 |
+| POST | /auth/integrity/challenge | L1300 |
+| GET | /auth/integrity/diagnose | L1309 |
+| POST | /auth/integrity/decode-test | L1322 |
+| POST | /protected/account/delete | L1437 |
+| POST | /protected/fortune | L1441 |
+| POST | /protected/tarot | L1451 |
+| POST | /protected/relocation | L1479 |
+| POST | /protected/astro/line-narrative | L1491 |
+| POST | /protected/astro/consultation | L1501 |
+| POST | /protected/astro/consultation2 | L1529 |
+| POST | /protected/consultation/credits | L1561 |
+| POST | /protected/report-ai-output | L1575 |
+| ? | /public/* | L1630 |
+| ? | /auth/* | L1632 |
+| ? | /protected/* | L1634 |
+| ? | /webhooks/revenuecat | L1636 |
 
 **KV 使用 (4 行):**
 
@@ -603,7 +603,7 @@ webhooks/*   外部連携      RevenueCat Webhook (Pro 状態の真の出所)。
 
 **Durable Object 使用 (4 行):**
 
-- 出現行: L262, L262, L262, L1579
+- 出現行: L262, L262, L262, L1584
 
 **export (2):** `isQuotaExemptPath`, `_internal`
 
@@ -741,7 +741,7 @@ Uses bounding-box heuristic for common regions, falls back to longitude-based of
 **export (1):** `lookupTimezone`
 
 
-### `worker/src/webhooks/revenuecat.js` (349 行)
+### `worker/src/webhooks/revenuecat.js` (380 行)
 
 **ファイル先頭コメント:**
 

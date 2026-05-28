@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 9 / 総行数: 2508
+- ファイル数: 9 / 総行数: 2522
 - class/mixin/extension/enum: 14
 - 関数 (top-level + method の素拾い): 114
 - Navigator.push 等: 0
@@ -121,7 +121,7 @@ Consultation Share — シェアエクスポート (V2: 全要素統合)
 - L139 `formatConsultationCaption()` — シェア用のキャプション短縮版 (画像と一緒に添える text)。
 
 
-### `lib/utils/forecast_cache.dart` (399 行)
+### `lib/utils/forecast_cache.dart` (413 行)
 
 **imports:** dart=1 / package=2 / relative=2
 
@@ -135,7 +135,7 @@ Consultation Share — シェアエクスポート (V2: 全要素統合)
   - 運勢サイクル（「◯◯期」）1件分。
 - L153 `class ForecastCache`
   - Forecast キャッシュ項目
-- L198 `class ForecastRepo`
+- L210 `class ForecastRepo`
 
 **関数 (8 public + 7 private):**
 
@@ -144,19 +144,19 @@ Consultation Share — シェアエクスポート (V2: 全要素統合)
 - L84 `detectLifePeriods()` — ForecastDay 列から各カテゴリの「◯◯期」を検出する。
 - L164 `toJson()`
 - L191 `profileHashOf()` — 出生情報のハッシュ。プロフィール変更を検知するために使う。
-- L286 `loadCached()` — キャッシュから読み込む（profileHash が一致する場合のみ有効）
-- L298 `cooldownRemaining()` — クールダウン残時間（0ならfetch可）。年オフセットごとに独立。
-- L331 `fetchFull()` — Worker /astro/forecast を呼び出して暦年(1/1〜12/31)分を取得。
+- L298 `loadCached()` — キャッシュから読み込む（profileHash が一致する場合のみ有効）
+- L310 `cooldownRemaining()` — クールダウン残時間（0ならfetch可）。年オフセットごとに独立。
+- L343 `fetchFull()` — Worker /astro/forecast を呼び出して暦年(1/1〜12/31)分を取得。
 
   <details><summary>private 関数 7 件</summary>
 
-  - L200 `_cKey()`
-  - L202 `_coolKey()`
-  - L204 `_periodsKey()`
-  - L206 `_top5StorageKey()`
-  - L310 `_saveCache()`
-  - L315 `_markFetched()`
-  - L321 `_daysInYear()`
+  - L212 `_cKey()`
+  - L214 `_coolKey()`
+  - L216 `_periodsKey()`
+  - L218 `_top5StorageKey()`
+  - L322 `_saveCache()`
+  - L327 `_markFetched()`
+  - L333 `_daysInYear()`
 
   </details>
 
