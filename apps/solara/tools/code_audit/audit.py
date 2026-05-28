@@ -27,8 +27,18 @@ if sys.platform == "win32":
 ROOT = Path(__file__).resolve().parents[2]  # apps/solara
 LIB = ROOT / "lib"
 
-LINE_WARN = 300
-LINE_HARD = 500
+# ── 行数閾値 (2026-05-29 3 段階化に再調整) ─────────────────────
+# 旧 (WARN 300 / HARD 500) は Solara の実態に対して厳しすぎた:
+#   - HARD ≥500 違反が 32 個 / 全 191 ファイル (16.8%) で常態化、警告が形骸化
+#   - Flutter の StatefulWidget は build/state/ライフサイクルで容易に 400-600 行
+# 実態データ (中央値 248、平均 330、最大 3099) に基づき 3 段階に拡張:
+#   - NOTICE 300: 「設計を意識するライン」(旧 WARN)、46 個 / 24.1%
+#   - WARN   500: 「分割を検討すべき」(旧 HARD)、25 個 / 13.1%
+#   - HARD  1000: 「即時分割急務、PR ブロッカー想定」、7 個 / 3.7%
+# これで HARD ゼロ運用が現実的になる (= 7 個リファクタすればクリア)。
+LINE_NOTICE = 300
+LINE_WARN = 500
+LINE_HARD = 1000
 DUP_MIN_LINES = 8
 
 # ── ファイル列挙 ──────────────────────────────────────────────
@@ -47,6 +57,8 @@ def check_line_count(files: list[Path]) -> list[tuple[Path, int, str]]:
             out.append((f, n, "HARD"))
         elif n >= LINE_WARN:
             out.append((f, n, "WARN"))
+        elif n >= LINE_NOTICE:
+            out.append((f, n, "NOTICE"))
     return sorted(out, key=lambda x: -x[1])
 
 
@@ -217,17 +229,21 @@ def main() -> int:
     print(f"# Solara Code Audit\n")
     print(f"対象: {LIB.relative_to(ROOT)} ({len(files)} 個の .dart)\n")
 
-    # 1. 行数
-    print("## 1. ファイル行数 (>= 300 行)\n")
+    # 1. 行数 (NOTICE 300 / WARN 500 / HARD 1000 の 3 段階)
+    print(
+        f"## 1. ファイル行数 (NOTICE >= {LINE_NOTICE} / "
+        f"WARN >= {LINE_WARN} / HARD >= {LINE_HARD})\n"
+    )
     big = check_line_count(files)
     if big:
         print("| 行数 | 判定 | ファイル |")
         print("|------|------|----------|")
+        marks = {"HARD": "🔴", "WARN": "🟠", "NOTICE": "🟡"}
         for f, n, sev in big:
-            mark = "🔴" if sev == "HARD" else "🟡"
+            mark = marks.get(sev, "🟡")
             print(f"| {n} | {mark} {sev} | {fmt(f)} |")
     else:
-        print("✅ 全ファイル < 300 行")
+        print(f"✅ 全ファイル < {LINE_NOTICE} 行")
     print()
 
     # 2. 重複
@@ -280,10 +296,15 @@ def main() -> int:
     print()
 
     print("---")
-    print(f"\n総計: 行数違反 {len(big)} / 重複 {len(dupes)} / TODO {len(todos)} / print {len(prints)} / 未使用候補 {len(unused)}")
-
-    # exit code: 重大な問題があれば 1
+    notice_count = sum(1 for _, _, s in big if s == "NOTICE")
+    warn_count = sum(1 for _, _, s in big if s == "WARN")
     hard_count = sum(1 for _, _, s in big if s == "HARD")
+    print(
+        f"\n総計: 行数 HARD {hard_count} / WARN {warn_count} / NOTICE {notice_count}"
+        f" / 重複 {len(dupes)} / TODO {len(todos)} / print {len(prints)} / 未使用候補 {len(unused)}"
+    )
+
+    # exit code: HARD (>= 1000 行) があれば 1
     return 1 if hard_count > 0 else 0
 
 

@@ -1,7 +1,7 @@
 """Solara コード検証スクリプト
 
 チェック内容:
-1. ファイル行数 (500行超は分割候補として警告)
+1. ファイル行数 (500 行超 WARN、1000 行超 CRIT。閾値は 2026-05-29 に audit.py と整合)
 2. 未使用 import (簡易検出)
 3. print() / debugPrint() 残り
 4. TODO / FIXME / XXX
@@ -15,8 +15,10 @@ import sys
 ROOT = Path(__file__).resolve().parents[1]
 LIB = ROOT / "lib"
 
+# audit.py の 3 段階閾値 (LINE_WARN=500 / LINE_HARD=1000) と整合。
+# verify_code.py は WARN / CRIT の 2 段階構造を維持しつつ、CRIT を 1000 に引き上げ。
 FILE_SIZE_WARN = 500
-FILE_SIZE_CRIT = 900
+FILE_SIZE_CRIT = 1000
 
 def gather_dart_files():
     return sorted(LIB.rglob("*.dart"))

@@ -750,6 +750,59 @@ Worker 側 `consultationCreditStatus` も `proSyncReconcile` 経由になった�
 - extract.py: stamp diff `+0 -0 ~1` (map_screen.dart 1 ファイル変更)
 - audit.py: 78 / 20 / 4 / 1 / 0 (前回と同じ、新規 HARD ゼロ)
 
+### 0.2.12 audit.py 行数閾値を 3 段階化 (NOTICE 300 / WARN 500 / HARD 1000) (2026-05-29 セッション末)
+
+> Solara 実態データ分析の結果、旧閾値 (WARN 300 / HARD 500) は厳しすぎたため再設計。
+> 旧 HARD 500 では 32 ファイル / 全 191 (16.8%) が違反 → 「HARD ゼロ運用」が事実上不可能で警告が形骸化していた。
+
+#### 実態データ (2026-05-29 時点、lib/ 配下 191 ファイル)
+
+| 統計 | 値 |
+|---|---|
+| 中央値 | 248 行 |
+| 平均値 | 330 行 |
+| 最大値 | 3099 行 (map_screen.dart) |
+| 旧 HARD ≥500 違反 | 32 ファイル (16.8%) |
+| 800 行以上 | 9 ファイル (4.7%) |
+| 1000 行以上 | 7 ファイル (3.7%) |
+
+#### 新閾値設計
+
+| レベル | 行数 | 性格 | 現状違反数 | 表示色 |
+|---|---|---|---|---|
+| 🟢 OK | <300 | 健全 | 113 個 | (表示なし) |
+| 🟡 NOTICE | 300-499 | 「設計を意識するライン」 (旧 WARN) | 46 個 | 🟡 |
+| 🟠 WARN | 500-999 | 「分割を検討すべき」 (旧 HARD) | 25 個 | 🟠 |
+| 🔴 HARD | ≥1000 | 「即時分割急務、PR ブロッカー想定」 | 7 個 | 🔴 |
+
+#### HARD 7 ファイル (リファクタ優先順位)
+
+1. `map_screen.dart` 3099 行 — 3 ファイル分割で全部消える
+2. `map_daily_transit_screen.dart` 1923 行 — 2 分割
+3. `sanctuary_screen.dart` 1473 行 — セクション別 part 分割
+4. `sanctuary_title_diagnosis.dart` 1385 行
+5. `galaxy_screen.dart` 1275 行
+6. `forecast_screen.dart` 1084 行
+7. `daily_transit_data.dart` 1013 行 — データ専用なら許容圏か
+
+#### コード変更
+- `tools/code_audit/audit.py`:
+  - `LINE_NOTICE = 300` 新規、`LINE_WARN = 500`、`LINE_HARD = 1000` に再定義
+  - `check_line_count` を 3 段階返却に対応
+  - main 出力でレベル別カウントを「HARD N / WARN M / NOTICE L」形式に
+  - 絵文字: 🔴 HARD / 🟠 WARN / 🟡 NOTICE (旧: 🔴 / 🟡 の 2 種)
+- `tools/verify_code.py`:
+  - `FILE_SIZE_CRIT = 900 → 1000` (audit.py の HARD と整合)
+  - docstring に「閾値は 2026-05-29 に audit.py と整合」と明記
+
+#### exit code
+- HARD (≥1000) が 1 個でもあれば exit 1 (= 公開ブロッカー想定)
+- WARN / NOTICE のみなら exit 0
+
+#### 検証
+- audit.py 再実行: 行数 HARD 7 / WARN 25 / NOTICE 46 / 重複 20 / TODO 4 / print 1 / 未使用 0
+- 既存の機能・出力は後方互換 (重複・TODO・print・未使用は同じロジック)
+
 ### 0.3 Horo「今日の占い」1 日 1 回固定 + プロンプト刷新 (2026-05-27)
 
 > **設計の柱**: 「30 回までは OK」のような曖昧な防衛をやめ、「**1 日 1 回・変更しない**」を
