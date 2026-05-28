@@ -5,9 +5,9 @@
 
 ## サマリ
 
-- ファイル数: 10 / 総行数: 5309
+- ファイル数: 10 / 総行数: 5350
 - class/mixin/extension/enum: 26
-- 関数 (top-level + method の素拾い): 114
+- 関数 (top-level + method の素拾い): 115
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 4
 - Worker URL リテラル: 0
@@ -68,7 +68,7 @@
   </details>
 
 
-### `lib/screens/sanctuary/sanctuary_legal_menu.dart` (144 行)
+### `lib/screens/sanctuary/sanctuary_legal_menu.dart` (153 行)
 
 **ファイル先頭コメント:**
 
@@ -96,12 +96,13 @@ Solara Sanctuary 法務リンクメニュー (Phase 2 launch_checklist)
 
 **型定義 (1):**
 
-- L110 `class _LegalRow : StatelessWidget`
+- L119 `class _LegalRow : StatelessWidget`
 
-**関数 (2 public + 2 private):**
+**関数 (3 public + 2 private):**
 
 - L32 `showSanctuaryLegalMenu()` — Sanctuary > ✦ App の「Terms & Privacy」エントリから開く法務情報 popup。
-- L116 `build()`
+- L107 `openSubscriptionSettings()` — 端末のサブスクリプション設定 deep link を直接開く (Cosmic Pro 加入中の解約導線)。
+- L125 `build()`
 
   <details><summary>private 関数 2 件</summary>
 
@@ -323,7 +324,7 @@ Solara Sanctuary 法務リンクメニュー (Phase 2 launch_checklist)
 - 集計: `showInfoPopup`×1
 
 
-### `lib/screens/sanctuary_screen.dart` (1441 行)
+### `lib/screens/sanctuary_screen.dart` (1473 行)
 
 **imports:** dart=1 / package=3 / relative=22
 
@@ -333,9 +334,9 @@ Solara Sanctuary 法務リンクメニュー (Phase 2 launch_checklist)
 
 - L29 `class SanctuaryScreen : StatefulWidget`
 - L36 `class _SanctuaryScreenState : State`
-- L1354 `extension _WidgetOpacity : Widget`
-- L1363 `class _SettingsGroup : StatelessWidget`
-- L1396 `class _SettingsItem : StatelessWidget`
+- L1386 `extension _WidgetOpacity : Widget`
+- L1395 `class _SettingsGroup : StatelessWidget`
+- L1428 `class _SettingsItem : StatelessWidget`
 
 **関数 (7 public + 33 private):**
 
@@ -343,9 +344,9 @@ Solara Sanctuary 法務リンクメニュー (Phase 2 launch_checklist)
 - L76 `initState()`
 - L89 `dispose()`
 - L295 `build()`
-- L1355 `withOpacity()`
-- L1369 `build()`
-- L1404 `build()`
+- L1387 `withOpacity()`
+- L1401 `build()`
+- L1436 `build()`
 
   <details><summary>private 関数 33 件</summary>
 
@@ -371,17 +372,17 @@ Solara Sanctuary 法務リンクメニュー (Phase 2 launch_checklist)
   - L916 `_buildRecordsSection()`
   - L952 `_buildCosmicProSection()`
   - L978 `_buildProUpgradeBanner()`
-  - L1034 `_buildProActiveBanner()`
-  - L1074 `_buildRestoreRow()`
-  - L1098 `_openPaywall()`
-  - L1107 `_restorePurchases()`
-  - L1132 `_buildDevProToggle()`
-  - L1185 `_buildAstrologySection()`
-  - L1215 `_buildHouseOption()`
-  - L1248 `_orbSummary()`
-  - L1261 `_openOrbOverlay()`
-  - L1277 `_buildAppSection()`
-  - L1307 `_pickDailyResetHour()`
+  - L1035 `_buildProActiveBanner()`
+  - L1106 `_buildRestoreRow()`
+  - L1130 `_openPaywall()`
+  - L1139 `_restorePurchases()`
+  - L1164 `_buildDevProToggle()`
+  - L1217 `_buildAstrologySection()`
+  - L1247 `_buildHouseOption()`
+  - L1280 `_orbSummary()`
+  - L1293 `_openOrbOverlay()`
+  - L1309 `_buildAppSection()`
+  - L1339 `_pickDailyResetHour()`
 
   </details>
 

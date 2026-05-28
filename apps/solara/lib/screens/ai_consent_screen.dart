@@ -101,7 +101,7 @@ class AiConsentScreen extends StatelessWidget {
             ),
           ),
           // 文字読みやすさ確保用の半透明オーバーレイ
-          Container(color: Colors.black.withValues(alpha: 0.55)),
+          Container(color: Colors.black.withValues(alpha: 0.70)),
           SafeArea(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),

@@ -517,6 +517,48 @@ Worker 側 `consultationCreditStatus` も `proSyncReconcile` 経由になった�
 - extract.py 再生成: stamp diff `+0 -0 ~1` (`ai_consent_screen.dart` のみ更新)
 - audit.py 再生成: 行数違反 77 / 重複 20 / TODO 4 / print 1 / 未使用 0。**新規 HARD ゼロ** (`ai_consent_screen.dart` 353 行は WARN 範囲、許容)。
 
+### 0.2.7 AiConsent alpha 調整 + Sanctuary 解約リンク + 法務 HTML 5 ファイル AiConsent 6 章整合 (2026-05-28 セッション末)
+
+> §0.2.6 の AiConsent 6 章構造を、オーナーと表現を 1 つずつ照合しながらブラッシュアップ + 法務 HTML
+> 5 ファイル (privacy / terms / scta-ios / scta-android / cancel) との文言整合 + Sanctuary 解約導線 UX 改善。
+> AAB ビルドは保留 (オーナー指示)。
+
+#### コード変更
+
+- `lib/screens/ai_consent_screen.dart`: 背景画像オーバーレイ alpha **0.55 → 0.70** (文字読みやすさ強化、背景控えめ化)
+- `lib/screens/sanctuary_screen.dart` `_buildProActiveBanner()`:
+  - 「更新と解約は端末のサブスクリプション設定から。」説明文を削除
+  - 新規「↗ 解約方法」リンクボタン (InkWell + Icon.open_in_new) を追加
+  - タップで `openSubscriptionSettings(context)` を呼出 (端末の定期購入画面に直接遷移)
+- `lib/screens/sanctuary/sanctuary_legal_menu.dart`:
+  - 新規 public `openSubscriptionSettings(BuildContext)` 関数追加
+  - iOS = `LegalUrls.iosSubscriptionsDeepLink` (設定アプリ → Apple ID → サブスク)
+  - Android = `LegalUrls.androidSubscriptionsDeepLink` (Play Store → 定期購入)
+  - その他 = `LegalUrls.howToCancel` (Web)
+  - 既存 `_openCancelGuide()` も同関数を内部呼出に置換 (重複解消)
+- `pubspec.yaml`: version `1.0.0+14 → +15` (alpha 修正用、Sanctuary 修正は次回ビルドで +16 へ)
+
+#### 法務 HTML 5 ファイル AiConsent 6 章整合
+
+| ファイル | 修正内容 |
+|---|---|
+| `legal/solara/privacy.html` | A: 冒頭「アプリの位置づけ」段落追加 / B: §1-1 機能列挙を AiConsent §1 と同じ 5 区分化 / C: §3-2 デバイス認証情報 (App Attest / Play Integrity) を先頭に追加 + §4 第三者リスト Apple Inc. / Google LLC に App Attest / Play Integrity 明記 / D: §7 免責を「娯楽・自己探求」「参考情報」表現に整合 / E: 「Stella の「相談」機能」→「Stella 相談」表記統一 |
+| `legal/solara/terms.html` | A: 冒頭追加 / B: 第 3 条 3-1 Pro 提供内容を Pro 週次キャップ 100/週 + タロット Pro 特典 (カテゴリクレジット不要+テキスト入力欄) + 星読み 5 カテゴリ (Free は「全体」のみ) に正確化 / C: 第 4 条 (1)(2) 免責を 4→5 項目化 (「参考情報」「鵜呑みにせず」追加) / D: 第 8 条「Stella による解釈テキスト」→「Stella 相談による解釈」3 箇所統一 |
+| `legal/solara/scta-ios.html` | 免責事項 (1 箇所) を terms 第 4 条と整合 (「娯楽および自己探求のためのコンテンツ」+「将来予測ではない」追加) |
+| `legal/solara/scta-android.html` | 同上 (Android 版、内容は scta-ios と統一) |
+| `legal/solara/cancel.html` | 変更なし (AiConsent 6 章との接点が薄い、解約手順のみ) |
+
+#### 検証
+
+- flutter analyze: **No issues found** (45.1s、ai_consent / sanctuary / sanctuary_legal_menu 3 ファイル)
+- extract.py 再生成: stamp diff `+0 -0 ~3` (`ai_consent_screen.dart` / `sanctuary_screen.dart` / `sanctuary_legal_menu.dart`)
+- audit.py 再生成: 行数違反 77 / 重複 20 / TODO 4 / print 1 / 未使用 0。前回と同じ統計 = 新規 HARD/重複追加ゼロ。
+
+#### iPhone / Android 解約 deep link 動作
+
+- A101FC (Android): Sanctuary > Cosmic Pro 加入中バナー > 解約方法 → Play Store の定期購入画面に直接遷移 (実機確認済)
+- iPhone (iOS): 同じ URL (`https://apps.apple.com/account/subscriptions`) で「設定アプリ → Apple ID → サブスクリプション」に自動遷移 (Apple 公式 deep link 仕様、TestFlight で実機確認予定)
+
 ### 0.3 Horo「今日の占い」1 日 1 回固定 + プロンプト刷新 (2026-05-27)
 
 > **設計の柱**: 「30 回までは OK」のような曖昧な防衛をやめ、「**1 日 1 回・変更しない**」を

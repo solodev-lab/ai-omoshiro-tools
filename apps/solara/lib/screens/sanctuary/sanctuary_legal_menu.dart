@@ -96,6 +96,15 @@ Future<void> _openUrl(BuildContext context, String url) async {
 /// その他 (Web/desktop debug 等) = 静的 howToCancel ページ。
 /// PaywallScreen._openCancelGuide と同じ振り分け。
 Future<void> _openCancelGuide(BuildContext context) async {
+  await openSubscriptionSettings(context);
+}
+
+/// 端末のサブスクリプション設定 deep link を直接開く (Cosmic Pro 加入中の解約導線)。
+/// iOS = 設定アプリ → Apple ID → サブスクリプション
+/// Android = Play Store → 定期購入
+/// その他 = Web 解約案内ページ
+/// Sanctuary > Cosmic Pro 加入中バナーから直接呼ばれる public API。
+Future<void> openSubscriptionSettings(BuildContext context) async {
   String url;
   if (!kIsWeb && Platform.isIOS) {
     url = LegalUrls.iosSubscriptionsDeepLink;

@@ -1031,6 +1031,7 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
   }
 
   /// Pro 加入済向け: 「Cosmic Pro 加入中」を伝えるバナー (購入不要)。
+  /// 解約方法リンクで端末のサブスクリプション設定 deep link を直接開く。
   Widget _buildProActiveBanner() {
     return Container(
       width: double.infinity,
@@ -1062,9 +1063,40 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
         ),
         const SizedBox(height: 8),
         const Text(
-          'すべての機能が解放されています。\n更新と解約は端末のサブスクリプション設定から。',
+          'すべての機能が解放されています。',
           textAlign: TextAlign.center,
           style: TextStyle(fontSize: 12, color: Color(0xFFACACAC), height: 1.6),
+        ),
+        const SizedBox(height: 12),
+        // 解約方法 deep link: タップで端末の定期購入画面に直接遷移。
+        // iOS = 設定アプリ → Apple ID → サブスクリプション、Android = Play Store → 定期購入。
+        InkWell(
+          onTap: () => openSubscriptionSettings(context),
+          borderRadius: BorderRadius.circular(8),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: const Color(0xFFF9D976).withValues(alpha: 0.4),
+              ),
+            ),
+            child: const Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.open_in_new, size: 14, color: Color(0xFFF9D976)),
+                SizedBox(width: 6),
+                Text(
+                  '解約方法',
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: Color(0xFFF9D976),
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ]),
     );
