@@ -5,9 +5,9 @@
 
 ## サマリ
 
-- ファイル数: 31 / 総行数: 9706
+- ファイル数: 31 / 総行数: 9863
 - class/mixin/extension/enum: 88
-- 関数 (top-level + method の素拾い): 254
+- 関数 (top-level + method の素拾い): 255
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 7
 - Worker URL リテラル: 0
@@ -93,7 +93,7 @@ Stella 相談 追加クレジット購入シート (消費型 IAP、設計 B 案
   </details>
 
 
-### `lib/screens/consultation/consultation_history_screen.dart` (248 行)
+### `lib/screens/consultation/consultation_history_screen.dart` (278 行)
 
 **ファイル先頭コメント:**
 
@@ -113,35 +113,36 @@ Consultation History Screen — Phase 2-4
   - 検索・フィルタは Pro 機能 (本画面では UI のみプレースホルダ、ゲートは課金後)
 ```
 
-**imports:** dart=0 / package=1 / relative=5
+**imports:** dart=0 / package=1 / relative=6
 
-- relative: `../../theme/solara_colors.dart`, `../../utils/consultation_record.dart`, `../../utils/solara_storage.dart`, `../../widgets/glass_panel.dart`, `consultation_result_screen.dart`
+- relative: `../../theme/solara_colors.dart`, `../../utils/consultation_record.dart`, `../../utils/solara_storage.dart`, `../../widgets/glass_panel.dart`, `../map/map_constants.dart`, `consultation_result_screen.dart`
 
 **型定義 (2):**
 
-- L49 `class ConsultationHistoryScreen : StatefulWidget`
-- L67 `class _ConsultationHistoryScreenState : State`
+- L79 `class ConsultationHistoryScreen : StatefulWidget`
+- L97 `class _ConsultationHistoryScreenState : State`
 
-**関数 (3 public + 7 private):**
+**関数 (3 public + 8 private):**
 
-- L63 `createState()`
-- L73 `initState()`
-- L151 `build()`
+- L93 `createState()`
+- L103 `initState()`
+- L181 `build()`
 
-  <details><summary>private 関数 7 件</summary>
+  <details><summary>private 関数 8 件</summary>
 
-  - L78 `_load()`
-  - L90 `_delete()`
-  - L99 `_toggleFavorite()`
-  - L110 `_confirmDeleteAll()`
-  - L196 `_buildFilterBar()`
-  - L217 `_buildList()`
-  - L241 `_openDetail()`
+  - L42 `_themeColor()`
+  - L108 `_load()`
+  - L120 `_delete()`
+  - L129 `_toggleFavorite()`
+  - L140 `_confirmDeleteAll()`
+  - L226 `_buildFilterBar()`
+  - L247 `_buildList()`
+  - L271 `_openDetail()`
 
   </details>
 
 
-### `lib/screens/consultation/consultation_history_widgets.dart` (389 行)
+### `lib/screens/consultation/consultation_history_widgets.dart` (488 行)
 
 **ファイル先頭コメント:**
 
@@ -157,18 +158,18 @@ Consultation History — サブウィジェット (part of consultation_history_
 - L57 `class _FilterChip : StatelessWidget`
   - 履歴フィルタ用のトグルチップ (すべて / お気に入り)。
 - L96 `class _HistoryCard : StatelessWidget`
-- L366 `class _MetaChip : StatelessWidget`
+- L460 `class _MetaChip : StatelessWidget`
 
 **関数 (4 public + 1 private):**
 
 - L13 `build()`
 - L68 `build()`
-- L197 `build()`
-- L371 `build()`
+- L243 `build()`
+- L468 `build()`
 
   <details><summary>private 関数 1 件</summary>
 
-  - L338 `_confirmDelete()`
+  - L432 `_confirmDelete()`
 
   </details>
 
@@ -240,7 +241,7 @@ setState を呼ばない純ロジック (when/scope → ConsultationRequest、�
 - 集計: `showInfoPopup`×1
 
 
-### `lib/screens/consultation/consultation_input_picker.dart` (338 行)
+### `lib/screens/consultation/consultation_input_picker.dart` (345 行)
 
 **ファイル先頭コメント:**
 
@@ -267,7 +268,7 @@ L836-1295 (_SpecificPicker 系) を切り出し (ファイル肥大化対策、2
 - L54 `createState()`
 - L73 `initState()`
 - L79 `dispose()`
-- L154 `build()`
+- L161 `build()`
 
   <details><summary>private 関数 6 件</summary>
 
@@ -276,12 +277,12 @@ L836-1295 (_SpecificPicker 系) を切り出し (ファイル肥大化対策、2
   - L109 `_runSearch()`
   - L123 `_onHitTap()`
   - L138 `_onSlotTap()`
-  - L146 `_openMapPicker()`
+  - L153 `_openMapPicker()`
 
   </details>
 
 
-### `lib/screens/consultation/consultation_input_picker_widgets.dart` (198 行)
+### `lib/screens/consultation/consultation_input_picker_widgets.dart` (203 行)
 
 **ファイル先頭コメント:**
 
@@ -297,19 +298,19 @@ consultation_input_picker.dart の HARD500 回避のため、検索結果行・�
 
 - L10 `class _SearchHitRow : StatelessWidget`
   - 検索結果 1 行 (番号バッジ + 場所名 + 住所サブ行)。
-- L95 `class _LocationChip : StatelessWidget`
+- L99 `class _LocationChip : StatelessWidget`
   - 保存地点 (ViewPoint / Locations) のチップ。アイコン + 登録名。
-- L131 `class _SelectedSpecificCard : StatelessWidget`
+- L136 `class _SelectedSpecificCard : StatelessWidget`
   - 選択中の具体地点カード (場所名 + 住所 + 解除ボタン)。
 
 **関数 (3 public + 0 private):**
 
 - L18 `build()`
-- L101 `build()`
-- L145 `build()`
+- L105 `build()`
+- L150 `build()`
 
 
-### `lib/screens/consultation/consultation_input_screen.dart` (483 行)
+### `lib/screens/consultation/consultation_input_screen.dart` (485 行)
 
 **ファイル先頭コメント:**
 
@@ -353,21 +354,21 @@ Consultation Input Screen — 5問モデル (V2: 全要素統合)
 
 - L91 `createState()`
 - L130 `initState()`
-- L153 `dispose()`
-- L314 `build()`
+- L155 `dispose()`
+- L316 `build()`
 
   <details><summary>private 関数 10 件</summary>
 
-  - L141 `_loadPrefsAndProfile()`
-  - L160 `_onModeChanged()`
-  - L189 `_onWhenKindTap()`
-  - L214 `_pickSingleDate()`
-  - L226 `_pickDateRange()`
-  - L238 `_ymd()`
-  - L242 `_onScopeKindTap()`
-  - L252 `_openMapPicker()`
-  - L302 `_refreshCreditsFresh()`
-  - L307 `_setStartPopupHidden()`
+  - L143 `_loadPrefsAndProfile()`
+  - L162 `_onModeChanged()`
+  - L191 `_onWhenKindTap()`
+  - L216 `_pickSingleDate()`
+  - L228 `_pickDateRange()`
+  - L240 `_ymd()`
+  - L244 `_onScopeKindTap()`
+  - L254 `_openMapPicker()`
+  - L304 `_refreshCreditsFresh()`
+  - L309 `_setStartPopupHidden()`
 
   </details>
 
@@ -403,7 +404,7 @@ Consultation Input — ③ いつ / 半径 セレクタ
   </details>
 
 
-### `lib/screens/consultation/consultation_input_widgets.dart` (421 行)
+### `lib/screens/consultation/consultation_input_widgets.dart` (430 行)
 
 **ファイル先頭コメント:**
 
@@ -414,39 +415,39 @@ Consultation Input — 基本サブウィジェット + 選択肢定数
 
 **型定義 (13):**
 
-- L55 `class _ThemeChoice`
-- L61 `class _ModeChoice`
-- L67 `class _ScopeChoice`
-- L76 `class _PillChip : StatelessWidget`
+- L60 `class _ThemeChoice`
+- L66 `class _ModeChoice`
+- L72 `class _ScopeChoice`
+- L81 `class _PillChip : StatelessWidget`
   - 単一選択の pill チップ (Wrap 用)。
-- L116 `class _Section : StatelessWidget`
-- L144 `class _ThemeGrid : StatelessWidget`
-- L165 `class _ModeRow : StatelessWidget`
-- L216 `class _ScopeWrap : StatelessWidget`
+- L121 `class _Section : StatelessWidget`
+- L149 `class _ThemeGrid : StatelessWidget`
+- L170 `class _ModeRow : StatelessWidget`
+- L225 `class _ScopeWrap : StatelessWidget`
   - ④ どこで のスコープ選択 (Wrap、場面で 3〜5 個)。
-- L242 `class _RegionPicker : StatelessWidget`
-- L263 `class _FreeTextField : StatelessWidget`
-- L319 `class _NoHomeNote : StatelessWidget`
+- L251 `class _RegionPicker : StatelessWidget`
+- L272 `class _FreeTextField : StatelessWidget`
+- L328 `class _NoHomeNote : StatelessWidget`
   - 自宅未設定で 方角/半径/自国内 が使えないときの注記。
-- L346 `class _PresetLocationCard : StatelessWidget`
-- L383 `class _SubmitBar : StatelessWidget`
+- L355 `class _PresetLocationCard : StatelessWidget`
+- L392 `class _SubmitBar : StatelessWidget`
 
 **関数 (10 public + 1 private):**
 
-- L87 `build()`
-- L122 `build()`
-- L150 `build()`
-- L171 `build()`
-- L227 `build()`
-- L248 `build()`
-- L276 `build()`
-- L323 `build()`
-- L351 `build()`
-- L389 `build()`
+- L92 `build()`
+- L127 `build()`
+- L155 `build()`
+- L176 `build()`
+- L236 `build()`
+- L257 `build()`
+- L285 `build()`
+- L332 `build()`
+- L360 `build()`
+- L398 `build()`
 
   <details><summary>private 関数 1 件</summary>
 
-  - L40 `_scopeChoicesFor()`
+  - L45 `_scopeChoicesFor()`
 
   </details>
 
@@ -582,7 +583,7 @@ Consultation Result — 候補カード (V2)
 - L202 `build()`
 
 
-### `lib/screens/consultation/consultation_result_credit_widgets.dart` (152 行)
+### `lib/screens/consultation/consultation_result_credit_widgets.dart` (153 行)
 
 **ファイル先頭コメント:**
 
@@ -604,7 +605,7 @@ Stella 相談 クレジット制 (設計 project_solara_stella_free_credits.md) 
 - L22 `build()`
 
 
-### `lib/screens/consultation/consultation_result_screen.dart` (409 行)
+### `lib/screens/consultation/consultation_result_screen.dart` (413 行)
 
 **ファイル先頭コメント:**
 
@@ -639,7 +640,7 @@ ConsultationRecord を読み込み専用表示 (fetch なし・autosave なし�
 - L73 `createState()`
 - L108 `initState()`
 - L121 `dispose()`
-- L305 `build()`
+- L309 `build()`
 
   <details><summary>private 関数 10 件</summary>
 
@@ -650,9 +651,9 @@ ConsultationRecord を読み込み専用表示 (fetch なし・autosave なし�
   - L229 `_snack()`
   - L241 `_onBuyCredits()`
   - L247 `_showConsultationPaywall()`
-  - L267 `_showAboutReading()`
-  - L282 `_persist()`
-  - L370 `_buildBody()`
+  - L268 `_showAboutReading()`
+  - L283 `_persist()`
+  - L374 `_buildBody()`
 
   </details>
 

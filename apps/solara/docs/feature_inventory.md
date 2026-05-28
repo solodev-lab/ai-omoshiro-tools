@@ -803,6 +803,227 @@ Worker 側 `consultationCreditStatus` も `proSyncReconcile` 経由になった�
 - audit.py 再実行: 行数 HARD 7 / WARN 25 / NOTICE 46 / 重複 20 / TODO 4 / print 1 / 未使用 0
 - 既存の機能・出力は後方互換 (重複・TODO・print・未使用は同じロジック)
 
+### 0.2.13 ACG モード UI 改善 — タイトル × ボタン拡大 + 天頂帯/天底帯 視認性向上 (2026-05-29 セッション)
+
+> 実機検証で「ACG モードの上部 ✕ ボタンが押しにくい」「天頂帯/天底帯がほとんど見えない (特に天底帯)」のフィードバックを反映。タップ領域とラインの視覚密度を再設計した。
+
+#### ① バナー (タイトル + ❓ + ✕) のタップ領域拡大
+
+[`map_astro_carto.dart` AstroCartoBanner](../lib/screens/map/map_astro_carto.dart) (L34):
+- 旧: ❓/✕ ともに padding `EdgeInsets.symmetric(h:4, v:2)` + icon 16/14 → 実効 ~24×20px → タップ困難
+- 新: padding `h:10, v:10` + icon 18/18 → 実効 ~38×38px (Material 推奨 48 には未満だがバナー UI 制約下で最大化)
+- バナー総高さの肥大を抑えるため container 外側 padding `vertical: 8 → 3` (= バナー総高さ +12px に留めた)
+- ✕ の色も `0xFFAAAAAA → 0xFFCCCCCC` で視認性向上
+
+#### ② 天頂帯・天底帯 (latitude bands) の視認性向上
+
+[`map_astro_lines.dart buildAstroLatitudeBandPolylines`](../lib/screens/map/map_astro_lines.dart) (L221):
+
+| 項目 | 旧 | 新 |
+|---|---|---|
+| `opacityBase` | 0.22 | **0.48** |
+| 天底色暗化倍率 | 0.60 | **0.80** |
+| 天底追加 ×0.85 減衰 | あり | **撤廃** |
+| 天頂帯 strokeWidth | 1.4 | **1.8** |
+| 天底帯 strokeWidth | 1.2 | **1.6** |
+
+実 alpha 換算:
+- 天頂帯: 0.22 → 0.48 (約 2.2 倍可視化)
+- 天底帯: 0.19 → 0.48 (約 2.6 倍 + 色暗化緩和)
+- 識別性: 破線パターン (5/6 dashed) で天頂/天底の区別を担保 (旧来通り)
+
+#### 検証
+- flutter analyze: No issues (2 files、3.1s)
+- extract.py stamp diff `+0 -0 ~2`
+
+### 0.2.14 Daily ボタン「今日固定 TOP カテゴリ」+ popup Header 初回 1.5s halo + Galaxy 3 演出も 0 時切替 (2026-05-29 セッション)
+
+> 実機検証で「Daily チップアイコンが 1 日の途中で変わる」のフィードバックを発見。原因は `_topCategory` が MapTimeSlider/Forecast ジャンプの `targetDate` に追従する設計だったため。Daily 系 UI 専用の「今日固定」TOP カテゴリ系統を新設。同時に Sanctuary subtitle 文言「タロットのみ」と整合させるため Galaxy 3 演出も Sanctuary リセット時刻設定から独立させた。
+
+#### 4 つの主変更
+
+##### ④-1 端末日付 0 時固定キー API 新設
+
+[`solara_storage.dart`](../lib/utils/solara_storage.dart) (L111-115 + 620-639):
+- `static String localDateKey()` — `now.year-month-day` (Sanctuary 設定無視、常に 0 時切替)
+- `static Future<bool> wasLocalOverlayShownToday(String type)`
+- `static Future<void> markLocalOverlayShown(String type)`
+- 専用ストレージキー: `solara_local_overlay_shown_<type>_<YYYY-MM-DD>`
+- 既存 `logicalTodayKey()` / `wasOverlayShownToday` / `markOverlayShown` (タロット用、リセット時刻追従) は温存
+
+##### ④-2 Daily Transit Badge + Galaxy 3 演出を 0 時固定キーへ移行
+
+[`map_screen.dart`](../lib/screens/map_screen.dart) (`dominant_fortune` overlay):
+- `wasOverlayShownToday → wasLocalOverlayShownToday`
+- `markOverlayShown → markLocalOverlayShown`
+
+[`galaxy_screen.dart`](../lib/screens/galaxy_screen.dart) + [`new_moon_overlay.dart`](../lib/widgets/new_moon_overlay.dart) + [`full_moon_overlay.dart`](../lib/widgets/full_moon_overlay.dart) + [`catasterism_overlay.dart`](../lib/widgets/catasterism_overlay.dart):
+- 全 8 箇所の `wasOverlayShownToday('new_moon'|'full_moon'|'catasterism')` / `markOverlayShown(...)` を local 版へ
+- Sanctuary picker subtitle 「タロットのみ」と完全整合 (タロットだけが Sanctuary リセット時刻に追従)
+
+##### ④-3 `_dailyChipCategory` 6 点平均算出
+
+[`map_screen.dart`](../lib/screens/map_screen.dart) (L300-319, L495-562):
+- 新 state: `_dailyChipCategory`, `_dailyChipDateKey`, `_computingDailyChip`
+- 端末 0/4/8/12/16/20 時の 6 点で `fetchChart()` → `scoreAll()` → fScores 16 方位合計を加算 → argmax
+- 端末日付 `localDateKey()` でキャッシュ、翌日に切替わるまで Worker 再 fetch なし (1 日 6 回のみ)
+- `_loadProfileAndChart` 完了時に `unawaited(_recomputeDailyChipCategoryIfNeeded())` で fire-and-forget
+- 確定後 `_checkDailyBadgeState()` を再評価 (halo 発光状態を即時更新)
+
+##### ④-4 Daily チップ + popup Header + アニメ + 判定 — 全て `_dailyChipCategory` に統一
+
+- `MapMenuChips.topCategory: _dailyChipCategory ?? _topCategory` (チップアイコン)
+- `MapDailyTransitScreen.topCategory: _dailyChipCategory ?? _topCategory` (popup TOP バナー)
+- `_onDailyBadgeTap` 内 `kind = _dailyChipCategory ?? _topCategory` (アニメ演出)
+- `_checkDailyBadgeState` で `effectiveCategory = _dailyChipCategory ?? _topCategory`
+
+→ 結果: 時刻スライダー操作で `_topCategory` が動いてもチップ + popup TOP + アニメは「今日固定」で不変
+
+#### popup Header 初回 1.5s 金色 halo (1 日 1 回)
+
+[`map_screen.dart`](../lib/screens/map_screen.dart) (`_onOverlayComplete` 修正、`daily_header_glow` キーで永続化):
+
+```dart
+final glowSeen = await SolaraStorage.wasLocalOverlayShownToday('daily_header_glow');
+final shouldGlow = !glowSeen;
+if (shouldGlow) await SolaraStorage.markLocalOverlayShown('daily_header_glow');
+setState(() {
+  _dailyTransitOpen = true;
+  _dailyHeaderGlowOnce = shouldGlow;
+});
+```
+
+[`map_daily_transit_screen.dart _Header`](../lib/screens/map/map_daily_transit_screen.dart):
+- StatelessWidget → StatefulWidget へ昇格
+- `SingleTickerProviderStateMixin` + `AnimationController` (1500ms)
+- TweenSequence: fade-in 400ms → 維持 500ms → fade-out 600ms (最大 alpha 0.55)
+- Stack の `Positioned.fill` で headerBox 上に DecoratedBox を重ね、border + 2 段 boxShadow (blur 20+36, spread 4+8) で金色グロー
+- 1 日 1 回ガード: `daily_header_glow` 永続キー (0 時固定)
+- popup を閉じる時 (`_onDailyTransitClose`) に `_dailyHeaderGlowOnce = false` リセット (Stack の旧 widget が glow 再生し始めるのを防ぐ)
+
+#### 基準地点 dropdown の RIGHT OVERFLOW 修正
+
+[`map_daily_transit_screen.dart _buildVpDropdownWithGuide`](../lib/screens/map/map_daily_transit_screen.dart) (L925):
+- 旧: `Row(MainAxisSize.min) + Flexible(Text)` → `isExpanded: true` の DropdownButton 内で制約が届かず overflow
+- 新: `Row(MainAxisSize.max) + Expanded(Text)` で確実に ellipsis (`...`) 短縮表示
+
+#### 検証
+- flutter analyze: No issues (7 files、6.3s)
+- extract.py stamp diff `+0 -0 ~7`
+
+### 0.2.15 Stella 相談入力タイル「おでかけ／イベント」化 + 初期選択 null + 用語完全統一 (2026-05-29 セッション)
+
+> 「自宅での事柄を Stella に相談したい場合、『おでかけ』だけだと設定しにくい」のフィードバックから、daily モードに「イベント」概念を追加 (= 自分が動かなくても、その場所で始まる事も含む)。同時に「どの経路から入っても初期選択は無し」に統一。
+
+#### ① 入力タイル 2 行ラベル化
+
+[`consultation_input_widgets.dart`](../lib/screens/consultation/consultation_input_widgets.dart) (L17-22):
+```dart
+const _modeChoices = <_ModeChoice>[
+  _ModeChoice('daily', 'おでかけ\nイベント'),
+  _ModeChoice('travel', '旅行'),
+  _ModeChoice('migration', '移住'),
+];
+```
+- `_ModeRow` の Text に `textAlign: TextAlign.center` + `height: 1.25` 追加
+- IntrinsicHeight + stretch で 3 タイルの高さは自動で揃う
+- Worker 側 mode key は `'daily'` のまま不変 → 既存 7 箇所の `_mode == 'daily'` ロジックに影響なし
+
+#### ② 初期選択を null 化 (preset 経路含む全経路)
+
+[`consultation_input_screen.dart`](../lib/screens/consultation/consultation_input_screen.dart) (L131):
+- 旧: `if (widget.presetTarget != null) { _mode = 'travel'; _scopeKind = 'point'; }` を撤廃
+- 新: どの経路 (Map preset / Daily Transit / Sanctuary) でも `_mode` / `_scopeKind` ともに初期 null
+- preset の地点情報は保持: ユーザーが mode を選んだ瞬間に `_onModeChanged` 内の既存ロジック (`if (widget.presetTarget != null) _scopeKind = 'point'`) で自動的に scope=point に進む
+
+#### ③ 用語完全統一 (タイル + 履歴 + Pro 訴求 + 共有テキスト)
+
+| 場所 | 表記 | 理由 |
+|---|---|---|
+| 入力タイル | `おでかけ\nイベント` (2 行) | 主入口、両概念を強調 |
+| 履歴カード | `おでかけ・イベント` (1 行・中黒) | 縦スペース無 |
+| Pro 訴求文 (paywall body / desc) | `おでかけ・イベント以外の相談 (移住・旅行)...` | 文章内 |
+| 共有テキスト | `おでかけ・イベント` (1 行) | フォーマット出力 |
+
+変更ファイル:
+- [`consultation_history_screen.dart:39`](../lib/screens/consultation/consultation_history_screen.dart#L39): `_modeLabel['daily']`
+- [`consultation_result_credit_widgets.dart:37`](../lib/screens/consultation/consultation_result_credit_widgets.dart#L37): paywall body
+- [`consultation_result_screen.dart:252`](../lib/screens/consultation/consultation_result_screen.dart#L252): paywall desc
+- [`consultation_share.dart:36`](../lib/utils/consultation_share.dart#L36): `_modeLabel['daily']`
+
+#### 検証
+- flutter analyze: No issues (2+4 files)
+- extract.py stamp diff: `+0 -0 ~2` (タイル変更) → `+0 -0 ~4` (用語統一)
+
+### 0.2.16 相談履歴に「いつ」表示 + categoryColors 連動チップ色 + VP/Loc「現住所」表記 (2026-05-29 セッション)
+
+> 履歴一覧で「いつ・どの時間帯を対象に相談したか」が一目で分かるよう情報密度を上げ、テーマチップの色を Map と統一 (扇・スコアバーと同色)。同時に VP/Loc の home slot は住所文字列ではなく「現住所」と表示する。
+
+#### ① ConsultationRecord に when 系 5 フィールド追加
+
+[`consultation_record.dart`](../lib/utils/consultation_record.dart):
+- 新フィールド: `whenKind`, `whenDate`, `whenStart`, `whenEnd`, `whenTimeBand` (全 nullable)
+- `fromReadings()` に `ConsultationWhen? when` 引数追加 → 5 フィールドへ自動展開
+- `toJson()` / `fromJson()` 対応 (nullable で旧データ欠落許容、後方互換維持)
+- `copyWith()` 同期 (新フィールドは保持のみ、変更不可)
+- 旧 JSON ラウンドトリップテスト 18 件全 pass = 完全互換
+
+#### ② result screen の auto-save に `when: req.when` 追加
+
+[`consultation_result_screen.dart:294`](../lib/screens/consultation/consultation_result_screen.dart#L294) の `_persist()`:
+- `ConsultationWhen` をそのままレコードに保存 → 履歴で再現
+
+#### ③ 履歴画面に「いつ」行を追加
+
+[`consultation_history_widgets.dart`](../lib/screens/consultation/consultation_history_widgets.dart):
+- 新ヘルパ:
+  - `_whenLabel`: kind 別整形
+    - `date` → `2026/05/30`
+    - `range` → `5/30〜6/2`
+    - `within6mo/within1yr/in3yr/in5yrPlus` → `半年以内` 等
+    - null + mode='daily' → `今日` (デフォルト推測)
+    - null + mode='migration' → `未定` (デフォルト推測)
+    - null + mode='travel' → null (旧データ欠落、行ごと非表示)
+  - `_timeBandLabelOrNull`: `morning→朝` 等 5 種
+- Row 3 新設 (Row 2 の下): `📅 [whenLabel] ⏰ [timeBand]` 横スクロール可
+
+#### ④ テーマチップを Map と同じ categoryColors で着色
+
+[`consultation_history_screen.dart`](../lib/screens/consultation/consultation_history_screen.dart):
+- `import '../map/map_constants.dart' show categoryColors;` で Map の色マップ流用
+- `_themeColor(theme)` ヘルパ: 5 テーマ (love/money/work/communication/healing) は `categoryColors` から、`newStart` のみ独自定義 `0xFFFFB07C` (夜明けオレンジ)
+- 「変化・新たな出発」は Map に存在しないテーマ → 独自色で差別化
+
+[`consultation_history_widgets.dart _MetaChip`](../lib/screens/consultation/consultation_history_widgets.dart):
+- `Color? color` 引数追加
+- bg = `color.withAlpha(0x22)` / border = `color.withAlpha(0x66)` / text = full color
+- 旧 hardcode gold は default に残し後方互換
+
+#### ⑤ 具体地点ピッカー: home は「現住所」表記 + Worker に「現住所」を送信
+
+[`consultation_input_picker_widgets.dart _LocationChip`](../lib/screens/consultation/consultation_input_picker_widgets.dart) (L97):
+- 旧: `slot.name` (= `profile.homeName` = ユーザー入力住所、例「東京都渋谷区」) をチップに表示
+- 新: `slot.isHome ? '現住所' : slot.name`
+
+[`consultation_input_picker.dart _onSlotTap`](../lib/screens/consultation/consultation_input_picker.dart) (L138):
+- 旧: `_PickedSpecific(name: s.name, placeKind: 'saved')` → Worker に住所文字列が flow
+- 新: `_PickedSpecific(name: s.isHome ? '現住所' : s.name, placeKind: 'saved')`
+
+データフロー:
+```
+[chip] 🏠 現住所 → [選択中カード] ✓ 現住所
+  → [Worker placeReference] 「『現住所』という場所」
+  → [結果本文・タイトル] 住所文字列が一切出ない
+```
+
+Worker [`consultation_v2.js:78-83`](../worker/src/consultation_v2.js#L78) の既存 `placeKind='saved'` 分岐がそのまま機能 (変更不要、テスト 21/21 pass で保護)。
+
+#### 検証
+- flutter analyze: No issues
+- Flutter tests: 18/18 pass (history + favorite)
+- Worker tests: 21/21 pass (consultation_v2)
+- extract.py stamp diff: `+0 -0 ~4` (record + history) → `+0 -0 ~2` (picker)
+
 ### 0.3 Horo「今日の占い」1 日 1 回固定 + プロンプト刷新 (2026-05-27)
 
 > **設計の柱**: 「30 回までは OK」のような曖昧な防衛をやめ、「**1 日 1 回・変更しない**」を

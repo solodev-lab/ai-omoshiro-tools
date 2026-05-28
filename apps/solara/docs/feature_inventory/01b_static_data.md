@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 14 / 総行数: 4695
+- ファイル数: 14 / 総行数: 4738
 - class/mixin/extension/enum: 18
 - 関数 (top-level + method の素拾い): 40
 - Navigator.push 等: 0
@@ -162,7 +162,7 @@ key: "${type}_${planet}" or "${type}_${planet}_${sign}"
   </details>
 
 
-### `lib/utils/consultation_record.dart` (205 行)
+### `lib/utils/consultation_record.dart` (248 行)
 
 **ファイル先頭コメント:**
 
@@ -189,10 +189,10 @@ intro/outro) + 蓄積した候補群 (1 枚ずつ「別の候補地」で増え�
 
 **関数 (4 public + 0 private):**
 
-- L71 `copyWith()` — お気に入りフラグ等を差し替えた複製を返す。
-- L121 `toReadings()` — 読み込み専用表示 (履歴詳細) のために reading 群を再構成する。
-- L141 `displayName()` — 履歴カード等の見出し用候補名 (方角は「○の方角」、座標のみは「この地点」)。
-- L156 `toJson()`
+- L91 `copyWith()` — お気に入りフラグ等を差し替えた複製を返す。
+- L154 `toReadings()` — 読み込み専用表示 (履歴詳細) のために reading 群を再構成する。
+- L174 `displayName()` — 履歴カード等の見出し用候補名 (方角は「○の方角」、座標のみは「この地点」)。
+- L189 `toJson()`
 
 
 ### `lib/utils/consultation_v2_request.dart` (257 行)

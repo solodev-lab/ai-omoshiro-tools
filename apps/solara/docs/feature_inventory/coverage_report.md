@@ -52,8 +52,8 @@
 
 ## #1 / #2 機械抽出 ↔ feature_inventory.md (人手版) の対整合
 
-- 機械抽出した class/mixin/extension/enum: **443**
-- inventory に登場する識別子 (大文字始まり ``backtick``囲み): **248**
+- 機械抽出した class/mixin/extension/enum: **444**
+- inventory に登場する識別子 (大文字始まり ``backtick``囲み): **250**
 
 ### #1 機械にあるが Doc に書かれていない (254)
 
@@ -70,7 +70,6 @@
 - `ConsultationResultScreen`
 - `ConsultationScope`
 - `ConsultationTimeWindowItem`
-- `ConsultationWhen`
 - `DeviceSecurityStatus`
 - `GalaxyArchiveFilter`
 - `GalaxyArchiveFilterBar`
@@ -170,6 +169,7 @@
 - `_GoldPalette`
 - `_GoldPiece`
 - `_Header`
+- `_HeaderState`
 - `_HealingPainter`
 - `_Hero`
 - `_HistoryCard`
@@ -259,7 +259,7 @@
 - `_SanctuaryProfileEditorPageState`
 - … 残り 54 省略
 
-### #2 Doc に書いてあるがコードに存在しない (ゴースト記述) (59)
+### #2 Doc に書いてあるがコードに存在しない (ゴースト記述) (60)
 
 > 注: Flutter SDK や外部ライブラリの型もここに乗る (誤検出)。
 > 真のゴーストはアプリ独自型のみ。実際の Doc 修正対象は手で絞り込む。
@@ -313,6 +313,7 @@
 - `ScrollController`
 - `SearchHourAngle`
 - `SearchRiseSet`
+- `SingleTickerProviderStateMixin`
 - `SolaraSafeText`
 - `SpiralPainter`
 - `StatefulWidget`
@@ -393,7 +394,7 @@
 | 4c | 1 | 1 | 15 | 1 | 7 | 5 | 9 | 6 | · | · | · | 17 | · | · | 1 | · |
 | 4d | 3 | 6 | 13 | 1 | 5 | 2 | 12 | 2 | 1 | · | · | · | 9 | · | · | · |
 | 4e | 1 | 4 | · | 3 | 7 | 1 | 15 | 1 | · | · | · | · | · | 9 | 3 | · |
-| 4f | 2 | 3 | · | 8 | 16 | 3 | 18 | 11 | · | 6 | · | · | · | · | 29 | · |
+| 4f | 2 | 3 | · | 8 | 16 | 3 | 18 | 12 | · | 6 | · | · | · | · | 29 | · |
 | 5 | 1 | · | · | 2 | 5 | 2 | 1 | 1 | · | 1 | 1 | 1 | 1 | 1 | 1 | · |
 
 > 健全な依存方向は「番号が大きい層 → 小さい層」(上位が下位に依存)。
@@ -408,7 +409,7 @@
 | `lib/theme/solara_colors.dart` | 3b | 36 |
 | `lib/utils/solara_storage.dart` | 2b | 31 |
 | `lib/widgets/info_popup.dart` | 3a | 24 |
-| `lib/screens/map/map_constants.dart` | 3b | 20 |
+| `lib/screens/map/map_constants.dart` | 3b | 21 |
 | `lib/utils/pro_status.dart` | 2b | 19 |
 | `lib/utils/solara_api.dart` | 2a | 15 |
 | `lib/models/galaxy_cycle.dart` | 1c | 14 |
