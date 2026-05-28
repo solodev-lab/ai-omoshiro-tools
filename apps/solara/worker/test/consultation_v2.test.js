@@ -175,6 +175,55 @@ function BUCKET_LABEL(b) {
   return { morning: '朝', midday: '昼', evening: '夕方', night: '夜', lateNight: '夜更け' }[b];
 }
 
+test('handler: when.timeBand=night 指定時、UI timeWindow.label もユーザー選択 (夜) に一致する', async () => {
+  // narrative はユーザー指定時間帯を主役にする仕様 (prompt:178-181)。
+  // 同時に UI ラベルもユーザー指定に合わせる (= 本文「夜」/ラベル「昼」のズレ防止)。
+  const cap = {};
+  const r = await handleConsultationV2(
+    {
+      birth: BIRTH, home: HOME, theme: 'communication', mode: 'daily',
+      when: { kind: 'date', date: '2026-07-10', timeBand: 'night' },
+      scope: { kind: 'point', point: { lat: 35.18, lng: 136.91, name: '名古屋' } },
+      isFirst: true, excluded: [],
+    },
+    ENV, { callGeminiFn: mockGemini(cap) },
+  );
+  assert.equal(r.candidate.timeWindow.kind, 'single');
+  assert.equal(r.candidate.timeWindow.bucket, 'night');
+  assert.equal(r.candidate.timeWindow.label, '夜');
+  // narrative プロンプトにも userTimeBand が「主役にする」として渡る
+  assert.match(cap.prompt, /相談者の予定時間帯: 夜/);
+});
+
+test('handler: when.timeBand 未指定なら従来通りエンジン計算の bucket を返す', async () => {
+  const r = await handleConsultationV2(
+    {
+      birth: BIRTH, home: HOME, theme: 'love', mode: 'daily',
+      when: { kind: 'date', date: '2026-07-10' },
+      scope: { kind: 'point', point: { lat: 35.68, lng: 139.69, name: '東京' } },
+      isFirst: true, excluded: [],
+    },
+    ENV, { callGeminiFn: mockGemini() },
+  );
+  assert.equal(r.candidate.timeWindow.kind, 'single');
+  // bucket は VALID_BANDS のいずれか (エンジン計算結果)
+  assert.ok(['morning', 'midday', 'evening', 'night', 'lateNight'].includes(r.candidate.timeWindow.bucket));
+  assert.equal(r.candidate.timeWindow.label, BUCKET_LABEL(r.candidate.timeWindow.bucket));
+});
+
+test('handler: 不正な timeBand は無視してエンジン計算 bucket にフォールバック', async () => {
+  const r = await handleConsultationV2(
+    {
+      birth: BIRTH, home: HOME, theme: 'love', mode: 'daily',
+      when: { kind: 'date', date: '2026-07-10', timeBand: 'bogus' },
+      scope: { kind: 'point', point: { lat: 35.68, lng: 139.69, name: '東京' } },
+      isFirst: true, excluded: [],
+    },
+    ENV, { callGeminiFn: mockGemini() },
+  );
+  assert.ok(['morning', 'midday', 'evening', 'night', 'lateNight'].includes(r.candidate.timeWindow.bucket));
+});
+
 test('handler: isFirst=false は intro/outro/innerSeason を付けない', async () => {
   const r = await handleConsultationV2(
     { birth: BIRTH, home: HOME, theme: 'work', mode: 'daily', when: { kind: 'date', date: '2026-07-10' }, scope: { kind: 'bearing', radiusKm: 100 }, isFirst: false, excluded: [] },
