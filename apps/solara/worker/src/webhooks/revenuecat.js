@@ -276,6 +276,36 @@ async function processEvent(env, ev) {
   // 受信 Worker instance のメモリキャッシュは即時 invalidate
   clearMemoryEntitlementCache(appUserId);
 
+  // 🔴 Pro 週次クレジットを 100 にリセット (= used 行を削除)。
+  //
+  // トリガー: INITIAL_PURCHASE のみ (= 新規 IAP 取引、新規契約 or 解約後再契約)。
+  //   - RENEWAL / UNCANCELLATION / PRODUCT_CHANGE は継続なのでリセットしない
+  //   - TRANSFER は別 DO instance (別 appUserId) になるので対象外
+  //   - alreadyProcessed (event_id 再送) はスキップ → 冪等性確保
+  //   - skippedOutOfOrder (古い event 上書き) もスキップ → 新しい状態を壊さない
+  //
+  // 仕様根拠: オーナー指示 2026-05-29「新しく支払いを行う訳だから、残数は 100 にして」
+  // (購入クレジット consultation_purchased は触らない = 失効なし規約維持)
+  //
+  // best-effort: 失敗しても webhook は成功で返す (RC リトライ不要、月曜リセットで自然解消)。
+  let proCreditReset = null;
+  if (
+    eventType === 'INITIAL_PURCHASE' &&
+    result.body.alreadyProcessed !== true &&
+    result.body.skippedOutOfOrder !== true
+  ) {
+    try {
+      const r = await callDo(env, '/consultation-pro-credit-reset-all', { appUserId });
+      proCreditReset = {
+        ok: r.status === 200,
+        deleted: (r.status === 200 && typeof r.body?.deleted === 'number') ? r.body.deleted : null,
+      };
+    } catch (e) {
+      console.warn('[revenuecat-webhook] pro_credit_reset_all failed', e);
+      proCreditReset = { ok: false, error: String(e?.message || e) };
+    }
+  }
+
   return {
     status: 200,
     body: {
@@ -286,6 +316,7 @@ async function processEvent(env, ev) {
       expiresAt,
       alreadyProcessed: result.body.alreadyProcessed === true,
       skippedOutOfOrder: result.body.skippedOutOfOrder === true,
+      proCreditReset,
     },
   };
 }

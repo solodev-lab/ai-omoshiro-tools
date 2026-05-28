@@ -826,8 +826,11 @@ async function consumeReadingCredit(env, gate) {
   } else if (gate.source === 'purchased') {
     await callDo(env, '/consultation-purchased-spend', { appUserId: gate.appUserId });
   } else if (gate.source === 'pro_weekly') {
+    // appUserId を併せて保存 → Pro 再契約時 (RC INITIAL_PURCHASE → reset-all) に
+    // 同一ユーザの全 device_key を絞り込んで削除できるようにする (2026-05-29 追加)。
     await callDo(env, '/consultation-pro-credit-bump', {
       deviceKey: gate.deviceKey, weekBucket: gate.weekBucket,
+      appUserId: gate.appUserId,
     });
   }
 }
@@ -893,7 +896,9 @@ async function gateConsultation(request, env, body, origin) {
   const got = await callDo(env, '/consultation-pro-credit-get', { deviceKey, weekBucket });
   const proUsed = (got.status === 200 && typeof got.body?.used === 'number') ? got.body.used : 0;
   if (proLimit - proUsed > 0) {
-    return { allow: true, isPro: true, source: 'pro_weekly', deviceKey, weekBucket };
+    // appUserId も gate に乗せる → consumeReadingCredit が bump 時に DO へ渡し、
+    // Pro 再契約 reset-all (RC INITIAL_PURCHASE) の絞り込みキーになる (2026-05-29 追加)。
+    return { allow: true, isPro: true, source: 'pro_weekly', deviceKey, weekBucket, appUserId };
   }
   // Pro 週次キャップ到達 → 購入残高へフォールバック (サインイン必須)
   if (appUserId) {

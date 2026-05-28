@@ -49,8 +49,11 @@
  *                                                          (週が違えばリセットして 1、同週なら +1)
  *   POST /consultation-pro-credit-get  body: {deviceKey, weekBucket}  → {used}
  *                                                          (Pro 週次キャップ用、別表 / 構造は credit-get と対称)
- *   POST /consultation-pro-credit-bump body: {deviceKey, weekBucket, now}  → {used}
- *                                                          (Pro 週次キャップ用、別表 / 構造は credit-bump と対称)
+ *   POST /consultation-pro-credit-bump body: {deviceKey, weekBucket, now, appUserId?}  → {used}
+ *                                                          (Pro 週次キャップ用、別表 / 構造は credit-bump と対称
+ *                                                           appUserId は reset-all 用の紐付け列、後方互換のためオプショナル)
+ *   POST /consultation-pro-credit-reset-all body: {appUserId}  → {deleted}
+ *                                                          (Pro 再契約 = RC INITIAL_PURCHASE で当該 user の Pro 週次行を全削除)
  *   POST /consultation-purchased-get   body: {appUserId}            → {balance}
  *   POST /consultation-purchased-spend body: {appUserId, now}       → {balance, spent}
  *                                                          (balance>0 なら -1 して spent:true)
@@ -209,9 +212,15 @@ export class AttestationState {
         device_key TEXT PRIMARY KEY,
         week_bucket TEXT NOT NULL,
         used INTEGER NOT NULL DEFAULT 0,
-        last_used_at INTEGER NOT NULL
+        last_used_at INTEGER NOT NULL,
+        app_user_id TEXT
       );
     `);
+    // app_user_id 列の migration (2026-05-29 追加)。
+    // Pro 再契約時 (RC INITIAL_PURCHASE) に「同一ユーザの全 device_key を消す」ために必要。
+    // 既存行は app_user_id=NULL のまま残るが、次回 bump で UPDATE される + 週次自然リセットで解消。
+    try { this.sql.exec(`ALTER TABLE consultation_pro_credits ADD COLUMN app_user_id TEXT`); } catch (_) {}
+    try { this.sql.exec(`CREATE INDEX IF NOT EXISTS idx_consultation_pro_credits_app_user_id ON consultation_pro_credits(app_user_id)`); } catch (_) {}
     // fortune_readings: Horo「今日の占い」の 1 日 1 回固定キャッシュ。
     // (appUserId, local_date, category, lang) で一意 = プロフィール変更で再生成されない設計。
     // local_date は端末の local TZ (例: Asia/Tokyo 0 時境界) で YYYY-MM-DD。
@@ -670,7 +679,10 @@ export class AttestationState {
   //
   // Pro 加入者の当週相談回数 +1。保存週が違えばリセットして used=1。
   // Worker は「Stella V2 生成が成功 (非 fallback / 非 exhausted) した時だけ」呼ぶ。
-  async _consultationProCreditBump({ deviceKey, weekBucket, now = Date.now() }) {
+  //
+  // appUserId は Pro 再契約リセット (RC INITIAL_PURCHASE → resetAll) のための紐付け列。
+  // 既存呼出は appUserId 未渡しでも動く (NULL 保存、後方互換)。
+  async _consultationProCreditBump({ deviceKey, weekBucket, now = Date.now(), appUserId = null }) {
     if (typeof deviceKey !== 'string' || !deviceKey) {
       return { status: 400, body: { error: 'invalid_device_key' } };
     }
@@ -684,14 +696,44 @@ export class AttestationState {
     const used = (rows.length === 0 || rows[0].week_bucket !== weekBucket)
       ? 1
       : rows[0].used + 1;
+    const aui = (typeof appUserId === 'string' && appUserId) ? appUserId : null;
     this.sql.exec(
-      `INSERT INTO consultation_pro_credits (device_key, week_bucket, used, last_used_at)
-       VALUES (?, ?, ?, ?)
-       ON CONFLICT(device_key) DO UPDATE SET week_bucket = ?, used = ?, last_used_at = ?`,
-      deviceKey, weekBucket, used, now,
-      weekBucket, used, now,
+      `INSERT INTO consultation_pro_credits (device_key, week_bucket, used, last_used_at, app_user_id)
+       VALUES (?, ?, ?, ?, ?)
+       ON CONFLICT(device_key) DO UPDATE SET
+         week_bucket = ?, used = ?, last_used_at = ?,
+         app_user_id = COALESCE(?, app_user_id)`,
+      deviceKey, weekBucket, used, now, aui,
+      weekBucket, used, now, aui,
     );
     return { status: 200, body: { used } };
+  }
+
+  // ── /consultation-pro-credit-reset-all ──
+  //
+  // 指定 appUserId に紐づく Pro 週次クレジット行を全削除 (= 当週 used を 0 にリセット)。
+  // RC INITIAL_PURCHASE (新規 IAP 取引 = Pro 再契約 / 初回契約) で呼ばれ、
+  // 「新しく支払いを行ったのだから残数 100 から始まる」というオーナー仕様を満たす。
+  //
+  // 設計判断:
+  //   - DELETE で行ごと消す (UPDATE used=0 ではなく) → 行が無ければ get は used=0 を返す = リセット完了
+  //   - 同一 appUserId に複数 device_key が紐づくケース (機種変・複数端末) を全部消す
+  //   - app_user_id 列が NULL の行 (migration 前の既存行) は対象外 → 月曜リセットで自然解消
+  //   - 購入クレジット (consultation_purchased) には触らない (失効なし規約、オーナー指示 2026-05-29)
+  async _consultationProCreditResetAll({ appUserId }) {
+    if (typeof appUserId !== 'string' || !appUserId) {
+      return { status: 400, body: { error: 'invalid_app_user_id' } };
+    }
+    const before = this.sql.exec(
+      `SELECT COUNT(*) AS c FROM consultation_pro_credits WHERE app_user_id = ?`,
+      appUserId,
+    ).toArray();
+    const deleted = before.length > 0 ? before[0].c : 0;
+    this.sql.exec(
+      `DELETE FROM consultation_pro_credits WHERE app_user_id = ?`,
+      appUserId,
+    );
+    return { status: 200, body: { deleted } };
   }
 
   // ── /consultation-purchased-get ──
@@ -884,6 +926,7 @@ export class AttestationState {
       '/consultation-credit-bump': () => this._consultationCreditBump(body),
       '/consultation-pro-credit-get': () => this._consultationProCreditGet(body),
       '/consultation-pro-credit-bump': () => this._consultationProCreditBump(body),
+      '/consultation-pro-credit-reset-all': () => this._consultationProCreditResetAll(body),
       '/consultation-purchased-get': () => this._consultationPurchasedGet(body),
       '/consultation-purchased-spend': () => this._consultationPurchasedSpend(body),
       '/consultation-credit-grant': () => this._consultationCreditGrant(body),
