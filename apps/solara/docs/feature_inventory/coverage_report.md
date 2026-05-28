@@ -437,12 +437,9 @@
 > 各ソースの SHA1 を `_stamps.json` に記録し、差分を検出。
 > 変更されたファイルが属する層は、人手版インベントリ章の見直し対象。
 
-- 追加: **0** / 削除: **0** / 変更: **3**
+- 追加: **0** / 削除: **0** / 変更: **0**
 
-### 変更されたファイル (層別)
-
-- **層 4e**: `lib/screens/sanctuary/sanctuary_legal_menu.dart`, `lib/screens/sanctuary_screen.dart`
-- **層 4f**: `lib/screens/ai_consent_screen.dart`
+- 変更なし — 全インベントリ章は最新。
 
 ## #7 astro_glossary 用語辞書対整合
 

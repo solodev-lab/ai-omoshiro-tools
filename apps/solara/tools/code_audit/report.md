@@ -8,7 +8,7 @@
 |------|------|----------|
 | 3065 | 🔴 HARD | lib/screens/map_screen.dart |
 | 1923 | 🔴 HARD | lib/screens/map/map_daily_transit_screen.dart |
-| 1441 | 🔴 HARD | lib/screens/sanctuary_screen.dart |
+| 1473 | 🔴 HARD | lib/screens/sanctuary_screen.dart |
 | 1385 | 🔴 HARD | lib/screens/sanctuary/sanctuary_title_diagnosis.dart |
 | 1275 | 🔴 HARD | lib/screens/galaxy_screen.dart |
 | 1084 | 🔴 HARD | lib/screens/forecast_screen.dart |
