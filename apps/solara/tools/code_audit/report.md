@@ -67,6 +67,7 @@
 | 355 | 🟡 WARN | lib/widgets/sanctuary_account_section.dart |
 | 355 | 🟡 WARN | lib/screens/locations/locations_date_stepper.dart |
 | 354 | 🟡 WARN | lib/screens/consultation/consultation_place_picker_screen.dart |
+| 353 | 🟡 WARN | lib/screens/ai_consent_screen.dart |
 | 348 | 🟡 WARN | lib/screens/consultation/consultation_credit_sheet.dart |
 | 343 | 🟡 WARN | lib/screens/horoscope/horo_fortune_cards.dart |
 | 338 | 🟡 WARN | lib/screens/consultation/consultation_input_picker.dart |
@@ -118,18 +119,7 @@
   ),
   ```
 
-### 4. 📁 別ファイル間 (9 箇所、9 ファイル)
-
-  - lib/screens/ai_consent_screen.dart:151
-  - lib/widgets/ai_report_button.dart:239
-  - lib/screens/consultation/consultation_history_widgets.dart:47
-  - lib/screens/consultation/consultation_place_picker_screen.dart:347
-  - lib/screens/consultation/consultation_result_credit_widgets.dart:142
-  ```
-  ),
-  ```
-
-### 5. 📁 別ファイル間 (37 箇所、8 ファイル)
+### 4. 📁 別ファイル間 (37 箇所、8 ファイル)
 
   - lib/screens/forecast_screen.dart:854
   - lib/screens/forecast_screen.dart:872
@@ -140,18 +130,7 @@
   style: TextStyle(
   ```
 
-### 6. 📁 別ファイル間 (8 箇所、8 ファイル)
-
-  - lib/screens/ai_consent_screen.dart:152
-  - lib/widgets/ai_report_button.dart:240
-  - lib/screens/consultation/consultation_history_widgets.dart:48
-  - lib/screens/consultation/consultation_result_card.dart:128
-  - lib/screens/consultation/consultation_result_credit_widgets.dart:143
-  ```
-  ],
-  ```
-
-### 7. 📁 別ファイル間 (8 箇所、8 ファイル)
+### 5. 📁 別ファイル間 (8 箇所、8 ファイル)
 
   - lib/screens/galaxy_screen.dart:551
   - lib/widgets/full_moon_overlay.dart:299
@@ -162,7 +141,18 @@
   ),
   ```
 
-### 8. 📁 別ファイル間 (8 箇所、8 ファイル)
+### 6. 📁 別ファイル間 (8 箇所、8 ファイル)
+
+  - lib/widgets/ai_report_button.dart:239
+  - lib/screens/consultation/consultation_history_widgets.dart:47
+  - lib/screens/consultation/consultation_place_picker_screen.dart:347
+  - lib/screens/consultation/consultation_result_credit_widgets.dart:142
+  - lib/screens/consultation/consultation_result_widgets.dart:75
+  ```
+  ),
+  ```
+
+### 7. 📁 別ファイル間 (8 箇所、8 ファイル)
 
   - lib/widgets/ai_report_button.dart:299
   - lib/widgets/new_moon_overlay.dart:312
@@ -173,13 +163,24 @@
   ],
   ```
 
-### 9. 📁 別ファイル間 (13 箇所、7 ファイル)
+### 8. 📁 別ファイル間 (13 箇所、7 ファイル)
 
   - lib/widgets/catasterism_overlay.dart:191
   - lib/widgets/full_moon_overlay.dart:200
   - lib/widgets/full_moon_overlay.dart:403
   - lib/widgets/full_moon_overlay.dart:458
   - lib/widgets/new_moon_overlay.dart:220
+  ```
+  ),
+  ```
+
+### 9. 📁 別ファイル間 (11 箇所、7 ファイル)
+
+  - lib/screens/ai_consent_screen.dart:250
+  - lib/screens/consultation/consultation_input_widgets.dart:375
+  - lib/screens/consultation/consultation_result_widgets.dart:31
+  - lib/screens/map/consult_entry_popup.dart:277
+  - lib/screens/map/map_astro_carto.dart:84
   ```
   ),
   ```
@@ -195,15 +196,15 @@
   ),
   ```
 
-### 11. 📁 別ファイル間 (10 箇所、6 ファイル)
+### 11. 📁 別ファイル間 (7 箇所、7 ファイル)
 
-  - lib/screens/consultation/consultation_input_widgets.dart:375
-  - lib/screens/consultation/consultation_result_widgets.dart:31
-  - lib/screens/map/consult_entry_popup.dart:277
-  - lib/screens/map/map_astro_carto.dart:84
-  - lib/screens/map/map_astro_carto.dart:459
+  - lib/widgets/ai_report_button.dart:240
+  - lib/screens/consultation/consultation_history_widgets.dart:48
+  - lib/screens/consultation/consultation_result_card.dart:128
+  - lib/screens/consultation/consultation_result_credit_widgets.dart:143
+  - lib/screens/consultation/consultation_result_widgets.dart:76
   ```
-  ),
+  ],
   ```
 
 ### 12. 📁 別ファイル間 (9 箇所、6 ファイル)
@@ -219,6 +220,17 @@
 
 ### 13. 📁 別ファイル間 (7 箇所、6 ファイル)
 
+  - lib/screens/ai_consent_screen.dart:249
+  - lib/widgets/info_popup.dart:106
+  - lib/screens/consultation/consultation_input_widgets.dart:374
+  - lib/screens/map/consult_entry_popup.dart:276
+  - lib/screens/map/map_astro_carto.dart:458
+  ```
+  ),
+  ```
+
+### 14. 📁 別ファイル間 (7 箇所、6 ファイル)
+
   - lib/widgets/catasterism_formation_overlay.dart:460
   - lib/widgets/catasterism_overlay.dart:187
   - lib/widgets/full_moon_overlay.dart:196
@@ -228,7 +240,7 @@
   ),
   ```
 
-### 14. 📁 別ファイル間 (7 箇所、6 ファイル)
+### 15. 📁 別ファイル間 (7 箇所、6 ファイル)
 
   - lib/widgets/class_card.dart:288
   - lib/screens/consultation/consultation_input_picker_widgets.dart:86
@@ -239,7 +251,7 @@
   ),
   ```
 
-### 15. 📁 別ファイル間 (7 箇所、6 ファイル)
+### 16. 📁 別ファイル間 (7 箇所、6 ファイル)
 
   - lib/screens/consultation/consultation_input_picker.dart:329
   - lib/screens/consultation/consultation_result_card.dart:184
@@ -250,7 +262,7 @@
   ),
   ```
 
-### 16. 📁 別ファイル間 (6 箇所、6 ファイル)
+### 17. 📁 別ファイル間 (6 箇所、6 ファイル)
 
   - lib/screens/paywall_widgets.dart:367
   - lib/widgets/catasterism_overlay.dart:190
@@ -261,7 +273,7 @@
   ),
   ```
 
-### 17. 📁 別ファイル間 (6 箇所、6 ファイル)
+### 18. 📁 別ファイル間 (6 箇所、6 ファイル)
 
   - lib/widgets/catasterism_formation_overlay.dart:461
   - lib/widgets/location_picker_minimap.dart:132
@@ -272,7 +284,7 @@
   ),
   ```
 
-### 18. 📁 別ファイル間 (6 箇所、6 ファイル)
+### 19. 📁 別ファイル間 (6 箇所、6 ファイル)
 
   - lib/widgets/catasterism_overlay.dart:189
   - lib/widgets/full_moon_overlay.dart:198
@@ -283,26 +295,15 @@
   ),
   ```
 
-### 19. 📁 別ファイル間 (6 箇所、5 ファイル)
-
-  - lib/widgets/info_popup.dart:106
-  - lib/screens/consultation/consultation_input_widgets.dart:374
-  - lib/screens/map/consult_entry_popup.dart:276
-  - lib/screens/map/map_astro_carto.dart:458
-  - lib/screens/map/map_astro_carto.dart:522
-  ```
-  ),
-  ```
-
 ### 20. 📁 別ファイル間 (5 箇所、5 ファイル)
 
-  - lib/screens/ai_consent_screen.dart:150
-  - lib/screens/consultation/consultation_place_picker_screen.dart:346
-  - lib/screens/consultation/consultation_result_credit_widgets.dart:141
-  - lib/screens/galaxy/galaxy_archive_filter_chips.dart:191
-  - lib/screens/observe/observe_reading_sheet.dart:175
+  - lib/screens/forecast_screen.dart:944
+  - lib/screens/map/map_astro_carto.dart:229
+  - lib/screens/map/map_daily_transit_screen.dart:1916
+  - lib/screens/map/map_fortune_sheet.dart:755
+  - lib/screens/map/map_viewpoint_menu.dart:128
   ```
-  ),
+  style: TextStyle(
   ```
 
 
@@ -323,4 +324,4 @@
 
 ---
 
-総計: 行数違反 76 / 重複 20 / TODO 4 / print 1 / 未使用候補 0
+総計: 行数違反 77 / 重複 20 / TODO 4 / print 1 / 未使用候補 0

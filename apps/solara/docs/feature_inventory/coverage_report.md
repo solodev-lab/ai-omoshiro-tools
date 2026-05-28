@@ -52,15 +52,11 @@
 
 ## #1 / #2 機械抽出 ↔ feature_inventory.md (人手版) の対整合
 
-- 機械抽出した class/mixin/extension/enum: **439**
-- inventory に登場する識別子 (大文字始まり ``backtick``囲み): **235**
+- 機械抽出した class/mixin/extension/enum: **440**
+- inventory に登場する識別子 (大文字始まり ``backtick``囲み): **245**
 
-### #1 機械にあるが Doc に書かれていない (255)
+### #1 機械にあるが Doc に書かれていない (252)
 
-- `AiConsentScreen`
-- `AiDisclaimerFooter`
-- `AiReportApi`
-- `AiReportButton`
 - `AppAttestClient`
 - `ConstellationShareCardPage`
 - `ConsultEntryPopup`
@@ -189,8 +185,10 @@
 - `_InfoPopupShell`
 - `_LatitudeBandBox`
 - `_LatitudeBandRow`
+- `_LegalLinks`
 - `_LegalRow`
 - `_LightMote`
+- `_LinkPill`
 - `_LoadingBody`
 - `_LoadingSkeleton`
 - `_LocationChip`
@@ -227,7 +225,6 @@
 - `_ObserveScreenState`
 - `_OrbSectionLabel`
 - `_PageIndicator`
-- `_ParagraphSection`
 - `_PaywallScreenState`
 - `_PaywallWidgets`
 - `_Petal`
@@ -257,9 +254,12 @@
 - `_SanctuaryHomeEditorPageState`
 - `_SanctuaryIconPainter`
 - `_SanctuaryOrbOverlayState`
-- … 残り 55 省略
+- `_SanctuaryProfileEditorPageState`
+- `_SanctuaryResetHourPickerState`
+- `_SanctuaryScreenState`
+- … 残り 52 省略
 
-### #2 Doc に書いてあるがコードに存在しない (ゴースト記述) (51)
+### #2 Doc に書いてあるがコードに存在しない (ゴースト記述) (57)
 
 > 注: Flutter SDK や外部ライブラリの型もここに乗る (誤検出)。
 > 真のゴーストはアプリ独自型のみ。実際の Doc 修正対象は手で絞り込む。
@@ -282,6 +282,7 @@
 - `ConsultationReading`
 - `CustomPaint`
 - `D6915C`
+- `D8BGKZW2AJ`
 - `DELETE`
 - `EAEAEA`
 - `F6BD60`
@@ -298,10 +299,14 @@
 - `MaterialApp`
 - `NON_RENEWING_PURCHASE`
 - `NOUN_SHAPES`
+- `NSLocationAlwaysAndWhenInUseUsageDescription`
 - `PATH_OVERRIDES`
 - `REVENUECAT_SECRET_KEY`
 - `RawScrollbar`
 - `RepaintBoundary`
+- `SOLARA_GCP_PROJECT_NUMBER`
+- `SOLARA_GOOGLE_SERVER_CLIENT_ID`
+- `SOLARA_RC_ANDROID_KEY`
 - `SUBSCRIPTION_EXTENDED`
 - `ScrollController`
 - `SearchHourAngle`
@@ -315,6 +320,7 @@
 - `TickerMode`
 - `Timer`
 - `ValueListenableBuilder`
+- `WhenInUse`
 
 ## #4 画面 ↔ 機能集合
 
@@ -385,7 +391,7 @@
 | 4c | 1 | 1 | 15 | 1 | 7 | 5 | 9 | 6 | · | · | · | 17 | · | · | 1 | · |
 | 4d | 3 | 6 | 13 | 1 | 5 | 2 | 12 | 2 | 1 | · | · | · | 9 | · | · | · |
 | 4e | 1 | 4 | · | 3 | 7 | 1 | 15 | 1 | · | · | · | · | · | 9 | 3 | · |
-| 4f | 2 | 3 | · | 7 | 16 | 3 | 18 | 11 | · | 6 | · | · | · | · | 27 | · |
+| 4f | 2 | 3 | · | 8 | 16 | 3 | 18 | 11 | · | 6 | · | · | · | · | 27 | · |
 | 5 | 1 | · | · | 2 | 5 | 2 | 1 | 1 | · | 1 | 1 | 1 | 1 | 1 | 1 | · |
 
 > 健全な依存方向は「番号が大きい層 → 小さい層」(上位が下位に依存)。
@@ -431,27 +437,11 @@
 > 各ソースの SHA1 を `_stamps.json` に記録し、差分を検出。
 > 変更されたファイルが属する層は、人手版インベントリ章の見直し対象。
 
-- 追加: **5** / 削除: **0** / 変更: **15**
+- 追加: **0** / 削除: **0** / 変更: **1**
 
 ### 変更されたファイル (層別)
 
-- **層 0**: `worker/src/consultation_v2.js`, `worker/src/fortune.js`, `worker/src/index.js`
-- **層 2a**: `lib/utils/legal_urls.dart`, `lib/utils/solara_api.dart`
-- **層 2b**: `lib/utils/solara_storage.dart`
-- **層 3a**: `lib/widgets/location_picker_minimap.dart`
-- **層 4a**: `lib/screens/map/map_styles.dart`, `lib/screens/map_screen.dart`
-- **層 4b**: `lib/screens/horoscope/horo_fortune_cards.dart`
-- **層 4c**: `lib/screens/observe_screen.dart`
-- **層 4f**: `lib/screens/consultation/consultation_place_picker_screen.dart`, `lib/screens/consultation/consultation_result_card.dart`, `lib/screens/consultation/consultation_result_screen.dart`
-- **層 5**: `lib/main.dart`
-
-### 追加されたファイル
-
-- `lib/screens/ai_consent_screen.dart` (層 4f)
-- `lib/utils/ai_report_api.dart` (層 1a)
-- `lib/widgets/ai_disclaimer_footer.dart` (層 3a)
-- `lib/widgets/ai_report_button.dart` (層 3a)
-- `worker/src/ai_report.js` (層 0)
+- **層 4f**: `lib/screens/ai_consent_screen.dart`
 
 ## #7 astro_glossary 用語辞書対整合
 

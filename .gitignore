@@ -22,3 +22,6 @@ _*_elements.md
 
 # メモリは自動メモリ側に一本化（C:/Users/cojif/.claude/projects/E--AppCreate/memory/）
 memory/
+
+# AiConsent background generation drafts (mockup) — keep local, do not commit
+apps/solara/mockup/ai_consent_bg_drafts/

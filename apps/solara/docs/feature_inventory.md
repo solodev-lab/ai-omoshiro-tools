@@ -470,6 +470,53 @@ Worker 側 `consultationCreditStatus` も `proSyncReconcile` 経由になった�
 7. **iOS Codemagic ビルド**: codemagic.yaml の `submit_to_testflight: true` で TestFlight 自動アップロード
 8. **クローズドテスト 12×14** (オーナーが個人 Play Console アカウントの場合のみ、法人なら不要)
 
+### 0.2.6 AiConsentScreen 6 章構造化 + 背景画像追加 (2026-05-28 セッション後半)
+
+> §0.2.5 で実装した G1 (AiConsentScreen) を、オーナーと審査要件の章立てを照合しながら
+> 6 章構造へ再整理。開発者からのユーザー向け挨拶 (§0「はじめに」) + 4 つの審査目的 (§1-§4) +
+> 同意 UX 運用 (§5) を分離。プライバシーポリシー/利用規約への直リンク追加 + 背景画像
+> (Gemini 3.1 Flash 生成) + 「同意しない」モーダル文言更新 + AAB v+14 ビルド。
+
+#### 章構造の再設計
+
+| § | タイトル | 役割 | 審査要件 |
+|---|---|---|---|
+| §0 | はじめに | 開発者からのユーザー向け挨拶、エビデンスベース設計の宣言、占い師としての関わり | (Apple 4.3(b) Spam 対策の競合差別化) |
+| §1 | 本アプリは娯楽・自己探求を目的としています | 機能列挙 (5 機能) + 専門助言否定 + 将来予測否定 | Apple 4.3(b) Spam + 1.4.1 Medical |
+| §2 | 第三者へのデータ送信について | Apple/Google (デバイス認証) + Gemini AI (占い解釈) + RC (課金) の 3 サービスを並列開示 | Apple 5.1.2(i) |
+| §3 | Gemini AI が生成するコンテンツについて | タロット/Stella/星読み/リロケーション の AI 利用機能を列挙 | Google Gen AI Policy |
+| §4 | 重要な意思決定について | 「参考情報」+ 不正確性警告 + 自己責任 + プライバシー/規約リンク | 占い系特有のリスク回避 |
+| §5 | 同意の取扱いについて | 同意して始める/同意しない 各々の動作、アンインストール案内 | (運用) |
+
+#### コード変更
+
+- `lib/screens/ai_consent_screen.dart` 全面書き換え (191 → 353 行、StatelessWidget 維持):
+  - 6 章構造の `_Section` ヘルパー新設 (旧 `_ParagraphSection` を置換、`footer` Widget 引数追加)
+  - `_LegalLinks` / `_LinkPill` 新設 ([LegalUrls](../lib/utils/legal_urls.dart).privacyPolicy/.termsOfService への外部ブラウザリンク)
+  - `_handleDecline` モーダル文言更新 (Gemini AI 特定削除 → 汎用化、§5 と整合)
+  - 背景画像 `assets/onboarding-bg/ai_consent.webp` を `Stack + Image.asset` で表示、半透明 overlay で文字読みやすさ確保
+- `assets/onboarding-bg/ai_consent.webp` 新規 (288 KB、768×1376、Gemini 3.1 Flash 生成、forging.webp に寄せた歓迎演出)
+- `pubspec.yaml` に `assets/onboarding-bg/` 追加 + version `1.0.0+13` → `1.0.0+14`
+
+#### 背景画像生成
+
+- `mockup/generate_ai_consent_bg.py` 新規 (3 案バッチ生成スクリプト、`generate_backgrounds_mystical.py` パターン流用)
+- `mockup/ai_consent_bg_drafts/` に P1-P3 PNG 3 案保管 (元絵保護ルール、削除しない)
+- 採用: **P1** (大銀河 + 中央光輝核 + 上部太陽月12星座アーチ + 下部金薔薇枠、forging.webp との統一感)
+
+#### AAB v+14 ビルド
+
+- `apps/solara/build/app/outputs/bundle/release/app-release.aab` (111.6 MB、2026-05-28 14:57)
+- versionCode 13 → 14、`build_release.py aab --release-mode` で全 dart-define 自動注入
+- AiConsent 改修 + 背景画像追加 反映
+- シンボル: `build/symbols/aab/1.0.0+14/` (arm/arm64/x64)
+
+#### 検証
+
+- flutter analyze: **No issues found** (23.5s)
+- extract.py 再生成: stamp diff `+0 -0 ~1` (`ai_consent_screen.dart` のみ更新)
+- audit.py 再生成: 行数違反 77 / 重複 20 / TODO 4 / print 1 / 未使用 0。**新規 HARD ゼロ** (`ai_consent_screen.dart` 353 行は WARN 範囲、許容)。
+
 ### 0.3 Horo「今日の占い」1 日 1 回固定 + プロンプト刷新 (2026-05-27)
 
 > **設計の柱**: 「30 回までは OK」のような曖昧な防衛をやめ、「**1 日 1 回・変更しない**」を
