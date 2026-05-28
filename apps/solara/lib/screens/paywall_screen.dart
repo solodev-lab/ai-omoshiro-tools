@@ -1,17 +1,18 @@
-// Solara ペイウォール画面 — Phase 2-6b
+// Solara ペイウォール画面 — Phase 2-6b + Suno 風リデザイン (2026-05-28)
 //
 // 設計:
 //   - launch_checklist Phase 2「ペイウォール UI 🚨 公開ブロッカー B5 (3.1.2 全項目 + 特商法 5 項目必須)」
 //   - project_solara_security_principles 原則 4「公開前必須の法務 3 点セット」
 //   - feedback_i18n_last: 当面 ja-JP のみ。EN 版はストアアップ前最終工程
+//   - project_solara_paywall_suno_redesign: Suno 風 UI (Monthly/Annual トグル / Free・Pro 2 カード / 比較テーブル / FAQ)
 //
-// 必須項目 (B5):
+// 必須項目 (B5、削除厳禁):
 //   ✦ サブスクタイトル ✦ 期間 (月額/年額) ✦ 価格 (税込) ✦ コンテンツ概要
 //   ✦ 自動更新明記 ✦ 解約方法リンク ✦ EULA ✦ プライバシーポリシー
 //   ✦ Free Trial 明記 ✦ 購入を復元
 //
 // 振舞:
-//   - Offerings 取得成功 → 月額 / 年額の 2 カード、タップで購入
+//   - Offerings 取得成功 → Free / Pro 2 カード、Pro 側に CTA、タップで購入
 //   - Offerings 取得失敗 (API キー未設定 / 未配信 / オフライン) → 「ストア準備中」案内
 //   - 購入完了 → entitlement listener が ProStatus 更新 → pop で前画面に戻る
 
@@ -29,6 +30,11 @@ import '../utils/purchases_service.dart';
 import '../utils/solara_auth.dart';
 
 part 'paywall_widgets.dart';
+part 'paywall_comparison.dart';
+part 'paywall_legal_links.dart';
+
+/// 課金サイクル選択トグル用。デフォルトは Annual (SAVE 50% 訴求)。
+enum BillingCycle { monthly, annual }
 
 class PaywallScreen extends StatefulWidget {
   const PaywallScreen({super.key});
@@ -43,6 +49,16 @@ class _PaywallScreenState extends State<PaywallScreen> {
   bool _purchasing = false;
   bool _restoring = false;
   String? _errorMessage;
+
+  /// Monthly/Annual トグル状態。Annual を初期選択にして SAVE 50% を視覚的に訴求。
+  BillingCycle _selectedBilling = BillingCycle.annual;
+
+  /// extension (_PaywallWidgets) から呼ぶための public-ish setter。
+  /// setState は protected なので extension 経由で直接触ると警告が出る。
+  void _setBilling(BillingCycle cycle) {
+    if (_selectedBilling == cycle) return;
+    setState(() => _selectedBilling = cycle);
+  }
 
   @override
   void initState() {
@@ -269,13 +285,15 @@ class _PaywallScreenState extends State<PaywallScreen> {
             children: [
               _buildHero(),
               const SizedBox(height: 24),
-              _buildFeatureList(),
-              const SizedBox(height: 28),
               _buildPlansSection(),
               if (_errorMessage != null) ...[
                 const SizedBox(height: 16),
                 _buildErrorPanel(_errorMessage!),
               ],
+              const SizedBox(height: 32),
+              _buildComparisonTable(),
+              const SizedBox(height: 32),
+              _buildFaqSection(),
               const SizedBox(height: 24),
               _buildAutoRenewNotice(),
               const SizedBox(height: 16),
@@ -290,6 +308,6 @@ class _PaywallScreenState extends State<PaywallScreen> {
     );
   }
 
-  // _buildHero / _buildFeatureList / _buildPlansSection / _buildStoreUnavailable
-  // / _buildPlanCard / _periodLabel / _introPeriodLabel は paywall_widgets.dart (part) へ移動。
+  // _buildHero / _buildPlansSection / トグル / 2 カード / _buildAutoRenewNotice 等 → paywall_widgets.dart
+  // _buildComparisonTable / _buildFaqSection → paywall_comparison.dart
 }

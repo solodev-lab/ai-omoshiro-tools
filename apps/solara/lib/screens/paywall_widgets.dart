@@ -1,19 +1,7 @@
-// Paywall Screen — プラン表示 / 機能リスト / 法的リンク のサブウィジェット
+// Paywall Screen — Hero / 課金トグル / Free・Pro 2 カード (Suno 風 core)
 // (part of 'paywall_screen.dart')
-//
-// 役割:
-//   - Stage 1 ペイウォール画面の表示パーツを分割保管
-//   - 親 (`_PaywallScreenState`) のメソッドとしてアクセス可能 (part-of)
-//
-// 内訳:
-//   - _buildHero                : ゴールドグラデのタイトル + 一文紹介
-//   - _buildFeatureList         : Pro で開く 5 機能の icon + 説明
-//   - _buildPlansSection        : Loading / 配信あり (月額/年額) / 配信無し
-//   - _buildStoreUnavailable    : Offerings 未配信 / 取得失敗時の準備中バナー
-//   - _buildPlanCard            : 単一プラン (年額 / 月額) のカード UI + 購入導線
-//   - _periodLabel / _introPeriodLabel : PackageType / PeriodUnit → 日本語ラベル
-//
-// (Solara は consultation_input_screen.dart と同じ part-of パターンを採用)
+// 比較テーブル + FAQ → paywall_comparison.dart
+// 法務必須項目 (B5) + 補助 (ストア準備中 / エラーパネル / 期間ラベル) → paywall_legal_links.dart
 
 part of 'paywall_screen.dart';
 
@@ -53,72 +41,6 @@ extension _PaywallWidgets on _PaywallScreenState {
     );
   }
 
-  Widget _buildFeatureList() {
-    const features = [
-      (Icons.auto_fix_high_outlined, 'Stella 相談 が常に開く',
-          '悩みから候補地を 3 つ読み解く。Map タップ起点 / 目的起点の両方で。'),
-      (Icons.public_outlined, '星と地を重ねる 4 つの時間軸',
-          'Natal / Transit / Progressed / Solar Arc の地相を切替えて 120 本の線を読む。'),
-      (Icons.home_work_outlined, 'リロケーションが動き出す',
-          '住み替え地点での星模様を Stella が動的に解釈する。'),
-      (Icons.library_books_outlined, '記録庫を自由に使う',
-          '相談履歴 / タロット履歴 / 称号変遷の検索・フィルタ・エクスポート。'),
-      (Icons.access_time, '時刻スライダー 1 分刻み',
-          'LOCATION 枠 10 件、Forecast 期間 5 年など、観測の解像度が上がる。'),
-    ];
-    return Column(
-      children: [
-        for (final f in features) _featureRow(f.$1, f.$2, f.$3),
-      ],
-    );
-  }
-
-  Widget _featureRow(IconData icon, String title, String description) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              color: const Color(0x14F9D976),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: const Color(0x33F9D976)),
-            ),
-            child: Icon(icon, size: 18, color: SolaraColors.solaraGoldLight),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    color: SolaraColors.textPrimary,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  description,
-                  style: const TextStyle(
-                    color: SolaraColors.textSecondary,
-                    fontSize: 12,
-                    height: 1.55,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildPlansSection() {
     if (_loading) {
       return const SizedBox(
@@ -142,226 +64,339 @@ extension _PaywallWidgets on _PaywallScreenState {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        if (annual != null) _buildPlanCard(annual, highlighted: true),
-        if (monthly != null) ...[
-          const SizedBox(height: 12),
-          _buildPlanCard(monthly),
+        if (monthly != null && annual != null) ...[
+          _buildBillingToggle(),
+          const SizedBox(height: 16),
         ],
+        _buildFreeCard(),
+        const SizedBox(height: 12),
+        _buildProCard(annual: annual, monthly: monthly),
       ],
     );
   }
 
-  Widget _buildStoreUnavailable() {
+  Widget _buildBillingToggle() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+      padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: const Color(0x14F9D976),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0x33F9D976)),
+        color: const Color(0x12FFFFFF),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0x22FFFFFF)),
       ),
-      child: Column(
+      child: Row(
         children: [
-          const Icon(Icons.hourglass_top_outlined,
-              color: SolaraColors.solaraGoldLight, size: 24),
-          const SizedBox(height: 8),
-          const Text(
-            'ストアの準備中です',
-            style: TextStyle(
-              color: SolaraColors.textPrimary,
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 6),
-          const Text(
-            '購入手続きは公開後にご利用いただけます。\n少し時間を空けてもう一度お試しください。',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: SolaraColors.textSecondary,
-              fontSize: 12,
-              height: 1.6,
-            ),
-          ),
-          const SizedBox(height: 12),
-          TextButton(
-            onPressed: _loadOfferings,
-            style: TextButton.styleFrom(
-              foregroundColor: SolaraColors.solaraGoldLight,
-            ),
-            child: const Text('もう一度確認する'),
-          ),
+          Expanded(child: _toggleSegment(BillingCycle.monthly, '月額', null)),
+          Expanded(
+              child:
+                  _toggleSegment(BillingCycle.annual, '年額', 'SAVE 50%')),
         ],
       ),
     );
   }
 
-  Widget _buildPlanCard(Package package, {bool highlighted = false}) {
-    final product = package.storeProduct;
-    final isAnnual = package.packageType == PackageType.annual;
-    final periodLabel = _periodLabel(package);
-    final intro = product.introductoryPrice;
-    final hasTrial = intro != null && intro.price == 0;
-
-    return InkWell(
-      onTap: _purchasing ? null : () => _purchase(package),
-      borderRadius: BorderRadius.circular(16),
-      child: Ink(
+  Widget _toggleSegment(BillingCycle cycle, String label, String? badge) {
+    final selected = _selectedBilling == cycle;
+    return GestureDetector(
+      onTap: () => _setBilling(cycle),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.symmetric(vertical: 10),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          gradient: highlighted
+          gradient: selected
               ? const LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [Color(0x33F9D976), Color(0x14F6BD60)],
+                  colors: [
+                    SolaraColors.solaraGoldLight,
+                    SolaraColors.solaraGold,
+                  ],
                 )
               : null,
-          color: highlighted ? null : const Color(0x12FFFFFF),
-          border: Border.all(
-            color: highlighted
-                ? const Color(0x77F9D976)
-                : const Color(0x33FFFFFF),
-            width: highlighted ? 1.4 : 1,
-          ),
+          borderRadius: BorderRadius.circular(9),
         ),
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
         child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Text(
-                        isAnnual ? '年額プラン' : '月額プラン',
-                        style: const TextStyle(
-                          color: SolaraColors.textPrimary,
-                          fontSize: 15,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      if (highlighted) ...[
-                        const SizedBox(width: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: const Color(0x33F9D976),
-                            borderRadius: BorderRadius.circular(6),
-                            border:
-                                Border.all(color: const Color(0x66F9D976)),
-                          ),
-                          child: const Text(
-                            'おすすめ',
-                            style: TextStyle(
-                              color: SolaraColors.solaraGoldLight,
-                              fontSize: 10,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '${product.priceString} / $periodLabel  (税込)',
-                    style: const TextStyle(
-                      color: SolaraColors.textSecondary,
-                      fontSize: 13,
-                    ),
-                  ),
-                  if (hasTrial) ...[
-                    const SizedBox(height: 4),
-                    Text(
-                      '無料トライアル ${_introPeriodLabel(intro)} → 終了後に自動課金',
-                      style: const TextStyle(
-                        color: SolaraColors.energyHardLight,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ],
+            Text(
+              label,
+              style: TextStyle(
+                color: selected
+                    ? SolaraColors.celestialBlueDark
+                    : SolaraColors.textPrimary,
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
               ),
             ),
-            if (_purchasing)
-              const SizedBox(
-                width: 22,
-                height: 22,
-                child: CircularProgressIndicator(
-                  color: SolaraColors.solaraGoldLight,
-                  strokeWidth: 2,
+            if (badge != null) ...[
+              const SizedBox(width: 6),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: selected
+                      ? SolaraColors.celestialBlueDark
+                      : const Color(0x33F9D976),
+                  borderRadius: BorderRadius.circular(4),
                 ),
-              )
-            else
-              const Icon(
-                Icons.chevron_right,
-                color: SolaraColors.solaraGoldLight,
-                size: 22,
+                child: Text(
+                  badge,
+                  style: TextStyle(
+                    color: selected
+                        ? SolaraColors.solaraGoldLight
+                        : SolaraColors.solaraGoldLight,
+                    fontSize: 9,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.3,
+                  ),
+                ),
               ),
+            ],
           ],
         ),
       ),
     );
   }
 
-  String _periodLabel(Package package) {
-    switch (package.packageType) {
-      case PackageType.annual:
-        return '年';
-      case PackageType.sixMonth:
-        return '6 か月';
-      case PackageType.threeMonth:
-        return '3 か月';
-      case PackageType.twoMonth:
-        return '2 か月';
-      case PackageType.monthly:
-        return '月';
-      case PackageType.weekly:
-        return '週';
-      case PackageType.lifetime:
-        return '買い切り';
-      default:
-        return '期間';
-    }
-  }
-
-  String _introPeriodLabel(IntroductoryPrice intro) {
-    final n = intro.periodNumberOfUnits;
-    switch (intro.periodUnit) {
-      case PeriodUnit.day:
-        return '$n 日間';
-      case PeriodUnit.week:
-        return '$n 週間';
-      case PeriodUnit.month:
-        return '$n か月';
-      case PeriodUnit.year:
-        return '$n 年';
-      case PeriodUnit.unknown:
-        return '$n';
-    }
-  }
-
-  Widget _buildErrorPanel(String message) {
+  Widget _buildFreeCard() {
+    final isFreeUser = !ProStatus.instance.isPro;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      padding: const EdgeInsets.fromLTRB(18, 16, 18, 18),
       decoration: BoxDecoration(
-        color: const Color(0x14D6915C),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: const Color(0x44D6915C)),
+        color: const Color(0x10FFFFFF),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0x33FFFFFF)),
       ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Text(
+                'Free',
+                style: TextStyle(
+                  color: SolaraColors.textPrimary,
+                  fontSize: 17,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const Spacer(),
+              if (isFreeUser) _cardBadge('現在のプラン', muted: true),
+            ],
+          ),
+          const SizedBox(height: 4),
+          const Text(
+            '¥0  /  ずっと',
+            style: TextStyle(
+              color: SolaraColors.textSecondary,
+              fontSize: 13,
+            ),
+          ),
+          const SizedBox(height: 14),
+          _planBullet('Stella 相談  週 3 回 (月曜リセット)'),
+          _planBullet('タロット解釈  1 日 1 回'),
+          _planBullet('星読み  「全体」カテゴリのみ'),
+          _planBullet('アスペクトライン  40 本'),
+          _planBullet('アストロカートグラフィー  部分機能'),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProCard({Package? annual, Package? monthly}) {
+    final isPro = ProStatus.instance.isPro;
+    final wantAnnual = _selectedBilling == BillingCycle.annual;
+    // Annual を選択していて annual が存在すればそれ、それ以外は monthly fallback。
+    final selectedPackage =
+        (wantAnnual ? annual : monthly) ?? annual ?? monthly;
+    final isAnnual = selectedPackage?.packageType == PackageType.annual;
+
+    final product = selectedPackage?.storeProduct;
+    final priceLine = product == null
+        ? '価格を取得中…'
+        : '${product.priceString} / ${_periodLabel(selectedPackage!)}  (税込)';
+
+    final intro = product?.introductoryPrice;
+    final hasTrial = intro != null && intro.price == 0;
+
+    // 年額時の月換算ヒント (¥9,000 / 12 ≈ ¥750 のような構造を product から自前で算出)。
+    String? monthlyEquivalent;
+    if (isAnnual && product != null) {
+      final perMonth = product.price / 12;
+      // 通貨記号は priceString に倣う: ¥ 始まり / 末尾 currency の両方を考慮しないので
+      // 簡易に「¥{価格}」形式で出す (ja-JP 想定。i18n 解禁時に再考)。
+      final yen = perMonth.round();
+      monthlyEquivalent = '月あたり ¥$yen 相当';
+    }
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(18, 16, 18, 18),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0x33F9D976), Color(0x14F6BD60)],
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0x99F9D976), width: 1.4),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Text(
+                'Cosmic Pro',
+                style: TextStyle(
+                  color: SolaraColors.solaraGoldLight,
+                  fontSize: 17,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 0.3,
+                ),
+              ),
+              const Spacer(),
+              _cardBadge(isPro ? 'ご加入中' : '人気'),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            priceLine,
+            style: const TextStyle(
+              color: SolaraColors.textPrimary,
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          if (monthlyEquivalent != null) ...[
+            const SizedBox(height: 2),
+            Text(
+              monthlyEquivalent,
+              style: const TextStyle(
+                color: SolaraColors.textSecondary,
+                fontSize: 11,
+              ),
+            ),
+          ],
+          if (hasTrial) ...[
+            const SizedBox(height: 6),
+            Text(
+              '🎁 ${_introPeriodLabel(intro)}の無料トライアル → 終了後に自動課金',
+              style: const TextStyle(
+                color: SolaraColors.energyHardLight,
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+          const SizedBox(height: 14),
+          _planBullet('Stella 相談  週 100 回 (月曜リセット)'),
+          _planBullet('タロット  クレジット消費なし + テキスト入力欄'),
+          _planBullet('星読み  全 5 カテゴリ (全体・恋愛・豊かさ・仕事・対話)'),
+          _planBullet('アスペクトライン  全 120 本'),
+          _planBullet('アストロカートグラフィー  全機能'),
+          _planBullet('占い結果の永続的な記録と検索'),
+          const SizedBox(height: 16),
+          _buildProCta(selectedPackage, isPro: isPro),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProCta(Package? package, {required bool isPro}) {
+    if (isPro) {
+      // 加入中 → 定期購入管理 (解約方法と同じ deep link を再利用)
+      return SizedBox(
+        width: double.infinity,
+        height: 46,
+        child: OutlinedButton.icon(
+          onPressed: _openCancelGuide,
+          icon: const Icon(Icons.settings_outlined, size: 16),
+          label: const Text('定期購入を管理'),
+          style: OutlinedButton.styleFrom(
+            foregroundColor: SolaraColors.solaraGoldLight,
+            side: const BorderSide(color: Color(0x77F9D976)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+        ),
+      );
+    }
+    if (package == null) {
+      return const SizedBox.shrink();
+    }
+    return SizedBox(
+      width: double.infinity,
+      height: 46,
+      child: FilledButton(
+        onPressed: _purchasing ? null : () => _purchase(package),
+        style: FilledButton.styleFrom(
+          backgroundColor: SolaraColors.solaraGoldLight,
+          foregroundColor: SolaraColors.celestialBlueDark,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+          textStyle: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 0.4,
+          ),
+        ),
+        child: _purchasing
+            ? const SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  color: SolaraColors.celestialBlueDark,
+                  strokeWidth: 2,
+                ),
+              )
+            : Text(package.packageType == PackageType.annual
+                ? '年額プランを始める'
+                : '月額プランを始める'),
+      ),
+    );
+  }
+
+  Widget _cardBadge(String text, {bool muted = false}) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: muted ? const Color(0x22FFFFFF) : const Color(0x33F9D976),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(
+          color: muted ? const Color(0x44FFFFFF) : const Color(0x66F9D976),
+        ),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(
+          color: muted
+              ? SolaraColors.textSecondary
+              : SolaraColors.solaraGoldLight,
+          fontSize: 10,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 0.3,
+        ),
+      ),
+    );
+  }
+
+  Widget _planBullet(String label) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 3),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.info_outline,
-              color: SolaraColors.energyHardLight, size: 18),
-          const SizedBox(width: 8),
+          const Padding(
+            padding: EdgeInsets.only(top: 2, right: 8),
+            child: Icon(Icons.check_circle_outline,
+                size: 14, color: SolaraColors.solaraGoldLight),
+          ),
           Expanded(
             child: Text(
-              message,
+              label,
               style: const TextStyle(
-                color: SolaraColors.energyHardLight,
+                color: SolaraColors.textPrimary,
                 fontSize: 12,
                 height: 1.55,
               ),
@@ -372,80 +407,7 @@ extension _PaywallWidgets on _PaywallScreenState {
     );
   }
 
-  Widget _buildAutoRenewNotice() {
-    // Apple App Store Review Guideline 3.1.2(a) で必須となる「auto-renewable subscription」の
-    // 必須開示 3 項目を含む文言:
-    //   1. 「期間終了の 24 時間以上前に自動更新を解約しない限り更新される」
-    //   2. 「料金は期間終了の 24 時間以内に Apple ID / Google アカウントへ請求される」
-    //   3. 「自動更新の管理 / 解約はストアのアカウント設定から可能」
-    // 並びに Guideline 3.1.1 で禁止される「払い戻し不可」「all sales are final」等の文言は
-    // 含めない (Apple は払い戻し判断を保有するため、誤解を招く表現は審査リジェクト対象)。
-    return const Padding(
-      padding: EdgeInsets.symmetric(horizontal: 4),
-      child: Text(
-        'サブスクリプションは自動更新されます。期間終了の 24 時間以上前に自動更新を解約'
-        'しない限り、同じ価格で次の期間に更新されます。料金は期間終了の 24 時間以内に '
-        'Apple ID / Google アカウントへ請求されます。自動更新の管理や解約は、ご利用ストア'
-        'のアカウント設定からいつでも行えます。',
-        style: TextStyle(
-          color: SolaraColors.textSecondary,
-          fontSize: 11,
-          height: 1.7,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildLegalLinks() {
-    return Wrap(
-      spacing: 14,
-      runSpacing: 8,
-      alignment: WrapAlignment.center,
-      children: [
-        _legalLink('解約方法', _openCancelGuide),
-        _legalLink('利用規約', () => _openUrl(LegalUrls.termsOfService)),
-        _legalLink(
-            'プライバシーポリシー', () => _openUrl(LegalUrls.privacyPolicy)),
-        _legalLink('特定商取引法に基づく表記',
-            () => _openUrl(LegalUrls.specifiedCommercialTransactions)),
-      ],
-    );
-  }
-
-  Widget _legalLink(String label, VoidCallback onTap) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Text(
-        label,
-        style: const TextStyle(
-          color: SolaraColors.solaraGoldLight,
-          fontSize: 11,
-          decoration: TextDecoration.underline,
-          decorationColor: SolaraColors.solaraGoldLight,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildRestoreButton() {
-    return Center(
-      child: TextButton.icon(
-        onPressed: _restoring ? null : _restore,
-        icon: _restoring
-            ? const SizedBox(
-                width: 14,
-                height: 14,
-                child: CircularProgressIndicator(
-                  color: SolaraColors.textSecondary,
-                  strokeWidth: 2,
-                ),
-              )
-            : const Icon(Icons.restore, size: 16),
-        label: const Text('購入を復元'),
-        style: TextButton.styleFrom(
-          foregroundColor: SolaraColors.textSecondary,
-        ),
-      ),
-    );
-  }
+  // _buildStoreUnavailable / _buildErrorPanel / _periodLabel / _introPeriodLabel
+  // と 法務必須項目 (_buildAutoRenewNotice / _buildLegalLinks / _buildRestoreButton)
+  // は paywall_legal_links.dart (part) に分離。
 }
