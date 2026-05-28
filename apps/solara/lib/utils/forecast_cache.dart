@@ -192,7 +192,19 @@ String profileHashOf(SolaraProfile p) {
   return '${p.birthDate}|${p.birthTime}|${p.birthLat.toStringAsFixed(4)}|${p.birthLng.toStringAsFixed(4)}|${p.birthTz}|${p.birthTzName ?? ''}';
 }
 
-/// クールダウン判定（同一プロフィールで 6時間以内の再取得は禁止）
+/// クールダウン定数（旧設計の名残、現在は未使用）。
+///
+/// 経緯:
+///   - v1: 今日起点ローリング 1 年 → 日付が進むと結果が変わるので 6h cooldown 必須
+///   - v2 (現行): 暦年(1/1〜12/31)ベース → (profileHash + yearOffset) で決定論的、
+///     再 fetch する意味なし
+///   - 2026-05-29: fetchFull() の cooldown 判定を撤廃して **永久キャッシュ** 化
+///     (CF Workers /public/astro/forecast の CPU 上限超過 503 対策、ログ実観測)
+///
+/// cooldownRemaining() / _markFetched() / _coolKey() は将来 force=true の
+/// 連打抑制等で復活させる余地のため残置。現在は実質 dead code だが、SharedPreferences
+/// に書く側 (_markFetched) は fetchFull が呼んでおり、読む側 (cooldownRemaining) は
+/// 外部参照ゼロ。
 const _cooldownHours = 6;
 
 class ForecastRepo {
@@ -337,12 +349,14 @@ class ForecastRepo {
     int yearOffset = 0,
   }) async {
     final hash = profileHashOf(profile);
+    // 永久キャッシュ (2026-05-29): forecast は (profileHash + yearOffset) で
+    // 決定論的に同じ結果になるため、キャッシュがあれば常に返す。
+    //   - 出生情報を更新すると profileHash が変わるので、自然に新規 fetch される
+    //   - 強制リフレッシュ (force=true) のみ再 fetch を許可
+    //   - これによりサーバ /public/astro/forecast の CPU 上限超過リスク (503) も実質ゼロ
     if (!force) {
-      final rem = await cooldownRemaining(hash, yearOffset: yearOffset);
-      if (rem > Duration.zero) {
-        final cached = await loadCached(hash, yearOffset: yearOffset);
-        if (cached != null) return cached;
-      }
+      final cached = await loadCached(hash, yearOffset: yearOffset);
+      if (cached != null) return cached;
     }
     // 暦年ベース: startDate 未指定なら (今年 + yearOffset) の 1/1 から、その年の日数分。
     if (startDate == null) {

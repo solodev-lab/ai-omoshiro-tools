@@ -269,6 +269,18 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   /// Case C で空になったタイルを救済する。dispose でキャンセル。
   Timer? _settleResetTimer;
 
+  /// Chart fetch debounce (2026-05-29 追加)。
+  ///
+  /// ◀▶ 1 日ステッパ / Forecast→Map 日付ジャンプ等で連続的に
+  /// `_loadProfileAndChart(targetDate: ...)` が呼ばれると、各タップごとに
+  /// CF Worker `/public/astro/chart` を叩いていた (2026-05-28 CF Logs で
+  /// 13 fetch / 3.84 秒の実例観測)。最後の操作だけサーバに反映するよう
+  /// `_scheduleLoadChart()` 経由で 250ms debounce。
+  ///
+  /// 即時実行が必要な経路 (initState / public reloadProfile) は
+  /// 直接 `_loadProfileAndChart()` を呼んで debounce を回避する。
+  Timer? _chartFetchDebounce;
+
   // Dominant fortune overlay
   DominantFortuneKind? _topCategory;
   DominantFortuneKind? _activeOverlay;
@@ -372,6 +384,7 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   void dispose() {
     _tileErrorDebounce?.cancel();
     _settleResetTimer?.cancel();
+    _chartFetchDebounce?.cancel();
     _tileResetCtrl.close();
     super.dispose();
   }
@@ -478,6 +491,23 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   /// Sanctuary でプロフィール登録/編集後に Map に戻ったとき、
   /// `_noProfile` フラグを更新して占い系オーバーレイを再表示するために使う。
   Future<void> reloadProfile() => _loadProfileAndChart();
+
+  /// 連続操作 (◀▶ ステッパ連打 / Forecast→Map 連続ジャンプ) を 250ms debounce
+  /// してから `_loadProfileAndChart` を呼ぶ。最後の操作だけ CF Worker に
+  /// 反映する。新しい呼出が来るたびに前の Timer をキャンセル → 再起動。
+  ///
+  /// 体感遅延 250ms。Step 1 タップだけの単発操作も 250ms 遅延するが、
+  /// 「ボタン押下 → 反応」の自然な遅延として許容範囲。
+  ///
+  /// この経路を通さない (= 即時実行する) 箇所:
+  ///   - initState (初回起動時)
+  ///   - reloadProfile (外部からのプロフィール更新リロード)
+  void _scheduleLoadChart({DateTime? targetDate}) {
+    _chartFetchDebounce?.cancel();
+    _chartFetchDebounce = Timer(const Duration(milliseconds: 250), () {
+      _loadProfileAndChart(targetDate: targetDate);
+    });
+  }
 
   /// 出生地ロード時の初期カメラ移動を MapController が確実に attach されている
   /// タイミングで実行する。onMapReady 未到達なら _pendingInitialMove に積み、
@@ -2030,9 +2060,11 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                 date: _selectedDate,
                 onExpandedChanged: (e) =>
                     setState(() => _timeRowExpanded = e),
-                onCommit: (d) async {
+                onCommit: (d) {
+                  // ステッパ ◀▶ 連打や時刻スライダーの連続 commit を
+                  // _scheduleLoadChart の 250ms debounce で 1 fetch に集約。
                   setState(() => _selectedDate = d);
-                  await _loadProfileAndChart(targetDate: d);
+                  _scheduleLoadChart(targetDate: d);
                 },
               ),
             ],
@@ -2338,11 +2370,13 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
             // Map に飛ばす。MapTimeSlider 側は実分表示 → step 操作で
             // 10 分 grid に合流するように変更済み。
             onJumpToTime: (time) {
+              // Forecast/DailyTransit からの日付ジャンプ。連続ジャンプも
+              // _scheduleLoadChart の debounce で集約。
               setState(() {
                 _selectedDate = time;
                 _dailyTransitOpen = false;
               });
-              _loadProfileAndChart(targetDate: time);
+              _scheduleLoadChart(targetDate: time);
             },
           ),
         ),

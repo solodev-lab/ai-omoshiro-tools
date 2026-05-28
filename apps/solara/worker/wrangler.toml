@@ -4,6 +4,16 @@ compatibility_date = "2024-12-01"
 # nodejs_compat: App Attest 検証で node:crypto (createHash/createVerify) が必要
 compatibility_flags = ["nodejs_compat"]
 
+# ── CPU time 上限 (2026-05-29 追加) ──────────────────────────────
+# Workers のデフォルト CPU time per invocation は 1000ms (≒1 秒) で、
+# /public/astro/forecast (出生情報を元に 365 日分の transit×natal アスペクトを
+# 計算) が 初回 fetch で 1000ms を踏み越えるケースを実観測 (2026-05-28 ログ、
+# 503 exceededCpu、cpu=1017ms)。Workers Standard プランの最大 30,000ms に
+# 引き上げ (追加課金なし、超過分は invocation 単位の従量、Forecast 永久キャッシュ
+# 併用でほぼ初回 1 回しか走らない)。
+[limits]
+cpu_ms = 30000
+
 # カスタムドメイン (solodev-lab.com は Cloudflare で DNS 管理中)
 # custom_domain = true で Cloudflare が DNS + SSL を全自動発行
 routes = [
