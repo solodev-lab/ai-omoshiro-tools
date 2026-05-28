@@ -135,6 +135,52 @@ class _HistoryCard extends StatelessWidget {
     return idx > 0 ? label.substring(0, idx) : label;
   }
 
+  /// 2026-05-29: 「いつ」を相談したかの compact ラベル (日付/期間/ホライズン)。
+  /// - kind='date'         → '2026/05/30'
+  /// - kind='range'        → '5/30〜6/2'
+  /// - kind=horizon (4 種) → '1年以内' 等
+  /// - kind=null かつ mode='daily'     → '今日'
+  /// - kind=null かつ mode='migration' → '未定'
+  /// - kind=null かつ mode='travel'    → null (旧データで欠落 = 不明)
+  String? get _whenLabel {
+    final k = record.whenKind;
+    if (k == null) {
+      switch (record.mode) {
+        case 'daily':
+          return '今日';
+        case 'migration':
+          return '未定';
+        default:
+          return null;
+      }
+    }
+    if (k == 'date') {
+      final d = record.whenDate;
+      if (d == null || d.length < 10) return null;
+      // YYYY-MM-DD → YYYY/MM/DD
+      return '${d.substring(0, 4)}/${d.substring(5, 7)}/${d.substring(8, 10)}';
+    }
+    if (k == 'range') {
+      String? fmt(String? raw) {
+        if (raw == null || raw.length < 10) return null;
+        // YYYY-MM-DD → M/D (年は省略、同年内が大半なので)
+        final mm = int.tryParse(raw.substring(5, 7));
+        final dd = int.tryParse(raw.substring(8, 10));
+        if (mm == null || dd == null) return null;
+        return '$mm/$dd';
+      }
+      final s = fmt(record.whenStart);
+      final e = fmt(record.whenEnd);
+      if (s == null && e == null) return null;
+      return '${s ?? '?'}〜${e ?? '?'}';
+    }
+    return _horizonLabel[k];
+  }
+
+  /// 時間帯ラベル (おでかけのみ・任意指定時)。指定なしなら null。
+  String? get _timeBandLabelOrNull =>
+      record.whenTimeBand == null ? null : _timeBandLabel[record.whenTimeBand!];
+
   /// モード (移住/旅行/おでかけ) → アイコン (履歴画面のみ)。
   IconData get _modeIcon {
     switch (record.mode) {
@@ -264,7 +310,8 @@ class _HistoryCard extends StatelessWidget {
                 scrollDirection: Axis.horizontal,
                 child: Row(
                   children: [
-                    _MetaChip(label: _themePrefix),
+                    // 2026-05-29: テーマチップを Map と同じカテゴリ色で着色。
+                    _MetaChip(label: _themePrefix, color: _themeColor(record.theme)),
                     const SizedBox(width: 14),
                     Tooltip(
                       message: modeJp,
@@ -298,6 +345,53 @@ class _HistoryCard extends StatelessWidget {
                 ),
               ),
             ),
+            // 2026-05-29: Row 3 — 相談対象の「いつ」(日付/期間/ホライズン + 時間帯)。
+            // _whenLabel / _timeBandLabelOrNull のどちらかが non-null のときだけ表示。
+            // 旧データで欠落 (whenKind == null かつ mode が daily/migration でない)
+            // の場合は丸ごと skip して空行を作らない。
+            if (_whenLabel != null || _timeBandLabelOrNull != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 4, right: 6),
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.event_outlined,
+                        size: 16,
+                        color: SolaraColors.textSecondary.withValues(alpha: 0.7),
+                      ),
+                      const SizedBox(width: 5),
+                      if (_whenLabel != null)
+                        Text(
+                          _whenLabel!,
+                          style: const TextStyle(
+                            color: SolaraColors.textSecondary,
+                            fontSize: 12,
+                            letterSpacing: 0.3,
+                          ),
+                        ),
+                      if (_timeBandLabelOrNull != null) ...[
+                        const SizedBox(width: 10),
+                        Icon(
+                          Icons.schedule_outlined,
+                          size: 16,
+                          color: SolaraColors.textSecondary.withValues(alpha: 0.7),
+                        ),
+                        const SizedBox(width: 5),
+                        Text(
+                          _timeBandLabelOrNull!,
+                          style: const TextStyle(
+                            color: SolaraColors.textSecondary,
+                            fontSize: 12,
+                            letterSpacing: 0.3,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
             const SizedBox(height: 8),
             Padding(
               padding: const EdgeInsets.only(right: 10),
@@ -365,21 +459,26 @@ class _HistoryCard extends StatelessWidget {
 
 class _MetaChip extends StatelessWidget {
   final String label;
-  const _MetaChip({required this.label});
+  /// 2026-05-29: テーマカテゴリ別の色。Map 画面の `categoryColors` と同期。
+  /// 未指定 (null) なら旧来の Solara ゴールド (後方互換)。
+  final Color? color;
+  const _MetaChip({required this.label, this.color});
 
   @override
   Widget build(BuildContext context) {
+    final c = color ?? SolaraColors.solaraGoldLight;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        color: const Color(0x22F6BD60),
+        // 旧 hardcode (bg 0x22, border 0x44) と同じ alpha 比率を維持。
+        color: c.withValues(alpha: 0x22 / 255),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: const Color(0x44F6BD60)),
+        border: Border.all(color: c.withValues(alpha: 0x66 / 255)),
       ),
       child: Text(
         label,
-        style: const TextStyle(
-          color: SolaraColors.solaraGoldLight,
+        style: TextStyle(
+          color: c,
           fontSize: 10,
           letterSpacing: 0.3,
         ),

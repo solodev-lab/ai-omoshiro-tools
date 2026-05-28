@@ -248,7 +248,8 @@ class _ConsultationResultScreenState extends State<ConsultationResultScreen> {
     final (label, desc) = switch (_block) {
       ConsultationBlock.proOnlyMode => (
           '移住・旅行の相談',
-          'おでかけ以外の相談も、Cosmic Pro なら無制限に。',
+          // 2026-05-29: タイル表記 (おでかけ・イベント) に合わせて文言統一。
+          'おでかけ・イベント以外の相談も、Cosmic Pro なら無制限に。',
         ),
       ConsultationBlock.proOnlyRefresh => (
           '候補の出し直し',
@@ -290,6 +291,9 @@ class _ConsultationResultScreenState extends State<ConsultationResultScreen> {
         mode: req.mode,
         scopeKind: req.scope?.kind ?? 'world',
         scopeDetail: widget.scopeDetail,
+        // 2026-05-29: 履歴一覧に「いつ」(日付・期間・ホライズン・時間帯) を表示
+        // できるよう ConsultationWhen を丸ごと保存する。
+        when: req.when,
         withWhom: req.withWhom,
         wish: req.wish,
         readings: _readings,

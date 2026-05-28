@@ -328,7 +328,7 @@ class _CatasterismOverlayState extends State<CatasterismOverlay>
                   const SizedBox(height: 16),
                   TextButton(
                     onPressed: () async {
-                      await SolaraStorage.markOverlayShown('catasterism');
+                      await SolaraStorage.markLocalOverlayShown('catasterism');
                       widget.onDismiss();
                     },
                     child: const Text(
@@ -433,7 +433,7 @@ class _CatasterismOverlayState extends State<CatasterismOverlay>
           CatasterismResult(assessedAt: DateTime.now(), released: released),
     );
     await SolaraStorage.saveIntention(updated);
-    await SolaraStorage.markOverlayShown('catasterism');
+    await SolaraStorage.markLocalOverlayShown('catasterism');
     // onResult があればそちらを呼ぶ (formation animation遷移用)。なければ単純dismiss。
     if (widget.onResult != null) {
       widget.onResult!(released);

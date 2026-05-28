@@ -28,10 +28,12 @@ const _themeLabel = <String, String>{
   'newStart': '変化・新たな出発',
 };
 
+// 2026-05-29: 入力タイル ('おでかけ\nイベント') + 履歴 ('おでかけ・イベント') と
+// 用語統一。共有テキスト (X/メール等) でも「おでかけ・イベント」と表記する。
 const _modeLabel = <String, String>{
   'migration': '移住',
   'travel': '旅行',
-  'daily': 'おでかけ',
+  'daily': 'おでかけ・イベント',
 };
 
 const _scopeLabel = <String, String>{

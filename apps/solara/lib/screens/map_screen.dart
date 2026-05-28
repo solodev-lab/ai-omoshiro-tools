@@ -292,6 +292,22 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   bool _dailyBadgeUnseen = false;
   bool _dailyTransitOpen = false;
 
+  /// 2026-05-29: Daily チップ + popup Header 表示用の「今日固定 TOP カテゴリ」。
+  /// _topCategory は MapTimeSlider/Forecast ジャンプの targetDate に追従して動くため、
+  /// 「今日の総括」を 1 日固定で示したい Daily 系 UI とは別系統で管理する。
+  /// 端末 0 時起点 24h を 6 点 (00/04/08/12/16/20 時、ローカル) で chart fetch し、
+  /// fScores を点ごとに加算 → 16 方位合計で argmax。
+  /// `_dailyChipDateKey` (端末日付 YYYY-MM-DD) と一致しない日付になったら再計算。
+  DominantFortuneKind? _dailyChipCategory;
+  String? _dailyChipDateKey;
+  bool _computingDailyChip = false;
+
+  /// 2026-05-29: popup 初回表示時の Header 1.5s halo 用フラグ。
+  /// アニメ演出経由 (= `_onOverlayComplete`) で popup が開いた時のみ true、
+  /// その日「タップで Daily チップを開いた最初の 1 回」だけ Header が金色発光。
+  /// 演出完了後 (1.5s) は false に戻す。
+  bool _dailyHeaderGlowOnce = false;
+
   // Search results
   List<SearchHit> _searchHits = [];
   SearchHit? _searchFocus; // 選択済み1件（ピン表示用）
@@ -463,17 +479,92 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     if (_debugAlwaysShowOverlay) {
       unseen = true;
     } else {
-      if (_topCategory == null ||
-          !_implementedOverlayKinds.contains(_topCategory)) {
+      // 2026-05-29: 「今日固定」カテゴリを優先 (起動直後で未算出なら _topCategory)。
+      final effectiveCategory = _dailyChipCategory ?? _topCategory;
+      if (effectiveCategory == null ||
+          !_implementedOverlayKinds.contains(effectiveCategory)) {
         // トップカテゴリ未算出 or アニメ未実装カテゴリ: 光らない（プロフィール無等）
         unseen = false;
       } else {
-        final shown = await SolaraStorage.wasOverlayShownToday(_overlayStorageKey);
+        final shown = await SolaraStorage.wasLocalOverlayShownToday(_overlayStorageKey);
         unseen = !shown;
       }
     }
     if (!mounted) return;
     setState(() => _dailyBadgeUnseen = unseen);
+  }
+
+  /// 2026-05-29: Daily チップ + popup Header 用の「今日固定 TOP カテゴリ」を計算する。
+  ///
+  /// 端末ローカル 00/04/08/12/16/20 時の 6 点で chart を fetch し、
+  /// 各点で scoreAll → fScores のカテゴリ別 16 方位合計を加算 → argmax。
+  /// 1 日 1 回のみ走り、`_dailyChipDateKey` (端末日付 YYYY-MM-DD) が変わるまで
+  /// キャッシュする。1 点でも fetch 成功すれば結果を採用、全 6 点失敗時のみ null。
+  ///
+  /// 既存の `_topCategory` (時刻スライダー連動) とは独立。`_loadProfileAndChart`
+  /// が走るたびに `_topCategory` は再計算されるが、`_dailyChipCategory` は
+  /// 端末日付ベースで凍結される (本日 → 翌日になるまで不変)。
+  Future<void> _recomputeDailyChipCategoryIfNeeded() async {
+    if (_computingDailyChip) return;
+    final todayKey = SolaraStorage.localDateKey();
+    if (_dailyChipDateKey == todayKey && _dailyChipCategory != null) return;
+    final p = _profile;
+    if (p == null || !p.isComplete) return;
+
+    _computingDailyChip = true;
+    try {
+      final now = DateTime.now();
+      final base = DateTime(now.year, now.month, now.day); // 端末ローカル 00:00
+      const sampleHours = [0, 4, 8, 12, 16, 20];
+      final useRelocate = !(p.homeLat == 0 && p.homeLng == 0);
+      final relocateLat = useRelocate ? p.homeLat : null;
+      final relocateLng = useRelocate ? p.homeLng : null;
+
+      // カテゴリ別の 16 方位合計を 6 点ぶん加算する。
+      final accum = <String, double>{};
+      int successCount = 0;
+      for (final hour in sampleHours) {
+        final sampleAt = base.add(Duration(hours: hour));
+        final chart = await fetchChart(
+          birthDate: p.birthDate,
+          birthTime: p.birthTime,
+          birthLat: p.birthLat,
+          birthLng: p.birthLng,
+          birthTz: p.birthTz,
+          birthTzName: p.birthTzName,
+          targetDate: sampleAt,
+          relocateLat: relocateLat,
+          relocateLng: relocateLng,
+        );
+        if (chart == null) continue;
+        successCount++;
+        final score = scoreAll(chart);
+        for (final entry in score.fScores.entries) {
+          final sum = entry.value.values.fold<double>(0, (a, b) => a + b);
+          accum[entry.key] = (accum[entry.key] ?? 0) + sum;
+        }
+      }
+
+      if (successCount == 0 || accum.isEmpty) return; // 全失敗 → 既存値維持
+
+      String? topKey;
+      double topSum = -1;
+      for (final entry in accum.entries) {
+        if (entry.value > topSum) {
+          topSum = entry.value;
+          topKey = entry.key;
+        }
+      }
+      if (!mounted) return;
+      setState(() {
+        _dailyChipCategory = topKey != null ? kindFromKey(topKey) : null;
+        _dailyChipDateKey = todayKey;
+      });
+      // 確定したので Daily Transit Badge (halo 発光) の状態を再評価。
+      await _checkDailyBadgeState();
+    } finally {
+      _computingDailyChip = false;
+    }
   }
 
   Future<void> _loadMapStyle() async {
@@ -684,6 +775,9 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
       _kickPaintInvalidation();
       // トップカテゴリが確定したので Daily Transit Badge の状態を再評価
       await _checkDailyBadgeState();
+      // 2026-05-29: Daily チップ用の「今日固定 TOP」を 1 日 1 回 6 点平均で算出。
+      // 端末日付が変わっていなければキャッシュ参照で即 return。fire-and-forget。
+      unawaited(_recomputeDailyChipCategoryIfNeeded());
       // 検索結果が残っていれば、新しい日付のスコアで再注入
       _reannotateSearchResults();
     } else {
@@ -879,7 +973,9 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
       kind = _debugCycleOrder[_debugCycleIdx];
       _debugCycleIdx = (_debugCycleIdx + 1) % _debugCycleOrder.length;
     } else {
-      kind = _topCategory;
+      // 2026-05-29: アニメ演出のカテゴリも「今日固定」を使う。
+      // 起動直後で未算出のときは _topCategory にフォールバック。
+      kind = _dailyChipCategory ?? _topCategory;
       if (_debugAlwaysShowOverlay && (kind == null || !_implementedOverlayKinds.contains(kind))) {
         kind = DominantFortuneKind.love;
       }
@@ -898,7 +994,7 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     if (!mounted) return;
 
     // 同日2回目以降: アニメ skip して F1-c へ直接
-    final shown = await SolaraStorage.wasOverlayShownToday(_overlayStorageKey);
+    final shown = await SolaraStorage.wasLocalOverlayShownToday(_overlayStorageKey);
     if (shown && !_debugAlwaysShowOverlay) {
       setState(() => _dailyTransitOpen = true);
       return;
@@ -910,7 +1006,7 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
       _dailyBadgeUnseen = false;
     });
     if (!_debugAlwaysShowOverlay) {
-      await SolaraStorage.markOverlayShown(_overlayStorageKey);
+      await SolaraStorage.markLocalOverlayShown(_overlayStorageKey);
     }
   }
 
@@ -922,7 +1018,19 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     // 余韻 0.5 秒
     await Future<void>.delayed(const Duration(milliseconds: 500));
     if (!mounted) return;
-    setState(() => _dailyTransitOpen = true);
+    // 2026-05-29: popup Header の初回 1.5s 金色 halo フラグ。
+    // 端末日付ベースで 1 日 1 回のみ発光 (`daily_header_glow_seen`)。
+    // 既に今日見ていれば glow なし、未閲覧なら glow ON + 即マーキング。
+    final glowSeen = await SolaraStorage.wasLocalOverlayShownToday('daily_header_glow');
+    final shouldGlow = !glowSeen;
+    if (shouldGlow) {
+      await SolaraStorage.markLocalOverlayShown('daily_header_glow');
+    }
+    if (!mounted) return;
+    setState(() {
+      _dailyTransitOpen = true;
+      _dailyHeaderGlowOnce = shouldGlow;
+    });
   }
 
   /// F1-c フル UI を閉じる。バッジは閲覧済み状態（光らない）に。
@@ -931,6 +1039,8 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     setState(() {
       _dailyTransitOpen = false;
       _dailyBadgeUnseen = false;
+      // 次回開いた時に Stack の旧 widget が glow 再生し始めないようリセット。
+      _dailyHeaderGlowOnce = false;
     });
   }
 
@@ -2199,7 +2309,10 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
           bottom: 0, left: 0, right: 0,
           child: MapMenuChips(
             dailyTransitUnseen: _dailyBadgeUnseen,
-            topCategory: _topCategory,
+            // 2026-05-29: 「今日固定 TOP」を表示。時刻スライダー操作で
+            // チップアイコンが変動するのを防ぐ (_dailyChipCategory 設計参照)。
+            // 算出未完了時のフォールバックとして _topCategory を使う (起動直後)。
+            topCategory: _dailyChipCategory ?? _topCategory,
             onDailyTransitTap: _onDailyBadgeTap,
             onFortuneTap: _noProfile
                 ? () {} // プロフィール未設定時は無効化 (FortuneSheet も意味を成さない)
@@ -2356,7 +2469,9 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
         // V2: natal を渡してイベント時刻のアスペクト context を併記
         if (_dailyTransitOpen && _profile != null) Positioned.fill(
           child: MapDailyTransitScreen(
-            topCategory: _topCategory,
+            // 2026-05-29: popup Header の TOP バナーも「今日固定」を表示。
+            topCategory: _dailyChipCategory ?? _topCategory,
+            headerGlowOnce: _dailyHeaderGlowOnce,
             birthLocation: LatLng(_profile!.birthLat, _profile!.birthLng),
             birthLocationName: _profile!.birthPlace.isNotEmpty
                 ? _profile!.birthPlace

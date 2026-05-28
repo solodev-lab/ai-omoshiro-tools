@@ -14,8 +14,13 @@ const _themeChoices = <_ThemeChoice>[
   _ThemeChoice('newStart', '変化・新たな出発'),
 ];
 
+// 2026-05-29: 'daily' のラベルを 2 行表記に変更。
+//   おでかけ = 自分がその場所に指定時刻に行く
+//   イベント = 自分が動かずにその場所で始まる事も含む
+// 例えば「自宅での出来事」を相談したい時、「おでかけ」だけでは設定しにくいので
+// 「イベント」を併記して概念を広げる。Worker 側 mode key は 'daily' のまま不変。
 const _modeChoices = <_ModeChoice>[
-  _ModeChoice('daily', 'おでかけ'),
+  _ModeChoice('daily', 'おでかけ\nイベント'),
   _ModeChoice('travel', '旅行'),
   _ModeChoice('migration', '移住'),
 ];
@@ -194,12 +199,16 @@ class _ModeRow extends StatelessWidget {
                 child: Center(
                   child: Text(
                     m.label,
+                    // 2026-05-29: 'daily' が 2 行ラベル (おでかけ\nイベント) に
+                    // なったため textAlign center + height 1.25 で中央寄せ統一。
+                    textAlign: TextAlign.center,
                     style: TextStyle(
                       color: active
                           ? SolaraColors.solaraGoldLight
                           : SolaraColors.textPrimary,
                       fontSize: 15,
                       fontWeight: FontWeight.w500,
+                      height: 1.25,
                     ),
                   ),
                 ),

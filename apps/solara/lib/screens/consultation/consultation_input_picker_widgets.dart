@@ -92,6 +92,10 @@ class _SearchHitRow extends StatelessWidget {
 }
 
 /// 保存地点 (ViewPoint / Locations) のチップ。アイコン + 登録名。
+///
+/// 2026-05-29: home (slot.isHome=true) のときは slot.name (= profile.homeName =
+/// ユーザー入力住所、例「東京都渋谷区」) を出さず、固定文言「現住所」に置換する。
+/// home 以外の slot は登録名 (例「お気に入りの公園」) をそのまま表示する。
 class _LocationChip extends StatelessWidget {
   final VPSlot slot;
   final VoidCallback onTap;
@@ -99,6 +103,7 @@ class _LocationChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final displayName = slot.isHome ? '現住所' : slot.name;
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -114,7 +119,7 @@ class _LocationChip extends StatelessWidget {
             Text(slot.icon, style: const TextStyle(fontSize: 14)),
             const SizedBox(width: 6),
             Text(
-              slot.name,
+              displayName,
               style: const TextStyle(
                 color: SolaraColors.textPrimary,
                 fontSize: 12,

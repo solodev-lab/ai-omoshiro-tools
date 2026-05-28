@@ -54,6 +54,11 @@ class MapDailyTransitScreen extends StatefulWidget {
   /// に合流する。
   final void Function(DateTime time)? onJumpToTime;
 
+  /// 2026-05-29: popup 初表示時に Header を 1.5s 金色 halo 発光させるフラグ。
+  /// 端末日付ベースで 1 日 1 回のみ true、それ以外は false。
+  /// 「ここを見て」と意識付けるための一発演出。
+  final bool headerGlowOnce;
+
   const MapDailyTransitScreen({
     super.key,
     required this.topCategory,
@@ -65,6 +70,7 @@ class MapDailyTransitScreen extends StatefulWidget {
     this.onEnterAcg,
     this.onEnterConsultation,
     this.onJumpToTime,
+    this.headerGlowOnce = false,
   });
 
   @override
@@ -218,6 +224,7 @@ class _MapDailyTransitScreenState extends State<MapDailyTransitScreen>
                 birthLocationName: widget.birthLocationName,
                 onVpChanged: _selectVp,
                 onClose: _close,
+                glowOnce: widget.headerGlowOnce,
               ),
               _DayTabBar(
                 active: _activeTab,
@@ -642,7 +649,7 @@ class _DayTabBar extends StatelessWidget {
 
 // ── Header（トップカテゴリバナー + 閉じる） ──
 
-class _Header extends StatelessWidget {
+class _Header extends StatefulWidget {
   final DominantFortuneKind? topCategory;
   final String locationLabel;
   final List<VPSlot> vpSlots;
@@ -650,6 +657,10 @@ class _Header extends StatelessWidget {
   final String birthLocationName;
   final ValueChanged<int> onVpChanged;
   final VoidCallback onClose;
+  /// 2026-05-29: true なら mount 直後に 1.5s 金色 halo を 1 回再生。
+  /// 「ここを見て」と意識付けるための一発演出。1 日 1 回のガードは親側
+  /// (`_dailyHeaderGlowOnce` + `daily_header_glow` 永続キー) で済む。
+  final bool glowOnce;
 
   const _Header({
     required this.topCategory,
@@ -659,19 +670,68 @@ class _Header extends StatelessWidget {
     required this.birthLocationName,
     required this.onVpChanged,
     required this.onClose,
+    this.glowOnce = false,
   });
+
+  @override
+  State<_Header> createState() => _HeaderState();
+}
+
+class _HeaderState extends State<_Header> with SingleTickerProviderStateMixin {
+  late final AnimationController _glowCtrl;
+  late final Animation<double> _glowAlpha;
+
+  @override
+  void initState() {
+    super.initState();
+    _glowCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1500),
+    );
+    // 0.0 → 0.55 → 0.55 → 0.0 の台形カーブ (fade-in 0.4s → 維持 0.5s → fade-out 0.6s)。
+    _glowAlpha = TweenSequence<double>([
+      TweenSequenceItem(
+        tween: Tween(begin: 0.0, end: 0.55)
+            .chain(CurveTween(curve: Curves.easeOut)),
+        weight: 400,
+      ),
+      TweenSequenceItem(
+        tween: ConstantTween<double>(0.55),
+        weight: 500,
+      ),
+      TweenSequenceItem(
+        tween: Tween(begin: 0.55, end: 0.0)
+            .chain(CurveTween(curve: Curves.easeIn)),
+        weight: 600,
+      ),
+    ]).animate(_glowCtrl);
+
+    if (widget.glowOnce) {
+      // mount 完了後に再生開始 (initState 中に forward() するとフレーム間で
+      // tick が走り setState が連鎖して assertion になる場合がある)。
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _glowCtrl.forward(from: 0);
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _glowCtrl.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     // null は 'all' に正規化。enum の .name は宣言名そのままなので
     // DominantFortuneKind.love → 'love' などキー文字列と一致する。
-    final catKey = topCategory?.name ?? 'all';
+    final catKey = widget.topCategory?.name ?? 'all';
     final color = categoryColors[catKey] ?? SolaraColors.solaraGoldLight;
     final label = categoryLabels[catKey] ?? 'TOP';
-    final iconKind = topCategory?.toCategoryIcon() ?? CategoryIconKind.all;
-    final tagline = _tagline(topCategory);
+    final iconKind = widget.topCategory?.toCategoryIcon() ?? CategoryIconKind.all;
+    final tagline = _tagline(widget.topCategory);
 
-    return Container(
+    final headerBox = Container(
       padding: const EdgeInsets.fromLTRB(20, 14, 12, 14),
       decoration: BoxDecoration(
         border: Border(
@@ -756,7 +816,7 @@ class _Header extends StatelessWidget {
           ),
           // ✕ 閉じる
           GestureDetector(
-            onTap: onClose,
+            onTap: widget.onClose,
             behavior: HitTestBehavior.opaque,
             child: const Padding(
               padding: EdgeInsets.all(8),
@@ -765,6 +825,48 @@ class _Header extends StatelessWidget {
           ),
         ],
       ),
+    );
+
+    // 2026-05-29: 初回 1.5s 金色 halo を Stack で重ねる。
+    // `clipBehavior: Clip.none` で Header 外周にもグローが滲み出る (Daily チップ
+    // halo と同等の演出)。`IgnorePointer` で dropdown 等のタップ判定を邪魔しない。
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        headerBox,
+        Positioned.fill(
+          child: IgnorePointer(
+            child: AnimatedBuilder(
+              animation: _glowCtrl,
+              builder: (context, _) {
+                final a = _glowAlpha.value;
+                if (a <= 0.001) return const SizedBox.shrink();
+                const glow = SolaraColors.solaraGoldLight;
+                return DecoratedBox(
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                      color: glow.withValues(alpha: a),
+                      width: 1.4,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: glow.withValues(alpha: a * 0.85),
+                        blurRadius: 20,
+                        spreadRadius: 4,
+                      ),
+                      BoxShadow(
+                        color: glow.withValues(alpha: a * 0.45),
+                        blurRadius: 36,
+                        spreadRadius: 8,
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -801,6 +903,7 @@ class _Header extends StatelessWidget {
   /// - その他の VPSlot: slot.name (登録時の名前)
   /// 横幅を超える長い名前は ellipsis で truncate して RIGHT OVERFLOW 対策。
   Widget _buildVpDropdownWithGuide(BuildContext context) {
+    final vpSlots = widget.vpSlots;
     // スロット index → 表示ラベル (カテゴリ名 or VIEWPOINT 名)
     String labelFor(int idx) {
       if (idx < 0) return '出生地';
@@ -818,13 +921,16 @@ class _Header extends StatelessWidget {
     }
 
     Widget itemRow(int idx) {
+      // 2026-05-29: RIGHT OVERFLOW 対策 — MainAxisSize.max + Expanded で
+      // 親の幅制約を Text に確実に伝播させ ellipsis を効かせる。
+      // 旧 (MainAxisSize.min + Flexible) では isExpanded:true の DropdownButton
+      // 内で制約が正しく届かず、長い VIEWPOINT 名で overflow していた。
       return Row(
-        mainAxisSize: MainAxisSize.min,
+        mainAxisSize: MainAxisSize.max,
         children: [
           Text(iconFor(idx), style: const TextStyle(fontSize: 13)),
           const SizedBox(width: 4),
-          // 長名 truncate 用に Flexible + ellipsis
-          Flexible(
+          Expanded(
             child: Text(
               labelFor(idx),
               style: const TextStyle(
@@ -864,7 +970,7 @@ class _Header extends StatelessWidget {
               border: Border.all(color: const Color(0x33C9A84C)),
             ),
             child: DropdownButton<int>(
-              value: vpIndex,
+              value: widget.vpIndex,
               underline: const SizedBox.shrink(),
               isDense: true,
               isExpanded: true,
@@ -881,7 +987,7 @@ class _Header extends StatelessWidget {
                   DropdownMenuItem<int>(value: i, child: itemRow(i)),
               ],
               onChanged: (v) {
-                if (v != null) onVpChanged(v);
+                if (v != null) widget.onVpChanged(v);
               },
             ),
           ),

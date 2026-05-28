@@ -281,7 +281,7 @@ class _NewMoonOverlayState extends State<NewMoonOverlay>
                   _selectedIndex = themes.en.length; // skip choice
                   await _setIntention();
                 } else {
-                  await SolaraStorage.markOverlayShown('new_moon');
+                  await SolaraStorage.markLocalOverlayShown('new_moon');
                   widget.onDismiss();
                 }
               },
@@ -557,7 +557,7 @@ class _NewMoonOverlayState extends State<NewMoonOverlay>
       newMoonSign: monthData?.newMoonSign ?? '',
     );
     await SolaraStorage.saveIntention(intention);
-    await SolaraStorage.markOverlayShown('new_moon');
+    await SolaraStorage.markLocalOverlayShown('new_moon');
     widget.onIntentionSet();
   }
 }

@@ -18,6 +18,7 @@ import '../../theme/solara_colors.dart';
 import '../../utils/consultation_record.dart';
 import '../../utils/solara_storage.dart';
 import '../../widgets/glass_panel.dart';
+import '../map/map_constants.dart' show categoryColors;
 import 'consultation_result_screen.dart';
 
 part 'consultation_history_widgets.dart';
@@ -31,10 +32,39 @@ const _themeLabel = <String, String>{
   'newStart': '変化・新たな出発',
 };
 
+// 2026-05-29: テーマチップを Map 画面と同じカテゴリ色で着色する。
+// 5 テーマ (love/money/work/communication/healing) は map_constants の
+// categoryColors を流用 (扇・スコアバーと完全同色)。
+// 'newStart' は Map 側に存在しないため、相談履歴ローカルで「夜明けオレンジ」
+// を独自定義する (既存 5 色と差別化、変化・変容のイメージ)。
+const _newStartColor = Color(0xFFFFB07C);
+
+Color _themeColor(String theme) =>
+    categoryColors[theme] ?? (theme == 'newStart' ? _newStartColor : SolaraColors.solaraGoldLight);
+
+// 時間帯 key → 日本語ラベル (consultation_input_when_scope の _timeBandChoices と一致)。
+const _timeBandLabel = <String, String>{
+  'morning': '朝',
+  'midday': '昼',
+  'evening': '夕方',
+  'night': '夜',
+  'lateNight': '夜更け',
+};
+
+// 移住ホライズン key → 日本語ラベル (consultation_input_when_scope の _horizonChoices と一致)。
+const _horizonLabel = <String, String>{
+  'within6mo': '半年以内',
+  'within1yr': '1年以内',
+  'in3yr': '3年後くらい',
+  'in5yrPlus': '5年以上先',
+};
+
+// 2026-05-29: 'daily' のラベルを入力タイル ('おでかけ\nイベント') と概念統一。
+// 履歴カードは 1 行表示なので中黒区切り 'おでかけ・イベント' に。
 const _modeLabel = <String, String>{
   'migration': '移住',
   'travel': '旅行',
-  'daily': 'おでかけ',
+  'daily': 'おでかけ・イベント',
 };
 
 const _scopeLabel = <String, String>{

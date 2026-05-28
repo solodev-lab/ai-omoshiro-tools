@@ -285,7 +285,7 @@ class _FullMoonOverlayState extends State<FullMoonOverlay>
             const SizedBox(height: 16),
             TextButton(
               onPressed: () async {
-                await SolaraStorage.markOverlayShown('full_moon');
+                await SolaraStorage.markLocalOverlayShown('full_moon');
                 widget.onDismiss();
               },
               child: const Text(
@@ -474,7 +474,7 @@ class _FullMoonOverlayState extends State<FullMoonOverlay>
       midpoint: MidpointCheck(checkedAt: DateTime.now(), rating: rating),
     );
     await SolaraStorage.saveIntention(updated);
-    await SolaraStorage.markOverlayShown('full_moon');
+    await SolaraStorage.markLocalOverlayShown('full_moon');
     widget.onDismiss();
   }
 }

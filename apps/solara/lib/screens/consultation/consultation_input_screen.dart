@@ -129,10 +129,12 @@ class _ConsultationInputScreenState extends State<ConsultationInputScreen> {
   @override
   void initState() {
     super.initState();
-    if (widget.presetTarget != null) {
-      _mode = 'travel';
-      _scopeKind = 'point';
-    }
+    // 2026-05-29: どの経路から入っても初期選択なし (mode / scope ともに null)。
+    // 旧実装は preset 経由 (Map ピンの「ここで相談」等) で travel + point を
+    // 自動セットしていたが、ユーザーが「何を相談したいか」を意識的に選ぶ前に
+    // tile が active 化すると入力品質が下がるため初期選択を撤廃。
+    // ※ preset の地点情報は `_buildScope()` 内で widget.presetTarget を参照する
+    //   ため、ユーザーが mode を選んだ後に scope='point' に進めばそのまま反映される。
     _loadPrefsAndProfile();
     // 注: 本画面は build() で ConsultationCredits を直接参照しないので listener は不要。
     // 残数表示は開始ポップアップ (_StartConsultPopup) が自前で listener を持つ。

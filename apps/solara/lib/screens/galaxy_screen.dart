@@ -338,18 +338,21 @@ class GalaxyScreenState extends State<GalaxyScreen>
     final today = DateTime(now.year, now.month, now.day);
     final crystDay = DateTime(dayBeforeNewMoon.year, dayBeforeNewMoon.month, dayBeforeNewMoon.day);
 
+    // 2026-05-29: Galaxy 3 演出も Sanctuary リセット時刻に左右されない
+    // 端末日付 (0 時切替) 基準に変更。Sanctuary picker の subtitle 文言
+    // 「タロットのみ」と整合させるための独立系統。
     if (MoonPhase.isNewMoon(now)) {
-      if (intention == null && !await SolaraStorage.wasOverlayShownToday('new_moon')) {
+      if (intention == null && !await SolaraStorage.wasLocalOverlayShownToday('new_moon')) {
         if (mounted) setState(() => _activeOverlay = 'new_moon');
       }
     } else if (MoonPhase.isFullMoon(now)) {
       if (intention != null && intention.midpoint == null &&
-          !await SolaraStorage.wasOverlayShownToday('full_moon')) {
+          !await SolaraStorage.wasLocalOverlayShownToday('full_moon')) {
         if (mounted) setState(() => _activeOverlay = 'full_moon');
       }
     } else if (today == crystDay || today.isAfter(crystDay)) {
       if (intention != null && intention.catasterism == null &&
-          !await SolaraStorage.wasOverlayShownToday('catasterism')) {
+          !await SolaraStorage.wasLocalOverlayShownToday('catasterism')) {
         if (mounted) setState(() => _activeOverlay = 'catasterism');
       }
     }

@@ -136,9 +136,16 @@ class _SpecificPickerState extends State<_SpecificPicker> {
   }
 
   void _onSlotTap(VPSlot s) {
+    // 2026-05-29: home の場合は slot.name (= profile.homeName = ユーザー入力住所、
+    // 例「東京都渋谷区」) ではなく「現住所」を送信する。これで:
+    //   ・選択中カード (_SelectedSpecificCard) が「現住所」表示
+    //   ・Worker placeReference (placeKind='saved') が「『現住所』という場所」と
+    //     呼び、結果本文・タイトル中に住所が出ない
+    // home 以外の slot は登録名 (例「お気に入りの公園」) をそのまま使う。
+    final sentName = s.isHome ? '現住所' : s.name;
     widget.onSelect(_PickedSpecific(
       position: LatLng(s.lat, s.lng),
-      name: s.name,
+      name: sentName,
       placeKind: 'saved', // 登録地 → Stella は「登録名」という場所、と呼ぶ
     ));
   }

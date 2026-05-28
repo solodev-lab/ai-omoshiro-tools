@@ -28,6 +28,21 @@ class ConsultationRecord {
   /// scope に付随する詳細ラベル (region グループ名 / 具体地点名 等)。なければ null。
   final String? scopeDetail;
 
+  // 2026-05-29: 「いつ」の情報を履歴に保存 (相談対象日付 / 時間帯)。
+  // 旧レコードには無いフィールドなので全て nullable + JSON 復号で欠落許容。
+  /// 'date' | 'range' | 'within6mo' | 'within1yr' | 'in3yr' | 'in5yrPlus' | null。
+  /// daily の 'today' / migration の 'undecided' は req.when=null になるため、
+  /// 表示時に mode から推測する (UI レイヤー側で補完)。
+  final String? whenKind;
+  /// 特定日付 (whenKind=='date'): YYYY-MM-DD。
+  final String? whenDate;
+  /// 期間開始 (whenKind=='range'): YYYY-MM-DD。
+  final String? whenStart;
+  /// 期間終了 (whenKind=='range'): YYYY-MM-DD。
+  final String? whenEnd;
+  /// 時間帯 (おでかけのみ): 'morning'|'midday'|'evening'|'night'|'lateNight'。
+  final String? whenTimeBand;
+
   /// だれと / 願い (語りのレンズ・自由記述)。
   final String withWhom;
   final String wish;
@@ -56,6 +71,11 @@ class ConsultationRecord {
     required this.mode,
     required this.scopeKind,
     this.scopeDetail,
+    this.whenKind,
+    this.whenDate,
+    this.whenStart,
+    this.whenEnd,
+    this.whenTimeBand,
     this.withWhom = '',
     this.wish = '',
     this.innerSeason = '',
@@ -75,6 +95,11 @@ class ConsultationRecord {
         mode: mode,
         scopeKind: scopeKind,
         scopeDetail: scopeDetail,
+        whenKind: whenKind,
+        whenDate: whenDate,
+        whenStart: whenStart,
+        whenEnd: whenEnd,
+        whenTimeBand: whenTimeBand,
         withWhom: withWhom,
         wish: wish,
         innerSeason: innerSeason,
@@ -87,11 +112,14 @@ class ConsultationRecord {
       );
 
   /// 結果画面が蓄積した reading 群からレコードを生成 (id は savedAt から自動採番)。
+  /// [when] が null の場合は whenKind/Date 等は null (= 'today' or 'undecided' or
+  /// 未指定で送信したケース)。UI 側は mode を見て「今日」「未定」を補完する。
   factory ConsultationRecord.fromReadings({
     required String theme,
     required String mode,
     required String scopeKind,
     String? scopeDetail,
+    ConsultationWhen? when,
     String withWhom = '',
     String wish = '',
     required List<ConsultationV2Reading> readings,
@@ -106,6 +134,11 @@ class ConsultationRecord {
       mode: mode,
       scopeKind: scopeKind,
       scopeDetail: scopeDetail,
+      whenKind: when?.kind,
+      whenDate: when?.date,
+      whenStart: when?.start,
+      whenEnd: when?.end,
+      whenTimeBand: when?.timeBand,
       withWhom: withWhom,
       wish: wish,
       innerSeason: first?.innerSeason ?? '',
@@ -161,6 +194,11 @@ class ConsultationRecord {
         'mode': mode,
         'scopeKind': scopeKind,
         if (scopeDetail != null) 'scopeDetail': scopeDetail,
+        if (whenKind != null) 'whenKind': whenKind,
+        if (whenDate != null) 'whenDate': whenDate,
+        if (whenStart != null) 'whenStart': whenStart,
+        if (whenEnd != null) 'whenEnd': whenEnd,
+        if (whenTimeBand != null) 'whenTimeBand': whenTimeBand,
         if (withWhom.isNotEmpty) 'withWhom': withWhom,
         if (wish.isNotEmpty) 'wish': wish,
         if (innerSeason.isNotEmpty) 'innerSeason': innerSeason,
@@ -181,6 +219,11 @@ class ConsultationRecord {
       mode: j['mode'] as String? ?? '',
       scopeKind: j['scopeKind'] as String? ?? 'world',
       scopeDetail: j['scopeDetail'] as String?,
+      whenKind: j['whenKind'] as String?,
+      whenDate: j['whenDate'] as String?,
+      whenStart: j['whenStart'] as String?,
+      whenEnd: j['whenEnd'] as String?,
+      whenTimeBand: j['whenTimeBand'] as String?,
       withWhom: j['withWhom'] as String? ?? '',
       wish: j['wish'] as String? ?? '',
       innerSeason: j['innerSeason'] as String? ?? '',

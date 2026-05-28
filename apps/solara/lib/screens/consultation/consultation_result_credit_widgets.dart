@@ -33,7 +33,8 @@ class _ConsultationBlockedBox extends StatelessWidget {
     final (title, body) = switch (reason) {
       ConsultationBlock.proOnlyMode => (
           'このモードは Cosmic Pro で',
-          'おでかけ以外の相談 (移住・旅行) は Cosmic Pro で読み解けます。',
+          // 2026-05-29: タイル表記 (おでかけ・イベント) に合わせて文言統一。
+          'おでかけ・イベント以外の相談 (移住・旅行) は Cosmic Pro で読み解けます。',
         ),
       ConsultationBlock.proOnlyRefresh => (
           '候補の出し直しは Cosmic Pro で',

@@ -217,7 +217,9 @@ List<LatLng> _latitudePolylinePoints(double lat) => [
 /// 分離した旧設計より効率的。
 ///
 /// [activeCategory] FORTUNE 連動。非該当惑星の緯度線は dim。
-/// [opacityBase] 緯度線のベース透明度 (default 0.22、視覚密度抑え目)。
+/// [opacityBase] 緯度線のベース透明度 (default 0.48)。
+/// 2026-05-29: 旧 0.22 だと天頂帯ですら薄く、天底帯はほぼ見えなかった (実機検証)。
+/// 帯 (緯度線) は元々 ON にして見たい線なので視覚密度を一段引き上げる。
 List<Polyline> buildAstroLatitudeBandPolylines({
   required List<AstroLine> lines,
   required String activeCategory,
@@ -225,7 +227,7 @@ List<Polyline> buildAstroLatitudeBandPolylines({
   Set<AstroFrame> zenithFrames = const {},
   Set<AstroFrame> nadirFrames = const {},
   double latLimit = 75,
-  double opacityBase = 0.22,
+  double opacityBase = 0.48,
 }) {
   final highlightSet = (allPlanetMode || activeCategory == 'all')
       ? null
@@ -252,25 +254,31 @@ List<Polyline> buildAstroLatitudeBandPolylines({
         polylines.add(Polyline(
           points: _latitudePolylinePoints(p.latitude),
           color: tinted.withAlpha((opacityBase * alphaMul * 255).round()),
-          strokeWidth: 1.4,
+          // 2026-05-29: 1.4 → 1.8。低 opacity 時の細線は実機でほぼ消えるため。
+          strokeWidth: 1.8,
         ));
       }
     }
     if (showNadir) {
       final p = line.nadir;
       if (p != null && p.latitude.isFinite && p.latitude.abs() <= latLimit) {
+        // 2026-05-29: 60% 暗 → 80% 暗。旧設定だと天底帯が「真っ黒に近い線」
+        // となり地図と一体化していた。区別は破線パターンで十分担保される。
         final darkened = Color.from(
           alpha: 1.0,
-          red: meta.color.r * 0.6,
-          green: meta.color.g * 0.6,
-          blue: meta.color.b * 0.6,
+          red: meta.color.r * 0.80,
+          green: meta.color.g * 0.80,
+          blue: meta.color.b * 0.80,
         );
         final tinted =
             _lerpColor(darkened, frameStyle.accent, frameStyle.tintMix * 0.6);
         polylines.add(Polyline(
           points: _latitudePolylinePoints(p.latitude),
-          color: tinted.withAlpha((opacityBase * alphaMul * 0.85 * 255).round()),
-          strokeWidth: 1.2,
+          // 2026-05-29: 旧 ×0.85 の追加減衰を撤廃 (天頂帯と同じ alpha)。
+          // 天底は色暗化 + 破線で識別、追加の opacity 減衰は不要。
+          color: tinted.withAlpha((opacityBase * alphaMul * 255).round()),
+          // 2026-05-29: 1.2 → 1.6。
+          strokeWidth: 1.6,
           pattern: StrokePattern.dashed(segments: const [5, 6]),
         ));
       }

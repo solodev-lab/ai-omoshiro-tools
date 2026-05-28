@@ -32,7 +32,9 @@ class AstroCartoBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      // 2026-05-29: 内側 icon の vertical padding を 10 に拡大した分、
+      // 外側を 8 → 3 に縮めてバナー総高さの肥大を抑える (~46px)。
+      padding: const EdgeInsets.fromLTRB(14, 3, 8, 3),
       decoration: BoxDecoration(
         color: const Color(0xE60C0C1A),
         borderRadius: BorderRadius.circular(20),
@@ -63,24 +65,26 @@ class AstroCartoBanner extends StatelessWidget {
               fontWeight: FontWeight.w600,
             ),
           ),
-          const SizedBox(width: 6),
+          const SizedBox(width: 4),
           // ❓ help_outline: ACG 画面の使い方説明 popup
+          // 2026-05-29: タップ領域拡大 (padding 4/2 → 10/10、icon 16 → 18)。
+          // 旧サイズは ~24×20px でタップ困難だった。約 38×38px に拡大。
           GestureDetector(
             onTap: () => _showAcgUsageGuide(context),
             behavior: HitTestBehavior.opaque,
             child: const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+              padding: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
               child: Icon(Icons.help_outline,
-                  size: 16, color: Color(0xCCAAAAAA)),
+                  size: 18, color: Color(0xCCAAAAAA)),
             ),
           ),
-          const SizedBox(width: 6),
+          // 2026-05-29: × も同様に padding/icon 拡大 (旧 14px → 18px)。
           GestureDetector(
             onTap: onClose,
             behavior: HitTestBehavior.opaque,
             child: const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-              child: Icon(Icons.close, size: 14, color: Color(0xFFAAAAAA)),
+              padding: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+              child: Icon(Icons.close, size: 18, color: Color(0xFFCCCCCC)),
             ),
           ),
         ],

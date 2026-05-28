@@ -104,6 +104,11 @@ class SolaraStorage {
   static const _completedCyclesKey = 'solara_galaxy_cycles';
   static const _intentionKey = 'solara_lunar_intention';
   static const _overlayShownKey = 'solara_overlay_shown';
+  /// 2026-05-29: Sanctuary リセット時刻に左右されない、端末日付 (常に 0 時切替)
+  /// 基準の overlay seen キー。Sanctuary picker subtitle が「タロットのみ」と
+  /// 明示している通り、Daily Transit Badge / Galaxy 3 演出はリセット時刻設定の
+  /// 影響を受けない設計に揃えるための新キー。
+  static const _localOverlayShownKey = 'solara_local_overlay_shown';
   static const _mapStyleKey = 'solara_map_style';
   static const _dailyResetHourKey = 'solara_daily_reset_hour';
   static const _dailyResetMinuteKey = 'solara_daily_reset_minute';
@@ -614,6 +619,29 @@ class SolaraStorage {
     final prefs = await SharedPreferences.getInstance();
     final day = await logicalTodayKey();
     final key = '${_overlayShownKey}_${type}_$day';
+    await prefs.setBool(key, true);
+  }
+
+  /// 端末日付 (常に 0 時切替) の "今日" キー (YYYY-MM-DD)。
+  /// Sanctuary リセット時刻設定の影響を受けない。
+  /// Daily Transit Badge / Galaxy 3 演出 / popup Header glow が使用。
+  static String localDateKey() {
+    final now = DateTime.now();
+    return '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+  }
+
+  /// 端末 0 時基準で「今日この type の演出を表示したか」を返す。
+  /// 2026-05-29 新設: Sanctuary subtitle と整合させるための独立系統。
+  static Future<bool> wasLocalOverlayShownToday(String type) async {
+    final prefs = await SharedPreferences.getInstance();
+    final key = '${_localOverlayShownKey}_${type}_${localDateKey()}';
+    return prefs.getBool(key) ?? false;
+  }
+
+  /// 端末 0 時基準で「今日この type の演出を表示した」と記録する。
+  static Future<void> markLocalOverlayShown(String type) async {
+    final prefs = await SharedPreferences.getInstance();
+    final key = '${_localOverlayShownKey}_${type}_${localDateKey()}';
     await prefs.setBool(key, true);
   }
 
