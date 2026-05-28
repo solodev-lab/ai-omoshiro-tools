@@ -122,6 +122,9 @@ class _StartConsultPopupState extends State<_StartConsultPopup> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // ── 主クレジット (Pro 週次 or 無料週次) ──
+              // ラベルと残数の合計幅がポップアップ内幅を超えるとはみ出るため、
+              // 残数側を Flexible (FlexFit.loose) + TextAlign.end で右寄せしつつ
+              // 領域不足時は折り返し可能にする。
               Row(
                 children: [
                   const Icon(Icons.auto_awesome,
@@ -135,13 +138,16 @@ class _StartConsultPopupState extends State<_StartConsultPopup> {
                       fontWeight: FontWeight.w600,
                     ),
                   ),
-                  const Spacer(),
-                  Text(
-                    primaryRemain,
-                    style: const TextStyle(
-                      color: SolaraColors.textPrimary,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      primaryRemain,
+                      textAlign: TextAlign.end,
+                      style: const TextStyle(
+                        color: SolaraColors.textPrimary,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                 ],
@@ -162,6 +168,7 @@ class _StartConsultPopupState extends State<_StartConsultPopup> {
                 color: Color(0x22F6BD60),
               ),
               // ── 有料クレジット ──
+              // 主クレジット行と同じ overflow 対策 (Expanded + textAlign.end)。
               Row(
                 children: [
                   const Icon(Icons.add_circle_outline,
@@ -175,13 +182,16 @@ class _StartConsultPopupState extends State<_StartConsultPopup> {
                       fontWeight: FontWeight.w600,
                     ),
                   ),
-                  const Spacer(),
-                  Text(
-                    '残り $purchased 回',
-                    style: const TextStyle(
-                      color: SolaraColors.textPrimary,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      '残り $purchased 回',
+                      textAlign: TextAlign.end,
+                      style: const TextStyle(
+                        color: SolaraColors.textPrimary,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                 ],

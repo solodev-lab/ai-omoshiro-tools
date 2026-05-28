@@ -111,6 +111,8 @@ class _TarotCategoryPopupBody extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // ── 無料クレジット ──
+              // 残数文字列が長い場合に Spacer ではみ出るのを防ぐため、
+              // 残数側を Expanded + TextAlign.end で右寄せ + 自動縮退。
               Row(
                 children: [
                   const Icon(Icons.auto_awesome,
@@ -124,15 +126,18 @@ class _TarotCategoryPopupBody extends StatelessWidget {
                       fontWeight: FontWeight.w600,
                     ),
                   ),
-                  const Spacer(),
-                  Text(
-                    (freeRemaining != null && freeLimit != null)
-                        ? '残り $freeRemaining / $freeLimit 回'
-                        : '残り回数を確認中',
-                    style: const TextStyle(
-                      color: SolaraColors.textPrimary,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      (freeRemaining != null && freeLimit != null)
+                          ? '残り $freeRemaining / $freeLimit 回'
+                          : '残り回数を確認中',
+                      textAlign: TextAlign.end,
+                      style: const TextStyle(
+                        color: SolaraColors.textPrimary,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                 ],
@@ -153,6 +158,7 @@ class _TarotCategoryPopupBody extends StatelessWidget {
                 color: Color(0x22F6BD60),
               ),
               // ── 有料クレジット ──
+              // 無料クレジット行と同じ overflow 対策。
               Row(
                 children: [
                   const Icon(Icons.add_circle_outline,
@@ -166,13 +172,16 @@ class _TarotCategoryPopupBody extends StatelessWidget {
                       fontWeight: FontWeight.w600,
                     ),
                   ),
-                  const Spacer(),
-                  Text(
-                    '残り $purchased 回',
-                    style: const TextStyle(
-                      color: SolaraColors.textPrimary,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      '残り $purchased 回',
+                      textAlign: TextAlign.end,
+                      style: const TextStyle(
+                        color: SolaraColors.textPrimary,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                 ],
