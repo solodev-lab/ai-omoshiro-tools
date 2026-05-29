@@ -11,6 +11,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:solara/screens/consultation/consultation_input_screen.dart';
 import 'package:solara/screens/consultation/consultation_result_screen.dart';
 import 'package:solara/utils/consultation_api.dart';
+import 'package:solara/utils/consultation_record.dart';
 import 'package:solara/utils/consultation_v2_api.dart';
 import 'package:solara/utils/pro_status.dart';
 import 'package:solara/utils/solara_storage.dart';
@@ -307,6 +308,45 @@ void main() {
     expect(find.text('世界全体に広げる'), findsOneWidget);
     expect(find.textContaining('クレジットを消費していません'), findsOneWidget);
     expect(find.text('別の候補地を見る'), findsNothing); // 出し尽くしたのでボタンは消える
+  });
+
+  // 回帰 (2026-05-30): 履歴閲覧 (record モード) では _exhausted は立つが、案Y パネルは
+  // 出してはいけない。出し直しボタンを押していないのに全履歴に「無理に候補を作りません
+  // でした」が出ていた不具合 (_exhausted がパネル条件に漏れていた) の再発防止。
+  testWidgets('Result(履歴): record 表示では案Yパネルを出さない', (tester) async {
+    final record = ConsultationRecord.fromReadings(
+      theme: 'love',
+      mode: 'travel',
+      scopeKind: 'world',
+      readings: [_reading(name: '京都', remainingAfter: 0)],
+    );
+    await tester.pumpWidget(MaterialApp(
+      home: ConsultationResultScreen.fromRecord(record: record),
+    ));
+    await tester.pumpAndSettle();
+
+    expect(find.text('京都'), findsOneWidget); // 履歴は表示される
+    expect(find.textContaining('クレジットを消費していません'), findsNothing);
+    expect(find.textContaining('無理に候補を作りません'), findsNothing);
+    expect(find.text('別の候補地を見る'), findsNothing); // 履歴は出し直し不可 (従来どおり)
+  });
+
+  // 回帰 (2026-05-30): 初回取得で残数0 になっても (結果は得てクレジット消費済)、
+  // 「クレジット非消費」を謳う案Yパネルを出してはいけない。
+  testWidgets('Result: 初回で残数0 でも案Yパネルは出さない', (tester) async {
+    await tester.pumpWidget(MaterialApp(
+      home: ConsultationResultScreen(
+        request: _req(),
+        fetchOverride: (req) async =>
+            ConsultationV2Result(reading: _reading(name: '京都', remainingAfter: 0)),
+      ),
+    ));
+    await tester.pumpAndSettle();
+
+    expect(find.text('京都'), findsOneWidget);
+    expect(find.textContaining('クレジットを消費していません'), findsNothing);
+    expect(find.textContaining('無理に候補を作りません'), findsNothing);
+    expect(find.text('別の候補地を見る'), findsNothing); // 残数0 なので従来どおりボタンも無い
   });
 
   // C-1 (Phase B 反映): 実在の町は字幕に方角・距離、生の国コード「JP」は出さない。

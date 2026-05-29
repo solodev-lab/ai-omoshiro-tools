@@ -84,8 +84,13 @@ class _ConsultationResultScreenState extends State<ConsultationResultScreen> {
   bool _sharing = false;
   String? _error;
 
-  /// これ以上「別の候補地」が無い (excluded で出し尽くした)。
+  /// これ以上「別の候補地」が無い (excluded で出し尽くした)。出し直しボタンの抑制に使う。
+  /// 注意: 履歴閲覧・初回残数0・出し直し後残数0 でも立つので、案Yパネルの条件には使わない。
   bool _exhausted = false;
+
+  /// 案Yパネル (出し尽くし案内) を出すか。出し直しで枯渇 (server isExhausted) したときだけ true。
+  /// 履歴閲覧や「残数0だが結果は得た」では _exhausted は立つが、これは立てない。
+  bool _showExhaustionPanel = false;
 
   /// 枯渇 (案Y) の理由コードと代替提案 (exhausted パネルで提示)。クレジットは非消費。
   String? _exhaustedReason;
@@ -225,6 +230,7 @@ class _ConsultationResultScreenState extends State<ConsultationResultScreen> {
       // 案Y: 正直に止めて代替提案を出す (パネル表示)。クレジットは消費していない。
       setState(() {
         _exhausted = true;
+        _showExhaustionPanel = true; // 出し直し由来の枯渇のみパネルを出す
         _exhaustedReason = result.exhaustedReason;
         _exhaustSuggestions = result.suggestions;
       });
@@ -455,8 +461,9 @@ class _ConsultationResultScreenState extends State<ConsultationResultScreen> {
         if (cur != null && cur.sparse) _SparseHint(nearbyCount: cur.nearbyCount),
         if (_canLoadNext)
           _RefreshButton(loading: _loadingNext, onTap: _loadingNext ? null : _loadNext),
-        // 案Y: 出し尽くしたら正直に止めて代替提案を出す (クレジット非消費)。
-        if (_exhausted)
+        // 案Y: 出し直しで出し尽くしたときだけ正直に止めて代替提案を出す (クレジット非消費)。
+        // 履歴閲覧・初回残数0 では _exhausted は立つが _showExhaustionPanel は立てない。
+        if (_showExhaustionPanel)
           _ExhaustionPanel(reason: _exhaustedReason, suggestions: _exhaustSuggestions),
         const SizedBox(height: 16),
       ],

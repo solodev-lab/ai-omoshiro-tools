@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 31 / 総行数: 10076
+- ファイル数: 31 / 総行数: 10083
 - class/mixin/extension/enum: 90
 - 関数 (top-level + method の素拾い): 258
 - Navigator.push 等: 0
@@ -605,7 +605,7 @@ Stella 相談 クレジット制 (設計 project_solara_stella_free_credits.md) 
 - L22 `build()`
 
 
-### `lib/screens/consultation/consultation_result_screen.dart` (465 行)
+### `lib/screens/consultation/consultation_result_screen.dart` (472 行)
 
 **ファイル先頭コメント:**
 
@@ -638,23 +638,23 @@ ConsultationRecord を読み込み専用表示 (fetch なし・autosave なし�
 **関数 (4 public + 11 private):**
 
 - L73 `createState()`
-- L134 `initState()`
-- L147 `dispose()`
-- L352 `build()`
+- L139 `initState()`
+- L152 `dispose()`
+- L358 `build()`
 
   <details><summary>private 関数 11 件</summary>
 
-  - L108 `_pushShownToAvoid()`
-  - L128 `_setSharing()`
-  - L152 `_runFetch()`
-  - L157 `_fetch()`
-  - L207 `_loadNext()`
-  - L272 `_snack()`
-  - L284 `_onBuyCredits()`
-  - L290 `_showConsultationPaywall()`
-  - L311 `_showAboutReading()`
-  - L326 `_persist()`
-  - L417 `_buildBody()`
+  - L113 `_pushShownToAvoid()`
+  - L133 `_setSharing()`
+  - L157 `_runFetch()`
+  - L162 `_fetch()`
+  - L212 `_loadNext()`
+  - L278 `_snack()`
+  - L290 `_onBuyCredits()`
+  - L296 `_showConsultationPaywall()`
+  - L317 `_showAboutReading()`
+  - L332 `_persist()`
+  - L423 `_buildBody()`
 
   </details>
 

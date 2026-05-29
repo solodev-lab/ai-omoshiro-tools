@@ -452,7 +452,7 @@
 
 ### 変更されたファイル (層別)
 
-- **層 2a**: `lib/utils/consultation_v2_api.dart`
+- **層 4f**: `lib/screens/consultation/consultation_result_screen.dart`
 
 ## #7 astro_glossary 用語辞書対整合
 
