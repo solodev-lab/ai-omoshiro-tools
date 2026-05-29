@@ -5,9 +5,9 @@
 
 ## サマリ
 
-- ファイル数: 23 / 総行数: 13752
+- ファイル数: 23 / 総行数: 13810
 - class/mixin/extension/enum: 87
-- 関数 (top-level + method の素拾い): 299
+- 関数 (top-level + method の素拾い): 301
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 18
 - Worker URL リテラル: 0
@@ -699,39 +699,41 @@ A*C*G ライン (natal / transit) のタップ詳細 popup。
 - 集計: `showLineNarrativeSheet`×1
 
 
-### `lib/screens/map/map_search.dart` (600 行)
+### `lib/screens/map/map_search.dart` (658 行)
 
-**imports:** dart=2 / package=3 / relative=4
+**imports:** dart=2 / package=4 / relative=4
 
 - relative: `../../utils/solara_api.dart`, `map_astro.dart`, `map_constants.dart`, `map_fortune_sheet.dart`
 
 **型定義 (5):**
 
-- L14 `class SearchHit`
+- L15 `class SearchHit`
   - 検索結果1件分
-- L138 `class SearchResultList : StatelessWidget`
+- L148 `class SearchResultList : StatelessWidget`
   - 検索結果リスト（スコア付き）ポップアップ
-- L316 `class SearchFocusPopup : StatelessWidget`
+- L326 `class SearchFocusPopup : StatelessWidget`
   - 検索候補から1件選ばれたあとの詳細ポップアップ。
-- L552 `class _CatChip : StatelessWidget`
-- L577 `class _ActionTile : StatelessWidget`
+- L569 `class _CatChip : StatelessWidget`
+- L594 `class _ActionTile : StatelessWidget`
 
-**関数 (7 public + 4 private):**
+**関数 (8 public + 5 private):**
 
-- L43 `directionFrom()` — 中心座標から見たこの地点の方位（16方位名）
-- L48 `distanceKmFrom()` — 中心から km 距離
-- L114 `annotateHitsWithScores()` — 検索結果に、現在中心からの方位スコアと支配カテゴリを注入する
-- L162 `build()`
-- L358 `build()`
-- L558 `build()`
-- L583 `build()`
+- L50 `directionFrom()` — 中心座標から見たこの地点の方位（16方位名）
+- L55 `distanceKmFrom()` — 中心から km 距離
+- L124 `annotateHitsWithScores()` — 検索結果に、現在中心からの方位スコアと支配カテゴリを注入する
+- L172 `build()`
+- L368 `build()`
+- L575 `build()`
+- L600 `build()`
+- L626 `googleMapsUrlForHit()` — 検索結果を Google マップで開く URL を組み立てる。
 
-  <details><summary>private 関数 4 件</summary>
+  <details><summary>private 関数 5 件</summary>
 
-  - L53 `_bearingDeg()`
-  - L62 `_azimuthToDir16()`
-  - L68 `_haversineKm()`
-  - L210 `_hitRow()`
+  - L60 `_bearingDeg()`
+  - L69 `_azimuthToDir16()`
+  - L75 `_haversineKm()`
+  - L220 `_hitRow()`
+  - L644 `_openInGoogleMaps()`
 
   </details>
 

@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:latlong2/latlong.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../utils/solara_api.dart' show solaraSearchUrl;
 import 'map_astro.dart';
 import 'map_constants.dart';
@@ -22,6 +23,11 @@ class SearchHit {
   final String? country;
   final String source; // 'nominatim' | 'google'
 
+  /// Google Places の place_id (source=='google' のみ)。Google マップを
+  /// その店舗/施設のページ (メニュー・営業時間・レビュー) で直接開くために使う。
+  /// Nominatim 経路では取得できないため null。
+  final String? placeId;
+
   /// この地点に向けた16方位ランキング（1位方位とスコア）
   String? bestDir;
   double bestScore;
@@ -35,6 +41,7 @@ class SearchHit {
     required this.name, required this.lat, required this.lng,
     this.address,
     this.country, this.source = 'nominatim',
+    this.placeId,
     this.bestDir, this.bestScore = 0, this.bestFortune,
     this.bestFortuneScore = 0,
   });
@@ -96,6 +103,8 @@ Future<List<SearchHit>> searchPlaces(String query, {LatLng? biasCenter}) async {
       // address は Google Places 経路のみ Worker が別フィールドで返す。
       // 空文字は null 扱い (popup 側で fallback 判定)。
       final rawAddress = m['address'] as String?;
+      // placeId は Google Places 経路のみ。空文字は null 扱い (Maps URL 側で判定)。
+      final rawPlaceId = m['placeId'] as String?;
       return SearchHit(
         name: m['name'] as String? ?? '',
         address: (rawAddress?.isNotEmpty ?? false) ? rawAddress : null,
@@ -103,6 +112,7 @@ Future<List<SearchHit>> searchPlaces(String query, {LatLng? biasCenter}) async {
         lng: (m['lng'] as num).toDouble(),
         country: m['country'] as String?,
         source: source,
+        placeId: (rawPlaceId?.isNotEmpty ?? false) ? rawPlaceId : null,
       );
     }).toList();
   } catch (_) {
@@ -540,6 +550,13 @@ class SearchFocusPopup extends StatelessWidget {
           const SizedBox(height: 6),
         ],
         _ActionTile(label: '✈ ここへ移動', onTap: onMoveToHit),
+        const SizedBox(height: 6),
+        // Google マップでその店舗/施設のページを開く (placeId があれば place card
+        // 直開き = メニュー・営業時間・レビューがすぐ見れる)。座標ピンではない。
+        _ActionTile(
+          label: '🗺 Googleマップで見る',
+          onTap: () => _openInGoogleMaps(context, focus),
+        ),
         if (onConsult != null) ...[
           const SizedBox(height: 6),
           _ActionTile(label: '✦ Stella に相談', onTap: onConsult!),
@@ -596,5 +613,46 @@ class _ActionTile extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+/// 検索結果を Google マップで開く URL を組み立てる。
+///
+/// Google Places 経路 (placeId あり) は `query_place_id` を付けることで、その
+/// 店舗/施設の place card (メニュー・営業時間・写真・レビュー) を直接開く。
+/// Nominatim 経路は placeId が無いため、店名+住所のテキスト検索にフォールバック
+/// する (それでも座標ピンより情報量が多い)。query は place_id 解決失敗時の保険。
+/// 公式: https://developers.google.com/maps/documentation/urls/get-started#search-action
+String googleMapsUrlForHit(SearchHit h) {
+  final queryParts = <String>[
+    if (h.name.isNotEmpty) h.name,
+    if (h.address != null && h.address!.isNotEmpty) h.address!,
+  ];
+  final rawQuery =
+      queryParts.isNotEmpty ? queryParts.join(' ') : '${h.lat},${h.lng}';
+  final query = Uri.encodeComponent(rawQuery);
+  final base = 'https://www.google.com/maps/search/?api=1&query=$query';
+  final pid = h.placeId;
+  if (pid != null && pid.isNotEmpty) {
+    return '$base&query_place_id=${Uri.encodeComponent(pid)}';
+  }
+  return base;
+}
+
+/// 検索結果を外部 Google マップ (アプリ優先、無ければブラウザ) で開く。
+/// 失敗時は SnackBar で通知 (sanctuary_legal_menu の _openUrl と同じ作法)。
+Future<void> _openInGoogleMaps(BuildContext context, SearchHit h) async {
+  final uri = Uri.parse(googleMapsUrlForHit(h));
+  bool ok = false;
+  try {
+    ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
+  } catch (_) {
+    ok = false;
+  }
+  if (!ok && context.mounted) {
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+      content: Text('Google マップを開けませんでした'),
+      backgroundColor: Color(0xFF1A2438),
+    ));
   }
 }

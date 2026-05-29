@@ -44,8 +44,8 @@
 | 481 | 🟡 NOTICE | lib/widgets/full_moon_overlay.dart |
 | 481 | 🟡 NOTICE | lib/screens/map/map_overlays.dart |
 | 476 | 🟡 NOTICE | lib/utils/app_attest_client.dart |
+| 472 | 🟡 NOTICE | lib/screens/consultation/consultation_result_screen.dart |
 | 467 | 🟡 NOTICE | lib/screens/horoscope/horo_relocation_panel.dart |
-| 465 | 🟡 NOTICE | lib/screens/consultation/consultation_result_screen.dart |
 | 460 | 🟡 NOTICE | lib/screens/galaxy/galaxy_star_atlas.dart |
 | 459 | 🟡 NOTICE | lib/utils/solara_auth.dart |
 | 447 | 🟡 NOTICE | lib/screens/sanctuary/class_share_card.dart |
