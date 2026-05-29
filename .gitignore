@@ -25,3 +25,6 @@ memory/
 
 # AiConsent background generation drafts (mockup) — keep local, do not commit
 apps/solara/mockup/ai_consent_bg_drafts/
+
+# GeoNames seed cache (Stella 相談 D1 都市プール) — DL zip/txt + 生成 12MB SQL。commit しない
+apps/solara/tools/_geonames_cache/

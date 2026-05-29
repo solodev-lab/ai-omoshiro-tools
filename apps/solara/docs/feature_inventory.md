@@ -159,7 +159,8 @@ Solara のバックエンドは **Cloudflare Workers** で稼働。本番 URL: `
   Worker がチャート/線/sectorEnergy/候補多様性/リロケハウスを全計算 → Stella ナレーション。
   client 候補生成 (`consultation_engine.dart`) と Dart 版 `world_cities.dart` は撤去。
 - **候補は 1 つずつ**: 最初の取得で「一番強い見出し候補」、「別の候補地」で excluded を足して
-  次の distinct 候補を 1 枚ずつ (最大 5 枚スワイプ比較)。**1 クレジット = 1 候補**。
+  次の候補を 1 枚ずつ。出し直しごとにレンズが回る (合成最強→アスペクト再合成→ランダム、§0.2.18)。
+  **1 クレジット = 1 候補**。枯渇 (これ以上活きた候補が無い) は案Y=正直に止めて代替を提案、クレジットは消費しない。
 - **影響プール = 全データ**: 4 アングル合線 + アスペクト線(合/トライン/スクエア/セクスタイル) +
   天頂帯/天底帯(緯度効果) を、フレーム横断(natal+transit+progressed、旅行は ≤3 日サンプリング)で集める。
 - **入口 3 導線**: Map タップ / Daily Transit / 検索結果詳細「✦ Stella に相談」。
@@ -194,8 +195,9 @@ Solara のバックエンドは **Cloudflare Workers** で稼働。本番 URL: `
   「テーマ線が遠い、静かでニュートラルな場」と正直に描く (本物の強さ > 作られた多様性)。
 - **内的季節 = ライフステージ補正**: 年齢の数字を使わず、進行の月(サイン+ハウス)/進行の太陽で
   「今のあなたは〜の内的な季節」と一文の枠を作り、土地のエネルギーを重ねる。専門用語は出さない。
-- **候補多様性 (案C)**: 候補ごとに主役 (惑星 × アスペクト質 × アングル/帯) を変える。
-  1 候補に関係し合う ~2 ファクター、可能なら Soft+Hard を 1 つずつで「幅」を出す。
+- **候補選定 = レンズ回転** (2026-05-29 リデザイン、旧「候補多様性 案C」を置換 → §0.2.18):
+  1 回目=多線合成最強 / 2 回目=アスペクト線主役の再合成 / 3 回目以降=ランダム。
+  ナレーション側は従来通り 1 候補に関係し合う ~2 ファクター、可能なら Soft+Hard を 1 つずつで「幅」を出す。
 - **出生時刻不明でも品質を落とさない**: サイン/帯/遅い惑星/アスペクトでフル出力。
   困るのは移住のみ (ハウス/角が要る)。正午仮定でごまかさず、エビデンス末尾に控えめに注記。
 
@@ -237,6 +239,79 @@ Solara のバックエンドは **Cloudflare Workers** で稼働。本番 URL: `
 - **再発防止**: `consultation_engine.test.js` に end-to-end テスト 3 件追加
   (`pipeline point scope: placeKind=named を candidate に保持` 等)。
   `placeReference` 単体テストだけでは検出できなかった「pipeline → placeReference」の透過テストを追加。
+
+#### 0.2.18 候補選定リデザイン Phase A: レンズ回転 + 16方位 + 多線合成 + 案Y (2026-05-29)
+
+> **位置づけ**: アプリの根幹機能 (Stella 相談の候補地選定) の再設計。旧「候補多様性 案C」
+> (`signatureFamily` / `diversifyOrder` = 主役を毎回ズラして見栄えの幅を作る) を撤去し、
+> 「本物の強さ順 → 質の違う 2 枚目 → ランダム」の **3 段レンズ回転** に置換した。
+> Phase A = Worker エンジン (deterministic 計算) のみ。Phase B (D1+GeoNames 都市プール拡張・
+> おでかけを実在の町に) は §0.2.19 で完了。Phase C (Flutter: avoid-window 永続化 N=Pro9/Free6・
+> no-home=案ア・「自宅」→「現住所」表記・sparse/枯渇 UI) は未着手。
+
+- **16 方位化** (`BEARING_DEFS` 8→16, `BEARING_JP`): おでかけ/方位スコープの合成点を 22.5° 刻みの
+  16 方位 (北/北北東/…/北北西) に倍増。ラベルも 16 個。8 方位では「別の方角」を押すと粗く飛んでいた。
+- **多線合成 `compositeStrengthOf`** (decay 0.6 の幾何級数和): 候補の主キーを「最強 1 本 (topStrength)」
+  から「上位ファクターの減衰総和」に変更。**強 1 本 > 弱多数** かつ **厚い場 (複数中強線) > 単線** を
+  区別する (線数インフレ防止)。`byRank` の第 1 ソートキーを compositeStrength に。
+- **レンズ回転 `selectCandidate(scored, excluded, attempt, randomFn)`**: 出し直し回数 `attempt`
+  (= excluded.length) でレンズを切替。
+  - **1 回目 (attempt 0)** = 多線合成最強 (lens='composite')。lively (= honestQuiet でない) の先頭。
+  - **2 回目 (attempt 1)** = アスペクト線主役の再合成 (lens='aspect', `aspectStrengthOf`)。
+    trine/square=1.0・sextile=0.85・conjunction=0.35・帯=0.2 で再重み付け → 合成順とは別の「質の違う」土地。
+  - **3 回目以降 (attempt ≥2)** = lively からランダム (lens='random', randomFn 注入可でテスト可能)。
+  - 具体地点 (isPoint, scored 1 件) は attempt 不問で常に単一返し (lens='point')。
+- **案Y = 正直に枯渇 + 非消費**: lively が尽きたら candidate=null + `exhausted:true` + `exhaustedReason`
+  (`emptyPool` / `noFresh` / `allQuiet`) + `suggestions` (`suggestionsFor(scope)` =
+  widenRadius/bearing/point/world のコード配列)。`consultationConsumed` が `!result.exhausted` を
+  見るため枯渇は自動的にクレジット非消費。**1 回目で全部静か (allQuiet) は枯渇にせず**、最強の静かな場を
+  fallbackHonest として返す (= 本物の読み・課金する)。枯渇は 2 回目以降にだけ起きる。
+- **meta 拡張**: 成功 candidate に `compositeStrength` (×1000 丸め)、meta に `lens` / `attempt` を追加。
+- **撤去**: `signatureFamily` / `diversifyOrder` (engine + test の参照のみ → 死蔵化を確認して削除)。
+- **テスト**: `consultation_engine.test.js` 33 件 pass (compositeStrengthOf 減衰 / aspectStrengthOf 再重み /
+  レンズ 3 段 attempt 0/1/2 / allQuiet fallbackHonest / 枯渇 3 reason / suggestionsFor / 16方位 length=16)。
+  `consultation_v2.test.js` 24 件 pass (excluded 出し尽くし→exhausted は 16 方位全列挙に更新)。
+  `consultation_credits.test.js` 30 件 pass (exhausted は非課金を維持)。
+
+#### 0.2.19 候補選定リデザイン Phase B: D1 グローバル都市プール + おでかけ実在の町 (2026-05-29)
+
+> **位置づけ**: §0.2.18 (Phase A) の続き。旧キュレート 762 都市 (`world_cities.js`) を
+> **Cloudflare D1 のグローバル都市プール (GeoNames cities1000, 約 169,000 件)** に置換し、
+> おでかけを「合成16方位」から **実在の町** に切り替える。Worker のみ (Flutter は Phase C)。
+> **安全機構**: D1 binding (`env.DB`) が無い間は engine が従来 `worldCities`(762) に自動フォールバック
+> するので、worker を先に deploy しても挙動は不変 (= v+17 クライアントに無影響)。owner が
+> wrangler で D1 を有効化 + redeploy した瞬間に おでかけ が実在の町へ切り替わる (Phase C 配信と同期させる)。
+
+- **seed**: `tools/seed_d1_cities.py` が GeoNames cities1000.zip + admin1CodesASCII を DL→パースし、
+  `worker/migrations/0001_cities.sql` (スキーマ: lat/lng・(country,population)・population の 3 index) と
+  `_geonames_cache/cities_data.sql` (約 12MB, gitignore, `wrangler d1 import` 用) を生成。
+  名前戦略 (実測 GeoNames col1 name は JP でもローマ字): **JP=alternatenames の CJK 最短** (例 厚木/鎌倉)、
+  **非JP=かな最短** (例 パリ/ロンドン、漢字のみは中国語誤認回避で除外)、無ければローマ字。
+  region は JP のみ admin1→日本語県名 (47 県 100% マップ)、非 JP は null (region は表示専用・本文非使用)。
+- **`buildCandidatePool` を async 化** (`{ scope, home, mode, env }` → `{ candidates, sparse, nearbyCount, source }`)。
+  `runConsultationPipeline(request, env)` も async 化し `consultation_v2.handleConsultationV2` が `await`。
+  - **局所 (おでかけ/近傍半径)** = D1 bounding-box (lat/lng 矩形 → JS で haversine 円精密化, 人口フロアなし)。
+    実在の町を `townRowToCandidate` 化: `directionFromHome`(表示用「南西」等)/`directionCode`/`distanceKm` を付与、
+    **`bearing` は敢えて立てない** (placeReference の「方角だけ・地名禁止」分岐に落ちるのを防ぎ町名を名指しさせる)。
+  - **広域 (地域/自国/世界)** = D1 で **人口フロア + 人口順 + LIMIT N**。世界≥30万 / 地域≥10万 / 自国≥5万、
+    N=`CONSULTATION_WIDE_LIMIT`(1000)。scorePool が粗ランク後 `FULL_SCORE_LIMIT`(48) しか full 採点しないため、
+    プールが 1000 でも CPU は数十 ms に収まる (N は主に D1 read 量・payload を抑える役)。
+  - **D1 binding 無し** = 全スコープ従来挙動 (`fallback-bearing`/`fallback-radius`/`fallback-region`/…)。
+- **sparse**: 局所 bounding-box の件数が `CONSULTATION_SPARSE_MIN`(6) 未満で `meta.sparse=true` + `nearbyCount`。
+  枯渇 (案Y) とは別物 (sparse はヒント用・候補は出す)。`consultation_v2` が `meta` で透過 → Phase C UI が消費。
+- **env** (`wrangler.toml [vars]`, deploy だけで調整可): `CONSULTATION_DAILY_RADIUS_KM`(50) /
+  `CONSULTATION_LOCAL_LIMIT`(1500) / `CONSULTATION_WORLD_MIN_POP`(300000) / `…_REGION_MIN_POP`(100000) /
+  `…_COUNTRY_MIN_POP`(50000) / `CONSULTATION_WIDE_LIMIT`(1000) / `CONSULTATION_SPARSE_MIN`(6)。
+- **owner 作業 (Cloudflare ログイン要)**: `wrangler d1 create solara-cities` → `wrangler.toml` の
+  `[[d1_databases]]` (binding="DB") を database_id 入りでコメント解除 → `d1 execute --remote --file=0001_cities.sql` (schema) →
+  `d1 execute --remote --yes --file=cities_data.sql` (約16.9万行・数分。**d1 import は v4 廃止 → execute --file**) →
+  `wrangler deploy`。正確なコマンドは wrangler.toml の `[[d1_databases]]` コメントに同梱。
+- **テスト**: `consultation_engine.test.js` 38 件 pass (D1 モックで bounding-box 50km 外除外 / sparse /
+  人口フロア+LIMIT 可変 / 自国・地域フィルタ / countriesInGroup / bearing16 / フォールバック分岐)。
+  `consultation_v2.test.js` 25 件 pass (D1 おでかけで candidateMeta→candidate に方角ラベル・町名がプロンプトに出る)。
+  `consultation_credits.test.js` 30 件 pass。
+- **未着手 (Phase C)**: Flutter の avoid-window 永続化 (N=Pro9/Free6, theme×scope)・no-home=案ア・
+  「自宅」→「現住所」表記・sparse / 枯渇 (`exhaustedReason`/`suggestions`) UI・実在の町の方角/距離バッジ表示。
 
 ### 0.2.3 Pro 週次キャップ 100 回/週 (2026-05-27)
 
