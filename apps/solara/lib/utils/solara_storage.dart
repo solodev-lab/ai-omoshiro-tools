@@ -119,6 +119,11 @@ class SolaraStorage {
   // V2 (全要素統合) でレコード形式が変わったため key を更新。旧キーのデータは
   // 互換性がないので無視 (pre-launch・内部テストのみ。実害なし)。
   static const _consultationHistoryKey = 'solara_consultation_history_v2';
+
+  /// 相談 候補「無連続」avoid-window (C-2)。theme×scope ごとに直近に提示した地名を
+  /// 覚えておき、次の相談で同じ土地の繰り返しを避ける。JSON マップ {key: [names]} を 1 キーに保存。
+  /// key = 'theme:scopeKind'。各リストは最新 N 件 (Pro 9 / Free 6) に trim。端末ローカル。
+  static const _consultationAvoidKey = 'solara_consultation_avoid_v1';
   // AI 生成同意 (Apple 5.1.2(i) 2025-11-13 改定、Google Generative AI Apps policy)。
   // 出生情報・相談内容を Google Gemini API に送る旨を明示し、初回起動時に
   // 一度だけユーザー同意を取得する。ISO8601 文字列を保存 (null = 未同意)。
@@ -719,5 +724,57 @@ class SolaraStorage {
     final prefs = await SharedPreferences.getInstance();
     final raw = json.encode(list.map((r) => r.toJson()).toList());
     await prefs.setString(_consultationHistoryKey, raw);
+  }
+
+  // --- Consultation 候補 無連続 avoid-window (C-2) ---
+
+  /// theme×scope キーの直近提示地名 (無連続用)。新規相談の開始時に読み、avoid として送る。
+  static Future<List<String>> getConsultationAvoid(String key) async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString(_consultationAvoidKey);
+    if (raw == null) return const [];
+    try {
+      final map = json.decode(raw) as Map<String, dynamic>;
+      final list = map[key];
+      if (list is List) {
+        return list.map((e) => e.toString()).toList(growable: false);
+      }
+    } catch (_) {
+      // 壊れたデータは無視 (no-repeat は best-effort、失敗で相談を止めない)。
+    }
+    return const [];
+  }
+
+  /// 提示した地名を window に積む (最新を末尾)。最新 [maxN] 件だけ残す。
+  /// maxN = Pro 9 / Free 6 (呼び出し側で決定)。
+  static Future<void> pushConsultationAvoid(
+      String key, String name, int maxN) async {
+    if (name.isEmpty || maxN <= 0) return;
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString(_consultationAvoidKey);
+    Map<String, dynamic> map;
+    try {
+      map = raw == null
+          ? <String, dynamic>{}
+          : (json.decode(raw) as Map<String, dynamic>);
+    } catch (_) {
+      map = <String, dynamic>{};
+    }
+    final cur = (map[key] is List)
+        ? (map[key] as List).map((e) => e.toString()).toList()
+        : <String>[];
+    cur.remove(name); // 既出なら末尾へ移動 (最新化)
+    cur.add(name);
+    if (cur.length > maxN) {
+      cur.removeRange(0, cur.length - maxN); // 最新 maxN 件に trim
+    }
+    map[key] = cur;
+    await prefs.setString(_consultationAvoidKey, json.encode(map));
+  }
+
+  /// avoid-window 全消去 (Sanctuary「すべて削除」と一緒に呼ぶ用)。
+  static Future<void> clearConsultationAvoid() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_consultationAvoidKey);
   }
 }

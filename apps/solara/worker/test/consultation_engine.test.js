@@ -427,6 +427,42 @@ test('pipeline diversity: excluded で別の候補に進む', async () => {
   assert.notEqual(second.candidate.name, first.candidate.name);
 });
 
+test('pipeline avoid (C-2): avoid は別候補にするが attempt/レンズは進めない (1回目=合成最強のまま)', async () => {
+  const base = {
+    birth: BIRTH, home: HOME, theme: 'work', mode: 'daily',
+    when: { kind: 'date', date: '2026-07-10' }, scope: { kind: 'bearing', radiusKm: 100 },
+  };
+  const first = await runConsultationPipeline({ ...base, isFirst: true, excluded: [] });
+  // first を avoid に入れて「新規相談」(excluded 空 = attempt 0)
+  const avoided = await runConsultationPipeline({
+    ...base, isFirst: true, excluded: [], avoid: [first.candidate.name],
+  });
+  assert.ok(avoided.candidate);
+  assert.notEqual(avoided.candidate.name, first.candidate.name); // avoid した土地は出ない
+  assert.equal(avoided.meta.attempt, 0); // avoid は attempt に数えない
+  assert.equal(avoided.meta.lens, 'composite'); // 1 回目=合成最強レンズのまま
+});
+
+test('pipeline avoid 安全策 (C-2): avoid で全滅しても新規相談(attempt0)は必ず 1 枚出す', async () => {
+  const base = {
+    birth: BIRTH, home: HOME, theme: 'love', mode: 'daily',
+    when: { kind: 'date', date: '2026-07-10' }, scope: { kind: 'bearing', radiusKm: 50 },
+  };
+  const allBearings = [
+    '北', '北北東', '北東', '東北東', '東', '東南東', '南東', '南南東',
+    '南', '南南西', '南西', '西南西', '西', '西北西', '北西', '北北西',
+  ];
+  const r = await runConsultationPipeline({ ...base, isFirst: true, excluded: [], avoid: allBearings });
+  assert.ok(r.candidate); // avoid を無視してでも 1 枚返す (fresh 相談で「何も無い」を避ける)
+
+  // ただし「出し直し」(attempt>=1) は avoid 全滅なら従来どおり枯渇 (案Y)
+  const exhausted = await runConsultationPipeline({
+    ...base, isFirst: false, excluded: [r.candidate.name], avoid: allBearings,
+  });
+  assert.ok(!exhausted.candidate);
+  assert.equal(exhausted.exhausted, true);
+});
+
 test('pipeline migration: transit 不使用 (factor は natal/progressed のみ) + リロケハウス', async () => {
   const r = await runConsultationPipeline({
     birth: BIRTH, home: HOME, theme: 'money', mode: 'migration',

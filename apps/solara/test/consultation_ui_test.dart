@@ -342,4 +342,30 @@ void main() {
     expect(find.textContaining('約30km'), findsOneWidget); // 距離
     expect(find.textContaining('· JP'), findsNothing); // 生の国コードは出さない
   });
+
+  // C-2: avoid-window を送信し、表示候補を window に積む。
+  testWidgets('Result: avoid-window を送信し表示候補を積む (C-2)', (tester) async {
+    // 前回相談で出した想定の地名を window に 1 件入れておく (theme=love, scope=world)。
+    await SolaraStorage.pushConsultationAvoid('love:world', '京都', 6);
+
+    ConsultationRequest? sent;
+    await tester.pumpWidget(MaterialApp(
+      home: ConsultationResultScreen(
+        request: _req(),
+        fetchOverride: (req) async {
+          sent = req;
+          return ConsultationV2Result(reading: _reading(name: '大阪', remainingAfter: 0));
+        },
+      ),
+    ));
+    await tester.pumpAndSettle();
+
+    // 初回リクエストに avoid=[京都] が乗る (excluded ではない = レンズ attempt を進めない)。
+    expect(sent?.avoid, contains('京都'));
+    expect(sent?.excluded, isEmpty);
+    // 表示された候補 (大阪) が window に積まれ、既存 (京都) も残る。
+    final win = await SolaraStorage.getConsultationAvoid('love:world');
+    expect(win, contains('大阪'));
+    expect(win, contains('京都'));
+  });
 }

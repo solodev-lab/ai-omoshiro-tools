@@ -5,9 +5,9 @@
 
 ## サマリ
 
-- ファイル数: 31 / 総行数: 10039
+- ファイル数: 31 / 総行数: 10076
 - class/mixin/extension/enum: 90
-- 関数 (top-level + method の素拾い): 257
+- 関数 (top-level + method の素拾い): 258
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 7
 - Worker URL リテラル: 0
@@ -93,7 +93,7 @@ Stella 相談 追加クレジット購入シート (消費型 IAP、設計 B 案
   </details>
 
 
-### `lib/screens/consultation/consultation_history_screen.dart` (278 行)
+### `lib/screens/consultation/consultation_history_screen.dart` (280 行)
 
 **ファイル先頭コメント:**
 
@@ -126,7 +126,7 @@ Consultation History Screen — Phase 2-4
 
 - L93 `createState()`
 - L103 `initState()`
-- L181 `build()`
+- L183 `build()`
 
   <details><summary>private 関数 8 件</summary>
 
@@ -135,9 +135,9 @@ Consultation History Screen — Phase 2-4
   - L120 `_delete()`
   - L129 `_toggleFavorite()`
   - L140 `_confirmDeleteAll()`
-  - L226 `_buildFilterBar()`
-  - L247 `_buildList()`
-  - L271 `_openDetail()`
+  - L228 `_buildFilterBar()`
+  - L249 `_buildList()`
+  - L273 `_openDetail()`
 
   </details>
 
@@ -605,7 +605,7 @@ Stella 相談 クレジット制 (設計 project_solara_stella_free_credits.md) 
 - L22 `build()`
 
 
-### `lib/screens/consultation/consultation_result_screen.dart` (430 行)
+### `lib/screens/consultation/consultation_result_screen.dart` (465 行)
 
 **ファイル先頭コメント:**
 
@@ -635,25 +635,26 @@ ConsultationRecord を読み込み専用表示 (fetch なし・autosave なし�
 - L42 `class ConsultationResultScreen : StatefulWidget`
 - L77 `class _ConsultationResultScreenState : State`
 
-**関数 (4 public + 10 private):**
+**関数 (4 public + 11 private):**
 
 - L73 `createState()`
-- L112 `initState()`
-- L125 `dispose()`
-- L317 `build()`
+- L134 `initState()`
+- L147 `dispose()`
+- L352 `build()`
 
-  <details><summary>private 関数 10 件</summary>
+  <details><summary>private 関数 11 件</summary>
 
-  - L106 `_setSharing()`
-  - L130 `_runFetch()`
-  - L135 `_fetch()`
-  - L176 `_loadNext()`
-  - L237 `_snack()`
-  - L249 `_onBuyCredits()`
-  - L255 `_showConsultationPaywall()`
-  - L276 `_showAboutReading()`
-  - L291 `_persist()`
-  - L382 `_buildBody()`
+  - L108 `_pushShownToAvoid()`
+  - L128 `_setSharing()`
+  - L152 `_runFetch()`
+  - L157 `_fetch()`
+  - L207 `_loadNext()`
+  - L272 `_snack()`
+  - L284 `_onBuyCredits()`
+  - L290 `_showConsultationPaywall()`
+  - L311 `_showAboutReading()`
+  - L326 `_persist()`
+  - L417 `_buildBody()`
 
   </details>
 

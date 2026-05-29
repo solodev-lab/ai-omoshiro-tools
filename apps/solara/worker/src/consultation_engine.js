@@ -880,6 +880,10 @@ export async function runConsultationPipeline(request, env = null) {
     birth, home, theme, mode,
     when = null, scope = null,
     isFirst = true, excluded = [],
+    // avoid-window (C-2): theme×scope の「無連続」用に直近 N 件の地名を渡す。
+    // excluded (= レンズ回転の attempt カウンタ) とは別物で、フィルタには効くが attempt には数えない。
+    // これで新規相談の 1 回目でも attempt=0 のまま「合成最強」レンズが効く。
+    avoid = [],
   } = request || {};
 
   if (!VALID_THEMES.has(theme)) throw new Error(`Invalid theme: ${theme}`);
@@ -904,8 +908,16 @@ export async function runConsultationPipeline(request, env = null) {
   const scored = scorePool(built.candidates, pool);
 
   // 4. レンズ選択 (回転レンズ: attempt は既出件数 = 何回目-1。excluded で前進)
+  // avoid (無連続 window) は excluded と合わせてフィルタに使うが attempt には数えない。
   const attempt = (excluded || []).length;
-  const sel = selectCandidate(scored, excluded, attempt);
+  const exclusionList = [...(excluded || []), ...(avoid || [])];
+  let sel = selectCandidate(scored, exclusionList, attempt);
+  // 安全策: 新規相談 (attempt 0) で avoid-window のせいだけで枯渇したら、avoid を無視して
+  // 必ず 1 枚出す (= 先週見た土地でも、他に新鮮な候補が無ければ正直に出す。fresh 相談で
+  // 「何も無い」を避ける)。出し直し (attempt>=1) はそのまま枯渇 = 案Y。
+  if (!sel.candidate && attempt === 0 && (avoid || []).length) {
+    sel = selectCandidate(scored, excluded || [], attempt);
+  }
   const { candidate, remainingAfter, single } = sel;
   if (!candidate) {
     // 案Y: 正直に止めて代替を提案する。candidate=null + exhausted で index.js は課金しない。

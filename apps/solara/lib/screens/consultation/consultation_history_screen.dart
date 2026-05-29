@@ -173,6 +173,8 @@ class _ConsultationHistoryScreenState extends State<ConsultationHistoryScreen> {
       }
     } else {
       await SolaraStorage.clearConsultationHistory();
+      // 履歴全消去なら無連続 avoid-window もリセット (次の相談を真っさらから)。
+      await SolaraStorage.clearConsultationAvoid();
     }
     await _load();
   }

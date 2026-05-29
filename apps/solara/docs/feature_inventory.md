@@ -342,6 +342,33 @@ Solara のバックエンドは **Cloudflare Workers** で稼働。本番 URL: `
   していた 3 件も現行 UI に追従修正 + Phase C 新規 2 件: 案Y 代替提案パネル / 実在の町字幕)。
   Flutter 相談テスト計 72 件 pass。`flutter analyze` クリーン。
 
+#### 0.2.21 候補選定リデザイン Phase C-2: 無連続 avoid-window (2026-05-29)
+
+> **位置づけ**: §0.2.18-§0.2.20 の最終ピース。theme×scope ごとに直近に提示した地名を覚えておき、
+> 次の相談で同じ土地の繰り返しを避ける (Pro 9 / Free 6 件)。worker 追補 (`avoid` フィールド) を伴う。
+
+- **設計上の肝 (excluded と avoid の分離)**: 旧来 `excluded` は「no-repeat フィルタ」と
+  「レンズ回転の attempt カウンタ」(`attempt = excluded.length`) を兼ねていた。avoid-window の履歴を
+  そのまま `excluded` に詰めると、新規相談の 1 回目でも attempt=N → いきなりランダムレンズになり
+  「1 回目=合成最強」が壊れる。そこで **`avoid` を別フィールドにし、フィルタには効くが attempt には
+  数えない**ようにした。
+- **worker** (`consultation_engine.runConsultationPipeline`): `avoid=[]` を受け、
+  `attempt=excluded.length` は不変、`selectCandidate` には `[...excluded, ...avoid]` を渡す。
+  **安全策**: 新規相談 (attempt 0) で avoid-window のせいだけで枯渇したら avoid を無視して必ず 1 枚出す
+  (先週見た土地でも、他に新鮮な候補が無ければ正直に出す = fresh 相談で「何も無い」を防ぐ)。
+  出し直し (attempt≥1) は avoid 全滅なら従来どおり枯渇 (案Y)。handler は body を透過するので変更不要。
+- **Flutter リクエスト** (`ConsultationRequest.avoid`): toJson (非空時) / copyWith / fromProfile に追加。
+- **永続化** (`SolaraStorage`, key=`theme:scopeKind`, JSON マップ 1 キー `solara_consultation_avoid_v1`):
+  `getConsultationAvoid(key)` / `pushConsultationAvoid(key, name, maxN)` (最新を末尾・最新 maxN に trim) /
+  `clearConsultationAvoid()` (履歴「すべて削除」と連動)。
+- **結果画面** (`consultation_result_screen`): 新規相談の開始時に window スナップショットを固定し、
+  初回 + 出し直しの全リクエストに `avoid` として送る (具体地点 scope と履歴閲覧は対象外 = null キー)。
+  提示した候補名は `_pushShownToAvoid` で window に積む (N = Pro 9 / Free 6, best-effort)。
+- **テスト**: worker `consultation_engine.test.js` 40 件 pass (avoid は別候補にするが attempt/レンズ不変 /
+  安全策で attempt0 は必ず 1 枚 / 出し直しは枯渇)。Flutter `consultation_ui_test` に avoid 往復テスト追加
+  (送信 + 表示候補の積み上げ)。`flutter analyze` クリーン。
+- **これで Phase A/B/C 完了**。残るは D1 binding 有効化 + deploy (実在の町の本番切替) と app ビルド。
+
 ### 0.2.3 Pro 週次キャップ 100 回/週 (2026-05-27)
 
 > **設計の柱**: 「Pro 無制限」を Gemini API 課金破綻防止のために 100 回/週でハードキャップ化。

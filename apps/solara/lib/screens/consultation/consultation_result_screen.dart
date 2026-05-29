@@ -91,6 +91,28 @@ class _ConsultationResultScreenState extends State<ConsultationResultScreen> {
   String? _exhaustedReason;
   List<String> _exhaustSuggestions = const [];
 
+  /// avoid-window (C-2): 新規相談の開始時に固定する「直近に出した地名」スナップショット。
+  /// 全リクエスト (初回 + 出し直し) に avoid として送り、theme×scope の無連続を効かせる。
+  List<String> _avoid = const [];
+
+  /// avoid-window のキー (theme:scopeKind)。履歴閲覧・具体地点は no-repeat 対象外 → null。
+  String? get _avoidKey {
+    final req = widget.request;
+    if (req == null || widget.record != null) return null;
+    final kind = req.scope?.kind ?? 'world';
+    if (kind == 'point') return null; // ユーザーが選んだ具体地点は繰り返してよい
+    return '${req.theme}:$kind';
+  }
+
+  /// 提示した候補名を avoid-window に積む (Pro 9 / Free 6、best-effort)。
+  Future<void> _pushShownToAvoid(ConsultationV2Reading reading) async {
+    final key = _avoidKey;
+    final name = reading.candidate.name;
+    if (key == null || name == null || name.isEmpty) return;
+    final maxN = ProStatus.instance.isPro ? 9 : 6;
+    await SolaraStorage.pushConsultationAvoid(key, name, maxN);
+  }
+
   /// 初回 fetch が 402 でブロックされた理由。非 null の間は結果ではなく誘導を出す。
   ConsultationBlock? _block;
 
@@ -140,7 +162,13 @@ class _ConsultationResultScreenState extends State<ConsultationResultScreen> {
       _error = null;
       _block = null;
     });
-    final result = await _runFetch(req.copyWith(isFirst: true, excluded: const []));
+    // avoid-window スナップショットを開始時に固定 (以後の出し直しでも同じものを送る)。
+    final key = _avoidKey;
+    _avoid = key != null
+        ? await SolaraStorage.getConsultationAvoid(key)
+        : const <String>[];
+    final result =
+        await _runFetch(req.copyWith(isFirst: true, excluded: const [], avoid: _avoid));
     if (!mounted) return;
     if (result.isBlocked) {
       setState(() {
@@ -169,6 +197,9 @@ class _ConsultationResultScreenState extends State<ConsultationResultScreen> {
     // 入力画面の開始ポップアップ等) が一気に更新される。
     // ignore: unawaited_futures
     ConsultationCredits.instance.refresh();
+    // 提示した候補を avoid-window に積む (次回相談の無連続用・best-effort)。
+    // ignore: unawaited_futures
+    _pushShownToAvoid(reading);
     _persist();
   }
 
@@ -185,7 +216,8 @@ class _ConsultationResultScreenState extends State<ConsultationResultScreen> {
         .whereType<String>()
         .where((s) => s.isNotEmpty)
         .toList(growable: false);
-    final result = await _runFetch(req.copyWith(isFirst: false, excluded: excluded));
+    final result =
+        await _runFetch(req.copyWith(isFirst: false, excluded: excluded, avoid: _avoid));
     if (!mounted) return;
     setState(() => _loadingNext = false);
 
@@ -224,6 +256,9 @@ class _ConsultationResultScreenState extends State<ConsultationResultScreen> {
     // 「別の候補地を見る」もクレジット消費なので singleton 経由で全画面更新。
     // ignore: unawaited_futures
     ConsultationCredits.instance.refresh();
+    // 提示した候補を avoid-window に積む (次回相談の無連続用・best-effort)。
+    // ignore: unawaited_futures
+    _pushShownToAvoid(reading);
     if (_pageCtrl.hasClients) {
       _pageCtrl.animateToPage(
         _pageIndex,
