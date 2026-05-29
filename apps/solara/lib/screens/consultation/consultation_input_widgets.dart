@@ -26,19 +26,19 @@ const _modeChoices = <_ModeChoice>[
 ];
 
 // scope 選択肢は場面別:
-//   - daily:           具体地点 / 方角 / 自宅から半径
-//   - travel/migration: 具体地点 / 地域 / 自国内 / 自宅から半径 / 世界全体
+//   - daily:           具体地点 / 方角 / 現住所から半径
+//   - travel/migration: 具体地点 / 地域 / 自国内 / 現住所から半径 / 世界全体
 const _scopeChoicesDaily = <_ScopeChoice>[
   _ScopeChoice('point', '具体地点'),
   _ScopeChoice('bearing', '方角'),
-  _ScopeChoice('radius', '自宅から半径'),
+  _ScopeChoice('radius', '現住所から半径'),
 ];
 
 const _scopeChoicesWide = <_ScopeChoice>[
   _ScopeChoice('point', '具体地点'),
   _ScopeChoice('region', '地域'),
   _ScopeChoice('country', '自国内'),
-  _ScopeChoice('radius', '自宅から半径'),
+  _ScopeChoice('radius', '現住所から半径'),
   _ScopeChoice('world', '世界全体'),
 ];
 
@@ -340,7 +340,7 @@ class _NoHomeNote extends StatelessWidget {
           border: Border.all(color: const Color(0x44D6915C)),
         ),
         child: Text(
-          '自宅の場所が未設定です。「方角・自宅から半径・自国内」は自宅を設定すると使えます。',
+          '現住所が未設定です。「方角・現住所から半径・自国内」は現住所を設定すると使えます。「具体地点」は今すぐ使えます。',
           style: TextStyle(
             color: SolaraColors.energyHardLight,
             fontSize: 11.5,

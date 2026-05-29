@@ -52,10 +52,10 @@
 
 ## #1 / #2 機械抽出 ↔ feature_inventory.md (人手版) の対整合
 
-- 機械抽出した class/mixin/extension/enum: **444**
-- inventory に登場する識別子 (大文字始まり ``backtick``囲み): **250**
+- 機械抽出した class/mixin/extension/enum: **446**
+- inventory に登場する識別子 (大文字始まり ``backtick``囲み): **258**
 
-### #1 機械にあるが Doc に書かれていない (254)
+### #1 機械にあるが Doc に書かれていない (256)
 
 - `AppAttestClient`
 - `ConstellationShareCardPage`
@@ -145,6 +145,7 @@
 - `_EnergyChip`
 - `_ErrorBox`
 - `_ExampleChips`
+- `_ExhaustionPanel`
 - `_FailedBody`
 - `_FallbackChip`
 - `_FilterChip`
@@ -256,10 +257,9 @@
 - `_SanctuaryHomeEditorPageState`
 - `_SanctuaryIconPainter`
 - `_SanctuaryOrbOverlayState`
-- `_SanctuaryProfileEditorPageState`
-- … 残り 54 省略
+- … 残り 56 省略
 
-### #2 Doc に書いてあるがコードに存在しない (ゴースト記述) (60)
+### #2 Doc に書いてあるがコードに存在しない (ゴースト記述) (68)
 
 > 注: Flutter SDK や外部ライブラリの型もここに乗る (誤検出)。
 > 真のゴーストはアプリ独自型のみ。実際の Doc 修正対象は手で絞り込む。
@@ -270,13 +270,20 @@
 - `APPLE_SIWA_PRIVATE_KEY`
 - `APPLE_SIWA_SERVICE_ID`
 - `AnimationController`
+- `BEARING_DEFS`
+- `BEARING_JP`
 - `BottomNavigationBar`
 - `C8D4E8`
 - `CHART_STYLE`
 - `CONSULTATION_CREDIT_PRODUCTS`
+- `CONSULTATION_DAILY_RADIUS_KM`
 - `CONSULTATION_FREE_MODES`
 - `CONSULTATION_FREE_WEEKLY`
+- `CONSULTATION_LOCAL_LIMIT`
 - `CONSULTATION_PRO_WEEKLY`
+- `CONSULTATION_SPARSE_MIN`
+- `CONSULTATION_WIDE_LIMIT`
+- `CONSULTATION_WORLD_MIN_POP`
 - `CategoryFilterTips`
 - `ConsultationCreditEvents`
 - `ConsultationReading`
@@ -288,6 +295,7 @@
 - `F6BD60`
 - `F9D976`
 - `FORECAST_KV`
+- `FULL_SCORE_LIMIT`
 - `FilledButton`
 - `FlutterMap`
 - `Front`

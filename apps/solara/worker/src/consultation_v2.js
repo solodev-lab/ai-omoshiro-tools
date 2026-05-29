@@ -308,15 +308,30 @@ export async function handleConsultationV2(body, env, deps = {}) {
   const { theme, mode, withWhom = '', wish = '', lang = 'ja' } = body || {};
   if (lang !== 'ja') throw new Error(`Unsupported lang: ${lang} (v1 supports ja only)`);
 
-  // Phase 1: 秘伝計算
-  const pipe = runPipeline(body);
+  // Phase 1: 秘伝計算 (候補プールは D1。env を渡す。binding 無し時は worldCities フォールバック)
+  const pipe = await runPipeline(body, env);
 
-  // これ以上候補が無い (excluded で出し尽くした)
+  // これ以上候補が無い (excluded で出し尽くした / 静かな場ばかり / プール空)。
+  // 案Y: 正直に止めて代替提案を返す。exhausted:true なので index.js は課金しない。
   if (!pipe.candidate) {
-    return { exhausted: true, remainingAfter: 0, meta: pipe.meta };
+    return {
+      exhausted: true, remainingAfter: 0,
+      exhaustedReason: pipe.exhaustedReason || null,
+      suggestions: pipe.suggestions || [],
+      meta: pipe.meta,
+    };
   }
 
-  const timeWindow = humanizeTimeWindow(pipe.timeWindow);
+  // おでかけの予定時間帯 (任意)。既知バケツのみ採用 (不正値は無視)。
+  // 2026-05-29: narrative は userTimeBand を主役にする一方で UI ラベルだけ
+  // エンジン計算 (角通過時刻) の bucket を出していたため、本文「夜」/ラベル「昼」のズレが発生。
+  // userTimeBand が指定されている時は UI 表示用 timeWindow もユーザー選択に合わせる。
+  const VALID_BANDS = ['morning', 'midday', 'evening', 'night', 'lateNight'];
+  const rawBand = body && body.when && body.when.timeBand;
+  const userTimeBand = VALID_BANDS.includes(rawBand) ? rawBand : null;
+  const timeWindow = userTimeBand
+    ? { kind: 'single', bucket: userTimeBand, label: BUCKET_JP[userTimeBand] || userTimeBand }
+    : humanizeTimeWindow(pipe.timeWindow);
 
   // 共通で返す土台 (Gemini 成否に依らず付ける構造データ)
   const base = {
@@ -331,6 +346,10 @@ export async function handleConsultationV2(body, env, deps = {}) {
       placeKind: pipe.candidate.placeKind || null,
       lat: pipe.candidate.lat, lng: pipe.candidate.lng,
       country: pipe.candidate.country, region: pipe.candidate.region,
+      // 実在の町 (D1 局所) の表示用方角・距離 (本文には出さない、UI バッジ用)。
+      directionFromHome: pipe.candidate.directionFromHome || null,
+      directionCode: pipe.candidate.directionCode || null,
+      distanceKm: pipe.candidate.distanceKm ?? null,
     },
     timeWindow,
     meta: pipe.meta,
@@ -344,10 +363,6 @@ export async function handleConsultationV2(body, env, deps = {}) {
   const fallbackModel = env.CONSULTATION_MODEL_FALLBACK || env.FORTUNE_MODEL_FALLBACK || 'gemini-flash-latest';
   const models = primary === fallbackModel ? [primary] : [primary, fallbackModel];
 
-  // おでかけの予定時間帯 (任意)。既知バケツのみ採用 (不正値は無視)。
-  const VALID_BANDS = ['morning', 'midday', 'evening', 'night', 'lateNight'];
-  const rawBand = body && body.when && body.when.timeBand;
-  const userTimeBand = VALID_BANDS.includes(rawBand) ? rawBand : null;
   const prompt = buildConsultationPrompt({ pipe, theme, mode, withWhom, wish, userTimeBand });
 
   let parsed;

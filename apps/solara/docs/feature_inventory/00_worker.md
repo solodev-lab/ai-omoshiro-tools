@@ -411,7 +411,7 @@ fallback?: boolean                        // Stella が届かない時 true (静
 **export (1):** `handleConsultation`
 
 
-### `worker/src/consultation_engine.js` (738 行)
+### `worker/src/consultation_engine.js` (1007 行)
 
 **ファイル先頭コメント:**
 
@@ -424,9 +424,12 @@ Solara Stella 相談 — 計算パイプライン (秘伝)。Phase 1。
 受け取り、Worker 側で**全部**計算する (秘匿アーキ最終確定 2026-05-23)。
 1. 影響プール構築 (テーマ絞り ACG 線 + 天頂/天底帯, natal+transit+progressed,
 旅行は期間内 ≤3 日サンプリング)
-2. scope 別 候補プール (具体地点 / 方角 / 半径 / 地域 / 自国内 / 世界)
-3. 候補スコアリング (近接ファクター + signature 抽出)
-4. 多様性選択 (案C + 正直フォールバック, excluded で 1 枚ずつ前進)
+2. scope 別 候補プール (具体地点 / おでかけ近傍の実在の町 / 半径 / 地域 / 自国内 / 世界)
+— D1 グローバル都市プール (cities1000) を bounding-box / 人口フロア+LIMIT で引く。
+D1 binding (env.DB) が無ければ従来の worldCities (762) にフォールバック。
+3. 候補スコアリング (多線合成 compositeStrength + アスペクト合成 aspectStrength + signature)
+4. レンズ選択 (1回目=多線合成最強 / 2回目=アスペクト線主役の再合成 / 3回目以降=ランダム,
+静かな場は正直フォールバック・枯渇は案Y=非消費, excluded で 1 枚ずつ前進)
 5. 候補別リロケハウス (astro.js Placidus 流用, 出生時刻不明は省略)
 6. 時間帯 (現地太陽時 = UTC + 経度/15 → 朝昼夜)
 7. 内的季節 (進行の月サイン+ハウス / 進行の太陽サイン, SA は節目フラグだけ)
@@ -443,7 +446,7 @@ Soft (trine/sextile) と Hard (square) は独立 2 エネルギー。total/吉�
 **export (2):** `runConsultationPipeline`, `_internal`
 
 
-### `worker/src/consultation_v2.js` (391 行)
+### `worker/src/consultation_v2.js` (406 行)
 
 **ファイル先頭コメント:**
 

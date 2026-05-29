@@ -89,7 +89,7 @@ void main() {
     expect(find.text('どこで？'), findsNothing);
 
     // モード 3 択
-    expect(find.text('おでかけ'), findsOneWidget);
+    expect(find.textContaining('おでかけ'), findsOneWidget);
     expect(find.text('旅行'), findsOneWidget);
     expect(find.text('移住'), findsOneWidget);
 
@@ -133,10 +133,10 @@ void main() {
     expect(find.text('自国内'), findsOneWidget);
     expect(find.text('方角'), findsNothing);
 
-    await tester.tap(find.text('おでかけ'));
+    await tester.tap(find.textContaining('おでかけ'));
     await tester.pumpAndSettle();
     expect(find.text('方角'), findsOneWidget);
-    expect(find.text('自宅から半径'), findsOneWidget);
+    expect(find.text('現住所から半径'), findsOneWidget);
     expect(find.text('世界全体'), findsNothing);
   });
 
@@ -175,6 +175,13 @@ void main() {
         ),
       ),
     ));
+    await tester.pumpAndSettle();
+
+    // §0.2.15: preset でも初期は mode/scope 未選択。おでかけ→具体地点 を選ぶと、
+    // picker ではなく preset カードが出る。
+    await tester.tap(find.textContaining('おでかけ'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('具体地点'));
     await tester.pumpAndSettle();
 
     expect(find.text('地点を選ぶ'), findsNothing);
@@ -273,5 +280,92 @@ void main() {
     expect(find.text('大阪'), findsOneWidget); // 2 枚目に遷移
     // remainingAfter=0 なのでボタンは消える
     expect(find.text('別の候補地を見る'), findsNothing);
+  });
+
+  // C-1 (Phase B 反映): 出し尽くし(案Y)で代替提案パネル + クレジット非消費の明示。
+  testWidgets('Result: 出し尽くし(案Y)で代替提案 + 非消費の明示', (tester) async {
+    await tester.pumpWidget(MaterialApp(
+      home: ConsultationResultScreen(
+        request: _req(),
+        fetchOverride: (req) async {
+          if (req.isFirst) {
+            return ConsultationV2Result(reading: _reading(name: '京都', remainingAfter: 1));
+          }
+          return const ConsultationV2Result(
+            exhausted: true,
+            exhaustedReason: 'allQuiet',
+            suggestions: ['widenRadius', 'world'],
+          );
+        },
+      ),
+    ));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('別の候補地を見る'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('半径を広げてみる'), findsOneWidget);
+    expect(find.text('世界全体に広げる'), findsOneWidget);
+    expect(find.textContaining('クレジットを消費していません'), findsOneWidget);
+    expect(find.text('別の候補地を見る'), findsNothing); // 出し尽くしたのでボタンは消える
+  });
+
+  // C-1 (Phase B 反映): 実在の町は字幕に方角・距離、生の国コード「JP」は出さない。
+  testWidgets('Result: 実在の町は字幕に方角・距離、生の国コードは出さない', (tester) async {
+    final townReading = ConsultationV2Reading(
+      isFirst: true,
+      candidate: const ConsultationV2Candidate(
+        name: '鎌倉',
+        lat: 35.31,
+        lng: 139.55,
+        country: 'JP',
+        region: '神奈川県',
+        directionFromHome: '南西',
+        directionCode: 'SW',
+        distanceKm: 30,
+        characterHeadline: '愛の軸が立つ場',
+        energyLabels: ['金星 MC・愛の軸'],
+        narrative: '鎌倉のモック narrative。',
+      ),
+      evidence: const ConsultationEvidence(factors: ['金星MC合']),
+      remainingAfter: 0,
+    );
+    await tester.pumpWidget(MaterialApp(
+      home: ConsultationResultScreen(
+        request: _req(),
+        fetchOverride: (req) async => ConsultationV2Result(reading: townReading),
+      ),
+    ));
+    await tester.pumpAndSettle();
+    expect(find.text('鎌倉'), findsOneWidget);
+    expect(find.textContaining('神奈川県'), findsOneWidget); // 県名
+    expect(find.textContaining('南西'), findsOneWidget); // 方角
+    expect(find.textContaining('約30km'), findsOneWidget); // 距離
+    expect(find.textContaining('· JP'), findsNothing); // 生の国コードは出さない
+  });
+
+  // C-2: avoid-window を送信し、表示候補を window に積む。
+  testWidgets('Result: avoid-window を送信し表示候補を積む (C-2)', (tester) async {
+    // 前回相談で出した想定の地名を window に 1 件入れておく (theme=love, scope=world)。
+    await SolaraStorage.pushConsultationAvoid('love:world', '京都', 6);
+
+    ConsultationRequest? sent;
+    await tester.pumpWidget(MaterialApp(
+      home: ConsultationResultScreen(
+        request: _req(),
+        fetchOverride: (req) async {
+          sent = req;
+          return ConsultationV2Result(reading: _reading(name: '大阪', remainingAfter: 0));
+        },
+      ),
+    ));
+    await tester.pumpAndSettle();
+
+    // 初回リクエストに avoid=[京都] が乗る (excluded ではない = レンズ attempt を進めない)。
+    expect(sent?.avoid, contains('京都'));
+    expect(sent?.excluded, isEmpty);
+    // 表示された候補 (大阪) が window に積まれ、既存 (京都) も残る。
+    final win = await SolaraStorage.getConsultationAvoid('love:world');
+    expect(win, contains('大阪'));
+    expect(win, contains('京都'));
   });
 }

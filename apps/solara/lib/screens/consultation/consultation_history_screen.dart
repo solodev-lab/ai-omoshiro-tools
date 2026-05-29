@@ -70,7 +70,7 @@ const _modeLabel = <String, String>{
 const _scopeLabel = <String, String>{
   'point': '具体地点',
   'bearing': '方角',
-  'radius': '自宅から半径',
+  'radius': '現住所から半径',
   'region': '地域',
   'country': '自国内',
   'world': '世界全体',
@@ -173,6 +173,8 @@ class _ConsultationHistoryScreenState extends State<ConsultationHistoryScreen> {
       }
     } else {
       await SolaraStorage.clearConsultationHistory();
+      // 履歴全消去なら無連続 avoid-window もリセット (次の相談を真っさらから)。
+      await SolaraStorage.clearConsultationAvoid();
     }
     await _load();
   }

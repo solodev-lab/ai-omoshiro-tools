@@ -147,12 +147,19 @@ class ConsultationEvidence {
 class ConsultationV2Candidate {
   final String? name;
   final String? nameEN;
-  final String? bearing; // daily 方角 (N/NE/...)、それ以外 null
+  final String? bearing; // 合成方位フォールバック (D1 無し時のみ N/NE/...)、実在の町は null
   final String? placeType; // 具体地点で店舗種類があれば
   final double lat;
   final double lng;
   final String? country;
   final String? region;
+
+  /// 実在の町 (Phase B D1 局所) の home から見た方角ラベル「南西」等 (表示専用・本文非使用)。
+  /// 合成方位候補・具体地点・広域候補では null。
+  final String? directionFromHome;
+  final String? directionCode; // 16方位コード (N/NNE/.../NNW)、無ければ null
+  final int? distanceKm; // home からの距離 (km、四捨五入)。実在の町のみ。
+
   final String characterHeadline; // 特徴ヘッドライン (15字目安)
   final List<String> energyLabels; // 「惑星 アングル・性格」
   final String narrative;
@@ -167,6 +174,9 @@ class ConsultationV2Candidate {
     required this.lng,
     this.country,
     this.region,
+    this.directionFromHome,
+    this.directionCode,
+    this.distanceKm,
     required this.characterHeadline,
     required this.energyLabels,
     required this.narrative,
@@ -183,6 +193,9 @@ class ConsultationV2Candidate {
         lng: (j['lng'] as num?)?.toDouble() ?? 0.0,
         country: j['country'] as String?,
         region: j['region'] as String?,
+        directionFromHome: j['directionFromHome'] as String?,
+        directionCode: j['directionCode'] as String?,
+        distanceKm: (j['distanceKm'] as num?)?.toInt(),
         characterHeadline: j['characterHeadline'] as String? ?? '',
         energyLabels: (j['energyLabels'] as List?)
                 ?.map((e) => e.toString())
@@ -201,6 +214,9 @@ class ConsultationV2Candidate {
         'lng': lng,
         if (country != null) 'country': country,
         if (region != null) 'region': region,
+        if (directionFromHome != null) 'directionFromHome': directionFromHome,
+        if (directionCode != null) 'directionCode': directionCode,
+        if (distanceKm != null) 'distanceKm': distanceKm,
         'characterHeadline': characterHeadline,
         'energyLabels': energyLabels,
         'narrative': narrative,
@@ -229,6 +245,12 @@ class ConsultationV2Reading {
   /// テーマ該当の強い線が近距離に無い「静かな場」(捏造で持ち上げていない)。
   final bool fallbackHonest;
 
+  /// おでかけ/近傍半径で近くの実在の町が乏しい (Phase B meta.sparse)。ヒント表示用。
+  final bool sparse;
+
+  /// 近傍の実在の町数 (sparse 判定の元・Phase B meta.nearbyCount)。
+  final int? nearbyCount;
+
   final String model;
 
   /// Stella が届かず静的 fallback になった場合 true。
@@ -245,29 +267,35 @@ class ConsultationV2Reading {
     this.remainingAfter = 0,
     this.single = false,
     this.fallbackHonest = false,
+    this.sparse = false,
+    this.nearbyCount,
     this.model = '',
     this.fallback = false,
   });
 
-  factory ConsultationV2Reading.fromJson(Map<String, dynamic> j) =>
-      ConsultationV2Reading(
-        isFirst: j['isFirst'] == true,
-        candidate: ConsultationV2Candidate.fromJson(
-          (j['candidate'] as Map?)?.cast<String, dynamic>() ?? const {},
-        ),
-        evidence: ConsultationEvidence.fromJson(
-          (j['evidence'] as Map?)?.cast<String, dynamic>() ?? const {},
-        ),
-        timeWindow: ConsultationTimeWindow.fromJsonOrNull(j['timeWindow']),
-        innerSeason: j['innerSeason'] as String? ?? '',
-        intro: j['intro'] as String? ?? '',
-        outro: j['outro'] as String? ?? '',
-        remainingAfter: (j['remainingAfter'] as num?)?.toInt() ?? 0,
-        single: j['single'] == true,
-        fallbackHonest: j['fallbackHonest'] == true,
-        model: j['model'] as String? ?? '',
-        fallback: j['fallback'] == true,
-      );
+  factory ConsultationV2Reading.fromJson(Map<String, dynamic> j) {
+    final meta = (j['meta'] as Map?)?.cast<String, dynamic>();
+    return ConsultationV2Reading(
+      isFirst: j['isFirst'] == true,
+      candidate: ConsultationV2Candidate.fromJson(
+        (j['candidate'] as Map?)?.cast<String, dynamic>() ?? const {},
+      ),
+      evidence: ConsultationEvidence.fromJson(
+        (j['evidence'] as Map?)?.cast<String, dynamic>() ?? const {},
+      ),
+      timeWindow: ConsultationTimeWindow.fromJsonOrNull(j['timeWindow']),
+      innerSeason: j['innerSeason'] as String? ?? '',
+      intro: j['intro'] as String? ?? '',
+      outro: j['outro'] as String? ?? '',
+      remainingAfter: (j['remainingAfter'] as num?)?.toInt() ?? 0,
+      single: j['single'] == true,
+      fallbackHonest: j['fallbackHonest'] == true,
+      sparse: meta?['sparse'] == true,
+      nearbyCount: (meta?['nearbyCount'] as num?)?.toInt(),
+      model: j['model'] as String? ?? '',
+      fallback: j['fallback'] == true,
+    );
+  }
 }
 
 /// fetchConsultationV2 の戻り値。
@@ -281,6 +309,12 @@ class ConsultationV2Result {
 
   /// excluded で候補を出し尽くした (これ以上「別の候補地」が無い)。
   final bool exhausted;
+
+  /// 枯渇の理由コード (案Y): 'emptyPool' | 'noFresh' | 'allQuiet' | null。
+  final String? exhaustedReason;
+
+  /// 正直な代替提案コード (案Y): 'widenRadius' | 'bearing' | 'point' | 'world'。
+  final List<String> suggestions;
 
   /// 非 Pro: 今週の残り無料回数 (Pro は null)。
   final int? freeCreditsRemaining;
@@ -298,6 +332,8 @@ class ConsultationV2Result {
     this.reading,
     this.block,
     this.exhausted = false,
+    this.exhaustedReason,
+    this.suggestions = const [],
     this.freeCreditsRemaining,
     this.freeCreditsLimit,
     this.proCreditsRemaining,
@@ -352,6 +388,11 @@ Future<ConsultationV2Result> fetchConsultationV2(
       if (map['exhausted'] == true) {
         return ConsultationV2Result(
           exhausted: true,
+          exhaustedReason: map['exhaustedReason'] as String?,
+          suggestions: (map['suggestions'] as List?)
+                  ?.map((e) => e.toString())
+                  .toList(growable: false) ??
+              const [],
           freeCreditsRemaining: freeRemaining,
           freeCreditsLimit: freeLimit,
           proCreditsRemaining: proRemaining,

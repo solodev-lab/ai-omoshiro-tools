@@ -148,7 +148,10 @@ class ConsultationRequest {
   final String wish; // どうなりたい/願い (語りの核・自由記述)
   // ページング
   final bool isFirst; // 初回 (内的季節/intro/outro を出す)
-  final List<String> excluded; // 既出候補名 (「別の候補地」用)
+  final List<String> excluded; // 既出候補名 (「別の候補地」用・レンズ回転 attempt を進める)
+  // avoid-window (C-2): theme×scope の「無連続」用に直近 N 件の地名を渡す。excluded と違い
+  // レンズ回転 attempt には数えない (新規相談の 1 回目でも合成最強レンズを保つ)。
+  final List<String> avoid;
   final String lang;
 
   const ConsultationRequest({
@@ -169,6 +172,7 @@ class ConsultationRequest {
     this.wish = '',
     this.isFirst = true,
     this.excluded = const [],
+    this.avoid = const [],
     this.lang = 'ja',
   });
 
@@ -183,6 +187,7 @@ class ConsultationRequest {
     String wish = '',
     bool isFirst = true,
     List<String> excluded = const [],
+    List<String> avoid = const [],
     String lang = 'ja',
   }) {
     final unknown = p.birthTimeUnknown || p.birthTime.isEmpty;
@@ -204,6 +209,7 @@ class ConsultationRequest {
       wish: wish,
       isFirst: isFirst,
       excluded: excluded,
+      avoid: avoid,
       lang: lang,
     );
   }
@@ -211,6 +217,7 @@ class ConsultationRequest {
   ConsultationRequest copyWith({
     bool? isFirst,
     List<String>? excluded,
+    List<String>? avoid,
   }) =>
       ConsultationRequest(
         birthDate: birthDate,
@@ -230,6 +237,7 @@ class ConsultationRequest {
         wish: wish,
         isFirst: isFirst ?? this.isFirst,
         excluded: excluded ?? this.excluded,
+        avoid: avoid ?? this.avoid,
         lang: lang,
       );
 
@@ -252,6 +260,7 @@ class ConsultationRequest {
         if (wish.isNotEmpty) 'wish': wish,
         'isFirst': isFirst,
         if (excluded.isNotEmpty) 'excluded': excluded,
+        if (avoid.isNotEmpty) 'avoid': avoid,
         'lang': lang,
       };
 }

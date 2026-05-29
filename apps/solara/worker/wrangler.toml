@@ -72,6 +72,20 @@ CONSULTATION_PRO_WEEKLY = "100"
 # 商品 ID/付与数は後から変更可 (deploy のみ)。RC NON_RENEWING_PURCHASE Webhook で残高加算。
 CONSULTATION_CREDIT_PRODUCTS = "com.solodevlab.solara.credits.small:3,com.solodevlab.solara.credits.large:10"
 
+# ── Stella 相談 候補プール (Phase B: D1 グローバル都市プール) チューニング ──
+# 値はコード既定 (consultation_engine.js) と同じ。deploy だけで調整でき、再ビルド不要。
+# D1 binding (DB) が無い間は engine が従来 worldCities(762) にフォールバックするので、
+# これらは D1 を有効化 (下の [[d1_databases]]) して初めて効く。
+#   おでかけ/近傍半径 = bounding-box (人口フロアなし=小さな町も全部)。下記 RADIUS / LOCAL_LIMIT。
+#   地域/自国/世界     = 人口フロア + 人口順 + WIDE_LIMIT 天井 (CPU 安全)。
+CONSULTATION_DAILY_RADIUS_KM = "50"    # おでかけ既定の近傍半径 (km)
+CONSULTATION_LOCAL_LIMIT = "1500"      # 局所 bounding-box の取得上限 (密集都市の保険)
+CONSULTATION_WORLD_MIN_POP = "300000"  # 世界スコープ 人口フロア
+CONSULTATION_REGION_MIN_POP = "100000" # 地域スコープ 人口フロア
+CONSULTATION_COUNTRY_MIN_POP = "50000" # 自国スコープ 人口フロア
+CONSULTATION_WIDE_LIMIT = "1000"       # 広域スコープ 採点件数の天井 (人口順 上位 N)
+CONSULTATION_SPARSE_MIN = "6"          # 近傍町数がこれ未満で sparse ヒント (Phase C UI 用)
+
 # ── App Attest 設定 (設計 v1.9 §16 確定値) ──────────
 # どちらも public 情報 (Bundle ID から推測可能、Team ID も同じ)、secret 不要
 APPLE_TEAM_ID = "TY5JW393Q5"
@@ -168,6 +182,27 @@ ANDROID_CERT_SHA256_ALLOWLIST = "-XyvOn4yrVJdrby9VfkwejUq7Zt4431y4QC-r8raucY"
 # [[kv_namespaces]]
 # binding = "FORECAST_KV"
 # id = "<namespace_id>"
+
+# ── D1: Stella 相談 候補プール (GeoNames cities1000 グローバル都市)。 ──
+# binding 名 "DB"。これが無い間は consultation_engine が従来 worldCities(762) に
+# 自動フォールバックするので、未設定でもサーバーは動く (おでかけは合成16方位のまま)。
+# 有効化手順 (オーナー作業・Cloudflare ログイン要。seed は python apps/solara/tools/seed_d1_cities.py で生成済):
+#   1) npx wrangler d1 create solara-cities
+#   2) 出力された database_id を下の id に貼り、binding 行と一緒にコメント解除
+#   3) npx wrangler d1 execute solara-cities --remote --file=apps/solara/worker/migrations/0001_cities.sql
+#   4) npx wrangler d1 execute solara-cities --remote --yes --file=apps/solara/tools/_geonames_cache/cities_data.sql
+#      (約16.9万行・12MB。wrangler が自動でバッチ分割して数分かかる。d1 import は v4 で廃止済 → execute --file を使う)
+#   5) npx wrangler deploy
+# 有効化した瞬間に おでかけ が「実在の町」に切り替わる (それまでは v+17 クライアントも従来挙動のまま安全)。
+#
+# 2026-05-29 状態: D1 'solara-cities' (region APAC/KIX) は作成済 + schema + 169,123 都市 投入済 + 検証済。
+#   ただし本番 deploy は **Phase C (Flutter UI 磨き込み) と同期** させる方針のため、binding はわざと
+#   コメントアウトに戻してある (有効のままだと別件の routine deploy で実在の町が誤って有効化されるため)。
+#   2026-05-29 有効化: Phase A/B/C 完了 + D1 障害耐性 (try/catch degrade) を入れた上で本番切替。
+[[d1_databases]]
+binding = "DB"
+database_name = "solara-cities"
+database_id = "1fa3e5ec-6bdc-4456-9eab-ab98881e24c9"
 
 # ── Durable Object (App Attest 用、設計 v1.8 §6.1) ──
 # 全 keyId を 1 instance に集約 (idFromName('global'))。

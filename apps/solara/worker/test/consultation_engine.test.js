@@ -4,9 +4,10 @@
  *
  * 検証対象 (src/consultation_engine.js):
  *   - 時間帯バケット (現地太陽時) / houseOf / sampleDays / migrationHorizonDate
- *   - 候補プール (bearing/world/region/point/radius) / homeCountry / offsetByBearing
- *   - scoreCandidate (近接ファクター + Soft/Hard 保持 + honestQuiet)
- *   - diversifyOrder / selectCandidate (案C + 正直フォールバック + excluded 前進)
+ *   - 候補プール (bearing=16方位/world/region/point/radius) / homeCountry / offsetByBearing
+ *   - scoreCandidate (近接ファクター + Soft/Hard 保持 + compositeStrength + aspectStrength + honestQuiet)
+ *   - 回転レンズ selectCandidate (1回目=合成最強 / 2回目=アスペクト再合成 / 3回目以降=ランダム
+ *     + 正直フォールバック + 案Y 枯渇 noCandidateReason + excluded 前進)
  *   - runConsultationPipeline (daily/travel/migration, 出生時刻不明 degrade)
  *
  * 実行: cd apps/solara/worker && node --test test/consultation_engine.test.js
@@ -19,11 +20,71 @@ const {
   houseOf, timeOfDayBucket, bucketFromUtcAt,
   sampleDays, migrationHorizonDate, transitInstants,
   buildCandidatePool, homeCountry, offsetByBearing,
-  scoreCandidate, diversifyOrder, selectCandidate,
+  bearingDegFromTo, bearing16, countriesInGroup,
+  scoreCandidate, compositeStrengthOf, aspectStrengthOf,
+  selectCandidate, suggestionsFor,
 } = _internal;
 
 const BIRTH = { date: '1990-06-15', time: '14:30', lat: 35.68, lng: 139.65, tzName: 'Asia/Tokyo' };
 const HOME = { lat: 35.68, lng: 139.65 };
+
+// ── D1 モック (Phase B: cities テーブルの bounding-box / 人口フロア+LIMIT を JS で再現) ──
+const D1_FIXTURE = [
+  // 東京近郊 (HOME=35.68,139.65 から 50km 圏内、≥6 件 → not sparse)
+  { name: '東京', ascii: 'Tokyo', lat: 35.68, lng: 139.69, country: 'JP', region: '東京都', population: 9000000 },
+  { name: 'さいたま', ascii: 'Saitama', lat: 35.86, lng: 139.65, country: 'JP', region: '埼玉県', population: 1300000 },
+  { name: '川崎', ascii: 'Kawasaki', lat: 35.53, lng: 139.70, country: 'JP', region: '神奈川県', population: 1500000 },
+  { name: '横浜', ascii: 'Yokohama', lat: 35.44, lng: 139.64, country: 'JP', region: '神奈川県', population: 3700000 },
+  { name: '千葉', ascii: 'Chiba', lat: 35.61, lng: 140.11, country: 'JP', region: '千葉県', population: 980000 },
+  { name: '立川', ascii: 'Tachikawa', lat: 35.69, lng: 139.41, country: 'JP', region: '東京都', population: 184000 },
+  { name: '鎌倉', ascii: 'Kamakura', lat: 35.31, lng: 139.55, country: 'JP', region: '神奈川県', population: 172000 },
+  // 50km 圏外 (国内)
+  { name: '大阪', ascii: 'Osaka', lat: 34.69, lng: 135.50, country: 'JP', region: '大阪府', population: 2700000 },
+  { name: '札幌', ascii: 'Sapporo', lat: 43.06, lng: 141.35, country: 'JP', region: '北海道', population: 1900000 },
+  // 海外 大都市
+  { name: 'パリ', ascii: 'Paris', lat: 48.85, lng: 2.35, country: 'FR', region: null, population: 2100000 },
+  { name: 'ニューヨーク', ascii: 'New York', lat: 40.71, lng: -74.0, country: 'US', region: null, population: 8400000 },
+  { name: 'ロンドン', ascii: 'London', lat: 51.50, lng: -0.12, country: 'GB', region: null, population: 9000000 },
+  // 全フロア未満の小村 (赤道直下、孤立 sparse テスト兼 人口フロア除外テスト)
+  { name: '小村A', ascii: 'Komura A', lat: 0.0, lng: 0.0, country: 'XX', region: null, population: 1500 },
+];
+
+/** my engine が発行する 3 種の SQL (bounding-box / country IN / world) を解釈する偽 D1。 */
+function makeFakeD1(rows) {
+  return {
+    prepare(sql) {
+      return {
+        bind(...args) {
+          return {
+            // eslint-disable-next-line require-await
+            async all() {
+              let out;
+              if (sql.includes('lat BETWEEN')) {
+                const [latMin, latMax, lngMin, lngMax, limit] = args;
+                out = rows.filter((r) => r.lat >= latMin && r.lat <= latMax && r.lng >= lngMin && r.lng <= lngMax);
+                out.sort((a, b) => b.population - a.population);
+                out = out.slice(0, limit);
+              } else if (sql.includes('country IN (')) {
+                const limit = args[args.length - 1];
+                const floor = args[args.length - 2];
+                const countries = args.slice(0, args.length - 2);
+                out = rows.filter((r) => countries.includes(r.country) && r.population >= floor);
+                out.sort((a, b) => b.population - a.population);
+                out = out.slice(0, limit);
+              } else {
+                const [floor, limit] = args;
+                out = rows.filter((r) => r.population >= floor);
+                out.sort((a, b) => b.population - a.population);
+                out = out.slice(0, limit);
+              }
+              return { results: out };
+            },
+          };
+        },
+      };
+    },
+  };
+}
 
 // ── 時間帯バケット ──────────────────────────────────────────
 
@@ -102,27 +163,113 @@ test('transitInstants: daily=1 / travel range≤3 / migration=空', () => {
 
 // ── 候補プール ──────────────────────────────────────────────
 
-test('buildCandidatePool: bearing=8方角 / world=全都市 / point=1件', () => {
-  const bearings = buildCandidatePool({ scope: { kind: 'bearing', radiusKm: 50 }, home: HOME, mode: 'daily' });
-  assert.equal(bearings.length, 8);
-  assert.ok(bearings.every((b) => b.bearing));
+// ── 候補プール フォールバック (D1 binding 無し = 従来 worldCities / 合成方位) ──
 
-  const world = buildCandidatePool({ scope: { kind: 'world' }, home: HOME, mode: 'migration' });
-  assert.ok(world.length > 700);
+test('buildCandidatePool フォールバック: bearing=16合成方位 / world=全都市 / point=1件 (D1 無し)', async () => {
+  const bearings = await buildCandidatePool({ scope: { kind: 'bearing', radiusKm: 50 }, home: HOME, mode: 'daily' });
+  assert.equal(bearings.source, 'fallback-bearing');
+  assert.equal(bearings.candidates.length, 16);
+  assert.ok(bearings.candidates.every((b) => b.bearing));
+  // 22.5°刻みの中間方位ラベルが含まれる (16方位化の回帰防止)
+  const names = bearings.candidates.map((b) => b.name);
+  assert.ok(names.includes('北北東') && names.includes('西南西'));
 
-  const point = buildCandidatePool({ scope: { kind: 'point', point: { lat: 34.69, lng: 135.5, name: 'カフェX', placeType: 'cafe' } }, home: HOME, mode: 'daily' });
-  assert.equal(point.length, 1);
-  assert.equal(point[0].isPoint, true);
-  assert.equal(point[0].placeType, 'cafe');
+  const world = await buildCandidatePool({ scope: { kind: 'world' }, home: HOME, mode: 'migration' });
+  assert.equal(world.source, 'fallback-world');
+  assert.ok(world.candidates.length > 700);
+
+  const point = await buildCandidatePool({ scope: { kind: 'point', point: { lat: 34.69, lng: 135.5, name: 'カフェX', placeType: 'cafe' } }, home: HOME, mode: 'daily' });
+  assert.equal(point.candidates.length, 1);
+  assert.equal(point.candidates[0].isPoint, true);
+  assert.equal(point.candidates[0].placeType, 'cafe');
 });
 
-test('buildCandidatePool: region は regionGroup で絞り込む / radius は距離で絞る', () => {
-  const jp = buildCandidatePool({ scope: { kind: 'region', regionGroup: '日本' }, home: HOME, mode: 'migration' });
-  assert.ok(jp.length > 50 && jp.every((c) => c.country === 'JP'));
+test('buildCandidatePool フォールバック: region は regionGroup / radius は距離で絞る (D1 無し)', async () => {
+  const jp = await buildCandidatePool({ scope: { kind: 'region', regionGroup: '日本' }, home: HOME, mode: 'migration' });
+  assert.ok(jp.candidates.length > 50 && jp.candidates.every((c) => c.country === 'JP'));
 
-  const near = buildCandidatePool({ scope: { kind: 'radius', radiusKm: 100 }, home: HOME, mode: 'travel' });
-  const far = buildCandidatePool({ scope: { kind: 'radius', radiusKm: 1000 }, home: HOME, mode: 'travel' });
-  assert.ok(near.length < far.length);
+  const near = await buildCandidatePool({ scope: { kind: 'radius', radiusKm: 100 }, home: HOME, mode: 'travel' });
+  const far = await buildCandidatePool({ scope: { kind: 'radius', radiusKm: 1000 }, home: HOME, mode: 'travel' });
+  assert.ok(near.candidates.length < far.candidates.length);
+});
+
+// ── 候補プール D1 (Phase B: 実在の町 bounding-box / 人口フロア+LIMIT) ──
+
+test('buildCandidatePool D1: おでかけ=近傍の実在の町 (方角ラベル付き・bearing 立てない・50km 外を除外)', async () => {
+  const DB = makeFakeD1(D1_FIXTURE);
+  const r = await buildCandidatePool({ scope: { kind: 'bearing', radiusKm: 50 }, home: HOME, mode: 'daily', env: { DB } });
+  assert.equal(r.source, 'd1-local');
+  assert.equal(r.sparse, false); // 50km 圏内 7 件 ≥ 6
+  assert.ok(r.candidates.some((c) => c.name === '鎌倉'));
+  const kama = r.candidates.find((c) => c.name === '鎌倉');
+  assert.equal(kama.bearing, undefined); // 方角だけの読みに落とさない (町名を名指しさせる)
+  assert.ok(kama.directionFromHome); // 表示用 方角ラベル「南西」等はある
+  assert.equal(typeof kama.distanceKm, 'number');
+  // 50km 圏外 (大阪/札幌/海外) は含まれない
+  assert.ok(!r.candidates.some((c) => c.name === '大阪' || c.name === '札幌' || c.name === 'パリ'));
+});
+
+test('buildCandidatePool D1: 近傍に町が乏しいと sparse=true (枯渇とは別、ヒント用)', async () => {
+  const DB = makeFakeD1(D1_FIXTURE);
+  const r = await buildCandidatePool({ scope: { kind: 'bearing', radiusKm: 50 }, home: { lat: 0.0, lng: 0.0 }, mode: 'daily', env: { DB } });
+  assert.equal(r.source, 'd1-local');
+  assert.ok(r.nearbyCount < 6);
+  assert.equal(r.sparse, true);
+});
+
+test('buildCandidatePool D1: 世界=人口フロアで小村を除外し人口順 (LIMIT は env で可変)', async () => {
+  const DB = makeFakeD1(D1_FIXTURE);
+  const world = await buildCandidatePool({ scope: { kind: 'world' }, home: HOME, mode: 'migration', env: { DB } });
+  assert.equal(world.source, 'd1-world');
+  assert.ok(!world.candidates.some((c) => c.name === '小村A')); // 人口 30万未満は除外
+  assert.ok(world.candidates[0].population >= world.candidates[1].population); // 人口降順
+
+  const capped = await buildCandidatePool({ scope: { kind: 'world' }, home: HOME, mode: 'migration', env: { DB, CONSULTATION_WIDE_LIMIT: '2' } });
+  assert.equal(capped.candidates.length, 2); // 上位 N=2 で頭打ち
+
+  const highFloor = await buildCandidatePool({ scope: { kind: 'world' }, home: HOME, mode: 'migration', env: { DB, CONSULTATION_WORLD_MIN_POP: '5000000' } });
+  assert.ok(highFloor.candidates.every((c) => c.population >= 5000000));
+});
+
+test('buildCandidatePool D1: 自国/地域は人口フロア + 国フィルタ', async () => {
+  const DB = makeFakeD1(D1_FIXTURE);
+  const jp = await buildCandidatePool({ scope: { kind: 'country', country: 'JP' }, home: HOME, mode: 'migration', env: { DB } });
+  assert.equal(jp.source, 'd1-country');
+  assert.ok(jp.candidates.length > 0 && jp.candidates.every((c) => c.country === 'JP'));
+
+  const region = await buildCandidatePool({ scope: { kind: 'region', regionGroup: '日本' }, home: HOME, mode: 'migration', env: { DB } });
+  assert.equal(region.source, 'd1-region');
+  assert.ok(region.candidates.length > 0 && region.candidates.every((c) => c.country === 'JP'));
+});
+
+test('buildCandidatePool D1: D1 エラー時は従来プールに degrade (おでかけ/広域を 500 にしない)', async () => {
+  const throwingDB = {
+    prepare: () => ({
+      bind: () => ({
+        // eslint-disable-next-line require-await
+        async all() { throw new Error('d1 down'); },
+      }),
+    }),
+  };
+  // 局所 (おでかけ) → 合成 16 方位フォールバック
+  const local = await buildCandidatePool({ scope: { kind: 'bearing', radiusKm: 50 }, home: HOME, mode: 'daily', env: { DB: throwingDB } });
+  assert.equal(local.source, 'fallback-bearing');
+  assert.equal(local.candidates.length, 16);
+  // 広域 (世界) → worldCities フォールバック
+  const world = await buildCandidatePool({ scope: { kind: 'world' }, home: HOME, mode: 'migration', env: { DB: throwingDB } });
+  assert.equal(world.source, 'fallback-world');
+  assert.ok(world.candidates.length > 700);
+});
+
+test('countriesInGroup / bearing16: 領域→国コード集合、方位度→16方位コード', () => {
+  assert.ok(countriesInGroup('日本').includes('JP'));
+  assert.ok(countriesInGroup('北米').includes('US'));
+  assert.equal(bearing16(0), 'N');
+  assert.equal(bearing16(45), 'NE');
+  assert.equal(bearing16(22.5), 'NNE');
+  assert.equal(bearing16(180), 'S');
+  // home の真北の点は方位≈0 (N)
+  assert.equal(bearing16(bearingDegFromTo(HOME, { lat: HOME.lat + 1, lng: HOME.lng })), 'N');
 });
 
 test('homeCountry: 東京の home → JP', () => {
@@ -164,64 +311,122 @@ test('scoreCandidate: 全ファクターがオーブ外なら honestQuiet=true (
   assert.equal(r.honestQuiet, true);
 });
 
-// ── diversifyOrder / selectCandidate ────────────────────────
+// ── 合成スコア (compositeStrength / aspectStrength) ──────────
 
-function fakeCand(name, planet, angle, quality, strength) {
-  return { name, nameEN: name, factors: [{ planet, angle, quality, strength, distanceKm: Math.round((1 - strength) * 800) }], topStrength: strength, honestQuiet: strength < 0.18 };
+test('compositeStrengthOf: 減衰総和で線数インフレを防ぐ (強1本 > 弱多数 / 厚い場 > 単線)', () => {
+  const one = compositeStrengthOf([{ strength: 0.9 }]);
+  const manyWeak = compositeStrengthOf(Array.from({ length: 8 }, () => ({ strength: 0.2 })));
+  assert.ok(one > manyWeak, `強1本(${one}) が 弱8本(${manyWeak}) を上回る`);
+  // 独立した中強度3本の「厚い場」は単線(0.5)をやや上回る (テーマ地理差別化の backbone)
+  const thick = compositeStrengthOf([{ strength: 0.5 }, { strength: 0.5 }, { strength: 0.5 }]);
+  assert.ok(thick > 0.5 && thick < 1.0, `厚い場(${thick})`);
+});
+
+test('aspectStrengthOf: trine/square を主役に conjunction と帯を脇に (2回目レンズ)', () => {
+  const trine = aspectStrengthOf([{ kind: 'line', aspect: 'trine', strength: 0.6 }]);
+  const conj = aspectStrengthOf([{ kind: 'line', aspect: 'conjunction', strength: 0.6 }]);
+  const band = aspectStrengthOf([{ kind: 'band', aspect: 'zenith', strength: 0.6 }]);
+  assert.ok(trine > conj, `トライン(${trine}) > 合(${conj})`);
+  assert.ok(conj > band, `合(${conj}) > 帯(${band})`);
+});
+
+// ── 回転レンズ selectCandidate ──────────────────────────────
+
+function fakeCand(name, planet, angle, aspect, quality, strength, aspectStrength) {
+  const f = { kind: 'line', planet, angle, aspect, quality, strength, distanceKm: Math.round((1 - strength) * 800) };
+  return {
+    name, nameEN: name, factors: [f],
+    topStrength: strength, compositeStrength: strength,
+    aspectStrength: aspectStrength ?? strength,
+    honestQuiet: strength < 0.18,
+  };
 }
 
-test('diversifyOrder: 1番手=最強、以降は別 signature 族を優先', () => {
+test('selectCandidate 1回目(attempt0): 多線合成最強(=先頭 lively)を返す', () => {
   const scored = [
-    fakeCand('A', 'venus', 'mc', 'neutral', 0.9),
-    fakeCand('B', 'venus', 'mc', 'neutral', 0.85), // A と同族
-    fakeCand('C', 'mars', 'asc', 'soft', 0.6),     // 別族
+    fakeCand('A', 'venus', 'mc', 'conjunction', 'neutral', 0.9, 0.3),
+    fakeCand('C', 'mars', 'asc', 'trine', 'soft', 0.6, 0.6),
   ];
-  const ordered = diversifyOrder(scored);
-  assert.equal(ordered[0].name, 'A'); // 最強
-  assert.equal(ordered[1].name, 'C'); // 別族を B より優先
-  assert.equal(ordered[2].name, 'B'); // 同族は最後 (正直に強さ順)
+  const r = selectCandidate(scored, [], 0);
+  assert.equal(r.candidate.name, 'A');
+  assert.equal(r.lens, 'composite');
 });
 
-test('diversifyOrder: 全部同族なら素直に強さ順 (作られた多様性をしない)', () => {
+test('selectCandidate 2回目(attempt1): アスペクト再合成で並べ替える (合成順と別の土地)', () => {
   const scored = [
-    fakeCand('A', 'venus', 'mc', 'neutral', 0.9),
-    fakeCand('B', 'venus', 'mc', 'neutral', 0.8),
-    fakeCand('C', 'venus', 'mc', 'neutral', 0.7),
+    fakeCand('A', 'venus', 'mc', 'conjunction', 'neutral', 0.95, 0.30), // 合成1位/アスペクト弱
+    fakeCand('B', 'mars', 'asc', 'square', 'hard', 0.70, 0.70),         // 合成2位/アスペクト強
+    fakeCand('C', 'venus', 'dsc', 'trine', 'soft', 0.60, 0.65),
   ];
-  const ordered = diversifyOrder(scored);
-  assert.deepEqual(ordered.map((c) => c.name), ['A', 'B', 'C']);
+  // 1回目で A を出した後 (excluded=['A'])、2回目=アスペクトレンズ → B (aspect最強)
+  const r = selectCandidate(scored, ['A'], 1);
+  assert.equal(r.lens, 'aspect');
+  assert.equal(r.candidate.name, 'B');
 });
 
-test('selectCandidate: excluded を飛ばして次を返す / 全除外で exhausted', () => {
-  const scored = [
-    fakeCand('A', 'venus', 'mc', 'neutral', 0.9),
-    fakeCand('C', 'mars', 'asc', 'soft', 0.6),
+test('selectCandidate 3回目以降(attempt2): lively からランダム (乱数注入で検証)', () => {
+  const two = [
+    fakeCand('X', 'sun', 'mc', 'trine', 'soft', 0.5, 0.5),
+    fakeCand('Y', 'moon', 'asc', 'trine', 'soft', 0.4, 0.4),
   ];
-  const first = selectCandidate(scored, []);
-  assert.equal(first.candidate.name, 'A');
-  const second = selectCandidate(scored, ['A']);
-  assert.equal(second.candidate.name, 'C');
-  const none = selectCandidate(scored, ['A', 'C']);
-  assert.equal(none.candidate, null);
+  assert.equal(selectCandidate(two, [], 2, () => 0).candidate.name, 'X');     // 乱数0→先頭
+  assert.equal(selectCandidate(two, [], 2, () => 0.99).candidate.name, 'Y');  // 乱数~1→末尾
+  assert.equal(selectCandidate(two, [], 2, () => 0).lens, 'random');
+});
+
+test('selectCandidate 1回目で全部静か: 正直フォールバックで最強の静かな場を返す (枯渇にしない)', () => {
+  const quiet = [
+    fakeCand('Q1', 'venus', 'mc', 'trine', 'soft', 0.15, 0.15),
+    fakeCand('Q2', 'mars', 'asc', 'trine', 'soft', 0.10, 0.10),
+  ];
+  const r = selectCandidate(quiet, [], 0);
+  assert.ok(r.candidate);              // null にしない (= クレジット消費する読み)
+  assert.equal(r.candidate.name, 'Q1');
+  assert.equal(r.lens, 'composite');
+});
+
+test('selectCandidate 枯渇(案Y): emptyPool / noFresh / allQuiet を区別', () => {
+  assert.equal(selectCandidate([], [], 0).noCandidateReason, 'emptyPool');
+
+  const lively = [fakeCand('A', 'venus', 'mc', 'trine', 'soft', 0.6, 0.6)];
+  const noFresh = selectCandidate(lively, ['A'], 1);
+  assert.equal(noFresh.candidate, null);
+  assert.equal(noFresh.noCandidateReason, 'noFresh');
+
+  // 2回目以降に lively が尽き、静かな場しか残らない
+  const mixed = [
+    fakeCand('A', 'venus', 'mc', 'trine', 'soft', 0.6, 0.6),
+    fakeCand('Q', 'mars', 'asc', 'trine', 'soft', 0.10, 0.10), // honestQuiet
+  ];
+  const allQuiet = selectCandidate(mixed, ['A'], 1);
+  assert.equal(allQuiet.candidate, null);
+  assert.equal(allQuiet.noCandidateReason, 'allQuiet');
 });
 
 test('selectCandidate: 具体地点 (isPoint) は単一候補で常に返す', () => {
-  const scored = [{ name: 'カフェX', nameEN: 'cafeX', isPoint: true, factors: [], topStrength: 0, honestQuiet: true }];
-  const r = selectCandidate(scored, ['カフェX']);
+  const scored = [{ name: 'カフェX', nameEN: 'cafeX', isPoint: true, factors: [], topStrength: 0, compositeStrength: 0, aspectStrength: 0, honestQuiet: true }];
+  const r = selectCandidate(scored, ['カフェX'], 5);
   assert.equal(r.single, true);
   assert.equal(r.candidate.name, 'カフェX'); // 既出でも返す
 });
 
+test('suggestionsFor: scope に応じた正直な代替提案コード (案Y)', () => {
+  assert.ok(suggestionsFor({ kind: 'radius' }).includes('widenRadius'));
+  assert.ok(suggestionsFor({ kind: 'country' }).includes('world'));
+  assert.ok(suggestionsFor({ kind: 'bearing' }).includes('point'));
+  assert.ok(!suggestionsFor({ kind: 'point' }).includes('point'));
+});
+
 // ── runConsultationPipeline (統合) ──────────────────────────
 
-test('pipeline daily: 候補 + factors + timeWindow + innerSeason + evidence を返す', () => {
-  const r = runConsultationPipeline({
+test('pipeline daily: 候補 + factors + timeWindow + innerSeason + evidence を返す', async () => {
+  const r = await runConsultationPipeline({
     birth: BIRTH, home: HOME, theme: 'love', mode: 'daily',
     when: { kind: 'date', date: '2026-07-10' }, scope: { kind: 'bearing', radiusKm: 50 },
     isFirst: true, excluded: [],
   });
   assert.ok(r.candidate);
-  assert.ok(r.candidate.bearing); // 方角候補
+  assert.ok(r.candidate.bearing); // 方角候補 (D1 無し=フォールバックの合成方位)
   assert.ok(Array.isArray(r.candidate.factors));
   assert.ok(r.innerSeason.progMoonSignJP);
   assert.ok(r.innerSeason.progMoonHouse >= 1 && r.innerSeason.progMoonHouse <= 12);
@@ -230,19 +435,55 @@ test('pipeline daily: 候補 + factors + timeWindow + innerSeason + evidence を
   assert.equal(r.evidence.note, null);
 });
 
-test('pipeline diversity: excluded で別の候補に進む', () => {
+test('pipeline diversity: excluded で別の候補に進む', async () => {
   const base = {
     birth: BIRTH, home: HOME, theme: 'work', mode: 'daily',
     when: { kind: 'date', date: '2026-07-10' }, scope: { kind: 'bearing', radiusKm: 100 },
   };
-  const first = runConsultationPipeline({ ...base, isFirst: true, excluded: [] });
-  const second = runConsultationPipeline({ ...base, isFirst: false, excluded: [first.candidate.name] });
+  const first = await runConsultationPipeline({ ...base, isFirst: true, excluded: [] });
+  const second = await runConsultationPipeline({ ...base, isFirst: false, excluded: [first.candidate.name] });
   assert.ok(second.candidate);
   assert.notEqual(second.candidate.name, first.candidate.name);
 });
 
-test('pipeline migration: transit 不使用 (factor は natal/progressed のみ) + リロケハウス', () => {
-  const r = runConsultationPipeline({
+test('pipeline avoid (C-2): avoid は別候補にするが attempt/レンズは進めない (1回目=合成最強のまま)', async () => {
+  const base = {
+    birth: BIRTH, home: HOME, theme: 'work', mode: 'daily',
+    when: { kind: 'date', date: '2026-07-10' }, scope: { kind: 'bearing', radiusKm: 100 },
+  };
+  const first = await runConsultationPipeline({ ...base, isFirst: true, excluded: [] });
+  // first を avoid に入れて「新規相談」(excluded 空 = attempt 0)
+  const avoided = await runConsultationPipeline({
+    ...base, isFirst: true, excluded: [], avoid: [first.candidate.name],
+  });
+  assert.ok(avoided.candidate);
+  assert.notEqual(avoided.candidate.name, first.candidate.name); // avoid した土地は出ない
+  assert.equal(avoided.meta.attempt, 0); // avoid は attempt に数えない
+  assert.equal(avoided.meta.lens, 'composite'); // 1 回目=合成最強レンズのまま
+});
+
+test('pipeline avoid 安全策 (C-2): avoid で全滅しても新規相談(attempt0)は必ず 1 枚出す', async () => {
+  const base = {
+    birth: BIRTH, home: HOME, theme: 'love', mode: 'daily',
+    when: { kind: 'date', date: '2026-07-10' }, scope: { kind: 'bearing', radiusKm: 50 },
+  };
+  const allBearings = [
+    '北', '北北東', '北東', '東北東', '東', '東南東', '南東', '南南東',
+    '南', '南南西', '南西', '西南西', '西', '西北西', '北西', '北北西',
+  ];
+  const r = await runConsultationPipeline({ ...base, isFirst: true, excluded: [], avoid: allBearings });
+  assert.ok(r.candidate); // avoid を無視してでも 1 枚返す (fresh 相談で「何も無い」を避ける)
+
+  // ただし「出し直し」(attempt>=1) は avoid 全滅なら従来どおり枯渇 (案Y)
+  const exhausted = await runConsultationPipeline({
+    ...base, isFirst: false, excluded: [r.candidate.name], avoid: allBearings,
+  });
+  assert.ok(!exhausted.candidate);
+  assert.equal(exhausted.exhausted, true);
+});
+
+test('pipeline migration: transit 不使用 (factor は natal/progressed のみ) + リロケハウス', async () => {
+  const r = await runConsultationPipeline({
     birth: BIRTH, home: HOME, theme: 'money', mode: 'migration',
     when: { kind: 'date', date: '2030-01-01' }, scope: { kind: 'world' },
     isFirst: true, excluded: [],
@@ -254,8 +495,8 @@ test('pipeline migration: transit 不使用 (factor は natal/progressed のみ)
   assert.equal(r.timeWindow, null); // 移住は時間帯なし
 });
 
-test('pipeline 出生時刻不明 migration: ハウス/リロケを使わず帯で読む + 注記', () => {
-  const r = runConsultationPipeline({
+test('pipeline 出生時刻不明 migration: ハウス/リロケを使わず帯で読む + 注記', async () => {
+  const r = await runConsultationPipeline({
     birth: { ...BIRTH, time: null, timeUnknown: true }, home: HOME, theme: 'healing', mode: 'migration',
     when: { kind: 'in1yr' }, scope: { kind: 'region', regionGroup: '日本' },
     isFirst: true, excluded: [],
@@ -270,8 +511,8 @@ test('pipeline 出生時刻不明 migration: ハウス/リロケを使わず帯�
   assert.ok(r.evidence.note && r.evidence.note.includes('出生時刻'));
 });
 
-test('pipeline 出生時刻不明 daily: フル品質 (注記なし) — 設計 B', () => {
-  const r = runConsultationPipeline({
+test('pipeline 出生時刻不明 daily: フル品質 (注記なし) — 設計 B', async () => {
+  const r = await runConsultationPipeline({
     birth: { ...BIRTH, time: null, timeUnknown: true }, home: HOME, theme: 'love', mode: 'daily',
     when: { kind: 'date', date: '2026-07-10' }, scope: { kind: 'bearing', radiusKm: 50 },
     isFirst: true, excluded: [],
@@ -280,8 +521,8 @@ test('pipeline 出生時刻不明 daily: フル品質 (注記なし) — 設計 
   assert.equal(r.evidence.note, null); // おでかけは時刻不明でも注記なし
 });
 
-test('pipeline point scope: 指定地点を single で返す (placeType 引き継ぎ)', () => {
-  const r = runConsultationPipeline({
+test('pipeline point scope: 指定地点を single で返す (placeType 引き継ぎ)', async () => {
+  const r = await runConsultationPipeline({
     birth: BIRTH, home: HOME, theme: 'love', mode: 'daily',
     when: { kind: 'today' }, scope: { kind: 'point', point: { lat: 34.69, lng: 135.5, name: 'カフェX', placeType: 'cafe' } },
     isFirst: true, excluded: [],
@@ -295,8 +536,8 @@ test('pipeline point scope: 指定地点を single で返す (placeType 引き�
 // buildCandidatePool で乗せた placeKind が runConsultationPipeline の最終 return で
 // 列挙忘れにより消えるバグの再発防止。'named'/'saved' は consultation_v2.placeReference
 // の分岐キーで、これが消えると検索の店名が「都市名で呼んでよい」分岐に丸められる。
-test('pipeline point scope: placeKind=named (検索) を candidate に保持', () => {
-  const r = runConsultationPipeline({
+test('pipeline point scope: placeKind=named (検索) を candidate に保持', async () => {
+  const r = await runConsultationPipeline({
     birth: BIRTH, home: HOME, theme: 'love', mode: 'daily',
     when: { kind: 'today' },
     scope: { kind: 'point', point: { lat: 35.17, lng: 136.88, name: 'JR名古屋高島屋', placeKind: 'named' } },
@@ -306,8 +547,8 @@ test('pipeline point scope: placeKind=named (検索) を candidate に保持', (
   assert.equal(r.candidate.placeKind, 'named');
 });
 
-test('pipeline point scope: placeKind=saved (登録地) を candidate に保持', () => {
-  const r = runConsultationPipeline({
+test('pipeline point scope: placeKind=saved (登録地) を candidate に保持', async () => {
+  const r = await runConsultationPipeline({
     birth: BIRTH, home: HOME, theme: 'healing', mode: 'daily',
     when: { kind: 'today' },
     scope: { kind: 'point', point: { lat: 35.68, lng: 139.65, name: 'マイ秘密基地', placeKind: 'saved' } },
@@ -317,8 +558,8 @@ test('pipeline point scope: placeKind=saved (登録地) を candidate に保持'
   assert.equal(r.candidate.placeKind, 'saved');
 });
 
-test('pipeline point scope: placeKind 未指定 (従来) は null', () => {
-  const r = runConsultationPipeline({
+test('pipeline point scope: placeKind 未指定 (従来) は null', async () => {
+  const r = await runConsultationPipeline({
     birth: BIRTH, home: HOME, theme: 'love', mode: 'daily',
     when: { kind: 'today' },
     scope: { kind: 'point', point: { lat: 34.69, lng: 135.5, name: '地図タップ地点' } },
@@ -327,9 +568,9 @@ test('pipeline point scope: placeKind 未指定 (従来) は null', () => {
   assert.equal(r.candidate.placeKind, null);
 });
 
-test('pipeline: world migration が CPU 予算内 (<3s)', () => {
+test('pipeline: world migration が CPU 予算内 (<3s)', async () => {
   const t0 = Date.now();
-  runConsultationPipeline({
+  await runConsultationPipeline({
     birth: BIRTH, home: HOME, theme: 'work', mode: 'migration',
     when: { kind: 'in5yrPlus' }, scope: { kind: 'world' }, isFirst: true, excluded: [],
   });
@@ -337,7 +578,7 @@ test('pipeline: world migration が CPU 予算内 (<3s)', () => {
   assert.ok(ms < 3000, `pipeline took ${ms}ms`);
 });
 
-test('pipeline: 不正 theme / mode は throw', () => {
-  assert.throws(() => runConsultationPipeline({ birth: BIRTH, home: HOME, theme: 'bogus', mode: 'daily' }));
-  assert.throws(() => runConsultationPipeline({ birth: BIRTH, home: HOME, theme: 'love', mode: 'bogus' }));
+test('pipeline: 不正 theme / mode は reject (async)', async () => {
+  await assert.rejects(() => runConsultationPipeline({ birth: BIRTH, home: HOME, theme: 'bogus', mode: 'daily' }));
+  await assert.rejects(() => runConsultationPipeline({ birth: BIRTH, home: HOME, theme: 'love', mode: 'bogus' }));
 });

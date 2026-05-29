@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 14 / 総行数: 4738
+- ファイル数: 14 / 総行数: 4747
 - class/mixin/extension/enum: 18
 - 関数 (top-level + method の素拾い): 40
 - Navigator.push 等: 0
@@ -195,7 +195,7 @@ intro/outro) + 蓄積した候補群 (1 枚ずつ「別の候補地」で増え�
 - L189 `toJson()`
 
 
-### `lib/utils/consultation_v2_request.dart` (257 行)
+### `lib/utils/consultation_v2_request.dart` (266 行)
 
 **ファイル先頭コメント:**
 
@@ -222,8 +222,8 @@ Worker (consultation_engine.js runConsultationPipeline) の契約に対応する
 - L37 `toJson()`
 - L72 `toJson()`
 - L120 `toJson()`
-- L211 `copyWith()`
-- L236 `toJson()`
+- L217 `copyWith()`
+- L244 `toJson()`
 
 
 ### `lib/utils/cycle_story_texts.dart` (86 行)

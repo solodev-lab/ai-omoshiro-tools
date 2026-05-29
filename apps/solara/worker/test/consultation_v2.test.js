@@ -175,6 +175,55 @@ function BUCKET_LABEL(b) {
   return { morning: '朝', midday: '昼', evening: '夕方', night: '夜', lateNight: '夜更け' }[b];
 }
 
+test('handler: when.timeBand=night 指定時、UI timeWindow.label もユーザー選択 (夜) に一致する', async () => {
+  // narrative はユーザー指定時間帯を主役にする仕様 (prompt:178-181)。
+  // 同時に UI ラベルもユーザー指定に合わせる (= 本文「夜」/ラベル「昼」のズレ防止)。
+  const cap = {};
+  const r = await handleConsultationV2(
+    {
+      birth: BIRTH, home: HOME, theme: 'communication', mode: 'daily',
+      when: { kind: 'date', date: '2026-07-10', timeBand: 'night' },
+      scope: { kind: 'point', point: { lat: 35.18, lng: 136.91, name: '名古屋' } },
+      isFirst: true, excluded: [],
+    },
+    ENV, { callGeminiFn: mockGemini(cap) },
+  );
+  assert.equal(r.candidate.timeWindow.kind, 'single');
+  assert.equal(r.candidate.timeWindow.bucket, 'night');
+  assert.equal(r.candidate.timeWindow.label, '夜');
+  // narrative プロンプトにも userTimeBand が「主役にする」として渡る
+  assert.match(cap.prompt, /相談者の予定時間帯: 夜/);
+});
+
+test('handler: when.timeBand 未指定なら従来通りエンジン計算の bucket を返す', async () => {
+  const r = await handleConsultationV2(
+    {
+      birth: BIRTH, home: HOME, theme: 'love', mode: 'daily',
+      when: { kind: 'date', date: '2026-07-10' },
+      scope: { kind: 'point', point: { lat: 35.68, lng: 139.69, name: '東京' } },
+      isFirst: true, excluded: [],
+    },
+    ENV, { callGeminiFn: mockGemini() },
+  );
+  assert.equal(r.candidate.timeWindow.kind, 'single');
+  // bucket は VALID_BANDS のいずれか (エンジン計算結果)
+  assert.ok(['morning', 'midday', 'evening', 'night', 'lateNight'].includes(r.candidate.timeWindow.bucket));
+  assert.equal(r.candidate.timeWindow.label, BUCKET_LABEL(r.candidate.timeWindow.bucket));
+});
+
+test('handler: 不正な timeBand は無視してエンジン計算 bucket にフォールバック', async () => {
+  const r = await handleConsultationV2(
+    {
+      birth: BIRTH, home: HOME, theme: 'love', mode: 'daily',
+      when: { kind: 'date', date: '2026-07-10', timeBand: 'bogus' },
+      scope: { kind: 'point', point: { lat: 35.68, lng: 139.69, name: '東京' } },
+      isFirst: true, excluded: [],
+    },
+    ENV, { callGeminiFn: mockGemini() },
+  );
+  assert.ok(['morning', 'midday', 'evening', 'night', 'lateNight'].includes(r.candidate.timeWindow.bucket));
+});
+
 test('handler: isFirst=false は intro/outro/innerSeason を付けない', async () => {
   const r = await handleConsultationV2(
     { birth: BIRTH, home: HOME, theme: 'work', mode: 'daily', when: { kind: 'date', date: '2026-07-10' }, scope: { kind: 'bearing', radiusKm: 100 }, isFirst: false, excluded: [] },
@@ -209,12 +258,44 @@ test('handler: GEMINI_API_KEY 無し → 静的フォールバック', async () 
 });
 
 test('handler: excluded で出し尽くすと exhausted', async () => {
-  const allBearings = ['北', '北東', '東', '南東', '南', '南西', '西', '北西'];
+  const allBearings = [
+    '北', '北北東', '北東', '東北東', '東', '東南東', '南東', '南南東',
+    '南', '南南西', '南西', '西南西', '西', '西北西', '北西', '北北西',
+  ];
   const r = await handleConsultationV2(
     { birth: BIRTH, home: HOME, theme: 'love', mode: 'daily', when: { kind: 'date', date: '2026-07-10' }, scope: { kind: 'bearing', radiusKm: 50 }, isFirst: false, excluded: allBearings },
     ENV, { callGeminiFn: mockGemini() },
   );
   assert.equal(r.exhausted, true);
+});
+
+test('handler D1: おでかけ=実在の町 (candidateMeta に方角ラベル + 本文は町名を名指し / poolSource=d1-local)', async () => {
+  // bounding-box クエリに対し東京近郊の実在の町を返す偽 D1。
+  const fakeDB = {
+    prepare: () => ({
+      bind: () => ({
+        async all() {
+          return { results: [
+            { name: '鎌倉', ascii: 'Kamakura', lat: 35.31, lng: 139.55, country: 'JP', region: '神奈川県', population: 172000 },
+            { name: '横浜', ascii: 'Yokohama', lat: 35.44, lng: 139.64, country: 'JP', region: '神奈川県', population: 3700000 },
+          ] };
+        },
+      }),
+    }),
+  };
+  const captured = {};
+  const r = await handleConsultationV2(
+    { birth: BIRTH, home: HOME, theme: 'love', mode: 'daily', when: { kind: 'date', date: '2026-07-10' }, scope: { kind: 'bearing', radiusKm: 50 }, isFirst: false, excluded: [] },
+    { ...ENV, DB: fakeDB }, { callGeminiFn: mockGemini(captured) },
+  );
+  // Gemini 成功パスは candidateMeta を out.candidate にマージする (candidateMeta は削除)。
+  assert.equal(r.meta.poolSource, 'd1-local');
+  assert.ok(['鎌倉', '横浜'].includes(r.candidate.name)); // 合成方位ではなく実在の町名
+  assert.ok(r.candidate.directionFromHome); // 表示用「南西」等
+  assert.ok(!r.candidate.bearing); // 方角だけの読みに落とさない
+  assert.equal(typeof r.candidate.distanceKm, 'number');
+  // placeReference は実在の町なので「町名をそのまま使う」分岐 → プロンプトに町名が出る
+  assert.ok(captured.prompt.includes(r.candidate.name));
 });
 
 test('handler: 非 ja lang は throw', async () => {
