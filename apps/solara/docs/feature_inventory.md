@@ -310,8 +310,37 @@ Solara のバックエンドは **Cloudflare Workers** で稼働。本番 URL: `
   人口フロア+LIMIT 可変 / 自国・地域フィルタ / countriesInGroup / bearing16 / フォールバック分岐)。
   `consultation_v2.test.js` 25 件 pass (D1 おでかけで candidateMeta→candidate に方角ラベル・町名がプロンプトに出る)。
   `consultation_credits.test.js` 30 件 pass。
-- **未着手 (Phase C)**: Flutter の avoid-window 永続化 (N=Pro9/Free6, theme×scope)・no-home=案ア・
-  「自宅」→「現住所」表記・sparse / 枯渇 (`exhaustedReason`/`suggestions`) UI・実在の町の方角/距離バッジ表示。
+- **Phase C-1 (§0.2.20 で完了)** / **Phase C-2 未着手**: 純 Flutter の表示反映 (実在の町・現住所表記・
+  sparse/枯渇 UI・no-home=案ア) は §0.2.20。avoid-window 永続化 (N=Pro9/Free6, theme×scope) は worker
+  追補 (avoid フィールド) を伴うため C-2 として分離・未着手。
+
+#### 0.2.20 候補選定リデザイン Phase C-1: Flutter で実在の町・現住所・sparse/枯渇 UI を反映 (2026-05-29)
+
+> **位置づけ**: §0.2.18-§0.2.19 (Phase A/B = worker) が返す新フィールドを Flutter 側で消費し、
+> 「実在の町デプロイ」を ship-ready にする純 Flutter ラウンド (worker 変更なし)。avoid-window (C-2) は
+> worker 追補を伴うため分離 (未着手)。本ラウンドの表示は **D1 binding 有効化前は従来挙動と同じ**
+> (worker が D1 無し時に合成方位フォールバックするため・§0.2.19)。
+
+- **API モデル拡張** (`consultation_v2_api.dart` / `consultation_v2_request.dart`):
+  `ConsultationV2Candidate` に `directionFromHome` / `directionCode` / `distanceKm`、
+  `ConsultationV2Reading` に `sparse` / `nearbyCount` (worker `meta` から)、
+  `ConsultationV2Result` (exhausted) に `exhaustedReason` / `suggestions` を追加・パース。
+- **実在の町表示** (`consultation_result_card.dart`): 字幕を「県名/国名 + 方角・距離」に再構成
+  (例「神奈川県 · 南西 約30km」)。生の国コード「JP」を出さず、JP は県名・海外は `_kCountryJa` で
+  日本語国名 (未知コードは非表示) に変換。`bearing` 立つ合成方位候補 (D1 無しフォールバック) は従来バッジ維持。
+- **「自宅」→「現住所」** (`consultation_input_widgets.dart` / `consultation_input_screen.dart` /
+  `consultation_history_screen.dart`): scope ラベル「現住所から半径」、距離 Section「現住所からの距離」、
+  no-home 注記を「現住所が未設定です…『具体地点』は今すぐ使えます」に (案ア=具体地点を促す)。
+- **sparse ヒント** (`_SparseHint` in `consultation_result_widgets.dart`): `reading.sparse` 時に
+  「この近くは候補が少なめです (近くの候補は N 件ほど)。半径を広げる・方角を変えると…」を控えめ表示。
+- **枯渇 = 案Y パネル** (`_ExhaustionPanel`): 出し尽くし時に snackbar でなく、理由
+  (allQuiet/noFresh/emptyPool) のヘッドライン + 代替提案 (widenRadius/bearing/point/world を日本語チップ化) +
+  **「※ この案内ではクレジットを消費していません」** を出す。`_loadNext` が `exhaustedReason`/`suggestions` を state に保持。
+- **no-home = 案ア**: 既存挙動が既に正しい (`_canStart` が bearing/radius/country を home 無しで弾く・
+  出生地フォールバックしない・point は home 不要)。注記に「具体地点は今すぐ使える」を追記して案内を補強。
+- **テスト**: `consultation_ui_test.dart` 12 件 pass (§0.2.15 の 2 行タイル化/preset フロー変更で stale 化
+  していた 3 件も現行 UI に追従修正 + Phase C 新規 2 件: 案Y 代替提案パネル / 実在の町字幕)。
+  Flutter 相談テスト計 72 件 pass。`flutter analyze` クリーン。
 
 ### 0.2.3 Pro 週次キャップ 100 回/週 (2026-05-27)
 

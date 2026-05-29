@@ -10,10 +10,23 @@ class _CandidateCard extends StatelessWidget {
   ConsultationV2Candidate get _c => reading.candidate;
   bool get _isBearing => _c.bearing != null && _c.bearing!.isNotEmpty;
 
+  /// 字幕: 県名/国名 + (実在の町なら) 方角・距離。生の国コード「JP」は出さない。
   String get _subtitle {
     final parts = <String>[];
-    if ((_c.region ?? '').isNotEmpty) parts.add(_c.region!);
-    if ((_c.country ?? '').isNotEmpty && !_isBearing) parts.add(_c.country!);
+    if ((_c.region ?? '').isNotEmpty) {
+      // JP は県名を出し、冗長な国コードは出さない。
+      parts.add(_c.region!);
+    } else if (!_isBearing) {
+      // 海外で region が無い場合のみ、国コードを日本語国名に変換して出す (未知コードは出さない)。
+      final cj = _countryJa(_c.country);
+      if (cj != null) parts.add(cj);
+    }
+    // 実在の町 (Phase B D1 局所) は home からの方角・距離を添える。
+    final dir = _c.directionFromHome;
+    if (dir != null && dir.isNotEmpty) {
+      final dist = _c.distanceKm;
+      parts.add(dist != null && dist > 0 ? '$dir 約${dist}km' : dir);
+    }
     return parts.join(' · ');
   }
 
@@ -131,6 +144,27 @@ class _CandidateCard extends StatelessWidget {
       ),
     );
   }
+}
+
+/// 国コード(ISO2) → 日本語国名 (字幕用、よく出る国のみ。未知は null=非表示)。
+/// 生の「JP」「FR」等を字幕に出さないための変換表。
+const Map<String, String> _kCountryJa = {
+  'JP': '日本', 'US': 'アメリカ', 'CA': 'カナダ', 'MX': 'メキシコ',
+  'GB': 'イギリス', 'FR': 'フランス', 'DE': 'ドイツ', 'IT': 'イタリア',
+  'ES': 'スペイン', 'PT': 'ポルトガル', 'NL': 'オランダ', 'BE': 'ベルギー',
+  'CH': 'スイス', 'AT': 'オーストリア', 'IE': 'アイルランド', 'SE': 'スウェーデン',
+  'NO': 'ノルウェー', 'DK': 'デンマーク', 'FI': 'フィンランド', 'GR': 'ギリシャ',
+  'PL': 'ポーランド', 'CZ': 'チェコ', 'RU': 'ロシア', 'TR': 'トルコ',
+  'CN': '中国', 'KR': '韓国', 'TW': '台湾', 'HK': '香港',
+  'TH': 'タイ', 'VN': 'ベトナム', 'SG': 'シンガポール', 'MY': 'マレーシア',
+  'ID': 'インドネシア', 'PH': 'フィリピン', 'IN': 'インド', 'AE': 'アラブ首長国連邦',
+  'AU': 'オーストラリア', 'NZ': 'ニュージーランド', 'BR': 'ブラジル', 'AR': 'アルゼンチン',
+  'EG': 'エジプト', 'ZA': '南アフリカ',
+};
+
+String? _countryJa(String? code) {
+  if (code == null || code.isEmpty) return null;
+  return _kCountryJa[code.toUpperCase()];
 }
 
 class _EnergyChip extends StatelessWidget {

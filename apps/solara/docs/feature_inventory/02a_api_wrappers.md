@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 10 / 総行数: 2137
+- ファイル数: 10 / 総行数: 2178
 - class/mixin/extension/enum: 23
 - 関数 (top-level + method の素拾い): 34
 - Navigator.push 等: 0
@@ -104,7 +104,7 @@ Consultation API — クレジット系 (V2 と共有)
 - L128 `fetchConsultationCredits()` — `/protected/consultation/credits` を呼んで現在のクレジット状況を取得する。
 
 
-### `lib/utils/consultation_v2_api.dart` (390 行)
+### `lib/utils/consultation_v2_api.dart` (431 行)
 
 **ファイル先頭コメント:**
 
@@ -140,9 +140,9 @@ HARD500 回避のため part 分割: リクエストモデルは consultation_v2
   - エビデンス (占星術ファクターのみ。重み・選び方・プロンプトは出さない)。
 - L147 `class ConsultationV2Candidate`
   - 1 候補地の Stella の読み (構造データ + ナレーション)。
-- L212 `class ConsultationV2Reading`
+- L228 `class ConsultationV2Reading`
   - 相談 V2 レスポンス全体 (成功時)。
-- L275 `class ConsultationV2Result`
+- L303 `class ConsultationV2Result`
   - fetchConsultationV2 の戻り値。
 
 **関数 (6 public + 0 private):**
@@ -151,8 +151,8 @@ HARD500 回避のため part 分割: リクエストモデルは consultation_v2
 - L86 `toJson()`
 - L107 `toJson()`
 - L139 `toJson()`
-- L195 `toJson()`
-- L324 `fetchConsultationV2()` — /protected/astro/consultation2 を呼んで Stella の読み (候補 1 つ) を取得する。
+- L208 `toJson()`
+- L360 `fetchConsultationV2()` — /protected/astro/consultation2 を呼んで Stella の読み (候補 1 つ) を取得する。
 
 
 ### `lib/utils/daily_transits_api.dart` (241 行)

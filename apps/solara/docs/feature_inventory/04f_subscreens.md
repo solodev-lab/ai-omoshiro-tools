@@ -5,9 +5,9 @@
 
 ## サマリ
 
-- ファイル数: 31 / 総行数: 9863
-- class/mixin/extension/enum: 88
-- 関数 (top-level + method の素拾い): 255
+- ファイル数: 31 / 総行数: 10039
+- class/mixin/extension/enum: 90
+- 関数 (top-level + method の素拾い): 257
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 7
 - Worker URL リテラル: 0
@@ -557,7 +557,7 @@ flutter_map ベースの地点選択画面のサブウィジェット群:
   </details>
 
 
-### `lib/screens/consultation/consultation_result_card.dart` (263 行)
+### `lib/screens/consultation/consultation_result_card.dart` (297 行)
 
 **ファイル先頭コメント:**
 
@@ -569,18 +569,18 @@ Consultation Result — 候補カード (V2)
 **型定義 (4):**
 
 - L6 `class _CandidateCard : StatelessWidget`
-- L136 `class _EnergyChip : StatelessWidget`
-- L162 `class _TimeWindowRow : StatelessWidget`
+- L170 `class _EnergyChip : StatelessWidget`
+- L196 `class _TimeWindowRow : StatelessWidget`
   - 時間帯 (現地の時間帯のみ・時計表示なし)。single=1 個 / rhythm=朝昼夜。
-- L193 `class _CandidateKindBadge : StatelessWidget`
+- L227 `class _CandidateKindBadge : StatelessWidget`
   - 候補種別バッジ (方角 / 場所)。
 
 **関数 (4 public + 0 private):**
 
-- L21 `build()`
-- L141 `build()`
-- L167 `build()`
-- L202 `build()`
+- L34 `build()`
+- L175 `build()`
+- L201 `build()`
+- L236 `build()`
 
 
 ### `lib/screens/consultation/consultation_result_credit_widgets.dart` (153 行)
@@ -605,7 +605,7 @@ Stella 相談 クレジット制 (設計 project_solara_stella_free_credits.md) 
 - L22 `build()`
 
 
-### `lib/screens/consultation/consultation_result_screen.dart` (413 行)
+### `lib/screens/consultation/consultation_result_screen.dart` (430 行)
 
 **ファイル先頭コメント:**
 
@@ -638,22 +638,22 @@ ConsultationRecord を読み込み専用表示 (fetch なし・autosave なし�
 **関数 (4 public + 10 private):**
 
 - L73 `createState()`
-- L108 `initState()`
-- L121 `dispose()`
-- L309 `build()`
+- L112 `initState()`
+- L125 `dispose()`
+- L317 `build()`
 
   <details><summary>private 関数 10 件</summary>
 
-  - L102 `_setSharing()`
-  - L126 `_runFetch()`
-  - L131 `_fetch()`
-  - L172 `_loadNext()`
-  - L229 `_snack()`
-  - L241 `_onBuyCredits()`
-  - L247 `_showConsultationPaywall()`
-  - L268 `_showAboutReading()`
-  - L283 `_persist()`
-  - L374 `_buildBody()`
+  - L106 `_setSharing()`
+  - L130 `_runFetch()`
+  - L135 `_fetch()`
+  - L176 `_loadNext()`
+  - L237 `_snack()`
+  - L249 `_onBuyCredits()`
+  - L255 `_showConsultationPaywall()`
+  - L276 `_showAboutReading()`
+  - L291 `_persist()`
+  - L382 `_buildBody()`
 
   </details>
 
@@ -688,7 +688,7 @@ Consultation Result — シェア機能 (part of consultation_result_screen.dart
   </details>
 
 
-### `lib/screens/consultation/consultation_result_widgets.dart` (302 行)
+### `lib/screens/consultation/consultation_result_widgets.dart` (427 行)
 
 **ファイル先頭コメント:**
 
@@ -697,7 +697,7 @@ Consultation Result — 状態/バナー/ページャ ウィジェット (V2)
 (part of 'consultation_result_screen.dart')
 ```
 
-**型定義 (7):**
+**型定義 (9):**
 
 - L7 `enum _ShareChoice`
   - シェアシートで選ばれた選択肢。
@@ -708,17 +708,23 @@ Consultation Result — 状態/バナー/ページャ ウィジェット (V2)
 - L119 `class _AboutReadingContent : StatelessWidget`
   - AppBar タイトルタップで開く「この読み解きについて」ポップアップの中身。
 - L234 `class _PageIndicator : StatelessWidget`
-- L265 `class _RefreshButton : StatelessWidget`
+- L265 `class _SparseHint : StatelessWidget`
+  - 近くの実在の町が乏しい (Phase B sparse) ときの控えめなヒント。
+- L306 `class _ExhaustionPanel : StatelessWidget`
+  - 候補を出し尽くした (案Y)。正直に止めた理由 + 条件変更の代替提案を出す。
+- L390 `class _RefreshButton : StatelessWidget`
   - 「別の候補地を見る」(1 クレジット消費で次の distinct 候補を 1 つ取得)。
 
-**関数 (6 public + 0 private):**
+**関数 (8 public + 0 private):**
 
 - L15 `build()`
 - L45 `build()`
 - L89 `build()`
 - L132 `build()`
 - L240 `build()`
-- L271 `build()`
+- L270 `build()`
+- L324 `build()`
+- L396 `build()`
 
 
 ### `lib/screens/consultation/consultation_start_popup.dart` (292 行)

@@ -70,7 +70,7 @@ const _modeLabel = <String, String>{
 const _scopeLabel = <String, String>{
   'point': '具体地点',
   'bearing': '方角',
-  'radius': '自宅から半径',
+  'radius': '現住所から半径',
   'region': '地域',
   'country': '自国内',
   'world': '世界全体',

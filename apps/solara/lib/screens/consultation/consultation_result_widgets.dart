@@ -261,6 +261,131 @@ class _PageIndicator extends StatelessWidget {
   }
 }
 
+/// 近くの実在の町が乏しい (Phase B sparse) ときの控えめなヒント。
+class _SparseHint extends StatelessWidget {
+  final int? nearbyCount;
+  const _SparseHint({this.nearbyCount});
+
+  @override
+  Widget build(BuildContext context) {
+    final n = nearbyCount;
+    final countText = (n != null && n > 0) ? '（近くの候補は$n件ほど）' : '';
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: const Color(0x14F6BD60),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: const Color(0x33F6BD60)),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.info_outline,
+                size: 15, color: SolaraColors.textSecondary),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'この近くは候補が少なめです$countText。半径を広げる・方角を変えると見つかりやすくなります。',
+                style: const TextStyle(
+                  color: SolaraColors.textSecondary,
+                  fontSize: 11.5,
+                  height: 1.5,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// 候補を出し尽くした (案Y)。正直に止めた理由 + 条件変更の代替提案を出す。
+/// 「無理に候補を作らない」設計なので、ここでは**クレジットを消費していない**ことを明示する。
+class _ExhaustionPanel extends StatelessWidget {
+  final String? reason;
+  final List<String> suggestions;
+  const _ExhaustionPanel({this.reason, this.suggestions = const []});
+
+  static const Map<String, String> _reasonText = {
+    'allQuiet': 'この条件では、いま強く惹かれる土地が見当たりませんでした。',
+    'noFresh': 'これ以上の新しい候補地は見つかりませんでした。',
+    'emptyPool': 'この範囲には候補が見つかりませんでした。',
+  };
+  static const Map<String, String> _suggestLabel = {
+    'widenRadius': '半径を広げてみる',
+    'bearing': '方角で探す',
+    'point': '具体的な場所を指定する',
+    'world': '世界全体に広げる',
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    final headline = _reasonText[reason] ?? 'これ以上は無理に候補を作りませんでした。';
+    final tips = suggestions
+        .map((c) => _suggestLabel[c])
+        .whereType<String>()
+        .toList(growable: false);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 4, 24, 8),
+      child: GlassPanel(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Icon(Icons.spa_outlined,
+                    size: 16, color: SolaraColors.solaraGoldLight),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    headline,
+                    style: const TextStyle(
+                      color: SolaraColors.textPrimary,
+                      fontSize: 13.5,
+                      height: 1.5,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            if (tips.isNotEmpty) ...[
+              const SizedBox(height: 10),
+              Text(
+                '条件を変えると見つかるかもしれません:',
+                style: TextStyle(
+                  color: SolaraColors.textSecondary,
+                  fontSize: 11.5,
+                  letterSpacing: 0.3,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                children:
+                    tips.map((t) => _EnergyChip(label: t)).toList(growable: false),
+              ),
+            ],
+            const SizedBox(height: 10),
+            Text(
+              '※ この案内ではクレジットを消費していません。',
+              style: TextStyle(
+                color: SolaraColors.textSecondary,
+                fontSize: 11,
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 /// 「別の候補地を見る」(1 クレジット消費で次の distinct 候補を 1 つ取得)。
 class _RefreshButton extends StatelessWidget {
   final bool loading;

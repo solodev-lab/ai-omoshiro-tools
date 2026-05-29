@@ -383,7 +383,7 @@ class _ConsultationInputScreenState extends State<ConsultationInputScreen> {
                         ),
                       if (_scopeKind == 'radius')
                         _Section(
-                          label: '自宅からの距離',
+                          label: '現住所からの距離',
                           child: _RadiusChips(
                             options: _mode == 'daily'
                                 ? const [50, 100, 300]

@@ -87,6 +87,10 @@ class _ConsultationResultScreenState extends State<ConsultationResultScreen> {
   /// これ以上「別の候補地」が無い (excluded で出し尽くした)。
   bool _exhausted = false;
 
+  /// 枯渇 (案Y) の理由コードと代替提案 (exhausted パネルで提示)。クレジットは非消費。
+  String? _exhaustedReason;
+  List<String> _exhaustSuggestions = const [];
+
   /// 初回 fetch が 402 でブロックされた理由。非 null の間は結果ではなく誘導を出す。
   ConsultationBlock? _block;
 
@@ -186,8 +190,12 @@ class _ConsultationResultScreenState extends State<ConsultationResultScreen> {
     setState(() => _loadingNext = false);
 
     if (result.isExhausted) {
-      setState(() => _exhausted = true);
-      _snack('これ以上の候補地は見つかりませんでした。');
+      // 案Y: 正直に止めて代替提案を出す (パネル表示)。クレジットは消費していない。
+      setState(() {
+        _exhausted = true;
+        _exhaustedReason = result.exhaustedReason;
+        _exhaustSuggestions = result.suggestions;
+      });
       return;
     }
     if (result.isBlocked) {
@@ -386,6 +394,10 @@ class _ConsultationResultScreenState extends State<ConsultationResultScreen> {
     final first = _first;
     if (first == null) return const _LoadingSkeleton();
 
+    final cur = _pageIndex >= 0 && _pageIndex < _readings.length
+        ? _readings[_pageIndex]
+        : null;
+
     return Column(
       children: [
         if (first.fallback) const _FallbackChip(),
@@ -404,8 +416,13 @@ class _ConsultationResultScreenState extends State<ConsultationResultScreen> {
             itemBuilder: (ctx, i) => _CandidateCard(reading: _readings[i]),
           ),
         ),
+        // おでかけ/近傍半径で近くの町が乏しいときのヒント (現在表示中の候補基準)。
+        if (cur != null && cur.sparse) _SparseHint(nearbyCount: cur.nearbyCount),
         if (_canLoadNext)
           _RefreshButton(loading: _loadingNext, onTap: _loadingNext ? null : _loadNext),
+        // 案Y: 出し尽くしたら正直に止めて代替提案を出す (クレジット非消費)。
+        if (_exhausted)
+          _ExhaustionPanel(reason: _exhaustedReason, suggestions: _exhaustSuggestions),
         const SizedBox(height: 16),
       ],
     );
