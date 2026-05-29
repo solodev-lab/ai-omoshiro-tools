@@ -136,7 +136,7 @@
   "lib/utils/consultation_credits.dart": "40af43102de68273e00cc21cb999a36c63fbf4a8",
   "lib/utils/consultation_record.dart": "bff164d6bfcaebc039d3319a08b135abf8326be3",
   "lib/utils/consultation_share.dart": "bb32a5f85599a1a428f2f75b8597f142526f0728",
-  "lib/utils/consultation_v2_api.dart": "89509c2e733b2ad6ed9dd7932a4b201319a6e430",
+  "lib/utils/consultation_v2_api.dart": "60445220ac52a7b002131b90c8b0bff2d1075aa7",
   "lib/utils/consultation_v2_request.dart": "29d59091dea59a73b3520a7e82befae29b84399e",
   "lib/utils/cycle_story_texts.dart": "23feb94e0367bd101c7260d5617db564b2ecc5be",
   "lib/utils/daily_transits_api.dart": "5d4046e40a879d357711fb26e94ed72aa4fe4a11",

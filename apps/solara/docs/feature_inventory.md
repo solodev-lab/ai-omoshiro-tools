@@ -156,7 +156,7 @@ Solara のバックエンドは **Cloudflare Workers** で稼働。本番 URL: `
   同じ計算に **フィルタ / 重み / レンズ** をかける。時間つまみ(日付)・焦点つまみ(テーマ+誰と)・
   場所つまみ(場面)・レンズつまみ(願い)。
 - **全サーバー計算 + client 最小入力**: client は「誕生+自宅+5問+preset」(約 1KB) だけ送り、
-  Worker がチャート/線/sectorEnergy/候補多様性/リロケハウスを全計算 → Stella ナレーション。
+  Worker がチャート/線/sectorEnergy/候補選定(レンズ回転)/リロケハウスを全計算 → Stella ナレーション。
   client 候補生成 (`consultation_engine.dart`) と Dart 版 `world_cities.dart` は撤去。
 - **候補は 1 つずつ**: 最初の取得で「一番強い見出し候補」、「別の候補地」で excluded を足して
   次の候補を 1 枚ずつ。出し直しごとにレンズが回る (合成最強→アスペクト再合成→ランダム、§0.2.18)。

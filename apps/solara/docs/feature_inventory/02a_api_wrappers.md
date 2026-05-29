@@ -115,7 +115,7 @@ Consultation V2 API — POST /protected/astro/consultation2
 Worker 側: apps/solara/worker/src/{consultation_engine,consultation_v2}.js
 
 新方式: client は「誕生データ + 自宅座標 + 5問の答え + preset」(約1KB) だけ送り、
-Worker がチャート/線/sectorEnergy/候補多様性/リロケハウスを全部計算して
+Worker がチャート/線/sectorEnergy/候補選定(レンズ回転)/リロケハウスを全部計算して
 Stella の言葉 (候補 1 つ + エビデンス + 初回のみ内的季節/intro/outro) を返す。
 1 クレジット = 1 候補。「別の候補地」は excluded を足した再呼び出し (= +1 クレジット)。
 
