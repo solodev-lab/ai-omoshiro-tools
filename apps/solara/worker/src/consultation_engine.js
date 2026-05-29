@@ -434,13 +434,18 @@ async function buildCandidatePool({ scope, home, mode, env = null }) {
         : RADIUS_DEFAULT_KM);
     const sparseMin = numEnv(env, 'CONSULTATION_SPARSE_MIN', SPARSE_MIN_DEFAULT);
     if (db && home && home.lat != null) {
-      const localLimit = numEnv(env, 'CONSULTATION_LOCAL_LIMIT', LOCAL_LIMIT_DEFAULT);
-      const rows = await d1BoundingBox(db, home, radiusKm, localLimit);
-      const inCircle = rows.filter((r) => haversineKm(home, { lat: r.lat, lng: r.lng }) <= radiusKm);
-      const candidates = inCircle.map((r) => townRowToCandidate(r, home));
-      return { candidates, sparse: candidates.length < sparseMin, nearbyCount: candidates.length, source: 'd1-local' };
+      try {
+        const localLimit = numEnv(env, 'CONSULTATION_LOCAL_LIMIT', LOCAL_LIMIT_DEFAULT);
+        const rows = await d1BoundingBox(db, home, radiusKm, localLimit);
+        const inCircle = rows.filter((r) => haversineKm(home, { lat: r.lat, lng: r.lng }) <= radiusKm);
+        const candidates = inCircle.map((r) => townRowToCandidate(r, home));
+        return { candidates, sparse: candidates.length < sparseMin, nearbyCount: candidates.length, source: 'd1-local' };
+      } catch (e) {
+        // D1 が一時的に落ちても おでかけ を 500 にしない。従来プールに degrade して読みは出す。
+        console.warn(`[consultation] D1 local query failed, falling back: ${e && e.message ? e.message : e}`);
+      }
     }
-    // フォールバック (D1 無し)
+    // フォールバック (D1 無し / D1 エラー)
     if (kind === 'radius') {
       const cs = worldCities
         .filter((c) => haversineKm(home, { lat: c.lat, lng: c.lng }) <= radiusKm)
@@ -457,26 +462,31 @@ async function buildCandidatePool({ scope, home, mode, env = null }) {
 
   // 広域 (地域 / 自国 / 世界)
   if (db) {
-    const limit = numEnv(env, 'CONSULTATION_WIDE_LIMIT', WIDE_LIMIT_DEFAULT);
-    if (kind === 'region' && scope.regionGroup) {
-      const countries = countriesInGroup(scope.regionGroup);
-      const floor = numEnv(env, 'CONSULTATION_REGION_MIN_POP', REGION_MIN_POP_DEFAULT);
-      const rows = countries.length ? await d1Wide(db, { countries, floor, limit }) : [];
-      return { candidates: rows.map(cityRowToCandidate), sparse: false, nearbyCount: rows.length, source: 'd1-region' };
+    try {
+      const limit = numEnv(env, 'CONSULTATION_WIDE_LIMIT', WIDE_LIMIT_DEFAULT);
+      if (kind === 'region' && scope.regionGroup) {
+        const countries = countriesInGroup(scope.regionGroup);
+        const floor = numEnv(env, 'CONSULTATION_REGION_MIN_POP', REGION_MIN_POP_DEFAULT);
+        const rows = countries.length ? await d1Wide(db, { countries, floor, limit }) : [];
+        return { candidates: rows.map(cityRowToCandidate), sparse: false, nearbyCount: rows.length, source: 'd1-region' };
+      }
+      if (kind === 'country') {
+        const cc = (scope && scope.country) || homeCountry(home);
+        const floor = numEnv(env, 'CONSULTATION_COUNTRY_MIN_POP', COUNTRY_MIN_POP_DEFAULT);
+        const rows = cc ? await d1Wide(db, { countries: [cc], floor, limit }) : [];
+        return { candidates: rows.map(cityRowToCandidate), sparse: false, nearbyCount: rows.length, source: 'd1-country' };
+      }
+      // world (既定)
+      const floor = numEnv(env, 'CONSULTATION_WORLD_MIN_POP', WORLD_MIN_POP_DEFAULT);
+      const rows = await d1Wide(db, { countries: null, floor, limit });
+      return { candidates: rows.map(cityRowToCandidate), sparse: false, nearbyCount: rows.length, source: 'd1-world' };
+    } catch (e) {
+      // D1 エラー時は従来 worldCities に degrade (地域/自国/世界を 500 にしない)。
+      console.warn(`[consultation] D1 wide query failed, falling back: ${e && e.message ? e.message : e}`);
     }
-    if (kind === 'country') {
-      const cc = (scope && scope.country) || homeCountry(home);
-      const floor = numEnv(env, 'CONSULTATION_COUNTRY_MIN_POP', COUNTRY_MIN_POP_DEFAULT);
-      const rows = cc ? await d1Wide(db, { countries: [cc], floor, limit }) : [];
-      return { candidates: rows.map(cityRowToCandidate), sparse: false, nearbyCount: rows.length, source: 'd1-country' };
-    }
-    // world (既定)
-    const floor = numEnv(env, 'CONSULTATION_WORLD_MIN_POP', WORLD_MIN_POP_DEFAULT);
-    const rows = await d1Wide(db, { countries: null, floor, limit });
-    return { candidates: rows.map(cityRowToCandidate), sparse: false, nearbyCount: rows.length, source: 'd1-world' };
   }
 
-  // 広域フォールバック (D1 無し) = 従来 worldCities
+  // 広域フォールバック (D1 無し / D1 エラー) = 従来 worldCities
   if (kind === 'region' && scope.regionGroup) {
     const cs = worldCities.filter((c) => worldCityRegionGroups[c.country] === scope.regionGroup).map(cityToCandidate);
     return { candidates: cs, sparse: false, nearbyCount: cs.length, source: 'fallback-region' };

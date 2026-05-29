@@ -411,7 +411,7 @@ fallback?: boolean                        // Stella が届かない時 true (静
 **export (1):** `handleConsultation`
 
 
-### `worker/src/consultation_engine.js` (997 行)
+### `worker/src/consultation_engine.js` (1007 行)
 
 **ファイル先頭コメント:**
 

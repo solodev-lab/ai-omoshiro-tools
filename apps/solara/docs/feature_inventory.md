@@ -367,6 +367,9 @@ Solara のバックエンドは **Cloudflare Workers** で稼働。本番 URL: `
 - **テスト**: worker `consultation_engine.test.js` 40 件 pass (avoid は別候補にするが attempt/レンズ不変 /
   安全策で attempt0 は必ず 1 枚 / 出し直しは枯渇)。Flutter `consultation_ui_test` に avoid 往復テスト追加
   (送信 + 表示候補の積み上げ)。`flutter analyze` クリーン。
+- **D1 障害耐性 (本番前手当て)**: `buildCandidatePool` の D1 分岐 (局所/広域) を try/catch で囲み、
+  D1 が一時的に落ちても従来 worldCities/合成方位に degrade する (おでかけ/広域を 500 にしない・
+  console.warn でログ)。テストに throwing D1 モックで degrade を検証。
 - **これで Phase A/B/C 完了**。残るは D1 binding 有効化 + deploy (実在の町の本番切替) と app ビルド。
 
 ### 0.2.3 Pro 週次キャップ 100 回/週 (2026-05-27)

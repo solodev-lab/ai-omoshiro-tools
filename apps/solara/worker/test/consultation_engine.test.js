@@ -242,6 +242,25 @@ test('buildCandidatePool D1: 自国/地域は人口フロア + 国フィルタ',
   assert.ok(region.candidates.length > 0 && region.candidates.every((c) => c.country === 'JP'));
 });
 
+test('buildCandidatePool D1: D1 エラー時は従来プールに degrade (おでかけ/広域を 500 にしない)', async () => {
+  const throwingDB = {
+    prepare: () => ({
+      bind: () => ({
+        // eslint-disable-next-line require-await
+        async all() { throw new Error('d1 down'); },
+      }),
+    }),
+  };
+  // 局所 (おでかけ) → 合成 16 方位フォールバック
+  const local = await buildCandidatePool({ scope: { kind: 'bearing', radiusKm: 50 }, home: HOME, mode: 'daily', env: { DB: throwingDB } });
+  assert.equal(local.source, 'fallback-bearing');
+  assert.equal(local.candidates.length, 16);
+  // 広域 (世界) → worldCities フォールバック
+  const world = await buildCandidatePool({ scope: { kind: 'world' }, home: HOME, mode: 'migration', env: { DB: throwingDB } });
+  assert.equal(world.source, 'fallback-world');
+  assert.ok(world.candidates.length > 700);
+});
+
 test('countriesInGroup / bearing16: 領域→国コード集合、方位度→16方位コード', () => {
   assert.ok(countriesInGroup('日本').includes('JP'));
   assert.ok(countriesInGroup('北米').includes('US'));
