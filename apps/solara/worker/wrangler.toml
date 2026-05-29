@@ -198,11 +198,11 @@ ANDROID_CERT_SHA256_ALLOWLIST = "-XyvOn4yrVJdrby9VfkwejUq7Zt4431y4QC-r8raucY"
 # 2026-05-29 状態: D1 'solara-cities' (region APAC/KIX) は作成済 + schema + 169,123 都市 投入済 + 検証済。
 #   ただし本番 deploy は **Phase C (Flutter UI 磨き込み) と同期** させる方針のため、binding はわざと
 #   コメントアウトに戻してある (有効のままだと別件の routine deploy で実在の町が誤って有効化されるため)。
-#   Phase C 配信時に下記 3 行をコメント解除 → `npx wrangler deploy` で一発で切り替わる (データは投入済)。
-# [[d1_databases]]
-# binding = "DB"
-# database_name = "solara-cities"
-# database_id = "1fa3e5ec-6bdc-4456-9eab-ab98881e24c9"
+#   2026-05-29 有効化: Phase A/B/C 完了 + D1 障害耐性 (try/catch degrade) を入れた上で本番切替。
+[[d1_databases]]
+binding = "DB"
+database_name = "solara-cities"
+database_id = "1fa3e5ec-6bdc-4456-9eab-ab98881e24c9"
 
 # ── Durable Object (App Attest 用、設計 v1.8 §6.1) ──
 # 全 keyId を 1 instance に集約 (idFromName('global'))。
