@@ -91,7 +91,7 @@
   "lib/screens/map/map_viewpoint_menu.dart": "42cf7711400856747e413c0e2c107568fe21277f",
   "lib/screens/map/map_vp_panel.dart": "654f8c0851739fb8c438c9e2633da8f55109b672",
   "lib/screens/map/map_widgets.dart": "19e3cbe3736b5aeedfda7ee0c3de77114a367302",
-  "lib/screens/map_screen.dart": "27fc6cf8cb6923836172a0ec081d032e09f5653f",
+  "lib/screens/map_screen.dart": "46731804f6a98a4f813f89762ecfa01b2e0115f0",
   "lib/screens/observe/observe_card_widgets.dart": "f5052189331cf55210f9db54477c610c0d0a77d5",
   "lib/screens/observe/observe_category_selector.dart": "a36f44ea79b2136c0d400871097c7eb9b21163e5",
   "lib/screens/observe/observe_constants.dart": "f47ce0118d4b1b49b3aa4592673f6501a76c5aed",

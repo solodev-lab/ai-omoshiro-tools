@@ -583,15 +583,13 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   /// `_noProfile` フラグを更新して占い系オーバーレイを再表示するために使う。
   Future<void> reloadProfile() => _loadProfileAndChart();
 
-  /// 相談結果カードの🗺ボタンから呼ばれる: カメラを [pos] へ移動し、[date] が
-  /// あればその日付で再計算する。視点 (VIEWPOINT/_center) は変えない (カメラ移動のみ)。
+  /// 相談結果カードの🗺ボタンから呼ばれる: 視点 (VIEWPOINT/_center) を [pos] へ移動
+  /// (カメラ移動 + 天体ライン/セクター再計算)。[date] があればその日付で再計算する。
   void focusLocationAndDate(LatLng pos, DateTime? date) {
     if (!mounted) return;
-    if (_mapReady) {
-      _mapCtrl.move(pos, 12);
-    } else {
-      _pendingInitialMove = pos; // map 未 ready なら onMapReady 時に消化
-    }
+    // _rebuild = 視点変更 + flyTo + セクター/ライン再構築 (既存のVP移動と同じ挙動)。
+    _rebuild(pos);
+    // 相談の日付があればその日付で再取得 (_center=pos のままラインが再計算される)。
     if (date != null) {
       setState(() => _selectedDate = date);
       _scheduleLoadChart(targetDate: date);

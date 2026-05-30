@@ -1,12 +1,12 @@
 # Solara Code Audit
 
-対象: lib (191 個の .dart)
+対象: lib (192 個の .dart)
 
 ## 1. ファイル行数 (NOTICE >= 300 / WARN >= 500 / HARD >= 1000)
 
 | 行数 | 判定 | ファイル |
 |------|------|----------|
-| 3214 | 🔴 HARD | lib/screens/map_screen.dart |
+| 3229 | 🔴 HARD | lib/screens/map_screen.dart |
 | 2029 | 🔴 HARD | lib/screens/map/map_daily_transit_screen.dart |
 | 1473 | 🔴 HARD | lib/screens/sanctuary_screen.dart |
 | 1385 | 🔴 HARD | lib/screens/sanctuary/sanctuary_title_diagnosis.dart |
@@ -39,12 +39,12 @@
 | 508 | 🟠 WARN | lib/screens/map/map_time_slider.dart |
 | 500 | 🟠 WARN | lib/screens/observe/tarot_altar_scene.dart |
 | 498 | 🟡 NOTICE | lib/widgets/fortune_overlays/healing_painter.dart |
+| 495 | 🟡 NOTICE | lib/screens/consultation/consultation_result_screen.dart |
 | 489 | 🟡 NOTICE | lib/screens/consultation/consultation_input_screen.dart |
 | 488 | 🟡 NOTICE | lib/screens/consultation/consultation_history_widgets.dart |
 | 481 | 🟡 NOTICE | lib/widgets/full_moon_overlay.dart |
 | 481 | 🟡 NOTICE | lib/screens/map/map_overlays.dart |
 | 476 | 🟡 NOTICE | lib/utils/app_attest_client.dart |
-| 472 | 🟡 NOTICE | lib/screens/consultation/consultation_result_screen.dart |
 | 467 | 🟡 NOTICE | lib/screens/horoscope/horo_relocation_panel.dart |
 | 460 | 🟡 NOTICE | lib/screens/galaxy/galaxy_star_atlas.dart |
 | 459 | 🟡 NOTICE | lib/utils/solara_auth.dart |
@@ -72,6 +72,7 @@
 | 348 | 🟡 NOTICE | lib/screens/consultation/consultation_credit_sheet.dart |
 | 345 | 🟡 NOTICE | lib/screens/consultation/consultation_input_picker.dart |
 | 343 | 🟡 NOTICE | lib/screens/horoscope/horo_fortune_cards.dart |
+| 341 | 🟡 NOTICE | lib/screens/consultation/consultation_result_card.dart |
 | 338 | 🟡 NOTICE | lib/screens/map/consult_entry_popup.dart |
 | 336 | 🟡 NOTICE | lib/screens/horoscope/horo_birth_panel.dart |
 | 319 | 🟡 NOTICE | lib/screens/galaxy/galaxy_archive_filter.dart |
@@ -109,13 +110,13 @@
   ),
   ```
 
-### 3. 📁 別ファイル間 (14 箇所、11 ファイル)
+### 3. 📁 別ファイル間 (15 箇所、11 ファイル)
 
   - lib/screens/consultation/consultation_history_widgets.dart:49
   - lib/screens/consultation/consultation_input_widgets.dart:112
-  - lib/screens/consultation/consultation_result_card.dart:142
+  - lib/screens/consultation/consultation_result_card.dart:156
+  - lib/screens/consultation/consultation_result_card.dart:232
   - lib/screens/consultation/consultation_result_credit_widgets.dart:145
-  - lib/screens/consultation/consultation_result_widgets.dart:77
   ```
   ),
   ```
@@ -223,7 +224,7 @@
 
   - lib/widgets/ai_report_button.dart:240
   - lib/screens/consultation/consultation_history_widgets.dart:48
-  - lib/screens/consultation/consultation_result_card.dart:141
+  - lib/screens/consultation/consultation_result_card.dart:155
   - lib/screens/consultation/consultation_result_credit_widgets.dart:144
   - lib/screens/consultation/consultation_result_widgets.dart:76
   ```
@@ -233,7 +234,7 @@
 ### 14. 📁 別ファイル間 (9 箇所、6 ファイル)
 
   - lib/screens/consultation/consultation_input_picker.dart:337
-  - lib/screens/consultation/consultation_result_card.dart:219
+  - lib/screens/consultation/consultation_result_card.dart:263
   - lib/screens/galaxy/galaxy_star_atlas.dart:155
   - lib/screens/galaxy/galaxy_star_atlas.dart:189
   - lib/screens/galaxy/galaxy_star_atlas.dart:355
@@ -266,7 +267,7 @@
 ### 17. 📁 別ファイル間 (7 箇所、6 ファイル)
 
   - lib/screens/consultation/consultation_input_picker.dart:336
-  - lib/screens/consultation/consultation_result_card.dart:218
+  - lib/screens/consultation/consultation_result_card.dart:262
   - lib/screens/galaxy/galaxy_archive_filter_chips.dart:58
   - lib/screens/galaxy/galaxy_star_atlas.dart:154
   - lib/screens/galaxy/galaxy_star_atlas.dart:354
@@ -291,7 +292,7 @@
   - lib/widgets/full_moon_overlay.dart:198
   - lib/widgets/info_popup.dart:105
   - lib/widgets/new_moon_overlay.dart:218
-  - lib/screens/consultation/consultation_result_card.dart:273
+  - lib/screens/consultation/consultation_result_card.dart:317
   ```
   ),
   ```
@@ -310,7 +311,7 @@
 
 ## 3. TODO/FIXME/HACK/DEBUG 残置
 
-  - lib/main.dart:38 — `// debug/Web/desktop/設定値不足ではいずれも no-op (Free 動作は不変)。`
+  - lib/main.dart:39 — `// debug/Web/desktop/設定値不足ではいずれも no-op (Free 動作は不変)。`
   - lib/screens/galaxy_screen.dart:453 — `// DEBUG: Cycle完了フローの各タイミングを手動トリガー`
   - lib/utils/device_security_status.dart:115 — `// debug build では `Threat.debug` で常時発火 + signing cert が release と`
   - lib/screens/galaxy/galaxy_archive_filter.dart:81 — `// debug で過去サイクルを後から作ったり、同月内に複数 cycle を並べると`
@@ -325,4 +326,4 @@
 
 ---
 
-総計: 行数 HARD 7 / WARN 25 / NOTICE 46 / 重複 20 / TODO 4 / print 1 / 未使用候補 0
+総計: 行数 HARD 7 / WARN 25 / NOTICE 47 / 重複 20 / TODO 4 / print 1 / 未使用候補 0
