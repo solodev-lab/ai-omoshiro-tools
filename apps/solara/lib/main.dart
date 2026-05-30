@@ -13,6 +13,7 @@ import 'utils/app_locale.dart';
 import 'utils/celestial_events.dart';
 import 'utils/consultation_credits.dart';
 import 'utils/device_security_status.dart';
+import 'utils/map_focus.dart';
 import 'utils/pro_status.dart';
 import 'utils/purchases_service.dart';
 import 'utils/solara_auth.dart';
@@ -144,12 +145,26 @@ class _SolaraHomeState extends State<SolaraHome> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    MapFocus.instance.addListener(_onMapFocusRequested);
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    MapFocus.instance.removeListener(_onMapFocusRequested);
     super.dispose();
+  }
+
+  /// 相談結果カードの🗺ボタン要求を受け、Map タブへ切替えて候補位置＋日付でフォーカス。
+  /// (結果画面は popUntil で閉じた後に request されるので、ここで前面はルートに戻っている)
+  void _onMapFocusRequested() {
+    if (!mounted) return;
+    final req = MapFocus.instance.take();
+    if (req == null) return;
+    _onTabTap(0); // Map タブ
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _mapKey.currentState?.focusLocationAndDate(req.pos, req.date);
+    });
   }
 
   @override

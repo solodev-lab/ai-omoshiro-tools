@@ -5,7 +5,10 @@ part of 'consultation_result_screen.dart';
 
 class _CandidateCard extends StatelessWidget {
   final ConsultationV2Reading reading;
-  const _CandidateCard({required this.reading});
+
+  /// 場所名の右の🗺ボタン (Map 画面でこの候補地を見る)。null なら非表示。
+  final VoidCallback? onOpenMap;
+  const _CandidateCard({required this.reading, this.onOpenMap});
 
   ConsultationV2Candidate get _c => reading.candidate;
   bool get _isBearing => _c.bearing != null && _c.bearing!.isNotEmpty;
@@ -59,14 +62,25 @@ class _CandidateCard extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 10),
-              Text(
-                ConsultationRecord.displayName(_c),
-                style: const TextStyle(
-                  color: SolaraColors.textPrimary,
-                  fontSize: 22,
-                  height: 1.3,
-                  letterSpacing: 0.5,
-                ),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Expanded(
+                    child: Text(
+                      ConsultationRecord.displayName(_c),
+                      style: const TextStyle(
+                        color: SolaraColors.textPrimary,
+                        fontSize: 22,
+                        height: 1.3,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ),
+                  if (onOpenMap != null) ...[
+                    const SizedBox(width: 8),
+                    _MapLinkIcon(onTap: onOpenMap!),
+                  ],
+                ],
               ),
               if (_subtitle.isNotEmpty) ...[
                 const SizedBox(height: 4),
@@ -186,6 +200,36 @@ class _EnergyChip extends StatelessWidget {
           color: SolaraColors.solaraGoldLight,
           fontSize: 11,
           letterSpacing: 0.4,
+        ),
+      ),
+    );
+  }
+}
+
+/// 場所名の右の🗺リンク。Map 画面で候補地を (相談の日付で) 見る。
+class _MapLinkIcon extends StatelessWidget {
+  final VoidCallback onTap;
+  const _MapLinkIcon({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Tooltip(
+        message: '地図で見る',
+        child: Container(
+          padding: const EdgeInsets.all(6),
+          decoration: BoxDecoration(
+            color: const Color(0x1FC9A84C),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: const Color(0x66C9A84C)),
+          ),
+          child: const Icon(
+            Icons.map_outlined,
+            size: 20,
+            color: SolaraColors.solaraGoldLight,
+          ),
         ),
       ),
     );

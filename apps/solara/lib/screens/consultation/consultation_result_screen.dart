@@ -15,10 +15,12 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:latlong2/latlong.dart';
 
 import '../../theme/solara_colors.dart';
 import '../../utils/consultation_api.dart' show ConsultationBlock;
 import '../../utils/consultation_credits.dart';
+import '../../utils/map_focus.dart';
 import '../../utils/consultation_record.dart';
 import '../../utils/consultation_share.dart';
 import '../../utils/consultation_v2_api.dart';
@@ -354,6 +356,24 @@ class _ConsultationResultScreenState extends State<ConsultationResultScreen> {
     }
   }
 
+  /// 結果カードの🗺ボタン: Map タブへ移り、候補地を相談の日付でフォーカスする。
+  /// 先にルート (タブ Scaffold) まで戻してから要求 → SolaraHome が Map タブへ切替。
+  /// 日付導出 (おでかけ=指定日/旅行=初日/移住=時期) は map_focus の純関数に委譲。
+  void _openCandidateOnMap(ConsultationV2Candidate c) {
+    final w = widget.request?.when;
+    final rec = widget.record;
+    final date = w != null
+        ? mapFocusDate(
+            kind: w.kind, date: w.date, start: w.start, timeBand: w.timeBand)
+        : rec != null
+            ? mapFocusDate(
+                kind: rec.whenKind, date: rec.whenDate,
+                start: rec.whenStart, timeBand: rec.whenTimeBand)
+            : null;
+    Navigator.of(context).popUntil((r) => r.isFirst);
+    MapFocus.instance.request(LatLng(c.lat, c.lng), date);
+  }
+
   @override
   Widget build(BuildContext context) {
     final canShare = _readings.isNotEmpty && !_loading;
@@ -454,7 +474,10 @@ class _ConsultationResultScreenState extends State<ConsultationResultScreen> {
               HapticFeedback.selectionClick();
               setState(() => _pageIndex = i);
             },
-            itemBuilder: (ctx, i) => _CandidateCard(reading: _readings[i]),
+            itemBuilder: (ctx, i) => _CandidateCard(
+              reading: _readings[i],
+              onOpenMap: () => _openCandidateOnMap(_readings[i].candidate),
+            ),
           ),
         ),
         // おでかけ/近傍半径で近くの町が乏しいときのヒント (現在表示中の候補基準)。

@@ -14,7 +14,7 @@
 | 1c | モデルクラス | 4 | [01c_models.md](01c_models.md) |
 | 2a | API/Worker ラッパ | 10 | [02a_api_wrappers.md](02a_api_wrappers.md) |
 | 2b | 永続化/キャッシュ | 9 | [02b_persistence.md](02b_persistence.md) |
-| 2c | グローバル singleton | 2 | [02c_globals.md](02c_globals.md) |
+| 2c | グローバル singleton | 3 | [02c_globals.md](02c_globals.md) |
 | 3a | 共通ウィジェット (純粋) | 27 | [03a_widgets_pure.md](03a_widgets_pure.md) |
 | 3b | テーマ・装飾 | 3 | [03b_theme.md](03b_theme.md) |
 | 3c | 演出ウィジェット (animated) | 5 | [03c_widgets_anim.md](03c_widgets_anim.md) |
@@ -28,11 +28,11 @@
 
 ## 全体統計
 
-- Dart ファイル: 191
+- Dart ファイル: 192
 - Worker JS ファイル: 26
 - Worker エンドポイント総数: 32
-- Dart class/mixin/extension/enum 総数: 456
-- Dart 関数総数 (素拾い): 1514
+- Dart class/mixin/extension/enum 総数: 459
+- Dart 関数総数 (素拾い): 1520
 
 ## 対整合チェック
 

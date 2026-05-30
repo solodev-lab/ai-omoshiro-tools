@@ -5,9 +5,9 @@
 
 ## サマリ
 
-- ファイル数: 31 / 総行数: 10117
-- class/mixin/extension/enum: 90
-- 関数 (top-level + method の素拾い): 260
+- ファイル数: 31 / 総行数: 10184
+- class/mixin/extension/enum: 91
+- 関数 (top-level + method の素拾い): 262
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 7
 - Worker URL リテラル: 0
@@ -559,7 +559,7 @@ flutter_map ベースの地点選択画面のサブウィジェット群:
   </details>
 
 
-### `lib/screens/consultation/consultation_result_card.dart` (297 行)
+### `lib/screens/consultation/consultation_result_card.dart` (341 行)
 
 **ファイル先頭コメント:**
 
@@ -568,21 +568,24 @@ Consultation Result — 候補カード (V2)
 (part of 'consultation_result_screen.dart')
 ```
 
-**型定義 (4):**
+**型定義 (5):**
 
 - L6 `class _CandidateCard : StatelessWidget`
-- L170 `class _EnergyChip : StatelessWidget`
-- L196 `class _TimeWindowRow : StatelessWidget`
+- L184 `class _EnergyChip : StatelessWidget`
+- L210 `class _MapLinkIcon : StatelessWidget`
+  - 場所名の右の🗺リンク。Map 画面で候補地を (相談の日付で) 見る。
+- L240 `class _TimeWindowRow : StatelessWidget`
   - 時間帯 (現地の時間帯のみ・時計表示なし)。single=1 個 / rhythm=朝昼夜。
-- L227 `class _CandidateKindBadge : StatelessWidget`
+- L271 `class _CandidateKindBadge : StatelessWidget`
   - 候補種別バッジ (方角 / 場所)。
 
-**関数 (4 public + 0 private):**
+**関数 (5 public + 0 private):**
 
-- L34 `build()`
-- L175 `build()`
-- L201 `build()`
-- L236 `build()`
+- L37 `build()`
+- L189 `build()`
+- L215 `build()`
+- L245 `build()`
+- L280 `build()`
 
 
 ### `lib/screens/consultation/consultation_result_credit_widgets.dart` (153 行)
@@ -607,7 +610,7 @@ Stella 相談 クレジット制 (設計 project_solara_stella_free_credits.md) 
 - L22 `build()`
 
 
-### `lib/screens/consultation/consultation_result_screen.dart` (472 行)
+### `lib/screens/consultation/consultation_result_screen.dart` (495 行)
 
 **ファイル先頭コメント:**
 
@@ -628,35 +631,36 @@ Pro = 無制限。live モード = ConsultationRequest で fetch / 履歴モー�
 ConsultationRecord を読み込み専用表示 (fetch なし・autosave なし・別候補なし)。
 ```
 
-**imports:** dart=0 / package=2 / relative=14
+**imports:** dart=0 / package=3 / relative=15
 
-- relative: `../../theme/solara_colors.dart`, `../../utils/consultation_api.dart`, `../../utils/consultation_credits.dart`, `../../utils/consultation_record.dart`, `../../utils/consultation_share.dart`, `../../utils/consultation_v2_api.dart`, `../../utils/pro_status.dart`, `../../utils/solara_storage.dart`, `../../widgets/ai_disclaimer_footer.dart`, `../../widgets/ai_report_button.dart`, `../../widgets/glass_panel.dart`, `../../widgets/info_popup.dart`, `../../widgets/pro_unlock_dialog.dart`, `consultation_credit_sheet.dart`
+- relative: `../../theme/solara_colors.dart`, `../../utils/consultation_api.dart`, `../../utils/consultation_credits.dart`, `../../utils/map_focus.dart`, `../../utils/consultation_record.dart`, `../../utils/consultation_share.dart`, `../../utils/consultation_v2_api.dart`, `../../utils/pro_status.dart`, `../../utils/solara_storage.dart`, `../../widgets/ai_disclaimer_footer.dart`, `../../widgets/ai_report_button.dart`, `../../widgets/glass_panel.dart`, `../../widgets/info_popup.dart`, `../../widgets/pro_unlock_dialog.dart`, `consultation_credit_sheet.dart`
 
 **型定義 (2):**
 
-- L42 `class ConsultationResultScreen : StatefulWidget`
-- L77 `class _ConsultationResultScreenState : State`
+- L44 `class ConsultationResultScreen : StatefulWidget`
+- L79 `class _ConsultationResultScreenState : State`
 
-**関数 (4 public + 11 private):**
+**関数 (4 public + 12 private):**
 
-- L73 `createState()`
-- L139 `initState()`
-- L152 `dispose()`
-- L358 `build()`
+- L75 `createState()`
+- L141 `initState()`
+- L154 `dispose()`
+- L378 `build()`
 
-  <details><summary>private 関数 11 件</summary>
+  <details><summary>private 関数 12 件</summary>
 
-  - L113 `_pushShownToAvoid()`
-  - L133 `_setSharing()`
-  - L157 `_runFetch()`
-  - L162 `_fetch()`
-  - L212 `_loadNext()`
-  - L278 `_snack()`
-  - L290 `_onBuyCredits()`
-  - L296 `_showConsultationPaywall()`
-  - L317 `_showAboutReading()`
-  - L332 `_persist()`
-  - L423 `_buildBody()`
+  - L115 `_pushShownToAvoid()`
+  - L135 `_setSharing()`
+  - L159 `_runFetch()`
+  - L164 `_fetch()`
+  - L214 `_loadNext()`
+  - L280 `_snack()`
+  - L292 `_onBuyCredits()`
+  - L298 `_showConsultationPaywall()`
+  - L319 `_showAboutReading()`
+  - L334 `_persist()`
+  - L362 `_openCandidateOnMap()`
+  - L443 `_buildBody()`
 
   </details>
 

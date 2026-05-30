@@ -52,10 +52,10 @@
 
 ## #1 / #2 機械抽出 ↔ feature_inventory.md (人手版) の対整合
 
-- 機械抽出した class/mixin/extension/enum: **446**
+- 機械抽出した class/mixin/extension/enum: **449**
 - inventory に登場する識別子 (大文字始まり ``backtick``囲み): **258**
 
-### #1 機械にあるが Doc に書かれていない (256)
+### #1 機械にあるが Doc に書かれていない (259)
 
 - `AppAttestClient`
 - `ConstellationShareCardPage`
@@ -76,6 +76,8 @@
 - `GalaxyArchiveSort`
 - `GalaxyArchiveSortLabel`
 - `LegalUrls`
+- `MapFocus`
+- `MapFocusRequest`
 - `MapTimeSliderState`
 - `MemoTextField`
 - `ObserveFullReadingButton`
@@ -201,6 +203,7 @@
 - `_MapDisplayMenuState`
 - `_MapIconPainter`
 - `_MapLineNarrativeSheetState`
+- `_MapLinkIcon`
 - `_MapViewpointMenuState`
 - `_MedalPalette`
 - `_Medallion`
@@ -254,10 +257,7 @@
 - `_ReportReason`
 - `_RosePetal`
 - `_SanctuaryAccountSectionState`
-- `_SanctuaryHomeEditorPageState`
-- `_SanctuaryIconPainter`
-- `_SanctuaryOrbOverlayState`
-- … 残り 56 省略
+- … 残り 59 省略
 
 ### #2 Doc に書いてあるがコードに存在しない (ゴースト記述) (68)
 
@@ -402,8 +402,8 @@
 | 4c | 1 | 1 | 15 | 1 | 7 | 5 | 9 | 6 | · | · | · | 17 | · | · | 1 | · |
 | 4d | 3 | 6 | 13 | 1 | 5 | 2 | 12 | 2 | 1 | · | · | · | 9 | · | · | · |
 | 4e | 1 | 4 | · | 3 | 7 | 1 | 15 | 1 | · | · | · | · | · | 9 | 3 | · |
-| 4f | 2 | 3 | · | 8 | 16 | 3 | 18 | 12 | · | 6 | · | · | · | · | 29 | · |
-| 5 | 1 | · | · | 2 | 5 | 2 | 1 | 1 | · | 1 | 1 | 1 | 1 | 1 | 1 | · |
+| 4f | 2 | 3 | · | 8 | 16 | 4 | 18 | 12 | · | 6 | · | · | · | · | 29 | · |
+| 5 | 1 | · | · | 2 | 5 | 3 | 1 | 1 | · | 1 | 1 | 1 | 1 | 1 | 1 | · |
 
 > 健全な依存方向は「番号が大きい層 → 小さい層」(上位が下位に依存)。
 > 番号が小さい層から大きい層への矢印 (左下三角) は逆流依存の疑い。
@@ -448,11 +448,17 @@
 > 各ソースの SHA1 を `_stamps.json` に記録し、差分を検出。
 > 変更されたファイルが属する層は、人手版インベントリ章の見直し対象。
 
-- 追加: **0** / 削除: **0** / 変更: **2**
+- 追加: **1** / 削除: **0** / 変更: **4**
 
 ### 変更されたファイル (層別)
 
-- **層 4f**: `lib/screens/consultation/consultation_input_logic.dart`, `lib/screens/consultation/consultation_input_screen.dart`
+- **層 4a**: `lib/screens/map_screen.dart`
+- **層 4f**: `lib/screens/consultation/consultation_result_card.dart`, `lib/screens/consultation/consultation_result_screen.dart`
+- **層 5**: `lib/main.dart`
+
+### 追加されたファイル
+
+- `lib/utils/map_focus.dart` (層 2c)
 
 ## #7 astro_glossary 用語辞書対整合
 

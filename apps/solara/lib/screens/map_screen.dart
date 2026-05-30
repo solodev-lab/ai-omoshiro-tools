@@ -583,6 +583,21 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   /// `_noProfile` フラグを更新して占い系オーバーレイを再表示するために使う。
   Future<void> reloadProfile() => _loadProfileAndChart();
 
+  /// 相談結果カードの🗺ボタンから呼ばれる: カメラを [pos] へ移動し、[date] が
+  /// あればその日付で再計算する。視点 (VIEWPOINT/_center) は変えない (カメラ移動のみ)。
+  void focusLocationAndDate(LatLng pos, DateTime? date) {
+    if (!mounted) return;
+    if (_mapReady) {
+      _mapCtrl.move(pos, 12);
+    } else {
+      _pendingInitialMove = pos; // map 未 ready なら onMapReady 時に消化
+    }
+    if (date != null) {
+      setState(() => _selectedDate = date);
+      _scheduleLoadChart(targetDate: date);
+    }
+  }
+
   /// 連続操作 (◀▶ ステッパ連打 / Forecast→Map 連続ジャンプ) を 250ms debounce
   /// してから `_loadProfileAndChart` を呼ぶ。最後の操作だけ CF Worker に
   /// 反映する。新しい呼出が来るたびに前の Timer をキャンセル → 再起動。

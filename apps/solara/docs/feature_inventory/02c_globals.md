@@ -5,9 +5,9 @@
 
 ## サマリ
 
-- ファイル数: 2 / 総行数: 145
-- class/mixin/extension/enum: 2
-- 関数 (top-level + method の素拾い): 5
+- ファイル数: 3 / 総行数: 239
+- class/mixin/extension/enum: 4
+- 関数 (top-level + method の素拾い): 7
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 0
 - Worker URL リテラル: 0
@@ -65,6 +65,27 @@ fetch をトリガーする 4 イベント (これ以外で呼んではいけな
   <details><summary>private 関数 1 件</summary>
 
   - L72 `_doFetch()`
+
+  </details>
+
+
+### `lib/utils/map_focus.dart` (94 行)
+
+**imports:** dart=0 / package=2 / relative=0
+
+**型定義 (2):**
+
+- L9 `class MapFocusRequest`
+  - 相談結果カード → Map タブへ「位置＋日付」でフォーカスする橋渡し。
+- L18 `class MapFocus : ChangeNotifier`
+
+**関数 (1 public + 1 private):**
+
+- L25 `request()` — 位置＋日付でのフォーカスを要求する (notifyListeners でルートが拾う)。
+
+  <details><summary>private 関数 1 件</summary>
+
+  - L79 `_timeBandHour()`
 
   </details>
 

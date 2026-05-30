@@ -36,10 +36,10 @@
 | 559 | 🟠 WARN | lib/utils/planet_intro.dart |
 | 535 | 🟠 WARN | lib/utils/astro_lines.dart |
 | 511 | 🟠 WARN | lib/screens/map/map_astro.dart |
-| 508 | 🟠 WARN | lib/screens/consultation/consultation_input_screen.dart |
 | 508 | 🟠 WARN | lib/screens/map/map_time_slider.dart |
 | 500 | 🟠 WARN | lib/screens/observe/tarot_altar_scene.dart |
 | 498 | 🟡 NOTICE | lib/widgets/fortune_overlays/healing_painter.dart |
+| 489 | 🟡 NOTICE | lib/screens/consultation/consultation_input_screen.dart |
 | 488 | 🟡 NOTICE | lib/screens/consultation/consultation_history_widgets.dart |
 | 481 | 🟡 NOTICE | lib/widgets/full_moon_overlay.dart |
 | 481 | 🟡 NOTICE | lib/screens/map/map_overlays.dart |
@@ -325,4 +325,4 @@
 
 ---
 
-総計: 行数 HARD 7 / WARN 26 / NOTICE 45 / 重複 20 / TODO 4 / print 1 / 未使用候補 0
+総計: 行数 HARD 7 / WARN 25 / NOTICE 46 / 重複 20 / TODO 4 / print 1 / 未使用候補 0

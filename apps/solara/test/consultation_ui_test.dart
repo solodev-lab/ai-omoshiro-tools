@@ -13,6 +13,7 @@ import 'package:solara/screens/consultation/consultation_result_screen.dart';
 import 'package:solara/utils/consultation_api.dart';
 import 'package:solara/utils/consultation_record.dart';
 import 'package:solara/utils/consultation_v2_api.dart';
+import 'package:solara/utils/map_focus.dart';
 import 'package:solara/utils/pro_status.dart';
 import 'package:solara/utils/solara_storage.dart';
 
@@ -381,6 +382,35 @@ void main() {
     expect(find.textContaining('南西'), findsOneWidget); // 方角
     expect(find.textContaining('約30km'), findsOneWidget); // 距離
     expect(find.textContaining('· JP'), findsNothing); // 生の国コードは出さない
+  });
+
+  // 結果カードの🗺ボタン: Map フォーカス要求を積む (旅行=初日の日付)。
+  testWidgets('Result: 🗺ボタンで Map フォーカス要求 (旅行=初日)', (tester) async {
+    MapFocus.instance.take(); // 前テストの残留をクリア
+    final req = ConsultationRequest.fromProfile(
+      _profile,
+      theme: 'love',
+      mode: 'travel',
+      when: ConsultationWhen.range('2026-07-01', '2026-07-05'),
+    );
+    await tester.pumpWidget(MaterialApp(
+      home: ConsultationResultScreen(
+        request: req,
+        fetchOverride: (r) async =>
+            ConsultationV2Result(reading: _reading(name: '京都')),
+      ),
+    ));
+    await tester.pumpAndSettle();
+
+    expect(find.byIcon(Icons.map_outlined), findsOneWidget);
+    await tester.tap(find.byIcon(Icons.map_outlined));
+    await tester.pumpAndSettle();
+
+    final focus = MapFocus.instance.take();
+    expect(focus, isNotNull);
+    expect(focus!.pos.latitude, 35); // _reading の候補座標
+    expect(focus.pos.longitude, 135);
+    expect(focus.date, DateTime(2026, 7, 1)); // 旅行 = range の初日
   });
 
   // C-2: avoid-window を送信し、表示候補を window に積む。
