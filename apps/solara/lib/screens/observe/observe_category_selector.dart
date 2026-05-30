@@ -29,7 +29,7 @@ const List<(String?, String)> _tarotCategories = [
   ('newStart', '変化'),
 ];
 
-extension _ObserveCategorySelector on _ObserveScreenState {
+extension _ObserveCategorySelector on ObserveScreenState {
   /// カテゴリ選択 UI。全体運=無料 / 特定カテゴリ=非Pro は 1 クレジット消費。
   Widget _buildCategorySelector(bool isPro) {
     return Column(

@@ -20,7 +20,20 @@ import 'observe_reading_button.dart';
 class ObserveHistoryPanel extends StatefulWidget {
   final List<DailyReading> history;
   final VoidCallback onCleared;
-  const ObserveHistoryPanel({super.key, required this.history, required this.onCleared});
+
+  /// 画面復元 (Android プロセス死対策): 初期表示するサブタブ (0=現在 / 1=過去)。
+  final int initialHistoryTab;
+
+  /// サブタブが切替わるたびに親 (ObserveScreen) へ通知 (復元キャプチャ用)。
+  final ValueChanged<int>? onHistoryTabChanged;
+
+  const ObserveHistoryPanel({
+    super.key,
+    required this.history,
+    required this.onCleared,
+    this.initialHistoryTab = 0,
+    this.onHistoryTabChanged,
+  });
 
   @override
   State<ObserveHistoryPanel> createState() => _ObserveHistoryPanelState();
@@ -31,7 +44,7 @@ class _ObserveHistoryPanelState extends State<ObserveHistoryPanel> {
   ObserveHistoryFilter _filter = const ObserveHistoryFilter();
 
   /// 内部タブ: 0=現在サイクル / 1=過去サイクル (柱3 原則「記録は永久」)
-  int _historyTab = 0;
+  late int _historyTab = widget.initialHistoryTab;
 
   /// 過去サイクル一覧 (タブ切替時に loadCompletedCycles で取得)
   List<GalaxyCycle>? _pastCycles;
@@ -156,7 +169,10 @@ class _ObserveHistoryPanelState extends State<ObserveHistoryPanel> {
   Widget _innerTabBtn(int idx, String label) {
     final active = _historyTab == idx;
     return GestureDetector(
-      onTap: () => setState(() => _historyTab = idx),
+      onTap: () {
+        setState(() => _historyTab = idx);
+        widget.onHistoryTabChanged?.call(idx); // 画面復元キャプチャ用
+      },
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
         decoration: BoxDecoration(

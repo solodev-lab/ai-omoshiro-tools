@@ -10,7 +10,7 @@
 | --- | --- | --- | --- |
 | 0 | Worker (バックエンド計算式) | 27 | [00_worker.md](00_worker.md) |
 | 1a | 純計算ユーティリティ | 7 | [01a_pure_calc.md](01a_pure_calc.md) |
-| 1b | 静的データ辞書 | 14 | [01b_static_data.md](01b_static_data.md) |
+| 1b | 静的データ辞書 | 15 | [01b_static_data.md](01b_static_data.md) |
 | 1c | モデルクラス | 4 | [01c_models.md](01c_models.md) |
 | 2a | API/Worker ラッパ | 10 | [02a_api_wrappers.md](02a_api_wrappers.md) |
 | 2b | 永続化/キャッシュ | 9 | [02b_persistence.md](02b_persistence.md) |
@@ -28,11 +28,11 @@
 
 ## 全体統計
 
-- Dart ファイル: 192
+- Dart ファイル: 193
 - Worker JS ファイル: 27
 - Worker エンドポイント総数: 32
-- Dart class/mixin/extension/enum 総数: 459
-- Dart 関数総数 (素拾い): 1520
+- Dart class/mixin/extension/enum 総数: 461
+- Dart 関数総数 (素拾い): 1539
 
 ## 対整合チェック
 

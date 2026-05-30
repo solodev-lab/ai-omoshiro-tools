@@ -324,6 +324,20 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   // -1 = 地図中心 (= _searchOriginCenter)、0+ = _vpSlotsCache の index
   int _searchVpIndex = -1;
 
+  // 画面復元 (Android プロセス死対策): コールド起動時、SolaraHome から
+  // restoreMapState() で渡される Map 画面のスナップショット (検索 + 各ポップアップ)
+  // を保持。検索は MapController 準備後 (onMapReady) に、ポップアップ (Daily/Fortune/
+  // sheet) は chart 読込完了後に消化する。各々 1 回限り (applied フラグでガード)。
+  Map<String, dynamic>? _pendingRestore;
+  bool _restoreSearchApplied = false;
+  bool _restoreUiApplied = false;
+  bool _chartReadyOnce = false; // 初回 chart 読込完了 (= Daily/Fortune 復元可能)
+
+  // 現在開いているモーダルシート ('locations' | 'forecast' | null)。
+  // Locations/Forecast は showModalBottomSheet (_showSheet) で出すため bool フラグが
+  // 無い。画面復元で「どのシートを開いていたか」を捕捉するために追跡する。
+  String? _openSheet;
+
   // Map style (tile source + light/dark filter)
   // OSM HOT は現地言語ラベルのまま（多言語化はユーザー数増えてから再検討）。
   MapStyle _mapStyle = MapStyle.osmHotLight;
@@ -583,6 +597,101 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   /// `_noProfile` フラグを更新して占い系オーバーレイを再表示するために使う。
   Future<void> reloadProfile() => _loadProfileAndChart();
 
+  // ── 画面復元 (Android プロセス死対策) ──────────────────────────
+  // 低 RAM 端末で Google マップ等の外部アプリへ離脱中に OS が Solara を kill
+  // → 復帰時コールド再起動で Map 画面の状態が失われる問題への対策。
+  // SolaraHome が paused 時に captureMapRestore() で状態を吸い上げて保存し、
+  // 次回コールド起動時に restoreMapState() で復元する。
+  // Map 画面の 4 ポップアップ (Daily / Fortune / Locations / Forecast) は、
+  // いずれも Map 画面が裏で生きているオーバーレイ/モーダルなので、本 1 組の
+  // capture/restore に集約して一括で扱う (SolaraHome は map ブロブを透過で運ぶだけ)。
+
+  /// Map 画面の復元スナップショット。検索 / Daily / Fortune / シートのいずれかが
+  /// 開いている時のみ非 null。地図カメラ等は hit や chart から再現可能なので、
+  /// 「何が開いていたか」+ 検索 hits のみを保存する。
+  Map<String, dynamic>? captureMapRestore() {
+    final out = <String, dynamic>{};
+    if (_searchHits.isNotEmpty) {
+      final focusIdx =
+          _searchFocus == null ? -1 : _searchHits.indexOf(_searchFocus!);
+      out['search'] = {
+        'query': _searchCtrl.text,
+        'hits': _searchHits.map((h) => h.toJson()).toList(),
+        'focusIndex': focusIdx,
+      };
+    }
+    if (_dailyTransitOpen) out['daily'] = true;
+    if (_fortuneSheetOpen) out['fortune'] = true;
+    if (_openSheet != null) out['sheet'] = _openSheet;
+    return out.isEmpty ? null : out;
+  }
+
+  /// captureMapRestore のスナップショットを復元する (コールド起動時)。
+  /// 検索は MapController 準備後、ポップアップは chart 読込後に消化 (各 1 回限り)。
+  void restoreMapState(Map<String, dynamic> blob) {
+    _pendingRestore = blob;
+    if (_mapReady) _applySearchPartFromPending();
+    if (_chartReadyOnce) _applyUiRestoreFromPending();
+  }
+
+  /// 検索パートの消化 (onMapReady / restoreMapState から、1 回限り)。
+  void _applySearchPartFromPending() {
+    final s = _pendingRestore?['search'];
+    if (s is! Map || _restoreSearchApplied) return;
+    _restoreSearchApplied = true;
+    _applySearchRestore(Map<String, dynamic>.from(s));
+  }
+
+  /// ポップアップ (Daily / Fortune / sheet) パートの消化 (chart 読込完了後、1 回限り)。
+  /// Daily/Fortune は chart/プロフィール必須なので、ここまで遅延させる。
+  /// sheet (Locations/Forecast) は同じ _openXxx() を呼び直して再表示する。
+  void _applyUiRestoreFromPending() {
+    final blob = _pendingRestore;
+    if (blob == null || _restoreUiApplied || !mounted) return;
+    _restoreUiApplied = true;
+    final daily = blob['daily'] == true;
+    final fortune = blob['fortune'] == true;
+    final sheet = blob['sheet'] as String?;
+    if ((daily || fortune) && !_noProfile) {
+      setState(() {
+        if (daily) _dailyTransitOpen = true;
+        if (fortune) _fortuneSheetOpen = true;
+      });
+    }
+    if (sheet == 'forecast') {
+      // ignore: unawaited_futures
+      _openForecast();
+    } else if (sheet == 'locations') {
+      // ignore: unawaited_futures
+      _openLocations();
+    }
+  }
+
+  /// 検索状態の復元実処理 (MapController 準備済の前提で呼ぶ)。
+  void _applySearchRestore(Map<String, dynamic> data) {
+    final rawHits = data['hits'];
+    if (rawHits is! List || rawHits.isEmpty) return;
+    final hits = rawHits
+        .map((e) => SearchHit.fromJson(Map<String, dynamic>.from(e as Map)))
+        .toList();
+    final query = data['query'] as String? ?? '';
+    final focusIdx = (data['focusIndex'] as num?)?.toInt() ?? -1;
+    if (!mounted) return;
+    setState(() {
+      _searchHits = hits;
+      _searchOpen = false;
+      _searchCtrl.text = query;
+      _searchFocus = null;
+    });
+    if (focusIdx >= 0 && focusIdx < hits.length) {
+      // 検索結果詳細 (SearchFocusPopup) を再表示。地図移動も含む。
+      _selectSearchHit(hits[focusIdx]);
+    } else {
+      // リスト表示のみ: 検索エリアにフレーミング。
+      _frameSearchArea(_searchOriginCenter ?? _searchEffectiveCenter);
+    }
+  }
+
   /// 相談結果カードの🗺ボタンから呼ばれる: 視点 (VIEWPOINT/_center) を [pos] へ移動
   /// (カメラ移動 + 天体ライン/セクター再計算)。[date] があればその日付で再計算する。
   void focusLocationAndDate(LatLng pos, DateTime? date) {
@@ -793,6 +902,10 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
       unawaited(_recomputeDailyChipCategoryIfNeeded());
       // 検索結果が残っていれば、新しい日付のスコアで再注入
       _reannotateSearchResults();
+      // 画面復元 (Android プロセス死対策): chart 準備完了後に Daily/Fortune/sheet
+      // ポップアップを復元する (1 回限り。Daily/Fortune は chart 必須のためここで)。
+      _chartReadyOnce = true;
+      _applyUiRestoreFromPending();
     } else {
       if (mounted) setState(() => _loadingChart = false);
     }
@@ -890,14 +1003,20 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     final effective = _searchFocus != null
         ? LatLng(_searchFocus!.lat, _searchFocus!.lng)
         : _center;
-    await _showSheet(LocationsScreen(
-      center: effective,
-      scoreResult: _scoreResult,
-      sectorScores: _displayScores(),
-      profile: _profile,
-      onSelectSlot: (slot) => _rebuild(LatLng(slot.lat, slot.lng)),
-      onNavigateToSanctuary: widget.onNavigateToSanctuary,
-    ));
+    // 画面復元用にシート開閉を追跡。
+    _openSheet = 'locations';
+    try {
+      await _showSheet(LocationsScreen(
+        center: effective,
+        scoreResult: _scoreResult,
+        sectorScores: _displayScores(),
+        profile: _profile,
+        onSelectSlot: (slot) => _rebuild(LatLng(slot.lat, slot.lng)),
+        onNavigateToSanctuary: widget.onNavigateToSanctuary,
+      ));
+    } finally {
+      if (_openSheet == 'locations') _openSheet = null;
+    }
     // 戻ったタイミングでスロット編集が反映されている可能性 → マーカー再描画
     await _reloadLocationSlots();
   }
@@ -906,12 +1025,16 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     // FORECAST → Map のジャンプリンクは廃止 (2026-05-14)。
     // 両画面は別計算 (時刻・場所依存の差) で数字が一致せず、リンクがあると
     // 誤った同一視を招くため、画面間の暗黙的接続を切る。
+    // 画面復元用にシート開閉を追跡 (whenComplete でクローズ検知)。
+    _openSheet = 'forecast';
     return _showSheet(
       ForecastScreen(
         onNavigateToSanctuary: widget.onNavigateToSanctuary,
       ),
       heightFrac: 0.92,
-    );
+    ).whenComplete(() {
+      if (_openSheet == 'forecast') _openSheet = null;
+    });
   }
 
   // ── 左サイド ☰ 表示 / 📍 地点 メニューの開閉 (2026-05-09 第二弾) ───────
@@ -1812,6 +1935,9 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                 _pendingInitialMove = null;
                 _mapCtrl.move(pending, _mapCtrl.camera.zoom);
               }
+              // 画面復元 (Android プロセス死対策): 起動前に積まれた検索状態を消化。
+              // ポップアップ (Daily/Fortune/sheet) は chart 読込完了後に別途消化する。
+              _applySearchPartFromPending();
             },
             // 回転ジェスチャー無効化 (2026-04-29):
             // Solara Map は北上固定前提 (16方位セクター・コンパス・VP Pin の方位概念が

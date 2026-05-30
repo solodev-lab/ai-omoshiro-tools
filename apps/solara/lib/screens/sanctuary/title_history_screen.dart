@@ -20,6 +20,7 @@ import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 
 import '../../theme/solara_colors.dart';
+import '../../utils/consult_restore.dart';
 import '../../utils/solara_storage.dart';
 import '../../utils/title_data.dart' as title_data;
 import '../../widgets/memo_text_field.dart';
@@ -39,10 +40,22 @@ class _TitleHistoryScreenState extends State<TitleHistoryScreen> {
   bool _loading = true;
   List<Map<String, dynamic>> _records = const [];
 
+  /// 画面復元 (Android プロセス死対策) レジストリ登録トークン。
+  late final Object _restoreToken;
+
   @override
   void initState() {
     super.initState();
+    _restoreToken = ConsultRestore.instance.register(
+      () => {'type': 'titleHistory'},
+    );
     _load();
+  }
+
+  @override
+  void dispose() {
+    ConsultRestore.instance.unregister(_restoreToken);
+    super.dispose();
   }
 
   Future<void> _load() async {

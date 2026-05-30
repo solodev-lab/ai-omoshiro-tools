@@ -3226,3 +3226,69 @@ main.dart は **層 0 (Worker) と層 1c (モデル) 以外の全層** に依存
 - **§0.2.26 結果カード地図リンク**: 結果カード (`consultation_result_card.dart`) の場所名右に🗺。`utils/map_focus.dart` (MapFocus singleton + `mapFocusDate()` 純関数) でタブ越し遷移し、`MapScreenState.focusLocationAndDate` が視点(_center)を候補地へ移動+相談日付で表示。日付=おでかけ:指定日+時間帯/旅行:初日/移住:時期代表日。
 - **§0.2.27 星読みトランジット接頭辞除去**: `fortune.js` プロンプトに呼称ルール(トランジット惑星は惑星名のみ・出生/プログレスはラベル) + `stripTransitLabel()` サニタイザ。Horo はアスペクト名を括弧併記 (トライン120°等)。
 - **§0.2.28 占い文に「光源」文体**: `worker/src/style_voice.js` (`STYLE_VOICE_JP` 単一ソース) を相談/星読み/タロットの ja プロンプトに注入。オーナー文体サンプルから蒸留。既存ルール(名前/挨拶/前置き禁止)最優先。consultation にテーマ推測ガード追加。
+
+---
+
+## 画面復元 (Android プロセス死対策) — 2026-05-31 追加 (横断機能)
+
+> **目的**: 低 RAM 端末 (A101FC 等) で外部アプリ (Google マップ / 共有シート等) へ離脱中に
+> OS が Solara プロセスを kill → 復帰時にコールド再起動して初期画面に戻る問題の解決。
+> 詳細仕様は memory [`project_solara_screen_restore.md`](../../../../C:/Users/cojif/.claude/projects/E--AppCreate/memory/project_solara_screen_restore.md)。
+
+### 設計 (ハイブリッド)
+
+Flutter 標準の状態復元 (`restorationScopeId` + `RestorableProperty`) は instance-state bundle に依存し、
+攻撃的 OEM キラー端末で不達になりうる + 全 StatefulWidget の大改修が必要。よって**ディスク永続化**を主軸にした:
+
+1. **基盤**: `MaterialApp.restorationScopeId = 'solara_root'` (Navigator/Restorable 対応の土台、無料)。
+2. **スナップショット保存**: `SolaraHome.didChangeAppLifecycleState` の `paused` で、現在の画面状態を
+   1 つの JSON に集約して `SolaraStorage.saveRestoreSnapshot()` でディスク保存 (まだ生存中に書くので確実)。
+3. **コールド起動時復元**: `SolaraHome.initState → _restoreLastScreen()` がスナップショットを読み、新しければ
+   (既定 6 時間以内) タブ + 各画面状態を復元し、消費後クリア。
+4. **warm 復帰で破棄**: `resumed` で `clearRestoreSnapshot()`。= **プロセス死の時だけ復元**が走り、通常の
+   アプリ切替では誤復元しない (残存スナップショット = kill されたことの証拠)。
+
+### 2 つの復元サブ機構
+
+| 機構 | 対象 | 実装 |
+|---|---|---|
+| **(A) タブ内 state** | 常駐タブ (IndexedStack) 内の状態 | 各 State に `captureRestore()`/`restoreXxx()` を生やし、`SolaraHome` が GlobalKey 経由で吸い上げ/適用。snapshot キー=`map`/`observe`/`galaxy`。SolaraHome は中身を透過で運ぶだけ (画面が所有) |
+| **(B) 押下ルート** | `Navigator.push` された別ルート | `utils/consult_restore.dart` の `ConsultRestore` (登録スタック singleton)。各ルート画面が initState で `register(capture)` / dispose で `unregister`。`SolaraHome` が paused 時に `captureTop()` で最前面を取得し、復元時 `_restorePushedRoute()` で type 別に再 push |
+
+### 復元カバレッジ
+
+- **タブ位置**: 全 5 タブ (Map/Horo/Tarot/Galaxy/Sanctuary)。
+- **Map** (機構 A, `MapScreenState.captureMapRestore/restoreMapState`): 検索結果一覧 + 検索結果詳細
+  (`_searchHits`/`_searchFocus`、`SearchHit.toJson/fromJson`)、Daily/Fortune オーバーレイ、Locations/Forecast
+  モーダルシート (`_openSheet` で追跡し復元時 `_openXxx()` 再呼出)。検索=onMapReady 後 / ポップアップ=chart 読込後に消化。
+- **Tarot** (機構 A, `ObserveScreenState.captureRestore/restoreState`): HISTORY タブ + サブタブ (今の/過去サイクル)。
+  サブタブ `_historyTab` は子 `ObserveHistoryPanel` から `_historyTabForChild` に持ち上げ。State を public 化
+  (`ObserveScreenState`) し part 拡張も追従。
+- **Galaxy** (機構 A, `GalaxyScreenState.captureRestore/restoreGalaxyState`): Star atlas 共有画面 2 種 =
+  通常再生終了 (`_replayController.value=1.0` へジャンプ) / 形成演出終了 (`CatasterismFormationOverlay.startFinished`
+  で 8 秒演出をスキップして最終フレーム直表示)。cycle は `GalaxyCycle.toJson` で丸ごと保存。
+- **相談** (機構 B): 入力画面 (`ConsultationInputScreen.restoreForm` でフォーム全項目復元)、結果画面
+  (**必ず履歴レコードから `fromRecord` で復元 = API 再実行/クレジット二重消費を構造的に防止**。未保存の live は復元対象外)。
+- **Sanctuary** (機構 B): 相談履歴 (`initialFavOnly` でタブ復元)、称号変遷 (引数なし再 push)、称号共有
+  (全引数 String なので丸ごと保存 + `initialShowShadow`)。
+
+### 不変条件 (必守)
+
+- 相談結果は **request(live) で復元しない** (= Gemini 再課金を防ぐ)。recordId 経由で履歴から `fromRecord` のみ。
+- warm 復帰でスナップショット破棄 (通常起動で古い画面が勝手に出ない)。
+- snapshot は全てプリミティブ JSON (SharedPreferences 保存可)。`SearchHit`/`GalaxyCycle` は toJson/fromJson 経由。
+
+### 主要ファイル
+
+- `lib/main.dart`: `SolaraHome` の保存/復元オーケストレーション (`_saveRestoreSnapshot`/`_restoreLastScreen`/`_restorePushedRoute`)、5 タブ GlobalKey。
+- `lib/utils/solara_storage.dart`: `saveRestoreSnapshot`/`loadRestoreSnapshot`/`clearRestoreSnapshot`。
+- `lib/utils/consult_restore.dart`: `ConsultRestore` 登録スタック (新規)。
+- `lib/screens/map_screen.dart` / `observe_screen.dart` / `galaxy_screen.dart`: タブ内 capture/restore。
+- 各押下ルート画面 (`consultation_input/result/history_screen`, `title_history_screen`, `class_share_card`): レジストリ登録 + 復元用コンストラクタ引数。
+- `lib/widgets/catasterism_formation_overlay.dart`: `startFinished` 引数。
+- テスト: `test/consult_restore_test.dart` (レジストリ単体)、`test/map_search_test.dart` (SearchHit 往復)。
+
+### 検証法 (実機)
+
+開発者向けオプション →「**アクティビティを保持しない**」を一時 ON にすると、アプリを離れて戻るたびに必ず
+コールド再起動が起き、全復元ケースを毎回・確実にテストできる (= 通常はランダムなプロセス死を強制再現)。検証後は OFF に戻す。

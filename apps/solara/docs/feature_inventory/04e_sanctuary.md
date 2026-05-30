@@ -5,37 +5,39 @@
 
 ## サマリ
 
-- ファイル数: 10 / 総行数: 5350
+- ファイル数: 10 / 総行数: 5394
 - class/mixin/extension/enum: 26
-- 関数 (top-level + method の素拾い): 115
+- 関数 (top-level + method の素拾い): 118
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 4
 - Worker URL リテラル: 0
 
 ## ファイル別
 
-### `lib/screens/sanctuary/class_share_card.dart` (447 行)
+### `lib/screens/sanctuary/class_share_card.dart` (478 行)
 
-**imports:** dart=2 / package=4 / relative=2
+**imports:** dart=2 / package=4 / relative=3
 
-- relative: `../../utils/title_data.dart`, `../../widgets/class_card.dart`
+- relative: `../../utils/consult_restore.dart`, `../../utils/title_data.dart`, `../../widgets/class_card.dart`
 
 **型定義 (2):**
 
-- L23 `class ClassShareCardPage : StatefulWidget`
+- L24 `class ClassShareCardPage : StatefulWidget`
   - クラスカードのシェア用画面
-- L52 `class _ClassShareCardPageState : State`
+- L57 `class _ClassShareCardPageState : State`
 
-**関数 (2 public + 3 private):**
+**関数 (4 public + 3 private):**
 
-- L40 `createState()`
-- L124 `build()`
+- L45 `createState()`
+- L66 `initState()`
+- L83 `dispose()`
+- L155 `build()`
 
   <details><summary>private 関数 3 件</summary>
 
-  - L83 `_share()`
-  - L227 `_buildShareImage()`
-  - L242 `_buildShareImageInner()`
+  - L114 `_share()`
+  - L258 `_buildShareImage()`
+  - L273 `_buildShareImageInner()`
 
   </details>
 
@@ -246,7 +248,7 @@ Solara Sanctuary 法務リンクメニュー (Phase 2 launch_checklist)
 - 集計: `showInfoPopup`×2
 
 
-### `lib/screens/sanctuary/title_history_screen.dart` (404 行)
+### `lib/screens/sanctuary/title_history_screen.dart` (417 行)
 
 **ファイル先頭コメント:**
 
@@ -270,32 +272,33 @@ Solara Sanctuary 法務リンクメニュー (Phase 2 launch_checklist)
     → 旧クラスを「以前は…」と弱めて表示しない、現在と等価に並べる
 ```
 
-**imports:** dart=0 / package=2 / relative=5
+**imports:** dart=0 / package=2 / relative=6
 
-- relative: `../../theme/solara_colors.dart`, `../../utils/solara_storage.dart`, `../../utils/title_data.dart`, `../../widgets/memo_text_field.dart`, `../../widgets/tap_to_unfocus.dart`
+- relative: `../../theme/solara_colors.dart`, `../../utils/consult_restore.dart`, `../../utils/solara_storage.dart`, `../../utils/title_data.dart`, `../../widgets/memo_text_field.dart`, `../../widgets/tap_to_unfocus.dart`
 
 **型定義 (5):**
 
-- L28 `class TitleHistoryScreen : StatefulWidget`
-- L38 `class _TitleHistoryScreenState : State`
-- L153 `class _EmptyState : StatelessWidget`
-- L196 `class _ChainConnector : StatelessWidget`
-- L214 `class _TitleChainRow : StatelessWidget`
+- L29 `class TitleHistoryScreen : StatefulWidget`
+- L39 `class _TitleHistoryScreenState : State`
+- L166 `class _EmptyState : StatelessWidget`
+- L209 `class _ChainConnector : StatelessWidget`
+- L227 `class _TitleChainRow : StatelessWidget`
 
-**関数 (6 public + 3 private):**
+**関数 (7 public + 3 private):**
 
-- L35 `createState()`
-- L43 `initState()`
-- L95 `build()`
-- L157 `build()`
-- L200 `build()`
-- L228 `build()`
+- L36 `createState()`
+- L47 `initState()`
+- L56 `dispose()`
+- L108 `build()`
+- L170 `build()`
+- L213 `build()`
+- L241 `build()`
 
   <details><summary>private 関数 3 件</summary>
 
-  - L48 `_load()`
-  - L60 `_confirmClearAll()`
-  - L219 `_formatDate()`
+  - L61 `_load()`
+  - L73 `_confirmClearAll()`
+  - L232 `_formatDate()`
 
   </details>
 

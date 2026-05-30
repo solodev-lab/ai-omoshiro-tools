@@ -6,6 +6,7 @@ import 'package:flutter/rendering.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../../utils/consult_restore.dart';
 import '../../utils/title_data.dart' as title_data;
 import '../../widgets/class_card.dart';
 
@@ -27,6 +28,9 @@ class ClassShareCardPage extends StatefulWidget {
   final String titleShadowJP; // 一言 Shadow (t144.shadow) 例: 「謎キャラぶって脳内ダメ出し中な」
   final String titleEN; // 太陽×月 英語二つ名 例: 「Abyssal Lighthouse」
 
+  /// 画面復元 (Android プロセス死対策): 復元時に Shadow 面で開く。
+  final bool initialShowShadow;
+
   const ClassShareCardPage({
     super.key,
     required this.axis,
@@ -34,6 +38,7 @@ class ClassShareCardPage extends StatefulWidget {
     required this.titleLightJP,
     required this.titleShadowJP,
     required this.titleEN,
+    this.initialShowShadow = false,
   });
 
   @override
@@ -51,8 +56,34 @@ const double _kTargetWidthPx = 1080.0;
 
 class _ClassShareCardPageState extends State<ClassShareCardPage> {
   final GlobalKey _captureKey = GlobalKey();
-  bool _showShadow = false;
+  late bool _showShadow = widget.initialShowShadow;
   bool _sharing = false;
+
+  /// 画面復元 (Android プロセス死対策) レジストリ登録トークン。
+  late final Object _restoreToken;
+
+  @override
+  void initState() {
+    super.initState();
+    // 称号共有画面の引数は全て String/bool なので、丸ごと保存して復元時に再 push。
+    _restoreToken = ConsultRestore.instance.register(
+      () => {
+        'type': 'classShare',
+        'axis': widget.axis,
+        'court': widget.court,
+        'light': widget.titleLightJP,
+        'shadow': widget.titleShadowJP,
+        'en': widget.titleEN,
+        'showShadow': _showShadow,
+      },
+    );
+  }
+
+  @override
+  void dispose() {
+    ConsultRestore.instance.unregister(_restoreToken);
+    super.dispose();
+  }
 
   title_data.TitleClass? get _cls =>
       title_data.getClassByAxisCourt(widget.axis, widget.court);

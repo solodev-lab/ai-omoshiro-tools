@@ -15,6 +15,7 @@
 import 'package:flutter/material.dart';
 
 import '../../theme/solara_colors.dart';
+import '../../utils/consult_restore.dart';
 import '../../utils/consultation_record.dart';
 import '../../utils/solara_storage.dart';
 import '../../widgets/glass_panel.dart';
@@ -83,10 +84,14 @@ class ConsultationHistoryScreen extends StatefulWidget {
   /// テスト用 hook (デフォルト null で SolaraStorage を呼ぶ)。
   final Future<void> Function(String id)? deleteOverride;
 
+  /// 画面復元 (Android プロセス死対策): 復元時に「お気に入り」タブで開く。
+  final bool initialFavOnly;
+
   const ConsultationHistoryScreen({
     super.key,
     this.loadOverride,
     this.deleteOverride,
+    this.initialFavOnly = false,
   });
 
   @override
@@ -96,13 +101,25 @@ class ConsultationHistoryScreen extends StatefulWidget {
 
 class _ConsultationHistoryScreenState extends State<ConsultationHistoryScreen> {
   bool _loading = true;
-  bool _favOnly = false;
+  late bool _favOnly = widget.initialFavOnly;
   List<ConsultationRecord> _records = const [];
+
+  /// 画面復元 (Android プロセス死対策) レジストリ登録トークン。
+  late final Object _restoreToken;
 
   @override
   void initState() {
     super.initState();
+    _restoreToken = ConsultRestore.instance.register(
+      () => {'type': 'consultationHistory', 'favOnly': _favOnly},
+    );
     _load();
+  }
+
+  @override
+  void dispose() {
+    ConsultRestore.instance.unregister(_restoreToken);
+    super.dispose();
   }
 
   Future<void> _load() async {

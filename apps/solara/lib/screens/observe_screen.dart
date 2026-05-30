@@ -30,12 +30,16 @@ part 'observe/observe_category_selector.dart';
 class ObserveScreen extends StatefulWidget {
   const ObserveScreen({super.key});
   @override
-  State<ObserveScreen> createState() => _ObserveScreenState();
+  State<ObserveScreen> createState() => ObserveScreenState();
 }
 
-class _ObserveScreenState extends State<ObserveScreen>
+class ObserveScreenState extends State<ObserveScreen>
     with TickerProviderStateMixin {
   int _innerTab = 0; // 0=draw, 1=history
+
+  /// 画面復元 (Android プロセス死対策): HISTORY パネルのサブタブ (0=現在 / 1=過去)
+  /// を子から持ち上げて保持。子は再生成時に毎回これで初期化され、切替で更新する。
+  int _historyTabForChild = 0;
   bool _cardFlipped = false;
   TarotCard? _drawnCard;
   bool _drawnReversed = false; // 正逆位置（true=逆位置）
@@ -146,6 +150,27 @@ class _ObserveScreenState extends State<ObserveScreen>
     if (!mounted) return;
     // Pro 切替で質問欄の表示が変わる。引きすでに済みなら次回の引きで反映。
     setState(() {});
+  }
+
+  // ── 画面復元 (Android プロセス死対策) ──────────────────────────
+  // SolaraHome が paused 時に captureRestore() を呼び、コールド起動時に
+  // restoreState() で復元する。HISTORY タブが開いている時のみ対象 (オーナー要望)。
+
+  /// HISTORY タブが開いていれば {innerTab:1, historyTab:0|1} を返す。それ以外は null。
+  Map<String, dynamic>? captureRestore() {
+    if (_innerTab != 1) return null;
+    return {'innerTab': 1, 'historyTab': _historyTabForChild};
+  }
+
+  /// 復元: HISTORY タブ + サブタブ (現在/過去サイクル) を再現する。
+  void restoreState(Map<String, dynamic> data) {
+    if (!mounted) return;
+    final inner = (data['innerTab'] as num?)?.toInt() ?? 0;
+    if (inner != 1) return;
+    setState(() {
+      _historyTabForChild = (data['historyTab'] as num?)?.toInt() ?? 0;
+      _innerTab = 1;
+    });
   }
 
   @override
@@ -435,6 +460,8 @@ class _ObserveScreenState extends State<ObserveScreen>
               child: _innerTab == 0 ? _buildDrawPanel() : ObserveHistoryPanel(
                 history: _history,
                 onCleared: _loadHistory,
+                initialHistoryTab: _historyTabForChild,
+                onHistoryTabChanged: (i) => _historyTabForChild = i,
               ),
             ),
           ]),

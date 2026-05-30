@@ -110,6 +110,9 @@ class GalaxyScreenState extends State<GalaxyScreen>
   LunarIntention? _currentIntention;
   // 刻星化完了演出で表示する対象cycle (formation overlay用)
   GalaxyCycle? _formationCycle;
+  // 画面復元 (Android プロセス死対策): true なら形成演出を最終フレーム
+  // (共有ボタンあり完了画面) から表示する。通常起動・通常再生では false。
+  bool _formationSkipToEnd = false;
 
   // HTML: ART_IMAGES — pre-loaded constellation art images
   final Map<int, ui.Image> _artImages = {};
@@ -867,6 +870,7 @@ class GalaxyScreenState extends State<GalaxyScreen>
         setState(() {
           _activeOverlay = 'formation';
           _formationCycle = c;
+          _formationSkipToEnd = false; // 通常再生は最初から
         });
       },
       intentionLoader: SolaraStorage.loadIntention,
@@ -1057,6 +1061,7 @@ class GalaxyScreenState extends State<GalaxyScreen>
                 onComplete: _onFormationComplete,
                 onShare: (bgImage) =>
                     _openConstellationShare(_formationCycle!, bgImage: bgImage),
+                startFinished: _formationSkipToEnd,
               ),
             ),
           );
@@ -1088,8 +1093,58 @@ class GalaxyScreenState extends State<GalaxyScreen>
     setState(() {
       _activeOverlay = null;
       _formationCycle = null;
+      _formationSkipToEnd = false;
       _activeTab = 1; // Star Atlasタブへ
     });
+  }
+
+  // ── 画面復元 (Android プロセス死対策) ──────────────────────────
+  // SolaraHome が paused 時に captureRestore() で「Star atlas 共有画面 (通常再生終了 /
+  // 形成演出終了)」の状態を吸い上げ、コールド起動時に restoreGalaxyState() で
+  // 最終フレーム (共有ボタンあり) を直接再表示する。
+
+  /// 共有ボタンが出ている終了画面が開いていれば {overlay, cycle} を返す。それ以外は null。
+  Map<String, dynamic>? captureRestore() {
+    if (_replayCycle != null) {
+      return {'overlay': 'replay', 'cycle': _replayCycle!.toJson()};
+    }
+    if (_activeOverlay == 'formation' && _formationCycle != null) {
+      return {'overlay': 'formation', 'cycle': _formationCycle!.toJson()};
+    }
+    return null;
+  }
+
+  /// captureRestore のスナップショットから終了画面を再現する (コールド起動時)。
+  void restoreGalaxyState(Map<String, dynamic> data) {
+    if (!mounted) return;
+    final raw = data['cycle'];
+    if (raw is! Map) return;
+    final GalaxyCycle cycle;
+    try {
+      cycle = GalaxyCycle.fromJson(Map<String, dynamic>.from(raw));
+    } catch (_) {
+      return;
+    }
+    final overlay = data['overlay'] as String?;
+    if (overlay == 'replay') {
+      // 通常再生の最終フレーム (共有ボタンあり) へジャンプ。
+      _loadArtImage(cycle.nounIdx);
+      _replayController?.dispose();
+      _replayController = AnimationController(
+        vsync: this,
+        duration: const Duration(milliseconds: 6500),
+      );
+      setState(() => _replayCycle = cycle);
+      _replayController!.value = 1.0;
+    } else if (overlay == 'formation') {
+      // 形成演出の最終フレーム (共有ボタンあり) へジャンプ (startFinished 経由)。
+      _loadArtImage(cycle.nounIdx);
+      setState(() {
+        _activeOverlay = 'formation';
+        _formationCycle = cycle;
+        _formationSkipToEnd = true;
+      });
+    }
   }
 }
 

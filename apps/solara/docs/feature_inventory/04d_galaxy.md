@@ -5,9 +5,9 @@
 
 ## サマリ
 
-- ファイル数: 10 / 総行数: 3677
+- ファイル数: 10 / 総行数: 3732
 - class/mixin/extension/enum: 22
-- 関数 (top-level + method の素拾い): 86
+- 関数 (top-level + method の素拾い): 87
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 1
 - Worker URL リテラル: 0
@@ -284,7 +284,7 @@ Free ユーザーが Pro 項目をタップしたら showProUnlockDialog で誘�
 - L16 `moonHealingMessage()` — 月齢 (端末ローカル) を 3 日ごと 10 区分に分け、その区分の月相に沿った
 
 
-### `lib/screens/galaxy_screen.dart` (1278 行)
+### `lib/screens/galaxy_screen.dart` (1333 行)
 
 **imports:** dart=3 / package=4 / relative=22
 
@@ -295,55 +295,56 @@ Free ユーザーが Pro 項目をタップしたら showProUnlockDialog で誘�
 - L33 `class GalaxyScreen : StatefulWidget`
 - L51 `class GalaxyScreenState : State`
 
-**関数 (9 public + 35 private):**
+**関数 (10 public + 35 private):**
 
 - L48 `createState()`
-- L123 `regenerateBackground()` — タブ切替でGalaxyに入ってきた時に、背景 (ネビュラ位置・色・星の位置)
-- L134 `pauseMotion()` — main.dart から Galaxy タブ離脱時に呼ばれる。Timer 即停止 = raster 0% 化。
-- L154 `initState()`
-- L165 `jitter()`
-- L183 `dispose()`
-- L386 `build()`
-- L685 `fmtTime()`
-- L687 `fmtDate()`
+- L126 `regenerateBackground()` — タブ切替でGalaxyに入ってきた時に、背景 (ネビュラ位置・色・星の位置)
+- L137 `pauseMotion()` — main.dart から Galaxy タブ離脱時に呼ばれる。Timer 即停止 = raster 0% 化。
+- L157 `initState()`
+- L168 `jitter()`
+- L186 `dispose()`
+- L389 `build()`
+- L688 `fmtTime()`
+- L690 `fmtDate()`
+- L1118 `restoreGalaxyState()` — captureRestore のスナップショットから終了画面を再現する (コールド起動時)。
 
   <details><summary>private 関数 35 件</summary>
 
-  - L163 `_initNebulaPositions()`
-  - L192 `_wakeMotion()`
-  - L200 `_onMotionTick()`
-  - L243 `_loadData()`
-  - L318 `_loadArtImage()`
-  - L333 `_checkMoonOverlay()`
-  - L372 `_dismissTopOverlay()`
-  - L512 `_buildTabBar()`
-  - L522 `_buildTab()`
-  - L565 `_buildCycleTab()`
-  - L596 `_buildDayBadge()`
-  - L620 `_buildMoonBadge()`
-  - L645 `_buildStellaMessage()`
-  - L727 `_onDragStart()`
-  - L734 `_onDragUpdate()`
-  - L745 `_onDragEnd()`
-  - L750 `_onTapUp()`
-  - L761 `_showDotPopup()`
-  - L767 `_hideDotPopup()`
-  - L771 `_buildDotPopup()`
-  - L826 `_openReplay()`
-  - L833 `_closeReplay()`
-  - L844 `_openConstellationShare()`
-  - L860 `_openCycleActions()`
-  - L879 `_buildDebugTriggerRow()`
-  - L896 `_buildDebugBtn()`
-  - L920 `_debugTriggerNewMoon()`
-  - L925 `_debugTriggerFullMoon()`
-  - L940 `_debugTriggerCatasterism()`
-  - L958 `_debugTriggerCycleCompletion()`
-  - L1003 `_buildMoonOverlay()`
-  - L1072 `_onCatasterismResult()`
-  - L1087 `_onFormationComplete()`
-  - L1099 `_moonPhaseDescription()`
-  - L1142 `_showGalaxyUsageGuide()`
+  - L166 `_initNebulaPositions()`
+  - L195 `_wakeMotion()`
+  - L203 `_onMotionTick()`
+  - L246 `_loadData()`
+  - L321 `_loadArtImage()`
+  - L336 `_checkMoonOverlay()`
+  - L375 `_dismissTopOverlay()`
+  - L515 `_buildTabBar()`
+  - L525 `_buildTab()`
+  - L568 `_buildCycleTab()`
+  - L599 `_buildDayBadge()`
+  - L623 `_buildMoonBadge()`
+  - L648 `_buildStellaMessage()`
+  - L730 `_onDragStart()`
+  - L737 `_onDragUpdate()`
+  - L748 `_onDragEnd()`
+  - L753 `_onTapUp()`
+  - L764 `_showDotPopup()`
+  - L770 `_hideDotPopup()`
+  - L774 `_buildDotPopup()`
+  - L829 `_openReplay()`
+  - L836 `_closeReplay()`
+  - L847 `_openConstellationShare()`
+  - L863 `_openCycleActions()`
+  - L883 `_buildDebugTriggerRow()`
+  - L900 `_buildDebugBtn()`
+  - L924 `_debugTriggerNewMoon()`
+  - L929 `_debugTriggerFullMoon()`
+  - L944 `_debugTriggerCatasterism()`
+  - L962 `_debugTriggerCycleCompletion()`
+  - L1007 `_buildMoonOverlay()`
+  - L1077 `_onCatasterismResult()`
+  - L1092 `_onFormationComplete()`
+  - L1154 `_moonPhaseDescription()`
+  - L1197 `_showGalaxyUsageGuide()`
 
   </details>
 

@@ -46,6 +46,36 @@ class SearchHit {
     this.bestFortuneScore = 0,
   });
 
+  /// 画面復元 (Android プロセス死対策) 用シリアライズ。
+  /// 全フィールドをプリミティブに落とす (SharedPreferences JSON 保存可能)。
+  Map<String, dynamic> toJson() => {
+        'name': name,
+        'address': address,
+        'lat': lat,
+        'lng': lng,
+        'country': country,
+        'source': source,
+        'placeId': placeId,
+        'bestDir': bestDir,
+        'bestScore': bestScore,
+        'bestFortune': bestFortune,
+        'bestFortuneScore': bestFortuneScore,
+      };
+
+  factory SearchHit.fromJson(Map<String, dynamic> j) => SearchHit(
+        name: j['name'] as String? ?? '',
+        address: j['address'] as String?,
+        lat: (j['lat'] as num).toDouble(),
+        lng: (j['lng'] as num).toDouble(),
+        country: j['country'] as String?,
+        source: j['source'] as String? ?? 'nominatim',
+        placeId: j['placeId'] as String?,
+        bestDir: j['bestDir'] as String?,
+        bestScore: (j['bestScore'] as num?)?.toDouble() ?? 0,
+        bestFortune: j['bestFortune'] as String?,
+        bestFortuneScore: (j['bestFortuneScore'] as num?)?.toDouble() ?? 0,
+      );
+
   /// 中心座標から見たこの地点の方位（16方位名）
   String directionFrom(LatLng center) {
     return _azimuthToDir16(_bearingDeg(center.latitude, center.longitude, lat, lng));

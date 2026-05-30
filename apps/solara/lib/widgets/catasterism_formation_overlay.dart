@@ -57,12 +57,17 @@ class CatasterismFormationOverlay extends StatefulWidget {
   /// (2026-05-17 Free 機能として追加。柱 3 = 自分の記録の道具)
   final void Function(ui.Image? bgImage)? onShare;
 
+  /// 画面復元 (Android プロセス死対策): true なら 8 秒演出をスキップして、
+  /// 最終フレーム (共有ボタンが出ている完了画面) を直接表示する。
+  final bool startFinished;
+
   const CatasterismFormationOverlay({
     super.key,
     required this.cycle,
     this.artImage,
     required this.onComplete,
     this.onShare,
+    this.startFinished = false,
   });
 
   @override
@@ -85,7 +90,13 @@ class _CatasterismFormationOverlayState
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 8),
-    )..forward();
+    );
+    // 画面復元時は最終フレーム (共有ボタンあり完了画面) へジャンプ。通常は再生。
+    if (widget.startFinished) {
+      _controller.value = 1.0;
+    } else {
+      _controller.forward();
+    }
     // 前画面(刻星化選択)からの切替時に Cycle 画面が一瞬透けないよう、
     // フェードインせず最初から完全不透明で出す。
     _fadeController = AnimationController(

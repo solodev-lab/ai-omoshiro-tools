@@ -5,9 +5,9 @@
 
 ## サマリ
 
-- ファイル数: 12 / 総行数: 3538
+- ファイル数: 12 / 総行数: 3581
 - class/mixin/extension/enum: 25
-- 関数 (top-level + method の素拾い): 83
+- 関数 (top-level + method の素拾い): 84
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 1
 - Worker URL リテラル: 0
@@ -39,7 +39,7 @@
 
 **型定義 (1):**
 
-- L32 `extension _ObserveCategorySelector : _ObserveScreenState`
+- L32 `extension _ObserveCategorySelector : ObserveScreenState`
 
 **関数 (0 public + 6 private):**
 
@@ -67,7 +67,7 @@ Shared constants for Observe (Tarot) screen
 ```
 
 
-### `lib/screens/observe/observe_history.dart` (423 行)
+### `lib/screens/observe/observe_history.dart` (439 行)
 
 **imports:** dart=0 / package=1 / relative=12
 
@@ -76,26 +76,26 @@ Shared constants for Observe (Tarot) screen
 **型定義 (2):**
 
 - L20 `class ObserveHistoryPanel : StatefulWidget`
-- L29 `class _ObserveHistoryPanelState : State`
+- L42 `class _ObserveHistoryPanelState : State`
 
 **関数 (4 public + 9 private):**
 
-- L26 `createState()`
-- L41 `initState()`
-- L58 `dispose()`
-- L99 `build()`
+- L39 `createState()`
+- L54 `initState()`
+- L71 `dispose()`
+- L112 `build()`
 
   <details><summary>private 関数 9 件</summary>
 
-  - L46 `_ensurePastCyclesLoaded()`
-  - L63 `_onProChanged()`
-  - L75 `_confirmClearHistory()`
-  - L145 `_buildInnerTabBar()`
-  - L156 `_innerTabBtn()`
-  - L188 `_buildCurrentTabContent()`
-  - L249 `_buildPastTabContent()`
-  - L269 `_buildHistoryCard()`
-  - L347 `_buildHistoryDetail()`
+  - L59 `_ensurePastCyclesLoaded()`
+  - L76 `_onProChanged()`
+  - L88 `_confirmClearHistory()`
+  - L158 `_buildInnerTabBar()`
+  - L169 `_innerTabBtn()`
+  - L204 `_buildCurrentTabContent()`
+  - L265 `_buildPastTabContent()`
+  - L285 `_buildHistoryCard()`
+  - L363 `_buildHistoryDetail()`
 
   </details>
 
@@ -204,7 +204,7 @@ Natal Tarot 履歴フィルタ — C3 (Pro 機能、柱 3)
 
 **型定義 (1):**
 
-- L15 `extension _QuestionFieldWidgets : _ObserveScreenState`
+- L15 `extension _QuestionFieldWidgets : ObserveScreenState`
 
 **関数 (2 public + 0 private):**
 
@@ -339,7 +339,7 @@ showInfoPopup 経由 (popup 統一規約)。呼出側は returned bool で proce
 - 集計: `showInfoPopup`×1
 
 
-### `lib/screens/observe_screen.dart` (704 行)
+### `lib/screens/observe_screen.dart` (731 行)
 
 **imports:** dart=2 / package=1 / relative=19
 
@@ -349,34 +349,35 @@ showInfoPopup 経由 (popup 統一規約)。呼出側は returned bool で proce
 
 - L30 `class ObserveScreen : StatefulWidget`
   - Tarot Draw screen — matches tarot.html exactly.
-- L36 `class _ObserveScreenState : State`
+- L36 `class ObserveScreenState : State`
 
-**関数 (4 public + 17 private):**
+**関数 (5 public + 17 private):**
 
 - L33 `createState()`
-- L137 `initState()`
-- L152 `dispose()`
-- L426 `build()`
+- L141 `initState()`
+- L166 `restoreState()` — 復元: HISTORY タブ + サブタブ (現在/過去サイクル) を再現する。
+- L177 `dispose()`
+- L451 `build()`
 
   <details><summary>private 関数 17 件</summary>
 
-  - L64 `_applyCategorySelection()`
-  - L71 `_applyTarotCreditBalance()`
-  - L88 `_startLoadingMessageRotation()`
-  - L100 `_stopLoadingMessageRotation()`
-  - L145 `_onProStatusChanged()`
-  - L161 `_checkTodayReading()`
-  - L200 `_loadHistory()`
-  - L205 `_drawCard()`
-  - L361 `_handleTarotCreditExhausted()`
-  - L371 `_resetTodayReading()`
-  - L394 `_generateReadingStatic()`
-  - L411 `_startTypewriter()`
-  - L450 `_buildInnerTabs()`
-  - L464 `_innerTabBtn()`
-  - L485 `_buildDrawPanel()`
-  - L580 `_buildLoadingIndicator()`
-  - L655 `_buildReadingPanel()`
+  - L68 `_applyCategorySelection()`
+  - L75 `_applyTarotCreditBalance()`
+  - L92 `_startLoadingMessageRotation()`
+  - L104 `_stopLoadingMessageRotation()`
+  - L149 `_onProStatusChanged()`
+  - L186 `_checkTodayReading()`
+  - L225 `_loadHistory()`
+  - L230 `_drawCard()`
+  - L386 `_handleTarotCreditExhausted()`
+  - L396 `_resetTodayReading()`
+  - L419 `_generateReadingStatic()`
+  - L436 `_startTypewriter()`
+  - L477 `_buildInnerTabs()`
+  - L491 `_innerTabBtn()`
+  - L512 `_buildDrawPanel()`
+  - L607 `_buildLoadingIndicator()`
+  - L682 `_buildReadingPanel()`
 
   </details>
 

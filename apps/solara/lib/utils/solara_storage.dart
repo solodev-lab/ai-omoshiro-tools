@@ -130,6 +130,13 @@ class SolaraStorage {
   // 詳細: docs/store_compliance.md §2.1 / §5.2
   static const _aiConsentAtKey = 'solara_ai_consent_at_v1';
 
+  /// 画面復元スナップショット (Android プロセス死対策)。
+  /// 低 RAM 端末 (A101FC 等) で外部アプリ (Google マップ等) へ離脱中に OS が
+  /// Solara プロセスを kill → 復帰時にコールド再起動して初期画面に戻る問題の対策。
+  /// バックグラウンド遷移 (paused) 時に「タブ + 各画面の最小復元キー」を保存し、
+  /// 次回コールド起動時に復元する。warm resume 時は破棄 (メモリ状態が無傷のため)。
+  static const _restoreSnapshotKey = 'solara_restore_snapshot_v1';
+
   /// 相談履歴の上限 (Free / Pro 共通)。柱 3 の原則「Free でも自分の記録を永久に
   /// 失わない」を満たす範囲で、ストレージ肥大を抑える上限。
   /// 1 件 ~3KB 想定 × 200 件 = ~600KB、SharedPreferences で十分。
@@ -776,5 +783,32 @@ class SolaraStorage {
   static Future<void> clearConsultationAvoid() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_consultationAvoidKey);
+  }
+
+  // --- 画面復元スナップショット (Android プロセス死対策) ---
+
+  /// 現在の画面状態スナップショットを保存する (paused 時に呼ぶ)。
+  /// snap 例: {savedAt: ISO8601, tab: 0, map: {search: {...}}}
+  static Future<void> saveRestoreSnapshot(Map<String, dynamic> snap) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_restoreSnapshotKey, json.encode(snap));
+  }
+
+  /// 保存済みスナップショットを読み込む (コールド起動時)。無ければ null。
+  static Future<Map<String, dynamic>?> loadRestoreSnapshot() async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString(_restoreSnapshotKey);
+    if (raw == null || raw.isEmpty) return null;
+    try {
+      return json.decode(raw) as Map<String, dynamic>;
+    } catch (_) {
+      return null; // 壊れたデータは無視
+    }
+  }
+
+  /// スナップショットを破棄する (warm resume 時 / 復元消費後)。
+  static Future<void> clearRestoreSnapshot() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_restoreSnapshotKey);
   }
 }

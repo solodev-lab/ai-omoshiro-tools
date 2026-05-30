@@ -8,10 +8,17 @@ import 'screens/horoscope_screen.dart';
 import 'screens/observe_screen.dart';
 import 'screens/galaxy_screen.dart';
 import 'screens/sanctuary_screen.dart';
+import 'screens/consultation/consultation_input_screen.dart';
+import 'screens/consultation/consultation_result_screen.dart';
+import 'screens/consultation/consultation_history_screen.dart';
+import 'screens/sanctuary/title_history_screen.dart';
+import 'screens/sanctuary/class_share_card.dart';
 import 'utils/app_attest_client.dart';
 import 'utils/app_locale.dart';
 import 'utils/celestial_events.dart';
+import 'utils/consult_restore.dart';
 import 'utils/consultation_credits.dart';
+import 'utils/consultation_record.dart';
 import 'utils/device_security_status.dart';
 import 'utils/map_focus.dart';
 import 'utils/pro_status.dart';
@@ -95,6 +102,11 @@ class _SolaraAppState extends State<SolaraApp> {
       valueListenable: AppLocale.instance.notifier,
       builder: (_, locale, _) => MaterialApp(
         title: 'Solara',
+        // Flutter 標準の状態復元基盤 (Android プロセス死対策のハイブリッド土台)。
+        // これにより Navigator スタックや RestorableProperty 対応 widget が復元可能に
+        // なる。検索結果詳細など非シリアライズ状態は SolaraHome 側の disk
+        // スナップショット (SolaraStorage.saveRestoreSnapshot) で別途復元する。
+        restorationScopeId: 'solara_root',
         debugShowCheckedModeBanner: false,
         theme: SolaraTheme.dark,
         locale: locale, // null の時は端末設定が使われる
@@ -139,13 +151,166 @@ class _SolaraHomeState extends State<SolaraHome> with WidgetsBindingObserver {
   int _currentIndex = 0;
   final _mapKey = GlobalKey<MapScreenState>();
   final _horoKey = GlobalKey<HoroscopeScreenState>();
+  final _observeKey = GlobalKey<ObserveScreenState>();
   final _galaxyKey = GlobalKey<GalaxyScreenState>();
+
+  /// 画面復元スナップショットの有効期限。これより古いものは無視する。
+  /// warm resume 時に破棄しているので、残存 = プロセス死を意味する。広めに取るが
+  /// 「翌日開いたら古い検索が出る」を避けるため上限を設ける。
+  static const _restoreMaxAge = Duration(hours: 6);
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     MapFocus.instance.addListener(_onMapFocusRequested);
+    // ignore: unawaited_futures
+    _restoreLastScreen();
+  }
+
+  /// コールド起動時、直近 paused で保存したスナップショットがあれば画面を復元する。
+  /// 低 RAM 端末 (A101FC 等) で外部アプリ往復中に OS が Solara を kill → 復帰時
+  /// コールド再起動で初期画面に戻る問題への対策。
+  Future<void> _restoreLastScreen() async {
+    final snap = await SolaraStorage.loadRestoreSnapshot();
+    await SolaraStorage.clearRestoreSnapshot(); // 1 回限り消費
+    if (snap == null || !mounted) return;
+    final savedAt = DateTime.tryParse(snap['savedAt'] as String? ?? '');
+    if (savedAt == null ||
+        DateTime.now().difference(savedAt) > _restoreMaxAge) {
+      return; // 古すぎるスナップショットは無視
+    }
+    // タブ復元 (全タブ共通の軽量復元)。
+    final tab = (snap['tab'] as num?)?.toInt();
+    if (tab != null &&
+        tab >= 0 &&
+        tab < _screens.length &&
+        tab != _currentIndex) {
+      setState(() => _currentIndex = tab);
+    }
+    // Map 画面の復元 (検索 + 各ポップアップ)。中身の消化タイミングは MapScreen 側
+    // (検索=onMapReady 後 / ポップアップ=chart 読込後) に委ねる。
+    final mapData = snap['map'];
+    if (mapData is Map) {
+      final data = Map<String, dynamic>.from(mapData);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        _mapKey.currentState?.restoreMapState(data);
+      });
+    }
+    // Tarot (Observe) 画面の HISTORY タブ復元。
+    final observeData = snap['observe'];
+    if (observeData is Map) {
+      final data = Map<String, dynamic>.from(observeData);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        _observeKey.currentState?.restoreState(data);
+      });
+    }
+    // Galaxy 画面の共有画面 (通常再生終了 / 形成演出終了) 復元。
+    final galaxyData = snap['galaxy'];
+    if (galaxyData is Map) {
+      final data = Map<String, dynamic>.from(galaxyData);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        _galaxyKey.currentState?.restoreGalaxyState(data);
+      });
+    }
+    // 押下ルート (相談入力 / 相談結果画面) の復元。タブ/Map の後に root Navigator へ push。
+    final route = snap['route'];
+    if (route is Map) {
+      final data = Map<String, dynamic>.from(route);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        // ignore: unawaited_futures
+        _restorePushedRoute(data);
+      });
+    }
+  }
+
+  /// 復元スナップショットの押下ルートを root Navigator に再 push する。
+  /// 相談結果は必ず履歴レコードから (fromRecord・読み込み専用) 開く。API 再実行＝
+  /// クレジット二重消費は絶対にしない。レコードが見つからなければ何もしない。
+  Future<void> _restorePushedRoute(Map<String, dynamic> route) async {
+    final type = route['type'];
+    if (type == 'consultationResult') {
+      final id = route['recordId'] as String?;
+      if (id == null) return;
+      final list = await SolaraStorage.loadConsultationHistory();
+      ConsultationRecord? rec;
+      for (final r in list) {
+        if (r.id == id) {
+          rec = r;
+          break;
+        }
+      }
+      if (rec == null || !mounted) return;
+      final found = rec;
+      Navigator.of(context).push(MaterialPageRoute(
+        builder: (_) => ConsultationResultScreen.fromRecord(record: found),
+      ));
+    } else if (type == 'consultationInput') {
+      if (!mounted) return;
+      Navigator.of(context).push(MaterialPageRoute(
+        builder: (_) => ConsultationInputScreen(restoreForm: route),
+      ));
+    } else if (type == 'consultationHistory') {
+      if (!mounted) return;
+      Navigator.of(context).push(MaterialPageRoute(
+        builder: (_) =>
+            ConsultationHistoryScreen(initialFavOnly: route['favOnly'] == true),
+      ));
+    } else if (type == 'titleHistory') {
+      if (!mounted) return;
+      Navigator.of(context).push(MaterialPageRoute(
+        builder: (_) => const TitleHistoryScreen(),
+      ));
+    } else if (type == 'classShare') {
+      if (!mounted) return;
+      final axis = route['axis'] as String?;
+      final court = route['court'] as String?;
+      if (axis == null || court == null) return;
+      Navigator.of(context).push(MaterialPageRoute(
+        builder: (_) => ClassShareCardPage(
+          axis: axis,
+          court: court,
+          titleLightJP: route['light'] as String? ?? '',
+          titleShadowJP: route['shadow'] as String? ?? '',
+          titleEN: route['en'] as String? ?? '',
+          initialShowShadow: route['showShadow'] == true,
+        ),
+      ));
+    }
+  }
+
+  /// バックグラウンド遷移時に現在の画面状態を保存する (プロセス死に備える)。
+  Future<void> _saveRestoreSnapshot() async {
+    final snap = <String, dynamic>{
+      'savedAt': DateTime.now().toIso8601String(),
+      'tab': _currentIndex,
+    };
+    // Map 画面のスナップショット (検索 + Daily/Fortune/Locations/Forecast ポップアップ)。
+    // 中身の構造は MapScreen が所有し、SolaraHome は透過で運ぶだけ。
+    final map = _mapKey.currentState?.captureMapRestore();
+    if (map != null) {
+      snap['map'] = map;
+    }
+    // Tarot (Observe) 画面の HISTORY タブ状態。
+    final observe = _observeKey.currentState?.captureRestore();
+    if (observe != null) {
+      snap['observe'] = observe;
+    }
+    // Galaxy 画面の共有画面 (通常再生終了 / 形成演出終了) 状態。
+    final galaxy = _galaxyKey.currentState?.captureRestore();
+    if (galaxy != null) {
+      snap['galaxy'] = galaxy;
+    }
+    // 押下ルート (相談入力 / 相談結果画面) の最前面スナップショット。
+    final route = ConsultRestore.instance.captureTop();
+    if (route != null) {
+      snap['route'] = route;
+    }
+    await SolaraStorage.saveRestoreSnapshot(snap);
   }
 
   @override
@@ -175,6 +340,15 @@ class _SolaraHomeState extends State<SolaraHome> with WidgetsBindingObserver {
     if (state == AppLifecycleState.resumed) {
       // ignore: unawaited_futures
       ConsultationCredits.instance.refresh();
+      // warm 復帰 = メモリ状態が無傷なので復元スナップショットは不要。
+      // 残すと次のコールド起動で誤って古い画面を復元しうるため破棄する。
+      // ignore: unawaited_futures
+      SolaraStorage.clearRestoreSnapshot();
+    } else if (state == AppLifecycleState.paused) {
+      // バックグラウンド遷移 (外部アプリ起動含む): プロセス死に備え状態保存。
+      // paused はまだ生存中に発火するので書き込みは間に合う。
+      // ignore: unawaited_futures
+      _saveRestoreSnapshot();
     }
   }
 
@@ -195,7 +369,7 @@ class _SolaraHomeState extends State<SolaraHome> with WidgetsBindingObserver {
   late final _screens = <Widget>[
     MapScreen(key: _mapKey, onNavigateToSanctuary: () => _onTabTap(4)),
     HoroscopeScreen(key: _horoKey, onNavigateToSanctuary: () => _onTabTap(4)),
-    const ObserveScreen(),
+    ObserveScreen(key: _observeKey),
     GalaxyScreen(key: _galaxyKey, onOverlayChanged: _onGalaxyOverlayChanged),
     const SanctuaryScreen(),
   ];

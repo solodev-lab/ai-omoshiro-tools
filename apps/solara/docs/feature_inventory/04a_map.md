@@ -5,11 +5,11 @@
 
 ## サマリ
 
-- ファイル数: 23 / 総行数: 13823
+- ファイル数: 23 / 総行数: 13979
 - class/mixin/extension/enum: 87
-- 関数 (top-level + method の素拾い): 302
+- 関数 (top-level + method の素拾い): 307
 - Navigator.push 等: 0
-- Popup/Dialog 呼出: 18
+- Popup/Dialog 呼出: 19
 - Worker URL リテラル: 0
 
 ## ファイル別
@@ -699,7 +699,7 @@ A*C*G ライン (natal / transit) のタップ詳細 popup。
 - 集計: `showLineNarrativeSheet`×1
 
 
-### `lib/screens/map/map_search.dart` (658 行)
+### `lib/screens/map/map_search.dart` (688 行)
 
 **imports:** dart=2 / package=4 / relative=4
 
@@ -709,31 +709,32 @@ A*C*G ライン (natal / transit) のタップ詳細 popup。
 
 - L15 `class SearchHit`
   - 検索結果1件分
-- L148 `class SearchResultList : StatelessWidget`
+- L178 `class SearchResultList : StatelessWidget`
   - 検索結果リスト（スコア付き）ポップアップ
-- L326 `class SearchFocusPopup : StatelessWidget`
+- L356 `class SearchFocusPopup : StatelessWidget`
   - 検索候補から1件選ばれたあとの詳細ポップアップ。
-- L569 `class _CatChip : StatelessWidget`
-- L594 `class _ActionTile : StatelessWidget`
+- L599 `class _CatChip : StatelessWidget`
+- L624 `class _ActionTile : StatelessWidget`
 
-**関数 (8 public + 5 private):**
+**関数 (9 public + 5 private):**
 
-- L50 `directionFrom()` — 中心座標から見たこの地点の方位（16方位名）
-- L55 `distanceKmFrom()` — 中心から km 距離
-- L124 `annotateHitsWithScores()` — 検索結果に、現在中心からの方位スコアと支配カテゴリを注入する
-- L172 `build()`
-- L368 `build()`
-- L575 `build()`
-- L600 `build()`
-- L626 `googleMapsUrlForHit()` — 検索結果を Google マップで開く URL を組み立てる。
+- L51 `toJson()` — 画面復元 (Android プロセス死対策) 用シリアライズ。
+- L80 `directionFrom()` — 中心座標から見たこの地点の方位（16方位名）
+- L85 `distanceKmFrom()` — 中心から km 距離
+- L154 `annotateHitsWithScores()` — 検索結果に、現在中心からの方位スコアと支配カテゴリを注入する
+- L202 `build()`
+- L398 `build()`
+- L605 `build()`
+- L630 `build()`
+- L656 `googleMapsUrlForHit()` — 検索結果を Google マップで開く URL を組み立てる。
 
   <details><summary>private 関数 5 件</summary>
 
-  - L60 `_bearingDeg()`
-  - L69 `_azimuthToDir16()`
-  - L75 `_haversineKm()`
-  - L220 `_hitRow()`
-  - L644 `_openInGoogleMaps()`
+  - L90 `_bearingDeg()`
+  - L99 `_azimuthToDir16()`
+  - L105 `_haversineKm()`
+  - L250 `_hitRow()`
+  - L674 `_openInGoogleMaps()`
 
   </details>
 
@@ -906,7 +907,7 @@ A*C*G ライン (natal / transit) のタップ詳細 popup。
 - L40 `build()`
 
 
-### `lib/screens/map_screen.dart` (3227 行)
+### `lib/screens/map_screen.dart` (3353 行)
 
 **imports:** dart=2 / package=6 / relative=36
 
@@ -917,81 +918,85 @@ A*C*G ライン (natal / transit) のタップ詳細 popup。
 - L75 `class MapScreen : StatefulWidget`
 - L85 `class MapScreenState : State`
 
-**関数 (9 public + 57 private):**
+**関数 (10 public + 60 private):**
 
 - L82 `createState()`
-- L362 `initState()`
-- L400 `dispose()`
-- L584 `reloadProfile()` — 外部（main.dart のタブ切替）から呼ばれる公開リロード。
-- L588 `focusLocationAndDate()` — 相談結果カードの🗺ボタンから呼ばれる: 視点 (VIEWPOINT/_center) を [pos] へ移動
-- L1446 `snack()`
-- L1618 `snack()`
-- L1664 `build()`
-- L2756 `signOf()`
+- L376 `initState()`
+- L414 `dispose()`
+- L598 `reloadProfile()` — 外部（main.dart のタブ切替）から呼ばれる公開リロード。
+- L631 `restoreMapState()` — captureMapRestore のスナップショットを復元する (コールド起動時)。
+- L697 `focusLocationAndDate()` — 相談結果カードの🗺ボタンから呼ばれる: 視点 (VIEWPOINT/_center) を [pos] へ移動
+- L1569 `snack()`
+- L1741 `snack()`
+- L1787 `build()`
+- L2882 `signOf()`
 
-  <details><summary>private 関数 57 件</summary>
+  <details><summary>private 関数 60 件</summary>
 
-  - L371 `_bootstrap()`
-  - L415 `_warmupTileConnection()`
-  - L450 `_onTileError()`
-  - L477 `_checkDailyBadgeState()`
-  - L507 `_recomputeDailyChipCategoryIfNeeded()`
-  - L570 `_loadMapStyle()`
-  - L576 `_onMapStyleChanged()`
-  - L609 `_scheduleLoadChart()`
-  - L621 `_moveToInitialCenter()`
-  - L629 `_loadProfileAndChart()`
-  - L809 `_cycleActiveCategory()`
-  - L836 `_reannotateSearchResults()`
-  - L868 `_showSheet()`
-  - L888 `_openLocations()`
-  - L905 `_openForecast()`
-  - L924 `_onDisplayMenuTap()`
-  - L934 `_onViewpointMenuTap()`
-  - L948 `_onSearchTap()`
-  - L962 `_clearAllSearch()`
-  - L979 `_onDailyBadgeTap()`
-  - L1028 `_onOverlayComplete()`
-  - L1050 `_onDailyTransitClose()`
-  - L1064 `_doSearch()`
-  - L1125 `_frameSearchArea()`
-  - L1151 `_restoreSearchListView()`
-  - L1161 `_selectSearchHit()`
-  - L1191 `_buildFocusedHitMarker()`
-  - L1233 `_buildSearchHitMarkers()`
-  - L1306 `_displayScores()`
-  - L1367 `_sectorRankAlphaMul()`
-  - L1385 `_rebuild()`
-  - L1419 `_kickPaintInvalidation()`
-  - L1433 `_setVpOnly()`
-  - L1445 `_setVpToCurrentLocationOnly()`
-  - L1491 `_enterAstroCartoMode()`
-  - L1569 `_exitAstroCartoMode()`
-  - L1617 `_geolocate()`
-  - L1729 `_buildBody()`
-  - L2717 `_buildZenithPopup()`
-  - L2736 `_buildRelocationPopup()`
-  - L2801 `_proLabelForAstroKey()`
-  - L2819 `_proDescForAstroKey()`
-  - L2845 `_onAstroToggle()`
-  - L2874 `_enterConsultationFromDaily()`
-  - L2906 `_launchConsultation()`
-  - L2954 `_launchConsultationFromSearch()`
-  - L2988 `_reloadLocationSlots()`
-  - L3012 `_nearestNatalConjunctions()`
-  - L3033 `_findNearbyAstroLines()`
-  - L3051 `_zenithMarkerFrames()`
-  - L3052 `_nadirMarkerFrames()`
-  - L3053 `_zenithBandFrames()`
-  - L3054 `_nadirBandFrames()`
-  - L3058 `_filteredFrames()`
-  - L3071 `_visibleAstroLines()`
-  - L3099 `_buildNoProfileGuide()`
-  - L3133 `_showSearchVpHelpPopup()`
+  - L385 `_bootstrap()`
+  - L429 `_warmupTileConnection()`
+  - L464 `_onTileError()`
+  - L491 `_checkDailyBadgeState()`
+  - L521 `_recomputeDailyChipCategoryIfNeeded()`
+  - L584 `_loadMapStyle()`
+  - L590 `_onMapStyleChanged()`
+  - L638 `_applySearchPartFromPending()`
+  - L648 `_applyUiRestoreFromPending()`
+  - L671 `_applySearchRestore()`
+  - L718 `_scheduleLoadChart()`
+  - L730 `_moveToInitialCenter()`
+  - L738 `_loadProfileAndChart()`
+  - L922 `_cycleActiveCategory()`
+  - L949 `_reannotateSearchResults()`
+  - L981 `_showSheet()`
+  - L1001 `_openLocations()`
+  - L1024 `_openForecast()`
+  - L1047 `_onDisplayMenuTap()`
+  - L1057 `_onViewpointMenuTap()`
+  - L1071 `_onSearchTap()`
+  - L1085 `_clearAllSearch()`
+  - L1102 `_onDailyBadgeTap()`
+  - L1151 `_onOverlayComplete()`
+  - L1173 `_onDailyTransitClose()`
+  - L1187 `_doSearch()`
+  - L1248 `_frameSearchArea()`
+  - L1274 `_restoreSearchListView()`
+  - L1284 `_selectSearchHit()`
+  - L1314 `_buildFocusedHitMarker()`
+  - L1356 `_buildSearchHitMarkers()`
+  - L1429 `_displayScores()`
+  - L1490 `_sectorRankAlphaMul()`
+  - L1508 `_rebuild()`
+  - L1542 `_kickPaintInvalidation()`
+  - L1556 `_setVpOnly()`
+  - L1568 `_setVpToCurrentLocationOnly()`
+  - L1614 `_enterAstroCartoMode()`
+  - L1692 `_exitAstroCartoMode()`
+  - L1740 `_geolocate()`
+  - L1852 `_buildBody()`
+  - L2843 `_buildZenithPopup()`
+  - L2862 `_buildRelocationPopup()`
+  - L2927 `_proLabelForAstroKey()`
+  - L2945 `_proDescForAstroKey()`
+  - L2971 `_onAstroToggle()`
+  - L3000 `_enterConsultationFromDaily()`
+  - L3032 `_launchConsultation()`
+  - L3080 `_launchConsultationFromSearch()`
+  - L3114 `_reloadLocationSlots()`
+  - L3138 `_nearestNatalConjunctions()`
+  - L3159 `_findNearbyAstroLines()`
+  - L3177 `_zenithMarkerFrames()`
+  - L3178 `_nadirMarkerFrames()`
+  - L3179 `_zenithBandFrames()`
+  - L3180 `_nadirBandFrames()`
+  - L3184 `_filteredFrames()`
+  - L3197 `_visibleAstroLines()`
+  - L3225 `_buildNoProfileGuide()`
+  - L3259 `_showSearchVpHelpPopup()`
 
   </details>
 
-**Popup/Dialog 呼出 (2):**
+**Popup/Dialog 呼出 (3):**
 
-- 集計: `showLineNarrativeSheet`×1, `showInfoPopup`×1
+- 集計: `showModalBottomSheet`×1, `showLineNarrativeSheet`×1, `showInfoPopup`×1
 

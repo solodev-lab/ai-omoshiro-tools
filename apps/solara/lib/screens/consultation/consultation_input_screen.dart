@@ -28,6 +28,7 @@ import 'package:latlong2/latlong.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../theme/solara_colors.dart';
+import '../../utils/consult_restore.dart';
 import '../../utils/consultation_credits.dart';
 import '../../utils/consultation_v2_api.dart';
 import '../../utils/pro_status.dart';
@@ -81,10 +82,15 @@ class ConsultationInputScreen extends StatefulWidget {
   /// Map から起動した場合の preset 地点 (scope=point を選びやすくする)。
   final ConsultationPresetTarget? presetTarget;
 
+  /// 画面復元 (Android プロセス死対策) 用。コールド起動時に SolaraHome が
+  /// 直前のフォーム状態を渡して再構築する。通常起動は null。
+  final Map<String, dynamic>? restoreForm;
+
   const ConsultationInputScreen({
     super.key,
     this.currentLocation,
     this.presetTarget,
+    this.restoreForm,
   });
 
   @override
@@ -126,6 +132,9 @@ class _ConsultationInputScreenState extends State<ConsultationInputScreen> {
     return p != null && !(p.homeLat == 0 && p.homeLng == 0);
   }
 
+  /// 画面復元 (Android プロセス死対策) レジストリ登録トークン。
+  late final Object _restoreToken;
+
   @override
   void initState() {
     super.initState();
@@ -135,9 +144,89 @@ class _ConsultationInputScreenState extends State<ConsultationInputScreen> {
     // tile が active 化すると入力品質が下がるため初期選択を撤廃。
     // ※ preset の地点情報は `_buildScope()` 内で widget.presetTarget を参照する
     //   ため、ユーザーが mode を選んだ後に scope='point' に進めばそのまま反映される。
+    // 画面復元: コールド起動時はフォーム状態を先に復元 (profile は別途 async で load)。
+    if (widget.restoreForm != null) {
+      _applyRestoreForm(widget.restoreForm!);
+    }
+    // 押下ルート復元の登録。SolaraHome が paused 時に _captureRestore を pull する。
+    _restoreToken = ConsultRestore.instance.register(_captureRestore);
     _loadPrefsAndProfile();
     // 注: 本画面は build() で ConsultationCredits を直接参照しないので listener は不要。
     // 残数表示は開始ポップアップ (_StartConsultPopup) が自前で listener を持つ。
+  }
+
+  /// 画面復元スナップショット (Android プロセス死対策)。入力画面は mount 中は常に
+  /// 復元対象 (空でも「相談入力画面にいた」状態を戻す)。具体地点は presetTarget /
+  /// _specificPick のどちらでも、有効点を単一の `point` に正規化して保存し、
+  /// 復元時は _specificPick として再構築する (_buildScope は両方を point として扱う)。
+  Map<String, dynamic>? _captureRestore() {
+    final pt = widget.presetTarget;
+    final pick = _specificPick;
+    Map<String, dynamic>? point;
+    if (pt != null) {
+      point = {
+        'lat': pt.position.latitude,
+        'lng': pt.position.longitude,
+        'name': pt.nameJP,
+        'region': pt.region,
+        'country': pt.country,
+        'placeKind': pt.placeKind ?? 'named',
+      };
+    } else if (pick != null) {
+      point = {
+        'lat': pick.position.latitude,
+        'lng': pick.position.longitude,
+        'name': pick.name,
+        'region': pick.region,
+        'country': pick.country,
+        'placeKind': pick.placeKind,
+      };
+    }
+    return {
+      'type': 'consultationInput',
+      'mode': _mode,
+      'theme': _theme,
+      'whenKind': _whenKind,
+      'whenDate': _whenDate,
+      'whenStart': _whenStart,
+      'whenEnd': _whenEnd,
+      'whenTimeBand': _whenTimeBand,
+      'scopeKind': _scopeKind,
+      'radiusKm': _radiusKm,
+      'regionGroup': _regionGroup,
+      'whom': _whomCtrl.text,
+      'wish': _wishCtrl.text,
+      'point': point,
+    };
+  }
+
+  /// 復元スナップショットからフォーム状態を再構築する (initState から同期で呼ぶ)。
+  void _applyRestoreForm(Map<String, dynamic> f) {
+    _mode = f['mode'] as String?;
+    _theme = f['theme'] as String?;
+    _whenKind = f['whenKind'] as String?;
+    _whenDate = f['whenDate'] as String?;
+    _whenStart = f['whenStart'] as String?;
+    _whenEnd = f['whenEnd'] as String?;
+    _whenTimeBand = f['whenTimeBand'] as String?;
+    _scopeKind = f['scopeKind'] as String?;
+    _radiusKm = (f['radiusKm'] as num?)?.toDouble() ?? _radiusKm;
+    _regionGroup = f['regionGroup'] as String? ?? _regionGroup;
+    _whomCtrl.text = f['whom'] as String? ?? '';
+    _wishCtrl.text = f['wish'] as String? ?? '';
+    final p = f['point'];
+    if (p is Map) {
+      _specificPick = _PickedSpecific(
+        position: LatLng(
+          (p['lat'] as num).toDouble(),
+          (p['lng'] as num).toDouble(),
+        ),
+        name: p['name'] as String? ?? '',
+        region: p['region'] as String? ?? '',
+        country: p['country'] as String? ?? '',
+        placeKind: p['placeKind'] as String? ?? 'named',
+      );
+    }
   }
 
   Future<void> _loadPrefsAndProfile() async {
@@ -153,6 +242,7 @@ class _ConsultationInputScreenState extends State<ConsultationInputScreen> {
 
   @override
   void dispose() {
+    ConsultRestore.instance.unregister(_restoreToken);
     _whomCtrl.dispose();
     _wishCtrl.dispose();
     super.dispose();

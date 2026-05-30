@@ -12,7 +12,7 @@ part of '../observe_screen.dart';
 // private state にアクセスする。
 // ══════════════════════════════════════════════════
 
-extension _QuestionFieldWidgets on _ObserveScreenState {
+extension _QuestionFieldWidgets on ObserveScreenState {
   /// Pro 専用: 「相談者のテーマ」入力欄。
   /// 200 字 cap (内部・Worker 側でも cap)。引き済みなら disabled。
   /// 入力内容は fetchTarotReading の `question` パラメータで Worker に送られ、

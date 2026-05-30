@@ -52,14 +52,15 @@
 
 ## #1 / #2 機械抽出 ↔ feature_inventory.md (人手版) の対整合
 
-- 機械抽出した class/mixin/extension/enum: **449**
-- inventory に登場する識別子 (大文字始まり ``backtick``囲み): **258**
+- 機械抽出した class/mixin/extension/enum: **451**
+- inventory に登場する識別子 (大文字始まり ``backtick``囲み): **259**
 
-### #1 機械にあるが Doc に書かれていない (259)
+### #1 機械にあるが Doc に書かれていない (261)
 
 - `AppAttestClient`
 - `ConstellationShareCardPage`
 - `ConsultEntryPopup`
+- `ConsultRestore`
 - `ConsultationEvidenceKm`
 - `ConsultationHistoryScreen`
 - `ConsultationInputScreen`
@@ -84,6 +85,7 @@
 - `ObserveHistoryFilter`
 - `ObserveHistoryFilterBar`
 - `ObserveHistoryPastPanel`
+- `ObserveScreenState`
 - `PaywallScreen`
 - `ProStatus`
 - `PurchasesService`
@@ -145,6 +147,7 @@
 - `_EmptyState`
 - `_EnergyBar`
 - `_EnergyChip`
+- `_Entry`
 - `_ErrorBox`
 - `_ExampleChips`
 - `_ExhaustionPanel`
@@ -226,7 +229,6 @@
 - `_ObserveHistoryFilterBarState`
 - `_ObserveHistoryPanelState`
 - `_ObserveHistoryPastPanelState`
-- `_ObserveScreenState`
 - `_OrbSectionLabel`
 - `_PageIndicator`
 - `_PaywallComparison`
@@ -255,11 +257,9 @@
 - `_RegionPicker`
 - `_RelocationProTeaser`
 - `_ReportReason`
-- `_RosePetal`
-- `_SanctuaryAccountSectionState`
-- … 残り 59 省略
+- … 残り 61 省略
 
-### #2 Doc に書いてあるがコードに存在しない (ゴースト記述) (68)
+### #2 Doc に書いてあるがコードに存在しない (ゴースト記述) (69)
 
 > 注: Flutter SDK や外部ライブラリの型もここに乗る (誤検出)。
 > 真のゴーストはアプリ独自型のみ。実際の Doc 修正対象は手で絞り込む。
@@ -317,6 +317,7 @@
 - `SOLARA_GCP_PROJECT_NUMBER`
 - `SOLARA_GOOGLE_SERVER_CLIENT_ID`
 - `SOLARA_RC_ANDROID_KEY`
+- `STYLE_VOICE_JP`
 - `SUBSCRIPTION_EXTENDED`
 - `ScrollController`
 - `SearchHourAngle`
@@ -339,7 +340,7 @@
 
 - ファイル数: 23
 - Worker URL 呼出: (なし)
-- Popup/Dialog: `showInfoPopup`×14, `showLineNarrativeSheet`×3, `showSolaraDatePicker`×1
+- Popup/Dialog: `showInfoPopup`×14, `showLineNarrativeSheet`×3, `showSolaraDatePicker`×1, `showModalBottomSheet`×1
 - Navigator.push 等: 0 箇所
 
 ### 層 4b: Horoscope 画面
@@ -401,9 +402,9 @@
 | 4b | 5 | 13 | · | 3 | 5 | · | 16 | · | · | · | 31 | · | · | 2 | · | · |
 | 4c | 1 | 1 | 15 | 1 | 7 | 5 | 9 | 6 | · | · | · | 17 | · | · | 1 | · |
 | 4d | 3 | 6 | 13 | 1 | 5 | 2 | 12 | 2 | 1 | · | · | · | 9 | · | · | · |
-| 4e | 1 | 4 | · | 3 | 7 | 1 | 15 | 1 | · | · | · | · | · | 9 | 3 | · |
-| 4f | 2 | 3 | · | 8 | 16 | 4 | 18 | 12 | · | 6 | · | · | · | · | 29 | · |
-| 5 | 1 | · | · | 2 | 5 | 3 | 1 | 1 | · | 1 | 1 | 1 | 1 | 1 | 1 | · |
+| 4e | 1 | 6 | · | 3 | 7 | 1 | 15 | 1 | · | · | · | · | · | 9 | 3 | · |
+| 4f | 2 | 6 | · | 8 | 16 | 4 | 18 | 12 | · | 6 | · | · | · | · | 29 | · |
+| 5 | 1 | 2 | · | 2 | 5 | 3 | 1 | 1 | · | 1 | 1 | 1 | 1 | 3 | 4 | · |
 
 > 健全な依存方向は「番号が大きい層 → 小さい層」(上位が下位に依存)。
 > 番号が小さい層から大きい層への矢印 (左下三角) は逆流依存の疑い。
@@ -448,15 +449,22 @@
 > 各ソースの SHA1 を `_stamps.json` に記録し、差分を検出。
 > 変更されたファイルが属する層は、人手版インベントリ章の見直し対象。
 
-- 追加: **1** / 削除: **0** / 変更: **3**
+- 追加: **1** / 削除: **0** / 変更: **15**
 
 ### 変更されたファイル (層別)
 
-- **層 0**: `worker/src/consultation_v2.js`, `worker/src/fortune.js`, `worker/src/tarot.js`
+- **層 2b**: `lib/utils/solara_storage.dart`
+- **層 3c**: `lib/widgets/catasterism_formation_overlay.dart`
+- **層 4a**: `lib/screens/map/map_search.dart`, `lib/screens/map_screen.dart`
+- **層 4c**: `lib/screens/observe/observe_category_selector.dart`, `lib/screens/observe/observe_history.dart`, `lib/screens/observe/observe_question_field.dart`, `lib/screens/observe_screen.dart`
+- **層 4d**: `lib/screens/galaxy_screen.dart`
+- **層 4e**: `lib/screens/sanctuary/class_share_card.dart`, `lib/screens/sanctuary/title_history_screen.dart`
+- **層 4f**: `lib/screens/consultation/consultation_history_screen.dart`, `lib/screens/consultation/consultation_input_screen.dart`, `lib/screens/consultation/consultation_result_screen.dart`
+- **層 5**: `lib/main.dart`
 
 ### 追加されたファイル
 
-- `worker/src/style_voice.js` (層 0)
+- `lib/utils/consult_restore.dart` (層 1b)
 
 ## #7 astro_glossary 用語辞書対整合
 

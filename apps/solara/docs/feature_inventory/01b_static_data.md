@@ -5,9 +5,9 @@
 
 ## サマリ
 
-- ファイル数: 14 / 総行数: 4752
-- class/mixin/extension/enum: 18
-- 関数 (top-level + method の素拾い): 40
+- ファイル数: 15 / 総行数: 4802
+- class/mixin/extension/enum: 20
+- 関数 (top-level + method の素拾い): 42
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 1
 - Worker URL リテラル: 0
@@ -160,6 +160,40 @@ key: "${type}_${planet}" or "${type}_${planet}_${sign}"
   - L248 `_hash()`
 
   </details>
+
+
+### `lib/utils/consult_restore.dart` (50 行)
+
+**ファイル先頭コメント:**
+
+```
+押下ルート (相談入力 / 相談結果画面) の画面復元レジストリ。
+
+Android プロセス死対策のハイブリッド復元 (SolaraStorage.saveRestoreSnapshot) の
+うち、`Navigator.push` で積まれたルートを扱う部分。低 RAM 端末 (A101FC 等) で
+外部アプリ (Google マップ / 共有シート等) へ離脱中に OS が Solara を kill →
+復帰時コールド再起動で押下ルートが失われる問題への対策。
+
+設計: 各画面が mount 時に capture コールバックを register し、dispose 時に
+unregister する「登録スタック」。SolaraHome が paused 時に captureTop() で
+最前面 (最後に登録され、まだ生存している) 画面のスナップショットを取得する。
+登録スタック方式なので、入力→結果の push 連鎖や、結果を pop して入力へ戻る
+ケースも追加配線なしで自然に扱える (RouteObserver 不要)。
+
+capture は「今この瞬間の復元スナップショット (復元不要なら null)」を返す純関数。
+SolaraHome が paused のタイミングで pull するので、画面側に lifecycle 監視を
+持たせる必要がない (SharedPreferences への書き込みは SolaraHome に一本化)。
+```
+
+**型定義 (2):**
+
+- L17 `class ConsultRestore`
+- L46 `class _Entry`
+
+**関数 (2 public + 0 private):**
+
+- L24 `register()` — 画面 mount 時に呼ぶ。返ってきた token を dispose 時に [unregister] へ渡す。
+- L31 `unregister()` — 画面 dispose 時に呼ぶ。
 
 
 ### `lib/utils/consultation_record.dart` (248 行)

@@ -20,6 +20,7 @@ import 'package:latlong2/latlong.dart';
 import '../../theme/solara_colors.dart';
 import '../../utils/consultation_api.dart' show ConsultationBlock;
 import '../../utils/consultation_credits.dart';
+import '../../utils/consult_restore.dart';
 import '../../utils/map_focus.dart';
 import '../../utils/consultation_record.dart';
 import '../../utils/consultation_share.dart';
@@ -137,10 +138,15 @@ class _ConsultationResultScreenState extends State<ConsultationResultScreen> {
   ConsultationV2Reading? get _first =>
       _readings.isNotEmpty ? _readings.first : null;
 
+  /// 画面復元 (Android プロセス死対策) レジストリ登録トークン。
+  late final Object _restoreToken;
+
   @override
   void initState() {
     super.initState();
     _pageCtrl = PageController();
+    // 押下ルート復元の登録。SolaraHome が paused 時に _captureRestore を pull する。
+    _restoreToken = ConsultRestore.instance.register(_captureRestore);
     if (widget.record != null) {
       _readings.addAll(widget.record!.toReadings());
       _loading = false;
@@ -152,8 +158,25 @@ class _ConsultationResultScreenState extends State<ConsultationResultScreen> {
 
   @override
   void dispose() {
+    ConsultRestore.instance.unregister(_restoreToken);
     _pageCtrl.dispose();
     super.dispose();
+  }
+
+  /// 画面復元スナップショット。履歴に保存済みのレコードを持つ時のみ非 null。
+  /// 復元は必ず `fromRecord` (読み込み専用) で行うため、recordId のみ保存する。
+  /// live モードで未保存 (fetch 中・失敗) なら null を返し、復元対象から外す
+  /// (request で復元すると API 再実行＝クレジット二重消費になるため絶対にしない)。
+  Map<String, dynamic>? _captureRestore() {
+    String? id;
+    if (widget.record != null) {
+      id = widget.record!.id;
+    } else if (_recordSavedAt != null) {
+      // _persist() の採番ルール (id = savedAt.millisecondsSinceEpoch) と一致。
+      id = _recordSavedAt!.millisecondsSinceEpoch.toString();
+    }
+    if (id == null) return null;
+    return {'type': 'consultationResult', 'recordId': id};
   }
 
   Future<ConsultationV2Result> _runFetch(ConsultationRequest req) {
