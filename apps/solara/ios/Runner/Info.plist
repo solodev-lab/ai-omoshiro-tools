@@ -8,6 +8,8 @@
 	<false/>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>出生地・候補地・現在地での占星術計算 (天体配置・方角占い) と地図表示のために使用します。バックグラウンドでの位置情報追跡は行いません。</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>出生地・候補地・現在地での占星術計算 (天体配置・方角占い) と地図表示のために使用します。バックグラウンドでの位置情報追跡は行いません。</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
