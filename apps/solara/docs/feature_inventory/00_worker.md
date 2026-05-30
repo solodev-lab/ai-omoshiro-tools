@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 26
+- ファイル数: 27
 - エンドポイント総数: 32
 - Gemini 呼出箇所: 2
 - KV 使用: 4 行 / Durable Object 使用: 12 行
@@ -446,7 +446,7 @@ Soft (trine/sextile) と Hard (square) は独立 2 エネルギー。total/吉�
 **export (2):** `runConsultationPipeline`, `_internal`
 
 
-### `worker/src/consultation_v2.js` (406 行)
+### `worker/src/consultation_v2.js` (411 行)
 
 **ファイル先頭コメント:**
 
@@ -508,7 +508,7 @@ astronomy-engine API:
 **export (1):** `computeDailyTransits`
 
 
-### `worker/src/fortune.js` (441 行)
+### `worker/src/fortune.js` (446 行)
 
 **ファイル先頭コメント:**
 
@@ -524,21 +524,15 @@ N-P=今の人生の章(背景)。クロス相は {natal, moving, type, quality}�
 
 GEMINI_API_KEY は wrangler secret put GEMINI_API_KEY で設定
 モデル: gemini-2.5-flash (テキスト生成、低コスト)
-
-── Fortune カテゴリ定義 ──
-houses: そのカテゴリで重視する伝統占星術のハウス番号
-1H=自己, 2H=所有/才能/収入, 3H=対話/兄弟/短距離, 4H=家庭/基盤,
-5H=恋愛/楽しみ/創造, 6H=日常業務/健康, 7H=パートナー/結婚, 8H=共有資産/変容,
-9H=哲学/遠距離/学問, 10H=社会的地位/キャリア, 11H=友人/ネットワーク, 12H=潜在意識/隠れた事
 ```
 
 **Gemini API 呼出 (1):**
 
-- L104: `generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;`
+- L106: `generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;`
 
 **Durable Object 使用 (4 行):**
 
-- 出現行: L331, L333, L333, L333
+- 出現行: L336, L338, L338, L338
 
 **export (4):** `computeCategoryScore`, `callGemini`, `stripTransitLabel`, `handleFortune`
 
@@ -698,7 +692,24 @@ Nominatim: https://nominatim.openstreetmap.org/search
 **export (1):** `searchPlace`
 
 
-### `worker/src/tarot.js` (290 行)
+### `worker/src/style_voice.js` (17 行)
+
+**ファイル先頭コメント:**
+
+```
+占い師「光源」の文体ガイド (オーナー文体サンプルから蒸留・2026-05-30 試作比較で確定)。
+
+Stella相談 / Horo星読み / タロット の日本語プロンプトに共通注入する単一ソース。
+各機能の構成ルール (名前/挨拶/前置き禁止・専門用語の扱い 等) を最優先し、
+それに反しない範囲で "語り口" だけを寄せる。プロンプトの「ルール群の直後・出力JSONの直前」に置く。
+
+注入対象は lang==='ja' のみ (英語プロンプトには入れない)。consultation_v2 は ja 専用。
+```
+
+**export (1):** `STYLE_VOICE_JP`
+
+
+### `worker/src/tarot.js` (293 行)
 
 **ファイル先頭コメント:**
 
@@ -718,7 +729,7 @@ GEMINI_API_KEY は wrangler secret put GEMINI_API_KEY で設定済み
 
 **Gemini API 呼出 (1):**
 
-- L62: `generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;`
+- L64: `generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;`
 
 **export (1):** `handleTarot`
 

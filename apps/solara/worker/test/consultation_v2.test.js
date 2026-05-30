@@ -128,6 +128,13 @@ test('prompt: 設計思想ガード (吉凶禁止/読心禁止/km本文禁止/�
   assert.match(p, /Soft.*Hard|独立した 2 エネルギー/);
 });
 
+test('prompt: 光源の文体ガイド + テーマ推測禁止ガードを含む (2026-05-30)', () => {
+  const p = buildConsultationPrompt({ pipe: fakePipe(), theme: 'love', mode: 'daily', withWhom: '', wish: '' });
+  assert.match(p, /文体ガイド: 占い師「光源」の声/);
+  assert.match(p, /動機を推測/); // テーマ既選択ガード
+  assert.match(p, /名前の呼びかけ・挨拶・前置きはしない/); // 既存ルールと矛盾しない声
+});
+
 test('prompt: isFirst=true は innerSeason/intro/outro スキーマを含む', () => {
   const p = buildConsultationPrompt({ pipe: fakePipe({ isFirst: true }), theme: 'love', mode: 'daily', withWhom: '', wish: '' });
   assert.match(p, /"innerSeason":/);

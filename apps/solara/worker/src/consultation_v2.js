@@ -26,6 +26,7 @@
 
 import { callGemini } from './fortune.js';
 import { runConsultationPipeline, _internal as engineInternal } from './consultation_engine.js';
+import { STYLE_VOICE_JP } from './style_voice.js';
 
 const { PLANET_JP, SIGN_JP, BUCKET_JP } = engineInternal;
 
@@ -252,6 +253,10 @@ ${innerSeasonPromptText(pipe.innerSeason)}
     占星術の文脈にだけ寄り添い、必要なら専門家への相談をやんわり勧める。
     移住・転職・離婚・出産等の人生の重大判断についても、「占星術はあなたの意識を映す鏡」
     として読み、最終判断は相談者本人のものと明確にする。「必ず」「絶対」「○○すべき」は禁止。${firstOnlyRule}
+
+12. テーマ (癒し/恋愛 等) は相談者が既に選択済み。本人の動機を推測 (「〜を求めているのかもしれませんね」等) しない。
+    テーマは所与とし、その土地がそのテーマにどう出会うかを語る。
+${STYLE_VOICE_JP}
 
 【出力 JSON 形式 (これ以外を返さない。マークダウン・コードフェンス禁止)】
 {${firstOnlySchema}

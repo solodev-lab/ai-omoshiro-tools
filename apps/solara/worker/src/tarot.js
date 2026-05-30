@@ -12,6 +12,8 @@
  * モデル: env vars TAROT_MODEL_PRIMARY/FALLBACK で指定（廃止リスク対策）
  */
 
+import { STYLE_VOICE_JP } from './style_voice.js';
+
 const PLANET_JP = {
   sun: '太陽', moon: '月', mercury: '水星', venus: '金星', mars: '火星',
   jupiter: '木星', saturn: '土星', uranus: '天王星', neptune: '海王星', pluto: '冥王星',
@@ -216,6 +218,7 @@ Return ONLY a JSON object with this exact field (no markdown, no extra text):
 正逆位置の意味を尊重して鑑定文を書いてください:
 - 正位置: カードの肯定的・成長的な意味を引き出す
 - 逆位置: 影・停滞・反転した教訓を語る — ただし破滅的な調子にはしない
+${STYLE_VOICE_JP}
 
 以下のJSON形式のみで返答してください（マークダウンや余分な文言は不要）:
 {
