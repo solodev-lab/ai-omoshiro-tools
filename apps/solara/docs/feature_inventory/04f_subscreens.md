@@ -207,7 +207,7 @@ Consultation Input — だれと / 願い の記入例 (テーマ別)
   </details>
 
 
-### `lib/screens/consultation/consultation_input_logic.dart` (160 行)
+### `lib/screens/consultation/consultation_input_logic.dart` (179 行)
 
 **ファイル先頭コメント:**
 
@@ -222,17 +222,18 @@ setState を呼ばない純ロジック (when/scope → ConsultationRequest、�
 
 **型定義 (1):**
 
-- L10 `extension _ConsultationInputLogic : _ConsultationInputScreenState`
+- L25 `extension _ConsultationInputLogic : _ConsultationInputScreenState`
 
-**関数 (0 public + 4 private):**
+**関数 (0 public + 5 private):**
 
 
-  <details><summary>private 関数 4 件</summary>
+  <details><summary>private 関数 5 件</summary>
 
-  - L96 `_onStartPressed()`
-  - L108 `_handleBuyFromPopup()`
-  - L115 `_showStartPopup()`
-  - L135 `_runConsultation()`
+  - L12 `_travelBandMin()`
+  - L115 `_onStartPressed()`
+  - L127 `_handleBuyFromPopup()`
+  - L134 `_showStartPopup()`
+  - L154 `_runConsultation()`
 
   </details>
 
@@ -310,7 +311,7 @@ consultation_input_picker.dart の HARD500 回避のため、検索結果行・�
 - L150 `build()`
 
 
-### `lib/screens/consultation/consultation_input_screen.dart` (508 行)
+### `lib/screens/consultation/consultation_input_screen.dart` (489 行)
 
 **ファイル先頭コメント:**
 
@@ -350,14 +351,14 @@ Consultation Input Screen — 5問モデル (V2: 全要素統合)
 - L77 `class ConsultationInputScreen : StatefulWidget`
 - L95 `class _ConsultationInputScreenState : State`
 
-**関数 (4 public + 11 private):**
+**関数 (4 public + 10 private):**
 
 - L91 `createState()`
 - L130 `initState()`
 - L155 `dispose()`
-- L335 `build()`
+- L316 `build()`
 
-  <details><summary>private 関数 11 件</summary>
+  <details><summary>private 関数 10 件</summary>
 
   - L143 `_loadPrefsAndProfile()`
   - L162 `_onModeChanged()`
@@ -366,10 +367,9 @@ Consultation Input Screen — 5問モデル (V2: 全要素統合)
   - L228 `_pickDateRange()`
   - L240 `_ymd()`
   - L244 `_onScopeKindTap()`
-  - L256 `_travelBandMin()`
-  - L273 `_openMapPicker()`
-  - L323 `_refreshCreditsFresh()`
-  - L328 `_setStartPopupHidden()`
+  - L254 `_openMapPicker()`
+  - L304 `_refreshCreditsFresh()`
+  - L309 `_setStartPopupHidden()`
 
   </details>
 
