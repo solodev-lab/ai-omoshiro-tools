@@ -3212,3 +3212,17 @@ main.dart は **層 0 (Worker) と層 1c (モデル) 以外の全層** に依存
 - 未実装対整合チェック実装: **#5 call graph** (誰が誰を呼ぶか、Pro 化影響範囲特定に必要) / **#6 ハッシュ stamp** (ファイル変更検知) / **#7 astro_glossary 用語辞書対整合**
 - 機能インベントリ運用ガイド更新 (CLAUDE.md / メモリ)
 - **#1 漏れ 146 件の選択的解消** (private state class は不要、`AppLocale` / `SolaraApp` 等の重要 public 識別子に絞って Doc 追記)
+
+---
+
+## 本セッション追加機能 (2026-05-30) — §0.2.22〜§0.2.28
+
+> 層別の詳細反映は次セッションのタスク。ここでは概要・ファイル・§番号を記録する。詳細は session_log 2026-05-30。
+
+- **§0.2.22 案Yパネル履歴バグ修正**: 相談結果画面 (`consultation_result_screen.dart`) で `_exhausted`(ボタン抑制) と案Yパネル表示が混線し履歴の全カードに枯渇パネルが出ていた → `_showExhaustionPanel` を分離 (出し直し由来の枯渇のみ表示)。
+- **§0.2.23 Map検索詳細「Googleマップで見る」**: `map_search.dart` の `SearchFocusPopup` に🗺ボタン。`SearchHit.placeId` を追加し `googleMapsUrlForHit()` が `query_place_id` で店舗ページを直開き (Worker は既に placeId 返却・変更不要)。
+- **§0.2.24 距離バンド + おでかけ20km**: `ConsultationScope.minKm` 追加。旅行/移住の半径を「以内」→ 距離帯バンド (50〜100/100〜300/300〜500km)。おでかけは [20,50,100,300]。worker `buildCandidatePool` に `inBand(minKm<=d<=radiusKm)` フィルタ。バンド下限ヘルパは `consultation_input_logic.dart`。
+- **§0.2.25 区/地区 D1 投入**: GeoNames allCountries から ADM3+PPLX 31.9万件を `cities` テーブルに追記 (人口名目2000・JP は ja 名)。名古屋16区/上野/Le Marais 等が近傍候補に。seeder=`tools/seed_d1_subdivisions.py`。worker/app 変更不要 (bounding-box が自動で拾う)。D1 20→62MB。
+- **§0.2.26 結果カード地図リンク**: 結果カード (`consultation_result_card.dart`) の場所名右に🗺。`utils/map_focus.dart` (MapFocus singleton + `mapFocusDate()` 純関数) でタブ越し遷移し、`MapScreenState.focusLocationAndDate` が視点(_center)を候補地へ移動+相談日付で表示。日付=おでかけ:指定日+時間帯/旅行:初日/移住:時期代表日。
+- **§0.2.27 星読みトランジット接頭辞除去**: `fortune.js` プロンプトに呼称ルール(トランジット惑星は惑星名のみ・出生/プログレスはラベル) + `stripTransitLabel()` サニタイザ。Horo はアスペクト名を括弧併記 (トライン120°等)。
+- **§0.2.28 占い文に「光源」文体**: `worker/src/style_voice.js` (`STYLE_VOICE_JP` 単一ソース) を相談/星読み/タロットの ja プロンプトに注入。オーナー文体サンプルから蒸留。既存ルール(名前/挨拶/前置き禁止)最優先。consultation にテーマ推測ガード追加。
