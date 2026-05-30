@@ -5,9 +5,9 @@
 
 ## サマリ
 
-- ファイル数: 31 / 総行数: 10083
+- ファイル数: 31 / 総行数: 10117
 - class/mixin/extension/enum: 90
-- 関数 (top-level + method の素拾い): 258
+- 関数 (top-level + method の素拾い): 260
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 7
 - Worker URL リテラル: 0
@@ -207,7 +207,7 @@ Consultation Input — だれと / 願い の記入例 (テーマ別)
   </details>
 
 
-### `lib/screens/consultation/consultation_input_logic.dart` (158 行)
+### `lib/screens/consultation/consultation_input_logic.dart` (160 行)
 
 **ファイル先頭コメント:**
 
@@ -229,10 +229,10 @@ setState を呼ばない純ロジック (when/scope → ConsultationRequest、�
 
   <details><summary>private 関数 4 件</summary>
 
-  - L94 `_onStartPressed()`
-  - L106 `_handleBuyFromPopup()`
-  - L113 `_showStartPopup()`
-  - L133 `_runConsultation()`
+  - L96 `_onStartPressed()`
+  - L108 `_handleBuyFromPopup()`
+  - L115 `_showStartPopup()`
+  - L135 `_runConsultation()`
 
   </details>
 
@@ -310,7 +310,7 @@ consultation_input_picker.dart の HARD500 回避のため、検索結果行・�
 - L150 `build()`
 
 
-### `lib/screens/consultation/consultation_input_screen.dart` (485 行)
+### `lib/screens/consultation/consultation_input_screen.dart` (508 行)
 
 **ファイル先頭コメント:**
 
@@ -350,14 +350,14 @@ Consultation Input Screen — 5問モデル (V2: 全要素統合)
 - L77 `class ConsultationInputScreen : StatefulWidget`
 - L95 `class _ConsultationInputScreenState : State`
 
-**関数 (4 public + 10 private):**
+**関数 (4 public + 11 private):**
 
 - L91 `createState()`
 - L130 `initState()`
 - L155 `dispose()`
-- L316 `build()`
+- L335 `build()`
 
-  <details><summary>private 関数 10 件</summary>
+  <details><summary>private 関数 11 件</summary>
 
   - L143 `_loadPrefsAndProfile()`
   - L162 `_onModeChanged()`
@@ -366,14 +366,15 @@ Consultation Input Screen — 5問モデル (V2: 全要素統合)
   - L228 `_pickDateRange()`
   - L240 `_ymd()`
   - L244 `_onScopeKindTap()`
-  - L254 `_openMapPicker()`
-  - L304 `_refreshCreditsFresh()`
-  - L309 `_setStartPopupHidden()`
+  - L256 `_travelBandMin()`
+  - L273 `_openMapPicker()`
+  - L323 `_refreshCreditsFresh()`
+  - L328 `_setStartPopupHidden()`
 
   </details>
 
 
-### `lib/screens/consultation/consultation_input_when_scope.dart` (150 行)
+### `lib/screens/consultation/consultation_input_when_scope.dart` (159 行)
 
 **ファイル先頭コメント:**
 
@@ -388,18 +389,19 @@ Consultation Input — ③ いつ / 半径 セレクタ
 - L43 `class _WhenSelector : StatelessWidget`
   - ③ いつ。場面別の選択肢を Wrap で出し、date/range は選んだ日付を下に表示する。
 - L104 `class _TimeBandSelector : StatelessWidget`
-- L126 `class _RadiusChips : StatelessWidget`
+- L128 `class _RadiusChips : StatelessWidget`
   - 自宅から半径の距離選択 (場面別 km 候補)。
 
-**関数 (3 public + 1 private):**
+**関数 (3 public + 2 private):**
 
 - L56 `build()`
 - L110 `build()`
-- L137 `build()`
+- L146 `build()`
 
-  <details><summary>private 関数 1 件</summary>
+  <details><summary>private 関数 2 件</summary>
 
   - L31 `_whenChoicesFor()`
+  - L140 `_label()`
 
   </details>
 

@@ -65,7 +65,9 @@ extension _ConsultationInputLogic on _ConsultationInputScreenState {
       case 'bearing':
         return ConsultationScope.bearing(radiusKm: _mode == 'daily' ? 50 : 100);
       case 'radius':
-        return ConsultationScope.radius(_radiusKm);
+        final minKm = _radiusMinKm;
+        return ConsultationScope.radius(_radiusKm,
+            minKm: minKm > 0 ? minKm : null);
       case 'region':
         return ConsultationScope.region(_regionGroup);
       case 'country':

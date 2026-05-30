@@ -84,6 +84,9 @@ class ConsultationScope {
   final String kind;
   final ConsultationPoint? point;
   final double? radiusKm;
+  /// 'radius' の距離帯下限 (km)。null/0 = 「以内」(おでかけ)。
+  /// 旅行/移住は 50〜100 / 100〜300 / 300〜500 のように下限を立てて隣町を弾く。
+  final double? minKm;
   final String? regionGroup; // 'region' のとき (例: '日本', '北米')
   final String? country; // 'country' のとき (省略時 Worker が home から推定)
 
@@ -91,6 +94,7 @@ class ConsultationScope {
     required this.kind,
     this.point,
     this.radiusKm,
+    this.minKm,
     this.regionGroup,
     this.country,
   });
@@ -102,9 +106,9 @@ class ConsultationScope {
   factory ConsultationScope.bearing({double radiusKm = 50}) =>
       ConsultationScope(kind: 'bearing', radiusKm: radiusKm);
 
-  /// 自宅から半径 radiusKm 以内の都市。
-  factory ConsultationScope.radius(double radiusKm) =>
-      ConsultationScope(kind: 'radius', radiusKm: radiusKm);
+  /// 自宅から距離帯 [minKm, radiusKm] の都市 (minKm 省略=「radiusKm 以内」)。
+  factory ConsultationScope.radius(double radiusKm, {double? minKm}) =>
+      ConsultationScope(kind: 'radius', radiusKm: radiusKm, minKm: minKm);
 
   /// 地域 (大ブロック) 内の都市。
   factory ConsultationScope.region(String regionGroup) =>
@@ -121,6 +125,7 @@ class ConsultationScope {
         'kind': kind,
         if (point != null) 'point': point!.toJson(),
         if (radiusKm != null) 'radiusKm': radiusKm,
+        if (minKm != null && minKm! > 0) 'minKm': minKm,
         if (regionGroup != null) 'regionGroup': regionGroup,
         if (country != null) 'country': country,
       };

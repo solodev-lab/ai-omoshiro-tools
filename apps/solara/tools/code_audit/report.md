@@ -23,13 +23,13 @@
 | 704 | 🟠 WARN | lib/screens/observe_screen.dart |
 | 702 | 🟠 WARN | lib/screens/horoscope/horo_chart_painter.dart |
 | 693 | 🟠 WARN | lib/widgets/fortune_overlays/money_painter.dart |
+| 658 | 🟠 WARN | lib/screens/map/map_search.dart |
 | 656 | 🟠 WARN | lib/screens/map/map_relocation_popup.dart |
 | 647 | 🟠 WARN | lib/utils/astro_glossary.dart |
 | 646 | 🟠 WARN | lib/screens/map/map_viewpoint_menu.dart |
 | 642 | 🟠 WARN | lib/widgets/fortune_overlays/communication_painter.dart |
 | 626 | 🟠 WARN | lib/utils/constellation_namer.dart |
 | 624 | 🟠 WARN | lib/screens/map/map_astro_lines.dart |
-| 600 | 🟠 WARN | lib/screens/map/map_search.dart |
 | 592 | 🟠 WARN | lib/screens/sanctuary/sanctuary_profile_editor.dart |
 | 581 | 🟠 WARN | lib/widgets/fortune_overlays/love_painter.dart |
 | 564 | 🟠 WARN | lib/widgets/new_moon_overlay.dart |

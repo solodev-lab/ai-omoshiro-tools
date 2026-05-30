@@ -141,9 +141,23 @@ void main() {
           .toJson()['scope'] as Map<String, dynamic>;
       expect(r['kind'], 'radius');
       expect(r['radiusKm'], 300);
+      // minKm 無し (おでかけ=「以内」) は minKm キーを省略。
+      expect(r.containsKey('minKm'), isFalse);
       final reg = _baseRequest(scope: ConsultationScope.region('日本'))
           .toJson()['scope'] as Map<String, dynamic>;
       expect(reg['regionGroup'], '日本');
+    });
+
+    test('scope.radius のバンド (minKm): 旅行/移住の距離帯下限を送る', () {
+      // 100〜300km バンド: max=300, min=100。
+      final band = _baseRequest(scope: ConsultationScope.radius(300, minKm: 100))
+          .toJson()['scope'] as Map<String, dynamic>;
+      expect(band['radiusKm'], 300);
+      expect(band['minKm'], 100);
+      // minKm=0 は「以内」扱いでキー省略。
+      final within = _baseRequest(scope: ConsultationScope.radius(100, minKm: 0))
+          .toJson()['scope'] as Map<String, dynamic>;
+      expect(within.containsKey('minKm'), isFalse);
     });
 
     test('withWhom/wish は空なら省略、非空なら含む', () {

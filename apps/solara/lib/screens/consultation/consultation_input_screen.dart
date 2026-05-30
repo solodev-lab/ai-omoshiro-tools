@@ -251,6 +251,25 @@ class _ConsultationInputScreenState extends State<ConsultationInputScreen> {
     });
   }
 
+  /// 旅行/移住の距離帯下限 (km)。選択した上限 maxKm に対し、隣町を弾くための下限を返す。
+  /// 100→50 / 300→100 / 500→300。該当しなければ 0 (=「以内」)。
+  static int _travelBandMin(int maxKm) {
+    switch (maxKm) {
+      case 100:
+        return 50;
+      case 300:
+        return 100;
+      case 500:
+        return 300;
+      default:
+        return 0;
+    }
+  }
+
+  /// 現在の radius scope に送る下限 km。おでかけ (daily) は 0 (=「以内」)。
+  double get _radiusMinKm =>
+      _mode == 'daily' ? 0 : _travelBandMin(_radiusKm.round()).toDouble();
+
   Future<_PickedSpecific?> _openMapPicker() async {
     final initialCenter =
         widget.currentLocation ?? widget.presetTarget?.position;
@@ -383,13 +402,17 @@ class _ConsultationInputScreenState extends State<ConsultationInputScreen> {
                         ),
                       if (_scopeKind == 'radius')
                         _Section(
-                          label: '現住所からの距離',
+                          label: _mode == 'daily'
+                              ? '現住所からの距離'
+                              : '現住所からの距離帯',
                           child: _RadiusChips(
                             options: _mode == 'daily'
-                                ? const [50, 100, 300]
+                                ? const [20, 50, 100, 300]
                                 : const [100, 300, 500],
                             selected: _radiusKm,
                             onSelect: (km) => setState(() => _radiusKm = km),
+                            // 旅行/移住はバンド表示 (50〜100km 等)。おでかけは「Nkm」。
+                            bandMinFor: _mode == 'daily' ? null : _travelBandMin,
                           ),
                         ),
                       if (_scopeKind == 'region')

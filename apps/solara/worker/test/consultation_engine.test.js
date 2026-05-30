@@ -191,6 +191,28 @@ test('buildCandidatePool フォールバック: region は regionGroup / radius 
   const near = await buildCandidatePool({ scope: { kind: 'radius', radiusKm: 100 }, home: HOME, mode: 'travel' });
   const far = await buildCandidatePool({ scope: { kind: 'radius', radiusKm: 1000 }, home: HOME, mode: 'travel' });
   assert.ok(near.candidates.length < far.candidates.length);
+
+  // 旅行/移住の距離帯バンド (minKm): 下限未満 (隣町) を弾く。
+  const within = await buildCandidatePool({ scope: { kind: 'radius', radiusKm: 500 }, home: HOME, mode: 'travel' });
+  const band = await buildCandidatePool({ scope: { kind: 'radius', radiusKm: 500, minKm: 300 }, home: HOME, mode: 'travel' });
+  assert.ok(band.candidates.length < within.candidates.length, 'バンドは「以内」より少ない');
+});
+
+test('buildCandidatePool D1: radius の minKm バンドで近場(隣町)を弾き遠方だけ残す', async () => {
+  const DB = makeFakeD1(D1_FIXTURE);
+  // 「以内」(minKm 無し) は近場 (東京) も遠方 (大阪) も含む。
+  const within = await buildCandidatePool({ scope: { kind: 'radius', radiusKm: 1000 }, home: HOME, mode: 'travel', env: { DB } });
+  assert.equal(within.source, 'd1-local');
+  assert.ok(within.candidates.some((c) => c.name === '東京'));
+  assert.ok(within.candidates.some((c) => c.name === '大阪'));
+  // バンド [100, 1000]: <100km の隣町 (東京/横浜/鎌倉) を除外、遠方 (大阪/札幌) は残す。
+  const band = await buildCandidatePool({ scope: { kind: 'radius', radiusKm: 1000, minKm: 100 }, home: HOME, mode: 'travel', env: { DB } });
+  assert.equal(band.source, 'd1-local');
+  assert.ok(!band.candidates.some((c) => c.name === '東京'), '隣町(東京)は弾く');
+  assert.ok(!band.candidates.some((c) => c.name === '横浜'), '隣町(横浜)は弾く');
+  assert.ok(!band.candidates.some((c) => c.name === '鎌倉'), '隣町(鎌倉)は弾く');
+  assert.ok(band.candidates.some((c) => c.name === '大阪'), 'バンド内(大阪)は残す');
+  assert.ok(band.candidates.some((c) => c.name === '札幌'), 'バンド内(札幌)は残す');
 });
 
 // ── 候補プール D1 (Phase B: 実在の町 bounding-box / 人口フロア+LIMIT) ──

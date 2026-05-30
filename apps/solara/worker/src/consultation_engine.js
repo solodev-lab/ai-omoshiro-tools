@@ -432,12 +432,19 @@ async function buildCandidatePool({ scope, home, mode, env = null }) {
       || (kind === 'bearing'
         ? numEnv(env, 'CONSULTATION_DAILY_RADIUS_KM', DAILY_RADIUS_KM_DEFAULT)
         : RADIUS_DEFAULT_KM);
+    // 距離帯下限 (旅行/移住のバンド: 50〜100 / 100〜300 / 300〜500)。
+    // 0 = 「以内」(おでかけ/bearing)。これで隣町 (例 2km) を弾く。
+    const minKm = (kind === 'radius' && scope && scope.minKm > 0) ? scope.minKm : 0;
+    const inBand = (lat, lng) => {
+      const d = haversineKm(home, { lat, lng });
+      return d >= minKm && d <= radiusKm;
+    };
     const sparseMin = numEnv(env, 'CONSULTATION_SPARSE_MIN', SPARSE_MIN_DEFAULT);
     if (db && home && home.lat != null) {
       try {
         const localLimit = numEnv(env, 'CONSULTATION_LOCAL_LIMIT', LOCAL_LIMIT_DEFAULT);
         const rows = await d1BoundingBox(db, home, radiusKm, localLimit);
-        const inCircle = rows.filter((r) => haversineKm(home, { lat: r.lat, lng: r.lng }) <= radiusKm);
+        const inCircle = rows.filter((r) => inBand(r.lat, r.lng));
         const candidates = inCircle.map((r) => townRowToCandidate(r, home));
         return { candidates, sparse: candidates.length < sparseMin, nearbyCount: candidates.length, source: 'd1-local' };
       } catch (e) {
@@ -448,7 +455,7 @@ async function buildCandidatePool({ scope, home, mode, env = null }) {
     // フォールバック (D1 無し / D1 エラー)
     if (kind === 'radius') {
       const cs = worldCities
-        .filter((c) => haversineKm(home, { lat: c.lat, lng: c.lng }) <= radiusKm)
+        .filter((c) => inBand(c.lat, c.lng))
         .map(cityToCandidate);
       return { candidates: cs, sparse: cs.length < sparseMin, nearbyCount: cs.length, source: 'fallback-radius' };
     }

@@ -123,15 +123,24 @@ class _TimeBandSelector extends StatelessWidget {
 }
 
 /// 自宅から半径の距離選択 (場面別 km 候補)。
+/// [bandMinFor] を渡すと「下限〜上限km」のバンド表示 (旅行/移住)。返り値 0 か
+/// null のままなら従来の「Nkm」表示 (おでかけ=「以内」)。
 class _RadiusChips extends StatelessWidget {
   final List<int> options;
   final double selected;
   final ValueChanged<double> onSelect;
+  final int Function(int maxKm)? bandMinFor;
   const _RadiusChips({
     required this.options,
     required this.selected,
     required this.onSelect,
+    this.bandMinFor,
   });
+
+  String _label(int km) {
+    final min = bandMinFor?.call(km) ?? 0;
+    return min > 0 ? '$min〜${km}km' : '${km}km';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -140,7 +149,7 @@ class _RadiusChips extends StatelessWidget {
       runSpacing: 8,
       children: options
           .map((km) => _PillChip(
-                label: '${km}km',
+                label: _label(km),
                 active: selected.round() == km,
                 onTap: () => onSelect(km.toDouble()),
               ))
