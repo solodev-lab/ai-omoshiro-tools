@@ -6,7 +6,7 @@
 
 | 行数 | 判定 | ファイル |
 |------|------|----------|
-| 3229 | 🔴 HARD | lib/screens/map_screen.dart |
+| 3227 | 🔴 HARD | lib/screens/map_screen.dart |
 | 2029 | 🔴 HARD | lib/screens/map/map_daily_transit_screen.dart |
 | 1473 | 🔴 HARD | lib/screens/sanctuary_screen.dart |
 | 1385 | 🔴 HARD | lib/screens/sanctuary/sanctuary_title_diagnosis.dart |

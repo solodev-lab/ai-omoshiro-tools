@@ -208,7 +208,7 @@
   "worker/src/consultation_engine.js": "bb6e8344be8effcfc766df12eee29c141d9ed840",
   "worker/src/consultation_v2.js": "5a6a510f32921234f7f65e2c216b48f4c9deda08",
   "worker/src/daily_transits.js": "020dbbaa3b0cc3c69afd196caffe4ca495b19c68",
-  "worker/src/fortune.js": "fc152319576ac32a8697fdbe4f946e84c97b6acd",
+  "worker/src/fortune.js": "34e65fad5510fa5f476873c0b69ecb34f4f32bff",
   "worker/src/index.js": "7e809fc63c2bf7c8f7d992b8f539fb68a9f2113a",
   "worker/src/line_narrative.js": "93091e28628269e8d3482cba68098649ff104720",
   "worker/src/relocation.js": "554bae08f5ebbfe2d677d482071112eab401893c",

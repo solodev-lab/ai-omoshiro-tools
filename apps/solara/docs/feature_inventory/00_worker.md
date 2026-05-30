@@ -508,7 +508,7 @@ astronomy-engine API:
 **export (1):** `computeDailyTransits`
 
 
-### `worker/src/fortune.js` (419 行)
+### `worker/src/fortune.js` (441 行)
 
 **ファイル先頭コメント:**
 
@@ -538,9 +538,9 @@ houses: そのカテゴリで重視する伝統占星術のハウス番号
 
 **Durable Object 使用 (4 行):**
 
-- 出現行: L310, L312, L312, L312
+- 出現行: L331, L333, L333, L333
 
-**export (3):** `computeCategoryScore`, `callGemini`, `handleFortune`
+**export (4):** `computeCategoryScore`, `callGemini`, `stripTransitLabel`, `handleFortune`
 
 
 ### `worker/src/index.js` (1648 行)

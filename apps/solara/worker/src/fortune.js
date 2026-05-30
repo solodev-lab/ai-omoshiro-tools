@@ -254,6 +254,7 @@ ${patternLines.join('\n') || '(none)'}
 🔴 Structure rules (in this order of importance):
 - The CORE of the writing is the concrete description of how today's transits activate the natal planets.
   Example: "Mercury opposes natal Mars — sparks fly in words." Always put today's movement concretely into the body.
+- 🔴 Naming rule (important): In the prose, do NOT prefix transiting planets with "transit/transiting" — use the bare planet name (e.g., "the Moon", "Mars"). Since today's sky is the default subject, an unlabeled planet name means the transit. Never put the literal word "transit"/"transiting" in the body. DO label natal planets ("natal Moon") and progressed planets ("progressed Venus") to distinguish them from transits.
 - House references are OPTIONAL and limited to AT MOST ONCE in the body. Phrasings like "(planet) activates the (N)th house" are fine — keep it light.
   Do not repeat house numbers (5H, 7H, etc.) or life-area names (romance/home/career/marriage) more than once.
 - Innate natal aspects are background context — at most one mention, one sentence.
@@ -291,6 +292,7 @@ ${patternLines.join('\n') || '(なし)'}
 🔴 構成ルール (この順で重要):
 - 文章の中心は「今日のトランジット相が出生天体をどう刺激しているか」の動きの描写。
   例: 「水星が出生火星にオポジション → 言葉に火花が散る」のように、今日の動きを具体的に必ず本文に出してください。
+- 🔴 呼称ルール (重要): 本文では、トランジット惑星に「トランジットの」を付けず惑星名のみで書いてください (例:「トランジットの月」→「月」、「トランジットの火星」→「火星」)。今日の空が主役なので、無印の惑星名は既定でトランジットを指します。「トランジット」「Transit」という語そのものを本文に出さないでください。一方、出生(ネイタル)惑星は「出生の月」、プログレス惑星は「プログレスの(進行の)金星」のように明示して、トランジットと区別してください。
 - ハウスへの言及は任意・本文中で最大 1 回まで。「(惑星) が (N) ハウスを刺激する」程度に控えめに。
   ハウス番号 (5H, 7H 等) や領域名 (恋愛/家庭/職場/結婚) を 2 回以上連発しないでください。
 - 出生図のアスペクト(生来の傾向)は「前提」として最大 1 回・1 文以内で。
@@ -305,6 +307,25 @@ ${patternLines.join('\n') || '(なし)'}
   "reading": "<${catName}にフォーカスし、今日のトランジットを主役にした詩的な鑑定 (3〜5 文)。200〜300 文字程度>",
   "advice": "<実践的なアドバイス (1〜2 文)。130〜180 文字程度>"
 }`;
+}
+
+/**
+ * 鑑定文から「トランジット/Transit」という語を除去する保険 (プロンプト指示すり抜け対策)。
+ * Horo の星読みはトランジット惑星が主役なので、無印の惑星名 (例「月」) で書かせる方針。
+ * 「トランジットの月」→「月」のように接頭辞だけ外す。出生(Natal)/プログレスのラベルは残す。
+ */
+export function stripTransitLabel(text, lang) {
+  if (!text) return text;
+  let t = text;
+  if (lang === 'en') {
+    t = t
+      .replace(/\btransiting\s+/gi, '')
+      .replace(/\btransit(?:s|ing)?\b/gi, '');
+  } else {
+    t = t.replace(/トランジットの/g, '').replace(/トランジット/g, '');
+  }
+  // 除去後の二重スペース / 句読点前スペースを軽く整える。
+  return t.replace(/[ \t]{2,}/g, ' ').replace(/\s+([、。,.])/g, '$1').trim();
 }
 
 // ── DO 呼出ラッパー (deps で差し替え可能、デフォルトは env.ATTESTATION_DO 経由) ──
@@ -365,12 +386,13 @@ export async function handleFortune(body, env, deps = {}) {
       appUserId, localDate: date, category, lang,
     });
     if (got.status === 200 && got.body && got.body.found) {
-      // 当日既に生成済 → 同じ結果を返す (Gemini 呼ばない)
+      // 当日既に生成済 → 同じ結果を返す (Gemini 呼ばない)。
+      // 旧キャッシュ (トランジット接頭辞付き) も返却時にサニタイズして即反映する。
       return {
         category,
         score: got.body.score,
-        reading: got.body.reading,
-        advice: got.body.advice,
+        reading: stripTransitLabel(got.body.reading, lang),
+        advice: stripTransitLabel(got.body.advice, lang),
         lang,
         cached: true,
       };
@@ -404,8 +426,8 @@ export async function handleFortune(body, env, deps = {}) {
     }
   }
 
-  const reading = parsed.reading || '';
-  const advice = parsed.advice || '';
+  const reading = stripTransitLabel(parsed.reading || '', lang);
+  const advice = stripTransitLabel(parsed.advice || '', lang);
 
   // 5. DO に保存 (ON CONFLICT DO NOTHING で並行リクエストでも安全)
   if (cacheEligible) {

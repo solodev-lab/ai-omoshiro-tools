@@ -452,7 +452,7 @@
 
 ### 変更されたファイル (層別)
 
-- **層 4a**: `lib/screens/map_screen.dart`
+- **層 0**: `worker/src/fortune.js`
 
 ## #7 astro_glossary 用語辞書対整合
 

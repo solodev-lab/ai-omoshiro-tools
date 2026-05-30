@@ -14,7 +14,24 @@
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { handleFortune } from '../src/fortune.js';
+import { handleFortune, stripTransitLabel } from '../src/fortune.js';
+
+test('stripTransitLabel: 日本語は「トランジットの」接頭辞を除去し惑星名だけ残す', () => {
+  assert.equal(
+    stripTransitLabel('トランジットの月が出生の火星を刺激し、プログレスの金星が支える。', 'ja'),
+    '月が出生の火星を刺激し、プログレスの金星が支える。',
+  );
+  // 「トランジット」単独も除去。出生/プログレスは残す。
+  assert.equal(stripTransitLabel('トランジット火星が活性化。', 'ja'), '火星が活性化。');
+  assert.equal(stripTransitLabel('出生の月とプログレスの太陽。', 'ja'), '出生の月とプログレスの太陽。');
+});
+
+test('stripTransitLabel: 英語は transit/transiting を除去し natal/progressed は残す', () => {
+  assert.equal(
+    stripTransitLabel('Transiting Moon meets natal Mars, progressed Venus supports.', 'en'),
+    'Moon meets natal Mars, progressed Venus supports.',
+  );
+});
 
 const DEFAULT_BODY = {
   category: 'overall',
