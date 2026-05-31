@@ -1,8 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../../utils/pro_status.dart';
-import '../../widgets/pro_unlock_dialog.dart';
-
 /// ============================================================
 /// Time Slider — Tier A #5 / CCG (Cyclo*Carto*Graphy)
 ///
@@ -191,10 +188,20 @@ class MapTimeSliderState extends State<MapTimeSlider> {
 
   /// 分を delta 刻み (典型: +10) で進める。
   /// 60 を超えたら時間に繰り上がり、24 時に達したら日付に繰り上がる。
+  /// 分ステップ。常に 10 分グリッドに合わせる (2026-05-31: 1 分刻みは廃止)。
+  /// グリッド外の時刻 (例 10:33、Daily の地図アイコン経由) からは
+  ///   △ → 次の 10 分グリッド (10:40) / ▽ → 手前の 10 分グリッド (10:30)。
+  /// グリッド上 (10:30) では通常の ±10 分 (△→10:40 / ▽→10:20)。
+  /// delta は方向の指示にのみ使う (符号のみ参照)。
   void _stepMinute(int delta) {
+    final base = widget.date ?? DateTime.now();
+    final actualMin = base.toLocal().minute;
+    final floorMin = (actualMin ~/ 10) * 10;
+    final onGrid = actualMin % 10 == 0;
+    final targetMin =
+        delta > 0 ? floorMin + 10 : (onGrid ? floorMin - 10 : floorMin);
     final curHour = _committedHourJst();
-    final curMin = _committedMinuteJst();
-    final totalMin = curHour * 60 + curMin + delta;
+    final totalMin = curHour * 60 + targetMin;
     // 1 日 = 1440 分。負・1440超えを正規化。
     final normMin = ((totalMin % 1440) + 1440) % 1440;
     final dayDelta = (totalMin < 0)
@@ -205,7 +212,6 @@ class MapTimeSliderState extends State<MapTimeSlider> {
     if (dayDelta != 0) {
       _commitDayShiftAndTime(dayDelta, nextHour, nextMin);
     } else {
-      final base = widget.date ?? DateTime.now();
       final local = base.toLocal();
       final newLocal = DateTime(
         local.year, local.month, local.day, nextHour, nextMin, 0,
@@ -432,38 +438,19 @@ class MapTimeSliderState extends State<MapTimeSlider> {
       // 分用 ◀▶ (10 分刻み) を 2 個配置:
       //   gap 4 + ◀ 32 + gap 4 + ▶ 32 + gap 4 = 76 (ぴったり一致)
       //
-      // Phase 2-8: 長押しで Pro 1 分刻みステップ。Free 長押し → Pro ダイアログ。
+      // 2026-05-31: Pro 1 分刻み (長押し) は廃止。常に 10 分グリッド。
       const SizedBox(width: 4),
       _stepperBtn(
         icon: Icons.arrow_left,
         onTap: () => _stepMinute(-10),
-        onLongPress: () => _stepMinuteFine(-1),
       ),
       const SizedBox(width: 4),
       _stepperBtn(
         icon: Icons.arrow_right,
         onTap: () => _stepMinute(10),
-        onLongPress: () => _stepMinuteFine(1),
       ),
       const SizedBox(width: 4),
     ]);
-  }
-
-  /// Phase 2-8: 1 分刻みの分ステップ (Pro 限定)。
-  ///
-  /// Free ユーザーが長押しすると Pro 案内ダイアログを表示し、ステップ自体は行わない。
-  /// Pro ユーザーは長押しで ±1 分シフト (通常タップの ±10 分より精度が高い)。
-  void _stepMinuteFine(int delta) {
-    if (!ProStatus.instance.isPro) {
-      showProUnlockDialog(
-        context,
-        featureLabel: '1 分刻みスライダー',
-        description: '長押しで時刻を 1 分単位で進めます。アスペクトの正確時刻や '
-            '天頂通過の瞬間を細かく追跡するための高精度モードです。',
-      );
-      return;
-    }
-    _stepMinute(delta);
   }
 
   SliderThemeData _sliderTheme({bool green = false}) {

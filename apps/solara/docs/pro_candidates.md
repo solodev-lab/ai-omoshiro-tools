@@ -272,10 +272,11 @@ Sanctuary に既に実装済の Cosmic Pro UI（$9.99/月・$49.99/年）の訴�
 |---|---|---|---|
 | ACG | 4 フレーム全て Free（natal/transit/prog/solarArc） | — | ↩ Free (2026-05-31、旧 2-7 で Pro 化 → 巻き戻し) |
 | CCG | 閲覧可（現住所基準。今すでに動作） | Pro ゲートは「転居先・遠隔地から見る」= 引越し | ✅ 2-7 (relocate) |
-| 天頂/天底点 | 表示 | 天頂帯・天底帯のオーブ塗りマークアップ（Lewis L5/L6、公開後） | 公開後 |
+| 天頂/天底点 | 表示 | — | (天頂/天底点は Free) |
+| 天頂帯/天底帯 | — | 緯度帯表示 (Lewis 流) | ✅ Pro (2026-05-31、`_isProGatedBandKey` で `zenithBand_*`/`nadirBand_*` を prefix ゲート、ACG サブピル経由) |
 | 引越し | — | Pro | ✅ 2-7 |
 | アスペクトライン | 40 本 (conjunction) | 120 本（**B1**、square/trine/sextile を追加） | ✅ 2-7 (aspectLines)、UI トグルは非 ACG=`MapDisplayMenu`、ACG=`AstroCartoFramePills` 第1層末尾 (2026-05-17 追加) |
-| 時計スライダー | 10 分刻み（タップ）| 1 分刻み（長押し） | ✅ 2-8 (`_stepperBtn.onLongPress` + Pro ダイアログ) |
+| 時計スライダー | 10 分刻み | 10 分刻み | ↩ Free (2026-05-31、1 分刻み Pro を廃止。グリッドスナップ式に) |
 | LOCATION 枠 | 5 個 (Free 上限) | 10 個 | ✅ 2-8 (`SlotManager.maxSlots` getter で ProStatus 参照) |
 | オーブ設定 | **Free**（「読み取りツールを自分で調整する」思想を優先） | — | (Free 確定) |
 | Forecast 期間 | 1 年（year offset 0 のみ） | 5 年（F3、year offset 0〜4） | ✅ 2-8 (`_setYearOffset` で year>0 を Free gate) |

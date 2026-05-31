@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 31 / 総行数: 10836
+- ファイル数: 31 / 総行数: 10834
 - class/mixin/extension/enum: 97
 - 関数 (top-level + method の素拾い): 276
 - Navigator.push 等: 0
@@ -1033,7 +1033,7 @@ showInfoPopup 経由で表示する (widgets/info_popup.dart、popup 統一規�
 - 集計: `showInfoPopup`×1
 
 
-### `lib/screens/paywall_comparison.dart` (312 行)
+### `lib/screens/paywall_comparison.dart` (311 行)
 
 **ファイル先頭コメント:**
 
@@ -1061,11 +1061,11 @@ Paywall Screen — Free vs Pro 比較テーブル / FAQ アコーディオン
   <details><summary>private 関数 6 件</summary>
 
   - L16 `_buildComparisonTable()`
-  - L72 `_comparisonHeader()`
-  - L120 `_comparisonSection()`
-  - L148 `_comparisonRow()`
-  - L195 `_buildFaqSection()`
-  - L266 `_faqItem()`
+  - L71 `_comparisonHeader()`
+  - L119 `_comparisonSection()`
+  - L147 `_comparisonRow()`
+  - L194 `_buildFaqSection()`
+  - L265 `_faqItem()`
 
   </details>
 
@@ -1168,7 +1168,7 @@ Solara ペイウォール画面 — Phase 2-6b + Suno 風リデザイン (2026-0
   </details>
 
 
-### `lib/screens/paywall_widgets.dart` (425 行)
+### `lib/screens/paywall_widgets.dart` (424 行)
 
 **ファイル先頭コメント:**
 
@@ -1194,9 +1194,9 @@ Paywall Screen — Hero / 課金トグル / Free・Pro 2 カード (Suno 風 cor
   - L97 `_toggleSegment()`
   - L160 `_buildFreeCard()`
   - L208 `_buildProCard()`
-  - L316 `_buildProCta()`
-  - L372 `_cardBadge()`
-  - L396 `_planBullet()`
+  - L315 `_buildProCta()`
+  - L371 `_cardBadge()`
+  - L395 `_planBullet()`
 
   </details>
 

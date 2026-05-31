@@ -5,9 +5,9 @@
 
 ## サマリ
 
-- ファイル数: 23 / 総行数: 13972
+- ファイル数: 23 / 総行数: 13959
 - class/mixin/extension/enum: 87
-- 関数 (top-level + method の素拾い): 308
+- 関数 (top-level + method の素拾い): 307
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 19
 - Worker URL リテラル: 0
@@ -779,48 +779,45 @@ A*C*G ライン (natal / transit) のタップ詳細 popup。
 - L182 `buildOsmAttributionCompact()` — minimap (出生地入力等の小さい埋め込み地図) 用の常時表示版。
 
 
-### `lib/screens/map/map_time_slider.dart` (508 行)
+### `lib/screens/map/map_time_slider.dart` (495 行)
 
-**imports:** dart=0 / package=1 / relative=2
-
-- relative: `../../utils/pro_status.dart`, `../../widgets/pro_unlock_dialog.dart`
+**imports:** dart=0 / package=1 / relative=0
 
 **型定義 (2):**
 
-- L20 `class MapTimeSlider : StatefulWidget`
+- L17 `class MapTimeSlider : StatefulWidget`
   - ============================================================
-- L42 `class MapTimeSliderState : State`
+- L39 `class MapTimeSliderState : State`
   - public State: GlobalKey 経由で map_screen.dart の PopScope から
 
-**関数 (3 public + 21 private):**
+**関数 (3 public + 20 private):**
 
-- L37 `createState()`
-- L48 `closeTimeRow()` — 時刻行が開いていれば閉じる。 開いていなければ何もしない。
-- L229 `build()`
+- L34 `createState()`
+- L45 `closeTimeRow()` — 時刻行が開いていれば閉じる。 開いていなければ何もしない。
+- L235 `build()`
 
-  <details><summary>private 関数 21 件</summary>
+  <details><summary>private 関数 20 件</summary>
 
-  - L55 `_setTimeRowExpanded()`
-  - L73 `_committedDays()`
-  - L84 `_committedHourJst()`
-  - L92 `_committedMinuteJst()`
-  - L103 `_displayMinuteJst()`
-  - L111 `_previewDateJst()`
-  - L122 `_commitDays()`
-  - L141 `_commitHour()`
-  - L151 `_commitDayShiftAndTime()`
-  - L161 `_isLive()`
-  - L164 `_isLiveHour()`
-  - L171 `_stepDay()`
-  - L178 `_stepHour()`
-  - L194 `_stepMinute()`
-  - L217 `_fmtDate()`
-  - L224 `_fmtTime()`
-  - L273 `_buildDayRow()`
-  - L392 `_buildHourRow()`
-  - L456 `_stepMinuteFine()`
-  - L469 `_sliderTheme()`
-  - L483 `_stepperBtn()`
+  - L52 `_setTimeRowExpanded()`
+  - L70 `_committedDays()`
+  - L81 `_committedHourJst()`
+  - L89 `_committedMinuteJst()`
+  - L100 `_displayMinuteJst()`
+  - L108 `_previewDateJst()`
+  - L119 `_commitDays()`
+  - L138 `_commitHour()`
+  - L148 `_commitDayShiftAndTime()`
+  - L158 `_isLive()`
+  - L161 `_isLiveHour()`
+  - L168 `_stepDay()`
+  - L175 `_stepHour()`
+  - L196 `_stepMinute()`
+  - L223 `_fmtDate()`
+  - L230 `_fmtTime()`
+  - L279 `_buildDayRow()`
+  - L398 `_buildHourRow()`
+  - L456 `_sliderTheme()`
+  - L470 `_stepperBtn()`
 
   </details>
 

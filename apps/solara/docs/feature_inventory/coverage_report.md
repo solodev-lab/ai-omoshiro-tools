@@ -399,7 +399,7 @@
 | 3a | 2 | 4 | 2 | 2 | 1 | 1 | 8 | 7 | 4 | 1 | · | · | · | · | 1 | · |
 | 3b | · | · | · | · | · | · | · | 1 | · | · | · | · | · | · | · | · |
 | 3c | · | 5 | 4 | 2 | 4 | · | 12 | 4 | · | · | · | · | · | · | · | · |
-| 4a | 10 | 11 | · | 13 | 8 | · | 19 | 23 | 3 | 30 | 2 | · | · | · | 3 | · |
+| 4a | 10 | 11 | · | 13 | 7 | · | 18 | 23 | 3 | 30 | 2 | · | · | · | 3 | · |
 | 4b | 5 | 13 | · | 3 | 5 | · | 16 | · | · | · | 31 | · | · | 2 | · | · |
 | 4c | 1 | 1 | 15 | 1 | 6 | 5 | 9 | 6 | · | · | · | 17 | · | · | 1 | · |
 | 4d | 3 | 6 | 13 | 1 | 3 | 2 | 11 | 2 | 1 | · | · | · | 9 | · | · | · |
@@ -420,12 +420,12 @@
 | `lib/utils/solara_storage.dart` | 2b | 31 |
 | `lib/widgets/info_popup.dart` | 3a | 24 |
 | `lib/screens/map/map_constants.dart` | 3b | 21 |
-| `lib/utils/pro_status.dart` | 2b | 16 |
+| `lib/utils/pro_status.dart` | 2b | 15 |
 | `lib/utils/solara_api.dart` | 2a | 15 |
 | `lib/models/galaxy_cycle.dart` | 1c | 14 |
 | `lib/screens/horoscope/horo_antique_icons.dart` | 3a | 14 |
 | `lib/models/daily_reading.dart` | 1c | 12 |
-| `lib/widgets/pro_unlock_dialog.dart` | 3a | 12 |
+| `lib/widgets/pro_unlock_dialog.dart` | 3a | 11 |
 | `lib/widgets/tap_to_unfocus.dart` | 3a | 11 |
 | `lib/screens/horoscope/horo_constants.dart` | 1b | 10 |
 | `lib/screens/horoscope/horo_panel_shared.dart` | 4b | 9 |
@@ -450,16 +450,12 @@
 > 各ソースの SHA1 を `_stamps.json` に記録し、差分を検出。
 > 変更されたファイルが属する層は、人手版インベントリ章の見直し対象。
 
-- 追加: **0** / 削除: **0** / 変更: **9**
+- 追加: **0** / 削除: **0** / 変更: **3**
 
 ### 変更されたファイル (層別)
 
-- **層 2b**: `lib/utils/app_attest_client.dart`
-- **層 3a**: `lib/widgets/ai_disclaimer_footer.dart`
-- **層 4a**: `lib/screens/map_screen.dart`
-- **層 4b**: `lib/screens/horoscope/horo_fortune_cards.dart`
-- **層 4c**: `lib/screens/observe_screen.dart`
-- **層 4f**: `lib/screens/ai_consent_screen.dart`, `lib/screens/consultation/consultation_result_card.dart`, `lib/screens/paywall_comparison.dart`, `lib/screens/paywall_widgets.dart`
+- **層 4a**: `lib/screens/map/map_time_slider.dart`
+- **層 4f**: `lib/screens/paywall_comparison.dart`, `lib/screens/paywall_widgets.dart`
 
 ## #7 astro_glossary 用語辞書対整合
 
