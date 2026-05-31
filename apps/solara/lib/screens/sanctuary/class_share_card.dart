@@ -162,15 +162,8 @@ class _ClassShareCardPageState extends State<ClassShareCardPage> {
         elevation: 0,
         iconTheme: const IconThemeData(color: Color(0xFFEAEAEA)),
         title: const Text('称号を共有', style: TextStyle(color: Color(0xFFEAEAEA))),
-        actions: [
-          TextButton(
-            onPressed: () => setState(() => _showShadow = !_showShadow),
-            child: Text(
-              _showShadow ? 'LIGHT 面' : 'SHADOW 面',
-              style: TextStyle(color: _accentColor),
-            ),
-          ),
-        ],
+        // Shadow 面トグルは「気付いた人だけ」の隠し要素にするため撤去。
+        // 切替はプレビューカードのタップのみ (下記 GestureDetector、案内は出さない)。
       ),
       body: SafeArea(
         child: cls == null
@@ -180,20 +173,25 @@ class _ClassShareCardPageState extends State<ClassShareCardPage> {
             : Column(
                 children: [
                   // ── プレビュー (実シェア画像と同じ構造) ──
+                  // カードをタップで Light ⟷ Shadow 切替 (案内は出さない隠し操作)。
                   Expanded(
                     child: Center(
-                      child: AspectRatio(
-                        aspectRatio: 9 / 16,
-                        child: Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: RepaintBoundary(
-                            key: _captureKey,
-                            // 端末のフォント/表示サイズ設定を無視してレイアウト固定
-                            child: MediaQuery(
-                              data: MediaQuery.of(context).copyWith(
-                                textScaler: const TextScaler.linear(1.0),
+                      child: GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onTap: () => setState(() => _showShadow = !_showShadow),
+                        child: AspectRatio(
+                          aspectRatio: 9 / 16,
+                          child: Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: RepaintBoundary(
+                              key: _captureKey,
+                              // 端末のフォント/表示サイズ設定を無視してレイアウト固定
+                              child: MediaQuery(
+                                data: MediaQuery.of(context).copyWith(
+                                  textScaler: const TextScaler.linear(1.0),
+                                ),
+                                child: _buildShareImage(cls),
                               ),
-                              child: _buildShareImage(cls),
                             ),
                           ),
                         ),

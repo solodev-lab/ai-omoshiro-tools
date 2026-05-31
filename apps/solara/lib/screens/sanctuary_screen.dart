@@ -257,6 +257,150 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
     }
   }
 
+  /// Pro として称号を受け直す前に表示する案内ダイアログ。
+  ///
+  /// Free の 1 回再診断では出さず、Pro 機能として「何度でも受け直せる」場合のみ表示する。
+  /// 伝えたいこと:
+  ///   - Pro は称号を何度でも受け取り直せる (毎日でも可)
+  ///   - 太陽星座×月星座から導かれる「二つ名」は不変、変わるのは設問で決まる称号(クラス)のみ
+  ///   - 内的/外的な変化のタイミングで受け直すと「称号 変遷」で成長を辿れる
+  /// 下部に [戻る]（キャンセル）と [OK]（そのまま診断へ）を配置する。
+  void _showRediagnoseProGuide(BuildContext anchorCtx) {
+    showDialog<void>(
+      context: anchorCtx,
+      barrierColor: const Color(0x99000000),
+      builder: (ctx) => Dialog(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 380),
+          child: Container(
+            padding: const EdgeInsets.fromLTRB(24, 24, 24, 18),
+            decoration: BoxDecoration(
+              color: const Color(0xEE0C0C1A),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: const Color(0x44F6BD60)),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // ── ヘッダ ──
+                const Row(
+                  children: [
+                    Icon(Icons.auto_awesome, color: Color(0xFFF9D976), size: 22),
+                    SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        '✦ 称号の受け直しについて',
+                        style: TextStyle(
+                          color: Color(0xFFF6D98A),
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 0.6,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                // ── リード文 (Pro 特典) ──
+                const Text(
+                  'Cosmic Pro では、称号を何度でも受け取り直すことができます。',
+                  style: TextStyle(
+                    color: Color(0xFFEAEAEA),
+                    fontSize: 14.5,
+                    height: 1.6,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                // ── 変わるもの / 変わらないもの ──
+                const Text(
+                  'ただし、あなたの太陽星座・月星座から導かれる「二つ名」そのものは変わりません。'
+                  '変わるのは、設問への答えで形づくられる「称号（クラス）」の部分だけです。',
+                  style: TextStyle(
+                    color: Color(0xFFC9C9D4),
+                    fontSize: 13,
+                    height: 1.75,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                // ── 推奨される使い方 (変遷で成長を辿る) ──
+                const Text(
+                  '称号は一つひとつの設問と深く結びついています。'
+                  'ご自身の内面の変化や、環境の変化を感じたときに受け直すと、'
+                  'のちに「称号 変遷」で振り返ったとき、'
+                  'あなたの成長や移ろいを辿ることができます。',
+                  style: TextStyle(
+                    color: Color(0xFFC9C9D4),
+                    fontSize: 13,
+                    height: 1.75,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                const Text(
+                  'もちろん毎日受け直していただいても構いません。'
+                  'そんな使い方もある、というご案内をそっとお伝えしておきます。',
+                  style: TextStyle(
+                    color: Color(0xFFC9C9D4),
+                    fontSize: 13,
+                    height: 1.75,
+                  ),
+                ),
+                const SizedBox(height: 22),
+                // ── 下部ボタン: 戻る / OK ──
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextButton(
+                        onPressed: () => Navigator.of(ctx).pop(),
+                        style: TextButton.styleFrom(
+                          foregroundColor: const Color(0xFFACACAC),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                        ),
+                        child: const Text('戻る', style: TextStyle(fontSize: 15)),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () {
+                          Navigator.of(ctx).pop();
+                          _startDiagnosis();
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 13),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(12),
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFFF9D976), Color(0xFFE8A840)],
+                            ),
+                          ),
+                          child: const Center(
+                            child: Text(
+                              'OK',
+                              style: TextStyle(
+                                color: Color(0xFF0A0A14),
+                                fontSize: 15,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 1,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   void _openHomeEditor() async {
     final result = await Navigator.of(context).push<SolaraProfile>(
       MaterialPageRoute(
@@ -617,18 +761,12 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
           // 2026-05-12 SHADOW flip 復活: 一言シャドー（10〜18文字）に短縮したことで
           // Solara イメージとの整合性が取れた為、再有効化。
           // タップで LIGHT ↔ SHADOW をトグル。
+          // シャドーは「気付いた人だけ」が見れる隠し要素 → タップ案内は出さない。
           GestureDetector(
             onTap: () => setState(() => _titleFlipped = !_titleFlipped),
             child: _buildTitleFlipCard(),
           ),
-          const SizedBox(height: 6),
-          Center(
-            child: Text(
-              _titleFlipped ? 'tap to show LIGHT' : 'tap to show SHADOW',
-              style: const TextStyle(fontSize: 12, color: Color(0x80ACACAC), letterSpacing: 1.2),
-            ),
-          ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 16),
         ],
         // HTML: #titleStartBtn — gold button (shown when not yet diagnosed)
         if (_titleLight == null) ...[
@@ -688,8 +826,11 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
               final canRedo = isPro || canRedoFree;
               final showProLabel = !canRedo;
               return GestureDetector(
+                // Free の 1 回再診断 → 案内なしで直接診断へ。
+                // Pro 機能として受け直す場合のみ、再診断前に「称号の受け直しについて」
+                // の案内を表示し、OK で診断へ / 戻るでキャンセルする。
                 onTap: canRedo
-                    ? _startDiagnosis
+                    ? (isPro ? () => _showRediagnoseProGuide(ctx) : _startDiagnosis)
                     : () => showProUnlockDialog(
                           ctx,
                           featureLabel: 'クラスの取り直し',

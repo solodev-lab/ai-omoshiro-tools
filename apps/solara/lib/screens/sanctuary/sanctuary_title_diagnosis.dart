@@ -1235,11 +1235,10 @@ class _SanctuaryTitleDiagnosisPageState extends State<SanctuaryTitleDiagnosisPag
     final t = _revealCtrl.value * 7;
     final cls = title_data.getClassByAxisCourt(_revealAxis, _revealCourt);
 
-    return GestureDetector(
-      onTap: _toggleShadowSide,
-      behavior: HitTestBehavior.opaque,
-      child: Center(child: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 28),
+    // シャドーは「気付いた人だけ」が見れる隠し要素。誘導は一切出さず、
+    // フリップのトリガはカード(ClassCard)のタップのみ (画面全体タップは廃止)。
+    return Center(child: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 20),
         child: Column(mainAxisSize: MainAxisSize.min, children: [
           // ── Light の言葉 (最上段、ゴールド) ──
           Opacity(opacity: (t / 1.5).clamp(0.0, 1.0),
@@ -1258,9 +1257,9 @@ class _SanctuaryTitleDiagnosisPageState extends State<SanctuaryTitleDiagnosisPag
                   style: const TextStyle(fontSize: 11, color: Color(0x80EAEAEA), letterSpacing: 3)),
               ])),
           // ── divider ──
-          Container(width: 200 * ((t - 2.0) / 1.0).clamp(0.0, 1.0), height: 1, margin: const EdgeInsets.symmetric(vertical: 18),
+          Container(width: 200 * ((t - 2.0) / 1.0).clamp(0.0, 1.0), height: 1, margin: const EdgeInsets.symmetric(vertical: 14),
             decoration: const BoxDecoration(gradient: LinearGradient(colors: [Colors.transparent, Color(0xFFF9D976), Colors.transparent]))),
-          // ── ClassCard (メインビジュアル) ──
+          // ── ClassCard (メインビジュアル) — タップでシャドー面へフリップ (案内なし) ──
           if (cls != null)
             Opacity(opacity: ((t - 2.8) / 1.5).clamp(0.0, 1.0),
               child: Transform.scale(scale: 0.85 + 0.15 * ((t - 2.8) / 1.5).clamp(0.0, 1.0),
@@ -1269,8 +1268,9 @@ class _SanctuaryTitleDiagnosisPageState extends State<SanctuaryTitleDiagnosisPag
                   width: 260,
                   mode: ClassCardMode.none,
                   showGlow: true,
+                  onTap: _toggleShadowSide,
                 ))),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
           // ── クラス Light テキスト (カード下、Shadow 面と対をなす) ──
           Opacity(opacity: ((t - 4.5) / 1.0).clamp(0.0, 1.0),
             child: Text('✦ $_revealClsLightJP ✦', textAlign: TextAlign.center,
@@ -1280,12 +1280,7 @@ class _SanctuaryTitleDiagnosisPageState extends State<SanctuaryTitleDiagnosisPag
           Opacity(opacity: ((t - 5.0) / 1.0).clamp(0.0, 1.0),
             child: Text(_revealTitleEN, textAlign: TextAlign.center,
               style: const TextStyle(fontSize: 13, color: Color(0x80F9D976), letterSpacing: 2, fontStyle: FontStyle.italic))),
-          const SizedBox(height: 18),
-          // ── シャドー誘導ヒント ──
-          Opacity(opacity: ((t - 6.0) / 0.8).clamp(0.0, 1.0),
-            child: const Text('✦ タップしてシャドーを見る ✦',
-              style: TextStyle(fontSize: 12, color: Color(0xAAF9D976), letterSpacing: 3))),
-          const SizedBox(height: 24),
+          const SizedBox(height: 20),
           // ── ボタン群 ──
           Opacity(opacity: ((t - 6.2) / 0.8).clamp(0.0, 1.0),
             child: Column(children: [
@@ -1311,18 +1306,15 @@ class _SanctuaryTitleDiagnosisPageState extends State<SanctuaryTitleDiagnosisPag
                 ),
               ],
             ])),
-        ]))),
-    );
+        ])));
   }
 
   // ── Back: Shadow side ─────────────────────────────────
   Widget _buildRevealShadowSide() {
     final cls = title_data.getClassByAxisCourt(_revealAxis, _revealCourt);
-    return GestureDetector(
-      onTap: _toggleShadowSide,
-      behavior: HitTestBehavior.opaque,
-      child: Center(child: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 28),
+    // Light 面同様、ライトへ戻す動作もカードタップのみ (案内・誘導なし)。
+    return Center(child: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 20),
         child: Column(mainAxisSize: MainAxisSize.min, children: [
           // ── 一言シャドー (タイトル、アメジスト) ──
           Text('✦ $_revealTitleJP ✦', textAlign: TextAlign.center,
@@ -1338,25 +1330,23 @@ class _SanctuaryTitleDiagnosisPageState extends State<SanctuaryTitleDiagnosisPag
                 style: TextStyle(fontSize: 11, color: const Color(0xFFC9A8E0).withValues(alpha: 0.55), letterSpacing: 4)),
             ]),
           // ── divider (アメジスト) ──
-          Container(width: 200, height: 1, margin: const EdgeInsets.symmetric(vertical: 18),
+          Container(width: 200, height: 1, margin: const EdgeInsets.symmetric(vertical: 14),
             decoration: const BoxDecoration(gradient: LinearGradient(colors: [Colors.transparent, Color(0xFFC9A8E0), Colors.transparent]))),
           // ── ClassCard (mode=none: 外側のテキスト群と重複しないよう画像のみ) ──
+          // タップでライト面へ戻る (案内なし)
           if (cls != null)
             ClassCard(
               classData: cls,
               width: 260,
               mode: ClassCardMode.none,
               showGlow: true,
+              onTap: _toggleShadowSide,
             ),
-          const SizedBox(height: 18),
+          const SizedBox(height: 14),
           // ── クラス Shadow テキスト ──
           Text('✦ $_revealShadowJP ✦', textAlign: TextAlign.center,
             style: const TextStyle(fontSize: 14, color: Color(0xFFD7BCEC), height: 1.6, fontStyle: FontStyle.italic)),
           const SizedBox(height: 20),
-          // ── ライト誘導ヒント ──
-          const Text('◀ タップしてライトに戻る',
-            style: TextStyle(fontSize: 12, color: Color(0xAAC9A8E0), letterSpacing: 3)),
-          const SizedBox(height: 24),
           // ── ボタン群 (シャドー配色) ──
           Column(children: [
             GestureDetector(onTap: _accept, child: Container(width: double.infinity, padding: const EdgeInsets.symmetric(vertical: 14),
@@ -1379,7 +1369,6 @@ class _SanctuaryTitleDiagnosisPageState extends State<SanctuaryTitleDiagnosisPag
               ),
             ],
           ]),
-        ]))),
-    );
+        ])));
   }
 }
