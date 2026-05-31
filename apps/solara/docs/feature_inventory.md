@@ -3292,3 +3292,19 @@ Flutter 標準の状態復元 (`restorationScopeId` + `RestorableProperty`) は 
 
 開発者向けオプション →「**アクティビティを保持しない**」を一時 ON にすると、アプリを離れて戻るたびに必ず
 コールド再起動が起き、全復元ケースを毎回・確実にテストできる (= 通常はランダムなプロセス死を強制再現)。検証後は OFF に戻す。
+
+---
+
+## 本セッション追加機能 (2026-05-31 セッション2) — §0.2.29〜§0.2.35
+
+> 30分デルタ Pro / Play Integrity TO 修正 / 免責注記 / Paywall・同意・相談入力 調整。詳細は session_log 2026-05-31。層別の詳細反映は次セッションのタスク。**worker (§0.2.29/§0.2.30) は本番未 deploy**。
+
+- **§0.2.29 おでかけ相談 Pro 時刻指定 + 30分経過後を見る**: 相談入力 (おでかけ) に 1時間刻みドラム (`consultation_input_when_scope.dart` の `showConsultationHourPicker`/`_HourDrumSheet`、Pro)。`ConsultationWhen.atUtcMs` を worker へ送信。worker `consultation_engine.js` が `transitInstants` で指定時刻を尊重 + `computeTimeDelta()` が候補地ごと +30分後の CCG 線移動 (`{planet,angle,aspect,dir,fromKm,toKm}`) を算出 → `consultation_v2.js` が同一 Gemini 呼び出しに同梱して `candidate.deltaAfter={deltaMin,changes,narrative}` を返す (コスト中立)。結果カード `_DeltaAfterSection` (ボタン+reveal+iボタン+`_DeltaChip`)。
+- **§0.2.30 再加入クレジット封じ込め (worker)**: `webhooks/revenuecat.js` の `INITIAL_PURCHASE`→週次クレジット全リセット呼び出しを削除。再加入では週次クレジットは復活しない (月曜 weekly reset のみ)。2026-05-29 の決定をオーナーが反転。**要 worker deploy**。
+- **§0.2.31 Play Integrity 遅延 TO 修正**: `utils/app_attest_client.dart` に `_kAttestStepTimeout=8s` を challenge fetch + verify の各段 (iOS/Android) に適用。cold verify ~161s が 60s クライアント TO を超過し /protected が失敗 →「Stellaの声が届きませんでした」となっていた真因。失敗時は従来通り graceful degrade。
+- **§0.2.32 AI 解釈の免責注記**: `widgets/ai_disclaimer_footer.dart` に `StellaInterpretationNote` を追加し、Horo (`horo_fortune_cards.dart`) / Tarot (`observe_screen.dart`) / 相談・30分デルタ (`consultation_result_card.dart`) の各結果で既存 `AiDisclaimerFooter` の上に表示。
+- **§0.2.33 Paywall 修正 + 天頂帯/天底帯 Pro 化**: `paywall_comparison.dart`/`paywall_widgets.dart` — Free タロット文言「1日1回（カテゴリ指定はクレジット消費）」、時刻スライダー/保存拠点数を分離、Forecast 5年予測をアスペクトラインより上に移動+訴求、ACG 比較セル Pro=Free。`map_screen.dart` の `_proGatedAstroKeys` + `_isProGatedBandKey`(zenithBand/nadirBand) で天頂帯/天底帯を Pro ゲート + 比較表に行追加。
+- **§0.2.34 時刻スライダー 10分グリッド統一**: `map/map_time_slider.dart` の `_stepMinute` を 10分グリッドスナップに書換え (off-grid △=ceil/▽=floor、10:33→△10:40/▽10:30)。1分刻み (Pro) の `_stepMinuteFine` + Pro ゲート + pro_status/pro_unlock_dialog import を撤廃。Paywall 記載も削除。daily transit サブタイトル →「天体から場所を読む」。
+- **§0.2.35 同意画面 + 相談入力 文言**: `ai_consent_screen.dart` タイトル「✦ Solara ✦」(両側対称) + 「現役の占星術師である私が」。`consultation/consultation_input_screen.dart` にタイトル下 `_ConsultIntroNote` (簡単説明) + タイトル右 i ボタン → `showConsultAboutPopup`/`_ConsultAboutContent` (3部: 相談とは / 読み解くデータ=Free/Pro のデータ規模を具体数字で / Solara 開発者より)。
+
+> 関連: デッドコード削除 (`galaxy_archive_filter.currentIsPro` / `observe_history_filter.observeHistoryIsPro`・`cardForId`) は機能ではないため §番号なし (commit `6ad477b`)。
