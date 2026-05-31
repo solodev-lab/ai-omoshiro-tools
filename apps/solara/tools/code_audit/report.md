@@ -47,10 +47,10 @@
 | 490 | 🟡 NOTICE | lib/utils/app_attest_client.dart |
 | 488 | 🟡 NOTICE | lib/screens/consultation/consultation_history_widgets.dart |
 | 487 | 🟡 NOTICE | lib/screens/map/map_overlays.dart |
+| 486 | 🟡 NOTICE | lib/utils/solara_auth.dart |
 | 481 | 🟡 NOTICE | lib/widgets/full_moon_overlay.dart |
 | 476 | 🟡 NOTICE | lib/screens/sanctuary/class_share_card.dart |
 | 467 | 🟡 NOTICE | lib/screens/horoscope/horo_relocation_panel.dart |
-| 459 | 🟡 NOTICE | lib/utils/solara_auth.dart |
 | 449 | 🟡 NOTICE | lib/main.dart |
 | 445 | 🟡 NOTICE | lib/widgets/catasterism_overlay.dart |
 | 438 | 🟡 NOTICE | lib/screens/galaxy/galaxy_star_atlas.dart |
@@ -321,7 +321,7 @@
 
 ## 4. print()/debugPrint() 残置
 
-  - lib/utils/solara_auth.dart:366 — `if (kDebugMode) debugPrint('[SolaraAuth] server purge failed: $e');`
+  - lib/utils/solara_auth.dart:368 — `if (kDebugMode) debugPrint('[SolaraAuth] server purge failed: $e');`
 
 ## 5. 未使用 private member 候補 (file 内 reference == 1)
 
