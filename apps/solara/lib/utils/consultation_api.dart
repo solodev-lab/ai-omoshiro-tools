@@ -13,7 +13,10 @@ import 'package:http/http.dart' as http;
 
 import 'app_attest_client.dart';
 import 'solara_api.dart'
-    show solaraConsultationCreditsUrl, solaraConsultationWelcomeGrantUrl;
+    show
+        solaraConsultationCreditsUrl,
+        solaraConsultationWelcomeGrantUrl,
+        solaraConsultationMigratePurchasedUrl;
 
 // 旧 ConsultationCreditEvents (notify-only ChangeNotifier) は 2026-05-26 に
 // ConsultationCredits (state-holder singleton, lib/utils/consultation_credits.dart) へ
@@ -181,16 +184,19 @@ class WelcomeGrantResult {
 }
 
 /// `/protected/consultation/welcome-grant` を呼び、ウェルカム特典 (恒久クレジット) を
-/// 付与する。**呼び出し側 (= 新規完了者判定) で「付与すべき」と判断した時だけ呼ぶこと。**
-/// Worker 側は端末固定キーで冪等付与する (二重付与/farming 防止) ので、何度呼んでも
-/// 安全 (2 回目以降は alreadyGranted=true)。失敗時 null。
+/// 付与する。**呼び出し側で「付与すべき」と判断した時だけ呼ぶこと。**
+/// [kind] = 'profile' (出生地+現住所を揃えた、端末単位で 1 回) /
+///          'signin' (初回 Google/Apple サインイン、アカウント単位で 1 回)。
+/// Worker 側で冪等付与する (二重付与/farming 防止) ので何度呼んでも安全。失敗時 null。
 Future<WelcomeGrantResult?> grantWelcomeCredits({
+  String kind = 'profile',
   Duration timeout = const Duration(seconds: 15),
   http.Client? client,
 }) async {
   final c = client ?? http.Client();
   try {
-    final merged = AppAttestClient.withAppUserIdMerged(<String, dynamic>{});
+    final merged =
+        AppAttestClient.withAppUserIdMerged(<String, dynamic>{'kind': kind});
     final bodyBytes = utf8.encode(json.encode(merged));
     final headers = <String, String>{'Content-Type': 'application/json'};
     await AppAttestClient.instance.addHeaders(headers, bodyBytes);
@@ -212,4 +218,35 @@ Future<WelcomeGrantResult?> grantWelcomeCredits({
     if (client == null) c.close();
   }
   return null;
+}
+
+/// `/protected/consultation/migrate-purchased` を呼び、匿名 app_user_id に貯まった
+/// 恒久クレジット残高を、サインイン後の認証済 id ([toAppUserId] = 現在の app_user_id) へ
+/// 移送する。[fromAppUserId] は logIn 前の匿名 id ($RCAnonymousID:...)。
+/// Worker 側で「from が匿名のみ + 冪等」を担保。成功時 true、失敗/対象外でも握り潰す。
+Future<bool> migratePurchasedCredits(
+  String fromAppUserId, {
+  Duration timeout = const Duration(seconds: 15),
+  http.Client? client,
+}) async {
+  final c = client ?? http.Client();
+  try {
+    final merged = AppAttestClient.withAppUserIdMerged(
+        <String, dynamic>{'fromAppUserId': fromAppUserId});
+    final bodyBytes = utf8.encode(json.encode(merged));
+    final headers = <String, String>{'Content-Type': 'application/json'};
+    await AppAttestClient.instance.addHeaders(headers, bodyBytes);
+    final res = await c
+        .post(
+          Uri.parse(solaraConsultationMigratePurchasedUrl),
+          headers: headers,
+          body: bodyBytes,
+        )
+        .timeout(timeout);
+    return res.statusCode == 200;
+  } catch (_) {
+    return false;
+  } finally {
+    if (client == null) c.close();
+  }
 }

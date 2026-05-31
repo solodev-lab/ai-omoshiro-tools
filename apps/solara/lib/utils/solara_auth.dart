@@ -34,6 +34,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
 import 'app_attest_client.dart';
+import 'consultation_api.dart' show grantWelcomeCredits, migratePurchasedCredits;
+import 'consultation_credits.dart';
 import 'purchases_service.dart';
 import 'solara_api.dart';
 
@@ -418,13 +420,38 @@ class SolaraAuth extends ChangeNotifier {
     _account = account;
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_kPrefsKey, jsonEncode(account.toJson()));
+    // サインイン前 (匿名) の app_user_id を控える (移送の from に使う)。
+    final oldAppUserId = PurchasesService.instance.appUserId;
     // RevenueCat に uid を渡す。configured されていなければ no-op。
     try {
       await PurchasesService.instance.logIn(account.uid);
     } catch (_) {
       // 失敗してもサインイン自体は成立とみなす (Pro 復元は次回起動で再試行)
     }
+    // 匿名残高の移送 + 初回サインイン特典 (恒久クレジット)。UI はブロックしない。
+    unawaited(
+        _onSignedInCredits(oldAppUserId, PurchasesService.instance.appUserId));
     notifyListeners();
+  }
+
+  /// サインイン完了時のクレジット処理 (best-effort、失敗は握り潰す)。
+  ///   1. 匿名→認証で id が変わったら、匿名 id の恒久クレジット残高を認証 id へ移送
+  ///      (匿名に取り残されるのを防ぐ。Worker 側は匿名 from のみ許可 = 窃取防止)。
+  ///   2. 初回 Google/Apple サインイン特典をアカウント単位で 1 回付与 (冪等)。
+  ///   3. 残高表示を更新。
+  Future<void> _onSignedInCredits(String? oldId, String? newId) async {
+    try {
+      if (oldId != null &&
+          newId != null &&
+          oldId != newId &&
+          oldId.startsWith(r'$RCAnonymousID:')) {
+        await migratePurchasedCredits(oldId);
+      }
+      await grantWelcomeCredits(kind: 'signin');
+      await ConsultationCredits.instance.refresh();
+    } catch (_) {
+      // best-effort
+    }
   }
 
   Future<void> _clearLocalSession() async {

@@ -6,7 +6,7 @@
 ## サマリ
 
 - ファイル数: 27
-- エンドポイント総数: 33
+- エンドポイント総数: 34
 - Gemini 呼出箇所: 2
 - KV 使用: 4 行 / Durable Object 使用: 12 行
 
@@ -209,7 +209,7 @@ https://developer.apple.com/documentation/devicecheck/validating-apps-that-conne
 **export (1):** `verifyAttestation`
 
 
-### `worker/src/auth/attestation_state.js` (945 行)
+### `worker/src/auth/attestation_state.js` (1003 行)
 
 **ファイル先頭コメント:**
 
@@ -537,7 +537,7 @@ GEMINI_API_KEY は wrangler secret put GEMINI_API_KEY で設定
 **export (4):** `computeCategoryScore`, `callGemini`, `stripTransitLabel`, `handleFortune`
 
 
-### `worker/src/index.js` (1710 行)
+### `worker/src/index.js` (1763 行)
 
 **ファイル先頭コメント:**
 
@@ -557,43 +557,44 @@ webhooks/*   外部連携      RevenueCat Webhook (Pro 状態の真の出所)。
 同セッションで新 path に書き換え済（`apps/solara/lib/utils/solara_api.dart` 参照）。
 ```
 
-**エンドポイント / ルート (33):**
+**エンドポイント / ルート (34):**
 
 | method | path | line |
 | --- | --- | --- |
-| ? | /protected/consultation/credits | L1015 |
-| ? | /public/astro/forecast | L1236 |
-| ? | /public/tiles/* | L1237 |
-| ? | /webhooks/* | L1238 |
-| ? | /public/health | L1246 |
-| GET | /public/tiles/osm/* | L1251 |
-| POST | /public/astro/chart | L1256 |
-| POST | /public/astro/forecast | L1264 |
-| POST | /public/astro/predict | L1279 |
-| POST | /public/astro/daily-transits | L1287 |
-| GET | /public/tz | L1295 |
-| GET | /public/astro/events | L1304 |
-| GET | /public/search | L1315 |
-| GET | /auth/whoami | L1337 |
-| POST | /auth/challenge | L1340 |
-| POST | /auth/attest | L1343 |
-| POST | /auth/integrity/challenge | L1347 |
-| GET | /auth/integrity/diagnose | L1356 |
-| POST | /auth/integrity/decode-test | L1369 |
-| POST | /protected/account/delete | L1484 |
-| POST | /protected/fortune | L1488 |
-| POST | /protected/tarot | L1498 |
-| POST | /protected/relocation | L1526 |
-| POST | /protected/astro/line-narrative | L1538 |
-| POST | /protected/astro/consultation | L1548 |
-| POST | /protected/astro/consultation2 | L1576 |
-| POST | /protected/consultation/credits | L1608 |
-| POST | /protected/consultation/welcome-grant | L1621 |
-| POST | /protected/report-ai-output | L1635 |
-| ? | /public/* | L1692 |
-| ? | /auth/* | L1694 |
-| ? | /protected/* | L1696 |
-| ? | /webhooks/revenuecat | L1698 |
+| ? | /protected/consultation/credits | L1055 |
+| ? | /public/astro/forecast | L1276 |
+| ? | /public/tiles/* | L1277 |
+| ? | /webhooks/* | L1278 |
+| ? | /public/health | L1286 |
+| GET | /public/tiles/osm/* | L1291 |
+| POST | /public/astro/chart | L1296 |
+| POST | /public/astro/forecast | L1304 |
+| POST | /public/astro/predict | L1319 |
+| POST | /public/astro/daily-transits | L1327 |
+| GET | /public/tz | L1335 |
+| GET | /public/astro/events | L1344 |
+| GET | /public/search | L1355 |
+| GET | /auth/whoami | L1377 |
+| POST | /auth/challenge | L1380 |
+| POST | /auth/attest | L1383 |
+| POST | /auth/integrity/challenge | L1387 |
+| GET | /auth/integrity/diagnose | L1396 |
+| POST | /auth/integrity/decode-test | L1409 |
+| POST | /protected/account/delete | L1524 |
+| POST | /protected/fortune | L1528 |
+| POST | /protected/tarot | L1538 |
+| POST | /protected/relocation | L1566 |
+| POST | /protected/astro/line-narrative | L1578 |
+| POST | /protected/astro/consultation | L1588 |
+| POST | /protected/astro/consultation2 | L1616 |
+| POST | /protected/consultation/credits | L1648 |
+| POST | /protected/consultation/welcome-grant | L1661 |
+| POST | /protected/consultation/migrate-purchased | L1673 |
+| POST | /protected/report-ai-output | L1687 |
+| ? | /public/* | L1745 |
+| ? | /auth/* | L1747 |
+| ? | /protected/* | L1749 |
+| ? | /webhooks/revenuecat | L1751 |
 
 **KV 使用 (4 行):**
 
@@ -601,7 +602,7 @@ webhooks/*   外部連携      RevenueCat Webhook (Pro 状態の真の出所)。
 
 **Durable Object 使用 (4 行):**
 
-- 出現行: L262, L262, L262, L1644
+- 出現行: L262, L262, L262, L1696
 
 **export (2):** `isQuotaExemptPath`, `_internal`
 

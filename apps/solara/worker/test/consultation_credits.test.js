@@ -29,6 +29,7 @@ const {
   consultationDeviceKey,
   consultationCreditStatus,
   consultationWelcomeGrant,
+  consultationMigratePurchased,
   consumeReadingCreditGate,
   gateConsultation,
   consultationConsumed,
@@ -419,10 +420,10 @@ test('creditProduct: env から商品ID→付与数を引く', () => {
 
 // ── consultationWelcomeAmount / consultationWelcomeGrant (ウェルカム特典) ──────
 
-/** ステートフルな付与 DO mock (eventId 冪等 + appUserId 別 purchased 残高を保持)。 */
-function makeGrantEnv(extra = {}) {
-  const grantedEvents = new Set(); // eventId
-  const balances = new Map();      // appUserId -> balance
+/** ステートフルな付与/移送 DO mock (eventId 冪等 + appUserId 別 purchased 残高を保持)。 */
+function makeGrantEnv(extra = {}, initialBalances = {}) {
+  const seenEvents = new Set(); // eventId (grant + migrate 共用)
+  const balances = new Map(Object.entries(initialBalances)); // appUserId -> balance
   const calls = [];
   const stub = {
     fetch: async (url, init) => {
@@ -431,20 +432,39 @@ function makeGrantEnv(extra = {}) {
       calls.push({ path, body });
       if (path === '/consultation-credit-grant') {
         const { appUserId, amount, eventId } = body;
-        if (grantedEvents.has(eventId)) {
+        if (seenEvents.has(eventId)) {
           return new Response(
             JSON.stringify({ balance: balances.get(appUserId) || 0, alreadyProcessed: true }),
             { status: 200 },
           );
         }
-        grantedEvents.add(eventId);
+        seenEvents.add(eventId);
         balances.set(appUserId, (balances.get(appUserId) || 0) + amount);
         return new Response(JSON.stringify({ balance: balances.get(appUserId) }), { status: 200 });
+      }
+      if (path === '/consultation-purchased-migrate') {
+        const { fromAppUserId, toAppUserId, eventId } = body;
+        if (seenEvents.has(eventId)) {
+          return new Response(
+            JSON.stringify({ migrated: 0, toBalance: balances.get(toAppUserId) || 0, alreadyProcessed: true }),
+            { status: 200 },
+          );
+        }
+        seenEvents.add(eventId);
+        const amount = balances.get(fromAppUserId) || 0;
+        if (amount > 0) {
+          balances.set(fromAppUserId, 0);
+          balances.set(toAppUserId, (balances.get(toAppUserId) || 0) + amount);
+        }
+        return new Response(JSON.stringify({ migrated: amount, toBalance: balances.get(toAppUserId) || 0 }), { status: 200 });
+      }
+      if (path === '/consultation-purchased-get') {
+        return new Response(JSON.stringify({ balance: balances.get(body.appUserId) || 0 }), { status: 200 });
       }
       return new Response(JSON.stringify({}), { status: 404 });
     },
   };
-  return { env: { ATTESTATION_DO: { idFromName: () => 'g', get: () => stub }, ...extra }, calls };
+  return { env: { ATTESTATION_DO: { idFromName: () => 'g', get: () => stub }, ...extra }, calls, balances };
 }
 
 test('welcomeAmount: default 3 / 上書き / 不正値は 3', () => {
@@ -454,18 +474,54 @@ test('welcomeAmount: default 3 / 上書き / 不正値は 3', () => {
   assert.equal(consultationWelcomeAmount({ CONSULTATION_WELCOME_GRANT: 'abc' }), 3);
 });
 
-test('welcomeGrant: iOS 初回 → granted + eventId=welcome:ios:{keyId} + 購入残 +3', async () => {
+test('welcomeGrant: profile (既定) → eventId=welcome_profile:{deviceKey} + 購入残 +3', async () => {
   const { env, calls } = makeGrantEnv();
   const req = makeRequest({ 'X-AppAttest-KeyId': 'K9' });
   const r = await consultationWelcomeGrant(env, req, { __appUserId: 'google:u9' });
   assert.equal(r.granted, true);
   assert.equal(r.alreadyGranted, false);
   assert.equal(r.amount, 3);
+  assert.equal(r.kind, 'profile');
   assert.equal(r.purchasedBalance, 3);
   const grantCall = calls.find((c) => c.path === '/consultation-credit-grant');
-  assert.equal(grantCall.body.eventId, 'welcome:ios:K9');
+  assert.equal(grantCall.body.eventId, 'welcome_profile:ios:K9');
   assert.equal(grantCall.body.amount, 3);
   assert.equal(grantCall.body.appUserId, 'google:u9');
+});
+
+test('welcomeGrant: signin → eventId=welcome_signin:{appUserId} (アカウント単位)', async () => {
+  const { env, calls } = makeGrantEnv();
+  const req = makeRequest({ 'X-AppAttest-KeyId': 'K9' });
+  const r = await consultationWelcomeGrant(env, req, { __appUserId: 'google:u9', kind: 'signin' });
+  assert.equal(r.granted, true);
+  assert.equal(r.kind, 'signin');
+  const grantCall = calls.find((c) => c.path === '/consultation-credit-grant');
+  assert.equal(grantCall.body.eventId, 'welcome_signin:google:u9');
+});
+
+test('welcomeGrant: profile と signin は独立 → 合計 6 (二重取りではなく各 1 回)', async () => {
+  const { env } = makeGrantEnv();
+  const req = makeRequest({ 'X-AppAttest-KeyId': 'K9' });
+  const rp = await consultationWelcomeGrant(env, req, { __appUserId: 'google:u9', kind: 'profile' });
+  const rs = await consultationWelcomeGrant(env, req, { __appUserId: 'google:u9', kind: 'signin' });
+  assert.equal(rp.granted, true);
+  assert.equal(rs.granted, true);
+  assert.equal(rs.purchasedBalance, 6); // 3 + 3
+  // それぞれ 2 回目は冪等
+  const rp2 = await consultationWelcomeGrant(env, req, { __appUserId: 'google:u9', kind: 'profile' });
+  const rs2 = await consultationWelcomeGrant(env, req, { __appUserId: 'google:u9', kind: 'signin' });
+  assert.equal(rp2.granted, false);
+  assert.equal(rs2.granted, false);
+  assert.equal(rs2.purchasedBalance, 6); // 増えない
+});
+
+test('welcomeGrant: signin はアカウント単位なので端末(keyId)が変わっても再付与しない', async () => {
+  const { env } = makeGrantEnv();
+  const a = await consultationWelcomeGrant(env, makeRequest({ 'X-AppAttest-KeyId': 'KA' }), { __appUserId: 'google:same', kind: 'signin' });
+  const b = await consultationWelcomeGrant(env, makeRequest({ 'X-AppAttest-KeyId': 'KB' }), { __appUserId: 'google:same', kind: 'signin' });
+  assert.equal(a.granted, true);
+  assert.equal(b.granted, false);
+  assert.equal(b.alreadyGranted, true);
 });
 
 test('welcomeGrant: 同一端末 2 回目 → alreadyGranted (二重付与しない)', async () => {
@@ -505,6 +561,51 @@ test('welcomeGrant: CONSULTATION_WELCOME_GRANT=0 → 付与しない (disabled, 
   assert.equal(r.granted, false);
   assert.equal(r.reason, 'disabled');
   assert.ok(!calls.some((c) => c.path === '/consultation-credit-grant'));
+});
+
+// ── consultationMigratePurchased (匿名→認証 残高移送) ──────
+
+test('migratePurchased: 匿名→認証で残高移送 (from 0 化, to へ加算)', async () => {
+  const { env, balances } = makeGrantEnv({}, { '$RCAnonymousID:anon1': 4, 'google:auth1': 1 });
+  const req = makeRequest({ 'X-AppAttest-KeyId': 'K' });
+  const r = await consultationMigratePurchased(env, req, {
+    __appUserId: 'google:auth1', fromAppUserId: '$RCAnonymousID:anon1',
+  });
+  assert.equal(r.migrated, 4);
+  assert.equal(r.toBalance, 5); // 1 + 4
+  assert.equal(balances.get('$RCAnonymousID:anon1'), 0);
+});
+
+test('migratePurchased: 冪等 (2 回目は migrated 0 / toBalance 不変)', async () => {
+  const { env } = makeGrantEnv({}, { '$RCAnonymousID:anon2': 3 });
+  const req = makeRequest({ 'X-AppAttest-KeyId': 'K' });
+  const body = { __appUserId: 'google:auth2', fromAppUserId: '$RCAnonymousID:anon2' };
+  const r1 = await consultationMigratePurchased(env, req, body);
+  const r2 = await consultationMigratePurchased(env, req, body);
+  assert.equal(r1.migrated, 3);
+  assert.equal(r2.migrated, 0);
+  assert.equal(r2.alreadyProcessed, true);
+  assert.equal(r2.toBalance, 3);
+});
+
+test('migratePurchased: from が匿名でない → 拒否 (from_not_anonymous, DO 呼ばない=窃取防止)', async () => {
+  const { env, calls } = makeGrantEnv({}, { 'google:victim': 9 });
+  const req = makeRequest({ 'X-AppAttest-KeyId': 'K' });
+  const r = await consultationMigratePurchased(env, req, {
+    __appUserId: 'google:attacker', fromAppUserId: 'google:victim',
+  });
+  assert.equal(r.migrated, 0);
+  assert.equal(r.reason, 'from_not_anonymous');
+  assert.ok(!calls.some((c) => c.path === '/consultation-purchased-migrate'));
+});
+
+test('migratePurchased: from===to / from 欠落 → invalid_ids', async () => {
+  const { env } = makeGrantEnv();
+  const req = makeRequest({ 'X-AppAttest-KeyId': 'K' });
+  const r1 = await consultationMigratePurchased(env, req, { __appUserId: 'google:x', fromAppUserId: 'google:x' });
+  assert.equal(r1.reason, 'invalid_ids');
+  const r2 = await consultationMigratePurchased(env, req, { __appUserId: 'google:x' });
+  assert.equal(r2.reason, 'invalid_ids');
 });
 
 // ── consultationConsumed (V2: 1クレジット=1候補の課金判定) ──────

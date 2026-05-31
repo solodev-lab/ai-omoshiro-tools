@@ -3341,3 +3341,16 @@ Flutter 標準の状態復元 (`restorationScopeId` + `RestorableProperty`) は 
   - **Flutter 付与**: `utils/consultation_api.dart` に `grantWelcomeCredits()` + `WelcomeGrantResult`、`utils/solara_api.dart` に `solaraConsultationWelcomeGrantUrl`。`utils/solara_storage.dart` に `WelcomeGiftFlags` + `ensureWelcomeBaseline(profileCompleteNow)` / `loadWelcomeFlags` / `setWelcomeGranted` / `setWelcomeConsultUsed` (SharedPreferences `solara_welcome_*_v1`)。**新規完了者のみ**: 本機能初回到達時に既に birth+home 揃いの既存ユーザーは eligible=false で対象外。
   - **Flutter Map** (`map_screen.dart`): `_loadProfileAndChart` 冒頭で `_evaluateWelcomeGift(hasBirth,hasHome)` を毎回評価 → eligible×birth×home×未付与で `grantWelcomeCredits()`→付与成功で `setWelcomeGranted`+credits refresh。バナー状態 `_welcomeBanner` (none/addHome=B/tryStella=C)。
   - **Flutter バナー** (`screens/map/map_welcome_banner.dart` 新規 `MapWelcomeBanner`/`WelcomeBannerMode`): 時刻スライダー直下に表示。B「現住所を登録すると無料クレジット3」→ CTA で `onNavigateToSanctuary` (自宅登録)。C「無料クレジット3をお贈りしました / 週でリセットされない相談チケット」→ CTA で `_enterConsultationFromMapButton`。C 表示中は Stella ボタンを強発光で誘導。✕ で B=セッション非表示 / C=consultUsed 永続クローズ。
+
+---
+
+## 本セッション追加機能 (2026-05-31 セッション6) — §0.2.40
+
+> ウェルカム特典の拡張: ①初回サインインでも +3 (合計最大6) ②匿名→認証サインイン時の恒久クレジット移送 (取り残し/IAP消失バグの解消) ③device recall 計画文書。stamp diff +0 -0 ~5。**要 worker deploy**。
+
+- **§0.2.40 サインイン付与 + 匿名→認証クレジット移送 (+ device recall 計画)**:
+  - **付与の kind 化** (`worker/src/index.js` `consultationWelcomeGrant`): body `kind` で eventId を分岐。`profile` (既定) = `welcome_profile:{deviceKey}` (端末単位)、`signin` = `welcome_signin:{appUserId}` (アカウント単位・安定 ID で farming 不可)。profile/signin は独立 = 合計最大6 (各1回・冪等)。
+  - **匿名→認証 移送** (新ルート `/protected/consultation/migrate-purchased` → `consultationMigratePurchased`; DO `_consultationPurchasedMigrate`): サインインで app_user_id が匿名→認証に変わると `consultation_purchased[匿名]` が取り残される問題を解消。from の残高を to へ加算し from を 0 化、eventId `migrate:{from}:{to}` で冪等。**セキュリティ**: from は `$RCAnonymousID:` のみ許可 (匿名IDは外部非露出で窃取不可)。これは匿名IAP購入クレジットがサインインで消える既存バグの修正でもある (TASK: TRANSFER webhook は entitlement のみ移送、purchased は対象外だった)。
+  - **Flutter** (`utils/solara_auth.dart` `_commitAccount` → `_onSignedInCredits`): logIn 前の匿名IDを控え、logIn 後に「匿名残高移送 (匿名のみ) → `grantWelcomeCredits(kind:'signin')` → credits refresh」を best-effort (UI 非ブロック)。`utils/consultation_api.dart` に `migratePurchasedCredits()` + `grantWelcomeCredits(kind:)`、`utils/solara_api.dart` に migrate URL。map の profile 付与は既定 kind=profile のまま。
+  - **device recall 計画** (`docs/device_recall_plan.md` 新規): Android 匿名再インストール farming の根本対策。**Google ベータ承認 + Play Console 有効化 (オーナー作業) が前提**のため実装は承認後。verdict 3ビットで「welcome 付与済」を端末単位に記録 (再インストール貫通)。当面は「匿名にも付与・farming は bounded で許容」(オーナー判断)。
+  - テスト: worker +7 (signin/profile 独立6・移送/冪等/窃取防止) → 計 346 green。

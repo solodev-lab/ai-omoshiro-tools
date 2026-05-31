@@ -5,12 +5,12 @@
 
 ## サマリ
 
-- ファイル数: 10 / 総行数: 2322
+- ファイル数: 10 / 総行数: 2363
 - class/mixin/extension/enum: 26
-- 関数 (top-level + method の素拾い): 37
+- 関数 (top-level + method の素拾い): 38
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 0
-- Worker URL リテラル: 21
+- Worker URL リテラル: 22
 
 ## ファイル別
 
@@ -72,7 +72,7 @@
   </details>
 
 
-### `lib/utils/consultation_api.dart` (215 行)
+### `lib/utils/consultation_api.dart` (252 行)
 
 **ファイル先頭コメント:**
 
@@ -93,18 +93,19 @@ Consultation API — クレジット系 (V2 と共有)
 
 **型定義 (3):**
 
-- L23 `enum ConsultationBlock`
+- L26 `enum ConsultationBlock`
   - Free 試食クレジット切れ等で Worker が 402 を返したときのブロック理由。
-- L73 `class ConsultationCreditStatus`
+- L76 `class ConsultationCreditStatus`
   - Stella 相談クレジットの現在状況。
-- L161 `class WelcomeGrantResult`
+- L164 `class WelcomeGrantResult`
   - ウェルカム特典付与の結果。
 
-**関数 (3 public + 0 private):**
+**関数 (4 public + 0 private):**
 
-- L48 `consultationBlockFromCode()` — 402 / 425 paywall レスポンスの `error` コード → [ConsultationBlock]。
-- L129 `fetchConsultationCredits()` — `/protected/consultation/credits` を呼んで現在のクレジット状況を取得する。
-- L187 `grantWelcomeCredits()` — `/protected/consultation/welcome-grant` を呼び、ウェルカム特典 (恒久クレジット) を
+- L51 `consultationBlockFromCode()` — 402 / 425 paywall レスポンスの `error` コード → [ConsultationBlock]。
+- L132 `fetchConsultationCredits()` — `/protected/consultation/credits` を呼んで現在のクレジット状況を取得する。
+- L191 `grantWelcomeCredits()` — `/protected/consultation/welcome-grant` を呼び、ウェルカム特典 (恒久クレジット) を
+- L227 `migratePurchasedCredits()` — `/protected/consultation/migrate-purchased` を呼び、匿名 app_user_id に貯まった
 
 
 ### `lib/utils/consultation_v2_api.dart` (510 行)
@@ -320,7 +321,7 @@ Solara 法務リンク定数 — Phase 2-6b
 - L68 `reverseGeocodeDetail()` — 緯度経度から逆ジオコーディングで region / country まで含む詳細を取得する。
 
 
-### `lib/utils/solara_api.dart` (99 行)
+### `lib/utils/solara_api.dart` (103 行)
 
 **ファイル先頭コメント:**
 
@@ -333,9 +334,9 @@ Solara CF Worker API - 軽量なユーティリティ呼び出し
 
 **関数 (1 public + 0 private):**
 
-- L86 `fetchTimezoneName()` — 緯度経度から IANA TZ名 (DST対応の基準) を取得。
+- L90 `fetchTimezoneName()` — 緯度経度から IANA TZ名 (DST対応の基準) を取得。
 
-**Worker URL リテラル (20):**
+**Worker URL リテラル (21):**
 
 - L17: `'https://solara-api.solodev-lab.com'`
 - L29: `'$solaraWorkerBase/public/tz'`
@@ -355,8 +356,9 @@ Solara CF Worker API - 軽量なユーティリティ呼び出し
 - L60: `'$solaraWorkerBase/protected/astro/consultation2'`
 - L64: `'$solaraWorkerBase/protected/consultation/credits'`
 - L70: `'$solaraWorkerBase/protected/consultation/welcome-grant'`
-- L76: `'$solaraWorkerBase/protected/account/delete'`
-- L81: `'$solaraWorkerBase/protected/report-ai-output'`
+- L74: `'$solaraWorkerBase/protected/consultation/migrate-purchased'`
+- L80: `'$solaraWorkerBase/protected/account/delete'`
+- L85: `'$solaraWorkerBase/protected/report-ai-output'`
 
 
 ### `lib/utils/tile_http_client.dart` (42 行)

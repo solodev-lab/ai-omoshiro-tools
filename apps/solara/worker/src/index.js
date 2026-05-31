@@ -783,14 +783,54 @@ async function consultationWelcomeGrant(env, request, body) {
   if (amount <= 0) {
     return { granted: false, alreadyGranted: false, amount: 0, purchasedBalance: 0, reason: 'disabled' };
   }
-  const eventId = `welcome:${deviceKey}`;
+  // kind 別の冪等キー:
+  //   'profile' (既定) … 出生地+現住所を揃えた新規完了者。端末単位で 1 回
+  //                       (eventId=welcome_profile:{deviceKey}。匿名 Android は再 install で
+  //                        deviceKey が変わり farming 可の既知の限界 → device recall で後日封じる)。
+  //   'signin'          … 初回 Google/Apple サインイン。アカウント単位で 1 回
+  //                       (eventId=welcome_signin:{appUserId}。認証済 id は安定 → farming 不可)。
+  const kind = body && body.kind === 'signin' ? 'signin' : 'profile';
+  const eventId = kind === 'signin'
+    ? `welcome_signin:${appUserId}`
+    : `welcome_profile:${deviceKey}`;
   const res = await callDo(env, '/consultation-credit-grant', { appUserId, amount, eventId });
   if (res.status !== 200) {
     throw new Error(`welcome grant DO failed: ${res.status}`);
   }
   const balance = typeof res.body?.balance === 'number' ? res.body.balance : 0;
   const already = res.body?.alreadyProcessed === true;
-  return { granted: !already, alreadyGranted: already, amount, purchasedBalance: balance };
+  return { granted: !already, alreadyGranted: already, amount, kind, purchasedBalance: balance };
+}
+
+/**
+ * 匿名 → 認証済 サインイン時に、匿名 app_user_id の恒久クレジット残高を認証済 id へ移送する。
+ * to = 認証済の現在 id (__appUserId)、from = body.fromAppUserId (匿名)。
+ *
+ * セキュリティ: from は匿名 ($RCAnonymousID:) のみ許可。匿名 id はランダム UUID で外部に
+ * 露出しないため、他人の残高を狙って窃取することは実質不可能。認証済 id 同士の移送は禁止。
+ * 冪等キー = `migrate:{from}:{to}` (二重移送防止)。
+ *
+ * 戻り値: { migrated, toBalance, alreadyProcessed }
+ */
+async function consultationMigratePurchased(env, request, body) {
+  const toAppUserId = consultationAppUserId(body);
+  const fromAppUserId = body && typeof body.fromAppUserId === 'string' ? body.fromAppUserId : null;
+  if (!toAppUserId || !fromAppUserId || fromAppUserId === toAppUserId) {
+    return { migrated: 0, toBalance: 0, reason: 'invalid_ids' };
+  }
+  if (!fromAppUserId.startsWith('$RCAnonymousID:')) {
+    return { migrated: 0, toBalance: 0, reason: 'from_not_anonymous' };
+  }
+  const eventId = `migrate:${fromAppUserId}:${toAppUserId}`;
+  const res = await callDo(env, '/consultation-purchased-migrate', { fromAppUserId, toAppUserId, eventId });
+  if (res.status !== 200) {
+    throw new Error(`purchased migrate DO failed: ${res.status}`);
+  }
+  return {
+    migrated: typeof res.body?.migrated === 'number' ? res.body.migrated : 0,
+    toBalance: typeof res.body?.toBalance === 'number' ? res.body.toBalance : 0,
+    alreadyProcessed: res.body?.alreadyProcessed === true,
+  };
 }
 
 /**
@@ -1628,6 +1668,18 @@ async function dispatchProtected(request, env, url, origin) {
     }
   }
 
+  // 匿名 → 認証済 サインイン時の恒久クレジット移送 (匿名 id に取り残されるのを防ぐ)。
+  // middleware 通過必須 (to = 検証済 __appUserId)。from は匿名のみ許可 (窃取防止)。
+  if (path === '/protected/consultation/migrate-purchased' && request.method === 'POST') {
+    const body = await request.json().catch(() => ({}));
+    try {
+      return jsonOk(await consultationMigratePurchased(env, request, body), origin);
+    } catch (err) {
+      console.error('Purchased migrate error:', err);
+      return jsonError(500, err.message || 'Purchased migrate failed', origin);
+    }
+  }
+
   // ── AI 出力ユーザー報告 (Google Generative AI Apps Policy 対応) ──
   // 3 つの AI 画面 (Tarot / Stella / Horo) に表示される「報告」ボタンの送信先。
   // 保存先は CF Workers Logs の console.warn のみ (永続なし)。
@@ -1662,6 +1714,7 @@ export const _internal = {
   proSyncReconcile,
   consultationCreditStatus,
   consultationWelcomeGrant,
+  consultationMigratePurchased,
   consumeReadingCreditGate,
   gateConsultation,
   consultationConsumed,

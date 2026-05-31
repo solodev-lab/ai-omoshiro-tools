@@ -5,9 +5,9 @@
 
 ## サマリ
 
-- ファイル数: 9 / 総行数: 2716
+- ファイル数: 9 / 総行数: 2743
 - class/mixin/extension/enum: 15
-- 関数 (top-level + method の素拾い): 125
+- 関数 (top-level + method の素拾い): 126
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 0
 - Worker URL リテラル: 0
@@ -271,7 +271,7 @@ Phase 2-6b 以降 (RevenueCat 接続後):
 - L89 `resetForTest()`
 
 
-### `lib/utils/solara_auth.dart` (459 行)
+### `lib/utils/solara_auth.dart` (486 行)
 
 **ファイル先頭コメント:**
 
@@ -303,40 +303,41 @@ Solara 認証サービス — Phase 2-9 Sign in 統合
   google-services.json) があれば動く。クライアント ID を渡すと優先される
 ```
 
-**imports:** dart=3 / package=4 / relative=3
+**imports:** dart=3 / package=4 / relative=5
 
-- relative: `app_attest_client.dart`, `purchases_service.dart`, `solara_api.dart`
+- relative: `app_attest_client.dart`, `consultation_api.dart`, `consultation_credits.dart`, `purchases_service.dart`, `solara_api.dart`
 
 **型定義 (4):**
 
-- L40 `enum SolaraAuthProvider`
-- L43 `class SolaraAuthAccount`
+- L42 `enum SolaraAuthProvider`
+- L45 `class SolaraAuthAccount`
   - 認証済アカウント情報。
-- L98 `class SolaraAuthException : Exception`
+- L100 `class SolaraAuthException : Exception`
   - 認証エラー (UI が型で分岐できるよう薄い wrapper)。
-- L106 `class SolaraAuth : ChangeNotifier`
+- L108 `class SolaraAuth : ChangeNotifier`
 
-**関数 (8 public + 8 private):**
+**関数 (8 public + 9 private):**
 
-- L64 `toJson()`
-- L103 `toString()`
-- L129 `load()` — 起動時に 1 度呼ぶ。SharedPreferences から復元 + provider 別の silent restore。
-- L191 `signInWithApple()` — Apple サインイン (iOS / macOS 推奨)。
-- L237 `signInWithGoogle()` — Google サインイン (iOS / Android / macOS / Web)。
-- L256 `signOut()` — 現在のアカウントを取り外す。
-- L289 `deleteAccount()` — アカウント削除 (App Store ガイドライン 5.1.1(v) — Sign in を提供する以上、
-- L449 `resetForTest()`
+- L66 `toJson()`
+- L105 `toString()`
+- L131 `load()` — 起動時に 1 度呼ぶ。SharedPreferences から復元 + provider 別の silent restore。
+- L193 `signInWithApple()` — Apple サインイン (iOS / macOS 推奨)。
+- L239 `signInWithGoogle()` — Google サインイン (iOS / Android / macOS / Web)。
+- L258 `signOut()` — 現在のアカウントを取り外す。
+- L291 `deleteAccount()` — アカウント削除 (App Store ガイドライン 5.1.1(v) — Sign in を提供する以上、
+- L476 `resetForTest()`
 
-  <details><summary>private 関数 8 件</summary>
+  <details><summary>private 関数 9 件</summary>
 
-  - L154 `_verifyOrClear()`
-  - L325 `_getFreshAppleAuthorizationCode()`
-  - L349 `_purgeServerAccountData()`
-  - L377 `_ensureGoogleInitialized()`
-  - L391 `_onGoogleEvent()`
-  - L407 `_adoptGoogleAccount()`
-  - L417 `_commitAccount()`
-  - L430 `_clearLocalSession()`
+  - L156 `_verifyOrClear()`
+  - L327 `_getFreshAppleAuthorizationCode()`
+  - L351 `_purgeServerAccountData()`
+  - L379 `_ensureGoogleInitialized()`
+  - L393 `_onGoogleEvent()`
+  - L409 `_adoptGoogleAccount()`
+  - L419 `_commitAccount()`
+  - L442 `_onSignedInCredits()`
+  - L457 `_clearLocalSession()`
 
   </details>
 

@@ -770,6 +770,63 @@ export class AttestationState {
     return { status: 200, body: { balance: next, spent: true } };
   }
 
+  // ── /consultation-purchased-migrate ──
+  // 匿名 app_user_id に貯まった恒久クレジット残高を、サインインで得た認証済
+  // app_user_id へ移送する (匿名→認証で残高が取り残されるのを防ぐ)。
+  // from の残高を to に加算し、from を 0 にする。eventId で冪等 (webhook_events 共用)。
+  // 呼出側 (Worker) が「from が匿名 ($RCAnonymousID:) かつ from≠to」を保証する前提。
+  async _consultationPurchasedMigrate({ fromAppUserId, toAppUserId, eventId, now = Date.now() }) {
+    if (typeof fromAppUserId !== 'string' || !fromAppUserId ||
+        typeof toAppUserId !== 'string' || !toAppUserId ||
+        fromAppUserId === toAppUserId) {
+      return { status: 400, body: { error: 'invalid_ids' } };
+    }
+    if (typeof eventId !== 'string' || !eventId) {
+      return { status: 400, body: { error: 'invalid_event_id' } };
+    }
+    // 冪等ガード (二重移送防止)
+    const seen = this.sql.exec(
+      `SELECT 1 FROM webhook_events WHERE event_id = ?`, eventId,
+    ).toArray();
+    if (seen.length > 0) {
+      const cur = this.sql.exec(
+        `SELECT balance FROM consultation_purchased WHERE app_user_id = ?`, toAppUserId,
+      ).toArray();
+      return {
+        status: 200,
+        body: { migrated: 0, toBalance: cur.length > 0 ? cur[0].balance : 0, alreadyProcessed: true },
+      };
+    }
+    this.sql.exec(
+      `INSERT INTO webhook_events (event_id, received_at, event_type, app_user_id, entitlement_id)
+       VALUES (?, ?, ?, ?, ?)`,
+      eventId, now, 'PURCHASED_MIGRATE', toAppUserId, null,
+    );
+    const fromRows = this.sql.exec(
+      `SELECT balance FROM consultation_purchased WHERE app_user_id = ?`, fromAppUserId,
+    ).toArray();
+    const amount = fromRows.length > 0 ? fromRows[0].balance : 0;
+    if (amount > 0) {
+      // from を 0 に
+      this.sql.exec(
+        `UPDATE consultation_purchased SET balance = 0, updated_at = ? WHERE app_user_id = ?`,
+        now, fromAppUserId,
+      );
+      // to へ加算 (無ければ作成)
+      this.sql.exec(
+        `INSERT INTO consultation_purchased (app_user_id, balance, updated_at)
+         VALUES (?, ?, ?)
+         ON CONFLICT(app_user_id) DO UPDATE SET balance = balance + ?, updated_at = ?`,
+        toAppUserId, amount, now,
+        amount, now,
+      );
+    }
+    const after = this.sql.exec(
+      `SELECT balance FROM consultation_purchased WHERE app_user_id = ?`, toAppUserId,
+    ).toArray();
+    return { status: 200, body: { migrated: amount, toBalance: after.length > 0 ? after[0].balance : amount } };
+  }
+
   // ── /consultation-credit-grant ──
   // 消費型 IAP 購入で残高 +amount。RC Webhook (NON_RENEWING_PURCHASE) から呼ばれる。
   // eventId で冪等 (webhook_events を共用、二重付与防止)。
@@ -929,6 +986,7 @@ export class AttestationState {
       '/consultation-pro-credit-reset-all': () => this._consultationProCreditResetAll(body),
       '/consultation-purchased-get': () => this._consultationPurchasedGet(body),
       '/consultation-purchased-spend': () => this._consultationPurchasedSpend(body),
+      '/consultation-purchased-migrate': () => this._consultationPurchasedMigrate(body),
       '/consultation-credit-grant': () => this._consultationCreditGrant(body),
       '/fortune-reading-get': () => this._fortuneReadingGet(body),
       '/fortune-reading-set': () => this._fortuneReadingSet(body),

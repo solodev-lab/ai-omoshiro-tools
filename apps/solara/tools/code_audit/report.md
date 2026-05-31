@@ -1,12 +1,12 @@
 # Solara Code Audit
 
-対象: lib (193 個の .dart)
+対象: lib (194 個の .dart)
 
 ## 1. ファイル行数 (NOTICE >= 300 / WARN >= 500 / HARD >= 1000)
 
 | 行数 | 判定 | ファイル |
 |------|------|----------|
-| 3403 | 🔴 HARD | lib/screens/map_screen.dart |
+| 3489 | 🔴 HARD | lib/screens/map_screen.dart |
 | 2029 | 🔴 HARD | lib/screens/map/map_daily_transit_screen.dart |
 | 1614 | 🔴 HARD | lib/screens/sanctuary_screen.dart |
 | 1374 | 🔴 HARD | lib/screens/sanctuary/sanctuary_title_diagnosis.dart |
@@ -14,8 +14,8 @@
 | 1084 | 🔴 HARD | lib/screens/forecast_screen.dart |
 | 1013 | 🔴 HARD | lib/screens/map/daily_transit_data.dart |
 | 943 | 🟠 WARN | lib/screens/horoscope_screen.dart |
+| 873 | 🟠 WARN | lib/utils/solara_storage.dart |
 | 872 | 🟠 WARN | lib/screens/map/map_astro_carto.dart |
-| 814 | 🟠 WARN | lib/utils/solara_storage.dart |
 | 798 | 🟠 WARN | lib/screens/map/map_fortune_sheet.dart |
 | 775 | 🟠 WARN | lib/widgets/catasterism_formation_overlay.dart |
 | 759 | 🟠 WARN | lib/screens/locations_screen.dart |

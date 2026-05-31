@@ -69,6 +69,10 @@ const String solaraConsultationCreditsUrl =
 const String solaraConsultationWelcomeGrantUrl =
     '$solaraWorkerBase/protected/consultation/welcome-grant';
 
+/// 匿名 → 認証済 サインイン時の恒久クレジット移送 (匿名 id に取り残されるのを防ぐ)。
+const String solaraConsultationMigratePurchasedUrl =
+    '$solaraWorkerBase/protected/consultation/migrate-purchased';
+
 /// アカウント削除時にサーバー側 (DO) の Pro 記録 + Webhook ログを物理削除する。
 /// App Attest / Play Integrity を通すため /protected/* 配下に置く (body の
 /// `__appUserId` が assertion で署名され、削除対象が改ざんされない)。
