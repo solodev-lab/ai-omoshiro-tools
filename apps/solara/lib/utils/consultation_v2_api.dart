@@ -143,6 +143,79 @@ class ConsultationEvidence {
       };
 }
 
+/// 30 分後デルタの 1 変化 (テーマ角ラインがその場に対してどう動くか)。
+class ConsultationDeltaChange {
+  final String planet; // 'mars' 等
+  final String angle; // 'mc'|'ic'|'asc'|'dsc'
+  final String aspect; // 'conjunction' 等
+  final String dir; // approaching|receding|entering|leaving|steady
+  final int? fromKm;
+  final int? toKm;
+
+  const ConsultationDeltaChange({
+    required this.planet,
+    required this.angle,
+    required this.aspect,
+    required this.dir,
+    this.fromKm,
+    this.toKm,
+  });
+
+  factory ConsultationDeltaChange.fromJson(Map<String, dynamic> j) =>
+      ConsultationDeltaChange(
+        planet: j['planet'] as String? ?? '',
+        angle: j['angle'] as String? ?? '',
+        aspect: j['aspect'] as String? ?? '',
+        dir: j['dir'] as String? ?? 'steady',
+        fromKm: (j['fromKm'] as num?)?.toInt(),
+        toKm: (j['toKm'] as num?)?.toInt(),
+      );
+
+  Map<String, dynamic> toJson() => {
+        'planet': planet,
+        'angle': angle,
+        'aspect': aspect,
+        'dir': dir,
+        if (fromKm != null) 'fromKm': fromKm,
+        if (toKm != null) 'toKm': toKm,
+      };
+}
+
+/// 30 分後デルタ (Pro おでかけ/イベント 時刻指定時のみ)。
+/// narrative = Stella の言葉 (空なら fallback で未生成) / changes = 構造データ。
+class ConsultationDeltaAfter {
+  final int deltaMin;
+  final String narrative;
+  final List<ConsultationDeltaChange> changes;
+
+  const ConsultationDeltaAfter({
+    this.deltaMin = 30,
+    this.narrative = '',
+    this.changes = const [],
+  });
+
+  static ConsultationDeltaAfter? fromJsonOrNull(dynamic j) {
+    if (j is! Map) return null;
+    final m = j.cast<String, dynamic>();
+    return ConsultationDeltaAfter(
+      deltaMin: (m['deltaMin'] as num?)?.toInt() ?? 30,
+      narrative: m['narrative'] as String? ?? '',
+      changes: (m['changes'] as List?)
+              ?.map((e) => ConsultationDeltaChange.fromJson(
+                    (e as Map).cast<String, dynamic>(),
+                  ))
+              .toList(growable: false) ??
+          const [],
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'deltaMin': deltaMin,
+        'narrative': narrative,
+        'changes': changes.map((e) => e.toJson()).toList(),
+      };
+}
+
 /// 1 候補地の Stella の読み (構造データ + ナレーション)。
 class ConsultationV2Candidate {
   final String? name;
@@ -165,6 +238,9 @@ class ConsultationV2Candidate {
   final String narrative;
   final ConsultationTimeWindow? timeWindow;
 
+  /// 30 分後デルタ (Pro 時刻指定時のみ非 null)。
+  final ConsultationDeltaAfter? deltaAfter;
+
   const ConsultationV2Candidate({
     this.name,
     this.nameEN,
@@ -181,6 +257,7 @@ class ConsultationV2Candidate {
     required this.energyLabels,
     required this.narrative,
     this.timeWindow,
+    this.deltaAfter,
   });
 
   factory ConsultationV2Candidate.fromJson(Map<String, dynamic> j) =>
@@ -203,6 +280,7 @@ class ConsultationV2Candidate {
             const [],
         narrative: j['narrative'] as String? ?? '',
         timeWindow: ConsultationTimeWindow.fromJsonOrNull(j['timeWindow']),
+        deltaAfter: ConsultationDeltaAfter.fromJsonOrNull(j['deltaAfter']),
       );
 
   Map<String, dynamic> toJson() => {
@@ -221,6 +299,7 @@ class ConsultationV2Candidate {
         'energyLabels': energyLabels,
         'narrative': narrative,
         if (timeWindow != null) 'timeWindow': timeWindow!.toJson(),
+        if (deltaAfter != null) 'deltaAfter': deltaAfter!.toJson(),
       };
 }
 

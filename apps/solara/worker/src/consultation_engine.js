@@ -170,6 +170,11 @@ function buildBands(planetLons, themePlanets, frame) {
 /** when から transit を計算する代表 UTC 瞬間 (旅行 range は ≤3 日サンプリング)。 */
 function transitInstants(mode, when) {
   if (mode === 'daily') {
+    // Pro 時刻指定 (おでかけ/イベント): client が選んだ時刻の正確な UTC epoch ms。
+    // これがあると線 geometry が実時刻で動く (従来は正午UTC固定でラベルだけ時間帯だった)。
+    if (when && when.atUtcMs != null && Number.isFinite(Number(when.atUtcMs))) {
+      return [new Date(Number(when.atUtcMs))];
+    }
     if (when && when.kind === 'date' && when.date) return [dateNoonUTC(when.date)];
     return [new Date()];
   }
@@ -622,6 +627,82 @@ function byRank(a, b) {
   return da - db;
 }
 
+// ── 3b. 30 分後デルタ (Pro おでかけ時刻指定) ────────────────────
+//
+// CCG の角ライン (惑星×MC/IC/ASC/DSC) は地球自転で動く: 30 分で GMST が 7.5°
+// 進むため、MC 子午線は経度約 7.5° (中緯度で約 800km) 西へ sweep する。よって
+// 固定地点と各テーマ線の距離は 30 分で実際に変わり、orb (LINE_ORB_KM) を跨ぐ
+// = 「線が近づく/離れる/差してくる/外れる」が起きる。これを T と T+Δ で候補地点を
+// スコアし直して差分検出する (transit フレームのみ。natal/帯は時刻不変)。
+
+/** 候補地点に対する transit テーマ線の近接を planet_angle_aspect 毎に集約 (最強 1 本)。 */
+function scoreTransitThemeLines(point, lines) {
+  const out = new Map();
+  for (const line of lines) {
+    if (line.frame !== 'transit') continue;
+    const dist = minDistanceKmToLine(point, line);
+    const near = Math.max(0, 1 - dist / LINE_ORB_KM);
+    if (near <= 0) continue;
+    const strength = (FRAME_WEIGHT.transit) * (ASPECT_WEIGHT[line.aspect] || 0.6) * near;
+    const k = `${line.planet}_${line.angle}_${line.aspect}`;
+    const prev = out.get(k);
+    if (!prev || strength > prev.strength) {
+      out.set(k, {
+        planet: line.planet, angle: line.angle, aspect: line.aspect,
+        quality: ASPECT_QUALITY[line.aspect] || 'neutral',
+        distanceKm: Math.round(dist), strength,
+      });
+    }
+  }
+  return out;
+}
+
+/**
+ * 候補の transit テーマ線が deltaMin 分後にどう動くかを差分検出する。
+ * @returns {{deltaMin, changes:Array, hasMotion:boolean}} changes は dir 別:
+ *   approaching (近づく) / receding (離れる) / entering (新たに差す) /
+ *   leaving (外れる) / steady (ほぼ不変)。
+ */
+function computeTimeDelta({ candidate, pool, themePlanets, instantT, deltaMin = 30 }) {
+  const factorsT = scoreTransitThemeLines(candidate, pool.lines);
+  const t2 = new Date(instantT.getTime() + deltaMin * 60000);
+  const lons2 = calcAllPlanetsKeyed(t2);
+  const gmst2 = gmstHoursFromUtc(t2);
+  const lines2 = buildAstroLinesAt({
+    planets: lons2, gmstHours: gmst2, frame: 'transit', onlyPlanets: themePlanets,
+  });
+  const factorsT30 = scoreTransitThemeLines(candidate, lines2);
+
+  const MARGIN_KM = 30; // この未満の距離変化は steady とみなす (ノイズ除去)
+  const keys = new Set([...factorsT.keys(), ...factorsT30.keys()]);
+  const changes = [];
+  for (const k of keys) {
+    const a = factorsT.get(k);
+    const b = factorsT30.get(k);
+    const fromKm = a ? a.distanceKm : null;
+    const toKm = b ? b.distanceKm : null;
+    let dir;
+    if (a && b) {
+      dir = toKm < fromKm - MARGIN_KM ? 'approaching'
+        : toKm > fromKm + MARGIN_KM ? 'receding' : 'steady';
+    } else if (a && !b) {
+      dir = 'leaving';
+    } else {
+      dir = 'entering';
+    }
+    const ref = a || b;
+    changes.push({
+      planet: ref.planet, angle: ref.angle, aspect: ref.aspect, quality: ref.quality,
+      dir, fromKm, toKm,
+    });
+  }
+  // 動きの大きいものを優先 (entering/leaving > approaching/receding > steady)。
+  const rank = { entering: 0, leaving: 0, approaching: 1, receding: 1, steady: 2 };
+  changes.sort((x, y) => (rank[x.dir] ?? 3) - (rank[y.dir] ?? 3));
+  const trimmed = changes.slice(0, 4);
+  return { deltaMin, changes: trimmed, hasMotion: trimmed.some((c) => c.dir !== 'steady') };
+}
+
 // ── 4. レンズ選択 (回転レンズ + 正直フォールバック + 案Y 枯渇) ─────
 
 /**
@@ -956,6 +1037,16 @@ export async function runConsultationPipeline(request, env = null) {
   // 6. 時間帯
   const timeWindow = timeWindowFor({ mode, when, candidate });
 
+  // 6b. 30 分後デルタ (Pro おでかけ/イベントで時刻指定したときのみ)。
+  // 角ラインが自転で sweep し、この候補地点との近接が 30 分でどう変わるか。
+  let timeDelta = null;
+  if (mode === 'daily' && when && when.atUtcMs != null && Number.isFinite(Number(when.atUtcMs))) {
+    timeDelta = computeTimeDelta({
+      candidate, pool, themePlanets: pool.themePlanets,
+      instantT: new Date(Number(when.atUtcMs)), deltaMin: 30,
+    });
+  }
+
   // 7. 内的季節
   const innerSeasonData = innerSeason({
     birthUTC, birthLat: birth.lat, birthLng: birth.lng, natalLons, mode, when, timeUnknown,
@@ -984,6 +1075,7 @@ export async function runConsultationPipeline(request, env = null) {
       compositeStrength: Math.round((candidate.compositeStrength ?? 0) * 1000) / 1000,
       honestQuiet: candidate.honestQuiet,
       relocation,
+      timeDelta, // 30 分後デルタ (Pro 時刻指定時のみ非 null)
     },
     evidence,
     innerSeason: innerSeasonData,
@@ -1008,6 +1100,7 @@ export const _internal = {
   buildInfluencePool, buildCandidatePool, homeCountry, offsetByBearing,
   bearingDegFromTo, bearing16, countriesInGroup, cityRowToCandidate, townRowToCandidate,
   scoreCandidate, scorePool, compositeStrengthOf, aspectStrengthOf,
+  scoreTransitThemeLines, computeTimeDelta,
   selectCandidate, suggestionsFor,
   relocationHousesAt, timeWindowFor, innerSeason, factorLabel, buildEvidence,
   PLANET_JP, SIGN_JP,

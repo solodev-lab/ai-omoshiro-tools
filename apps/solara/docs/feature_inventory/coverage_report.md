@@ -52,14 +52,16 @@
 
 ## #1 / #2 機械抽出 ↔ feature_inventory.md (人手版) の対整合
 
-- 機械抽出した class/mixin/extension/enum: **451**
+- 機械抽出した class/mixin/extension/enum: **459**
 - inventory に登場する識別子 (大文字始まり ``backtick``囲み): **262**
 
-### #1 機械にあるが Doc に書かれていない (259)
+### #1 機械にあるが Doc に書かれていない (267)
 
 - `AppAttestClient`
 - `ConstellationShareCardPage`
 - `ConsultEntryPopup`
+- `ConsultationDeltaAfter`
+- `ConsultationDeltaChange`
 - `ConsultationEvidenceKm`
 - `ConsultationHistoryScreen`
 - `ConsultationInputScreen`
@@ -140,6 +142,9 @@
 - `_DayStepperButton`
 - `_DayTab`
 - `_DayTabBar`
+- `_DeltaAfterSection`
+- `_DeltaAfterSectionState`
+- `_DeltaChip`
 - `_DominantFortuneOverlayState`
 - `_ElementChipBtn`
 - `_EmptyState`
@@ -186,6 +191,8 @@
 - `_HoroLocationInputState`
 - `_HoroRelocationPanelState`
 - `_HoroTransitPanelState`
+- `_HourDrumSheet`
+- `_HourDrumSheetState`
 - `_InfoPopupShell`
 - `_LatitudeBandBox`
 - `_LatitudeBandRow`
@@ -250,14 +257,7 @@
 - `_RarityStarRow`
 - `_Ray`
 - `_ReadingSheet`
-- `_ReasonTile`
-- `_RefreshButton`
-- `_RegionPicker`
-- `_RelocationProTeaser`
-- `_ReportReason`
-- `_RosePetal`
-- `_SanctuaryAccountSectionState`
-- … 残り 59 省略
+- … 残り 67 省略
 
 ### #2 Doc に書いてあるがコードに存在しない (ゴースト記述) (70)
 
@@ -376,7 +376,7 @@
 
 - ファイル数: 31
 - Worker URL 呼出: (なし)
-- Popup/Dialog: `showInfoPopup`×7
+- Popup/Dialog: `showInfoPopup`×8
 - Navigator.push 等: 0 箇所
 
 ## #5 import 依存グラフ (Pro 化影響範囲特定用)
@@ -404,7 +404,7 @@
 | 4c | 1 | 1 | 15 | 1 | 6 | 5 | 9 | 6 | · | · | · | 17 | · | · | 1 | · |
 | 4d | 3 | 6 | 13 | 1 | 3 | 2 | 11 | 2 | 1 | · | · | · | 9 | · | · | · |
 | 4e | 1 | 6 | · | 3 | 7 | 1 | 15 | 1 | · | · | · | · | · | 9 | 3 | · |
-| 4f | 2 | 6 | · | 8 | 16 | 4 | 18 | 12 | · | 6 | · | · | · | · | 29 | · |
+| 4f | 2 | 6 | · | 8 | 16 | 4 | 19 | 12 | · | 6 | · | · | · | · | 29 | · |
 | 5 | 1 | 2 | · | 2 | 5 | 3 | 1 | 1 | · | 1 | 1 | 1 | 1 | 3 | 4 | · |
 
 > 健全な依存方向は「番号が大きい層 → 小さい層」(上位が下位に依存)。
@@ -425,7 +425,7 @@
 | `lib/models/galaxy_cycle.dart` | 1c | 14 |
 | `lib/screens/horoscope/horo_antique_icons.dart` | 3a | 14 |
 | `lib/models/daily_reading.dart` | 1c | 12 |
-| `lib/widgets/pro_unlock_dialog.dart` | 3a | 11 |
+| `lib/widgets/pro_unlock_dialog.dart` | 3a | 12 |
 | `lib/widgets/tap_to_unfocus.dart` | 3a | 11 |
 | `lib/screens/horoscope/horo_constants.dart` | 1b | 10 |
 | `lib/screens/horoscope/horo_panel_shared.dart` | 4b | 9 |
@@ -450,12 +450,14 @@
 > 各ソースの SHA1 を `_stamps.json` に記録し、差分を検出。
 > 変更されたファイルが属する層は、人手版インベントリ章の見直し対象。
 
-- 追加: **0** / 削除: **0** / 変更: **3**
+- 追加: **0** / 削除: **0** / 変更: **10**
 
 ### 変更されたファイル (層別)
 
-- **層 0**: `worker/src/webhooks/revenuecat.js`
-- **層 4f**: `lib/screens/paywall_comparison.dart`, `lib/screens/paywall_widgets.dart`
+- **層 0**: `worker/src/consultation_engine.js`, `worker/src/consultation_v2.js`
+- **層 1b**: `lib/utils/consultation_v2_request.dart`
+- **層 2a**: `lib/utils/consultation_v2_api.dart`
+- **層 4f**: `lib/screens/consultation/consultation_input_logic.dart`, `lib/screens/consultation/consultation_input_screen.dart`, `lib/screens/consultation/consultation_input_when_scope.dart`, `lib/screens/consultation/consultation_result_card.dart`, `lib/screens/paywall_comparison.dart`, `lib/screens/paywall_widgets.dart`
 
 ## #7 astro_glossary 用語辞書対整合
 

@@ -5,11 +5,11 @@
 
 ## サマリ
 
-- ファイル数: 31 / 総行数: 10344
-- class/mixin/extension/enum: 91
-- 関数 (top-level + method の素拾い): 264
+- ファイル数: 31 / 総行数: 10809
+- class/mixin/extension/enum: 97
+- 関数 (top-level + method の素拾い): 276
 - Navigator.push 等: 0
-- Popup/Dialog 呼出: 7
+- Popup/Dialog 呼出: 8
 - Worker URL リテラル: 0
 
 ## ファイル別
@@ -208,7 +208,7 @@ Consultation Input — だれと / 願い の記入例 (テーマ別)
   </details>
 
 
-### `lib/screens/consultation/consultation_input_logic.dart` (179 行)
+### `lib/screens/consultation/consultation_input_logic.dart` (199 行)
 
 **ファイル先頭コメント:**
 
@@ -225,16 +225,17 @@ setState を呼ばない純ロジック (when/scope → ConsultationRequest、�
 
 - L25 `extension _ConsultationInputLogic : _ConsultationInputScreenState`
 
-**関数 (0 public + 5 private):**
+**関数 (0 public + 6 private):**
 
 
-  <details><summary>private 関数 5 件</summary>
+  <details><summary>private 関数 6 件</summary>
 
   - L12 `_travelBandMin()`
-  - L115 `_onStartPressed()`
-  - L127 `_handleBuyFromPopup()`
-  - L134 `_showStartPopup()`
-  - L154 `_runConsultation()`
+  - L33 `_atUtcMsForSelectedHour()`
+  - L135 `_onStartPressed()`
+  - L147 `_handleBuyFromPopup()`
+  - L154 `_showStartPopup()`
+  - L174 `_runConsultation()`
 
   </details>
 
@@ -312,7 +313,7 @@ consultation_input_picker.dart の HARD500 回避のため、検索結果行・�
 - L150 `build()`
 
 
-### `lib/screens/consultation/consultation_input_screen.dart` (579 行)
+### `lib/screens/consultation/consultation_input_screen.dart` (620 行)
 
 **ファイル先頭コメント:**
 
@@ -341,42 +342,43 @@ Consultation Input Screen — 5問モデル (V2: 全要素統合)
   consultation_start_popup.dart       ← 開始ポップアップ (Free 残数)
 ```
 
-**imports:** dart=1 / package=3 / relative=13
+**imports:** dart=1 / package=3 / relative=14
 
-- relative: `../../theme/solara_colors.dart`, `../../utils/consult_restore.dart`, `../../utils/consultation_credits.dart`, `../../utils/consultation_v2_api.dart`, `../../utils/pro_status.dart`, `../../utils/solara_storage.dart`, `../../widgets/info_popup.dart`, `../../widgets/tap_to_unfocus.dart`, `../map/map_search.dart`, `../map/map_vp_panel.dart`, `consultation_credit_sheet.dart`, `consultation_place_picker_screen.dart`, `consultation_result_screen.dart`
+- relative: `../../theme/solara_colors.dart`, `../../utils/consult_restore.dart`, `../../utils/consultation_credits.dart`, `../../utils/consultation_v2_api.dart`, `../../utils/pro_status.dart`, `../../utils/solara_storage.dart`, `../../widgets/info_popup.dart`, `../../widgets/pro_unlock_dialog.dart`, `../../widgets/tap_to_unfocus.dart`, `../map/map_search.dart`, `../map/map_vp_panel.dart`, `consultation_credit_sheet.dart`, `consultation_place_picker_screen.dart`, `consultation_result_screen.dart`
 
 **型定義 (3):**
 
-- L53 `class ConsultationPresetTarget`
+- L54 `class ConsultationPresetTarget`
   - Map から「📍この場所で相談」で起動した時の preset (point scope 用)。
-- L78 `class ConsultationInputScreen : StatefulWidget`
-- L101 `class _ConsultationInputScreenState : State`
+- L79 `class ConsultationInputScreen : StatefulWidget`
+- L102 `class _ConsultationInputScreenState : State`
 
-**関数 (4 public + 11 private):**
+**関数 (4 public + 12 private):**
 
-- L97 `createState()`
-- L139 `initState()`
-- L244 `dispose()`
-- L406 `build()`
+- L98 `createState()`
+- L141 `initState()`
+- L248 `dispose()`
+- L422 `build()`
 
-  <details><summary>private 関数 11 件</summary>
+  <details><summary>private 関数 12 件</summary>
 
-  - L204 `_applyRestoreForm()`
-  - L232 `_loadPrefsAndProfile()`
-  - L252 `_onModeChanged()`
-  - L281 `_onWhenKindTap()`
-  - L306 `_pickSingleDate()`
-  - L318 `_pickDateRange()`
-  - L330 `_ymd()`
-  - L334 `_onScopeKindTap()`
-  - L344 `_openMapPicker()`
-  - L394 `_refreshCreditsFresh()`
-  - L399 `_setStartPopupHidden()`
+  - L207 `_applyRestoreForm()`
+  - L236 `_loadPrefsAndProfile()`
+  - L256 `_onModeChanged()`
+  - L286 `_onWhenKindTap()`
+  - L313 `_pickHour()`
+  - L322 `_pickSingleDate()`
+  - L334 `_pickDateRange()`
+  - L346 `_ymd()`
+  - L350 `_onScopeKindTap()`
+  - L360 `_openMapPicker()`
+  - L410 `_refreshCreditsFresh()`
+  - L415 `_setStartPopupHidden()`
 
   </details>
 
 
-### `lib/screens/consultation/consultation_input_when_scope.dart` (159 行)
+### `lib/screens/consultation/consultation_input_when_scope.dart` (359 行)
 
 **ファイル先頭コメント:**
 
@@ -385,25 +387,35 @@ Consultation Input — ③ いつ / 半径 セレクタ
 (part of 'consultation_input_screen.dart')
 ```
 
-**型定義 (4):**
+**型定義 (7):**
 
 - L6 `class _WhenChoice`
 - L43 `class _WhenSelector : StatelessWidget`
   - ③ いつ。場面別の選択肢を Wrap で出し、date/range は選んだ日付を下に表示する。
 - L104 `class _TimeBandSelector : StatelessWidget`
-- L128 `class _RadiusChips : StatelessWidget`
+- L147 `class _HourDrumSheet : StatefulWidget`
+- L154 `class _HourDrumSheetState : State`
+- L235 `class _TimeHourRow : StatelessWidget`
+  - Pro 時刻指定の行。未選択=「時刻を指定（1時間刻み）」/ 選択中=「15:00 を指定中」+×。
+- L328 `class _RadiusChips : StatelessWidget`
   - 自宅から半径の距離選択 (場面別 km 候補)。
 
-**関数 (3 public + 2 private):**
+**関数 (9 public + 2 private):**
 
 - L56 `build()`
 - L110 `build()`
-- L146 `build()`
+- L126 `bandFromHour()` — 時刻 (0〜23) → 現地太陽時バケット。worker consultation_engine.timeOfDayBucket と一致。
+- L136 `showConsultationHourPicker()` — Pro 時刻ドラム (1 時間刻み)。0〜23 時のホイールを bottom sheet で出し、決定で hour を返す。
+- L151 `createState()`
+- L160 `dispose()`
+- L166 `build()`
+- L250 `build()`
+- L346 `build()`
 
   <details><summary>private 関数 2 件</summary>
 
   - L31 `_whenChoicesFor()`
-  - L140 `_label()`
+  - L340 `_label()`
 
   </details>
 
@@ -561,7 +573,7 @@ flutter_map ベースの地点選択画面のサブウィジェット群:
   </details>
 
 
-### `lib/screens/consultation/consultation_result_card.dart` (341 行)
+### `lib/screens/consultation/consultation_result_card.dart` (532 行)
 
 **ファイル先頭コメント:**
 
@@ -570,24 +582,42 @@ Consultation Result — 候補カード (V2)
 (part of 'consultation_result_screen.dart')
 ```
 
-**型定義 (5):**
+**型定義 (8):**
 
 - L6 `class _CandidateCard : StatelessWidget`
-- L184 `class _EnergyChip : StatelessWidget`
-- L210 `class _MapLinkIcon : StatelessWidget`
+- L188 `class _EnergyChip : StatelessWidget`
+- L214 `class _MapLinkIcon : StatelessWidget`
   - 場所名の右の🗺リンク。Map 画面で候補地を (相談の日付で) 見る。
-- L240 `class _TimeWindowRow : StatelessWidget`
+- L244 `class _TimeWindowRow : StatelessWidget`
   - 時間帯 (現地の時間帯のみ・時計表示なし)。single=1 個 / rhythm=朝昼夜。
-- L271 `class _CandidateKindBadge : StatelessWidget`
+- L287 `class _DeltaAfterSection : StatefulWidget`
+  - 候補カードの「30分経過後を見る」セクション。タップで開閉、i ボタンで説明。
+- L295 `class _DeltaAfterSectionState : State`
+- L424 `class _DeltaChip : StatelessWidget`
+  - 30 分後の 1 変化チップ (例: 「火星 MC ↘ 離れる」)。
+- L462 `class _CandidateKindBadge : StatelessWidget`
   - 候補種別バッジ (方角 / 場所)。
 
-**関数 (5 public + 0 private):**
+**関数 (8 public + 1 private):**
 
 - L37 `build()`
-- L189 `build()`
-- L215 `build()`
-- L245 `build()`
-- L280 `build()`
+- L193 `build()`
+- L219 `build()`
+- L249 `build()`
+- L292 `createState()`
+- L335 `build()`
+- L429 `build()`
+- L471 `build()`
+
+  <details><summary>private 関数 1 件</summary>
+
+  - L298 `_showInfo()`
+
+  </details>
+
+**Popup/Dialog 呼出 (1):**
+
+- 集計: `showInfoPopup`×1
 
 
 ### `lib/screens/consultation/consultation_result_credit_widgets.dart` (153 行)
@@ -1003,7 +1033,7 @@ showInfoPopup 経由で表示する (widgets/info_popup.dart、popup 統一規�
 - 集計: `showInfoPopup`×1
 
 
-### `lib/screens/paywall_comparison.dart` (299 行)
+### `lib/screens/paywall_comparison.dart` (310 行)
 
 **ファイル先頭コメント:**
 
@@ -1031,11 +1061,11 @@ Paywall Screen — Free vs Pro 比較テーブル / FAQ アコーディオン
   <details><summary>private 関数 6 件</summary>
 
   - L16 `_buildComparisonTable()`
-  - L69 `_comparisonHeader()`
-  - L117 `_comparisonSection()`
-  - L145 `_comparisonRow()`
-  - L192 `_buildFaqSection()`
-  - L253 `_faqItem()`
+  - L70 `_comparisonHeader()`
+  - L118 `_comparisonSection()`
+  - L146 `_comparisonRow()`
+  - L193 `_buildFaqSection()`
+  - L264 `_faqItem()`
 
   </details>
 
@@ -1138,7 +1168,7 @@ Solara ペイウォール画面 — Phase 2-6b + Suno 風リデザイン (2026-0
   </details>
 
 
-### `lib/screens/paywall_widgets.dart` (419 行)
+### `lib/screens/paywall_widgets.dart` (421 行)
 
 **ファイル先頭コメント:**
 
@@ -1164,9 +1194,9 @@ Paywall Screen — Hero / 課金トグル / Free・Pro 2 カード (Suno 風 cor
   - L97 `_toggleSegment()`
   - L160 `_buildFreeCard()`
   - L208 `_buildProCard()`
-  - L310 `_buildProCta()`
-  - L366 `_cardBadge()`
-  - L390 `_planBullet()`
+  - L312 `_buildProCta()`
+  - L368 `_cardBadge()`
+  - L392 `_planBullet()`
 
   </details>
 

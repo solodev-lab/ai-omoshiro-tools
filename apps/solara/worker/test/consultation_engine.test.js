@@ -15,6 +15,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { runConsultationPipeline, _internal } from '../src/consultation_engine.js';
+import { calcAllPlanetsKeyed, makeUTCDateFromTzName } from '../src/astro.js';
 
 const {
   houseOf, timeOfDayBucket, bucketFromUtcAt,
@@ -603,4 +604,96 @@ test('pipeline: world migration が CPU 予算内 (<3s)', async () => {
 test('pipeline: 不正 theme / mode は reject (async)', async () => {
   await assert.rejects(() => runConsultationPipeline({ birth: BIRTH, home: HOME, theme: 'bogus', mode: 'daily' }));
   await assert.rejects(() => runConsultationPipeline({ birth: BIRTH, home: HOME, theme: 'love', mode: 'bogus' }));
+});
+
+// ── 30 分後デルタ (Pro おでかけ時刻指定) ──────────────────────
+
+const DELTA_DIRS = new Set(['approaching', 'receding', 'entering', 'leaving', 'steady']);
+
+test('transitInstants: when.atUtcMs を尊重する (daily)', () => {
+  const ms = Date.UTC(2026, 0, 1, 3, 30, 0);
+  const got = transitInstants('daily', { kind: 'today', atUtcMs: ms });
+  assert.equal(got.length, 1);
+  assert.equal(got[0].getTime(), ms);
+});
+
+test('transitInstants: atUtcMs 無しは従来 (today=now / date=正午)', () => {
+  assert.equal(transitInstants('daily', { kind: 'date', date: '2026-06-15' })[0].getTime(),
+    new Date('2026-06-15T12:00:00Z').getTime());
+});
+
+test('computeTimeDelta: changes は許可された dir、deltaMin を返す', () => {
+  const birthUTC = makeUTCDateFromTzName('1990-06-15', '14:30', 'Asia/Tokyo');
+  const natalLons = calcAllPlanetsKeyed(birthUTC);
+  const instantT = new Date(Date.UTC(2026, 5, 15, 6, 0, 0)); // 15:00 JST
+  const pool = _internal.buildInfluencePool({
+    birthUTC, mode: 'daily', when: { atUtcMs: instantT.getTime() },
+    theme: 'love', timeUnknown: false, natalLons,
+  });
+  const candidate = { lat: 35.68, lng: 139.65 };
+  const delta = _internal.computeTimeDelta({
+    candidate, pool, themePlanets: pool.themePlanets, instantT, deltaMin: 30,
+  });
+  assert.equal(delta.deltaMin, 30);
+  assert.ok(Array.isArray(delta.changes));
+  assert.equal(typeof delta.hasMotion, 'boolean');
+  for (const ch of delta.changes) {
+    assert.ok(DELTA_DIRS.has(ch.dir), `unexpected dir: ${ch.dir}`);
+    assert.ok(ch.planet && ch.angle, 'planet/angle がある');
+  }
+});
+
+test('computeTimeDelta: 大きく時間を進めると線が動く (12h で motion 検出)', () => {
+  const birthUTC = makeUTCDateFromTzName('1990-06-15', '14:30', 'Asia/Tokyo');
+  const natalLons = calcAllPlanetsKeyed(birthUTC);
+  const instantT = new Date(Date.UTC(2026, 5, 15, 6, 0, 0));
+  const pool = _internal.buildInfluencePool({
+    birthUTC, mode: 'daily', when: { atUtcMs: instantT.getTime() },
+    theme: 'all', timeUnknown: false, natalLons,
+  });
+  const candidate = { lat: 35.68, lng: 139.65 };
+  // 12 時間 = GMST 180° 進行 → 角ラインが地球規模で sweep。何かしら入れ替わる。
+  const delta = _internal.computeTimeDelta({
+    candidate, pool, themePlanets: pool.themePlanets, instantT, deltaMin: 720,
+  });
+  assert.ok(delta.changes.length > 0, '12時間後は近接テーマ線の集合が変わる');
+  assert.ok(delta.hasMotion, '大きな時間差では hasMotion=true');
+});
+
+test('pipeline: daily + when.atUtcMs で candidate.timeDelta が出る', async () => {
+  const atUtcMs = Date.UTC(2026, 5, 15, 6, 0, 0);
+  const pipe = await runConsultationPipeline({
+    birth: BIRTH, home: HOME, theme: 'love', mode: 'daily',
+    when: { kind: 'today', atUtcMs },
+    scope: { kind: 'point', point: { lat: 35.68, lng: 139.65, name: 'テスト地点' } },
+    isFirst: true, excluded: [],
+  });
+  assert.ok(pipe.candidate, '候補が出る');
+  assert.ok(pipe.candidate.timeDelta, 'timeDelta が非null');
+  assert.equal(pipe.candidate.timeDelta.deltaMin, 30);
+  assert.ok(Array.isArray(pipe.candidate.timeDelta.changes));
+  for (const ch of pipe.candidate.timeDelta.changes) {
+    assert.ok(DELTA_DIRS.has(ch.dir));
+  }
+});
+
+test('pipeline: when.atUtcMs 無しなら timeDelta は null', async () => {
+  const pipe = await runConsultationPipeline({
+    birth: BIRTH, home: HOME, theme: 'love', mode: 'daily',
+    when: { kind: 'today' },
+    scope: { kind: 'point', point: { lat: 35.68, lng: 139.65, name: 'テスト地点' } },
+    isFirst: true, excluded: [],
+  });
+  assert.ok(pipe.candidate);
+  assert.equal(pipe.candidate.timeDelta, null);
+});
+
+test('pipeline: migration では timeDelta を出さない (atUtcMs があっても daily 限定)', async () => {
+  const pipe = await runConsultationPipeline({
+    birth: BIRTH, home: HOME, theme: 'work', mode: 'migration',
+    when: { kind: 'in3yr', atUtcMs: Date.UTC(2026, 5, 15, 6, 0, 0) },
+    scope: { kind: 'world' }, isFirst: true, excluded: [],
+  });
+  assert.ok(pipe.candidate);
+  assert.equal(pipe.candidate.timeDelta, null);
 });

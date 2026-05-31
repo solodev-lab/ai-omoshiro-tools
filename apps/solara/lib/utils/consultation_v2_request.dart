@@ -20,12 +20,23 @@ class ConsultationWhen {
   /// 未指定時は Worker が特定の時間帯に言及しない (= 昼の予定なのに朝/夜更けを語る白け防止)。
   final String? timeBand;
 
+  /// Pro 時刻指定 (おでかけ/イベントのみ・任意): 選んだ「日付 × 時刻 (1 時間刻み)」を
+  /// 端末ローカルで解釈した正確な UTC epoch ms。Worker はこれを CCG 線計算の実時刻に使い、
+  /// さらに +30 分後のデルタ (deltaAfter) を同じ呼出で生成する。null = 時刻未指定 (従来)。
+  final int? atUtcMs;
+
   const ConsultationWhen(
-      {required this.kind, this.date, this.start, this.end, this.timeBand});
+      {required this.kind,
+      this.date,
+      this.start,
+      this.end,
+      this.timeBand,
+      this.atUtcMs});
 
   /// 特定の 1 日 (おでかけ日付指定 / 旅行特定日 / 移住日付指定)。
-  factory ConsultationWhen.onDate(String date, {String? timeBand}) =>
-      ConsultationWhen(kind: 'date', date: date, timeBand: timeBand);
+  factory ConsultationWhen.onDate(String date, {String? timeBand, int? atUtcMs}) =>
+      ConsultationWhen(
+          kind: 'date', date: date, timeBand: timeBand, atUtcMs: atUtcMs);
 
   /// 期間 (旅行)。Worker は最大 3 日サンプリングする。
   factory ConsultationWhen.range(String start, String end) =>
@@ -40,6 +51,7 @@ class ConsultationWhen {
         if (start != null) 'start': start,
         if (end != null) 'end': end,
         if (timeBand != null) 'timeBand': timeBand,
+        if (atUtcMs != null) 'atUtcMs': atUtcMs,
       };
 }
 

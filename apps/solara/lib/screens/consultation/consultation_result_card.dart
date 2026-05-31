@@ -140,6 +140,10 @@ class _CandidateCard extends StatelessWidget {
                   letterSpacing: 0.4,
                 ),
               ),
+              // 30 分後デルタ (Pro おでかけ時刻指定時のみ・narrative がある時)。
+              // この候補地の星の流れが 30 分でどう移ろうかをタップで開く。
+              if (_c.deltaAfter != null && _c.deltaAfter!.narrative.isNotEmpty)
+                _DeltaAfterSection(delta: _c.deltaAfter!),
               // AI 出力ユーザー報告 (Google Gen AI Policy)。narrative がある時のみ表示。
               // 詳細: docs/store_compliance.md §3.1 / widgets/ai_report_button.dart
               if (_c.narrative.isNotEmpty) ...[
@@ -263,6 +267,193 @@ class _TimeWindowRow extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+// ── 30 分後デルタ (Pro おでかけ時刻指定) ──────────────────────
+
+const Map<String, String> _kPlanetJa = {
+  'sun': '太陽', 'moon': '月', 'mercury': '水星', 'venus': '金星', 'mars': '火星',
+  'jupiter': '木星', 'saturn': '土星', 'uranus': '天王星', 'neptune': '海王星',
+  'pluto': '冥王星',
+};
+const Map<String, String> _kAngleJa = {
+  'mc': 'MC', 'ic': 'IC', 'asc': 'ASC', 'dsc': 'DSC',
+};
+
+/// 候補カードの「30分経過後を見る」セクション。タップで開閉、i ボタンで説明。
+/// CCG の角ラインが自転で動くため、この場所の流れが 30 分でどう移ろうかを示す。
+class _DeltaAfterSection extends StatefulWidget {
+  final ConsultationDeltaAfter delta;
+  const _DeltaAfterSection({required this.delta});
+
+  @override
+  State<_DeltaAfterSection> createState() => _DeltaAfterSectionState();
+}
+
+class _DeltaAfterSectionState extends State<_DeltaAfterSection> {
+  bool _open = false;
+
+  void _showInfo() {
+    final m = widget.delta.deltaMin;
+    showInfoPopup(
+      context: context,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            '「30分経過後を見る」とは',
+            style: TextStyle(
+                color: SolaraColors.solaraGoldLight,
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.6),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            'アストロカートグラフィの星の線は、地球の自転で刻一刻と動いています。\n'
+            '惑星が真上や地平線に来る「角ライン」は、$m分でおよそ 7.5°——'
+            '中緯度で約 800km も西へ進みます。\n\n'
+            'だから同じ場所でも、選んだ時刻と$m分後では「その場の主役」が'
+            '静かに入れ替わることがあります。火星の線が離れていく、'
+            '金星の線が近づいてくる——その移ろいを先に知っておくと、'
+            '「核心は前半に」「後半にかけて温まる」のように、'
+            'その場での時間の使い方が見えてきます。\n\n'
+            '吉凶ではなく、エネルギーの“質の移り変わり”として読んでいます。'
+            'Cosmic Pro・おでかけで時刻を指定したときに見られます。',
+            style: const TextStyle(
+                color: SolaraColors.textPrimary, fontSize: 13, height: 1.75),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final d = widget.delta;
+    final moved =
+        d.changes.where((c) => c.dir != 'steady').toList(growable: false);
+    return Padding(
+      padding: const EdgeInsets.only(top: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: GestureDetector(
+                  onTap: () => setState(() => _open = !_open),
+                  behavior: HitTestBehavior.opaque,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 14, vertical: 11),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                      color: const Color(0x22F6BD60),
+                      border: Border.all(color: const Color(0x66F6BD60)),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.update,
+                            size: 18, color: SolaraColors.solaraGoldLight),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            _open
+                                ? '${d.deltaMin}分後の変化を閉じる'
+                                : '${d.deltaMin}分経過後を見る',
+                            style: const TextStyle(
+                              color: SolaraColors.solaraGoldLight,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              letterSpacing: 0.3,
+                            ),
+                          ),
+                        ),
+                        Icon(_open ? Icons.expand_less : Icons.expand_more,
+                            size: 18, color: SolaraColors.solaraGoldLight),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 4),
+              GestureDetector(
+                onTap: _showInfo,
+                behavior: HitTestBehavior.opaque,
+                child: const Padding(
+                  padding: EdgeInsets.all(8),
+                  child: Icon(Icons.help_outline,
+                      size: 18, color: Color(0xCCAAAAAA)),
+                ),
+              ),
+            ],
+          ),
+          if (_open) ...[
+            const SizedBox(height: 12),
+            if (moved.isNotEmpty) ...[
+              Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                children:
+                    moved.map((c) => _DeltaChip(change: c)).toList(growable: false),
+              ),
+              const SizedBox(height: 12),
+            ],
+            Text(
+              d.narrative,
+              style: const TextStyle(
+                color: SolaraColors.textPrimary,
+                fontSize: 13.5,
+                height: 1.8,
+                letterSpacing: 0.3,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+/// 30 分後の 1 変化チップ (例: 「火星 MC ↘ 離れる」)。
+/// 近づく/差す = 緑系、離れる/外れる = 琥珀系 (吉凶ではなく方向の色分け)。
+class _DeltaChip extends StatelessWidget {
+  final ConsultationDeltaChange change;
+  const _DeltaChip({required this.change});
+
+  @override
+  Widget build(BuildContext context) {
+    final planet = _kPlanetJa[change.planet] ?? change.planet;
+    final angle = _kAngleJa[change.angle] ?? change.angle;
+    final (IconData icon, String label, Color color) = switch (change.dir) {
+      'approaching' => (Icons.trending_down, '近づく', const Color(0xFF8FD3B0)),
+      'entering' => (Icons.add_circle_outline, '差してくる', const Color(0xFF8FD3B0)),
+      'receding' => (Icons.trending_up, '離れる', const Color(0xFFE0A878)),
+      'leaving' => (Icons.remove_circle_outline, '外れる', const Color(0xFFE0A878)),
+      _ => (Icons.remove, '安定', SolaraColors.textSecondary),
+    };
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withValues(alpha: 0.5)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 13, color: color),
+          const SizedBox(width: 5),
+          Text(
+            '$planet $angle・$label',
+            style: TextStyle(color: color, fontSize: 11, letterSpacing: 0.3),
+          ),
+        ],
+      ),
     );
   }
 }

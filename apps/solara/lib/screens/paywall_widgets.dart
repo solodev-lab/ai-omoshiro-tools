@@ -292,6 +292,8 @@ extension _PaywallWidgets on _PaywallScreenState {
           ],
           const SizedBox(height: 14),
           _planBullet('Stella 相談  週 100 回 (月曜リセット)'),
+          _planBullet('おでかけ相談  時刻を1時間刻みで指定 + 「30分後の変化」が読める'
+              ' (CCG の線が自転で動き、前半/後半で主役が入れ替わる)'),
           _planBullet('タロット  7 カテゴリ (全体運・恋愛・豊かさ・仕事・対話・癒し・変化) を'
               'クレジット消費なしで指定 + 質問入力欄'),
           _planBullet('星読み  全 5 カテゴリ (全体・恋愛・豊かさ・仕事・対話) + 深い読み'),

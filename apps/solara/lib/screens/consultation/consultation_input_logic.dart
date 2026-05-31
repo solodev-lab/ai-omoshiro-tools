@@ -27,15 +27,35 @@ extension _ConsultationInputLogic on _ConsultationInputScreenState {
   double get _radiusMinKm =>
       _mode == 'daily' ? 0 : _travelBandMin(_radiusKm.round()).toDouble();
 
+  /// Pro 時刻指定 (おでかけ/イベント) の正確な UTC epoch ms。
+  /// 選んだ日付 (today or _whenDate) × _whenHour:00 を端末ローカルで解釈し UTC へ。
+  /// Worker はこれを CCG 線の実時刻に使い +30 分デルタを生成する。null = 時刻未指定。
+  int? _atUtcMsForSelectedHour() {
+    if (_mode != 'daily' || _whenHour == null) return null;
+    DateTime base;
+    if (_whenKind == 'date' && _whenDate != null) {
+      final p = _whenDate!.split('-');
+      if (p.length != 3) return null;
+      base = DateTime(int.parse(p[0]), int.parse(p[1]), int.parse(p[2]));
+    } else {
+      final now = DateTime.now();
+      base = DateTime(now.year, now.month, now.day);
+    }
+    // ローカル時刻として構築 → device tz で UTC 化 (DST/civil clock を尊重)。
+    final local = DateTime(base.year, base.month, base.day, _whenHour!, 0);
+    return local.toUtc().millisecondsSinceEpoch;
+  }
+
   // ── リクエスト組み立て ──────────────────────────────────
   ConsultationWhen? _buildWhen() {
     // 時間帯はおでかけ (daily) のときだけ付ける。
     final tb = _mode == 'daily' ? _whenTimeBand : null;
+    final atMs = _atUtcMsForSelectedHour();
     switch (_whenKind) {
       case 'date':
         return _whenDate == null
             ? null
-            : ConsultationWhen.onDate(_whenDate!, timeBand: tb);
+            : ConsultationWhen.onDate(_whenDate!, timeBand: tb, atUtcMs: atMs);
       case 'range':
         return (_whenStart == null || _whenEnd == null)
             ? null
@@ -46,13 +66,13 @@ extension _ConsultationInputLogic on _ConsultationInputScreenState {
       case 'in5yrPlus':
         return ConsultationWhen.horizon(_whenKind!);
       default:
-        // today / undecided / null。おでかけで時間帯だけ指定されたら、今日の
-        // 日付に時間帯を載せて送る (Worker が時間帯を語りの主役にできるよう)。
-        if (_whenKind == 'today' && tb != null) {
+        // today / undecided / null。おでかけで時間帯 or 時刻が指定されたら、今日の
+        // 日付に載せて送る (Worker が時間帯を語りの主役 + 時刻で線を動かせるよう)。
+        if (_whenKind == 'today' && (tb != null || atMs != null)) {
           final now = DateTime.now();
           final todayStr =
               '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
-          return ConsultationWhen.onDate(todayStr, timeBand: tb);
+          return ConsultationWhen.onDate(todayStr, timeBand: tb, atUtcMs: atMs);
         }
         return null;
     }

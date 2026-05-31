@@ -121,6 +121,28 @@ function timeWindowPromptText(tw) {
   return '(時間帯は扱わない)';
 }
 
+// ── 30 分後デルタ (Pro おでかけ時刻指定) → プロンプト節 ──────────
+
+const DELTA_DIR_JP = {
+  approaching: 'この場所に近づいてくる (これから高まっていく)',
+  receding: 'この場所から離れていく (引いていく)',
+  entering: '新たにこの場所へ差してくる (後半に立ち上がる)',
+  leaving: 'この場所から外れていく (役目を終える)',
+  steady: 'ほぼ位置を保つ (流れは穏やかに続く)',
+};
+
+/** timeDelta.changes をプロンプト用の日本語ブロックにする。変化が無ければ空文字。 */
+function deltaPromptSection(timeDelta) {
+  if (!timeDelta || !Array.isArray(timeDelta.changes) || !timeDelta.changes.length) return '';
+  const lines = timeDelta.changes.map((ch) => {
+    const planet = PLANET_JP[ch.planet] || ch.planet;
+    const angle = ANGLE_JP[ch.angle] || ch.angle;
+    const asp = ASPECT_JP[ch.aspect] || ch.aspect;
+    return `  - ${planet} ${angle} ${asp} の線が ${DELTA_DIR_JP[ch.dir] || ch.dir}`;
+  }).join('\n');
+  return `\n\n【${timeDelta.deltaMin}分後の変化 (選んだ時刻から${timeDelta.deltaMin}分後、この地点で角ラインが地球の自転で動いた結果)】\n${lines}`;
+}
+
 /** UI チップ用の人間可読な時間帯ラベル (narrative とは別に構造で返す)。 */
 function humanizeTimeWindow(tw) {
   if (!tw) return null;
@@ -151,6 +173,17 @@ function buildConsultationPrompt({ pipe, theme, mode, withWhom, wish, userTimeBa
   const c = pipe.candidate;
   const place = placeReference(c);
   const isFirst = pipe.isFirst;
+  // 30 分後デルタ (Pro おでかけ時刻指定)。candidate.timeDelta が非 null のとき。
+  const timeDelta = c.timeDelta || null;
+  const deltaSection = deltaPromptSection(timeDelta);
+  const hasDelta = !!(timeDelta && Array.isArray(timeDelta.changes) && timeDelta.changes.length);
+  const deltaMin = hasDelta ? timeDelta.deltaMin : 30;
+  const deltaSchemaLine = hasDelta
+    ? `,\n    "deltaAfter": "<${deltaMin}分後、この場所の流れがどう移ろうかを書く。100〜160字。観察(だ/である)+語りかけ(ですます)のハイブリッド。吉凶禁止。線が離れる=そのエネルギーが引いて別の質へ移る/近づく・差す=これから高まる、で描く。『核心は前半に』『後半に向けて〜』のような主体性への寄り添い助言はOK(断定・命令はしない)。変化が小さければ『この${deltaMin}分は流れが穏やかに続く』と正直に。>"`
+    : '';
+  const deltaRule = hasDelta
+    ? `\n- deltaAfter: 上の「${deltaMin}分後の変化」を、選んだ時刻の読みからの"移ろい"として語る。線が動く=その場の主役が静かに入れ替わる、を吉凶なしで。前半/後半の質の違いに気づける一言を添える。`
+    : '';
 
   const factorLines = (c.factors || []).map((f) => `  - ${factorPromptLine(f)}`).join('\n')
     || '  - (テーマ該当の強いファクターが近距離に無い)';
@@ -211,7 +244,7 @@ ${factorLines}${relocLine}${quietGuidance}
 ${timeSection}
 
 【内的季節 (進行。専門用語は narrative に出さない。枠として使う)】
-${innerSeasonPromptText(pipe.innerSeason)}
+${innerSeasonPromptText(pipe.innerSeason)}${deltaSection}
 
 🔴 Solara 設計思想 (絶対遵守、すべての文に適用):
 
@@ -255,7 +288,7 @@ ${innerSeasonPromptText(pipe.innerSeason)}
     として読み、最終判断は相談者本人のものと明確にする。「必ず」「絶対」「○○すべき」は禁止。${firstOnlyRule}
 
 12. テーマ (癒し/恋愛 等) は相談者が既に選択済み。本人の動機を推測 (「〜を求めているのかもしれませんね」等) しない。
-    テーマは所与とし、その土地がそのテーマにどう出会うかを語る。
+    テーマは所与とし、その土地がそのテーマにどう出会うかを語る。${deltaRule}
 ${STYLE_VOICE_JP}
 
 【出力 JSON 形式 (これ以外を返さない。マークダウン・コードフェンス禁止)】
@@ -263,7 +296,7 @@ ${STYLE_VOICE_JP}
   "candidate": {
     "characterHeadline": "<15字以内目安の特徴見出し>",
     "energyLabels": ["<惑星 アングル・性格>", ...],
-    "narrative": "<400〜520字。観察 (だ/である) + 語りかけ (ですます) のハイブリッド。最寄り 1〜2 ファクター中心、可能なら Soft+Hard で幅。km を出さない。内的季節を重ねる。読心しない>"
+    "narrative": "<400〜520字。観察 (だ/である) + 語りかけ (ですます) のハイブリッド。最寄り 1〜2 ファクター中心、可能なら Soft+Hard で幅。km を出さない。内的季節を重ねる。読心しない>"${deltaSchemaLine}
   }
 }`;
 }
@@ -286,10 +319,12 @@ function staticFallback(pipe) {
     ? `${place.ref}。今は Stella の声が届きませんが、在るエネルギーの客観情報をお渡しします。`
     : `${place.ref} はテーマ該当の線が近距離に見当たらない、静かでニュートラルな場です。`;
 
-  const out = {
-    candidate: { name: c.name, characterHeadline: headline, energyLabels, narrative },
-    fallback: true,
-  };
+  const candidateOut = { name: c.name, characterHeadline: headline, energyLabels, narrative };
+  if (c.timeDelta) {
+    // fallback では narrative を生成できないので changes のみ (UI 側で narrative 空なら非表示)。
+    candidateOut.deltaAfter = { deltaMin: c.timeDelta.deltaMin, changes: c.timeDelta.changes, narrative: '' };
+  }
+  const out = { candidate: candidateOut, fallback: true };
   if (pipe.isFirst) {
     out.innerSeason = '';
     out.intro = `${MODE_JP[pipe.meta?.mode] || ''}の候補を整理しました。`;
@@ -384,6 +419,7 @@ export async function handleConsultationV2(body, env, deps = {}) {
   }
 
   const ai = (parsed && parsed.candidate) || {};
+  const td = pipe.candidate.timeDelta || null;
   const out = {
     ...base,
     candidate: {
@@ -392,6 +428,14 @@ export async function handleConsultationV2(body, env, deps = {}) {
       energyLabels: Array.isArray(ai.energyLabels) ? ai.energyLabels : [],
       narrative: typeof ai.narrative === 'string' ? ai.narrative : '',
       timeWindow,
+      // 30 分後デルタ (Pro 時刻指定時のみ)。changes=構造データ / narrative=Stella の言葉。
+      ...(td ? {
+        deltaAfter: {
+          deltaMin: td.deltaMin,
+          changes: td.changes,
+          narrative: typeof ai.deltaAfter === 'string' ? ai.deltaAfter : '',
+        },
+      } : {}),
     },
     model: primary,
   };
@@ -408,4 +452,5 @@ export async function handleConsultationV2(body, env, deps = {}) {
 export const _internal = {
   buildConsultationPrompt, placeReference, factorPromptLine,
   timeWindowPromptText, humanizeTimeWindow, innerSeasonPromptText, staticFallback,
+  deltaPromptSection,
 };

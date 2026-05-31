@@ -437,4 +437,87 @@ void main() {
       expect((sent!['when'] as Map)['date'], '2026-08-01');
     });
   });
+
+  group('30分後デルタ (Pro 時刻指定)', () {
+    test('when.atUtcMs が JSON に乗る (onDate + atUtcMs)', () {
+      final w = ConsultationWhen.onDate('2026-06-15',
+          timeBand: 'evening', atUtcMs: 1234567890000);
+      final j = w.toJson();
+      expect(j['atUtcMs'], 1234567890000);
+      expect(j['timeBand'], 'evening');
+    });
+
+    test('atUtcMs 未指定なら JSON に出ない', () {
+      final j = ConsultationWhen.onDate('2026-06-15').toJson();
+      expect(j.containsKey('atUtcMs'), isFalse);
+    });
+
+    test('candidate.deltaAfter を解析する (narrative + changes)', () {
+      final c = ConsultationV2Candidate.fromJson({
+        'lat': 35.0,
+        'lng': 139.0,
+        'characterHeadline': 'h',
+        'energyLabels': [],
+        'narrative': 'n',
+        'deltaAfter': {
+          'deltaMin': 30,
+          'narrative': '30分後、火星の線が離れていきます。',
+          'changes': [
+            {
+              'planet': 'mars',
+              'angle': 'mc',
+              'aspect': 'conjunction',
+              'dir': 'receding',
+              'fromKm': 120,
+              'toKm': 540,
+            },
+          ],
+        },
+      });
+      expect(c.deltaAfter, isNotNull);
+      expect(c.deltaAfter!.deltaMin, 30);
+      expect(c.deltaAfter!.narrative, contains('30分後'));
+      expect(c.deltaAfter!.changes.length, 1);
+      expect(c.deltaAfter!.changes.first.planet, 'mars');
+      expect(c.deltaAfter!.changes.first.dir, 'receding');
+    });
+
+    test('deltaAfter 無しなら null + toJson に出ない', () {
+      final c = ConsultationV2Candidate.fromJson({
+        'lat': 0,
+        'lng': 0,
+        'characterHeadline': '',
+        'energyLabels': [],
+        'narrative': '',
+      });
+      expect(c.deltaAfter, isNull);
+      expect(c.toJson().containsKey('deltaAfter'), isFalse);
+    });
+
+    test('deltaAfter は toJson→fromJson で round-trip (履歴保存の保持)', () {
+      const c = ConsultationV2Candidate(
+        lat: 1,
+        lng: 2,
+        characterHeadline: 'h',
+        energyLabels: [],
+        narrative: 'n',
+        deltaAfter: ConsultationDeltaAfter(
+          deltaMin: 30,
+          narrative: 'd',
+          changes: [
+            ConsultationDeltaChange(
+                planet: 'venus',
+                angle: 'asc',
+                aspect: 'trine',
+                dir: 'approaching',
+                fromKm: 500,
+                toKm: 200),
+          ],
+        ),
+      );
+      final back = ConsultationV2Candidate.fromJson(c.toJson());
+      expect(back.deltaAfter!.changes.first.dir, 'approaching');
+      expect(back.deltaAfter!.changes.first.toKm, 200);
+    });
+  });
 }

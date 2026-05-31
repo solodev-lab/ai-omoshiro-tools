@@ -15,7 +15,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { handleConsultationV2, _internal } from '../src/consultation_v2.js';
 
-const { placeReference, buildConsultationPrompt, humanizeTimeWindow, timeWindowPromptText } = _internal;
+const { placeReference, buildConsultationPrompt, humanizeTimeWindow, timeWindowPromptText, deltaPromptSection } = _internal;
 
 const BIRTH = { date: '1990-06-15', time: '14:30', lat: 35.68, lng: 139.65, tzName: 'Asia/Tokyo' };
 const HOME = { lat: 35.68, lng: 139.65 };
@@ -318,4 +318,80 @@ test('handler: 不正 JSON (パース不能) → 静的フォールバック', a
     ENV, { callGeminiFn: garbage },
   );
   assert.equal(r.fallback, true);
+});
+
+// ── 30 分後デルタ (Pro おでかけ時刻指定) ──────────────────────
+
+test('deltaPromptSection: changes を日本語ブロックにする / 空なら空文字', () => {
+  assert.equal(deltaPromptSection(null), '');
+  assert.equal(deltaPromptSection({ deltaMin: 30, changes: [] }), '');
+  const s = deltaPromptSection({
+    deltaMin: 30,
+    changes: [
+      { planet: 'mars', angle: 'mc', aspect: 'conjunction', dir: 'receding' },
+      { planet: 'venus', angle: 'asc', aspect: 'trine', dir: 'approaching' },
+    ],
+  });
+  assert.match(s, /30分後の変化/);
+  assert.match(s, /火星/);
+  assert.match(s, /離れていく/);
+  assert.match(s, /金星/);
+  assert.match(s, /近づいてくる/);
+});
+
+test('prompt: candidate.timeDelta があると 30分後の変化 + deltaAfter スキーマが入る', () => {
+  const pipe = fakePipe();
+  pipe.candidate.timeDelta = {
+    deltaMin: 30,
+    changes: [{ planet: 'mars', angle: 'mc', aspect: 'conjunction', dir: 'receding', fromKm: 120, toKm: 540 }],
+    hasMotion: true,
+  };
+  const p = buildConsultationPrompt({ pipe, theme: 'love', mode: 'daily', withWhom: '', wish: '' });
+  assert.match(p, /30分後の変化/);
+  assert.match(p, /"deltaAfter":/);
+  assert.match(p, /吉凶禁止/); // delta スキーマにも吉凶禁止が効く
+});
+
+test('prompt: timeDelta が無いと deltaAfter スキーマは出ない', () => {
+  const p = buildConsultationPrompt({ pipe: fakePipe(), theme: 'love', mode: 'daily', withWhom: '', wish: '' });
+  assert.doesNotMatch(p, /"deltaAfter":/);
+});
+
+test('handler: when.atUtcMs 指定で candidate.deltaAfter (narrative + changes) を返す', async () => {
+  const mockWithDelta = async () => JSON.stringify({
+    innerSeason: '今のあなたは動きの季節。', intro: '見てみましょう。', outro: '全部ではありません。',
+    candidate: {
+      characterHeadline: '火星が前に立つ場',
+      energyLabels: ['火星 MC・推進力'],
+      narrative: '観察である。語りかけです。',
+      deltaAfter: '30分後、火星の線が引いていきます。核心は前半に置くと流れに乗れます。',
+    },
+  });
+  const r = await handleConsultationV2(
+    {
+      birth: BIRTH, home: HOME, theme: 'work', mode: 'daily',
+      when: { kind: 'today', atUtcMs: Date.UTC(2026, 5, 15, 6, 0, 0) },
+      scope: { kind: 'point', point: { lat: 35.68, lng: 139.65, name: 'テスト地点' } },
+      isFirst: true, excluded: [],
+    },
+    ENV, { callGeminiFn: mockWithDelta },
+  );
+  assert.ok(r.candidate.deltaAfter, 'deltaAfter がある');
+  assert.equal(r.candidate.deltaAfter.deltaMin, 30);
+  assert.match(r.candidate.deltaAfter.narrative, /30分後/);
+  assert.ok(Array.isArray(r.candidate.deltaAfter.changes));
+});
+
+test('handler: atUtcMs 無しなら candidate.deltaAfter は付かない', async () => {
+  const cap = {};
+  const r = await handleConsultationV2(
+    {
+      birth: BIRTH, home: HOME, theme: 'work', mode: 'daily',
+      when: { kind: 'today' },
+      scope: { kind: 'point', point: { lat: 35.68, lng: 139.65, name: 'テスト地点' } },
+      isFirst: true, excluded: [],
+    },
+    ENV, { callGeminiFn: mockGemini(cap) },
+  );
+  assert.equal(r.candidate.deltaAfter, undefined);
 });

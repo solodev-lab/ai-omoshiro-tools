@@ -5,9 +5,9 @@
 
 ## サマリ
 
-- ファイル数: 10 / 総行数: 2178
-- class/mixin/extension/enum: 23
-- 関数 (top-level + method の素拾い): 34
+- ファイル数: 10 / 総行数: 2257
+- class/mixin/extension/enum: 25
+- 関数 (top-level + method の素拾い): 36
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 0
 - Worker URL リテラル: 20
@@ -104,7 +104,7 @@ Consultation API — クレジット系 (V2 と共有)
 - L128 `fetchConsultationCredits()` — `/protected/consultation/credits` を呼んで現在のクレジット状況を取得する。
 
 
-### `lib/utils/consultation_v2_api.dart` (431 行)
+### `lib/utils/consultation_v2_api.dart` (510 行)
 
 **ファイル先頭コメント:**
 
@@ -128,7 +128,7 @@ HARD500 回避のため part 分割: リクエストモデルは consultation_v2
 
 - relative: `app_attest_client.dart`, `consultation_api.dart`, `solara_api.dart`, `solara_storage.dart`
 
-**型定義 (7):**
+**型定義 (9):**
 
 - L31 `class ConsultationTimeWindowItem`
   - 時間帯リズムの 1 項目 (旅行の朝昼夜)。
@@ -138,21 +138,27 @@ HARD500 回避のため part 分割: リクエストモデルは consultation_v2
   - エビデンスの距離行 (玄人向けに km を出す。本文には出さない)。
 - L111 `class ConsultationEvidence`
   - エビデンス (占星術ファクターのみ。重み・選び方・プロンプトは出さない)。
-- L147 `class ConsultationV2Candidate`
+- L147 `class ConsultationDeltaChange`
+  - 30 分後デルタの 1 変化 (テーマ角ラインがその場に対してどう動くか)。
+- L186 `class ConsultationDeltaAfter`
+  - 30 分後デルタ (Pro おでかけ/イベント 時刻指定時のみ)。
+- L220 `class ConsultationV2Candidate`
   - 1 候補地の Stella の読み (構造データ + ナレーション)。
-- L228 `class ConsultationV2Reading`
+- L307 `class ConsultationV2Reading`
   - 相談 V2 レスポンス全体 (成功時)。
-- L303 `class ConsultationV2Result`
+- L382 `class ConsultationV2Result`
   - fetchConsultationV2 の戻り値。
 
-**関数 (6 public + 0 private):**
+**関数 (8 public + 0 private):**
 
 - L43 `toJson()`
 - L86 `toJson()`
 - L107 `toJson()`
 - L139 `toJson()`
-- L208 `toJson()`
-- L360 `fetchConsultationV2()` — /protected/astro/consultation2 を呼んで Stella の読み (候補 1 つ) を取得する。
+- L174 `toJson()`
+- L212 `toJson()`
+- L286 `toJson()`
+- L439 `fetchConsultationV2()` — /protected/astro/consultation2 を呼んで Stella の読み (候補 1 つ) を取得する。
 
 
 ### `lib/utils/daily_transits_api.dart` (241 行)

@@ -311,6 +311,15 @@ LOCATION 枠 (Free 5 / Pro 10、`SlotManager.maxSlots` を ProStatus 参照 gett
 Forecast 期間 (Free 1 年 / Pro 5 年、`_setYearOffset` で year>0 を Free gate)。
 **残る Pro ゲート未配線**: Forecast 回数無制限 (KV 月次クォータ自体が未実装、F2 は脚注扱いのため公開後)。
 
+**🆕 (2026-05-31) おでかけ時刻指定 + 「30分経過後を見る」(Pro・おでかけ/イベント限定)**:
+- Free のおでかけは従来どおり 5 時間帯バンド (ラベル + 語りの主役)。**Pro は 1 時間刻みの時刻ドラム**を追加 (`consultation_input_when_scope.dart` の `_HourDrumSheet` / `_TimeHourRow`、Free はロック→Pro 案内)。
+- 時刻を指定すると `ConsultationWhen.atUtcMs` (端末ローカル→UTC) を送り、Worker が **CCG 線 geometry を実時刻で計算**する (従来 daily は正午 UTC 固定でラベルだけだった不整合を是正)。
+- 同じ 1 呼出で **T と T+30 分のデルタ**を計算 (`consultation_engine.computeTimeDelta`、transit 角ラインのみ・候補地点に対し近接を再スコア)。角ラインは自転で 30 分 ≈ 7.5°(中緯度 ~800km) 西へ sweep するため、線がその場に「近づく/離れる/差す/外れる」を検出。
+- Worker が同じ Gemini 呼出に **deltaAfter narrative を同梱** (`consultation_v2.js`、吉凶禁止・変化中心・「核心は前半に」等の主体性助言可)。**追加クレジット 0** (候補 1 件 = 1 呼出のまま、出力が richer になるだけ)。
+- 結果画面は候補カードごとに **「30分経過後を見る」+ reveal + i ボタン** (`consultation_result_card.dart` `_DeltaAfterSection`)。候補ごとに線の動きが違う = 場所ごとに違う 30 分後。
+- 履歴は candidate.deltaAfter が toJson/fromJson で round-trip するため自動保持。
+- テスト: worker engine 7 + v2 5、flutter model 5 追加。全 green。
+
 ---
 
 ### (ii) 詳細設計 — Stage 1〜4 すり合わせ完了（2026-05-15）

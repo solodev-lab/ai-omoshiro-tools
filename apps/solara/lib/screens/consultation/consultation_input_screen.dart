@@ -34,6 +34,7 @@ import '../../utils/consultation_v2_api.dart';
 import '../../utils/pro_status.dart';
 import '../../utils/solara_storage.dart';
 import '../../widgets/info_popup.dart';
+import '../../widgets/pro_unlock_dialog.dart';
 import '../../widgets/tap_to_unfocus.dart';
 import '../map/map_search.dart' as map_search;
 import '../map/map_vp_panel.dart';
@@ -109,6 +110,7 @@ class _ConsultationInputScreenState extends State<ConsultationInputScreen> {
   String? _whenStart; // YYYY-MM-DD ('range')
   String? _whenEnd; // YYYY-MM-DD ('range')
   String? _whenTimeBand; // 時間帯 (おでかけのみ・任意): morning/midday/evening/night/lateNight
+  int? _whenHour; // Pro 時刻指定 (おでかけのみ・任意): 0〜23 時。set 時 atUtcMs を送り 30 分後デルタ有効
 
   // ④ どこで
   String? _scopeKind; // point / bearing / radius / region / country / world
@@ -191,6 +193,7 @@ class _ConsultationInputScreenState extends State<ConsultationInputScreen> {
       'whenStart': _whenStart,
       'whenEnd': _whenEnd,
       'whenTimeBand': _whenTimeBand,
+      'whenHour': _whenHour,
       'scopeKind': _scopeKind,
       'radiusKm': _radiusKm,
       'regionGroup': _regionGroup,
@@ -209,6 +212,7 @@ class _ConsultationInputScreenState extends State<ConsultationInputScreen> {
     _whenStart = f['whenStart'] as String?;
     _whenEnd = f['whenEnd'] as String?;
     _whenTimeBand = f['whenTimeBand'] as String?;
+    _whenHour = (f['whenHour'] as num?)?.toInt();
     _scopeKind = f['scopeKind'] as String?;
     _radiusKm = (f['radiusKm'] as num?)?.toDouble() ?? _radiusKm;
     _regionGroup = f['regionGroup'] as String? ?? _regionGroup;
@@ -258,6 +262,7 @@ class _ConsultationInputScreenState extends State<ConsultationInputScreen> {
       _whenStart = null;
       _whenEnd = null;
       _whenTimeBand = null; // 場面変更で時間帯もリセット (おでかけ以外では非表示)
+      _whenHour = null; // 時刻指定もリセット
       if (widget.presetTarget != null || _specificPick != null) {
         _scopeKind = 'point';
       } else {
@@ -301,6 +306,17 @@ class _ConsultationInputScreenState extends State<ConsultationInputScreen> {
       return;
     }
     setState(() => _whenKind = key);
+  }
+
+  /// Pro: 時刻ドラム (1 時間刻み) を開いて _whenHour を設定。選んだ時刻から
+  /// 語りのバンド (_whenTimeBand) も自動導出して一致させる (geometry=時刻 / 語り=バンド)。
+  Future<void> _pickHour() async {
+    final picked = await showConsultationHourPicker(context, _whenHour ?? 15);
+    if (!mounted || picked == null) return;
+    setState(() {
+      _whenHour = picked;
+      _whenTimeBand = bandFromHour(picked);
+    });
   }
 
   Future<String?> _pickSingleDate() async {
@@ -455,10 +471,35 @@ class _ConsultationInputScreenState extends State<ConsultationInputScreen> {
                       if (_mode == 'daily')
                         _Section(
                           label: '時間帯（任意）',
-                          child: _TimeBandSelector(
-                            selected: _whenTimeBand,
-                            onTap: (b) => setState(() =>
-                                _whenTimeBand = _whenTimeBand == b ? null : b),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _TimeBandSelector(
+                                selected: _whenTimeBand,
+                                onTap: (b) => setState(() {
+                                  _whenTimeBand = _whenTimeBand == b ? null : b;
+                                  _whenHour = null; // 手動バンドは時刻指定と排他
+                                }),
+                              ),
+                              const SizedBox(height: 10),
+                              // Pro: 1 時間刻みの時刻指定 (おでかけ/イベント)。選ぶと結果画面で
+                              // 「30分経過後を見る」が出る。Free はタップで Pro 案内。
+                              _TimeHourRow(
+                                isPro: ProStatus.instance.isPro,
+                                hour: _whenHour,
+                                onPick: _pickHour,
+                                onClear: () =>
+                                    setState(() => _whenHour = null),
+                                onLockedTap: () => showProUnlockDialog(
+                                  context,
+                                  featureLabel: 'おでかけの時刻指定 + 30分後の変化',
+                                  description:
+                                      '行く時刻を1時間刻みで指定でき、その場の流れが'
+                                      '「30分後どう変わるか」まで読めます。CCGの線は地球の'
+                                      '自転で動くので、同じ場所でも前半と後半で主役が入れ替わります。',
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       // ④ どこで

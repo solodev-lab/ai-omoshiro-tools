@@ -54,10 +54,10 @@
 | 431 | 🟡 NOTICE | lib/utils/consultation_v2_api.dart |
 | 430 | 🟡 NOTICE | lib/screens/consultation/consultation_input_widgets.dart |
 | 427 | 🟡 NOTICE | lib/screens/consultation/consultation_result_widgets.dart |
+| 419 | 🟡 NOTICE | lib/screens/paywall_widgets.dart |
 | 417 | 🟡 NOTICE | lib/screens/sanctuary/title_history_screen.dart |
 | 415 | 🟡 NOTICE | lib/screens/galaxy/constellation_share_card_page.dart |
 | 415 | 🟡 NOTICE | lib/screens/observe/observe_history.dart |
-| 413 | 🟡 NOTICE | lib/screens/paywall_widgets.dart |
 | 413 | 🟡 NOTICE | lib/utils/forecast_cache.dart |
 | 413 | 🟡 NOTICE | lib/screens/map/map_display_menu.dart |
 | 411 | 🟡 NOTICE | lib/screens/consultation/consultation_place_picker_widgets.dart |
@@ -91,7 +91,7 @@
 
 ### 1. 📁 別ファイル間 (16 箇所、14 ファイル)
 
-  - lib/screens/paywall_comparison.dart:260
+  - lib/screens/paywall_comparison.dart:292
   - lib/widgets/ai_report_button.dart:300
   - lib/widgets/class_card.dart:287
   - lib/widgets/location_picker_minimap.dart:135
@@ -125,7 +125,7 @@
 ### 4. 📁 別ファイル間 (10 箇所、10 ファイル)
 
   - lib/screens/galaxy_screen.dart:557
-  - lib/screens/paywall_comparison.dart:259
+  - lib/screens/paywall_comparison.dart:291
   - lib/widgets/full_moon_overlay.dart:299
   - lib/widgets/location_picker_minimap.dart:134
   - lib/screens/consultation/consultation_result_widgets.dart:294
@@ -146,7 +146,7 @@
 
 ### 6. 📁 別ファイル間 (13 箇所、8 ファイル)
 
-  - lib/screens/paywall_widgets.dart:403
+  - lib/screens/paywall_widgets.dart:409
   - lib/widgets/catasterism_overlay.dart:191
   - lib/widgets/full_moon_overlay.dart:200
   - lib/widgets/full_moon_overlay.dart:403
@@ -157,10 +157,10 @@
 
 ### 7. 📁 別ファイル間 (9 箇所、8 ファイル)
 
-  - lib/screens/paywall_comparison.dart:94
-  - lib/screens/paywall_comparison.dart:169
+  - lib/screens/paywall_comparison.dart:109
+  - lib/screens/paywall_comparison.dart:184
   - lib/screens/paywall_legal_links.dart:83
-  - lib/screens/paywall_widgets.dart:402
+  - lib/screens/paywall_widgets.dart:408
   - lib/widgets/catasterism_overlay.dart:190
   ```
   ),
