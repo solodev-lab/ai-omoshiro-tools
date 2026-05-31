@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 6 / 総行数: 2515
+- ファイル数: 6 / 総行数: 2516
 - class/mixin/extension/enum: 13
 - 関数 (top-level + method の素拾い): 63
 - Navigator.push 等: 0
@@ -176,7 +176,7 @@
   </details>
 
 
-### `lib/widgets/solara_splash.dart` (165 行)
+### `lib/widgets/solara_splash.dart` (166 行)
 
 **imports:** dart=1 / package=2 / relative=0
 

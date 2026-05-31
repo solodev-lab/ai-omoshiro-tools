@@ -5,9 +5,9 @@
 
 ## サマリ
 
-- ファイル数: 27 / 総行数: 6910
+- ファイル数: 27 / 総行数: 6967
 - class/mixin/extension/enum: 78
-- 関数 (top-level + method の素拾い): 179
+- 関数 (top-level + method の素拾い): 180
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 3
 - Worker URL リテラル: 0
@@ -768,7 +768,7 @@ Sanctuary ✦ Account セクション — Phase 2-9 Sign in 統合
   </details>
 
 
-### `lib/widgets/solara_nav_bar.dart` (163 行)
+### `lib/widgets/solara_nav_bar.dart` (220 行)
 
 **imports:** dart=0 / package=1 / relative=1
 
@@ -779,16 +779,17 @@ Sanctuary ✦ Account セクション — Phase 2-9 Sign in 統合
 - L23 `class SolaraNavBar : StatelessWidget`
   - Custom bottom navigation bar matching HTML shared/styles.css exactly.
 
-**関数 (3 public + 2 private):**
+**関数 (3 public + 3 private):**
 
 - L35 `totalHeight()` — systemNav 込みの NavBar 全体の高さ。
 - L47 `systemNavInset()`
-- L60 `build()`
+- L69 `build()`
 
-  <details><summary>private 関数 2 件</summary>
+  <details><summary>private 関数 3 件</summary>
 
-  - L90 `_buildItem()`
-  - L153 `_iconForIndex()`
+  - L135 `_glowDot()`
+  - L146 `_buildItem()`
+  - L210 `_iconForIndex()`
 
   </details>
 

@@ -55,7 +55,7 @@
 ## #1 / #2 機械抽出 ↔ feature_inventory.md (人手版) の対整合
 
 - 機械抽出した class/mixin/extension/enum: **468**
-- inventory に登場する識別子 (大文字始まり ``backtick``囲み): **271**
+- inventory に登場する識別子 (大文字始まり ``backtick``囲み): **272**
 
 ### #1 機械にあるが Doc に書かれていない (270)
 
@@ -261,7 +261,7 @@
 - `_RarityStarRow`
 - … 残り 70 省略
 
-### #2 Doc に書いてあるがコードに存在しない (ゴースト記述) (73)
+### #2 Doc に書いてあるがコードに存在しない (ゴースト記述) (74)
 
 > 注: Flutter SDK や外部ライブラリの型もここに乗る (誤検出)。
 > 真のゴーストはアプリ独自型のみ。実際の Doc 修正対象は手で絞り込む。
@@ -329,6 +329,7 @@
 - `SearchHourAngle`
 - `SearchRiseSet`
 - `SingleTickerProviderStateMixin`
+- `Solara`
 - `SolaraSafeText`
 - `SpiralPainter`
 - `StatefulWidget`
@@ -455,9 +456,11 @@
 > 各ソースの SHA1 を `_stamps.json` に記録し、差分を検出。
 > 変更されたファイルが属する層は、人手版インベントリ章の見直し対象。
 
-- 追加: **0** / 削除: **0** / 変更: **0**
+- 追加: **0** / 削除: **0** / 変更: **1**
 
-- 変更なし — 全インベントリ章は最新。
+### 変更されたファイル (層別)
+
+- **層 3c**: `lib/widgets/solara_splash.dart`
 
 ## #7 astro_glossary 用語辞書対整合
 

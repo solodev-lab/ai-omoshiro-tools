@@ -116,11 +116,12 @@ class _SolaraSplashState extends State<SolaraSplash>
             ),
           ),
         ),
-        // ── コンテンツ: Solara + サブタイトル ──
-        // 中央の発光星 (★) と重ならないよう、星のすぐ下 (中央やや下) に配置。
+        // ── コンテンツ: Solara + サブタイトル (上寄せ) ──
+        // 中央やや下 (0.42) だと裏の「ログイン中」表示と被るため、鏡像位置の
+        // 上寄せ (-0.42 = 下からの距離と同じ距離を上から) に配置。
         // 背景は純黒なので中央スクリムは不要 (星の輝きを潰さない)。文字シャドウのみで可読。
         Align(
-          alignment: const Alignment(0, 0.42),
+          alignment: const Alignment(0, -0.42),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 32),
             child: Column(
