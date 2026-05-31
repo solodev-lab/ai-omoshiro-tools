@@ -401,8 +401,8 @@
 | 3c | · | 5 | 4 | 2 | 4 | · | 12 | 4 | · | · | · | · | · | · | · | · |
 | 4a | 10 | 11 | · | 13 | 7 | · | 18 | 23 | 3 | 30 | 2 | · | · | · | 3 | · |
 | 4b | 5 | 13 | · | 3 | 5 | · | 16 | · | · | · | 31 | · | · | 2 | · | · |
-| 4c | 1 | 1 | 15 | 1 | 6 | 5 | 9 | 6 | · | · | · | 17 | · | · | 1 | · |
-| 4d | 3 | 6 | 13 | 1 | 3 | 2 | 11 | 2 | 1 | · | · | · | 9 | · | · | · |
+| 4c | 1 | 1 | 14 | 1 | 5 | 5 | 9 | 6 | · | · | · | 17 | · | · | 1 | · |
+| 4d | 3 | 6 | 13 | 1 | 2 | 2 | 11 | 2 | 1 | · | · | · | 9 | · | · | · |
 | 4e | 1 | 6 | · | 3 | 7 | 1 | 15 | 1 | · | · | · | · | · | 9 | 3 | · |
 | 4f | 2 | 6 | · | 8 | 16 | 4 | 19 | 12 | · | 6 | · | · | · | · | 29 | · |
 | 5 | 1 | 2 | · | 2 | 5 | 3 | 1 | 1 | · | 1 | 1 | 1 | 1 | 3 | 4 | · |
@@ -420,19 +420,19 @@
 | `lib/utils/solara_storage.dart` | 2b | 31 |
 | `lib/widgets/info_popup.dart` | 3a | 24 |
 | `lib/screens/map/map_constants.dart` | 3b | 21 |
-| `lib/utils/pro_status.dart` | 2b | 15 |
 | `lib/utils/solara_api.dart` | 2a | 15 |
 | `lib/models/galaxy_cycle.dart` | 1c | 14 |
 | `lib/screens/horoscope/horo_antique_icons.dart` | 3a | 14 |
+| `lib/utils/pro_status.dart` | 2b | 13 |
 | `lib/models/daily_reading.dart` | 1c | 12 |
 | `lib/widgets/pro_unlock_dialog.dart` | 3a | 11 |
 | `lib/widgets/tap_to_unfocus.dart` | 3a | 11 |
 | `lib/screens/horoscope/horo_constants.dart` | 1b | 10 |
 | `lib/screens/horoscope/horo_panel_shared.dart` | 4b | 9 |
-| `lib/models/tarot_card.dart` | 1c | 8 |
 | `lib/utils/constellation_namer.dart` | 1b | 8 |
 | `lib/utils/tarot_data.dart` | 2c | 8 |
 | `lib/models/lunar_intention.dart` | 1c | 7 |
+| `lib/models/tarot_card.dart` | 1c | 7 |
 | `lib/screens/map/map_vp_panel.dart` | 4a | 7 |
 | `lib/widgets/glass_panel.dart` | 3a | 7 |
 | `lib/screens/observe/observe_constants.dart` | 4c | 6 |
@@ -450,12 +450,12 @@
 > 各ソースの SHA1 を `_stamps.json` に記録し、差分を検出。
 > 変更されたファイルが属する層は、人手版インベントリ章の見直し対象。
 
-- 追加: **0** / 削除: **0** / 変更: **4**
+- 追加: **0** / 削除: **0** / 変更: **2**
 
 ### 変更されたファイル (層別)
 
-- **層 4a**: `lib/screens/map/map_daily_transit_screen.dart`
-- **層 4f**: `lib/screens/ai_consent_screen.dart`, `lib/screens/consultation/consultation_input_screen.dart`, `lib/screens/consultation/consultation_input_widgets.dart`
+- **層 4c**: `lib/screens/observe/observe_history_filter.dart`
+- **層 4d**: `lib/screens/galaxy/galaxy_archive_filter.dart`
 
 ## #7 astro_glossary 用語辞書対整合
 

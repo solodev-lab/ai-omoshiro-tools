@@ -5,9 +5,9 @@
 
 ## サマリ
 
-- ファイル数: 10 / 総行数: 3680
+- ファイル数: 10 / 総行数: 3676
 - class/mixin/extension/enum: 22
-- 関数 (top-level + method の素拾い): 83
+- 関数 (top-level + method の素拾い): 82
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 1
 - Worker URL リテラル: 0
@@ -62,7 +62,7 @@
   </details>
 
 
-### `lib/screens/galaxy/galaxy_archive_filter.dart` (319 行)
+### `lib/screens/galaxy/galaxy_archive_filter.dart` (315 行)
 
 **ファイル先頭コメント:**
 
@@ -85,37 +85,36 @@ Pro が売るのは「記録を使う道具」= 検索・フィルタ・ソー�
     チップ自体は静かなゴールド系のみ。
 ```
 
-**imports:** dart=0 / package=1 / relative=4
+**imports:** dart=0 / package=1 / relative=3
 
-- relative: `../../models/galaxy_cycle.dart`, `../../theme/solara_colors.dart`, `../../utils/pro_status.dart`, `../../widgets/pro_unlock_dialog.dart`
+- relative: `../../models/galaxy_cycle.dart`, `../../theme/solara_colors.dart`, `../../widgets/pro_unlock_dialog.dart`
 
 **型定義 (5):**
 
-- L29 `class GalaxyArchiveFilter`
+- L28 `class GalaxyArchiveFilter`
   - Star Atlas のフィルタ状態。Atlas タブで保持 → カードリスト構築前に
-- L101 `enum GalaxyArchiveSort`
-- L107 `extension GalaxyArchiveSortLabel : GalaxyArchiveSort`
-- L124 `class GalaxyArchiveFilterBar : StatefulWidget`
+- L100 `enum GalaxyArchiveSort`
+- L106 `extension GalaxyArchiveSortLabel : GalaxyArchiveSort`
+- L123 `class GalaxyArchiveFilterBar : StatefulWidget`
   - Star Atlas タブ上部に置く検索・フィルタバー。
-- L140 `class _GalaxyArchiveFilterBarState : State`
+- L139 `class _GalaxyArchiveFilterBarState : State`
 
-**関数 (8 public + 4 private):**
+**関数 (7 public + 4 private):**
 
-- L47 `copyWith()`
-- L65 `apply()` — `cycles` (新しい順を想定) に絞込 + 並べ替えを適用して返す。
-- L137 `createState()`
-- L144 `initState()`
-- L150 `didUpdateWidget()`
-- L159 `dispose()`
-- L198 `build()`
-- L319 `currentIsPro()` — 外部ヘルパー: ProStatus を参照するシンプル版。状態管理を持たないので
+- L46 `copyWith()`
+- L64 `apply()` — `cycles` (新しい順を想定) に絞込 + 並べ替えを適用して返す。
+- L136 `createState()`
+- L143 `initState()`
+- L149 `didUpdateWidget()`
+- L158 `dispose()`
+- L197 `build()`
 
   <details><summary>private 関数 4 件</summary>
 
-  - L164 `_proGuard()`
-  - L172 `_onQueryChanged()`
-  - L185 `_toggleRarity()`
-  - L193 `_setSort()`
+  - L163 `_proGuard()`
+  - L171 `_onQueryChanged()`
+  - L184 `_toggleRarity()`
+  - L192 `_setSort()`
 
   </details>
 

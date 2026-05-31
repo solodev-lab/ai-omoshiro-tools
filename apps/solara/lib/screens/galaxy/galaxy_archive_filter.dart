@@ -19,7 +19,6 @@ import 'package:flutter/material.dart';
 
 import '../../models/galaxy_cycle.dart';
 import '../../theme/solara_colors.dart';
-import '../../utils/pro_status.dart';
 import '../../widgets/pro_unlock_dialog.dart';
 
 part 'galaxy_archive_filter_chips.dart';
@@ -314,6 +313,3 @@ class _GalaxyArchiveFilterBarState extends State<GalaxyArchiveFilterBar> {
 }
 
 
-/// 外部ヘルパー: ProStatus を参照するシンプル版。状態管理を持たないので
-/// AnimatedBuilder でラップして使うか、画面側で listen する。
-bool currentIsPro() => ProStatus.instance.isPro;

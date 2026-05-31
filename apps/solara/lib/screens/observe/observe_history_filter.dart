@@ -11,8 +11,6 @@
 import 'package:flutter/material.dart';
 
 import '../../models/daily_reading.dart';
-import '../../models/tarot_card.dart';
-import '../../utils/pro_status.dart';
 import '../../utils/tarot_data.dart';
 import '../../widgets/pro_unlock_dialog.dart';
 import 'observe_constants.dart';
@@ -388,10 +386,3 @@ class _ElementChipBtn extends StatelessWidget {
   }
 }
 
-/// 外部からも参照しやすいよう pro 状態を取れるショートカット (テストで mock しやすい)。
-bool observeHistoryIsPro() => ProStatus.instance.isPro;
-
-/// TarotData が初期化されていない時に [TarotData.getCard] を呼ぶと例外になるが、
-/// テストでは shared_preferences/tarot_data 初期化済みで使う想定。
-@visibleForTesting
-TarotCard cardForId(int id) => TarotData.getCard(id);

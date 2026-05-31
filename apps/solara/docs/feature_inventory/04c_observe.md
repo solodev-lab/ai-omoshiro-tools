@@ -5,9 +5,9 @@
 
 ## サマリ
 
-- ファイル数: 12 / 総行数: 3563
+- ファイル数: 12 / 総行数: 3554
 - class/mixin/extension/enum: 25
-- 関数 (top-level + method の素拾い): 81
+- 関数 (top-level + method の素拾い): 79
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 1
 - Worker URL リテラル: 0
@@ -97,7 +97,7 @@ Shared constants for Observe (Tarot) screen
   </details>
 
 
-### `lib/screens/observe/observe_history_filter.dart` (397 行)
+### `lib/screens/observe/observe_history_filter.dart` (388 行)
 
 **ファイル先頭コメント:**
 
@@ -113,42 +113,40 @@ Natal Tarot 履歴フィルタ — C3 (Pro 機能、柱 3)
   - フィルタ適用ロジックは `ObserveHistoryFilter.apply` で集中管理
 ```
 
-**imports:** dart=0 / package=1 / relative=6
+**imports:** dart=0 / package=1 / relative=4
 
-- relative: `../../models/daily_reading.dart`, `../../models/tarot_card.dart`, `../../utils/pro_status.dart`, `../../utils/tarot_data.dart`, `../../widgets/pro_unlock_dialog.dart`, `observe_constants.dart`
+- relative: `../../models/daily_reading.dart`, `../../utils/tarot_data.dart`, `../../widgets/pro_unlock_dialog.dart`, `observe_constants.dart`
 
 **型定義 (6):**
 
-- L21 `class ObserveHistoryFilter`
+- L19 `class ObserveHistoryFilter`
   - 履歴フィルタ状態 (immutable)。
-- L92 `class _Sentinel`
-- L100 `class ObserveHistoryFilterBar : StatefulWidget`
+- L90 `class _Sentinel`
+- L98 `class ObserveHistoryFilterBar : StatefulWidget`
   - Natal Tarot 履歴フィルタバー。
-- L117 `class _ObserveHistoryFilterBarState : State`
-- L298 `class _ChipBtn : StatelessWidget`
-- L343 `class _ElementChipBtn : StatelessWidget`
+- L115 `class _ObserveHistoryFilterBarState : State`
+- L296 `class _ChipBtn : StatelessWidget`
+- L341 `class _ElementChipBtn : StatelessWidget`
 
-**関数 (11 public + 5 private):**
+**関数 (9 public + 5 private):**
 
-- L41 `copyWith()`
-- L66 `apply()` — DailyReading の list を絞り込む。順序は元の list の通り。
-- L113 `createState()`
-- L121 `initState()`
-- L127 `didUpdateWidget()`
-- L136 `dispose()`
-- L173 `build()`
-- L311 `build()`
-- L356 `build()`
-- L392 `observeHistoryIsPro()` — 外部からも参照しやすいよう pro 状態を取れるショートカット (テストで mock しやすい)。
-- L397 `cardForId()`
+- L39 `copyWith()`
+- L64 `apply()` — DailyReading の list を絞り込む。順序は元の list の通り。
+- L111 `createState()`
+- L119 `initState()`
+- L125 `didUpdateWidget()`
+- L134 `dispose()`
+- L171 `build()`
+- L309 `build()`
+- L354 `build()`
 
   <details><summary>private 関数 5 件</summary>
 
-  - L141 `_proGuard()`
-  - L148 `_setQuery()`
-  - L150 `_toggleElement()`
-  - L156 `_toggleMajor()`
-  - L164 `_toggleReversed()`
+  - L139 `_proGuard()`
+  - L146 `_setQuery()`
+  - L148 `_toggleElement()`
+  - L154 `_toggleMajor()`
+  - L162 `_toggleReversed()`
 
   </details>
 

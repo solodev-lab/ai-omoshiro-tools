@@ -28,14 +28,15 @@
 | 647 | 🟠 WARN | lib/utils/astro_glossary.dart |
 | 646 | 🟠 WARN | lib/screens/map/map_viewpoint_menu.dart |
 | 642 | 🟠 WARN | lib/widgets/fortune_overlays/communication_painter.dart |
+| 638 | 🟠 WARN | lib/screens/consultation/consultation_input_screen.dart |
 | 626 | 🟠 WARN | lib/utils/constellation_namer.dart |
 | 624 | 🟠 WARN | lib/screens/map/map_astro_lines.dart |
-| 620 | 🟠 WARN | lib/screens/consultation/consultation_input_screen.dart |
 | 592 | 🟠 WARN | lib/screens/sanctuary/sanctuary_profile_editor.dart |
 | 581 | 🟠 WARN | lib/widgets/fortune_overlays/love_painter.dart |
 | 564 | 🟠 WARN | lib/widgets/new_moon_overlay.dart |
 | 559 | 🟠 WARN | lib/utils/planet_intro.dart |
 | 553 | 🟠 WARN | lib/screens/consultation/consultation_result_card.dart |
+| 550 | 🟠 WARN | lib/screens/consultation/consultation_input_widgets.dart |
 | 535 | 🟠 WARN | lib/utils/astro_lines.dart |
 | 518 | 🟠 WARN | lib/screens/consultation/consultation_result_screen.dart |
 | 511 | 🟠 WARN | lib/screens/map/map_astro.dart |
@@ -53,7 +54,6 @@
 | 449 | 🟡 NOTICE | lib/main.dart |
 | 445 | 🟡 NOTICE | lib/widgets/catasterism_overlay.dart |
 | 438 | 🟡 NOTICE | lib/screens/galaxy/galaxy_star_atlas.dart |
-| 430 | 🟡 NOTICE | lib/screens/consultation/consultation_input_widgets.dart |
 | 427 | 🟡 NOTICE | lib/screens/consultation/consultation_result_widgets.dart |
 | 424 | 🟡 NOTICE | lib/screens/paywall_widgets.dart |
 | 417 | 🟡 NOTICE | lib/screens/sanctuary/title_history_screen.dart |
@@ -329,4 +329,4 @@
 
 ---
 
-総計: 行数 HARD 7 / WARN 28 / NOTICE 47 / 重複 20 / TODO 4 / print 1 / 未使用候補 0
+総計: 行数 HARD 7 / WARN 29 / NOTICE 46 / 重複 20 / TODO 4 / print 1 / 未使用候補 0
