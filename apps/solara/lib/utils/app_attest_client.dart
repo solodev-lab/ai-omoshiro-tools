@@ -232,6 +232,14 @@ class AppAttestClient {
   ///
   /// bypass 時 (Simulator / debug / 未初期化 / Cloud Project Number 未設定) は
   /// 何もしない → Worker 側 log_only モードで通過する想定 (enforced では 401)。
+  /// attestation の各ステップ (challenge 取得 / token・assertion 生成) の上限時間。
+  /// 🔴 2026-05-31: Play Integrity の token 生成 (`verify`) が端末で冷えていると
+  /// 数十秒〜2分かかり、`fetchFortune` 等の 60s タイムアウト (postProtected 全体を包む)
+  /// を addHeaders 段階で食い潰して本リクエストが送られず「Stellaの声が届きませんでした」
+  /// になっていた (A101FC 実機 + worker tail で実証)。各ステップを短時間で打ち切り、
+  /// 超えたら例外 → catch で degrade (ヘッダ無しで送信、enforcement=log_only なので通過)。
+  static const Duration _kAttestStepTimeout = Duration(seconds: 8);
+
   Future<void> addHeaders(
       Map<String, String> headers, List<int> payloadBytes) async {
     // initialize() は main.dart で unawaited に呼ばれるため、ここで完了を待つ。
@@ -263,7 +271,9 @@ class AppAttestClient {
     if (_keyId == null) return;
     try {
       // 1. 使い捨て challenge を取得
-      final chRes = await _httpClient.post(Uri.parse(solaraChallengeUrl));
+      final chRes = await _httpClient
+          .post(Uri.parse(solaraChallengeUrl))
+          .timeout(_kAttestStepTimeout);
       if (chRes.statusCode != 200) {
         throw Exception('challenge fetch failed: ${chRes.statusCode}');
       }
@@ -280,11 +290,11 @@ class AppAttestClient {
         'ts': DateTime.now().millisecondsSinceEpoch,
       });
 
-      // 3. assertion 生成
+      // 3. assertion 生成 (遅延時はタイムボックスで打ち切り → catch で degrade)
       final assertionB64 = await _attest.verify(
         clientData: clientDataStr,
         iOSkeyID: _keyId,
-      );
+      ).timeout(_kAttestStepTimeout);
       if (assertionB64.isEmpty) throw Exception('verify returned empty string');
 
       // 4. 4 ヘッダー注入
@@ -311,7 +321,9 @@ class AppAttestClient {
       Map<String, String> headers, List<int> payloadBytes) async {
     try {
       // 1. Worker から nonce 取得
-      final chRes = await _httpClient.post(Uri.parse(solaraIntegrityChallengeUrl));
+      final chRes = await _httpClient
+          .post(Uri.parse(solaraIntegrityChallengeUrl))
+          .timeout(_kAttestStepTimeout);
       if (chRes.statusCode != 200) {
         throw Exception('integrity challenge fetch failed: ${chRes.statusCode}');
       }
@@ -332,7 +344,9 @@ class AppAttestClient {
       // 3. plugin の verify() で token 取得
       //    plugin 内部で requestHash = base64(sha256(clientData)) を計算
       //    → StandardIntegrityTokenProvider.request(requestHash) で token 取得
-      final token = await _attest.verify(clientData: clientDataStr);
+      //    🔴 冷えていると数十秒〜2分かかるためタイムボックスで打ち切り → catch で degrade。
+      final token =
+          await _attest.verify(clientData: clientDataStr).timeout(_kAttestStepTimeout);
       if (token.isEmpty) throw Exception('verify returned empty string');
 
       // 4. 3 ヘッダー注入
