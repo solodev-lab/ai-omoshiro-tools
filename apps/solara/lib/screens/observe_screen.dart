@@ -722,6 +722,12 @@ class ObserveScreenState extends State<ObserveScreen>
         // 詳細: docs/store_compliance.md §3.1 / widgets/ai_report_button.dart
         if (_typingDone && _readingFromApi) ...[
           AiReportButton(feature: 'tarot', outputText: _readingText),
+          // 解釈は 1 つに過ぎない旨の注記。
+          const StellaInterpretationNote(
+            text: 'カードからStellaが解釈の１つとして本内容を表示しています。'
+                '内容に違和感がある場合はご自身で解釈を広げてみてください。'
+                'あくまでここでの表示は解釈の１つに過ぎません。',
+          ),
           // disclaimer footer (Apple 4.0 + Google Misleading) — 報告ボタンの直下に常時。
           const AiDisclaimerFooter(),
         ],

@@ -152,6 +152,13 @@ class _CandidateCard extends StatelessWidget {
                   outputText: _c.narrative,
                   padding: const EdgeInsets.only(top: 4),
                 ),
+                // 解釈は 1 つに過ぎない旨の注記 (エビデンスは上部に表示)。
+                const StellaInterpretationNote(
+                  text: '最上段相談の結果に本内容のエビデンスが表示されています。'
+                      'Stellaが解釈の１つとして本内容を表示しています。内容に違和感が'
+                      'ある場合はご自身で解釈を広げてみてください。あくまでここでの表示は'
+                      '解釈の１つに過ぎません。',
+                ),
                 // disclaimer footer — 報告ボタンの直下に常時。
                 const AiDisclaimerFooter(padding: EdgeInsets.zero),
               ],
@@ -412,6 +419,20 @@ class _DeltaAfterSectionState extends State<_DeltaAfterSection> {
                 letterSpacing: 0.3,
               ),
             ),
+            // 30分後の変化にも、報告ボタン + 解釈注記 + AI 免責を付ける。
+            // エビデンス (線の動き) は上のチップとして表示済み。
+            AiReportButton(
+              feature: 'consultation',
+              outputText: d.narrative,
+              padding: const EdgeInsets.only(top: 6),
+            ),
+            const StellaInterpretationNote(
+              text: 'この30分後の変化は、上に示した線の動きをエビデンスとして、'
+                  'Stellaが解釈の１つとして表示しています。内容に違和感がある場合は'
+                  'ご自身で解釈を広げてみてください。'
+                  'あくまでここでの表示は解釈の１つに過ぎません。',
+            ),
+            const AiDisclaimerFooter(padding: EdgeInsets.zero),
           ],
         ],
       ),

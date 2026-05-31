@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 23 / 総行数: 5943
+- ファイル数: 23 / 総行数: 5950
 - class/mixin/extension/enum: 32
 - 関数 (top-level + method の素拾い): 151
 - Navigator.push 等: 0
@@ -259,7 +259,7 @@ ignore_for_file: invalid_use_of_protected_member
   </details>
 
 
-### `lib/screens/horoscope/horo_fortune_cards.dart` (343 行)
+### `lib/screens/horoscope/horo_fortune_cards.dart` (350 行)
 
 **imports:** dart=0 / package=2 / relative=5
 
@@ -275,12 +275,12 @@ ignore_for_file: invalid_use_of_protected_member
 
   <details><summary>private 関数 6 件</summary>
 
-  - L180 `_birthEditedBanner()`
-  - L197 `_loadingBanner()`
-  - L214 `_errorBanner()`
-  - L237 `_skeletonLine()`
-  - L245 `_skeletonBar()`
-  - L257 `_lockedTeaserCard()`
+  - L187 `_birthEditedBanner()`
+  - L204 `_loadingBanner()`
+  - L221 `_errorBanner()`
+  - L244 `_skeletonLine()`
+  - L252 `_skeletonBar()`
+  - L264 `_lockedTeaserCard()`
 
   </details>
 

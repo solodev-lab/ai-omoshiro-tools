@@ -35,3 +35,33 @@ class AiDisclaimerFooter extends StatelessWidget {
     );
   }
 }
+
+/// Stella の出力は「解釈の 1 つ」であることを伝える注記 (画面ごとに文面が異なる)。
+/// 配置順: AiReportButton (不適切な内容を報告) → 本注記 → [AiDisclaimerFooter] (AI 生成・娯楽目的)。
+/// AiDisclaimerFooter より少し読ませる必要があるので、わずかに明るめ・大きめにする。
+class StellaInterpretationNote extends StatelessWidget {
+  final String text;
+  final EdgeInsets padding;
+  const StellaInterpretationNote({
+    super.key,
+    required this.text,
+    this.padding = const EdgeInsets.fromLTRB(12, 6, 12, 2),
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: padding,
+      child: Text(
+        text,
+        textAlign: TextAlign.center,
+        style: const TextStyle(
+          color: Color(0xFF8C8680),
+          fontSize: 10.5,
+          height: 1.6,
+          letterSpacing: 0.2,
+        ),
+      ),
+    );
+  }
+}

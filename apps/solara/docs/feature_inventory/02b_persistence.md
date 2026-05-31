@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 9 / 総行数: 2643
+- ファイル数: 9 / 総行数: 2657
 - class/mixin/extension/enum: 14
 - 関数 (top-level + method の素拾い): 121
 - Navigator.push 等: 0
@@ -14,7 +14,7 @@
 
 ## ファイル別
 
-### `lib/utils/app_attest_client.dart` (476 行)
+### `lib/utils/app_attest_client.dart` (490 行)
 
 **ファイル先頭コメント:**
 
@@ -56,15 +56,15 @@ Worker 側仕様: apps/solara/worker/src/index.js
 **関数 (10 public + 7 private):**
 
 - L124 `initialize()` — 起動時 1 回だけ呼ぶ (main.dart で unawaited)。
-- L235 `addHeaders()` — /protected/* 呼び出し直前に header を注入。
-- L379 `withAppUserIdMerged()` — 呼び出し側で body Map を構築している場合に使う公開 helper。
-- L384 `postProtected()` — `/protected/*` への POST を attestation header 付きで送る wrapper。
-- L403 `reattestOnFailure()` — 401 で middleware に弾かれた時のリトライ用。
-- L429 `debugPayloadSha256()` — payload bytes の SHA-256 (debug 用、Worker 側計算値との一致確認に使う)。
-- L444 `addAndroidHeadersForTest()`
-- L450 `addIosHeadersForTest()`
-- L462 `initializeAndroidForTest()`
-- L466 `resetForTest()`
+- L243 `addHeaders()`
+- L393 `withAppUserIdMerged()` — 呼び出し側で body Map を構築している場合に使う公開 helper。
+- L398 `postProtected()` — `/protected/*` への POST を attestation header 付きで送る wrapper。
+- L417 `reattestOnFailure()` — 401 で middleware に弾かれた時のリトライ用。
+- L443 `debugPayloadSha256()` — payload bytes の SHA-256 (debug 用、Worker 側計算値との一致確認に使う)。
+- L458 `addAndroidHeadersForTest()`
+- L464 `addIosHeadersForTest()`
+- L476 `initializeAndroidForTest()`
+- L480 `resetForTest()`
 
   <details><summary>private 関数 7 件</summary>
 
@@ -72,9 +72,9 @@ Worker 側仕様: apps/solara/worker/src/index.js
   - L143 `_initializeIos()`
   - L161 `_attestNewKey()`
   - L201 `_initializeAndroid()`
-  - L261 `_addIosHeaders()`
-  - L310 `_addAndroidHeaders()`
-  - L364 `_withAppUserId()`
+  - L269 `_addIosHeaders()`
+  - L320 `_addAndroidHeaders()`
+  - L378 `_withAppUserId()`
 
   </details>
 

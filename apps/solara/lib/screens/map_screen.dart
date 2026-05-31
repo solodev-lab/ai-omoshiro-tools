@@ -2732,9 +2732,9 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                   child: AstroCartoSubPills(
                     astroLayers: _astroLayers,
                     activeFrame: active,
-                    onToggle: (k) => setState(() {
-                      _astroLayers[k] = !(_astroLayers[k] ?? false);
-                    }),
+                    // 天頂帯/天底帯は Pro ゲート対象なので _onAstroToggle 経由
+                    // (天頂/天底点は Free のまま通る)。
+                    onToggle: _onAstroToggle,
                   ),
                 ),
                 if (active != null) const SizedBox(height: 1),
@@ -2912,6 +2912,8 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   /// 2026-05-31: Transit/Progressed/SolarArc フレームを Free に戻した
   /// (オーナー指示)。natal (`aspect`) と合わせ 4 フレームは全て Free。
   /// アスペクト 120 本 (`aspectLines`) と引越し (`relocate`) は Pro 維持。
+  /// 天頂帯/天底帯 (`zenithBand_*` / `nadirBand_*`) も Pro (2026-05-31、prefix 判定)。
+  /// 天頂/天底点 (`zenith_*` / `nadir_*`) は Free。
   ///
   /// 「OFF にする」操作はゲート対象外 (元 Pro が降格しても片付けられるように)。
   static const Set<String> _proGatedAstroKeys = {
@@ -2919,8 +2921,14 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     'relocate',
   };
 
+  /// 天頂帯/天底帯 (frame サフィックス付き全キー) を prefix で判定。Pro 限定。
+  /// 天頂/天底点 (`zenith_` / `nadir_`) は Free なので `Band` を含む prefix で厳密判定する。
+  static bool _isProGatedBandKey(String k) =>
+      k.startsWith('zenithBand') || k.startsWith('nadirBand');
+
   /// Pro ゲートで表示する機能名 (showProUnlockDialog の featureLabel)。
   String _proLabelForAstroKey(String k) {
+    if (_isProGatedBandKey(k)) return '天頂帯・天底帯';
     switch (k) {
       case 'aspectLines':
         return 'アスペクトライン (120 本)';
@@ -2933,6 +2941,10 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
 
   /// Pro ゲートで表示する機能説明 (吉凶禁止、寄り添い文体)。
   String _proDescForAstroKey(String k) {
+    if (_isProGatedBandKey(k)) {
+      return '惑星が真上 (天頂) / 真下 (天底) を通る緯度を帯で示す Lewis 流の表示。'
+          'キャリアや家庭のテーマを「緯度」で読み解けます。';
+    }
     switch (k) {
       case 'aspectLines':
         return 'コンジャンクション 40 本に加え、スクエア / トライン / セクスタイル '
@@ -2952,7 +2964,7 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   void _onAstroToggle(String k) {
     final wasOn = _astroLayers[k] ?? false;
     if (!wasOn &&
-        _proGatedAstroKeys.contains(k) &&
+        (_proGatedAstroKeys.contains(k) || _isProGatedBandKey(k)) &&
         !ProStatus.instance.isPro) {
       showProUnlockDialog(
         context,

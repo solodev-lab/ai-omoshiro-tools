@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 31 / 総行数: 10809
+- ファイル数: 31 / 総行数: 10836
 - class/mixin/extension/enum: 97
 - 関数 (top-level + method の素拾い): 276
 - Navigator.push 等: 0
@@ -573,7 +573,7 @@ flutter_map ベースの地点選択画面のサブウィジェット群:
   </details>
 
 
-### `lib/screens/consultation/consultation_result_card.dart` (532 行)
+### `lib/screens/consultation/consultation_result_card.dart` (553 行)
 
 **ファイル先頭コメント:**
 
@@ -585,33 +585,33 @@ Consultation Result — 候補カード (V2)
 **型定義 (8):**
 
 - L6 `class _CandidateCard : StatelessWidget`
-- L188 `class _EnergyChip : StatelessWidget`
-- L214 `class _MapLinkIcon : StatelessWidget`
+- L195 `class _EnergyChip : StatelessWidget`
+- L221 `class _MapLinkIcon : StatelessWidget`
   - 場所名の右の🗺リンク。Map 画面で候補地を (相談の日付で) 見る。
-- L244 `class _TimeWindowRow : StatelessWidget`
+- L251 `class _TimeWindowRow : StatelessWidget`
   - 時間帯 (現地の時間帯のみ・時計表示なし)。single=1 個 / rhythm=朝昼夜。
-- L287 `class _DeltaAfterSection : StatefulWidget`
+- L294 `class _DeltaAfterSection : StatefulWidget`
   - 候補カードの「30分経過後を見る」セクション。タップで開閉、i ボタンで説明。
-- L295 `class _DeltaAfterSectionState : State`
-- L424 `class _DeltaChip : StatelessWidget`
+- L302 `class _DeltaAfterSectionState : State`
+- L445 `class _DeltaChip : StatelessWidget`
   - 30 分後の 1 変化チップ (例: 「火星 MC ↘ 離れる」)。
-- L462 `class _CandidateKindBadge : StatelessWidget`
+- L483 `class _CandidateKindBadge : StatelessWidget`
   - 候補種別バッジ (方角 / 場所)。
 
 **関数 (8 public + 1 private):**
 
 - L37 `build()`
-- L193 `build()`
-- L219 `build()`
-- L249 `build()`
-- L292 `createState()`
-- L335 `build()`
-- L429 `build()`
-- L471 `build()`
+- L200 `build()`
+- L226 `build()`
+- L256 `build()`
+- L299 `createState()`
+- L342 `build()`
+- L450 `build()`
+- L492 `build()`
 
   <details><summary>private 関数 1 件</summary>
 
-  - L298 `_showInfo()`
+  - L305 `_showInfo()`
 
   </details>
 
@@ -1033,7 +1033,7 @@ showInfoPopup 経由で表示する (widgets/info_popup.dart、popup 統一規�
 - 集計: `showInfoPopup`×1
 
 
-### `lib/screens/paywall_comparison.dart` (310 行)
+### `lib/screens/paywall_comparison.dart` (312 行)
 
 **ファイル先頭コメント:**
 
@@ -1061,11 +1061,11 @@ Paywall Screen — Free vs Pro 比較テーブル / FAQ アコーディオン
   <details><summary>private 関数 6 件</summary>
 
   - L16 `_buildComparisonTable()`
-  - L70 `_comparisonHeader()`
-  - L118 `_comparisonSection()`
-  - L146 `_comparisonRow()`
-  - L193 `_buildFaqSection()`
-  - L264 `_faqItem()`
+  - L72 `_comparisonHeader()`
+  - L120 `_comparisonSection()`
+  - L148 `_comparisonRow()`
+  - L195 `_buildFaqSection()`
+  - L266 `_faqItem()`
 
   </details>
 
@@ -1168,7 +1168,7 @@ Solara ペイウォール画面 — Phase 2-6b + Suno 風リデザイン (2026-0
   </details>
 
 
-### `lib/screens/paywall_widgets.dart` (421 行)
+### `lib/screens/paywall_widgets.dart` (425 行)
 
 **ファイル先頭コメント:**
 
@@ -1194,9 +1194,9 @@ Paywall Screen — Hero / 課金トグル / Free・Pro 2 カード (Suno 風 cor
   - L97 `_toggleSegment()`
   - L160 `_buildFreeCard()`
   - L208 `_buildProCard()`
-  - L312 `_buildProCta()`
-  - L368 `_cardBadge()`
-  - L392 `_planBullet()`
+  - L316 `_buildProCta()`
+  - L372 `_cardBadge()`
+  - L396 `_planBullet()`
 
   </details>
 

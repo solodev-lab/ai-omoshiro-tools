@@ -164,6 +164,13 @@ class HoroAstrologyView extends StatelessWidget {
                   outputText: advice.isNotEmpty ? '$text\n\n$advice' : text,
                   padding: const EdgeInsets.only(top: 4),
                 ),
+                // 解釈は 1 つに過ぎない旨の注記 (ホロスコープにエビデンスがある旨)。
+                const StellaInterpretationNote(
+                  text: 'ホロスコープのアスペクトやハウスからStellaが解釈の１つとして'
+                      '本内容を表示しています。内容に違和感がある場合はホロスコープに'
+                      'Stella解釈の元となるエビデンスがあるので、ぜひご自身での解釈を'
+                      '広げてみてください。あくまでここでの表示は解釈の１つに過ぎません。',
+                ),
                 // disclaimer footer — 報告ボタンの直下に常時。
                 const AiDisclaimerFooter(padding: EdgeInsets.zero),
               ],

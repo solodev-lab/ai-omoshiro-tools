@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 12 / 総行数: 3557
+- ファイル数: 12 / 総行数: 3563
 - class/mixin/extension/enum: 25
 - 関数 (top-level + method の素拾い): 81
 - Navigator.push 等: 0
@@ -336,7 +336,7 @@ showInfoPopup 経由 (popup 統一規約)。呼出側は returned bool で proce
 - 集計: `showInfoPopup`×1
 
 
-### `lib/screens/observe_screen.dart` (731 行)
+### `lib/screens/observe_screen.dart` (737 行)
 
 **imports:** dart=2 / package=1 / relative=19
 

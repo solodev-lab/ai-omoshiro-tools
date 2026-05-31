@@ -52,10 +52,10 @@
 
 ## #1 / #2 機械抽出 ↔ feature_inventory.md (人手版) の対整合
 
-- 機械抽出した class/mixin/extension/enum: **459**
+- 機械抽出した class/mixin/extension/enum: **460**
 - inventory に登場する識別子 (大文字始まり ``backtick``囲み): **262**
 
-### #1 機械にあるが Doc に書かれていない (267)
+### #1 機械にあるが Doc に書かれていない (268)
 
 - `AppAttestClient`
 - `ConstellationShareCardPage`
@@ -95,6 +95,7 @@
 - `SolaraAuthAccount`
 - `SolaraAuthException`
 - `SolaraAuthProvider`
+- `StellaInterpretationNote`
 - `TapToUnfocus`
 - `TitleHistoryScreen`
 - `_AboutReadingContent`
@@ -256,8 +257,7 @@
 - `_RarityChip`
 - `_RarityStarRow`
 - `_Ray`
-- `_ReadingSheet`
-- … 残り 67 省略
+- … 残り 68 省略
 
 ### #2 Doc に書いてあるがコードに存在しない (ゴースト記述) (70)
 
@@ -450,14 +450,16 @@
 > 各ソースの SHA1 を `_stamps.json` に記録し、差分を検出。
 > 変更されたファイルが属する層は、人手版インベントリ章の見直し対象。
 
-- 追加: **0** / 削除: **0** / 変更: **10**
+- 追加: **0** / 削除: **0** / 変更: **9**
 
 ### 変更されたファイル (層別)
 
-- **層 0**: `worker/src/consultation_engine.js`, `worker/src/consultation_v2.js`
-- **層 1b**: `lib/utils/consultation_v2_request.dart`
-- **層 2a**: `lib/utils/consultation_v2_api.dart`
-- **層 4f**: `lib/screens/consultation/consultation_input_logic.dart`, `lib/screens/consultation/consultation_input_screen.dart`, `lib/screens/consultation/consultation_input_when_scope.dart`, `lib/screens/consultation/consultation_result_card.dart`, `lib/screens/paywall_comparison.dart`, `lib/screens/paywall_widgets.dart`
+- **層 2b**: `lib/utils/app_attest_client.dart`
+- **層 3a**: `lib/widgets/ai_disclaimer_footer.dart`
+- **層 4a**: `lib/screens/map_screen.dart`
+- **層 4b**: `lib/screens/horoscope/horo_fortune_cards.dart`
+- **層 4c**: `lib/screens/observe_screen.dart`
+- **層 4f**: `lib/screens/ai_consent_screen.dart`, `lib/screens/consultation/consultation_result_card.dart`, `lib/screens/paywall_comparison.dart`, `lib/screens/paywall_widgets.dart`
 
 ## #7 astro_glossary 用語辞書対整合
 
