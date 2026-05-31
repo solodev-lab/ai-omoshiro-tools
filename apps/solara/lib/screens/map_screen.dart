@@ -1807,7 +1807,8 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     //   5. 時刻バー展開 (MapTimeSlider 内 _timeRowExpanded、 GlobalKey 経由制御)
     //   6. ACG (Astro*Carto*Graphy) モード
     //   7. 表示メニュー / 地点メニュー (左サイド展開メニュー)
-    //   8. 検索バー (= _searchOpen / focus / hits を一括クリア)
+    //   8a. 検索結果詳細 (_searchFocus) → 詳細だけ閉じて一覧へ戻す (× と同じ)
+    //   8b. 検索バー / 一覧のみ (focus なし) → _searchOpen / hits を一括クリア
     //
     // 注: 以下は Navigator stack (showDialog / showModalBottomSheet) に
     // 乗っているため Flutter 標準で back 自動処理される (この PopScope 不要):
@@ -1850,6 +1851,12 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
           setState(() => _displayMenuOpen = false);
         } else if (_viewpointMenuOpen) {
           setState(() => _viewpointMenuOpen = false);
+        } else if (_searchFocus != null) {
+          // 検索結果詳細 (SearchFocusPopup) を開いている時の端末 back は、右上 × と
+          // 同じ動作にする: 詳細だけ閉じて検索結果一覧へ戻す (Map までは戻さない)。
+          // 2026-05-31 オーナー要望。次の back で一覧 → Map と段階的に戻る。
+          setState(() => _searchFocus = null);
+          _restoreSearchListView();
         } else if (hasSearchUi) {
           _clearAllSearch();
         }
@@ -2389,9 +2396,11 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
           ),
         ),
 
-        // ── 表示メニュー (☰ボタン → 検索ボックス高さで右展開) ──────
-        // 2026-05-09 第四弾: 全幅 → 左サイドボタン (🔍/☰/📍) を見せるため left:60。
+        // ── 表示メニュー (☰ボタン → 検索ボックス高さで展開) ──────
         // 縦位置は検索バーと同じ top+152 を維持 (オーナー要望)。
+        // 2026-05-31: 左サイドボタン (🔍/☰/📍) が下端チップバー直上へ移動したため、
+        // 旧 left:60 の余白 (ボタンを見せるための空き) は不要に。検索バーと同じ
+        // left:16/right:16 の横一杯に変更 (Positioned が端末幅に自動追従)。
         // 検索バー / 地点メニューとは相互排他 (タップハンドラで他を閉じる)。
         if (_displayMenuOpen && !_astroCartoMode) ...[
           Positioned.fill(
@@ -2402,7 +2411,7 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
             ),
           ),
           Positioned(
-            top: topPad + 152, left: 60, right: 16,
+            top: topPad + 152, left: 16, right: 16,
             child: MapDisplayMenu(
               layers: _layers,
               planetGroups: _planetGroups,
@@ -2424,6 +2433,8 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
         // 旧設計ではアイコン/名称変更の submenu が下端で見切れていた。
         // 「見えない方が問題」とのオーナー判断で縦は bottom:16 までフル展開。
         // チップバーは menu 開いている間は非表示 (重なり回避、下記参照)。
+        // 2026-05-31: 表示メニューと同様、左サイドボタンが下端へ移動したため
+        // 旧 left:60 の余白を撤廃し left:16 の横一杯に統一 (端末幅に自動追従)。
         if (_viewpointMenuOpen && !_astroCartoMode) ...[
           Positioned.fill(
             child: GestureDetector(
@@ -2436,7 +2447,7 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
             ),
           ),
           Positioned(
-            top: topPad + 6, left: 60, right: 16, bottom: 16,
+            top: topPad + 6, left: 16, right: 16, bottom: 16,
             child: MapViewpointMenu(
               center: _searchFocus != null
                   ? LatLng(_searchFocus!.lat, _searchFocus!.lng)
@@ -2507,8 +2518,9 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                 GestureDetector(
                   onTap: _enterConsultationFromMapButton,
                   child: Container(
-                    width: 52,
-                    height: 52,
+                    // 2026-05-31: 現在地ボタン (MapBtn 40x40) と同サイズに統一。
+                    width: 40,
+                    height: 40,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       color: const Color(0xCC0A0A19),
@@ -2527,7 +2539,7 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                             ],
                     ),
                     child: const Padding(
-                      padding: EdgeInsets.all(7),
+                      padding: EdgeInsets.all(6),
                       child: Image(
                         image: AssetImage('assets/menu_icons/consult.webp'),
                         fit: BoxFit.contain,

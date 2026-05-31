@@ -1158,6 +1158,34 @@ Worker [`consultation_v2.js:78-83`](../worker/src/consultation_v2.js#L78) の既
 - Worker tests: 21/21 pass (consultation_v2)
 - extract.py stamp diff: `+0 -0 ~4` (record + history) → `+0 -0 ~2` (picker)
 
+### 0.2.41 起動スプラッシュ + 相談時刻表示 + Map/Popup UX 一括改善 (2026-06-01 セッション)
+
+> オーナー実機フィードバック起点の UI/UX 改善 9 件を 1 セッションで実施。新規 HARD 化ゼロ。
+
+#### A. 起動スプラッシュ (新規 `lib/widgets/solara_splash.dart`)
+- コールド起動時に `SolaraHome` (Map タブ) の上へ被せ、Map 初期化の待ち時間を埋める (`main.dart` の `home:` を `SolaraSplash(child: SolaraHome())` でラップ)。同意未取得 (AiConsent) 時は出さない。
+- 起動ごとに 3 枚 (`assets/splash-bg/{gold,azure,rose}.webp`、称号儀式 `ceremony.webp` 調 = 純黒 + 金アールヌーヴォー四隅 + 中央発光四芒星、Gemini 3.1 Flash 生成) からランダム 1 枚。
+- フェードイン 700ms → ホールド 1500ms → フェードアウト 800ms (計 3.0s) で自動消滅。中央やや下 (`Alignment(0,0.42)`) に `Solara` (Cinzel) + サブタイトル `Follow Stella through the living stars.` (Cormorant) を重ねる。生成スクリプト = `mockup/generate_splash_backgrounds.py`。
+
+#### B. 相談 時刻指定まわり (オーナー要望)
+- 時刻指定時に時間帯チップ (5 枠) を**自動選択しない** (`_pickHour` で `_whenTimeBand=null`)。Worker へ送る語りバンドは `_buildWhen` が `bandFromHour(_whenHour)` で導出 (UI チップ選択と Worker payload を分離 → narrative 品質は不変)。
+- 結果カードの時間帯行は、時刻指定時はバンド名でなく「**15:00**」を表示 (`_TimeWindowRow.specifiedHour`)。ライブは `request.when.atUtcMs`、履歴は新規 `ConsultationRecord.whenAtUtcMs` から復元。履歴一覧カードも同様 (`consultation_history_widgets.dart`)。
+- レコードに `whenAtUtcMs` (int?) を追加 (nullable・旧レコード互換)。
+
+#### C. その他 UI 修正
+- Map: 「✦ Stella に相談」ボタンを現在地ボタンと同寸 (52→40px)。
+- Galaxy 最下部: ラベルを Cinzel(大文字専用) → Cormorant で「Stella」表示、size 13、本文 19→14、本文の前後ダブルクォート撤去。
+- Paywall: 拠点数表記を「保存拠点数 10か所」/ 比較表「5か所 / 10か所」に統一。
+- Sanctuary: Pro 称号再診断の案内ダイアログを枠内スクロール対応 (本文だけ `Flexible+SingleChildScrollView`、ヘッダ/ボタン固定 → 小型端末でボタンが押し出される不具合を解消)。
+- Map: ☰ 表示メニュー / 📍 地点メニューを横一杯に (`left:60→16`。左サイドボタンが下端へ移動済みで余白列が不要に)。
+- Map: 検索結果詳細 (`SearchFocusPopup`) 表示中の端末 back を右上 × と同一動作に (詳細だけ閉じて検索結果一覧へ。Map まで戻さない)。
+- `info_popup`: 本文の `right:26` 余白列を撤去し本文を枠の右端まで使用 (× は最上行右上に float のみ)。全 28 利用箇所に一括適用。
+
+#### 検証
+- flutter analyze: lib/ クリーン (既存 test 2 件のみ)
+- Flutter tests **275 pass** / Worker tests **345 pass**
+- extract.py stamp diff `+0 -0 ~0` (完全同期) / audit.py 行数 **HARD 7 (新規ゼロ)** / WARN 29 / 重複 20 (全て `),` 等の構造的誤検出) / 未使用候補 0
+
 ### 0.3 Horo「今日の占い」1 日 1 回固定 + プロンプト刷新 (2026-05-27)
 
 > **設計の柱**: 「30 回までは OK」のような曖昧な防衛をやめ、「**1 日 1 回・変更しない**」を

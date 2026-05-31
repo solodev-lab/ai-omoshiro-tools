@@ -8,7 +8,11 @@ class _CandidateCard extends StatelessWidget {
 
   /// 場所名の右の🗺ボタン (Map 画面でこの候補地を見る)。null なら非表示。
   final VoidCallback? onOpenMap;
-  const _CandidateCard({required this.reading, this.onOpenMap});
+
+  /// Pro 時刻指定時の指定時刻 (0-23)。non-null なら時間帯行をバンド名でなく
+  /// 「HH:00」で表示する (オーナー要望 2026-05-31)。null = 時刻未指定 → 従来のバンド表示。
+  final int? specifiedHour;
+  const _CandidateCard({required this.reading, this.onOpenMap, this.specifiedHour});
 
   ConsultationV2Candidate get _c => reading.candidate;
   bool get _isBearing => _c.bearing != null && _c.bearing!.isNotEmpty;
@@ -118,7 +122,7 @@ class _CandidateCard extends StatelessWidget {
               ],
               if (tw != null) ...[
                 const SizedBox(height: 12),
-                _TimeWindowRow(timeWindow: tw),
+                _TimeWindowRow(timeWindow: tw, specifiedHour: specifiedHour),
               ],
               if (_c.energyLabels.isNotEmpty) ...[
                 const SizedBox(height: 14),
@@ -247,16 +251,21 @@ class _MapLinkIcon extends StatelessWidget {
   }
 }
 
-/// 時間帯 (現地の時間帯のみ・時計表示なし)。single=1 個 / rhythm=朝昼夜。
+/// 時間帯。通常は現地の時間帯バンド (朝/昼/夕方/夜/夜更け)。single=1 個 / rhythm=朝昼夜。
+/// [specifiedHour] が non-null (Pro 時刻指定時) は、バンド名でなく「HH:00」で表示する。
 class _TimeWindowRow extends StatelessWidget {
   final ConsultationTimeWindow timeWindow;
-  const _TimeWindowRow({required this.timeWindow});
+  final int? specifiedHour;
+  const _TimeWindowRow({required this.timeWindow, this.specifiedHour});
 
   @override
   Widget build(BuildContext context) {
-    final labels = timeWindow.kind == 'rhythm'
-        ? timeWindow.items.map((e) => e.label).where((s) => s.isNotEmpty).toList()
-        : [if ((timeWindow.label ?? '').isNotEmpty) timeWindow.label!];
+    // 時刻指定時は「15:00」のみを出す (オーナー要望: 5 枠バンドではなく指定時刻)。
+    final labels = specifiedHour != null
+        ? ['${specifiedHour.toString().padLeft(2, '0')}:00']
+        : timeWindow.kind == 'rhythm'
+            ? timeWindow.items.map((e) => e.label).where((s) => s.isNotEmpty).toList()
+            : [if ((timeWindow.label ?? '').isNotEmpty) timeWindow.label!];
     if (labels.isEmpty) return const SizedBox.shrink();
     return Row(
       children: [

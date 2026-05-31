@@ -397,6 +397,15 @@ class _ConsultationResultScreenState extends State<ConsultationResultScreen> {
     MapFocus.instance.request(LatLng(c.lat, c.lng), date);
   }
 
+  /// Pro 時刻指定 (おでかけ) の指定時刻 (端末ローカルの「時」0-23)。null = 時刻未指定。
+  /// ライブ結果は request.when.atUtcMs、履歴は record.whenAtUtcMs から復元する。
+  /// 結果カードの時間帯行に「15:00」のように指定時刻を出すために使う。
+  int? get _specifiedHour {
+    final ms = widget.request?.when?.atUtcMs ?? widget.record?.whenAtUtcMs;
+    if (ms == null) return null;
+    return DateTime.fromMillisecondsSinceEpoch(ms, isUtc: true).toLocal().hour;
+  }
+
   @override
   Widget build(BuildContext context) {
     final canShare = _readings.isNotEmpty && !_loading;
@@ -410,26 +419,32 @@ class _ConsultationResultScreenState extends State<ConsultationResultScreen> {
           onPressed: () => Navigator.of(context).maybePop(),
           tooltip: '戻る',
         ),
+        // タイトルタップで「この読み解きについて」(エビデンス) を開く。
+        // 2026-05-31: タップ領域が文字の実寸ぶんしかなく上下が狭かったため、
+        // Padding で上下左右に判定を広げる (文字部分込みで広い当たり判定に)。
         title: GestureDetector(
           onTap: _readings.isNotEmpty ? _showAboutReading : null,
           behavior: HitTestBehavior.opaque,
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text(
-                '相談の結果',
-                style: TextStyle(
-                  color: SolaraColors.textPrimary,
-                  fontSize: 16,
-                  letterSpacing: 0.4,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  '相談の結果',
+                  style: TextStyle(
+                    color: SolaraColors.textPrimary,
+                    fontSize: 16,
+                    letterSpacing: 0.4,
+                  ),
                 ),
-              ),
-              if (_readings.isNotEmpty) ...[
-                const SizedBox(width: 3),
-                const Icon(Icons.expand_more,
-                    size: 18, color: SolaraColors.textPrimary),
+                if (_readings.isNotEmpty) ...[
+                  const SizedBox(width: 3),
+                  const Icon(Icons.expand_more,
+                      size: 18, color: SolaraColors.textPrimary),
+                ],
               ],
-            ],
+            ),
           ),
         ),
         centerTitle: true,
@@ -500,6 +515,7 @@ class _ConsultationResultScreenState extends State<ConsultationResultScreen> {
             itemBuilder: (ctx, i) => _CandidateCard(
               reading: _readings[i],
               onOpenMap: () => _openCandidateOnMap(_readings[i].candidate),
+              specifiedHour: _specifiedHour,
             ),
           ),
         ),

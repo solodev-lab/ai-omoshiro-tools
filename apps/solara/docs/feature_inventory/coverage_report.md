@@ -54,10 +54,10 @@
 
 ## #1 / #2 機械抽出 ↔ feature_inventory.md (人手版) の対整合
 
-- 機械抽出した class/mixin/extension/enum: **466**
+- 機械抽出した class/mixin/extension/enum: **468**
 - inventory に登場する識別子 (大文字始まり ``backtick``囲み): **271**
 
-### #1 機械にあるが Doc に書かれていない (268)
+### #1 機械にあるが Doc に書かれていない (270)
 
 - `AppAttestClient`
 - `ConstellationShareCardPage`
@@ -96,6 +96,7 @@
 - `SolaraAuthAccount`
 - `SolaraAuthException`
 - `SolaraAuthProvider`
+- `SolaraSplash`
 - `TapToUnfocus`
 - `TitleHistoryScreen`
 - `_AboutReadingContent`
@@ -258,8 +259,7 @@
 - `_RankedLine`
 - `_RarityChip`
 - `_RarityStarRow`
-- `_Ray`
-- … 残り 68 省略
+- … 残り 70 省略
 
 ### #2 Doc に書いてあるがコードに存在しない (ゴースト記述) (73)
 
@@ -410,7 +410,7 @@
 | 4d | 3 | 6 | 13 | 1 | 2 | 2 | 11 | 2 | 1 | · | · | · | 9 | · | · | · |
 | 4e | 1 | 6 | · | 3 | 7 | 1 | 15 | 1 | · | · | · | · | · | 9 | 3 | · |
 | 4f | 2 | 6 | · | 8 | 16 | 4 | 19 | 12 | · | 6 | · | · | · | · | 29 | · |
-| 5 | 1 | 2 | · | 2 | 5 | 3 | 1 | 1 | · | 1 | 1 | 1 | 1 | 3 | 4 | · |
+| 5 | 1 | 2 | · | 2 | 5 | 3 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 3 | 4 | · |
 
 > 健全な依存方向は「番号が大きい層 → 小さい層」(上位が下位に依存)。
 > 番号が小さい層から大きい層への矢印 (左下三角) は逆流依存の疑い。

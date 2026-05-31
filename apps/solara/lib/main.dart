@@ -27,6 +27,7 @@ import 'utils/solara_auth.dart';
 import 'utils/solara_storage.dart';
 import 'utils/tarot_data.dart';
 import 'widgets/solara_nav_bar.dart';
+import 'widgets/solara_splash.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -130,8 +131,10 @@ class _SolaraAppState extends State<SolaraApp> {
         ),
         // AI 同意未取得時は SolaraHome の代わりに AiConsentScreen を出す。
         // 同意完了 → setState で _consented=true → SolaraHome に差し替わる。
+        // コールド起動時は SolaraHome (Map タブ) の上にスプラッシュを一瞬被せ、
+        // Map 初期化の待ち時間を埋める。同意未取得時 (AiConsent) は不要。
         home: _consented
-            ? const SolaraHome()
+            ? const SolaraSplash(child: SolaraHome())
             : AiConsentScreen(
                 onConsented: () => setState(() => _consented = true),
               ),

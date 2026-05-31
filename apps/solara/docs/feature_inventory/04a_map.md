@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 24 / 総行数: 14244
+- ファイル数: 24 / 総行数: 14256
 - class/mixin/extension/enum: 89
 - 関数 (top-level + method の素拾い): 312
 - Navigator.push 等: 0
@@ -920,7 +920,7 @@ A*C*G ライン (natal / transit) のタップ詳細 popup。
 - L40 `build()`
 
 
-### `lib/screens/map_screen.dart` (3489 行)
+### `lib/screens/map_screen.dart` (3501 行)
 
 **imports:** dart=2 / package=6 / relative=39
 
@@ -942,7 +942,7 @@ A*C*G ライン (natal / transit) のタップ詳細 popup。
 - L1581 `snack()`
 - L1750 `snack()`
 - L1796 `build()`
-- L2951 `signOf()`
+- L2963 `signOf()`
 
   <details><summary>private 関数 65 件</summary>
 
@@ -986,31 +986,31 @@ A*C*G ライン (natal / transit) のタップ詳細 popup。
   - L1626 `_enterAstroCartoMode()`
   - L1701 `_exitAstroCartoMode()`
   - L1749 `_geolocate()`
-  - L1861 `_buildBody()`
-  - L2912 `_buildZenithPopup()`
-  - L2931 `_buildRelocationPopup()`
-  - L2998 `_isProGatedBandKey()`
-  - L3002 `_proLabelForAstroKey()`
-  - L3015 `_proDescForAstroKey()`
-  - L3036 `_onAstroToggle()`
-  - L3065 `_enterConsultationFromDaily()`
-  - L3093 `_enterConsultationFromMapButton()`
-  - L3112 `_evaluateWelcomeGift()`
-  - L3140 `_onWelcomeCta()`
-  - L3153 `_onWelcomeDismiss()`
-  - L3168 `_launchConsultation()`
-  - L3216 `_launchConsultationFromSearch()`
-  - L3250 `_reloadLocationSlots()`
-  - L3274 `_nearestNatalConjunctions()`
-  - L3295 `_findNearbyAstroLines()`
-  - L3313 `_zenithMarkerFrames()`
-  - L3314 `_nadirMarkerFrames()`
-  - L3315 `_zenithBandFrames()`
-  - L3316 `_nadirBandFrames()`
-  - L3320 `_filteredFrames()`
-  - L3333 `_visibleAstroLines()`
-  - L3361 `_buildNoProfileGuide()`
-  - L3395 `_showSearchVpHelpPopup()`
+  - L1868 `_buildBody()`
+  - L2924 `_buildZenithPopup()`
+  - L2943 `_buildRelocationPopup()`
+  - L3010 `_isProGatedBandKey()`
+  - L3014 `_proLabelForAstroKey()`
+  - L3027 `_proDescForAstroKey()`
+  - L3048 `_onAstroToggle()`
+  - L3077 `_enterConsultationFromDaily()`
+  - L3105 `_enterConsultationFromMapButton()`
+  - L3124 `_evaluateWelcomeGift()`
+  - L3152 `_onWelcomeCta()`
+  - L3165 `_onWelcomeDismiss()`
+  - L3180 `_launchConsultation()`
+  - L3228 `_launchConsultationFromSearch()`
+  - L3262 `_reloadLocationSlots()`
+  - L3286 `_nearestNatalConjunctions()`
+  - L3307 `_findNearbyAstroLines()`
+  - L3325 `_zenithMarkerFrames()`
+  - L3326 `_nadirMarkerFrames()`
+  - L3327 `_zenithBandFrames()`
+  - L3328 `_nadirBandFrames()`
+  - L3332 `_filteredFrames()`
+  - L3345 `_visibleAstroLines()`
+  - L3373 `_buildNoProfileGuide()`
+  - L3407 `_showSearchVpHelpPopup()`
 
   </details>
 

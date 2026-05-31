@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 27 / 総行数: 6908
+- ファイル数: 27 / 総行数: 6910
 - class/mixin/extension/enum: 78
 - 関数 (top-level + method の素拾い): 179
 - Navigator.push 等: 0
@@ -503,7 +503,7 @@ Daily 未開封チップは `unsealed.webp` を別アセット名で使う (kind
 - L19 `build()`
 
 
-### `lib/widgets/info_popup.dart` (113 行)
+### `lib/widgets/info_popup.dart` (115 行)
 
 **imports:** dart=0 / package=1 / relative=1
 
@@ -511,12 +511,12 @@ Daily 未開封チップは `unsealed.webp` を別アセット名で使う (kind
 
 **型定義 (1):**
 
-- L66 `class _InfoPopupShell : StatelessWidget`
+- L67 `class _InfoPopupShell : StatelessWidget`
 
 **関数 (2 public + 0 private):**
 
-- L36 `showInfoPopup()` — 説明ポップアップを表示する共通ヘルパー。
-- L72 `build()`
+- L37 `showInfoPopup()` — 説明ポップアップを表示する共通ヘルパー。
+- L73 `build()`
 
 **Popup/Dialog 呼出 (2):**
 

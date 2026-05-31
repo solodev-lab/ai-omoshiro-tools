@@ -308,14 +308,16 @@ class _ConsultationInputScreenState extends State<ConsultationInputScreen> {
     setState(() => _whenKind = key);
   }
 
-  /// Pro: 時刻ドラム (1 時間刻み) を開いて _whenHour を設定。選んだ時刻から
-  /// 語りのバンド (_whenTimeBand) も自動導出して一致させる (geometry=時刻 / 語り=バンド)。
+  /// Pro: 時刻ドラム (1 時間刻み) を開いて _whenHour を設定。
+  /// 2026-05-31: 時刻指定時に時間帯チップ (_whenTimeBand) を自動選択しないよう変更
+  /// (オーナー要望)。チップ点灯=手動バンド選択のみに限定し、時刻指定とは UI 上は排他。
+  /// Worker へ送る語りバンドは _buildWhen が _whenHour から導出する (narrative 品質維持)。
   Future<void> _pickHour() async {
     final picked = await showConsultationHourPicker(context, _whenHour ?? 15);
     if (!mounted || picked == null) return;
     setState(() {
       _whenHour = picked;
-      _whenTimeBand = bandFromHour(picked);
+      _whenTimeBand = null; // 時間帯チップは自動選択しない
     });
   }
 

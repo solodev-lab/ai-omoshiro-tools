@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 10 / 総行数: 3676
+- ファイル数: 10 / 総行数: 3677
 - class/mixin/extension/enum: 22
 - 関数 (top-level + method の素拾い): 82
 - Navigator.push 等: 0
@@ -275,7 +275,7 @@ Star Atlas のカード長押しで表示される bottom sheet。
 - L16 `moonHealingMessage()` — 月齢 (端末ローカル) を 3 日ごと 10 区分に分け、その区分の月相に沿った
 
 
-### `lib/screens/galaxy_screen.dart` (1333 行)
+### `lib/screens/galaxy_screen.dart` (1334 行)
 
 **imports:** dart=3 / package=4 / relative=22
 
@@ -295,9 +295,9 @@ Star Atlas のカード長押しで表示される bottom sheet。
 - L168 `jitter()`
 - L186 `dispose()`
 - L389 `build()`
-- L688 `fmtTime()`
-- L690 `fmtDate()`
-- L1118 `restoreGalaxyState()` — captureRestore のスナップショットから終了画面を再現する (コールド起動時)。
+- L689 `fmtTime()`
+- L691 `fmtDate()`
+- L1119 `restoreGalaxyState()` — captureRestore のスナップショットから終了画面を再現する (コールド起動時)。
 
   <details><summary>private 関数 35 件</summary>
 
@@ -314,28 +314,28 @@ Star Atlas のカード長押しで表示される bottom sheet。
   - L599 `_buildDayBadge()`
   - L623 `_buildMoonBadge()`
   - L648 `_buildStellaMessage()`
-  - L730 `_onDragStart()`
-  - L737 `_onDragUpdate()`
-  - L748 `_onDragEnd()`
-  - L753 `_onTapUp()`
-  - L764 `_showDotPopup()`
-  - L770 `_hideDotPopup()`
-  - L774 `_buildDotPopup()`
-  - L829 `_openReplay()`
-  - L836 `_closeReplay()`
-  - L847 `_openConstellationShare()`
-  - L863 `_openCycleActions()`
-  - L883 `_buildDebugTriggerRow()`
-  - L900 `_buildDebugBtn()`
-  - L924 `_debugTriggerNewMoon()`
-  - L929 `_debugTriggerFullMoon()`
-  - L944 `_debugTriggerCatasterism()`
-  - L962 `_debugTriggerCycleCompletion()`
-  - L1007 `_buildMoonOverlay()`
-  - L1077 `_onCatasterismResult()`
-  - L1092 `_onFormationComplete()`
-  - L1154 `_moonPhaseDescription()`
-  - L1197 `_showGalaxyUsageGuide()`
+  - L731 `_onDragStart()`
+  - L738 `_onDragUpdate()`
+  - L749 `_onDragEnd()`
+  - L754 `_onTapUp()`
+  - L765 `_showDotPopup()`
+  - L771 `_hideDotPopup()`
+  - L775 `_buildDotPopup()`
+  - L830 `_openReplay()`
+  - L837 `_closeReplay()`
+  - L848 `_openConstellationShare()`
+  - L864 `_openCycleActions()`
+  - L884 `_buildDebugTriggerRow()`
+  - L901 `_buildDebugBtn()`
+  - L925 `_debugTriggerNewMoon()`
+  - L930 `_debugTriggerFullMoon()`
+  - L945 `_debugTriggerCatasterism()`
+  - L963 `_debugTriggerCycleCompletion()`
+  - L1008 `_buildMoonOverlay()`
+  - L1078 `_onCatasterismResult()`
+  - L1093 `_onFormationComplete()`
+  - L1155 `_moonPhaseDescription()`
+  - L1198 `_showGalaxyUsageGuide()`
 
   </details>
 

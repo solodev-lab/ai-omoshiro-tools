@@ -662,19 +662,20 @@ class GalaxyScreenState extends State<GalaxyScreen>
         border: Border.all(color: const Color(0x1AFFFFFF)),
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        // Stella label — Cinzel Bold
+        // Stella label — 小文字混じり「Stella」で表示するため Cormorant Garamond Bold。
+        // (Cinzel は大文字専用書体で "STELLA" になってしまうため変更。2026-05-31)
         Row(children: [
           const AntiqueGlyph(icon: AntiqueIcon.pattern, size: 13,
             color: Color(0xFFF9D976), glow: false),
           const SizedBox(width: 5),
-          Text('Stella', style: GoogleFonts.cinzel(
+          Text('Stella', style: GoogleFonts.cormorantGaramond(
             fontSize: 13, fontWeight: FontWeight.w700,
-            color: const Color(0xFFF9D976), letterSpacing: 2.0)),
+            color: const Color(0xFFF9D976), letterSpacing: 1.0)),
         ]),
         const SizedBox(height: 8),
         // Message body — Cormorant italic (letter-like), w500で読みやすく
-        Text('"$msg"', style: GoogleFonts.cormorantGaramond(
-          fontSize: 19, fontWeight: FontWeight.w500,
+        Text(msg, style: GoogleFonts.cormorantGaramond(
+          fontSize: 14, fontWeight: FontWeight.w500,
           fontStyle: FontStyle.italic,
           color: const Color(0xFFEAEAEA), height: 1.6)),
       ]),

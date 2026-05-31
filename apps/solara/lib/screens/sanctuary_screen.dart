@@ -304,48 +304,62 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
                   ],
                 ),
                 const SizedBox(height: 16),
-                // ── リード文 (Pro 特典) ──
-                const Text(
-                  'Cosmic Pro では、称号を何度でも受け取り直すことができます。',
-                  style: TextStyle(
-                    color: Color(0xFFEAEAEA),
-                    fontSize: 14.5,
-                    height: 1.6,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                // ── 変わるもの / 変わらないもの ──
-                const Text(
-                  'ただし、あなたの太陽星座・月星座から導かれる「二つ名」そのものは変わりません。'
-                  '変わるのは、設問への答えで形づくられる「称号（クラス）」の部分だけです。',
-                  style: TextStyle(
-                    color: Color(0xFFC9C9D4),
-                    fontSize: 13,
-                    height: 1.75,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                // ── 推奨される使い方 (変遷で成長を辿る) ──
-                const Text(
-                  '称号は一つひとつの設問と深く結びついています。'
-                  'ご自身の内面の変化や、環境の変化を感じたときに受け直すと、'
-                  'のちに「称号 変遷」で振り返ったとき、'
-                  'あなたの成長や移ろいを辿ることができます。',
-                  style: TextStyle(
-                    color: Color(0xFFC9C9D4),
-                    fontSize: 13,
-                    height: 1.75,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                const Text(
-                  'もちろん毎日受け直していただいても構いません。'
-                  'そんな使い方もある、というご案内をそっとお伝えしておきます。',
-                  style: TextStyle(
-                    color: Color(0xFFC9C9D4),
-                    fontSize: 13,
-                    height: 1.75,
+                // ── 本文 (枠内スクロール) ──
+                // ヘッダと下部ボタンは固定し、本文テキストだけを縦スクロールさせる。
+                // 小さい端末や文字サイズ拡大時に本文がボタンを画面外へ押し出して
+                // 押せなくなる問題を防ぐため、Flexible + SingleChildScrollView で
+                // 枠内に収める (枠そのものの見た目は変えない)。
+                Flexible(
+                  child: SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        // ── リード文 (Pro 特典) ──
+                        const Text(
+                          'Cosmic Pro では、称号を何度でも受け取り直すことができます。',
+                          style: TextStyle(
+                            color: Color(0xFFEAEAEA),
+                            fontSize: 14.5,
+                            height: 1.6,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        // ── 変わるもの / 変わらないもの ──
+                        const Text(
+                          'ただし、あなたの太陽星座・月星座から導かれる「二つ名」そのものは変わりません。'
+                          '変わるのは、設問への答えで形づくられる「称号（クラス）」の部分だけです。',
+                          style: TextStyle(
+                            color: Color(0xFFC9C9D4),
+                            fontSize: 13,
+                            height: 1.75,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        // ── 推奨される使い方 (変遷で成長を辿る) ──
+                        const Text(
+                          '称号は一つひとつの設問と深く結びついています。'
+                          'ご自身の内面の変化や、環境の変化を感じたときに受け直すと、'
+                          'のちに「称号 変遷」で振り返ったとき、'
+                          'あなたの成長や移ろいを辿ることができます。',
+                          style: TextStyle(
+                            color: Color(0xFFC9C9D4),
+                            fontSize: 13,
+                            height: 1.75,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        const Text(
+                          'もちろん毎日受け直していただいても構いません。'
+                          'そんな使い方もある、というご案内をそっとお伝えしておきます。',
+                          style: TextStyle(
+                            color: Color(0xFFC9C9D4),
+                            fontSize: 13,
+                            height: 1.75,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
                 const SizedBox(height: 22),

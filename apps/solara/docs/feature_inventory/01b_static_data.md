@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 15 / 総行数: 4814
+- ファイル数: 15 / 総行数: 4823
 - class/mixin/extension/enum: 20
 - 関数 (top-level + method の素拾い): 42
 - Navigator.push 等: 0
@@ -196,7 +196,7 @@ SolaraHome が paused のタイミングで pull するので、画面側に lif
 - L31 `unregister()` — 画面 dispose 時に呼ぶ。
 
 
-### `lib/utils/consultation_record.dart` (248 行)
+### `lib/utils/consultation_record.dart` (257 行)
 
 **ファイル先頭コメント:**
 
@@ -223,10 +223,10 @@ intro/outro) + 蓄積した候補群 (1 枚ずつ「別の候補地」で増え�
 
 **関数 (4 public + 0 private):**
 
-- L91 `copyWith()` — お気に入りフラグ等を差し替えた複製を返す。
-- L154 `toReadings()` — 読み込み専用表示 (履歴詳細) のために reading 群を再構成する。
-- L174 `displayName()` — 履歴カード等の見出し用候補名 (方角は「○の方角」、座標のみは「この地点」)。
-- L189 `toJson()`
+- L96 `copyWith()` — お気に入りフラグ等を差し替えた複製を返す。
+- L161 `toReadings()` — 読み込み専用表示 (履歴詳細) のために reading 群を再構成する。
+- L181 `displayName()` — 履歴カード等の見出し用候補名 (方角は「○の方角」、座標のみは「この地点」)。
+- L196 `toJson()`
 
 
 ### `lib/utils/consultation_v2_request.dart` (283 行)

@@ -303,7 +303,7 @@ extension _PaywallWidgets on _PaywallScreenState {
           _planBullet('天頂帯・天底帯  惑星が真上/真下を通る緯度を帯で表示 (Lewis 流)'),
           _planBullet('引越しシミュレーション  地点タップで ASC / MC / 12 ハウスを再計算'),
           _planBullet('リロケーション  Stella による動的解説'),
-          _planBullet('保存拠点数  10'),
+          _planBullet('保存拠点数  10か所'),
           _planBullet('称号 (クラス) の再診断  無制限'),
           const SizedBox(height: 16),
           _buildProCta(selectedPackage, isPro: isPro),

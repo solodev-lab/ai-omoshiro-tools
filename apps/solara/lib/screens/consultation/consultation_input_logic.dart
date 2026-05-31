@@ -49,7 +49,13 @@ extension _ConsultationInputLogic on _ConsultationInputScreenState {
   // ── リクエスト組み立て ──────────────────────────────────
   ConsultationWhen? _buildWhen() {
     // 時間帯はおでかけ (daily) のときだけ付ける。
-    final tb = _mode == 'daily' ? _whenTimeBand : null;
+    // 2026-05-31: 時刻指定時はチップ未選択 (_whenTimeBand=null) でも、語りバンドを
+    // 時刻から導出して Worker へ送る (UI のチップ選択と Worker payload を分離。
+    // narrative は従来通り「その時間帯を主役」にできる)。
+    final tb = _mode == 'daily'
+        ? (_whenTimeBand ??
+            (_whenHour != null ? bandFromHour(_whenHour!) : null))
+        : null;
     final atMs = _atUtcMsForSelectedHour();
     switch (_whenKind) {
       case 'date':

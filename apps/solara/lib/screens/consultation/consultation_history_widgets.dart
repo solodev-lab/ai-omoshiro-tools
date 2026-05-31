@@ -178,8 +178,19 @@ class _HistoryCard extends StatelessWidget {
   }
 
   /// 時間帯ラベル (おでかけのみ・任意指定時)。指定なしなら null。
-  String? get _timeBandLabelOrNull =>
-      record.whenTimeBand == null ? null : _timeBandLabel[record.whenTimeBand!];
+  /// 2026-05-31: 時刻指定 (whenAtUtcMs) があるときは「15:00」のように指定時刻を
+  /// 優先表示し、結果詳細画面と表記を揃える。それ以外は時間帯バンド名。
+  String? get _timeBandLabelOrNull {
+    final ms = record.whenAtUtcMs;
+    if (ms != null) {
+      final h =
+          DateTime.fromMillisecondsSinceEpoch(ms, isUtc: true).toLocal().hour;
+      return '${h.toString().padLeft(2, '0')}:00';
+    }
+    return record.whenTimeBand == null
+        ? null
+        : _timeBandLabel[record.whenTimeBand!];
+  }
 
   /// モード (移住/旅行/おでかけ) → アイコン (履歴画面のみ)。
   IconData get _modeIcon {

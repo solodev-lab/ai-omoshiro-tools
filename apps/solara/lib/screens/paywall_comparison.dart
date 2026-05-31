@@ -54,7 +54,7 @@ extension _PaywallComparison on _PaywallScreenState {
           _comparisonRow('天頂帯・天底帯 (緯度帯)', '—', '✓'),
           _comparisonRow('アスペクトライン', '40 本\n(合)', '120 本\n(合・□・△・⚹)'),
           _comparisonRow('引越しシミュレーション', '—', '✓'),
-          _comparisonRow('拠点 (VP/LOCATION) 枠', '5 個', '10 個'),
+          _comparisonRow('拠点 (VP/LOCATION) 枠', '5か所', '10か所'),
           _comparisonSection('記録（あなたの記録は Free でも永久に残ります）'),
           _comparisonRow('占い・サイクルの永久保存', '✓', '✓'),
           _comparisonRow('星座アーカイブ・履歴の検索/フィルタ', '✓', '✓'),

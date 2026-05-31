@@ -24,8 +24,9 @@ import '../theme/solara_colors.dart';
 //     child: Column(...内容...),
 //   );
 //
-// child 内で × ボタンを書かないこと。Shell 側が右上に配置する。
-// child の右側には × ボタン分の余白 (26px) が自動で確保される。
+// child 内で × ボタンを書かないこと。Shell 側が右上に float 配置する。
+// 本文は枠の右端まで使う (× は最上行の右上に重なるだけ。2 行目以降に余白列は作らない)。
+// そのため child の先頭要素は短いタイトル/ヘッダにして × と重ならないようにすること。
 // ============================================================
 
 /// 説明ポップアップを表示する共通ヘルパー。
@@ -81,13 +82,14 @@ class _InfoPopupShell extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
       child: Stack(
         children: [
-          // 本文 (× ボタンの分だけ右に余白)
-          Padding(
-            padding: const EdgeInsets.only(right: 26),
-            child: SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
-              child: child,
-            ),
+          // 本文。枠の右端まで使う (左右ともコンテナ padding 20px で対称)。
+          // 2026-05-31 オーナー要望: 旧実装は本文全体に right:26 を掛けていたため
+          // 2 行目以降にも × ボタン用の余白列ができ、本文が右端まで伸びなかった。
+          // × は最上行の右上に float させるだけ。child の先頭要素は短いタイトル/
+          // ヘッダにして × と重ならないようにすること。
+          SingleChildScrollView(
+            physics: const BouncingScrollPhysics(),
+            child: child,
           ),
           // 右上 × ボタン
           Positioned(

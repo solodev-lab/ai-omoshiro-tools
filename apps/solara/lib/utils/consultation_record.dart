@@ -42,6 +42,10 @@ class ConsultationRecord {
   final String? whenEnd;
   /// 時間帯 (おでかけのみ): 'morning'|'midday'|'evening'|'night'|'lateNight'。
   final String? whenTimeBand;
+  /// Pro 時刻指定 (おでかけのみ): 選んだ「日付×時刻」の UTC epoch ms。
+  /// 2026-05-31 追加。履歴でも「15:00」のような指定時刻を再表示するために保存する。
+  /// 旧レコードには無い (nullable・欠落許容)。null = 時刻未指定。
+  final int? whenAtUtcMs;
 
   /// だれと / 願い (語りのレンズ・自由記述)。
   final String withWhom;
@@ -76,6 +80,7 @@ class ConsultationRecord {
     this.whenStart,
     this.whenEnd,
     this.whenTimeBand,
+    this.whenAtUtcMs,
     this.withWhom = '',
     this.wish = '',
     this.innerSeason = '',
@@ -100,6 +105,7 @@ class ConsultationRecord {
         whenStart: whenStart,
         whenEnd: whenEnd,
         whenTimeBand: whenTimeBand,
+        whenAtUtcMs: whenAtUtcMs,
         withWhom: withWhom,
         wish: wish,
         innerSeason: innerSeason,
@@ -139,6 +145,7 @@ class ConsultationRecord {
       whenStart: when?.start,
       whenEnd: when?.end,
       whenTimeBand: when?.timeBand,
+      whenAtUtcMs: when?.atUtcMs,
       withWhom: withWhom,
       wish: wish,
       innerSeason: first?.innerSeason ?? '',
@@ -199,6 +206,7 @@ class ConsultationRecord {
         if (whenStart != null) 'whenStart': whenStart,
         if (whenEnd != null) 'whenEnd': whenEnd,
         if (whenTimeBand != null) 'whenTimeBand': whenTimeBand,
+        if (whenAtUtcMs != null) 'whenAtUtcMs': whenAtUtcMs,
         if (withWhom.isNotEmpty) 'withWhom': withWhom,
         if (wish.isNotEmpty) 'wish': wish,
         if (innerSeason.isNotEmpty) 'innerSeason': innerSeason,
@@ -224,6 +232,7 @@ class ConsultationRecord {
       whenStart: j['whenStart'] as String?,
       whenEnd: j['whenEnd'] as String?,
       whenTimeBand: j['whenTimeBand'] as String?,
+      whenAtUtcMs: (j['whenAtUtcMs'] as num?)?.toInt(),
       withWhom: j['withWhom'] as String? ?? '',
       wish: j['wish'] as String? ?? '',
       innerSeason: j['innerSeason'] as String? ?? '',

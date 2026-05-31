@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 31 / 総行数: 10972
+- ファイル数: 31 / 総行数: 11016
 - class/mixin/extension/enum: 99
 - 関数 (top-level + method の素拾い): 279
 - Navigator.push 等: 0
@@ -143,7 +143,7 @@ Consultation History Screen — Phase 2-4
   </details>
 
 
-### `lib/screens/consultation/consultation_history_widgets.dart` (488 行)
+### `lib/screens/consultation/consultation_history_widgets.dart` (499 行)
 
 **ファイル先頭コメント:**
 
@@ -159,18 +159,18 @@ Consultation History — サブウィジェット (part of consultation_history_
 - L57 `class _FilterChip : StatelessWidget`
   - 履歴フィルタ用のトグルチップ (すべて / お気に入り)。
 - L96 `class _HistoryCard : StatelessWidget`
-- L460 `class _MetaChip : StatelessWidget`
+- L471 `class _MetaChip : StatelessWidget`
 
 **関数 (4 public + 1 private):**
 
 - L13 `build()`
 - L68 `build()`
-- L243 `build()`
-- L468 `build()`
+- L254 `build()`
+- L479 `build()`
 
   <details><summary>private 関数 1 件</summary>
 
-  - L432 `_confirmDelete()`
+  - L443 `_confirmDelete()`
 
   </details>
 
@@ -208,7 +208,7 @@ Consultation Input — だれと / 願い の記入例 (テーマ別)
   </details>
 
 
-### `lib/screens/consultation/consultation_input_logic.dart` (199 行)
+### `lib/screens/consultation/consultation_input_logic.dart` (205 行)
 
 **ファイル先頭コメント:**
 
@@ -232,10 +232,10 @@ setState を呼ばない純ロジック (when/scope → ConsultationRequest、�
 
   - L12 `_travelBandMin()`
   - L33 `_atUtcMsForSelectedHour()`
-  - L135 `_onStartPressed()`
-  - L147 `_handleBuyFromPopup()`
-  - L154 `_showStartPopup()`
-  - L174 `_runConsultation()`
+  - L141 `_onStartPressed()`
+  - L153 `_handleBuyFromPopup()`
+  - L160 `_showStartPopup()`
+  - L180 `_runConsultation()`
 
   </details>
 
@@ -313,7 +313,7 @@ consultation_input_picker.dart の HARD500 回避のため、検索結果行・�
 - L150 `build()`
 
 
-### `lib/screens/consultation/consultation_input_screen.dart` (638 行)
+### `lib/screens/consultation/consultation_input_screen.dart` (640 行)
 
 **ファイル先頭コメント:**
 
@@ -358,7 +358,7 @@ Consultation Input Screen — 5問モデル (V2: 全要素統合)
 - L98 `createState()`
 - L141 `initState()`
 - L248 `dispose()`
-- L422 `build()`
+- L424 `build()`
 
   <details><summary>private 関数 12 件</summary>
 
@@ -366,14 +366,14 @@ Consultation Input Screen — 5問モデル (V2: 全要素統合)
   - L236 `_loadPrefsAndProfile()`
   - L256 `_onModeChanged()`
   - L286 `_onWhenKindTap()`
-  - L313 `_pickHour()`
-  - L322 `_pickSingleDate()`
-  - L334 `_pickDateRange()`
-  - L346 `_ymd()`
-  - L350 `_onScopeKindTap()`
-  - L360 `_openMapPicker()`
-  - L410 `_refreshCreditsFresh()`
-  - L415 `_setStartPopupHidden()`
+  - L315 `_pickHour()`
+  - L324 `_pickSingleDate()`
+  - L336 `_pickDateRange()`
+  - L348 `_ymd()`
+  - L352 `_onScopeKindTap()`
+  - L362 `_openMapPicker()`
+  - L412 `_refreshCreditsFresh()`
+  - L417 `_setStartPopupHidden()`
 
   </details>
 
@@ -583,7 +583,7 @@ flutter_map ベースの地点選択画面のサブウィジェット群:
   </details>
 
 
-### `lib/screens/consultation/consultation_result_card.dart` (553 行)
+### `lib/screens/consultation/consultation_result_card.dart` (562 行)
 
 **ファイル先頭コメント:**
 
@@ -595,33 +595,33 @@ Consultation Result — 候補カード (V2)
 **型定義 (8):**
 
 - L6 `class _CandidateCard : StatelessWidget`
-- L195 `class _EnergyChip : StatelessWidget`
-- L221 `class _MapLinkIcon : StatelessWidget`
+- L199 `class _EnergyChip : StatelessWidget`
+- L225 `class _MapLinkIcon : StatelessWidget`
   - 場所名の右の🗺リンク。Map 画面で候補地を (相談の日付で) 見る。
-- L251 `class _TimeWindowRow : StatelessWidget`
-  - 時間帯 (現地の時間帯のみ・時計表示なし)。single=1 個 / rhythm=朝昼夜。
-- L294 `class _DeltaAfterSection : StatefulWidget`
+- L256 `class _TimeWindowRow : StatelessWidget`
+  - 時間帯。通常は現地の時間帯バンド (朝/昼/夕方/夜/夜更け)。single=1 個 / rhythm=朝昼夜。
+- L303 `class _DeltaAfterSection : StatefulWidget`
   - 候補カードの「30分経過後を見る」セクション。タップで開閉、i ボタンで説明。
-- L302 `class _DeltaAfterSectionState : State`
-- L445 `class _DeltaChip : StatelessWidget`
+- L311 `class _DeltaAfterSectionState : State`
+- L454 `class _DeltaChip : StatelessWidget`
   - 30 分後の 1 変化チップ (例: 「火星 MC ↘ 離れる」)。
-- L483 `class _CandidateKindBadge : StatelessWidget`
+- L492 `class _CandidateKindBadge : StatelessWidget`
   - 候補種別バッジ (方角 / 場所)。
 
 **関数 (8 public + 1 private):**
 
-- L37 `build()`
-- L200 `build()`
-- L226 `build()`
-- L256 `build()`
-- L299 `createState()`
-- L342 `build()`
-- L450 `build()`
-- L492 `build()`
+- L41 `build()`
+- L204 `build()`
+- L230 `build()`
+- L262 `build()`
+- L308 `createState()`
+- L351 `build()`
+- L459 `build()`
+- L501 `build()`
 
   <details><summary>private 関数 1 件</summary>
 
-  - L305 `_showInfo()`
+  - L314 `_showInfo()`
 
   </details>
 
@@ -652,7 +652,7 @@ Stella 相談 クレジット制 (設計 project_solara_stella_free_credits.md) 
 - L22 `build()`
 
 
-### `lib/screens/consultation/consultation_result_screen.dart` (518 行)
+### `lib/screens/consultation/consultation_result_screen.dart` (534 行)
 
 **ファイル先頭コメント:**
 
@@ -687,7 +687,7 @@ ConsultationRecord を読み込み専用表示 (fetch なし・autosave なし�
 - L76 `createState()`
 - L145 `initState()`
 - L160 `dispose()`
-- L401 `build()`
+- L410 `build()`
 
   <details><summary>private 関数 12 件</summary>
 
@@ -702,7 +702,7 @@ ConsultationRecord を読み込み専用表示 (fetch なし・autosave なし�
   - L342 `_showAboutReading()`
   - L357 `_persist()`
   - L385 `_openCandidateOnMap()`
-  - L466 `_buildBody()`
+  - L481 `_buildBody()`
 
   </details>
 
