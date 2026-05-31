@@ -315,7 +315,7 @@ class _FooterActions extends StatelessWidget {
                 child: _FooterButton(
                   emoji: '🔮',
                   title: 'Stella に相談',
-                  subtitle: '悩みから場所を読む',
+                  subtitle: '天体から場所を読む',
                   onTap: onEnterConsultation!,
                   compact: showSplit,
                 ),
