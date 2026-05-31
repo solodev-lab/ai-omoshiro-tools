@@ -1,14 +1,15 @@
-// Galaxy Cycle 操作シート — C5 (Pro 機能、柱 3)
+// Galaxy Cycle 操作シート — C5 (柱 3)
 //
 // 設計: apps/solara/docs/pro_candidates.md §7.3 + §3 C5
 //
 // Star Atlas のカード長押しで表示される bottom sheet。
 // メニュー項目:
-//   - 通常再生 (Free) ※カードタップと同じだが UX 上ここにも置いておく
-//   - 形成演出を再生 (Pro)
-//   - エクスポート (テキストコピー / 画像共有、Pro)
+//   - 通常再生 ※カードタップと同じだが UX 上ここにも置いておく
+//   - 形成演出を再生
+//   - エクスポート (テキストコピー)
 //
-// Free ユーザーが Pro 項目をタップしたら showProUnlockDialog で誘導する。
+// 2026-05-31: 「形成演出を再生」「テキストとしてコピー」を Free に戻した
+// (オーナー指示)。全項目 Free。
 
 import 'dart:async';
 
@@ -19,8 +20,6 @@ import '../../models/galaxy_cycle.dart';
 import '../../models/lunar_intention.dart';
 import '../../theme/solara_colors.dart';
 import '../../utils/galaxy_cycle_export.dart';
-import '../../utils/pro_status.dart';
-import '../../widgets/pro_unlock_dialog.dart';
 
 /// [GalaxyCycle] に対する Pro メニューを bottom sheet で表示する。
 ///
@@ -60,14 +59,6 @@ class _CycleActionsSheet extends StatelessWidget {
     required this.intentionLoader,
   });
 
-  Future<void> _proGuard(BuildContext ctx, String label, String desc) {
-    return showProUnlockDialog(
-      ctx,
-      featureLabel: label,
-      description: desc,
-    );
-  }
-
   Future<void> _exportText(BuildContext ctx) async {
     final intention = intentionLoader != null
         ? await intentionLoader!(cycle.id)
@@ -89,7 +80,6 @@ class _CycleActionsSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isPro = ProStatus.instance.isPro;
     final displayName = cycle.nameJP.isNotEmpty ? cycle.nameJP : cycle.nameEN;
 
     return SafeArea(
@@ -147,17 +137,8 @@ class _CycleActionsSheet extends StatelessWidget {
                 icon: Icons.auto_fix_high,
                 label: '形成演出を再生',
                 subtitle: '刻星化の 8 秒の形成シーンを再生',
-                isLocked: !isPro,
+                isLocked: false,
                 onTap: () {
-                  if (!isPro) {
-                    _proGuard(
-                      context,
-                      '形成演出の再生',
-                      '刻星化の瞬間の演出を、何度でも見返せます。\n'
-                          '過去のサイクルにも適用できます。',
-                    );
-                    return;
-                  }
                   Navigator.of(context).pop();
                   onPlayFormation(cycle);
                 },
@@ -166,19 +147,8 @@ class _CycleActionsSheet extends StatelessWidget {
                 icon: Icons.copy_outlined,
                 label: 'テキストとしてコピー',
                 subtitle: 'Markdown 形式でクリップボードへ',
-                isLocked: !isPro,
-                onTap: () {
-                  if (!isPro) {
-                    _proGuard(
-                      context,
-                      'サイクルのエクスポート',
-                      '完成した星座とそのサイクルを\n'
-                          'テキスト / 画像で持ち出せます。',
-                    );
-                    return;
-                  }
-                  _exportText(context);
-                },
+                isLocked: false,
+                onTap: () => _exportText(context),
               ),
               // 画像エクスポートは公開後 (1080px 専用カード新規実装が要る) — Phase 2 で
               // 検討する。テキスト版だけ先行で出す。

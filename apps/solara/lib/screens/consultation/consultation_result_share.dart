@@ -21,15 +21,7 @@ extension _ConsultationResultShare on _ConsultationResultScreenState {
   Future<void> _openShareSheet() async {
     if (_readings.isEmpty || _sharing) return;
 
-    if (!ProStatus.instance.isPro) {
-      await showProUnlockDialog(
-        context,
-        featureLabel: '相談結果のシェア',
-        description: 'Stella の読みをテキスト/画像で書き出して、近しい人と共有できます。',
-      );
-      return;
-    }
-
+    // 2026-05-31: 相談結果のシェアを Free に戻した (オーナー指示)。Pro ゲート撤廃。
     final choice = await showModalBottomSheet<_ShareChoice>(
       context: context,
       backgroundColor: SolaraColors.celestialBlueLight,

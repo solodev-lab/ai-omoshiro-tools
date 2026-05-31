@@ -3,7 +3,7 @@
 // 検証範囲:
 //   - formatConsultationAsText: 候補群 + 枠 → plain text 整形
 //   - formatConsultationCaption: 画像同梱用の短いキャプション整形
-//   - ConsultationResultScreen: AppBar の share アイコン (Pro ゲート含む)
+//   - ConsultationResultScreen: AppBar の share アイコン (2026-05-31 Free 開放)
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -182,8 +182,12 @@ void main() {
     });
   });
 
-  group('ConsultationResultScreen share Pro gate', () {
-    testWidgets('Free は share タップで Pro 案内 (sheet は出ない)', (tester) async {
+  group('ConsultationResultScreen share (Free 開放)', () {
+    // 2026-05-31: 相談結果のシェアを Free に戻した (オーナー指示)。
+    // 旧テスト「Free は Pro 案内 (sheet は出ない)」を反転 — Free でもシェア
+    // シートが開き、Pro 案内ダイアログは出ないことを確認する。
+    testWidgets('Free でも share タップで bottom sheet が出る (Pro 案内は出ない)',
+        (tester) async {
       SharedPreferences.setMockInitialValues({});
       await ProStatus.instance.resetForTest(isPro: false);
 
@@ -201,9 +205,9 @@ void main() {
       ));
       await tester.pumpAndSettle();
 
-      expect(find.text('✦ Cosmic Pro'), findsOneWidget);
-      expect(find.text('テキストをコピー'), findsNothing);
-      expect(find.text('画像で共有'), findsNothing);
+      expect(find.text('テキストをコピー'), findsOneWidget);
+      expect(find.text('画像で共有'), findsOneWidget);
+      expect(find.text('✦ Cosmic Pro'), findsNothing);
     });
   });
 }

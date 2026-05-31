@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../models/galaxy_cycle.dart';
 import '../../utils/constellation_namer.dart';
-import '../../utils/pro_status.dart';
 import '../../widgets/constellation_painter.dart';
 import '../horoscope/horo_antique_icons.dart';
 import 'galaxy_archive_filter.dart';
@@ -19,9 +18,12 @@ import 'galaxy_archive_filter.dart';
 /// `.stella-msg` は親 (galaxy_screen.dart) 側で描画されるためここには含めない。
 ///
 /// C2/C5 (柱 3) 統合:
-///   - 上部に [GalaxyArchiveFilterBar] (検索/レアリティ/ソート、Pro 限定)
+///   - 上部に [GalaxyArchiveFilterBar] (検索/レアリティ/ソート)
 ///   - カード長押しで [onLongPressCard] を呼ぶ (親側で形成演出再生 + エクスポート
-///     メニューを開く、いずれも Pro 機能)
+///     メニューを開く)
+///
+/// 2026-05-31: 検索/フィルタ・形成演出再生・テキストコピーを Free に戻した
+/// (オーナー指示)。Pro 判定と Free 降格リセット listener を撤廃。
 class GalaxyStarAtlasTab extends StatefulWidget {
   final List<GalaxyCycle> completedCycles;
   final Map<int, ui.Image> artImages;
@@ -46,36 +48,12 @@ class _GalaxyStarAtlasTabState extends State<GalaxyStarAtlasTab> {
   GalaxyArchiveFilter _filter = const GalaxyArchiveFilter();
 
   @override
-  void initState() {
-    super.initState();
-    ProStatus.instance.addListener(_onProChanged);
-  }
-
-  @override
-  void dispose() {
-    ProStatus.instance.removeListener(_onProChanged);
-    super.dispose();
-  }
-
-  void _onProChanged() {
-    if (!mounted) return;
-    // Free に降格された時はフィルタを初期状態に戻して結果が消えないようにする
-    // (柱 3 原則: Free の記録閲覧を阻害しない)。
-    if (!ProStatus.instance.isPro && _filter.isActive) {
-      setState(() => _filter = const GalaxyArchiveFilter());
-    } else {
-      setState(() {}); // バー UI の文言を切替させる
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
     // 空状態: HTMLにはグリッド空の状態は明示されていないので、案内のみ出す。
     if (widget.completedCycles.isEmpty) {
       return _EmptyState();
     }
 
-    final isPro = ProStatus.instance.isPro;
     // completedCycles は呼出側で「古い順」のことが多いため、Filter 内で
     // sort を再適用してから表示する。
     final visible = _filter.apply(widget.completedCycles);
@@ -98,7 +76,7 @@ class _GalaxyStarAtlasTabState extends State<GalaxyStarAtlasTab> {
           sliver: SliverToBoxAdapter(
             child: GalaxyArchiveFilterBar(
               filter: _filter,
-              isPro: isPro,
+              isPro: true, // 2026-05-31: 検索/フィルタを Free 開放 (オーナー指示)
               onChanged: (f) => setState(() => _filter = f),
             ),
           ),

@@ -1640,20 +1640,17 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
       // aspectAll は強制 ON しない (FORTUNE Pills でカテゴリ絞込みする UX 用)。
       // 「総合」タップで activeCategory='all' → 自動で全惑星 100% になる。
       //
-      // Phase 2-7: Transit は Pro 機能のため、Free ユーザーには natal を初期表示。
-      // Pro になったら次回入時から Transit が初期表示に戻る。
-      final isPro = ProStatus.instance.isPro;
-      _astroLayers['aspect'] = !isPro;
-      _astroLayers['aspectTransit'] = isPro;
+      // 2026-05-31: Transit/Progressed/SolarArc を Free に戻した (オーナー指示)。
+      // 全ユーザーで Transit を初期表示にする (Phase 2-7 の Pro 判定分岐を撤廃)。
+      _astroLayers['aspect'] = false;
+      _astroLayers['aspectTransit'] = true;
       // 2026-05-11 2 層メニュー化: フレーム線 ON と同時に同フレームの天頂も自動 ON。
       // モード入時に第2層 4 トグル全 OFF だと「ラインだけで天頂マーカー無し」となり、
       // 旧仕様 (天頂自動表示) からの体験劣化を防ぐ。天底/天頂帯/天底帯は OFF のまま
       // (ユーザーが意識して ON する段階的 UX)。
-      _astroLayers['zenith_natal'] = !isPro;
-      _astroLayers['zenith_transit'] = isPro;
-      _activeAstroFrame = isPro
-          ? astro_lines.AstroFrame.transit
-          : astro_lines.AstroFrame.natal;
+      _astroLayers['zenith_natal'] = false;
+      _astroLayers['zenith_transit'] = true;
+      _activeAstroFrame = astro_lines.AstroFrame.transit;
       _acgMenuOpen = false; // モード入時はバーガー閉、地図最大表示
       _mapStyle = MapStyle.osmHotDark;
       // 既存メニュー/シート/ピンを片付け、世界規模ビューにフォーカス
@@ -2909,16 +2906,15 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     );
   }
 
-  /// Phase 2-7: ACG / アスペクト / 引越し系の Pro ゲート対象キー。
+  /// ACG / アスペクト / 引越し系の Pro ゲート対象キー。
   ///
-  /// 設計: pro_candidates.md §7.2 — ACG 4 フレーム / アスペクト 120 本 / 引越しは Pro。
-  /// natal フレーム (`aspect`) は Free のままで残す。
+  /// 設計: pro_candidates.md §7.2。
+  /// 2026-05-31: Transit/Progressed/SolarArc フレームを Free に戻した
+  /// (オーナー指示)。natal (`aspect`) と合わせ 4 フレームは全て Free。
+  /// アスペクト 120 本 (`aspectLines`) と引越し (`relocate`) は Pro 維持。
   ///
   /// 「OFF にする」操作はゲート対象外 (元 Pro が降格しても片付けられるように)。
   static const Set<String> _proGatedAstroKeys = {
-    'aspectTransit',
-    'aspectProgressed',
-    'aspectSolarArc',
     'aspectLines',
     'relocate',
   };
@@ -2926,12 +2922,6 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   /// Pro ゲートで表示する機能名 (showProUnlockDialog の featureLabel)。
   String _proLabelForAstroKey(String k) {
     switch (k) {
-      case 'aspectTransit':
-        return 'Transit フレーム';
-      case 'aspectProgressed':
-        return 'Progressed フレーム';
-      case 'aspectSolarArc':
-        return 'Solar Arc フレーム';
       case 'aspectLines':
         return 'アスペクトライン (120 本)';
       case 'relocate':
@@ -2944,15 +2934,6 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   /// Pro ゲートで表示する機能説明 (吉凶禁止、寄り添い文体)。
   String _proDescForAstroKey(String k) {
     switch (k) {
-      case 'aspectTransit':
-        return '今この瞬間の惑星配置で ACG 線を引き直し、現在の流れを '
-            '地図上で読み解きます。';
-      case 'aspectProgressed':
-        return 'Secondary Progression の進行図で ACG 線を引き直し、'
-            '内的成長の流れを地図に重ねます。';
-      case 'aspectSolarArc':
-        return 'Solar Arc 進行で ACG 線を引き直し、人生のターニングポイントを '
-            '地理的に追跡します。';
       case 'aspectLines':
         return 'コンジャンクション 40 本に加え、スクエア / トライン / セクスタイル '
             'を含む全 120 本のアスペクトラインを表示します。';

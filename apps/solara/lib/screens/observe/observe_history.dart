@@ -3,7 +3,6 @@ import '../../models/daily_reading.dart';
 import '../../models/galaxy_cycle.dart';
 import '../../models/tarot_card.dart';
 import '../../theme/solara_colors.dart';
-import '../../utils/pro_status.dart';
 import '../../utils/solara_storage.dart';
 import '../../utils/tarot_data.dart';
 import '../../widgets/memo_text_field.dart';
@@ -50,12 +49,6 @@ class _ObserveHistoryPanelState extends State<ObserveHistoryPanel> {
   List<GalaxyCycle>? _pastCycles;
   bool _loadingPastCycles = false;
 
-  @override
-  void initState() {
-    super.initState();
-    ProStatus.instance.addListener(_onProChanged);
-  }
-
   Future<void> _ensurePastCyclesLoaded() async {
     if (_pastCycles != null || _loadingPastCycles) return;
     setState(() => _loadingPastCycles = true);
@@ -65,23 +58,6 @@ class _ObserveHistoryPanelState extends State<ObserveHistoryPanel> {
       _pastCycles = cycles;
       _loadingPastCycles = false;
     });
-  }
-
-  @override
-  void dispose() {
-    ProStatus.instance.removeListener(_onProChanged);
-    super.dispose();
-  }
-
-  void _onProChanged() {
-    if (!mounted) return;
-    // Free に降格された時はフィルタを初期状態に戻して結果が消えないようにする
-    // (柱 3 原則: Free の記録閲覧を阻害しない)。
-    if (!ProStatus.instance.isPro && _filter.isActive) {
-      setState(() => _filter = const ObserveHistoryFilter());
-    } else {
-      setState(() {});
-    }
   }
 
   // HTML: confirm('履歴をすべて削除しますか？')
@@ -211,7 +187,7 @@ class _ObserveHistoryPanelState extends State<ObserveHistoryPanel> {
       if (widget.history.isNotEmpty) ...[
         ObserveHistoryFilterBar(
           filter: _filter,
-          isPro: ProStatus.instance.isPro,
+          isPro: true, // 2026-05-31: 履歴の検索/フィルタを Free 開放 (オーナー指示)
           onChanged: (f) => setState(() => _filter = f),
         ),
         const SizedBox(height: 10),
