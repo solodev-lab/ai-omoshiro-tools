@@ -110,7 +110,7 @@ class AiConsentScreen extends StatelessWidget {
                 children: [
                   const SizedBox(height: 16),
                   const Text(
-                    '✦ Solara',
+                    '✦ Solara ✦',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: Color(0xFFC9A84C),
