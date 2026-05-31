@@ -52,10 +52,10 @@
 
 ## #1 / #2 機械抽出 ↔ feature_inventory.md (人手版) の対整合
 
-- 機械抽出した class/mixin/extension/enum: **460**
+- 機械抽出した class/mixin/extension/enum: **462**
 - inventory に登場する識別子 (大文字始まり ``backtick``囲み): **262**
 
-### #1 機械にあるが Doc に書かれていない (268)
+### #1 機械にあるが Doc に書かれていない (270)
 
 - `AppAttestClient`
 - `ConstellationShareCardPage`
@@ -126,7 +126,9 @@
 - `_ClassShareCardPageState`
 - `_CommunicationPainter`
 - `_ConstellationCard`
+- `_ConsultAboutContent`
 - `_ConsultEntryPopupState`
+- `_ConsultIntroNote`
 - `_ConsultationBlockedBox`
 - `_ConsultationHistoryScreenState`
 - `_ConsultationInputLogic`
@@ -255,9 +257,7 @@
 - `_RadiusChips`
 - `_RankedLine`
 - `_RarityChip`
-- `_RarityStarRow`
-- `_Ray`
-- … 残り 68 省略
+- … 残り 70 省略
 
 ### #2 Doc に書いてあるがコードに存在しない (ゴースト記述) (70)
 
@@ -376,7 +376,7 @@
 
 - ファイル数: 31
 - Worker URL 呼出: (なし)
-- Popup/Dialog: `showInfoPopup`×8
+- Popup/Dialog: `showInfoPopup`×9
 - Navigator.push 等: 0 箇所
 
 ## #5 import 依存グラフ (Pro 化影響範囲特定用)
@@ -450,12 +450,12 @@
 > 各ソースの SHA1 を `_stamps.json` に記録し、差分を検出。
 > 変更されたファイルが属する層は、人手版インベントリ章の見直し対象。
 
-- 追加: **0** / 削除: **0** / 変更: **3**
+- 追加: **0** / 削除: **0** / 変更: **4**
 
 ### 変更されたファイル (層別)
 
-- **層 4a**: `lib/screens/map/map_time_slider.dart`
-- **層 4f**: `lib/screens/paywall_comparison.dart`, `lib/screens/paywall_widgets.dart`
+- **層 4a**: `lib/screens/map/map_daily_transit_screen.dart`
+- **層 4f**: `lib/screens/ai_consent_screen.dart`, `lib/screens/consultation/consultation_input_screen.dart`, `lib/screens/consultation/consultation_input_widgets.dart`
 
 ## #7 astro_glossary 用語辞書対整合
 

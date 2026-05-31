@@ -430,13 +430,29 @@ class _ConsultationInputScreenState extends State<ConsultationInputScreen> {
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           elevation: 0,
-          title: const Text(
-            '相談する',
-            style: TextStyle(
-              color: SolaraColors.textPrimary,
-              fontSize: 16,
-              letterSpacing: 0.5,
-            ),
+          title: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                '相談する',
+                style: TextStyle(
+                  color: SolaraColors.textPrimary,
+                  fontSize: 16,
+                  letterSpacing: 0.5,
+                ),
+              ),
+              const SizedBox(width: 6),
+              // i ボタン: この機能の詳しい説明 (読み解くデータ + 開発者より)。
+              GestureDetector(
+                onTap: () => showConsultAboutPopup(context),
+                behavior: HitTestBehavior.opaque,
+                child: const Padding(
+                  padding: EdgeInsets.all(4),
+                  child: Icon(Icons.help_outline,
+                      size: 18, color: SolaraColors.textSecondary),
+                ),
+              ),
+            ],
           ),
           centerTitle: true,
           iconTheme: const IconThemeData(color: SolaraColors.textPrimary),
@@ -450,6 +466,8 @@ class _ConsultationInputScreenState extends State<ConsultationInputScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // タイトル下の簡単説明 (この機能で何ができるか)。
+                      const _ConsultIntroNote(),
                       // ② 場面
                       _Section(
                         label: 'どんな場面で？',

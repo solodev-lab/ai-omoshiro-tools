@@ -428,3 +428,123 @@ class _SubmitBar extends StatelessWidget {
     );
   }
 }
+
+// ── タイトル下の簡単説明 + i ボタンの詳細ポップアップ (2026-05-31) ──────────
+// この機能が「何に使えるか」を一目で伝える。簡単版は常時表示、詳細版は
+// AppBar の i ボタンから showInfoPopup で開く (データ量で凄さを伝える)。
+
+/// タイトル直下に常時表示する短い説明 (グレー小文字)。
+class _ConsultIntroNote extends StatelessWidget {
+  const _ConsultIntroNote();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Padding(
+      padding: EdgeInsets.only(bottom: 14),
+      child: Text(
+        'いつ・どこで・何をするか を選ぶと、その時その場所で“どんなエネルギーが働くか”を、'
+        '膨大な占星術データから Stella が分かりやすく読み解きます。',
+        style: TextStyle(
+          color: SolaraColors.textSecondary,
+          fontSize: 12,
+          height: 1.6,
+          letterSpacing: 0.2,
+        ),
+      ),
+    );
+  }
+}
+
+/// i ボタンの詳細ポップアップ (導入 → 読み解くデータ → 開発者より)。
+Future<void> showConsultAboutPopup(BuildContext context) {
+  return showInfoPopup(context: context, child: const _ConsultAboutContent());
+}
+
+class _ConsultAboutContent extends StatelessWidget {
+  const _ConsultAboutContent();
+
+  @override
+  Widget build(BuildContext context) {
+    const head = TextStyle(
+        color: SolaraColors.solaraGoldLight,
+        fontSize: 14,
+        fontWeight: FontWeight.w600,
+        letterSpacing: 0.6);
+    const sub = TextStyle(
+        color: SolaraColors.solaraGoldLight,
+        fontSize: 12,
+        fontWeight: FontWeight.w600);
+    const body =
+        TextStyle(color: SolaraColors.textPrimary, fontSize: 13, height: 1.7);
+    const bullet =
+        TextStyle(color: SolaraColors.textPrimary, fontSize: 12.5, height: 1.7);
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: const [
+        Text('Stella 相談とは', style: head),
+        SizedBox(height: 8),
+        Text(
+          '「いつ・どこで・何をするか」を選ぶだけ。その予定に、地球規模の星の地図を重ね、'
+          'その時・その場所であなたに働くエネルギーを読み解く——Solara の中核機能です。\n'
+          '本来は占星術師が長い時間をかけて読み解く膨大な天体計算を Stella が瞬時に行い、'
+          '専門用語ではなく、あなたに寄り添う言葉でお渡しします。',
+          style: body,
+        ),
+        SizedBox(height: 8),
+        Text(
+          '・「どこで・何をすると、どんな作用が得られるか」を、あなたの願いに照らして描きます。\n'
+          '・吉凶やランキングはしません。「良い/悪い」ではなく“どんな質の流れか'
+          '（追い風か、向き合う課題か）”として伝えます。\n'
+          '・おでかけ・旅行・移住——スケールに合わせて。Cosmic Pro なら時刻を1時間刻みで'
+          '指定でき、「30分後にその場の流れがどう動くか」まで読めます。',
+          style: bullet,
+        ),
+        SizedBox(height: 18),
+        Text('Stella 相談が読み解くデータ', style: head),
+        SizedBox(height: 8),
+        Text(
+          'Solara の星のライン計算は 10天体 × 4アングル(ASC・MC・DSC・IC) × '
+          '3アスペクト(合・スクエア・トライン／セクスタイル)＝1フレーム120本。'
+          'これを複数フレーム重ね、緯度帯・12ハウス・進行図まで計算します。',
+          style: body,
+        ),
+        SizedBox(height: 10),
+        Text('― おでかけ・イベント（Free）でも、ここまで ―', style: sub),
+        SizedBox(height: 4),
+        Text(
+          '・出生図（ネイタル）の 10 天体／今日の経過天体（トランジット）の 10 天体\n'
+          '・アストロカートグラフィ（Astro*Carto*Graphy／出生のライン）\n'
+          '・サイクロカートグラフィ（Cyclo*Carto*Graphy／今この瞬間の動くライン）\n'
+          '・合・スクエア・トライン・セクスタイルの全アスペクトライン'
+          '（テーマ天体 × 4アングル × 3アスペクト）\n'
+          '・天頂帯・天底帯（緯度のエネルギー帯）\n'
+          '・その土地のリロケーション（ASC／MC／12ハウスの組み替え＋テーマ天体の在室）\n'
+          '・内的季節（進行の月・太陽、ソーラーアークの節目）／'
+          '現地の時間帯（天体が角を通過する時刻）\n'
+          '…これを世界中の候補地点に重ね、最適な場所・方角を Stella が抽出します。',
+          style: bullet,
+        ),
+        SizedBox(height: 10),
+        Text('― Cosmic Pro なら、さらに ―', style: sub),
+        SizedBox(height: 4),
+        Text(
+          '・移住スケール＝生涯不変のネイタル ACG ＋ 進行（プログレス）の人生の章\n'
+          '・旅行スケール＝旅行日ごとの動くライン（期間を複数日サンプリング）\n'
+          '・時刻を1時間刻みで指定 → 30分後に線がどう動くかまで',
+          style: bullet,
+        ),
+        SizedBox(height: 18),
+        Text('― Solara 開発者より ―', style: sub),
+        SizedBox(height: 4),
+        Text(
+          'このきめ細かさは、占星術を実践してきた私自身が、設計から開発まで直接'
+          '手がけているからこそ実現できました。「ここをこう汲んでほしい」と誰かに'
+          '頼むのではなく、占星術師がそのまま形にする——だから、細部のひとつひとつに'
+          '星の意味を宿せています。あなたの毎日のそばに、この星の地図が寄り添えますように。',
+          style: body,
+        ),
+      ],
+    );
+  }
+}

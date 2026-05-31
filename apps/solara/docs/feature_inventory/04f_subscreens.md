@@ -5,11 +5,11 @@
 
 ## サマリ
 
-- ファイル数: 31 / 総行数: 10834
-- class/mixin/extension/enum: 97
-- 関数 (top-level + method の素拾い): 276
+- ファイル数: 31 / 総行数: 10972
+- class/mixin/extension/enum: 99
+- 関数 (top-level + method の素拾い): 279
 - Navigator.push 等: 0
-- Popup/Dialog 呼出: 8
+- Popup/Dialog 呼出: 9
 - Worker URL リテラル: 0
 
 ## ファイル別
@@ -313,7 +313,7 @@ consultation_input_picker.dart の HARD500 回避のため、検索結果行・�
 - L150 `build()`
 
 
-### `lib/screens/consultation/consultation_input_screen.dart` (620 行)
+### `lib/screens/consultation/consultation_input_screen.dart` (638 行)
 
 **ファイル先頭コメント:**
 
@@ -420,7 +420,7 @@ Consultation Input — ③ いつ / 半径 セレクタ
   </details>
 
 
-### `lib/screens/consultation/consultation_input_widgets.dart` (430 行)
+### `lib/screens/consultation/consultation_input_widgets.dart` (550 行)
 
 **ファイル先頭コメント:**
 
@@ -429,7 +429,7 @@ Consultation Input — 基本サブウィジェット + 選択肢定数
 (part of 'consultation_input_screen.dart')
 ```
 
-**型定義 (13):**
+**型定義 (15):**
 
 - L60 `class _ThemeChoice`
 - L66 `class _ModeChoice`
@@ -447,8 +447,11 @@ Consultation Input — 基本サブウィジェット + 選択肢定数
   - 自宅未設定で 方角/半径/自国内 が使えないときの注記。
 - L355 `class _PresetLocationCard : StatelessWidget`
 - L392 `class _SubmitBar : StatelessWidget`
+- L437 `class _ConsultIntroNote : StatelessWidget`
+  - タイトル直下に常時表示する短い説明 (グレー小文字)。
+- L463 `class _ConsultAboutContent : StatelessWidget`
 
-**関数 (10 public + 1 private):**
+**関数 (13 public + 1 private):**
 
 - L92 `build()`
 - L127 `build()`
@@ -460,12 +463,19 @@ Consultation Input — 基本サブウィジェット + 選択肢定数
 - L332 `build()`
 - L360 `build()`
 - L398 `build()`
+- L441 `build()`
+- L459 `showConsultAboutPopup()` — i ボタンの詳細ポップアップ (導入 → 読み解くデータ → 開発者より)。
+- L467 `build()`
 
   <details><summary>private 関数 1 件</summary>
 
   - L45 `_scopeChoicesFor()`
 
   </details>
+
+**Popup/Dialog 呼出 (1):**
+
+- 集計: `showInfoPopup`×1
 
 
 ### `lib/screens/consultation/consultation_place_picker_screen.dart` (354 行)

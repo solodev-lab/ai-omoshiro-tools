@@ -6,7 +6,7 @@
 
 | 行数 | 判定 | ファイル |
 |------|------|----------|
-| 3334 | 🔴 HARD | lib/screens/map_screen.dart |
+| 3346 | 🔴 HARD | lib/screens/map_screen.dart |
 | 2029 | 🔴 HARD | lib/screens/map/map_daily_transit_screen.dart |
 | 1473 | 🔴 HARD | lib/screens/sanctuary_screen.dart |
 | 1385 | 🔴 HARD | lib/screens/sanctuary/sanctuary_title_diagnosis.dart |
@@ -40,9 +40,9 @@
 | 518 | 🟠 WARN | lib/screens/consultation/consultation_result_screen.dart |
 | 511 | 🟠 WARN | lib/screens/map/map_astro.dart |
 | 510 | 🟠 WARN | lib/utils/consultation_v2_api.dart |
-| 508 | 🟠 WARN | lib/screens/map/map_time_slider.dart |
 | 500 | 🟠 WARN | lib/screens/observe/tarot_altar_scene.dart |
 | 498 | 🟡 NOTICE | lib/widgets/fortune_overlays/healing_painter.dart |
+| 495 | 🟡 NOTICE | lib/screens/map/map_time_slider.dart |
 | 490 | 🟡 NOTICE | lib/utils/app_attest_client.dart |
 | 488 | 🟡 NOTICE | lib/screens/consultation/consultation_history_widgets.dart |
 | 481 | 🟡 NOTICE | lib/widgets/full_moon_overlay.dart |
@@ -55,7 +55,7 @@
 | 438 | 🟡 NOTICE | lib/screens/galaxy/galaxy_star_atlas.dart |
 | 430 | 🟡 NOTICE | lib/screens/consultation/consultation_input_widgets.dart |
 | 427 | 🟡 NOTICE | lib/screens/consultation/consultation_result_widgets.dart |
-| 421 | 🟡 NOTICE | lib/screens/paywall_widgets.dart |
+| 424 | 🟡 NOTICE | lib/screens/paywall_widgets.dart |
 | 417 | 🟡 NOTICE | lib/screens/sanctuary/title_history_screen.dart |
 | 415 | 🟡 NOTICE | lib/screens/galaxy/constellation_share_card_page.dart |
 | 415 | 🟡 NOTICE | lib/screens/observe/observe_history.dart |
@@ -81,7 +81,7 @@
 | 313 | 🟡 NOTICE | lib/screens/paywall_screen.dart |
 | 313 | 🟡 NOTICE | lib/utils/celestial_events.dart |
 | 313 | 🟡 NOTICE | lib/screens/observe/observe_history_past.dart |
-| 310 | 🟡 NOTICE | lib/screens/paywall_comparison.dart |
+| 311 | 🟡 NOTICE | lib/screens/paywall_comparison.dart |
 | 309 | 🟡 NOTICE | lib/utils/fortune_api.dart |
 | 309 | 🟡 NOTICE | lib/screens/horoscope/horo_panel_shared.dart |
 | 308 | 🟡 NOTICE | lib/utils/purchases_service.dart |
@@ -93,7 +93,7 @@
 
 ### 1. 📁 別ファイル間 (17 箇所、15 ファイル)
 
-  - lib/screens/paywall_comparison.dart:303
+  - lib/screens/paywall_comparison.dart:304
   - lib/widgets/ai_report_button.dart:300
   - lib/widgets/class_card.dart:287
   - lib/widgets/location_picker_minimap.dart:135
@@ -127,7 +127,7 @@
 ### 4. 📁 別ファイル間 (10 箇所、10 ファイル)
 
   - lib/screens/galaxy_screen.dart:557
-  - lib/screens/paywall_comparison.dart:302
+  - lib/screens/paywall_comparison.dart:303
   - lib/widgets/full_moon_overlay.dart:299
   - lib/widgets/location_picker_minimap.dart:134
   - lib/screens/consultation/consultation_result_widgets.dart:294
@@ -148,7 +148,7 @@
 
 ### 6. 📁 別ファイル間 (13 箇所、8 ファイル)
 
-  - lib/screens/paywall_widgets.dart:411
+  - lib/screens/paywall_widgets.dart:414
   - lib/widgets/catasterism_overlay.dart:191
   - lib/widgets/full_moon_overlay.dart:200
   - lib/widgets/full_moon_overlay.dart:403
@@ -170,10 +170,10 @@
 
 ### 8. 📁 別ファイル間 (9 箇所、8 ファイル)
 
-  - lib/screens/paywall_comparison.dart:110
-  - lib/screens/paywall_comparison.dart:185
+  - lib/screens/paywall_comparison.dart:111
+  - lib/screens/paywall_comparison.dart:186
   - lib/screens/paywall_legal_links.dart:83
-  - lib/screens/paywall_widgets.dart:410
+  - lib/screens/paywall_widgets.dart:413
   - lib/widgets/catasterism_overlay.dart:190
   ```
   ),
@@ -329,4 +329,4 @@
 
 ---
 
-総計: 行数 HARD 7 / WARN 29 / NOTICE 46 / 重複 20 / TODO 4 / print 1 / 未使用候補 0
+総計: 行数 HARD 7 / WARN 28 / NOTICE 47 / 重複 20 / TODO 4 / print 1 / 未使用候補 0
