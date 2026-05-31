@@ -53,7 +53,7 @@
 ## #1 / #2 機械抽出 ↔ feature_inventory.md (人手版) の対整合
 
 - 機械抽出した class/mixin/extension/enum: **462**
-- inventory に登場する識別子 (大文字始まり ``backtick``囲み): **264**
+- inventory に登場する識別子 (大文字始まり ``backtick``囲み): **265**
 
 ### #1 機械にあるが Doc に書かれていない (269)
 
@@ -259,7 +259,7 @@
 - `_RarityStarRow`
 - … 残り 69 省略
 
-### #2 Doc に書いてあるがコードに存在しない (ゴースト記述) (71)
+### #2 Doc に書いてあるがコードに存在しない (ゴースト記述) (72)
 
 > 注: Flutter SDK や外部ライブラリの型もここに乗る (誤検出)。
 > 真のゴーストはアプリ独自型のみ。実際の Doc 修正対象は手で絞り込む。
@@ -301,6 +301,7 @@
 - `Front`
 - `GEMINI_API_KEY`
 - `GOOGLE_PLACES_KEY`
+- `GestureDetector`
 - `GlobalKey`
 - `HoroInfoRow`
 - `INITIAL_PURCHASE`
@@ -451,11 +452,11 @@
 > 各ソースの SHA1 を `_stamps.json` に記録し、差分を検出。
 > 変更されたファイルが属する層は、人手版インベントリ章の見直し対象。
 
-- 追加: **0** / 削除: **0** / 変更: **3**
+- 追加: **0** / 削除: **0** / 変更: **2**
 
 ### 変更されたファイル (層別)
 
-- **層 4e**: `lib/screens/sanctuary/class_share_card.dart`, `lib/screens/sanctuary/sanctuary_title_diagnosis.dart`, `lib/screens/sanctuary_screen.dart`
+- **層 4a**: `lib/screens/map/map_overlays.dart`, `lib/screens/map_screen.dart`
 
 ## #7 astro_glossary 用語辞書対整合
 

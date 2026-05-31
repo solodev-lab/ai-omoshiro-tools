@@ -6,7 +6,7 @@
 
 | 行数 | 判定 | ファイル |
 |------|------|----------|
-| 3346 | 🔴 HARD | lib/screens/map_screen.dart |
+| 3403 | 🔴 HARD | lib/screens/map_screen.dart |
 | 2029 | 🔴 HARD | lib/screens/map/map_daily_transit_screen.dart |
 | 1614 | 🔴 HARD | lib/screens/sanctuary_screen.dart |
 | 1374 | 🔴 HARD | lib/screens/sanctuary/sanctuary_title_diagnosis.dart |
@@ -46,8 +46,8 @@
 | 495 | 🟡 NOTICE | lib/screens/map/map_time_slider.dart |
 | 490 | 🟡 NOTICE | lib/utils/app_attest_client.dart |
 | 488 | 🟡 NOTICE | lib/screens/consultation/consultation_history_widgets.dart |
+| 487 | 🟡 NOTICE | lib/screens/map/map_overlays.dart |
 | 481 | 🟡 NOTICE | lib/widgets/full_moon_overlay.dart |
-| 481 | 🟡 NOTICE | lib/screens/map/map_overlays.dart |
 | 476 | 🟡 NOTICE | lib/screens/sanctuary/class_share_card.dart |
 | 467 | 🟡 NOTICE | lib/screens/horoscope/horo_relocation_panel.dart |
 | 459 | 🟡 NOTICE | lib/utils/solara_auth.dart |

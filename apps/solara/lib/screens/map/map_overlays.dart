@@ -46,7 +46,6 @@ Marker buildVpPinMarker({
 ///
 /// 表示と地点メニューは相互排他。両方同時に開けない (親 state で管理)。
 class MapSideButtons extends StatelessWidget {
-  final double topPad;
   final bool searchOpen;
   final bool displayMenuOpen;
   final bool viewpointMenuOpen;
@@ -56,7 +55,6 @@ class MapSideButtons extends StatelessWidget {
 
   const MapSideButtons({
     super.key,
-    required this.topPad,
     required this.searchOpen,
     required this.displayMenuOpen,
     required this.viewpointMenuOpen,
@@ -70,42 +68,50 @@ class MapSideButtons extends StatelessWidget {
     // 検索中は左サイド全ボタン非表示 (検索バー + VP チップ列が
     // 横幅をフル使うため)。検索が閉じれば 3 ボタン復帰。
     if (searchOpen) return const SizedBox.shrink();
-    return Stack(children: [
-      Positioned(
-        top: topPad + 152,
-        left: 16,
-        child: MapBtn(
-          onTap: onSearchTap,
-          child: const Icon(Icons.search, size: 18, color: Color(0x99C9A84C)),
+    // 2026-05-31: 親指が届きやすいよう、左サイド 3 ボタンを画面上部から
+    // 下端チップバーの直上 (左寄せ) に移動。右下の現在地/相談ボタン列と
+    // 左右対称になる。bottom 基準で配置するため SizedBox.expand で全画面を占有
+    // (空白領域は Stack が hit-test しないので地図ジェスチャは透過する)。
+    // 縦の視覚順は従来どおり 🔍 (上) / ☰ (中) / 📍 (下)。
+    return SizedBox.expand(
+      child: Stack(children: [
+        // 🔍 検索 (上)
+        Positioned(
+          bottom: 176,
+          left: 16,
+          child: MapBtn(
+            onTap: onSearchTap,
+            child: const Icon(Icons.search, size: 18, color: Color(0x99C9A84C)),
+          ),
         ),
-      ),
-      // ☰ 表示メニュートリガー (3本ライン = レイヤー切替の象徴)
-      Positioned(
-        top: topPad + 200,
-        left: 16,
-        child: MapBtn(
-          active: displayMenuOpen,
-          onTap: onDisplayMenuTap,
-          child: Column(mainAxisSize: MainAxisSize.min, children: [
-            Container(width: 18, height: 2, decoration: BoxDecoration(color: const Color(0xFFE8E0D0), borderRadius: BorderRadius.circular(1))),
-            const SizedBox(height: 3),
-            Container(width: 18, height: 2, decoration: BoxDecoration(color: const Color(0xFFC9A84C), borderRadius: BorderRadius.circular(1))),
-            const SizedBox(height: 3),
-            Container(width: 18, height: 2, decoration: BoxDecoration(color: const Color(0xFF00D4FF), borderRadius: BorderRadius.circular(1))),
-          ]),
+        // ☰ 表示メニュートリガー (3本ライン = レイヤー切替の象徴)
+        Positioned(
+          bottom: 128,
+          left: 16,
+          child: MapBtn(
+            active: displayMenuOpen,
+            onTap: onDisplayMenuTap,
+            child: Column(mainAxisSize: MainAxisSize.min, children: [
+              Container(width: 18, height: 2, decoration: BoxDecoration(color: const Color(0xFFE8E0D0), borderRadius: BorderRadius.circular(1))),
+              const SizedBox(height: 3),
+              Container(width: 18, height: 2, decoration: BoxDecoration(color: const Color(0xFFC9A84C), borderRadius: BorderRadius.circular(1))),
+              const SizedBox(height: 3),
+              Container(width: 18, height: 2, decoration: BoxDecoration(color: const Color(0xFF00D4FF), borderRadius: BorderRadius.circular(1))),
+            ]),
+          ),
         ),
-      ),
-      // 📍 地点メニュートリガー (VIEWPOINT 保存スロット選択)
-      Positioned(
-        top: topPad + 248,
-        left: 16,
-        child: MapBtn(
-          active: viewpointMenuOpen,
-          onTap: onViewpointMenuTap,
-          child: const Icon(Icons.location_on_outlined, size: 18, color: Color(0xFFC9A84C)),
+        // 📍 地点メニュートリガー (VIEWPOINT 保存スロット選択)
+        Positioned(
+          bottom: 80,
+          left: 16,
+          child: MapBtn(
+            active: viewpointMenuOpen,
+            onTap: onViewpointMenuTap,
+            child: const Icon(Icons.location_on_outlined, size: 18, color: Color(0xFFC9A84C)),
+          ),
         ),
-      ),
-    ]);
+      ]),
+    );
   }
 }
 

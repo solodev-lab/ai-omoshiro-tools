@@ -5,9 +5,9 @@
 
 ## サマリ
 
-- ファイル数: 23 / 総行数: 13959
+- ファイル数: 23 / 総行数: 14022
 - class/mixin/extension/enum: 87
-- 関数 (top-level + method の素拾い): 307
+- 関数 (top-level + method の素拾い): 308
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 19
 - Worker URL リテラル: 0
@@ -555,7 +555,7 @@ A*C*G ライン (natal / transit) のタップ詳細 popup。
   </details>
 
 
-### `lib/screens/map/map_overlays.dart` (481 行)
+### `lib/screens/map/map_overlays.dart` (487 行)
 
 **imports:** dart=0 / package=3 / relative=2
 
@@ -565,40 +565,40 @@ A*C*G ライン (natal / transit) のタップ詳細 popup。
 
 - L48 `class MapSideButtons : StatelessWidget`
   - 左サイド縦並び 3 ボタン: 🔍 検索 / ☰ 表示 / 📍 地点 (2026-05-09 第二弾)。
-- L119 `class SearchBarOverlay : StatefulWidget`
+- L125 `class SearchBarOverlay : StatefulWidget`
   - 検索バー（_searchOpen 時に最上部に表示）
-- L135 `class _SearchBarOverlayState : State`
-- L197 `class SearchVpChipRow : StatelessWidget`
+- L141 `class _SearchBarOverlayState : State`
+- L203 `class SearchVpChipRow : StatelessWidget`
   - 検索バー直上に出す VIEWPOINT (16方位基準) 選択チップ列。
-- L276 `class _Chip : StatelessWidget`
-- L320 `class SelectedDateBadge : StatelessWidget`
+- L282 `class _Chip : StatelessWidget`
+- L326 `class SelectedDateBadge : StatelessWidget`
   - 選択日バッジ（地図左上に常時表示）
-- L369 `class StatusBadge : StatelessWidget`
+- L375 `class StatusBadge : StatelessWidget`
   - 右上のステータスバッジ（計算中・検索中）
-- L396 `class VpPinVisual : StatelessWidget`
+- L402 `class VpPinVisual : StatelessWidget`
   - VP Pin (ドラッグ可能な中央の金色ピン) — 見た目のみ。
-- L420 `class RestOverlay : StatelessWidget`
+- L426 `class RestOverlay : StatelessWidget`
   - 休息オーバーレイ（🌙 + テキスト）
 
 **関数 (13 public + 1 private):**
 
 - L9 `buildVpPinMarker()` — VP Pin (ドラッグ可能な中央の金色ピン) の Marker を生成する。
-- L69 `build()`
-- L132 `createState()`
-- L139 `initState()`
-- L147 `dispose()`
-- L153 `build()`
-- L221 `build()`
-- L283 `build()`
-- L332 `build()`
-- L374 `build()`
-- L400 `build()`
-- L426 `build()`
-- L455 `showSolaraDatePicker()` — Solara テーマ適用の DatePicker を開く。選択されたら DateTime を返す（正午固定はしない）。
+- L67 `build()`
+- L138 `createState()`
+- L145 `initState()`
+- L153 `dispose()`
+- L159 `build()`
+- L227 `build()`
+- L289 `build()`
+- L338 `build()`
+- L380 `build()`
+- L406 `build()`
+- L432 `build()`
+- L461 `showSolaraDatePicker()` — Solara テーマ適用の DatePicker を開く。選択されたら DateTime を返す（正午固定はしない）。
 
   <details><summary>private 関数 1 件</summary>
 
-  - L214 `_isActive()`
+  - L220 `_isActive()`
 
   </details>
 
@@ -904,7 +904,7 @@ A*C*G ライン (natal / transit) のタップ詳細 popup。
 - L40 `build()`
 
 
-### `lib/screens/map_screen.dart` (3346 行)
+### `lib/screens/map_screen.dart` (3403 行)
 
 **imports:** dart=2 / package=6 / relative=36
 
@@ -915,7 +915,7 @@ A*C*G ライン (natal / transit) のタップ詳細 popup。
 - L75 `class MapScreen : StatefulWidget`
 - L85 `class MapScreenState : State`
 
-**関数 (10 public + 61 private):**
+**関数 (10 public + 62 private):**
 
 - L82 `createState()`
 - L376 `initState()`
@@ -926,9 +926,9 @@ A*C*G ライン (natal / transit) のタップ詳細 popup。
 - L1569 `snack()`
 - L1738 `snack()`
 - L1784 `build()`
-- L2879 `signOf()`
+- L2918 `signOf()`
 
-  <details><summary>private 関数 61 件</summary>
+  <details><summary>private 関数 62 件</summary>
 
   - L385 `_bootstrap()`
   - L429 `_warmupTileConnection()`
@@ -971,26 +971,27 @@ A*C*G ライン (natal / transit) のタップ詳細 popup。
   - L1689 `_exitAstroCartoMode()`
   - L1737 `_geolocate()`
   - L1849 `_buildBody()`
-  - L2840 `_buildZenithPopup()`
-  - L2859 `_buildRelocationPopup()`
-  - L2926 `_isProGatedBandKey()`
-  - L2930 `_proLabelForAstroKey()`
-  - L2943 `_proDescForAstroKey()`
-  - L2964 `_onAstroToggle()`
-  - L2993 `_enterConsultationFromDaily()`
-  - L3025 `_launchConsultation()`
-  - L3073 `_launchConsultationFromSearch()`
-  - L3107 `_reloadLocationSlots()`
-  - L3131 `_nearestNatalConjunctions()`
-  - L3152 `_findNearbyAstroLines()`
-  - L3170 `_zenithMarkerFrames()`
-  - L3171 `_nadirMarkerFrames()`
-  - L3172 `_zenithBandFrames()`
-  - L3173 `_nadirBandFrames()`
-  - L3177 `_filteredFrames()`
-  - L3190 `_visibleAstroLines()`
-  - L3218 `_buildNoProfileGuide()`
-  - L3252 `_showSearchVpHelpPopup()`
+  - L2879 `_buildZenithPopup()`
+  - L2898 `_buildRelocationPopup()`
+  - L2965 `_isProGatedBandKey()`
+  - L2969 `_proLabelForAstroKey()`
+  - L2982 `_proDescForAstroKey()`
+  - L3003 `_onAstroToggle()`
+  - L3032 `_enterConsultationFromDaily()`
+  - L3060 `_enterConsultationFromMapButton()`
+  - L3082 `_launchConsultation()`
+  - L3130 `_launchConsultationFromSearch()`
+  - L3164 `_reloadLocationSlots()`
+  - L3188 `_nearestNatalConjunctions()`
+  - L3209 `_findNearbyAstroLines()`
+  - L3227 `_zenithMarkerFrames()`
+  - L3228 `_nadirMarkerFrames()`
+  - L3229 `_zenithBandFrames()`
+  - L3230 `_nadirBandFrames()`
+  - L3234 `_filteredFrames()`
+  - L3247 `_visibleAstroLines()`
+  - L3275 `_buildNoProfileGuide()`
+  - L3309 `_showSearchVpHelpPopup()`
 
   </details>
 

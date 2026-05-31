@@ -2318,9 +2318,10 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
         ),
 
         // ── 左サイド 3 ボタン: 🔍 検索 / ☰ 表示 / 📍 地点 ──
+        // 2026-05-31: 親指リーチ改善で上部 → 下端チップバー直上の左寄せに移動
+        // (右下の現在地/相談ボタン列と左右対称)。詳細は MapSideButtons 内コメント。
         // 表示・地点メニューは右に展開する別ウィジェットで描画 (下記)。
         if (!_astroCartoMode) MapSideButtons(
-          topPad: topPad,
           searchOpen: _searchOpen,
           displayMenuOpen: _displayMenuOpen,
           viewpointMenuOpen: _viewpointMenuOpen,
@@ -2458,22 +2459,58 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
           ),
         ),
 
-        // ── 右下「現在地に移動」ボタン ──
+        // ── 右下ボタン列: [✦ Stella に相談] (上) / [現在地に移動] (下) ──
         // 下部チップバー (高さ 72: _kChipHeight 60 + container padding 12) の
-        // 直上 8px gap、Forecast チップの上に重ねる位置。
-        // 右端寄せ (right: 12) でタップしやすさ重視。
+        // 直上、Forecast チップの上に重ねる位置。
+        // 2026-05-31: 現在地ボタンを少し左 (right 12→16) ・少し上 (bottom 80→92)
+        // に移し、画面端の余白をわずかに広げた。その上に Stella 相談ボタンを縦積み。
+        // crossAxisAlignment.end で両ボタンの右端を揃える。
         // チップバー非表示の条件と完全に揃える (同じ理由で隠す)。
         // 検索中は VP チップ列内の「📍 現在地」で代替できるため非表示。
         if (!_astroCartoMode &&
             !_fortuneSheetOpen &&
             !_viewpointMenuOpen &&
             !_searchOpen) Positioned(
-          right: 12,
-          bottom: 80,
-          child: MapBtn(
-            onTap: _geolocate,
-            child: const Icon(Icons.my_location,
-                size: 20, color: Color(0xFFC9A84C)),
+          right: 16,
+          bottom: 92,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              // ✦ Stella に相談 (プロフィール設定済みのときだけ表示)
+              // アンティーク神秘アイコン (Daily カテゴリと同系) + 金リング + 微光。
+              if (!_noProfile) ...[
+                GestureDetector(
+                  onTap: _enterConsultationFromMapButton,
+                  child: Container(
+                    width: 52,
+                    height: 52,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: const Color(0xCC0A0A19),
+                      border: Border.all(color: const Color(0x66C9A84C)),
+                      boxShadow: const [
+                        BoxShadow(color: Color(0x55C9A84C), blurRadius: 16, spreadRadius: 1),
+                      ],
+                    ),
+                    child: const Padding(
+                      padding: EdgeInsets.all(7),
+                      child: Image(
+                        image: AssetImage('assets/menu_icons/consult.webp'),
+                        fit: BoxFit.contain,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+              ],
+              // 現在地に移動
+              MapBtn(
+                onTap: _geolocate,
+                child: const Icon(Icons.my_location,
+                    size: 20, color: Color(0xFFC9A84C)),
+              ),
+            ],
           ),
         ),
 
@@ -2665,7 +2702,9 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
         if (_astroCartoMode) Builder(builder: (context) {
           final active = _resolveActiveAstroFrame();
           return Positioned(
-          left: 0, right: 0, bottom: 1,
+          // 2026-05-31: bottom 1 → 14。NavBar に密着して「余裕が無い」印象だったため
+          // バーガー (及び展開時の各ピル層) を少し持ち上げて余白を確保。
+          left: 0, right: 0, bottom: 14,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -3009,6 +3048,24 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
         builder: (_) => ConsultationInputScreen(
           currentLocation: currentLoc,
           // preset 無し: ユーザーが scope を選ぶ (世界全体 / 範囲指定 / おでかけ等)
+        ),
+      ),
+    );
+  }
+
+  /// 2026-05-31: 右下「✦ Stella に相談」ボタンのハンドラ (目的起点・入口 2)。
+  /// Daily CTA (`_enterConsultationFromDaily`) と同じく preset 無しで
+  /// `ConsultationInputScreen` を push する。Free 試食 (週N回) も入力画面までは
+  /// 開ける (回数/モードゲートは送信時に Worker が判定)。
+  Future<void> _enterConsultationFromMapButton() async {
+    if (!mounted) return;
+    final p = _profile;
+    final hasHome = p != null && !(p.homeLat == 0 && p.homeLng == 0);
+    final currentLoc = hasHome ? LatLng(p.homeLat, p.homeLng) : null;
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => ConsultationInputScreen(
+          currentLocation: currentLoc,
         ),
       ),
     );

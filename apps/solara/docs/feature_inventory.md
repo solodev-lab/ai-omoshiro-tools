@@ -3317,3 +3317,15 @@ Flutter 標準の状態復元 (`restorationScopeId` + `RestorableProperty`) は 
 
 - **§0.2.36 称号 Shadow 面を隠し要素化**: Shadow への誘導文言・案内をすべて撤去し、シャドーはカードタップでのみ現れる「え？」の隠し要素にした。① reveal 画面 (`sanctuary/sanctuary_title_diagnosis.dart`) — `_buildRevealLightSide`/`_buildRevealShadowSide` の「✦ タップしてシャドーを見る ✦」「◀ タップしてライトに戻る」ヒントを削除。フリップトリガを**画面全体タップ → `ClassCard.onTap` (カードのみ)** に変更 (外側 `GestureDetector`/`HitTestBehavior.opaque` 撤去)。余白を詰めて「これでいく」ボタンを 1 画面に収めた (カード幅 260 維持)。② Sanctuary 画面 (`sanctuary_screen.dart` `_buildTitleDiagnosisSection`) — 「tap to show SHADOW / LIGHT」表示を削除 (カードタップのトグルは維持)。③ 共有画面 (`sanctuary/class_share_card.dart`) — AppBar 右上「SHADOW 面 / LIGHT 面」トグルボタンを撤去し、プレビューカードを `GestureDetector(HitTestBehavior.opaque)` でタップ → `_showShadow` トグル (案内なし)。
 - **§0.2.37 Pro 称号再診断の使い方案内**: `sanctuary_screen.dart` に `_showRediagnoseProGuide(BuildContext)` を追加。再診断ボタン onTap を `canRedo ? (isPro ? 案内ダイアログ : _startDiagnosis) : showProUnlockDialog` に分岐。Free の 1 回再診断は案内なしで直接診断、**Pro 機能として受け直す時のみ**「✦ 称号の受け直しについて」ダイアログ (金枠ダーク調、下部に [戻る]=キャンセル / [OK]=診断へ) を表示。内容: Pro は何度でも受け直せる / 太陽×月由来の「二つ名」は不変・変わるのは設問由来の「称号(クラス)」のみ / 内的外的変化時に受け直すと「称号 変遷」で成長を辿れる。`_kFreeRedoLimit=1` の既存ゲートは不変。
+
+---
+
+## 本セッション追加機能 (2026-05-31 セッション4) — §0.2.38
+
+> Map 画面の操作系を親指リーチ重視で再配置 + 「✦ Stella に相談」ボタン新設 + 専用アイコン生成。stamp diff +0 -0 ~2 (クラス増減なし)。
+
+- **§0.2.38 Map 操作系の再配置 + Stella 相談ボタン + 専用アイコン**:
+  - **左サイド 3 ボタン (🔍/☰/📍) を下端チップバー直上の左寄せに移動** (`map/map_overlays.dart` `MapSideButtons`)。`top: topPad+152/200/248` → `SizedBox.expand` + `bottom: 176/128/80`。`topPad` フィールド/引数を撤去 (呼出側 `map_screen.dart` も更新)。右下ボタン列と左右対称・親指リーチ改善。空白領域は Stack 非 hit-test で地図ジェスチャ透過。
+  - **右下に「✦ Stella に相談」ボタン新設 + 現在地ボタン微調整** (`map_screen.dart`)。現在地ボタン `right:12→16, bottom:80→92`。その上に Stella 相談ボタン (52px 円・金リング `0x66C9A84C`・微光) を `Column(crossAxisAlignment.end)` で縦積み。タップ → `_enterConsultationFromMapButton()` が `ConsultationInputScreen` (preset 無し) を push (Free も入力画面まで可)。`_noProfile` 時は Stella ボタン非表示。
+  - **ACG バーガー (及び展開ピル) を少し上げる**: ACG 下部 Column `bottom: 1 → 14` (`map_screen.dart`)。NavBar 密着の窮屈感を解消。
+  - **Stella 相談アイコンを新規生成** (`mockup/generate_consult_icons.py`、既存 `generate_menu_icons_v2.py` の BASE_STYLE 踏襲 + 円形αマスク)。3 案 (A 導きの星+環 / B 三日月+星 / C 水晶玉+星座) 生成 → **C 採用** (`assets/menu_icons/consult.webp`)。原 PNG 3 枚は `mockup/share-assets/menu-icons/v2/consult_*.png` に保護。
