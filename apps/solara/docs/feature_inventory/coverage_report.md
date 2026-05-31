@@ -5,8 +5,8 @@
 
 ## #3 Worker ↔ Flutter エンドポイント対整合
 
-- Worker 側に定義された path: **30**
-- Flutter から呼ばれている path リテラル: **18**
+- Worker 側に定義された path: **31**
+- Flutter から呼ばれている path リテラル: **19**
 
 ### Worker → Flutter 漏れ (Worker にあるが Flutter から呼出無し)
 
@@ -37,6 +37,7 @@
 - `/protected/account/delete`
 - `/protected/astro/consultation2`
 - `/protected/consultation/credits`
+- `/protected/consultation/welcome-grant`
 - `/protected/fortune`
 - `/protected/relocation`
 - `/protected/report-ai-output`
@@ -52,10 +53,10 @@
 
 ## #1 / #2 機械抽出 ↔ feature_inventory.md (人手版) の対整合
 
-- 機械抽出した class/mixin/extension/enum: **462**
-- inventory に登場する識別子 (大文字始まり ``backtick``囲み): **265**
+- 機械抽出した class/mixin/extension/enum: **466**
+- inventory に登場する識別子 (大文字始まり ``backtick``囲み): **266**
 
-### #1 機械にあるが Doc に書かれていない (269)
+### #1 機械にあるが Doc に書かれていない (272)
 
 - `AppAttestClient`
 - `ConstellationShareCardPage`
@@ -64,7 +65,6 @@
 - `ConsultationDeltaChange`
 - `ConsultationEvidenceKm`
 - `ConsultationHistoryScreen`
-- `ConsultationInputScreen`
 - `ConsultationPlacePickerScreen`
 - `ConsultationPoint`
 - `ConsultationPresetTarget`
@@ -81,6 +81,7 @@
 - `MapFocus`
 - `MapFocusRequest`
 - `MapTimeSliderState`
+- `MapWelcomeBanner`
 - `MemoTextField`
 - `ObserveFullReadingButton`
 - `ObserveHistoryFilter`
@@ -97,6 +98,9 @@
 - `SolaraAuthProvider`
 - `TapToUnfocus`
 - `TitleHistoryScreen`
+- `WelcomeBannerMode`
+- `WelcomeGiftFlags`
+- `WelcomeGrantResult`
 - `_AboutReadingContent`
 - `_ActionTile`
 - `_AggBuilder`
@@ -254,10 +258,7 @@
 - `_PresetLocationCard`
 - `_QuestionFieldWidgets`
 - `_RadiusChips`
-- `_RankedLine`
-- `_RarityChip`
-- `_RarityStarRow`
-- … 残り 69 省略
+- … 残り 72 省略
 
 ### #2 Doc に書いてあるがコードに存在しない (ゴースト記述) (72)
 
@@ -341,7 +342,7 @@
 
 ### 層 4a: Map 画面
 
-- ファイル数: 23
+- ファイル数: 24
 - Worker URL 呼出: (なし)
 - Popup/Dialog: `showInfoPopup`×14, `showLineNarrativeSheet`×3, `showSolaraDatePicker`×1, `showModalBottomSheet`×1
 - Navigator.push 等: 0 箇所
@@ -401,7 +402,7 @@
 | 3a | 2 | 4 | 2 | 2 | 1 | 1 | 8 | 7 | 4 | 1 | · | · | · | · | 1 | · |
 | 3b | · | · | · | · | · | · | · | 1 | · | · | · | · | · | · | · | · |
 | 3c | · | 5 | 4 | 2 | 4 | · | 12 | 4 | · | · | · | · | · | · | · | · |
-| 4a | 10 | 11 | · | 13 | 7 | · | 18 | 23 | 3 | 30 | 2 | · | · | · | 3 | · |
+| 4a | 10 | 11 | · | 14 | 7 | 1 | 18 | 23 | 3 | 31 | 2 | · | · | · | 3 | · |
 | 4b | 5 | 13 | · | 3 | 5 | · | 16 | · | · | · | 31 | · | · | 2 | · | · |
 | 4c | 1 | 1 | 14 | 1 | 5 | 5 | 9 | 6 | · | · | · | 17 | · | · | 1 | · |
 | 4d | 3 | 6 | 13 | 1 | 2 | 2 | 11 | 2 | 1 | · | · | · | 9 | · | · | · |
@@ -436,8 +437,8 @@
 | `lib/models/lunar_intention.dart` | 1c | 7 |
 | `lib/models/tarot_card.dart` | 1c | 7 |
 | `lib/screens/map/map_vp_panel.dart` | 4a | 7 |
-| `lib/widgets/glass_panel.dart` | 3a | 7 |
-| `lib/screens/observe/observe_constants.dart` | 4c | 6 |
+| `lib/utils/consultation_api.dart` | 2a | 7 |
+| `lib/utils/consultation_credits.dart` | 2c | 7 |
 
 ### #5c 孤立ファイル (2) — 誰からも import されない
 
@@ -452,11 +453,18 @@
 > 各ソースの SHA1 を `_stamps.json` に記録し、差分を検出。
 > 変更されたファイルが属する層は、人手版インベントリ章の見直し対象。
 
-- 追加: **0** / 削除: **0** / 変更: **2**
+- 追加: **1** / 削除: **0** / 変更: **5**
 
 ### 変更されたファイル (層別)
 
-- **層 4a**: `lib/screens/map/map_overlays.dart`, `lib/screens/map_screen.dart`
+- **層 0**: `worker/src/index.js`
+- **層 2a**: `lib/utils/consultation_api.dart`, `lib/utils/solara_api.dart`
+- **層 2b**: `lib/utils/solara_storage.dart`
+- **層 4a**: `lib/screens/map_screen.dart`
+
+### 追加されたファイル
+
+- `lib/screens/map/map_welcome_banner.dart` (層 4a)
 
 ## #7 astro_glossary 用語辞書対整合
 

@@ -534,6 +534,18 @@ function consultationFreeWeekly(env) {
 }
 
 /**
+ * CONSULTATION_WELCOME_GRANT を int に。default 3、不正値も 3 に倒す。
+ * 「出生地 + 現住所」を初めて揃えた新規ユーザーに 1 回だけ贈る購入型 (恒久・
+ * 月曜リセットなし) クレジット数。付与は端末固定キー (consultationDeviceKey) で
+ * 冪等ガードするため iOS リインストール farming に強い (Android は匿名再 install で
+ * deviceKey が変わる既知の限界 = 既存週次クレジットと同じ)。
+ */
+function consultationWelcomeAmount(env) {
+  const n = parseInt(env.CONSULTATION_WELCOME_GRANT || '3', 10);
+  return Number.isInteger(n) && n >= 0 ? n : 3;
+}
+
+/**
  * CONSULTATION_PRO_WEEKLY を int に。default 100、不正値も 100 に倒す。
  * Pro 1 週あたりの Stella 相談上限 (Gemini API 課金破綻防止)。
  * 100/週 ≈ 月 430 回 ≈ 日平均 14 回 < 20 回/日 breakeven。
@@ -744,6 +756,41 @@ async function consultationCreditStatus(env, request, body) {
     proRemaining: null, proLimit: null,
     purchasedBalance,
   };
+}
+
+/**
+ * ウェルカム特典: 「出生地 + 現住所」を初めて揃えた新規ユーザーへ恒久 (購入型・
+ * 月曜リセットなし) クレジットを 1 回だけ付与する。
+ *
+ * - 対象判定 (= 新規完了者のみ) はクライアント側が行い、付与すべき時だけ本 endpoint を叩く。
+ *   サーバは「冪等付与 + 端末固定ガード」のみ担保する (= 二重付与/farming 防止)。
+ * - 冪等キー = `welcome:{deviceKey}`。deviceKey は iOS=App Attest keyId (リインストール耐性)、
+ *   Android=usr:{appUserId} (匿名再 install で変わる既知の限界)。既存 `_consultationCreditGrant`
+ *   の webhook_events 冪等ガードをそのまま流用 (スキーマ追加なし)。
+ * - appUserId / deviceKey が無い (bypass/dev) 場合は付与しない (purchased プールは appUserId
+ *   キーのため記録できず、端末ガードも効かない)。
+ *
+ * 戻り値: { granted, alreadyGranted, amount, purchasedBalance }
+ *   granted=true は「今回新規に付与した」、alreadyGranted=true は「既にこの端末は付与済」。
+ */
+async function consultationWelcomeGrant(env, request, body) {
+  const appUserId = consultationAppUserId(body);
+  const deviceKey = consultationDeviceKey(request, appUserId);
+  if (!appUserId || !deviceKey) {
+    return { granted: false, alreadyGranted: false, amount: 0, purchasedBalance: 0, reason: 'no_identity' };
+  }
+  const amount = consultationWelcomeAmount(env);
+  if (amount <= 0) {
+    return { granted: false, alreadyGranted: false, amount: 0, purchasedBalance: 0, reason: 'disabled' };
+  }
+  const eventId = `welcome:${deviceKey}`;
+  const res = await callDo(env, '/consultation-credit-grant', { appUserId, amount, eventId });
+  if (res.status !== 200) {
+    throw new Error(`welcome grant DO failed: ${res.status}`);
+  }
+  const balance = typeof res.body?.balance === 'number' ? res.body.balance : 0;
+  const already = res.body?.alreadyProcessed === true;
+  return { granted: !already, alreadyGranted: already, amount, purchasedBalance: balance };
 }
 
 /**
@@ -1568,6 +1615,19 @@ async function dispatchProtected(request, env, url, origin) {
     }
   }
 
+  // ウェルカム特典付与 (出生地+現住所を初めて揃えた新規ユーザーへ恒久クレジット)。
+  // middleware 通過必須 (deviceKey は検証済ヘッダー由来)。冪等 + 端末固定ガードは
+  // consultationWelcomeGrant 内で担保。新規完了者かどうかの判定はクライアント側。
+  if (path === '/protected/consultation/welcome-grant' && request.method === 'POST') {
+    const body = await request.json().catch(() => ({}));
+    try {
+      return jsonOk(await consultationWelcomeGrant(env, request, body), origin);
+    } catch (err) {
+      console.error('Welcome grant error:', err);
+      return jsonError(500, err.message || 'Welcome grant failed', origin);
+    }
+  }
+
   // ── AI 出力ユーザー報告 (Google Generative AI Apps Policy 対応) ──
   // 3 つの AI 画面 (Tarot / Stella / Horo) に表示される「報告」ボタンの送信先。
   // 保存先は CF Workers Logs の console.warn のみ (永続なし)。
@@ -1595,11 +1655,13 @@ export const _internal = {
   consultationFreeModes,
   consultationFreeWeekly,
   consultationProWeekly,
+  consultationWelcomeAmount,
   consultationDeviceKey,
   consultationAppUserId,
   consultationClientEntitlement,
   proSyncReconcile,
   consultationCreditStatus,
+  consultationWelcomeGrant,
   consumeReadingCreditGate,
   gateConsultation,
   consultationConsumed,

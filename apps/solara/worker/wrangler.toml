@@ -66,6 +66,11 @@ CONSULTATION_FREE_WEEKLY = "3"
 # Free 週次カウンタ (consultation_credits 表) とは別キー (consultation_pro_credits 表)
 # で持つため、Free→Pro upgrade 時に Pro 100 がフルで使える。
 CONSULTATION_PRO_WEEKLY = "100"
+# ウェルカム特典: 出生地+現住所を初めて揃えた新規完了者へ 1 回だけ贈る恒久 (購入型・
+# 月曜リセットなし) クレジット数。0 で無効化。付与は端末固定キー (iOS=App Attest keyId
+# はリインストール耐性、Android=appUserId は匿名再 install で farming 可の既知の限界) で
+# 冪等。新規完了者かの判定はクライアント側 (既存完了者は付与対象外)。
+CONSULTATION_WELCOME_GRANT = "3"
 # 消費型クレジット商品 (B案、有料追加クレジット)。"商品ID:付与数" を CSV で。
 # 🚨 オーナー作業: App Store Connect / Google Play / RevenueCat で同じ商品 ID の消費型 IAP を作成。
 # 価格は各ストアで設定 (提案: small=3個 $2.99/¥450、large=10個 $8.99/¥1,300、Pro へ寄せた割高設定)。

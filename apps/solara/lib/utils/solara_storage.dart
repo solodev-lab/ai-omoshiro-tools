@@ -97,6 +97,23 @@ class SolaraProfile {
   );
 }
 
+/// ウェルカム特典 (恒久クレジット) のローカル状態。
+/// [baselineSet] 初回ベースライン記録済 / [eligible] 新規完了者 (付与対象) /
+/// [granted] 付与成功済 / [consultUsed] 付与後に相談へ進んだ or バナーを閉じた。
+class WelcomeGiftFlags {
+  final bool baselineSet;
+  final bool eligible;
+  final bool granted;
+  final bool consultUsed;
+
+  const WelcomeGiftFlags({
+    required this.baselineSet,
+    required this.eligible,
+    required this.granted,
+    required this.consultUsed,
+  });
+}
+
 /// Persistence wrapper for Solara data.
 class SolaraStorage {
   static const _profileKey = 'solara_profile';
@@ -164,6 +181,48 @@ class SolaraStorage {
   static Future<bool> hasAiConsent() async {
     final at = await loadAiConsentAt();
     return at != null;
+  }
+
+  // --- Welcome gift (出生地+現住所を初めて揃えた新規完了者へ恒久クレジット3) ---
+  //
+  // 「新規完了者のみ」を守るため、本機能の初回到達時に既に birth+home が揃っていた
+  // 既存ユーザーは eligible=false にして付与対象外にする。付与の冪等/farming 防止は
+  // Worker 側 (端末固定キー) が担保。ここのフラグは付与トリガ判定 + バナー表示制御用。
+  static const _welcomeBaselineKey = 'solara_welcome_baseline_set_v1';
+  static const _welcomeEligibleKey = 'solara_welcome_eligible_v1';
+  static const _welcomeGrantedKey = 'solara_welcome_granted_v1';
+  static const _welcomeConsultUsedKey = 'solara_welcome_consult_used_v1';
+
+  /// 本機能の初回到達時に 1 度だけベースラインを記録する (以後 no-op)。
+  /// [profileCompleteNow] = その瞬間に birth+home が揃っているか。
+  /// 既に揃っている既存ユーザーは eligible=false (付与対象外) になる。
+  static Future<void> ensureWelcomeBaseline(bool profileCompleteNow) async {
+    final prefs = await SharedPreferences.getInstance();
+    if (prefs.getBool(_welcomeBaselineKey) == true) return;
+    await prefs.setBool(_welcomeBaselineKey, true);
+    await prefs.setBool(_welcomeEligibleKey, !profileCompleteNow);
+  }
+
+  static Future<WelcomeGiftFlags> loadWelcomeFlags() async {
+    final prefs = await SharedPreferences.getInstance();
+    return WelcomeGiftFlags(
+      baselineSet: prefs.getBool(_welcomeBaselineKey) ?? false,
+      eligible: prefs.getBool(_welcomeEligibleKey) ?? false,
+      granted: prefs.getBool(_welcomeGrantedKey) ?? false,
+      consultUsed: prefs.getBool(_welcomeConsultUsedKey) ?? false,
+    );
+  }
+
+  /// 恒久クレジット付与が成功した (granted) ら呼ぶ。バナー C の表示条件になる。
+  static Future<void> setWelcomeGranted() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_welcomeGrantedKey, true);
+  }
+
+  /// 相談に進んだ or バナー C を閉じたら呼ぶ。以後バナー C を出さない。
+  static Future<void> setWelcomeConsultUsed() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_welcomeConsultUsedKey, true);
   }
 
   // --- Forecast heatmap display settings ---

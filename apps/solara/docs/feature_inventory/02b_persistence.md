@@ -5,9 +5,9 @@
 
 ## サマリ
 
-- ファイル数: 9 / 総行数: 2657
-- class/mixin/extension/enum: 14
-- 関数 (top-level + method の素拾い): 121
+- ファイル数: 9 / 総行数: 2716
+- class/mixin/extension/enum: 15
+- 関数 (top-level + method の素拾い): 125
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 0
 - Worker URL リテラル: 0
@@ -341,82 +341,88 @@ Solara 認証サービス — Phase 2-9 Sign in 統合
   </details>
 
 
-### `lib/utils/solara_storage.dart` (814 行)
+### `lib/utils/solara_storage.dart` (873 行)
 
 **imports:** dart=1 / package=2 / relative=4
 
 - relative: `../models/daily_reading.dart`, `../models/galaxy_cycle.dart`, `../models/lunar_intention.dart`, `consultation_record.dart`
 
-**型定義 (2):**
+**型定義 (3):**
 
 - L10 `class SolaraProfile`
   - User profile data.
-- L101 `class SolaraStorage`
+- L103 `class WelcomeGiftFlags`
+  - ウェルカム特典 (恒久クレジット) のローカル状態。
+- L118 `class SolaraStorage`
   - Persistence wrapper for Solara data.
 
-**関数 (57 public + 1 private):**
+**関数 (61 public + 1 private):**
 
 - L41 `toJson()`
 - L71 `copyWith()`
-- L150 `loadAiConsentAt()` — AI 生成同意の取得日時 (null = 未同意)。
-- L158 `saveAiConsentNow()` — 同意ボタンが押された瞬間に呼ぶ (現在時刻を ISO8601 で保存)。
-- L164 `hasAiConsent()` — 主に main.dart の起動分岐用。null チェックを 1 関数に。
-- L172 `loadForecastColorMode()` — ヒートマップ色モード: 'relative' | 'absolute' | 'category'
-- L177 `saveForecastColorMode()`
-- L183 `loadForecastHighColor()` — 高スコア側の色: 'green' | 'red'
-- L188 `saveForecastHighColor()`
-- L194 `loadForecastYearOffset()` — Forecast 画面で最後に見た年オフセット（0-4）
-- L199 `saveForecastYearOffset()`
-- L206 `loadMapStyleId()`
-- L211 `saveMapStyleId()`
-- L218 `loadProfile()`
-- L225 `saveProfile()`
-- L242 `saveCurrentReadings()`
-- L248 `addReading()`
-- L260 `clearReadings()`
-- L266 `updateSynchronicity()` — Update synchronicity text for a specific reading date.
-- L279 `updateReading()` — Update an existing reading (matched by date) with new reading text.
-- L293 `removeReadingByDate()` — Remove a reading by date (used for the dev "reset today" button).
-- L316 `saveTitleData()`
-- L347 `addTitleHistoryEntry()` — 称号診断結果を履歴に追加する。
-- L379 `clearTitleHistory()` — 履歴全削除 (Sanctuary 設定からの「すべて削除」用)。
-- L387 `updateTitleHistoryNote()` — 指定 savedAt のエントリにメモを書き込む (200 字 cap、超過は切詰)。
-- L401 `getTodayReading()`
-- L415 `loadLastFreeTarotDay()` — タロットを最後に引いた「論理日」(YYYY-MM-DD)。未記録なら null。
-- L428 `markFreeTarotDrawn()` — タロットを「今日」引いたものとして記録する。
-- L443 `hasDrawnFreeTarotToday()` — タロットを「今日 (論理日)」もう引いたか。
-- L451 `clearFreeTarotDay()` — テスト用: 無料タロットの引き記録をクリア (再ドロー可能に戻す)。
-- L468 `saveCompletedCycle()`
-- L486 `updateCompletedCycleReadingSynchronicity()` — 過去サイクルに含まれる reading の synchronicity (自由メモ) を更新する。
-- L501 `clearCurrentReadings()`
-- L508 `loadIntention()`
-- L516 `saveIntention()`
-- L526 `loadDailyResetHour()` — 1日の基準時刻（0-23時）。この時刻を跨ぐと「今日」が更新される。
-- L532 `saveDailyResetHour()`
-- L539 `loadDailyResetMinute()` — 1日の基準時刻 (分、0-59)。1 分単位ピッカーの導入で追加。
-- L545 `saveDailyResetMinute()`
-- L560 `loadHouseSystem()` — ハウスシステム設定を読み込む (未保存は 'placidus')。同期キャッシュも更新。
-- L568 `saveHouseSystem()` — ハウスシステム設定を保存する。同期キャッシュも即時更新。
-- L610 `logicalTodayKey()` — リセット時刻 (「1日の開始時刻」設定) を考慮した「今日」の論理日キー
-- L623 `wasOverlayShownToday()` — Track which overlay was shown today to avoid re-showing.
-- L630 `markOverlayShown()`
-- L640 `localDateKey()` — 端末日付 (常に 0 時切替) の "今日" キー (YYYY-MM-DD)。
-- L647 `wasLocalOverlayShownToday()` — 端末 0 時基準で「今日この type の演出を表示したか」を返す。
-- L654 `markLocalOverlayShown()` — 端末 0 時基準で「今日この type の演出を表示した」と記録する。
-- L661 `getNotTodayCount()` — Not today 押下回数（サイクルID単位で保存）
-- L666 `incrementNotTodayCount()`
-- L696 `addConsultationRecord()` — 履歴を 1 件追加 (新しい順で先頭、上限超過分は古いものから削除)。
-- L708 `setConsultationFavorite()` — id 指定でお気に入りフラグを設定。見つからない場合は no-op。
-- L717 `deleteConsultationRecord()` — id 指定で 1 件削除。見つからない場合は no-op。
-- L724 `clearConsultationHistory()` — 履歴全削除 (Sanctuary 設定からの「すべて削除」用)。
-- L757 `pushConsultationAvoid()` — 提示した地名を window に積む (最新を末尾)。最新 [maxN] 件だけ残す。
-- L783 `clearConsultationAvoid()` — avoid-window 全消去 (Sanctuary「すべて削除」と一緒に呼ぶ用)。
-- L792 `saveRestoreSnapshot()` — 現在の画面状態スナップショットを保存する (paused 時に呼ぶ)。
-- L810 `clearRestoreSnapshot()` — スナップショットを破棄する (warm resume 時 / 復元消費後)。
+- L167 `loadAiConsentAt()` — AI 生成同意の取得日時 (null = 未同意)。
+- L175 `saveAiConsentNow()` — 同意ボタンが押された瞬間に呼ぶ (現在時刻を ISO8601 で保存)。
+- L181 `hasAiConsent()` — 主に main.dart の起動分岐用。null チェックを 1 関数に。
+- L199 `ensureWelcomeBaseline()` — 本機能の初回到達時に 1 度だけベースラインを記録する (以後 no-op)。
+- L206 `loadWelcomeFlags()`
+- L217 `setWelcomeGranted()` — 恒久クレジット付与が成功した (granted) ら呼ぶ。バナー C の表示条件になる。
+- L223 `setWelcomeConsultUsed()` — 相談に進んだ or バナー C を閉じたら呼ぶ。以後バナー C を出さない。
+- L231 `loadForecastColorMode()` — ヒートマップ色モード: 'relative' | 'absolute' | 'category'
+- L236 `saveForecastColorMode()`
+- L242 `loadForecastHighColor()` — 高スコア側の色: 'green' | 'red'
+- L247 `saveForecastHighColor()`
+- L253 `loadForecastYearOffset()` — Forecast 画面で最後に見た年オフセット（0-4）
+- L258 `saveForecastYearOffset()`
+- L265 `loadMapStyleId()`
+- L270 `saveMapStyleId()`
+- L277 `loadProfile()`
+- L284 `saveProfile()`
+- L301 `saveCurrentReadings()`
+- L307 `addReading()`
+- L319 `clearReadings()`
+- L325 `updateSynchronicity()` — Update synchronicity text for a specific reading date.
+- L338 `updateReading()` — Update an existing reading (matched by date) with new reading text.
+- L352 `removeReadingByDate()` — Remove a reading by date (used for the dev "reset today" button).
+- L375 `saveTitleData()`
+- L406 `addTitleHistoryEntry()` — 称号診断結果を履歴に追加する。
+- L438 `clearTitleHistory()` — 履歴全削除 (Sanctuary 設定からの「すべて削除」用)。
+- L446 `updateTitleHistoryNote()` — 指定 savedAt のエントリにメモを書き込む (200 字 cap、超過は切詰)。
+- L460 `getTodayReading()`
+- L474 `loadLastFreeTarotDay()` — タロットを最後に引いた「論理日」(YYYY-MM-DD)。未記録なら null。
+- L487 `markFreeTarotDrawn()` — タロットを「今日」引いたものとして記録する。
+- L502 `hasDrawnFreeTarotToday()` — タロットを「今日 (論理日)」もう引いたか。
+- L510 `clearFreeTarotDay()` — テスト用: 無料タロットの引き記録をクリア (再ドロー可能に戻す)。
+- L527 `saveCompletedCycle()`
+- L545 `updateCompletedCycleReadingSynchronicity()` — 過去サイクルに含まれる reading の synchronicity (自由メモ) を更新する。
+- L560 `clearCurrentReadings()`
+- L567 `loadIntention()`
+- L575 `saveIntention()`
+- L585 `loadDailyResetHour()` — 1日の基準時刻（0-23時）。この時刻を跨ぐと「今日」が更新される。
+- L591 `saveDailyResetHour()`
+- L598 `loadDailyResetMinute()` — 1日の基準時刻 (分、0-59)。1 分単位ピッカーの導入で追加。
+- L604 `saveDailyResetMinute()`
+- L619 `loadHouseSystem()` — ハウスシステム設定を読み込む (未保存は 'placidus')。同期キャッシュも更新。
+- L627 `saveHouseSystem()` — ハウスシステム設定を保存する。同期キャッシュも即時更新。
+- L669 `logicalTodayKey()` — リセット時刻 (「1日の開始時刻」設定) を考慮した「今日」の論理日キー
+- L682 `wasOverlayShownToday()` — Track which overlay was shown today to avoid re-showing.
+- L689 `markOverlayShown()`
+- L699 `localDateKey()` — 端末日付 (常に 0 時切替) の "今日" キー (YYYY-MM-DD)。
+- L706 `wasLocalOverlayShownToday()` — 端末 0 時基準で「今日この type の演出を表示したか」を返す。
+- L713 `markLocalOverlayShown()` — 端末 0 時基準で「今日この type の演出を表示した」と記録する。
+- L720 `getNotTodayCount()` — Not today 押下回数（サイクルID単位で保存）
+- L725 `incrementNotTodayCount()`
+- L755 `addConsultationRecord()` — 履歴を 1 件追加 (新しい順で先頭、上限超過分は古いものから削除)。
+- L767 `setConsultationFavorite()` — id 指定でお気に入りフラグを設定。見つからない場合は no-op。
+- L776 `deleteConsultationRecord()` — id 指定で 1 件削除。見つからない場合は no-op。
+- L783 `clearConsultationHistory()` — 履歴全削除 (Sanctuary 設定からの「すべて削除」用)。
+- L816 `pushConsultationAvoid()` — 提示した地名を window に積む (最新を末尾)。最新 [maxN] 件だけ残す。
+- L842 `clearConsultationAvoid()` — avoid-window 全消去 (Sanctuary「すべて削除」と一緒に呼ぶ用)。
+- L851 `saveRestoreSnapshot()` — 現在の画面状態スナップショットを保存する (paused 時に呼ぶ)。
+- L869 `clearRestoreSnapshot()` — スナップショットを破棄する (warm resume 時 / 復元消費後)。
 
   <details><summary>private 関数 1 件</summary>
 
-  - L729 `_writeConsultationHistory()`
+  - L788 `_writeConsultationHistory()`
 
   </details>
 

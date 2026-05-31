@@ -25,8 +25,10 @@ const {
   consultationFreeModes,
   consultationFreeWeekly,
   consultationProWeekly,
+  consultationWelcomeAmount,
   consultationDeviceKey,
   consultationCreditStatus,
+  consultationWelcomeGrant,
   consumeReadingCreditGate,
   gateConsultation,
   consultationConsumed,
@@ -413,6 +415,96 @@ test('creditProduct: env から商品ID→付与数を引く', () => {
   assert.equal(consultationCreditAmountForProduct(env, 'com.solodevlab.solara.credits.large'), 10);
   assert.equal(consultationCreditAmountForProduct(env, 'com.solodevlab.solara.unknown'), 0);
   assert.equal(consultationCreditAmountForProduct({}, 'anything'), 0);
+});
+
+// ── consultationWelcomeAmount / consultationWelcomeGrant (ウェルカム特典) ──────
+
+/** ステートフルな付与 DO mock (eventId 冪等 + appUserId 別 purchased 残高を保持)。 */
+function makeGrantEnv(extra = {}) {
+  const grantedEvents = new Set(); // eventId
+  const balances = new Map();      // appUserId -> balance
+  const calls = [];
+  const stub = {
+    fetch: async (url, init) => {
+      const path = new URL(url).pathname;
+      const body = init?.body ? JSON.parse(init.body) : {};
+      calls.push({ path, body });
+      if (path === '/consultation-credit-grant') {
+        const { appUserId, amount, eventId } = body;
+        if (grantedEvents.has(eventId)) {
+          return new Response(
+            JSON.stringify({ balance: balances.get(appUserId) || 0, alreadyProcessed: true }),
+            { status: 200 },
+          );
+        }
+        grantedEvents.add(eventId);
+        balances.set(appUserId, (balances.get(appUserId) || 0) + amount);
+        return new Response(JSON.stringify({ balance: balances.get(appUserId) }), { status: 200 });
+      }
+      return new Response(JSON.stringify({}), { status: 404 });
+    },
+  };
+  return { env: { ATTESTATION_DO: { idFromName: () => 'g', get: () => stub }, ...extra }, calls };
+}
+
+test('welcomeAmount: default 3 / 上書き / 不正値は 3', () => {
+  assert.equal(consultationWelcomeAmount({}), 3);
+  assert.equal(consultationWelcomeAmount({ CONSULTATION_WELCOME_GRANT: '5' }), 5);
+  assert.equal(consultationWelcomeAmount({ CONSULTATION_WELCOME_GRANT: '0' }), 0);
+  assert.equal(consultationWelcomeAmount({ CONSULTATION_WELCOME_GRANT: 'abc' }), 3);
+});
+
+test('welcomeGrant: iOS 初回 → granted + eventId=welcome:ios:{keyId} + 購入残 +3', async () => {
+  const { env, calls } = makeGrantEnv();
+  const req = makeRequest({ 'X-AppAttest-KeyId': 'K9' });
+  const r = await consultationWelcomeGrant(env, req, { __appUserId: 'google:u9' });
+  assert.equal(r.granted, true);
+  assert.equal(r.alreadyGranted, false);
+  assert.equal(r.amount, 3);
+  assert.equal(r.purchasedBalance, 3);
+  const grantCall = calls.find((c) => c.path === '/consultation-credit-grant');
+  assert.equal(grantCall.body.eventId, 'welcome:ios:K9');
+  assert.equal(grantCall.body.amount, 3);
+  assert.equal(grantCall.body.appUserId, 'google:u9');
+});
+
+test('welcomeGrant: 同一端末 2 回目 → alreadyGranted (二重付与しない)', async () => {
+  const { env } = makeGrantEnv();
+  const req = makeRequest({ 'X-AppAttest-KeyId': 'K9' });
+  const r1 = await consultationWelcomeGrant(env, req, { __appUserId: 'google:u9' });
+  const r2 = await consultationWelcomeGrant(env, req, { __appUserId: 'google:u9' });
+  assert.equal(r1.granted, true);
+  assert.equal(r2.granted, false);
+  assert.equal(r2.alreadyGranted, true);
+  assert.equal(r2.purchasedBalance, 3); // 増えない
+});
+
+test('welcomeGrant: iOS は keyId 固定なら appUserId が変わっても再付与しない (farming 防止)', async () => {
+  const { env } = makeGrantEnv();
+  const req = makeRequest({ 'X-AppAttest-KeyId': 'KSAME' });
+  const r1 = await consultationWelcomeGrant(env, req, { __appUserId: 'rc:anon1' });
+  const r2 = await consultationWelcomeGrant(env, req, { __appUserId: 'rc:anon2' });
+  assert.equal(r1.granted, true);
+  assert.equal(r2.granted, false);
+  assert.equal(r2.alreadyGranted, true);
+});
+
+test('welcomeGrant: appUserId / keyId 無し → granted=false (no_identity, DO 呼ばない)', async () => {
+  const { env, calls } = makeGrantEnv();
+  const req = makeRequest({}); // keyId 無し
+  const r = await consultationWelcomeGrant(env, req, {}); // appUserId 無し
+  assert.equal(r.granted, false);
+  assert.equal(r.reason, 'no_identity');
+  assert.ok(!calls.some((c) => c.path === '/consultation-credit-grant'));
+});
+
+test('welcomeGrant: CONSULTATION_WELCOME_GRANT=0 → 付与しない (disabled, DO 呼ばない)', async () => {
+  const { env, calls } = makeGrantEnv({ CONSULTATION_WELCOME_GRANT: '0' });
+  const req = makeRequest({ 'X-AppAttest-KeyId': 'K' });
+  const r = await consultationWelcomeGrant(env, req, { __appUserId: 'google:u' });
+  assert.equal(r.granted, false);
+  assert.equal(r.reason, 'disabled');
+  assert.ok(!calls.some((c) => c.path === '/consultation-credit-grant'));
 });
 
 // ── consultationConsumed (V2: 1クレジット=1候補の課金判定) ──────

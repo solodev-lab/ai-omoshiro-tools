@@ -63,6 +63,12 @@ const String solaraConsultation2Url =
 const String solaraConsultationCreditsUrl =
     '$solaraWorkerBase/protected/consultation/credits';
 
+/// ウェルカム特典付与 (出生地+現住所を初めて揃えた新規ユーザーへ恒久クレジット)。
+/// 端末固定キーで冪等。新規完了者かの判定はクライアント側、付与の冪等/farming 防止は
+/// Worker 側 (consultationWelcomeGrant)。
+const String solaraConsultationWelcomeGrantUrl =
+    '$solaraWorkerBase/protected/consultation/welcome-grant';
+
 /// アカウント削除時にサーバー側 (DO) の Pro 記録 + Webhook ログを物理削除する。
 /// App Attest / Play Integrity を通すため /protected/* 配下に置く (body の
 /// `__appUserId` が assertion で署名され、削除対象が改ざんされない)。

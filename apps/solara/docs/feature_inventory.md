@@ -3329,3 +3329,15 @@ Flutter 標準の状態復元 (`restorationScopeId` + `RestorableProperty`) は 
   - **右下に「✦ Stella に相談」ボタン新設 + 現在地ボタン微調整** (`map_screen.dart`)。現在地ボタン `right:12→16, bottom:80→92`。その上に Stella 相談ボタン (52px 円・金リング `0x66C9A84C`・微光) を `Column(crossAxisAlignment.end)` で縦積み。タップ → `_enterConsultationFromMapButton()` が `ConsultationInputScreen` (preset 無し) を push (Free も入力画面まで可)。`_noProfile` 時は Stella ボタン非表示。
   - **ACG バーガー (及び展開ピル) を少し上げる**: ACG 下部 Column `bottom: 1 → 14` (`map_screen.dart`)。NavBar 密着の窮屈感を解消。
   - **Stella 相談アイコンを新規生成** (`mockup/generate_consult_icons.py`、既存 `generate_menu_icons_v2.py` の BASE_STYLE 踏襲 + 円形αマスク)。3 案 (A 導きの星+環 / B 三日月+星 / C 水晶玉+星座) 生成 → **C 採用** (`assets/menu_icons/consult.webp`)。原 PNG 3 枚は `mockup/share-assets/menu-icons/v2/consult_*.png` に保護。
+
+---
+
+## 本セッション追加機能 (2026-05-31 セッション5) — §0.2.39
+
+> ウェルカム特典: 出生地+現住所を初めて揃えた**新規完了者**へ恒久 (購入型・月曜リセットなし) クレジット 3 を 1 回付与 + Map バナー誘導。stamp diff +1 -0 ~5 (`map_welcome_banner.dart` 新規)。**要 worker deploy**。
+
+- **§0.2.39 ウェルカム無料3クレジット + Map 誘導バナー**:
+  - **Worker** (`worker/src/index.js`): 新 protected ルート `/protected/consultation/welcome-grant` → `consultationWelcomeGrant(env,request,body)`。既存冪等関数 `_consultationCreditGrant({appUserId,amount,eventId})` を `eventId='welcome:'+deviceKey` で再利用 (`consultation_purchased` 恒久プールへ +amount、スキーマ追加なし)。`consultationWelcomeAmount(env)` = `CONSULTATION_WELCOME_GRANT` (default 3)。端末固定ガード: `consultationDeviceKey` は iOS=App Attest keyId (リインストール耐性) / Android=usr:{appUserId} (匿名再 install で farming 可の既知の限界)。appUserId/deviceKey 無しは付与しない。`wrangler.toml` に `CONSULTATION_WELCOME_GRANT="3"`。テスト 6 件追加 (`test/consultation_credits.test.js`、計 339 green)。
+  - **Flutter 付与**: `utils/consultation_api.dart` に `grantWelcomeCredits()` + `WelcomeGrantResult`、`utils/solara_api.dart` に `solaraConsultationWelcomeGrantUrl`。`utils/solara_storage.dart` に `WelcomeGiftFlags` + `ensureWelcomeBaseline(profileCompleteNow)` / `loadWelcomeFlags` / `setWelcomeGranted` / `setWelcomeConsultUsed` (SharedPreferences `solara_welcome_*_v1`)。**新規完了者のみ**: 本機能初回到達時に既に birth+home 揃いの既存ユーザーは eligible=false で対象外。
+  - **Flutter Map** (`map_screen.dart`): `_loadProfileAndChart` 冒頭で `_evaluateWelcomeGift(hasBirth,hasHome)` を毎回評価 → eligible×birth×home×未付与で `grantWelcomeCredits()`→付与成功で `setWelcomeGranted`+credits refresh。バナー状態 `_welcomeBanner` (none/addHome=B/tryStella=C)。
+  - **Flutter バナー** (`screens/map/map_welcome_banner.dart` 新規 `MapWelcomeBanner`/`WelcomeBannerMode`): 時刻スライダー直下に表示。B「現住所を登録すると無料クレジット3」→ CTA で `onNavigateToSanctuary` (自宅登録)。C「無料クレジット3をお贈りしました / 週でリセットされない相談チケット」→ CTA で `_enterConsultationFromMapButton`。C 表示中は Stella ボタンを強発光で誘導。✕ で B=セッション非表示 / C=consultUsed 永続クローズ。

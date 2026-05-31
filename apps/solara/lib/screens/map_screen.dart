@@ -34,7 +34,10 @@ import 'map/map_search.dart';
 import 'map/map_overlays.dart';
 import 'map/map_time_slider.dart';
 import 'map/map_widgets.dart';
+import 'map/map_welcome_banner.dart';
 import '../utils/astro_lines.dart' as astro_lines;
+import '../utils/consultation_api.dart' show grantWelcomeCredits;
+import '../utils/consultation_credits.dart';
 import '../utils/direction_energy.dart';
 import '../utils/pro_status.dart';
 import '../utils/reverse_geocode.dart';
@@ -224,6 +227,10 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   /// FortuneSheet・Omen 等）を非表示にし、中央に案内カードを出す。
   /// 乱数のモックスコアを見せて誤解を招くのを防ぐ目的。
   bool _noProfile = false;
+
+  /// ウェルカム特典バナー (出生地+現住所を初めて揃えた新規完了者向け)。
+  /// B=現住所登録の促し / C=付与済→Stella 相談へ誘導 / none=非表示。
+  WelcomeBannerMode _welcomeBanner = WelcomeBannerMode.none;
 
   // 日付選択（null = 今日）。UTC 扱い。
   DateTime? _selectedDate;
@@ -737,6 +744,11 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
 
   Future<void> _loadProfileAndChart({DateTime? targetDate}) async {
     final p = await SolaraStorage.loadProfile();
+    // ウェルカム特典 (恒久クレジット) の判定はプロフィール完成度に依存するので、
+    // chart 取得や _noProfile 早期 return より前に毎回評価する。
+    final hasBirth = p != null && p.isComplete;
+    final hasHome = p != null && !(p.homeLat == 0 && p.homeLng == 0);
+    await _evaluateWelcomeGift(hasBirth: hasBirth, hasHome: hasHome);
     if (p == null || !p.isComplete) {
       if (mounted) setState(() => _noProfile = true);
       return;
@@ -2313,6 +2325,18 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                   _scheduleLoadChart(targetDate: d);
                 },
               ),
+              // ── ウェルカム特典バナー (B/C、時刻スライダー直下) ──
+              // 各種オーバーレイ展開中・ACG・検索中は非表示 (重なり回避)。
+              if (_welcomeBanner != WelcomeBannerMode.none &&
+                  !_astroCartoMode &&
+                  !_searchOpen &&
+                  !_displayMenuOpen &&
+                  !_viewpointMenuOpen)
+                MapWelcomeBanner(
+                  mode: _welcomeBanner,
+                  onCta: _onWelcomeCta,
+                  onDismiss: _onWelcomeDismiss,
+                ),
             ],
           ),
         ),
@@ -2488,10 +2512,19 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       color: const Color(0xCC0A0A19),
-                      border: Border.all(color: const Color(0x66C9A84C)),
-                      boxShadow: const [
-                        BoxShadow(color: Color(0x55C9A84C), blurRadius: 16, spreadRadius: 1),
-                      ],
+                      // ウェルカム特典付与済 (バナー C 表示中) は淡く強発光させて誘導。
+                      border: Border.all(
+                        color: _welcomeBanner == WelcomeBannerMode.tryStella
+                            ? const Color(0xCCF9D976)
+                            : const Color(0x66C9A84C),
+                      ),
+                      boxShadow: _welcomeBanner == WelcomeBannerMode.tryStella
+                          ? const [
+                              BoxShadow(color: Color(0xAAF9D976), blurRadius: 26, spreadRadius: 3),
+                            ]
+                          : const [
+                              BoxShadow(color: Color(0x55C9A84C), blurRadius: 16, spreadRadius: 1),
+                            ],
                     ),
                     child: const Padding(
                       padding: EdgeInsets.all(7),
@@ -3069,6 +3102,59 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
         ),
       ),
     );
+  }
+
+  // ── ウェルカム特典 (出生地+現住所を初めて揃えた新規完了者へ恒久クレジット3) ──
+  //
+  // 「新規完了者のみ」: 本機能初回到達時に既に birth+home が揃っていた既存ユーザーは
+  // ベースラインで eligible=false にして対象外。付与は端末固定キーで冪等 (farming 防止)。
+  // バナー B=現住所登録の促し / C=付与済→Stella 相談へ誘導。
+  Future<void> _evaluateWelcomeGift({
+    required bool hasBirth,
+    required bool hasHome,
+  }) async {
+    await SolaraStorage.ensureWelcomeBaseline(hasBirth && hasHome);
+    var flags = await SolaraStorage.loadWelcomeFlags();
+
+    // 新規完了者が birth+home を揃えた瞬間 → 1 回だけ恒久クレジットを付与。
+    if (flags.eligible && hasBirth && hasHome && !flags.granted) {
+      final res = await grantWelcomeCredits();
+      if (res != null && (res.granted || res.alreadyGranted)) {
+        await SolaraStorage.setWelcomeGranted();
+        await ConsultationCredits.instance.refresh();
+        flags = await SolaraStorage.loadWelcomeFlags();
+      }
+    }
+
+    // バナー状態の決定。
+    WelcomeBannerMode mode = WelcomeBannerMode.none;
+    if (flags.eligible && hasBirth && !hasHome && !flags.granted) {
+      mode = WelcomeBannerMode.addHome; // B
+    } else if (flags.granted && !flags.consultUsed) {
+      mode = WelcomeBannerMode.tryStella; // C
+    }
+    if (mounted) setState(() => _welcomeBanner = mode);
+  }
+
+  /// ウェルカムバナーの CTA。B=Sanctuary (自宅登録) へ / C=相談入力へ。
+  void _onWelcomeCta() {
+    if (_welcomeBanner == WelcomeBannerMode.addHome) {
+      // 現住所は Sanctuary の「自宅（現住所）」で登録する。戻った時に
+      // _loadProfileAndChart → _evaluateWelcomeGift が再評価して C に切り替わる。
+      widget.onNavigateToSanctuary?.call();
+    } else if (_welcomeBanner == WelcomeBannerMode.tryStella) {
+      SolaraStorage.setWelcomeConsultUsed();
+      setState(() => _welcomeBanner = WelcomeBannerMode.none);
+      _enterConsultationFromMapButton();
+    }
+  }
+
+  /// ウェルカムバナーの ✕。C は永続的に閉じる (consultUsed)、B はこのセッションのみ非表示。
+  void _onWelcomeDismiss() {
+    if (_welcomeBanner == WelcomeBannerMode.tryStella) {
+      SolaraStorage.setWelcomeConsultUsed();
+    }
+    setState(() => _welcomeBanner = WelcomeBannerMode.none);
   }
 
   /// Phase 2-3b: relocation popup 内 CTA 「この場所で相談」のハンドラ。

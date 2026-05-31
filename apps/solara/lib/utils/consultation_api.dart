@@ -12,7 +12,8 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 import 'app_attest_client.dart';
-import 'solara_api.dart' show solaraConsultationCreditsUrl;
+import 'solara_api.dart'
+    show solaraConsultationCreditsUrl, solaraConsultationWelcomeGrantUrl;
 
 // 旧 ConsultationCreditEvents (notify-only ChangeNotifier) は 2026-05-26 に
 // ConsultationCredits (state-holder singleton, lib/utils/consultation_credits.dart) へ
@@ -144,6 +145,64 @@ Future<ConsultationCreditStatus?> fetchConsultationCredits({
         .timeout(timeout);
     if (res.statusCode == 200) {
       return ConsultationCreditStatus.fromJson(
+        json.decode(utf8.decode(res.bodyBytes)) as Map<String, dynamic>,
+      );
+    }
+  } catch (_) {
+    // network error → null
+  } finally {
+    if (client == null) c.close();
+  }
+  return null;
+}
+
+/// ウェルカム特典付与の結果。
+/// [granted] = 今回新規に付与した / [alreadyGranted] = この端末は既に付与済。
+class WelcomeGrantResult {
+  final bool granted;
+  final bool alreadyGranted;
+  final int amount;
+  final int purchasedBalance;
+
+  const WelcomeGrantResult({
+    required this.granted,
+    required this.alreadyGranted,
+    required this.amount,
+    required this.purchasedBalance,
+  });
+
+  factory WelcomeGrantResult.fromJson(Map<String, dynamic> j) =>
+      WelcomeGrantResult(
+        granted: j['granted'] == true,
+        alreadyGranted: j['alreadyGranted'] == true,
+        amount: (j['amount'] as num?)?.toInt() ?? 0,
+        purchasedBalance: (j['purchasedBalance'] as num?)?.toInt() ?? 0,
+      );
+}
+
+/// `/protected/consultation/welcome-grant` を呼び、ウェルカム特典 (恒久クレジット) を
+/// 付与する。**呼び出し側 (= 新規完了者判定) で「付与すべき」と判断した時だけ呼ぶこと。**
+/// Worker 側は端末固定キーで冪等付与する (二重付与/farming 防止) ので、何度呼んでも
+/// 安全 (2 回目以降は alreadyGranted=true)。失敗時 null。
+Future<WelcomeGrantResult?> grantWelcomeCredits({
+  Duration timeout = const Duration(seconds: 15),
+  http.Client? client,
+}) async {
+  final c = client ?? http.Client();
+  try {
+    final merged = AppAttestClient.withAppUserIdMerged(<String, dynamic>{});
+    final bodyBytes = utf8.encode(json.encode(merged));
+    final headers = <String, String>{'Content-Type': 'application/json'};
+    await AppAttestClient.instance.addHeaders(headers, bodyBytes);
+    final res = await c
+        .post(
+          Uri.parse(solaraConsultationWelcomeGrantUrl),
+          headers: headers,
+          body: bodyBytes,
+        )
+        .timeout(timeout);
+    if (res.statusCode == 200) {
+      return WelcomeGrantResult.fromJson(
         json.decode(utf8.decode(res.bodyBytes)) as Map<String, dynamic>,
       );
     }

@@ -5,12 +5,12 @@
 
 ## サマリ
 
-- ファイル数: 10 / 総行数: 2257
-- class/mixin/extension/enum: 25
-- 関数 (top-level + method の素拾い): 36
+- ファイル数: 10 / 総行数: 2322
+- class/mixin/extension/enum: 26
+- 関数 (top-level + method の素拾い): 37
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 0
-- Worker URL リテラル: 20
+- Worker URL リテラル: 21
 
 ## ファイル別
 
@@ -72,7 +72,7 @@
   </details>
 
 
-### `lib/utils/consultation_api.dart` (156 行)
+### `lib/utils/consultation_api.dart` (215 行)
 
 **ファイル先頭コメント:**
 
@@ -91,17 +91,20 @@ Consultation API — クレジット系 (V2 と共有)
 
 - relative: `app_attest_client.dart`, `solara_api.dart`
 
-**型定義 (2):**
+**型定義 (3):**
 
-- L22 `enum ConsultationBlock`
+- L23 `enum ConsultationBlock`
   - Free 試食クレジット切れ等で Worker が 402 を返したときのブロック理由。
-- L72 `class ConsultationCreditStatus`
+- L73 `class ConsultationCreditStatus`
   - Stella 相談クレジットの現在状況。
+- L161 `class WelcomeGrantResult`
+  - ウェルカム特典付与の結果。
 
-**関数 (2 public + 0 private):**
+**関数 (3 public + 0 private):**
 
-- L47 `consultationBlockFromCode()` — 402 / 425 paywall レスポンスの `error` コード → [ConsultationBlock]。
-- L128 `fetchConsultationCredits()` — `/protected/consultation/credits` を呼んで現在のクレジット状況を取得する。
+- L48 `consultationBlockFromCode()` — 402 / 425 paywall レスポンスの `error` コード → [ConsultationBlock]。
+- L129 `fetchConsultationCredits()` — `/protected/consultation/credits` を呼んで現在のクレジット状況を取得する。
+- L187 `grantWelcomeCredits()` — `/protected/consultation/welcome-grant` を呼び、ウェルカム特典 (恒久クレジット) を
 
 
 ### `lib/utils/consultation_v2_api.dart` (510 行)
@@ -317,7 +320,7 @@ Solara 法務リンク定数 — Phase 2-6b
 - L68 `reverseGeocodeDetail()` — 緯度経度から逆ジオコーディングで region / country まで含む詳細を取得する。
 
 
-### `lib/utils/solara_api.dart` (93 行)
+### `lib/utils/solara_api.dart` (99 行)
 
 **ファイル先頭コメント:**
 
@@ -330,9 +333,9 @@ Solara CF Worker API - 軽量なユーティリティ呼び出し
 
 **関数 (1 public + 0 private):**
 
-- L80 `fetchTimezoneName()` — 緯度経度から IANA TZ名 (DST対応の基準) を取得。
+- L86 `fetchTimezoneName()` — 緯度経度から IANA TZ名 (DST対応の基準) を取得。
 
-**Worker URL リテラル (19):**
+**Worker URL リテラル (20):**
 
 - L17: `'https://solara-api.solodev-lab.com'`
 - L29: `'$solaraWorkerBase/public/tz'`
@@ -351,8 +354,9 @@ Solara CF Worker API - 軽量なユーティリティ呼び出し
 - L54: `'$solaraWorkerBase/protected/relocation'`
 - L60: `'$solaraWorkerBase/protected/astro/consultation2'`
 - L64: `'$solaraWorkerBase/protected/consultation/credits'`
-- L70: `'$solaraWorkerBase/protected/account/delete'`
-- L75: `'$solaraWorkerBase/protected/report-ai-output'`
+- L70: `'$solaraWorkerBase/protected/consultation/welcome-grant'`
+- L76: `'$solaraWorkerBase/protected/account/delete'`
+- L81: `'$solaraWorkerBase/protected/report-ai-output'`
 
 
 ### `lib/utils/tile_http_client.dart` (42 行)
