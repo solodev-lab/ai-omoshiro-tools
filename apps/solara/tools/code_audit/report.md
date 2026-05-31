@@ -6,7 +6,7 @@
 
 | 行数 | 判定 | ファイル |
 |------|------|----------|
-| 3353 | 🔴 HARD | lib/screens/map_screen.dart |
+| 3334 | 🔴 HARD | lib/screens/map_screen.dart |
 | 2029 | 🔴 HARD | lib/screens/map/map_daily_transit_screen.dart |
 | 1473 | 🔴 HARD | lib/screens/sanctuary_screen.dart |
 | 1385 | 🔴 HARD | lib/screens/sanctuary/sanctuary_title_diagnosis.dart |
@@ -47,16 +47,16 @@
 | 478 | 🟡 NOTICE | lib/screens/sanctuary/class_share_card.dart |
 | 476 | 🟡 NOTICE | lib/utils/app_attest_client.dart |
 | 467 | 🟡 NOTICE | lib/screens/horoscope/horo_relocation_panel.dart |
-| 460 | 🟡 NOTICE | lib/screens/galaxy/galaxy_star_atlas.dart |
 | 459 | 🟡 NOTICE | lib/utils/solara_auth.dart |
 | 449 | 🟡 NOTICE | lib/main.dart |
 | 445 | 🟡 NOTICE | lib/widgets/catasterism_overlay.dart |
-| 439 | 🟡 NOTICE | lib/screens/observe/observe_history.dart |
+| 438 | 🟡 NOTICE | lib/screens/galaxy/galaxy_star_atlas.dart |
 | 431 | 🟡 NOTICE | lib/utils/consultation_v2_api.dart |
 | 430 | 🟡 NOTICE | lib/screens/consultation/consultation_input_widgets.dart |
 | 427 | 🟡 NOTICE | lib/screens/consultation/consultation_result_widgets.dart |
 | 417 | 🟡 NOTICE | lib/screens/sanctuary/title_history_screen.dart |
 | 415 | 🟡 NOTICE | lib/screens/galaxy/constellation_share_card_page.dart |
+| 415 | 🟡 NOTICE | lib/screens/observe/observe_history.dart |
 | 413 | 🟡 NOTICE | lib/screens/paywall_widgets.dart |
 | 413 | 🟡 NOTICE | lib/utils/forecast_cache.dart |
 | 413 | 🟡 NOTICE | lib/screens/map/map_display_menu.dart |
@@ -183,7 +183,7 @@
   - lib/widgets/new_moon_overlay.dart:312
   - lib/screens/consultation/consultation_input_picker_widgets.dart:84
   - lib/screens/galaxy/constellation_share_card_page.dart:377
-  - lib/screens/galaxy/galaxy_cycle_actions_sheet.dart:264
+  - lib/screens/galaxy/galaxy_cycle_actions_sheet.dart:234
   ```
   ],
   ```
@@ -236,9 +236,9 @@
 
   - lib/screens/consultation/consultation_input_picker.dart:337
   - lib/screens/consultation/consultation_result_card.dart:263
-  - lib/screens/galaxy/galaxy_star_atlas.dart:155
-  - lib/screens/galaxy/galaxy_star_atlas.dart:189
-  - lib/screens/galaxy/galaxy_star_atlas.dart:355
+  - lib/screens/galaxy/galaxy_star_atlas.dart:133
+  - lib/screens/galaxy/galaxy_star_atlas.dart:167
+  - lib/screens/galaxy/galaxy_star_atlas.dart:333
   ```
   ),
   ```
@@ -270,8 +270,8 @@
   - lib/screens/consultation/consultation_input_picker.dart:336
   - lib/screens/consultation/consultation_result_card.dart:262
   - lib/screens/galaxy/galaxy_archive_filter_chips.dart:58
-  - lib/screens/galaxy/galaxy_star_atlas.dart:154
-  - lib/screens/galaxy/galaxy_star_atlas.dart:354
+  - lib/screens/galaxy/galaxy_star_atlas.dart:132
+  - lib/screens/galaxy/galaxy_star_atlas.dart:332
   ```
   ),
   ```

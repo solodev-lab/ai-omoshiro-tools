@@ -276,35 +276,18 @@ async function processEvent(env, ev) {
   // 受信 Worker instance のメモリキャッシュは即時 invalidate
   clearMemoryEntitlementCache(appUserId);
 
-  // 🔴 Pro 週次クレジットを 100 にリセット (= used 行を削除)。
+  // 🔴 Pro 週次クレジットは「再契約」では補充しない (2026-05-31 オーナー指示で方針反転)。
   //
-  // トリガー: INITIAL_PURCHASE のみ (= 新規 IAP 取引、新規契約 or 解約後再契約)。
-  //   - RENEWAL / UNCANCELLATION / PRODUCT_CHANGE は継続なのでリセットしない
-  //   - TRANSFER は別 DO instance (別 appUserId) になるので対象外
-  //   - alreadyProcessed (event_id 再送) はスキップ → 冪等性確保
-  //   - skippedOutOfOrder (古い event 上書き) もスキップ → 新しい状態を壊さない
+  // 旧仕様 (2026-05-29〜2026-05-30): INITIAL_PURCHASE で週次クレジットを 100 に
+  //   リセット (used 行を削除) していた。→ 解約直後の再契約で「週 100 回」を即補充でき、
+  //   抜け穴的な使い方が成立し得た。
+  // 新仕様 (2026-05-31〜): 週次クレジットは 1 アカウントごとに ISO 週単位で管理し、
+  //   毎週月曜のリセットでのみ 100 に復活する。再契約 (INITIAL_PURCHASE) では補充しない。
+  //   例: 水曜に残 0 →解約 →再契約 でも残 0 のまま、翌月曜に 100 へ復活。
+  // (購入クレジット consultation_purchased は従来どおり失効なし、本変更の対象外)
   //
-  // 仕様根拠: オーナー指示 2026-05-29「新しく支払いを行う訳だから、残数は 100 にして」
-  // (購入クレジット consultation_purchased は触らない = 失効なし規約維持)
-  //
-  // best-effort: 失敗しても webhook は成功で返す (RC リトライ不要、月曜リセットで自然解消)。
-  let proCreditReset = null;
-  if (
-    eventType === 'INITIAL_PURCHASE' &&
-    result.body.alreadyProcessed !== true &&
-    result.body.skippedOutOfOrder !== true
-  ) {
-    try {
-      const r = await callDo(env, '/consultation-pro-credit-reset-all', { appUserId });
-      proCreditReset = {
-        ok: r.status === 200,
-        deleted: (r.status === 200 && typeof r.body?.deleted === 'number') ? r.body.deleted : null,
-      };
-    } catch (e) {
-      console.warn('[revenuecat-webhook] pro_credit_reset_all failed', e);
-      proCreditReset = { ok: false, error: String(e?.message || e) };
-    }
-  }
+  // DO 側 /consultation-pro-credit-reset-all は呼出元が無くなったため deprecated
+  // (内部ルートは残置、外部からは到達不可)。
 
   return {
     status: 200,
@@ -316,7 +299,6 @@ async function processEvent(env, ev) {
       expiresAt,
       alreadyProcessed: result.body.alreadyProcessed === true,
       skippedOutOfOrder: result.body.skippedOutOfOrder === true,
-      proCreditReset,
     },
   };
 }

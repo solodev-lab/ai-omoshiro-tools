@@ -310,15 +310,13 @@ test('webhook: INITIAL_PURCHASE active event → DO upsert 呼出 + isActive=tru
   assert.equal(body.ok, true);
   assert.equal(body.isActive, true);
   assert.equal(body.appUserId, 'apple:abc');
-  // INITIAL_PURCHASE は entitlement-upsert + Pro 週次クレジット reset-all の 2 回 DO を呼ぶ
-  assert.equal(calls.length, 2);
+  // 2026-05-31: 再契約リセット撤廃 → INITIAL_PURCHASE は entitlement-upsert のみ
+  assert.equal(calls.length, 1);
   assert.equal(calls[0].path, '/entitlement-upsert');
   assert.equal(calls[0].body.entitlementId, 'cosmic_pro');
   assert.equal(calls[0].body.isActive, true);
   assert.equal(calls[0].body.expiresAt, 1700000000000);
   assert.equal(calls[0].body.environment, 'production');
-  assert.equal(calls[1].path, '/consultation-pro-credit-reset-all');
-  assert.equal(calls[1].body.appUserId, 'apple:abc');
   // cache が invalidate された (前 set 後に webhook で消えている)
   assert.equal(getCachedEntitlement('apple:abc'), undefined);
 });
@@ -379,12 +377,11 @@ test('webhook: event_timestamp_ms が無い event でも upsert は通る (legac
     env,
   );
   assert.equal(res.status, 200);
-  // INITIAL_PURCHASE は entitlement-upsert + reset-all の 2 回
-  assert.equal(calls.length, 2);
+  // 2026-05-31: 再契約リセット撤廃 → entitlement-upsert のみ
+  assert.equal(calls.length, 1);
   // 無いフィールドは null として渡る
   assert.equal(calls[0].body.graceExpiresAt, null);
   assert.equal(calls[0].body.eventTimestampMs, null);
-  assert.equal(calls[1].path, '/consultation-pro-credit-reset-all');
 });
 
 test('webhook: EXPIRATION event → isActive=false', async () => {
@@ -592,22 +589,16 @@ test('webhook: alreadyProcessed=true を伝搬 + reset-all スキップ', async 
   );
   const body = await res.json();
   assert.equal(body.alreadyProcessed, true);
-  // 冪等: 既処理 event の再送で Pro 週次クレジットをリセットしてはいけない
+  // 冪等: 既処理 event の再送でも entitlement-upsert のみ
   assert.equal(calls.length, 1);
   assert.equal(calls[0].path, '/entitlement-upsert');
-  assert.equal(body.proCreditReset, null);
 });
 
-// ── Pro 再契約 Pro 週次クレジット 100 リセット (2026-05-29 追加) ─────────────
+// ── Pro 再契約では週次クレジットを補充しない (2026-05-31 方針反転、旧 100 リセット撤廃) ──
 
-test('webhook: INITIAL_PURCHASE で /consultation-pro-credit-reset-all を呼ぶ (新規 IAP 取引)', async () => {
+test('webhook: INITIAL_PURCHASE でも reset-all を呼ばない (再契約で週次クレジットは増えない)', async () => {
   const { env, calls } = makeEnv({
-    doImpl: async (path) => {
-      if (path === '/consultation-pro-credit-reset-all') {
-        return { status: 200, body: { deleted: 3 } };
-      }
-      return { status: 200, body: { ok: true } };
-    },
+    doImpl: async () => ({ status: 200, body: { ok: true } }),
   });
   const res = await handleRevenueCatWebhook(
     makeRequest({
@@ -626,10 +617,11 @@ test('webhook: INITIAL_PURCHASE で /consultation-pro-credit-reset-all を呼ぶ
   );
   assert.equal(res.status, 200);
   const body = await res.json();
-  assert.equal(calls.length, 2);
-  assert.equal(calls[1].path, '/consultation-pro-credit-reset-all');
-  assert.equal(calls[1].body.appUserId, 'google:resub');
-  assert.deepEqual(body.proCreditReset, { ok: true, deleted: 3 });
+  // 再契約 (INITIAL_PURCHASE) でも entitlement-upsert のみ。週次クレジットの
+  // 補充 (reset-all) はしない = 月曜リセット以外で週 100 回は復活しない。
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0].path, '/entitlement-upsert');
+  assert.equal(body.proCreditReset, undefined);
 });
 
 test('webhook: RENEWAL では reset-all を呼ばない (継続契約)', async () => {
@@ -654,8 +646,6 @@ test('webhook: RENEWAL では reset-all を呼ばない (継続契約)', async (
   assert.equal(res.status, 200);
   assert.equal(calls.length, 1, 'RENEWAL は entitlement-upsert のみ');
   assert.equal(calls[0].path, '/entitlement-upsert');
-  const body = await res.json();
-  assert.equal(body.proCreditReset, null);
 });
 
 test('webhook: PRODUCT_CHANGE (月額↔年額切替) では reset-all を呼ばない', async () => {
@@ -701,39 +691,7 @@ test('webhook: INITIAL_PURCHASE + skippedOutOfOrder=true なら reset-all をス
   assert.equal(res.status, 200);
   const body = await res.json();
   assert.equal(body.skippedOutOfOrder, true);
-  assert.equal(calls.length, 1, '古い event 上書きスキップ時は reset-all しない');
-  assert.equal(body.proCreditReset, null);
-});
-
-test('webhook: reset-all 失敗でも webhook は 200 (best-effort)', async () => {
-  const { env, calls } = makeEnv({
-    doImpl: async (path) => {
-      if (path === '/consultation-pro-credit-reset-all') {
-        throw new Error('do_simulated_failure');
-      }
-      return { status: 200, body: { ok: true } };
-    },
-  });
-  const res = await handleRevenueCatWebhook(
-    makeRequest({
-      body: {
-        event: {
-          type: 'INITIAL_PURCHASE',
-          id: 'evt-besteffort-1',
-          app_user_id: 'apple:be',
-          entitlement_ids: ['cosmic_pro'],
-          environment: 'PRODUCTION',
-        },
-      },
-    }),
-    env,
-  );
-  assert.equal(res.status, 200, 'reset-all 失敗でも RC へは 200 返却 (リトライ不要)');
-  const body = await res.json();
-  assert.equal(body.ok, true);
-  assert.equal(body.proCreditReset.ok, false);
-  assert.match(body.proCreditReset.error, /do_simulated_failure/);
-  assert.equal(calls.length, 2, 'entitlement-upsert + reset-all (失敗) の 2 回');
+  assert.equal(calls.length, 1, '古い event 上書きスキップ時は entitlement-upsert のみ');
 });
 
 test('webhook: DO エラー → 500', async () => {

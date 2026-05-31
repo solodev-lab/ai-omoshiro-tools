@@ -36,15 +36,30 @@ extension _PaywallComparison on _PaywallScreenState {
           const SizedBox(height: 12),
           _comparisonHeader(),
           _comparisonSection('相談・占い'),
-          _comparisonRow('Stella 相談', '週 3 回', '週 100 回'),
-          _comparisonRow('タロット解釈', '1 日 1 回', '1 日 1 回\nクレジット消費なし\n+ テキスト入力欄'),
-          _comparisonRow('星読み (Horo)', '「全体」のみ', '全 5 カテゴリ\n(全体・恋愛・豊かさ\n・仕事・対話)'),
-          _comparisonSection('地図機能'),
-          _comparisonRow('アスペクトライン', '40 本', '120 本'),
-          _comparisonRow('アストロカートグラフィー', '部分機能', '全機能'),
-          _comparisonSection('記録'),
-          _comparisonRow('占い結果の永続的な記録', '—', '✓'),
-          _comparisonRow('履歴の検索・フィルタ', '—', '✓'),
+          _comparisonRow('Stella 相談', '週 3 回\n+ 購入クレジット', '週 100 回'),
+          _comparisonRow(
+            'タロット',
+            '全体運 無料\n他カテゴリ 1 クレジット\n(1 日 1 回)',
+            '全 7 カテゴリ\nクレジット消費なし\n+ 質問入力欄\n(1 日 1 回)',
+          ),
+          _comparisonRow('星読み (Horo)', '「全体運」のみ',
+              '全 5 カテゴリ\n(全体・恋愛・豊かさ\n・仕事・対話)\n+ 深い読み'),
+          _comparisonRow('リロケーション解説', '静的テンプレ', 'Stella 動的解説'),
+          _comparisonSection('地図 (ACG / CCG)'),
+          _comparisonRow('ACG / CCG 4 フレーム',
+              '✓ すべて\n(natal/transit\n/prog/solar arc)', '✓ すべて'),
+          _comparisonRow('天頂・天底点 / カテゴリ絞り込み', '✓', '✓'),
+          _comparisonRow('アスペクトライン', '40 本\n(合)', '120 本\n(合・□・△・⚹)'),
+          _comparisonRow('引越しシミュレーション', '—', '✓'),
+          _comparisonRow('時刻スライダー', '10 分刻み', '1 分刻み'),
+          _comparisonRow('拠点 (VP/LOCATION) 枠', '5 個', '10 個'),
+          _comparisonSection('記録（あなたの記録は Free でも永久に残ります）'),
+          _comparisonRow('占い・サイクルの永久保存', '✓', '✓'),
+          _comparisonRow('星座アーカイブ・履歴の検索/フィルタ', '✓', '✓'),
+          _comparisonRow('形成演出の再生・テキスト書き出し', '✓', '✓'),
+          _comparisonRow('称号 (クラス) の再診断', '1 回まで', '無制限'),
+          _comparisonSection('予報'),
+          _comparisonRow('Forecast 期間', '1 年', '5 年'),
           const SizedBox(height: 6),
         ],
       ),
@@ -192,17 +207,25 @@ extension _PaywallComparison on _PaywallScreenState {
         ),
         _faqItem(
           'Free と Pro の違いは何ですか?',
-          'Stella 相談は Free 週 3 回 → Pro 週 100 回、星読みは Free「全体」のみ → Pro 全 5 カテゴリ、'
+          'Stella 相談は Free 週 3 回 → Pro 週 100 回、星読みは Free「全体運」のみ → Pro 全 5 カテゴリ、'
               'アスペクトラインは Free 40 本 → Pro 120 本に増えます。タロットは両プラン 1 日 1 回ですが、'
-              'Pro はカテゴリ選択時のクレジット消費なし + テキスト入力欄が付与されます。',
+              'Pro はカテゴリ指定時のクレジット消費なし + 質問入力欄が付与されます。\n\n'
+              'ACG / CCG の 4 フレーム、星座アーカイブやタロット履歴の検索・フィルタ、'
+              '占い結果の保存・シェアは Free でもお使いいただけます。'
+              '詳細は上記表でご確認ください。',
         ),
         _faqItem(
           'Stella 相談の週次キャップを超えるとどうなりますか?',
           '追加クレジットの購入で継続してご利用いただけます。月曜のリセット時に Pro 週 100 回が補充されます。',
         ),
         _faqItem(
-          'タロットは Pro でも 1 日 1 回ですか?',
-          'はい、両プラン 1 日 1 回です。Pro 特典は「カテゴリ選択時にクレジットを消費しない」「テキスト入力欄が付与される」の 2 点です。',
+          'Pro のタロットは何が変わりますか?',
+          'タロットは Free・Pro とも 1 日 1 回です。Pro では、クレジットを消費せずに'
+              '聞きたいカテゴリ（全体運・恋愛・豊かさ・仕事・対話・癒し・変化）を指定して'
+              'リーディングできます。さらに、知りたいことを直接質問として入力でき、'
+              'その質問内容に応じたリーディング結果が表示されます。\n\n'
+              'Free では全体運のみ無料（1 日 1 回）で、ほかのカテゴリは 1 回につき'
+              '1 クレジットを消費します。',
         ),
         _faqItem(
           'プランをアップグレード / ダウングレードできますか?',
@@ -213,6 +236,15 @@ extension _PaywallComparison on _PaywallScreenState {
           '解約後の機能はどうなりますか?',
           '現在の課金期間が終了するまでは Cosmic Pro 機能を継続してお使いいただけます。'
               '期間終了後は Free プランに自動移行します。占い結果の履歴は端末内に保存されたまま残ります。',
+        ),
+        _faqItem(
+          'Pro を再契約すると週次クレジットは増えますか?',
+          'いいえ。週次クレジットは 1 アカウントごとに管理され、毎週月曜日にリセットされます。'
+              'Pro を解約してすぐ再契約しても、その時点の残数は変わりません。'
+              '不正利用ではありませんが、再契約によって「週 100 回」の制度を'
+              '繰り返し補充するような抜け穴的な使い方はできない仕組みです。\n\n'
+              '例: 水曜日に週次クレジットが残り 0 の状態で Pro を解約し、すぐ再契約しても、'
+              '残りは 0 のままです。翌週の月曜日に 100 回へ復活します。',
         ),
       ],
     );

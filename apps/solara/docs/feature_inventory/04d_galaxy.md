@@ -5,9 +5,9 @@
 
 ## サマリ
 
-- ファイル数: 10 / 総行数: 3732
+- ファイル数: 10 / 総行数: 3680
 - class/mixin/extension/enum: 22
-- 関数 (top-level + method の素拾い): 87
+- 関数 (top-level + method の素拾い): 83
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 1
 - Worker URL リテラル: 0
@@ -156,44 +156,44 @@ Galaxy Archive フィルタバーのサブウィジェット — C2 (柱 3)
 - relative: `../../models/daily_reading.dart`, `../../models/galaxy_cycle.dart`, `../../utils/constellation_namer.dart`, `../../utils/moon_phase.dart`, `../../utils/tarot_data.dart`
 
 
-### `lib/screens/galaxy/galaxy_cycle_actions_sheet.dart` (272 行)
+### `lib/screens/galaxy/galaxy_cycle_actions_sheet.dart` (242 行)
 
 **ファイル先頭コメント:**
 
 ```
-Galaxy Cycle 操作シート — C5 (Pro 機能、柱 3)
+Galaxy Cycle 操作シート — C5 (柱 3)
 
 設計: apps/solara/docs/pro_candidates.md §7.3 + §3 C5
 
 Star Atlas のカード長押しで表示される bottom sheet。
 メニュー項目:
-  - 通常再生 (Free) ※カードタップと同じだが UX 上ここにも置いておく
-  - 形成演出を再生 (Pro)
-  - エクスポート (テキストコピー / 画像共有、Pro)
+  - 通常再生 ※カードタップと同じだが UX 上ここにも置いておく
+  - 形成演出を再生
+  - エクスポート (テキストコピー)
 
-Free ユーザーが Pro 項目をタップしたら showProUnlockDialog で誘導する。
+2026-05-31: 「形成演出を再生」「テキストとしてコピー」を Free に戻した
+(オーナー指示)。全項目 Free。
 ```
 
-**imports:** dart=1 / package=2 / relative=6
+**imports:** dart=1 / package=2 / relative=4
 
-- relative: `../../models/galaxy_cycle.dart`, `../../models/lunar_intention.dart`, `../../theme/solara_colors.dart`, `../../utils/galaxy_cycle_export.dart`, `../../utils/pro_status.dart`, `../../widgets/pro_unlock_dialog.dart`
+- relative: `../../models/galaxy_cycle.dart`, `../../models/lunar_intention.dart`, `../../theme/solara_colors.dart`, `../../utils/galaxy_cycle_export.dart`
 
 **型定義 (2):**
 
-- L50 `class _CycleActionsSheet : StatelessWidget`
-- L194 `class _ActionTile : StatelessWidget`
+- L49 `class _CycleActionsSheet : StatelessWidget`
+- L164 `class _ActionTile : StatelessWidget`
 
-**関数 (4 public + 2 private):**
+**関数 (4 public + 1 private):**
 
-- L30 `showGalaxyCycleActionsSheet()` — [GalaxyCycle] に対する Pro メニューを bottom sheet で表示する。
-- L35 `Function()`
-- L91 `build()`
-- L209 `build()`
+- L29 `showGalaxyCycleActionsSheet()` — [GalaxyCycle] に対する Pro メニューを bottom sheet で表示する。
+- L34 `Function()`
+- L82 `build()`
+- L179 `build()`
 
-  <details><summary>private 関数 2 件</summary>
+  <details><summary>private 関数 1 件</summary>
 
-  - L63 `_proGuard()`
-  - L71 `_exportText()`
+  - L62 `_exportText()`
 
   </details>
 
@@ -236,41 +236,33 @@ Free ユーザーが Pro 項目をタップしたら showProUnlockDialog で誘�
   </details>
 
 
-### `lib/screens/galaxy/galaxy_star_atlas.dart` (460 行)
+### `lib/screens/galaxy/galaxy_star_atlas.dart` (438 行)
 
-**imports:** dart=1 / package=2 / relative=6
+**imports:** dart=1 / package=2 / relative=5
 
-- relative: `../../models/galaxy_cycle.dart`, `../../utils/constellation_namer.dart`, `../../utils/pro_status.dart`, `../../widgets/constellation_painter.dart`, `../horoscope/horo_antique_icons.dart`, `galaxy_archive_filter.dart`
+- relative: `../../models/galaxy_cycle.dart`, `../../utils/constellation_namer.dart`, `../../widgets/constellation_painter.dart`, `../horoscope/horo_antique_icons.dart`, `galaxy_archive_filter.dart`
 
 **型定義 (7):**
 
-- L25 `class GalaxyStarAtlasTab : StatefulWidget`
+- L27 `class GalaxyStarAtlasTab : StatefulWidget`
   - STAR ATLAS タブ本体。HTML の `.atlas-content` と中のグリッドを描画する。
-- L45 `class _GalaxyStarAtlasTabState : State`
-- L167 `class _AtlasHeader : StatelessWidget`
-- L201 `class _ConstellationCard : StatelessWidget`
-- L365 `class _RarityStarRow : StatelessWidget`
+- L47 `class _GalaxyStarAtlasTabState : State`
+- L145 `class _AtlasHeader : StatelessWidget`
+- L179 `class _ConstellationCard : StatelessWidget`
+- L343 `class _RarityStarRow : StatelessWidget`
   - 5 つの星アイコンで rarity を表示する Row。
-- L396 `class _NoMatchState : StatelessWidget`
-- L421 `class _EmptyState : StatelessWidget`
+- L374 `class _NoMatchState : StatelessWidget`
+- L399 `class _EmptyState : StatelessWidget`
 
-**関数 (9 public + 1 private):**
+**関数 (7 public + 0 private):**
 
-- L42 `createState()`
-- L49 `initState()`
-- L55 `dispose()`
-- L72 `build()`
-- L171 `build()`
-- L215 `build()`
-- L371 `build()`
-- L400 `build()`
-- L423 `build()`
-
-  <details><summary>private 関数 1 件</summary>
-
-  - L60 `_onProChanged()`
-
-  </details>
+- L44 `createState()`
+- L51 `build()`
+- L149 `build()`
+- L193 `build()`
+- L349 `build()`
+- L378 `build()`
+- L401 `build()`
 
 
 ### `lib/screens/galaxy/galaxy_stella_messages.dart` (288 行)

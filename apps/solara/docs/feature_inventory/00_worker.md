@@ -755,7 +755,7 @@ Uses bounding-box heuristic for common regions, falls back to longitude-based of
 **export (1):** `lookupTimezone`
 
 
-### `worker/src/webhooks/revenuecat.js` (380 行)
+### `worker/src/webhooks/revenuecat.js` (362 行)
 
 **ファイル先頭コメント:**
 

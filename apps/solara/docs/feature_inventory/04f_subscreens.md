@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 31 / 総行数: 10314
+- ファイル数: 31 / 総行数: 10344
 - class/mixin/extension/enum: 91
 - 関数 (top-level + method の素拾い): 264
 - Navigator.push 等: 0
@@ -671,7 +671,7 @@ ConsultationRecord を読み込み専用表示 (fetch なし・autosave なし�
 - 集計: `showInfoPopup`×1
 
 
-### `lib/screens/consultation/consultation_result_share.dart` (135 行)
+### `lib/screens/consultation/consultation_result_share.dart` (127 行)
 
 **ファイル先頭コメント:**
 
@@ -691,8 +691,8 @@ Consultation Result — シェア機能 (part of consultation_result_screen.dart
   <details><summary>private 関数 3 件</summary>
 
   - L21 `_openShareSheet()`
-  - L91 `_copyText()`
-  - L115 `_shareImage()`
+  - L83 `_copyText()`
+  - L107 `_shareImage()`
 
   </details>
 
@@ -1003,7 +1003,7 @@ showInfoPopup 経由で表示する (widgets/info_popup.dart、popup 統一規�
 - 集計: `showInfoPopup`×1
 
 
-### `lib/screens/paywall_comparison.dart` (267 行)
+### `lib/screens/paywall_comparison.dart` (299 行)
 
 **ファイル先頭コメント:**
 
@@ -1031,11 +1031,11 @@ Paywall Screen — Free vs Pro 比較テーブル / FAQ アコーディオン
   <details><summary>private 関数 6 件</summary>
 
   - L16 `_buildComparisonTable()`
-  - L54 `_comparisonHeader()`
-  - L102 `_comparisonSection()`
-  - L130 `_comparisonRow()`
-  - L177 `_buildFaqSection()`
-  - L221 `_faqItem()`
+  - L69 `_comparisonHeader()`
+  - L117 `_comparisonSection()`
+  - L145 `_comparisonRow()`
+  - L192 `_buildFaqSection()`
+  - L253 `_faqItem()`
 
   </details>
 
@@ -1138,7 +1138,7 @@ Solara ペイウォール画面 — Phase 2-6b + Suno 風リデザイン (2026-0
   </details>
 
 
-### `lib/screens/paywall_widgets.dart` (413 行)
+### `lib/screens/paywall_widgets.dart` (419 行)
 
 **ファイル先頭コメント:**
 
@@ -1163,10 +1163,10 @@ Paywall Screen — Hero / 課金トグル / Free・Pro 2 カード (Suno 風 cor
   - L78 `_buildBillingToggle()`
   - L97 `_toggleSegment()`
   - L160 `_buildFreeCard()`
-  - L205 `_buildProCard()`
-  - L304 `_buildProCta()`
-  - L360 `_cardBadge()`
-  - L384 `_planBullet()`
+  - L208 `_buildProCard()`
+  - L310 `_buildProCta()`
+  - L366 `_cardBadge()`
+  - L390 `_planBullet()`
 
   </details>
 

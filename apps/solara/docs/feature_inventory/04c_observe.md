@@ -5,9 +5,9 @@
 
 ## サマリ
 
-- ファイル数: 12 / 総行数: 3581
+- ファイル数: 12 / 総行数: 3557
 - class/mixin/extension/enum: 25
-- 関数 (top-level + method の素拾い): 84
+- 関数 (top-level + method の素拾い): 81
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 1
 - Worker URL リテラル: 0
@@ -67,35 +67,32 @@ Shared constants for Observe (Tarot) screen
 ```
 
 
-### `lib/screens/observe/observe_history.dart` (439 行)
+### `lib/screens/observe/observe_history.dart` (415 行)
 
-**imports:** dart=0 / package=1 / relative=12
+**imports:** dart=0 / package=1 / relative=11
 
-- relative: `../../models/daily_reading.dart`, `../../models/galaxy_cycle.dart`, `../../models/tarot_card.dart`, `../../theme/solara_colors.dart`, `../../utils/pro_status.dart`, `../../utils/solara_storage.dart`, `../../utils/tarot_data.dart`, `../../widgets/memo_text_field.dart`, `observe_constants.dart`, `observe_history_filter.dart`, `observe_history_past.dart`, `observe_reading_button.dart`
+- relative: `../../models/daily_reading.dart`, `../../models/galaxy_cycle.dart`, `../../models/tarot_card.dart`, `../../theme/solara_colors.dart`, `../../utils/solara_storage.dart`, `../../utils/tarot_data.dart`, `../../widgets/memo_text_field.dart`, `observe_constants.dart`, `observe_history_filter.dart`, `observe_history_past.dart`, `observe_reading_button.dart`
 
 **型定義 (2):**
 
-- L20 `class ObserveHistoryPanel : StatefulWidget`
-- L42 `class _ObserveHistoryPanelState : State`
+- L19 `class ObserveHistoryPanel : StatefulWidget`
+- L41 `class _ObserveHistoryPanelState : State`
 
-**関数 (4 public + 9 private):**
+**関数 (2 public + 8 private):**
 
-- L39 `createState()`
-- L54 `initState()`
-- L71 `dispose()`
-- L112 `build()`
+- L38 `createState()`
+- L88 `build()`
 
-  <details><summary>private 関数 9 件</summary>
+  <details><summary>private 関数 8 件</summary>
 
-  - L59 `_ensurePastCyclesLoaded()`
-  - L76 `_onProChanged()`
-  - L88 `_confirmClearHistory()`
-  - L158 `_buildInnerTabBar()`
-  - L169 `_innerTabBtn()`
-  - L204 `_buildCurrentTabContent()`
-  - L265 `_buildPastTabContent()`
-  - L285 `_buildHistoryCard()`
-  - L363 `_buildHistoryDetail()`
+  - L52 `_ensurePastCyclesLoaded()`
+  - L64 `_confirmClearHistory()`
+  - L134 `_buildInnerTabBar()`
+  - L145 `_innerTabBtn()`
+  - L180 `_buildCurrentTabContent()`
+  - L241 `_buildPastTabContent()`
+  - L261 `_buildHistoryCard()`
+  - L339 `_buildHistoryDetail()`
 
   </details>
 
