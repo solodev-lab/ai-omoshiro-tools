@@ -19,6 +19,7 @@ import 'utils/celestial_events.dart';
 import 'utils/consult_restore.dart';
 import 'utils/consultation_credits.dart';
 import 'utils/consultation_record.dart';
+import 'utils/consultation_return.dart';
 import 'utils/device_security_status.dart';
 import 'utils/map_focus.dart';
 import 'utils/pro_status.dart';
@@ -27,7 +28,6 @@ import 'utils/solara_auth.dart';
 import 'utils/solara_storage.dart';
 import 'utils/tarot_data.dart';
 import 'widgets/solara_nav_bar.dart';
-import 'widgets/solara_splash.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -131,10 +131,10 @@ class _SolaraAppState extends State<SolaraApp> {
         ),
         // AI 同意未取得時は SolaraHome の代わりに AiConsentScreen を出す。
         // 同意完了 → setState で _consented=true → SolaraHome に差し替わる。
-        // コールド起動時は SolaraHome (Map タブ) の上にスプラッシュを一瞬被せ、
-        // Map 初期化の待ち時間を埋める。同意未取得時 (AiConsent) は不要。
+        // 起動スプラッシュ (背景画像 + Solara ロゴ) は廃止し、通常起動 (起動後
+        // すぐ Map) に戻した (2026-06-01 オーナー判断)。
         home: _consented
-            ? const SolaraSplash(child: SolaraHome())
+            ? const SolaraHome()
             : AiConsentScreen(
                 onConsented: () => setState(() => _consented = true),
               ),
@@ -382,6 +382,9 @@ class _SolaraHomeState extends State<SolaraHome> with WidgetsBindingObserver {
     final switchingToGalaxy = i == 3 && _currentIndex != 3;
     final leavingGalaxy = i != 3 && _currentIndex == 3;
     final leavingHoro = i != 1 && _currentIndex == 1;
+    // Map 以外のタブへ移ったら「相談結果に戻る」導線を破棄 (Map タブ専用の一過性
+    // 導線。🗺 ジャンプは _onMapFocusRequested → _onTabTap(0) なので消えない)。
+    if (i != 0) ConsultationReturn.instance.clear();
     setState(() => _currentIndex = i);
     // Map / Horo へ戻ったときはプロフィールを再読込（Sanctuary で編集された場合に追従）
     if (i == 0) _mapKey.currentState?.reloadProfile();

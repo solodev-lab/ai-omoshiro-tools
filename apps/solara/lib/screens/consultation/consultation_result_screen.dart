@@ -22,6 +22,7 @@ import '../../utils/consultation_api.dart' show ConsultationBlock;
 import '../../utils/consultation_credits.dart';
 import '../../utils/consult_restore.dart';
 import '../../utils/map_focus.dart';
+import '../../utils/consultation_return.dart';
 import '../../utils/consultation_record.dart';
 import '../../utils/consultation_share.dart';
 import '../../utils/consultation_v2_api.dart';
@@ -56,11 +57,22 @@ class ConsultationResultScreen extends StatefulWidget {
   final Future<ConsultationV2Result> Function(ConsultationRequest req)?
       fetchOverride;
 
+  /// 戻り導線 (ConsultationReturn) からの再表示用 seed。非 null かつ非空なら
+  /// fetch せず live 状態をそのまま復元する (= クレジット非消費)。通常起動は null。
+  final List<ConsultationV2Reading>? resumeReadings;
+  final List<String>? resumeAvoid;
+  final DateTime? resumeSavedAt;
+  final int? resumePageIndex;
+
   const ConsultationResultScreen({
     super.key,
     required this.request,
     this.scopeDetail,
     this.fetchOverride,
+    this.resumeReadings,
+    this.resumeAvoid,
+    this.resumeSavedAt,
+    this.resumePageIndex,
   }) : record = null;
 
   const ConsultationResultScreen.fromRecord({
@@ -68,7 +80,11 @@ class ConsultationResultScreen extends StatefulWidget {
     required this.record,
   })  : request = null,
         scopeDetail = null,
-        fetchOverride = null;
+        fetchOverride = null,
+        resumeReadings = null,
+        resumeAvoid = null,
+        resumeSavedAt = null,
+        resumePageIndex = null;
 
   bool get isHistory => record != null;
 
@@ -144,14 +160,31 @@ class _ConsultationResultScreenState extends State<ConsultationResultScreen> {
   @override
   void initState() {
     super.initState();
-    _pageCtrl = PageController();
     // 押下ルート復元の登録。SolaraHome が paused 時に _captureRestore を pull する。
     _restoreToken = ConsultRestore.instance.register(_captureRestore);
     if (widget.record != null) {
+      _pageCtrl = PageController();
       _readings.addAll(widget.record!.toReadings());
       _loading = false;
       _exhausted = true; // 履歴は追加取得しない
+    } else if (widget.resumeReadings != null &&
+        widget.resumeReadings!.isNotEmpty) {
+      // 戻り導線: 退避した live 状態を fetch せず復元 (クレジット非消費)。
+      // 「別の候補地」も継続可 (request / avoid / readings を引き継ぐ)。
+      _readings.addAll(widget.resumeReadings!);
+      _avoid = widget.resumeAvoid ?? const [];
+      _recordSavedAt = widget.resumeSavedAt;
+      _pageIndex =
+          (widget.resumePageIndex ?? 0).clamp(0, _readings.length - 1);
+      _pageCtrl = PageController(initialPage: _pageIndex);
+      _loading = false;
+      final last = _readings.last;
+      _exhausted =
+          last.remainingAfter <= 0 || _readings.length >= _kMaxCandidates;
     } else {
+      _pageCtrl = PageController();
+      // 新規 live 相談を開始 → 別セッションの古い戻り導線は無効化する。
+      ConsultationReturn.instance.clear();
       _fetch();
     }
   }
@@ -393,6 +426,18 @@ class _ConsultationResultScreenState extends State<ConsultationResultScreen> {
                 kind: rec.whenKind, date: rec.whenDate,
                 start: rec.whenStart, timeBand: rec.whenTimeBand)
             : null;
+    // live セッションは「戻り導線」用に状態を退避 (Map 下部チップから fetch なしで
+    // 再表示できる)。履歴は対象外 (履歴一覧からいつでも再開できるため)。
+    if (!widget.isHistory && widget.request != null && _readings.isNotEmpty) {
+      ConsultationReturn.instance.stash(ConsultationResumeState(
+        request: widget.request!,
+        readings: List<ConsultationV2Reading>.of(_readings),
+        avoid: _avoid,
+        recordSavedAt: _recordSavedAt,
+        pageIndex: _pageIndex,
+        scopeDetail: widget.scopeDetail,
+      ));
+    }
     Navigator.of(context).popUntil((r) => r.isFirst);
     MapFocus.instance.request(LatLng(c.lat, c.lng), date);
   }

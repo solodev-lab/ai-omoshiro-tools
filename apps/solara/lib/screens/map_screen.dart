@@ -43,6 +43,7 @@ import '../utils/pro_status.dart';
 import '../utils/reverse_geocode.dart';
 import '../widgets/pro_unlock_dialog.dart';
 import 'consultation/consultation_input_screen.dart';
+import 'consultation/consultation_return_chip.dart';
 import 'forecast_screen.dart';
 import 'horoscope/horo_antique_icons.dart';
 import 'locations_screen.dart';
@@ -2492,6 +2493,19 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
             onLocationsTap: _openLocations,
             onForecastTap: _openForecast,
           ),
+        ),
+
+        // ── 「← 相談結果に戻る」チップ (4 チップバー = MapMenuChips の直上) ──
+        // 相談結果カードの🗺で Map に来た live セッションがある間だけ表示。
+        // タップで fetch なし再表示 (クレジット非消費)。チップバーと同条件で隠す
+        // (検索/運勢方位シート/地点メニュー/ACG 中は被るため非表示)。
+        // 実体の表示制御 (pending の有無) は ConsultationReturnChip 内で行う。
+        if (!_astroCartoMode &&
+            !_fortuneSheetOpen &&
+            !_viewpointMenuOpen &&
+            !_searchOpen) const Positioned(
+          bottom: 80, left: 16, right: 16,
+          child: ConsultationReturnChip(),
         ),
 
         // ── 右下ボタン列: [✦ Stella に相談] (上) / [現在地に移動] (下) ──
