@@ -1186,6 +1186,73 @@ Worker [`consultation_v2.js:78-83`](../worker/src/consultation_v2.js#L78) の既
 - Flutter tests **275 pass** / Worker tests **345 pass**
 - extract.py stamp diff `+0 -0 ~0` (完全同期) / audit.py 行数 **HARD 7 (新規ゼロ)** / WARN 29 / 重複 20 (全て `),` 等の構造的誤検出) / 未使用候補 0
 
+> 注: §0.2.42〜§0.2.45 (NavBar 光点スライド / スプラッシュ調整 / 相談結果↔Map 戻り導線 /
+> スプラッシュ撤去) は git 履歴にあるが本人手版は未バックフィル (機械抽出 `feature_inventory/` は同期済)。
+
+### 0.2.46 月イベント通知の取りこぼし対策 B+C+A (2026-06-01 セッション、commit `d029b99`)
+
+> 新月→満月→刻星化の月サイクル儀式 (層 4d Galaxy) は overlay が `initState` (コールド起動)
+> でしか発火判定されず、warm resume / 別タブからの Galaxy 入室 / 「アプリを開かない日」で
+> 取りこぼしていた。通知拒否でもアプリ内で拾い、許可すれば OS 通知で外から呼び戻す 3 段改善。
+> 新規 HARD ゼロ。§0.2.42 (NavBar 光点スライド) を土台に C のバッジを追加。
+
+#### B. overlay 発火の再判定 (アプリ内・許諾不要)
+- `galaxy_screen.dart` に公開メソッド `recheckMoonEvents()` 新設。日付と intention だけ軽量に
+  読み直して `_checkMoonOverlay` を呼ぶ (重い `_loadData` は呼ばない / overlay・replay 中は no-op)。
+- `main.dart`: `_onTabTap` の Galaxy 入室時 + `didChangeAppLifecycleState` の resumed で呼ぶ
+  → コールド起動だけでなく warm resume・別タブからの入室でも当日イベントを拾う。
+
+#### C. NavBar バッジ + Map 案内 (アプリ内・許諾不要)
+- 新規 `utils/moon_event_status.dart`: `MoonEventKind` enum + `MoonEventStatus.pendingToday(now)`。
+  overlay 発火条件 (新月/満月/刻星化 + `wasLocalOverlayShownToday`) を **一本化**し、`_checkMoonOverlay`
+  もこれを使う形にリファクタ (バッジ/案内と overlay の条件乖離を防ぐ単一の真実)。
+- `solara_nav_bar.dart`: `showGalaxyBadge` 追加。Galaxy(idx3) アイコン右上に静的ゴールド点 (滞在中は
+  非表示・tick なし)。
+- 新規 `screens/map/map_moon_notice.dart`: Map 上部 (時刻スライダー直下) の案内バナー。種別→文言
+  (ロケール対応)、タップで閉じるのみ (Galaxy へ遷移しない)。
+- `main.dart`: `_pendingMoonKind` + `_refreshMoonStatus()` (起動 postFrame / resume / タブ切替 /
+  overlay 開閉で更新) が NavBar バッジ (`!=null`) と `MapScreen.showMoonNotice(kind)` を駆動。
+
+#### A. ローカル通知エンジン + Sanctuary トグル (許諾要・OS 通知)
+- 依存追加: `flutter_local_notifications ^21.0.0` / `timezone ^0.11.0` / `flutter_timezone ^5.1.0`。
+  **permission_handler 不採用** (iOS で未使用権限をバイナリに含め App Store リジェクト要因)
+  → プラグイン内蔵 API で許諾完結。**exact alarm 不使用** (Android 13+ で原則拒否・審査制限)
+  → `AndroidScheduleMode.inexactAllowWhileIdle`。
+- 新規 `utils/moon_notification_service.dart`: init (timezone + 通知チャンネル) / isAuthorized /
+  requestPermission / `rescheduleAll` (cancelAll → 新月・満月・刻星化 + 惑星イベントを **当日朝 9:00**
+  に予約。マスタ OFF / OS 未許可なら cancel のみ) / disable / enableFromToggle /
+  `runSoftAskIfNeeded` (Apple 4.5.4 準拠で初回起動では出さず、新月 Set Intention 直後に自前
+  ソフトアスク → 受諾で OS 許諾。2 回上限・サイクル 1 回の back-off)。
+- 惑星イベントは `CelestialEvents.fetchCycleEvents` の `localDate`/`localDescJP` を当日朝に通知
+  (上限 30、オフライン時は次回 reschedule で再試行)。
+- `solara_storage.dart`: 通知マスタスイッチ + ソフトアスク back-off (declines / cycle) を永続化。
+- `sanctuary_screen.dart`: App 設定群 (Language 隣) に通知トグル `_NotificationToggleItem` を復活
+  (HTML mock の "Notifications" は実装が無かったダミー)。許諾不可時は SnackBar で設定誘導。
+- reschedule トリガー: 起動 `main()` / 新月 Set Intention / Galaxy overlay close (儀式完了反映)。
+
+#### native 設定 (最新公式準拠、2026-06 調査)
+- `android/app/build.gradle.kts`: `isCoreLibraryDesugaringEnabled` + `desugar_jdk_libs:2.1.4`
+  (v21 必須。本 env は compileSdk 36 / AGP 8.11.1 / Gradle 8.14 で要件充足)。
+- `AndroidManifest.xml`: `POST_NOTIFICATIONS` + `RECEIVE_BOOT_COMPLETED` + `ScheduledNotification(Boot)Receiver`。
+- `proguard-rules.pro` #12: flutter_local_notifications / GSON keep (R8 minify + shrinkResources 対策)。
+- `ios/Runner/AppDelegate.swift`: `UNUserNotificationCenter` delegate (`import UserNotifications`)。
+- `pubspec.yaml`: version **1.0.0+25 → +26**。
+
+#### 検証
+- flutter analyze lib: クリーン
+- extract.py stamp diff `+1 -0 ~4` → 同期後 `+0 -0 ~0`
+- moon_phase + widget test 36 green
+- **flutter build appbundle --release 成功 (114.8MB)** = R8 + desugaring + manifest merge +
+  通知プラグインのネイティブ統合が実ビルドで全通過
+- audit.py: 行数 **HARD 7 (新規ゼロ)** / WARN 30 / 重複 20 (全て `),` 等の構造的誤検出) /
+  未使用候補 0。新規 3 ファイルは moon_notification_service 312 (NOTICE) / 他 2 は <300
+
+#### 未検証 (次セッションへ)
+- **実機 (A101FC) での通知実発火 + 端末再起動後の予約永続化** — ビルド成功はリンク/設定の正しさ
+  のみ保証、実発火は別。
+- **iOS は Mac/CI でのビルド検証が必要** (Windows ではビルド不可、コードは analyze クリーン)。
+- アップロード用 AAB は dart-define (GCP / RC android / Google serverClientId) 付きで再ビルド要。
+
 ### 0.3 Horo「今日の占い」1 日 1 回固定 + プロンプト刷新 (2026-05-27)
 
 > **設計の柱**: 「30 回までは OK」のような曖昧な防衛をやめ、「**1 日 1 回・変更しない**」を
