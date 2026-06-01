@@ -5,9 +5,9 @@
 
 ## サマリ
 
-- ファイル数: 7 / 総行数: 1731
-- class/mixin/extension/enum: 14
-- 関数 (top-level + method の素拾い): 64
+- ファイル数: 8 / 総行数: 1789
+- class/mixin/extension/enum: 16
+- 関数 (top-level + method の素拾い): 65
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 0
 - Worker URL リテラル: 0
@@ -199,6 +199,24 @@ Solara DirectionEnergy — Soft/Hard 独立2エネルギー
 - L182 `aggregateContributions()` — 寄与アスペクトリストを groupKey で集約し、magnitude の降順でソート。
 - L222 `merge()`
 - L228 `build()`
+
+
+### `lib/utils/moon_event_status.dart` (58 行)
+
+**imports:** dart=0 / package=0 / relative=3
+
+- relative: `../models/lunar_intention.dart`, `moon_phase.dart`, `solara_storage.dart`
+
+**型定義 (2):**
+
+- L6 `enum MoonEventKind`
+  - 月のサイクル儀式の 3 イベント種別。
+- L13 `class MoonEventStatus`
+  - 月イベント (新月・満月・刻星化) が「今この瞬間に保留中か」を判定する単一の真実。
+
+**関数 (1 public + 0 private):**
+
+- L25 `pendingToday()` — 今 ([now] = 端末ローカル時刻) 保留中で、かつ「まだ今日 overlay を表示していない」
 
 
 ### `lib/utils/moon_phase.dart` (360 行)

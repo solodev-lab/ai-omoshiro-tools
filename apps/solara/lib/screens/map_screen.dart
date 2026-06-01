@@ -35,7 +35,9 @@ import 'map/map_overlays.dart';
 import 'map/map_time_slider.dart';
 import 'map/map_widgets.dart';
 import 'map/map_welcome_banner.dart';
+import 'map/map_moon_notice.dart';
 import '../utils/astro_lines.dart' as astro_lines;
+import '../utils/moon_event_status.dart';
 import '../utils/consultation_api.dart' show grantWelcomeCredits;
 import '../utils/consultation_credits.dart';
 import '../utils/direction_energy.dart';
@@ -232,6 +234,12 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   /// ウェルカム特典バナー (出生地+現住所を初めて揃えた新規完了者向け)。
   /// B=現住所登録の促し / C=付与済→Stella 相談へ誘導 / none=非表示。
   WelcomeBannerMode _welcomeBanner = WelcomeBannerMode.none;
+
+  // ── C: 月イベント案内バナー (時刻スライダー直下) ──
+  /// 表示中の月イベント種別。null = 非表示。main.dart が showMoonNotice で設定する。
+  MoonEventKind? _moonNoticeKind;
+  /// 一度閉じた種別。同じ種別では再表示しない (種別が変わる/消えると解除)。
+  MoonEventKind? _moonNoticeDismissedKind;
 
   // 日付選択（null = 今日）。UTC 扱い。
   DateTime? _selectedDate;
@@ -2345,6 +2353,18 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                   onCta: _onWelcomeCta,
                   onDismiss: _onWelcomeDismiss,
                 ),
+              // ── 月イベント案内 (新月/満月/刻星化、時刻スライダー直下) ──
+              // pending があり未ディスミスの間だけ表示。タップで閉じるのみ
+              // (Galaxy へは遷移しない)。他バナー同様 ACG/検索/メニュー中は隠す。
+              if (_moonNoticeKind != null &&
+                  !_astroCartoMode &&
+                  !_searchOpen &&
+                  !_displayMenuOpen &&
+                  !_viewpointMenuOpen)
+                MapMoonNotice(
+                  kind: _moonNoticeKind!,
+                  onDismiss: _dismissMoonNotice,
+                ),
             ],
           ),
         ),
@@ -3181,6 +3201,32 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
       SolaraStorage.setWelcomeConsultUsed();
     }
     setState(() => _welcomeBanner = WelcomeBannerMode.none);
+  }
+
+  /// C: main.dart から月イベント保留状態を受け取る (GlobalKey 命令呼び出し)。
+  /// 一度閉じた種別は再表示しない。種別が消える (null) と閉じ履歴もリセットする。
+  void showMoonNotice(MoonEventKind? kind) {
+    if (!mounted) return;
+    final MoonEventKind? next;
+    if (kind == null) {
+      next = null;
+      _moonNoticeDismissedKind = null; // イベント消滅 → 次のイベントは出せるよう解除
+    } else if (kind == _moonNoticeDismissedKind) {
+      next = null; // この種別は閉じ済み
+    } else {
+      next = kind;
+    }
+    if (next != _moonNoticeKind) {
+      setState(() => _moonNoticeKind = next);
+    }
+  }
+
+  /// C: 月イベント案内バナーのタップ (= 閉じる)。Galaxy へは遷移しない (案内のみ)。
+  void _dismissMoonNotice() {
+    setState(() {
+      _moonNoticeDismissedKind = _moonNoticeKind;
+      _moonNoticeKind = null;
+    });
   }
 
   /// Phase 2-3b: relocation popup 内 CTA 「この場所で相談」のハンドラ。

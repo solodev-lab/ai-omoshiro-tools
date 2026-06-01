@@ -5,6 +5,7 @@ import '../models/lunar_intention.dart';
 import '../theme/solara_colors.dart';
 import '../utils/celestial_events.dart';
 import '../utils/cycle_story_texts.dart';
+import '../utils/moon_notification_service.dart';
 import '../utils/solara_storage.dart';
 import 'glass_panel.dart';
 import 'moon_overlay_shared.dart';
@@ -558,6 +559,14 @@ class _NewMoonOverlayState extends State<NewMoonOverlay>
     );
     await SolaraStorage.saveIntention(intention);
     await SolaraStorage.markLocalOverlayShown('new_moon');
+    // 通知ソフトアスク (意図設定直後 = Apple 4.5.4 / UX 推奨タイミング)。
+    // 既に有効 / 断られ過ぎ / 同サイクル既出 なら内部で no-op。
+    if (mounted) {
+      await MoonNotificationService.runSoftAskIfNeeded(context,
+          cycleId: widget.cycleId);
+    }
+    // 意図確定 → 当サイクルの満月/刻星化を予約 (通知有効時のみ実スケジュール)。
+    await MoonNotificationService.instance.rescheduleAll();
     widget.onIntentionSet();
   }
 }

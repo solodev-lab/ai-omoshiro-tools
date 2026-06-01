@@ -5,9 +5,9 @@
 
 ## サマリ
 
-- ファイル数: 4 / 総行数: 317
-- class/mixin/extension/enum: 6
-- 関数 (top-level + method の素拾い): 9
+- ファイル数: 5 / 総行数: 629
+- class/mixin/extension/enum: 7
+- 関数 (top-level + method の素拾い): 18
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 0
 - Worker URL リテラル: 0
@@ -104,6 +104,35 @@ fetch をトリガーする 4 イベント (これ以外で呼んではいけな
   <details><summary>private 関数 1 件</summary>
 
   - L79 `_timeBandHour()`
+
+  </details>
+
+
+### `lib/utils/moon_notification_service.dart` (312 行)
+
+**imports:** dart=0 / package=5 / relative=4
+
+- relative: `app_locale.dart`, `celestial_events.dart`, `moon_phase.dart`, `solara_storage.dart`
+
+**型定義 (1):**
+
+- L23 `class MoonNotificationService`
+  - 月イベント (新月・満月・刻星化 + 惑星イベント) のローカル通知を司る singleton。
+
+**関数 (7 public + 2 private):**
+
+- L55 `init()` — プラグイン + timezone を初期化 (main() で 1 回)。多重呼び出しは no-op。
+- L90 `isAuthorized()` — 現在 OS で通知が許可されているか。
+- L106 `requestPermission()` — OS 許諾ダイアログを出して結果を返す。既に許可済なら無言で true。
+- L156 `rescheduleAll()` — 全予約をキャンセルし、現在の状態から今後の通知を再スケジュールする。
+- L236 `disable()` — マスタスイッチを OFF にして全予約を取り消す。明示 OFF はソフトアスクも抑制。
+- L245 `enableFromToggle()` — Sanctuary トグル ON 時のフロー: OS 許諾を確保 → マスタ ON → schedule。
+- L259 `runSoftAskIfNeeded()` — 新月 Set Intention 直後に呼ぶソフトアスク。
+
+  <details><summary>private 関数 2 件</summary>
+
+  - L122 `_details()`
+  - L141 `_scheduleAt()`
 
   </details>
 

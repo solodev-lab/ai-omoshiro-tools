@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 5 / 総行数: 2350
+- ファイル数: 5 / 総行数: 2359
 - class/mixin/extension/enum: 11
 - 関数 (top-level + method の素拾い): 58
 - Navigator.push 等: 0
@@ -139,39 +139,39 @@
   </details>
 
 
-### `lib/widgets/new_moon_overlay.dart` (564 行)
+### `lib/widgets/new_moon_overlay.dart` (573 行)
 
-**imports:** dart=1 / package=2 / relative=7
+**imports:** dart=1 / package=2 / relative=8
 
-- relative: `../models/lunar_intention.dart`, `../theme/solara_colors.dart`, `../utils/celestial_events.dart`, `../utils/cycle_story_texts.dart`, `../utils/solara_storage.dart`, `glass_panel.dart`, `moon_overlay_shared.dart`
+- relative: `../models/lunar_intention.dart`, `../theme/solara_colors.dart`, `../utils/celestial_events.dart`, `../utils/cycle_story_texts.dart`, `../utils/moon_notification_service.dart`, `../utils/solara_storage.dart`, `glass_panel.dart`, `moon_overlay_shared.dart`
 
 **型定義 (2):**
 
-- L16 `class NewMoonOverlay : StatefulWidget`
-- L34 `class _NewMoonOverlayState : State`
+- L17 `class NewMoonOverlay : StatefulWidget`
+- L35 `class _NewMoonOverlayState : State`
 
 **関数 (4 public + 13 private):**
 
-- L31 `createState()`
-- L63 `initState()`
-- L119 `dispose()`
-- L156 `build()`
+- L32 `createState()`
+- L64 `initState()`
+- L120 `dispose()`
+- L157 `build()`
 
   <details><summary>private 関数 13 件</summary>
 
-  - L102 `_transitionToChoice()`
-  - L107 `_loadNotTodayCount()`
-  - L112 `_loadCycleEvents()`
-  - L130 `_onChoiceTap()`
-  - L144 `_runRevealSequence()`
-  - L173 `_buildStoryContent()`
-  - L230 `_buildChoiceList()`
-  - L325 `_buildRevealLayout()`
-  - L443 `_titleBlock()`
-  - L481 `_choiceCardWidget()`
-  - L517 `_revealMessage()`
-  - L524 `_revealEvents()`
-  - L548 `_setIntention()`
+  - L103 `_transitionToChoice()`
+  - L108 `_loadNotTodayCount()`
+  - L113 `_loadCycleEvents()`
+  - L131 `_onChoiceTap()`
+  - L145 `_runRevealSequence()`
+  - L174 `_buildStoryContent()`
+  - L231 `_buildChoiceList()`
+  - L326 `_buildRevealLayout()`
+  - L444 `_titleBlock()`
+  - L482 `_choiceCardWidget()`
+  - L518 `_revealMessage()`
+  - L525 `_revealEvents()`
+  - L549 `_setIntention()`
 
   </details>
 

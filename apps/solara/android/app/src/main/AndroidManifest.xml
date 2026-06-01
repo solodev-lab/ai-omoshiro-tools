@@ -3,6 +3,12 @@
     <!-- 現在地 GPS (Map 画面「現在地に移動」, geolocator パッケージ用) -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <!-- 月イベント (新月/満月/刻星化 + 惑星イベント) のローカル通知。
+         Android 13+ で実行時許諾が必要 (12 以下は自動付与)。
+         exact alarm は使わず inexact 配信のみ (SCHEDULE_EXACT_ALARM は宣言しない)。 -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- 予約済みローカル通知を端末再起動/アプリ更新後も復元する -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <application
         android:label="solara"
         android:name="${applicationName}"
@@ -35,6 +41,21 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+        <!-- flutter_local_notifications: 予約通知の配信 + 端末再起動/アプリ更新後の復元。
+             receiver クラスはプラグイン (com.dexterous.*) 提供。inexact 配信なので
+             SCHEDULE_EXACT_ALARM receiver は不要。 -->
+        <receiver
+            android:exported="false"
+            android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationReceiver" />
+        <receiver
+            android:exported="false"
+            android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationBootReceiver">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
+            </intent-filter>
+        </receiver>
         <!-- Impeller 制御の経緯:
              - commit 93368ee: A101FC fd leak (Vulkan sync_file leak) 対策で Impeller=false に。
              - 2026-05-06 再検証: opt-out 廃止予告 ([Action Required]: Impeller opt-out deprecated)

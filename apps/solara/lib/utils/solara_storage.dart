@@ -728,6 +728,54 @@ class SolaraStorage {
     await prefs.setInt('not_today_count_$cycleId', count + 1);
   }
 
+  // ─── 月イベント通知 (A: MoonNotificationService) ──────────────
+  // アプリ側マスタスイッチ (Sanctuary トグル) と、ソフトアスクの back-off 状態。
+  // OS 許諾は別 (flutter_local_notifications が司る)。両方 ON で初めて schedule する。
+
+  static const _notificationsEnabledKey = 'moon_notifications_enabled';
+  static const _notifSoftAskDeclinesKey = 'moon_notif_softask_declines';
+  static const _notifSoftAskCycleKey = 'moon_notif_softask_cycle';
+
+  /// 通知マスタスイッチ (Sanctuary トグル)。デフォルト false (オプトイン)。
+  static Future<bool> getNotificationsEnabled() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_notificationsEnabledKey) ?? false;
+  }
+
+  static Future<void> setNotificationsEnabled(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_notificationsEnabledKey, value);
+  }
+
+  /// ソフトアスクを「今はしない」で断られた累計回数 (上限超過で以後出さない)。
+  static Future<int> getNotifSoftAskDeclines() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_notifSoftAskDeclinesKey) ?? 0;
+  }
+
+  static Future<void> incrementNotifSoftAskDeclines() async {
+    final prefs = await SharedPreferences.getInstance();
+    final n = prefs.getInt(_notifSoftAskDeclinesKey) ?? 0;
+    await prefs.setInt(_notifSoftAskDeclinesKey, n + 1);
+  }
+
+  /// declines を直接設定 (0=リセット / 2=明示 OFF でソフトアスク抑制)。
+  static Future<void> setNotifSoftAskDeclines(int value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_notifSoftAskDeclinesKey, value);
+  }
+
+  /// ソフトアスクを最後に出したサイクル ID (= 同一サイクルで二度出さない)。
+  static Future<String?> getNotifSoftAskCycle() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_notifSoftAskCycleKey);
+  }
+
+  static Future<void> setNotifSoftAskCycle(String cycleId) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_notifSoftAskCycleKey, cycleId);
+  }
+
   // ─── Consultation History (Phase 2-4) ────────────────────────
   // 設計: docs/pro_candidates.md §7.2 Stage 4 + §7.3 柱3
   // Free でも自分の記録を永久に失わない。Pro 機能は検索・フィルタ (記録を使う道具)。

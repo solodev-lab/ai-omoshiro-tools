@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'horoscope/horo_antique_icons.dart';
 import '../utils/consultation_api.dart' show ConsultationCreditStatus;
 import '../utils/consultation_credits.dart';
+import '../utils/moon_notification_service.dart';
 import '../utils/pro_status.dart';
 import '../utils/purchases_service.dart';
 import '../utils/solara_storage.dart';
@@ -1472,6 +1473,8 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
           value: 'English ›',
           onTap: () {},
         ),
+        // Notifications — 月イベント (新月/満月/刻星化 + 惑星イベント) のローカル通知トグル。
+        const _NotificationToggleItem(),
         // Daily reset hour（今日のタップボタンのリセット時刻）
         _SettingsItem(
           icon: Icons.schedule_outlined,
@@ -1621,6 +1624,104 @@ class _SettingsItem extends StatelessWidget {
             Text(value, style: const TextStyle(fontSize: 15, color: Color(0xFFACACAC))),
           ],
         ),
+      ),
+    );
+  }
+}
+
+// ══════════════════════════════════════════════════
+// ── Notification Toggle Item (A: 月イベント通知) ──
+// _SettingsItem と同じ見た目で末尾を Switch にしたトグル行。
+// ON: OS 許諾を確保 → schedule。許諾が取れなければ OFF に戻し、設定誘導を SnackBar 表示。
+// OFF: 全予約 cancel + 明示 OFF (ソフトアスク抑制)。
+// ══════════════════════════════════════════════════
+class _NotificationToggleItem extends StatefulWidget {
+  const _NotificationToggleItem();
+
+  @override
+  State<_NotificationToggleItem> createState() =>
+      _NotificationToggleItemState();
+}
+
+class _NotificationToggleItemState extends State<_NotificationToggleItem> {
+  bool _on = false;
+  bool _busy = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    final on = await SolaraStorage.getNotificationsEnabled();
+    if (mounted) setState(() => _on = on);
+  }
+
+  Future<void> _toggle(bool want) async {
+    if (_busy) return;
+    setState(() => _busy = true);
+    if (want) {
+      final ok = await MoonNotificationService.instance.enableFromToggle();
+      if (!mounted) return;
+      setState(() {
+        _on = ok;
+        _busy = false;
+      });
+      if (!ok) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('端末の設定で通知を許可してください'),
+        ));
+      }
+    } else {
+      await MoonNotificationService.instance.disable();
+      if (!mounted) return;
+      setState(() {
+        _on = false;
+        _busy = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      // Switch があるぶん vertical を詰めて _SettingsItem と同じ高さ感にする。
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 6),
+      decoration: BoxDecoration(
+        color: const Color(0x0FFFFFFF),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0x1AFFFFFF)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: const Color(0x0DFFFFFF),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: const Center(
+              child: Icon(Icons.notifications_outlined,
+                  size: 20, color: Color(0xB3F9D976)),
+            ),
+          ),
+          const SizedBox(width: 12),
+          const Expanded(
+            child: Text('Notifications',
+                style: TextStyle(fontSize: 15, color: Color(0xFFEAEAEA))),
+          ),
+          Switch.adaptive(
+            value: _on,
+            onChanged: _busy
+                ? null
+                : (v) {
+                    _toggle(v);
+                  },
+            activeThumbColor: const Color(0xFFF9D976),
+          ),
+        ],
       ),
     );
   }

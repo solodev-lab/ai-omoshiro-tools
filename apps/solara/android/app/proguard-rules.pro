@@ -74,7 +74,16 @@
 }
 -keepattributes Signature, InnerClasses, EnclosingMethod, *Annotation*
 
-# ── 11. 警告抑制 (release build 時のノイズ削減) ──
+# ── 12. flutter_local_notifications / GSON ──
+# v19+ では plugin 同梱 consumer rules + GSON が proguard を提供するが、
+# R8 minify + shrinkResources ON のため、予約通知の (de)serialize が壊れて
+# 「debug では動くが release で通知が出ない/再起動後に消える」典型バグを防ぐべく
+# defensive に keep する。Signature/*Annotation* は #10 で既に keep 済。
+-keep class com.dexterous.flutterlocalnotifications.** { *; }
+-keep class com.google.gson.reflect.TypeToken { *; }
+-keep class * extends com.google.gson.reflect.TypeToken
+
+# ── 13. 警告抑制 (release build 時のノイズ削減) ──
 # 一部 SDK が optional dependency として参照するクラスの「missing」警告を抑制。
 # release ビルドが成功しても警告でログが汚れるため。
 -dontwarn javax.annotation.**

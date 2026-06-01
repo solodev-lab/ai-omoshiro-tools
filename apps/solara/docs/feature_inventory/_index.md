@@ -9,16 +9,16 @@
 | 層 | 名称 | ファイル数 | Markdown |
 | --- | --- | --- | --- |
 | 0 | Worker (バックエンド計算式) | 27 | [00_worker.md](00_worker.md) |
-| 1a | 純計算ユーティリティ | 7 | [01a_pure_calc.md](01a_pure_calc.md) |
+| 1a | 純計算ユーティリティ | 8 | [01a_pure_calc.md](01a_pure_calc.md) |
 | 1b | 静的データ辞書 | 15 | [01b_static_data.md](01b_static_data.md) |
 | 1c | モデルクラス | 4 | [01c_models.md](01c_models.md) |
 | 2a | API/Worker ラッパ | 10 | [02a_api_wrappers.md](02a_api_wrappers.md) |
 | 2b | 永続化/キャッシュ | 9 | [02b_persistence.md](02b_persistence.md) |
-| 2c | グローバル singleton | 4 | [02c_globals.md](02c_globals.md) |
+| 2c | グローバル singleton | 5 | [02c_globals.md](02c_globals.md) |
 | 3a | 共通ウィジェット (純粋) | 27 | [03a_widgets_pure.md](03a_widgets_pure.md) |
 | 3b | テーマ・装飾 | 3 | [03b_theme.md](03b_theme.md) |
 | 3c | 演出ウィジェット (animated) | 5 | [03c_widgets_anim.md](03c_widgets_anim.md) |
-| 4a | Map 画面 | 24 | [04a_map.md](04a_map.md) |
+| 4a | Map 画面 | 25 | [04a_map.md](04a_map.md) |
 | 4b | Horoscope 画面 | 23 | [04b_horoscope.md](04b_horoscope.md) |
 | 4c | Observe (Tarot) 画面 | 12 | [04c_observe.md](04c_observe.md) |
 | 4d | Galaxy 画面 | 10 | [04d_galaxy.md](04d_galaxy.md) |
@@ -28,11 +28,11 @@
 
 ## 全体統計
 
-- Dart ファイル: 196
+- Dart ファイル: 199
 - Worker JS ファイル: 27
 - Worker エンドポイント総数: 34
-- Dart class/mixin/extension/enum 総数: 479
-- Dart 関数総数 (素拾い): 1565
+- Dart class/mixin/extension/enum 総数: 485
+- Dart 関数総数 (素拾い): 1593
 
 ## 対整合チェック
 

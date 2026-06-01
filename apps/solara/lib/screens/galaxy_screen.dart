@@ -12,6 +12,7 @@ import '../models/lunar_intention.dart';
 
 import '../utils/celestial_events.dart';
 import '../utils/constellation_namer.dart';
+import '../utils/moon_event_status.dart';
 import '../utils/moon_phase.dart';
 import '../utils/solara_storage.dart';
 import '../utils/tarot_data.dart';
@@ -138,6 +139,35 @@ class GalaxyScreenState extends State<GalaxyScreen>
     _motionTimer?.cancel();
     _motionTimer = null;
   }
+
+  /// タブ入室 / アプリ復帰時に、月イベント (新月・満月・刻星化) の発火判定だけを
+  /// 軽量に再評価する。main.dart の _onTabTap (Galaxy 入室) と
+  /// didChangeAppLifecycleState (resumed) から呼ばれる。
+  ///
+  /// 背景: _checkMoonOverlay は initState→_loadData でしか走らないため、warm resume
+  /// (プロセス生存のままバックグラウンド復帰) や、別タブから満月当日に Galaxy へ入った
+  /// 場合に overlay が出ない穴があった。
+  ///
+  /// _loadData 全体 (readings 読込・formConstellation・sample 注入・art ロード) は重く
+  /// 副作用もあるので呼ばない。overlay 判定に必要な日付と intention だけ読み直す。
+  /// 既に overlay / replay 表示中なら何もしない (進行中の演出を壊さない)。
+  Future<void> recheckMoonEvents() async {
+    if (!mounted || _activeOverlay != null || _replayCycle != null) return;
+    final now = DateTime.now();
+    final (cycleStart, cycleEnd) = MoonPhase.getCurrentCycleBounds(now);
+    final csLocal = cycleStart.toLocal();
+    final cycleId =
+        '${csLocal.year}-${csLocal.month.toString().padLeft(2, '0')}';
+    final intention = await SolaraStorage.loadIntention(cycleId);
+    if (!mounted || _activeOverlay != null || _replayCycle != null) return;
+    setState(() {
+      _cycleStart = cycleStart;
+      _totalDays = cycleEnd.difference(cycleStart).inDays;
+      _currentIntention = intention;
+    });
+    await _checkMoonOverlay(now);
+  }
+
   List<Alignment> _nebulaPositions = [];
   List<Color> _nebulaColors = [];
 
@@ -307,7 +337,7 @@ class GalaxyScreenState extends State<GalaxyScreen>
       });
     }
 
-    await _checkMoonOverlay(now, cycleStart, cycleEnd, intention, cycleId);
+    await _checkMoonOverlay(now);
 
     for (final c in completedCycles) {
       _loadArtImage(c.nounIdx);
@@ -333,32 +363,21 @@ class GalaxyScreenState extends State<GalaxyScreen>
     } catch (_) {}
   }
 
-  Future<void> _checkMoonOverlay(
-    DateTime now, DateTime cycleStart, DateTime cycleEnd,
-    LunarIntention? intention, String cycleId,
-  ) async {
-    final dayBeforeNewMoon = cycleEnd.subtract(const Duration(days: 1));
-    final today = DateTime(now.year, now.month, now.day);
-    final crystDay = DateTime(dayBeforeNewMoon.year, dayBeforeNewMoon.month, dayBeforeNewMoon.day);
-
-    // 2026-05-29: Galaxy 3 演出も Sanctuary リセット時刻に左右されない
-    // 端末日付 (0 時切替) 基準に変更。Sanctuary picker の subtitle 文言
-    // 「タロットのみ」と整合させるための独立系統。
-    if (MoonPhase.isNewMoon(now)) {
-      if (intention == null && !await SolaraStorage.wasLocalOverlayShownToday('new_moon')) {
-        if (mounted) setState(() => _activeOverlay = 'new_moon');
-      }
-    } else if (MoonPhase.isFullMoon(now)) {
-      if (intention != null && intention.midpoint == null &&
-          !await SolaraStorage.wasLocalOverlayShownToday('full_moon')) {
-        if (mounted) setState(() => _activeOverlay = 'full_moon');
-      }
-    } else if (today == crystDay || today.isAfter(crystDay)) {
-      if (intention != null && intention.catasterism == null &&
-          !await SolaraStorage.wasLocalOverlayShownToday('catasterism')) {
-        if (mounted) setState(() => _activeOverlay = 'catasterism');
-      }
-    }
+  /// 月イベント (新月/満月/刻星化) の発火を判定し、該当すれば overlay を出す。
+  ///
+  /// 2026-06-01: 発火条件を [MoonEventStatus.pendingToday] に一本化 (NavBar バッジ /
+  /// Map 案内バナーと共有して乖離を防ぐ)。判定ロジック本体はそちらを参照。
+  /// 端末日付 (0 時切替) 基準で、Sanctuary のクレジットリセット時刻には左右されない。
+  Future<void> _checkMoonOverlay(DateTime now) async {
+    final kind = await MoonEventStatus.pendingToday(now);
+    if (!mounted || kind == null) return;
+    setState(() {
+      _activeOverlay = switch (kind) {
+        MoonEventKind.newMoon => 'new_moon',
+        MoonEventKind.fullMoon => 'full_moon',
+        MoonEventKind.catasterism => 'catasterism',
+      };
+    });
   }
 
   /// 画面内で active な overlay (replay / formation / moon)。

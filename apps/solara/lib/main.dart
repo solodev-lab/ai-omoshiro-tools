@@ -22,6 +22,8 @@ import 'utils/consultation_record.dart';
 import 'utils/consultation_return.dart';
 import 'utils/device_security_status.dart';
 import 'utils/map_focus.dart';
+import 'utils/moon_event_status.dart';
+import 'utils/moon_notification_service.dart';
 import 'utils/pro_status.dart';
 import 'utils/purchases_service.dart';
 import 'utils/solara_auth.dart';
@@ -41,6 +43,13 @@ void main() async {
   await TarotData.initialize();
   await CelestialEvents.initialize();
   await AppLocale.instance.load();
+  // 月イベント通知: プラグイン + timezone を初期化し、現状態から再スケジュール。
+  // マスタ OFF / OS 未許可なら cancel のみ (= 何も鳴らない)。CelestialEvents +
+  // AppLocale 初期化後に呼ぶ (惑星イベント取得とロケール判定に必要)。
+  // reschedule は内部 network (events) を伴うので await しない (起動を待たせない)。
+  await MoonNotificationService.instance.init();
+  // ignore: unawaited_futures
+  MoonNotificationService.instance.rescheduleAll();
   await ProStatus.instance.load();
   // Phase 2 RASP: freerasp で root/Frida/エミュレータ等を検知 → 検知時は
   // ProStatus.isPro が effective false を返すので Pro ゲートが自動的に発火。
@@ -169,6 +178,9 @@ class _SolaraHomeState extends State<SolaraHome> with WidgetsBindingObserver {
     MapFocus.instance.addListener(_onMapFocusRequested);
     // ignore: unawaited_futures
     _restoreLastScreen();
+    // C: 起動時の月イベント判定 (NavBar バッジ + Map 案内)。MapScreen の state は
+    // build 後に生成されるため postFrame で呼ぶ (initState 時点では currentState=null)。
+    WidgetsBinding.instance.addPostFrameCallback((_) => _refreshMoonStatus());
   }
 
   /// コールド起動時、直近 paused で保存したスナップショットがあれば画面を復元する。
@@ -347,6 +359,13 @@ class _SolaraHomeState extends State<SolaraHome> with WidgetsBindingObserver {
       // 残すと次のコールド起動で誤って古い画面を復元しうるため破棄する。
       // ignore: unawaited_futures
       SolaraStorage.clearRestoreSnapshot();
+      // B: warm 復帰でも月イベント判定を再評価。initState は warm resume で再実行
+      // されないため、満月当日にアプリを開き直しても overlay が出ない穴を塞ぐ。
+      // ignore: unawaited_futures
+      _galaxyKey.currentState?.recheckMoonEvents();
+      // C: バッジ/Map 案内も resume で再評価 (日付跨ぎ・別端末での完了を反映)。
+      // ignore: unawaited_futures
+      _refreshMoonStatus();
     } else if (state == AppLifecycleState.paused) {
       // バックグラウンド遷移 (外部アプリ起動含む): プロセス死に備え状態保存。
       // paused はまだ生存中に発火するので書き込みは間に合う。
@@ -367,6 +386,35 @@ class _SolaraHomeState extends State<SolaraHome> with WidgetsBindingObserver {
     if (_galaxyHasOverlay != active) {
       setState(() => _galaxyHasOverlay = active);
     }
+    // overlay 開閉で wasLocalOverlayShownToday が変わりうる (完了/ディスミス時に
+    // markLocalOverlayShown される) → 月イベント保留状態を再計算してバッジ/案内を更新。
+    // ignore: unawaited_futures
+    _refreshMoonStatus();
+    if (!active) {
+      // 儀式完了/ディスミスで intention の midpoint/catasterism が変わりうる →
+      // 済んだイベントの通知予約を取り消すため再スケジュール (A)。
+      // ignore: unawaited_futures
+      MoonNotificationService.instance.rescheduleAll();
+    }
+  }
+
+  // ── C: 月イベント (新月/満月/刻星化) の NavBar バッジ + Map 案内 ──
+  /// 保留中の月イベント種別。null = 保留なし。NavBar バッジは `!= null` で点灯し、
+  /// Map 案内は MapScreen に種別を渡して表示する。発火条件は overlay と同一
+  /// (MoonEventStatus.pendingToday に一本化)。
+  MoonEventKind? _pendingMoonKind;
+
+  /// 月イベント保留状態を再計算し、NavBar バッジ (_pendingMoonKind) と Map 案内
+  /// (MapScreen.showMoonNotice) を更新する。起動 / resume / タブ切替 /
+  /// Galaxy overlay 開閉 のたびに呼ぶ。許諾不要・新パッケージ不要のアプリ内導線。
+  Future<void> _refreshMoonStatus() async {
+    final kind = await MoonEventStatus.pendingToday(DateTime.now());
+    if (!mounted) return;
+    if (kind != _pendingMoonKind) {
+      setState(() => _pendingMoonKind = kind);
+    }
+    // Map 案内は MapScreen 側 state に命令で渡す (既存の GlobalKey 流儀)。
+    _mapKey.currentState?.showMoonNotice(kind);
   }
 
   late final _screens = <Widget>[
@@ -396,10 +444,20 @@ class _SolaraHomeState extends State<SolaraHome> with WidgetsBindingObserver {
       _horoKey.currentState?.wakeAnimations();
     }
     // Galaxy 入室で背景再生成 + motion fresh 40s lifecycle
-    if (switchingToGalaxy) _galaxyKey.currentState?.regenerateBackground();
+    if (switchingToGalaxy) {
+      _galaxyKey.currentState?.regenerateBackground();
+      // B: 入室時にも月イベント (新月/満月/刻星化) 判定を再評価。warm 状態で別タブから
+      // 満月当日などに Galaxy へ入っても overlay が出ない穴を塞ぐ。
+      // ignore: unawaited_futures
+      _galaxyKey.currentState?.recheckMoonEvents();
+    }
     // タブ離脱時は Timer.periodic も明示停止 (TickerMode の対象外なので)
     if (leavingGalaxy) _galaxyKey.currentState?.pauseMotion();
     if (leavingHoro) _horoKey.currentState?.pauseAnimations();
+    // C: タブ切替のたびに月イベント保留状態を再評価 (バッジ/Map 案内を最新化)。
+    // ストレージ読み込み数回の軽量処理 — ユーザー操作起点なのでホットループではない。
+    // ignore: unawaited_futures
+    _refreshMoonStatus();
   }
 
   @override
@@ -448,6 +506,7 @@ class _SolaraHomeState extends State<SolaraHome> with WidgetsBindingObserver {
         bottomNavigationBar: SolaraNavBar(
           currentIndex: _currentIndex,
           onTap: _onTabTap,
+          showGalaxyBadge: _pendingMoonKind != null,
         ),
       ),
     );

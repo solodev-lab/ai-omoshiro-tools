@@ -21,6 +21,9 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
+        // flutter_local_notifications v21 が要求する core library desugaring。
+        // (java.time 等を minSdk 31 でも使えるようにする。無いとビルド不可)
+        isCoreLibraryDesugaringEnabled = true
     }
 
     kotlinOptions {
@@ -74,4 +77,10 @@ android {
 
 flutter {
     source = "../.."
+}
+
+dependencies {
+    // flutter_local_notifications v21 必須: core library desugaring 実体。
+    // バージョンは公式ドキュメント (pub.dev flutter_local_notifications) 準拠の 2.1.4。
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
 }

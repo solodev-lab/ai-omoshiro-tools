@@ -28,7 +28,16 @@ class SolaraNavBar extends StatelessWidget {
   final int currentIndex;
   final ValueChanged<int> onTap;
 
-  const SolaraNavBar({super.key, required this.currentIndex, required this.onTap});
+  /// true のとき Galaxy(index 3) アイコン右上に「保留中の月イベント」バッジを出す。
+  /// 表示判定は main.dart (MoonEventStatus.pendingToday) 側で行い、ここは描画のみ。
+  final bool showGalaxyBadge;
+
+  const SolaraNavBar({
+    super.key,
+    required this.currentIndex,
+    required this.onTap,
+    this.showGalaxyBadge = false,
+  });
 
   /// systemNav 込みの NavBar 全体の高さ。
   /// Map画面など bottom 配置で「NavBar の上」を計算するときに使う。
@@ -143,6 +152,23 @@ class SolaraNavBar extends StatelessWidget {
         ),
       );
 
+  /// 保留中の月イベントを示す Galaxy アイコン右上のゴールド点。
+  /// NavBar 背景色で 1px 縁取りしてアイコンから視覚的に分離する。
+  Widget _moonBadge() => Container(
+        width: 7,
+        height: 7,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: _gold,
+          border: const Border.fromBorderSide(
+            BorderSide(color: Color(0xFF04060E), width: 1),
+          ),
+          boxShadow: [
+            BoxShadow(color: _gold.withAlpha(140), blurRadius: 5, spreadRadius: 1),
+          ],
+        ),
+      );
+
   Widget _buildItem(int index) {
     final active = index == currentIndex;
 
@@ -161,26 +187,39 @@ class SolaraNavBar extends StatelessWidget {
         builder: (context, t, _) {
           // 色: rgba(255,255,255,0.35) → #F9D976 を t で lerp (t=0 で旧 inactive と完全一致)。
           final color = Color.lerp(_inactiveColor, _gold, t)!;
+          // Icon with glow — drop-shadow の濃度を t で補間 (t=1 で旧 active と完全一致)。
+          Widget icon = Container(
+            decoration: BoxDecoration(
+              boxShadow: t <= 0
+                  ? null
+                  : [
+                      BoxShadow(
+                          color: _gold.withAlpha((180 * t).round()),
+                          blurRadius: 8),
+                      BoxShadow(
+                          color: _gold.withAlpha((77 * t).round()),
+                          blurRadius: 16),
+                    ],
+            ),
+            child: _iconForIndex(index, color),
+          );
+          // 保留中の月イベントがあれば Galaxy(index 3) アイコン右上にゴールド点。
+          // Galaxy タブ滞在中 (active) は overlay/体験が目の前にあるので出さない。
+          // 静的描画 (アニメ・tick なし) — 静止時 CPU/電池消費ゼロ。
+          if (index == 3 && showGalaxyBadge && !active) {
+            icon = Stack(
+              clipBehavior: Clip.none,
+              children: [
+                icon,
+                Positioned(top: -2, right: -2, child: _moonBadge()),
+              ],
+            );
+          }
           return Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               const SizedBox(height: 6),
-              // Icon with glow — drop-shadow の濃度を t で補間 (t=1 で旧 active と完全一致)。
-              Container(
-                decoration: BoxDecoration(
-                  boxShadow: t <= 0
-                      ? null
-                      : [
-                          BoxShadow(
-                              color: _gold.withAlpha((180 * t).round()),
-                              blurRadius: 8),
-                          BoxShadow(
-                              color: _gold.withAlpha((77 * t).round()),
-                              blurRadius: 16),
-                        ],
-                ),
-                child: _iconForIndex(index, color),
-              ),
+              icon,
               const SizedBox(height: 4),
               // Label: 9px, uppercase, letter-spacing 0.5
               // 2026-05-08: textScaler.noScaling 適用。global の 1.5x 拡大が

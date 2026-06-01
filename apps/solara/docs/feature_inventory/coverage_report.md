@@ -54,10 +54,10 @@
 
 ## #1 / #2 機械抽出 ↔ feature_inventory.md (人手版) の対整合
 
-- 機械抽出した class/mixin/extension/enum: **469**
+- 機械抽出した class/mixin/extension/enum: **475**
 - inventory に登場する識別子 (大文字始まり ``backtick``囲み): **272**
 
-### #1 機械にあるが Doc に書かれていない (271)
+### #1 機械にあるが Doc に書かれていない (277)
 
 - `AppAttestClient`
 - `ConstellationShareCardPage`
@@ -84,8 +84,12 @@
 - `LegalUrls`
 - `MapFocus`
 - `MapFocusRequest`
+- `MapMoonNotice`
 - `MapTimeSliderState`
 - `MemoTextField`
+- `MoonEventKind`
+- `MoonEventStatus`
+- `MoonNotificationService`
 - `ObserveFullReadingButton`
 - `ObserveHistoryFilter`
 - `ObserveHistoryFilterBar`
@@ -235,6 +239,8 @@
 - `_NoMatchState`
 - `_Note`
 - `_NotePair`
+- `_NotificationToggleItem`
+- `_NotificationToggleItemState`
 - `_NumberedPin`
 - `_ObserveCategorySelector`
 - `_ObserveHistoryFilterBarState`
@@ -253,13 +259,7 @@
 - `_PlanetDef`
 - `_PlanetGlyphPainter`
 - `_PlanetIntroBody`
-- `_PlanetSub`
-- `_PopupBody`
-- `_PresetLocationCard`
-- `_QuestionFieldWidgets`
-- `_RadiusChips`
-- `_RankedLine`
-- … 残り 71 省略
+- … 残り 77 省略
 
 ### #2 Doc に書いてあるがコードに存在しない (ゴースト記述) (74)
 
@@ -345,7 +345,7 @@
 
 ### 層 4a: Map 画面
 
-- ファイル数: 24
+- ファイル数: 25
 - Worker URL 呼出: (なし)
 - Popup/Dialog: `showInfoPopup`×14, `showLineNarrativeSheet`×3, `showSolaraDatePicker`×1, `showModalBottomSheet`×1
 - Navigator.push 等: 0 箇所
@@ -396,22 +396,22 @@
 
 | from\to | 1a | 1b | 1c | 2a | 2b | 2c | 3a | 3b | 3c | 4a | 4b | 4c | 4d | 4e | 4f | 5 |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1a | 2 | · | · | 1 | 2 | · | · | · | · | · | · | · | · | · | · | · |
+| 1a | 3 | · | 1 | 1 | 3 | · | · | · | · | · | · | · | · | · | · | · |
 | 1b | · | · | · | 2 | 1 | · | 1 | · | · | · | · | · | · | · | · | · |
 | 1c | · | · | 1 | · | · | · | · | · | · | · | · | · | · | · | · | · |
 | 2a | 2 | 1 | · | 6 | 4 | · | · | 1 | · | · | · | · | · | · | · | · |
 | 2b | 2 | 3 | 5 | 6 | 4 | 1 | · | · | · | · | · | · | · | · | · | · |
-| 2c | · | · | 1 | 2 | · | · | · | · | · | · | · | · | · | · | · | · |
+| 2c | 1 | · | 1 | 3 | 2 | · | · | · | · | · | · | · | · | · | · | · |
 | 3a | 2 | 4 | 2 | 2 | 1 | 1 | 8 | 7 | 4 | 1 | · | · | · | · | 1 | · |
 | 3b | · | · | · | · | · | · | · | 1 | · | · | · | · | · | · | · | · |
-| 3c | · | 5 | 4 | 2 | 4 | · | 12 | 4 | · | · | · | · | · | · | · | · |
-| 4a | 10 | 11 | · | 14 | 7 | 1 | 18 | 23 | 3 | 31 | 2 | · | · | · | 4 | · |
+| 3c | · | 5 | 4 | 2 | 4 | 1 | 12 | 4 | · | · | · | · | · | · | · | · |
+| 4a | 12 | 11 | · | 14 | 7 | 1 | 18 | 24 | 3 | 32 | 2 | · | · | · | 4 | · |
 | 4b | 5 | 13 | · | 3 | 5 | · | 16 | · | · | · | 31 | · | · | 2 | · | · |
 | 4c | 1 | 1 | 14 | 1 | 5 | 5 | 9 | 6 | · | · | · | 17 | · | · | 1 | · |
-| 4d | 3 | 6 | 13 | 1 | 2 | 2 | 11 | 2 | 1 | · | · | · | 9 | · | · | · |
-| 4e | 1 | 6 | · | 3 | 7 | 1 | 15 | 1 | · | · | · | · | · | 9 | 3 | · |
+| 4d | 4 | 6 | 13 | 1 | 2 | 2 | 11 | 2 | 1 | · | · | · | 9 | · | · | · |
+| 4e | 1 | 6 | · | 3 | 7 | 2 | 15 | 1 | · | · | · | · | · | 9 | 3 | · |
 | 4f | 2 | 6 | · | 8 | 16 | 6 | 19 | 13 | · | 6 | · | · | · | · | 30 | · |
-| 5 | 1 | 2 | · | 2 | 5 | 4 | 1 | 1 | · | 1 | 1 | 1 | 1 | 3 | 4 | · |
+| 5 | 2 | 2 | · | 2 | 5 | 5 | 1 | 1 | · | 1 | 1 | 1 | 1 | 3 | 4 | · |
 
 > 健全な依存方向は「番号が大きい層 → 小さい層」(上位が下位に依存)。
 > 番号が小さい層から大きい層への矢印 (左下三角) は逆流依存の疑い。
@@ -422,8 +422,8 @@
 
 | ファイル | 層 | 被 import 数 |
 | --- | --- | --- |
-| `lib/theme/solara_colors.dart` | 3b | 37 |
-| `lib/utils/solara_storage.dart` | 2b | 31 |
+| `lib/theme/solara_colors.dart` | 3b | 38 |
+| `lib/utils/solara_storage.dart` | 2b | 33 |
 | `lib/widgets/info_popup.dart` | 3a | 24 |
 | `lib/screens/map/map_constants.dart` | 3b | 21 |
 | `lib/utils/solara_api.dart` | 2a | 15 |
@@ -435,11 +435,11 @@
 | `lib/widgets/tap_to_unfocus.dart` | 3a | 11 |
 | `lib/screens/horoscope/horo_constants.dart` | 1b | 10 |
 | `lib/screens/horoscope/horo_panel_shared.dart` | 4b | 9 |
+| `lib/models/lunar_intention.dart` | 1c | 8 |
 | `lib/utils/constellation_namer.dart` | 1b | 8 |
 | `lib/utils/consultation_api.dart` | 2a | 8 |
 | `lib/utils/consultation_credits.dart` | 2c | 8 |
 | `lib/utils/tarot_data.dart` | 2c | 8 |
-| `lib/models/lunar_intention.dart` | 1c | 7 |
 | `lib/models/tarot_card.dart` | 1c | 7 |
 | `lib/screens/map/map_vp_panel.dart` | 4a | 7 |
 
@@ -456,9 +456,18 @@
 > 各ソースの SHA1 を `_stamps.json` に記録し、差分を検出。
 > 変更されたファイルが属する層は、人手版インベントリ章の見直し対象。
 
-- 追加: **0** / 削除: **0** / 変更: **0**
+- 追加: **1** / 削除: **0** / 変更: **4**
 
-- 変更なし — 全インベントリ章は最新。
+### 変更されたファイル (層別)
+
+- **層 2b**: `lib/utils/solara_storage.dart`
+- **層 3c**: `lib/widgets/new_moon_overlay.dart`
+- **層 4e**: `lib/screens/sanctuary_screen.dart`
+- **層 5**: `lib/main.dart`
+
+### 追加されたファイル
+
+- `lib/utils/moon_notification_service.dart` (層 2c)
 
 ## #7 astro_glossary 用語辞書対整合
 

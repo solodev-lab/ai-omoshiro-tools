@@ -5,9 +5,9 @@
 
 ## サマリ
 
-- ファイル数: 10 / 総行数: 5536
-- class/mixin/extension/enum: 26
-- 関数 (top-level + method の素拾い): 119
+- ファイル数: 10 / 総行数: 5637
+- class/mixin/extension/enum: 28
+- 関数 (top-level + method の素拾い): 124
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 4
 - Worker URL リテラル: 0
@@ -327,66 +327,73 @@ Solara Sanctuary 法務リンクメニュー (Phase 2 launch_checklist)
 - 集計: `showInfoPopup`×1
 
 
-### `lib/screens/sanctuary_screen.dart` (1628 行)
+### `lib/screens/sanctuary_screen.dart` (1729 行)
 
-**imports:** dart=1 / package=3 / relative=22
+**imports:** dart=1 / package=3 / relative=23
 
-- relative: `horoscope/horo_antique_icons.dart`, `../utils/consultation_api.dart`, `../utils/consultation_credits.dart`, `../utils/pro_status.dart`, `../utils/purchases_service.dart`, `../utils/solara_storage.dart`, `../utils/title_data.dart`, `../widgets/class_card.dart`, `../widgets/pro_unlock_dialog.dart`, `../widgets/sanctuary_account_section.dart`, `../widgets/tap_to_unfocus.dart`, `consultation/consultation_credit_sheet.dart`, `consultation/consultation_history_screen.dart`, `paywall_screen.dart`, `sanctuary/sanctuary_orb_overlay.dart`, `sanctuary/sanctuary_profile_editor.dart`, `sanctuary/sanctuary_reset_hour_picker.dart`, `sanctuary/sanctuary_title_diagnosis.dart`, `sanctuary/class_share_card.dart`, `sanctuary/sanctuary_home_editor.dart`, `sanctuary/sanctuary_legal_menu.dart`, `sanctuary/title_history_screen.dart`
+- relative: `horoscope/horo_antique_icons.dart`, `../utils/consultation_api.dart`, `../utils/consultation_credits.dart`, `../utils/moon_notification_service.dart`, `../utils/pro_status.dart`, `../utils/purchases_service.dart`, `../utils/solara_storage.dart`, `../utils/title_data.dart`, `../widgets/class_card.dart`, `../widgets/pro_unlock_dialog.dart`, `../widgets/sanctuary_account_section.dart`, `../widgets/tap_to_unfocus.dart`, `consultation/consultation_credit_sheet.dart`, `consultation/consultation_history_screen.dart`, `paywall_screen.dart`, `sanctuary/sanctuary_orb_overlay.dart`, `sanctuary/sanctuary_profile_editor.dart`, `sanctuary/sanctuary_reset_hour_picker.dart`, `sanctuary/sanctuary_title_diagnosis.dart`, `sanctuary/class_share_card.dart`, `sanctuary/sanctuary_home_editor.dart`, `sanctuary/sanctuary_legal_menu.dart`, `sanctuary/title_history_screen.dart`
 
-**型定義 (5):**
+**型定義 (7):**
 
-- L29 `class SanctuaryScreen : StatefulWidget`
-- L36 `class _SanctuaryScreenState : State`
-- L1541 `extension _WidgetOpacity : Widget`
-- L1550 `class _SettingsGroup : StatelessWidget`
-- L1583 `class _SettingsItem : StatelessWidget`
+- L30 `class SanctuaryScreen : StatefulWidget`
+- L37 `class _SanctuaryScreenState : State`
+- L1544 `extension _WidgetOpacity : Widget`
+- L1553 `class _SettingsGroup : StatelessWidget`
+- L1586 `class _SettingsItem : StatelessWidget`
+- L1638 `class _NotificationToggleItem : StatefulWidget`
+- L1646 `class _NotificationToggleItemState : State`
 
-**関数 (7 public + 34 private):**
+**関数 (10 public + 36 private):**
 
-- L33 `createState()`
-- L76 `initState()`
-- L89 `dispose()`
-- L453 `build()`
-- L1542 `withOpacity()`
-- L1556 `build()`
-- L1591 `build()`
+- L34 `createState()`
+- L77 `initState()`
+- L90 `dispose()`
+- L454 `build()`
+- L1545 `withOpacity()`
+- L1559 `build()`
+- L1594 `build()`
+- L1642 `createState()`
+- L1651 `initState()`
+- L1687 `build()`
 
-  <details><summary>private 関数 34 件</summary>
+  <details><summary>private 関数 36 件</summary>
 
-  - L95 `_onProChanged()`
-  - L99 `_onCreditsChanged()`
-  - L109 `_openCreditPurchase()`
-  - L113 `_loadSettings()`
-  - L137 `_loadProfile()`
-  - L155 `_openProfileEditor()`
-  - L187 `_openShareCard()`
-  - L207 `_startDiagnosis()`
-  - L268 `_showRediagnoseProGuide()`
-  - L418 `_openHomeEditor()`
-  - L435 `_syncHomeToVP()`
-  - L531 `_buildTopHeader()`
-  - L587 `_buildCreditRow()`
-  - L649 `_buildProfileOrb()`
-  - L712 `_buildProfileRow()`
-  - L744 `_buildStellarProfileSection()`
-  - L769 `_buildTitleDiagnosisSection()`
-  - L941 `_buildTitleFlipCard()`
-  - L982 `_buildLegacyVCard()`
-  - L1005 `_buildTitleVCard()`
-  - L1071 `_buildRecordsSection()`
-  - L1107 `_buildCosmicProSection()`
-  - L1133 `_buildProUpgradeBanner()`
-  - L1190 `_buildProActiveBanner()`
-  - L1261 `_buildRestoreRow()`
-  - L1285 `_openPaywall()`
-  - L1294 `_restorePurchases()`
-  - L1319 `_buildDevProToggle()`
-  - L1372 `_buildAstrologySection()`
-  - L1402 `_buildHouseOption()`
-  - L1435 `_orbSummary()`
-  - L1448 `_openOrbOverlay()`
-  - L1464 `_buildAppSection()`
-  - L1494 `_pickDailyResetHour()`
+  - L96 `_onProChanged()`
+  - L100 `_onCreditsChanged()`
+  - L110 `_openCreditPurchase()`
+  - L114 `_loadSettings()`
+  - L138 `_loadProfile()`
+  - L156 `_openProfileEditor()`
+  - L188 `_openShareCard()`
+  - L208 `_startDiagnosis()`
+  - L269 `_showRediagnoseProGuide()`
+  - L419 `_openHomeEditor()`
+  - L436 `_syncHomeToVP()`
+  - L532 `_buildTopHeader()`
+  - L588 `_buildCreditRow()`
+  - L650 `_buildProfileOrb()`
+  - L713 `_buildProfileRow()`
+  - L745 `_buildStellarProfileSection()`
+  - L770 `_buildTitleDiagnosisSection()`
+  - L942 `_buildTitleFlipCard()`
+  - L983 `_buildLegacyVCard()`
+  - L1006 `_buildTitleVCard()`
+  - L1072 `_buildRecordsSection()`
+  - L1108 `_buildCosmicProSection()`
+  - L1134 `_buildProUpgradeBanner()`
+  - L1191 `_buildProActiveBanner()`
+  - L1262 `_buildRestoreRow()`
+  - L1286 `_openPaywall()`
+  - L1295 `_restorePurchases()`
+  - L1320 `_buildDevProToggle()`
+  - L1373 `_buildAstrologySection()`
+  - L1403 `_buildHouseOption()`
+  - L1436 `_orbSummary()`
+  - L1449 `_openOrbOverlay()`
+  - L1465 `_buildAppSection()`
+  - L1497 `_pickDailyResetHour()`
+  - L1656 `_load()`
+  - L1661 `_toggle()`
 
   </details>
 

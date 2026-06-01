@@ -5,9 +5,9 @@
 
 ## サマリ
 
-- ファイル数: 9 / 総行数: 2743
+- ファイル数: 9 / 総行数: 2791
 - class/mixin/extension/enum: 15
-- 関数 (top-level + method の素拾い): 126
+- 関数 (top-level + method の素拾い): 133
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 0
 - Worker URL リテラル: 0
@@ -342,7 +342,7 @@ Solara 認証サービス — Phase 2-9 Sign in 統合
   </details>
 
 
-### `lib/utils/solara_storage.dart` (873 行)
+### `lib/utils/solara_storage.dart` (921 行)
 
 **imports:** dart=1 / package=2 / relative=4
 
@@ -357,7 +357,7 @@ Solara 認証サービス — Phase 2-9 Sign in 統合
 - L118 `class SolaraStorage`
   - Persistence wrapper for Solara data.
 
-**関数 (61 public + 1 private):**
+**関数 (68 public + 1 private):**
 
 - L41 `toJson()`
 - L71 `copyWith()`
@@ -412,18 +412,25 @@ Solara 認証サービス — Phase 2-9 Sign in 統合
 - L713 `markLocalOverlayShown()` — 端末 0 時基準で「今日この type の演出を表示した」と記録する。
 - L720 `getNotTodayCount()` — Not today 押下回数（サイクルID単位で保存）
 - L725 `incrementNotTodayCount()`
-- L755 `addConsultationRecord()` — 履歴を 1 件追加 (新しい順で先頭、上限超過分は古いものから削除)。
-- L767 `setConsultationFavorite()` — id 指定でお気に入りフラグを設定。見つからない場合は no-op。
-- L776 `deleteConsultationRecord()` — id 指定で 1 件削除。見つからない場合は no-op。
-- L783 `clearConsultationHistory()` — 履歴全削除 (Sanctuary 設定からの「すべて削除」用)。
-- L816 `pushConsultationAvoid()` — 提示した地名を window に積む (最新を末尾)。最新 [maxN] 件だけ残す。
-- L842 `clearConsultationAvoid()` — avoid-window 全消去 (Sanctuary「すべて削除」と一緒に呼ぶ用)。
-- L851 `saveRestoreSnapshot()` — 現在の画面状態スナップショットを保存する (paused 時に呼ぶ)。
-- L869 `clearRestoreSnapshot()` — スナップショットを破棄する (warm resume 時 / 復元消費後)。
+- L740 `getNotificationsEnabled()` — 通知マスタスイッチ (Sanctuary トグル)。デフォルト false (オプトイン)。
+- L745 `setNotificationsEnabled()`
+- L751 `getNotifSoftAskDeclines()` — ソフトアスクを「今はしない」で断られた累計回数 (上限超過で以後出さない)。
+- L756 `incrementNotifSoftAskDeclines()`
+- L763 `setNotifSoftAskDeclines()` — declines を直接設定 (0=リセット / 2=明示 OFF でソフトアスク抑制)。
+- L769 `getNotifSoftAskCycle()` — ソフトアスクを最後に出したサイクル ID (= 同一サイクルで二度出さない)。
+- L774 `setNotifSoftAskCycle()`
+- L803 `addConsultationRecord()` — 履歴を 1 件追加 (新しい順で先頭、上限超過分は古いものから削除)。
+- L815 `setConsultationFavorite()` — id 指定でお気に入りフラグを設定。見つからない場合は no-op。
+- L824 `deleteConsultationRecord()` — id 指定で 1 件削除。見つからない場合は no-op。
+- L831 `clearConsultationHistory()` — 履歴全削除 (Sanctuary 設定からの「すべて削除」用)。
+- L864 `pushConsultationAvoid()` — 提示した地名を window に積む (最新を末尾)。最新 [maxN] 件だけ残す。
+- L890 `clearConsultationAvoid()` — avoid-window 全消去 (Sanctuary「すべて削除」と一緒に呼ぶ用)。
+- L899 `saveRestoreSnapshot()` — 現在の画面状態スナップショットを保存する (paused 時に呼ぶ)。
+- L917 `clearRestoreSnapshot()` — スナップショットを破棄する (warm resume 時 / 復元消費後)。
 
   <details><summary>private 関数 1 件</summary>
 
-  - L788 `_writeConsultationHistory()`
+  - L836 `_writeConsultationHistory()`
 
   </details>
 

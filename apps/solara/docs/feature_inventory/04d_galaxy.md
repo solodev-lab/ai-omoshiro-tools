@@ -5,9 +5,9 @@
 
 ## サマリ
 
-- ファイル数: 10 / 総行数: 3677
+- ファイル数: 10 / 総行数: 3696
 - class/mixin/extension/enum: 22
-- 関数 (top-level + method の素拾い): 82
+- 関数 (top-level + method の素拾い): 83
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 1
 - Worker URL リテラル: 0
@@ -275,67 +275,68 @@ Star Atlas のカード長押しで表示される bottom sheet。
 - L16 `moonHealingMessage()` — 月齢 (端末ローカル) を 3 日ごと 10 区分に分け、その区分の月相に沿った
 
 
-### `lib/screens/galaxy_screen.dart` (1334 行)
+### `lib/screens/galaxy_screen.dart` (1353 行)
 
-**imports:** dart=3 / package=4 / relative=22
+**imports:** dart=3 / package=4 / relative=23
 
-- relative: `horoscope/horo_antique_icons.dart`, `../models/daily_reading.dart`, `../models/galaxy_cycle.dart`, `../models/lunar_intention.dart`, `../utils/celestial_events.dart`, `../utils/constellation_namer.dart`, `../utils/moon_phase.dart`, `../utils/solara_storage.dart`, `../utils/tarot_data.dart`, `../widgets/catasterism_formation_overlay.dart`, `../widgets/celestial_event_bar.dart`, `../widgets/cycle_spiral_painter.dart`, `../widgets/info_popup.dart`, `../widgets/moon_overlay.dart`, `../widgets/tap_to_unfocus.dart`, `galaxy/constellation_share_card_page.dart`, `galaxy/galaxy_constellation_builder.dart`, `galaxy/galaxy_stella_messages.dart`, `galaxy/galaxy_cycle_actions_sheet.dart`, `galaxy/galaxy_sample_data.dart`, `galaxy/galaxy_star_atlas.dart`, `galaxy/galaxy_replay_overlay.dart`
+- relative: `horoscope/horo_antique_icons.dart`, `../models/daily_reading.dart`, `../models/galaxy_cycle.dart`, `../models/lunar_intention.dart`, `../utils/celestial_events.dart`, `../utils/constellation_namer.dart`, `../utils/moon_event_status.dart`, `../utils/moon_phase.dart`, `../utils/solara_storage.dart`, `../utils/tarot_data.dart`, `../widgets/catasterism_formation_overlay.dart`, `../widgets/celestial_event_bar.dart`, `../widgets/cycle_spiral_painter.dart`, `../widgets/info_popup.dart`, `../widgets/moon_overlay.dart`, `../widgets/tap_to_unfocus.dart`, `galaxy/constellation_share_card_page.dart`, `galaxy/galaxy_constellation_builder.dart`, `galaxy/galaxy_stella_messages.dart`, `galaxy/galaxy_cycle_actions_sheet.dart`, `galaxy/galaxy_sample_data.dart`, `galaxy/galaxy_star_atlas.dart`, `galaxy/galaxy_replay_overlay.dart`
 
 **型定義 (2):**
 
-- L33 `class GalaxyScreen : StatefulWidget`
-- L51 `class GalaxyScreenState : State`
+- L34 `class GalaxyScreen : StatefulWidget`
+- L52 `class GalaxyScreenState : State`
 
-**関数 (10 public + 35 private):**
+**関数 (11 public + 35 private):**
 
-- L48 `createState()`
-- L126 `regenerateBackground()` — タブ切替でGalaxyに入ってきた時に、背景 (ネビュラ位置・色・星の位置)
-- L137 `pauseMotion()` — main.dart から Galaxy タブ離脱時に呼ばれる。Timer 即停止 = raster 0% 化。
-- L157 `initState()`
-- L168 `jitter()`
-- L186 `dispose()`
-- L389 `build()`
-- L689 `fmtTime()`
-- L691 `fmtDate()`
-- L1119 `restoreGalaxyState()` — captureRestore のスナップショットから終了画面を再現する (コールド起動時)。
+- L49 `createState()`
+- L127 `regenerateBackground()` — タブ切替でGalaxyに入ってきた時に、背景 (ネビュラ位置・色・星の位置)
+- L138 `pauseMotion()` — main.dart から Galaxy タブ離脱時に呼ばれる。Timer 即停止 = raster 0% 化。
+- L154 `recheckMoonEvents()` — タブ入室 / アプリ復帰時に、月イベント (新月・満月・刻星化) の発火判定だけを
+- L187 `initState()`
+- L198 `jitter()`
+- L216 `dispose()`
+- L408 `build()`
+- L708 `fmtTime()`
+- L710 `fmtDate()`
+- L1138 `restoreGalaxyState()` — captureRestore のスナップショットから終了画面を再現する (コールド起動時)。
 
   <details><summary>private 関数 35 件</summary>
 
-  - L166 `_initNebulaPositions()`
-  - L195 `_wakeMotion()`
-  - L203 `_onMotionTick()`
-  - L246 `_loadData()`
-  - L321 `_loadArtImage()`
-  - L336 `_checkMoonOverlay()`
-  - L375 `_dismissTopOverlay()`
-  - L515 `_buildTabBar()`
-  - L525 `_buildTab()`
-  - L568 `_buildCycleTab()`
-  - L599 `_buildDayBadge()`
-  - L623 `_buildMoonBadge()`
-  - L648 `_buildStellaMessage()`
-  - L731 `_onDragStart()`
-  - L738 `_onDragUpdate()`
-  - L749 `_onDragEnd()`
-  - L754 `_onTapUp()`
-  - L765 `_showDotPopup()`
-  - L771 `_hideDotPopup()`
-  - L775 `_buildDotPopup()`
-  - L830 `_openReplay()`
-  - L837 `_closeReplay()`
-  - L848 `_openConstellationShare()`
-  - L864 `_openCycleActions()`
-  - L884 `_buildDebugTriggerRow()`
-  - L901 `_buildDebugBtn()`
-  - L925 `_debugTriggerNewMoon()`
-  - L930 `_debugTriggerFullMoon()`
-  - L945 `_debugTriggerCatasterism()`
-  - L963 `_debugTriggerCycleCompletion()`
-  - L1008 `_buildMoonOverlay()`
-  - L1078 `_onCatasterismResult()`
-  - L1093 `_onFormationComplete()`
-  - L1155 `_moonPhaseDescription()`
-  - L1198 `_showGalaxyUsageGuide()`
+  - L196 `_initNebulaPositions()`
+  - L225 `_wakeMotion()`
+  - L233 `_onMotionTick()`
+  - L276 `_loadData()`
+  - L351 `_loadArtImage()`
+  - L371 `_checkMoonOverlay()`
+  - L394 `_dismissTopOverlay()`
+  - L534 `_buildTabBar()`
+  - L544 `_buildTab()`
+  - L587 `_buildCycleTab()`
+  - L618 `_buildDayBadge()`
+  - L642 `_buildMoonBadge()`
+  - L667 `_buildStellaMessage()`
+  - L750 `_onDragStart()`
+  - L757 `_onDragUpdate()`
+  - L768 `_onDragEnd()`
+  - L773 `_onTapUp()`
+  - L784 `_showDotPopup()`
+  - L790 `_hideDotPopup()`
+  - L794 `_buildDotPopup()`
+  - L849 `_openReplay()`
+  - L856 `_closeReplay()`
+  - L867 `_openConstellationShare()`
+  - L883 `_openCycleActions()`
+  - L903 `_buildDebugTriggerRow()`
+  - L920 `_buildDebugBtn()`
+  - L944 `_debugTriggerNewMoon()`
+  - L949 `_debugTriggerFullMoon()`
+  - L964 `_debugTriggerCatasterism()`
+  - L982 `_debugTriggerCycleCompletion()`
+  - L1027 `_buildMoonOverlay()`
+  - L1097 `_onCatasterismResult()`
+  - L1112 `_onFormationComplete()`
+  - L1174 `_moonPhaseDescription()`
+  - L1217 `_showGalaxyUsageGuide()`
 
   </details>
 
