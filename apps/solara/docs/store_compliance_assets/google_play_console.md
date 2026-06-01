@@ -126,10 +126,16 @@ Solara が提供する占星術・タロット・AI 相談は、すべて娯楽�
 ```
 
 ### A-4. アプリ アイコン (512 × 512 px PNG)
-→ 既存 `assets/solara_logo.png` を 512 × 512 に書き出し
+→ ✅ 生成済: `docs/store_compliance_assets/icons/google_play_icon_512.png` (512×512, 32-bit PNG, 329KB)。
+  unsealed 8芒星メダルを `tools/make_app_icon.py` で書き出し。フルブリード正方形 (角丸・効果なし、Google が表示時にマスク)。
 
 ### A-5. フィーチャー グラフィック (1024 × 500 px PNG)
-→ 「Solara」ロゴ + 星空 + アストロカートグラフィ風のイメージ。要新規制作。
+→ 🎨 デザイン案 3 種を生成済 (`tools/make_feature_graphic.py`、`docs/store_compliance_assets/feature_graphic/`):
+  - `feature_graphic_A_emblem-left.png` … 紋章左 + 右に SOLARA(Cinzel)/タグライン。王道・推奨。
+  - `feature_graphic_B_centered.png` … 中央シンメトリ。※プロモ動画併用時は中央に再生ボタンが重なる点に注意。
+  - `feature_graphic_C_astromap.png` … アストロカートグラフィ地図(緯度経度グリッド+惑星ライン)背景。地図機能訴求。**← 採用 (2026-06-01)**。
+  文言: `SOLARA` + `占星術でひもとく自己探求` (NG ワード回避 + オーナー指示で「AI」表記は不使用)。背景は procedural のまま確定。
+  再生成: `python tools/make_feature_graphic.py` (CWD=apps/solara)。
 
 ### A-6. スマートフォン用スクリーンショット (最低 2 枚、推奨 4-8 枚)
 推奨: Apple 用と同じ 6 枚 ([apple_app_store_connect.md §D-7](apple_app_store_connect.md) 参照)

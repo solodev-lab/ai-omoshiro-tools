@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="ic_launcher_background">#080C14</color>
+    <color name="ic_launcher_background">#000000</color>
     <!-- 起動スプラッシュ(OS の system splash / 旧 launch screen)の背景。
          Solara の最暗コズミック色。ライトモードでの白チラつきを防ぎ、
          アイコン → Flutter スプラッシュ(黒)をシームレスに繋ぐ。 -->

@@ -56,3 +56,7 @@ mockup/share-assets/tarot_scene/planet_textures/
 # (the app ships a curated subset under assets/catasterism-bg/). Local only.
 mockup/share-assets/backgrounds_*_variants/
 mockup/share-assets/backgrounds_*_bright/
+
+# Downloaded fonts for tools (e.g. Cinzel for make_feature_graphic.py). OFL,
+# re-downloadable; avoid committing binaries. Download URL is in the script header.
+tools/_fonts_*.ttf

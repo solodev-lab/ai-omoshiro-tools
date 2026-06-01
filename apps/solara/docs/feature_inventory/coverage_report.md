@@ -55,9 +55,9 @@
 ## #1 / #2 機械抽出 ↔ feature_inventory.md (人手版) の対整合
 
 - 機械抽出した class/mixin/extension/enum: **475**
-- inventory に登場する識別子 (大文字始まり ``backtick``囲み): **272**
+- inventory に登場する識別子 (大文字始まり ``backtick``囲み): **276**
 
-### #1 機械にあるが Doc に書かれていない (277)
+### #1 機械にあるが Doc に書かれていない (276)
 
 - `AppAttestClient`
 - `ConstellationShareCardPage`
@@ -87,7 +87,6 @@
 - `MapMoonNotice`
 - `MapTimeSliderState`
 - `MemoTextField`
-- `MoonEventKind`
 - `MoonEventStatus`
 - `MoonNotificationService`
 - `ObserveFullReadingButton`
@@ -259,9 +258,10 @@
 - `_PlanetDef`
 - `_PlanetGlyphPainter`
 - `_PlanetIntroBody`
-- … 残り 77 省略
+- `_PlanetSub`
+- … 残り 76 省略
 
-### #2 Doc に書いてあるがコードに存在しない (ゴースト記述) (74)
+### #2 Doc に書いてあるがコードに存在しない (ゴースト記述) (77)
 
 > 注: Flutter SDK や外部ライブラリの型もここに乗る (誤検出)。
 > 真のゴーストはアプリ独自型のみ。実際の Doc 修正対象は手で絞り込む。
@@ -316,6 +316,8 @@
 - `NSLocationAlwaysAndWhenInUseUsageDescription`
 - `OutlinedButton`
 - `PATH_OVERRIDES`
+- `POST_NOTIFICATIONS`
+- `RECEIVE_BOOT_COMPLETED`
 - `REVENUECAT_SECRET_KEY`
 - `RawScrollbar`
 - `RepaintBoundary`
@@ -338,6 +340,7 @@
 - `ThemeData`
 - `TickerMode`
 - `Timer`
+- `UNUserNotificationCenter`
 - `ValueListenableBuilder`
 - `WhenInUse`
 

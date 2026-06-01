@@ -277,7 +277,8 @@ v1.0.0 — はじめての公開バージョン
 🔴 **キャッチコピーで NG**: 「占い」「運勢」「予言」「的中」「保証」 (Apple 2.3.10 検出対象)
 
 ### D-8. App アイコン (1024 × 1024 px、透過なし PNG)
-→ 既存 `assets/solara_logo.png` をベースに 1024 × 1024 で生成。Build に同梱されている。
+→ ✅ 生成済: `docs/store_compliance_assets/icons/apple_app_store_icon_1024.png` (1024×1024, RGB / **alpha なし**, 938KB)。
+  unsealed 8芒星メダルを `tools/make_app_icon.py` で書き出し。Build にも同梱 (Icon-App-1024x1024@1x.png, remove_alpha_ios) されており、通常は Xcode アップロードで自動受領。手動入稿が必要な場合はこのファイルを使う。
 
 ### D-9. App プレビュー (動画、任意)
 → 初回公開はスキップで OK。後で追加可能。
