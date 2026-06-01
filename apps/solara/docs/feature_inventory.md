@@ -1253,6 +1253,28 @@ Worker [`consultation_v2.js:78-83`](../worker/src/consultation_v2.js#L78) の既
 - **iOS は Mac/CI でのビルド検証が必要** (Windows ではビルド不可、コードは analyze クリーン)。
 - アップロード用 AAB は dart-define (GCP / RC android / Google serverClientId) 付きで再ビルド要。
 
+### 0.2.47 アプリアイコン刷新 + ストア素材一式 + AAB +27 (2026-06-01 セッション、commit `addf6bb` push 済)
+
+> コードレイヤ変更なし (extract `+0 -0 ~0`)。アセット/設定/ストア素材のみ。新規 HARD ゼロ。
+
+#### アプリアイコン (launcher)
+- 原画 `mockup/share-assets/menu-icons/v2/unsealed.png` (1024 黒背景の8芒星メダル)。
+- `tools/make_app_icon.py` (新規) が `assets/app_icon.png` (フル・iOS/Androidレガシー用) と
+  `assets/app_icon_foreground.png` (紋章を 66% = 円マスク径72dp相当に縮小・透明・アダプティブ前景用) を生成。
+- `pubspec.yaml` `flutter_launcher_icons`: image_path/foreground を新アセットへ、adaptive 背景 `#080C14`→`#000000`、`remove_alpha_ios:true` 追加。`dart run flutter_launcher_icons` で全解像度再生成。
+- 🔴 罠: `mipmap-anydpi-v26/ic_launcher.xml` は flutter_launcher_icons に上書きされず旧 `inset 16%` が残る → 手動除去 (前景の二重縮小を防ぎ円マスクで金リング flush)。
+- version `1.0.0+26 → +27`。
+
+#### ストア掲載素材 (`docs/store_compliance_assets/`)
+- `icons/google_play_icon_512.png` (512² 32bit不透明) / `icons/apple_app_store_icon_1024.png` (1024² RGB透過なし)。
+- `feature_graphic/feature_graphic_{A,B,C}.png` (1024×500) を `tools/make_feature_graphic.py` で生成、**C (astromap) 採用**。文言「SOLARA / 占星術でひもとく自己探求」(NG ワード回避・AI 表記不使用)。Cinzel は `.gitignore` (tools/_fonts_*.ttf)。
+- 掲載ドキュメント A-4 / A-5 / D-8 を新ファイル参照に更新。
+
+#### 検証
+- flutter analyze: lib/ クリーン (既存 test 2 件のみ) / AAB +27 ビルド成功 (112.7MB, dart-define 全注入)。
+- audit.py **HARD 7 (新規ゼロ・行数増は §0.2.46 由来) / WARN 30 / 重複 20 (全て `),`) / 未使用候補 0**。
+  find_unused_code.py の 2 候補 (`GalaxyArchiveSortLabel.jp` / `DominantFortuneKindToCategoryIcon.toCategoryIcon`) は両方 extension で使用中 = 誤検出。
+
 ### 0.3 Horo「今日の占い」1 日 1 回固定 + プロンプト刷新 (2026-05-27)
 
 > **設計の柱**: 「30 回までは OK」のような曖昧な防衛をやめ、「**1 日 1 回・変更しない**」を
