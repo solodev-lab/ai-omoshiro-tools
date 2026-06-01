@@ -5,9 +5,9 @@
 
 ## サマリ
 
-- ファイル数: 6 / 総行数: 2516
-- class/mixin/extension/enum: 13
-- 関数 (top-level + method の素拾い): 63
+- ファイル数: 5 / 総行数: 2350
+- class/mixin/extension/enum: 11
+- 関数 (top-level + method の素拾い): 58
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 0
 - Worker URL リテラル: 0
@@ -172,30 +172,6 @@
   - L517 `_revealMessage()`
   - L524 `_revealEvents()`
   - L548 `_setIntention()`
-
-  </details>
-
-
-### `lib/widgets/solara_splash.dart` (166 行)
-
-**imports:** dart=1 / package=2 / relative=0
-
-**型定義 (2):**
-
-- L18 `class SolaraSplash : StatefulWidget`
-  - コールド起動時に [child] (= SolaraHome / Map) の上へ一瞬だけ被せる
-- L26 `class _SolaraSplashState : State`
-
-**関数 (4 public + 1 private):**
-
-- L23 `createState()`
-- L41 `initState()`
-- L73 `dispose()`
-- L79 `build()`
-
-  <details><summary>private 関数 1 件</summary>
-
-  - L101 `_splashLayer()`
 
   </details>
 

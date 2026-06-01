@@ -5,9 +5,9 @@
 
 ## サマリ
 
-- ファイル数: 3 / 総行数: 239
-- class/mixin/extension/enum: 4
-- 関数 (top-level + method の素拾い): 7
+- ファイル数: 4 / 総行数: 317
+- class/mixin/extension/enum: 6
+- 関数 (top-level + method の素拾い): 9
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 0
 - Worker URL リテラル: 0
@@ -67,6 +67,24 @@ fetch をトリガーする 4 イベント (これ以外で呼んではいけな
   - L72 `_doFetch()`
 
   </details>
+
+
+### `lib/utils/consultation_return.dart` (78 行)
+
+**imports:** dart=0 / package=1 / relative=1
+
+- relative: `consultation_v2_api.dart`
+
+**型定義 (2):**
+
+- L18 `class ConsultationResumeState`
+  - 相談結果(live) → Map → 相談結果 への「戻り導線」橋渡し singleton。
+- L47 `class ConsultationReturn : ChangeNotifier`
+
+**関数 (2 public + 0 private):**
+
+- L56 `stash()` — 🗺 で Map へ移る前に live 状態を積む。
+- L72 `clear()` — 破棄 (✕ / Map タブ離脱 / 新規相談開始)。
 
 
 ### `lib/utils/map_focus.dart` (94 行)

@@ -1,12 +1,12 @@
 # Solara Code Audit
 
-対象: lib (195 個の .dart)
+対象: lib (196 個の .dart)
 
 ## 1. ファイル行数 (NOTICE >= 300 / WARN >= 500 / HARD >= 1000)
 
 | 行数 | 判定 | ファイル |
 |------|------|----------|
-| 3501 | 🔴 HARD | lib/screens/map_screen.dart |
+| 3515 | 🔴 HARD | lib/screens/map_screen.dart |
 | 2029 | 🔴 HARD | lib/screens/map/map_daily_transit_screen.dart |
 | 1628 | 🔴 HARD | lib/screens/sanctuary_screen.dart |
 | 1374 | 🔴 HARD | lib/screens/sanctuary/sanctuary_title_diagnosis.dart |
@@ -33,12 +33,12 @@
 | 624 | 🟠 WARN | lib/screens/map/map_astro_lines.dart |
 | 592 | 🟠 WARN | lib/screens/sanctuary/sanctuary_profile_editor.dart |
 | 581 | 🟠 WARN | lib/widgets/fortune_overlays/love_painter.dart |
+| 579 | 🟠 WARN | lib/screens/consultation/consultation_result_screen.dart |
 | 564 | 🟠 WARN | lib/widgets/new_moon_overlay.dart |
 | 562 | 🟠 WARN | lib/screens/consultation/consultation_result_card.dart |
 | 559 | 🟠 WARN | lib/utils/planet_intro.dart |
 | 550 | 🟠 WARN | lib/screens/consultation/consultation_input_widgets.dart |
 | 535 | 🟠 WARN | lib/utils/astro_lines.dart |
-| 534 | 🟠 WARN | lib/screens/consultation/consultation_result_screen.dart |
 | 511 | 🟠 WARN | lib/screens/map/map_astro.dart |
 | 510 | 🟠 WARN | lib/utils/consultation_v2_api.dart |
 | 500 | 🟠 WARN | lib/screens/observe/tarot_altar_scene.dart |
@@ -51,7 +51,7 @@
 | 481 | 🟡 NOTICE | lib/widgets/full_moon_overlay.dart |
 | 476 | 🟡 NOTICE | lib/screens/sanctuary/class_share_card.dart |
 | 467 | 🟡 NOTICE | lib/screens/horoscope/horo_relocation_panel.dart |
-| 452 | 🟡 NOTICE | lib/main.dart |
+| 455 | 🟡 NOTICE | lib/main.dart |
 | 445 | 🟡 NOTICE | lib/widgets/catasterism_overlay.dart |
 | 438 | 🟡 NOTICE | lib/screens/galaxy/galaxy_star_atlas.dart |
 | 427 | 🟡 NOTICE | lib/screens/consultation/consultation_result_widgets.dart |
