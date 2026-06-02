@@ -28,3 +28,6 @@ apps/solara/mockup/ai_consent_bg_drafts/
 
 # GeoNames seed cache (Stella 相談 D1 都市プール) — DL zip/txt + 生成 12MB SQL。commit しない
 apps/solara/tools/_geonames_cache/
+
+# ストアスクショの実機キャプチャ素材 (個人データ含む中間物。装飾済みは phone_screenshots/ をコミット)
+apps/solara/docs/store_compliance_assets/phone_raw/
