@@ -8,7 +8,7 @@
 |------|------|----------|
 | 3643 | 🔴 HARD | lib/screens/map_screen.dart |
 | 2029 | 🔴 HARD | lib/screens/map/map_daily_transit_screen.dart |
-| 1729 | 🔴 HARD | lib/screens/sanctuary_screen.dart |
+| 1735 | 🔴 HARD | lib/screens/sanctuary_screen.dart |
 | 1374 | 🔴 HARD | lib/screens/sanctuary/sanctuary_title_diagnosis.dart |
 | 1353 | 🔴 HARD | lib/screens/galaxy_screen.dart |
 | 1084 | 🔴 HARD | lib/screens/forecast_screen.dart |
@@ -193,7 +193,7 @@
 
 ### 10. 📁 別ファイル間 (12 箇所、7 ファイル)
 
-  - lib/screens/sanctuary_screen.dart:1625
+  - lib/screens/sanctuary_screen.dart:1631
   - lib/widgets/class_card.dart:289
   - lib/screens/consultation/consultation_input_picker_widgets.dart:87
   - lib/screens/consultation/consultation_input_picker_widgets.dart:128

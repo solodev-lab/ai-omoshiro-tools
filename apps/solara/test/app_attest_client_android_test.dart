@@ -1,15 +1,15 @@
-/// AppAttestClient の Android 経路 (Play Integrity) 単体テスト (S5)。
-///
-/// flutter test は host OS (Windows/macOS) で動くため `Platform.isAndroid` は false。
-/// テスト専用 hook (`addAndroidHeadersForTest` / `initializeAndroidForTest`) で
-/// 直接 Android logic を呼出し、mock plugin + mock http で挙動検証する。
-///
-/// カバー範囲:
-///   - initializeAndroidForTest: plugin warmup 成功 / 失敗
-///   - addAndroidHeadersForTest: nonce 取得 → clientData 構築 → token 取得 → 3 ヘッダー注入
-///   - challenge endpoint エラー時の defensive 動作
-///   - plugin verify 例外時の defensive 動作 (= ヘッダー注入しない)
-///   - uid 注入 (PurchasesService.appUserId の値が clientData.uid に入る)
+// AppAttestClient の Android 経路 (Play Integrity) 単体テスト (S5)。
+//
+// flutter test は host OS (Windows/macOS) で動くため `Platform.isAndroid` は false。
+// テスト専用 hook (`addAndroidHeadersForTest` / `initializeAndroidForTest`) で
+// 直接 Android logic を呼出し、mock plugin + mock http で挙動検証する。
+//
+// カバー範囲:
+//   - initializeAndroidForTest: plugin warmup 成功 / 失敗
+//   - addAndroidHeadersForTest: nonce 取得 → clientData 構築 → token 取得 → 3 ヘッダー注入
+//   - challenge endpoint エラー時の defensive 動作
+//   - plugin verify 例外時の defensive 動作 (= ヘッダー注入しない)
+//   - uid 注入 (PurchasesService.appUserId の値が clientData.uid に入る)
 
 import 'dart:convert';
 
@@ -28,13 +28,12 @@ class _MockIntegrityPlatform extends AppAttestIntegrityPlatform {
     this.prepareShouldThrow = false,
     this.verifyShouldThrow = false,
     this.verifyReturnEmpty = false,
-    this.fixedToken = 'mock-play-integrity-token',
   });
 
   final bool prepareShouldThrow;
   final bool verifyShouldThrow;
   final bool verifyReturnEmpty;
-  final String fixedToken;
+  final String fixedToken = 'mock-play-integrity-token';
 
   int prepareCalls = 0;
   int verifyCalls = 0;
