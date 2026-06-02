@@ -37,6 +37,8 @@ export async function searchPlace(query, env, options = {}) {
         env.GOOGLE_PLACES_KEY,
         options,
       );
+      // options.rank (中心点/知名度) は Google 経路のみ有効。Nominatim フォールバック
+      // は rankPreference 非対応なので、フォールバック時は順位指定は無視される。
       if (googleResults.length > 0) {
         return { source: 'google', results: googleResults };
       }
@@ -87,12 +89,26 @@ async function searchNominatim(query) {
  * - フィールド指定が X-Goog-FieldMask ヘッダ
  * - レスポンス schema が places[] (camelCase)
  */
-async function searchGooglePlacesNew(query, apiKey, { lat, lng, radius = 15000 } = {}) {
+async function searchGooglePlacesNew(
+  query,
+  apiKey,
+  { lat, lng, radius = 15000, rank } = {},
+) {
   const reqBody = {
     textQuery: query,
     languageCode: 'ja',
     pageSize: 20,
   };
+
+  // rank: 'distance' (中心点=近さ優先) のときだけ rankPreference: DISTANCE を付ける。
+  // 'relevance' / 未指定 は Google 既定 (RELEVANCE=知名度込み) なので何も付けない。
+  // DISTANCE は locationBias と併用可 (Google 公式: カテゴリ検索「東京 カフェ」等で有効)。
+  // ★ どちらのモードでも pageSize は 20 のまま (= 1 リクエスト)。Google が順位を
+  //    変えるので「上から 20 件」の中身が変わり、近所中心 / 知名度中心の 2 パターンの
+  //    結果が得られる (件数を増やさないので課金も従来どおり 1 検索 = 1 req)。
+  if (rank === 'distance') {
+    reqBody.rankPreference = 'DISTANCE';
+  }
 
   // マップ中心座標が渡されていれば locationBias を付与（半径15km円形）
   // → カフェ等POI検索でマップ中心付近の結果を優先

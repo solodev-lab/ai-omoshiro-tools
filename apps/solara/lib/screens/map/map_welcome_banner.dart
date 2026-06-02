@@ -10,6 +10,9 @@ enum WelcomeBannerMode {
 
   /// C: 出生地+現住所あり・付与済 → Stella 相談へ誘導。
   tryStella,
+
+  /// D: profile 付与完了 + C 消化後・未サインイン → サインインでさらに3クレジット、と促す。
+  addSignin,
 }
 
 /// Map 上部に出すウェルカム特典バナー (B/C 共通)。
@@ -32,14 +35,41 @@ class MapWelcomeBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (mode == WelcomeBannerMode.none) return const SizedBox.shrink();
-    final isHome = mode == WelcomeBannerMode.addHome;
-    final title = isHome
-        ? '✦ 現住所を登録すると、無料クレジットを3つプレゼント'
-        : '✦ ようこそ。無料クレジットを3つお贈りしました';
-    final subtitle = isHome
-        ? 'あなたの「今いる場所」から星を読み解き、Stella相談にも使えます。'
-        : '週でリセットされない相談チケットです。Stellaに、あなたの星と場所のことを相談してみませんか？';
-    final ctaLabel = isHome ? '現住所を登録する' : 'Stellaに相談する';
+    final String title;
+    final String subtitle;
+    final String ctaLabel;
+    final Widget iconWidget;
+    switch (mode) {
+      case WelcomeBannerMode.addHome: // B
+        title = '✦ 現住所を登録すると、無料クレジットを3つプレゼント';
+        subtitle = 'あなたの「今いる場所」から星を読み解き、Stella相談にも使えます。';
+        ctaLabel = '現住所を登録する';
+        iconWidget =
+            const Icon(Icons.auto_awesome, color: Color(0xFFF9D976), size: 22);
+        break;
+      case WelcomeBannerMode.addSignin: // D
+        title = '✦ Google / Apple でサインインすると、無料クレジットをさらに3つプレゼント';
+        subtitle = 'サインインすると記録を引き継げて、機種変更や再インストールでも安心です。';
+        ctaLabel = 'サインインする';
+        iconWidget =
+            const Icon(Icons.login, color: Color(0xFFF9D976), size: 22);
+        break;
+      case WelcomeBannerMode.tryStella: // C
+      case WelcomeBannerMode.none:
+        title = '✦ ようこそ。無料クレジットを3つお贈りしました';
+        subtitle =
+            '週でリセットされない相談チケットです。Stellaに、あなたの星と場所のことを相談してみませんか？';
+        ctaLabel = 'Stellaに相談する';
+        iconWidget = const SizedBox(
+          width: 28,
+          height: 28,
+          child: Image(
+            image: AssetImage('assets/menu_icons/consult.webp'),
+            fit: BoxFit.contain,
+          ),
+        );
+        break;
+    }
 
     return Container(
       margin: const EdgeInsets.only(top: 8),
@@ -58,17 +88,7 @@ class MapWelcomeBanner extends StatelessWidget {
           // ── アイコン (C は水晶玉アイコン、B は ✦) ──
           Padding(
             padding: const EdgeInsets.only(top: 1, right: 10),
-            child: isHome
-                ? const Icon(Icons.auto_awesome,
-                    color: Color(0xFFF9D976), size: 22)
-                : const SizedBox(
-                    width: 28,
-                    height: 28,
-                    child: Image(
-                      image: AssetImage('assets/menu_icons/consult.webp'),
-                      fit: BoxFit.contain,
-                    ),
-                  ),
+            child: iconWidget,
           ),
           // ── テキスト + CTA ──
           Expanded(

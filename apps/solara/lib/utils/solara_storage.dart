@@ -192,6 +192,10 @@ class SolaraStorage {
   static const _welcomeEligibleKey = 'solara_welcome_eligible_v1';
   static const _welcomeGrantedKey = 'solara_welcome_granted_v1';
   static const _welcomeConsultUsedKey = 'solara_welcome_consult_used_v1';
+  // バナー D (サインイン勧誘) を ✕ で閉じた永続フラグ。WelcomeGiftFlags には
+  // 含めず独立 getter で読む (既存構造を壊さないため)。
+  static const _welcomeSigninDismissedKey =
+      'solara_welcome_signin_dismissed_v1';
 
   /// 本機能の初回到達時に 1 度だけベースラインを記録する (以後 no-op)。
   /// [profileCompleteNow] = その瞬間に birth+home が揃っているか。
@@ -223,6 +227,18 @@ class SolaraStorage {
   static Future<void> setWelcomeConsultUsed() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_welcomeConsultUsedKey, true);
+  }
+
+  /// バナー D (サインイン勧誘) を ✕ で閉じたか。true なら以後 D を出さない。
+  static Future<bool> loadWelcomeSigninDismissed() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_welcomeSigninDismissedKey) ?? false;
+  }
+
+  /// バナー D を ✕ で閉じたら呼ぶ。
+  static Future<void> setWelcomeSigninDismissed() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_welcomeSigninDismissedKey, true);
   }
 
   // --- Forecast heatmap display settings ---

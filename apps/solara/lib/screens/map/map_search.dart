@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:latlong2/latlong.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../utils/solara_api.dart' show solaraSearchUrl;
+import '../../widgets/info_popup.dart';
 import 'map_astro.dart';
 import 'map_constants.dart';
 import 'map_fortune_sheet.dart' show showCategoryInfoPopup;
@@ -114,10 +115,14 @@ double _haversineKm(double lat1, double lng1, double lat2, double lng2) {
 /// CF Worker /search 経由で場所検索。
 /// [biasCenter] を渡すと Google Places の locationBias.circle (15km) として
 /// 中心付近のPOIを優先する。出生地検索など特定地名のときは null で良い。
-Future<List<SearchHit>> searchPlaces(String query, {LatLng? biasCenter}) async {
+Future<List<SearchHit>> searchPlaces(String query,
+    {LatLng? biasCenter, String rank = 'distance'}) async {
   if (query.trim().length < 2) return [];
   try {
-    final params = <String, String>{'q': query};
+    // rank: 'distance' (中心点=地図中心からの近さ優先) | 'relevance' (知名度)。
+    // 件数は Worker 側で 20 件のまま。Google の順位が変わることで「上から 20 件」の
+    // 中身が変わり、近所中心 / 知名度中心の 2 パターンの結果が取れる。
+    final params = <String, String>{'q': query, 'rank': rank};
     if (biasCenter != null) {
       params['lat'] = biasCenter.latitude.toString();
       params['lng'] = biasCenter.longitude.toString();
@@ -188,6 +193,12 @@ class SearchResultList extends StatelessWidget {
   /// 検索結果一覧で「カテゴリ名 X.X」表示に使う。
   final String activeCategory;
 
+  /// 検索ランク ('distance'=中心点 / 'relevance'=知名度)。ヘッダのトグル表示用。
+  final String rank;
+
+  /// ランク切替コールバック (同一キーワード・同一原点で再検索)。null ならトグル非表示。
+  final ValueChanged<String>? onRankChanged;
+
   const SearchResultList({
     super.key,
     required this.hits,
@@ -196,6 +207,8 @@ class SearchResultList extends StatelessWidget {
     required this.center,
     this.maxHeight = 320,
     this.activeCategory = 'all',
+    this.rank = 'distance',
+    this.onRankChanged,
   });
 
   @override
@@ -233,6 +246,7 @@ class SearchResultList extends StatelessWidget {
             ),
           ]),
         ),
+        if (onRankChanged != null) _rankToggle(context),
         const Divider(height: 1, color: Color(0x22C9A84C)),
         Flexible(
           child: ListView.separated(
@@ -244,6 +258,107 @@ class SearchResultList extends StatelessWidget {
           ),
         ),
       ]),
+    );
+  }
+
+  /// ヘッダ直下の「中心点 / 知名度」トグル。
+  /// 並び替えではなく「取得する検索結果の中身を 2 パターン切替える」もの:
+  ///   中心点 (distance) = 地図中心 (現住所等) から近い順 → 近所の店が上位に入る。
+  ///   知名度 (relevance) = Google 既定 → 知名度の高い店が上位に入る (多少遠くても)。
+  /// Google が順位を変え、上から 20 件取るので「中身」が変わる (件数は不変)。
+  Widget _rankToggle(BuildContext context) {
+    final cb = onRankChanged!;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(14, 6, 10, 6),
+      child: Row(children: [
+        _rankSeg('distance', '中心点', cb),
+        const SizedBox(width: 6),
+        _rankSeg('relevance', '知名度', cb),
+        const Spacer(),
+        GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: () => _showRankHelp(context),
+          child: const Padding(
+            padding: EdgeInsets.all(4),
+            child: Icon(Icons.help_outline, size: 14, color: Color(0xFF888888)),
+          ),
+        ),
+      ]),
+    );
+  }
+
+  Widget _rankSeg(String value, String label, ValueChanged<String> cb) {
+    final active = rank == value;
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: active ? null : () => cb(value),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(14),
+          color: active ? const Color(0x33C9A84C) : Colors.transparent,
+          border: Border.all(
+            color: active ? const Color(0xFFC9A84C) : const Color(0x33C9A84C),
+            width: active ? 1.2 : 1,
+          ),
+        ),
+        child: Text(
+          label,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            fontSize: 12,
+            letterSpacing: 0.5,
+            color: active ? const Color(0xFFC9A84C) : const Color(0xFF888888),
+            fontWeight: active ? FontWeight.w600 : FontWeight.w400,
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showRankHelp(BuildContext context) {
+    showInfoPopup(
+      context: context,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: const [
+          Text('検索結果の絞り方',
+              style: TextStyle(
+                  color: Color(0xFFC9A84C), fontSize: 14, letterSpacing: 1)),
+          SizedBox(height: 10),
+          Text('【中心点】',
+              style: TextStyle(
+                  color: Color(0xFFC9A84C),
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600)),
+          SizedBox(height: 4),
+          Text(
+            '地図の中心 (現住所など) から近い順で取得します。\n'
+            '知名度が低くても、近所のお店が上位に出ます。',
+            style: TextStyle(color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
+          ),
+          SizedBox(height: 10),
+          Text('【知名度】',
+              style: TextStyle(
+                  color: Color(0xFFC9A84C),
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600)),
+          SizedBox(height: 4),
+          Text(
+            'Google でよく知られているお店を優先して取得します。\n'
+            '多少離れていても、知名度の高い候補が上位に出ます。',
+            style: TextStyle(color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
+          ),
+          SizedBox(height: 10),
+          Text(
+            '※ 並べ替えではなく、取得する候補そのものが変わります。\n'
+            '　 同じキーワードで両方を見比べてみてください。',
+            style: TextStyle(color: Color(0xFF888888), fontSize: 12, height: 1.5),
+          ),
+        ],
+      ),
     );
   }
 

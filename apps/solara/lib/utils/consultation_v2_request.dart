@@ -53,6 +53,22 @@ class ConsultationWhen {
         if (timeBand != null) 'timeBand': timeBand,
         if (atUtcMs != null) 'atUtcMs': atUtcMs,
       };
+
+  /// プロセス死復元用 (ConsultationReturn スナップショット)。kind 欠落は null。
+  static ConsultationWhen? fromJsonOrNull(dynamic j) {
+    if (j is! Map) return null;
+    final m = j.cast<String, dynamic>();
+    final kind = m['kind'] as String?;
+    if (kind == null) return null;
+    return ConsultationWhen(
+      kind: kind,
+      date: m['date'] as String?,
+      start: m['start'] as String?,
+      end: m['end'] as String?,
+      timeBand: m['timeBand'] as String?,
+      atUtcMs: (m['atUtcMs'] as num?)?.toInt(),
+    );
+  }
 }
 
 /// 具体地点 (具体地点スコープ)。地図タップ=座標のみ / 検索=店名+種類付き。
@@ -88,6 +104,19 @@ class ConsultationPoint {
         if (placeType != null && placeType!.isNotEmpty) 'placeType': placeType,
         if (placeKind != null && placeKind!.isNotEmpty) 'placeKind': placeKind,
       };
+
+  /// プロセス死復元用 (ConsultationReturn スナップショット)。
+  static ConsultationPoint? fromJsonOrNull(dynamic j) {
+    if (j is! Map) return null;
+    final m = j.cast<String, dynamic>();
+    return ConsultationPoint(
+      lat: (m['lat'] as num?)?.toDouble() ?? 0,
+      lng: (m['lng'] as num?)?.toDouble() ?? 0,
+      name: m['name'] as String?,
+      placeType: m['placeType'] as String?,
+      placeKind: m['placeKind'] as String?,
+    );
+  }
 }
 
 /// 「どこで」(scope)。候補地点プールの作り方。
@@ -141,6 +170,22 @@ class ConsultationScope {
         if (regionGroup != null) 'regionGroup': regionGroup,
         if (country != null) 'country': country,
       };
+
+  /// プロセス死復元用 (ConsultationReturn スナップショット)。kind 欠落は null。
+  static ConsultationScope? fromJsonOrNull(dynamic j) {
+    if (j is! Map) return null;
+    final m = j.cast<String, dynamic>();
+    final kind = m['kind'] as String?;
+    if (kind == null) return null;
+    return ConsultationScope(
+      kind: kind,
+      point: ConsultationPoint.fromJsonOrNull(m['point']),
+      radiusKm: (m['radiusKm'] as num?)?.toDouble(),
+      minKm: (m['minKm'] as num?)?.toDouble(),
+      regionGroup: m['regionGroup'] as String?,
+      country: m['country'] as String?,
+    );
+  }
 }
 
 /// 相談リクエスト (最小入力 約1KB)。Worker が全計算する。
@@ -280,4 +325,35 @@ class ConsultationRequest {
         if (avoid.isNotEmpty) 'avoid': avoid,
         'lang': lang,
       };
+
+  /// プロセス死復元用 (ConsultationReturn スナップショット)。[toJson] と往復対応。
+  /// birth/home はネストオブジェクトから読む。欠落フィールドは安全側 (0/null/
+  /// 既定値) に倒す (壊れたスナップショットでもクラッシュさせない)。
+  factory ConsultationRequest.fromJson(Map<String, dynamic> j) {
+    final birth = (j['birth'] as Map?)?.cast<String, dynamic>() ?? const {};
+    final home = (j['home'] as Map?)?.cast<String, dynamic>() ?? const {};
+    return ConsultationRequest(
+      birthDate: birth['date'] as String? ?? '',
+      birthTime: birth['time'] as String?,
+      birthTimeUnknown: birth['timeUnknown'] == true,
+      birthLat: (birth['lat'] as num?)?.toDouble() ?? 0,
+      birthLng: (birth['lng'] as num?)?.toDouble() ?? 0,
+      birthTz: (birth['tz'] as num?)?.toInt() ?? 0,
+      birthTzName: birth['tzName'] as String?,
+      homeLat: (home['lat'] as num?)?.toDouble() ?? 0,
+      homeLng: (home['lng'] as num?)?.toDouble() ?? 0,
+      theme: j['theme'] as String? ?? '',
+      mode: j['mode'] as String? ?? '',
+      when: ConsultationWhen.fromJsonOrNull(j['when']),
+      scope: ConsultationScope.fromJsonOrNull(j['scope']),
+      withWhom: j['withWhom'] as String? ?? '',
+      wish: j['wish'] as String? ?? '',
+      isFirst: j['isFirst'] != false, // 欠落時は既定の true
+      excluded: (j['excluded'] as List?)?.map((e) => e.toString()).toList() ??
+          const [],
+      avoid:
+          (j['avoid'] as List?)?.map((e) => e.toString()).toList() ?? const [],
+      lang: j['lang'] as String? ?? 'ja',
+    );
+  }
 }

@@ -176,6 +176,10 @@ class _SolaraHomeState extends State<SolaraHome> with WidgetsBindingObserver {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     MapFocus.instance.addListener(_onMapFocusRequested);
+    // 初回サインイン特典 (signin grant) のお祝い通知を全画面共通で出すため、
+    // SolaraHome (常駐) で SolaraAuth を listen する。サインインは Sanctuary /
+    // 相談のサインインダイアログ等 複数箇所から起きるので中央で受ける。
+    SolaraAuth.instance.addListener(_onSigninCelebration);
     // ignore: unawaited_futures
     _restoreLastScreen();
     // C: 起動時の月イベント判定 (NavBar バッジ + Map 案内)。MapScreen の state は
@@ -240,6 +244,14 @@ class _SolaraHomeState extends State<SolaraHome> with WidgetsBindingObserver {
         // ignore: unawaited_futures
         _restorePushedRoute(data);
       });
+    }
+    // 「相談結果に戻る」チップの live 状態を復元 (Map タブ下部に再表示される)。
+    // singleton 状態を戻すだけ。チップは ConsultationReturn を listen しているため、
+    // Map タブが前面なら自動的に再描画される (push 不要)。
+    final consultReturn = snap['consultReturn'];
+    if (consultReturn is Map) {
+      ConsultationReturn.instance
+          .restoreFrom(Map<String, dynamic>.from(consultReturn));
     }
   }
 
@@ -325,6 +337,13 @@ class _SolaraHomeState extends State<SolaraHome> with WidgetsBindingObserver {
     if (route != null) {
       snap['route'] = route;
     }
+    // 「相談結果に戻る」チップの live 状態 (ConsultationReturn singleton)。
+    // メモリ専用のため、外部アプリ往復でプロセス死すると消える → ここで snapshot に
+    // 載せ、コールド起動時に Map タブ下部のチップを復活させる (案C のプロセス死対応)。
+    final consultReturn = ConsultationReturn.instance.captureRestore();
+    if (consultReturn != null) {
+      snap['consultReturn'] = consultReturn;
+    }
     await SolaraStorage.saveRestoreSnapshot(snap);
   }
 
@@ -332,7 +351,27 @@ class _SolaraHomeState extends State<SolaraHome> with WidgetsBindingObserver {
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     MapFocus.instance.removeListener(_onMapFocusRequested);
+    SolaraAuth.instance.removeListener(_onSigninCelebration);
     super.dispose();
+  }
+
+  /// 初回サインイン特典 (signin grant) が新規付与された直後にお祝いスナックバーを出す。
+  /// SolaraAuth の one-shot シグナル (pendingSigninGrantAmount) を消費して表示する。
+  /// alreadyGranted (再サインイン) では立たないので、新規付与時のみ祝う。
+  void _onSigninCelebration() {
+    if (!mounted) return;
+    final amount = SolaraAuth.instance.pendingSigninGrantAmount;
+    if (amount == null) return;
+    SolaraAuth.instance.consumeSigninGrantCelebration(); // one-shot 即消費
+    // listener はビルド中に呼ばれうるので、SnackBar は次フレームで出す。
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('✦ サインインしました！クレジットを$amountつ進呈しました'),
+        backgroundColor: const Color(0xFF1A2438),
+        duration: const Duration(seconds: 4),
+      ));
+    });
   }
 
   /// 相談結果カードの🗺ボタン要求を受け、Map タブへ切替えて候補位置＋日付でフォーカス。

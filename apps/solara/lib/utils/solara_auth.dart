@@ -127,6 +127,14 @@ class SolaraAuth extends ChangeNotifier {
   bool get isSignedIn => _account != null;
   bool get loaded => _loaded;
 
+  /// 初回サインイン特典 (signin grant) が **今回新規付与された** ときの付与額。
+  /// お祝いスナックバー用の one-shot シグナル。null = 表示すべきものなし。
+  /// UI 層 (main.dart) が listen し、表示後に [consumeSigninGrantCelebration] でクリアする。
+  /// alreadyGranted (再サインイン等で既に付与済) のときは立てない (=お祝いしない)。
+  int? _pendingSigninGrantAmount;
+  int? get pendingSigninGrantAmount => _pendingSigninGrantAmount;
+  void consumeSigninGrantCelebration() => _pendingSigninGrantAmount = null;
+
   /// 起動時に 1 度呼ぶ。SharedPreferences から復元 + provider 別の silent restore。
   Future<void> load() async {
     if (_loaded) return;
@@ -447,8 +455,14 @@ class SolaraAuth extends ChangeNotifier {
           oldId.startsWith(r'$RCAnonymousID:')) {
         await migratePurchasedCredits(oldId);
       }
-      await grantWelcomeCredits(kind: 'signin');
+      final res = await grantWelcomeCredits(kind: 'signin');
       await ConsultationCredits.instance.refresh();
+      // 今回新規に付与できたときだけ、お祝い通知を UI へ伝える。
+      // alreadyGranted (再サインイン) や失敗 (null) では祝わない。
+      if (res != null && res.granted && res.amount > 0) {
+        _pendingSigninGrantAmount = res.amount;
+        notifyListeners();
+      }
     } catch (_) {
       // best-effort
     }

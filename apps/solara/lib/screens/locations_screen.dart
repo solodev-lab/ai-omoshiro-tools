@@ -542,7 +542,11 @@ class _LocationsScreenState extends State<LocationsScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(s.name,
+              // HOME スロットは住所そのもの (例: 名古屋市東区) ではなく
+              // 「現住所」固定表示。VIEWPOINT プルダウン (_buildRefPointSelector)
+              // や map_viewpoint_menu と表記を統一し、個人情報的な住所文字列を
+              // 一覧に出さない方針 (オーナー指示 2026-05-09)。
+              Text(s.isHome ? '現住所' : s.name,
                   style: const TextStyle(fontSize: 13, color: Color(0xFFE8E0D0), fontWeight: FontWeight.w600),
                   maxLines: 1, overflow: TextOverflow.ellipsis),
               const SizedBox(height: 4),

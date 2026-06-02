@@ -43,6 +43,7 @@ import '../utils/consultation_credits.dart';
 import '../utils/direction_energy.dart';
 import '../utils/pro_status.dart';
 import '../utils/reverse_geocode.dart';
+import '../utils/solara_auth.dart';
 import '../widgets/pro_unlock_dialog.dart';
 import 'consultation/consultation_input_screen.dart';
 import 'consultation/consultation_return_chip.dart';
@@ -339,6 +340,10 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   // 検索結果リスト dropdown で選択中の VIEWPOINT index
   // -1 = 地図中心 (= _searchOriginCenter)、0+ = _vpSlotsCache の index
   int _searchVpIndex = -1;
+  // 検索ランク: 'distance' (中心点=地図中心からの近さ優先・既定) | 'relevance' (知名度)。
+  // 並び替えではなく「取得する検索結果の中身を 2 パターン切替える」ためのもの。
+  // Google が順位を変え、Worker が上から 20 件返すので「上位 20 件の中身」が変わる。
+  String _searchRank = 'distance';
 
   // 画面復元 (Android プロセス死対策): コールド起動時、SolaraHome から
   // restoreMapState() で渡される Map 画面のスナップショット (検索 + 各ポップアップ)
@@ -634,6 +639,7 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
         'query': _searchCtrl.text,
         'hits': _searchHits.map((h) => h.toJson()).toList(),
         'focusIndex': focusIdx,
+        'rank': _searchRank,
       };
     }
     if (_dailyTransitOpen) out['daily'] = true;
@@ -698,6 +704,7 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
       _searchOpen = false;
       _searchCtrl.text = query;
       _searchFocus = null;
+      _searchRank = data['rank'] as String? ?? 'distance';
     });
     if (focusIdx >= 0 && focusIdx < hits.length) {
       // 検索結果詳細 (SearchFocusPopup) を再表示。地図移動も含む。
@@ -1221,7 +1228,8 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     _searchOriginCenter = searchOrigin;
     _searchVpIndex = -1; // 新規検索なので「地図中心」(= searchOrigin) にリセット
 
-    final hits = await searchPlaces(query, biasCenter: searchOrigin);
+    final hits =
+        await searchPlaces(query, biasCenter: searchOrigin, rank: _searchRank);
     annotateHitsWithScores(
       hits: hits,
       center: _searchEffectiveCenter,
@@ -1258,6 +1266,43 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
         }
       } catch (_) {/* camera 未確定なら無視 */}
     });
+  }
+
+  /// 検索ランク (中心点/知名度) を切替えて、同じキーワード・同じ検索原点で再検索する。
+  /// _doSearch と違い camera.center を読み直さず、保存済みの _searchOriginCenter を
+  /// 使う (一覧表示で地図が動いた後でも検索原点がブレないように)。
+  /// 並び替えではなく「取得する候補の中身」を 2 パターン切替えるための再取得。
+  Future<void> _changeSearchRank(String rank) async {
+    if (rank == _searchRank) return;
+    final query = _searchCtrl.text.trim();
+    // キーワード未確定 (一覧が無い等) のときは選択状態だけ覚えて次回検索に反映。
+    if (query.length < 2) {
+      setState(() => _searchRank = rank);
+      return;
+    }
+    final origin = _searchOriginCenter ?? _searchEffectiveCenter;
+    setState(() {
+      _searchRank = rank;
+      _searching = true;
+    });
+    final hits = await searchPlaces(query, biasCenter: origin, rank: rank);
+    annotateHitsWithScores(
+      hits: hits,
+      center: _searchEffectiveCenter,
+      sectorScores: _displayScores(),
+      scoreResult: _scoreResult,
+    );
+    if (!mounted) return;
+    setState(() {
+      _searchHits = hits;
+      _searching = false;
+      _searchFocus = null; // focus 中に切替えても一覧へ戻す
+    });
+    // 単一候補のときだけ自動 focus (一覧は出さない)。複数なら一覧のまま据え置き
+    // (地図フレーミングは元の検索時のまま維持して見比べやすくする)。
+    if (hits.length == 1) {
+      _selectSearchHit(hits.first);
+    }
   }
 
   /// 検索結果リストが画面下半分を覆う前提で、マップ中心を「南」にずらして
@@ -2633,6 +2678,9 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
             // 0.45 = ハーフサイズより少し小さめ。地図領域を広めに取る (オーナー判断)
             maxHeight: MediaQuery.of(context).size.height * 0.45,
             onTap: _selectSearchHit,
+            // 中心点/知名度トグル: 同一キーワード・同一原点で再検索 (中身が変わる)。
+            rank: _searchRank,
+            onRankChanged: _changeSearchRank,
             onClose: () => setState(() {
               _searchHits = [];
               _searchListCenter = null;
@@ -3172,21 +3220,32 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
       }
     }
 
-    // バナー状態の決定。
+    // バナー状態の決定 (優先順位 B → C → D)。
+    //   D (addSignin): profile 付与完了 + C 消化後 (else-if で consultUsed=true) +
+    //   未サインイン + 未✕。サインインでさらに恒久クレジット3 (signin grant) を促す。
+    //   サインイン後は次の Map 復帰時 (reloadProfile→本評価) に isSignedIn=true で自動的に消える。
+    final signinDismissed = await SolaraStorage.loadWelcomeSigninDismissed();
     WelcomeBannerMode mode = WelcomeBannerMode.none;
     if (flags.eligible && hasBirth && !hasHome && !flags.granted) {
       mode = WelcomeBannerMode.addHome; // B
     } else if (flags.granted && !flags.consultUsed) {
       mode = WelcomeBannerMode.tryStella; // C
+    } else if (flags.granted &&
+        !SolaraAuth.instance.isSignedIn &&
+        !signinDismissed) {
+      mode = WelcomeBannerMode.addSignin; // D
     }
     if (mounted) setState(() => _welcomeBanner = mode);
   }
 
-  /// ウェルカムバナーの CTA。B=Sanctuary (自宅登録) へ / C=相談入力へ。
+  /// ウェルカムバナーの CTA。B/D=Sanctuary へ (B:自宅登録 / D:サインイン) / C=相談入力へ。
   void _onWelcomeCta() {
-    if (_welcomeBanner == WelcomeBannerMode.addHome) {
-      // 現住所は Sanctuary の「自宅（現住所）」で登録する。戻った時に
-      // _loadProfileAndChart → _evaluateWelcomeGift が再評価して C に切り替わる。
+    if (_welcomeBanner == WelcomeBannerMode.addHome ||
+        _welcomeBanner == WelcomeBannerMode.addSignin) {
+      // B: 現住所は Sanctuary の「自宅（現住所）」で登録する。
+      // D: サインインは Sanctuary の Account セクションで行う。
+      // どちらも戻った時に _loadProfileAndChart → _evaluateWelcomeGift が再評価し、
+      // B→C、D→(サインイン済で)非表示 に自動で切り替わる。
       widget.onNavigateToSanctuary?.call();
     } else if (_welcomeBanner == WelcomeBannerMode.tryStella) {
       SolaraStorage.setWelcomeConsultUsed();
@@ -3195,10 +3254,13 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     }
   }
 
-  /// ウェルカムバナーの ✕。C は永続的に閉じる (consultUsed)、B はこのセッションのみ非表示。
+  /// ウェルカムバナーの ✕。C は永続的に閉じる (consultUsed)、D も永続的に閉じる
+  /// (signinDismissed)、B はこのセッションのみ非表示。
   void _onWelcomeDismiss() {
     if (_welcomeBanner == WelcomeBannerMode.tryStella) {
       SolaraStorage.setWelcomeConsultUsed();
+    } else if (_welcomeBanner == WelcomeBannerMode.addSignin) {
+      SolaraStorage.setWelcomeSigninDismissed();
     }
     setState(() => _welcomeBanner = WelcomeBannerMode.none);
   }
@@ -3444,9 +3506,14 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
           const AntiqueGlyph(icon: AntiqueIcon.reading, size: 32,
             color: Color(0xFFF6BD60)),
           const SizedBox(height: 8),
-          const Text('SANCTUARYでプロフィールを設定すると、\n各地点の方位スコアが表示されます',
+          const Text('✦ 出生情報と現住所を登録すると、無料クレジットを3つプレゼント',
             textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 13, color: Color(0xFFF6BD60))),
+            style: TextStyle(fontSize: 13, color: Color(0xFFF6D98A),
+              fontWeight: FontWeight.w700, height: 1.4)),
+          const SizedBox(height: 6),
+          const Text('SANCTUARYで設定すると、各地点の方位スコアも表示されます',
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 12, color: Color(0xFFF6BD60))),
           const SizedBox(height: 8),
           GestureDetector(
             onTap: () => widget.onNavigateToSanctuary?.call(),

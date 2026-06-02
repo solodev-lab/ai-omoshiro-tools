@@ -375,6 +375,29 @@ class ConsultationV2Reading {
       fallback: j['fallback'] == true,
     );
   }
+
+  /// プロセス死復元 (ConsultationReturn のスナップショット) 用。
+  /// [fromJson] と往復対応。sparse/nearbyCount は fromJson が 'meta' 配下から
+  /// 読むため、ここでも 'meta' にネストして出す。
+  Map<String, dynamic> toJson() => {
+        'isFirst': isFirst,
+        'candidate': candidate.toJson(),
+        'evidence': evidence.toJson(),
+        if (timeWindow != null) 'timeWindow': timeWindow!.toJson(),
+        if (innerSeason.isNotEmpty) 'innerSeason': innerSeason,
+        if (intro.isNotEmpty) 'intro': intro,
+        if (outro.isNotEmpty) 'outro': outro,
+        'remainingAfter': remainingAfter,
+        if (single) 'single': true,
+        if (fallbackHonest) 'fallbackHonest': true,
+        if (sparse || nearbyCount != null)
+          'meta': {
+            if (sparse) 'sparse': true,
+            if (nearbyCount != null) 'nearbyCount': nearbyCount,
+          },
+        if (model.isNotEmpty) 'model': model,
+        if (fallback) 'fallback': true,
+      };
 }
 
 /// fetchConsultationV2 の戻り値。

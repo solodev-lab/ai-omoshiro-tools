@@ -1364,6 +1364,12 @@ async function dispatchPublic(request, env, url, origin) {
       options.lat = latParam;
       options.lng = lngParam;
     }
+    // rank: 'distance' (中心点=地図中心からの近さ優先) | 'relevance' (知名度=既定)。
+    // 旧クライアントは付けてこないので、未指定は relevance (= 従来挙動) にフォールバック。
+    const rankParam = url.searchParams.get('rank');
+    if (rankParam === 'distance' || rankParam === 'relevance') {
+      options.rank = rankParam;
+    }
     const results = await searchPlace(q, env, options);
     return jsonOk(results, origin);
   }

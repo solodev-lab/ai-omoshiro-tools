@@ -42,6 +42,37 @@ class ConsultationResumeState {
     required this.pageIndex,
     required this.scopeDetail,
   });
+
+  /// プロセス死復元 (SolaraStorage.saveRestoreSnapshot) 用。
+  /// 低 RAM 端末で Google マップ等の外部アプリ往復中に OS が Solara を kill した
+  /// 場合でも、コールド起動時にこのスナップショットから戻りチップを復活させる。
+  Map<String, dynamic> toJson() => {
+        'request': request.toJson(),
+        'readings': readings.map((r) => r.toJson()).toList(),
+        if (avoid.isNotEmpty) 'avoid': avoid,
+        if (recordSavedAt != null)
+          'recordSavedAt': recordSavedAt!.toIso8601String(),
+        'pageIndex': pageIndex,
+        if (scopeDetail != null) 'scopeDetail': scopeDetail,
+      };
+
+  factory ConsultationResumeState.fromJson(Map<String, dynamic> j) =>
+      ConsultationResumeState(
+        request: ConsultationRequest.fromJson(
+          (j['request'] as Map).cast<String, dynamic>(),
+        ),
+        readings: (j['readings'] as List?)
+                ?.map((e) => ConsultationV2Reading.fromJson(
+                      (e as Map).cast<String, dynamic>(),
+                    ))
+                .toList() ??
+            const [],
+        avoid:
+            (j['avoid'] as List?)?.map((e) => e.toString()).toList() ?? const [],
+        recordSavedAt: DateTime.tryParse(j['recordSavedAt'] as String? ?? ''),
+        pageIndex: (j['pageIndex'] as num?)?.toInt() ?? 0,
+        scopeDetail: j['scopeDetail'] as String?,
+      );
 }
 
 class ConsultationReturn extends ChangeNotifier {
@@ -73,6 +104,21 @@ class ConsultationReturn extends ChangeNotifier {
     if (_pending != null) {
       _pending = null;
       notifyListeners();
+    }
+  }
+
+  /// プロセス死復元用: 現在の pending をスナップショット化 (なければ null)。
+  /// SolaraHome が paused 時に pull し、restore snapshot に載せる。
+  Map<String, dynamic>? captureRestore() => _pending?.toJson();
+
+  /// コールド起動時: スナップショットから pending を復元する。
+  /// 壊れたスナップショットはチップを出さないだけで握り潰す (クラッシュ回避)。
+  void restoreFrom(Map<String, dynamic> json) {
+    try {
+      _pending = ConsultationResumeState.fromJson(json);
+      notifyListeners();
+    } catch (_) {
+      _pending = null;
     }
   }
 }
