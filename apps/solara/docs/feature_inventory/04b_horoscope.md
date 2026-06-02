@@ -5,9 +5,9 @@
 
 ## サマリ
 
-- ファイル数: 23 / 総行数: 5955
-- class/mixin/extension/enum: 32
-- 関数 (top-level + method の素拾い): 151
+- ファイル数: 22 / 総行数: 5663
+- class/mixin/extension/enum: 31
+- 関数 (top-level + method の素拾い): 149
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 2
 - Worker URL リテラル: 0
@@ -122,7 +122,7 @@ continue to work after the split.
 ```
 
 
-### `lib/screens/horoscope/horo_bottom_sheet.dart` (242 行)
+### `lib/screens/horoscope/horo_bottom_sheet.dart` (245 行)
 
 **ファイル先頭コメント:**
 
@@ -444,64 +444,72 @@ ignore_for_file: invalid_use_of_protected_member
 - 集計: `showInfoPopup`×1
 
 
-### `lib/screens/horoscope/horo_relocation_panel.dart` (467 行)
-
-**imports:** dart=0 / package=2 / relative=6
-
-- relative: `../../utils/astro_houses.dart`, `../../utils/fortune_api.dart`, `../../utils/pro_status.dart`, `../../widgets/pro_unlock_dialog.dart`, `horo_constants.dart`, `horo_relocation_templates.dart`
-
-**型定義 (3):**
-
-- L31 `class HouseShift`
-- L38 `class HoroRelocationPanel : StatefulWidget`
-- L66 `class _HoroRelocationPanelState : State`
-
-**関数 (5 public + 11 private):**
-
-- L63 `createState()`
-- L73 `initState()`
-- L80 `dispose()`
-- L103 `didUpdateWidget()`
-- L180 `build()`
-
-  <details><summary>private 関数 11 件</summary>
-
-  - L86 `_onProStatusChanged()`
-  - L110 `_buildFetchKey()`
-  - L119 `_maybeFetch()`
-  - L130 `_computeAllPositions()`
-  - L151 `_fetchNarrative()`
-  - L225 `_buildHeader()`
-  - L254 `_buildSummaryBlock()`
-  - L278 `_buildLoadingHint()`
-  - L303 `_buildAngleBlock()`
-  - L367 `_buildShiftBlock()`
-  - L441 `_buildCompareRow()`
-
-  </details>
-
-
-### `lib/screens/horoscope/horo_relocation_pro_teaser.dart` (96 行)
-
-**型定義 (1):**
-
-- L14 `extension _RelocationProTeaser : _HoroRelocationPanelState`
-
-**関数 (1 public + 0 private):**
-
-- L18 `buildProTeaser()` — Free ユーザー向け Pro 誘導カード。
-
-
-### `lib/screens/horoscope/horo_relocation_templates.dart` (196 行)
+### `lib/screens/horoscope/horo_relocation_lines.dart` (139 行)
 
 **ファイル先頭コメント:**
 
 ```
-リロケーション解説テンプレート
-(惑星 × 移動先ハウス) の組み合わせから「現住所で活性化する側面」を生成。
-Phase A: 静的テンプレート (将来 Stella 動的生成に切替予定 → 同データ構造で互換)。
-惑星日本語名は horo_constants.dart の planetNamesJP を使用。
+拠点(リロケーション) — ライン近接デルタの計算 + 静的意味文の合成。
+
+設計 (2026-06-02, feature_inventory §0.2.52):
+  出生地と現住所では緯度経度が違う → 各惑星ラインへの距離が必ず変わる。
+  「ハウスが変わったか」(近距離では大抵変化なし) ではなく、
+  「どの惑星ラインに近づいた / 遠ざかったか」を主役にする。「変化なし」が原理的に消える。
+
+  全て静的: astro_lines.dart の buildAstroLines + minDistanceKmToLine で距離を出し、
+  惑星の性質 × アングルの領域 × 方向 × 度合い を定型文に合成する (Gemini 不使用 = ¥0)。
+  占星術の吉凶禁止に沿い「強まる / やわらぐ」の中立表現のみ (good/bad/lucky を使わない)。
+
+範囲: 7惑星 (太陽/月/水星/金星/火星/木星/土星) × 4アングル (MC/IC/ASC/DSC) = 28本 (本線のみ)。
+  外惑星(天王星/海王星/冥王星)とアスペクト線は重い/抽象的なため初版では除外。
 ```
+
+**imports:** dart=0 / package=1 / relative=2
+
+- relative: `../../utils/astro_lines.dart`, `horo_constants.dart`
+
+**型定義 (1):**
+
+- L52 `class RelocationLineDelta`
+  - 1本のラインについて、出生地→現住所での距離変化。
+
+**関数 (4 public + 0 private):**
+
+- L79 `computeRelocationLineDeltas()` — 出生地・現住所の座標から、7惑星×4アングル=28本の距離デルタを計算し
+- L110 `relocationMagnitudeAdverb()` — |delta| (km) を 3 段階の副詞に。閾値は実機チューニング可。
+- L117 `relocationLineDeltaSentence()` — ライン近接デルタの 1 文 (中立表現)。
+- L132 `relocationHouseChangeComment()` — ハウス変化の 1 文 (変化があった惑星のみ・中立表現)。
+
+
+### `lib/screens/horoscope/horo_relocation_panel.dart` (325 行)
+
+**imports:** dart=0 / package=2 / relative=3
+
+- relative: `../../utils/astro_houses.dart`, `horo_constants.dart`, `horo_relocation_lines.dart`
+
+**型定義 (2):**
+
+- L28 `class HoroRelocationPanel : StatefulWidget`
+- L60 `class _HoroRelocationPanelState : State`
+
+**関数 (4 public + 7 private):**
+
+- L57 `createState()`
+- L67 `initState()`
+- L73 `didUpdateWidget()`
+- L114 `build()`
+
+  <details><summary>private 関数 7 件</summary>
+
+  - L84 `_recompute()`
+  - L146 `_buildHeader()`
+  - L178 `_buildSectionTitle()`
+  - L191 `_buildLineDeltaCard()`
+  - L249 `_buildHouseChangeCard()`
+  - L296 `_buildSamePlaceHint()`
+  - L315 `_buildFootnote()`
+
+  </details>
 
 
 ### `lib/screens/horoscope/horo_transit_panel.dart` (188 行)

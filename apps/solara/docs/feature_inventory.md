@@ -1441,6 +1441,46 @@ Worker [`consultation_v2.js:78-83`](../worker/src/consultation_v2.js#L78) の既
 - worker test 42 件 green / `node --check` fortune・tarot OK / extract `~N` (worker 2 ファイル) / 実測 2 系統 (トークン内訳 + 安定性6回)。
 - 反映 = `wrangler deploy` (Worker のみ)。Flutter 変更なし。
 
+### 0.2.52 拠点(リロケーション)を「ライン近接デルタ」静的無料機能へ作り替え (2026-06-02 夜)
+
+> 旧拠点パネルは「出生地ハウス vs 現住所ハウス」の差分で、近距離移動ではハウスが変わらず
+> 「変化なし」だらけ + Pro(Gemini)解説も生成されず "何に金払った?" 問題があった (オーナー実機で確認)。
+> オーナーの気づき: ハウスは変わらなくても緯度経度が変わる → **各惑星ラインへの距離は必ず変わる**。
+> これを主役にすれば「変化なし」が原理消滅し、Solara の核心 (マップの惑星ライン) と地続きになる。
+
+#### コンセプト転換
+- 「ハウスが変わったか」→「**どの惑星ラインに近づいた / 遠ざかったか (デルタ)**」を主役に。
+- **全て静的** (Gemini 不使用 = ¥0)・**全員無料** (Pro 限定を撤廃)。実測で Solara の Gemini は全経路
+  ナレーションのみ (§0.2.51) と確定済 → 拠点も静的合成で情報は同等。吉凶禁止に沿い「強まる/やわらぐ」中立表現。
+
+#### 計算 (既存資産の再利用)
+- 新規 `horoscope/horo_relocation_lines.dart`: `astro_lines.dart` の `buildAstroLines` + `minDistanceKmToLine`
+  を使い、**7惑星(太陽/月/水/金/火/木/土) × 4アングル(MC/IC/ASC/DSC) = 28本** (本線のみ) について
+  出生地・現住所からの距離を出し **delta = 現住所 − 出生地** を算出。|delta| 降順で上位4本表示。
+  外惑星・アスペクト線は重い/抽象的なため除外。
+- 意味文 = 惑星の性質(7語・新規) × アングル領域(4語) × 方向(近/遠) × 度合い(km3段階) の合成。
+  ハウス変化は **変化した惑星だけ** 副次表示 + 静的コメント (fromHouse領域→toHouse領域)。
+
+#### UI / 配線
+- `horo_relocation_panel.dart` を StatefulWidget で全面書き換え (Pro/Gemini/teaser/ProStatus 連動を撤去、
+  330行 NOTICE)。座標 (birth/home Lat/Lng) を props 追加 → `horo_bottom_sheet.dart` の `case 'relocate'` で
+  `_profile` から渡す (part-of で State 共有)。
+- 「ほぼ同じ場所」(max|delta|<1km) は移動なし案内のみ。
+
+#### 撤去 / 残置
+- 削除: `horo_relocation_pro_teaser.dart` / `horo_relocation_templates.dart` (静的ハウス文テンプレ、孤立化) /
+  `fortune_api.dart` の `RelocationNarrative` + `fetchRelocationNarrative` (+ `solaraRelocationUrl` import)。
+- paywall: 「リロケーション解説 Free=静的/Pro=Stella動的」行を `拠点(ライン近接)解説 ✓/✓` に、
+  「リロケーション Stella動的解説」Pro bullet を撤去 (引越しシミュレーション=マップ別機能は残置)。
+- 残置: Worker `/protected/relocation` (旧アプリ互換・新アプリは呼ばない)。マップの「引越しシミュレーション」
+  (map_relocation_popup・地点タップ再計算) は別機能で不変。
+
+#### 検証
+- flutter analyze クリーン / 新規 `test/horo_relocation_lines_test.dart` 8件 green
+  (28本/conjunction限定/外惑星除外, |delta|降順, 同一地点≈0, 移動で非ゼロ, 近→強まる・遠→やわらぐ中立, 度合い閾値, ハウスコメント)。
+- extract `+1 -2 ~5` / audit **HARD 7 (新規ゼロ)**・未使用候補 0。
+- 反映 = 次の AAB ビルド (Flutter のみ・Worker 変更なし)。
+
 ### 0.3 Horo「今日の占い」1 日 1 回固定 + プロンプト刷新 (2026-05-27)
 
 > **設計の柱**: 「30 回までは OK」のような曖昧な防衛をやめ、「**1 日 1 回・変更しない**」を

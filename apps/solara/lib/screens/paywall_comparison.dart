@@ -44,7 +44,7 @@ extension _PaywallComparison on _PaywallScreenState {
           ),
           _comparisonRow('星読み (Horo)', '「全体運」のみ',
               '全 5 カテゴリ\n(全体・恋愛・豊かさ\n・仕事・対話)\n+ 深い読み'),
-          _comparisonRow('リロケーション解説', '静的テンプレ', 'Stella 動的解説'),
+          _comparisonRow('拠点 (ライン近接) 解説', '✓', '✓'),
           _comparisonRow('おでかけの時刻指定\n+ 30分後の変化', '—', '✓\n(1時間刻み)'),
           _comparisonSection('地図 (ACG / CCG)'),
           _comparisonRow('ACG / CCG 4 フレーム',

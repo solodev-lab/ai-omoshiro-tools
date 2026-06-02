@@ -19,7 +19,7 @@
 | 3b | テーマ・装飾 | 3 | [03b_theme.md](03b_theme.md) |
 | 3c | 演出ウィジェット (animated) | 5 | [03c_widgets_anim.md](03c_widgets_anim.md) |
 | 4a | Map 画面 | 25 | [04a_map.md](04a_map.md) |
-| 4b | Horoscope 画面 | 23 | [04b_horoscope.md](04b_horoscope.md) |
+| 4b | Horoscope 画面 | 22 | [04b_horoscope.md](04b_horoscope.md) |
 | 4c | Observe (Tarot) 画面 | 12 | [04c_observe.md](04c_observe.md) |
 | 4d | Galaxy 画面 | 10 | [04d_galaxy.md](04d_galaxy.md) |
 | 4e | Sanctuary 画面 | 10 | [04e_sanctuary.md](04e_sanctuary.md) |
@@ -28,11 +28,11 @@
 
 ## 全体統計
 
-- Dart ファイル: 199
+- Dart ファイル: 198
 - Worker JS ファイル: 27
 - Worker エンドポイント総数: 34
-- Dart class/mixin/extension/enum 総数: 485
-- Dart 関数総数 (素拾い): 1608
+- Dart class/mixin/extension/enum 総数: 483
+- Dart 関数総数 (素拾い): 1605
 
 ## 対整合チェック
 

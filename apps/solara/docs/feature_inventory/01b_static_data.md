@@ -5,9 +5,9 @@
 
 ## サマリ
 
-- ファイル数: 15 / 総行数: 4899
-- class/mixin/extension/enum: 20
-- 関数 (top-level + method の素拾い): 42
+- ファイル数: 15 / 総行数: 4808
+- class/mixin/extension/enum: 19
+- 関数 (top-level + method の素拾い): 41
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 1
 - Worker URL リテラル: 0
@@ -288,7 +288,7 @@ Worker (consultation_engine.js runConsultationPipeline) の契約に対応する
   </details>
 
 
-### `lib/utils/fortune_api.dart` (309 行)
+### `lib/utils/fortune_api.dart` (218 行)
 
 **ファイル先頭コメント:**
 
@@ -304,19 +304,17 @@ middleware が log_only モードなら bypass、enforced モードなら attest
 
 - relative: `app_attest_client.dart`, `solara_api.dart`
 
-**型定義 (3):**
+**型定義 (2):**
 
-- L12 `class FortuneReading`
+- L11 `class FortuneReading`
   - Fortune APIレスポンス
-- L107 `class RelocationNarrative`
-- L199 `class TarotReading`
+- L108 `class TarotReading`
 
-**関数 (4 public + 0 private):**
+**関数 (3 public + 0 private):**
 
-- L36 `toJson()`
-- L51 `fetchFortune()` — /fortune を叩いて占い文を取得
-- L159 `fetchRelocationNarrative()` — /relocation を叩いてリロケーション解説を取得。
-- L238 `fetchTarotReading()` — /tarot を叩いて1枚引きの Reading を生成する。
+- L35 `toJson()`
+- L50 `fetchFortune()` — /fortune を叩いて占い文を取得
+- L147 `fetchTarotReading()` — /tarot を叩いて1枚引きの Reading を生成する。
 
 
 ### `lib/utils/planet_intro.dart` (559 行)

@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 32 / 総行数: 11159
+- ファイル数: 32 / 総行数: 11158
 - class/mixin/extension/enum: 100
 - 関数 (top-level + method の素拾い): 281
 - Navigator.push 等: 0
@@ -1200,7 +1200,7 @@ Solara ペイウォール画面 — Phase 2-6b + Suno 風リデザイン (2026-0
   </details>
 
 
-### `lib/screens/paywall_widgets.dart` (424 行)
+### `lib/screens/paywall_widgets.dart` (423 行)
 
 **ファイル先頭コメント:**
 
@@ -1226,9 +1226,9 @@ Paywall Screen — Hero / 課金トグル / Free・Pro 2 カード (Suno 風 cor
   - L97 `_toggleSegment()`
   - L160 `_buildFreeCard()`
   - L208 `_buildProCard()`
-  - L315 `_buildProCta()`
-  - L371 `_cardBadge()`
-  - L395 `_planBullet()`
+  - L314 `_buildProCta()`
+  - L370 `_cardBadge()`
+  - L394 `_planBullet()`
 
   </details>
 

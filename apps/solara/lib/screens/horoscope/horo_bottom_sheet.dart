@@ -196,9 +196,12 @@ extension _HoroBottomSheet on HoroscopeScreenState {
         relocateHouses: _relocateHouses,
         natalAsc: _natalAsc, natalMc: _natalMc,
         relocateAsc: _relocateAsc, relocateMc: _relocateMc,
+        birthLat: _profile?.birthLat ?? 0,
+        birthLng: _profile?.birthLng ?? 0,
+        homeLat: _profile?.homeLat ?? 0,
+        homeLng: _profile?.homeLng ?? 0,
         birthPlaceName: _profile?.birthPlace,
         homeName: _profile?.homeName,
-        userName: _profile?.name,
       );
       case 'filter': return HoroFilterPanel(
         qualityFilters: _qualityFilters,
