@@ -104,7 +104,10 @@ SCREENS = [
      "lines": ["お出かけも、移住も。", "ぜんぶ星に相談。"],
      "sub":   ["毎日のお出かけから、人生の移住まで。",
                "場面とテーマを選ぶだけで星が読み解く。"],
-     "stats": {"items": [["246", "国・地域"], ["488,270", "都市"],
+     "stats": {"lead": ["膨大な占星術データを総合解析し、",
+                        "行くべき場所・時間帯・理由をひとつの答えに。",
+                        "Proは週100回＋時刻指定で30分後の変化まで。"],
+               "items": [["246", "国・地域"], ["488,270", "都市"],
                          ["10", "惑星"], ["1,500", "地点採点"]]}},
     {"slug": "horoscope",
      "lines": ["精密な出生図が、", "すべての土台。"],
@@ -332,10 +335,18 @@ def draw_stats_overlay(canvas, box, stats):
 
 
 def draw_stats_bar(canvas, boxes, stats):
-    """2枚配置 (ACG+CCG) の下に横一列の数値バーを置く。(canvas, 下端y) を返す。"""
+    """2枚配置の下に (任意の lead 説明文 +) 横一列の数値バーを置く。(canvas, 下端y) を返す。"""
     x0 = min(b[0] for b in boxes)
     x1 = max(b[0] + b[2] for b in boxes)
     top = max(b[1] + b[3] for b in boxes) + 16
+    # lead: 数値バーの少し上に置く説明文 (端末の下=ナビ領域に被せず、その下の余白に)
+    lead = stats.get("lead", [])
+    if lead:
+        ld = ImageDraw.Draw(canvas)
+        lf = fit_font(ld, lead, max_w=(x1 - x0), start=30, min_size=22)
+        top = draw_centered_lines(canvas, lead, top_y=top, font=lf,
+                                  fill=SUB_TEXT, line_gap=1.3)
+        top += 14
     items = stats.get("items", [])
     h = 92
     panel = Image.new("RGBA", (W, H), (0, 0, 0, 0))
@@ -368,8 +379,8 @@ def compose_one(screen, pos) -> str:
     raw2 = screen.get("raw2")
     if raw2:
         labels = screen.get("labels", [None, None])
-        sw = 440
-        layout = [(raw, labels[0], 86, 548), (raw2, labels[1], 526, 640)]
+        sw = 420
+        layout = [(raw, labels[0], 96, 540), (raw2, labels[1], 536, 630)]
         boxes = []
         for rname, lab, ph_x, ph_y in layout:
             rp = os.path.join(RAW_DIR, rname + ".png")
