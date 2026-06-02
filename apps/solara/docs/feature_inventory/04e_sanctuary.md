@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 10 / 総行数: 5637
+- ファイル数: 10 / 総行数: 5643
 - class/mixin/extension/enum: 28
 - 関数 (top-level + method の素拾い): 124
 - Navigator.push 等: 0
@@ -327,7 +327,7 @@ Solara Sanctuary 法務リンクメニュー (Phase 2 launch_checklist)
 - 集計: `showInfoPopup`×1
 
 
-### `lib/screens/sanctuary_screen.dart` (1729 行)
+### `lib/screens/sanctuary_screen.dart` (1735 行)
 
 **imports:** dart=1 / package=3 / relative=23
 
@@ -337,11 +337,11 @@ Solara Sanctuary 法務リンクメニュー (Phase 2 launch_checklist)
 
 - L30 `class SanctuaryScreen : StatefulWidget`
 - L37 `class _SanctuaryScreenState : State`
-- L1544 `extension _WidgetOpacity : Widget`
-- L1553 `class _SettingsGroup : StatelessWidget`
-- L1586 `class _SettingsItem : StatelessWidget`
-- L1638 `class _NotificationToggleItem : StatefulWidget`
-- L1646 `class _NotificationToggleItemState : State`
+- L1550 `extension _WidgetOpacity : Widget`
+- L1559 `class _SettingsGroup : StatelessWidget`
+- L1592 `class _SettingsItem : StatelessWidget`
+- L1644 `class _NotificationToggleItem : StatefulWidget`
+- L1652 `class _NotificationToggleItemState : State`
 
 **関数 (10 public + 36 private):**
 
@@ -349,12 +349,12 @@ Solara Sanctuary 法務リンクメニュー (Phase 2 launch_checklist)
 - L77 `initState()`
 - L90 `dispose()`
 - L454 `build()`
-- L1545 `withOpacity()`
-- L1559 `build()`
-- L1594 `build()`
-- L1642 `createState()`
-- L1651 `initState()`
-- L1687 `build()`
+- L1551 `withOpacity()`
+- L1565 `build()`
+- L1600 `build()`
+- L1648 `createState()`
+- L1657 `initState()`
+- L1693 `build()`
 
   <details><summary>private 関数 36 件</summary>
 
@@ -381,19 +381,19 @@ Solara Sanctuary 法務リンクメニュー (Phase 2 launch_checklist)
   - L1072 `_buildRecordsSection()`
   - L1108 `_buildCosmicProSection()`
   - L1134 `_buildProUpgradeBanner()`
-  - L1191 `_buildProActiveBanner()`
-  - L1262 `_buildRestoreRow()`
-  - L1286 `_openPaywall()`
-  - L1295 `_restorePurchases()`
-  - L1320 `_buildDevProToggle()`
-  - L1373 `_buildAstrologySection()`
-  - L1403 `_buildHouseOption()`
-  - L1436 `_orbSummary()`
-  - L1449 `_openOrbOverlay()`
-  - L1465 `_buildAppSection()`
-  - L1497 `_pickDailyResetHour()`
-  - L1656 `_load()`
-  - L1661 `_toggle()`
+  - L1197 `_buildProActiveBanner()`
+  - L1268 `_buildRestoreRow()`
+  - L1292 `_openPaywall()`
+  - L1301 `_restorePurchases()`
+  - L1326 `_buildDevProToggle()`
+  - L1379 `_buildAstrologySection()`
+  - L1409 `_buildHouseOption()`
+  - L1442 `_orbSummary()`
+  - L1455 `_openOrbOverlay()`
+  - L1471 `_buildAppSection()`
+  - L1503 `_pickDailyResetHour()`
+  - L1662 `_load()`
+  - L1667 `_toggle()`
 
   </details>
 

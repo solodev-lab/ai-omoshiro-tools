@@ -1162,6 +1162,12 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
             style: TextStyle(fontSize: 15, color: Color(0xFFACACAC), height: 1.55),
             textAlign: TextAlign.center,
           ),
+          const SizedBox(height: 8),
+          const Text(
+            'ACG 引越し — 地図の地点をタップすると、その地で近づく星・遠ざかる星のラインを解説',
+            style: TextStyle(fontSize: 12, color: Color(0x99ACACAC), height: 1.5),
+            textAlign: TextAlign.center,
+          ),
           const SizedBox(height: 12),
           Container(
             padding: const EdgeInsets.symmetric(vertical: 13, horizontal: 30),

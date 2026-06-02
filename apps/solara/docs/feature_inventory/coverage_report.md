@@ -461,11 +461,11 @@
 > 各ソースの SHA1 を `_stamps.json` に記録し、差分を検出。
 > 変更されたファイルが属する層は、人手版インベントリ章の見直し対象。
 
-- 追加: **0** / 削除: **0** / 変更: **2**
+- 追加: **0** / 削除: **0** / 変更: **1**
 
 ### 変更されたファイル (層別)
 
-- **層 4a**: `lib/screens/map/map_relocation_popup.dart`, `lib/screens/map_screen.dart`
+- **層 4e**: `lib/screens/sanctuary_screen.dart`
 
 ## #7 astro_glossary 用語辞書対整合
 
