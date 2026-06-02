@@ -5,9 +5,9 @@
 
 ## サマリ
 
-- ファイル数: 22 / 総行数: 5663
-- class/mixin/extension/enum: 31
-- 関数 (top-level + method の素拾い): 149
+- ファイル数: 23 / 総行数: 6041
+- class/mixin/extension/enum: 33
+- 関数 (top-level + method の素拾い): 161
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 2
 - Worker URL リテラル: 0
@@ -122,7 +122,7 @@ continue to work after the split.
 ```
 
 
-### `lib/screens/horoscope/horo_bottom_sheet.dart` (245 行)
+### `lib/screens/horoscope/horo_bottom_sheet.dart` (242 行)
 
 **ファイル先頭コメント:**
 
@@ -259,7 +259,7 @@ ignore_for_file: invalid_use_of_protected_member
   </details>
 
 
-### `lib/screens/horoscope/horo_fortune_cards.dart` (350 行)
+### `lib/screens/horoscope/horo_fortune_cards.dart` (336 行)
 
 **imports:** dart=0 / package=2 / relative=5
 
@@ -267,20 +267,20 @@ ignore_for_file: invalid_use_of_protected_member
 
 **型定義 (1):**
 
-- L35 `class HoroAstrologyView : StatelessWidget`
+- L20 `class HoroAstrologyView : StatelessWidget`
 
 **関数 (1 public + 6 private):**
 
-- L77 `build()`
+- L62 `build()`
 
   <details><summary>private 関数 6 件</summary>
 
-  - L187 `_birthEditedBanner()`
-  - L204 `_loadingBanner()`
-  - L221 `_errorBanner()`
-  - L244 `_skeletonLine()`
-  - L252 `_skeletonBar()`
-  - L264 `_lockedTeaserCard()`
+  - L173 `_birthEditedBanner()`
+  - L190 `_loadingBanner()`
+  - L207 `_errorBanner()`
+  - L230 `_skeletonLine()`
+  - L238 `_skeletonBar()`
+  - L250 `_lockedTeaserCard()`
 
   </details>
 
@@ -444,6 +444,51 @@ ignore_for_file: invalid_use_of_protected_member
 - 集計: `showInfoPopup`×1
 
 
+### `lib/screens/horoscope/horo_relocation_angles.dart` (184 行)
+
+**ファイル先頭コメント:**
+
+```
+拠点(リロケーション) — アングル近接 (A案・度数距離) の計算 + 静的フォールバック文。
+
+設計 (2026-06-02, feature_inventory §0.2.53):
+  引っ越しても惑星の黄経は動かないが、ハウスのカスプ(= アングル ASC/MC/DSC/IC)は緯度経度で
+  ずれる。各惑星から「最も近いアングルへの度数距離」を 出生地チャート vs 現住所チャート で
+  比較し、近づいた/遠ざかったを連続量で捉える。ハウスが変わらなくても必ず変化が出る
+  (= 旧ハウス差分版の「変化なし」だらけ問題が原理的に消える)。
+  占星術の正統: アングルに近い惑星 (angular planet) ほど強く働く。ASC/MC 変化の印象とも一貫。
+  B案(ライン近接・地理km)と違い「図の度数空間」で測るため「地球の裏のライン」問題は起きない。
+
+  解説本文は Worker /relocation (Gemini, thinkingBudget:0・全員無料) で動的生成する。
+  本ファイルは ① 幾何計算 ② Gemini へ渡す構造化ファクト ③ 取得前/失敗時の静的フォールバック文。
+  吉凶禁止 (強まる/やわらぐ・前に出る/落ち着く の中立表現のみ。good/bad/lucky を使わない)。
+```
+
+**imports:** dart=0 / package=0 / relative=1
+
+- relative: `../../utils/astro_houses.dart`
+
+**型定義 (2):**
+
+- L45 `class RelocationAngleDelta`
+  - 1惑星のアングル近接デルタ。
+- L87 `class RelocationAngleSignChange`
+  - アングル自身の星座変化 (ASC/MC/DSC/IC)。引越の印象的なヘッドライン。
+
+**関数 (4 public + 1 private):**
+
+- L76 `toPayload()` — Worker /relocation へ渡す構造化ファクト (Gemini はこれを文章化するだけ)。
+- L98 `toPayload()`
+- L107 `computeRelocationAngleDeltas()` — 出生地/現住所のチャート (ハウスカスプ12・ASC・MC) と惑星黄経から、10天体の
+- L163 `computeRelocationAngleSignChanges()` — ASC/MC/DSC/IC の星座が出生地→現住所で変わったものだけ返す。
+
+  <details><summary>private 関数 1 件</summary>
+
+  - L38 `_angularDist()`
+
+  </details>
+
+
 ### `lib/screens/horoscope/horo_relocation_lines.dart` (139 行)
 
 **ファイル先頭コメント:**
@@ -481,33 +526,40 @@ ignore_for_file: invalid_use_of_protected_member
 - L132 `relocationHouseChangeComment()` — ハウス変化の 1 文 (変化があった惑星のみ・中立表現)。
 
 
-### `lib/screens/horoscope/horo_relocation_panel.dart` (325 行)
+### `lib/screens/horoscope/horo_relocation_panel.dart` (536 行)
 
 **imports:** dart=0 / package=2 / relative=3
 
-- relative: `../../utils/astro_houses.dart`, `horo_constants.dart`, `horo_relocation_lines.dart`
+- relative: `../../utils/fortune_api.dart`, `horo_constants.dart`, `horo_relocation_angles.dart`
 
 **型定義 (2):**
 
-- L28 `class HoroRelocationPanel : StatefulWidget`
-- L60 `class _HoroRelocationPanelState : State`
+- L22 `class HoroRelocationPanel : StatefulWidget`
+- L50 `class _HoroRelocationPanelState : State`
 
-**関数 (4 public + 7 private):**
+**関数 (4 public + 14 private):**
 
-- L57 `createState()`
-- L67 `initState()`
-- L73 `didUpdateWidget()`
-- L114 `build()`
+- L47 `createState()`
+- L77 `initState()`
+- L85 `didUpdateWidget()`
+- L169 `build()`
 
-  <details><summary>private 関数 7 件</summary>
+  <details><summary>private 関数 14 件</summary>
 
-  - L84 `_recompute()`
-  - L146 `_buildHeader()`
-  - L178 `_buildSectionTitle()`
-  - L191 `_buildLineDeltaCard()`
-  - L249 `_buildHouseChangeCard()`
-  - L296 `_buildSamePlaceHint()`
-  - L315 `_buildFootnote()`
+  - L98 `_recompute()`
+  - L121 `_buildFetchKey()`
+  - L126 `_maybeFetch()`
+  - L163 `_retry()`
+  - L207 `_buildHeader()`
+  - L239 `_buildSectionTitle()`
+  - L251 `_buildSummary()`
+  - L270 `_buildLoadingBlock()`
+  - L298 `_buildFailureBlock()`
+  - L354 `_buildAngleChangeCard()`
+  - L392 `_buildPlanetCard()`
+  - L487 `_buildNeedChartHint()`
+  - L506 `_buildSamePlaceHint()`
+  - L525 `_buildFootnote()`
 
   </details>
 

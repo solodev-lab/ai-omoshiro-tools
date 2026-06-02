@@ -1,6 +1,6 @@
 # Solara Code Audit
 
-対象: lib (198 個の .dart)
+対象: lib (199 個の .dart)
 
 ## 1. ファイル行数 (NOTICE >= 300 / WARN >= 500 / HARD >= 1000)
 
@@ -51,6 +51,7 @@
 | 487 | 🟡 NOTICE | lib/screens/map/map_overlays.dart |
 | 481 | 🟡 NOTICE | lib/widgets/full_moon_overlay.dart |
 | 476 | 🟡 NOTICE | lib/screens/sanctuary/class_share_card.dart |
+| 448 | 🟡 NOTICE | lib/screens/horoscope/horo_relocation_panel.dart |
 | 445 | 🟡 NOTICE | lib/widgets/catasterism_overlay.dart |
 | 438 | 🟡 NOTICE | lib/screens/galaxy/galaxy_star_atlas.dart |
 | 427 | 🟡 NOTICE | lib/screens/consultation/consultation_result_widgets.dart |
@@ -77,8 +78,8 @@
 | 345 | 🟡 NOTICE | lib/screens/consultation/consultation_input_picker.dart |
 | 338 | 🟡 NOTICE | lib/screens/map/consult_entry_popup.dart |
 | 336 | 🟡 NOTICE | lib/screens/horoscope/horo_birth_panel.dart |
-| 325 | 🟡 NOTICE | lib/screens/horoscope/horo_relocation_panel.dart |
 | 315 | 🟡 NOTICE | lib/screens/galaxy/galaxy_archive_filter.dart |
+| 314 | 🟡 NOTICE | lib/utils/fortune_api.dart |
 | 313 | 🟡 NOTICE | lib/screens/paywall_screen.dart |
 | 313 | 🟡 NOTICE | lib/utils/celestial_events.dart |
 | 313 | 🟡 NOTICE | lib/screens/observe/observe_history_past.dart |
@@ -136,7 +137,7 @@
   ),
   ```
 
-### 5. 📁 別ファイル間 (14 箇所、9 ファイル)
+### 5. 📁 別ファイル間 (15 箇所、9 ファイル)
 
   - lib/screens/paywall_widgets.dart:413
   - lib/widgets/catasterism_overlay.dart:191
@@ -330,4 +331,4 @@
 
 ---
 
-総計: 行数 HARD 7 / WARN 32 / NOTICE 44 / 重複 20 / TODO 4 / print 1 / 未使用候補 0
+総計: 行数 HARD 7 / WARN 32 / NOTICE 45 / 重複 20 / TODO 4 / print 1 / 未使用候補 0

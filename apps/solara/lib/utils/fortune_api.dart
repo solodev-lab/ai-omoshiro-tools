@@ -5,7 +5,8 @@
 // middleware が log_only モードなら bypass、enforced モードなら attestation 必須。
 import 'dart:convert' show json;
 import 'app_attest_client.dart';
-import 'solara_api.dart' show solaraFortuneUrl, solaraTarotUrl;
+import 'solara_api.dart'
+    show solaraFortuneUrl, solaraRelocationUrl, solaraTarotUrl;
 
 /// Fortune APIレスポンス
 class FortuneReading {
@@ -96,9 +97,104 @@ Future<FortuneReading?> fetchFortune({
   return null;
 }
 
-// Relocation 解説は 2026-06-02 にクライアント静的計算 (ライン近接デルタ) へ移行。
-// horo_relocation_lines.dart + horo_relocation_panel.dart 参照。Gemini 経由
-// (/protected/relocation) の取得は廃止 (Worker 側 endpoint は旧アプリ互換で残置)。
+// ──────────────────────────────────────────────────
+// Relocation Angle API — /relocation エンドポイント (アングル近接の動的解説)
+// 関連: worker/src/relocation.js (model:'angle' 分岐)
+//
+// 2026-06-02 A案再設計 (§0.2.53): 各惑星が ASC/MC/DSC/IC 軸へ近づく/遠ざかるを
+// クライアント (horo_relocation_angles.dart) が度数で計算 → 構造化ファクトを Worker に送り、
+// Gemini (thinkingBudget:0・全員無料) が文章化する。失敗時は呼出側で静的フォールバック文を表示。
+// ※ 旧 B案 (ライン近接・静的) は Map popup (horo_relocation_lines.dart) が引き続き使用。
+// ──────────────────────────────────────────────────
+
+class RelocationAngleNarrative {
+  /// planet ('sun' 等) → 動的解説文。生成されなかった惑星はキー無し。
+  final Map<String, String> planetNarratives;
+  /// angle ('asc'|'mc'|'dsc'|'ic') → 星座変化の動的解説文。変化なしはキー無し。
+  final Map<String, String> angleNarratives;
+  /// 総合サマリー (パネル先頭表示用)。
+  final String summary;
+  final String lang;
+
+  const RelocationAngleNarrative({
+    required this.planetNarratives,
+    required this.angleNarratives,
+    required this.summary,
+    required this.lang,
+  });
+
+  factory RelocationAngleNarrative.fromJson(Map<String, dynamic> j) {
+    final planetMap = <String, String>{};
+    for (final p in (j['planets'] as List?) ?? const []) {
+      if (p is Map<String, dynamic>) {
+        final planet = p['planet'] as String?;
+        final narrative = p['narrative'] as String?;
+        if (planet != null && narrative != null && narrative.isNotEmpty) {
+          planetMap[planet] = narrative;
+        }
+      }
+    }
+    final angleMap = <String, String>{};
+    for (final a in (j['angles'] as List?) ?? const []) {
+      if (a is Map<String, dynamic>) {
+        final angle = a['angle'] as String?;
+        final narrative = a['narrative'] as String?;
+        if (angle != null && narrative != null && narrative.isNotEmpty) {
+          angleMap[angle] = narrative;
+        }
+      }
+    }
+    return RelocationAngleNarrative(
+      planetNarratives: planetMap,
+      angleNarratives: angleMap,
+      summary: j['summary'] as String? ?? '',
+      lang: j['lang'] as String? ?? 'ja',
+    );
+  }
+
+  /// 全項目が空 = 実質「解説なし」。呼出側は静的フォールバックに任せる。
+  bool get isEmpty =>
+      planetNarratives.isEmpty && angleNarratives.isEmpty && summary.isEmpty;
+}
+
+/// /relocation を叩いてアングル近接の動的解説を取得 (全員無料)。
+/// planets: RelocationAngleDelta.toPayload() のリスト
+/// angles:  RelocationAngleSignChange.toPayload() のリスト
+/// 失敗時は null。呼出側 (horo_relocation_panel) で静的フォールバック文を表示すること。
+Future<RelocationAngleNarrative?> fetchRelocationAngleNarrative({
+  required List<Map<String, dynamic>> planets,
+  required List<Map<String, dynamic>> angles,
+  String? birthPlaceName,
+  String? homeName,
+  String? userName,
+  String lang = 'ja',
+}) async {
+  try {
+    final body = <String, dynamic>{
+      'model': 'angle',
+      'planets': planets,
+      'angles': angles,
+      if (birthPlaceName != null && birthPlaceName.isNotEmpty)
+        'birthPlaceName': birthPlaceName,
+      if (homeName != null && homeName.isNotEmpty) 'homeName': homeName,
+      if (userName != null && userName.isNotEmpty) 'userName': userName,
+      'lang': lang,
+    };
+    final res = await AppAttestClient.instance.postProtected(
+      solaraRelocationUrl,
+      payload: body,
+    ).timeout(const Duration(seconds: 60)); // LLM生成は数秒〜30秒
+
+    if (res.statusCode == 200) {
+      return RelocationAngleNarrative.fromJson(
+        json.decode(res.body) as Map<String, dynamic>,
+      );
+    }
+  } catch (_) {
+    // network / LLM error → null fallback (呼出側で静的文)
+  }
+  return null;
+}
 
 // ──────────────────────────────────────────────────
 // Tarot API — /tarot エンドポイント (Stella によるタロット占い文)

@@ -36,6 +36,30 @@ const HOUSE_MEANINGS_EN = {
 const SIGN_NAMES_JP = ['牡羊', '牡牛', '双子', '蟹', '獅子', '乙女', '天秤', '蠍', '射手', '山羊', '水瓶', '魚'];
 const SIGN_NAMES_EN = ['Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo', 'Libra', 'Scorpio', 'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces'];
 
+// ── A案 (アングル近接) 用 ──
+const ANGLE_JP = {
+  asc: 'ASC（自己・第一印象）', mc: 'MC（社会的立場・キャリア）',
+  dsc: 'DSC（対人・パートナーシップ）', ic: 'IC（家庭・心の拠り所）',
+};
+const ANGLE_EN = {
+  asc: 'ASC (self/first impression)', mc: 'MC (career/public status)',
+  dsc: 'DSC (partnership)', ic: 'IC (home/roots)',
+};
+
+// 度数差 → 度合い語。Dart 側 (horo_relocation_angles.dart) と閾値を一致させる。
+function magnitudeWordJP(absDeg) {
+  if (absDeg < 0.5) return 'ごくわずかに';
+  if (absDeg < 2) return 'わずかに';
+  if (absDeg < 6) return 'はっきりと';
+  return '大きく';
+}
+function magnitudeWordEN(absDeg) {
+  if (absDeg < 0.5) return 'very slightly';
+  if (absDeg < 2) return 'slightly';
+  if (absDeg < 6) return 'noticeably';
+  return 'greatly';
+}
+
 // ── プロンプト生成 ──
 // 変化のある shift / angle のみ Gemini に投げる（トークン節約）。
 // 変化なしのものは呼出側で静的テンプレートが残る（情報量は維持）。
@@ -122,8 +146,165 @@ ${hasAscChange ? `  "ascNarrative": "<第一印象が「${SIGN_NAMES_JP[ascChang
 }`;
 }
 
+// ── A案プロンプト生成 (アングル近接) ──
+// planets: [{planet, natalHouse?, reloHouse?, nearestAngle, deltaDeg, direction}]
+// angles:  [{angle, fromSign, toSign}]  (星座が変わった軸のみ)
+// 何も無ければ null (呼出側は空レスポンス)。
+function buildAnglePrompt({ planets, angles, birthPlaceName, homeName, userName, lang }) {
+  const list = Array.isArray(planets) ? planets : [];
+  const angleList = Array.isArray(angles) ? angles : [];
+  if (list.length === 0 && angleList.length === 0) return null;
+
+  const HOUSE = lang === 'en' ? HOUSE_MEANINGS_EN : HOUSE_MEANINGS_JP;
+  const ANGLE = lang === 'en' ? ANGLE_EN : ANGLE_JP;
+  const SIGN = lang === 'en' ? SIGN_NAMES_EN : SIGN_NAMES_JP;
+  const magWord = lang === 'en' ? magnitudeWordEN : magnitudeWordJP;
+  const from = birthPlaceName || (lang === 'en' ? 'birthplace' : '出生地');
+  const to = homeName || (lang === 'en' ? 'current home' : '現住所');
+
+  const planetFacts = list.map(p => {
+    const pName = lang === 'en' ? p.planet : (PLANET_JP[p.planet] || p.planet);
+    const ang = ANGLE[p.nearestAngle] || p.nearestAngle;
+    const mag = magWord(Math.abs(p.deltaDeg || 0));
+    const houseChanged = p.natalHouse && p.reloHouse && p.natalHouse !== p.reloHouse;
+    if (houseChanged) {
+      const fromH = HOUSE[p.natalHouse] || `${p.natalHouse}H`;
+      const toH = HOUSE[p.reloHouse] || `${p.reloHouse}H`;
+      return lang === 'en'
+        ? `- ${pName}: HOUSE MOVE ${p.natalHouse}H(${fromH}) -> ${p.reloHouse}H(${toH}); nearest angle ${ang}`
+        : `- ${pName}: ハウス移動 ${p.natalHouse}H(${fromH}) → ${p.reloHouse}H(${toH})、最寄り軸 ${ang}`;
+    }
+    if (p.direction === 'closer') {
+      return lang === 'en'
+        ? `- ${pName}: moves ${mag} CLOSER to ${ang}`
+        : `- ${pName}: ${ang}に${mag}近づく`;
+    }
+    if (p.direction === 'farther') {
+      return lang === 'en'
+        ? `- ${pName}: moves ${mag} FARTHER from ${ang}`
+        : `- ${pName}: ${ang}から${mag}遠ざかる`;
+    }
+    return lang === 'en'
+      ? `- ${pName}: stays about the same near ${ang}`
+      : `- ${pName}: ${ang}との距離はほぼ保たれる`;
+  }).join('\n');
+
+  const angleFacts = angleList.map(a => {
+    const ang = ANGLE[a.angle] || a.angle;
+    return lang === 'en'
+      ? `- ${ang}: ${SIGN[a.fromSign]} -> ${SIGN[a.toSign]}`
+      : `- ${ang}: ${SIGN[a.fromSign]}座 → ${SIGN[a.toSign]}座`;
+  }).join('\n');
+
+  const planetSchema = list.map(p =>
+    lang === 'en'
+      ? `    {"planet": "${p.planet}", "narrative": "<1-2 sentences, ~50-110 chars>"}`
+      : `    {"planet": "${p.planet}", "narrative": "<1〜2文・50〜110文字>"}`
+  ).join(',\n');
+  const angleSchema = angleList.map(a =>
+    lang === 'en'
+      ? `    {"angle": "${a.angle}", "narrative": "<1-2 sentences, ~50-110 chars>"}`
+      : `    {"angle": "${a.angle}", "narrative": "<1〜2文・50〜110文字>"}`
+  ).join(',\n');
+
+  if (lang === 'en') {
+    return `You are an expert in relocation astrology / astrocartography. The user compares moving from ${from} to ${to}. A planet near an angle (ASC/MC/DSC/IC) expresses that life area more strongly in that place.
+${userName ? `User: ${userName}` : ''}
+
+Planet vs nearest-angle changes:
+${planetFacts || '(none)'}
+${angleFacts ? `\nAngle sign changes:\n${angleFacts}` : ''}
+
+For each planet, write how its theme shifts in the new place based on its angle proximity. Concrete, warm, and NEUTRAL: never say good/bad/lucky/unlucky; use "strengthens / softens / comes forward / settles". For very small changes, be honest and understated. Address the user warmly without a mechanical greeting.
+
+Return ONLY a JSON object (no markdown, no extra text):
+{
+  "planets": [
+${planetSchema}
+  ],${angleList.length ? `\n  "angles": [\n${angleSchema}\n  ],` : ''}
+  "summary": "<overall 1-2 sentence summary, ~70-130 chars>"
+}`;
+  }
+
+  return `あなたはリロケーション占星術 / アストロカートグラフィの専門家です。${from}から${to}への移動を比較します。惑星はアングル(ASC/MC/DSC/IC)に近いほど、その人生領域がその土地で強く働きます。
+${userName ? `対象: ${userName}さん` : ''}
+
+各惑星と最寄りアングルの変化:
+${planetFacts || '(なし)'}
+${angleFacts ? `\nアングルの星座変化:\n${angleFacts}` : ''}
+
+各惑星について、アングルへの近さの変化から、その星のテーマがこの土地でどう変わるかを書いてください。具体的かつ温かく、ただし中立に。吉凶・幸運/不運の語は禁止。「強まる／やわらぐ／前に出る／落ち着く」で表現。ごく小さな変化は誇張せず正直に控えめに。冒頭の機械的な呼びかけは避け、自然に語りかける口調で。
+
+以下のJSON形式のみで返答 (マークダウンや余分な文言は不要):
+{
+  "planets": [
+${planetSchema}
+  ],${angleList.length ? `\n  "angles": [\n${angleSchema}\n  ],` : ''}
+  "summary": "<総合サマリーを1〜2文・70〜130文字>"
+}`;
+}
+
+// ── A案メインエントリ: アングル近接の動的解説 (全員無料) ──
+async function handleRelocationAngle(body, env) {
+  const {
+    planets = [],
+    angles = [],
+    birthPlaceName,
+    homeName,
+    userName,
+    lang = 'ja',
+  } = body;
+
+  if (!Array.isArray(planets)) {
+    throw new Error('planets must be an array');
+  }
+
+  const prompt = buildAnglePrompt({ planets, angles, birthPlaceName, homeName, userName, lang });
+  if (prompt === null) {
+    return { planets: [], angles: [], summary: '', lang };
+  }
+
+  if (!env.GEMINI_API_KEY) {
+    throw new Error('GEMINI_API_KEY not configured on worker');
+  }
+
+  const primary = env.FORTUNE_MODEL_PRIMARY || 'gemini-2.5-flash';
+  const fallback = env.FORTUNE_MODEL_FALLBACK || 'gemini-flash-latest';
+  const models = primary === fallback ? [primary] : [primary, fallback];
+
+  // ナレーション生成のみ → thinking OFF (§0.2.51)。10天体ぶんで長めなので出力上限を拡張
+  // (上限であって課金額ではない。実出力分のみ課金)。
+  const raw = await callGemini(env.GEMINI_API_KEY, prompt, models, {
+    thinkingBudget: 0,
+    maxOutputTokens: 4096,
+  });
+
+  let parsed;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    const cleaned = raw.replace(/^```json\s*|\s*```$/g, '').trim();
+    try { parsed = JSON.parse(cleaned); }
+    catch {
+      throw new Error(`Gemini returned non-JSON: ${raw.slice(0, 200)}`);
+    }
+  }
+
+  return {
+    planets: Array.isArray(parsed.planets) ? parsed.planets : [],
+    angles: Array.isArray(parsed.angles) ? parsed.angles : [],
+    summary: parsed.summary || '',
+    lang,
+  };
+}
+
 // ── メインエントリ: POST /relocation ──
 export async function handleRelocation(body, env) {
+  // A案 (アングル近接・新アプリ): model:'angle' か planets[] が来たら新分岐。
+  // 旧B/旧A (shifts[]) は後方互換でそのまま下に残す。
+  if (body && (body.model === 'angle' || Array.isArray(body.planets))) {
+    return handleRelocationAngle(body, env);
+  }
   const {
     shifts = [],
     ascChange = null,
@@ -181,3 +362,10 @@ export async function handleRelocation(body, env) {
     lang,
   };
 }
+
+// テスト用内部エクスポート (A案アングル近接)。
+export const _internal = {
+  buildAnglePrompt,
+  magnitudeWordJP,
+  magnitudeWordEN,
+};

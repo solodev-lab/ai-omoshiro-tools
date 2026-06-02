@@ -648,7 +648,7 @@ title, narrative, softNote, hardNote, lang
 **export (1):** `handleLineNarrative`
 
 
-### `worker/src/relocation.js` (183 行)
+### `worker/src/relocation.js` (371 行)
 
 **ファイル先頭コメント:**
 
@@ -666,7 +666,7 @@ Phase B: 静的テンプレート (horo_relocation_templates.dart) を動的解�
 フォールバック: API失敗時は呼出側 (Dart) で null を受け、静的テンプレ表示。
 ```
 
-**export (1):** `handleRelocation`
+**export (2):** `handleRelocation`, `_internal`
 
 
 ### `worker/src/search.js` (160 行)

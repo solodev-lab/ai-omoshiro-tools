@@ -14,23 +14,8 @@ import '../../widgets/ai_report_button.dart';
 // ══════════════════════════════════════════════════
 
 // HTML exact: FORTUNE_MOCK data
-const _fortuneMock = {
-  'overall': {
-    'text': '今日の星配置は、あなたの内側に眠る意志の力を呼び覚ます一日です。太陽と木星が緩やかにトラインを形成し、行動へのエネルギーと拡張の気風が自然と高まっています。午前中は特に直感が鋭く、長らく保留にしていた選択や決断に向き合う好機といえるでしょう。水星と金星のセクスタイルが知性とコミュニケーションを後押しし、周囲との対話から思わぬヒントが得られる暗示があります。午後にかけては月が蟹座に入り、感受性がさらに深まります。家族や親しい人との時間を大切にすると、心の充電ができるでしょう。夕方以降は火星のエネルギーが穏やかに高まるため、体を動かすことで気持ちがリフレッシュされます。全体的に、内なる声に従って行動することで、自然と良い流れに乗れる一日です。焦らず、自分のペースを信じて進んでみてください。',
-  },
-  'love': {
-    'text': '金星と月のアスペクトが感受性を高め、心の距離が自然と縮まりやすい一日です。パートナーがいる方は、日常の中に小さな感謝を伝えると関係が深まります。フリーの方は、感性が開いている今日、心に響く出会いの予感があります。',
-  },
-  'money': {
-    'text': '木星と水星の配置が金銭面の判断力を高めています。長期的な視点で資産や収入について考えるのに向いた一日です。衝動買いは控え、本当に価値のあるものに投資する意識を持つと良いでしょう。',
-  },
-  'career': {
-    'text': '太陽と火星のエネルギーが重なり、仕事への推進力と自信が最高潮に達する一日です。プレゼンや提案、新しいプロジェクトの立ち上げに適しています。午後は特に集中力が増すので、重要なタスクはこの時間帯に。',
-  },
-  'communication': {
-    'text': '水星と金星の調和的なアスペクトが言葉に温かみと説得力を与えています。大切な人との会話、ビジネスの交渉、SNSでの発信——あらゆるコミュニケーションが好調です。誤解を恐れず、素直に気持ちを伝えてみましょう。',
-  },
-};
+// 旧: 取得失敗時に出す mock 仮テキスト。2026-06-03 撤去。
+// 失敗は fake で取り繕わず素直に「失敗+再試行」を出す方針 (タロット/拠点と統一)。
 
 class HoroAstrologyView extends StatelessWidget {
   /// 各モードで成立中の特殊アスペクト
@@ -102,7 +87,6 @@ class HoroAstrologyView extends StatelessWidget {
           final catId = cat['id'] as String;
           final reading = fortunes[catId];
           final useApi = reading != null;
-          final mock = _fortuneMock[catId];
 
           // Phase A1: Free ユーザーは overall 以外を殻ティーザー化。
           // 「🔴 殻ティーザーは Free ユーザーで Gemini を 1 回も呼ばないこと」
@@ -112,9 +96,11 @@ class HoroAstrologyView extends StatelessWidget {
             return _lockedTeaserCard(cat, color);
           }
 
-          final text = useApi
-              ? reading.reading
-              : (mock?['text'] ?? '');
+          // 取得できていない (失敗 / 未取得) かつロード中でない → mock で取り繕わず
+          // カード自体を出さない (上部の失敗バナー + 再試行が状況を説明する。2026-06-03)。
+          if (!useApi && !fortuneLoading) return const SizedBox.shrink();
+
+          final text = useApi ? reading.reading : '';
           final advice = useApi ? reading.advice : '';
 
           return Container(
@@ -229,8 +215,8 @@ class HoroAstrologyView extends StatelessWidget {
     child: Row(children: [
       const Icon(Icons.cloud_off, size: 14, color: Color(0xFFFF9E9E)),
       const SizedBox(width: 8),
-      const Expanded(child: Text('Stella の声が届きませんでした。仮テキストを表示中',
-        style: TextStyle(fontSize: 11, color: Color(0xFFFF9E9E)))),
+      const Expanded(child: Text('解説の取得に失敗しました。通信状況を確認して、もう一度お試しください。',
+        style: TextStyle(fontSize: 11, color: Color(0xFFFF9E9E), height: 1.5))),
       if (onRetry != null)
         GestureDetector(
           onTap: onRetry,

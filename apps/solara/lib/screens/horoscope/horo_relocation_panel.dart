@@ -1,29 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../utils/astro_houses.dart' show assignPlanetHouse;
+import '../../utils/fortune_api.dart'
+    show RelocationAngleNarrative, fetchRelocationAngleNarrative;
 import 'horo_constants.dart' show planetGlyphs, planetNamesJP;
-import 'horo_relocation_lines.dart';
+import 'horo_relocation_angles.dart';
 
 // ══════════════════════════════════════════════════
-// Relocation Panel (ライン近接版 — 2026-06-02 再設計、feature_inventory §0.2.52)
+// Relocation Panel (アングル近接版 — 2026-06-02 A案再設計、feature_inventory §0.2.53)
 //
-// 旧版: 「出生地ハウス vs 現住所ハウス」の差分。近距離移動ではハウスが変わらず
-//   「変化なし」だらけになり、Pro(Gemini)解説も生成されず "何に金払った?" 問題があった。
+// 各惑星が ASC/MC/DSC/IC 軸へ近づく/遠ざかるを「度数」で測る。ハウスが変わらなくても必ず変化が出る
+// (「変化なし」消滅)。占星術の正統「アングルに近い惑星ほど強い」と一貫。幾何は horo_relocation_angles.dart。
 //
-// 新版: 「どの惑星ラインに近づいた / 遠ざかったか」を主役に。緯度経度が違えば線距離は
-//   必ず変わるので「変化なし」が原理的に消える。Solara の核心(マップの惑星ライン)と地続き。
-//   全て静的 (Gemini 不使用 = ¥0)・全員無料。計算と意味文は horo_relocation_lines.dart。
-//   ハウス変化は「実際に変わった惑星だけ」副次表示 + 静的コメント。
+// 解説本文は Worker /relocation (Gemini, thinkingBudget:0・全員無料) で動的生成。
+//   取得失敗時は **素直に「失敗しました」+ 再試行** を出す (定型文で取り繕わない = オーナー方針 2026-06-03)。
+//   10天体すべて + ASC/MC/DSC/IC の星座変化を表示する。
 //
-// 1重円モード + home有効 + houses取得済みの時のみ Bottom Sheet「拠点」タブに表示。
+// 1重円モード + home有効 + houses取得済み (出生時刻判明) の時のみ Bottom Sheet「拠点」タブに表示。
 // ══════════════════════════════════════════════════
-
-/// 上位何本のライン近接デルタを表示するか。
-const int _kTopLines = 4;
-
-/// 「ほぼ同じ場所」と見なすデルタ上限 (km)。これ未満しか無ければ移動なし扱い。
-const double _kSamePlaceKm = 1.0;
 
 class HoroRelocationPanel extends StatefulWidget {
   final Map<String, double> natalPlanets; // 惑星黄経 (relocate で変わらない)
@@ -31,10 +25,9 @@ class HoroRelocationPanel extends StatefulWidget {
   final List<double> relocateHouses;       // 現住所ベースのハウスカスプ12個
   final double natalAsc, natalMc;
   final double relocateAsc, relocateMc;
-  final double birthLat, birthLng;         // 出生地座標 (ライン距離計算に必須)
-  final double homeLat, homeLng;           // 現住所座標
-  final String? birthPlaceName;            // 出生地名 (任意・ヘッダ表示)
-  final String? homeName;                  // 現住所名 (任意・ヘッダ表示)
+  final String? birthPlaceName;            // 出生地名 (任意・ヘッダ + プロンプト)
+  final String? homeName;                  // 現住所名 (任意・ヘッダ + プロンプト)
+  final String? userName;                  // 対象者名 (任意・プロンプト)
 
   const HoroRelocationPanel({
     super.key,
@@ -45,12 +38,9 @@ class HoroRelocationPanel extends StatefulWidget {
     required this.natalMc,
     required this.relocateAsc,
     required this.relocateMc,
-    required this.birthLat,
-    required this.birthLng,
-    required this.homeLat,
-    required this.homeLng,
     this.birthPlaceName,
     this.homeName,
+    this.userName,
   });
 
   @override
@@ -58,64 +48,125 @@ class HoroRelocationPanel extends StatefulWidget {
 }
 
 class _HoroRelocationPanelState extends State<HoroRelocationPanel> {
-  /// ライン近接デルタ (|delta| 降順)。計算は座標が変わった時のみ。
-  List<RelocationLineDelta> _deltas = const [];
-  /// ハウスが実際に変わった惑星のみ (7惑星)。
-  List<({String planet, int from, int to})> _houseChanges = const [];
+  List<RelocationAngleDelta> _deltas = const [];
+  List<RelocationAngleSignChange> _angleChanges = const [];
+
+  /// Worker から取得した動的解説。null = 未取得 / 失敗。
+  RelocationAngleNarrative? _narrative;
+  bool _loading = false;
+  bool _failed = false;
+  String? _lastFetchKey;
+
+  bool get _hasCharts =>
+      widget.natalHouses.length == 12 && widget.relocateHouses.length == 12;
+
+  /// 出生地と現住所がほぼ同じ場所 (変化を語る意味がない)。
+  bool get _isSamePlace {
+    if (_deltas.isEmpty) return true;
+    final maxAbs = _deltas
+        .map((d) => d.deltaDeg.abs())
+        .fold<double>(0, (a, b) => a > b ? a : b);
+    return maxAbs < kSamePlaceMaxDeg &&
+        _angleChanges.isEmpty &&
+        !_deltas.any((d) => d.houseChanged);
+  }
+
+  bool get _willFetch => _hasCharts && _deltas.isNotEmpty && !_isSamePlace;
 
   @override
   void initState() {
     super.initState();
     _recompute();
+    if (_willFetch) _loading = true;
+    _maybeFetch();
   }
 
   @override
   void didUpdateWidget(covariant HoroRelocationPanel oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.birthLat != widget.birthLat ||
-        oldWidget.birthLng != widget.birthLng ||
-        oldWidget.homeLat != widget.homeLat ||
-        oldWidget.homeLng != widget.homeLng ||
-        oldWidget.natalMc != widget.natalMc) {
+    if (oldWidget.natalAsc != widget.natalAsc ||
+        oldWidget.natalMc != widget.natalMc ||
+        oldWidget.relocateAsc != widget.relocateAsc ||
+        oldWidget.relocateMc != widget.relocateMc ||
+        oldWidget.natalHouses.length != widget.natalHouses.length ||
+        oldWidget.relocateHouses.length != widget.relocateHouses.length) {
       _recompute();
+      _maybeFetch();
     }
   }
 
   void _recompute() {
-    if (widget.natalPlanets.isEmpty) {
+    if (!_hasCharts || widget.natalPlanets.isEmpty) {
       _deltas = const [];
-      _houseChanges = const [];
+      _angleChanges = const [];
       return;
     }
-    _deltas = computeRelocationLineDeltas(
+    _deltas = computeRelocationAngleDeltas(
       natalPlanets: widget.natalPlanets,
+      natalHouses: widget.natalHouses,
+      relocateHouses: widget.relocateHouses,
+      natalAsc: widget.natalAsc,
       natalMc: widget.natalMc,
-      birthLat: widget.birthLat,
-      birthLng: widget.birthLng,
-      homeLat: widget.homeLat,
-      homeLng: widget.homeLng,
+      relocateAsc: widget.relocateAsc,
+      relocateMc: widget.relocateMc,
     );
-    // ハウス変化 (7惑星・変化したものだけ)
-    final changes = <({String planet, int from, int to})>[];
-    if (widget.natalHouses.length == 12 && widget.relocateHouses.length == 12) {
-      for (final planet in relocationLinePlanets) {
-        final lon = widget.natalPlanets[planet];
-        if (lon == null) continue;
-        final from = assignPlanetHouse(lon, widget.natalHouses);
-        final to = assignPlanetHouse(lon, widget.relocateHouses);
-        if (from == null || to == null || from == to) continue;
-        changes.add((planet: planet, from: from, to: to));
-      }
+    _angleChanges = computeRelocationAngleSignChanges(
+      natalAsc: widget.natalAsc,
+      natalMc: widget.natalMc,
+      relocateAsc: widget.relocateAsc,
+      relocateMc: widget.relocateMc,
+    );
+  }
+
+  String _buildFetchKey() =>
+      '${widget.birthPlaceName}|${widget.homeName}|${widget.userName}'
+      '|${widget.natalAsc.toStringAsFixed(2)}|${widget.natalMc.toStringAsFixed(2)}'
+      '|${widget.relocateAsc.toStringAsFixed(2)}|${widget.relocateMc.toStringAsFixed(2)}';
+
+  Future<void> _maybeFetch() async {
+    if (!_willFetch) {
+      if (_loading && mounted) setState(() => _loading = false);
+      return;
     }
-    _houseChanges = changes;
+    final key = _buildFetchKey();
+    // 取得成功済みで同条件なら再取得しない (コスト節約)。失敗時は再試行で _lastFetchKey をリセット。
+    if (key == _lastFetchKey && _narrative != null) return;
+    _lastFetchKey = key;
+    if (mounted) {
+      setState(() {
+        _loading = true;
+        _failed = false;
+      });
+    } else {
+      _loading = true;
+    }
+    final n = await fetchRelocationAngleNarrative(
+      planets: _deltas.map((d) => d.toPayload()).toList(),
+      angles: _angleChanges.map((c) => c.toPayload()).toList(),
+      birthPlaceName: widget.birthPlaceName,
+      homeName: widget.homeName,
+      userName: widget.userName,
+    );
+    if (!mounted) return;
+    setState(() {
+      if (n != null && !n.isEmpty) {
+        _narrative = n;
+        _failed = false;
+      } else {
+        _narrative = null;
+        _failed = true;
+      }
+      _loading = false;
+    });
+  }
+
+  void _retry() {
+    _lastFetchKey = null;
+    _maybeFetch();
   }
 
   @override
   Widget build(BuildContext context) {
-    final top = _deltas.take(_kTopLines).toList();
-    final maxAbs = _deltas.isEmpty ? 0.0 : _deltas.first.deltaKm.abs();
-    final samePlace = maxAbs < _kSamePlaceKm;
-
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(12, 8, 12, 24),
       child: Column(
@@ -123,18 +174,28 @@ class _HoroRelocationPanelState extends State<HoroRelocationPanel> {
         children: [
           _buildHeader(),
           const SizedBox(height: 14),
-          if (samePlace)
+          if (!_hasCharts)
+            _buildNeedChartHint()
+          else if (_isSamePlace)
             _buildSamePlaceHint()
+          else if (_loading)
+            _buildLoadingBlock()
+          else if (_failed || _narrative == null)
+            _buildFailureBlock()
           else ...[
-            _buildSectionTitle('この移動で変わる星のライン'),
-            const SizedBox(height: 8),
-            ...top.map(_buildLineDeltaCard),
-            if (_houseChanges.isNotEmpty) ...[
+            if (_narrative!.summary.isNotEmpty) ...[
+              _buildSummary(_narrative!.summary),
               const SizedBox(height: 14),
-              _buildSectionTitle('ハウスの移り変わり'),
-              const SizedBox(height: 8),
-              ..._houseChanges.map(_buildHouseChangeCard),
             ],
+            if (_angleChanges.isNotEmpty) ...[
+              _buildSectionTitle('アングルの星座が変わる'),
+              const SizedBox(height: 8),
+              ..._angleChanges.map(_buildAngleChangeCard),
+              const SizedBox(height: 14),
+            ],
+            _buildSectionTitle('10天体とアングルの近さ'),
+            const SizedBox(height: 8),
+            ..._deltas.map(_buildPlanetCard),
             const SizedBox(height: 10),
             _buildFootnote(),
           ],
@@ -164,7 +225,7 @@ class _HoroRelocationPanelState extends State<HoroRelocationPanel> {
         ),
         const SizedBox(height: 4),
         Text(
-          '$from → $to で、近づく星・遠ざかる星',
+          '$from → $to で、星がアングルに近づく・遠ざかる',
           style: GoogleFonts.notoSansJp(
             fontSize: 11,
             color: const Color(0xCCCCCCCC),
@@ -187,23 +248,162 @@ class _HoroRelocationPanelState extends State<HoroRelocationPanel> {
     );
   }
 
-  /// ライン近接デルタ 1 枚 (近=金色 / 遠=控えめ)。
-  Widget _buildLineDeltaCard(RelocationLineDelta d) {
-    final glyph = planetGlyphs[d.planet] ?? '';
-    final planet = planetNamesJP[d.planet] ?? d.planet;
-    final angle = d.angle.toUpperCase();
-    final adv = relocationMagnitudeAdverb(d.deltaKm.abs());
-    final closer = d.closer;
-    final accent = closer ? const Color(0xFFF6BD60) : const Color(0xFF9FB4C7);
+  Widget _buildSummary(String text) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+      decoration: BoxDecoration(
+        color: const Color(0x14F6BD60),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: const Color(0x33F6BD60)),
+      ),
+      child: Text(
+        text,
+        style: GoogleFonts.notoSansJp(
+          fontSize: 12.5,
+          color: const Color(0xFFE8E0D0),
+          height: 1.7,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLoadingBlock() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 24),
+      child: Center(
+        child: Column(
+          children: [
+            const SizedBox(
+              width: 22,
+              height: 22,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                valueColor: AlwaysStoppedAnimation(Color(0xFFF6BD60)),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Stella がこの地の星を読み解いています…',
+              style: GoogleFonts.notoSansJp(
+                fontSize: 11.5,
+                color: const Color(0xFFB8B2A6),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFailureBlock() {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
+      decoration: BoxDecoration(
+        color: const Color(0x0AFFFFFF),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: const Color(0x1FFFFFFF)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '解説の取得に失敗しました。',
+            style: GoogleFonts.notoSansJp(
+              fontSize: 13,
+              color: const Color(0xFFE8E0D0),
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            '通信状況を確認して、もう一度お試しください。',
+            style: GoogleFonts.notoSansJp(
+              fontSize: 12,
+              color: const Color(0xFFB8B2A6),
+              height: 1.6,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: OutlinedButton(
+              onPressed: _retry,
+              style: OutlinedButton.styleFrom(
+                foregroundColor: const Color(0xFFF6BD60),
+                side: const BorderSide(color: Color(0x55F6BD60)),
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: Text(
+                '再試行',
+                style: GoogleFonts.notoSansJp(
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// アングル星座変化 1枚 (ヘッドライン)。
+  Widget _buildAngleChangeCard(RelocationAngleSignChange c) {
+    final narrative = _narrative?.angleNarratives[c.angle] ?? '';
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
       decoration: BoxDecoration(
-        color: closer ? const Color(0x14F6BD60) : const Color(0x0AFFFFFF),
+        color: const Color(0x14F6BD60),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: closer ? const Color(0x33F6BD60) : const Color(0x1FFFFFFF),
-        ),
+        border: Border.all(color: const Color(0x33F6BD60)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '${c.angle.toUpperCase()}（${relocationAngleDomain[c.angle] ?? ''}）',
+            style: GoogleFonts.notoSansJp(
+              fontSize: 13,
+              color: const Color(0xFFE8E0D0),
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          if (narrative.isNotEmpty) ...[
+            const SizedBox(height: 6),
+            Text(
+              narrative,
+              style: GoogleFonts.notoSansJp(
+                fontSize: 12,
+                color: const Color(0xFFD8D2C6),
+                height: 1.6,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  /// 惑星 1枚 (ハウス移動=金色強調 / 近=金色 / 遠=控えめ / ほぼ変化なし=灰)。
+  Widget _buildPlanetCard(RelocationAngleDelta d) {
+    final glyph = planetGlyphs[d.planet] ?? '';
+    final planet = planetNamesJP[d.planet] ?? d.planet;
+    final angle = d.nearestAngle.toUpperCase();
+    final narrative = _narrative?.planetNarratives[d.planet] ?? '';
+
+    final (String tag, Color accent, Color bg, Color border) = _styleFor(d);
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -211,7 +411,9 @@ class _HoroRelocationPanelState extends State<HoroRelocationPanel> {
           Row(children: [
             Flexible(
               child: Text(
-                '$glyph $planet の$angleライン',
+                d.houseChanged && d.reloHouse != null
+                    ? '$glyph $planet · ${d.reloHouse}H'
+                    : '$glyph $planet · $angle軸',
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: GoogleFonts.notoSansJp(
@@ -223,7 +425,7 @@ class _HoroRelocationPanelState extends State<HoroRelocationPanel> {
             ),
             const SizedBox(width: 8),
             Text(
-              closer ? '▲ $adv近づく' : '▽ $adv遠ざかる',
+              tag,
               style: GoogleFonts.notoSansJp(
                 fontSize: 11,
                 color: accent,
@@ -231,64 +433,72 @@ class _HoroRelocationPanelState extends State<HoroRelocationPanel> {
               ),
             ),
           ]),
-          const SizedBox(height: 6),
-          Text(
-            relocationLineDeltaSentence(d),
-            style: GoogleFonts.notoSansJp(
-              fontSize: 12,
-              color: const Color(0xFFD8D2C6),
-              height: 1.6,
+          if (narrative.isNotEmpty) ...[
+            const SizedBox(height: 6),
+            Text(
+              narrative,
+              style: GoogleFonts.notoSansJp(
+                fontSize: 12,
+                color: const Color(0xFFD8D2C6),
+                height: 1.6,
+              ),
             ),
-          ),
+          ],
         ],
       ),
     );
   }
 
-  /// ハウス変化 1 枚 (変化した惑星のみ)。
-  Widget _buildHouseChangeCard(({String planet, int from, int to}) c) {
-    final glyph = planetGlyphs[c.planet] ?? '';
-    final planet = planetNamesJP[c.planet] ?? c.planet;
+  /// 状態に応じたタグ文言と配色。
+  (String, Color, Color, Color) _styleFor(RelocationAngleDelta d) {
+    if (d.houseChanged) {
+      return (
+        '◆ ハウス移動',
+        const Color(0xFFF6BD60),
+        const Color(0x1FF6BD60),
+        const Color(0x44F6BD60),
+      );
+    }
+    switch (d.direction) {
+      case 'closer':
+        return (
+          '▲ 近づく',
+          const Color(0xFFF6BD60),
+          const Color(0x14F6BD60),
+          const Color(0x33F6BD60),
+        );
+      case 'farther':
+        return (
+          '▽ 遠ざかる',
+          const Color(0xFF9FB4C7),
+          const Color(0x0AFFFFFF),
+          const Color(0x1FFFFFFF),
+        );
+      default:
+        return (
+          '・ ほぼ変化なし',
+          const Color(0xFF888888),
+          const Color(0x08FFFFFF),
+          const Color(0x14FFFFFF),
+        );
+    }
+  }
+
+  Widget _buildNeedChartHint() {
     return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
       decoration: BoxDecoration(
         color: const Color(0x0AFFFFFF),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(10),
         border: Border.all(color: const Color(0x1FFFFFFF)),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(children: [
-            Text(
-              '$glyph $planet',
-              style: GoogleFonts.notoSansJp(
-                fontSize: 13,
-                color: const Color(0xFFE8E0D0),
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(width: 8),
-            Text(
-              '${c.from}H → ${c.to}H',
-              style: const TextStyle(
-                color: Color(0xFFAAAAAA),
-                fontFamily: 'Courier New',
-                fontSize: 12,
-              ),
-            ),
-          ]),
-          const SizedBox(height: 6),
-          Text(
-            relocationHouseChangeComment(c.planet, c.from, c.to),
-            style: GoogleFonts.notoSansJp(
-              fontSize: 12,
-              color: const Color(0xFFD8D2C6),
-              height: 1.6,
-            ),
-          ),
-        ],
+      child: Text(
+        '出生時刻と現住所を設定すると、星がどのアングルに近づく地かを読み解けます。',
+        style: GoogleFonts.notoSansJp(
+          fontSize: 12,
+          color: const Color(0xFFB8B2A6),
+          height: 1.6,
+        ),
       ),
     );
   }
@@ -302,7 +512,7 @@ class _HoroRelocationPanelState extends State<HoroRelocationPanel> {
         border: Border.all(color: const Color(0x1FFFFFFF)),
       ),
       child: Text(
-        '出生地と現住所がほぼ同じ場所です。遠くへ移るほど、星のラインとの距離がはっきり変わります。',
+        '出生地と現住所がほぼ同じ場所です。遠くへ移るほど、星とアングルの距離がはっきり変わります。',
         style: GoogleFonts.notoSansJp(
           fontSize: 12,
           color: const Color(0xFFB8B2A6),
@@ -314,7 +524,8 @@ class _HoroRelocationPanelState extends State<HoroRelocationPanel> {
 
   Widget _buildFootnote() {
     return Text(
-      '※ ラインに近いほど、その星のテーマがその土地で前に出ます。吉凶ではなく「強まる／やわらぐ」の傾きです。',
+      '※ 星がアングル(ASC/MC/DSC/IC)に近いほど、その星のテーマがその土地で前に出ます。'
+      '吉凶ではなく「強まる／やわらぐ」の傾きです。',
       style: GoogleFonts.notoSansJp(
         fontSize: 10,
         color: const Color(0xFF888888),

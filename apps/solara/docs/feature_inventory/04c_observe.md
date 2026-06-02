@@ -5,9 +5,9 @@
 
 ## サマリ
 
-- ファイル数: 12 / 総行数: 3554
+- ファイル数: 12 / 総行数: 3613
 - class/mixin/extension/enum: 25
-- 関数 (top-level + method の素拾い): 79
+- 関数 (top-level + method の素拾い): 81
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 1
 - Worker URL リテラル: 0
@@ -56,7 +56,7 @@
   </details>
 
 
-### `lib/screens/observe/observe_constants.dart` (55 行)
+### `lib/screens/observe/observe_constants.dart` (36 行)
 
 **ファイル先頭コメント:**
 
@@ -334,27 +334,27 @@ showInfoPopup 経由 (popup 統一規約)。呼出側は returned bool で proce
 - 集計: `showInfoPopup`×1
 
 
-### `lib/screens/observe_screen.dart` (737 行)
+### `lib/screens/observe_screen.dart` (815 行)
 
-**imports:** dart=2 / package=1 / relative=19
+**imports:** dart=2 / package=1 / relative=18
 
-- relative: `../models/daily_reading.dart`, `../models/tarot_card.dart`, `../utils/fortune_api.dart`, `../utils/moon_phase.dart`, `../utils/pro_status.dart`, `../utils/solara_storage.dart`, `../utils/tarot_data.dart`, `../widgets/ai_disclaimer_footer.dart`, `../widgets/ai_report_button.dart`, `../widgets/pro_unlock_dialog.dart`, `../widgets/tap_to_unfocus.dart`, `../theme/solara_colors.dart`, `../utils/consultation_credits.dart`, `consultation/consultation_credit_sheet.dart`, `observe/observe_constants.dart`, `observe/observe_card_widgets.dart`, `observe/observe_history.dart`, `observe/tarot_altar_scene.dart`, `observe/tarot_category_popup.dart`
+- relative: `../models/daily_reading.dart`, `../models/tarot_card.dart`, `../utils/fortune_api.dart`, `../utils/moon_phase.dart`, `../utils/pro_status.dart`, `../utils/solara_storage.dart`, `../utils/tarot_data.dart`, `../widgets/ai_disclaimer_footer.dart`, `../widgets/ai_report_button.dart`, `../widgets/pro_unlock_dialog.dart`, `../widgets/tap_to_unfocus.dart`, `../theme/solara_colors.dart`, `../utils/consultation_credits.dart`, `consultation/consultation_credit_sheet.dart`, `observe/observe_card_widgets.dart`, `observe/observe_history.dart`, `observe/tarot_altar_scene.dart`, `observe/tarot_category_popup.dart`
 
 **型定義 (2):**
 
-- L30 `class ObserveScreen : StatefulWidget`
+- L29 `class ObserveScreen : StatefulWidget`
   - Tarot Draw screen — matches tarot.html exactly.
-- L36 `class ObserveScreenState : State`
+- L35 `class ObserveScreenState : State`
 
-**関数 (5 public + 17 private):**
+**関数 (5 public + 19 private):**
 
-- L33 `createState()`
+- L32 `createState()`
 - L141 `initState()`
 - L166 `restoreState()` — 復元: HISTORY タブ + サブタブ (現在/過去サイクル) を再現する。
 - L177 `dispose()`
-- L451 `build()`
+- L471 `build()`
 
-  <details><summary>private 関数 17 件</summary>
+  <details><summary>private 関数 19 件</summary>
 
   - L68 `_applyCategorySelection()`
   - L75 `_applyTarotCreditBalance()`
@@ -362,17 +362,19 @@ showInfoPopup 経由 (popup 統一規約)。呼出側は returned bool で proce
   - L104 `_stopLoadingMessageRotation()`
   - L149 `_onProStatusChanged()`
   - L186 `_checkTodayReading()`
-  - L225 `_loadHistory()`
-  - L230 `_drawCard()`
-  - L386 `_handleTarotCreditExhausted()`
-  - L396 `_resetTodayReading()`
-  - L419 `_generateReadingStatic()`
-  - L436 `_startTypewriter()`
-  - L477 `_buildInnerTabs()`
-  - L491 `_innerTabBtn()`
-  - L512 `_buildDrawPanel()`
-  - L607 `_buildLoadingIndicator()`
-  - L682 `_buildReadingPanel()`
+  - L227 `_loadHistory()`
+  - L232 `_drawCard()`
+  - L310 `_fetchReading()`
+  - L414 `_retryReading()`
+  - L423 `_handleTarotCreditExhausted()`
+  - L433 `_resetTodayReading()`
+  - L456 `_startTypewriter()`
+  - L497 `_buildInnerTabs()`
+  - L511 `_innerTabBtn()`
+  - L532 `_buildDrawPanel()`
+  - L628 `_buildLoadingIndicator()`
+  - L705 `_buildReadingError()`
+  - L760 `_buildReadingPanel()`
 
   </details>
 

@@ -16,7 +16,6 @@ import '../widgets/tap_to_unfocus.dart';
 import '../theme/solara_colors.dart';
 import '../utils/consultation_credits.dart';
 import 'consultation/consultation_credit_sheet.dart';
-import 'observe/observe_constants.dart';
 import 'observe/observe_card_widgets.dart';
 import 'observe/observe_history.dart';
 import 'observe/tarot_altar_scene.dart';
@@ -45,7 +44,8 @@ class ObserveScreenState extends State<ObserveScreen>
   bool _drawnReversed = false; // 正逆位置（true=逆位置）
   bool _alreadyDrawnToday = false;
   bool _readingLoading = false; // /tarot 呼び出し中
-  bool _readingFromApi = false; // true=Stella の声 / false=静的fallback
+  bool _readingFromApi = false; // true=Stella の声 (失敗時は fake を出さず _readingError)
+  bool _readingError = false;   // true=解説取得に失敗 (素直に「失敗+再試行」を表示)
 
   /// 選択中の占いカテゴリ (null = 全体運。指定すると非Pro は 1 クレジット消費)。
   String? _selectedCategory;
@@ -212,8 +212,10 @@ class ObserveScreenState extends State<ObserveScreen>
         _typingDone = false;
         _startTypewriter();
       } else {
-        // 旧データ（reading 無し）: 静的フォールバックで補う
-        _generateReadingStatic(card, today.reversed);
+        // カードは固定済みだが解説 pending (前回失敗 / 未取得)。電波が戻っていれば
+        // 自動で取得して表示・保存。ダメなら「失敗+再試行」を出す (fake は出さない)。
+        // ignore: unawaited_futures
+        _fetchReading(card, today, ProStatus.instance.isPro);
       }
     } else if (drawn) {
       // 当日の表示カードは無いが (リセット時刻変更で論理日が過去へ戻った等)、
@@ -262,6 +264,8 @@ class ObserveScreenState extends State<ObserveScreen>
       _drawnCard = card;
       _drawnReversed = reversed;
       _cardFlipped = true;
+      _readingText = '';
+      _readingError = false;
       _readingLoading = true;
       // 2026-05-26 仕様変更: Tarot は Pro 含め 1日1回 (全体運/カテゴリ問わず)。
       // 引いた瞬間に画面固定フラグを立てる。
@@ -293,9 +297,27 @@ class ObserveScreenState extends State<ObserveScreen>
       _loadHistory();
     }
 
-    // カードフリップ完了後に /tarot 呼び出し
+    // カードフリップ完了を待ってから解説を取得 (draw / 再試行 / 復元で共用)。
     await Future.delayed(const Duration(milliseconds: 900));
     if (!mounted) return;
+    await _fetchReading(card, reading, isPro);
+  }
+
+  /// 引いたカードの解説 (/tarot) を取得して表示・保存する。
+  /// draw 直後 / 再試行ボタン / 復元 (電波復活時の自動取得) で共用。
+  /// 🔴 失敗時は fake で取り繕わず素直に「失敗」状態にする (オーナー方針 2026-06-03)。
+  ///   今日の引き (カード) は固定のまま解説を pending 保存し、電波が戻れば同じカードで再取得する。
+  Future<void> _fetchReading(
+      TarotCard card, DailyReading reading, bool isPro) async {
+    final isCategoryDraw = reading.category != null;
+    final question = reading.question ?? '';
+    if (mounted) {
+      setState(() {
+        _readingLoading = true;
+        _readingError = false;
+      });
+    }
+    _startLoadingMessageRotation();
 
     final profile = await SolaraStorage.loadProfile();
     // A3: Pro なら thinking ON + 質問欄の内容を「テーマ」として渡す。
@@ -303,17 +325,17 @@ class ObserveScreenState extends State<ObserveScreen>
     // userName は渡すが、冒頭の呼びかけは Worker プロンプト側で禁止 (途中の使用は可)。
     final tarotResult = await fetchTarotReading(
       cardId: card.id,
-      reversed: reversed,
+      reversed: reading.reversed,
       nameJP: card.nameJP,
       nameEN: card.nameEN,
       keyword: card.keyword,
       element: card.element,
       planet: card.planet,
-      moonPhase: moonPhase,
+      moonPhase: reading.moonPhase,
       userName: profile?.name,
       thinking: isPro,
       question: question.isEmpty ? null : question,
-      category: category,
+      category: reading.category,
     );
 
     if (!mounted) return;
@@ -323,6 +345,7 @@ class ObserveScreenState extends State<ObserveScreen>
     if (tarotResult != null && tarotResult.creditExhausted) {
       setState(() {
         _readingLoading = false;
+        _readingError = false;
         _cardFlipped = false;
         _drawnCard = null;
         // 確定状態を解除 (再度カテゴリ tap で POPUP からやり直し)。
@@ -334,6 +357,8 @@ class ObserveScreenState extends State<ObserveScreen>
       });
       // 単調ガードのストレージもクリア (購入後 / 全体運切替で再ドロー可能に)。
       await SolaraStorage.clearFreeTarotDay();
+      // pending 保存していたカードがあれば取り消す (クレジット切れ=引き直し可)。
+      await SolaraStorage.removeReadingByDate(reading.date);
       _flipCtrl.value = 0.0;
       // Sanctuary 等の残数表示も refetch (購入シート開いてサーバー側残が動く可能性)。
       // ignore: unawaited_futures
@@ -343,10 +368,11 @@ class ObserveScreenState extends State<ObserveScreen>
     }
 
     if (tarotResult != null && tarotResult.reading.isNotEmpty) {
-      // API成功: Stella の声を表示・保存
+      // 成功: Stella の声を表示・保存
       setState(() {
         _readingText = tarotResult.reading;
         _readingLoading = false;
+        _readingError = false;
         _readingFromApi = true;
         _typedChars = 0;
         _typingDone = false;
@@ -357,8 +383,8 @@ class ObserveScreenState extends State<ObserveScreen>
         // _selectedCategory は表示として残す (どのカテゴリで引いたか分かるように)。
         if (isCategoryDraw && !isPro) _categoryConfirmed = false;
       });
-      reading.reading = _readingText;
-      // カテゴリは成功後にここで保存 (date キーで今日の表示を置換)。
+      reading.reading = tarotResult.reading;
+      // date キーで今日の表示を置換 (pending → 本文)。
       await SolaraStorage.addReading(reading);
       _loadHistory();
       _startTypewriter();
@@ -369,17 +395,28 @@ class ObserveScreenState extends State<ObserveScreen>
         ConsultationCredits.instance.refresh();
       }
     } else {
-      // API失敗 (null = network/LLM): 静的テンプレートで fallback。クレジットは消費されない。
+      // 失敗 (null = network/LLM): fake を出さず素直に「失敗+再試行」。クレジットは消費されない。
+      // カード (今日の引き) は固定のまま解説を pending 保存 → 電波復活で再取得して表示・履歴保存。
+      reading.reading = '';
+      await SolaraStorage.addReading(reading); // カード固定 (category 含む) + 復元可能に
+      if (!mounted) return;
       setState(() {
+        _readingText = '';
         _readingLoading = false;
         _readingFromApi = false;
+        _readingError = true;
       });
-      _generateReadingStatic(card, reversed);
-      // 履歴閲覧時にも READING が見えるよう fallback 文章も永続化 (柱3 原則)。
-      reading.reading = _readingText;
-      await SolaraStorage.addReading(reading);
       _loadHistory();
     }
+  }
+
+  /// 「失敗」状態からの再試行 / 復元時の自動取得: 今日の引きのカードで解説を取り直す。
+  Future<void> _retryReading() async {
+    final card = _drawnCard;
+    if (card == null) return;
+    final today = await SolaraStorage.getTodayReading();
+    if (!mounted || today == null) return;
+    await _fetchReading(card, today, ProStatus.instance.isPro);
   }
 
   /// カテゴリ占いのクレジット切れ時: 追加クレジット購入 / Pro 導線 (相談と共通シート)。
@@ -410,27 +447,10 @@ class ObserveScreenState extends State<ObserveScreen>
       _typingDone = false;
       _readingLoading = false;
       _readingFromApi = false;
+      _readingError = false;
     });
     _flipCtrl.value = 0.0;
     _loadHistory();
-  }
-
-  // 静的フォールバック: API失敗時のみ使用
-  void _generateReadingStatic(TarotCard card, bool reversed) {
-    final rng = Random(card.id * 31 + DateTime.now().day + (reversed ? 7 : 0));
-    final templates = tarotReadings[card.element] ?? tarotReadings['fire']!;
-    final template = templates[rng.nextInt(templates.length)];
-
-    final body = template
-        .replaceAll('{card}', card.nameJP)
-        .replaceAll('{keyword}', card.keyword);
-    _readingText = reversed
-        ? '【逆位置】$body しかし今は流れに逆らわず、内側に意識を向けることが先決です。'
-        : body;
-
-    _typedChars = 0;
-    _typingDone = false;
-    _startTypewriter();
   }
 
   void _startTypewriter() {
@@ -595,7 +615,8 @@ class ObserveScreenState extends State<ObserveScreen>
           ),
         const SizedBox(height: 16),
         if (_readingLoading) _buildLoadingIndicator(),
-        if (_readingText.isNotEmpty) _buildReadingPanel(),
+        if (_readingError && !_readingLoading) _buildReadingError(),
+        if (_readingText.isNotEmpty && !_readingLoading) _buildReadingPanel(),
       ]),
     );
   }
@@ -676,6 +697,63 @@ class ObserveScreenState extends State<ObserveScreen>
           ]),
         );
       },
+    );
+  }
+
+  /// 解説取得に失敗したとき: fake で取り繕わず素直に「失敗+再試行」(オーナー方針 2026-06-03)。
+  /// 引いたカードは固定のまま。電波が戻って再試行が成功すれば同じカードの解説が表示される。
+  Widget _buildReadingError() {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+      decoration: BoxDecoration(
+        color: const Color(0x0AFFFFFF),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0x1FFFFFFF)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            '解説の取得に失敗しました。',
+            style: TextStyle(
+              fontSize: 13,
+              color: Color(0xFFE8E0D0),
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 6),
+          const Text(
+            '通信状況を確認して、もう一度お試しください。',
+            style: TextStyle(
+              fontSize: 12,
+              color: Color(0xFFB8B2A6),
+              height: 1.6,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: OutlinedButton(
+              onPressed: _readingLoading ? null : _retryReading,
+              style: OutlinedButton.styleFrom(
+                foregroundColor: const Color(0xFFF6BD60),
+                side: const BorderSide(color: Color(0x55F6BD60)),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: const Text(
+                '再試行',
+                style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 

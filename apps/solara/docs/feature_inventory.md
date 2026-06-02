@@ -1491,6 +1491,73 @@ Worker [`consultation_v2.js:78-83`](../worker/src/consultation_v2.js#L78) の既
 - extract `+1 -2 ~5` (拠点) → `~2` (map_screen/popup 横展開) / audit **HARD 7 (新規ゼロ)**・未使用候補 0。
 - 反映 = 次の AAB ビルド (Flutter のみ・Worker 変更なし)。
 
+### 0.2.53 拠点(リロケーション)を「アングル近接 (A案) + 動的Gemini解説・全員無料」へ再設計 (2026-06-02 深夜)
+
+> §0.2.52 (ライン近接・静的・B案) を実機で見たオーナーが「以前の動的解説と**ずいぶん違って見える**、
+> いったん戻して考えたい」。協議の結果 **A案 (ハウス/アングル) に寄せ直し + 動的Gemini解説を復活**。
+> 「ハウスが変わるか (離散)」ではなく「**惑星が ASC/MC/DSC/IC 軸にどれだけ近いか (度数・連続)**」で測れば
+> ハウスが変わらなくても必ず変化が出る (= 「変化なし」消滅)。占星術の正統 (アングルに近い惑星ほど強い) と一貫。
+> B案(ライン・km・地理)と違い**図の度数空間**で測るため「地球の裏のライン」問題 (§0.2.52) も起きない。
+
+#### 設計判断 (オーナーと4往復で確定)
+- 主役は **A (ハウス/アングル)**。基準点 = 各惑星から最も近い **アングル(ASC/MC/DSC/IC)への度数距離**
+  (「ハウス中心(midpoint)」案より、アングル/カスプ近接が astrology 的に正統)。
+- 表示 = **10天体すべて** (太陽〜冥王星) + ASC/MC/DSC/IC の星座変化。ハウス移動はヘッドライン優先 → 軸に近い順。
+- 解説本文は **Worker /relocation (Gemini, thinkingBudget:0) で動的生成・全員無料** (§0.2.51 でコスト ¥0.17/回)。
+  🔴 **取得失敗時は定型文で取り繕わず「解説の取得に失敗しました + 再試行」を素直に表示** (オーナー方針 2026-06-03。
+  黙って劣化した静的テンプレを出す設計は不誠実、として静的フォールバック文は撤去)。Map は文脈が違う
+  (任意地点→ハウス計算が必要) ため**今回は対象外** (Map popup は §0.2.52 のライン静的 `horo_relocation_lines.dart` を引き続き使用)。
+
+#### 計算 (新規 `horoscope/horo_relocation_angles.dart`)
+- `computeRelocationAngleDeltas`: 各惑星 (黄経固定) について、現住所チャートで最も近いアングルを選び、
+  その**同じアングル**への度数距離を出生地チャートでも測って `deltaDeg = reloDeg − natalDeg` (負=近づいた)。
+  4アングル = ASC=natalAsc / MC=natalMc / DSC=ASC+180 / IC=MC+180。ハウスは `assignPlanetHouse` で natal/relo 判定。
+  並び: ハウス移動あり優先 → `reloDeg` 昇順 (= その地で効いている軸が上位)。
+- `computeRelocationAngleSignChanges`: ASC/MC/DSC/IC の星座が出生地→現住所で変わったものだけ返す。
+- 度合い語のバケット (<0.5°ごくわずか / <2°わずか / <6°はっきり / else 大きく) は **Worker JS `magnitudeWordJP/EN`
+  のみが保持** (プロンプトの度合い表現用)。Dart は `deltaDeg` を数値で送るだけ (= 静的文撤去でバケットも Dart から削除)。
+  短距離移動は度数変化がごく小さい → Gemini にも「ごく小さな変化は誇張せず正直に」と指示。
+- 新規型: `RelocationAngleDelta` (`.toPayload()` = {planet, natalHouse, reloHouse, nearestAngle, deltaDeg, direction}) /
+  `RelocationAngleSignChange`。吉凶禁止は Worker プロンプト指示で担保 (前に出る/落ち着く・強まる/やわらぐ)。
+
+#### UI / 配線
+- `horo_relocation_panel.dart` を A案 + 動的fetch で全面書き換え (StatefulWidget・座標props撤去)。
+  サマリー (動的) → アングル星座変化セクション → 10天体カード (動的 narrative。無い項目は見出しのみ) → 脚注。
+  fetch は `_buildFetchKey` (ASC/MC/名前) でキャッシュ (成功時のみ同条件再取得なし=コスト節約)。
+  状態: ロード中=スピナー / **失敗=エラー文+再試行ボタン (`_retry` が `_lastFetchKey` リセットして再fetch)** /
+  houses 未取得=「出生時刻+現住所を設定」案内 / ほぼ同地点=移動なし案内。
+- `fortune_api.dart`: `RelocationAngleNarrative` + `fetchRelocationAngleNarrative` 再追加 (`solaraRelocationUrl` import 復活)。
+  payload `{model:'angle', planets:[...toPayload], angles:[...], birthPlaceName, homeName, userName, lang}`。
+- `horo_bottom_sheet.dart`: `case 'relocate'` に `userName:_profile?.name` を配線 (座標props撤去)。
+
+#### Worker (`worker/src/relocation.js`)
+- `handleRelocation` 冒頭で `model:'angle'` or `planets[]` を検出し新 `handleRelocationAngle` へ分岐
+  (旧 `shifts[]` 版は後方互換で残置)。`buildAnglePrompt` で 10天体+アングル変化のファクトを組み、
+  `callGemini(thinkingBudget:0, maxOutputTokens:4096)`。返却 `{planets:[{planet,narrative}], angles:[{angle,narrative}], summary, lang}`。
+  変化なし (planets/angles 空) は Gemini 呼ばず空レスポンス。`_internal` にテスト用エクスポート。
+
+#### 失敗時UIの統一 — タロット / 星読みへ横展開 (2026-06-03)
+> オーナー方針: 「失敗したときは素直に失敗しましたでよい」。**fake (静的テンプレ/mock仮テキスト) で
+> 取り繕う設計をやめ**、3機能 (拠点 / タロット / 星読み) すべて同一の失敗メッセージに統一:
+> 「**解説の取得に失敗しました。通信状況を確認して、もう一度お試しください。**＋ 再試行」。
+- **タロット** (`observe_screen.dart`): 静的テンプレ fallback (`_generateReadingStatic` / `observe_constants.tarotReadings`)
+  を**撤去**。fetch を `_fetchReading(card, reading, isPro)` に抽出 (draw / 再試行 / 復元で共用)。
+  🔴 **1日1回は固定** (引き直し不可): 失敗しても引いたカードは `markFreeTarotDrawn` 済のまま、解説だけ
+  pending 保存 (`reading.reading=''`)。`_checkTodayReading` が **電波復活時に自動再取得** → 成功で本文を保存・表示。
+  失敗中は `_readingError` で `_buildReadingError` (失敗+再試行) を表示 (`_retryReading` は今日のカードで再取得)。
+  402 クレジット切れは従来通りロールバック (= 失敗とは別扱い・引き直し可)。
+- **星読み** (`horo_fortune_cards.dart`): 失敗時の **mock 仮テキスト (`_fortuneMock`) を撤去**。未取得カードは
+  `SizedBox.shrink` で出さず、`_errorBanner` を統一文言+再試行に変更 (state/retry は既存 `_loadFortunes` を流用)。
+- audit 未使用 0 (撤去した静的関数/定数はすべて参照ゼロを確認)。
+
+#### 検証
+- flutter analyze クリーン / 新規 `test/horo_relocation_angles_test.dart` 11件 + 既存 lines 8件 (Map用に残置)。
+  タロット既存 tarot_daily_gate / tarot_category_popup 16件含め **Flutter 全 306件 green**。
+- worker 新規 `test/relocation_angle.test.js` 8件 + 全 358件 green。
+- audit **HARD7 (新規ゼロ) / 未使用候補 0**。extract: angles 追加 / panel・fortune_api・bottom_sheet・
+  observe_screen・horo_fortune_cards・observe_constants・relocation.js 更新。coverage #3: `/protected/relocation` 一致(健全)。
+- 反映 = ① Worker `wrangler deploy` (動的解説) ② 次の AAB ビルド (Flutter)。
+
 ### 0.3 Horo「今日の占い」1 日 1 回固定 + プロンプト刷新 (2026-05-27)
 
 > **設計の柱**: 「30 回までは OK」のような曖昧な防衛をやめ、「**1 日 1 回・変更しない**」を
