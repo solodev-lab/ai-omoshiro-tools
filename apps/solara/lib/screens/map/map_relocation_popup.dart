@@ -8,6 +8,8 @@ import '../../utils/astro_lines.dart';
 import '../../utils/solara_storage.dart';
 import '../../widgets/astro_term_label.dart';
 import '../horoscope/horo_constants.dart' show planetGlyphs, planetNamesJP, signNames;
+import '../horoscope/horo_relocation_lines.dart'
+    show RelocationLineDelta, relocationLineDeltaSentence;
 import 'map_constants.dart' show planetMeta;
 import 'map_line_narrative_sheet.dart';
 
@@ -60,6 +62,11 @@ class MapRelocationPopup extends StatelessWidget {
   /// 近接アスペクト線 (空 or null なら線セクション非表示)
   final List<NearbyAstroLine>? nearbyLines;
 
+  /// ライン近接デルタ (比較ベース → タップ地点)。homeKm 近い順。
+  /// 「この地点で近づく星・遠ざかる星」解説に使う。map_screen で算出して渡す。
+  /// null/空なら解説セクション非表示。
+  final List<RelocationLineDelta>? lineDeltas;
+
   /// Tier S #2: ライン narrative API 用文脈（任意）
   /// 設定済みなら線行タップで MapLineNarrativeSheet を開ける。
   /// null の場合は線行はタップ不可（静的表示のみ）。
@@ -89,6 +96,7 @@ class MapRelocationPopup extends StatelessWidget {
     required this.onClose,
     this.showHouses = true,
     this.nearbyLines,
+    this.lineDeltas,
     this.natalSummary,
     this.tappedPlaceName,
     this.transitDate,
@@ -100,6 +108,9 @@ class MapRelocationPopup extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final hasLines = (nearbyLines != null && nearbyLines!.isNotEmpty);
+    // ベースとタップ地点が実質同じ (全 delta ~0) なら解説は出さない。
+    final showDeltas =
+        lineDeltas != null && lineDeltas!.any((d) => d.deltaKm.abs() >= 1.0);
 
     // showHouses 時のみ ASC/MC/houses を再計算 (重い処理を回避)
     HousesResult? relocated;
@@ -145,6 +156,10 @@ class MapRelocationPopup extends StatelessWidget {
             if (onConsult != null) ...[
               const SizedBox(height: 10),
               _buildConsultCta(),
+            ],
+            if (showDeltas) ...[
+              const SizedBox(height: 10),
+              _buildLineDeltaSection(),
             ],
             if (hasLines) ...[
               const SizedBox(height: 10),
@@ -203,6 +218,46 @@ class MapRelocationPopup extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+
+  // ── ライン近接デルタ解説 (2026-06-02、拠点パネルと同一の静的文) ──
+  /// 比較ベース (現住所 or 出生地) → タップ地点で、近づく/遠ざかる星のラインを
+  /// 言葉で解説する (km 非表示・吉凶禁止)。homeKm 近い順 上位3本。
+  Widget _buildLineDeltaSection() {
+    final top = lineDeltas!.take(3).toList();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(children: [
+          const Icon(Icons.compare_arrows, size: 12, color: Color(0xFFF6BD60)),
+          const SizedBox(width: 6),
+          Flexible(
+            child: Text(
+              '$baselineLabelと比べて、この地点で動く星のライン',
+              style: GoogleFonts.notoSansJp(
+                fontSize: 13,
+                color: const Color(0xFFF6BD60),
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.5,
+              ),
+            ),
+          ),
+        ]),
+        const SizedBox(height: 6),
+        for (final d in top)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 6, left: 18),
+            child: Text(
+              '・${relocationLineDeltaSentence(d)}',
+              style: GoogleFonts.notoSansJp(
+                fontSize: 12,
+                color: const Color(0xFFD8D2C6),
+                height: 1.6,
+              ),
+            ),
+          ),
+      ],
     );
   }
 

@@ -1456,9 +1456,12 @@ Worker [`consultation_v2.js:78-83`](../worker/src/consultation_v2.js#L78) の既
 #### 計算 (既存資産の再利用)
 - 新規 `horoscope/horo_relocation_lines.dart`: `astro_lines.dart` の `buildAstroLines` + `minDistanceKmToLine`
   を使い、**7惑星(太陽/月/水/金/火/木/土) × 4アングル(MC/IC/ASC/DSC) = 28本** (本線のみ) について
-  出生地・現住所からの距離を出し **delta = 現住所 − 出生地** を算出。|delta| 降順で上位4本表示。
-  外惑星・アスペクト線は重い/抽象的なため除外。
-- 意味文 = 惑星の性質(7語・新規) × アングル領域(4語) × 方向(近/遠) × 度合い(km3段階) の合成。
+  出生地・現住所からの距離を出し **delta = 現住所 − 出生地** を算出。
+  🔴 ランキングは **現住所から近い順 (homeKm 昇順)**。当初 |delta| 順にしたが、実例 (岐阜→名古屋) で
+  全ラインが 6700〜7700km 彼方・移動40kmで一律~30km変化 → 地球裏の無関係ラインが上位に来る欠陥を発見し是正。
+  「現住所で近い (=その地で効く) ライン」を出すのが正、近/遠は副情報。上位4本表示。外惑星・アスペクト線は除外。
+- 意味文 = 惑星の性質(7語・新規) × アングル領域(4語) × 方向(近/遠) × 度合い(わずかに/はっきりと/大きく) の合成。
+  **km は非表示**・増減は言葉のみ (オーナー指示)。吉凶禁止 (強まる/やわらぐ)。
   ハウス変化は **変化した惑星だけ** 副次表示 + 静的コメント (fromHouse領域→toHouse領域)。
 
 #### UI / 配線
@@ -1472,13 +1475,20 @@ Worker [`consultation_v2.js:78-83`](../worker/src/consultation_v2.js#L78) の既
   `fortune_api.dart` の `RelocationNarrative` + `fetchRelocationNarrative` (+ `solaraRelocationUrl` import)。
 - paywall: 「リロケーション解説 Free=静的/Pro=Stella動的」行を `拠点(ライン近接)解説 ✓/✓` に、
   「リロケーション Stella動的解説」Pro bullet を撤去 (引越しシミュレーション=マップ別機能は残置)。
-- 残置: Worker `/protected/relocation` (旧アプリ互換・新アプリは呼ばない)。マップの「引越しシミュレーション」
-  (map_relocation_popup・地点タップ再計算) は別機能で不変。
+- 残置: Worker `/protected/relocation` (旧アプリ互換・新アプリは呼ばない)。
+
+#### Map 引越 popup へ横展開
+- 同じ `computeRelocationLineDeltas` + `relocationLineDeltaSentence` を **`map_relocation_popup.dart`** にも適用。
+  ACG/引越レイヤーで地図上の地点をタップした popup に「**比較ベース(現住所/出生地) → タップ地点**で近づく/遠ざかる
+  星のライン」上位3本を解説表示 (`_buildLineDeltaSection`)。`computeRelocationLineDeltas(base→tap)` は
+  **`map_screen._buildRelocationPopup` でタップ時に1回算出**して `lineDeltas` で渡す (popup 再描画での 120 本再計算回避)。
+- これで「ホロスコープ拠点タブ (出生地→現住所)」と「マップ地点タップ (現住所→候補地)」が同一の言葉・体験になる。
 
 #### 検証
 - flutter analyze クリーン / 新規 `test/horo_relocation_lines_test.dart` 8件 green
-  (28本/conjunction限定/外惑星除外, |delta|降順, 同一地点≈0, 移動で非ゼロ, 近→強まる・遠→やわらぐ中立, 度合い閾値, ハウスコメント)。
-- extract `+1 -2 ~5` / audit **HARD 7 (新規ゼロ)**・未使用候補 0。
+  (28本/conjunction限定/外惑星除外, **homeKm昇順**, 同一地点≈0, 移動で非ゼロ, 近→強まる・遠→やわらぐ中立, 度合い閾値, ハウスコメント)
+  / 全テスト 295件 green。
+- extract `+1 -2 ~5` (拠点) → `~2` (map_screen/popup 横展開) / audit **HARD 7 (新規ゼロ)**・未使用候補 0。
 - 反映 = 次の AAB ビルド (Flutter のみ・Worker 変更なし)。
 
 ### 0.3 Horo「今日の占い」1 日 1 回固定 + プロンプト刷新 (2026-05-27)

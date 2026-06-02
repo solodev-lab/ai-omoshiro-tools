@@ -31,6 +31,7 @@ import 'map/map_planet_intro_popup.dart';
 import 'map/map_planet_lines.dart';
 import 'map/map_relocation_popup.dart';
 import 'map/map_search.dart';
+import 'horoscope/horo_relocation_lines.dart' show computeRelocationLineDeltas;
 import 'map/map_overlays.dart';
 import 'map/map_time_slider.dart';
 import 'map/map_widgets.dart';
@@ -3027,7 +3028,20 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     final chart = _chartResult!;
     final hasHome = !(p.homeLat == 0 && p.homeLng == 0);
     final baselineLng = hasHome ? p.homeLng : p.birthLng;
+    final baselineLat = hasHome ? p.homeLat : p.birthLat;
     final baselineLabel = hasHome ? '現住所' : '出生地';
+    // 拠点パネルと同一: ベース → タップ地点 のライン近接デルタ (静的・近さ順)。
+    // popup の再描画で 120 本を再計算しないよう、ここ (タップ時 1 回) で算出して渡す。
+    final lineDeltas = chart.natal.isNotEmpty
+        ? computeRelocationLineDeltas(
+            natalPlanets: chart.natal,
+            natalMc: chart.mc,
+            birthLat: baselineLat,
+            birthLng: baselineLng,
+            homeLat: tap.latitude,
+            homeLng: tap.longitude,
+          )
+        : null;
 
     // CCG: aspect トグルは4フレームの何れか ON で有効
     final aspectOn = _astroLayers['aspect'] == true ||
@@ -3065,6 +3079,7 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
       // popup の中身 (ハウス情報を出すか) とは切り離す。
       showHouses: true,
       nearbyLines: nearby,
+      lineDeltas: lineDeltas,
       natalSummary: natalSummary,
       userName: p.name.isNotEmpty ? p.name : null,
       onClose: () => setState(() => _relocateTapPoint = null),
