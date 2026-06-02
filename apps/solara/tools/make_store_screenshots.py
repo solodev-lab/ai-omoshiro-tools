@@ -99,15 +99,13 @@ SCREENS = [
      "stats": {"head": "店ごとの運気を、即比較。",
                "items": [["5", "目的別エネルギー"], ["16", "方位"],
                          ["10", "惑星から算出"], ["3", "層を合算"]]}},
-    {"slug": "stella_result",
-     "lines": ["どこへ向かうべきか、", "星に相談。"],
-     "sub":   ["膨大な占星術データを総合解析し、行くべき場所・",
-               "時間帯・理由を提案。Proは週100回＋30分後の変化。"],
-     "stats": {"head": "この一手に、これだけの解析。",
-               "items": [["488,270", "都市データ"], ["1,500", "地点を採点"],
-                         ["10", "惑星"], ["120", "本のライン"],
-                         ["12", "ハウス"], ["3", "層構造"]],
-               "foot": "出生図×経過×進行、方位エネルギーまで総合。"}},
+    {"slug": "stella_result", "raw": "stella_input", "raw2": "stella_result",
+     "labels": ["相談", "結果"],
+     "lines": ["お出かけも、移住も。", "ぜんぶ星に相談。"],
+     "sub":   ["毎日のお出かけから、人生の移住まで。",
+               "場面とテーマを選ぶだけで星が読み解く。"],
+     "stats": {"items": [["488,270", "都市データ"], ["10", "惑星"],
+                         ["120", "本のライン"], ["1,500", "地点採点"]]}},
     {"slug": "horoscope",
      "lines": ["精密な出生図が、", "すべての土台。"],
      "sub":   ["天体・アスペクト・ハウスを本格計算。", "Tスクエア等レア配置の成立日も予測。"],
@@ -273,9 +271,9 @@ def paste_phone(canvas, shot, phone_x, phone_y, label=None):
 
 
 def draw_label_chip(canvas, cx, top_y, text):
-    """端末上の小さなゴールドのラベルピル (ACG / CCG 用)。"""
+    """端末上の小さなゴールドのラベルピル (ACG/CCG・相談/結果 等)。ASCII は Cinzel、和文は JP。"""
     d = ImageDraw.Draw(canvas)
-    f = _font(CINZEL, 30)
+    f = _font(CINZEL, 30) if text.isascii() else _font(_JP_PATH, 27, _JP_INDEX)
     box = d.textbbox((0, 0), text, font=f)
     tw = box[2] - box[0]
     th = box[3] - box[1]
