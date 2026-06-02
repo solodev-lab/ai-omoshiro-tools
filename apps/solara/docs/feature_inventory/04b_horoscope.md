@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 23 / 総行数: 5950
+- ファイル数: 23 / 総行数: 5955
 - class/mixin/extension/enum: 32
 - 関数 (top-level + method の素拾い): 151
 - Navigator.push 等: 0
@@ -63,7 +63,7 @@
   </details>
 
 
-### `lib/screens/horoscope/horo_backdrop.dart` (114 行)
+### `lib/screens/horoscope/horo_backdrop.dart` (119 行)
 
 **型定義 (1):**
 

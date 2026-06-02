@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 27 / 総行数: 7006
+- ファイル数: 27 / 総行数: 7011
 - class/mixin/extension/enum: 78
 - 関数 (top-level + method の素拾い): 181
 - Navigator.push 等: 0
@@ -668,7 +668,7 @@ Re-export split overlay files for backward compatibility
 - L217 `shouldRepaint()`
 
 
-### `lib/widgets/no_profile_guide.dart` (51 行)
+### `lib/widgets/no_profile_guide.dart` (56 行)
 
 **imports:** dart=0 / package=1 / relative=1
 

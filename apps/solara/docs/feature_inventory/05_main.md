@@ -5,16 +5,16 @@
 
 ## サマリ
 
-- ファイル数: 1 / 総行数: 514
+- ファイル数: 1 / 総行数: 553
 - class/mixin/extension/enum: 4
-- 関数 (top-level + method の素拾い): 15
+- 関数 (top-level + method の素拾い): 16
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 0
 - Worker URL リテラル: 0
 
 ## ファイル別
 
-### `lib/main.dart` (514 行)
+### `lib/main.dart` (553 行)
 
 **imports:** dart=0 / package=3 / relative=29
 
@@ -27,26 +27,27 @@
 - L155 `class SolaraHome : StatefulWidget`
 - L162 `class _SolaraHomeState : State`
 
-**関数 (8 public + 7 private):**
+**関数 (8 public + 8 private):**
 
 - L34 `main()`
 - L103 `createState()`
 - L110 `build()`
 - L159 `createState()`
 - L175 `initState()`
-- L332 `dispose()`
-- L351 `didChangeAppLifecycleState()`
-- L464 `build()`
+- L351 `dispose()`
+- L390 `didChangeAppLifecycleState()`
+- L503 `build()`
 
-  <details><summary>private 関数 7 件</summary>
+  <details><summary>private 関数 8 件</summary>
 
-  - L189 `_restoreLastScreen()`
-  - L249 `_restorePushedRoute()`
-  - L302 `_saveRestoreSnapshot()`
-  - L340 `_onMapFocusRequested()`
-  - L384 `_onGalaxyOverlayChanged()`
-  - L410 `_refreshMoonStatus()`
-  - L428 `_onTabTap()`
+  - L193 `_restoreLastScreen()`
+  - L261 `_restorePushedRoute()`
+  - L314 `_saveRestoreSnapshot()`
+  - L361 `_onSigninCelebration()`
+  - L379 `_onMapFocusRequested()`
+  - L423 `_onGalaxyOverlayChanged()`
+  - L449 `_refreshMoonStatus()`
+  - L467 `_onTabTap()`
 
   </details>
 

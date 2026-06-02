@@ -5,9 +5,9 @@
 
 ## サマリ
 
-- ファイル数: 9 / 総行数: 2804
+- ファイル数: 9 / 総行数: 2834
 - class/mixin/extension/enum: 15
-- 関数 (top-level + method の素拾い): 133
+- 関数 (top-level + method の素拾い): 136
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 0
 - Worker URL リテラル: 0
@@ -271,7 +271,7 @@ Phase 2-6b 以降 (RevenueCat 接続後):
 - L89 `resetForTest()`
 
 
-### `lib/utils/solara_auth.dart` (486 行)
+### `lib/utils/solara_auth.dart` (500 行)
 
 **ファイル先頭コメント:**
 
@@ -316,33 +316,34 @@ Solara 認証サービス — Phase 2-9 Sign in 統合
   - 認証エラー (UI が型で分岐できるよう薄い wrapper)。
 - L108 `class SolaraAuth : ChangeNotifier`
 
-**関数 (8 public + 9 private):**
+**関数 (9 public + 9 private):**
 
 - L66 `toJson()`
 - L105 `toString()`
-- L131 `load()` — 起動時に 1 度呼ぶ。SharedPreferences から復元 + provider 別の silent restore。
-- L193 `signInWithApple()` — Apple サインイン (iOS / macOS 推奨)。
-- L239 `signInWithGoogle()` — Google サインイン (iOS / Android / macOS / Web)。
-- L258 `signOut()` — 現在のアカウントを取り外す。
-- L291 `deleteAccount()` — アカウント削除 (App Store ガイドライン 5.1.1(v) — Sign in を提供する以上、
-- L476 `resetForTest()`
+- L136 `consumeSigninGrantCelebration()`
+- L139 `load()` — 起動時に 1 度呼ぶ。SharedPreferences から復元 + provider 別の silent restore。
+- L201 `signInWithApple()` — Apple サインイン (iOS / macOS 推奨)。
+- L247 `signInWithGoogle()` — Google サインイン (iOS / Android / macOS / Web)。
+- L266 `signOut()` — 現在のアカウントを取り外す。
+- L299 `deleteAccount()` — アカウント削除 (App Store ガイドライン 5.1.1(v) — Sign in を提供する以上、
+- L490 `resetForTest()`
 
   <details><summary>private 関数 9 件</summary>
 
-  - L156 `_verifyOrClear()`
-  - L327 `_getFreshAppleAuthorizationCode()`
-  - L351 `_purgeServerAccountData()`
-  - L379 `_ensureGoogleInitialized()`
-  - L393 `_onGoogleEvent()`
-  - L409 `_adoptGoogleAccount()`
-  - L419 `_commitAccount()`
-  - L442 `_onSignedInCredits()`
-  - L457 `_clearLocalSession()`
+  - L164 `_verifyOrClear()`
+  - L335 `_getFreshAppleAuthorizationCode()`
+  - L359 `_purgeServerAccountData()`
+  - L387 `_ensureGoogleInitialized()`
+  - L401 `_onGoogleEvent()`
+  - L417 `_adoptGoogleAccount()`
+  - L427 `_commitAccount()`
+  - L450 `_onSignedInCredits()`
+  - L471 `_clearLocalSession()`
 
   </details>
 
 
-### `lib/utils/solara_storage.dart` (921 行)
+### `lib/utils/solara_storage.dart` (937 行)
 
 **imports:** dart=1 / package=2 / relative=4
 
@@ -357,80 +358,82 @@ Solara 認証サービス — Phase 2-9 Sign in 統合
 - L118 `class SolaraStorage`
   - Persistence wrapper for Solara data.
 
-**関数 (68 public + 1 private):**
+**関数 (70 public + 1 private):**
 
 - L41 `toJson()`
 - L71 `copyWith()`
 - L167 `loadAiConsentAt()` — AI 生成同意の取得日時 (null = 未同意)。
 - L175 `saveAiConsentNow()` — 同意ボタンが押された瞬間に呼ぶ (現在時刻を ISO8601 で保存)。
 - L181 `hasAiConsent()` — 主に main.dart の起動分岐用。null チェックを 1 関数に。
-- L199 `ensureWelcomeBaseline()` — 本機能の初回到達時に 1 度だけベースラインを記録する (以後 no-op)。
-- L206 `loadWelcomeFlags()`
-- L217 `setWelcomeGranted()` — 恒久クレジット付与が成功した (granted) ら呼ぶ。バナー C の表示条件になる。
-- L223 `setWelcomeConsultUsed()` — 相談に進んだ or バナー C を閉じたら呼ぶ。以後バナー C を出さない。
-- L231 `loadForecastColorMode()` — ヒートマップ色モード: 'relative' | 'absolute' | 'category'
-- L236 `saveForecastColorMode()`
-- L242 `loadForecastHighColor()` — 高スコア側の色: 'green' | 'red'
-- L247 `saveForecastHighColor()`
-- L253 `loadForecastYearOffset()` — Forecast 画面で最後に見た年オフセット（0-4）
-- L258 `saveForecastYearOffset()`
-- L265 `loadMapStyleId()`
-- L270 `saveMapStyleId()`
-- L277 `loadProfile()`
-- L284 `saveProfile()`
-- L301 `saveCurrentReadings()`
-- L307 `addReading()`
-- L319 `clearReadings()`
-- L325 `updateSynchronicity()` — Update synchronicity text for a specific reading date.
-- L338 `updateReading()` — Update an existing reading (matched by date) with new reading text.
-- L352 `removeReadingByDate()` — Remove a reading by date (used for the dev "reset today" button).
-- L375 `saveTitleData()`
-- L406 `addTitleHistoryEntry()` — 称号診断結果を履歴に追加する。
-- L438 `clearTitleHistory()` — 履歴全削除 (Sanctuary 設定からの「すべて削除」用)。
-- L446 `updateTitleHistoryNote()` — 指定 savedAt のエントリにメモを書き込む (200 字 cap、超過は切詰)。
-- L460 `getTodayReading()`
-- L474 `loadLastFreeTarotDay()` — タロットを最後に引いた「論理日」(YYYY-MM-DD)。未記録なら null。
-- L487 `markFreeTarotDrawn()` — タロットを「今日」引いたものとして記録する。
-- L502 `hasDrawnFreeTarotToday()` — タロットを「今日 (論理日)」もう引いたか。
-- L510 `clearFreeTarotDay()` — テスト用: 無料タロットの引き記録をクリア (再ドロー可能に戻す)。
-- L527 `saveCompletedCycle()`
-- L545 `updateCompletedCycleReadingSynchronicity()` — 過去サイクルに含まれる reading の synchronicity (自由メモ) を更新する。
-- L560 `clearCurrentReadings()`
-- L567 `loadIntention()`
-- L575 `saveIntention()`
-- L585 `loadDailyResetHour()` — 1日の基準時刻（0-23時）。この時刻を跨ぐと「今日」が更新される。
-- L591 `saveDailyResetHour()`
-- L598 `loadDailyResetMinute()` — 1日の基準時刻 (分、0-59)。1 分単位ピッカーの導入で追加。
-- L604 `saveDailyResetMinute()`
-- L619 `loadHouseSystem()` — ハウスシステム設定を読み込む (未保存は 'placidus')。同期キャッシュも更新。
-- L627 `saveHouseSystem()` — ハウスシステム設定を保存する。同期キャッシュも即時更新。
-- L669 `logicalTodayKey()` — リセット時刻 (「1日の開始時刻」設定) を考慮した「今日」の論理日キー
-- L682 `wasOverlayShownToday()` — Track which overlay was shown today to avoid re-showing.
-- L689 `markOverlayShown()`
-- L699 `localDateKey()` — 端末日付 (常に 0 時切替) の "今日" キー (YYYY-MM-DD)。
-- L706 `wasLocalOverlayShownToday()` — 端末 0 時基準で「今日この type の演出を表示したか」を返す。
-- L713 `markLocalOverlayShown()` — 端末 0 時基準で「今日この type の演出を表示した」と記録する。
-- L720 `getNotTodayCount()` — Not today 押下回数（サイクルID単位で保存）
-- L725 `incrementNotTodayCount()`
-- L740 `getNotificationsEnabled()` — 通知マスタスイッチ (Sanctuary トグル)。デフォルト false (オプトイン)。
-- L745 `setNotificationsEnabled()`
-- L751 `getNotifSoftAskDeclines()` — ソフトアスクを「今はしない」で断られた累計回数 (上限超過で以後出さない)。
-- L756 `incrementNotifSoftAskDeclines()`
-- L763 `setNotifSoftAskDeclines()` — declines を直接設定 (0=リセット / 2=明示 OFF でソフトアスク抑制)。
-- L769 `getNotifSoftAskCycle()` — ソフトアスクを最後に出したサイクル ID (= 同一サイクルで二度出さない)。
-- L774 `setNotifSoftAskCycle()`
-- L803 `addConsultationRecord()` — 履歴を 1 件追加 (新しい順で先頭、上限超過分は古いものから削除)。
-- L815 `setConsultationFavorite()` — id 指定でお気に入りフラグを設定。見つからない場合は no-op。
-- L824 `deleteConsultationRecord()` — id 指定で 1 件削除。見つからない場合は no-op。
-- L831 `clearConsultationHistory()` — 履歴全削除 (Sanctuary 設定からの「すべて削除」用)。
-- L864 `pushConsultationAvoid()` — 提示した地名を window に積む (最新を末尾)。最新 [maxN] 件だけ残す。
-- L890 `clearConsultationAvoid()` — avoid-window 全消去 (Sanctuary「すべて削除」と一緒に呼ぶ用)。
-- L899 `saveRestoreSnapshot()` — 現在の画面状態スナップショットを保存する (paused 時に呼ぶ)。
-- L917 `clearRestoreSnapshot()` — スナップショットを破棄する (warm resume 時 / 復元消費後)。
+- L203 `ensureWelcomeBaseline()` — 本機能の初回到達時に 1 度だけベースラインを記録する (以後 no-op)。
+- L210 `loadWelcomeFlags()`
+- L221 `setWelcomeGranted()` — 恒久クレジット付与が成功した (granted) ら呼ぶ。バナー C の表示条件になる。
+- L227 `setWelcomeConsultUsed()` — 相談に進んだ or バナー C を閉じたら呼ぶ。以後バナー C を出さない。
+- L233 `loadWelcomeSigninDismissed()` — バナー D (サインイン勧誘) を ✕ で閉じたか。true なら以後 D を出さない。
+- L239 `setWelcomeSigninDismissed()` — バナー D を ✕ で閉じたら呼ぶ。
+- L247 `loadForecastColorMode()` — ヒートマップ色モード: 'relative' | 'absolute' | 'category'
+- L252 `saveForecastColorMode()`
+- L258 `loadForecastHighColor()` — 高スコア側の色: 'green' | 'red'
+- L263 `saveForecastHighColor()`
+- L269 `loadForecastYearOffset()` — Forecast 画面で最後に見た年オフセット（0-4）
+- L274 `saveForecastYearOffset()`
+- L281 `loadMapStyleId()`
+- L286 `saveMapStyleId()`
+- L293 `loadProfile()`
+- L300 `saveProfile()`
+- L317 `saveCurrentReadings()`
+- L323 `addReading()`
+- L335 `clearReadings()`
+- L341 `updateSynchronicity()` — Update synchronicity text for a specific reading date.
+- L354 `updateReading()` — Update an existing reading (matched by date) with new reading text.
+- L368 `removeReadingByDate()` — Remove a reading by date (used for the dev "reset today" button).
+- L391 `saveTitleData()`
+- L422 `addTitleHistoryEntry()` — 称号診断結果を履歴に追加する。
+- L454 `clearTitleHistory()` — 履歴全削除 (Sanctuary 設定からの「すべて削除」用)。
+- L462 `updateTitleHistoryNote()` — 指定 savedAt のエントリにメモを書き込む (200 字 cap、超過は切詰)。
+- L476 `getTodayReading()`
+- L490 `loadLastFreeTarotDay()` — タロットを最後に引いた「論理日」(YYYY-MM-DD)。未記録なら null。
+- L503 `markFreeTarotDrawn()` — タロットを「今日」引いたものとして記録する。
+- L518 `hasDrawnFreeTarotToday()` — タロットを「今日 (論理日)」もう引いたか。
+- L526 `clearFreeTarotDay()` — テスト用: 無料タロットの引き記録をクリア (再ドロー可能に戻す)。
+- L543 `saveCompletedCycle()`
+- L561 `updateCompletedCycleReadingSynchronicity()` — 過去サイクルに含まれる reading の synchronicity (自由メモ) を更新する。
+- L576 `clearCurrentReadings()`
+- L583 `loadIntention()`
+- L591 `saveIntention()`
+- L601 `loadDailyResetHour()` — 1日の基準時刻（0-23時）。この時刻を跨ぐと「今日」が更新される。
+- L607 `saveDailyResetHour()`
+- L614 `loadDailyResetMinute()` — 1日の基準時刻 (分、0-59)。1 分単位ピッカーの導入で追加。
+- L620 `saveDailyResetMinute()`
+- L635 `loadHouseSystem()` — ハウスシステム設定を読み込む (未保存は 'placidus')。同期キャッシュも更新。
+- L643 `saveHouseSystem()` — ハウスシステム設定を保存する。同期キャッシュも即時更新。
+- L685 `logicalTodayKey()` — リセット時刻 (「1日の開始時刻」設定) を考慮した「今日」の論理日キー
+- L698 `wasOverlayShownToday()` — Track which overlay was shown today to avoid re-showing.
+- L705 `markOverlayShown()`
+- L715 `localDateKey()` — 端末日付 (常に 0 時切替) の "今日" キー (YYYY-MM-DD)。
+- L722 `wasLocalOverlayShownToday()` — 端末 0 時基準で「今日この type の演出を表示したか」を返す。
+- L729 `markLocalOverlayShown()` — 端末 0 時基準で「今日この type の演出を表示した」と記録する。
+- L736 `getNotTodayCount()` — Not today 押下回数（サイクルID単位で保存）
+- L741 `incrementNotTodayCount()`
+- L756 `getNotificationsEnabled()` — 通知マスタスイッチ (Sanctuary トグル)。デフォルト false (オプトイン)。
+- L761 `setNotificationsEnabled()`
+- L767 `getNotifSoftAskDeclines()` — ソフトアスクを「今はしない」で断られた累計回数 (上限超過で以後出さない)。
+- L772 `incrementNotifSoftAskDeclines()`
+- L779 `setNotifSoftAskDeclines()` — declines を直接設定 (0=リセット / 2=明示 OFF でソフトアスク抑制)。
+- L785 `getNotifSoftAskCycle()` — ソフトアスクを最後に出したサイクル ID (= 同一サイクルで二度出さない)。
+- L790 `setNotifSoftAskCycle()`
+- L819 `addConsultationRecord()` — 履歴を 1 件追加 (新しい順で先頭、上限超過分は古いものから削除)。
+- L831 `setConsultationFavorite()` — id 指定でお気に入りフラグを設定。見つからない場合は no-op。
+- L840 `deleteConsultationRecord()` — id 指定で 1 件削除。見つからない場合は no-op。
+- L847 `clearConsultationHistory()` — 履歴全削除 (Sanctuary 設定からの「すべて削除」用)。
+- L880 `pushConsultationAvoid()` — 提示した地名を window に積む (最新を末尾)。最新 [maxN] 件だけ残す。
+- L906 `clearConsultationAvoid()` — avoid-window 全消去 (Sanctuary「すべて削除」と一緒に呼ぶ用)。
+- L915 `saveRestoreSnapshot()` — 現在の画面状態スナップショットを保存する (paused 時に呼ぶ)。
+- L933 `clearRestoreSnapshot()` — スナップショットを破棄する (warm resume 時 / 復元消費後)。
 
   <details><summary>private 関数 1 件</summary>
 
-  - L836 `_writeConsultationHistory()`
+  - L852 `_writeConsultationHistory()`
 
   </details>
 

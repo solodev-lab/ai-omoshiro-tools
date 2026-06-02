@@ -5,9 +5,9 @@
 
 ## サマリ
 
-- ファイル数: 5 / 総行数: 629
+- ファイル数: 5 / 総行数: 675
 - class/mixin/extension/enum: 7
-- 関数 (top-level + method の素拾い): 18
+- 関数 (top-level + method の素拾い): 20
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 0
 - Worker URL リテラル: 0
@@ -69,7 +69,7 @@ fetch をトリガーする 4 イベント (これ以外で呼んではいけな
   </details>
 
 
-### `lib/utils/consultation_return.dart` (78 行)
+### `lib/utils/consultation_return.dart` (124 行)
 
 **imports:** dart=0 / package=1 / relative=1
 
@@ -79,12 +79,14 @@ fetch をトリガーする 4 イベント (これ以外で呼んではいけな
 
 - L18 `class ConsultationResumeState`
   - 相談結果(live) → Map → 相談結果 への「戻り導線」橋渡し singleton。
-- L47 `class ConsultationReturn : ChangeNotifier`
+- L78 `class ConsultationReturn : ChangeNotifier`
 
-**関数 (2 public + 0 private):**
+**関数 (4 public + 0 private):**
 
-- L56 `stash()` — 🗺 で Map へ移る前に live 状態を積む。
-- L72 `clear()` — 破棄 (✕ / Map タブ離脱 / 新規相談開始)。
+- L49 `toJson()` — プロセス死復元 (SolaraStorage.saveRestoreSnapshot) 用。
+- L87 `stash()` — 🗺 で Map へ移る前に live 状態を積む。
+- L103 `clear()` — 破棄 (✕ / Map タブ離脱 / 新規相談開始)。
+- L116 `restoreFrom()` — コールド起動時: スナップショットから pending を復元する。
 
 
 ### `lib/utils/map_focus.dart` (94 行)

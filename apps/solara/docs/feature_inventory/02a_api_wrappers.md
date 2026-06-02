@@ -5,9 +5,9 @@
 
 ## サマリ
 
-- ファイル数: 10 / 総行数: 2363
+- ファイル数: 10 / 総行数: 2386
 - class/mixin/extension/enum: 26
-- 関数 (top-level + method の素拾い): 38
+- 関数 (top-level + method の素拾い): 39
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 0
 - Worker URL リテラル: 22
@@ -108,7 +108,7 @@ Consultation API — クレジット系 (V2 と共有)
 - L227 `migratePurchasedCredits()` — `/protected/consultation/migrate-purchased` を呼び、匿名 app_user_id に貯まった
 
 
-### `lib/utils/consultation_v2_api.dart` (510 行)
+### `lib/utils/consultation_v2_api.dart` (533 行)
 
 **ファイル先頭コメント:**
 
@@ -150,10 +150,10 @@ HARD500 回避のため part 分割: リクエストモデルは consultation_v2
   - 1 候補地の Stella の読み (構造データ + ナレーション)。
 - L307 `class ConsultationV2Reading`
   - 相談 V2 レスポンス全体 (成功時)。
-- L382 `class ConsultationV2Result`
+- L405 `class ConsultationV2Result`
   - fetchConsultationV2 の戻り値。
 
-**関数 (8 public + 0 private):**
+**関数 (9 public + 0 private):**
 
 - L43 `toJson()`
 - L86 `toJson()`
@@ -162,7 +162,8 @@ HARD500 回避のため part 分割: リクエストモデルは consultation_v2
 - L174 `toJson()`
 - L212 `toJson()`
 - L286 `toJson()`
-- L439 `fetchConsultationV2()` — /protected/astro/consultation2 を呼んで Stella の読み (候補 1 つ) を取得する。
+- L382 `toJson()` — プロセス死復元 (ConsultationReturn のスナップショット) 用。
+- L462 `fetchConsultationV2()` — /protected/astro/consultation2 を呼んで Stella の読み (候補 1 つ) を取得する。
 
 
 ### `lib/utils/daily_transits_api.dart` (241 行)

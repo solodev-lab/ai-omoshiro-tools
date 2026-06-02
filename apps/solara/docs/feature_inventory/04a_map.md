@@ -5,11 +5,11 @@
 
 ## サマリ
 
-- ファイル数: 25 / 総行数: 14402
+- ファイル数: 25 / 総行数: 14604
 - class/mixin/extension/enum: 90
-- 関数 (top-level + method の素拾い): 315
+- 関数 (top-level + method の素拾い): 319
 - Navigator.push 等: 0
-- Popup/Dialog 呼出: 19
+- Popup/Dialog 呼出: 20
 - Worker URL リテラル: 0
 
 ## ファイル別
@@ -715,44 +715,51 @@ A*C*G ライン (natal / transit) のタップ詳細 popup。
 - 集計: `showLineNarrativeSheet`×1
 
 
-### `lib/screens/map/map_search.dart` (688 行)
+### `lib/screens/map/map_search.dart` (803 行)
 
-**imports:** dart=2 / package=4 / relative=4
+**imports:** dart=2 / package=4 / relative=5
 
-- relative: `../../utils/solara_api.dart`, `map_astro.dart`, `map_constants.dart`, `map_fortune_sheet.dart`
+- relative: `../../utils/solara_api.dart`, `../../widgets/info_popup.dart`, `map_astro.dart`, `map_constants.dart`, `map_fortune_sheet.dart`
 
 **型定義 (5):**
 
-- L15 `class SearchHit`
+- L16 `class SearchHit`
   - 検索結果1件分
-- L178 `class SearchResultList : StatelessWidget`
+- L183 `class SearchResultList : StatelessWidget`
   - 検索結果リスト（スコア付き）ポップアップ
-- L356 `class SearchFocusPopup : StatelessWidget`
+- L471 `class SearchFocusPopup : StatelessWidget`
   - 検索候補から1件選ばれたあとの詳細ポップアップ。
-- L599 `class _CatChip : StatelessWidget`
-- L624 `class _ActionTile : StatelessWidget`
+- L714 `class _CatChip : StatelessWidget`
+- L739 `class _ActionTile : StatelessWidget`
 
-**関数 (9 public + 5 private):**
+**関数 (9 public + 8 private):**
 
-- L51 `toJson()` — 画面復元 (Android プロセス死対策) 用シリアライズ。
-- L80 `directionFrom()` — 中心座標から見たこの地点の方位（16方位名）
-- L85 `distanceKmFrom()` — 中心から km 距離
-- L154 `annotateHitsWithScores()` — 検索結果に、現在中心からの方位スコアと支配カテゴリを注入する
-- L202 `build()`
-- L398 `build()`
-- L605 `build()`
-- L630 `build()`
-- L656 `googleMapsUrlForHit()` — 検索結果を Google マップで開く URL を組み立てる。
+- L52 `toJson()` — 画面復元 (Android プロセス死対策) 用シリアライズ。
+- L81 `directionFrom()` — 中心座標から見たこの地点の方位（16方位名）
+- L86 `distanceKmFrom()` — 中心から km 距離
+- L159 `annotateHitsWithScores()` — 検索結果に、現在中心からの方位スコアと支配カテゴリを注入する
+- L215 `build()`
+- L513 `build()`
+- L720 `build()`
+- L745 `build()`
+- L771 `googleMapsUrlForHit()` — 検索結果を Google マップで開く URL を組み立てる。
 
-  <details><summary>private 関数 5 件</summary>
+  <details><summary>private 関数 8 件</summary>
 
-  - L90 `_bearingDeg()`
-  - L99 `_azimuthToDir16()`
-  - L105 `_haversineKm()`
-  - L250 `_hitRow()`
-  - L674 `_openInGoogleMaps()`
+  - L91 `_bearingDeg()`
+  - L100 `_azimuthToDir16()`
+  - L106 `_haversineKm()`
+  - L269 `_rankToggle()`
+  - L290 `_rankSeg()`
+  - L320 `_showRankHelp()`
+  - L365 `_hitRow()`
+  - L789 `_openInGoogleMaps()`
 
   </details>
+
+**Popup/Dialog 呼出 (1):**
+
+- 集計: `showInfoPopup`×1
 
 
 ### `lib/screens/map/map_sectors.dart` (173 行)
@@ -903,7 +910,7 @@ A*C*G ライン (natal / transit) のタップ詳細 popup。
 - L134 `changeIcon()`
 
 
-### `lib/screens/map/map_welcome_banner.dart` (136 行)
+### `lib/screens/map/map_welcome_banner.dart` (156 行)
 
 **imports:** dart=0 / package=1 / relative=0
 
@@ -911,12 +918,12 @@ A*C*G ライン (natal / transit) のタップ詳細 popup。
 
 - L4 `enum WelcomeBannerMode`
   - Map 画面のウェルカム特典バナーの種類。
-- L20 `class MapWelcomeBanner : StatelessWidget`
+- L23 `class MapWelcomeBanner : StatelessWidget`
   - Map 上部に出すウェルカム特典バナー (B/C 共通)。
 
 **関数 (1 public + 0 private):**
 
-- L33 `build()`
+- L36 `build()`
 
 
 ### `lib/screens/map/map_widgets.dart` (51 行)
@@ -936,99 +943,100 @@ A*C*G ライン (natal / transit) のタップ詳細 popup。
 - L40 `build()`
 
 
-### `lib/screens/map_screen.dart` (3561 行)
+### `lib/screens/map_screen.dart` (3628 行)
 
-**imports:** dart=2 / package=6 / relative=42
+**imports:** dart=2 / package=6 / relative=43
 
-- relative: `../utils/solara_api.dart`, `../utils/solara_storage.dart`, `../utils/tile_http_client.dart`, `../widgets/dominant_fortune_overlay.dart`, `../widgets/info_popup.dart`, `../widgets/tap_to_unfocus.dart`, `map/map_daily_transit_screen.dart`, `map/consult_entry_popup.dart`, `map/map_constants.dart`, `map/map_styles.dart`, `map/map_sectors.dart`, `map/map_fortune_sheet.dart`, `map/map_vp_panel.dart`, `map/map_menu_chips.dart`, `map/map_display_menu.dart`, `map/map_viewpoint_menu.dart`, `map/map_astro.dart`, `map/map_astro_carto.dart`, `map/map_astro_lines.dart`, `map/map_location_markers.dart`, `map/map_planet_intro_popup.dart`, `map/map_planet_lines.dart`, `map/map_relocation_popup.dart`, `map/map_search.dart`, `map/map_overlays.dart`, `map/map_time_slider.dart`, `map/map_widgets.dart`, `map/map_welcome_banner.dart`, `map/map_moon_notice.dart`, `../utils/astro_lines.dart`, `../utils/moon_event_status.dart`, `../utils/consultation_api.dart`, `../utils/consultation_credits.dart`, `../utils/direction_energy.dart`, `../utils/pro_status.dart`, `../utils/reverse_geocode.dart`, `../widgets/pro_unlock_dialog.dart`, `consultation/consultation_input_screen.dart`, `consultation/consultation_return_chip.dart`, `forecast_screen.dart`, `horoscope/horo_antique_icons.dart`, `locations_screen.dart`
+- relative: `../utils/solara_api.dart`, `../utils/solara_storage.dart`, `../utils/tile_http_client.dart`, `../widgets/dominant_fortune_overlay.dart`, `../widgets/info_popup.dart`, `../widgets/tap_to_unfocus.dart`, `map/map_daily_transit_screen.dart`, `map/consult_entry_popup.dart`, `map/map_constants.dart`, `map/map_styles.dart`, `map/map_sectors.dart`, `map/map_fortune_sheet.dart`, `map/map_vp_panel.dart`, `map/map_menu_chips.dart`, `map/map_display_menu.dart`, `map/map_viewpoint_menu.dart`, `map/map_astro.dart`, `map/map_astro_carto.dart`, `map/map_astro_lines.dart`, `map/map_location_markers.dart`, `map/map_planet_intro_popup.dart`, `map/map_planet_lines.dart`, `map/map_relocation_popup.dart`, `map/map_search.dart`, `map/map_overlays.dart`, `map/map_time_slider.dart`, `map/map_widgets.dart`, `map/map_welcome_banner.dart`, `map/map_moon_notice.dart`, `../utils/astro_lines.dart`, `../utils/moon_event_status.dart`, `../utils/consultation_api.dart`, `../utils/consultation_credits.dart`, `../utils/direction_energy.dart`, `../utils/pro_status.dart`, `../utils/reverse_geocode.dart`, `../utils/solara_auth.dart`, `../widgets/pro_unlock_dialog.dart`, `consultation/consultation_input_screen.dart`, `consultation/consultation_return_chip.dart`, `forecast_screen.dart`, `horoscope/horo_antique_icons.dart`, `locations_screen.dart`
 
 **型定義 (2):**
 
-- L81 `class MapScreen : StatefulWidget`
-- L91 `class MapScreenState : State`
+- L82 `class MapScreen : StatefulWidget`
+- L92 `class MapScreenState : State`
 
-**関数 (11 public + 66 private):**
+**関数 (11 public + 67 private):**
 
-- L88 `createState()`
-- L392 `initState()`
-- L430 `dispose()`
-- L614 `reloadProfile()` — 外部（main.dart のタブ切替）から呼ばれる公開リロード。
-- L647 `restoreMapState()` — captureMapRestore のスナップショットを復元する (コールド起動時)。
-- L713 `focusLocationAndDate()` — 相談結果カードの🗺ボタンから呼ばれる: 視点 (VIEWPOINT/_center) を [pos] へ移動
-- L1590 `snack()`
-- L1759 `snack()`
-- L1805 `build()`
-- L2997 `signOf()`
-- L3208 `showMoonNotice()` — C: main.dart から月イベント保留状態を受け取る (GlobalKey 命令呼び出し)。
+- L89 `createState()`
+- L397 `initState()`
+- L435 `dispose()`
+- L619 `reloadProfile()` — 外部（main.dart のタブ切替）から呼ばれる公開リロード。
+- L653 `restoreMapState()` — captureMapRestore のスナップショットを復元する (コールド起動時)。
+- L720 `focusLocationAndDate()` — 相談結果カードの🗺ボタンから呼ばれる: 視点 (VIEWPOINT/_center) を [pos] へ移動
+- L1635 `snack()`
+- L1804 `snack()`
+- L1850 `build()`
+- L3045 `signOf()`
+- L3270 `showMoonNotice()` — C: main.dart から月イベント保留状態を受け取る (GlobalKey 命令呼び出し)。
 
-  <details><summary>private 関数 66 件</summary>
+  <details><summary>private 関数 67 件</summary>
 
-  - L401 `_bootstrap()`
-  - L445 `_warmupTileConnection()`
-  - L480 `_onTileError()`
-  - L507 `_checkDailyBadgeState()`
-  - L537 `_recomputeDailyChipCategoryIfNeeded()`
-  - L600 `_loadMapStyle()`
-  - L606 `_onMapStyleChanged()`
-  - L654 `_applySearchPartFromPending()`
-  - L664 `_applyUiRestoreFromPending()`
-  - L687 `_applySearchRestore()`
-  - L734 `_scheduleLoadChart()`
-  - L746 `_moveToInitialCenter()`
-  - L754 `_loadProfileAndChart()`
-  - L943 `_cycleActiveCategory()`
-  - L970 `_reannotateSearchResults()`
-  - L1002 `_showSheet()`
-  - L1022 `_openLocations()`
-  - L1045 `_openForecast()`
-  - L1068 `_onDisplayMenuTap()`
-  - L1078 `_onViewpointMenuTap()`
-  - L1092 `_onSearchTap()`
-  - L1106 `_clearAllSearch()`
-  - L1123 `_onDailyBadgeTap()`
-  - L1172 `_onOverlayComplete()`
-  - L1194 `_onDailyTransitClose()`
-  - L1208 `_doSearch()`
-  - L1269 `_frameSearchArea()`
-  - L1295 `_restoreSearchListView()`
-  - L1305 `_selectSearchHit()`
-  - L1335 `_buildFocusedHitMarker()`
-  - L1377 `_buildSearchHitMarkers()`
-  - L1450 `_displayScores()`
-  - L1511 `_sectorRankAlphaMul()`
-  - L1529 `_rebuild()`
-  - L1563 `_kickPaintInvalidation()`
-  - L1577 `_setVpOnly()`
-  - L1589 `_setVpToCurrentLocationOnly()`
-  - L1635 `_enterAstroCartoMode()`
-  - L1710 `_exitAstroCartoMode()`
-  - L1758 `_geolocate()`
-  - L1877 `_buildBody()`
-  - L2958 `_buildZenithPopup()`
-  - L2977 `_buildRelocationPopup()`
-  - L3044 `_isProGatedBandKey()`
-  - L3048 `_proLabelForAstroKey()`
-  - L3061 `_proDescForAstroKey()`
-  - L3082 `_onAstroToggle()`
-  - L3111 `_enterConsultationFromDaily()`
-  - L3139 `_enterConsultationFromMapButton()`
-  - L3158 `_evaluateWelcomeGift()`
-  - L3186 `_onWelcomeCta()`
-  - L3199 `_onWelcomeDismiss()`
-  - L3225 `_dismissMoonNotice()`
-  - L3240 `_launchConsultation()`
-  - L3288 `_launchConsultationFromSearch()`
-  - L3322 `_reloadLocationSlots()`
-  - L3346 `_nearestNatalConjunctions()`
-  - L3367 `_findNearbyAstroLines()`
-  - L3385 `_zenithMarkerFrames()`
-  - L3386 `_nadirMarkerFrames()`
-  - L3387 `_zenithBandFrames()`
-  - L3388 `_nadirBandFrames()`
-  - L3392 `_filteredFrames()`
-  - L3405 `_visibleAstroLines()`
-  - L3433 `_buildNoProfileGuide()`
-  - L3467 `_showSearchVpHelpPopup()`
+  - L406 `_bootstrap()`
+  - L450 `_warmupTileConnection()`
+  - L485 `_onTileError()`
+  - L512 `_checkDailyBadgeState()`
+  - L542 `_recomputeDailyChipCategoryIfNeeded()`
+  - L605 `_loadMapStyle()`
+  - L611 `_onMapStyleChanged()`
+  - L660 `_applySearchPartFromPending()`
+  - L670 `_applyUiRestoreFromPending()`
+  - L693 `_applySearchRestore()`
+  - L741 `_scheduleLoadChart()`
+  - L753 `_moveToInitialCenter()`
+  - L761 `_loadProfileAndChart()`
+  - L950 `_cycleActiveCategory()`
+  - L977 `_reannotateSearchResults()`
+  - L1009 `_showSheet()`
+  - L1029 `_openLocations()`
+  - L1052 `_openForecast()`
+  - L1075 `_onDisplayMenuTap()`
+  - L1085 `_onViewpointMenuTap()`
+  - L1099 `_onSearchTap()`
+  - L1113 `_clearAllSearch()`
+  - L1130 `_onDailyBadgeTap()`
+  - L1179 `_onOverlayComplete()`
+  - L1201 `_onDailyTransitClose()`
+  - L1215 `_doSearch()`
+  - L1275 `_changeSearchRank()`
+  - L1314 `_frameSearchArea()`
+  - L1340 `_restoreSearchListView()`
+  - L1350 `_selectSearchHit()`
+  - L1380 `_buildFocusedHitMarker()`
+  - L1422 `_buildSearchHitMarkers()`
+  - L1495 `_displayScores()`
+  - L1556 `_sectorRankAlphaMul()`
+  - L1574 `_rebuild()`
+  - L1608 `_kickPaintInvalidation()`
+  - L1622 `_setVpOnly()`
+  - L1634 `_setVpToCurrentLocationOnly()`
+  - L1680 `_enterAstroCartoMode()`
+  - L1755 `_exitAstroCartoMode()`
+  - L1803 `_geolocate()`
+  - L1922 `_buildBody()`
+  - L3006 `_buildZenithPopup()`
+  - L3025 `_buildRelocationPopup()`
+  - L3092 `_isProGatedBandKey()`
+  - L3096 `_proLabelForAstroKey()`
+  - L3109 `_proDescForAstroKey()`
+  - L3130 `_onAstroToggle()`
+  - L3159 `_enterConsultationFromDaily()`
+  - L3187 `_enterConsultationFromMapButton()`
+  - L3206 `_evaluateWelcomeGift()`
+  - L3242 `_onWelcomeCta()`
+  - L3259 `_onWelcomeDismiss()`
+  - L3287 `_dismissMoonNotice()`
+  - L3302 `_launchConsultation()`
+  - L3350 `_launchConsultationFromSearch()`
+  - L3384 `_reloadLocationSlots()`
+  - L3408 `_nearestNatalConjunctions()`
+  - L3429 `_findNearbyAstroLines()`
+  - L3447 `_zenithMarkerFrames()`
+  - L3448 `_nadirMarkerFrames()`
+  - L3449 `_zenithBandFrames()`
+  - L3450 `_nadirBandFrames()`
+  - L3454 `_filteredFrames()`
+  - L3467 `_visibleAstroLines()`
+  - L3495 `_buildNoProfileGuide()`
+  - L3534 `_showSearchVpHelpPopup()`
 
   </details>
 

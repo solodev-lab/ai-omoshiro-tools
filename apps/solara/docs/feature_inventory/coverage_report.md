@@ -350,7 +350,7 @@
 
 - ファイル数: 25
 - Worker URL 呼出: (なし)
-- Popup/Dialog: `showInfoPopup`×14, `showLineNarrativeSheet`×3, `showSolaraDatePicker`×1, `showModalBottomSheet`×1
+- Popup/Dialog: `showInfoPopup`×15, `showLineNarrativeSheet`×3, `showSolaraDatePicker`×1, `showModalBottomSheet`×1
 - Navigator.push 等: 0 箇所
 
 ### 層 4b: Horoscope 画面
@@ -408,7 +408,7 @@
 | 3a | 2 | 4 | 2 | 2 | 1 | 1 | 8 | 7 | 4 | 1 | · | · | · | · | 1 | · |
 | 3b | · | · | · | · | · | · | · | 1 | · | · | · | · | · | · | · | · |
 | 3c | · | 5 | 4 | 2 | 4 | 1 | 12 | 4 | · | · | · | · | · | · | · | · |
-| 4a | 12 | 11 | · | 14 | 7 | 1 | 18 | 24 | 3 | 32 | 2 | · | · | · | 4 | · |
+| 4a | 12 | 11 | · | 14 | 8 | 1 | 19 | 24 | 3 | 32 | 2 | · | · | · | 4 | · |
 | 4b | 5 | 13 | · | 3 | 5 | · | 16 | · | · | · | 31 | · | · | 2 | · | · |
 | 4c | 1 | 1 | 14 | 1 | 5 | 5 | 9 | 6 | · | · | · | 17 | · | · | 1 | · |
 | 4d | 4 | 6 | 13 | 1 | 2 | 2 | 11 | 2 | 1 | · | · | · | 9 | · | · | · |
@@ -427,7 +427,7 @@
 | --- | --- | --- |
 | `lib/theme/solara_colors.dart` | 3b | 38 |
 | `lib/utils/solara_storage.dart` | 2b | 33 |
-| `lib/widgets/info_popup.dart` | 3a | 24 |
+| `lib/widgets/info_popup.dart` | 3a | 25 |
 | `lib/screens/map/map_constants.dart` | 3b | 21 |
 | `lib/utils/solara_api.dart` | 2a | 15 |
 | `lib/models/galaxy_cycle.dart` | 1c | 14 |
@@ -459,9 +459,20 @@
 > 各ソースの SHA1 を `_stamps.json` に記録し、差分を検出。
 > 変更されたファイルが属する層は、人手版インベントリ章の見直し対象。
 
-- 追加: **0** / 削除: **0** / 変更: **0**
+- 追加: **0** / 削除: **0** / 変更: **14**
 
-- 変更なし — 全インベントリ章は最新。
+### 変更されたファイル (層別)
+
+- **層 0**: `worker/src/index.js`, `worker/src/search.js`
+- **層 1b**: `lib/utils/consultation_v2_request.dart`
+- **層 2a**: `lib/utils/consultation_v2_api.dart`
+- **層 2b**: `lib/utils/solara_auth.dart`, `lib/utils/solara_storage.dart`
+- **層 2c**: `lib/utils/consultation_return.dart`
+- **層 3a**: `lib/widgets/no_profile_guide.dart`
+- **層 4a**: `lib/screens/map/map_search.dart`, `lib/screens/map/map_welcome_banner.dart`, `lib/screens/map_screen.dart`
+- **層 4b**: `lib/screens/horoscope/horo_backdrop.dart`
+- **層 4f**: `lib/screens/locations_screen.dart`
+- **層 5**: `lib/main.dart`
 
 ## #7 astro_glossary 用語辞書対整合
 

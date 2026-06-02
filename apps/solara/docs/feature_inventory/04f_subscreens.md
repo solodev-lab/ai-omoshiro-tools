@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 32 / 総行数: 11155
+- ファイル数: 32 / 総行数: 11159
 - class/mixin/extension/enum: 100
 - 関数 (top-level + method の素拾い): 281
 - Navigator.push 等: 0
@@ -1018,7 +1018,7 @@ showInfoPopup 経由で表示する (widgets/info_popup.dart、popup 統一規�
   </details>
 
 
-### `lib/screens/locations_screen.dart` (759 行)
+### `lib/screens/locations_screen.dart` (763 行)
 
 **imports:** dart=1 / package=2 / relative=9
 
@@ -1029,7 +1029,7 @@ showInfoPopup 経由で表示する (widgets/info_popup.dart、popup 統一規�
 - L16 `class LocationsScreen : StatefulWidget`
   - Locations 一覧画面 — 登録済み拠点を16方位スコア付きで管理。
 - L39 `class _LocationsScreenState : State`
-- L646 `class _SlotStats`
+- L650 `class _SlotStats`
 
 **関数 (3 public + 18 private):**
 
@@ -1054,9 +1054,9 @@ showInfoPopup 経由で表示する (widgets/info_popup.dart、popup 統一規�
   - L483 `_emptyState()`
   - L508 `_buildList()`
   - L517 `_buildRow()`
-  - L604 `_scoreBar()`
-  - L640 `_fmtKm()`
-  - L656 `_showLocationsUsageGuide()`
+  - L608 `_scoreBar()`
+  - L644 `_fmtKm()`
+  - L660 `_showLocationsUsageGuide()`
 
   </details>
 

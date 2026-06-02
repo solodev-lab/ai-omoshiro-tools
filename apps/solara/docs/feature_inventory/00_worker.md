@@ -537,7 +537,7 @@ GEMINI_API_KEY は wrangler secret put GEMINI_API_KEY で設定
 **export (4):** `computeCategoryScore`, `callGemini`, `stripTransitLabel`, `handleFortune`
 
 
-### `worker/src/index.js` (1763 行)
+### `worker/src/index.js` (1769 行)
 
 **ファイル先頭コメント:**
 
@@ -574,27 +574,27 @@ webhooks/*   外部連携      RevenueCat Webhook (Pro 状態の真の出所)。
 | GET | /public/tz | L1335 |
 | GET | /public/astro/events | L1344 |
 | GET | /public/search | L1355 |
-| GET | /auth/whoami | L1377 |
-| POST | /auth/challenge | L1380 |
-| POST | /auth/attest | L1383 |
-| POST | /auth/integrity/challenge | L1387 |
-| GET | /auth/integrity/diagnose | L1396 |
-| POST | /auth/integrity/decode-test | L1409 |
-| POST | /protected/account/delete | L1524 |
-| POST | /protected/fortune | L1528 |
-| POST | /protected/tarot | L1538 |
-| POST | /protected/relocation | L1566 |
-| POST | /protected/astro/line-narrative | L1578 |
-| POST | /protected/astro/consultation | L1588 |
-| POST | /protected/astro/consultation2 | L1616 |
-| POST | /protected/consultation/credits | L1648 |
-| POST | /protected/consultation/welcome-grant | L1661 |
-| POST | /protected/consultation/migrate-purchased | L1673 |
-| POST | /protected/report-ai-output | L1687 |
-| ? | /public/* | L1745 |
-| ? | /auth/* | L1747 |
-| ? | /protected/* | L1749 |
-| ? | /webhooks/revenuecat | L1751 |
+| GET | /auth/whoami | L1383 |
+| POST | /auth/challenge | L1386 |
+| POST | /auth/attest | L1389 |
+| POST | /auth/integrity/challenge | L1393 |
+| GET | /auth/integrity/diagnose | L1402 |
+| POST | /auth/integrity/decode-test | L1415 |
+| POST | /protected/account/delete | L1530 |
+| POST | /protected/fortune | L1534 |
+| POST | /protected/tarot | L1544 |
+| POST | /protected/relocation | L1572 |
+| POST | /protected/astro/line-narrative | L1584 |
+| POST | /protected/astro/consultation | L1594 |
+| POST | /protected/astro/consultation2 | L1622 |
+| POST | /protected/consultation/credits | L1654 |
+| POST | /protected/consultation/welcome-grant | L1667 |
+| POST | /protected/consultation/migrate-purchased | L1679 |
+| POST | /protected/report-ai-output | L1693 |
+| ? | /public/* | L1751 |
+| ? | /auth/* | L1753 |
+| ? | /protected/* | L1755 |
+| ? | /webhooks/revenuecat | L1757 |
 
 **KV 使用 (4 行):**
 
@@ -602,7 +602,7 @@ webhooks/*   外部連携      RevenueCat Webhook (Pro 状態の真の出所)。
 
 **Durable Object 使用 (4 行):**
 
-- 出現行: L262, L262, L262, L1696
+- 出現行: L262, L262, L262, L1702
 
 **export (2):** `isQuotaExemptPath`, `_internal`
 
@@ -669,7 +669,7 @@ Phase B: 静的テンプレート (horo_relocation_templates.dart) を動的解�
 **export (1):** `handleRelocation`
 
 
-### `worker/src/search.js` (144 行)
+### `worker/src/search.js` (160 行)
 
 **ファイル先頭コメント:**
 

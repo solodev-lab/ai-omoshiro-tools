@@ -1299,6 +1299,71 @@ Worker [`consultation_v2.js:78-83`](../worker/src/consultation_v2.js#L78) の既
 - flutter analyze クリーン / extract `+0 -0 ~0`。
 - 都市データ正典訂正: D1 `solara-cities` 実測 **488,270 行 / 246 国・地域** (§0.2.19 の旧見積「約169,000」を本セッションで更新)。`world_cities.js`(762) はフォールバック。
 
+### 0.2.49 検索2パターン + 相談戻りチップ プロセス死復元 + クレジット特典導線 + 現住所表記 (2026-06-02 PM、commit `10a628d`)
+
+> 層をまたぐ機能追加 5 件。新規 HARD ゼロ (map_screen 3561→3628 増だが既存 HARD 内)。
+> Worker rank は本セッションで deploy 済 (version `4b112d82`、後方互換のため現行配布アプリに無影響)。
+
+#### ① 検索結果の2パターン (中心点 / 知名度) — 層 0 + 層 4a
+- 並び替えではなく**取得候補の中身が変わる**。Google Places (New) Text Search の `rankPreference` を
+  「中心点 = DISTANCE (地図中心=現住所からの近さ優先)」「知名度 = RELEVANCE (既定)」で切替。
+  pageSize は 20 据置 (= 1 リクエスト/検索 = 課金増ほぼゼロ。Google が順位を変え上位 20 件の中身が変わる)。
+- `worker/src/index.js`: `/public/search` に `rank` (distance|relevance) 受領。未指定は relevance
+  フォールバック (旧クライアント互換)。`worker/src/search.js`: distance のとき `rankPreference:'DISTANCE'`。
+- `map_search.dart`: `searchPlaces(rank:)` + `SearchResultList` ヘッダに `[中心点｜知名度]` トグル + ヘルプ popup。
+- `map_screen.dart`: `_searchRank` (既定 distance) / `_changeSearchRank` (保存済み `_searchOriginCenter`
+  で同一キーワード即再検索) / `captureMapRestore`・`_applySearchRestore` に rank 追加 (プロセス死復元でも保持)。
+- 新規 `worker/test/search.test.js` 4 件 (fetch mock で rankPreference 検証)。
+
+#### ② 相談戻りチップを プロセス死復元 対象に — 層 1c + 層 2c + 層 5
+- 🗺「Map画面でみる」で `popUntil` により相談ルートを破棄するため live 状態はメモリ専用 singleton
+  (`ConsultationReturn`) のみ。低 RAM 端末で Google マップ往復中に OS kill → コールド再起動で
+  検索/シートは復元されるがチップだけ消えていた穴を塞ぐ。
+- `ConsultationV2Reading.toJson` (既存 fromJson と往復) / `ConsultationRequest.fromJson`
+  (+ `ConsultationWhen/Scope/Point.fromJsonOrNull`) / `ConsultationResumeState.toJson/fromJson` /
+  `ConsultationReturn.captureRestore/restoreFrom` を追加。
+- `main.dart`: `_saveRestoreSnapshot` で capture (`snap['consultReturn']`)、`_restoreLastScreen` で
+  restore。`route` 復元 (ConsultRestore) とは排他 (🗺 で pop=チップ側 / チップ take()=route 側)。
+- 新規 `test/consultation_return_restore_test.dart` 3 件 (往復 / capture-restore / 壊れ snapshot 握り潰し)。
+
+#### ③ クレジット特典の導線追加 — 層 2a/2b + 層 3a + 層 4a/4b + 層 5
+- **未設定カード訴求**: プロフィール未設定カード (Map `_buildNoProfileGuide` / 共通
+  `widgets/no_profile_guide.dart` = Forecast・Locations / `horo_backdrop.dart` = Horo) に
+  共通見出し「✦ 出生情報と現住所を登録すると、無料クレジットを3つプレゼント」を追加。機能説明
+  (方位スコア / ホロスコープ) は各画面の文言を維持。文言はウェルカムバナー承認済み表現に統一。
+- **サインインお祝いスナックバー**: 初回 Google/Apple サインインで +3 (signin grant) が
+  **新規付与されたときだけ** お祝い。`solara_auth.dart` の `_onSignedInCredits` で結果を捕捉し
+  one-shot シグナル `pendingSigninGrantAmount` + notifyListeners。`main.dart` (SolaraHome) が
+  SolaraAuth を中央 listen して SnackBar 表示 (Sanctuary / 相談ダイアログ等 どこでサインインしても出る)。
+  `alreadyGranted` (再サインイン) / 失敗時は祝わない。
+- **サインイン勧誘バナー D (addSignin)**: `map_welcome_banner.dart` に 4 つ目のモード。表示条件は
+  優先順位 B→C→D で `granted && C消化後(consultUsed) && !isSignedIn && !signinDismissed`。
+  CTA「サインインする」→ Sanctuary。✕ で永続非表示 (`solara_storage` の signinDismissed)。
+  サインイン後は Map 復帰時 (reloadProfile→再評価) に自動で消える。
+- signin grant は profile grant と別冪等キー (`welcome_signin:{appUserId}` vs
+  `welcome_profile:{deviceKey}`) のため**両方もらえて最大 6**。
+
+#### ④ 現住所表記の統一 — 層 4f
+- `locations_screen.dart` の Locations 一覧 `_buildRow` で HOME 行を住所文字列 (例: 名古屋市東区) →
+  「現住所」固定。VIEWPOINT プルダウン / map_viewpoint_menu と統一 (個人情報的住所を一覧に出さない)。
+
+#### 検証
+- audit.py: 行数 **HARD 7 (新規ゼロ)** / WARN 32 / NOTICE 45 / 重複 20 (全て `),` 等 構造的) /
+  TODO 4 / print 1 (いずれも意図的) / 未使用 private 0。
+- find_unused_code.py の 2 候補 (`GalaxyArchiveSortLabel.jp` / `DominantFortuneKindToCategoryIcon.toCategoryIcon`)
+  は grep 裏取りで両方 extension 実使用 = 誤検出 = **削除対象ゼロ**。
+- extract.py stamp diff `+0 -0 ~14` (変更 14 ファイル反映)。coverage #3 で `/public/search`・
+  `/protected/consultation/welcome-grant` ともに「一致」、Flutter→Worker 孤立なし、#7b 壊れ 0。
+- flutter analyze クリーン (既知 test 2件のみ)。
+- check_file_split.py: part-of 構造破綻なし。**HARD7 のファイル分割自体は引き続き未着手** (専用セッション)。
+
+#### 未実施 (次セッションへ)
+- **pubspec +28→+29 bump + AAB 再ビルド** (本セッションの Flutter 変更を本番反映する場合。Worker rank
+  は deploy 済なので AAB 無しでも現行アプリは無影響)。
+- **実機 A101FC 検証**: 検索トグル中心点/知名度 (実機確認済) / 未設定カード特典訴求の表示 (要新規状態) /
+  サインインお祝いスナックバー + 勧誘バナー D の遷移。
+- **HARD7 ファイル分割** (専用セッション、map_screen 3628 から)。
+
 ### 0.3 Horo「今日の占い」1 日 1 回固定 + プロンプト刷新 (2026-05-27)
 
 > **設計の柱**: 「30 回までは OK」のような曖昧な防衛をやめ、「**1 日 1 回・変更しない**」を
