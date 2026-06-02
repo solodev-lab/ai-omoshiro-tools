@@ -55,9 +55,9 @@
 ## #1 / #2 機械抽出 ↔ feature_inventory.md (人手版) の対整合
 
 - 機械抽出した class/mixin/extension/enum: **475**
-- inventory に登場する識別子 (大文字始まり ``backtick``囲み): **276**
+- inventory に登場する識別子 (大文字始まり ``backtick``囲み): **277**
 
-### #1 機械にあるが Doc に書かれていない (276)
+### #1 機械にあるが Doc に書かれていない (275)
 
 - `AppAttestClient`
 - `ConstellationShareCardPage`
@@ -72,7 +72,6 @@
 - `ConsultationRecord`
 - `ConsultationResultScreen`
 - `ConsultationResumeState`
-- `ConsultationReturn`
 - `ConsultationReturnChip`
 - `ConsultationScope`
 - `ConsultationTimeWindowItem`
@@ -259,7 +258,8 @@
 - `_PlanetGlyphPainter`
 - `_PlanetIntroBody`
 - `_PlanetSub`
-- … 残り 76 省略
+- `_PopupBody`
+- … 残り 75 省略
 
 ### #2 Doc に書いてあるがコードに存在しない (ゴースト記述) (77)
 
@@ -459,20 +459,11 @@
 > 各ソースの SHA1 を `_stamps.json` に記録し、差分を検出。
 > 変更されたファイルが属する層は、人手版インベントリ章の見直し対象。
 
-- 追加: **0** / 削除: **0** / 変更: **14**
+- 追加: **0** / 削除: **0** / 変更: **2**
 
 ### 変更されたファイル (層別)
 
-- **層 0**: `worker/src/index.js`, `worker/src/search.js`
-- **層 1b**: `lib/utils/consultation_v2_request.dart`
-- **層 2a**: `lib/utils/consultation_v2_api.dart`
-- **層 2b**: `lib/utils/solara_auth.dart`, `lib/utils/solara_storage.dart`
-- **層 2c**: `lib/utils/consultation_return.dart`
-- **層 3a**: `lib/widgets/no_profile_guide.dart`
-- **層 4a**: `lib/screens/map/map_search.dart`, `lib/screens/map/map_welcome_banner.dart`, `lib/screens/map_screen.dart`
-- **層 4b**: `lib/screens/horoscope/horo_backdrop.dart`
-- **層 4f**: `lib/screens/locations_screen.dart`
-- **層 5**: `lib/main.dart`
+- **層 0**: `worker/src/consultation_v2.js`, `worker/src/fortune.js`
 
 ## #7 astro_glossary 用語辞書対整合
 

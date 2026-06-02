@@ -34,6 +34,7 @@
 | 592 | 🟠 WARN | lib/screens/sanctuary/sanctuary_profile_editor.dart |
 | 581 | 🟠 WARN | lib/widgets/fortune_overlays/love_painter.dart |
 | 579 | 🟠 WARN | lib/screens/consultation/consultation_result_screen.dart |
+| 576 | 🟠 WARN | lib/utils/app_attest_client.dart |
 | 573 | 🟠 WARN | lib/widgets/new_moon_overlay.dart |
 | 562 | 🟠 WARN | lib/screens/consultation/consultation_result_card.dart |
 | 559 | 🟠 WARN | lib/utils/planet_intro.dart |
@@ -42,7 +43,6 @@
 | 535 | 🟠 WARN | lib/utils/astro_lines.dart |
 | 533 | 🟠 WARN | lib/utils/consultation_v2_api.dart |
 | 511 | 🟠 WARN | lib/screens/map/map_astro.dart |
-| 503 | 🟠 WARN | lib/utils/app_attest_client.dart |
 | 500 | 🟠 WARN | lib/utils/solara_auth.dart |
 | 500 | 🟠 WARN | lib/screens/observe/tarot_altar_scene.dart |
 | 499 | 🟡 NOTICE | lib/screens/consultation/consultation_history_widgets.dart |

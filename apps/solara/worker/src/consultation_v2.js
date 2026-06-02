@@ -409,7 +409,10 @@ export async function handleConsultationV2(body, env, deps = {}) {
   try {
     const raw = await callGeminiFn(env.GEMINI_API_KEY, prompt, models, {
       thinkingBudget: 512, // 2026-05-25 1024→512 (コスト半減・品質ほぼ維持)。Free/Pro 同等品質
-      maxOutputTokens: 2048, // 候補1つ + (初回のみ intro/outro/innerSeason)
+      // 🔴 2026-06-02: thinking(512) が maxOutputTokens に算入されるため 2048 だと本文余地が
+      // ~1536。候補1つで通常は収まるが fortune.js と同一構造の MAX_TOKENS 切れリスク。予防的に
+      // 4096 へ拡大 (上限なので実出力分のみ課金=コスト増なし)。
+      maxOutputTokens: 4096, // 候補1つ + (初回のみ intro/outro/innerSeason)
       retries: 1,
     });
     try { parsed = JSON.parse(raw); }

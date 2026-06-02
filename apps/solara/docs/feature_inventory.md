@@ -1364,6 +1364,51 @@ Worker [`consultation_v2.js:78-83`](../worker/src/consultation_v2.js#L78) の既
   サインインお祝いスナックバー + 勧誘バナー D の遷移。
 - **HARD7 ファイル分割** (専用セッション、map_screen 3628 から)。
 
+### 0.2.50 CFログ点検 — grant系 attestation warm-retry + 星読みGemini MAX_TOKENS切れ根治 (2026-06-02)
+
+> CF Workers ログ 3 本 (5/31〜6/2、計 ~3,800 entries) を全件解析し、3 系統の異常を切り分け。
+> コード変更が必要だったのは 2 件 (#1 Flutter / 星読み Worker)。#2 (UNRECOGNIZED_VERSION) と
+> #3 (404 entitlement-get) は**仕様通り**でコード変更不要と確認。
+
+#### ① grant 系 attestation の warm リトライ — 層 2a + 層 2b (Flutter)
+- **症状**: `welcome-grant` / `migrate-purchased` が cold/stale warmup 時に attestation ヘッダ無しで
+  送信され Worker が `missing_attestation_headers` を log_only warn (= enforced 化の would_block≠0
+  ブロッカー + 将来 enforced 時の farming 穴)。原因は `addHeaders` の 8s degrade (コールド対策の副作用)。
+- `app_attest_client.dart`: `addHeadersWithWarmRetry` (degrade 検知→**本送信の前に** warmup 完了を
+  最大 12s 待ってヘッダ付け直し→送信は 1 回のみ) / `ensureWarm` / 静的 `hasAttestationHeader` /
+  純ロジック top-level `warmRetryAttach` (プラットフォーム非依存・テスト可能) を追加。
+- `consultation_api.dart`: `grantWelcomeCredits` / `migratePurchasedCredits` を warm-retry 経由に変更。
+  両 endpoint は Worker 側冪等なので二重付与無し。credits 等 latency-sensitive な read は 8s degrade 維持
+  (UX 優先・オーナー方針)。
+- 新規 `test/app_attest_client_warm_retry_test.dart` 9 件 (warmRetryAttach 全 4 分岐 + bypass 安全動作)。
+- 反映 = 次の AAB ビルド (Worker 変更なし)。
+
+#### ② 星読み (fortune) Gemini MAX_TOKENS 切れ根治 — 層 0 (Worker)
+- **症状**: `/protected/fortune` が 5/31〜6/1 のログで 500×5 (`Gemini MAX_TOKENS: output truncated`
+  → non-JSON)。原因は `fortune.js` が `thinkingBudget:512` を渡すのに `maxOutputTokens` 未指定
+  (= default 2048)。thinking が maxOutputTokens に算入され本文余地が ~1536 しか残らず、長めの星読みで
+  切れていた。**tarot.js が 2026-05-26 に直したのと同一バグ**が fortune に残存。リトライ 2 回で同じ
+  MAX_TOKENS を繰り返し wall 52-62s まで粘って失敗 = レイテンシ/コストも浪費。
+- `fortune.js`: `maxOutputTokens: 4096` 明示。`consultation_v2.js`: `2048→4096` (同一構造の予防。
+  候補1つで通常収まるが latent risk)。maxOutputTokens は**上限**で Gemini は実出力分のみ課金 =
+  コスト増なし (むしろ無駄リトライ消滅で減)。worker test 42 件 green。
+- 反映 = `wrangler deploy` (Worker のみ・AAB 不要)。
+
+#### ③ コード変更不要だった 2 件 (記録)
+- **UNRECOGNIZED_VERSION** (Play Integrity): サイドロード (Play 経由以外の install) の検証ビルド由来。
+  `play_integrity_design.md` Q4 で「PLAY_RECOGNIZED 必須 = サイドロード排除」と確定済の意図的仕様。
+  Worker の拒否ロジック正常。**enforced 化前の実機検証は必ず Play Internal Testing 経由で install** すること
+  (adb / `flutter run` だとオーナー自身のテストが 401 になる)。
+- **404 entitlement-get**: DO の「Pro 記録なし = 無料ユーザー」の正常規約。`lookupIsPro` が 404 を
+  Free と正しく解釈 (購読した瞬間 200 化を log で実証)。バグではない。
+- (参考) ボットスキャナ (PHP webshell / `.env` / `.git` 総当たり) は Worker が 404/429 で全撃退・
+  正規アプリ通信への影響ゼロ・シークレット漏洩ゼロ。防御は健全。
+
+#### 検証
+- flutter analyze クリーン / Flutter test 33 件 green (warm-retry 9 + 関連 24) / worker test 42 件 green。
+- extract.py stamp diff `+0 -0 ~4` (Flutter 2 + Worker 2)。coverage #3 エンドポイント増減なし・対整合維持。
+- audit.py: **HARD 7 (新規ゼロ)**。app_attest_client.dart 503→576 (WARN 据置)。未使用候補 新規ゼロ。
+
 ### 0.3 Horo「今日の占い」1 日 1 回固定 + プロンプト刷新 (2026-05-27)
 
 > **設計の柱**: 「30 回までは OK」のような曖昧な防衛をやめ、「**1 日 1 回・変更しない**」を

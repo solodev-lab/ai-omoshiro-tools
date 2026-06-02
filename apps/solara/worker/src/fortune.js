@@ -416,6 +416,12 @@ export async function handleFortune(body, env, deps = {}) {
   const prompt = buildPrompt({ category, lang, natal, planetHouses, aspects, transitAspects, progressedAspects, patterns, date, userName });
   const raw = await callGemini(env.GEMINI_API_KEY, prompt, models, {
     thinkingBudget: thinking ? 512 : null, // 2026-05-25 1024→512 (コスト半減・品質ほぼ維持)
+    // 🔴 2026-06-02: thinking(512) は maxOutputTokens に算入されるため default 2048 だと
+    // 本文余地が ~1536 しか残らず、長めの星読みで MAX_TOKENS 切れ→non-JSON→500 になっていた
+    // (CFログ実害: 5/31 16:25-16:29 に星読み 500×2 + リトライで wall 52-62s)。tarot.js が
+    // 2026-05-26 に踏んだのと同一バグ。4096 へ拡大 (上限なので実出力分のみ課金=コスト増なし、
+    // むしろ無駄リトライ消滅で減)。
+    maxOutputTokens: 4096,
   });
 
   // 4. JSON抽出 (Geminiは基本JSON返すが念のためfallback)

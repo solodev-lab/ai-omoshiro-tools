@@ -446,7 +446,7 @@ Soft (trine/sextile) と Hard (square) は独立 2 エネルギー。total/吉�
 **export (2):** `runConsultationPipeline`, `_internal`
 
 
-### `worker/src/consultation_v2.js` (456 行)
+### `worker/src/consultation_v2.js` (459 行)
 
 **ファイル先頭コメント:**
 
@@ -508,7 +508,7 @@ astronomy-engine API:
 **export (1):** `computeDailyTransits`
 
 
-### `worker/src/fortune.js` (446 行)
+### `worker/src/fortune.js` (452 行)
 
 **ファイル先頭コメント:**
 
