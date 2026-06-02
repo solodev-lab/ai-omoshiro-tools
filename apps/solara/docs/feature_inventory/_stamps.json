@@ -125,7 +125,7 @@
   "lib/theme/solara_colors.dart": "bd5814fd788fa3614dfa55d5ceb4f7bccfa76b5c",
   "lib/theme/solara_theme.dart": "596cf63264e2973e8163a422670584a441f11cf9",
   "lib/utils/ai_report_api.dart": "533ceb6c199dbba9ca4bd4e3c05d0e64aca6e9c1",
-  "lib/utils/app_attest_client.dart": "8eec92033cd22d48b42ed062b9d50f22527d2faf",
+  "lib/utils/app_attest_client.dart": "df1a9df246e7c5fce99c063c4931a563076195a8",
   "lib/utils/app_locale.dart": "cb10a55d0349105a17510a45f5b0c2e7ff8da774",
   "lib/utils/astro_glossary.dart": "800c1df90f0deddd09f4fd98e80c0566d6823b80",
   "lib/utils/astro_houses.dart": "b022185eb2f75ac40a8dd5ddd9f843166f647063",

@@ -247,7 +247,20 @@ class AppAttestClient {
     // 未完了のまま走り、ヘッダー欠落 → Worker で missing_attestation_headers に
     // なる (2026-05-21 TestFlight log_only で判明)。memoize 済みなので 2 回目以降は
     // 即 return。
-    await initialize();
+    // 🔴 2026-06-02: コールド起動時の warmup (_initializeAndroid →
+    // androidPrepareIntegrityServer) は端末が冷えていると数十秒〜2分かかる。ここを
+    // time-box せず await すると、challenge/verify が 8s キャップ済みでも addHeaders 全体が
+    // initialize で詰まり、fetchFortune 等の 60s タイムアウトを食い潰して「Stella の声が
+    // 届きませんでした。仮テキストを表示中」になる (c912622 の 8s キャップは challenge/verify
+    // のみで initialize が未キャップだった穴。+27 でも再発、A101FC 実機 + worker tail で
+    // 200 が 60s 超過後に届くのを実証)。→ warmup も _kAttestStepTimeout で打ち切り、間に
+    // 合わなければヘッダ無しで続行 (log_only で通過 / verify 側 8s キャップとも整合)。
+    // initialize() の Future は memoize 済みなので裏で warmup を継続し、次回以降は warm。
+    try {
+      await initialize().timeout(_kAttestStepTimeout);
+    } catch (_) {
+      // warmup が時間内に終わらない → degrade (ヘッダ無し or verify 側 cap で続行)。
+    }
     if (_isBypassed) return;
     if (_isIosPath) {
       await _addIosHeaders(headers, payloadBytes);
