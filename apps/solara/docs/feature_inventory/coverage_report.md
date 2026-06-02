@@ -461,12 +461,9 @@
 > 各ソースの SHA1 を `_stamps.json` に記録し、差分を検出。
 > 変更されたファイルが属する層は、人手版インベントリ章の見直し対象。
 
-- 追加: **0** / 削除: **0** / 変更: **3**
+- 追加: **0** / 削除: **0** / 変更: **0**
 
-### 変更されたファイル (層別)
-
-- **層 4b**: `lib/screens/horoscope/horo_fortune_cards.dart`
-- **層 4c**: `lib/screens/observe/observe_constants.dart`, `lib/screens/observe_screen.dart`
+- 変更なし — 全インベントリ章は最新。
 
 ## #7 astro_glossary 用語辞書対整合
 
