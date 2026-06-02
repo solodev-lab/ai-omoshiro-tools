@@ -364,7 +364,7 @@ RC 公式ホスト (固定)。
 **export (4):** `_setFetchForTest`, `_resetRcRestCacheForTest`, `reverifyEntitlementViaRC`, `deleteSubscriberViaRC`
 
 
-### `worker/src/consultation.js` (330 行)
+### `worker/src/consultation.js` (332 行)
 
 **ファイル先頭コメント:**
 

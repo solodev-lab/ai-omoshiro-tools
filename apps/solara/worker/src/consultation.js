@@ -295,7 +295,9 @@ export async function handleConsultation(body, env) {
   let parsed;
   try {
     const raw = await callGemini(env.GEMINI_API_KEY, prompt, models, {
-      thinkingBudget: 512, // 2026-05-25 1024→512 (コスト半減・品質ほぼ維持)。Free/Pro 同等品質
+      // 🔴 2026-06-02: 旧相談V1 (Flutter は V2 へ移行済・後方互換で温存)。V2 と同じく
+      // ナレーションのみ=thinking 不要と実測で確定 → thinkingBudget:0 (コスト40%減・品質同等)。
+      thinkingBudget: 0,
       maxOutputTokens: 4096, // 3 候補 × 500 字 + intro/outro でやや余裕
       retries: 1,
     });

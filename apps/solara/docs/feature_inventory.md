@@ -1426,8 +1426,10 @@ Worker [`consultation_v2.js:78-83`](../worker/src/consultation_v2.js#L78) の既
   `body.thinking` は API 互換で受けるが参照しない (fortune は思考で品質が上がらないため)。¥1.64→¥0.17 (約1/9) + 500根絶。
 - `fortune.js` / `tarot.js` の `callGemini` **default を `null`→`0`** に。指定漏れ呼出 (`relocation.js` /
   `line_narrative.js`) も自動で thinking OFF 化 = 同型の暴走を根絶 (relocation は narrative なので 0 が妥当)。
-- **`consultation_v2.js` / `consultation.js` は `thinkingBudget: 512` 維持** (候補地選定+エビデンス構築の
-  複雑推論で thinking が効く想定。「効くところだけ思考」方針)。
+- **`consultation_v2.js` / `consultation.js` も `thinkingBudget: 0`** (当初 512 維持と判断したが、
+  追加実測で覆った)。相談も「決定論的エンジン runConsultationPipeline が選んだ候補地のナレーション」で
+  Gemini は推論しない。512 vs 0 を 5テーマ厳密比較 → **全件 STOP/JSON妥当・品質同等 (0 の方が簡潔)・40%減
+  (¥0.48→¥0.29)**。結論: **Solara の Gemini 経路は全て narration で thinking 不要 → 全経路 0**。
 - maxOutputTokens 4096 (§0.2.50) は安全網として残置 (thinking:0 なので実害 ~300tok で STOP、課金は実出力分のみ=増えない)。
 
 #### コスト影響 (オーナーの「47円は多い/ユーザー増でやばい」への回答)
