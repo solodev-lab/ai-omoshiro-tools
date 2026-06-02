@@ -276,12 +276,15 @@ Solara のバックエンドは **Cloudflare Workers** で稼働。本番 URL: `
 #### 0.2.19 候補選定リデザイン Phase B: D1 グローバル都市プール + おでかけ実在の町 (2026-05-29)
 
 > **位置づけ**: §0.2.18 (Phase A) の続き。旧キュレート 762 都市 (`world_cities.js`) を
-> **Cloudflare D1 のグローバル都市プール (GeoNames cities1000, 約 169,000 件)** に置換し、
+> **Cloudflare D1 のグローバル都市プール (GeoNames ベース)** に置換し、
 > おでかけを「合成16方位」から **実在の町** に切り替える。Worker のみ (Flutter は Phase C)。
 > **安全機構**: D1 binding (`env.DB`) が無い間は engine が従来 `worldCities`(762) に自動フォールバック
 > するので、worker を先に deploy しても挙動は不変 (= v+17 クライアントに無影響)。owner が
 > wrangler で D1 を有効化 + redeploy した瞬間に おでかけ が実在の町へ切り替わる (Phase C 配信と同期させる)。
 
+- 🔴 **現行 D1 実測 (2026-06-02 照会)**: `cities` テーブル **488,270 行 / 246 の国・地域 = 全世界**。
+  区・特別区など細粒度も `tools/seed_d1_subdivisions.py` で追加投入済。設計時の「約169,000 (cities1000)」は旧推定で
+  実体はより多い。照会: `npx wrangler d1 execute solara-cities --command "SELECT COUNT(*) AS n FROM cities" --remote`。
 - **seed**: `tools/seed_d1_cities.py` が GeoNames cities1000.zip + admin1CodesASCII を DL→パースし、
   `worker/migrations/0001_cities.sql` (スキーマ: lat/lng・(country,population)・population の 3 index) と
   `_geonames_cache/cities_data.sql` (約 12MB, gitignore, `wrangler d1 import` 用) を生成。
@@ -1258,7 +1261,7 @@ Worker [`consultation_v2.js:78-83`](../worker/src/consultation_v2.js#L78) の既
 > コードレイヤ変更なし (extract `+0 -0 ~0`)。アセット/設定/ストア素材のみ。新規 HARD ゼロ。
 
 #### アプリアイコン (launcher)
-- 原画 `mockup/share-assets/menu-icons/v2/unsealed.png` (1024 黒背景の8芒星メダル)。
+- 原画 `mockup/share-assets/menu-icons/v2/unsealed.png` (1024 黒背景の9芒星メダル)。
 - `tools/make_app_icon.py` (新規) が `assets/app_icon.png` (フル・iOS/Androidレガシー用) と
   `assets/app_icon_foreground.png` (紋章を 66% = 円マスク径72dp相当に縮小・透明・アダプティブ前景用) を生成。
 - `pubspec.yaml` `flutter_launcher_icons`: image_path/foreground を新アセットへ、adaptive 背景 `#080C14`→`#000000`、`remove_alpha_ios:true` 追加。`dart run flutter_launcher_icons` で全解像度再生成。
@@ -1274,6 +1277,27 @@ Worker [`consultation_v2.js:78-83`](../worker/src/consultation_v2.js#L78) の既
 - flutter analyze: lib/ クリーン (既存 test 2 件のみ) / AAB +27 ビルド成功 (112.7MB, dart-define 全注入)。
 - audit.py **HARD 7 (新規ゼロ・行数増は §0.2.46 由来) / WARN 30 / 重複 20 (全て `),`) / 未使用候補 0**。
   find_unused_code.py の 2 候補 (`GalaxyArchiveSortLabel.jp` / `DominantFortuneKindToCategoryIcon.toCategoryIcon`) は両方 extension で使用中 = 誤検出。
+
+### 0.2.48 星読みコールド仮表示 根治 + ストアスクショ一式 + AAB +28 (2026-06-02)
+
+> コードは層 2a/認証 1 ファイルのみ (`app_attest_client.dart`)。他はアセット/ツール/ドキュメント。
+
+#### 🐛 コールド起動時の AI 仮表示 根治 (commit `1eb86fa`)
+- 症状: コールド起動直後の星読み/タロット/Stella が「Stella の声が届きませんでした。仮テキストを表示中」(`horo_fortune_cards._errorBanner`)。
+- 真因: `addHeaders` が `await initialize()` (`androidPrepareIntegrityServer` warmup・冷時数十秒〜2分) を**未 time-box** で待つ → challenge/verify が 8s キャップ済みでも addHeaders 全体が initialize で詰まり、`fetchFortune` の 60s タイムアウトを食い潰す。c912622 の 8s キャップは challenge/verify のみで initialize が穴だった。+27 でも再発 (A101FC 実機 + `wrangler tail` で 200 が 60s 超過後に届くのを実証)。Gemini/課金/サーバは正常。
+- 修正: `await initialize().timeout(_kAttestStepTimeout)` + try/catch。間に合わなければ degrade (ヘッダ無しで続行・log_only 通過 / verify 側 8s キャップと整合)。warmup は memoize で裏継続し次回 warm。
+- version `1.0.0+27 → +28`。
+
+#### ストア用スマホスクショ 11 枚 + 生成ツール (commit `f3cb781`〜`ec7d7d4`)
+- `tools/make_store_screenshots.py` (新規・PIL): 実機 720×1520 adb キャプチャ → 1080×1920 装飾 (游明朝/金縁/9芒星紋章/SOLARA + 見出し+サブ見出し+数値オーバーレイ)。`docs/store_compliance_assets/phone_screenshots/` に 11 枚。raw (個人データ) は `.gitignore`。SCREENS リスト順で自動採番=並べ替え容易。手順は memory `reference_solara_store_screenshots.md`。
+- Play8 = Map / ACG+CCG(2枚配置) / Locations / 検索エネルギー / Stella相談(入力+結果の2画面+解析説明+数値) / ホロ / サイクル / ヒートマップ。
+- 掲示数値はすべて実コード/D1 実測: 16方位 / 最大120本ライン / 12ハウス / 8アスペクト種 / **246 国・地域** / **488,270 都市** / 1,500 地点採点 / Pro 週100回 / 最大5年先。
+
+#### 検証
+- audit.py **HARD 7 (新規ゼロ) / WARN 31 / NOTICE 45 / 重複 20 (全て `),` 等 構造的) / TODO 4 / print 1 / 未使用候補 0**。
+- find_unused_code.py の 2 候補 (`GalaxyArchiveSortLabel.jp` / `DominantFortuneKindToCategoryIcon.toCategoryIcon`) は両方 extension 実使用 (grep 裏取り) = 誤検出 = **削除対象ゼロ**。
+- flutter analyze クリーン / extract `+0 -0 ~0`。
+- 都市データ正典訂正: D1 `solara-cities` 実測 **488,270 行 / 246 国・地域** (§0.2.19 の旧見積「約169,000」を本セッションで更新)。`world_cities.js`(762) はフォールバック。
 
 ### 0.3 Horo「今日の占い」1 日 1 回固定 + プロンプト刷新 (2026-05-27)
 

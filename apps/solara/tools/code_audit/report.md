@@ -42,11 +42,11 @@
 | 514 | 🟠 WARN | lib/main.dart |
 | 511 | 🟠 WARN | lib/screens/map/map_astro.dart |
 | 510 | 🟠 WARN | lib/utils/consultation_v2_api.dart |
+| 503 | 🟠 WARN | lib/utils/app_attest_client.dart |
 | 500 | 🟠 WARN | lib/screens/observe/tarot_altar_scene.dart |
 | 499 | 🟡 NOTICE | lib/screens/consultation/consultation_history_widgets.dart |
 | 498 | 🟡 NOTICE | lib/widgets/fortune_overlays/healing_painter.dart |
 | 495 | 🟡 NOTICE | lib/screens/map/map_time_slider.dart |
-| 490 | 🟡 NOTICE | lib/utils/app_attest_client.dart |
 | 487 | 🟡 NOTICE | lib/screens/map/map_overlays.dart |
 | 486 | 🟡 NOTICE | lib/utils/solara_auth.dart |
 | 481 | 🟡 NOTICE | lib/widgets/full_moon_overlay.dart |
@@ -330,4 +330,4 @@
 
 ---
 
-総計: 行数 HARD 7 / WARN 30 / NOTICE 46 / 重複 20 / TODO 4 / print 1 / 未使用候補 0
+総計: 行数 HARD 7 / WARN 31 / NOTICE 45 / 重複 20 / TODO 4 / print 1 / 未使用候補 0
