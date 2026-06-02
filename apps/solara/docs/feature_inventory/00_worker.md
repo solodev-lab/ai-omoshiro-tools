@@ -508,7 +508,7 @@ astronomy-engine API:
 **export (1):** `computeDailyTransits`
 
 
-### `worker/src/fortune.js` (452 行)
+### `worker/src/fortune.js` (458 行)
 
 **ファイル先頭コメント:**
 
@@ -528,11 +528,11 @@ GEMINI_API_KEY は wrangler secret put GEMINI_API_KEY で設定
 
 **Gemini API 呼出 (1):**
 
-- L106: `generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;`
+- L109: `generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;`
 
 **Durable Object 使用 (4 行):**
 
-- 出現行: L336, L338, L338, L338
+- 出現行: L339, L341, L341, L341
 
 **export (4):** `computeCategoryScore`, `callGemini`, `stripTransitLabel`, `handleFortune`
 
@@ -711,7 +711,7 @@ Stella相談 / Horo星読み / タロット の日本語プロンプトに共通
 **export (1):** `STYLE_VOICE_JP`
 
 
-### `worker/src/tarot.js` (293 行)
+### `worker/src/tarot.js` (298 行)
 
 **ファイル先頭コメント:**
 
@@ -731,7 +731,7 @@ GEMINI_API_KEY は wrangler secret put GEMINI_API_KEY で設定済み
 
 **Gemini API 呼出 (1):**
 
-- L64: `generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;`
+- L66: `generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;`
 
 **export (1):** `handleTarot`
 

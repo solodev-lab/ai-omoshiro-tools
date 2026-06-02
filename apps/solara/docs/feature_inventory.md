@@ -1409,6 +1409,36 @@ Worker [`consultation_v2.js:78-83`](../worker/src/consultation_v2.js#L78) の既
 - extract.py stamp diff `+0 -0 ~4` (Flutter 2 + Worker 2)。coverage #3 エンドポイント増減なし・対整合維持。
 - audit.py: **HARD 7 (新規ゼロ)**。app_attest_client.dart 503→576 (WARN 据置)。未使用候補 新規ゼロ。
 
+### 0.2.51 Gemini thinking暴走 (thinkingBudget:null) 根治 — コスト約1/9 + 星読み500の真因 (2026-06-02 夜)
+
+> §0.2.50 の maxOutputTokens 4096 は**部分修正**だった。usageMetadata を直接実測した結果、
+> 星読み500とコスト高騰の**真因は `thinkingBudget: thinking ? 512 : null` の `null`** と判明。
+
+#### 実測 (gemini-2.5-flash・本物プロンプト・usageMetadata 直接計測)
+- **`thinkingBudget: null` は thinking OFF ではない**。Gemini 2.5 Flash の**動的(default)thinkingが暴走** (実測 ~3,900 思考トークン)。
+- 結果、**無料星読み 1回 ¥1.64 = Pro(thinking 512)の 4.8倍**。しかも 3,900tok が maxOutputTokens を突破し
+  **MAX_TOKENS→non-JSON→500** (= CFログの星読み500の正体。max 4096 でも null は再truncを実測 = §0.2.50 では塞ぎ切れていなかった)。
+- 品質比較: Pro(512) ≈ Free(0)、むしろ Free(0) がハウス/プログレスまで網羅する回もあり**差なし**。
+  thinkingBudget=0 を 6回 (カテゴリ変えて) 実測 = **6/6 STOP・JSON妥当・適切長・平均 ¥0.172**。
+
+#### 修正
+- `fortune.js` / `tarot.js`: callGemini 呼出を **`thinkingBudget: 0`** (Free/Pro 問わず真に OFF)。
+  `body.thinking` は API 互換で受けるが参照しない (fortune は思考で品質が上がらないため)。¥1.64→¥0.17 (約1/9) + 500根絶。
+- `fortune.js` / `tarot.js` の `callGemini` **default を `null`→`0`** に。指定漏れ呼出 (`relocation.js` /
+  `line_narrative.js`) も自動で thinking OFF 化 = 同型の暴走を根絶 (relocation は narrative なので 0 が妥当)。
+- **`consultation_v2.js` / `consultation.js` は `thinkingBudget: 512` 維持** (候補地選定+エビデンス構築の
+  複雑推論で thinking が効く想定。「効くところだけ思考」方針)。
+- maxOutputTokens 4096 (§0.2.50) は安全網として残置 (thinking:0 なので実害 ~300tok で STOP、課金は実出力分のみ=増えない)。
+
+#### コスト影響 (オーナーの「47円は多い/ユーザー増でやばい」への回答)
+- 6/1 課金は全テキスト Gemini (画像生成なし確認済)。大多数の無料ユーザーが**一番高い暴走パス**を通っていた。
+- 本修正で無料 fortune/tarot が約 1/9。星読みは 1日1回キャッシュ + 相談/タロットはクレジット制で**1ユーザーあたり上限**があり、
+  スケール時のテキストコストは bounded。青天井の主費目は画像生成 (別管理) のまま。
+
+#### 検証
+- worker test 42 件 green / `node --check` fortune・tarot OK / extract `~N` (worker 2 ファイル) / 実測 2 系統 (トークン内訳 + 安定性6回)。
+- 反映 = `wrangler deploy` (Worker のみ)。Flutter 変更なし。
+
 ### 0.3 Horo「今日の占い」1 日 1 回固定 + プロンプト刷新 (2026-05-27)
 
 > **設計の柱**: 「30 回までは OK」のような曖昧な防衛をやめ、「**1 日 1 回・変更しない**」を

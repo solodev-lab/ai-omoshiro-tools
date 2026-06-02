@@ -95,7 +95,10 @@ export function computeCategoryScore(category, aspects) {
 export async function callGemini(apiKey, prompt, models, opts = {}) {
   const {
     retries = 2,
-    thinkingBudget = null,
+    // 🔴 2026-06-02 実測: default を null から 0 に変更。null は thinking「OFF」ではなく
+    // Gemini 2.5 Flash の動的thinkingが暴走 (~3900tok) しコスト9倍+MAX_TOKENS切れの原因。
+    // 0 = 真に thinking OFF。thinking が要る呼出元は明示的に budget を渡す (consultation 等)。
+    thinkingBudget = 0,
     maxOutputTokens = 2048,
     temperature = 0.9,
   } = opts;
@@ -414,13 +417,16 @@ export async function handleFortune(body, env, deps = {}) {
   const models = primary === fallback ? [primary] : [primary, fallback];
 
   const prompt = buildPrompt({ category, lang, natal, planetHouses, aspects, transitAspects, progressedAspects, patterns, date, userName });
+  // 🔴 2026-06-02 実測で確定 (usageMetadata 直接計測):
+  //   旧 `thinking ? 512 : null` の null は OFF ではなく Gemini 2.5 Flash の動的thinkingが
+  //   暴走 (~3900tok)。無料星読みが ¥1.6/回 (Pro 512 の 4.8倍) + maxOutputTokens 突破で
+  //   MAX_TOKENS→non-JSON→500 (これが CFログの星読み500の正体)。
+  //   fortune は思考の有無で品質差が出ない (Pro512 ≈ Free0、6回 STOP/JSON妥当を実測) ため
+  //   Free/Pro 問わず thinkingBudget:0 (真に OFF)。¥1.6→¥0.17 (約1/9) + 500根絶。
+  //   ※ body.thinking は API 互換のため受け取るが、品質差が無いので fortune では参照しない。
+  //   maxOutputTokens:4096 は安全網 (thinking:0 なので実際は答え ~300tok で STOP、課金は実出力分のみ)。
   const raw = await callGemini(env.GEMINI_API_KEY, prompt, models, {
-    thinkingBudget: thinking ? 512 : null, // 2026-05-25 1024→512 (コスト半減・品質ほぼ維持)
-    // 🔴 2026-06-02: thinking(512) は maxOutputTokens に算入されるため default 2048 だと
-    // 本文余地が ~1536 しか残らず、長めの星読みで MAX_TOKENS 切れ→non-JSON→500 になっていた
-    // (CFログ実害: 5/31 16:25-16:29 に星読み 500×2 + リトライで wall 52-62s)。tarot.js が
-    // 2026-05-26 に踏んだのと同一バグ。4096 へ拡大 (上限なので実出力分のみ課金=コスト増なし、
-    // むしろ無駄リトライ消滅で減)。
+    thinkingBudget: 0,
     maxOutputTokens: 4096,
   });
 

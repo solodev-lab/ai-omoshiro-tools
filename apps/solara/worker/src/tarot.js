@@ -56,7 +56,9 @@ function moonPhaseLabel(p, lang) {
 // ── Gemini API 呼び出し ──
 // models: 試行順の配列。先頭が PRIMARY、それ以降が FALLBACK チェーン。
 // 廃止モデル(404)・ overload(503/429) ・ tx エラーいずれも次のモデルへ自動フォールバック。
-async function callGemini(apiKey, prompt, models, { retries = 2, thinkingBudget = null } = {}) {
+// 🔴 2026-06-02: thinkingBudget default を null→0 に。null は thinking OFF ではなく
+// Gemini 2.5 Flash の動的thinking暴走 (~3900tok=コスト9倍+MAX_TOKENS切れ) の原因 (fortune で実測)。
+async function callGemini(apiKey, prompt, models, { retries = 2, thinkingBudget = 0 } = {}) {
   let lastErr;
   for (const model of models) {
     for (let attempt = 0; attempt <= retries; attempt++) {
@@ -269,8 +271,11 @@ export async function handleTarot(body, env) {
   const models = primary === fallback ? [primary] : [primary, fallback];
 
   const prompt = buildPrompt({ cardId, reversed, nameJP, nameEN, keyword, element, planet, moonPhase, userName, lang, question, category });
+  // 🔴 2026-06-02: fortune と同じ理由で Free/Pro 問わず thinkingBudget:0 (真に OFF)。
+  // 旧 `thinking ? 512 : null` の null は無料で動的thinking暴走→コスト9倍+MAX_TOKENS切れ。
+  // ※ body.thinking は API 互換のため残すが参照しない。
   const raw = await callGemini(env.GEMINI_API_KEY, prompt, models, {
-    thinkingBudget: thinking ? 512 : null, // 2026-05-25 1024→512 (コスト半減・品質ほぼ維持)
+    thinkingBudget: 0,
   });
 
   let parsed;

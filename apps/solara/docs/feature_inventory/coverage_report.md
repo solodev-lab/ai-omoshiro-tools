@@ -463,7 +463,7 @@
 
 ### 変更されたファイル (層別)
 
-- **層 0**: `worker/src/consultation_v2.js`, `worker/src/fortune.js`
+- **層 0**: `worker/src/fortune.js`, `worker/src/tarot.js`
 
 ## #7 astro_glossary 用語辞書対整合
 
