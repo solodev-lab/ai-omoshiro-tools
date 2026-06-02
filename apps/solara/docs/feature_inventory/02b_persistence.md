@@ -5,16 +5,16 @@
 
 ## サマリ
 
-- ファイル数: 9 / 総行数: 2834
+- ファイル数: 9 / 総行数: 2907
 - class/mixin/extension/enum: 15
-- 関数 (top-level + method の素拾い): 136
+- 関数 (top-level + method の素拾い): 140
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 0
 - Worker URL リテラル: 0
 
 ## ファイル別
 
-### `lib/utils/app_attest_client.dart` (503 行)
+### `lib/utils/app_attest_client.dart` (576 行)
 
 **ファイル先頭コメント:**
 
@@ -50,31 +50,35 @@ Worker 側仕様: apps/solara/worker/src/index.js
 
 **型定義 (1):**
 
-- L65 `class AppAttestClient`
+- L85 `class AppAttestClient`
   - AppAttestClient シングルトン。
 
-**関数 (10 public + 7 private):**
+**関数 (14 public + 7 private):**
 
-- L124 `initialize()` — 起動時 1 回だけ呼ぶ (main.dart で unawaited)。
-- L243 `addHeaders()`
-- L406 `withAppUserIdMerged()` — 呼び出し側で body Map を構築している場合に使う公開 helper。
-- L411 `postProtected()` — `/protected/*` への POST を attestation header 付きで送る wrapper。
-- L430 `reattestOnFailure()` — 401 で middleware に弾かれた時のリトライ用。
-- L456 `debugPayloadSha256()` — payload bytes の SHA-256 (debug 用、Worker 側計算値との一致確認に使う)。
-- L471 `addAndroidHeadersForTest()`
-- L477 `addIosHeadersForTest()`
-- L489 `initializeAndroidForTest()`
-- L493 `resetForTest()`
+- L50 `warmRetryAttach()` — degrade(ヘッダ無し)後の warm リトライの純ロジック (プラットフォーム非依存・テスト可能)。
+- L144 `initialize()` — 起動時 1 回だけ呼ぶ (main.dart で unawaited)。
+- L263 `addHeaders()`
+- L309 `addHeadersWithWarmRetry()` — 冪等な書き込み系 (welcome-grant / migrate-purchased) 専用の header 注入。
+- L329 `ensureWarm()` — warmup (initialize) の完了を [wait] 上限で待ち、attestation が有効
+- L341 `hasAttestationHeader()` — headers に attestation ヘッダ (iOS App Attest / Android Play Integrity いずれか)
+- L479 `withAppUserIdMerged()` — 呼び出し側で body Map を構築している場合に使う公開 helper。
+- L484 `postProtected()` — `/protected/*` への POST を attestation header 付きで送る wrapper。
+- L503 `reattestOnFailure()` — 401 で middleware に弾かれた時のリトライ用。
+- L529 `debugPayloadSha256()` — payload bytes の SHA-256 (debug 用、Worker 側計算値との一致確認に使う)。
+- L544 `addAndroidHeadersForTest()`
+- L550 `addIosHeadersForTest()`
+- L562 `initializeAndroidForTest()`
+- L566 `resetForTest()`
 
   <details><summary>private 関数 7 件</summary>
 
-  - L126 `_doInitialize()`
-  - L143 `_initializeIos()`
-  - L161 `_attestNewKey()`
-  - L201 `_initializeAndroid()`
-  - L282 `_addIosHeaders()`
-  - L333 `_addAndroidHeaders()`
-  - L391 `_withAppUserId()`
+  - L146 `_doInitialize()`
+  - L163 `_initializeIos()`
+  - L181 `_attestNewKey()`
+  - L221 `_initializeAndroid()`
+  - L355 `_addIosHeaders()`
+  - L406 `_addAndroidHeaders()`
+  - L464 `_withAppUserId()`
 
   </details>
 

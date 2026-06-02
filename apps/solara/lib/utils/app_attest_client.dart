@@ -36,6 +36,26 @@ import 'solara_api.dart';
 
 const String _kPrefsKeyId = 'solara_appattest_key_id_v1';
 
+/// degrade(ヘッダ無し)後の warm リトライの純ロジック (プラットフォーム非依存・テスト可能)。
+///
+/// - [attach]: ヘッダ注入を 1 回行い、attestation ヘッダが付いたかを返す。
+/// - [warmUp]: warmup 完了を待ち、リトライする価値があるか (warm かつ非 bypass) を返す。
+///
+/// 流れ: attach() が付けば即 true。付かず (degrade) かつ warmUp()==true のときだけ
+/// attach() をもう 1 回 (= 最大 2 回)。2 回目の結果を返す。warmUp()==false (bypass /
+/// 間に合わず) なら 1 回で諦めて false。
+///
+/// `AppAttestClient.addHeadersWithWarmRetry` の中核。flutter test は host で動き
+/// 実機 attestation を模せないため、本関数を fake で直接テストして orchestration を担保する。
+Future<bool> warmRetryAttach({
+  required Future<bool> Function() attach,
+  required Future<bool> Function() warmUp,
+}) async {
+  if (await attach()) return true;
+  if (!await warmUp()) return false;
+  return attach();
+}
+
 /// Cloud Project Number — Play Console > Solara > アプリの完全性 > Play Integrity API
 /// にリンクした Cloud project の 12 桁数字。release ビルド時に
 /// `--dart-define=SOLARA_GCP_PROJECT_NUMBER=...` で注入する (public 情報、secret 不要)。
@@ -268,6 +288,59 @@ class AppAttestClient {
       await _addAndroidHeaders(headers, payloadBytes);
     }
   }
+
+  /// 冪等な書き込み系 (welcome-grant / migrate-purchased) 専用の header 注入。
+  ///
+  /// 🔴 2026-06-02: CF log 解析で missing_attestation_headers の warn が
+  /// grant 系で発生していた (= cold/stale warmup → `addHeaders` の 8s degrade で
+  /// ヘッダ無し送信)。log_only では通過するが enforced 化のブロッカー (would_block≠0)
+  /// + 将来 enforced 時の farming 穴になる。
+  ///
+  /// 対策: 通常の [addHeaders] を試し、**degrade (ヘッダ無し) を検知したら本送信の前に**
+  /// warmup 完了 ([warmupWait] 上限) を待って 1 回だけ付け直す。これにより:
+  ///   - log_only でも header-less な本リクエストを出さない (= warn を出さない)
+  ///   - 送信は呼出側が 1 回だけ (degrade 送信と attested 送信を二重に出さない)
+  /// warmup が間に合わない / bypass のときは degrade のまま (= 現状の挙動、log_only 通過)。
+  ///
+  /// grant 系以外 (latency-sensitive な read/相談) には使わない。これらは UX 優先で
+  /// 8s degrade を許容する ([addHeaders] をそのまま使う)。
+  ///
+  /// 戻り値: 最終的に attestation ヘッダが付いたか。
+  Future<bool> addHeadersWithWarmRetry(
+    Map<String, String> headers,
+    List<int> payloadBytes, {
+    Duration warmupWait = const Duration(seconds: 12),
+  }) {
+    return warmRetryAttach(
+      attach: () async {
+        await addHeaders(headers, payloadBytes);
+        return hasAttestationHeader(headers);
+      },
+      warmUp: () => ensureWarm(warmupWait),
+    );
+  }
+
+  /// warmup (initialize) の完了を [wait] 上限で待ち、attestation が有効
+  /// (= 非 bypass) になったかを返す。
+  ///
+  /// degrade (ヘッダ無し) を検知した grant 系が「warmup を待って付け直す価値があるか」
+  /// を判定するための helper。bypass (web/debug/simulator/gcp 未設定) や [wait] 超過時は
+  /// false (= 待っても attestation は付かない)。
+  Future<bool> ensureWarm(Duration wait) async {
+    if (_isBypassed) return false;
+    try {
+      await initialize().timeout(wait);
+    } catch (_) {
+      return false; // warmup が間に合わない → degrade のまま
+    }
+    return !_isBypassed;
+  }
+
+  /// headers に attestation ヘッダ (iOS App Attest / Android Play Integrity いずれか)
+  /// が注入されているか。degrade (ヘッダ無し) を呼出側が検知して warm リトライ判定に使う。
+  static bool hasAttestationHeader(Map<String, String> headers) =>
+      headers.containsKey('X-AppAttest-KeyId') ||
+      headers.containsKey('X-PlayIntegrity-Token');
 
   /// iOS assertion 経路 (設計 v3.1 = リクエスト毎チャレンジ方式、Android と統一)。
   ///

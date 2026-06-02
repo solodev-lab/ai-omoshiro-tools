@@ -199,7 +199,10 @@ Future<WelcomeGrantResult?> grantWelcomeCredits({
         AppAttestClient.withAppUserIdMerged(<String, dynamic>{'kind': kind});
     final bodyBytes = utf8.encode(json.encode(merged));
     final headers = <String, String>{'Content-Type': 'application/json'};
-    await AppAttestClient.instance.addHeaders(headers, bodyBytes);
+    // 冪等な書き込み (端末/アカウント単位で 1 回)。cold/stale warmup で attestation が
+    // 8s degrade したら本送信前に warmup を待って付け直す (= missing_attestation_headers
+    // を出さず enforced 化のブロッカー/farming 穴を塞ぐ)。詳細 addHeadersWithWarmRetry。
+    await AppAttestClient.instance.addHeadersWithWarmRetry(headers, bodyBytes);
     final res = await c
         .post(
           Uri.parse(solaraConsultationWelcomeGrantUrl),
@@ -235,7 +238,9 @@ Future<bool> migratePurchasedCredits(
         <String, dynamic>{'fromAppUserId': fromAppUserId});
     final bodyBytes = utf8.encode(json.encode(merged));
     final headers = <String, String>{'Content-Type': 'application/json'};
-    await AppAttestClient.instance.addHeaders(headers, bodyBytes);
+    // 冪等な移送 (from が匿名のみ + Worker 側冪等)。welcome-grant と同様、cold/stale
+    // warmup の degrade を本送信前に warmup 待ちで付け直す (addHeadersWithWarmRetry)。
+    await AppAttestClient.instance.addHeadersWithWarmRetry(headers, bodyBytes);
     final res = await c
         .post(
           Uri.parse(solaraConsultationMigratePurchasedUrl),

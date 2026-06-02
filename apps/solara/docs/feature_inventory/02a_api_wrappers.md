@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 10 / 総行数: 2386
+- ファイル数: 10 / 総行数: 2391
 - class/mixin/extension/enum: 26
 - 関数 (top-level + method の素拾い): 39
 - Navigator.push 等: 0
@@ -72,7 +72,7 @@
   </details>
 
 
-### `lib/utils/consultation_api.dart` (252 行)
+### `lib/utils/consultation_api.dart` (257 行)
 
 **ファイル先頭コメント:**
 
@@ -105,7 +105,7 @@ Consultation API — クレジット系 (V2 と共有)
 - L51 `consultationBlockFromCode()` — 402 / 425 paywall レスポンスの `error` コード → [ConsultationBlock]。
 - L132 `fetchConsultationCredits()` — `/protected/consultation/credits` を呼んで現在のクレジット状況を取得する。
 - L191 `grantWelcomeCredits()` — `/protected/consultation/welcome-grant` を呼び、ウェルカム特典 (恒久クレジット) を
-- L227 `migratePurchasedCredits()` — `/protected/consultation/migrate-purchased` を呼び、匿名 app_user_id に貯まった
+- L230 `migratePurchasedCredits()` — `/protected/consultation/migrate-purchased` を呼び、匿名 app_user_id に貯まった
 
 
 ### `lib/utils/consultation_v2_api.dart` (533 行)
