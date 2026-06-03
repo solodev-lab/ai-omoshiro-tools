@@ -40,6 +40,7 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 	Translations $copyWith({TranslationMetadata<AppLocale, Translations>? meta}) => Translations(meta: meta ?? this.$meta);
 
 	// Translations
+	late final Translations$mapAcg$ja mapAcg = Translations$mapAcg$ja.internal(_root);
 	late final Translations$mapVp$ja mapVp = Translations$mapVp$ja.internal(_root);
 	late final Translations$mapMenu$ja mapMenu = Translations$mapMenu$ja.internal(_root);
 	late final Translations$locations$ja locations = Translations$locations$ja.internal(_root);
@@ -48,6 +49,29 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 	late final Translations$disclaimer$ja disclaimer = Translations$disclaimer$ja.internal(_root);
 	late final Translations$common$ja common = Translations$common$ja.internal(_root);
 	late final Translations$aiConsent$ja aiConsent = Translations$aiConsent$ja.internal(_root);
+}
+
+// Path: mapAcg
+class Translations$mapAcg$ja {
+	Translations$mapAcg$ja.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// ja: '引越し'
+	String get pillRelocate => '引越し';
+
+	/// ja: 'アスペクト'
+	String get pillAspect => 'アスペクト';
+
+	late final Translations$mapAcg$sub$ja sub = Translations$mapAcg$sub$ja.internal(_root);
+	late final Translations$mapAcg$frameLabel$ja frameLabel = Translations$mapAcg$frameLabel$ja.internal(_root);
+
+	/// ja: 'この地点で相談する'
+	String get consultHere => 'この地点で相談する';
+
+	late final Translations$mapAcg$guide$ja guide = Translations$mapAcg$guide$ja.internal(_root);
 }
 
 // Path: mapVp
@@ -280,6 +304,96 @@ class Translations$aiConsent$ja {
 	late final Translations$aiConsent$geminiContent$ja geminiContent = Translations$aiConsent$geminiContent$ja.internal(_root);
 	late final Translations$aiConsent$decisions$ja decisions = Translations$aiConsent$decisions$ja.internal(_root);
 	late final Translations$aiConsent$consentHandling$ja consentHandling = Translations$aiConsent$consentHandling$ja.internal(_root);
+}
+
+// Path: mapAcg.sub
+class Translations$mapAcg$sub$ja {
+	Translations$mapAcg$sub$ja.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// ja: '天頂'
+	String get zenith => '天頂';
+
+	/// ja: '天底'
+	String get nadir => '天底';
+
+	/// ja: '天頂帯'
+	String get zenithBand => '天頂帯';
+
+	/// ja: '天底帯'
+	String get nadirBand => '天底帯';
+}
+
+// Path: mapAcg.frameLabel
+class Translations$mapAcg$frameLabel$ja {
+	Translations$mapAcg$frameLabel$ja.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// ja: 'TRANSIT — 今この瞬間の天体位置'
+	String get transit => 'TRANSIT — 今この瞬間の天体位置';
+
+	/// ja: 'PROGRESSED — 2次進行 (1日=1年)'
+	String get progressed => 'PROGRESSED — 2次進行 (1日=1年)';
+
+	/// ja: 'SOLAR ARC — 太陽進行弧で全惑星シフト'
+	String get solarArc => 'SOLAR ARC — 太陽進行弧で全惑星シフト';
+}
+
+// Path: mapAcg.guide
+class Translations$mapAcg$guide$ja {
+	Translations$mapAcg$guide$ja.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// ja: 'ASTRO*CARTO*GRAPHY / CYCLO*CARTO*GRAPHY の使い方'
+	String get title => 'ASTRO*CARTO*GRAPHY / CYCLO*CARTO*GRAPHY の使い方';
+
+	/// ja: '— Jim Lewis が遺した、地球上の天体地図 —'
+	String get jimLewis => '— Jim Lewis が遺した、地球上の天体地図 —';
+
+	/// ja: '【ACG（アストロカートグラフィ）とは】'
+	String get acgHead => '【ACG（アストロカートグラフィ）とは】';
+
+	/// ja: '1970 年代に占星術師 Jim Lewis が体系化した手法。 出生時の天体配置を世界地図上の「線」として投影し、 どの土地でどの惑星が立ち上がるかを描き出します (生涯不変の地図)。'
+	String get acgBody => '1970 年代に占星術師 Jim Lewis が体系化した手法。\n出生時の天体配置を世界地図上の「線」として投影し、\nどの土地でどの惑星が立ち上がるかを描き出します\n(生涯不変の地図)。';
+
+	/// ja: '【CCG（サイクロカートグラフィ）とは】'
+	String get ccgHead => '【CCG（サイクロカートグラフィ）とは】';
+
+	/// ja: 'Jim Lewis が 1982 年に ACG の続編として体系化した 発展形。出生時ではなく「今この瞬間」や指定時刻の 天体位置を投影します。線は地球の自転とともに動き、 星の風景が刻一刻と書き換わります。 Solara の Transit / Prog / S.Arc フレームが この CCG にあたります。'
+	String get ccgBody => 'Jim Lewis が 1982 年に ACG の続編として体系化した\n発展形。出生時ではなく「今この瞬間」や指定時刻の\n天体位置を投影します。線は地球の自転とともに動き、\n星の風景が刻一刻と書き換わります。\nSolara の Transit / Prog / S.Arc フレームが\nこの CCG にあたります。';
+
+	/// ja: '【4 つのフレーム (上部ピル・すべて無料)】'
+	String get framesHead => '【4 つのフレーム (上部ピル・すべて無料)】';
+
+	/// ja: '・Natal … 出生時の配置 (ACG・生涯不変) ・Transit / Prog / S.Arc … 時刻で動く配置 (CCG) 各ピル横の i ボタンに、それぞれの詳しい説明があります。'
+	String get framesBody => '・Natal … 出生時の配置 (ACG・生涯不変)\n・Transit / Prog / S.Arc … 時刻で動く配置 (CCG)\n\n各ピル横の i ボタンに、それぞれの詳しい説明があります。';
+
+	/// ja: '【地図上の線・マーカー】'
+	String get linesHead => '【地図上の線・マーカー】';
+
+	/// ja: '惑星 × アングルのライン、天頂・天底マーカーを 表示します。ライン・マーカーをタップすると、 その地点の意味や惑星固有のメッセージが見られます。 各ピル (アングル / 天頂 / 天底) 横の i ボタンに 詳しい説明があります。'
+	String get linesBody => '惑星 × アングルのライン、天頂・天底マーカーを\n表示します。ライン・マーカーをタップすると、\nその地点の意味や惑星固有のメッセージが見られます。\n各ピル (アングル / 天頂 / 天底) 横の i ボタンに\n詳しい説明があります。';
+
+	/// ja: '【Pro 機能】'
+	String get proHead => '【Pro 機能】';
+
+	/// ja: '・アスペクト線 (120 本): 本線にスクエア / トライン / セクスタイルを追加 ・引越し: タップ地点を引越し先に見立て、動く星の ライン・ASC/MC・ハウスを比較 ・天頂帯 / 天底帯: 同じ緯度全周に効く Lewis 流の帯表示 いずれも Cosmic Pro で解放されます。'
+	String get proBody => '・アスペクト線 (120 本): 本線にスクエア / トライン /\n　セクスタイルを追加\n・引越し: タップ地点を引越し先に見立て、動く星の\n　ライン・ASC/MC・ハウスを比較\n・天頂帯 / 天底帯: 同じ緯度全周に効く Lewis 流の帯表示\n\nいずれも Cosmic Pro で解放されます。';
+
+	/// ja: '【活用方法】'
+	String get usageHead => '【活用方法】';
+
+	/// ja: '旅行・引越し・出張先の選定に。 同じ行動でも、土地によってエネルギーの流れ方が 変わります。さらに 16 方位スコア (方位エネルギー扇) を 重ねれば、「どこに」と「いつ」が地図と時計の上に 同時に立ち上がります。'
+	String get usageBody => '旅行・引越し・出張先の選定に。\n同じ行動でも、土地によってエネルギーの流れ方が\n変わります。さらに 16 方位スコア (方位エネルギー扇) を\n重ねれば、「どこに」と「いつ」が地図と時計の上に\n同時に立ち上がります。';
 }
 
 // Path: mapVp.help
@@ -1296,6 +1410,30 @@ class Translations$paywall$faq$resubscribe$ja {
 extension on Translations {
 	dynamic _flatMapFunction(String path) {
 		return switch (path) {
+			'mapAcg.pillRelocate' => '引越し',
+			'mapAcg.pillAspect' => 'アスペクト',
+			'mapAcg.sub.zenith' => '天頂',
+			'mapAcg.sub.nadir' => '天底',
+			'mapAcg.sub.zenithBand' => '天頂帯',
+			'mapAcg.sub.nadirBand' => '天底帯',
+			'mapAcg.frameLabel.transit' => 'TRANSIT — 今この瞬間の天体位置',
+			'mapAcg.frameLabel.progressed' => 'PROGRESSED — 2次進行 (1日=1年)',
+			'mapAcg.frameLabel.solarArc' => 'SOLAR ARC — 太陽進行弧で全惑星シフト',
+			'mapAcg.consultHere' => 'この地点で相談する',
+			'mapAcg.guide.title' => 'ASTRO*CARTO*GRAPHY / CYCLO*CARTO*GRAPHY の使い方',
+			'mapAcg.guide.jimLewis' => '— Jim Lewis が遺した、地球上の天体地図 —',
+			'mapAcg.guide.acgHead' => '【ACG（アストロカートグラフィ）とは】',
+			'mapAcg.guide.acgBody' => '1970 年代に占星術師 Jim Lewis が体系化した手法。\n出生時の天体配置を世界地図上の「線」として投影し、\nどの土地でどの惑星が立ち上がるかを描き出します\n(生涯不変の地図)。',
+			'mapAcg.guide.ccgHead' => '【CCG（サイクロカートグラフィ）とは】',
+			'mapAcg.guide.ccgBody' => 'Jim Lewis が 1982 年に ACG の続編として体系化した\n発展形。出生時ではなく「今この瞬間」や指定時刻の\n天体位置を投影します。線は地球の自転とともに動き、\n星の風景が刻一刻と書き換わります。\nSolara の Transit / Prog / S.Arc フレームが\nこの CCG にあたります。',
+			'mapAcg.guide.framesHead' => '【4 つのフレーム (上部ピル・すべて無料)】',
+			'mapAcg.guide.framesBody' => '・Natal … 出生時の配置 (ACG・生涯不変)\n・Transit / Prog / S.Arc … 時刻で動く配置 (CCG)\n\n各ピル横の i ボタンに、それぞれの詳しい説明があります。',
+			'mapAcg.guide.linesHead' => '【地図上の線・マーカー】',
+			'mapAcg.guide.linesBody' => '惑星 × アングルのライン、天頂・天底マーカーを\n表示します。ライン・マーカーをタップすると、\nその地点の意味や惑星固有のメッセージが見られます。\n各ピル (アングル / 天頂 / 天底) 横の i ボタンに\n詳しい説明があります。',
+			'mapAcg.guide.proHead' => '【Pro 機能】',
+			'mapAcg.guide.proBody' => '・アスペクト線 (120 本): 本線にスクエア / トライン /\n　セクスタイルを追加\n・引越し: タップ地点を引越し先に見立て、動く星の\n　ライン・ASC/MC・ハウスを比較\n・天頂帯 / 天底帯: 同じ緯度全周に効く Lewis 流の帯表示\n\nいずれも Cosmic Pro で解放されます。',
+			'mapAcg.guide.usageHead' => '【活用方法】',
+			'mapAcg.guide.usageBody' => '旅行・引越し・出張先の選定に。\n同じ行動でも、土地によってエネルギーの流れ方が\n変わります。さらに 16 方位スコア (方位エネルギー扇) を\n重ねれば、「どこに」と「いつ」が地図と時計の上に\n同時に立ち上がります。',
 			'mapVp.savedSlots' => '保存済みスロット',
 			'mapVp.registeredPlaces' => '登録地',
 			'mapVp.noSlots' => '（スロットなし）',

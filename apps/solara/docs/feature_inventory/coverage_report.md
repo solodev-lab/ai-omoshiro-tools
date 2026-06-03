@@ -473,7 +473,7 @@
 
 ### 変更されたファイル (層別)
 
-- **層 4a**: `lib/screens/map/map_viewpoint_menu.dart`
+- **層 4a**: `lib/screens/map/map_astro_carto.dart`
 
 ## #7 astro_glossary 用語辞書対整合
 

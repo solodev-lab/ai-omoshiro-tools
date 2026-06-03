@@ -1,4 +1,31 @@
 {
+  "mapAcg": {
+    "pillRelocate": "Relocate",
+    "pillAspect": "Aspect",
+    "sub": { "zenith": "Zenith", "nadir": "Nadir", "zenithBand": "Zenith band", "nadirBand": "Nadir band" },
+    "frameLabel": {
+      "transit": "TRANSIT — planetary positions this very moment",
+      "progressed": "PROGRESSED — secondary progression (1 day = 1 year)",
+      "solarArc": "SOLAR ARC — all planets shifted by the solar arc"
+    },
+    "consultHere": "Consult about this place",
+    "guide": {
+      "title": "How to use ASTRO*CARTO*GRAPHY / CYCLO*CARTO*GRAPHY",
+      "jimLewis": "— The celestial map upon the Earth, left to us by Jim Lewis —",
+      "acgHead": "[What is ACG (AstroCartoGraphy)?]",
+      "acgBody": "A method systematized by the astrologer Jim Lewis in the 1970s.\nIt projects the planetary positions at your birth as \"lines\" on a world map,\nshowing which planet rises in which land\n(a map that never changes throughout your life).",
+      "ccgHead": "[What is CCG (CycloCartoGraphy)?]",
+      "ccgBody": "An evolution Jim Lewis systematized in 1982 as a sequel to ACG.\nInstead of your birth moment, it projects the planetary positions of \"this very moment\" or a time you specify. The lines move with Earth's rotation,\nand the starscape rewrites itself moment by moment.\nSolara's Transit / Prog / S.Arc frames\ncorrespond to this CCG.",
+      "framesHead": "[The 4 frames (top pills, all free)]",
+      "framesBody": "• Natal … positions at birth (ACG, unchanging for life)\n• Transit / Prog / S.Arc … positions that move with time (CCG)\n\nThe i button beside each pill has a detailed explanation of each.",
+      "linesHead": "[Lines & markers on the map]",
+      "linesBody": "Shows planet × angle lines and zenith / nadir markers.\nTap a line or marker to see the meaning of that point\nand a message specific to the planet.\nThe i button beside each pill (angle / zenith / nadir)\nhas a detailed explanation.",
+      "proHead": "[Pro features]",
+      "proBody": "• Aspect lines (120): adds square / trine / sextile\n　to the main lines\n• Relocate: treat the tapped point as a relocation destination and\n　compare the moving star lines, ASC/MC, and houses\n• Zenith band / Nadir band: Lewis-style band display that applies around the whole latitude\n\nAll are unlocked with Cosmic Pro.",
+      "usageHead": "[How to make use of it]",
+      "usageBody": "For choosing destinations for travel, moving, or business trips.\nEven the same action flows with different energy depending on the land. Layer on the 16-direction scores (the directional-energy fan), and \"where\" and \"when\" rise together upon the map and the clock."
+    }
+  },
   "mapVp": {
     "savedSlots": "Saved slots",
     "registeredPlaces": "Registered places",

@@ -5,9 +5,9 @@
 
 ## サマリ
 
-- ファイル数: 25 / 総行数: 14656
+- ファイル数: 25 / 総行数: 14642
 - class/mixin/extension/enum: 90
-- 関数 (top-level + method の素拾い): 320
+- 関数 (top-level + method の素拾い): 321
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 20
 - Worker URL リテラル: 0
@@ -113,46 +113,47 @@ MapAspectChip — Daily Transit V2 用 1アスペクトチップ
 - 集計: `showInfoPopup`×1
 
 
-### `lib/screens/map/map_astro_carto.dart` (873 行)
+### `lib/screens/map/map_astro_carto.dart` (859 行)
 
-**imports:** dart=0 / package=2 / relative=6
+**imports:** dart=0 / package=2 / relative=7
 
-- relative: `../../utils/astro_glossary.dart`, `../../utils/astro_lines.dart`, `../../utils/astro_zenith_messages.dart`, `../../widgets/info_popup.dart`, `map_astro_lines.dart`, `map_constants.dart`
+- relative: `../../i18n/strings.g.dart`, `../../utils/astro_glossary.dart`, `../../utils/astro_lines.dart`, `../../utils/astro_zenith_messages.dart`, `../../widgets/info_popup.dart`, `map_astro_lines.dart`, `map_constants.dart`
 
 **型定義 (9):**
 
-- L28 `class AstroCartoBanner : StatelessWidget`
+- L29 `class AstroCartoBanner : StatelessWidget`
   - Astro*Carto*Graphy モード中の上部バナー (タイトル + 閉じる×)。
-- L255 `class AcgFrameDef`
-- L298 `class AstroCartoFramePills : StatelessWidget`
+- L233 `class AcgFrameDef`
+- L284 `class AstroCartoFramePills : StatelessWidget`
   - 第1層: フレーム切替ピル (横並び 4 ピル + i)。
-- L365 `class AstroCartoSubPills : StatelessWidget`
+- L351 `class AstroCartoSubPills : StatelessWidget`
   - 第2層: active frame のサブトグル 4 つ (横並び)。
-- L404 `class _FramePill : StatelessWidget`
+- L390 `class _FramePill : StatelessWidget`
   - 第1層の個別ピル (ラベル + i)。active 時はリング glow で強調。
-- L473 `class _SubPill : StatelessWidget`
+- L459 `class _SubPill : StatelessWidget`
   - 第2層の個別小ピル (天頂 / 天底 / 天頂帯 / 天底帯)。
-- L540 `class _ScrollableRowPanel : StatelessWidget`
+- L526 `class _ScrollableRowPanel : StatelessWidget`
   - ピル列の overflow 対策ラッパー。
-- L575 `class AstroCartoCategoryPills : StatelessWidget`
+- L561 `class AstroCartoCategoryPills : StatelessWidget`
   - Astro*Carto*Graphy モード中のカテゴリピル。
-- L648 `class AstroZenithPopup : StatelessWidget`
+- L634 `class AstroZenithPopup : StatelessWidget`
   - 天頂・天底点タップ詳細 popup。
 
-**関数 (8 public + 1 private):**
+**関数 (8 public + 2 private):**
 
-- L33 `build()`
-- L311 `build()`
-- L378 `build()`
-- L421 `build()`
-- L488 `build()`
-- L551 `build()`
-- L585 `build()`
-- L671 `build()`
+- L34 `build()`
+- L297 `build()`
+- L364 `build()`
+- L407 `build()`
+- L474 `build()`
+- L537 `build()`
+- L571 `build()`
+- L657 `build()`
 
-  <details><summary>private 関数 1 件</summary>
+  <details><summary>private 関数 2 件</summary>
 
-  - L98 `_showAcgUsageGuide()`
+  - L99 `_showAcgUsageGuide()`
+  - L275 `_subLabel()`
 
   </details>
 

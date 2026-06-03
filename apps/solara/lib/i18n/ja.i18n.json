@@ -1,4 +1,31 @@
 {
+  "mapAcg": {
+    "pillRelocate": "引越し",
+    "pillAspect": "アスペクト",
+    "sub": { "zenith": "天頂", "nadir": "天底", "zenithBand": "天頂帯", "nadirBand": "天底帯" },
+    "frameLabel": {
+      "transit": "TRANSIT — 今この瞬間の天体位置",
+      "progressed": "PROGRESSED — 2次進行 (1日=1年)",
+      "solarArc": "SOLAR ARC — 太陽進行弧で全惑星シフト"
+    },
+    "consultHere": "この地点で相談する",
+    "guide": {
+      "title": "ASTRO*CARTO*GRAPHY / CYCLO*CARTO*GRAPHY の使い方",
+      "jimLewis": "— Jim Lewis が遺した、地球上の天体地図 —",
+      "acgHead": "【ACG（アストロカートグラフィ）とは】",
+      "acgBody": "1970 年代に占星術師 Jim Lewis が体系化した手法。\n出生時の天体配置を世界地図上の「線」として投影し、\nどの土地でどの惑星が立ち上がるかを描き出します\n(生涯不変の地図)。",
+      "ccgHead": "【CCG（サイクロカートグラフィ）とは】",
+      "ccgBody": "Jim Lewis が 1982 年に ACG の続編として体系化した\n発展形。出生時ではなく「今この瞬間」や指定時刻の\n天体位置を投影します。線は地球の自転とともに動き、\n星の風景が刻一刻と書き換わります。\nSolara の Transit / Prog / S.Arc フレームが\nこの CCG にあたります。",
+      "framesHead": "【4 つのフレーム (上部ピル・すべて無料)】",
+      "framesBody": "・Natal … 出生時の配置 (ACG・生涯不変)\n・Transit / Prog / S.Arc … 時刻で動く配置 (CCG)\n\n各ピル横の i ボタンに、それぞれの詳しい説明があります。",
+      "linesHead": "【地図上の線・マーカー】",
+      "linesBody": "惑星 × アングルのライン、天頂・天底マーカーを\n表示します。ライン・マーカーをタップすると、\nその地点の意味や惑星固有のメッセージが見られます。\n各ピル (アングル / 天頂 / 天底) 横の i ボタンに\n詳しい説明があります。",
+      "proHead": "【Pro 機能】",
+      "proBody": "・アスペクト線 (120 本): 本線にスクエア / トライン /\n　セクスタイルを追加\n・引越し: タップ地点を引越し先に見立て、動く星の\n　ライン・ASC/MC・ハウスを比較\n・天頂帯 / 天底帯: 同じ緯度全周に効く Lewis 流の帯表示\n\nいずれも Cosmic Pro で解放されます。",
+      "usageHead": "【活用方法】",
+      "usageBody": "旅行・引越し・出張先の選定に。\n同じ行動でも、土地によってエネルギーの流れ方が\n変わります。さらに 16 方位スコア (方位エネルギー扇) を\n重ねれば、「どこに」と「いつ」が地図と時計の上に\n同時に立ち上がります。"
+    }
+  },
   "mapVp": {
     "savedSlots": "保存済みスロット",
     "registeredPlaces": "登録地",

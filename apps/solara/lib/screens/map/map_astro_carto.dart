@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:latlong2/latlong.dart';
 
+import '../../i18n/strings.g.dart';
 import '../../utils/astro_glossary.dart';
 import '../../utils/astro_lines.dart' show AstroFrame;
 import '../../utils/astro_zenith_messages.dart'
@@ -101,17 +102,17 @@ void _showAcgUsageGuide(BuildContext context) {
     child: Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: const [
+      children: [
         Text(
-          'ASTRO*CARTO*GRAPHY / CYCLO*CARTO*GRAPHY の使い方',
-          style: TextStyle(
+          t.mapAcg.guide.title,
+          style: const TextStyle(
               color: Color(0xFFC9A84C), fontSize: 14, letterSpacing: 1),
         ),
-        SizedBox(height: 10),
+        const SizedBox(height: 10),
         // ── Jim Lewis への礼と Solara 独自性 ──
         Text(
-          '— Jim Lewis が遺した、地球上の天体地図 —',
-          style: TextStyle(
+          t.mapAcg.guide.jimLewis,
+          style: const TextStyle(
             color: Color(0xFFE9D29A),
             fontSize: 13,
             fontStyle: FontStyle.italic,
@@ -119,119 +120,96 @@ void _showAcgUsageGuide(BuildContext context) {
             fontWeight: FontWeight.w500,
           ),
         ),
-        SizedBox(height: 14),
+        const SizedBox(height: 14),
         // ── ACG とは ──
         Text(
-          '【ACG（アストロカートグラフィ）とは】',
-          style: TextStyle(
+          t.mapAcg.guide.acgHead,
+          style: const TextStyle(
               color: Color(0xFFC9A84C),
               fontSize: 13,
               fontWeight: FontWeight.w600,
               letterSpacing: 0.5),
         ),
-        SizedBox(height: 4),
+        const SizedBox(height: 4),
         Text(
-          '1970 年代に占星術師 Jim Lewis が体系化した手法。\n'
-          '出生時の天体配置を世界地図上の「線」として投影し、\n'
-          'どの土地でどの惑星が立ち上がるかを描き出します\n'
-          '(生涯不変の地図)。',
-          style: TextStyle(
+          t.mapAcg.guide.acgBody,
+          style: const TextStyle(
               color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
         ),
-        SizedBox(height: 12),
+        const SizedBox(height: 12),
         // ── CCG とは ──
         Text(
-          '【CCG（サイクロカートグラフィ）とは】',
-          style: TextStyle(
+          t.mapAcg.guide.ccgHead,
+          style: const TextStyle(
               color: Color(0xFFC9A84C),
               fontSize: 13,
               fontWeight: FontWeight.w600,
               letterSpacing: 0.5),
         ),
-        SizedBox(height: 4),
+        const SizedBox(height: 4),
         Text(
-          'Jim Lewis が 1982 年に ACG の続編として体系化した\n'
-          '発展形。出生時ではなく「今この瞬間」や指定時刻の\n'
-          '天体位置を投影します。線は地球の自転とともに動き、\n'
-          '星の風景が刻一刻と書き換わります。\n'
-          'Solara の Transit / Prog / S.Arc フレームが\n'
-          'この CCG にあたります。',
-          style: TextStyle(
+          t.mapAcg.guide.ccgBody,
+          style: const TextStyle(
               color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
         ),
-        SizedBox(height: 12),
+        const SizedBox(height: 12),
         Text(
-          '【4 つのフレーム (上部ピル・すべて無料)】',
-          style: TextStyle(
+          t.mapAcg.guide.framesHead,
+          style: const TextStyle(
               color: Color(0xFFC9A84C),
               fontSize: 13,
               fontWeight: FontWeight.w600,
               letterSpacing: 0.5),
         ),
-        SizedBox(height: 4),
+        const SizedBox(height: 4),
         Text(
-          '・Natal … 出生時の配置 (ACG・生涯不変)\n'
-          '・Transit / Prog / S.Arc … 時刻で動く配置 (CCG)\n\n'
-          '各ピル横の i ボタンに、それぞれの詳しい説明があります。',
-          style: TextStyle(
+          t.mapAcg.guide.framesBody,
+          style: const TextStyle(
               color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
         ),
-        SizedBox(height: 10),
+        const SizedBox(height: 10),
         Text(
-          '【地図上の線・マーカー】',
-          style: TextStyle(
+          t.mapAcg.guide.linesHead,
+          style: const TextStyle(
               color: Color(0xFFC9A84C),
               fontSize: 13,
               fontWeight: FontWeight.w600,
               letterSpacing: 0.5),
         ),
-        SizedBox(height: 4),
+        const SizedBox(height: 4),
         Text(
-          '惑星 × アングルのライン、天頂・天底マーカーを\n'
-          '表示します。ライン・マーカーをタップすると、\n'
-          'その地点の意味や惑星固有のメッセージが見られます。\n'
-          '各ピル (アングル / 天頂 / 天底) 横の i ボタンに\n'
-          '詳しい説明があります。',
-          style: TextStyle(
+          t.mapAcg.guide.linesBody,
+          style: const TextStyle(
               color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
         ),
-        SizedBox(height: 10),
+        const SizedBox(height: 10),
         Text(
-          '【Pro 機能】',
-          style: TextStyle(
+          t.mapAcg.guide.proHead,
+          style: const TextStyle(
               color: Color(0xFFC9A84C),
               fontSize: 13,
               fontWeight: FontWeight.w600,
               letterSpacing: 0.5),
         ),
-        SizedBox(height: 4),
+        const SizedBox(height: 4),
         Text(
-          '・アスペクト線 (120 本): 本線にスクエア / トライン /\n'
-          '　セクスタイルを追加\n'
-          '・引越し: タップ地点を引越し先に見立て、動く星の\n'
-          '　ライン・ASC/MC・ハウスを比較\n'
-          '・天頂帯 / 天底帯: 同じ緯度全周に効く Lewis 流の帯表示\n\n'
-          'いずれも Cosmic Pro で解放されます。',
-          style: TextStyle(
+          t.mapAcg.guide.proBody,
+          style: const TextStyle(
               color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
         ),
-        SizedBox(height: 10),
+        const SizedBox(height: 10),
         Text(
-          '【活用方法】',
-          style: TextStyle(
+          t.mapAcg.guide.usageHead,
+          style: const TextStyle(
               color: Color(0xFFC9A84C),
               fontSize: 13,
               fontWeight: FontWeight.w600,
               letterSpacing: 0.5),
         ),
-        SizedBox(height: 4),
+        const SizedBox(height: 4),
         Text(
-          '旅行・引越し・出張先の選定に。\n'
-          '同じ行動でも、土地によってエネルギーの流れ方が\n'
-          '変わります。さらに 16 方位スコア (方位エネルギー扇) を\n'
-          '重ねれば、「どこに」と「いつ」が地図と時計の上に\n'
-          '同時に立ち上がります。',
-          style: TextStyle(
+          t.mapAcg.guide.usageBody,
+          style: const TextStyle(
               color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
         ),
       ],
@@ -286,12 +264,20 @@ const List<AcgFrameDef> acgFrameDefs = [
   ),
 ];
 
-const List<({String subKey, String label, String termKey})> _subDefs = [
-  (subKey: 'zenith', label: '天頂', termKey: 'zenith_point'),
-  (subKey: 'nadir', label: '天底', termKey: 'nadir_point'),
-  (subKey: 'zenithBand', label: '天頂帯', termKey: 'latitude_band'),
-  (subKey: 'nadirBand', label: '天底帯', termKey: 'latitude_band'),
+const List<({String subKey, String termKey})> _subDefs = [
+  (subKey: 'zenith', termKey: 'zenith_point'),
+  (subKey: 'nadir', termKey: 'nadir_point'),
+  (subKey: 'zenithBand', termKey: 'latitude_band'),
+  (subKey: 'nadirBand', termKey: 'latitude_band'),
 ];
+
+/// サブピル subKey → ロケール別ラベル (天頂/天底/天頂帯/天底帯)。
+String _subLabel(String subKey) => switch (subKey) {
+      'zenith' => t.mapAcg.sub.zenith,
+      'nadir' => t.mapAcg.sub.nadir,
+      'zenithBand' => t.mapAcg.sub.zenithBand,
+      _ => t.mapAcg.sub.nadirBand,
+    };
 
 /// 第1層: フレーム切替ピル (横並び 4 ピル + i)。
 /// タップ: 線の ON/OFF + active 更新 (排他、第2層展開対象)。
@@ -333,7 +319,7 @@ class AstroCartoFramePills extends StatelessWidget {
           // ON のとき排他的に: 地点タップで引越し popup のみ、他 (線/天頂/天底
           // タップ) は反応しない。地図上の引越し検討に集中するためのモードトグル。
           _FramePill(
-            label: '引越し',
+            label: t.mapAcg.pillRelocate,
             accent: const Color(0xFFE9D29A),
             on: relocateOn,
             active: false,
@@ -346,7 +332,7 @@ class AstroCartoFramePills extends StatelessWidget {
           // 旧 UI では MapDisplayMenu (非 ACG モードのバーガー) にのみ存在し、
           // ACG モード下部ピルには乗っていなかった (設計の見落とし)。
           _FramePill(
-            label: 'アスペクト',
+            label: t.mapAcg.pillAspect,
             accent: const Color(0xFFB59CFF),
             on: astroLayers['aspectLines'] ?? false,
             active: false,
@@ -388,7 +374,7 @@ class AstroCartoSubPills extends StatelessWidget {
           final key = '${sub.subKey}_${def.frameSuffix}';
           final on = astroLayers[key] ?? false;
           return _SubPill(
-            label: sub.label,
+            label: _subLabel(sub.subKey),
             accent: accent,
             on: on,
             onTap: () => onToggle(key),
@@ -677,10 +663,10 @@ class AstroZenithPopup extends StatelessWidget {
     final frameLabel = isNatal
         ? null
         : (frame == AstroFrame.transit
-            ? 'TRANSIT — 今この瞬間の天体位置'
+            ? t.mapAcg.frameLabel.transit
             : frame == AstroFrame.progressed
-                ? 'PROGRESSED — 2次進行 (1日=1年)'
-                : 'SOLAR ARC — 太陽進行弧で全惑星シフト');
+                ? t.mapAcg.frameLabel.progressed
+                : t.mapAcg.frameLabel.solarArc);
 
     return Container(
       width: double.infinity,
@@ -845,15 +831,15 @@ class AstroZenithPopup extends StatelessWidget {
                     borderRadius: BorderRadius.circular(10),
                     border: Border.all(color: const Color(0x88F6BD60)),
                   ),
-                  child: const Row(
+                  child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.auto_awesome,
+                      const Icon(Icons.auto_awesome,
                           size: 16, color: Color(0xFFE9D29A)),
-                      SizedBox(width: 8),
+                      const SizedBox(width: 8),
                       Text(
-                        'この地点で相談する',
-                        style: TextStyle(
+                        t.mapAcg.consultHere,
+                        style: const TextStyle(
                           color: Color(0xFFE9D29A),
                           fontSize: 13,
                           fontWeight: FontWeight.w600,

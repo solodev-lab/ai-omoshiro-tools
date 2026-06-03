@@ -39,6 +39,7 @@ class TranslationsEn extends Translations with BaseTranslations<AppLocale, Trans
 	TranslationsEn $copyWith({TranslationMetadata<AppLocale, Translations>? meta}) => TranslationsEn(meta: meta ?? this.$meta);
 
 	// Translations
+	@override late final _Translations$mapAcg$en mapAcg = _Translations$mapAcg$en._(_root);
 	@override late final _Translations$mapVp$en mapVp = _Translations$mapVp$en._(_root);
 	@override late final _Translations$mapMenu$en mapMenu = _Translations$mapMenu$en._(_root);
 	@override late final _Translations$locations$en locations = _Translations$locations$en._(_root);
@@ -47,6 +48,21 @@ class TranslationsEn extends Translations with BaseTranslations<AppLocale, Trans
 	@override late final _Translations$disclaimer$en disclaimer = _Translations$disclaimer$en._(_root);
 	@override late final _Translations$common$en common = _Translations$common$en._(_root);
 	@override late final _Translations$aiConsent$en aiConsent = _Translations$aiConsent$en._(_root);
+}
+
+// Path: mapAcg
+class _Translations$mapAcg$en extends Translations$mapAcg$ja {
+	_Translations$mapAcg$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get pillRelocate => 'Relocate';
+	@override String get pillAspect => 'Aspect';
+	@override late final _Translations$mapAcg$sub$en sub = _Translations$mapAcg$sub$en._(_root);
+	@override late final _Translations$mapAcg$frameLabel$en frameLabel = _Translations$mapAcg$frameLabel$en._(_root);
+	@override String get consultHere => 'Consult about this place';
+	@override late final _Translations$mapAcg$guide$en guide = _Translations$mapAcg$guide$en._(_root);
 }
 
 // Path: mapVp
@@ -195,6 +211,54 @@ class _Translations$aiConsent$en extends Translations$aiConsent$ja {
 	@override late final _Translations$aiConsent$geminiContent$en geminiContent = _Translations$aiConsent$geminiContent$en._(_root);
 	@override late final _Translations$aiConsent$decisions$en decisions = _Translations$aiConsent$decisions$en._(_root);
 	@override late final _Translations$aiConsent$consentHandling$en consentHandling = _Translations$aiConsent$consentHandling$en._(_root);
+}
+
+// Path: mapAcg.sub
+class _Translations$mapAcg$sub$en extends Translations$mapAcg$sub$ja {
+	_Translations$mapAcg$sub$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get zenith => 'Zenith';
+	@override String get nadir => 'Nadir';
+	@override String get zenithBand => 'Zenith band';
+	@override String get nadirBand => 'Nadir band';
+}
+
+// Path: mapAcg.frameLabel
+class _Translations$mapAcg$frameLabel$en extends Translations$mapAcg$frameLabel$ja {
+	_Translations$mapAcg$frameLabel$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get transit => 'TRANSIT — planetary positions this very moment';
+	@override String get progressed => 'PROGRESSED — secondary progression (1 day = 1 year)';
+	@override String get solarArc => 'SOLAR ARC — all planets shifted by the solar arc';
+}
+
+// Path: mapAcg.guide
+class _Translations$mapAcg$guide$en extends Translations$mapAcg$guide$ja {
+	_Translations$mapAcg$guide$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get title => 'How to use ASTRO*CARTO*GRAPHY / CYCLO*CARTO*GRAPHY';
+	@override String get jimLewis => '— The celestial map upon the Earth, left to us by Jim Lewis —';
+	@override String get acgHead => '[What is ACG (AstroCartoGraphy)?]';
+	@override String get acgBody => 'A method systematized by the astrologer Jim Lewis in the 1970s.\nIt projects the planetary positions at your birth as "lines" on a world map,\nshowing which planet rises in which land\n(a map that never changes throughout your life).';
+	@override String get ccgHead => '[What is CCG (CycloCartoGraphy)?]';
+	@override String get ccgBody => 'An evolution Jim Lewis systematized in 1982 as a sequel to ACG.\nInstead of your birth moment, it projects the planetary positions of "this very moment" or a time you specify. The lines move with Earth\'s rotation,\nand the starscape rewrites itself moment by moment.\nSolara\'s Transit / Prog / S.Arc frames\ncorrespond to this CCG.';
+	@override String get framesHead => '[The 4 frames (top pills, all free)]';
+	@override String get framesBody => '• Natal … positions at birth (ACG, unchanging for life)\n• Transit / Prog / S.Arc … positions that move with time (CCG)\n\nThe i button beside each pill has a detailed explanation of each.';
+	@override String get linesHead => '[Lines & markers on the map]';
+	@override String get linesBody => 'Shows planet × angle lines and zenith / nadir markers.\nTap a line or marker to see the meaning of that point\nand a message specific to the planet.\nThe i button beside each pill (angle / zenith / nadir)\nhas a detailed explanation.';
+	@override String get proHead => '[Pro features]';
+	@override String get proBody => '• Aspect lines (120): adds square / trine / sextile\n　to the main lines\n• Relocate: treat the tapped point as a relocation destination and\n　compare the moving star lines, ASC/MC, and houses\n• Zenith band / Nadir band: Lewis-style band display that applies around the whole latitude\n\nAll are unlocked with Cosmic Pro.';
+	@override String get usageHead => '[How to make use of it]';
+	@override String get usageBody => 'For choosing destinations for travel, moving, or business trips.\nEven the same action flows with different energy depending on the land. Layer on the 16-direction scores (the directional-energy fan), and "where" and "when" rise together upon the map and the clock.';
 }
 
 // Path: mapVp.help
@@ -856,6 +920,30 @@ class _Translations$paywall$faq$resubscribe$en extends Translations$paywall$faq$
 extension on TranslationsEn {
 	dynamic _flatMapFunction(String path) {
 		return switch (path) {
+			'mapAcg.pillRelocate' => 'Relocate',
+			'mapAcg.pillAspect' => 'Aspect',
+			'mapAcg.sub.zenith' => 'Zenith',
+			'mapAcg.sub.nadir' => 'Nadir',
+			'mapAcg.sub.zenithBand' => 'Zenith band',
+			'mapAcg.sub.nadirBand' => 'Nadir band',
+			'mapAcg.frameLabel.transit' => 'TRANSIT — planetary positions this very moment',
+			'mapAcg.frameLabel.progressed' => 'PROGRESSED — secondary progression (1 day = 1 year)',
+			'mapAcg.frameLabel.solarArc' => 'SOLAR ARC — all planets shifted by the solar arc',
+			'mapAcg.consultHere' => 'Consult about this place',
+			'mapAcg.guide.title' => 'How to use ASTRO*CARTO*GRAPHY / CYCLO*CARTO*GRAPHY',
+			'mapAcg.guide.jimLewis' => '— The celestial map upon the Earth, left to us by Jim Lewis —',
+			'mapAcg.guide.acgHead' => '[What is ACG (AstroCartoGraphy)?]',
+			'mapAcg.guide.acgBody' => 'A method systematized by the astrologer Jim Lewis in the 1970s.\nIt projects the planetary positions at your birth as "lines" on a world map,\nshowing which planet rises in which land\n(a map that never changes throughout your life).',
+			'mapAcg.guide.ccgHead' => '[What is CCG (CycloCartoGraphy)?]',
+			'mapAcg.guide.ccgBody' => 'An evolution Jim Lewis systematized in 1982 as a sequel to ACG.\nInstead of your birth moment, it projects the planetary positions of "this very moment" or a time you specify. The lines move with Earth\'s rotation,\nand the starscape rewrites itself moment by moment.\nSolara\'s Transit / Prog / S.Arc frames\ncorrespond to this CCG.',
+			'mapAcg.guide.framesHead' => '[The 4 frames (top pills, all free)]',
+			'mapAcg.guide.framesBody' => '• Natal … positions at birth (ACG, unchanging for life)\n• Transit / Prog / S.Arc … positions that move with time (CCG)\n\nThe i button beside each pill has a detailed explanation of each.',
+			'mapAcg.guide.linesHead' => '[Lines & markers on the map]',
+			'mapAcg.guide.linesBody' => 'Shows planet × angle lines and zenith / nadir markers.\nTap a line or marker to see the meaning of that point\nand a message specific to the planet.\nThe i button beside each pill (angle / zenith / nadir)\nhas a detailed explanation.',
+			'mapAcg.guide.proHead' => '[Pro features]',
+			'mapAcg.guide.proBody' => '• Aspect lines (120): adds square / trine / sextile\n　to the main lines\n• Relocate: treat the tapped point as a relocation destination and\n　compare the moving star lines, ASC/MC, and houses\n• Zenith band / Nadir band: Lewis-style band display that applies around the whole latitude\n\nAll are unlocked with Cosmic Pro.',
+			'mapAcg.guide.usageHead' => '[How to make use of it]',
+			'mapAcg.guide.usageBody' => 'For choosing destinations for travel, moving, or business trips.\nEven the same action flows with different energy depending on the land. Layer on the 16-direction scores (the directional-energy fan), and "where" and "when" rise together upon the map and the clock.',
 			'mapVp.savedSlots' => 'Saved slots',
 			'mapVp.registeredPlaces' => 'Registered places',
 			'mapVp.noSlots' => '(no slots)',
