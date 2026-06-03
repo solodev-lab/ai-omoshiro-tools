@@ -1725,6 +1725,37 @@ Worker [`consultation_v2.js:78-83`](../worker/src/consultation_v2.js#L78) の既
 - `flutter analyze` クリーン / `flutter test` **全319件 green**(既存 i18n_test は無改変で通過=ファサード互換を実証) / `slang analyze` = `en:{}`(**未訳0**) / `audit.py` = HARD7(新規ゼロ)/WARN34/NOTICE44/重複20(構造的)/未使用0 = 前回と完全一致(退行ゼロ) / `extract.py` = `+0 -0 ~2`。
 - ブランチ `feat/solara-en-localization`。次 = Phase 1(UI chrome 英訳・既存 tr() を型安全 `t.x` へ移行しつつ抽出)。
 
+### 0.2.60 英語化 Phase 1 (UI chrome 英訳・進行中 ≈480/2,200文字列) (2026-06-03〜04)
+
+> §0.2.59 の slang 基盤の上に、UI chrome を画面ごとに英訳。**日本語はマスターとして完全保全**、英語は正典(STYLE_VOICE_EN/光源の声)準拠で書き起こし。各画面で flutter analyze クリーン / flutter test 全319件green / slang analyze 未訳0 / audit 退行ゼロ を確認しコミット。ブランチ `feat/solara-en-localization`(未push)。
+
+#### 完了画面 (slang 名前空間 / commit)
+- `aiConsent` — ai_consent_screen (`d4a26c5`・声OK pilot)
+- `paywall` — paywall 3 part: comparison/widgets/legal_links (`8bade36`・収益直結)
+- `locations` — locations_screen + 共有 `dirName`(map_constants: ja漢字/en略号) (`6033154`)
+- `mapMenu` — map_display_menu + 共有 `planetName`(map_constants: ja漢字/en Sun等) (`13fadb2`)
+- `mapVp` — map_viewpoint_menu (`6a9fe17`)
+- `mapAcg` — map_astro_carto (ACG/CCGモードUI) (`9ffbffe`)
+- `consultInput` — consultation_input_widgets (`8f782a8`) + consultation_input_when_scope (`0c034a0`)
+
+#### 確立した手順・規約 (Phase 1 残り・Phase 2 で踏襲)
+1. 画面を全行精読しユーザー向け JP 文字列を全抽出 (コメントは訳さない)。
+2. `lib/i18n/{ja,en}.i18n.json` の**先頭** (`{` 直後) に名前空間ブロックを挿入 (巨大ファイルでも安全・低コスト・`tr()` 互換維持)。ja=現行文言を一字一句保全・en=正典準拠。
+3. Dart を型安全 `t.<ns>.<key>` へ。`const Text`→`Text` + `style: const TextStyle`。const 選択肢リストは getter 化 (label を t 連動・id 不変)。`part of` ファイルは親に `import '../i18n/strings.g.dart'`(必要なら `solara_i18n.dart`)。
+4. `dart run slang` → `dart run slang analyze`(en:{}=未訳0) → `flutter analyze` → `flutter test`(319) → `extract.py` → `audit.py` → commit。
+
+#### 重要な原則・罠
+- **共有データの ID と表示の分離**: `dir16JP`(方位)・region picker(`worldCityRegionGroups` 照合キー)・`PlanetMeta`(惑星) は ID を日本語のまま保持し、表示のみ localize (`dirName`/`planetName`/`_regionLabel`)。直接英語化すると照合ロジックが壊れる。
+- **言語非依存で据え置く語**: Free/Pro/✓/—/VIEWPOINT/LOCATIONS/HOME/OK/SAVE 50%/ASTRO*CARTO*GRAPHY/Natal/Transit/Prog/S.Arc。
+- **slang param**: `$name`(例 `presetCard`/`bearing`/`monthlyEquivalent`/`introPeriod.days`/`radiusBand`)。リスト=JSON配列→`List<String>`(例 `locDefaults`)。flat map `t['ns.key']` は `tr()` 互換用。
+- **Phase 2 (コンテンツ) 持ち越し**: astro_zenith_messages(天頂/天底)・astro_glossary(用語辞書)・都市名(target.nameJP) 等の content data は本 Phase 対象外。paywall 月換算の `¥` ハードコードも将来課題(JP想定)。
+
+#### 残り (Phase 1)
+forecast_screen 112 / galaxy_screen 105 / map_fortune_sheet 96 / map_daily_transit_screen 93 / consultation_result_card 83 / map_screen 66(3643行) / consultation_input の残 part(examples/picker/logic/start_popup) / sanctuary_screen 49 / sanctuary_title_diagnosis 39 / 小物多数。
+
+#### ⚠️ ファイル分割 (HARD7) は本 Phase 対象外・未実施
+英語化は新規 HARD/WARN ゼロだが、既存の 1000 行超 7 ファイル (map_screen 3643 / map_daily_transit 2029 / sanctuary 1678 / galaxy 1460 / sanctuary_title_diagnosis 1374 / forecast 1092 / daily_transit_data 1078) は**別バックログ**として残置。`check_file_split.py` で確認可。
+
 ### 0.3 Horo「今日の占い」1 日 1 回固定 + プロンプト刷新 (2026-05-27)
 
 > **設計の柱**: 「30 回までは OK」のような曖昧な防衛をやめ、「**1 日 1 回・変更しない**」を
