@@ -39,10 +39,32 @@ class TranslationsEn extends Translations with BaseTranslations<AppLocale, Trans
 	TranslationsEn $copyWith({TranslationMetadata<AppLocale, Translations>? meta}) => TranslationsEn(meta: meta ?? this.$meta);
 
 	// Translations
+	@override late final _Translations$paywall$en paywall = _Translations$paywall$en._(_root);
 	@override late final _Translations$category$en category = _Translations$category$en._(_root);
 	@override late final _Translations$disclaimer$en disclaimer = _Translations$disclaimer$en._(_root);
 	@override late final _Translations$common$en common = _Translations$common$en._(_root);
 	@override late final _Translations$aiConsent$en aiConsent = _Translations$aiConsent$en._(_root);
+}
+
+// Path: paywall
+class _Translations$paywall$en extends Translations$paywall$ja {
+	_Translations$paywall$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override late final _Translations$paywall$period$en period = _Translations$paywall$period$en._(_root);
+	@override late final _Translations$paywall$introPeriod$en introPeriod = _Translations$paywall$introPeriod$en._(_root);
+	@override late final _Translations$paywall$store$en store = _Translations$paywall$store$en._(_root);
+	@override String get autoRenewNotice => 'Your subscription renews automatically. Unless you cancel auto-renewal at least 24 hours before the end of the current period, it renews at the same price for the next period. You will be charged to your Apple ID / Google account within 24 hours before the period ends. You can manage or cancel auto-renewal anytime in your store account settings.';
+	@override late final _Translations$paywall$legal$en legal = _Translations$paywall$legal$en._(_root);
+	@override String get restore => 'Restore purchases';
+	@override late final _Translations$paywall$hero$en hero = _Translations$paywall$hero$en._(_root);
+	@override late final _Translations$paywall$billing$en billing = _Translations$paywall$billing$en._(_root);
+	@override late final _Translations$paywall$plans$en plans = _Translations$paywall$plans$en._(_root);
+	@override late final _Translations$paywall$cta$en cta = _Translations$paywall$cta$en._(_root);
+	@override late final _Translations$paywall$comparison$en comparison = _Translations$paywall$comparison$en._(_root);
+	@override late final _Translations$paywall$faq$en faq = _Translations$paywall$faq$en._(_root);
 }
 
 // Path: category
@@ -102,6 +124,162 @@ class _Translations$aiConsent$en extends Translations$aiConsent$ja {
 	@override late final _Translations$aiConsent$geminiContent$en geminiContent = _Translations$aiConsent$geminiContent$en._(_root);
 	@override late final _Translations$aiConsent$decisions$en decisions = _Translations$aiConsent$decisions$en._(_root);
 	@override late final _Translations$aiConsent$consentHandling$en consentHandling = _Translations$aiConsent$consentHandling$en._(_root);
+}
+
+// Path: paywall.period
+class _Translations$paywall$period$en extends Translations$paywall$period$ja {
+	_Translations$paywall$period$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get year => 'year';
+	@override String get sixMonth => '6 months';
+	@override String get threeMonth => '3 months';
+	@override String get twoMonth => '2 months';
+	@override String get month => 'month';
+	@override String get week => 'week';
+	@override String get lifetime => 'one-time';
+	@override String get generic => 'period';
+}
+
+// Path: paywall.introPeriod
+class _Translations$paywall$introPeriod$en extends Translations$paywall$introPeriod$ja {
+	_Translations$paywall$introPeriod$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String days({required Object n}) => '${n} days';
+	@override String weeks({required Object n}) => '${n} weeks';
+	@override String months({required Object n}) => '${n} months';
+	@override String years({required Object n}) => '${n} years';
+	@override String unknown({required Object n}) => '${n}';
+}
+
+// Path: paywall.store
+class _Translations$paywall$store$en extends Translations$paywall$store$ja {
+	_Translations$paywall$store$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get preparingTitle => 'The store is being set up';
+	@override String get preparingBody => 'Purchases will be available after launch.\nPlease wait a moment and try again.';
+	@override String get recheck => 'Check again';
+}
+
+// Path: paywall.legal
+class _Translations$paywall$legal$en extends Translations$paywall$legal$ja {
+	_Translations$paywall$legal$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get cancelMethod => 'How to cancel';
+	@override String get terms => 'Terms of Service';
+	@override String get privacy => 'Privacy Policy';
+	@override String get sctaNotice => 'Commercial Transactions Act notice';
+}
+
+// Path: paywall.hero
+class _Translations$paywall$hero$en extends Translations$paywall$hero$ja {
+	_Translations$paywall$hero$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get subtitle => 'The complete experience — for deeper conversations with Stella, and for reading the landscape where sky meets land.';
+}
+
+// Path: paywall.billing
+class _Translations$paywall$billing$en extends Translations$paywall$billing$ja {
+	_Translations$paywall$billing$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get monthly => 'Monthly';
+	@override String get annual => 'Annual';
+}
+
+// Path: paywall.plans
+class _Translations$paywall$plans$en extends Translations$paywall$plans$ja {
+	_Translations$paywall$plans$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get currentPlan => 'Current plan';
+	@override String get freePrice => 'Free  /  forever';
+	@override String get priceLoading => 'Loading price…';
+	@override String get taxIncl => '(tax incl.)';
+	@override String monthlyEquivalent({required Object yen}) => '≈ ¥${yen} / month';
+	@override String trialLine({required Object period}) => '🎁 ${period} free trial → auto-billing after it ends';
+	@override String get badgeSubscribed => 'Subscribed';
+	@override String get badgePopular => 'Popular';
+	@override late final _Translations$paywall$plans$free$en free = _Translations$paywall$plans$free$en._(_root);
+	@override late final _Translations$paywall$plans$pro$en pro = _Translations$paywall$plans$pro$en._(_root);
+}
+
+// Path: paywall.cta
+class _Translations$paywall$cta$en extends Translations$paywall$cta$ja {
+	_Translations$paywall$cta$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get manageSubscription => 'Manage subscription';
+	@override String get startAnnual => 'Start annual plan';
+	@override String get startMonthly => 'Start monthly plan';
+}
+
+// Path: paywall.comparison
+class _Translations$paywall$comparison$en extends Translations$paywall$comparison$ja {
+	_Translations$paywall$comparison$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get title => 'Free vs Pro';
+	@override String get colFeature => 'Feature';
+	@override String get secConsult => 'Consultation & Interpretation';
+	@override String get secMap => 'Map (ACG / CCG)';
+	@override String get secRecords => 'Records (your records are kept forever, even on Free)';
+	@override String get secForecast => 'Forecast';
+	@override late final _Translations$paywall$comparison$stellaConsult$en stellaConsult = _Translations$paywall$comparison$stellaConsult$en._(_root);
+	@override late final _Translations$paywall$comparison$tarot$en tarot = _Translations$paywall$comparison$tarot$en._(_root);
+	@override late final _Translations$paywall$comparison$starReading$en starReading = _Translations$paywall$comparison$starReading$en._(_root);
+	@override late final _Translations$paywall$comparison$relocationLine$en relocationLine = _Translations$paywall$comparison$relocationLine$en._(_root);
+	@override late final _Translations$paywall$comparison$outingTime$en outingTime = _Translations$paywall$comparison$outingTime$en._(_root);
+	@override late final _Translations$paywall$comparison$acgFrames$en acgFrames = _Translations$paywall$comparison$acgFrames$en._(_root);
+	@override late final _Translations$paywall$comparison$zenithNadirPoints$en zenithNadirPoints = _Translations$paywall$comparison$zenithNadirPoints$en._(_root);
+	@override late final _Translations$paywall$comparison$zenithNadirBands$en zenithNadirBands = _Translations$paywall$comparison$zenithNadirBands$en._(_root);
+	@override late final _Translations$paywall$comparison$aspectLines$en aspectLines = _Translations$paywall$comparison$aspectLines$en._(_root);
+	@override late final _Translations$paywall$comparison$relocationSim$en relocationSim = _Translations$paywall$comparison$relocationSim$en._(_root);
+	@override late final _Translations$paywall$comparison$locationSlots$en locationSlots = _Translations$paywall$comparison$locationSlots$en._(_root);
+	@override late final _Translations$paywall$comparison$recordsSave$en recordsSave = _Translations$paywall$comparison$recordsSave$en._(_root);
+	@override late final _Translations$paywall$comparison$archiveSearch$en archiveSearch = _Translations$paywall$comparison$archiveSearch$en._(_root);
+	@override late final _Translations$paywall$comparison$replayExport$en replayExport = _Translations$paywall$comparison$replayExport$en._(_root);
+	@override late final _Translations$paywall$comparison$titleRediagnosis$en titleRediagnosis = _Translations$paywall$comparison$titleRediagnosis$en._(_root);
+	@override late final _Translations$paywall$comparison$forecastPeriod$en forecastPeriod = _Translations$paywall$comparison$forecastPeriod$en._(_root);
+}
+
+// Path: paywall.faq
+class _Translations$paywall$faq$en extends Translations$paywall$faq$ja {
+	_Translations$paywall$faq$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get title => 'Frequently Asked Questions';
+	@override late final _Translations$paywall$faq$diff$en diff = _Translations$paywall$faq$diff$en._(_root);
+	@override late final _Translations$paywall$faq$weeklyCap$en weeklyCap = _Translations$paywall$faq$weeklyCap$en._(_root);
+	@override late final _Translations$paywall$faq$proTarot$en proTarot = _Translations$paywall$faq$proTarot$en._(_root);
+	@override late final _Translations$paywall$faq$outing30min$en outing30min = _Translations$paywall$faq$outing30min$en._(_root);
+	@override late final _Translations$paywall$faq$upgradeDowngrade$en upgradeDowngrade = _Translations$paywall$faq$upgradeDowngrade$en._(_root);
+	@override late final _Translations$paywall$faq$afterCancel$en afterCancel = _Translations$paywall$faq$afterCancel$en._(_root);
+	@override late final _Translations$paywall$faq$resubscribe$en resubscribe = _Translations$paywall$faq$resubscribe$en._(_root);
 }
 
 // Path: aiConsent.declineDialog
@@ -192,6 +370,295 @@ class _Translations$aiConsent$consentHandling$en extends Translations$aiConsent$
 	@override String get body => 'When you tap "Agree and Begin," the fact that you agreed to what\'s described in "Before You Begin" is recorded on your device. It won\'t be shown again. (If the terms change, we may show this notice once more.)\n\nIf you do not agree, please tap "Decline" at the bottom of the screen and uninstall Solara. At this point, we have not received any of your data, including any personal information.';
 }
 
+// Path: paywall.plans.free
+class _Translations$paywall$plans$free$en extends Translations$paywall$plans$free$ja {
+	_Translations$paywall$plans$free$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get stella => 'Stella Consultation  3 / week (Monday reset) + purchased credits';
+	@override String get tarot => 'Tarot  once a day (choosing a category uses a credit)';
+	@override String get starReading => 'Star Reading  "Overall" category only';
+	@override String get aspectLines => 'Aspect lines  40';
+	@override String get acgFrames => 'ACG / CCG  all 4 frames (natal / transit / prog / solar arc)';
+	@override String get archiveSearch => 'Search & filter for Star Atlas and tarot history';
+	@override String get replayExport => 'Replay the formation animation · export as text';
+	@override String get save => 'Permanent saving and sharing of your interpretations';
+}
+
+// Path: paywall.plans.pro
+class _Translations$paywall$plans$pro$en extends Translations$paywall$plans$pro$ja {
+	_Translations$paywall$plans$pro$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get stella => 'Stella Consultation  100 / week (Monday reset)';
+	@override String get outing => 'Outing consultations  set the time in one-hour steps + read "changes 30 minutes later" (CCG lines move with Earth\'s rotation; the lead star shifts between the first and second half)';
+	@override String get tarot => 'Tarot  choose any of 7 categories (Overall · Love · Abundance · Work · Talk · Healing · Change) with no credits used + question field';
+	@override String get starReading => 'Star Reading  all 5 categories (Overall · Love · Abundance · Work · Talk) + deeper reading';
+	@override String get forecast => 'Forecast — 5-year outlook  see periods of romance and abundance up to 5 years ahead, and view the heatmap 5 years out';
+	@override String get aspectLines => 'Aspect lines  all 120 (conjunction · square · trine · sextile)';
+	@override String get zenithBands => 'Zenith / Nadir bands  shows the latitudes where a planet passes directly overhead or underfoot, as bands (Lewis style)';
+	@override String get relocationSim => 'Relocation simulation  tap a location to recompute ASC / MC / the 12 houses';
+	@override String get slots => 'Saved home bases  10 places';
+	@override String get rediagnosis => 'Re-diagnosing your Title (Class)  unlimited';
+}
+
+// Path: paywall.comparison.stellaConsult
+class _Translations$paywall$comparison$stellaConsult$en extends Translations$paywall$comparison$stellaConsult$ja {
+	_Translations$paywall$comparison$stellaConsult$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get label => 'Stella Consultation';
+	@override String get free => '3 / week\n+ purchased credits';
+	@override String get pro => '100 / week';
+}
+
+// Path: paywall.comparison.tarot
+class _Translations$paywall$comparison$tarot$en extends Translations$paywall$comparison$tarot$ja {
+	_Translations$paywall$comparison$tarot$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get label => 'Tarot';
+	@override String get free => 'Overall free\nOther categories: 1 credit\n(once a day)';
+	@override String get pro => 'All 7 categories\nno credits used\n+ question field\n(once a day)';
+}
+
+// Path: paywall.comparison.starReading
+class _Translations$paywall$comparison$starReading$en extends Translations$paywall$comparison$starReading$ja {
+	_Translations$paywall$comparison$starReading$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get label => 'Star Reading (Horo)';
+	@override String get free => '"Overall" only';
+	@override String get pro => 'All 5 categories\n(Overall · Love · Abundance\n· Work · Talk)\n+ deeper reading';
+}
+
+// Path: paywall.comparison.relocationLine
+class _Translations$paywall$comparison$relocationLine$en extends Translations$paywall$comparison$relocationLine$ja {
+	_Translations$paywall$comparison$relocationLine$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get label => 'Home base reading (line proximity)';
+}
+
+// Path: paywall.comparison.outingTime
+class _Translations$paywall$comparison$outingTime$en extends Translations$paywall$comparison$outingTime$ja {
+	_Translations$paywall$comparison$outingTime$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get label => 'Set the time of your outing\n+ changes 30 min later';
+	@override String get pro => '✓\n(hourly)';
+}
+
+// Path: paywall.comparison.acgFrames
+class _Translations$paywall$comparison$acgFrames$en extends Translations$paywall$comparison$acgFrames$ja {
+	_Translations$paywall$comparison$acgFrames$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get label => 'ACG / CCG — 4 frames';
+	@override String get value => '✓ all\n(natal/transit\n/prog/solar arc)';
+}
+
+// Path: paywall.comparison.zenithNadirPoints
+class _Translations$paywall$comparison$zenithNadirPoints$en extends Translations$paywall$comparison$zenithNadirPoints$ja {
+	_Translations$paywall$comparison$zenithNadirPoints$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get label => 'Zenith / Nadir points · category filter';
+}
+
+// Path: paywall.comparison.zenithNadirBands
+class _Translations$paywall$comparison$zenithNadirBands$en extends Translations$paywall$comparison$zenithNadirBands$ja {
+	_Translations$paywall$comparison$zenithNadirBands$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get label => 'Zenith / Nadir bands (latitude bands)';
+}
+
+// Path: paywall.comparison.aspectLines
+class _Translations$paywall$comparison$aspectLines$en extends Translations$paywall$comparison$aspectLines$ja {
+	_Translations$paywall$comparison$aspectLines$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get label => 'Aspect lines';
+	@override String get free => '40 lines\n(conjunction)';
+	@override String get pro => '120 lines\n(conj. □ △ ⚹)';
+}
+
+// Path: paywall.comparison.relocationSim
+class _Translations$paywall$comparison$relocationSim$en extends Translations$paywall$comparison$relocationSim$ja {
+	_Translations$paywall$comparison$relocationSim$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get label => 'Relocation simulation';
+}
+
+// Path: paywall.comparison.locationSlots
+class _Translations$paywall$comparison$locationSlots$en extends Translations$paywall$comparison$locationSlots$ja {
+	_Translations$paywall$comparison$locationSlots$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get label => 'Home base slots (VP / LOCATION)';
+	@override String get free => '5 places';
+	@override String get pro => '10 places';
+}
+
+// Path: paywall.comparison.recordsSave
+class _Translations$paywall$comparison$recordsSave$en extends Translations$paywall$comparison$recordsSave$ja {
+	_Translations$paywall$comparison$recordsSave$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get label => 'Permanent saving of interpretations & cycles';
+}
+
+// Path: paywall.comparison.archiveSearch
+class _Translations$paywall$comparison$archiveSearch$en extends Translations$paywall$comparison$archiveSearch$ja {
+	_Translations$paywall$comparison$archiveSearch$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get label => 'Search / filter Star Atlas & history';
+}
+
+// Path: paywall.comparison.replayExport
+class _Translations$paywall$comparison$replayExport$en extends Translations$paywall$comparison$replayExport$ja {
+	_Translations$paywall$comparison$replayExport$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get label => 'Replay formation animation · export as text';
+}
+
+// Path: paywall.comparison.titleRediagnosis
+class _Translations$paywall$comparison$titleRediagnosis$en extends Translations$paywall$comparison$titleRediagnosis$ja {
+	_Translations$paywall$comparison$titleRediagnosis$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get label => 'Re-diagnose your Title (Class)';
+	@override String get free => 'Up to once';
+	@override String get pro => 'Unlimited';
+}
+
+// Path: paywall.comparison.forecastPeriod
+class _Translations$paywall$comparison$forecastPeriod$en extends Translations$paywall$comparison$forecastPeriod$ja {
+	_Translations$paywall$comparison$forecastPeriod$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get label => 'Forecast range';
+	@override String get free => '1 year';
+	@override String get pro => '5 years';
+}
+
+// Path: paywall.faq.diff
+class _Translations$paywall$faq$diff$en extends Translations$paywall$faq$diff$ja {
+	_Translations$paywall$faq$diff$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get q => 'What\'s the difference between Free and Pro?';
+	@override String get a => 'Stella Consultation goes from 3 / week on Free to 100 / week on Pro; Star Reading goes from "Overall" only on Free to all 5 categories on Pro; aspect lines increase from 40 on Free to 120 on Pro. Tarot is once a day on both plans, but Pro adds no credit cost when you choose a category, plus a question field.\n\nThe 4 ACG / CCG frames, search and filter for the Star Atlas and tarot history, and saving and sharing your interpretations are all available on Free too. Please see the table above for details.';
+}
+
+// Path: paywall.faq.weeklyCap
+class _Translations$paywall$faq$weeklyCap$en extends Translations$paywall$faq$weeklyCap$ja {
+	_Translations$paywall$faq$weeklyCap$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get q => 'What happens if I exceed the weekly cap for Stella Consultation?';
+	@override String get a => 'You can keep going by purchasing additional credits. On Pro, your 100 / week are replenished at the Monday reset.';
+}
+
+// Path: paywall.faq.proTarot
+class _Translations$paywall$faq$proTarot$en extends Translations$paywall$faq$proTarot$ja {
+	_Translations$paywall$faq$proTarot$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get q => 'What changes with Tarot on Pro?';
+	@override String get a => 'Tarot is once a day on both Free and Pro. On Pro, you can choose the category you want to ask about (Overall · Love · Abundance · Work · Talk · Healing · Change) and draw a reading without spending any credits. You can also type what you\'d like to know as a direct question, and the reading responds to it.\n\nOn Free, only Overall is free (once a day); other categories cost 1 credit each time.';
+}
+
+// Path: paywall.faq.outing30min
+class _Translations$paywall$faq$outing30min$en extends Translations$paywall$faq$outing30min$ja {
+	_Translations$paywall$faq$outing30min$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get q => 'What does "changes 30 minutes later" mean in outing consultations?';
+	@override String get a => 'With Cosmic Pro, you can set the time of an outing or event consultation in one-hour steps. The star lines of astrocartography (CCG) move with Earth\'s rotation, so even in the same place the "lead star of the moment" quietly changes within 30 minutes.\n\nOpening "View 30 minutes later" on the result screen lets you read the shift in advance — Mars\'s line drawing away, or Venus\'s line drawing near. You begin to see how to use your time in that place, such as "the heart of it comes early" or "it warms up toward the latter half" (this is not good or bad fortune, but a shift in the quality of energy).';
+}
+
+// Path: paywall.faq.upgradeDowngrade
+class _Translations$paywall$faq$upgradeDowngrade$en extends Translations$paywall$faq$upgradeDowngrade$ja {
+	_Translations$paywall$faq$upgradeDowngrade$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get q => 'Can I upgrade or downgrade my plan?';
+	@override String get a => 'You can change it anytime from the subscription management screen in the Apple App Store or Google Play. If you cancel auto-renewal, you\'ll switch to the Free plan automatically from your next billing date.';
+}
+
+// Path: paywall.faq.afterCancel
+class _Translations$paywall$faq$afterCancel$en extends Translations$paywall$faq$afterCancel$ja {
+	_Translations$paywall$faq$afterCancel$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get q => 'What happens to features after I cancel?';
+	@override String get a => 'You can keep using Cosmic Pro features until your current billing period ends. After it ends, you\'ll move to the Free plan automatically. Your history of interpretations stays saved on your device.';
+}
+
+// Path: paywall.faq.resubscribe
+class _Translations$paywall$faq$resubscribe$en extends Translations$paywall$faq$resubscribe$ja {
+	_Translations$paywall$faq$resubscribe$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get q => 'If I resubscribe to Pro, do my weekly credits increase?';
+	@override String get a => 'No. Weekly credits are managed per account and reset every Monday. Even if you cancel Pro and resubscribe right away, your remaining count at that moment doesn\'t change. This isn\'t about misuse — it simply means resubscribing can\'t be used as a loophole to repeatedly top up the "100 / week" allowance.\n\nExample: if you cancel Pro on a Wednesday with 0 weekly credits left and resubscribe immediately, the remaining count stays at 0. It returns to 100 the following Monday.';
+}
+
 /// The flat map containing all translations for locale <en>.
 /// Only for edge cases! For simple maps, use the map function of this library.
 ///
@@ -200,6 +667,113 @@ class _Translations$aiConsent$consentHandling$en extends Translations$aiConsent$
 extension on TranslationsEn {
 	dynamic _flatMapFunction(String path) {
 		return switch (path) {
+			'paywall.period.year' => 'year',
+			'paywall.period.sixMonth' => '6 months',
+			'paywall.period.threeMonth' => '3 months',
+			'paywall.period.twoMonth' => '2 months',
+			'paywall.period.month' => 'month',
+			'paywall.period.week' => 'week',
+			'paywall.period.lifetime' => 'one-time',
+			'paywall.period.generic' => 'period',
+			'paywall.introPeriod.days' => ({required Object n}) => '${n} days',
+			'paywall.introPeriod.weeks' => ({required Object n}) => '${n} weeks',
+			'paywall.introPeriod.months' => ({required Object n}) => '${n} months',
+			'paywall.introPeriod.years' => ({required Object n}) => '${n} years',
+			'paywall.introPeriod.unknown' => ({required Object n}) => '${n}',
+			'paywall.store.preparingTitle' => 'The store is being set up',
+			'paywall.store.preparingBody' => 'Purchases will be available after launch.\nPlease wait a moment and try again.',
+			'paywall.store.recheck' => 'Check again',
+			'paywall.autoRenewNotice' => 'Your subscription renews automatically. Unless you cancel auto-renewal at least 24 hours before the end of the current period, it renews at the same price for the next period. You will be charged to your Apple ID / Google account within 24 hours before the period ends. You can manage or cancel auto-renewal anytime in your store account settings.',
+			'paywall.legal.cancelMethod' => 'How to cancel',
+			'paywall.legal.terms' => 'Terms of Service',
+			'paywall.legal.privacy' => 'Privacy Policy',
+			'paywall.legal.sctaNotice' => 'Commercial Transactions Act notice',
+			'paywall.restore' => 'Restore purchases',
+			'paywall.hero.subtitle' => 'The complete experience — for deeper conversations with Stella, and for reading the landscape where sky meets land.',
+			'paywall.billing.monthly' => 'Monthly',
+			'paywall.billing.annual' => 'Annual',
+			'paywall.plans.currentPlan' => 'Current plan',
+			'paywall.plans.freePrice' => 'Free  /  forever',
+			'paywall.plans.priceLoading' => 'Loading price…',
+			'paywall.plans.taxIncl' => '(tax incl.)',
+			'paywall.plans.monthlyEquivalent' => ({required Object yen}) => '≈ ¥${yen} / month',
+			'paywall.plans.trialLine' => ({required Object period}) => '🎁 ${period} free trial → auto-billing after it ends',
+			'paywall.plans.badgeSubscribed' => 'Subscribed',
+			'paywall.plans.badgePopular' => 'Popular',
+			'paywall.plans.free.stella' => 'Stella Consultation  3 / week (Monday reset) + purchased credits',
+			'paywall.plans.free.tarot' => 'Tarot  once a day (choosing a category uses a credit)',
+			'paywall.plans.free.starReading' => 'Star Reading  "Overall" category only',
+			'paywall.plans.free.aspectLines' => 'Aspect lines  40',
+			'paywall.plans.free.acgFrames' => 'ACG / CCG  all 4 frames (natal / transit / prog / solar arc)',
+			'paywall.plans.free.archiveSearch' => 'Search & filter for Star Atlas and tarot history',
+			'paywall.plans.free.replayExport' => 'Replay the formation animation · export as text',
+			'paywall.plans.free.save' => 'Permanent saving and sharing of your interpretations',
+			'paywall.plans.pro.stella' => 'Stella Consultation  100 / week (Monday reset)',
+			'paywall.plans.pro.outing' => 'Outing consultations  set the time in one-hour steps + read "changes 30 minutes later" (CCG lines move with Earth\'s rotation; the lead star shifts between the first and second half)',
+			'paywall.plans.pro.tarot' => 'Tarot  choose any of 7 categories (Overall · Love · Abundance · Work · Talk · Healing · Change) with no credits used + question field',
+			'paywall.plans.pro.starReading' => 'Star Reading  all 5 categories (Overall · Love · Abundance · Work · Talk) + deeper reading',
+			'paywall.plans.pro.forecast' => 'Forecast — 5-year outlook  see periods of romance and abundance up to 5 years ahead, and view the heatmap 5 years out',
+			'paywall.plans.pro.aspectLines' => 'Aspect lines  all 120 (conjunction · square · trine · sextile)',
+			'paywall.plans.pro.zenithBands' => 'Zenith / Nadir bands  shows the latitudes where a planet passes directly overhead or underfoot, as bands (Lewis style)',
+			'paywall.plans.pro.relocationSim' => 'Relocation simulation  tap a location to recompute ASC / MC / the 12 houses',
+			'paywall.plans.pro.slots' => 'Saved home bases  10 places',
+			'paywall.plans.pro.rediagnosis' => 'Re-diagnosing your Title (Class)  unlimited',
+			'paywall.cta.manageSubscription' => 'Manage subscription',
+			'paywall.cta.startAnnual' => 'Start annual plan',
+			'paywall.cta.startMonthly' => 'Start monthly plan',
+			'paywall.comparison.title' => 'Free vs Pro',
+			'paywall.comparison.colFeature' => 'Feature',
+			'paywall.comparison.secConsult' => 'Consultation & Interpretation',
+			'paywall.comparison.secMap' => 'Map (ACG / CCG)',
+			'paywall.comparison.secRecords' => 'Records (your records are kept forever, even on Free)',
+			'paywall.comparison.secForecast' => 'Forecast',
+			'paywall.comparison.stellaConsult.label' => 'Stella Consultation',
+			'paywall.comparison.stellaConsult.free' => '3 / week\n+ purchased credits',
+			'paywall.comparison.stellaConsult.pro' => '100 / week',
+			'paywall.comparison.tarot.label' => 'Tarot',
+			'paywall.comparison.tarot.free' => 'Overall free\nOther categories: 1 credit\n(once a day)',
+			'paywall.comparison.tarot.pro' => 'All 7 categories\nno credits used\n+ question field\n(once a day)',
+			'paywall.comparison.starReading.label' => 'Star Reading (Horo)',
+			'paywall.comparison.starReading.free' => '"Overall" only',
+			'paywall.comparison.starReading.pro' => 'All 5 categories\n(Overall · Love · Abundance\n· Work · Talk)\n+ deeper reading',
+			'paywall.comparison.relocationLine.label' => 'Home base reading (line proximity)',
+			'paywall.comparison.outingTime.label' => 'Set the time of your outing\n+ changes 30 min later',
+			'paywall.comparison.outingTime.pro' => '✓\n(hourly)',
+			'paywall.comparison.acgFrames.label' => 'ACG / CCG — 4 frames',
+			'paywall.comparison.acgFrames.value' => '✓ all\n(natal/transit\n/prog/solar arc)',
+			'paywall.comparison.zenithNadirPoints.label' => 'Zenith / Nadir points · category filter',
+			'paywall.comparison.zenithNadirBands.label' => 'Zenith / Nadir bands (latitude bands)',
+			'paywall.comparison.aspectLines.label' => 'Aspect lines',
+			'paywall.comparison.aspectLines.free' => '40 lines\n(conjunction)',
+			'paywall.comparison.aspectLines.pro' => '120 lines\n(conj. □ △ ⚹)',
+			'paywall.comparison.relocationSim.label' => 'Relocation simulation',
+			'paywall.comparison.locationSlots.label' => 'Home base slots (VP / LOCATION)',
+			'paywall.comparison.locationSlots.free' => '5 places',
+			'paywall.comparison.locationSlots.pro' => '10 places',
+			'paywall.comparison.recordsSave.label' => 'Permanent saving of interpretations & cycles',
+			'paywall.comparison.archiveSearch.label' => 'Search / filter Star Atlas & history',
+			'paywall.comparison.replayExport.label' => 'Replay formation animation · export as text',
+			'paywall.comparison.titleRediagnosis.label' => 'Re-diagnose your Title (Class)',
+			'paywall.comparison.titleRediagnosis.free' => 'Up to once',
+			'paywall.comparison.titleRediagnosis.pro' => 'Unlimited',
+			'paywall.comparison.forecastPeriod.label' => 'Forecast range',
+			'paywall.comparison.forecastPeriod.free' => '1 year',
+			'paywall.comparison.forecastPeriod.pro' => '5 years',
+			'paywall.faq.title' => 'Frequently Asked Questions',
+			'paywall.faq.diff.q' => 'What\'s the difference between Free and Pro?',
+			'paywall.faq.diff.a' => 'Stella Consultation goes from 3 / week on Free to 100 / week on Pro; Star Reading goes from "Overall" only on Free to all 5 categories on Pro; aspect lines increase from 40 on Free to 120 on Pro. Tarot is once a day on both plans, but Pro adds no credit cost when you choose a category, plus a question field.\n\nThe 4 ACG / CCG frames, search and filter for the Star Atlas and tarot history, and saving and sharing your interpretations are all available on Free too. Please see the table above for details.',
+			'paywall.faq.weeklyCap.q' => 'What happens if I exceed the weekly cap for Stella Consultation?',
+			'paywall.faq.weeklyCap.a' => 'You can keep going by purchasing additional credits. On Pro, your 100 / week are replenished at the Monday reset.',
+			'paywall.faq.proTarot.q' => 'What changes with Tarot on Pro?',
+			'paywall.faq.proTarot.a' => 'Tarot is once a day on both Free and Pro. On Pro, you can choose the category you want to ask about (Overall · Love · Abundance · Work · Talk · Healing · Change) and draw a reading without spending any credits. You can also type what you\'d like to know as a direct question, and the reading responds to it.\n\nOn Free, only Overall is free (once a day); other categories cost 1 credit each time.',
+			'paywall.faq.outing30min.q' => 'What does "changes 30 minutes later" mean in outing consultations?',
+			'paywall.faq.outing30min.a' => 'With Cosmic Pro, you can set the time of an outing or event consultation in one-hour steps. The star lines of astrocartography (CCG) move with Earth\'s rotation, so even in the same place the "lead star of the moment" quietly changes within 30 minutes.\n\nOpening "View 30 minutes later" on the result screen lets you read the shift in advance — Mars\'s line drawing away, or Venus\'s line drawing near. You begin to see how to use your time in that place, such as "the heart of it comes early" or "it warms up toward the latter half" (this is not good or bad fortune, but a shift in the quality of energy).',
+			'paywall.faq.upgradeDowngrade.q' => 'Can I upgrade or downgrade my plan?',
+			'paywall.faq.upgradeDowngrade.a' => 'You can change it anytime from the subscription management screen in the Apple App Store or Google Play. If you cancel auto-renewal, you\'ll switch to the Free plan automatically from your next billing date.',
+			'paywall.faq.afterCancel.q' => 'What happens to features after I cancel?',
+			'paywall.faq.afterCancel.a' => 'You can keep using Cosmic Pro features until your current billing period ends. After it ends, you\'ll move to the Free plan automatically. Your history of interpretations stays saved on your device.',
+			'paywall.faq.resubscribe.q' => 'If I resubscribe to Pro, do my weekly credits increase?',
+			'paywall.faq.resubscribe.a' => 'No. Weekly credits are managed per account and reset every Monday. Even if you cancel Pro and resubscribe right away, your remaining count at that moment doesn\'t change. This isn\'t about misuse — it simply means resubscribing can\'t be used as a loophole to repeatedly top up the "100 / week" allowance.\n\nExample: if you cancel Pro on a Wednesday with 0 weekly credits left and resubscribe immediately, the remaining count stays at 0. It returns to 100 the following Monday.',
 			'category.overall' => 'Overall',
 			'category.healing' => 'Healing',
 			'category.abundance' => 'Abundance',

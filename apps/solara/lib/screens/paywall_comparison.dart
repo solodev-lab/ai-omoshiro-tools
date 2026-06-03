@@ -24,9 +24,9 @@ extension _PaywallComparison on _PaywallScreenState {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Free と Pro の違い',
-            style: TextStyle(
+          Text(
+            t.paywall.comparison.title,
+            style: const TextStyle(
               color: SolaraColors.solaraGoldLight,
               fontSize: 15,
               fontWeight: FontWeight.w700,
@@ -35,33 +35,46 @@ extension _PaywallComparison on _PaywallScreenState {
           ),
           const SizedBox(height: 12),
           _comparisonHeader(),
-          _comparisonSection('相談・読み解き'),
-          _comparisonRow('Stella 相談', '週 3 回\n+ 購入クレジット', '週 100 回'),
+          _comparisonSection(t.paywall.comparison.secConsult),
           _comparisonRow(
-            'タロット',
-            '総合 無料\n他カテゴリ 1 クレジット\n(1 日 1 回)',
-            '全 7 カテゴリ\nクレジット消費なし\n+ 質問入力欄\n(1 日 1 回)',
+              t.paywall.comparison.stellaConsult.label,
+              t.paywall.comparison.stellaConsult.free,
+              t.paywall.comparison.stellaConsult.pro),
+          _comparisonRow(
+            t.paywall.comparison.tarot.label,
+            t.paywall.comparison.tarot.free,
+            t.paywall.comparison.tarot.pro,
           ),
-          _comparisonRow('星読み (Horo)', '「総合」のみ',
-              '全 5 カテゴリ\n(総合・恋愛・豊かさ\n・仕事・話す)\n+ 深い読み'),
-          _comparisonRow('拠点 (ライン近接) 解説', '✓', '✓'),
-          _comparisonRow('おでかけの時刻指定\n+ 30分後の変化', '—', '✓\n(1時間刻み)'),
-          _comparisonSection('地図 (ACG / CCG)'),
-          _comparisonRow('ACG / CCG 4 フレーム',
-              '✓ すべて\n(natal/transit\n/prog/solar arc)',
-              '✓ すべて\n(natal/transit\n/prog/solar arc)'),
-          _comparisonRow('天頂・天底点 / カテゴリ絞り込み', '✓', '✓'),
-          _comparisonRow('天頂帯・天底帯 (緯度帯)', '—', '✓'),
-          _comparisonRow('アスペクトライン', '40 本\n(合)', '120 本\n(合・□・△・⚹)'),
-          _comparisonRow('引越しシミュレーション', '—', '✓'),
-          _comparisonRow('拠点 (VP/LOCATION) 枠', '5か所', '10か所'),
-          _comparisonSection('記録（あなたの記録は Free でも永久に残ります）'),
-          _comparisonRow('読み解き・サイクルの永久保存', '✓', '✓'),
-          _comparisonRow('星座アーカイブ・履歴の検索/フィルタ', '✓', '✓'),
-          _comparisonRow('形成演出の再生・テキスト書き出し', '✓', '✓'),
-          _comparisonRow('称号 (クラス) の再診断', '1 回まで', '無制限'),
-          _comparisonSection('予報'),
-          _comparisonRow('Forecast 期間', '1 年', '5 年'),
+          _comparisonRow(t.paywall.comparison.starReading.label,
+              t.paywall.comparison.starReading.free,
+              t.paywall.comparison.starReading.pro),
+          _comparisonRow(t.paywall.comparison.relocationLine.label, '✓', '✓'),
+          _comparisonRow(t.paywall.comparison.outingTime.label, '—',
+              t.paywall.comparison.outingTime.pro),
+          _comparisonSection(t.paywall.comparison.secMap),
+          _comparisonRow(t.paywall.comparison.acgFrames.label,
+              t.paywall.comparison.acgFrames.value,
+              t.paywall.comparison.acgFrames.value),
+          _comparisonRow(t.paywall.comparison.zenithNadirPoints.label, '✓', '✓'),
+          _comparisonRow(t.paywall.comparison.zenithNadirBands.label, '—', '✓'),
+          _comparisonRow(t.paywall.comparison.aspectLines.label,
+              t.paywall.comparison.aspectLines.free,
+              t.paywall.comparison.aspectLines.pro),
+          _comparisonRow(t.paywall.comparison.relocationSim.label, '—', '✓'),
+          _comparisonRow(t.paywall.comparison.locationSlots.label,
+              t.paywall.comparison.locationSlots.free,
+              t.paywall.comparison.locationSlots.pro),
+          _comparisonSection(t.paywall.comparison.secRecords),
+          _comparisonRow(t.paywall.comparison.recordsSave.label, '✓', '✓'),
+          _comparisonRow(t.paywall.comparison.archiveSearch.label, '✓', '✓'),
+          _comparisonRow(t.paywall.comparison.replayExport.label, '✓', '✓'),
+          _comparisonRow(t.paywall.comparison.titleRediagnosis.label,
+              t.paywall.comparison.titleRediagnosis.free,
+              t.paywall.comparison.titleRediagnosis.pro),
+          _comparisonSection(t.paywall.comparison.secForecast),
+          _comparisonRow(t.paywall.comparison.forecastPeriod.label,
+              t.paywall.comparison.forecastPeriod.free,
+              t.paywall.comparison.forecastPeriod.pro),
           const SizedBox(height: 6),
         ],
       ),
@@ -72,12 +85,12 @@ extension _PaywallComparison on _PaywallScreenState {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
-        children: const [
+        children: [
           Expanded(
             flex: 4,
             child: Text(
-              '機能',
-              style: TextStyle(
+              t.paywall.comparison.colFeature,
+              style: const TextStyle(
                 color: SolaraColors.textSecondary,
                 fontSize: 11,
                 fontWeight: FontWeight.w700,
@@ -85,7 +98,7 @@ extension _PaywallComparison on _PaywallScreenState {
               ),
             ),
           ),
-          Expanded(
+          const Expanded(
             flex: 3,
             child: Text(
               'Free',
@@ -98,7 +111,7 @@ extension _PaywallComparison on _PaywallScreenState {
               ),
             ),
           ),
-          Expanded(
+          const Expanded(
             flex: 3,
             child: Text(
               'Pro',
@@ -195,11 +208,11 @@ extension _PaywallComparison on _PaywallScreenState {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Padding(
-          padding: EdgeInsets.only(left: 4, bottom: 12),
+        Padding(
+          padding: const EdgeInsets.only(left: 4, bottom: 12),
           child: Text(
-            'よくあるご質問',
-            style: TextStyle(
+            t.paywall.faq.title,
+            style: const TextStyle(
               color: SolaraColors.solaraGoldLight,
               fontSize: 15,
               fontWeight: FontWeight.w700,
@@ -207,57 +220,14 @@ extension _PaywallComparison on _PaywallScreenState {
             ),
           ),
         ),
+        _faqItem(t.paywall.faq.diff.q, t.paywall.faq.diff.a),
+        _faqItem(t.paywall.faq.weeklyCap.q, t.paywall.faq.weeklyCap.a),
+        _faqItem(t.paywall.faq.proTarot.q, t.paywall.faq.proTarot.a),
+        _faqItem(t.paywall.faq.outing30min.q, t.paywall.faq.outing30min.a),
         _faqItem(
-          'Free と Pro の違いは何ですか?',
-          'Stella 相談は Free 週 3 回 → Pro 週 100 回、星読みは Free「総合」のみ → Pro 全 5 カテゴリ、'
-              'アスペクトラインは Free 40 本 → Pro 120 本に増えます。タロットは両プラン 1 日 1 回ですが、'
-              'Pro はカテゴリ指定時のクレジット消費なし + 質問入力欄が付与されます。\n\n'
-              'ACG / CCG の 4 フレーム、星座アーカイブやタロット履歴の検索・フィルタ、'
-              '読み解き結果の保存・シェアは Free でもお使いいただけます。'
-              '詳細は上記表でご確認ください。',
-        ),
-        _faqItem(
-          'Stella 相談の週次キャップを超えるとどうなりますか?',
-          '追加クレジットの購入で継続してご利用いただけます。月曜のリセット時に Pro 週 100 回が補充されます。',
-        ),
-        _faqItem(
-          'Pro のタロットは何が変わりますか?',
-          'タロットは Free・Pro とも 1 日 1 回です。Pro では、クレジットを消費せずに'
-              '聞きたいカテゴリ（総合・恋愛・豊かさ・仕事・対話・癒し・変化）を指定して'
-              'リーディングできます。さらに、知りたいことを直接質問として入力でき、'
-              'その質問内容に応じたリーディング結果が表示されます。\n\n'
-              'Free では総合のみ無料（1 日 1 回）で、ほかのカテゴリは 1 回につき'
-              '1 クレジットを消費します。',
-        ),
-        _faqItem(
-          'おでかけ相談の「30分後の変化」とは?',
-          'Cosmic Pro なら、おでかけ・イベントの相談で行く時刻を 1 時間刻みで'
-              '指定できます。アストロカートグラフィ（CCG）の星の線は地球の自転で'
-              '動くため、同じ場所でも 30 分で「その場の主役」が静かに入れ替わります。\n\n'
-              '結果画面の「30分経過後を見る」を開くと、火星の線が離れていく／'
-              '金星の線が近づいてくる といった移ろいを先に読めます。'
-              '「核心は前半に」「後半にかけて温まる」のように、その場での'
-              '時間の使い方が見えてきます（吉凶ではなく、エネルギーの質の移り変わりです）。',
-        ),
-        _faqItem(
-          'プランをアップグレード / ダウングレードできますか?',
-          'Apple App Store または Google Play のサブスクリプション管理画面から、いつでも変更できます。'
-              '自動更新を解約すると、次の課金日から Free プランへ自動的に切り替わります。',
-        ),
-        _faqItem(
-          '解約後の機能はどうなりますか?',
-          '現在の課金期間が終了するまでは Cosmic Pro 機能を継続してお使いいただけます。'
-              '期間終了後は Free プランに自動移行します。読み解き結果の履歴は端末内に保存されたまま残ります。',
-        ),
-        _faqItem(
-          'Pro を再契約すると週次クレジットは増えますか?',
-          'いいえ。週次クレジットは 1 アカウントごとに管理され、毎週月曜日にリセットされます。'
-              'Pro を解約してすぐ再契約しても、その時点の残数は変わりません。'
-              '不正利用ではありませんが、再契約によって「週 100 回」の制度を'
-              '繰り返し補充するような抜け穴的な使い方はできない仕組みです。\n\n'
-              '例: 水曜日に週次クレジットが残り 0 の状態で Pro を解約し、すぐ再契約しても、'
-              '残りは 0 のままです。翌週の月曜日に 100 回へ復活します。',
-        ),
+            t.paywall.faq.upgradeDowngrade.q, t.paywall.faq.upgradeDowngrade.a),
+        _faqItem(t.paywall.faq.afterCancel.q, t.paywall.faq.afterCancel.a),
+        _faqItem(t.paywall.faq.resubscribe.q, t.paywall.faq.resubscribe.a),
       ],
     );
   }

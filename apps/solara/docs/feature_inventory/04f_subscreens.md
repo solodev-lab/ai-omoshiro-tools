@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 32 / 総行数: 11125
+- ファイル数: 32 / 総行数: 11095
 - class/mixin/extension/enum: 100
 - 関数 (top-level + method の素拾い): 281
 - Navigator.push 等: 0
@@ -1065,7 +1065,7 @@ showInfoPopup 経由で表示する (widgets/info_popup.dart、popup 統一規�
 - 集計: `showInfoPopup`×1
 
 
-### `lib/screens/paywall_comparison.dart` (311 行)
+### `lib/screens/paywall_comparison.dart` (281 行)
 
 **ファイル先頭コメント:**
 
@@ -1093,16 +1093,16 @@ Paywall Screen — Free vs Pro 比較テーブル / FAQ アコーディオン
   <details><summary>private 関数 6 件</summary>
 
   - L16 `_buildComparisonTable()`
-  - L71 `_comparisonHeader()`
-  - L119 `_comparisonSection()`
-  - L147 `_comparisonRow()`
-  - L194 `_buildFaqSection()`
-  - L265 `_faqItem()`
+  - L84 `_comparisonHeader()`
+  - L132 `_comparisonSection()`
+  - L160 `_comparisonRow()`
+  - L207 `_buildFaqSection()`
+  - L235 `_faqItem()`
 
   </details>
 
 
-### `lib/screens/paywall_legal_links.dart` (197 行)
+### `lib/screens/paywall_legal_links.dart` (195 行)
 
 **ファイル先頭コメント:**
 
@@ -1136,14 +1136,14 @@ Paywall Screen — 法務必須項目 + 補助ウィジェット + 期間ラベ�
   - L91 `_periodLabel()`
   - L112 `_introPeriodLabel()`
   - L128 `_buildAutoRenewNotice()`
-  - L145 `_buildLegalLinks()`
-  - L161 `_legalLink()`
-  - L176 `_buildRestoreButton()`
+  - L142 `_buildLegalLinks()`
+  - L159 `_legalLink()`
+  - L174 `_buildRestoreButton()`
 
   </details>
 
 
-### `lib/screens/paywall_screen.dart` (313 行)
+### `lib/screens/paywall_screen.dart` (314 行)
 
 **ファイル先頭コメント:**
 
@@ -1167,40 +1167,40 @@ Solara ペイウォール画面 — Phase 2-6b + Suno 風リデザイン (2026-0
   - 購入完了 → entitlement listener が ProStatus 更新 → pop で前画面に戻る
 ```
 
-**imports:** dart=1 / package=4 / relative=5
+**imports:** dart=1 / package=4 / relative=6
 
-- relative: `../theme/solara_colors.dart`, `../utils/legal_urls.dart`, `../utils/pro_status.dart`, `../utils/purchases_service.dart`, `../utils/solara_auth.dart`
+- relative: `../i18n/strings.g.dart`, `../theme/solara_colors.dart`, `../utils/legal_urls.dart`, `../utils/pro_status.dart`, `../utils/purchases_service.dart`, `../utils/solara_auth.dart`
 
 **型定義 (3):**
 
-- L37 `enum BillingCycle`
+- L38 `enum BillingCycle`
   - 課金サイクル選択トグル用。デフォルトは Annual (SAVE 50% 訴求)。
-- L39 `class PaywallScreen : StatefulWidget`
-- L46 `class _PaywallScreenState : State`
+- L40 `class PaywallScreen : StatefulWidget`
+- L47 `class _PaywallScreenState : State`
 
 **関数 (4 public + 9 private):**
 
-- L43 `createState()`
-- L64 `initState()`
-- L71 `dispose()`
-- L259 `build()`
+- L44 `createState()`
+- L65 `initState()`
+- L72 `dispose()`
+- L260 `build()`
 
   <details><summary>private 関数 9 件</summary>
 
-  - L58 `_setBilling()`
-  - L76 `_onProStatusChanged()`
-  - L83 `_loadOfferings()`
-  - L102 `_ensureSignedInForPro()`
-  - L164 `_purchase()`
-  - L199 `_restore()`
-  - L226 `_showSnack()`
-  - L236 `_openUrl()`
-  - L244 `_openCancelGuide()`
+  - L59 `_setBilling()`
+  - L77 `_onProStatusChanged()`
+  - L84 `_loadOfferings()`
+  - L103 `_ensureSignedInForPro()`
+  - L165 `_purchase()`
+  - L200 `_restore()`
+  - L227 `_showSnack()`
+  - L237 `_openUrl()`
+  - L245 `_openCancelGuide()`
 
   </details>
 
 
-### `lib/screens/paywall_widgets.dart` (423 行)
+### `lib/screens/paywall_widgets.dart` (424 行)
 
 **ファイル先頭コメント:**
 
@@ -1223,12 +1223,12 @@ Paywall Screen — Hero / 課金トグル / Free・Pro 2 カード (Suno 風 cor
   - L9 `_buildHero()`
   - L44 `_buildPlansSection()`
   - L78 `_buildBillingToggle()`
-  - L97 `_toggleSegment()`
-  - L160 `_buildFreeCard()`
-  - L208 `_buildProCard()`
-  - L314 `_buildProCta()`
-  - L370 `_cardBadge()`
-  - L394 `_planBullet()`
+  - L99 `_toggleSegment()`
+  - L162 `_buildFreeCard()`
+  - L210 `_buildProCard()`
+  - L315 `_buildProCta()`
+  - L371 `_cardBadge()`
+  - L395 `_planBullet()`
 
   </details>
 

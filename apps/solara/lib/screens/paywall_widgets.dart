@@ -28,10 +28,10 @@ extension _PaywallWidgets on _PaywallScreenState {
           ),
         ),
         const SizedBox(height: 10),
-        const Text(
-          'Stella と深く対話し、星と地に重なる景色を読み解くための完全機能。',
+        Text(
+          t.paywall.hero.subtitle,
           textAlign: TextAlign.center,
-          style: TextStyle(
+          style: const TextStyle(
             color: SolaraColors.textSecondary,
             fontSize: 14,
             height: 1.6,
@@ -85,10 +85,12 @@ extension _PaywallWidgets on _PaywallScreenState {
       ),
       child: Row(
         children: [
-          Expanded(child: _toggleSegment(BillingCycle.monthly, '月額', null)),
           Expanded(
-              child:
-                  _toggleSegment(BillingCycle.annual, '年額', 'SAVE 50%')),
+              child: _toggleSegment(
+                  BillingCycle.monthly, t.paywall.billing.monthly, null)),
+          Expanded(
+              child: _toggleSegment(
+                  BillingCycle.annual, t.paywall.billing.annual, 'SAVE 50%')),
         ],
       ),
     );
@@ -180,26 +182,26 @@ extension _PaywallWidgets on _PaywallScreenState {
                 ),
               ),
               const Spacer(),
-              if (isFreeUser) _cardBadge('現在のプラン', muted: true),
+              if (isFreeUser) _cardBadge(t.paywall.plans.currentPlan, muted: true),
             ],
           ),
           const SizedBox(height: 4),
-          const Text(
-            '¥0  /  ずっと',
-            style: TextStyle(
+          Text(
+            t.paywall.plans.freePrice,
+            style: const TextStyle(
               color: SolaraColors.textSecondary,
               fontSize: 13,
             ),
           ),
           const SizedBox(height: 14),
-          _planBullet('Stella 相談  週 3 回 (月曜リセット) + 購入クレジット'),
-          _planBullet('タロット  1 日 1 回（カテゴリ指定はクレジット消費）'),
-          _planBullet('星読み  「総合」カテゴリのみ'),
-          _planBullet('アスペクトライン  40 本'),
-          _planBullet('ACG / CCG  4 フレームすべて (natal / transit / prog / solar arc)'),
-          _planBullet('星座アーカイブ・タロット履歴の検索・フィルタ'),
-          _planBullet('形成演出の再生・テキスト書き出し'),
-          _planBullet('読み解き結果の永久保存とシェア'),
+          _planBullet(t.paywall.plans.free.stella),
+          _planBullet(t.paywall.plans.free.tarot),
+          _planBullet(t.paywall.plans.free.starReading),
+          _planBullet(t.paywall.plans.free.aspectLines),
+          _planBullet(t.paywall.plans.free.acgFrames),
+          _planBullet(t.paywall.plans.free.archiveSearch),
+          _planBullet(t.paywall.plans.free.replayExport),
+          _planBullet(t.paywall.plans.free.save),
         ],
       ),
     );
@@ -215,8 +217,8 @@ extension _PaywallWidgets on _PaywallScreenState {
 
     final product = selectedPackage?.storeProduct;
     final priceLine = product == null
-        ? '価格を取得中…'
-        : '${product.priceString} / ${_periodLabel(selectedPackage!)}  (税込)';
+        ? t.paywall.plans.priceLoading
+        : '${product.priceString} / ${_periodLabel(selectedPackage!)}  ${t.paywall.plans.taxIncl}';
 
     final intro = product?.introductoryPrice;
     final hasTrial = intro != null && intro.price == 0;
@@ -228,7 +230,7 @@ extension _PaywallWidgets on _PaywallScreenState {
       // 通貨記号は priceString に倣う: ¥ 始まり / 末尾 currency の両方を考慮しないので
       // 簡易に「¥{価格}」形式で出す (ja-JP 想定。i18n 解禁時に再考)。
       final yen = perMonth.round();
-      monthlyEquivalent = '月あたり ¥$yen 相当';
+      monthlyEquivalent = t.paywall.plans.monthlyEquivalent(yen: yen);
     }
 
     return Container(
@@ -257,7 +259,9 @@ extension _PaywallWidgets on _PaywallScreenState {
                 ),
               ),
               const Spacer(),
-              _cardBadge(isPro ? 'ご加入中' : '人気'),
+              _cardBadge(isPro
+                  ? t.paywall.plans.badgeSubscribed
+                  : t.paywall.plans.badgePopular),
             ],
           ),
           const SizedBox(height: 4),
@@ -282,7 +286,7 @@ extension _PaywallWidgets on _PaywallScreenState {
           if (hasTrial) ...[
             const SizedBox(height: 6),
             Text(
-              '🎁 ${_introPeriodLabel(intro)}の無料トライアル → 終了後に自動課金',
+              t.paywall.plans.trialLine(period: _introPeriodLabel(intro)),
               style: const TextStyle(
                 color: SolaraColors.energyHardLight,
                 fontSize: 11,
@@ -291,19 +295,16 @@ extension _PaywallWidgets on _PaywallScreenState {
             ),
           ],
           const SizedBox(height: 14),
-          _planBullet('Stella 相談  週 100 回 (月曜リセット)'),
-          _planBullet('おでかけ相談  時刻を1時間刻みで指定 + 「30分後の変化」が読める'
-              ' (CCG の線が自転で動き、前半/後半で主役が入れ替わる)'),
-          _planBullet('タロット  7 カテゴリ (総合・恋愛・豊かさ・仕事・対話・癒し・変化) を'
-              'クレジット消費なしで指定 + 質問入力欄'),
-          _planBullet('星読み  全 5 カテゴリ (総合・恋愛・豊かさ・仕事・話す) + 深い読み'),
-          _planBullet('Forecast 5 年予測  モテ期や豊かさ期などが 5 年先までわかる。'
-              'ヒートマップを 5 年先まで見られる'),
-          _planBullet('アスペクトライン  全 120 本 (合・スクエア・トライン・セクスタイル)'),
-          _planBullet('天頂帯・天底帯  惑星が真上/真下を通る緯度を帯で表示 (Lewis 流)'),
-          _planBullet('引越しシミュレーション  地点タップで ASC / MC / 12 ハウスを再計算'),
-          _planBullet('保存拠点数  10か所'),
-          _planBullet('称号 (クラス) の再診断  無制限'),
+          _planBullet(t.paywall.plans.pro.stella),
+          _planBullet(t.paywall.plans.pro.outing),
+          _planBullet(t.paywall.plans.pro.tarot),
+          _planBullet(t.paywall.plans.pro.starReading),
+          _planBullet(t.paywall.plans.pro.forecast),
+          _planBullet(t.paywall.plans.pro.aspectLines),
+          _planBullet(t.paywall.plans.pro.zenithBands),
+          _planBullet(t.paywall.plans.pro.relocationSim),
+          _planBullet(t.paywall.plans.pro.slots),
+          _planBullet(t.paywall.plans.pro.rediagnosis),
           const SizedBox(height: 16),
           _buildProCta(selectedPackage, isPro: isPro),
         ],
@@ -320,7 +321,7 @@ extension _PaywallWidgets on _PaywallScreenState {
         child: OutlinedButton.icon(
           onPressed: _openCancelGuide,
           icon: const Icon(Icons.settings_outlined, size: 16),
-          label: const Text('定期購入を管理'),
+          label: Text(t.paywall.cta.manageSubscription),
           style: OutlinedButton.styleFrom(
             foregroundColor: SolaraColors.solaraGoldLight,
             side: const BorderSide(color: Color(0x77F9D976)),
@@ -361,8 +362,8 @@ extension _PaywallWidgets on _PaywallScreenState {
                 ),
               )
             : Text(package.packageType == PackageType.annual
-                ? '年額プランを始める'
-                : '月額プランを始める'),
+                ? t.paywall.cta.startAnnual
+                : t.paywall.cta.startMonthly),
       ),
     );
   }

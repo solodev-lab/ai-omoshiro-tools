@@ -23,6 +23,7 @@ import 'package:flutter/material.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../i18n/strings.g.dart';
 import '../theme/solara_colors.dart';
 import '../utils/legal_urls.dart';
 import '../utils/pro_status.dart';
