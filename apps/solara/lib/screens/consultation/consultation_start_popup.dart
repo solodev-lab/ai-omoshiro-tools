@@ -69,30 +69,30 @@ class _StartConsultPopupState extends State<_StartConsultPopup> {
     final String titleText;
     if (isPro) {
       titleText = hasPro
-          ? 'Pro 週次クレジットを使う'
-          : (hasPaid ? '有料クレジットを使う' : 'クレジットを使う');
+          ? t.consultStart.useProWeekly
+          : (hasPaid ? t.consultStart.usePaid : t.consultStart.useCredit);
     } else {
       if (hasFree) {
-        titleText = '無料クレジットを使う';
+        titleText = t.consultStart.useFree;
       } else if (hasPaid) {
-        titleText = '有料クレジットを使う';
+        titleText = t.consultStart.usePaid;
       } else {
-        titleText = 'クレジットを使う';
+        titleText = t.consultStart.useCredit;
       }
     }
 
     // 1 行ぶんの残数バッジ。Pro/Free で項目内容と説明文だけ変える。
-    final String primaryLabel = isPro ? 'Pro 週次クレジット' : '無料クレジット';
+    final String primaryLabel =
+        isPro ? t.consultStart.proWeeklyLabel : t.consultStart.freeLabel;
     final String primaryRemain = isPro
         ? ((proRemaining != null && proLimit != null)
-            ? '残り $proRemaining / $proLimit 回'
-            : '残り回数を確認中')
+            ? t.consultStart.remaining(n: proRemaining, limit: proLimit)
+            : t.consultStart.checkingRemaining)
         : ((freeRemaining != null && freeLimit != null)
-            ? '残り $freeRemaining / $freeLimit 回'
-            : '残り回数を確認中');
-    final String primarySubtitle = isPro
-        ? '毎週月曜日に補充（Pro 加入中）'
-        : '毎週月曜日に補充';
+            ? t.consultStart.remaining(n: freeRemaining, limit: freeLimit)
+            : t.consultStart.checkingRemaining);
+    final String primarySubtitle =
+        isPro ? t.consultStart.refillProMonday : t.consultStart.refillMonday;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -180,10 +180,10 @@ class _StartConsultPopupState extends State<_StartConsultPopup> {
                       color: SolaraColors.solaraGoldLight, size: 16),
                   const SizedBox(width: 8),
                   // 主クレジット行と同じく大フォント+狭端末でもはみ出さないよう Flexible 化。
-                  const Flexible(
+                  Flexible(
                     child: Text(
-                      '有料クレジット',
-                      style: TextStyle(
+                      t.consultStart.paidLabel,
+                      style: const TextStyle(
                         color: SolaraColors.textPrimary,
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
@@ -193,7 +193,7 @@ class _StartConsultPopupState extends State<_StartConsultPopup> {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      '残り $purchased 回',
+                      t.consultStart.paidRemaining(n: purchased),
                       textAlign: TextAlign.end,
                       style: const TextStyle(
                         color: SolaraColors.textPrimary,
@@ -204,11 +204,11 @@ class _StartConsultPopupState extends State<_StartConsultPopup> {
                   ),
                 ],
               ),
-              const Padding(
-                padding: EdgeInsets.only(left: 24, top: 2),
+              Padding(
+                padding: const EdgeInsets.only(left: 24, top: 2),
                 child: Text(
-                  '失効なし（購入分は端末を変えても残る）',
-                  style: TextStyle(
+                  t.consultStart.neverExpires,
+                  style: const TextStyle(
                     color: SolaraColors.textSecondary,
                     fontSize: 11,
                   ),
@@ -237,9 +237,9 @@ class _StartConsultPopupState extends State<_StartConsultPopup> {
                   size: 20,
                 ),
                 const SizedBox(width: 8),
-                const Text(
-                  '次回以降表示しない',
-                  style: TextStyle(
+                Text(
+                  t.consultStart.dontShowAgain,
+                  style: const TextStyle(
                     color: SolaraColors.textSecondary,
                     fontSize: 13,
                   ),
@@ -266,7 +266,7 @@ class _StartConsultPopupState extends State<_StartConsultPopup> {
               ),
             ),
             icon: const Icon(Icons.add_circle_outline, size: 18),
-            label: const Text('クレジットを購入'),
+            label: Text(t.consultStart.buyCredits),
           ),
         ),
         const SizedBox(height: 8),
@@ -291,7 +291,7 @@ class _StartConsultPopupState extends State<_StartConsultPopup> {
                 letterSpacing: 0.6,
               ),
             ),
-            child: const Text('相談を始める'),
+            child: Text(t.consultStart.start),
           ),
         ),
       ],

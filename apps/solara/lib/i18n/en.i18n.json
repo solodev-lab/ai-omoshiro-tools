@@ -1,4 +1,43 @@
 {
+  "consultHistory": {
+    "title": "Consultation history",
+    "deleteAll": "Delete all",
+    "deleteAllTitle": "Delete everything?",
+    "deleteAllBody": "All of your saved consultation records will be erased. This can't be undone.",
+    "delete": "Delete",
+    "deleteOneTitle": "Delete this record?",
+    "filterAll": "All",
+    "filterFav": "★ Favorites",
+    "emptyAll": "No consultation history yet",
+    "emptyFav": "No favorites yet",
+    "emptyAllHint": "Tap a place on the Map, or start a consultation from Daily Transit, and it'll be saved here.",
+    "emptyFavHint": "Tap the ☆ on a record and it gathers here.",
+    "withWhomPrefix": "With: $name",
+    "undecidedShort": "Undecided",
+    "modeDaily": "Outing / Event",
+    "fav": "Add to favorites",
+    "unfav": "Remove from favorites"
+  },
+  "consultCredit": {
+    "signinTitle": "Sign-in required",
+    "signinBody": "Buying credits requires signing in with $provider.\n\nOnce you sign in, your balance carries over even after you change or reinstall on a new device. The free features work without signing in.",
+    "signinCta": "Sign in with $provider",
+    "signinFailed": "Sign-in failed",
+    "buyFailed": "The purchase didn't go through. Please try again in a little while.",
+    "heading": "Stella consultation credits",
+    "balanceFree": "Free consultations this week: $n left",
+    "balancePaid": " · $n purchased left",
+    "proUnlimited": "✦ Cosmic Pro makes it unlimited →",
+    "preparing": "Credits aren't on sale just yet.\nPlease check back a little later.",
+    "fallbackProduct": "Credits"
+  },
+  "consultPlacePicker": {
+    "prompt": "Tap or search to choose a place",
+    "loading": "Loading…",
+    "selectedPoint": "Selected point",
+    "coordName": "Selected point ($lat°, $lng°)",
+    "consultHere": "Consult about this place"
+  },
   "consultResult": {
     "title": "Consultation result",
     "back": "Back",
@@ -83,7 +122,71 @@
     },
     "returnChip": "Back to consultation result"
   },
+  "consultStart": {
+    "useProWeekly": "Use a Pro weekly credit",
+    "usePaid": "Use a paid credit",
+    "useCredit": "Use a credit",
+    "useFree": "Use a free credit",
+    "proWeeklyLabel": "Pro weekly credit",
+    "freeLabel": "Free credit",
+    "remaining": "$n / $limit left",
+    "checkingRemaining": "Checking how many are left…",
+    "refillProMonday": "Refills every Monday (Cosmic Pro active)",
+    "refillMonday": "Refills every Monday",
+    "paidLabel": "Paid credit",
+    "paidRemaining": "$n left",
+    "neverExpires": "Never expires (purchased credits stay even if you switch devices)",
+    "dontShowAgain": "Don't show this again",
+    "buyCredits": "Buy credits",
+    "start": "Start the consultation"
+  },
   "consultInput": {
+    "screenTitle": "Stella Consultation",
+    "section": {
+      "occasion": "What's the occasion?",
+      "when": "When?",
+      "timeBand": "Time of day (optional)",
+      "where": "Where?",
+      "radiusDaily": "Distance from your current address",
+      "radiusBand": "Distance band from your current address",
+      "region": "Region block",
+      "point": "Pick a place",
+      "theme": "Which theme shall we read?",
+      "whom": "With whom? (optional)",
+      "wish": "What do you hope for? / Your wish (optional)"
+    },
+    "proTimePick": {
+      "label": "Setting the time for Outings + the 30-minute shift",
+      "desc": "Set the time you'll go in one-hour steps, and read how the flow of the place shifts 30 minutes later. CCG lines move as the Earth turns, so even in the same place the lead of the moment changes between the first and second half."
+    },
+    "whomHint": "e.g. with my wife / on my own / with someone I like",
+    "wishHint": "The feeling you most want to hold onto right now, in a few words",
+    "whomExamples": {
+      "love": ["On my own", "With my partner", "With someone I like"],
+      "money": ["On my own", "With family", "With my partner"],
+      "work": ["On my own", "With a colleague", "With teammates"],
+      "communication": ["With a friend", "With companions", "On my own"],
+      "healing": ["On my own", "With my partner", "With family"],
+      "newStart": ["On my own", "With my partner", "With family"],
+      "fallback": ["On my own", "With my partner", "With a friend", "With family"]
+    },
+    "wishExamples": {
+      "love": ["Deepen this bond", "Meet someone good", "Connect heart to heart"],
+      "money": ["Draw in abundance", "Build a foundation for work", "Live with stability"],
+      "work": ["Move forward at work", "Take on a new challenge", "Find a place I can focus"],
+      "communication": ["Widen my horizons", "Deepen my learning", "Find fresh inspiration"],
+      "healing": ["Rest my heart", "Refresh my mood", "Spend calm time"],
+      "newStart": ["Change the current", "Take a new step", "Begin anew"],
+      "fallback": ["Take a step forward", "Change the current"]
+    },
+    "picker": {
+      "searchHint": "Search by address / place name",
+      "clearSearch": "Clear",
+      "fromViewpoint": "🔭 From your ViewPoints",
+      "fromLocations": "📍 From your saved Locations",
+      "pickOnMap": "Pick on the map",
+      "clearSelection": "Clear selection"
+    },
     "theme": {
       "love": "Love & relationships",
       "money": "Abundance & money",

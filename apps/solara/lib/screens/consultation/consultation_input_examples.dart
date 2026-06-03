@@ -7,32 +7,28 @@
 part of 'consultation_input_screen.dart';
 
 // ── だれと (テーマ別) ──
-const _whomByTheme = <String, List<String>>{
-  'love': ['ひとりで', 'パートナーと', '気になる人と'],
-  'money': ['ひとりで', '家族と', 'パートナーと'],
-  'work': ['ひとりで', '同僚と', '仲間と'],
-  'communication': ['友人と', '仲間と', 'ひとりで'],
-  'healing': ['ひとりで', 'パートナーと', '家族と'],
-  'newStart': ['ひとりで', 'パートナーと', '家族と'],
-};
-const _whomDefault = <String>['ひとりで', 'パートナーと', '友人と', '家族と'];
-
-List<String> _whomExamplesFor(String? theme) =>
-    _whomByTheme[theme] ?? _whomDefault;
+// 記入例はタップで自由記述欄に入り、その文字列が Worker に送られる
+// (lang に応じて ja/en の例文を選ぶ)。正典は i18n consultInput.whomExamples。
+List<String> _whomExamplesFor(String? theme) => switch (theme) {
+      'love' => t.consultInput.whomExamples.love,
+      'money' => t.consultInput.whomExamples.money,
+      'work' => t.consultInput.whomExamples.work,
+      'communication' => t.consultInput.whomExamples.communication,
+      'healing' => t.consultInput.whomExamples.healing,
+      'newStart' => t.consultInput.whomExamples.newStart,
+      _ => t.consultInput.whomExamples.fallback,
+    };
 
 // ── 願い (テーマ別) ──
-const _wishByTheme = <String, List<String>>{
-  'love': ['関係を深めたい', 'いい出会いがほしい', '心を通わせたい'],
-  'money': ['豊かさを引き寄せたい', '仕事の基盤を築きたい', '安定した暮らしがしたい'],
-  'work': ['仕事で前進したい', '新しい挑戦をしたい', '集中できる場所がほしい'],
-  'communication': ['視野を広げたい', '学びを深めたい', 'いい刺激がほしい'],
-  'healing': ['心を休めたい', '気分転換したい', '穏やかに過ごしたい'],
-  'newStart': ['流れを変えたい', '新たな一歩を踏み出したい', '心機一転したい'],
-};
-const _wishDefault = <String>['今より一歩進みたい', '流れを変えたい'];
-
-List<String> _wishExamplesFor(String? theme) =>
-    _wishByTheme[theme] ?? _wishDefault;
+List<String> _wishExamplesFor(String? theme) => switch (theme) {
+      'love' => t.consultInput.wishExamples.love,
+      'money' => t.consultInput.wishExamples.money,
+      'work' => t.consultInput.wishExamples.work,
+      'communication' => t.consultInput.wishExamples.communication,
+      'healing' => t.consultInput.wishExamples.healing,
+      'newStart' => t.consultInput.wishExamples.newStart,
+      _ => t.consultInput.wishExamples.fallback,
+    };
 
 /// タップで自由記述を埋める記入例チップ群。
 /// 枠はテキストフィールドより薄く + 右矢じりで「タップで入る候補」と分かるように。

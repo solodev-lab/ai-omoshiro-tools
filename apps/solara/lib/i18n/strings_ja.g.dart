@@ -40,7 +40,11 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 	Translations $copyWith({TranslationMetadata<AppLocale, Translations>? meta}) => Translations(meta: meta ?? this.$meta);
 
 	// Translations
+	late final Translations$consultHistory$ja consultHistory = Translations$consultHistory$ja.internal(_root);
+	late final Translations$consultCredit$ja consultCredit = Translations$consultCredit$ja.internal(_root);
+	late final Translations$consultPlacePicker$ja consultPlacePicker = Translations$consultPlacePicker$ja.internal(_root);
 	late final Translations$consultResult$ja consultResult = Translations$consultResult$ja.internal(_root);
+	late final Translations$consultStart$ja consultStart = Translations$consultStart$ja.internal(_root);
 	late final Translations$consultInput$ja consultInput = Translations$consultInput$ja.internal(_root);
 	late final Translations$mapAcg$ja mapAcg = Translations$mapAcg$ja.internal(_root);
 	late final Translations$mapVp$ja mapVp = Translations$mapVp$ja.internal(_root);
@@ -51,6 +55,132 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 	late final Translations$disclaimer$ja disclaimer = Translations$disclaimer$ja.internal(_root);
 	late final Translations$common$ja common = Translations$common$ja.internal(_root);
 	late final Translations$aiConsent$ja aiConsent = Translations$aiConsent$ja.internal(_root);
+}
+
+// Path: consultHistory
+class Translations$consultHistory$ja {
+	Translations$consultHistory$ja.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// ja: '相談履歴'
+	String get title => '相談履歴';
+
+	/// ja: 'すべて削除'
+	String get deleteAll => 'すべて削除';
+
+	/// ja: 'すべて削除しますか？'
+	String get deleteAllTitle => 'すべて削除しますか？';
+
+	/// ja: '保存された全ての相談記録が消えます。元に戻せません。'
+	String get deleteAllBody => '保存された全ての相談記録が消えます。元に戻せません。';
+
+	/// ja: '削除'
+	String get delete => '削除';
+
+	/// ja: 'この記録を削除しますか？'
+	String get deleteOneTitle => 'この記録を削除しますか？';
+
+	/// ja: 'すべて'
+	String get filterAll => 'すべて';
+
+	/// ja: '★ お気に入り'
+	String get filterFav => '★ お気に入り';
+
+	/// ja: 'まだ相談履歴はありません'
+	String get emptyAll => 'まだ相談履歴はありません';
+
+	/// ja: 'お気に入りはまだありません'
+	String get emptyFav => 'お気に入りはまだありません';
+
+	/// ja: 'Map で地点をタップ、または Daily Transit から相談を始めると、 ここに保存されます。'
+	String get emptyAllHint => 'Map で地点をタップ、または Daily Transit から相談を始めると、\nここに保存されます。';
+
+	/// ja: '記録の ☆ をタップすると、ここに集まります。'
+	String get emptyFavHint => '記録の ☆ をタップすると、ここに集まります。';
+
+	/// ja: 'だれと: $name'
+	String withWhomPrefix({required Object name}) => 'だれと: ${name}';
+
+	/// ja: '未定'
+	String get undecidedShort => '未定';
+
+	/// ja: 'おでかけ・イベント'
+	String get modeDaily => 'おでかけ・イベント';
+
+	/// ja: 'お気に入り登録'
+	String get fav => 'お気に入り登録';
+
+	/// ja: 'お気に入り解除'
+	String get unfav => 'お気に入り解除';
+}
+
+// Path: consultCredit
+class Translations$consultCredit$ja {
+	Translations$consultCredit$ja.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// ja: 'サインインが必要です'
+	String get signinTitle => 'サインインが必要です';
+
+	/// ja: 'クレジットのご購入には $provider サインインが必要です。 サインインすると、機種変更や再インストール後も残高が引き継がれます。無料の機能はサインインなしでお使いいただけます。'
+	String signinBody({required Object provider}) => 'クレジットのご購入には ${provider} サインインが必要です。\n\nサインインすると、機種変更や再インストール後も残高が引き継がれます。無料の機能はサインインなしでお使いいただけます。';
+
+	/// ja: '$provider でサインイン'
+	String signinCta({required Object provider}) => '${provider} でサインイン';
+
+	/// ja: 'サインインに失敗しました'
+	String get signinFailed => 'サインインに失敗しました';
+
+	/// ja: '購入に失敗しました。時間をおいてお試しください。'
+	String get buyFailed => '購入に失敗しました。時間をおいてお試しください。';
+
+	/// ja: 'Stella 相談クレジット'
+	String get heading => 'Stella 相談クレジット';
+
+	/// ja: '今週の無料相談 あと$n回'
+	String balanceFree({required Object n}) => '今週の無料相談 あと${n}回';
+
+	/// ja: ' ・ 購入残高 $n回'
+	String balancePaid({required Object n}) => ' ・ 購入残高 ${n}回';
+
+	/// ja: '✦ Cosmic Pro なら回数無制限 →'
+	String get proUnlimited => '✦ Cosmic Pro なら回数無制限 →';
+
+	/// ja: 'クレジットの販売準備中です。 しばらくしてからお試しください。'
+	String get preparing => 'クレジットの販売準備中です。\nしばらくしてからお試しください。';
+
+	/// ja: 'クレジット'
+	String get fallbackProduct => 'クレジット';
+}
+
+// Path: consultPlacePicker
+class Translations$consultPlacePicker$ja {
+	Translations$consultPlacePicker$ja.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// ja: 'タップ または 検索 で地点を選んでください'
+	String get prompt => 'タップ または 検索 で地点を選んでください';
+
+	/// ja: '読み込み中…'
+	String get loading => '読み込み中…';
+
+	/// ja: '選択地点'
+	String get selectedPoint => '選択地点';
+
+	/// ja: '選択地点 ($lat°, $lng°)'
+	String coordName({required Object lat, required Object lng}) => '選択地点 (${lat}°, ${lng}°)';
+
+	/// ja: 'この地点で相談'
+	String get consultHere => 'この地点で相談';
 }
 
 // Path: consultResult
@@ -140,6 +270,63 @@ class Translations$consultResult$ja {
 	String get returnChip => '相談結果に戻る';
 }
 
+// Path: consultStart
+class Translations$consultStart$ja {
+	Translations$consultStart$ja.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// ja: 'Pro 週次クレジットを使う'
+	String get useProWeekly => 'Pro 週次クレジットを使う';
+
+	/// ja: '有料クレジットを使う'
+	String get usePaid => '有料クレジットを使う';
+
+	/// ja: 'クレジットを使う'
+	String get useCredit => 'クレジットを使う';
+
+	/// ja: '無料クレジットを使う'
+	String get useFree => '無料クレジットを使う';
+
+	/// ja: 'Pro 週次クレジット'
+	String get proWeeklyLabel => 'Pro 週次クレジット';
+
+	/// ja: '無料クレジット'
+	String get freeLabel => '無料クレジット';
+
+	/// ja: '残り $n / $limit 回'
+	String remaining({required Object n, required Object limit}) => '残り ${n} / ${limit} 回';
+
+	/// ja: '残り回数を確認中'
+	String get checkingRemaining => '残り回数を確認中';
+
+	/// ja: '毎週月曜日に補充（Pro 加入中）'
+	String get refillProMonday => '毎週月曜日に補充（Pro 加入中）';
+
+	/// ja: '毎週月曜日に補充'
+	String get refillMonday => '毎週月曜日に補充';
+
+	/// ja: '有料クレジット'
+	String get paidLabel => '有料クレジット';
+
+	/// ja: '残り $n 回'
+	String paidRemaining({required Object n}) => '残り ${n} 回';
+
+	/// ja: '失効なし（購入分は端末を変えても残る）'
+	String get neverExpires => '失効なし（購入分は端末を変えても残る）';
+
+	/// ja: '次回以降表示しない'
+	String get dontShowAgain => '次回以降表示しない';
+
+	/// ja: 'クレジットを購入'
+	String get buyCredits => 'クレジットを購入';
+
+	/// ja: '相談を始める'
+	String get start => '相談を始める';
+}
+
 // Path: consultInput
 class Translations$consultInput$ja {
 	Translations$consultInput$ja.internal(this._root);
@@ -147,6 +334,22 @@ class Translations$consultInput$ja {
 	final Translations _root; // ignore: unused_field
 
 	// Translations
+
+	/// ja: '相談する'
+	String get screenTitle => '相談する';
+
+	late final Translations$consultInput$section$ja section = Translations$consultInput$section$ja.internal(_root);
+	late final Translations$consultInput$proTimePick$ja proTimePick = Translations$consultInput$proTimePick$ja.internal(_root);
+
+	/// ja: '例: 妻と / ひとりで / 気になる人と'
+	String get whomHint => '例: 妻と / ひとりで / 気になる人と';
+
+	/// ja: '今いちばん大切にしたい気持ちを一言で'
+	String get wishHint => '今いちばん大切にしたい気持ちを一言で';
+
+	late final Translations$consultInput$whomExamples$ja whomExamples = Translations$consultInput$whomExamples$ja.internal(_root);
+	late final Translations$consultInput$wishExamples$ja wishExamples = Translations$consultInput$wishExamples$ja.internal(_root);
+	late final Translations$consultInput$picker$ja picker = Translations$consultInput$picker$ja.internal(_root);
 	late final Translations$consultInput$theme$ja theme = Translations$consultInput$theme$ja.internal(_root);
 	late final Translations$consultInput$mode$ja mode = Translations$consultInput$mode$ja.internal(_root);
 	late final Translations$consultInput$scope$ja scope = Translations$consultInput$scope$ja.internal(_root);
@@ -626,6 +829,178 @@ class Translations$consultResult$shareSheet$ja {
 
 	/// ja: 'シェアに失敗しました: $e'
 	String failed({required Object e}) => 'シェアに失敗しました: ${e}';
+}
+
+// Path: consultInput.section
+class Translations$consultInput$section$ja {
+	Translations$consultInput$section$ja.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// ja: 'どんな場面で？'
+	String get occasion => 'どんな場面で？';
+
+	/// ja: 'いつ？'
+	String get when => 'いつ？';
+
+	/// ja: '時間帯（任意）'
+	String get timeBand => '時間帯（任意）';
+
+	/// ja: 'どこで？'
+	String get where => 'どこで？';
+
+	/// ja: '現住所からの距離'
+	String get radiusDaily => '現住所からの距離';
+
+	/// ja: '現住所からの距離帯'
+	String get radiusBand => '現住所からの距離帯';
+
+	/// ja: '地域ブロック'
+	String get region => '地域ブロック';
+
+	/// ja: '地点を選ぶ'
+	String get point => '地点を選ぶ';
+
+	/// ja: '何のテーマで観たい？'
+	String get theme => '何のテーマで観たい？';
+
+	/// ja: 'だれと？（任意）'
+	String get whom => 'だれと？（任意）';
+
+	/// ja: 'どうなりたい？／願い（任意）'
+	String get wish => 'どうなりたい？／願い（任意）';
+}
+
+// Path: consultInput.proTimePick
+class Translations$consultInput$proTimePick$ja {
+	Translations$consultInput$proTimePick$ja.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// ja: 'おでかけの時刻指定 + 30分後の変化'
+	String get label => 'おでかけの時刻指定 + 30分後の変化';
+
+	/// ja: '行く時刻を1時間刻みで指定でき、その場の流れが「30分後どう変わるか」まで読めます。CCGの線は地球の自転で動くので、同じ場所でも前半と後半で主役が入れ替わります。'
+	String get desc => '行く時刻を1時間刻みで指定でき、その場の流れが「30分後どう変わるか」まで読めます。CCGの線は地球の自転で動くので、同じ場所でも前半と後半で主役が入れ替わります。';
+}
+
+// Path: consultInput.whomExamples
+class Translations$consultInput$whomExamples$ja {
+	Translations$consultInput$whomExamples$ja.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+	List<String> get love => [
+		'ひとりで',
+		'パートナーと',
+		'気になる人と',
+	];
+	List<String> get money => [
+		'ひとりで',
+		'家族と',
+		'パートナーと',
+	];
+	List<String> get work => [
+		'ひとりで',
+		'同僚と',
+		'仲間と',
+	];
+	List<String> get communication => [
+		'友人と',
+		'仲間と',
+		'ひとりで',
+	];
+	List<String> get healing => [
+		'ひとりで',
+		'パートナーと',
+		'家族と',
+	];
+	List<String> get newStart => [
+		'ひとりで',
+		'パートナーと',
+		'家族と',
+	];
+	List<String> get fallback => [
+		'ひとりで',
+		'パートナーと',
+		'友人と',
+		'家族と',
+	];
+}
+
+// Path: consultInput.wishExamples
+class Translations$consultInput$wishExamples$ja {
+	Translations$consultInput$wishExamples$ja.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+	List<String> get love => [
+		'関係を深めたい',
+		'いい出会いがほしい',
+		'心を通わせたい',
+	];
+	List<String> get money => [
+		'豊かさを引き寄せたい',
+		'仕事の基盤を築きたい',
+		'安定した暮らしがしたい',
+	];
+	List<String> get work => [
+		'仕事で前進したい',
+		'新しい挑戦をしたい',
+		'集中できる場所がほしい',
+	];
+	List<String> get communication => [
+		'視野を広げたい',
+		'学びを深めたい',
+		'いい刺激がほしい',
+	];
+	List<String> get healing => [
+		'心を休めたい',
+		'気分転換したい',
+		'穏やかに過ごしたい',
+	];
+	List<String> get newStart => [
+		'流れを変えたい',
+		'新たな一歩を踏み出したい',
+		'心機一転したい',
+	];
+	List<String> get fallback => [
+		'今より一歩進みたい',
+		'流れを変えたい',
+	];
+}
+
+// Path: consultInput.picker
+class Translations$consultInput$picker$ja {
+	Translations$consultInput$picker$ja.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// ja: '住所 / 店名で検索'
+	String get searchHint => '住所 / 店名で検索';
+
+	/// ja: 'クリア'
+	String get clearSearch => 'クリア';
+
+	/// ja: '🔭 視点 (ViewPoint) から'
+	String get fromViewpoint => '🔭 視点 (ViewPoint) から';
+
+	/// ja: '📍 保存地点 (Locations) から'
+	String get fromLocations => '📍 保存地点 (Locations) から';
+
+	/// ja: '地図で選ぶ'
+	String get pickOnMap => '地図で選ぶ';
+
+	/// ja: '選択を解除'
+	String get clearSelection => '選択を解除';
 }
 
 // Path: consultInput.theme
@@ -1924,6 +2299,39 @@ class Translations$paywall$faq$resubscribe$ja {
 extension on Translations {
 	dynamic _flatMapFunction(String path) {
 		return switch (path) {
+			'consultHistory.title' => '相談履歴',
+			'consultHistory.deleteAll' => 'すべて削除',
+			'consultHistory.deleteAllTitle' => 'すべて削除しますか？',
+			'consultHistory.deleteAllBody' => '保存された全ての相談記録が消えます。元に戻せません。',
+			'consultHistory.delete' => '削除',
+			'consultHistory.deleteOneTitle' => 'この記録を削除しますか？',
+			'consultHistory.filterAll' => 'すべて',
+			'consultHistory.filterFav' => '★ お気に入り',
+			'consultHistory.emptyAll' => 'まだ相談履歴はありません',
+			'consultHistory.emptyFav' => 'お気に入りはまだありません',
+			'consultHistory.emptyAllHint' => 'Map で地点をタップ、または Daily Transit から相談を始めると、\nここに保存されます。',
+			'consultHistory.emptyFavHint' => '記録の ☆ をタップすると、ここに集まります。',
+			'consultHistory.withWhomPrefix' => ({required Object name}) => 'だれと: ${name}',
+			'consultHistory.undecidedShort' => '未定',
+			'consultHistory.modeDaily' => 'おでかけ・イベント',
+			'consultHistory.fav' => 'お気に入り登録',
+			'consultHistory.unfav' => 'お気に入り解除',
+			'consultCredit.signinTitle' => 'サインインが必要です',
+			'consultCredit.signinBody' => ({required Object provider}) => 'クレジットのご購入には ${provider} サインインが必要です。\n\nサインインすると、機種変更や再インストール後も残高が引き継がれます。無料の機能はサインインなしでお使いいただけます。',
+			'consultCredit.signinCta' => ({required Object provider}) => '${provider} でサインイン',
+			'consultCredit.signinFailed' => 'サインインに失敗しました',
+			'consultCredit.buyFailed' => '購入に失敗しました。時間をおいてお試しください。',
+			'consultCredit.heading' => 'Stella 相談クレジット',
+			'consultCredit.balanceFree' => ({required Object n}) => '今週の無料相談 あと${n}回',
+			'consultCredit.balancePaid' => ({required Object n}) => ' ・ 購入残高 ${n}回',
+			'consultCredit.proUnlimited' => '✦ Cosmic Pro なら回数無制限 →',
+			'consultCredit.preparing' => 'クレジットの販売準備中です。\nしばらくしてからお試しください。',
+			'consultCredit.fallbackProduct' => 'クレジット',
+			'consultPlacePicker.prompt' => 'タップ または 検索 で地点を選んでください',
+			'consultPlacePicker.loading' => '読み込み中…',
+			'consultPlacePicker.selectedPoint' => '選択地点',
+			'consultPlacePicker.coordName' => ({required Object lat, required Object lng}) => '選択地点 (${lat}°, ${lng}°)',
+			'consultPlacePicker.consultHere' => 'この地点で相談',
 			'consultResult.title' => '相談の結果',
 			'consultResult.back' => '戻る',
 			'consultResult.shareTooltip' => 'シェア',
@@ -1994,6 +2402,86 @@ extension on Translations {
 			'consultResult.shareSheet.copied' => 'テキストをコピーしました',
 			'consultResult.shareSheet.failed' => ({required Object e}) => 'シェアに失敗しました: ${e}',
 			'consultResult.returnChip' => '相談結果に戻る',
+			'consultStart.useProWeekly' => 'Pro 週次クレジットを使う',
+			'consultStart.usePaid' => '有料クレジットを使う',
+			'consultStart.useCredit' => 'クレジットを使う',
+			'consultStart.useFree' => '無料クレジットを使う',
+			'consultStart.proWeeklyLabel' => 'Pro 週次クレジット',
+			'consultStart.freeLabel' => '無料クレジット',
+			'consultStart.remaining' => ({required Object n, required Object limit}) => '残り ${n} / ${limit} 回',
+			'consultStart.checkingRemaining' => '残り回数を確認中',
+			'consultStart.refillProMonday' => '毎週月曜日に補充（Pro 加入中）',
+			'consultStart.refillMonday' => '毎週月曜日に補充',
+			'consultStart.paidLabel' => '有料クレジット',
+			'consultStart.paidRemaining' => ({required Object n}) => '残り ${n} 回',
+			'consultStart.neverExpires' => '失効なし（購入分は端末を変えても残る）',
+			'consultStart.dontShowAgain' => '次回以降表示しない',
+			'consultStart.buyCredits' => 'クレジットを購入',
+			'consultStart.start' => '相談を始める',
+			'consultInput.screenTitle' => '相談する',
+			'consultInput.section.occasion' => 'どんな場面で？',
+			'consultInput.section.when' => 'いつ？',
+			'consultInput.section.timeBand' => '時間帯（任意）',
+			'consultInput.section.where' => 'どこで？',
+			'consultInput.section.radiusDaily' => '現住所からの距離',
+			'consultInput.section.radiusBand' => '現住所からの距離帯',
+			'consultInput.section.region' => '地域ブロック',
+			'consultInput.section.point' => '地点を選ぶ',
+			'consultInput.section.theme' => '何のテーマで観たい？',
+			'consultInput.section.whom' => 'だれと？（任意）',
+			'consultInput.section.wish' => 'どうなりたい？／願い（任意）',
+			'consultInput.proTimePick.label' => 'おでかけの時刻指定 + 30分後の変化',
+			'consultInput.proTimePick.desc' => '行く時刻を1時間刻みで指定でき、その場の流れが「30分後どう変わるか」まで読めます。CCGの線は地球の自転で動くので、同じ場所でも前半と後半で主役が入れ替わります。',
+			'consultInput.whomHint' => '例: 妻と / ひとりで / 気になる人と',
+			'consultInput.wishHint' => '今いちばん大切にしたい気持ちを一言で',
+			'consultInput.whomExamples.love.0' => 'ひとりで',
+			'consultInput.whomExamples.love.1' => 'パートナーと',
+			'consultInput.whomExamples.love.2' => '気になる人と',
+			'consultInput.whomExamples.money.0' => 'ひとりで',
+			'consultInput.whomExamples.money.1' => '家族と',
+			'consultInput.whomExamples.money.2' => 'パートナーと',
+			'consultInput.whomExamples.work.0' => 'ひとりで',
+			'consultInput.whomExamples.work.1' => '同僚と',
+			'consultInput.whomExamples.work.2' => '仲間と',
+			'consultInput.whomExamples.communication.0' => '友人と',
+			'consultInput.whomExamples.communication.1' => '仲間と',
+			'consultInput.whomExamples.communication.2' => 'ひとりで',
+			'consultInput.whomExamples.healing.0' => 'ひとりで',
+			'consultInput.whomExamples.healing.1' => 'パートナーと',
+			'consultInput.whomExamples.healing.2' => '家族と',
+			'consultInput.whomExamples.newStart.0' => 'ひとりで',
+			'consultInput.whomExamples.newStart.1' => 'パートナーと',
+			'consultInput.whomExamples.newStart.2' => '家族と',
+			'consultInput.whomExamples.fallback.0' => 'ひとりで',
+			'consultInput.whomExamples.fallback.1' => 'パートナーと',
+			'consultInput.whomExamples.fallback.2' => '友人と',
+			'consultInput.whomExamples.fallback.3' => '家族と',
+			'consultInput.wishExamples.love.0' => '関係を深めたい',
+			'consultInput.wishExamples.love.1' => 'いい出会いがほしい',
+			'consultInput.wishExamples.love.2' => '心を通わせたい',
+			'consultInput.wishExamples.money.0' => '豊かさを引き寄せたい',
+			'consultInput.wishExamples.money.1' => '仕事の基盤を築きたい',
+			'consultInput.wishExamples.money.2' => '安定した暮らしがしたい',
+			'consultInput.wishExamples.work.0' => '仕事で前進したい',
+			'consultInput.wishExamples.work.1' => '新しい挑戦をしたい',
+			'consultInput.wishExamples.work.2' => '集中できる場所がほしい',
+			'consultInput.wishExamples.communication.0' => '視野を広げたい',
+			'consultInput.wishExamples.communication.1' => '学びを深めたい',
+			'consultInput.wishExamples.communication.2' => 'いい刺激がほしい',
+			'consultInput.wishExamples.healing.0' => '心を休めたい',
+			'consultInput.wishExamples.healing.1' => '気分転換したい',
+			'consultInput.wishExamples.healing.2' => '穏やかに過ごしたい',
+			'consultInput.wishExamples.newStart.0' => '流れを変えたい',
+			'consultInput.wishExamples.newStart.1' => '新たな一歩を踏み出したい',
+			'consultInput.wishExamples.newStart.2' => '心機一転したい',
+			'consultInput.wishExamples.fallback.0' => '今より一歩進みたい',
+			'consultInput.wishExamples.fallback.1' => '流れを変えたい',
+			'consultInput.picker.searchHint' => '住所 / 店名で検索',
+			'consultInput.picker.clearSearch' => 'クリア',
+			'consultInput.picker.fromViewpoint' => '🔭 視点 (ViewPoint) から',
+			'consultInput.picker.fromLocations' => '📍 保存地点 (Locations) から',
+			'consultInput.picker.pickOnMap' => '地図で選ぶ',
+			'consultInput.picker.clearSelection' => '選択を解除',
 			'consultInput.theme.love' => '恋愛・関係',
 			'consultInput.theme.money' => '豊かさ・お金',
 			'consultInput.theme.work' => '仕事・キャリア',

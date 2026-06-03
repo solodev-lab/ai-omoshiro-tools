@@ -55,12 +55,12 @@ class _SearchBar extends StatelessWidget {
                     color: SolaraColors.textPrimary,
                     fontSize: 14,
                   ),
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     border: InputBorder.none,
                     isDense: true,
-                    contentPadding: EdgeInsets.symmetric(vertical: 12),
-                    hintText: '住所 / 店名で検索',
-                    hintStyle: TextStyle(
+                    contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                    hintText: t.consultInput.picker.searchHint,
+                    hintStyle: const TextStyle(
                       color: SolaraColors.textSecondary,
                       fontSize: 13,
                     ),
@@ -77,7 +77,7 @@ class _SearchBar extends StatelessWidget {
                   },
                   visualDensity: VisualDensity.compact,
                   padding: const EdgeInsets.symmetric(horizontal: 6),
-                  tooltip: 'クリア',
+                  tooltip: t.consultInput.picker.clearSearch,
                 ),
               if (searching)
                 const Padding(
@@ -275,11 +275,11 @@ class _SelectionCard extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           if (p == null)
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 4),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4),
               child: Text(
-                'タップ または 検索 で地点を選んでください',
-                style: TextStyle(
+                t.consultPlacePicker.prompt,
+                style: const TextStyle(
                   color: SolaraColors.textSecondary,
                   fontSize: 12,
                 ),
@@ -321,7 +321,9 @@ class _SelectionCard extends StatelessWidget {
                         Text(
                           name?.isNotEmpty == true
                               ? name!
-                              : (resolving ? '読み込み中…' : '選択地点'),
+                              : (resolving
+                                  ? t.consultPlacePicker.loading
+                                  : t.consultPlacePicker.selectedPoint),
                           style: const TextStyle(
                             color: SolaraColors.textPrimary,
                             fontSize: 14,
@@ -350,7 +352,7 @@ class _SelectionCard extends StatelessWidget {
                   padding: EdgeInsets.zero,
                   constraints:
                       const BoxConstraints(minWidth: 32, minHeight: 32),
-                  tooltip: '選択を解除',
+                  tooltip: t.consultInput.picker.clearSelection,
                 ),
               ],
             ),
@@ -375,7 +377,7 @@ class _SelectionCard extends StatelessWidget {
                     foregroundColor: SolaraColors.textSecondary,
                     padding: const EdgeInsets.symmetric(vertical: 12),
                   ),
-                  child: const Text('キャンセル'),
+                  child: Text(t.locations.cancel),
                 ),
               ),
               const SizedBox(width: 8),
@@ -392,9 +394,9 @@ class _SelectionCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(10),
                     ),
                   ),
-                  child: const Text(
-                    'この地点で相談',
-                    style: TextStyle(
+                  child: Text(
+                    t.consultPlacePicker.consultHere,
+                    style: const TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
                       letterSpacing: 0.4,

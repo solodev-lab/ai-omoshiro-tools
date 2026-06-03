@@ -1,4 +1,43 @@
 {
+  "consultHistory": {
+    "title": "相談履歴",
+    "deleteAll": "すべて削除",
+    "deleteAllTitle": "すべて削除しますか？",
+    "deleteAllBody": "保存された全ての相談記録が消えます。元に戻せません。",
+    "delete": "削除",
+    "deleteOneTitle": "この記録を削除しますか？",
+    "filterAll": "すべて",
+    "filterFav": "★ お気に入り",
+    "emptyAll": "まだ相談履歴はありません",
+    "emptyFav": "お気に入りはまだありません",
+    "emptyAllHint": "Map で地点をタップ、または Daily Transit から相談を始めると、\nここに保存されます。",
+    "emptyFavHint": "記録の ☆ をタップすると、ここに集まります。",
+    "withWhomPrefix": "だれと: $name",
+    "undecidedShort": "未定",
+    "modeDaily": "おでかけ・イベント",
+    "fav": "お気に入り登録",
+    "unfav": "お気に入り解除"
+  },
+  "consultCredit": {
+    "signinTitle": "サインインが必要です",
+    "signinBody": "クレジットのご購入には $provider サインインが必要です。\n\nサインインすると、機種変更や再インストール後も残高が引き継がれます。無料の機能はサインインなしでお使いいただけます。",
+    "signinCta": "$provider でサインイン",
+    "signinFailed": "サインインに失敗しました",
+    "buyFailed": "購入に失敗しました。時間をおいてお試しください。",
+    "heading": "Stella 相談クレジット",
+    "balanceFree": "今週の無料相談 あと$n回",
+    "balancePaid": " ・ 購入残高 $n回",
+    "proUnlimited": "✦ Cosmic Pro なら回数無制限 →",
+    "preparing": "クレジットの販売準備中です。\nしばらくしてからお試しください。",
+    "fallbackProduct": "クレジット"
+  },
+  "consultPlacePicker": {
+    "prompt": "タップ または 検索 で地点を選んでください",
+    "loading": "読み込み中…",
+    "selectedPoint": "選択地点",
+    "coordName": "選択地点 ($lat°, $lng°)",
+    "consultHere": "この地点で相談"
+  },
   "consultResult": {
     "title": "相談の結果",
     "back": "戻る",
@@ -83,7 +122,71 @@
     },
     "returnChip": "相談結果に戻る"
   },
+  "consultStart": {
+    "useProWeekly": "Pro 週次クレジットを使う",
+    "usePaid": "有料クレジットを使う",
+    "useCredit": "クレジットを使う",
+    "useFree": "無料クレジットを使う",
+    "proWeeklyLabel": "Pro 週次クレジット",
+    "freeLabel": "無料クレジット",
+    "remaining": "残り $n / $limit 回",
+    "checkingRemaining": "残り回数を確認中",
+    "refillProMonday": "毎週月曜日に補充（Pro 加入中）",
+    "refillMonday": "毎週月曜日に補充",
+    "paidLabel": "有料クレジット",
+    "paidRemaining": "残り $n 回",
+    "neverExpires": "失効なし（購入分は端末を変えても残る）",
+    "dontShowAgain": "次回以降表示しない",
+    "buyCredits": "クレジットを購入",
+    "start": "相談を始める"
+  },
   "consultInput": {
+    "screenTitle": "相談する",
+    "section": {
+      "occasion": "どんな場面で？",
+      "when": "いつ？",
+      "timeBand": "時間帯（任意）",
+      "where": "どこで？",
+      "radiusDaily": "現住所からの距離",
+      "radiusBand": "現住所からの距離帯",
+      "region": "地域ブロック",
+      "point": "地点を選ぶ",
+      "theme": "何のテーマで観たい？",
+      "whom": "だれと？（任意）",
+      "wish": "どうなりたい？／願い（任意）"
+    },
+    "proTimePick": {
+      "label": "おでかけの時刻指定 + 30分後の変化",
+      "desc": "行く時刻を1時間刻みで指定でき、その場の流れが「30分後どう変わるか」まで読めます。CCGの線は地球の自転で動くので、同じ場所でも前半と後半で主役が入れ替わります。"
+    },
+    "whomHint": "例: 妻と / ひとりで / 気になる人と",
+    "wishHint": "今いちばん大切にしたい気持ちを一言で",
+    "whomExamples": {
+      "love": ["ひとりで", "パートナーと", "気になる人と"],
+      "money": ["ひとりで", "家族と", "パートナーと"],
+      "work": ["ひとりで", "同僚と", "仲間と"],
+      "communication": ["友人と", "仲間と", "ひとりで"],
+      "healing": ["ひとりで", "パートナーと", "家族と"],
+      "newStart": ["ひとりで", "パートナーと", "家族と"],
+      "fallback": ["ひとりで", "パートナーと", "友人と", "家族と"]
+    },
+    "wishExamples": {
+      "love": ["関係を深めたい", "いい出会いがほしい", "心を通わせたい"],
+      "money": ["豊かさを引き寄せたい", "仕事の基盤を築きたい", "安定した暮らしがしたい"],
+      "work": ["仕事で前進したい", "新しい挑戦をしたい", "集中できる場所がほしい"],
+      "communication": ["視野を広げたい", "学びを深めたい", "いい刺激がほしい"],
+      "healing": ["心を休めたい", "気分転換したい", "穏やかに過ごしたい"],
+      "newStart": ["流れを変えたい", "新たな一歩を踏み出したい", "心機一転したい"],
+      "fallback": ["今より一歩進みたい", "流れを変えたい"]
+    },
+    "picker": {
+      "searchHint": "住所 / 店名で検索",
+      "clearSearch": "クリア",
+      "fromViewpoint": "🔭 視点 (ViewPoint) から",
+      "fromLocations": "📍 保存地点 (Locations) から",
+      "pickOnMap": "地図で選ぶ",
+      "clearSelection": "選択を解除"
+    },
     "theme": {
       "love": "恋愛・関係",
       "money": "豊かさ・お金",

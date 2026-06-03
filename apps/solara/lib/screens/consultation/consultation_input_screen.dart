@@ -437,9 +437,9 @@ class _ConsultationInputScreenState extends State<ConsultationInputScreen> {
           title: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text(
-                '相談する',
-                style: TextStyle(
+              Text(
+                t.consultInput.screenTitle,
+                style: const TextStyle(
                   color: SolaraColors.textPrimary,
                   fontSize: 16,
                   letterSpacing: 0.5,
@@ -474,13 +474,13 @@ class _ConsultationInputScreenState extends State<ConsultationInputScreen> {
                       const _ConsultIntroNote(),
                       // ② 場面
                       _Section(
-                        label: 'どんな場面で？',
+                        label: t.consultInput.section.occasion,
                         child: _ModeRow(selected: _mode, onSelect: _onModeChanged),
                       ),
                       // ③ いつ
                       if (_mode != null)
                         _Section(
-                          label: 'いつ？',
+                          label: t.consultInput.section.when,
                           child: _WhenSelector(
                             mode: _mode!,
                             selectedKind: _whenKind,
@@ -492,7 +492,7 @@ class _ConsultationInputScreenState extends State<ConsultationInputScreen> {
                       // 語られる白けを防ぐため、行く時間帯を Stella に伝える。
                       if (_mode == 'daily')
                         _Section(
-                          label: '時間帯（任意）',
+                          label: t.consultInput.section.timeBand,
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -514,11 +514,8 @@ class _ConsultationInputScreenState extends State<ConsultationInputScreen> {
                                     setState(() => _whenHour = null),
                                 onLockedTap: () => showProUnlockDialog(
                                   context,
-                                  featureLabel: 'おでかけの時刻指定 + 30分後の変化',
-                                  description:
-                                      '行く時刻を1時間刻みで指定でき、その場の流れが'
-                                      '「30分後どう変わるか」まで読めます。CCGの線は地球の'
-                                      '自転で動くので、同じ場所でも前半と後半で主役が入れ替わります。',
+                                  featureLabel: t.consultInput.proTimePick.label,
+                                  description: t.consultInput.proTimePick.desc,
                                 ),
                               ),
                             ],
@@ -527,7 +524,7 @@ class _ConsultationInputScreenState extends State<ConsultationInputScreen> {
                       // ④ どこで
                       if (_mode != null)
                         _Section(
-                          label: 'どこで？',
+                          label: t.consultInput.section.where,
                           child: _ScopeWrap(
                             selected: _scopeKind,
                             onSelect: _onScopeKindTap,
@@ -537,8 +534,8 @@ class _ConsultationInputScreenState extends State<ConsultationInputScreen> {
                       if (_scopeKind == 'radius')
                         _Section(
                           label: _mode == 'daily'
-                              ? '現住所からの距離'
-                              : '現住所からの距離帯',
+                              ? t.consultInput.section.radiusDaily
+                              : t.consultInput.section.radiusBand,
                           child: _RadiusChips(
                             options: _mode == 'daily'
                                 ? const [20, 50, 100, 300]
@@ -551,7 +548,7 @@ class _ConsultationInputScreenState extends State<ConsultationInputScreen> {
                         ),
                       if (_scopeKind == 'region')
                         _Section(
-                          label: '地域ブロック',
+                          label: t.consultInput.section.region,
                           child: _RegionPicker(
                             selected: _regionGroup,
                             onSelect: (g) => setState(() => _regionGroup = g),
@@ -559,7 +556,7 @@ class _ConsultationInputScreenState extends State<ConsultationInputScreen> {
                         ),
                       if (_scopeKind == 'point' && widget.presetTarget == null)
                         _Section(
-                          label: '地点を選ぶ',
+                          label: t.consultInput.section.point,
                           child: _SpecificPicker(
                             selected: _specificPick,
                             biasCenter: widget.currentLocation,
@@ -574,7 +571,7 @@ class _ConsultationInputScreenState extends State<ConsultationInputScreen> {
                         const _NoHomeNote(),
                       // ① テーマ
                       _Section(
-                        label: '何のテーマで観たい？',
+                        label: t.consultInput.section.theme,
                         child: _ThemeGrid(
                           selected: _theme,
                           onSelect: (id) => setState(() => _theme = id),
@@ -582,13 +579,13 @@ class _ConsultationInputScreenState extends State<ConsultationInputScreen> {
                       ),
                       // ⑤ だれと
                       _Section(
-                        label: 'だれと？（任意）',
+                        label: t.consultInput.section.whom,
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             _FreeTextField(
                               controller: _whomCtrl,
-                              hint: '例: 妻と / ひとりで / 気になる人と',
+                              hint: t.consultInput.whomHint,
                               maxLines: 2,
                               maxLength: 80,
                             ),
@@ -601,13 +598,13 @@ class _ConsultationInputScreenState extends State<ConsultationInputScreen> {
                       ),
                       // ⑥ 願い
                       _Section(
-                        label: 'どうなりたい？／願い（任意）',
+                        label: t.consultInput.section.wish,
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             _FreeTextField(
                               controller: _wishCtrl,
-                              hint: '今いちばん大切にしたい気持ちを一言で',
+                              hint: t.consultInput.wishHint,
                               maxLines: 3,
                               maxLength: 200,
                             ),

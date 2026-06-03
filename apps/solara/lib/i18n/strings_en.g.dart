@@ -39,7 +39,11 @@ class TranslationsEn extends Translations with BaseTranslations<AppLocale, Trans
 	TranslationsEn $copyWith({TranslationMetadata<AppLocale, Translations>? meta}) => TranslationsEn(meta: meta ?? this.$meta);
 
 	// Translations
+	@override late final _Translations$consultHistory$en consultHistory = _Translations$consultHistory$en._(_root);
+	@override late final _Translations$consultCredit$en consultCredit = _Translations$consultCredit$en._(_root);
+	@override late final _Translations$consultPlacePicker$en consultPlacePicker = _Translations$consultPlacePicker$en._(_root);
 	@override late final _Translations$consultResult$en consultResult = _Translations$consultResult$en._(_root);
+	@override late final _Translations$consultStart$en consultStart = _Translations$consultStart$en._(_root);
 	@override late final _Translations$consultInput$en consultInput = _Translations$consultInput$en._(_root);
 	@override late final _Translations$mapAcg$en mapAcg = _Translations$mapAcg$en._(_root);
 	@override late final _Translations$mapVp$en mapVp = _Translations$mapVp$en._(_root);
@@ -50,6 +54,66 @@ class TranslationsEn extends Translations with BaseTranslations<AppLocale, Trans
 	@override late final _Translations$disclaimer$en disclaimer = _Translations$disclaimer$en._(_root);
 	@override late final _Translations$common$en common = _Translations$common$en._(_root);
 	@override late final _Translations$aiConsent$en aiConsent = _Translations$aiConsent$en._(_root);
+}
+
+// Path: consultHistory
+class _Translations$consultHistory$en extends Translations$consultHistory$ja {
+	_Translations$consultHistory$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get title => 'Consultation history';
+	@override String get deleteAll => 'Delete all';
+	@override String get deleteAllTitle => 'Delete everything?';
+	@override String get deleteAllBody => 'All of your saved consultation records will be erased. This can\'t be undone.';
+	@override String get delete => 'Delete';
+	@override String get deleteOneTitle => 'Delete this record?';
+	@override String get filterAll => 'All';
+	@override String get filterFav => '★ Favorites';
+	@override String get emptyAll => 'No consultation history yet';
+	@override String get emptyFav => 'No favorites yet';
+	@override String get emptyAllHint => 'Tap a place on the Map, or start a consultation from Daily Transit, and it\'ll be saved here.';
+	@override String get emptyFavHint => 'Tap the ☆ on a record and it gathers here.';
+	@override String withWhomPrefix({required Object name}) => 'With: ${name}';
+	@override String get undecidedShort => 'Undecided';
+	@override String get modeDaily => 'Outing / Event';
+	@override String get fav => 'Add to favorites';
+	@override String get unfav => 'Remove from favorites';
+}
+
+// Path: consultCredit
+class _Translations$consultCredit$en extends Translations$consultCredit$ja {
+	_Translations$consultCredit$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get signinTitle => 'Sign-in required';
+	@override String signinBody({required Object provider}) => 'Buying credits requires signing in with ${provider}.\n\nOnce you sign in, your balance carries over even after you change or reinstall on a new device. The free features work without signing in.';
+	@override String signinCta({required Object provider}) => 'Sign in with ${provider}';
+	@override String get signinFailed => 'Sign-in failed';
+	@override String get buyFailed => 'The purchase didn\'t go through. Please try again in a little while.';
+	@override String get heading => 'Stella consultation credits';
+	@override String balanceFree({required Object n}) => 'Free consultations this week: ${n} left';
+	@override String balancePaid({required Object n}) => ' · ${n} purchased left';
+	@override String get proUnlimited => '✦ Cosmic Pro makes it unlimited →';
+	@override String get preparing => 'Credits aren\'t on sale just yet.\nPlease check back a little later.';
+	@override String get fallbackProduct => 'Credits';
+}
+
+// Path: consultPlacePicker
+class _Translations$consultPlacePicker$en extends Translations$consultPlacePicker$ja {
+	_Translations$consultPlacePicker$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get prompt => 'Tap or search to choose a place';
+	@override String get loading => 'Loading…';
+	@override String get selectedPoint => 'Selected point';
+	@override String coordName({required Object lat, required Object lng}) => 'Selected point (${lat}°, ${lng}°)';
+	@override String get consultHere => 'Consult about this place';
 }
 
 // Path: consultResult
@@ -90,6 +154,31 @@ class _Translations$consultResult$en extends Translations$consultResult$ja {
 	@override String get returnChip => 'Back to consultation result';
 }
 
+// Path: consultStart
+class _Translations$consultStart$en extends Translations$consultStart$ja {
+	_Translations$consultStart$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get useProWeekly => 'Use a Pro weekly credit';
+	@override String get usePaid => 'Use a paid credit';
+	@override String get useCredit => 'Use a credit';
+	@override String get useFree => 'Use a free credit';
+	@override String get proWeeklyLabel => 'Pro weekly credit';
+	@override String get freeLabel => 'Free credit';
+	@override String remaining({required Object n, required Object limit}) => '${n} / ${limit} left';
+	@override String get checkingRemaining => 'Checking how many are left…';
+	@override String get refillProMonday => 'Refills every Monday (Cosmic Pro active)';
+	@override String get refillMonday => 'Refills every Monday';
+	@override String get paidLabel => 'Paid credit';
+	@override String paidRemaining({required Object n}) => '${n} left';
+	@override String get neverExpires => 'Never expires (purchased credits stay even if you switch devices)';
+	@override String get dontShowAgain => 'Don\'t show this again';
+	@override String get buyCredits => 'Buy credits';
+	@override String get start => 'Start the consultation';
+}
+
 // Path: consultInput
 class _Translations$consultInput$en extends Translations$consultInput$ja {
 	_Translations$consultInput$en._(TranslationsEn root) : this._root = root, super.internal(root);
@@ -97,6 +186,14 @@ class _Translations$consultInput$en extends Translations$consultInput$ja {
 	final TranslationsEn _root; // ignore: unused_field
 
 	// Translations
+	@override String get screenTitle => 'Stella Consultation';
+	@override late final _Translations$consultInput$section$en section = _Translations$consultInput$section$en._(_root);
+	@override late final _Translations$consultInput$proTimePick$en proTimePick = _Translations$consultInput$proTimePick$en._(_root);
+	@override String get whomHint => 'e.g. with my wife / on my own / with someone I like';
+	@override String get wishHint => 'The feeling you most want to hold onto right now, in a few words';
+	@override late final _Translations$consultInput$whomExamples$en whomExamples = _Translations$consultInput$whomExamples$en._(_root);
+	@override late final _Translations$consultInput$wishExamples$en wishExamples = _Translations$consultInput$wishExamples$en._(_root);
+	@override late final _Translations$consultInput$picker$en picker = _Translations$consultInput$picker$en._(_root);
 	@override late final _Translations$consultInput$theme$en theme = _Translations$consultInput$theme$en._(_root);
 	@override late final _Translations$consultInput$mode$en mode = _Translations$consultInput$mode$en._(_root);
 	@override late final _Translations$consultInput$scope$en scope = _Translations$consultInput$scope$en._(_root);
@@ -375,6 +472,140 @@ class _Translations$consultResult$shareSheet$en extends Translations$consultResu
 	@override String get shareImageSub => 'Turn the result screen into a PNG and share it your usual way';
 	@override String get copied => 'Copied to the clipboard';
 	@override String failed({required Object e}) => 'Sharing failed: ${e}';
+}
+
+// Path: consultInput.section
+class _Translations$consultInput$section$en extends Translations$consultInput$section$ja {
+	_Translations$consultInput$section$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get occasion => 'What\'s the occasion?';
+	@override String get when => 'When?';
+	@override String get timeBand => 'Time of day (optional)';
+	@override String get where => 'Where?';
+	@override String get radiusDaily => 'Distance from your current address';
+	@override String get radiusBand => 'Distance band from your current address';
+	@override String get region => 'Region block';
+	@override String get point => 'Pick a place';
+	@override String get theme => 'Which theme shall we read?';
+	@override String get whom => 'With whom? (optional)';
+	@override String get wish => 'What do you hope for? / Your wish (optional)';
+}
+
+// Path: consultInput.proTimePick
+class _Translations$consultInput$proTimePick$en extends Translations$consultInput$proTimePick$ja {
+	_Translations$consultInput$proTimePick$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get label => 'Setting the time for Outings + the 30-minute shift';
+	@override String get desc => 'Set the time you\'ll go in one-hour steps, and read how the flow of the place shifts 30 minutes later. CCG lines move as the Earth turns, so even in the same place the lead of the moment changes between the first and second half.';
+}
+
+// Path: consultInput.whomExamples
+class _Translations$consultInput$whomExamples$en extends Translations$consultInput$whomExamples$ja {
+	_Translations$consultInput$whomExamples$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override List<String> get love => [
+		'On my own',
+		'With my partner',
+		'With someone I like',
+	];
+	@override List<String> get money => [
+		'On my own',
+		'With family',
+		'With my partner',
+	];
+	@override List<String> get work => [
+		'On my own',
+		'With a colleague',
+		'With teammates',
+	];
+	@override List<String> get communication => [
+		'With a friend',
+		'With companions',
+		'On my own',
+	];
+	@override List<String> get healing => [
+		'On my own',
+		'With my partner',
+		'With family',
+	];
+	@override List<String> get newStart => [
+		'On my own',
+		'With my partner',
+		'With family',
+	];
+	@override List<String> get fallback => [
+		'On my own',
+		'With my partner',
+		'With a friend',
+		'With family',
+	];
+}
+
+// Path: consultInput.wishExamples
+class _Translations$consultInput$wishExamples$en extends Translations$consultInput$wishExamples$ja {
+	_Translations$consultInput$wishExamples$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override List<String> get love => [
+		'Deepen this bond',
+		'Meet someone good',
+		'Connect heart to heart',
+	];
+	@override List<String> get money => [
+		'Draw in abundance',
+		'Build a foundation for work',
+		'Live with stability',
+	];
+	@override List<String> get work => [
+		'Move forward at work',
+		'Take on a new challenge',
+		'Find a place I can focus',
+	];
+	@override List<String> get communication => [
+		'Widen my horizons',
+		'Deepen my learning',
+		'Find fresh inspiration',
+	];
+	@override List<String> get healing => [
+		'Rest my heart',
+		'Refresh my mood',
+		'Spend calm time',
+	];
+	@override List<String> get newStart => [
+		'Change the current',
+		'Take a new step',
+		'Begin anew',
+	];
+	@override List<String> get fallback => [
+		'Take a step forward',
+		'Change the current',
+	];
+}
+
+// Path: consultInput.picker
+class _Translations$consultInput$picker$en extends Translations$consultInput$picker$ja {
+	_Translations$consultInput$picker$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get searchHint => 'Search by address / place name';
+	@override String get clearSearch => 'Clear';
+	@override String get fromViewpoint => '🔭 From your ViewPoints';
+	@override String get fromLocations => '📍 From your saved Locations';
+	@override String get pickOnMap => 'Pick on the map';
+	@override String get clearSelection => 'Clear selection';
 }
 
 // Path: consultInput.theme
@@ -1190,6 +1421,39 @@ class _Translations$paywall$faq$resubscribe$en extends Translations$paywall$faq$
 extension on TranslationsEn {
 	dynamic _flatMapFunction(String path) {
 		return switch (path) {
+			'consultHistory.title' => 'Consultation history',
+			'consultHistory.deleteAll' => 'Delete all',
+			'consultHistory.deleteAllTitle' => 'Delete everything?',
+			'consultHistory.deleteAllBody' => 'All of your saved consultation records will be erased. This can\'t be undone.',
+			'consultHistory.delete' => 'Delete',
+			'consultHistory.deleteOneTitle' => 'Delete this record?',
+			'consultHistory.filterAll' => 'All',
+			'consultHistory.filterFav' => '★ Favorites',
+			'consultHistory.emptyAll' => 'No consultation history yet',
+			'consultHistory.emptyFav' => 'No favorites yet',
+			'consultHistory.emptyAllHint' => 'Tap a place on the Map, or start a consultation from Daily Transit, and it\'ll be saved here.',
+			'consultHistory.emptyFavHint' => 'Tap the ☆ on a record and it gathers here.',
+			'consultHistory.withWhomPrefix' => ({required Object name}) => 'With: ${name}',
+			'consultHistory.undecidedShort' => 'Undecided',
+			'consultHistory.modeDaily' => 'Outing / Event',
+			'consultHistory.fav' => 'Add to favorites',
+			'consultHistory.unfav' => 'Remove from favorites',
+			'consultCredit.signinTitle' => 'Sign-in required',
+			'consultCredit.signinBody' => ({required Object provider}) => 'Buying credits requires signing in with ${provider}.\n\nOnce you sign in, your balance carries over even after you change or reinstall on a new device. The free features work without signing in.',
+			'consultCredit.signinCta' => ({required Object provider}) => 'Sign in with ${provider}',
+			'consultCredit.signinFailed' => 'Sign-in failed',
+			'consultCredit.buyFailed' => 'The purchase didn\'t go through. Please try again in a little while.',
+			'consultCredit.heading' => 'Stella consultation credits',
+			'consultCredit.balanceFree' => ({required Object n}) => 'Free consultations this week: ${n} left',
+			'consultCredit.balancePaid' => ({required Object n}) => ' · ${n} purchased left',
+			'consultCredit.proUnlimited' => '✦ Cosmic Pro makes it unlimited →',
+			'consultCredit.preparing' => 'Credits aren\'t on sale just yet.\nPlease check back a little later.',
+			'consultCredit.fallbackProduct' => 'Credits',
+			'consultPlacePicker.prompt' => 'Tap or search to choose a place',
+			'consultPlacePicker.loading' => 'Loading…',
+			'consultPlacePicker.selectedPoint' => 'Selected point',
+			'consultPlacePicker.coordName' => ({required Object lat, required Object lng}) => 'Selected point (${lat}°, ${lng}°)',
+			'consultPlacePicker.consultHere' => 'Consult about this place',
 			'consultResult.title' => 'Consultation result',
 			'consultResult.back' => 'Back',
 			'consultResult.shareTooltip' => 'Share',
@@ -1260,6 +1524,86 @@ extension on TranslationsEn {
 			'consultResult.shareSheet.copied' => 'Copied to the clipboard',
 			'consultResult.shareSheet.failed' => ({required Object e}) => 'Sharing failed: ${e}',
 			'consultResult.returnChip' => 'Back to consultation result',
+			'consultStart.useProWeekly' => 'Use a Pro weekly credit',
+			'consultStart.usePaid' => 'Use a paid credit',
+			'consultStart.useCredit' => 'Use a credit',
+			'consultStart.useFree' => 'Use a free credit',
+			'consultStart.proWeeklyLabel' => 'Pro weekly credit',
+			'consultStart.freeLabel' => 'Free credit',
+			'consultStart.remaining' => ({required Object n, required Object limit}) => '${n} / ${limit} left',
+			'consultStart.checkingRemaining' => 'Checking how many are left…',
+			'consultStart.refillProMonday' => 'Refills every Monday (Cosmic Pro active)',
+			'consultStart.refillMonday' => 'Refills every Monday',
+			'consultStart.paidLabel' => 'Paid credit',
+			'consultStart.paidRemaining' => ({required Object n}) => '${n} left',
+			'consultStart.neverExpires' => 'Never expires (purchased credits stay even if you switch devices)',
+			'consultStart.dontShowAgain' => 'Don\'t show this again',
+			'consultStart.buyCredits' => 'Buy credits',
+			'consultStart.start' => 'Start the consultation',
+			'consultInput.screenTitle' => 'Stella Consultation',
+			'consultInput.section.occasion' => 'What\'s the occasion?',
+			'consultInput.section.when' => 'When?',
+			'consultInput.section.timeBand' => 'Time of day (optional)',
+			'consultInput.section.where' => 'Where?',
+			'consultInput.section.radiusDaily' => 'Distance from your current address',
+			'consultInput.section.radiusBand' => 'Distance band from your current address',
+			'consultInput.section.region' => 'Region block',
+			'consultInput.section.point' => 'Pick a place',
+			'consultInput.section.theme' => 'Which theme shall we read?',
+			'consultInput.section.whom' => 'With whom? (optional)',
+			'consultInput.section.wish' => 'What do you hope for? / Your wish (optional)',
+			'consultInput.proTimePick.label' => 'Setting the time for Outings + the 30-minute shift',
+			'consultInput.proTimePick.desc' => 'Set the time you\'ll go in one-hour steps, and read how the flow of the place shifts 30 minutes later. CCG lines move as the Earth turns, so even in the same place the lead of the moment changes between the first and second half.',
+			'consultInput.whomHint' => 'e.g. with my wife / on my own / with someone I like',
+			'consultInput.wishHint' => 'The feeling you most want to hold onto right now, in a few words',
+			'consultInput.whomExamples.love.0' => 'On my own',
+			'consultInput.whomExamples.love.1' => 'With my partner',
+			'consultInput.whomExamples.love.2' => 'With someone I like',
+			'consultInput.whomExamples.money.0' => 'On my own',
+			'consultInput.whomExamples.money.1' => 'With family',
+			'consultInput.whomExamples.money.2' => 'With my partner',
+			'consultInput.whomExamples.work.0' => 'On my own',
+			'consultInput.whomExamples.work.1' => 'With a colleague',
+			'consultInput.whomExamples.work.2' => 'With teammates',
+			'consultInput.whomExamples.communication.0' => 'With a friend',
+			'consultInput.whomExamples.communication.1' => 'With companions',
+			'consultInput.whomExamples.communication.2' => 'On my own',
+			'consultInput.whomExamples.healing.0' => 'On my own',
+			'consultInput.whomExamples.healing.1' => 'With my partner',
+			'consultInput.whomExamples.healing.2' => 'With family',
+			'consultInput.whomExamples.newStart.0' => 'On my own',
+			'consultInput.whomExamples.newStart.1' => 'With my partner',
+			'consultInput.whomExamples.newStart.2' => 'With family',
+			'consultInput.whomExamples.fallback.0' => 'On my own',
+			'consultInput.whomExamples.fallback.1' => 'With my partner',
+			'consultInput.whomExamples.fallback.2' => 'With a friend',
+			'consultInput.whomExamples.fallback.3' => 'With family',
+			'consultInput.wishExamples.love.0' => 'Deepen this bond',
+			'consultInput.wishExamples.love.1' => 'Meet someone good',
+			'consultInput.wishExamples.love.2' => 'Connect heart to heart',
+			'consultInput.wishExamples.money.0' => 'Draw in abundance',
+			'consultInput.wishExamples.money.1' => 'Build a foundation for work',
+			'consultInput.wishExamples.money.2' => 'Live with stability',
+			'consultInput.wishExamples.work.0' => 'Move forward at work',
+			'consultInput.wishExamples.work.1' => 'Take on a new challenge',
+			'consultInput.wishExamples.work.2' => 'Find a place I can focus',
+			'consultInput.wishExamples.communication.0' => 'Widen my horizons',
+			'consultInput.wishExamples.communication.1' => 'Deepen my learning',
+			'consultInput.wishExamples.communication.2' => 'Find fresh inspiration',
+			'consultInput.wishExamples.healing.0' => 'Rest my heart',
+			'consultInput.wishExamples.healing.1' => 'Refresh my mood',
+			'consultInput.wishExamples.healing.2' => 'Spend calm time',
+			'consultInput.wishExamples.newStart.0' => 'Change the current',
+			'consultInput.wishExamples.newStart.1' => 'Take a new step',
+			'consultInput.wishExamples.newStart.2' => 'Begin anew',
+			'consultInput.wishExamples.fallback.0' => 'Take a step forward',
+			'consultInput.wishExamples.fallback.1' => 'Change the current',
+			'consultInput.picker.searchHint' => 'Search by address / place name',
+			'consultInput.picker.clearSearch' => 'Clear',
+			'consultInput.picker.fromViewpoint' => '🔭 From your ViewPoints',
+			'consultInput.picker.fromLocations' => '📍 From your saved Locations',
+			'consultInput.picker.pickOnMap' => 'Pick on the map',
+			'consultInput.picker.clearSelection' => 'Clear selection',
 			'consultInput.theme.love' => 'Love & relationships',
 			'consultInput.theme.money' => 'Abundance & money',
 			'consultInput.theme.work' => 'Work & career',

@@ -16,6 +16,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 
+import '../../i18n/strings.g.dart';
 import '../../theme/solara_colors.dart';
 import '../../utils/consultation_api.dart' show ConsultationCreditStatus;
 import '../../utils/consultation_credits.dart';
@@ -94,20 +95,19 @@ class _CreditSheetState extends State<_CreditSheet> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: SolaraColors.celestialBlueDark,
-        title: const Text('サインインが必要です',
-            style: TextStyle(color: SolaraColors.textPrimary, fontSize: 16)),
+        title: Text(t.consultCredit.signinTitle,
+            style: const TextStyle(
+                color: SolaraColors.textPrimary, fontSize: 16)),
         content: Text(
-          'クレジットのご購入には $providerLabel サインインが必要です。\n\n'
-          'サインインすると、機種変更や再インストール後も残高が引き継がれます。'
-          '無料の機能はサインインなしでお使いいただけます。',
+          t.consultCredit.signinBody(provider: providerLabel),
           style: const TextStyle(
               color: SolaraColors.textSecondary, fontSize: 13, height: 1.5),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('キャンセル',
-                style: TextStyle(color: SolaraColors.textSecondary)),
+            child: Text(t.locations.cancel,
+                style: const TextStyle(color: SolaraColors.textSecondary)),
           ),
           FilledButton(
             onPressed: () => Navigator.of(ctx).pop(true),
@@ -115,7 +115,7 @@ class _CreditSheetState extends State<_CreditSheet> {
               backgroundColor: SolaraColors.solaraGoldLight,
               foregroundColor: SolaraColors.celestialBlueDark,
             ),
-            child: Text('$providerLabel でサインイン'),
+            child: Text(t.consultCredit.signinCta(provider: providerLabel)),
           ),
         ],
       ),
@@ -131,7 +131,7 @@ class _CreditSheetState extends State<_CreditSheet> {
       if (mounted) setState(() => _message = e.message);
       return false;
     } catch (e) {
-      if (mounted) setState(() => _message = 'サインインに失敗しました');
+      if (mounted) setState(() => _message = t.consultCredit.signinFailed);
       return false;
     }
     return SolaraAuth.instance.isSignedIn;
@@ -160,7 +160,7 @@ class _CreditSheetState extends State<_CreditSheet> {
       if (mounted) {
         setState(() {
           _busy = false;
-          _message = '購入に失敗しました。時間をおいてお試しください。';
+          _message = t.consultCredit.buyFailed;
         });
       }
       return;
@@ -220,15 +220,15 @@ class _CreditSheetState extends State<_CreditSheet> {
                 ),
               ),
             ),
-            const Row(
+            Row(
               children: [
-                Icon(Icons.auto_awesome,
+                const Icon(Icons.auto_awesome,
                     color: SolaraColors.solaraGold, size: 20),
-                SizedBox(width: 8),
+                const SizedBox(width: 8),
                 // 大フォント設定 (最大1.5x) + 狭い端末でもはみ出さないよう Flexible 化。
                 Flexible(
-                  child: Text('Stella 相談クレジット',
-                      style: TextStyle(
+                  child: Text(t.consultCredit.heading,
+                      style: const TextStyle(
                           color: SolaraColors.solaraGoldLight,
                           fontSize: 16,
                           fontWeight: FontWeight.w600)),
@@ -238,8 +238,11 @@ class _CreditSheetState extends State<_CreditSheet> {
             const SizedBox(height: 6),
             if (_status != null && !_status!.pro)
               Text(
-                '今週の無料相談 あと${_status!.freeRemaining ?? 0}回'
-                '${(_status!.purchasedBalance ?? 0) > 0 ? ' ・ 購入残高 ${_status!.purchasedBalance}回' : ''}',
+                t.consultCredit.balanceFree(n: _status!.freeRemaining ?? 0) +
+                    ((_status!.purchasedBalance ?? 0) > 0
+                        ? t.consultCredit
+                            .balancePaid(n: _status!.purchasedBalance!)
+                        : ''),
                 style: const TextStyle(
                     color: SolaraColors.textSecondary, fontSize: 12),
               ),
@@ -267,7 +270,7 @@ class _CreditSheetState extends State<_CreditSheet> {
               onPressed: _busy ? null : _openPaywall,
               style: TextButton.styleFrom(
                   foregroundColor: SolaraColors.solaraGold),
-              child: const Text('✦ Cosmic Pro なら回数無制限 →'),
+              child: Text(t.consultCredit.proUnlimited),
             ),
           ],
         ),
@@ -280,11 +283,11 @@ class _CreditSheetState extends State<_CreditSheet> {
     final packages = offering?.availablePackages ?? const <Package>[];
     if (packages.isEmpty) {
       return [
-        const Padding(
-          padding: EdgeInsets.symmetric(vertical: 16),
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 16),
           child: Text(
-            'クレジットの販売準備中です。\nしばらくしてからお試しください。',
-            style: TextStyle(
+            t.consultCredit.preparing,
+            style: const TextStyle(
                 color: SolaraColors.textSecondary, fontSize: 13, height: 1.6),
             textAlign: TextAlign.center,
           ),
@@ -301,7 +304,8 @@ class _CreditSheetState extends State<_CreditSheet> {
 
   Widget _packageTile(Package p) {
     final product = p.storeProduct;
-    final title = product.title.isNotEmpty ? product.title : 'クレジット';
+    final title =
+        product.title.isNotEmpty ? product.title : t.consultCredit.fallbackProduct;
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Material(

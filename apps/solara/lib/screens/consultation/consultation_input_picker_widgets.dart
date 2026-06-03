@@ -103,7 +103,7 @@ class _LocationChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final displayName = slot.isHome ? '現住所' : slot.name;
+    final displayName = slot.isHome ? t.locations.currentAddress : slot.name;
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -194,7 +194,7 @@ class _SelectedSpecificCard extends StatelessWidget {
             visualDensity: VisualDensity.compact,
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
-            tooltip: '選択を解除',
+            tooltip: t.consultInput.picker.clearSelection,
           ),
         ],
       ),

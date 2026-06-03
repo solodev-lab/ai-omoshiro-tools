@@ -38,6 +38,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 
+import '../../i18n/strings.g.dart';
 import '../../theme/solara_colors.dart';
 import '../../utils/reverse_geocode.dart';
 import '../../widgets/tap_to_unfocus.dart';
@@ -217,7 +218,9 @@ class _ConsultationPlacePickerScreenState
     if (p == null) return;
     final name = _pickedName?.isNotEmpty == true
         ? _pickedName!
-        : '選択地点 (${p.latitude.toStringAsFixed(2)}°, ${p.longitude.toStringAsFixed(2)}°)';
+        : t.consultPlacePicker.coordName(
+            lat: p.latitude.toStringAsFixed(2),
+            lng: p.longitude.toStringAsFixed(2));
     final target = ConsultationPresetTarget(
       position: p,
       nameJP: name,
@@ -242,9 +245,9 @@ class _ConsultationPlacePickerScreenState
         backgroundColor: Colors.transparent,
         elevation: 0,
         iconTheme: const IconThemeData(color: SolaraColors.textPrimary),
-        title: const Text(
-          '地図で選ぶ',
-          style: TextStyle(
+        title: Text(
+          t.consultInput.picker.pickOnMap,
+          style: const TextStyle(
             color: SolaraColors.textPrimary,
             fontSize: 16,
             letterSpacing: 0.5,

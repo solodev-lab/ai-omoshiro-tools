@@ -25,7 +25,7 @@ class _EmptyState extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               Text(
-                favOnly ? 'お気に入りはまだありません' : 'まだ相談履歴はありません',
+                favOnly ? t.consultHistory.emptyFav : t.consultHistory.emptyAll,
                 style: const TextStyle(
                   color: SolaraColors.textPrimary,
                   fontSize: 14,
@@ -36,8 +36,8 @@ class _EmptyState extends StatelessWidget {
               const SizedBox(height: 4),
               Text(
                 favOnly
-                    ? '記録の ☆ をタップすると、ここに集まります。'
-                    : 'Map で地点をタップ、または Daily Transit から相談を始めると、\nここに保存されます。',
+                    ? t.consultHistory.emptyFavHint
+                    : t.consultHistory.emptyAllHint,
                 style: const TextStyle(
                   color: SolaraColors.textSecondary,
                   fontSize: 12,
@@ -122,7 +122,9 @@ class _HistoryCard extends StatelessWidget {
   /// カード下部の抜粋: 願い → だれと の順で 1 行。
   String get _excerpt {
     if (record.wish.isNotEmpty) return record.wish;
-    if (record.withWhom.isNotEmpty) return 'だれと: ${record.withWhom}';
+    if (record.withWhom.isNotEmpty) {
+      return t.consultHistory.withWhomPrefix(name: record.withWhom);
+    }
     return '';
   }
 
@@ -130,9 +132,14 @@ class _HistoryCard extends StatelessWidget {
   /// 例: 恋愛・関係 → 恋愛、豊かさ・お金 → 豊かさ。
   /// 結果画面ではフルラベルを使うので、この prefix 化は履歴画面ローカル。
   String get _themePrefix {
-    final label = _themeLabel[record.theme] ?? record.theme;
-    final idx = label.indexOf('・');
-    return idx > 0 ? label.substring(0, idx) : label;
+    final label = _themeLabel(record.theme);
+    // ja は「・」前、en は「 & 」「 / 」前を短縮 prefix にする
+    // (例: 恋愛・関係→恋愛 / Love & relationships→Love)。
+    for (final sep in const ['・', ' & ', ' / ']) {
+      final idx = label.indexOf(sep);
+      if (idx > 0) return label.substring(0, idx);
+    }
+    return label;
   }
 
   /// 2026-05-29: 「いつ」を相談したかの compact ラベル (日付/期間/ホライズン)。
@@ -147,9 +154,9 @@ class _HistoryCard extends StatelessWidget {
     if (k == null) {
       switch (record.mode) {
         case 'daily':
-          return '今日';
+          return t.consultInput.when.today;
         case 'migration':
-          return '未定';
+          return t.consultHistory.undecidedShort;
         default:
           return null;
       }
@@ -174,7 +181,7 @@ class _HistoryCard extends StatelessWidget {
       if (s == null && e == null) return null;
       return '${s ?? '?'}〜${e ?? '?'}';
     }
-    return _horizonLabel[k];
+    return _horizonLabel(k);
   }
 
   /// 時間帯ラベル (おでかけのみ・任意指定時)。指定なしなら null。
@@ -189,7 +196,7 @@ class _HistoryCard extends StatelessWidget {
     }
     return record.whenTimeBand == null
         ? null
-        : _timeBandLabel[record.whenTimeBand!];
+        : _timeBandLabel(record.whenTimeBand!);
   }
 
   /// モード (移住/旅行/おでかけ) → アイコン (履歴画面のみ)。
@@ -252,8 +259,8 @@ class _HistoryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final modeJp = _modeLabel[record.mode] ?? record.mode;
-    final scopeJp = _scopeLabel[record.scopeKind] ?? record.scopeKind;
+    final modeJp = _modeLabel(record.mode);
+    final scopeJp = _scopeLabel(record.scopeKind);
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
@@ -291,7 +298,8 @@ class _HistoryCard extends StatelessWidget {
                     ),
                     padding: EdgeInsets.zero,
                     visualDensity: VisualDensity.compact,
-                    tooltip: isFavorite ? 'お気に入り解除' : 'お気に入り登録',
+                    tooltip:
+                        isFavorite ? t.consultHistory.unfav : t.consultHistory.fav,
                     onPressed: onToggleFavorite,
                   ),
                 ),
@@ -306,7 +314,7 @@ class _HistoryCard extends StatelessWidget {
                     ),
                     padding: EdgeInsets.zero,
                     visualDensity: VisualDensity.compact,
-                    tooltip: '削除',
+                    tooltip: t.consultHistory.delete,
                     onPressed: () => _confirmDelete(context),
                   ),
                 ),
@@ -445,21 +453,21 @@ class _HistoryCard extends StatelessWidget {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: SolaraColors.celestialBlueLight,
-        title: const Text(
-          'この記録を削除しますか？',
-          style: TextStyle(color: SolaraColors.textPrimary, fontSize: 15),
+        title: Text(
+          t.consultHistory.deleteOneTitle,
+          style: const TextStyle(color: SolaraColors.textPrimary, fontSize: 15),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('キャンセル'),
+            child: Text(t.locations.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(true),
             style: TextButton.styleFrom(
               foregroundColor: SolaraColors.energyHardLight,
             ),
-            child: const Text('削除'),
+            child: Text(t.consultHistory.delete),
           ),
         ],
       ),

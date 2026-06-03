@@ -14,6 +14,7 @@
 
 import 'package:flutter/material.dart';
 
+import '../../i18n/strings.g.dart';
 import '../../theme/solara_colors.dart';
 import '../../utils/consult_restore.dart';
 import '../../utils/consultation_record.dart';
@@ -24,14 +25,17 @@ import 'consultation_result_screen.dart';
 
 part 'consultation_history_widgets.dart';
 
-const _themeLabel = <String, String>{
-  'love': '恋愛・関係',
-  'money': '豊かさ・お金',
-  'work': '仕事・キャリア',
-  'communication': '対話・学び',
-  'healing': '癒し・休息',
-  'newStart': '変化・新たな出発',
-};
+// テーマ/時間帯/ホライズン/スコープのラベルは consultInput と完全一致のため
+// i18n を再利用 (重複定義しない)。mode の daily のみ履歴は中黒インライン表記。
+String _themeLabel(String theme) => switch (theme) {
+      'love' => t.consultInput.theme.love,
+      'money' => t.consultInput.theme.money,
+      'work' => t.consultInput.theme.work,
+      'communication' => t.consultInput.theme.communication,
+      'healing' => t.consultInput.theme.healing,
+      'newStart' => t.consultInput.theme.newStart,
+      _ => theme,
+    };
 
 // 2026-05-29: テーマチップを Map 画面と同じカテゴリ色で着色する。
 // 5 テーマ (love/money/work/communication/healing) は map_constants の
@@ -43,39 +47,43 @@ const _newStartColor = Color(0xFFFFB07C);
 Color _themeColor(String theme) =>
     categoryColors[theme] ?? (theme == 'newStart' ? _newStartColor : SolaraColors.solaraGoldLight);
 
-// 時間帯 key → 日本語ラベル (consultation_input_when_scope の _timeBandChoices と一致)。
-const _timeBandLabel = <String, String>{
-  'morning': '朝',
-  'midday': '昼',
-  'evening': '夕方',
-  'night': '夜',
-  'lateNight': '夜更け',
-};
+// 時間帯 key → ラベル (consultInput.timeBand を再利用)。
+String? _timeBandLabel(String key) => switch (key) {
+      'morning' => t.consultInput.timeBand.morning,
+      'midday' => t.consultInput.timeBand.midday,
+      'evening' => t.consultInput.timeBand.evening,
+      'night' => t.consultInput.timeBand.night,
+      'lateNight' => t.consultInput.timeBand.lateNight,
+      _ => null,
+    };
 
-// 移住ホライズン key → 日本語ラベル (consultation_input_when_scope の _horizonChoices と一致)。
-const _horizonLabel = <String, String>{
-  'within6mo': '半年以内',
-  'within1yr': '1年以内',
-  'in3yr': '3年後くらい',
-  'in5yrPlus': '5年以上先',
-};
+// 移住ホライズン key → ラベル (consultInput.when を再利用)。
+String? _horizonLabel(String key) => switch (key) {
+      'within6mo' => t.consultInput.when.within6mo,
+      'within1yr' => t.consultInput.when.within1yr,
+      'in3yr' => t.consultInput.when.in3yr,
+      'in5yrPlus' => t.consultInput.when.in5yrPlus,
+      _ => null,
+    };
 
-// 2026-05-29: 'daily' のラベルを入力タイル ('おでかけ\nイベント') と概念統一。
-// 履歴カードは 1 行表示なので中黒区切り 'おでかけ・イベント' に。
-const _modeLabel = <String, String>{
-  'migration': '移住',
-  'travel': '旅行',
-  'daily': 'おでかけ・イベント',
-};
+// mode → ラベル。travel/migration は consultInput を再利用、daily は履歴用に
+// 中黒インライン (consultHistory.modeDaily)。
+String _modeLabel(String mode) => switch (mode) {
+      'migration' => t.consultInput.mode.migration,
+      'travel' => t.consultInput.mode.travel,
+      'daily' => t.consultHistory.modeDaily,
+      _ => mode,
+    };
 
-const _scopeLabel = <String, String>{
-  'point': '具体地点',
-  'bearing': '方角',
-  'radius': '現住所から半径',
-  'region': '地域',
-  'country': '自国内',
-  'world': '世界全体',
-};
+String _scopeLabel(String kind) => switch (kind) {
+      'point' => t.consultInput.scope.point,
+      'bearing' => t.consultInput.scope.bearing,
+      'radius' => t.consultInput.scope.radius,
+      'region' => t.consultInput.scope.region,
+      'country' => t.consultInput.scope.country,
+      'world' => t.consultInput.scope.world,
+      _ => kind,
+    };
 
 class ConsultationHistoryScreen extends StatefulWidget {
   /// テスト用 hook (デフォルト null で SolaraStorage を読む)。
@@ -159,25 +167,25 @@ class _ConsultationHistoryScreenState extends State<ConsultationHistoryScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: SolaraColors.celestialBlueLight,
-        title: const Text(
-          'すべて削除しますか？',
-          style: TextStyle(color: SolaraColors.textPrimary, fontSize: 16),
+        title: Text(
+          t.consultHistory.deleteAllTitle,
+          style: const TextStyle(color: SolaraColors.textPrimary, fontSize: 16),
         ),
-        content: const Text(
-          '保存された全ての相談記録が消えます。元に戻せません。',
-          style: TextStyle(color: SolaraColors.textSecondary, fontSize: 13),
+        content: Text(
+          t.consultHistory.deleteAllBody,
+          style: const TextStyle(color: SolaraColors.textSecondary, fontSize: 13),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('キャンセル'),
+            child: Text(t.locations.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(true),
             style: TextButton.styleFrom(
               foregroundColor: SolaraColors.energyHardLight,
             ),
-            child: const Text('削除'),
+            child: Text(t.consultHistory.delete),
           ),
         ],
       ),
@@ -203,9 +211,9 @@ class _ConsultationHistoryScreenState extends State<ConsultationHistoryScreen> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: const Text(
-          '相談履歴',
-          style: TextStyle(
+        title: Text(
+          t.consultHistory.title,
+          style: const TextStyle(
             color: SolaraColors.textPrimary,
             fontSize: 16,
             letterSpacing: 0.5,
@@ -217,7 +225,7 @@ class _ConsultationHistoryScreenState extends State<ConsultationHistoryScreen> {
           if (_records.isNotEmpty)
             IconButton(
               icon: const Icon(Icons.delete_sweep_outlined),
-              tooltip: 'すべて削除',
+              tooltip: t.consultHistory.deleteAll,
               onPressed: _confirmDeleteAll,
             ),
         ],
@@ -248,13 +256,13 @@ class _ConsultationHistoryScreenState extends State<ConsultationHistoryScreen> {
       child: Row(
         children: [
           _FilterChip(
-            label: 'すべて',
+            label: t.consultHistory.filterAll,
             selected: !_favOnly,
             onTap: () => setState(() => _favOnly = false),
           ),
           const SizedBox(width: 8),
           _FilterChip(
-            label: '★ お気に入り',
+            label: t.consultHistory.filterFav,
             selected: _favOnly,
             onTap: () => setState(() => _favOnly = true),
           ),

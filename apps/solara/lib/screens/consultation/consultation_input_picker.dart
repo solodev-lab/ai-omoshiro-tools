@@ -142,7 +142,7 @@ class _SpecificPickerState extends State<_SpecificPicker> {
     //   ・Worker placeReference (placeKind='saved') が「『現住所』という場所」と
     //     呼び、結果本文・タイトル中に住所が出ない
     // home 以外の slot は登録名 (例「お気に入りの公園」) をそのまま使う。
-    final sentName = s.isHome ? '現住所' : s.name;
+    final sentName = s.isHome ? t.locations.currentAddress : s.name;
     widget.onSelect(_PickedSpecific(
       position: LatLng(s.lat, s.lng),
       name: sentName,
@@ -191,12 +191,12 @@ class _SpecificPickerState extends State<_SpecificPicker> {
                     color: SolaraColors.textPrimary,
                     fontSize: 13,
                   ),
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     border: InputBorder.none,
                     isDense: true,
-                    contentPadding: EdgeInsets.symmetric(vertical: 10),
-                    hintText: '住所 / 店名で検索',
-                    hintStyle: TextStyle(
+                    contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                    hintText: t.consultInput.picker.searchHint,
+                    hintStyle: const TextStyle(
                       color: SolaraColors.textSecondary,
                       fontSize: 12,
                     ),
@@ -225,7 +225,7 @@ class _SpecificPickerState extends State<_SpecificPicker> {
                   },
                   visualDensity: VisualDensity.compact,
                   padding: const EdgeInsets.symmetric(horizontal: 6),
-                  tooltip: 'クリア',
+                  tooltip: t.consultInput.picker.clearSearch,
                 ),
               ],
             ],
@@ -260,9 +260,9 @@ class _SpecificPickerState extends State<_SpecificPicker> {
         // VIEWPOINT 保存地点 (chips) — グループ1
         if (_loadingSlots == false && _viewpointSlots.isNotEmpty) ...[
           const SizedBox(height: 14),
-          const Text(
-            '🔭 視点 (ViewPoint) から',
-            style: TextStyle(
+          Text(
+            t.consultInput.picker.fromViewpoint,
+            style: const TextStyle(
               color: SolaraColors.textSecondary,
               fontSize: 11,
               letterSpacing: 0.4,
@@ -288,9 +288,9 @@ class _SpecificPickerState extends State<_SpecificPicker> {
         // LOCATIONS 保存地点 (chips) — グループ2
         if (_loadingSlots == false && _locationSlots.isNotEmpty) ...[
           const SizedBox(height: 12),
-          const Text(
-            '📍 保存地点 (Locations) から',
-            style: TextStyle(
+          Text(
+            t.consultInput.picker.fromLocations,
+            style: const TextStyle(
               color: SolaraColors.textSecondary,
               fontSize: 11,
               letterSpacing: 0.4,
@@ -319,9 +319,9 @@ class _SpecificPickerState extends State<_SpecificPicker> {
           onPressed: _openMapPicker,
           icon: const Icon(Icons.map_outlined,
               size: 18, color: SolaraColors.solaraGoldLight),
-          label: const Text(
-            '地図で選ぶ',
-            style: TextStyle(
+          label: Text(
+            t.consultInput.picker.pickOnMap,
+            style: const TextStyle(
               color: SolaraColors.solaraGoldLight,
               fontSize: 13,
               fontWeight: FontWeight.w500,

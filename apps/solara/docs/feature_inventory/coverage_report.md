@@ -470,11 +470,11 @@
 > 各ソースの SHA1 を `_stamps.json` に記録し、差分を検出。
 > 変更されたファイルが属する層は、人手版インベントリ章の見直し対象。
 
-- 追加: **0** / 削除: **0** / 変更: **6**
+- 追加: **0** / 削除: **0** / 変更: **10**
 
 ### 変更されたファイル (層別)
 
-- **層 4f**: `lib/screens/consultation/consultation_result_card.dart`, `lib/screens/consultation/consultation_result_credit_widgets.dart`, `lib/screens/consultation/consultation_result_screen.dart`, `lib/screens/consultation/consultation_result_share.dart`, `lib/screens/consultation/consultation_result_widgets.dart`, `lib/screens/consultation/consultation_return_chip.dart`
+- **層 4f**: `lib/screens/consultation/consultation_credit_sheet.dart`, `lib/screens/consultation/consultation_history_screen.dart`, `lib/screens/consultation/consultation_history_widgets.dart`, `lib/screens/consultation/consultation_input_examples.dart`, `lib/screens/consultation/consultation_input_picker.dart`, `lib/screens/consultation/consultation_input_picker_widgets.dart`, `lib/screens/consultation/consultation_input_screen.dart`, `lib/screens/consultation/consultation_place_picker_screen.dart`, `lib/screens/consultation/consultation_place_picker_widgets.dart`, `lib/screens/consultation/consultation_start_popup.dart`
 
 ## #7 astro_glossary 用語辞書対整合
 
