@@ -39,6 +39,7 @@ class TranslationsEn extends Translations with BaseTranslations<AppLocale, Trans
 	TranslationsEn $copyWith({TranslationMetadata<AppLocale, Translations>? meta}) => TranslationsEn(meta: meta ?? this.$meta);
 
 	// Translations
+	@override late final _Translations$sanctuary$en sanctuary = _Translations$sanctuary$en._(_root);
 	@override late final _Translations$mapDaily$en mapDaily = _Translations$mapDaily$en._(_root);
 	@override late final _Translations$mapFortune$en mapFortune = _Translations$mapFortune$en._(_root);
 	@override late final _Translations$galaxy$en galaxy = _Translations$galaxy$en._(_root);
@@ -58,6 +59,46 @@ class TranslationsEn extends Translations with BaseTranslations<AppLocale, Trans
 	@override late final _Translations$disclaimer$en disclaimer = _Translations$disclaimer$en._(_root);
 	@override late final _Translations$common$en common = _Translations$common$en._(_root);
 	@override late final _Translations$aiConsent$en aiConsent = _Translations$aiConsent$en._(_root);
+}
+
+// Path: sanctuary
+class _Translations$sanctuary$en extends Translations$sanctuary$ja {
+	_Translations$sanctuary$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String creditPro({required Object remaining, required Object limit, required Object pur}) => '✦ Pro ${remaining} / ${limit} ・ Purchased ${pur} (refills Monday)';
+	@override String creditProSyncing({required Object pur}) => '✦ Pro balance syncing ・ Purchased ${pur}';
+	@override String creditFree({required Object free, required Object pur}) => '✦ Credits ─ Free ${free} ・ Purchased ${pur}';
+	@override String get set => 'Set ›';
+	@override String get unset => 'Not set ›';
+	@override String get birthInfo => 'Birth details';
+	@override String get home => 'Home (current address)';
+	@override String get receiveTitle => '✦ Receive your title';
+	@override String get shareTitleCard => '✦ Share your title card';
+	@override String get rediagnose => 'Retake the diagnosis';
+	@override String get rediagnoseProOnly => 'Retaking is Cosmic Pro only';
+	@override String get needProfile => 'Please set your birth details first';
+	@override String get rediagnoseProFeature => 'Retaking your class';
+	@override String get rediagnoseProDesc => 'The "you of now" keeps changing.\nWith Cosmic Pro you can retake the diagnosis any time,\nand line up your past classes side by side in the history gallery.';
+	@override late final _Translations$sanctuary$guide$en guide = _Translations$sanctuary$guide$en._(_root);
+	@override String get consultHistory => 'Consultation history';
+	@override String get titleHistory => 'Title history';
+	@override String get proPerks1 => 'All tarot categories · Deeper star readings · Map relocation & 120 lines';
+	@override String get proPerks2 => 'Time-specific outings · Unlimited title retakes · 5-year Forecast, and more';
+	@override String get proPaywallNote => 'See plans and pricing on the paywall · Cancel anytime';
+	@override String get proActive => 'Cosmic Pro active';
+	@override String get proActiveDesc => 'All features are unlocked.';
+	@override String get plansTerms => 'Plans & terms';
+	@override String get restoreNotFound => 'No purchases to restore were found.';
+	@override String get restoreDone => 'Your purchases have been restored.';
+	@override String restoreError({required Object e}) => 'An error occurred while restoring: ${e}';
+	@override String get orbSetting => 'Horoscope orbs';
+	@override String get orbStandard => 'Standard ›';
+	@override String get orbCustom => 'Custom ›';
+	@override String get dayStart => 'Start of day';
+	@override String get notifyNeedPermission => 'Please allow notifications in your device settings';
 }
 
 // Path: mapDaily
@@ -489,6 +530,21 @@ class _Translations$aiConsent$en extends Translations$aiConsent$ja {
 	@override late final _Translations$aiConsent$geminiContent$en geminiContent = _Translations$aiConsent$geminiContent$en._(_root);
 	@override late final _Translations$aiConsent$decisions$en decisions = _Translations$aiConsent$decisions$en._(_root);
 	@override late final _Translations$aiConsent$consentHandling$en consentHandling = _Translations$aiConsent$consentHandling$en._(_root);
+}
+
+// Path: sanctuary.guide
+class _Translations$sanctuary$guide$en extends Translations$sanctuary$guide$ja {
+	_Translations$sanctuary$guide$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get title => '✦ About retaking your title';
+	@override String get lead => 'With Cosmic Pro, you can receive your title again as many times as you like.';
+	@override String get body1 => 'That said, the "epithet" drawn from your Sun and Moon signs never changes. What changes is only the "title (class)" shaped by your answers to the questions.';
+	@override String get body2 => 'Each title is deeply tied to its questions. Retake it when you feel a change within yourself or in your surroundings, and later — looking back through "Title history" — you can trace your growth and your shifts.';
+	@override String get body3 => 'Of course, you\'re welcome to retake it every day. We simply mention, gently, that this too is one way to use it.';
+	@override String get back => 'Back';
 }
 
 // Path: mapDaily.tagline
@@ -1826,6 +1882,42 @@ class _Translations$paywall$faq$resubscribe$en extends Translations$paywall$faq$
 extension on TranslationsEn {
 	dynamic _flatMapFunction(String path) {
 		return switch (path) {
+			'sanctuary.creditPro' => ({required Object remaining, required Object limit, required Object pur}) => '✦ Pro ${remaining} / ${limit} ・ Purchased ${pur} (refills Monday)',
+			'sanctuary.creditProSyncing' => ({required Object pur}) => '✦ Pro balance syncing ・ Purchased ${pur}',
+			'sanctuary.creditFree' => ({required Object free, required Object pur}) => '✦ Credits ─ Free ${free} ・ Purchased ${pur}',
+			'sanctuary.set' => 'Set ›',
+			'sanctuary.unset' => 'Not set ›',
+			'sanctuary.birthInfo' => 'Birth details',
+			'sanctuary.home' => 'Home (current address)',
+			'sanctuary.receiveTitle' => '✦ Receive your title',
+			'sanctuary.shareTitleCard' => '✦ Share your title card',
+			'sanctuary.rediagnose' => 'Retake the diagnosis',
+			'sanctuary.rediagnoseProOnly' => 'Retaking is Cosmic Pro only',
+			'sanctuary.needProfile' => 'Please set your birth details first',
+			'sanctuary.rediagnoseProFeature' => 'Retaking your class',
+			'sanctuary.rediagnoseProDesc' => 'The "you of now" keeps changing.\nWith Cosmic Pro you can retake the diagnosis any time,\nand line up your past classes side by side in the history gallery.',
+			'sanctuary.guide.title' => '✦ About retaking your title',
+			'sanctuary.guide.lead' => 'With Cosmic Pro, you can receive your title again as many times as you like.',
+			'sanctuary.guide.body1' => 'That said, the "epithet" drawn from your Sun and Moon signs never changes. What changes is only the "title (class)" shaped by your answers to the questions.',
+			'sanctuary.guide.body2' => 'Each title is deeply tied to its questions. Retake it when you feel a change within yourself or in your surroundings, and later — looking back through "Title history" — you can trace your growth and your shifts.',
+			'sanctuary.guide.body3' => 'Of course, you\'re welcome to retake it every day. We simply mention, gently, that this too is one way to use it.',
+			'sanctuary.guide.back' => 'Back',
+			'sanctuary.consultHistory' => 'Consultation history',
+			'sanctuary.titleHistory' => 'Title history',
+			'sanctuary.proPerks1' => 'All tarot categories · Deeper star readings · Map relocation & 120 lines',
+			'sanctuary.proPerks2' => 'Time-specific outings · Unlimited title retakes · 5-year Forecast, and more',
+			'sanctuary.proPaywallNote' => 'See plans and pricing on the paywall · Cancel anytime',
+			'sanctuary.proActive' => 'Cosmic Pro active',
+			'sanctuary.proActiveDesc' => 'All features are unlocked.',
+			'sanctuary.plansTerms' => 'Plans & terms',
+			'sanctuary.restoreNotFound' => 'No purchases to restore were found.',
+			'sanctuary.restoreDone' => 'Your purchases have been restored.',
+			'sanctuary.restoreError' => ({required Object e}) => 'An error occurred while restoring: ${e}',
+			'sanctuary.orbSetting' => 'Horoscope orbs',
+			'sanctuary.orbStandard' => 'Standard ›',
+			'sanctuary.orbCustom' => 'Custom ›',
+			'sanctuary.dayStart' => 'Start of day',
+			'sanctuary.notifyNeedPermission' => 'Please allow notifications in your device settings',
 			'mapDaily.birthplace' => 'Birthplace',
 			'mapDaily.worldScale' => 'See on a world scale',
 			'mapDaily.consultStella' => 'Consult Stella',
@@ -2302,6 +2394,8 @@ extension on TranslationsEn {
 			'mapVp.help.reorderBody' => 'Also in the ⋯ menu, use ↑ ↓ to reorder.\nSlots higher up appear earlier in the list.\n(Your home 🏠 is fixed at the top and can\'t be moved or deleted.)',
 			'mapMenu.tabPlanet' => 'Planets',
 			'mapMenu.map.dirEnergy' => 'Directional Energy',
+			_ => null,
+		} ?? switch (path) {
 			'mapMenu.map.compass' => 'Compass',
 			'mapMenu.map.coords' => 'Coordinates',
 			'mapMenu.planet.type' => 'Type',
@@ -2338,8 +2432,6 @@ extension on TranslationsEn {
 			'locations.locDefaults.1' => 'Place 2',
 			'locations.locDefaults.2' => 'Place 3',
 			'locations.locDefaults.3' => 'Place 4',
-			_ => null,
-		} ?? switch (path) {
 			'locations.vpDefaults.0' => 'Workplace',
 			'locations.vpDefaults.1' => 'Favorite',
 			'locations.vpDefaults.2' => 'Spot',

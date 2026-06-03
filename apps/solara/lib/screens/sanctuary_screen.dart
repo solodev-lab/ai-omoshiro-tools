@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'horoscope/horo_antique_icons.dart';
+import '../i18n/strings.g.dart';
 import '../utils/consultation_api.dart' show ConsultationCreditStatus;
 import '../utils/consultation_credits.dart';
 import '../utils/moon_notification_service.dart';
@@ -287,14 +288,14 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 // ── ヘッダ ──
-                const Row(
+                Row(
                   children: [
-                    Icon(Icons.auto_awesome, color: Color(0xFFF9D976), size: 22),
-                    SizedBox(width: 10),
+                    const Icon(Icons.auto_awesome, color: Color(0xFFF9D976), size: 22),
+                    const SizedBox(width: 10),
                     Expanded(
                       child: Text(
-                        '✦ 称号の受け直しについて',
-                        style: TextStyle(
+                        t.sanctuary.guide.title,
+                        style: const TextStyle(
                           color: Color(0xFFF6D98A),
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
@@ -316,9 +317,9 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         // ── リード文 (Pro 特典) ──
-                        const Text(
-                          'Cosmic Pro では、称号を何度でも受け取り直すことができます。',
-                          style: TextStyle(
+                        Text(
+                          t.sanctuary.guide.lead,
+                          style: const TextStyle(
                             color: Color(0xFFEAEAEA),
                             fontSize: 14.5,
                             height: 1.6,
@@ -327,10 +328,9 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
                         ),
                         const SizedBox(height: 12),
                         // ── 変わるもの / 変わらないもの ──
-                        const Text(
-                          'ただし、あなたの太陽星座・月星座から導かれる「二つ名」そのものは変わりません。'
-                          '変わるのは、設問への答えで形づくられる「称号（クラス）」の部分だけです。',
-                          style: TextStyle(
+                        Text(
+                          t.sanctuary.guide.body1,
+                          style: const TextStyle(
                             color: Color(0xFFC9C9D4),
                             fontSize: 13,
                             height: 1.75,
@@ -338,22 +338,18 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
                         ),
                         const SizedBox(height: 12),
                         // ── 推奨される使い方 (変遷で成長を辿る) ──
-                        const Text(
-                          '称号は一つひとつの設問と深く結びついています。'
-                          'ご自身の内面の変化や、環境の変化を感じたときに受け直すと、'
-                          'のちに「称号 変遷」で振り返ったとき、'
-                          'あなたの成長や移ろいを辿ることができます。',
-                          style: TextStyle(
+                        Text(
+                          t.sanctuary.guide.body2,
+                          style: const TextStyle(
                             color: Color(0xFFC9C9D4),
                             fontSize: 13,
                             height: 1.75,
                           ),
                         ),
                         const SizedBox(height: 12),
-                        const Text(
-                          'もちろん毎日受け直していただいても構いません。'
-                          'そんな使い方もある、というご案内をそっとお伝えしておきます。',
-                          style: TextStyle(
+                        Text(
+                          t.sanctuary.guide.body3,
+                          style: const TextStyle(
                             color: Color(0xFFC9C9D4),
                             fontSize: 13,
                             height: 1.75,
@@ -374,7 +370,7 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
                           foregroundColor: const Color(0xFFACACAC),
                           padding: const EdgeInsets.symmetric(vertical: 12),
                         ),
-                        child: const Text('戻る', style: TextStyle(fontSize: 15)),
+                        child: Text(t.sanctuary.guide.back, style: const TextStyle(fontSize: 15)),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -597,13 +593,14 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
       final hasProData = c.proRemaining != null && c.proLimit != null;
       if (hasProData) {
         // 月曜リセットを明示。Pro 100/週 を使い切っても購入残で続行可能。
-        label = '✦ Pro 残 ${c.proRemaining} / ${c.proLimit} ・ 購入 $pur （月曜補充）';
+        label = t.sanctuary.creditPro(
+            remaining: c.proRemaining!, limit: c.proLimit!, pur: pur);
       } else {
-        label = '✦ Pro 残 確認中 ・ 購入 $pur';
+        label = t.sanctuary.creditProSyncing(pur: pur);
       }
     } else {
       final free = c.freeRemaining ?? 0;
-      label = '✦ クレジット残 ─ 無料 $free ・ 購入 $pur';
+      label = t.sanctuary.creditFree(free: free, pur: pur);
     }
     // タップで購入シートを開く（追加クレジットの導線）。InkWell で残バッジ全面を反応域に。
     // Pro でも購入導線を出す: 週次キャップ到達後のフォールバック消費先。
@@ -745,21 +742,21 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
   Widget _buildStellarProfileSection(bool hasProfile) {
     // プライバシー: 誕生日・住所の値は一覧に出さず「設定済み/未設定」のみ表示
     // (行はタップで編集できるよう残す)。
-    final birthVal = hasProfile ? '設定済み ›' : '未設定 ›';
+    final birthVal = hasProfile ? t.sanctuary.set : t.sanctuary.unset;
     final homeSet = _profile != null && _profile!.homeName.isNotEmpty;
     return _SettingsGroup(
       label: '✦ Stellar Profile',
       children: [
         _SettingsItem(
           icon: Icons.auto_awesome,
-          text: '出生情報',
+          text: t.sanctuary.birthInfo,
           value: birthVal,
           onTap: _openProfileEditor,
         ),
         _SettingsItem(
           icon: Icons.home_outlined,
-          text: '自宅（現住所）',
-          value: homeSet ? '設定済み ›' : '未設定 ›',
+          text: t.sanctuary.home,
+          value: homeSet ? t.sanctuary.set : t.sanctuary.unset,
           onTap: _openHomeEditor,
         ),
       ],
@@ -800,9 +797,9 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
                 ),
                 boxShadow: const [BoxShadow(color: Color(0x40F9D976), blurRadius: 24)],
               ),
-              child: const Center(
-                child: Text('✦ あなたの称号を受け取る',
-                  style: TextStyle(color: Color(0xFF0A0A14), fontSize: 15, fontWeight: FontWeight.w700, letterSpacing: 0.5)),
+              child: Center(
+                child: Text(t.sanctuary.receiveTitle,
+                  style: const TextStyle(color: Color(0xFF0A0A14), fontSize: 15, fontWeight: FontWeight.w700, letterSpacing: 0.5)),
               ),
             ),
           ),
@@ -821,9 +818,9 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
                   colors: [Color(0x33F9D976), Color(0x1AF9D976)],
                 ),
               ),
-              child: const Center(
-                child: Text('✦ 称号カードを共有する',
-                  style: TextStyle(color: Color(0xFFF9D976), fontSize: 15, fontWeight: FontWeight.w600)),
+              child: Center(
+                child: Text(t.sanctuary.shareTitleCard,
+                  style: const TextStyle(color: Color(0xFFF9D976), fontSize: 15, fontWeight: FontWeight.w600)),
               ),
             ),
           ),
@@ -848,11 +845,8 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
                     ? (isPro ? () => _showRediagnoseProGuide(ctx) : _startDiagnosis)
                     : () => showProUnlockDialog(
                           ctx,
-                          featureLabel: 'クラスの取り直し',
-                          description:
-                              '「今の自分」は変わっていきます。\n'
-                              'Cosmic Pro なら何度でも診断を受け直せ、\n'
-                              '変遷ギャラリーで過去のクラスを並べて見返せます。',
+                          featureLabel: t.sanctuary.rediagnoseProFeature,
+                          description: t.sanctuary.rediagnoseProDesc,
                         ),
                 child: Container(
                   width: double.infinity,
@@ -867,7 +861,7 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
                   ),
                   child: Center(
                     child: Text(
-                      showProLabel ? '再診断はCosmic Pro限定' : '再診断する',
+                      showProLabel ? t.sanctuary.rediagnoseProOnly : t.sanctuary.rediagnose,
                       style: TextStyle(
                         color: canRedo
                             ? const Color(0xFFF9D976)
@@ -926,11 +920,11 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
         ],
         // HTML: #titleNeedProfile { display:none; text-align:center; color:#ACACAC; font-size:13px; padding:10px; }
         if (!hasProfile) ...[
-          const Padding(
-            padding: EdgeInsets.all(10),
+          Padding(
+            padding: const EdgeInsets.all(10),
             child: Center(
-              child: Text('まず出生情報を設定してください',
-                style: TextStyle(fontSize: 15, color: Color(0xFFACACAC))),
+              child: Text(t.sanctuary.needProfile,
+                style: const TextStyle(fontSize: 15, color: Color(0xFFACACAC))),
             ),
           ),
         ],
@@ -1075,7 +1069,7 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
       children: [
         _SettingsItem(
           icon: Icons.auto_stories_outlined,
-          text: '相談履歴',
+          text: t.sanctuary.consultHistory,
           value: '›',
           onTap: () {
             Navigator.of(context).push(
@@ -1088,7 +1082,7 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
         // C4 (柱 3): クラス変遷ギャラリー。Free でも閲覧可能。
         _SettingsItem(
           icon: Icons.history_edu_outlined,
-          text: '称号 変遷',
+          text: t.sanctuary.titleHistory,
           value: '›',
           onTap: () {
             Navigator.of(context).push(
@@ -1154,15 +1148,15 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
                 ).createShader(const Rect.fromLTWH(0, 0, 220, 24)),
             )),
           const SizedBox(height: 12),
-          const Text(
-            'タロット全カテゴリ · 星読みの深い読み · 地図の引越し&120本ライン',
-            style: TextStyle(fontSize: 15, color: Color(0xFFACACAC), height: 1.55),
+          Text(
+            t.sanctuary.proPerks1,
+            style: const TextStyle(fontSize: 15, color: Color(0xFFACACAC), height: 1.55),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 8),
-          const Text(
-            'おでかけの時刻指定 · 称号は無制限に再診断 · Forecast 5年 ほか',
-            style: TextStyle(fontSize: 12, color: Color(0x99ACACAC), height: 1.5),
+          Text(
+            t.sanctuary.proPerks2,
+            style: const TextStyle(fontSize: 12, color: Color(0x99ACACAC), height: 1.5),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 12),
@@ -1180,9 +1174,9 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
                 fontSize: 15, fontWeight: FontWeight.w700, color: Color(0xFF0C1D3A))),
           ),
           const SizedBox(height: 12),
-          const Text(
-            'プランと価格はペイウォールでご確認ください · いつでも解約可能',
-            style: TextStyle(fontSize: 12, color: Color(0x99ACACAC)),
+          Text(
+            t.sanctuary.proPaywallNote,
+            style: const TextStyle(fontSize: 12, color: Color(0x99ACACAC)),
           ),
         ]),
       ),
@@ -1204,14 +1198,14 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
         border: Border.all(color: const Color(0x66F9D976)),
       ),
       child: Column(children: [
-        const Row(
+        Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.auto_awesome, color: Color(0xFFF9D976), size: 18),
-            SizedBox(width: 8),
+            const Icon(Icons.auto_awesome, color: Color(0xFFF9D976), size: 18),
+            const SizedBox(width: 8),
             Text(
-              'Cosmic Pro 加入中',
-              style: TextStyle(
+              t.sanctuary.proActive,
+              style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
                 color: Color(0xFFF9D976),
@@ -1221,10 +1215,10 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
           ],
         ),
         const SizedBox(height: 8),
-        const Text(
-          'すべての機能が解放されています。',
+        Text(
+          t.sanctuary.proActiveDesc,
           textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 12, color: Color(0xFFACACAC), height: 1.6),
+          style: const TextStyle(fontSize: 12, color: Color(0xFFACACAC), height: 1.6),
         ),
         const SizedBox(height: 12),
         // 解約方法 deep link: タップで端末の定期購入画面に直接遷移。
@@ -1240,14 +1234,14 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
                 color: const Color(0xFFF9D976).withValues(alpha: 0.4),
               ),
             ),
-            child: const Row(
+            child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.open_in_new, size: 14, color: Color(0xFFF9D976)),
-                SizedBox(width: 6),
+                const Icon(Icons.open_in_new, size: 14, color: Color(0xFFF9D976)),
+                const SizedBox(width: 6),
                 Text(
-                  '解約方法',
-                  style: TextStyle(
+                  t.paywall.legal.cancelMethod,
+                  style: const TextStyle(
                     fontSize: 13,
                     color: Color(0xFFF9D976),
                     fontWeight: FontWeight.w600,
@@ -1269,7 +1263,7 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
         TextButton.icon(
           onPressed: _restorePurchases,
           icon: const Icon(Icons.restore, size: 16),
-          label: const Text('購入を復元'),
+          label: Text(t.paywall.restore),
           style: TextButton.styleFrom(
             foregroundColor: const Color(0xFFACACAC),
           ),
@@ -1277,7 +1271,7 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
         TextButton.icon(
           onPressed: _openPaywall,
           icon: const Icon(Icons.receipt_long_outlined, size: 16),
-          label: const Text('プラン・規約'),
+          label: Text(t.sanctuary.plansTerms),
           style: TextButton.styleFrom(
             foregroundColor: const Color(0xFFACACAC),
           ),
@@ -1302,18 +1296,18 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
       final info = await PurchasesService.instance.restorePurchases();
       if (!mounted) return;
       if (info == null || !ProStatus.instance.isPro) {
-        messenger.showSnackBar(const SnackBar(
-          content: Text('復元する購入が見つかりませんでした。'),
+        messenger.showSnackBar(SnackBar(
+          content: Text(t.sanctuary.restoreNotFound),
         ));
       } else {
-        messenger.showSnackBar(const SnackBar(
-          content: Text('購入を復元しました。'),
+        messenger.showSnackBar(SnackBar(
+          content: Text(t.sanctuary.restoreDone),
         ));
       }
     } catch (e) {
       if (!mounted) return;
       messenger.showSnackBar(SnackBar(
-        content: Text('復元中にエラーが発生しました: $e'),
+        content: Text(t.sanctuary.restoreError(e: e)),
       ));
     }
   }
@@ -1341,7 +1335,7 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
         // ホロスコープのオーブ設定 (Horoscope 画面のアスペクト/パターン検出にのみ反映)
         _SettingsItem(
           icon: Icons.adjust,
-          text: 'ホロスコープのオーブ',
+          text: t.sanctuary.orbSetting,
           value: _orbSummary(),
           onTap: _openOrbOverlay,
         ),
@@ -1392,7 +1386,7 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
     };
     final isDefault =
         _orbValues.entries.every((e) => defaults[e.key] == e.value);
-    return isDefault ? '標準 ›' : 'カスタム ›';
+    return isDefault ? t.sanctuary.orbStandard : t.sanctuary.orbCustom;
   }
 
   void _openOrbOverlay() async {
@@ -1427,7 +1421,7 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
         // Daily reset hour（今日のタップボタンのリセット時刻）
         _SettingsItem(
           icon: Icons.schedule_outlined,
-          text: '1日の開始時刻',
+          text: t.sanctuary.dayStart,
           value: '${_dailyResetHour.toString().padLeft(2, '0')}:${_dailyResetMinute.toString().padLeft(2, '0')} ›',
           onTap: _pickDailyResetHour,
         ),
@@ -1618,8 +1612,8 @@ class _NotificationToggleItemState extends State<_NotificationToggleItem> {
         _busy = false;
       });
       if (!ok) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('端末の設定で通知を許可してください'),
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(t.sanctuary.notifyNeedPermission),
         ));
       }
     } else {

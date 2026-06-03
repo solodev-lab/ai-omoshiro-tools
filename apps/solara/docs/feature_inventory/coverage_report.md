@@ -55,9 +55,9 @@
 ## #1 / #2 機械抽出 ↔ feature_inventory.md (人手版) の対整合
 
 - 機械抽出した class/mixin/extension/enum: **476**
-- inventory に登場する識別子 (大文字始まり ``backtick``囲み): **289**
+- inventory に登場する識別子 (大文字始まり ``backtick``囲み): **292**
 
-### #1 機械にあるが Doc に書かれていない (275)
+### #1 機械にあるが Doc に書かれていない (274)
 
 - `AppAttestClient`
 - `ConstellationShareCardPage`
@@ -79,7 +79,6 @@
 - `GalaxyArchiveFilter`
 - `GalaxyArchiveFilterBar`
 - `GalaxyArchiveSort`
-- `GalaxyArchiveSortLabel`
 - `LegalUrls`
 - `MapFocus`
 - `MapFocusRequest`
@@ -259,9 +258,10 @@
 - `_PlanetGlyphPainter`
 - `_PlanetIntroBody`
 - `_PlanetSub`
-- … 残り 75 省略
+- `_PopupBody`
+- … 残り 74 省略
 
-### #2 Doc に書いてあるがコードに存在しない (ゴースト記述) (88)
+### #2 Doc に書いてあるがコードに存在しない (ゴースト記述) (90)
 
 > 注: Flutter SDK や外部ライブラリの型もここに乗る (誤検出)。
 > 真のゴーストはアプリ独自型のみ。実際の Doc 修正対象は手で絞り込む。
@@ -271,10 +271,12 @@
 - `APPLE_SIWA_KEY_ID`
 - `APPLE_SIWA_PRIVATE_KEY`
 - `APPLE_SIWA_SERVICE_ID`
+- `Abundance`
 - `AnimationController`
 - `BEARING_DEFS`
 - `BEARING_JP`
 - `BottomNavigationBar`
+- `BuildContextTranslationsExtension`
 - `C8D4E8`
 - `CHART_STYLE`
 - `CONSULTATION_CREDIT_PRODUCTS`
@@ -474,7 +476,7 @@
 
 ### 変更されたファイル (層別)
 
-- **層 4a**: `lib/screens/map/map_daily_transit_screen.dart`
+- **層 4e**: `lib/screens/sanctuary_screen.dart`
 
 ## #7 astro_glossary 用語辞書対整合
 

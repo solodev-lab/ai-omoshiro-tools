@@ -40,6 +40,7 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 	Translations $copyWith({TranslationMetadata<AppLocale, Translations>? meta}) => Translations(meta: meta ?? this.$meta);
 
 	// Translations
+	late final Translations$sanctuary$ja sanctuary = Translations$sanctuary$ja.internal(_root);
 	late final Translations$mapDaily$ja mapDaily = Translations$mapDaily$ja.internal(_root);
 	late final Translations$mapFortune$ja mapFortune = Translations$mapFortune$ja.internal(_root);
 	late final Translations$galaxy$ja galaxy = Translations$galaxy$ja.internal(_root);
@@ -59,6 +60,107 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 	late final Translations$disclaimer$ja disclaimer = Translations$disclaimer$ja.internal(_root);
 	late final Translations$common$ja common = Translations$common$ja.internal(_root);
 	late final Translations$aiConsent$ja aiConsent = Translations$aiConsent$ja.internal(_root);
+}
+
+// Path: sanctuary
+class Translations$sanctuary$ja {
+	Translations$sanctuary$ja.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// ja: '✦ Pro 残 $remaining / $limit ・ 購入 $pur （月曜補充）'
+	String creditPro({required Object remaining, required Object limit, required Object pur}) => '✦ Pro 残 ${remaining} / ${limit} ・ 購入 ${pur} （月曜補充）';
+
+	/// ja: '✦ Pro 残 確認中 ・ 購入 $pur'
+	String creditProSyncing({required Object pur}) => '✦ Pro 残 確認中 ・ 購入 ${pur}';
+
+	/// ja: '✦ クレジット残 ─ 無料 $free ・ 購入 $pur'
+	String creditFree({required Object free, required Object pur}) => '✦ クレジット残 ─ 無料 ${free} ・ 購入 ${pur}';
+
+	/// ja: '設定済み ›'
+	String get set => '設定済み ›';
+
+	/// ja: '未設定 ›'
+	String get unset => '未設定 ›';
+
+	/// ja: '出生情報'
+	String get birthInfo => '出生情報';
+
+	/// ja: '自宅（現住所）'
+	String get home => '自宅（現住所）';
+
+	/// ja: '✦ あなたの称号を受け取る'
+	String get receiveTitle => '✦ あなたの称号を受け取る';
+
+	/// ja: '✦ 称号カードを共有する'
+	String get shareTitleCard => '✦ 称号カードを共有する';
+
+	/// ja: '再診断する'
+	String get rediagnose => '再診断する';
+
+	/// ja: '再診断はCosmic Pro限定'
+	String get rediagnoseProOnly => '再診断はCosmic Pro限定';
+
+	/// ja: 'まず出生情報を設定してください'
+	String get needProfile => 'まず出生情報を設定してください';
+
+	/// ja: 'クラスの取り直し'
+	String get rediagnoseProFeature => 'クラスの取り直し';
+
+	/// ja: '「今の自分」は変わっていきます。 Cosmic Pro なら何度でも診断を受け直せ、 変遷ギャラリーで過去のクラスを並べて見返せます。'
+	String get rediagnoseProDesc => '「今の自分」は変わっていきます。\nCosmic Pro なら何度でも診断を受け直せ、\n変遷ギャラリーで過去のクラスを並べて見返せます。';
+
+	late final Translations$sanctuary$guide$ja guide = Translations$sanctuary$guide$ja.internal(_root);
+
+	/// ja: '相談履歴'
+	String get consultHistory => '相談履歴';
+
+	/// ja: '称号 変遷'
+	String get titleHistory => '称号 変遷';
+
+	/// ja: 'タロット全カテゴリ · 星読みの深い読み · 地図の引越し&120本ライン'
+	String get proPerks1 => 'タロット全カテゴリ · 星読みの深い読み · 地図の引越し&120本ライン';
+
+	/// ja: 'おでかけの時刻指定 · 称号は無制限に再診断 · Forecast 5年 ほか'
+	String get proPerks2 => 'おでかけの時刻指定 · 称号は無制限に再診断 · Forecast 5年 ほか';
+
+	/// ja: 'プランと価格はペイウォールでご確認ください · いつでも解約可能'
+	String get proPaywallNote => 'プランと価格はペイウォールでご確認ください · いつでも解約可能';
+
+	/// ja: 'Cosmic Pro 加入中'
+	String get proActive => 'Cosmic Pro 加入中';
+
+	/// ja: 'すべての機能が解放されています。'
+	String get proActiveDesc => 'すべての機能が解放されています。';
+
+	/// ja: 'プラン・規約'
+	String get plansTerms => 'プラン・規約';
+
+	/// ja: '復元する購入が見つかりませんでした。'
+	String get restoreNotFound => '復元する購入が見つかりませんでした。';
+
+	/// ja: '購入を復元しました。'
+	String get restoreDone => '購入を復元しました。';
+
+	/// ja: '復元中にエラーが発生しました: $e'
+	String restoreError({required Object e}) => '復元中にエラーが発生しました: ${e}';
+
+	/// ja: 'ホロスコープのオーブ'
+	String get orbSetting => 'ホロスコープのオーブ';
+
+	/// ja: '標準 ›'
+	String get orbStandard => '標準 ›';
+
+	/// ja: 'カスタム ›'
+	String get orbCustom => 'カスタム ›';
+
+	/// ja: '1日の開始時刻'
+	String get dayStart => '1日の開始時刻';
+
+	/// ja: '端末の設定で通知を許可してください'
+	String get notifyNeedPermission => '端末の設定で通知を許可してください';
 }
 
 // Path: mapDaily
@@ -867,6 +969,33 @@ class Translations$aiConsent$ja {
 	late final Translations$aiConsent$geminiContent$ja geminiContent = Translations$aiConsent$geminiContent$ja.internal(_root);
 	late final Translations$aiConsent$decisions$ja decisions = Translations$aiConsent$decisions$ja.internal(_root);
 	late final Translations$aiConsent$consentHandling$ja consentHandling = Translations$aiConsent$consentHandling$ja.internal(_root);
+}
+
+// Path: sanctuary.guide
+class Translations$sanctuary$guide$ja {
+	Translations$sanctuary$guide$ja.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// ja: '✦ 称号の受け直しについて'
+	String get title => '✦ 称号の受け直しについて';
+
+	/// ja: 'Cosmic Pro では、称号を何度でも受け取り直すことができます。'
+	String get lead => 'Cosmic Pro では、称号を何度でも受け取り直すことができます。';
+
+	/// ja: 'ただし、あなたの太陽星座・月星座から導かれる「二つ名」そのものは変わりません。変わるのは、設問への答えで形づくられる「称号（クラス）」の部分だけです。'
+	String get body1 => 'ただし、あなたの太陽星座・月星座から導かれる「二つ名」そのものは変わりません。変わるのは、設問への答えで形づくられる「称号（クラス）」の部分だけです。';
+
+	/// ja: '称号は一つひとつの設問と深く結びついています。ご自身の内面の変化や、環境の変化を感じたときに受け直すと、のちに「称号 変遷」で振り返ったとき、あなたの成長や移ろいを辿ることができます。'
+	String get body2 => '称号は一つひとつの設問と深く結びついています。ご自身の内面の変化や、環境の変化を感じたときに受け直すと、のちに「称号 変遷」で振り返ったとき、あなたの成長や移ろいを辿ることができます。';
+
+	/// ja: 'もちろん毎日受け直していただいても構いません。そんな使い方もある、というご案内をそっとお伝えしておきます。'
+	String get body3 => 'もちろん毎日受け直していただいても構いません。そんな使い方もある、というご案内をそっとお伝えしておきます。';
+
+	/// ja: '戻る'
+	String get back => '戻る';
 }
 
 // Path: mapDaily.tagline
@@ -3087,6 +3216,42 @@ class Translations$paywall$faq$resubscribe$ja {
 extension on Translations {
 	dynamic _flatMapFunction(String path) {
 		return switch (path) {
+			'sanctuary.creditPro' => ({required Object remaining, required Object limit, required Object pur}) => '✦ Pro 残 ${remaining} / ${limit} ・ 購入 ${pur} （月曜補充）',
+			'sanctuary.creditProSyncing' => ({required Object pur}) => '✦ Pro 残 確認中 ・ 購入 ${pur}',
+			'sanctuary.creditFree' => ({required Object free, required Object pur}) => '✦ クレジット残 ─ 無料 ${free} ・ 購入 ${pur}',
+			'sanctuary.set' => '設定済み ›',
+			'sanctuary.unset' => '未設定 ›',
+			'sanctuary.birthInfo' => '出生情報',
+			'sanctuary.home' => '自宅（現住所）',
+			'sanctuary.receiveTitle' => '✦ あなたの称号を受け取る',
+			'sanctuary.shareTitleCard' => '✦ 称号カードを共有する',
+			'sanctuary.rediagnose' => '再診断する',
+			'sanctuary.rediagnoseProOnly' => '再診断はCosmic Pro限定',
+			'sanctuary.needProfile' => 'まず出生情報を設定してください',
+			'sanctuary.rediagnoseProFeature' => 'クラスの取り直し',
+			'sanctuary.rediagnoseProDesc' => '「今の自分」は変わっていきます。\nCosmic Pro なら何度でも診断を受け直せ、\n変遷ギャラリーで過去のクラスを並べて見返せます。',
+			'sanctuary.guide.title' => '✦ 称号の受け直しについて',
+			'sanctuary.guide.lead' => 'Cosmic Pro では、称号を何度でも受け取り直すことができます。',
+			'sanctuary.guide.body1' => 'ただし、あなたの太陽星座・月星座から導かれる「二つ名」そのものは変わりません。変わるのは、設問への答えで形づくられる「称号（クラス）」の部分だけです。',
+			'sanctuary.guide.body2' => '称号は一つひとつの設問と深く結びついています。ご自身の内面の変化や、環境の変化を感じたときに受け直すと、のちに「称号 変遷」で振り返ったとき、あなたの成長や移ろいを辿ることができます。',
+			'sanctuary.guide.body3' => 'もちろん毎日受け直していただいても構いません。そんな使い方もある、というご案内をそっとお伝えしておきます。',
+			'sanctuary.guide.back' => '戻る',
+			'sanctuary.consultHistory' => '相談履歴',
+			'sanctuary.titleHistory' => '称号 変遷',
+			'sanctuary.proPerks1' => 'タロット全カテゴリ · 星読みの深い読み · 地図の引越し&120本ライン',
+			'sanctuary.proPerks2' => 'おでかけの時刻指定 · 称号は無制限に再診断 · Forecast 5年 ほか',
+			'sanctuary.proPaywallNote' => 'プランと価格はペイウォールでご確認ください · いつでも解約可能',
+			'sanctuary.proActive' => 'Cosmic Pro 加入中',
+			'sanctuary.proActiveDesc' => 'すべての機能が解放されています。',
+			'sanctuary.plansTerms' => 'プラン・規約',
+			'sanctuary.restoreNotFound' => '復元する購入が見つかりませんでした。',
+			'sanctuary.restoreDone' => '購入を復元しました。',
+			'sanctuary.restoreError' => ({required Object e}) => '復元中にエラーが発生しました: ${e}',
+			'sanctuary.orbSetting' => 'ホロスコープのオーブ',
+			'sanctuary.orbStandard' => '標準 ›',
+			'sanctuary.orbCustom' => 'カスタム ›',
+			'sanctuary.dayStart' => '1日の開始時刻',
+			'sanctuary.notifyNeedPermission' => '端末の設定で通知を許可してください',
 			'mapDaily.birthplace' => '出生地',
 			'mapDaily.worldScale' => '世界規模で見る',
 			'mapDaily.consultStella' => 'Stella に相談',
@@ -3563,6 +3728,8 @@ extension on Translations {
 			'mapVp.help.reorderBody' => '同じく ⋯ メニュー内の ↑ ↓ で並び替えできます。\n上にあるスロットほど一覧で先に出ます。\n(自宅 🏠 は先頭固定で移動・削除できません。)',
 			'mapMenu.tabPlanet' => '惑星',
 			'mapMenu.map.dirEnergy' => '方位エネルギー',
+			_ => null,
+		} ?? switch (path) {
 			'mapMenu.map.compass' => 'コンパス',
 			'mapMenu.map.coords' => '座標取得',
 			'mapMenu.planet.type' => 'タイプ',
@@ -3599,8 +3766,6 @@ extension on Translations {
 			'locations.locDefaults.1' => '場所2',
 			'locations.locDefaults.2' => '場所3',
 			'locations.locDefaults.3' => '場所4',
-			_ => null,
-		} ?? switch (path) {
 			'locations.vpDefaults.0' => '職場',
 			'locations.vpDefaults.1' => 'お気に入り',
 			'locations.vpDefaults.2' => 'スポット',
