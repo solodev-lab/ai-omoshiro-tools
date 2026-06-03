@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:latlong2/latlong.dart';
 
+import '../../i18n/strings.g.dart';
 import '../../utils/solara_storage.dart';
 import '../../widgets/info_popup.dart';
 import 'map_vp_panel.dart';
@@ -13,120 +14,93 @@ void _showViewpointHelpPopup(BuildContext context) {
     child: Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: const [
+      children: [
         Text(
-          'VIEWPOINT と LOCATIONS',
-          style: TextStyle(
+          t.mapVp.help.title,
+          style: const TextStyle(
               color: Color(0xFFC9A84C), fontSize: 14, letterSpacing: 1),
         ),
-        SizedBox(height: 10),
+        const SizedBox(height: 10),
         Text(
-          '【📍 VIEWPOINT】',
-          style: TextStyle(
+          t.mapVp.help.vpHead,
+          style: const TextStyle(
               color: Color(0xFFC9A84C),
               fontSize: 13,
               fontWeight: FontWeight.w600,
               letterSpacing: 0.5),
         ),
-        SizedBox(height: 4),
+        const SizedBox(height: 4),
         Text(
-          '方位スコアを計算する基準地点 (観測点) です。\n'
-          'ここから見た 16 方位それぞれに惑星の\n'
-          'エネルギーがどう降りているかを Map に描画します。\n\n'
-          '検索結果リスト上部のプルダウンや、\n'
-          'Daily チップ画面の VIEWPOINT 切替で使われます。',
-          style: TextStyle(
+          t.mapVp.help.vpBody,
+          style: const TextStyle(
               color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
         ),
-        SizedBox(height: 10),
+        const SizedBox(height: 10),
         Text(
-          '【🌐 LOCATIONS】',
-          style: TextStyle(
+          t.mapVp.help.locHead,
+          style: const TextStyle(
               color: Color(0xFFC9A84C),
               fontSize: 13,
               fontWeight: FontWeight.w600,
               letterSpacing: 0.5),
         ),
-        SizedBox(height: 4),
+        const SizedBox(height: 4),
         Text(
-          '地図上にマーカーとして表示しておく地点です\n'
-          '(よく行く場所のリスト)。\n'
-          '登録すると Map にずっとマーカーが残り、\n'
-          '位置関係を一目で確認できます。\n\n'
-          'Map 画面下部の「LOCATIONS」タイルボタンを\n'
-          'タップすると、VIEWPOINT から見た\n'
-          'LOCATIONS（登録地点）のエネルギースコアを\n'
-          '一覧で確認できます。\n'
-          'よく行く場所を登録しておくと、\n'
-          '今日この公園は癒しスコアが高い、\n'
-          '今日このカフェは恋愛スコアが高い、\n'
-          'というように、登録地ごとの今日のエネルギー\n'
-          '強弱が一目で分かる便利機能です。',
-          style: TextStyle(
+          t.mapVp.help.locBody,
+          style: const TextStyle(
               color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
         ),
-        SizedBox(height: 16),
-        Divider(color: Color(0x33C9A84C), height: 1),
-        SizedBox(height: 16),
+        const SizedBox(height: 16),
+        const Divider(color: Color(0x33C9A84C), height: 1),
+        const SizedBox(height: 16),
         Text(
-          '使い方',
-          style: TextStyle(
+          t.mapVp.help.usageTitle,
+          style: const TextStyle(
               color: Color(0xFFC9A84C), fontSize: 14, letterSpacing: 1),
         ),
-        SizedBox(height: 10),
+        const SizedBox(height: 10),
         Text(
-          '【登録する】',
-          style: TextStyle(
+          t.mapVp.help.registerHead,
+          style: const TextStyle(
               color: Color(0xFFC9A84C),
               fontSize: 13,
               fontWeight: FontWeight.w600,
               letterSpacing: 0.5),
         ),
-        SizedBox(height: 4),
+        const SizedBox(height: 4),
         Text(
-          'VIEWPOINT / LOCATIONS とも、それぞれ 5 件まで\n'
-          '登録できます (自宅 🏠 を含む)。\n'
-          '自宅はプロフィールから自動で先頭スロットに\n'
-          '入るので、追加で登録できるのは最大 4 件です。\n\n'
-          '登録したい場所を地図中央に表示し、\n'
-          'VIEWPOINT タブなら「この地点を保存」、\n'
-          'LOCATIONS タブなら「この地点を登録」を\n'
-          'タップすると、現在のタブに保存されます。',
-          style: TextStyle(
+          t.mapVp.help.registerBody,
+          style: const TextStyle(
               color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
         ),
-        SizedBox(height: 10),
+        const SizedBox(height: 10),
         Text(
-          '【アイコン・名前を変える】',
-          style: TextStyle(
+          t.mapVp.help.iconNameHead,
+          style: const TextStyle(
               color: Color(0xFFC9A84C),
               fontSize: 13,
               fontWeight: FontWeight.w600,
               letterSpacing: 0.5),
         ),
-        SizedBox(height: 4),
+        const SizedBox(height: 4),
         Text(
-          '各スロット右端の ⋯ ボタンからサブメニューを\n'
-          '開き、名前の変更とアイコン変更ができます。\n'
-          'アイコンは 32 種類から選べます。',
-          style: TextStyle(
+          t.mapVp.help.iconNameBody,
+          style: const TextStyle(
               color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
         ),
-        SizedBox(height: 10),
+        const SizedBox(height: 10),
         Text(
-          '【順序を変える】',
-          style: TextStyle(
+          t.mapVp.help.reorderHead,
+          style: const TextStyle(
               color: Color(0xFFC9A84C),
               fontSize: 13,
               fontWeight: FontWeight.w600,
               letterSpacing: 0.5),
         ),
-        SizedBox(height: 4),
+        const SizedBox(height: 4),
         Text(
-          '同じく ⋯ メニュー内の ↑ ↓ で並び替えできます。\n'
-          '上にあるスロットほど一覧で先に出ます。\n'
-          '(自宅 🏠 は先頭固定で移動・削除できません。)',
-          style: TextStyle(
+          t.mapVp.help.reorderBody,
+          style: const TextStyle(
               color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
         ),
       ],
@@ -183,11 +157,11 @@ const _allIcons = [
 class _MapViewpointMenuState extends State<MapViewpointMenu> {
   final SlotManager _vpMgr = SlotManager(
     storageKey: 'solara_vp_slots',
-    defaultNames: ['職場', 'お気に入り', 'スポット', '場所'],
+    defaultNames: t.locations.vpDefaults,
   );
   final SlotManager _locMgr = SlotManager(
     storageKey: 'solara_locations',
-    defaultNames: ['場所1', '場所2', '場所3', '場所4'],
+    defaultNames: t.locations.locDefaults,
   );
   List<VPSlot> _vpSlots = [];
   List<VPSlot> _locSlots = [];
@@ -314,11 +288,11 @@ class _MapViewpointMenuState extends State<MapViewpointMenu> {
                   const SizedBox(height: 8),
                   // アクションボタン (タブ別)
                   if (_tab == 'vp') ...[
-                    _actionBtn(Icons.my_location, '現在地に移動', widget.onGeolocate),
+                    _actionBtn(Icons.my_location, t.mapVp.moveToCurrent, widget.onGeolocate),
                     const SizedBox(height: 6),
-                    _actionBtn(Icons.save_alt, 'この地点を保存', _saveCurrent),
+                    _actionBtn(Icons.save_alt, t.mapVp.saveThisPoint, _saveCurrent),
                   ] else
-                    _actionBtn(Icons.add_location_alt, 'この地点を登録', _saveCurrent),
+                    _actionBtn(Icons.add_location_alt, t.mapVp.registerThisPoint, _saveCurrent),
                   if (_msg != null)
                     Padding(
                       padding: const EdgeInsets.only(top: 6),
@@ -330,7 +304,7 @@ class _MapViewpointMenuState extends State<MapViewpointMenu> {
                     ),
                   const SizedBox(height: 12),
                   Text(
-                    _tab == 'vp' ? '保存済みスロット' : '登録地',
+                    _tab == 'vp' ? t.mapVp.savedSlots : t.mapVp.registeredPlaces,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
@@ -421,11 +395,11 @@ class _MapViewpointMenuState extends State<MapViewpointMenu> {
 
   Widget _buildSlotList(List<VPSlot> slots, {required bool showMove}) {
     if (slots.isEmpty) {
-      return const Padding(
-        padding: EdgeInsets.symmetric(vertical: 8),
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8),
         child: Text(
-          '（スロットなし）',
-          style: TextStyle(fontSize: 12, color: Color(0xFF555555)),
+          t.mapVp.noSlots,
+          style: const TextStyle(fontSize: 12, color: Color(0xFF555555)),
         ),
       );
     }
@@ -462,7 +436,7 @@ class _MapViewpointMenuState extends State<MapViewpointMenu> {
               child: Text(
                 // HOME スロットは住所そのものではなく「現住所」固定表示。
                 // (オーナー指示 2026-05-09: 個人情報的な住所文字列を見せない方針)
-                slot.isHome ? '現住所' : slot.name,
+                slot.isHome ? t.locations.currentAddress : slot.name,
                 style: TextStyle(
                   fontSize: 13,
                   color: slot.isHome
@@ -502,18 +476,18 @@ class _MapViewpointMenuState extends State<MapViewpointMenu> {
       ),
       child: Column(mainAxisSize: MainAxisSize.min, children: [
         if (showMove) ...[
-          _subItem('↑', '上に移動', idx == 0, () async {
+          _subItem('↑', t.mapVp.subMoveUp, idx == 0, () async {
             await _activeMgr.moveSlot(idx, -1);
             await _reload();
           }),
-          _subItem('↓', '下に移動', idx == total - 1, () async {
+          _subItem('↓', t.mapVp.subMoveDown, idx == total - 1, () async {
             await _activeMgr.moveSlot(idx, 1);
             await _reload();
           }),
         ],
-        _subItem('🎨', 'アイコン変更', false, () => _showIconPickerDialog(idx)),
-        _subItem('✏️', '名称変更', false, () => _showRenameDialog(idx)),
-        _subItem('🗑', '削除', false, () async {
+        _subItem('🎨', t.mapVp.subChangeIcon, false, () => _showIconPickerDialog(idx)),
+        _subItem('✏️', t.mapVp.subRename, false, () => _showRenameDialog(idx)),
+        _subItem('🗑', t.mapVp.subDelete, false, () async {
           await _activeMgr.deleteSlot(idx);
           await _reload();
         }, isDanger: true),
@@ -562,8 +536,8 @@ class _MapViewpointMenuState extends State<MapViewpointMenu> {
       builder: (ctx) => AlertDialog(
         backgroundColor: const Color(0xFF0C0C1A),
         insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-        title: const Text('アイコンを選択',
-            style: TextStyle(fontSize: 14, color: Color(0xFFC9A84C))),
+        title: Text(t.mapVp.iconPickerTitle,
+            style: const TextStyle(fontSize: 14, color: Color(0xFFC9A84C))),
         contentPadding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
         content: SizedBox(
           // 固定 352 は狭端末 (320dp) で dialog 幅を超えて横 overflow するため、
@@ -595,7 +569,7 @@ class _MapViewpointMenuState extends State<MapViewpointMenu> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('キャンセル', style: TextStyle(color: Color(0xFF555555))),
+            child: Text(t.locations.cancel, style: const TextStyle(color: Color(0xFF555555))),
           ),
         ],
       ),
@@ -612,8 +586,8 @@ class _MapViewpointMenuState extends State<MapViewpointMenu> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: const Color(0xFF0C0C1A),
-        title: const Text('地点の名称を入力',
-            style: TextStyle(fontSize: 14, color: Color(0xFFC9A84C))),
+        title: Text(t.locations.renameTitle,
+            style: const TextStyle(fontSize: 14, color: Color(0xFFC9A84C))),
         content: TextField(
           controller: ctrl,
           autofocus: true,
@@ -629,7 +603,7 @@ class _MapViewpointMenuState extends State<MapViewpointMenu> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('キャンセル', style: TextStyle(color: Color(0xFF555555))),
+            child: Text(t.locations.cancel, style: const TextStyle(color: Color(0xFF555555))),
           ),
           TextButton(
             onPressed: () async {

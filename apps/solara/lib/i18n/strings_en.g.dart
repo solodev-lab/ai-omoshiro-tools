@@ -39,6 +39,7 @@ class TranslationsEn extends Translations with BaseTranslations<AppLocale, Trans
 	TranslationsEn $copyWith({TranslationMetadata<AppLocale, Translations>? meta}) => TranslationsEn(meta: meta ?? this.$meta);
 
 	// Translations
+	@override late final _Translations$mapVp$en mapVp = _Translations$mapVp$en._(_root);
 	@override late final _Translations$mapMenu$en mapMenu = _Translations$mapMenu$en._(_root);
 	@override late final _Translations$locations$en locations = _Translations$locations$en._(_root);
 	@override late final _Translations$paywall$en paywall = _Translations$paywall$en._(_root);
@@ -46,6 +47,28 @@ class TranslationsEn extends Translations with BaseTranslations<AppLocale, Trans
 	@override late final _Translations$disclaimer$en disclaimer = _Translations$disclaimer$en._(_root);
 	@override late final _Translations$common$en common = _Translations$common$en._(_root);
 	@override late final _Translations$aiConsent$en aiConsent = _Translations$aiConsent$en._(_root);
+}
+
+// Path: mapVp
+class _Translations$mapVp$en extends Translations$mapVp$ja {
+	_Translations$mapVp$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get savedSlots => 'Saved slots';
+	@override String get registeredPlaces => 'Registered places';
+	@override String get noSlots => '(no slots)';
+	@override String get moveToCurrent => 'Go to current location';
+	@override String get saveThisPoint => 'Save this point';
+	@override String get registerThisPoint => 'Register this point';
+	@override String get subMoveUp => 'Move up';
+	@override String get subMoveDown => 'Move down';
+	@override String get subChangeIcon => 'Change icon';
+	@override String get subRename => 'Rename';
+	@override String get subDelete => 'Delete';
+	@override String get iconPickerTitle => 'Choose an icon';
+	@override late final _Translations$mapVp$help$en help = _Translations$mapVp$help$en._(_root);
 }
 
 // Path: mapMenu
@@ -172,6 +195,27 @@ class _Translations$aiConsent$en extends Translations$aiConsent$ja {
 	@override late final _Translations$aiConsent$geminiContent$en geminiContent = _Translations$aiConsent$geminiContent$en._(_root);
 	@override late final _Translations$aiConsent$decisions$en decisions = _Translations$aiConsent$decisions$en._(_root);
 	@override late final _Translations$aiConsent$consentHandling$en consentHandling = _Translations$aiConsent$consentHandling$en._(_root);
+}
+
+// Path: mapVp.help
+class _Translations$mapVp$help$en extends Translations$mapVp$help$ja {
+	_Translations$mapVp$help$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get title => 'VIEWPOINT and LOCATIONS';
+	@override String get vpHead => '[📍 VIEWPOINT]';
+	@override String get vpBody => 'The reference point (observation point) for calculating directional scores.\nThe map draws how each planet\'s energy descends across the 16 directions as seen from here.\n\nIt\'s used in the dropdown at the top of the search-results list, and in the VIEWPOINT switcher on the Daily chip screen.';
+	@override String get locHead => '[🌐 LOCATIONS]';
+	@override String get locBody => 'Points shown as markers on the map\n(a list of places you visit often).\nOnce registered, the marker stays on the map,\nso you can see how places relate to each other at a glance.\n\nTapping the "LOCATIONS" tile button at the bottom\nof the Map screen lets you see, in a list,\nthe energy scores of your LOCATIONS (registered places)\nas viewed from the VIEWPOINT.\nRegister the places you visit often, and you\'ll see\nthings like "this park has a high Healing score today" or\n"this café has a high Love score today" —\na handy way to see how strong today\'s energy is\nat each registered place.';
+	@override String get usageTitle => 'How to use';
+	@override String get registerHead => '[Saving]';
+	@override String get registerBody => 'Both VIEWPOINT and LOCATIONS can hold up to 5 entries each\n(including your home 🏠).\nYour home is placed in the first slot automatically from your profile,\nso you can add up to 4 more.\n\nShow the place you want to save at the center of the map,\nthen tap "Save this point" on the VIEWPOINT tab,\nor "Register this point" on the LOCATIONS tab,\nto save it to the current tab.';
+	@override String get iconNameHead => '[Change icon / name]';
+	@override String get iconNameBody => 'From the ⋯ button at the right of each slot, open the submenu\nto change the name and the icon.\nYou can choose from 32 icons.';
+	@override String get reorderHead => '[Reorder]';
+	@override String get reorderBody => 'Also in the ⋯ menu, use ↑ ↓ to reorder.\nSlots higher up appear earlier in the list.\n(Your home 🏠 is fixed at the top and can\'t be moved or deleted.)';
 }
 
 // Path: mapMenu.map
@@ -812,6 +856,30 @@ class _Translations$paywall$faq$resubscribe$en extends Translations$paywall$faq$
 extension on TranslationsEn {
 	dynamic _flatMapFunction(String path) {
 		return switch (path) {
+			'mapVp.savedSlots' => 'Saved slots',
+			'mapVp.registeredPlaces' => 'Registered places',
+			'mapVp.noSlots' => '(no slots)',
+			'mapVp.moveToCurrent' => 'Go to current location',
+			'mapVp.saveThisPoint' => 'Save this point',
+			'mapVp.registerThisPoint' => 'Register this point',
+			'mapVp.subMoveUp' => 'Move up',
+			'mapVp.subMoveDown' => 'Move down',
+			'mapVp.subChangeIcon' => 'Change icon',
+			'mapVp.subRename' => 'Rename',
+			'mapVp.subDelete' => 'Delete',
+			'mapVp.iconPickerTitle' => 'Choose an icon',
+			'mapVp.help.title' => 'VIEWPOINT and LOCATIONS',
+			'mapVp.help.vpHead' => '[📍 VIEWPOINT]',
+			'mapVp.help.vpBody' => 'The reference point (observation point) for calculating directional scores.\nThe map draws how each planet\'s energy descends across the 16 directions as seen from here.\n\nIt\'s used in the dropdown at the top of the search-results list, and in the VIEWPOINT switcher on the Daily chip screen.',
+			'mapVp.help.locHead' => '[🌐 LOCATIONS]',
+			'mapVp.help.locBody' => 'Points shown as markers on the map\n(a list of places you visit often).\nOnce registered, the marker stays on the map,\nso you can see how places relate to each other at a glance.\n\nTapping the "LOCATIONS" tile button at the bottom\nof the Map screen lets you see, in a list,\nthe energy scores of your LOCATIONS (registered places)\nas viewed from the VIEWPOINT.\nRegister the places you visit often, and you\'ll see\nthings like "this park has a high Healing score today" or\n"this café has a high Love score today" —\na handy way to see how strong today\'s energy is\nat each registered place.',
+			'mapVp.help.usageTitle' => 'How to use',
+			'mapVp.help.registerHead' => '[Saving]',
+			'mapVp.help.registerBody' => 'Both VIEWPOINT and LOCATIONS can hold up to 5 entries each\n(including your home 🏠).\nYour home is placed in the first slot automatically from your profile,\nso you can add up to 4 more.\n\nShow the place you want to save at the center of the map,\nthen tap "Save this point" on the VIEWPOINT tab,\nor "Register this point" on the LOCATIONS tab,\nto save it to the current tab.',
+			'mapVp.help.iconNameHead' => '[Change icon / name]',
+			'mapVp.help.iconNameBody' => 'From the ⋯ button at the right of each slot, open the submenu\nto change the name and the icon.\nYou can choose from 32 icons.',
+			'mapVp.help.reorderHead' => '[Reorder]',
+			'mapVp.help.reorderBody' => 'Also in the ⋯ menu, use ↑ ↓ to reorder.\nSlots higher up appear earlier in the list.\n(Your home 🏠 is fixed at the top and can\'t be moved or deleted.)',
 			'mapMenu.tabPlanet' => 'Planets',
 			'mapMenu.map.dirEnergy' => 'Directional Energy',
 			'mapMenu.map.compass' => 'Compass',

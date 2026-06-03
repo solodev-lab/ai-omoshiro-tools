@@ -1,4 +1,32 @@
 {
+  "mapVp": {
+    "savedSlots": "Saved slots",
+    "registeredPlaces": "Registered places",
+    "noSlots": "(no slots)",
+    "moveToCurrent": "Go to current location",
+    "saveThisPoint": "Save this point",
+    "registerThisPoint": "Register this point",
+    "subMoveUp": "Move up",
+    "subMoveDown": "Move down",
+    "subChangeIcon": "Change icon",
+    "subRename": "Rename",
+    "subDelete": "Delete",
+    "iconPickerTitle": "Choose an icon",
+    "help": {
+      "title": "VIEWPOINT and LOCATIONS",
+      "vpHead": "[📍 VIEWPOINT]",
+      "vpBody": "The reference point (observation point) for calculating directional scores.\nThe map draws how each planet's energy descends across the 16 directions as seen from here.\n\nIt's used in the dropdown at the top of the search-results list, and in the VIEWPOINT switcher on the Daily chip screen.",
+      "locHead": "[🌐 LOCATIONS]",
+      "locBody": "Points shown as markers on the map\n(a list of places you visit often).\nOnce registered, the marker stays on the map,\nso you can see how places relate to each other at a glance.\n\nTapping the \"LOCATIONS\" tile button at the bottom\nof the Map screen lets you see, in a list,\nthe energy scores of your LOCATIONS (registered places)\nas viewed from the VIEWPOINT.\nRegister the places you visit often, and you'll see\nthings like \"this park has a high Healing score today\" or\n\"this café has a high Love score today\" —\na handy way to see how strong today's energy is\nat each registered place.",
+      "usageTitle": "How to use",
+      "registerHead": "[Saving]",
+      "registerBody": "Both VIEWPOINT and LOCATIONS can hold up to 5 entries each\n(including your home 🏠).\nYour home is placed in the first slot automatically from your profile,\nso you can add up to 4 more.\n\nShow the place you want to save at the center of the map,\nthen tap \"Save this point\" on the VIEWPOINT tab,\nor \"Register this point\" on the LOCATIONS tab,\nto save it to the current tab.",
+      "iconNameHead": "[Change icon / name]",
+      "iconNameBody": "From the ⋯ button at the right of each slot, open the submenu\nto change the name and the icon.\nYou can choose from 32 icons.",
+      "reorderHead": "[Reorder]",
+      "reorderBody": "Also in the ⋯ menu, use ↑ ↓ to reorder.\nSlots higher up appear earlier in the list.\n(Your home 🏠 is fixed at the top and can't be moved or deleted.)"
+    }
+  },
   "mapMenu": {
     "tabPlanet": "Planets",
     "map": { "dirEnergy": "Directional Energy", "compass": "Compass", "coords": "Coordinates" },

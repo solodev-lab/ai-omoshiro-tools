@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 25 / 総行数: 14682
+- ファイル数: 25 / 総行数: 14656
 - class/mixin/extension/enum: 90
 - 関数 (top-level + method の素拾い): 320
 - Navigator.push 等: 0
@@ -846,38 +846,38 @@ A*C*G ライン (natal / transit) のタップ詳細 popup。
   </details>
 
 
-### `lib/screens/map/map_viewpoint_menu.dart` (649 行)
+### `lib/screens/map/map_viewpoint_menu.dart` (623 行)
 
-**imports:** dart=0 / package=2 / relative=3
+**imports:** dart=0 / package=2 / relative=4
 
-- relative: `../../utils/solara_storage.dart`, `../../widgets/info_popup.dart`, `map_vp_panel.dart`
+- relative: `../../i18n/strings.g.dart`, `../../utils/solara_storage.dart`, `../../widgets/info_popup.dart`, `map_vp_panel.dart`
 
 **型定義 (2):**
 
-- L152 `class MapViewpointMenu : StatefulWidget`
+- L126 `class MapViewpointMenu : StatefulWidget`
   - 📍 地点ボタンタップで画面上部に展開するパネル (2026-05-09 第三弾)。
-- L183 `class _MapViewpointMenuState : State`
+- L157 `class _MapViewpointMenuState : State`
 
 **関数 (3 public + 12 private):**
 
-- L173 `createState()`
-- L199 `initState()`
-- L246 `build()`
+- L147 `createState()`
+- L173 `initState()`
+- L220 `build()`
 
   <details><summary>private 関数 12 件</summary>
 
-  - L10 `_showViewpointHelpPopup()`
-  - L204 `_loadAll()`
-  - L219 `_reload()`
-  - L233 `_saveCurrent()`
-  - L353 `_tabBtn()`
-  - L390 `_actionBtn()`
-  - L422 `_buildSlotList()`
-  - L440 `_buildSlotRow()`
-  - L494 `_buildSubMenu()`
-  - L524 `_subItem()`
-  - L557 `_showIconPickerDialog()`
-  - L609 `_showRenameDialog()`
+  - L11 `_showViewpointHelpPopup()`
+  - L178 `_loadAll()`
+  - L193 `_reload()`
+  - L207 `_saveCurrent()`
+  - L327 `_tabBtn()`
+  - L364 `_actionBtn()`
+  - L396 `_buildSlotList()`
+  - L414 `_buildSlotRow()`
+  - L468 `_buildSubMenu()`
+  - L498 `_subItem()`
+  - L531 `_showIconPickerDialog()`
+  - L583 `_showRenameDialog()`
 
   </details>
 

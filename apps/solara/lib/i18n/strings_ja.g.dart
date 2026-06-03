@@ -40,6 +40,7 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 	Translations $copyWith({TranslationMetadata<AppLocale, Translations>? meta}) => Translations(meta: meta ?? this.$meta);
 
 	// Translations
+	late final Translations$mapVp$ja mapVp = Translations$mapVp$ja.internal(_root);
 	late final Translations$mapMenu$ja mapMenu = Translations$mapMenu$ja.internal(_root);
 	late final Translations$locations$ja locations = Translations$locations$ja.internal(_root);
 	late final Translations$paywall$ja paywall = Translations$paywall$ja.internal(_root);
@@ -47,6 +48,53 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 	late final Translations$disclaimer$ja disclaimer = Translations$disclaimer$ja.internal(_root);
 	late final Translations$common$ja common = Translations$common$ja.internal(_root);
 	late final Translations$aiConsent$ja aiConsent = Translations$aiConsent$ja.internal(_root);
+}
+
+// Path: mapVp
+class Translations$mapVp$ja {
+	Translations$mapVp$ja.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// ja: '保存済みスロット'
+	String get savedSlots => '保存済みスロット';
+
+	/// ja: '登録地'
+	String get registeredPlaces => '登録地';
+
+	/// ja: '（スロットなし）'
+	String get noSlots => '（スロットなし）';
+
+	/// ja: '現在地に移動'
+	String get moveToCurrent => '現在地に移動';
+
+	/// ja: 'この地点を保存'
+	String get saveThisPoint => 'この地点を保存';
+
+	/// ja: 'この地点を登録'
+	String get registerThisPoint => 'この地点を登録';
+
+	/// ja: '上に移動'
+	String get subMoveUp => '上に移動';
+
+	/// ja: '下に移動'
+	String get subMoveDown => '下に移動';
+
+	/// ja: 'アイコン変更'
+	String get subChangeIcon => 'アイコン変更';
+
+	/// ja: '名称変更'
+	String get subRename => '名称変更';
+
+	/// ja: '削除'
+	String get subDelete => '削除';
+
+	/// ja: 'アイコンを選択'
+	String get iconPickerTitle => 'アイコンを選択';
+
+	late final Translations$mapVp$help$ja help = Translations$mapVp$help$ja.internal(_root);
 }
 
 // Path: mapMenu
@@ -232,6 +280,51 @@ class Translations$aiConsent$ja {
 	late final Translations$aiConsent$geminiContent$ja geminiContent = Translations$aiConsent$geminiContent$ja.internal(_root);
 	late final Translations$aiConsent$decisions$ja decisions = Translations$aiConsent$decisions$ja.internal(_root);
 	late final Translations$aiConsent$consentHandling$ja consentHandling = Translations$aiConsent$consentHandling$ja.internal(_root);
+}
+
+// Path: mapVp.help
+class Translations$mapVp$help$ja {
+	Translations$mapVp$help$ja.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// ja: 'VIEWPOINT と LOCATIONS'
+	String get title => 'VIEWPOINT と LOCATIONS';
+
+	/// ja: '【📍 VIEWPOINT】'
+	String get vpHead => '【📍 VIEWPOINT】';
+
+	/// ja: '方位スコアを計算する基準地点 (観測点) です。 ここから見た 16 方位それぞれに惑星の エネルギーがどう降りているかを Map に描画します。 検索結果リスト上部のプルダウンや、 Daily チップ画面の VIEWPOINT 切替で使われます。'
+	String get vpBody => '方位スコアを計算する基準地点 (観測点) です。\nここから見た 16 方位それぞれに惑星の\nエネルギーがどう降りているかを Map に描画します。\n\n検索結果リスト上部のプルダウンや、\nDaily チップ画面の VIEWPOINT 切替で使われます。';
+
+	/// ja: '【🌐 LOCATIONS】'
+	String get locHead => '【🌐 LOCATIONS】';
+
+	/// ja: '地図上にマーカーとして表示しておく地点です (よく行く場所のリスト)。 登録すると Map にずっとマーカーが残り、 位置関係を一目で確認できます。 Map 画面下部の「LOCATIONS」タイルボタンを タップすると、VIEWPOINT から見た LOCATIONS（登録地点）のエネルギースコアを 一覧で確認できます。 よく行く場所を登録しておくと、 今日この公園は癒しスコアが高い、 今日このカフェは恋愛スコアが高い、 というように、登録地ごとの今日のエネルギー 強弱が一目で分かる便利機能です。'
+	String get locBody => '地図上にマーカーとして表示しておく地点です\n(よく行く場所のリスト)。\n登録すると Map にずっとマーカーが残り、\n位置関係を一目で確認できます。\n\nMap 画面下部の「LOCATIONS」タイルボタンを\nタップすると、VIEWPOINT から見た\nLOCATIONS（登録地点）のエネルギースコアを\n一覧で確認できます。\nよく行く場所を登録しておくと、\n今日この公園は癒しスコアが高い、\n今日このカフェは恋愛スコアが高い、\nというように、登録地ごとの今日のエネルギー\n強弱が一目で分かる便利機能です。';
+
+	/// ja: '使い方'
+	String get usageTitle => '使い方';
+
+	/// ja: '【登録する】'
+	String get registerHead => '【登録する】';
+
+	/// ja: 'VIEWPOINT / LOCATIONS とも、それぞれ 5 件まで 登録できます (自宅 🏠 を含む)。 自宅はプロフィールから自動で先頭スロットに 入るので、追加で登録できるのは最大 4 件です。 登録したい場所を地図中央に表示し、 VIEWPOINT タブなら「この地点を保存」、 LOCATIONS タブなら「この地点を登録」を タップすると、現在のタブに保存されます。'
+	String get registerBody => 'VIEWPOINT / LOCATIONS とも、それぞれ 5 件まで\n登録できます (自宅 🏠 を含む)。\n自宅はプロフィールから自動で先頭スロットに\n入るので、追加で登録できるのは最大 4 件です。\n\n登録したい場所を地図中央に表示し、\nVIEWPOINT タブなら「この地点を保存」、\nLOCATIONS タブなら「この地点を登録」を\nタップすると、現在のタブに保存されます。';
+
+	/// ja: '【アイコン・名前を変える】'
+	String get iconNameHead => '【アイコン・名前を変える】';
+
+	/// ja: '各スロット右端の ⋯ ボタンからサブメニューを 開き、名前の変更とアイコン変更ができます。 アイコンは 32 種類から選べます。'
+	String get iconNameBody => '各スロット右端の ⋯ ボタンからサブメニューを\n開き、名前の変更とアイコン変更ができます。\nアイコンは 32 種類から選べます。';
+
+	/// ja: '【順序を変える】'
+	String get reorderHead => '【順序を変える】';
+
+	/// ja: '同じく ⋯ メニュー内の ↑ ↓ で並び替えできます。 上にあるスロットほど一覧で先に出ます。 (自宅 🏠 は先頭固定で移動・削除できません。)'
+	String get reorderBody => '同じく ⋯ メニュー内の ↑ ↓ で並び替えできます。\n上にあるスロットほど一覧で先に出ます。\n(自宅 🏠 は先頭固定で移動・削除できません。)';
 }
 
 // Path: mapMenu.map
@@ -1203,6 +1296,30 @@ class Translations$paywall$faq$resubscribe$ja {
 extension on Translations {
 	dynamic _flatMapFunction(String path) {
 		return switch (path) {
+			'mapVp.savedSlots' => '保存済みスロット',
+			'mapVp.registeredPlaces' => '登録地',
+			'mapVp.noSlots' => '（スロットなし）',
+			'mapVp.moveToCurrent' => '現在地に移動',
+			'mapVp.saveThisPoint' => 'この地点を保存',
+			'mapVp.registerThisPoint' => 'この地点を登録',
+			'mapVp.subMoveUp' => '上に移動',
+			'mapVp.subMoveDown' => '下に移動',
+			'mapVp.subChangeIcon' => 'アイコン変更',
+			'mapVp.subRename' => '名称変更',
+			'mapVp.subDelete' => '削除',
+			'mapVp.iconPickerTitle' => 'アイコンを選択',
+			'mapVp.help.title' => 'VIEWPOINT と LOCATIONS',
+			'mapVp.help.vpHead' => '【📍 VIEWPOINT】',
+			'mapVp.help.vpBody' => '方位スコアを計算する基準地点 (観測点) です。\nここから見た 16 方位それぞれに惑星の\nエネルギーがどう降りているかを Map に描画します。\n\n検索結果リスト上部のプルダウンや、\nDaily チップ画面の VIEWPOINT 切替で使われます。',
+			'mapVp.help.locHead' => '【🌐 LOCATIONS】',
+			'mapVp.help.locBody' => '地図上にマーカーとして表示しておく地点です\n(よく行く場所のリスト)。\n登録すると Map にずっとマーカーが残り、\n位置関係を一目で確認できます。\n\nMap 画面下部の「LOCATIONS」タイルボタンを\nタップすると、VIEWPOINT から見た\nLOCATIONS（登録地点）のエネルギースコアを\n一覧で確認できます。\nよく行く場所を登録しておくと、\n今日この公園は癒しスコアが高い、\n今日このカフェは恋愛スコアが高い、\nというように、登録地ごとの今日のエネルギー\n強弱が一目で分かる便利機能です。',
+			'mapVp.help.usageTitle' => '使い方',
+			'mapVp.help.registerHead' => '【登録する】',
+			'mapVp.help.registerBody' => 'VIEWPOINT / LOCATIONS とも、それぞれ 5 件まで\n登録できます (自宅 🏠 を含む)。\n自宅はプロフィールから自動で先頭スロットに\n入るので、追加で登録できるのは最大 4 件です。\n\n登録したい場所を地図中央に表示し、\nVIEWPOINT タブなら「この地点を保存」、\nLOCATIONS タブなら「この地点を登録」を\nタップすると、現在のタブに保存されます。',
+			'mapVp.help.iconNameHead' => '【アイコン・名前を変える】',
+			'mapVp.help.iconNameBody' => '各スロット右端の ⋯ ボタンからサブメニューを\n開き、名前の変更とアイコン変更ができます。\nアイコンは 32 種類から選べます。',
+			'mapVp.help.reorderHead' => '【順序を変える】',
+			'mapVp.help.reorderBody' => '同じく ⋯ メニュー内の ↑ ↓ で並び替えできます。\n上にあるスロットほど一覧で先に出ます。\n(自宅 🏠 は先頭固定で移動・削除できません。)',
 			'mapMenu.tabPlanet' => '惑星',
 			'mapMenu.map.dirEnergy' => '方位エネルギー',
 			'mapMenu.map.compass' => 'コンパス',

@@ -1,4 +1,32 @@
 {
+  "mapVp": {
+    "savedSlots": "保存済みスロット",
+    "registeredPlaces": "登録地",
+    "noSlots": "（スロットなし）",
+    "moveToCurrent": "現在地に移動",
+    "saveThisPoint": "この地点を保存",
+    "registerThisPoint": "この地点を登録",
+    "subMoveUp": "上に移動",
+    "subMoveDown": "下に移動",
+    "subChangeIcon": "アイコン変更",
+    "subRename": "名称変更",
+    "subDelete": "削除",
+    "iconPickerTitle": "アイコンを選択",
+    "help": {
+      "title": "VIEWPOINT と LOCATIONS",
+      "vpHead": "【📍 VIEWPOINT】",
+      "vpBody": "方位スコアを計算する基準地点 (観測点) です。\nここから見た 16 方位それぞれに惑星の\nエネルギーがどう降りているかを Map に描画します。\n\n検索結果リスト上部のプルダウンや、\nDaily チップ画面の VIEWPOINT 切替で使われます。",
+      "locHead": "【🌐 LOCATIONS】",
+      "locBody": "地図上にマーカーとして表示しておく地点です\n(よく行く場所のリスト)。\n登録すると Map にずっとマーカーが残り、\n位置関係を一目で確認できます。\n\nMap 画面下部の「LOCATIONS」タイルボタンを\nタップすると、VIEWPOINT から見た\nLOCATIONS（登録地点）のエネルギースコアを\n一覧で確認できます。\nよく行く場所を登録しておくと、\n今日この公園は癒しスコアが高い、\n今日このカフェは恋愛スコアが高い、\nというように、登録地ごとの今日のエネルギー\n強弱が一目で分かる便利機能です。",
+      "usageTitle": "使い方",
+      "registerHead": "【登録する】",
+      "registerBody": "VIEWPOINT / LOCATIONS とも、それぞれ 5 件まで\n登録できます (自宅 🏠 を含む)。\n自宅はプロフィールから自動で先頭スロットに\n入るので、追加で登録できるのは最大 4 件です。\n\n登録したい場所を地図中央に表示し、\nVIEWPOINT タブなら「この地点を保存」、\nLOCATIONS タブなら「この地点を登録」を\nタップすると、現在のタブに保存されます。",
+      "iconNameHead": "【アイコン・名前を変える】",
+      "iconNameBody": "各スロット右端の ⋯ ボタンからサブメニューを\n開き、名前の変更とアイコン変更ができます。\nアイコンは 32 種類から選べます。",
+      "reorderHead": "【順序を変える】",
+      "reorderBody": "同じく ⋯ メニュー内の ↑ ↓ で並び替えできます。\n上にあるスロットほど一覧で先に出ます。\n(自宅 🏠 は先頭固定で移動・削除できません。)"
+    }
+  },
   "mapMenu": {
     "tabPlanet": "惑星",
     "map": { "dirEnergy": "方位エネルギー", "compass": "コンパス", "coords": "座標取得" },
