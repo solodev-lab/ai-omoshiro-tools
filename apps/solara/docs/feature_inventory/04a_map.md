@@ -5,9 +5,9 @@
 
 ## サマリ
 
-- ファイル数: 25 / 総行数: 14642
+- ファイル数: 25 / 総行数: 14594
 - class/mixin/extension/enum: 90
-- 関数 (top-level + method の素拾い): 321
+- 関数 (top-level + method の素拾い): 322
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 20
 - Worker URL リテラル: 0
@@ -396,38 +396,39 @@ E4 (2026-04-29): 設計思想に基づく「両エネルギー事実提示」型
 - 集計: `showInfoPopup`×1
 
 
-### `lib/screens/map/map_fortune_sheet.dart` (798 行)
+### `lib/screens/map/map_fortune_sheet.dart` (750 行)
 
-**imports:** dart=0 / package=1 / relative=4
+**imports:** dart=0 / package=1 / relative=6
 
-- relative: `../../utils/direction_energy.dart`, `../../widgets/info_popup.dart`, `map_constants.dart`, `map_direction_popup.dart`
+- relative: `../../i18n/strings.g.dart`, `../../utils/direction_energy.dart`, `../../utils/solara_i18n.dart`, `../../widgets/info_popup.dart`, `map_constants.dart`, `map_direction_popup.dart`
 
 **型定義 (4):**
 
-- L15 `class FortuneFilterLabel : StatelessWidget`
+- L17 `class FortuneFilterLabel : StatelessWidget`
   - HTML: .ff-label { top:52px; left:16px; inline-flex row: ff-tag + ff-bars }
-- L190 `class FortuneSheet : StatelessWidget`
+- L195 `class FortuneSheet : StatelessWidget`
   - Fortune Sheet — HTML: .fs { bottom:80px; border-radius:16px 16px 0 0; }
-- L766 `class _FortuneRowsList : StatefulWidget`
+- L718 `class _FortuneRowsList : StatefulWidget`
   - `RawScrollbar` と `ListView` で同じ `ScrollController` を共有する。
-- L774 `class _FortuneRowsListState : State`
+- L726 `class _FortuneRowsListState : State`
 
-**関数 (7 public + 4 private):**
+**関数 (8 public + 4 private):**
 
-- L9 `pctValue()` — pct() from HTML: 0-5 → 0-83.3%, 5-10 → 83.3-100%
-- L32 `build()`
-- L215 `build()`
-- L489 `showCategoryInfoPopup()` — Map の使い方 + カテゴリと関連惑星ペアの説明 popup。
-- L771 `createState()`
-- L778 `dispose()`
-- L784 `build()`
+- L11 `pctValue()` — pct() from HTML: 0-5 → 0-83.3%, 5-10 → 83.3-100%
+- L34 `build()`
+- L220 `build()`
+- L498 `showCategoryInfoPopup()` — Map の使い方 + カテゴリと関連惑星ペアの説明 popup。
+- L511 `pair()`
+- L723 `createState()`
+- L730 `dispose()`
+- L736 `build()`
 
   <details><summary>private 関数 4 件</summary>
 
-  - L270 `_buildSrcTabs()`
-  - L305 `_buildCatTabs()`
-  - L341 `_legendChip()`
-  - L364 `_buildFortuneRows()`
+  - L275 `_buildSrcTabs()`
+  - L314 `_buildCatTabs()`
+  - L350 `_legendChip()`
+  - L373 `_buildFortuneRows()`
 
   </details>
 

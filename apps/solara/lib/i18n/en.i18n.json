@@ -1,4 +1,40 @@
 {
+  "mapFortune": {
+    "srcShort": { "combined": "Total", "transit": "TR", "progressed": "PR" },
+    "srcFull": { "combined": "Total", "transit": "Transit", "progressed": "Progressed" },
+    "header": "$src / $cat",
+    "legendTSoft": "T-soft",
+    "legendTHard": "T-hard",
+    "legendPSoft": "P-soft",
+    "legendPHard": "P-hard",
+    "catMeta": {
+      "healing": "A theme of rest, recovery, and intuition",
+      "money": "A theme of flourishing, joy, and self-affirmation",
+      "love": "A theme of love, passion, and closeness",
+      "work": "A theme of responsibility, action, and growth",
+      "communication": "A theme of conveying, dialogue, and intellect"
+    },
+    "usage": {
+      "title": "How to use the Map",
+      "dirTitle": "[Reading a direction]",
+      "dirBody": "Centered on your reference point (VIEWPOINT), it scores and shows the energy of each of the 16 surface directions\n(N, NNE, NE, ENE, E…).\nYou can judge \"which land or direction to turn your attention toward.\"\n\nIt isn't only a display of which way to go.\nGoing toward a direction is, of course, one action you can take toward it. But there's also turning your attention there, calling out, placing a cherished item to match the direction as you leave home, being mindful of the direction you face when you speak, which seat you take in a shop and which way you turn, the direction you take a deep breath — you are free to decide.\nThrough the action you choose, the planets' energy will reach you.\nThe planets are always watching over you, from a vast vantage point.\n\nTap the score bar to switch category\n(Overall → Healing → Abundance → Love → Work → Talk).\nChoose the category you want, and you'll see which directions that energy comes through most strongly.",
+      "regTitle": "[Registering a reference point]",
+      "regPre": "You can register a reference point from the ",
+      "regPost": " (VIEWPOINT) button on the left of the map screen.\nShow the place you want at the center of the map, open the panel, and tap \"Save this point\" — that point is then saved as a VIEWPOINT.\n\nYou can switch between your saved reference points anytime, from the top of the search results or the dropdown inside the \"Daily\" chip in the bottom menu.",
+      "findTitle": "[Finding a place]",
+      "findBody": "Search for shopping, a meeting spot, a shop, and so on from the search button, and you can check which planets that point is receiving energy from right now.",
+      "timeTitle": "[Reading the time]",
+      "timeBody": "From the \"Daily\" chip in the bottom menu you can read \"guidance on the time to act.\"\n* The \"Daily\" chip screen deals with \"sky directions\" (where and when a planet comes in the sky); it's separate from this Map's \"surface directions\" (which land to head toward).\n\nCombine the score bar (the strength of surface directions) with the \"Daily\" chip (sky direction × time), and Solara works out the best \"direction × time\" for the future you wish for."
+    },
+    "catPlanets": {
+      "title": "Categories and their planets",
+      "intro": "Each category extracts the aspects of its related planet pairs and scores them per direction, with pair weighting applied.\n(How the pair weighting works is explained in detail below.)",
+      "weightTitle": "[How pair weighting works]",
+      "weightBody": "A category's score extracts the aspects of its related planet pairs and sums them, weighted by each pair's \"centrality.\"\n\n· Lead pair (weight 2.0)\n　The planet pair that carries the category's central theme.\n　e.g. Love = Venus×Mars / Work = Saturn×Sun\n　→ when the aspect appears, it counts with 2× the influence.\n\n· Sub pair (weight 0.5)\n　An aspect where only one of the planets relates to the category.\n　e.g. for Love, \"Venus×Jupiter\" (only Venus carries love)\n　→ counts with a modest 0.5× influence.\n\n· Outside the pair (weight 0)\n　An aspect where neither planet relates to the category.\n　→ it isn't reflected in that category's score.\n\nThis \"weighting\" yields a precise score that reflects the category's \"central theme.\"\nA plain sum without pair weights would blur each category's character, so we refine it with weighted calculation.",
+      "overallTitle": "[How it relates to Overall]",
+      "overallBody": "When \"Overall\" is selected on the top score bar, the number is the straight sum of all planets and all aspects.\nNo category weighting is applied (= no pair weights).\n\nThe per-category views (Healing / Abundance / Love / Work / Talk), on the other hand, apply the pair weights above.\nAnd a single aspect can be counted in more than one category\n(e.g. Venus×Jupiter → counts for both Love and Abundance).\n\nSo \"the plain sum of the 5 categories ≠ Overall.\"\nThe two are numbers for seeing energy from different angles; neither is more correct.\n· Per-category = see the category's \"concentration\"\n· Overall = see the \"total volume\""
+    }
+  },
   "galaxy": {
     "todayMoon": "Today's moon: $name",
     "phaseDesc": {

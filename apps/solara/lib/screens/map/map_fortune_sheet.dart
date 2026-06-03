@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../../i18n/strings.g.dart';
 import '../../utils/direction_energy.dart';
+import '../../utils/solara_i18n.dart';
 import '../../widgets/info_popup.dart';
 import 'map_constants.dart';
 import 'map_direction_popup.dart';
@@ -102,7 +104,10 @@ class FortuneFilterLabel extends StatelessWidget {
                     // バーの縦中央寄り (1.3x スケール時はほぼ中央) になる。
                     const Spacer(),
                     Text(
-                      '${srcLabels[activeSrc] ?? '合計'} / ${categoryLabels[activeCategory] ?? '総合'}',
+                      t.mapFortune.header(
+                          src: srcLabels[activeSrc] ?? srcLabels['combined']!,
+                          cat: categoryLabels[activeCategory] ??
+                              categoryLabel('overall')),
                       style: const TextStyle(fontSize: 11, color: Color(0xFFC9A84C), letterSpacing: 0.5, fontWeight: FontWeight.w600),
                       overflow: TextOverflow.ellipsis,
                       maxLines: 1,
@@ -138,7 +143,7 @@ class FortuneFilterLabel extends StatelessWidget {
                     padding: const EdgeInsets.only(bottom: 2),
                     child: Row(mainAxisSize: MainAxisSize.min, children: [
                       SizedBox(width: dirLabelW, child: Text(
-                        dir16JP[e.key] ?? e.key,
+                        dirName(e.key),
                         style: const TextStyle(fontSize: 11, color: Color(0xFF888888), fontWeight: FontWeight.w500),
                         textAlign: TextAlign.right,
                         maxLines: 1,
@@ -246,13 +251,13 @@ class FortuneSheet extends StatelessWidget {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  _legendChip(compColors['tSoft']!, 'Tソフト'),
+                  _legendChip(compColors['tSoft']!, t.mapFortune.legendTSoft),
                   const SizedBox(width: 6),
-                  _legendChip(compColors['tHard']!, 'Tハード'),
+                  _legendChip(compColors['tHard']!, t.mapFortune.legendTHard),
                   const SizedBox(width: 6),
-                  _legendChip(compColors['pSoft']!, 'Pソフト'),
+                  _legendChip(compColors['pSoft']!, t.mapFortune.legendPSoft),
                   const SizedBox(width: 6),
-                  _legendChip(compColors['pHard']!, 'Pハード'),
+                  _legendChip(compColors['pHard']!, t.mapFortune.legendPHard),
                 ],
               ),
             ),
@@ -268,7 +273,11 @@ class FortuneSheet extends StatelessWidget {
   }
 
   Widget _buildSrcTabs() {
-    const srcs = [('combined', '合計'), ('transit', 'トランジット'), ('progressed', 'プログレス')];
+    final srcs = [
+      ('combined', t.mapFortune.srcFull.combined),
+      ('transit', t.mapFortune.srcFull.transit),
+      ('progressed', t.mapFortune.srcFull.progressed),
+    ];
     // モダン化: 下線タブ → 角丸ピル。アクティブは金色の淡い塗り + 枠。
     // 横スクロールでフォント拡大時の RIGHT OVERFLOW を回避 (2026-05-08)。
     return SingleChildScrollView(
@@ -409,7 +418,7 @@ class FortuneSheet extends StatelessWidget {
           SizedBox(
             width: 60,
             child: Text(
-              dir16JP[dir] ?? dir,
+              dirName(dir),
               maxLines: 1,
               softWrap: false,
               style: const TextStyle(
@@ -498,18 +507,25 @@ void showCategoryInfoPopup(
   //   love:    venus×mars / venus×moon / mars×moon
   //   work:    saturn×sun / saturn×mars / jupiter×sun / jupiter×mars
   //   communication: mercury×sun / mercury×venus / mercury×moon
-  const entries = <(String, String, String, String)>[
+    // 惑星ペア表記はロケール別惑星名 (planetName) で組み立てる (× / は言語非依存)。
+    String pair(String a, String b) => '${planetName(a)}×${planetName(b)}';
+  final entries = <(String, String, String, String)>[
     // (cat key, icon, pairs text, nuance)
-    ('healing', '🌿', '月×海王星 / 月×金星 / 太陽×海王星',
-        '休息・回復・直感が流れるテーマ'),
-    ('money', '💰', '木星×金星 / 木星×太陽 / 金星×太陽',
-        '繁栄・喜び・自己肯定のテーマ'),
-    ('love', '💗', '金星×火星 / 金星×月 / 火星×月',
-        '愛・情熱・親密さのテーマ'),
-    ('work', '⚙', '土星×太陽 / 土星×火星 / 木星×太陽 / 木星×火星',
-        '責任・行動・拡大のテーマ'),
-    ('communication', '💬', '水星×太陽 / 水星×金星 / 水星×月',
-        '伝達・対話・知性のテーマ'),
+    ('healing', '🌿',
+        '${pair('moon', 'neptune')} / ${pair('moon', 'venus')} / ${pair('sun', 'neptune')}',
+        t.mapFortune.catMeta.healing),
+    ('money', '💰',
+        '${pair('jupiter', 'venus')} / ${pair('jupiter', 'sun')} / ${pair('venus', 'sun')}',
+        t.mapFortune.catMeta.money),
+    ('love', '💗',
+        '${pair('venus', 'mars')} / ${pair('venus', 'moon')} / ${pair('mars', 'moon')}',
+        t.mapFortune.catMeta.love),
+    ('work', '⚙',
+        '${pair('saturn', 'sun')} / ${pair('saturn', 'mars')} / ${pair('jupiter', 'sun')} / ${pair('jupiter', 'mars')}',
+        t.mapFortune.catMeta.work),
+    ('communication', '💬',
+        '${pair('mercury', 'sun')} / ${pair('mercury', 'venus')} / ${pair('mercury', 'moon')}',
+        t.mapFortune.catMeta.communication),
   ];
 
   showInfoPopup(
@@ -522,47 +538,30 @@ void showCategoryInfoPopup(
         // includeMapUsageTop=false の場合 (検索詳細から呼ばれた時) は
         // 「方角を読む」「基準地点を登録する」を省略し、「場所を探す」から開始。
         if (includeMapUsageTop) ...[
-          const Text(
-            'Map の使い方',
-            style: TextStyle(
+          Text(
+            t.mapFortune.usage.title,
+            style: const TextStyle(
                 color: Color(0xFFC9A84C), fontSize: 14, letterSpacing: 1),
           ),
           const SizedBox(height: 10),
-          const Text(
-            '【方角を読む】',
-            style: TextStyle(
+          Text(
+            t.mapFortune.usage.dirTitle,
+            style: const TextStyle(
                 color: Color(0xFFC9A84C),
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
                 letterSpacing: 0.5),
           ),
           const SizedBox(height: 4),
-          const Text(
-            '基準地点 (VIEWPOINT) を中心に、地表の 16 方位\n'
-            '(北・北北東・北東・東北東・東…) ごとのエネルギーを\n'
-            'スコア化して表示しています。\n'
-            '「どの土地・方向に意識を向けるべきか」が判断できます。\n\n'
-            'どの方向に進むべきかだけの表示ではありません。\n'
-            'もちろん方角に向かい進む事も一つの方角に対する\n'
-            '行動です。他には、意識を向ける事や、声をかける、\n'
-            '大切なアイテムの置き場所を方角に合わせて家を出発する、\n'
-            '話しかける時の方角を意識する、お店で座る席や\n'
-            'どちらに向くか意識する、深呼吸をする方角、\n'
-            'など、あなたが自由に決められます。\n'
-            '決めた行動により、惑星たちのエネルギーが\n'
-            'あなたに届くでしょう。\n'
-            '惑星たちは常に大きな視点であなたを見守っています。\n\n'
-            'スコアバーをタップするとカテゴリが切替わります\n'
-            '(総合 → 癒し → 豊かさ → 恋愛 → 仕事 → 話す)。\n'
-            '見たいカテゴリを選ぶと、そのエネルギーが\n'
-            'どの方位に強く出ているかが分かります。',
-            style: TextStyle(
+          Text(
+            t.mapFortune.usage.dirBody,
+            style: const TextStyle(
                 color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
           ),
           const SizedBox(height: 10),
-          const Text(
-            '【基準地点を登録する】',
-            style: TextStyle(
+          Text(
+            t.mapFortune.usage.regTitle,
+            style: const TextStyle(
                 color: Color(0xFFC9A84C),
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
@@ -573,81 +572,61 @@ void showCategoryInfoPopup(
             TextSpan(
               style: const TextStyle(
                   color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
-              children: const [
-                TextSpan(text: '基準地点は地図画面の左側にある '),
-                WidgetSpan(
+              children: [
+                TextSpan(text: t.mapFortune.usage.regPre),
+                const WidgetSpan(
                   alignment: PlaceholderAlignment.middle,
                   child: Icon(Icons.location_on_outlined,
                       size: 14, color: Color(0xFFC9A84C)),
                 ),
-                TextSpan(
-                    text: ' (VIEWPOINT) ボタン\n'
-                        'から登録できます。\n'
-                        '登録したい場所を地図中央に表示してパネルを開き、\n'
-                        '「この地点を保存」をタップすると、その地点が\n'
-                        'VIEWPOINT として保存されます。\n\n'
-                        '保存した基準地点は、検索結果一覧の上部や\n'
-                        '下部メニューの「Daily」チップ内のプルダウンから、\n'
-                        'いつでも切り替えて使えます。'),
+                TextSpan(text: t.mapFortune.usage.regPost),
               ],
             ),
           ),
           const SizedBox(height: 10),
         ],
-        const Text(
-          '【場所を探す】',
-          style: TextStyle(
+        Text(
+          t.mapFortune.usage.findTitle,
+          style: const TextStyle(
               color: Color(0xFFC9A84C),
               fontSize: 13,
               fontWeight: FontWeight.w600,
               letterSpacing: 0.5),
         ),
         const SizedBox(height: 4),
-        const Text(
-          '検索ボタンから買い物・待ち合わせ・お店などを\n'
-          '検索すると、その地点が今どの惑星から\n'
-          'エネルギーを受けているかを確認できます。',
-          style: TextStyle(
+        Text(
+          t.mapFortune.usage.findBody,
+          style: const TextStyle(
               color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
         ),
         const SizedBox(height: 10),
-        const Text(
-          '【時間を読む】',
-          style: TextStyle(
+        Text(
+          t.mapFortune.usage.timeTitle,
+          style: const TextStyle(
               color: Color(0xFFC9A84C),
               fontSize: 13,
               fontWeight: FontWeight.w600,
               letterSpacing: 0.5),
         ),
         const SizedBox(height: 4),
-        const Text(
-          '下部メニューの「Daily」チップから\n'
-          '「行動する時間の指針」が分かります。\n'
-          '※「Daily」チップの画面は「天空方位」(惑星が空の\n'
-          '　 どこにいつ来るか) を扱い、この Map の「地表方位」\n'
-          '　 (どの土地に向かうか) とは別物です。\n\n'
-          'スコアバー (地表方位の強さ) と「Daily」チップ\n'
-          '(天空方位 × 時刻) を組み合わせると、\n'
-          'あなたの望む未来に対する最適な\n'
-          '「方角 × 時間」を Solara が算出します。',
-          style: TextStyle(
+        Text(
+          t.mapFortune.usage.timeBody,
+          style: const TextStyle(
               color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
         ),
         const SizedBox(height: 16),
         const Divider(color: Color(0x33C9A84C), height: 1),
         const SizedBox(height: 16),
         // ── Section 2: カテゴリと関連惑星 ──
-        const Text(
-          'カテゴリと関連惑星',
-          style: TextStyle(
+        Text(
+          t.mapFortune.catPlanets.title,
+          style: const TextStyle(
               color: Color(0xFFC9A84C), fontSize: 14, letterSpacing: 1),
         ),
         const SizedBox(height: 10),
-        const Text(
-          '各カテゴリは、関連する惑星ペアのアスペクトを抽出し、\n'
-          'ペア重みをかけて方位ごとにスコア化しています。\n'
-          '(ペア重みの仕組みは下に詳しく説明)',
-          style: TextStyle(
+        Text(
+          t.mapFortune.catPlanets.intro,
+          style: const TextStyle(
               color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
         ),
         const SizedBox(height: 12),
@@ -699,60 +678,33 @@ void showCategoryInfoPopup(
         ],
         const SizedBox(height: 4),
         // ── ペア重みの詳細解説 (2026-05-08 ボリューム増) ──
-        const Text(
-          '【ペア重みの仕組み】',
-          style: TextStyle(
+        Text(
+          t.mapFortune.catPlanets.weightTitle,
+          style: const TextStyle(
               color: Color(0xFFC9A84C),
               fontSize: 13,
               fontWeight: FontWeight.w600,
               letterSpacing: 0.5),
         ),
         const SizedBox(height: 4),
-        const Text(
-          'カテゴリ別スコアは、関連する惑星ペアのアスペクトを抽出し、\n'
-          'ペアの「中心度」に応じた重みをかけて合算しています。\n\n'
-          '・主役ペア (重み 2.0)\n'
-          '　そのカテゴリの中心テーマを担う惑星ペア。\n'
-          '　例: 恋愛 = 金星×火星 / 仕事 = 土星×太陽\n'
-          '　→ アスペクト出現時は 2 倍の影響力で計上されます。\n\n'
-          '・サブペア (重み 0.5)\n'
-          '　片方の惑星だけがカテゴリに関わるアスペクト。\n'
-          '　例: 恋愛で「金星×木星」(金星のみ love 担当)\n'
-          '　→ 0.5 倍の控えめな影響力で計上されます。\n\n'
-          '・ペア外 (重み 0)\n'
-          '　両方ともカテゴリに関係ない惑星のアスペクト。\n'
-          '　→ そのカテゴリのスコアには反映されません。\n\n'
-          'この「重み付け」により、カテゴリの「中心テーマ」を\n'
-          '反映した精度の高いスコアが得られます。\n'
-          'ペア重みなしの単純合算では、カテゴリの個性が\n'
-          'ぼやけてしまうため、加重計算で精緻化しています。',
-          style: TextStyle(
+        Text(
+          t.mapFortune.catPlanets.weightBody,
+          style: const TextStyle(
               color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
         ),
         const SizedBox(height: 14),
-        const Text(
-          '【総合との関係】',
-          style: TextStyle(
+        Text(
+          t.mapFortune.catPlanets.overallTitle,
+          style: const TextStyle(
               color: Color(0xFFC9A84C),
               fontSize: 13,
               fontWeight: FontWeight.w600,
               letterSpacing: 0.5),
         ),
         const SizedBox(height: 4),
-        const Text(
-          '上部スコアバーで「総合」を選んでいる時の数字は、\n'
-          '全惑星・全アスペクトをそのまま合算した値です。\n'
-          'カテゴリ重みは入りません (= ペア重みなし)。\n\n'
-          '一方、カテゴリ別 (癒し / 豊かさ / 恋愛 / 仕事 / 話す) は\n'
-          '上記のペア重みがかかります。\n'
-          'さらに 1 つのアスペクトが複数カテゴリに重複計上される\n'
-          'こともあります (例: 金星×木星 → 恋愛にも豊かさにも入る)。\n\n'
-          'このため「カテゴリ別 5 つの単純合算 ≠ 総合」となります。\n'
-          '両者は別の角度からエネルギーを見るための数値で、\n'
-          'どちらが正しいということはありません。\n'
-          '・カテゴリ別 = カテゴリの「集中度」を見る\n'
-          '・総合 = 全体の「総量」を見る',
-          style: TextStyle(
+        Text(
+          t.mapFortune.catPlanets.overallBody,
+          style: const TextStyle(
               color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
         ),
       ],

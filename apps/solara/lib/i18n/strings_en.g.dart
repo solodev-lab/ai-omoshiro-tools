@@ -39,6 +39,7 @@ class TranslationsEn extends Translations with BaseTranslations<AppLocale, Trans
 	TranslationsEn $copyWith({TranslationMetadata<AppLocale, Translations>? meta}) => TranslationsEn(meta: meta ?? this.$meta);
 
 	// Translations
+	@override late final _Translations$mapFortune$en mapFortune = _Translations$mapFortune$en._(_root);
 	@override late final _Translations$galaxy$en galaxy = _Translations$galaxy$en._(_root);
 	@override late final _Translations$forecast$en forecast = _Translations$forecast$en._(_root);
 	@override late final _Translations$consultHistory$en consultHistory = _Translations$consultHistory$en._(_root);
@@ -56,6 +57,25 @@ class TranslationsEn extends Translations with BaseTranslations<AppLocale, Trans
 	@override late final _Translations$disclaimer$en disclaimer = _Translations$disclaimer$en._(_root);
 	@override late final _Translations$common$en common = _Translations$common$en._(_root);
 	@override late final _Translations$aiConsent$en aiConsent = _Translations$aiConsent$en._(_root);
+}
+
+// Path: mapFortune
+class _Translations$mapFortune$en extends Translations$mapFortune$ja {
+	_Translations$mapFortune$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override late final _Translations$mapFortune$srcShort$en srcShort = _Translations$mapFortune$srcShort$en._(_root);
+	@override late final _Translations$mapFortune$srcFull$en srcFull = _Translations$mapFortune$srcFull$en._(_root);
+	@override String header({required Object src, required Object cat}) => '${src} / ${cat}';
+	@override String get legendTSoft => 'T-soft';
+	@override String get legendTHard => 'T-hard';
+	@override String get legendPSoft => 'P-soft';
+	@override String get legendPHard => 'P-hard';
+	@override late final _Translations$mapFortune$catMeta$en catMeta = _Translations$mapFortune$catMeta$en._(_root);
+	@override late final _Translations$mapFortune$usage$en usage = _Translations$mapFortune$usage$en._(_root);
+	@override late final _Translations$mapFortune$catPlanets$en catPlanets = _Translations$mapFortune$catPlanets$en._(_root);
 }
 
 // Path: galaxy
@@ -429,6 +449,78 @@ class _Translations$aiConsent$en extends Translations$aiConsent$ja {
 	@override late final _Translations$aiConsent$geminiContent$en geminiContent = _Translations$aiConsent$geminiContent$en._(_root);
 	@override late final _Translations$aiConsent$decisions$en decisions = _Translations$aiConsent$decisions$en._(_root);
 	@override late final _Translations$aiConsent$consentHandling$en consentHandling = _Translations$aiConsent$consentHandling$en._(_root);
+}
+
+// Path: mapFortune.srcShort
+class _Translations$mapFortune$srcShort$en extends Translations$mapFortune$srcShort$ja {
+	_Translations$mapFortune$srcShort$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get combined => 'Total';
+	@override String get transit => 'TR';
+	@override String get progressed => 'PR';
+}
+
+// Path: mapFortune.srcFull
+class _Translations$mapFortune$srcFull$en extends Translations$mapFortune$srcFull$ja {
+	_Translations$mapFortune$srcFull$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get combined => 'Total';
+	@override String get transit => 'Transit';
+	@override String get progressed => 'Progressed';
+}
+
+// Path: mapFortune.catMeta
+class _Translations$mapFortune$catMeta$en extends Translations$mapFortune$catMeta$ja {
+	_Translations$mapFortune$catMeta$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get healing => 'A theme of rest, recovery, and intuition';
+	@override String get money => 'A theme of flourishing, joy, and self-affirmation';
+	@override String get love => 'A theme of love, passion, and closeness';
+	@override String get work => 'A theme of responsibility, action, and growth';
+	@override String get communication => 'A theme of conveying, dialogue, and intellect';
+}
+
+// Path: mapFortune.usage
+class _Translations$mapFortune$usage$en extends Translations$mapFortune$usage$ja {
+	_Translations$mapFortune$usage$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get title => 'How to use the Map';
+	@override String get dirTitle => '[Reading a direction]';
+	@override String get dirBody => 'Centered on your reference point (VIEWPOINT), it scores and shows the energy of each of the 16 surface directions\n(N, NNE, NE, ENE, E…).\nYou can judge "which land or direction to turn your attention toward."\n\nIt isn\'t only a display of which way to go.\nGoing toward a direction is, of course, one action you can take toward it. But there\'s also turning your attention there, calling out, placing a cherished item to match the direction as you leave home, being mindful of the direction you face when you speak, which seat you take in a shop and which way you turn, the direction you take a deep breath — you are free to decide.\nThrough the action you choose, the planets\' energy will reach you.\nThe planets are always watching over you, from a vast vantage point.\n\nTap the score bar to switch category\n(Overall → Healing → Abundance → Love → Work → Talk).\nChoose the category you want, and you\'ll see which directions that energy comes through most strongly.';
+	@override String get regTitle => '[Registering a reference point]';
+	@override String get regPre => 'You can register a reference point from the ';
+	@override String get regPost => ' (VIEWPOINT) button on the left of the map screen.\nShow the place you want at the center of the map, open the panel, and tap "Save this point" — that point is then saved as a VIEWPOINT.\n\nYou can switch between your saved reference points anytime, from the top of the search results or the dropdown inside the "Daily" chip in the bottom menu.';
+	@override String get findTitle => '[Finding a place]';
+	@override String get findBody => 'Search for shopping, a meeting spot, a shop, and so on from the search button, and you can check which planets that point is receiving energy from right now.';
+	@override String get timeTitle => '[Reading the time]';
+	@override String get timeBody => 'From the "Daily" chip in the bottom menu you can read "guidance on the time to act."\n* The "Daily" chip screen deals with "sky directions" (where and when a planet comes in the sky); it\'s separate from this Map\'s "surface directions" (which land to head toward).\n\nCombine the score bar (the strength of surface directions) with the "Daily" chip (sky direction × time), and Solara works out the best "direction × time" for the future you wish for.';
+}
+
+// Path: mapFortune.catPlanets
+class _Translations$mapFortune$catPlanets$en extends Translations$mapFortune$catPlanets$ja {
+	_Translations$mapFortune$catPlanets$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get title => 'Categories and their planets';
+	@override String get intro => 'Each category extracts the aspects of its related planet pairs and scores them per direction, with pair weighting applied.\n(How the pair weighting works is explained in detail below.)';
+	@override String get weightTitle => '[How pair weighting works]';
+	@override String get weightBody => 'A category\'s score extracts the aspects of its related planet pairs and sums them, weighted by each pair\'s "centrality."\n\n· Lead pair (weight 2.0)\n　The planet pair that carries the category\'s central theme.\n　e.g. Love = Venus×Mars / Work = Saturn×Sun\n　→ when the aspect appears, it counts with 2× the influence.\n\n· Sub pair (weight 0.5)\n　An aspect where only one of the planets relates to the category.\n　e.g. for Love, "Venus×Jupiter" (only Venus carries love)\n　→ counts with a modest 0.5× influence.\n\n· Outside the pair (weight 0)\n　An aspect where neither planet relates to the category.\n　→ it isn\'t reflected in that category\'s score.\n\nThis "weighting" yields a precise score that reflects the category\'s "central theme."\nA plain sum without pair weights would blur each category\'s character, so we refine it with weighted calculation.';
+	@override String get overallTitle => '[How it relates to Overall]';
+	@override String get overallBody => 'When "Overall" is selected on the top score bar, the number is the straight sum of all planets and all aspects.\nNo category weighting is applied (= no pair weights).\n\nThe per-category views (Healing / Abundance / Love / Work / Talk), on the other hand, apply the pair weights above.\nAnd a single aspect can be counted in more than one category\n(e.g. Venus×Jupiter → counts for both Love and Abundance).\n\nSo "the plain sum of the 5 categories ≠ Overall."\nThe two are numbers for seeing energy from different angles; neither is more correct.\n· Per-category = see the category\'s "concentration"\n· Overall = see the "total volume"';
 }
 
 // Path: galaxy.phaseDesc
@@ -1634,6 +1726,38 @@ class _Translations$paywall$faq$resubscribe$en extends Translations$paywall$faq$
 extension on TranslationsEn {
 	dynamic _flatMapFunction(String path) {
 		return switch (path) {
+			'mapFortune.srcShort.combined' => 'Total',
+			'mapFortune.srcShort.transit' => 'TR',
+			'mapFortune.srcShort.progressed' => 'PR',
+			'mapFortune.srcFull.combined' => 'Total',
+			'mapFortune.srcFull.transit' => 'Transit',
+			'mapFortune.srcFull.progressed' => 'Progressed',
+			'mapFortune.header' => ({required Object src, required Object cat}) => '${src} / ${cat}',
+			'mapFortune.legendTSoft' => 'T-soft',
+			'mapFortune.legendTHard' => 'T-hard',
+			'mapFortune.legendPSoft' => 'P-soft',
+			'mapFortune.legendPHard' => 'P-hard',
+			'mapFortune.catMeta.healing' => 'A theme of rest, recovery, and intuition',
+			'mapFortune.catMeta.money' => 'A theme of flourishing, joy, and self-affirmation',
+			'mapFortune.catMeta.love' => 'A theme of love, passion, and closeness',
+			'mapFortune.catMeta.work' => 'A theme of responsibility, action, and growth',
+			'mapFortune.catMeta.communication' => 'A theme of conveying, dialogue, and intellect',
+			'mapFortune.usage.title' => 'How to use the Map',
+			'mapFortune.usage.dirTitle' => '[Reading a direction]',
+			'mapFortune.usage.dirBody' => 'Centered on your reference point (VIEWPOINT), it scores and shows the energy of each of the 16 surface directions\n(N, NNE, NE, ENE, E…).\nYou can judge "which land or direction to turn your attention toward."\n\nIt isn\'t only a display of which way to go.\nGoing toward a direction is, of course, one action you can take toward it. But there\'s also turning your attention there, calling out, placing a cherished item to match the direction as you leave home, being mindful of the direction you face when you speak, which seat you take in a shop and which way you turn, the direction you take a deep breath — you are free to decide.\nThrough the action you choose, the planets\' energy will reach you.\nThe planets are always watching over you, from a vast vantage point.\n\nTap the score bar to switch category\n(Overall → Healing → Abundance → Love → Work → Talk).\nChoose the category you want, and you\'ll see which directions that energy comes through most strongly.',
+			'mapFortune.usage.regTitle' => '[Registering a reference point]',
+			'mapFortune.usage.regPre' => 'You can register a reference point from the ',
+			'mapFortune.usage.regPost' => ' (VIEWPOINT) button on the left of the map screen.\nShow the place you want at the center of the map, open the panel, and tap "Save this point" — that point is then saved as a VIEWPOINT.\n\nYou can switch between your saved reference points anytime, from the top of the search results or the dropdown inside the "Daily" chip in the bottom menu.',
+			'mapFortune.usage.findTitle' => '[Finding a place]',
+			'mapFortune.usage.findBody' => 'Search for shopping, a meeting spot, a shop, and so on from the search button, and you can check which planets that point is receiving energy from right now.',
+			'mapFortune.usage.timeTitle' => '[Reading the time]',
+			'mapFortune.usage.timeBody' => 'From the "Daily" chip in the bottom menu you can read "guidance on the time to act."\n* The "Daily" chip screen deals with "sky directions" (where and when a planet comes in the sky); it\'s separate from this Map\'s "surface directions" (which land to head toward).\n\nCombine the score bar (the strength of surface directions) with the "Daily" chip (sky direction × time), and Solara works out the best "direction × time" for the future you wish for.',
+			'mapFortune.catPlanets.title' => 'Categories and their planets',
+			'mapFortune.catPlanets.intro' => 'Each category extracts the aspects of its related planet pairs and scores them per direction, with pair weighting applied.\n(How the pair weighting works is explained in detail below.)',
+			'mapFortune.catPlanets.weightTitle' => '[How pair weighting works]',
+			'mapFortune.catPlanets.weightBody' => 'A category\'s score extracts the aspects of its related planet pairs and sums them, weighted by each pair\'s "centrality."\n\n· Lead pair (weight 2.0)\n　The planet pair that carries the category\'s central theme.\n　e.g. Love = Venus×Mars / Work = Saturn×Sun\n　→ when the aspect appears, it counts with 2× the influence.\n\n· Sub pair (weight 0.5)\n　An aspect where only one of the planets relates to the category.\n　e.g. for Love, "Venus×Jupiter" (only Venus carries love)\n　→ counts with a modest 0.5× influence.\n\n· Outside the pair (weight 0)\n　An aspect where neither planet relates to the category.\n　→ it isn\'t reflected in that category\'s score.\n\nThis "weighting" yields a precise score that reflects the category\'s "central theme."\nA plain sum without pair weights would blur each category\'s character, so we refine it with weighted calculation.',
+			'mapFortune.catPlanets.overallTitle' => '[How it relates to Overall]',
+			'mapFortune.catPlanets.overallBody' => 'When "Overall" is selected on the top score bar, the number is the straight sum of all planets and all aspects.\nNo category weighting is applied (= no pair weights).\n\nThe per-category views (Healing / Abundance / Love / Work / Talk), on the other hand, apply the pair weights above.\nAnd a single aspect can be counted in more than one category\n(e.g. Venus×Jupiter → counts for both Love and Abundance).\n\nSo "the plain sum of the 5 categories ≠ Overall."\nThe two are numbers for seeing energy from different angles; neither is more correct.\n· Per-category = see the category\'s "concentration"\n· Overall = see the "total volume"',
 			'galaxy.todayMoon' => ({required Object name}) => 'Today\'s moon: ${name}',
 			'galaxy.phaseDesc.newMoon' => 'A time of beginnings.\nThe sky is at its darkest, and the stars show clearest.\nA time to set a new intention and plant seeds.',
 			'galaxy.phaseDesc.crescent' => 'A time of sprouting.\nA thin light appears in the western sky.\nA time to begin moving, little by little, toward the intention you planted at the new moon.',
@@ -2114,6 +2238,8 @@ extension on TranslationsEn {
 			'paywall.billing.annual' => 'Annual',
 			'paywall.plans.currentPlan' => 'Current plan',
 			'paywall.plans.freePrice' => 'Free  /  forever',
+			_ => null,
+		} ?? switch (path) {
 			'paywall.plans.priceLoading' => 'Loading price…',
 			'paywall.plans.taxIncl' => '(tax incl.)',
 			'paywall.plans.monthlyEquivalent' => ({required Object yen}) => '≈ ¥${yen} / month',
@@ -2146,8 +2272,6 @@ extension on TranslationsEn {
 			'paywall.comparison.secConsult' => 'Consultation & Interpretation',
 			'paywall.comparison.secMap' => 'Map (ACG / CCG)',
 			'paywall.comparison.secRecords' => 'Records (your records are kept forever, even on Free)',
-			_ => null,
-		} ?? switch (path) {
 			'paywall.comparison.secForecast' => 'Forecast',
 			'paywall.comparison.stellaConsult.label' => 'Stella Consultation',
 			'paywall.comparison.stellaConsult.free' => '3 / week\n+ purchased credits',

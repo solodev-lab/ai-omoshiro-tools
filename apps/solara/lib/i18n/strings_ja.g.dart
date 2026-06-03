@@ -40,6 +40,7 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 	Translations $copyWith({TranslationMetadata<AppLocale, Translations>? meta}) => Translations(meta: meta ?? this.$meta);
 
 	// Translations
+	late final Translations$mapFortune$ja mapFortune = Translations$mapFortune$ja.internal(_root);
 	late final Translations$galaxy$ja galaxy = Translations$galaxy$ja.internal(_root);
 	late final Translations$forecast$ja forecast = Translations$forecast$ja.internal(_root);
 	late final Translations$consultHistory$ja consultHistory = Translations$consultHistory$ja.internal(_root);
@@ -57,6 +58,36 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 	late final Translations$disclaimer$ja disclaimer = Translations$disclaimer$ja.internal(_root);
 	late final Translations$common$ja common = Translations$common$ja.internal(_root);
 	late final Translations$aiConsent$ja aiConsent = Translations$aiConsent$ja.internal(_root);
+}
+
+// Path: mapFortune
+class Translations$mapFortune$ja {
+	Translations$mapFortune$ja.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+	late final Translations$mapFortune$srcShort$ja srcShort = Translations$mapFortune$srcShort$ja.internal(_root);
+	late final Translations$mapFortune$srcFull$ja srcFull = Translations$mapFortune$srcFull$ja.internal(_root);
+
+	/// ja: '$src / $cat'
+	String header({required Object src, required Object cat}) => '${src} / ${cat}';
+
+	/// ja: 'Tソフト'
+	String get legendTSoft => 'Tソフト';
+
+	/// ja: 'Tハード'
+	String get legendTHard => 'Tハード';
+
+	/// ja: 'Pソフト'
+	String get legendPSoft => 'Pソフト';
+
+	/// ja: 'Pハード'
+	String get legendPHard => 'Pハード';
+
+	late final Translations$mapFortune$catMeta$ja catMeta = Translations$mapFortune$catMeta$ja.internal(_root);
+	late final Translations$mapFortune$usage$ja usage = Translations$mapFortune$usage$ja.internal(_root);
+	late final Translations$mapFortune$catPlanets$ja catPlanets = Translations$mapFortune$catPlanets$ja.internal(_root);
 }
 
 // Path: galaxy
@@ -741,6 +772,132 @@ class Translations$aiConsent$ja {
 	late final Translations$aiConsent$geminiContent$ja geminiContent = Translations$aiConsent$geminiContent$ja.internal(_root);
 	late final Translations$aiConsent$decisions$ja decisions = Translations$aiConsent$decisions$ja.internal(_root);
 	late final Translations$aiConsent$consentHandling$ja consentHandling = Translations$aiConsent$consentHandling$ja.internal(_root);
+}
+
+// Path: mapFortune.srcShort
+class Translations$mapFortune$srcShort$ja {
+	Translations$mapFortune$srcShort$ja.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// ja: '合計'
+	String get combined => '合計';
+
+	/// ja: 'TR'
+	String get transit => 'TR';
+
+	/// ja: 'PR'
+	String get progressed => 'PR';
+}
+
+// Path: mapFortune.srcFull
+class Translations$mapFortune$srcFull$ja {
+	Translations$mapFortune$srcFull$ja.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// ja: '合計'
+	String get combined => '合計';
+
+	/// ja: 'トランジット'
+	String get transit => 'トランジット';
+
+	/// ja: 'プログレス'
+	String get progressed => 'プログレス';
+}
+
+// Path: mapFortune.catMeta
+class Translations$mapFortune$catMeta$ja {
+	Translations$mapFortune$catMeta$ja.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// ja: '休息・回復・直感が流れるテーマ'
+	String get healing => '休息・回復・直感が流れるテーマ';
+
+	/// ja: '繁栄・喜び・自己肯定のテーマ'
+	String get money => '繁栄・喜び・自己肯定のテーマ';
+
+	/// ja: '愛・情熱・親密さのテーマ'
+	String get love => '愛・情熱・親密さのテーマ';
+
+	/// ja: '責任・行動・拡大のテーマ'
+	String get work => '責任・行動・拡大のテーマ';
+
+	/// ja: '伝達・対話・知性のテーマ'
+	String get communication => '伝達・対話・知性のテーマ';
+}
+
+// Path: mapFortune.usage
+class Translations$mapFortune$usage$ja {
+	Translations$mapFortune$usage$ja.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// ja: 'Map の使い方'
+	String get title => 'Map の使い方';
+
+	/// ja: '【方角を読む】'
+	String get dirTitle => '【方角を読む】';
+
+	/// ja: '基準地点 (VIEWPOINT) を中心に、地表の 16 方位 (北・北北東・北東・東北東・東…) ごとのエネルギーを スコア化して表示しています。 「どの土地・方向に意識を向けるべきか」が判断できます。 どの方向に進むべきかだけの表示ではありません。 もちろん方角に向かい進む事も一つの方角に対する 行動です。他には、意識を向ける事や、声をかける、 大切なアイテムの置き場所を方角に合わせて家を出発する、 話しかける時の方角を意識する、お店で座る席や どちらに向くか意識する、深呼吸をする方角、 など、あなたが自由に決められます。 決めた行動により、惑星たちのエネルギーが あなたに届くでしょう。 惑星たちは常に大きな視点であなたを見守っています。 スコアバーをタップするとカテゴリが切替わります (総合 → 癒し → 豊かさ → 恋愛 → 仕事 → 話す)。 見たいカテゴリを選ぶと、そのエネルギーが どの方位に強く出ているかが分かります。'
+	String get dirBody => '基準地点 (VIEWPOINT) を中心に、地表の 16 方位\n(北・北北東・北東・東北東・東…) ごとのエネルギーを\nスコア化して表示しています。\n「どの土地・方向に意識を向けるべきか」が判断できます。\n\nどの方向に進むべきかだけの表示ではありません。\nもちろん方角に向かい進む事も一つの方角に対する\n行動です。他には、意識を向ける事や、声をかける、\n大切なアイテムの置き場所を方角に合わせて家を出発する、\n話しかける時の方角を意識する、お店で座る席や\nどちらに向くか意識する、深呼吸をする方角、\nなど、あなたが自由に決められます。\n決めた行動により、惑星たちのエネルギーが\nあなたに届くでしょう。\n惑星たちは常に大きな視点であなたを見守っています。\n\nスコアバーをタップするとカテゴリが切替わります\n(総合 → 癒し → 豊かさ → 恋愛 → 仕事 → 話す)。\n見たいカテゴリを選ぶと、そのエネルギーが\nどの方位に強く出ているかが分かります。';
+
+	/// ja: '【基準地点を登録する】'
+	String get regTitle => '【基準地点を登録する】';
+
+	/// ja: '基準地点は地図画面の左側にある '
+	String get regPre => '基準地点は地図画面の左側にある ';
+
+	/// ja: ' (VIEWPOINT) ボタン から登録できます。 登録したい場所を地図中央に表示してパネルを開き、 「この地点を保存」をタップすると、その地点が VIEWPOINT として保存されます。 保存した基準地点は、検索結果一覧の上部や 下部メニューの「Daily」チップ内のプルダウンから、 いつでも切り替えて使えます。'
+	String get regPost => ' (VIEWPOINT) ボタン\nから登録できます。\n登録したい場所を地図中央に表示してパネルを開き、\n「この地点を保存」をタップすると、その地点が\nVIEWPOINT として保存されます。\n\n保存した基準地点は、検索結果一覧の上部や\n下部メニューの「Daily」チップ内のプルダウンから、\nいつでも切り替えて使えます。';
+
+	/// ja: '【場所を探す】'
+	String get findTitle => '【場所を探す】';
+
+	/// ja: '検索ボタンから買い物・待ち合わせ・お店などを 検索すると、その地点が今どの惑星から エネルギーを受けているかを確認できます。'
+	String get findBody => '検索ボタンから買い物・待ち合わせ・お店などを\n検索すると、その地点が今どの惑星から\nエネルギーを受けているかを確認できます。';
+
+	/// ja: '【時間を読む】'
+	String get timeTitle => '【時間を読む】';
+
+	/// ja: '下部メニューの「Daily」チップから 「行動する時間の指針」が分かります。 ※「Daily」チップの画面は「天空方位」(惑星が空の どこにいつ来るか) を扱い、この Map の「地表方位」 (どの土地に向かうか) とは別物です。 スコアバー (地表方位の強さ) と「Daily」チップ (天空方位 × 時刻) を組み合わせると、 あなたの望む未来に対する最適な 「方角 × 時間」を Solara が算出します。'
+	String get timeBody => '下部メニューの「Daily」チップから\n「行動する時間の指針」が分かります。\n※「Daily」チップの画面は「天空方位」(惑星が空の\n　 どこにいつ来るか) を扱い、この Map の「地表方位」\n　 (どの土地に向かうか) とは別物です。\n\nスコアバー (地表方位の強さ) と「Daily」チップ\n(天空方位 × 時刻) を組み合わせると、\nあなたの望む未来に対する最適な\n「方角 × 時間」を Solara が算出します。';
+}
+
+// Path: mapFortune.catPlanets
+class Translations$mapFortune$catPlanets$ja {
+	Translations$mapFortune$catPlanets$ja.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// ja: 'カテゴリと関連惑星'
+	String get title => 'カテゴリと関連惑星';
+
+	/// ja: '各カテゴリは、関連する惑星ペアのアスペクトを抽出し、 ペア重みをかけて方位ごとにスコア化しています。 (ペア重みの仕組みは下に詳しく説明)'
+	String get intro => '各カテゴリは、関連する惑星ペアのアスペクトを抽出し、\nペア重みをかけて方位ごとにスコア化しています。\n(ペア重みの仕組みは下に詳しく説明)';
+
+	/// ja: '【ペア重みの仕組み】'
+	String get weightTitle => '【ペア重みの仕組み】';
+
+	/// ja: 'カテゴリ別スコアは、関連する惑星ペアのアスペクトを抽出し、 ペアの「中心度」に応じた重みをかけて合算しています。 ・主役ペア (重み 2.0) そのカテゴリの中心テーマを担う惑星ペア。 例: 恋愛 = 金星×火星 / 仕事 = 土星×太陽 → アスペクト出現時は 2 倍の影響力で計上されます。 ・サブペア (重み 0.5) 片方の惑星だけがカテゴリに関わるアスペクト。 例: 恋愛で「金星×木星」(金星のみ love 担当) → 0.5 倍の控えめな影響力で計上されます。 ・ペア外 (重み 0) 両方ともカテゴリに関係ない惑星のアスペクト。 → そのカテゴリのスコアには反映されません。 この「重み付け」により、カテゴリの「中心テーマ」を 反映した精度の高いスコアが得られます。 ペア重みなしの単純合算では、カテゴリの個性が ぼやけてしまうため、加重計算で精緻化しています。'
+	String get weightBody => 'カテゴリ別スコアは、関連する惑星ペアのアスペクトを抽出し、\nペアの「中心度」に応じた重みをかけて合算しています。\n\n・主役ペア (重み 2.0)\n　そのカテゴリの中心テーマを担う惑星ペア。\n　例: 恋愛 = 金星×火星 / 仕事 = 土星×太陽\n　→ アスペクト出現時は 2 倍の影響力で計上されます。\n\n・サブペア (重み 0.5)\n　片方の惑星だけがカテゴリに関わるアスペクト。\n　例: 恋愛で「金星×木星」(金星のみ love 担当)\n　→ 0.5 倍の控えめな影響力で計上されます。\n\n・ペア外 (重み 0)\n　両方ともカテゴリに関係ない惑星のアスペクト。\n　→ そのカテゴリのスコアには反映されません。\n\nこの「重み付け」により、カテゴリの「中心テーマ」を\n反映した精度の高いスコアが得られます。\nペア重みなしの単純合算では、カテゴリの個性が\nぼやけてしまうため、加重計算で精緻化しています。';
+
+	/// ja: '【総合との関係】'
+	String get overallTitle => '【総合との関係】';
+
+	/// ja: '上部スコアバーで「総合」を選んでいる時の数字は、 全惑星・全アスペクトをそのまま合算した値です。 カテゴリ重みは入りません (= ペア重みなし)。 一方、カテゴリ別 (癒し / 豊かさ / 恋愛 / 仕事 / 話す) は 上記のペア重みがかかります。 さらに 1 つのアスペクトが複数カテゴリに重複計上される こともあります (例: 金星×木星 → 恋愛にも豊かさにも入る)。 このため「カテゴリ別 5 つの単純合算 ≠ 総合」となります。 両者は別の角度からエネルギーを見るための数値で、 どちらが正しいということはありません。 ・カテゴリ別 = カテゴリの「集中度」を見る ・総合 = 全体の「総量」を見る'
+	String get overallBody => '上部スコアバーで「総合」を選んでいる時の数字は、\n全惑星・全アスペクトをそのまま合算した値です。\nカテゴリ重みは入りません (= ペア重みなし)。\n\n一方、カテゴリ別 (癒し / 豊かさ / 恋愛 / 仕事 / 話す) は\n上記のペア重みがかかります。\nさらに 1 つのアスペクトが複数カテゴリに重複計上される\nこともあります (例: 金星×木星 → 恋愛にも豊かさにも入る)。\n\nこのため「カテゴリ別 5 つの単純合算 ≠ 総合」となります。\n両者は別の角度からエネルギーを見るための数値で、\nどちらが正しいということはありません。\n・カテゴリ別 = カテゴリの「集中度」を見る\n・総合 = 全体の「総量」を見る';
 }
 
 // Path: galaxy.phaseDesc
@@ -2727,6 +2884,38 @@ class Translations$paywall$faq$resubscribe$ja {
 extension on Translations {
 	dynamic _flatMapFunction(String path) {
 		return switch (path) {
+			'mapFortune.srcShort.combined' => '合計',
+			'mapFortune.srcShort.transit' => 'TR',
+			'mapFortune.srcShort.progressed' => 'PR',
+			'mapFortune.srcFull.combined' => '合計',
+			'mapFortune.srcFull.transit' => 'トランジット',
+			'mapFortune.srcFull.progressed' => 'プログレス',
+			'mapFortune.header' => ({required Object src, required Object cat}) => '${src} / ${cat}',
+			'mapFortune.legendTSoft' => 'Tソフト',
+			'mapFortune.legendTHard' => 'Tハード',
+			'mapFortune.legendPSoft' => 'Pソフト',
+			'mapFortune.legendPHard' => 'Pハード',
+			'mapFortune.catMeta.healing' => '休息・回復・直感が流れるテーマ',
+			'mapFortune.catMeta.money' => '繁栄・喜び・自己肯定のテーマ',
+			'mapFortune.catMeta.love' => '愛・情熱・親密さのテーマ',
+			'mapFortune.catMeta.work' => '責任・行動・拡大のテーマ',
+			'mapFortune.catMeta.communication' => '伝達・対話・知性のテーマ',
+			'mapFortune.usage.title' => 'Map の使い方',
+			'mapFortune.usage.dirTitle' => '【方角を読む】',
+			'mapFortune.usage.dirBody' => '基準地点 (VIEWPOINT) を中心に、地表の 16 方位\n(北・北北東・北東・東北東・東…) ごとのエネルギーを\nスコア化して表示しています。\n「どの土地・方向に意識を向けるべきか」が判断できます。\n\nどの方向に進むべきかだけの表示ではありません。\nもちろん方角に向かい進む事も一つの方角に対する\n行動です。他には、意識を向ける事や、声をかける、\n大切なアイテムの置き場所を方角に合わせて家を出発する、\n話しかける時の方角を意識する、お店で座る席や\nどちらに向くか意識する、深呼吸をする方角、\nなど、あなたが自由に決められます。\n決めた行動により、惑星たちのエネルギーが\nあなたに届くでしょう。\n惑星たちは常に大きな視点であなたを見守っています。\n\nスコアバーをタップするとカテゴリが切替わります\n(総合 → 癒し → 豊かさ → 恋愛 → 仕事 → 話す)。\n見たいカテゴリを選ぶと、そのエネルギーが\nどの方位に強く出ているかが分かります。',
+			'mapFortune.usage.regTitle' => '【基準地点を登録する】',
+			'mapFortune.usage.regPre' => '基準地点は地図画面の左側にある ',
+			'mapFortune.usage.regPost' => ' (VIEWPOINT) ボタン\nから登録できます。\n登録したい場所を地図中央に表示してパネルを開き、\n「この地点を保存」をタップすると、その地点が\nVIEWPOINT として保存されます。\n\n保存した基準地点は、検索結果一覧の上部や\n下部メニューの「Daily」チップ内のプルダウンから、\nいつでも切り替えて使えます。',
+			'mapFortune.usage.findTitle' => '【場所を探す】',
+			'mapFortune.usage.findBody' => '検索ボタンから買い物・待ち合わせ・お店などを\n検索すると、その地点が今どの惑星から\nエネルギーを受けているかを確認できます。',
+			'mapFortune.usage.timeTitle' => '【時間を読む】',
+			'mapFortune.usage.timeBody' => '下部メニューの「Daily」チップから\n「行動する時間の指針」が分かります。\n※「Daily」チップの画面は「天空方位」(惑星が空の\n　 どこにいつ来るか) を扱い、この Map の「地表方位」\n　 (どの土地に向かうか) とは別物です。\n\nスコアバー (地表方位の強さ) と「Daily」チップ\n(天空方位 × 時刻) を組み合わせると、\nあなたの望む未来に対する最適な\n「方角 × 時間」を Solara が算出します。',
+			'mapFortune.catPlanets.title' => 'カテゴリと関連惑星',
+			'mapFortune.catPlanets.intro' => '各カテゴリは、関連する惑星ペアのアスペクトを抽出し、\nペア重みをかけて方位ごとにスコア化しています。\n(ペア重みの仕組みは下に詳しく説明)',
+			'mapFortune.catPlanets.weightTitle' => '【ペア重みの仕組み】',
+			'mapFortune.catPlanets.weightBody' => 'カテゴリ別スコアは、関連する惑星ペアのアスペクトを抽出し、\nペアの「中心度」に応じた重みをかけて合算しています。\n\n・主役ペア (重み 2.0)\n　そのカテゴリの中心テーマを担う惑星ペア。\n　例: 恋愛 = 金星×火星 / 仕事 = 土星×太陽\n　→ アスペクト出現時は 2 倍の影響力で計上されます。\n\n・サブペア (重み 0.5)\n　片方の惑星だけがカテゴリに関わるアスペクト。\n　例: 恋愛で「金星×木星」(金星のみ love 担当)\n　→ 0.5 倍の控えめな影響力で計上されます。\n\n・ペア外 (重み 0)\n　両方ともカテゴリに関係ない惑星のアスペクト。\n　→ そのカテゴリのスコアには反映されません。\n\nこの「重み付け」により、カテゴリの「中心テーマ」を\n反映した精度の高いスコアが得られます。\nペア重みなしの単純合算では、カテゴリの個性が\nぼやけてしまうため、加重計算で精緻化しています。',
+			'mapFortune.catPlanets.overallTitle' => '【総合との関係】',
+			'mapFortune.catPlanets.overallBody' => '上部スコアバーで「総合」を選んでいる時の数字は、\n全惑星・全アスペクトをそのまま合算した値です。\nカテゴリ重みは入りません (= ペア重みなし)。\n\n一方、カテゴリ別 (癒し / 豊かさ / 恋愛 / 仕事 / 話す) は\n上記のペア重みがかかります。\nさらに 1 つのアスペクトが複数カテゴリに重複計上される\nこともあります (例: 金星×木星 → 恋愛にも豊かさにも入る)。\n\nこのため「カテゴリ別 5 つの単純合算 ≠ 総合」となります。\n両者は別の角度からエネルギーを見るための数値で、\nどちらが正しいということはありません。\n・カテゴリ別 = カテゴリの「集中度」を見る\n・総合 = 全体の「総量」を見る',
 			'galaxy.todayMoon' => ({required Object name}) => '今日の月: ${name}',
 			'galaxy.phaseDesc.newMoon' => '始まりの時。\n空が最も暗く、星々が最もよく見える夜。\n新しい意図を立て、種を蒔く時間帯です。',
 			'galaxy.phaseDesc.crescent' => '芽吹きの時。\n細い光が西の空に現れます。\n新月で蒔いた意図に向けて、少しずつ動き出す時間帯。',
@@ -3207,6 +3396,8 @@ extension on Translations {
 			'paywall.billing.annual' => '年額',
 			'paywall.plans.currentPlan' => '現在のプラン',
 			'paywall.plans.freePrice' => '¥0  /  ずっと',
+			_ => null,
+		} ?? switch (path) {
 			'paywall.plans.priceLoading' => '価格を取得中…',
 			'paywall.plans.taxIncl' => '(税込)',
 			'paywall.plans.monthlyEquivalent' => ({required Object yen}) => '月あたり ¥${yen} 相当',
@@ -3239,8 +3430,6 @@ extension on Translations {
 			'paywall.comparison.secConsult' => '相談・読み解き',
 			'paywall.comparison.secMap' => '地図 (ACG / CCG)',
 			'paywall.comparison.secRecords' => '記録（あなたの記録は Free でも永久に残ります）',
-			_ => null,
-		} ?? switch (path) {
 			'paywall.comparison.secForecast' => '予報',
 			'paywall.comparison.stellaConsult.label' => 'Stella 相談',
 			'paywall.comparison.stellaConsult.free' => '週 3 回\n+ 購入クレジット',
