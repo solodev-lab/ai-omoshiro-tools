@@ -425,7 +425,7 @@
 | 4b | 9 | 14 | · | 3 | 4 | · | 15 | · | · | · | 30 | · | · | 2 | · | · |
 | 4c | 2 | 1 | 14 | 1 | 4 | 5 | 8 | 6 | · | · | · | 16 | · | · | 1 | · |
 | 4d | 5 | 6 | 13 | 1 | 2 | 2 | 11 | 3 | 1 | · | · | · | 9 | · | · | · |
-| 4e | 1 | 6 | · | 3 | 7 | 2 | 16 | 1 | · | · | · | · | · | 9 | 3 | · |
+| 4e | 2 | 6 | · | 3 | 7 | 2 | 16 | 1 | · | · | · | · | · | 9 | 3 | · |
 | 4f | 6 | 6 | · | 8 | 16 | 6 | 19 | 14 | · | 6 | · | · | · | · | 30 | · |
 | 5 | 2 | 2 | · | 2 | 5 | 5 | 1 | 1 | · | 1 | 1 | 1 | 1 | 3 | 4 | · |
 
@@ -445,8 +445,8 @@
 | `lib/utils/solara_api.dart` | 2a | 15 |
 | `lib/models/galaxy_cycle.dart` | 1c | 14 |
 | `lib/screens/horoscope/horo_antique_icons.dart` | 3a | 14 |
+| `lib/utils/solara_i18n.dart` | 1a | 13 |
 | `lib/models/daily_reading.dart` | 1c | 12 |
-| `lib/utils/solara_i18n.dart` | 1a | 12 |
 | `lib/screens/horoscope/horo_constants.dart` | 1b | 11 |
 | `lib/utils/pro_status.dart` | 2b | 11 |
 | `lib/widgets/tap_to_unfocus.dart` | 3a | 11 |
@@ -472,11 +472,12 @@
 > 各ソースの SHA1 を `_stamps.json` に記録し、差分を検出。
 > 変更されたファイルが属する層は、人手版インベントリ章の見直し対象。
 
-- 追加: **0** / 削除: **0** / 変更: **1**
+- 追加: **0** / 削除: **0** / 変更: **11**
 
 ### 変更されたファイル (層別)
 
-- **層 4e**: `lib/screens/sanctuary_screen.dart`
+- **層 3a**: `lib/widgets/sanctuary_account_section.dart`
+- **層 4e**: `lib/screens/sanctuary/class_share_card.dart`, `lib/screens/sanctuary/sanctuary_home_editor.dart`, `lib/screens/sanctuary/sanctuary_legal_menu.dart`, `lib/screens/sanctuary/sanctuary_orb_overlay.dart`, `lib/screens/sanctuary/sanctuary_profile_editor.dart`, `lib/screens/sanctuary/sanctuary_reset_hour_picker.dart`, `lib/screens/sanctuary/sanctuary_title_diagnosis.dart`, `lib/screens/sanctuary/title_history_screen.dart`, `lib/screens/sanctuary/title_how_it_works.dart`, `lib/screens/sanctuary_screen.dart`
 
 ## #7 astro_glossary 用語辞書対整合
 

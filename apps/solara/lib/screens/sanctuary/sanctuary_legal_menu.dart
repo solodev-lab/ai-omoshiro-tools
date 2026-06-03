@@ -20,6 +20,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../i18n/strings.g.dart';
 import '../../utils/legal_urls.dart';
 import '../../widgets/info_popup.dart';
 
@@ -36,11 +37,11 @@ Future<void> showSanctuaryLegalMenu(BuildContext context) {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Padding(
-          padding: EdgeInsets.only(bottom: 6),
+        Padding(
+          padding: const EdgeInsets.only(bottom: 6),
           child: Text(
-            '✦ 法務情報',
-            style: TextStyle(
+            t.legalMenu.heading,
+            style: const TextStyle(
               color: Color(0xFFF9D976),
               fontSize: 14,
               fontWeight: FontWeight.w700,
@@ -50,15 +51,15 @@ Future<void> showSanctuaryLegalMenu(BuildContext context) {
         ),
         const SizedBox(height: 8),
         _LegalRow(
-          label: '利用規約 (EULA)',
+          label: t.legalMenu.eula,
           onTap: () => _openUrl(context, LegalUrls.termsOfService),
         ),
         _LegalRow(
-          label: 'プライバシーポリシー',
+          label: t.paywall.legal.privacy,
           onTap: () => _openUrl(context, LegalUrls.privacyPolicy),
         ),
         _LegalRow(
-          label: '特定商取引法に基づく表記',
+          label: t.paywall.legal.sctaNotice,
           onTap: () => _openUrl(context, LegalUrls.specifiedCommercialTransactions),
         ),
         const Padding(
@@ -66,7 +67,7 @@ Future<void> showSanctuaryLegalMenu(BuildContext context) {
           child: Divider(color: Color(0x33F9D976), height: 1, thickness: 1),
         ),
         _LegalRow(
-          label: '解約方法',
+          label: t.paywall.legal.cancelMethod,
           onTap: () => _openCancelGuide(context),
         ),
       ],
@@ -85,7 +86,7 @@ Future<void> _openUrl(BuildContext context, String url) async {
   if (!ok && context.mounted) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('リンクを開けませんでした: $url'),
+        content: Text(t.legalMenu.openFailed(url: url)),
         backgroundColor: const Color(0xFF1A2438),
       ),
     );

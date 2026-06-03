@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 10 / 総行数: 5700
+- ファイル数: 10 / 総行数: 5693
 - class/mixin/extension/enum: 28
 - 関数 (top-level + method の素拾い): 124
 - Navigator.push 等: 0
@@ -14,63 +14,63 @@
 
 ## ファイル別
 
-### `lib/screens/sanctuary/class_share_card.dart` (476 行)
+### `lib/screens/sanctuary/class_share_card.dart` (478 行)
 
-**imports:** dart=2 / package=4 / relative=3
+**imports:** dart=2 / package=4 / relative=4
 
-- relative: `../../utils/consult_restore.dart`, `../../utils/title_data.dart`, `../../widgets/class_card.dart`
+- relative: `../../i18n/strings.g.dart`, `../../utils/consult_restore.dart`, `../../utils/title_data.dart`, `../../widgets/class_card.dart`
 
 **型定義 (2):**
 
-- L24 `class ClassShareCardPage : StatefulWidget`
+- L25 `class ClassShareCardPage : StatefulWidget`
   - クラスカードのシェア用画面
-- L57 `class _ClassShareCardPageState : State`
+- L58 `class _ClassShareCardPageState : State`
 
 **関数 (4 public + 3 private):**
 
-- L45 `createState()`
-- L66 `initState()`
-- L83 `dispose()`
-- L155 `build()`
+- L46 `createState()`
+- L67 `initState()`
+- L84 `dispose()`
+- L157 `build()`
 
   <details><summary>private 関数 3 件</summary>
 
-  - L114 `_share()`
-  - L256 `_buildShareImage()`
-  - L271 `_buildShareImageInner()`
+  - L115 `_share()`
+  - L258 `_buildShareImage()`
+  - L273 `_buildShareImageInner()`
 
   </details>
 
 
-### `lib/screens/sanctuary/sanctuary_home_editor.dart` (240 行)
+### `lib/screens/sanctuary/sanctuary_home_editor.dart` (241 行)
 
-**imports:** dart=1 / package=2 / relative=3
+**imports:** dart=1 / package=2 / relative=4
 
-- relative: `../../utils/solara_storage.dart`, `../../widgets/location_picker_minimap.dart`, `../../widgets/tap_to_unfocus.dart`
+- relative: `../../i18n/strings.g.dart`, `../../utils/solara_storage.dart`, `../../widgets/location_picker_minimap.dart`, `../../widgets/tap_to_unfocus.dart`
 
 **型定義 (2):**
 
-- L14 `class SanctuaryHomeEditorPage : StatefulWidget`
-- L22 `class _SanctuaryHomeEditorPageState : State`
+- L15 `class SanctuaryHomeEditorPage : StatefulWidget`
+- L23 `class _SanctuaryHomeEditorPageState : State`
 
 **関数 (4 public + 4 private):**
 
-- L19 `createState()`
-- L30 `initState()`
-- L39 `dispose()`
-- L91 `build()`
+- L20 `createState()`
+- L31 `initState()`
+- L40 `dispose()`
+- L92 `build()`
 
   <details><summary>private 関数 4 件</summary>
 
-  - L44 `_search()`
-  - L69 `_save()`
-  - L207 `_input()`
-  - L222 `_readonlyField()`
+  - L45 `_search()`
+  - L70 `_save()`
+  - L208 `_input()`
+  - L223 `_readonlyField()`
 
   </details>
 
 
-### `lib/screens/sanctuary/sanctuary_legal_menu.dart` (153 行)
+### `lib/screens/sanctuary/sanctuary_legal_menu.dart` (154 行)
 
 **ファイル先頭コメント:**
 
@@ -92,24 +92,24 @@ Solara Sanctuary 法務リンクメニュー (Phase 2 launch_checklist)
   ストア公開後の継続アクセス手段 (ユーザーが Paywall 通らなくなっても法務情報を見られる) の確保。
 ```
 
-**imports:** dart=1 / package=3 / relative=2
+**imports:** dart=1 / package=3 / relative=3
 
-- relative: `../../utils/legal_urls.dart`, `../../widgets/info_popup.dart`
+- relative: `../../i18n/strings.g.dart`, `../../utils/legal_urls.dart`, `../../widgets/info_popup.dart`
 
 **型定義 (1):**
 
-- L119 `class _LegalRow : StatelessWidget`
+- L120 `class _LegalRow : StatelessWidget`
 
 **関数 (3 public + 2 private):**
 
-- L32 `showSanctuaryLegalMenu()` — Sanctuary > ✦ App の「Terms & Privacy」エントリから開く法務情報 popup。
-- L107 `openSubscriptionSettings()` — 端末のサブスクリプション設定 deep link を直接開く (Cosmic Pro 加入中の解約導線)。
-- L125 `build()`
+- L33 `showSanctuaryLegalMenu()` — Sanctuary > ✦ App の「Terms & Privacy」エントリから開く法務情報 popup。
+- L108 `openSubscriptionSettings()` — 端末のサブスクリプション設定 deep link を直接開く (Cosmic Pro 加入中の解約導線)。
+- L126 `build()`
 
   <details><summary>private 関数 2 件</summary>
 
-  - L77 `_openUrl()`
-  - L98 `_openCancelGuide()`
+  - L78 `_openUrl()`
+  - L99 `_openCancelGuide()`
 
   </details>
 
@@ -118,128 +118,132 @@ Solara Sanctuary 法務リンクメニュー (Phase 2 launch_checklist)
 - 集計: `showInfoPopup`×1
 
 
-### `lib/screens/sanctuary/sanctuary_orb_overlay.dart` (277 行)
+### `lib/screens/sanctuary/sanctuary_orb_overlay.dart` (279 行)
 
-**imports:** dart=0 / package=1 / relative=0
+**imports:** dart=0 / package=1 / relative=1
+
+- relative: `../../i18n/strings.g.dart`
 
 **型定義 (3):**
 
-- L8 `class SanctuaryOrbOverlay : StatefulWidget`
-- L16 `class _SanctuaryOrbOverlayState : State`
-- L271 `class _OrbSectionLabel : StatelessWidget`
+- L10 `class SanctuaryOrbOverlay : StatefulWidget`
+- L18 `class _SanctuaryOrbOverlayState : State`
+- L273 `class _OrbSectionLabel : StatelessWidget`
 
 **関数 (4 public + 3 private):**
 
-- L13 `createState()`
-- L43 `initState()`
-- L63 `build()`
-- L275 `build()`
+- L15 `createState()`
+- L45 `initState()`
+- L65 `build()`
+- L277 `build()`
 
   <details><summary>private 関数 3 件</summary>
 
-  - L48 `_reset()`
-  - L180 `_orbRow()`
-  - L258 `_orbPmBtn()`
+  - L50 `_reset()`
+  - L182 `_orbRow()`
+  - L260 `_orbPmBtn()`
 
   </details>
 
 
-### `lib/screens/sanctuary/sanctuary_profile_editor.dart` (610 行)
+### `lib/screens/sanctuary/sanctuary_profile_editor.dart` (612 行)
 
-**imports:** dart=1 / package=3 / relative=5
+**imports:** dart=1 / package=3 / relative=6
 
-- relative: `../../utils/app_locale.dart`, `../../utils/solara_storage.dart`, `../../utils/solara_api.dart`, `../../widgets/location_picker_minimap.dart`, `../../widgets/tap_to_unfocus.dart`
+- relative: `../../i18n/strings.g.dart`, `../../utils/app_locale.dart`, `../../utils/solara_storage.dart`, `../../utils/solara_api.dart`, `../../widgets/location_picker_minimap.dart`, `../../widgets/tap_to_unfocus.dart`
 
 **型定義 (3):**
 
-- L17 `class SanctuaryProfileEditorPage : StatefulWidget`
-- L25 `class _SanctuaryProfileEditorPageState : State`
-- L584 `class DateSlashFormatter : TextInputFormatter`
+- L19 `class SanctuaryProfileEditorPage : StatefulWidget`
+- L27 `class _SanctuaryProfileEditorPageState : State`
+- L586 `class DateSlashFormatter : TextInputFormatter`
   - Auto-inserts `/` after YYYY and MM for date input (YYYY/MM/DD format).
 
 **関数 (5 public + 8 private):**
 
-- L22 `createState()`
-- L43 `initState()`
-- L68 `dispose()`
-- L172 `build()`
-- L586 `formatEditUpdate()`
+- L24 `createState()`
+- L45 `initState()`
+- L70 `dispose()`
+- L174 `build()`
+- L588 `formatEditUpdate()`
 
   <details><summary>private 関数 8 件</summary>
 
-  - L79 `_searchPlace()`
-  - L107 `_selectPlace()`
-  - L121 `_resolveTimezone()`
-  - L134 `_save()`
-  - L498 `_langBtn()`
-  - L541 `_birthSection()`
-  - L559 `_inputDecoration()`
-  - L570 `_readonlyField()`
+  - L81 `_searchPlace()`
+  - L109 `_selectPlace()`
+  - L123 `_resolveTimezone()`
+  - L136 `_save()`
+  - L500 `_langBtn()`
+  - L543 `_birthSection()`
+  - L561 `_inputDecoration()`
+  - L572 `_readonlyField()`
 
   </details>
 
 
-### `lib/screens/sanctuary/sanctuary_reset_hour_picker.dart` (192 行)
+### `lib/screens/sanctuary/sanctuary_reset_hour_picker.dart` (193 行)
 
-**imports:** dart=0 / package=1 / relative=0
+**imports:** dart=0 / package=1 / relative=1
+
+- relative: `../../i18n/strings.g.dart`
 
 **型定義 (2):**
 
-- L12 `class SanctuaryResetHourPicker : StatefulWidget`
+- L14 `class SanctuaryResetHourPicker : StatefulWidget`
   - 時:分 ピッカー (時 + 分の 2 ドロップダウン、1 分単位)。
-- L37 `class _SanctuaryResetHourPickerState : State`
+- L38 `class _SanctuaryResetHourPickerState : State`
 
 **関数 (3 public + 1 private):**
 
-- L34 `createState()`
-- L45 `initState()`
-- L52 `build()`
+- L35 `createState()`
+- L46 `initState()`
+- L53 `build()`
 
   <details><summary>private 関数 1 件</summary>
 
-  - L156 `_dropdown()`
+  - L157 `_dropdown()`
 
   </details>
 
 
-### `lib/screens/sanctuary/sanctuary_title_diagnosis.dart` (1374 行)
+### `lib/screens/sanctuary/sanctuary_title_diagnosis.dart` (1384 行)
 
-**imports:** dart=1 / package=3 / relative=5
+**imports:** dart=1 / package=3 / relative=8
 
-- relative: `../../utils/solara_storage.dart`, `../../utils/title_data.dart`, `../../widgets/class_card.dart`, `../../widgets/info_popup.dart`, `title_how_it_works.dart`
+- relative: `../../i18n/strings.g.dart`, `../../i18n/strings.g.dart`, `../../utils/solara_i18n.dart`, `../../utils/solara_storage.dart`, `../../utils/title_data.dart`, `../../widgets/class_card.dart`, `../../widgets/info_popup.dart`, `title_how_it_works.dart`
 
 **型定義 (2):**
 
-- L18 `class SanctuaryTitleDiagnosisPage : StatefulWidget`
-- L37 `class _SanctuaryTitleDiagnosisPageState : State`
+- L23 `class SanctuaryTitleDiagnosisPage : StatefulWidget`
+- L42 `class _SanctuaryTitleDiagnosisPageState : State`
 
 **関数 (4 public + 18 private):**
 
-- L34 `createState()`
-- L143 `initState()`
-- L161 `dispose()`
-- L562 `build()`
+- L39 `createState()`
+- L148 `initState()`
+- L166 `dispose()`
+- L567 `build()`
 
   <details><summary>private 関数 18 件</summary>
 
-  - L132 `_shuffleCards()`
-  - L169 `_beginRounds()`
-  - L178 `_selectCard()`
-  - L252 `_finishDiagnosis()`
-  - L393 `_pickByAstroSeed()`
-  - L406 `_accept()`
-  - L416 `_acceptPrevious()`
-  - L431 `_showPreviousComparison()`
-  - L583 `_buildSummoning()`
-  - L661 `_buildIntro()`
-  - L863 `_showHowItWorks()`
-  - L871 `_buildRound()`
-  - L929 `_buildPartTrans()`
-  - L1032 `_buildForging()`
-  - L1157 `_toggleShadowSide()`
-  - L1168 `_buildReveal()`
-  - L1226 `_buildRevealLightSide()`
-  - L1313 `_buildRevealShadowSide()`
+  - L137 `_shuffleCards()`
+  - L174 `_beginRounds()`
+  - L183 `_selectCard()`
+  - L257 `_finishDiagnosis()`
+  - L398 `_pickByAstroSeed()`
+  - L411 `_accept()`
+  - L421 `_acceptPrevious()`
+  - L436 `_showPreviousComparison()`
+  - L588 `_buildSummoning()`
+  - L666 `_buildIntro()`
+  - L868 `_showHowItWorks()`
+  - L876 `_buildRound()`
+  - L939 `_buildPartTrans()`
+  - L1042 `_buildForging()`
+  - L1167 `_toggleShadowSide()`
+  - L1178 `_buildReveal()`
+  - L1236 `_buildRevealLightSide()`
+  - L1323 `_buildRevealShadowSide()`
 
   </details>
 
@@ -248,7 +252,7 @@ Solara Sanctuary 法務リンクメニュー (Phase 2 launch_checklist)
 - 集計: `showInfoPopup`×2
 
 
-### `lib/screens/sanctuary/title_history_screen.dart` (505 行)
+### `lib/screens/sanctuary/title_history_screen.dart` (495 行)
 
 **ファイル先頭コメント:**
 
@@ -272,34 +276,34 @@ Solara Sanctuary 法務リンクメニュー (Phase 2 launch_checklist)
     → 旧クラスを「以前は…」と弱めて表示しない、現在と等価に並べる
 ```
 
-**imports:** dart=0 / package=2 / relative=7
+**imports:** dart=0 / package=2 / relative=8
 
-- relative: `../../theme/solara_colors.dart`, `../../utils/consult_restore.dart`, `../../utils/solara_storage.dart`, `../../utils/title_data.dart`, `../../widgets/info_popup.dart`, `../../widgets/memo_text_field.dart`, `../../widgets/tap_to_unfocus.dart`
+- relative: `../../i18n/strings.g.dart`, `../../theme/solara_colors.dart`, `../../utils/consult_restore.dart`, `../../utils/solara_storage.dart`, `../../utils/title_data.dart`, `../../widgets/info_popup.dart`, `../../widgets/memo_text_field.dart`, `../../widgets/tap_to_unfocus.dart`
 
 **型定義 (5):**
 
-- L30 `class TitleHistoryScreen : StatefulWidget`
-- L40 `class _TitleHistoryScreenState : State`
-- L254 `class _EmptyState : StatelessWidget`
-- L297 `class _ChainConnector : StatelessWidget`
-- L315 `class _TitleChainRow : StatelessWidget`
+- L31 `class TitleHistoryScreen : StatefulWidget`
+- L41 `class _TitleHistoryScreenState : State`
+- L244 `class _EmptyState : StatelessWidget`
+- L287 `class _ChainConnector : StatelessWidget`
+- L305 `class _TitleChainRow : StatelessWidget`
 
 **関数 (7 public + 4 private):**
 
-- L37 `createState()`
-- L48 `initState()`
-- L57 `dispose()`
-- L181 `build()`
-- L258 `build()`
-- L301 `build()`
-- L329 `build()`
+- L38 `createState()`
+- L49 `initState()`
+- L58 `dispose()`
+- L171 `build()`
+- L248 `build()`
+- L291 `build()`
+- L319 `build()`
 
   <details><summary>private 関数 4 件</summary>
 
-  - L62 `_load()`
-  - L74 `_confirmClearAll()`
+  - L63 `_load()`
+  - L75 `_confirmClearAll()`
   - L110 `_showGuide()`
-  - L320 `_formatDate()`
+  - L310 `_formatDate()`
 
   </details>
 
@@ -308,22 +312,24 @@ Solara Sanctuary 法務リンクメニュー (Phase 2 launch_checklist)
 - 集計: `showInfoPopup`×1
 
 
-### `lib/screens/sanctuary/title_how_it_works.dart` (201 行)
+### `lib/screens/sanctuary/title_how_it_works.dart` (183 行)
 
-**imports:** dart=0 / package=1 / relative=0
+**imports:** dart=0 / package=1 / relative=1
+
+- relative: `../../i18n/strings.g.dart`
 
 **型定義 (1):**
 
-- L11 `class TitleHowItWorksContent : StatelessWidget`
+- L13 `class TitleHowItWorksContent : StatelessWidget`
   - 称号システムの仕組み説明 popup の中身。
 
 **関数 (1 public + 1 private):**
 
-- L15 `build()`
+- L17 `build()`
 
   <details><summary>private 関数 1 件</summary>
 
-  - L142 `_section()`
+  - L124 `_section()`
 
   </details>
 
@@ -332,7 +338,7 @@ Solara Sanctuary 法務リンクメニュー (Phase 2 launch_checklist)
 - 集計: `showInfoPopup`×1
 
 
-### `lib/screens/sanctuary_screen.dart` (1672 行)
+### `lib/screens/sanctuary_screen.dart` (1674 行)
 
 **imports:** dart=1 / package=3 / relative=24
 
@@ -342,11 +348,11 @@ Solara Sanctuary 法務リンクメニュー (Phase 2 launch_checklist)
 
 - L31 `class SanctuaryScreen : StatefulWidget`
 - L38 `class _SanctuaryScreenState : State`
-- L1487 `extension _WidgetOpacity : Widget`
-- L1496 `class _SettingsGroup : StatelessWidget`
-- L1529 `class _SettingsItem : StatelessWidget`
-- L1581 `class _NotificationToggleItem : StatefulWidget`
-- L1589 `class _NotificationToggleItemState : State`
+- L1489 `extension _WidgetOpacity : Widget`
+- L1498 `class _SettingsGroup : StatelessWidget`
+- L1531 `class _SettingsItem : StatelessWidget`
+- L1583 `class _NotificationToggleItem : StatefulWidget`
+- L1591 `class _NotificationToggleItemState : State`
 
 **関数 (10 public + 35 private):**
 
@@ -354,12 +360,12 @@ Solara Sanctuary 法務リンクメニュー (Phase 2 launch_checklist)
 - L78 `initState()`
 - L91 `dispose()`
 - L450 `build()`
-- L1488 `withOpacity()`
-- L1502 `build()`
-- L1537 `build()`
-- L1585 `createState()`
-- L1594 `initState()`
-- L1630 `build()`
+- L1490 `withOpacity()`
+- L1504 `build()`
+- L1539 `build()`
+- L1587 `createState()`
+- L1596 `initState()`
+- L1632 `build()`
 
   <details><summary>private 関数 35 件</summary>
 
@@ -396,8 +402,8 @@ Solara Sanctuary 法務リンクメニュー (Phase 2 launch_checklist)
   - L1392 `_openOrbOverlay()`
   - L1408 `_buildAppSection()`
   - L1440 `_pickDailyResetHour()`
-  - L1599 `_load()`
-  - L1604 `_toggle()`
+  - L1601 `_load()`
+  - L1606 `_toggle()`
 
   </details>
 

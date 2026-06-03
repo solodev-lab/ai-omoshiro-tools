@@ -19,6 +19,7 @@
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 
+import '../../i18n/strings.g.dart';
 import '../../theme/solara_colors.dart';
 import '../../utils/consult_restore.dart';
 import '../../utils/solara_storage.dart';
@@ -76,26 +77,25 @@ class _TitleHistoryScreenState extends State<TitleHistoryScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: SolaraColors.celestialBlueLight,
-        title: const Text(
-          '変遷をすべて削除しますか？',
-          style: TextStyle(color: SolaraColors.textPrimary, fontSize: 16),
+        title: Text(
+          t.titleHist.clearTitle,
+          style: const TextStyle(color: SolaraColors.textPrimary, fontSize: 16),
         ),
-        content: const Text(
-          '保存された称号 (クラス) の変遷が消えます。元に戻せません。\n'
-          '現在の称号は Sanctuary に残ります。',
-          style: TextStyle(color: SolaraColors.textSecondary, fontSize: 13),
+        content: Text(
+          t.titleHist.clearBody,
+          style: const TextStyle(color: SolaraColors.textSecondary, fontSize: 13),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('キャンセル'),
+            child: Text(t.titleHist.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(true),
             style: TextButton.styleFrom(
               foregroundColor: SolaraColors.energyHardLight,
             ),
-            child: const Text('削除'),
+            child: Text(t.titleHist.delete),
           ),
         ],
       ),
@@ -113,63 +113,53 @@ class _TitleHistoryScreenState extends State<TitleHistoryScreen> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: const [
-          Text('称号 変遷 とは',
-              style: TextStyle(
+        children: [
+          Text(t.titleHist.guideTitle,
+              style: const TextStyle(
                   color: Color(0xFFF6D98A), fontSize: 14, letterSpacing: 1)),
-          SizedBox(height: 10),
+          const SizedBox(height: 10),
           Text(
-            'ここには、Sanctuary で診断した「称号（クラス）」の\n'
-            '移り変わりが、新しいものから順に記録されます。',
-            style: TextStyle(
+            t.titleHist.guideIntro,
+            style: const TextStyle(
                 color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
           ),
-          SizedBox(height: 14),
-          Text('【称号（クラス）と二つ名】',
-              style: TextStyle(
+          const SizedBox(height: 14),
+          Text(t.titleHist.guideClassEpithetHead,
+              style: const TextStyle(
                   color: Color(0xFFF9D976),
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
                   letterSpacing: 0.5)),
-          SizedBox(height: 4),
+          const SizedBox(height: 4),
           Text(
-            '・二つ名 … 太陽星座×月星座から導かれる、\n'
-            '　生涯変わらないあなたの呼び名。\n'
-            '・称号（クラス）… 設問への答えで形づくられる\n'
-            '　「今のあなた」。内面や状況の変化に合わせて、\n'
-            '　再診断で変わっていきます。',
-            style: TextStyle(
+            t.titleHist.guideClassEpithet,
+            style: const TextStyle(
                 color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
           ),
-          SizedBox(height: 12),
-          Text('【再診断について】',
-              style: TextStyle(
+          const SizedBox(height: 12),
+          Text(t.titleHist.guideRediagnoseHead,
+              style: const TextStyle(
                   color: Color(0xFFF9D976),
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
                   letterSpacing: 0.5)),
-          SizedBox(height: 4),
+          const SizedBox(height: 4),
           Text(
-            'Sanctuary の「再診断する」から受け直せます。\n'
-            '・Free … 1 回まで\n'
-            '・Cosmic Pro … 何度でも（毎日でも可）\n'
-            '変化のタイミングで受け直すと、ここに変遷が\n'
-            '積み重なり、成長の軌跡を辿れます。',
-            style: TextStyle(
+            t.titleHist.guideRediagnose,
+            style: const TextStyle(
                 color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
           ),
-          SizedBox(height: 12),
-          Text('【Solara の姿勢】',
-              style: TextStyle(
+          const SizedBox(height: 12),
+          Text(t.titleHist.guideStanceHead,
+              style: const TextStyle(
                   color: Color(0xFFF9D976),
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
                   letterSpacing: 0.5)),
-          SizedBox(height: 4),
+          const SizedBox(height: 4),
           Text(
-            '過去の称号を「以前は…」と弱めることはしません。\n'
-            'どの称号も、その時々のあなたとして等しく並びます。',
-            style: TextStyle(
+            t.titleHist.guideStance,
+            style: const TextStyle(
                 color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
           ),
         ],
@@ -190,9 +180,9 @@ class _TitleHistoryScreenState extends State<TitleHistoryScreen> {
         title: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text(
-              '称号 変遷',
-              style: TextStyle(
+            Text(
+              t.sanctuary.titleHistory,
+              style: const TextStyle(
                 color: SolaraColors.textPrimary,
                 fontSize: 16,
                 letterSpacing: 0.5,
@@ -268,9 +258,9 @@ class _EmptyState extends StatelessWidget {
               size: 40,
             ),
             const SizedBox(height: 12),
-            const Text(
-              'まだ称号の変遷はありません',
-              style: TextStyle(
+            Text(
+              t.titleHist.emptyTitle,
+              style: const TextStyle(
                 color: SolaraColors.textPrimary,
                 fontSize: 14,
                 height: 1.6,
@@ -278,9 +268,9 @@ class _EmptyState extends StatelessWidget {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 4),
-            const Text(
-              'Sanctuary で再診断するたびに、\nここに過去のクラスが残っていきます。',
-              style: TextStyle(
+            Text(
+              t.titleHist.emptyBody,
+              style: const TextStyle(
                 color: SolaraColors.textSecondary,
                 fontSize: 12,
                 height: 1.6,
@@ -492,7 +482,7 @@ class _TitleChainRow extends StatelessWidget {
               initialText: note,
               label: 'NOTE',
               labelIcon: '✎',
-              hintText: '商号が変わったときの状況や心境を、自分のために残す',
+              hintText: t.titleHist.noteHint,
               onChanged: (text) {
                 SolaraStorage.updateTitleHistoryNote(savedAtRaw, text);
               },

@@ -40,6 +40,16 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 	Translations $copyWith({TranslationMetadata<AppLocale, Translations>? meta}) => Translations(meta: meta ?? this.$meta);
 
 	// Translations
+	late final Translations$homeEdit$ja homeEdit = Translations$homeEdit$ja.internal(_root);
+	late final Translations$resetPicker$ja resetPicker = Translations$resetPicker$ja.internal(_root);
+	late final Translations$orbOverlay$ja orbOverlay = Translations$orbOverlay$ja.internal(_root);
+	late final Translations$legalMenu$ja legalMenu = Translations$legalMenu$ja.internal(_root);
+	late final Translations$account$ja account = Translations$account$ja.internal(_root);
+	late final Translations$shareCard$ja shareCard = Translations$shareCard$ja.internal(_root);
+	late final Translations$titleHow$ja titleHow = Translations$titleHow$ja.internal(_root);
+	late final Translations$titleHist$ja titleHist = Translations$titleHist$ja.internal(_root);
+	late final Translations$profileEdit$ja profileEdit = Translations$profileEdit$ja.internal(_root);
+	late final Translations$titleDiag$ja titleDiag = Translations$titleDiag$ja.internal(_root);
 	late final Translations$sanctuary$ja sanctuary = Translations$sanctuary$ja.internal(_root);
 	late final Translations$mapDaily$ja mapDaily = Translations$mapDaily$ja.internal(_root);
 	late final Translations$mapFortune$ja mapFortune = Translations$mapFortune$ja.internal(_root);
@@ -60,6 +70,408 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 	late final Translations$disclaimer$ja disclaimer = Translations$disclaimer$ja.internal(_root);
 	late final Translations$common$ja common = Translations$common$ja.internal(_root);
 	late final Translations$aiConsent$ja aiConsent = Translations$aiConsent$ja.internal(_root);
+}
+
+// Path: homeEdit
+class Translations$homeEdit$ja {
+	Translations$homeEdit$ja.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// ja: '住所・地名'
+	String get addressLabel => '住所・地名';
+
+	/// ja: '例: 東京都渋谷区'
+	String get placeHint => '例: 東京都渋谷区';
+
+	/// ja: '見つかりませんでした'
+	String get notFound => '見つかりませんでした';
+
+	/// ja: '通信エラー'
+	String get connError => '通信エラー';
+}
+
+// Path: resetPicker
+class Translations$resetPicker$ja {
+	Translations$resetPicker$ja.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// ja: '✦ 1日の開始時刻'
+	String get title => '✦ 1日の開始時刻';
+
+	/// ja: 'タロットの「1日1回」と、月の儀式（新月・満月・刻星化）の案内は、 この時刻を跨ぐと新しい1日になります。 （星読みは0時で切り替わります）'
+	String get subtitle => 'タロットの「1日1回」と、月の儀式（新月・満月・刻星化）の案内は、\nこの時刻を跨ぐと新しい1日になります。\n（星読みは0時で切り替わります）';
+
+	/// ja: '時'
+	String get unitHour => '時';
+
+	/// ja: '分'
+	String get unitMinute => '分';
+
+	/// ja: 'キャンセル'
+	String get cancel => 'キャンセル';
+
+	/// ja: '決定'
+	String get confirm => '決定';
+}
+
+// Path: orbOverlay
+class Translations$orbOverlay$ja {
+	Translations$orbOverlay$ja.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// ja: 'リセット'
+	String get reset => 'リセット';
+
+	/// ja: 'この設定はホロスコープ画面のアスペクト・パターン検出に反映されます。Map の方位スコアや Daily Transit には影響しません。'
+	String get scopeNote => 'この設定はホロスコープ画面のアスペクト・パターン検出に反映されます。Map の方位スコアや Daily Transit には影響しません。';
+}
+
+// Path: legalMenu
+class Translations$legalMenu$ja {
+	Translations$legalMenu$ja.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// ja: '✦ 法務情報'
+	String get heading => '✦ 法務情報';
+
+	/// ja: '利用規約 (EULA)'
+	String get eula => '利用規約 (EULA)';
+
+	/// ja: 'リンクを開けませんでした: $url'
+	String openFailed({required Object url}) => 'リンクを開けませんでした: ${url}';
+}
+
+// Path: account
+class Translations$account$ja {
+	Translations$account$ja.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// ja: 'サインインで Pro が端末間に追従'
+	String get signInBenefit => 'サインインで Pro が端末間に追従';
+
+	/// ja: '機種変更や端末追加でも Cosmic Pro を引き継げます。記録庫はサインインなしでも端末内に残ります。'
+	String get signInBenefitSub => '機種変更や端末追加でも Cosmic Pro を引き継げます。記録庫はサインインなしでも端末内に残ります。';
+
+	/// ja: ' Apple でサインイン'
+	String get signInApple => ' Apple でサインイン';
+
+	/// ja: 'Google でサインイン'
+	String get signInGoogle => 'Google でサインイン';
+
+	/// ja: '$provider でサインイン中'
+	String signedInWith({required Object provider}) => '${provider} でサインイン中';
+
+	/// ja: 'サインアウト'
+	String get signOut => 'サインアウト';
+
+	/// ja: '削除しています…'
+	String get deleting => '削除しています…';
+
+	/// ja: 'Solaraからアカウントを削除'
+	String get deleteAccount => 'Solaraからアカウントを削除';
+
+	/// ja: 'サインインに失敗しました: $e'
+	String signInFailed({required Object e}) => 'サインインに失敗しました: ${e}';
+
+	/// ja: 'サインアウトしました'
+	String get signedOut => 'サインアウトしました';
+
+	/// ja: 'アカウントを削除しますか？'
+	String get deleteTitle => 'アカウントを削除しますか？';
+
+	/// ja: 'サインイン情報と、サーバー上の購読記録を削除します。 ・Apple サインインの場合、削除確認のため Apple サインインを再度求められます（連携を完全に解除するため）。 ・有料プランをご契約中の場合、解約は別途 App Store / Google Play から行ってください（削除では自動解約されません）。 ・端末内の記録庫（相談履歴・称号・Galaxy）は、この端末に残ります。 ・この操作は取り消せません。'
+	String get deleteBody => 'サインイン情報と、サーバー上の購読記録を削除します。\n\n・Apple サインインの場合、削除確認のため Apple サインインを再度求められます（連携を完全に解除するため）。\n・有料プランをご契約中の場合、解約は別途 App Store / Google Play から行ってください（削除では自動解約されません）。\n・端末内の記録庫（相談履歴・称号・Galaxy）は、この端末に残ります。\n・この操作は取り消せません。';
+
+	/// ja: 'キャンセル'
+	String get cancel => 'キャンセル';
+
+	/// ja: '削除する'
+	String get deleteConfirm => '削除する';
+
+	/// ja: 'アカウントを削除しました'
+	String get deleted => 'アカウントを削除しました';
+
+	/// ja: '削除に失敗しました: $e'
+	String deleteFailed({required Object e}) => '削除に失敗しました: ${e}';
+}
+
+// Path: shareCard
+class Translations$shareCard$ja {
+	Translations$shareCard$ja.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// ja: '称号を共有'
+	String get appBar => '称号を共有';
+
+	/// ja: 'クラスデータがありません'
+	String get noClassData => 'クラスデータがありません';
+
+	/// ja: '私の称号は「$title」— $cls #Solara'
+	String shareText({required Object title, required Object cls}) => '私の称号は「${title}」— ${cls}\n#Solara';
+
+	/// ja: 'シェア失敗: $e'
+	String shareFailed({required Object e}) => 'シェア失敗: ${e}';
+}
+
+// Path: titleHow
+class Translations$titleHow$ja {
+	Translations$titleHow$ja.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// ja: '✦ 称号の仕組み'
+	String get title => '✦ 称号の仕組み';
+
+	/// ja: '生年月日 → 一言'
+	String get s1Title => '生年月日 → 一言';
+
+	/// ja: '太陽星座 × 月星座の組み合わせから、144通りの「一言の称号」が決まります。 これはあなた固有のもの。診断では変わりません。'
+	String get s1Body => '太陽星座 × 月星座の組み合わせから、144通りの「一言の称号」が決まります。\nこれはあなた固有のもの。診断では変わりません。';
+
+	/// ja: '28問の選択 → 5軸スコア'
+	String get s2Title => '28問の選択 → 5軸スコア';
+
+	/// ja: 'PART 1 (日常) と PART 2 (運命) の問いに、直感でカードを選ぶと、5つの軸 (パワー・マインド・スピリット・シャドー・ハート) に点数が加算されます。 最高得点の軸があなたの「気質」になります。'
+	String get s2Body => 'PART 1 (日常) と PART 2 (運命) の問いに、直感でカードを選ぶと、5つの軸 (パワー・マインド・スピリット・シャドー・ハート) に点数が加算されます。\n最高得点の軸があなたの「気質」になります。';
+
+	/// ja: 'PART 3 → コート (役職)'
+	String get s3Title => 'PART 3 → コート (役職)';
+
+	/// ja: '4問のコートカードで、page・knight・queen・king のうち2回以上選んだものがあなたのコートに。バラバラなら mixed (混合) になります。'
+	String get s3Body => '4問のコートカードで、page・knight・queen・king のうち2回以上選んだものがあなたのコートに。バラバラなら mixed (混合) になります。';
+
+	/// ja: '軸 × コート → 25クラス'
+	String get s4Title => '軸 × コート → 25クラス';
+
+	/// ja: '5軸 × 5コート = 25種類のクラス (騎士・賢者・占星術師・忍者…) から、あなたに合うクラスが1つ決まります。'
+	String get s4Body => '5軸 × 5コート = 25種類のクラス (騎士・賢者・占星術師・忍者…) から、あなたに合うクラスが1つ決まります。';
+
+	/// ja: 'Light面 / Shadow面'
+	String get s5Title => 'Light面 / Shadow面';
+
+	/// ja: '結果画面はタップすると、表 (Light=光) と裏 (Shadow=影) を切替できます。 光は長所、影はユーモア混じりの「あるある」です。'
+	String get s5Body => '結果画面はタップすると、表 (Light=光) と裏 (Shadow=影) を切替できます。\n光は長所、影はユーモア混じりの「あるある」です。';
+
+	/// ja: '同点処理 — 占星術シード'
+	String get s6Title => '同点処理 — 占星術シード';
+
+	/// ja: '軸やコートが同点になったとき、太陽星座 × 月星座 (144通り) から1つに決めます。 判定の主役はあなたが選んだカードそのもの。違うカードを選べば違う結果が出ます。 占星術シードは「審判が困ったときの最後の判定基準」のポジションです。'
+	String get s6Body => '軸やコートが同点になったとき、太陽星座 × 月星座 (144通り) から1つに決めます。\n判定の主役はあなたが選んだカードそのもの。違うカードを選べば違う結果が出ます。\n占星術シードは「審判が困ったときの最後の判定基準」のポジションです。';
+
+	/// ja: '※ いつでももう一度診断できます。気質はその日の気分で動くもの。「いまの自分」を映す鏡として楽しんでください。'
+	String get footer => '※ いつでももう一度診断できます。気質はその日の気分で動くもの。「いまの自分」を映す鏡として楽しんでください。';
+}
+
+// Path: titleHist
+class Translations$titleHist$ja {
+	Translations$titleHist$ja.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// ja: '変遷をすべて削除しますか？'
+	String get clearTitle => '変遷をすべて削除しますか？';
+
+	/// ja: '保存された称号 (クラス) の変遷が消えます。元に戻せません。 現在の称号は Sanctuary に残ります。'
+	String get clearBody => '保存された称号 (クラス) の変遷が消えます。元に戻せません。\n現在の称号は Sanctuary に残ります。';
+
+	/// ja: 'キャンセル'
+	String get cancel => 'キャンセル';
+
+	/// ja: '削除'
+	String get delete => '削除';
+
+	/// ja: '称号 変遷 とは'
+	String get guideTitle => '称号 変遷 とは';
+
+	/// ja: 'ここには、Sanctuary で診断した「称号（クラス）」の 移り変わりが、新しいものから順に記録されます。'
+	String get guideIntro => 'ここには、Sanctuary で診断した「称号（クラス）」の\n移り変わりが、新しいものから順に記録されます。';
+
+	/// ja: '【称号（クラス）と二つ名】'
+	String get guideClassEpithetHead => '【称号（クラス）と二つ名】';
+
+	/// ja: '・二つ名 … 太陽星座×月星座から導かれる、 生涯変わらないあなたの呼び名。 ・称号（クラス）… 設問への答えで形づくられる 「今のあなた」。内面や状況の変化に合わせて、 再診断で変わっていきます。'
+	String get guideClassEpithet => '・二つ名 … 太陽星座×月星座から導かれる、\n　生涯変わらないあなたの呼び名。\n・称号（クラス）… 設問への答えで形づくられる\n　「今のあなた」。内面や状況の変化に合わせて、\n　再診断で変わっていきます。';
+
+	/// ja: '【再診断について】'
+	String get guideRediagnoseHead => '【再診断について】';
+
+	/// ja: 'Sanctuary の「再診断する」から受け直せます。 ・Free … 1 回まで ・Cosmic Pro … 何度でも（毎日でも可） 変化のタイミングで受け直すと、ここに変遷が 積み重なり、成長の軌跡を辿れます。'
+	String get guideRediagnose => 'Sanctuary の「再診断する」から受け直せます。\n・Free … 1 回まで\n・Cosmic Pro … 何度でも（毎日でも可）\n変化のタイミングで受け直すと、ここに変遷が\n積み重なり、成長の軌跡を辿れます。';
+
+	/// ja: '【Solara の姿勢】'
+	String get guideStanceHead => '【Solara の姿勢】';
+
+	/// ja: '過去の称号を「以前は…」と弱めることはしません。 どの称号も、その時々のあなたとして等しく並びます。'
+	String get guideStance => '過去の称号を「以前は…」と弱めることはしません。\nどの称号も、その時々のあなたとして等しく並びます。';
+
+	/// ja: 'まだ称号の変遷はありません'
+	String get emptyTitle => 'まだ称号の変遷はありません';
+
+	/// ja: 'Sanctuary で再診断するたびに、 ここに過去のクラスが残っていきます。'
+	String get emptyBody => 'Sanctuary で再診断するたびに、\nここに過去のクラスが残っていきます。';
+
+	/// ja: '商号が変わったときの状況や心境を、自分のために残す'
+	String get noteHint => '商号が変わったときの状況や心境を、自分のために残す';
+}
+
+// Path: profileEdit
+class Translations$profileEdit$ja {
+	Translations$profileEdit$ja.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// ja: '✦ 出生情報'
+	String get title => '✦ 出生情報';
+
+	/// ja: 'ニックネーム'
+	String get nickname => 'ニックネーム';
+
+	/// ja: 'ニックネームを入力'
+	String get nicknameHint => 'ニックネームを入力';
+
+	/// ja: '生年月日'
+	String get birthDate => '生年月日';
+
+	/// ja: '生年月日を入力してください'
+	String get birthDateRequired => '生年月日を入力してください';
+
+	/// ja: '出生時刻'
+	String get birthTime => '出生時刻';
+
+	/// ja: '時'
+	String get hourHint => '時';
+
+	/// ja: '分'
+	String get minuteHint => '分';
+
+	/// ja: '$h 時'
+	String hourItem({required Object h}) => '${h} 時';
+
+	/// ja: '$m 分'
+	String minuteItem({required Object m}) => '${m} 分';
+
+	/// ja: '出生時刻が分からない'
+	String get timeUnknown => '出生時刻が分からない';
+
+	/// ja: '鑑定には惑星配置とアスペクト情報を使用します。ハウス・ASC・MCの鑑定は省略されます。'
+	String get timeUnknownNote => '鑑定には惑星配置とアスペクト情報を使用します。ハウス・ASC・MCの鑑定は省略されます。';
+
+	/// ja: '出生地'
+	String get birthPlace => '出生地';
+
+	/// ja: '市区町村レベルでOK・番地は不要です'
+	String get cityLevelHint => '市区町村レベルでOK・番地は不要です';
+
+	/// ja: '例: 岐阜県岐阜市'
+	String get placeHint => '例: 岐阜県岐阜市';
+
+	/// ja: '出生地を入力してください'
+	String get placeRequired => '出生地を入力してください';
+
+	/// ja: '検索'
+	String get search => '検索';
+
+	/// ja: '緯度'
+	String get latitude => '緯度';
+
+	/// ja: '経度'
+	String get longitude => '経度';
+
+	/// ja: 'タイムゾーン判定中…'
+	String get tzResolving => 'タイムゾーン判定中…';
+
+	/// ja: 'タイムゾーン: $tz (DST自動)'
+	String tzAuto({required Object tz}) => 'タイムゾーン: ${tz} (DST自動)';
+
+	/// ja: 'タイムゾーン: UTC+$tz (固定)'
+	String tzFixed({required Object tz}) => 'タイムゾーン: UTC+${tz} (固定)';
+
+	/// ja: '言語 / Language'
+	String get language => '言語 / Language';
+
+	/// ja: '端末'
+	String get langDevice => '端末';
+
+	/// ja: 'システム設定'
+	String get langDeviceSub => 'システム設定';
+
+	/// ja: '英語'
+	String get langEnglishSub => '英語';
+
+	/// ja: '保存する'
+	String get save => '保存する';
+}
+
+// Path: titleDiag
+class Translations$titleDiag$ja {
+	Translations$titleDiag$ja.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// ja: '— 称号の儀式 —'
+	String get ceremonyDash => '— 称号の儀式 —';
+
+	/// ja: '称号の儀式'
+	String get ceremony => '称号の儀式';
+
+	/// ja: 'カードがあなたを映し出します。 28の問いに、直感で答えてください。'
+	String get introBody => 'カードがあなたを映し出します。\n28の問いに、直感で答えてください。';
+
+	/// ja: '始める'
+	String get begin => '始める';
+
+	/// ja: 'あとで'
+	String get later => 'あとで';
+
+	/// ja: 'あなたの星を読み取る…'
+	String get forging1 => 'あなたの星を読み取る…';
+
+	/// ja: '運命が結ばれる…'
+	String get forging2 => '運命が結ばれる…';
+
+	/// ja: '称号が刻まれる…'
+	String get forging3 => '称号が刻まれる…';
+
+	/// ja: 'これでいく'
+	String get goWithThis => 'これでいく';
+
+	/// ja: '✦ 前のクラスと比較する'
+	String get compareWithPrevious => '✦ 前のクラスと比較する';
+
+	/// ja: '✦ 前のクラスに戻る?'
+	String get prevReturnTitle => '✦ 前のクラスに戻る?';
+
+	/// ja: '✦ 前のクラスを採用する'
+	String get adoptPrevious => '✦ 前のクラスを採用する';
+
+	/// ja: '新しいクラスのままにする'
+	String get keepNew => '新しいクラスのままにする';
 }
 
 // Path: sanctuary
@@ -3216,6 +3628,110 @@ class Translations$paywall$faq$resubscribe$ja {
 extension on Translations {
 	dynamic _flatMapFunction(String path) {
 		return switch (path) {
+			'homeEdit.addressLabel' => '住所・地名',
+			'homeEdit.placeHint' => '例: 東京都渋谷区',
+			'homeEdit.notFound' => '見つかりませんでした',
+			'homeEdit.connError' => '通信エラー',
+			'resetPicker.title' => '✦ 1日の開始時刻',
+			'resetPicker.subtitle' => 'タロットの「1日1回」と、月の儀式（新月・満月・刻星化）の案内は、\nこの時刻を跨ぐと新しい1日になります。\n（星読みは0時で切り替わります）',
+			'resetPicker.unitHour' => '時',
+			'resetPicker.unitMinute' => '分',
+			'resetPicker.cancel' => 'キャンセル',
+			'resetPicker.confirm' => '決定',
+			'orbOverlay.reset' => 'リセット',
+			'orbOverlay.scopeNote' => 'この設定はホロスコープ画面のアスペクト・パターン検出に反映されます。Map の方位スコアや Daily Transit には影響しません。',
+			'legalMenu.heading' => '✦ 法務情報',
+			'legalMenu.eula' => '利用規約 (EULA)',
+			'legalMenu.openFailed' => ({required Object url}) => 'リンクを開けませんでした: ${url}',
+			'account.signInBenefit' => 'サインインで Pro が端末間に追従',
+			'account.signInBenefitSub' => '機種変更や端末追加でも Cosmic Pro を引き継げます。記録庫はサインインなしでも端末内に残ります。',
+			'account.signInApple' => ' Apple でサインイン',
+			'account.signInGoogle' => 'Google でサインイン',
+			'account.signedInWith' => ({required Object provider}) => '${provider} でサインイン中',
+			'account.signOut' => 'サインアウト',
+			'account.deleting' => '削除しています…',
+			'account.deleteAccount' => 'Solaraからアカウントを削除',
+			'account.signInFailed' => ({required Object e}) => 'サインインに失敗しました: ${e}',
+			'account.signedOut' => 'サインアウトしました',
+			'account.deleteTitle' => 'アカウントを削除しますか？',
+			'account.deleteBody' => 'サインイン情報と、サーバー上の購読記録を削除します。\n\n・Apple サインインの場合、削除確認のため Apple サインインを再度求められます（連携を完全に解除するため）。\n・有料プランをご契約中の場合、解約は別途 App Store / Google Play から行ってください（削除では自動解約されません）。\n・端末内の記録庫（相談履歴・称号・Galaxy）は、この端末に残ります。\n・この操作は取り消せません。',
+			'account.cancel' => 'キャンセル',
+			'account.deleteConfirm' => '削除する',
+			'account.deleted' => 'アカウントを削除しました',
+			'account.deleteFailed' => ({required Object e}) => '削除に失敗しました: ${e}',
+			'shareCard.appBar' => '称号を共有',
+			'shareCard.noClassData' => 'クラスデータがありません',
+			'shareCard.shareText' => ({required Object title, required Object cls}) => '私の称号は「${title}」— ${cls}\n#Solara',
+			'shareCard.shareFailed' => ({required Object e}) => 'シェア失敗: ${e}',
+			'titleHow.title' => '✦ 称号の仕組み',
+			'titleHow.s1Title' => '生年月日 → 一言',
+			'titleHow.s1Body' => '太陽星座 × 月星座の組み合わせから、144通りの「一言の称号」が決まります。\nこれはあなた固有のもの。診断では変わりません。',
+			'titleHow.s2Title' => '28問の選択 → 5軸スコア',
+			'titleHow.s2Body' => 'PART 1 (日常) と PART 2 (運命) の問いに、直感でカードを選ぶと、5つの軸 (パワー・マインド・スピリット・シャドー・ハート) に点数が加算されます。\n最高得点の軸があなたの「気質」になります。',
+			'titleHow.s3Title' => 'PART 3 → コート (役職)',
+			'titleHow.s3Body' => '4問のコートカードで、page・knight・queen・king のうち2回以上選んだものがあなたのコートに。バラバラなら mixed (混合) になります。',
+			'titleHow.s4Title' => '軸 × コート → 25クラス',
+			'titleHow.s4Body' => '5軸 × 5コート = 25種類のクラス (騎士・賢者・占星術師・忍者…) から、あなたに合うクラスが1つ決まります。',
+			'titleHow.s5Title' => 'Light面 / Shadow面',
+			'titleHow.s5Body' => '結果画面はタップすると、表 (Light=光) と裏 (Shadow=影) を切替できます。\n光は長所、影はユーモア混じりの「あるある」です。',
+			'titleHow.s6Title' => '同点処理 — 占星術シード',
+			'titleHow.s6Body' => '軸やコートが同点になったとき、太陽星座 × 月星座 (144通り) から1つに決めます。\n判定の主役はあなたが選んだカードそのもの。違うカードを選べば違う結果が出ます。\n占星術シードは「審判が困ったときの最後の判定基準」のポジションです。',
+			'titleHow.footer' => '※ いつでももう一度診断できます。気質はその日の気分で動くもの。「いまの自分」を映す鏡として楽しんでください。',
+			'titleHist.clearTitle' => '変遷をすべて削除しますか？',
+			'titleHist.clearBody' => '保存された称号 (クラス) の変遷が消えます。元に戻せません。\n現在の称号は Sanctuary に残ります。',
+			'titleHist.cancel' => 'キャンセル',
+			'titleHist.delete' => '削除',
+			'titleHist.guideTitle' => '称号 変遷 とは',
+			'titleHist.guideIntro' => 'ここには、Sanctuary で診断した「称号（クラス）」の\n移り変わりが、新しいものから順に記録されます。',
+			'titleHist.guideClassEpithetHead' => '【称号（クラス）と二つ名】',
+			'titleHist.guideClassEpithet' => '・二つ名 … 太陽星座×月星座から導かれる、\n　生涯変わらないあなたの呼び名。\n・称号（クラス）… 設問への答えで形づくられる\n　「今のあなた」。内面や状況の変化に合わせて、\n　再診断で変わっていきます。',
+			'titleHist.guideRediagnoseHead' => '【再診断について】',
+			'titleHist.guideRediagnose' => 'Sanctuary の「再診断する」から受け直せます。\n・Free … 1 回まで\n・Cosmic Pro … 何度でも（毎日でも可）\n変化のタイミングで受け直すと、ここに変遷が\n積み重なり、成長の軌跡を辿れます。',
+			'titleHist.guideStanceHead' => '【Solara の姿勢】',
+			'titleHist.guideStance' => '過去の称号を「以前は…」と弱めることはしません。\nどの称号も、その時々のあなたとして等しく並びます。',
+			'titleHist.emptyTitle' => 'まだ称号の変遷はありません',
+			'titleHist.emptyBody' => 'Sanctuary で再診断するたびに、\nここに過去のクラスが残っていきます。',
+			'titleHist.noteHint' => '商号が変わったときの状況や心境を、自分のために残す',
+			'profileEdit.title' => '✦ 出生情報',
+			'profileEdit.nickname' => 'ニックネーム',
+			'profileEdit.nicknameHint' => 'ニックネームを入力',
+			'profileEdit.birthDate' => '生年月日',
+			'profileEdit.birthDateRequired' => '生年月日を入力してください',
+			'profileEdit.birthTime' => '出生時刻',
+			'profileEdit.hourHint' => '時',
+			'profileEdit.minuteHint' => '分',
+			'profileEdit.hourItem' => ({required Object h}) => '${h} 時',
+			'profileEdit.minuteItem' => ({required Object m}) => '${m} 分',
+			'profileEdit.timeUnknown' => '出生時刻が分からない',
+			'profileEdit.timeUnknownNote' => '鑑定には惑星配置とアスペクト情報を使用します。ハウス・ASC・MCの鑑定は省略されます。',
+			'profileEdit.birthPlace' => '出生地',
+			'profileEdit.cityLevelHint' => '市区町村レベルでOK・番地は不要です',
+			'profileEdit.placeHint' => '例: 岐阜県岐阜市',
+			'profileEdit.placeRequired' => '出生地を入力してください',
+			'profileEdit.search' => '検索',
+			'profileEdit.latitude' => '緯度',
+			'profileEdit.longitude' => '経度',
+			'profileEdit.tzResolving' => 'タイムゾーン判定中…',
+			'profileEdit.tzAuto' => ({required Object tz}) => 'タイムゾーン: ${tz} (DST自動)',
+			'profileEdit.tzFixed' => ({required Object tz}) => 'タイムゾーン: UTC+${tz} (固定)',
+			'profileEdit.language' => '言語 / Language',
+			'profileEdit.langDevice' => '端末',
+			'profileEdit.langDeviceSub' => 'システム設定',
+			'profileEdit.langEnglishSub' => '英語',
+			'profileEdit.save' => '保存する',
+			'titleDiag.ceremonyDash' => '— 称号の儀式 —',
+			'titleDiag.ceremony' => '称号の儀式',
+			'titleDiag.introBody' => 'カードがあなたを映し出します。\n28の問いに、直感で答えてください。',
+			'titleDiag.begin' => '始める',
+			'titleDiag.later' => 'あとで',
+			'titleDiag.forging1' => 'あなたの星を読み取る…',
+			'titleDiag.forging2' => '運命が結ばれる…',
+			'titleDiag.forging3' => '称号が刻まれる…',
+			'titleDiag.goWithThis' => 'これでいく',
+			'titleDiag.compareWithPrevious' => '✦ 前のクラスと比較する',
+			'titleDiag.prevReturnTitle' => '✦ 前のクラスに戻る?',
+			'titleDiag.adoptPrevious' => '✦ 前のクラスを採用する',
+			'titleDiag.keepNew' => '新しいクラスのままにする',
 			'sanctuary.creditPro' => ({required Object remaining, required Object limit, required Object pur}) => '✦ Pro 残 ${remaining} / ${limit} ・ 購入 ${pur} （月曜補充）',
 			'sanctuary.creditProSyncing' => ({required Object pur}) => '✦ Pro 残 確認中 ・ 購入 ${pur}',
 			'sanctuary.creditFree' => ({required Object free, required Object pur}) => '✦ クレジット残 ─ 無料 ${free} ・ 購入 ${pur}',
@@ -3624,6 +4140,8 @@ extension on Translations {
 			'consultInput.wishExamples.fallback.1' => '流れを変えたい',
 			'consultInput.picker.searchHint' => '住所 / 店名で検索',
 			'consultInput.picker.clearSearch' => 'クリア',
+			_ => null,
+		} ?? switch (path) {
 			'consultInput.picker.fromViewpoint' => '🔭 視点 (ViewPoint) から',
 			'consultInput.picker.fromLocations' => '📍 保存地点 (Locations) から',
 			'consultInput.picker.pickOnMap' => '地図で選ぶ',
@@ -3728,8 +4246,6 @@ extension on Translations {
 			'mapVp.help.reorderBody' => '同じく ⋯ メニュー内の ↑ ↓ で並び替えできます。\n上にあるスロットほど一覧で先に出ます。\n(自宅 🏠 は先頭固定で移動・削除できません。)',
 			'mapMenu.tabPlanet' => '惑星',
 			'mapMenu.map.dirEnergy' => '方位エネルギー',
-			_ => null,
-		} ?? switch (path) {
 			'mapMenu.map.compass' => 'コンパス',
 			'mapMenu.map.coords' => '座標取得',
 			'mapMenu.planet.type' => 'タイプ',

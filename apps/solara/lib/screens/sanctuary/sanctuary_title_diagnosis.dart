@@ -4,6 +4,11 @@ import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../i18n/strings.g.dart';
+// 一部の build メソッドはアニメ進捗を local 変数 `t` として持つため、slang の
+// global `t` が shadow される。その scope 用に prefix 付き別名 `i18n` も用意する。
+import '../../i18n/strings.g.dart' as i18n;
+import '../../utils/solara_i18n.dart';
 import '../../utils/solara_storage.dart';
 import '../../utils/title_data.dart' as title_data;
 import '../../widgets/class_card.dart';
@@ -443,9 +448,9 @@ class _SanctuaryTitleDiagnosisPageState extends State<SanctuaryTitleDiagnosisPag
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text(
-              '✦ 前のクラスに戻る?',
-              style: TextStyle(
+            Text(
+              t.titleDiag.prevReturnTitle,
+              style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
                 color: Color(0xFFC9A8E0),
@@ -523,10 +528,10 @@ class _SanctuaryTitleDiagnosisPageState extends State<SanctuaryTitleDiagnosisPag
                     colors: [Color(0xFFC9A8E0), Color(0xFF8C5BC0)],
                   ),
                 ),
-                child: const Center(
+                child: Center(
                   child: Text(
-                    '✦ 前のクラスを採用する',
-                    style: TextStyle(
+                    t.titleDiag.adoptPrevious,
+                    style: const TextStyle(
                       color: Color(0xFF0A0A14),
                       fontSize: 14,
                       fontWeight: FontWeight.w700,
@@ -539,11 +544,11 @@ class _SanctuaryTitleDiagnosisPageState extends State<SanctuaryTitleDiagnosisPag
             Center(
               child: GestureDetector(
                 onTap: () => Navigator.of(context).pop(),
-                child: const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 6),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 6),
                   child: Text(
-                    '新しいクラスのままにする',
-                    style: TextStyle(
+                    t.titleDiag.keepNew,
+                    style: const TextStyle(
                       fontSize: 13,
                       color: Color(0xFFACACAC),
                       decoration: TextDecoration.underline,
@@ -637,10 +642,10 @@ class _SanctuaryTitleDiagnosisPageState extends State<SanctuaryTitleDiagnosisPag
                   ),
                 ),
                 const SizedBox(height: 12),
-                const Text(
-                  '\u2014 \u79f0\u53f7\u306e\u5100\u5f0f \u2014',
+                Text(
+                  i18n.t.titleDiag.ceremonyDash,
                   textAlign: TextAlign.center,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 13,
                     color: Color(0x99F9D976),
                     letterSpacing: 4,
@@ -715,10 +720,10 @@ class _SanctuaryTitleDiagnosisPageState extends State<SanctuaryTitleDiagnosisPag
                       ),
                     ),
                     const SizedBox(height: 14),
-                    const Text(
-                      '\u79f0\u53f7\u306e\u5100\u5f0f',
+                    Text(
+                      t.titleDiag.ceremony,
                       textAlign: TextAlign.center,
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 26,
                         fontWeight: FontWeight.w700,
                         color: Color(0xFFF9D976),
@@ -752,10 +757,10 @@ class _SanctuaryTitleDiagnosisPageState extends State<SanctuaryTitleDiagnosisPag
                       ),
                     ),
                     const SizedBox(height: 24),
-                    const Text(
-                      '\u30ab\u30fc\u30c9\u304c\u3042\u306a\u305f\u3092\u6620\u3057\u51fa\u3057\u307e\u3059\u3002\n28\u306e\u554f\u3044\u306b\u3001\u76f4\u611f\u3067\u7b54\u3048\u3066\u304f\u3060\u3055\u3044\u3002',
+                    Text(
+                      t.titleDiag.introBody,
                       textAlign: TextAlign.center,
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 15,
                         color: Color(0xCCEAEAEA),
                         height: 1.8,
@@ -791,10 +796,10 @@ class _SanctuaryTitleDiagnosisPageState extends State<SanctuaryTitleDiagnosisPag
                                 ),
                               ],
                             ),
-                            child: const Center(
+                            child: Center(
                               child: Text(
-                                '\u59cb\u3081\u308b',
-                                style: TextStyle(
+                                t.titleDiag.begin,
+                                style: const TextStyle(
                                   color: Color(0xFF0A0A14),
                                   fontSize: 16,
                                   fontWeight: FontWeight.w700,
@@ -814,9 +819,9 @@ class _SanctuaryTitleDiagnosisPageState extends State<SanctuaryTitleDiagnosisPag
                     const SizedBox(height: 14),
                     GestureDetector(
                       onTap: () => Navigator.pop(context),
-                      child: const Text(
-                        '\u3042\u3068\u3067',
-                        style: TextStyle(
+                      child: Text(
+                        t.titleDiag.later,
+                        style: const TextStyle(
                           fontSize: 14,
                           color: Color(0x88ACACAC),
                           letterSpacing: 2,
@@ -888,9 +893,14 @@ class _SanctuaryTitleDiagnosisPageState extends State<SanctuaryTitleDiagnosisPag
             const SizedBox(height: 4),
             Text(_partNames[r['part']] ?? '', style: const TextStyle(fontSize: 15, color: Color(0xB3F9D976), letterSpacing: 2)),
             const SizedBox(height: 16),
-            Text(r['q'] as String, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: Color(0xFFEAEAEA), height: 1.5), textAlign: TextAlign.center),
-            const SizedBox(height: 4),
-            Text(r['qen'] as String, style: const TextStyle(fontSize: 15, color: Color(0x80ACACAC)), textAlign: TextAlign.center),
+            // EN ロケールでは英語質問 (qen) を主役にし、JP 字幕は出さない。
+            // JP ロケールでは従来どおり 日本語 (q) を主役 + 英語 (qen) を字幕。
+            Text(isEnLocale() ? r['qen'] as String : r['q'] as String,
+              style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: Color(0xFFEAEAEA), height: 1.5), textAlign: TextAlign.center),
+            if (!isEnLocale()) ...[
+              const SizedBox(height: 4),
+              Text(r['qen'] as String, style: const TextStyle(fontSize: 15, color: Color(0x80ACACAC)), textAlign: TextAlign.center),
+            ],
             const SizedBox(height: 28),
             Wrap(spacing: 12, runSpacing: 12, alignment: WrapAlignment.center,
               children: List.generate(cards.length, (i) {
@@ -1117,23 +1127,23 @@ class _SanctuaryTitleDiagnosisPageState extends State<SanctuaryTitleDiagnosisPag
                       children: [
                         Opacity(
                           opacity: stage1Op.clamp(0.0, 1.0),
-                          child: const Text(
-                            'あなたの星を読み取る…',
-                            style: TextStyle(fontSize: 16, color: Color(0xFFEAEAEA), letterSpacing: 3),
+                          child: Text(
+                            i18n.t.titleDiag.forging1,
+                            style: const TextStyle(fontSize: 16, color: Color(0xFFEAEAEA), letterSpacing: 3),
                           ),
                         ),
                         Opacity(
                           opacity: stage2Op.clamp(0.0, 1.0),
-                          child: const Text(
-                            '運命が結ばれる…',
-                            style: TextStyle(fontSize: 16, color: Color(0xFFEAEAEA), letterSpacing: 3),
+                          child: Text(
+                            i18n.t.titleDiag.forging2,
+                            style: const TextStyle(fontSize: 16, color: Color(0xFFEAEAEA), letterSpacing: 3),
                           ),
                         ),
                         Opacity(
                           opacity: stage3Op.clamp(0.0, 1.0),
-                          child: const Text(
-                            '称号が刻まれる…',
-                            style: TextStyle(fontSize: 16, color: Color(0xFFF9D976), letterSpacing: 3, fontWeight: FontWeight.w600),
+                          child: Text(
+                            i18n.t.titleDiag.forging3,
+                            style: const TextStyle(fontSize: 16, color: Color(0xFFF9D976), letterSpacing: 3, fontWeight: FontWeight.w600),
                           ),
                         ),
                       ],
@@ -1286,7 +1296,7 @@ class _SanctuaryTitleDiagnosisPageState extends State<SanctuaryTitleDiagnosisPag
             child: Column(children: [
               GestureDetector(onTap: _accept, child: Container(width: double.infinity, padding: const EdgeInsets.symmetric(vertical: 14),
                 decoration: BoxDecoration(borderRadius: BorderRadius.circular(14), gradient: const LinearGradient(colors: [Color(0xFFF9D976), Color(0xFFE8A840)])),
-                child: const Center(child: Text('これでいく', style: TextStyle(color: Color(0xFF0A0A14), fontSize: 15, fontWeight: FontWeight.w700))))),
+                child: Center(child: Text(i18n.t.titleDiag.goWithThis, style: const TextStyle(color: Color(0xFF0A0A14), fontSize: 15, fontWeight: FontWeight.w700))))),
               // やり直し診断時のみ「前のクラスと比較する」を表示
               // 初回診断時はボタンなし (Free 1回上限の抜け道を作らないため、
               // 旧「もう一度診断する」を撤去。やり直したい場合は Sanctuary 画面の
@@ -1295,9 +1305,9 @@ class _SanctuaryTitleDiagnosisPageState extends State<SanctuaryTitleDiagnosisPag
                 const SizedBox(height: 12),
                 GestureDetector(
                   onTap: () => _showPreviousComparison(context),
-                  child: const Text(
-                    '✦ 前のクラスと比較する',
-                    style: TextStyle(
+                  child: Text(
+                    i18n.t.titleDiag.compareWithPrevious,
+                    style: const TextStyle(
                       fontSize: 15,
                       color: Color(0xFFC9A8E0),
                       decoration: TextDecoration.underline,
@@ -1351,16 +1361,16 @@ class _SanctuaryTitleDiagnosisPageState extends State<SanctuaryTitleDiagnosisPag
           Column(children: [
             GestureDetector(onTap: _accept, child: Container(width: double.infinity, padding: const EdgeInsets.symmetric(vertical: 14),
               decoration: BoxDecoration(borderRadius: BorderRadius.circular(14), gradient: const LinearGradient(colors: [Color(0xFFC9A8E0), Color(0xFF8C5BC0)])),
-              child: const Center(child: Text('これでいく', style: TextStyle(color: Color(0xFF0A0A14), fontSize: 15, fontWeight: FontWeight.w700))))),
+              child: Center(child: Text(t.titleDiag.goWithThis, style: const TextStyle(color: Color(0xFF0A0A14), fontSize: 15, fontWeight: FontWeight.w700))))),
             // やり直し診断時のみ「前のクラスと比較する」を表示
             // 初回診断時はボタンなし (Free 1回上限の抜け道を作らないため)
             if (widget.previousResult != null) ...[
               const SizedBox(height: 12),
               GestureDetector(
                 onTap: () => _showPreviousComparison(context),
-                child: const Text(
-                  '✦ 前のクラスと比較する',
-                  style: TextStyle(
+                child: Text(
+                  t.titleDiag.compareWithPrevious,
+                  style: const TextStyle(
                     fontSize: 15,
                     color: Color(0xFFEFE5F5),
                     decoration: TextDecoration.underline,

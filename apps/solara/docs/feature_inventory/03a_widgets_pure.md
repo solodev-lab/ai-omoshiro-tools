@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 27 / 総行数: 7003
+- ファイル数: 27 / 総行数: 7000
 - class/mixin/extension/enum: 78
 - 関数 (top-level + method の素拾い): 181
 - Navigator.push 等: 0
@@ -726,7 +726,7 @@ Pro 案内ダイアログ — Phase 2-6a / Phase 2-6b + Phase 2 RASP 連携
   </details>
 
 
-### `lib/widgets/sanctuary_account_section.dart` (357 行)
+### `lib/widgets/sanctuary_account_section.dart` (354 行)
 
 **ファイル先頭コメント:**
 
@@ -743,29 +743,29 @@ Sanctuary ✦ Account セクション — Phase 2-9 Sign in 統合
   - SolaraAuth を ChangeNotifier として購読し、状態変化で再描画
 ```
 
-**imports:** dart=0 / package=2 / relative=1
+**imports:** dart=0 / package=2 / relative=2
 
-- relative: `../utils/solara_auth.dart`
+- relative: `../i18n/strings.g.dart`, `../utils/solara_auth.dart`
 
 **型定義 (2):**
 
-- L18 `class SanctuaryAccountSection : StatefulWidget`
-- L26 `class _SanctuaryAccountSectionState : State`
+- L19 `class SanctuaryAccountSection : StatefulWidget`
+- L27 `class _SanctuaryAccountSectionState : State`
 
 **関数 (2 public + 7 private):**
 
-- L22 `createState()`
-- L30 `build()`
+- L23 `createState()`
+- L31 `build()`
 
   <details><summary>private 関数 7 件</summary>
 
-  - L57 `_buildSignedOutBlock()`
-  - L113 `_buildSignedInBlock()`
-  - L213 `_signInButton()`
-  - L256 `_signIn()`
-  - L273 `_signOut()`
-  - L284 `_confirmDeleteAccount()`
-  - L339 `_performDelete()`
+  - L58 `_buildSignedOutBlock()`
+  - L114 `_buildSignedInBlock()`
+  - L214 `_signInButton()`
+  - L257 `_signIn()`
+  - L274 `_signOut()`
+  - L285 `_confirmDeleteAccount()`
+  - L336 `_performDelete()`
 
   </details>
 

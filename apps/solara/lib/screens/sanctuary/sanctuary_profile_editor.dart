@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 
+// slang も AppLocale を定義するため、app_locale.dart の AppLocale と衝突しないよう hide。
+import '../../i18n/strings.g.dart' hide AppLocale;
 import '../../utils/app_locale.dart';
 import '../../utils/solara_storage.dart';
 import '../../utils/solara_api.dart';
@@ -134,13 +136,13 @@ class _SanctuaryProfileEditorPageState extends State<SanctuaryProfileEditorPage>
   void _save() {
     if (_birthDate == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('生年月日を入力してください')),
+        SnackBar(content: Text(t.profileEdit.birthDateRequired)),
       );
       return;
     }
     if (_birthPlace.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('出生地を入力してください')),
+        SnackBar(content: Text(t.profileEdit.placeRequired)),
       );
       return;
     }
@@ -199,8 +201,8 @@ class _SanctuaryProfileEditorPageState extends State<SanctuaryProfileEditorPage>
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text('✦ 出生情報',
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Color(0xFFF9D976), letterSpacing: 1)),
+                        Text(t.profileEdit.title,
+                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Color(0xFFF9D976), letterSpacing: 1)),
                         GestureDetector(
                           onTap: () => Navigator.pop(context),
                           child: Container(
@@ -217,14 +219,14 @@ class _SanctuaryProfileEditorPageState extends State<SanctuaryProfileEditorPage>
                     const SizedBox(height: 20),
 
                     // ニックネーム
-                    _birthSection('ニックネーム', TextField(
+                    _birthSection(t.profileEdit.nickname, TextField(
                       controller: _nameCtrl,
                       style: const TextStyle(color: Color(0xFFEAEAEA), fontSize: 15),
-                      decoration: _inputDecoration('ニックネームを入力'),
+                      decoration: _inputDecoration(t.profileEdit.nicknameHint),
                     )),
 
                     // 生年月日 — auto-format: 19901231 → 1990/12/31
-                    _birthSection('生年月日', TextField(
+                    _birthSection(t.profileEdit.birthDate, TextField(
                       controller: _birthDateCtrl,
                       keyboardType: TextInputType.number,
                       style: const TextStyle(color: Color(0xFFEAEAEA), fontSize: 15),
@@ -244,7 +246,7 @@ class _SanctuaryProfileEditorPageState extends State<SanctuaryProfileEditorPage>
                     )),
 
                     // 出生時刻 — 24時間表記ドロップダウン（30分刻み）
-                    _birthSection('出生時刻', Column(
+                    _birthSection(t.profileEdit.birthTime, Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         // 時間・分 2つのドロップダウン
@@ -259,11 +261,11 @@ class _SanctuaryProfileEditorPageState extends State<SanctuaryProfileEditorPage>
                             ),
                             child: DropdownButtonHideUnderline(child: DropdownButton<String>(
                               value: _birthTimeUnknown ? null : _birthTime?.hour.toString().padLeft(2, '0'),
-                              hint: Text(_birthTimeUnknown ? '12' : '時', style: TextStyle(fontSize: 15, color: _birthTimeUnknown ? const Color(0x59EAEAEA) : const Color(0x99EAEAEA))),
+                              hint: Text(_birthTimeUnknown ? '12' : t.profileEdit.hourHint, style: TextStyle(fontSize: 15, color: _birthTimeUnknown ? const Color(0x59EAEAEA) : const Color(0x99EAEAEA))),
                               isExpanded: true, dropdownColor: const Color(0xFF0A1220),
                               style: const TextStyle(fontSize: 15, color: Color(0xFFEAEAEA)),
                               icon: Icon(Icons.arrow_drop_down, color: _birthTimeUnknown ? const Color(0x59EAEAEA) : const Color(0xFFACACAC)),
-                              items: _birthTimeUnknown ? null : _hourOptions.map((h) => DropdownMenuItem(value: h, child: Text('$h 時'))).toList(),
+                              items: _birthTimeUnknown ? null : _hourOptions.map((h) => DropdownMenuItem(value: h, child: Text(t.profileEdit.hourItem(h: h)))).toList(),
                               onChanged: _birthTimeUnknown ? null : (val) {
                                 if (val != null) setState(() => _birthTime = TimeOfDay(hour: int.parse(val), minute: _birthTime?.minute ?? 0));
                               },
@@ -282,11 +284,11 @@ class _SanctuaryProfileEditorPageState extends State<SanctuaryProfileEditorPage>
                             ),
                             child: DropdownButtonHideUnderline(child: DropdownButton<String>(
                               value: _birthTimeUnknown ? null : _birthTime?.minute.toString().padLeft(2, '0'),
-                              hint: Text(_birthTimeUnknown ? '00' : '分', style: TextStyle(fontSize: 15, color: _birthTimeUnknown ? const Color(0x59EAEAEA) : const Color(0x99EAEAEA))),
+                              hint: Text(_birthTimeUnknown ? '00' : t.profileEdit.minuteHint, style: TextStyle(fontSize: 15, color: _birthTimeUnknown ? const Color(0x59EAEAEA) : const Color(0x99EAEAEA))),
                               isExpanded: true, dropdownColor: const Color(0xFF0A1220),
                               style: const TextStyle(fontSize: 15, color: Color(0xFFEAEAEA)),
                               icon: Icon(Icons.arrow_drop_down, color: _birthTimeUnknown ? const Color(0x59EAEAEA) : const Color(0xFFACACAC)),
-                              items: _birthTimeUnknown ? null : _minuteOptions.map((m) => DropdownMenuItem(value: m, child: Text('$m 分'))).toList(),
+                              items: _birthTimeUnknown ? null : _minuteOptions.map((m) => DropdownMenuItem(value: m, child: Text(t.profileEdit.minuteItem(m: m)))).toList(),
                               onChanged: _birthTimeUnknown ? null : (val) {
                                 if (val != null) setState(() => _birthTime = TimeOfDay(hour: _birthTime?.hour ?? 12, minute: int.parse(val)));
                               },
@@ -307,8 +309,8 @@ class _SanctuaryProfileEditorPageState extends State<SanctuaryProfileEditorPage>
                           const SizedBox(width: 8),
                           GestureDetector(
                             onTap: () => setState(() => _birthTimeUnknown = !_birthTimeUnknown),
-                            child: const Text('出生時刻が分からない',
-                              style: TextStyle(fontSize: 15, color: Color(0xFFACACAC))),
+                            child: Text(t.profileEdit.timeUnknown,
+                              style: const TextStyle(fontSize: 15, color: Color(0xFFACACAC))),
                           ),
                         ]),
                         // HTML: .time-noon-hint
@@ -320,9 +322,9 @@ class _SanctuaryProfileEditorPageState extends State<SanctuaryProfileEditorPage>
                               color: const Color(0x14F9D976),
                               borderRadius: BorderRadius.circular(8),
                             ),
-                            child: const Text(
-                              '鑑定には惑星配置とアスペクト情報を使用します。ハウス・ASC・MCの鑑定は省略されます。',
-                              style: TextStyle(color: Color(0xFFF9D976), fontSize: 15, height: 1.4),
+                            child: Text(
+                              t.profileEdit.timeUnknownNote,
+                              style: const TextStyle(color: Color(0xFFF9D976), fontSize: 15, height: 1.4),
                             ),
                           ),
                         ],
@@ -330,16 +332,16 @@ class _SanctuaryProfileEditorPageState extends State<SanctuaryProfileEditorPage>
                     )),
 
                     // 出生地
-                    _birthSection('出生地', Column(
+                    _birthSection(t.profileEdit.birthPlace, Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         // 入力粒度の案内 (市区町村でOK・番地不要)。
                         // Column 内の全幅 Text なので Row overflow は起きない。
-                        const Padding(
-                          padding: EdgeInsets.only(bottom: 8),
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 8),
                           child: Text(
-                            '市区町村レベルでOK・番地は不要です',
-                            style: TextStyle(
+                            t.profileEdit.cityLevelHint,
+                            style: const TextStyle(
                                 fontSize: 12, color: Color(0xFF9AA0A6), height: 1.4),
                           ),
                         ),
@@ -348,7 +350,7 @@ class _SanctuaryProfileEditorPageState extends State<SanctuaryProfileEditorPage>
                           Expanded(child: TextField(
                             controller: _placeCtrl,
                             style: const TextStyle(color: Color(0xFFEAEAEA), fontSize: 15),
-                            decoration: _inputDecoration('例: 岐阜県岐阜市'),
+                            decoration: _inputDecoration(t.profileEdit.placeHint),
                             onSubmitted: _searchPlace,
                           )),
                           const SizedBox(width: 8),
@@ -364,7 +366,7 @@ class _SanctuaryProfileEditorPageState extends State<SanctuaryProfileEditorPage>
                                   colors: [Color(0xFFF9D976), Color(0xFFE8A840)],
                                 ),
                               ),
-                              child: const Text('検索', style: TextStyle(
+                              child: Text(t.profileEdit.search, style: const TextStyle(
                                 color: Color(0xFF0A0A14), fontSize: 15, fontWeight: FontWeight.w600)),
                             ),
                           ),
@@ -418,9 +420,9 @@ class _SanctuaryProfileEditorPageState extends State<SanctuaryProfileEditorPage>
                         if (_birthLat != 0 && _birthLng != 0) ...[
                           const SizedBox(height: 8),
                           Row(children: [
-                            Expanded(child: _readonlyField('緯度', _birthLat.toStringAsFixed(4))),
+                            Expanded(child: _readonlyField(t.profileEdit.latitude, _birthLat.toStringAsFixed(4))),
                             const SizedBox(width: 8),
-                            Expanded(child: _readonlyField('経度', _birthLng.toStringAsFixed(4))),
+                            Expanded(child: _readonlyField(t.profileEdit.longitude, _birthLng.toStringAsFixed(4))),
                           ]),
                           // C案: 取得した IANA TZ名 を表示 (DST自動考慮)
                           const SizedBox(height: 6),
@@ -429,10 +431,10 @@ class _SanctuaryProfileEditorPageState extends State<SanctuaryProfileEditorPage>
                             const SizedBox(width: 6),
                             Expanded(child: Text(
                               _resolvingTz
-                                ? 'タイムゾーン判定中…'
+                                ? t.profileEdit.tzResolving
                                 : (_birthTzName != null
-                                    ? 'タイムゾーン: $_birthTzName (DST自動)'
-                                    : 'タイムゾーン: UTC+$_birthTz (固定)'),
+                                    ? t.profileEdit.tzAuto(tz: _birthTzName!)
+                                    : t.profileEdit.tzFixed(tz: _birthTz)),
                               style: const TextStyle(fontSize: 15, color: Color(0xFFACACAC)),
                               overflow: TextOverflow.ellipsis,
                             )),
@@ -444,18 +446,18 @@ class _SanctuaryProfileEditorPageState extends State<SanctuaryProfileEditorPage>
                     const SizedBox(height: 16),
 
                     // 言語切替
-                    _birthSection('言語 / Language', ValueListenableBuilder<Locale?>(
+                    _birthSection(t.profileEdit.language, ValueListenableBuilder<Locale?>(
                       valueListenable: AppLocale.instance.notifier,
                       builder: (_, currentLocale, _) {
                         final code = currentLocale?.languageCode;
                         return Row(children: [
-                          _langBtn('端末', 'システム設定', code == null, () =>
+                          _langBtn(t.profileEdit.langDevice, t.profileEdit.langDeviceSub, code == null, () =>
                             AppLocale.instance.setOverride(null)),
                           const SizedBox(width: 8),
                           _langBtn('日本語', 'Japanese', code == 'ja', () =>
                             AppLocale.instance.setOverride('ja')),
                           const SizedBox(width: 8),
-                          _langBtn('English', '英語', code == 'en', () =>
+                          _langBtn('English', t.profileEdit.langEnglishSub, code == 'en', () =>
                             AppLocale.instance.setOverride('en')),
                         ]);
                       },
@@ -477,8 +479,8 @@ class _SanctuaryProfileEditorPageState extends State<SanctuaryProfileEditorPage>
                             colors: [Color(0xFFF9D976), Color(0xFFE8A840)],
                           ),
                         ),
-                        child: const Center(
-                          child: Text('保存する', style: TextStyle(
+                        child: Center(
+                          child: Text(t.profileEdit.save, style: const TextStyle(
                             color: Color(0xFF0A0A14), fontSize: 15, fontWeight: FontWeight.w700, letterSpacing: 0.5)),
                         ),
                       ),

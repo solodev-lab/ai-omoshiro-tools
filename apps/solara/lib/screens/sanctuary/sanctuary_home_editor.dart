@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
+import '../../i18n/strings.g.dart';
 import '../../utils/solara_storage.dart';
 import '../../widgets/location_picker_minimap.dart';
 import '../../widgets/tap_to_unfocus.dart';
@@ -59,10 +60,10 @@ class _SanctuaryHomeEditorPageState extends State<SanctuaryHomeEditorPage> {
             : data[0]['display_name'] as String;
         setState(() { _lat = lat; _lng = lng; _searchResult = display; _searching = false; });
       } else {
-        setState(() { _searchResult = '見つかりませんでした'; _searching = false; });
+        setState(() { _searchResult = t.homeEdit.notFound; _searching = false; });
       }
     } catch (_) {
-      setState(() { _searchResult = '通信エラー'; _searching = false; });
+      setState(() { _searchResult = t.homeEdit.connError; _searching = false; });
     }
   }
 
@@ -109,10 +110,10 @@ class _SanctuaryHomeEditorPageState extends State<SanctuaryHomeEditorPage> {
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 // Header
                 Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                  const Row(mainAxisSize: MainAxisSize.min, children: [
-                    Icon(Icons.home_rounded, size: 18, color: Color(0xFFF9D976)),
-                    SizedBox(width: 8),
-                    Text('自宅（現住所）', style: TextStyle(
+                  Row(mainAxisSize: MainAxisSize.min, children: [
+                    const Icon(Icons.home_rounded, size: 18, color: Color(0xFFF9D976)),
+                    const SizedBox(width: 8),
+                    Text(t.sanctuary.home, style: const TextStyle(
                       fontSize: 16, fontWeight: FontWeight.w700, color: Color(0xFFF9D976), letterSpacing: 1)),
                   ]),
                   GestureDetector(
@@ -127,18 +128,18 @@ class _SanctuaryHomeEditorPageState extends State<SanctuaryHomeEditorPage> {
                 const SizedBox(height: 20),
 
                 // Search
-                const Text('住所・地名', style: TextStyle(fontSize: 15, color: Color(0xFFACACAC), letterSpacing: 0.5)),
+                Text(t.homeEdit.addressLabel, style: const TextStyle(fontSize: 15, color: Color(0xFFACACAC), letterSpacing: 0.5)),
                 const SizedBox(height: 6),
                 // 入力粒度の案内 (市区町村でOK・番地不要)。
                 // Column 内の全幅 Text なので Row overflow は起きない。
-                const Text(
-                  '市区町村レベルでOK・番地は不要です',
-                  style: TextStyle(
+                Text(
+                  t.profileEdit.cityLevelHint,
+                  style: const TextStyle(
                       fontSize: 12, color: Color(0xFF9AA0A6), height: 1.4),
                 ),
                 const SizedBox(height: 8),
                 Row(children: [
-                  Expanded(child: _input(_nameCtrl, '例: 東京都渋谷区')),
+                  Expanded(child: _input(_nameCtrl, t.homeEdit.placeHint)),
                   const SizedBox(width: 8),
                   GestureDetector(
                     onTap: _searching ? null : _search,
@@ -148,7 +149,7 @@ class _SanctuaryHomeEditorPageState extends State<SanctuaryHomeEditorPage> {
                         borderRadius: BorderRadius.circular(12),
                         gradient: const LinearGradient(colors: [Color(0xFFF9D976), Color(0xFFE8A840)]),
                       ),
-                      child: Text(_searching ? '...' : '検索',
+                      child: Text(_searching ? '...' : t.profileEdit.search,
                         style: const TextStyle(color: Color(0xFF0A0A14), fontSize: 15, fontWeight: FontWeight.w600)),
                     ),
                   ),
@@ -175,9 +176,9 @@ class _SanctuaryHomeEditorPageState extends State<SanctuaryHomeEditorPage> {
 
                 // Lat/Lng (ミニマップ操作で動的更新される)
                 Row(children: [
-                  Expanded(child: _readonlyField('緯度', _lat?.toStringAsFixed(4) ?? '')),
+                  Expanded(child: _readonlyField(t.profileEdit.latitude, _lat?.toStringAsFixed(4) ?? '')),
                   const SizedBox(width: 8),
-                  Expanded(child: _readonlyField('経度', _lng?.toStringAsFixed(4) ?? '')),
+                  Expanded(child: _readonlyField(t.profileEdit.longitude, _lng?.toStringAsFixed(4) ?? '')),
                 ]),
                 const SizedBox(height: 16),
 
@@ -191,8 +192,8 @@ class _SanctuaryHomeEditorPageState extends State<SanctuaryHomeEditorPage> {
                       borderRadius: BorderRadius.circular(14),
                       gradient: const LinearGradient(colors: [Color(0xFFF9D976), Color(0xFFE8A840)]),
                     ),
-                    child: const Center(child: Text('保存する',
-                      style: TextStyle(color: Color(0xFF0A0A14), fontSize: 15, fontWeight: FontWeight.w700))),
+                    child: Center(child: Text(t.profileEdit.save,
+                      style: const TextStyle(color: Color(0xFF0A0A14), fontSize: 15, fontWeight: FontWeight.w700))),
                   ),
                 ),
               ]),

@@ -39,6 +39,16 @@ class TranslationsEn extends Translations with BaseTranslations<AppLocale, Trans
 	TranslationsEn $copyWith({TranslationMetadata<AppLocale, Translations>? meta}) => TranslationsEn(meta: meta ?? this.$meta);
 
 	// Translations
+	@override late final _Translations$homeEdit$en homeEdit = _Translations$homeEdit$en._(_root);
+	@override late final _Translations$resetPicker$en resetPicker = _Translations$resetPicker$en._(_root);
+	@override late final _Translations$orbOverlay$en orbOverlay = _Translations$orbOverlay$en._(_root);
+	@override late final _Translations$legalMenu$en legalMenu = _Translations$legalMenu$en._(_root);
+	@override late final _Translations$account$en account = _Translations$account$en._(_root);
+	@override late final _Translations$shareCard$en shareCard = _Translations$shareCard$en._(_root);
+	@override late final _Translations$titleHow$en titleHow = _Translations$titleHow$en._(_root);
+	@override late final _Translations$titleHist$en titleHist = _Translations$titleHist$en._(_root);
+	@override late final _Translations$profileEdit$en profileEdit = _Translations$profileEdit$en._(_root);
+	@override late final _Translations$titleDiag$en titleDiag = _Translations$titleDiag$en._(_root);
 	@override late final _Translations$sanctuary$en sanctuary = _Translations$sanctuary$en._(_root);
 	@override late final _Translations$mapDaily$en mapDaily = _Translations$mapDaily$en._(_root);
 	@override late final _Translations$mapFortune$en mapFortune = _Translations$mapFortune$en._(_root);
@@ -59,6 +69,200 @@ class TranslationsEn extends Translations with BaseTranslations<AppLocale, Trans
 	@override late final _Translations$disclaimer$en disclaimer = _Translations$disclaimer$en._(_root);
 	@override late final _Translations$common$en common = _Translations$common$en._(_root);
 	@override late final _Translations$aiConsent$en aiConsent = _Translations$aiConsent$en._(_root);
+}
+
+// Path: homeEdit
+class _Translations$homeEdit$en extends Translations$homeEdit$ja {
+	_Translations$homeEdit$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get addressLabel => 'Address / place name';
+	@override String get placeHint => 'e.g. Shibuya, Tokyo';
+	@override String get notFound => 'No results found';
+	@override String get connError => 'Connection error';
+}
+
+// Path: resetPicker
+class _Translations$resetPicker$en extends Translations$resetPicker$ja {
+	_Translations$resetPicker$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get title => '✦ Start of day';
+	@override String get subtitle => 'Tarot\'s "once a day" and the moon rituals (new moon, full moon, catasterism) roll over to a new day when this time passes.\n(Star readings switch at midnight.)';
+	@override String get unitHour => 'h';
+	@override String get unitMinute => 'm';
+	@override String get cancel => 'Cancel';
+	@override String get confirm => 'Done';
+}
+
+// Path: orbOverlay
+class _Translations$orbOverlay$en extends Translations$orbOverlay$ja {
+	_Translations$orbOverlay$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get reset => 'Reset';
+	@override String get scopeNote => 'This setting applies to aspect and pattern detection on the Horoscope screen. It does not affect the Map\'s direction scores or Daily Transit.';
+}
+
+// Path: legalMenu
+class _Translations$legalMenu$en extends Translations$legalMenu$ja {
+	_Translations$legalMenu$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get heading => '✦ Legal';
+	@override String get eula => 'Terms of Service (EULA)';
+	@override String openFailed({required Object url}) => 'Couldn\'t open the link: ${url}';
+}
+
+// Path: account
+class _Translations$account$en extends Translations$account$ja {
+	_Translations$account$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get signInBenefit => 'Sign in to carry Pro across devices';
+	@override String get signInBenefitSub => 'Keep Cosmic Pro even when you change or add devices. Your records stay on this device even without signing in.';
+	@override String get signInApple => ' Sign in with Apple';
+	@override String get signInGoogle => 'Sign in with Google';
+	@override String signedInWith({required Object provider}) => 'Signed in with ${provider}';
+	@override String get signOut => 'Sign out';
+	@override String get deleting => 'Deleting…';
+	@override String get deleteAccount => 'Delete account from Solara';
+	@override String signInFailed({required Object e}) => 'Sign-in failed: ${e}';
+	@override String get signedOut => 'Signed out';
+	@override String get deleteTitle => 'Delete your account?';
+	@override String get deleteBody => 'This deletes your sign-in info and the subscription records on our server.\n\n· For Apple sign-in, you\'ll be asked to sign in with Apple again to confirm deletion (to fully revoke the link).\n· If you have a paid plan, please cancel it separately from the App Store / Google Play (deletion does not auto-cancel).\n· Your on-device records (consultation history, titles, Galaxy) stay on this device.\n· This action can\'t be undone.';
+	@override String get cancel => 'Cancel';
+	@override String get deleteConfirm => 'Delete';
+	@override String get deleted => 'Your account has been deleted.';
+	@override String deleteFailed({required Object e}) => 'Deletion failed: ${e}';
+}
+
+// Path: shareCard
+class _Translations$shareCard$en extends Translations$shareCard$ja {
+	_Translations$shareCard$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get appBar => 'Share your title';
+	@override String get noClassData => 'No class data';
+	@override String shareText({required Object title, required Object cls}) => 'My title is "${title}" — ${cls}\n#Solara';
+	@override String shareFailed({required Object e}) => 'Share failed: ${e}';
+}
+
+// Path: titleHow
+class _Translations$titleHow$en extends Translations$titleHow$ja {
+	_Translations$titleHow$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get title => '✦ How titles work';
+	@override String get s1Title => 'Birth date → Epithet';
+	@override String get s1Body => 'From the combination of your Sun sign × Moon sign, one of 144 "epithets" is set.\nThis one is uniquely yours — the diagnosis never changes it.';
+	@override String get s2Title => '28 questions → 5-axis score';
+	@override String get s2Body => 'As you answer the PART 1 (everyday) and PART 2 (destiny) questions by choosing cards on intuition, points are added to five axes (Power, Mind, Spirit, Shadow, Heart).\nYour highest-scoring axis becomes your "temperament".';
+	@override String get s3Title => 'PART 3 → Court (role)';
+	@override String get s3Body => 'Across the 4 court-card questions, whichever of page, knight, queen, king you pick two or more times becomes your court. If they\'re scattered, it becomes "mixed".';
+	@override String get s4Title => 'Axis × Court → 25 classes';
+	@override String get s4Body => '5 axes × 5 courts = 25 kinds of class (Knight, Sage, Astrologer, Ninja…), from which the one class that fits you is chosen.';
+	@override String get s5Title => 'Light side / Shadow side';
+	@override String get s5Body => 'Tap the result screen to flip between the front (Light) and back (Shadow).\nLight is your strengths; Shadow is a humor-tinged "oh, that\'s so me".';
+	@override String get s6Title => 'Tiebreak — astrological seed';
+	@override String get s6Body => 'When axes or courts tie, one is chosen from your Sun sign × Moon sign (144 combinations).\nThe real lead is the cards you chose — pick different cards and you get a different result.\nThe astrological seed only plays "the final tiebreaker for when the judge is stuck".';
+	@override String get footer => '* You can take the diagnosis again anytime. Temperament moves with the mood of the day — enjoy it as a mirror reflecting "the you of now".';
+}
+
+// Path: titleHist
+class _Translations$titleHist$en extends Translations$titleHist$ja {
+	_Translations$titleHist$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get clearTitle => 'Delete all history?';
+	@override String get clearBody => 'Your saved title (class) history will be erased. This can\'t be undone.\nYour current title stays in the Sanctuary.';
+	@override String get cancel => 'Cancel';
+	@override String get delete => 'Delete';
+	@override String get guideTitle => 'What "Title history" is';
+	@override String get guideIntro => 'Here, the changes in the "title (class)" you diagnosed in the Sanctuary are recorded, newest first.';
+	@override String get guideClassEpithetHead => '[Title (class) and epithet]';
+	@override String get guideClassEpithet => '· Epithet … the name drawn from your Sun sign × Moon sign that stays with you for life.\n· Title (class) … "the you of now", shaped by your answers. It changes through re-diagnosis as your inner life and circumstances shift.';
+	@override String get guideRediagnoseHead => '[About re-diagnosis]';
+	@override String get guideRediagnose => 'You can retake it from "Retake the diagnosis" in the Sanctuary.\n· Free … up to once\n· Cosmic Pro … as many times as you like (even daily)\nRetake it at moments of change, and your history stacks up here so you can trace the path of your growth.';
+	@override String get guideStanceHead => '[Solara\'s stance]';
+	@override String get guideStance => 'We never weaken a past title as "you used to be…". Every title stands equally, as the you of that moment.';
+	@override String get emptyTitle => 'No title history yet';
+	@override String get emptyBody => 'Each time you retake the diagnosis in the Sanctuary,\nyour past classes will remain here.';
+	@override String get noteHint => 'Leave a note for yourself about the situation or feelings when your title changed';
+}
+
+// Path: profileEdit
+class _Translations$profileEdit$en extends Translations$profileEdit$ja {
+	_Translations$profileEdit$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get title => '✦ Birth details';
+	@override String get nickname => 'Nickname';
+	@override String get nicknameHint => 'Enter a nickname';
+	@override String get birthDate => 'Date of birth';
+	@override String get birthDateRequired => 'Please enter your date of birth';
+	@override String get birthTime => 'Birth time';
+	@override String get hourHint => 'Hour';
+	@override String get minuteHint => 'Min';
+	@override String hourItem({required Object h}) => '${h}';
+	@override String minuteItem({required Object m}) => '${m}';
+	@override String get timeUnknown => 'I don\'t know my birth time';
+	@override String get timeUnknownNote => 'The reading uses planetary positions and aspects. House, ASC and MC readings are omitted.';
+	@override String get birthPlace => 'Birthplace';
+	@override String get cityLevelHint => 'City/town level is fine — no street address needed';
+	@override String get placeHint => 'e.g. Gifu, Japan';
+	@override String get placeRequired => 'Please enter your birthplace';
+	@override String get search => 'Search';
+	@override String get latitude => 'Latitude';
+	@override String get longitude => 'Longitude';
+	@override String get tzResolving => 'Resolving timezone…';
+	@override String tzAuto({required Object tz}) => 'Timezone: ${tz} (DST auto)';
+	@override String tzFixed({required Object tz}) => 'Timezone: UTC+${tz} (fixed)';
+	@override String get language => 'Language';
+	@override String get langDevice => 'Device';
+	@override String get langDeviceSub => 'System default';
+	@override String get langEnglishSub => 'English';
+	@override String get save => 'Save';
+}
+
+// Path: titleDiag
+class _Translations$titleDiag$en extends Translations$titleDiag$ja {
+	_Translations$titleDiag$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get ceremonyDash => '— The Title Ceremony —';
+	@override String get ceremony => 'The Title Ceremony';
+	@override String get introBody => 'The cards reflect who you are.\nAnswer the 28 questions with your intuition.';
+	@override String get begin => 'Begin';
+	@override String get later => 'Later';
+	@override String get forging1 => 'Reading your stars…';
+	@override String get forging2 => 'Weaving your destiny…';
+	@override String get forging3 => 'Engraving your title…';
+	@override String get goWithThis => 'Go with this';
+	@override String get compareWithPrevious => '✦ Compare with your previous class';
+	@override String get prevReturnTitle => '✦ Return to your previous class?';
+	@override String get adoptPrevious => '✦ Keep the previous class';
+	@override String get keepNew => 'Keep the new class';
 }
 
 // Path: sanctuary
@@ -1882,6 +2086,110 @@ class _Translations$paywall$faq$resubscribe$en extends Translations$paywall$faq$
 extension on TranslationsEn {
 	dynamic _flatMapFunction(String path) {
 		return switch (path) {
+			'homeEdit.addressLabel' => 'Address / place name',
+			'homeEdit.placeHint' => 'e.g. Shibuya, Tokyo',
+			'homeEdit.notFound' => 'No results found',
+			'homeEdit.connError' => 'Connection error',
+			'resetPicker.title' => '✦ Start of day',
+			'resetPicker.subtitle' => 'Tarot\'s "once a day" and the moon rituals (new moon, full moon, catasterism) roll over to a new day when this time passes.\n(Star readings switch at midnight.)',
+			'resetPicker.unitHour' => 'h',
+			'resetPicker.unitMinute' => 'm',
+			'resetPicker.cancel' => 'Cancel',
+			'resetPicker.confirm' => 'Done',
+			'orbOverlay.reset' => 'Reset',
+			'orbOverlay.scopeNote' => 'This setting applies to aspect and pattern detection on the Horoscope screen. It does not affect the Map\'s direction scores or Daily Transit.',
+			'legalMenu.heading' => '✦ Legal',
+			'legalMenu.eula' => 'Terms of Service (EULA)',
+			'legalMenu.openFailed' => ({required Object url}) => 'Couldn\'t open the link: ${url}',
+			'account.signInBenefit' => 'Sign in to carry Pro across devices',
+			'account.signInBenefitSub' => 'Keep Cosmic Pro even when you change or add devices. Your records stay on this device even without signing in.',
+			'account.signInApple' => ' Sign in with Apple',
+			'account.signInGoogle' => 'Sign in with Google',
+			'account.signedInWith' => ({required Object provider}) => 'Signed in with ${provider}',
+			'account.signOut' => 'Sign out',
+			'account.deleting' => 'Deleting…',
+			'account.deleteAccount' => 'Delete account from Solara',
+			'account.signInFailed' => ({required Object e}) => 'Sign-in failed: ${e}',
+			'account.signedOut' => 'Signed out',
+			'account.deleteTitle' => 'Delete your account?',
+			'account.deleteBody' => 'This deletes your sign-in info and the subscription records on our server.\n\n· For Apple sign-in, you\'ll be asked to sign in with Apple again to confirm deletion (to fully revoke the link).\n· If you have a paid plan, please cancel it separately from the App Store / Google Play (deletion does not auto-cancel).\n· Your on-device records (consultation history, titles, Galaxy) stay on this device.\n· This action can\'t be undone.',
+			'account.cancel' => 'Cancel',
+			'account.deleteConfirm' => 'Delete',
+			'account.deleted' => 'Your account has been deleted.',
+			'account.deleteFailed' => ({required Object e}) => 'Deletion failed: ${e}',
+			'shareCard.appBar' => 'Share your title',
+			'shareCard.noClassData' => 'No class data',
+			'shareCard.shareText' => ({required Object title, required Object cls}) => 'My title is "${title}" — ${cls}\n#Solara',
+			'shareCard.shareFailed' => ({required Object e}) => 'Share failed: ${e}',
+			'titleHow.title' => '✦ How titles work',
+			'titleHow.s1Title' => 'Birth date → Epithet',
+			'titleHow.s1Body' => 'From the combination of your Sun sign × Moon sign, one of 144 "epithets" is set.\nThis one is uniquely yours — the diagnosis never changes it.',
+			'titleHow.s2Title' => '28 questions → 5-axis score',
+			'titleHow.s2Body' => 'As you answer the PART 1 (everyday) and PART 2 (destiny) questions by choosing cards on intuition, points are added to five axes (Power, Mind, Spirit, Shadow, Heart).\nYour highest-scoring axis becomes your "temperament".',
+			'titleHow.s3Title' => 'PART 3 → Court (role)',
+			'titleHow.s3Body' => 'Across the 4 court-card questions, whichever of page, knight, queen, king you pick two or more times becomes your court. If they\'re scattered, it becomes "mixed".',
+			'titleHow.s4Title' => 'Axis × Court → 25 classes',
+			'titleHow.s4Body' => '5 axes × 5 courts = 25 kinds of class (Knight, Sage, Astrologer, Ninja…), from which the one class that fits you is chosen.',
+			'titleHow.s5Title' => 'Light side / Shadow side',
+			'titleHow.s5Body' => 'Tap the result screen to flip between the front (Light) and back (Shadow).\nLight is your strengths; Shadow is a humor-tinged "oh, that\'s so me".',
+			'titleHow.s6Title' => 'Tiebreak — astrological seed',
+			'titleHow.s6Body' => 'When axes or courts tie, one is chosen from your Sun sign × Moon sign (144 combinations).\nThe real lead is the cards you chose — pick different cards and you get a different result.\nThe astrological seed only plays "the final tiebreaker for when the judge is stuck".',
+			'titleHow.footer' => '* You can take the diagnosis again anytime. Temperament moves with the mood of the day — enjoy it as a mirror reflecting "the you of now".',
+			'titleHist.clearTitle' => 'Delete all history?',
+			'titleHist.clearBody' => 'Your saved title (class) history will be erased. This can\'t be undone.\nYour current title stays in the Sanctuary.',
+			'titleHist.cancel' => 'Cancel',
+			'titleHist.delete' => 'Delete',
+			'titleHist.guideTitle' => 'What "Title history" is',
+			'titleHist.guideIntro' => 'Here, the changes in the "title (class)" you diagnosed in the Sanctuary are recorded, newest first.',
+			'titleHist.guideClassEpithetHead' => '[Title (class) and epithet]',
+			'titleHist.guideClassEpithet' => '· Epithet … the name drawn from your Sun sign × Moon sign that stays with you for life.\n· Title (class) … "the you of now", shaped by your answers. It changes through re-diagnosis as your inner life and circumstances shift.',
+			'titleHist.guideRediagnoseHead' => '[About re-diagnosis]',
+			'titleHist.guideRediagnose' => 'You can retake it from "Retake the diagnosis" in the Sanctuary.\n· Free … up to once\n· Cosmic Pro … as many times as you like (even daily)\nRetake it at moments of change, and your history stacks up here so you can trace the path of your growth.',
+			'titleHist.guideStanceHead' => '[Solara\'s stance]',
+			'titleHist.guideStance' => 'We never weaken a past title as "you used to be…". Every title stands equally, as the you of that moment.',
+			'titleHist.emptyTitle' => 'No title history yet',
+			'titleHist.emptyBody' => 'Each time you retake the diagnosis in the Sanctuary,\nyour past classes will remain here.',
+			'titleHist.noteHint' => 'Leave a note for yourself about the situation or feelings when your title changed',
+			'profileEdit.title' => '✦ Birth details',
+			'profileEdit.nickname' => 'Nickname',
+			'profileEdit.nicknameHint' => 'Enter a nickname',
+			'profileEdit.birthDate' => 'Date of birth',
+			'profileEdit.birthDateRequired' => 'Please enter your date of birth',
+			'profileEdit.birthTime' => 'Birth time',
+			'profileEdit.hourHint' => 'Hour',
+			'profileEdit.minuteHint' => 'Min',
+			'profileEdit.hourItem' => ({required Object h}) => '${h}',
+			'profileEdit.minuteItem' => ({required Object m}) => '${m}',
+			'profileEdit.timeUnknown' => 'I don\'t know my birth time',
+			'profileEdit.timeUnknownNote' => 'The reading uses planetary positions and aspects. House, ASC and MC readings are omitted.',
+			'profileEdit.birthPlace' => 'Birthplace',
+			'profileEdit.cityLevelHint' => 'City/town level is fine — no street address needed',
+			'profileEdit.placeHint' => 'e.g. Gifu, Japan',
+			'profileEdit.placeRequired' => 'Please enter your birthplace',
+			'profileEdit.search' => 'Search',
+			'profileEdit.latitude' => 'Latitude',
+			'profileEdit.longitude' => 'Longitude',
+			'profileEdit.tzResolving' => 'Resolving timezone…',
+			'profileEdit.tzAuto' => ({required Object tz}) => 'Timezone: ${tz} (DST auto)',
+			'profileEdit.tzFixed' => ({required Object tz}) => 'Timezone: UTC+${tz} (fixed)',
+			'profileEdit.language' => 'Language',
+			'profileEdit.langDevice' => 'Device',
+			'profileEdit.langDeviceSub' => 'System default',
+			'profileEdit.langEnglishSub' => 'English',
+			'profileEdit.save' => 'Save',
+			'titleDiag.ceremonyDash' => '— The Title Ceremony —',
+			'titleDiag.ceremony' => 'The Title Ceremony',
+			'titleDiag.introBody' => 'The cards reflect who you are.\nAnswer the 28 questions with your intuition.',
+			'titleDiag.begin' => 'Begin',
+			'titleDiag.later' => 'Later',
+			'titleDiag.forging1' => 'Reading your stars…',
+			'titleDiag.forging2' => 'Weaving your destiny…',
+			'titleDiag.forging3' => 'Engraving your title…',
+			'titleDiag.goWithThis' => 'Go with this',
+			'titleDiag.compareWithPrevious' => '✦ Compare with your previous class',
+			'titleDiag.prevReturnTitle' => '✦ Return to your previous class?',
+			'titleDiag.adoptPrevious' => '✦ Keep the previous class',
+			'titleDiag.keepNew' => 'Keep the new class',
 			'sanctuary.creditPro' => ({required Object remaining, required Object limit, required Object pur}) => '✦ Pro ${remaining} / ${limit} ・ Purchased ${pur} (refills Monday)',
 			'sanctuary.creditProSyncing' => ({required Object pur}) => '✦ Pro balance syncing ・ Purchased ${pur}',
 			'sanctuary.creditFree' => ({required Object free, required Object pur}) => '✦ Credits ─ Free ${free} ・ Purchased ${pur}',
@@ -2290,6 +2598,8 @@ extension on TranslationsEn {
 			'consultInput.wishExamples.fallback.1' => 'Change the current',
 			'consultInput.picker.searchHint' => 'Search by address / place name',
 			'consultInput.picker.clearSearch' => 'Clear',
+			_ => null,
+		} ?? switch (path) {
 			'consultInput.picker.fromViewpoint' => '🔭 From your ViewPoints',
 			'consultInput.picker.fromLocations' => '📍 From your saved Locations',
 			'consultInput.picker.pickOnMap' => 'Pick on the map',
@@ -2394,8 +2704,6 @@ extension on TranslationsEn {
 			'mapVp.help.reorderBody' => 'Also in the ⋯ menu, use ↑ ↓ to reorder.\nSlots higher up appear earlier in the list.\n(Your home 🏠 is fixed at the top and can\'t be moved or deleted.)',
 			'mapMenu.tabPlanet' => 'Planets',
 			'mapMenu.map.dirEnergy' => 'Directional Energy',
-			_ => null,
-		} ?? switch (path) {
 			'mapMenu.map.compass' => 'Compass',
 			'mapMenu.map.coords' => 'Coordinates',
 			'mapMenu.planet.type' => 'Type',

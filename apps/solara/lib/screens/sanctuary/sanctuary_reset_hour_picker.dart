@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../i18n/strings.g.dart';
+
 /// 時:分 ピッカー (時 + 分の 2 ドロップダウン、1 分単位)。
 ///
 /// 出生時刻入力フォーム (sanctuary_profile_editor) と同じ操作感を提供する。
@@ -13,21 +15,20 @@ class SanctuaryResetHourPicker extends StatefulWidget {
   final int initialHour;
   final int initialMinute;
 
-  /// 上部タイトル文言。デフォルトは Sanctuary 用途。
-  final String title;
+  /// 上部タイトル文言。null なら build 側で t.resetPicker.title を使う。
+  final String? title;
 
   /// 下のサブテキスト。null なら非表示。
-  /// デフォルトは Sanctuary 用途の説明文 (後方互換)。
+  /// Sanctuary 用途の説明文を出すには呼び出し側で t.resetPicker.subtitle を渡す
+  /// (slang の文言は const default にできないため、デフォルト値ではなく呼び出し側で注入する)。
   final String? subtitle;
 
   const SanctuaryResetHourPicker({
     super.key,
     required this.initialHour,
     this.initialMinute = 0,
-    this.title = '✦ 1日の開始時刻',
-    this.subtitle = 'タロットの「1日1回」と、月の儀式（新月・満月・刻星化）の案内は、\n'
-        'この時刻を跨ぐと新しい1日になります。\n'
-        '（星読みは0時で切り替わります）',
+    this.title,
+    this.subtitle,
   });
 
   @override
@@ -58,7 +59,7 @@ class _SanctuaryResetHourPickerState extends State<SanctuaryResetHourPicker> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
-              widget.title,
+              widget.title ?? t.resetPicker.title,
               textAlign: TextAlign.center,
               style: const TextStyle(
                 color: Color(0xFFF9D976),
@@ -84,14 +85,14 @@ class _SanctuaryResetHourPickerState extends State<SanctuaryResetHourPicker> {
                 _dropdown(
                   value: _hour,
                   options: _hourOptions,
-                  unit: '時',
+                  unit: t.resetPicker.unitHour,
                   onChanged: (v) => setState(() => _hour = v),
                 ),
                 const SizedBox(width: 18),
                 _dropdown(
                   value: _minute,
                   options: _minuteOptions,
-                  unit: '分',
+                  unit: t.resetPicker.unitMinute,
                   onChanged: (v) => setState(() => _minute = v),
                 ),
               ],
@@ -117,7 +118,7 @@ class _SanctuaryResetHourPickerState extends State<SanctuaryResetHourPicker> {
                       foregroundColor: const Color(0xFFACACAC),
                       padding: const EdgeInsets.symmetric(vertical: 12),
                     ),
-                    child: const Text('キャンセル'),
+                    child: Text(t.resetPicker.cancel),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -136,9 +137,9 @@ class _SanctuaryResetHourPickerState extends State<SanctuaryResetHourPicker> {
                       ),
                       elevation: 0,
                     ),
-                    child: const Text(
-                      '決定',
-                      style: TextStyle(
+                    child: Text(
+                      t.resetPicker.confirm,
+                      style: const TextStyle(
                         letterSpacing: 2,
                         fontWeight: FontWeight.w600,
                       ),

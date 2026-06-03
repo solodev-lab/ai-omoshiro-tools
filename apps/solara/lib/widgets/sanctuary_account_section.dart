@@ -13,6 +13,7 @@ import 'package:flutter/foundation.dart'
     show defaultTargetPlatform, kIsWeb, TargetPlatform;
 import 'package:flutter/material.dart';
 
+import '../i18n/strings.g.dart';
 import '../utils/solara_auth.dart';
 
 class SanctuaryAccountSection extends StatefulWidget {
@@ -69,18 +70,18 @@ class _SanctuaryAccountSectionState extends State<SanctuaryAccountSection> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Text(
-            'サインインで Pro が端末間に追従',
-            style: TextStyle(
+          Text(
+            t.account.signInBenefit,
+            style: const TextStyle(
               color: Color(0xFFEAEAEA),
               fontSize: 14,
               fontWeight: FontWeight.w600,
             ),
           ),
           const SizedBox(height: 4),
-          const Text(
-            '機種変更や端末追加でも Cosmic Pro を引き継げます。記録庫はサインインなしでも端末内に残ります。',
-            style: TextStyle(
+          Text(
+            t.account.signInBenefitSub,
+            style: const TextStyle(
               color: Color(0xFFACACAC),
               fontSize: 11,
               height: 1.6,
@@ -91,7 +92,7 @@ class _SanctuaryAccountSectionState extends State<SanctuaryAccountSection> {
           // 公開後に iOS Google を設定したら戻す)。Android/その他は Google のみ。
           if (isApplePlatform)
             _signInButton(
-              label: ' Apple でサインイン',
+              label: t.account.signInApple,
               icon: Icons.apple,
               // Google と同じ「透明背景 + 枠線 + 白文字」スタイル。
               // filled:true (白背景+黒文字) は文字が見えにくいとの指摘で変更。
@@ -100,7 +101,7 @@ class _SanctuaryAccountSectionState extends State<SanctuaryAccountSection> {
             )
           else
             _signInButton(
-              label: 'Google でサインイン',
+              label: t.account.signInGoogle,
               icon: Icons.account_circle_outlined,
               filled: false,
               onTap: () => _signIn(SolaraAuthProvider.google),
@@ -146,7 +147,7 @@ class _SanctuaryAccountSectionState extends State<SanctuaryAccountSection> {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      '$providerLabel でサインイン中',
+                      t.account.signedInWith(provider: providerLabel),
                       style: const TextStyle(
                         color: Color(0xFFACACAC),
                         fontSize: 11,
@@ -161,7 +162,7 @@ class _SanctuaryAccountSectionState extends State<SanctuaryAccountSection> {
           TextButton.icon(
             onPressed: _deleting ? null : _signOut,
             icon: const Icon(Icons.logout, size: 16),
-            label: const Text('サインアウト'),
+            label: Text(t.account.signOut),
             style: TextButton.styleFrom(
               foregroundColor: const Color(0xFFACACAC),
               alignment: Alignment.centerLeft,
@@ -196,7 +197,7 @@ class _SanctuaryAccountSectionState extends State<SanctuaryAccountSection> {
                     fit: BoxFit.scaleDown,
                     alignment: Alignment.centerLeft,
                     child: Text(
-                      _deleting ? '削除しています…' : 'Solaraからアカウントを削除',
+                      _deleting ? t.account.deleting : t.account.deleteAccount,
                       maxLines: 1,
                       softWrap: false,
                     ),
@@ -266,7 +267,7 @@ class _SanctuaryAccountSectionState extends State<SanctuaryAccountSection> {
       messenger.showSnackBar(SnackBar(content: Text(e.message)));
     } catch (e) {
       if (!mounted) return;
-      messenger.showSnackBar(SnackBar(content: Text('サインインに失敗しました: $e')));
+      messenger.showSnackBar(SnackBar(content: Text(t.account.signInFailed(e: e))));
     }
   }
 
@@ -274,7 +275,7 @@ class _SanctuaryAccountSectionState extends State<SanctuaryAccountSection> {
     await SolaraAuth.instance.signOut();
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('サインアウトしました')),
+      SnackBar(content: Text(t.account.signedOut)),
     );
   }
 
@@ -293,21 +294,17 @@ class _SanctuaryAccountSectionState extends State<SanctuaryAccountSection> {
           borderRadius: BorderRadius.circular(16),
           side: const BorderSide(color: Color(0x33E57373)),
         ),
-        title: const Text(
-          'アカウントを削除しますか？',
-          style: TextStyle(
+        title: Text(
+          t.account.deleteTitle,
+          style: const TextStyle(
             color: Color(0xFFEAEAEA),
             fontSize: 16,
             fontWeight: FontWeight.w700,
           ),
         ),
-        content: const Text(
-          'サインイン情報と、サーバー上の購読記録を削除します。\n\n'
-          '・Apple サインインの場合、削除確認のため Apple サインインを再度求められます（連携を完全に解除するため）。\n'
-          '・有料プランをご契約中の場合、解約は別途 App Store / Google Play から行ってください（削除では自動解約されません）。\n'
-          '・端末内の記録庫（相談履歴・称号・Galaxy）は、この端末に残ります。\n'
-          '・この操作は取り消せません。',
-          style: TextStyle(
+        content: Text(
+          t.account.deleteBody,
+          style: const TextStyle(
             color: Color(0xFFBFBFBF),
             fontSize: 12.5,
             height: 1.7,
@@ -320,14 +317,14 @@ class _SanctuaryAccountSectionState extends State<SanctuaryAccountSection> {
             style: TextButton.styleFrom(
               foregroundColor: const Color(0xFFACACAC),
             ),
-            child: const Text('キャンセル'),
+            child: Text(t.account.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(true),
             style: TextButton.styleFrom(
               foregroundColor: const Color(0xFFE57373),
             ),
-            child: const Text('削除する'),
+            child: Text(t.account.deleteConfirm),
           ),
         ],
       ),
@@ -343,12 +340,12 @@ class _SanctuaryAccountSectionState extends State<SanctuaryAccountSection> {
       await SolaraAuth.instance.deleteAccount();
       if (!mounted) return;
       messenger.showSnackBar(
-        const SnackBar(content: Text('アカウントを削除しました')),
+        SnackBar(content: Text(t.account.deleted)),
       );
     } catch (e) {
       if (!mounted) return;
       messenger.showSnackBar(
-        SnackBar(content: Text('削除に失敗しました: $e')),
+        SnackBar(content: Text(t.account.deleteFailed(e: e))),
       );
     } finally {
       if (mounted) setState(() => _deleting = false);

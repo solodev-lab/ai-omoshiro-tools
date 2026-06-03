@@ -6,6 +6,7 @@ import 'package:flutter/rendering.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../../i18n/strings.g.dart';
 import '../../utils/consult_restore.dart';
 import '../../utils/title_data.dart' as title_data;
 import '../../widgets/class_card.dart';
@@ -138,12 +139,13 @@ class _ClassShareCardPageState extends State<ClassShareCardPage> {
           _showShadow ? widget.titleShadowJP : widget.titleLightJP;
       await SharePlus.instance.share(ShareParams(
         files: [XFile(file.path)],
-        text: '私の称号は「$titleForShare」— ${_cls?.nameJP ?? ""}\n#Solara',
+        text: t.shareCard.shareText(
+            title: titleForShare, cls: _cls?.nameJP ?? ''),
       ));
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('シェア失敗: $e')),
+          SnackBar(content: Text(t.shareCard.shareFailed(e: e))),
         );
       }
     } finally {
@@ -161,15 +163,15 @@ class _ClassShareCardPageState extends State<ClassShareCardPage> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         iconTheme: const IconThemeData(color: Color(0xFFEAEAEA)),
-        title: const Text('称号を共有', style: TextStyle(color: Color(0xFFEAEAEA))),
+        title: Text(t.shareCard.appBar, style: const TextStyle(color: Color(0xFFEAEAEA))),
         // Shadow 面トグルは「気付いた人だけ」の隠し要素にするため撤去。
         // 切替はプレビューカードのタップのみ (下記 GestureDetector、案内は出さない)。
       ),
       body: SafeArea(
         child: cls == null
-            ? const Center(
-                child: Text('クラスデータがありません',
-                    style: TextStyle(color: Color(0xFFACACAC))))
+            ? Center(
+                child: Text(t.shareCard.noClassData,
+                    style: const TextStyle(color: Color(0xFFACACAC))))
             : Column(
                 children: [
                   // ── プレビュー (実シェア画像と同じ構造) ──
@@ -229,9 +231,9 @@ class _ClassShareCardPageState extends State<ClassShareCardPage> {
                                       strokeWidth: 2,
                                       color: Color(0xFF0A0A14)),
                                 )
-                              : const Text(
-                                  '✦ 称号カードを共有する',
-                                  style: TextStyle(
+                              : Text(
+                                  t.sanctuary.shareTitleCard,
+                                  style: const TextStyle(
                                     color: Color(0xFF0A0A14),
                                     fontSize: 15,
                                     fontWeight: FontWeight.w700,

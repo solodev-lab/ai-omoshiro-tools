@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../i18n/strings.g.dart';
+
 // ══════════════════════════════════════════════════
 // ── Orb Overlay (Bottom Sheet) ──
 // HTML: birth-overlay > birth-card for Aspect Orbs
@@ -83,14 +85,14 @@ class _SanctuaryOrbOverlayState extends State<SanctuaryOrbOverlay> {
             Row(
               children: [
                 Expanded(
-                  child: Row(mainAxisSize: MainAxisSize.min, children: const [
-                    Icon(Icons.tune, size: 18, color: Color(0xFFF9D976)),
-                    SizedBox(width: 8),
+                  child: Row(mainAxisSize: MainAxisSize.min, children: [
+                    const Icon(Icons.tune, size: 18, color: Color(0xFFF9D976)),
+                    const SizedBox(width: 8),
                     Flexible(
-                      child: Text('ホロスコープのオーブ',
+                      child: Text(t.sanctuary.orbSetting,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Color(0xFFF9D976), letterSpacing: 1)),
+                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Color(0xFFF9D976), letterSpacing: 1)),
                     ),
                   ]),
                 ),
@@ -102,10 +104,10 @@ class _SanctuaryOrbOverlayState extends State<SanctuaryOrbOverlay> {
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(color: const Color(0x40F9D976)),
                     ),
-                    child: const Text('リセット',
+                    child: Text(t.orbOverlay.reset,
                       maxLines: 1,
                       softWrap: false,
-                      style: TextStyle(fontSize: 15, color: Color(0xFFF9D976))),
+                      style: const TextStyle(fontSize: 15, color: Color(0xFFF9D976))),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -124,9 +126,9 @@ class _SanctuaryOrbOverlayState extends State<SanctuaryOrbOverlay> {
             ),
             const SizedBox(height: 8),
             // この設定が効く範囲を明示 (Map / Daily Transit には影響しない)。
-            const Text(
-              'この設定はホロスコープ画面のアスペクト・パターン検出に反映されます。Map の方位スコアや Daily Transit には影響しません。',
-              style: TextStyle(fontSize: 12, color: Color(0xCCACACAC), height: 1.5),
+            Text(
+              t.orbOverlay.scopeNote,
+              style: const TextStyle(fontSize: 12, color: Color(0xCCACACAC), height: 1.5),
             ),
             const SizedBox(height: 20),
 
@@ -164,8 +166,8 @@ class _SanctuaryOrbOverlayState extends State<SanctuaryOrbOverlay> {
                     colors: [Color(0xFFF9D976), Color(0xFFE8A840)],
                   ),
                 ),
-                child: const Center(
-                  child: Text('保存する', style: TextStyle(
+                child: Center(
+                  child: Text(t.profileEdit.save, style: const TextStyle(
                     color: Color(0xFF0A0A14), fontSize: 15, fontWeight: FontWeight.w700)),
                 ),
               ),

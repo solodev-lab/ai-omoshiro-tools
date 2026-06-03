@@ -1447,6 +1447,8 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
       builder: (ctx) => SanctuaryResetHourPicker(
         initialHour: _dailyResetHour,
         initialMinute: _dailyResetMinute,
+        title: t.resetPicker.title,
+        subtitle: t.resetPicker.subtitle,
       ),
     );
     if (picked == null) return;
