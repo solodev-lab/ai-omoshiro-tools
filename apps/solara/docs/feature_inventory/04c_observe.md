@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 12 / 総行数: 3613
+- ファイル数: 12 / 総行数: 3627
 - class/mixin/extension/enum: 25
 - 関数 (top-level + method の素拾い): 81
 - Navigator.push 等: 0
@@ -14,7 +14,7 @@
 
 ## ファイル別
 
-### `lib/screens/observe/observe_card_widgets.dart` (198 行)
+### `lib/screens/observe/observe_card_widgets.dart` (204 行)
 
 **imports:** dart=1 / package=1 / relative=2
 
@@ -67,7 +67,7 @@ Shared constants for Observe (Tarot) screen
 ```
 
 
-### `lib/screens/observe/observe_history.dart` (415 行)
+### `lib/screens/observe/observe_history.dart` (422 行)
 
 **imports:** dart=0 / package=1 / relative=11
 
@@ -92,12 +92,12 @@ Shared constants for Observe (Tarot) screen
   - L180 `_buildCurrentTabContent()`
   - L241 `_buildPastTabContent()`
   - L261 `_buildHistoryCard()`
-  - L339 `_buildHistoryDetail()`
+  - L346 `_buildHistoryDetail()`
 
   </details>
 
 
-### `lib/screens/observe/observe_history_filter.dart` (388 行)
+### `lib/screens/observe/observe_history_filter.dart` (389 行)
 
 **ファイル先頭コメント:**
 
@@ -125,8 +125,8 @@ Natal Tarot 履歴フィルタ — C3 (Pro 機能、柱 3)
 - L98 `class ObserveHistoryFilterBar : StatefulWidget`
   - Natal Tarot 履歴フィルタバー。
 - L115 `class _ObserveHistoryFilterBarState : State`
-- L296 `class _ChipBtn : StatelessWidget`
-- L341 `class _ElementChipBtn : StatelessWidget`
+- L297 `class _ChipBtn : StatelessWidget`
+- L342 `class _ElementChipBtn : StatelessWidget`
 
 **関数 (9 public + 5 private):**
 
@@ -137,8 +137,8 @@ Natal Tarot 履歴フィルタ — C3 (Pro 機能、柱 3)
 - L125 `didUpdateWidget()`
 - L134 `dispose()`
 - L171 `build()`
-- L309 `build()`
-- L354 `build()`
+- L310 `build()`
+- L355 `build()`
 
   <details><summary>private 関数 5 件</summary>
 

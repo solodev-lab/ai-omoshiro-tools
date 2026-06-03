@@ -286,6 +286,8 @@ class _SanctuaryAccountSectionState extends State<SanctuaryAccountSection> {
       context: context,
       barrierColor: const Color(0x99000000),
       builder: (ctx) => AlertDialog(
+        // 長文 content が小画面×1.5x で縦 overflow しないよう scrollable 化。
+        scrollable: true,
         backgroundColor: const Color(0xE60A0A14),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),

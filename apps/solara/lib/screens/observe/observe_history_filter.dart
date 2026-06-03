@@ -244,7 +244,8 @@ class _ObserveHistoryFilterBarState extends State<ObserveHistoryFilterBar> {
         const SizedBox(height: 8),
         // フィルタチップ列
         SizedBox(
-          height: 28,
+          // 1.5x フォントでチップが縦に伸びても縦 overflow しないよう高さに余裕を持たせる。
+          height: 36,
           child: ListView(
             scrollDirection: Axis.horizontal,
             children: [

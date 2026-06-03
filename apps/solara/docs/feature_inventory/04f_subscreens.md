@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 32 / 総行数: 11158
+- ファイル数: 32 / 総行数: 11177
 - class/mixin/extension/enum: 100
 - 関数 (top-level + method の素拾い): 281
 - Navigator.push 等: 0
@@ -44,7 +44,7 @@
   </details>
 
 
-### `lib/screens/consultation/consultation_credit_sheet.dart` (348 行)
+### `lib/screens/consultation/consultation_credit_sheet.dart` (351 行)
 
 **ファイル先頭コメント:**
 
@@ -87,8 +87,8 @@ Stella 相談 追加クレジット購入シート (消費型 IAP、設計 B 案
   - L140 `_buy()`
   - L180 `_pollUntilGranted()`
   - L193 `_openPaywall()`
-  - L275 `_buildContent()`
-  - L299 `_packageTile()`
+  - L278 `_buildContent()`
+  - L302 `_packageTile()`
 
   </details>
 
@@ -798,7 +798,7 @@ Consultation Result — 状態/バナー/ページャ ウィジェット (V2)
   </details>
 
 
-### `lib/screens/consultation/consultation_start_popup.dart` (292 行)
+### `lib/screens/consultation/consultation_start_popup.dart` (300 行)
 
 **ファイル先頭コメント:**
 
@@ -923,7 +923,7 @@ showInfoPopup 経由で表示する (widgets/info_popup.dart、popup 統一規�
 - 集計: `showInfoPopup`×1
 
 
-### `lib/screens/forecast_screen.dart` (1084 行)
+### `lib/screens/forecast_screen.dart` (1092 行)
 
 **imports:** dart=0 / package=1 / relative=10
 
@@ -934,7 +934,7 @@ showInfoPopup 経由で表示する (widgets/info_popup.dart、popup 統一規�
 - L16 `class ForecastScreen : StatefulWidget`
   - Forecast 画面 — 1年予測（ヒートマップ + 選択日詳細 + 強運Top5）
 - L34 `class _ForecastScreenState : State`
-- L1055 `class _DayStepperButton : StatelessWidget`
+- L1063 `class _DayStepperButton : StatelessWidget`
   - 選択日詳細パネルの △ ボタン (左右で 1 日前後に動かす)。
 
 **関数 (4 public + 30 private):**
@@ -942,7 +942,7 @@ showInfoPopup 経由で表示する (widgets/info_popup.dart、popup 統一規�
 - L31 `createState()`
 - L66 `initState()`
 - L164 `build()`
-- L1066 `build()`
+- L1074 `build()`
 
   <details><summary>private 関数 30 件</summary>
 
@@ -956,26 +956,26 @@ showInfoPopup 経由で表示する (widgets/info_popup.dart、popup 統一規�
   - L270 `_buildBasisCard()`
   - L325 `_fmt()`
   - L328 `_buildBestChip()`
-  - L362 `_yearSeg()`
-  - L386 `_buildHeatmap()`
-  - L451 `_buildColorModeToggle()`
-  - L492 `_rankSeg()`
-  - L522 `_segment()`
-  - L543 `_buildLegend()`
-  - L570 `_catColorChips()`
-  - L584 `_monthRow()`
-  - L613 `_dayCell()`
-  - L644 `_cellColor()`
-  - L661 `_gradientColor()`
-  - L672 `_categoryColor()`
-  - L688 `_canShiftSelectedDay()`
-  - L699 `_shiftSelectedDay()`
-  - L706 `_buildSelectedDayDetail()`
-  - L769 `_metric()`
-  - L777 `_catBar()`
-  - L814 `_buildFetchInfo()`
-  - L828 `_showForecastUsageGuide()`
-  - L954 `_showHeatmapInfo()`
+  - L368 `_yearSeg()`
+  - L392 `_buildHeatmap()`
+  - L457 `_buildColorModeToggle()`
+  - L498 `_rankSeg()`
+  - L528 `_segment()`
+  - L549 `_buildLegend()`
+  - L576 `_catColorChips()`
+  - L590 `_monthRow()`
+  - L619 `_dayCell()`
+  - L650 `_cellColor()`
+  - L667 `_gradientColor()`
+  - L678 `_categoryColor()`
+  - L694 `_canShiftSelectedDay()`
+  - L705 `_shiftSelectedDay()`
+  - L712 `_buildSelectedDayDetail()`
+  - L777 `_metric()`
+  - L785 `_catBar()`
+  - L822 `_buildFetchInfo()`
+  - L836 `_showForecastUsageGuide()`
+  - L962 `_showHeatmapInfo()`
 
   </details>
 

@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 10 / 総行数: 5643
+- ファイル数: 10 / 総行数: 5674
 - class/mixin/extension/enum: 28
 - 関数 (top-level + method の素拾い): 124
 - Navigator.push 等: 0
@@ -42,7 +42,7 @@
   </details>
 
 
-### `lib/screens/sanctuary/sanctuary_home_editor.dart` (232 行)
+### `lib/screens/sanctuary/sanctuary_home_editor.dart` (240 行)
 
 **imports:** dart=1 / package=2 / relative=3
 
@@ -64,8 +64,8 @@
 
   - L44 `_search()`
   - L69 `_save()`
-  - L199 `_input()`
-  - L214 `_readonlyField()`
+  - L207 `_input()`
+  - L222 `_readonlyField()`
 
   </details>
 
@@ -118,7 +118,7 @@ Solara Sanctuary 法務リンクメニュー (Phase 2 launch_checklist)
 - 集計: `showInfoPopup`×1
 
 
-### `lib/screens/sanctuary/sanctuary_orb_overlay.dart` (272 行)
+### `lib/screens/sanctuary/sanctuary_orb_overlay.dart` (277 行)
 
 **imports:** dart=0 / package=1 / relative=0
 
@@ -126,25 +126,25 @@ Solara Sanctuary 法務リンクメニュー (Phase 2 launch_checklist)
 
 - L8 `class SanctuaryOrbOverlay : StatefulWidget`
 - L16 `class _SanctuaryOrbOverlayState : State`
-- L266 `class _OrbSectionLabel : StatelessWidget`
+- L271 `class _OrbSectionLabel : StatelessWidget`
 
 **関数 (4 public + 3 private):**
 
 - L13 `createState()`
 - L43 `initState()`
 - L63 `build()`
-- L270 `build()`
+- L275 `build()`
 
   <details><summary>private 関数 3 件</summary>
 
   - L48 `_reset()`
   - L180 `_orbRow()`
-  - L253 `_orbPmBtn()`
+  - L258 `_orbPmBtn()`
 
   </details>
 
 
-### `lib/screens/sanctuary/sanctuary_profile_editor.dart` (592 行)
+### `lib/screens/sanctuary/sanctuary_profile_editor.dart` (610 行)
 
 **imports:** dart=1 / package=3 / relative=5
 
@@ -154,7 +154,7 @@ Solara Sanctuary 法務リンクメニュー (Phase 2 launch_checklist)
 
 - L17 `class SanctuaryProfileEditorPage : StatefulWidget`
 - L25 `class _SanctuaryProfileEditorPageState : State`
-- L566 `class DateSlashFormatter : TextInputFormatter`
+- L584 `class DateSlashFormatter : TextInputFormatter`
   - Auto-inserts `/` after YYYY and MM for date input (YYYY/MM/DD format).
 
 **関数 (5 public + 8 private):**
@@ -163,7 +163,7 @@ Solara Sanctuary 法務リンクメニュー (Phase 2 launch_checklist)
 - L43 `initState()`
 - L68 `dispose()`
 - L172 `build()`
-- L568 `formatEditUpdate()`
+- L586 `formatEditUpdate()`
 
   <details><summary>private 関数 8 件</summary>
 
@@ -171,10 +171,10 @@ Solara Sanctuary 法務リンクメニュー (Phase 2 launch_checklist)
   - L107 `_selectPlace()`
   - L121 `_resolveTimezone()`
   - L134 `_save()`
-  - L488 `_langBtn()`
-  - L523 `_birthSection()`
-  - L541 `_inputDecoration()`
-  - L552 `_readonlyField()`
+  - L498 `_langBtn()`
+  - L541 `_birthSection()`
+  - L559 `_inputDecoration()`
+  - L570 `_readonlyField()`
 
   </details>
 

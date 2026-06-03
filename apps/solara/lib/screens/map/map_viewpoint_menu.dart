@@ -565,7 +565,9 @@ class _MapViewpointMenuState extends State<MapViewpointMenu> {
             style: TextStyle(fontSize: 14, color: Color(0xFFC9A84C))),
         contentPadding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
         content: SizedBox(
-          width: 352,
+          // 固定 352 は狭端末 (320dp) で dialog 幅を超えて横 overflow するため、
+          // 端末幅連動 (最大 352) にする。Wrap はこの幅内で自動折返しする。
+          width: (MediaQuery.of(ctx).size.width - 64).clamp(240.0, 352.0),
           child: Wrap(
             spacing: 8,
             runSpacing: 8,

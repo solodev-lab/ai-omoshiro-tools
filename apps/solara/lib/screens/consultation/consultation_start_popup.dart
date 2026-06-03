@@ -130,12 +130,17 @@ class _StartConsultPopupState extends State<_StartConsultPopup> {
                   const Icon(Icons.auto_awesome,
                       color: SolaraColors.solaraGoldLight, size: 16),
                   const SizedBox(width: 8),
-                  Text(
-                    primaryLabel,
-                    style: const TextStyle(
-                      color: SolaraColors.textPrimary,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
+                  // 大フォント設定 (最大1.5x) + 狭い端末でもはみ出さないよう
+                  // ラベル側も Flexible 化 (折り返し可)。残数は textAlign.end のままなので
+                  // 右寄せの見た目は不変。
+                  Flexible(
+                    child: Text(
+                      primaryLabel,
+                      style: const TextStyle(
+                        color: SolaraColors.textPrimary,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -174,12 +179,15 @@ class _StartConsultPopupState extends State<_StartConsultPopup> {
                   const Icon(Icons.add_circle_outline,
                       color: SolaraColors.solaraGoldLight, size: 16),
                   const SizedBox(width: 8),
-                  const Text(
-                    '有料クレジット',
-                    style: TextStyle(
-                      color: SolaraColors.textPrimary,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
+                  // 主クレジット行と同じく大フォント+狭端末でもはみ出さないよう Flexible 化。
+                  const Flexible(
+                    child: Text(
+                      '有料クレジット',
+                      style: TextStyle(
+                        color: SolaraColors.textPrimary,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                   const SizedBox(width: 8),

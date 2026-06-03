@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 27 / 総行数: 7011
+- ファイル数: 27 / 総行数: 7021
 - class/mixin/extension/enum: 78
 - 関数 (top-level + method の素拾い): 181
 - Navigator.push 等: 0
@@ -185,7 +185,7 @@ Daily 未開封チップは `unsealed.webp` を別アセット名で使う (kind
 - 集計: `showInfoPopup`×1
 
 
-### `lib/widgets/class_card.dart` (306 行)
+### `lib/widgets/class_card.dart` (311 行)
 
 **imports:** dart=0 / package=1 / relative=1
 
@@ -195,7 +195,7 @@ Daily 未開封チップは `unsealed.webp` を別アセット名で使う (kind
 
 - L13 `class ClassCard : StatelessWidget`
   - Solara クラスカード表示ウィジェット
-- L297 `enum ClassCardMode`
+- L302 `enum ClassCardMode`
   - ClassCard のオーバーレイ表示モード
 
 **関数 (1 public + 2 private):**
@@ -205,7 +205,7 @@ Daily 未開封チップは `unsealed.webp` を別アセット名で使う (kind
   <details><summary>private 関数 2 件</summary>
 
   - L145 `_buildOverlay()`
-  - L262 `_buildPlaceholder()`
+  - L267 `_buildPlaceholder()`
 
   </details>
 
@@ -684,7 +684,7 @@ Re-export split overlay files for backward compatibility
 - L20 `build()`
 
 
-### `lib/widgets/pro_unlock_dialog.dart` (231 行)
+### `lib/widgets/pro_unlock_dialog.dart` (234 行)
 
 **ファイル先頭コメント:**
 
@@ -718,13 +718,13 @@ Pro 案内ダイアログ — Phase 2-6a / Phase 2-6b + Phase 2 RASP 連携
 
   <details><summary>private 関数 2 件</summary>
 
-  - L75 `_buildProUpsellContent()`
-  - L176 `_buildCompromisedContent()`
+  - L78 `_buildProUpsellContent()`
+  - L179 `_buildCompromisedContent()`
 
   </details>
 
 
-### `lib/widgets/sanctuary_account_section.dart` (355 行)
+### `lib/widgets/sanctuary_account_section.dart` (357 行)
 
 **ファイル先頭コメント:**
 
@@ -763,7 +763,7 @@ Sanctuary ✦ Account セクション — Phase 2-9 Sign in 統合
   - L256 `_signIn()`
   - L273 `_signOut()`
   - L284 `_confirmDeleteAccount()`
-  - L337 `_performDelete()`
+  - L339 `_performDelete()`
 
   </details>
 

@@ -58,12 +58,15 @@ Future<void> showProUnlockDialog(
                   : const Color(0x44F6BD60),
             ),
           ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: compromised
-                ? _buildCompromisedContent(ctx, featureLabel)
-                : _buildProUpsellContent(context, ctx, featureLabel, description),
+          // 小画面 × 1.5x で本文が縦に伸びても overflow しないよう縦スクロール化。
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: compromised
+                  ? _buildCompromisedContent(ctx, featureLabel)
+                  : _buildProUpsellContent(context, ctx, featureLabel, description),
+            ),
           ),
         ),
       ),

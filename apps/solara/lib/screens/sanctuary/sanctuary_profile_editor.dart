@@ -333,6 +333,16 @@ class _SanctuaryProfileEditorPageState extends State<SanctuaryProfileEditorPage>
                     _birthSection('出生地', Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        // 入力粒度の案内 (市区町村でOK・番地不要)。
+                        // Column 内の全幅 Text なので Row overflow は起きない。
+                        const Padding(
+                          padding: EdgeInsets.only(bottom: 8),
+                          child: Text(
+                            '市区町村レベルでOK・番地は不要です',
+                            style: TextStyle(
+                                fontSize: 12, color: Color(0xFF9AA0A6), height: 1.4),
+                          ),
+                        ),
                         // HTML: .map-search-row { display:flex; gap:8px; }
                         Row(children: [
                           Expanded(child: TextField(
@@ -502,18 +512,26 @@ class _SanctuaryProfileEditorPageState extends State<SanctuaryProfileEditorPage>
               width: active ? 1.5 : 1,
             ),
           ),
+          // 各ボタンは Expanded で 1/3 幅。1.5x フォントで「システム設定」等が枠を
+          // 超えないよう FittedBox(scaleDown) で全文を保ったまま収める (truncation 回避)。
           child: Column(children: [
-            Text(primary, style: TextStyle(
-              fontSize: 15, fontWeight: FontWeight.w600,
-              color: active ? const Color(0xFFF9D976) : const Color(0xFFE0E0E0),
-            )),
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(primary, style: TextStyle(
+                fontSize: 15, fontWeight: FontWeight.w600,
+                color: active ? const Color(0xFFF9D976) : const Color(0xFFE0E0E0),
+              )),
+            ),
             const SizedBox(height: 2),
-            Text(sub, style: TextStyle(
-              fontSize: 15,
-              color: active
-                ? const Color(0xFFF9D976).withAlpha(180)
-                : const Color(0xFF888888),
-            )),
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(sub, style: TextStyle(
+                fontSize: 15,
+                color: active
+                  ? const Color(0xFFF9D976).withAlpha(180)
+                  : const Color(0xFF888888),
+              )),
+            ),
           ]),
         ),
       ),

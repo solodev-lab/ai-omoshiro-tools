@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 23 / 総行数: 6041
+- ファイル数: 23 / 総行数: 6050
 - class/mixin/extension/enum: 33
 - 関数 (top-level + method の素拾い): 161
 - Navigator.push 等: 0
@@ -80,7 +80,7 @@
   </details>
 
 
-### `lib/screens/horoscope/horo_birth_panel.dart` (336 行)
+### `lib/screens/horoscope/horo_birth_panel.dart` (345 行)
 
 **imports:** dart=0 / package=3 / relative=5
 
@@ -103,8 +103,8 @@
 
   - L81 `_initFromProfile()`
   - L104 `_apply()`
-  - L291 `_labeled()`
-  - L306 `_textField()`
+  - L300 `_labeled()`
+  - L315 `_textField()`
 
   </details>
 

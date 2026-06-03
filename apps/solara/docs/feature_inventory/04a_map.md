@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 25 / 総行数: 14674
+- ファイル数: 25 / 総行数: 14685
 - class/mixin/extension/enum: 90
 - 関数 (top-level + method の素拾い): 320
 - Navigator.push 等: 0
@@ -716,7 +716,7 @@ A*C*G ライン (natal / transit) のタップ詳細 popup。
 - 集計: `showLineNarrativeSheet`×1
 
 
-### `lib/screens/map/map_search.dart` (803 行)
+### `lib/screens/map/map_search.dart` (812 行)
 
 **imports:** dart=2 / package=4 / relative=5
 
@@ -730,8 +730,8 @@ A*C*G ライン (natal / transit) のタップ詳細 popup。
   - 検索結果リスト（スコア付き）ポップアップ
 - L471 `class SearchFocusPopup : StatelessWidget`
   - 検索候補から1件選ばれたあとの詳細ポップアップ。
-- L714 `class _CatChip : StatelessWidget`
-- L739 `class _ActionTile : StatelessWidget`
+- L723 `class _CatChip : StatelessWidget`
+- L748 `class _ActionTile : StatelessWidget`
 
 **関数 (9 public + 8 private):**
 
@@ -741,9 +741,9 @@ A*C*G ライン (natal / transit) のタップ詳細 popup。
 - L159 `annotateHitsWithScores()` — 検索結果に、現在中心からの方位スコアと支配カテゴリを注入する
 - L215 `build()`
 - L513 `build()`
-- L720 `build()`
-- L745 `build()`
-- L771 `googleMapsUrlForHit()` — 検索結果を Google マップで開く URL を組み立てる。
+- L729 `build()`
+- L754 `build()`
+- L780 `googleMapsUrlForHit()` — 検索結果を Google マップで開く URL を組み立てる。
 
   <details><summary>private 関数 8 件</summary>
 
@@ -754,7 +754,7 @@ A*C*G ライン (natal / transit) のタップ詳細 popup。
   - L290 `_rankSeg()`
   - L320 `_showRankHelp()`
   - L365 `_hitRow()`
-  - L789 `_openInGoogleMaps()`
+  - L798 `_openInGoogleMaps()`
 
   </details>
 
@@ -846,7 +846,7 @@ A*C*G ライン (natal / transit) のタップ詳細 popup。
   </details>
 
 
-### `lib/screens/map/map_viewpoint_menu.dart` (646 行)
+### `lib/screens/map/map_viewpoint_menu.dart` (648 行)
 
 **imports:** dart=0 / package=2 / relative=3
 
@@ -877,7 +877,7 @@ A*C*G ライン (natal / transit) のタップ詳細 popup。
   - L493 `_buildSubMenu()`
   - L523 `_subItem()`
   - L556 `_showIconPickerDialog()`
-  - L606 `_showRenameDialog()`
+  - L608 `_showRenameDialog()`
 
   </details>
 

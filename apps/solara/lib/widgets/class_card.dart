@@ -210,6 +210,7 @@ class ClassCard extends StatelessWidget {
             const SizedBox(height: 3),
           ],
           // クラス名 JP (大) — 一言の次の行に来て「省察に長けた / 騎士」と読める
+          // 固定高 overlay 内なので maxLines:1+ellipsis で 1.5x の折返しによる縦溢れを防ぐ。
           Text(
             isEnglish ? classNameEN : classNameJP,
             style: TextStyle(
@@ -222,6 +223,8 @@ class ClassCard extends StatelessWidget {
               ],
             ),
             textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
           const SizedBox(height: 1),
           // クラス名 EN (小)
@@ -234,6 +237,8 @@ class ClassCard extends StatelessWidget {
               fontWeight: FontWeight.w300,
             ),
             textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
           if (text.isNotEmpty) ...[
             const SizedBox(height: 6),

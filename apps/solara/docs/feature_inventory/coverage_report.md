@@ -55,7 +55,7 @@
 ## #1 / #2 機械抽出 ↔ feature_inventory.md (人手版) の対整合
 
 - 機械抽出した class/mixin/extension/enum: **476**
-- inventory に登場する識別子 (大文字始まり ``backtick``囲み): **280**
+- inventory に登場する識別子 (大文字始まり ``backtick``囲み): **284**
 
 ### #1 機械にあるが Doc に書かれていない (275)
 
@@ -261,7 +261,7 @@
 - `_PlanetSub`
 - … 残り 75 省略
 
-### #2 Doc に書いてあるがコードに存在しない (ゴースト記述) (79)
+### #2 Doc に書いてあるがコードに存在しない (ゴースト記述) (83)
 
 > 注: Flutter SDK や外部ライブラリの型もここに乗る (誤検出)。
 > 真のゴーストはアプリ独自型のみ。実際の Doc 修正対象は手で絞り込む。
@@ -295,11 +295,13 @@
 - `D8BGKZW2AJ`
 - `DELETE`
 - `EAEAEA`
+- `Expanded`
 - `F6BD60`
 - `F9D976`
 - `FORECAST_KV`
 - `FULL_SCORE_LIMIT`
 - `FilledButton`
+- `FittedBox`
 - `FlutterMap`
 - `Front`
 - `GEMINI_API_KEY`
@@ -339,6 +341,8 @@
 - `StatefulWidget`
 - `TAROT_MODEL_FALLBACK`
 - `TAROT_MODEL_PRIMARY`
+- `TextPainter`
+- `TextScaler`
 - `ThemeData`
 - `TickerMode`
 - `Timer`

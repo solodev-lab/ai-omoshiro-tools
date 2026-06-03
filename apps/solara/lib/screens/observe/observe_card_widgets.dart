@@ -166,7 +166,13 @@ class ObserveCardInfo extends StatelessWidget {
       const SizedBox(height: 2),
       // Card name JP + 正逆位置
       Row(mainAxisAlignment: MainAxisAlignment.center, mainAxisSize: MainAxisSize.min, children: [
-        Text(card.nameJP, style: const TextStyle(fontSize: 18, color: Color(0xFFE8E0D0), fontWeight: FontWeight.w300)),
+        // 長いカード名 (fontSize18・最大級) が 1.5x で横 overflow しないよう Flexible+ellipsis。
+        Flexible(
+          child: Text(card.nameJP,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontSize: 18, color: Color(0xFFE8E0D0), fontWeight: FontWeight.w300)),
+        ),
         const SizedBox(width: 8),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),

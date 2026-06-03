@@ -693,10 +693,18 @@ class GalaxyScreenState extends State<GalaxyScreen>
         ]),
         const SizedBox(height: 8),
         // Message body — Cormorant italic (letter-like), w500で読みやすく
-        Text(msg, style: GoogleFonts.cormorantGaramond(
-          fontSize: 14, fontWeight: FontWeight.w500,
-          fontStyle: FontStyle.italic,
-          color: const Color(0xFFEAEAEA), height: 1.6)),
+        // 1.5x でメッセージが伸びても、上の Cycle 螺旋キャンバス (Expanded) を縦圧迫しないよう
+        // 高さ上限 + 内部スクロール (枠は固定・本文だけスクロール)。描画側は一切変更しない。
+        ConstrainedBox(
+          constraints: BoxConstraints(
+              maxHeight: MediaQuery.of(context).size.height * 0.18),
+          child: SingleChildScrollView(
+            child: Text(msg, style: GoogleFonts.cormorantGaramond(
+              fontSize: 14, fontWeight: FontWeight.w500,
+              fontStyle: FontStyle.italic,
+              color: const Color(0xFFEAEAEA), height: 1.6)),
+          ),
+        ),
       ]),
     );
   }

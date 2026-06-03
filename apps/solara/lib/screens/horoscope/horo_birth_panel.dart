@@ -238,6 +238,15 @@ class _HoroBirthPanelState extends State<HoroBirthPanel> {
       ])),
 
       // ── 位置入力 (座標貼り付け + 緯度/経度横並び + 地名/TZ 自動) ──
+      // 入力粒度の案内 (市区町村でOK・番地不要)。座標貼付式だが「正確な番地まで
+      // 突き止めなくてよい」という意味は同じ。全幅 Text なので overflow しない。
+      const Padding(
+        padding: EdgeInsets.only(bottom: 6),
+        child: Text(
+          '出生地は市区町村レベルでOK・番地は不要です',
+          style: TextStyle(fontSize: 11, color: Color(0xFF9AA0A6), height: 1.4),
+        ),
+      ),
       // key を profile に紐付け、リセット等で profile が差し替わったら再生成する。
       HoroLocationInput(
         key: ValueKey('birth_${widget.profile.birthLat}_'

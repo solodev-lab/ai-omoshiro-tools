@@ -235,7 +235,13 @@ class _ConstellationCard extends StatelessWidget {
           border: Border.all(color: borderColor, width: 1),
         ),
         // HTML: flex-direction:column; justify-content:space-between;
-        child: Column(
+        // 固定高カード内の文字 (星座名/メタ) が 1.5x で伸びると 80×80 の星キャンバスを
+        // 圧迫する (Expanded が縮む) ため、カード内テキストは noScaling 固定
+        // (レアリティ星 Icon と同じ思想)。描画 painter は textScale 非依存なので影響なし。
+        child: MediaQuery(
+          data: MediaQuery.of(context).copyWith(
+              textScaler: TextScaler.noScaling),
+          child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // HTML: .const-mini { flex:1; display:flex; align-items:center; justify-content:center; }
@@ -305,6 +311,7 @@ class _ConstellationCard extends StatelessWidget {
             const SizedBox(height: 4),
             _RarityStarRow(rarity: rarity, color: starColor),
           ],
+        ),
         ),
       ),
         ),

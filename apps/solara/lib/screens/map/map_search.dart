@@ -559,7 +559,14 @@ class SearchFocusPopup extends StatelessWidget {
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: const Color(0x33C9A84C)),
       ),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
+      // popup は Positioned(bottom:80) でアンカーされ上方向に高さ無制限。内容
+      // (住所2行 + カテゴリ内訳 + 最大5個のアクション) が 1.5x で縦に伸びると上端が
+      // 画面外へ突き抜けて見切れるため、画面高の 60% で頭打ち + 縦スクロール化。
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.6),
+        child: SingleChildScrollView(
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
         Row(children: [
           const Icon(Icons.place, size: 16, color: Color(0xFFC9A84C)),
           const SizedBox(width: 6),
@@ -707,6 +714,8 @@ class SearchFocusPopup extends StatelessWidget {
           _ActionTile(label: '✦ Stella に相談', onTap: onConsult!),
         ],
       ]),
+        ),
+      ),
     );
   }
 }

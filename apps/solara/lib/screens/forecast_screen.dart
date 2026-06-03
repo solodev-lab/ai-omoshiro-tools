@@ -334,27 +334,33 @@ class _ForecastScreenState extends State<ForecastScreen> {
     final fColor = fortune != null
         ? (categoryColors[fortune] ?? const Color(0xFFC9A84C))
         : const Color(0xFFC9A84C);
-    return Row(children: [
-      const Text('⭐', style: TextStyle(fontSize: 12)),
-      const SizedBox(width: 6),
-      const Text('年間ベスト',
-          style: TextStyle(fontSize: 9, color: Color(0xFF999999), letterSpacing: 2)),
-      const SizedBox(width: 10),
-      Text('$mm/$dd',
-          style: const TextStyle(fontSize: 12, color: Color(0xFFE8E0D0), fontWeight: FontWeight.w600)),
-      const SizedBox(width: 8),
-      if (fLabel.isNotEmpty) Container(
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
-        decoration: BoxDecoration(
-          color: fColor.withValues(alpha: 0.18),
-          borderRadius: BorderRadius.circular(6),
+    // 実効 ~2.0x では固定ラベル群の合計幅がカード幅を超えうる。FittedBox(scaleDown)
+    // で全文を保ったまま 1 行に収める (truncation せず縮小のみ)。
+    return FittedBox(
+      fit: BoxFit.scaleDown,
+      alignment: Alignment.centerLeft,
+      child: Row(mainAxisSize: MainAxisSize.min, children: [
+        const Text('⭐', style: TextStyle(fontSize: 12)),
+        const SizedBox(width: 6),
+        const Text('年間ベスト',
+            style: TextStyle(fontSize: 9, color: Color(0xFF999999), letterSpacing: 2)),
+        const SizedBox(width: 10),
+        Text('$mm/$dd',
+            style: const TextStyle(fontSize: 12, color: Color(0xFFE8E0D0), fontWeight: FontWeight.w600)),
+        const SizedBox(width: 8),
+        if (fLabel.isNotEmpty) Container(
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+          decoration: BoxDecoration(
+            color: fColor.withValues(alpha: 0.18),
+            borderRadius: BorderRadius.circular(6),
+          ),
+          child: Text(fLabel, style: TextStyle(fontSize: 9, color: fColor)),
         ),
-        child: Text(fLabel, style: TextStyle(fontSize: 9, color: fColor)),
-      ),
-      const SizedBox(width: 6),
-      Text(best.overall.toStringAsFixed(1),
-          style: const TextStyle(fontSize: 10, color: Color(0xFFC9A84C))),
-    ]);
+        const SizedBox(width: 6),
+        Text(best.overall.toStringAsFixed(1),
+            style: const TextStyle(fontSize: 10, color: Color(0xFFC9A84C))),
+      ]),
+    );
   }
 
   static const _yearLabels = ['今年', '来年', '再来年', '3年後', '4年後'];
@@ -750,12 +756,14 @@ class _ForecastScreenState extends State<ForecastScreen> {
           ),
         ]),
         const SizedBox(height: 10),
+        // 3メトリクスを Expanded で等分 (Forecast は画面内で追加 1.33x ブーストが
+        // 掛かり実効最大 ~2.0x。非flex のままだと横 overflow するため)。
         Row(children: [
-          _metric('総合', d.overall.toStringAsFixed(1)),
+          Expanded(child: _metric('総合', d.overall.toStringAsFixed(1))),
           const SizedBox(width: 14),
-          _metric('強運方位', dir16JP[d.topDir] ?? d.topDir),
+          Expanded(child: _metric('強運方位', dir16JP[d.topDir] ?? d.topDir)),
           const SizedBox(width: 14),
-          _metric('方位スコア', d.topDirScore.toStringAsFixed(1)),
+          Expanded(child: _metric('方位スコア', d.topDirScore.toStringAsFixed(1))),
         ]),
         const SizedBox(height: 12),
         const Text('カテゴリ別',

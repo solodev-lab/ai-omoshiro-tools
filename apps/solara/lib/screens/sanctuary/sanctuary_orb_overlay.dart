@@ -190,7 +190,12 @@ class _SanctuaryOrbOverlayState extends State<SanctuaryOrbOverlay> {
         children: [
           // HTML: .orb-name { font-size:12px; color:#ACACAC; min-width:120px; }
           SizedBox(width: 120,
-            child: Text(label, style: const TextStyle(fontSize: 15, color: Color(0xFFACACAC)))),
+            // 長いアスペクト名 (例 "Semi-Sextile (30°)") が 1.5x で固定120px枠を
+            // 超えないよう 2行折返し+ellipsis。
+            child: Text(label,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontSize: 15, color: Color(0xFFACACAC)))),
           // − button
           _orbPmBtn('−', () {
             if (val > 0.5) setState(() => _vals[key] = val - 0.5);

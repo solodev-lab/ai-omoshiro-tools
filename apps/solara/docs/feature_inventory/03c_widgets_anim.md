@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 5 / 総行数: 2359
+- ファイル数: 5 / 総行数: 2365
 - class/mixin/extension/enum: 11
 - 関数 (top-level + method の素拾い): 58
 - Navigator.push 等: 0
@@ -48,7 +48,7 @@
   </details>
 
 
-### `lib/widgets/catasterism_overlay.dart` (445 行)
+### `lib/widgets/catasterism_overlay.dart` (451 行)
 
 **imports:** dart=0 / package=2 / relative=6
 
@@ -72,8 +72,8 @@
   - L84 `_onReleasedTap()`
   - L140 `_buildStoryContent()`
   - L202 `_buildChoiceContent()`
-  - L354 `_buildChoice()`
-  - L430 `_submit()`
+  - L360 `_buildChoice()`
+  - L436 `_submit()`
 
   </details>
 

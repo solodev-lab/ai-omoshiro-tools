@@ -307,21 +307,27 @@ class _CatasterismOverlayState extends State<CatasterismOverlay>
                   ),
                   const SizedBox(height: 40),
                   // Yes / Not yet
+                  // \u5404\u30ab\u30fc\u30c9\u306f Expanded \u3067\u7b49\u5206 (\u56fa\u5b9a 130\u00d72+16=276 \u306f\u72ed\u7aef\u672b 320dp \u3067
+                  // \u6a2a overflow \u3057\u305f\u305f\u3081)\u3002
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      _buildChoice(
-                        emoji: '\u{2728}',
-                        label: '\u624b\u653e\u305b\u305f',
-                        sublabel: 'Released',
-                        released: true,
+                      Expanded(
+                        child: _buildChoice(
+                          emoji: '\u{2728}',
+                          label: '\u624b\u653e\u305b\u305f',
+                          sublabel: 'Released',
+                          released: true,
+                        ),
                       ),
                       const SizedBox(width: 16),
-                      _buildChoice(
-                        emoji: '\u{1F331}',
-                        label: '\u307e\u3060\u9014\u4e2d',
-                        sublabel: 'Still growing',
-                        released: false,
+                      Expanded(
+                        child: _buildChoice(
+                          emoji: '\u{1F331}',
+                          label: '\u307e\u3060\u9014\u4e2d',
+                          sublabel: 'Still growing',
+                          released: false,
+                        ),
                       ),
                     ],
                   ),
@@ -371,7 +377,7 @@ class _CatasterismOverlayState extends State<CatasterismOverlay>
               : SolaraColors.glassBorder;
           final borderWidth = isSelected ? 1.5 : 1.0;
           return Container(
-            width: 130,
+            // width は親 Row の Expanded が決める (旧 width:130 固定は撤去)。
             padding: const EdgeInsets.symmetric(vertical: 20),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(16),

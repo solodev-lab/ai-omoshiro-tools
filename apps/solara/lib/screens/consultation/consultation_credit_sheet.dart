@@ -225,11 +225,14 @@ class _CreditSheetState extends State<_CreditSheet> {
                 Icon(Icons.auto_awesome,
                     color: SolaraColors.solaraGold, size: 20),
                 SizedBox(width: 8),
-                Text('Stella 相談クレジット',
-                    style: TextStyle(
-                        color: SolaraColors.solaraGoldLight,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600)),
+                // 大フォント設定 (最大1.5x) + 狭い端末でもはみ出さないよう Flexible 化。
+                Flexible(
+                  child: Text('Stella 相談クレジット',
+                      style: TextStyle(
+                          color: SolaraColors.solaraGoldLight,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600)),
+                ),
               ],
             ),
             const SizedBox(height: 6),

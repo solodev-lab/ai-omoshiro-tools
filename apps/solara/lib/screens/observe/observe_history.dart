@@ -280,8 +280,15 @@ class _ObserveHistoryPanelState extends State<ObserveHistoryPanel> {
               SizedBox(width: 40, child: Text(card.emoji, style: const TextStyle(fontSize: 28), textAlign: TextAlign.center)),
               const SizedBox(width: 12),
               Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Row(mainAxisSize: MainAxisSize.min, children: [
-                  Text(card.nameJP, style: const TextStyle(fontSize: 14, color: Color(0xFFE8E0D0), fontWeight: FontWeight.w500)),
+                Row(children: [
+                  // 過去サイクル側 (observe_history_past) と同じく Flexible+ellipsis で
+                  // 長いカード名でも横 overflow しないようにする。
+                  Flexible(
+                    child: Text(card.nameJP,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontSize: 14, color: Color(0xFFE8E0D0), fontWeight: FontWeight.w500)),
+                  ),
                   const SizedBox(width: 6),
                   Text(
                     r.reversed ? '逆' : '正',

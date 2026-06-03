@@ -1558,6 +1558,41 @@ Worker [`consultation_v2.js:78-83`](../worker/src/consultation_v2.js#L78) の既
   observe_screen・horo_fortune_cards・observe_constants・relocation.js 更新。coverage #3: `/protected/relocation` 一致(健全)。
 - 反映 = ① Worker `wrangler deploy` (動的解説) ② 次の AAB ビルド (Flutter)。
 
+### 0.2.54 入力欄ヘルプ文 + オーバーフロー全方位対応 (横+縦) + 自動検出テスト + キャンバス保護 (2026-06-03)
+
+> ストア対応の持ち越しB (入力欄ヘルプ) から始まり、オーナー指摘「年配者向けに文字を大きくしたい / 英語化で文字が伸びる / オーバーフローがときどき出る (縦も)」を受けて、**文字拡大・多言語に耐えるレイアウト**へ全面的に固めたセッション。**Flutter のみ・Worker 変更なし → 反映=次の AAB ビルド**。
+
+#### 設計原則 (このセッションで確立・今後の指針)
+- 🔴 **「文字主役ゾーン」と「絵(描画)主役ゾーン」は対処が真逆**:
+  - 文字主役 (星読み本文・設定・ダイアログ・バナー・リスト) = 文字を**伸ばしてOK** + 折り返し/スクロールで overflow を吸収。
+  - 絵主役 (Map / Galaxy星描画 / 共有カード / 称号画像 / ホロ円盤) = 文字を**伸ばさない** (`TextScaler` 固定/`noScaling`/`FittedBox` 固定サイズ) で**絵の領域を死守**。素で「全部折り返す/文字を大きく」を適用すると絵が潰れる。
+- 🔴 **overflow の縞表示は debug 専用** (release では出ない)。目標は「縞を消す」より上の **「どの言語・文字サイズでも文字が切れない/重ならない/絵が潰れない」**。
+- 🔴 アプリは `main.dart:136` で `MediaQuery.withClampedTextScaling(min1.0/max1.5)`。**forecast/locations は画面内で追加 ~1.33x ブースト=実効 ~2.0x** が最危険。
+- 🔴 オーナー方針: 対処は**「文字を読んでもらう所」に絞る**。絵ゾーンの軽微な記号重なり等 (Map方位ラベル/天頂天底シンボル/バッジ/透かしSOLARA) は**現状維持で可** (崩壊しない)。
+
+#### 入力欄ヘルプ文 (持ち越しB)
+- 出生地・現住所の入力欄に「市区町村レベルでOK・番地は不要です」を全幅 Text(softWrap=折返し) で追加。`sanctuary_profile_editor.dart` (出生地)・`sanctuary_home_editor.dart` (現住所)・`horo_birth_panel.dart` (Horo試算・座標貼付。文言「出生地は市区町村レベルでOK…」)。Row を介さない配置で overflow しない。「任意」は付けない (オーナー指示。出生地は必須)。
+
+#### overflow 自動検出テスト (新規 `test/overflow_stress_test.dart`)
+- 狭端末 320dp × textScale 1.0/1.5 で案内系 widget を pump し `tester.takeException()` で**縦横どちらの RenderFlex overflow も検出**。対象: MapWelcomeBanner 全モード / NoProfileGuide / TarotCategoryPopup。6件 green。今後ここに追加していく検出器の土台。
+
+#### overflow 修正 (3エージェントで全画面総ざらい→実害のみ修正)
+- **横**: map_viewpoint_menu アイコンピッカー (固定352→端末幅連動) / catasterism_overlay 2択 (固定276→Expanded) / sanctuary_orb_overlay ラベル (maxLines2+ellipsis) / observe_history 現サイクル名 (Flexible+ellipsis・過去サイクル側に整合) / observe_card_widgets 和名 (Flexible) / sanctuary_profile_editor 言語ボタン (FittedBox scaleDown) / forecast `_metric` (Expanded) / `_buildBestChip` (FittedBox scaleDown) / consultation_start_popup・consultation_credit_sheet ラベル (Flexible 保険)。
+- **縦**: observe_history_filter チップ帯 (28→36) / map_search SearchFocusPopup (maxHeight 60%+SingleChildScrollView) / pro_unlock_dialog (SingleChildScrollView) / sanctuary_account_section 削除確認 (AlertDialog scrollable) / class_card クラス名JP/EN (maxLines1+ellipsis)。
+
+#### Galaxy 星描画の圧縮を外科的に保護 (描画/座標/配置は不変)
+- **Cycle 螺旋** (`galaxy_screen.dart`): 兄弟の Stella メッセージが 1.5x で伸びて `Expanded` 螺旋を縦圧縮 → メッセージ本文に `ConstrainedBox(maxHeight 画面18%)+SingleChildScrollView` (枠固定・本文だけスクロール) で**螺旋面積を死守**。
+- **Star Atlas カード** (`galaxy_star_atlas.dart`): 固定高カード内で 80×80 の星が name 2行に押されて縮む → カード内テキストを `MediaQuery(textScaler: TextScaler.noScaling)` で固定 (レアリティ星 Icon と同思想・共有カードと同じ明示形。`MediaQuery.withNoTextScaling` は `avoid_unnecessary_containers` を誤発火させたため明示形)。
+- painter (CycleSpiralPainter/MiniConstellationPainter) は textScale 非依存なので描画は不変。
+
+#### 読み取り専用 キャンバス監査の結論 (今後の参照用)
+- ✅ 保護済 (絵が潰れない): **Map本体** (Stack最底面の全画面・文字UIはoverlayで面積を奪わない) / **共有カード** (class_share_card・constellation_share_card_page = `TextScaler.linear(1.0)`+`FittedBox 360×640`) / **ホロ円盤の計器** (惑星記号・度数・軸ラベルは全て painter の `TextPainter`=noScaling 既定で伸びない)。
+- ⚠️ 残置 (崩壊せず・オーナー判断で現状維持): Map方位ラベル/天頂天底の惑星シンボル/検索番号 (地図は潰れず記号重なりのみ) / Galaxy Day-Moonバッジ・CelestialEventBar・刻星化ラベル / ホロ円盤透かし"SOLARA" / 称号フリップカード (`sanctuary_screen:970`・帯高固定+ellipsisで崩壊なし可読性低下のみ)。
+
+#### 検証
+- flutter analyze クリーン / flutter test **全312件 green** (+6=overflow_stress_test) / audit **HARD7 (新規ゼロ)**・重複20(構造的 `),`)・未使用候補0 (GalaxyArchiveSortLabel.jp / DominantFortuneKindToCategoryIcon.toCategoryIcon は extension 実使用=誤検出) / extract `+0 -0` (新規クラスなし)。
+- 反映 = 次の AAB ビルド (Flutter のみ)。
+
 ### 0.3 Horo「今日の占い」1 日 1 回固定 + プロンプト刷新 (2026-05-27)
 
 > **設計の柱**: 「30 回までは OK」のような曖昧な防衛をやめ、「**1 日 1 回・変更しない**」を

@@ -129,6 +129,14 @@ class _SanctuaryHomeEditorPageState extends State<SanctuaryHomeEditorPage> {
                 // Search
                 const Text('住所・地名', style: TextStyle(fontSize: 15, color: Color(0xFFACACAC), letterSpacing: 0.5)),
                 const SizedBox(height: 6),
+                // 入力粒度の案内 (市区町村でOK・番地不要)。
+                // Column 内の全幅 Text なので Row overflow は起きない。
+                const Text(
+                  '市区町村レベルでOK・番地は不要です',
+                  style: TextStyle(
+                      fontSize: 12, color: Color(0xFF9AA0A6), height: 1.4),
+                ),
+                const SizedBox(height: 8),
                 Row(children: [
                   Expanded(child: _input(_nameCtrl, '例: 東京都渋谷区')),
                   const SizedBox(width: 8),
