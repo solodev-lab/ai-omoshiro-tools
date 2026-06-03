@@ -13,6 +13,20 @@
       "point": "具体地点", "bearing": "方角", "radius": "現住所から半径",
       "region": "地域", "country": "自国内", "world": "世界全体"
     },
+    "when": {
+      "today": "今日", "date": "日付指定", "specificDay": "特定の日", "range": "期間",
+      "undecided": "時期未定", "within6mo": "半年以内", "within1yr": "1年以内",
+      "in3yr": "3年後くらい", "in5yrPlus": "5年以上先"
+    },
+    "timeBand": { "morning": "朝", "midday": "昼", "evening": "夕方", "night": "夜", "lateNight": "夜更け" },
+    "hourPicker": {
+      "title": "時刻を指定（1時間刻み）",
+      "sub": "行く時刻のその場の流れと、30分後の変化を読みます",
+      "confirm": "$time に決定"
+    },
+    "timeRowSelected": "$time を指定中（30分後の変化が見られます）",
+    "radiusBand": "$min〜${max}km",
+    "radiusSingle": "${km}km",
     "submit": "相談を始める",
     "noHomeNote": "現住所が未設定です。「方角・現住所から半径・自国内」は現住所を設定すると使えます。「具体地点」は今すぐ使えます。",
     "presetCard": "$name を見ます",

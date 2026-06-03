@@ -61,6 +61,12 @@ class _Translations$consultInput$en extends Translations$consultInput$ja {
 	@override late final _Translations$consultInput$theme$en theme = _Translations$consultInput$theme$en._(_root);
 	@override late final _Translations$consultInput$mode$en mode = _Translations$consultInput$mode$en._(_root);
 	@override late final _Translations$consultInput$scope$en scope = _Translations$consultInput$scope$en._(_root);
+	@override late final _Translations$consultInput$when$en when = _Translations$consultInput$when$en._(_root);
+	@override late final _Translations$consultInput$timeBand$en timeBand = _Translations$consultInput$timeBand$en._(_root);
+	@override late final _Translations$consultInput$hourPicker$en hourPicker = _Translations$consultInput$hourPicker$en._(_root);
+	@override String timeRowSelected({required Object time}) => '${time} selected (you can see the changes 30 minutes later)';
+	@override String radiusBand({required Object min, required Object max}) => '${min}–${max} km';
+	@override String radiusSingle({required Object km}) => '${km} km';
 	@override String get submit => 'Start consultation';
 	@override String get noHomeNote => 'No current address is set. "Direction," "Radius from home," and "Within my country" become available once you set your current address. "Specific place" works right now.';
 	@override String presetCard({required Object name}) => 'Looking at ${name}';
@@ -271,6 +277,50 @@ class _Translations$consultInput$scope$en extends Translations$consultInput$scop
 	@override String get region => 'Region';
 	@override String get country => 'Within my country';
 	@override String get world => 'Worldwide';
+}
+
+// Path: consultInput.when
+class _Translations$consultInput$when$en extends Translations$consultInput$when$ja {
+	_Translations$consultInput$when$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get today => 'Today';
+	@override String get date => 'Pick a date';
+	@override String get specificDay => 'A specific day';
+	@override String get range => 'Date range';
+	@override String get undecided => 'Timing undecided';
+	@override String get within6mo => 'Within 6 months';
+	@override String get within1yr => 'Within a year';
+	@override String get in3yr => 'Around 3 years';
+	@override String get in5yrPlus => '5+ years ahead';
+}
+
+// Path: consultInput.timeBand
+class _Translations$consultInput$timeBand$en extends Translations$consultInput$timeBand$ja {
+	_Translations$consultInput$timeBand$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get morning => 'Morning';
+	@override String get midday => 'Midday';
+	@override String get evening => 'Evening';
+	@override String get night => 'Night';
+	@override String get lateNight => 'Late night';
+}
+
+// Path: consultInput.hourPicker
+class _Translations$consultInput$hourPicker$en extends Translations$consultInput$hourPicker$ja {
+	_Translations$consultInput$hourPicker$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get title => 'Set the time (hourly)';
+	@override String get sub => 'Reads the flow of the place at that time, and the change 30 minutes later';
+	@override String confirm({required Object time}) => 'Set to ${time}';
 }
 
 // Path: consultInput.about
@@ -1015,6 +1065,26 @@ extension on TranslationsEn {
 			'consultInput.scope.region' => 'Region',
 			'consultInput.scope.country' => 'Within my country',
 			'consultInput.scope.world' => 'Worldwide',
+			'consultInput.when.today' => 'Today',
+			'consultInput.when.date' => 'Pick a date',
+			'consultInput.when.specificDay' => 'A specific day',
+			'consultInput.when.range' => 'Date range',
+			'consultInput.when.undecided' => 'Timing undecided',
+			'consultInput.when.within6mo' => 'Within 6 months',
+			'consultInput.when.within1yr' => 'Within a year',
+			'consultInput.when.in3yr' => 'Around 3 years',
+			'consultInput.when.in5yrPlus' => '5+ years ahead',
+			'consultInput.timeBand.morning' => 'Morning',
+			'consultInput.timeBand.midday' => 'Midday',
+			'consultInput.timeBand.evening' => 'Evening',
+			'consultInput.timeBand.night' => 'Night',
+			'consultInput.timeBand.lateNight' => 'Late night',
+			'consultInput.hourPicker.title' => 'Set the time (hourly)',
+			'consultInput.hourPicker.sub' => 'Reads the flow of the place at that time, and the change 30 minutes later',
+			'consultInput.hourPicker.confirm' => ({required Object time}) => 'Set to ${time}',
+			'consultInput.timeRowSelected' => ({required Object time}) => '${time} selected (you can see the changes 30 minutes later)',
+			'consultInput.radiusBand' => ({required Object min, required Object max}) => '${min}–${max} km',
+			'consultInput.radiusSingle' => ({required Object km}) => '${km} km',
 			'consultInput.submit' => 'Start consultation',
 			'consultInput.noHomeNote' => 'No current address is set. "Direction," "Radius from home," and "Within my country" become available once you set your current address. "Specific place" works right now.',
 			'consultInput.presetCard' => ({required Object name}) => 'Looking at ${name}',

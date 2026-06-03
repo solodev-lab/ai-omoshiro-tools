@@ -9,24 +9,24 @@ class _WhenChoice {
   const _WhenChoice(this.key, this.label);
 }
 
-const _whenChoicesDaily = <_WhenChoice>[
-  _WhenChoice('today', '今日'),
-  _WhenChoice('date', '日付指定'),
-];
+List<_WhenChoice> get _whenChoicesDaily => [
+      _WhenChoice('today', t.consultInput.when.today),
+      _WhenChoice('date', t.consultInput.when.date),
+    ];
 
-const _whenChoicesTravel = <_WhenChoice>[
-  _WhenChoice('date', '特定の日'),
-  _WhenChoice('range', '期間'),
-];
+List<_WhenChoice> get _whenChoicesTravel => [
+      _WhenChoice('date', t.consultInput.when.specificDay),
+      _WhenChoice('range', t.consultInput.when.range),
+    ];
 
-const _whenChoicesMigration = <_WhenChoice>[
-  _WhenChoice('undecided', '時期未定'),
-  _WhenChoice('date', '日付指定'),
-  _WhenChoice('within6mo', '半年以内'),
-  _WhenChoice('within1yr', '1年以内'),
-  _WhenChoice('in3yr', '3年後くらい'),
-  _WhenChoice('in5yrPlus', '5年以上先'),
-];
+List<_WhenChoice> get _whenChoicesMigration => [
+      _WhenChoice('undecided', t.consultInput.when.undecided),
+      _WhenChoice('date', t.consultInput.when.date),
+      _WhenChoice('within6mo', t.consultInput.when.within6mo),
+      _WhenChoice('within1yr', t.consultInput.when.within1yr),
+      _WhenChoice('in3yr', t.consultInput.when.in3yr),
+      _WhenChoice('in5yrPlus', t.consultInput.when.in5yrPlus),
+    ];
 
 List<_WhenChoice> _whenChoicesFor(String mode) {
   switch (mode) {
@@ -93,13 +93,13 @@ class _WhenSelector extends StatelessWidget {
 
 /// 時間帯チップ (おでかけのみ・任意)。キーは Worker BUCKET_JP と一致させる。
 /// もう一度タップで解除 (= 未指定)。
-const _timeBandChoices = <_WhenChoice>[
-  _WhenChoice('morning', '朝'),
-  _WhenChoice('midday', '昼'),
-  _WhenChoice('evening', '夕方'),
-  _WhenChoice('night', '夜'),
-  _WhenChoice('lateNight', '夜更け'),
-];
+List<_WhenChoice> get _timeBandChoices => [
+      _WhenChoice('morning', t.consultInput.timeBand.morning),
+      _WhenChoice('midday', t.consultInput.timeBand.midday),
+      _WhenChoice('evening', t.consultInput.timeBand.evening),
+      _WhenChoice('night', t.consultInput.timeBand.night),
+      _WhenChoice('lateNight', t.consultInput.timeBand.lateNight),
+    ];
 
 class _TimeBandSelector extends StatelessWidget {
   final String? selected;
@@ -170,16 +170,16 @@ class _HourDrumSheetState extends State<_HourDrumSheet> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text('時刻を指定（1時間刻み）',
-                style: TextStyle(
+            Text(t.consultInput.hourPicker.title,
+                style: const TextStyle(
                     color: SolaraColors.solaraGoldLight,
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
                     letterSpacing: 0.4)),
             const SizedBox(height: 4),
-            const Text('行く時刻のその場の流れと、30分後の変化を読みます',
-                style:
-                    TextStyle(color: SolaraColors.textSecondary, fontSize: 11)),
+            Text(t.consultInput.hourPicker.sub,
+                style: const TextStyle(
+                    color: SolaraColors.textSecondary, fontSize: 11)),
             const SizedBox(height: 8),
             SizedBox(
               height: 160,
@@ -220,7 +220,8 @@ class _HourDrumSheetState extends State<_HourDrumSheet> {
                   backgroundColor: SolaraColors.solaraGoldLight,
                   foregroundColor: SolaraColors.celestialBlueDark,
                 ),
-                child: Text('${_hour.toString().padLeft(2, '0')}:00 に決定'),
+                child: Text(t.consultInput.hourPicker
+                    .confirm(time: '${_hour.toString().padLeft(2, '0')}:00')),
               ),
             ),
           ],
@@ -274,8 +275,9 @@ class _TimeHourRow extends StatelessWidget {
             Expanded(
               child: Text(
                 selected
-                    ? '${hour.toString().padLeft(2, '0')}:00 を指定中（30分後の変化が見られます）'
-                    : '時刻を指定（1時間刻み）',
+                    ? t.consultInput.timeRowSelected(
+                        time: '${hour.toString().padLeft(2, '0')}:00')
+                    : t.consultInput.hourPicker.title,
                 style: TextStyle(
                   color: selected
                       ? const Color(0xFFF9D976)
@@ -339,7 +341,9 @@ class _RadiusChips extends StatelessWidget {
 
   String _label(int km) {
     final min = bandMinFor?.call(km) ?? 0;
-    return min > 0 ? '$min〜${km}km' : '${km}km';
+    return min > 0
+        ? t.consultInput.radiusBand(min: min, max: km)
+        : t.consultInput.radiusSingle(km: km);
   }
 
   @override

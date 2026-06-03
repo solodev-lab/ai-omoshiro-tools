@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 32 / 総行数: 11057
+- ファイル数: 32 / 総行数: 11061
 - class/mixin/extension/enum: 100
 - 関数 (top-level + method の素拾い): 282
 - Navigator.push 等: 0
@@ -378,7 +378,7 @@ Consultation Input Screen — 5問モデル (V2: 全要素統合)
   </details>
 
 
-### `lib/screens/consultation/consultation_input_when_scope.dart` (359 行)
+### `lib/screens/consultation/consultation_input_when_scope.dart` (363 行)
 
 **ファイル先頭コメント:**
 
@@ -395,9 +395,9 @@ Consultation Input — ③ いつ / 半径 セレクタ
 - L104 `class _TimeBandSelector : StatelessWidget`
 - L147 `class _HourDrumSheet : StatefulWidget`
 - L154 `class _HourDrumSheetState : State`
-- L235 `class _TimeHourRow : StatelessWidget`
+- L236 `class _TimeHourRow : StatelessWidget`
   - Pro 時刻指定の行。未選択=「時刻を指定（1時間刻み）」/ 選択中=「15:00 を指定中」+×。
-- L328 `class _RadiusChips : StatelessWidget`
+- L330 `class _RadiusChips : StatelessWidget`
   - 自宅から半径の距離選択 (場面別 km 候補)。
 
 **関数 (9 public + 2 private):**
@@ -409,13 +409,13 @@ Consultation Input — ③ いつ / 半径 セレクタ
 - L151 `createState()`
 - L160 `dispose()`
 - L166 `build()`
-- L250 `build()`
-- L346 `build()`
+- L251 `build()`
+- L350 `build()`
 
   <details><summary>private 関数 2 件</summary>
 
   - L31 `_whenChoicesFor()`
-  - L340 `_label()`
+  - L342 `_label()`
 
   </details>
 

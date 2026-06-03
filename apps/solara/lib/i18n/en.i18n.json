@@ -13,6 +13,20 @@
       "point": "Specific place", "bearing": "Direction", "radius": "Radius from home",
       "region": "Region", "country": "Within my country", "world": "Worldwide"
     },
+    "when": {
+      "today": "Today", "date": "Pick a date", "specificDay": "A specific day", "range": "Date range",
+      "undecided": "Timing undecided", "within6mo": "Within 6 months", "within1yr": "Within a year",
+      "in3yr": "Around 3 years", "in5yrPlus": "5+ years ahead"
+    },
+    "timeBand": { "morning": "Morning", "midday": "Midday", "evening": "Evening", "night": "Night", "lateNight": "Late night" },
+    "hourPicker": {
+      "title": "Set the time (hourly)",
+      "sub": "Reads the flow of the place at that time, and the change 30 minutes later",
+      "confirm": "Set to $time"
+    },
+    "timeRowSelected": "$time selected (you can see the changes 30 minutes later)",
+    "radiusBand": "$min–$max km",
+    "radiusSingle": "$km km",
     "submit": "Start consultation",
     "noHomeNote": "No current address is set. \"Direction,\" \"Radius from home,\" and \"Within my country\" become available once you set your current address. \"Specific place\" works right now.",
     "presetCard": "Looking at $name",

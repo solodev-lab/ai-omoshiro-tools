@@ -62,6 +62,18 @@ class Translations$consultInput$ja {
 	late final Translations$consultInput$theme$ja theme = Translations$consultInput$theme$ja.internal(_root);
 	late final Translations$consultInput$mode$ja mode = Translations$consultInput$mode$ja.internal(_root);
 	late final Translations$consultInput$scope$ja scope = Translations$consultInput$scope$ja.internal(_root);
+	late final Translations$consultInput$when$ja when = Translations$consultInput$when$ja.internal(_root);
+	late final Translations$consultInput$timeBand$ja timeBand = Translations$consultInput$timeBand$ja.internal(_root);
+	late final Translations$consultInput$hourPicker$ja hourPicker = Translations$consultInput$hourPicker$ja.internal(_root);
+
+	/// ja: '$time を指定中（30分後の変化が見られます）'
+	String timeRowSelected({required Object time}) => '${time} を指定中（30分後の変化が見られます）';
+
+	/// ja: '$min〜${max}km'
+	String radiusBand({required Object min, required Object max}) => '${min}〜${max}km';
+
+	/// ja: '${km}km'
+	String radiusSingle({required Object km}) => '${km}km';
 
 	/// ja: '相談を始める'
 	String get submit => '相談を始める';
@@ -403,6 +415,84 @@ class Translations$consultInput$scope$ja {
 
 	/// ja: '世界全体'
 	String get world => '世界全体';
+}
+
+// Path: consultInput.when
+class Translations$consultInput$when$ja {
+	Translations$consultInput$when$ja.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// ja: '今日'
+	String get today => '今日';
+
+	/// ja: '日付指定'
+	String get date => '日付指定';
+
+	/// ja: '特定の日'
+	String get specificDay => '特定の日';
+
+	/// ja: '期間'
+	String get range => '期間';
+
+	/// ja: '時期未定'
+	String get undecided => '時期未定';
+
+	/// ja: '半年以内'
+	String get within6mo => '半年以内';
+
+	/// ja: '1年以内'
+	String get within1yr => '1年以内';
+
+	/// ja: '3年後くらい'
+	String get in3yr => '3年後くらい';
+
+	/// ja: '5年以上先'
+	String get in5yrPlus => '5年以上先';
+}
+
+// Path: consultInput.timeBand
+class Translations$consultInput$timeBand$ja {
+	Translations$consultInput$timeBand$ja.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// ja: '朝'
+	String get morning => '朝';
+
+	/// ja: '昼'
+	String get midday => '昼';
+
+	/// ja: '夕方'
+	String get evening => '夕方';
+
+	/// ja: '夜'
+	String get night => '夜';
+
+	/// ja: '夜更け'
+	String get lateNight => '夜更け';
+}
+
+// Path: consultInput.hourPicker
+class Translations$consultInput$hourPicker$ja {
+	Translations$consultInput$hourPicker$ja.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// ja: '時刻を指定（1時間刻み）'
+	String get title => '時刻を指定（1時間刻み）';
+
+	/// ja: '行く時刻のその場の流れと、30分後の変化を読みます'
+	String get sub => '行く時刻のその場の流れと、30分後の変化を読みます';
+
+	/// ja: '$time に決定'
+	String confirm({required Object time}) => '${time} に決定';
 }
 
 // Path: consultInput.about
@@ -1566,6 +1656,26 @@ extension on Translations {
 			'consultInput.scope.region' => '地域',
 			'consultInput.scope.country' => '自国内',
 			'consultInput.scope.world' => '世界全体',
+			'consultInput.when.today' => '今日',
+			'consultInput.when.date' => '日付指定',
+			'consultInput.when.specificDay' => '特定の日',
+			'consultInput.when.range' => '期間',
+			'consultInput.when.undecided' => '時期未定',
+			'consultInput.when.within6mo' => '半年以内',
+			'consultInput.when.within1yr' => '1年以内',
+			'consultInput.when.in3yr' => '3年後くらい',
+			'consultInput.when.in5yrPlus' => '5年以上先',
+			'consultInput.timeBand.morning' => '朝',
+			'consultInput.timeBand.midday' => '昼',
+			'consultInput.timeBand.evening' => '夕方',
+			'consultInput.timeBand.night' => '夜',
+			'consultInput.timeBand.lateNight' => '夜更け',
+			'consultInput.hourPicker.title' => '時刻を指定（1時間刻み）',
+			'consultInput.hourPicker.sub' => '行く時刻のその場の流れと、30分後の変化を読みます',
+			'consultInput.hourPicker.confirm' => ({required Object time}) => '${time} に決定',
+			'consultInput.timeRowSelected' => ({required Object time}) => '${time} を指定中（30分後の変化が見られます）',
+			'consultInput.radiusBand' => ({required Object min, required Object max}) => '${min}〜${max}km',
+			'consultInput.radiusSingle' => ({required Object km}) => '${km}km',
 			'consultInput.submit' => '相談を始める',
 			'consultInput.noHomeNote' => '現住所が未設定です。「方角・現住所から半径・自国内」は現住所を設定すると使えます。「具体地点」は今すぐ使えます。',
 			'consultInput.presetCard' => ({required Object name}) => '${name} を見ます',
