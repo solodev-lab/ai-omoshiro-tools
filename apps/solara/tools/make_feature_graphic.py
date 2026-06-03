@@ -31,7 +31,7 @@ IVORY = (242, 236, 223)
 CYAN = (130, 170, 200)
 
 WORDMARK = "SOLARA"
-TAGLINE = "占星術でひもとく自己探求"
+TAGLINE = "Your Astrolabe for When & Where"
 
 
 def font(path, size, wght=None):
@@ -235,7 +235,7 @@ def concept_C():
     d = ImageDraw.Draw(img)
     tx = 452
     fk = font(CINZEL, 23, 600)
-    draw_kicker(d, tx + 4, 158, "RELOCATION", "ASTROLOGY", fk, GOLD + (235,), 4, gap=18)
+    draw_kicker(d, tx + 4, 158, "CELESTIAL", "ASTROLABE", fk, GOLD + (235,), 4, gap=18)
     wm = gradient_text(WORDMARK, font(CINZEL, 100, 680), 10, GOLD_HI, GOLD_LO)
     img.alpha_composite(wm, (tx - 8, 184))
     d.line([tx + 6, 306, tx + 360, 306], fill=GOLD + (200,), width=2)

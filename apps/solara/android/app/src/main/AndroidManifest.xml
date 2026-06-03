@@ -10,7 +10,7 @@
     <!-- 予約済みローカル通知を端末再起動/アプリ更新後も復元する -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <application
-        android:label="solara"
+        android:label="Solara"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
         android:enableOnBackInvokedCallback="true">
