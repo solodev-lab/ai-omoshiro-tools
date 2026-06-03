@@ -1,4 +1,52 @@
 {
+  "mapSearch": {
+    "results": "検索結果 ($n)",
+    "rankDistance": "中心点",
+    "rankRelevance": "知名度",
+    "rankHelpTitle": "検索結果の絞り方",
+    "rankDistanceHead": "【中心点】",
+    "rankDistanceBody": "地図の中心 (現住所など) から近い順で取得します。\n知名度が低くても、近所のお店が上位に出ます。",
+    "rankRelevanceHead": "【知名度】",
+    "rankRelevanceBody": "Google でよく知られているお店を優先して取得します。\n多少離れていても、知名度の高い候補が上位に出ます。",
+    "rankNote": "※ 並べ替えではなく、取得する候補そのものが変わります。",
+    "bearing": "$dir方位",
+    "categoryBreakdown": "カテゴリ別内訳",
+    "saveViewpoint": "📍 VIEWPOINT に登録",
+    "savedViewpoint": "✓ VIEWPOINT に登録しました",
+    "saveLocation": "🏠 LOCATION に登録",
+    "savedLocation": "✓ LOCATION に登録しました",
+    "moveHere": "✈ ここへ移動",
+    "openGoogleMaps": "🗺 Googleマップで見る",
+    "consultStella": "✦ Stella に相談",
+    "googleMapsFailed": "Google マップを開けませんでした"
+  },
+  "mapDir": {
+    "mainContrib": "主な寄与アスペクト",
+    "twoEnergies": "2つのエネルギーについて",
+    "guidanceBoth": "この方角には、両エネルギーが同時に在ります。\n流れと摩擦の両方が効く、深い体験の場。\nどちらに乗るか、両方を観察するか、選ぶのはあなた。",
+    "guidanceSoft": "この方角は、ソフトエネルギーが優勢です。\n流れに乗りやすい場。\n受容的に進むのも、意識的に方向を選ぶのも、あなた次第。",
+    "guidanceHard": "この方角は、ハードエネルギーが優勢です。\n摩擦と変容の場。\n見つめ直すか、対峙するか、距離を取るかは、あなたの選択。",
+    "guidanceQuiet": "この方角の両エネルギーは、いま静かです。\n特別な作用は感じにくい時間帯。\n無理に意味を見出さず、自然体でいられる場所。"
+  },
+  "aiReport": {
+    "reportLink": "不適切な内容を報告",
+    "sheetTitle": "AI 出力の報告",
+    "sheetIntro": "どのような問題があったか教えてください。内容を確認し、AI の品質改善に役立てます。",
+    "detailHint": "詳細 (任意・500 字以内)",
+    "submit": "送信する",
+    "cancel": "キャンセル",
+    "thanks": "ご報告ありがとうございました。内容を確認いたします。",
+    "sendFailed": "送信に失敗しました。電波の良いところで再度お試しください。",
+    "reasons": {
+      "inappropriate": { "label": "不適切な内容", "hint": "差別的・暴力的・性的等の不快な表現" },
+      "misinformation": { "label": "誤った専門助言", "hint": "「絶対に治る」「必ず儲かる」等、医療/金融/法律の断定表現" },
+      "ethics": { "label": "倫理違反", "hint": "他人の心を断定 (読心)、占星術の解釈として不適切" },
+      "quality": { "label": "品質問題", "hint": "文字化け、意味不明、空、繰り返し、未完成" },
+      "hallucination": { "label": "事実誤認", "hint": "存在しない地名、間違った占星術用語、捏造" },
+      "uncomfortable": { "label": "不快な表現", "hint": "過度に暗い、脅し、不安をあおる、悲観的すぎる" },
+      "other": { "label": "その他", "hint": "上記以外" }
+    }
+  },
   "mapScreen": {
     "vpOffscreen": "VIEWPOINT が画面外です。ズームアウト、または左上スコアバーから 16 方位の状況を確認できます。",
     "geoServiceOff": "端末の位置情報サービスが OFF です。設定からONにしてください。",

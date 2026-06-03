@@ -418,10 +418,10 @@
 | 2a | 2 | 1 | · | 6 | 4 | · | · | 1 | · | · | · | · | · | · | · | · |
 | 2b | 2 | 3 | 5 | 6 | 4 | 1 | · | · | · | · | · | · | · | · | · | · |
 | 2c | 1 | · | 1 | 3 | 2 | · | · | · | · | · | · | · | · | · | · | · |
-| 3a | 3 | 4 | 2 | 2 | 1 | 1 | 8 | 7 | 4 | 1 | · | · | · | · | 1 | · |
+| 3a | 4 | 4 | 2 | 2 | 1 | 1 | 8 | 7 | 4 | 1 | · | · | · | · | 1 | · |
 | 3b | 1 | · | · | · | · | · | · | 1 | · | · | · | · | · | · | · | · |
 | 3c | · | 5 | 4 | 2 | 4 | 1 | 12 | 4 | · | · | · | · | · | · | · | · |
-| 4a | 13 | 11 | · | 14 | 8 | 1 | 19 | 24 | 3 | 32 | 4 | · | · | · | 4 | · |
+| 4a | 14 | 11 | · | 14 | 8 | 1 | 19 | 24 | 3 | 32 | 4 | · | · | · | 4 | · |
 | 4b | 9 | 14 | · | 3 | 4 | · | 15 | · | · | · | 30 | · | · | 2 | · | · |
 | 4c | 2 | 1 | 14 | 1 | 4 | 5 | 8 | 6 | · | · | · | 16 | · | · | 1 | · |
 | 4d | 5 | 6 | 13 | 1 | 2 | 2 | 11 | 3 | 1 | · | · | · | 9 | · | · | · |
@@ -443,9 +443,9 @@
 | `lib/widgets/info_popup.dart` | 3a | 26 |
 | `lib/screens/map/map_constants.dart` | 3b | 23 |
 | `lib/utils/solara_api.dart` | 2a | 15 |
+| `lib/utils/solara_i18n.dart` | 1a | 15 |
 | `lib/models/galaxy_cycle.dart` | 1c | 14 |
 | `lib/screens/horoscope/horo_antique_icons.dart` | 3a | 14 |
-| `lib/utils/solara_i18n.dart` | 1a | 13 |
 | `lib/models/daily_reading.dart` | 1c | 12 |
 | `lib/screens/horoscope/horo_constants.dart` | 1b | 11 |
 | `lib/utils/pro_status.dart` | 2b | 11 |
@@ -472,11 +472,12 @@
 > 各ソースの SHA1 を `_stamps.json` に記録し、差分を検出。
 > 変更されたファイルが属する層は、人手版インベントリ章の見直し対象。
 
-- 追加: **0** / 削除: **0** / 変更: **1**
+- 追加: **0** / 削除: **0** / 変更: **3**
 
 ### 変更されたファイル (層別)
 
-- **層 4a**: `lib/screens/map_screen.dart`
+- **層 3a**: `lib/widgets/ai_report_button.dart`
+- **層 4a**: `lib/screens/map/map_direction_popup.dart`, `lib/screens/map/map_search.dart`
 
 ## #7 astro_glossary 用語辞書対整合
 

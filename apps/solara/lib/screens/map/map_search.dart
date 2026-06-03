@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:latlong2/latlong.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../i18n/strings.g.dart';
 import '../../utils/solara_api.dart' show solaraSearchUrl;
 import '../../widgets/info_popup.dart';
 import 'map_astro.dart';
@@ -228,7 +229,7 @@ class SearchResultList extends StatelessWidget {
           // 同機能を残すと UI 二重化。
           child: Row(children: [
             Expanded(
-              child: Text('検索結果 (${hits.length})',
+              child: Text(t.mapSearch.results(n: hits.length),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
@@ -271,9 +272,9 @@ class SearchResultList extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.fromLTRB(14, 6, 10, 6),
       child: Row(children: [
-        _rankSeg('distance', '中心点', cb),
+        _rankSeg('distance', t.mapSearch.rankDistance, cb),
         const SizedBox(width: 6),
-        _rankSeg('relevance', '知名度', cb),
+        _rankSeg('relevance', t.mapSearch.rankRelevance, cb),
         const Spacer(),
         GestureDetector(
           behavior: HitTestBehavior.opaque,
@@ -323,38 +324,36 @@ class SearchResultList extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: const [
-          Text('検索結果の絞り方',
-              style: TextStyle(
+        children: [
+          Text(t.mapSearch.rankHelpTitle,
+              style: const TextStyle(
                   color: Color(0xFFC9A84C), fontSize: 14, letterSpacing: 1)),
-          SizedBox(height: 10),
-          Text('【中心点】',
-              style: TextStyle(
+          const SizedBox(height: 10),
+          Text(t.mapSearch.rankDistanceHead,
+              style: const TextStyle(
                   color: Color(0xFFC9A84C),
                   fontSize: 13,
                   fontWeight: FontWeight.w600)),
-          SizedBox(height: 4),
+          const SizedBox(height: 4),
           Text(
-            '地図の中心 (現住所など) から近い順で取得します。\n'
-            '知名度が低くても、近所のお店が上位に出ます。',
-            style: TextStyle(color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
+            t.mapSearch.rankDistanceBody,
+            style: const TextStyle(color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
           ),
-          SizedBox(height: 10),
-          Text('【知名度】',
-              style: TextStyle(
+          const SizedBox(height: 10),
+          Text(t.mapSearch.rankRelevanceHead,
+              style: const TextStyle(
                   color: Color(0xFFC9A84C),
                   fontSize: 13,
                   fontWeight: FontWeight.w600)),
-          SizedBox(height: 4),
+          const SizedBox(height: 4),
           Text(
-            'Google でよく知られているお店を優先して取得します。\n'
-            '多少離れていても、知名度の高い候補が上位に出ます。',
-            style: TextStyle(color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
+            t.mapSearch.rankRelevanceBody,
+            style: const TextStyle(color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
           ),
-          SizedBox(height: 10),
+          const SizedBox(height: 10),
           Text(
-            '※ 並べ替えではなく、取得する候補そのものが変わります。',
-            style: TextStyle(color: Color(0xFF888888), fontSize: 12, height: 1.5),
+            t.mapSearch.rankNote,
+            style: const TextStyle(color: Color(0xFF888888), fontSize: 12, height: 1.5),
           ),
         ],
       ),
@@ -435,9 +434,9 @@ class SearchResultList extends StatelessWidget {
                         fontWeight: FontWeight.w600,
                       )),
                   if (h.bestDir != null)
-                    Text('${dir16JP[h.bestDir!]}方位',
+                    Text(t.mapSearch.bearing(dir: dirName(h.bestDir!)),
                         style: const TextStyle(fontSize: 13, color: Color(0xFF999999))),
-                  Text('${categoryLabels[displayCat] ?? '総合'} ${displayScore.toStringAsFixed(1)}',
+                  Text('${categoryLabels[displayCat] ?? t.category.overall} ${displayScore.toStringAsFixed(1)}',
                       style: TextStyle(fontSize: 13, color: catColor)),
                   if (fortuneIcon != null)
                     Text(fortuneIcon, style: const TextStyle(fontSize: 13)),
@@ -526,7 +525,7 @@ class SearchFocusPopup extends StatelessWidget {
         : (parts.length > 1 ? parts.skip(1).join(', ') : '');
     // 中心が動いたら方位を再計算（bestDir はキャッシュの可能性がある）
     final dir = focus.directionFrom(center);
-    final dirJp = dir16JP[dir] ?? dir;
+    final dirJp = dirName(dir);
     final km = focus.distanceKmFrom(center);
 
     // この方位のカテゴリ別スコア — _displayScores と同じ src フィルタを適用して、
@@ -614,7 +613,7 @@ class SearchFocusPopup extends StatelessWidget {
           runSpacing: 4,
           crossAxisAlignment: WrapCrossAlignment.center,
           children: [
-            Text('$dirJp方位',
+            Text(t.mapSearch.bearing(dir: dirJp),
                 style: const TextStyle(
                     fontSize: 13,
                     color: Color(0xFFC9A84C),
@@ -632,9 +631,9 @@ class SearchFocusPopup extends StatelessWidget {
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text(
-                'カテゴリ別内訳',
-                style: TextStyle(
+              Text(
+                t.mapSearch.categoryBreakdown,
+                style: const TextStyle(
                     fontSize: 13,
                     color: Color(0xFF888888),
                     letterSpacing: 0.5),
@@ -674,12 +673,12 @@ class SearchFocusPopup extends StatelessWidget {
         // 結果は SnackBar で通知 (満杯時はエラーメッセージ)。
         if (onSaveAsViewpoint != null) ...[
           _ActionTile(
-            label: '📍 VIEWPOINT に登録',
+            label: t.mapSearch.saveViewpoint,
             onTap: () async {
               final err = await onSaveAsViewpoint!();
               if (!context.mounted) return;
               ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                content: Text(err ?? '✓ VIEWPOINT に登録しました'),
+                content: Text(err ?? t.mapSearch.savedViewpoint),
                 duration: const Duration(seconds: 2),
               ));
             },
@@ -688,29 +687,29 @@ class SearchFocusPopup extends StatelessWidget {
         ],
         if (onSaveAsLocation != null) ...[
           _ActionTile(
-            label: '🏠 LOCATION に登録',
+            label: t.mapSearch.saveLocation,
             onTap: () async {
               final err = await onSaveAsLocation!();
               if (!context.mounted) return;
               ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                content: Text(err ?? '✓ LOCATION に登録しました'),
+                content: Text(err ?? t.mapSearch.savedLocation),
                 duration: const Duration(seconds: 2),
               ));
             },
           ),
           const SizedBox(height: 6),
         ],
-        _ActionTile(label: '✈ ここへ移動', onTap: onMoveToHit),
+        _ActionTile(label: t.mapSearch.moveHere, onTap: onMoveToHit),
         const SizedBox(height: 6),
         // Google マップでその店舗/施設のページを開く (placeId があれば place card
         // 直開き = メニュー・営業時間・レビューがすぐ見れる)。座標ピンではない。
         _ActionTile(
-          label: '🗺 Googleマップで見る',
+          label: t.mapSearch.openGoogleMaps,
           onTap: () => _openInGoogleMaps(context, focus),
         ),
         if (onConsult != null) ...[
           const SizedBox(height: 6),
-          _ActionTile(label: '✦ Stella に相談', onTap: onConsult!),
+          _ActionTile(label: t.mapSearch.consultStella, onTap: onConsult!),
         ],
       ]),
         ),
@@ -803,9 +802,9 @@ Future<void> _openInGoogleMaps(BuildContext context, SearchHit h) async {
     ok = false;
   }
   if (!ok && context.mounted) {
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-      content: Text('Google マップを開けませんでした'),
-      backgroundColor: Color(0xFF1A2438),
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(t.mapSearch.googleMapsFailed),
+      backgroundColor: const Color(0xFF1A2438),
     ));
   }
 }

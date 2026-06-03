@@ -40,6 +40,9 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 	Translations $copyWith({TranslationMetadata<AppLocale, Translations>? meta}) => Translations(meta: meta ?? this.$meta);
 
 	// Translations
+	late final Translations$mapSearch$ja mapSearch = Translations$mapSearch$ja.internal(_root);
+	late final Translations$mapDir$ja mapDir = Translations$mapDir$ja.internal(_root);
+	late final Translations$aiReport$ja aiReport = Translations$aiReport$ja.internal(_root);
 	late final Translations$mapScreen$ja mapScreen = Translations$mapScreen$ja.internal(_root);
 	late final Translations$homeEdit$ja homeEdit = Translations$homeEdit$ja.internal(_root);
 	late final Translations$resetPicker$ja resetPicker = Translations$resetPicker$ja.internal(_root);
@@ -71,6 +74,134 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 	late final Translations$disclaimer$ja disclaimer = Translations$disclaimer$ja.internal(_root);
 	late final Translations$common$ja common = Translations$common$ja.internal(_root);
 	late final Translations$aiConsent$ja aiConsent = Translations$aiConsent$ja.internal(_root);
+}
+
+// Path: mapSearch
+class Translations$mapSearch$ja {
+	Translations$mapSearch$ja.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// ja: '検索結果 ($n)'
+	String results({required Object n}) => '検索結果 (${n})';
+
+	/// ja: '中心点'
+	String get rankDistance => '中心点';
+
+	/// ja: '知名度'
+	String get rankRelevance => '知名度';
+
+	/// ja: '検索結果の絞り方'
+	String get rankHelpTitle => '検索結果の絞り方';
+
+	/// ja: '【中心点】'
+	String get rankDistanceHead => '【中心点】';
+
+	/// ja: '地図の中心 (現住所など) から近い順で取得します。 知名度が低くても、近所のお店が上位に出ます。'
+	String get rankDistanceBody => '地図の中心 (現住所など) から近い順で取得します。\n知名度が低くても、近所のお店が上位に出ます。';
+
+	/// ja: '【知名度】'
+	String get rankRelevanceHead => '【知名度】';
+
+	/// ja: 'Google でよく知られているお店を優先して取得します。 多少離れていても、知名度の高い候補が上位に出ます。'
+	String get rankRelevanceBody => 'Google でよく知られているお店を優先して取得します。\n多少離れていても、知名度の高い候補が上位に出ます。';
+
+	/// ja: '※ 並べ替えではなく、取得する候補そのものが変わります。'
+	String get rankNote => '※ 並べ替えではなく、取得する候補そのものが変わります。';
+
+	/// ja: '$dir方位'
+	String bearing({required Object dir}) => '${dir}方位';
+
+	/// ja: 'カテゴリ別内訳'
+	String get categoryBreakdown => 'カテゴリ別内訳';
+
+	/// ja: '📍 VIEWPOINT に登録'
+	String get saveViewpoint => '📍 VIEWPOINT に登録';
+
+	/// ja: '✓ VIEWPOINT に登録しました'
+	String get savedViewpoint => '✓ VIEWPOINT に登録しました';
+
+	/// ja: '🏠 LOCATION に登録'
+	String get saveLocation => '🏠 LOCATION に登録';
+
+	/// ja: '✓ LOCATION に登録しました'
+	String get savedLocation => '✓ LOCATION に登録しました';
+
+	/// ja: '✈ ここへ移動'
+	String get moveHere => '✈ ここへ移動';
+
+	/// ja: '🗺 Googleマップで見る'
+	String get openGoogleMaps => '🗺 Googleマップで見る';
+
+	/// ja: '✦ Stella に相談'
+	String get consultStella => '✦ Stella に相談';
+
+	/// ja: 'Google マップを開けませんでした'
+	String get googleMapsFailed => 'Google マップを開けませんでした';
+}
+
+// Path: mapDir
+class Translations$mapDir$ja {
+	Translations$mapDir$ja.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// ja: '主な寄与アスペクト'
+	String get mainContrib => '主な寄与アスペクト';
+
+	/// ja: '2つのエネルギーについて'
+	String get twoEnergies => '2つのエネルギーについて';
+
+	/// ja: 'この方角には、両エネルギーが同時に在ります。 流れと摩擦の両方が効く、深い体験の場。 どちらに乗るか、両方を観察するか、選ぶのはあなた。'
+	String get guidanceBoth => 'この方角には、両エネルギーが同時に在ります。\n流れと摩擦の両方が効く、深い体験の場。\nどちらに乗るか、両方を観察するか、選ぶのはあなた。';
+
+	/// ja: 'この方角は、ソフトエネルギーが優勢です。 流れに乗りやすい場。 受容的に進むのも、意識的に方向を選ぶのも、あなた次第。'
+	String get guidanceSoft => 'この方角は、ソフトエネルギーが優勢です。\n流れに乗りやすい場。\n受容的に進むのも、意識的に方向を選ぶのも、あなた次第。';
+
+	/// ja: 'この方角は、ハードエネルギーが優勢です。 摩擦と変容の場。 見つめ直すか、対峙するか、距離を取るかは、あなたの選択。'
+	String get guidanceHard => 'この方角は、ハードエネルギーが優勢です。\n摩擦と変容の場。\n見つめ直すか、対峙するか、距離を取るかは、あなたの選択。';
+
+	/// ja: 'この方角の両エネルギーは、いま静かです。 特別な作用は感じにくい時間帯。 無理に意味を見出さず、自然体でいられる場所。'
+	String get guidanceQuiet => 'この方角の両エネルギーは、いま静かです。\n特別な作用は感じにくい時間帯。\n無理に意味を見出さず、自然体でいられる場所。';
+}
+
+// Path: aiReport
+class Translations$aiReport$ja {
+	Translations$aiReport$ja.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// ja: '不適切な内容を報告'
+	String get reportLink => '不適切な内容を報告';
+
+	/// ja: 'AI 出力の報告'
+	String get sheetTitle => 'AI 出力の報告';
+
+	/// ja: 'どのような問題があったか教えてください。内容を確認し、AI の品質改善に役立てます。'
+	String get sheetIntro => 'どのような問題があったか教えてください。内容を確認し、AI の品質改善に役立てます。';
+
+	/// ja: '詳細 (任意・500 字以内)'
+	String get detailHint => '詳細 (任意・500 字以内)';
+
+	/// ja: '送信する'
+	String get submit => '送信する';
+
+	/// ja: 'キャンセル'
+	String get cancel => 'キャンセル';
+
+	/// ja: 'ご報告ありがとうございました。内容を確認いたします。'
+	String get thanks => 'ご報告ありがとうございました。内容を確認いたします。';
+
+	/// ja: '送信に失敗しました。電波の良いところで再度お試しください。'
+	String get sendFailed => '送信に失敗しました。電波の良いところで再度お試しください。';
+
+	late final Translations$aiReport$reasons$ja reasons = Translations$aiReport$reasons$ja.internal(_root);
 }
 
 // Path: mapScreen
@@ -1497,6 +1628,22 @@ class Translations$aiConsent$ja {
 	late final Translations$aiConsent$geminiContent$ja geminiContent = Translations$aiConsent$geminiContent$ja.internal(_root);
 	late final Translations$aiConsent$decisions$ja decisions = Translations$aiConsent$decisions$ja.internal(_root);
 	late final Translations$aiConsent$consentHandling$ja consentHandling = Translations$aiConsent$consentHandling$ja.internal(_root);
+}
+
+// Path: aiReport.reasons
+class Translations$aiReport$reasons$ja {
+	Translations$aiReport$reasons$ja.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+	late final Translations$aiReport$reasons$inappropriate$ja inappropriate = Translations$aiReport$reasons$inappropriate$ja.internal(_root);
+	late final Translations$aiReport$reasons$misinformation$ja misinformation = Translations$aiReport$reasons$misinformation$ja.internal(_root);
+	late final Translations$aiReport$reasons$ethics$ja ethics = Translations$aiReport$reasons$ethics$ja.internal(_root);
+	late final Translations$aiReport$reasons$quality$ja quality = Translations$aiReport$reasons$quality$ja.internal(_root);
+	late final Translations$aiReport$reasons$hallucination$ja hallucination = Translations$aiReport$reasons$hallucination$ja.internal(_root);
+	late final Translations$aiReport$reasons$uncomfortable$ja uncomfortable = Translations$aiReport$reasons$uncomfortable$ja.internal(_root);
+	late final Translations$aiReport$reasons$other$ja other = Translations$aiReport$reasons$other$ja.internal(_root);
 }
 
 // Path: sanctuary.guide
@@ -3319,6 +3466,111 @@ class Translations$aiConsent$consentHandling$ja {
 	String get body => '「同意して始める」を押すと、この「ご利用前のおしらせ」に記載されている事項に同意した事実を端末内に記録します。次回以降は表示されません。（規約変更の際は再度のご案内をさせて頂く場合がございます）\n\n同意しない場合は、画面下の「同意しない」をタップしていただき、Solara をアンインストールしてください。この時点では、本アプリではユーザーの個人情報含む一切のデータを受け取っておりません。';
 }
 
+// Path: aiReport.reasons.inappropriate
+class Translations$aiReport$reasons$inappropriate$ja {
+	Translations$aiReport$reasons$inappropriate$ja.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// ja: '不適切な内容'
+	String get label => '不適切な内容';
+
+	/// ja: '差別的・暴力的・性的等の不快な表現'
+	String get hint => '差別的・暴力的・性的等の不快な表現';
+}
+
+// Path: aiReport.reasons.misinformation
+class Translations$aiReport$reasons$misinformation$ja {
+	Translations$aiReport$reasons$misinformation$ja.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// ja: '誤った専門助言'
+	String get label => '誤った専門助言';
+
+	/// ja: '「絶対に治る」「必ず儲かる」等、医療/金融/法律の断定表現'
+	String get hint => '「絶対に治る」「必ず儲かる」等、医療/金融/法律の断定表現';
+}
+
+// Path: aiReport.reasons.ethics
+class Translations$aiReport$reasons$ethics$ja {
+	Translations$aiReport$reasons$ethics$ja.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// ja: '倫理違反'
+	String get label => '倫理違反';
+
+	/// ja: '他人の心を断定 (読心)、占星術の解釈として不適切'
+	String get hint => '他人の心を断定 (読心)、占星術の解釈として不適切';
+}
+
+// Path: aiReport.reasons.quality
+class Translations$aiReport$reasons$quality$ja {
+	Translations$aiReport$reasons$quality$ja.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// ja: '品質問題'
+	String get label => '品質問題';
+
+	/// ja: '文字化け、意味不明、空、繰り返し、未完成'
+	String get hint => '文字化け、意味不明、空、繰り返し、未完成';
+}
+
+// Path: aiReport.reasons.hallucination
+class Translations$aiReport$reasons$hallucination$ja {
+	Translations$aiReport$reasons$hallucination$ja.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// ja: '事実誤認'
+	String get label => '事実誤認';
+
+	/// ja: '存在しない地名、間違った占星術用語、捏造'
+	String get hint => '存在しない地名、間違った占星術用語、捏造';
+}
+
+// Path: aiReport.reasons.uncomfortable
+class Translations$aiReport$reasons$uncomfortable$ja {
+	Translations$aiReport$reasons$uncomfortable$ja.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// ja: '不快な表現'
+	String get label => '不快な表現';
+
+	/// ja: '過度に暗い、脅し、不安をあおる、悲観的すぎる'
+	String get hint => '過度に暗い、脅し、不安をあおる、悲観的すぎる';
+}
+
+// Path: aiReport.reasons.other
+class Translations$aiReport$reasons$other$ja {
+	Translations$aiReport$reasons$other$ja.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// ja: 'その他'
+	String get label => 'その他';
+
+	/// ja: '上記以外'
+	String get hint => '上記以外';
+}
+
 // Path: paywall.plans.free
 class Translations$paywall$plans$free$ja {
 	Translations$paywall$plans$free$ja.internal(this._root);
@@ -3744,6 +3996,53 @@ class Translations$paywall$faq$resubscribe$ja {
 extension on Translations {
 	dynamic _flatMapFunction(String path) {
 		return switch (path) {
+			'mapSearch.results' => ({required Object n}) => '検索結果 (${n})',
+			'mapSearch.rankDistance' => '中心点',
+			'mapSearch.rankRelevance' => '知名度',
+			'mapSearch.rankHelpTitle' => '検索結果の絞り方',
+			'mapSearch.rankDistanceHead' => '【中心点】',
+			'mapSearch.rankDistanceBody' => '地図の中心 (現住所など) から近い順で取得します。\n知名度が低くても、近所のお店が上位に出ます。',
+			'mapSearch.rankRelevanceHead' => '【知名度】',
+			'mapSearch.rankRelevanceBody' => 'Google でよく知られているお店を優先して取得します。\n多少離れていても、知名度の高い候補が上位に出ます。',
+			'mapSearch.rankNote' => '※ 並べ替えではなく、取得する候補そのものが変わります。',
+			'mapSearch.bearing' => ({required Object dir}) => '${dir}方位',
+			'mapSearch.categoryBreakdown' => 'カテゴリ別内訳',
+			'mapSearch.saveViewpoint' => '📍 VIEWPOINT に登録',
+			'mapSearch.savedViewpoint' => '✓ VIEWPOINT に登録しました',
+			'mapSearch.saveLocation' => '🏠 LOCATION に登録',
+			'mapSearch.savedLocation' => '✓ LOCATION に登録しました',
+			'mapSearch.moveHere' => '✈ ここへ移動',
+			'mapSearch.openGoogleMaps' => '🗺 Googleマップで見る',
+			'mapSearch.consultStella' => '✦ Stella に相談',
+			'mapSearch.googleMapsFailed' => 'Google マップを開けませんでした',
+			'mapDir.mainContrib' => '主な寄与アスペクト',
+			'mapDir.twoEnergies' => '2つのエネルギーについて',
+			'mapDir.guidanceBoth' => 'この方角には、両エネルギーが同時に在ります。\n流れと摩擦の両方が効く、深い体験の場。\nどちらに乗るか、両方を観察するか、選ぶのはあなた。',
+			'mapDir.guidanceSoft' => 'この方角は、ソフトエネルギーが優勢です。\n流れに乗りやすい場。\n受容的に進むのも、意識的に方向を選ぶのも、あなた次第。',
+			'mapDir.guidanceHard' => 'この方角は、ハードエネルギーが優勢です。\n摩擦と変容の場。\n見つめ直すか、対峙するか、距離を取るかは、あなたの選択。',
+			'mapDir.guidanceQuiet' => 'この方角の両エネルギーは、いま静かです。\n特別な作用は感じにくい時間帯。\n無理に意味を見出さず、自然体でいられる場所。',
+			'aiReport.reportLink' => '不適切な内容を報告',
+			'aiReport.sheetTitle' => 'AI 出力の報告',
+			'aiReport.sheetIntro' => 'どのような問題があったか教えてください。内容を確認し、AI の品質改善に役立てます。',
+			'aiReport.detailHint' => '詳細 (任意・500 字以内)',
+			'aiReport.submit' => '送信する',
+			'aiReport.cancel' => 'キャンセル',
+			'aiReport.thanks' => 'ご報告ありがとうございました。内容を確認いたします。',
+			'aiReport.sendFailed' => '送信に失敗しました。電波の良いところで再度お試しください。',
+			'aiReport.reasons.inappropriate.label' => '不適切な内容',
+			'aiReport.reasons.inappropriate.hint' => '差別的・暴力的・性的等の不快な表現',
+			'aiReport.reasons.misinformation.label' => '誤った専門助言',
+			'aiReport.reasons.misinformation.hint' => '「絶対に治る」「必ず儲かる」等、医療/金融/法律の断定表現',
+			'aiReport.reasons.ethics.label' => '倫理違反',
+			'aiReport.reasons.ethics.hint' => '他人の心を断定 (読心)、占星術の解釈として不適切',
+			'aiReport.reasons.quality.label' => '品質問題',
+			'aiReport.reasons.quality.hint' => '文字化け、意味不明、空、繰り返し、未完成',
+			'aiReport.reasons.hallucination.label' => '事実誤認',
+			'aiReport.reasons.hallucination.hint' => '存在しない地名、間違った占星術用語、捏造',
+			'aiReport.reasons.uncomfortable.label' => '不快な表現',
+			'aiReport.reasons.uncomfortable.hint' => '過度に暗い、脅し、不安をあおる、悲観的すぎる',
+			'aiReport.reasons.other.label' => 'その他',
+			'aiReport.reasons.other.hint' => '上記以外',
 			'mapScreen.vpOffscreen' => 'VIEWPOINT が画面外です。ズームアウト、または左上スコアバーから 16 方位の状況を確認できます。',
 			'mapScreen.geoServiceOff' => '端末の位置情報サービスが OFF です。設定からONにしてください。',
 			'mapScreen.geoDeniedForever' => '位置情報の利用が永久拒否されています。設定アプリから許可してください。',
@@ -4209,6 +4508,8 @@ extension on Translations {
 			'consultResult.block.proSyncBody' => 'Cosmic Pro の課金状態をストアと再確認しています。クレジットは消費されていません。数十秒待ってからもう一度お試しください。',
 			'consultResult.block.exhaustedTitle' => '相談クレジットを使い切りました',
 			'consultResult.block.exhaustedBody' => '無料の Stella 相談は週ごとに補充されます。すぐ続けるなら、追加クレジットの購入か、回数無制限の Cosmic Pro が選べます。',
+			_ => null,
+		} ?? switch (path) {
 			'consultResult.block.buyCredits' => '追加クレジットを購入',
 			'consultResult.block.goUnlimited' => '✦ Cosmic Pro で無制限にする',
 			'consultResult.block.seePro' => '✦ Cosmic Pro を見る',
@@ -4256,8 +4557,6 @@ extension on Translations {
 			'consultInput.whomExamples.love.2' => '気になる人と',
 			'consultInput.whomExamples.money.0' => 'ひとりで',
 			'consultInput.whomExamples.money.1' => '家族と',
-			_ => null,
-		} ?? switch (path) {
 			'consultInput.whomExamples.money.2' => 'パートナーと',
 			'consultInput.whomExamples.work.0' => 'ひとりで',
 			'consultInput.whomExamples.work.1' => '同僚と',

@@ -1,4 +1,52 @@
 {
+  "mapSearch": {
+    "results": "Results ($n)",
+    "rankDistance": "Nearby",
+    "rankRelevance": "Popular",
+    "rankHelpTitle": "How to narrow results",
+    "rankDistanceHead": "[Nearby]",
+    "rankDistanceBody": "Fetches in order of nearness to the map's center (e.g. your current address).\nEven lesser-known places rank high if they're nearby.",
+    "rankRelevanceHead": "[Popular]",
+    "rankRelevanceBody": "Prioritizes places well-known on Google.\nWell-known candidates rank high even if somewhat far.",
+    "rankNote": "* This isn't a re-sort — the candidates fetched themselves change.",
+    "bearing": "$dir",
+    "categoryBreakdown": "Category breakdown",
+    "saveViewpoint": "📍 Save as VIEWPOINT",
+    "savedViewpoint": "✓ Saved as VIEWPOINT",
+    "saveLocation": "🏠 Save as LOCATION",
+    "savedLocation": "✓ Saved as LOCATION",
+    "moveHere": "✈ Move here",
+    "openGoogleMaps": "🗺 View on Google Maps",
+    "consultStella": "✦ Consult Stella",
+    "googleMapsFailed": "Couldn't open Google Maps"
+  },
+  "mapDir": {
+    "mainContrib": "Main contributing aspects",
+    "twoEnergies": "About the two energies",
+    "guidanceBoth": "Both energies are present in this direction at once.\nA place of deep experience where both flow and friction take effect.\nWhich to ride, or to observe both — the choice is yours.",
+    "guidanceSoft": "Soft energy is dominant in this direction.\nA place where it's easy to ride the flow.\nWhether to move receptively or to consciously choose your direction is up to you.",
+    "guidanceHard": "Hard energy is dominant in this direction.\nA place of friction and transformation.\nWhether to look again, to confront, or to keep your distance is your choice.",
+    "guidanceQuiet": "Both energies in this direction are quiet right now.\nA time when special effects are hard to feel.\nA place to stay natural, without forcing meaning onto it."
+  },
+  "aiReport": {
+    "reportLink": "Report inappropriate content",
+    "sheetTitle": "Report AI output",
+    "sheetIntro": "Tell us what was wrong. We'll review it and use it to improve the AI's quality.",
+    "detailHint": "Details (optional, up to 500 characters)",
+    "submit": "Submit",
+    "cancel": "Cancel",
+    "thanks": "Thank you for your report. We'll review it.",
+    "sendFailed": "Sending failed. Please try again where you have a good signal.",
+    "reasons": {
+      "inappropriate": { "label": "Inappropriate content", "hint": "Discriminatory, violent, sexual, or otherwise offensive expression" },
+      "misinformation": { "label": "Wrong expert advice", "hint": "Definitive medical/financial/legal claims like \"guaranteed to cure\" or \"sure to profit\"" },
+      "ethics": { "label": "Ethics violation", "hint": "Asserting what's in someone's mind (mind-reading), inappropriate as an astrological interpretation" },
+      "quality": { "label": "Quality issue", "hint": "Garbled text, nonsense, empty, repetitive, or unfinished" },
+      "hallucination": { "label": "Factual error", "hint": "Nonexistent place names, wrong astrology terms, fabrication" },
+      "uncomfortable": { "label": "Uncomfortable wording", "hint": "Overly dark, threatening, anxiety-inducing, or too pessimistic" },
+      "other": { "label": "Other", "hint": "Anything not listed above" }
+    }
+  },
   "mapScreen": {
     "vpOffscreen": "VIEWPOINT is off-screen. Zoom out, or check the 16-direction status from the score bar at the top-left.",
     "geoServiceOff": "Location services are OFF on your device. Please turn them on in Settings.",

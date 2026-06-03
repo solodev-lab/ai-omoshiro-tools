@@ -39,6 +39,9 @@ class TranslationsEn extends Translations with BaseTranslations<AppLocale, Trans
 	TranslationsEn $copyWith({TranslationMetadata<AppLocale, Translations>? meta}) => TranslationsEn(meta: meta ?? this.$meta);
 
 	// Translations
+	@override late final _Translations$mapSearch$en mapSearch = _Translations$mapSearch$en._(_root);
+	@override late final _Translations$mapDir$en mapDir = _Translations$mapDir$en._(_root);
+	@override late final _Translations$aiReport$en aiReport = _Translations$aiReport$en._(_root);
 	@override late final _Translations$mapScreen$en mapScreen = _Translations$mapScreen$en._(_root);
 	@override late final _Translations$homeEdit$en homeEdit = _Translations$homeEdit$en._(_root);
 	@override late final _Translations$resetPicker$en resetPicker = _Translations$resetPicker$en._(_root);
@@ -70,6 +73,67 @@ class TranslationsEn extends Translations with BaseTranslations<AppLocale, Trans
 	@override late final _Translations$disclaimer$en disclaimer = _Translations$disclaimer$en._(_root);
 	@override late final _Translations$common$en common = _Translations$common$en._(_root);
 	@override late final _Translations$aiConsent$en aiConsent = _Translations$aiConsent$en._(_root);
+}
+
+// Path: mapSearch
+class _Translations$mapSearch$en extends Translations$mapSearch$ja {
+	_Translations$mapSearch$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String results({required Object n}) => 'Results (${n})';
+	@override String get rankDistance => 'Nearby';
+	@override String get rankRelevance => 'Popular';
+	@override String get rankHelpTitle => 'How to narrow results';
+	@override String get rankDistanceHead => '[Nearby]';
+	@override String get rankDistanceBody => 'Fetches in order of nearness to the map\'s center (e.g. your current address).\nEven lesser-known places rank high if they\'re nearby.';
+	@override String get rankRelevanceHead => '[Popular]';
+	@override String get rankRelevanceBody => 'Prioritizes places well-known on Google.\nWell-known candidates rank high even if somewhat far.';
+	@override String get rankNote => '* This isn\'t a re-sort — the candidates fetched themselves change.';
+	@override String bearing({required Object dir}) => '${dir}';
+	@override String get categoryBreakdown => 'Category breakdown';
+	@override String get saveViewpoint => '📍 Save as VIEWPOINT';
+	@override String get savedViewpoint => '✓ Saved as VIEWPOINT';
+	@override String get saveLocation => '🏠 Save as LOCATION';
+	@override String get savedLocation => '✓ Saved as LOCATION';
+	@override String get moveHere => '✈ Move here';
+	@override String get openGoogleMaps => '🗺 View on Google Maps';
+	@override String get consultStella => '✦ Consult Stella';
+	@override String get googleMapsFailed => 'Couldn\'t open Google Maps';
+}
+
+// Path: mapDir
+class _Translations$mapDir$en extends Translations$mapDir$ja {
+	_Translations$mapDir$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get mainContrib => 'Main contributing aspects';
+	@override String get twoEnergies => 'About the two energies';
+	@override String get guidanceBoth => 'Both energies are present in this direction at once.\nA place of deep experience where both flow and friction take effect.\nWhich to ride, or to observe both — the choice is yours.';
+	@override String get guidanceSoft => 'Soft energy is dominant in this direction.\nA place where it\'s easy to ride the flow.\nWhether to move receptively or to consciously choose your direction is up to you.';
+	@override String get guidanceHard => 'Hard energy is dominant in this direction.\nA place of friction and transformation.\nWhether to look again, to confront, or to keep your distance is your choice.';
+	@override String get guidanceQuiet => 'Both energies in this direction are quiet right now.\nA time when special effects are hard to feel.\nA place to stay natural, without forcing meaning onto it.';
+}
+
+// Path: aiReport
+class _Translations$aiReport$en extends Translations$aiReport$ja {
+	_Translations$aiReport$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get reportLink => 'Report inappropriate content';
+	@override String get sheetTitle => 'Report AI output';
+	@override String get sheetIntro => 'Tell us what was wrong. We\'ll review it and use it to improve the AI\'s quality.';
+	@override String get detailHint => 'Details (optional, up to 500 characters)';
+	@override String get submit => 'Submit';
+	@override String get cancel => 'Cancel';
+	@override String get thanks => 'Thank you for your report. We\'ll review it.';
+	@override String get sendFailed => 'Sending failed. Please try again where you have a good signal.';
+	@override late final _Translations$aiReport$reasons$en reasons = _Translations$aiReport$reasons$en._(_root);
 }
 
 // Path: mapScreen
@@ -787,6 +851,22 @@ class _Translations$aiConsent$en extends Translations$aiConsent$ja {
 	@override late final _Translations$aiConsent$geminiContent$en geminiContent = _Translations$aiConsent$geminiContent$en._(_root);
 	@override late final _Translations$aiConsent$decisions$en decisions = _Translations$aiConsent$decisions$en._(_root);
 	@override late final _Translations$aiConsent$consentHandling$en consentHandling = _Translations$aiConsent$consentHandling$en._(_root);
+}
+
+// Path: aiReport.reasons
+class _Translations$aiReport$reasons$en extends Translations$aiReport$reasons$ja {
+	_Translations$aiReport$reasons$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override late final _Translations$aiReport$reasons$inappropriate$en inappropriate = _Translations$aiReport$reasons$inappropriate$en._(_root);
+	@override late final _Translations$aiReport$reasons$misinformation$en misinformation = _Translations$aiReport$reasons$misinformation$en._(_root);
+	@override late final _Translations$aiReport$reasons$ethics$en ethics = _Translations$aiReport$reasons$ethics$en._(_root);
+	@override late final _Translations$aiReport$reasons$quality$en quality = _Translations$aiReport$reasons$quality$en._(_root);
+	@override late final _Translations$aiReport$reasons$hallucination$en hallucination = _Translations$aiReport$reasons$hallucination$en._(_root);
+	@override late final _Translations$aiReport$reasons$uncomfortable$en uncomfortable = _Translations$aiReport$reasons$uncomfortable$en._(_root);
+	@override late final _Translations$aiReport$reasons$other$en other = _Translations$aiReport$reasons$other$en._(_root);
 }
 
 // Path: sanctuary.guide
@@ -1842,6 +1922,83 @@ class _Translations$aiConsent$consentHandling$en extends Translations$aiConsent$
 	@override String get body => 'When you tap "Agree and Begin," the fact that you agreed to what\'s described in "Before You Begin" is recorded on your device. It won\'t be shown again. (If the terms change, we may show this notice once more.)\n\nIf you do not agree, please tap "Decline" at the bottom of the screen and uninstall Solara. At this point, we have not received any of your data, including any personal information.';
 }
 
+// Path: aiReport.reasons.inappropriate
+class _Translations$aiReport$reasons$inappropriate$en extends Translations$aiReport$reasons$inappropriate$ja {
+	_Translations$aiReport$reasons$inappropriate$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get label => 'Inappropriate content';
+	@override String get hint => 'Discriminatory, violent, sexual, or otherwise offensive expression';
+}
+
+// Path: aiReport.reasons.misinformation
+class _Translations$aiReport$reasons$misinformation$en extends Translations$aiReport$reasons$misinformation$ja {
+	_Translations$aiReport$reasons$misinformation$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get label => 'Wrong expert advice';
+	@override String get hint => 'Definitive medical/financial/legal claims like "guaranteed to cure" or "sure to profit"';
+}
+
+// Path: aiReport.reasons.ethics
+class _Translations$aiReport$reasons$ethics$en extends Translations$aiReport$reasons$ethics$ja {
+	_Translations$aiReport$reasons$ethics$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get label => 'Ethics violation';
+	@override String get hint => 'Asserting what\'s in someone\'s mind (mind-reading), inappropriate as an astrological interpretation';
+}
+
+// Path: aiReport.reasons.quality
+class _Translations$aiReport$reasons$quality$en extends Translations$aiReport$reasons$quality$ja {
+	_Translations$aiReport$reasons$quality$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get label => 'Quality issue';
+	@override String get hint => 'Garbled text, nonsense, empty, repetitive, or unfinished';
+}
+
+// Path: aiReport.reasons.hallucination
+class _Translations$aiReport$reasons$hallucination$en extends Translations$aiReport$reasons$hallucination$ja {
+	_Translations$aiReport$reasons$hallucination$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get label => 'Factual error';
+	@override String get hint => 'Nonexistent place names, wrong astrology terms, fabrication';
+}
+
+// Path: aiReport.reasons.uncomfortable
+class _Translations$aiReport$reasons$uncomfortable$en extends Translations$aiReport$reasons$uncomfortable$ja {
+	_Translations$aiReport$reasons$uncomfortable$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get label => 'Uncomfortable wording';
+	@override String get hint => 'Overly dark, threatening, anxiety-inducing, or too pessimistic';
+}
+
+// Path: aiReport.reasons.other
+class _Translations$aiReport$reasons$other$en extends Translations$aiReport$reasons$other$ja {
+	_Translations$aiReport$reasons$other$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get label => 'Other';
+	@override String get hint => 'Anything not listed above';
+}
+
 // Path: paywall.plans.free
 class _Translations$paywall$plans$free$en extends Translations$paywall$plans$free$ja {
 	_Translations$paywall$plans$free$en._(TranslationsEn root) : this._root = root, super.internal(root);
@@ -2139,6 +2296,53 @@ class _Translations$paywall$faq$resubscribe$en extends Translations$paywall$faq$
 extension on TranslationsEn {
 	dynamic _flatMapFunction(String path) {
 		return switch (path) {
+			'mapSearch.results' => ({required Object n}) => 'Results (${n})',
+			'mapSearch.rankDistance' => 'Nearby',
+			'mapSearch.rankRelevance' => 'Popular',
+			'mapSearch.rankHelpTitle' => 'How to narrow results',
+			'mapSearch.rankDistanceHead' => '[Nearby]',
+			'mapSearch.rankDistanceBody' => 'Fetches in order of nearness to the map\'s center (e.g. your current address).\nEven lesser-known places rank high if they\'re nearby.',
+			'mapSearch.rankRelevanceHead' => '[Popular]',
+			'mapSearch.rankRelevanceBody' => 'Prioritizes places well-known on Google.\nWell-known candidates rank high even if somewhat far.',
+			'mapSearch.rankNote' => '* This isn\'t a re-sort — the candidates fetched themselves change.',
+			'mapSearch.bearing' => ({required Object dir}) => '${dir}',
+			'mapSearch.categoryBreakdown' => 'Category breakdown',
+			'mapSearch.saveViewpoint' => '📍 Save as VIEWPOINT',
+			'mapSearch.savedViewpoint' => '✓ Saved as VIEWPOINT',
+			'mapSearch.saveLocation' => '🏠 Save as LOCATION',
+			'mapSearch.savedLocation' => '✓ Saved as LOCATION',
+			'mapSearch.moveHere' => '✈ Move here',
+			'mapSearch.openGoogleMaps' => '🗺 View on Google Maps',
+			'mapSearch.consultStella' => '✦ Consult Stella',
+			'mapSearch.googleMapsFailed' => 'Couldn\'t open Google Maps',
+			'mapDir.mainContrib' => 'Main contributing aspects',
+			'mapDir.twoEnergies' => 'About the two energies',
+			'mapDir.guidanceBoth' => 'Both energies are present in this direction at once.\nA place of deep experience where both flow and friction take effect.\nWhich to ride, or to observe both — the choice is yours.',
+			'mapDir.guidanceSoft' => 'Soft energy is dominant in this direction.\nA place where it\'s easy to ride the flow.\nWhether to move receptively or to consciously choose your direction is up to you.',
+			'mapDir.guidanceHard' => 'Hard energy is dominant in this direction.\nA place of friction and transformation.\nWhether to look again, to confront, or to keep your distance is your choice.',
+			'mapDir.guidanceQuiet' => 'Both energies in this direction are quiet right now.\nA time when special effects are hard to feel.\nA place to stay natural, without forcing meaning onto it.',
+			'aiReport.reportLink' => 'Report inappropriate content',
+			'aiReport.sheetTitle' => 'Report AI output',
+			'aiReport.sheetIntro' => 'Tell us what was wrong. We\'ll review it and use it to improve the AI\'s quality.',
+			'aiReport.detailHint' => 'Details (optional, up to 500 characters)',
+			'aiReport.submit' => 'Submit',
+			'aiReport.cancel' => 'Cancel',
+			'aiReport.thanks' => 'Thank you for your report. We\'ll review it.',
+			'aiReport.sendFailed' => 'Sending failed. Please try again where you have a good signal.',
+			'aiReport.reasons.inappropriate.label' => 'Inappropriate content',
+			'aiReport.reasons.inappropriate.hint' => 'Discriminatory, violent, sexual, or otherwise offensive expression',
+			'aiReport.reasons.misinformation.label' => 'Wrong expert advice',
+			'aiReport.reasons.misinformation.hint' => 'Definitive medical/financial/legal claims like "guaranteed to cure" or "sure to profit"',
+			'aiReport.reasons.ethics.label' => 'Ethics violation',
+			'aiReport.reasons.ethics.hint' => 'Asserting what\'s in someone\'s mind (mind-reading), inappropriate as an astrological interpretation',
+			'aiReport.reasons.quality.label' => 'Quality issue',
+			'aiReport.reasons.quality.hint' => 'Garbled text, nonsense, empty, repetitive, or unfinished',
+			'aiReport.reasons.hallucination.label' => 'Factual error',
+			'aiReport.reasons.hallucination.hint' => 'Nonexistent place names, wrong astrology terms, fabrication',
+			'aiReport.reasons.uncomfortable.label' => 'Uncomfortable wording',
+			'aiReport.reasons.uncomfortable.hint' => 'Overly dark, threatening, anxiety-inducing, or too pessimistic',
+			'aiReport.reasons.other.label' => 'Other',
+			'aiReport.reasons.other.hint' => 'Anything not listed above',
 			'mapScreen.vpOffscreen' => 'VIEWPOINT is off-screen. Zoom out, or check the 16-direction status from the score bar at the top-left.',
 			'mapScreen.geoServiceOff' => 'Location services are OFF on your device. Please turn them on in Settings.',
 			'mapScreen.geoDeniedForever' => 'Location access is permanently denied. Please allow it from the Settings app.',
@@ -2604,6 +2808,8 @@ extension on TranslationsEn {
 			'consultResult.block.proSyncBody' => 'We\'re re-checking your Cosmic Pro billing status with the store. No credits have been used. Please wait a moment, then try again.',
 			'consultResult.block.exhaustedTitle' => 'You\'ve used up your consultation credits',
 			'consultResult.block.exhaustedBody' => 'Free Stella consultations refill each week. To keep going right away, you can buy extra credits, or go unlimited with Cosmic Pro.',
+			_ => null,
+		} ?? switch (path) {
 			'consultResult.block.buyCredits' => 'Buy extra credits',
 			'consultResult.block.goUnlimited' => '✦ Go unlimited with Cosmic Pro',
 			'consultResult.block.seePro' => '✦ See Cosmic Pro',
@@ -2651,8 +2857,6 @@ extension on TranslationsEn {
 			'consultInput.whomExamples.love.2' => 'With someone I like',
 			'consultInput.whomExamples.money.0' => 'On my own',
 			'consultInput.whomExamples.money.1' => 'With family',
-			_ => null,
-		} ?? switch (path) {
 			'consultInput.whomExamples.money.2' => 'With my partner',
 			'consultInput.whomExamples.work.0' => 'On my own',
 			'consultInput.whomExamples.work.1' => 'With a colleague',

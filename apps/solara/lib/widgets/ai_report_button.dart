@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import '../i18n/strings.g.dart';
 import '../utils/ai_report_api.dart';
+import '../utils/solara_i18n.dart';
 
 /// AI 出力ユーザー報告ボタン (Google Generative AI Apps Policy 対応)。
 ///
@@ -45,9 +47,9 @@ class AiReportButton extends StatelessWidget {
             size: 14,
             color: Color(0xFF888270),
           ),
-          label: const Text(
-            '不適切な内容を報告',
-            style: TextStyle(
+          label: Text(
+            t.aiReport.reportLink,
+            style: const TextStyle(
               color: Color(0xFF888270),
               fontSize: 11,
               decoration: TextDecoration.underline,
@@ -99,16 +101,24 @@ class _ReportReason {
   const _ReportReason(this.value, this.label, this.hint);
 }
 
-const List<_ReportReason> _kReasons = [
-  _ReportReason('inappropriate', '不適切な内容', '差別的・暴力的・性的等の不快な表現'),
-  _ReportReason('misinformation', '誤った専門助言',
-      '「絶対に治る」「必ず儲かる」等、医療/金融/法律の断定表現'),
-  _ReportReason('ethics', '倫理違反', '他人の心を断定 (読心)、占星術の解釈として不適切'),
-  _ReportReason('quality', '品質問題', '文字化け、意味不明、空、繰り返し、未完成'),
-  _ReportReason('hallucination', '事実誤認', '存在しない地名、間違った占星術用語、捏造'),
-  _ReportReason('uncomfortable', '不快な表現', '過度に暗い、脅し、不安をあおる、悲観的すぎる'),
-  _ReportReason('other', 'その他', '上記以外'),
+/// 報告理由の安定 ID 一覧 (Worker へ送る value)。label / hint は
+/// i18n (`aiReport.reasons.{value}.label` / `.hint`) からロケール別に解決する。
+const List<String> _kReasonValues = [
+  'inappropriate',
+  'misinformation',
+  'ethics',
+  'quality',
+  'hallucination',
+  'uncomfortable',
+  'other',
 ];
+
+/// value から表示用 _ReportReason (label/hint をロケール解決) を作る。
+_ReportReason _reasonOf(String value) => _ReportReason(
+      value,
+      tr('aiReport.reasons.$value.label'),
+      tr('aiReport.reasons.$value.hint'),
+    );
 
 class _AiReportSheetState extends State<_AiReportSheet> {
   String? _selected;
@@ -137,9 +147,7 @@ class _AiReportSheetState extends State<_AiReportSheet> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          ok
-              ? 'ご報告ありがとうございました。内容を確認いたします。'
-              : '送信に失敗しました。電波の良いところで再度お試しください。',
+          ok ? t.aiReport.thanks : t.aiReport.sendFailed,
           style: const TextStyle(fontSize: 13),
         ),
         backgroundColor: ok ? const Color(0xFF1F3322) : const Color(0xFF3A1A1A),
@@ -172,25 +180,25 @@ class _AiReportSheetState extends State<_AiReportSheet> {
                   ),
                 ),
               ),
-              const Text(
-                'AI 出力の報告',
-                style: TextStyle(
+              Text(
+                t.aiReport.sheetTitle,
+                style: const TextStyle(
                   color: Color(0xFFE8E4D3),
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
                 ),
               ),
               const SizedBox(height: 4),
-              const Text(
-                'どのような問題があったか教えてください。内容を確認し、AI の品質改善に役立てます。',
-                style: TextStyle(color: Color(0xFFB8B4A3), fontSize: 12, height: 1.5),
+              Text(
+                t.aiReport.sheetIntro,
+                style: const TextStyle(color: Color(0xFFB8B4A3), fontSize: 12, height: 1.5),
               ),
               const SizedBox(height: 16),
               // 理由選択
-              ..._kReasons.map((r) => _ReasonTile(
-                    reason: r,
-                    selected: _selected == r.value,
-                    onTap: () => setState(() => _selected = r.value),
+              ..._kReasonValues.map((v) => _ReasonTile(
+                    reason: _reasonOf(v),
+                    selected: _selected == v,
+                    onTap: () => setState(() => _selected = v),
                   )),
               const SizedBox(height: 12),
               // 自由記述 (任意)
@@ -199,15 +207,15 @@ class _AiReportSheetState extends State<_AiReportSheet> {
                 maxLength: 500,
                 maxLines: 3,
                 style: const TextStyle(color: Color(0xFFE8E4D3), fontSize: 13),
-                decoration: const InputDecoration(
-                  hintText: '詳細 (任意・500 字以内)',
-                  hintStyle: TextStyle(color: Color(0xFF666060)),
+                decoration: InputDecoration(
+                  hintText: t.aiReport.detailHint,
+                  hintStyle: const TextStyle(color: Color(0xFF666060)),
                   filled: true,
-                  fillColor: Color(0xFF0A0A14),
-                  border: OutlineInputBorder(
+                  fillColor: const Color(0xFF0A0A14),
+                  border: const OutlineInputBorder(
                     borderSide: BorderSide(color: Color(0xFF444444)),
                   ),
-                  counterStyle: TextStyle(color: Color(0xFF666060), fontSize: 10),
+                  counterStyle: const TextStyle(color: Color(0xFF666060), fontSize: 10),
                 ),
               ),
               const SizedBox(height: 12),
@@ -229,13 +237,13 @@ class _AiReportSheetState extends State<_AiReportSheet> {
                         height: 18,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : const Text('送信する',
-                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+                    : Text(t.aiReport.submit,
+                        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
               ),
               TextButton(
                 onPressed: () => Navigator.of(context).pop(),
-                child: const Text('キャンセル',
-                    style: TextStyle(color: Color(0xFF888270), fontSize: 13)),
+                child: Text(t.aiReport.cancel,
+                    style: const TextStyle(color: Color(0xFF888270), fontSize: 13)),
               ),
             ],
           ),

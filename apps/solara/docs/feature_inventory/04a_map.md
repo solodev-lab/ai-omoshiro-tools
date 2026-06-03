@@ -301,7 +301,7 @@ F1-c (2026-04-29 オーナー設計):
 - 集計: `showInfoPopup`×4
 
 
-### `lib/screens/map/map_direction_popup.dart` (374 行)
+### `lib/screens/map/map_direction_popup.dart` (375 行)
 
 **ファイル先頭コメント:**
 
@@ -320,28 +320,28 @@ E4 (2026-04-29): 設計思想に基づく「両エネルギー事実提示」型
 ============================================================
 ```
 
-**imports:** dart=0 / package=1 / relative=5
+**imports:** dart=0 / package=1 / relative=7
 
-- relative: `../../theme/solara_colors.dart`, `../../utils/astro_glossary.dart`, `../../utils/direction_energy.dart`, `../../widgets/info_popup.dart`, `map_constants.dart`
+- relative: `../../i18n/strings.g.dart`, `../../theme/solara_colors.dart`, `../../utils/astro_glossary.dart`, `../../utils/direction_energy.dart`, `../../utils/solara_i18n.dart`, `../../widgets/info_popup.dart`, `map_constants.dart`
 
 **型定義 (3):**
 
-- L45 `class _PopupBody : StatelessWidget`
-- L200 `class _EnergyBar : StatelessWidget`
-- L295 `class _ContribRow : StatelessWidget`
+- L47 `class _PopupBody : StatelessWidget`
+- L192 `class _EnergyBar : StatelessWidget`
+- L285 `class _ContribRow : StatelessWidget`
 
 **関数 (4 public + 3 private):**
 
-- L26 `showDirectionEnergyPopup()` — 方角タップ詳細ポップアップを表示するヘルパー。
-- L59 `build()`
-- L218 `build()`
-- L300 `build()`
+- L28 `showDirectionEnergyPopup()` — 方角タップ詳細ポップアップを表示するヘルパー。
+- L61 `build()`
+- L208 `build()`
+- L290 `build()`
 
   <details><summary>private 関数 3 件</summary>
 
   - L173 `_guidanceText()`
-  - L345 `_planetLabel()`
-  - L362 `_aspectLabel()`
+  - L335 `_planetLabel()`
+  - L353 `_aspectLabel()`
 
   </details>
 
@@ -718,45 +718,45 @@ A*C*G ライン (natal / transit) のタップ詳細 popup。
 - 集計: `showLineNarrativeSheet`×1
 
 
-### `lib/screens/map/map_search.dart` (811 行)
+### `lib/screens/map/map_search.dart` (810 行)
 
-**imports:** dart=2 / package=4 / relative=5
+**imports:** dart=2 / package=4 / relative=6
 
-- relative: `../../utils/solara_api.dart`, `../../widgets/info_popup.dart`, `map_astro.dart`, `map_constants.dart`, `map_fortune_sheet.dart`
+- relative: `../../i18n/strings.g.dart`, `../../utils/solara_api.dart`, `../../widgets/info_popup.dart`, `map_astro.dart`, `map_constants.dart`, `map_fortune_sheet.dart`
 
 **型定義 (5):**
 
-- L16 `class SearchHit`
+- L17 `class SearchHit`
   - 検索結果1件分
-- L183 `class SearchResultList : StatelessWidget`
+- L184 `class SearchResultList : StatelessWidget`
   - 検索結果リスト（スコア付き）ポップアップ
-- L470 `class SearchFocusPopup : StatelessWidget`
+- L469 `class SearchFocusPopup : StatelessWidget`
   - 検索候補から1件選ばれたあとの詳細ポップアップ。
-- L722 `class _CatChip : StatelessWidget`
-- L747 `class _ActionTile : StatelessWidget`
+- L721 `class _CatChip : StatelessWidget`
+- L746 `class _ActionTile : StatelessWidget`
 
 **関数 (9 public + 8 private):**
 
-- L52 `toJson()` — 画面復元 (Android プロセス死対策) 用シリアライズ。
-- L81 `directionFrom()` — 中心座標から見たこの地点の方位（16方位名）
-- L86 `distanceKmFrom()` — 中心から km 距離
-- L159 `annotateHitsWithScores()` — 検索結果に、現在中心からの方位スコアと支配カテゴリを注入する
-- L215 `build()`
-- L512 `build()`
-- L728 `build()`
-- L753 `build()`
-- L779 `googleMapsUrlForHit()` — 検索結果を Google マップで開く URL を組み立てる。
+- L53 `toJson()` — 画面復元 (Android プロセス死対策) 用シリアライズ。
+- L82 `directionFrom()` — 中心座標から見たこの地点の方位（16方位名）
+- L87 `distanceKmFrom()` — 中心から km 距離
+- L160 `annotateHitsWithScores()` — 検索結果に、現在中心からの方位スコアと支配カテゴリを注入する
+- L216 `build()`
+- L511 `build()`
+- L727 `build()`
+- L752 `build()`
+- L778 `googleMapsUrlForHit()` — 検索結果を Google マップで開く URL を組み立てる。
 
   <details><summary>private 関数 8 件</summary>
 
-  - L91 `_bearingDeg()`
-  - L100 `_azimuthToDir16()`
-  - L106 `_haversineKm()`
-  - L269 `_rankToggle()`
-  - L290 `_rankSeg()`
-  - L320 `_showRankHelp()`
-  - L364 `_hitRow()`
-  - L797 `_openInGoogleMaps()`
+  - L92 `_bearingDeg()`
+  - L101 `_azimuthToDir16()`
+  - L107 `_haversineKm()`
+  - L270 `_rankToggle()`
+  - L291 `_rankSeg()`
+  - L321 `_showRankHelp()`
+  - L363 `_hitRow()`
+  - L796 `_openInGoogleMaps()`
 
   </details>
 

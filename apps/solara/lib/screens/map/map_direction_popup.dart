@@ -12,9 +12,11 @@
 // ============================================================
 import 'package:flutter/material.dart';
 
+import '../../i18n/strings.g.dart';
 import '../../theme/solara_colors.dart';
 import '../../utils/astro_glossary.dart';
 import '../../utils/direction_energy.dart';
+import '../../utils/solara_i18n.dart';
 import '../../widgets/info_popup.dart';
 // glass_panel: 旧 _PopupBody が直接使っていたが、showInfoPopup Shell に移譲したため不要。
 import 'map_constants.dart';
@@ -57,7 +59,7 @@ class _PopupBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dirJP = dir16JP[direction] ?? direction;
+    final dirJP = dirName(direction);
     final aggregated = aggregateContributions(contributors, topN: 6);
 
     // 2026-05-07: 外枠 (GlassPanel + 右上 × + maxWidth) は showInfoPopup Shell に移譲。
@@ -89,8 +91,7 @@ class _PopupBody extends StatelessWidget {
         // ── エネルギーバー（2軸独立） ──
         _EnergyBar(
           symbol: '☯',
-          label: 'ソフト',
-          labelEn: 'Soft',
+          label: isEnLocale() ? 'Soft' : 'ソフト',
           value: energy.soft,
           color: SolaraColors.energySoft,
           termKey: 'soft_aspect',
@@ -98,8 +99,7 @@ class _PopupBody extends StatelessWidget {
         const SizedBox(height: 8),
         _EnergyBar(
           symbol: '☐',
-          label: 'ハード',
-          labelEn: 'Hard',
+          label: isEnLocale() ? 'Hard' : 'ハード',
           value: energy.hard,
           color: SolaraColors.energyHard,
           termKey: 'hard_aspect',
@@ -109,9 +109,9 @@ class _PopupBody extends StatelessWidget {
         // ── 寄与アスペクト ──
         if (aggregated.isNotEmpty) ...[
           const Divider(color: Color(0x22FFFFFF), height: 22),
-          const Text(
-            '主な寄与アスペクト',
-            style: TextStyle(
+          Text(
+            t.mapDir.mainContrib,
+            style: const TextStyle(
               fontSize: 13,
               color: SolaraColors.textSecondary,
               letterSpacing: 1.0,
@@ -139,8 +139,8 @@ class _PopupBody extends StatelessWidget {
         GestureDetector(
           onTap: () => showAstroGlossaryDialog(context, 'two_energies'),
           behavior: HitTestBehavior.opaque,
-          child: const Padding(
-            padding: EdgeInsets.fromLTRB(8, 8, 8, 8),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
             // フォント拡大時に Row の固定 mainAxisSize.max + 右寄せでは
             // テキスト末尾が画面端を超えて RIGHT OVERFLOWED になっていた。
             // Wrap に切り替え、幅不足時はアイコンと文字が次行に折り返す。
@@ -150,11 +150,11 @@ class _PopupBody extends StatelessWidget {
               spacing: 5,
               runSpacing: 4,
               children: [
-                Icon(Icons.info_outline,
+                const Icon(Icons.info_outline,
                     size: 16, color: Color(0xCCAAAAAA)),
                 Text(
-                  '2つのエネルギーについて',
-                  style: TextStyle(
+                  t.mapDir.twoEnergies,
+                  style: const TextStyle(
                     fontSize: 13,
                     color: Color(0xCCCCCCCC),
                     letterSpacing: 0.3,
@@ -177,30 +177,21 @@ class _PopupBody extends StatelessWidget {
     final hardHigh = e.hard > threshold;
 
     if (softHigh && hardHigh) {
-      return 'この方角には、両エネルギーが同時に在ります。\n'
-          '流れと摩擦の両方が効く、深い体験の場。\n'
-          'どちらに乗るか、両方を観察するか、選ぶのはあなた。';
+      return t.mapDir.guidanceBoth;
     }
     if (softHigh) {
-      return 'この方角は、ソフトエネルギーが優勢です。\n'
-          '流れに乗りやすい場。\n'
-          '受容的に進むのも、意識的に方向を選ぶのも、あなた次第。';
+      return t.mapDir.guidanceSoft;
     }
     if (hardHigh) {
-      return 'この方角は、ハードエネルギーが優勢です。\n'
-          '摩擦と変容の場。\n'
-          '見つめ直すか、対峙するか、距離を取るかは、あなたの選択。';
+      return t.mapDir.guidanceHard;
     }
-    return 'この方角の両エネルギーは、いま静かです。\n'
-        '特別な作用は感じにくい時間帯。\n'
-        '無理に意味を見出さず、自然体でいられる場所。';
+    return t.mapDir.guidanceQuiet;
   }
 }
 
 class _EnergyBar extends StatelessWidget {
   final String symbol;
   final String label;
-  final String labelEn;
   final double value;
   final Color color;
   final String termKey;
@@ -208,7 +199,6 @@ class _EnergyBar extends StatelessWidget {
   const _EnergyBar({
     required this.symbol,
     required this.label,
-    required this.labelEn,
     required this.value,
     required this.color,
     required this.termKey,
@@ -346,13 +336,14 @@ class _ContribRow extends StatelessWidget {
     // 接頭辞除去（'N:venus' → 'venus'、'_asc' → 'asc'）
     final clean = key.replaceAll('N:', '').replaceAll('P:', '');
     if (clean.startsWith('_')) {
-      return _angleJP[clean] ?? clean.substring(1).toUpperCase();
+      return _angleLabels[clean] ?? clean.substring(1).toUpperCase();
     }
-    final meta = planetMeta[clean];
-    return meta?.jp ?? clean;
+    // 惑星名はロケール連動 (ja=漢字 / en=英名)。
+    return planetName(clean);
   }
 
-  static const _angleJP = <String, String>{
+  // ASC/MC/DSC/IC は両ロケール共通の天文略号。
+  static const _angleLabels = <String, String>{
     '_asc': 'ASC',
     '_mc': 'MC',
     '_dsc': 'DSC',
@@ -360,7 +351,8 @@ class _ContribRow extends StatelessWidget {
   };
 
   String _aspectLabel(String type) {
-    return _aspectJP[type] ?? type;
+    final m = isEnLocale() ? _aspectEN : _aspectJP;
+    return m[type] ?? type;
   }
 
   static const _aspectJP = <String, String>{
@@ -370,5 +362,14 @@ class _ContribRow extends StatelessWidget {
     'trine': '△トライン',
     'quincunx': 'Qxクインカンクス',
     'opposition': '☍オポジション',
+  };
+
+  static const _aspectEN = <String, String>{
+    'conjunction': '☌ Conjunction',
+    'sextile': '⚹ Sextile',
+    'square': '□ Square',
+    'trine': '△ Trine',
+    'quincunx': 'Qx Quincunx',
+    'opposition': '☍ Opposition',
   };
 }

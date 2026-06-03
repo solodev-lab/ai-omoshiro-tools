@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 27 / 総行数: 7000
+- ファイル数: 27 / 総行数: 7008
 - class/mixin/extension/enum: 78
 - 関数 (top-level + method の素拾い): 181
 - Navigator.push 等: 0
@@ -68,35 +68,35 @@
 - L54 `build()`
 
 
-### `lib/widgets/ai_report_button.dart` (307 行)
+### `lib/widgets/ai_report_button.dart` (315 行)
 
-**imports:** dart=0 / package=1 / relative=1
+**imports:** dart=0 / package=1 / relative=3
 
-- relative: `../utils/ai_report_api.dart`
+- relative: `../i18n/strings.g.dart`, `../utils/ai_report_api.dart`, `../utils/solara_i18n.dart`
 
 **型定義 (5):**
 
-- L18 `class AiReportButton : StatelessWidget`
+- L20 `class AiReportButton : StatelessWidget`
   - AI 出力ユーザー報告ボタン (Google Generative AI Apps Policy 対応)。
-- L85 `class _AiReportSheet : StatefulWidget`
+- L87 `class _AiReportSheet : StatefulWidget`
   - 報告 BottomSheet 内部実装。
-- L95 `class _ReportReason`
+- L97 `class _ReportReason`
   - 報告理由の enum (UI 側固定)。Worker は文字列として保存するだけ。
-- L113 `class _AiReportSheetState : State`
-- L248 `class _ReasonTile : StatelessWidget`
+- L123 `class _AiReportSheetState : State`
+- L256 `class _ReasonTile : StatelessWidget`
 
 **関数 (5 public + 2 private):**
 
-- L36 `build()`
-- L91 `createState()`
-- L119 `dispose()`
-- L151 `build()`
-- L259 `build()`
+- L38 `build()`
+- L93 `createState()`
+- L129 `dispose()`
+- L159 `build()`
+- L267 `build()`
 
   <details><summary>private 関数 2 件</summary>
 
-  - L68 `_openSheet()`
-  - L124 `_submit()`
+  - L70 `_openSheet()`
+  - L134 `_submit()`
 
   </details>
 
