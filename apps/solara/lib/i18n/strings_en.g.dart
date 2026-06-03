@@ -39,6 +39,7 @@ class TranslationsEn extends Translations with BaseTranslations<AppLocale, Trans
 	TranslationsEn $copyWith({TranslationMetadata<AppLocale, Translations>? meta}) => TranslationsEn(meta: meta ?? this.$meta);
 
 	// Translations
+	@override late final _Translations$forecast$en forecast = _Translations$forecast$en._(_root);
 	@override late final _Translations$consultHistory$en consultHistory = _Translations$consultHistory$en._(_root);
 	@override late final _Translations$consultCredit$en consultCredit = _Translations$consultCredit$en._(_root);
 	@override late final _Translations$consultPlacePicker$en consultPlacePicker = _Translations$consultPlacePicker$en._(_root);
@@ -54,6 +55,49 @@ class TranslationsEn extends Translations with BaseTranslations<AppLocale, Trans
 	@override late final _Translations$disclaimer$en disclaimer = _Translations$disclaimer$en._(_root);
 	@override late final _Translations$common$en common = _Translations$common$en._(_root);
 	@override late final _Translations$aiConsent$en aiConsent = _Translations$aiConsent$en._(_root);
+}
+
+// Path: forecast
+class _Translations$forecast$en extends Translations$forecast$ja {
+	_Translations$forecast$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get error => 'Couldn\'t fetch the forecast. Please check your network connection.';
+	@override String get pro5yrLabel => 'The 5-year flow';
+	@override String get pro5yrDesc => 'A 5-year heatmap — this year plus the years ahead — to take in the larger flow of your life.';
+	@override String daysCount({required Object n}) => '(${n} days)';
+	@override String get calculating => 'Calculating the planets\' motion…';
+	@override String get noData => 'No data';
+	@override String get displayPeriod => 'Period';
+	@override String get yearBest => 'Best of the year';
+	@override List<String> get yearLabels => [
+		'This year',
+		'Next year',
+		'In 2 years',
+		'In 3 years',
+		'In 4 years',
+	];
+	@override String plusYears({required Object n}) => '+${n} yrs';
+	@override String monthRange({required Object fy, required Object fm, required Object ly, required Object lm}) => '${fy}/${fm} – ${ly}/${lm}';
+	@override String get heatmap1yr => '1-year heatmap';
+	@override String get segRelative => 'Relative';
+	@override String get segAbsolute => 'Absolute';
+	@override String get segCategory => 'Category';
+	@override String get highGreen => '🟢↑high';
+	@override String get highRed => '🔴↑high';
+	@override String rankNth({required Object n}) => '#${n}';
+	@override String get metricOverall => 'Overall';
+	@override String get metricTopDir => 'Rising direction';
+	@override String get metricDirScore => 'Direction score';
+	@override String get categoryBy => 'By category';
+	@override String lastFetch({required Object ts}) => 'Last fetched: ${ts}  /  monthly incremental updates';
+	@override late final _Translations$forecast$legend$en legend = _Translations$forecast$legend$en._(_root);
+	@override late final _Translations$forecast$usage$en usage = _Translations$forecast$usage$en._(_root);
+	@override late final _Translations$forecast$heatmapInfo$en heatmapInfo = _Translations$forecast$heatmapInfo$en._(_root);
+	@override late final _Translations$forecast$cycles$en cycles = _Translations$forecast$cycles$en._(_root);
+	@override late final _Translations$forecast$top5$en top5 = _Translations$forecast$top5$en._(_root);
 }
 
 // Path: consultHistory
@@ -371,6 +415,107 @@ class _Translations$aiConsent$en extends Translations$aiConsent$ja {
 	@override late final _Translations$aiConsent$geminiContent$en geminiContent = _Translations$aiConsent$geminiContent$en._(_root);
 	@override late final _Translations$aiConsent$decisions$en decisions = _Translations$aiConsent$decisions$en._(_root);
 	@override late final _Translations$aiConsent$consentHandling$en consentHandling = _Translations$aiConsent$consentHandling$en._(_root);
+}
+
+// Path: forecast.legend
+class _Translations$forecast$legend$en extends Translations$forecast$legend$ja {
+	_Translations$forecast$legend$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get relLowRed => 'red = year\'s low';
+	@override String get relLowGreen => 'green = year\'s low';
+	@override String get relHighGreen => 'green = year\'s high';
+	@override String get relHighRed => 'red = year\'s high';
+	@override String relRange({required Object low, required Object high, required Object min, required Object max}) => '${low}  /  ${high}  (min: ${min} → max: ${max})';
+	@override String get absLowRed => 'red = 45 or below';
+	@override String get absLowGreen => 'green = 45 or below';
+	@override String get absHighGreen => 'green = 85 or above';
+	@override String get absHighRed => 'red = 85 or above';
+	@override String absScale({required Object low, required Object high}) => '${low}  /  yellow = 65  /  ${high}  (fixed scale)';
+	@override String catRank({required Object rank}) => 'color = category #${rank} / depth = score level';
+}
+
+// Path: forecast.usage
+class _Translations$forecast$usage$en extends Translations$forecast$usage$ja {
+	_Translations$forecast$usage$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get title => 'How to use FORECAST';
+	@override String get intro => 'This shows the rhythm of your stars over the year ahead (365 days).\nYou can take in each day\'s overall and per-category scores at a glance,\nand see ahead of time which days move easily and which call for care.';
+	@override String get s1Title => '[1-year heatmap]';
+	@override String get s1Body => 'A 12-month × 31-day grid colors each day by its score.\nChange how it reads with the mode (relative / absolute /\ncategory), the color direction (🟢 high /\n🔴 high), and the rank (#1 / #2).\nSee the i button to the right of the heatmap for more.';
+	@override String get s2Title => '[Selected-day detail]';
+	@override String get s2Body => 'Tap a day on the heatmap and that day\'s directional score\nand per-category ranking appear below.';
+	@override String get s3Title => '[Your star cycles]';
+	@override String get s3Body => 'Shows each category\'s "seasons" (a season of connection /\nabundance / healing, and so on). Only ongoing stretches that\narrive from today onward. A compass for longer-term plans.';
+	@override String get s4Title => '[Highlights — Top 5]';
+	@override String get s4Body => 'Shows the top 5 days per category — for pinpointing\n"when to act" in the short term.';
+	@override String get s5Title => '[How this relates to the Map numbers]';
+	@override String get s5Body => 'The FORECAST numbers and the numbers on the Map for the same day\nwon\'t match — they\'re different calculations.\n\n· FORECAST = computed from your birth data alone.\n　Wherever you are on Earth, whatever the hour, it doesn\'t change —\n　it traces the energy flowing through you across a whole year.\n\n· Map = computed from where you are now + this very moment.\n　Because it includes the ASC (horizon) and MC (zenith),\n　the numbers change as the place changes, and even the same day\n　reads differently at 12:00 and 19:00\n　(the ASC moves about 15°/hour).\n\nNeither is right or wrong — they\'re two lenses reading the same you\nfrom different angles.\n· Use FORECAST to catch the "times that move easily,"\n· Use the Map to read "that place, that hour" in detail.\nUse them together that way.';
+}
+
+// Path: forecast.heatmapInfo
+class _Translations$forecast$heatmapInfo$en extends Translations$forecast$heatmapInfo$ja {
+	_Translations$forecast$heatmapInfo$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get title => 'How to read the 1-year heatmap';
+	@override String get s1Title => '[Three color modes]';
+	@override String get s1Body => '■ Relative mode (default)\nNormalized from the year\'s low → high.\nThe relatively higher days among your 365 show brighter.\nIt maximizes the day-to-day contrast.\n\n■ Absolute mode\nColors by the absolute score. Low values are dark,\nhigh values are bright. Use it when comparing across\nyears or with other people.\n\n■ Category mode\nColors each day by its strongest category:\n　🟢 Healing　🟡 Abundance　🩷 Love\n　🔵 Work　🟣 Talk\n\nA stretch of the same color is a time when that category\'s\n"wave" is rolling in.\n· 🩷 in a row → a season of connection (relational energy flows)\n· 🟡 in a row → a season of abundance\n· 🟢 in a row → a season of healing\n· 🔵 in a row → a season of work\n· 🟣 in a row → a season of expression\n\nThese "seasons" are also listed with start and end dates in the\n"Your star cycles" section below\n(only stretches of 7 days or more).';
+	@override String get s2Title => '[Color direction (🟢 high / 🔴 high)]';
+	@override String get s2Body => 'Active in "relative" and "absolute" modes.\n· 🟢 high: high score = green, low score = red\n· 🔴 high: high score = red, low score = green (inverted)\n\nTo avoid any good/bad verdict, you choose for yourself\nwhich color direction you want to see.';
+	@override String get s3Title => '[Rank (#1 / #2)]';
+	@override String get s3Body => 'Active in "category" mode.\n· #1: paints with the day\'s strongest category color\n· #2: paints with the second-strongest category color\n\nChecking both reveals the "lead" and the "support"\nwithin a single day.';
+	@override String get footer => '* Even for the same day, this is a different measure from the number you\'d open on the Map\n(a calculation independent of place and time).\nFor details, see "How this relates to the Map numbers" under the ❓ button at the top.';
+}
+
+// Path: forecast.cycles
+class _Translations$forecast$cycles$en extends Translations$forecast$cycles$ja {
+	_Translations$forecast$cycles$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get title => 'Your star cycles';
+	@override String get hint => 'Shows stretches arriving from today onward (7+ days running)';
+	@override String get empty => 'No stretches arriving from today onward';
+	@override String get infoTitle => 'What are star cycles?';
+	@override String get s1Title => '[What it means]';
+	@override String get s1Body => 'Over the year ahead, it shows the "stretches" where each category\'s\n(Love / Abundance / Healing /\nWork / Talk) energy flows strongly.\n\ne.g. "💗 Season of love 6/15 – 7/2 (18 days)"\n　 → from 6/15 to 7/2, relational energy\n　   runs strong without a break';
+	@override String get s2Title => '[Conditions for showing]';
+	@override String get s2Body => '· Only stretches arriving from today onward\n　(past stretches are hidden)\n· Counted as a "stretch" only when strong for 7+ days running\n　(short waves aren\'t shown)\n· One nearest entry per category';
+	@override String get s3Title => '[How to use it]';
+	@override String get s3Body => 'For longer-term "when to act" planning.\nCheck a specific day within the stretch on the Map screen,\nand you\'ll see the direction and timing at that place and hour.';
+	@override String get footer => '* Even for the same stretch\'s score, this is a different measure from the number you\'d open on the Map\n(a calculation independent of place and time).\nFor details, see "How this relates to the Map numbers" under the ❓ button at the top.';
+}
+
+// Path: forecast.top5
+class _Translations$forecast$top5$en extends Translations$forecast$top5$ja {
+	_Translations$forecast$top5$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get title => 'Highlights Top 5';
+	@override String year({required Object year}) => '${year}';
+	@override String get infoTitle => 'How to read Highlights — Top 5';
+	@override String get s1Title => '[What it means]';
+	@override String get s1Body => 'Within the year shown (1/1–12/31), it shows the 5 days\nwhere the selected category scores highest.';
+	@override String get s2Title => '[Switching category]';
+	@override String get s2Body => 'Choose from Overall / Love / Abundance / Healing / Work / Talk.\nThe top 5 days for the chosen category appear.';
+	@override String get s3Title => '[Rank markers]';
+	@override String get s3Body => '👑 #1 / 🥈 #2 / 🥉 #3 / ⭐ #4 / ✨ #5';
+	@override String get s4Title => '[Reading a row]';
+	@override String get s4Body => 'Date — the selected category\'s score that day.\nTap to jump to the selected-day detail.\n(That day\'s rising direction is shown in the selected-day detail.)';
+	@override String get s5Title => '[How to use it]';
+	@override String get s5Body => 'For short-term, pinpoint "where to move" planning.\nThe #1 day especially is a day when moving on that\ncategory\'s theme lets its energy flow strongest.';
+	@override String get footer => '* Even for the same day, this is a different measure from the number you\'d open on the Map\n(a calculation independent of place and time).\nFor details, see "How this relates to the Map numbers" under the ❓ button at the top.';
 }
 
 // Path: consultResult.exhaust
@@ -1421,6 +1566,89 @@ class _Translations$paywall$faq$resubscribe$en extends Translations$paywall$faq$
 extension on TranslationsEn {
 	dynamic _flatMapFunction(String path) {
 		return switch (path) {
+			'forecast.error' => 'Couldn\'t fetch the forecast. Please check your network connection.',
+			'forecast.pro5yrLabel' => 'The 5-year flow',
+			'forecast.pro5yrDesc' => 'A 5-year heatmap — this year plus the years ahead — to take in the larger flow of your life.',
+			'forecast.daysCount' => ({required Object n}) => '(${n} days)',
+			'forecast.calculating' => 'Calculating the planets\' motion…',
+			'forecast.noData' => 'No data',
+			'forecast.displayPeriod' => 'Period',
+			'forecast.yearBest' => 'Best of the year',
+			'forecast.yearLabels.0' => 'This year',
+			'forecast.yearLabels.1' => 'Next year',
+			'forecast.yearLabels.2' => 'In 2 years',
+			'forecast.yearLabels.3' => 'In 3 years',
+			'forecast.yearLabels.4' => 'In 4 years',
+			'forecast.plusYears' => ({required Object n}) => '+${n} yrs',
+			'forecast.monthRange' => ({required Object fy, required Object fm, required Object ly, required Object lm}) => '${fy}/${fm} – ${ly}/${lm}',
+			'forecast.heatmap1yr' => '1-year heatmap',
+			'forecast.segRelative' => 'Relative',
+			'forecast.segAbsolute' => 'Absolute',
+			'forecast.segCategory' => 'Category',
+			'forecast.highGreen' => '🟢↑high',
+			'forecast.highRed' => '🔴↑high',
+			'forecast.rankNth' => ({required Object n}) => '#${n}',
+			'forecast.metricOverall' => 'Overall',
+			'forecast.metricTopDir' => 'Rising direction',
+			'forecast.metricDirScore' => 'Direction score',
+			'forecast.categoryBy' => 'By category',
+			'forecast.lastFetch' => ({required Object ts}) => 'Last fetched: ${ts}  /  monthly incremental updates',
+			'forecast.legend.relLowRed' => 'red = year\'s low',
+			'forecast.legend.relLowGreen' => 'green = year\'s low',
+			'forecast.legend.relHighGreen' => 'green = year\'s high',
+			'forecast.legend.relHighRed' => 'red = year\'s high',
+			'forecast.legend.relRange' => ({required Object low, required Object high, required Object min, required Object max}) => '${low}  /  ${high}  (min: ${min} → max: ${max})',
+			'forecast.legend.absLowRed' => 'red = 45 or below',
+			'forecast.legend.absLowGreen' => 'green = 45 or below',
+			'forecast.legend.absHighGreen' => 'green = 85 or above',
+			'forecast.legend.absHighRed' => 'red = 85 or above',
+			'forecast.legend.absScale' => ({required Object low, required Object high}) => '${low}  /  yellow = 65  /  ${high}  (fixed scale)',
+			'forecast.legend.catRank' => ({required Object rank}) => 'color = category #${rank} / depth = score level',
+			'forecast.usage.title' => 'How to use FORECAST',
+			'forecast.usage.intro' => 'This shows the rhythm of your stars over the year ahead (365 days).\nYou can take in each day\'s overall and per-category scores at a glance,\nand see ahead of time which days move easily and which call for care.',
+			'forecast.usage.s1Title' => '[1-year heatmap]',
+			'forecast.usage.s1Body' => 'A 12-month × 31-day grid colors each day by its score.\nChange how it reads with the mode (relative / absolute /\ncategory), the color direction (🟢 high /\n🔴 high), and the rank (#1 / #2).\nSee the i button to the right of the heatmap for more.',
+			'forecast.usage.s2Title' => '[Selected-day detail]',
+			'forecast.usage.s2Body' => 'Tap a day on the heatmap and that day\'s directional score\nand per-category ranking appear below.',
+			'forecast.usage.s3Title' => '[Your star cycles]',
+			'forecast.usage.s3Body' => 'Shows each category\'s "seasons" (a season of connection /\nabundance / healing, and so on). Only ongoing stretches that\narrive from today onward. A compass for longer-term plans.',
+			'forecast.usage.s4Title' => '[Highlights — Top 5]',
+			'forecast.usage.s4Body' => 'Shows the top 5 days per category — for pinpointing\n"when to act" in the short term.',
+			'forecast.usage.s5Title' => '[How this relates to the Map numbers]',
+			'forecast.usage.s5Body' => 'The FORECAST numbers and the numbers on the Map for the same day\nwon\'t match — they\'re different calculations.\n\n· FORECAST = computed from your birth data alone.\n　Wherever you are on Earth, whatever the hour, it doesn\'t change —\n　it traces the energy flowing through you across a whole year.\n\n· Map = computed from where you are now + this very moment.\n　Because it includes the ASC (horizon) and MC (zenith),\n　the numbers change as the place changes, and even the same day\n　reads differently at 12:00 and 19:00\n　(the ASC moves about 15°/hour).\n\nNeither is right or wrong — they\'re two lenses reading the same you\nfrom different angles.\n· Use FORECAST to catch the "times that move easily,"\n· Use the Map to read "that place, that hour" in detail.\nUse them together that way.',
+			'forecast.heatmapInfo.title' => 'How to read the 1-year heatmap',
+			'forecast.heatmapInfo.s1Title' => '[Three color modes]',
+			'forecast.heatmapInfo.s1Body' => '■ Relative mode (default)\nNormalized from the year\'s low → high.\nThe relatively higher days among your 365 show brighter.\nIt maximizes the day-to-day contrast.\n\n■ Absolute mode\nColors by the absolute score. Low values are dark,\nhigh values are bright. Use it when comparing across\nyears or with other people.\n\n■ Category mode\nColors each day by its strongest category:\n　🟢 Healing　🟡 Abundance　🩷 Love\n　🔵 Work　🟣 Talk\n\nA stretch of the same color is a time when that category\'s\n"wave" is rolling in.\n· 🩷 in a row → a season of connection (relational energy flows)\n· 🟡 in a row → a season of abundance\n· 🟢 in a row → a season of healing\n· 🔵 in a row → a season of work\n· 🟣 in a row → a season of expression\n\nThese "seasons" are also listed with start and end dates in the\n"Your star cycles" section below\n(only stretches of 7 days or more).',
+			'forecast.heatmapInfo.s2Title' => '[Color direction (🟢 high / 🔴 high)]',
+			'forecast.heatmapInfo.s2Body' => 'Active in "relative" and "absolute" modes.\n· 🟢 high: high score = green, low score = red\n· 🔴 high: high score = red, low score = green (inverted)\n\nTo avoid any good/bad verdict, you choose for yourself\nwhich color direction you want to see.',
+			'forecast.heatmapInfo.s3Title' => '[Rank (#1 / #2)]',
+			'forecast.heatmapInfo.s3Body' => 'Active in "category" mode.\n· #1: paints with the day\'s strongest category color\n· #2: paints with the second-strongest category color\n\nChecking both reveals the "lead" and the "support"\nwithin a single day.',
+			'forecast.heatmapInfo.footer' => '* Even for the same day, this is a different measure from the number you\'d open on the Map\n(a calculation independent of place and time).\nFor details, see "How this relates to the Map numbers" under the ❓ button at the top.',
+			'forecast.cycles.title' => 'Your star cycles',
+			'forecast.cycles.hint' => 'Shows stretches arriving from today onward (7+ days running)',
+			'forecast.cycles.empty' => 'No stretches arriving from today onward',
+			'forecast.cycles.infoTitle' => 'What are star cycles?',
+			'forecast.cycles.s1Title' => '[What it means]',
+			'forecast.cycles.s1Body' => 'Over the year ahead, it shows the "stretches" where each category\'s\n(Love / Abundance / Healing /\nWork / Talk) energy flows strongly.\n\ne.g. "💗 Season of love 6/15 – 7/2 (18 days)"\n　 → from 6/15 to 7/2, relational energy\n　   runs strong without a break',
+			'forecast.cycles.s2Title' => '[Conditions for showing]',
+			'forecast.cycles.s2Body' => '· Only stretches arriving from today onward\n　(past stretches are hidden)\n· Counted as a "stretch" only when strong for 7+ days running\n　(short waves aren\'t shown)\n· One nearest entry per category',
+			'forecast.cycles.s3Title' => '[How to use it]',
+			'forecast.cycles.s3Body' => 'For longer-term "when to act" planning.\nCheck a specific day within the stretch on the Map screen,\nand you\'ll see the direction and timing at that place and hour.',
+			'forecast.cycles.footer' => '* Even for the same stretch\'s score, this is a different measure from the number you\'d open on the Map\n(a calculation independent of place and time).\nFor details, see "How this relates to the Map numbers" under the ❓ button at the top.',
+			'forecast.top5.title' => 'Highlights Top 5',
+			'forecast.top5.year' => ({required Object year}) => '${year}',
+			'forecast.top5.infoTitle' => 'How to read Highlights — Top 5',
+			'forecast.top5.s1Title' => '[What it means]',
+			'forecast.top5.s1Body' => 'Within the year shown (1/1–12/31), it shows the 5 days\nwhere the selected category scores highest.',
+			'forecast.top5.s2Title' => '[Switching category]',
+			'forecast.top5.s2Body' => 'Choose from Overall / Love / Abundance / Healing / Work / Talk.\nThe top 5 days for the chosen category appear.',
+			'forecast.top5.s3Title' => '[Rank markers]',
+			'forecast.top5.s3Body' => '👑 #1 / 🥈 #2 / 🥉 #3 / ⭐ #4 / ✨ #5',
+			'forecast.top5.s4Title' => '[Reading a row]',
+			'forecast.top5.s4Body' => 'Date — the selected category\'s score that day.\nTap to jump to the selected-day detail.\n(That day\'s rising direction is shown in the selected-day detail.)',
+			'forecast.top5.s5Title' => '[How to use it]',
+			'forecast.top5.s5Body' => 'For short-term, pinpoint "where to move" planning.\nThe #1 day especially is a day when moving on that\ncategory\'s theme lets its energy flow strongest.',
+			'forecast.top5.footer' => '* Even for the same day, this is a different measure from the number you\'d open on the Map\n(a calculation independent of place and time).\nFor details, see "How this relates to the Map numbers" under the ❓ button at the top.',
 			'consultHistory.title' => 'Consultation history',
 			'consultHistory.deleteAll' => 'Delete all',
 			'consultHistory.deleteAllTitle' => 'Delete everything?',
@@ -1850,6 +2078,8 @@ extension on TranslationsEn {
 			'paywall.comparison.archiveSearch.label' => 'Search / filter Star Atlas & history',
 			'paywall.comparison.replayExport.label' => 'Replay formation animation · export as text',
 			'paywall.comparison.titleRediagnosis.label' => 'Re-diagnose your Title (Class)',
+			_ => null,
+		} ?? switch (path) {
 			'paywall.comparison.titleRediagnosis.free' => 'Up to once',
 			'paywall.comparison.titleRediagnosis.pro' => 'Unlimited',
 			'paywall.comparison.forecastPeriod.label' => 'Forecast range',

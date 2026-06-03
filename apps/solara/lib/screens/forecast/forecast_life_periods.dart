@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import '../../i18n/strings.g.dart';
 import '../../utils/forecast_cache.dart';
+import '../../utils/solara_i18n.dart';
 import '../../widgets/info_popup.dart';
 import '../map/map_constants.dart';
 import 'forecast_section_header.dart';
@@ -15,9 +17,10 @@ const Map<String, (String, String)> lifePeriodLabels = {
 
 /// 英語ロケール用カテゴリラベル (短い 1 単語に揃える。
 /// 行内の固定幅 (98px) で太字表示しても 1 行に収まる範囲)。
+// money は正典で「豊かさ/Abundance」固定 (Wealth/Money は吉凶回避で不可)。
 const Map<String, String> lifePeriodLabelsEn = {
   'love':          'Love',
-  'money':         'Wealth',
+  'money':         'Abundance',
   'healing':       'Healing',
   'work':          'Work',
   'communication': 'Voice',
@@ -55,16 +58,16 @@ class ForecastLifePeriodsSection extends StatelessWidget {
 
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       ForecastSectionHeader(
-        label: 'あなたの星のサイクル',
+        label: t.forecast.cycles.title,
         onInfo: () => _showLifePeriodsInfo(context),
       ),
       const SizedBox(height: 4),
-      const Text('今日以降に到来する期間を表示（7日以上の継続）',
-          style: TextStyle(fontSize: 9, color: Color(0xFF666666))),
+      Text(t.forecast.cycles.hint,
+          style: const TextStyle(fontSize: 9, color: Color(0xFF666666))),
       const SizedBox(height: 10),
       if (visibleCats.isEmpty) Padding(
         padding: const EdgeInsets.symmetric(vertical: 12),
-        child: Text('今日以降に到来する期間はありません',
+        child: Text(t.forecast.cycles.empty,
             style: TextStyle(fontSize: 11, color: Colors.white.withValues(alpha: 0.45))),
       ) else for (final cat in visibleCats)
         _periodRow(context, cat, byCategory[cat]!, today),
@@ -76,7 +79,8 @@ class ForecastLifePeriodsSection extends StatelessWidget {
     if (idx < 0) idx = list.length - 1;
     final p = list[idx];
 
-    final isJP = Localizations.localeOf(context).languageCode == 'ja';
+    // slang ゲートと一致させる (端末 en でも override 未設定なら ja のまま)。
+    final isJP = !isEnLocale();
     final label = lifePeriodLabels[cat];
     final (jaName, emoji) = label ?? (cat, '✨');
     // 表示名は ja/en 切替。英語ラベル未定義カテゴリは ja にフォールバック。
@@ -133,74 +137,61 @@ void _showLifePeriodsInfo(BuildContext context) {
     child: Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: const [
+      children: [
         Text(
-          '星のサイクルとは',
-          style: TextStyle(
+          t.forecast.cycles.infoTitle,
+          style: const TextStyle(
               color: Color(0xFFC9A84C), fontSize: 14, letterSpacing: 1),
         ),
-        SizedBox(height: 10),
+        const SizedBox(height: 10),
         Text(
-          '【表示の意味】',
-          style: TextStyle(
+          t.forecast.cycles.s1Title,
+          style: const TextStyle(
               color: Color(0xFFC9A84C),
               fontSize: 13,
               fontWeight: FontWeight.w600,
               letterSpacing: 0.5),
         ),
-        SizedBox(height: 4),
+        const SizedBox(height: 4),
         Text(
-          '今後 1 年で、各カテゴリ (恋愛 / 豊かさ / 癒し /\n'
-          '仕事 / 話す) のエネルギーが強く流れる「期間」を\n'
-          '表示します。\n\n'
-          '例:「💗 モテ期 6/15 〜 7/2 (18 日間)」\n'
-          '　 → 6/15 から 7/2 まで関係性のエネルギーが\n'
-          '　   継続して強い時期',
-          style: TextStyle(
+          t.forecast.cycles.s1Body,
+          style: const TextStyle(
               color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
         ),
-        SizedBox(height: 10),
+        const SizedBox(height: 10),
         Text(
-          '【表示条件】',
-          style: TextStyle(
+          t.forecast.cycles.s2Title,
+          style: const TextStyle(
               color: Color(0xFFC9A84C),
               fontSize: 13,
               fontWeight: FontWeight.w600,
               letterSpacing: 0.5),
         ),
-        SizedBox(height: 4),
+        const SizedBox(height: 4),
         Text(
-          '・今日以降に到来する期間のみ表示\n'
-          '　(過ぎた期間は非表示)\n'
-          '・7 日以上連続して強い場合のみ「期間」と認定\n'
-          '　(短い波は表示しない)\n'
-          '・カテゴリごとに最も近い 1 件ずつ表示',
-          style: TextStyle(
+          t.forecast.cycles.s2Body,
+          style: const TextStyle(
               color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
         ),
-        SizedBox(height: 10),
+        const SizedBox(height: 10),
         Text(
-          '【活用方法】',
-          style: TextStyle(
+          t.forecast.cycles.s3Title,
+          style: const TextStyle(
               color: Color(0xFFC9A84C),
               fontSize: 13,
               fontWeight: FontWeight.w600,
               letterSpacing: 0.5),
         ),
-        SizedBox(height: 4),
+        const SizedBox(height: 4),
         Text(
-          '「いつ動くか」の長期計画に。\n'
-          'その期間の中で具体的な 1 日を Map 画面で確認すると、\n'
-          'その地点・時刻での方角と時間が見えます。',
-          style: TextStyle(
+          t.forecast.cycles.s3Body,
+          style: const TextStyle(
               color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
         ),
-        SizedBox(height: 10),
+        const SizedBox(height: 10),
         Text(
-          '※ 同じ期間のスコアでも Map で開いた数字とは別の指標です\n'
-          '(場所・時刻に依存しない計算)。\n'
-          '詳細は画面上部 ❓ ボタンの「Map 画面の数字との関係」へ。',
-          style: TextStyle(
+          t.forecast.cycles.footer,
+          style: const TextStyle(
               color: Color(0xFF999999), fontSize: 11, height: 1.5),
         ),
       ],

@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 32 / 総行数: 11104
+- ファイル数: 32 / 総行数: 11054
 - class/mixin/extension/enum: 100
 - 関数 (top-level + method の素拾い): 286
 - Navigator.push 等: 0
@@ -863,25 +863,25 @@ showInfoPopup 経由で表示する (widgets/info_popup.dart、popup 統一規�
   </details>
 
 
-### `lib/screens/forecast/forecast_life_periods.dart` (209 行)
+### `lib/screens/forecast/forecast_life_periods.dart` (200 行)
 
-**imports:** dart=0 / package=1 / relative=4
+**imports:** dart=0 / package=1 / relative=6
 
-- relative: `../../utils/forecast_cache.dart`, `../../widgets/info_popup.dart`, `../map/map_constants.dart`, `forecast_section_header.dart`
+- relative: `../../i18n/strings.g.dart`, `../../utils/forecast_cache.dart`, `../../utils/solara_i18n.dart`, `../../widgets/info_popup.dart`, `../map/map_constants.dart`, `forecast_section_header.dart`
 
 **型定義 (1):**
 
-- L29 `class ForecastLifePeriodsSection : StatelessWidget`
+- L32 `class ForecastLifePeriodsSection : StatelessWidget`
   - 「◯◯期」セクション — 永続保存された運勢サイクルを表示
 
 **関数 (1 public + 2 private):**
 
-- L39 `build()`
+- L42 `build()`
 
   <details><summary>private 関数 2 件</summary>
 
-  - L74 `_periodRow()`
-  - L130 `_showLifePeriodsInfo()`
+  - L77 `_periodRow()`
+  - L134 `_showLifePeriodsInfo()`
 
   </details>
 
@@ -904,27 +904,27 @@ showInfoPopup 経由で表示する (widgets/info_popup.dart、popup 統一規�
 - L19 `build()`
 
 
-### `lib/screens/forecast/forecast_top5.dart` (243 行)
+### `lib/screens/forecast/forecast_top5.dart` (237 行)
 
-**imports:** dart=0 / package=1 / relative=4
+**imports:** dart=0 / package=1 / relative=6
 
-- relative: `../../utils/forecast_cache.dart`, `../../widgets/info_popup.dart`, `../map/map_constants.dart`, `forecast_section_header.dart`
+- relative: `../../i18n/strings.g.dart`, `../../utils/forecast_cache.dart`, `../../utils/solara_i18n.dart`, `../../widgets/info_popup.dart`, `../map/map_constants.dart`, `forecast_section_header.dart`
 
 **型定義 (1):**
 
-- L9 `class ForecastTop5Section : StatelessWidget`
+- L11 `class ForecastTop5Section : StatelessWidget`
   - 強運Top5 セクション — 永続保存された Top5 を mode 別に表示
 
 **関数 (1 public + 4 private):**
 
-- L35 `build()`
+- L37 `build()`
 
   <details><summary>private 関数 4 件</summary>
 
-  - L58 `_modeSelector()`
-  - L76 `_seg()`
-  - L101 `_row()`
-  - L139 `_showTop5Info()`
+  - L60 `_modeSelector()`
+  - L78 `_seg()`
+  - L103 `_row()`
+  - L141 `_showTop5Info()`
 
   </details>
 
@@ -933,59 +933,59 @@ showInfoPopup 経由で表示する (widgets/info_popup.dart、popup 統一規�
 - 集計: `showInfoPopup`×1
 
 
-### `lib/screens/forecast_screen.dart` (1092 行)
+### `lib/screens/forecast_screen.dart` (1057 行)
 
-**imports:** dart=0 / package=1 / relative=10
+**imports:** dart=0 / package=1 / relative=11
 
-- relative: `../utils/forecast_cache.dart`, `../utils/pro_status.dart`, `../utils/solara_storage.dart`, `../widgets/info_popup.dart`, `../widgets/no_profile_guide.dart`, `../widgets/pro_unlock_dialog.dart`, `forecast/forecast_life_periods.dart`, `forecast/forecast_section_header.dart`, `forecast/forecast_top5.dart`, `map/map_constants.dart`
+- relative: `../i18n/strings.g.dart`, `../utils/forecast_cache.dart`, `../utils/pro_status.dart`, `../utils/solara_storage.dart`, `../widgets/info_popup.dart`, `../widgets/no_profile_guide.dart`, `../widgets/pro_unlock_dialog.dart`, `forecast/forecast_life_periods.dart`, `forecast/forecast_section_header.dart`, `forecast/forecast_top5.dart`, `map/map_constants.dart`
 
 **型定義 (3):**
 
-- L16 `class ForecastScreen : StatefulWidget`
+- L17 `class ForecastScreen : StatefulWidget`
   - Forecast 画面 — 1年予測（ヒートマップ + 選択日詳細 + 強運Top5）
-- L34 `class _ForecastScreenState : State`
-- L1063 `class _DayStepperButton : StatelessWidget`
+- L35 `class _ForecastScreenState : State`
+- L1028 `class _DayStepperButton : StatelessWidget`
   - 選択日詳細パネルの △ ボタン (左右で 1 日前後に動かす)。
 
 **関数 (4 public + 30 private):**
 
-- L31 `createState()`
-- L66 `initState()`
+- L32 `createState()`
+- L67 `initState()`
 - L164 `build()`
-- L1074 `build()`
+- L1039 `build()`
 
   <details><summary>private 関数 30 件</summary>
 
-  - L71 `_initialize()`
-  - L77 `_loadSettings()`
-  - L91 `_setColorMode()`
-  - L96 `_setHighColor()`
-  - L101 `_load()`
-  - L144 `_setYearOffset()`
+  - L72 `_initialize()`
+  - L78 `_loadSettings()`
+  - L92 `_setColorMode()`
+  - L97 `_setHighColor()`
+  - L102 `_load()`
+  - L145 `_setYearOffset()`
   - L215 `_buildBody()`
-  - L270 `_buildBasisCard()`
-  - L325 `_fmt()`
-  - L328 `_buildBestChip()`
-  - L368 `_yearSeg()`
-  - L392 `_buildHeatmap()`
-  - L457 `_buildColorModeToggle()`
-  - L498 `_rankSeg()`
-  - L528 `_segment()`
-  - L549 `_buildLegend()`
-  - L576 `_catColorChips()`
-  - L590 `_monthRow()`
-  - L619 `_dayCell()`
-  - L650 `_cellColor()`
-  - L667 `_gradientColor()`
-  - L678 `_categoryColor()`
-  - L694 `_canShiftSelectedDay()`
-  - L705 `_shiftSelectedDay()`
-  - L712 `_buildSelectedDayDetail()`
-  - L777 `_metric()`
-  - L785 `_catBar()`
-  - L822 `_buildFetchInfo()`
-  - L836 `_showForecastUsageGuide()`
-  - L962 `_showHeatmapInfo()`
+  - L273 `_buildBasisCard()`
+  - L328 `_fmt()`
+  - L331 `_buildBestChip()`
+  - L369 `_yearSeg()`
+  - L395 `_buildHeatmap()`
+  - L461 `_buildColorModeToggle()`
+  - L504 `_rankSeg()`
+  - L534 `_segment()`
+  - L555 `_buildLegend()`
+  - L595 `_catColorChips()`
+  - L609 `_monthRow()`
+  - L638 `_dayCell()`
+  - L669 `_cellColor()`
+  - L686 `_gradientColor()`
+  - L697 `_categoryColor()`
+  - L713 `_canShiftSelectedDay()`
+  - L724 `_shiftSelectedDay()`
+  - L731 `_buildSelectedDayDetail()`
+  - L796 `_metric()`
+  - L804 `_catBar()`
+  - L841 `_buildFetchInfo()`
+  - L855 `_showForecastUsageGuide()`
+  - L958 `_showHeatmapInfo()`
 
   </details>
 

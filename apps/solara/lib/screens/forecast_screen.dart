@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../i18n/strings.g.dart';
 import '../utils/forecast_cache.dart';
 import '../utils/pro_status.dart';
 import '../utils/solara_storage.dart';
@@ -122,7 +123,7 @@ class _ForecastScreenState extends State<ForecastScreen> {
       _periods = periods;
       _top5 = top5;
       _loading = false;
-      _errorMsg = cache == null ? 'Forecast の取得に失敗しました。ネットワーク接続を確認してください。' : null;
+      _errorMsg = cache == null ? t.forecast.error : null;
       // 初期選択: 今年なら今日、過去/未来年は先頭(1/1)。
       _selected = _initialSelectedDay(cache);
     });
@@ -148,9 +149,8 @@ class _ForecastScreenState extends State<ForecastScreen> {
     if (offset > 0 && !ProStatus.instance.isPro) {
       await showProUnlockDialog(
         context,
-        featureLabel: '5 年の流れ',
-        description: '今年だけでなく翌年・来々年も含めた 5 年分のヒートマップで、'
-            '人生の大きな流れを見渡せます。',
+        featureLabel: t.forecast.pro5yrLabel,
+        description: t.forecast.pro5yrDesc,
       );
       return;
     }
@@ -197,7 +197,7 @@ class _ForecastScreenState extends State<ForecastScreen> {
               ),
             ),
             const SizedBox(width: 4),
-            if (_cache != null) Text('(${_cache!.days.length}日)',
+            if (_cache != null) Text(t.forecast.daysCount(n: _cache!.days.length),
                 style: const TextStyle(fontSize: 9, color: Color(0xFF666666))),
             const Spacer(),
             IconButton(
@@ -214,11 +214,13 @@ class _ForecastScreenState extends State<ForecastScreen> {
 
   Widget _buildBody() {
     if (_loading) {
-      return const Center(
+      return Center(
         child: Column(mainAxisSize: MainAxisSize.min, children: [
-          CircularProgressIndicator(color: Color(0xFFC9A84C), strokeWidth: 2),
-          SizedBox(height: 14),
-          Text('天体の運行を計算中…', style: TextStyle(fontSize: 11, color: Color(0xFF888888))),
+          const CircularProgressIndicator(
+              color: Color(0xFFC9A84C), strokeWidth: 2),
+          const SizedBox(height: 14),
+          Text(t.forecast.calculating,
+              style: const TextStyle(fontSize: 11, color: Color(0xFF888888))),
         ]),
       );
     }
@@ -235,8 +237,9 @@ class _ForecastScreenState extends State<ForecastScreen> {
     }
     final c = _cache;
     if (c == null || c.days.isEmpty) {
-      return const Center(
-        child: Text('データがありません', style: TextStyle(color: Color(0xFF888888))),
+      return Center(
+        child: Text(t.forecast.noData,
+            style: const TextStyle(color: Color(0xFF888888))),
       );
     }
     return SingleChildScrollView(
@@ -292,8 +295,8 @@ class _ForecastScreenState extends State<ForecastScreen> {
         Row(children: [
           const Text('📅', style: TextStyle(fontSize: 15)),
           const SizedBox(width: 8),
-          const Text('表示期間',
-              style: TextStyle(fontSize: 9, color: Color(0xFF999999), letterSpacing: 2)),
+          Text(t.forecast.displayPeriod,
+              style: const TextStyle(fontSize: 9, color: Color(0xFF999999), letterSpacing: 2)),
           const SizedBox(width: 8),
           // 「表示期間」のすぐ右から左寄せで表示。枠内に収まるよう自動縮小。
           Expanded(
@@ -342,8 +345,8 @@ class _ForecastScreenState extends State<ForecastScreen> {
       child: Row(mainAxisSize: MainAxisSize.min, children: [
         const Text('⭐', style: TextStyle(fontSize: 12)),
         const SizedBox(width: 6),
-        const Text('年間ベスト',
-            style: TextStyle(fontSize: 9, color: Color(0xFF999999), letterSpacing: 2)),
+        Text(t.forecast.yearBest,
+            style: const TextStyle(fontSize: 9, color: Color(0xFF999999), letterSpacing: 2)),
         const SizedBox(width: 10),
         Text('$mm/$dd',
             style: const TextStyle(fontSize: 12, color: Color(0xFFE8E0D0), fontWeight: FontWeight.w600)),
@@ -363,11 +366,11 @@ class _ForecastScreenState extends State<ForecastScreen> {
     );
   }
 
-  static const _yearLabels = ['今年', '来年', '再来年', '3年後', '4年後'];
-
   Widget _yearSeg(int offset) {
     final active = _yearOffset == offset;
-    final label = offset < _yearLabels.length ? _yearLabels[offset] : '+$offset年';
+    final labels = t.forecast.yearLabels;
+    final label =
+        offset < labels.length ? labels[offset] : t.forecast.plusYears(n: offset);
     return GestureDetector(
       onTap: _loading ? null : () => _setYearOffset(offset),
       child: Container(
@@ -417,11 +420,12 @@ class _ForecastScreenState extends State<ForecastScreen> {
       final lp = monthKeys.last.split('-');
       final fm = int.parse(fp[1]);
       final lm = int.parse(lp[1]);
-      monthRangeLabel = '${fp[0]}年$fm月 〜 ${lp[0]}年$lm月';
+      monthRangeLabel =
+          t.forecast.monthRange(fy: fp[0], fm: fm, ly: lp[0], lm: lm);
     }
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       ForecastSectionHeader(
-        label: '1年ヒートマップ',
+        label: t.forecast.heatmap1yr,
         onInfo: () => _showHeatmapInfo(context),
       ),
       // 期間表示: タイトル直下の行に配置。月数字のみのラベル列とぶつからない
@@ -458,9 +462,9 @@ class _ForecastScreenState extends State<ForecastScreen> {
     final highToggleDisabled = _colorMode == 'category';
     final rankDisabled = _colorMode != 'category';
     return Row(mainAxisSize: MainAxisSize.min, children: [
-      _segment('相対', 'relative'),
-      _segment('絶対', 'absolute'),
-      _segment('カテゴリ', 'category'),
+      _segment(t.forecast.segRelative, 'relative'),
+      _segment(t.forecast.segAbsolute, 'absolute'),
+      _segment(t.forecast.segCategory, 'category'),
       Padding(
         padding: const EdgeInsets.only(left: 6),
         child: GestureDetector(
@@ -479,7 +483,9 @@ class _ForecastScreenState extends State<ForecastScreen> {
                 ),
               ),
               child: Text(
-                _highColor == 'green' ? '🟢↑高' : '🔴↑高',
+                _highColor == 'green'
+                    ? t.forecast.highGreen
+                    : t.forecast.highRed,
                 style: TextStyle(
                   fontSize: 9,
                   color: highToggleDisabled ? const Color(0xFF666666) : const Color(0xFFE8E0D0),
@@ -513,7 +519,7 @@ class _ForecastScreenState extends State<ForecastScreen> {
                    : (disabled ? const Color(0x22FFFFFF) : const Color(0x33C9A84C)),
             ),
           ),
-          child: Text('$rank位',
+          child: Text(t.forecast.rankNth(n: rank),
               style: TextStyle(
                 fontSize: 9,
                 color: active ? const Color(0xFFC9A84C)
@@ -549,19 +555,32 @@ class _ForecastScreenState extends State<ForecastScreen> {
   Widget _buildLegend(double minV, double maxV) {
     switch (_colorMode) {
       case 'relative':
-        final low = _highColor == 'green' ? '赤=年内最低' : '緑=年内最低';
-        final high = _highColor == 'green' ? '緑=年内最高' : '赤=年内最高';
-        return Text('$low  /  $high  （min:${minV.toStringAsFixed(1)} → max:${maxV.toStringAsFixed(1)}）',
+        final low = _highColor == 'green'
+            ? t.forecast.legend.relLowRed
+            : t.forecast.legend.relLowGreen;
+        final high = _highColor == 'green'
+            ? t.forecast.legend.relHighGreen
+            : t.forecast.legend.relHighRed;
+        return Text(
+            t.forecast.legend.relRange(
+                low: low,
+                high: high,
+                min: minV.toStringAsFixed(1),
+                max: maxV.toStringAsFixed(1)),
             style: const TextStyle(fontSize: 9, color: Color(0xFF666666)));
       case 'absolute':
-        final low = _highColor == 'green' ? '赤=45以下' : '緑=45以下';
-        final high = _highColor == 'green' ? '緑=85以上' : '赤=85以上';
-        return Text('$low  /  黄=65  /  $high  （固定スケール）',
+        final low = _highColor == 'green'
+            ? t.forecast.legend.absLowRed
+            : t.forecast.legend.absLowGreen;
+        final high = _highColor == 'green'
+            ? t.forecast.legend.absHighGreen
+            : t.forecast.legend.absHighRed;
+        return Text(t.forecast.legend.absScale(low: low, high: high),
             style: const TextStyle(fontSize: 9, color: Color(0xFF666666)));
       case 'category':
         return Row(children: [
           Flexible(
-            child: Text('色=$_categoryRank位カテゴリ / 濃さ=スコア高低',
+            child: Text(t.forecast.legend.catRank(rank: _categoryRank),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(fontSize: 9, color: Color(0xFF666666))),
@@ -759,15 +778,15 @@ class _ForecastScreenState extends State<ForecastScreen> {
         // 3メトリクスを Expanded で等分 (Forecast は画面内で追加 1.33x ブーストが
         // 掛かり実効最大 ~2.0x。非flex のままだと横 overflow するため)。
         Row(children: [
-          Expanded(child: _metric('総合', d.overall.toStringAsFixed(1))),
+          Expanded(child: _metric(t.forecast.metricOverall, d.overall.toStringAsFixed(1))),
           const SizedBox(width: 14),
-          Expanded(child: _metric('高まる方位', dir16JP[d.topDir] ?? d.topDir)),
+          Expanded(child: _metric(t.forecast.metricTopDir, dirName(d.topDir))),
           const SizedBox(width: 14),
-          Expanded(child: _metric('方位スコア', d.topDirScore.toStringAsFixed(1))),
+          Expanded(child: _metric(t.forecast.metricDirScore, d.topDirScore.toStringAsFixed(1))),
         ]),
         const SizedBox(height: 12),
-        const Text('カテゴリ別',
-            style: TextStyle(fontSize: 10, color: Color(0xFF888888), letterSpacing: 1)),
+        Text(t.forecast.categoryBy,
+            style: const TextStyle(fontSize: 10, color: Color(0xFF888888), letterSpacing: 1)),
         const SizedBox(height: 6),
         for (final e in catList) _catBar(e.key, e.value, catList.first.value),
       ]),
@@ -826,7 +845,7 @@ class _ForecastScreenState extends State<ForecastScreen> {
     final ts = '${jst.year}/${jst.month.toString().padLeft(2, "0")}/${jst.day.toString().padLeft(2, "0")} ${jst.hour.toString().padLeft(2, "0")}:${jst.minute.toString().padLeft(2, "0")}';
     return Padding(
       padding: const EdgeInsets.only(top: 8),
-      child: Text('最終取得: $ts  /  差分更新方式（月次）',
+      child: Text(t.forecast.lastFetch(ts: ts),
           style: const TextStyle(fontSize: 9, color: Color(0xFF555555))),
     );
   }
@@ -839,117 +858,94 @@ void _showForecastUsageGuide(BuildContext context) {
     child: Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: const [
+      children: [
         Text(
-          'FORECAST の使い方',
-          style: TextStyle(
+          t.forecast.usage.title,
+          style: const TextStyle(
               color: Color(0xFFC9A84C), fontSize: 14, letterSpacing: 1),
         ),
-        SizedBox(height: 10),
+        const SizedBox(height: 10),
         Text(
-          'あなたの今後 1 年 (365 日) の星のリズムを表示します。\n'
-          '日々の総合スコア・カテゴリ別スコアを一目で把握でき、\n'
-          '動きやすい日 / 慎重に進める日を事前に確認できます。',
-          style: TextStyle(
+          t.forecast.usage.intro,
+          style: const TextStyle(
               color: Color(0xFFE8E0D0),
               fontSize: 13,
               height: 1.6,
               fontWeight: FontWeight.w500),
         ),
-        SizedBox(height: 14),
+        const SizedBox(height: 14),
         Text(
-          '【1 年ヒートマップ】',
-          style: TextStyle(
+          t.forecast.usage.s1Title,
+          style: const TextStyle(
               color: Color(0xFFC9A84C),
               fontSize: 13,
               fontWeight: FontWeight.w600,
               letterSpacing: 0.5),
         ),
-        SizedBox(height: 4),
+        const SizedBox(height: 4),
         Text(
-          '12 ヶ月 × 31 日のグリッドで、各日のスコアを色で表現。\n'
-          'モード切替 (相対 / 絶対 / カテゴリ)、色方向 (緑↑高 /\n'
-          '赤↑高)、ランク (1 位 / 2 位) で見せ方を変えられます。\n'
-          '詳細はヒートマップ右の i ボタンを参照してください。',
-          style: TextStyle(
+          t.forecast.usage.s1Body,
+          style: const TextStyle(
               color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
         ),
-        SizedBox(height: 10),
+        const SizedBox(height: 10),
         Text(
-          '【選択日詳細】',
-          style: TextStyle(
+          t.forecast.usage.s2Title,
+          style: const TextStyle(
               color: Color(0xFFC9A84C),
               fontSize: 13,
               fontWeight: FontWeight.w600,
               letterSpacing: 0.5),
         ),
-        SizedBox(height: 4),
+        const SizedBox(height: 4),
         Text(
-          'ヒートマップで日をタップすると、その日の方位スコアと\n'
-          'カテゴリ別ランキングが下に表示されます。',
-          style: TextStyle(
+          t.forecast.usage.s2Body,
+          style: const TextStyle(
               color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
         ),
-        SizedBox(height: 10),
+        const SizedBox(height: 10),
         Text(
-          '【あなたの星のサイクル】',
-          style: TextStyle(
+          t.forecast.usage.s3Title,
+          style: const TextStyle(
               color: Color(0xFFC9A84C),
               fontSize: 13,
               fontWeight: FontWeight.w600,
               letterSpacing: 0.5),
         ),
-        SizedBox(height: 4),
+        const SizedBox(height: 4),
         Text(
-          'カテゴリ別の「期間」(モテ期 / 豊かさ期 / 癒し期 等) を\n'
-          '表示。今日以降に到来する継続期間のみ表示します。\n'
-          '長期計画の指針に。',
-          style: TextStyle(
+          t.forecast.usage.s3Body,
+          style: const TextStyle(
               color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
         ),
-        SizedBox(height: 10),
+        const SizedBox(height: 10),
         Text(
-          '【ハイライト Top5】',
-          style: TextStyle(
+          t.forecast.usage.s4Title,
+          style: const TextStyle(
               color: Color(0xFFC9A84C),
               fontSize: 13,
               fontWeight: FontWeight.w600,
               letterSpacing: 0.5),
         ),
-        SizedBox(height: 4),
+        const SizedBox(height: 4),
         Text(
-          'カテゴリ別の上位 5 日を表示。「いつ動くか」の\n'
-          '短期ピンポイント計画に。',
-          style: TextStyle(
+          t.forecast.usage.s4Body,
+          style: const TextStyle(
               color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
         ),
-        SizedBox(height: 10),
+        const SizedBox(height: 10),
         Text(
-          '【Map 画面の数字との関係】',
-          style: TextStyle(
+          t.forecast.usage.s5Title,
+          style: const TextStyle(
               color: Color(0xFFC9A84C),
               fontSize: 13,
               fontWeight: FontWeight.w600,
               letterSpacing: 0.5),
         ),
-        SizedBox(height: 4),
+        const SizedBox(height: 4),
         Text(
-          'FORECAST の数字と、Map で同じ日を開いた時の数字は\n'
-          '一致しません。これは別計算だからです。\n\n'
-          '・FORECAST = あなたの出生情報のみで算出。\n'
-          '　地球のどこにいても、何時に見ても変わらない、\n'
-          '　あなた自身に流れているエネルギーを 1 年分追跡。\n\n'
-          '・Map = 今いる地点 + 今この瞬間で算出。\n'
-          '　ASC (地平線) と MC (天頂) を含むため、\n'
-          '　地点が変われば数字が変わり、同じ日でも\n'
-          '　12:00 と 19:00 で違う数字になります\n'
-          '　(ASC は 15°/時間で動くため)。\n\n'
-          'どちらが正しい・間違いではなく、別の角度から\n'
-          '同じあなたを読み取る 2 つのレンズです。\n'
-          '・FORECAST で「動きやすい時期」を掴み\n'
-          '・Map で「その地点・その時刻」を詳しく読む\n'
-          'という使い分けで両方使えます。',
-          style: TextStyle(
+          t.forecast.usage.s5Body,
+          style: const TextStyle(
               color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
         ),
       ],
@@ -965,92 +961,61 @@ void _showHeatmapInfo(BuildContext context) {
     child: Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: const [
+      children: [
         Text(
-          '1 年ヒートマップの読み方',
-          style: TextStyle(
+          t.forecast.heatmapInfo.title,
+          style: const TextStyle(
               color: Color(0xFFC9A84C), fontSize: 14, letterSpacing: 1),
         ),
-        SizedBox(height: 10),
+        const SizedBox(height: 10),
         Text(
-          '【3 つの色モード】',
-          style: TextStyle(
+          t.forecast.heatmapInfo.s1Title,
+          style: const TextStyle(
               color: Color(0xFFC9A84C),
               fontSize: 13,
               fontWeight: FontWeight.w600,
               letterSpacing: 0.5),
         ),
-        SizedBox(height: 4),
+        const SizedBox(height: 4),
         Text(
-          '■ 相対モード (デフォルト)\n'
-          '1 年内の最低 → 最高で正規化。\n'
-          'あなたの 365 日のうち相対的に高い日が明るく\n'
-          '見えます。日々の濃淡を最大化して把握できます。\n\n'
-          '■ 絶対モード\n'
-          'スコアの絶対値で色化。低い値は暗く、\n'
-          '高い値は明るい。他の年・他のユーザーと\n'
-          '比較する時に使います。\n\n'
-          '■ カテゴリモード\n'
-          '日ごとに最も強いカテゴリを色で表現:\n'
-          '　🟢 癒し　🟡 豊かさ　🩷 恋愛\n'
-          '　🔵 仕事　🟣 話す\n\n'
-          '同じ色が連続している期間が、そのカテゴリの\n'
-          '「波」が来ている時期です。\n'
-          '・🩷 が連続 → モテ期 (関係性のエネルギーが流れる)\n'
-          '・🟡 が連続 → 豊かさ期\n'
-          '・🟢 が連続 → 癒し期\n'
-          '・🔵 が連続 → 仕事期\n'
-          '・🟣 が連続 → 発信期\n\n'
-          'これらの「○○期」は下の「あなたの星のサイクル」\n'
-          'セクションでも、開始日・終了日付きで一覧表示されます\n'
-          '(7 日以上の継続のみ抽出)。',
-          style: TextStyle(
+          t.forecast.heatmapInfo.s1Body,
+          style: const TextStyle(
               color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
         ),
-        SizedBox(height: 10),
+        const SizedBox(height: 10),
         Text(
-          '【色方向 (🟢↑高 / 🔴↑高)】',
-          style: TextStyle(
+          t.forecast.heatmapInfo.s2Title,
+          style: const TextStyle(
               color: Color(0xFFC9A84C),
               fontSize: 13,
               fontWeight: FontWeight.w600,
               letterSpacing: 0.5),
         ),
-        SizedBox(height: 4),
+        const SizedBox(height: 4),
         Text(
-          '「相対」「絶対」モードで有効です。\n'
-          '・🟢↑高: 高スコア=緑、低スコア=赤\n'
-          '・🔴↑高: 高スコア=赤、低スコア=緑 (反転)\n\n'
-          '吉凶判定を避けるため、見たい色の方向を\n'
-          'あなた自身で選べます。',
-          style: TextStyle(
+          t.forecast.heatmapInfo.s2Body,
+          style: const TextStyle(
               color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
         ),
-        SizedBox(height: 10),
+        const SizedBox(height: 10),
         Text(
-          '【ランク (1 位 / 2 位)】',
-          style: TextStyle(
+          t.forecast.heatmapInfo.s3Title,
+          style: const TextStyle(
               color: Color(0xFFC9A84C),
               fontSize: 13,
               fontWeight: FontWeight.w600,
               letterSpacing: 0.5),
         ),
-        SizedBox(height: 4),
+        const SizedBox(height: 4),
         Text(
-          '「カテゴリ」モードで有効です。\n'
-          '・1 位: その日の最強カテゴリ色で塗る\n'
-          '・2 位: 2 番目に強いカテゴリ色で塗る\n\n'
-          '両方確認すると、1 日の中の「主役」と「サブ」が\n'
-          '見えてきます。',
-          style: TextStyle(
+          t.forecast.heatmapInfo.s3Body,
+          style: const TextStyle(
               color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
         ),
-        SizedBox(height: 10),
+        const SizedBox(height: 10),
         Text(
-          '※ 同じ日でも Map で開いた数字とは別の指標です\n'
-          '(場所・時刻に依存しない計算)。\n'
-          '詳細は画面上部 ❓ ボタンの「Map 画面の数字との関係」へ。',
-          style: TextStyle(
+          t.forecast.heatmapInfo.footer,
+          style: const TextStyle(
               color: Color(0xFF999999), fontSize: 11, height: 1.5),
         ),
       ],

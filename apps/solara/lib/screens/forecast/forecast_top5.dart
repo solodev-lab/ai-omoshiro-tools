@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import '../../i18n/strings.g.dart';
 import '../../utils/forecast_cache.dart';
+import '../../utils/solara_i18n.dart';
 import '../../widgets/info_popup.dart';
 import '../map/map_constants.dart';
 import 'forecast_section_header.dart';
@@ -38,10 +40,10 @@ class ForecastTop5Section extends StatelessWidget {
 
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       ForecastSectionHeader(
-        label: 'ハイライトTop5',
+        label: t.forecast.top5.title,
         onInfo: () => _showTop5Info(context),
         // 集計対象の暦年 (西暦) を右端に表示。
-        trailing: Text('$year年',
+        trailing: Text(t.forecast.top5.year(year: year),
             style: const TextStyle(
                 fontSize: 11,
                 color: Color(0xFFC9A84C),
@@ -57,12 +59,12 @@ class ForecastTop5Section extends StatelessWidget {
 
   Widget _modeSelector() {
     final modes = <Map<String, Object>>[
-      {'key': 'overall', 'label': '総合', 'color': const Color(0xFFC9A84C)},
-      {'key': 'love', 'label': '恋愛', 'color': categoryColors['love']!},
-      {'key': 'money', 'label': '豊かさ', 'color': categoryColors['money']!},
-      {'key': 'healing', 'label': '癒し', 'color': categoryColors['healing']!},
-      {'key': 'work', 'label': '仕事', 'color': categoryColors['work']!},
-      {'key': 'communication', 'label': '話す', 'color': categoryColors['communication']!},
+      {'key': 'overall', 'label': categoryLabel('overall'), 'color': const Color(0xFFC9A84C)},
+      {'key': 'love', 'label': categoryLabel('love'), 'color': categoryColors['love']!},
+      {'key': 'money', 'label': categoryLabel('money'), 'color': categoryColors['money']!},
+      {'key': 'healing', 'label': categoryLabel('healing'), 'color': categoryColors['healing']!},
+      {'key': 'work', 'label': categoryLabel('work'), 'color': categoryColors['work']!},
+      {'key': 'communication', 'label': categoryLabel('communication'), 'color': categoryColors['communication']!},
     ];
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
@@ -142,99 +144,91 @@ void _showTop5Info(BuildContext context) {
     child: Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: const [
+      children: [
         Text(
-          'ハイライト Top5 の読み方',
-          style: TextStyle(
+          t.forecast.top5.infoTitle,
+          style: const TextStyle(
               color: Color(0xFFC9A84C), fontSize: 14, letterSpacing: 1),
         ),
-        SizedBox(height: 10),
+        const SizedBox(height: 10),
         Text(
-          '【表示の意味】',
-          style: TextStyle(
+          t.forecast.top5.s1Title,
+          style: const TextStyle(
               color: Color(0xFFC9A84C),
               fontSize: 13,
               fontWeight: FontWeight.w600,
               letterSpacing: 0.5),
         ),
-        SizedBox(height: 4),
+        const SizedBox(height: 4),
         Text(
-          '表示中の年 (1/1〜12/31) で、選択中の\n'
-          'カテゴリのスコアが最も高い 5 日を表示します。',
-          style: TextStyle(
+          t.forecast.top5.s1Body,
+          style: const TextStyle(
               color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
         ),
-        SizedBox(height: 10),
+        const SizedBox(height: 10),
         Text(
-          '【カテゴリ切替】',
-          style: TextStyle(
+          t.forecast.top5.s2Title,
+          style: const TextStyle(
               color: Color(0xFFC9A84C),
               fontSize: 13,
               fontWeight: FontWeight.w600,
               letterSpacing: 0.5),
         ),
-        SizedBox(height: 4),
+        const SizedBox(height: 4),
         Text(
-          '総合 / 恋愛 / 豊かさ / 癒し / 仕事 / 話す から選択。\n'
-          '選んだカテゴリの上位 5 日が表示されます。',
-          style: TextStyle(
+          t.forecast.top5.s2Body,
+          style: const TextStyle(
               color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
         ),
-        SizedBox(height: 10),
+        const SizedBox(height: 10),
         Text(
-          '【順位マーカー】',
-          style: TextStyle(
+          t.forecast.top5.s3Title,
+          style: const TextStyle(
               color: Color(0xFFC9A84C),
               fontSize: 13,
               fontWeight: FontWeight.w600,
               letterSpacing: 0.5),
         ),
-        SizedBox(height: 4),
+        const SizedBox(height: 4),
         Text(
-          '👑 1 位 / 🥈 2 位 / 🥉 3 位 / ⭐ 4 位 / ✨ 5 位',
-          style: TextStyle(
+          t.forecast.top5.s3Body,
+          style: const TextStyle(
               color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
         ),
-        SizedBox(height: 10),
+        const SizedBox(height: 10),
         Text(
-          '【行の見方】',
-          style: TextStyle(
+          t.forecast.top5.s4Title,
+          style: const TextStyle(
               color: Color(0xFFC9A84C),
               fontSize: 13,
               fontWeight: FontWeight.w600,
               letterSpacing: 0.5),
         ),
-        SizedBox(height: 4),
+        const SizedBox(height: 4),
         Text(
-          '日付 — 選択中カテゴリのその日のスコア\n'
-          'タップで選択日詳細にジャンプ。\n'
-          '(その日の高まる方位は選択日詳細で確認できます)',
-          style: TextStyle(
+          t.forecast.top5.s4Body,
+          style: const TextStyle(
               color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
         ),
-        SizedBox(height: 10),
+        const SizedBox(height: 10),
         Text(
-          '【活用方法】',
-          style: TextStyle(
+          t.forecast.top5.s5Title,
+          style: const TextStyle(
               color: Color(0xFFC9A84C),
               fontSize: 13,
               fontWeight: FontWeight.w600,
               letterSpacing: 0.5),
         ),
-        SizedBox(height: 4),
+        const SizedBox(height: 4),
         Text(
-          '「動きどころ」の短期ピンポイント計画に。\n'
-          '特に 1 位の日は、そのカテゴリのテーマで動くと\n'
-          'エネルギーが特に強く流れる日です。',
-          style: TextStyle(
+          t.forecast.top5.s5Body,
+          style: const TextStyle(
               color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
         ),
-        SizedBox(height: 10),
+        const SizedBox(height: 10),
         Text(
-          '※ 同じ日でも Map で開いた数字とは別の指標です\n'
-          '(場所・時刻に依存しない計算)。\n'
-          '詳細は画面上部 ❓ ボタンの「Map 画面の数字との関係」へ。',
-          style: TextStyle(
+          t.forecast.top5.footer,
+          style: const TextStyle(
               color: Color(0xFF999999), fontSize: 11, height: 1.5),
         ),
       ],

@@ -40,6 +40,7 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 	Translations $copyWith({TranslationMetadata<AppLocale, Translations>? meta}) => Translations(meta: meta ?? this.$meta);
 
 	// Translations
+	late final Translations$forecast$ja forecast = Translations$forecast$ja.internal(_root);
 	late final Translations$consultHistory$ja consultHistory = Translations$consultHistory$ja.internal(_root);
 	late final Translations$consultCredit$ja consultCredit = Translations$consultCredit$ja.internal(_root);
 	late final Translations$consultPlacePicker$ja consultPlacePicker = Translations$consultPlacePicker$ja.internal(_root);
@@ -55,6 +56,95 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 	late final Translations$disclaimer$ja disclaimer = Translations$disclaimer$ja.internal(_root);
 	late final Translations$common$ja common = Translations$common$ja.internal(_root);
 	late final Translations$aiConsent$ja aiConsent = Translations$aiConsent$ja.internal(_root);
+}
+
+// Path: forecast
+class Translations$forecast$ja {
+	Translations$forecast$ja.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// ja: 'Forecast の取得に失敗しました。ネットワーク接続を確認してください。'
+	String get error => 'Forecast の取得に失敗しました。ネットワーク接続を確認してください。';
+
+	/// ja: '5 年の流れ'
+	String get pro5yrLabel => '5 年の流れ';
+
+	/// ja: '今年だけでなく翌年・来々年も含めた 5 年分のヒートマップで、人生の大きな流れを見渡せます。'
+	String get pro5yrDesc => '今年だけでなく翌年・来々年も含めた 5 年分のヒートマップで、人生の大きな流れを見渡せます。';
+
+	/// ja: '($n日)'
+	String daysCount({required Object n}) => '(${n}日)';
+
+	/// ja: '天体の運行を計算中…'
+	String get calculating => '天体の運行を計算中…';
+
+	/// ja: 'データがありません'
+	String get noData => 'データがありません';
+
+	/// ja: '表示期間'
+	String get displayPeriod => '表示期間';
+
+	/// ja: '年間ベスト'
+	String get yearBest => '年間ベスト';
+
+	List<String> get yearLabels => [
+		'今年',
+		'来年',
+		'再来年',
+		'3年後',
+		'4年後',
+	];
+
+	/// ja: '+$n年'
+	String plusYears({required Object n}) => '+${n}年';
+
+	/// ja: '$fy年$fm月 〜 $ly年$lm月'
+	String monthRange({required Object fy, required Object fm, required Object ly, required Object lm}) => '${fy}年${fm}月 〜 ${ly}年${lm}月';
+
+	/// ja: '1年ヒートマップ'
+	String get heatmap1yr => '1年ヒートマップ';
+
+	/// ja: '相対'
+	String get segRelative => '相対';
+
+	/// ja: '絶対'
+	String get segAbsolute => '絶対';
+
+	/// ja: 'カテゴリ'
+	String get segCategory => 'カテゴリ';
+
+	/// ja: '🟢↑高'
+	String get highGreen => '🟢↑高';
+
+	/// ja: '🔴↑高'
+	String get highRed => '🔴↑高';
+
+	/// ja: '$n位'
+	String rankNth({required Object n}) => '${n}位';
+
+	/// ja: '総合'
+	String get metricOverall => '総合';
+
+	/// ja: '高まる方位'
+	String get metricTopDir => '高まる方位';
+
+	/// ja: '方位スコア'
+	String get metricDirScore => '方位スコア';
+
+	/// ja: 'カテゴリ別'
+	String get categoryBy => 'カテゴリ別';
+
+	/// ja: '最終取得: $ts / 差分更新方式（月次）'
+	String lastFetch({required Object ts}) => '最終取得: ${ts}  /  差分更新方式（月次）';
+
+	late final Translations$forecast$legend$ja legend = Translations$forecast$legend$ja.internal(_root);
+	late final Translations$forecast$usage$ja usage = Translations$forecast$usage$ja.internal(_root);
+	late final Translations$forecast$heatmapInfo$ja heatmapInfo = Translations$forecast$heatmapInfo$ja.internal(_root);
+	late final Translations$forecast$cycles$ja cycles = Translations$forecast$cycles$ja.internal(_root);
+	late final Translations$forecast$top5$ja top5 = Translations$forecast$top5$ja.internal(_root);
 }
 
 // Path: consultHistory
@@ -634,6 +724,219 @@ class Translations$aiConsent$ja {
 	late final Translations$aiConsent$geminiContent$ja geminiContent = Translations$aiConsent$geminiContent$ja.internal(_root);
 	late final Translations$aiConsent$decisions$ja decisions = Translations$aiConsent$decisions$ja.internal(_root);
 	late final Translations$aiConsent$consentHandling$ja consentHandling = Translations$aiConsent$consentHandling$ja.internal(_root);
+}
+
+// Path: forecast.legend
+class Translations$forecast$legend$ja {
+	Translations$forecast$legend$ja.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// ja: '赤=年内最低'
+	String get relLowRed => '赤=年内最低';
+
+	/// ja: '緑=年内最低'
+	String get relLowGreen => '緑=年内最低';
+
+	/// ja: '緑=年内最高'
+	String get relHighGreen => '緑=年内最高';
+
+	/// ja: '赤=年内最高'
+	String get relHighRed => '赤=年内最高';
+
+	/// ja: '$low / $high （min:$min → max:$max）'
+	String relRange({required Object low, required Object high, required Object min, required Object max}) => '${low}  /  ${high}  （min:${min} → max:${max}）';
+
+	/// ja: '赤=45以下'
+	String get absLowRed => '赤=45以下';
+
+	/// ja: '緑=45以下'
+	String get absLowGreen => '緑=45以下';
+
+	/// ja: '緑=85以上'
+	String get absHighGreen => '緑=85以上';
+
+	/// ja: '赤=85以上'
+	String get absHighRed => '赤=85以上';
+
+	/// ja: '$low / 黄=65 / $high （固定スケール）'
+	String absScale({required Object low, required Object high}) => '${low}  /  黄=65  /  ${high}  （固定スケール）';
+
+	/// ja: '色=$rank位カテゴリ / 濃さ=スコア高低'
+	String catRank({required Object rank}) => '色=${rank}位カテゴリ / 濃さ=スコア高低';
+}
+
+// Path: forecast.usage
+class Translations$forecast$usage$ja {
+	Translations$forecast$usage$ja.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// ja: 'FORECAST の使い方'
+	String get title => 'FORECAST の使い方';
+
+	/// ja: 'あなたの今後 1 年 (365 日) の星のリズムを表示します。 日々の総合スコア・カテゴリ別スコアを一目で把握でき、 動きやすい日 / 慎重に進める日を事前に確認できます。'
+	String get intro => 'あなたの今後 1 年 (365 日) の星のリズムを表示します。\n日々の総合スコア・カテゴリ別スコアを一目で把握でき、\n動きやすい日 / 慎重に進める日を事前に確認できます。';
+
+	/// ja: '【1 年ヒートマップ】'
+	String get s1Title => '【1 年ヒートマップ】';
+
+	/// ja: '12 ヶ月 × 31 日のグリッドで、各日のスコアを色で表現。 モード切替 (相対 / 絶対 / カテゴリ)、色方向 (緑↑高 / 赤↑高)、ランク (1 位 / 2 位) で見せ方を変えられます。 詳細はヒートマップ右の i ボタンを参照してください。'
+	String get s1Body => '12 ヶ月 × 31 日のグリッドで、各日のスコアを色で表現。\nモード切替 (相対 / 絶対 / カテゴリ)、色方向 (緑↑高 /\n赤↑高)、ランク (1 位 / 2 位) で見せ方を変えられます。\n詳細はヒートマップ右の i ボタンを参照してください。';
+
+	/// ja: '【選択日詳細】'
+	String get s2Title => '【選択日詳細】';
+
+	/// ja: 'ヒートマップで日をタップすると、その日の方位スコアと カテゴリ別ランキングが下に表示されます。'
+	String get s2Body => 'ヒートマップで日をタップすると、その日の方位スコアと\nカテゴリ別ランキングが下に表示されます。';
+
+	/// ja: '【あなたの星のサイクル】'
+	String get s3Title => '【あなたの星のサイクル】';
+
+	/// ja: 'カテゴリ別の「期間」(モテ期 / 豊かさ期 / 癒し期 等) を 表示。今日以降に到来する継続期間のみ表示します。 長期計画の指針に。'
+	String get s3Body => 'カテゴリ別の「期間」(モテ期 / 豊かさ期 / 癒し期 等) を\n表示。今日以降に到来する継続期間のみ表示します。\n長期計画の指針に。';
+
+	/// ja: '【ハイライト Top5】'
+	String get s4Title => '【ハイライト Top5】';
+
+	/// ja: 'カテゴリ別の上位 5 日を表示。「いつ動くか」の 短期ピンポイント計画に。'
+	String get s4Body => 'カテゴリ別の上位 5 日を表示。「いつ動くか」の\n短期ピンポイント計画に。';
+
+	/// ja: '【Map 画面の数字との関係】'
+	String get s5Title => '【Map 画面の数字との関係】';
+
+	/// ja: 'FORECAST の数字と、Map で同じ日を開いた時の数字は 一致しません。これは別計算だからです。 ・FORECAST = あなたの出生情報のみで算出。 地球のどこにいても、何時に見ても変わらない、 あなた自身に流れているエネルギーを 1 年分追跡。 ・Map = 今いる地点 + 今この瞬間で算出。 ASC (地平線) と MC (天頂) を含むため、 地点が変われば数字が変わり、同じ日でも 12:00 と 19:00 で違う数字になります (ASC は 15°/時間で動くため)。 どちらが正しい・間違いではなく、別の角度から 同じあなたを読み取る 2 つのレンズです。 ・FORECAST で「動きやすい時期」を掴み ・Map で「その地点・その時刻」を詳しく読む という使い分けで両方使えます。'
+	String get s5Body => 'FORECAST の数字と、Map で同じ日を開いた時の数字は\n一致しません。これは別計算だからです。\n\n・FORECAST = あなたの出生情報のみで算出。\n　地球のどこにいても、何時に見ても変わらない、\n　あなた自身に流れているエネルギーを 1 年分追跡。\n\n・Map = 今いる地点 + 今この瞬間で算出。\n　ASC (地平線) と MC (天頂) を含むため、\n　地点が変われば数字が変わり、同じ日でも\n　12:00 と 19:00 で違う数字になります\n　(ASC は 15°/時間で動くため)。\n\nどちらが正しい・間違いではなく、別の角度から\n同じあなたを読み取る 2 つのレンズです。\n・FORECAST で「動きやすい時期」を掴み\n・Map で「その地点・その時刻」を詳しく読む\nという使い分けで両方使えます。';
+}
+
+// Path: forecast.heatmapInfo
+class Translations$forecast$heatmapInfo$ja {
+	Translations$forecast$heatmapInfo$ja.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// ja: '1 年ヒートマップの読み方'
+	String get title => '1 年ヒートマップの読み方';
+
+	/// ja: '【3 つの色モード】'
+	String get s1Title => '【3 つの色モード】';
+
+	/// ja: '■ 相対モード (デフォルト) 1 年内の最低 → 最高で正規化。 あなたの 365 日のうち相対的に高い日が明るく 見えます。日々の濃淡を最大化して把握できます。 ■ 絶対モード スコアの絶対値で色化。低い値は暗く、 高い値は明るい。他の年・他のユーザーと 比較する時に使います。 ■ カテゴリモード 日ごとに最も強いカテゴリを色で表現: 🟢 癒し 🟡 豊かさ 🩷 恋愛 🔵 仕事 🟣 話す 同じ色が連続している期間が、そのカテゴリの 「波」が来ている時期です。 ・🩷 が連続 → モテ期 (関係性のエネルギーが流れる) ・🟡 が連続 → 豊かさ期 ・🟢 が連続 → 癒し期 ・🔵 が連続 → 仕事期 ・🟣 が連続 → 発信期 これらの「○○期」は下の「あなたの星のサイクル」 セクションでも、開始日・終了日付きで一覧表示されます (7 日以上の継続のみ抽出)。'
+	String get s1Body => '■ 相対モード (デフォルト)\n1 年内の最低 → 最高で正規化。\nあなたの 365 日のうち相対的に高い日が明るく\n見えます。日々の濃淡を最大化して把握できます。\n\n■ 絶対モード\nスコアの絶対値で色化。低い値は暗く、\n高い値は明るい。他の年・他のユーザーと\n比較する時に使います。\n\n■ カテゴリモード\n日ごとに最も強いカテゴリを色で表現:\n　🟢 癒し　🟡 豊かさ　🩷 恋愛\n　🔵 仕事　🟣 話す\n\n同じ色が連続している期間が、そのカテゴリの\n「波」が来ている時期です。\n・🩷 が連続 → モテ期 (関係性のエネルギーが流れる)\n・🟡 が連続 → 豊かさ期\n・🟢 が連続 → 癒し期\n・🔵 が連続 → 仕事期\n・🟣 が連続 → 発信期\n\nこれらの「○○期」は下の「あなたの星のサイクル」\nセクションでも、開始日・終了日付きで一覧表示されます\n(7 日以上の継続のみ抽出)。';
+
+	/// ja: '【色方向 (🟢↑高 / 🔴↑高)】'
+	String get s2Title => '【色方向 (🟢↑高 / 🔴↑高)】';
+
+	/// ja: '「相対」「絶対」モードで有効です。 ・🟢↑高: 高スコア=緑、低スコア=赤 ・🔴↑高: 高スコア=赤、低スコア=緑 (反転) 吉凶判定を避けるため、見たい色の方向を あなた自身で選べます。'
+	String get s2Body => '「相対」「絶対」モードで有効です。\n・🟢↑高: 高スコア=緑、低スコア=赤\n・🔴↑高: 高スコア=赤、低スコア=緑 (反転)\n\n吉凶判定を避けるため、見たい色の方向を\nあなた自身で選べます。';
+
+	/// ja: '【ランク (1 位 / 2 位)】'
+	String get s3Title => '【ランク (1 位 / 2 位)】';
+
+	/// ja: '「カテゴリ」モードで有効です。 ・1 位: その日の最強カテゴリ色で塗る ・2 位: 2 番目に強いカテゴリ色で塗る 両方確認すると、1 日の中の「主役」と「サブ」が 見えてきます。'
+	String get s3Body => '「カテゴリ」モードで有効です。\n・1 位: その日の最強カテゴリ色で塗る\n・2 位: 2 番目に強いカテゴリ色で塗る\n\n両方確認すると、1 日の中の「主役」と「サブ」が\n見えてきます。';
+
+	/// ja: '※ 同じ日でも Map で開いた数字とは別の指標です (場所・時刻に依存しない計算)。 詳細は画面上部 ❓ ボタンの「Map 画面の数字との関係」へ。'
+	String get footer => '※ 同じ日でも Map で開いた数字とは別の指標です\n(場所・時刻に依存しない計算)。\n詳細は画面上部 ❓ ボタンの「Map 画面の数字との関係」へ。';
+}
+
+// Path: forecast.cycles
+class Translations$forecast$cycles$ja {
+	Translations$forecast$cycles$ja.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// ja: 'あなたの星のサイクル'
+	String get title => 'あなたの星のサイクル';
+
+	/// ja: '今日以降に到来する期間を表示（7日以上の継続）'
+	String get hint => '今日以降に到来する期間を表示（7日以上の継続）';
+
+	/// ja: '今日以降に到来する期間はありません'
+	String get empty => '今日以降に到来する期間はありません';
+
+	/// ja: '星のサイクルとは'
+	String get infoTitle => '星のサイクルとは';
+
+	/// ja: '【表示の意味】'
+	String get s1Title => '【表示の意味】';
+
+	/// ja: '今後 1 年で、各カテゴリ (恋愛 / 豊かさ / 癒し / 仕事 / 話す) のエネルギーが強く流れる「期間」を 表示します。 例:「💗 モテ期 6/15 〜 7/2 (18 日間)」 → 6/15 から 7/2 まで関係性のエネルギーが 継続して強い時期'
+	String get s1Body => '今後 1 年で、各カテゴリ (恋愛 / 豊かさ / 癒し /\n仕事 / 話す) のエネルギーが強く流れる「期間」を\n表示します。\n\n例:「💗 モテ期 6/15 〜 7/2 (18 日間)」\n　 → 6/15 から 7/2 まで関係性のエネルギーが\n　   継続して強い時期';
+
+	/// ja: '【表示条件】'
+	String get s2Title => '【表示条件】';
+
+	/// ja: '・今日以降に到来する期間のみ表示 (過ぎた期間は非表示) ・7 日以上連続して強い場合のみ「期間」と認定 (短い波は表示しない) ・カテゴリごとに最も近い 1 件ずつ表示'
+	String get s2Body => '・今日以降に到来する期間のみ表示\n　(過ぎた期間は非表示)\n・7 日以上連続して強い場合のみ「期間」と認定\n　(短い波は表示しない)\n・カテゴリごとに最も近い 1 件ずつ表示';
+
+	/// ja: '【活用方法】'
+	String get s3Title => '【活用方法】';
+
+	/// ja: '「いつ動くか」の長期計画に。 その期間の中で具体的な 1 日を Map 画面で確認すると、 その地点・時刻での方角と時間が見えます。'
+	String get s3Body => '「いつ動くか」の長期計画に。\nその期間の中で具体的な 1 日を Map 画面で確認すると、\nその地点・時刻での方角と時間が見えます。';
+
+	/// ja: '※ 同じ期間のスコアでも Map で開いた数字とは別の指標です (場所・時刻に依存しない計算)。 詳細は画面上部 ❓ ボタンの「Map 画面の数字との関係」へ。'
+	String get footer => '※ 同じ期間のスコアでも Map で開いた数字とは別の指標です\n(場所・時刻に依存しない計算)。\n詳細は画面上部 ❓ ボタンの「Map 画面の数字との関係」へ。';
+}
+
+// Path: forecast.top5
+class Translations$forecast$top5$ja {
+	Translations$forecast$top5$ja.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// ja: 'ハイライトTop5'
+	String get title => 'ハイライトTop5';
+
+	/// ja: '$year年'
+	String year({required Object year}) => '${year}年';
+
+	/// ja: 'ハイライト Top5 の読み方'
+	String get infoTitle => 'ハイライト Top5 の読み方';
+
+	/// ja: '【表示の意味】'
+	String get s1Title => '【表示の意味】';
+
+	/// ja: '表示中の年 (1/1〜12/31) で、選択中の カテゴリのスコアが最も高い 5 日を表示します。'
+	String get s1Body => '表示中の年 (1/1〜12/31) で、選択中の\nカテゴリのスコアが最も高い 5 日を表示します。';
+
+	/// ja: '【カテゴリ切替】'
+	String get s2Title => '【カテゴリ切替】';
+
+	/// ja: '総合 / 恋愛 / 豊かさ / 癒し / 仕事 / 話す から選択。 選んだカテゴリの上位 5 日が表示されます。'
+	String get s2Body => '総合 / 恋愛 / 豊かさ / 癒し / 仕事 / 話す から選択。\n選んだカテゴリの上位 5 日が表示されます。';
+
+	/// ja: '【順位マーカー】'
+	String get s3Title => '【順位マーカー】';
+
+	/// ja: '👑 1 位 / 🥈 2 位 / 🥉 3 位 / ⭐ 4 位 / ✨ 5 位'
+	String get s3Body => '👑 1 位 / 🥈 2 位 / 🥉 3 位 / ⭐ 4 位 / ✨ 5 位';
+
+	/// ja: '【行の見方】'
+	String get s4Title => '【行の見方】';
+
+	/// ja: '日付 — 選択中カテゴリのその日のスコア タップで選択日詳細にジャンプ。 (その日の高まる方位は選択日詳細で確認できます)'
+	String get s4Body => '日付 — 選択中カテゴリのその日のスコア\nタップで選択日詳細にジャンプ。\n(その日の高まる方位は選択日詳細で確認できます)';
+
+	/// ja: '【活用方法】'
+	String get s5Title => '【活用方法】';
+
+	/// ja: '「動きどころ」の短期ピンポイント計画に。 特に 1 位の日は、そのカテゴリのテーマで動くと エネルギーが特に強く流れる日です。'
+	String get s5Body => '「動きどころ」の短期ピンポイント計画に。\n特に 1 位の日は、そのカテゴリのテーマで動くと\nエネルギーが特に強く流れる日です。';
+
+	/// ja: '※ 同じ日でも Map で開いた数字とは別の指標です (場所・時刻に依存しない計算)。 詳細は画面上部 ❓ ボタンの「Map 画面の数字との関係」へ。'
+	String get footer => '※ 同じ日でも Map で開いた数字とは別の指標です\n(場所・時刻に依存しない計算)。\n詳細は画面上部 ❓ ボタンの「Map 画面の数字との関係」へ。';
 }
 
 // Path: consultResult.exhaust
@@ -2299,6 +2602,89 @@ class Translations$paywall$faq$resubscribe$ja {
 extension on Translations {
 	dynamic _flatMapFunction(String path) {
 		return switch (path) {
+			'forecast.error' => 'Forecast の取得に失敗しました。ネットワーク接続を確認してください。',
+			'forecast.pro5yrLabel' => '5 年の流れ',
+			'forecast.pro5yrDesc' => '今年だけでなく翌年・来々年も含めた 5 年分のヒートマップで、人生の大きな流れを見渡せます。',
+			'forecast.daysCount' => ({required Object n}) => '(${n}日)',
+			'forecast.calculating' => '天体の運行を計算中…',
+			'forecast.noData' => 'データがありません',
+			'forecast.displayPeriod' => '表示期間',
+			'forecast.yearBest' => '年間ベスト',
+			'forecast.yearLabels.0' => '今年',
+			'forecast.yearLabels.1' => '来年',
+			'forecast.yearLabels.2' => '再来年',
+			'forecast.yearLabels.3' => '3年後',
+			'forecast.yearLabels.4' => '4年後',
+			'forecast.plusYears' => ({required Object n}) => '+${n}年',
+			'forecast.monthRange' => ({required Object fy, required Object fm, required Object ly, required Object lm}) => '${fy}年${fm}月 〜 ${ly}年${lm}月',
+			'forecast.heatmap1yr' => '1年ヒートマップ',
+			'forecast.segRelative' => '相対',
+			'forecast.segAbsolute' => '絶対',
+			'forecast.segCategory' => 'カテゴリ',
+			'forecast.highGreen' => '🟢↑高',
+			'forecast.highRed' => '🔴↑高',
+			'forecast.rankNth' => ({required Object n}) => '${n}位',
+			'forecast.metricOverall' => '総合',
+			'forecast.metricTopDir' => '高まる方位',
+			'forecast.metricDirScore' => '方位スコア',
+			'forecast.categoryBy' => 'カテゴリ別',
+			'forecast.lastFetch' => ({required Object ts}) => '最終取得: ${ts}  /  差分更新方式（月次）',
+			'forecast.legend.relLowRed' => '赤=年内最低',
+			'forecast.legend.relLowGreen' => '緑=年内最低',
+			'forecast.legend.relHighGreen' => '緑=年内最高',
+			'forecast.legend.relHighRed' => '赤=年内最高',
+			'forecast.legend.relRange' => ({required Object low, required Object high, required Object min, required Object max}) => '${low}  /  ${high}  （min:${min} → max:${max}）',
+			'forecast.legend.absLowRed' => '赤=45以下',
+			'forecast.legend.absLowGreen' => '緑=45以下',
+			'forecast.legend.absHighGreen' => '緑=85以上',
+			'forecast.legend.absHighRed' => '赤=85以上',
+			'forecast.legend.absScale' => ({required Object low, required Object high}) => '${low}  /  黄=65  /  ${high}  （固定スケール）',
+			'forecast.legend.catRank' => ({required Object rank}) => '色=${rank}位カテゴリ / 濃さ=スコア高低',
+			'forecast.usage.title' => 'FORECAST の使い方',
+			'forecast.usage.intro' => 'あなたの今後 1 年 (365 日) の星のリズムを表示します。\n日々の総合スコア・カテゴリ別スコアを一目で把握でき、\n動きやすい日 / 慎重に進める日を事前に確認できます。',
+			'forecast.usage.s1Title' => '【1 年ヒートマップ】',
+			'forecast.usage.s1Body' => '12 ヶ月 × 31 日のグリッドで、各日のスコアを色で表現。\nモード切替 (相対 / 絶対 / カテゴリ)、色方向 (緑↑高 /\n赤↑高)、ランク (1 位 / 2 位) で見せ方を変えられます。\n詳細はヒートマップ右の i ボタンを参照してください。',
+			'forecast.usage.s2Title' => '【選択日詳細】',
+			'forecast.usage.s2Body' => 'ヒートマップで日をタップすると、その日の方位スコアと\nカテゴリ別ランキングが下に表示されます。',
+			'forecast.usage.s3Title' => '【あなたの星のサイクル】',
+			'forecast.usage.s3Body' => 'カテゴリ別の「期間」(モテ期 / 豊かさ期 / 癒し期 等) を\n表示。今日以降に到来する継続期間のみ表示します。\n長期計画の指針に。',
+			'forecast.usage.s4Title' => '【ハイライト Top5】',
+			'forecast.usage.s4Body' => 'カテゴリ別の上位 5 日を表示。「いつ動くか」の\n短期ピンポイント計画に。',
+			'forecast.usage.s5Title' => '【Map 画面の数字との関係】',
+			'forecast.usage.s5Body' => 'FORECAST の数字と、Map で同じ日を開いた時の数字は\n一致しません。これは別計算だからです。\n\n・FORECAST = あなたの出生情報のみで算出。\n　地球のどこにいても、何時に見ても変わらない、\n　あなた自身に流れているエネルギーを 1 年分追跡。\n\n・Map = 今いる地点 + 今この瞬間で算出。\n　ASC (地平線) と MC (天頂) を含むため、\n　地点が変われば数字が変わり、同じ日でも\n　12:00 と 19:00 で違う数字になります\n　(ASC は 15°/時間で動くため)。\n\nどちらが正しい・間違いではなく、別の角度から\n同じあなたを読み取る 2 つのレンズです。\n・FORECAST で「動きやすい時期」を掴み\n・Map で「その地点・その時刻」を詳しく読む\nという使い分けで両方使えます。',
+			'forecast.heatmapInfo.title' => '1 年ヒートマップの読み方',
+			'forecast.heatmapInfo.s1Title' => '【3 つの色モード】',
+			'forecast.heatmapInfo.s1Body' => '■ 相対モード (デフォルト)\n1 年内の最低 → 最高で正規化。\nあなたの 365 日のうち相対的に高い日が明るく\n見えます。日々の濃淡を最大化して把握できます。\n\n■ 絶対モード\nスコアの絶対値で色化。低い値は暗く、\n高い値は明るい。他の年・他のユーザーと\n比較する時に使います。\n\n■ カテゴリモード\n日ごとに最も強いカテゴリを色で表現:\n　🟢 癒し　🟡 豊かさ　🩷 恋愛\n　🔵 仕事　🟣 話す\n\n同じ色が連続している期間が、そのカテゴリの\n「波」が来ている時期です。\n・🩷 が連続 → モテ期 (関係性のエネルギーが流れる)\n・🟡 が連続 → 豊かさ期\n・🟢 が連続 → 癒し期\n・🔵 が連続 → 仕事期\n・🟣 が連続 → 発信期\n\nこれらの「○○期」は下の「あなたの星のサイクル」\nセクションでも、開始日・終了日付きで一覧表示されます\n(7 日以上の継続のみ抽出)。',
+			'forecast.heatmapInfo.s2Title' => '【色方向 (🟢↑高 / 🔴↑高)】',
+			'forecast.heatmapInfo.s2Body' => '「相対」「絶対」モードで有効です。\n・🟢↑高: 高スコア=緑、低スコア=赤\n・🔴↑高: 高スコア=赤、低スコア=緑 (反転)\n\n吉凶判定を避けるため、見たい色の方向を\nあなた自身で選べます。',
+			'forecast.heatmapInfo.s3Title' => '【ランク (1 位 / 2 位)】',
+			'forecast.heatmapInfo.s3Body' => '「カテゴリ」モードで有効です。\n・1 位: その日の最強カテゴリ色で塗る\n・2 位: 2 番目に強いカテゴリ色で塗る\n\n両方確認すると、1 日の中の「主役」と「サブ」が\n見えてきます。',
+			'forecast.heatmapInfo.footer' => '※ 同じ日でも Map で開いた数字とは別の指標です\n(場所・時刻に依存しない計算)。\n詳細は画面上部 ❓ ボタンの「Map 画面の数字との関係」へ。',
+			'forecast.cycles.title' => 'あなたの星のサイクル',
+			'forecast.cycles.hint' => '今日以降に到来する期間を表示（7日以上の継続）',
+			'forecast.cycles.empty' => '今日以降に到来する期間はありません',
+			'forecast.cycles.infoTitle' => '星のサイクルとは',
+			'forecast.cycles.s1Title' => '【表示の意味】',
+			'forecast.cycles.s1Body' => '今後 1 年で、各カテゴリ (恋愛 / 豊かさ / 癒し /\n仕事 / 話す) のエネルギーが強く流れる「期間」を\n表示します。\n\n例:「💗 モテ期 6/15 〜 7/2 (18 日間)」\n　 → 6/15 から 7/2 まで関係性のエネルギーが\n　   継続して強い時期',
+			'forecast.cycles.s2Title' => '【表示条件】',
+			'forecast.cycles.s2Body' => '・今日以降に到来する期間のみ表示\n　(過ぎた期間は非表示)\n・7 日以上連続して強い場合のみ「期間」と認定\n　(短い波は表示しない)\n・カテゴリごとに最も近い 1 件ずつ表示',
+			'forecast.cycles.s3Title' => '【活用方法】',
+			'forecast.cycles.s3Body' => '「いつ動くか」の長期計画に。\nその期間の中で具体的な 1 日を Map 画面で確認すると、\nその地点・時刻での方角と時間が見えます。',
+			'forecast.cycles.footer' => '※ 同じ期間のスコアでも Map で開いた数字とは別の指標です\n(場所・時刻に依存しない計算)。\n詳細は画面上部 ❓ ボタンの「Map 画面の数字との関係」へ。',
+			'forecast.top5.title' => 'ハイライトTop5',
+			'forecast.top5.year' => ({required Object year}) => '${year}年',
+			'forecast.top5.infoTitle' => 'ハイライト Top5 の読み方',
+			'forecast.top5.s1Title' => '【表示の意味】',
+			'forecast.top5.s1Body' => '表示中の年 (1/1〜12/31) で、選択中の\nカテゴリのスコアが最も高い 5 日を表示します。',
+			'forecast.top5.s2Title' => '【カテゴリ切替】',
+			'forecast.top5.s2Body' => '総合 / 恋愛 / 豊かさ / 癒し / 仕事 / 話す から選択。\n選んだカテゴリの上位 5 日が表示されます。',
+			'forecast.top5.s3Title' => '【順位マーカー】',
+			'forecast.top5.s3Body' => '👑 1 位 / 🥈 2 位 / 🥉 3 位 / ⭐ 4 位 / ✨ 5 位',
+			'forecast.top5.s4Title' => '【行の見方】',
+			'forecast.top5.s4Body' => '日付 — 選択中カテゴリのその日のスコア\nタップで選択日詳細にジャンプ。\n(その日の高まる方位は選択日詳細で確認できます)',
+			'forecast.top5.s5Title' => '【活用方法】',
+			'forecast.top5.s5Body' => '「動きどころ」の短期ピンポイント計画に。\n特に 1 位の日は、そのカテゴリのテーマで動くと\nエネルギーが特に強く流れる日です。',
+			'forecast.top5.footer' => '※ 同じ日でも Map で開いた数字とは別の指標です\n(場所・時刻に依存しない計算)。\n詳細は画面上部 ❓ ボタンの「Map 画面の数字との関係」へ。',
 			'consultHistory.title' => '相談履歴',
 			'consultHistory.deleteAll' => 'すべて削除',
 			'consultHistory.deleteAllTitle' => 'すべて削除しますか？',
@@ -2728,6 +3114,8 @@ extension on Translations {
 			'paywall.comparison.archiveSearch.label' => '星座アーカイブ・履歴の検索/フィルタ',
 			'paywall.comparison.replayExport.label' => '形成演出の再生・テキスト書き出し',
 			'paywall.comparison.titleRediagnosis.label' => '称号 (クラス) の再診断',
+			_ => null,
+		} ?? switch (path) {
 			'paywall.comparison.titleRediagnosis.free' => '1 回まで',
 			'paywall.comparison.titleRediagnosis.pro' => '無制限',
 			'paywall.comparison.forecastPeriod.label' => 'Forecast 期間',
