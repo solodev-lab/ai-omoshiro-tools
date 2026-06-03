@@ -327,6 +327,8 @@ class _ChipBtn extends StatelessWidget {
         ),
         child: Text(
           label,
+          // フォント拡大時にチップ高さ(36)で下端が切れるため最大固定。
+          textScaler: TextScaler.noScaling,
           style: TextStyle(
             color: fg,
             fontSize: 11,
@@ -375,6 +377,8 @@ class _ElementChipBtn extends StatelessWidget {
         ),
         child: Text(
           '$emoji$nameJP',
+          // フォント拡大時にチップ高さ(36)で下端が切れるため最大固定。
+          textScaler: TextScaler.noScaling,
           style: TextStyle(
             color: fg,
             fontSize: 11,

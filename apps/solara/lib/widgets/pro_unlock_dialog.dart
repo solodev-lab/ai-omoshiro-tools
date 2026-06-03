@@ -16,7 +16,6 @@
 //   - 結果画面のシェアアイコン タップ (Free)
 //   - その他 Pro ゲート対象機能のタップ (Phase 2-7 / 2-8 で配線)
 
-import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 
 import '../screens/paywall_screen.dart';
@@ -121,25 +120,6 @@ List<Widget> _buildProUpsellContent(
       ),
     ),
     const SizedBox(height: 20),
-    if (kDebugMode) ...[
-      Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        decoration: BoxDecoration(
-          color: const Color(0x33D6915C),
-          borderRadius: BorderRadius.circular(6),
-          border: Border.all(color: const Color(0x66D6915C)),
-        ),
-        child: const Text(
-          '[DEV] Sanctuary → ✦ Cosmic Pro で Pro 状態を切替できます',
-          style: TextStyle(
-            color: SolaraColors.energyHardLight,
-            fontSize: 11,
-            height: 1.5,
-          ),
-        ),
-      ),
-      const SizedBox(height: 16),
-    ],
     // Phase 2-6b: アップグレードボタン → PaywallScreen を push。
     // 縦並びで overflow 回避 (380px 幅でも入りきる)。
     SizedBox(

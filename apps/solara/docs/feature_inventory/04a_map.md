@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 25 / 総行数: 14685
+- ファイル数: 25 / 総行数: 14688
 - class/mixin/extension/enum: 90
 - 関数 (top-level + method の素拾い): 320
 - Navigator.push 等: 0
@@ -113,7 +113,7 @@ MapAspectChip — Daily Transit V2 用 1アスペクトチップ
 - 集計: `showInfoPopup`×1
 
 
-### `lib/screens/map/map_astro_carto.dart` (872 行)
+### `lib/screens/map/map_astro_carto.dart` (873 行)
 
 **imports:** dart=0 / package=2 / relative=6
 
@@ -123,32 +123,32 @@ MapAspectChip — Daily Transit V2 用 1アスペクトチップ
 
 - L28 `class AstroCartoBanner : StatelessWidget`
   - Astro*Carto*Graphy モード中の上部バナー (タイトル + 閉じる×)。
-- L254 `class AcgFrameDef`
-- L297 `class AstroCartoFramePills : StatelessWidget`
+- L255 `class AcgFrameDef`
+- L298 `class AstroCartoFramePills : StatelessWidget`
   - 第1層: フレーム切替ピル (横並び 4 ピル + i)。
-- L364 `class AstroCartoSubPills : StatelessWidget`
+- L365 `class AstroCartoSubPills : StatelessWidget`
   - 第2層: active frame のサブトグル 4 つ (横並び)。
-- L403 `class _FramePill : StatelessWidget`
+- L404 `class _FramePill : StatelessWidget`
   - 第1層の個別ピル (ラベル + i)。active 時はリング glow で強調。
-- L472 `class _SubPill : StatelessWidget`
+- L473 `class _SubPill : StatelessWidget`
   - 第2層の個別小ピル (天頂 / 天底 / 天頂帯 / 天底帯)。
-- L539 `class _ScrollableRowPanel : StatelessWidget`
+- L540 `class _ScrollableRowPanel : StatelessWidget`
   - ピル列の overflow 対策ラッパー。
-- L574 `class AstroCartoCategoryPills : StatelessWidget`
+- L575 `class AstroCartoCategoryPills : StatelessWidget`
   - Astro*Carto*Graphy モード中のカテゴリピル。
-- L647 `class AstroZenithPopup : StatelessWidget`
+- L648 `class AstroZenithPopup : StatelessWidget`
   - 天頂・天底点タップ詳細 popup。
 
 **関数 (8 public + 1 private):**
 
 - L33 `build()`
-- L310 `build()`
-- L377 `build()`
-- L420 `build()`
-- L487 `build()`
-- L550 `build()`
-- L584 `build()`
-- L670 `build()`
+- L311 `build()`
+- L378 `build()`
+- L421 `build()`
+- L488 `build()`
+- L551 `build()`
+- L585 `build()`
+- L671 `build()`
 
   <details><summary>private 関数 1 件</summary>
 
@@ -349,7 +349,7 @@ E4 (2026-04-29): 設計思想に基づく「両エネルギー事実提示」型
 - 集計: `showInfoPopup`×1
 
 
-### `lib/screens/map/map_display_menu.dart` (413 行)
+### `lib/screens/map/map_display_menu.dart` (415 行)
 
 **imports:** dart=0 / package=1 / relative=3
 
@@ -362,9 +362,9 @@ E4 (2026-04-29): 設計思想に基づく「両エネルギー事実提示」型
 - L61 `enum _MainTab`
 - L62 `enum _PlanetSub`
 - L64 `class _MapDisplayMenuState : State`
-- L345 `class _MenuInfoRow : StatelessWidget`
+- L347 `class _MenuInfoRow : StatelessWidget`
   - 説明 popup 用の項目行 (見出し + 本文)。
-- L372 `class _ChipButton : StatelessWidget`
+- L374 `class _ChipButton : StatelessWidget`
   - 共通のチップ風ボタン (active 状態で塗りつぶし変化)。
 
 **関数 (5 public + 10 private):**
@@ -372,8 +372,8 @@ E4 (2026-04-29): 設計思想に基づく「両エネルギー事実提示」型
 - L58 `createState()`
 - L69 `build()`
 - L235 `planetsJp()`
-- L351 `build()`
-- L387 `build()`
+- L353 `build()`
+- L389 `build()`
 
   <details><summary>private 関数 10 件</summary>
 
@@ -383,10 +383,10 @@ E4 (2026-04-29): 設計思想に基づく「両エネルギー事実提示」型
   - L188 `_tabBtn()`
   - L200 `_tabBtnWithInfo()`
   - L218 `_showTabInfo()`
-  - L298 `_subTabBtn()`
-  - L308 `_toggleBtn()`
-  - L318 `_radioBtn()`
-  - L328 `_scrollRow()`
+  - L300 `_subTabBtn()`
+  - L310 `_toggleBtn()`
+  - L320 `_radioBtn()`
+  - L330 `_scrollRow()`
 
   </details>
 
@@ -716,7 +716,7 @@ A*C*G ライン (natal / transit) のタップ詳細 popup。
 - 集計: `showLineNarrativeSheet`×1
 
 
-### `lib/screens/map/map_search.dart` (812 行)
+### `lib/screens/map/map_search.dart` (811 行)
 
 **imports:** dart=2 / package=4 / relative=5
 
@@ -728,10 +728,10 @@ A*C*G ライン (natal / transit) のタップ詳細 popup。
   - 検索結果1件分
 - L183 `class SearchResultList : StatelessWidget`
   - 検索結果リスト（スコア付き）ポップアップ
-- L471 `class SearchFocusPopup : StatelessWidget`
+- L470 `class SearchFocusPopup : StatelessWidget`
   - 検索候補から1件選ばれたあとの詳細ポップアップ。
-- L723 `class _CatChip : StatelessWidget`
-- L748 `class _ActionTile : StatelessWidget`
+- L722 `class _CatChip : StatelessWidget`
+- L747 `class _ActionTile : StatelessWidget`
 
 **関数 (9 public + 8 private):**
 
@@ -740,10 +740,10 @@ A*C*G ライン (natal / transit) のタップ詳細 popup。
 - L86 `distanceKmFrom()` — 中心から km 距離
 - L159 `annotateHitsWithScores()` — 検索結果に、現在中心からの方位スコアと支配カテゴリを注入する
 - L215 `build()`
-- L513 `build()`
-- L729 `build()`
-- L754 `build()`
-- L780 `googleMapsUrlForHit()` — 検索結果を Google マップで開く URL を組み立てる。
+- L512 `build()`
+- L728 `build()`
+- L753 `build()`
+- L779 `googleMapsUrlForHit()` — 検索結果を Google マップで開く URL を組み立てる。
 
   <details><summary>private 関数 8 件</summary>
 
@@ -753,8 +753,8 @@ A*C*G ライン (natal / transit) のタップ詳細 popup。
   - L269 `_rankToggle()`
   - L290 `_rankSeg()`
   - L320 `_showRankHelp()`
-  - L365 `_hitRow()`
-  - L798 `_openInGoogleMaps()`
+  - L364 `_hitRow()`
+  - L797 `_openInGoogleMaps()`
 
   </details>
 
@@ -846,7 +846,7 @@ A*C*G ライン (natal / transit) のタップ詳細 popup。
   </details>
 
 
-### `lib/screens/map/map_viewpoint_menu.dart` (648 行)
+### `lib/screens/map/map_viewpoint_menu.dart` (649 行)
 
 **imports:** dart=0 / package=2 / relative=3
 
@@ -854,30 +854,30 @@ A*C*G ライン (natal / transit) のタップ詳細 popup。
 
 **型定義 (2):**
 
-- L151 `class MapViewpointMenu : StatefulWidget`
+- L152 `class MapViewpointMenu : StatefulWidget`
   - 📍 地点ボタンタップで画面上部に展開するパネル (2026-05-09 第三弾)。
-- L182 `class _MapViewpointMenuState : State`
+- L183 `class _MapViewpointMenuState : State`
 
 **関数 (3 public + 12 private):**
 
-- L172 `createState()`
-- L198 `initState()`
-- L245 `build()`
+- L173 `createState()`
+- L199 `initState()`
+- L246 `build()`
 
   <details><summary>private 関数 12 件</summary>
 
   - L10 `_showViewpointHelpPopup()`
-  - L203 `_loadAll()`
-  - L218 `_reload()`
-  - L232 `_saveCurrent()`
-  - L352 `_tabBtn()`
-  - L389 `_actionBtn()`
-  - L421 `_buildSlotList()`
-  - L439 `_buildSlotRow()`
-  - L493 `_buildSubMenu()`
-  - L523 `_subItem()`
-  - L556 `_showIconPickerDialog()`
-  - L608 `_showRenameDialog()`
+  - L204 `_loadAll()`
+  - L219 `_reload()`
+  - L233 `_saveCurrent()`
+  - L353 `_tabBtn()`
+  - L390 `_actionBtn()`
+  - L422 `_buildSlotList()`
+  - L440 `_buildSlotRow()`
+  - L494 `_buildSubMenu()`
+  - L524 `_subItem()`
+  - L557 `_showIconPickerDialog()`
+  - L609 `_showRenameDialog()`
 
   </details>
 

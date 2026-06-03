@@ -5,16 +5,16 @@
 
 ## サマリ
 
-- ファイル数: 12 / 総行数: 3627
+- ファイル数: 12 / 総行数: 3556
 - class/mixin/extension/enum: 25
-- 関数 (top-level + method の素拾い): 81
+- 関数 (top-level + method の素拾い): 80
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 1
 - Worker URL リテラル: 0
 
 ## ファイル別
 
-### `lib/screens/observe/observe_card_widgets.dart` (204 行)
+### `lib/screens/observe/observe_card_widgets.dart` (200 行)
 
 **imports:** dart=1 / package=1 / relative=2
 
@@ -23,19 +23,19 @@
 **型定義 (4):**
 
 - L10 `class Observe3DCard : StatelessWidget`
-- L53 `class ObserveCardBack : StatelessWidget`
-- L111 `class ObserveCardFront : StatelessWidget`
-- L143 `class ObserveCardInfo : StatelessWidget`
+- L47 `class ObserveCardBack : StatelessWidget`
+- L107 `class ObserveCardFront : StatelessWidget`
+- L139 `class ObserveCardInfo : StatelessWidget`
 
 **関数 (4 public + 0 private):**
 
-- L29 `build()`
-- L61 `build()`
-- L117 `build()`
-- L149 `build()`
+- L23 `build()`
+- L51 `build()`
+- L113 `build()`
+- L145 `build()`
 
 
-### `lib/screens/observe/observe_category_selector.dart` (199 行)
+### `lib/screens/observe/observe_category_selector.dart` (205 行)
 
 **型定義 (1):**
 
@@ -47,11 +47,11 @@
   <details><summary>private 関数 6 件</summary>
 
   - L34 `_buildCategorySelector()`
-  - L67 `_categoryChip()`
-  - L117 `_onCategoryChipTap()`
-  - L138 `_showOverallNoCostToast()`
-  - L165 `_showCategoryConfirmPopup()`
-  - L190 `_handleBuyFromCategoryPopup()`
+  - L73 `_categoryChip()`
+  - L123 `_onCategoryChipTap()`
+  - L144 `_showOverallNoCostToast()`
+  - L171 `_showCategoryConfirmPopup()`
+  - L196 `_handleBuyFromCategoryPopup()`
 
   </details>
 
@@ -97,7 +97,7 @@ Shared constants for Observe (Tarot) screen
   </details>
 
 
-### `lib/screens/observe/observe_history_filter.dart` (389 行)
+### `lib/screens/observe/observe_history_filter.dart` (393 行)
 
 **ファイル先頭コメント:**
 
@@ -126,7 +126,7 @@ Natal Tarot 履歴フィルタ — C3 (Pro 機能、柱 3)
   - Natal Tarot 履歴フィルタバー。
 - L115 `class _ObserveHistoryFilterBarState : State`
 - L297 `class _ChipBtn : StatelessWidget`
-- L342 `class _ElementChipBtn : StatelessWidget`
+- L344 `class _ElementChipBtn : StatelessWidget`
 
 **関数 (9 public + 5 private):**
 
@@ -138,7 +138,7 @@ Natal Tarot 履歴フィルタ — C3 (Pro 機能、柱 3)
 - L134 `dispose()`
 - L171 `build()`
 - L310 `build()`
-- L355 `build()`
+- L357 `build()`
 
   <details><summary>private 関数 5 件</summary>
 
@@ -207,7 +207,7 @@ Natal Tarot 履歴フィルタ — C3 (Pro 機能、柱 3)
 - L123 `buildQuestionFieldTeaser()` — Free 向け誘導: 質問欄を見せず、「Pro でテーマを添えられる」と説明する CTA。
 
 
-### `lib/screens/observe/observe_reading_button.dart` (90 行)
+### `lib/screens/observe/observe_reading_button.dart` (60 行)
 
 **ファイル先頭コメント:**
 
@@ -217,22 +217,21 @@ Natal Tarot 履歴フィルタ — C3 (Pro 機能、柱 3)
 observe_history.dart (現在サイクル HISTORY) と observe_history_past.dart
 (過去サイクル HISTORY) の両方で使うため、 重複コードを 1 つに集約。
 
-役割:
-  - Pro: タップで observe_reading_sheet を起動 (READING 全文を独立シート表示)
-  - Free: タップで Pro Unlock dialog 表示
+役割: タップで observe_reading_sheet を起動 (READING 全文を独立シート表示)。
+  2026-06-03: Pro 限定を撤去し、Free でも使えるよう開放 (オーナー指示)。
 ```
 
-**imports:** dart=0 / package=1 / relative=6
+**imports:** dart=0 / package=1 / relative=4
 
-- relative: `../../models/daily_reading.dart`, `../../models/tarot_card.dart`, `../../theme/solara_colors.dart`, `../../utils/pro_status.dart`, `../../widgets/pro_unlock_dialog.dart`, `observe_reading_sheet.dart`
+- relative: `../../models/daily_reading.dart`, `../../models/tarot_card.dart`, `../../theme/solara_colors.dart`, `observe_reading_sheet.dart`
 
 **型定義 (1):**
 
-- L19 `class ObserveFullReadingButton : StatelessWidget`
+- L16 `class ObserveFullReadingButton : StatelessWidget`
 
 **関数 (1 public + 0 private):**
 
-- L29 `build()`
+- L26 `build()`
 
 
 ### `lib/screens/observe/observe_reading_sheet.dart` (183 行)
@@ -240,7 +239,7 @@ observe_history.dart (現在サイクル HISTORY) と observe_history_past.dart
 **ファイル先頭コメント:**
 
 ```
-タロット履歴 — 「📖 占いの全文を読みやすく表示」シート (Pro 限定)
+タロット履歴 — 「📖 占いの全文を読みやすく表示」シート (Free 開放 2026-06-03)
 
 設計:
   - HISTORY 詳細展開でも READING 本文は表示されるが、一覧で全文を見ると
@@ -334,7 +333,7 @@ showInfoPopup 経由 (popup 統一規約)。呼出側は returned bool で proce
 - 集計: `showInfoPopup`×1
 
 
-### `lib/screens/observe_screen.dart` (815 行)
+### `lib/screens/observe_screen.dart` (768 行)
 
 **imports:** dart=2 / package=1 / relative=18
 
@@ -346,35 +345,34 @@ showInfoPopup 経由 (popup 統一規約)。呼出側は returned bool で proce
   - Tarot Draw screen — matches tarot.html exactly.
 - L35 `class ObserveScreenState : State`
 
-**関数 (5 public + 19 private):**
+**関数 (5 public + 18 private):**
 
 - L32 `createState()`
-- L141 `initState()`
-- L166 `restoreState()` — 復元: HISTORY タブ + サブタブ (現在/過去サイクル) を再現する。
-- L177 `dispose()`
-- L471 `build()`
+- L137 `initState()`
+- L162 `restoreState()` — 復元: HISTORY タブ + サブタブ (現在/過去サイクル) を再現する。
+- L173 `dispose()`
+- L444 `build()`
 
-  <details><summary>private 関数 19 件</summary>
+  <details><summary>private 関数 18 件</summary>
 
   - L68 `_applyCategorySelection()`
   - L75 `_applyTarotCreditBalance()`
   - L92 `_startLoadingMessageRotation()`
   - L104 `_stopLoadingMessageRotation()`
-  - L149 `_onProStatusChanged()`
-  - L186 `_checkTodayReading()`
-  - L227 `_loadHistory()`
-  - L232 `_drawCard()`
-  - L310 `_fetchReading()`
-  - L414 `_retryReading()`
-  - L423 `_handleTarotCreditExhausted()`
-  - L433 `_resetTodayReading()`
-  - L456 `_startTypewriter()`
-  - L497 `_buildInnerTabs()`
-  - L511 `_innerTabBtn()`
-  - L532 `_buildDrawPanel()`
-  - L628 `_buildLoadingIndicator()`
-  - L705 `_buildReadingError()`
-  - L760 `_buildReadingPanel()`
+  - L145 `_onProStatusChanged()`
+  - L182 `_checkTodayReading()`
+  - L223 `_loadHistory()`
+  - L228 `_drawCard()`
+  - L306 `_fetchReading()`
+  - L410 `_retryReading()`
+  - L419 `_handleTarotCreditExhausted()`
+  - L429 `_startTypewriter()`
+  - L470 `_buildInnerTabs()`
+  - L484 `_innerTabBtn()`
+  - L505 `_buildDrawPanel()`
+  - L581 `_buildLoadingIndicator()`
+  - L658 `_buildReadingError()`
+  - L713 `_buildReadingPanel()`
 
   </details>
 

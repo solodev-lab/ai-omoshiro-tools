@@ -23,6 +23,7 @@ import '../../theme/solara_colors.dart';
 import '../../utils/consult_restore.dart';
 import '../../utils/solara_storage.dart';
 import '../../utils/title_data.dart' as title_data;
+import '../../widgets/info_popup.dart';
 import '../../widgets/memo_text_field.dart';
 import '../../widgets/tap_to_unfocus.dart';
 
@@ -104,6 +105,78 @@ class _TitleHistoryScreenState extends State<TitleHistoryScreen> {
     await _load();
   }
 
+  /// AppBar タイトル横の i ボタン。称号変遷と再診断についての案内を表示する。
+  /// 内容は Sanctuary の「✦ 称号の受け直しについて」案内を踏まえる。
+  void _showGuide(BuildContext context) {
+    showInfoPopup(
+      context: context,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: const [
+          Text('称号 変遷 とは',
+              style: TextStyle(
+                  color: Color(0xFFF6D98A), fontSize: 14, letterSpacing: 1)),
+          SizedBox(height: 10),
+          Text(
+            'ここには、Sanctuary で診断した「称号（クラス）」の\n'
+            '移り変わりが、新しいものから順に記録されます。',
+            style: TextStyle(
+                color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
+          ),
+          SizedBox(height: 14),
+          Text('【称号（クラス）と二つ名】',
+              style: TextStyle(
+                  color: Color(0xFFF9D976),
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.5)),
+          SizedBox(height: 4),
+          Text(
+            '・二つ名 … 太陽星座×月星座から導かれる、\n'
+            '　生涯変わらないあなたの呼び名。\n'
+            '・称号（クラス）… 設問への答えで形づくられる\n'
+            '　「今のあなた」。内面や状況の変化に合わせて、\n'
+            '　再診断で変わっていきます。',
+            style: TextStyle(
+                color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
+          ),
+          SizedBox(height: 12),
+          Text('【再診断について】',
+              style: TextStyle(
+                  color: Color(0xFFF9D976),
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.5)),
+          SizedBox(height: 4),
+          Text(
+            'Sanctuary の「再診断する」から受け直せます。\n'
+            '・Free … 1 回まで\n'
+            '・Cosmic Pro … 何度でも（毎日でも可）\n'
+            '変化のタイミングで受け直すと、ここに変遷が\n'
+            '積み重なり、成長の軌跡を辿れます。',
+            style: TextStyle(
+                color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
+          ),
+          SizedBox(height: 12),
+          Text('【Solara の姿勢】',
+              style: TextStyle(
+                  color: Color(0xFFF9D976),
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.5)),
+          SizedBox(height: 4),
+          Text(
+            '過去の称号を「以前は…」と弱めることはしません。\n'
+            'どの称号も、その時々のあなたとして等しく並びます。',
+            style: TextStyle(
+                color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return TapToUnfocus(
@@ -114,13 +187,28 @@ class _TitleHistoryScreenState extends State<TitleHistoryScreen> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: const Text(
-          '称号 変遷',
-          style: TextStyle(
-            color: SolaraColors.textPrimary,
-            fontSize: 16,
-            letterSpacing: 0.5,
-          ),
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              '称号 変遷',
+              style: TextStyle(
+                color: SolaraColors.textPrimary,
+                fontSize: 16,
+                letterSpacing: 0.5,
+              ),
+            ),
+            const SizedBox(width: 6),
+            GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () => _showGuide(context),
+              child: const Padding(
+                padding: EdgeInsets.all(4),
+                child: Icon(Icons.info_outline,
+                    size: 16, color: SolaraColors.solaraGoldLight),
+              ),
+            ),
+          ],
         ),
         centerTitle: true,
         iconTheme: const IconThemeData(color: SolaraColors.textPrimary),

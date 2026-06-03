@@ -1593,6 +1593,38 @@ Worker [`consultation_v2.js:78-83`](../worker/src/consultation_v2.js#L78) の既
 - flutter analyze クリーン / flutter test **全312件 green** (+6=overflow_stress_test) / audit **HARD7 (新規ゼロ)**・重複20(構造的 `),`)・未使用候補0 (GalaxyArchiveSortLabel.jp / DominantFortuneKindToCategoryIcon.toCategoryIcon は extension 実使用=誤検出) / extract `+0 -0` (新規クラスなし)。
 - 反映 = 次の AAB ビルド (Flutter のみ)。
 
+### 0.2.55 i/? ボタンの説明文を全面刷新 (Map/Tarot/Sanctuary/Galaxy) + Tarot UI 整理 (2026-06-03 夜)
+
+> 「i ボタン・? ボタンは設置当時の機能説明のままで、その後の更新が反映されていない」というオーナー指摘から、**各画面のヘルプ文を現行機能に合わせて刷新**し、あわせて Tarot/Sanctuary/Galaxy の UI 文言・意匠を整理したセッション。**Flutter のみ・Worker 変更なし → 反映=次の AAB ビルド**。
+
+#### Map 画面のヘルプ刷新
+- **検索ヘルプ** (`map_search`): 末尾の冗長文「同じキーワードで両方を見比べて」を削除。
+- **VIEWPOINT/LOCATIONS ヘルプ** (`map_viewpoint_menu`): 「VIEWPOINT から見た **LOCATIONS（登録地点）の**エネルギースコア」に明確化。
+- **ACG レイヤー説明** (`map_display_menu`): 4 項目化。本線(無料・4フレーム)/**アスペクト線〔Pro〕120本**/**引越し〔Pro〕**(近づく遠ざかる星のライン・ASC/MC・12ハウス)/表示ヒント。旧「本線=アスペクト線」誤記を是正。
+- **ACG 使い方ガイド** (`map_astro_carto`): タイトルに **CYCLO\*CARTO\*GRAPHY** 追記。「ACG とは/CCG とは」を新設し、天頂・アングル線の詳細は各 i へ誘導。**Pro 機能節**(アスペクト線120本/引越し/天頂帯天底帯)を明示。
+- **カテゴリ Tips** (`daily_transit_data`): 締め文「指示ではなく例示です。」(35エントリ中32件) を Solara の声「これは『良い・悪い』の判定ではありません。在るエネルギーの一例をお伝えするだけ。どう動くかは、あなたが選びます。」へ統一 (全体運の温かい3文は据置)。
+- **辞書** (`astro_glossary`): `relocate_layer` を新機能(動く星のライン)+〔Pro〕表記へ更新。
+
+#### Tarot 画面の整理
+- **カテゴリ下の文言** (`observe_category_selector`): 「全体運は無料(1日1回)」→「タロットは1日1回です」(Proにも表示)。注意書き「全体運以外のカテゴリ選択にはクレジットを消費します。」追加。「カテゴリ**占い**」→「カテゴリ**選択**」(占いの語を排除)。
+- **DEV パネル削除**: カード後の「[DEV] 今日の引きをリセット」+ `_resetTodayReading()` 削除 (`observe_screen`)。Sanctuary の「[DEV] Pro状態切替」トグル + `_buildDevProToggle()` + `pro_unlock_dialog` の DEV 案内も削除 (kDebugMode import 整理)。※以後 Pro 確認はテスト購読経由。
+- **カード裏の意匠** (`observe_card_widgets`): 中央の ✨絵文字 → **9芒星エンブレム** (`assets/app_icon_foreground.png`・透過確認済・pubspec 登録) を静止表示。pulse 系コントローラ依存を除去 (`_pulseOpacity`/`_pulseScale` も削除)。
+- **HISTORY チップ** (`observe_history_filter`): 大/小アルカナ・エレメント・正逆チップを `TextScaler.noScaling` で最大固定 (高さ36 の枠で下端切れ解消)。
+- **全文表示の Free 開放** (`observe_reading_button`): 「全文を読みやすく表示」を Pro ゲート撤去・🔒/Pro バッジ削除。
+
+#### Sanctuary 画面
+- **称号変遷に i ボタン** (`title_history_screen`): タイトル横の i → 案内 popup (称号/二つ名の違い・再診断 Free1回/Pro無制限・「以前は…と弱めない」姿勢)。
+- **Pro バナー刷新** (`sanctuary_screen`): 旧「Stella相談・ACG4フレーム・記録庫の道具」は陳腐化 (ACG4フレーム/記録は今や Free) → 現行 Pro 専用機能「タロット全カテゴリ・星読みの深い読み・引越し&120本ライン / おでかけ時刻指定・称号無制限再診断・Forecast 5年」へ。
+- **1日の開始時刻のスコープ補足** (`sanctuary_reset_hour_picker`): 説明に「**月の儀式(新月/満月/刻星化)の案内**もこの時刻を跨ぐと新しい1日に」を追記。適用範囲は Tarot「1日1回」+ 月儀式 overlay の論理日 (`logicalTodayKey`)。星読みは 0時基準で対象外。
+
+#### Galaxy 画面
+- **ガイド popup の取り残し**: 「Observe タブ」→「Tarot タブ」(`galaxy_screen:1353`。ナビ表記は既に Tarot)。
+- **右上 月齢バッジに月イベント案内** (`galaxy_screen`): バッジをタップ可能化 (ⓘ ヒント) → 新規 `_showMoonEventsGuide` popup。🌑新月→🌕満月→✦刻星化 の説明 + **満月・刻星化は新月の意図設定が前提** (MoonEventStatus と整合) + 🔔通知 ON の勧め (Sanctuary・当日朝)。
+
+#### 検証
+- flutter analyze クリーン / flutter test **全312件 green** / audit **HARD7 (新規ゼロ・1000行超分割は依然 backlog)**・重複20(構造的 `),`/`style: TextStyle(`)・未使用候補0 (`GalaxyArchiveSortLabel.jp`/`DominantFortuneKindToCategoryIcon.toCategoryIcon` は extension 実使用=誤検出) / extract `+0 -0` (新規クラスなし・追加は top-level 関数のみ)。
+- 反映 = 次の AAB ビルド (Flutter のみ・Worker 変更なし)。
+
 ### 0.3 Horo「今日の占い」1 日 1 回固定 + プロンプト刷新 (2026-05-27)
 
 > **設計の柱**: 「30 回までは OK」のような曖昧な防衛をやめ、「**1 日 1 回・変更しない**」を

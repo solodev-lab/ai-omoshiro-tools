@@ -111,10 +111,6 @@ class ObserveScreenState extends State<ObserveScreen>
     vsync: this,
     duration: const Duration(seconds: 3),
   )..repeat(reverse: true);
-  late final Animation<double> _pulseOpacity =
-      Tween(begin: 0.5, end: 0.8).animate(CurvedAnimation(parent: _pulseCtrl, curve: Curves.easeInOut));
-  late final Animation<double> _pulseScale =
-      Tween(begin: 1.0, end: 1.05).animate(CurvedAnimation(parent: _pulseCtrl, curve: Curves.easeInOut));
 
   // HTML: 3D card flip — rotateY(180deg) with 0.8s cubic-bezier(0.4,0,0.2,1)
   late final AnimationController _flipCtrl = AnimationController(
@@ -430,29 +426,6 @@ class ObserveScreenState extends State<ObserveScreen>
 
   // テスト用: 今日の引きを削除して再抽選可能な状態に戻す
   // 🔴 本番リリース時にこのメソッドと呼び出しボタンを削除すること
-  Future<void> _resetTodayReading() async {
-    final dateStr = await SolaraStorage.logicalTodayKey();
-    await SolaraStorage.removeReadingByDate(dateStr);
-    await SolaraStorage.clearFreeTarotDay();
-
-    if (!mounted) return;
-    _stopLoadingMessageRotation();
-    setState(() {
-      _drawnCard = null;
-      _drawnReversed = false;
-      _cardFlipped = false;
-      _alreadyDrawnToday = false;
-      _readingText = '';
-      _typedChars = 0;
-      _typingDone = false;
-      _readingLoading = false;
-      _readingFromApi = false;
-      _readingError = false;
-    });
-    _flipCtrl.value = 0.0;
-    _loadHistory();
-  }
-
   void _startTypewriter() {
     Future.delayed(const Duration(milliseconds: 25), () {
       if (!mounted) return;
@@ -569,9 +542,6 @@ class ObserveScreenState extends State<ObserveScreen>
                   ),
                   child: Observe3DCard(
                     flipAnimation: _flipAnimation,
-                    pulseOpacity: _pulseOpacity,
-                    pulseScale: _pulseScale,
-                    pulseCtrl: _pulseCtrl,
                     drawnCard: _drawnCard,
                     reversed: _drawnReversed,
                   ),
@@ -595,23 +565,6 @@ class ObserveScreenState extends State<ObserveScreen>
             child: Text('✓ 本日のカードは引き済み',
                 style: TextStyle(fontSize: 13, color: Color(0xFF666666), letterSpacing: 0.5),
                 textAlign: TextAlign.center),
-          ),
-        // 🔴 本番リリース時に削除: テスト用「今日の引きをリセット」ボタン
-        if (_alreadyDrawnToday)
-          Padding(
-            padding: const EdgeInsets.only(top: 4),
-            child: GestureDetector(
-              onTap: _resetTodayReading,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  border: Border.all(color: const Color(0x55FF6B6B)),
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: const Text('🔄 [DEV] 今日の引きをリセット',
-                    style: TextStyle(fontSize: 10, color: Color(0xFFFF8888), letterSpacing: 0.8)),
-              ),
-            ),
           ),
         const SizedBox(height: 16),
         if (_readingLoading) _buildLoadingIndicator(),

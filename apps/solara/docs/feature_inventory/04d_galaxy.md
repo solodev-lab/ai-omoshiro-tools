@@ -5,11 +5,11 @@
 
 ## サマリ
 
-- ファイル数: 10 / 総行数: 3711
+- ファイル数: 10 / 総行数: 3810
 - class/mixin/extension/enum: 22
-- 関数 (top-level + method の素拾い): 83
+- 関数 (top-level + method の素拾い): 84
 - Navigator.push 等: 0
-- Popup/Dialog 呼出: 1
+- Popup/Dialog 呼出: 2
 - Worker URL リテラル: 0
 
 ## ファイル別
@@ -275,7 +275,7 @@ Star Atlas のカード長押しで表示される bottom sheet。
 - L16 `moonHealingMessage()` — 月齢 (端末ローカル) を 3 日ごと 10 区分に分け、その区分の月相に沿った
 
 
-### `lib/screens/galaxy_screen.dart` (1361 行)
+### `lib/screens/galaxy_screen.dart` (1460 行)
 
 **imports:** dart=3 / package=4 / relative=23
 
@@ -286,7 +286,7 @@ Star Atlas のカード長押しで表示される bottom sheet。
 - L34 `class GalaxyScreen : StatefulWidget`
 - L52 `class GalaxyScreenState : State`
 
-**関数 (11 public + 35 private):**
+**関数 (11 public + 36 private):**
 
 - L49 `createState()`
 - L127 `regenerateBackground()` — タブ切替でGalaxyに入ってきた時に、背景 (ネビュラ位置・色・星の位置)
@@ -296,11 +296,11 @@ Star Atlas のカード長押しで表示される bottom sheet。
 - L198 `jitter()`
 - L216 `dispose()`
 - L408 `build()`
-- L716 `fmtTime()`
-- L718 `fmtDate()`
-- L1146 `restoreGalaxyState()` — captureRestore のスナップショットから終了画面を再現する (コールド起動時)。
+- L727 `fmtTime()`
+- L729 `fmtDate()`
+- L1157 `restoreGalaxyState()` — captureRestore のスナップショットから終了画面を再現する (コールド起動時)。
 
-  <details><summary>private 関数 35 件</summary>
+  <details><summary>private 関数 36 件</summary>
 
   - L196 `_initNebulaPositions()`
   - L225 `_wakeMotion()`
@@ -313,34 +313,35 @@ Star Atlas のカード長押しで表示される bottom sheet。
   - L544 `_buildTab()`
   - L587 `_buildCycleTab()`
   - L618 `_buildDayBadge()`
-  - L642 `_buildMoonBadge()`
-  - L667 `_buildStellaMessage()`
-  - L758 `_onDragStart()`
-  - L765 `_onDragUpdate()`
-  - L776 `_onDragEnd()`
-  - L781 `_onTapUp()`
-  - L792 `_showDotPopup()`
-  - L798 `_hideDotPopup()`
-  - L802 `_buildDotPopup()`
-  - L857 `_openReplay()`
-  - L864 `_closeReplay()`
-  - L875 `_openConstellationShare()`
-  - L891 `_openCycleActions()`
-  - L911 `_buildDebugTriggerRow()`
-  - L928 `_buildDebugBtn()`
-  - L952 `_debugTriggerNewMoon()`
-  - L957 `_debugTriggerFullMoon()`
-  - L972 `_debugTriggerCatasterism()`
-  - L990 `_debugTriggerCycleCompletion()`
-  - L1035 `_buildMoonOverlay()`
-  - L1105 `_onCatasterismResult()`
-  - L1120 `_onFormationComplete()`
-  - L1182 `_moonPhaseDescription()`
-  - L1225 `_showGalaxyUsageGuide()`
+  - L653 `_buildMoonBadge()`
+  - L678 `_buildStellaMessage()`
+  - L769 `_onDragStart()`
+  - L776 `_onDragUpdate()`
+  - L787 `_onDragEnd()`
+  - L792 `_onTapUp()`
+  - L803 `_showDotPopup()`
+  - L809 `_hideDotPopup()`
+  - L813 `_buildDotPopup()`
+  - L868 `_openReplay()`
+  - L875 `_closeReplay()`
+  - L886 `_openConstellationShare()`
+  - L902 `_openCycleActions()`
+  - L922 `_buildDebugTriggerRow()`
+  - L939 `_buildDebugBtn()`
+  - L963 `_debugTriggerNewMoon()`
+  - L968 `_debugTriggerFullMoon()`
+  - L983 `_debugTriggerCatasterism()`
+  - L1001 `_debugTriggerCycleCompletion()`
+  - L1046 `_buildMoonOverlay()`
+  - L1116 `_onCatasterismResult()`
+  - L1131 `_onFormationComplete()`
+  - L1193 `_moonPhaseDescription()`
+  - L1236 `_showMoonEventsGuide()`
+  - L1324 `_showGalaxyUsageGuide()`
 
   </details>
 
-**Popup/Dialog 呼出 (1):**
+**Popup/Dialog 呼出 (2):**
 
-- 集計: `showInfoPopup`×1
+- 集計: `showInfoPopup`×2
 

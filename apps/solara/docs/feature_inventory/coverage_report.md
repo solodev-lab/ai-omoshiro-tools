@@ -377,14 +377,14 @@
 
 - ファイル数: 10
 - Worker URL 呼出: (なし)
-- Popup/Dialog: `showInfoPopup`×1
+- Popup/Dialog: `showInfoPopup`×2
 - Navigator.push 等: 0 箇所
 
 ### 層 4e: Sanctuary 画面
 
 - ファイル数: 10
 - Worker URL 呼出: (なし)
-- Popup/Dialog: `showInfoPopup`×4
+- Popup/Dialog: `showInfoPopup`×5
 - Navigator.push 等: 0 箇所
 
 ### 層 4f: サブ画面 (Forecast / Locations / Philosophy / Font Preview)
@@ -416,9 +416,9 @@
 | 3c | · | 5 | 4 | 2 | 4 | 1 | 12 | 4 | · | · | · | · | · | · | · | · |
 | 4a | 12 | 11 | · | 14 | 8 | 1 | 19 | 24 | 3 | 32 | 4 | · | · | · | 4 | · |
 | 4b | 6 | 14 | · | 3 | 4 | · | 15 | · | · | · | 30 | · | · | 2 | · | · |
-| 4c | 1 | 1 | 14 | 1 | 5 | 5 | 9 | 6 | · | · | · | 16 | · | · | 1 | · |
+| 4c | 1 | 1 | 14 | 1 | 4 | 5 | 8 | 6 | · | · | · | 16 | · | · | 1 | · |
 | 4d | 4 | 6 | 13 | 1 | 2 | 2 | 11 | 2 | 1 | · | · | · | 9 | · | · | · |
-| 4e | 1 | 6 | · | 3 | 7 | 2 | 15 | 1 | · | · | · | · | · | 9 | 3 | · |
+| 4e | 1 | 6 | · | 3 | 7 | 2 | 16 | 1 | · | · | · | · | · | 9 | 3 | · |
 | 4f | 2 | 6 | · | 8 | 16 | 6 | 19 | 13 | · | 6 | · | · | · | · | 30 | · |
 | 5 | 2 | 2 | · | 2 | 5 | 5 | 1 | 1 | · | 1 | 1 | 1 | 1 | 3 | 4 | · |
 
@@ -433,17 +433,17 @@
 | --- | --- | --- |
 | `lib/theme/solara_colors.dart` | 3b | 38 |
 | `lib/utils/solara_storage.dart` | 2b | 33 |
-| `lib/widgets/info_popup.dart` | 3a | 25 |
+| `lib/widgets/info_popup.dart` | 3a | 26 |
 | `lib/screens/map/map_constants.dart` | 3b | 21 |
 | `lib/utils/solara_api.dart` | 2a | 15 |
 | `lib/models/galaxy_cycle.dart` | 1c | 14 |
 | `lib/screens/horoscope/horo_antique_icons.dart` | 3a | 14 |
 | `lib/models/daily_reading.dart` | 1c | 12 |
-| `lib/utils/pro_status.dart` | 2b | 12 |
 | `lib/screens/horoscope/horo_constants.dart` | 1b | 11 |
+| `lib/utils/pro_status.dart` | 2b | 11 |
 | `lib/widgets/tap_to_unfocus.dart` | 3a | 11 |
-| `lib/widgets/pro_unlock_dialog.dart` | 3a | 10 |
 | `lib/screens/horoscope/horo_panel_shared.dart` | 4b | 9 |
+| `lib/widgets/pro_unlock_dialog.dart` | 3a | 9 |
 | `lib/models/lunar_intention.dart` | 1c | 8 |
 | `lib/utils/constellation_namer.dart` | 1b | 8 |
 | `lib/utils/consultation_api.dart` | 2a | 8 |
@@ -465,9 +465,11 @@
 > 各ソースの SHA1 を `_stamps.json` に記録し、差分を検出。
 > 変更されたファイルが属する層は、人手版インベントリ章の見直し対象。
 
-- 追加: **0** / 削除: **0** / 変更: **0**
+- 追加: **0** / 削除: **0** / 変更: **1**
 
-- 変更なし — 全インベントリ章は最新。
+### 変更されたファイル (層別)
+
+- **層 4d**: `lib/screens/galaxy_screen.dart`
 
 ## #7 astro_glossary 用語辞書対整合
 

@@ -9,18 +9,12 @@ import 'observe_constants.dart';
 
 class Observe3DCard extends StatelessWidget {
   final Animation<double> flipAnimation;
-  final Animation<double> pulseOpacity;
-  final Animation<double> pulseScale;
-  final AnimationController pulseCtrl;
   final TarotCard? drawnCard;
   final bool reversed;
 
   const Observe3DCard({
     super.key,
     required this.flipAnimation,
-    required this.pulseOpacity,
-    required this.pulseScale,
-    required this.pulseCtrl,
     required this.drawnCard,
     this.reversed = false,
   });
@@ -41,7 +35,7 @@ class Observe3DCard extends StatelessWidget {
               transform: Matrix4.rotationY(pi),
               child: ObserveCardFront(card: drawnCard!, reversed: reversed),
             )
-          : ObserveCardBack(pulseCtrl: pulseCtrl, pulseOpacity: pulseOpacity, pulseScale: pulseScale),
+          : const ObserveCardBack(),
     );
   }
 }
@@ -51,11 +45,7 @@ class Observe3DCard extends StatelessWidget {
 // ══════════════════════════════════════════════════
 
 class ObserveCardBack extends StatelessWidget {
-  final AnimationController pulseCtrl;
-  final Animation<double> pulseOpacity;
-  final Animation<double> pulseScale;
-
-  const ObserveCardBack({super.key, required this.pulseCtrl, required this.pulseOpacity, required this.pulseScale});
+  const ObserveCardBack({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -74,19 +64,25 @@ class ObserveCardBack extends StatelessWidget {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(8),
           border: Border.all(color: const Color(0x4DC9A84C)),
-          gradient: const RadialGradient(colors: [Color(0x146B5CE7), Colors.transparent], radius: 0.7),
+          // 中央エンブレムを浮かび上がらせる静止ゴールドグロー
+          gradient: const RadialGradient(
+            colors: [Color(0x26C9A84C), Colors.transparent],
+            radius: 0.72,
+          ),
         ),
         child: Stack(children: [
-          Center(child: AnimatedBuilder(
-            animation: pulseCtrl,
-            builder: (_, child) => Opacity(
-              opacity: pulseOpacity.value,
-              child: Transform.scale(
-                scale: pulseScale.value,
-                child: const Text('✨', style: TextStyle(fontSize: 48)),
+          // Solara 9 芒星エンブレム (アプリアイコン・静止)
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Image.asset(
+                'assets/app_icon_foreground.png',
+                width: 120,
+                height: 120,
+                fit: BoxFit.contain,
               ),
             ),
-          )),
+          ),
           Positioned.fill(child: Container(
             margin: const EdgeInsets.all(8),
             decoration: BoxDecoration(

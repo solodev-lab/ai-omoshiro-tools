@@ -1123,9 +1123,6 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
             );
           },
         ),
-        // ── [DEV] Pro 状態切替 (動作確認用、課金基盤と並走) ──
-        // kDebugMode のみ表示。リリースビルドでは消える。
-        if (kDebugMode) _buildDevProToggle(),
       ],
     );
   }
@@ -1158,13 +1155,13 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
             )),
           const SizedBox(height: 12),
           const Text(
-            'Stella 相談 · ACG 4 フレーム · 記録庫の道具',
+            'タロット全カテゴリ · 星読みの深い読み · 地図の引越し&120本ライン',
             style: TextStyle(fontSize: 15, color: Color(0xFFACACAC), height: 1.55),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 8),
           const Text(
-            'ACG 引越し — 地図の地点をタップすると、その地で近づく星・遠ざかる星のラインを解説',
+            'おでかけの時刻指定 · 称号は無制限に再診断 · Forecast 5年 ほか',
             style: TextStyle(fontSize: 12, color: Color(0x99ACACAC), height: 1.5),
             textAlign: TextAlign.center,
           ),
@@ -1319,60 +1316,6 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
         content: Text('復元中にエラーが発生しました: $e'),
       ));
     }
-  }
-
-  /// [DEV] Pro 状態切替トグル。Phase 2-6a で Pro ゲートの動作確認用。
-  /// Phase 2-6b で RevenueCat 接続したら撤去する。
-  Widget _buildDevProToggle() {
-    return AnimatedBuilder(
-      animation: ProStatus.instance,
-      builder: (ctx, _) {
-        final isPro = ProStatus.instance.isPro;
-        return Container(
-          margin: const EdgeInsets.only(top: 12),
-          padding:
-              const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-          decoration: BoxDecoration(
-            color: const Color(0x14D6915C),
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: const Color(0x44D6915C)),
-          ),
-          child: Row(
-            children: [
-              const Icon(Icons.bug_report_outlined,
-                  size: 16, color: Color(0xFFE8B080)),
-              const SizedBox(width: 8),
-              const Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '[DEV] Pro 状態切替',
-                      style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: Color(0xFFE8B080)),
-                    ),
-                    Text(
-                      'リリースビルドでは表示されません',
-                      style: TextStyle(
-                          fontSize: 10, color: Color(0xFFA56838)),
-                    ),
-                  ],
-                ),
-              ),
-              Switch.adaptive(
-                value: isPro,
-                onChanged: (v) {
-                  ProStatus.instance.setPro(v);
-                },
-                activeThumbColor: const Color(0xFFF9D976),
-              ),
-            ],
-          ),
-        );
-      },
-    );
   }
 
   // ── ✦ Astrology Section ──

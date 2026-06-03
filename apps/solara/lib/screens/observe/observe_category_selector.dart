@@ -47,15 +47,21 @@ extension _ObserveCategorySelector on ObserveScreenState {
               _categoryChip(key, label, isPro),
           ],
         ),
+        const SizedBox(height: 6),
+        const Text(
+          'タロットは1日1回です',
+          style: TextStyle(fontSize: 10, color: Color(0xFF888888)),
+          textAlign: TextAlign.center,
+        ),
         if (!isPro) ...[
-          const SizedBox(height: 6),
+          const SizedBox(height: 2),
           Text(
             _selectedCategory == null
-                ? '全体運は無料（1日1回）'
+                ? '全体運以外のカテゴリ選択にはクレジットを消費します。'
                 : _tarotFreeRemaining != null
-                    ? 'カテゴリ占いは1クレジット（無料あと$_tarotFreeRemaining回'
+                    ? 'カテゴリ選択は1クレジット（無料あと$_tarotFreeRemaining回'
                         '${(_tarotPurchased ?? 0) > 0 ? ' ・購入$_tarotPurchased回' : ''}）'
-                    : 'カテゴリ占いは1クレジット消費',
+                    : 'カテゴリ選択は1クレジット消費',
             style: const TextStyle(fontSize: 10, color: Color(0xFF888888)),
             textAlign: TextAlign.center,
           ),

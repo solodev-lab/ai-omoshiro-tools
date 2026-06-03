@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 27 / 総行数: 7021
+- ファイル数: 27 / 総行数: 7001
 - class/mixin/extension/enum: 78
 - 関数 (top-level + method の素拾い): 181
 - Navigator.push 等: 0
@@ -684,7 +684,7 @@ Re-export split overlay files for backward compatibility
 - L20 `build()`
 
 
-### `lib/widgets/pro_unlock_dialog.dart` (234 行)
+### `lib/widgets/pro_unlock_dialog.dart` (214 行)
 
 **ファイル先頭コメント:**
 
@@ -708,18 +708,18 @@ Pro 案内ダイアログ — Phase 2-6a / Phase 2-6b + Phase 2 RASP 連携
   - その他 Pro ゲート対象機能のタップ (Phase 2-7 / 2-8 で配線)
 ```
 
-**imports:** dart=0 / package=2 / relative=3
+**imports:** dart=0 / package=1 / relative=3
 
 - relative: `../screens/paywall_screen.dart`, `../theme/solara_colors.dart`, `../utils/device_security_status.dart`
 
 **関数 (1 public + 2 private):**
 
-- L36 `showProUnlockDialog()` — Pro 限定機能の案内ダイアログを表示する。
+- L35 `showProUnlockDialog()` — Pro 限定機能の案内ダイアログを表示する。
 
   <details><summary>private 関数 2 件</summary>
 
-  - L78 `_buildProUpsellContent()`
-  - L179 `_buildCompromisedContent()`
+  - L77 `_buildProUpsellContent()`
+  - L159 `_buildCompromisedContent()`
 
   </details>
 

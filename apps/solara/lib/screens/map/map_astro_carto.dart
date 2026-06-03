@@ -103,7 +103,7 @@ void _showAcgUsageGuide(BuildContext context) {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: const [
         Text(
-          'ASTRO*CARTO*GRAPHY の使い方',
+          'ASTRO*CARTO*GRAPHY / CYCLO*CARTO*GRAPHY の使い方',
           style: TextStyle(
               color: Color(0xFFC9A84C), fontSize: 14, letterSpacing: 1),
         ),
@@ -119,27 +119,29 @@ void _showAcgUsageGuide(BuildContext context) {
             fontWeight: FontWeight.w500,
           ),
         ),
-        SizedBox(height: 8),
+        SizedBox(height: 14),
+        // ── ACG とは ──
         Text(
-          '1970 年代、占星術師 Jim Lewis によって体系化された手法。\n'
+          '【ACG（アストロカートグラフィ）とは】',
+          style: TextStyle(
+              color: Color(0xFFC9A84C),
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.5),
+        ),
+        SizedBox(height: 4),
+        Text(
+          '1970 年代に占星術師 Jim Lewis が体系化した手法。\n'
           '出生時の天体配置を世界地図上の「線」として投影し、\n'
-          'どの土地でどの惑星が立ち上がるのかを描き出します。\n\n'
-          'Solara はこの伝統的な ACG に「時間軸」を重ねました。\n'
-          'Natal / Transit / Progressed / Solar Arc の 4 フレームと\n'
-          '時刻スライダーで、過去・今・先の天体配置に自由に飛べる。\n'
-          '線が時間とともに動き、星の風景が刻一刻と書き換わります。\n\n'
-          'さらに Solara 独自の 16 方位スコア (運勢方位扇) を重ねれば、\n'
-          '「どこに」と「いつ」が、地図と時計の上に同時に立ち上がる。\n'
-          '旅・引越し・出張・大事な約束 — 行動の基準点が、ここで決まります。',
+          'どの土地でどの惑星が立ち上がるかを描き出します\n'
+          '(生涯不変の地図)。',
           style: TextStyle(
-              color: Color(0xFFE8E0D0),
-              fontSize: 13,
-              height: 1.7,
-              fontWeight: FontWeight.w500),
+              color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
         ),
-        SizedBox(height: 18),
+        SizedBox(height: 12),
+        // ── CCG とは ──
         Text(
-          '【4 つのフレーム (上部ピル)】',
+          '【CCG（サイクロカートグラフィ）とは】',
           style: TextStyle(
               color: Color(0xFFC9A84C),
               fontSize: 13,
@@ -148,18 +150,35 @@ void _showAcgUsageGuide(BuildContext context) {
         ),
         SizedBox(height: 4),
         Text(
-          '・Natal: 出生時の天体位置に基づくライン (生涯不変)\n'
-          '・Transit: 今この瞬間の天体位置のライン (毎日動く)\n'
-          '・Prog: 2 次進行 (1 日 = 1 年の比率) のライン\n'
-          '・S.Arc: ソーラーアーク (太陽進行弧で全惑星シフト)\n\n'
-          'それぞれ独立に ON/OFF 可能。各ピル横の i ボタンで\n'
-          '詳しい説明が見られます。',
+          'Jim Lewis が 1982 年に ACG の続編として体系化した\n'
+          '発展形。出生時ではなく「今この瞬間」や指定時刻の\n'
+          '天体位置を投影します。線は地球の自転とともに動き、\n'
+          '星の風景が刻一刻と書き換わります。\n'
+          'Solara の Transit / Prog / S.Arc フレームが\n'
+          'この CCG にあたります。',
+          style: TextStyle(
+              color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
+        ),
+        SizedBox(height: 12),
+        Text(
+          '【4 つのフレーム (上部ピル・すべて無料)】',
+          style: TextStyle(
+              color: Color(0xFFC9A84C),
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.5),
+        ),
+        SizedBox(height: 4),
+        Text(
+          '・Natal … 出生時の配置 (ACG・生涯不変)\n'
+          '・Transit / Prog / S.Arc … 時刻で動く配置 (CCG)\n\n'
+          '各ピル横の i ボタンに、それぞれの詳しい説明があります。',
           style: TextStyle(
               color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
         ),
         SizedBox(height: 10),
         Text(
-          '【天頂マーカー (地図上の◯)】',
+          '【地図上の線・マーカー】',
           style: TextStyle(
               color: Color(0xFFC9A84C),
               fontSize: 13,
@@ -168,16 +187,17 @@ void _showAcgUsageGuide(BuildContext context) {
         ),
         SizedBox(height: 4),
         Text(
-          '各惑星が真上 (天頂) を通る土地を表示します。\n'
-          'そこではその惑星のエネルギーがダイレクトに\n'
-          '頭上から降る「シャワー直下」の地点です。\n'
-          'タップで惑星固有のメッセージを確認できます。',
+          '惑星 × アングルのライン、天頂・天底マーカーを\n'
+          '表示します。ライン・マーカーをタップすると、\n'
+          'その地点の意味や惑星固有のメッセージが見られます。\n'
+          '各ピル (アングル / 天頂 / 天底) 横の i ボタンに\n'
+          '詳しい説明があります。',
           style: TextStyle(
               color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
         ),
         SizedBox(height: 10),
         Text(
-          '【アングルライン (地図上の線)】',
+          '【Pro 機能】',
           style: TextStyle(
               color: Color(0xFFC9A84C),
               fontSize: 13,
@@ -186,31 +206,12 @@ void _showAcgUsageGuide(BuildContext context) {
         ),
         SizedBox(height: 4),
         Text(
-          '惑星 × 4 アングル (ASC/MC/DSC/IC) のライン:\n'
-          '・ASC (上昇): 惑星が東の地平線に昇る土地\n'
-          '・MC (天頂): 惑星が真上を通る土地\n'
-          '・DSC (下降): 惑星が西の地平線に沈む土地\n'
-          '・IC (天底): 惑星が真下 (地球の裏側) にある土地\n\n'
-          '線をタップすると、その地点の引越し効果\n'
-          '(ASC/MC のサイン変化、惑星のハウス遷移) が\n'
-          '詳細表示されます。',
-          style: TextStyle(
-              color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
-        ),
-        SizedBox(height: 10),
-        Text(
-          '【カテゴリピル (下部)】',
-          style: TextStyle(
-              color: Color(0xFFC9A84C),
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              letterSpacing: 0.5),
-        ),
-        SizedBox(height: 4),
-        Text(
-          '癒し / 豊かさ / 恋愛 / 仕事 / 話す をタップで切替えると、\n'
-          'そのカテゴリ関連の惑星ラインだけが強調表示されます。\n'
-          '「総合」では全惑星のラインを表示。',
+          '・アスペクト線 (120 本): 本線にスクエア / トライン /\n'
+          '　セクスタイルを追加\n'
+          '・引越し: タップ地点を引越し先に見立て、動く星の\n'
+          '　ライン・ASC/MC・ハウスを比較\n'
+          '・天頂帯 / 天底帯: 同じ緯度全周に効く Lewis 流の帯表示\n\n'
+          'いずれも Cosmic Pro で解放されます。',
           style: TextStyle(
               color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
         ),
@@ -225,11 +226,11 @@ void _showAcgUsageGuide(BuildContext context) {
         ),
         SizedBox(height: 4),
         Text(
-          '旅行先・引越し先・出張先の選定に。\n'
-          '同じ「行動」でも、ある土地ではエネルギーが\n'
-          '強く流れ、別の土地では静かに流れます。\n'
-          '見たい惑星のラインを基準に、\n'
-          'あなたの目的に合う土地を見つけられます。',
+          '旅行・引越し・出張先の選定に。\n'
+          '同じ行動でも、土地によってエネルギーの流れ方が\n'
+          '変わります。さらに 16 方位スコア (運勢方位扇) を\n'
+          '重ねれば、「どこに」と「いつ」が地図と時計の上に\n'
+          '同時に立ち上がります。',
           style: TextStyle(
               color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
         ),

@@ -616,26 +616,37 @@ class GalaxyScreenState extends State<GalaxyScreen>
   }
 
   Widget _buildDayBadge() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-      decoration: BoxDecoration(
-        color: const Color(0x1FF9D976),
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: const Color(0x47F9D976)),
+    // 2026-06-03: タップで「月のイベント」案内 popup を開けるようにした
+    // (新月/満月/刻星化 の説明 + 通知の勧め)。右下に ⓘ ヒントを添える。
+    return GestureDetector(
+      onTap: () => _showMoonEventsGuide(context),
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color: const Color(0x1FF9D976),
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(color: const Color(0x47F9D976)),
+        ),
+        child: Column(children: [
+          // サイクル日数表記を月齢 (0-indexed) に揃える。
+          // _currentDayIndex は MoonPhase.getCurrentDayIndex で
+          // 「JST 新月発生日 0:00 → JST 当日 0:00 の経過日数」を返すので、
+          // 検索サイト等で見る月齢と同じ数字になる。
+          // (旧: +1 した 1-indexed 表記。新月日が「Day 1」になり、
+          //  検索サイト等の月齢と 1 ズレてユーザーが混乱していた。)
+          Text('$_currentDayIndex', style: GoogleFonts.cinzel(
+            fontSize: 22, fontWeight: FontWeight.w700,
+            color: const Color(0xFFF9D976), height: 1)),
+          Row(mainAxisSize: MainAxisSize.min, children: [
+            Text('of $_totalDays', style: GoogleFonts.cinzel(
+              fontSize: 13, color: const Color(0xA6F9D976), letterSpacing: 1.5)),
+            const SizedBox(width: 3),
+            const Icon(Icons.info_outline,
+                size: 11, color: Color(0xA6F9D976)),
+          ]),
+        ]),
       ),
-      child: Column(children: [
-        // サイクル日数表記を月齢 (0-indexed) に揃える。
-        // _currentDayIndex は MoonPhase.getCurrentDayIndex で
-        // 「JST 新月発生日 0:00 → JST 当日 0:00 の経過日数」を返すので、
-        // 検索サイト等で見る月齢と同じ数字になる。
-        // (旧: +1 した 1-indexed 表記。新月日が「Day 1」になり、
-        //  検索サイト等の月齢と 1 ズレてユーザーが混乱していた。)
-        Text('$_currentDayIndex', style: GoogleFonts.cinzel(
-          fontSize: 22, fontWeight: FontWeight.w700,
-          color: const Color(0xFFF9D976), height: 1)),
-        Text('of $_totalDays', style: GoogleFonts.cinzel(
-          fontSize: 13, color: const Color(0xA6F9D976), letterSpacing: 1.5)),
-      ]),
     );
   }
 
@@ -1219,6 +1230,94 @@ String _moonPhaseDescription(String labelJP) {
   }
 }
 
+/// 右上の月齢バッジ (サイクル日数) をタップで開く「月のイベント」案内。
+/// 新月 → 満月 → 刻星化 の 3 イベントと、その発生条件・通知の勧めを説明する。
+/// 発生条件は MoonEventStatus.pendingToday と整合 (満月/刻星化は新月の意図設定が前提)。
+void _showMoonEventsGuide(BuildContext context) {
+  showInfoPopup(
+    context: context,
+    child: Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: const [
+        Text('月のイベントについて',
+            style: TextStyle(
+                color: Color(0xFFC9A84C), fontSize: 14, letterSpacing: 1)),
+        SizedBox(height: 10),
+        Text(
+          'このサイクルでは、月の満ち欠けに合わせて\n'
+          '3 つの節目があなたを訪れます。',
+          style: TextStyle(
+              color: Color(0xFFE8E0D0), fontSize: 13, height: 1.7),
+        ),
+        SizedBox(height: 14),
+        Text('🌑 新月イベント',
+            style: TextStyle(
+                color: Color(0xFFC9A84C),
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.5)),
+        SizedBox(height: 4),
+        Text(
+          '新月の日に「意図（インテンション）」を立てる出発点。\n'
+          'このサイクルで大切にしたいことを言葉にします。\n'
+          'すべてはここから始まります。',
+          style: TextStyle(
+              color: Color(0xFFE8E0D0), fontSize: 13, height: 1.7),
+        ),
+        SizedBox(height: 12),
+        Text('🌕 満月イベント',
+            style: TextStyle(
+                color: Color(0xFFC9A84C),
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.5)),
+        SizedBox(height: 4),
+        Text(
+          '満月の日に、立てた意図への中間チェック（振り返り）。\n'
+          '※ 新月で意図を立てていないと出てきません。',
+          style: TextStyle(
+              color: Color(0xFFE8E0D0), fontSize: 13, height: 1.7),
+        ),
+        SizedBox(height: 12),
+        Text('✦ 刻星化イベント',
+            style: TextStyle(
+                color: Color(0xFFC9A84C),
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.5)),
+        SizedBox(height: 4),
+        Text(
+          '次の新月の前日以降に訪れる、サイクルの締めくくり。\n'
+          '手放しと、あなただけの星座の形成です。\n'
+          '※ こちらも新月で意図を立てているのが前提です。',
+          style: TextStyle(
+              color: Color(0xFFE8E0D0), fontSize: 13, height: 1.7),
+        ),
+        SizedBox(height: 16),
+        Divider(color: Color(0x33C9A84C), height: 1),
+        SizedBox(height: 16),
+        Text('🔔 通知をオンにするのがおすすめ',
+            style: TextStyle(
+                color: Color(0xFFF9D976),
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.5)),
+        SizedBox(height: 4),
+        Text(
+          '各イベントは「その日」だけ訪れます。\n'
+          'Sanctuary で通知をオンにしておくと、\n'
+          '当日の朝にお知らせします。\n\n'
+          '満月・刻星化は新月の意図設定が前提なので、\n'
+          'まず新月を逃さないことが大切です。',
+          style: TextStyle(
+              color: Color(0xFFE8E0D0), fontSize: 13, height: 1.7),
+        ),
+      ],
+    ),
+  );
+}
+
 /// Galaxy 画面の総合ガイド popup (月齢バッジをタップで開く)。
 /// 月齢の説明 → Galaxy 画面全体 → CYCLE タブ → Star Atlas タブを
 /// 1 つの popup で順に表示する。
@@ -1350,7 +1449,7 @@ void _showGalaxyUsageGuide(
           '🌑 新月 → 始まり。種を蒔く時。\n'
           '🌕 満月 → 達成・解放。気づきの時。\n\n'
           '1 サイクルかけて、あなたの内面が 1 つの星座に\n'
-          'なっていきます。Observe タブで日々のカードを\n'
+          'なっていきます。Tarot タブで日々のカードを\n'
           '引いて、ゆっくり育てていってください。',
           style: TextStyle(
               color: Color(0xFFE8E0D0), fontSize: 13, height: 1.7),

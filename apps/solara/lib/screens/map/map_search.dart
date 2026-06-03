@@ -353,8 +353,7 @@ class SearchResultList extends StatelessWidget {
           ),
           SizedBox(height: 10),
           Text(
-            '※ 並べ替えではなく、取得する候補そのものが変わります。\n'
-            '　 同じキーワードで両方を見比べてみてください。',
+            '※ 並べ替えではなく、取得する候補そのものが変わります。',
             style: TextStyle(color: Color(0xFF888888), fontSize: 12, height: 1.5),
           ),
         ],

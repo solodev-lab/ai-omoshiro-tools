@@ -5,11 +5,11 @@
 
 ## サマリ
 
-- ファイル数: 10 / 総行数: 5674
+- ファイル数: 10 / 総行数: 5706
 - class/mixin/extension/enum: 28
 - 関数 (top-level + method の素拾い): 124
 - Navigator.push 等: 0
-- Popup/Dialog 呼出: 4
+- Popup/Dialog 呼出: 5
 - Worker URL リテラル: 0
 
 ## ファイル別
@@ -179,7 +179,7 @@ Solara Sanctuary 法務リンクメニュー (Phase 2 launch_checklist)
   </details>
 
 
-### `lib/screens/sanctuary/sanctuary_reset_hour_picker.dart` (191 行)
+### `lib/screens/sanctuary/sanctuary_reset_hour_picker.dart` (192 行)
 
 **imports:** dart=0 / package=1 / relative=0
 
@@ -187,17 +187,17 @@ Solara Sanctuary 法務リンクメニュー (Phase 2 launch_checklist)
 
 - L12 `class SanctuaryResetHourPicker : StatefulWidget`
   - 時:分 ピッカー (時 + 分の 2 ドロップダウン、1 分単位)。
-- L36 `class _SanctuaryResetHourPickerState : State`
+- L37 `class _SanctuaryResetHourPickerState : State`
 
 **関数 (3 public + 1 private):**
 
-- L33 `createState()`
-- L44 `initState()`
-- L51 `build()`
+- L34 `createState()`
+- L45 `initState()`
+- L52 `build()`
 
   <details><summary>private 関数 1 件</summary>
 
-  - L155 `_dropdown()`
+  - L156 `_dropdown()`
 
   </details>
 
@@ -248,7 +248,7 @@ Solara Sanctuary 法務リンクメニュー (Phase 2 launch_checklist)
 - 集計: `showInfoPopup`×2
 
 
-### `lib/screens/sanctuary/title_history_screen.dart` (417 行)
+### `lib/screens/sanctuary/title_history_screen.dart` (505 行)
 
 **ファイル先頭コメント:**
 
@@ -272,35 +272,40 @@ Solara Sanctuary 法務リンクメニュー (Phase 2 launch_checklist)
     → 旧クラスを「以前は…」と弱めて表示しない、現在と等価に並べる
 ```
 
-**imports:** dart=0 / package=2 / relative=6
+**imports:** dart=0 / package=2 / relative=7
 
-- relative: `../../theme/solara_colors.dart`, `../../utils/consult_restore.dart`, `../../utils/solara_storage.dart`, `../../utils/title_data.dart`, `../../widgets/memo_text_field.dart`, `../../widgets/tap_to_unfocus.dart`
+- relative: `../../theme/solara_colors.dart`, `../../utils/consult_restore.dart`, `../../utils/solara_storage.dart`, `../../utils/title_data.dart`, `../../widgets/info_popup.dart`, `../../widgets/memo_text_field.dart`, `../../widgets/tap_to_unfocus.dart`
 
 **型定義 (5):**
 
-- L29 `class TitleHistoryScreen : StatefulWidget`
-- L39 `class _TitleHistoryScreenState : State`
-- L166 `class _EmptyState : StatelessWidget`
-- L209 `class _ChainConnector : StatelessWidget`
-- L227 `class _TitleChainRow : StatelessWidget`
+- L30 `class TitleHistoryScreen : StatefulWidget`
+- L40 `class _TitleHistoryScreenState : State`
+- L254 `class _EmptyState : StatelessWidget`
+- L297 `class _ChainConnector : StatelessWidget`
+- L315 `class _TitleChainRow : StatelessWidget`
 
-**関数 (7 public + 3 private):**
+**関数 (7 public + 4 private):**
 
-- L36 `createState()`
-- L47 `initState()`
-- L56 `dispose()`
-- L108 `build()`
-- L170 `build()`
-- L213 `build()`
-- L241 `build()`
+- L37 `createState()`
+- L48 `initState()`
+- L57 `dispose()`
+- L181 `build()`
+- L258 `build()`
+- L301 `build()`
+- L329 `build()`
 
-  <details><summary>private 関数 3 件</summary>
+  <details><summary>private 関数 4 件</summary>
 
-  - L61 `_load()`
-  - L73 `_confirmClearAll()`
-  - L232 `_formatDate()`
+  - L62 `_load()`
+  - L74 `_confirmClearAll()`
+  - L110 `_showGuide()`
+  - L320 `_formatDate()`
 
   </details>
+
+**Popup/Dialog 呼出 (1):**
+
+- 集計: `showInfoPopup`×1
 
 
 ### `lib/screens/sanctuary/title_how_it_works.dart` (201 行)
@@ -327,7 +332,7 @@ Solara Sanctuary 法務リンクメニュー (Phase 2 launch_checklist)
 - 集計: `showInfoPopup`×1
 
 
-### `lib/screens/sanctuary_screen.dart` (1735 行)
+### `lib/screens/sanctuary_screen.dart` (1678 行)
 
 **imports:** dart=1 / package=3 / relative=23
 
@@ -337,26 +342,26 @@ Solara Sanctuary 法務リンクメニュー (Phase 2 launch_checklist)
 
 - L30 `class SanctuaryScreen : StatefulWidget`
 - L37 `class _SanctuaryScreenState : State`
-- L1550 `extension _WidgetOpacity : Widget`
-- L1559 `class _SettingsGroup : StatelessWidget`
-- L1592 `class _SettingsItem : StatelessWidget`
-- L1644 `class _NotificationToggleItem : StatefulWidget`
-- L1652 `class _NotificationToggleItemState : State`
+- L1493 `extension _WidgetOpacity : Widget`
+- L1502 `class _SettingsGroup : StatelessWidget`
+- L1535 `class _SettingsItem : StatelessWidget`
+- L1587 `class _NotificationToggleItem : StatefulWidget`
+- L1595 `class _NotificationToggleItemState : State`
 
-**関数 (10 public + 36 private):**
+**関数 (10 public + 35 private):**
 
 - L34 `createState()`
 - L77 `initState()`
 - L90 `dispose()`
 - L454 `build()`
-- L1551 `withOpacity()`
-- L1565 `build()`
-- L1600 `build()`
-- L1648 `createState()`
-- L1657 `initState()`
-- L1693 `build()`
+- L1494 `withOpacity()`
+- L1508 `build()`
+- L1543 `build()`
+- L1591 `createState()`
+- L1600 `initState()`
+- L1636 `build()`
 
-  <details><summary>private 関数 36 件</summary>
+  <details><summary>private 関数 35 件</summary>
 
   - L96 `_onProChanged()`
   - L100 `_onCreditsChanged()`
@@ -380,20 +385,19 @@ Solara Sanctuary 法務リンクメニュー (Phase 2 launch_checklist)
   - L1006 `_buildTitleVCard()`
   - L1072 `_buildRecordsSection()`
   - L1108 `_buildCosmicProSection()`
-  - L1134 `_buildProUpgradeBanner()`
-  - L1197 `_buildProActiveBanner()`
-  - L1268 `_buildRestoreRow()`
-  - L1292 `_openPaywall()`
-  - L1301 `_restorePurchases()`
-  - L1326 `_buildDevProToggle()`
-  - L1379 `_buildAstrologySection()`
-  - L1409 `_buildHouseOption()`
-  - L1442 `_orbSummary()`
-  - L1455 `_openOrbOverlay()`
-  - L1471 `_buildAppSection()`
-  - L1503 `_pickDailyResetHour()`
-  - L1662 `_load()`
-  - L1667 `_toggle()`
+  - L1131 `_buildProUpgradeBanner()`
+  - L1194 `_buildProActiveBanner()`
+  - L1265 `_buildRestoreRow()`
+  - L1289 `_openPaywall()`
+  - L1298 `_restorePurchases()`
+  - L1322 `_buildAstrologySection()`
+  - L1352 `_buildHouseOption()`
+  - L1385 `_orbSummary()`
+  - L1398 `_openOrbOverlay()`
+  - L1414 `_buildAppSection()`
+  - L1446 `_pickDailyResetHour()`
+  - L1605 `_load()`
+  - L1610 `_toggle()`
 
   </details>
 
