@@ -24,15 +24,17 @@ class _CandidateCard extends StatelessWidget {
       // JP は県名を出し、冗長な国コードは出さない。
       parts.add(_c.region!);
     } else if (!_isBearing) {
-      // 海外で region が無い場合のみ、国コードを日本語国名に変換して出す (未知コードは出さない)。
-      final cj = _countryJa(_c.country);
+      // 海外で region が無い場合のみ、国コードをロケール別国名に変換して出す (未知コードは出さない)。
+      final cj = _countryName(_c.country);
       if (cj != null) parts.add(cj);
     }
     // 実在の町 (Phase B D1 局所) は home からの方角・距離を添える。
     final dir = _c.directionFromHome;
     if (dir != null && dir.isNotEmpty) {
       final dist = _c.distanceKm;
-      parts.add(dist != null && dist > 0 ? '$dir 約${dist}km' : dir);
+      parts.add(dist != null && dist > 0
+          ? t.consultResult.distanceFromHome(dir: dir, dist: dist)
+          : dir);
     }
     return parts.join(' · ');
   }
@@ -56,7 +58,9 @@ class _CandidateCard extends StatelessWidget {
                   ),
                   const SizedBox(width: 10),
                   Text(
-                    _isBearing ? '方角' : '場所',
+                    _isBearing
+                        ? t.consultResult.kindDirection
+                        : t.consultResult.kindPlace,
                     style: const TextStyle(
                       color: SolaraColors.textSecondary,
                       fontSize: 11,
@@ -136,7 +140,9 @@ class _CandidateCard extends StatelessWidget {
               ],
               const SizedBox(height: 18),
               Text(
-                _c.narrative.isNotEmpty ? _c.narrative : '(narrative なし)',
+                _c.narrative.isNotEmpty
+                    ? _c.narrative
+                    : t.consultResult.noReading,
                 style: const TextStyle(
                   color: SolaraColors.textPrimary,
                   fontSize: 14,
@@ -157,11 +163,8 @@ class _CandidateCard extends StatelessWidget {
                   padding: const EdgeInsets.only(top: 4),
                 ),
                 // 解釈は 1 つに過ぎない旨の注記 (エビデンスは上部に表示)。
-                const StellaInterpretationNote(
-                  text: 'この候補の根拠（エビデンス）は、最上部「相談の結果」に表示しています。'
-                      'Stella は、その一つの読み方をお伝えしています。違和感があれば、'
-                      'ご自身の解釈も重ねてみてください。ここでの表示は、'
-                      '数ある解釈の一つです。',
+                StellaInterpretationNote(
+                  text: t.consultResult.interpNote,
                 ),
                 // disclaimer footer — 報告ボタンの直下に常時。
                 const AiDisclaimerFooter(padding: EdgeInsets.zero),
@@ -191,9 +194,26 @@ const Map<String, String> _kCountryJa = {
   'EG': 'エジプト', 'ZA': '南アフリカ',
 };
 
-String? _countryJa(String? code) {
+/// 国コード(ISO2) → 英語国名 (en ロケール用、_kCountryJa と同じキー集合)。
+const Map<String, String> _kCountryEn = {
+  'JP': 'Japan', 'US': 'United States', 'CA': 'Canada', 'MX': 'Mexico',
+  'GB': 'United Kingdom', 'FR': 'France', 'DE': 'Germany', 'IT': 'Italy',
+  'ES': 'Spain', 'PT': 'Portugal', 'NL': 'Netherlands', 'BE': 'Belgium',
+  'CH': 'Switzerland', 'AT': 'Austria', 'IE': 'Ireland', 'SE': 'Sweden',
+  'NO': 'Norway', 'DK': 'Denmark', 'FI': 'Finland', 'GR': 'Greece',
+  'PL': 'Poland', 'CZ': 'Czechia', 'RU': 'Russia', 'TR': 'Türkiye',
+  'CN': 'China', 'KR': 'South Korea', 'TW': 'Taiwan', 'HK': 'Hong Kong',
+  'TH': 'Thailand', 'VN': 'Vietnam', 'SG': 'Singapore', 'MY': 'Malaysia',
+  'ID': 'Indonesia', 'PH': 'Philippines', 'IN': 'India', 'AE': 'United Arab Emirates',
+  'AU': 'Australia', 'NZ': 'New Zealand', 'BR': 'Brazil', 'AR': 'Argentina',
+  'EG': 'Egypt', 'ZA': 'South Africa',
+};
+
+/// 国コード → ロケール別国名 (字幕用、未知コードは null=非表示)。
+String? _countryName(String? code) {
   if (code == null || code.isEmpty) return null;
-  return _kCountryJa[code.toUpperCase()];
+  final c = code.toUpperCase();
+  return isEnLocale() ? _kCountryEn[c] : _kCountryJa[c];
 }
 
 class _EnergyChip extends StatelessWidget {
@@ -232,7 +252,7 @@ class _MapLinkIcon extends StatelessWidget {
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
       child: Tooltip(
-        message: '地図で見る',
+        message: t.consultResult.viewOnMap,
         child: Container(
           padding: const EdgeInsets.all(6),
           decoration: BoxDecoration(
@@ -289,11 +309,6 @@ class _TimeWindowRow extends StatelessWidget {
 
 // ── 30 分後デルタ (Pro おでかけ時刻指定) ──────────────────────
 
-const Map<String, String> _kPlanetJa = {
-  'sun': '太陽', 'moon': '月', 'mercury': '水星', 'venus': '金星', 'mars': '火星',
-  'jupiter': '木星', 'saturn': '土星', 'uranus': '天王星', 'neptune': '海王星',
-  'pluto': '冥王星',
-};
 const Map<String, String> _kAngleJa = {
   'mc': 'MC', 'ic': 'IC', 'asc': 'ASC', 'dsc': 'DSC',
 };
@@ -319,9 +334,9 @@ class _DeltaAfterSectionState extends State<_DeltaAfterSection> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            '「30分経過後を見る」とは',
-            style: TextStyle(
+          Text(
+            t.consultResult.delta.infoTitle,
+            style: const TextStyle(
                 color: SolaraColors.solaraGoldLight,
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
@@ -329,16 +344,7 @@ class _DeltaAfterSectionState extends State<_DeltaAfterSection> {
           ),
           const SizedBox(height: 10),
           Text(
-            'アストロカートグラフィの星の線は、地球の自転で刻一刻と動いています。\n'
-            '惑星が真上や地平線に来る「角ライン」は、$m分でおよそ 7.5°——'
-            '中緯度で約 800km も西へ進みます。\n\n'
-            'だから同じ場所でも、選んだ時刻と$m分後では「その場の主役」が'
-            '静かに入れ替わることがあります。火星の線が離れていく、'
-            '金星の線が近づいてくる——その移ろいを先に知っておくと、'
-            '「核心は前半に」「後半にかけて温まる」のように、'
-            'その場での時間の使い方が見えてきます。\n\n'
-            '吉凶ではなく、エネルギーの“質の移り変わり”として読んでいます。'
-            'Cosmic Pro・おでかけで時刻を指定したときに見られます。',
+            t.consultResult.delta.infoBody(m: m),
             style: const TextStyle(
                 color: SolaraColors.textPrimary, fontSize: 13, height: 1.75),
           ),
@@ -379,8 +385,8 @@ class _DeltaAfterSectionState extends State<_DeltaAfterSection> {
                         Expanded(
                           child: Text(
                             _open
-                                ? '${d.deltaMin}分後の変化を閉じる'
-                                : '${d.deltaMin}分経過後を見る',
+                                ? t.consultResult.delta.close(m: d.deltaMin)
+                                : t.consultResult.delta.open(m: d.deltaMin),
                             style: const TextStyle(
                               color: SolaraColors.solaraGoldLight,
                               fontSize: 13,
@@ -435,11 +441,8 @@ class _DeltaAfterSectionState extends State<_DeltaAfterSection> {
               outputText: d.narrative,
               padding: const EdgeInsets.only(top: 6),
             ),
-            const StellaInterpretationNote(
-              text: 'この30分後の変化は、上に示した線の動きをエビデンスとして、'
-                  'Stellaが解釈の１つとして表示しています。内容に違和感がある場合は'
-                  'ご自身で解釈を広げてみてください。'
-                  'あくまでここでの表示は解釈の１つに過ぎません。',
+            StellaInterpretationNote(
+              text: t.consultResult.deltaInterpNote,
             ),
             const AiDisclaimerFooter(padding: EdgeInsets.zero),
           ],
@@ -457,14 +460,30 @@ class _DeltaChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final planet = _kPlanetJa[change.planet] ?? change.planet;
+    final planet = planetName(change.planet);
     final angle = _kAngleJa[change.angle] ?? change.angle;
     final (IconData icon, String label, Color color) = switch (change.dir) {
-      'approaching' => (Icons.trending_down, '近づく', const Color(0xFF8FD3B0)),
-      'entering' => (Icons.add_circle_outline, '差してくる', const Color(0xFF8FD3B0)),
-      'receding' => (Icons.trending_up, '離れる', const Color(0xFFE0A878)),
-      'leaving' => (Icons.remove_circle_outline, '外れる', const Color(0xFFE0A878)),
-      _ => (Icons.remove, '安定', SolaraColors.textSecondary),
+      'approaching' => (
+          Icons.trending_down,
+          t.consultResult.delta.approaching,
+          const Color(0xFF8FD3B0)
+        ),
+      'entering' => (
+          Icons.add_circle_outline,
+          t.consultResult.delta.entering,
+          const Color(0xFF8FD3B0)
+        ),
+      'receding' => (
+          Icons.trending_up,
+          t.consultResult.delta.receding,
+          const Color(0xFFE0A878)
+        ),
+      'leaving' => (
+          Icons.remove_circle_outline,
+          t.consultResult.delta.leaving,
+          const Color(0xFFE0A878)
+        ),
+      _ => (Icons.remove, t.consultResult.delta.steady, SolaraColors.textSecondary),
     };
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
@@ -479,7 +498,7 @@ class _DeltaChip extends StatelessWidget {
           Icon(icon, size: 13, color: color),
           const SizedBox(width: 5),
           Text(
-            '$planet $angle・$label',
+            t.consultResult.delta.chip(planet: planet, angle: angle, label: label),
             style: TextStyle(color: color, fontSize: 11, letterSpacing: 0.3),
           ),
         ],

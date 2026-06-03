@@ -55,7 +55,7 @@
 ## #1 / #2 機械抽出 ↔ feature_inventory.md (人手版) の対整合
 
 - 機械抽出した class/mixin/extension/enum: **476**
-- inventory に登場する識別子 (大文字始まり ``backtick``囲み): **288**
+- inventory に登場する識別子 (大文字始まり ``backtick``囲み): **289**
 
 ### #1 機械にあるが Doc に書かれていない (275)
 
@@ -261,7 +261,7 @@
 - `_PlanetSub`
 - … 残り 75 省略
 
-### #2 Doc に書いてあるがコードに存在しない (ゴースト記述) (87)
+### #2 Doc に書いてあるがコードに存在しない (ゴースト記述) (88)
 
 > 注: Flutter SDK や外部ライブラリの型もここに乗る (誤検出)。
 > 真のゴーストはアプリ独自型のみ。実際の Doc 修正対象は手で絞り込む。
@@ -345,6 +345,7 @@
 - `StatefulWidget`
 - `TAROT_MODEL_FALLBACK`
 - `TAROT_MODEL_PRIMARY`
+- `Text`
 - `TextPainter`
 - `TextScaler`
 - `ThemeData`
@@ -423,7 +424,7 @@
 | 4c | 2 | 1 | 14 | 1 | 4 | 5 | 8 | 6 | · | · | · | 16 | · | · | 1 | · |
 | 4d | 4 | 6 | 13 | 1 | 2 | 2 | 11 | 2 | 1 | · | · | · | 9 | · | · | · |
 | 4e | 1 | 6 | · | 3 | 7 | 2 | 16 | 1 | · | · | · | · | · | 9 | 3 | · |
-| 4f | 3 | 6 | · | 8 | 16 | 6 | 19 | 13 | · | 6 | · | · | · | · | 30 | · |
+| 4f | 4 | 6 | · | 8 | 16 | 6 | 19 | 14 | · | 6 | · | · | · | · | 30 | · |
 | 5 | 2 | 2 | · | 2 | 5 | 5 | 1 | 1 | · | 1 | 1 | 1 | 1 | 3 | 4 | · |
 
 > 健全な依存方向は「番号が大きい層 → 小さい層」(上位が下位に依存)。
@@ -438,7 +439,7 @@
 | `lib/theme/solara_colors.dart` | 3b | 38 |
 | `lib/utils/solara_storage.dart` | 2b | 33 |
 | `lib/widgets/info_popup.dart` | 3a | 26 |
-| `lib/screens/map/map_constants.dart` | 3b | 21 |
+| `lib/screens/map/map_constants.dart` | 3b | 22 |
 | `lib/utils/solara_api.dart` | 2a | 15 |
 | `lib/models/galaxy_cycle.dart` | 1c | 14 |
 | `lib/screens/horoscope/horo_antique_icons.dart` | 3a | 14 |
@@ -452,9 +453,9 @@
 | `lib/utils/constellation_namer.dart` | 1b | 8 |
 | `lib/utils/consultation_api.dart` | 2a | 8 |
 | `lib/utils/consultation_credits.dart` | 2c | 8 |
+| `lib/utils/solara_i18n.dart` | 1a | 8 |
 | `lib/utils/tarot_data.dart` | 2c | 8 |
 | `lib/models/tarot_card.dart` | 1c | 7 |
-| `lib/screens/map/map_vp_panel.dart` | 4a | 7 |
 
 ### #5c 孤立ファイル (2) — 誰からも import されない
 
@@ -469,9 +470,11 @@
 > 各ソースの SHA1 を `_stamps.json` に記録し、差分を検出。
 > 変更されたファイルが属する層は、人手版インベントリ章の見直し対象。
 
-- 追加: **0** / 削除: **0** / 変更: **0**
+- 追加: **0** / 削除: **0** / 変更: **6**
 
-- 変更なし — 全インベントリ章は最新。
+### 変更されたファイル (層別)
+
+- **層 4f**: `lib/screens/consultation/consultation_result_card.dart`, `lib/screens/consultation/consultation_result_credit_widgets.dart`, `lib/screens/consultation/consultation_result_screen.dart`, `lib/screens/consultation/consultation_result_share.dart`, `lib/screens/consultation/consultation_result_widgets.dart`, `lib/screens/consultation/consultation_return_chip.dart`
 
 ## #7 astro_glossary 用語辞書対整合
 

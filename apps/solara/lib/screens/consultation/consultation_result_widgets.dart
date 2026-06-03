@@ -23,7 +23,7 @@ class _LoadingSkeleton extends StatelessWidget {
           ),
           const SizedBox(height: 20),
           Text(
-            'Stella が読み解いています…',
+            t.consultResult.loading,
             style: TextStyle(
               color: SolaraColors.textSecondary,
               fontSize: 14,
@@ -71,7 +71,7 @@ class _ErrorBox extends StatelessWidget {
                 style: TextButton.styleFrom(
                   foregroundColor: SolaraColors.solaraGold,
                 ),
-                child: const Text('もう一度試す'),
+                child: Text(t.consultResult.retry),
               ),
             ],
           ),
@@ -98,7 +98,7 @@ class _FallbackChip extends StatelessWidget {
           border: Border.all(color: SolaraColors.energyHardDark),
         ),
         child: Text(
-          'Stella の声が今は届きませんでした',
+          t.consultResult.voiceUnavailable,
           style: TextStyle(
             color: SolaraColors.energyHardLight,
             fontSize: 11,
@@ -135,9 +135,9 @@ class _AboutReadingContent extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Text(
-            'この読み解きについて',
-            style: TextStyle(
+          Text(
+            t.consultResult.aboutReading,
+            style: const TextStyle(
               color: SolaraColors.textPrimary,
               fontSize: 15,
               fontWeight: FontWeight.w600,
@@ -157,7 +157,7 @@ class _AboutReadingContent extends StatelessWidget {
             Container(height: 1, color: SolaraColors.glassBorder),
             const SizedBox(height: 12),
             Text(
-              'この土地の占星術ファクター',
+              t.consultResult.factorsTitle,
               style: TextStyle(
                 color: SolaraColors.textSecondary,
                 fontSize: 11.5,
@@ -176,13 +176,14 @@ class _AboutReadingContent extends StatelessWidget {
               ...evidence.km.map(
                 (k) => Padding(
                   padding: const EdgeInsets.only(bottom: 2),
-                  child: Text('  ${k.factor}：約 ${k.km}km', style: _kmStyle),
+                  child: Text(
+                      t.consultResult.kmFactor(factor: k.factor, km: k.km),
+                      style: _kmStyle),
                 ),
               ),
               const SizedBox(height: 6),
               Text(
-                '距離はエネルギーの有無を決めません。惑星ははるか遠方、地上の数百kmは'
-                '「圏内かどうか」の差にすぎません。',
+                t.consultResult.distanceNote,
                 style: _kmStyle,
               ),
             ],
@@ -269,7 +270,8 @@ class _SparseHint extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final n = nearbyCount;
-    final countText = (n != null && n > 0) ? '（近くの候補は$n件ほど）' : '';
+    final countText =
+        (n != null && n > 0) ? t.consultResult.nearbyCount(n: n) : '';
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
       child: Container(
@@ -286,7 +288,7 @@ class _SparseHint extends StatelessWidget {
             const SizedBox(width: 8),
             Expanded(
               child: Text(
-                'この近くは候補が少なめです$countText。半径を広げる・方角を変えると見つかりやすくなります。',
+                t.consultResult.sparseHint(countText: countText),
                 style: const TextStyle(
                   color: SolaraColors.textSecondary,
                   fontSize: 11.5,
@@ -308,23 +310,25 @@ class _ExhaustionPanel extends StatelessWidget {
   final List<String> suggestions;
   const _ExhaustionPanel({this.reason, this.suggestions = const []});
 
-  static const Map<String, String> _reasonText = {
-    'allQuiet': 'この条件では、いま強く惹かれる土地が見当たりませんでした。',
-    'noFresh': 'これ以上の新しい候補地は見つかりませんでした。',
-    'emptyPool': 'この範囲には候補が見つかりませんでした。',
-  };
-  static const Map<String, String> _suggestLabel = {
-    'widenRadius': '半径を広げてみる',
-    'bearing': '方角で探す',
-    'point': '具体的な場所を指定する',
-    'world': '世界全体に広げる',
-  };
+  static String _reasonText(String? reason) => switch (reason) {
+        'allQuiet' => t.consultResult.exhaust.allQuiet,
+        'noFresh' => t.consultResult.exhaust.noFresh,
+        'emptyPool' => t.consultResult.exhaust.emptyPool,
+        _ => t.consultResult.exhaust.fallback,
+      };
+  static String? _suggestLabel(String key) => switch (key) {
+        'widenRadius' => t.consultResult.suggest.widenRadius,
+        'bearing' => t.consultResult.suggest.bearing,
+        'point' => t.consultResult.suggest.point,
+        'world' => t.consultResult.suggest.world,
+        _ => null,
+      };
 
   @override
   Widget build(BuildContext context) {
-    final headline = _reasonText[reason] ?? 'これ以上は無理に候補を作りませんでした。';
+    final headline = _reasonText(reason);
     final tips = suggestions
-        .map((c) => _suggestLabel[c])
+        .map((c) => _suggestLabel(c))
         .whereType<String>()
         .toList(growable: false);
     return Padding(
@@ -355,7 +359,7 @@ class _ExhaustionPanel extends StatelessWidget {
             if (tips.isNotEmpty) ...[
               const SizedBox(height: 10),
               Text(
-                '条件を変えると見つかるかもしれません:',
+                t.consultResult.exhaust.tipsLead,
                 style: TextStyle(
                   color: SolaraColors.textSecondary,
                   fontSize: 11.5,
@@ -372,7 +376,7 @@ class _ExhaustionPanel extends StatelessWidget {
             ],
             const SizedBox(height: 10),
             Text(
-              '※ この案内ではクレジットを消費していません。',
+              t.consultResult.exhaust.noCredit,
               style: TextStyle(
                 color: SolaraColors.textSecondary,
                 fontSize: 11,
@@ -419,7 +423,8 @@ class _RefreshButton extends StatelessWidget {
                   ),
                 )
               : const Icon(Icons.travel_explore, size: 18),
-          label: Text(loading ? '別の候補地を探しています…' : '別の候補地を見る'),
+          label: Text(
+              loading ? t.consultResult.refreshLoading : t.consultResult.refresh),
         ),
       ),
     );

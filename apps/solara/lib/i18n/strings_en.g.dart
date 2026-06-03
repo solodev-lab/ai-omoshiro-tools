@@ -39,6 +39,7 @@ class TranslationsEn extends Translations with BaseTranslations<AppLocale, Trans
 	TranslationsEn $copyWith({TranslationMetadata<AppLocale, Translations>? meta}) => TranslationsEn(meta: meta ?? this.$meta);
 
 	// Translations
+	@override late final _Translations$consultResult$en consultResult = _Translations$consultResult$en._(_root);
 	@override late final _Translations$consultInput$en consultInput = _Translations$consultInput$en._(_root);
 	@override late final _Translations$mapAcg$en mapAcg = _Translations$mapAcg$en._(_root);
 	@override late final _Translations$mapVp$en mapVp = _Translations$mapVp$en._(_root);
@@ -49,6 +50,44 @@ class TranslationsEn extends Translations with BaseTranslations<AppLocale, Trans
 	@override late final _Translations$disclaimer$en disclaimer = _Translations$disclaimer$en._(_root);
 	@override late final _Translations$common$en common = _Translations$common$en._(_root);
 	@override late final _Translations$aiConsent$en aiConsent = _Translations$aiConsent$en._(_root);
+}
+
+// Path: consultResult
+class _Translations$consultResult$en extends Translations$consultResult$ja {
+	_Translations$consultResult$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get title => 'Consultation result';
+	@override String get back => 'Back';
+	@override String get shareTooltip => 'Share';
+	@override String get connError => 'We couldn\'t reach the connection just now. You can try again.';
+	@override String get kindDirection => 'Direction';
+	@override String get kindPlace => 'Place';
+	@override String get noReading => '(no reading)';
+	@override String get viewOnMap => 'View on the map';
+	@override String distanceFromHome({required Object dir, required Object dist}) => '${dir} ~${dist} km';
+	@override String get loading => 'Stella is reading the stars…';
+	@override String get retry => 'Try again';
+	@override String get voiceUnavailable => 'Stella\'s voice didn\'t reach you just now';
+	@override String get aboutReading => 'About this reading';
+	@override String get factorsTitle => 'The astrological factors of this place';
+	@override String kmFactor({required Object factor, required Object km}) => '  ${factor}: ~${km} km';
+	@override String get distanceNote => 'Distance doesn\'t decide whether an energy is present. The planets are immensely far away; a few hundred kilometers on the ground only change whether you\'re within range.';
+	@override String nearbyCount({required Object n}) => ' (about ${n} nearby)';
+	@override String sparseHint({required Object countText}) => 'There are few candidate places near here${countText}. Widening the radius or changing the direction makes them easier to find.';
+	@override late final _Translations$consultResult$exhaust$en exhaust = _Translations$consultResult$exhaust$en._(_root);
+	@override late final _Translations$consultResult$suggest$en suggest = _Translations$consultResult$suggest$en._(_root);
+	@override String get refreshLoading => 'Looking for another place…';
+	@override String get refresh => 'See another candidate place';
+	@override late final _Translations$consultResult$delta$en delta = _Translations$consultResult$delta$en._(_root);
+	@override String get interpNote => 'The grounds for this candidate — its evidence — are shown at the top, under "Consultation result." Stella is sharing one way of reading them. If something feels off, lay your own interpretation alongside it. What you see here is one of many possible readings.';
+	@override String get deltaInterpNote => 'Stella shows this shift 30 minutes later as one interpretation, with the line movements above as its evidence. If anything feels off, widen the reading with your own sense of it. What you see here is no more than one interpretation among many.';
+	@override late final _Translations$consultResult$pro$en pro = _Translations$consultResult$pro$en._(_root);
+	@override late final _Translations$consultResult$block$en block = _Translations$consultResult$block$en._(_root);
+	@override late final _Translations$consultResult$shareSheet$en shareSheet = _Translations$consultResult$shareSheet$en._(_root);
+	@override String get returnChip => 'Back to consultation result';
 }
 
 // Path: consultInput
@@ -235,6 +274,107 @@ class _Translations$aiConsent$en extends Translations$aiConsent$ja {
 	@override late final _Translations$aiConsent$geminiContent$en geminiContent = _Translations$aiConsent$geminiContent$en._(_root);
 	@override late final _Translations$aiConsent$decisions$en decisions = _Translations$aiConsent$decisions$en._(_root);
 	@override late final _Translations$aiConsent$consentHandling$en consentHandling = _Translations$aiConsent$consentHandling$en._(_root);
+}
+
+// Path: consultResult.exhaust
+class _Translations$consultResult$exhaust$en extends Translations$consultResult$exhaust$ja {
+	_Translations$consultResult$exhaust$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get allQuiet => 'With these conditions, no place is strongly drawing you right now.';
+	@override String get noFresh => 'No further new candidate places turned up.';
+	@override String get emptyPool => 'No candidates were found within this range.';
+	@override String get fallback => 'We didn\'t force any more candidates into being.';
+	@override String get tipsLead => 'Changing the conditions might surface more:';
+	@override String get noCredit => '* No credits were used for this notice.';
+}
+
+// Path: consultResult.suggest
+class _Translations$consultResult$suggest$en extends Translations$consultResult$suggest$ja {
+	_Translations$consultResult$suggest$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get widenRadius => 'Widen the radius';
+	@override String get bearing => 'Search by direction';
+	@override String get point => 'Pick a specific place';
+	@override String get world => 'Open it up to the whole world';
+}
+
+// Path: consultResult.delta
+class _Translations$consultResult$delta$en extends Translations$consultResult$delta$ja {
+	_Translations$consultResult$delta$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String open({required Object m}) => 'See the change ${m} minutes later';
+	@override String close({required Object m}) => 'Close the change ${m} minutes later';
+	@override String get infoTitle => 'About "the change 30 minutes later"';
+	@override String infoBody({required Object m}) => 'The star lines of astrocartography move moment by moment as the Earth turns.\nThe "angle lines"—where a planet sits directly overhead or on the horizon—travel about 7.5° in ${m} minutes: roughly 800 km westward at mid-latitudes.\n\nSo even in the same place, the lead of the moment can quietly change between the time you chose and ${m} minutes later. Mars\'s line drawing away, Venus\'s line drawing near—knowing that shift in advance lets you see how to use your time there: the heart of it early on, or warming toward the end.\n\nWe read this not as fortune, good or bad, but as a shift in the quality of the energy. You can see it when you set a time with Cosmic Pro · Outing.';
+	@override String get approaching => 'drawing near';
+	@override String get entering => 'moving in';
+	@override String get receding => 'drawing away';
+	@override String get leaving => 'moving out';
+	@override String get steady => 'steady';
+	@override String chip({required Object planet, required Object angle, required Object label}) => '${planet} ${angle} · ${label}';
+}
+
+// Path: consultResult.pro
+class _Translations$consultResult$pro$en extends Translations$consultResult$pro$ja {
+	_Translations$consultResult$pro$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get consultLabel => 'Stella Consultation';
+	@override String get consultDesc => 'With Cosmic Pro you can read it as many times as you like.';
+	@override String get migrationLabel => 'Migration & travel consultations';
+	@override String get migrationDesc => 'With Cosmic Pro, consultations beyond Outing / Event are unlimited too.';
+	@override String get refreshLabel => 'Drawing fresh candidates';
+	@override String get refreshDesc => 'Compare as many other candidates as you like.';
+	@override String get weeklyLabel => 'Stella Consultation';
+	@override String get weeklyDesc => 'You\'ve used up this week\'s free consultations. With Cosmic Pro it\'s unlimited, and reads more deeply with thinking.';
+}
+
+// Path: consultResult.block
+class _Translations$consultResult$block$en extends Translations$consultResult$block$ja {
+	_Translations$consultResult$block$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get proOnlyModeTitle => 'This mode is part of Cosmic Pro';
+	@override String get proOnlyModeBody => 'Consultations beyond Outing / Event (migration & travel) can be read with Cosmic Pro.';
+	@override String get proOnlyRefreshTitle => 'Drawing fresh candidates is part of Cosmic Pro';
+	@override String get proOnlyRefreshBody => 'Compare as many other candidates as you like.';
+	@override String get proWeeklyTitle => 'You\'ve reached this week\'s Pro consultation limit';
+	@override String get proWeeklyBody => 'Cosmic Pro lets you consult Stella up to 100 times a week. It refills on Monday. To keep going right away, you can buy extra credits.';
+	@override String get proSyncTitle => 'Syncing your Pro status';
+	@override String get proSyncBody => 'We\'re re-checking your Cosmic Pro billing status with the store. No credits have been used. Please wait a moment, then try again.';
+	@override String get exhaustedTitle => 'You\'ve used up your consultation credits';
+	@override String get exhaustedBody => 'Free Stella consultations refill each week. To keep going right away, you can buy extra credits, or go unlimited with Cosmic Pro.';
+	@override String get buyCredits => 'Buy extra credits';
+	@override String get goUnlimited => '✦ Go unlimited with Cosmic Pro';
+	@override String get seePro => '✦ See Cosmic Pro';
+}
+
+// Path: consultResult.shareSheet
+class _Translations$consultResult$shareSheet$en extends Translations$consultResult$shareSheet$ja {
+	_Translations$consultResult$shareSheet$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get copyText => 'Copy as text';
+	@override String get copyTextSub => 'Copy the consultation result, formatted, to the clipboard';
+	@override String get shareImage => 'Share as an image';
+	@override String get shareImageSub => 'Turn the result screen into a PNG and share it your usual way';
+	@override String get copied => 'Copied to the clipboard';
+	@override String failed({required Object e}) => 'Sharing failed: ${e}';
 }
 
 // Path: consultInput.theme
@@ -1050,6 +1190,76 @@ class _Translations$paywall$faq$resubscribe$en extends Translations$paywall$faq$
 extension on TranslationsEn {
 	dynamic _flatMapFunction(String path) {
 		return switch (path) {
+			'consultResult.title' => 'Consultation result',
+			'consultResult.back' => 'Back',
+			'consultResult.shareTooltip' => 'Share',
+			'consultResult.connError' => 'We couldn\'t reach the connection just now. You can try again.',
+			'consultResult.kindDirection' => 'Direction',
+			'consultResult.kindPlace' => 'Place',
+			'consultResult.noReading' => '(no reading)',
+			'consultResult.viewOnMap' => 'View on the map',
+			'consultResult.distanceFromHome' => ({required Object dir, required Object dist}) => '${dir} ~${dist} km',
+			'consultResult.loading' => 'Stella is reading the stars…',
+			'consultResult.retry' => 'Try again',
+			'consultResult.voiceUnavailable' => 'Stella\'s voice didn\'t reach you just now',
+			'consultResult.aboutReading' => 'About this reading',
+			'consultResult.factorsTitle' => 'The astrological factors of this place',
+			'consultResult.kmFactor' => ({required Object factor, required Object km}) => '  ${factor}: ~${km} km',
+			'consultResult.distanceNote' => 'Distance doesn\'t decide whether an energy is present. The planets are immensely far away; a few hundred kilometers on the ground only change whether you\'re within range.',
+			'consultResult.nearbyCount' => ({required Object n}) => ' (about ${n} nearby)',
+			'consultResult.sparseHint' => ({required Object countText}) => 'There are few candidate places near here${countText}. Widening the radius or changing the direction makes them easier to find.',
+			'consultResult.exhaust.allQuiet' => 'With these conditions, no place is strongly drawing you right now.',
+			'consultResult.exhaust.noFresh' => 'No further new candidate places turned up.',
+			'consultResult.exhaust.emptyPool' => 'No candidates were found within this range.',
+			'consultResult.exhaust.fallback' => 'We didn\'t force any more candidates into being.',
+			'consultResult.exhaust.tipsLead' => 'Changing the conditions might surface more:',
+			'consultResult.exhaust.noCredit' => '* No credits were used for this notice.',
+			'consultResult.suggest.widenRadius' => 'Widen the radius',
+			'consultResult.suggest.bearing' => 'Search by direction',
+			'consultResult.suggest.point' => 'Pick a specific place',
+			'consultResult.suggest.world' => 'Open it up to the whole world',
+			'consultResult.refreshLoading' => 'Looking for another place…',
+			'consultResult.refresh' => 'See another candidate place',
+			'consultResult.delta.open' => ({required Object m}) => 'See the change ${m} minutes later',
+			'consultResult.delta.close' => ({required Object m}) => 'Close the change ${m} minutes later',
+			'consultResult.delta.infoTitle' => 'About "the change 30 minutes later"',
+			'consultResult.delta.infoBody' => ({required Object m}) => 'The star lines of astrocartography move moment by moment as the Earth turns.\nThe "angle lines"—where a planet sits directly overhead or on the horizon—travel about 7.5° in ${m} minutes: roughly 800 km westward at mid-latitudes.\n\nSo even in the same place, the lead of the moment can quietly change between the time you chose and ${m} minutes later. Mars\'s line drawing away, Venus\'s line drawing near—knowing that shift in advance lets you see how to use your time there: the heart of it early on, or warming toward the end.\n\nWe read this not as fortune, good or bad, but as a shift in the quality of the energy. You can see it when you set a time with Cosmic Pro · Outing.',
+			'consultResult.delta.approaching' => 'drawing near',
+			'consultResult.delta.entering' => 'moving in',
+			'consultResult.delta.receding' => 'drawing away',
+			'consultResult.delta.leaving' => 'moving out',
+			'consultResult.delta.steady' => 'steady',
+			'consultResult.delta.chip' => ({required Object planet, required Object angle, required Object label}) => '${planet} ${angle} · ${label}',
+			'consultResult.interpNote' => 'The grounds for this candidate — its evidence — are shown at the top, under "Consultation result." Stella is sharing one way of reading them. If something feels off, lay your own interpretation alongside it. What you see here is one of many possible readings.',
+			'consultResult.deltaInterpNote' => 'Stella shows this shift 30 minutes later as one interpretation, with the line movements above as its evidence. If anything feels off, widen the reading with your own sense of it. What you see here is no more than one interpretation among many.',
+			'consultResult.pro.consultLabel' => 'Stella Consultation',
+			'consultResult.pro.consultDesc' => 'With Cosmic Pro you can read it as many times as you like.',
+			'consultResult.pro.migrationLabel' => 'Migration & travel consultations',
+			'consultResult.pro.migrationDesc' => 'With Cosmic Pro, consultations beyond Outing / Event are unlimited too.',
+			'consultResult.pro.refreshLabel' => 'Drawing fresh candidates',
+			'consultResult.pro.refreshDesc' => 'Compare as many other candidates as you like.',
+			'consultResult.pro.weeklyLabel' => 'Stella Consultation',
+			'consultResult.pro.weeklyDesc' => 'You\'ve used up this week\'s free consultations. With Cosmic Pro it\'s unlimited, and reads more deeply with thinking.',
+			'consultResult.block.proOnlyModeTitle' => 'This mode is part of Cosmic Pro',
+			'consultResult.block.proOnlyModeBody' => 'Consultations beyond Outing / Event (migration & travel) can be read with Cosmic Pro.',
+			'consultResult.block.proOnlyRefreshTitle' => 'Drawing fresh candidates is part of Cosmic Pro',
+			'consultResult.block.proOnlyRefreshBody' => 'Compare as many other candidates as you like.',
+			'consultResult.block.proWeeklyTitle' => 'You\'ve reached this week\'s Pro consultation limit',
+			'consultResult.block.proWeeklyBody' => 'Cosmic Pro lets you consult Stella up to 100 times a week. It refills on Monday. To keep going right away, you can buy extra credits.',
+			'consultResult.block.proSyncTitle' => 'Syncing your Pro status',
+			'consultResult.block.proSyncBody' => 'We\'re re-checking your Cosmic Pro billing status with the store. No credits have been used. Please wait a moment, then try again.',
+			'consultResult.block.exhaustedTitle' => 'You\'ve used up your consultation credits',
+			'consultResult.block.exhaustedBody' => 'Free Stella consultations refill each week. To keep going right away, you can buy extra credits, or go unlimited with Cosmic Pro.',
+			'consultResult.block.buyCredits' => 'Buy extra credits',
+			'consultResult.block.goUnlimited' => '✦ Go unlimited with Cosmic Pro',
+			'consultResult.block.seePro' => '✦ See Cosmic Pro',
+			'consultResult.shareSheet.copyText' => 'Copy as text',
+			'consultResult.shareSheet.copyTextSub' => 'Copy the consultation result, formatted, to the clipboard',
+			'consultResult.shareSheet.shareImage' => 'Share as an image',
+			'consultResult.shareSheet.shareImageSub' => 'Turn the result screen into a PNG and share it your usual way',
+			'consultResult.shareSheet.copied' => 'Copied to the clipboard',
+			'consultResult.shareSheet.failed' => ({required Object e}) => 'Sharing failed: ${e}',
+			'consultResult.returnChip' => 'Back to consultation result',
 			'consultInput.theme.love' => 'Love & relationships',
 			'consultInput.theme.money' => 'Abundance & money',
 			'consultInput.theme.work' => 'Work & career',

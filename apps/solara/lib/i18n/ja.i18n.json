@@ -1,4 +1,88 @@
 {
+  "consultResult": {
+    "title": "相談の結果",
+    "back": "戻る",
+    "shareTooltip": "シェア",
+    "connError": "接続に届きませんでした。もう一度試せます。",
+    "kindDirection": "方角",
+    "kindPlace": "場所",
+    "noReading": "(narrative なし)",
+    "viewOnMap": "地図で見る",
+    "distanceFromHome": "$dir 約${dist}km",
+    "loading": "Stella が読み解いています…",
+    "retry": "もう一度試す",
+    "voiceUnavailable": "Stella の声が今は届きませんでした",
+    "aboutReading": "この読み解きについて",
+    "factorsTitle": "この土地の占星術ファクター",
+    "kmFactor": "  $factor：約 ${km}km",
+    "distanceNote": "距離はエネルギーの有無を決めません。惑星ははるか遠方、地上の数百kmは「圏内かどうか」の差にすぎません。",
+    "nearbyCount": "（近くの候補は$n件ほど）",
+    "sparseHint": "この近くは候補が少なめです$countText。半径を広げる・方角を変えると見つかりやすくなります。",
+    "exhaust": {
+      "allQuiet": "この条件では、いま強く惹かれる土地が見当たりませんでした。",
+      "noFresh": "これ以上の新しい候補地は見つかりませんでした。",
+      "emptyPool": "この範囲には候補が見つかりませんでした。",
+      "fallback": "これ以上は無理に候補を作りませんでした。",
+      "tipsLead": "条件を変えると見つかるかもしれません:",
+      "noCredit": "※ この案内ではクレジットを消費していません。"
+    },
+    "suggest": {
+      "widenRadius": "半径を広げてみる",
+      "bearing": "方角で探す",
+      "point": "具体的な場所を指定する",
+      "world": "世界全体に広げる"
+    },
+    "refreshLoading": "別の候補地を探しています…",
+    "refresh": "別の候補地を見る",
+    "delta": {
+      "open": "${m}分経過後を見る",
+      "close": "${m}分後の変化を閉じる",
+      "infoTitle": "「30分経過後を見る」とは",
+      "infoBody": "アストロカートグラフィの星の線は、地球の自転で刻一刻と動いています。\n惑星が真上や地平線に来る「角ライン」は、${m}分でおよそ 7.5°——中緯度で約 800km も西へ進みます。\n\nだから同じ場所でも、選んだ時刻と${m}分後では「その場の主役」が静かに入れ替わることがあります。火星の線が離れていく、金星の線が近づいてくる——その移ろいを先に知っておくと、「核心は前半に」「後半にかけて温まる」のように、その場での時間の使い方が見えてきます。\n\n吉凶ではなく、エネルギーの“質の移り変わり”として読んでいます。Cosmic Pro・おでかけで時刻を指定したときに見られます。",
+      "approaching": "近づく",
+      "entering": "差してくる",
+      "receding": "離れる",
+      "leaving": "外れる",
+      "steady": "安定",
+      "chip": "$planet $angle・$label"
+    },
+    "interpNote": "この候補の根拠（エビデンス）は、最上部「相談の結果」に表示しています。Stella は、その一つの読み方をお伝えしています。違和感があれば、ご自身の解釈も重ねてみてください。ここでの表示は、数ある解釈の一つです。",
+    "deltaInterpNote": "この30分後の変化は、上に示した線の動きをエビデンスとして、Stellaが解釈の１つとして表示しています。内容に違和感がある場合はご自身で解釈を広げてみてください。あくまでここでの表示は解釈の１つに過ぎません。",
+    "pro": {
+      "consultLabel": "Stella 相談",
+      "consultDesc": "Cosmic Pro なら回数無制限で読み解けます。",
+      "migrationLabel": "移住・旅行の相談",
+      "migrationDesc": "おでかけ・イベント以外の相談も、Cosmic Pro なら無制限に。",
+      "refreshLabel": "候補の出し直し",
+      "refreshDesc": "別の候補を何度でも見比べられます。",
+      "weeklyLabel": "Stella 相談",
+      "weeklyDesc": "今週の無料の相談を使い切りました。Cosmic Pro なら回数無制限・thinking でより深く読み解きます。"
+    },
+    "block": {
+      "proOnlyModeTitle": "このモードは Cosmic Pro で",
+      "proOnlyModeBody": "おでかけ・イベント以外の相談 (移住・旅行) は Cosmic Pro で読み解けます。",
+      "proOnlyRefreshTitle": "候補の出し直しは Cosmic Pro で",
+      "proOnlyRefreshBody": "別の候補を何度でも見比べられます。",
+      "proWeeklyTitle": "今週の Pro 相談上限に達しました",
+      "proWeeklyBody": "Cosmic Pro は週 100 回まで Stella に相談できます。月曜日に補充されます。すぐ続けるなら、追加クレジットの購入が選べます。",
+      "proSyncTitle": "Pro 状態を同期しています",
+      "proSyncBody": "Cosmic Pro の課金状態をストアと再確認しています。クレジットは消費されていません。数十秒待ってからもう一度お試しください。",
+      "exhaustedTitle": "相談クレジットを使い切りました",
+      "exhaustedBody": "無料の Stella 相談は週ごとに補充されます。すぐ続けるなら、追加クレジットの購入か、回数無制限の Cosmic Pro が選べます。",
+      "buyCredits": "追加クレジットを購入",
+      "goUnlimited": "✦ Cosmic Pro で無制限にする",
+      "seePro": "✦ Cosmic Pro を見る"
+    },
+    "shareSheet": {
+      "copyText": "テキストをコピー",
+      "copyTextSub": "相談結果を clipboard に整形してコピー",
+      "shareImage": "画像で共有",
+      "shareImageSub": "結果画面を PNG にして OS 標準シェアで共有",
+      "copied": "テキストをコピーしました",
+      "failed": "シェアに失敗しました: $e"
+    },
+    "returnChip": "相談結果に戻る"
+  },
   "consultInput": {
     "theme": {
       "love": "恋愛・関係",

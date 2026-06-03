@@ -40,6 +40,7 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 	Translations $copyWith({TranslationMetadata<AppLocale, Translations>? meta}) => Translations(meta: meta ?? this.$meta);
 
 	// Translations
+	late final Translations$consultResult$ja consultResult = Translations$consultResult$ja.internal(_root);
 	late final Translations$consultInput$ja consultInput = Translations$consultInput$ja.internal(_root);
 	late final Translations$mapAcg$ja mapAcg = Translations$mapAcg$ja.internal(_root);
 	late final Translations$mapVp$ja mapVp = Translations$mapVp$ja.internal(_root);
@@ -50,6 +51,93 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 	late final Translations$disclaimer$ja disclaimer = Translations$disclaimer$ja.internal(_root);
 	late final Translations$common$ja common = Translations$common$ja.internal(_root);
 	late final Translations$aiConsent$ja aiConsent = Translations$aiConsent$ja.internal(_root);
+}
+
+// Path: consultResult
+class Translations$consultResult$ja {
+	Translations$consultResult$ja.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// ja: '相談の結果'
+	String get title => '相談の結果';
+
+	/// ja: '戻る'
+	String get back => '戻る';
+
+	/// ja: 'シェア'
+	String get shareTooltip => 'シェア';
+
+	/// ja: '接続に届きませんでした。もう一度試せます。'
+	String get connError => '接続に届きませんでした。もう一度試せます。';
+
+	/// ja: '方角'
+	String get kindDirection => '方角';
+
+	/// ja: '場所'
+	String get kindPlace => '場所';
+
+	/// ja: '(narrative なし)'
+	String get noReading => '(narrative なし)';
+
+	/// ja: '地図で見る'
+	String get viewOnMap => '地図で見る';
+
+	/// ja: '$dir 約${dist}km'
+	String distanceFromHome({required Object dir, required Object dist}) => '${dir} 約${dist}km';
+
+	/// ja: 'Stella が読み解いています…'
+	String get loading => 'Stella が読み解いています…';
+
+	/// ja: 'もう一度試す'
+	String get retry => 'もう一度試す';
+
+	/// ja: 'Stella の声が今は届きませんでした'
+	String get voiceUnavailable => 'Stella の声が今は届きませんでした';
+
+	/// ja: 'この読み解きについて'
+	String get aboutReading => 'この読み解きについて';
+
+	/// ja: 'この土地の占星術ファクター'
+	String get factorsTitle => 'この土地の占星術ファクター';
+
+	/// ja: ' $factor：約 ${km}km'
+	String kmFactor({required Object factor, required Object km}) => '  ${factor}：約 ${km}km';
+
+	/// ja: '距離はエネルギーの有無を決めません。惑星ははるか遠方、地上の数百kmは「圏内かどうか」の差にすぎません。'
+	String get distanceNote => '距離はエネルギーの有無を決めません。惑星ははるか遠方、地上の数百kmは「圏内かどうか」の差にすぎません。';
+
+	/// ja: '（近くの候補は$n件ほど）'
+	String nearbyCount({required Object n}) => '（近くの候補は${n}件ほど）';
+
+	/// ja: 'この近くは候補が少なめです$countText。半径を広げる・方角を変えると見つかりやすくなります。'
+	String sparseHint({required Object countText}) => 'この近くは候補が少なめです${countText}。半径を広げる・方角を変えると見つかりやすくなります。';
+
+	late final Translations$consultResult$exhaust$ja exhaust = Translations$consultResult$exhaust$ja.internal(_root);
+	late final Translations$consultResult$suggest$ja suggest = Translations$consultResult$suggest$ja.internal(_root);
+
+	/// ja: '別の候補地を探しています…'
+	String get refreshLoading => '別の候補地を探しています…';
+
+	/// ja: '別の候補地を見る'
+	String get refresh => '別の候補地を見る';
+
+	late final Translations$consultResult$delta$ja delta = Translations$consultResult$delta$ja.internal(_root);
+
+	/// ja: 'この候補の根拠（エビデンス）は、最上部「相談の結果」に表示しています。Stella は、その一つの読み方をお伝えしています。違和感があれば、ご自身の解釈も重ねてみてください。ここでの表示は、数ある解釈の一つです。'
+	String get interpNote => 'この候補の根拠（エビデンス）は、最上部「相談の結果」に表示しています。Stella は、その一つの読み方をお伝えしています。違和感があれば、ご自身の解釈も重ねてみてください。ここでの表示は、数ある解釈の一つです。';
+
+	/// ja: 'この30分後の変化は、上に示した線の動きをエビデンスとして、Stellaが解釈の１つとして表示しています。内容に違和感がある場合はご自身で解釈を広げてみてください。あくまでここでの表示は解釈の１つに過ぎません。'
+	String get deltaInterpNote => 'この30分後の変化は、上に示した線の動きをエビデンスとして、Stellaが解釈の１つとして表示しています。内容に違和感がある場合はご自身で解釈を広げてみてください。あくまでここでの表示は解釈の１つに過ぎません。';
+
+	late final Translations$consultResult$pro$ja pro = Translations$consultResult$pro$ja.internal(_root);
+	late final Translations$consultResult$block$ja block = Translations$consultResult$block$ja.internal(_root);
+	late final Translations$consultResult$shareSheet$ja shareSheet = Translations$consultResult$shareSheet$ja.internal(_root);
+
+	/// ja: '相談結果に戻る'
+	String get returnChip => '相談結果に戻る';
 }
 
 // Path: consultInput
@@ -343,6 +431,201 @@ class Translations$aiConsent$ja {
 	late final Translations$aiConsent$geminiContent$ja geminiContent = Translations$aiConsent$geminiContent$ja.internal(_root);
 	late final Translations$aiConsent$decisions$ja decisions = Translations$aiConsent$decisions$ja.internal(_root);
 	late final Translations$aiConsent$consentHandling$ja consentHandling = Translations$aiConsent$consentHandling$ja.internal(_root);
+}
+
+// Path: consultResult.exhaust
+class Translations$consultResult$exhaust$ja {
+	Translations$consultResult$exhaust$ja.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// ja: 'この条件では、いま強く惹かれる土地が見当たりませんでした。'
+	String get allQuiet => 'この条件では、いま強く惹かれる土地が見当たりませんでした。';
+
+	/// ja: 'これ以上の新しい候補地は見つかりませんでした。'
+	String get noFresh => 'これ以上の新しい候補地は見つかりませんでした。';
+
+	/// ja: 'この範囲には候補が見つかりませんでした。'
+	String get emptyPool => 'この範囲には候補が見つかりませんでした。';
+
+	/// ja: 'これ以上は無理に候補を作りませんでした。'
+	String get fallback => 'これ以上は無理に候補を作りませんでした。';
+
+	/// ja: '条件を変えると見つかるかもしれません:'
+	String get tipsLead => '条件を変えると見つかるかもしれません:';
+
+	/// ja: '※ この案内ではクレジットを消費していません。'
+	String get noCredit => '※ この案内ではクレジットを消費していません。';
+}
+
+// Path: consultResult.suggest
+class Translations$consultResult$suggest$ja {
+	Translations$consultResult$suggest$ja.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// ja: '半径を広げてみる'
+	String get widenRadius => '半径を広げてみる';
+
+	/// ja: '方角で探す'
+	String get bearing => '方角で探す';
+
+	/// ja: '具体的な場所を指定する'
+	String get point => '具体的な場所を指定する';
+
+	/// ja: '世界全体に広げる'
+	String get world => '世界全体に広げる';
+}
+
+// Path: consultResult.delta
+class Translations$consultResult$delta$ja {
+	Translations$consultResult$delta$ja.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// ja: '${m}分経過後を見る'
+	String open({required Object m}) => '${m}分経過後を見る';
+
+	/// ja: '${m}分後の変化を閉じる'
+	String close({required Object m}) => '${m}分後の変化を閉じる';
+
+	/// ja: '「30分経過後を見る」とは'
+	String get infoTitle => '「30分経過後を見る」とは';
+
+	/// ja: 'アストロカートグラフィの星の線は、地球の自転で刻一刻と動いています。 惑星が真上や地平線に来る「角ライン」は、${m}分でおよそ 7.5°——中緯度で約 800km も西へ進みます。 だから同じ場所でも、選んだ時刻と${m}分後では「その場の主役」が静かに入れ替わることがあります。火星の線が離れていく、金星の線が近づいてくる——その移ろいを先に知っておくと、「核心は前半に」「後半にかけて温まる」のように、その場での時間の使い方が見えてきます。 吉凶ではなく、エネルギーの“質の移り変わり”として読んでいます。Cosmic Pro・おでかけで時刻を指定したときに見られます。'
+	String infoBody({required Object m}) => 'アストロカートグラフィの星の線は、地球の自転で刻一刻と動いています。\n惑星が真上や地平線に来る「角ライン」は、${m}分でおよそ 7.5°——中緯度で約 800km も西へ進みます。\n\nだから同じ場所でも、選んだ時刻と${m}分後では「その場の主役」が静かに入れ替わることがあります。火星の線が離れていく、金星の線が近づいてくる——その移ろいを先に知っておくと、「核心は前半に」「後半にかけて温まる」のように、その場での時間の使い方が見えてきます。\n\n吉凶ではなく、エネルギーの“質の移り変わり”として読んでいます。Cosmic Pro・おでかけで時刻を指定したときに見られます。';
+
+	/// ja: '近づく'
+	String get approaching => '近づく';
+
+	/// ja: '差してくる'
+	String get entering => '差してくる';
+
+	/// ja: '離れる'
+	String get receding => '離れる';
+
+	/// ja: '外れる'
+	String get leaving => '外れる';
+
+	/// ja: '安定'
+	String get steady => '安定';
+
+	/// ja: '$planet $angle・$label'
+	String chip({required Object planet, required Object angle, required Object label}) => '${planet} ${angle}・${label}';
+}
+
+// Path: consultResult.pro
+class Translations$consultResult$pro$ja {
+	Translations$consultResult$pro$ja.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// ja: 'Stella 相談'
+	String get consultLabel => 'Stella 相談';
+
+	/// ja: 'Cosmic Pro なら回数無制限で読み解けます。'
+	String get consultDesc => 'Cosmic Pro なら回数無制限で読み解けます。';
+
+	/// ja: '移住・旅行の相談'
+	String get migrationLabel => '移住・旅行の相談';
+
+	/// ja: 'おでかけ・イベント以外の相談も、Cosmic Pro なら無制限に。'
+	String get migrationDesc => 'おでかけ・イベント以外の相談も、Cosmic Pro なら無制限に。';
+
+	/// ja: '候補の出し直し'
+	String get refreshLabel => '候補の出し直し';
+
+	/// ja: '別の候補を何度でも見比べられます。'
+	String get refreshDesc => '別の候補を何度でも見比べられます。';
+
+	/// ja: 'Stella 相談'
+	String get weeklyLabel => 'Stella 相談';
+
+	/// ja: '今週の無料の相談を使い切りました。Cosmic Pro なら回数無制限・thinking でより深く読み解きます。'
+	String get weeklyDesc => '今週の無料の相談を使い切りました。Cosmic Pro なら回数無制限・thinking でより深く読み解きます。';
+}
+
+// Path: consultResult.block
+class Translations$consultResult$block$ja {
+	Translations$consultResult$block$ja.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// ja: 'このモードは Cosmic Pro で'
+	String get proOnlyModeTitle => 'このモードは Cosmic Pro で';
+
+	/// ja: 'おでかけ・イベント以外の相談 (移住・旅行) は Cosmic Pro で読み解けます。'
+	String get proOnlyModeBody => 'おでかけ・イベント以外の相談 (移住・旅行) は Cosmic Pro で読み解けます。';
+
+	/// ja: '候補の出し直しは Cosmic Pro で'
+	String get proOnlyRefreshTitle => '候補の出し直しは Cosmic Pro で';
+
+	/// ja: '別の候補を何度でも見比べられます。'
+	String get proOnlyRefreshBody => '別の候補を何度でも見比べられます。';
+
+	/// ja: '今週の Pro 相談上限に達しました'
+	String get proWeeklyTitle => '今週の Pro 相談上限に達しました';
+
+	/// ja: 'Cosmic Pro は週 100 回まで Stella に相談できます。月曜日に補充されます。すぐ続けるなら、追加クレジットの購入が選べます。'
+	String get proWeeklyBody => 'Cosmic Pro は週 100 回まで Stella に相談できます。月曜日に補充されます。すぐ続けるなら、追加クレジットの購入が選べます。';
+
+	/// ja: 'Pro 状態を同期しています'
+	String get proSyncTitle => 'Pro 状態を同期しています';
+
+	/// ja: 'Cosmic Pro の課金状態をストアと再確認しています。クレジットは消費されていません。数十秒待ってからもう一度お試しください。'
+	String get proSyncBody => 'Cosmic Pro の課金状態をストアと再確認しています。クレジットは消費されていません。数十秒待ってからもう一度お試しください。';
+
+	/// ja: '相談クレジットを使い切りました'
+	String get exhaustedTitle => '相談クレジットを使い切りました';
+
+	/// ja: '無料の Stella 相談は週ごとに補充されます。すぐ続けるなら、追加クレジットの購入か、回数無制限の Cosmic Pro が選べます。'
+	String get exhaustedBody => '無料の Stella 相談は週ごとに補充されます。すぐ続けるなら、追加クレジットの購入か、回数無制限の Cosmic Pro が選べます。';
+
+	/// ja: '追加クレジットを購入'
+	String get buyCredits => '追加クレジットを購入';
+
+	/// ja: '✦ Cosmic Pro で無制限にする'
+	String get goUnlimited => '✦ Cosmic Pro で無制限にする';
+
+	/// ja: '✦ Cosmic Pro を見る'
+	String get seePro => '✦ Cosmic Pro を見る';
+}
+
+// Path: consultResult.shareSheet
+class Translations$consultResult$shareSheet$ja {
+	Translations$consultResult$shareSheet$ja.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// ja: 'テキストをコピー'
+	String get copyText => 'テキストをコピー';
+
+	/// ja: '相談結果を clipboard に整形してコピー'
+	String get copyTextSub => '相談結果を clipboard に整形してコピー';
+
+	/// ja: '画像で共有'
+	String get shareImage => '画像で共有';
+
+	/// ja: '結果画面を PNG にして OS 標準シェアで共有'
+	String get shareImageSub => '結果画面を PNG にして OS 標準シェアで共有';
+
+	/// ja: 'テキストをコピーしました'
+	String get copied => 'テキストをコピーしました';
+
+	/// ja: 'シェアに失敗しました: $e'
+	String failed({required Object e}) => 'シェアに失敗しました: ${e}';
 }
 
 // Path: consultInput.theme
@@ -1641,6 +1924,76 @@ class Translations$paywall$faq$resubscribe$ja {
 extension on Translations {
 	dynamic _flatMapFunction(String path) {
 		return switch (path) {
+			'consultResult.title' => '相談の結果',
+			'consultResult.back' => '戻る',
+			'consultResult.shareTooltip' => 'シェア',
+			'consultResult.connError' => '接続に届きませんでした。もう一度試せます。',
+			'consultResult.kindDirection' => '方角',
+			'consultResult.kindPlace' => '場所',
+			'consultResult.noReading' => '(narrative なし)',
+			'consultResult.viewOnMap' => '地図で見る',
+			'consultResult.distanceFromHome' => ({required Object dir, required Object dist}) => '${dir} 約${dist}km',
+			'consultResult.loading' => 'Stella が読み解いています…',
+			'consultResult.retry' => 'もう一度試す',
+			'consultResult.voiceUnavailable' => 'Stella の声が今は届きませんでした',
+			'consultResult.aboutReading' => 'この読み解きについて',
+			'consultResult.factorsTitle' => 'この土地の占星術ファクター',
+			'consultResult.kmFactor' => ({required Object factor, required Object km}) => '  ${factor}：約 ${km}km',
+			'consultResult.distanceNote' => '距離はエネルギーの有無を決めません。惑星ははるか遠方、地上の数百kmは「圏内かどうか」の差にすぎません。',
+			'consultResult.nearbyCount' => ({required Object n}) => '（近くの候補は${n}件ほど）',
+			'consultResult.sparseHint' => ({required Object countText}) => 'この近くは候補が少なめです${countText}。半径を広げる・方角を変えると見つかりやすくなります。',
+			'consultResult.exhaust.allQuiet' => 'この条件では、いま強く惹かれる土地が見当たりませんでした。',
+			'consultResult.exhaust.noFresh' => 'これ以上の新しい候補地は見つかりませんでした。',
+			'consultResult.exhaust.emptyPool' => 'この範囲には候補が見つかりませんでした。',
+			'consultResult.exhaust.fallback' => 'これ以上は無理に候補を作りませんでした。',
+			'consultResult.exhaust.tipsLead' => '条件を変えると見つかるかもしれません:',
+			'consultResult.exhaust.noCredit' => '※ この案内ではクレジットを消費していません。',
+			'consultResult.suggest.widenRadius' => '半径を広げてみる',
+			'consultResult.suggest.bearing' => '方角で探す',
+			'consultResult.suggest.point' => '具体的な場所を指定する',
+			'consultResult.suggest.world' => '世界全体に広げる',
+			'consultResult.refreshLoading' => '別の候補地を探しています…',
+			'consultResult.refresh' => '別の候補地を見る',
+			'consultResult.delta.open' => ({required Object m}) => '${m}分経過後を見る',
+			'consultResult.delta.close' => ({required Object m}) => '${m}分後の変化を閉じる',
+			'consultResult.delta.infoTitle' => '「30分経過後を見る」とは',
+			'consultResult.delta.infoBody' => ({required Object m}) => 'アストロカートグラフィの星の線は、地球の自転で刻一刻と動いています。\n惑星が真上や地平線に来る「角ライン」は、${m}分でおよそ 7.5°——中緯度で約 800km も西へ進みます。\n\nだから同じ場所でも、選んだ時刻と${m}分後では「その場の主役」が静かに入れ替わることがあります。火星の線が離れていく、金星の線が近づいてくる——その移ろいを先に知っておくと、「核心は前半に」「後半にかけて温まる」のように、その場での時間の使い方が見えてきます。\n\n吉凶ではなく、エネルギーの“質の移り変わり”として読んでいます。Cosmic Pro・おでかけで時刻を指定したときに見られます。',
+			'consultResult.delta.approaching' => '近づく',
+			'consultResult.delta.entering' => '差してくる',
+			'consultResult.delta.receding' => '離れる',
+			'consultResult.delta.leaving' => '外れる',
+			'consultResult.delta.steady' => '安定',
+			'consultResult.delta.chip' => ({required Object planet, required Object angle, required Object label}) => '${planet} ${angle}・${label}',
+			'consultResult.interpNote' => 'この候補の根拠（エビデンス）は、最上部「相談の結果」に表示しています。Stella は、その一つの読み方をお伝えしています。違和感があれば、ご自身の解釈も重ねてみてください。ここでの表示は、数ある解釈の一つです。',
+			'consultResult.deltaInterpNote' => 'この30分後の変化は、上に示した線の動きをエビデンスとして、Stellaが解釈の１つとして表示しています。内容に違和感がある場合はご自身で解釈を広げてみてください。あくまでここでの表示は解釈の１つに過ぎません。',
+			'consultResult.pro.consultLabel' => 'Stella 相談',
+			'consultResult.pro.consultDesc' => 'Cosmic Pro なら回数無制限で読み解けます。',
+			'consultResult.pro.migrationLabel' => '移住・旅行の相談',
+			'consultResult.pro.migrationDesc' => 'おでかけ・イベント以外の相談も、Cosmic Pro なら無制限に。',
+			'consultResult.pro.refreshLabel' => '候補の出し直し',
+			'consultResult.pro.refreshDesc' => '別の候補を何度でも見比べられます。',
+			'consultResult.pro.weeklyLabel' => 'Stella 相談',
+			'consultResult.pro.weeklyDesc' => '今週の無料の相談を使い切りました。Cosmic Pro なら回数無制限・thinking でより深く読み解きます。',
+			'consultResult.block.proOnlyModeTitle' => 'このモードは Cosmic Pro で',
+			'consultResult.block.proOnlyModeBody' => 'おでかけ・イベント以外の相談 (移住・旅行) は Cosmic Pro で読み解けます。',
+			'consultResult.block.proOnlyRefreshTitle' => '候補の出し直しは Cosmic Pro で',
+			'consultResult.block.proOnlyRefreshBody' => '別の候補を何度でも見比べられます。',
+			'consultResult.block.proWeeklyTitle' => '今週の Pro 相談上限に達しました',
+			'consultResult.block.proWeeklyBody' => 'Cosmic Pro は週 100 回まで Stella に相談できます。月曜日に補充されます。すぐ続けるなら、追加クレジットの購入が選べます。',
+			'consultResult.block.proSyncTitle' => 'Pro 状態を同期しています',
+			'consultResult.block.proSyncBody' => 'Cosmic Pro の課金状態をストアと再確認しています。クレジットは消費されていません。数十秒待ってからもう一度お試しください。',
+			'consultResult.block.exhaustedTitle' => '相談クレジットを使い切りました',
+			'consultResult.block.exhaustedBody' => '無料の Stella 相談は週ごとに補充されます。すぐ続けるなら、追加クレジットの購入か、回数無制限の Cosmic Pro が選べます。',
+			'consultResult.block.buyCredits' => '追加クレジットを購入',
+			'consultResult.block.goUnlimited' => '✦ Cosmic Pro で無制限にする',
+			'consultResult.block.seePro' => '✦ Cosmic Pro を見る',
+			'consultResult.shareSheet.copyText' => 'テキストをコピー',
+			'consultResult.shareSheet.copyTextSub' => '相談結果を clipboard に整形してコピー',
+			'consultResult.shareSheet.shareImage' => '画像で共有',
+			'consultResult.shareSheet.shareImageSub' => '結果画面を PNG にして OS 標準シェアで共有',
+			'consultResult.shareSheet.copied' => 'テキストをコピーしました',
+			'consultResult.shareSheet.failed' => ({required Object e}) => 'シェアに失敗しました: ${e}',
+			'consultResult.returnChip' => '相談結果に戻る',
 			'consultInput.theme.love' => '恋愛・関係',
 			'consultInput.theme.money' => '豊かさ・お金',
 			'consultInput.theme.work' => '仕事・キャリア',

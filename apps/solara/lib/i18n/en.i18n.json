@@ -1,4 +1,88 @@
 {
+  "consultResult": {
+    "title": "Consultation result",
+    "back": "Back",
+    "shareTooltip": "Share",
+    "connError": "We couldn't reach the connection just now. You can try again.",
+    "kindDirection": "Direction",
+    "kindPlace": "Place",
+    "noReading": "(no reading)",
+    "viewOnMap": "View on the map",
+    "distanceFromHome": "$dir ~${dist} km",
+    "loading": "Stella is reading the stars…",
+    "retry": "Try again",
+    "voiceUnavailable": "Stella's voice didn't reach you just now",
+    "aboutReading": "About this reading",
+    "factorsTitle": "The astrological factors of this place",
+    "kmFactor": "  $factor: ~${km} km",
+    "distanceNote": "Distance doesn't decide whether an energy is present. The planets are immensely far away; a few hundred kilometers on the ground only change whether you're within range.",
+    "nearbyCount": " (about $n nearby)",
+    "sparseHint": "There are few candidate places near here$countText. Widening the radius or changing the direction makes them easier to find.",
+    "exhaust": {
+      "allQuiet": "With these conditions, no place is strongly drawing you right now.",
+      "noFresh": "No further new candidate places turned up.",
+      "emptyPool": "No candidates were found within this range.",
+      "fallback": "We didn't force any more candidates into being.",
+      "tipsLead": "Changing the conditions might surface more:",
+      "noCredit": "* No credits were used for this notice."
+    },
+    "suggest": {
+      "widenRadius": "Widen the radius",
+      "bearing": "Search by direction",
+      "point": "Pick a specific place",
+      "world": "Open it up to the whole world"
+    },
+    "refreshLoading": "Looking for another place…",
+    "refresh": "See another candidate place",
+    "delta": {
+      "open": "See the change ${m} minutes later",
+      "close": "Close the change ${m} minutes later",
+      "infoTitle": "About \"the change 30 minutes later\"",
+      "infoBody": "The star lines of astrocartography move moment by moment as the Earth turns.\nThe \"angle lines\"—where a planet sits directly overhead or on the horizon—travel about 7.5° in ${m} minutes: roughly 800 km westward at mid-latitudes.\n\nSo even in the same place, the lead of the moment can quietly change between the time you chose and ${m} minutes later. Mars's line drawing away, Venus's line drawing near—knowing that shift in advance lets you see how to use your time there: the heart of it early on, or warming toward the end.\n\nWe read this not as fortune, good or bad, but as a shift in the quality of the energy. You can see it when you set a time with Cosmic Pro · Outing.",
+      "approaching": "drawing near",
+      "entering": "moving in",
+      "receding": "drawing away",
+      "leaving": "moving out",
+      "steady": "steady",
+      "chip": "$planet $angle · $label"
+    },
+    "interpNote": "The grounds for this candidate — its evidence — are shown at the top, under \"Consultation result.\" Stella is sharing one way of reading them. If something feels off, lay your own interpretation alongside it. What you see here is one of many possible readings.",
+    "deltaInterpNote": "Stella shows this shift 30 minutes later as one interpretation, with the line movements above as its evidence. If anything feels off, widen the reading with your own sense of it. What you see here is no more than one interpretation among many.",
+    "pro": {
+      "consultLabel": "Stella Consultation",
+      "consultDesc": "With Cosmic Pro you can read it as many times as you like.",
+      "migrationLabel": "Migration & travel consultations",
+      "migrationDesc": "With Cosmic Pro, consultations beyond Outing / Event are unlimited too.",
+      "refreshLabel": "Drawing fresh candidates",
+      "refreshDesc": "Compare as many other candidates as you like.",
+      "weeklyLabel": "Stella Consultation",
+      "weeklyDesc": "You've used up this week's free consultations. With Cosmic Pro it's unlimited, and reads more deeply with thinking."
+    },
+    "block": {
+      "proOnlyModeTitle": "This mode is part of Cosmic Pro",
+      "proOnlyModeBody": "Consultations beyond Outing / Event (migration & travel) can be read with Cosmic Pro.",
+      "proOnlyRefreshTitle": "Drawing fresh candidates is part of Cosmic Pro",
+      "proOnlyRefreshBody": "Compare as many other candidates as you like.",
+      "proWeeklyTitle": "You've reached this week's Pro consultation limit",
+      "proWeeklyBody": "Cosmic Pro lets you consult Stella up to 100 times a week. It refills on Monday. To keep going right away, you can buy extra credits.",
+      "proSyncTitle": "Syncing your Pro status",
+      "proSyncBody": "We're re-checking your Cosmic Pro billing status with the store. No credits have been used. Please wait a moment, then try again.",
+      "exhaustedTitle": "You've used up your consultation credits",
+      "exhaustedBody": "Free Stella consultations refill each week. To keep going right away, you can buy extra credits, or go unlimited with Cosmic Pro.",
+      "buyCredits": "Buy extra credits",
+      "goUnlimited": "✦ Go unlimited with Cosmic Pro",
+      "seePro": "✦ See Cosmic Pro"
+    },
+    "shareSheet": {
+      "copyText": "Copy as text",
+      "copyTextSub": "Copy the consultation result, formatted, to the clipboard",
+      "shareImage": "Share as an image",
+      "shareImageSub": "Turn the result screen into a PNG and share it your usual way",
+      "copied": "Copied to the clipboard",
+      "failed": "Sharing failed: $e"
+    },
+    "returnChip": "Back to consultation result"
+  },
   "consultInput": {
     "theme": {
       "love": "Love & relationships",

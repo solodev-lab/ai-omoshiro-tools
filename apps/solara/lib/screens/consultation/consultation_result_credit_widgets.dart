@@ -32,28 +32,25 @@ class _ConsultationBlockedBox extends StatelessWidget {
     final isProSyncPending = reason == ConsultationBlock.proSyncPending;
     final (title, body) = switch (reason) {
       ConsultationBlock.proOnlyMode => (
-          'このモードは Cosmic Pro で',
+          t.consultResult.block.proOnlyModeTitle,
           // 2026-05-29: タイル表記 (おでかけ・イベント) に合わせて文言統一。
-          'おでかけ・イベント以外の相談 (移住・旅行) は Cosmic Pro で読み解けます。',
+          t.consultResult.block.proOnlyModeBody,
         ),
       ConsultationBlock.proOnlyRefresh => (
-          '候補の出し直しは Cosmic Pro で',
-          '別の候補を何度でも見比べられます。',
+          t.consultResult.block.proOnlyRefreshTitle,
+          t.consultResult.block.proOnlyRefreshBody,
         ),
       ConsultationBlock.proWeeklyExhausted => (
-          '今週の Pro 相談上限に達しました',
-          'Cosmic Pro は週 100 回まで Stella に相談できます。'
-              '月曜日に補充されます。すぐ続けるなら、追加クレジットの購入が選べます。',
+          t.consultResult.block.proWeeklyTitle,
+          t.consultResult.block.proWeeklyBody,
         ),
       ConsultationBlock.proSyncPending => (
-          'Pro 状態を同期しています',
-          'Cosmic Pro の課金状態をストアと再確認しています。クレジットは消費されていません。'
-              '数十秒待ってからもう一度お試しください。',
+          t.consultResult.block.proSyncTitle,
+          t.consultResult.block.proSyncBody,
         ),
       _ => (
-          '相談クレジットを使い切りました',
-          '無料の Stella 相談は週ごとに補充されます。すぐ続けるなら、'
-              '追加クレジットの購入か、回数無制限の Cosmic Pro が選べます。',
+          t.consultResult.block.exhaustedTitle,
+          t.consultResult.block.exhaustedBody,
         ),
     };
     return Center(
@@ -111,7 +108,7 @@ class _ConsultationBlockedBox extends StatelessWidget {
                         side: const BorderSide(color: Color(0x44F6BD60)),
                       ),
                     ),
-                    child: const Text('追加クレジットを購入'),
+                    child: Text(t.consultResult.block.buyCredits),
                   ),
                 ),
                 if (!isProExhausted) ...[
@@ -121,7 +118,7 @@ class _ConsultationBlockedBox extends StatelessWidget {
                     style: TextButton.styleFrom(
                       foregroundColor: SolaraColors.textSecondary,
                     ),
-                    child: const Text('✦ Cosmic Pro で無制限にする'),
+                    child: Text(t.consultResult.block.goUnlimited),
                   ),
                 ],
               ] else
@@ -138,7 +135,7 @@ class _ConsultationBlockedBox extends StatelessWidget {
                         side: const BorderSide(color: Color(0x44F6BD60)),
                       ),
                     ),
-                    child: const Text('✦ Cosmic Pro を見る'),
+                    child: Text(t.consultResult.block.seePro),
                   ),
                 ),
             ],

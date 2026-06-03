@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../i18n/strings.g.dart';
 import '../../theme/solara_colors.dart';
 import '../../utils/consultation_return.dart';
 import 'consultation_result_screen.dart';
@@ -63,9 +64,9 @@ class ConsultationReturnChip extends StatelessWidget {
                     const Icon(Icons.arrow_back,
                         size: 16, color: SolaraColors.solaraGold),
                     const SizedBox(width: 7),
-                    const Text(
-                      '相談結果に戻る',
-                      style: TextStyle(
+                    Text(
+                      t.consultResult.returnChip,
+                      style: const TextStyle(
                         color: SolaraColors.textPrimary,
                         fontSize: 13,
                         letterSpacing: 0.3,

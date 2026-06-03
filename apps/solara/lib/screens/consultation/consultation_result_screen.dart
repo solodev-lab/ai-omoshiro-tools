@@ -17,6 +17,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:latlong2/latlong.dart';
 
+import '../../i18n/strings.g.dart';
 import '../../theme/solara_colors.dart';
 import '../../utils/consultation_api.dart' show ConsultationBlock;
 import '../../utils/consultation_credits.dart';
@@ -27,7 +28,9 @@ import '../../utils/consultation_record.dart';
 import '../../utils/consultation_share.dart';
 import '../../utils/consultation_v2_api.dart';
 import '../../utils/pro_status.dart';
+import '../../utils/solara_i18n.dart' show isEnLocale;
 import '../../utils/solara_storage.dart';
+import '../map/map_constants.dart' show planetName;
 import '../../widgets/ai_disclaimer_footer.dart';
 import '../../widgets/ai_report_button.dart';
 import '../../widgets/glass_panel.dart';
@@ -244,7 +247,7 @@ class _ConsultationResultScreenState extends State<ConsultationResultScreen> {
     if (reading == null) {
       setState(() {
         _loading = false;
-        _error = '接続に届きませんでした。もう一度試せます。';
+        _error = t.consultResult.connError;
       });
       return;
     }
@@ -300,15 +303,15 @@ class _ConsultationResultScreenState extends State<ConsultationResultScreen> {
       } else {
         await showProUnlockDialog(
           context,
-          featureLabel: 'Stella 相談',
-          description: 'Cosmic Pro なら回数無制限で読み解けます。',
+          featureLabel: t.consultResult.pro.consultLabel,
+          description: t.consultResult.pro.consultDesc,
         );
       }
       return;
     }
     final reading = result.reading;
     if (reading == null) {
-      _snack('接続に届きませんでした。もう一度試せます。');
+      _snack(t.consultResult.connError);
       return;
     }
     setState(() {
@@ -354,17 +357,17 @@ class _ConsultationResultScreenState extends State<ConsultationResultScreen> {
   void _showConsultationPaywall() {
     final (label, desc) = switch (_block) {
       ConsultationBlock.proOnlyMode => (
-          '移住・旅行の相談',
+          t.consultResult.pro.migrationLabel,
           // 2026-05-29: タイル表記 (おでかけ・イベント) に合わせて文言統一。
-          'おでかけ・イベント以外の相談も、Cosmic Pro なら無制限に。',
+          t.consultResult.pro.migrationDesc,
         ),
       ConsultationBlock.proOnlyRefresh => (
-          '候補の出し直し',
-          '別の候補を何度でも見比べられます。',
+          t.consultResult.pro.refreshLabel,
+          t.consultResult.pro.refreshDesc,
         ),
       _ => (
-          'Stella 相談',
-          '今週の無料の相談を使い切りました。Cosmic Pro なら回数無制限・thinking でより深く読み解きます。',
+          t.consultResult.pro.weeklyLabel,
+          t.consultResult.pro.weeklyDesc,
         ),
     };
     showProUnlockDialog(context, featureLabel: label, description: desc);
@@ -462,7 +465,7 @@ class _ConsultationResultScreenState extends State<ConsultationResultScreen> {
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: SolaraColors.textPrimary),
           onPressed: () => Navigator.of(context).maybePop(),
-          tooltip: '戻る',
+          tooltip: t.consultResult.back,
         ),
         // タイトルタップで「この読み解きについて」(エビデンス) を開く。
         // 2026-05-31: タップ領域が文字の実寸ぶんしかなく上下が狭かったため、
@@ -475,9 +478,9 @@ class _ConsultationResultScreenState extends State<ConsultationResultScreen> {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text(
-                  '相談の結果',
-                  style: TextStyle(
+                Text(
+                  t.consultResult.title,
+                  style: const TextStyle(
                     color: SolaraColors.textPrimary,
                     fontSize: 16,
                     letterSpacing: 0.4,
@@ -505,7 +508,7 @@ class _ConsultationResultScreenState extends State<ConsultationResultScreen> {
                     ),
                   )
                 : const Icon(Icons.ios_share, color: SolaraColors.textPrimary),
-            tooltip: 'シェア',
+            tooltip: t.consultResult.shareTooltip,
             onPressed: canShare && !_sharing ? _openShareSheet : null,
           ),
         ],

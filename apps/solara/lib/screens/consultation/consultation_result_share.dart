@@ -46,11 +46,11 @@ extension _ConsultationResultShare on _ConsultationResultScreenState {
               ListTile(
                 leading: const Icon(Icons.copy_outlined,
                     color: SolaraColors.solaraGold),
-                title: const Text('テキストをコピー',
-                    style: TextStyle(color: SolaraColors.textPrimary)),
-                subtitle: const Text(
-                  '相談結果を clipboard に整形してコピー',
-                  style: TextStyle(
+                title: Text(t.consultResult.shareSheet.copyText,
+                    style: const TextStyle(color: SolaraColors.textPrimary)),
+                subtitle: Text(
+                  t.consultResult.shareSheet.copyTextSub,
+                  style: const TextStyle(
                       color: SolaraColors.textSecondary, fontSize: 11),
                 ),
                 onTap: () => Navigator.of(ctx).pop(_ShareChoice.text),
@@ -58,11 +58,11 @@ extension _ConsultationResultShare on _ConsultationResultScreenState {
               ListTile(
                 leading: const Icon(Icons.image_outlined,
                     color: SolaraColors.solaraGold),
-                title: const Text('画像で共有',
-                    style: TextStyle(color: SolaraColors.textPrimary)),
-                subtitle: const Text(
-                  '結果画面を PNG にして OS 標準シェアで共有',
-                  style: TextStyle(
+                title: Text(t.consultResult.shareSheet.shareImage,
+                    style: const TextStyle(color: SolaraColors.textPrimary)),
+                subtitle: Text(
+                  t.consultResult.shareSheet.shareImageSub,
+                  style: const TextStyle(
                       color: SolaraColors.textSecondary, fontSize: 11),
                 ),
                 onTap: () => Navigator.of(ctx).pop(_ShareChoice.image),
@@ -97,9 +97,9 @@ extension _ConsultationResultShare on _ConsultationResultScreenState {
     await Clipboard.setData(ClipboardData(text: text));
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('テキストをコピーしました'),
-        duration: Duration(seconds: 2),
+      SnackBar(
+        content: Text(t.consultResult.shareSheet.copied),
+        duration: const Duration(seconds: 2),
       ),
     );
   }
@@ -118,7 +118,7 @@ extension _ConsultationResultShare on _ConsultationResultScreenState {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('シェアに失敗しました: $e')),
+        SnackBar(content: Text(t.consultResult.shareSheet.failed(e: e))),
       );
     } finally {
       if (mounted) _setSharing(false);

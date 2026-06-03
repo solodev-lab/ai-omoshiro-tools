@@ -5,9 +5,9 @@
 
 ## サマリ
 
-- ファイル数: 32 / 総行数: 11061
+- ファイル数: 32 / 総行数: 11086
 - class/mixin/extension/enum: 100
-- 関数 (top-level + method の素拾い): 282
+- 関数 (top-level + method の素拾い): 283
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 9
 - Worker URL リテラル: 0
@@ -584,7 +584,7 @@ flutter_map ベースの地点選択画面のサブウィジェット群:
   </details>
 
 
-### `lib/screens/consultation/consultation_result_card.dart` (562 行)
+### `lib/screens/consultation/consultation_result_card.dart` (581 行)
 
 **ファイル先頭コメント:**
 
@@ -596,33 +596,33 @@ Consultation Result — 候補カード (V2)
 **型定義 (8):**
 
 - L6 `class _CandidateCard : StatelessWidget`
-- L199 `class _EnergyChip : StatelessWidget`
-- L225 `class _MapLinkIcon : StatelessWidget`
+- L219 `class _EnergyChip : StatelessWidget`
+- L245 `class _MapLinkIcon : StatelessWidget`
   - 場所名の右の🗺リンク。Map 画面で候補地を (相談の日付で) 見る。
-- L256 `class _TimeWindowRow : StatelessWidget`
+- L276 `class _TimeWindowRow : StatelessWidget`
   - 時間帯。通常は現地の時間帯バンド (朝/昼/夕方/夜/夜更け)。single=1 個 / rhythm=朝昼夜。
-- L303 `class _DeltaAfterSection : StatefulWidget`
+- L318 `class _DeltaAfterSection : StatefulWidget`
   - 候補カードの「30分経過後を見る」セクション。タップで開閉、i ボタンで説明。
-- L311 `class _DeltaAfterSectionState : State`
-- L454 `class _DeltaChip : StatelessWidget`
+- L326 `class _DeltaAfterSectionState : State`
+- L457 `class _DeltaChip : StatelessWidget`
   - 30 分後の 1 変化チップ (例: 「火星 MC ↘ 離れる」)。
-- L492 `class _CandidateKindBadge : StatelessWidget`
+- L511 `class _CandidateKindBadge : StatelessWidget`
   - 候補種別バッジ (方角 / 場所)。
 
 **関数 (8 public + 1 private):**
 
-- L41 `build()`
-- L204 `build()`
-- L230 `build()`
-- L262 `build()`
-- L308 `createState()`
-- L351 `build()`
-- L459 `build()`
-- L501 `build()`
+- L43 `build()`
+- L224 `build()`
+- L250 `build()`
+- L282 `build()`
+- L323 `createState()`
+- L357 `build()`
+- L462 `build()`
+- L520 `build()`
 
   <details><summary>private 関数 1 件</summary>
 
-  - L314 `_showInfo()`
+  - L329 `_showInfo()`
 
   </details>
 
@@ -631,7 +631,7 @@ Consultation Result — 候補カード (V2)
 - 集計: `showInfoPopup`×1
 
 
-### `lib/screens/consultation/consultation_result_credit_widgets.dart` (153 行)
+### `lib/screens/consultation/consultation_result_credit_widgets.dart` (150 行)
 
 **ファイル先頭コメント:**
 
@@ -653,7 +653,7 @@ Stella 相談 クレジット制 (設計 project_solara_stella_free_credits.md) 
 - L22 `build()`
 
 
-### `lib/screens/consultation/consultation_result_screen.dart` (579 行)
+### `lib/screens/consultation/consultation_result_screen.dart` (582 行)
 
 **ファイル先頭コメント:**
 
@@ -674,36 +674,36 @@ Pro = 無制限。live モード = ConsultationRequest で fetch / 履歴モー�
 ConsultationRecord を読み込み専用表示 (fetch なし・autosave なし・別候補なし)。
 ```
 
-**imports:** dart=0 / package=3 / relative=17
+**imports:** dart=0 / package=3 / relative=20
 
-- relative: `../../theme/solara_colors.dart`, `../../utils/consultation_api.dart`, `../../utils/consultation_credits.dart`, `../../utils/consult_restore.dart`, `../../utils/map_focus.dart`, `../../utils/consultation_return.dart`, `../../utils/consultation_record.dart`, `../../utils/consultation_share.dart`, `../../utils/consultation_v2_api.dart`, `../../utils/pro_status.dart`, `../../utils/solara_storage.dart`, `../../widgets/ai_disclaimer_footer.dart`, `../../widgets/ai_report_button.dart`, `../../widgets/glass_panel.dart`, `../../widgets/info_popup.dart`, `../../widgets/pro_unlock_dialog.dart`, `consultation_credit_sheet.dart`
+- relative: `../../i18n/strings.g.dart`, `../../theme/solara_colors.dart`, `../../utils/consultation_api.dart`, `../../utils/consultation_credits.dart`, `../../utils/consult_restore.dart`, `../../utils/map_focus.dart`, `../../utils/consultation_return.dart`, `../../utils/consultation_record.dart`, `../../utils/consultation_share.dart`, `../../utils/consultation_v2_api.dart`, `../../utils/pro_status.dart`, `../../utils/solara_i18n.dart`, `../../utils/solara_storage.dart`, `../map/map_constants.dart`, `../../widgets/ai_disclaimer_footer.dart`, `../../widgets/ai_report_button.dart`, `../../widgets/glass_panel.dart`, `../../widgets/info_popup.dart`, `../../widgets/pro_unlock_dialog.dart`, `consultation_credit_sheet.dart`
 
 **型定義 (2):**
 
-- L46 `class ConsultationResultScreen : StatefulWidget`
-- L96 `class _ConsultationResultScreenState : State`
+- L49 `class ConsultationResultScreen : StatefulWidget`
+- L99 `class _ConsultationResultScreenState : State`
 
 **関数 (4 public + 12 private):**
 
-- L92 `createState()`
-- L161 `initState()`
-- L193 `dispose()`
-- L455 `build()`
+- L95 `createState()`
+- L164 `initState()`
+- L196 `dispose()`
+- L458 `build()`
 
   <details><summary>private 関数 12 件</summary>
 
-  - L132 `_pushShownToAvoid()`
-  - L152 `_setSharing()`
-  - L215 `_runFetch()`
-  - L220 `_fetch()`
-  - L270 `_loadNext()`
-  - L336 `_snack()`
-  - L348 `_onBuyCredits()`
-  - L354 `_showConsultationPaywall()`
-  - L375 `_showAboutReading()`
-  - L390 `_persist()`
-  - L418 `_openCandidateOnMap()`
-  - L526 `_buildBody()`
+  - L135 `_pushShownToAvoid()`
+  - L155 `_setSharing()`
+  - L218 `_runFetch()`
+  - L223 `_fetch()`
+  - L273 `_loadNext()`
+  - L339 `_snack()`
+  - L351 `_onBuyCredits()`
+  - L357 `_showConsultationPaywall()`
+  - L378 `_showAboutReading()`
+  - L393 `_persist()`
+  - L421 `_openCandidateOnMap()`
+  - L529 `_buildBody()`
 
   </details>
 
@@ -738,7 +738,7 @@ Consultation Result — シェア機能 (part of consultation_result_screen.dart
   </details>
 
 
-### `lib/screens/consultation/consultation_result_widgets.dart` (427 行)
+### `lib/screens/consultation/consultation_result_widgets.dart` (432 行)
 
 **ファイル先頭コメント:**
 
@@ -757,44 +757,50 @@ Consultation Result — 状態/バナー/ページャ ウィジェット (V2)
   - 静的フォールバック時の注意チップ (Stella 応答が届かず静的表示になったことを示す)。
 - L119 `class _AboutReadingContent : StatelessWidget`
   - AppBar タイトルタップで開く「この読み解きについて」ポップアップの中身。
-- L234 `class _PageIndicator : StatelessWidget`
-- L265 `class _SparseHint : StatelessWidget`
+- L235 `class _PageIndicator : StatelessWidget`
+- L266 `class _SparseHint : StatelessWidget`
   - 近くの実在の町が乏しい (Phase B sparse) ときの控えめなヒント。
-- L306 `class _ExhaustionPanel : StatelessWidget`
+- L308 `class _ExhaustionPanel : StatelessWidget`
   - 候補を出し尽くした (案Y)。正直に止めた理由 + 条件変更の代替提案を出す。
-- L390 `class _RefreshButton : StatelessWidget`
+- L394 `class _RefreshButton : StatelessWidget`
   - 「別の候補地を見る」(1 クレジット消費で次の distinct 候補を 1 つ取得)。
 
-**関数 (8 public + 0 private):**
+**関数 (8 public + 1 private):**
 
 - L15 `build()`
 - L45 `build()`
 - L89 `build()`
 - L132 `build()`
-- L240 `build()`
-- L270 `build()`
-- L324 `build()`
-- L396 `build()`
+- L241 `build()`
+- L271 `build()`
+- L328 `build()`
+- L400 `build()`
+
+  <details><summary>private 関数 1 件</summary>
+
+  - L313 `_reasonText()`
+
+  </details>
 
 
-### `lib/screens/consultation/consultation_return_chip.dart` (94 行)
+### `lib/screens/consultation/consultation_return_chip.dart` (95 行)
 
-**imports:** dart=0 / package=1 / relative=3
+**imports:** dart=0 / package=1 / relative=4
 
-- relative: `../../theme/solara_colors.dart`, `../../utils/consultation_return.dart`, `consultation_result_screen.dart`
+- relative: `../../i18n/strings.g.dart`, `../../theme/solara_colors.dart`, `../../utils/consultation_return.dart`, `consultation_result_screen.dart`
 
 **型定義 (1):**
 
-- L13 `class ConsultationReturnChip : StatelessWidget`
+- L14 `class ConsultationReturnChip : StatelessWidget`
   - Map 下部 (4 チップバー = MapMenuChips の直上) に出す「← 相談結果に戻る」チップ。
 
 **関数 (1 public + 1 private):**
 
-- L34 `build()`
+- L35 `build()`
 
   <details><summary>private 関数 1 件</summary>
 
-  - L16 `_onReturn()`
+  - L17 `_onReturn()`
 
   </details>
 
