@@ -1,4 +1,64 @@
 {
+  "mapDaily": {
+    "birthplace": "出生地",
+    "worldScale": "世界規模で見る",
+    "consultStella": "Stella に相談",
+    "consultStellaSub": "天体から場所を読む",
+    "tabToday": "本日",
+    "tabTomorrow": "明日",
+    "allCategories": "全カテゴリ",
+    "todayTop": "今日の TOP — $label",
+    "tagline": {
+      "neutral": "今日の動きを確認しましょう",
+      "love": "関係性のエネルギーが多面的に動く一日",
+      "money": "物質的な豊かさのエネルギーが流れる一日",
+      "work": "社会的役割のエネルギーが動く一日",
+      "healing": "内省と統合のエネルギーが流れる一日",
+      "communication": "対話と知性のエネルギーが動く一日"
+    },
+    "subLabelOuter": "外向きの相",
+    "subLabelInner": "内向きの相",
+    "subLabelMixed": "外向き＋内向きの相が混在",
+    "recommendedActions": "おすすめ行動の例（参考）",
+    "otherActionsNote": "※ 他の行動も、この例を参考に自由に考えてみてください",
+    "loading": "惑星の動きを読み取っています",
+    "failed": "データの取得に失敗しました",
+    "retry": "もう一度",
+    "quietDay": "今日は静かな日。\n特別な動きは見えません。",
+    "noFilterMatch": "このフィルタ条件に\n該当するイベントはありません。\nフィルタを変更してください。",
+    "viewOnMap": "この時刻をMapで見る",
+    "transitPass": "$planet が$angle通過",
+    "transitTitle": "$planetの$angle通過",
+    "angle": {
+      "asc": "東の地平 (ASC)",
+      "mc": "天頂 (MC)",
+      "dsc": "西の地平 (DSC)",
+      "ic": "天底 (IC)"
+    },
+    "angleHint": {
+      "asc": "昇り始める時刻 — $compass の地平に現れる",
+      "mc": "最も高くに上る時刻 — $compass の空で頂点",
+      "dsc": "沈む時刻 — $compass の地平に降る",
+      "ic": "地下を通る時刻 — 内的な動きとして効く"
+    },
+    "zenithBias": "★ 天頂寄り",
+    "nadirBias": "★ 天底寄り",
+    "latitudeBand": "今あなたの緯度帯 (緯度 $lat°、オーブ ±$orb°)",
+    "zenithBand": "天頂帯",
+    "nadirBand": "天底帯",
+    "usage": {
+      "title": "今日の動きの読み方",
+      "summary": "この画面では、あなたの意図する目的に合わせて\n「いつ行動するか」の時間の指針が分かります。",
+      "vpTitle": "【基準地点 (VIEWPOINT)】",
+      "vpBody": "右側のプルダウンが「基準地点」です。\n出生地 (現住所として登録した地点) や、\nVIEWPOINT として登録した地点を選択できます。\nこの画面では、選択した基準地点の空で、\n惑星が「天空方位」のどこにいつ来るかを表示します。",
+      "diffTitle": "【⚠ Map 画面の方位とは別物です】",
+      "diffBody": "・Map 画面 = 「地表方位」(16 方位)\n　基準地点から見て地表のどの方向に行くか\n　(東の土地へ行く / 北の土地へ向かう、という地理)\n\n・この画面 = 「天空方位」(4 アングル)\n　基準地点の真上の空で惑星がどこにあるか\n　(東の地平線 / 真上の天頂 / 西の地平線 / 真下)\n\n同じ「東」でも、Map では「東の土地」、\nこの画面では「東の地平線 (惑星が昇る位置)」を指します。",
+      "timeTitle": "【時間と天空方位を読む】",
+      "timeBody": "今日、各惑星が選択した基準地点の空で\n4 つの天空方位 (アングル) を通る時刻を表示します:\n\n・ASC (東の地平線) — 惑星が昇る瞬間\n・MC  (真上 = 天頂) — 惑星が最高点を通る瞬間\n・DSC (西の地平線) — 惑星が沈む瞬間\n・IC  (真下 = 地下) — 惑星が地球の裏側にある瞬間\n\n「いつ恋愛のテーマが動く」「いつ仕事の節目になる」など、\n行動する時間の指針が読み取れます。",
+      "comboTitle": "【Map スコアバーと組み合わせる】",
+      "comboBody": "地表方位ごとのエネルギーの強さは、\nMap のスコアバーから確認できます (16 方位)。\n「合計 / 総合」ラベル下の i ボタンに詳細解説があります。\n\nスコアバー (地表方位の強さ) と\nこの画面 (天空方位 × 時刻) を組み合わせると、\nあなたの望む未来に対する最適な\n「方角 × 時間」を Solara が算出します。"
+    }
+  },
   "mapFortune": {
     "srcShort": { "combined": "合計", "transit": "TR", "progressed": "PR" },
     "srcFull": { "combined": "合計", "transit": "トランジット", "progressed": "プログレス" },

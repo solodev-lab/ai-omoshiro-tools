@@ -1,4 +1,64 @@
 {
+  "mapDaily": {
+    "birthplace": "Birthplace",
+    "worldScale": "See on a world scale",
+    "consultStella": "Consult Stella",
+    "consultStellaSub": "Read places from the planets",
+    "tabToday": "Today",
+    "tabTomorrow": "Tomorrow",
+    "allCategories": "All categories",
+    "todayTop": "Today's TOP — $label",
+    "tagline": {
+      "neutral": "Let's check today's movement",
+      "love": "A day when relational energy moves on many sides",
+      "money": "A day when the energy of material abundance flows",
+      "work": "A day when the energy of your social role moves",
+      "healing": "A day when the energy of reflection and integration flows",
+      "communication": "A day when the energy of dialogue and intellect moves"
+    },
+    "subLabelOuter": "Outward phase",
+    "subLabelInner": "Inward phase",
+    "subLabelMixed": "Outward + inward phases mixed",
+    "recommendedActions": "Example actions (for reference)",
+    "otherActionsNote": "* Feel free to think up other actions too, using these as a guide",
+    "loading": "Reading the planets' motion",
+    "failed": "Couldn't fetch the data",
+    "retry": "Try again",
+    "quietDay": "A quiet day.\nNo special movement is visible.",
+    "noFilterMatch": "No events match this filter.\nPlease change the filter.",
+    "viewOnMap": "See this time on the Map",
+    "transitPass": "$planet passing $angle",
+    "transitTitle": "$planet passing $angle",
+    "angle": {
+      "asc": "Eastern horizon (ASC)",
+      "mc": "Zenith (MC)",
+      "dsc": "Western horizon (DSC)",
+      "ic": "Nadir (IC)"
+    },
+    "angleHint": {
+      "asc": "The time it begins to rise — appearing on the $compass horizon",
+      "mc": "The time it climbs highest — its peak in the $compass sky",
+      "dsc": "The time it sets — descending to the $compass horizon",
+      "ic": "The time it passes underground — felt as an inner movement"
+    },
+    "zenithBias": "★ Near zenith",
+    "nadirBias": "★ Near nadir",
+    "latitudeBand": "Your latitude band now (lat $lat°, orb ±$orb°)",
+    "zenithBand": "Zenith band",
+    "nadirBand": "Nadir band",
+    "usage": {
+      "title": "How to read today's movement",
+      "summary": "On this screen, matched to the purpose you intend,\nyou can read \"when to act\" — guidance on timing.",
+      "vpTitle": "[Reference point (VIEWPOINT)]",
+      "vpBody": "The dropdown on the right is the \"reference point.\"\nYou can choose your birthplace (the point you registered as your current address)\nor a point you registered as a VIEWPOINT.\nThis screen shows where and when the planets reach each \"sky direction\"\nin the sky above your chosen reference point.",
+      "diffTitle": "[⚠ Different from the Map screen's directions]",
+      "diffBody": "· Map screen = \"surface directions\" (16 directions)\n　which way along the ground you head from the reference point\n　(going to a land in the east / heading to a land in the north — geography)\n\n· This screen = \"sky directions\" (4 angles)\n　where a planet sits in the sky right above the reference point\n　(eastern horizon / overhead zenith / western horizon / straight below)\n\nEven the same \"east\" means \"a land in the east\" on the Map,\nand \"the eastern horizon (where a planet rises)\" on this screen.",
+      "timeTitle": "[Reading time and sky direction]",
+      "timeBody": "It shows the times today when each planet passes the 4 sky directions (angles)\nin the sky above your chosen reference point:\n\n· ASC (eastern horizon) — the moment a planet rises\n· MC  (overhead = zenith) — the moment a planet passes its highest point\n· DSC (western horizon) — the moment a planet sets\n· IC  (straight below = underground) — the moment a planet is on the far side of the Earth\n\nYou can read guidance on the time to act — \"when a love theme moves,\" \"when a turning point at work comes,\" and so on.",
+      "comboTitle": "[Combining with the Map score bar]",
+      "comboBody": "The strength of the energy in each surface direction\ncan be checked from the Map's score bar (16 directions).\nThere's a detailed explanation in the i button under the \"Total / Overall\" label.\n\nCombine the score bar (the strength of surface directions) with\nthis screen (sky direction × time), and Solara works out\nthe best \"direction × time\" for the future you wish for."
+    }
+  },
   "mapFortune": {
     "srcShort": { "combined": "Total", "transit": "TR", "progressed": "PR" },
     "srcFull": { "combined": "Total", "transit": "Transit", "progressed": "Progressed" },

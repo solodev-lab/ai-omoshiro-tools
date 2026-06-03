@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 25 / 総行数: 14594
+- ファイル数: 25 / 総行数: 14569
 - class/mixin/extension/enum: 90
 - 関数 (top-level + method の素拾い): 322
 - Navigator.push 等: 0
@@ -198,7 +198,7 @@ MapAspectChip — Daily Transit V2 用 1アスペクトチップ
   </details>
 
 
-### `lib/screens/map/map_daily_transit_screen.dart` (2029 行)
+### `lib/screens/map/map_daily_transit_screen.dart` (2004 行)
 
 **ファイル先頭コメント:**
 
@@ -217,78 +217,78 @@ F1-c (2026-04-29 オーナー設計):
 ============================================================
 ```
 
-**imports:** dart=0 / package=2 / relative=11
+**imports:** dart=0 / package=2 / relative=12
 
-- relative: `../../theme/solara_colors.dart`, `../../utils/astro_glossary.dart`, `../../utils/daily_transits_api.dart`, `../../widgets/category_icon.dart`, `../../widgets/dominant_fortune_overlay.dart`, `../../widgets/glass_panel.dart`, `../../widgets/info_popup.dart`, `daily_transit_data.dart`, `map_aspect_chip.dart`, `map_constants.dart`, `map_vp_panel.dart`
+- relative: `../../i18n/strings.g.dart`, `../../theme/solara_colors.dart`, `../../utils/astro_glossary.dart`, `../../utils/daily_transits_api.dart`, `../../widgets/category_icon.dart`, `../../widgets/dominant_fortune_overlay.dart`, `../../widgets/glass_panel.dart`, `../../widgets/info_popup.dart`, `daily_transit_data.dart`, `map_aspect_chip.dart`, `map_constants.dart`, `map_vp_panel.dart`
 
 **型定義 (16):**
 
-- L28 `class MapDailyTransitScreen : StatefulWidget`
-- L81 `enum _DayTab`
+- L29 `class MapDailyTransitScreen : StatefulWidget`
+- L82 `enum _DayTab`
   - タブ識別子。
-- L85 `class _MapDailyTransitScreenState : State`
-- L274 `class _FooterActions : StatelessWidget`
+- L86 `class _MapDailyTransitScreenState : State`
+- L275 `class _FooterActions : StatelessWidget`
   - Daily Transit popup 下部の動線フッター。
-- L332 `class _FooterButton : StatelessWidget`
+- L333 `class _FooterButton : StatelessWidget`
   - フッター内の 1 つのアクションボタン (絵文字 + タイトル + サブタイトル)。
-- L435 `class _DayTabBar : StatelessWidget`
-- L652 `class _Header : StatefulWidget`
-- L680 `class _HeaderState : State`
-- L1004 `class _CategoryTipsBox : StatelessWidget`
-- L1177 `class _LoadingBody : StatelessWidget`
-- L1207 `class _FailedBody : StatelessWidget`
-- L1252 `class _TimelineBody : StatelessWidget`
-- L1352 `class _TimelineRow : StatelessWidget`
-- L1579 `class _AltitudeBadge : StatelessWidget`
+- L436 `class _DayTabBar : StatelessWidget`
+- L653 `class _Header : StatefulWidget`
+- L681 `class _HeaderState : State`
+- L1005 `class _CategoryTipsBox : StatelessWidget`
+- L1178 `class _LoadingBody : StatelessWidget`
+- L1208 `class _FailedBody : StatelessWidget`
+- L1253 `class _TimelineBody : StatelessWidget`
+- L1353 `class _TimelineRow : StatelessWidget`
+- L1575 `class _AltitudeBadge : StatelessWidget`
   - L3 Lewis 高度バッジ。
-- L1630 `class _LatitudeBandBox : StatelessWidget`
+- L1628 `class _LatitudeBandBox : StatelessWidget`
   - L3 Lewis 緯度帯ボックス。
 - L1680 `class _LatitudeBandRow : StatelessWidget`
 
 **関数 (23 public + 20 private):**
 
-- L77 `createState()`
-- L130 `initState()`
-- L143 `dispose()`
-- L207 `build()`
-- L284 `build()`
-- L348 `build()`
-- L453 `build()`
-- L677 `createState()`
-- L685 `initState()`
-- L719 `dispose()`
-- L725 `build()`
-- L908 `labelFor()`
-- L917 `iconFor()`
-- L923 `itemRow()`
-- L1014 `build()`
-- L1180 `build()`
-- L1211 `build()`
-- L1267 `build()`
-- L1369 `build()`
-- L1585 `build()`
-- L1635 `build()`
+- L78 `createState()`
+- L131 `initState()`
+- L144 `dispose()`
+- L208 `build()`
+- L285 `build()`
+- L349 `build()`
+- L454 `build()`
+- L678 `createState()`
+- L686 `initState()`
+- L720 `dispose()`
+- L726 `build()`
+- L909 `labelFor()`
+- L918 `iconFor()`
+- L924 `itemRow()`
+- L1015 `build()`
+- L1181 `build()`
+- L1212 `build()`
+- L1268 `build()`
+- L1370 `build()`
+- L1581 `build()`
+- L1633 `build()`
 - L1687 `build()`
 - L1916 `showDailyUsageGuidePopup()` — 「今日の動き」画面の使い方 popup。
 
   <details><summary>private 関数 20 件</summary>
 
-  - L118 `_cacheKey()`
-  - L124 `_resolveInitialVpIndex()`
-  - L150 `_tabStartTime()`
-  - L157 `_loadTab()`
-  - L186 `_selectTab()`
-  - L193 `_selectVp()`
-  - L200 `_close()`
-  - L530 `_tabBtn()`
-  - L563 `_angleDropdown()`
-  - L597 `_categoryDropdown()`
-  - L638 `_filterPill()`
-  - L876 `_tagline()`
-  - L905 `_buildVpDropdownWithGuide()`
-  - L1540 `_angleLabel()`
-  - L1550 `_angleHint()`
-  - L1560 `_azimuthToCompass()`
+  - L119 `_cacheKey()`
+  - L125 `_resolveInitialVpIndex()`
+  - L151 `_tabStartTime()`
+  - L158 `_loadTab()`
+  - L187 `_selectTab()`
+  - L194 `_selectVp()`
+  - L201 `_close()`
+  - L531 `_tabBtn()`
+  - L564 `_angleDropdown()`
+  - L598 `_categoryDropdown()`
+  - L639 `_filterPill()`
+  - L877 `_tagline()`
+  - L906 `_buildVpDropdownWithGuide()`
+  - L1542 `_angleLabel()`
+  - L1552 `_angleHint()`
+  - L1562 `_azimuthToCompass()`
   - L1737 `_showEventDetailDialog()`
   - L1769 `_showCategoryTipsIntent()`
   - L1809 `_showAngleDetailPopup()`

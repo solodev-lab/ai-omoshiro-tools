@@ -13,6 +13,7 @@
 import 'package:flutter/material.dart';
 import 'package:latlong2/latlong.dart';
 
+import '../../i18n/strings.g.dart';
 import '../../theme/solara_colors.dart';
 import '../../utils/astro_glossary.dart';
 import '../../utils/daily_transits_api.dart';
@@ -111,7 +112,7 @@ class _MapDailyTransitScreenState extends State<MapDailyTransitScreen>
     }
     return widget.birthLocationName.isNotEmpty
         ? widget.birthLocationName
-        : '出生地';
+        : t.mapDaily.birthplace;
   }
 
   /// キャッシュ・状態管理用のキー。
@@ -298,7 +299,7 @@ class _FooterActions extends StatelessWidget {
               Expanded(
                 child: _FooterButton(
                   emoji: '🌐',
-                  title: '世界規模で見る',
+                  title: t.mapDaily.worldScale,
                   subtitle: 'Astro*Carto*Graphy',
                   onTap: onEnterAcg!,
                   compact: showSplit,
@@ -314,8 +315,8 @@ class _FooterActions extends StatelessWidget {
               Expanded(
                 child: _FooterButton(
                   emoji: '🔮',
-                  title: 'Stella に相談',
-                  subtitle: '天体から場所を読む',
+                  title: t.mapDaily.consultStella,
+                  subtitle: t.mapDaily.consultStellaSub,
                   onTap: onEnterConsultation!,
                   compact: showSplit,
                 ),
@@ -466,9 +467,9 @@ class _DayTabBar extends StatelessWidget {
               physics: const BouncingScrollPhysics(),
               child: Row(
                 children: [
-                  _tabBtn(_DayTab.today, '本日'),
+                  _tabBtn(_DayTab.today, t.mapDaily.tabToday),
                   const SizedBox(width: 6),
-                  _tabBtn(_DayTab.tomorrow, '明日'),
+                  _tabBtn(_DayTab.tomorrow, t.mapDaily.tabTomorrow),
                   const SizedBox(width: 14),
                   Container(
                     width: 1, height: 16,
@@ -597,7 +598,7 @@ class _DayTabBar extends StatelessWidget {
   Widget _categoryDropdown() {
     final entries = <MapEntry<String, String>>[];
     // 「全カテゴリ」を先頭に固定
-    entries.add(const MapEntry('all', '全カテゴリ'));
+    entries.add(MapEntry('all', t.mapDaily.allCategories));
     for (final k in categoryPlanetSets.keys) {
       if (k == 'all') continue;
       entries.add(MapEntry(k, categoryLabels[k] ?? k));
@@ -774,7 +775,7 @@ class _HeaderState extends State<_Header> with SingleTickerProviderStateMixin {
                   children: [
                     Flexible(
                       child: Text(
-                        '今日の TOP — $label',
+                        t.mapDaily.todayTop(label: label),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
@@ -874,18 +875,18 @@ class _HeaderState extends State<_Header> with SingleTickerProviderStateMixin {
   // → final catKey = topCategory?.name ?? 'all';
 
   String _tagline(DominantFortuneKind? cat) {
-    if (cat == null) return '今日の動きを確認しましょう';
+    if (cat == null) return t.mapDaily.tagline.neutral;
     switch (cat) {
       case DominantFortuneKind.love:
-        return '関係性のエネルギーが多面的に動く一日';
+        return t.mapDaily.tagline.love;
       case DominantFortuneKind.money:
-        return '物質的な豊かさのエネルギーが流れる一日';
+        return t.mapDaily.tagline.money;
       case DominantFortuneKind.work:
-        return '社会的役割のエネルギーが動く一日';
+        return t.mapDaily.tagline.work;
       case DominantFortuneKind.healing:
-        return '内省と統合のエネルギーが流れる一日';
+        return t.mapDaily.tagline.healing;
       case DominantFortuneKind.communication:
-        return '対話と知性のエネルギーが動く一日';
+        return t.mapDaily.tagline.communication;
     }
   }
 
@@ -906,10 +907,10 @@ class _HeaderState extends State<_Header> with SingleTickerProviderStateMixin {
     final vpSlots = widget.vpSlots;
     // スロット index → 表示ラベル (カテゴリ名 or VIEWPOINT 名)
     String labelFor(int idx) {
-      if (idx < 0) return '出生地';
+      if (idx < 0) return t.mapDaily.birthplace;
       if (idx >= vpSlots.length) return 'VP';
       final s = vpSlots[idx];
-      if (s.isHome) return '現住所';
+      if (s.isHome) return t.locations.currentAddress;
       return s.name.isEmpty ? 'VP${idx + 1}' : s.name;
     }
 
@@ -1041,15 +1042,15 @@ class _CategoryTipsBox extends StatelessWidget {
         break;
       case AngleFilter.ascMc:
         tips = tipsData.tipsAscMc;
-        subLabel = '外向きの相';
+        subLabel = t.mapDaily.subLabelOuter;
         break;
       case AngleFilter.dscIc:
         tips = tipsData.tipsDscIc;
-        subLabel = '内向きの相';
+        subLabel = t.mapDaily.subLabelInner;
         break;
       case AngleFilter.all:
         tips = tipsData.tipsAscMc;
-        subLabel = '外向き＋内向きの相が混在';
+        subLabel = t.mapDaily.subLabelMixed;
         break;
     }
 
@@ -1104,7 +1105,7 @@ class _CategoryTipsBox extends StatelessWidget {
             children: [
               Flexible(
                 child: Text(
-                  'おすすめ行動の例（参考）',
+                  t.mapDaily.recommendedActions,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
@@ -1156,9 +1157,9 @@ class _CategoryTipsBox extends StatelessWidget {
             ),
           const SizedBox(height: 6),
           // 注記: 他の動きも自由に考える
-          const Text(
-            '※ 他の行動も、この例を参考に自由に考えてみてください',
-            style: TextStyle(
+          Text(
+            t.mapDaily.otherActionsNote,
+            style: const TextStyle(
               fontSize: 13,
               color: Color(0xFF777777),
               fontStyle: FontStyle.italic,
@@ -1178,21 +1179,21 @@ class _LoadingBody extends StatelessWidget {
   const _LoadingBody();
   @override
   Widget build(BuildContext context) {
-    return const Center(
+    return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          SizedBox(
+          const SizedBox(
             width: 28, height: 28,
             child: CircularProgressIndicator(
               strokeWidth: 2,
               color: SolaraColors.solaraGoldLight,
             ),
           ),
-          SizedBox(height: 14),
+          const SizedBox(height: 14),
           Text(
-            '惑星の動きを読み取っています',
-            style: TextStyle(
+            t.mapDaily.loading,
+            style: const TextStyle(
               fontSize: 13,
               color: SolaraColors.textSecondary,
               letterSpacing: 0.5,
@@ -1215,9 +1216,9 @@ class _FailedBody extends StatelessWidget {
         children: [
           const Icon(Icons.cloud_off, color: Color(0xFF666666), size: 32),
           const SizedBox(height: 10),
-          const Text(
-            'データの取得に失敗しました',
-            style: TextStyle(
+          Text(
+            t.mapDaily.failed,
+            style: const TextStyle(
               fontSize: 13,
               color: SolaraColors.textSecondary,
             ),
@@ -1231,9 +1232,9 @@ class _FailedBody extends StatelessWidget {
                 border: Border.all(color: SolaraColors.solaraGoldLight),
                 borderRadius: BorderRadius.circular(20),
               ),
-              child: const Text(
-                'もう一度',
-                style: TextStyle(
+              child: Text(
+                t.mapDaily.retry,
+                style: const TextStyle(
                   fontSize: 13,
                   color: SolaraColors.solaraGoldLight,
                   letterSpacing: 0.5,
@@ -1301,12 +1302,12 @@ class _TimelineBody extends StatelessWidget {
       ));
     }
     if (allEvents.isEmpty) {
-      children.add(const Padding(
-        padding: EdgeInsets.fromLTRB(12, 28, 12, 28),
+      children.add(Padding(
+        padding: const EdgeInsets.fromLTRB(12, 28, 12, 28),
         child: Text(
-          '今日は静かな日。\n特別な動きは見えません。',
+          t.mapDaily.quietDay,
           textAlign: TextAlign.center,
-          style: TextStyle(
+          style: const TextStyle(
             fontSize: 13,
             color: SolaraColors.textSecondary,
             height: 1.7,
@@ -1316,12 +1317,12 @@ class _TimelineBody extends StatelessWidget {
       ));
     } else if (events.isEmpty) {
       // 全データはあるがフィルタで0件 → ユーザーにフィルタ変更を促す
-      children.add(const Padding(
-        padding: EdgeInsets.fromLTRB(12, 28, 12, 28),
+      children.add(Padding(
+        padding: const EdgeInsets.fromLTRB(12, 28, 12, 28),
         child: Text(
-          'このフィルタ条件に\n該当するイベントはありません。\nフィルタを変更してください。',
+          t.mapDaily.noFilterMatch,
           textAlign: TextAlign.center,
-          style: TextStyle(
+          style: const TextStyle(
             fontSize: 13,
             color: SolaraColors.textSecondary,
             height: 1.7,
@@ -1370,7 +1371,7 @@ class _TimelineRow extends StatelessWidget {
     final meta = planetMeta[planetKey];
     final planetColor = meta?.color ?? SolaraColors.solaraGoldLight;
     final planetSym = meta?.sym ?? '✦';
-    final planetJP = meta?.jp ?? planetKey;
+    final planetJP = planetName(planetKey);
     final localTime = event.time.toLocal();
     final timeStr =
         '${localTime.hour.toString().padLeft(2, '0')}:${localTime.minute.toString().padLeft(2, '0')}';
@@ -1434,7 +1435,7 @@ class _TimelineRow extends StatelessWidget {
                           padding: EdgeInsets.zero,
                           constraints: const BoxConstraints(
                               minWidth: 28, minHeight: 28),
-                          tooltip: 'この時刻をMapで見る',
+                          tooltip: t.mapDaily.viewOnMap,
                           // Daily Transit は state 駆動なので Navigator.pop は呼ばない。
                           // 親 (map_screen) 側で onJumpToTime ハンドラ内で
                           // _dailyTransitOpen=false にして閉じる。
@@ -1464,7 +1465,8 @@ class _TimelineRow extends StatelessWidget {
                         children: [
                           Flexible(
                             child: Text(
-                              '$planetJP が$angleLabel通過',
+                              t.mapDaily
+                                  .transitPass(planet: planetJP, angle: angleLabel),
                               style: const TextStyle(
                                 fontSize: 13,
                                 color: SolaraColors.textPrimary,
@@ -1539,35 +1541,29 @@ class _TimelineRow extends StatelessWidget {
 
   String _angleLabel(String angle) {
     switch (angle) {
-      case 'ASC': return '東の地平 (ASC)';
-      case 'MC': return '天頂 (MC)';
-      case 'DSC': return '西の地平 (DSC)';
-      case 'IC': return '天底 (IC)';
+      case 'ASC': return t.mapDaily.angle.asc;
+      case 'MC': return t.mapDaily.angle.mc;
+      case 'DSC': return t.mapDaily.angle.dsc;
+      case 'IC': return t.mapDaily.angle.ic;
       default: return angle;
     }
   }
 
   String _angleHint(String angle, String compass) {
     switch (angle) {
-      case 'ASC': return '昇り始める時刻 — $compass の地平に現れる';
-      case 'MC': return '最も高くに上る時刻 — $compass の空で頂点';
-      case 'DSC': return '沈む時刻 — $compass の地平に降る';
-      case 'IC': return '地下を通る時刻 — 内的な動きとして効く';
+      case 'ASC': return t.mapDaily.angleHint.asc(compass: compass);
+      case 'MC': return t.mapDaily.angleHint.mc(compass: compass);
+      case 'DSC': return t.mapDaily.angleHint.dsc(compass: compass);
+      case 'IC': return t.mapDaily.angleHint.ic;
       default: return '';
     }
   }
 
   String _azimuthToCompass(double az) {
-    // 0=北、90=東、180=南、270=西
+    // 0=北、90=東、180=南、270=西。方位名はロケール連動 (dirName)。
     final norm = ((az % 360) + 360) % 360;
-    const labels = [
-      '北', '北北東', '北東', '東北東',
-      '東', '東南東', '南東', '南南東',
-      '南', '南南西', '南西', '西南西',
-      '西', '西北西', '北西', '北北西',
-    ];
     final idx = ((norm + 11.25) ~/ 22.5) % 16;
-    return labels[idx];
+    return dirName(dir16[idx]);
   }
 }
 
@@ -1585,7 +1581,9 @@ class _AltitudeBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     final isMC = angle == 'MC';
     final extreme = isMC ? altitude >= 85.0 : altitude <= -85.0;
-    final label = extreme ? (isMC ? '★ 天頂寄り' : '★ 天底寄り') : null;
+    final label = extreme
+        ? (isMC ? t.mapDaily.zenithBias : t.mapDaily.nadirBias)
+        : null;
     final color = extreme
         ? (isMC ? const Color(0xFFC9A84C) : const Color(0xFFB07CFF))
         : const Color(0x99AAAAAA);
@@ -1650,7 +1648,9 @@ class _LatitudeBandBox extends StatelessWidget {
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(
-                    '今あなたの緯度帯 (緯度 ${band.observerLat.toStringAsFixed(1)}°、オーブ ±${band.orb.toStringAsFixed(0)}°)',
+                    t.mapDaily.latitudeBand(
+                        lat: band.observerLat.toStringAsFixed(1),
+                        orb: band.orb.toStringAsFixed(0)),
                     style: const TextStyle(
                       fontSize: 13,
                       color: SolaraColors.textPrimary,
@@ -1665,11 +1665,11 @@ class _LatitudeBandBox extends StatelessWidget {
           ),
           if (band.zenith.isNotEmpty) ...[
             const SizedBox(height: 8),
-            _LatitudeBandRow(label: '天頂帯', hits: band.zenith, accent: const Color(0xFFC9A84C)),
+            _LatitudeBandRow(label: t.mapDaily.zenithBand, hits: band.zenith, accent: const Color(0xFFC9A84C)),
           ],
           if (band.nadir.isNotEmpty) ...[
             const SizedBox(height: 6),
-            _LatitudeBandRow(label: '天底帯', hits: band.nadir, accent: const Color(0xFFB07CFF)),
+            _LatitudeBandRow(label: t.mapDaily.nadirBand, hits: band.nadir, accent: const Color(0xFFB07CFF)),
           ],
         ],
       ),
@@ -1741,7 +1741,7 @@ void _showEventDetailDialog(
   required String categoryFilter,
 }) {
   final meta = planetMeta[planetKey];
-  final planetJP = meta?.jp ?? planetKey;
+  final planetJP = planetName(planetKey);
   final planetColor = meta?.color ?? SolaraColors.solaraGoldLight;
   final angleUpper = angle.toUpperCase();
   final base = planetAngleBaseText[planetKey]?[angleUpper] ?? '';
@@ -1751,7 +1751,7 @@ void _showEventDetailDialog(
       ? (categoryAngleAppendix[categoryFilter]?[angleUpper] ??
           categoryAppendix[categoryFilter])
       : null;
-  final title = '$planetJPの$angleUpper通過';
+  final title = t.mapDaily.transitTitle(planet: planetJP, angle: angleUpper);
 
   _showPlanetAngleDetail(
     context: context,
@@ -1919,107 +1919,82 @@ void showDailyUsageGuidePopup(BuildContext context) {
     child: Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: const [
+      children: [
         Text(
-          '今日の動きの読み方',
-          style: TextStyle(
+          t.mapDaily.usage.title,
+          style: const TextStyle(
               color: Color(0xFFC9A84C), fontSize: 14, letterSpacing: 1),
         ),
-        SizedBox(height: 8),
+        const SizedBox(height: 8),
         // ── 画面要約 (ユーザー要望: パッと見て機能が分かる一行) ──
         Text(
-          'この画面では、あなたの意図する目的に合わせて\n'
-          '「いつ行動するか」の時間の指針が分かります。',
-          style: TextStyle(
+          t.mapDaily.usage.summary,
+          style: const TextStyle(
               color: Color(0xFFE8E0D0),
               fontSize: 13,
               height: 1.6,
               fontWeight: FontWeight.w500),
         ),
-        SizedBox(height: 14),
+        const SizedBox(height: 14),
         // ── 基準地点 (VIEWPOINT) の説明 ──
         Text(
-          '【基準地点 (VIEWPOINT)】',
-          style: TextStyle(
+          t.mapDaily.usage.vpTitle,
+          style: const TextStyle(
               color: Color(0xFFC9A84C),
               fontSize: 13,
               fontWeight: FontWeight.w600,
               letterSpacing: 0.5),
         ),
-        SizedBox(height: 4),
+        const SizedBox(height: 4),
         Text(
-          '右側のプルダウンが「基準地点」です。\n'
-          '出生地 (現住所として登録した地点) や、\n'
-          'VIEWPOINT として登録した地点を選択できます。\n'
-          'この画面では、選択した基準地点の空で、\n'
-          '惑星が「天空方位」のどこにいつ来るかを表示します。',
-          style: TextStyle(
+          t.mapDaily.usage.vpBody,
+          style: const TextStyle(
               color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
         ),
-        SizedBox(height: 10),
+        const SizedBox(height: 10),
         // ── Map 画面の方位との違いを明示 ──
         Text(
-          '【⚠ Map 画面の方位とは別物です】',
-          style: TextStyle(
+          t.mapDaily.usage.diffTitle,
+          style: const TextStyle(
               color: Color(0xFFFFA864), // やや警告色 (混同防止)
               fontSize: 13,
               fontWeight: FontWeight.w600,
               letterSpacing: 0.5),
         ),
-        SizedBox(height: 4),
+        const SizedBox(height: 4),
         Text(
-          '・Map 画面 = 「地表方位」(16 方位)\n'
-          '　基準地点から見て地表のどの方向に行くか\n'
-          '　(東の土地へ行く / 北の土地へ向かう、という地理)\n\n'
-          '・この画面 = 「天空方位」(4 アングル)\n'
-          '　基準地点の真上の空で惑星がどこにあるか\n'
-          '　(東の地平線 / 真上の天頂 / 西の地平線 / 真下)\n\n'
-          '同じ「東」でも、Map では「東の土地」、\n'
-          'この画面では「東の地平線 (惑星が昇る位置)」を指します。',
-          style: TextStyle(
+          t.mapDaily.usage.diffBody,
+          style: const TextStyle(
               color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
         ),
-        SizedBox(height: 10),
+        const SizedBox(height: 10),
         Text(
-          '【時間と天空方位を読む】',
-          style: TextStyle(
+          t.mapDaily.usage.timeTitle,
+          style: const TextStyle(
               color: Color(0xFFC9A84C),
               fontSize: 13,
               fontWeight: FontWeight.w600,
               letterSpacing: 0.5),
         ),
-        SizedBox(height: 4),
+        const SizedBox(height: 4),
         Text(
-          '今日、各惑星が選択した基準地点の空で\n'
-          '4 つの天空方位 (アングル) を通る時刻を表示します:\n\n'
-          '・ASC (東の地平線) — 惑星が昇る瞬間\n'
-          '・MC  (真上 = 天頂) — 惑星が最高点を通る瞬間\n'
-          '・DSC (西の地平線) — 惑星が沈む瞬間\n'
-          '・IC  (真下 = 地下) — 惑星が地球の裏側にある瞬間\n\n'
-          '「いつ恋愛のテーマが動く」「いつ仕事の節目になる」など、\n'
-          '行動する時間の指針が読み取れます。',
-          style: TextStyle(
+          t.mapDaily.usage.timeBody,
+          style: const TextStyle(
               color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
         ),
-        SizedBox(height: 10),
+        const SizedBox(height: 10),
         Text(
-          '【Map スコアバーと組み合わせる】',
-          style: TextStyle(
+          t.mapDaily.usage.comboTitle,
+          style: const TextStyle(
               color: Color(0xFFC9A84C),
               fontSize: 13,
               fontWeight: FontWeight.w600,
               letterSpacing: 0.5),
         ),
-        SizedBox(height: 4),
+        const SizedBox(height: 4),
         Text(
-          '地表方位ごとのエネルギーの強さは、\n'
-          'Map のスコアバーから確認できます (16 方位)。\n'
-          '「合計 / 総合」ラベル下の i ボタンに詳細解説があります。\n\n'
-          'スコアバー (地表方位の強さ) と\n'
-          'この画面 (天空方位 × 時刻) を組み合わせると、\n'
-          'あなたの望む未来に対する最適な\n'
-          '「方角 × 時間」を Solara が算出します。',
-          style: TextStyle(
+          t.mapDaily.usage.comboBody,
+          style: const TextStyle(
               color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
         ),
       ],

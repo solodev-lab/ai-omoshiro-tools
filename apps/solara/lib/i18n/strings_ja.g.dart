@@ -40,6 +40,7 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 	Translations $copyWith({TranslationMetadata<AppLocale, Translations>? meta}) => Translations(meta: meta ?? this.$meta);
 
 	// Translations
+	late final Translations$mapDaily$ja mapDaily = Translations$mapDaily$ja.internal(_root);
 	late final Translations$mapFortune$ja mapFortune = Translations$mapFortune$ja.internal(_root);
 	late final Translations$galaxy$ja galaxy = Translations$galaxy$ja.internal(_root);
 	late final Translations$forecast$ja forecast = Translations$forecast$ja.internal(_root);
@@ -58,6 +59,100 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 	late final Translations$disclaimer$ja disclaimer = Translations$disclaimer$ja.internal(_root);
 	late final Translations$common$ja common = Translations$common$ja.internal(_root);
 	late final Translations$aiConsent$ja aiConsent = Translations$aiConsent$ja.internal(_root);
+}
+
+// Path: mapDaily
+class Translations$mapDaily$ja {
+	Translations$mapDaily$ja.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// ja: '出生地'
+	String get birthplace => '出生地';
+
+	/// ja: '世界規模で見る'
+	String get worldScale => '世界規模で見る';
+
+	/// ja: 'Stella に相談'
+	String get consultStella => 'Stella に相談';
+
+	/// ja: '天体から場所を読む'
+	String get consultStellaSub => '天体から場所を読む';
+
+	/// ja: '本日'
+	String get tabToday => '本日';
+
+	/// ja: '明日'
+	String get tabTomorrow => '明日';
+
+	/// ja: '全カテゴリ'
+	String get allCategories => '全カテゴリ';
+
+	/// ja: '今日の TOP — $label'
+	String todayTop({required Object label}) => '今日の TOP — ${label}';
+
+	late final Translations$mapDaily$tagline$ja tagline = Translations$mapDaily$tagline$ja.internal(_root);
+
+	/// ja: '外向きの相'
+	String get subLabelOuter => '外向きの相';
+
+	/// ja: '内向きの相'
+	String get subLabelInner => '内向きの相';
+
+	/// ja: '外向き＋内向きの相が混在'
+	String get subLabelMixed => '外向き＋内向きの相が混在';
+
+	/// ja: 'おすすめ行動の例（参考）'
+	String get recommendedActions => 'おすすめ行動の例（参考）';
+
+	/// ja: '※ 他の行動も、この例を参考に自由に考えてみてください'
+	String get otherActionsNote => '※ 他の行動も、この例を参考に自由に考えてみてください';
+
+	/// ja: '惑星の動きを読み取っています'
+	String get loading => '惑星の動きを読み取っています';
+
+	/// ja: 'データの取得に失敗しました'
+	String get failed => 'データの取得に失敗しました';
+
+	/// ja: 'もう一度'
+	String get retry => 'もう一度';
+
+	/// ja: '今日は静かな日。 特別な動きは見えません。'
+	String get quietDay => '今日は静かな日。\n特別な動きは見えません。';
+
+	/// ja: 'このフィルタ条件に 該当するイベントはありません。 フィルタを変更してください。'
+	String get noFilterMatch => 'このフィルタ条件に\n該当するイベントはありません。\nフィルタを変更してください。';
+
+	/// ja: 'この時刻をMapで見る'
+	String get viewOnMap => 'この時刻をMapで見る';
+
+	/// ja: '$planet が$angle通過'
+	String transitPass({required Object planet, required Object angle}) => '${planet} が${angle}通過';
+
+	/// ja: '$planetの$angle通過'
+	String transitTitle({required Object planet, required Object angle}) => '${planet}の${angle}通過';
+
+	late final Translations$mapDaily$angle$ja angle = Translations$mapDaily$angle$ja.internal(_root);
+	late final Translations$mapDaily$angleHint$ja angleHint = Translations$mapDaily$angleHint$ja.internal(_root);
+
+	/// ja: '★ 天頂寄り'
+	String get zenithBias => '★ 天頂寄り';
+
+	/// ja: '★ 天底寄り'
+	String get nadirBias => '★ 天底寄り';
+
+	/// ja: '今あなたの緯度帯 (緯度 $lat°、オーブ ±$orb°)'
+	String latitudeBand({required Object lat, required Object orb}) => '今あなたの緯度帯 (緯度 ${lat}°、オーブ ±${orb}°)';
+
+	/// ja: '天頂帯'
+	String get zenithBand => '天頂帯';
+
+	/// ja: '天底帯'
+	String get nadirBand => '天底帯';
+
+	late final Translations$mapDaily$usage$ja usage = Translations$mapDaily$usage$ja.internal(_root);
 }
 
 // Path: mapFortune
@@ -772,6 +867,114 @@ class Translations$aiConsent$ja {
 	late final Translations$aiConsent$geminiContent$ja geminiContent = Translations$aiConsent$geminiContent$ja.internal(_root);
 	late final Translations$aiConsent$decisions$ja decisions = Translations$aiConsent$decisions$ja.internal(_root);
 	late final Translations$aiConsent$consentHandling$ja consentHandling = Translations$aiConsent$consentHandling$ja.internal(_root);
+}
+
+// Path: mapDaily.tagline
+class Translations$mapDaily$tagline$ja {
+	Translations$mapDaily$tagline$ja.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// ja: '今日の動きを確認しましょう'
+	String get neutral => '今日の動きを確認しましょう';
+
+	/// ja: '関係性のエネルギーが多面的に動く一日'
+	String get love => '関係性のエネルギーが多面的に動く一日';
+
+	/// ja: '物質的な豊かさのエネルギーが流れる一日'
+	String get money => '物質的な豊かさのエネルギーが流れる一日';
+
+	/// ja: '社会的役割のエネルギーが動く一日'
+	String get work => '社会的役割のエネルギーが動く一日';
+
+	/// ja: '内省と統合のエネルギーが流れる一日'
+	String get healing => '内省と統合のエネルギーが流れる一日';
+
+	/// ja: '対話と知性のエネルギーが動く一日'
+	String get communication => '対話と知性のエネルギーが動く一日';
+}
+
+// Path: mapDaily.angle
+class Translations$mapDaily$angle$ja {
+	Translations$mapDaily$angle$ja.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// ja: '東の地平 (ASC)'
+	String get asc => '東の地平 (ASC)';
+
+	/// ja: '天頂 (MC)'
+	String get mc => '天頂 (MC)';
+
+	/// ja: '西の地平 (DSC)'
+	String get dsc => '西の地平 (DSC)';
+
+	/// ja: '天底 (IC)'
+	String get ic => '天底 (IC)';
+}
+
+// Path: mapDaily.angleHint
+class Translations$mapDaily$angleHint$ja {
+	Translations$mapDaily$angleHint$ja.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// ja: '昇り始める時刻 — $compass の地平に現れる'
+	String asc({required Object compass}) => '昇り始める時刻 — ${compass} の地平に現れる';
+
+	/// ja: '最も高くに上る時刻 — $compass の空で頂点'
+	String mc({required Object compass}) => '最も高くに上る時刻 — ${compass} の空で頂点';
+
+	/// ja: '沈む時刻 — $compass の地平に降る'
+	String dsc({required Object compass}) => '沈む時刻 — ${compass} の地平に降る';
+
+	/// ja: '地下を通る時刻 — 内的な動きとして効く'
+	String get ic => '地下を通る時刻 — 内的な動きとして効く';
+}
+
+// Path: mapDaily.usage
+class Translations$mapDaily$usage$ja {
+	Translations$mapDaily$usage$ja.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// ja: '今日の動きの読み方'
+	String get title => '今日の動きの読み方';
+
+	/// ja: 'この画面では、あなたの意図する目的に合わせて 「いつ行動するか」の時間の指針が分かります。'
+	String get summary => 'この画面では、あなたの意図する目的に合わせて\n「いつ行動するか」の時間の指針が分かります。';
+
+	/// ja: '【基準地点 (VIEWPOINT)】'
+	String get vpTitle => '【基準地点 (VIEWPOINT)】';
+
+	/// ja: '右側のプルダウンが「基準地点」です。 出生地 (現住所として登録した地点) や、 VIEWPOINT として登録した地点を選択できます。 この画面では、選択した基準地点の空で、 惑星が「天空方位」のどこにいつ来るかを表示します。'
+	String get vpBody => '右側のプルダウンが「基準地点」です。\n出生地 (現住所として登録した地点) や、\nVIEWPOINT として登録した地点を選択できます。\nこの画面では、選択した基準地点の空で、\n惑星が「天空方位」のどこにいつ来るかを表示します。';
+
+	/// ja: '【⚠ Map 画面の方位とは別物です】'
+	String get diffTitle => '【⚠ Map 画面の方位とは別物です】';
+
+	/// ja: '・Map 画面 = 「地表方位」(16 方位) 基準地点から見て地表のどの方向に行くか (東の土地へ行く / 北の土地へ向かう、という地理) ・この画面 = 「天空方位」(4 アングル) 基準地点の真上の空で惑星がどこにあるか (東の地平線 / 真上の天頂 / 西の地平線 / 真下) 同じ「東」でも、Map では「東の土地」、 この画面では「東の地平線 (惑星が昇る位置)」を指します。'
+	String get diffBody => '・Map 画面 = 「地表方位」(16 方位)\n　基準地点から見て地表のどの方向に行くか\n　(東の土地へ行く / 北の土地へ向かう、という地理)\n\n・この画面 = 「天空方位」(4 アングル)\n　基準地点の真上の空で惑星がどこにあるか\n　(東の地平線 / 真上の天頂 / 西の地平線 / 真下)\n\n同じ「東」でも、Map では「東の土地」、\nこの画面では「東の地平線 (惑星が昇る位置)」を指します。';
+
+	/// ja: '【時間と天空方位を読む】'
+	String get timeTitle => '【時間と天空方位を読む】';
+
+	/// ja: '今日、各惑星が選択した基準地点の空で 4 つの天空方位 (アングル) を通る時刻を表示します: ・ASC (東の地平線) — 惑星が昇る瞬間 ・MC (真上 = 天頂) — 惑星が最高点を通る瞬間 ・DSC (西の地平線) — 惑星が沈む瞬間 ・IC (真下 = 地下) — 惑星が地球の裏側にある瞬間 「いつ恋愛のテーマが動く」「いつ仕事の節目になる」など、 行動する時間の指針が読み取れます。'
+	String get timeBody => '今日、各惑星が選択した基準地点の空で\n4 つの天空方位 (アングル) を通る時刻を表示します:\n\n・ASC (東の地平線) — 惑星が昇る瞬間\n・MC  (真上 = 天頂) — 惑星が最高点を通る瞬間\n・DSC (西の地平線) — 惑星が沈む瞬間\n・IC  (真下 = 地下) — 惑星が地球の裏側にある瞬間\n\n「いつ恋愛のテーマが動く」「いつ仕事の節目になる」など、\n行動する時間の指針が読み取れます。';
+
+	/// ja: '【Map スコアバーと組み合わせる】'
+	String get comboTitle => '【Map スコアバーと組み合わせる】';
+
+	/// ja: '地表方位ごとのエネルギーの強さは、 Map のスコアバーから確認できます (16 方位)。 「合計 / 総合」ラベル下の i ボタンに詳細解説があります。 スコアバー (地表方位の強さ) と この画面 (天空方位 × 時刻) を組み合わせると、 あなたの望む未来に対する最適な 「方角 × 時間」を Solara が算出します。'
+	String get comboBody => '地表方位ごとのエネルギーの強さは、\nMap のスコアバーから確認できます (16 方位)。\n「合計 / 総合」ラベル下の i ボタンに詳細解説があります。\n\nスコアバー (地表方位の強さ) と\nこの画面 (天空方位 × 時刻) を組み合わせると、\nあなたの望む未来に対する最適な\n「方角 × 時間」を Solara が算出します。';
 }
 
 // Path: mapFortune.srcShort
@@ -2884,6 +3087,56 @@ class Translations$paywall$faq$resubscribe$ja {
 extension on Translations {
 	dynamic _flatMapFunction(String path) {
 		return switch (path) {
+			'mapDaily.birthplace' => '出生地',
+			'mapDaily.worldScale' => '世界規模で見る',
+			'mapDaily.consultStella' => 'Stella に相談',
+			'mapDaily.consultStellaSub' => '天体から場所を読む',
+			'mapDaily.tabToday' => '本日',
+			'mapDaily.tabTomorrow' => '明日',
+			'mapDaily.allCategories' => '全カテゴリ',
+			'mapDaily.todayTop' => ({required Object label}) => '今日の TOP — ${label}',
+			'mapDaily.tagline.neutral' => '今日の動きを確認しましょう',
+			'mapDaily.tagline.love' => '関係性のエネルギーが多面的に動く一日',
+			'mapDaily.tagline.money' => '物質的な豊かさのエネルギーが流れる一日',
+			'mapDaily.tagline.work' => '社会的役割のエネルギーが動く一日',
+			'mapDaily.tagline.healing' => '内省と統合のエネルギーが流れる一日',
+			'mapDaily.tagline.communication' => '対話と知性のエネルギーが動く一日',
+			'mapDaily.subLabelOuter' => '外向きの相',
+			'mapDaily.subLabelInner' => '内向きの相',
+			'mapDaily.subLabelMixed' => '外向き＋内向きの相が混在',
+			'mapDaily.recommendedActions' => 'おすすめ行動の例（参考）',
+			'mapDaily.otherActionsNote' => '※ 他の行動も、この例を参考に自由に考えてみてください',
+			'mapDaily.loading' => '惑星の動きを読み取っています',
+			'mapDaily.failed' => 'データの取得に失敗しました',
+			'mapDaily.retry' => 'もう一度',
+			'mapDaily.quietDay' => '今日は静かな日。\n特別な動きは見えません。',
+			'mapDaily.noFilterMatch' => 'このフィルタ条件に\n該当するイベントはありません。\nフィルタを変更してください。',
+			'mapDaily.viewOnMap' => 'この時刻をMapで見る',
+			'mapDaily.transitPass' => ({required Object planet, required Object angle}) => '${planet} が${angle}通過',
+			'mapDaily.transitTitle' => ({required Object planet, required Object angle}) => '${planet}の${angle}通過',
+			'mapDaily.angle.asc' => '東の地平 (ASC)',
+			'mapDaily.angle.mc' => '天頂 (MC)',
+			'mapDaily.angle.dsc' => '西の地平 (DSC)',
+			'mapDaily.angle.ic' => '天底 (IC)',
+			'mapDaily.angleHint.asc' => ({required Object compass}) => '昇り始める時刻 — ${compass} の地平に現れる',
+			'mapDaily.angleHint.mc' => ({required Object compass}) => '最も高くに上る時刻 — ${compass} の空で頂点',
+			'mapDaily.angleHint.dsc' => ({required Object compass}) => '沈む時刻 — ${compass} の地平に降る',
+			'mapDaily.angleHint.ic' => '地下を通る時刻 — 内的な動きとして効く',
+			'mapDaily.zenithBias' => '★ 天頂寄り',
+			'mapDaily.nadirBias' => '★ 天底寄り',
+			'mapDaily.latitudeBand' => ({required Object lat, required Object orb}) => '今あなたの緯度帯 (緯度 ${lat}°、オーブ ±${orb}°)',
+			'mapDaily.zenithBand' => '天頂帯',
+			'mapDaily.nadirBand' => '天底帯',
+			'mapDaily.usage.title' => '今日の動きの読み方',
+			'mapDaily.usage.summary' => 'この画面では、あなたの意図する目的に合わせて\n「いつ行動するか」の時間の指針が分かります。',
+			'mapDaily.usage.vpTitle' => '【基準地点 (VIEWPOINT)】',
+			'mapDaily.usage.vpBody' => '右側のプルダウンが「基準地点」です。\n出生地 (現住所として登録した地点) や、\nVIEWPOINT として登録した地点を選択できます。\nこの画面では、選択した基準地点の空で、\n惑星が「天空方位」のどこにいつ来るかを表示します。',
+			'mapDaily.usage.diffTitle' => '【⚠ Map 画面の方位とは別物です】',
+			'mapDaily.usage.diffBody' => '・Map 画面 = 「地表方位」(16 方位)\n　基準地点から見て地表のどの方向に行くか\n　(東の土地へ行く / 北の土地へ向かう、という地理)\n\n・この画面 = 「天空方位」(4 アングル)\n　基準地点の真上の空で惑星がどこにあるか\n　(東の地平線 / 真上の天頂 / 西の地平線 / 真下)\n\n同じ「東」でも、Map では「東の土地」、\nこの画面では「東の地平線 (惑星が昇る位置)」を指します。',
+			'mapDaily.usage.timeTitle' => '【時間と天空方位を読む】',
+			'mapDaily.usage.timeBody' => '今日、各惑星が選択した基準地点の空で\n4 つの天空方位 (アングル) を通る時刻を表示します:\n\n・ASC (東の地平線) — 惑星が昇る瞬間\n・MC  (真上 = 天頂) — 惑星が最高点を通る瞬間\n・DSC (西の地平線) — 惑星が沈む瞬間\n・IC  (真下 = 地下) — 惑星が地球の裏側にある瞬間\n\n「いつ恋愛のテーマが動く」「いつ仕事の節目になる」など、\n行動する時間の指針が読み取れます。',
+			'mapDaily.usage.comboTitle' => '【Map スコアバーと組み合わせる】',
+			'mapDaily.usage.comboBody' => '地表方位ごとのエネルギーの強さは、\nMap のスコアバーから確認できます (16 方位)。\n「合計 / 総合」ラベル下の i ボタンに詳細解説があります。\n\nスコアバー (地表方位の強さ) と\nこの画面 (天空方位 × 時刻) を組み合わせると、\nあなたの望む未来に対する最適な\n「方角 × 時間」を Solara が算出します。',
 			'mapFortune.srcShort.combined' => '合計',
 			'mapFortune.srcShort.transit' => 'TR',
 			'mapFortune.srcShort.progressed' => 'PR',
@@ -3346,6 +3599,8 @@ extension on Translations {
 			'locations.locDefaults.1' => '場所2',
 			'locations.locDefaults.2' => '場所3',
 			'locations.locDefaults.3' => '場所4',
+			_ => null,
+		} ?? switch (path) {
 			'locations.vpDefaults.0' => '職場',
 			'locations.vpDefaults.1' => 'お気に入り',
 			'locations.vpDefaults.2' => 'スポット',
@@ -3396,8 +3651,6 @@ extension on Translations {
 			'paywall.billing.annual' => '年額',
 			'paywall.plans.currentPlan' => '現在のプラン',
 			'paywall.plans.freePrice' => '¥0  /  ずっと',
-			_ => null,
-		} ?? switch (path) {
 			'paywall.plans.priceLoading' => '価格を取得中…',
 			'paywall.plans.taxIncl' => '(税込)',
 			'paywall.plans.monthlyEquivalent' => ({required Object yen}) => '月あたり ¥${yen} 相当',

@@ -39,6 +39,7 @@ class TranslationsEn extends Translations with BaseTranslations<AppLocale, Trans
 	TranslationsEn $copyWith({TranslationMetadata<AppLocale, Translations>? meta}) => TranslationsEn(meta: meta ?? this.$meta);
 
 	// Translations
+	@override late final _Translations$mapDaily$en mapDaily = _Translations$mapDaily$en._(_root);
 	@override late final _Translations$mapFortune$en mapFortune = _Translations$mapFortune$en._(_root);
 	@override late final _Translations$galaxy$en galaxy = _Translations$galaxy$en._(_root);
 	@override late final _Translations$forecast$en forecast = _Translations$forecast$en._(_root);
@@ -57,6 +58,45 @@ class TranslationsEn extends Translations with BaseTranslations<AppLocale, Trans
 	@override late final _Translations$disclaimer$en disclaimer = _Translations$disclaimer$en._(_root);
 	@override late final _Translations$common$en common = _Translations$common$en._(_root);
 	@override late final _Translations$aiConsent$en aiConsent = _Translations$aiConsent$en._(_root);
+}
+
+// Path: mapDaily
+class _Translations$mapDaily$en extends Translations$mapDaily$ja {
+	_Translations$mapDaily$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get birthplace => 'Birthplace';
+	@override String get worldScale => 'See on a world scale';
+	@override String get consultStella => 'Consult Stella';
+	@override String get consultStellaSub => 'Read places from the planets';
+	@override String get tabToday => 'Today';
+	@override String get tabTomorrow => 'Tomorrow';
+	@override String get allCategories => 'All categories';
+	@override String todayTop({required Object label}) => 'Today\'s TOP — ${label}';
+	@override late final _Translations$mapDaily$tagline$en tagline = _Translations$mapDaily$tagline$en._(_root);
+	@override String get subLabelOuter => 'Outward phase';
+	@override String get subLabelInner => 'Inward phase';
+	@override String get subLabelMixed => 'Outward + inward phases mixed';
+	@override String get recommendedActions => 'Example actions (for reference)';
+	@override String get otherActionsNote => '* Feel free to think up other actions too, using these as a guide';
+	@override String get loading => 'Reading the planets\' motion';
+	@override String get failed => 'Couldn\'t fetch the data';
+	@override String get retry => 'Try again';
+	@override String get quietDay => 'A quiet day.\nNo special movement is visible.';
+	@override String get noFilterMatch => 'No events match this filter.\nPlease change the filter.';
+	@override String get viewOnMap => 'See this time on the Map';
+	@override String transitPass({required Object planet, required Object angle}) => '${planet} passing ${angle}';
+	@override String transitTitle({required Object planet, required Object angle}) => '${planet} passing ${angle}';
+	@override late final _Translations$mapDaily$angle$en angle = _Translations$mapDaily$angle$en._(_root);
+	@override late final _Translations$mapDaily$angleHint$en angleHint = _Translations$mapDaily$angleHint$en._(_root);
+	@override String get zenithBias => '★ Near zenith';
+	@override String get nadirBias => '★ Near nadir';
+	@override String latitudeBand({required Object lat, required Object orb}) => 'Your latitude band now (lat ${lat}°, orb ±${orb}°)';
+	@override String get zenithBand => 'Zenith band';
+	@override String get nadirBand => 'Nadir band';
+	@override late final _Translations$mapDaily$usage$en usage = _Translations$mapDaily$usage$en._(_root);
 }
 
 // Path: mapFortune
@@ -449,6 +489,66 @@ class _Translations$aiConsent$en extends Translations$aiConsent$ja {
 	@override late final _Translations$aiConsent$geminiContent$en geminiContent = _Translations$aiConsent$geminiContent$en._(_root);
 	@override late final _Translations$aiConsent$decisions$en decisions = _Translations$aiConsent$decisions$en._(_root);
 	@override late final _Translations$aiConsent$consentHandling$en consentHandling = _Translations$aiConsent$consentHandling$en._(_root);
+}
+
+// Path: mapDaily.tagline
+class _Translations$mapDaily$tagline$en extends Translations$mapDaily$tagline$ja {
+	_Translations$mapDaily$tagline$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get neutral => 'Let\'s check today\'s movement';
+	@override String get love => 'A day when relational energy moves on many sides';
+	@override String get money => 'A day when the energy of material abundance flows';
+	@override String get work => 'A day when the energy of your social role moves';
+	@override String get healing => 'A day when the energy of reflection and integration flows';
+	@override String get communication => 'A day when the energy of dialogue and intellect moves';
+}
+
+// Path: mapDaily.angle
+class _Translations$mapDaily$angle$en extends Translations$mapDaily$angle$ja {
+	_Translations$mapDaily$angle$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get asc => 'Eastern horizon (ASC)';
+	@override String get mc => 'Zenith (MC)';
+	@override String get dsc => 'Western horizon (DSC)';
+	@override String get ic => 'Nadir (IC)';
+}
+
+// Path: mapDaily.angleHint
+class _Translations$mapDaily$angleHint$en extends Translations$mapDaily$angleHint$ja {
+	_Translations$mapDaily$angleHint$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String asc({required Object compass}) => 'The time it begins to rise — appearing on the ${compass} horizon';
+	@override String mc({required Object compass}) => 'The time it climbs highest — its peak in the ${compass} sky';
+	@override String dsc({required Object compass}) => 'The time it sets — descending to the ${compass} horizon';
+	@override String get ic => 'The time it passes underground — felt as an inner movement';
+}
+
+// Path: mapDaily.usage
+class _Translations$mapDaily$usage$en extends Translations$mapDaily$usage$ja {
+	_Translations$mapDaily$usage$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get title => 'How to read today\'s movement';
+	@override String get summary => 'On this screen, matched to the purpose you intend,\nyou can read "when to act" — guidance on timing.';
+	@override String get vpTitle => '[Reference point (VIEWPOINT)]';
+	@override String get vpBody => 'The dropdown on the right is the "reference point."\nYou can choose your birthplace (the point you registered as your current address)\nor a point you registered as a VIEWPOINT.\nThis screen shows where and when the planets reach each "sky direction"\nin the sky above your chosen reference point.';
+	@override String get diffTitle => '[⚠ Different from the Map screen\'s directions]';
+	@override String get diffBody => '· Map screen = "surface directions" (16 directions)\n　which way along the ground you head from the reference point\n　(going to a land in the east / heading to a land in the north — geography)\n\n· This screen = "sky directions" (4 angles)\n　where a planet sits in the sky right above the reference point\n　(eastern horizon / overhead zenith / western horizon / straight below)\n\nEven the same "east" means "a land in the east" on the Map,\nand "the eastern horizon (where a planet rises)" on this screen.';
+	@override String get timeTitle => '[Reading time and sky direction]';
+	@override String get timeBody => 'It shows the times today when each planet passes the 4 sky directions (angles)\nin the sky above your chosen reference point:\n\n· ASC (eastern horizon) — the moment a planet rises\n· MC  (overhead = zenith) — the moment a planet passes its highest point\n· DSC (western horizon) — the moment a planet sets\n· IC  (straight below = underground) — the moment a planet is on the far side of the Earth\n\nYou can read guidance on the time to act — "when a love theme moves," "when a turning point at work comes," and so on.';
+	@override String get comboTitle => '[Combining with the Map score bar]';
+	@override String get comboBody => 'The strength of the energy in each surface direction\ncan be checked from the Map\'s score bar (16 directions).\nThere\'s a detailed explanation in the i button under the "Total / Overall" label.\n\nCombine the score bar (the strength of surface directions) with\nthis screen (sky direction × time), and Solara works out\nthe best "direction × time" for the future you wish for.';
 }
 
 // Path: mapFortune.srcShort
@@ -1726,6 +1826,56 @@ class _Translations$paywall$faq$resubscribe$en extends Translations$paywall$faq$
 extension on TranslationsEn {
 	dynamic _flatMapFunction(String path) {
 		return switch (path) {
+			'mapDaily.birthplace' => 'Birthplace',
+			'mapDaily.worldScale' => 'See on a world scale',
+			'mapDaily.consultStella' => 'Consult Stella',
+			'mapDaily.consultStellaSub' => 'Read places from the planets',
+			'mapDaily.tabToday' => 'Today',
+			'mapDaily.tabTomorrow' => 'Tomorrow',
+			'mapDaily.allCategories' => 'All categories',
+			'mapDaily.todayTop' => ({required Object label}) => 'Today\'s TOP — ${label}',
+			'mapDaily.tagline.neutral' => 'Let\'s check today\'s movement',
+			'mapDaily.tagline.love' => 'A day when relational energy moves on many sides',
+			'mapDaily.tagline.money' => 'A day when the energy of material abundance flows',
+			'mapDaily.tagline.work' => 'A day when the energy of your social role moves',
+			'mapDaily.tagline.healing' => 'A day when the energy of reflection and integration flows',
+			'mapDaily.tagline.communication' => 'A day when the energy of dialogue and intellect moves',
+			'mapDaily.subLabelOuter' => 'Outward phase',
+			'mapDaily.subLabelInner' => 'Inward phase',
+			'mapDaily.subLabelMixed' => 'Outward + inward phases mixed',
+			'mapDaily.recommendedActions' => 'Example actions (for reference)',
+			'mapDaily.otherActionsNote' => '* Feel free to think up other actions too, using these as a guide',
+			'mapDaily.loading' => 'Reading the planets\' motion',
+			'mapDaily.failed' => 'Couldn\'t fetch the data',
+			'mapDaily.retry' => 'Try again',
+			'mapDaily.quietDay' => 'A quiet day.\nNo special movement is visible.',
+			'mapDaily.noFilterMatch' => 'No events match this filter.\nPlease change the filter.',
+			'mapDaily.viewOnMap' => 'See this time on the Map',
+			'mapDaily.transitPass' => ({required Object planet, required Object angle}) => '${planet} passing ${angle}',
+			'mapDaily.transitTitle' => ({required Object planet, required Object angle}) => '${planet} passing ${angle}',
+			'mapDaily.angle.asc' => 'Eastern horizon (ASC)',
+			'mapDaily.angle.mc' => 'Zenith (MC)',
+			'mapDaily.angle.dsc' => 'Western horizon (DSC)',
+			'mapDaily.angle.ic' => 'Nadir (IC)',
+			'mapDaily.angleHint.asc' => ({required Object compass}) => 'The time it begins to rise — appearing on the ${compass} horizon',
+			'mapDaily.angleHint.mc' => ({required Object compass}) => 'The time it climbs highest — its peak in the ${compass} sky',
+			'mapDaily.angleHint.dsc' => ({required Object compass}) => 'The time it sets — descending to the ${compass} horizon',
+			'mapDaily.angleHint.ic' => 'The time it passes underground — felt as an inner movement',
+			'mapDaily.zenithBias' => '★ Near zenith',
+			'mapDaily.nadirBias' => '★ Near nadir',
+			'mapDaily.latitudeBand' => ({required Object lat, required Object orb}) => 'Your latitude band now (lat ${lat}°, orb ±${orb}°)',
+			'mapDaily.zenithBand' => 'Zenith band',
+			'mapDaily.nadirBand' => 'Nadir band',
+			'mapDaily.usage.title' => 'How to read today\'s movement',
+			'mapDaily.usage.summary' => 'On this screen, matched to the purpose you intend,\nyou can read "when to act" — guidance on timing.',
+			'mapDaily.usage.vpTitle' => '[Reference point (VIEWPOINT)]',
+			'mapDaily.usage.vpBody' => 'The dropdown on the right is the "reference point."\nYou can choose your birthplace (the point you registered as your current address)\nor a point you registered as a VIEWPOINT.\nThis screen shows where and when the planets reach each "sky direction"\nin the sky above your chosen reference point.',
+			'mapDaily.usage.diffTitle' => '[⚠ Different from the Map screen\'s directions]',
+			'mapDaily.usage.diffBody' => '· Map screen = "surface directions" (16 directions)\n　which way along the ground you head from the reference point\n　(going to a land in the east / heading to a land in the north — geography)\n\n· This screen = "sky directions" (4 angles)\n　where a planet sits in the sky right above the reference point\n　(eastern horizon / overhead zenith / western horizon / straight below)\n\nEven the same "east" means "a land in the east" on the Map,\nand "the eastern horizon (where a planet rises)" on this screen.',
+			'mapDaily.usage.timeTitle' => '[Reading time and sky direction]',
+			'mapDaily.usage.timeBody' => 'It shows the times today when each planet passes the 4 sky directions (angles)\nin the sky above your chosen reference point:\n\n· ASC (eastern horizon) — the moment a planet rises\n· MC  (overhead = zenith) — the moment a planet passes its highest point\n· DSC (western horizon) — the moment a planet sets\n· IC  (straight below = underground) — the moment a planet is on the far side of the Earth\n\nYou can read guidance on the time to act — "when a love theme moves," "when a turning point at work comes," and so on.',
+			'mapDaily.usage.comboTitle' => '[Combining with the Map score bar]',
+			'mapDaily.usage.comboBody' => 'The strength of the energy in each surface direction\ncan be checked from the Map\'s score bar (16 directions).\nThere\'s a detailed explanation in the i button under the "Total / Overall" label.\n\nCombine the score bar (the strength of surface directions) with\nthis screen (sky direction × time), and Solara works out\nthe best "direction × time" for the future you wish for.',
 			'mapFortune.srcShort.combined' => 'Total',
 			'mapFortune.srcShort.transit' => 'TR',
 			'mapFortune.srcShort.progressed' => 'PR',
@@ -2188,6 +2338,8 @@ extension on TranslationsEn {
 			'locations.locDefaults.1' => 'Place 2',
 			'locations.locDefaults.2' => 'Place 3',
 			'locations.locDefaults.3' => 'Place 4',
+			_ => null,
+		} ?? switch (path) {
 			'locations.vpDefaults.0' => 'Workplace',
 			'locations.vpDefaults.1' => 'Favorite',
 			'locations.vpDefaults.2' => 'Spot',
@@ -2238,8 +2390,6 @@ extension on TranslationsEn {
 			'paywall.billing.annual' => 'Annual',
 			'paywall.plans.currentPlan' => 'Current plan',
 			'paywall.plans.freePrice' => 'Free  /  forever',
-			_ => null,
-		} ?? switch (path) {
 			'paywall.plans.priceLoading' => 'Loading price…',
 			'paywall.plans.taxIncl' => '(tax incl.)',
 			'paywall.plans.monthlyEquivalent' => ({required Object yen}) => '≈ ¥${yen} / month',
