@@ -1756,6 +1756,30 @@ forecast_screen 112 / galaxy_screen 105 / map_fortune_sheet 96 / map_daily_trans
 #### ⚠️ ファイル分割 (HARD7) は本 Phase 対象外・未実施
 英語化は新規 HARD/WARN ゼロだが、既存の 1000 行超 7 ファイル (map_screen 3643 / map_daily_transit 2029 / sanctuary 1678 / galaxy 1460 / sanctuary_title_diagnosis 1374 / forecast 1092 / daily_transit_data 1078) は**別バックログ**として残置。`check_file_split.py` で確認可。
 
+### 0.2.61 英語化 Phase 1 大幅前進 (5 サブシステム完了・≈960/2,200文字列) (2026-06-04)
+
+> §0.2.60 の続き。1 セッションで 6 コミット。**consultation 全部 / FORECAST / Galaxy / Map FortuneSheet / Map Daily Transit のサブシステムを 100% 英語化完了**。各コミットで analyze クリーン / test 全319件green / slang analyze 未訳0 / audit 退行ゼロ を確認。ブランチ `feat/solara-en-localization`(push 済)。
+
+#### 完了画面 (新 slang 名前空間 / commit)
+- `consultResult` — Stella相談 結果フロー全部 (result_screen/card/widgets/credit_widgets/share/return_chip) (`ddc6e24`)
+- `consultStart`/`consultHistory`/`consultCredit`/`consultPlacePicker` — Stella相談 入力/履歴/クレジット購入/地点選択 全部 (input_screen/examples/picker/picker_widgets/start_popup + history_screen/widgets + credit_sheet + place_picker) (`e1b0bdd`)
+- `forecast` — FORECAST 全部 (forecast_screen + forecast/forecast_life_periods + forecast/forecast_top5。legend/usage/heatmapInfo/cycles/top5) (`18459bb`)
+- `galaxy` — Galaxy 画面 (月相詩的解説/月イベント案内/総合ガイド/今日の月) (`f7b8cff`)
+- `mapFortune` — Map FortuneSheet (src/凡例/カテゴリnuance/Map使い方/カテゴリと関連惑星)。map_constants `srcLabels` を locale連動 getter 化 (`dcda68d`)
+- `mapDaily` — Map Daily Transit (タブ/カテゴリ/TOP/タグライン/通過行/アングル/緯度帯/失敗・空状態/使い方) (`5519b85`)
+
+#### 本セッションで確立した追加パターン・是正
+- **`Localizations.localeOf().languageCode` 基準の en 判定は `!isEnLocale()` (slangゲート) に統一** — 端末en+override未設定で「半英語UI」が出る穴を塞ぐ (forecast_life_periods / galaxy で是正)。
+- **正典違反の修正**: `lifePeriodLabelsEn['money']='Wealth'` → `Abundance` (money は全言語で豊かさ系・吉凶回避)。
+- **共有helper の積極再利用**: `dirName(dir)`(方位)・`planetName(key)`(惑星・ペア表記も動的組立)・`categoryLabel(id)`(canon短縮形)・`dir16`(コード配列)・`locations.currentAddress`/`locations.cancel`。history は theme/timeBand/when/scope を `consultInput` から再利用。
+- **罠**: ① `dir16JP[x] ?? x` 直参照 → `dirName(x)` に置換。② slang reserved word key 回避 (`default`→`neutral`)。③ JSONキー rename 後は必ず `dart run slang` 再生成してから analyze (古い生成物で undefined_getter)。④ `!kReleaseMode` debug UI・既存 bilingual(`isJP ?`) は対象外で可。
+
+#### 残り (Phase 1・次セッション)
+**sanctuary_screen 49 / sanctuary_title_diagnosis 39 / sanctuary_profile_editor 28** → **map_screen 66 (3643行・最後)** → horo系 (horo_relocation_lines 32 / horo_constants 30) / galaxy_archive_filter の `GalaxyArchiveSortLabel.jp`(新しい順/古い順/レア度順) / 小物。consultation_result_card の残 42 は `_kCountryJa`(ja国名 lookup・`_kCountryEn` 併設で locale 選択)=意図的なデータで対象外。
+
+#### 検証 (本セッション末・全 green)
+`flutter analyze` クリーン / `flutter test` **全319件green** / `slang analyze` = `en:{}`(未訳0) / `audit.py` = **HARD7(英語化で新規ゼロ)/WARN35(+1=consultation_result_card 581行・国名表追加で500超=許容)/NOTICE43/重複20(全て `),`/`],`/`style:` の構造的誤検出)/TODO4/print1/未使用0** / `check_unused.py`=0 / `find_unused_code.py`=3候補(`BuildContextTranslationsExtension`=slang生成 / `GalaxyArchiveSortLabel`=`.jp`実使用 / `DominantFortuneKindToCategoryIcon`=`.toCategoryIcon()`実使用)すべて誤検出=**削除対象ゼロ** / `check_file_split.py`=HARD7変化なし(galaxy 1460→1416・forecast 1092→1057・map_daily_transit 2029→2004 と縮小)。
+
 ### 0.3 Horo「今日の占い」1 日 1 回固定 + プロンプト刷新 (2026-05-27)
 
 > **設計の柱**: 「30 回までは OK」のような曖昧な防衛をやめ、「**1 日 1 回・変更しない**」を
