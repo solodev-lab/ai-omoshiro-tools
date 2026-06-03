@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../i18n/strings.g.dart';
 import '../../widgets/info_popup.dart';
 import 'map_constants.dart';
 import 'map_styles.dart';
@@ -80,7 +81,7 @@ class _MapDisplayMenuState extends State<MapDisplayMenu> {
         children: [
           _scrollRow([
             _tabBtnWithInfo('Map', _MainTab.map),
-            _tabBtnWithInfo('惑星', _MainTab.planet),
+            _tabBtnWithInfo(t.mapMenu.tabPlanet, _MainTab.planet),
             _tabBtnWithInfo('ACG', _MainTab.acg),
           ]),
           const SizedBox(height: 6),
@@ -103,13 +104,13 @@ class _MapDisplayMenuState extends State<MapDisplayMenu> {
               () => widget.onMapStyleChanged(MapStyle.osmHotLight)),
           _radioBtn('MapDark', widget.mapStyle == MapStyle.osmHotDark,
               () => widget.onMapStyleChanged(MapStyle.osmHotDark)),
-          _toggleBtn('方位エネルギー', widget.layers['sectors'] ?? false,
+          _toggleBtn(t.mapMenu.map.dirEnergy, widget.layers['sectors'] ?? false,
               () => widget.onLayerToggle('sectors')),
-          _toggleBtn('コンパス', widget.layers['compass'] ?? false,
+          _toggleBtn(t.mapMenu.map.compass, widget.layers['compass'] ?? false,
               () => widget.onLayerToggle('compass')),
           // 「座標取得」: 十字 (+) は常時表示、ラベル (緯度経度) のみ
           // このトグルで制御。ラベル常時表示は地図が見にくいのでトグル制。
-          _toggleBtn('座標取得', widget.layers['coords'] ?? false,
+          _toggleBtn(t.mapMenu.map.coords, widget.layers['coords'] ?? false,
               () => widget.onLayerToggle('coords')),
         ];
       case _MainTab.planet:
@@ -117,27 +118,27 @@ class _MapDisplayMenuState extends State<MapDisplayMenu> {
         // 直感的でなかったので、カタカナの簡素なラベルに統一。
         // 英語ロケール対応時は TYPE/GROUP/FOCUS の予定。
         return [
-          _subTabBtn('タイプ', _planetSub == _PlanetSub.chart, () => _toggleSub(_PlanetSub.chart)),
-          _subTabBtn('グループ', _planetSub == _PlanetSub.pg, () => _toggleSub(_PlanetSub.pg)),
-          _subTabBtn('テーマ', _planetSub == _PlanetSub.fortune, () => _toggleSub(_PlanetSub.fortune)),
+          _subTabBtn(t.mapMenu.planet.type, _planetSub == _PlanetSub.chart, () => _toggleSub(_PlanetSub.chart)),
+          _subTabBtn(t.mapMenu.planet.group, _planetSub == _PlanetSub.pg, () => _toggleSub(_PlanetSub.pg)),
+          _subTabBtn(t.mapMenu.planet.focus, _planetSub == _PlanetSub.fortune, () => _toggleSub(_PlanetSub.fortune)),
         ];
       case _MainTab.acg:
         return [
-          _toggleBtn('Natal線', widget.astroLayers['aspect'] ?? false,
+          _toggleBtn(t.mapMenu.acg.natalLine, widget.astroLayers['aspect'] ?? false,
               () => widget.onAstroToggle('aspect')),
-          _toggleBtn('Transit線', widget.astroLayers['aspectTransit'] ?? false,
+          _toggleBtn(t.mapMenu.acg.transitLine, widget.astroLayers['aspectTransit'] ?? false,
               () => widget.onAstroToggle('aspectTransit')),
-          _toggleBtn('Prog線', widget.astroLayers['aspectProgressed'] ?? false,
+          _toggleBtn(t.mapMenu.acg.progLine, widget.astroLayers['aspectProgressed'] ?? false,
               () => widget.onAstroToggle('aspectProgressed')),
-          _toggleBtn('S.Arc線', widget.astroLayers['aspectSolarArc'] ?? false,
+          _toggleBtn(t.mapMenu.acg.sArcLine, widget.astroLayers['aspectSolarArc'] ?? false,
               () => widget.onAstroToggle('aspectSolarArc')),
           // B1: アスペクト線 (square/trine/sextile)。全フレーム共通トグル、デフォルト OFF。
-          _toggleBtn('アスペクト線', widget.astroLayers['aspectLines'] ?? false,
+          _toggleBtn(t.mapMenu.acg.aspectLines, widget.astroLayers['aspectLines'] ?? false,
               () => widget.onAstroToggle('aspectLines')),
           // 2026-05-11 「天頂帯」を ACG モード下部の 2 層メニュー (各フレーム配下) に移動。
           // フレーム別に独立 (zenithBand_natal / nadirBand_transit 等) なので
           // ここの共通トグルは廃止。
-          _toggleBtn('引越し', widget.astroLayers['relocate'] ?? false,
+          _toggleBtn(t.mapMenu.acg.relocate, widget.astroLayers['relocate'] ?? false,
               () => widget.onAstroToggle('relocate')),
         ];
     }
@@ -157,11 +158,11 @@ class _MapDisplayMenuState extends State<MapDisplayMenu> {
         ];
       case _PlanetSub.pg:
         return [
-          _toggleBtn('個人', widget.planetGroups['personal'] ?? false,
+          _toggleBtn(t.mapMenu.pg.personal, widget.planetGroups['personal'] ?? false,
               () => widget.onPlanetGroupToggle('personal')),
-          _toggleBtn('社会', widget.planetGroups['social'] ?? false,
+          _toggleBtn(t.mapMenu.pg.social, widget.planetGroups['social'] ?? false,
               () => widget.onPlanetGroupToggle('social')),
-          _toggleBtn('世代', widget.planetGroups['generational'] ?? false,
+          _toggleBtn(t.mapMenu.pg.generational, widget.planetGroups['generational'] ?? false,
               () => widget.onPlanetGroupToggle('generational')),
         ];
       case _PlanetSub.fortune:
@@ -218,59 +219,52 @@ class _MapDisplayMenuState extends State<MapDisplayMenu> {
   void _showTabInfo(_MainTab tab) {
     late String title;
     late List<(String, String)> items;
+    final p = t.mapMenu.popup;
     switch (tab) {
       case _MainTab.map:
-        title = 'Map レイヤー';
-        items = const [
-          ('Map / MapDark', '通常マップとダークマップを切替。視認性の好みで選択。'),
-          ('方位エネルギー', '自分の星のエネルギーを 16 方位の扇形で地図上に表示。色が濃い方位ほどエネルギーが強い。タップでカテゴリ別に絞り込める。'),
-          ('コンパス', '中心地点から見た方位線 (N / E / S / W)。距離感の把握に。'),
-          ('座標取得', '画面中央の + の下に緯度経度ラベルを表示。地図を動かすと中心の座標がリアルタイムで更新される。ラベルをタップするとクリップボードにコピーされる。場所登録の事前確認や任意地点の座標確認に。十字 (+) 自体はトグル OFF でも常時表示。'),
+        title = p.mapTitle;
+        items = [
+          ('Map / MapDark', p.mapDarkBody),
+          (t.mapMenu.map.dirEnergy, p.dirEnergyBody),
+          (t.mapMenu.map.compass, p.compassBody),
+          (t.mapMenu.map.coords, p.coordsBody),
         ];
         break;
       case _MainTab.planet:
-        // map_constants.dart の planetMeta / planetGroups / fortunePlanets
-        // を引いて日本語名で全惑星を列挙する (短縮 Sun〜Mars 表記をやめ、
-        // ユーザーが惑星を見落とさず確認できる形に)。
-        String planetsJp(List<String> keys) =>
-            keys.map((k) => planetMeta[k]?.jp ?? k).join(' / ');
-        title = '惑星レイヤー';
+        // planetName (map_constants) でロケール別の惑星名を列挙
+        // (ja=漢字名 / en=英語名)。動的な惑星リストは slang パラメータで渡す。
+        String planetsName(List<String> keys) =>
+            keys.map(planetName).join(' / ');
+        title = p.planetTitle;
         items = [
+          (t.mapMenu.planet.type, p.typeBody),
           (
-            'タイプ',
-            'どのチャートの惑星を表示するか。'
-                'Natal (出生時固定) / Prog (1日=1年で進行) / Transit (今この瞬間)。'
+            t.mapMenu.planet.group,
+            p.groupBody(
+              personal: planetsName(planetGroups["personal"]!),
+              social: planetsName(planetGroups["social"]!),
+              generational: planetsName(planetGroups["generational"]!),
+            ),
           ),
           (
-            'グループ',
-            '10 惑星のグループフィルタ。\n'
-                '・個人: ${planetsJp(planetGroups["personal"]!)}\n'
-                '・社会: ${planetsJp(planetGroups["social"]!)}\n'
-                '・世代: ${planetsJp(planetGroups["generational"]!)}'
-          ),
-          (
-            'テーマ',
-            'カテゴリ別フィルタ。テーマに関わる惑星のみ強調表示する。\n'
-                '・総合: 全惑星\n'
-                '・癒し: ${planetsJp(fortunePlanets["healing"]!)}\n'
-                '・豊かさ: ${planetsJp(fortunePlanets["money"]!)}\n'
-                '・恋愛: ${planetsJp(fortunePlanets["love"]!)}\n'
-                '・仕事: ${planetsJp(fortunePlanets["work"]!)}\n'
-                '・話す: ${planetsJp(fortunePlanets["communication"]!)}'
+            t.mapMenu.planet.focus,
+            p.focusBody(
+              healing: planetsName(fortunePlanets["healing"]!),
+              money: planetsName(fortunePlanets["money"]!),
+              love: planetsName(fortunePlanets["love"]!),
+              work: planetsName(fortunePlanets["work"]!),
+              communication: planetsName(fortunePlanets["communication"]!),
+            ),
           ),
         ];
         break;
       case _MainTab.acg:
-        title = 'ACG レイヤー (Astro*Carto*Graphy)';
-        items = const [
-          ('4 フレームのライン (Natal / Transit / Prog / S.Arc)',
-              '各惑星 × 4 アングル (ASC/MC/DSC/IC) の「本線」を世界規模で描画。4 フレームはすべて無料で切替できる (Natal=出生時固定 / Transit=今動く / Prog=2次進行 / S.Arc=ソーラーアーク)。各ピル横の i ボタンに詳しい説明があります。'),
-          ('アスペクト線 〔Pro〕',
-              '本線 (コンジャンクション 40 本) に、スクエア / トライン / セクスタイルを加えた全 120 本を表示する拡張。ON 中の全フレームに同時適用されます。Cosmic Pro 限定。'),
-          ('引越し 〔Pro〕',
-              '地図タップ地点を引越し先に見立てて表示。①現住所と比べて近づく / 遠ざかる星のライン、②ASC / MC の星座変化、③10 惑星の 12 ハウス遷移、をまとめて確認できます。Cosmic Pro 限定。'),
-          ('表示のヒント',
-              'ACG 線は世界規模で表示するため、ズームレベルによっては画面外に出て見えないことがあります。ズームアウト (縮小表示) すると線の全体像が確認しやすくなります。'),
+        title = p.acgTitle;
+        items = [
+          (p.framesHead, p.framesBody),
+          (p.aspectHead, p.aspectBody),
+          (p.relocateHead, p.relocateBody),
+          (p.hintHead, p.hintBody),
         ];
         break;
     }

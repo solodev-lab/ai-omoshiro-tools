@@ -39,12 +39,28 @@ class TranslationsEn extends Translations with BaseTranslations<AppLocale, Trans
 	TranslationsEn $copyWith({TranslationMetadata<AppLocale, Translations>? meta}) => TranslationsEn(meta: meta ?? this.$meta);
 
 	// Translations
+	@override late final _Translations$mapMenu$en mapMenu = _Translations$mapMenu$en._(_root);
 	@override late final _Translations$locations$en locations = _Translations$locations$en._(_root);
 	@override late final _Translations$paywall$en paywall = _Translations$paywall$en._(_root);
 	@override late final _Translations$category$en category = _Translations$category$en._(_root);
 	@override late final _Translations$disclaimer$en disclaimer = _Translations$disclaimer$en._(_root);
 	@override late final _Translations$common$en common = _Translations$common$en._(_root);
 	@override late final _Translations$aiConsent$en aiConsent = _Translations$aiConsent$en._(_root);
+}
+
+// Path: mapMenu
+class _Translations$mapMenu$en extends Translations$mapMenu$ja {
+	_Translations$mapMenu$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get tabPlanet => 'Planets';
+	@override late final _Translations$mapMenu$map$en map = _Translations$mapMenu$map$en._(_root);
+	@override late final _Translations$mapMenu$planet$en planet = _Translations$mapMenu$planet$en._(_root);
+	@override late final _Translations$mapMenu$acg$en acg = _Translations$mapMenu$acg$en._(_root);
+	@override late final _Translations$mapMenu$pg$en pg = _Translations$mapMenu$pg$en._(_root);
+	@override late final _Translations$mapMenu$popup$en popup = _Translations$mapMenu$popup$en._(_root);
 }
 
 // Path: locations
@@ -156,6 +172,84 @@ class _Translations$aiConsent$en extends Translations$aiConsent$ja {
 	@override late final _Translations$aiConsent$geminiContent$en geminiContent = _Translations$aiConsent$geminiContent$en._(_root);
 	@override late final _Translations$aiConsent$decisions$en decisions = _Translations$aiConsent$decisions$en._(_root);
 	@override late final _Translations$aiConsent$consentHandling$en consentHandling = _Translations$aiConsent$consentHandling$en._(_root);
+}
+
+// Path: mapMenu.map
+class _Translations$mapMenu$map$en extends Translations$mapMenu$map$ja {
+	_Translations$mapMenu$map$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get dirEnergy => 'Directional Energy';
+	@override String get compass => 'Compass';
+	@override String get coords => 'Coordinates';
+}
+
+// Path: mapMenu.planet
+class _Translations$mapMenu$planet$en extends Translations$mapMenu$planet$ja {
+	_Translations$mapMenu$planet$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get type => 'Type';
+	@override String get group => 'Group';
+	@override String get focus => 'Focus';
+}
+
+// Path: mapMenu.acg
+class _Translations$mapMenu$acg$en extends Translations$mapMenu$acg$ja {
+	_Translations$mapMenu$acg$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get natalLine => 'Natal lines';
+	@override String get transitLine => 'Transit lines';
+	@override String get progLine => 'Prog lines';
+	@override String get sArcLine => 'S.Arc lines';
+	@override String get aspectLines => 'Aspect lines';
+	@override String get relocate => 'Relocate';
+}
+
+// Path: mapMenu.pg
+class _Translations$mapMenu$pg$en extends Translations$mapMenu$pg$ja {
+	_Translations$mapMenu$pg$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get personal => 'Personal';
+	@override String get social => 'Social';
+	@override String get generational => 'Generational';
+}
+
+// Path: mapMenu.popup
+class _Translations$mapMenu$popup$en extends Translations$mapMenu$popup$ja {
+	_Translations$mapMenu$popup$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get mapTitle => 'Map layers';
+	@override String get mapDarkBody => 'Switch between the normal and dark map. Choose by visibility preference.';
+	@override String get dirEnergyBody => 'Shows your stars\' energy as 16-direction fans on the map. The darker a direction\'s color, the stronger its energy. Tap to filter by category.';
+	@override String get compassBody => 'Direction lines (N / E / S / W) seen from the center point. Helps gauge bearing.';
+	@override String get coordsBody => 'Shows a latitude/longitude label below the + at the center of the screen. As you move the map, the center coordinates update in real time. Tap the label to copy it to the clipboard. Useful for checking before saving a place, or for confirming the coordinates of any point. The crosshair (+) itself is always shown, even when this toggle is off.';
+	@override String get planetTitle => 'Planet layers';
+	@override String get typeBody => 'Which chart\'s planets to show. Natal (fixed at birth) / Prog (one day = one year) / Transit (this very moment).';
+	@override String groupBody({required Object personal, required Object social, required Object generational}) => 'Group filter for the 10 planets.\n• Personal: ${personal}\n• Social: ${social}\n• Generational: ${generational}';
+	@override String focusBody({required Object healing, required Object money, required Object love, required Object work, required Object communication}) => 'Category filter — highlights only the planets related to a theme.\n• Overall: all planets\n• Healing: ${healing}\n• Abundance: ${money}\n• Love: ${love}\n• Work: ${work}\n• Talk: ${communication}';
+	@override String get acgTitle => 'ACG layers (Astro*Carto*Graphy)';
+	@override String get framesHead => 'The 4 frames of lines (Natal / Transit / Prog / S.Arc)';
+	@override String get framesBody => 'Draws the "main lines" of each planet × 4 angles (ASC/MC/DSC/IC) on a world scale. All 4 frames can be switched for free (Natal = fixed at birth / Transit = moving now / Prog = secondary progression / S.Arc = solar arc). The i button beside each pill has a detailed explanation.';
+	@override String get aspectHead => 'Aspect lines [Pro]';
+	@override String get aspectBody => 'An extension that adds square / trine / sextile to the main lines (40 conjunction lines), for 120 lines in total. It applies to all frames that are on at the same time. Cosmic Pro only.';
+	@override String get relocateHead => 'Relocate [Pro]';
+	@override String get relocateBody => 'Treats the point you tap on the map as a relocation destination. You can check, all together: (1) which planets\' lines move closer or farther compared with your current address, (2) the sign changes of ASC / MC, and (3) the 12-house transitions of the 10 planets. Cosmic Pro only.';
+	@override String get hintHead => 'Display tip';
+	@override String get hintBody => 'Because ACG lines are drawn on a world scale, at some zoom levels they may move off-screen and be hard to see. Zooming out makes the overall picture of the lines easier to see.';
 }
 
 // Path: locations.guide
@@ -718,6 +812,40 @@ class _Translations$paywall$faq$resubscribe$en extends Translations$paywall$faq$
 extension on TranslationsEn {
 	dynamic _flatMapFunction(String path) {
 		return switch (path) {
+			'mapMenu.tabPlanet' => 'Planets',
+			'mapMenu.map.dirEnergy' => 'Directional Energy',
+			'mapMenu.map.compass' => 'Compass',
+			'mapMenu.map.coords' => 'Coordinates',
+			'mapMenu.planet.type' => 'Type',
+			'mapMenu.planet.group' => 'Group',
+			'mapMenu.planet.focus' => 'Focus',
+			'mapMenu.acg.natalLine' => 'Natal lines',
+			'mapMenu.acg.transitLine' => 'Transit lines',
+			'mapMenu.acg.progLine' => 'Prog lines',
+			'mapMenu.acg.sArcLine' => 'S.Arc lines',
+			'mapMenu.acg.aspectLines' => 'Aspect lines',
+			'mapMenu.acg.relocate' => 'Relocate',
+			'mapMenu.pg.personal' => 'Personal',
+			'mapMenu.pg.social' => 'Social',
+			'mapMenu.pg.generational' => 'Generational',
+			'mapMenu.popup.mapTitle' => 'Map layers',
+			'mapMenu.popup.mapDarkBody' => 'Switch between the normal and dark map. Choose by visibility preference.',
+			'mapMenu.popup.dirEnergyBody' => 'Shows your stars\' energy as 16-direction fans on the map. The darker a direction\'s color, the stronger its energy. Tap to filter by category.',
+			'mapMenu.popup.compassBody' => 'Direction lines (N / E / S / W) seen from the center point. Helps gauge bearing.',
+			'mapMenu.popup.coordsBody' => 'Shows a latitude/longitude label below the + at the center of the screen. As you move the map, the center coordinates update in real time. Tap the label to copy it to the clipboard. Useful for checking before saving a place, or for confirming the coordinates of any point. The crosshair (+) itself is always shown, even when this toggle is off.',
+			'mapMenu.popup.planetTitle' => 'Planet layers',
+			'mapMenu.popup.typeBody' => 'Which chart\'s planets to show. Natal (fixed at birth) / Prog (one day = one year) / Transit (this very moment).',
+			'mapMenu.popup.groupBody' => ({required Object personal, required Object social, required Object generational}) => 'Group filter for the 10 planets.\n• Personal: ${personal}\n• Social: ${social}\n• Generational: ${generational}',
+			'mapMenu.popup.focusBody' => ({required Object healing, required Object money, required Object love, required Object work, required Object communication}) => 'Category filter — highlights only the planets related to a theme.\n• Overall: all planets\n• Healing: ${healing}\n• Abundance: ${money}\n• Love: ${love}\n• Work: ${work}\n• Talk: ${communication}',
+			'mapMenu.popup.acgTitle' => 'ACG layers (Astro*Carto*Graphy)',
+			'mapMenu.popup.framesHead' => 'The 4 frames of lines (Natal / Transit / Prog / S.Arc)',
+			'mapMenu.popup.framesBody' => 'Draws the "main lines" of each planet × 4 angles (ASC/MC/DSC/IC) on a world scale. All 4 frames can be switched for free (Natal = fixed at birth / Transit = moving now / Prog = secondary progression / S.Arc = solar arc). The i button beside each pill has a detailed explanation.',
+			'mapMenu.popup.aspectHead' => 'Aspect lines [Pro]',
+			'mapMenu.popup.aspectBody' => 'An extension that adds square / trine / sextile to the main lines (40 conjunction lines), for 120 lines in total. It applies to all frames that are on at the same time. Cosmic Pro only.',
+			'mapMenu.popup.relocateHead' => 'Relocate [Pro]',
+			'mapMenu.popup.relocateBody' => 'Treats the point you tap on the map as a relocation destination. You can check, all together: (1) which planets\' lines move closer or farther compared with your current address, (2) the sign changes of ASC / MC, and (3) the 12-house transitions of the 10 planets. Cosmic Pro only.',
+			'mapMenu.popup.hintHead' => 'Display tip',
+			'mapMenu.popup.hintBody' => 'Because ACG lines are drawn on a world scale, at some zoom levels they may move off-screen and be hard to see. Zooming out makes the overall picture of the lines easier to see.',
 			'locations.locDefaults.0' => 'Place 1',
 			'locations.locDefaults.1' => 'Place 2',
 			'locations.locDefaults.2' => 'Place 3',

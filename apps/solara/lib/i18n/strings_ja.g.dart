@@ -40,12 +40,31 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 	Translations $copyWith({TranslationMetadata<AppLocale, Translations>? meta}) => Translations(meta: meta ?? this.$meta);
 
 	// Translations
+	late final Translations$mapMenu$ja mapMenu = Translations$mapMenu$ja.internal(_root);
 	late final Translations$locations$ja locations = Translations$locations$ja.internal(_root);
 	late final Translations$paywall$ja paywall = Translations$paywall$ja.internal(_root);
 	late final Translations$category$ja category = Translations$category$ja.internal(_root);
 	late final Translations$disclaimer$ja disclaimer = Translations$disclaimer$ja.internal(_root);
 	late final Translations$common$ja common = Translations$common$ja.internal(_root);
 	late final Translations$aiConsent$ja aiConsent = Translations$aiConsent$ja.internal(_root);
+}
+
+// Path: mapMenu
+class Translations$mapMenu$ja {
+	Translations$mapMenu$ja.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// ja: '惑星'
+	String get tabPlanet => '惑星';
+
+	late final Translations$mapMenu$map$ja map = Translations$mapMenu$map$ja.internal(_root);
+	late final Translations$mapMenu$planet$ja planet = Translations$mapMenu$planet$ja.internal(_root);
+	late final Translations$mapMenu$acg$ja acg = Translations$mapMenu$acg$ja.internal(_root);
+	late final Translations$mapMenu$pg$ja pg = Translations$mapMenu$pg$ja.internal(_root);
+	late final Translations$mapMenu$popup$ja popup = Translations$mapMenu$popup$ja.internal(_root);
 }
 
 // Path: locations
@@ -213,6 +232,150 @@ class Translations$aiConsent$ja {
 	late final Translations$aiConsent$geminiContent$ja geminiContent = Translations$aiConsent$geminiContent$ja.internal(_root);
 	late final Translations$aiConsent$decisions$ja decisions = Translations$aiConsent$decisions$ja.internal(_root);
 	late final Translations$aiConsent$consentHandling$ja consentHandling = Translations$aiConsent$consentHandling$ja.internal(_root);
+}
+
+// Path: mapMenu.map
+class Translations$mapMenu$map$ja {
+	Translations$mapMenu$map$ja.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// ja: '方位エネルギー'
+	String get dirEnergy => '方位エネルギー';
+
+	/// ja: 'コンパス'
+	String get compass => 'コンパス';
+
+	/// ja: '座標取得'
+	String get coords => '座標取得';
+}
+
+// Path: mapMenu.planet
+class Translations$mapMenu$planet$ja {
+	Translations$mapMenu$planet$ja.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// ja: 'タイプ'
+	String get type => 'タイプ';
+
+	/// ja: 'グループ'
+	String get group => 'グループ';
+
+	/// ja: 'テーマ'
+	String get focus => 'テーマ';
+}
+
+// Path: mapMenu.acg
+class Translations$mapMenu$acg$ja {
+	Translations$mapMenu$acg$ja.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// ja: 'Natal線'
+	String get natalLine => 'Natal線';
+
+	/// ja: 'Transit線'
+	String get transitLine => 'Transit線';
+
+	/// ja: 'Prog線'
+	String get progLine => 'Prog線';
+
+	/// ja: 'S.Arc線'
+	String get sArcLine => 'S.Arc線';
+
+	/// ja: 'アスペクト線'
+	String get aspectLines => 'アスペクト線';
+
+	/// ja: '引越し'
+	String get relocate => '引越し';
+}
+
+// Path: mapMenu.pg
+class Translations$mapMenu$pg$ja {
+	Translations$mapMenu$pg$ja.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// ja: '個人'
+	String get personal => '個人';
+
+	/// ja: '社会'
+	String get social => '社会';
+
+	/// ja: '世代'
+	String get generational => '世代';
+}
+
+// Path: mapMenu.popup
+class Translations$mapMenu$popup$ja {
+	Translations$mapMenu$popup$ja.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// ja: 'Map レイヤー'
+	String get mapTitle => 'Map レイヤー';
+
+	/// ja: '通常マップとダークマップを切替。視認性の好みで選択。'
+	String get mapDarkBody => '通常マップとダークマップを切替。視認性の好みで選択。';
+
+	/// ja: '自分の星のエネルギーを 16 方位の扇形で地図上に表示。色が濃い方位ほどエネルギーが強い。タップでカテゴリ別に絞り込める。'
+	String get dirEnergyBody => '自分の星のエネルギーを 16 方位の扇形で地図上に表示。色が濃い方位ほどエネルギーが強い。タップでカテゴリ別に絞り込める。';
+
+	/// ja: '中心地点から見た方位線 (N / E / S / W)。距離感の把握に。'
+	String get compassBody => '中心地点から見た方位線 (N / E / S / W)。距離感の把握に。';
+
+	/// ja: '画面中央の + の下に緯度経度ラベルを表示。地図を動かすと中心の座標がリアルタイムで更新される。ラベルをタップするとクリップボードにコピーされる。場所登録の事前確認や任意地点の座標確認に。十字 (+) 自体はトグル OFF でも常時表示。'
+	String get coordsBody => '画面中央の + の下に緯度経度ラベルを表示。地図を動かすと中心の座標がリアルタイムで更新される。ラベルをタップするとクリップボードにコピーされる。場所登録の事前確認や任意地点の座標確認に。十字 (+) 自体はトグル OFF でも常時表示。';
+
+	/// ja: '惑星レイヤー'
+	String get planetTitle => '惑星レイヤー';
+
+	/// ja: 'どのチャートの惑星を表示するか。Natal (出生時固定) / Prog (1日=1年で進行) / Transit (今この瞬間)。'
+	String get typeBody => 'どのチャートの惑星を表示するか。Natal (出生時固定) / Prog (1日=1年で進行) / Transit (今この瞬間)。';
+
+	/// ja: '10 惑星のグループフィルタ。 ・個人: $personal ・社会: $social ・世代: $generational'
+	String groupBody({required Object personal, required Object social, required Object generational}) => '10 惑星のグループフィルタ。\n・個人: ${personal}\n・社会: ${social}\n・世代: ${generational}';
+
+	/// ja: 'カテゴリ別フィルタ。テーマに関わる惑星のみ強調表示する。 ・総合: 全惑星 ・癒し: $healing ・豊かさ: $money ・恋愛: $love ・仕事: $work ・話す: $communication'
+	String focusBody({required Object healing, required Object money, required Object love, required Object work, required Object communication}) => 'カテゴリ別フィルタ。テーマに関わる惑星のみ強調表示する。\n・総合: 全惑星\n・癒し: ${healing}\n・豊かさ: ${money}\n・恋愛: ${love}\n・仕事: ${work}\n・話す: ${communication}';
+
+	/// ja: 'ACG レイヤー (Astro*Carto*Graphy)'
+	String get acgTitle => 'ACG レイヤー (Astro*Carto*Graphy)';
+
+	/// ja: '4 フレームのライン (Natal / Transit / Prog / S.Arc)'
+	String get framesHead => '4 フレームのライン (Natal / Transit / Prog / S.Arc)';
+
+	/// ja: '各惑星 × 4 アングル (ASC/MC/DSC/IC) の「本線」を世界規模で描画。4 フレームはすべて無料で切替できる (Natal=出生時固定 / Transit=今動く / Prog=2次進行 / S.Arc=ソーラーアーク)。各ピル横の i ボタンに詳しい説明があります。'
+	String get framesBody => '各惑星 × 4 アングル (ASC/MC/DSC/IC) の「本線」を世界規模で描画。4 フレームはすべて無料で切替できる (Natal=出生時固定 / Transit=今動く / Prog=2次進行 / S.Arc=ソーラーアーク)。各ピル横の i ボタンに詳しい説明があります。';
+
+	/// ja: 'アスペクト線 〔Pro〕'
+	String get aspectHead => 'アスペクト線 〔Pro〕';
+
+	/// ja: '本線 (コンジャンクション 40 本) に、スクエア / トライン / セクスタイルを加えた全 120 本を表示する拡張。ON 中の全フレームに同時適用されます。Cosmic Pro 限定。'
+	String get aspectBody => '本線 (コンジャンクション 40 本) に、スクエア / トライン / セクスタイルを加えた全 120 本を表示する拡張。ON 中の全フレームに同時適用されます。Cosmic Pro 限定。';
+
+	/// ja: '引越し 〔Pro〕'
+	String get relocateHead => '引越し 〔Pro〕';
+
+	/// ja: '地図タップ地点を引越し先に見立てて表示。①現住所と比べて近づく / 遠ざかる星のライン、②ASC / MC の星座変化、③10 惑星の 12 ハウス遷移、をまとめて確認できます。Cosmic Pro 限定。'
+	String get relocateBody => '地図タップ地点を引越し先に見立てて表示。①現住所と比べて近づく / 遠ざかる星のライン、②ASC / MC の星座変化、③10 惑星の 12 ハウス遷移、をまとめて確認できます。Cosmic Pro 限定。';
+
+	/// ja: '表示のヒント'
+	String get hintHead => '表示のヒント';
+
+	/// ja: 'ACG 線は世界規模で表示するため、ズームレベルによっては画面外に出て見えないことがあります。ズームアウト (縮小表示) すると線の全体像が確認しやすくなります。'
+	String get hintBody => 'ACG 線は世界規模で表示するため、ズームレベルによっては画面外に出て見えないことがあります。ズームアウト (縮小表示) すると線の全体像が確認しやすくなります。';
 }
 
 // Path: locations.guide
@@ -1040,6 +1203,40 @@ class Translations$paywall$faq$resubscribe$ja {
 extension on Translations {
 	dynamic _flatMapFunction(String path) {
 		return switch (path) {
+			'mapMenu.tabPlanet' => '惑星',
+			'mapMenu.map.dirEnergy' => '方位エネルギー',
+			'mapMenu.map.compass' => 'コンパス',
+			'mapMenu.map.coords' => '座標取得',
+			'mapMenu.planet.type' => 'タイプ',
+			'mapMenu.planet.group' => 'グループ',
+			'mapMenu.planet.focus' => 'テーマ',
+			'mapMenu.acg.natalLine' => 'Natal線',
+			'mapMenu.acg.transitLine' => 'Transit線',
+			'mapMenu.acg.progLine' => 'Prog線',
+			'mapMenu.acg.sArcLine' => 'S.Arc線',
+			'mapMenu.acg.aspectLines' => 'アスペクト線',
+			'mapMenu.acg.relocate' => '引越し',
+			'mapMenu.pg.personal' => '個人',
+			'mapMenu.pg.social' => '社会',
+			'mapMenu.pg.generational' => '世代',
+			'mapMenu.popup.mapTitle' => 'Map レイヤー',
+			'mapMenu.popup.mapDarkBody' => '通常マップとダークマップを切替。視認性の好みで選択。',
+			'mapMenu.popup.dirEnergyBody' => '自分の星のエネルギーを 16 方位の扇形で地図上に表示。色が濃い方位ほどエネルギーが強い。タップでカテゴリ別に絞り込める。',
+			'mapMenu.popup.compassBody' => '中心地点から見た方位線 (N / E / S / W)。距離感の把握に。',
+			'mapMenu.popup.coordsBody' => '画面中央の + の下に緯度経度ラベルを表示。地図を動かすと中心の座標がリアルタイムで更新される。ラベルをタップするとクリップボードにコピーされる。場所登録の事前確認や任意地点の座標確認に。十字 (+) 自体はトグル OFF でも常時表示。',
+			'mapMenu.popup.planetTitle' => '惑星レイヤー',
+			'mapMenu.popup.typeBody' => 'どのチャートの惑星を表示するか。Natal (出生時固定) / Prog (1日=1年で進行) / Transit (今この瞬間)。',
+			'mapMenu.popup.groupBody' => ({required Object personal, required Object social, required Object generational}) => '10 惑星のグループフィルタ。\n・個人: ${personal}\n・社会: ${social}\n・世代: ${generational}',
+			'mapMenu.popup.focusBody' => ({required Object healing, required Object money, required Object love, required Object work, required Object communication}) => 'カテゴリ別フィルタ。テーマに関わる惑星のみ強調表示する。\n・総合: 全惑星\n・癒し: ${healing}\n・豊かさ: ${money}\n・恋愛: ${love}\n・仕事: ${work}\n・話す: ${communication}',
+			'mapMenu.popup.acgTitle' => 'ACG レイヤー (Astro*Carto*Graphy)',
+			'mapMenu.popup.framesHead' => '4 フレームのライン (Natal / Transit / Prog / S.Arc)',
+			'mapMenu.popup.framesBody' => '各惑星 × 4 アングル (ASC/MC/DSC/IC) の「本線」を世界規模で描画。4 フレームはすべて無料で切替できる (Natal=出生時固定 / Transit=今動く / Prog=2次進行 / S.Arc=ソーラーアーク)。各ピル横の i ボタンに詳しい説明があります。',
+			'mapMenu.popup.aspectHead' => 'アスペクト線 〔Pro〕',
+			'mapMenu.popup.aspectBody' => '本線 (コンジャンクション 40 本) に、スクエア / トライン / セクスタイルを加えた全 120 本を表示する拡張。ON 中の全フレームに同時適用されます。Cosmic Pro 限定。',
+			'mapMenu.popup.relocateHead' => '引越し 〔Pro〕',
+			'mapMenu.popup.relocateBody' => '地図タップ地点を引越し先に見立てて表示。①現住所と比べて近づく / 遠ざかる星のライン、②ASC / MC の星座変化、③10 惑星の 12 ハウス遷移、をまとめて確認できます。Cosmic Pro 限定。',
+			'mapMenu.popup.hintHead' => '表示のヒント',
+			'mapMenu.popup.hintBody' => 'ACG 線は世界規模で表示するため、ズームレベルによっては画面外に出て見えないことがあります。ズームアウト (縮小表示) すると線の全体像が確認しやすくなります。',
 			'locations.locDefaults.0' => '場所1',
 			'locations.locDefaults.1' => '場所2',
 			'locations.locDefaults.2' => '場所3',

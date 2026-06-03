@@ -1,4 +1,34 @@
 {
+  "mapMenu": {
+    "tabPlanet": "Planets",
+    "map": { "dirEnergy": "Directional Energy", "compass": "Compass", "coords": "Coordinates" },
+    "planet": { "type": "Type", "group": "Group", "focus": "Focus" },
+    "acg": {
+      "natalLine": "Natal lines", "transitLine": "Transit lines", "progLine": "Prog lines",
+      "sArcLine": "S.Arc lines", "aspectLines": "Aspect lines", "relocate": "Relocate"
+    },
+    "pg": { "personal": "Personal", "social": "Social", "generational": "Generational" },
+    "popup": {
+      "mapTitle": "Map layers",
+      "mapDarkBody": "Switch between the normal and dark map. Choose by visibility preference.",
+      "dirEnergyBody": "Shows your stars' energy as 16-direction fans on the map. The darker a direction's color, the stronger its energy. Tap to filter by category.",
+      "compassBody": "Direction lines (N / E / S / W) seen from the center point. Helps gauge bearing.",
+      "coordsBody": "Shows a latitude/longitude label below the + at the center of the screen. As you move the map, the center coordinates update in real time. Tap the label to copy it to the clipboard. Useful for checking before saving a place, or for confirming the coordinates of any point. The crosshair (+) itself is always shown, even when this toggle is off.",
+      "planetTitle": "Planet layers",
+      "typeBody": "Which chart's planets to show. Natal (fixed at birth) / Prog (one day = one year) / Transit (this very moment).",
+      "groupBody": "Group filter for the 10 planets.\n• Personal: $personal\n• Social: $social\n• Generational: $generational",
+      "focusBody": "Category filter — highlights only the planets related to a theme.\n• Overall: all planets\n• Healing: $healing\n• Abundance: $money\n• Love: $love\n• Work: $work\n• Talk: $communication",
+      "acgTitle": "ACG layers (Astro*Carto*Graphy)",
+      "framesHead": "The 4 frames of lines (Natal / Transit / Prog / S.Arc)",
+      "framesBody": "Draws the \"main lines\" of each planet × 4 angles (ASC/MC/DSC/IC) on a world scale. All 4 frames can be switched for free (Natal = fixed at birth / Transit = moving now / Prog = secondary progression / S.Arc = solar arc). The i button beside each pill has a detailed explanation.",
+      "aspectHead": "Aspect lines [Pro]",
+      "aspectBody": "An extension that adds square / trine / sextile to the main lines (40 conjunction lines), for 120 lines in total. It applies to all frames that are on at the same time. Cosmic Pro only.",
+      "relocateHead": "Relocate [Pro]",
+      "relocateBody": "Treats the point you tap on the map as a relocation destination. You can check, all together: (1) which planets' lines move closer or farther compared with your current address, (2) the sign changes of ASC / MC, and (3) the 12-house transitions of the 10 planets. Cosmic Pro only.",
+      "hintHead": "Display tip",
+      "hintBody": "Because ACG lines are drawn on a world scale, at some zoom levels they may move off-screen and be hard to see. Zooming out makes the overall picture of the lines easier to see."
+    }
+  },
   "locations": {
     "locDefaults": ["Place 1", "Place 2", "Place 3", "Place 4"],
     "vpDefaults": ["Workplace", "Favorite", "Spot", "Place"],

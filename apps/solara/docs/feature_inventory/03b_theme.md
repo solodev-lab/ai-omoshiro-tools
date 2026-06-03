@@ -5,16 +5,16 @@
 
 ## サマリ
 
-- ファイル数: 3 / 総行数: 310
+- ファイル数: 3 / 総行数: 321
 - class/mixin/extension/enum: 4
-- 関数 (top-level + method の素拾い): 3
+- 関数 (top-level + method の素拾い): 4
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 0
 - Worker URL リテラル: 0
 
 ## ファイル別
 
-### `lib/screens/map/map_constants.dart` (132 行)
+### `lib/screens/map/map_constants.dart` (143 行)
 
 **imports:** dart=0 / package=1 / relative=1
 
@@ -27,9 +27,10 @@
 - L95 `class PlanetMeta`
   - HTML: TAROT.planets — 惑星シンボルと色
 
-**関数 (1 public + 0 private):**
+**関数 (2 public + 0 private):**
 
 - L20 `dirName()` — 方位コード (N/NE/...) → ロケール別表示名。
+- L126 `planetName()` — 惑星キー → ロケール別表示名 (ja=漢字名 / en=英語名)。地図系画面で再利用。
 
 
 ### `lib/theme/solara_colors.dart` (110 行)

@@ -1,4 +1,34 @@
 {
+  "mapMenu": {
+    "tabPlanet": "惑星",
+    "map": { "dirEnergy": "方位エネルギー", "compass": "コンパス", "coords": "座標取得" },
+    "planet": { "type": "タイプ", "group": "グループ", "focus": "テーマ" },
+    "acg": {
+      "natalLine": "Natal線", "transitLine": "Transit線", "progLine": "Prog線",
+      "sArcLine": "S.Arc線", "aspectLines": "アスペクト線", "relocate": "引越し"
+    },
+    "pg": { "personal": "個人", "social": "社会", "generational": "世代" },
+    "popup": {
+      "mapTitle": "Map レイヤー",
+      "mapDarkBody": "通常マップとダークマップを切替。視認性の好みで選択。",
+      "dirEnergyBody": "自分の星のエネルギーを 16 方位の扇形で地図上に表示。色が濃い方位ほどエネルギーが強い。タップでカテゴリ別に絞り込める。",
+      "compassBody": "中心地点から見た方位線 (N / E / S / W)。距離感の把握に。",
+      "coordsBody": "画面中央の + の下に緯度経度ラベルを表示。地図を動かすと中心の座標がリアルタイムで更新される。ラベルをタップするとクリップボードにコピーされる。場所登録の事前確認や任意地点の座標確認に。十字 (+) 自体はトグル OFF でも常時表示。",
+      "planetTitle": "惑星レイヤー",
+      "typeBody": "どのチャートの惑星を表示するか。Natal (出生時固定) / Prog (1日=1年で進行) / Transit (今この瞬間)。",
+      "groupBody": "10 惑星のグループフィルタ。\n・個人: $personal\n・社会: $social\n・世代: $generational",
+      "focusBody": "カテゴリ別フィルタ。テーマに関わる惑星のみ強調表示する。\n・総合: 全惑星\n・癒し: $healing\n・豊かさ: $money\n・恋愛: $love\n・仕事: $work\n・話す: $communication",
+      "acgTitle": "ACG レイヤー (Astro*Carto*Graphy)",
+      "framesHead": "4 フレームのライン (Natal / Transit / Prog / S.Arc)",
+      "framesBody": "各惑星 × 4 アングル (ASC/MC/DSC/IC) の「本線」を世界規模で描画。4 フレームはすべて無料で切替できる (Natal=出生時固定 / Transit=今動く / Prog=2次進行 / S.Arc=ソーラーアーク)。各ピル横の i ボタンに詳しい説明があります。",
+      "aspectHead": "アスペクト線 〔Pro〕",
+      "aspectBody": "本線 (コンジャンクション 40 本) に、スクエア / トライン / セクスタイルを加えた全 120 本を表示する拡張。ON 中の全フレームに同時適用されます。Cosmic Pro 限定。",
+      "relocateHead": "引越し 〔Pro〕",
+      "relocateBody": "地図タップ地点を引越し先に見立てて表示。①現住所と比べて近づく / 遠ざかる星のライン、②ASC / MC の星座変化、③10 惑星の 12 ハウス遷移、をまとめて確認できます。Cosmic Pro 限定。",
+      "hintHead": "表示のヒント",
+      "hintBody": "ACG 線は世界規模で表示するため、ズームレベルによっては画面外に出て見えないことがあります。ズームアウト (縮小表示) すると線の全体像が確認しやすくなります。"
+    }
+  },
   "locations": {
     "locDefaults": ["場所1", "場所2", "場所3", "場所4"],
     "vpDefaults": ["職場", "お気に入り", "スポット", "場所"],

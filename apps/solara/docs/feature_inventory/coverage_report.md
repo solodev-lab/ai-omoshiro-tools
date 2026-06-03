@@ -474,7 +474,7 @@
 ### 変更されたファイル (層別)
 
 - **層 3b**: `lib/screens/map/map_constants.dart`
-- **層 4f**: `lib/screens/locations_screen.dart`
+- **層 4a**: `lib/screens/map/map_display_menu.dart`
 
 ## #7 astro_glossary 用語辞書対整合
 

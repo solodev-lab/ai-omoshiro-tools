@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 25 / 総行数: 14688
+- ファイル数: 25 / 総行数: 14682
 - class/mixin/extension/enum: 90
 - 関数 (top-level + method の素拾い): 320
 - Navigator.push 等: 0
@@ -349,44 +349,44 @@ E4 (2026-04-29): 設計思想に基づく「両エネルギー事実提示」型
 - 集計: `showInfoPopup`×1
 
 
-### `lib/screens/map/map_display_menu.dart` (415 行)
+### `lib/screens/map/map_display_menu.dart` (409 行)
 
-**imports:** dart=0 / package=1 / relative=3
+**imports:** dart=0 / package=1 / relative=4
 
-- relative: `../../widgets/info_popup.dart`, `map_constants.dart`, `map_styles.dart`
+- relative: `../../i18n/strings.g.dart`, `../../widgets/info_popup.dart`, `map_constants.dart`, `map_styles.dart`
 
 **型定義 (6):**
 
-- L27 `class MapDisplayMenu : StatefulWidget`
+- L28 `class MapDisplayMenu : StatefulWidget`
   - 左サイド ☰表示ボタンタップで右に展開するメニュー (2026-05-09)。
-- L61 `enum _MainTab`
-- L62 `enum _PlanetSub`
-- L64 `class _MapDisplayMenuState : State`
-- L347 `class _MenuInfoRow : StatelessWidget`
+- L62 `enum _MainTab`
+- L63 `enum _PlanetSub`
+- L65 `class _MapDisplayMenuState : State`
+- L341 `class _MenuInfoRow : StatelessWidget`
   - 説明 popup 用の項目行 (見出し + 本文)。
-- L374 `class _ChipButton : StatelessWidget`
+- L368 `class _ChipButton : StatelessWidget`
   - 共通のチップ風ボタン (active 状態で塗りつぶし変化)。
 
 **関数 (5 public + 10 private):**
 
-- L58 `createState()`
-- L69 `build()`
-- L235 `planetsJp()`
-- L353 `build()`
-- L389 `build()`
+- L59 `createState()`
+- L70 `build()`
+- L236 `planetsName()`
+- L347 `build()`
+- L383 `build()`
 
   <details><summary>private 関数 10 件</summary>
 
-  - L98 `_l2Buttons()`
-  - L147 `_l3Buttons()`
-  - L180 `_toggleSub()`
-  - L188 `_tabBtn()`
-  - L200 `_tabBtnWithInfo()`
-  - L218 `_showTabInfo()`
-  - L300 `_subTabBtn()`
-  - L310 `_toggleBtn()`
-  - L320 `_radioBtn()`
-  - L330 `_scrollRow()`
+  - L99 `_l2Buttons()`
+  - L148 `_l3Buttons()`
+  - L181 `_toggleSub()`
+  - L189 `_tabBtn()`
+  - L201 `_tabBtnWithInfo()`
+  - L219 `_showTabInfo()`
+  - L294 `_subTabBtn()`
+  - L304 `_toggleBtn()`
+  - L314 `_radioBtn()`
+  - L324 `_scrollRow()`
 
   </details>
 

@@ -115,6 +115,17 @@ const planetMeta = <String, PlanetMeta>{
   'pluto':   PlanetMeta('♇', '冥王星', Color(0xFF8B0000)),
 };
 
+/// 惑星キー → 英語名 (en ロケール用)。jp は planetMeta[k].jp。
+const _planetEn = <String, String>{
+  'sun': 'Sun', 'moon': 'Moon', 'mercury': 'Mercury', 'venus': 'Venus',
+  'mars': 'Mars', 'jupiter': 'Jupiter', 'saturn': 'Saturn',
+  'uranus': 'Uranus', 'neptune': 'Neptune', 'pluto': 'Pluto',
+};
+
+/// 惑星キー → ロケール別表示名 (ja=漢字名 / en=英語名)。地図系画面で再利用。
+String planetName(String key) =>
+    isEnLocale() ? (_planetEn[key] ?? key) : (planetMeta[key]?.jp ?? key);
+
 /// HTML: PLANET_GROUPS — personal/social/generational
 const planetGroups = <String, List<String>>{
   'personal':     ['sun', 'moon', 'mercury', 'venus', 'mars'],
