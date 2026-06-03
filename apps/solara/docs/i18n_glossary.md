@@ -54,10 +54,13 @@
 
 ---
 
-## 1. 運用ルール（現状）
-- **ロケール切替**：`AppLocale`（utils/app_locale.dart）が `ja` / `en` / `system` を `MaterialApp.locale` に注入。
-- **EN 表示の条件**：`utils/solara_i18n.dart` の `isEnLocale()` は **override=='en' のときだけ true**（端末が英語でも override 未設定なら JP）。理由：EN カバレッジが揃うまで「半分英語の UI」を出さない＋test 安定。揃ったら system 連動へ切替可。
-- **正式な l10n 基盤（.arb / AppLocalizations / intl）は未導入**。当面 `solara_i18n.dart` の `key→(ja,en)` テーブルで賄う。多言語化時にここを拡張 or .arb へ移行。
+## 1. 運用ルール（現状 — 2026-06-03 slang 採用）
+- **i18n 基盤 = `slang`**（pub `slang`/`slang_flutter`/dev `slang_build_runner`）。対訳ソースは `lib/i18n/<locale>.i18n.json`（`ja.i18n.json`=base/master, `en.i18n.json`, 将来 `es/pt/fr/de/ko`）。生成コードは `lib/i18n/strings*.g.dart`（**コミット対象**）。設定は `slang.yaml`（base_locale=ja, fallback_strategy=base_locale, flat_map=true, lazy=false, timestamp=false）。
+- **アクセス方法**：① 型安全 `t.category.overall`（`import '../i18n/strings.g.dart'`）＝新規実装はこちらを使う。② 動的キー `tr('category.overall')`（`utils/solara_i18n.dart` の薄いファサード、slang flat map 委譲）＝既存コード互換。
+- **ロケール切替**：`AppLocale`（utils/app_locale.dart）が `ja`/`en`/`system` を `MaterialApp.locale` に注入し、同時に notifier listener で **slang `LocaleSettings`** へ橋渡し（`_syncSlang`）。
+- **EN 表示の完成度ゲート**：`_syncSlang` は **override=='en' のときだけ** slang を en にする（端末が英語でも override 未設定なら ja）。理由：EN カバレッジが揃うまで「半分英語の UI」を出さない＋test 安定。**揃ったら（`dart run slang analyze` で `_missing_translations.json` の `en:{}` を確認）`_syncSlang` を system 連動へ広げる**。
+- **API の言語**：Worker へ送る `lang` は `currentLang()`（solara_i18n.dart）が単一の真実源。
+- **ワークフロー（必須）**：`<locale>.i18n.json` を編集 → `dart run slang`（再生成）→ `dart run slang analyze`（未訳検出）→ analyze=0 を確認して `strings*.g.dart` ごとコミット。
 - **キー命名**：`namespace.camelCase`（例 `category.overall`）。namespace = `category` / `feature` / `metric` / `place` / `brand` / `energy` / `astro` / `tone` / `disclaimer`。
 - **内部キー（'overall','love' 等の英字 id）は不変**。正典が固定するのは「表示語」と「i18nキー」。
 

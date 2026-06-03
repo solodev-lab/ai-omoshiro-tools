@@ -60,3 +60,8 @@ mockup/share-assets/backgrounds_*_bright/
 # Downloaded fonts for tools (e.g. Cinzel for make_feature_graphic.py). OFL,
 # re-downloadable; avoid committing binaries. Download URL is in the script header.
 tools/_fonts_*.ttf
+
+# slang i18n analyze の一時レポート (`dart run slang analyze` が生成)。
+# 翻訳ソースは lib/i18n/<locale>.i18n.json、生成コードは lib/i18n/strings*.g.dart (コミット対象)。
+# 下の _missing/_unused は実行のたび上書きされる検査結果なので追跡しない。
+lib/i18n/_*.json

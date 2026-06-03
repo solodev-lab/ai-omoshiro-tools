@@ -1707,6 +1707,24 @@ Worker [`consultation_v2.js:78-83`](../worker/src/consultation_v2.js#L78) の既
 - アプリが fortune/tarot/consultation で `lang` を送る配線が未 → 英語/各言語生成を出すには `lang = 現在ロケール` が必要。de/ko は出荷前ネイティブ確認推奨。
 - 正典 = `apps/solara/docs/i18n_glossary.md`(§0 声/哲学/翻訳原則・§2-7 語彙・§8 多言語・§9 手順・§10 ログ) + memory `project_solara_voice_i18n_canon.md`(MEMORY.md 先頭 📌)。
 
+### 0.2.59 英語化プロジェクト Phase 0 — i18n 基盤を `slang` へ移行 (2026-06-03 深夜)
+
+> **「ストアのデフォルト言語を英語に → 世界展開」のため、アプリを英語で実用可能にする多Phaseプロジェクトに着手** (オーナー決定: EN完成まで申請保留)。Phase 0 は i18n 基盤の確立。計測でアプリ内ハードコード日本語=**文字列リテラル約4,512個**(コメント7,104行は対象外)、内訳は UI chrome 約2,200 + コンテンツ/データ約2,300 (daily_transit_data 728 / astro_glossary 408 / title_data 387 / planet_intro 349 …)。
+
+#### 採用 = `slang` (最新調査の上で確定)
+- pub `slang 4.15.0` / `slang_flutter` / dev `slang_build_runner`。**選定理由**: ①`dart run slang analyze` で**ロケール間未訳キーを機械検出**=正典の「半英語UIを出さない」完成度ゲートをそのまま実装 ②型安全 `t.x.y` で4,500×7言語のキータイポをコンパイル時に落とす ③JSON/CSV対応で将来翻訳者が編集可。公式 gen-l10n(.arb) と比較し7言語スケール+未訳自動検出で上回ると判断。
+- 対訳ソース `lib/i18n/<locale>.i18n.json`(`ja`=base/master, `en`)。生成 `lib/i18n/strings*.g.dart`(**コミット対象**=このリポジトリは codegen をビルド前提にしない規約のため)。設定 `slang.yaml`(base=ja, fallback=base_locale, flat_map=true, lazy=false, timestamp=false)。
+
+#### 基盤配線
+- `solara_i18n.dart` を slang 委譲のファサードに書換: `isEnLocale()`/`currentLang()` は `LocaleSettings.currentLocale` を読む。`tr(key)` は slang flat map(`t[key]`)委譲で**既存42箇所の互換維持**。`categoryLabel(id)` の id 吸収はそのまま。
+- `app_locale.dart`: notifier listener `_syncSlang` で `AppLocale`(override) → slang `LocaleSettings` を橋渡し。**完成度ゲート**: override=='en' のときだけ slang を en に(端末英語でも override 未設定なら ja)。EN 揃ったら system 連動へ広げる。
+- `currentLang()` = Worker へ送る `lang` の単一の真実源(Phase 3 で AI 各経路に配線)。
+- `_*translations.json`(analyze の一時レポート)は .gitignore。
+
+#### 検証 (全 green)
+- `flutter analyze` クリーン / `flutter test` **全319件 green**(既存 i18n_test は無改変で通過=ファサード互換を実証) / `slang analyze` = `en:{}`(**未訳0**) / `audit.py` = HARD7(新規ゼロ)/WARN34/NOTICE44/重複20(構造的)/未使用0 = 前回と完全一致(退行ゼロ) / `extract.py` = `+0 -0 ~2`。
+- ブランチ `feat/solara-en-localization`。次 = Phase 1(UI chrome 英訳・既存 tr() を型安全 `t.x` へ移行しつつ抽出)。
+
 ### 0.3 Horo「今日の占い」1 日 1 回固定 + プロンプト刷新 (2026-05-27)
 
 > **設計の柱**: 「30 回までは OK」のような曖昧な防衛をやめ、「**1 日 1 回・変更しない**」を

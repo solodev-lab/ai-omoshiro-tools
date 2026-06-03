@@ -1,0 +1,18 @@
+{
+  "category": {
+    "overall": "Overall",
+    "healing": "Healing",
+    "abundance": "Abundance",
+    "love": "Love",
+    "work": "Work",
+    "talk": "Talk",
+    "change": "Change"
+  },
+  "disclaimer": {
+    "ai": "✦ AI-generated, for entertainment & self-reflection. Not professional medical, legal, or financial advice.",
+    "fetchFailed": "We couldn't load the reading. Please check your connection and try again."
+  },
+  "common": {
+    "tryAgain": "Try again"
+  }
+}

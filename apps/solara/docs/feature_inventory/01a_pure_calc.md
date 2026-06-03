@@ -5,9 +5,9 @@
 
 ## サマリ
 
-- ファイル数: 9 / 総行数: 1857
+- ファイル数: 9 / 総行数: 1838
 - class/mixin/extension/enum: 16
-- 関数 (top-level + method の素拾い): 68
+- 関数 (top-level + method の素拾い): 69
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 0
 - Worker URL リテラル: 0
@@ -323,15 +323,16 @@ Solara RevenueCat ラッパー — Phase 2-6b
   </details>
 
 
-### `lib/utils/solara_i18n.dart` (68 行)
+### `lib/utils/solara_i18n.dart` (49 行)
 
 **imports:** dart=0 / package=0 / relative=1
 
-- relative: `app_locale.dart`
+- relative: `../i18n/strings.g.dart`
 
-**関数 (3 public + 0 private):**
+**関数 (4 public + 0 private):**
 
-- L18 `isEnLocale()` — 現在 English 表示にすべきか。AppLocale override == 'en' のときのみ true。
-- L57 `tr()` — key → 現在ロケールの文字列。未登録キーは key をそのまま返す (開発時に気づける)。
-- L65 `categoryLabel()` — 内部カテゴリ id (all/overall/healing/money/love/work/career/communication/newStart)
+- L19 `isEnLocale()` — 現在 English 表示にすべきか。slang の現在ロケールが en のとき true。
+- L23 `currentLang()` — API へ送る言語コード ('ja' / 'en' / 将来 'es' 等)。Worker の lang パラメータの
+- L39 `tr()` — key → 現在ロケールの文字列。未登録キーは key をそのまま返す (開発時に気づける)。
+- L46 `categoryLabel()` — 内部カテゴリ id (all/overall/healing/money/love/work/career/communication/newStart)
 

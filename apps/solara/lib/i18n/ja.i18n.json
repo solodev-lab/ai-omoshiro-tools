@@ -1,0 +1,18 @@
+{
+  "category": {
+    "overall": "総合",
+    "healing": "癒し",
+    "abundance": "豊かさ",
+    "love": "恋愛",
+    "work": "仕事",
+    "talk": "話す",
+    "change": "変化"
+  },
+  "disclaimer": {
+    "ai": "✦ AI 生成・娯楽目的。医療・法律・金融等の専門的な助言ではありません。",
+    "fetchFailed": "解説の取得に失敗しました。通信状況を確認して、もう一度お試しください。"
+  },
+  "common": {
+    "tryAgain": "再試行"
+  }
+}

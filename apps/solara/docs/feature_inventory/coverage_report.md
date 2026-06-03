@@ -55,7 +55,7 @@
 ## #1 / #2 機械抽出 ↔ feature_inventory.md (人手版) の対整合
 
 - 機械抽出した class/mixin/extension/enum: **476**
-- inventory に登場する識別子 (大文字始まり ``backtick``囲み): **285**
+- inventory に登場する識別子 (大文字始まり ``backtick``囲み): **287**
 
 ### #1 機械にあるが Doc に書かれていない (275)
 
@@ -261,7 +261,7 @@
 - `_PlanetSub`
 - … 残り 75 省略
 
-### #2 Doc に書いてあるがコードに存在しない (ゴースト記述) (84)
+### #2 Doc に書いてあるがコードに存在しない (ゴースト記述) (86)
 
 > 注: Flutter SDK や外部ライブラリの型もここに乗る (誤検出)。
 > 真のゴーストはアプリ独自型のみ。実際の Doc 修正対象は手で絞り込む。
@@ -317,6 +317,7 @@
 - `NON_RENEWING_PURCHASE`
 - `NOUN_SHAPES`
 - `NSLocationAlwaysAndWhenInUseUsageDescription`
+- `OUTPUT_LANG_NAME`
 - `OutlinedButton`
 - `PATH_OVERRIDES`
 - `POST_NOTIFICATIONS`
@@ -329,6 +330,7 @@
 - `SOLARA_GCP_PROJECT_NUMBER`
 - `SOLARA_GOOGLE_SERVER_CLIENT_ID`
 - `SOLARA_RC_ANDROID_KEY`
+- `STYLE_VOICE_BY_LANG`
 - `STYLE_VOICE_EN`
 - `STYLE_VOICE_JP`
 - `SUBSCRIPTION_EXTENDED`
@@ -406,7 +408,7 @@
 
 | from\to | 1a | 1b | 1c | 2a | 2b | 2c | 3a | 3b | 3c | 4a | 4b | 4c | 4d | 4e | 4f | 5 |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1a | 3 | · | 1 | 1 | 4 | · | · | · | · | · | · | · | · | · | · | · |
+| 1a | 3 | · | 1 | 1 | 3 | · | · | · | · | · | · | · | · | · | · | · |
 | 1b | · | · | · | 2 | 1 | · | 1 | · | · | · | · | · | · | · | · | · |
 | 1c | · | · | 1 | · | · | · | · | · | · | · | · | · | · | · | · | · |
 | 2a | 2 | 1 | · | 6 | 4 | · | · | 1 | · | · | · | · | · | · | · | · |
@@ -466,12 +468,12 @@
 > 各ソースの SHA1 を `_stamps.json` に記録し、差分を検出。
 > 変更されたファイルが属する層は、人手版インベントリ章の見直し対象。
 
-- 追加: **0** / 削除: **0** / 変更: **5**
+- 追加: **0** / 削除: **0** / 変更: **2**
 
 ### 変更されたファイル (層別)
 
-- **層 0**: `worker/src/consultation_v2.js`, `worker/src/fortune.js`, `worker/src/style_voice.js`, `worker/src/tarot.js`
-- **層 1b**: `lib/utils/cycle_story_texts.dart`
+- **層 1a**: `lib/utils/solara_i18n.dart`
+- **層 2b**: `lib/utils/app_locale.dart`
 
 ## #7 astro_glossary 用語辞書対整合
 

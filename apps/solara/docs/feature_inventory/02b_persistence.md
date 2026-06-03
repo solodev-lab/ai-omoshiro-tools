@@ -5,9 +5,9 @@
 
 ## サマリ
 
-- ファイル数: 9 / 総行数: 2907
+- ファイル数: 9 / 総行数: 2928
 - class/mixin/extension/enum: 15
-- 関数 (top-level + method の素拾い): 140
+- 関数 (top-level + method の素拾い): 141
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 0
 - Worker URL リテラル: 0
@@ -83,19 +83,27 @@ Worker 側仕様: apps/solara/worker/src/index.js
   </details>
 
 
-### `lib/utils/app_locale.dart` (41 行)
+### `lib/utils/app_locale.dart` (62 行)
 
-**imports:** dart=0 / package=2 / relative=0
+**imports:** dart=0 / package=2 / relative=1
+
+- relative: `../i18n/strings.g.dart`
 
 **型定義 (1):**
 
-- L8 `class AppLocale`
+- L17 `class AppLocale`
   - アプリ内の言語切替 (オーバーライド) を管理する global singleton。
 
-**関数 (2 public + 0 private):**
+**関数 (2 public + 1 private):**
 
-- L18 `load()` — 起動時に SharedPreferences から復元
-- L29 `setOverride()` — 言語を変更して保存 (null=端末設定に戻す)
+- L30 `load()` — 起動時に SharedPreferences から復元
+- L42 `setOverride()` — 言語を変更して保存 (null=端末設定に戻す)
+
+  <details><summary>private 関数 1 件</summary>
+
+  - L56 `_syncSlang()`
+
+  </details>
 
 
 ### `lib/utils/consultation_share.dart` (156 行)
