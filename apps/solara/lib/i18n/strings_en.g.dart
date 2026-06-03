@@ -39,6 +39,7 @@ class TranslationsEn extends Translations with BaseTranslations<AppLocale, Trans
 	TranslationsEn $copyWith({TranslationMetadata<AppLocale, Translations>? meta}) => TranslationsEn(meta: meta ?? this.$meta);
 
 	// Translations
+	@override late final _Translations$mapScreen$en mapScreen = _Translations$mapScreen$en._(_root);
 	@override late final _Translations$homeEdit$en homeEdit = _Translations$homeEdit$en._(_root);
 	@override late final _Translations$resetPicker$en resetPicker = _Translations$resetPicker$en._(_root);
 	@override late final _Translations$orbOverlay$en orbOverlay = _Translations$orbOverlay$en._(_root);
@@ -69,6 +70,58 @@ class TranslationsEn extends Translations with BaseTranslations<AppLocale, Trans
 	@override late final _Translations$disclaimer$en disclaimer = _Translations$disclaimer$en._(_root);
 	@override late final _Translations$common$en common = _Translations$common$en._(_root);
 	@override late final _Translations$aiConsent$en aiConsent = _Translations$aiConsent$en._(_root);
+}
+
+// Path: mapScreen
+class _Translations$mapScreen$en extends Translations$mapScreen$ja {
+	_Translations$mapScreen$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get vpOffscreen => 'VIEWPOINT is off-screen. Zoom out, or check the 16-direction status from the score bar at the top-left.';
+	@override String get geoServiceOff => 'Location services are OFF on your device. Please turn them on in Settings.';
+	@override String get geoDeniedForever => 'Location access is permanently denied. Please allow it from the Settings app.';
+	@override String get geoDenied => 'Location access was denied.';
+	@override String get geoGetting => 'Getting your current location…';
+	@override String geoFailed({required Object e}) => 'Couldn\'t get your current location: ${e}';
+	@override String coordsCopied({required Object coords}) => 'Coordinates copied: ${coords}';
+	@override String get searching => 'Searching…';
+	@override String get calculating => 'Calculating…';
+	@override String get tappedPoint => 'Tapped point';
+	@override String get proBandLabel => 'Zenith / Nadir bands';
+	@override String get proAspectLabel => 'Aspect lines (120)';
+	@override String get proRelocateLabel => 'Relocation simulation';
+	@override String get proAcgLabel => 'Advanced ACG';
+	@override String get proBandDesc => 'A Lewis-style display showing, as bands, the latitudes where a planet passes directly overhead (zenith) or underfoot (nadir). You can read career and home themes by "latitude".';
+	@override String get proAspectDesc => 'In addition to the 40 conjunction lines, shows all 120 aspect lines including squares, trines, and sextiles.';
+	@override String get proRelocateDesc => 'Treats the tapped point on the map as a relocation destination, recalculating ASC / MC / the 12 houses and comparing them side by side with your current address.';
+	@override String get proAcgDesc => 'A feature unlocked with Cosmic Pro.';
+	@override String get creditBannerTitle => '✦ Register your birth details and current address to get 3 free credits';
+	@override String get creditBannerSub => 'Set them up in SANCTUARY to also see the direction scores for each place';
+	@override String get setupCta => 'Set up →';
+	@override String get vpHelpTitle => 'Choosing your VIEWPOINT (the 16-direction reference point)';
+	@override String get vpHelpIntro => 'Tapping a chip switches the reference point (VP) for the 16-direction score\nto that place. The map view doesn\'t move.\nIf you search without entering a place name, candidates are returned from\naround the map\'s center (the VP is a separate axis).';
+	@override String get vpHelpGpsHead => '[📍 Current location]';
+	@override String get vpHelpGpsBody => 'For when you want to see "which way to head, right now".\nUses GPS to get your current location and makes that spot the viewpoint.\nFor "the directions here and now" while moving or traveling.';
+	@override String get vpHelpHomeHead => '[🏠 Home / saved VP]';
+	@override String get vpHelpHomeBody => 'Using your own base (home, school, workplace, etc.) as the viewpoint.\nYou can read it as "what energy this searched place receives\nas seen from my home, school, or workplace".';
+	@override String get vpHelpChoiceHead => 'Which to choose is up to you';
+	@override String get vpHelpChoiceBody => 'In astrology, "where to place the viewpoint" changes with the theme you want\nto see. For everyday guidance, home; for a decision in the moment of action,\nyour current location; for a place to put down roots while traveling, that land.\nUsing them by purpose, the "meaning of direction" comes into fuller relief.';
+	@override String get vpHelpOffscreenHead => 'When the VP goes off-screen';
+	@override String get vpHelpOffscreenBody => 'When the searched place and the VP are far apart, the 16-direction fan\ngoes off-screen and can\'t be seen. Zoom out, or tap the score bar (band)\nat the top-left, and you can check today\'s direction status even off-screen.';
+	@override List<String> get vpSlotDefaults => [
+		'Workplace',
+		'Favorite',
+		'Spot',
+		'Place',
+	];
+	@override List<String> get locSlotDefaults => [
+		'Place 1',
+		'Place 2',
+		'Place 3',
+		'Place 4',
+	];
 }
 
 // Path: homeEdit
@@ -2086,6 +2139,45 @@ class _Translations$paywall$faq$resubscribe$en extends Translations$paywall$faq$
 extension on TranslationsEn {
 	dynamic _flatMapFunction(String path) {
 		return switch (path) {
+			'mapScreen.vpOffscreen' => 'VIEWPOINT is off-screen. Zoom out, or check the 16-direction status from the score bar at the top-left.',
+			'mapScreen.geoServiceOff' => 'Location services are OFF on your device. Please turn them on in Settings.',
+			'mapScreen.geoDeniedForever' => 'Location access is permanently denied. Please allow it from the Settings app.',
+			'mapScreen.geoDenied' => 'Location access was denied.',
+			'mapScreen.geoGetting' => 'Getting your current location…',
+			'mapScreen.geoFailed' => ({required Object e}) => 'Couldn\'t get your current location: ${e}',
+			'mapScreen.coordsCopied' => ({required Object coords}) => 'Coordinates copied: ${coords}',
+			'mapScreen.searching' => 'Searching…',
+			'mapScreen.calculating' => 'Calculating…',
+			'mapScreen.tappedPoint' => 'Tapped point',
+			'mapScreen.proBandLabel' => 'Zenith / Nadir bands',
+			'mapScreen.proAspectLabel' => 'Aspect lines (120)',
+			'mapScreen.proRelocateLabel' => 'Relocation simulation',
+			'mapScreen.proAcgLabel' => 'Advanced ACG',
+			'mapScreen.proBandDesc' => 'A Lewis-style display showing, as bands, the latitudes where a planet passes directly overhead (zenith) or underfoot (nadir). You can read career and home themes by "latitude".',
+			'mapScreen.proAspectDesc' => 'In addition to the 40 conjunction lines, shows all 120 aspect lines including squares, trines, and sextiles.',
+			'mapScreen.proRelocateDesc' => 'Treats the tapped point on the map as a relocation destination, recalculating ASC / MC / the 12 houses and comparing them side by side with your current address.',
+			'mapScreen.proAcgDesc' => 'A feature unlocked with Cosmic Pro.',
+			'mapScreen.creditBannerTitle' => '✦ Register your birth details and current address to get 3 free credits',
+			'mapScreen.creditBannerSub' => 'Set them up in SANCTUARY to also see the direction scores for each place',
+			'mapScreen.setupCta' => 'Set up →',
+			'mapScreen.vpHelpTitle' => 'Choosing your VIEWPOINT (the 16-direction reference point)',
+			'mapScreen.vpHelpIntro' => 'Tapping a chip switches the reference point (VP) for the 16-direction score\nto that place. The map view doesn\'t move.\nIf you search without entering a place name, candidates are returned from\naround the map\'s center (the VP is a separate axis).',
+			'mapScreen.vpHelpGpsHead' => '[📍 Current location]',
+			'mapScreen.vpHelpGpsBody' => 'For when you want to see "which way to head, right now".\nUses GPS to get your current location and makes that spot the viewpoint.\nFor "the directions here and now" while moving or traveling.',
+			'mapScreen.vpHelpHomeHead' => '[🏠 Home / saved VP]',
+			'mapScreen.vpHelpHomeBody' => 'Using your own base (home, school, workplace, etc.) as the viewpoint.\nYou can read it as "what energy this searched place receives\nas seen from my home, school, or workplace".',
+			'mapScreen.vpHelpChoiceHead' => 'Which to choose is up to you',
+			'mapScreen.vpHelpChoiceBody' => 'In astrology, "where to place the viewpoint" changes with the theme you want\nto see. For everyday guidance, home; for a decision in the moment of action,\nyour current location; for a place to put down roots while traveling, that land.\nUsing them by purpose, the "meaning of direction" comes into fuller relief.',
+			'mapScreen.vpHelpOffscreenHead' => 'When the VP goes off-screen',
+			'mapScreen.vpHelpOffscreenBody' => 'When the searched place and the VP are far apart, the 16-direction fan\ngoes off-screen and can\'t be seen. Zoom out, or tap the score bar (band)\nat the top-left, and you can check today\'s direction status even off-screen.',
+			'mapScreen.vpSlotDefaults.0' => 'Workplace',
+			'mapScreen.vpSlotDefaults.1' => 'Favorite',
+			'mapScreen.vpSlotDefaults.2' => 'Spot',
+			'mapScreen.vpSlotDefaults.3' => 'Place',
+			'mapScreen.locSlotDefaults.0' => 'Place 1',
+			'mapScreen.locSlotDefaults.1' => 'Place 2',
+			'mapScreen.locSlotDefaults.2' => 'Place 3',
+			'mapScreen.locSlotDefaults.3' => 'Place 4',
 			'homeEdit.addressLabel' => 'Address / place name',
 			'homeEdit.placeHint' => 'e.g. Shibuya, Tokyo',
 			'homeEdit.notFound' => 'No results found',
@@ -2559,6 +2651,8 @@ extension on TranslationsEn {
 			'consultInput.whomExamples.love.2' => 'With someone I like',
 			'consultInput.whomExamples.money.0' => 'On my own',
 			'consultInput.whomExamples.money.1' => 'With family',
+			_ => null,
+		} ?? switch (path) {
 			'consultInput.whomExamples.money.2' => 'With my partner',
 			'consultInput.whomExamples.work.0' => 'On my own',
 			'consultInput.whomExamples.work.1' => 'With a colleague',
@@ -2598,8 +2692,6 @@ extension on TranslationsEn {
 			'consultInput.wishExamples.fallback.1' => 'Change the current',
 			'consultInput.picker.searchHint' => 'Search by address / place name',
 			'consultInput.picker.clearSearch' => 'Clear',
-			_ => null,
-		} ?? switch (path) {
 			'consultInput.picker.fromViewpoint' => '🔭 From your ViewPoints',
 			'consultInput.picker.fromLocations' => '📍 From your saved Locations',
 			'consultInput.picker.pickOnMap' => 'Pick on the map',

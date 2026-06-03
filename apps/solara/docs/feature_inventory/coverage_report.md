@@ -472,12 +472,11 @@
 > 各ソースの SHA1 を `_stamps.json` に記録し、差分を検出。
 > 変更されたファイルが属する層は、人手版インベントリ章の見直し対象。
 
-- 追加: **0** / 削除: **0** / 変更: **11**
+- 追加: **0** / 削除: **0** / 変更: **1**
 
 ### 変更されたファイル (層別)
 
-- **層 3a**: `lib/widgets/sanctuary_account_section.dart`
-- **層 4e**: `lib/screens/sanctuary/class_share_card.dart`, `lib/screens/sanctuary/sanctuary_home_editor.dart`, `lib/screens/sanctuary/sanctuary_legal_menu.dart`, `lib/screens/sanctuary/sanctuary_orb_overlay.dart`, `lib/screens/sanctuary/sanctuary_profile_editor.dart`, `lib/screens/sanctuary/sanctuary_reset_hour_picker.dart`, `lib/screens/sanctuary/sanctuary_title_diagnosis.dart`, `lib/screens/sanctuary/title_history_screen.dart`, `lib/screens/sanctuary/title_how_it_works.dart`, `lib/screens/sanctuary_screen.dart`
+- **層 4a**: `lib/screens/map_screen.dart`
 
 ## #7 astro_glossary 用語辞書対整合
 

@@ -40,6 +40,7 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 	Translations $copyWith({TranslationMetadata<AppLocale, Translations>? meta}) => Translations(meta: meta ?? this.$meta);
 
 	// Translations
+	late final Translations$mapScreen$ja mapScreen = Translations$mapScreen$ja.internal(_root);
 	late final Translations$homeEdit$ja homeEdit = Translations$homeEdit$ja.internal(_root);
 	late final Translations$resetPicker$ja resetPicker = Translations$resetPicker$ja.internal(_root);
 	late final Translations$orbOverlay$ja orbOverlay = Translations$orbOverlay$ja.internal(_root);
@@ -70,6 +71,121 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 	late final Translations$disclaimer$ja disclaimer = Translations$disclaimer$ja.internal(_root);
 	late final Translations$common$ja common = Translations$common$ja.internal(_root);
 	late final Translations$aiConsent$ja aiConsent = Translations$aiConsent$ja.internal(_root);
+}
+
+// Path: mapScreen
+class Translations$mapScreen$ja {
+	Translations$mapScreen$ja.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// ja: 'VIEWPOINT が画面外です。ズームアウト、または左上スコアバーから 16 方位の状況を確認できます。'
+	String get vpOffscreen => 'VIEWPOINT が画面外です。ズームアウト、または左上スコアバーから 16 方位の状況を確認できます。';
+
+	/// ja: '端末の位置情報サービスが OFF です。設定からONにしてください。'
+	String get geoServiceOff => '端末の位置情報サービスが OFF です。設定からONにしてください。';
+
+	/// ja: '位置情報の利用が永久拒否されています。設定アプリから許可してください。'
+	String get geoDeniedForever => '位置情報の利用が永久拒否されています。設定アプリから許可してください。';
+
+	/// ja: '位置情報の利用が拒否されました。'
+	String get geoDenied => '位置情報の利用が拒否されました。';
+
+	/// ja: '現在地を取得中…'
+	String get geoGetting => '現在地を取得中…';
+
+	/// ja: '現在地の取得に失敗しました: $e'
+	String geoFailed({required Object e}) => '現在地の取得に失敗しました: ${e}';
+
+	/// ja: '座標をコピー: $coords'
+	String coordsCopied({required Object coords}) => '座標をコピー: ${coords}';
+
+	/// ja: '検索中…'
+	String get searching => '検索中…';
+
+	/// ja: '計算中…'
+	String get calculating => '計算中…';
+
+	/// ja: 'タップ地点'
+	String get tappedPoint => 'タップ地点';
+
+	/// ja: '天頂帯・天底帯'
+	String get proBandLabel => '天頂帯・天底帯';
+
+	/// ja: 'アスペクトライン (120 本)'
+	String get proAspectLabel => 'アスペクトライン (120 本)';
+
+	/// ja: '引越しシミュレーション'
+	String get proRelocateLabel => '引越しシミュレーション';
+
+	/// ja: '高度な ACG'
+	String get proAcgLabel => '高度な ACG';
+
+	/// ja: '惑星が真上 (天頂) / 真下 (天底) を通る緯度を帯で示す Lewis 流の表示。キャリアや家庭のテーマを「緯度」で読み解けます。'
+	String get proBandDesc => '惑星が真上 (天頂) / 真下 (天底) を通る緯度を帯で示す Lewis 流の表示。キャリアや家庭のテーマを「緯度」で読み解けます。';
+
+	/// ja: 'コンジャンクション 40 本に加え、スクエア / トライン / セクスタイル を含む全 120 本のアスペクトラインを表示します。'
+	String get proAspectDesc => 'コンジャンクション 40 本に加え、スクエア / トライン / セクスタイル を含む全 120 本のアスペクトラインを表示します。';
+
+	/// ja: '地図タップ地点を引越し先として ASC / MC / 12 ハウスを 再計算し、現住所と並べて比較します。'
+	String get proRelocateDesc => '地図タップ地点を引越し先として ASC / MC / 12 ハウスを 再計算し、現住所と並べて比較します。';
+
+	/// ja: 'Cosmic Pro で解放される機能です。'
+	String get proAcgDesc => 'Cosmic Pro で解放される機能です。';
+
+	/// ja: '✦ 出生情報と現住所を登録すると、無料クレジットを3つプレゼント'
+	String get creditBannerTitle => '✦ 出生情報と現住所を登録すると、無料クレジットを3つプレゼント';
+
+	/// ja: 'SANCTUARYで設定すると、各地点の方位スコアも表示されます'
+	String get creditBannerSub => 'SANCTUARYで設定すると、各地点の方位スコアも表示されます';
+
+	/// ja: '設定する →'
+	String get setupCta => '設定する →';
+
+	/// ja: 'VIEWPOINT (16方位の基準点) の選び方'
+	String get vpHelpTitle => 'VIEWPOINT (16方位の基準点) の選び方';
+
+	/// ja: 'チップをタップすると 16 方位スコアの基準点 (VP) が その地点に切替わります。地図の表示は動きません。 検索バーで地名を入れずに検索すると、地図中心の 周辺から候補が返ります (VP は別軸)。'
+	String get vpHelpIntro => 'チップをタップすると 16 方位スコアの基準点 (VP) が\nその地点に切替わります。地図の表示は動きません。\n検索バーで地名を入れずに検索すると、地図中心の\n周辺から候補が返ります (VP は別軸)。';
+
+	/// ja: '【📍 現在地】'
+	String get vpHelpGpsHead => '【📍 現在地】';
+
+	/// ja: '「今この瞬間、どちらに向かうべきか」を見たい時。 GPS で現在地を取得し、その場を観測点にします。 移動中・旅先での「今ここの方角」用途。'
+	String get vpHelpGpsBody => '「今この瞬間、どちらに向かうべきか」を見たい時。\nGPS で現在地を取得し、その場を観測点にします。\n移動中・旅先での「今ここの方角」用途。';
+
+	/// ja: '【🏠 自宅 / 登録 VP】'
+	String get vpHelpHomeHead => '【🏠 自宅 / 登録 VP】';
+
+	/// ja: '自分の拠点 (自宅・学校・職場など) を観測点にする使い方。 「自宅や学校、職場から見てこの検索地は 何のエネルギーを受けているのか」と読む使い方があります。'
+	String get vpHelpHomeBody => '自分の拠点 (自宅・学校・職場など) を観測点にする使い方。\n「自宅や学校、職場から見てこの検索地は\n何のエネルギーを受けているのか」と読む使い方があります。';
+
+	/// ja: 'どちらを選ぶかはユーザー次第'
+	String get vpHelpChoiceHead => 'どちらを選ぶかはユーザー次第';
+
+	/// ja: '占星術で「観測点をどこに置くか」は、見たいテーマで 変わります。日常の指針なら自宅、いま動く瞬間の判断 なら現在地、旅先で根を張る場所を考えるならその土地。 使い分けで「方角の意味」が立体的に見えてきます。'
+	String get vpHelpChoiceBody => '占星術で「観測点をどこに置くか」は、見たいテーマで\n変わります。日常の指針なら自宅、いま動く瞬間の判断\nなら現在地、旅先で根を張る場所を考えるならその土地。\n使い分けで「方角の意味」が立体的に見えてきます。';
+
+	/// ja: 'VP が画面外に出た時'
+	String get vpHelpOffscreenHead => 'VP が画面外に出た時';
+
+	/// ja: '検索地と VP が大きく離れていると、16 方位の扇状が 画面外に出てしまい見えません。ズームアウトするか、 左上のスコアバー (帯) をタップすると、画面外でも 今日の方位状況が確認できます。'
+	String get vpHelpOffscreenBody => '検索地と VP が大きく離れていると、16 方位の扇状が\n画面外に出てしまい見えません。ズームアウトするか、\n左上のスコアバー (帯) をタップすると、画面外でも\n今日の方位状況が確認できます。';
+
+	List<String> get vpSlotDefaults => [
+		'職場',
+		'お気に入り',
+		'スポット',
+		'場所',
+	];
+	List<String> get locSlotDefaults => [
+		'場所1',
+		'場所2',
+		'場所3',
+		'場所4',
+	];
 }
 
 // Path: homeEdit
@@ -3628,6 +3744,45 @@ class Translations$paywall$faq$resubscribe$ja {
 extension on Translations {
 	dynamic _flatMapFunction(String path) {
 		return switch (path) {
+			'mapScreen.vpOffscreen' => 'VIEWPOINT が画面外です。ズームアウト、または左上スコアバーから 16 方位の状況を確認できます。',
+			'mapScreen.geoServiceOff' => '端末の位置情報サービスが OFF です。設定からONにしてください。',
+			'mapScreen.geoDeniedForever' => '位置情報の利用が永久拒否されています。設定アプリから許可してください。',
+			'mapScreen.geoDenied' => '位置情報の利用が拒否されました。',
+			'mapScreen.geoGetting' => '現在地を取得中…',
+			'mapScreen.geoFailed' => ({required Object e}) => '現在地の取得に失敗しました: ${e}',
+			'mapScreen.coordsCopied' => ({required Object coords}) => '座標をコピー: ${coords}',
+			'mapScreen.searching' => '検索中…',
+			'mapScreen.calculating' => '計算中…',
+			'mapScreen.tappedPoint' => 'タップ地点',
+			'mapScreen.proBandLabel' => '天頂帯・天底帯',
+			'mapScreen.proAspectLabel' => 'アスペクトライン (120 本)',
+			'mapScreen.proRelocateLabel' => '引越しシミュレーション',
+			'mapScreen.proAcgLabel' => '高度な ACG',
+			'mapScreen.proBandDesc' => '惑星が真上 (天頂) / 真下 (天底) を通る緯度を帯で示す Lewis 流の表示。キャリアや家庭のテーマを「緯度」で読み解けます。',
+			'mapScreen.proAspectDesc' => 'コンジャンクション 40 本に加え、スクエア / トライン / セクスタイル を含む全 120 本のアスペクトラインを表示します。',
+			'mapScreen.proRelocateDesc' => '地図タップ地点を引越し先として ASC / MC / 12 ハウスを 再計算し、現住所と並べて比較します。',
+			'mapScreen.proAcgDesc' => 'Cosmic Pro で解放される機能です。',
+			'mapScreen.creditBannerTitle' => '✦ 出生情報と現住所を登録すると、無料クレジットを3つプレゼント',
+			'mapScreen.creditBannerSub' => 'SANCTUARYで設定すると、各地点の方位スコアも表示されます',
+			'mapScreen.setupCta' => '設定する →',
+			'mapScreen.vpHelpTitle' => 'VIEWPOINT (16方位の基準点) の選び方',
+			'mapScreen.vpHelpIntro' => 'チップをタップすると 16 方位スコアの基準点 (VP) が\nその地点に切替わります。地図の表示は動きません。\n検索バーで地名を入れずに検索すると、地図中心の\n周辺から候補が返ります (VP は別軸)。',
+			'mapScreen.vpHelpGpsHead' => '【📍 現在地】',
+			'mapScreen.vpHelpGpsBody' => '「今この瞬間、どちらに向かうべきか」を見たい時。\nGPS で現在地を取得し、その場を観測点にします。\n移動中・旅先での「今ここの方角」用途。',
+			'mapScreen.vpHelpHomeHead' => '【🏠 自宅 / 登録 VP】',
+			'mapScreen.vpHelpHomeBody' => '自分の拠点 (自宅・学校・職場など) を観測点にする使い方。\n「自宅や学校、職場から見てこの検索地は\n何のエネルギーを受けているのか」と読む使い方があります。',
+			'mapScreen.vpHelpChoiceHead' => 'どちらを選ぶかはユーザー次第',
+			'mapScreen.vpHelpChoiceBody' => '占星術で「観測点をどこに置くか」は、見たいテーマで\n変わります。日常の指針なら自宅、いま動く瞬間の判断\nなら現在地、旅先で根を張る場所を考えるならその土地。\n使い分けで「方角の意味」が立体的に見えてきます。',
+			'mapScreen.vpHelpOffscreenHead' => 'VP が画面外に出た時',
+			'mapScreen.vpHelpOffscreenBody' => '検索地と VP が大きく離れていると、16 方位の扇状が\n画面外に出てしまい見えません。ズームアウトするか、\n左上のスコアバー (帯) をタップすると、画面外でも\n今日の方位状況が確認できます。',
+			'mapScreen.vpSlotDefaults.0' => '職場',
+			'mapScreen.vpSlotDefaults.1' => 'お気に入り',
+			'mapScreen.vpSlotDefaults.2' => 'スポット',
+			'mapScreen.vpSlotDefaults.3' => '場所',
+			'mapScreen.locSlotDefaults.0' => '場所1',
+			'mapScreen.locSlotDefaults.1' => '場所2',
+			'mapScreen.locSlotDefaults.2' => '場所3',
+			'mapScreen.locSlotDefaults.3' => '場所4',
 			'homeEdit.addressLabel' => '住所・地名',
 			'homeEdit.placeHint' => '例: 東京都渋谷区',
 			'homeEdit.notFound' => '見つかりませんでした',
@@ -4101,6 +4256,8 @@ extension on Translations {
 			'consultInput.whomExamples.love.2' => '気になる人と',
 			'consultInput.whomExamples.money.0' => 'ひとりで',
 			'consultInput.whomExamples.money.1' => '家族と',
+			_ => null,
+		} ?? switch (path) {
 			'consultInput.whomExamples.money.2' => 'パートナーと',
 			'consultInput.whomExamples.work.0' => 'ひとりで',
 			'consultInput.whomExamples.work.1' => '同僚と',
@@ -4140,8 +4297,6 @@ extension on Translations {
 			'consultInput.wishExamples.fallback.1' => '流れを変えたい',
 			'consultInput.picker.searchHint' => '住所 / 店名で検索',
 			'consultInput.picker.clearSearch' => 'クリア',
-			_ => null,
-		} ?? switch (path) {
 			'consultInput.picker.fromViewpoint' => '🔭 視点 (ViewPoint) から',
 			'consultInput.picker.fromLocations' => '📍 保存地点 (Locations) から',
 			'consultInput.picker.pickOnMap' => '地図で選ぶ',

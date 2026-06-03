@@ -94,7 +94,7 @@
   "lib/screens/map/map_vp_panel.dart": "654f8c0851739fb8c438c9e2633da8f55109b672",
   "lib/screens/map/map_welcome_banner.dart": "1fdc95f9b839676aa70b788edd941740c3fa2ca3",
   "lib/screens/map/map_widgets.dart": "19e3cbe3736b5aeedfda7ee0c3de77114a367302",
-  "lib/screens/map_screen.dart": "a28207fb49b220032afec408db1db30680379728",
+  "lib/screens/map_screen.dart": "b58720d1cc2354a531a2725542f85d8565a85677",
   "lib/screens/observe/observe_card_widgets.dart": "203fae6059b3f1d4b1033888c375550cec036e2f",
   "lib/screens/observe/observe_category_selector.dart": "8747d1ae3e51d458e64703046da11e4d5cc34234",
   "lib/screens/observe/observe_constants.dart": "6a7f5b059ab47b94742ee6b6b60bc93367a2ad16",

@@ -7,6 +7,7 @@ import 'package:flutter/services.dart' show Clipboard, ClipboardData;
 import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
+import '../i18n/strings.g.dart';
 import '../utils/solara_api.dart' show solaraOsmTileBase;
 import '../utils/solara_storage.dart';
 import '../utils/tile_http_client.dart' show sharedTileHttpClient;
@@ -386,9 +387,9 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   // 登録地マーカー (出生地 + VP slots + Locations slots、両モード共通表示)
   // VP/Locations 編集後は _reloadLocationSlots() で再読込。
   final SlotManager _vpSlotMgr =
-      SlotManager(storageKey: 'solara_vp_slots', defaultNames: ['職場','お気に入り','スポット','場所']);
+      SlotManager(storageKey: 'solara_vp_slots', defaultNames: t.mapScreen.vpSlotDefaults);
   final SlotManager _locSlotMgr =
-      SlotManager(storageKey: 'solara_locations', defaultNames: ['場所1','場所2','場所3','場所4']);
+      SlotManager(storageKey: 'solara_locations', defaultNames: t.mapScreen.locSlotDefaults);
   List<VPSlot> _vpSlotsCache = const [];
   List<VPSlot> _locSlotsCache = const [];
   // タップされたマーカー情報 (popup 表示用)。null = popup 非表示。
@@ -1259,10 +1260,9 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
       try {
         final visible = _mapCtrl.camera.visibleBounds;
         if (!visible.contains(_center)) {
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-            content: Text(
-                'VIEWPOINT が画面外です。ズームアウト、または左上スコアバーから 16 方位の状況を確認できます。'),
-            duration: Duration(seconds: 3),
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text(t.mapScreen.vpOffscreen),
+            duration: const Duration(seconds: 3),
           ));
         }
       } catch (_) {/* camera 未確定なら無視 */}
@@ -1642,7 +1642,7 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
 
     final serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
-      snack('端末の位置情報サービスが OFF です。設定からONにしてください。');
+      snack(t.mapScreen.geoServiceOff);
       return;
     }
 
@@ -1651,16 +1651,15 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
       permission = await Geolocator.requestPermission();
     }
     if (permission == LocationPermission.deniedForever) {
-      snack('位置情報の利用が永久拒否されています。設定アプリから許可してください。',
-          seconds: 4);
+      snack(t.mapScreen.geoDeniedForever, seconds: 4);
       return;
     }
     if (permission == LocationPermission.denied) {
-      snack('位置情報の利用が拒否されました。');
+      snack(t.mapScreen.geoDenied);
       return;
     }
 
-    snack('現在地取得中…', seconds: 2);
+    snack(t.mapScreen.geoGetting, seconds: 2);
     try {
       final pos = await Geolocator.getCurrentPosition(
         locationSettings: const LocationSettings(
@@ -1671,7 +1670,7 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
       if (!mounted) return;
       _setVpOnly(LatLng(pos.latitude, pos.longitude));
     } catch (e) {
-      snack('現在地の取得に失敗しました: $e');
+      snack(t.mapScreen.geoFailed(e: e));
     }
   }
 
@@ -1811,7 +1810,7 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
 
     final serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
-      snack('端末の位置情報サービスが OFF です。設定からONにしてください。');
+      snack(t.mapScreen.geoServiceOff);
       return;
     }
 
@@ -1820,16 +1819,15 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
       permission = await Geolocator.requestPermission();
     }
     if (permission == LocationPermission.deniedForever) {
-      snack('位置情報の利用が永久拒否されています。設定アプリから許可してください。',
-          seconds: 4);
+      snack(t.mapScreen.geoDeniedForever, seconds: 4);
       return;
     }
     if (permission == LocationPermission.denied) {
-      snack('位置情報の利用が拒否されました。');
+      snack(t.mapScreen.geoDenied);
       return;
     }
 
-    snack('現在地を取得中…', seconds: 2);
+    snack(t.mapScreen.geoGetting, seconds: 2);
     try {
       final pos = await Geolocator.getCurrentPosition(
         locationSettings: const LocationSettings(
@@ -1840,7 +1838,7 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
       if (!mounted) return;
       _rebuild(LatLng(pos.latitude, pos.longitude));
     } catch (e) {
-      snack('現在地の取得に失敗しました: $e');
+      snack(t.mapScreen.geoFailed(e: e));
     }
   }
 
@@ -2287,7 +2285,7 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                             ClipboardData(text: coordsText));
                         if (!ctx.mounted) return;
                         ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(
-                          content: Text('座標をコピー: $coordsText'),
+                          content: Text(t.mapScreen.coordsCopied(coords: coordsText)),
                           duration: const Duration(seconds: 2),
                         ));
                       },
@@ -2750,7 +2748,7 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
         // ── Searching spinner ──
         if (_searching) Positioned(
           top: topPad + 204, left: 16,
-          child: const StatusBadge(label: '検索中…'),
+          child: StatusBadge(label: t.mapScreen.searching),
         ),
 
         // ── Dominant Fortune Overlay ──
@@ -2776,7 +2774,7 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
             birthLocation: LatLng(_profile!.birthLat, _profile!.birthLng),
             birthLocationName: _profile!.birthPlace.isNotEmpty
                 ? _profile!.birthPlace
-                : '出生地',
+                : t.profileEdit.birthPlace,
             vpSlots: _vpSlotsCache,
             natal: _chartResult?.natal,
             onClose: _onDailyTransitClose,
@@ -2800,7 +2798,7 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
         // ── Loading Indicator (date change) ──
         if (_loadingChart) Positioned(
           top: topPad + 44, right: 16,
-          child: const StatusBadge(label: '計算中…'),
+          child: StatusBadge(label: t.mapScreen.calculating),
         ),
 
         // ── Rest Overlay ──
@@ -3029,7 +3027,7 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     final hasHome = !(p.homeLat == 0 && p.homeLng == 0);
     final baselineLng = hasHome ? p.homeLng : p.birthLng;
     final baselineLat = hasHome ? p.homeLat : p.birthLat;
-    final baselineLabel = hasHome ? '現住所' : '出生地';
+    final baselineLabel = hasHome ? t.locations.currentAddress : t.profileEdit.birthPlace;
     // 拠点パネルと同一: ベース → タップ地点 のライン近接デルタ (静的・近さ順)。
     // popup の再描画で 120 本を再計算しないよう、ここ (タップ時 1 回) で算出して渡す。
     final lineDeltas = chart.natal.isNotEmpty
@@ -3109,32 +3107,29 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
 
   /// Pro ゲートで表示する機能名 (showProUnlockDialog の featureLabel)。
   String _proLabelForAstroKey(String k) {
-    if (_isProGatedBandKey(k)) return '天頂帯・天底帯';
+    if (_isProGatedBandKey(k)) return t.mapScreen.proBandLabel;
     switch (k) {
       case 'aspectLines':
-        return 'アスペクトライン (120 本)';
+        return t.mapScreen.proAspectLabel;
       case 'relocate':
-        return '引越しシミュレーション';
+        return t.mapScreen.proRelocateLabel;
       default:
-        return '高度な ACG';
+        return t.mapScreen.proAcgLabel;
     }
   }
 
   /// Pro ゲートで表示する機能説明 (吉凶禁止、寄り添い文体)。
   String _proDescForAstroKey(String k) {
     if (_isProGatedBandKey(k)) {
-      return '惑星が真上 (天頂) / 真下 (天底) を通る緯度を帯で示す Lewis 流の表示。'
-          'キャリアや家庭のテーマを「緯度」で読み解けます。';
+      return t.mapScreen.proBandDesc;
     }
     switch (k) {
       case 'aspectLines':
-        return 'コンジャンクション 40 本に加え、スクエア / トライン / セクスタイル '
-            'を含む全 120 本のアスペクトラインを表示します。';
+        return t.mapScreen.proAspectDesc;
       case 'relocate':
-        return '地図タップ地点を引越し先として ASC / MC / 12 ハウスを '
-            '再計算し、現住所と並べて比較します。';
+        return t.mapScreen.proRelocateDesc;
       default:
-        return 'Cosmic Pro で解放される機能です。';
+        return t.mapScreen.proAcgDesc;
     }
   }
 
@@ -3335,7 +3330,7 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
 
     final coordLabel =
         '${tap.latitude.toStringAsFixed(2)}°, ${tap.longitude.toStringAsFixed(2)}°';
-    final nameJP = placeName ?? 'タップ地点';
+    final nameJP = placeName ?? t.mapScreen.tappedPoint;
     final preset = ConsultationPresetTarget(
       position: tap,
       nameJP: nameJP,
@@ -3521,19 +3516,19 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
           const AntiqueGlyph(icon: AntiqueIcon.reading, size: 32,
             color: Color(0xFFF6BD60)),
           const SizedBox(height: 8),
-          const Text('✦ 出生情報と現住所を登録すると、無料クレジットを3つプレゼント',
+          Text(t.mapScreen.creditBannerTitle,
             textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 13, color: Color(0xFFF6D98A),
+            style: const TextStyle(fontSize: 13, color: Color(0xFFF6D98A),
               fontWeight: FontWeight.w700, height: 1.4)),
           const SizedBox(height: 6),
-          const Text('SANCTUARYで設定すると、各地点の方位スコアも表示されます',
+          Text(t.mapScreen.creditBannerSub,
             textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 12, color: Color(0xFFF6BD60))),
+            style: const TextStyle(fontSize: 12, color: Color(0xFFF6BD60))),
           const SizedBox(height: 8),
           GestureDetector(
             onTap: () => widget.onNavigateToSanctuary?.call(),
-            child: const Text('設定する →',
-              style: TextStyle(fontSize: 13, color: Color(0xFFF9D976),
+            child: Text(t.mapScreen.setupCta,
+              style: const TextStyle(fontSize: 13, color: Color(0xFFF9D976),
                 decoration: TextDecoration.underline)),
           ),
         ]),
@@ -3552,89 +3547,76 @@ void _showSearchVpHelpPopup(BuildContext context) {
     child: Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: const [
+      children: [
         Text(
-          'VIEWPOINT (16方位の基準点) の選び方',
-          style: TextStyle(
+          t.mapScreen.vpHelpTitle,
+          style: const TextStyle(
               color: Color(0xFFC9A84C), fontSize: 14, letterSpacing: 1),
         ),
-        SizedBox(height: 10),
+        const SizedBox(height: 10),
         Text(
-          'チップをタップすると 16 方位スコアの基準点 (VP) が\n'
-          'その地点に切替わります。地図の表示は動きません。\n'
-          '検索バーで地名を入れずに検索すると、地図中心の\n'
-          '周辺から候補が返ります (VP は別軸)。',
-          style: TextStyle(
+          t.mapScreen.vpHelpIntro,
+          style: const TextStyle(
               color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
         ),
-        SizedBox(height: 14),
+        const SizedBox(height: 14),
         Text(
-          '【📍 現在地】',
-          style: TextStyle(
+          t.mapScreen.vpHelpGpsHead,
+          style: const TextStyle(
               color: Color(0xFFC9A84C),
               fontSize: 13,
               fontWeight: FontWeight.w600,
               letterSpacing: 0.5),
         ),
-        SizedBox(height: 4),
+        const SizedBox(height: 4),
         Text(
-          '「今この瞬間、どちらに向かうべきか」を見たい時。\n'
-          'GPS で現在地を取得し、その場を観測点にします。\n'
-          '移動中・旅先での「今ここの方角」用途。',
-          style: TextStyle(
+          t.mapScreen.vpHelpGpsBody,
+          style: const TextStyle(
               color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
         ),
-        SizedBox(height: 10),
+        const SizedBox(height: 10),
         Text(
-          '【🏠 自宅 / 登録 VP】',
-          style: TextStyle(
+          t.mapScreen.vpHelpHomeHead,
+          style: const TextStyle(
               color: Color(0xFFC9A84C),
               fontSize: 13,
               fontWeight: FontWeight.w600,
               letterSpacing: 0.5),
         ),
-        SizedBox(height: 4),
+        const SizedBox(height: 4),
         Text(
-          '自分の拠点 (自宅・学校・職場など) を観測点にする使い方。\n'
-          '「自宅や学校、職場から見てこの検索地は\n'
-          '何のエネルギーを受けているのか」と読む使い方があります。',
-          style: TextStyle(
+          t.mapScreen.vpHelpHomeBody,
+          style: const TextStyle(
               color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
         ),
-        SizedBox(height: 14),
+        const SizedBox(height: 14),
         Text(
-          'どちらを選ぶかはユーザー次第',
-          style: TextStyle(
+          t.mapScreen.vpHelpChoiceHead,
+          style: const TextStyle(
               color: Color(0xFFC9A84C),
               fontSize: 13,
               fontWeight: FontWeight.w600,
               letterSpacing: 0.5),
         ),
-        SizedBox(height: 4),
+        const SizedBox(height: 4),
         Text(
-          '占星術で「観測点をどこに置くか」は、見たいテーマで\n'
-          '変わります。日常の指針なら自宅、いま動く瞬間の判断\n'
-          'なら現在地、旅先で根を張る場所を考えるならその土地。\n'
-          '使い分けで「方角の意味」が立体的に見えてきます。',
-          style: TextStyle(
+          t.mapScreen.vpHelpChoiceBody,
+          style: const TextStyle(
               color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
         ),
-        SizedBox(height: 14),
+        const SizedBox(height: 14),
         Text(
-          'VP が画面外に出た時',
-          style: TextStyle(
+          t.mapScreen.vpHelpOffscreenHead,
+          style: const TextStyle(
               color: Color(0xFFC9A84C),
               fontSize: 13,
               fontWeight: FontWeight.w600,
               letterSpacing: 0.5),
         ),
-        SizedBox(height: 4),
+        const SizedBox(height: 4),
         Text(
-          '検索地と VP が大きく離れていると、16 方位の扇状が\n'
-          '画面外に出てしまい見えません。ズームアウトするか、\n'
-          '左上のスコアバー (帯) をタップすると、画面外でも\n'
-          '今日の方位状況が確認できます。',
-          style: TextStyle(
+          t.mapScreen.vpHelpOffscreenBody,
+          style: const TextStyle(
               color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
         ),
       ],
