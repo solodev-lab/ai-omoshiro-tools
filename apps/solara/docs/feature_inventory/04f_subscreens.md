@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 32 / 総行数: 11177
+- ファイル数: 32 / 総行数: 11125
 - class/mixin/extension/enum: 100
 - 関数 (top-level + method の素拾い): 281
 - Navigator.push 等: 0
@@ -14,32 +14,32 @@
 
 ## ファイル別
 
-### `lib/screens/ai_consent_screen.dart` (353 行)
+### `lib/screens/ai_consent_screen.dart` (301 行)
 
-**imports:** dart=0 / package=2 / relative=2
+**imports:** dart=0 / package=2 / relative=3
 
-- relative: `../utils/legal_urls.dart`, `../utils/solara_storage.dart`
+- relative: `../i18n/strings.g.dart`, `../utils/legal_urls.dart`, `../utils/solara_storage.dart`
 
 **型定義 (4):**
 
-- L23 `class AiConsentScreen : StatelessWidget`
+- L24 `class AiConsentScreen : StatelessWidget`
   - AI 生成同意モーダル (Apple 5.1.2(i) / Google Generative AI Apps Policy)。
-- L258 `class _Section : StatelessWidget`
-- L295 `class _LegalLinks : StatelessWidget`
-- L313 `class _LinkPill : StatelessWidget`
+- L206 `class _Section : StatelessWidget`
+- L243 `class _LegalLinks : StatelessWidget`
+- L261 `class _LinkPill : StatelessWidget`
 
 **関数 (4 public + 3 private):**
 
-- L84 `build()`
-- L265 `build()`
-- L301 `build()`
-- L319 `build()`
+- L82 `build()`
+- L213 `build()`
+- L249 `build()`
+- L267 `build()`
 
   <details><summary>private 関数 3 件</summary>
 
-  - L28 `_handleAgree()`
-  - L34 `_handleDecline()`
-  - L65 `_openLegalUrl()`
+  - L29 `_handleAgree()`
+  - L35 `_handleDecline()`
+  - L63 `_openLegalUrl()`
 
   </details>
 

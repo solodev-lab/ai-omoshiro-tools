@@ -4,7 +4,7 @@
   "lib/models/galaxy_cycle.dart": "26ea94bacc6e5f46a5d8f68bd46a24f40f154032",
   "lib/models/lunar_intention.dart": "170f447254ea8ca2da645d776ef400fdd517f3ad",
   "lib/models/tarot_card.dart": "a892b10864a060e4c4b4a0afd03e40756d8fdc68",
-  "lib/screens/ai_consent_screen.dart": "bab04c4c8cd545176b56d0b7ee78c6e5f300a04c",
+  "lib/screens/ai_consent_screen.dart": "04e0bf8bff4a75c6dc090b8027b739eb2c455f86",
   "lib/screens/consultation/consultation_credit_sheet.dart": "5ffa40a6c288c9e66f2a664d820590814f491705",
   "lib/screens/consultation/consultation_history_screen.dart": "9fa4edbd3a6cbf582096540a4600ec15cf02c175",
   "lib/screens/consultation/consultation_history_widgets.dart": "209bbd0d412e1ba8e0cff4369ea408f39700fb4e",

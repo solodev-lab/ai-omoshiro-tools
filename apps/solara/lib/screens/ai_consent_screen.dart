@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../i18n/strings.g.dart';
 import '../utils/legal_urls.dart';
 import '../utils/solara_storage.dart';
 
@@ -37,24 +38,21 @@ class AiConsentScreen extends StatelessWidget {
       barrierDismissible: false,
       builder: (ctx) => AlertDialog(
         backgroundColor: const Color(0xFF1A1A24),
-        title: const Text(
-          '本アプリのご利用には同意が必要です',
-          style: TextStyle(color: Color(0xFFE8E4D3), fontSize: 18),
+        title: Text(
+          t.aiConsent.declineDialog.title,
+          style: const TextStyle(color: Color(0xFFE8E4D3), fontSize: 18),
         ),
-        content: const Text(
-          'Solara をご利用いただくためには、「ご利用前のおしらせ」にご記載の'
-          '内容にご同意いただく必要がございます。同意なしではご利用いただけません。\n\n'
-          'もう一度ご確認いただくか、Solara をアンインストールしてください。'
-          '本アプリでは、ユーザーの個人情報を含む一切のデータを受け取って'
-          'おりませんので、安心してアンインストールしていただけます。',
-          style: TextStyle(color: Color(0xFFB8B4A3), fontSize: 14, height: 1.5),
+        content: Text(
+          t.aiConsent.declineDialog.body,
+          style: const TextStyle(
+              color: Color(0xFFB8B4A3), fontSize: 14, height: 1.5),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text(
-              '戻る',
-              style: TextStyle(color: Color(0xFFC9A84C)),
+            child: Text(
+              t.aiConsent.back,
+              style: const TextStyle(color: Color(0xFFC9A84C)),
             ),
           ),
         ],
@@ -73,7 +71,7 @@ class AiConsentScreen extends StatelessWidget {
     if (!ok && context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('リンクを開けませんでした: $url'),
+          content: Text(t.aiConsent.linkOpenFailed(url: url)),
           backgroundColor: const Color(0xFF1A2438),
         ),
       );
@@ -120,10 +118,10 @@ class AiConsentScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 6),
-                  const Text(
-                    'ご利用前のおしらせ',
+                  Text(
+                    t.aiConsent.subtitle,
                     textAlign: TextAlign.center,
-                    style: TextStyle(color: Color(0xFFB8B4A3), fontSize: 13),
+                    style: const TextStyle(color: Color(0xFFB8B4A3), fontSize: 13),
                   ),
                   const SizedBox(height: 28),
                   Expanded(
@@ -131,72 +129,29 @@ class AiConsentScreen extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const _Section(
-                            heading: '◆ はじめに',
-                            body:
-                              'このアプリは広大な宇宙のデータを1つにまとめたアプリです。'
-                              'その瞬間1点において占星術を使い解釈する時、膨大なデータが実は存在します。'
-                              'このアプリはその膨大なデータを判断材料としてあなたに提供する、とても便利なアプリです。\n\n'
-                              'アプリが解釈して生成する文章やデータはエビデンスとして列挙してあり、'
-                              'そのエビデンスから導き出される1つの解釈としてあなたに提示しています。\n\n'
-                              'エビデンスを元に様々な解釈もできるので、'
-                              '本アプリからの提示は、解釈の一つの例に過ぎません。'
-                              '本アプリで、提示する文章において違和感を感じた場合は、'
-                              'エビデンスをもとにご自身の解釈を加えてみてください。'
-                              '是非、本アプリのデータを活用してあなた自身で占星術を試して頂けると幸いです。\n\n'
-                              '本アプリは現役の占星術師である私が作りました。'
-                              'あなたの人生が、あなたらしく輝いて生きられるように願っています。\n'
-                              '私はあなたの幸せを祈っています。'
-                              'あなたと本アプリを通して出会えた事に感謝します。ありがとう。\n\n'
-                              'ー Solara 開発者より',
-                          ),
-                          SizedBox(height: 22),
-                          const _Section(
-                            heading: '◆ 本アプリは娯楽・自己探求を目的としています',
-                            body:
-                              'Solara の以下のすべての機能は、娯楽および自己探求のための手段です。\n\n'
-                              '・出生図・トランジット・プログレスなどの占星術\n'
-                              '・タロットカードの引きと解釈\n'
-                              '・Stella との相談\n'
-                              '・星読み\n'
-                              '・地図上のアストロカートグラフィと方位スコア表示\n\n'
-                              '医療・法律・金融・心理に関する専門的な助言ではありません。'
-                              '将来の出来事を予測・保証するものでもありません。',
-                          ),
-                          SizedBox(height: 22),
-                          const _Section(
-                            heading: '◆ 第三者へのデータ送信について',
-                            body:
-                              '本アプリは、サービス提供のために以下の第三者サービスへ'
-                              'データを送信します:\n\n'
-                              '・Apple / Google ─ 不正利用防止 (デバイス認証) のため。'
-                              '認証情報を送信します。\n'
-                              '・Google Gemini AI ─ 占星術を元にした解釈文章生成及び'
-                              'タロット解釈文章生成のため。あなたの出生情報 (生年月日・'
-                              '出生時刻・出生地) と相談で入力したテキストを送信します。\n'
-                              '・RevenueCat ─ 課金管理のため。匿名 ID と購入情報を送信します。',
-                          ),
-                          SizedBox(height: 22),
-                          const _Section(
-                            heading: '◆ Gemini AI が生成するコンテンツについて',
-                            body:
-                              '本アプリは、以下の機能で Google の Gemini AI を利用して'
-                              '文章を生成しています:\n\n'
-                              '・タロット ─ 引いたカードの解釈文章\n'
-                              '・Stella 相談 ─ あなたの問いへの占星術相談の解釈文章\n'
-                              '・星読み ─ 5 カテゴリ別 (恋愛 / 豊かさ / 仕事 / 対話 / 全体) の解釈文章\n'
-                              '・リロケーション (地図) ─ 地図上で選択した地点の占星術解釈文章',
+                          _Section(
+                            heading: t.aiConsent.intro.heading,
+                            body: t.aiConsent.intro.body,
                           ),
                           SizedBox(height: 22),
                           _Section(
-                            heading: '◆ 重要な意思決定について',
-                            body:
-                              'Solara の読み解きは、あなた自身を理解するための参考情報です。'
-                              '不正確だったり、あなたに合わない内容になる場合もあります。\n\n'
-                              '違和感を感じた結果は鵜呑みにせず、'
-                              '移住・転職・結婚など人生の重要な判断は、ご自身の意思と、'
-                              'ご家族・専門家への相談に基づいて行ってください。\n\n'
-                              'データの詳しい取扱いは下記をご確認ください。',
+                            heading: t.aiConsent.entertainment.heading,
+                            body: t.aiConsent.entertainment.body,
+                          ),
+                          SizedBox(height: 22),
+                          _Section(
+                            heading: t.aiConsent.thirdParty.heading,
+                            body: t.aiConsent.thirdParty.body,
+                          ),
+                          SizedBox(height: 22),
+                          _Section(
+                            heading: t.aiConsent.geminiContent.heading,
+                            body: t.aiConsent.geminiContent.body,
+                          ),
+                          SizedBox(height: 22),
+                          _Section(
+                            heading: t.aiConsent.decisions.heading,
+                            body: t.aiConsent.decisions.body,
                             footer: _LegalLinks(
                               onPrivacyTap: () =>
                                 _openLegalUrl(context, LegalUrls.privacyPolicy),
@@ -205,17 +160,9 @@ class AiConsentScreen extends StatelessWidget {
                             ),
                           ),
                           SizedBox(height: 22),
-                          const _Section(
-                            heading: '◆ 同意の取扱いについて',
-                            body:
-                              '「同意して始める」を押すと、この「ご利用前のおしらせ」に'
-                              '記載されている事項に同意した事実を端末内に記録します。'
-                              '次回以降は表示されません。'
-                              '（規約変更の際は再度のご案内をさせて頂く場合がございます）\n\n'
-                              '同意しない場合は、画面下の「同意しない」をタップしていただき、'
-                              'Solara をアンインストールしてください。この時点では、'
-                              '本アプリではユーザーの個人情報含む一切のデータを'
-                              '受け取っておりません。',
+                          _Section(
+                            heading: t.aiConsent.consentHandling.heading,
+                            body: t.aiConsent.consentHandling.body,
                           ),
                         ],
                       ),
@@ -232,17 +179,18 @@ class AiConsentScreen extends StatelessWidget {
                       ),
                     ),
                     onPressed: () => _handleAgree(context),
-                    child: const Text(
-                      '同意して始める',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                    child: Text(
+                      t.aiConsent.agree,
+                      style: const TextStyle(
+                          fontSize: 16, fontWeight: FontWeight.w600),
                     ),
                   ),
                   const SizedBox(height: 8),
                   TextButton(
                     onPressed: () => _handleDecline(context),
-                    child: const Text(
-                      '同意しない',
-                      style: TextStyle(color: Color(0xFF888270), fontSize: 14),
+                    child: Text(
+                      t.aiConsent.decline,
+                      style: const TextStyle(color: Color(0xFF888270), fontSize: 14),
                     ),
                   ),
                 ],
@@ -303,8 +251,8 @@ class _LegalLinks extends StatelessWidget {
       spacing: 12,
       runSpacing: 8,
       children: [
-        _LinkPill(label: 'プライバシーポリシー', onTap: onPrivacyTap),
-        _LinkPill(label: '利用規約', onTap: onTermsTap),
+        _LinkPill(label: t.aiConsent.links.privacy, onTap: onPrivacyTap),
+        _LinkPill(label: t.aiConsent.links.terms, onTap: onTermsTap),
       ],
     );
   }
