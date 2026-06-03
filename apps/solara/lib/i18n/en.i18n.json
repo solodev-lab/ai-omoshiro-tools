@@ -1,4 +1,29 @@
 {
+  "locations": {
+    "locDefaults": ["Place 1", "Place 2", "Place 3", "Place 4"],
+    "vpDefaults": ["Workplace", "Favorite", "Spot", "Place"],
+    "currentAddress": "Current address",
+    "mapCenter": "Map center",
+    "renameTitle": "Enter a name for this place",
+    "cancel": "Cancel",
+    "bearing": "$dir",
+    "emptyTitle": "No places saved yet",
+    "addCurrent": "📍 Save current location",
+    "menuRename": "✏ Rename",
+    "menuDelete": "🗑 Delete",
+    "guide": {
+      "title": "How to use LOCATIONS",
+      "intro": "See, at a glance, the energy of your LOCATIONS (saved places)\nas viewed from the VIEWPOINT (your chosen center point) you registered.\nSave the places you care about as LOCATIONS,\nand you can read today's energy for each at a glance.\n\nRegister the places you visit often, and you'll see\nthings like \"this park has a high Healing score today\" or\n\"this café has a high Love score today\" —\na handy way to see how strong today's energy is\nat each saved place.",
+      "dateTimeHead": "[Date & time]",
+      "dateTimeBody": "Change the \"date\" and \"time\" at the top to recalculate\nthe scores for that moment. The \"Back to today\" button\nreturns you to the present.",
+      "viewpointHead": "[Switch VIEWPOINT]",
+      "viewpointBody": "The \"VIEWPOINT\" dropdown switches the reference point for\ndistance and direction scores.\nYou can choose the map center (current location), your current address,\nor a VIEWPOINT you've saved.",
+      "categoryHead": "[Switch category]",
+      "categoryBody": "Tap Healing / Abundance / Love / Work / Talk to switch,\nand the places are re-ranked by that category's score.\nTap the same category again to deselect (= show the overall score).",
+      "registerHead": "[Saving a place]",
+      "registerBody": "From the 📍 button on the left of the Map screen, you can save\nthe point at the center of the map as either a VIEWPOINT or a LOCATION.\nSaved places can also be renamed or deleted."
+    }
+  },
   "paywall": {
     "period": {
       "year": "year", "sixMonth": "6 months", "threeMonth": "3 months", "twoMonth": "2 months",

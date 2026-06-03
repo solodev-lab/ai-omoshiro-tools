@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 32 / 総行数: 11095
+- ファイル数: 32 / 総行数: 11076
 - class/mixin/extension/enum: 100
 - 関数 (top-level + method の素拾い): 281
 - Navigator.push 等: 0
@@ -1018,42 +1018,42 @@ showInfoPopup 経由で表示する (widgets/info_popup.dart、popup 統一規�
   </details>
 
 
-### `lib/screens/locations_screen.dart` (763 行)
+### `lib/screens/locations_screen.dart` (744 行)
 
-**imports:** dart=1 / package=2 / relative=9
+**imports:** dart=1 / package=2 / relative=10
 
-- relative: `../utils/solara_storage.dart`, `../widgets/info_popup.dart`, `../widgets/no_profile_guide.dart`, `../widgets/tap_to_unfocus.dart`, `locations/locations_date_stepper.dart`, `map/map_astro.dart`, `map/map_constants.dart`, `map/map_search.dart`, `map/map_vp_panel.dart`
+- relative: `../i18n/strings.g.dart`, `../utils/solara_storage.dart`, `../widgets/info_popup.dart`, `../widgets/no_profile_guide.dart`, `../widgets/tap_to_unfocus.dart`, `locations/locations_date_stepper.dart`, `map/map_astro.dart`, `map/map_constants.dart`, `map/map_search.dart`, `map/map_vp_panel.dart`
 
 **型定義 (3):**
 
-- L16 `class LocationsScreen : StatefulWidget`
+- L17 `class LocationsScreen : StatefulWidget`
   - Locations 一覧画面 — 登録済み拠点を16方位スコア付きで管理。
-- L39 `class _LocationsScreenState : State`
+- L40 `class _LocationsScreenState : State`
 - L650 `class _SlotStats`
 
 **関数 (3 public + 18 private):**
 
-- L36 `createState()`
-- L67 `initState()`
-- L285 `build()`
+- L37 `createState()`
+- L68 `initState()`
+- L286 `build()`
 
   <details><summary>private 関数 18 件</summary>
 
-  - L72 `_load()`
-  - L132 `_shiftDate()`
-  - L152 `_setYmd()`
-  - L171 `_setHour()`
-  - L179 `_shiftHour()`
-  - L186 `_resetToday()`
-  - L196 `_setDate()`
-  - L229 `_addCurrent()`
-  - L241 `_delete()`
-  - L246 `_rename()`
-  - L359 `_buildRefPointSelector()`
-  - L439 `_buildCategorySelector()`
-  - L483 `_emptyState()`
-  - L508 `_buildList()`
-  - L517 `_buildRow()`
+  - L73 `_load()`
+  - L133 `_shiftDate()`
+  - L153 `_setYmd()`
+  - L172 `_setHour()`
+  - L180 `_shiftHour()`
+  - L187 `_resetToday()`
+  - L197 `_setDate()`
+  - L230 `_addCurrent()`
+  - L242 `_delete()`
+  - L247 `_rename()`
+  - L360 `_buildRefPointSelector()`
+  - L440 `_buildCategorySelector()`
+  - L484 `_emptyState()`
+  - L509 `_buildList()`
+  - L518 `_buildRow()`
   - L608 `_scoreBar()`
   - L644 `_fmtKm()`
   - L660 `_showLocationsUsageGuide()`

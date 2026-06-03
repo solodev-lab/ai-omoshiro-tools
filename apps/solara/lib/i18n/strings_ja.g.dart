@@ -40,11 +40,62 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 	Translations $copyWith({TranslationMetadata<AppLocale, Translations>? meta}) => Translations(meta: meta ?? this.$meta);
 
 	// Translations
+	late final Translations$locations$ja locations = Translations$locations$ja.internal(_root);
 	late final Translations$paywall$ja paywall = Translations$paywall$ja.internal(_root);
 	late final Translations$category$ja category = Translations$category$ja.internal(_root);
 	late final Translations$disclaimer$ja disclaimer = Translations$disclaimer$ja.internal(_root);
 	late final Translations$common$ja common = Translations$common$ja.internal(_root);
 	late final Translations$aiConsent$ja aiConsent = Translations$aiConsent$ja.internal(_root);
+}
+
+// Path: locations
+class Translations$locations$ja {
+	Translations$locations$ja.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+	List<String> get locDefaults => [
+		'場所1',
+		'場所2',
+		'場所3',
+		'場所4',
+	];
+	List<String> get vpDefaults => [
+		'職場',
+		'お気に入り',
+		'スポット',
+		'場所',
+	];
+
+	/// ja: '現住所'
+	String get currentAddress => '現住所';
+
+	/// ja: '地図中心'
+	String get mapCenter => '地図中心';
+
+	/// ja: '地点の名称を入力'
+	String get renameTitle => '地点の名称を入力';
+
+	/// ja: 'キャンセル'
+	String get cancel => 'キャンセル';
+
+	/// ja: '$dir方位'
+	String bearing({required Object dir}) => '${dir}方位';
+
+	/// ja: '登録された拠点はまだありません'
+	String get emptyTitle => '登録された拠点はまだありません';
+
+	/// ja: '📍 現在地を登録'
+	String get addCurrent => '📍 現在地を登録';
+
+	/// ja: '✏ 名称変更'
+	String get menuRename => '✏ 名称変更';
+
+	/// ja: '🗑 削除'
+	String get menuDelete => '🗑 削除';
+
+	late final Translations$locations$guide$ja guide = Translations$locations$guide$ja.internal(_root);
 }
 
 // Path: paywall
@@ -162,6 +213,45 @@ class Translations$aiConsent$ja {
 	late final Translations$aiConsent$geminiContent$ja geminiContent = Translations$aiConsent$geminiContent$ja.internal(_root);
 	late final Translations$aiConsent$decisions$ja decisions = Translations$aiConsent$decisions$ja.internal(_root);
 	late final Translations$aiConsent$consentHandling$ja consentHandling = Translations$aiConsent$consentHandling$ja.internal(_root);
+}
+
+// Path: locations.guide
+class Translations$locations$guide$ja {
+	Translations$locations$guide$ja.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// ja: 'LOCATIONS の使い方'
+	String get title => 'LOCATIONS の使い方';
+
+	/// ja: 'あなたが登録したVIEWPOINT（視点の中心点）から みた、LOCATION（登録地点）のエネルギーを 一覧で確認できます。 気になるところをLOCATIONとして登録しておけば、 一目で今日のエネルギーを知る事ができます。 よく行く場所を登録しておくと、 今日この公園は癒しスコアが高い、 今日このカフェは恋愛スコアが高い、 というように、登録地ごとの今日のエネルギー 強弱が一目で分かる便利機能です。'
+	String get intro => 'あなたが登録したVIEWPOINT（視点の中心点）から\nみた、LOCATION（登録地点）のエネルギーを\n一覧で確認できます。\n気になるところをLOCATIONとして登録しておけば、\n一目で今日のエネルギーを知る事ができます。\n\nよく行く場所を登録しておくと、\n今日この公園は癒しスコアが高い、\n今日このカフェは恋愛スコアが高い、\nというように、登録地ごとの今日のエネルギー\n強弱が一目で分かる便利機能です。';
+
+	/// ja: '【日付・時刻】'
+	String get dateTimeHead => '【日付・時刻】';
+
+	/// ja: '上部の「日付」と「時刻」を変更すると、その時点の スコアで再計算されます。「今日に戻す」ボタンで 現在に戻せます。'
+	String get dateTimeBody => '上部の「日付」と「時刻」を変更すると、その時点の\nスコアで再計算されます。「今日に戻す」ボタンで\n現在に戻せます。';
+
+	/// ja: '【VIEWPOINT 切替】'
+	String get viewpointHead => '【VIEWPOINT 切替】';
+
+	/// ja: '「VIEWPOINT」プルダウンで、距離・方位スコアの 基準地点を切替えられます。 ・地図中心 (現在地) ・現住所 ・登録した VIEWPOINT を選択可能。'
+	String get viewpointBody => '「VIEWPOINT」プルダウンで、距離・方位スコアの\n基準地点を切替えられます。\n・地図中心 (現在地) ・現住所 ・登録した VIEWPOINT\nを選択可能。';
+
+	/// ja: '【カテゴリ切替】'
+	String get categoryHead => '【カテゴリ切替】';
+
+	/// ja: '癒し / 豊かさ / 恋愛 / 仕事 / 話す をタップで切替えると、 そのカテゴリのスコアで地点が再ランクされます。 もう一度同じカテゴリをタップで未選択 (= 総合スコア表示) に 戻ります。'
+	String get categoryBody => '癒し / 豊かさ / 恋愛 / 仕事 / 話す をタップで切替えると、\nそのカテゴリのスコアで地点が再ランクされます。\nもう一度同じカテゴリをタップで未選択 (= 総合スコア表示) に\n戻ります。';
+
+	/// ja: '【地点の登録】'
+	String get registerHead => '【地点の登録】';
+
+	/// ja: 'Map 画面の左側 📍 ボタンから、地図中央の地点を VIEWPOINT と LOCATION のどちらにも保存できます。 保存した地点は名前変更や削除も可能です。'
+	String get registerBody => 'Map 画面の左側 📍 ボタンから、地図中央の地点を\nVIEWPOINT と LOCATION のどちらにも保存できます。\n保存した地点は名前変更や削除も可能です。';
 }
 
 // Path: paywall.period
@@ -950,6 +1040,33 @@ class Translations$paywall$faq$resubscribe$ja {
 extension on Translations {
 	dynamic _flatMapFunction(String path) {
 		return switch (path) {
+			'locations.locDefaults.0' => '場所1',
+			'locations.locDefaults.1' => '場所2',
+			'locations.locDefaults.2' => '場所3',
+			'locations.locDefaults.3' => '場所4',
+			'locations.vpDefaults.0' => '職場',
+			'locations.vpDefaults.1' => 'お気に入り',
+			'locations.vpDefaults.2' => 'スポット',
+			'locations.vpDefaults.3' => '場所',
+			'locations.currentAddress' => '現住所',
+			'locations.mapCenter' => '地図中心',
+			'locations.renameTitle' => '地点の名称を入力',
+			'locations.cancel' => 'キャンセル',
+			'locations.bearing' => ({required Object dir}) => '${dir}方位',
+			'locations.emptyTitle' => '登録された拠点はまだありません',
+			'locations.addCurrent' => '📍 現在地を登録',
+			'locations.menuRename' => '✏ 名称変更',
+			'locations.menuDelete' => '🗑 削除',
+			'locations.guide.title' => 'LOCATIONS の使い方',
+			'locations.guide.intro' => 'あなたが登録したVIEWPOINT（視点の中心点）から\nみた、LOCATION（登録地点）のエネルギーを\n一覧で確認できます。\n気になるところをLOCATIONとして登録しておけば、\n一目で今日のエネルギーを知る事ができます。\n\nよく行く場所を登録しておくと、\n今日この公園は癒しスコアが高い、\n今日このカフェは恋愛スコアが高い、\nというように、登録地ごとの今日のエネルギー\n強弱が一目で分かる便利機能です。',
+			'locations.guide.dateTimeHead' => '【日付・時刻】',
+			'locations.guide.dateTimeBody' => '上部の「日付」と「時刻」を変更すると、その時点の\nスコアで再計算されます。「今日に戻す」ボタンで\n現在に戻せます。',
+			'locations.guide.viewpointHead' => '【VIEWPOINT 切替】',
+			'locations.guide.viewpointBody' => '「VIEWPOINT」プルダウンで、距離・方位スコアの\n基準地点を切替えられます。\n・地図中心 (現在地) ・現住所 ・登録した VIEWPOINT\nを選択可能。',
+			'locations.guide.categoryHead' => '【カテゴリ切替】',
+			'locations.guide.categoryBody' => '癒し / 豊かさ / 恋愛 / 仕事 / 話す をタップで切替えると、\nそのカテゴリのスコアで地点が再ランクされます。\nもう一度同じカテゴリをタップで未選択 (= 総合スコア表示) に\n戻ります。',
+			'locations.guide.registerHead' => '【地点の登録】',
+			'locations.guide.registerBody' => 'Map 画面の左側 📍 ボタンから、地図中央の地点を\nVIEWPOINT と LOCATION のどちらにも保存できます。\n保存した地点は名前変更や削除も可能です。',
 			'paywall.period.year' => '年',
 			'paywall.period.sixMonth' => '6 か月',
 			'paywall.period.threeMonth' => '3 か月',

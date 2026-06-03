@@ -14,6 +14,12 @@ const dir16JP = <String,String>{
   'W':'西','WNW':'西北西','NW':'北西','NNW':'北北西',
 };
 
+/// 方位コード (N/NE/...) → ロケール別表示名。
+/// ja は dir16JP の漢字名、en は英語コンパス略号 (= コード自身) をそのまま使う
+/// (NE/SSW 等は英語圏で自明・狭い行に収まる)。複数の地図系画面で再利用する。
+String dirName(String dir) =>
+    isEnLocale() ? dir : (dir16JP[dir] ?? dir);
+
 /// HTML: fp-item --pc colors
 const categoryColors = <String, Color>{
   'all': Color(0xFFE8E0D0), 'healing': Color(0xFF64C8B4), 'money': Color(0xFFF5D76E),

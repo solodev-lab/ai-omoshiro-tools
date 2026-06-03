@@ -1,4 +1,29 @@
 {
+  "locations": {
+    "locDefaults": ["場所1", "場所2", "場所3", "場所4"],
+    "vpDefaults": ["職場", "お気に入り", "スポット", "場所"],
+    "currentAddress": "現住所",
+    "mapCenter": "地図中心",
+    "renameTitle": "地点の名称を入力",
+    "cancel": "キャンセル",
+    "bearing": "$dir方位",
+    "emptyTitle": "登録された拠点はまだありません",
+    "addCurrent": "📍 現在地を登録",
+    "menuRename": "✏ 名称変更",
+    "menuDelete": "🗑 削除",
+    "guide": {
+      "title": "LOCATIONS の使い方",
+      "intro": "あなたが登録したVIEWPOINT（視点の中心点）から\nみた、LOCATION（登録地点）のエネルギーを\n一覧で確認できます。\n気になるところをLOCATIONとして登録しておけば、\n一目で今日のエネルギーを知る事ができます。\n\nよく行く場所を登録しておくと、\n今日この公園は癒しスコアが高い、\n今日このカフェは恋愛スコアが高い、\nというように、登録地ごとの今日のエネルギー\n強弱が一目で分かる便利機能です。",
+      "dateTimeHead": "【日付・時刻】",
+      "dateTimeBody": "上部の「日付」と「時刻」を変更すると、その時点の\nスコアで再計算されます。「今日に戻す」ボタンで\n現在に戻せます。",
+      "viewpointHead": "【VIEWPOINT 切替】",
+      "viewpointBody": "「VIEWPOINT」プルダウンで、距離・方位スコアの\n基準地点を切替えられます。\n・地図中心 (現在地) ・現住所 ・登録した VIEWPOINT\nを選択可能。",
+      "categoryHead": "【カテゴリ切替】",
+      "categoryBody": "癒し / 豊かさ / 恋愛 / 仕事 / 話す をタップで切替えると、\nそのカテゴリのスコアで地点が再ランクされます。\nもう一度同じカテゴリをタップで未選択 (= 総合スコア表示) に\n戻ります。",
+      "registerHead": "【地点の登録】",
+      "registerBody": "Map 画面の左側 📍 ボタンから、地図中央の地点を\nVIEWPOINT と LOCATION のどちらにも保存できます。\n保存した地点は名前変更や削除も可能です。"
+    }
+  },
   "paywall": {
     "period": {
       "year": "年", "sixMonth": "6 か月", "threeMonth": "3 か月", "twoMonth": "2 か月",

@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:latlong2/latlong.dart';
+import '../i18n/strings.g.dart';
 import '../utils/solara_storage.dart';
 import '../widgets/info_popup.dart';
 import '../widgets/no_profile_guide.dart';
@@ -39,13 +40,13 @@ class LocationsScreen extends StatefulWidget {
 class _LocationsScreenState extends State<LocationsScreen> {
   final SlotManager _mgr = SlotManager(
     storageKey: 'solara_locations',
-    defaultNames: ['場所1','場所2','場所3','場所4'],
+    defaultNames: t.locations.locDefaults,
   );
   // VIEWPOINT プルダウン用に VIEWPOINT スロットも読み込む。
   // null = 現在地（widget.center）、それ以外は VP スロットの index
   final SlotManager _vpMgr = SlotManager(
     storageKey: 'solara_vp_slots',
-    defaultNames: ['職場','お気に入り','スポット','場所'],
+    defaultNames: t.locations.vpDefaults,
   );
   List<VPSlot> _slots = [];
   List<VPSlot> _vpSlots = [];
@@ -249,8 +250,8 @@ class _LocationsScreenState extends State<LocationsScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: const Color(0xFF0C0C1A),
-        title: const Text('地点の名称を入力',
-            style: TextStyle(fontSize: 14, color: Color(0xFFC9A84C))),
+        title: Text(t.locations.renameTitle,
+            style: const TextStyle(fontSize: 14, color: Color(0xFFC9A84C))),
         content: TextField(
           controller: ctrl, autofocus: true, maxLength: 12,
           style: const TextStyle(color: Color(0xFFE8E0D0), fontSize: 13),
@@ -260,7 +261,7 @@ class _LocationsScreenState extends State<LocationsScreen> {
           ),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('キャンセル', style: TextStyle(color: Color(0xFF555555)))),
+          TextButton(onPressed: () => Navigator.pop(ctx), child: Text(t.locations.cancel, style: const TextStyle(color: Color(0xFF555555)))),
           TextButton(onPressed: () => Navigator.pop(ctx, ctrl.text.trim()),
               child: const Text('OK', style: TextStyle(color: Color(0xFFC9A84C)))),
         ],
@@ -390,13 +391,13 @@ class _LocationsScreenState extends State<LocationsScreen> {
               items: [
                 DropdownMenuItem<int?>(
                   value: null,
-                  child: Row(mainAxisSize: MainAxisSize.min, children: const [
-                    Text('📡', style: TextStyle(fontSize: 13)),
-                    SizedBox(width: 6),
+                  child: Row(mainAxisSize: MainAxisSize.min, children: [
+                    const Text('📡', style: TextStyle(fontSize: 13)),
+                    const SizedBox(width: 6),
                     Flexible(
                       child: Text(
-                        '地図中心',
-                        style: TextStyle(
+                        t.locations.mapCenter,
+                        style: const TextStyle(
                             fontSize: 12, color: Color(0xFFE8E0D0)),
                         overflow: TextOverflow.ellipsis,
                         maxLines: 1,
@@ -413,7 +414,7 @@ class _LocationsScreenState extends State<LocationsScreen> {
                       Flexible(
                         child: Text(
                           _vpSlots[i].isHome
-                              ? '現住所'
+                              ? t.locations.currentAddress
                               : (_vpSlots[i].name.isEmpty
                                   ? 'VP${i + 1}'
                                   : _vpSlots[i].name),
@@ -485,8 +486,8 @@ class _LocationsScreenState extends State<LocationsScreen> {
       child: Column(mainAxisSize: MainAxisSize.min, children: [
         const Text('🗺', style: TextStyle(fontSize: 40)),
         const SizedBox(height: 14),
-        const Text('登録された拠点はまだありません',
-            style: TextStyle(fontSize: 12, color: Color(0xFF777777))),
+        Text(t.locations.emptyTitle,
+            style: const TextStyle(fontSize: 12, color: Color(0xFF777777))),
         const SizedBox(height: 16),
         GestureDetector(
           onTap: _addCurrent,
@@ -497,8 +498,8 @@ class _LocationsScreenState extends State<LocationsScreen> {
               borderRadius: BorderRadius.circular(10),
               border: Border.all(color: const Color(0x66C9A84C)),
             ),
-            child: const Text('📍 現在地を登録',
-                style: TextStyle(fontSize: 11, color: Color(0xFFC9A84C), letterSpacing: 1)),
+            child: Text(t.locations.addCurrent,
+                style: const TextStyle(fontSize: 11, color: Color(0xFFC9A84C), letterSpacing: 1)),
           ),
         ),
       ]),
@@ -517,7 +518,6 @@ class _LocationsScreenState extends State<LocationsScreen> {
   Widget _buildRow(int i) {
     final s = _slots[i];
     final stats = _statsFor(s);
-    final dirJp = dir16JP[stats.dir] ?? stats.dir;
 
     return InkWell(
       onTap: () {
@@ -546,13 +546,13 @@ class _LocationsScreenState extends State<LocationsScreen> {
               // 「現住所」固定表示。VIEWPOINT プルダウン (_buildRefPointSelector)
               // や map_viewpoint_menu と表記を統一し、個人情報的な住所文字列を
               // 一覧に出さない方針 (オーナー指示 2026-05-09)。
-              Text(s.isHome ? '現住所' : s.name,
+              Text(s.isHome ? t.locations.currentAddress : s.name,
                   style: const TextStyle(fontSize: 13, color: Color(0xFFE8E0D0), fontWeight: FontWeight.w600),
                   maxLines: 1, overflow: TextOverflow.ellipsis),
               const SizedBox(height: 4),
               Row(children: [
                 Flexible(
-                  child: Text('$dirJp方位',
+                  child: Text(t.locations.bearing(dir: dirName(stats.dir)),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(fontSize: 10, color: Color(0xFF999999))),
@@ -594,9 +594,9 @@ class _LocationsScreenState extends State<LocationsScreen> {
                     if (v == 'rename') await _rename(i);
                     if (v == 'delete') await _delete(i);
                   },
-                  itemBuilder: (ctx) => const [
-                    PopupMenuItem(value: 'rename', child: Text('✏ 名称変更', style: TextStyle(color: Color(0xFFE8E0D0), fontSize: 12))),
-                    PopupMenuItem(value: 'delete', child: Text('🗑 削除', style: TextStyle(color: Color(0xFFFF6B6B), fontSize: 12))),
+                  itemBuilder: (ctx) => [
+                    PopupMenuItem(value: 'rename', child: Text(t.locations.menuRename, style: const TextStyle(color: Color(0xFFE8E0D0), fontSize: 12))),
+                    PopupMenuItem(value: 'delete', child: Text(t.locations.menuDelete, style: const TextStyle(color: Color(0xFFFF6B6B), fontSize: 12))),
                   ],
                 )),
           ),
@@ -663,98 +663,79 @@ void _showLocationsUsageGuide(BuildContext context) {
     child: Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: const [
+      children: [
         Text(
-          'LOCATIONS の使い方',
-          style: TextStyle(
+          t.locations.guide.title,
+          style: const TextStyle(
               color: Color(0xFFC9A84C), fontSize: 14, letterSpacing: 1),
         ),
-        SizedBox(height: 10),
+        const SizedBox(height: 10),
         Text(
-          'あなたが登録したVIEWPOINT（視点の中心点）から\n'
-          'みた、LOCATION（登録地点）のエネルギーを\n'
-          '一覧で確認できます。\n'
-          '気になるところをLOCATIONとして登録しておけば、\n'
-          '一目で今日のエネルギーを知る事ができます。\n\n'
-          'よく行く場所を登録しておくと、\n'
-          '今日この公園は癒しスコアが高い、\n'
-          '今日このカフェは恋愛スコアが高い、\n'
-          'というように、登録地ごとの今日のエネルギー\n'
-          '強弱が一目で分かる便利機能です。',
-          style: TextStyle(
+          t.locations.guide.intro,
+          style: const TextStyle(
               color: Color(0xFFE8E0D0),
               fontSize: 13,
               height: 1.6,
               fontWeight: FontWeight.w500),
         ),
-        SizedBox(height: 14),
+        const SizedBox(height: 14),
         Text(
-          '【日付・時刻】',
-          style: TextStyle(
+          t.locations.guide.dateTimeHead,
+          style: const TextStyle(
               color: Color(0xFFC9A84C),
               fontSize: 13,
               fontWeight: FontWeight.w600,
               letterSpacing: 0.5),
         ),
-        SizedBox(height: 4),
+        const SizedBox(height: 4),
         Text(
-          '上部の「日付」と「時刻」を変更すると、その時点の\n'
-          'スコアで再計算されます。「今日に戻す」ボタンで\n'
-          '現在に戻せます。',
-          style: TextStyle(
+          t.locations.guide.dateTimeBody,
+          style: const TextStyle(
               color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
         ),
-        SizedBox(height: 10),
+        const SizedBox(height: 10),
         Text(
-          '【VIEWPOINT 切替】',
-          style: TextStyle(
+          t.locations.guide.viewpointHead,
+          style: const TextStyle(
               color: Color(0xFFC9A84C),
               fontSize: 13,
               fontWeight: FontWeight.w600,
               letterSpacing: 0.5),
         ),
-        SizedBox(height: 4),
+        const SizedBox(height: 4),
         Text(
-          '「VIEWPOINT」プルダウンで、距離・方位スコアの\n'
-          '基準地点を切替えられます。\n'
-          '・地図中心 (現在地) ・現住所 ・登録した VIEWPOINT\n'
-          'を選択可能。',
-          style: TextStyle(
+          t.locations.guide.viewpointBody,
+          style: const TextStyle(
               color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
         ),
-        SizedBox(height: 10),
+        const SizedBox(height: 10),
         Text(
-          '【カテゴリ切替】',
-          style: TextStyle(
+          t.locations.guide.categoryHead,
+          style: const TextStyle(
               color: Color(0xFFC9A84C),
               fontSize: 13,
               fontWeight: FontWeight.w600,
               letterSpacing: 0.5),
         ),
-        SizedBox(height: 4),
+        const SizedBox(height: 4),
         Text(
-          '癒し / 豊かさ / 恋愛 / 仕事 / 話す をタップで切替えると、\n'
-          'そのカテゴリのスコアで地点が再ランクされます。\n'
-          'もう一度同じカテゴリをタップで未選択 (= 総合スコア表示) に\n'
-          '戻ります。',
-          style: TextStyle(
+          t.locations.guide.categoryBody,
+          style: const TextStyle(
               color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
         ),
-        SizedBox(height: 10),
+        const SizedBox(height: 10),
         Text(
-          '【地点の登録】',
-          style: TextStyle(
+          t.locations.guide.registerHead,
+          style: const TextStyle(
               color: Color(0xFFC9A84C),
               fontSize: 13,
               fontWeight: FontWeight.w600,
               letterSpacing: 0.5),
         ),
-        SizedBox(height: 4),
+        const SizedBox(height: 4),
         Text(
-          'Map 画面の左側 📍 ボタンから、地図中央の地点を\n'
-          'VIEWPOINT と LOCATION のどちらにも保存できます。\n'
-          '保存した地点は名前変更や削除も可能です。',
-          style: TextStyle(
+          t.locations.guide.registerBody,
+          style: const TextStyle(
               color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
         ),
       ],

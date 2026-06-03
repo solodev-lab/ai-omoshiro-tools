@@ -39,11 +39,43 @@ class TranslationsEn extends Translations with BaseTranslations<AppLocale, Trans
 	TranslationsEn $copyWith({TranslationMetadata<AppLocale, Translations>? meta}) => TranslationsEn(meta: meta ?? this.$meta);
 
 	// Translations
+	@override late final _Translations$locations$en locations = _Translations$locations$en._(_root);
 	@override late final _Translations$paywall$en paywall = _Translations$paywall$en._(_root);
 	@override late final _Translations$category$en category = _Translations$category$en._(_root);
 	@override late final _Translations$disclaimer$en disclaimer = _Translations$disclaimer$en._(_root);
 	@override late final _Translations$common$en common = _Translations$common$en._(_root);
 	@override late final _Translations$aiConsent$en aiConsent = _Translations$aiConsent$en._(_root);
+}
+
+// Path: locations
+class _Translations$locations$en extends Translations$locations$ja {
+	_Translations$locations$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override List<String> get locDefaults => [
+		'Place 1',
+		'Place 2',
+		'Place 3',
+		'Place 4',
+	];
+	@override List<String> get vpDefaults => [
+		'Workplace',
+		'Favorite',
+		'Spot',
+		'Place',
+	];
+	@override String get currentAddress => 'Current address';
+	@override String get mapCenter => 'Map center';
+	@override String get renameTitle => 'Enter a name for this place';
+	@override String get cancel => 'Cancel';
+	@override String bearing({required Object dir}) => '${dir}';
+	@override String get emptyTitle => 'No places saved yet';
+	@override String get addCurrent => '📍 Save current location';
+	@override String get menuRename => '✏ Rename';
+	@override String get menuDelete => '🗑 Delete';
+	@override late final _Translations$locations$guide$en guide = _Translations$locations$guide$en._(_root);
 }
 
 // Path: paywall
@@ -124,6 +156,25 @@ class _Translations$aiConsent$en extends Translations$aiConsent$ja {
 	@override late final _Translations$aiConsent$geminiContent$en geminiContent = _Translations$aiConsent$geminiContent$en._(_root);
 	@override late final _Translations$aiConsent$decisions$en decisions = _Translations$aiConsent$decisions$en._(_root);
 	@override late final _Translations$aiConsent$consentHandling$en consentHandling = _Translations$aiConsent$consentHandling$en._(_root);
+}
+
+// Path: locations.guide
+class _Translations$locations$guide$en extends Translations$locations$guide$ja {
+	_Translations$locations$guide$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get title => 'How to use LOCATIONS';
+	@override String get intro => 'See, at a glance, the energy of your LOCATIONS (saved places)\nas viewed from the VIEWPOINT (your chosen center point) you registered.\nSave the places you care about as LOCATIONS,\nand you can read today\'s energy for each at a glance.\n\nRegister the places you visit often, and you\'ll see\nthings like "this park has a high Healing score today" or\n"this café has a high Love score today" —\na handy way to see how strong today\'s energy is\nat each saved place.';
+	@override String get dateTimeHead => '[Date & time]';
+	@override String get dateTimeBody => 'Change the "date" and "time" at the top to recalculate\nthe scores for that moment. The "Back to today" button\nreturns you to the present.';
+	@override String get viewpointHead => '[Switch VIEWPOINT]';
+	@override String get viewpointBody => 'The "VIEWPOINT" dropdown switches the reference point for\ndistance and direction scores.\nYou can choose the map center (current location), your current address,\nor a VIEWPOINT you\'ve saved.';
+	@override String get categoryHead => '[Switch category]';
+	@override String get categoryBody => 'Tap Healing / Abundance / Love / Work / Talk to switch,\nand the places are re-ranked by that category\'s score.\nTap the same category again to deselect (= show the overall score).';
+	@override String get registerHead => '[Saving a place]';
+	@override String get registerBody => 'From the 📍 button on the left of the Map screen, you can save\nthe point at the center of the map as either a VIEWPOINT or a LOCATION.\nSaved places can also be renamed or deleted.';
 }
 
 // Path: paywall.period
@@ -667,6 +718,33 @@ class _Translations$paywall$faq$resubscribe$en extends Translations$paywall$faq$
 extension on TranslationsEn {
 	dynamic _flatMapFunction(String path) {
 		return switch (path) {
+			'locations.locDefaults.0' => 'Place 1',
+			'locations.locDefaults.1' => 'Place 2',
+			'locations.locDefaults.2' => 'Place 3',
+			'locations.locDefaults.3' => 'Place 4',
+			'locations.vpDefaults.0' => 'Workplace',
+			'locations.vpDefaults.1' => 'Favorite',
+			'locations.vpDefaults.2' => 'Spot',
+			'locations.vpDefaults.3' => 'Place',
+			'locations.currentAddress' => 'Current address',
+			'locations.mapCenter' => 'Map center',
+			'locations.renameTitle' => 'Enter a name for this place',
+			'locations.cancel' => 'Cancel',
+			'locations.bearing' => ({required Object dir}) => '${dir}',
+			'locations.emptyTitle' => 'No places saved yet',
+			'locations.addCurrent' => '📍 Save current location',
+			'locations.menuRename' => '✏ Rename',
+			'locations.menuDelete' => '🗑 Delete',
+			'locations.guide.title' => 'How to use LOCATIONS',
+			'locations.guide.intro' => 'See, at a glance, the energy of your LOCATIONS (saved places)\nas viewed from the VIEWPOINT (your chosen center point) you registered.\nSave the places you care about as LOCATIONS,\nand you can read today\'s energy for each at a glance.\n\nRegister the places you visit often, and you\'ll see\nthings like "this park has a high Healing score today" or\n"this café has a high Love score today" —\na handy way to see how strong today\'s energy is\nat each saved place.',
+			'locations.guide.dateTimeHead' => '[Date & time]',
+			'locations.guide.dateTimeBody' => 'Change the "date" and "time" at the top to recalculate\nthe scores for that moment. The "Back to today" button\nreturns you to the present.',
+			'locations.guide.viewpointHead' => '[Switch VIEWPOINT]',
+			'locations.guide.viewpointBody' => 'The "VIEWPOINT" dropdown switches the reference point for\ndistance and direction scores.\nYou can choose the map center (current location), your current address,\nor a VIEWPOINT you\'ve saved.',
+			'locations.guide.categoryHead' => '[Switch category]',
+			'locations.guide.categoryBody' => 'Tap Healing / Abundance / Love / Work / Talk to switch,\nand the places are re-ranked by that category\'s score.\nTap the same category again to deselect (= show the overall score).',
+			'locations.guide.registerHead' => '[Saving a place]',
+			'locations.guide.registerBody' => 'From the 📍 button on the left of the Map screen, you can save\nthe point at the center of the map as either a VIEWPOINT or a LOCATION.\nSaved places can also be renamed or deleted.',
 			'paywall.period.year' => 'year',
 			'paywall.period.sixMonth' => '6 months',
 			'paywall.period.threeMonth' => '3 months',
