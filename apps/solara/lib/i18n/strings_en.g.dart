@@ -39,6 +39,7 @@ class TranslationsEn extends Translations with BaseTranslations<AppLocale, Trans
 	TranslationsEn $copyWith({TranslationMetadata<AppLocale, Translations>? meta}) => TranslationsEn(meta: meta ?? this.$meta);
 
 	// Translations
+	@override late final _Translations$consultInput$en consultInput = _Translations$consultInput$en._(_root);
 	@override late final _Translations$mapAcg$en mapAcg = _Translations$mapAcg$en._(_root);
 	@override late final _Translations$mapVp$en mapVp = _Translations$mapVp$en._(_root);
 	@override late final _Translations$mapMenu$en mapMenu = _Translations$mapMenu$en._(_root);
@@ -48,6 +49,23 @@ class TranslationsEn extends Translations with BaseTranslations<AppLocale, Trans
 	@override late final _Translations$disclaimer$en disclaimer = _Translations$disclaimer$en._(_root);
 	@override late final _Translations$common$en common = _Translations$common$en._(_root);
 	@override late final _Translations$aiConsent$en aiConsent = _Translations$aiConsent$en._(_root);
+}
+
+// Path: consultInput
+class _Translations$consultInput$en extends Translations$consultInput$ja {
+	_Translations$consultInput$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override late final _Translations$consultInput$theme$en theme = _Translations$consultInput$theme$en._(_root);
+	@override late final _Translations$consultInput$mode$en mode = _Translations$consultInput$mode$en._(_root);
+	@override late final _Translations$consultInput$scope$en scope = _Translations$consultInput$scope$en._(_root);
+	@override String get submit => 'Start consultation';
+	@override String get noHomeNote => 'No current address is set. "Direction," "Radius from home," and "Within my country" become available once you set your current address. "Specific place" works right now.';
+	@override String presetCard({required Object name}) => 'Looking at ${name}';
+	@override String get introNote => 'Choose when, where, and what you\'ll do, and Stella reads — clearly — what kind of energy works at that time and place, from a vast body of astrological data.';
+	@override late final _Translations$consultInput$about$en about = _Translations$consultInput$about$en._(_root);
 }
 
 // Path: mapAcg
@@ -211,6 +229,68 @@ class _Translations$aiConsent$en extends Translations$aiConsent$ja {
 	@override late final _Translations$aiConsent$geminiContent$en geminiContent = _Translations$aiConsent$geminiContent$en._(_root);
 	@override late final _Translations$aiConsent$decisions$en decisions = _Translations$aiConsent$decisions$en._(_root);
 	@override late final _Translations$aiConsent$consentHandling$en consentHandling = _Translations$aiConsent$consentHandling$en._(_root);
+}
+
+// Path: consultInput.theme
+class _Translations$consultInput$theme$en extends Translations$consultInput$theme$ja {
+	_Translations$consultInput$theme$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get love => 'Love & relationships';
+	@override String get money => 'Abundance & money';
+	@override String get work => 'Work & career';
+	@override String get communication => 'Talk & learning';
+	@override String get healing => 'Healing & rest';
+	@override String get newStart => 'Change & new beginnings';
+}
+
+// Path: consultInput.mode
+class _Translations$consultInput$mode$en extends Translations$consultInput$mode$ja {
+	_Translations$consultInput$mode$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get daily => 'Outing /\nEvent';
+	@override String get travel => 'Travel';
+	@override String get migration => 'Migration';
+}
+
+// Path: consultInput.scope
+class _Translations$consultInput$scope$en extends Translations$consultInput$scope$ja {
+	_Translations$consultInput$scope$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get point => 'Specific place';
+	@override String get bearing => 'Direction';
+	@override String get radius => 'Radius from home';
+	@override String get region => 'Region';
+	@override String get country => 'Within my country';
+	@override String get world => 'Worldwide';
+}
+
+// Path: consultInput.about
+class _Translations$consultInput$about$en extends Translations$consultInput$about$ja {
+	_Translations$consultInput$about$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get title => 'What is Stella Consultation?';
+	@override String get intro => 'Just choose "when, where, and what you\'ll do." Solara lays a planet-scale star map over that plan and reads the energy that works on you at that time and place — it\'s the heart of Solara.\nThe vast celestial calculations an astrologer would normally take a long time to read, Stella performs in an instant, and hands to you in words that stay close to you rather than in technical jargon.';
+	@override String get bullets => '• It maps "where and what you do, and what effect it draws out," in the light of your wish.\n• No good/bad verdicts, no rankings. Rather than "good/bad," it tells you what quality of flow it is — a quality that gives you a push, or one that invites you to face something.\n• Outings, travel, migration — to match the scale. With Cosmic Pro you can set the time in one-hour steps, and even read how the flow of a place shifts 30 minutes later.';
+	@override String get dataTitle => 'The data Stella Consultation reads';
+	@override String get dataIntro => 'Solara\'s star-line calculation is 10 planets × 4 angles (ASC · MC · DSC · IC) × 3 aspects (conjunction · square · trine / sextile) = 120 lines per frame. It layers several frames and calculates latitude bands, the 12 houses, and progressions.';
+	@override String get freeHead => '— Even with Outing / Event (Free), it goes this far —';
+	@override String get freeList => '• The 10 planets of the birth chart (natal) / the 10 transiting planets of today\n• Astrocartography (Astro*Carto*Graphy / the lines of your birth)\n• Cyclocartography (Cyclo*Carto*Graphy / the moving lines of this very moment)\n• All aspect lines — conjunction, square, trine, sextile (theme planets × 4 angles × 3 aspects)\n• Zenith and nadir bands (latitude energy bands)\n• Relocation for that land (the reshuffling of ASC / MC / the 12 houses + which house each theme planet falls in)\n• Inner seasons (the progressed Moon and Sun, the turning points of the solar arc) / local timing (the times planets cross the angles)\n…Stella overlays all of this across candidate points worldwide and maps the places and directions that resonate with your wish.';
+	@override String get proHead => '— With Cosmic Pro, further —';
+	@override String get proList => '• Migration scale = the lifelong, unchanging natal ACG + the life-chapters of progression\n• Travel scale = the moving lines for each travel day (sampling several days of the period)\n• Set the time in one-hour steps → even how the lines move 30 minutes later';
+	@override String get devHead => '— From the maker of Solara —';
+	@override String get devBody => 'This level of detail is possible because I — someone who has practiced astrology myself — handle everything directly, from design to development. Rather than asking someone else to "please read it this way here," an astrologer gives it form directly; so the meaning of the stars can dwell in every small detail. May this star map stay close beside your every day.';
 }
 
 // Path: mapAcg.sub
@@ -920,6 +1000,36 @@ class _Translations$paywall$faq$resubscribe$en extends Translations$paywall$faq$
 extension on TranslationsEn {
 	dynamic _flatMapFunction(String path) {
 		return switch (path) {
+			'consultInput.theme.love' => 'Love & relationships',
+			'consultInput.theme.money' => 'Abundance & money',
+			'consultInput.theme.work' => 'Work & career',
+			'consultInput.theme.communication' => 'Talk & learning',
+			'consultInput.theme.healing' => 'Healing & rest',
+			'consultInput.theme.newStart' => 'Change & new beginnings',
+			'consultInput.mode.daily' => 'Outing /\nEvent',
+			'consultInput.mode.travel' => 'Travel',
+			'consultInput.mode.migration' => 'Migration',
+			'consultInput.scope.point' => 'Specific place',
+			'consultInput.scope.bearing' => 'Direction',
+			'consultInput.scope.radius' => 'Radius from home',
+			'consultInput.scope.region' => 'Region',
+			'consultInput.scope.country' => 'Within my country',
+			'consultInput.scope.world' => 'Worldwide',
+			'consultInput.submit' => 'Start consultation',
+			'consultInput.noHomeNote' => 'No current address is set. "Direction," "Radius from home," and "Within my country" become available once you set your current address. "Specific place" works right now.',
+			'consultInput.presetCard' => ({required Object name}) => 'Looking at ${name}',
+			'consultInput.introNote' => 'Choose when, where, and what you\'ll do, and Stella reads — clearly — what kind of energy works at that time and place, from a vast body of astrological data.',
+			'consultInput.about.title' => 'What is Stella Consultation?',
+			'consultInput.about.intro' => 'Just choose "when, where, and what you\'ll do." Solara lays a planet-scale star map over that plan and reads the energy that works on you at that time and place — it\'s the heart of Solara.\nThe vast celestial calculations an astrologer would normally take a long time to read, Stella performs in an instant, and hands to you in words that stay close to you rather than in technical jargon.',
+			'consultInput.about.bullets' => '• It maps "where and what you do, and what effect it draws out," in the light of your wish.\n• No good/bad verdicts, no rankings. Rather than "good/bad," it tells you what quality of flow it is — a quality that gives you a push, or one that invites you to face something.\n• Outings, travel, migration — to match the scale. With Cosmic Pro you can set the time in one-hour steps, and even read how the flow of a place shifts 30 minutes later.',
+			'consultInput.about.dataTitle' => 'The data Stella Consultation reads',
+			'consultInput.about.dataIntro' => 'Solara\'s star-line calculation is 10 planets × 4 angles (ASC · MC · DSC · IC) × 3 aspects (conjunction · square · trine / sextile) = 120 lines per frame. It layers several frames and calculates latitude bands, the 12 houses, and progressions.',
+			'consultInput.about.freeHead' => '— Even with Outing / Event (Free), it goes this far —',
+			'consultInput.about.freeList' => '• The 10 planets of the birth chart (natal) / the 10 transiting planets of today\n• Astrocartography (Astro*Carto*Graphy / the lines of your birth)\n• Cyclocartography (Cyclo*Carto*Graphy / the moving lines of this very moment)\n• All aspect lines — conjunction, square, trine, sextile (theme planets × 4 angles × 3 aspects)\n• Zenith and nadir bands (latitude energy bands)\n• Relocation for that land (the reshuffling of ASC / MC / the 12 houses + which house each theme planet falls in)\n• Inner seasons (the progressed Moon and Sun, the turning points of the solar arc) / local timing (the times planets cross the angles)\n…Stella overlays all of this across candidate points worldwide and maps the places and directions that resonate with your wish.',
+			'consultInput.about.proHead' => '— With Cosmic Pro, further —',
+			'consultInput.about.proList' => '• Migration scale = the lifelong, unchanging natal ACG + the life-chapters of progression\n• Travel scale = the moving lines for each travel day (sampling several days of the period)\n• Set the time in one-hour steps → even how the lines move 30 minutes later',
+			'consultInput.about.devHead' => '— From the maker of Solara —',
+			'consultInput.about.devBody' => 'This level of detail is possible because I — someone who has practiced astrology myself — handle everything directly, from design to development. Rather than asking someone else to "please read it this way here," an astrologer gives it form directly; so the meaning of the stars can dwell in every small detail. May this star map stay close beside your every day.',
 			'mapAcg.pillRelocate' => 'Relocate',
 			'mapAcg.pillAspect' => 'Aspect',
 			'mapAcg.sub.zenith' => 'Zenith',

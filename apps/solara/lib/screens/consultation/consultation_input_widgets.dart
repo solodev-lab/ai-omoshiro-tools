@@ -5,47 +5,49 @@ part of 'consultation_input_screen.dart';
 
 // ── 選択肢定数 ───────────────────────────────────────────
 
-const _themeChoices = <_ThemeChoice>[
-  _ThemeChoice('love', '恋愛・関係'),
-  _ThemeChoice('money', '豊かさ・お金'),
-  _ThemeChoice('work', '仕事・キャリア'),
-  _ThemeChoice('communication', '対話・学び'),
-  _ThemeChoice('healing', '癒し・休息'),
-  _ThemeChoice('newStart', '変化・新たな出発'),
-];
+// ラベルはロケール連動 (t.*) のため getter。id は不変 (Worker mode/scope key)。
+List<_ThemeChoice> get _themeChoices => [
+      _ThemeChoice('love', t.consultInput.theme.love),
+      _ThemeChoice('money', t.consultInput.theme.money),
+      _ThemeChoice('work', t.consultInput.theme.work),
+      _ThemeChoice('communication', t.consultInput.theme.communication),
+      _ThemeChoice('healing', t.consultInput.theme.healing),
+      _ThemeChoice('newStart', t.consultInput.theme.newStart),
+    ];
 
 // 2026-05-29: 'daily' のラベルを 2 行表記に変更。
 //   おでかけ = 自分がその場所に指定時刻に行く
 //   イベント = 自分が動かずにその場所で始まる事も含む
 // 例えば「自宅での出来事」を相談したい時、「おでかけ」だけでは設定しにくいので
 // 「イベント」を併記して概念を広げる。Worker 側 mode key は 'daily' のまま不変。
-const _modeChoices = <_ModeChoice>[
-  _ModeChoice('daily', 'おでかけ\nイベント'),
-  _ModeChoice('travel', '旅行'),
-  _ModeChoice('migration', '移住'),
-];
+List<_ModeChoice> get _modeChoices => [
+      _ModeChoice('daily', t.consultInput.mode.daily),
+      _ModeChoice('travel', t.consultInput.mode.travel),
+      _ModeChoice('migration', t.consultInput.mode.migration),
+    ];
 
 // scope 選択肢は場面別:
 //   - daily:           具体地点 / 方角 / 現住所から半径
 //   - travel/migration: 具体地点 / 地域 / 自国内 / 現住所から半径 / 世界全体
-const _scopeChoicesDaily = <_ScopeChoice>[
-  _ScopeChoice('point', '具体地点'),
-  _ScopeChoice('bearing', '方角'),
-  _ScopeChoice('radius', '現住所から半径'),
-];
+List<_ScopeChoice> get _scopeChoicesDaily => [
+      _ScopeChoice('point', t.consultInput.scope.point),
+      _ScopeChoice('bearing', t.consultInput.scope.bearing),
+      _ScopeChoice('radius', t.consultInput.scope.radius),
+    ];
 
-const _scopeChoicesWide = <_ScopeChoice>[
-  _ScopeChoice('point', '具体地点'),
-  _ScopeChoice('region', '地域'),
-  _ScopeChoice('country', '自国内'),
-  _ScopeChoice('radius', '現住所から半径'),
-  _ScopeChoice('world', '世界全体'),
-];
+List<_ScopeChoice> get _scopeChoicesWide => [
+      _ScopeChoice('point', t.consultInput.scope.point),
+      _ScopeChoice('region', t.consultInput.scope.region),
+      _ScopeChoice('country', t.consultInput.scope.country),
+      _ScopeChoice('radius', t.consultInput.scope.radius),
+      _ScopeChoice('world', t.consultInput.scope.world),
+    ];
 
 List<_ScopeChoice> _scopeChoicesFor(String mode) =>
     mode == 'daily' ? _scopeChoicesDaily : _scopeChoicesWide;
 
-// 大ブロック region picker (worldCityRegionGroups の値で識別)
+// 大ブロック region picker。値は worldCityRegionGroups の照合キー (日本語) の
+// ため不変。表示名のみ _regionLabel でロケール連動 (en は英語地域名)。
 const _regionPickerGroups = <String>[
   '日本',
   '北米',
@@ -56,6 +58,22 @@ const _regionPickerGroups = <String>[
   '中南米',
   'オセアニア',
 ];
+
+/// region picker の表示名 (id=日本語の照合キーは保持、表示のみ localize)。
+String _regionLabel(String jpId) {
+  if (!isEnLocale()) return jpId;
+  const en = {
+    '日本': 'Japan',
+    '北米': 'North America',
+    'ヨーロッパ': 'Europe',
+    'アジア': 'Asia',
+    '中東': 'Middle East',
+    'アフリカ': 'Africa',
+    '中南米': 'Latin America',
+    'オセアニア': 'Oceania',
+  };
+  return en[jpId] ?? jpId;
+}
 
 class _ThemeChoice {
   final String id;
@@ -260,7 +278,7 @@ class _RegionPicker extends StatelessWidget {
       runSpacing: 8,
       children: _regionPickerGroups
           .map((g) => _PillChip(
-                label: g,
+                label: _regionLabel(g),
                 active: selected == g,
                 onTap: () => onSelect(g),
               ))
@@ -340,8 +358,8 @@ class _NoHomeNote extends StatelessWidget {
           border: Border.all(color: const Color(0x44D6915C)),
         ),
         child: Text(
-          '現住所が未設定です。「方角・現住所から半径・自国内」は現住所を設定すると使えます。「具体地点」は今すぐ使えます。',
-          style: TextStyle(
+          t.consultInput.noHomeNote,
+          style: const TextStyle(
             color: SolaraColors.energyHardLight,
             fontSize: 11.5,
             height: 1.5,
@@ -376,7 +394,9 @@ class _PresetLocationCard extends StatelessWidget {
           const SizedBox(width: 8),
           Expanded(
             child: Text(
-              '${target.nameJP}${target.region.isNotEmpty ? " (${target.region})" : ""} を見ます',
+              t.consultInput.presetCard(
+                  name:
+                      '${target.nameJP}${target.region.isNotEmpty ? " (${target.region})" : ""}'),
               style: const TextStyle(
                 color: SolaraColors.textPrimary,
                 fontSize: 12,
@@ -422,7 +442,7 @@ class _SubmitBar extends StatelessWidget {
               letterSpacing: 0.6,
             ),
           ),
-          child: const Text('相談を始める'),
+          child: Text(t.consultInput.submit),
         ),
       ),
     );
@@ -439,12 +459,11 @@ class _ConsultIntroNote extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Padding(
-      padding: EdgeInsets.only(bottom: 14),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
       child: Text(
-        'いつ・どこで・何をするか を選ぶと、その時その場所で“どんなエネルギーが働くか”を、'
-        '膨大な占星術データから Stella が分かりやすく読み解きます。',
-        style: TextStyle(
+        t.consultInput.introNote,
+        style: const TextStyle(
           color: SolaraColors.textSecondary,
           fontSize: 12,
           height: 1.6,
@@ -478,72 +497,32 @@ class _ConsultAboutContent extends StatelessWidget {
         TextStyle(color: SolaraColors.textPrimary, fontSize: 13, height: 1.7);
     const bullet =
         TextStyle(color: SolaraColors.textPrimary, fontSize: 12.5, height: 1.7);
+    final a = t.consultInput.about;
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: const [
-        Text('Stella 相談とは', style: head),
-        SizedBox(height: 8),
-        Text(
-          '「いつ・どこで・何をするか」を選ぶだけ。その予定に、地球規模の星の地図を重ね、'
-          'その時・その場所であなたに働くエネルギーを読み解く——Solara の中核機能です。\n'
-          '本来は占星術師が長い時間をかけて読み解く膨大な天体計算を Stella が瞬時に行い、'
-          '専門用語ではなく、あなたに寄り添う言葉でお渡しします。',
-          style: body,
-        ),
-        SizedBox(height: 8),
-        Text(
-          '・「どこで・何をすると、どんな作用が得られるか」を、あなたの願いに照らして描きます。\n'
-          '・吉凶やランキングはしません。「良い/悪い」ではなく“どんな質の流れか'
-          '（後押しになる質か、向き合う質か）”として伝えます。\n'
-          '・おでかけ・旅行・移住——スケールに合わせて。Cosmic Pro なら時刻を1時間刻みで'
-          '指定でき、「30分後にその場の流れがどう動くか」まで読めます。',
-          style: bullet,
-        ),
-        SizedBox(height: 18),
-        Text('Stella 相談が読み解くデータ', style: head),
-        SizedBox(height: 8),
-        Text(
-          'Solara の星のライン計算は 10天体 × 4アングル(ASC・MC・DSC・IC) × '
-          '3アスペクト(合・スクエア・トライン／セクスタイル)＝1フレーム120本。'
-          'これを複数フレーム重ね、緯度帯・12ハウス・進行図まで計算します。',
-          style: body,
-        ),
-        SizedBox(height: 10),
-        Text('― おでかけ・イベント（Free）でも、ここまで ―', style: sub),
-        SizedBox(height: 4),
-        Text(
-          '・出生図（ネイタル）の 10 天体／今日の経過天体（トランジット）の 10 天体\n'
-          '・アストロカートグラフィ（Astro*Carto*Graphy／出生のライン）\n'
-          '・サイクロカートグラフィ（Cyclo*Carto*Graphy／今この瞬間の動くライン）\n'
-          '・合・スクエア・トライン・セクスタイルの全アスペクトライン'
-          '（テーマ天体 × 4アングル × 3アスペクト）\n'
-          '・天頂帯・天底帯（緯度のエネルギー帯）\n'
-          '・その土地のリロケーション（ASC／MC／12ハウスの組み替え＋テーマ天体の在室）\n'
-          '・内的季節（進行の月・太陽、ソーラーアークの節目）／'
-          '現地の時間帯（天体が角を通過する時刻）\n'
-          '…これを世界中の候補地点に重ね、あなたの願いに響く場所・方角を Stella が描きます。',
-          style: bullet,
-        ),
-        SizedBox(height: 10),
-        Text('― Cosmic Pro なら、さらに ―', style: sub),
-        SizedBox(height: 4),
-        Text(
-          '・移住スケール＝生涯不変のネイタル ACG ＋ 進行（プログレス）の人生の章\n'
-          '・旅行スケール＝旅行日ごとの動くライン（期間を複数日サンプリング）\n'
-          '・時刻を1時間刻みで指定 → 30分後に線がどう動くかまで',
-          style: bullet,
-        ),
-        SizedBox(height: 18),
-        Text('― Solara 開発者より ―', style: sub),
-        SizedBox(height: 4),
-        Text(
-          'このきめ細かさは、占星術を実践してきた私自身が、設計から開発まで直接'
-          '手がけているからこそ実現できました。「ここをこう汲んでほしい」と誰かに'
-          '頼むのではなく、占星術師がそのまま形にする——だから、細部のひとつひとつに'
-          '星の意味を宿せています。あなたの毎日のそばに、この星の地図が寄り添えますように。',
-          style: body,
-        ),
+      children: [
+        Text(a.title, style: head),
+        const SizedBox(height: 8),
+        Text(a.intro, style: body),
+        const SizedBox(height: 8),
+        Text(a.bullets, style: bullet),
+        const SizedBox(height: 18),
+        Text(a.dataTitle, style: head),
+        const SizedBox(height: 8),
+        Text(a.dataIntro, style: body),
+        const SizedBox(height: 10),
+        Text(a.freeHead, style: sub),
+        const SizedBox(height: 4),
+        Text(a.freeList, style: bullet),
+        const SizedBox(height: 10),
+        Text(a.proHead, style: sub),
+        const SizedBox(height: 4),
+        Text(a.proList, style: bullet),
+        const SizedBox(height: 18),
+        Text(a.devHead, style: sub),
+        const SizedBox(height: 4),
+        Text(a.devBody, style: body),
       ],
     );
   }

@@ -27,8 +27,10 @@ import 'package:flutter/material.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../i18n/strings.g.dart';
 import '../../theme/solara_colors.dart';
 import '../../utils/consult_restore.dart';
+import '../../utils/solara_i18n.dart';
 import '../../utils/consultation_credits.dart';
 import '../../utils/consultation_v2_api.dart';
 import '../../utils/pro_status.dart';

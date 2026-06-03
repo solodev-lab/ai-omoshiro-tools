@@ -5,9 +5,9 @@
 
 ## サマリ
 
-- ファイル数: 32 / 総行数: 11076
+- ファイル数: 32 / 総行数: 11057
 - class/mixin/extension/enum: 100
-- 関数 (top-level + method の素拾い): 281
+- 関数 (top-level + method の素拾い): 282
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 9
 - Worker URL リテラル: 0
@@ -313,7 +313,7 @@ consultation_input_picker.dart の HARD500 回避のため、検索結果行・�
 - L150 `build()`
 
 
-### `lib/screens/consultation/consultation_input_screen.dart` (640 行)
+### `lib/screens/consultation/consultation_input_screen.dart` (642 行)
 
 **ファイル先頭コメント:**
 
@@ -342,38 +342,38 @@ Consultation Input Screen — 5問モデル (V2: 全要素統合)
   consultation_start_popup.dart       ← 開始ポップアップ (Free 残数)
 ```
 
-**imports:** dart=1 / package=3 / relative=14
+**imports:** dart=1 / package=3 / relative=16
 
-- relative: `../../theme/solara_colors.dart`, `../../utils/consult_restore.dart`, `../../utils/consultation_credits.dart`, `../../utils/consultation_v2_api.dart`, `../../utils/pro_status.dart`, `../../utils/solara_storage.dart`, `../../widgets/info_popup.dart`, `../../widgets/pro_unlock_dialog.dart`, `../../widgets/tap_to_unfocus.dart`, `../map/map_search.dart`, `../map/map_vp_panel.dart`, `consultation_credit_sheet.dart`, `consultation_place_picker_screen.dart`, `consultation_result_screen.dart`
+- relative: `../../i18n/strings.g.dart`, `../../theme/solara_colors.dart`, `../../utils/consult_restore.dart`, `../../utils/solara_i18n.dart`, `../../utils/consultation_credits.dart`, `../../utils/consultation_v2_api.dart`, `../../utils/pro_status.dart`, `../../utils/solara_storage.dart`, `../../widgets/info_popup.dart`, `../../widgets/pro_unlock_dialog.dart`, `../../widgets/tap_to_unfocus.dart`, `../map/map_search.dart`, `../map/map_vp_panel.dart`, `consultation_credit_sheet.dart`, `consultation_place_picker_screen.dart`, `consultation_result_screen.dart`
 
 **型定義 (3):**
 
-- L54 `class ConsultationPresetTarget`
+- L56 `class ConsultationPresetTarget`
   - Map から「📍この場所で相談」で起動した時の preset (point scope 用)。
-- L79 `class ConsultationInputScreen : StatefulWidget`
-- L102 `class _ConsultationInputScreenState : State`
+- L81 `class ConsultationInputScreen : StatefulWidget`
+- L104 `class _ConsultationInputScreenState : State`
 
 **関数 (4 public + 12 private):**
 
-- L98 `createState()`
-- L141 `initState()`
-- L248 `dispose()`
-- L424 `build()`
+- L100 `createState()`
+- L143 `initState()`
+- L250 `dispose()`
+- L426 `build()`
 
   <details><summary>private 関数 12 件</summary>
 
-  - L207 `_applyRestoreForm()`
-  - L236 `_loadPrefsAndProfile()`
-  - L256 `_onModeChanged()`
-  - L286 `_onWhenKindTap()`
-  - L315 `_pickHour()`
-  - L324 `_pickSingleDate()`
-  - L336 `_pickDateRange()`
-  - L348 `_ymd()`
-  - L352 `_onScopeKindTap()`
-  - L362 `_openMapPicker()`
-  - L412 `_refreshCreditsFresh()`
-  - L417 `_setStartPopupHidden()`
+  - L209 `_applyRestoreForm()`
+  - L238 `_loadPrefsAndProfile()`
+  - L258 `_onModeChanged()`
+  - L288 `_onWhenKindTap()`
+  - L317 `_pickHour()`
+  - L326 `_pickSingleDate()`
+  - L338 `_pickDateRange()`
+  - L350 `_ymd()`
+  - L354 `_onScopeKindTap()`
+  - L364 `_openMapPicker()`
+  - L414 `_refreshCreditsFresh()`
+  - L419 `_setStartPopupHidden()`
 
   </details>
 
@@ -420,7 +420,7 @@ Consultation Input — ③ いつ / 半径 セレクタ
   </details>
 
 
-### `lib/screens/consultation/consultation_input_widgets.dart` (550 行)
+### `lib/screens/consultation/consultation_input_widgets.dart` (529 行)
 
 **ファイル先頭コメント:**
 
@@ -431,45 +431,46 @@ Consultation Input — 基本サブウィジェット + 選択肢定数
 
 **型定義 (15):**
 
-- L60 `class _ThemeChoice`
-- L66 `class _ModeChoice`
-- L72 `class _ScopeChoice`
-- L81 `class _PillChip : StatelessWidget`
+- L78 `class _ThemeChoice`
+- L84 `class _ModeChoice`
+- L90 `class _ScopeChoice`
+- L99 `class _PillChip : StatelessWidget`
   - 単一選択の pill チップ (Wrap 用)。
-- L121 `class _Section : StatelessWidget`
-- L149 `class _ThemeGrid : StatelessWidget`
-- L170 `class _ModeRow : StatelessWidget`
-- L225 `class _ScopeWrap : StatelessWidget`
+- L139 `class _Section : StatelessWidget`
+- L167 `class _ThemeGrid : StatelessWidget`
+- L188 `class _ModeRow : StatelessWidget`
+- L243 `class _ScopeWrap : StatelessWidget`
   - ④ どこで のスコープ選択 (Wrap、場面で 3〜5 個)。
-- L251 `class _RegionPicker : StatelessWidget`
-- L272 `class _FreeTextField : StatelessWidget`
-- L328 `class _NoHomeNote : StatelessWidget`
+- L269 `class _RegionPicker : StatelessWidget`
+- L290 `class _FreeTextField : StatelessWidget`
+- L346 `class _NoHomeNote : StatelessWidget`
   - 自宅未設定で 方角/半径/自国内 が使えないときの注記。
-- L355 `class _PresetLocationCard : StatelessWidget`
-- L392 `class _SubmitBar : StatelessWidget`
-- L437 `class _ConsultIntroNote : StatelessWidget`
+- L373 `class _PresetLocationCard : StatelessWidget`
+- L412 `class _SubmitBar : StatelessWidget`
+- L457 `class _ConsultIntroNote : StatelessWidget`
   - タイトル直下に常時表示する短い説明 (グレー小文字)。
-- L463 `class _ConsultAboutContent : StatelessWidget`
+- L482 `class _ConsultAboutContent : StatelessWidget`
 
-**関数 (13 public + 1 private):**
+**関数 (13 public + 2 private):**
 
-- L92 `build()`
-- L127 `build()`
-- L155 `build()`
-- L176 `build()`
-- L236 `build()`
-- L257 `build()`
-- L285 `build()`
-- L332 `build()`
-- L360 `build()`
-- L398 `build()`
-- L441 `build()`
-- L459 `showConsultAboutPopup()` — i ボタンの詳細ポップアップ (導入 → 読み解くデータ → 開発者より)。
-- L467 `build()`
+- L110 `build()`
+- L145 `build()`
+- L173 `build()`
+- L194 `build()`
+- L254 `build()`
+- L275 `build()`
+- L303 `build()`
+- L350 `build()`
+- L378 `build()`
+- L418 `build()`
+- L461 `build()`
+- L478 `showConsultAboutPopup()` — i ボタンの詳細ポップアップ (導入 → 読み解くデータ → 開発者より)。
+- L486 `build()`
 
-  <details><summary>private 関数 1 件</summary>
+  <details><summary>private 関数 2 件</summary>
 
-  - L45 `_scopeChoicesFor()`
+  - L46 `_scopeChoicesFor()`
+  - L63 `_regionLabel()`
 
   </details>
 

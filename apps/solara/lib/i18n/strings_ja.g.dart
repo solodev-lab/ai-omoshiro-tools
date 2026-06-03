@@ -40,6 +40,7 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 	Translations $copyWith({TranslationMetadata<AppLocale, Translations>? meta}) => Translations(meta: meta ?? this.$meta);
 
 	// Translations
+	late final Translations$consultInput$ja consultInput = Translations$consultInput$ja.internal(_root);
 	late final Translations$mapAcg$ja mapAcg = Translations$mapAcg$ja.internal(_root);
 	late final Translations$mapVp$ja mapVp = Translations$mapVp$ja.internal(_root);
 	late final Translations$mapMenu$ja mapMenu = Translations$mapMenu$ja.internal(_root);
@@ -49,6 +50,32 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 	late final Translations$disclaimer$ja disclaimer = Translations$disclaimer$ja.internal(_root);
 	late final Translations$common$ja common = Translations$common$ja.internal(_root);
 	late final Translations$aiConsent$ja aiConsent = Translations$aiConsent$ja.internal(_root);
+}
+
+// Path: consultInput
+class Translations$consultInput$ja {
+	Translations$consultInput$ja.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+	late final Translations$consultInput$theme$ja theme = Translations$consultInput$theme$ja.internal(_root);
+	late final Translations$consultInput$mode$ja mode = Translations$consultInput$mode$ja.internal(_root);
+	late final Translations$consultInput$scope$ja scope = Translations$consultInput$scope$ja.internal(_root);
+
+	/// ja: '相談を始める'
+	String get submit => '相談を始める';
+
+	/// ja: '現住所が未設定です。「方角・現住所から半径・自国内」は現住所を設定すると使えます。「具体地点」は今すぐ使えます。'
+	String get noHomeNote => '現住所が未設定です。「方角・現住所から半径・自国内」は現住所を設定すると使えます。「具体地点」は今すぐ使えます。';
+
+	/// ja: '$name を見ます'
+	String presetCard({required Object name}) => '${name} を見ます';
+
+	/// ja: 'いつ・どこで・何をするか を選ぶと、その時その場所で“どんなエネルギーが働くか”を、膨大な占星術データから Stella が分かりやすく読み解きます。'
+	String get introNote => 'いつ・どこで・何をするか を選ぶと、その時その場所で“どんなエネルギーが働くか”を、膨大な占星術データから Stella が分かりやすく読み解きます。';
+
+	late final Translations$consultInput$about$ja about = Translations$consultInput$about$ja.internal(_root);
 }
 
 // Path: mapAcg
@@ -304,6 +331,120 @@ class Translations$aiConsent$ja {
 	late final Translations$aiConsent$geminiContent$ja geminiContent = Translations$aiConsent$geminiContent$ja.internal(_root);
 	late final Translations$aiConsent$decisions$ja decisions = Translations$aiConsent$decisions$ja.internal(_root);
 	late final Translations$aiConsent$consentHandling$ja consentHandling = Translations$aiConsent$consentHandling$ja.internal(_root);
+}
+
+// Path: consultInput.theme
+class Translations$consultInput$theme$ja {
+	Translations$consultInput$theme$ja.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// ja: '恋愛・関係'
+	String get love => '恋愛・関係';
+
+	/// ja: '豊かさ・お金'
+	String get money => '豊かさ・お金';
+
+	/// ja: '仕事・キャリア'
+	String get work => '仕事・キャリア';
+
+	/// ja: '対話・学び'
+	String get communication => '対話・学び';
+
+	/// ja: '癒し・休息'
+	String get healing => '癒し・休息';
+
+	/// ja: '変化・新たな出発'
+	String get newStart => '変化・新たな出発';
+}
+
+// Path: consultInput.mode
+class Translations$consultInput$mode$ja {
+	Translations$consultInput$mode$ja.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// ja: 'おでかけ イベント'
+	String get daily => 'おでかけ\nイベント';
+
+	/// ja: '旅行'
+	String get travel => '旅行';
+
+	/// ja: '移住'
+	String get migration => '移住';
+}
+
+// Path: consultInput.scope
+class Translations$consultInput$scope$ja {
+	Translations$consultInput$scope$ja.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// ja: '具体地点'
+	String get point => '具体地点';
+
+	/// ja: '方角'
+	String get bearing => '方角';
+
+	/// ja: '現住所から半径'
+	String get radius => '現住所から半径';
+
+	/// ja: '地域'
+	String get region => '地域';
+
+	/// ja: '自国内'
+	String get country => '自国内';
+
+	/// ja: '世界全体'
+	String get world => '世界全体';
+}
+
+// Path: consultInput.about
+class Translations$consultInput$about$ja {
+	Translations$consultInput$about$ja.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// ja: 'Stella 相談とは'
+	String get title => 'Stella 相談とは';
+
+	/// ja: '「いつ・どこで・何をするか」を選ぶだけ。その予定に、地球規模の星の地図を重ね、その時・その場所であなたに働くエネルギーを読み解く——Solara の中核機能です。 本来は占星術師が長い時間をかけて読み解く膨大な天体計算を Stella が瞬時に行い、専門用語ではなく、あなたに寄り添う言葉でお渡しします。'
+	String get intro => '「いつ・どこで・何をするか」を選ぶだけ。その予定に、地球規模の星の地図を重ね、その時・その場所であなたに働くエネルギーを読み解く——Solara の中核機能です。\n本来は占星術師が長い時間をかけて読み解く膨大な天体計算を Stella が瞬時に行い、専門用語ではなく、あなたに寄り添う言葉でお渡しします。';
+
+	/// ja: '・「どこで・何をすると、どんな作用が得られるか」を、あなたの願いに照らして描きます。 ・吉凶やランキングはしません。「良い/悪い」ではなく“どんな質の流れか（後押しになる質か、向き合う質か）”として伝えます。 ・おでかけ・旅行・移住——スケールに合わせて。Cosmic Pro なら時刻を1時間刻みで指定でき、「30分後にその場の流れがどう動くか」まで読めます。'
+	String get bullets => '・「どこで・何をすると、どんな作用が得られるか」を、あなたの願いに照らして描きます。\n・吉凶やランキングはしません。「良い/悪い」ではなく“どんな質の流れか（後押しになる質か、向き合う質か）”として伝えます。\n・おでかけ・旅行・移住——スケールに合わせて。Cosmic Pro なら時刻を1時間刻みで指定でき、「30分後にその場の流れがどう動くか」まで読めます。';
+
+	/// ja: 'Stella 相談が読み解くデータ'
+	String get dataTitle => 'Stella 相談が読み解くデータ';
+
+	/// ja: 'Solara の星のライン計算は 10天体 × 4アングル(ASC・MC・DSC・IC) × 3アスペクト(合・スクエア・トライン／セクスタイル)＝1フレーム120本。これを複数フレーム重ね、緯度帯・12ハウス・進行図まで計算します。'
+	String get dataIntro => 'Solara の星のライン計算は 10天体 × 4アングル(ASC・MC・DSC・IC) × 3アスペクト(合・スクエア・トライン／セクスタイル)＝1フレーム120本。これを複数フレーム重ね、緯度帯・12ハウス・進行図まで計算します。';
+
+	/// ja: '― おでかけ・イベント（Free）でも、ここまで ―'
+	String get freeHead => '― おでかけ・イベント（Free）でも、ここまで ―';
+
+	/// ja: '・出生図（ネイタル）の 10 天体／今日の経過天体（トランジット）の 10 天体 ・アストロカートグラフィ（Astro*Carto*Graphy／出生のライン） ・サイクロカートグラフィ（Cyclo*Carto*Graphy／今この瞬間の動くライン） ・合・スクエア・トライン・セクスタイルの全アスペクトライン（テーマ天体 × 4アングル × 3アスペクト） ・天頂帯・天底帯（緯度のエネルギー帯） ・その土地のリロケーション（ASC／MC／12ハウスの組み替え＋テーマ天体の在室） ・内的季節（進行の月・太陽、ソーラーアークの節目）／現地の時間帯（天体が角を通過する時刻） …これを世界中の候補地点に重ね、あなたの願いに響く場所・方角を Stella が描きます。'
+	String get freeList => '・出生図（ネイタル）の 10 天体／今日の経過天体（トランジット）の 10 天体\n・アストロカートグラフィ（Astro*Carto*Graphy／出生のライン）\n・サイクロカートグラフィ（Cyclo*Carto*Graphy／今この瞬間の動くライン）\n・合・スクエア・トライン・セクスタイルの全アスペクトライン（テーマ天体 × 4アングル × 3アスペクト）\n・天頂帯・天底帯（緯度のエネルギー帯）\n・その土地のリロケーション（ASC／MC／12ハウスの組み替え＋テーマ天体の在室）\n・内的季節（進行の月・太陽、ソーラーアークの節目）／現地の時間帯（天体が角を通過する時刻）\n…これを世界中の候補地点に重ね、あなたの願いに響く場所・方角を Stella が描きます。';
+
+	/// ja: '― Cosmic Pro なら、さらに ―'
+	String get proHead => '― Cosmic Pro なら、さらに ―';
+
+	/// ja: '・移住スケール＝生涯不変のネイタル ACG ＋ 進行（プログレス）の人生の章 ・旅行スケール＝旅行日ごとの動くライン（期間を複数日サンプリング） ・時刻を1時間刻みで指定 → 30分後に線がどう動くかまで'
+	String get proList => '・移住スケール＝生涯不変のネイタル ACG ＋ 進行（プログレス）の人生の章\n・旅行スケール＝旅行日ごとの動くライン（期間を複数日サンプリング）\n・時刻を1時間刻みで指定 → 30分後に線がどう動くかまで';
+
+	/// ja: '― Solara 開発者より ―'
+	String get devHead => '― Solara 開発者より ―';
+
+	/// ja: 'このきめ細かさは、占星術を実践してきた私自身が、設計から開発まで直接手がけているからこそ実現できました。「ここをこう汲んでほしい」と誰かに頼むのではなく、占星術師がそのまま形にする——だから、細部のひとつひとつに星の意味を宿せています。あなたの毎日のそばに、この星の地図が寄り添えますように。'
+	String get devBody => 'このきめ細かさは、占星術を実践してきた私自身が、設計から開発まで直接手がけているからこそ実現できました。「ここをこう汲んでほしい」と誰かに頼むのではなく、占星術師がそのまま形にする——だから、細部のひとつひとつに星の意味を宿せています。あなたの毎日のそばに、この星の地図が寄り添えますように。';
 }
 
 // Path: mapAcg.sub
@@ -1410,6 +1551,36 @@ class Translations$paywall$faq$resubscribe$ja {
 extension on Translations {
 	dynamic _flatMapFunction(String path) {
 		return switch (path) {
+			'consultInput.theme.love' => '恋愛・関係',
+			'consultInput.theme.money' => '豊かさ・お金',
+			'consultInput.theme.work' => '仕事・キャリア',
+			'consultInput.theme.communication' => '対話・学び',
+			'consultInput.theme.healing' => '癒し・休息',
+			'consultInput.theme.newStart' => '変化・新たな出発',
+			'consultInput.mode.daily' => 'おでかけ\nイベント',
+			'consultInput.mode.travel' => '旅行',
+			'consultInput.mode.migration' => '移住',
+			'consultInput.scope.point' => '具体地点',
+			'consultInput.scope.bearing' => '方角',
+			'consultInput.scope.radius' => '現住所から半径',
+			'consultInput.scope.region' => '地域',
+			'consultInput.scope.country' => '自国内',
+			'consultInput.scope.world' => '世界全体',
+			'consultInput.submit' => '相談を始める',
+			'consultInput.noHomeNote' => '現住所が未設定です。「方角・現住所から半径・自国内」は現住所を設定すると使えます。「具体地点」は今すぐ使えます。',
+			'consultInput.presetCard' => ({required Object name}) => '${name} を見ます',
+			'consultInput.introNote' => 'いつ・どこで・何をするか を選ぶと、その時その場所で“どんなエネルギーが働くか”を、膨大な占星術データから Stella が分かりやすく読み解きます。',
+			'consultInput.about.title' => 'Stella 相談とは',
+			'consultInput.about.intro' => '「いつ・どこで・何をするか」を選ぶだけ。その予定に、地球規模の星の地図を重ね、その時・その場所であなたに働くエネルギーを読み解く——Solara の中核機能です。\n本来は占星術師が長い時間をかけて読み解く膨大な天体計算を Stella が瞬時に行い、専門用語ではなく、あなたに寄り添う言葉でお渡しします。',
+			'consultInput.about.bullets' => '・「どこで・何をすると、どんな作用が得られるか」を、あなたの願いに照らして描きます。\n・吉凶やランキングはしません。「良い/悪い」ではなく“どんな質の流れか（後押しになる質か、向き合う質か）”として伝えます。\n・おでかけ・旅行・移住——スケールに合わせて。Cosmic Pro なら時刻を1時間刻みで指定でき、「30分後にその場の流れがどう動くか」まで読めます。',
+			'consultInput.about.dataTitle' => 'Stella 相談が読み解くデータ',
+			'consultInput.about.dataIntro' => 'Solara の星のライン計算は 10天体 × 4アングル(ASC・MC・DSC・IC) × 3アスペクト(合・スクエア・トライン／セクスタイル)＝1フレーム120本。これを複数フレーム重ね、緯度帯・12ハウス・進行図まで計算します。',
+			'consultInput.about.freeHead' => '― おでかけ・イベント（Free）でも、ここまで ―',
+			'consultInput.about.freeList' => '・出生図（ネイタル）の 10 天体／今日の経過天体（トランジット）の 10 天体\n・アストロカートグラフィ（Astro*Carto*Graphy／出生のライン）\n・サイクロカートグラフィ（Cyclo*Carto*Graphy／今この瞬間の動くライン）\n・合・スクエア・トライン・セクスタイルの全アスペクトライン（テーマ天体 × 4アングル × 3アスペクト）\n・天頂帯・天底帯（緯度のエネルギー帯）\n・その土地のリロケーション（ASC／MC／12ハウスの組み替え＋テーマ天体の在室）\n・内的季節（進行の月・太陽、ソーラーアークの節目）／現地の時間帯（天体が角を通過する時刻）\n…これを世界中の候補地点に重ね、あなたの願いに響く場所・方角を Stella が描きます。',
+			'consultInput.about.proHead' => '― Cosmic Pro なら、さらに ―',
+			'consultInput.about.proList' => '・移住スケール＝生涯不変のネイタル ACG ＋ 進行（プログレス）の人生の章\n・旅行スケール＝旅行日ごとの動くライン（期間を複数日サンプリング）\n・時刻を1時間刻みで指定 → 30分後に線がどう動くかまで',
+			'consultInput.about.devHead' => '― Solara 開発者より ―',
+			'consultInput.about.devBody' => 'このきめ細かさは、占星術を実践してきた私自身が、設計から開発まで直接手がけているからこそ実現できました。「ここをこう汲んでほしい」と誰かに頼むのではなく、占星術師がそのまま形にする——だから、細部のひとつひとつに星の意味を宿せています。あなたの毎日のそばに、この星の地図が寄り添えますように。',
 			'mapAcg.pillRelocate' => '引越し',
 			'mapAcg.pillAspect' => 'アスペクト',
 			'mapAcg.sub.zenith' => '天頂',
