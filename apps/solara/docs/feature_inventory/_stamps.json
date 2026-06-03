@@ -38,7 +38,7 @@
   "lib/screens/galaxy/galaxy_sample_data.dart": "1208c96ca740599996b5ccc0c6e52f834ee2397a",
   "lib/screens/galaxy/galaxy_star_atlas.dart": "5408681c4a97534dba161b3bfb701fa757b36764",
   "lib/screens/galaxy/galaxy_stella_messages.dart": "eb515d40d920939e10233069546e38b84f318b09",
-  "lib/screens/galaxy_screen.dart": "d53d81ce82366a46721509e1fac38d1bbac13fed",
+  "lib/screens/galaxy_screen.dart": "e2c2400e12fca48dc128ddc41400b6bdd4abda7e",
   "lib/screens/horoscope/horo_antique_icons.dart": "5ef068e4ae69946a69f74c727781d171ddb479a0",
   "lib/screens/horoscope/horo_aspect_description.dart": "abe4466570ab049b56965791384e8d65d44a29a7",
   "lib/screens/horoscope/horo_aspect_list.dart": "e705c702f991bee5eb3d2974dca4687d28906745",

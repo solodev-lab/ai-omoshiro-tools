@@ -6,12 +6,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'horoscope/horo_antique_icons.dart';
+import '../i18n/strings.g.dart';
 import '../models/daily_reading.dart';
 import '../models/galaxy_cycle.dart';
 import '../models/lunar_intention.dart';
 
 import '../utils/celestial_events.dart';
 import '../utils/constellation_namer.dart';
+import '../utils/solara_i18n.dart';
 import '../utils/moon_event_status.dart';
 import '../utils/moon_phase.dart';
 import '../utils/solara_storage.dart';
@@ -23,6 +25,7 @@ import '../widgets/info_popup.dart';
 import '../widgets/moon_overlay.dart';
 import '../widgets/tap_to_unfocus.dart';
 
+import 'map/map_constants.dart' show planetName;
 import 'galaxy/constellation_share_card_page.dart';
 import 'galaxy/galaxy_constellation_builder.dart';
 import 'galaxy/galaxy_stella_messages.dart';
@@ -676,7 +679,7 @@ class GalaxyScreenState extends State<GalaxyScreen>
   }
 
   Widget _buildStellaMessage(BuildContext context) {
-    final isJP = Localizations.localeOf(context).languageCode == 'ja';
+    final isJP = !isEnLocale();
     final now = DateTime.now();
 
     // 月相連動メッセージ (当日 / 3 日以内) を最優先で表示。
@@ -816,8 +819,6 @@ class GalaxyScreenState extends State<GalaxyScreen>
     if (reading == null) return const SizedBox.shrink();
 
     final card = TarotData.getCard(reading.cardId);
-    const planetNamesJP = {'sun':'太陽','moon':'月','mercury':'水星','venus':'金星','mars':'火星',
-      'jupiter':'木星','saturn':'土星','uranus':'天王星','neptune':'海王星','pluto':'冥王星'};
 
     return Positioned(
       left: (_popupPosition.dx - 100).clamp(8, MediaQuery.of(context).size.width - 208),
@@ -850,7 +851,7 @@ class GalaxyScreenState extends State<GalaxyScreen>
           ]),
           const SizedBox(height: 8),
           if (card.planet != null)
-            Text('Planet: ${planetNamesJP[card.planet] ?? card.planet}', style: const TextStyle(
+            Text('Planet: ${planetName(card.planet!)}', style: const TextStyle(
               fontSize: 13, color: Color(0xCCACACAC))),
           const SizedBox(height: 4),
           Text('Keyword: ${card.keyword}', style: const TextStyle(
@@ -1191,42 +1192,26 @@ class GalaxyScreenState extends State<GalaxyScreen>
 /// labelJP (新月 / 三日月 / 上弦の月 / 十三夜月 / 満月 / 十八夜月 /
 ///        下弦の月 / 二十六夜月) で分岐。
 String _moonPhaseDescription(String labelJP) {
+  // labelJP はデータ由来で常に日本語 (UI ロケールに依らない安定キー)。
   switch (labelJP) {
     case '新月':
-      return '始まりの時。\n'
-          '空が最も暗く、星々が最もよく見える夜。\n'
-          '新しい意図を立て、種を蒔く時間帯です。';
+      return t.galaxy.phaseDesc.newMoon;
     case '三日月':
-      return '芽吹きの時。\n'
-          '細い光が西の空に現れます。\n'
-          '新月で蒔いた意図に向けて、少しずつ動き出す時間帯。';
+      return t.galaxy.phaseDesc.crescent;
     case '上弦の月':
-      return '行動の時。\n'
-          '半月が天頂に達し、決断と行動が求められます。\n'
-          '芽生えた意図を形にしていく転換点。';
+      return t.galaxy.phaseDesc.firstQuarter;
     case '十三夜月':
-      return '高まりの時。\n'
-          '月が満ちていく勢いがピークに近づきます。\n'
-          '準備が整い、表現が膨らむ時間帯。';
+      return t.galaxy.phaseDesc.gibbous13;
     case '満月':
-      return '達成・解放の時。\n'
-          '月が最も明るく輝く夜。\n'
-          '気づきと完了がやってきます。\n'
-          '手にしたものを見つめ直し、感謝する時間帯。';
+      return t.galaxy.phaseDesc.fullMoon;
     case '十八夜月':
-      return '共有の時。\n'
-          '月が欠け始めます。\n'
-          '満月で得た学びを他者と分かち合う時間帯。';
+      return t.galaxy.phaseDesc.waningGibbous18;
     case '下弦の月':
-      return '手放しの時。\n'
-          '半月が逆向きに浮かびます。\n'
-          '不要なものを整理し、ゆるめる時間帯。';
+      return t.galaxy.phaseDesc.lastQuarter;
     case '二十六夜月':
-      return '休息の時。\n'
-          '空に薄い月が残ります。\n'
-          '次のサイクルへ向けて静かに整える時間帯。';
+      return t.galaxy.phaseDesc.waning26;
     default:
-      return '月のサイクルが流れています。';
+      return t.galaxy.phaseDesc.flowing;
   }
 }
 
@@ -1239,78 +1224,68 @@ void _showMoonEventsGuide(BuildContext context) {
     child: Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: const [
-        Text('月のイベントについて',
-            style: TextStyle(
+      children: [
+        Text(t.galaxy.events.title,
+            style: const TextStyle(
                 color: Color(0xFFC9A84C), fontSize: 14, letterSpacing: 1)),
-        SizedBox(height: 10),
+        const SizedBox(height: 10),
         Text(
-          'このサイクルでは、月の満ち欠けに合わせて\n'
-          '3 つの節目があなたを訪れます。',
-          style: TextStyle(
+          t.galaxy.events.intro,
+          style: const TextStyle(
               color: Color(0xFFE8E0D0), fontSize: 13, height: 1.7),
         ),
-        SizedBox(height: 14),
-        Text('🌑 新月イベント',
-            style: TextStyle(
+        const SizedBox(height: 14),
+        Text(t.galaxy.events.newTitle,
+            style: const TextStyle(
                 color: Color(0xFFC9A84C),
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
                 letterSpacing: 0.5)),
-        SizedBox(height: 4),
+        const SizedBox(height: 4),
         Text(
-          '新月の日に「意図（インテンション）」を立てる出発点。\n'
-          'このサイクルで大切にしたいことを言葉にします。\n'
-          'すべてはここから始まります。',
-          style: TextStyle(
+          t.galaxy.events.newBody,
+          style: const TextStyle(
               color: Color(0xFFE8E0D0), fontSize: 13, height: 1.7),
         ),
-        SizedBox(height: 12),
-        Text('🌕 満月イベント',
-            style: TextStyle(
+        const SizedBox(height: 12),
+        Text(t.galaxy.events.fullTitle,
+            style: const TextStyle(
                 color: Color(0xFFC9A84C),
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
                 letterSpacing: 0.5)),
-        SizedBox(height: 4),
+        const SizedBox(height: 4),
         Text(
-          '満月の日に、立てた意図への中間チェック（振り返り）。\n'
-          '※ 新月で意図を立てていないと出てきません。',
-          style: TextStyle(
+          t.galaxy.events.fullBody,
+          style: const TextStyle(
               color: Color(0xFFE8E0D0), fontSize: 13, height: 1.7),
         ),
-        SizedBox(height: 12),
-        Text('✦ 刻星化イベント',
-            style: TextStyle(
+        const SizedBox(height: 12),
+        Text(t.galaxy.events.catTitle,
+            style: const TextStyle(
                 color: Color(0xFFC9A84C),
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
                 letterSpacing: 0.5)),
-        SizedBox(height: 4),
+        const SizedBox(height: 4),
         Text(
-          '次の新月の前日以降に訪れる、サイクルの締めくくり。\n'
-          '手放しと、あなただけの星座の形成です。\n'
-          '※ こちらも新月で意図を立てているのが前提です。',
-          style: TextStyle(
+          t.galaxy.events.catBody,
+          style: const TextStyle(
               color: Color(0xFFE8E0D0), fontSize: 13, height: 1.7),
         ),
-        SizedBox(height: 16),
-        Divider(color: Color(0x33C9A84C), height: 1),
-        SizedBox(height: 16),
-        Text('🔔 通知をオンにするのがおすすめ',
-            style: TextStyle(
+        const SizedBox(height: 16),
+        const Divider(color: Color(0x33C9A84C), height: 1),
+        const SizedBox(height: 16),
+        Text(t.galaxy.events.notifyTitle,
+            style: const TextStyle(
                 color: Color(0xFFF9D976),
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
                 letterSpacing: 0.5)),
-        SizedBox(height: 4),
+        const SizedBox(height: 4),
         Text(
-          '各イベントは「その日」だけ訪れます。\n'
-          'Sanctuary で通知をオンにしておくと、\n'
-          '当日の朝にお知らせします。\n\n'
-          '満月・刻星化は新月の意図設定が前提なので、\n'
-          'まず新月を逃さないことが大切です。',
-          style: TextStyle(
+          t.galaxy.events.notifyBody,
+          style: const TextStyle(
               color: Color(0xFFE8E0D0), fontSize: 13, height: 1.7),
         ),
       ],
@@ -1344,20 +1319,23 @@ void _showGalaxyUsageGuide(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '今日の月: ${info.labelJP}',
+                    t.galaxy.todayMoon(
+                        name: isEnLocale() ? info.label : info.labelJP),
                     style: const TextStyle(
                         color: Color(0xFFC9A84C),
                         fontSize: 14,
                         letterSpacing: 1,
                         fontWeight: FontWeight.w600),
                   ),
-                  Text(
-                    info.label,
-                    style: const TextStyle(
-                        color: Color(0xA6C0C8E0),
-                        fontSize: 11,
-                        letterSpacing: 1.2),
-                  ),
+                  // 英語ロケールでは主見出しが既に英名なので副題 (英名) は省く。
+                  if (!isEnLocale())
+                    Text(
+                      info.label,
+                      style: const TextStyle(
+                          color: Color(0xA6C0C8E0),
+                          fontSize: 11,
+                          letterSpacing: 1.2),
+                    ),
                 ],
               ),
             ),
@@ -1373,85 +1351,63 @@ void _showGalaxyUsageGuide(
         const Divider(color: Color(0x33C9A84C), height: 1),
         const SizedBox(height: 16),
         // ── Galaxy 画面とは ──
-        const Text(
-          'Galaxy 画面とは',
-          style: TextStyle(
+        Text(
+          t.galaxy.guide.title,
+          style: const TextStyle(
               color: Color(0xFFC9A84C), fontSize: 14, letterSpacing: 1),
         ),
         const SizedBox(height: 8),
-        const Text(
-          '月のサイクル (約 29.5 日) に合わせて、\n'
-          'あなたの日々のタロットリーディングが\n'
-          '「星」として記録されていく画面です。\n\n'
-          '1 サイクル = 1 つの constellation (星座) が完成。\n'
-          '内面のリズムが、星座という形で残っていきます。',
-          style: TextStyle(
+        Text(
+          t.galaxy.guide.intro,
+          style: const TextStyle(
               color: Color(0xFFE8E0D0), fontSize: 13, height: 1.7),
         ),
         const SizedBox(height: 16),
         // ── CYCLE タブ ──
-        const Text(
-          '🌌 CYCLE タブ (現在のサイクル)',
-          style: TextStyle(
+        Text(
+          t.galaxy.guide.cycleTitle,
+          style: const TextStyle(
               color: Color(0xFFC9A84C),
               fontSize: 13,
               fontWeight: FontWeight.w600,
               letterSpacing: 0.5),
         ),
         const SizedBox(height: 6),
-        const Text(
-          '今の月サイクルの「現在地」を表示。\n'
-          '日々の reading を描いた "dot" が螺旋上に並び、\n'
-          '完成に向けて進んでいきます。\n\n'
-          '・右上の数字: サイクル何日目か (例: 23 of 30)\n'
-          '・左上の月齢バッジ: 今日の月の相 (← 今ココ)\n'
-          '・ドラッグで 3D 回転\n'
-          '・dot タップで該当日のリーディングを表示\n'
-          '・新月・満月の日は特別オーバーレイで\n'
-          '　意図を立てる/振り返るアクションを促します',
-          style: TextStyle(
+        Text(
+          t.galaxy.guide.cycleBody,
+          style: const TextStyle(
               color: Color(0xFFE8E0D0), fontSize: 13, height: 1.7),
         ),
         const SizedBox(height: 14),
         // ── Star Atlas タブ ──
-        const Text(
-          '🌟 Star Atlas タブ (過去の星座図鑑)',
-          style: TextStyle(
+        Text(
+          t.galaxy.guide.atlasTitle,
+          style: const TextStyle(
               color: Color(0xFFC9A84C),
               fontSize: 13,
               fontWeight: FontWeight.w600,
               letterSpacing: 0.5),
         ),
         const SizedBox(height: 6),
-        const Text(
-          '完成した過去のサイクル (= 星座) のコレクション。\n'
-          '1 つ 1 つが、あなた自身の内面が紡いだ星座です。\n\n'
-          '・各カードは 1 サイクル分の reading が織りなす星座\n'
-          '・カードタップで再アニメ + 詳細表示\n'
-          '　(星座名・期間・レア度)\n'
-          '・レア度: 5 段階の星評価 (★)\n'
-          '　レア度が高いほど「珍しい組み合わせ」が出た証',
-          style: TextStyle(
+        Text(
+          t.galaxy.guide.atlasBody,
+          style: const TextStyle(
               color: Color(0xFFE8E0D0), fontSize: 13, height: 1.7),
         ),
         const SizedBox(height: 14),
         // ── 月のサイクルの意味 ──
-        const Text(
-          '月のサイクルの意味',
-          style: TextStyle(
+        Text(
+          t.galaxy.guide.meaningTitle,
+          style: const TextStyle(
               color: Color(0xFFC9A84C),
               fontSize: 13,
               fontWeight: FontWeight.w600,
               letterSpacing: 0.5),
         ),
         const SizedBox(height: 6),
-        const Text(
-          '🌑 新月 → 始まり。種を蒔く時。\n'
-          '🌕 満月 → 達成・解放。気づきの時。\n\n'
-          '1 サイクルかけて、あなたの内面が 1 つの星座に\n'
-          'なっていきます。Tarot タブで日々のカードを\n'
-          '引いて、ゆっくり育てていってください。',
-          style: TextStyle(
+        Text(
+          t.galaxy.guide.meaningBody,
+          style: const TextStyle(
               color: Color(0xFFE8E0D0), fontSize: 13, height: 1.7),
         ),
       ],

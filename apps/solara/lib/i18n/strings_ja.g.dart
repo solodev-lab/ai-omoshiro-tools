@@ -40,6 +40,7 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 	Translations $copyWith({TranslationMetadata<AppLocale, Translations>? meta}) => Translations(meta: meta ?? this.$meta);
 
 	// Translations
+	late final Translations$galaxy$ja galaxy = Translations$galaxy$ja.internal(_root);
 	late final Translations$forecast$ja forecast = Translations$forecast$ja.internal(_root);
 	late final Translations$consultHistory$ja consultHistory = Translations$consultHistory$ja.internal(_root);
 	late final Translations$consultCredit$ja consultCredit = Translations$consultCredit$ja.internal(_root);
@@ -56,6 +57,22 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 	late final Translations$disclaimer$ja disclaimer = Translations$disclaimer$ja.internal(_root);
 	late final Translations$common$ja common = Translations$common$ja.internal(_root);
 	late final Translations$aiConsent$ja aiConsent = Translations$aiConsent$ja.internal(_root);
+}
+
+// Path: galaxy
+class Translations$galaxy$ja {
+	Translations$galaxy$ja.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// ja: '今日の月: $name'
+	String todayMoon({required Object name}) => '今日の月: ${name}';
+
+	late final Translations$galaxy$phaseDesc$ja phaseDesc = Translations$galaxy$phaseDesc$ja.internal(_root);
+	late final Translations$galaxy$events$ja events = Translations$galaxy$events$ja.internal(_root);
+	late final Translations$galaxy$guide$ja guide = Translations$galaxy$guide$ja.internal(_root);
 }
 
 // Path: forecast
@@ -724,6 +741,114 @@ class Translations$aiConsent$ja {
 	late final Translations$aiConsent$geminiContent$ja geminiContent = Translations$aiConsent$geminiContent$ja.internal(_root);
 	late final Translations$aiConsent$decisions$ja decisions = Translations$aiConsent$decisions$ja.internal(_root);
 	late final Translations$aiConsent$consentHandling$ja consentHandling = Translations$aiConsent$consentHandling$ja.internal(_root);
+}
+
+// Path: galaxy.phaseDesc
+class Translations$galaxy$phaseDesc$ja {
+	Translations$galaxy$phaseDesc$ja.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// ja: '始まりの時。 空が最も暗く、星々が最もよく見える夜。 新しい意図を立て、種を蒔く時間帯です。'
+	String get newMoon => '始まりの時。\n空が最も暗く、星々が最もよく見える夜。\n新しい意図を立て、種を蒔く時間帯です。';
+
+	/// ja: '芽吹きの時。 細い光が西の空に現れます。 新月で蒔いた意図に向けて、少しずつ動き出す時間帯。'
+	String get crescent => '芽吹きの時。\n細い光が西の空に現れます。\n新月で蒔いた意図に向けて、少しずつ動き出す時間帯。';
+
+	/// ja: '行動の時。 半月が天頂に達し、決断と行動が求められます。 芽生えた意図を形にしていく転換点。'
+	String get firstQuarter => '行動の時。\n半月が天頂に達し、決断と行動が求められます。\n芽生えた意図を形にしていく転換点。';
+
+	/// ja: '高まりの時。 月が満ちていく勢いがピークに近づきます。 準備が整い、表現が膨らむ時間帯。'
+	String get gibbous13 => '高まりの時。\n月が満ちていく勢いがピークに近づきます。\n準備が整い、表現が膨らむ時間帯。';
+
+	/// ja: '達成・解放の時。 月が最も明るく輝く夜。 気づきと完了がやってきます。 手にしたものを見つめ直し、感謝する時間帯。'
+	String get fullMoon => '達成・解放の時。\n月が最も明るく輝く夜。\n気づきと完了がやってきます。\n手にしたものを見つめ直し、感謝する時間帯。';
+
+	/// ja: '共有の時。 月が欠け始めます。 満月で得た学びを他者と分かち合う時間帯。'
+	String get waningGibbous18 => '共有の時。\n月が欠け始めます。\n満月で得た学びを他者と分かち合う時間帯。';
+
+	/// ja: '手放しの時。 半月が逆向きに浮かびます。 不要なものを整理し、ゆるめる時間帯。'
+	String get lastQuarter => '手放しの時。\n半月が逆向きに浮かびます。\n不要なものを整理し、ゆるめる時間帯。';
+
+	/// ja: '休息の時。 空に薄い月が残ります。 次のサイクルへ向けて静かに整える時間帯。'
+	String get waning26 => '休息の時。\n空に薄い月が残ります。\n次のサイクルへ向けて静かに整える時間帯。';
+
+	/// ja: '月のサイクルが流れています。'
+	String get flowing => '月のサイクルが流れています。';
+}
+
+// Path: galaxy.events
+class Translations$galaxy$events$ja {
+	Translations$galaxy$events$ja.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// ja: '月のイベントについて'
+	String get title => '月のイベントについて';
+
+	/// ja: 'このサイクルでは、月の満ち欠けに合わせて 3 つの節目があなたを訪れます。'
+	String get intro => 'このサイクルでは、月の満ち欠けに合わせて\n3 つの節目があなたを訪れます。';
+
+	/// ja: '🌑 新月イベント'
+	String get newTitle => '🌑 新月イベント';
+
+	/// ja: '新月の日に「意図（インテンション）」を立てる出発点。 このサイクルで大切にしたいことを言葉にします。 すべてはここから始まります。'
+	String get newBody => '新月の日に「意図（インテンション）」を立てる出発点。\nこのサイクルで大切にしたいことを言葉にします。\nすべてはここから始まります。';
+
+	/// ja: '🌕 満月イベント'
+	String get fullTitle => '🌕 満月イベント';
+
+	/// ja: '満月の日に、立てた意図への中間チェック（振り返り）。 ※ 新月で意図を立てていないと出てきません。'
+	String get fullBody => '満月の日に、立てた意図への中間チェック（振り返り）。\n※ 新月で意図を立てていないと出てきません。';
+
+	/// ja: '✦ 刻星化イベント'
+	String get catTitle => '✦ 刻星化イベント';
+
+	/// ja: '次の新月の前日以降に訪れる、サイクルの締めくくり。 手放しと、あなただけの星座の形成です。 ※ こちらも新月で意図を立てているのが前提です。'
+	String get catBody => '次の新月の前日以降に訪れる、サイクルの締めくくり。\n手放しと、あなただけの星座の形成です。\n※ こちらも新月で意図を立てているのが前提です。';
+
+	/// ja: '🔔 通知をオンにするのがおすすめ'
+	String get notifyTitle => '🔔 通知をオンにするのがおすすめ';
+
+	/// ja: '各イベントは「その日」だけ訪れます。 Sanctuary で通知をオンにしておくと、 当日の朝にお知らせします。 満月・刻星化は新月の意図設定が前提なので、 まず新月を逃さないことが大切です。'
+	String get notifyBody => '各イベントは「その日」だけ訪れます。\nSanctuary で通知をオンにしておくと、\n当日の朝にお知らせします。\n\n満月・刻星化は新月の意図設定が前提なので、\nまず新月を逃さないことが大切です。';
+}
+
+// Path: galaxy.guide
+class Translations$galaxy$guide$ja {
+	Translations$galaxy$guide$ja.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// ja: 'Galaxy 画面とは'
+	String get title => 'Galaxy 画面とは';
+
+	/// ja: '月のサイクル (約 29.5 日) に合わせて、 あなたの日々のタロットリーディングが 「星」として記録されていく画面です。 1 サイクル = 1 つの constellation (星座) が完成。 内面のリズムが、星座という形で残っていきます。'
+	String get intro => '月のサイクル (約 29.5 日) に合わせて、\nあなたの日々のタロットリーディングが\n「星」として記録されていく画面です。\n\n1 サイクル = 1 つの constellation (星座) が完成。\n内面のリズムが、星座という形で残っていきます。';
+
+	/// ja: '🌌 CYCLE タブ (現在のサイクル)'
+	String get cycleTitle => '🌌 CYCLE タブ (現在のサイクル)';
+
+	/// ja: '今の月サイクルの「現在地」を表示。 日々の reading を描いた "dot" が螺旋上に並び、 完成に向けて進んでいきます。 ・右上の数字: サイクル何日目か (例: 23 of 30) ・左上の月齢バッジ: 今日の月の相 (← 今ココ) ・ドラッグで 3D 回転 ・dot タップで該当日のリーディングを表示 ・新月・満月の日は特別オーバーレイで 意図を立てる/振り返るアクションを促します'
+	String get cycleBody => '今の月サイクルの「現在地」を表示。\n日々の reading を描いた "dot" が螺旋上に並び、\n完成に向けて進んでいきます。\n\n・右上の数字: サイクル何日目か (例: 23 of 30)\n・左上の月齢バッジ: 今日の月の相 (← 今ココ)\n・ドラッグで 3D 回転\n・dot タップで該当日のリーディングを表示\n・新月・満月の日は特別オーバーレイで\n　意図を立てる/振り返るアクションを促します';
+
+	/// ja: '🌟 Star Atlas タブ (過去の星座図鑑)'
+	String get atlasTitle => '🌟 Star Atlas タブ (過去の星座図鑑)';
+
+	/// ja: '完成した過去のサイクル (= 星座) のコレクション。 1 つ 1 つが、あなた自身の内面が紡いだ星座です。 ・各カードは 1 サイクル分の reading が織りなす星座 ・カードタップで再アニメ + 詳細表示 (星座名・期間・レア度) ・レア度: 5 段階の星評価 (★) レア度が高いほど「珍しい組み合わせ」が出た証'
+	String get atlasBody => '完成した過去のサイクル (= 星座) のコレクション。\n1 つ 1 つが、あなた自身の内面が紡いだ星座です。\n\n・各カードは 1 サイクル分の reading が織りなす星座\n・カードタップで再アニメ + 詳細表示\n　(星座名・期間・レア度)\n・レア度: 5 段階の星評価 (★)\n　レア度が高いほど「珍しい組み合わせ」が出た証';
+
+	/// ja: '月のサイクルの意味'
+	String get meaningTitle => '月のサイクルの意味';
+
+	/// ja: '🌑 新月 → 始まり。種を蒔く時。 🌕 満月 → 達成・解放。気づきの時。 1 サイクルかけて、あなたの内面が 1 つの星座に なっていきます。Tarot タブで日々のカードを 引いて、ゆっくり育てていってください。'
+	String get meaningBody => '🌑 新月 → 始まり。種を蒔く時。\n🌕 満月 → 達成・解放。気づきの時。\n\n1 サイクルかけて、あなたの内面が 1 つの星座に\nなっていきます。Tarot タブで日々のカードを\n引いて、ゆっくり育てていってください。';
 }
 
 // Path: forecast.legend
@@ -2602,6 +2727,34 @@ class Translations$paywall$faq$resubscribe$ja {
 extension on Translations {
 	dynamic _flatMapFunction(String path) {
 		return switch (path) {
+			'galaxy.todayMoon' => ({required Object name}) => '今日の月: ${name}',
+			'galaxy.phaseDesc.newMoon' => '始まりの時。\n空が最も暗く、星々が最もよく見える夜。\n新しい意図を立て、種を蒔く時間帯です。',
+			'galaxy.phaseDesc.crescent' => '芽吹きの時。\n細い光が西の空に現れます。\n新月で蒔いた意図に向けて、少しずつ動き出す時間帯。',
+			'galaxy.phaseDesc.firstQuarter' => '行動の時。\n半月が天頂に達し、決断と行動が求められます。\n芽生えた意図を形にしていく転換点。',
+			'galaxy.phaseDesc.gibbous13' => '高まりの時。\n月が満ちていく勢いがピークに近づきます。\n準備が整い、表現が膨らむ時間帯。',
+			'galaxy.phaseDesc.fullMoon' => '達成・解放の時。\n月が最も明るく輝く夜。\n気づきと完了がやってきます。\n手にしたものを見つめ直し、感謝する時間帯。',
+			'galaxy.phaseDesc.waningGibbous18' => '共有の時。\n月が欠け始めます。\n満月で得た学びを他者と分かち合う時間帯。',
+			'galaxy.phaseDesc.lastQuarter' => '手放しの時。\n半月が逆向きに浮かびます。\n不要なものを整理し、ゆるめる時間帯。',
+			'galaxy.phaseDesc.waning26' => '休息の時。\n空に薄い月が残ります。\n次のサイクルへ向けて静かに整える時間帯。',
+			'galaxy.phaseDesc.flowing' => '月のサイクルが流れています。',
+			'galaxy.events.title' => '月のイベントについて',
+			'galaxy.events.intro' => 'このサイクルでは、月の満ち欠けに合わせて\n3 つの節目があなたを訪れます。',
+			'galaxy.events.newTitle' => '🌑 新月イベント',
+			'galaxy.events.newBody' => '新月の日に「意図（インテンション）」を立てる出発点。\nこのサイクルで大切にしたいことを言葉にします。\nすべてはここから始まります。',
+			'galaxy.events.fullTitle' => '🌕 満月イベント',
+			'galaxy.events.fullBody' => '満月の日に、立てた意図への中間チェック（振り返り）。\n※ 新月で意図を立てていないと出てきません。',
+			'galaxy.events.catTitle' => '✦ 刻星化イベント',
+			'galaxy.events.catBody' => '次の新月の前日以降に訪れる、サイクルの締めくくり。\n手放しと、あなただけの星座の形成です。\n※ こちらも新月で意図を立てているのが前提です。',
+			'galaxy.events.notifyTitle' => '🔔 通知をオンにするのがおすすめ',
+			'galaxy.events.notifyBody' => '各イベントは「その日」だけ訪れます。\nSanctuary で通知をオンにしておくと、\n当日の朝にお知らせします。\n\n満月・刻星化は新月の意図設定が前提なので、\nまず新月を逃さないことが大切です。',
+			'galaxy.guide.title' => 'Galaxy 画面とは',
+			'galaxy.guide.intro' => '月のサイクル (約 29.5 日) に合わせて、\nあなたの日々のタロットリーディングが\n「星」として記録されていく画面です。\n\n1 サイクル = 1 つの constellation (星座) が完成。\n内面のリズムが、星座という形で残っていきます。',
+			'galaxy.guide.cycleTitle' => '🌌 CYCLE タブ (現在のサイクル)',
+			'galaxy.guide.cycleBody' => '今の月サイクルの「現在地」を表示。\n日々の reading を描いた "dot" が螺旋上に並び、\n完成に向けて進んでいきます。\n\n・右上の数字: サイクル何日目か (例: 23 of 30)\n・左上の月齢バッジ: 今日の月の相 (← 今ココ)\n・ドラッグで 3D 回転\n・dot タップで該当日のリーディングを表示\n・新月・満月の日は特別オーバーレイで\n　意図を立てる/振り返るアクションを促します',
+			'galaxy.guide.atlasTitle' => '🌟 Star Atlas タブ (過去の星座図鑑)',
+			'galaxy.guide.atlasBody' => '完成した過去のサイクル (= 星座) のコレクション。\n1 つ 1 つが、あなた自身の内面が紡いだ星座です。\n\n・各カードは 1 サイクル分の reading が織りなす星座\n・カードタップで再アニメ + 詳細表示\n　(星座名・期間・レア度)\n・レア度: 5 段階の星評価 (★)\n　レア度が高いほど「珍しい組み合わせ」が出た証',
+			'galaxy.guide.meaningTitle' => '月のサイクルの意味',
+			'galaxy.guide.meaningBody' => '🌑 新月 → 始まり。種を蒔く時。\n🌕 満月 → 達成・解放。気づきの時。\n\n1 サイクルかけて、あなたの内面が 1 つの星座に\nなっていきます。Tarot タブで日々のカードを\n引いて、ゆっくり育てていってください。',
 			'forecast.error' => 'Forecast の取得に失敗しました。ネットワーク接続を確認してください。',
 			'forecast.pro5yrLabel' => '5 年の流れ',
 			'forecast.pro5yrDesc' => '今年だけでなく翌年・来々年も含めた 5 年分のヒートマップで、人生の大きな流れを見渡せます。',
@@ -3086,6 +3239,8 @@ extension on Translations {
 			'paywall.comparison.secConsult' => '相談・読み解き',
 			'paywall.comparison.secMap' => '地図 (ACG / CCG)',
 			'paywall.comparison.secRecords' => '記録（あなたの記録は Free でも永久に残ります）',
+			_ => null,
+		} ?? switch (path) {
 			'paywall.comparison.secForecast' => '予報',
 			'paywall.comparison.stellaConsult.label' => 'Stella 相談',
 			'paywall.comparison.stellaConsult.free' => '週 3 回\n+ 購入クレジット',
@@ -3114,8 +3269,6 @@ extension on Translations {
 			'paywall.comparison.archiveSearch.label' => '星座アーカイブ・履歴の検索/フィルタ',
 			'paywall.comparison.replayExport.label' => '形成演出の再生・テキスト書き出し',
 			'paywall.comparison.titleRediagnosis.label' => '称号 (クラス) の再診断',
-			_ => null,
-		} ?? switch (path) {
 			'paywall.comparison.titleRediagnosis.free' => '1 回まで',
 			'paywall.comparison.titleRediagnosis.pro' => '無制限',
 			'paywall.comparison.forecastPeriod.label' => 'Forecast 期間',

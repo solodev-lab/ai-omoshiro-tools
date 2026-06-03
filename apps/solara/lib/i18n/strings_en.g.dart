@@ -39,6 +39,7 @@ class TranslationsEn extends Translations with BaseTranslations<AppLocale, Trans
 	TranslationsEn $copyWith({TranslationMetadata<AppLocale, Translations>? meta}) => TranslationsEn(meta: meta ?? this.$meta);
 
 	// Translations
+	@override late final _Translations$galaxy$en galaxy = _Translations$galaxy$en._(_root);
 	@override late final _Translations$forecast$en forecast = _Translations$forecast$en._(_root);
 	@override late final _Translations$consultHistory$en consultHistory = _Translations$consultHistory$en._(_root);
 	@override late final _Translations$consultCredit$en consultCredit = _Translations$consultCredit$en._(_root);
@@ -55,6 +56,19 @@ class TranslationsEn extends Translations with BaseTranslations<AppLocale, Trans
 	@override late final _Translations$disclaimer$en disclaimer = _Translations$disclaimer$en._(_root);
 	@override late final _Translations$common$en common = _Translations$common$en._(_root);
 	@override late final _Translations$aiConsent$en aiConsent = _Translations$aiConsent$en._(_root);
+}
+
+// Path: galaxy
+class _Translations$galaxy$en extends Translations$galaxy$ja {
+	_Translations$galaxy$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String todayMoon({required Object name}) => 'Today\'s moon: ${name}';
+	@override late final _Translations$galaxy$phaseDesc$en phaseDesc = _Translations$galaxy$phaseDesc$en._(_root);
+	@override late final _Translations$galaxy$events$en events = _Translations$galaxy$events$en._(_root);
+	@override late final _Translations$galaxy$guide$en guide = _Translations$galaxy$guide$en._(_root);
 }
 
 // Path: forecast
@@ -415,6 +429,60 @@ class _Translations$aiConsent$en extends Translations$aiConsent$ja {
 	@override late final _Translations$aiConsent$geminiContent$en geminiContent = _Translations$aiConsent$geminiContent$en._(_root);
 	@override late final _Translations$aiConsent$decisions$en decisions = _Translations$aiConsent$decisions$en._(_root);
 	@override late final _Translations$aiConsent$consentHandling$en consentHandling = _Translations$aiConsent$consentHandling$en._(_root);
+}
+
+// Path: galaxy.phaseDesc
+class _Translations$galaxy$phaseDesc$en extends Translations$galaxy$phaseDesc$ja {
+	_Translations$galaxy$phaseDesc$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get newMoon => 'A time of beginnings.\nThe sky is at its darkest, and the stars show clearest.\nA time to set a new intention and plant seeds.';
+	@override String get crescent => 'A time of sprouting.\nA thin light appears in the western sky.\nA time to begin moving, little by little, toward the intention you planted at the new moon.';
+	@override String get firstQuarter => 'A time to act.\nThe half-moon reaches the zenith; decision and action are called for.\nA turning point for shaping the intention that has sprouted.';
+	@override String get gibbous13 => 'A time of swelling.\nThe moon\'s waxing momentum nears its peak.\nA time when things fall into place and expression grows full.';
+	@override String get fullMoon => 'A time of fulfillment and release.\nThe night the moon shines brightest.\nAwareness and completion arrive.\nA time to look again at what you hold, and give thanks.';
+	@override String get waningGibbous18 => 'A time of sharing.\nThe moon begins to wane.\nA time to share what you learned at the full moon with others.';
+	@override String get lastQuarter => 'A time of letting go.\nA half-moon floats, turned the other way.\nA time to clear away what\'s no longer needed, and loosen your grip.';
+	@override String get waning26 => 'A time of rest.\nA faint moon lingers in the sky.\nA time to quietly set yourself in order for the next cycle.';
+	@override String get flowing => 'The moon\'s cycle is flowing.';
+}
+
+// Path: galaxy.events
+class _Translations$galaxy$events$en extends Translations$galaxy$events$ja {
+	_Translations$galaxy$events$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get title => 'About the moon events';
+	@override String get intro => 'Through this cycle, in step with the moon\'s waxing and waning,\nthree turning points come to you.';
+	@override String get newTitle => '🌑 New moon event';
+	@override String get newBody => 'The starting point — on the new moon, you set an "intention."\nYou put into words what you want to hold dear this cycle.\nEverything begins here.';
+	@override String get fullTitle => '🌕 Full moon event';
+	@override String get fullBody => 'On the full moon, a midway check-in on the intention you set (a look back).\n* It won\'t appear unless you set an intention at the new moon.';
+	@override String get catTitle => '✦ Catasterism event';
+	@override String get catBody => 'Arriving the day before the next new moon or later — the close of the cycle.\nA letting-go, and the forming of a constellation that is yours alone.\n* This, too, assumes you set an intention at the new moon.';
+	@override String get notifyTitle => '🔔 We recommend turning notifications on';
+	@override String get notifyBody => 'Each event visits on "that day" only.\nTurn notifications on in Sanctuary,\nand we\'ll let you know the morning of.\n\nThe full moon and catasterism assume a new-moon intention,\nso the main thing is not to miss the new moon.';
+}
+
+// Path: galaxy.guide
+class _Translations$galaxy$guide$en extends Translations$galaxy$guide$ja {
+	_Translations$galaxy$guide$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get title => 'What is the Galaxy screen?';
+	@override String get intro => 'In step with the moon\'s cycle (about 29.5 days),\nyour daily tarot readings\nare recorded here as "stars."\n\nOne cycle = one constellation completed.\nThe rhythm of your inner life remains, in the shape of a constellation.';
+	@override String get cycleTitle => '🌌 CYCLE tab (the current cycle)';
+	@override String get cycleBody => 'Shows where you are now in this moon cycle.\nThe "dots" of your daily readings line up along a spiral,\nadvancing toward completion.\n\n· Top-right number: which day of the cycle (e.g. 23 of 30)\n· Top-left moon badge: today\'s phase (← you are here)\n· Drag to rotate in 3D\n· Tap a dot to see that day\'s reading\n· On new- and full-moon days, a special overlay\n　invites you to set or look back on your intention';
+	@override String get atlasTitle => '🌟 Star Atlas tab (your past constellations)';
+	@override String get atlasBody => 'A collection of completed past cycles (= constellations).\nEach one is a constellation your own inner life has woven.\n\n· Each card is a constellation woven from one cycle of readings\n· Tap a card to replay it + see details\n　(name, period, rarity)\n· Rarity: a 5-level star rating (★)\n　the higher the rarity, the rarer the combination that appeared';
+	@override String get meaningTitle => 'What the moon cycle means';
+	@override String get meaningBody => '🌑 New moon → a beginning. A time to plant seeds.\n🌕 Full moon → fulfillment and release. A time of awareness.\n\nOver one cycle, your inner life becomes a single constellation.\nDraw your daily card on the Tarot tab,\nand let it grow, slowly.';
 }
 
 // Path: forecast.legend
@@ -1566,6 +1634,34 @@ class _Translations$paywall$faq$resubscribe$en extends Translations$paywall$faq$
 extension on TranslationsEn {
 	dynamic _flatMapFunction(String path) {
 		return switch (path) {
+			'galaxy.todayMoon' => ({required Object name}) => 'Today\'s moon: ${name}',
+			'galaxy.phaseDesc.newMoon' => 'A time of beginnings.\nThe sky is at its darkest, and the stars show clearest.\nA time to set a new intention and plant seeds.',
+			'galaxy.phaseDesc.crescent' => 'A time of sprouting.\nA thin light appears in the western sky.\nA time to begin moving, little by little, toward the intention you planted at the new moon.',
+			'galaxy.phaseDesc.firstQuarter' => 'A time to act.\nThe half-moon reaches the zenith; decision and action are called for.\nA turning point for shaping the intention that has sprouted.',
+			'galaxy.phaseDesc.gibbous13' => 'A time of swelling.\nThe moon\'s waxing momentum nears its peak.\nA time when things fall into place and expression grows full.',
+			'galaxy.phaseDesc.fullMoon' => 'A time of fulfillment and release.\nThe night the moon shines brightest.\nAwareness and completion arrive.\nA time to look again at what you hold, and give thanks.',
+			'galaxy.phaseDesc.waningGibbous18' => 'A time of sharing.\nThe moon begins to wane.\nA time to share what you learned at the full moon with others.',
+			'galaxy.phaseDesc.lastQuarter' => 'A time of letting go.\nA half-moon floats, turned the other way.\nA time to clear away what\'s no longer needed, and loosen your grip.',
+			'galaxy.phaseDesc.waning26' => 'A time of rest.\nA faint moon lingers in the sky.\nA time to quietly set yourself in order for the next cycle.',
+			'galaxy.phaseDesc.flowing' => 'The moon\'s cycle is flowing.',
+			'galaxy.events.title' => 'About the moon events',
+			'galaxy.events.intro' => 'Through this cycle, in step with the moon\'s waxing and waning,\nthree turning points come to you.',
+			'galaxy.events.newTitle' => '🌑 New moon event',
+			'galaxy.events.newBody' => 'The starting point — on the new moon, you set an "intention."\nYou put into words what you want to hold dear this cycle.\nEverything begins here.',
+			'galaxy.events.fullTitle' => '🌕 Full moon event',
+			'galaxy.events.fullBody' => 'On the full moon, a midway check-in on the intention you set (a look back).\n* It won\'t appear unless you set an intention at the new moon.',
+			'galaxy.events.catTitle' => '✦ Catasterism event',
+			'galaxy.events.catBody' => 'Arriving the day before the next new moon or later — the close of the cycle.\nA letting-go, and the forming of a constellation that is yours alone.\n* This, too, assumes you set an intention at the new moon.',
+			'galaxy.events.notifyTitle' => '🔔 We recommend turning notifications on',
+			'galaxy.events.notifyBody' => 'Each event visits on "that day" only.\nTurn notifications on in Sanctuary,\nand we\'ll let you know the morning of.\n\nThe full moon and catasterism assume a new-moon intention,\nso the main thing is not to miss the new moon.',
+			'galaxy.guide.title' => 'What is the Galaxy screen?',
+			'galaxy.guide.intro' => 'In step with the moon\'s cycle (about 29.5 days),\nyour daily tarot readings\nare recorded here as "stars."\n\nOne cycle = one constellation completed.\nThe rhythm of your inner life remains, in the shape of a constellation.',
+			'galaxy.guide.cycleTitle' => '🌌 CYCLE tab (the current cycle)',
+			'galaxy.guide.cycleBody' => 'Shows where you are now in this moon cycle.\nThe "dots" of your daily readings line up along a spiral,\nadvancing toward completion.\n\n· Top-right number: which day of the cycle (e.g. 23 of 30)\n· Top-left moon badge: today\'s phase (← you are here)\n· Drag to rotate in 3D\n· Tap a dot to see that day\'s reading\n· On new- and full-moon days, a special overlay\n　invites you to set or look back on your intention',
+			'galaxy.guide.atlasTitle' => '🌟 Star Atlas tab (your past constellations)',
+			'galaxy.guide.atlasBody' => 'A collection of completed past cycles (= constellations).\nEach one is a constellation your own inner life has woven.\n\n· Each card is a constellation woven from one cycle of readings\n· Tap a card to replay it + see details\n　(name, period, rarity)\n· Rarity: a 5-level star rating (★)\n　the higher the rarity, the rarer the combination that appeared',
+			'galaxy.guide.meaningTitle' => 'What the moon cycle means',
+			'galaxy.guide.meaningBody' => '🌑 New moon → a beginning. A time to plant seeds.\n🌕 Full moon → fulfillment and release. A time of awareness.\n\nOver one cycle, your inner life becomes a single constellation.\nDraw your daily card on the Tarot tab,\nand let it grow, slowly.',
 			'forecast.error' => 'Couldn\'t fetch the forecast. Please check your network connection.',
 			'forecast.pro5yrLabel' => 'The 5-year flow',
 			'forecast.pro5yrDesc' => 'A 5-year heatmap — this year plus the years ahead — to take in the larger flow of your life.',
@@ -2050,6 +2146,8 @@ extension on TranslationsEn {
 			'paywall.comparison.secConsult' => 'Consultation & Interpretation',
 			'paywall.comparison.secMap' => 'Map (ACG / CCG)',
 			'paywall.comparison.secRecords' => 'Records (your records are kept forever, even on Free)',
+			_ => null,
+		} ?? switch (path) {
 			'paywall.comparison.secForecast' => 'Forecast',
 			'paywall.comparison.stellaConsult.label' => 'Stella Consultation',
 			'paywall.comparison.stellaConsult.free' => '3 / week\n+ purchased credits',
@@ -2078,8 +2176,6 @@ extension on TranslationsEn {
 			'paywall.comparison.archiveSearch.label' => 'Search / filter Star Atlas & history',
 			'paywall.comparison.replayExport.label' => 'Replay formation animation · export as text',
 			'paywall.comparison.titleRediagnosis.label' => 'Re-diagnose your Title (Class)',
-			_ => null,
-		} ?? switch (path) {
 			'paywall.comparison.titleRediagnosis.free' => 'Up to once',
 			'paywall.comparison.titleRediagnosis.pro' => 'Unlimited',
 			'paywall.comparison.forecastPeriod.label' => 'Forecast range',

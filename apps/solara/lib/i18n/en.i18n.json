@@ -1,4 +1,40 @@
 {
+  "galaxy": {
+    "todayMoon": "Today's moon: $name",
+    "phaseDesc": {
+      "newMoon": "A time of beginnings.\nThe sky is at its darkest, and the stars show clearest.\nA time to set a new intention and plant seeds.",
+      "crescent": "A time of sprouting.\nA thin light appears in the western sky.\nA time to begin moving, little by little, toward the intention you planted at the new moon.",
+      "firstQuarter": "A time to act.\nThe half-moon reaches the zenith; decision and action are called for.\nA turning point for shaping the intention that has sprouted.",
+      "gibbous13": "A time of swelling.\nThe moon's waxing momentum nears its peak.\nA time when things fall into place and expression grows full.",
+      "fullMoon": "A time of fulfillment and release.\nThe night the moon shines brightest.\nAwareness and completion arrive.\nA time to look again at what you hold, and give thanks.",
+      "waningGibbous18": "A time of sharing.\nThe moon begins to wane.\nA time to share what you learned at the full moon with others.",
+      "lastQuarter": "A time of letting go.\nA half-moon floats, turned the other way.\nA time to clear away what's no longer needed, and loosen your grip.",
+      "waning26": "A time of rest.\nA faint moon lingers in the sky.\nA time to quietly set yourself in order for the next cycle.",
+      "flowing": "The moon's cycle is flowing."
+    },
+    "events": {
+      "title": "About the moon events",
+      "intro": "Through this cycle, in step with the moon's waxing and waning,\nthree turning points come to you.",
+      "newTitle": "🌑 New moon event",
+      "newBody": "The starting point — on the new moon, you set an \"intention.\"\nYou put into words what you want to hold dear this cycle.\nEverything begins here.",
+      "fullTitle": "🌕 Full moon event",
+      "fullBody": "On the full moon, a midway check-in on the intention you set (a look back).\n* It won't appear unless you set an intention at the new moon.",
+      "catTitle": "✦ Catasterism event",
+      "catBody": "Arriving the day before the next new moon or later — the close of the cycle.\nA letting-go, and the forming of a constellation that is yours alone.\n* This, too, assumes you set an intention at the new moon.",
+      "notifyTitle": "🔔 We recommend turning notifications on",
+      "notifyBody": "Each event visits on \"that day\" only.\nTurn notifications on in Sanctuary,\nand we'll let you know the morning of.\n\nThe full moon and catasterism assume a new-moon intention,\nso the main thing is not to miss the new moon."
+    },
+    "guide": {
+      "title": "What is the Galaxy screen?",
+      "intro": "In step with the moon's cycle (about 29.5 days),\nyour daily tarot readings\nare recorded here as \"stars.\"\n\nOne cycle = one constellation completed.\nThe rhythm of your inner life remains, in the shape of a constellation.",
+      "cycleTitle": "🌌 CYCLE tab (the current cycle)",
+      "cycleBody": "Shows where you are now in this moon cycle.\nThe \"dots\" of your daily readings line up along a spiral,\nadvancing toward completion.\n\n· Top-right number: which day of the cycle (e.g. 23 of 30)\n· Top-left moon badge: today's phase (← you are here)\n· Drag to rotate in 3D\n· Tap a dot to see that day's reading\n· On new- and full-moon days, a special overlay\n　invites you to set or look back on your intention",
+      "atlasTitle": "🌟 Star Atlas tab (your past constellations)",
+      "atlasBody": "A collection of completed past cycles (= constellations).\nEach one is a constellation your own inner life has woven.\n\n· Each card is a constellation woven from one cycle of readings\n· Tap a card to replay it + see details\n　(name, period, rarity)\n· Rarity: a 5-level star rating (★)\n　the higher the rarity, the rarer the combination that appeared",
+      "meaningTitle": "What the moon cycle means",
+      "meaningBody": "🌑 New moon → a beginning. A time to plant seeds.\n🌕 Full moon → fulfillment and release. A time of awareness.\n\nOver one cycle, your inner life becomes a single constellation.\nDraw your daily card on the Tarot tab,\nand let it grow, slowly."
+    }
+  },
   "forecast": {
     "error": "Couldn't fetch the forecast. Please check your network connection.",
     "pro5yrLabel": "The 5-year flow",
