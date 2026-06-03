@@ -8,6 +8,7 @@ import '../utils/moon_phase.dart';
 import '../utils/pro_status.dart';
 import '../utils/solara_storage.dart';
 import '../utils/tarot_data.dart';
+import '../utils/solara_i18n.dart';
 import '../widgets/ai_disclaimer_footer.dart';
 import '../widgets/ai_report_button.dart';
 import '../widgets/pro_unlock_dialog.dart';

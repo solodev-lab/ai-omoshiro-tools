@@ -38,7 +38,7 @@ class ForecastTop5Section extends StatelessWidget {
 
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       ForecastSectionHeader(
-        label: '強運Top5',
+        label: 'ハイライトTop5',
         onInfo: () => _showTop5Info(context),
         // 集計対象の暦年 (西暦) を右端に表示。
         trailing: Text('$year年',
@@ -144,7 +144,7 @@ void _showTop5Info(BuildContext context) {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: const [
         Text(
-          '強運 Top5 の読み方',
+          'ハイライト Top5 の読み方',
           style: TextStyle(
               color: Color(0xFFC9A84C), fontSize: 14, letterSpacing: 1),
         ),
@@ -208,7 +208,7 @@ void _showTop5Info(BuildContext context) {
         Text(
           '日付 — 選択中カテゴリのその日のスコア\n'
           'タップで選択日詳細にジャンプ。\n'
-          '(その日の強運方位は選択日詳細で確認できます)',
+          '(その日の高まる方位は選択日詳細で確認できます)',
           style: TextStyle(
               color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
         ),
@@ -225,7 +225,7 @@ void _showTop5Info(BuildContext context) {
         Text(
           '「動きどころ」の短期ピンポイント計画に。\n'
           '特に 1 位の日は、そのカテゴリのテーマで動くと\n'
-          '追い風が強い日です。',
+          'エネルギーが特に強く流れる日です。',
           style: TextStyle(
               color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),
         ),

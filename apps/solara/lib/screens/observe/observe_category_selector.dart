@@ -20,7 +20,7 @@ part of '../observe_screen.dart';
 
 /// カテゴリ選択肢 (Stella 相談の theme と同じ語彙)。null = 全体運。
 const List<(String?, String)> _tarotCategories = [
-  (null, '全体運'),
+  (null, '総合'),
   ('love', '恋愛'),
   ('money', '豊かさ'),
   ('work', '仕事'),
@@ -34,7 +34,7 @@ extension _ObserveCategorySelector on ObserveScreenState {
   Widget _buildCategorySelector(bool isPro) {
     return Column(
       children: [
-        const Text('占いたいカテゴリ',
+        const Text('読みたいカテゴリ',
             style: TextStyle(
                 fontSize: 11, color: Color(0xFF888888), letterSpacing: 1.0)),
         const SizedBox(height: 8),
@@ -43,8 +43,8 @@ extension _ObserveCategorySelector on ObserveScreenState {
           runSpacing: 6,
           alignment: WrapAlignment.center,
           children: [
-            for (final (key, label) in _tarotCategories)
-              _categoryChip(key, label, isPro),
+            for (final (key, _) in _tarotCategories)
+              _categoryChip(key, categoryLabel(key ?? 'overall'), isPro),
           ],
         ),
         const SizedBox(height: 6),
@@ -57,7 +57,7 @@ extension _ObserveCategorySelector on ObserveScreenState {
           const SizedBox(height: 2),
           Text(
             _selectedCategory == null
-                ? '全体運以外のカテゴリ選択にはクレジットを消費します。'
+                ? '総合以外のカテゴリ選択にはクレジットを消費します。'
                 : _tarotFreeRemaining != null
                     ? 'カテゴリ選択は1クレジット（無料あと$_tarotFreeRemaining回'
                         '${(_tarotPurchased ?? 0) > 0 ? ' ・購入$_tarotPurchased回' : ''}）'
@@ -148,7 +148,7 @@ extension _ObserveCategorySelector on ObserveScreenState {
     m.showSnackBar(
       const SnackBar(
         content: Text(
-          '全体運はクレジットを使いません',
+          '総合はクレジットを使いません',
           style: TextStyle(color: SolaraColors.textPrimary),
           textAlign: TextAlign.center,
         ),

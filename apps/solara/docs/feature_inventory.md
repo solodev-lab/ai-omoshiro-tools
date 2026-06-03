@@ -1625,6 +1625,88 @@ Worker [`consultation_v2.js:78-83`](../worker/src/consultation_v2.js#L78) の既
 - flutter analyze クリーン / flutter test **全312件 green** / audit **HARD7 (新規ゼロ・1000行超分割は依然 backlog)**・重複20(構造的 `),`/`style: TextStyle(`)・未使用候補0 (`GalaxyArchiveSortLabel.jp`/`DominantFortuneKindToCategoryIcon.toCategoryIcon` は extension 実使用=誤検出) / extract `+0 -0` (新規クラスなし・追加は top-level 関数のみ)。
 - 反映 = 次の AAB ビルド (Flutter のみ・Worker 変更なし)。
 
+### 0.2.56 アプリ全文の用語・ブランド声 統一 (運除去 / 占い→読み解き / 吉凶・予測・運勢機能名 中立化) (2026-06-03 夜)
+
+> オーナーが「アプリに記載のある全ての言葉に不整合や Solara らしくない言葉が無いか」を、`store_compliance_assets/apple_app_store_connect` コピーと `Solaraアプリの魅力.docx` (ブランドの声の源泉) を物差しに点検したいと指示。全11画面+共通テキストを領域別に総ざらい (7 並列監査) し、ブランド方針に反する語を洗い出し→中立化。**Flutter のみ・Worker 変更なし → 反映=次の AAB ビルド**。
+
+#### 判定基準 (2ファイルから抽出・オーナー確定)
+① 吉凶を出さない・中立 (追い風/最適/魔法/ラッキー 等を排除) ② 予測・保証しない (予測/予報→リズム・傾向・到来) ③ カテゴリ名から「運」を外し全画面統一 (全体運→総合 / 恋愛運→恋愛 / 仕事運→仕事 / 対話運→話す / 金運→豊かさ ※money は既済) ④「運勢〇〇」機能名を中立名へ ⑤ Stella 表記統一 (全画面 latin「Stella」= 既に統一済を確認) ⑥ AI/Gemini はマーケUIで主役化しない (同意/免責/報告のみ=方針通り) ⑦ 用語ゆれ統一。
+
+#### A. カテゴリ名の「運」除去 (基準③) — 全画面統一
+- 震源 `horo_constants.dart` fortuneCategories nameJP: 全体運→総合 / 恋愛運→恋愛 / 仕事運→仕事 / 対話運→話す (星読みカード見出し・殻ティーザー・Pro解放文に波及)。
+- `horo_filter_panel` 絞込チップ (constants とは別ハードコード): セクション名「運勢カテゴリ」→「カテゴリ」/ 恋愛運→恋愛 / 仕事運→仕事 / コミュニケーション→話す。
+- `observe_category_selector`: 全体運→総合 (chip + 説明文 + トースト)。`horoscope_screen:259` フォールバック「この運勢」→「このテーマ」。`horo_fortune_cards:77`「ホロスコープ運勢」→「ホロスコープ」。`astro_glossary:380`「個別の運勢カテゴリ」→「個別のカテゴリ」。`map_daily_transit_screen:1999`「いつ恋愛運が上がる」→「いつ恋愛のテーマが動く」。`astro_zenith_messages:45`「関係性運」→「関係性のエネルギー」。
+- overall は「総合」(Map 正典) に統一 (旧 全体運/全体/総合 の3表記を解消)。paywall (`paywall_widgets`/`paywall_comparison`) の星読み・タロット特典/比較表/FAQ も全て 総合 へ。communication は Map/Horo=「話す」/ Observe・相談=「対話」(対話・学び 等の compound は据置=残る軽微差)。
+- ⚠ コード**コメント**内の旧名 (運勢サイクル/強運Top5/運勢方位 等) は未表示=据置 (`category_icon`/`forecast_cache`/`map_screen`/`map_overlays` 他)。
+
+#### B. 「占い」→「星読み/読み解き」 (基準③⑦)
+- `observe_category_selector:37`「占いたいカテゴリ」→「読みたいカテゴリ」。paywall の総称「占い結果/相談・占い/占い・サイクル」→「読み解き結果/相談・読み解き/読み解き・サイクル」(機能固有名は星読み・タロットを維持。「星読み」は Horo 専用機能名のため総称には汎用の「読み解き」を採用)。
+
+#### C/D/E. 吉凶・予測・運勢機能名の中立化 (基準①②④)
+- **追い風** (4箇所): `map_display_menu:226`「色が濃いほど追い風」→「エネルギーが強い」/ `planet_intro` 木星 natal+prog / `forecast_top5:228` / `consultation_input_widgets:497`。
+- **予測** (基準②): `forecast_screen:850`「運勢を予測表示」→「星のリズムを表示」/ `forecast_life_periods:67`「予測される期間なし」→「到来する期間はありません」/ `forecast_screen:151,153`「5年予測/先取り」→「5年の流れ/見渡せます」。
+- **運勢機能名→中立名** (基準④): 運勢方位→**方位エネルギー** (`map_display_menu:106,226`/`map_astro_carto:231`) / 運勢サイクル→**星のサイクル** (`forecast_life_periods:58,138`/`forecast_screen:895,1004`) / 強運Top5→**ハイライトTop5**・強運方位→**高まる方位** (`forecast_top5:41,147,211`/`forecast_screen:764,912`)。
+
+#### F. 解説・天体イベントの断定中立化 (基準①②・オーナーが画面別に範囲指定)
+- **F1 天頂点解説** (`astro_zenith_messages`・全中立化): 最適な土地→表れやすい土地 / 魔法の土地→引き出されやすい土地 / 実力以上の力が出る→行動力や闘志が高まりやすい /「注意が必要」→「起きやすい」。
+- **F2 天体イベント** (`celestial_event_meanings`・◎のみ): 金星逆行「避けた方が無難」→「立ち止まって見つめ直しやすいエネルギー」(水星逆行/日食/ノードの「運命的」は△=据置)。
+- **F3 惑星intro 木星** (`planet_intro`・全中立化): 幸運→恵み / 運に恵まれている→ものごとが広がりやすい / 追い風×2。
+- **F4 特殊アスペクト解説** (`horo_aspect_description`・全中立化): ヨッド「運命・使命/運命的な使命/運命的な転機」→「使命・転換/使命を映し出す/転機のリズムが高まる」/ グランドトライン「引き寄せる・チャンスを逃さず」/ Tスクエア「飛躍が期待・打破する力」を中立成長語へ。
+
+#### G. 称号の「運命」= 現状維持 (基準④)
+- `title_data` Light称号「運命に身を捧げる/運命を信じる」等は吉凶でなく詩的称号名 → オーナー判断で据置。
+
+#### H. 用語ゆれ
+- レア度に統一 (`galaxy_screen` rarity→レア度 / `galaxy_archive_filter` レアリティ→レア度)。`observe_question_field`/`horoscope_screen` の「thinking モード ON」→「より深い読み解き」。`consultation_result_card:161` の破綻文 (主語/助詞欠落) をリライト。`consultation_result_widgets:101`「(静的表示)」開発者語を除去。
+
+#### 検証
+- flutter analyze クリーン / flutter test **全312件 green** (consultation_ui_test の fallback チップ assert 文言を新文へ更新) / audit **HARD7 (新規ゼロ)・WARN34・NOTICE44・重複20(構造的)・未使用0** / extract `+0 -0 ~24` (文字列のみ・構造変化なし)。
+- 反映 = 次の AAB ビルド (Flutter のみ・Worker 変更なし)。
+
+### 0.2.57 i18n 基盤 v1 — 正典語彙辞書 + カテゴリの辞書キー化 + Gemini 英語プロンプトに "光源の声" (2026-06-03 夜)
+
+> §0.2.56 の用語統一を土台に「i18n のキーとなる言葉」を確定し、実装の足場を作ったセッション。① 正典語彙辞書 `docs/i18n_glossary.md` 作成 ② カテゴリ表示を辞書キー経由に ③ Worker の英語プロンプトにも Stella(光源) の声を注入。
+
+#### ① 正典語彙辞書 (docs/i18n_glossary.md)
+- 全画面で揺れていた語を JP 確定 + EN 確定で固定。カテゴリ(総合/癒し/豊かさ/恋愛/仕事/話す)・機能名・場所・ブランド固定語・占星術一般語・トーン規則(吉凶/予測の禁止語 + 中立代替 + 正典ディスクレーマ EN 一本化)。
+- 確定した分岐: 話す=Talk / 星読み=Star Reading・総称読み解き=Interpretation / ホロスコープ=Horoscope・出生図=Birth Chart / 豊かさ=Abundance(🔴 Money/Wealth 禁止)。
+
+#### ② カテゴリの i18n 化 (Flutter)
+- 新規 `utils/solara_i18n.dart`: `tr(key)` / `categoryLabel(id)` / `isEnLocale()` + 語彙テーブル(ja,en)。🔴 EN 表示は AppLocale override=='en' のときだけ (system 連動しない = 未訳UIの混在を防ぐ + flutter test 安定)。
+- `map_constants.categoryLabels` を const→getter 化 (14 呼出箇所 無改修)。Horo `fortuneCategories` / horo_filter チップ / observe カテゴリ / `AiDisclaimerFooter` を辞書経由に。observe の communication は「対話→話す」へ統一。
+- 検証: flutter analyze クリーン (solara 0 件) / flutter test 全315件 green (新規 `test/i18n_test.dart` 3件) / extract +1 -0。反映 = 次の AAB。
+
+#### ③ Gemini 英語プロンプトに "光源の声" (Worker)
+- `style_voice.js` に `STYLE_VOICE_EN` 追加 (STYLE_VOICE_JP と同思想を英語で: やわらかい推量 / 吉凶を煽らない / 命令しない / 名前・挨拶・前置き禁止)。
+- `fortune.js` / `tarot.js` の英語ブランチに注入 (従来は英語プロンプトに声が無かった)。
+- 🔴 `consultation_v2.js` (Stella 相談) は従来 `lang!=='ja'` で throw = 日本語専用だった → **英語パスを新規構築**: EN ラベル表 (THEME/MODE/ANGLE/QUALITY/FRAME/BEARING/PLANET/SIGN/BUCKET/PLACE_TYPE/DELTA_DIR) + EN ヘルパー群 + EN プロンプト (12原則 + 出力スキーマを英訳) + STYLE_VOICE_EN。**JP コードは一切不変** (EN 関数を別途追加し lang==='en' 時のみ呼ぶ)。未対応 lang は ja にフォールバック。
+- 検証: node --check 4ファイル OK / worker test (fortune + consultation_v2) 43件 green (新規 EN ハンドラテスト含む)。反映 = `wrangler deploy`。
+
+#### ⚠️ 活性化ギャップ (次フェーズ)
+- 英語プロンプトは Worker 側に揃ったが、**アプリは fortune/tarot/consultation で `lang` を送っていない** (既定 ja) → 英語UIにしても今は日本語生成のまま。英語生成を出すには、アプリの API 呼出に `lang = isEnLocale() ? 'en' : 'ja'` を渡す配線が必要 (EN UI 本格ロールアウトと同時に)。
+
+### 0.2.58 多言語拡張 — 月の儀式 6言語化 + 5言語キー語彙 + Gemini出力の多言語化 (es/pt/fr/de/ko) (2026-06-03 夜)
+
+> §0.2.57 の i18n 基盤の上に、① 月の儀式ストーリーの全文6言語化 ② 5言語のキー語彙確定 ③ Gemini出力 (fortune/tarot/相談) の多言語化、を実施。Flutter(月儀式) + Worker(Gemini) 両方。
+
+#### ① 月の儀式ストーリー 6言語化 (Flutter)
+- `cycle_story_texts.dart`: 新月/満月/刻星化を ES/PT/FR/DE/KO で**全文書き起こし**(日本語マスターから・逐語訳でない・性別中立・区切り数 5/4/8 一致)。選択を `_isJapanese` 2分岐 → languageCode 多言語 switch(未対応は EN)に。
+- 🔴 **英語版が落としていたニュアンスを日本語マスターから復元** (新月「いつも見守っている」/刻星化「未来のあなたがこの苦しい物語を書き換えられる」)。
+- 新規 `test/cycle_story_texts_test.dart` green(全7言語の区切り数一致・{chosen}/totalDays 差し込み・未対応EN)。反映=次AAB。⚠️ 表示活性化(`supportedLocales` 登録)は未。
+
+#### ② 5言語キー語彙 (docs)
+- `i18n_glossary.md` §2: カテゴリ(総合/癒し/豊かさ/恋愛/仕事/話す/変化)を ES/PT/FR/DE/KO で確定(8列表) + 言語別トーン禁止語(§7)。🔴 money=全言語で豊かさ系(Money/金運 禁止)。
+
+#### ③ Gemini出力の多言語化 (Worker)
+- `style_voice.js`: `STYLE_VOICE_ES/PT/FR/DE/KO`(各言語ネイティブの光源の声) + `styleVoiceFor()` / `outputLangDirective()` / `STYLE_VOICE_BY_LANG` / `OUTPUT_LANG_NAME`。
+- `fortune.js`/`tarot.js`: `lang==='en'` → `lang!=='ja'` 全置換、声を `styleVoiceFor(lang)` + 出力言語ディレクティブに。`consultation_v2.js`: `isEn`→`isNonJa`、`buildConsultationPromptEN` に lang を渡し声+ディレクティブ注入。
+- **方式**: 非 ja は「英語の指示プロンプト土台 + 『出力は必ず {言語} で』+ 言語別の声」。Gemini は「英語で指示→対象言語で出力」を正確にこなす=5言語フルプロンプト不要でネイティブ出力 + 光源の声。未知 lang は英語フォールバック。`relocation.js` は対象外(ja/en・中立解説・声なし)。
+- worker test 44件 green(新規 es 相談テスト + 未知lang英語フォールバック)。反映=`wrangler deploy`。
+
+#### ⚠️ 活性化ギャップ + 正典
+- アプリが fortune/tarot/consultation で `lang` を送る配線が未 → 英語/各言語生成を出すには `lang = 現在ロケール` が必要。de/ko は出荷前ネイティブ確認推奨。
+- 正典 = `apps/solara/docs/i18n_glossary.md`(§0 声/哲学/翻訳原則・§2-7 語彙・§8 多言語・§9 手順・§10 ログ) + memory `project_solara_voice_i18n_canon.md`(MEMORY.md 先頭 📌)。
+
 ### 0.3 Horo「今日の占い」1 日 1 回固定 + プロンプト刷新 (2026-05-27)
 
 > **設計の柱**: 「30 回までは OK」のような曖昧な防衛をやめ、「**1 日 1 回・変更しない**」を

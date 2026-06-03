@@ -446,7 +446,7 @@ Soft (trine/sextile) と Hard (square) は独立 2 エネルギー。total/吉�
 **export (2):** `runConsultationPipeline`, `_internal`
 
 
-### `worker/src/consultation_v2.js` (459 行)
+### `worker/src/consultation_v2.js` (757 行)
 
 **ファイル先頭コメント:**
 
@@ -508,7 +508,7 @@ astronomy-engine API:
 **export (1):** `computeDailyTransits`
 
 
-### `worker/src/fortune.js` (458 行)
+### `worker/src/fortune.js` (459 行)
 
 **ファイル先頭コメント:**
 
@@ -532,7 +532,7 @@ GEMINI_API_KEY は wrangler secret put GEMINI_API_KEY で設定
 
 **Durable Object 使用 (4 行):**
 
-- 出現行: L339, L341, L341, L341
+- 出現行: L340, L342, L342, L342
 
 **export (4):** `computeCategoryScore`, `callGemini`, `stripTransitLabel`, `handleFortune`
 
@@ -694,24 +694,28 @@ Nominatim: https://nominatim.openstreetmap.org/search
 **export (1):** `searchPlace`
 
 
-### `worker/src/style_voice.js` (17 行)
+### `worker/src/style_voice.js` (108 行)
 
 **ファイル先頭コメント:**
 
 ```
 占い師「光源」の文体ガイド (オーナー文体サンプルから蒸留・2026-05-30 試作比較で確定)。
 
+🔒 STYLE_VOICE_JP は Solara の声の「マスター」。オーナー承認済 (2026-06-03「満足」)。
+無断で変えない。全言語の声 (STYLE_VOICE_EN / 将来 ES/PT/FR/DE/KO) はこれから派生する。
+正典 = apps/solara/docs/i18n_glossary.md §0 (声・哲学・翻訳原則)。
+
 Stella相談 / Horo星読み / タロット の日本語プロンプトに共通注入する単一ソース。
 各機能の構成ルール (名前/挨拶/前置き禁止・専門用語の扱い 等) を最優先し、
 それに反しない範囲で "語り口" だけを寄せる。プロンプトの「ルール群の直後・出力JSONの直前」に置く。
 
-注入対象は lang==='ja' のみ (英語プロンプトには入れない)。consultation_v2 は ja 専用。
+注入対象: 日本語=STYLE_VOICE_JP / 英語=STYLE_VOICE_EN (fortune・tarot に注入)。consultation_v2 は ja 専用。
 ```
 
-**export (1):** `STYLE_VOICE_JP`
+**export (10):** `STYLE_VOICE_JP`, `STYLE_VOICE_EN`, `STYLE_VOICE_ES`, `STYLE_VOICE_PT`, `STYLE_VOICE_FR`, `STYLE_VOICE_DE`, `STYLE_VOICE_KO`, `STYLE_VOICE_BY_LANG`, `styleVoiceFor`, `outputLangDirective`
 
 
-### `worker/src/tarot.js` (298 行)
+### `worker/src/tarot.js` (299 行)
 
 **ファイル先頭コメント:**
 

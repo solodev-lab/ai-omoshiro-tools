@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 27 / 総行数: 7001
+- ファイル数: 27 / 総行数: 7003
 - class/mixin/extension/enum: 78
 - 関数 (top-level + method の素拾い): 181
 - Navigator.push 等: 0
@@ -49,21 +49,23 @@
   </details>
 
 
-### `lib/widgets/ai_disclaimer_footer.dart` (67 行)
+### `lib/widgets/ai_disclaimer_footer.dart` (69 行)
 
-**imports:** dart=0 / package=1 / relative=0
+**imports:** dart=0 / package=1 / relative=1
+
+- relative: `../utils/solara_i18n.dart`
 
 **型定義 (2):**
 
-- L14 `class AiDisclaimerFooter : StatelessWidget`
+- L16 `class AiDisclaimerFooter : StatelessWidget`
   - AI 出力 disclaimer フッター (Apple 4.0 + Google Misleading Claims policy 対応)。
-- L42 `class StellaInterpretationNote : StatelessWidget`
+- L44 `class StellaInterpretationNote : StatelessWidget`
   - Stella の出力は「解釈の 1 つ」であることを伝える注記 (画面ごとに文面が異なる)。
 
 **関数 (2 public + 0 private):**
 
-- L22 `build()`
-- L52 `build()`
+- L24 `build()`
+- L54 `build()`
 
 
 ### `lib/widgets/ai_report_button.dart` (307 行)

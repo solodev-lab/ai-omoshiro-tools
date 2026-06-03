@@ -1,6 +1,6 @@
 # Solara Code Audit
 
-対象: lib (199 個の .dart)
+対象: lib (200 個の .dart)
 
 ## 1. ファイル行数 (NOTICE >= 300 / WARN >= 500 / HARD >= 1000)
 
@@ -13,13 +13,13 @@
 | 1374 | 🔴 HARD | lib/screens/sanctuary/sanctuary_title_diagnosis.dart |
 | 1092 | 🔴 HARD | lib/screens/forecast_screen.dart |
 | 1078 | 🔴 HARD | lib/screens/map/daily_transit_data.dart |
-| 943 | 🟠 WARN | lib/screens/horoscope_screen.dart |
+| 946 | 🟠 WARN | lib/screens/horoscope_screen.dart |
 | 937 | 🟠 WARN | lib/utils/solara_storage.dart |
 | 873 | 🟠 WARN | lib/screens/map/map_astro_carto.dart |
 | 811 | 🟠 WARN | lib/screens/map/map_search.dart |
 | 798 | 🟠 WARN | lib/screens/map/map_fortune_sheet.dart |
 | 775 | 🟠 WARN | lib/widgets/catasterism_formation_overlay.dart |
-| 768 | 🟠 WARN | lib/screens/observe_screen.dart |
+| 769 | 🟠 WARN | lib/screens/observe_screen.dart |
 | 763 | 🟠 WARN | lib/screens/locations_screen.dart |
 | 758 | 🟠 WARN | lib/widgets/fortune_overlays/work_painter.dart |
 | 711 | 🟠 WARN | lib/screens/map/map_relocation_popup.dart |
@@ -77,7 +77,7 @@
 | 345 | 🟡 NOTICE | lib/screens/consultation/consultation_input_picker.dart |
 | 345 | 🟡 NOTICE | lib/screens/horoscope/horo_birth_panel.dart |
 | 338 | 🟡 NOTICE | lib/screens/map/consult_entry_popup.dart |
-| 336 | 🟡 NOTICE | lib/screens/horoscope/horo_fortune_cards.dart |
+| 337 | 🟡 NOTICE | lib/screens/horoscope/horo_fortune_cards.dart |
 | 315 | 🟡 NOTICE | lib/screens/galaxy/galaxy_archive_filter.dart |
 | 314 | 🟡 NOTICE | lib/utils/fortune_api.dart |
 | 313 | 🟡 NOTICE | lib/screens/paywall_screen.dart |
@@ -140,7 +140,7 @@
 
 ### 5. 📁 別ファイル間 (11 箇所、10 ファイル)
 
-  - lib/screens/observe_screen.dart:705
+  - lib/screens/observe_screen.dart:706
   - lib/screens/paywall_comparison.dart:111
   - lib/screens/paywall_comparison.dart:186
   - lib/screens/paywall_legal_links.dart:83

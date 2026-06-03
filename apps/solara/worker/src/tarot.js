@@ -12,7 +12,7 @@
  * モデル: env vars TAROT_MODEL_PRIMARY/FALLBACK で指定（廃止リスク対策）
  */
 
-import { STYLE_VOICE_JP } from './style_voice.js';
+import { STYLE_VOICE_JP, styleVoiceFor, outputLangDirective } from './style_voice.js';
 
 const PLANET_JP = {
   sun: '太陽', moon: '月', mercury: '水星', venus: '金星', mars: '火星',
@@ -44,7 +44,7 @@ const CATEGORY_EN = {
 // 月相を 8 段階の名前に分類（0〜29.53）
 function moonPhaseLabel(p, lang) {
   const day = p % 29.53;
-  const phases = lang === 'en'
+  const phases = lang !== 'ja'
     ? ['New Moon', 'Waxing Crescent', 'First Quarter', 'Waxing Gibbous',
        'Full Moon', 'Waning Gibbous', 'Last Quarter', 'Waning Crescent']
     : ['新月', '三日月', '上弦', '十三夜', '満月', '十六夜', '下弦', '有明月'];
@@ -132,11 +132,11 @@ async function callGemini(apiKey, prompt, models, { retries = 2, thinkingBudget 
 //   - 必要に応じて専門家への相談を勧める
 function buildPrompt({ cardId, reversed, nameJP, nameEN, keyword, element, planet, moonPhase, userName, lang, question, category }) {
   const orientation = reversed
-    ? (lang === 'en' ? 'Reversed' : '逆位置')
-    : (lang === 'en' ? 'Upright' : '正位置');
-  const elementLabel = lang === 'en' ? element : (ELEMENT_JP[element] || element);
+    ? (lang !== 'ja' ? 'Reversed' : '逆位置')
+    : (lang !== 'ja' ? 'Upright' : '正位置');
+  const elementLabel = lang !== 'ja' ? element : (ELEMENT_JP[element] || element);
   const planetLabel = planet
-    ? (lang === 'en' ? planet : (PLANET_JP[planet] || planet))
+    ? (lang !== 'ja' ? planet : (PLANET_JP[planet] || planet))
     : null;
   const moonLabel = (typeof moonPhase === 'number') ? moonPhaseLabel(moonPhase, lang) : null;
   // 末尾の敬称「さん」を取り除く（プロンプト側で「さん」を付けるので二重防止）。
@@ -153,7 +153,7 @@ function buildPrompt({ cardId, reversed, nameJP, nameEN, keyword, element, plane
     ? category
     : null;
 
-  if (lang === 'en') {
+  if (lang !== 'ja') {
     const cardName = nameEN || nameJP;
     const categorySection = validCategory
       ? `\n\n── Today's focus ──\nRead "${cardName}" specifically in the context of: ${CATEGORY_EN[validCategory]}.`
@@ -181,6 +181,7 @@ Element: ${elementLabel}${planetLabel ? `\nRuling planet: ${planetLabel}` : ''}$
 Write a tarot reading honoring the orientation:
 - Upright: bring out the card's affirming, growth-oriented meaning
 - Reversed: speak to the shadow, blockage, or inverted lesson — without being doom-laden
+${styleVoiceFor(lang)}${outputLangDirective(lang)}
 
 Return ONLY a JSON object with this exact field (no markdown, no extra text):
 {

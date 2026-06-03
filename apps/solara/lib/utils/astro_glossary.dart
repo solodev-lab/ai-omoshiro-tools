@@ -377,7 +377,7 @@ const Map<String, AstroGlossaryEntry> astroGlossary = {
     detail:
         '占星術の全領域を一望するモード。10惑星 × 4アングル = 40本の'
         'アスペクト線をすべて同じ強度で表示する。\n\n'
-        '個別の運勢カテゴリではなく、「人生全体のエネルギー地図」'
+        '個別のカテゴリではなく、「人生全体のエネルギー地図」'
         'として土地の総合的な性質を確認したいときに使う。',
   ),
   'fortune_love': AstroGlossaryEntry(

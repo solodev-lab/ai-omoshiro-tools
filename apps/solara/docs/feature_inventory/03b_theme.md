@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 3 / 総行数: 300
+- ファイル数: 3 / 総行数: 304
 - class/mixin/extension/enum: 4
 - 関数 (top-level + method の素拾い): 2
 - Navigator.push 等: 0
@@ -14,15 +14,17 @@
 
 ## ファイル別
 
-### `lib/screens/map/map_constants.dart` (122 行)
+### `lib/screens/map/map_constants.dart` (126 行)
 
-**imports:** dart=0 / package=1 / relative=0
+**imports:** dart=0 / package=1 / relative=1
+
+- relative: `../../utils/solara_i18n.dart`
 
 **型定義 (2):**
 
-- L50 `class ChartLineStyle`
+- L54 `class ChartLineStyle`
   - HTML: CHART_STYLE — natal/progressed/transit の線スタイル
-- L85 `class PlanetMeta`
+- L89 `class PlanetMeta`
   - HTML: TAROT.planets — 惑星シンボルと色
 
 

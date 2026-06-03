@@ -178,6 +178,44 @@ test('handler: isFirst → candidate + intro/outro/innerSeason を返す', async
   assert.match(cap.prompt, /青いカフェ \(カフェ\)/);
 });
 
+test('handler: lang=en は throw せず英語プロンプト + STYLE_VOICE_EN を使う', async () => {
+  const cap = {};
+  const r = await handleConsultationV2(
+    {
+      birth: BIRTH, home: HOME, theme: 'love', mode: 'daily',
+      when: { kind: 'date', date: '2026-07-10' },
+      scope: { kind: 'point', point: { lat: 34.69, lng: 135.5, name: 'Blue Cafe', placeType: 'cafe' } },
+      isFirst: true, excluded: [], lang: 'en',
+    },
+    ENV, { callGeminiFn: mockGemini(cap) },
+  );
+  assert.ok(r.candidate);                                   // lang=en で throw しない
+  assert.match(cap.prompt, /No good\/bad verdicts/);        // 英語の設計原則
+  assert.match(cap.prompt, /No mind-reading/);
+  assert.match(cap.prompt, /Voice guide: the diviner's voice/); // STYLE_VOICE_EN 注入
+  assert.match(cap.prompt, /Love & relationships/);         // THEME_EN
+  assert.match(cap.prompt, /Output language: write EVERY output text field entirely in natural, native English/);
+  assert.doesNotMatch(cap.prompt, /吉凶判定をしない/);        // 日本語プロンプトが混ざらない
+});
+
+test('handler: lang=es は英語土台 + 出力言語ディレクティブ + STYLE_VOICE_ES', async () => {
+  const cap = {};
+  const r = await handleConsultationV2(
+    {
+      birth: BIRTH, home: HOME, theme: 'love', mode: 'daily',
+      when: { kind: 'date', date: '2026-07-10' },
+      scope: { kind: 'point', point: { lat: 34.69, lng: 135.5, name: 'Cafe Azul', placeType: 'cafe' } },
+      isFirst: true, excluded: [], lang: 'es',
+    },
+    ENV, { callGeminiFn: mockGemini(cap) },
+  );
+  assert.ok(r.candidate);
+  assert.match(cap.prompt, /Output language: write EVERY output text field entirely in natural, native Spanish/);
+  assert.match(cap.prompt, /Guía de voz: la voz del adivino/); // STYLE_VOICE_ES 注入
+  assert.match(cap.prompt, /No good\/bad verdicts/);           // 英語土台の設計原則
+  assert.doesNotMatch(cap.prompt, /吉凶判定をしない/);          // 日本語プロンプトでない
+});
+
 function BUCKET_LABEL(b) {
   return { morning: '朝', midday: '昼', evening: '夕方', night: '夜', lateNight: '夜更け' }[b];
 }
@@ -305,10 +343,22 @@ test('handler D1: おでかけ=実在の町 (candidateMeta に方角ラベル + 
   assert.ok(captured.prompt.includes(r.candidate.name));
 });
 
-test('handler: 非 ja lang は throw', async () => {
-  await assert.rejects(() => handleConsultationV2(
-    { birth: BIRTH, home: HOME, theme: 'love', mode: 'daily', lang: 'en' }, ENV, { callGeminiFn: mockGemini() },
-  ));
+test('handler: 未知 lang (テーブルに無い) は英語土台 + 英語の声にフォールバック (throw しない)', async () => {
+  // fr/es/pt/de/ko は正式サポート済。テーブルに無い lang (例: it) だけが英語フォールバック。
+  const cap = {};
+  const r = await handleConsultationV2(
+    {
+      birth: BIRTH, home: HOME, theme: 'love', mode: 'daily',
+      when: { kind: 'date', date: '2026-07-10' },
+      scope: { kind: 'point', point: { lat: 34.69, lng: 135.5, name: 'Cafe', placeType: 'cafe' } },
+      isFirst: true, excluded: [], lang: 'it',
+    },
+    ENV, { callGeminiFn: mockGemini(cap) },
+  );
+  assert.ok(r.candidate);                                        // throw しない
+  assert.match(cap.prompt, /No good\/bad verdicts/);             // 英語土台
+  assert.match(cap.prompt, /Voice guide: the diviner's voice/);  // 英語の声にフォールバック
+  assert.doesNotMatch(cap.prompt, /吉凶判定をしない/);             // ja ではない
 });
 
 test('handler: 不正 JSON (パース不能) → 静的フォールバック', async () => {

@@ -5,9 +5,9 @@
 
 ## サマリ
 
-- ファイル数: 8 / 総行数: 1789
+- ファイル数: 9 / 総行数: 1857
 - class/mixin/extension/enum: 16
-- 関数 (top-level + method の素拾い): 65
+- 関数 (top-level + method の素拾い): 68
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 0
 - Worker URL リテラル: 0
@@ -321,4 +321,17 @@ Solara RevenueCat ラッパー — Phase 2-6b
   - L182 `_onCustomerInfo()`
 
   </details>
+
+
+### `lib/utils/solara_i18n.dart` (68 行)
+
+**imports:** dart=0 / package=0 / relative=1
+
+- relative: `app_locale.dart`
+
+**関数 (3 public + 0 private):**
+
+- L18 `isEnLocale()` — 現在 English 表示にすべきか。AppLocale override == 'en' のときのみ true。
+- L57 `tr()` — key → 現在ロケールの文字列。未登録キーは key をそのまま返す (開発時に気づける)。
+- L65 `categoryLabel()` — 内部カテゴリ id (all/overall/healing/money/love/work/career/communication/newStart)
 

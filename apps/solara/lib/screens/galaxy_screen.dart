@@ -1428,9 +1428,9 @@ void _showGalaxyUsageGuide(
           '1 つ 1 つが、あなた自身の内面が紡いだ星座です。\n\n'
           '・各カードは 1 サイクル分の reading が織りなす星座\n'
           '・カードタップで再アニメ + 詳細表示\n'
-          '　(星座名・期間・rarity)\n'
+          '　(星座名・期間・レア度)\n'
           '・レア度: 5 段階の星評価 (★)\n'
-          '　高 rarity ほど「珍しい組み合わせ」が出た証',
+          '　レア度が高いほど「珍しい組み合わせ」が出た証',
           style: TextStyle(
               color: Color(0xFFE8E0D0), fontSize: 13, height: 1.7),
         ),

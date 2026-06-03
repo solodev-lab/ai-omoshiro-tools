@@ -98,7 +98,7 @@ class _FallbackChip extends StatelessWidget {
           border: Border.all(color: SolaraColors.energyHardDark),
         ),
         child: Text(
-          'Stella の声が届きませんでした (静的表示)',
+          'Stella の声が今は届きませんでした',
           style: TextStyle(
             color: SolaraColors.energyHardLight,
             fontSize: 11,

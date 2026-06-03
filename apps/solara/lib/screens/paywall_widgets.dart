@@ -194,12 +194,12 @@ extension _PaywallWidgets on _PaywallScreenState {
           const SizedBox(height: 14),
           _planBullet('Stella 相談  週 3 回 (月曜リセット) + 購入クレジット'),
           _planBullet('タロット  1 日 1 回（カテゴリ指定はクレジット消費）'),
-          _planBullet('星読み  「全体運」カテゴリのみ'),
+          _planBullet('星読み  「総合」カテゴリのみ'),
           _planBullet('アスペクトライン  40 本'),
           _planBullet('ACG / CCG  4 フレームすべて (natal / transit / prog / solar arc)'),
           _planBullet('星座アーカイブ・タロット履歴の検索・フィルタ'),
           _planBullet('形成演出の再生・テキスト書き出し'),
-          _planBullet('占い結果の永久保存とシェア'),
+          _planBullet('読み解き結果の永久保存とシェア'),
         ],
       ),
     );
@@ -294,9 +294,9 @@ extension _PaywallWidgets on _PaywallScreenState {
           _planBullet('Stella 相談  週 100 回 (月曜リセット)'),
           _planBullet('おでかけ相談  時刻を1時間刻みで指定 + 「30分後の変化」が読める'
               ' (CCG の線が自転で動き、前半/後半で主役が入れ替わる)'),
-          _planBullet('タロット  7 カテゴリ (全体運・恋愛・豊かさ・仕事・対話・癒し・変化) を'
+          _planBullet('タロット  7 カテゴリ (総合・恋愛・豊かさ・仕事・対話・癒し・変化) を'
               'クレジット消費なしで指定 + 質問入力欄'),
-          _planBullet('星読み  全 5 カテゴリ (全体・恋愛・豊かさ・仕事・対話) + 深い読み'),
+          _planBullet('星読み  全 5 カテゴリ (総合・恋愛・豊かさ・仕事・話す) + 深い読み'),
           _planBullet('Forecast 5 年予測  モテ期や豊かさ期などが 5 年先までわかる。'
               'ヒートマップを 5 年先まで見られる'),
           _planBullet('アスペクトライン  全 120 本 (合・スクエア・トライン・セクスタイル)'),

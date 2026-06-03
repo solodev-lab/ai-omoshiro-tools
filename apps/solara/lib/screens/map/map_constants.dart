@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../utils/solara_i18n.dart';
+
 /// 16方位の方位名
 const dir16 = ['N','NNE','NE','ENE','E','ESE','SE','SSE',
                'S','SSW','SW','WSW','W','WNW','NW','NNW'];
@@ -18,10 +20,12 @@ const categoryColors = <String, Color>{
   'love': Color(0xFFFF88B4), 'work': Color(0xFF6BB5FF), 'communication': Color(0xFFB088FF),
 };
 
-/// カテゴリ日本語ラベル
+/// カテゴリ日本語/英語ラベル (i18n_glossary 経由・2026-06-03 i18n 化)。
 /// 「金運」は設計思想（吉凶判定回避）に基づき「豊かさ」に変更（2026-04-29）。
-const categoryLabels = <String, String>{
-  'all':'総合','healing':'癒し','money':'豊かさ','love':'恋愛','work':'仕事','communication':'話す',
+/// 内部 id (all/healing/money/love/work/communication) は不変。表示語のみロケール連動。
+Map<String, String> get categoryLabels => {
+  for (final id in const ['all', 'healing', 'money', 'love', 'work', 'communication'])
+    id: categoryLabel(id),
 };
 
 /// 4成分カラー（Solara 設計思想: ソフト=銀月色、ハード=金陽色）

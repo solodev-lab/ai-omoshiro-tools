@@ -103,7 +103,7 @@ class _MapDisplayMenuState extends State<MapDisplayMenu> {
               () => widget.onMapStyleChanged(MapStyle.osmHotLight)),
           _radioBtn('MapDark', widget.mapStyle == MapStyle.osmHotDark,
               () => widget.onMapStyleChanged(MapStyle.osmHotDark)),
-          _toggleBtn('運勢方位', widget.layers['sectors'] ?? false,
+          _toggleBtn('方位エネルギー', widget.layers['sectors'] ?? false,
               () => widget.onLayerToggle('sectors')),
           _toggleBtn('コンパス', widget.layers['compass'] ?? false,
               () => widget.onLayerToggle('compass')),
@@ -223,7 +223,7 @@ class _MapDisplayMenuState extends State<MapDisplayMenu> {
         title = 'Map レイヤー';
         items = const [
           ('Map / MapDark', '通常マップとダークマップを切替。視認性の好みで選択。'),
-          ('運勢方位', '自分の運勢を 16 方位の扇形で地図上に表示。色が濃い方位ほど追い風。タップでカテゴリ別に絞り込める。'),
+          ('方位エネルギー', '自分の星のエネルギーを 16 方位の扇形で地図上に表示。色が濃い方位ほどエネルギーが強い。タップでカテゴリ別に絞り込める。'),
           ('コンパス', '中心地点から見た方位線 (N / E / S / W)。距離感の把握に。'),
           ('座標取得', '画面中央の + の下に緯度経度ラベルを表示。地図を動かすと中心の座標がリアルタイムで更新される。ラベルをタップするとクリップボードにコピーされる。場所登録の事前確認や任意地点の座標確認に。十字 (+) 自体はトグル OFF でも常時表示。'),
         ];

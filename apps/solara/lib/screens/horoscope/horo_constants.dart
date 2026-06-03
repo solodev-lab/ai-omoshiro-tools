@@ -16,11 +16,11 @@ const planetNamesJP = {'sun':'太陽','moon':'月','mercury':'水星','venus':'�
 // HTML: FORTUNE_CATEGORIES (L2748-2773)
 // 'score' / 'direction' は 2026-04 に未使用となり削除済（数値スコア表示廃止に伴う）。
 const fortuneCategories = [
-  {'id':'overall','icon':'✦','nameJP':'全体運','color':0xFFF6BD60,'bg':0x14F6BD60,'border':0x33F6BD60},
-  {'id':'love','icon':'💕','nameJP':'恋愛運','color':0xFFFF6B9D,'bg':0x14FF6B9D,'border':0x33FF6B9D},
+  {'id':'overall','icon':'✦','nameJP':'総合','color':0xFFF6BD60,'bg':0x14F6BD60,'border':0x33F6BD60},
+  {'id':'love','icon':'💕','nameJP':'恋愛','color':0xFFFF6B9D,'bg':0x14FF6B9D,'border':0x33FF6B9D},
   {'id':'money','icon':'💰','nameJP':'豊かさ','color':0xFFFFD370,'bg':0x14FFD370,'border':0x33FFD370},
-  {'id':'career','icon':'💼','nameJP':'仕事運','color':0xFFFF8C42,'bg':0x14FF8C42,'border':0x33FF8C42},
-  {'id':'communication','icon':'💬','nameJP':'対話運','color':0xFF6BB5FF,'bg':0x146BB5FF,'border':0x336BB5FF},
+  {'id':'career','icon':'💼','nameJP':'仕事','color':0xFFFF8C42,'bg':0x14FF8C42,'border':0x33FF8C42},
+  {'id':'communication','icon':'💬','nameJP':'話す','color':0xFF6BB5FF,'bg':0x146BB5FF,'border':0x336BB5FF},
 ];
 
 // HTML: ASPECT_TYPES — 日本語名・シンボル付き (L1162-1171)

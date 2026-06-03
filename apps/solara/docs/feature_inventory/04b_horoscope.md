@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 23 / 総行数: 6050
+- ファイル数: 23 / 総行数: 6055
 - class/mixin/extension/enum: 33
 - 関数 (top-level + method の素拾い): 161
 - Navigator.push 等: 0
@@ -236,51 +236,51 @@ ignore_for_file: invalid_use_of_protected_member
 - L21 `build()`
 
 
-### `lib/screens/horoscope/horo_filter_panel.dart` (134 行)
+### `lib/screens/horoscope/horo_filter_panel.dart` (135 行)
 
-**imports:** dart=0 / package=2 / relative=2
+**imports:** dart=0 / package=2 / relative=3
 
-- relative: `horo_antique_icons.dart`, `horo_panel_shared.dart`
+- relative: `horo_antique_icons.dart`, `horo_panel_shared.dart`, `../../utils/solara_i18n.dart`
 
 **型定義 (1):**
 
-- L12 `class HoroFilterPanel : StatelessWidget`
+- L13 `class HoroFilterPanel : StatelessWidget`
 
 **関数 (1 public + 3 private):**
 
-- L33 `build()`
+- L34 `build()`
 
   <details><summary>private 関数 3 件</summary>
 
-  - L78 `_filterSection()`
-  - L104 `_filterChip()`
-  - L119 `_exclusiveChip()`
+  - L79 `_filterSection()`
+  - L105 `_filterChip()`
+  - L120 `_exclusiveChip()`
 
   </details>
 
 
-### `lib/screens/horoscope/horo_fortune_cards.dart` (336 行)
+### `lib/screens/horoscope/horo_fortune_cards.dart` (337 行)
 
-**imports:** dart=0 / package=2 / relative=5
+**imports:** dart=0 / package=2 / relative=6
 
-- relative: `horo_constants.dart`, `horo_antique_icons.dart`, `../../utils/fortune_api.dart`, `../../widgets/ai_disclaimer_footer.dart`, `../../widgets/ai_report_button.dart`
+- relative: `horo_constants.dart`, `horo_antique_icons.dart`, `../../utils/fortune_api.dart`, `../../widgets/ai_disclaimer_footer.dart`, `../../widgets/ai_report_button.dart`, `../../utils/solara_i18n.dart`
 
 **型定義 (1):**
 
-- L20 `class HoroAstrologyView : StatelessWidget`
+- L21 `class HoroAstrologyView : StatelessWidget`
 
 **関数 (1 public + 6 private):**
 
-- L62 `build()`
+- L63 `build()`
 
   <details><summary>private 関数 6 件</summary>
 
-  - L173 `_birthEditedBanner()`
-  - L190 `_loadingBanner()`
-  - L207 `_errorBanner()`
-  - L230 `_skeletonLine()`
-  - L238 `_skeletonBar()`
-  - L250 `_lockedTeaserCard()`
+  - L174 `_birthEditedBanner()`
+  - L191 `_loadingBanner()`
+  - L208 `_errorBanner()`
+  - L231 `_skeletonLine()`
+  - L239 `_skeletonBar()`
+  - L251 `_lockedTeaserCard()`
 
   </details>
 
@@ -583,48 +583,48 @@ ignore_for_file: invalid_use_of_protected_member
 - L78 `build()`
 
 
-### `lib/screens/horoscope_screen.dart` (943 行)
+### `lib/screens/horoscope_screen.dart` (946 行)
 
-**imports:** dart=2 / package=2 / relative=16
+**imports:** dart=2 / package=2 / relative=17
 
-- relative: `../utils/astro_houses.dart`, `../utils/astro_math.dart`, `../utils/pro_status.dart`, `../utils/solara_storage.dart`, `../utils/fortune_api.dart`, `../utils/fortune_cache.dart`, `../widgets/pro_unlock_dialog.dart`, `../widgets/tap_to_unfocus.dart`, `horoscope/horo_constants.dart`, `horoscope/horo_chart_painter.dart`, `horoscope/horo_fortune_cards.dart`, `horoscope/horo_bottom_panels.dart`, `horoscope/horo_ornament_painter.dart`, `horoscope/horo_antique_icons.dart`, `horoscope/horo_relocation_panel.dart`, `map/map_astro.dart`
+- relative: `../utils/astro_houses.dart`, `../utils/astro_math.dart`, `../utils/pro_status.dart`, `../utils/solara_storage.dart`, `../utils/fortune_api.dart`, `../utils/fortune_cache.dart`, `../utils/solara_i18n.dart`, `../widgets/pro_unlock_dialog.dart`, `../widgets/tap_to_unfocus.dart`, `horoscope/horo_constants.dart`, `horoscope/horo_chart_painter.dart`, `horoscope/horo_fortune_cards.dart`, `horoscope/horo_bottom_panels.dart`, `horoscope/horo_ornament_painter.dart`, `horoscope/horo_antique_icons.dart`, `horoscope/horo_relocation_panel.dart`, `map/map_astro.dart`
 
 **型定義 (2):**
 
-- L30 `class HoroscopeScreen : StatefulWidget`
-- L43 `class HoroscopeScreenState : State`
+- L31 `class HoroscopeScreen : StatefulWidget`
+- L44 `class HoroscopeScreenState : State`
 
 **関数 (7 public + 19 private):**
 
-- L34 `createState()`
-- L216 `initState()`
-- L270 `dispose()`
-- L301 `wakeAnimations()` — 「再覚醒」: anim 再開 + 30s タイマー再起動。
-- L315 `pauseAnimations()` — main.dart からタブ離脱時に呼ばれる。Anim + 寿命タイマー両方停止 = raster 0%。
-- L346 `loadProfile()`
-- L740 `build()`
+- L35 `createState()`
+- L217 `initState()`
+- L273 `dispose()`
+- L304 `wakeAnimations()` — 「再覚醒」: anim 再開 + 30s タイマー再起動。
+- L318 `pauseAnimations()` — main.dart からタブ離脱時に呼ばれる。Anim + 寿命タイマー両方停止 = raster 0%。
+- L349 `loadProfile()`
+- L743 `build()`
 
   <details><summary>private 関数 19 件</summary>
 
-  - L160 `_planetHouse()`
-  - L179 `_currentCacheKey()`
-  - L198 `_refreshCacheKey()`
-  - L242 `_onProStatusChanged()`
-  - L258 `_showFortuneProUnlock()`
-  - L282 `_resetAnimLifeTimer()`
-  - L292 `_stopAnimations()`
-  - L324 `_startRotTimer()`
-  - L337 `_syncRotationByMode()`
-  - L371 `_onTransitUpdate()`
-  - L387 `_applyWorkingProfile()`
-  - L408 `_fetchRealChart()`
-  - L547 `_resetWorkingProfile()`
-  - L554 `_profilesEqual()`
-  - L583 `_loadFortunes()`
-  - L857 `_menuItem()`
-  - L870 `_buildHouseModeToggle()`
-  - L898 `_toggleSegment()`
-  - L933 `_setRelocateMode()`
+  - L161 `_planetHouse()`
+  - L180 `_currentCacheKey()`
+  - L199 `_refreshCacheKey()`
+  - L243 `_onProStatusChanged()`
+  - L259 `_showFortuneProUnlock()`
+  - L285 `_resetAnimLifeTimer()`
+  - L295 `_stopAnimations()`
+  - L327 `_startRotTimer()`
+  - L340 `_syncRotationByMode()`
+  - L374 `_onTransitUpdate()`
+  - L390 `_applyWorkingProfile()`
+  - L411 `_fetchRealChart()`
+  - L550 `_resetWorkingProfile()`
+  - L557 `_profilesEqual()`
+  - L586 `_loadFortunes()`
+  - L860 `_menuItem()`
+  - L873 `_buildHouseModeToggle()`
+  - L901 `_toggleSegment()`
+  - L936 `_setRelocateMode()`
 
   </details>
 

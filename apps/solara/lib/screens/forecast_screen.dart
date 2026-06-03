@@ -148,9 +148,9 @@ class _ForecastScreenState extends State<ForecastScreen> {
     if (offset > 0 && !ProStatus.instance.isPro) {
       await showProUnlockDialog(
         context,
-        featureLabel: '5 年予測',
+        featureLabel: '5 年の流れ',
         description: '今年だけでなく翌年・来々年も含めた 5 年分のヒートマップで、'
-            '人生の大きな流れを先取りします。',
+            '人生の大きな流れを見渡せます。',
       );
       return;
     }
@@ -761,7 +761,7 @@ class _ForecastScreenState extends State<ForecastScreen> {
         Row(children: [
           Expanded(child: _metric('総合', d.overall.toStringAsFixed(1))),
           const SizedBox(width: 14),
-          Expanded(child: _metric('強運方位', dir16JP[d.topDir] ?? d.topDir)),
+          Expanded(child: _metric('高まる方位', dir16JP[d.topDir] ?? d.topDir)),
           const SizedBox(width: 14),
           Expanded(child: _metric('方位スコア', d.topDirScore.toStringAsFixed(1))),
         ]),
@@ -847,7 +847,7 @@ void _showForecastUsageGuide(BuildContext context) {
         ),
         SizedBox(height: 10),
         Text(
-          'あなたの今後 1 年 (365 日) の運勢を予測表示します。\n'
+          'あなたの今後 1 年 (365 日) の星のリズムを表示します。\n'
           '日々の総合スコア・カテゴリ別スコアを一目で把握でき、\n'
           '動きやすい日 / 慎重に進める日を事前に確認できます。',
           style: TextStyle(
@@ -892,7 +892,7 @@ void _showForecastUsageGuide(BuildContext context) {
         ),
         SizedBox(height: 10),
         Text(
-          '【あなたの運勢サイクル】',
+          '【あなたの星のサイクル】',
           style: TextStyle(
               color: Color(0xFFC9A84C),
               fontSize: 13,
@@ -909,7 +909,7 @@ void _showForecastUsageGuide(BuildContext context) {
         ),
         SizedBox(height: 10),
         Text(
-          '【強運 Top5】',
+          '【ハイライト Top5】',
           style: TextStyle(
               color: Color(0xFFC9A84C),
               fontSize: 13,
@@ -1001,7 +1001,7 @@ void _showHeatmapInfo(BuildContext context) {
           '・🟢 が連続 → 癒し期\n'
           '・🔵 が連続 → 仕事期\n'
           '・🟣 が連続 → 発信期\n\n'
-          'これらの「○○期」は下の「あなたの運勢サイクル」\n'
+          'これらの「○○期」は下の「あなたの星のサイクル」\n'
           'セクションでも、開始日・終了日付きで一覧表示されます\n'
           '(7 日以上の継続のみ抽出)。',
           style: TextStyle(

@@ -1996,7 +1996,7 @@ void showDailyUsageGuidePopup(BuildContext context) {
           '・MC  (真上 = 天頂) — 惑星が最高点を通る瞬間\n'
           '・DSC (西の地平線) — 惑星が沈む瞬間\n'
           '・IC  (真下 = 地下) — 惑星が地球の裏側にある瞬間\n\n'
-          '「いつ恋愛運が上がる」「いつ仕事の節目になる」など、\n'
+          '「いつ恋愛のテーマが動く」「いつ仕事の節目になる」など、\n'
           '行動する時間の指針が読み取れます。',
           style: TextStyle(
               color: Color(0xFFE8E0D0), fontSize: 13, height: 1.6),

@@ -12,7 +12,7 @@
  * モデル: gemini-2.5-flash (テキスト生成、低コスト)
  */
 
-import { STYLE_VOICE_JP } from './style_voice.js';
+import { STYLE_VOICE_JP, styleVoiceFor, outputLangDirective } from './style_voice.js';
 
 // ── Fortune カテゴリ定義 ──
 // houses: そのカテゴリで重視する伝統占星術のハウス番号
@@ -166,7 +166,7 @@ export async function callGemini(apiKey, prompt, models, opts = {}) {
 // 渡さない (API surface 維持・Tarot 等他経路は別途)。
 function buildPrompt({ category, lang, natal, planetHouses, aspects, transitAspects, progressedAspects, patterns, date, userName: _userName }) {
   const cat = FORTUNE_CATEGORIES[category] || FORTUNE_CATEGORIES.overall;
-  const catName = lang === 'en' ? cat.en : cat.jp;
+  const catName = lang !== 'ja' ? cat.en : cat.jp;
   const dateStr = date || new Date().toISOString().slice(0, 10);
 
   // 関連アスペクト抽出 (関連惑星を含むもののみ)
@@ -178,9 +178,9 @@ function buildPrompt({ category, lang, natal, planetHouses, aspects, transitAspe
   ).slice(0, 6); // トークン節約
 
   const aspectLines = relevantAspects.map(a => {
-    const p1 = lang === 'en' ? a.p1 : (PLANET_JP[a.p1] || a.p1);
-    const p2 = lang === 'en' ? a.p2 : (PLANET_JP[a.p2] || a.p2);
-    const type = lang === 'en' ? a.type : (ASPECT_JP[a.type] || a.type);
+    const p1 = lang !== 'ja' ? a.p1 : (PLANET_JP[a.p1] || a.p1);
+    const p2 = lang !== 'ja' ? a.p2 : (PLANET_JP[a.p2] || a.p2);
+    const type = lang !== 'ja' ? a.type : (ASPECT_JP[a.type] || a.type);
     return `- ${p1} × ${p2}: ${type} (${a.quality})`;
   }).join('\n');
 
@@ -191,10 +191,10 @@ function buildPrompt({ category, lang, natal, planetHouses, aspects, transitAspe
       .filter(a => relevantPlanets.has(a.natal) || relevantPlanets.has(a.moving))
       .slice(0, 6)
       .map(a => {
-        const n = lang === 'en' ? a.natal : (PLANET_JP[a.natal] || a.natal);
-        const m = lang === 'en' ? a.moving : (PLANET_JP[a.moving] || a.moving);
-        const type = lang === 'en' ? a.type : (ASPECT_JP[a.type] || a.type);
-        return lang === 'en'
+        const n = lang !== 'ja' ? a.natal : (PLANET_JP[a.natal] || a.natal);
+        const m = lang !== 'ja' ? a.moving : (PLANET_JP[a.moving] || a.moving);
+        const type = lang !== 'ja' ? a.type : (ASPECT_JP[a.type] || a.type);
+        return lang !== 'ja'
           ? `- ${labelEn} ${m} ${type} natal ${n} (${a.quality})`
           : `- ${labelJp}${m} → 出生${n}: ${type} (${a.quality})`;
       })
@@ -209,15 +209,15 @@ function buildPrompt({ category, lang, natal, planetHouses, aspects, transitAspe
     for (const p of list) {
       const pNames = (p.planets || []).map(pl => {
         const key = typeof pl === 'string' ? pl : pl.key;
-        return lang === 'en' ? key : (PLANET_JP[key] || key);
+        return lang !== 'ja' ? key : (PLANET_JP[key] || key);
       }).join(', ');
-      const name = lang === 'en' ? type : PATTERN_JP[type];
+      const name = lang !== 'ja' ? type : PATTERN_JP[type];
       patternLines.push(`- ${name}: ${pNames}`);
     }
   }
 
   // ハウス情報（出生時刻が判明している場合のみ planetHouses が渡される）
-  const HOUSE_MEANINGS = lang === 'en' ? HOUSE_MEANINGS_EN : HOUSE_MEANINGS_JP;
+  const HOUSE_MEANINGS = lang !== 'ja' ? HOUSE_MEANINGS_EN : HOUSE_MEANINGS_JP;
   const hasHouses = planetHouses && Object.keys(planetHouses).length > 0;
   let houseLines = '';
   let categoryHousesHint = '';
@@ -230,7 +230,7 @@ function buildPrompt({ category, lang, natal, planetHouses, aspects, transitAspe
     for (const p of cat.planets) {
       const h = planetHouses[p];
       if (h) {
-        const pName = lang === 'en' ? p : (PLANET_JP[p] || p);
+        const pName = lang !== 'ja' ? p : (PLANET_JP[p] || p);
         const meaning = HOUSE_MEANINGS[h] || '';
         lines.push(`- ${pName}: ${h}H (${meaning})`);
       }
@@ -238,7 +238,7 @@ function buildPrompt({ category, lang, natal, planetHouses, aspects, transitAspe
     houseLines = lines.join('\n');
   }
 
-  if (lang === 'en') {
+  if (lang !== 'ja') {
     return `You are an expert astrologer. Read today's (${dateStr}) ${catName} for this person, using their birth chart as the foundation and TODAY'S TRANSITS as the main driver.
 
 【Foundation — natal chart (who they are)】
@@ -268,6 +268,7 @@ ${patternLines.join('\n') || '(none)'}
 - If house positions are unavailable, do not mention houses at all.
 - Do NOT use any name or nickname in the writing, neither in the opening nor in the body. Begin with the movement of the stars or the day's feeling, and refer to the reader only via second person ("you") or implicit subject.
 - 🔴 Safety guard: Do NOT give definitive medical, legal, financial, investment, or self-harm advice. If today's themes touch these areas (health, money, contracts, crisis), stay with gentle astrological imagery only and suggest consulting an appropriate professional. Never claim certainty about future events — use "may", "could", "this energy suggests" rather than "will" or "definitely".
+${styleVoiceFor(lang)}${outputLangDirective(lang)}
 
 Return ONLY a JSON object with exactly these fields (no markdown, no extra text):
 {
@@ -325,7 +326,7 @@ ${STYLE_VOICE_JP}
 export function stripTransitLabel(text, lang) {
   if (!text) return text;
   let t = text;
-  if (lang === 'en') {
+  if (lang !== 'ja') {
     t = t
       .replace(/\btransiting\s+/gi, '')
       .replace(/\btransit(?:s|ing)?\b/gi, '');

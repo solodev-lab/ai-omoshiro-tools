@@ -5,9 +5,9 @@
 
 ## サマリ
 
-- ファイル数: 15 / 総行数: 4972
+- ファイル数: 15 / 総行数: 5140
 - class/mixin/extension/enum: 20
-- 関数 (top-level + method の素拾い): 42
+- 関数 (top-level + method の素拾い): 49
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 1
 - Worker URL リテラル: 0
@@ -260,7 +260,7 @@ Worker (consultation_engine.js runConsultationPipeline) の契約に対応する
 - L306 `toJson()`
 
 
-### `lib/utils/cycle_story_texts.dart` (86 行)
+### `lib/utils/cycle_story_texts.dart` (254 行)
 
 **ファイル先頭コメント:**
 
@@ -273,17 +273,24 @@ Worker (consultation_engine.js runConsultationPipeline) の契約に対応する
 
 - L5 `class CycleStoryTexts`
 
-**関数 (5 public + 1 private):**
+**関数 (10 public + 3 private):**
 
 - L45 `catasterismJP()`
 - L57 `catasterismEN()`
-- L72 `getNewMoon()`
-- L75 `getFullMoon()`
-- L80 `getCatasterism()`
+- L90 `catasterismES()`
+- L115 `catasterismPT()`
+- L140 `catasterismFR()`
+- L165 `catasterismDE()`
+- L190 `catasterismKO()`
+- L213 `getNewMoon()`
+- L237 `getFullMoon()`
+- L252 `getCatasterism()`
 
-  <details><summary>private 関数 1 件</summary>
+  <details><summary>private 関数 3 件</summary>
 
-  - L69 `_isJapanese()`
+  - L202 `_lang()`
+  - L225 `_fullMoon()`
+  - L240 `_catasterism()`
 
   </details>
 

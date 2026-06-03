@@ -127,8 +127,8 @@ extension _QuestionFieldWidgets on ObserveScreenState {
         context,
         featureLabel: '質問つきタロット',
         description: '「今日のテーマ」を 200 字以内で添えると、Stella がそのテーマに'
-            '寄り添ってカードを読み解きます。Cosmic Pro で thinking モード ON の '
-            '深い読みも一緒に解放されます。',
+            '寄り添ってカードを読み解きます。Cosmic Pro では、より '
+            '深い読み解きも一緒に解放されます。',
       ),
       child: Container(
         padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),

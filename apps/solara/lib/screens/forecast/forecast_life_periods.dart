@@ -55,7 +55,7 @@ class ForecastLifePeriodsSection extends StatelessWidget {
 
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       ForecastSectionHeader(
-        label: 'あなたの運勢サイクル',
+        label: 'あなたの星のサイクル',
         onInfo: () => _showLifePeriodsInfo(context),
       ),
       const SizedBox(height: 4),
@@ -64,7 +64,7 @@ class ForecastLifePeriodsSection extends StatelessWidget {
       const SizedBox(height: 10),
       if (visibleCats.isEmpty) Padding(
         padding: const EdgeInsets.symmetric(vertical: 12),
-        child: Text('今日以降に予測される期間なし',
+        child: Text('今日以降に到来する期間はありません',
             style: TextStyle(fontSize: 11, color: Colors.white.withValues(alpha: 0.45))),
       ) else for (final cat in visibleCats)
         _periodRow(context, cat, byCategory[cat]!, today),
@@ -135,7 +135,7 @@ void _showLifePeriodsInfo(BuildContext context) {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: const [
         Text(
-          '運勢サイクルとは',
+          '星のサイクルとは',
           style: TextStyle(
               color: Color(0xFFC9A84C), fontSize: 14, letterSpacing: 1),
         ),

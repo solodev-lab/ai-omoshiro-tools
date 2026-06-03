@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import 'horo_antique_icons.dart';
 import 'horo_panel_shared.dart';
+import '../../utils/solara_i18n.dart';
 
 // ══════════════════════════════════════════════════
 // Filter Panel
@@ -58,12 +59,12 @@ class HoroFilterPanel extends StatelessWidget {
       ]),
 
       // B: Fortune Category
-      _filterSection('B', '運勢カテゴリ', [
-        _exclusiveChip('癒し', 'healing', const Color(0xFF26D0CE)),
-        _exclusiveChip('豊かさ', 'money', const Color(0xFFFFD370)),
-        _exclusiveChip('恋愛運', 'love', const Color(0xFFFF6B9D)),
-        _exclusiveChip('仕事運', 'career', const Color(0xFFFF8C42)),
-        _exclusiveChip('コミュニケーション', 'communication', const Color(0xFF6BB5FF)),
+      _filterSection('B', 'カテゴリ', [
+        _exclusiveChip(categoryLabel('healing'), 'healing', const Color(0xFF26D0CE)),
+        _exclusiveChip(categoryLabel('money'), 'money', const Color(0xFFFFD370)),
+        _exclusiveChip(categoryLabel('love'), 'love', const Color(0xFFFF6B9D)),
+        _exclusiveChip(categoryLabel('career'), 'career', const Color(0xFFFF8C42)),
+        _exclusiveChip(categoryLabel('communication'), 'communication', const Color(0xFF6BB5FF)),
       ]),
 
       // C: Planet Group

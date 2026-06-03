@@ -26,7 +26,7 @@
 
 import { callGemini } from './fortune.js';
 import { runConsultationPipeline, _internal as engineInternal } from './consultation_engine.js';
-import { STYLE_VOICE_JP } from './style_voice.js';
+import { STYLE_VOICE_JP, styleVoiceFor, outputLangDirective } from './style_voice.js';
 
 const { PLANET_JP, SIGN_JP, BUCKET_JP } = engineInternal;
 
@@ -333,6 +333,302 @@ function staticFallback(pipe) {
   return out;
 }
 
+// ════════════════════════════════════════════════════════════
+// 非 ja 言語版 (lang !== 'ja')。英語を土台に「出力は {言語} で書け」ディレクティブ +
+// 言語別の声 (styleVoiceFor) を注入。日本語版と同じ構造・同じ出力 JSON フィールド名。
+// 🔴 上の日本語パスには一切手を入れない (JP 無傷を最優先)。
+// ════════════════════════════════════════════════════════════
+
+const THEME_EN = {
+  love: 'Love & relationships', money: 'Abundance & money', work: 'Work & career',
+  communication: 'Talk & learning', healing: 'Healing & rest', newStart: 'Change & new beginnings',
+};
+const MODE_EN = { migration: 'relocation', travel: 'travel', daily: 'an outing' };
+const ANGLE_EN = { mc: 'MC (zenith)', ic: 'IC (nadir)', asc: 'ASC (rising)', dsc: 'DSC (setting)' };
+const ASPECT_EN = { conjunction: 'conjunction', trine: 'trine', square: 'square', sextile: 'sextile' };
+const QUALITY_EN = { soft: 'flow & harmony (Soft)', hard: 'friction & challenge (Hard)', neutral: 'neutral' };
+const FRAME_EN = { natal: 'natal', transit: 'transiting', progressed: 'progressed' };
+const BEARING_EN = { N: 'north', NE: 'northeast', E: 'east', SE: 'southeast', S: 'south', SW: 'southwest', W: 'west', NW: 'northwest' };
+const BUCKET_EN = { morning: 'morning', midday: 'midday', evening: 'evening', night: 'night', lateNight: 'late night' };
+const SIGN_EN = ['Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo', 'Libra', 'Scorpio', 'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces'];
+const PLANET_EN = {
+  sun: 'the Sun', moon: 'the Moon', mercury: 'Mercury', venus: 'Venus', mars: 'Mars',
+  jupiter: 'Jupiter', saturn: 'Saturn', uranus: 'Uranus', neptune: 'Neptune', pluto: 'Pluto',
+};
+const PLACE_TYPE_EN = {
+  restaurant: 'restaurant', cafe: 'café', bar: 'bar', bakery: 'bakery',
+  movie_theater: 'cinema', park: 'park', museum: 'museum', art_gallery: 'gallery',
+  shopping_mall: 'shopping mall', store: 'shop', lodging: 'inn', hotel: 'hotel',
+  tourist_attraction: 'tourist spot', spa: 'spa', gym: 'gym', library: 'library',
+  aquarium: 'aquarium', zoo: 'zoo', amusement_park: 'amusement park', book_store: 'bookshop',
+  church: 'church', temple: 'temple', shrine: 'shrine', beach: 'beach', night_club: 'club',
+};
+const DELTA_DIR_EN = {
+  approaching: 'is drawing closer to this place (it keeps rising from here)',
+  receding: 'is pulling away from this place (it is receding)',
+  entering: 'is newly reaching this place (rising in the latter half)',
+  leaving: 'is moving off this place (its role winding down)',
+  steady: 'holds roughly its position (the flow continues gently)',
+};
+
+function placeReferenceEN(candidate) {
+  if (candidate.bearing) {
+    return {
+      ref: `the ${BEARING_EN[candidate.bearing] || candidate.bearing} direction`,
+      guidance: 'Refer to it by direction (and the energy present there). Do not name a specific place or city.',
+    };
+  }
+  if (candidate.placeType) {
+    const typeEn = PLACE_TYPE_EN[candidate.placeType] || candidate.placeType;
+    const name = candidate.name || 'this place';
+    return {
+      ref: `${name} (${typeEn})`,
+      guidance: 'Use the real venue name and type the user chose. You may read the mood of the type. Do not invent a venue name.',
+    };
+  }
+  if (candidate.placeKind === 'named' && candidate.name) {
+    return {
+      ref: candidate.name,
+      guidance: 'A specific place the user searched for (a shop, park, company, school, etc.). Use this exact name. '
+        + 'Do not rephrase or round it into a city or address (e.g. do not turn "JR Nagoya Takashimaya" into "Nagoya"). Do not invent names.',
+    };
+  }
+  if (candidate.placeKind === 'saved' && candidate.name) {
+    return {
+      ref: `the place called "${candidate.name}"`,
+      guidance: `A place the user saved. Refer to it by its saved name, "${candidate.name}". Do not rephrase it into a city or address.`,
+    };
+  }
+  if (candidate.name) {
+    return {
+      ref: candidate.name,
+      guidance: 'You may refer to it by city name. Widely-known traits of the land (e.g. an ancient capital) are fine, but do not name venues.',
+    };
+  }
+  return {
+    ref: 'this spot',
+    guidance: 'Only coordinates were given. Call it "this spot". Do not rephrase it into a place, city, or venue name.',
+  };
+}
+
+function factorPromptLineEN(f) {
+  const planet = PLANET_EN[f.planet] || f.planet;
+  const frame = FRAME_EN[f.frame] ? `${FRAME_EN[f.frame]} ` : '';
+  if (f.kind === 'band') {
+    const band = f.aspect === 'zenith'
+      ? 'zenith band (latitude effect on public exposure / career)'
+      : 'nadir band (latitude effect on home, roots, the unconscious)';
+    return `${frame}${planet} ${band} [${QUALITY_EN[f.quality] || f.quality}]`;
+  }
+  const angle = ANGLE_EN[f.angle] || f.angle;
+  const asp = ASPECT_EN[f.aspect] || f.aspect;
+  return `${frame}${planet} ${angle} ${asp} [${QUALITY_EN[f.quality] || f.quality}]`;
+}
+
+function timeWindowPromptTextEN(tw) {
+  if (!tw) return '(time of day is not in scope)';
+  if (tw.kind === 'single') {
+    if (!tw.planet) return `Local time of day: ${BUCKET_EN[tw.bucket] || tw.bucket}`;
+    return `At this spot, around ${BUCKET_EN[tw.bucket] || tw.bucket} the ${PLANET_EN[tw.planet] || tw.planet} crosses the ${ANGLE_EN[tw.angle] || tw.angle} (local time)`;
+  }
+  if (tw.kind === 'rhythm') {
+    return tw.items.map((it) => `${BUCKET_EN[it.bucket] || it.bucket}: ${PLANET_EN[it.planet] || it.planet} ${ANGLE_EN[it.angle] || it.angle}`).join(' / ');
+  }
+  return '(time of day is not in scope)';
+}
+
+function deltaPromptSectionEN(timeDelta) {
+  if (!timeDelta || !Array.isArray(timeDelta.changes) || !timeDelta.changes.length) return '';
+  const lines = timeDelta.changes.map((ch) => {
+    const planet = PLANET_EN[ch.planet] || ch.planet;
+    const angle = ANGLE_EN[ch.angle] || ch.angle;
+    const asp = ASPECT_EN[ch.aspect] || ch.aspect;
+    return `  - the ${planet} ${angle} ${asp} line ${DELTA_DIR_EN[ch.dir] || ch.dir}`;
+  }).join('\n');
+  return `\n\n[Shift ${timeDelta.deltaMin} minutes later (${timeDelta.deltaMin} min after the chosen time, as the angle lines move with Earth's rotation at this spot)]\n${lines}`;
+}
+
+function humanizeTimeWindowEN(tw) {
+  if (!tw) return null;
+  if (tw.kind === 'single') {
+    return { kind: 'single', bucket: tw.bucket, label: BUCKET_EN[tw.bucket] || tw.bucket };
+  }
+  if (tw.kind === 'rhythm') {
+    return { kind: 'rhythm', items: tw.items.map((it) => ({ bucket: it.bucket, label: BUCKET_EN[it.bucket] || it.bucket })) };
+  }
+  return null;
+}
+
+function innerSeasonPromptTextEN(is) {
+  if (!is) return '(no inner-season data)';
+  const moonSign = (is.progMoonSign != null && SIGN_EN[is.progMoonSign]) ? SIGN_EN[is.progMoonSign] : (is.progMoonSignJP || '');
+  const sunSign = (is.progSunSign != null && SIGN_EN[is.progSunSign]) ? SIGN_EN[is.progSunSign] : (is.progSunSignJP || '');
+  const houseStr = is.progMoonHouse ? `, house ${is.progMoonHouse}` : '';
+  let s = `Progressed Moon: ${moonSign}${houseStr} (the current inner season / where awareness turns) / Progressed Sun: ${sunSign} (the evolving direction of the core)`;
+  if (is.turningPoint) {
+    s += ` / a solar-arc turning point is in effect (you may lightly suggest a season of larger change)`;
+  }
+  return s;
+}
+
+function buildConsultationPromptEN({ pipe, theme, mode, withWhom, wish, userTimeBand, lang = 'en' }) {
+  const themeEn = THEME_EN[theme] || theme;
+  const modeEn = MODE_EN[mode] || mode;
+  const c = pipe.candidate;
+  const place = placeReferenceEN(c);
+  const isFirst = pipe.isFirst;
+  const timeDelta = c.timeDelta || null;
+  const deltaSection = deltaPromptSectionEN(timeDelta);
+  const hasDelta = !!(timeDelta && Array.isArray(timeDelta.changes) && timeDelta.changes.length);
+  const deltaMin = hasDelta ? timeDelta.deltaMin : 30;
+  const deltaSchemaLine = hasDelta
+    ? `,\n    "deltaAfter": "<How this place's flow shifts ${deltaMin} minutes later. 60-110 words. Observation (plain) + address to the reader (gentle), hybrid. No good/bad. A line moving away = that energy receding into another quality; drawing closer / newly arriving = rising from here. Light, non-commanding pointers like 'the heart of it is early on' or 'it warms toward the latter half' are fine (no assertions, no commands). If the change is small, be honest: 'these ${deltaMin} minutes simply flow on gently.'>"`
+    : '';
+  const deltaRule = hasDelta
+    ? `\n- deltaAfter: tell the "shift" from the reading at the chosen time. A moving line = the lead of the place quietly changing — without good/bad. Add one line that helps notice the difference in quality between the first and the latter half.`
+    : '';
+
+  const factorLines = (c.factors || []).map((f) => `  - ${factorPromptLineEN(f)}`).join('\n')
+    || '  - (no strong theme-matching factor lies close by)';
+
+  let relocLine = '';
+  if (c.relocation && c.relocation.planetHouses) {
+    const hs = Object.entries(c.relocation.planetHouses)
+      .map(([p, h]) => `${PLANET_EN[p] || p}=house ${h}`).join(' / ');
+    relocLine = `\n[Relocated houses at this land (esoteric — do NOT put house numbers in the narrative; weave only the meaning)]\n  ${hs}`;
+  }
+
+  const whomBlock = (withWhom && withWhom.trim())
+    ? `\n[With whom (a lens for the telling — free text)]\n${withWhom.trim()}`
+    : '\n[With whom] (unspecified)';
+  const wishBlock = (wish && wish.trim())
+    ? `\n[What they wish for (the core of the telling — free text)]\n${wish.trim()}`
+    : '\n[What they wish for] (unspecified)';
+
+  const quietGuidance = c.honestQuiet
+    ? '\n⚠️ This candidate is a "quiet place" with no strong theme line close by. Do not fabricate or inflate it ("a hidden power…"). '
+      + 'Describe it honestly as "a neutral, quiet place where the theme lines are far" (Solara\'s honesty).'
+    : '';
+
+  const userBandEn = userTimeBand ? (BUCKET_EN[userTimeBand] || null) : null;
+  const timeSection = userBandEn
+    ? `The reader's planned time of day: ${userBandEn} (they will go at this time; center the telling on this time of day)\n  (for reference, the time of day when the star lines stand out at this land: ${timeWindowPromptTextEN(pipe.timeWindow)})`
+    : timeWindowPromptTextEN(pipe.timeWindow);
+
+  const firstOnlySchema = isFirst
+    ? `\n  "innerSeason": "<Without any jargon, frame it in one sentence: 'right now you are in an inner season of …'. 25-45 words>",`
+      + `\n  "intro": "<An opening that receives the reader's wish. Touch the theme. No opening salutation. 25-50 words>",`
+      + `\n  "outro": "<Close with words that open awareness. No verdict, command, or banned phrase. 50-70 words>",`
+    : '';
+
+  const firstOnlyRule = isFirst
+    ? `\n- innerSeason: no jargon ("progressed Moon", "house"); name the current inner season in one sentence.`
+      + `\n- Provide intro/outro. The outro must carry a seed of awareness (one of: "the candidates listed here are not all the world holds" / "there is an unseen best" / "the unexpected can later turn into insight").`
+    : '\n- This is an additional candidate (2nd onward). Do not output innerSeason/intro/outro. Return only candidate.';
+
+  return `You are Stella, the voice of Solara. Built on astrocartography (the Jim Lewis tradition),
+you read the "energy present" at one offered candidate place, in light of the reader's wish.
+Call yourself "Stella", or omit the first person. Never call yourself "AI" or "artificial intelligence".
+
+[Consultation meta]
+- Theme: ${themeEn} (${theme})
+- Setting: ${modeEn} (${mode})${whomBlock}${wishBlock}
+
+[How to refer to the place]
+- Reference: ${place.ref}
+- Rule: ${place.guidance}
+
+[Astrological factors present at this place (nearest/strongest first. Soft and Hard are two independent energies)]
+${factorLines}${relocLine}${quietGuidance}
+
+[Time of day (local time of day only. Clock numbers and timezone names are forbidden)]
+${timeSection}
+
+[Inner season (progressions. Keep the jargon out of the narrative; use it only as a frame)]
+${innerSeasonPromptTextEN(pipe.innerSeason)}${deltaSection}
+
+🔴 Solara design principles (absolute — apply to every sentence):
+
+1. No good/bad verdicts. Never use "lucky", "unlucky", "good/bad", "fortunate/unfortunate", "blessed".
+   Soft (flow, receptivity, expansion, harmony) and Hard (friction, transformation, confrontation, deepening) are two independent energies.
+   Render Hard not as "bad" but as "an invitation to face something — an opportunity that may ask for resolve".
+
+2. Weave the narrative around at most TWO interrelated factors. If possible, layer one Soft + one Hard,
+   so the reader can place themselves on the span of "flowing smoothly / carrying a challenge". If only one quality is present, don't force it (honesty). Don't touch every factor thinly and scatter.
+
+3. Never put distance (km, "about __ km") in the narrative. Speak in the presence and quality of energy.
+
+4. Speak of time only by local time of day (morning / midday / evening / night / late night). No clock numbers, no "JST", etc.${userBandEn ? `
+   🔴 Make the reader's planned time of day, "${userBandEn}", the lead of the telling; stay with that time. Do not center it on other times (early morning / late night, etc.).` : `
+   For a travel place, use the destination's local time of day. Since no time of day is specified, do not assert a particular one; if needed, present it only as "the time of day when the star lines stand out at this land".`}
+
+5. Lay the inner season over the land's energy: "right now you are in a season of …, so this land's quality meets you as …".
+   Do not instruct ("you should"). Only "where you are now" + "how the land meets that".
+
+6. No mind-reading (principle 5): never state another person's private feelings as fact
+   ("he thinks …" is forbidden). Instead convert it into "what you notice, how you move, and when you move". Read the reader's own placements, the energy reaching them, and what to be aware of — concretely, warmly, without dodging.
+
+7. Hybrid register: energy description (the scene, the quality of the lines) = observation (plain, declarative).
+   Address to the reader = gentle (warm, second person). Do not mix the two inside one paragraph; switch by block.
+
+8. Do not open with a nickname or salutation (occasionally fine later). The reader's name is not provided.
+   If a relational term (wife / husband / friend, etc.) appears in the free text, you may prefer that term.
+
+9. characterHeadline = a short headline of this place's single strongest element (aim for ~6 words).
+   The hook that, with three placed side by side, makes "a different invitation" obvious at a glance. For a quiet place, be honest ("a quiet place, theme lines far").
+
+10. energyLabels = an array of "{planet} {angle/band} · {a 3-7 word character}". Unfold the factors above.
+    e.g. "Venus MC · an axis of love and harmony" / "Mars ASC · the body of breakthrough".
+
+11. 🔴 Safety guard: give no definitive medical, legal, financial, investment, or self-harm advice.
+    If the consultation text (theme / with whom / wish) touches these areas (health, money, contracts, crisis),
+    stay only within astrological imagery and gently suggest consulting an appropriate professional.
+    For major life decisions too (relocation, career change, divorce, childbirth), read astrology "as a mirror of your awareness"
+    and make clear the final decision is the reader's own. "Will", "definitely", "you should" are forbidden.${firstOnlyRule}
+
+12. The theme (healing / love, etc.) is already chosen by the reader. Do not guess their motive ("perhaps you are seeking …").
+    Take the theme as given and tell how this land meets that theme.${deltaRule}
+${styleVoiceFor(lang)}${outputLangDirective(lang)}
+
+[Output JSON format (return nothing else. No markdown, no code fences)]
+{${firstOnlySchema}
+  "candidate": {
+    "characterHeadline": "<a feature headline, aim for ~6 words>",
+    "energyLabels": ["<planet angle · character>", ...],
+    "narrative": "<160-230 words. Observation (plain) + address (gentle), hybrid. Centered on the nearest 1-2 factors, with a Soft+Hard span if possible. No km. Lay the inner season over it. No mind-reading>"${deltaSchemaLine}
+  }
+}`;
+}
+
+function staticFallbackEN(pipe) {
+  const c = pipe.candidate;
+  const place = placeReferenceEN(c);
+  const factors = c.factors || [];
+  const energyLabels = factors.map((f) => {
+    const planet = PLANET_EN[f.planet] || f.planet;
+    if (f.kind === 'band') return `${planet} ${f.aspect === 'zenith' ? 'zenith band' : 'nadir band'}`;
+    return `${planet} ${(ANGLE_EN[f.angle] || f.angle).replace(/\(.*\)/, '').trim()} ${ASPECT_EN[f.aspect] || ''}`.trim();
+  });
+  const headline = factors.length
+    ? `a place where ${PLANET_EN[factors[0].planet] || factors[0].planet}'s ${factors[0].kind === 'band' ? 'band' : (ANGLE_EN[factors[0].angle] || '').replace(/\(.*\)/, '').trim()} is present`
+    : 'a quiet place, theme lines far';
+  const narrative = factors.length
+    ? `${place.ref}. Stella's voice isn't reaching right now, so here is the objective picture of the energy present.`
+    : `${place.ref} is a quiet, neutral place with no theme-matching line close by.`;
+
+  const candidateOut = { name: c.name, characterHeadline: headline, energyLabels, narrative };
+  if (c.timeDelta) {
+    candidateOut.deltaAfter = { deltaMin: c.timeDelta.deltaMin, changes: c.timeDelta.changes, narrative: '' };
+  }
+  const out = { candidate: candidateOut, fallback: true };
+  if (pipe.isFirst) {
+    out.innerSeason = '';
+    out.intro = `I've gathered the candidates for your ${MODE_EN[pipe.meta?.mode] || 'outing'}.`;
+    out.outro = 'The candidates listed here are not all the world holds. Unseen places, too, may one day turn into insight.';
+  }
+  return out;
+}
+
 // ── メインエントリ ──────────────────────────────────────────
 
 /**
@@ -346,7 +642,7 @@ export async function handleConsultationV2(body, env, deps = {}) {
   const callGeminiFn = deps.callGeminiFn || callGemini;
 
   const { theme, mode, withWhom = '', wish = '', lang = 'ja' } = body || {};
-  if (lang !== 'ja') throw new Error(`Unsupported lang: ${lang} (v1 supports ja only)`);
+  const isNonJa = lang !== 'ja';
 
   // Phase 1: 秘伝計算 (候補プールは D1。env を渡す。binding 無し時は worldCities フォールバック)
   const pipe = await runPipeline(body, env);
@@ -370,8 +666,8 @@ export async function handleConsultationV2(body, env, deps = {}) {
   const rawBand = body && body.when && body.when.timeBand;
   const userTimeBand = VALID_BANDS.includes(rawBand) ? rawBand : null;
   const timeWindow = userTimeBand
-    ? { kind: 'single', bucket: userTimeBand, label: BUCKET_JP[userTimeBand] || userTimeBand }
-    : humanizeTimeWindow(pipe.timeWindow);
+    ? { kind: 'single', bucket: userTimeBand, label: (isNonJa ? BUCKET_EN[userTimeBand] : BUCKET_JP[userTimeBand]) || userTimeBand }
+    : (isNonJa ? humanizeTimeWindowEN(pipe.timeWindow) : humanizeTimeWindow(pipe.timeWindow));
 
   // 共通で返す土台 (Gemini 成否に依らず付ける構造データ)
   const base = {
@@ -396,14 +692,14 @@ export async function handleConsultationV2(body, env, deps = {}) {
   };
 
   if (!env.GEMINI_API_KEY) {
-    return { ...base, ...staticFallback(pipe), model: 'fallback' };
+    return { ...base, ...(isNonJa ? staticFallbackEN(pipe) : staticFallback(pipe)), model: 'fallback' };
   }
 
   const primary = env.CONSULTATION_MODEL_PRIMARY || env.FORTUNE_MODEL_PRIMARY || 'gemini-2.5-flash';
   const fallbackModel = env.CONSULTATION_MODEL_FALLBACK || env.FORTUNE_MODEL_FALLBACK || 'gemini-flash-latest';
   const models = primary === fallbackModel ? [primary] : [primary, fallbackModel];
 
-  const prompt = buildConsultationPrompt({ pipe, theme, mode, withWhom, wish, userTimeBand });
+  const prompt = (isNonJa ? buildConsultationPromptEN : buildConsultationPrompt)({ pipe, theme, mode, withWhom, wish, userTimeBand, lang });
 
   let parsed;
   try {
@@ -418,7 +714,7 @@ export async function handleConsultationV2(body, env, deps = {}) {
     try { parsed = JSON.parse(raw); }
     catch { parsed = JSON.parse(raw.replace(/^```json\s*|\s*```$/g, '').trim()); }
   } catch (_) {
-    return { ...base, ...staticFallback(pipe), model: 'fallback' };
+    return { ...base, ...(isNonJa ? staticFallbackEN(pipe) : staticFallback(pipe)), model: 'fallback' };
   }
 
   const ai = (parsed && parsed.candidate) || {};
@@ -456,4 +752,6 @@ export const _internal = {
   buildConsultationPrompt, placeReference, factorPromptLine,
   timeWindowPromptText, humanizeTimeWindow, innerSeasonPromptText, staticFallback,
   deltaPromptSection,
+  // 非 ja 言語版 (英語土台 + 出力言語ディレクティブ + 言語別の声)。
+  buildConsultationPromptEN, placeReferenceEN, staticFallbackEN, humanizeTimeWindowEN,
 };

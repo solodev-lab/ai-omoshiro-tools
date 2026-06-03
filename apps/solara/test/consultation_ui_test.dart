@@ -245,7 +245,7 @@ void main() {
       ),
     ));
     await tester.pumpAndSettle();
-    expect(find.text('Stella の声が届きませんでした (静的表示)'), findsOneWidget);
+    expect(find.text('Stella の声が今は届きませんでした'), findsOneWidget);
   });
 
   testWidgets('Result: 接続失敗で error UI', (tester) async {

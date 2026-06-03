@@ -158,10 +158,10 @@ class _CandidateCard extends StatelessWidget {
                 ),
                 // 解釈は 1 つに過ぎない旨の注記 (エビデンスは上部に表示)。
                 const StellaInterpretationNote(
-                  text: '最上段相談の結果に本内容のエビデンスが表示されています。'
-                      'Stellaが解釈の１つとして本内容を表示しています。内容に違和感が'
-                      'ある場合はご自身で解釈を広げてみてください。あくまでここでの表示は'
-                      '解釈の１つに過ぎません。',
+                  text: 'この候補の根拠（エビデンス）は、最上部「相談の結果」に表示しています。'
+                      'Stella は、その一つの読み方をお伝えしています。違和感があれば、'
+                      'ご自身の解釈も重ねてみてください。ここでの表示は、'
+                      '数ある解釈の一つです。',
                 ),
                 // disclaimer footer — 報告ボタンの直下に常時。
                 const AiDisclaimerFooter(padding: EdgeInsets.zero),

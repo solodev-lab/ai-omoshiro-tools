@@ -6,6 +6,7 @@ import 'horo_antique_icons.dart';
 import '../../utils/fortune_api.dart';
 import '../../widgets/ai_disclaimer_footer.dart';
 import '../../widgets/ai_report_button.dart';
+import '../../utils/solara_i18n.dart';
 
 // ══════════════════════════════════════════════════
 // Astrology / Today View (full screen fortune reading)
@@ -74,7 +75,7 @@ class HoroAstrologyView extends StatelessWidget {
         ]),
         const SizedBox(height: 4),
         Text(
-          '${DateTime.now().month}/${DateTime.now().day} のホロスコープ運勢',
+          '${DateTime.now().month}/${DateTime.now().day} のホロスコープ',
           style: const TextStyle(fontSize: 11, color: Color(0xFF888888)),
         ),
         const SizedBox(height: 16),
@@ -121,7 +122,7 @@ class HoroAstrologyView extends StatelessWidget {
                   ),
                   child: Center(child: Text(cat['icon'] as String, style: const TextStyle(fontSize: 18)))),
                 const SizedBox(width: 10),
-                Text(cat['nameJP'] as String, style: TextStyle(
+                Text(categoryLabel(cat['id'] as String), style: TextStyle(
                   fontSize: 15, color: color, fontWeight: FontWeight.w700)),
                 // 数値スコア表示は廃止（占い文だけで完結させる方針）
               ]),
@@ -248,7 +249,7 @@ class HoroAstrologyView extends StatelessWidget {
   /// タップで親が showProUnlockDialog を出す。
   /// dim 配色 (alpha 8/30/60) で「触れるが今は読めない」シグナルを送る。
   Widget _lockedTeaserCard(Map<String, dynamic> cat, Color color) {
-    final nameJP = cat['nameJP'] as String;
+    final nameJP = categoryLabel(cat['id'] as String);
     final icon = cat['icon'] as String;
     return GestureDetector(
       onTap: onLockedCategoryTap == null

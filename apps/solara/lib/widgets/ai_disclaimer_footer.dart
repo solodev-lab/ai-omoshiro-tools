@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../utils/solara_i18n.dart';
+
 /// AI 出力 disclaimer フッター (Apple 4.0 + Google Misleading Claims policy 対応)。
 ///
 /// 設計根拠: apps/solara/docs/store_compliance.md §5.1 / §5.2 B
@@ -22,10 +24,10 @@ class AiDisclaimerFooter extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: padding,
-      child: const Text(
-        '✦ AI 生成・娯楽目的。医療・法律・金融等の専門的な助言ではありません。',
+      child: Text(
+        tr('disclaimer.ai'),
         textAlign: TextAlign.center,
-        style: TextStyle(
+        style: const TextStyle(
           color: Color(0xFF666060),
           fontSize: 10,
           height: 1.5,

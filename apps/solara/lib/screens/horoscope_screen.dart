@@ -8,6 +8,7 @@ import '../utils/pro_status.dart';
 import '../utils/solara_storage.dart';
 import '../utils/fortune_api.dart';
 import '../utils/fortune_cache.dart';
+import '../utils/solara_i18n.dart';
 import '../widgets/pro_unlock_dialog.dart';
 import '../widgets/tap_to_unfocus.dart';
 
@@ -256,12 +257,14 @@ class HoroscopeScreenState extends State<HoroscopeScreen>
   /// をタップしたときに Pro Unlock dialog を出すハンドラ。
   /// カテゴリ名を渡して dialog の文言をカテゴリに合わせる。
   void _showFortuneProUnlock(Map<String, dynamic> category) {
-    final nameJP = category['nameJP'] as String? ?? 'この運勢';
+    final nameJP = category['id'] != null
+        ? categoryLabel(category['id'] as String)
+        : 'このテーマ';
     showProUnlockDialog(
       context,
       featureLabel: '$nameJP の Stella の読み',
       description: '今日の星配置から「$nameJP」のテーマで Stella が読み解きます。'
-          '全 5 カテゴリの読みと、より深く考えた thinking モード ON の解釈は '
+          '全 5 カテゴリの読みと、より深い読み解きは '
           'Cosmic Pro で解放されます。',
     );
   }

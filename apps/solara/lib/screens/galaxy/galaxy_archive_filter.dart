@@ -111,7 +111,7 @@ extension GalaxyArchiveSortLabel on GalaxyArchiveSort {
       case GalaxyArchiveSort.oldestFirst:
         return '古い順';
       case GalaxyArchiveSort.rarityHighFirst:
-        return 'レアリティ順';
+        return 'レア度順';
     }
   }
 }
@@ -164,7 +164,7 @@ class _GalaxyArchiveFilterBarState extends State<GalaxyArchiveFilterBar> {
         context,
         featureLabel: 'アーカイブの検索・フィルタ',
         description:
-            '完成したサイクルを名前・レアリティ・並び順で絞り込めます。\n'
+            '完成したサイクルを名前・レア度・並び順で絞り込めます。\n'
             '記録が積み上がるほど、振り返りやすくなります。',
       );
 
