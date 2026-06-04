@@ -1,6 +1,6 @@
 # Solara Code Audit
 
-対象: lib (201 個の .dart)
+対象: lib (203 個の .dart)
 
 ## 1. ファイル行数 (NOTICE >= 300 / WARN >= 500 / HARD >= 1000)
 
@@ -11,7 +11,7 @@
 | 1703 | 🔴 HARD | lib/screens/sanctuary_screen.dart |
 | 1416 | 🔴 HARD | lib/screens/galaxy_screen.dart |
 | 1397 | 🔴 HARD | lib/screens/sanctuary/sanctuary_title_diagnosis.dart |
-| 1078 | 🔴 HARD | lib/screens/map/daily_transit_data.dart |
+| 1154 | 🔴 HARD | lib/screens/map/daily_transit_data.dart |
 | 1057 | 🔴 HARD | lib/screens/forecast_screen.dart |
 | 984 | 🟠 WARN | lib/utils/planet_intro.dart |
 | 945 | 🟠 WARN | lib/screens/horoscope_screen.dart |
@@ -27,6 +27,7 @@
 | 702 | 🟠 WARN | lib/screens/horoscope/horo_chart_painter.dart |
 | 693 | 🟠 WARN | lib/widgets/fortune_overlays/money_painter.dart |
 | 657 | 🟠 WARN | lib/utils/astro_glossary.dart |
+| 644 | 🟠 WARN | lib/screens/map/daily_transit_data_en2.dart |
 | 642 | 🟠 WARN | lib/widgets/fortune_overlays/communication_painter.dart |
 | 639 | 🟠 WARN | lib/screens/consultation/consultation_input_screen.dart |
 | 626 | 🟠 WARN | lib/utils/constellation_namer.dart |
@@ -65,6 +66,7 @@
 | 409 | 🟡 NOTICE | lib/screens/map/map_display_menu.dart |
 | 396 | 🟡 NOTICE | lib/widgets/cycle_spiral_painter.dart |
 | 395 | 🟡 NOTICE | lib/utils/title_data.dart |
+| 393 | 🟡 NOTICE | lib/screens/map/daily_transit_data_en.dart |
 | 393 | 🟡 NOTICE | lib/screens/observe/observe_history_filter.dart |
 | 375 | 🟡 NOTICE | lib/screens/map/map_direction_popup.dart |
 | 363 | 🟡 NOTICE | lib/screens/consultation/consultation_input_when_scope.dart |
@@ -334,4 +336,4 @@
 
 ---
 
-総計: 行数 HARD 7 / WARN 37 / NOTICE 43 / 重複 20 / TODO 4 / print 1 / 未使用候補 0
+総計: 行数 HARD 7 / WARN 38 / NOTICE 44 / 重複 20 / TODO 4 / print 1 / 未使用候補 0

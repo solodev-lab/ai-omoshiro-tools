@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 25 / 総行数: 14586
+- ファイル数: 27 / 総行数: 15623
 - class/mixin/extension/enum: 90
 - 関数 (top-level + method の素拾い): 324
 - Navigator.push 等: 0
@@ -59,6 +59,61 @@ Consult Entry Popup — Stella 相談の共通入口 popup
   - L106 `_copyCoords()`
 
   </details>
+
+
+### `lib/screens/map/daily_transit_data_en.dart` (393 行)
+
+**ファイル先頭コメント:**
+
+```
+============================================================
+Daily Transit 画面用 データ定義 — 英語版 (その1)
+daily_transit_data.dart から分離 (英語化 Phase 2・HARD7 維持のため)。
+同一キー・STYLE_VOICE_EN。daily_transit_data.dart の *For アクセサが
+en ロケールで選択する (isEnLocale)。
+
+含むもの (短〜中):
+  - angleFilterLabelsEN
+  - angleFilterShortMeaningEN
+  - angleIndividualSubLabelsEN
+  - categoryFilterTipsEN
+  - planetAngleBaseTextEN
+  - categoryAppendixEN
+  - categoryAngleAppendixEN
+大物 (categoryTipsIntentEN / angleDetailContentEN) は _en2.dart。
+
+Solara 設計思想: 両面思想・吉凶判定なし・ユーザーが読み取って判断。
+============================================================
+```
+
+**imports:** dart=0 / package=0 / relative=1
+
+- relative: `daily_transit_data.dart`
+
+
+### `lib/screens/map/daily_transit_data_en2.dart` (644 行)
+
+**ファイル先頭コメント:**
+
+```
+============================================================
+Daily Transit 画面用 データ定義 — 英語版 (その2・大物)
+daily_transit_data.dart から分離 (英語化 Phase 2・HARD7 維持のため)。
+同一キー・STYLE_VOICE_EN。daily_transit_data.dart の *For アクセサが
+en ロケールで選択する (isEnLocale)。
+
+含むもの (大物):
+  - categoryTipsIntentEN (5 カテゴリ × 7 アングル = 35 ガイド)
+  - angleDetailContentEN (7 アングル詳細)
+
+末尾の中立フッター ("This isn't a verdict of good or bad…") は
+設計思想 (吉凶判定なし・ユーザーが読み取って判断) の定型文。
+============================================================
+```
+
+**imports:** dart=0 / package=0 / relative=1
+
+- relative: `daily_transit_data.dart`
 
 
 ### `lib/screens/map/map_aspect_chip.dart` (222 行)

@@ -12,7 +12,31 @@
 //
 // Solara 設計思想: project_solara_design_philosophy.md
 //   両面思想・吉凶判定なし・ユーザーが読み取って判断
+//
+// 英語化 Phase 2: 各 const の英語版は daily_transit_data_en.dart /
+// daily_transit_data_en2.dart に並列で持ち、末尾の *For アクセサが
+// isEnLocale() で選択する (JP フォールバック)。消費側はアクセサを呼ぶ。
 // ============================================================
+
+import 'daily_transit_data_en.dart';
+import 'daily_transit_data_en2.dart';
+import '../../utils/solara_i18n.dart' show isEnLocale;
+
+/// カテゴリ tips ボックスの record 型 (categoryFilterTips の値型)。
+/// en 版 (categoryFilterTipsEN) と共有する。
+typedef CategoryTips = ({
+  String headline,
+  List<String> tipsAsc,
+  List<String> tipsMc,
+  List<String> tipsDsc,
+  List<String> tipsIc,
+  List<String> tipsAscMc,
+  List<String> tipsDscIc,
+});
+
+/// title + body の record 型 (categoryTipsIntent / angleDetailContent の値型)。
+/// en 版と共有する。
+typedef TitledBody = ({String title, String body});
 
 /// アングルフィルタ識別子。
 ///   asc/mc/dsc/ic: 個別アングル (1点)
@@ -1076,3 +1100,55 @@ const categoryPlanetSets = <String, Set<String>>{
   'healing': {'moon', 'neptune', 'venus'},
   'communication': {'mercury', 'sun', 'venus', 'moon'},
 };
+
+// ============================================================
+// ロケール連動アクセサ (英語化 Phase 2)
+// en ロケールなら *EN を、無ければ JP マップをフォールバックで返す。
+// angleFilterSets / categoryPlanetSets はコード(ASC 等)のみで言語非依存
+// のためアクセサ不要 (そのまま参照する)。
+// ============================================================
+
+/// アングルフィルタのラベル (en で all のみ英語化、他はコード共通)。
+String angleFilterLabelFor(AngleFilter f) =>
+    (isEnLocale() ? angleFilterLabelsEN[f] : null) ??
+    angleFilterLabels[f] ??
+    f.name;
+
+/// アングルフィルタの「意味」1行テキスト。
+String angleFilterShortMeaningFor(AngleFilter f) =>
+    (isEnLocale() ? angleFilterShortMeaningEN[f] : null) ??
+    angleFilterShortMeaning[f] ??
+    '';
+
+/// 個別アングルの表示用サブラベル。
+String angleIndividualSubLabelFor(AngleFilter f) =>
+    (isEnLocale() ? angleIndividualSubLabelsEN[f] : null) ??
+    angleIndividualSubLabels[f] ??
+    f.name.toUpperCase();
+
+/// カテゴリ × アングル別の tips データ。
+CategoryTips? categoryFilterTipsFor(String key) =>
+    (isEnLocale() ? categoryFilterTipsEN[key] : null) ?? categoryFilterTips[key];
+
+/// 惑星 × アングル の基本意味。
+String planetAngleBaseTextFor(String planetKey, String angleUpper) =>
+    (isEnLocale() ? (planetAngleBaseTextEN[planetKey]?[angleUpper]) : null) ??
+    planetAngleBaseText[planetKey]?[angleUpper] ??
+    '';
+
+/// カテゴリ × アングル の組み合わせ補足文。
+String? categoryAngleAppendixFor(String key, String angleUpper) =>
+    (isEnLocale() ? (categoryAngleAppendixEN[key]?[angleUpper]) : null) ??
+    categoryAngleAppendix[key]?[angleUpper];
+
+/// カテゴリ別の補足文 (legacy・カテゴリ単体)。
+String? categoryAppendixFor(String key) =>
+    (isEnLocale() ? categoryAppendixEN[key] : null) ?? categoryAppendix[key];
+
+/// 「おすすめ行動の例」カテゴリ × アングル別ガイド。
+Map<AngleFilter, TitledBody>? categoryTipsIntentFor(String key) =>
+    (isEnLocale() ? categoryTipsIntentEN[key] : null) ?? categoryTipsIntent[key];
+
+/// アングル詳細 popup の内容。
+TitledBody? angleDetailContentFor(AngleFilter f) =>
+    (isEnLocale() ? angleDetailContentEN[f] : null) ?? angleDetailContent[f];

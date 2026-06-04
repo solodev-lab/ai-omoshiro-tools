@@ -5,9 +5,9 @@
 
 ## サマリ
 
-- ファイル数: 15 / 総行数: 5946
+- ファイル数: 15 / 総行数: 6022
 - class/mixin/extension/enum: 20
-- 関数 (top-level + method の素拾い): 52
+- 関数 (top-level + method の素拾い): 56
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 1
 - Worker URL リテラル: 0
@@ -55,7 +55,7 @@ STYLE_VOICE_EN で併設。buildAspectDescription / patternDescriptionFor が is
 - L128 `patternLabel()` — patternStyles の 1 エントリ → ロケール別ラベル (ja=labelJP / en=label)。
 
 
-### `lib/screens/map/daily_transit_data.dart` (1078 行)
+### `lib/screens/map/daily_transit_data.dart` (1154 行)
 
 **ファイル先頭コメント:**
 
@@ -74,13 +74,32 @@ Daily Transit 画面用 データ定義
 
 Solara 設計思想: project_solara_design_philosophy.md
   両面思想・吉凶判定なし・ユーザーが読み取って判断
+
+英語化 Phase 2: 各 const の英語版は daily_transit_data_en.dart /
+daily_transit_data_en2.dart に並列で持ち、末尾の *For アクセサが
+isEnLocale() で選択する (JP フォールバック)。消費側はアクセサを呼ぶ。
 ============================================================
 ```
 
-**型定義 (1):**
+**imports:** dart=0 / package=0 / relative=3
 
-- L23 `enum AngleFilter`
+- relative: `daily_transit_data_en.dart`, `daily_transit_data_en2.dart`, `../../utils/solara_i18n.dart`
+
+**型定義 (3):**
+
+- L27 `typedef CategoryTips`
+  - カテゴリ tips ボックスの record 型 (categoryFilterTips の値型)。
+- L39 `typedef TitledBody`
+  - title + body の record 型 (categoryTipsIntent / angleDetailContent の値型)。
+- L47 `enum AngleFilter`
   - アングルフィルタ識別子。
+
+**関数 (4 public + 0 private):**
+
+- L1112 `angleFilterLabelFor()` — アングルフィルタのラベル (en で all のみ英語化、他はコード共通)。
+- L1118 `angleFilterShortMeaningFor()` — アングルフィルタの「意味」1行テキスト。
+- L1124 `angleIndividualSubLabelFor()` — 個別アングルの表示用サブラベル。
+- L1134 `planetAngleBaseTextFor()` — 惑星 × アングル の基本意味。
 
 
 ### `lib/utils/astro_glossary.dart` (657 行)

@@ -506,7 +506,7 @@ class _DayTabBar extends StatelessWidget {
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(
-                    angleFilterShortMeaning[angleFilter] ?? '',
+                    angleFilterShortMeaningFor(angleFilter),
                     style: const TextStyle(
                       fontSize: 13,
                       color: Color(0xFF888888),
@@ -580,7 +580,7 @@ class _DayTabBar extends StatelessWidget {
             DropdownMenuItem<AngleFilter>(
               value: f,
               child: Text(
-                angleFilterLabels[f] ?? f.name,
+                angleFilterLabelFor(f),
                 style: const TextStyle(
                   fontSize: 13,
                   color: Color(0xFFE8E0D0),
@@ -1013,7 +1013,7 @@ class _CategoryTipsBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tipsData = categoryFilterTips[categoryKey];
+    final tipsData = categoryFilterTipsFor(categoryKey);
     if (tipsData == null) return const SizedBox.shrink();
     final color = categoryColors[categoryKey] ?? SolaraColors.solaraGoldLight;
 
@@ -1026,19 +1026,19 @@ class _CategoryTipsBox extends StatelessWidget {
     switch (angleFilter) {
       case AngleFilter.asc:
         tips = tipsData.tipsAsc;
-        subLabel = angleIndividualSubLabels[AngleFilter.asc] ?? 'ASC';
+        subLabel = angleIndividualSubLabelFor(AngleFilter.asc);
         break;
       case AngleFilter.mc:
         tips = tipsData.tipsMc;
-        subLabel = angleIndividualSubLabels[AngleFilter.mc] ?? 'MC';
+        subLabel = angleIndividualSubLabelFor(AngleFilter.mc);
         break;
       case AngleFilter.dsc:
         tips = tipsData.tipsDsc;
-        subLabel = angleIndividualSubLabels[AngleFilter.dsc] ?? 'DSC';
+        subLabel = angleIndividualSubLabelFor(AngleFilter.dsc);
         break;
       case AngleFilter.ic:
         tips = tipsData.tipsIc;
-        subLabel = angleIndividualSubLabels[AngleFilter.ic] ?? 'IC';
+        subLabel = angleIndividualSubLabelFor(AngleFilter.ic);
         break;
       case AngleFilter.ascMc:
         tips = tipsData.tipsAscMc;
@@ -1744,12 +1744,12 @@ void _showEventDetailDialog(
   final planetJP = planetName(planetKey);
   final planetColor = meta?.color ?? SolaraColors.solaraGoldLight;
   final angleUpper = angle.toUpperCase();
-  final base = planetAngleBaseText[planetKey]?[angleUpper] ?? '';
+  final base = planetAngleBaseTextFor(planetKey, angleUpper);
   // B6: カテゴリ × アングル の組み合わせ補足を優先 (惑星×カテゴリ×アングル の文脈)。
   // データが無い場合は legacy の categoryAppendix (カテゴリ単体) にフォールバック。
   final appendix = (categoryFilter != 'all')
-      ? (categoryAngleAppendix[categoryFilter]?[angleUpper] ??
-          categoryAppendix[categoryFilter])
+      ? (categoryAngleAppendixFor(categoryFilter, angleUpper) ??
+          categoryAppendixFor(categoryFilter))
       : null;
   final title = t.mapDaily.transitTitle(planet: planetJP, angle: angleUpper);
 
@@ -1768,7 +1768,7 @@ void _showEventDetailDialog(
 /// 2026-05-08: angleFilter パラメータ追加 — 個別アングル別の細分化対応。
 void _showCategoryTipsIntent(
     BuildContext context, String categoryKey, AngleFilter angleFilter) {
-  final catEntries = categoryTipsIntent[categoryKey];
+  final catEntries = categoryTipsIntentFor(categoryKey);
   final entry = catEntries?[angleFilter] ?? catEntries?[AngleFilter.all];
   if (entry == null) {
     showAstroGlossaryDialog(context, 'category_tips_intent');
@@ -1807,7 +1807,7 @@ void _showCategoryTipsIntent(
 /// 複合 / 全角度の場合はまとめ表示。
 /// 2026-05-08: showAstroGlossaryDialog('transit_angles') を置換。
 void _showAngleDetailPopup(BuildContext context, AngleFilter filter) {
-  final entry = angleDetailContent[filter];
+  final entry = angleDetailContentFor(filter);
   if (entry == null) {
     showAstroGlossaryDialog(context, 'transit_angles');
     return;

@@ -361,7 +361,7 @@
 
 ### 層 4a: Map 画面
 
-- ファイル数: 25
+- ファイル数: 27
 - Worker URL 呼出: (なし)
 - Popup/Dialog: `showInfoPopup`×15, `showLineNarrativeSheet`×3, `showSolaraDatePicker`×1, `showModalBottomSheet`×1
 - Navigator.push 等: 0 箇所
@@ -413,7 +413,7 @@
 | from\to | 1a | 1b | 1c | 2a | 2b | 2c | 3a | 3b | 3c | 4a | 4b | 4c | 4d | 4e | 4f | 5 |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | 1a | 3 | 1 | 1 | 1 | 3 | · | · | · | · | · | · | · | · | · | · | · |
-| 1b | 7 | · | · | 2 | 1 | · | 1 | · | · | · | · | · | · | · | · | · |
+| 1b | 8 | · | · | 2 | 1 | · | 1 | · | · | 2 | · | · | · | · | · | · |
 | 1c | · | · | 1 | · | · | · | · | · | · | · | · | · | · | · | · | · |
 | 2a | 3 | 1 | · | 6 | 4 | · | · | 1 | · | · | · | · | · | · | · | · |
 | 2b | 3 | 3 | 5 | 6 | 4 | 1 | · | · | · | · | · | · | · | · | · | · |
@@ -421,7 +421,7 @@
 | 3a | 4 | 4 | 2 | 2 | 1 | 1 | 8 | 7 | 4 | 1 | · | · | · | · | 1 | · |
 | 3b | 1 | · | · | · | · | · | · | 1 | · | · | · | · | · | · | · | · |
 | 3c | 2 | 5 | 4 | 2 | 4 | 1 | 12 | 4 | · | · | · | · | · | · | · | · |
-| 4a | 16 | 11 | · | 14 | 8 | 1 | 19 | 24 | 3 | 32 | 4 | · | · | · | 4 | · |
+| 4a | 16 | 13 | · | 14 | 8 | 1 | 19 | 24 | 3 | 32 | 4 | · | · | · | 4 | · |
 | 4b | 11 | 14 | · | 3 | 4 | · | 15 | · | · | · | 30 | · | · | 2 | · | · |
 | 4c | 3 | 1 | 14 | 1 | 4 | 5 | 8 | 6 | · | · | · | 16 | · | · | 1 | · |
 | 4d | 9 | 6 | 13 | 1 | 2 | 2 | 11 | 3 | 1 | · | · | · | 9 | · | · | · |
@@ -439,7 +439,7 @@
 | ファイル | 層 | 被 import 数 |
 | --- | --- | --- |
 | `lib/theme/solara_colors.dart` | 3b | 38 |
-| `lib/utils/solara_i18n.dart` | 1a | 37 |
+| `lib/utils/solara_i18n.dart` | 1a | 38 |
 | `lib/utils/solara_storage.dart` | 2b | 33 |
 | `lib/widgets/info_popup.dart` | 3a | 26 |
 | `lib/screens/map/map_constants.dart` | 3b | 23 |
@@ -472,15 +472,17 @@
 > 各ソースの SHA1 を `_stamps.json` に記録し、差分を検出。
 > 変更されたファイルが属する層は、人手版インベントリ章の見直し対象。
 
-- 追加: **1** / 削除: **0** / 変更: **1**
+- 追加: **2** / 削除: **0** / 変更: **2**
 
 ### 変更されたファイル (層別)
 
-- **層 1b**: `lib/utils/astro_glossary.dart`
+- **層 1b**: `lib/screens/map/daily_transit_data.dart`
+- **層 4a**: `lib/screens/map/map_daily_transit_screen.dart`
 
 ### 追加されたファイル
 
-- `lib/utils/astro_glossary_en.dart` (層 1a)
+- `lib/screens/map/daily_transit_data_en.dart` (層 4a)
+- `lib/screens/map/daily_transit_data_en2.dart` (層 4a)
 
 ## #7 astro_glossary 用語辞書対整合
 
