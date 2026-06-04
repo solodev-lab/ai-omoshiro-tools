@@ -18,7 +18,7 @@
 | 859 | 🟠 WARN | lib/screens/map/map_astro_carto.dart |
 | 810 | 🟠 WARN | lib/screens/map/map_search.dart |
 | 775 | 🟠 WARN | lib/widgets/catasterism_formation_overlay.dart |
-| 769 | 🟠 WARN | lib/screens/observe_screen.dart |
+| 768 | 🟠 WARN | lib/screens/observe_screen.dart |
 | 758 | 🟠 WARN | lib/widgets/fortune_overlays/work_painter.dart |
 | 750 | 🟠 WARN | lib/screens/map/map_fortune_sheet.dart |
 | 744 | 🟠 WARN | lib/screens/locations_screen.dart |
@@ -57,7 +57,7 @@
 | 445 | 🟡 NOTICE | lib/screens/galaxy/galaxy_star_atlas.dart |
 | 432 | 🟡 NOTICE | lib/screens/consultation/consultation_result_widgets.dart |
 | 424 | 🟡 NOTICE | lib/screens/paywall_widgets.dart |
-| 422 | 🟡 NOTICE | lib/screens/observe/observe_history.dart |
+| 423 | 🟡 NOTICE | lib/screens/observe/observe_history.dart |
 | 415 | 🟡 NOTICE | lib/screens/galaxy/constellation_share_card_page.dart |
 | 413 | 🟡 NOTICE | lib/utils/forecast_cache.dart |
 | 413 | 🟡 NOTICE | lib/screens/consultation/consultation_place_picker_widgets.dart |
@@ -79,11 +79,11 @@
 | 335 | 🟡 NOTICE | lib/screens/horoscope/horo_fortune_cards.dart |
 | 315 | 🟡 NOTICE | lib/widgets/ai_report_button.dart |
 | 315 | 🟡 NOTICE | lib/screens/galaxy/galaxy_archive_filter.dart |
-| 314 | 🟡 NOTICE | lib/screens/paywall_screen.dart |
 | 314 | 🟡 NOTICE | lib/utils/fortune_api.dart |
 | 313 | 🟡 NOTICE | lib/utils/celestial_events.dart |
-| 313 | 🟡 NOTICE | lib/screens/observe/observe_history_past.dart |
 | 312 | 🟡 NOTICE | lib/utils/moon_notification_service.dart |
+| 312 | 🟡 NOTICE | lib/screens/observe/observe_history_past.dart |
+| 311 | 🟡 NOTICE | lib/screens/paywall_screen.dart |
 | 311 | 🟡 NOTICE | lib/widgets/class_card.dart |
 | 310 | 🟡 NOTICE | lib/screens/horoscope/horo_panel_shared.dart |
 | 308 | 🟡 NOTICE | lib/utils/purchases_service.dart |
@@ -140,7 +140,7 @@
 
 ### 5. 📁 別ファイル間 (11 箇所、10 ファイル)
 
-  - lib/screens/observe_screen.dart:706
+  - lib/screens/observe_screen.dart:707
   - lib/screens/paywall_comparison.dart:124
   - lib/screens/paywall_comparison.dart:199
   - lib/screens/paywall_legal_links.dart:83
