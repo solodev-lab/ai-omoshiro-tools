@@ -165,7 +165,7 @@ class _PlanetIntroBody extends StatelessWidget {
   Widget _frameSection(PlanetIntroFrame frame) {
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Text(
-        frame.summary,
+        frame.summaryDisplay,
         style: TextStyle(
           fontSize: 13,
           color: frameColor,
@@ -175,7 +175,7 @@ class _PlanetIntroBody extends StatelessWidget {
       ),
       const SizedBox(height: 8),
       Text(
-        frame.detail,
+        frame.detailDisplay,
         style: const TextStyle(
           fontSize: 13,
           color: Color(0xFFE0DCD0),
@@ -206,7 +206,7 @@ class _PlanetIntroBody extends StatelessWidget {
         ),
         const SizedBox(height: 6),
         Text(
-          intro.coreSummary,
+          intro.coreSummaryDisplay,
           style: TextStyle(
             fontSize: 13,
             color: planetColor,
@@ -216,7 +216,7 @@ class _PlanetIntroBody extends StatelessWidget {
         ),
         const SizedBox(height: 6),
         Text(
-          intro.coreDetail,
+          intro.coreDetailDisplay,
           style: const TextStyle(
             fontSize: 13,
             color: Color(0xFFCCC5B5),

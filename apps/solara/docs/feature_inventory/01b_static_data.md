@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 15 / 総行数: 5514
+- ファイル数: 15 / 総行数: 5939
 - class/mixin/extension/enum: 20
 - 関数 (top-level + method の素拾い): 52
 - Navigator.push 等: 0
@@ -351,7 +351,7 @@ middleware が log_only モードなら bypass、enforced モードなら attest
 - L243 `fetchTarotReading()` — /tarot を叩いて1枚引きの Reading を生成する。
 
 
-### `lib/utils/planet_intro.dart` (559 行)
+### `lib/utils/planet_intro.dart` (984 行)
 
 **ファイル先頭コメント:**
 
@@ -377,14 +377,18 @@ Phase: 2026-05-07 全 10 惑星対応完了
 ============================================================
 ```
 
+**imports:** dart=0 / package=0 / relative=1
+
+- relative: `solara_i18n.dart`
+
 **型定義 (2):**
 
-- L21 `class PlanetIntroFrame`
-- L31 `class PlanetIntro`
+- L23 `class PlanetIntroFrame`
+- L46 `class PlanetIntro`
 
 **関数 (1 public + 0 private):**
 
-- L56 `frameOf()` — frame キー ('natal' / 'transit' / 'progressed') から該当 frame を返す。
+- L81 `frameOf()` — frame キー ('natal' / 'transit' / 'progressed') から該当 frame を返す。
 
 
 ### `lib/utils/solara_manifesto.dart` (141 行)
