@@ -8,6 +8,7 @@ import '../utils/moon_phase.dart';
 import '../utils/pro_status.dart';
 import '../utils/solara_storage.dart';
 import '../utils/tarot_data.dart';
+import '../i18n/strings.g.dart';
 import '../utils/solara_i18n.dart';
 import '../widgets/ai_disclaimer_footer.dart';
 import '../widgets/ai_report_button.dart';
@@ -80,12 +81,12 @@ class ObserveScreenState extends State<ObserveScreen>
     });
   }
 
-  // ローディング演出: 4つのメッセージを4秒ごとに切り替え
-  static const _loadingMessages = [
-    '星々があなたへの言葉を紡いでいます',
-    '天体の囁きに耳を澄ませています',
-    'カードの神秘を解き明かしています',
-    '今日のあなたの意味を結晶化しています',
+  // ローディング演出: 4つのメッセージを4秒ごとに切り替え (ロケール連動のため getter)
+  List<String> get _loadingMessages => [
+    t.observe.loading1,
+    t.observe.loading2,
+    t.observe.loading3,
+    t.observe.loading4,
   ];
   int _loadingMsgIdx = 0;
   Timer? _loadingMsgTimer;
@@ -556,15 +557,15 @@ class ObserveScreenState extends State<ObserveScreen>
         if (_cardFlipped && _drawnCard != null)
           ObserveCardInfo(card: _drawnCard!, reversed: _drawnReversed),
         if (!_alreadyDrawnToday)
-          const Padding(
-            padding: EdgeInsets.only(top: 8),
-            child: Text('👆 タップしてカードを引く', style: TextStyle(fontSize: 11, color: Color(0xFF555555))),
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Text(t.observe.tapToDraw, style: const TextStyle(fontSize: 11, color: Color(0xFF555555))),
           ),
         if (_alreadyDrawnToday && !_cardFlipped)
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: 8),
-            child: Text('✓ 本日のカードは引き済み',
-                style: TextStyle(fontSize: 13, color: Color(0xFF666666), letterSpacing: 0.5),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Text(t.observe.alreadyDrawn,
+                style: const TextStyle(fontSize: 13, color: Color(0xFF666666), letterSpacing: 0.5),
                 textAlign: TextAlign.center),
           ),
         const SizedBox(height: 16),
@@ -669,18 +670,18 @@ class ObserveScreenState extends State<ObserveScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            '解説の取得に失敗しました。',
-            style: TextStyle(
+          Text(
+            t.observe.failTitle,
+            style: const TextStyle(
               fontSize: 13,
               color: Color(0xFFE8E0D0),
               fontWeight: FontWeight.w600,
             ),
           ),
           const SizedBox(height: 6),
-          const Text(
-            '通信状況を確認して、もう一度お試しください。',
-            style: TextStyle(
+          Text(
+            t.observe.failBody,
+            style: const TextStyle(
               fontSize: 12,
               color: Color(0xFFB8B2A6),
               height: 1.6,
@@ -700,9 +701,9 @@ class ObserveScreenState extends State<ObserveScreen>
                   borderRadius: BorderRadius.circular(8),
                 ),
               ),
-              child: const Text(
-                '再試行',
-                style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600),
+              child: Text(
+                t.common.tryAgain,
+                style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600),
               ),
             ),
           ),
@@ -741,12 +742,12 @@ class ObserveScreenState extends State<ObserveScreen>
           const Text('▋', style: TextStyle(fontSize: 13, color: Color(0xFFC9A84C))),
         if (_typingDone && !_readingFromApi) ...[
           const SizedBox(height: 12),
-          Row(mainAxisAlignment: MainAxisAlignment.end, children: const [
+          Row(mainAxisAlignment: MainAxisAlignment.end, children: [
             Flexible(
-              child: Text('⚠ オフラインモード（簡易表示）',
+              child: Text(t.observe.offlineMode,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(fontSize: 9, color: Color(0xFF666666), letterSpacing: 0.8)),
+                  style: const TextStyle(fontSize: 9, color: Color(0xFF666666), letterSpacing: 0.8)),
             ),
           ]),
         ],
@@ -755,10 +756,8 @@ class ObserveScreenState extends State<ObserveScreen>
         if (_typingDone && _readingFromApi) ...[
           AiReportButton(feature: 'tarot', outputText: _readingText),
           // 解釈は 1 つに過ぎない旨の注記。
-          const StellaInterpretationNote(
-            text: 'カードからStellaが解釈の１つとして本内容を表示しています。'
-                '内容に違和感がある場合はご自身で解釈を広げてみてください。'
-                'あくまでここでの表示は解釈の１つに過ぎません。',
+          StellaInterpretationNote(
+            text: t.observe.stellaNote,
           ),
           // disclaimer footer (Apple 4.0 + Google Misleading) — 報告ボタンの直下に常時。
           const AiDisclaimerFooter(),

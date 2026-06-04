@@ -1,5 +1,6 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
+import '../../i18n/strings.g.dart';
 import '../../models/tarot_card.dart';
 import 'observe_constants.dart';
 
@@ -151,7 +152,7 @@ class ObserveCardInfo extends StatelessWidget {
       const SizedBox(height: 12),
       // Element badge
       Text(
-        '${elementEmojis[card.element] ?? ''} ${elementNames[card.element] ?? ''} · $suitLabel',
+        '${elementEmojis[card.element] ?? ''} ${elementName(card.element)} · $suitLabel',
         style: const TextStyle(fontSize: 11, color: Color(0xFFAAAAAA), letterSpacing: 1.5),
       ),
       const SizedBox(height: 6),
@@ -178,7 +179,7 @@ class ObserveCardInfo extends StatelessWidget {
             border: Border.all(color: reversed ? const Color(0x80B088FF) : const Color(0x80C9A84C)),
           ),
           child: Text(
-            reversed ? '逆位置' : '正位置',
+            reversed ? t.observe.posReversed : t.observe.posUpright,
             style: TextStyle(fontSize: 10, color: reversed ? const Color(0xFFB088FF) : const Color(0xFFC9A84C), letterSpacing: 1),
           ),
         ),

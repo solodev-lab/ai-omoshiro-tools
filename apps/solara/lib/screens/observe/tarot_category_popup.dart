@@ -13,6 +13,7 @@
 
 import 'package:flutter/material.dart';
 
+import '../../i18n/strings.g.dart';
 import '../../theme/solara_colors.dart';
 import '../../utils/consultation_api.dart';
 import '../../widgets/info_popup.dart';
@@ -70,11 +71,11 @@ class _TarotCategoryPopupBody extends StatelessWidget {
     // タイトル: 次に消費されるクレジット種別を反映 (消費順=無料→購入)。
     final String titleText;
     if (hasFree) {
-      titleText = '無料クレジットを使う';
+      titleText = t.observe.creditTitleFree;
     } else if (hasPaid) {
-      titleText = '有料クレジットを使う';
+      titleText = t.observe.creditTitlePaid;
     } else {
-      titleText = 'クレジットがありません';
+      titleText = t.observe.creditTitleNone;
     }
 
     return Column(
@@ -91,7 +92,7 @@ class _TarotCategoryPopupBody extends StatelessWidget {
         ),
         const SizedBox(height: 6),
         Text(
-          'カテゴリ: $categoryLabel',
+          t.observe.catLine(label: categoryLabel),
           style: const TextStyle(
             color: SolaraColors.solaraGoldLight,
             fontSize: 13,
@@ -118,9 +119,9 @@ class _TarotCategoryPopupBody extends StatelessWidget {
                   const Icon(Icons.auto_awesome,
                       color: SolaraColors.solaraGoldLight, size: 16),
                   const SizedBox(width: 8),
-                  const Text(
-                    '無料クレジット',
-                    style: TextStyle(
+                  Text(
+                    t.observe.freeCredits,
+                    style: const TextStyle(
                       color: SolaraColors.textPrimary,
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
@@ -130,8 +131,8 @@ class _TarotCategoryPopupBody extends StatelessWidget {
                   Expanded(
                     child: Text(
                       (freeRemaining != null && freeLimit != null)
-                          ? '残り $freeRemaining / $freeLimit 回'
-                          : '残り回数を確認中',
+                          ? t.observe.freeRemaining(remaining: freeRemaining, limit: freeLimit)
+                          : t.observe.freeChecking,
                       textAlign: TextAlign.end,
                       style: const TextStyle(
                         color: SolaraColors.textPrimary,
@@ -142,11 +143,11 @@ class _TarotCategoryPopupBody extends StatelessWidget {
                   ),
                 ],
               ),
-              const Padding(
-                padding: EdgeInsets.only(left: 24, top: 2),
+              Padding(
+                padding: const EdgeInsets.only(left: 24, top: 2),
                 child: Text(
-                  '毎週月曜日に補充',
-                  style: TextStyle(
+                  t.observe.weeklyRefill,
+                  style: const TextStyle(
                     color: SolaraColors.textSecondary,
                     fontSize: 11,
                   ),
@@ -164,9 +165,9 @@ class _TarotCategoryPopupBody extends StatelessWidget {
                   const Icon(Icons.add_circle_outline,
                       color: SolaraColors.solaraGoldLight, size: 16),
                   const SizedBox(width: 8),
-                  const Text(
-                    '有料クレジット',
-                    style: TextStyle(
+                  Text(
+                    t.observe.paidCredits,
+                    style: const TextStyle(
                       color: SolaraColors.textPrimary,
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
@@ -175,7 +176,7 @@ class _TarotCategoryPopupBody extends StatelessWidget {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      '残り $purchased 回',
+                      t.observe.paidRemaining(n: purchased),
                       textAlign: TextAlign.end,
                       style: const TextStyle(
                         color: SolaraColors.textPrimary,
@@ -186,11 +187,11 @@ class _TarotCategoryPopupBody extends StatelessWidget {
                   ),
                 ],
               ),
-              const Padding(
-                padding: EdgeInsets.only(left: 24, top: 2),
+              Padding(
+                padding: const EdgeInsets.only(left: 24, top: 2),
                 child: Text(
-                  '失効なし（購入分は端末を変えても残る）',
-                  style: TextStyle(
+                  t.observe.noExpiry,
+                  style: const TextStyle(
                     color: SolaraColors.textSecondary,
                     fontSize: 11,
                   ),
@@ -216,7 +217,7 @@ class _TarotCategoryPopupBody extends StatelessWidget {
               ),
             ),
             icon: const Icon(Icons.add_circle_outline, size: 18),
-            label: const Text('クレジットを購入'),
+            label: Text(t.observe.buyCredits),
           ),
         ),
         const SizedBox(height: 8),
@@ -234,7 +235,7 @@ class _TarotCategoryPopupBody extends StatelessWidget {
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  child: const Text('キャンセル'),
+                  child: Text(t.observe.cancel),
                 ),
               ),
             ),
@@ -264,7 +265,7 @@ class _TarotCategoryPopupBody extends StatelessWidget {
                       letterSpacing: 0.6,
                     ),
                   ),
-                  child: const Text('引く'),
+                  child: Text(t.observe.draw),
                 ),
               ),
             ),

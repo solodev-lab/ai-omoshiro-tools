@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../i18n/strings.g.dart';
 import '../../models/daily_reading.dart';
 import '../../models/galaxy_cycle.dart';
 import '../../models/tarot_card.dart';
@@ -66,15 +67,15 @@ class _ObserveHistoryPanelState extends State<ObserveHistoryPanel> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: const Color(0xFF0F0F1E),
-        title: const Text('確認', style: TextStyle(color: Color(0xFFE8E0D0), fontSize: 16)),
-        content: const Text('履歴をすべて削除しますか？', style: TextStyle(color: Color(0xFFCCCCCC), fontSize: 14)),
+        title: Text(t.observe.confirm, style: const TextStyle(color: Color(0xFFE8E0D0), fontSize: 16)),
+        content: Text(t.observe.deleteAllConfirm, style: const TextStyle(color: Color(0xFFCCCCCC), fontSize: 14)),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('キャンセル', style: TextStyle(color: Color(0xFF888888)))),
+              child: Text(t.observe.cancel, style: const TextStyle(color: Color(0xFF888888)))),
           TextButton(
               onPressed: () => Navigator.pop(ctx, true),
-              child: const Text('削除', style: TextStyle(color: Color(0xFFC9A84C)))),
+              child: Text(t.observe.delete, style: const TextStyle(color: Color(0xFFC9A84C)))),
         ],
       ),
     );
@@ -135,9 +136,9 @@ class _ObserveHistoryPanelState extends State<ObserveHistoryPanel> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        _innerTabBtn(0, '今のサイクル'),
+        _innerTabBtn(0, t.observe.tabCurrentCycle),
         const SizedBox(width: 4),
-        _innerTabBtn(1, '過去のサイクル'),
+        _innerTabBtn(1, t.observe.tabPastCycle),
       ],
     );
   }
@@ -179,8 +180,8 @@ class _ObserveHistoryPanelState extends State<ObserveHistoryPanel> {
   /// ので List of Widget で返す。
   List<Widget> _buildCurrentTabContent(List<DailyReading> visible) {
     return [
-      const Text('※ 履歴は50件までです。古い履歴から自動的に削除されます。',
-          style: TextStyle(fontSize: 9, color: Color(0xFF444444))),
+      Text(t.observe.limitNote,
+          style: const TextStyle(fontSize: 9, color: Color(0xFF444444))),
       const SizedBox(height: 10),
 
       // ── C3 (Pro) フィルタバー: 履歴がある時のみ表示 ──
@@ -197,7 +198,7 @@ class _ObserveHistoryPanelState extends State<ObserveHistoryPanel> {
             child: Align(
               alignment: Alignment.centerLeft,
               child: Text(
-                '${visible.length} 件 / 全 ${widget.history.length} 件',
+                t.observe.countLine(visible: visible.length, total: widget.history.length),
                 style: const TextStyle(
                   color: Color(0xFF666666),
                   fontSize: 10,
@@ -209,20 +210,20 @@ class _ObserveHistoryPanelState extends State<ObserveHistoryPanel> {
       ],
 
       if (widget.history.isEmpty)
-        const Padding(
-          padding: EdgeInsets.symmetric(vertical: 60, horizontal: 20),
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 60, horizontal: 20),
           child: Text(
-              'まだ履歴がありません\n\nTAROT DRAW タブでカードを引くと\nここに記録されます',
+              t.observe.emptyHistory,
               textAlign: TextAlign.center,
-              style: TextStyle(color: Color(0xFF444444), fontSize: 13, height: 1.8)),
+              style: const TextStyle(color: Color(0xFF444444), fontSize: 13, height: 1.8)),
         )
       else if (visible.isEmpty)
-        const Padding(
-          padding: EdgeInsets.symmetric(vertical: 32, horizontal: 20),
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 20),
           child: Text(
-            '条件に合うカードはありません',
+            t.observe.noMatch,
             textAlign: TextAlign.center,
-            style: TextStyle(color: Color(0xFF666666), fontSize: 12, height: 1.6),
+            style: const TextStyle(color: Color(0xFF666666), fontSize: 12, height: 1.6),
           ),
         )
       else
@@ -291,7 +292,7 @@ class _ObserveHistoryPanelState extends State<ObserveHistoryPanel> {
                   ),
                   const SizedBox(width: 6),
                   Text(
-                    r.reversed ? '逆' : '正',
+                    r.reversed ? t.observe.posShortReversed : t.observe.posShortUpright,
                     style: TextStyle(
                       fontSize: 10,
                       color: r.reversed ? const Color(0xFFB088FF) : const Color(0xFFC9A84C),
@@ -303,19 +304,19 @@ class _ObserveHistoryPanelState extends State<ObserveHistoryPanel> {
                 Text(card.keyword, style: const TextStyle(fontSize: 11, color: Color(0xFF999999), fontStyle: FontStyle.italic)),
                 const SizedBox(height: 4),
                 Wrap(spacing: 8, children: [
-                  Text('${elementEmojis[card.element] ?? ''} ${elementNames[card.element] ?? ''}',
+                  Text('${elementEmojis[card.element] ?? ''} ${elementName(card.element)}',
                     style: TextStyle(fontSize: 10, color: elColor)),
-                  const Row(mainAxisSize: MainAxisSize.min, children: [
-                    Icon(Icons.home_rounded, size: 11, color: Color(0xFF666666)),
-                    SizedBox(width: 3),
-                    Text('自宅', style: TextStyle(fontSize: 10, color: Color(0xFF555555))),
+                  Row(mainAxisSize: MainAxisSize.min, children: [
+                    const Icon(Icons.home_rounded, size: 11, color: Color(0xFF666666)),
+                    const SizedBox(width: 3),
+                    Text(t.observe.home, style: const TextStyle(fontSize: 10, color: Color(0xFF555555))),
                   ]),
                   Text(r.date, style: const TextStyle(fontSize: 10, color: Color(0xFF555555))),
                   if (r.question != null && r.question!.isNotEmpty)
-                    const Row(mainAxisSize: MainAxisSize.min, children: [
-                      Icon(Icons.help_outline, size: 11, color: Color(0xFF888888)),
-                      SizedBox(width: 3),
-                      Text('質問あり', style: TextStyle(fontSize: 10, color: Color(0xFF888888))),
+                    Row(mainAxisSize: MainAxisSize.min, children: [
+                      const Icon(Icons.help_outline, size: 11, color: Color(0xFF888888)),
+                      const SizedBox(width: 3),
+                      Text(t.observe.hasQuestion, style: const TextStyle(fontSize: 10, color: Color(0xFF888888))),
                     ]),
                 ]),
               ])),
@@ -345,7 +346,7 @@ class _ObserveHistoryPanelState extends State<ObserveHistoryPanel> {
 
   Widget _buildHistoryDetail(TarotCard card, DailyReading r) {
     final pInfo = planetInfo[card.planet];
-    final planetDisplay = pInfo != null ? '${pInfo[1]}(${pInfo[0]})' : '';
+    final planetDisplay = pInfo != null ? '${observePlanetName(card.planet!)}(${pInfo[0]})' : '';
 
     return Container(
       width: double.infinity,
@@ -405,7 +406,7 @@ class _ObserveHistoryPanelState extends State<ObserveHistoryPanel> {
             const SizedBox(height: 6),
             MemoTextField(
               initialText: r.synchronicity,
-              hintText: '偶然の一致や気づきをメモ...',
+              hintText: t.observe.memoHintSync,
               onChanged: (text) {
                 r.synchronicity = text;
                 SolaraStorage.updateSynchronicity(r.date, text);

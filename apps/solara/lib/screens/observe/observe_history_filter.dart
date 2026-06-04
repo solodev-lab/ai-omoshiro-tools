@@ -10,6 +10,7 @@
 
 import 'package:flutter/material.dart';
 
+import '../../i18n/strings.g.dart';
 import '../../models/daily_reading.dart';
 import '../../utils/tarot_data.dart';
 import '../../widgets/pro_unlock_dialog.dart';
@@ -138,9 +139,8 @@ class _ObserveHistoryFilterBarState extends State<ObserveHistoryFilterBar> {
 
   Future<void> _proGuard() => showProUnlockDialog(
         context,
-        featureLabel: '履歴の検索・フィルタ',
-        description: '過去のカード履歴を、キーワード・アルカナ・エレメントで絞り込めます。\n'
-            '気になる瞬間が、すぐに見つかります。',
+        featureLabel: t.observe.filterProFeature,
+        description: t.observe.filterProDesc,
       );
 
   void _setQuery(String v) => widget.onChanged(widget.filter.copyWith(query: v));
@@ -213,8 +213,8 @@ class _ObserveHistoryFilterBarState extends State<ObserveHistoryFilterBar> {
                         isCollapsed: true,
                         border: InputBorder.none,
                         hintText: isPro
-                            ? 'カード名・読み・質問・シンクロを検索'
-                            : '検索 — Cosmic Pro',
+                            ? t.observe.searchHint
+                            : t.observe.searchProLocked,
                         hintStyle: TextStyle(
                           color: isPro
                               ? const Color(0xFF666666)
@@ -250,14 +250,14 @@ class _ObserveHistoryFilterBarState extends State<ObserveHistoryFilterBar> {
             scrollDirection: Axis.horizontal,
             children: [
               _ChipBtn(
-                label: '大アルカナ',
+                label: t.observe.majorArcana,
                 active: widget.filter.onlyMajor == true,
                 isPro: isPro,
                 onTap: () => isPro ? _toggleMajor(true) : _proGuard(),
               ),
               const SizedBox(width: 6),
               _ChipBtn(
-                label: '小アルカナ',
+                label: t.observe.minorArcana,
                 active: widget.filter.onlyMajor == false,
                 isPro: isPro,
                 onTap: () => isPro ? _toggleMajor(false) : _proGuard(),
@@ -274,14 +274,14 @@ class _ObserveHistoryFilterBarState extends State<ObserveHistoryFilterBar> {
               ],
               const SizedBox(width: 4),
               _ChipBtn(
-                label: '正位置',
+                label: t.observe.posUpright,
                 active: widget.filter.onlyReversed == false,
                 isPro: isPro,
                 onTap: () => isPro ? _toggleReversed(false) : _proGuard(),
               ),
               const SizedBox(width: 6),
               _ChipBtn(
-                label: '逆位置',
+                label: t.observe.posReversed,
                 active: widget.filter.onlyReversed == true,
                 isPro: isPro,
                 onTap: () => isPro ? _toggleReversed(true) : _proGuard(),
@@ -357,7 +357,7 @@ class _ElementChipBtn extends StatelessWidget {
   Widget build(BuildContext context) {
     final color = Color(elementColors[element] ?? 0xFFC9A84C);
     final emoji = elementEmojis[element] ?? '';
-    final nameJP = elementNames[element] ?? element;
+    final nameJP = elementName(element);
     final fg = isPro
         ? (active ? const Color(0xFF0F0F1E) : color)
         : color.withValues(alpha: 0.5);

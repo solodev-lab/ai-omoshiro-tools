@@ -37,9 +37,9 @@ extension _QuestionFieldWidgets on ObserveScreenState {
           Row(children: [
             const Icon(Icons.auto_awesome, size: 14, color: Color(0xFFE9D29A)),
             const SizedBox(width: 6),
-            const Text(
-              '今日のテーマ',
-              style: TextStyle(
+            Text(
+              t.observe.todayTheme,
+              style: const TextStyle(
                 fontSize: 12,
                 color: Color(0xFFE9D29A),
                 fontWeight: FontWeight.w600,
@@ -66,7 +66,7 @@ extension _QuestionFieldWidgets on ObserveScreenState {
               builder: (_, value, _) {
                 final n = value.text.characters.length;
                 return Text(
-                  '任意・$n/200',
+                  t.observe.themeOptional(n: n),
                   style: TextStyle(
                     fontSize: 10,
                     color: n >= 200
@@ -87,8 +87,8 @@ extension _QuestionFieldWidgets on ObserveScreenState {
             style: const TextStyle(fontSize: 13, color: Color(0xFFE8E0D0)),
             decoration: InputDecoration(
               hintText: _alreadyDrawnToday
-                  ? '本日は引き済みです (明日また)'
-                  : '例: 新しいプロジェクトを始めるべきか迷っている',
+                  ? t.observe.alreadyDrawnHint
+                  : t.observe.themeExample,
               hintStyle: const TextStyle(
                   fontSize: 12, color: Color(0xFF666666), height: 1.4),
               counterText: '',
@@ -125,10 +125,8 @@ extension _QuestionFieldWidgets on ObserveScreenState {
       behavior: HitTestBehavior.opaque,
       onTap: () => showProUnlockDialog(
         context,
-        featureLabel: '質問つきタロット',
-        description: '「今日のテーマ」を 200 字以内で添えると、Stella がそのテーマに'
-            '寄り添ってカードを読み解きます。Cosmic Pro では、より '
-            '深い読み解きも一緒に解放されます。',
+        featureLabel: t.observe.qProFeature,
+        description: t.observe.qProDesc,
       ),
       child: Container(
         padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
@@ -148,20 +146,20 @@ extension _QuestionFieldWidgets on ObserveScreenState {
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
+                children: [
                   Text(
-                    '今日のテーマを添えて引く',
-                    style: TextStyle(
+                    t.observe.addTheme,
+                    style: const TextStyle(
                       fontSize: 12.5,
                       color: Color(0xFFE9D29A),
                       fontWeight: FontWeight.w600,
                       letterSpacing: 0.4,
                     ),
                   ),
-                  SizedBox(height: 3),
+                  const SizedBox(height: 3),
                   Text(
-                    'Cosmic Pro でテーマ欄が開き、Stella がそれに寄り添って読みます。',
-                    style: TextStyle(
+                    t.observe.qProHint,
+                    style: const TextStyle(
                       fontSize: 11,
                       color: Color(0xCCE8E0D0),
                       height: 1.45,

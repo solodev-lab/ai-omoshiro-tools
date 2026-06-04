@@ -40,6 +40,7 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 	Translations $copyWith({TranslationMetadata<AppLocale, Translations>? meta}) => Translations(meta: meta ?? this.$meta);
 
 	// Translations
+	late final Translations$observe$ja observe = Translations$observe$ja.internal(_root);
 	late final Translations$horoDisplay$ja horoDisplay = Translations$horoDisplay$ja.internal(_root);
 	late final Translations$horoPanel$ja horoPanel = Translations$horoPanel$ja.internal(_root);
 	late final Translations$horoScreen$ja horoScreen = Translations$horoScreen$ja.internal(_root);
@@ -79,6 +80,213 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 	late final Translations$disclaimer$ja disclaimer = Translations$disclaimer$ja.internal(_root);
 	late final Translations$common$ja common = Translations$common$ja.internal(_root);
 	late final Translations$aiConsent$ja aiConsent = Translations$aiConsent$ja.internal(_root);
+}
+
+// Path: observe
+class Translations$observe$ja {
+	Translations$observe$ja.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// ja: '星々があなたへの言葉を紡いでいます'
+	String get loading1 => '星々があなたへの言葉を紡いでいます';
+
+	/// ja: '天体の囁きに耳を澄ませています'
+	String get loading2 => '天体の囁きに耳を澄ませています';
+
+	/// ja: 'カードの神秘を解き明かしています'
+	String get loading3 => 'カードの神秘を解き明かしています';
+
+	/// ja: '今日のあなたの意味を結晶化しています'
+	String get loading4 => '今日のあなたの意味を結晶化しています';
+
+	/// ja: '👆 タップしてカードを引く'
+	String get tapToDraw => '👆 タップしてカードを引く';
+
+	/// ja: '✓ 本日のカードは引き済み'
+	String get alreadyDrawn => '✓ 本日のカードは引き済み';
+
+	/// ja: '⚠ オフラインモード（簡易表示）'
+	String get offlineMode => '⚠ オフラインモード（簡易表示）';
+
+	/// ja: '解説の取得に失敗しました。'
+	String get failTitle => '解説の取得に失敗しました。';
+
+	/// ja: '通信状況を確認して、もう一度お試しください。'
+	String get failBody => '通信状況を確認して、もう一度お試しください。';
+
+	/// ja: 'カードからStellaが解釈の１つとして本内容を表示しています。内容に違和感がある場合はご自身で解釈を広げてみてください。あくまでここでの表示は解釈の１つに過ぎません。'
+	String get stellaNote => 'カードからStellaが解釈の１つとして本内容を表示しています。内容に違和感がある場合はご自身で解釈を広げてみてください。あくまでここでの表示は解釈の１つに過ぎません。';
+
+	/// ja: '正位置'
+	String get posUpright => '正位置';
+
+	/// ja: '逆位置'
+	String get posReversed => '逆位置';
+
+	/// ja: '正'
+	String get posShortUpright => '正';
+
+	/// ja: '逆'
+	String get posShortReversed => '逆';
+
+	/// ja: 'キャンセル'
+	String get cancel => 'キャンセル';
+
+	/// ja: '削除'
+	String get delete => '削除';
+
+	/// ja: '無料クレジットを使う'
+	String get creditTitleFree => '無料クレジットを使う';
+
+	/// ja: '有料クレジットを使う'
+	String get creditTitlePaid => '有料クレジットを使う';
+
+	/// ja: 'クレジットがありません'
+	String get creditTitleNone => 'クレジットがありません';
+
+	/// ja: 'カテゴリ: $label'
+	String catLine({required Object label}) => 'カテゴリ: ${label}';
+
+	/// ja: '無料クレジット'
+	String get freeCredits => '無料クレジット';
+
+	/// ja: '残り $remaining / $limit 回'
+	String freeRemaining({required Object remaining, required Object limit}) => '残り ${remaining} / ${limit} 回';
+
+	/// ja: '残り回数を確認中'
+	String get freeChecking => '残り回数を確認中';
+
+	/// ja: '毎週月曜日に補充'
+	String get weeklyRefill => '毎週月曜日に補充';
+
+	/// ja: '有料クレジット'
+	String get paidCredits => '有料クレジット';
+
+	/// ja: '残り $n 回'
+	String paidRemaining({required Object n}) => '残り ${n} 回';
+
+	/// ja: '失効なし（購入分は端末を変えても残る）'
+	String get noExpiry => '失効なし（購入分は端末を変えても残る）';
+
+	/// ja: 'クレジットを購入'
+	String get buyCredits => 'クレジットを購入';
+
+	/// ja: '引く'
+	String get draw => '引く';
+
+	/// ja: '今日のテーマ'
+	String get todayTheme => '今日のテーマ';
+
+	/// ja: '任意・$n/200'
+	String themeOptional({required Object n}) => '任意・${n}/200';
+
+	/// ja: '本日は引き済みです (明日また)'
+	String get alreadyDrawnHint => '本日は引き済みです (明日また)';
+
+	/// ja: '例: 新しいプロジェクトを始めるべきか迷っている'
+	String get themeExample => '例: 新しいプロジェクトを始めるべきか迷っている';
+
+	/// ja: '質問つきタロット'
+	String get qProFeature => '質問つきタロット';
+
+	/// ja: '「今日のテーマ」を 200 字以内で添えると、Stella がそのテーマに寄り添ってカードを読み解きます。Cosmic Pro では、より 深い読み解きも一緒に解放されます。'
+	String get qProDesc => '「今日のテーマ」を 200 字以内で添えると、Stella がそのテーマに寄り添ってカードを読み解きます。Cosmic Pro では、より 深い読み解きも一緒に解放されます。';
+
+	/// ja: '今日のテーマを添えて引く'
+	String get addTheme => '今日のテーマを添えて引く';
+
+	/// ja: 'Cosmic Pro でテーマ欄が開き、Stella がそれに寄り添って読みます。'
+	String get qProHint => 'Cosmic Pro でテーマ欄が開き、Stella がそれに寄り添って読みます。';
+
+	/// ja: '読みたいカテゴリ'
+	String get readCategory => '読みたいカテゴリ';
+
+	/// ja: 'タロットは1日1回です'
+	String get onceADay => 'タロットは1日1回です';
+
+	/// ja: '総合以外のカテゴリ選択にはクレジットを消費します。'
+	String get catCreditNonOverall => '総合以外のカテゴリ選択にはクレジットを消費します。';
+
+	/// ja: 'カテゴリ選択は1クレジット（無料あと$free回$purExtra）'
+	String catCreditWithCount({required Object free, required Object purExtra}) => 'カテゴリ選択は1クレジット（無料あと${free}回${purExtra}）';
+
+	/// ja: ' ・購入$n回'
+	String purExtra({required Object n}) => ' ・購入${n}回';
+
+	/// ja: 'カテゴリ選択は1クレジット消費'
+	String get catCreditSimple => 'カテゴリ選択は1クレジット消費';
+
+	/// ja: '総合はクレジットを使いません'
+	String get overallFree => '総合はクレジットを使いません';
+
+	/// ja: '全文を読みやすく表示'
+	String get fullText => '全文を読みやすく表示';
+
+	/// ja: '確認'
+	String get confirm => '確認';
+
+	/// ja: '履歴をすべて削除しますか？'
+	String get deleteAllConfirm => '履歴をすべて削除しますか？';
+
+	/// ja: '今のサイクル'
+	String get tabCurrentCycle => '今のサイクル';
+
+	/// ja: '過去のサイクル'
+	String get tabPastCycle => '過去のサイクル';
+
+	/// ja: '※ 履歴は50件までです。古い履歴から自動的に削除されます。'
+	String get limitNote => '※ 履歴は50件までです。古い履歴から自動的に削除されます。';
+
+	/// ja: '$visible 件 / 全 $total 件'
+	String countLine({required Object visible, required Object total}) => '${visible} 件 / 全 ${total} 件';
+
+	/// ja: 'まだ履歴がありません TAROT DRAW タブでカードを引くと ここに記録されます'
+	String get emptyHistory => 'まだ履歴がありません\n\nTAROT DRAW タブでカードを引くと\nここに記録されます';
+
+	/// ja: '条件に合うカードはありません'
+	String get noMatch => '条件に合うカードはありません';
+
+	/// ja: '自宅'
+	String get home => '自宅';
+
+	/// ja: '質問あり'
+	String get hasQuestion => '質問あり';
+
+	/// ja: '偶然の一致や気づきをメモ...'
+	String get memoHintSync => '偶然の一致や気づきをメモ...';
+
+	/// ja: '過去のサイクルはまだありません 月が満ちて新しいサイクルに入ると、 それまでのタロット履歴がここに残ります。'
+	String get noPastCycles => '過去のサイクルはまだありません\n\n月が満ちて新しいサイクルに入ると、\nそれまでのタロット履歴がここに残ります。';
+
+	/// ja: '$date · $count 件'
+	String dateCount({required Object date, required Object count}) => '${date} · ${count} 件';
+
+	/// ja: 'このサイクルにはタロット履歴がありません'
+	String get noTarotInCycle => 'このサイクルにはタロット履歴がありません';
+
+	/// ja: '当時の気づきをメモ...'
+	String get memoHintPast => '当時の気づきをメモ...';
+
+	/// ja: '履歴の検索・フィルタ'
+	String get filterProFeature => '履歴の検索・フィルタ';
+
+	/// ja: '過去のカード履歴を、キーワード・アルカナ・エレメントで絞り込めます。 気になる瞬間が、すぐに見つかります。'
+	String get filterProDesc => '過去のカード履歴を、キーワード・アルカナ・エレメントで絞り込めます。\n気になる瞬間が、すぐに見つかります。';
+
+	/// ja: 'カード名・読み・質問・シンクロを検索'
+	String get searchHint => 'カード名・読み・質問・シンクロを検索';
+
+	/// ja: '検索 — Cosmic Pro'
+	String get searchProLocked => '検索 — Cosmic Pro';
+
+	/// ja: '大アルカナ'
+	String get majorArcana => '大アルカナ';
+
+	/// ja: '小アルカナ'
+	String get minorArcana => '小アルカナ';
 }
 
 // Path: horoDisplay
@@ -4364,6 +4572,72 @@ class Translations$paywall$faq$resubscribe$ja {
 extension on Translations {
 	dynamic _flatMapFunction(String path) {
 		return switch (path) {
+			'observe.loading1' => '星々があなたへの言葉を紡いでいます',
+			'observe.loading2' => '天体の囁きに耳を澄ませています',
+			'observe.loading3' => 'カードの神秘を解き明かしています',
+			'observe.loading4' => '今日のあなたの意味を結晶化しています',
+			'observe.tapToDraw' => '👆 タップしてカードを引く',
+			'observe.alreadyDrawn' => '✓ 本日のカードは引き済み',
+			'observe.offlineMode' => '⚠ オフラインモード（簡易表示）',
+			'observe.failTitle' => '解説の取得に失敗しました。',
+			'observe.failBody' => '通信状況を確認して、もう一度お試しください。',
+			'observe.stellaNote' => 'カードからStellaが解釈の１つとして本内容を表示しています。内容に違和感がある場合はご自身で解釈を広げてみてください。あくまでここでの表示は解釈の１つに過ぎません。',
+			'observe.posUpright' => '正位置',
+			'observe.posReversed' => '逆位置',
+			'observe.posShortUpright' => '正',
+			'observe.posShortReversed' => '逆',
+			'observe.cancel' => 'キャンセル',
+			'observe.delete' => '削除',
+			'observe.creditTitleFree' => '無料クレジットを使う',
+			'observe.creditTitlePaid' => '有料クレジットを使う',
+			'observe.creditTitleNone' => 'クレジットがありません',
+			'observe.catLine' => ({required Object label}) => 'カテゴリ: ${label}',
+			'observe.freeCredits' => '無料クレジット',
+			'observe.freeRemaining' => ({required Object remaining, required Object limit}) => '残り ${remaining} / ${limit} 回',
+			'observe.freeChecking' => '残り回数を確認中',
+			'observe.weeklyRefill' => '毎週月曜日に補充',
+			'observe.paidCredits' => '有料クレジット',
+			'observe.paidRemaining' => ({required Object n}) => '残り ${n} 回',
+			'observe.noExpiry' => '失効なし（購入分は端末を変えても残る）',
+			'observe.buyCredits' => 'クレジットを購入',
+			'observe.draw' => '引く',
+			'observe.todayTheme' => '今日のテーマ',
+			'observe.themeOptional' => ({required Object n}) => '任意・${n}/200',
+			'observe.alreadyDrawnHint' => '本日は引き済みです (明日また)',
+			'observe.themeExample' => '例: 新しいプロジェクトを始めるべきか迷っている',
+			'observe.qProFeature' => '質問つきタロット',
+			'observe.qProDesc' => '「今日のテーマ」を 200 字以内で添えると、Stella がそのテーマに寄り添ってカードを読み解きます。Cosmic Pro では、より 深い読み解きも一緒に解放されます。',
+			'observe.addTheme' => '今日のテーマを添えて引く',
+			'observe.qProHint' => 'Cosmic Pro でテーマ欄が開き、Stella がそれに寄り添って読みます。',
+			'observe.readCategory' => '読みたいカテゴリ',
+			'observe.onceADay' => 'タロットは1日1回です',
+			'observe.catCreditNonOverall' => '総合以外のカテゴリ選択にはクレジットを消費します。',
+			'observe.catCreditWithCount' => ({required Object free, required Object purExtra}) => 'カテゴリ選択は1クレジット（無料あと${free}回${purExtra}）',
+			'observe.purExtra' => ({required Object n}) => ' ・購入${n}回',
+			'observe.catCreditSimple' => 'カテゴリ選択は1クレジット消費',
+			'observe.overallFree' => '総合はクレジットを使いません',
+			'observe.fullText' => '全文を読みやすく表示',
+			'observe.confirm' => '確認',
+			'observe.deleteAllConfirm' => '履歴をすべて削除しますか？',
+			'observe.tabCurrentCycle' => '今のサイクル',
+			'observe.tabPastCycle' => '過去のサイクル',
+			'observe.limitNote' => '※ 履歴は50件までです。古い履歴から自動的に削除されます。',
+			'observe.countLine' => ({required Object visible, required Object total}) => '${visible} 件 / 全 ${total} 件',
+			'observe.emptyHistory' => 'まだ履歴がありません\n\nTAROT DRAW タブでカードを引くと\nここに記録されます',
+			'observe.noMatch' => '条件に合うカードはありません',
+			'observe.home' => '自宅',
+			'observe.hasQuestion' => '質問あり',
+			'observe.memoHintSync' => '偶然の一致や気づきをメモ...',
+			'observe.noPastCycles' => '過去のサイクルはまだありません\n\n月が満ちて新しいサイクルに入ると、\nそれまでのタロット履歴がここに残ります。',
+			'observe.dateCount' => ({required Object date, required Object count}) => '${date} · ${count} 件',
+			'observe.noTarotInCycle' => 'このサイクルにはタロット履歴がありません',
+			'observe.memoHintPast' => '当時の気づきをメモ...',
+			'observe.filterProFeature' => '履歴の検索・フィルタ',
+			'observe.filterProDesc' => '過去のカード履歴を、キーワード・アルカナ・エレメントで絞り込めます。\n気になる瞬間が、すぐに見つかります。',
+			'observe.searchHint' => 'カード名・読み・質問・シンクロを検索',
+			'observe.searchProLocked' => '検索 — Cosmic Pro',
+			'observe.majorArcana' => '大アルカナ',
+			'observe.minorArcana' => '小アルカナ',
 			'horoDisplay.filterHint' => '左チェック＝ON/OFF切替 ／ 右ラベル＝解説を開く',
 			'horoDisplay.secPlacement' => '配置の特徴',
 			'horoDisplay.secNatal' => 'ネイタル成立時 (N)',
@@ -4810,6 +5084,8 @@ extension on Translations {
 			'forecast.pro5yrLabel' => '5 年の流れ',
 			'forecast.pro5yrDesc' => '今年だけでなく翌年・来々年も含めた 5 年分のヒートマップで、人生の大きな流れを見渡せます。',
 			'forecast.daysCount' => ({required Object n}) => '(${n}日)',
+			_ => null,
+		} ?? switch (path) {
 			'forecast.calculating' => '天体の運行を計算中…',
 			'forecast.noData' => 'データがありません',
 			'forecast.displayPeriod' => '表示期間',
@@ -4876,8 +5152,6 @@ extension on Translations {
 			'forecast.cycles.s3Body' => '「いつ動くか」の長期計画に。\nその期間の中で具体的な 1 日を Map 画面で確認すると、\nその地点・時刻での方角と時間が見えます。',
 			'forecast.cycles.footer' => '※ 同じ期間のスコアでも Map で開いた数字とは別の指標です\n(場所・時刻に依存しない計算)。\n詳細は画面上部 ❓ ボタンの「Map 画面の数字との関係」へ。',
 			'forecast.top5.title' => 'ハイライトTop5',
-			_ => null,
-		} ?? switch (path) {
 			'forecast.top5.year' => ({required Object year}) => '${year}年',
 			'forecast.top5.infoTitle' => 'ハイライト Top5 の読み方',
 			'forecast.top5.s1Title' => '【表示の意味】',
@@ -5324,6 +5598,8 @@ extension on Translations {
 			'paywall.comparison.titleRediagnosis.pro' => '無制限',
 			'paywall.comparison.forecastPeriod.label' => 'Forecast 期間',
 			'paywall.comparison.forecastPeriod.free' => '1 年',
+			_ => null,
+		} ?? switch (path) {
 			'paywall.comparison.forecastPeriod.pro' => '5 年',
 			'paywall.faq.title' => 'よくあるご質問',
 			'paywall.faq.diff.q' => 'Free と Pro の違いは何ですか?',

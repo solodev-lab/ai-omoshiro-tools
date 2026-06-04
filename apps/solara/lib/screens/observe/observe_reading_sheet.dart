@@ -11,6 +11,7 @@
 
 import 'package:flutter/material.dart';
 
+import '../../i18n/strings.g.dart';
 import '../../models/daily_reading.dart';
 import '../../models/tarot_card.dart';
 import '../../theme/solara_colors.dart';
@@ -89,7 +90,7 @@ class _ReadingSheet extends StatelessWidget {
                           ),
                           const SizedBox(width: 6),
                           Text(
-                            reading.reversed ? '逆' : '正',
+                            reading.reversed ? t.observe.posShortReversed : t.observe.posShortUpright,
                             style: TextStyle(
                               fontSize: 11,
                               color: reading.reversed

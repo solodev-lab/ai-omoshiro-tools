@@ -8,6 +8,7 @@
 
 import 'package:flutter/material.dart';
 
+import '../../i18n/strings.g.dart';
 import '../../models/daily_reading.dart';
 import '../../models/tarot_card.dart';
 import '../../theme/solara_colors.dart';
@@ -35,17 +36,17 @@ class ObserveFullReadingButton extends StatelessWidget {
           border: Border.all(color: const Color(0x66F6BD60)),
           color: const Color(0x14F6BD60),
         ),
-        child: const Row(
+        child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('📖', style: TextStyle(fontSize: 11)),
-            SizedBox(width: 6),
+            const Text('📖', style: TextStyle(fontSize: 11)),
+            const SizedBox(width: 6),
             Flexible(
               child: Text(
-                '全文を読みやすく表示',
+                t.observe.fullText,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 11,
                   color: SolaraColors.solaraGoldLight,
                   letterSpacing: 0.4,

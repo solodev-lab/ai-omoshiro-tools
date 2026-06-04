@@ -19,14 +19,9 @@ part of '../observe_screen.dart';
 // ══════════════════════════════════════════════════
 
 /// カテゴリ選択肢 (Stella 相談の theme と同じ語彙)。null = 全体運。
-const List<(String?, String)> _tarotCategories = [
-  (null, '総合'),
-  ('love', '恋愛'),
-  ('money', '豊かさ'),
-  ('work', '仕事'),
-  ('communication', '対話'),
-  ('healing', '癒し'),
-  ('newStart', '変化'),
+/// 表示ラベルは categoryLabel(id) でロケール連動 (旧バイリンガルラベルは廃止)。
+const List<String?> _tarotCategories = [
+  null, 'love', 'money', 'work', 'communication', 'healing', 'newStart',
 ];
 
 extension _ObserveCategorySelector on ObserveScreenState {
@@ -34,8 +29,8 @@ extension _ObserveCategorySelector on ObserveScreenState {
   Widget _buildCategorySelector(bool isPro) {
     return Column(
       children: [
-        const Text('読みたいカテゴリ',
-            style: TextStyle(
+        Text(t.observe.readCategory,
+            style: const TextStyle(
                 fontSize: 11, color: Color(0xFF888888), letterSpacing: 1.0)),
         const SizedBox(height: 8),
         Wrap(
@@ -43,25 +38,28 @@ extension _ObserveCategorySelector on ObserveScreenState {
           runSpacing: 6,
           alignment: WrapAlignment.center,
           children: [
-            for (final (key, _) in _tarotCategories)
+            for (final key in _tarotCategories)
               _categoryChip(key, categoryLabel(key ?? 'overall'), isPro),
           ],
         ),
         const SizedBox(height: 6),
-        const Text(
-          'タロットは1日1回です',
-          style: TextStyle(fontSize: 10, color: Color(0xFF888888)),
+        Text(
+          t.observe.onceADay,
+          style: const TextStyle(fontSize: 10, color: Color(0xFF888888)),
           textAlign: TextAlign.center,
         ),
         if (!isPro) ...[
           const SizedBox(height: 2),
           Text(
             _selectedCategory == null
-                ? '総合以外のカテゴリ選択にはクレジットを消費します。'
+                ? t.observe.catCreditNonOverall
                 : _tarotFreeRemaining != null
-                    ? 'カテゴリ選択は1クレジット（無料あと$_tarotFreeRemaining回'
-                        '${(_tarotPurchased ?? 0) > 0 ? ' ・購入$_tarotPurchased回' : ''}）'
-                    : 'カテゴリ選択は1クレジット消費',
+                    ? t.observe.catCreditWithCount(
+                        free: _tarotFreeRemaining!,
+                        purExtra: (_tarotPurchased ?? 0) > 0
+                            ? t.observe.purExtra(n: _tarotPurchased!)
+                            : '')
+                    : t.observe.catCreditSimple,
             style: const TextStyle(fontSize: 10, color: Color(0xFF888888)),
             textAlign: TextAlign.center,
           ),
@@ -146,17 +144,17 @@ extension _ObserveCategorySelector on ObserveScreenState {
     if (m == null) return;
     m.clearSnackBars();
     m.showSnackBar(
-      const SnackBar(
+      SnackBar(
         content: Text(
-          '総合はクレジットを使いません',
-          style: TextStyle(color: SolaraColors.textPrimary),
+          t.observe.overallFree,
+          style: const TextStyle(color: SolaraColors.textPrimary),
           textAlign: TextAlign.center,
         ),
-        backgroundColor: Color(0xE60F0F1E),
-        duration: Duration(seconds: 2),
+        backgroundColor: const Color(0xE60F0F1E),
+        duration: const Duration(seconds: 2),
         behavior: SnackBarBehavior.floating,
-        margin: EdgeInsets.symmetric(horizontal: 40, vertical: 24),
-        shape: RoundedRectangleBorder(
+        margin: const EdgeInsets.symmetric(horizontal: 40, vertical: 24),
+        shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.all(Radius.circular(12)),
           side: BorderSide(color: Color(0x33F6BD60)),
         ),

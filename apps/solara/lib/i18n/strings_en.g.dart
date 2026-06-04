@@ -39,6 +39,7 @@ class TranslationsEn extends Translations with BaseTranslations<AppLocale, Trans
 	TranslationsEn $copyWith({TranslationMetadata<AppLocale, Translations>? meta}) => TranslationsEn(meta: meta ?? this.$meta);
 
 	// Translations
+	@override late final _Translations$observe$en observe = _Translations$observe$en._(_root);
 	@override late final _Translations$horoDisplay$en horoDisplay = _Translations$horoDisplay$en._(_root);
 	@override late final _Translations$horoPanel$en horoPanel = _Translations$horoPanel$en._(_root);
 	@override late final _Translations$horoScreen$en horoScreen = _Translations$horoScreen$en._(_root);
@@ -78,6 +79,81 @@ class TranslationsEn extends Translations with BaseTranslations<AppLocale, Trans
 	@override late final _Translations$disclaimer$en disclaimer = _Translations$disclaimer$en._(_root);
 	@override late final _Translations$common$en common = _Translations$common$en._(_root);
 	@override late final _Translations$aiConsent$en aiConsent = _Translations$aiConsent$en._(_root);
+}
+
+// Path: observe
+class _Translations$observe$en extends Translations$observe$ja {
+	_Translations$observe$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get loading1 => 'The stars are weaving their words for you';
+	@override String get loading2 => 'Listening closely to the planets\' whispers';
+	@override String get loading3 => 'Unraveling the mystery of the cards';
+	@override String get loading4 => 'Crystallizing what today means for you';
+	@override String get tapToDraw => '👆 Tap to draw a card';
+	@override String get alreadyDrawn => '✓ Today\'s card already drawn';
+	@override String get offlineMode => '⚠ Offline mode (simplified)';
+	@override String get failTitle => 'Couldn\'t load the reading.';
+	@override String get failBody => 'Please check your connection and try again.';
+	@override String get stellaNote => 'Stella shows this as one interpretation drawn from the cards. If something feels off, feel free to expand on it with your own reading. What\'s shown here is only one of many interpretations.';
+	@override String get posUpright => 'Upright';
+	@override String get posReversed => 'Reversed';
+	@override String get posShortUpright => 'Up';
+	@override String get posShortReversed => 'Rev';
+	@override String get cancel => 'Cancel';
+	@override String get delete => 'Delete';
+	@override String get creditTitleFree => 'Use a free credit';
+	@override String get creditTitlePaid => 'Use a paid credit';
+	@override String get creditTitleNone => 'No credits';
+	@override String catLine({required Object label}) => 'Category: ${label}';
+	@override String get freeCredits => 'Free credits';
+	@override String freeRemaining({required Object remaining, required Object limit}) => '${remaining} / ${limit} left';
+	@override String get freeChecking => 'Checking remaining';
+	@override String get weeklyRefill => 'Refills every Monday';
+	@override String get paidCredits => 'Paid credits';
+	@override String paidRemaining({required Object n}) => '${n} left';
+	@override String get noExpiry => 'No expiry (purchased credits carry across devices)';
+	@override String get buyCredits => 'Buy credits';
+	@override String get draw => 'Draw';
+	@override String get todayTheme => 'Today\'s theme';
+	@override String themeOptional({required Object n}) => 'Optional · ${n}/200';
+	@override String get alreadyDrawnHint => 'Already drawn today (come back tomorrow)';
+	@override String get themeExample => 'e.g. I\'m unsure whether to start a new project';
+	@override String get qProFeature => 'Tarot with a question';
+	@override String get qProDesc => 'Add a "theme for today" in 200 characters or less, and Stella reads the cards in tune with it. Cosmic Pro also unlocks a deeper reading.';
+	@override String get addTheme => 'Draw with today\'s theme';
+	@override String get qProHint => 'Cosmic Pro opens the theme field, and Stella reads in tune with it.';
+	@override String get readCategory => 'Category to read';
+	@override String get onceADay => 'Tarot is once a day';
+	@override String get catCreditNonOverall => 'Choosing a category other than Overall uses a credit.';
+	@override String catCreditWithCount({required Object free, required Object purExtra}) => 'Choosing a category uses 1 credit (${free} free left${purExtra})';
+	@override String purExtra({required Object n}) => ' · ${n} purchased';
+	@override String get catCreditSimple => 'Choosing a category uses 1 credit';
+	@override String get overallFree => 'Overall uses no credits';
+	@override String get fullText => 'Show full text for easy reading';
+	@override String get confirm => 'Confirm';
+	@override String get deleteAllConfirm => 'Delete all history?';
+	@override String get tabCurrentCycle => 'This cycle';
+	@override String get tabPastCycle => 'Past cycles';
+	@override String get limitNote => '* History keeps up to 50 entries. The oldest are removed automatically.';
+	@override String countLine({required Object visible, required Object total}) => '${visible} / ${total}';
+	@override String get emptyHistory => 'No history yet\n\nDraw a card on the TAROT DRAW tab\nto record it here';
+	@override String get noMatch => 'No cards match your filters';
+	@override String get home => 'Home';
+	@override String get hasQuestion => 'Has a question';
+	@override String get memoHintSync => 'Note a coincidence or insight...';
+	@override String get noPastCycles => 'No past cycles yet\n\nWhen the moon fills and a new cycle begins,\nyour tarot history until then remains here.';
+	@override String dateCount({required Object date, required Object count}) => '${date} · ${count}';
+	@override String get noTarotInCycle => 'No tarot history in this cycle';
+	@override String get memoHintPast => 'Note what you noticed back then...';
+	@override String get filterProFeature => 'Search & filter history';
+	@override String get filterProDesc => 'Narrow your past card history by keyword, arcana, or element.\nThe moment you\'re after, found in an instant.';
+	@override String get searchHint => 'Search card name, reading, question, synchronicity';
+	@override String get searchProLocked => 'Search — Cosmic Pro';
+	@override String get majorArcana => 'Major Arcana';
+	@override String get minorArcana => 'Minor Arcana';
 }
 
 // Path: horoDisplay
@@ -2452,6 +2528,72 @@ class _Translations$paywall$faq$resubscribe$en extends Translations$paywall$faq$
 extension on TranslationsEn {
 	dynamic _flatMapFunction(String path) {
 		return switch (path) {
+			'observe.loading1' => 'The stars are weaving their words for you',
+			'observe.loading2' => 'Listening closely to the planets\' whispers',
+			'observe.loading3' => 'Unraveling the mystery of the cards',
+			'observe.loading4' => 'Crystallizing what today means for you',
+			'observe.tapToDraw' => '👆 Tap to draw a card',
+			'observe.alreadyDrawn' => '✓ Today\'s card already drawn',
+			'observe.offlineMode' => '⚠ Offline mode (simplified)',
+			'observe.failTitle' => 'Couldn\'t load the reading.',
+			'observe.failBody' => 'Please check your connection and try again.',
+			'observe.stellaNote' => 'Stella shows this as one interpretation drawn from the cards. If something feels off, feel free to expand on it with your own reading. What\'s shown here is only one of many interpretations.',
+			'observe.posUpright' => 'Upright',
+			'observe.posReversed' => 'Reversed',
+			'observe.posShortUpright' => 'Up',
+			'observe.posShortReversed' => 'Rev',
+			'observe.cancel' => 'Cancel',
+			'observe.delete' => 'Delete',
+			'observe.creditTitleFree' => 'Use a free credit',
+			'observe.creditTitlePaid' => 'Use a paid credit',
+			'observe.creditTitleNone' => 'No credits',
+			'observe.catLine' => ({required Object label}) => 'Category: ${label}',
+			'observe.freeCredits' => 'Free credits',
+			'observe.freeRemaining' => ({required Object remaining, required Object limit}) => '${remaining} / ${limit} left',
+			'observe.freeChecking' => 'Checking remaining',
+			'observe.weeklyRefill' => 'Refills every Monday',
+			'observe.paidCredits' => 'Paid credits',
+			'observe.paidRemaining' => ({required Object n}) => '${n} left',
+			'observe.noExpiry' => 'No expiry (purchased credits carry across devices)',
+			'observe.buyCredits' => 'Buy credits',
+			'observe.draw' => 'Draw',
+			'observe.todayTheme' => 'Today\'s theme',
+			'observe.themeOptional' => ({required Object n}) => 'Optional · ${n}/200',
+			'observe.alreadyDrawnHint' => 'Already drawn today (come back tomorrow)',
+			'observe.themeExample' => 'e.g. I\'m unsure whether to start a new project',
+			'observe.qProFeature' => 'Tarot with a question',
+			'observe.qProDesc' => 'Add a "theme for today" in 200 characters or less, and Stella reads the cards in tune with it. Cosmic Pro also unlocks a deeper reading.',
+			'observe.addTheme' => 'Draw with today\'s theme',
+			'observe.qProHint' => 'Cosmic Pro opens the theme field, and Stella reads in tune with it.',
+			'observe.readCategory' => 'Category to read',
+			'observe.onceADay' => 'Tarot is once a day',
+			'observe.catCreditNonOverall' => 'Choosing a category other than Overall uses a credit.',
+			'observe.catCreditWithCount' => ({required Object free, required Object purExtra}) => 'Choosing a category uses 1 credit (${free} free left${purExtra})',
+			'observe.purExtra' => ({required Object n}) => ' · ${n} purchased',
+			'observe.catCreditSimple' => 'Choosing a category uses 1 credit',
+			'observe.overallFree' => 'Overall uses no credits',
+			'observe.fullText' => 'Show full text for easy reading',
+			'observe.confirm' => 'Confirm',
+			'observe.deleteAllConfirm' => 'Delete all history?',
+			'observe.tabCurrentCycle' => 'This cycle',
+			'observe.tabPastCycle' => 'Past cycles',
+			'observe.limitNote' => '* History keeps up to 50 entries. The oldest are removed automatically.',
+			'observe.countLine' => ({required Object visible, required Object total}) => '${visible} / ${total}',
+			'observe.emptyHistory' => 'No history yet\n\nDraw a card on the TAROT DRAW tab\nto record it here',
+			'observe.noMatch' => 'No cards match your filters',
+			'observe.home' => 'Home',
+			'observe.hasQuestion' => 'Has a question',
+			'observe.memoHintSync' => 'Note a coincidence or insight...',
+			'observe.noPastCycles' => 'No past cycles yet\n\nWhen the moon fills and a new cycle begins,\nyour tarot history until then remains here.',
+			'observe.dateCount' => ({required Object date, required Object count}) => '${date} · ${count}',
+			'observe.noTarotInCycle' => 'No tarot history in this cycle',
+			'observe.memoHintPast' => 'Note what you noticed back then...',
+			'observe.filterProFeature' => 'Search & filter history',
+			'observe.filterProDesc' => 'Narrow your past card history by keyword, arcana, or element.\nThe moment you\'re after, found in an instant.',
+			'observe.searchHint' => 'Search card name, reading, question, synchronicity',
+			'observe.searchProLocked' => 'Search — Cosmic Pro',
+			'observe.majorArcana' => 'Major Arcana',
+			'observe.minorArcana' => 'Minor Arcana',
 			'horoDisplay.filterHint' => 'Left check = toggle ON/OFF / Right label = open description',
 			'horoDisplay.secPlacement' => 'Placement features',
 			'horoDisplay.secNatal' => 'When natal (N)',
@@ -2898,6 +3040,8 @@ extension on TranslationsEn {
 			'forecast.pro5yrLabel' => 'The 5-year flow',
 			'forecast.pro5yrDesc' => 'A 5-year heatmap — this year plus the years ahead — to take in the larger flow of your life.',
 			'forecast.daysCount' => ({required Object n}) => '(${n} days)',
+			_ => null,
+		} ?? switch (path) {
 			'forecast.calculating' => 'Calculating the planets\' motion…',
 			'forecast.noData' => 'No data',
 			'forecast.displayPeriod' => 'Period',
@@ -2964,8 +3108,6 @@ extension on TranslationsEn {
 			'forecast.cycles.s3Body' => 'For longer-term "when to act" planning.\nCheck a specific day within the stretch on the Map screen,\nand you\'ll see the direction and timing at that place and hour.',
 			'forecast.cycles.footer' => '* Even for the same stretch\'s score, this is a different measure from the number you\'d open on the Map\n(a calculation independent of place and time).\nFor details, see "How this relates to the Map numbers" under the ❓ button at the top.',
 			'forecast.top5.title' => 'Highlights Top 5',
-			_ => null,
-		} ?? switch (path) {
 			'forecast.top5.year' => ({required Object year}) => '${year}',
 			'forecast.top5.infoTitle' => 'How to read Highlights — Top 5',
 			'forecast.top5.s1Title' => '[What it means]',
@@ -3412,6 +3554,8 @@ extension on TranslationsEn {
 			'paywall.comparison.titleRediagnosis.pro' => 'Unlimited',
 			'paywall.comparison.forecastPeriod.label' => 'Forecast range',
 			'paywall.comparison.forecastPeriod.free' => '1 year',
+			_ => null,
+		} ?? switch (path) {
 			'paywall.comparison.forecastPeriod.pro' => '5 years',
 			'paywall.faq.title' => 'Frequently Asked Questions',
 			'paywall.faq.diff.q' => 'What\'s the difference between Free and Pro?',

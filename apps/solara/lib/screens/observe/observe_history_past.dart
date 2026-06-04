@@ -14,6 +14,7 @@
 
 import 'package:flutter/material.dart';
 
+import '../../i18n/strings.g.dart';
 import '../../models/daily_reading.dart';
 import '../../models/galaxy_cycle.dart';
 import '../../models/tarot_card.dart';
@@ -47,14 +48,12 @@ class _ObserveHistoryPastPanelState extends State<ObserveHistoryPastPanel> {
       ..sort((a, b) => b.effectiveFormedAt.compareTo(a.effectiveFormedAt));
 
     if (ordered.isEmpty) {
-      return const Padding(
-        padding: EdgeInsets.symmetric(vertical: 60, horizontal: 20),
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 60, horizontal: 20),
         child: Text(
-          '過去のサイクルはまだありません\n\n'
-          '月が満ちて新しいサイクルに入ると、\n'
-          'それまでのタロット履歴がここに残ります。',
+          t.observe.noPastCycles,
           textAlign: TextAlign.center,
-          style: TextStyle(color: Color(0xFF666666), fontSize: 12, height: 1.8),
+          style: const TextStyle(color: Color(0xFF666666), fontSize: 12, height: 1.8),
         ),
       );
     }
@@ -124,7 +123,7 @@ class _ObserveHistoryPastPanelState extends State<ObserveHistoryPastPanel> {
                     ),
                     const SizedBox(height: 3),
                     Text(
-                      '$dateLabel · $count 件',
+                      t.observe.dateCount(date: dateLabel, count: count),
                       style: const TextStyle(
                           fontSize: 10, color: Color(0xFF888888)),
                     ),
@@ -146,11 +145,11 @@ class _ObserveHistoryPastPanelState extends State<ObserveHistoryPastPanel> {
 
   Widget _buildReadingsList(GalaxyCycle cycle) {
     if (cycle.readings.isEmpty) {
-      return const Padding(
-        padding: EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
         child: Text(
-          'このサイクルにはタロット履歴がありません',
-          style: TextStyle(fontSize: 11, color: Color(0xFF666666)),
+          t.observe.noTarotInCycle,
+          style: const TextStyle(fontSize: 11, color: Color(0xFF666666)),
         ),
       );
     }
@@ -214,7 +213,7 @@ class _ObserveHistoryPastPanelState extends State<ObserveHistoryPastPanel> {
                       ),
                       const SizedBox(width: 6),
                       Text(
-                        r.reversed ? '逆' : '正',
+                        r.reversed ? t.observe.posShortReversed : t.observe.posShortUpright,
                         style: TextStyle(
                           fontSize: 10,
                           color: r.reversed
@@ -297,7 +296,7 @@ class _ObserveHistoryPastPanelState extends State<ObserveHistoryPastPanel> {
         MemoTextField(
           key: ValueKey('past-memo-${cycle.id}-${r.date}'),
           initialText: r.synchronicity,
-          hintText: '当時の気づきをメモ...',
+          hintText: t.observe.memoHintPast,
           onChanged: (text) {
             r.synchronicity = text;
             SolaraStorage.updateCompletedCycleReadingSynchronicity(

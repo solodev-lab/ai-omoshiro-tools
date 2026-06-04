@@ -423,7 +423,7 @@
 | 3c | · | 5 | 4 | 2 | 4 | 1 | 12 | 4 | · | · | · | · | · | · | · | · |
 | 4a | 15 | 11 | · | 14 | 8 | 1 | 19 | 24 | 3 | 32 | 4 | · | · | · | 4 | · |
 | 4b | 11 | 14 | · | 3 | 4 | · | 15 | · | · | · | 30 | · | · | 2 | · | · |
-| 4c | 2 | 1 | 14 | 1 | 4 | 5 | 8 | 6 | · | · | · | 16 | · | · | 1 | · |
+| 4c | 3 | 1 | 14 | 1 | 4 | 5 | 8 | 6 | · | · | · | 16 | · | · | 1 | · |
 | 4d | 5 | 6 | 13 | 1 | 2 | 2 | 11 | 3 | 1 | · | · | · | 9 | · | · | · |
 | 4e | 2 | 6 | · | 3 | 7 | 2 | 16 | 1 | · | · | · | · | · | 9 | 3 | · |
 | 4f | 6 | 6 | · | 8 | 16 | 6 | 19 | 14 | · | 6 | · | · | · | · | 30 | · |
@@ -442,7 +442,7 @@
 | `lib/utils/solara_storage.dart` | 2b | 33 |
 | `lib/widgets/info_popup.dart` | 3a | 26 |
 | `lib/screens/map/map_constants.dart` | 3b | 23 |
-| `lib/utils/solara_i18n.dart` | 1a | 19 |
+| `lib/utils/solara_i18n.dart` | 1a | 20 |
 | `lib/utils/solara_api.dart` | 2a | 15 |
 | `lib/models/galaxy_cycle.dart` | 1c | 14 |
 | `lib/screens/horoscope/horo_antique_icons.dart` | 3a | 14 |
@@ -472,13 +472,11 @@
 > 各ソースの SHA1 を `_stamps.json` に記録し、差分を検出。
 > 変更されたファイルが属する層は、人手版インベントリ章の見直し対象。
 
-- 追加: **0** / 削除: **0** / 変更: **18**
+- 追加: **0** / 削除: **0** / 変更: **11**
 
 ### 変更されたファイル (層別)
 
-- **層 1b**: `lib/screens/horoscope/horo_constants.dart`
-- **層 4a**: `lib/screens/map/map_relocation_popup.dart`
-- **層 4b**: `lib/screens/horoscope/horo_aspect_list.dart`, `lib/screens/horoscope/horo_backdrop.dart`, `lib/screens/horoscope/horo_birth_panel.dart`, `lib/screens/horoscope/horo_bottom_sheet.dart`, `lib/screens/horoscope/horo_chart_view.dart`, `lib/screens/horoscope/horo_filter_panel.dart`, `lib/screens/horoscope/horo_fortune_cards.dart`, `lib/screens/horoscope/horo_location_input.dart`, `lib/screens/horoscope/horo_panel_shared.dart`, `lib/screens/horoscope/horo_planet_table.dart`, `lib/screens/horoscope/horo_prediction_panel.dart`, `lib/screens/horoscope/horo_relocation_angles.dart`, `lib/screens/horoscope/horo_relocation_lines.dart`, `lib/screens/horoscope/horo_relocation_panel.dart`, `lib/screens/horoscope/horo_transit_panel.dart`, `lib/screens/horoscope_screen.dart`
+- **層 4c**: `lib/screens/observe/observe_card_widgets.dart`, `lib/screens/observe/observe_category_selector.dart`, `lib/screens/observe/observe_constants.dart`, `lib/screens/observe/observe_history.dart`, `lib/screens/observe/observe_history_filter.dart`, `lib/screens/observe/observe_history_past.dart`, `lib/screens/observe/observe_question_field.dart`, `lib/screens/observe/observe_reading_button.dart`, `lib/screens/observe/observe_reading_sheet.dart`, `lib/screens/observe/tarot_category_popup.dart`, `lib/screens/observe_screen.dart`
 
 ## #7 astro_glossary 用語辞書対整合
 
