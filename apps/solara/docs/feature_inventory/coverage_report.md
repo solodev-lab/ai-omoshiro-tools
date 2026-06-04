@@ -54,12 +54,14 @@
 
 ## #1 / #2 機械抽出 ↔ feature_inventory.md (人手版) の対整合
 
-- 機械抽出した class/mixin/extension/enum: **476**
+- 機械抽出した class/mixin/extension/enum: **479**
 - inventory に登場する識別子 (大文字始まり ``backtick``囲み): **292**
 
-### #1 機械にあるが Doc に書かれていない (274)
+### #1 機械にあるが Doc に書かれていない (277)
 
 - `AppAttestClient`
+- `AppFontSize`
+- `AppTextScale`
 - `ConstellationShareCardPage`
 - `ConsultEntryPopup`
 - `ConsultationDeltaAfter`
@@ -253,13 +255,11 @@
 - `_Petal`
 - `_PetalPalette`
 - `_PickedSpecific`
+- `_PickerOption`
 - `_PillChip`
 - `_PlanetDef`
 - `_PlanetGlyphPainter`
-- `_PlanetIntroBody`
-- `_PlanetSub`
-- `_PopupBody`
-- … 残り 74 省略
+- … 残り 77 省略
 
 ### #2 Doc に書いてあるがコードに存在しない (ゴースト記述) (90)
 
@@ -389,7 +389,7 @@
 
 ### 層 4e: Sanctuary 画面
 
-- ファイル数: 10
+- ファイル数: 11
 - Worker URL 呼出: (なし)
 - Popup/Dialog: `showInfoPopup`×5
 - Navigator.push 等: 0 箇所
@@ -415,7 +415,7 @@
 | 1a | 3 | 1 | 1 | 1 | 3 | · | · | · | · | · | · | · | · | · | · | · |
 | 1b | 8 | · | · | 2 | 1 | · | 1 | · | · | 2 | · | · | · | · | · | · |
 | 1c | · | · | 1 | · | · | · | · | · | · | · | · | · | · | · | · | · |
-| 2a | 3 | 1 | · | 6 | 4 | · | · | 1 | · | · | · | · | · | · | · | · |
+| 2a | 3 | 1 | · | 6 | 5 | · | · | 1 | · | · | · | · | · | · | · | · |
 | 2b | 3 | 3 | 5 | 6 | 4 | 1 | · | · | · | · | · | · | · | · | · | · |
 | 2c | 1 | · | 1 | 3 | 2 | · | · | · | · | · | · | · | · | · | · | · |
 | 3a | 4 | 4 | 2 | 2 | 1 | 1 | 8 | 7 | 4 | 1 | · | · | · | · | 1 | · |
@@ -425,9 +425,9 @@
 | 4b | 12 | 14 | · | 3 | 4 | · | 15 | · | · | · | 30 | · | · | 2 | · | · |
 | 4c | 3 | 1 | 14 | 1 | 4 | 5 | 8 | 6 | · | · | · | 16 | · | · | 1 | · |
 | 4d | 9 | 6 | 13 | 1 | 2 | 2 | 11 | 3 | 1 | · | · | · | 9 | · | · | · |
-| 4e | 5 | 6 | · | 3 | 7 | 2 | 16 | 1 | · | · | · | · | · | 9 | 3 | · |
+| 4e | 5 | 6 | · | 3 | 11 | 2 | 16 | 1 | · | · | · | · | · | 10 | 3 | · |
 | 4f | 6 | 6 | · | 8 | 16 | 6 | 19 | 14 | · | 6 | · | · | · | · | 30 | · |
-| 5 | 2 | 2 | · | 2 | 5 | 5 | 1 | 1 | · | 1 | 1 | 1 | 1 | 3 | 4 | · |
+| 5 | 2 | 2 | · | 2 | 6 | 5 | 1 | 1 | · | 1 | 1 | 1 | 1 | 3 | 4 | · |
 
 > 健全な依存方向は「番号が大きい層 → 小さい層」(上位が下位に依存)。
 > 番号が小さい層から大きい層への矢印 (左下三角) は逆流依存の疑い。
@@ -472,14 +472,20 @@
 > 各ソースの SHA1 を `_stamps.json` に記録し、差分を検出。
 > 変更されたファイルが属する層は、人手版インベントリ章の見直し対象。
 
-- 追加: **0** / 削除: **0** / 変更: **5**
+- 追加: **2** / 削除: **0** / 変更: **5**
 
 ### 変更されたファイル (層別)
 
+- **層 2a**: `lib/utils/legal_urls.dart`
 - **層 2b**: `lib/utils/app_locale.dart`
-- **層 4b**: `lib/screens/horoscope/horo_relocation_panel.dart`, `lib/screens/horoscope_screen.dart`
-- **層 4c**: `lib/screens/observe_screen.dart`
-- **層 4f**: `lib/screens/consultation/consultation_input_logic.dart`
+- **層 4e**: `lib/screens/sanctuary_screen.dart`
+- **層 4f**: `lib/screens/ai_consent_screen.dart`
+- **層 5**: `lib/main.dart`
+
+### 追加されたファイル
+
+- `lib/screens/sanctuary/sanctuary_settings_pickers.dart` (層 4e)
+- `lib/utils/app_text_scale.dart` (層 2b)
 
 ## #7 astro_glossary 用語辞書対整合
 

@@ -5,9 +5,9 @@
 
 ## サマリ
 
-- ファイル数: 10 / 総行数: 2395
+- ファイル数: 10 / 総行数: 2411
 - class/mixin/extension/enum: 26
-- 関数 (top-level + method の素拾い): 39
+- 関数 (top-level + method の素拾い): 40
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 0
 - Worker URL リテラル: 22
@@ -264,7 +264,7 @@ Solara 端末セキュリティ状態 (RASP) — Phase 2 launch_checklist
   </details>
 
 
-### `lib/utils/legal_urls.dart` (63 行)
+### `lib/utils/legal_urls.dart` (79 行)
 
 **ファイル先頭コメント:**
 
@@ -292,19 +292,34 @@ Solara 法務リンク定数 — Phase 2-6b
   - Phase 0 完了時に同 URL に文書を公開してから審査提出する
   - Phase 0 未完で本番ビルドを出すと審査リジェクト (B5)、絶対に飛ばさない
 
-🔴 i18n:
-  - 当面 ja-JP のみ。ストアアップ前最終工程で EN 版 URL を追加 (feedback_i18n_last)
+🔴 i18n (2026-06-04 言語別サブフォルダ化):
+  - 各文書は /{lang}/ サブフォルダ配下に置く (例: /legal/solara/en/privacy.html,
+    /legal/solara/ja/privacy.html)。表示言語 (AppLocale.resolvedCode) で出し分け。
+  - _hostedLangs に列挙した言語のみ実在。未ホスト言語は 'en' にフォールバック。
+  - 🔴 公開前に en/ + ja/ 配下へ実ファイルを設置すること (B5 ブロッカー)。新言語は
+    ページ公開 + _hostedLangs に languageCode 追加。英語=ストア提出のプライマリ。
 ```
 
-**imports:** dart=1 / package=0 / relative=0
+**imports:** dart=1 / package=0 / relative=1
+
+- relative: `app_locale.dart`
 
 **型定義 (1):**
 
-- L29 `class LegalUrls`
+- L35 `class LegalUrls`
+
+**関数 (0 public + 1 private):**
+
+
+  <details><summary>private 関数 1 件</summary>
+
+  - L44 `_lang()`
+
+  </details>
 
 **Worker URL リテラル (1):**
 
-- L30: `'https://solodev-lab.com/legal/solara'`
+- L36: `'https://solodev-lab.com/legal/solara'`
 
 
 ### `lib/utils/reverse_geocode.dart` (100 行)

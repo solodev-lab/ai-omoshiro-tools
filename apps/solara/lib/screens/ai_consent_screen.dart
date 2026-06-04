@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../i18n/strings.g.dart';
@@ -106,24 +107,37 @@ class AiConsentScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const SizedBox(height: 16),
-                  const Text(
-                    '✦ Solara ✦',
+                  // エンブレム画像を外した分の高さを確保し、SOLARA の縦位置を
+                  // 以前 (エンブレム表示時) と同じに保つ (オーナー指示「文字位置は
+                  // そのまま」)。上部には背景画像の太陽意匠が見える。
+                  const SizedBox(height: 94),
+                  // ブランドヘッダー: SOLARA ワードマーク (Cinzel = ストア feature
+                  // graphic と同一書体) + タグライン (日英ロケール連動)。背景画像の
+                  // 太陽意匠と重なるためエンブレム画像は置かない (2026-06-04 オーナー判断)。
+                  Text(
+                    'SOLARA',
                     textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Color(0xFFC9A84C),
+                    style: GoogleFonts.cinzel(
+                      color: const Color(0xFFC9A84C),
                       fontSize: 32,
-                      fontWeight: FontWeight.w300,
-                      letterSpacing: 2.0,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 6.0,
                     ),
                   ),
                   const SizedBox(height: 6),
+                  // タグライン。Cormorant は Latin 専用書体なので、日本語ロケールでは
+                  // Flutter のグリフフォールバックで既定書体描画になる (実害なし)。
                   Text(
                     t.aiConsent.subtitle,
                     textAlign: TextAlign.center,
-                    style: const TextStyle(color: Color(0xFFB8B4A3), fontSize: 13),
+                    style: GoogleFonts.cormorantGaramond(
+                      color: const Color(0xFFCDB87E),
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      letterSpacing: 1.0,
+                    ),
                   ),
-                  const SizedBox(height: 28),
+                  const SizedBox(height: 24),
                   Expanded(
                     child: SingleChildScrollView(
                       child: Column(

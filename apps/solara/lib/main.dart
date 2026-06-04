@@ -15,6 +15,7 @@ import 'screens/sanctuary/title_history_screen.dart';
 import 'screens/sanctuary/class_share_card.dart';
 import 'utils/app_attest_client.dart';
 import 'utils/app_locale.dart';
+import 'utils/app_text_scale.dart';
 import 'utils/celestial_events.dart';
 import 'utils/consult_restore.dart';
 import 'utils/consultation_credits.dart';
@@ -43,6 +44,7 @@ void main() async {
   await TarotData.initialize();
   await CelestialEvents.initialize();
   await AppLocale.instance.load();
+  await AppTextScale.instance.load();
   // 月イベント通知: プラグイン + timezone を初期化し、現状態から再スケジュール。
   // マスタ OFF / OS 未許可なら cancel のみ (= 何も鳴らない)。CelestialEvents +
   // AppLocale 初期化後に呼ぶ (惑星イベント取得とロケール判定に必要)。
@@ -133,10 +135,30 @@ class _SolaraAppState extends State<SolaraApp> {
         // 無効化 (TextScaler.noScaling) は Apple HIG 違反 + ストア審査リスクの
         // ため避け、業界標準の「1.2〜1.5 クランプ」のうち上限値を採用。
         // (スコアバー / 日付バーは Column 化済みなので 1.5 まで耐えられる)
-        builder: (context, child) => MediaQuery.withClampedTextScaling(
-          minScaleFactor: 1.0,
-          maxScaleFactor: 1.5,
-          child: child!,
+        //
+        // 2026-06-04: これに「言語ごとの拡大倍率」を掛ける。ラテン文字系
+        // (en/es/pt/fr/de) は x-height が全角字形より小さく、日本語基準で詰めた
+        // fontSize だと小さく見えるため拡大する。CJK/ハングル (ja/ko) は 1.0。
+        // 倍率表は AppLocale._textScaleBoostByLang。最終的に [1.0, 1.5] へクランプ
+        // するので overflow 天井 (テスト済み上限) は従来と変わらない。
+        builder: (context, child) => ValueListenableBuilder<AppFontSize>(
+          valueListenable: AppTextScale.instance.notifier,
+          builder: (context, _, _) {
+            final boost = AppLocale.instance.textScaleBoost;
+            final userMult = AppTextScale.instance.multiplier;
+            final mq = MediaQuery.of(context);
+            // body 相当 (14px) で端末の実効倍率を測る (Android14 の非線形 scale 対策)。
+            final deviceFactor = mq.textScaler.scale(14) / 14;
+            // 標準 (userMult=1.0) は端末×言語倍率を [1.0,1.5] にクランプ = 従来挙動
+            // と完全一致 (退行なし)。大きめ/最大はその上から拡大し、最後に 2.0 で
+            // 安全クランプ (絵主役画面の窮屈さは設定 UI の注意書きで明示)。
+            final base = (deviceFactor * boost).clamp(1.0, 1.5);
+            final factor = (base * userMult).clamp(1.0, 2.0).toDouble();
+            return MediaQuery(
+              data: mq.copyWith(textScaler: TextScaler.linear(factor)),
+              child: child!,
+            );
+          },
         ),
         // AI 同意未取得時は SolaraHome の代わりに AiConsentScreen を出す。
         // 同意完了 → setState で _consented=true → SolaraHome に差し替わる。

@@ -63,4 +63,35 @@ class AppLocale {
   }
 
   String get currentCode => notifier.value?.languageCode ?? 'system';
+
+  /// 言語ごとのテキスト拡大倍率 (x-height 補正)。
+  /// ラテン文字 (en/es/pt/fr/de) は小文字の x-height が全角字形より小さく、
+  /// 日本語の密な字形に合わせて詰めた基準 fontSize だと小さく見えるため
+  /// 拡大する。CJK / ハングル (ja/ko) は全角の密な字形で基準値のまま読めるので
+  /// 1.0。新言語を足すときはここに 1 行追加する (未登録は 1.0 = 拡大なし)。
+  ///
+  /// 1.3 の根拠 (2026-06-04 調査): 本文 base=13px × 1.3 = 16.9px ≒ Apple HIG の
+  /// 本文基準 17pt / Material Design 3 の本文 16sp を満たす。業界知見「ラテンは
+  /// CJK より 10〜20% 大きくしてバランスを取る」とも整合 (詳細は i18n_glossary)。
+  static const Map<String, double> _textScaleBoostByLang = {
+    'ja': 1.0,
+    'ko': 1.0,
+    'en': 1.3,
+    'es': 1.3,
+    'pt': 1.3,
+    'fr': 1.3,
+    'de': 1.3,
+  };
+
+  /// 実際に表示している言語コード (slang と同じ解決 = _syncSlang に一致)。
+  /// override=='en'/'ja' はそれ、null(端末追従) は端末ロケールの最良一致。
+  String get resolvedCode {
+    final ov = notifier.value?.languageCode;
+    return (ov == 'en' || ov == 'ja')
+        ? ov!
+        : i18n.AppLocaleUtils.findDeviceLocale().languageCode;
+  }
+
+  /// 現在表示中の言語のテキスト拡大倍率 (未登録言語は 1.0 = 拡大なし)。
+  double get textScaleBoost => _textScaleBoostByLang[resolvedCode] ?? 1.0;
 }

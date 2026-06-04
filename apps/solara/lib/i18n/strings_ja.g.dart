@@ -96,6 +96,7 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 	late final Translations$category$ja category = Translations$category$ja.internal(_root);
 	late final Translations$disclaimer$ja disclaimer = Translations$disclaimer$ja.internal(_root);
 	late final Translations$common$ja common = Translations$common$ja.internal(_root);
+	late final Translations$appSettings$ja appSettings = Translations$appSettings$ja.internal(_root);
 	late final Translations$aiConsent$ja aiConsent = Translations$aiConsent$ja.internal(_root);
 }
 
@@ -2634,6 +2635,39 @@ class Translations$common$ja {
 	String get tryAgain => '再試行';
 }
 
+// Path: appSettings
+class Translations$appSettings$ja {
+	Translations$appSettings$ja.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// ja: '言語'
+	String get language => '言語';
+
+	/// ja: '言語を選択'
+	String get langTitle => '言語を選択';
+
+	/// ja: '文字サイズ'
+	String get fontSize => '文字サイズ';
+
+	/// ja: '文字サイズ'
+	String get fontSizeTitle => '文字サイズ';
+
+	/// ja: '標準'
+	String get fontStandard => '標準';
+
+	/// ja: '大きめ'
+	String get fontLarge => '大きめ';
+
+	/// ja: '最大'
+	String get fontMax => '最大';
+
+	/// ja: '標準より大きくすると、Map や Galaxy など一部の画面で文字やアイコンが重なって見えにくくなる場合があります。'
+	String get fontCaveat => '標準より大きくすると、Map や Galaxy など一部の画面で文字やアイコンが重なって見えにくくなる場合があります。';
+}
+
 // Path: aiConsent
 class Translations$aiConsent$ja {
 	Translations$aiConsent$ja.internal(this._root);
@@ -2642,8 +2676,8 @@ class Translations$aiConsent$ja {
 
 	// Translations
 
-	/// ja: 'ご利用前のおしらせ'
-	String get subtitle => 'ご利用前のおしらせ';
+	/// ja: '時と場所を読む、人生のアストロラーベ'
+	String get subtitle => '時と場所を読む、人生のアストロラーベ';
 
 	/// ja: '同意して始める'
 	String get agree => '同意して始める';
@@ -4439,8 +4473,8 @@ class Translations$aiConsent$declineDialog$ja {
 	/// ja: '本アプリのご利用には同意が必要です'
 	String get title => '本アプリのご利用には同意が必要です';
 
-	/// ja: 'Solara をご利用いただくためには、「ご利用前のおしらせ」にご記載の内容にご同意いただく必要がございます。同意なしではご利用いただけません。 もう一度ご確認いただくか、Solara をアンインストールしてください。本アプリでは、ユーザーの個人情報を含む一切のデータを受け取っておりませんので、安心してアンインストールしていただけます。'
-	String get body => 'Solara をご利用いただくためには、「ご利用前のおしらせ」にご記載の内容にご同意いただく必要がございます。同意なしではご利用いただけません。\n\nもう一度ご確認いただくか、Solara をアンインストールしてください。本アプリでは、ユーザーの個人情報を含む一切のデータを受け取っておりませんので、安心してアンインストールしていただけます。';
+	/// ja: 'Solara をご利用いただくためには、上記にご記載の内容にご同意いただく必要がございます。同意なしではご利用いただけません。 もう一度ご確認いただくか、Solara をアンインストールしてください。本アプリでは、ユーザーの個人情報を含む一切のデータを受け取っておりませんので、安心してアンインストールしていただけます。'
+	String get body => 'Solara をご利用いただくためには、上記にご記載の内容にご同意いただく必要がございます。同意なしではご利用いただけません。\n\nもう一度ご確認いただくか、Solara をアンインストールしてください。本アプリでは、ユーザーの個人情報を含む一切のデータを受け取っておりませんので、安心してアンインストールしていただけます。';
 }
 
 // Path: aiConsent.links
@@ -4544,8 +4578,8 @@ class Translations$aiConsent$consentHandling$ja {
 	/// ja: '◆ 同意の取扱いについて'
 	String get heading => '◆ 同意の取扱いについて';
 
-	/// ja: '「同意して始める」を押すと、この「ご利用前のおしらせ」に記載されている事項に同意した事実を端末内に記録します。次回以降は表示されません。（規約変更の際は再度のご案内をさせて頂く場合がございます） 同意しない場合は、画面下の「同意しない」をタップしていただき、Solara をアンインストールしてください。この時点では、本アプリではユーザーの個人情報含む一切のデータを受け取っておりません。'
-	String get body => '「同意して始める」を押すと、この「ご利用前のおしらせ」に記載されている事項に同意した事実を端末内に記録します。次回以降は表示されません。（規約変更の際は再度のご案内をさせて頂く場合がございます）\n\n同意しない場合は、画面下の「同意しない」をタップしていただき、Solara をアンインストールしてください。この時点では、本アプリではユーザーの個人情報含む一切のデータを受け取っておりません。';
+	/// ja: '「同意して始める」を押すと、上記に記載されている事項に同意した事実を端末内に記録します。次回以降は表示されません。（規約変更の際は再度のご案内をさせて頂く場合がございます） 同意しない場合は、画面下の「同意しない」をタップしていただき、Solara をアンインストールしてください。この時点では、本アプリではユーザーの個人情報含む一切のデータを受け取っておりません。'
+	String get body => '「同意して始める」を押すと、上記に記載されている事項に同意した事実を端末内に記録します。次回以降は表示されません。（規約変更の際は再度のご案内をさせて頂く場合がございます）\n\n同意しない場合は、画面下の「同意しない」をタップしていただき、Solara をアンインストールしてください。この時点では、本アプリではユーザーの個人情報含む一切のデータを受け取っておりません。';
 }
 
 // Path: aiReport.reasons.inappropriate
@@ -6239,13 +6273,21 @@ extension on Translations {
 			'disclaimer.ai' => '✦ AI 生成・娯楽目的。医療・法律・金融等の専門的な助言ではありません。',
 			'disclaimer.fetchFailed' => '解説の取得に失敗しました。通信状況を確認して、もう一度お試しください。',
 			'common.tryAgain' => '再試行',
-			'aiConsent.subtitle' => 'ご利用前のおしらせ',
+			'appSettings.language' => '言語',
+			'appSettings.langTitle' => '言語を選択',
+			'appSettings.fontSize' => '文字サイズ',
+			'appSettings.fontSizeTitle' => '文字サイズ',
+			'appSettings.fontStandard' => '標準',
+			'appSettings.fontLarge' => '大きめ',
+			'appSettings.fontMax' => '最大',
+			'appSettings.fontCaveat' => '標準より大きくすると、Map や Galaxy など一部の画面で文字やアイコンが重なって見えにくくなる場合があります。',
+			'aiConsent.subtitle' => '時と場所を読む、人生のアストロラーベ',
 			'aiConsent.agree' => '同意して始める',
 			'aiConsent.decline' => '同意しない',
 			'aiConsent.back' => '戻る',
 			'aiConsent.linkOpenFailed' => ({required Object url}) => 'リンクを開けませんでした: ${url}',
 			'aiConsent.declineDialog.title' => '本アプリのご利用には同意が必要です',
-			'aiConsent.declineDialog.body' => 'Solara をご利用いただくためには、「ご利用前のおしらせ」にご記載の内容にご同意いただく必要がございます。同意なしではご利用いただけません。\n\nもう一度ご確認いただくか、Solara をアンインストールしてください。本アプリでは、ユーザーの個人情報を含む一切のデータを受け取っておりませんので、安心してアンインストールしていただけます。',
+			'aiConsent.declineDialog.body' => 'Solara をご利用いただくためには、上記にご記載の内容にご同意いただく必要がございます。同意なしではご利用いただけません。\n\nもう一度ご確認いただくか、Solara をアンインストールしてください。本アプリでは、ユーザーの個人情報を含む一切のデータを受け取っておりませんので、安心してアンインストールしていただけます。',
 			'aiConsent.links.privacy' => 'プライバシーポリシー',
 			'aiConsent.links.terms' => '利用規約',
 			'aiConsent.intro.heading' => '◆ はじめに',
@@ -6259,7 +6301,7 @@ extension on Translations {
 			'aiConsent.decisions.heading' => '◆ 重要な意思決定について',
 			'aiConsent.decisions.body' => 'Solara の読み解きは、あなた自身を理解するための参考情報です。不正確だったり、あなたに合わない内容になる場合もあります。\n\n違和感を感じた結果は鵜呑みにせず、移住・転職・結婚など人生の重要な判断は、ご自身の意思と、ご家族・専門家への相談に基づいて行ってください。\n\nデータの詳しい取扱いは下記をご確認ください。',
 			'aiConsent.consentHandling.heading' => '◆ 同意の取扱いについて',
-			'aiConsent.consentHandling.body' => '「同意して始める」を押すと、この「ご利用前のおしらせ」に記載されている事項に同意した事実を端末内に記録します。次回以降は表示されません。（規約変更の際は再度のご案内をさせて頂く場合がございます）\n\n同意しない場合は、画面下の「同意しない」をタップしていただき、Solara をアンインストールしてください。この時点では、本アプリではユーザーの個人情報含む一切のデータを受け取っておりません。',
+			'aiConsent.consentHandling.body' => '「同意して始める」を押すと、上記に記載されている事項に同意した事実を端末内に記録します。次回以降は表示されません。（規約変更の際は再度のご案内をさせて頂く場合がございます）\n\n同意しない場合は、画面下の「同意しない」をタップしていただき、Solara をアンインストールしてください。この時点では、本アプリではユーザーの個人情報含む一切のデータを受け取っておりません。',
 			_ => null,
 		};
 	}

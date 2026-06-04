@@ -95,6 +95,7 @@ class TranslationsEn extends Translations with BaseTranslations<AppLocale, Trans
 	@override late final _Translations$category$en category = _Translations$category$en._(_root);
 	@override late final _Translations$disclaimer$en disclaimer = _Translations$disclaimer$en._(_root);
 	@override late final _Translations$common$en common = _Translations$common$en._(_root);
+	@override late final _Translations$appSettings$en appSettings = _Translations$appSettings$en._(_root);
 	@override late final _Translations$aiConsent$en aiConsent = _Translations$aiConsent$en._(_root);
 }
 
@@ -516,8 +517,8 @@ class _Translations$horoScreen$en extends Translations$horoScreen$ja {
 	@override String get houseEssence => 'Essence';
 	@override String get houseEssenceTip => 'Houses based on your birthplace';
 	@override String get houseReality => 'Reality';
-	@override String get houseRealityTipHome => 'Houses based on your current address (relocation)';
-	@override String get houseRealityTipNoHome => 'Please set your current address in the Sanctuary';
+	@override String get houseRealityTipHome => 'Houses based on your current residence (relocation)';
+	@override String get houseRealityTipNoHome => 'Please set your current residence in the Sanctuary';
 }
 
 // Path: relocPanel
@@ -539,8 +540,8 @@ class _Translations$relocPanel$en extends Translations$relocPanel$ja {
 	@override String get tagCloser => '▲ Approaching';
 	@override String get tagFarther => '▽ Receding';
 	@override String get tagSame => '・ Almost no change';
-	@override String get needChart => 'Set your birth time and current address to read which angle the planets draw near here.';
-	@override String get samePlace => 'Your birthplace and current address are almost the same spot. The farther you move, the more clearly the distance between planets and angles changes.';
+	@override String get needChart => 'Set your birth time and current residence to read which angle the planets draw near here.';
+	@override String get samePlace => 'Your birthplace and current residence are almost the same spot. The farther you move, the more clearly the distance between planets and angles changes.';
 	@override String get footnote => '* The closer a planet is to an angle (ASC/MC/DSC/IC), the more that planet\'s theme comes forward in that land. Not a good/bad verdict, but a leaning toward "stronger / gentler".';
 }
 
@@ -578,7 +579,7 @@ class _Translations$mapSearch$en extends Translations$mapSearch$ja {
 	@override String get rankRelevance => 'Popular';
 	@override String get rankHelpTitle => 'How to narrow results';
 	@override String get rankDistanceHead => '[Nearby]';
-	@override String get rankDistanceBody => 'Fetches in order of nearness to the map\'s center (e.g. your current address).\nEven lesser-known places rank high if they\'re nearby.';
+	@override String get rankDistanceBody => 'Fetches in order of nearness to the map\'s center (e.g. your current residence).\nEven lesser-known places rank high if they\'re nearby.';
 	@override String get rankRelevanceHead => '[Popular]';
 	@override String get rankRelevanceBody => 'Prioritizes places well-known on Google.\nWell-known candidates rank high even if somewhat far.';
 	@override String get rankNote => '* This isn\'t a re-sort — the candidates fetched themselves change.';
@@ -650,9 +651,9 @@ class _Translations$mapScreen$en extends Translations$mapScreen$ja {
 	@override String get proAcgLabel => 'Advanced ACG';
 	@override String get proBandDesc => 'A Lewis-style display showing, as bands, the latitudes where a planet passes directly overhead (zenith) or underfoot (nadir). You can read career and home themes by "latitude".';
 	@override String get proAspectDesc => 'In addition to the 40 conjunction lines, shows all 120 aspect lines including squares, trines, and sextiles.';
-	@override String get proRelocateDesc => 'Treats the tapped point on the map as a relocation destination, recalculating ASC / MC / the 12 houses and comparing them side by side with your current address.';
+	@override String get proRelocateDesc => 'Treats the tapped point on the map as a relocation destination, recalculating ASC / MC / the 12 houses and comparing them side by side with your current residence.';
 	@override String get proAcgDesc => 'A feature unlocked with Cosmic Pro.';
-	@override String get creditBannerTitle => '✦ Register your birth details and current address to get 3 free credits';
+	@override String get creditBannerTitle => '✦ Register your birth details and current residence to get 3 free credits';
 	@override String get creditBannerSub => 'Set them up in SANCTUARY to also see the direction scores for each place';
 	@override String get setupCta => 'Set up →';
 	@override String get vpHelpTitle => 'Choosing your VIEWPOINT (the 16-direction reference point)';
@@ -886,7 +887,7 @@ class _Translations$sanctuary$en extends Translations$sanctuary$ja {
 	@override String get set => 'Set ›';
 	@override String get unset => 'Not set ›';
 	@override String get birthInfo => 'Birth details';
-	@override String get home => 'Home (current address)';
+	@override String get home => 'Home (current residence)';
 	@override String get receiveTitle => '✦ Receive your title';
 	@override String get shareTitleCard => '✦ Share your title card';
 	@override String get rediagnose => 'Retake the diagnosis';
@@ -1175,7 +1176,7 @@ class _Translations$consultInput$en extends Translations$consultInput$ja {
 	@override String radiusBand({required Object min, required Object max}) => '${min}–${max} km';
 	@override String radiusSingle({required Object km}) => '${km} km';
 	@override String get submit => 'Start consultation';
-	@override String get noHomeNote => 'No current address is set. "Direction," "Radius from home," and "Within my country" become available once you set your current address. "Specific place" works right now.';
+	@override String get noHomeNote => 'No current residence is set. "Direction," "Radius from home," and "Within my country" become available once you set your current residence. "Specific place" works right now.';
 	@override String presetCard({required Object name}) => 'Looking at ${name}';
 	@override String get introNote => 'Choose when, where, and what you\'ll do, and Stella reads — clearly — what kind of energy works at that time and place, from a vast body of astrological data.';
 	@override late final _Translations$consultInput$about$en about = _Translations$consultInput$about$en._(_root);
@@ -1261,7 +1262,7 @@ class _Translations$locations$en extends Translations$locations$ja {
 		'Spot',
 		'Place',
 	];
-	@override String get currentAddress => 'Current address';
+	@override String get currentAddress => 'Current residence';
 	@override String get mapCenter => 'Map center';
 	@override String get renameTitle => 'Enter a name for this place';
 	@override String get cancel => 'Cancel';
@@ -1335,6 +1336,23 @@ class _Translations$common$en extends Translations$common$ja {
 	@override String get tryAgain => 'Try again';
 }
 
+// Path: appSettings
+class _Translations$appSettings$en extends Translations$appSettings$ja {
+	_Translations$appSettings$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get language => 'Language';
+	@override String get langTitle => 'Select language';
+	@override String get fontSize => 'Text size';
+	@override String get fontSizeTitle => 'Text size';
+	@override String get fontStandard => 'Standard';
+	@override String get fontLarge => 'Large';
+	@override String get fontMax => 'Largest';
+	@override String get fontCaveat => 'Larger sizes may cause text and icons to overlap or become harder to read on some screens, such as Map and Galaxy.';
+}
+
 // Path: aiConsent
 class _Translations$aiConsent$en extends Translations$aiConsent$ja {
 	_Translations$aiConsent$en._(TranslationsEn root) : this._root = root, super.internal(root);
@@ -1342,7 +1360,7 @@ class _Translations$aiConsent$en extends Translations$aiConsent$ja {
 	final TranslationsEn _root; // ignore: unused_field
 
 	// Translations
-	@override String get subtitle => 'Before You Begin';
+	@override String get subtitle => 'Your Astrolabe for When & Where';
 	@override String get agree => 'Agree and Begin';
 	@override String get decline => 'Decline';
 	@override String get back => 'Back';
@@ -1466,7 +1484,7 @@ class _Translations$mapDaily$usage$en extends Translations$mapDaily$usage$ja {
 	@override String get title => 'How to read today\'s movement';
 	@override String get summary => 'On this screen, matched to the purpose you intend,\nyou can read "when to act" — guidance on timing.';
 	@override String get vpTitle => '[Reference point (VIEWPOINT)]';
-	@override String get vpBody => 'The dropdown on the right is the "reference point."\nYou can choose your birthplace (the point you registered as your current address)\nor a point you registered as a VIEWPOINT.\nThis screen shows where and when the planets reach each "sky direction"\nin the sky above your chosen reference point.';
+	@override String get vpBody => 'The dropdown on the right is the "reference point."\nYou can choose your birthplace (the point you registered as your current residence)\nor a point you registered as a VIEWPOINT.\nThis screen shows where and when the planets reach each "sky direction"\nin the sky above your chosen reference point.';
 	@override String get diffTitle => '[⚠ Different from the Map screen\'s directions]';
 	@override String get diffBody => '· Map screen = "surface directions" (16 directions)\n　which way along the ground you head from the reference point\n　(going to a land in the east / heading to a land in the north — geography)\n\n· This screen = "sky directions" (4 angles)\n　where a planet sits in the sky right above the reference point\n　(eastern horizon / overhead zenith / western horizon / straight below)\n\nEven the same "east" means "a land in the east" on the Map,\nand "the eastern horizon (where a planet rises)" on this screen.';
 	@override String get timeTitle => '[Reading time and sky direction]';
@@ -1814,8 +1832,8 @@ class _Translations$consultInput$section$en extends Translations$consultInput$se
 	@override String get when => 'When?';
 	@override String get timeBand => 'Time of day (optional)';
 	@override String get where => 'Where?';
-	@override String get radiusDaily => 'Distance from your current address';
-	@override String get radiusBand => 'Distance band from your current address';
+	@override String get radiusDaily => 'Distance from your current residence';
+	@override String get radiusBand => 'Distance band from your current residence';
 	@override String get region => 'Region block';
 	@override String get point => 'Pick a place';
 	@override String get theme => 'Which theme shall we read?';
@@ -2185,7 +2203,7 @@ class _Translations$mapMenu$popup$en extends Translations$mapMenu$popup$ja {
 	@override String get aspectHead => 'Aspect lines [Pro]';
 	@override String get aspectBody => 'An extension that adds square / trine / sextile to the main lines (40 conjunction lines), for 120 lines in total. It applies to all frames that are on at the same time. Cosmic Pro only.';
 	@override String get relocateHead => 'Relocate [Pro]';
-	@override String get relocateBody => 'Treats the point you tap on the map as a relocation destination. You can check, all together: (1) which planets\' lines move closer or farther compared with your current address, (2) the sign changes of ASC / MC, and (3) the 12-house transitions of the 10 planets. Cosmic Pro only.';
+	@override String get relocateBody => 'Treats the point you tap on the map as a relocation destination. You can check, all together: (1) which planets\' lines move closer or farther compared with your current residence, (2) the sign changes of ASC / MC, and (3) the 12-house transitions of the 10 planets. Cosmic Pro only.';
 	@override String get hintHead => 'Display tip';
 	@override String get hintBody => 'Because ACG lines are drawn on a world scale, at some zoom levels they may move off-screen and be hard to see. Zooming out makes the overall picture of the lines easier to see.';
 }
@@ -2202,7 +2220,7 @@ class _Translations$locations$guide$en extends Translations$locations$guide$ja {
 	@override String get dateTimeHead => '[Date & time]';
 	@override String get dateTimeBody => 'Change the "date" and "time" at the top to recalculate\nthe scores for that moment. The "Back to today" button\nreturns you to the present.';
 	@override String get viewpointHead => '[Switch VIEWPOINT]';
-	@override String get viewpointBody => 'The "VIEWPOINT" dropdown switches the reference point for\ndistance and direction scores.\nYou can choose the map center (current location), your current address,\nor a VIEWPOINT you\'ve saved.';
+	@override String get viewpointBody => 'The "VIEWPOINT" dropdown switches the reference point for\ndistance and direction scores.\nYou can choose the map center (current location), your current residence,\nor a VIEWPOINT you\'ve saved.';
 	@override String get categoryHead => '[Switch category]';
 	@override String get categoryBody => 'Tap Healing / Abundance / Love / Work / Talk to switch,\nand the places are re-ranked by that category\'s score.\nTap the same category again to deselect (= show the overall score).';
 	@override String get registerHead => '[Saving a place]';
@@ -2373,7 +2391,7 @@ class _Translations$aiConsent$declineDialog$en extends Translations$aiConsent$de
 
 	// Translations
 	@override String get title => 'Consent is required to use Solara';
-	@override String get body => 'To use Solara, you\'ll need to agree to what\'s described in "Before You Begin." Without your consent, the app can\'t be used.\n\nPlease take another look, or feel free to uninstall Solara. At this point we have not received any of your data, including any personal information, so you can uninstall with complete peace of mind.';
+	@override String get body => 'To use Solara, you\'ll need to agree to the items described above. Without your consent, the app can\'t be used.\n\nPlease take another look, or feel free to uninstall Solara. At this point we have not received any of your data, including any personal information, so you can uninstall with complete peace of mind.';
 }
 
 // Path: aiConsent.links
@@ -2450,7 +2468,7 @@ class _Translations$aiConsent$consentHandling$en extends Translations$aiConsent$
 
 	// Translations
 	@override String get heading => '◆ How your consent is handled';
-	@override String get body => 'When you tap "Agree and Begin," the fact that you agreed to what\'s described in "Before You Begin" is recorded on your device. It won\'t be shown again. (If the terms change, we may show this notice once more.)\n\nIf you do not agree, please tap "Decline" at the bottom of the screen and uninstall Solara. At this point, we have not received any of your data, including any personal information.';
+	@override String get body => 'When you tap "Agree and Begin," the fact that you agreed to the items described above is recorded on your device. It won\'t be shown again. (If the terms change, we may show this notice once more.)\n\nIf you do not agree, please tap "Decline" at the bottom of the screen and uninstall Solara. At this point, we have not received any of your data, including any personal information.';
 }
 
 // Path: aiReport.reasons.inappropriate
@@ -3065,8 +3083,8 @@ extension on TranslationsEn {
 			'horoScreen.houseEssence' => 'Essence',
 			'horoScreen.houseEssenceTip' => 'Houses based on your birthplace',
 			'horoScreen.houseReality' => 'Reality',
-			'horoScreen.houseRealityTipHome' => 'Houses based on your current address (relocation)',
-			'horoScreen.houseRealityTipNoHome' => 'Please set your current address in the Sanctuary',
+			'horoScreen.houseRealityTipHome' => 'Houses based on your current residence (relocation)',
+			'horoScreen.houseRealityTipNoHome' => 'Please set your current residence in the Sanctuary',
 			'relocPanel.headerSub' => ({required Object from, required Object to}) => 'From ${from} to ${to}: how the planets near and leave the angles',
 			'relocPanel.loading' => 'Stella is reading the stars of this place…',
 			'relocPanel.failTitle' => 'Couldn\'t load the reading.',
@@ -3079,8 +3097,8 @@ extension on TranslationsEn {
 			'relocPanel.tagCloser' => '▲ Approaching',
 			'relocPanel.tagFarther' => '▽ Receding',
 			'relocPanel.tagSame' => '・ Almost no change',
-			'relocPanel.needChart' => 'Set your birth time and current address to read which angle the planets draw near here.',
-			'relocPanel.samePlace' => 'Your birthplace and current address are almost the same spot. The farther you move, the more clearly the distance between planets and angles changes.',
+			'relocPanel.needChart' => 'Set your birth time and current residence to read which angle the planets draw near here.',
+			'relocPanel.samePlace' => 'Your birthplace and current residence are almost the same spot. The farther you move, the more clearly the distance between planets and angles changes.',
 			'relocPanel.footnote' => '* The closer a planet is to an angle (ASC/MC/DSC/IC), the more that planet\'s theme comes forward in that land. Not a good/bad verdict, but a leaning toward "stronger / gentler".',
 			'mapReloc.consultHere' => 'Consult about this place',
 			'mapReloc.deltaTitle' => ({required Object base}) => 'Star lines that shift here, compared with your ${base}',
@@ -3100,7 +3118,7 @@ extension on TranslationsEn {
 			'mapSearch.rankRelevance' => 'Popular',
 			'mapSearch.rankHelpTitle' => 'How to narrow results',
 			'mapSearch.rankDistanceHead' => '[Nearby]',
-			'mapSearch.rankDistanceBody' => 'Fetches in order of nearness to the map\'s center (e.g. your current address).\nEven lesser-known places rank high if they\'re nearby.',
+			'mapSearch.rankDistanceBody' => 'Fetches in order of nearness to the map\'s center (e.g. your current residence).\nEven lesser-known places rank high if they\'re nearby.',
 			'mapSearch.rankRelevanceHead' => '[Popular]',
 			'mapSearch.rankRelevanceBody' => 'Prioritizes places well-known on Google.\nWell-known candidates rank high even if somewhat far.',
 			'mapSearch.rankNote' => '* This isn\'t a re-sort — the candidates fetched themselves change.',
@@ -3158,9 +3176,9 @@ extension on TranslationsEn {
 			'mapScreen.proAcgLabel' => 'Advanced ACG',
 			'mapScreen.proBandDesc' => 'A Lewis-style display showing, as bands, the latitudes where a planet passes directly overhead (zenith) or underfoot (nadir). You can read career and home themes by "latitude".',
 			'mapScreen.proAspectDesc' => 'In addition to the 40 conjunction lines, shows all 120 aspect lines including squares, trines, and sextiles.',
-			'mapScreen.proRelocateDesc' => 'Treats the tapped point on the map as a relocation destination, recalculating ASC / MC / the 12 houses and comparing them side by side with your current address.',
+			'mapScreen.proRelocateDesc' => 'Treats the tapped point on the map as a relocation destination, recalculating ASC / MC / the 12 houses and comparing them side by side with your current residence.',
 			'mapScreen.proAcgDesc' => 'A feature unlocked with Cosmic Pro.',
-			'mapScreen.creditBannerTitle' => '✦ Register your birth details and current address to get 3 free credits',
+			'mapScreen.creditBannerTitle' => '✦ Register your birth details and current residence to get 3 free credits',
 			'mapScreen.creditBannerSub' => 'Set them up in SANCTUARY to also see the direction scores for each place',
 			'mapScreen.setupCta' => 'Set up →',
 			'mapScreen.vpHelpTitle' => 'Choosing your VIEWPOINT (the 16-direction reference point)',
@@ -3291,7 +3309,7 @@ extension on TranslationsEn {
 			'sanctuary.set' => 'Set ›',
 			'sanctuary.unset' => 'Not set ›',
 			'sanctuary.birthInfo' => 'Birth details',
-			'sanctuary.home' => 'Home (current address)',
+			'sanctuary.home' => 'Home (current residence)',
 			'sanctuary.receiveTitle' => '✦ Receive your title',
 			'sanctuary.shareTitleCard' => '✦ Share your title card',
 			'sanctuary.rediagnose' => 'Retake the diagnosis',
@@ -3366,7 +3384,7 @@ extension on TranslationsEn {
 			'mapDaily.usage.title' => 'How to read today\'s movement',
 			'mapDaily.usage.summary' => 'On this screen, matched to the purpose you intend,\nyou can read "when to act" — guidance on timing.',
 			'mapDaily.usage.vpTitle' => '[Reference point (VIEWPOINT)]',
-			'mapDaily.usage.vpBody' => 'The dropdown on the right is the "reference point."\nYou can choose your birthplace (the point you registered as your current address)\nor a point you registered as a VIEWPOINT.\nThis screen shows where and when the planets reach each "sky direction"\nin the sky above your chosen reference point.',
+			'mapDaily.usage.vpBody' => 'The dropdown on the right is the "reference point."\nYou can choose your birthplace (the point you registered as your current residence)\nor a point you registered as a VIEWPOINT.\nThis screen shows where and when the planets reach each "sky direction"\nin the sky above your chosen reference point.',
 			'mapDaily.usage.diffTitle' => '[⚠ Different from the Map screen\'s directions]',
 			'mapDaily.usage.diffBody' => '· Map screen = "surface directions" (16 directions)\n　which way along the ground you head from the reference point\n　(going to a land in the east / heading to a land in the north — geography)\n\n· This screen = "sky directions" (4 angles)\n　where a planet sits in the sky right above the reference point\n　(eastern horizon / overhead zenith / western horizon / straight below)\n\nEven the same "east" means "a land in the east" on the Map,\nand "the eastern horizon (where a planet rises)" on this screen.',
 			'mapDaily.usage.timeTitle' => '[Reading time and sky direction]',
@@ -3640,8 +3658,8 @@ extension on TranslationsEn {
 			'consultInput.section.when' => 'When?',
 			'consultInput.section.timeBand' => 'Time of day (optional)',
 			'consultInput.section.where' => 'Where?',
-			'consultInput.section.radiusDaily' => 'Distance from your current address',
-			'consultInput.section.radiusBand' => 'Distance band from your current address',
+			'consultInput.section.radiusDaily' => 'Distance from your current residence',
+			'consultInput.section.radiusBand' => 'Distance band from your current residence',
 			'consultInput.section.region' => 'Region block',
 			'consultInput.section.point' => 'Pick a place',
 			'consultInput.section.theme' => 'Which theme shall we read?',
@@ -3735,7 +3753,7 @@ extension on TranslationsEn {
 			'consultInput.radiusBand' => ({required Object min, required Object max}) => '${min}–${max} km',
 			'consultInput.radiusSingle' => ({required Object km}) => '${km} km',
 			'consultInput.submit' => 'Start consultation',
-			'consultInput.noHomeNote' => 'No current address is set. "Direction," "Radius from home," and "Within my country" become available once you set your current address. "Specific place" works right now.',
+			'consultInput.noHomeNote' => 'No current residence is set. "Direction," "Radius from home," and "Within my country" become available once you set your current residence. "Specific place" works right now.',
 			'consultInput.presetCard' => ({required Object name}) => 'Looking at ${name}',
 			'consultInput.introNote' => 'Choose when, where, and what you\'ll do, and Stella reads — clearly — what kind of energy works at that time and place, from a vast body of astrological data.',
 			'consultInput.about.title' => 'What is Stella Consultation?',
@@ -3835,7 +3853,7 @@ extension on TranslationsEn {
 			'mapMenu.popup.aspectHead' => 'Aspect lines [Pro]',
 			'mapMenu.popup.aspectBody' => 'An extension that adds square / trine / sextile to the main lines (40 conjunction lines), for 120 lines in total. It applies to all frames that are on at the same time. Cosmic Pro only.',
 			'mapMenu.popup.relocateHead' => 'Relocate [Pro]',
-			'mapMenu.popup.relocateBody' => 'Treats the point you tap on the map as a relocation destination. You can check, all together: (1) which planets\' lines move closer or farther compared with your current address, (2) the sign changes of ASC / MC, and (3) the 12-house transitions of the 10 planets. Cosmic Pro only.',
+			'mapMenu.popup.relocateBody' => 'Treats the point you tap on the map as a relocation destination. You can check, all together: (1) which planets\' lines move closer or farther compared with your current residence, (2) the sign changes of ASC / MC, and (3) the 12-house transitions of the 10 planets. Cosmic Pro only.',
 			'mapMenu.popup.hintHead' => 'Display tip',
 			'mapMenu.popup.hintBody' => 'Because ACG lines are drawn on a world scale, at some zoom levels they may move off-screen and be hard to see. Zooming out makes the overall picture of the lines easier to see.',
 			'locations.locDefaults.0' => 'Place 1',
@@ -3846,7 +3864,7 @@ extension on TranslationsEn {
 			'locations.vpDefaults.1' => 'Favorite',
 			'locations.vpDefaults.2' => 'Spot',
 			'locations.vpDefaults.3' => 'Place',
-			'locations.currentAddress' => 'Current address',
+			'locations.currentAddress' => 'Current residence',
 			'locations.mapCenter' => 'Map center',
 			'locations.renameTitle' => 'Enter a name for this place',
 			'locations.cancel' => 'Cancel',
@@ -3862,7 +3880,7 @@ extension on TranslationsEn {
 			'locations.guide.dateTimeHead' => '[Date & time]',
 			'locations.guide.dateTimeBody' => 'Change the "date" and "time" at the top to recalculate\nthe scores for that moment. The "Back to today" button\nreturns you to the present.',
 			'locations.guide.viewpointHead' => '[Switch VIEWPOINT]',
-			'locations.guide.viewpointBody' => 'The "VIEWPOINT" dropdown switches the reference point for\ndistance and direction scores.\nYou can choose the map center (current location), your current address,\nor a VIEWPOINT you\'ve saved.',
+			'locations.guide.viewpointBody' => 'The "VIEWPOINT" dropdown switches the reference point for\ndistance and direction scores.\nYou can choose the map center (current location), your current residence,\nor a VIEWPOINT you\'ve saved.',
 			'locations.guide.categoryHead' => '[Switch category]',
 			'locations.guide.categoryBody' => 'Tap Healing / Abundance / Love / Work / Talk to switch,\nand the places are re-ranked by that category\'s score.\nTap the same category again to deselect (= show the overall score).',
 			'locations.guide.registerHead' => '[Saving a place]',
@@ -3988,13 +4006,21 @@ extension on TranslationsEn {
 			'disclaimer.ai' => '✦ AI-generated, for entertainment & self-reflection. Not professional medical, legal, or financial advice.',
 			'disclaimer.fetchFailed' => 'We couldn\'t load the reading. Please check your connection and try again.',
 			'common.tryAgain' => 'Try again',
-			'aiConsent.subtitle' => 'Before You Begin',
+			'appSettings.language' => 'Language',
+			'appSettings.langTitle' => 'Select language',
+			'appSettings.fontSize' => 'Text size',
+			'appSettings.fontSizeTitle' => 'Text size',
+			'appSettings.fontStandard' => 'Standard',
+			'appSettings.fontLarge' => 'Large',
+			'appSettings.fontMax' => 'Largest',
+			'appSettings.fontCaveat' => 'Larger sizes may cause text and icons to overlap or become harder to read on some screens, such as Map and Galaxy.',
+			'aiConsent.subtitle' => 'Your Astrolabe for When & Where',
 			'aiConsent.agree' => 'Agree and Begin',
 			'aiConsent.decline' => 'Decline',
 			'aiConsent.back' => 'Back',
 			'aiConsent.linkOpenFailed' => ({required Object url}) => 'Couldn\'t open the link: ${url}',
 			'aiConsent.declineDialog.title' => 'Consent is required to use Solara',
-			'aiConsent.declineDialog.body' => 'To use Solara, you\'ll need to agree to what\'s described in "Before You Begin." Without your consent, the app can\'t be used.\n\nPlease take another look, or feel free to uninstall Solara. At this point we have not received any of your data, including any personal information, so you can uninstall with complete peace of mind.',
+			'aiConsent.declineDialog.body' => 'To use Solara, you\'ll need to agree to the items described above. Without your consent, the app can\'t be used.\n\nPlease take another look, or feel free to uninstall Solara. At this point we have not received any of your data, including any personal information, so you can uninstall with complete peace of mind.',
 			'aiConsent.links.privacy' => 'Privacy Policy',
 			'aiConsent.links.terms' => 'Terms of Service',
 			'aiConsent.intro.heading' => '◆ Welcome',
@@ -4008,7 +4034,7 @@ extension on TranslationsEn {
 			'aiConsent.decisions.heading' => '◆ About important decisions',
 			'aiConsent.decisions.body' => 'Solara\'s interpretations are reference material for understanding yourself. At times they may be inaccurate, or may not fit you.\n\nIf a result feels off, please don\'t take it at face value. For life\'s important decisions — moving, changing jobs, marriage — please rely on your own judgment and on talking with family and professionals.\n\nFor details on how your data is handled, please see below.',
 			'aiConsent.consentHandling.heading' => '◆ How your consent is handled',
-			'aiConsent.consentHandling.body' => 'When you tap "Agree and Begin," the fact that you agreed to what\'s described in "Before You Begin" is recorded on your device. It won\'t be shown again. (If the terms change, we may show this notice once more.)\n\nIf you do not agree, please tap "Decline" at the bottom of the screen and uninstall Solara. At this point, we have not received any of your data, including any personal information.',
+			'aiConsent.consentHandling.body' => 'When you tap "Agree and Begin," the fact that you agreed to the items described above is recorded on your device. It won\'t be shown again. (If the terms change, we may show this notice once more.)\n\nIf you do not agree, please tap "Decline" at the bottom of the screen and uninstall Solara. At this point, we have not received any of your data, including any personal information.',
 			_ => null,
 		};
 	}

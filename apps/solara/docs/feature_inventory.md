@@ -1806,6 +1806,29 @@ forecast_screen 112 / galaxy_screen 105 / map_fortune_sheet 96 / map_daily_trans
 #### 検証 (本セッション末・全 green)
 `flutter analyze` クリーン / `flutter test` **全319件green** / `slang analyze` = `en:{}`(未訳0) / worker `node --test` **360件green** / `audit.py` = **HARD7(英語化で新規ゼロ・daily_transit_data は既HARD)/WARN38/NOTICE44/重複20(全て構造的 `),`/`],`)/TODO4/print1/未使用0** / `check_unused.py`=0 / `find_unused_code.py`=3候補すべて誤検出(slang生成/`.label`/`.toCategoryIcon()` 実使用)=削除対象ゼロ / `check_file_split.py`=HARD7変化なし。
 
+### 0.2.63 英語タイポグラフィ + アプリ内 言語/文字サイズ設定 + 同意画面リブランド + 法務多言語URL (2026-06-04)
+
+> §0.2.62 の続き (英語 E2E を実機/エミュで進める中で判明した英語UXの調整群)。ブランチ `feat/solara-en-localization`。analyze クリーン / test 全319件green。
+
+#### 言語別テキスト倍率 (x-height 補正)
+- `app_locale.dart`: `_textScaleBoostByLang` (ja/ko=1.0・en/es/pt/fr/de=**1.3**) + `resolvedCode` (slang `_syncSlang` と同じ解決) + `textScaleBoost`。`main.dart` builder で **端末倍率 × 言語倍率 → [1.0,1.5]クランプ → ユーザー倍率 → [1.0,2.0]クランプ**。根拠: ラテンは x-height が小さく、本文 base13px×1.3=16.9px ≒ Apple HIG 17pt / Material 16sp (調査済)。CJK/ハングルは全角で 1.0。**標準(userMult=1.0)は従来挙動と完全一致=退行ゼロ**。
+
+#### アプリ内 言語/文字サイズ設定 (Sanctuary「✦ App」)
+- 新規 `utils/app_text_scale.dart` (`AppFontSize` enum standard/large/max・倍率 1.0/1.15/1.3・SharedPreferences 永続) + `screens/sanctuary/sanctuary_settings_pickers.dart` (言語/文字サイズの bottom sheet・**文字サイズに注意書き**「大きくすると Map/Galaxy 等が見えにくくなる場合」)。
+- `sanctuary_screen.dart` `_buildAppSection`: 死んでいた "Language" 行 (`onTap:(){}`/ベタ書き) を実働化 + 文字サイズ行を新設 (両方 `ValueListenableBuilder` で現在値を動的表示)。実トグルは従来 `sanctuary_profile_editor` 内に埋没していたもの。
+- ⚠️ slang も `AppLocale` (ロケール enum) を定義 → 自前 `AppLocale` クラスと衝突するため、両方 import するファイルは `import '...strings.g.dart' hide AppLocale;`。
+
+#### 同意画面リブランド (`ai_consent_screen.dart`)
+- ヘッダーを「`✦ Solara ✦` + Before You Begin」→ **`SOLARA`(GoogleFonts.cinzel = ストア feature graphic と同一書体) + タグライン**へ。タグライン `aiConsent.subtitle` = EN「Your Astrolabe for When & Where」/ JP「時と場所を読む、人生のアストロラーベ」。エンブレム画像は背景の太陽意匠と重なるため不使用 (オーナー判断・SOLARA縦位置維持)。
+- 旧ラベル "Before You Begin"/「ご利用前のおしらせ」を参照していた `declineDialog.body` と `consentHandling.body` (§5) を「the items above / 上記」へ修正 (日英)。`widget_test` の assertion を `find.text('SOLARA')` (ロケール非依存) に更新。
+
+#### 法務リンク多言語化 (`legal_urls.dart`)
+- フラット URL → **言語別サブフォルダ `/{lang}/`** (`_hostedLangs={en,ja}`・`_lang()`=`resolvedCode` で解決・未ホストは en フォールバック)。const → getter 化 (全使用箇所は実行時呼び出しのみ=安全)。
+- 英語版法務ページ6枚を新規作成し `docs/store_compliance_assets/legal/en/` に、現行JP6枚を取得し `/ja/` に保存 (JP原本のテンプレ/CSSを保持し本文のみ英訳・固有名詞ローマ字+漢字併記)。🔴 サーバー (`solodev-lab.com`) へ `/en/` `/ja/` 設置が公開前必須 (B5)。
+
+#### 用語修正
+- 「現住所」EN を **"Current address" → "Current residence"** に統一 (英語15箇所・GPSの "Current location" とは別概念で区別)。
+
 ### 0.3 Horo「今日の占い」1 日 1 回固定 + プロンプト刷新 (2026-05-27)
 
 > **設計の柱**: 「30 回までは OK」のような曖昧な防衛をやめ、「**1 日 1 回・変更しない**」を

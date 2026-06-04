@@ -271,8 +271,8 @@
     "houseEssence": "Essence",
     "houseEssenceTip": "Houses based on your birthplace",
     "houseReality": "Reality",
-    "houseRealityTipHome": "Houses based on your current address (relocation)",
-    "houseRealityTipNoHome": "Please set your current address in the Sanctuary"
+    "houseRealityTipHome": "Houses based on your current residence (relocation)",
+    "houseRealityTipNoHome": "Please set your current residence in the Sanctuary"
   },
   "relocPanel": {
     "headerSub": "From $from to $to: how the planets near and leave the angles",
@@ -287,8 +287,8 @@
     "tagCloser": "▲ Approaching",
     "tagFarther": "▽ Receding",
     "tagSame": "・ Almost no change",
-    "needChart": "Set your birth time and current address to read which angle the planets draw near here.",
-    "samePlace": "Your birthplace and current address are almost the same spot. The farther you move, the more clearly the distance between planets and angles changes.",
+    "needChart": "Set your birth time and current residence to read which angle the planets draw near here.",
+    "samePlace": "Your birthplace and current residence are almost the same spot. The farther you move, the more clearly the distance between planets and angles changes.",
     "footnote": "* The closer a planet is to an angle (ASC/MC/DSC/IC), the more that planet's theme comes forward in that land. Not a good/bad verdict, but a leaning toward \"stronger / gentler\"."
   },
   "mapReloc": {
@@ -312,7 +312,7 @@
     "rankRelevance": "Popular",
     "rankHelpTitle": "How to narrow results",
     "rankDistanceHead": "[Nearby]",
-    "rankDistanceBody": "Fetches in order of nearness to the map's center (e.g. your current address).\nEven lesser-known places rank high if they're nearby.",
+    "rankDistanceBody": "Fetches in order of nearness to the map's center (e.g. your current residence).\nEven lesser-known places rank high if they're nearby.",
     "rankRelevanceHead": "[Popular]",
     "rankRelevanceBody": "Prioritizes places well-known on Google.\nWell-known candidates rank high even if somewhat far.",
     "rankNote": "* This isn't a re-sort — the candidates fetched themselves change.",
@@ -371,9 +371,9 @@
     "proAcgLabel": "Advanced ACG",
     "proBandDesc": "A Lewis-style display showing, as bands, the latitudes where a planet passes directly overhead (zenith) or underfoot (nadir). You can read career and home themes by \"latitude\".",
     "proAspectDesc": "In addition to the 40 conjunction lines, shows all 120 aspect lines including squares, trines, and sextiles.",
-    "proRelocateDesc": "Treats the tapped point on the map as a relocation destination, recalculating ASC / MC / the 12 houses and comparing them side by side with your current address.",
+    "proRelocateDesc": "Treats the tapped point on the map as a relocation destination, recalculating ASC / MC / the 12 houses and comparing them side by side with your current residence.",
     "proAcgDesc": "A feature unlocked with Cosmic Pro.",
-    "creditBannerTitle": "✦ Register your birth details and current address to get 3 free credits",
+    "creditBannerTitle": "✦ Register your birth details and current residence to get 3 free credits",
     "creditBannerSub": "Set them up in SANCTUARY to also see the direction scores for each place",
     "setupCta": "Set up →",
     "vpHelpTitle": "Choosing your VIEWPOINT (the 16-direction reference point)",
@@ -520,7 +520,7 @@
     "set": "Set ›",
     "unset": "Not set ›",
     "birthInfo": "Birth details",
-    "home": "Home (current address)",
+    "home": "Home (current residence)",
     "receiveTitle": "✦ Receive your title",
     "shareTitleCard": "✦ Share your title card",
     "rediagnose": "Retake the diagnosis",
@@ -604,7 +604,7 @@
       "title": "How to read today's movement",
       "summary": "On this screen, matched to the purpose you intend,\nyou can read \"when to act\" — guidance on timing.",
       "vpTitle": "[Reference point (VIEWPOINT)]",
-      "vpBody": "The dropdown on the right is the \"reference point.\"\nYou can choose your birthplace (the point you registered as your current address)\nor a point you registered as a VIEWPOINT.\nThis screen shows where and when the planets reach each \"sky direction\"\nin the sky above your chosen reference point.",
+      "vpBody": "The dropdown on the right is the \"reference point.\"\nYou can choose your birthplace (the point you registered as your current residence)\nor a point you registered as a VIEWPOINT.\nThis screen shows where and when the planets reach each \"sky direction\"\nin the sky above your chosen reference point.",
       "diffTitle": "[⚠ Different from the Map screen's directions]",
       "diffBody": "· Map screen = \"surface directions\" (16 directions)\n　which way along the ground you head from the reference point\n　(going to a land in the east / heading to a land in the north — geography)\n\n· This screen = \"sky directions\" (4 angles)\n　where a planet sits in the sky right above the reference point\n　(eastern horizon / overhead zenith / western horizon / straight below)\n\nEven the same \"east\" means \"a land in the east\" on the Map,\nand \"the eastern horizon (where a planet rises)\" on this screen.",
       "timeTitle": "[Reading time and sky direction]",
@@ -924,8 +924,8 @@
       "when": "When?",
       "timeBand": "Time of day (optional)",
       "where": "Where?",
-      "radiusDaily": "Distance from your current address",
-      "radiusBand": "Distance band from your current address",
+      "radiusDaily": "Distance from your current residence",
+      "radiusBand": "Distance band from your current residence",
       "region": "Region block",
       "point": "Pick a place",
       "theme": "Which theme shall we read?",
@@ -992,7 +992,7 @@
     "radiusBand": "$min–$max km",
     "radiusSingle": "$km km",
     "submit": "Start consultation",
-    "noHomeNote": "No current address is set. \"Direction,\" \"Radius from home,\" and \"Within my country\" become available once you set your current address. \"Specific place\" works right now.",
+    "noHomeNote": "No current residence is set. \"Direction,\" \"Radius from home,\" and \"Within my country\" become available once you set your current residence. \"Specific place\" works right now.",
     "presetCard": "Looking at $name",
     "introNote": "Choose when, where, and what you'll do, and Stella reads — clearly — what kind of energy works at that time and place, from a vast body of astrological data.",
     "about": {
@@ -1093,7 +1093,7 @@
       "aspectHead": "Aspect lines [Pro]",
       "aspectBody": "An extension that adds square / trine / sextile to the main lines (40 conjunction lines), for 120 lines in total. It applies to all frames that are on at the same time. Cosmic Pro only.",
       "relocateHead": "Relocate [Pro]",
-      "relocateBody": "Treats the point you tap on the map as a relocation destination. You can check, all together: (1) which planets' lines move closer or farther compared with your current address, (2) the sign changes of ASC / MC, and (3) the 12-house transitions of the 10 planets. Cosmic Pro only.",
+      "relocateBody": "Treats the point you tap on the map as a relocation destination. You can check, all together: (1) which planets' lines move closer or farther compared with your current residence, (2) the sign changes of ASC / MC, and (3) the 12-house transitions of the 10 planets. Cosmic Pro only.",
       "hintHead": "Display tip",
       "hintBody": "Because ACG lines are drawn on a world scale, at some zoom levels they may move off-screen and be hard to see. Zooming out makes the overall picture of the lines easier to see."
     }
@@ -1101,7 +1101,7 @@
   "locations": {
     "locDefaults": ["Place 1", "Place 2", "Place 3", "Place 4"],
     "vpDefaults": ["Workplace", "Favorite", "Spot", "Place"],
-    "currentAddress": "Current address",
+    "currentAddress": "Current residence",
     "mapCenter": "Map center",
     "renameTitle": "Enter a name for this place",
     "cancel": "Cancel",
@@ -1116,7 +1116,7 @@
       "dateTimeHead": "[Date & time]",
       "dateTimeBody": "Change the \"date\" and \"time\" at the top to recalculate\nthe scores for that moment. The \"Back to today\" button\nreturns you to the present.",
       "viewpointHead": "[Switch VIEWPOINT]",
-      "viewpointBody": "The \"VIEWPOINT\" dropdown switches the reference point for\ndistance and direction scores.\nYou can choose the map center (current location), your current address,\nor a VIEWPOINT you've saved.",
+      "viewpointBody": "The \"VIEWPOINT\" dropdown switches the reference point for\ndistance and direction scores.\nYou can choose the map center (current location), your current residence,\nor a VIEWPOINT you've saved.",
       "categoryHead": "[Switch category]",
       "categoryBody": "Tap Healing / Abundance / Love / Work / Talk to switch,\nand the places are re-ranked by that category's score.\nTap the same category again to deselect (= show the overall score).",
       "registerHead": "[Saving a place]",
@@ -1261,15 +1261,25 @@
   "common": {
     "tryAgain": "Try again"
   },
+  "appSettings": {
+    "language": "Language",
+    "langTitle": "Select language",
+    "fontSize": "Text size",
+    "fontSizeTitle": "Text size",
+    "fontStandard": "Standard",
+    "fontLarge": "Large",
+    "fontMax": "Largest",
+    "fontCaveat": "Larger sizes may cause text and icons to overlap or become harder to read on some screens, such as Map and Galaxy."
+  },
   "aiConsent": {
-    "subtitle": "Before You Begin",
+    "subtitle": "Your Astrolabe for When & Where",
     "agree": "Agree and Begin",
     "decline": "Decline",
     "back": "Back",
     "linkOpenFailed": "Couldn't open the link: $url",
     "declineDialog": {
       "title": "Consent is required to use Solara",
-      "body": "To use Solara, you'll need to agree to what's described in \"Before You Begin.\" Without your consent, the app can't be used.\n\nPlease take another look, or feel free to uninstall Solara. At this point we have not received any of your data, including any personal information, so you can uninstall with complete peace of mind."
+      "body": "To use Solara, you'll need to agree to the items described above. Without your consent, the app can't be used.\n\nPlease take another look, or feel free to uninstall Solara. At this point we have not received any of your data, including any personal information, so you can uninstall with complete peace of mind."
     },
     "links": {
       "privacy": "Privacy Policy",
@@ -1297,7 +1307,7 @@
     },
     "consentHandling": {
       "heading": "◆ How your consent is handled",
-      "body": "When you tap \"Agree and Begin,\" the fact that you agreed to what's described in \"Before You Begin\" is recorded on your device. It won't be shown again. (If the terms change, we may show this notice once more.)\n\nIf you do not agree, please tap \"Decline\" at the bottom of the screen and uninstall Solara. At this point, we have not received any of your data, including any personal information."
+      "body": "When you tap \"Agree and Begin,\" the fact that you agreed to the items described above is recorded on your device. It won't be shown again. (If the terms change, we may show this notice once more.)\n\nIf you do not agree, please tap \"Decline\" at the bottom of the screen and uninstall Solara. At this point, we have not received any of your data, including any personal information."
     }
   }
 }

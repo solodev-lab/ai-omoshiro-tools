@@ -8,6 +8,7 @@ void main() {
   //  本テストは default false の起動経路 = 初回起動相当を検証する)。
   testWidgets('Solara app launches to AI consent screen', (tester) async {
     await tester.pumpWidget(const SolaraApp());
-    expect(find.text('ご利用前のおしらせ'), findsOneWidget);
+    // SOLARA ワードマークはロケール非依存で常に出る (consent 画面の指標)。
+    expect(find.text('SOLARA'), findsOneWidget);
   });
 }

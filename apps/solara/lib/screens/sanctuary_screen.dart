@@ -4,7 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'horoscope/horo_antique_icons.dart';
-import '../i18n/strings.g.dart';
+// slang も AppLocale を定義するため、app_locale.dart の AppLocale と衝突しないよう hide。
+import '../i18n/strings.g.dart' hide AppLocale;
+import '../utils/app_locale.dart';
+import '../utils/app_text_scale.dart';
 import '../utils/consultation_api.dart' show ConsultationCreditStatus;
 import '../utils/consultation_credits.dart';
 import '../utils/moon_notification_service.dart';
@@ -23,6 +26,7 @@ import 'paywall_screen.dart';
 import 'sanctuary/sanctuary_orb_overlay.dart';
 import 'sanctuary/sanctuary_profile_editor.dart';
 import 'sanctuary/sanctuary_reset_hour_picker.dart';
+import 'sanctuary/sanctuary_settings_pickers.dart';
 import 'sanctuary/sanctuary_title_diagnosis.dart';
 import 'sanctuary/class_share_card.dart';
 import 'sanctuary/sanctuary_home_editor.dart';
@@ -1438,12 +1442,25 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
     return _SettingsGroup(
       label: '✦ App',
       children: [
-        // Language
-        _SettingsItem(
-          icon: Icons.language,
-          text: 'Language',
-          value: 'English ›',
-          onTap: () {},
+        // Language — 端末追従 / 日本語 / English を選ぶ bottom sheet。現在値を動的表示。
+        ValueListenableBuilder<Locale?>(
+          valueListenable: AppLocale.instance.notifier,
+          builder: (ctx, _, _) => _SettingsItem(
+            icon: Icons.language,
+            text: t.appSettings.language,
+            value: '${languageValueLabel()} ›',
+            onTap: () => showLanguagePicker(ctx),
+          ),
+        ),
+        // Text size — 標準 / 大きめ / 最大 (注意書き付き)。現在値を動的表示。
+        ValueListenableBuilder<AppFontSize>(
+          valueListenable: AppTextScale.instance.notifier,
+          builder: (ctx, _, _) => _SettingsItem(
+            icon: Icons.format_size,
+            text: t.appSettings.fontSize,
+            value: '${fontSizeValueLabel()} ›',
+            onTap: () => showFontSizePicker(ctx),
+          ),
         ),
         // Notifications — 月イベント (新月/満月/刻星化 + 惑星イベント) のローカル通知トグル。
         const _NotificationToggleItem(),
