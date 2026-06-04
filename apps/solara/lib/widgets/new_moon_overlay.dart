@@ -540,7 +540,7 @@ class _NewMoonOverlayState extends State<NewMoonOverlay>
           return Padding(
             padding: const EdgeInsets.symmetric(vertical: 3),
             child: Text(
-              e.localDescJP,
+              e.localDescDisplay,
               style: const TextStyle(
                 color: Color(0xFFCCCCCC),
                 fontSize: 13,

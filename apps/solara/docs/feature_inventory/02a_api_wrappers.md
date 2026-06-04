@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 10 / 総行数: 2391
+- ファイル数: 10 / 総行数: 2395
 - class/mixin/extension/enum: 26
 - 関数 (top-level + method の素拾い): 39
 - Navigator.push 等: 0
@@ -46,28 +46,28 @@
   </details>
 
 
-### `lib/utils/celestial_events.dart` (313 行)
+### `lib/utils/celestial_events.dart` (317 行)
 
-**imports:** dart=1 / package=2 / relative=1
+**imports:** dart=1 / package=2 / relative=2
 
-- relative: `solara_api.dart`
+- relative: `solara_api.dart`, `solara_i18n.dart`
 
 **型定義 (3):**
 
-- L14 `class CelestialEvents`
+- L15 `class CelestialEvents`
   - Loads and provides celestial event data for intention generation.
-- L150 `class MonthEvents`
-- L219 `class CelestialEvent`
+- L151 `class MonthEvents`
+- L220 `class CelestialEvent`
 
 **関数 (3 public + 1 private):**
 
-- L18 `initialize()`
-- L195 `eventSummary()` — Format active events as a summary string.
-- L203 `copyWithEvents()` — API経由のリアル計算eventsで置換した新MonthEventsを返す
+- L19 `initialize()`
+- L196 `eventSummary()` — Format active events as a summary string.
+- L204 `copyWithEvents()` — API経由のリアル計算eventsで置換した新MonthEventsを返す
 
   <details><summary>private 関数 1 件</summary>
 
-  - L64 `_getNewMoonDate()`
+  - L65 `_getNewMoonDate()`
 
   </details>
 

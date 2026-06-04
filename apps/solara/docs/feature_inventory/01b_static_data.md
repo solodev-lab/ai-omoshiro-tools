@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 15 / 総行数: 5161
+- ファイル数: 15 / 総行数: 5228
 - class/mixin/extension/enum: 20
 - 関数 (top-level + method の素拾い): 52
 - Navigator.push 等: 0
@@ -125,7 +125,7 @@ Astro*Carto*Graphy モードで天頂点マーカータップ時に表示。
 - L7 `class ZenithMessage`
 
 
-### `lib/utils/celestial_event_meanings.dart` (52 行)
+### `lib/utils/celestial_event_meanings.dart` (119 行)
 
 **ファイル先頭コメント:**
 
@@ -135,9 +135,13 @@ key: "${type}_${planet}" or "${type}_${planet}_${sign}"
 惑星×タイプで汎用解説。星座固有の意味が必要な場合は planet_sign キーで上書き。
 ```
 
+**imports:** dart=0 / package=0 / relative=1
+
+- relative: `solara_i18n.dart`
+
 **関数 (1 public + 0 private):**
 
-- L49 `getEventMeaningJP()` — CelestialEvent から意味を取得するヘルパー
+- L115 `getEventMeaning()` — CelestialEvent から意味を取得するヘルパー (ロケール連動)。
 
 
 ### `lib/utils/constellation_namer.dart` (626 行)

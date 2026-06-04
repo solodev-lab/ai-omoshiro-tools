@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:http/http.dart' as http;
 import 'solara_api.dart' show solaraEventsUrl;
+import 'solara_i18n.dart' show isEnLocale;
 
 /// Loads and provides celestial event data for intention generation.
 ///
@@ -310,4 +311,7 @@ class CelestialEvent {
     }
     return desc;
   }
+
+  /// UI 表示用: 端末ロケールに応じて英/日の説明を選ぶ (英語化Phase 2)。
+  String get localDescDisplay => isEnLocale() ? localDesc : localDescJP;
 }

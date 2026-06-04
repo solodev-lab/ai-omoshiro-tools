@@ -39,7 +39,7 @@ class CelestialEventBar extends StatelessWidget {
 
   Widget _buildChip(BuildContext context, CelestialEvent event) {
     final icon = _typeIcons[event.type] ?? '★';
-    final label = event.localDescJP;
+    final label = event.localDescDisplay;
 
     return GestureDetector(
       onTap: () => _showMeaning(context, event),
@@ -70,7 +70,7 @@ class CelestialEventBar extends StatelessWidget {
   }
 
   void _showMeaning(BuildContext context, CelestialEvent event) {
-    final meaning = getEventMeaningJP(event.type, event.planet);
+    final meaning = getEventMeaning(event.type, event.planet);
     if (meaning.isEmpty) return;
 
     // 2026-05-07: showModalBottomSheet → showInfoPopup へ統一移行。
@@ -84,7 +84,7 @@ class CelestialEventBar extends StatelessWidget {
         children: [
           // イベント名
           Text(
-            event.localDescJP,
+            event.localDescDisplay,
             style: const TextStyle(
               color: SolaraColors.solaraGold,
               fontSize: 16,

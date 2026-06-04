@@ -3,6 +3,8 @@
 /// 惑星×タイプで汎用解説。星座固有の意味が必要な場合は planet_sign キーで上書き。
 library;
 
+import 'solara_i18n.dart';
+
 const Map<String, String> eventMeaningsJP = {
   // ── Ingress (惑星移行) ──
   'ingress_mercury': '水星がサインを移ると、思考やコミュニケーションのスタイルが変化します。新しい視点で物事を捉え、情報の受け取り方が切り替わるタイミングです。',
@@ -42,11 +44,76 @@ const Map<String, String> eventMeaningsJP = {
   'node_shift_moon': 'ノースノードの移動は、集合的な運命の方向転換を示します。社会全体が目指すべきテーマが切り替わり、個人の成長の方向性にも影響を与えます。約18ヶ月ごとの大きな転換です。',
 };
 
-// eventMeaningsEN 削除 (audit dead-symbol, 2026-05-06): 多言語対応未実装で
-// 参照ゼロ。i18n フェーズで必要になったら git log から復元可能。
+/// 英語版 (英語化Phase 2)。eventMeaningsJP を正典に、STYLE_VOICE_EN で書き起こし。
+/// 吉凶/予測語は使わず、叙述(plain)＋寄り添い(gentle)・中立で再表現。
+const Map<String, String> eventMeaningsEN = {
+  // ── Ingress (惑星移行) ──
+  'ingress_mercury':
+      'When Mercury changes signs, the style of thought and communication shifts. It is a moment to see things from a fresh angle, and the way information reaches you changes.',
+  'ingress_venus':
+      'Venus changing signs marks a shift in how affection is expressed, in your sense of beauty, and in what you value. A fresh wind moves through relationships and creativity.',
+  'ingress_mars':
+      'When Mars changes signs, the direction your drive and energy reach for turns. The source of your motivation shifts, and an appetite for new challenges begins to stir.',
+  'ingress_jupiter':
+      'Jupiter changing signs is a major turning point that comes roughly once a year. The themes of expansion and growth change over, and energy pours into a new area of life.',
+  'ingress_saturn':
+      'Saturn changes signs about once every two and a half years. The themes of responsibility and testing shift, and the structures of society are reshaped — a long-term turning point.',
+  'ingress_uranus':
+      'Uranus changing signs is an era-defining shift that comes about once every seven years. Familiar assumptions are overturned, and the shape of technology and society begins to change at its roots.',
+  'ingress_neptune':
+      'Neptune changes signs about once every fourteen years. The collective dreams, ideals, and spirituality of an age shift at a generational level — a turning of the larger tide.',
+  'ingress_chiron':
+      'Chiron changing signs means the collective theme of healing is changing. It points to the wound a society is invited to face, and the direction in which it may move through it.',
 
-/// CelestialEvent から意味を取得するヘルパー
-String getEventMeaningJP(String type, String planet) {
-  return eventMeaningsJP['${type}_$planet'] ?? eventMeaningsJP[type] ?? '';
+  // ── Retrograde (逆行) ──
+  'retrograde_mercury':
+      'Mercury retrograde is a season for reviewing communication, travel, and agreements. A good time to tie up unfinished threads from the past, while new contracts and large purchases ask for a little more care. Misunderstandings come easily here, so gentle, thorough confirmation helps.',
+  'retrograde_venus':
+      'Venus retrograde is a season for looking back over relationships and values. Past loves and friendships come up for another look, and you reconfirm what truly matters to you. It is also an energy that makes it natural to pause before impulsive spending or big changes to your appearance.',
+  'retrograde_mars':
+      'Mars retrograde turns drive and energy inward. The impulse to push outward softens, and it becomes a time to cultivate inner strength. Working with anger can become one of its themes.',
+  'retrograde_jupiter':
+      'Jupiter retrograde is a season for re-examining growth and belief. Focus moves from outward expansion to inner growth. You look back over past decisions and reconfirm what you genuinely believe in.',
+  'retrograde_saturn':
+      'Saturn retrograde is a season for reappraising responsibility and limits. You question whether the rules and duties you have placed on yourself are truly needed — an opening to let go of old structures and find a more essential kind of discipline.',
+  'retrograde_uranus':
+      'Uranus retrograde draws the energy of change inward. Rather than outward rebellion, it is a time to seek inner freedom. The meaning of the changes you once set in motion can be understood more deeply now.',
+  'retrograde_neptune':
+      'Neptune retrograde is a season when the line between illusion and reality grows clearer. The truth of things you have kept vague becomes easier to see. Spiritual insight can deepen, and it is also a time to test how grounded your dreamier plans really are.',
+  'retrograde_pluto':
+      'Pluto retrograde is a season when deep transformation moves quietly within. On the surface things may feel calm, yet at an unconscious level a large change is being prepared. It becomes easier to tell apart what is yours to release and what you truly seek.',
+
+  // ── Retrograde End (順行) ──
+  'retrograde_end_mercury':
+      'Mercury returns to direct motion. Communication and projects that had stalled begin to move again, and misunderstandings clear more easily. A natural moment to put into action what you reviewed during the retrograde.',
+  'retrograde_end_venus':
+      'Venus returns to direct motion. Stalls in relationships ease, and affection and creativity flow outward again. Standing on the values you reconfirmed during the retrograde, you can take a new step.',
+  'retrograde_end_saturn':
+      'Saturn returns to direct motion. Carrying a new understanding of the responsibilities and structures you have reappraised, you can move into concrete action.',
+  'retrograde_end_neptune':
+      'Neptune returns to direct motion. Holding the grounded perspective you gained during the retrograde, you enter a time to move forward again by your ideals and intuition.',
+  'retrograde_end_pluto':
+      'Pluto returns to direct motion. The deep transformation that has been preparing within begins to show itself in outer reality.',
+
+  // ── Eclipse (食) ──
+  'eclipse_sun':
+      'A solar eclipse is a powerful new moon. A new cycle begins with several times the energy of an ordinary new moon. Significant, life-shaping turning points tend to gather around it, and its influence can carry on for half a year or more.',
+  'eclipse_moon':
+      'A lunar eclipse is a powerful full moon. Hidden truths tend to come to light, and emotional release comes more easily. The energy of endings and completion is amplified.',
+
+  // ── Conjunction (合) ──
+  'conjunction_saturn':
+      'The conjunction of Saturn and Neptune is a rare alignment that comes roughly once every thirty-six years. Reality (Saturn) and the ideal (Neptune) merge — a major social turning point for giving dreams a concrete form. The structures of a new era are born.',
+
+  // ── Node Shift ──
+  'node_shift_moon':
+      'A shift of the North Node points to a change in collective direction. The theme a whole society moves toward changes over, and it touches the direction of personal growth as well. A major turn that comes roughly every eighteen months.',
+};
+
+/// CelestialEvent から意味を取得するヘルパー (ロケール連動)。
+/// en ロケールでは eventMeaningsEN、それ以外は eventMeaningsJP を引く。
+String getEventMeaning(String type, String planet) {
+  final map = isEnLocale() ? eventMeaningsEN : eventMeaningsJP;
+  return map['${type}_$planet'] ?? map[type] ?? '';
 }
 
