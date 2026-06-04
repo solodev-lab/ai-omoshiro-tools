@@ -4,8 +4,7 @@ import 'package:latlong2/latlong.dart';
 import '../../i18n/strings.g.dart';
 import '../../utils/astro_glossary.dart';
 import '../../utils/astro_lines.dart' show AstroFrame;
-import '../../utils/astro_zenith_messages.dart'
-    show astroNadirMessages, astroZenithMessages;
+import '../../utils/astro_zenith_messages.dart' show zenithMessageFor;
 import '../../widgets/info_popup.dart';
 import 'map_astro_lines.dart'
     show AstroNadirMarker, AstroZenithMarker, astroFrameStyles;
@@ -656,7 +655,7 @@ class AstroZenithPopup extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final meta = planetMeta[planetKey];
-    final msg = (isNadir ? astroNadirMessages : astroZenithMessages)[planetKey];
+    final msg = zenithMessageFor(planetKey, isNadir: isNadir);
     if (meta == null || msg == null) return const SizedBox.shrink();
     final frameStyle = astroFrameStyles[frame] ?? astroFrameStyles[AstroFrame.natal]!;
     final isNatal = frame == AstroFrame.natal;

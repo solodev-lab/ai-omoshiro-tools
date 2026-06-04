@@ -3,6 +3,12 @@
 // 「観測者が立つと惑星が物理的に頭上(高度90°)に来る」場所。
 // MCライン全体の中でも特に強い「シャワー直下」「ノズル先端」のスポット。
 // Astro*Carto*Graphy モードで天頂点マーカータップ時に表示。
+//
+// 英語化Phase 2: 日本語マップを正典に、astroZenithMessagesEN/astroNadirMessagesEN を
+// STYLE_VOICE_EN で併設 (ファイル末尾)。zenithMessageFor() が isEnLocale() で選択。
+// Hard エネルギー (土星/冥王星等) は吉凶でなく「質の違い」として中立に再表現。
+
+import 'solara_i18n.dart' show isEnLocale;
 
 class ZenithMessage {
   final String title;     // 「太陽天頂点」等
@@ -168,3 +174,179 @@ const Map<String, ZenithMessage> astroNadirMessages = {
     tags: ['根源', '深層変容', 'タブー'],
   ),
 };
+
+// ── 英語版 (英語化Phase 2) ──
+
+const Map<String, ZenithMessage> astroZenithMessagesEN = {
+  'sun': ZenithMessage(
+    title: 'Sun Zenith Point',
+    summary: 'Essence and presence are physically amplified',
+    detail: 'A place where the energy of self-expression descends straight from the zenith. '
+        'Your aura widens and your sense of self sharpens. A land where leadership, '
+        'recognition, and creativity surface readily.',
+    tags: ['Presence', 'Creativity', 'Leadership'],
+  ),
+  'moon': ZenithMessage(
+    title: 'Moon Zenith Point',
+    summary: 'Emotion and the unconscious resonate with the land',
+    detail: 'A place where the depths of the heart connect with the zenith. Intuition, '
+        'sensitivity, and a nurturing, protective quality are amplified. A land that touches '
+        'family bonds, inner healing, and reconciliation with the past.',
+    tags: ['Emotion', 'Intuition', 'Healing'],
+  ),
+  'mercury': ZenithMessage(
+    title: 'Mercury Zenith Point',
+    summary: 'Words and thought descend from above',
+    detail: 'A place where the energy of communication and intellect comes straight down. '
+        'You find your stride in learning, writing, negotiation, and speech. Insight and the '
+        'gift for putting things into words grow keen.',
+    tags: ['Learning', 'Communication', 'Intellect'],
+  ),
+  'venus': ZenithMessage(
+    title: 'Venus Zenith Point',
+    summary: 'The energy of beauty and love descends overhead',
+    detail: 'A place where the power of attraction and connection descends straight from the '
+        'zenith. Encounters, art, harmony, and abundance come into bloom. A land that draws '
+        'out aesthetic sense and charm.',
+    tags: ['Love', 'Beauty', 'Charm'],
+  ),
+  'mars': ZenithMessage(
+    title: 'Mars Zenith Point',
+    summary: 'Passion and drive descend directly',
+    detail: 'A place where breakthrough power, fighting spirit, and physical energy pour down '
+        'from the zenith. Drive and resolve rise in sport, enterprise, martial arts, and '
+        'competition. Collisions and overreach can come easily here too.',
+    tags: ['Action', 'Passion', 'Breakthrough'],
+  ),
+  'jupiter': ZenithMessage(
+    title: 'Jupiter Zenith Point',
+    summary: 'Expansion and grace descend overhead',
+    detail: 'A symbol of abundance and room to grow. A place where your horizons widen and '
+        'generosity, optimism, and philosophical insight deepen. A land where ties to travel '
+        'abroad, education, publishing, and faith tend to form.',
+    tags: ['Grace', 'Expansion', 'Learning'],
+  ),
+  'saturn': ZenithMessage(
+    title: 'Saturn Zenith Point',
+    summary: 'The energy of crystallization and achievement',
+    detail: 'A place where resolve and responsibility are tested and refined. Through trial, '
+        'you can build genuine strength and standing here. A field that brings pressure in the '
+        'short term and an unshakable sense of achievement over the long run.',
+    tags: ['Achievement', 'Responsibility', 'Building'],
+  ),
+  'uranus': ZenithMessage(
+    title: 'Uranus Zenith Point',
+    summary: 'Sudden awakening and liberation',
+    detail: 'A place where the energy of innovation and independence descends directly. Sudden '
+        'insight, release from the established, and the breaking of old assumptions come '
+        'easily. A land where paths open in technology and frontier fields.',
+    tags: ['Innovation', 'Freedom', 'Awakening'],
+  ),
+  'neptune': ZenithMessage(
+    title: 'Neptune Zenith Point',
+    summary: 'Dreams and spirit seep into the land',
+    detail: 'A place where boundaries dissolve and you connect with formless energy. A land '
+        'where art, spirituality, healing, and deep compassion come into bloom. At the same '
+        'time, confusion, dependence, and escapism can arise more easily.',
+    tags: ['Spirit', 'Dreams', 'Art'],
+  ),
+  'pluto': ZenithMessage(
+    title: 'Pluto Zenith Point',
+    summary: 'A direct line to the source of transformation and rebirth',
+    detail: 'A place where the depths of the psyche, taboo, and questions of power rise to the '
+        'surface. A trial that remakes life from its foundations, and the irreversible rebirth '
+        'beyond it. A land that opens to those who are ready for it.',
+    tags: ['Transformation', 'Rebirth', 'Depths'],
+  ),
+};
+
+const Map<String, ZenithMessage> astroNadirMessagesEN = {
+  'sun': ZenithMessage(
+    title: 'Sun Nadir Point',
+    summary: 'The core of self resonates with ancestral roots',
+    detail: 'A place where identity is rebuilt from deep within. Ties to the private sphere, '
+        'home, and ancestry come alive, and a field arises for meeting your true core rather '
+        'than your outward self.',
+    tags: ['Roots', 'Inner core', 'Foundation'],
+  ),
+  'moon': ZenithMessage(
+    title: 'Moon Nadir Point',
+    summary: 'The sea of the unconscious meets the land',
+    detail: 'A place where the roots of memory, the maternal, and emotion stir deeply. Comfort '
+        'and nostalgia arrive — or old feelings resurface. A land that asks you to reconsider '
+        'where your heart calls home.',
+    tags: ['Unconscious', 'Maternal', 'Belonging'],
+  ),
+  'mercury': ZenithMessage(
+    title: 'Mercury Nadir Point',
+    summary: 'Inner dialogue and the underground stream of thought',
+    detail: 'A place that resonates with unspoken thought, introspection, and the roots of '
+        'your mother tongue. A field where you can quietly and deeply attend to writing, '
+        'research, and the sorting of lineage.',
+    tags: ['Introspection', 'Writing', 'Lineage'],
+  ),
+  'venus': ZenithMessage(
+    title: 'Venus Nadir Point',
+    summary: 'The soil of inner beauty and attachment',
+    detail: 'A place where the roots of how you love, and your sense of comfort, come into '
+        'question. The aesthetics of home and the outline of what you most want to cherish '
+        'rise quietly into view.',
+    tags: ['Attachment', 'Soil', 'Inner beauty'],
+  ),
+  'mars': ZenithMessage(
+    title: 'Mars Nadir Point',
+    summary: 'The underground layer of inner drive and will',
+    detail: 'A place where the roots of anger, fighting spirit, and primal energy move. A '
+        'field for meeting the impulses you keep hidden, and rebuilding the fuel for action '
+        'from within the private sphere.',
+    tags: ['Impulse', 'Will', 'Fuel'],
+  ),
+  'jupiter': ZenithMessage(
+    title: 'Jupiter Nadir Point',
+    summary: 'The roots of faith and abundance spread wide',
+    detail: 'A place where the roots of what you believe and value spread out. A land where a '
+        'home\'s philosophy, inner abundance, and unseen veins of grace are activated.',
+    tags: ['Faith', 'Inner abundance', 'Roots of belief'],
+  ),
+  'saturn': ZenithMessage(
+    title: 'Saturn Nadir Point',
+    summary: 'The root of structure and ancestral responsibility',
+    detail: 'A place where responsibility, structure, and limits inherited from your lineage '
+        'come into the open. A field that calls for resolve in the private sphere and a '
+        'fundamental rebuilding.',
+    tags: ['Foundation', 'Responsibility', 'Lineage'],
+  ),
+  'uranus': ZenithMessage(
+    title: 'Uranus Nadir Point',
+    summary: 'Departure and reboot from the foundations',
+    detail: 'A place to separate your inner life from lineage and existing frameworks, and '
+        'reboot the original pattern. Sudden change and independent rebuilding in the private '
+        'sphere come easily.',
+    tags: ['Departure', 'Independence', 'Reboot'],
+  ),
+  'neptune': ZenithMessage(
+    title: 'Neptune Nadir Point',
+    summary: 'The sea of the unconscious and spiritual memory',
+    detail: 'A place where the boundary between self and lineage dissolves and connects to a '
+        'larger current. A land where spiritual roots, dreams, and a sense of past lives rise '
+        'to the surface.',
+    tags: ['Spirit', 'Dissolving', 'Memory'],
+  ),
+  'pluto': ZenithMessage(
+    title: 'Pluto Nadir Point',
+    summary: 'The deep source and the core of transformation',
+    detail: 'A place where a lineage\'s taboos, repression, and questions of power move from '
+        'the depths. A field of irreversible transformation that asks you to reexamine your '
+        'innermost foundation, and the purification beyond it.',
+    tags: ['Source', 'Deep transformation', 'Taboo'],
+  ),
+};
+
+/// ロケール連動アクセサ。en では英語マップ、それ以外は日本語マップを引く。
+/// isNadir=true で天底点、false で天頂点。
+ZenithMessage? zenithMessageFor(String planetKey, {required bool isNadir}) {
+  if (isEnLocale()) {
+    return (isNadir ? astroNadirMessagesEN : astroZenithMessagesEN)[planetKey];
+  }
+  return (isNadir ? astroNadirMessages : astroZenithMessages)[planetKey];
+}

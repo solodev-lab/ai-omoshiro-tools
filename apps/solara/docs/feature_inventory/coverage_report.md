@@ -413,7 +413,7 @@
 | from\to | 1a | 1b | 1c | 2a | 2b | 2c | 3a | 3b | 3c | 4a | 4b | 4c | 4d | 4e | 4f | 5 |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | 1a | 3 | · | 1 | 1 | 3 | · | · | · | · | · | · | · | · | · | · | · |
-| 1b | 2 | · | · | 2 | 1 | · | 1 | · | · | · | · | · | · | · | · | · |
+| 1b | 3 | · | · | 2 | 1 | · | 1 | · | · | · | · | · | · | · | · | · |
 | 1c | · | · | 1 | · | · | · | · | · | · | · | · | · | · | · | · | · |
 | 2a | 3 | 1 | · | 6 | 4 | · | · | 1 | · | · | · | · | · | · | · | · |
 | 2b | 3 | 3 | 5 | 6 | 4 | 1 | · | · | · | · | · | · | · | · | · | · |
@@ -440,7 +440,7 @@
 | --- | --- | --- |
 | `lib/theme/solara_colors.dart` | 3b | 38 |
 | `lib/utils/solara_storage.dart` | 2b | 33 |
-| `lib/utils/solara_i18n.dart` | 1a | 26 |
+| `lib/utils/solara_i18n.dart` | 1a | 27 |
 | `lib/widgets/info_popup.dart` | 3a | 26 |
 | `lib/screens/map/map_constants.dart` | 3b | 23 |
 | `lib/utils/solara_api.dart` | 2a | 15 |
@@ -472,11 +472,12 @@
 > 各ソースの SHA1 を `_stamps.json` に記録し、差分を検出。
 > 変更されたファイルが属する層は、人手版インベントリ章の見直し対象。
 
-- 追加: **0** / 削除: **0** / 変更: **1**
+- 追加: **0** / 削除: **0** / 変更: **2**
 
 ### 変更されたファイル (層別)
 
-- **層 2b**: `lib/utils/consultation_share.dart`
+- **層 1b**: `lib/utils/astro_zenith_messages.dart`
+- **層 4a**: `lib/screens/map/map_astro_carto.dart`
 
 ## #7 astro_glossary 用語辞書対整合
 

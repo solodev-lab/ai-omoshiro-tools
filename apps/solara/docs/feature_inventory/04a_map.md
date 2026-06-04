@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 25 / 総行数: 14587
+- ファイル数: 25 / 総行数: 14586
 - class/mixin/extension/enum: 90
 - 関数 (top-level + method の素拾い): 324
 - Navigator.push 等: 0
@@ -113,7 +113,7 @@ MapAspectChip — Daily Transit V2 用 1アスペクトチップ
 - 集計: `showInfoPopup`×1
 
 
-### `lib/screens/map/map_astro_carto.dart` (859 行)
+### `lib/screens/map/map_astro_carto.dart` (858 行)
 
 **imports:** dart=0 / package=2 / relative=7
 
@@ -121,39 +121,39 @@ MapAspectChip — Daily Transit V2 用 1アスペクトチップ
 
 **型定義 (9):**
 
-- L29 `class AstroCartoBanner : StatelessWidget`
+- L28 `class AstroCartoBanner : StatelessWidget`
   - Astro*Carto*Graphy モード中の上部バナー (タイトル + 閉じる×)。
-- L233 `class AcgFrameDef`
-- L284 `class AstroCartoFramePills : StatelessWidget`
+- L232 `class AcgFrameDef`
+- L283 `class AstroCartoFramePills : StatelessWidget`
   - 第1層: フレーム切替ピル (横並び 4 ピル + i)。
-- L351 `class AstroCartoSubPills : StatelessWidget`
+- L350 `class AstroCartoSubPills : StatelessWidget`
   - 第2層: active frame のサブトグル 4 つ (横並び)。
-- L390 `class _FramePill : StatelessWidget`
+- L389 `class _FramePill : StatelessWidget`
   - 第1層の個別ピル (ラベル + i)。active 時はリング glow で強調。
-- L459 `class _SubPill : StatelessWidget`
+- L458 `class _SubPill : StatelessWidget`
   - 第2層の個別小ピル (天頂 / 天底 / 天頂帯 / 天底帯)。
-- L526 `class _ScrollableRowPanel : StatelessWidget`
+- L525 `class _ScrollableRowPanel : StatelessWidget`
   - ピル列の overflow 対策ラッパー。
-- L561 `class AstroCartoCategoryPills : StatelessWidget`
+- L560 `class AstroCartoCategoryPills : StatelessWidget`
   - Astro*Carto*Graphy モード中のカテゴリピル。
-- L634 `class AstroZenithPopup : StatelessWidget`
+- L633 `class AstroZenithPopup : StatelessWidget`
   - 天頂・天底点タップ詳細 popup。
 
 **関数 (8 public + 2 private):**
 
-- L34 `build()`
-- L297 `build()`
-- L364 `build()`
-- L407 `build()`
-- L474 `build()`
-- L537 `build()`
-- L571 `build()`
-- L657 `build()`
+- L33 `build()`
+- L296 `build()`
+- L363 `build()`
+- L406 `build()`
+- L473 `build()`
+- L536 `build()`
+- L570 `build()`
+- L656 `build()`
 
   <details><summary>private 関数 2 件</summary>
 
-  - L99 `_showAcgUsageGuide()`
-  - L275 `_subLabel()`
+  - L98 `_showAcgUsageGuide()`
+  - L274 `_subLabel()`
 
   </details>
 

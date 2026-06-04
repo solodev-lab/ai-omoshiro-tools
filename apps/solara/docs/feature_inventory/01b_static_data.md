@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 15 / 総行数: 5228
+- ファイル数: 15 / 総行数: 5410
 - class/mixin/extension/enum: 20
 - 関数 (top-level + method の素拾い): 52
 - Navigator.push 等: 0
@@ -108,7 +108,7 @@ Solara Astro Glossary — Phase M2 論点4 (β案 確定)
 - 集計: `showInfoPopup`×1
 
 
-### `lib/utils/astro_zenith_messages.dart` (170 行)
+### `lib/utils/astro_zenith_messages.dart` (352 行)
 
 **ファイル先頭コメント:**
 
@@ -118,11 +118,19 @@ Solara Astro Glossary — Phase M2 論点4 (β案 確定)
 「観測者が立つと惑星が物理的に頭上(高度90°)に来る」場所。
 MCライン全体の中でも特に強い「シャワー直下」「ノズル先端」のスポット。
 Astro*Carto*Graphy モードで天頂点マーカータップ時に表示。
+
+英語化Phase 2: 日本語マップを正典に、astroZenithMessagesEN/astroNadirMessagesEN を
+STYLE_VOICE_EN で併設 (ファイル末尾)。zenithMessageFor() が isEnLocale() で選択。
+Hard エネルギー (土星/冥王星等) は吉凶でなく「質の違い」として中立に再表現。
 ```
+
+**imports:** dart=0 / package=0 / relative=1
+
+- relative: `solara_i18n.dart`
 
 **型定義 (1):**
 
-- L7 `class ZenithMessage`
+- L13 `class ZenithMessage`
 
 
 ### `lib/utils/celestial_event_meanings.dart` (119 行)
