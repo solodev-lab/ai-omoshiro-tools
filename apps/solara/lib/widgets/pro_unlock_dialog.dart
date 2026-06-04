@@ -18,6 +18,7 @@
 
 import 'package:flutter/material.dart';
 
+import '../i18n/strings.g.dart';
 import '../screens/paywall_screen.dart';
 import '../theme/solara_colors.dart';
 import '../utils/device_security_status.dart';
@@ -102,7 +103,7 @@ List<Widget> _buildProUpsellContent(
     ),
     const SizedBox(height: 16),
     Text(
-      '$featureLabel は Pro 機能です',
+      t.proDialog.isFeature(label: featureLabel),
       style: const TextStyle(
         color: SolaraColors.textPrimary,
         fontSize: 15,
@@ -138,7 +139,7 @@ List<Widget> _buildProUpsellContent(
           foregroundColor: SolaraColors.solaraGold,
           padding: const EdgeInsets.symmetric(vertical: 10),
         ),
-        child: const Text('Pro にアップグレード'),
+        child: Text(t.proDialog.upgrade),
       ),
     ),
     Align(
@@ -148,7 +149,7 @@ List<Widget> _buildProUpsellContent(
         style: TextButton.styleFrom(
           foregroundColor: SolaraColors.textSecondary,
         ),
-        child: const Text('閉じる'),
+        child: Text(t.proDialog.close),
       ),
     ),
   ];
@@ -158,17 +159,17 @@ List<Widget> _buildProUpsellContent(
 /// アップグレード CTA を出さず、Free 機能は使える旨と原因の手がかりを提示。
 List<Widget> _buildCompromisedContent(BuildContext ctx, String featureLabel) {
   return [
-    const Row(
+    Row(
       children: [
-        Icon(
+        const Icon(
           Icons.shield_outlined,
           color: SolaraColors.energyHardLight,
           size: 22,
         ),
-        SizedBox(width: 10),
+        const SizedBox(width: 10),
         Text(
-          '✦ デバイスのセキュリティ確認',
-          style: TextStyle(
+          t.proDialog.secTitle,
+          style: const TextStyle(
             color: SolaraColors.energyHardLight,
             fontSize: 16,
             fontWeight: FontWeight.w600,
@@ -179,7 +180,7 @@ List<Widget> _buildCompromisedContent(BuildContext ctx, String featureLabel) {
     ),
     const SizedBox(height: 16),
     Text(
-      '$featureLabel は今この端末では利用できません',
+      t.proDialog.unavailableHere(label: featureLabel),
       style: const TextStyle(
         color: SolaraColors.textPrimary,
         fontSize: 15,
@@ -188,12 +189,9 @@ List<Widget> _buildCompromisedContent(BuildContext ctx, String featureLabel) {
       ),
     ),
     const SizedBox(height: 8),
-    const Text(
-      'デバイスに改変や解析ツール (root化、Frida、Jailbreak、エミュレータ等) '
-      'の兆候を検知しました。\n\n'
-      'Pro 機能を安全に提供できないためロックされています。\n'
-      '無料機能はそのままご利用いただけます。',
-      style: TextStyle(
+    Text(
+      t.proDialog.compromisedBody,
+      style: const TextStyle(
         color: SolaraColors.textSecondary,
         fontSize: 13,
         height: 1.7,
@@ -207,7 +205,7 @@ List<Widget> _buildCompromisedContent(BuildContext ctx, String featureLabel) {
         style: TextButton.styleFrom(
           foregroundColor: SolaraColors.textSecondary,
         ),
-        child: const Text('閉じる'),
+        child: Text(t.proDialog.close),
       ),
     ),
   ];

@@ -472,11 +472,12 @@
 > 各ソースの SHA1 を `_stamps.json` に記録し、差分を検出。
 > 変更されたファイルが属する層は、人手版インベントリ章の見直し対象。
 
-- 追加: **0** / 削除: **0** / 変更: **11**
+- 追加: **0** / 削除: **0** / 変更: **2**
 
 ### 変更されたファイル (層別)
 
-- **層 4c**: `lib/screens/observe/observe_card_widgets.dart`, `lib/screens/observe/observe_category_selector.dart`, `lib/screens/observe/observe_constants.dart`, `lib/screens/observe/observe_history.dart`, `lib/screens/observe/observe_history_filter.dart`, `lib/screens/observe/observe_history_past.dart`, `lib/screens/observe/observe_question_field.dart`, `lib/screens/observe/observe_reading_button.dart`, `lib/screens/observe/observe_reading_sheet.dart`, `lib/screens/observe/tarot_category_popup.dart`, `lib/screens/observe_screen.dart`
+- **層 3a**: `lib/widgets/pro_unlock_dialog.dart`
+- **層 4f**: `lib/screens/paywall_screen.dart`
 
 ## #7 astro_glossary 用語辞書対整合
 

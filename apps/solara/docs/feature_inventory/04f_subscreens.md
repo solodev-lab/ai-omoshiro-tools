@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 32 / 総行数: 11054
+- ファイル数: 32 / 総行数: 11051
 - class/mixin/extension/enum: 100
 - 関数 (top-level + method の素拾い): 286
 - Navigator.push 等: 0
@@ -1153,7 +1153,7 @@ Paywall Screen — 法務必須項目 + 補助ウィジェット + 期間ラベ�
   </details>
 
 
-### `lib/screens/paywall_screen.dart` (314 行)
+### `lib/screens/paywall_screen.dart` (311 行)
 
 **ファイル先頭コメント:**
 
@@ -1193,7 +1193,7 @@ Solara ペイウォール画面 — Phase 2-6b + Suno 風リデザイン (2026-0
 - L44 `createState()`
 - L65 `initState()`
 - L72 `dispose()`
-- L260 `build()`
+- L257 `build()`
 
   <details><summary>private 関数 9 件</summary>
 
@@ -1201,11 +1201,11 @@ Solara ペイウォール画面 — Phase 2-6b + Suno 風リデザイン (2026-0
   - L77 `_onProStatusChanged()`
   - L84 `_loadOfferings()`
   - L103 `_ensureSignedInForPro()`
-  - L165 `_purchase()`
-  - L200 `_restore()`
-  - L227 `_showSnack()`
-  - L237 `_openUrl()`
-  - L245 `_openCancelGuide()`
+  - L163 `_purchase()`
+  - L197 `_restore()`
+  - L224 `_showSnack()`
+  - L234 `_openUrl()`
+  - L242 `_openCancelGuide()`
 
   </details>
 

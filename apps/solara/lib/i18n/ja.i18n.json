@@ -1,4 +1,12 @@
 {
+  "proDialog": {
+    "isFeature": "$label は Pro 機能です",
+    "upgrade": "Pro にアップグレード",
+    "close": "閉じる",
+    "secTitle": "✦ デバイスのセキュリティ確認",
+    "unavailableHere": "$label は今この端末では利用できません",
+    "compromisedBody": "デバイスに改変や解析ツール (root化、Frida、Jailbreak、エミュレータ等) の兆候を検知しました。\n\nPro 機能を安全に提供できないためロックされています。\n無料機能はそのままご利用いただけます。"
+  },
   "observe": {
     "loading1": "星々があなたへの言葉を紡いでいます",
     "loading2": "天体の囁きに耳を澄ませています",
@@ -1017,6 +1025,10 @@
       "sctaNotice": "特定商取引法に基づく表記"
     },
     "restore": "購入を復元",
+    "signinBody": "Cosmic Pro のご利用には $provider サインインが必要です。\n\nサインインすると、機種変更や再インストール後もご購入が引き継がれます。無料の機能はサインインなしでお使いいただけます。",
+    "purchaseVerifyFailed": "購入は完了しましたが、エンタイトルメントの検証に失敗しました。時間を置いて「購入を復元」をお試しください。",
+    "purchaseError": "お手続き中にエラーが発生しました。\n$e",
+    "restoreErrorMsg": "復元中にエラーが発生しました。\n$e",
     "hero": {
       "subtitle": "Stella と深く対話し、星と地に重なる景色を読み解くための完全機能。"
     },

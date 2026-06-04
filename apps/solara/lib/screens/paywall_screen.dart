@@ -111,14 +111,12 @@ class _PaywallScreenState extends State<PaywallScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: SolaraColors.celestialBlueDark,
-        title: const Text(
-          'サインインが必要です',
-          style: TextStyle(color: SolaraColors.textPrimary, fontSize: 16),
+        title: Text(
+          t.consultCredit.signinTitle,
+          style: const TextStyle(color: SolaraColors.textPrimary, fontSize: 16),
         ),
         content: Text(
-          'Cosmic Pro のご利用には $providerLabel サインインが必要です。\n\n'
-          'サインインすると、機種変更や再インストール後もご購入が引き継がれます。'
-          '無料の機能はサインインなしでお使いいただけます。',
+          t.paywall.signinBody(provider: providerLabel),
           style: const TextStyle(
             color: SolaraColors.textSecondary,
             fontSize: 13,
@@ -128,9 +126,9 @@ class _PaywallScreenState extends State<PaywallScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text(
-              'キャンセル',
-              style: TextStyle(color: SolaraColors.textSecondary),
+            child: Text(
+              t.locations.cancel,
+              style: const TextStyle(color: SolaraColors.textSecondary),
             ),
           ),
           FilledButton(
@@ -139,7 +137,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
               backgroundColor: SolaraColors.solaraGoldLight,
               foregroundColor: SolaraColors.celestialBlueDark,
             ),
-            child: Text('$providerLabel でサインイン'),
+            child: Text(t.consultCredit.signinCta(provider: providerLabel)),
           ),
         ],
       ),
@@ -156,7 +154,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
       if (mounted) _showSnack(e.message);
       return false;
     } catch (e) {
-      if (mounted) _showSnack('サインインに失敗しました: $e');
+      if (mounted) _showSnack(t.account.signInFailed(e: e));
       return false;
     }
     return SolaraAuth.instance.isSignedIn;
@@ -184,15 +182,14 @@ class _PaywallScreenState extends State<PaywallScreen> {
         // verification == failed 等で Pro 判定されなかった場合
         setState(() {
           _purchasing = false;
-          _errorMessage =
-              '購入は完了しましたが、エンタイトルメントの検証に失敗しました。時間を置いて「購入を復元」をお試しください。';
+          _errorMessage = t.paywall.purchaseVerifyFailed;
         });
       }
     } catch (e) {
       if (!mounted) return;
       setState(() {
         _purchasing = false;
-        _errorMessage = 'お手続き中にエラーが発生しました。\n$e';
+        _errorMessage = t.paywall.purchaseError(e: e);
       });
     }
   }
@@ -210,16 +207,16 @@ class _PaywallScreenState extends State<PaywallScreen> {
       if (!mounted) return;
       setState(() => _restoring = false);
       if (info == null || !ProStatus.instance.isPro) {
-        _showSnack('復元する購入が見つかりませんでした。');
+        _showSnack(t.sanctuary.restoreNotFound);
       } else {
-        _showSnack('購入を復元しました。');
+        _showSnack(t.sanctuary.restoreDone);
         Navigator.of(context).maybePop();
       }
     } catch (e) {
       if (!mounted) return;
       setState(() {
         _restoring = false;
-        _errorMessage = '復元中にエラーが発生しました。\n$e';
+        _errorMessage = t.paywall.restoreErrorMsg(e: e);
       });
     }
   }
@@ -238,7 +235,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
     final uri = Uri.parse(url);
     final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
     if (!ok && mounted) {
-      _showSnack('リンクを開けませんでした: $url');
+      _showSnack(t.legalMenu.openFailed(url: url));
     }
   }
 

@@ -40,6 +40,7 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 	Translations $copyWith({TranslationMetadata<AppLocale, Translations>? meta}) => Translations(meta: meta ?? this.$meta);
 
 	// Translations
+	late final Translations$proDialog$ja proDialog = Translations$proDialog$ja.internal(_root);
 	late final Translations$observe$ja observe = Translations$observe$ja.internal(_root);
 	late final Translations$horoDisplay$ja horoDisplay = Translations$horoDisplay$ja.internal(_root);
 	late final Translations$horoPanel$ja horoPanel = Translations$horoPanel$ja.internal(_root);
@@ -80,6 +81,33 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 	late final Translations$disclaimer$ja disclaimer = Translations$disclaimer$ja.internal(_root);
 	late final Translations$common$ja common = Translations$common$ja.internal(_root);
 	late final Translations$aiConsent$ja aiConsent = Translations$aiConsent$ja.internal(_root);
+}
+
+// Path: proDialog
+class Translations$proDialog$ja {
+	Translations$proDialog$ja.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// ja: '$label は Pro 機能です'
+	String isFeature({required Object label}) => '${label} は Pro 機能です';
+
+	/// ja: 'Pro にアップグレード'
+	String get upgrade => 'Pro にアップグレード';
+
+	/// ja: '閉じる'
+	String get close => '閉じる';
+
+	/// ja: '✦ デバイスのセキュリティ確認'
+	String get secTitle => '✦ デバイスのセキュリティ確認';
+
+	/// ja: '$label は今この端末では利用できません'
+	String unavailableHere({required Object label}) => '${label} は今この端末では利用できません';
+
+	/// ja: 'デバイスに改変や解析ツール (root化、Frida、Jailbreak、エミュレータ等) の兆候を検知しました。 Pro 機能を安全に提供できないためロックされています。 無料機能はそのままご利用いただけます。'
+	String get compromisedBody => 'デバイスに改変や解析ツール (root化、Frida、Jailbreak、エミュレータ等) の兆候を検知しました。\n\nPro 機能を安全に提供できないためロックされています。\n無料機能はそのままご利用いただけます。';
 }
 
 // Path: observe
@@ -2107,6 +2135,18 @@ class Translations$paywall$ja {
 
 	/// ja: '購入を復元'
 	String get restore => '購入を復元';
+
+	/// ja: 'Cosmic Pro のご利用には $provider サインインが必要です。 サインインすると、機種変更や再インストール後もご購入が引き継がれます。無料の機能はサインインなしでお使いいただけます。'
+	String signinBody({required Object provider}) => 'Cosmic Pro のご利用には ${provider} サインインが必要です。\n\nサインインすると、機種変更や再インストール後もご購入が引き継がれます。無料の機能はサインインなしでお使いいただけます。';
+
+	/// ja: '購入は完了しましたが、エンタイトルメントの検証に失敗しました。時間を置いて「購入を復元」をお試しください。'
+	String get purchaseVerifyFailed => '購入は完了しましたが、エンタイトルメントの検証に失敗しました。時間を置いて「購入を復元」をお試しください。';
+
+	/// ja: 'お手続き中にエラーが発生しました。 $e'
+	String purchaseError({required Object e}) => 'お手続き中にエラーが発生しました。\n${e}';
+
+	/// ja: '復元中にエラーが発生しました。 $e'
+	String restoreErrorMsg({required Object e}) => '復元中にエラーが発生しました。\n${e}';
 
 	late final Translations$paywall$hero$ja hero = Translations$paywall$hero$ja.internal(_root);
 	late final Translations$paywall$billing$ja billing = Translations$paywall$billing$ja.internal(_root);
@@ -4572,6 +4612,12 @@ class Translations$paywall$faq$resubscribe$ja {
 extension on Translations {
 	dynamic _flatMapFunction(String path) {
 		return switch (path) {
+			'proDialog.isFeature' => ({required Object label}) => '${label} は Pro 機能です',
+			'proDialog.upgrade' => 'Pro にアップグレード',
+			'proDialog.close' => '閉じる',
+			'proDialog.secTitle' => '✦ デバイスのセキュリティ確認',
+			'proDialog.unavailableHere' => ({required Object label}) => '${label} は今この端末では利用できません',
+			'proDialog.compromisedBody' => 'デバイスに改変や解析ツール (root化、Frida、Jailbreak、エミュレータ等) の兆候を検知しました。\n\nPro 機能を安全に提供できないためロックされています。\n無料機能はそのままご利用いただけます。',
 			'observe.loading1' => '星々があなたへの言葉を紡いでいます',
 			'observe.loading2' => '天体の囁きに耳を澄ませています',
 			'observe.loading3' => 'カードの神秘を解き明かしています',
@@ -5078,14 +5124,14 @@ extension on Translations {
 			'galaxy.guide.cycleBody' => '今の月サイクルの「現在地」を表示。\n日々の reading を描いた "dot" が螺旋上に並び、\n完成に向けて進んでいきます。\n\n・右上の数字: サイクル何日目か (例: 23 of 30)\n・左上の月齢バッジ: 今日の月の相 (← 今ココ)\n・ドラッグで 3D 回転\n・dot タップで該当日のリーディングを表示\n・新月・満月の日は特別オーバーレイで\n　意図を立てる/振り返るアクションを促します',
 			'galaxy.guide.atlasTitle' => '🌟 Star Atlas タブ (過去の星座図鑑)',
 			'galaxy.guide.atlasBody' => '完成した過去のサイクル (= 星座) のコレクション。\n1 つ 1 つが、あなた自身の内面が紡いだ星座です。\n\n・各カードは 1 サイクル分の reading が織りなす星座\n・カードタップで再アニメ + 詳細表示\n　(星座名・期間・レア度)\n・レア度: 5 段階の星評価 (★)\n　レア度が高いほど「珍しい組み合わせ」が出た証',
+			_ => null,
+		} ?? switch (path) {
 			'galaxy.guide.meaningTitle' => '月のサイクルの意味',
 			'galaxy.guide.meaningBody' => '🌑 新月 → 始まり。種を蒔く時。\n🌕 満月 → 達成・解放。気づきの時。\n\n1 サイクルかけて、あなたの内面が 1 つの星座に\nなっていきます。Tarot タブで日々のカードを\n引いて、ゆっくり育てていってください。',
 			'forecast.error' => 'Forecast の取得に失敗しました。ネットワーク接続を確認してください。',
 			'forecast.pro5yrLabel' => '5 年の流れ',
 			'forecast.pro5yrDesc' => '今年だけでなく翌年・来々年も含めた 5 年分のヒートマップで、人生の大きな流れを見渡せます。',
 			'forecast.daysCount' => ({required Object n}) => '(${n}日)',
-			_ => null,
-		} ?? switch (path) {
 			'forecast.calculating' => '天体の運行を計算中…',
 			'forecast.noData' => 'データがありません',
 			'forecast.displayPeriod' => '表示期間',
@@ -5529,6 +5575,10 @@ extension on Translations {
 			'paywall.legal.privacy' => 'プライバシーポリシー',
 			'paywall.legal.sctaNotice' => '特定商取引法に基づく表記',
 			'paywall.restore' => '購入を復元',
+			'paywall.signinBody' => ({required Object provider}) => 'Cosmic Pro のご利用には ${provider} サインインが必要です。\n\nサインインすると、機種変更や再インストール後もご購入が引き継がれます。無料の機能はサインインなしでお使いいただけます。',
+			'paywall.purchaseVerifyFailed' => '購入は完了しましたが、エンタイトルメントの検証に失敗しました。時間を置いて「購入を復元」をお試しください。',
+			'paywall.purchaseError' => ({required Object e}) => 'お手続き中にエラーが発生しました。\n${e}',
+			'paywall.restoreErrorMsg' => ({required Object e}) => '復元中にエラーが発生しました。\n${e}',
 			'paywall.hero.subtitle' => 'Stella と深く対話し、星と地に重なる景色を読み解くための完全機能。',
 			'paywall.billing.monthly' => '月額',
 			'paywall.billing.annual' => '年額',
@@ -5588,6 +5638,8 @@ extension on Translations {
 			'paywall.comparison.aspectLines.pro' => '120 本\n(合・□・△・⚹)',
 			'paywall.comparison.relocationSim.label' => '引越しシミュレーション',
 			'paywall.comparison.locationSlots.label' => '拠点 (VP/LOCATION) 枠',
+			_ => null,
+		} ?? switch (path) {
 			'paywall.comparison.locationSlots.free' => '5か所',
 			'paywall.comparison.locationSlots.pro' => '10か所',
 			'paywall.comparison.recordsSave.label' => '読み解き・サイクルの永久保存',
@@ -5598,8 +5650,6 @@ extension on Translations {
 			'paywall.comparison.titleRediagnosis.pro' => '無制限',
 			'paywall.comparison.forecastPeriod.label' => 'Forecast 期間',
 			'paywall.comparison.forecastPeriod.free' => '1 年',
-			_ => null,
-		} ?? switch (path) {
 			'paywall.comparison.forecastPeriod.pro' => '5 年',
 			'paywall.faq.title' => 'よくあるご質問',
 			'paywall.faq.diff.q' => 'Free と Pro の違いは何ですか?',

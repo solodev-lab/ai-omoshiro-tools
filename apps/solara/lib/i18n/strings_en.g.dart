@@ -39,6 +39,7 @@ class TranslationsEn extends Translations with BaseTranslations<AppLocale, Trans
 	TranslationsEn $copyWith({TranslationMetadata<AppLocale, Translations>? meta}) => TranslationsEn(meta: meta ?? this.$meta);
 
 	// Translations
+	@override late final _Translations$proDialog$en proDialog = _Translations$proDialog$en._(_root);
 	@override late final _Translations$observe$en observe = _Translations$observe$en._(_root);
 	@override late final _Translations$horoDisplay$en horoDisplay = _Translations$horoDisplay$en._(_root);
 	@override late final _Translations$horoPanel$en horoPanel = _Translations$horoPanel$en._(_root);
@@ -79,6 +80,21 @@ class TranslationsEn extends Translations with BaseTranslations<AppLocale, Trans
 	@override late final _Translations$disclaimer$en disclaimer = _Translations$disclaimer$en._(_root);
 	@override late final _Translations$common$en common = _Translations$common$en._(_root);
 	@override late final _Translations$aiConsent$en aiConsent = _Translations$aiConsent$en._(_root);
+}
+
+// Path: proDialog
+class _Translations$proDialog$en extends Translations$proDialog$ja {
+	_Translations$proDialog$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String isFeature({required Object label}) => '${label} is a Pro feature';
+	@override String get upgrade => 'Upgrade to Pro';
+	@override String get close => 'Close';
+	@override String get secTitle => '✦ Device security check';
+	@override String unavailableHere({required Object label}) => '${label} isn\'t available on this device right now';
+	@override String get compromisedBody => 'We\'ve detected signs of tampering or analysis tools (rooting, Frida, jailbreak, emulator, etc.) on this device.\n\nPro features are locked because we can\'t provide them safely here.\nFree features remain available as usual.';
 }
 
 // Path: observe
@@ -1018,6 +1034,10 @@ class _Translations$paywall$en extends Translations$paywall$ja {
 	@override String get autoRenewNotice => 'Your subscription renews automatically. Unless you cancel auto-renewal at least 24 hours before the end of the current period, it renews at the same price for the next period. You will be charged to your Apple ID / Google account within 24 hours before the period ends. You can manage or cancel auto-renewal anytime in your store account settings.';
 	@override late final _Translations$paywall$legal$en legal = _Translations$paywall$legal$en._(_root);
 	@override String get restore => 'Restore purchases';
+	@override String signinBody({required Object provider}) => 'Signing in with ${provider} is required to use Cosmic Pro.\n\nOnce you sign in, your purchases carry over even after changing or reinstalling on a device. Free features can be used without signing in.';
+	@override String get purchaseVerifyFailed => 'Your purchase completed, but entitlement verification failed. Please wait a moment and try "Restore purchases".';
+	@override String purchaseError({required Object e}) => 'An error occurred during the process.\n${e}';
+	@override String restoreErrorMsg({required Object e}) => 'An error occurred while restoring.\n${e}';
 	@override late final _Translations$paywall$hero$en hero = _Translations$paywall$hero$en._(_root);
 	@override late final _Translations$paywall$billing$en billing = _Translations$paywall$billing$en._(_root);
 	@override late final _Translations$paywall$plans$en plans = _Translations$paywall$plans$en._(_root);
@@ -2528,6 +2548,12 @@ class _Translations$paywall$faq$resubscribe$en extends Translations$paywall$faq$
 extension on TranslationsEn {
 	dynamic _flatMapFunction(String path) {
 		return switch (path) {
+			'proDialog.isFeature' => ({required Object label}) => '${label} is a Pro feature',
+			'proDialog.upgrade' => 'Upgrade to Pro',
+			'proDialog.close' => 'Close',
+			'proDialog.secTitle' => '✦ Device security check',
+			'proDialog.unavailableHere' => ({required Object label}) => '${label} isn\'t available on this device right now',
+			'proDialog.compromisedBody' => 'We\'ve detected signs of tampering or analysis tools (rooting, Frida, jailbreak, emulator, etc.) on this device.\n\nPro features are locked because we can\'t provide them safely here.\nFree features remain available as usual.',
 			'observe.loading1' => 'The stars are weaving their words for you',
 			'observe.loading2' => 'Listening closely to the planets\' whispers',
 			'observe.loading3' => 'Unraveling the mystery of the cards',
@@ -3034,14 +3060,14 @@ extension on TranslationsEn {
 			'galaxy.guide.cycleBody' => 'Shows where you are now in this moon cycle.\nThe "dots" of your daily readings line up along a spiral,\nadvancing toward completion.\n\n· Top-right number: which day of the cycle (e.g. 23 of 30)\n· Top-left moon badge: today\'s phase (← you are here)\n· Drag to rotate in 3D\n· Tap a dot to see that day\'s reading\n· On new- and full-moon days, a special overlay\n　invites you to set or look back on your intention',
 			'galaxy.guide.atlasTitle' => '🌟 Star Atlas tab (your past constellations)',
 			'galaxy.guide.atlasBody' => 'A collection of completed past cycles (= constellations).\nEach one is a constellation your own inner life has woven.\n\n· Each card is a constellation woven from one cycle of readings\n· Tap a card to replay it + see details\n　(name, period, rarity)\n· Rarity: a 5-level star rating (★)\n　the higher the rarity, the rarer the combination that appeared',
+			_ => null,
+		} ?? switch (path) {
 			'galaxy.guide.meaningTitle' => 'What the moon cycle means',
 			'galaxy.guide.meaningBody' => '🌑 New moon → a beginning. A time to plant seeds.\n🌕 Full moon → fulfillment and release. A time of awareness.\n\nOver one cycle, your inner life becomes a single constellation.\nDraw your daily card on the Tarot tab,\nand let it grow, slowly.',
 			'forecast.error' => 'Couldn\'t fetch the forecast. Please check your network connection.',
 			'forecast.pro5yrLabel' => 'The 5-year flow',
 			'forecast.pro5yrDesc' => 'A 5-year heatmap — this year plus the years ahead — to take in the larger flow of your life.',
 			'forecast.daysCount' => ({required Object n}) => '(${n} days)',
-			_ => null,
-		} ?? switch (path) {
 			'forecast.calculating' => 'Calculating the planets\' motion…',
 			'forecast.noData' => 'No data',
 			'forecast.displayPeriod' => 'Period',
@@ -3485,6 +3511,10 @@ extension on TranslationsEn {
 			'paywall.legal.privacy' => 'Privacy Policy',
 			'paywall.legal.sctaNotice' => 'Commercial Transactions Act notice',
 			'paywall.restore' => 'Restore purchases',
+			'paywall.signinBody' => ({required Object provider}) => 'Signing in with ${provider} is required to use Cosmic Pro.\n\nOnce you sign in, your purchases carry over even after changing or reinstalling on a device. Free features can be used without signing in.',
+			'paywall.purchaseVerifyFailed' => 'Your purchase completed, but entitlement verification failed. Please wait a moment and try "Restore purchases".',
+			'paywall.purchaseError' => ({required Object e}) => 'An error occurred during the process.\n${e}',
+			'paywall.restoreErrorMsg' => ({required Object e}) => 'An error occurred while restoring.\n${e}',
 			'paywall.hero.subtitle' => 'The complete experience — for deeper conversations with Stella, and for reading the landscape where sky meets land.',
 			'paywall.billing.monthly' => 'Monthly',
 			'paywall.billing.annual' => 'Annual',
@@ -3544,6 +3574,8 @@ extension on TranslationsEn {
 			'paywall.comparison.aspectLines.pro' => '120 lines\n(conj. □ △ ⚹)',
 			'paywall.comparison.relocationSim.label' => 'Relocation simulation',
 			'paywall.comparison.locationSlots.label' => 'Home base slots (VP / LOCATION)',
+			_ => null,
+		} ?? switch (path) {
 			'paywall.comparison.locationSlots.free' => '5 places',
 			'paywall.comparison.locationSlots.pro' => '10 places',
 			'paywall.comparison.recordsSave.label' => 'Permanent saving of interpretations & cycles',
@@ -3554,8 +3586,6 @@ extension on TranslationsEn {
 			'paywall.comparison.titleRediagnosis.pro' => 'Unlimited',
 			'paywall.comparison.forecastPeriod.label' => 'Forecast range',
 			'paywall.comparison.forecastPeriod.free' => '1 year',
-			_ => null,
-		} ?? switch (path) {
 			'paywall.comparison.forecastPeriod.pro' => '5 years',
 			'paywall.faq.title' => 'Frequently Asked Questions',
 			'paywall.faq.diff.q' => 'What\'s the difference between Free and Pro?',
