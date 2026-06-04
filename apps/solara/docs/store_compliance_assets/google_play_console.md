@@ -13,7 +13,7 @@
 >
 > 関連: [store_compliance.md](../store_compliance.md) (背景・根拠) / [data_safety_form.md](data_safety_form.md) (データセーフティ詳細根拠)
 >
-> 最終更新: 2026-05-28
+> 最終更新: 2026-06-05 (ストア申請テキストを日英併記化)
 
 ---
 
@@ -32,16 +32,92 @@
 **遷移 (左サイド)**: **拡大 > ストアでの表示 > メイン ストア情報**
 
 ### A-1. アプリ名 (30 字以内)
+
+> 🌍 ストア既定言語を **英語 (en-US)** にして世界配信。各テキストは **English (既定)** と **日本語 (ja-JP)** の 2 言語を併記。Play Console の「言語の管理」で言語ごとに貼り分ける。
+
+**🇬🇧 English (26/30)**
+```
+Solara — Astrolabe of Life
+```
+**🇯🇵 日本語**
 ```
 Solara — 人生のアストロラーベ
 ```
 
 ### A-2. 簡単な説明 (Short Description、80 字以内)
+**🇬🇧 English (79/80)**
+```
+When, where, what you do — read it from planetary lines and directional energy.
+```
+**🇯🇵 日本語**
 ```
 Solaraは、いつどこで・何をするかまで、世界の惑星ラインと方位のエネルギーから読み解きます。星の力を意図して味方にできる。人生の舵を、もう一度あなたの手に。
 ```
 
 ### A-3. 詳しい説明 (Full Description、4000 字以内)
+**🇬🇧 English (3,959/4000)**
+```
+Astrology has always reflected "who you are."
+Solara turns toward what comes next — when, where, and what you do.
+Your own astrolabe for the time and place written in the stars.
+
+Across a world map, your planetary lines unfold, and the star that takes the lead shifts with where you stand and when. Solara weaves astrocartography (ACG/CCG) — systematized by the astrologer Jim Lewis — together with the energy of the sixteen directions, and hands you the feel of "this very moment" and "the place you are heading," in words.
+
+Rather than being swept along by the stars, take them up by intention, as allies.
+Where will your reference point be? What date and time will you choose? — that is yours to decide.
+Take your life's helm back into your hands.
+
+* Solara is for entertainment and self-exploration. It does not offer medical, legal, financial, or psychological advice, nor does it predict or guarantee the future.
+
+──────────────
+
+■ What Solara can do
+
+◇ Read the "terrain of the stars" on a world map (ACG/CCG)
+Where and when your stars work most strongly, at a glance as lines on the map. Choose your travels, a move, or a city you long for, through the lens of the stars.
+
+◇ Sixteen directions of energy, from where you are
+Which way the stars' energy gathers around you now. A small signpost for "which way today?"
+
+◇ Compare where you are headed
+Register the places on your mind — a workplace, a shop, a date spot — and line them up by the energy of date-time × intention.
+
+◇ A reading made only for you, every day
+Your birth chart × today's stars, woven into words that are your own — never just a one-line sun-sign blurb.
+
+◇ And more: Stella, Tarot, the rhythm of a year, a beautiful birth chart, a growing archive of constellations
+Mirror this moment in 78 cards, take in the year's tide of stars, gaze at the sky you were born under, and grow your constellation with every record you keep.
+
+──────────────
+
+■ Stella is always on your side
+
+Solara was made by a practicing astrologer who has faced countless life consultations for as long as they can remember. That experience, and the wish "may you be happy," are entrusted to Stella, the interpretive presence living inside the app.
+
+What Solara shows is not a prediction, but "one interpretation" drawn from a vast body of stellar data. How you receive it, how you move — that is up to you. The stars, and Stella, are always on your side.
+
+──────────────
+
+■ Free to use
+・All four frames of the world-map star lines (ACG/CCG)
+・A daily star reading (Overall) and one tarot draw a day
+・Stella consultation, 3 times a week
+・Permanent saving, search, and sharing of your records
+
+■ Cosmic Pro — stars and earth overlapping, deeper
+・Set the "time of day" for an outing and read even the change 30 minutes later. CCG's lines move with the earth's rotation, and the leading star of a place quietly shifts.
+・Stella consultation, up to 100 times a week.
+・Star readings in all 5 categories plus deeper readings; Tarot in all 7 categories with no credits spent.
+・Aspect lines 40 to 120, zenith and nadir zones, relocation simulation, and a flow of stars up to 5 years ahead.
+Price, period, and auto-renewal appear on the purchase screen. Cancel anytime, up to 24 hours before the next renewal.
+
+■ Before you begin
+・Usable without signing in (anonymous is fine). Your birth details are used only for your own reading, and your account can be deleted in-app anytime.
+・Tarot, Stella, and today's reading are written by Google's generative AI "Gemini." Your birth details (date, time, place of birth) and the text you enter are sent to Google's servers to generate it. We ask your consent on first launch.
+
+【Important】Solara's astrology, tarot, and consultations are for entertainment and self-exploration. They are not professional advice (medical, legal, financial, or psychological), and do not predict or guarantee the future. Please base important choices on your own will and a professional's guidance.
+```
+**🇯🇵 日本語**
 ```
 これまでの占星術は、「あなたがどんな人か」を映してきました。
 Solara が照らすのは、その先——「いつ・どこで・何をするか」。
@@ -119,21 +195,21 @@ Solara が見せるのは、未来の言い当てではなく、膨大な星の�
 ### A-6. スマートフォン用スクリーンショット (最低 2 枚、推奨 4-8 枚)
 推奨: Apple 用と同じ 6 枚 ([apple_app_store_connect.md §D-7](apple_app_store_connect.md) 参照)
 
-| # | ファイル | 見出しキャッチコピー |
-|---|---|---|
-| 01 | 01_map_energy | 行く先のエネルギーが、地図でわかる。 |
-| 02 | 02_acg_ccg | 行く土地と動く時で、主役の星が変わる。 |
-| 03 | 03_locations | その日時・その場所のエネルギーが全部わかる。 |
-| 04 | 04_search_energy | 検索した店のエネルギーが、ひと目で並ぶ。 |
-| 05 | 05_stella_result | お出かけも、移住も。ぜんぶ星に相談。 |
-| 06 | 06_horoscope | 精密な出生図が、すべての土台。 |
-| 07 | 07_cycle | 恋も、豊かさも。めぐる季節を、先に。 |
-| 08 | 08_heatmap | 1年の星のリズムを、色で見渡す。 |
-| 09 | 09_star_reading | 星が語る、今日のあなたへの指針。 |
-| 10 | 10_tarot | タロットが照らす、心の奥の答え。 |
-| 11 | 11_star_atlas | 夜空にあなただけの星座が生まれる。 |
+| # | ファイル | 見出しキャッチコピー (日本語) | Caption (English) |
+|---|---|---|---|
+| 01 | 01_map_energy | 行く先のエネルギーが、地図でわかる。 | See the energy of where you're going, on the map. |
+| 02 | 02_acg_ccg | 行く土地と動く時で、主役の星が変わる。 | The leading star shifts with the place and the moment. |
+| 03 | 03_locations | その日時・その場所のエネルギーが全部わかる。 | Know the energy of that time and that place — all of it. |
+| 04 | 04_search_energy | 検索した店のエネルギーが、ひと目で並ぶ。 | The places you search, lined up by their energy at a glance. |
+| 05 | 05_stella_result | お出かけも、移住も。ぜんぶ星に相談。 | An outing or a move — ask the stars about it all. |
+| 06 | 06_horoscope | 精密な出生図が、すべての土台。 | A precise birth chart is the foundation of it all. |
+| 07 | 07_cycle | 恋も、豊かさも。めぐる季節を、先に。 | Love and abundance — see the turning seasons ahead. |
+| 08 | 08_heatmap | 1年の星のリズムを、色で見渡す。 | Take in a year's rhythm of stars, in color. |
+| 09 | 09_star_reading | 星が語る、今日のあなたへの指針。 | What the stars say — a compass for your today. |
+| 10 | 10_tarot | タロットが照らす、心の奥の答え。 | Tarot lights the answer deep in your heart. |
+| 11 | 11_star_atlas | 夜空にあなただけの星座が生まれる。 | A constellation all your own is born in the night sky. |
 
-🔴 NG 表現: 「占い」「運勢」「予言」「的中」「保証」 (Google Misleading Claims 検出対象)
+🔴 NG 表現 (日英とも): 「占い/fortune」「運勢/luck」「予言/predict」「的中」「保証/guarantee」 (Google Misleading Claims 検出対象)
 
 ### A-7. 動画 (任意)
 → 初回公開はスキップで OK
@@ -165,9 +241,14 @@ Solara が見せるのは、未来の言い当てではなく、膨大な星の�
 
 ここに 10 個以上のサブ項目があり、すべて「管理 > 開始」を押して埋める必要がある。
 
-### C-1. プライバシー ポリシー
+### C-1. プライバシー ポリシー (ロケール別)
+**🇬🇧 English (en)**
 ```
-https://solodev-lab.com/legal/solara/privacy.html
+https://solodev-lab.com/legal/solara/en/privacy.html
+```
+**🇯🇵 日本語 (ja)**
+```
+https://solodev-lab.com/legal/solara/ja/privacy.html
 ```
 
 ### C-2. アプリのアクセス
@@ -227,8 +308,15 @@ https://solodev-lab.com/legal/solara/privacy.html
 
 ### C-7. アカウントの削除 (2024 義務化)
 
+> 🔴 Data Safety フォームの「アカウント削除 URL」は **1 つだけ** 登録できる。既定言語=英語なので **English (en)** を登録する。日本語版はストア掲載 (ja ローカライズ) 用。
+
+**🇬🇧 English (en) — Data Safety に登録するのはこちら**
 ```
-https://solodev-lab.com/legal/solara/delete-account.html
+https://solodev-lab.com/legal/solara/en/delete-account.html
+```
+**🇯🇵 日本語 (ja)**
+```
+https://solodev-lab.com/legal/solara/ja/delete-account.html
 ```
 
 → 「アプリの削除によってユーザー データもすべて削除されますか?」: **いいえ** (アプリ削除で端末内データは消えるが、サーバーのアカウントデータは残る → 削除リクエスト必要)
@@ -266,11 +354,12 @@ v1.0.0 — はじめての公開バージョン
 ・地図上のアストロカートグラフィと方角占い
 ```
 
-#### リリース ノート (英語、任意)
+#### リリース ノート (英語=既定言語)
 ```
-v1.0.0 — Initial release.
-Personal birth chart, daily horoscope, tarot with AI interpretation,
-astrocartography (planetary lines on world map), and Stella consultation.
+v1.0.0 — First public release
+・Birth chart, transits, and progressions
+・Daily star reading, tarot, and Stella consultation
+・Astrocartography and directional energy on the map
 ```
 
 ### D-2. 内部テスト アクセス (テスター登録)
@@ -317,3 +406,4 @@ astrocartography (planetary lines on world map), and Stella consultation.
 | 日付 | 内容 |
 |---|---|
 | 2026-05-28 | 初版 (旧 store_listing.md の Google 部分 + 旧 age_rating_questionnaire.md の Google 部分 + 旧 data_safety_form.md 要点 を統合 + ナビゲーション明記) |
+| 2026-06-05 | ストア申請テキスト入力を **日英併記** 化 (既定=English / 併記=日本語)。対象=アプリ名(26字)/簡単な説明(79字)/詳しい説明(EN 3,958字)/スクショ見出し11/リリースノート、+プライバシーURL・アカウント削除URLをロケール別(en/ja)化。英語は `docs/i18n_glossary.md` 正典語彙準拠・NGワード回避。 |
