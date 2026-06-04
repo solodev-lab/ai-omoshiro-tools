@@ -420,7 +420,7 @@
 | 2c | 1 | · | 1 | 3 | 2 | · | · | · | · | · | · | · | · | · | · | · |
 | 3a | 4 | 4 | 2 | 2 | 1 | 1 | 8 | 7 | 4 | 1 | · | · | · | · | 1 | · |
 | 3b | 1 | · | · | · | · | · | · | 1 | · | · | · | · | · | · | · | · |
-| 3c | · | 5 | 4 | 2 | 4 | 1 | 12 | 4 | · | · | · | · | · | · | · | · |
+| 3c | 2 | 5 | 4 | 2 | 4 | 1 | 12 | 4 | · | · | · | · | · | · | · | · |
 | 4a | 16 | 11 | · | 14 | 8 | 1 | 19 | 24 | 3 | 32 | 4 | · | · | · | 4 | · |
 | 4b | 11 | 14 | · | 3 | 4 | · | 15 | · | · | · | 30 | · | · | 2 | · | · |
 | 4c | 3 | 1 | 14 | 1 | 4 | 5 | 8 | 6 | · | · | · | 16 | · | · | 1 | · |
@@ -442,7 +442,7 @@
 | `lib/utils/solara_storage.dart` | 2b | 33 |
 | `lib/widgets/info_popup.dart` | 3a | 26 |
 | `lib/screens/map/map_constants.dart` | 3b | 23 |
-| `lib/utils/solara_i18n.dart` | 1a | 21 |
+| `lib/utils/solara_i18n.dart` | 1a | 23 |
 | `lib/utils/solara_api.dart` | 2a | 15 |
 | `lib/models/galaxy_cycle.dart` | 1c | 14 |
 | `lib/screens/horoscope/horo_antique_icons.dart` | 3a | 14 |
@@ -472,11 +472,13 @@
 > 各ソースの SHA1 を `_stamps.json` に記録し、差分を検出。
 > 変更されたファイルが属する層は、人手版インベントリ章の見直し対象。
 
-- 追加: **0** / 削除: **0** / 変更: **10**
+- 追加: **0** / 削除: **0** / 変更: **8**
 
 ### 変更されたファイル (層別)
 
-- **層 4a**: `lib/screens/map/consult_entry_popup.dart`, `lib/screens/map/map_aspect_chip.dart`, `lib/screens/map/map_astro_lines.dart`, `lib/screens/map/map_line_narrative_sheet.dart`, `lib/screens/map/map_location_markers.dart`, `lib/screens/map/map_overlays.dart`, `lib/screens/map/map_planet_intro_popup.dart`, `lib/screens/map/map_time_slider.dart`, `lib/screens/map/map_vp_panel.dart`, `lib/screens/map/map_welcome_banner.dart`
+- **層 3a**: `lib/widgets/celestial_event_bar.dart`
+- **層 3c**: `lib/widgets/full_moon_overlay.dart`, `lib/widgets/new_moon_overlay.dart`
+- **層 4d**: `lib/screens/galaxy/constellation_share_card_page.dart`, `lib/screens/galaxy/galaxy_archive_filter.dart`, `lib/screens/galaxy/galaxy_archive_filter_chips.dart`, `lib/screens/galaxy/galaxy_cycle_actions_sheet.dart`, `lib/screens/galaxy/galaxy_star_atlas.dart`
 
 ## #7 astro_glossary 用語辞書対整合
 

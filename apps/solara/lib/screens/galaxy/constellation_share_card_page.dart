@@ -25,6 +25,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../../i18n/strings.g.dart';
 import '../../models/galaxy_cycle.dart';
 import '../../utils/constellation_namer.dart';
 import '../../widgets/constellation_painter.dart';
@@ -80,12 +81,12 @@ class _ConstellationShareCardPageState
           : widget.cycle.nameEN;
       await SharePlus.instance.share(ShareParams(
         files: [XFile(file.path)],
-        text: '私の星座「$name」が完成しました。\n#Solara',
+        text: t.shareConstellation.shareText(name: name),
       ));
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('シェア失敗: $e')),
+          SnackBar(content: Text(t.shareConstellation.shareFailed(e: e))),
         );
       }
     } finally {
@@ -101,8 +102,8 @@ class _ConstellationShareCardPageState
         backgroundColor: Colors.transparent,
         elevation: 0,
         iconTheme: const IconThemeData(color: Color(0xFFEAEAEA)),
-        title: const Text('星座を共有',
-            style: TextStyle(color: Color(0xFFEAEAEA))),
+        title: Text(t.shareConstellation.appBarTitle,
+            style: const TextStyle(color: Color(0xFFEAEAEA))),
       ),
       body: SafeArea(
         child: Column(
@@ -155,9 +156,9 @@ class _ConstellationShareCardPageState
                               color: Color(0xFF0A0A14),
                             ),
                           )
-                        : const Text(
-                            '✦ 星座カードを共有する',
-                            style: TextStyle(
+                        : Text(
+                            t.shareConstellation.shareButton,
+                            style: const TextStyle(
                               color: Color(0xFF0A0A14),
                               fontSize: 15,
                               fontWeight: FontWeight.w700,

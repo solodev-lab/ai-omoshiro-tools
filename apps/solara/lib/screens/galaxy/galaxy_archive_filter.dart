@@ -17,6 +17,7 @@
 
 import 'package:flutter/material.dart';
 
+import '../../i18n/strings.g.dart';
 import '../../models/galaxy_cycle.dart';
 import '../../theme/solara_colors.dart';
 import '../../widgets/pro_unlock_dialog.dart';
@@ -104,14 +105,14 @@ enum GalaxyArchiveSort {
 }
 
 extension GalaxyArchiveSortLabel on GalaxyArchiveSort {
-  String get jp {
+  String get label {
     switch (this) {
       case GalaxyArchiveSort.newestFirst:
-        return '新しい順';
+        return t.galaxyArchive.sortNewest;
       case GalaxyArchiveSort.oldestFirst:
-        return '古い順';
+        return t.galaxyArchive.sortOldest;
       case GalaxyArchiveSort.rarityHighFirst:
-        return 'レア度順';
+        return t.galaxyArchive.sortRarity;
     }
   }
 }
@@ -162,10 +163,8 @@ class _GalaxyArchiveFilterBarState extends State<GalaxyArchiveFilterBar> {
 
   Future<void> _proGuard() => showProUnlockDialog(
         context,
-        featureLabel: 'アーカイブの検索・フィルタ',
-        description:
-            '完成したサイクルを名前・レア度・並び順で絞り込めます。\n'
-            '記録が積み上がるほど、振り返りやすくなります。',
+        featureLabel: t.galaxyArchive.proLabel,
+        description: t.galaxyArchive.proDesc,
       );
 
   void _onQueryChanged(String v) {
@@ -241,8 +240,8 @@ class _GalaxyArchiveFilterBarState extends State<GalaxyArchiveFilterBar> {
                           isCollapsed: true,
                           border: InputBorder.none,
                           hintText: isPro
-                              ? '星座名で検索 (例: 翼 / Dragon)'
-                              : '検索 — Cosmic Pro',
+                              ? t.galaxyArchive.searchHint
+                              : t.galaxyArchive.searchHintLocked,
                           hintStyle: TextStyle(
                             color: isPro
                                 ? const Color(0x99ACACAC)

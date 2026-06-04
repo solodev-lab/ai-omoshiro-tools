@@ -1,6 +1,7 @@
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../i18n/strings.g.dart';
 import '../../models/galaxy_cycle.dart';
 import '../../utils/constellation_namer.dart';
 import '../../widgets/constellation_painter.dart';
@@ -89,7 +90,9 @@ class _GalaxyStarAtlasTabState extends State<GalaxyStarAtlasTab> {
             padding: const EdgeInsets.fromLTRB(hPad + 4, 0, hPad, 6),
             sliver: SliverToBoxAdapter(
               child: Text(
-                '${visible.length} 件 / 全 ${widget.completedCycles.length} 件',
+                t.starAtlas.resultCount(
+                    shown: visible.length,
+                    total: widget.completedCycles.length),
                 style: const TextStyle(
                   fontFamily: 'DMSans',
                   color: Color(0xFF999999),
@@ -387,7 +390,7 @@ class _NoMatchState extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 24),
       child: Center(
         child: Text(
-          '条件に合うサイクルはありません',
+          t.starAtlas.noMatch,
           style: GoogleFonts.cinzel(
             color: const Color(0xFFACACAC),
             fontSize: 13,

@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 5 / 総行数: 2365
+- ファイル数: 5 / 総行数: 2380
 - class/mixin/extension/enum: 11
 - 関数 (top-level + method の素拾い): 58
 - Navigator.push 等: 0
@@ -105,73 +105,73 @@
   </details>
 
 
-### `lib/widgets/full_moon_overlay.dart` (481 行)
+### `lib/widgets/full_moon_overlay.dart` (489 行)
 
-**imports:** dart=2 / package=2 / relative=7
+**imports:** dart=2 / package=2 / relative=8
 
-- relative: `../models/lunar_intention.dart`, `../theme/solara_colors.dart`, `../utils/celestial_events.dart`, `../utils/cycle_story_texts.dart`, `../utils/solara_storage.dart`, `glass_panel.dart`, `moon_overlay_shared.dart`
+- relative: `../models/lunar_intention.dart`, `../theme/solara_colors.dart`, `../utils/celestial_events.dart`, `../utils/cycle_story_texts.dart`, `../utils/solara_i18n.dart`, `../utils/solara_storage.dart`, `glass_panel.dart`, `moon_overlay_shared.dart`
 
 **型定義 (2):**
 
-- L17 `class FullMoonOverlay : StatefulWidget`
-- L33 `class _FullMoonOverlayState : State`
+- L18 `class FullMoonOverlay : StatefulWidget`
+- L34 `class _FullMoonOverlayState : State`
 
 **関数 (4 public + 10 private):**
 
-- L30 `createState()`
-- L58 `initState()`
-- L92 `dispose()`
-- L134 `build()`
+- L31 `createState()`
+- L59 `initState()`
+- L93 `dispose()`
+- L135 `build()`
 
   <details><summary>private 関数 10 件</summary>
 
-  - L86 `_transitionToRating()`
-  - L108 `_onRatingTap()`
-  - L122 `_runRevealSequence()`
-  - L151 `_buildStoryContent()`
-  - L210 `_buildRatingList()`
-  - L312 `_buildRevealLayout()`
-  - L377 `_titleBlock()`
-  - L412 `_ratingCardWidget()`
-  - L466 `_revealMessage()`
-  - L472 `_submitRating()`
+  - L87 `_transitionToRating()`
+  - L109 `_onRatingTap()`
+  - L123 `_runRevealSequence()`
+  - L152 `_buildStoryContent()`
+  - L211 `_buildRatingList()`
+  - L317 `_buildRevealLayout()`
+  - L382 `_titleBlock()`
+  - L418 `_ratingCardWidget()`
+  - L474 `_revealMessage()`
+  - L480 `_submitRating()`
 
   </details>
 
 
-### `lib/widgets/new_moon_overlay.dart` (573 行)
+### `lib/widgets/new_moon_overlay.dart` (580 行)
 
-**imports:** dart=1 / package=2 / relative=8
+**imports:** dart=1 / package=2 / relative=10
 
-- relative: `../models/lunar_intention.dart`, `../theme/solara_colors.dart`, `../utils/celestial_events.dart`, `../utils/cycle_story_texts.dart`, `../utils/moon_notification_service.dart`, `../utils/solara_storage.dart`, `glass_panel.dart`, `moon_overlay_shared.dart`
+- relative: `../i18n/strings.g.dart`, `../models/lunar_intention.dart`, `../theme/solara_colors.dart`, `../utils/celestial_events.dart`, `../utils/cycle_story_texts.dart`, `../utils/moon_notification_service.dart`, `../utils/solara_i18n.dart`, `../utils/solara_storage.dart`, `glass_panel.dart`, `moon_overlay_shared.dart`
 
 **型定義 (2):**
 
-- L17 `class NewMoonOverlay : StatefulWidget`
-- L35 `class _NewMoonOverlayState : State`
+- L19 `class NewMoonOverlay : StatefulWidget`
+- L37 `class _NewMoonOverlayState : State`
 
 **関数 (4 public + 13 private):**
 
-- L32 `createState()`
-- L64 `initState()`
-- L120 `dispose()`
-- L157 `build()`
+- L34 `createState()`
+- L66 `initState()`
+- L122 `dispose()`
+- L159 `build()`
 
   <details><summary>private 関数 13 件</summary>
 
-  - L103 `_transitionToChoice()`
-  - L108 `_loadNotTodayCount()`
-  - L113 `_loadCycleEvents()`
-  - L131 `_onChoiceTap()`
-  - L145 `_runRevealSequence()`
-  - L174 `_buildStoryContent()`
-  - L231 `_buildChoiceList()`
-  - L326 `_buildRevealLayout()`
-  - L444 `_titleBlock()`
-  - L482 `_choiceCardWidget()`
-  - L518 `_revealMessage()`
-  - L525 `_revealEvents()`
-  - L549 `_setIntention()`
+  - L105 `_transitionToChoice()`
+  - L110 `_loadNotTodayCount()`
+  - L115 `_loadCycleEvents()`
+  - L133 `_onChoiceTap()`
+  - L147 `_runRevealSequence()`
+  - L176 `_buildStoryContent()`
+  - L233 `_buildChoiceList()`
+  - L328 `_buildRevealLayout()`
+  - L446 `_titleBlock()`
+  - L486 `_choiceCardWidget()`
+  - L525 `_revealMessage()`
+  - L532 `_revealEvents()`
+  - L556 `_setIntention()`
 
   </details>
 

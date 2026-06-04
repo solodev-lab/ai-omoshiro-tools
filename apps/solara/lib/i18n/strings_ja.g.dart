@@ -40,6 +40,12 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 	Translations $copyWith({TranslationMetadata<AppLocale, Translations>? meta}) => Translations(meta: meta ?? this.$meta);
 
 	// Translations
+	late final Translations$moonOverlay$ja moonOverlay = Translations$moonOverlay$ja.internal(_root);
+	late final Translations$galaxyArchive$ja galaxyArchive = Translations$galaxyArchive$ja.internal(_root);
+	late final Translations$galaxyActions$ja galaxyActions = Translations$galaxyActions$ja.internal(_root);
+	late final Translations$starAtlas$ja starAtlas = Translations$starAtlas$ja.internal(_root);
+	late final Translations$shareConstellation$ja shareConstellation = Translations$shareConstellation$ja.internal(_root);
+	late final Translations$celestialBar$ja celestialBar = Translations$celestialBar$ja.internal(_root);
 	late final Translations$mapWelcome$ja mapWelcome = Translations$mapWelcome$ja.internal(_root);
 	late final Translations$mapOverlay$ja mapOverlay = Translations$mapOverlay$ja.internal(_root);
 	late final Translations$consultEntry$ja consultEntry = Translations$consultEntry$ja.internal(_root);
@@ -86,6 +92,150 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 	late final Translations$disclaimer$ja disclaimer = Translations$disclaimer$ja.internal(_root);
 	late final Translations$common$ja common = Translations$common$ja.internal(_root);
 	late final Translations$aiConsent$ja aiConsent = Translations$aiConsent$ja.internal(_root);
+}
+
+// Path: moonOverlay
+class Translations$moonOverlay$ja {
+	Translations$moonOverlay$ja.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// ja: 'もう一度押すと「特別決めない」で開始'
+	String get pressAgainSkip => 'もう一度押すと「特別決めない」で開始';
+}
+
+// Path: galaxyArchive
+class Translations$galaxyArchive$ja {
+	Translations$galaxyArchive$ja.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// ja: 'アーカイブの検索・フィルタ'
+	String get proLabel => 'アーカイブの検索・フィルタ';
+
+	/// ja: '完成したサイクルを名前・レア度・並び順で絞り込めます。 記録が積み上がるほど、振り返りやすくなります。'
+	String get proDesc => '完成したサイクルを名前・レア度・並び順で絞り込めます。\n記録が積み上がるほど、振り返りやすくなります。';
+
+	/// ja: '星座名で検索 (例: 翼 / Dragon)'
+	String get searchHint => '星座名で検索 (例: 翼 / Dragon)';
+
+	/// ja: '検索 — Cosmic Pro'
+	String get searchHintLocked => '検索 — Cosmic Pro';
+
+	/// ja: '新しい順'
+	String get sortNewest => '新しい順';
+
+	/// ja: '古い順'
+	String get sortOldest => '古い順';
+
+	/// ja: 'レア度順'
+	String get sortRarity => 'レア度順';
+
+	/// ja: '並び順'
+	String get sortTooltip => '並び順';
+
+	/// ja: '選択中:'
+	String get selectedLabel => '選択中:';
+
+	/// ja: 'クリア'
+	String get clear => 'クリア';
+}
+
+// Path: galaxyActions
+class Translations$galaxyActions$ja {
+	Translations$galaxyActions$ja.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// ja: 'テキストをコピーしました'
+	String get copied => 'テキストをコピーしました';
+
+	/// ja: '通常再生'
+	String get replayLabel => '通常再生';
+
+	/// ja: '線が描かれていく演出を見る'
+	String get replaySub => '線が描かれていく演出を見る';
+
+	/// ja: '形成演出を再生'
+	String get formationLabel => '形成演出を再生';
+
+	/// ja: '刻星化の 8 秒の形成シーンを再生'
+	String get formationSub => '刻星化の 8 秒の形成シーンを再生';
+
+	/// ja: 'テキストとしてコピー'
+	String get copyLabel => 'テキストとしてコピー';
+
+	/// ja: 'Markdown 形式でクリップボードへ'
+	String get copySub => 'Markdown 形式でクリップボードへ';
+}
+
+// Path: starAtlas
+class Translations$starAtlas$ja {
+	Translations$starAtlas$ja.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// ja: '$shown 件 / 全 $total 件'
+	String resultCount({required Object shown, required Object total}) => '${shown} 件 / 全 ${total} 件';
+
+	/// ja: '条件に合うサイクルはありません'
+	String get noMatch => '条件に合うサイクルはありません';
+}
+
+// Path: shareConstellation
+class Translations$shareConstellation$ja {
+	Translations$shareConstellation$ja.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// ja: '私の星座「$name」が完成しました。 #Solara'
+	String shareText({required Object name}) => '私の星座「${name}」が完成しました。\n#Solara';
+
+	/// ja: 'シェア失敗: $e'
+	String shareFailed({required Object e}) => 'シェア失敗: ${e}';
+
+	/// ja: '星座を共有'
+	String get appBarTitle => '星座を共有';
+
+	/// ja: '✦ 星座カードを共有する'
+	String get shareButton => '✦ 星座カードを共有する';
+}
+
+// Path: celestialBar
+class Translations$celestialBar$ja {
+	Translations$celestialBar$ja.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// ja: '惑星移行'
+	String get ingress => '惑星移行';
+
+	/// ja: '逆行'
+	String get retrograde => '逆行';
+
+	/// ja: '順行'
+	String get retrogradeEnd => '順行';
+
+	/// ja: '食'
+	String get eclipse => '食';
+
+	/// ja: '合'
+	String get conjunction => '合';
+
+	/// ja: 'ノード移動'
+	String get nodeShift => 'ノード移動';
 }
 
 // Path: mapWelcome
@@ -4764,6 +4914,36 @@ class Translations$paywall$faq$resubscribe$ja {
 extension on Translations {
 	dynamic _flatMapFunction(String path) {
 		return switch (path) {
+			'moonOverlay.pressAgainSkip' => 'もう一度押すと「特別決めない」で開始',
+			'galaxyArchive.proLabel' => 'アーカイブの検索・フィルタ',
+			'galaxyArchive.proDesc' => '完成したサイクルを名前・レア度・並び順で絞り込めます。\n記録が積み上がるほど、振り返りやすくなります。',
+			'galaxyArchive.searchHint' => '星座名で検索 (例: 翼 / Dragon)',
+			'galaxyArchive.searchHintLocked' => '検索 — Cosmic Pro',
+			'galaxyArchive.sortNewest' => '新しい順',
+			'galaxyArchive.sortOldest' => '古い順',
+			'galaxyArchive.sortRarity' => 'レア度順',
+			'galaxyArchive.sortTooltip' => '並び順',
+			'galaxyArchive.selectedLabel' => '選択中:',
+			'galaxyArchive.clear' => 'クリア',
+			'galaxyActions.copied' => 'テキストをコピーしました',
+			'galaxyActions.replayLabel' => '通常再生',
+			'galaxyActions.replaySub' => '線が描かれていく演出を見る',
+			'galaxyActions.formationLabel' => '形成演出を再生',
+			'galaxyActions.formationSub' => '刻星化の 8 秒の形成シーンを再生',
+			'galaxyActions.copyLabel' => 'テキストとしてコピー',
+			'galaxyActions.copySub' => 'Markdown 形式でクリップボードへ',
+			'starAtlas.resultCount' => ({required Object shown, required Object total}) => '${shown} 件 / 全 ${total} 件',
+			'starAtlas.noMatch' => '条件に合うサイクルはありません',
+			'shareConstellation.shareText' => ({required Object name}) => '私の星座「${name}」が完成しました。\n#Solara',
+			'shareConstellation.shareFailed' => ({required Object e}) => 'シェア失敗: ${e}',
+			'shareConstellation.appBarTitle' => '星座を共有',
+			'shareConstellation.shareButton' => '✦ 星座カードを共有する',
+			'celestialBar.ingress' => '惑星移行',
+			'celestialBar.retrograde' => '逆行',
+			'celestialBar.retrogradeEnd' => '順行',
+			'celestialBar.eclipse' => '食',
+			'celestialBar.conjunction' => '合',
+			'celestialBar.nodeShift' => 'ノード移動',
 			'mapWelcome.addHomeTitle' => '✦ 現住所を登録すると、無料クレジットを3つプレゼント',
 			'mapWelcome.addHomeSub' => 'あなたの「今いる場所」から星を読み解き、Stella相談にも使えます。',
 			'mapWelcome.addHomeCta' => '現住所を登録する',
@@ -5246,6 +5426,8 @@ extension on Translations {
 			'mapDaily.usage.timeTitle' => '【時間と天空方位を読む】',
 			'mapDaily.usage.timeBody' => '今日、各惑星が選択した基準地点の空で\n4 つの天空方位 (アングル) を通る時刻を表示します:\n\n・ASC (東の地平線) — 惑星が昇る瞬間\n・MC  (真上 = 天頂) — 惑星が最高点を通る瞬間\n・DSC (西の地平線) — 惑星が沈む瞬間\n・IC  (真下 = 地下) — 惑星が地球の裏側にある瞬間\n\n「いつ恋愛のテーマが動く」「いつ仕事の節目になる」など、\n行動する時間の指針が読み取れます。',
 			'mapDaily.usage.comboTitle' => '【Map スコアバーと組み合わせる】',
+			_ => null,
+		} ?? switch (path) {
 			'mapDaily.usage.comboBody' => '地表方位ごとのエネルギーの強さは、\nMap のスコアバーから確認できます (16 方位)。\n「合計 / 総合」ラベル下の i ボタンに詳細解説があります。\n\nスコアバー (地表方位の強さ) と\nこの画面 (天空方位 × 時刻) を組み合わせると、\nあなたの望む未来に対する最適な\n「方角 × 時間」を Solara が算出します。',
 			'mapFortune.srcShort.combined' => '合計',
 			'mapFortune.srcShort.transit' => 'TR',
@@ -5276,8 +5458,6 @@ extension on Translations {
 			'mapFortune.catPlanets.title' => 'カテゴリと関連惑星',
 			'mapFortune.catPlanets.intro' => '各カテゴリは、関連する惑星ペアのアスペクトを抽出し、\nペア重みをかけて方位ごとにスコア化しています。\n(ペア重みの仕組みは下に詳しく説明)',
 			'mapFortune.catPlanets.weightTitle' => '【ペア重みの仕組み】',
-			_ => null,
-		} ?? switch (path) {
 			'mapFortune.catPlanets.weightBody' => 'カテゴリ別スコアは、関連する惑星ペアのアスペクトを抽出し、\nペアの「中心度」に応じた重みをかけて合算しています。\n\n・主役ペア (重み 2.0)\n　そのカテゴリの中心テーマを担う惑星ペア。\n　例: 恋愛 = 金星×火星 / 仕事 = 土星×太陽\n　→ アスペクト出現時は 2 倍の影響力で計上されます。\n\n・サブペア (重み 0.5)\n　片方の惑星だけがカテゴリに関わるアスペクト。\n　例: 恋愛で「金星×木星」(金星のみ love 担当)\n　→ 0.5 倍の控えめな影響力で計上されます。\n\n・ペア外 (重み 0)\n　両方ともカテゴリに関係ない惑星のアスペクト。\n　→ そのカテゴリのスコアには反映されません。\n\nこの「重み付け」により、カテゴリの「中心テーマ」を\n反映した精度の高いスコアが得られます。\nペア重みなしの単純合算では、カテゴリの個性が\nぼやけてしまうため、加重計算で精緻化しています。',
 			'mapFortune.catPlanets.overallTitle' => '【総合との関係】',
 			'mapFortune.catPlanets.overallBody' => '上部スコアバーで「総合」を選んでいる時の数字は、\n全惑星・全アスペクトをそのまま合算した値です。\nカテゴリ重みは入りません (= ペア重みなし)。\n\n一方、カテゴリ別 (癒し / 豊かさ / 恋愛 / 仕事 / 話す) は\n上記のペア重みがかかります。\nさらに 1 つのアスペクトが複数カテゴリに重複計上される\nこともあります (例: 金星×木星 → 恋愛にも豊かさにも入る)。\n\nこのため「カテゴリ別 5 つの単純合算 ≠ 総合」となります。\n両者は別の角度からエネルギーを見るための数値で、\nどちらが正しいということはありません。\n・カテゴリ別 = カテゴリの「集中度」を見る\n・総合 = 全体の「総量」を見る',
@@ -5760,6 +5940,8 @@ extension on Translations {
 			'paywall.autoRenewNotice' => 'サブスクリプションは自動更新されます。期間終了の 24 時間以上前に自動更新を解約しない限り、同じ価格で次の期間に更新されます。料金は期間終了の 24 時間以内に Apple ID / Google アカウントへ請求されます。自動更新の管理や解約は、ご利用ストアのアカウント設定からいつでも行えます。',
 			'paywall.legal.cancelMethod' => '解約方法',
 			'paywall.legal.terms' => '利用規約',
+			_ => null,
+		} ?? switch (path) {
 			'paywall.legal.privacy' => 'プライバシーポリシー',
 			'paywall.legal.sctaNotice' => '特定商取引法に基づく表記',
 			'paywall.restore' => '購入を復元',
@@ -5790,8 +5972,6 @@ extension on Translations {
 			'paywall.plans.pro.outing' => 'おでかけ相談  時刻を1時間刻みで指定 + 「30分後の変化」が読める (CCG の線が自転で動き、前半/後半で主役が入れ替わる)',
 			'paywall.plans.pro.tarot' => 'タロット  7 カテゴリ (総合・恋愛・豊かさ・仕事・対話・癒し・変化) をクレジット消費なしで指定 + 質問入力欄',
 			'paywall.plans.pro.starReading' => '星読み  全 5 カテゴリ (総合・恋愛・豊かさ・仕事・話す) + 深い読み',
-			_ => null,
-		} ?? switch (path) {
 			'paywall.plans.pro.forecast' => 'Forecast 5 年予測  モテ期や豊かさ期などが 5 年先までわかる。ヒートマップを 5 年先まで見られる',
 			'paywall.plans.pro.aspectLines' => 'アスペクトライン  全 120 本 (合・スクエア・トライン・セクスタイル)',
 			'paywall.plans.pro.zenithBands' => '天頂帯・天底帯  惑星が真上/真下を通る緯度を帯で表示 (Lewis 流)',

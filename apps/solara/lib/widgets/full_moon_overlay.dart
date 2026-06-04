@@ -6,6 +6,7 @@ import '../models/lunar_intention.dart';
 import '../theme/solara_colors.dart';
 import '../utils/celestial_events.dart';
 import '../utils/cycle_story_texts.dart';
+import '../utils/solara_i18n.dart';
 import '../utils/solara_storage.dart';
 import 'glass_panel.dart';
 import 'moon_overlay_shared.dart';
@@ -236,22 +237,26 @@ class _FullMoonOverlayState extends State<FullMoonOverlay>
               child: Column(
                 children: [
                   Text(
-                    widget.intention.chosenTextJP,
+                    isEnLocale()
+                        ? widget.intention.chosenText
+                        : widget.intention.chosenTextJP,
                     style: const TextStyle(
                       color: SolaraColors.solaraGold,
                       fontSize: 18,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    widget.intention.chosenText,
-                    style: const TextStyle(
-                      color: SolaraColors.textSecondary,
-                      fontSize: 13,
-                      letterSpacing: 0.5,
+                  if (!isEnLocale()) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      widget.intention.chosenText,
+                      style: const TextStyle(
+                        color: SolaraColors.textSecondary,
+                        fontSize: 13,
+                        letterSpacing: 0.5,
+                      ),
                     ),
-                  ),
+                  ],
                 ],
               ),
             ),
@@ -393,15 +398,16 @@ class _FullMoonOverlayState extends State<FullMoonOverlay>
               letterSpacing: 2.5,
             ),
           ),
-          Text(
-            moonNameJP,
-            style: const TextStyle(
-              color: SolaraColors.solaraGold,
-              fontSize: 15,
-              fontWeight: FontWeight.w500,
-              letterSpacing: 2,
+          if (!isEnLocale())
+            Text(
+              moonNameJP,
+              style: const TextStyle(
+                color: SolaraColors.solaraGold,
+                fontSize: 15,
+                fontWeight: FontWeight.w500,
+                letterSpacing: 2,
+              ),
             ),
-          ),
         ],
       ),
     );
@@ -436,7 +442,7 @@ class _FullMoonOverlayState extends State<FullMoonOverlay>
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  labelJP,
+                  isEnLocale() ? labelEN : labelJP,
                   style: TextStyle(
                     color: isSelected
                         ? SolaraColors.solaraGold
@@ -445,15 +451,17 @@ class _FullMoonOverlayState extends State<FullMoonOverlay>
                     fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                   ),
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  labelEN,
-                  style: const TextStyle(
-                    color: SolaraColors.textSecondary,
-                    fontSize: 12,
-                    letterSpacing: 0.5,
+                if (!isEnLocale()) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    labelEN,
+                    style: const TextStyle(
+                      color: SolaraColors.textSecondary,
+                      fontSize: 12,
+                      letterSpacing: 0.5,
+                    ),
                   ),
-                ),
+                ],
               ],
             ),
           ),

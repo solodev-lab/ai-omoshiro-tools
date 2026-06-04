@@ -39,6 +39,12 @@ class TranslationsEn extends Translations with BaseTranslations<AppLocale, Trans
 	TranslationsEn $copyWith({TranslationMetadata<AppLocale, Translations>? meta}) => TranslationsEn(meta: meta ?? this.$meta);
 
 	// Translations
+	@override late final _Translations$moonOverlay$en moonOverlay = _Translations$moonOverlay$en._(_root);
+	@override late final _Translations$galaxyArchive$en galaxyArchive = _Translations$galaxyArchive$en._(_root);
+	@override late final _Translations$galaxyActions$en galaxyActions = _Translations$galaxyActions$en._(_root);
+	@override late final _Translations$starAtlas$en starAtlas = _Translations$starAtlas$en._(_root);
+	@override late final _Translations$shareConstellation$en shareConstellation = _Translations$shareConstellation$en._(_root);
+	@override late final _Translations$celestialBar$en celestialBar = _Translations$celestialBar$en._(_root);
 	@override late final _Translations$mapWelcome$en mapWelcome = _Translations$mapWelcome$en._(_root);
 	@override late final _Translations$mapOverlay$en mapOverlay = _Translations$mapOverlay$en._(_root);
 	@override late final _Translations$consultEntry$en consultEntry = _Translations$consultEntry$en._(_root);
@@ -85,6 +91,90 @@ class TranslationsEn extends Translations with BaseTranslations<AppLocale, Trans
 	@override late final _Translations$disclaimer$en disclaimer = _Translations$disclaimer$en._(_root);
 	@override late final _Translations$common$en common = _Translations$common$en._(_root);
 	@override late final _Translations$aiConsent$en aiConsent = _Translations$aiConsent$en._(_root);
+}
+
+// Path: moonOverlay
+class _Translations$moonOverlay$en extends Translations$moonOverlay$ja {
+	_Translations$moonOverlay$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get pressAgainSkip => 'Press again to start with "No particular theme"';
+}
+
+// Path: galaxyArchive
+class _Translations$galaxyArchive$en extends Translations$galaxyArchive$ja {
+	_Translations$galaxyArchive$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get proLabel => 'Search & filter the archive';
+	@override String get proDesc => 'Filter your completed cycles by name, rarity, and order.\nThe more your records build up, the easier they are to look back on.';
+	@override String get searchHint => 'Search by name (e.g. Wing / Dragon)';
+	@override String get searchHintLocked => 'Search — Cosmic Pro';
+	@override String get sortNewest => 'Newest first';
+	@override String get sortOldest => 'Oldest first';
+	@override String get sortRarity => 'By rarity';
+	@override String get sortTooltip => 'Sort order';
+	@override String get selectedLabel => 'Selected:';
+	@override String get clear => 'Clear';
+}
+
+// Path: galaxyActions
+class _Translations$galaxyActions$en extends Translations$galaxyActions$ja {
+	_Translations$galaxyActions$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get copied => 'Copied as text';
+	@override String get replayLabel => 'Replay';
+	@override String get replaySub => 'Watch the lines being drawn';
+	@override String get formationLabel => 'Play the formation';
+	@override String get formationSub => 'Play the 8-second catasterism scene';
+	@override String get copyLabel => 'Copy as text';
+	@override String get copySub => 'To the clipboard as Markdown';
+}
+
+// Path: starAtlas
+class _Translations$starAtlas$en extends Translations$starAtlas$ja {
+	_Translations$starAtlas$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String resultCount({required Object shown, required Object total}) => '${shown} / ${total}';
+	@override String get noMatch => 'No cycles match your filters';
+}
+
+// Path: shareConstellation
+class _Translations$shareConstellation$en extends Translations$shareConstellation$ja {
+	_Translations$shareConstellation$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String shareText({required Object name}) => 'My constellation "${name}" has formed.\n#Solara';
+	@override String shareFailed({required Object e}) => 'Share failed: ${e}';
+	@override String get appBarTitle => 'Share constellation';
+	@override String get shareButton => '✦ Share constellation card';
+}
+
+// Path: celestialBar
+class _Translations$celestialBar$en extends Translations$celestialBar$ja {
+	_Translations$celestialBar$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get ingress => 'Ingress';
+	@override String get retrograde => 'Retrograde';
+	@override String get retrogradeEnd => 'Direct';
+	@override String get eclipse => 'Eclipse';
+	@override String get conjunction => 'Conjunction';
+	@override String get nodeShift => 'Node shift';
 }
 
 // Path: mapWelcome
@@ -2636,6 +2726,36 @@ class _Translations$paywall$faq$resubscribe$en extends Translations$paywall$faq$
 extension on TranslationsEn {
 	dynamic _flatMapFunction(String path) {
 		return switch (path) {
+			'moonOverlay.pressAgainSkip' => 'Press again to start with "No particular theme"',
+			'galaxyArchive.proLabel' => 'Search & filter the archive',
+			'galaxyArchive.proDesc' => 'Filter your completed cycles by name, rarity, and order.\nThe more your records build up, the easier they are to look back on.',
+			'galaxyArchive.searchHint' => 'Search by name (e.g. Wing / Dragon)',
+			'galaxyArchive.searchHintLocked' => 'Search — Cosmic Pro',
+			'galaxyArchive.sortNewest' => 'Newest first',
+			'galaxyArchive.sortOldest' => 'Oldest first',
+			'galaxyArchive.sortRarity' => 'By rarity',
+			'galaxyArchive.sortTooltip' => 'Sort order',
+			'galaxyArchive.selectedLabel' => 'Selected:',
+			'galaxyArchive.clear' => 'Clear',
+			'galaxyActions.copied' => 'Copied as text',
+			'galaxyActions.replayLabel' => 'Replay',
+			'galaxyActions.replaySub' => 'Watch the lines being drawn',
+			'galaxyActions.formationLabel' => 'Play the formation',
+			'galaxyActions.formationSub' => 'Play the 8-second catasterism scene',
+			'galaxyActions.copyLabel' => 'Copy as text',
+			'galaxyActions.copySub' => 'To the clipboard as Markdown',
+			'starAtlas.resultCount' => ({required Object shown, required Object total}) => '${shown} / ${total}',
+			'starAtlas.noMatch' => 'No cycles match your filters',
+			'shareConstellation.shareText' => ({required Object name}) => 'My constellation "${name}" has formed.\n#Solara',
+			'shareConstellation.shareFailed' => ({required Object e}) => 'Share failed: ${e}',
+			'shareConstellation.appBarTitle' => 'Share constellation',
+			'shareConstellation.shareButton' => '✦ Share constellation card',
+			'celestialBar.ingress' => 'Ingress',
+			'celestialBar.retrograde' => 'Retrograde',
+			'celestialBar.retrogradeEnd' => 'Direct',
+			'celestialBar.eclipse' => 'Eclipse',
+			'celestialBar.conjunction' => 'Conjunction',
+			'celestialBar.nodeShift' => 'Node shift',
 			'mapWelcome.addHomeTitle' => '✦ Register your current location and receive 3 free credits',
 			'mapWelcome.addHomeSub' => 'We\'ll read the stars from where you are now — and you can use it for Stella consultations too.',
 			'mapWelcome.addHomeCta' => 'Set current location',
@@ -3118,6 +3238,8 @@ extension on TranslationsEn {
 			'mapDaily.usage.timeTitle' => '[Reading time and sky direction]',
 			'mapDaily.usage.timeBody' => 'It shows the times today when each planet passes the 4 sky directions (angles)\nin the sky above your chosen reference point:\n\n· ASC (eastern horizon) — the moment a planet rises\n· MC  (overhead = zenith) — the moment a planet passes its highest point\n· DSC (western horizon) — the moment a planet sets\n· IC  (straight below = underground) — the moment a planet is on the far side of the Earth\n\nYou can read guidance on the time to act — "when a love theme moves," "when a turning point at work comes," and so on.',
 			'mapDaily.usage.comboTitle' => '[Combining with the Map score bar]',
+			_ => null,
+		} ?? switch (path) {
 			'mapDaily.usage.comboBody' => 'The strength of the energy in each surface direction\ncan be checked from the Map\'s score bar (16 directions).\nThere\'s a detailed explanation in the i button under the "Total / Overall" label.\n\nCombine the score bar (the strength of surface directions) with\nthis screen (sky direction × time), and Solara works out\nthe best "direction × time" for the future you wish for.',
 			'mapFortune.srcShort.combined' => 'Total',
 			'mapFortune.srcShort.transit' => 'TR',
@@ -3148,8 +3270,6 @@ extension on TranslationsEn {
 			'mapFortune.catPlanets.title' => 'Categories and their planets',
 			'mapFortune.catPlanets.intro' => 'Each category extracts the aspects of its related planet pairs and scores them per direction, with pair weighting applied.\n(How the pair weighting works is explained in detail below.)',
 			'mapFortune.catPlanets.weightTitle' => '[How pair weighting works]',
-			_ => null,
-		} ?? switch (path) {
 			'mapFortune.catPlanets.weightBody' => 'A category\'s score extracts the aspects of its related planet pairs and sums them, weighted by each pair\'s "centrality."\n\n· Lead pair (weight 2.0)\n　The planet pair that carries the category\'s central theme.\n　e.g. Love = Venus×Mars / Work = Saturn×Sun\n　→ when the aspect appears, it counts with 2× the influence.\n\n· Sub pair (weight 0.5)\n　An aspect where only one of the planets relates to the category.\n　e.g. for Love, "Venus×Jupiter" (only Venus carries love)\n　→ counts with a modest 0.5× influence.\n\n· Outside the pair (weight 0)\n　An aspect where neither planet relates to the category.\n　→ it isn\'t reflected in that category\'s score.\n\nThis "weighting" yields a precise score that reflects the category\'s "central theme."\nA plain sum without pair weights would blur each category\'s character, so we refine it with weighted calculation.',
 			'mapFortune.catPlanets.overallTitle' => '[How it relates to Overall]',
 			'mapFortune.catPlanets.overallBody' => 'When "Overall" is selected on the top score bar, the number is the straight sum of all planets and all aspects.\nNo category weighting is applied (= no pair weights).\n\nThe per-category views (Healing / Abundance / Love / Work / Talk), on the other hand, apply the pair weights above.\nAnd a single aspect can be counted in more than one category\n(e.g. Venus×Jupiter → counts for both Love and Abundance).\n\nSo "the plain sum of the 5 categories ≠ Overall."\nThe two are numbers for seeing energy from different angles; neither is more correct.\n· Per-category = see the category\'s "concentration"\n· Overall = see the "total volume"',
@@ -3632,6 +3752,8 @@ extension on TranslationsEn {
 			'paywall.autoRenewNotice' => 'Your subscription renews automatically. Unless you cancel auto-renewal at least 24 hours before the end of the current period, it renews at the same price for the next period. You will be charged to your Apple ID / Google account within 24 hours before the period ends. You can manage or cancel auto-renewal anytime in your store account settings.',
 			'paywall.legal.cancelMethod' => 'How to cancel',
 			'paywall.legal.terms' => 'Terms of Service',
+			_ => null,
+		} ?? switch (path) {
 			'paywall.legal.privacy' => 'Privacy Policy',
 			'paywall.legal.sctaNotice' => 'Commercial Transactions Act notice',
 			'paywall.restore' => 'Restore purchases',
@@ -3662,8 +3784,6 @@ extension on TranslationsEn {
 			'paywall.plans.pro.outing' => 'Outing consultations  set the time in one-hour steps + read "changes 30 minutes later" (CCG lines move with Earth\'s rotation; the lead star shifts between the first and second half)',
 			'paywall.plans.pro.tarot' => 'Tarot  choose any of 7 categories (Overall · Love · Abundance · Work · Talk · Healing · Change) with no credits used + question field',
 			'paywall.plans.pro.starReading' => 'Star Reading  all 5 categories (Overall · Love · Abundance · Work · Talk) + deeper reading',
-			_ => null,
-		} ?? switch (path) {
 			'paywall.plans.pro.forecast' => 'Forecast — 5-year outlook  see periods of romance and abundance up to 5 years ahead, and view the heatmap 5 years out',
 			'paywall.plans.pro.aspectLines' => 'Aspect lines  all 120 (conjunction · square · trine · sextile)',
 			'paywall.plans.pro.zenithBands' => 'Zenith / Nadir bands  shows the latitudes where a planet passes directly overhead or underfoot, as bands (Lewis style)',

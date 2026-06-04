@@ -16,6 +16,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../i18n/strings.g.dart';
 import '../../models/galaxy_cycle.dart';
 import '../../models/lunar_intention.dart';
 import '../../theme/solara_colors.dart';
@@ -71,9 +72,9 @@ class _CycleActionsSheet extends StatelessWidget {
     if (!ctx.mounted) return;
     Navigator.of(ctx).pop();
     ScaffoldMessenger.of(ctx).showSnackBar(
-      const SnackBar(
-        content: Text('テキストをコピーしました'),
-        duration: Duration(seconds: 2),
+      SnackBar(
+        content: Text(t.galaxyActions.copied),
+        duration: const Duration(seconds: 2),
       ),
     );
   }
@@ -125,8 +126,8 @@ class _CycleActionsSheet extends StatelessWidget {
               const Divider(color: Color(0x22F9D976), height: 18),
               _ActionTile(
                 icon: Icons.play_circle_outline,
-                label: '通常再生',
-                subtitle: '線が描かれていく演出を見る',
+                label: t.galaxyActions.replayLabel,
+                subtitle: t.galaxyActions.replaySub,
                 isLocked: false,
                 onTap: () {
                   Navigator.of(context).pop();
@@ -135,8 +136,8 @@ class _CycleActionsSheet extends StatelessWidget {
               ),
               _ActionTile(
                 icon: Icons.auto_fix_high,
-                label: '形成演出を再生',
-                subtitle: '刻星化の 8 秒の形成シーンを再生',
+                label: t.galaxyActions.formationLabel,
+                subtitle: t.galaxyActions.formationSub,
                 isLocked: false,
                 onTap: () {
                   Navigator.of(context).pop();
@@ -145,8 +146,8 @@ class _CycleActionsSheet extends StatelessWidget {
               ),
               _ActionTile(
                 icon: Icons.copy_outlined,
-                label: 'テキストとしてコピー',
-                subtitle: 'Markdown 形式でクリップボードへ',
+                label: t.galaxyActions.copyLabel,
+                subtitle: t.galaxyActions.copySub,
                 isLocked: false,
                 onTap: () => _exportText(context),
               ),

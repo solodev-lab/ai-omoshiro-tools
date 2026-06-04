@@ -1,11 +1,13 @@
 import 'dart:ui' show lerpDouble;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../i18n/strings.g.dart';
 import '../models/lunar_intention.dart';
 import '../theme/solara_colors.dart';
 import '../utils/celestial_events.dart';
 import '../utils/cycle_story_texts.dart';
 import '../utils/moon_notification_service.dart';
+import '../utils/solara_i18n.dart';
 import '../utils/solara_storage.dart';
 import 'glass_panel.dart';
 import 'moon_overlay_shared.dart';
@@ -302,7 +304,7 @@ class _NewMoonOverlayState extends State<NewMoonOverlay>
                   if (_notTodayCount >= 2) ...[
                     const SizedBox(height: 3),
                     Text(
-                      'もう一度押すと「特別決めない」で開始',
+                      t.moonOverlay.pressAgainSkip,
                       style: TextStyle(
                         color: SolaraColors.textSecondary.withValues(alpha: 0.72),
                         fontSize: 11,
@@ -461,17 +463,19 @@ class _NewMoonOverlayState extends State<NewMoonOverlay>
               letterSpacing: 2.5,
             ),
           ),
-          const SizedBox(height: 4),
-          Text(
-            '$signJPの新月',
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              color: SolaraColors.solaraGold,
-              fontSize: 15,
-              fontWeight: FontWeight.w500,
-              letterSpacing: 2,
+          if (!isEnLocale()) ...[
+            const SizedBox(height: 4),
+            Text(
+              '$signJPの新月',
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: SolaraColors.solaraGold,
+                fontSize: 15,
+                fontWeight: FontWeight.w500,
+                letterSpacing: 2,
+              ),
             ),
-          ),
+          ],
         ],
       ),
     );
@@ -485,13 +489,14 @@ class _NewMoonOverlayState extends State<NewMoonOverlay>
     required String titleJP,
     required String titleEN,
   }) {
+    final en = isEnLocale();
     return moonOverlaySelectableCard(
       isSelected: isSelected,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            titleJP,
+            en ? titleEN : titleJP,
             style: TextStyle(
               color: isSelected
                   ? SolaraColors.solaraGold
@@ -500,15 +505,17 @@ class _NewMoonOverlayState extends State<NewMoonOverlay>
               fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
             ),
           ),
-          const SizedBox(height: 3),
-          Text(
-            titleEN,
-            style: TextStyle(
-              color: SolaraColors.textSecondary.withValues(alpha: 0.8),
-              fontSize: 12,
-              letterSpacing: 0.5,
+          if (!en) ...[
+            const SizedBox(height: 3),
+            Text(
+              titleEN,
+              style: TextStyle(
+                color: SolaraColors.textSecondary.withValues(alpha: 0.8),
+                fontSize: 12,
+                letterSpacing: 0.5,
+              ),
             ),
-          ),
+          ],
         ],
       ),
     );

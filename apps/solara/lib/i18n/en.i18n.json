@@ -1,4 +1,46 @@
 {
+  "moonOverlay": {
+    "pressAgainSkip": "Press again to start with \"No particular theme\""
+  },
+  "galaxyArchive": {
+    "proLabel": "Search & filter the archive",
+    "proDesc": "Filter your completed cycles by name, rarity, and order.\nThe more your records build up, the easier they are to look back on.",
+    "searchHint": "Search by name (e.g. Wing / Dragon)",
+    "searchHintLocked": "Search — Cosmic Pro",
+    "sortNewest": "Newest first",
+    "sortOldest": "Oldest first",
+    "sortRarity": "By rarity",
+    "sortTooltip": "Sort order",
+    "selectedLabel": "Selected:",
+    "clear": "Clear"
+  },
+  "galaxyActions": {
+    "copied": "Copied as text",
+    "replayLabel": "Replay",
+    "replaySub": "Watch the lines being drawn",
+    "formationLabel": "Play the formation",
+    "formationSub": "Play the 8-second catasterism scene",
+    "copyLabel": "Copy as text",
+    "copySub": "To the clipboard as Markdown"
+  },
+  "starAtlas": {
+    "resultCount": "$shown / $total",
+    "noMatch": "No cycles match your filters"
+  },
+  "shareConstellation": {
+    "shareText": "My constellation \"$name\" has formed.\n#Solara",
+    "shareFailed": "Share failed: $e",
+    "appBarTitle": "Share constellation",
+    "shareButton": "✦ Share constellation card"
+  },
+  "celestialBar": {
+    "ingress": "Ingress",
+    "retrograde": "Retrograde",
+    "retrogradeEnd": "Direct",
+    "eclipse": "Eclipse",
+    "conjunction": "Conjunction",
+    "nodeShift": "Node shift"
+  },
   "mapWelcome": {
     "addHomeTitle": "✦ Register your current location and receive 3 free credits",
     "addHomeSub": "We'll read the stars from where you are now — and you can use it for Stella consultations too.",

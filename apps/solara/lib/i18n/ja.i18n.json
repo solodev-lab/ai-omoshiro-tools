@@ -1,4 +1,46 @@
 {
+  "moonOverlay": {
+    "pressAgainSkip": "もう一度押すと「特別決めない」で開始"
+  },
+  "galaxyArchive": {
+    "proLabel": "アーカイブの検索・フィルタ",
+    "proDesc": "完成したサイクルを名前・レア度・並び順で絞り込めます。\n記録が積み上がるほど、振り返りやすくなります。",
+    "searchHint": "星座名で検索 (例: 翼 / Dragon)",
+    "searchHintLocked": "検索 — Cosmic Pro",
+    "sortNewest": "新しい順",
+    "sortOldest": "古い順",
+    "sortRarity": "レア度順",
+    "sortTooltip": "並び順",
+    "selectedLabel": "選択中:",
+    "clear": "クリア"
+  },
+  "galaxyActions": {
+    "copied": "テキストをコピーしました",
+    "replayLabel": "通常再生",
+    "replaySub": "線が描かれていく演出を見る",
+    "formationLabel": "形成演出を再生",
+    "formationSub": "刻星化の 8 秒の形成シーンを再生",
+    "copyLabel": "テキストとしてコピー",
+    "copySub": "Markdown 形式でクリップボードへ"
+  },
+  "starAtlas": {
+    "resultCount": "$shown 件 / 全 $total 件",
+    "noMatch": "条件に合うサイクルはありません"
+  },
+  "shareConstellation": {
+    "shareText": "私の星座「$name」が完成しました。\n#Solara",
+    "shareFailed": "シェア失敗: $e",
+    "appBarTitle": "星座を共有",
+    "shareButton": "✦ 星座カードを共有する"
+  },
+  "celestialBar": {
+    "ingress": "惑星移行",
+    "retrograde": "逆行",
+    "retrogradeEnd": "順行",
+    "eclipse": "食",
+    "conjunction": "合",
+    "nodeShift": "ノード移動"
+  },
   "mapWelcome": {
     "addHomeTitle": "✦ 現住所を登録すると、無料クレジットを3つプレゼント",
     "addHomeSub": "あなたの「今いる場所」から星を読み解き、Stella相談にも使えます。",

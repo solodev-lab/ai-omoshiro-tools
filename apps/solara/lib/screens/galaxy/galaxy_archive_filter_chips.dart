@@ -23,9 +23,9 @@ class _SelectedRarityBanner extends StatelessWidget {
     final sorted = rarities.toList()..sort((a, b) => b.compareTo(a));
     return Row(
       children: [
-        const Text(
-          '選択中:',
-          style: TextStyle(
+        Text(
+          t.galaxyArchive.selectedLabel,
+          style: const TextStyle(
             color: SolaraColors.textSecondary,
             fontSize: 11,
             letterSpacing: 0.4,
@@ -45,11 +45,11 @@ class _SelectedRarityBanner extends StatelessWidget {
         GestureDetector(
           onTap: onClear,
           behavior: HitTestBehavior.opaque,
-          child: const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
             child: Text(
-              'クリア',
-              style: TextStyle(
+              t.galaxyArchive.clear,
+              style: const TextStyle(
                 color: SolaraColors.textSecondary,
                 fontSize: 11,
                 letterSpacing: 0.4,
@@ -139,7 +139,7 @@ class _SortChip extends StatelessWidget {
       onTap: isPro ? null : onLockedTap,
       child: PopupMenuButton<GalaxyArchiveSort>(
         enabled: isPro,
-        tooltip: '並び順',
+        tooltip: t.galaxyArchive.sortTooltip,
         offset: const Offset(0, 36),
         color: SolaraColors.celestialBlueLight,
         onSelected: onSelect,
@@ -148,7 +148,7 @@ class _SortChip extends StatelessWidget {
             PopupMenuItem(
               value: s,
               child: Text(
-                s.jp,
+                s.label,
                 style: TextStyle(
                   color: s == current
                       ? SolaraColors.solaraGoldLight
@@ -181,7 +181,7 @@ class _SortChip extends StatelessWidget {
               ),
               const SizedBox(width: 4),
               Text(
-                current.jp,
+                current.label,
                 style: TextStyle(
                   color: isPro
                       ? SolaraColors.solaraGoldLight

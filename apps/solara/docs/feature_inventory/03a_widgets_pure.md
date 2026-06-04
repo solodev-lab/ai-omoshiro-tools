@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 27 / 総行数: 7006
+- ファイル数: 27 / 総行数: 7007
 - class/mixin/extension/enum: 78
 - 関数 (top-level + method の素拾い): 181
 - Navigator.push 等: 0
@@ -159,26 +159,26 @@ Daily 未開封チップは `unsealed.webp` を別アセット名で使う (kind
 - L71 `build()`
 
 
-### `lib/widgets/celestial_event_bar.dart` (129 行)
+### `lib/widgets/celestial_event_bar.dart` (130 行)
 
-**imports:** dart=0 / package=1 / relative=4
+**imports:** dart=0 / package=1 / relative=5
 
-- relative: `../utils/celestial_events.dart`, `../utils/celestial_event_meanings.dart`, `../theme/solara_colors.dart`, `info_popup.dart`
+- relative: `../i18n/strings.g.dart`, `../utils/celestial_events.dart`, `../utils/celestial_event_meanings.dart`, `../theme/solara_colors.dart`, `info_popup.dart`
 
 **型定義 (1):**
 
-- L9 `class CelestialEventBar : StatelessWidget`
+- L10 `class CelestialEventBar : StatelessWidget`
   - Cycle画面下部に常時表示する天体イベント横スクロールバー
 
 **関数 (1 public + 3 private):**
 
-- L24 `build()`
+- L25 `build()`
 
   <details><summary>private 関数 3 件</summary>
 
-  - L39 `_buildChip()`
-  - L71 `_showMeaning()`
-  - L118 `_typeLabel()`
+  - L40 `_buildChip()`
+  - L72 `_showMeaning()`
+  - L119 `_typeLabel()`
 
   </details>
 

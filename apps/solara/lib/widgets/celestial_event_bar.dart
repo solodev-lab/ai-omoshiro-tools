@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../i18n/strings.g.dart';
 import '../utils/celestial_events.dart';
 import '../utils/celestial_event_meanings.dart';
 import '../theme/solara_colors.dart';
@@ -117,12 +118,12 @@ class CelestialEventBar extends StatelessWidget {
 
   static String _typeLabel(String type) {
     switch (type) {
-      case 'ingress': return '惑星移行';
-      case 'retrograde': return '逆行';
-      case 'retrograde_end': return '順行';
-      case 'eclipse': return '食';
-      case 'conjunction': return '合';
-      case 'node_shift': return 'ノード移動';
+      case 'ingress': return t.celestialBar.ingress;
+      case 'retrograde': return t.celestialBar.retrograde;
+      case 'retrograde_end': return t.celestialBar.retrogradeEnd;
+      case 'eclipse': return t.celestialBar.eclipse;
+      case 'conjunction': return t.celestialBar.conjunction;
+      case 'node_shift': return t.celestialBar.nodeShift;
       default: return '';
     }
   }
