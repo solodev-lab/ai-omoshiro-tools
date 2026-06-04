@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 9 / 総行数: 1838
+- ファイル数: 10 / 総行数: 2396
 - class/mixin/extension/enum: 16
 - 関数 (top-level + method の素拾い): 69
 - Navigator.push 等: 0
@@ -45,6 +45,23 @@ middleware が log_only モードなら bypass、enforced モードなら attest
 **関数 (1 public + 0 private):**
 
 - L29 `reportAiOutput()` — AI 出力を運営に報告する。
+
+
+### `lib/utils/astro_glossary_en.dart` (558 行)
+
+**ファイル先頭コメント:**
+
+```
+============================================================
+Solara Astro Glossary — 英語版用語辞書 (英語化 Phase 2)
+astro_glossary.dart から分離 (HARD7 維持のため)。
+同一キー・STYLE_VOICE_EN。astroGlossaryEntryFor が en ロケールで選択。
+============================================================
+```
+
+**imports:** dart=0 / package=0 / relative=1
+
+- relative: `astro_glossary.dart`
 
 
 ### `lib/utils/astro_houses.dart` (208 行)

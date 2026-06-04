@@ -11,6 +11,8 @@
 import 'package:flutter/material.dart';
 
 import '../widgets/info_popup.dart';
+import 'solara_i18n.dart' show isEnLocale;
+import 'astro_glossary_en.dart';
 
 class AstroGlossaryEntry {
   /// 表示用の正式名 (例: "ASC (上昇宮)")
@@ -605,6 +607,11 @@ const Map<String, AstroGlossaryEntry> astroGlossary = {
   ),
 };
 
+/// ロケール連動で用語エントリを返す。en ロケールなら astroGlossaryEN、
+/// 無ければ JP (astroGlossary) にフォールバック。
+AstroGlossaryEntry? astroGlossaryEntryFor(String key) =>
+    (isEnLocale() ? astroGlossaryEN[key] : null) ?? astroGlossary[key];
+
 /// 用語解説 popup を表示する共通ヘルパー。
 /// LayerPanel / FramePills / CategoryPills 等から共通で呼ぶ。
 /// [termKey] が astroGlossary に存在しなければ何もしない。
@@ -612,7 +619,7 @@ const Map<String, AstroGlossaryEntry> astroGlossary = {
 /// 2026-05-07: 統一 popup ヘルパー [showInfoPopup] 経由に移行。
 /// 右上 × / 全文スクロール / 外タップ閉じが Shell 側で自動提供される。
 void showAstroGlossaryDialog(BuildContext context, String termKey) {
-  final entry = astroGlossary[termKey];
+  final entry = astroGlossaryEntryFor(termKey);
   if (entry == null) return;
   showInfoPopup(
     context: context,

@@ -1,6 +1,6 @@
 # Solara Code Audit
 
-対象: lib (200 個の .dart)
+対象: lib (201 個の .dart)
 
 ## 1. ファイル行数 (NOTICE >= 300 / WARN >= 500 / HARD >= 1000)
 
@@ -8,13 +8,14 @@
 |------|------|----------|
 | 3625 | 🔴 HARD | lib/screens/map_screen.dart |
 | 2004 | 🔴 HARD | lib/screens/map/map_daily_transit_screen.dart |
-| 1674 | 🔴 HARD | lib/screens/sanctuary_screen.dart |
+| 1703 | 🔴 HARD | lib/screens/sanctuary_screen.dart |
 | 1416 | 🔴 HARD | lib/screens/galaxy_screen.dart |
-| 1384 | 🔴 HARD | lib/screens/sanctuary/sanctuary_title_diagnosis.dart |
+| 1397 | 🔴 HARD | lib/screens/sanctuary/sanctuary_title_diagnosis.dart |
 | 1078 | 🔴 HARD | lib/screens/map/daily_transit_data.dart |
 | 1057 | 🔴 HARD | lib/screens/forecast_screen.dart |
+| 984 | 🟠 WARN | lib/utils/planet_intro.dart |
 | 945 | 🟠 WARN | lib/screens/horoscope_screen.dart |
-| 937 | 🟠 WARN | lib/utils/solara_storage.dart |
+| 941 | 🟠 WARN | lib/utils/solara_storage.dart |
 | 858 | 🟠 WARN | lib/screens/map/map_astro_carto.dart |
 | 810 | 🟠 WARN | lib/screens/map/map_search.dart |
 | 775 | 🟠 WARN | lib/widgets/catasterism_formation_overlay.dart |
@@ -25,7 +26,7 @@
 | 722 | 🟠 WARN | lib/screens/map/map_relocation_popup.dart |
 | 702 | 🟠 WARN | lib/screens/horoscope/horo_chart_painter.dart |
 | 693 | 🟠 WARN | lib/widgets/fortune_overlays/money_painter.dart |
-| 650 | 🟠 WARN | lib/utils/astro_glossary.dart |
+| 657 | 🟠 WARN | lib/utils/astro_glossary.dart |
 | 642 | 🟠 WARN | lib/widgets/fortune_overlays/communication_painter.dart |
 | 639 | 🟠 WARN | lib/screens/consultation/consultation_input_screen.dart |
 | 626 | 🟠 WARN | lib/utils/constellation_namer.dart |
@@ -37,22 +38,22 @@
 | 581 | 🟠 WARN | lib/screens/consultation/consultation_result_card.dart |
 | 580 | 🟠 WARN | lib/widgets/new_moon_overlay.dart |
 | 576 | 🟠 WARN | lib/utils/app_attest_client.dart |
-| 559 | 🟠 WARN | lib/utils/planet_intro.dart |
-| 553 | 🟠 WARN | lib/main.dart |
+| 558 | 🟠 WARN | lib/utils/astro_glossary_en.dart |
+| 555 | 🟠 WARN | lib/main.dart |
 | 538 | 🟠 WARN | lib/screens/horoscope/horo_relocation_panel.dart |
 | 535 | 🟠 WARN | lib/utils/astro_lines.dart |
 | 533 | 🟠 WARN | lib/utils/consultation_v2_api.dart |
 | 529 | 🟠 WARN | lib/screens/consultation/consultation_input_widgets.dart |
 | 511 | 🟠 WARN | lib/screens/map/map_astro.dart |
 | 507 | 🟠 WARN | lib/screens/consultation/consultation_history_widgets.dart |
+| 504 | 🟠 WARN | lib/screens/sanctuary/title_history_screen.dart |
+| 501 | 🟠 WARN | lib/screens/sanctuary/class_share_card.dart |
 | 500 | 🟠 WARN | lib/utils/solara_auth.dart |
 | 500 | 🟠 WARN | lib/screens/observe/tarot_altar_scene.dart |
 | 498 | 🟡 NOTICE | lib/widgets/fortune_overlays/healing_painter.dart |
 | 497 | 🟡 NOTICE | lib/screens/map/map_time_slider.dart |
-| 495 | 🟡 NOTICE | lib/screens/sanctuary/title_history_screen.dart |
 | 490 | 🟡 NOTICE | lib/screens/map/map_overlays.dart |
 | 489 | 🟡 NOTICE | lib/widgets/full_moon_overlay.dart |
-| 478 | 🟡 NOTICE | lib/screens/sanctuary/class_share_card.dart |
 | 451 | 🟡 NOTICE | lib/widgets/catasterism_overlay.dart |
 | 449 | 🟡 NOTICE | lib/screens/galaxy/galaxy_star_atlas.dart |
 | 438 | 🟡 NOTICE | lib/screens/galaxy/constellation_share_card_page.dart |
@@ -78,6 +79,7 @@
 | 345 | 🟡 NOTICE | lib/screens/consultation/consultation_input_picker.dart |
 | 339 | 🟡 NOTICE | lib/screens/map/consult_entry_popup.dart |
 | 335 | 🟡 NOTICE | lib/screens/horoscope/horo_fortune_cards.dart |
+| 322 | 🟡 NOTICE | lib/widgets/class_card.dart |
 | 317 | 🟡 NOTICE | lib/utils/celestial_events.dart |
 | 315 | 🟡 NOTICE | lib/widgets/ai_report_button.dart |
 | 314 | 🟡 NOTICE | lib/utils/fortune_api.dart |
@@ -85,7 +87,6 @@
 | 312 | 🟡 NOTICE | lib/utils/moon_notification_service.dart |
 | 312 | 🟡 NOTICE | lib/screens/observe/observe_history_past.dart |
 | 311 | 🟡 NOTICE | lib/screens/paywall_screen.dart |
-| 311 | 🟡 NOTICE | lib/widgets/class_card.dart |
 | 310 | 🟡 NOTICE | lib/screens/horoscope/horo_panel_shared.dart |
 | 308 | 🟡 NOTICE | lib/utils/purchases_service.dart |
 | 305 | 🟡 NOTICE | lib/screens/consultation/consultation_history_screen.dart |
@@ -99,7 +100,7 @@
 
   - lib/screens/paywall_comparison.dart:274
   - lib/widgets/ai_report_button.dart:308
-  - lib/widgets/class_card.dart:292
+  - lib/widgets/class_card.dart:303
   - lib/widgets/location_picker_minimap.dart:136
   - lib/screens/consultation/consultation_input_picker_widgets.dart:85
   ```
@@ -174,7 +175,7 @@
 
 ### 8. 📁 別ファイル間 (11 箇所、8 ファイル)
 
-  - lib/widgets/class_card.dart:293
+  - lib/widgets/class_card.dart:304
   - lib/screens/consultation/consultation_input_picker_widgets.dart:86
   - lib/screens/consultation/consultation_input_picker_widgets.dart:127
   - lib/screens/consultation/consultation_input_when_scope.dart:226
@@ -196,8 +197,8 @@
 
 ### 10. 📁 別ファイル間 (12 箇所、7 ファイル)
 
-  - lib/screens/sanctuary_screen.dart:1570
-  - lib/widgets/class_card.dart:294
+  - lib/screens/sanctuary_screen.dart:1599
+  - lib/widgets/class_card.dart:305
   - lib/screens/consultation/consultation_input_picker_widgets.dart:87
   - lib/screens/consultation/consultation_input_picker_widgets.dart:128
   - lib/screens/consultation/consultation_input_when_scope.dart:227
@@ -218,7 +219,7 @@
 
 ### 12. 📁 別ファイル間 (8 箇所、7 ファイル)
 
-  - lib/screens/sanctuary_screen.dart:399
+  - lib/screens/sanctuary_screen.dart:419
   - lib/widgets/catasterism_formation_overlay.dart:471
   - lib/widgets/catasterism_overlay.dart:187
   - lib/widgets/full_moon_overlay.dart:197
@@ -333,4 +334,4 @@
 
 ---
 
-総計: 行数 HARD 7 / WARN 34 / NOTICE 45 / 重複 20 / TODO 4 / print 1 / 未使用候補 0
+総計: 行数 HARD 7 / WARN 37 / NOTICE 43 / 重複 20 / TODO 4 / print 1 / 未使用候補 0

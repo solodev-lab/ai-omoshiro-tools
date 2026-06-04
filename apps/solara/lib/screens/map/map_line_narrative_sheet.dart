@@ -232,7 +232,7 @@ class _MapLineNarrativeSheetState extends State<MapLineNarrativeSheet> {
 
   // ── 静的辞書セクション (用語辞書から取得) ──
   Widget _buildStaticSection() {
-    final entry = astroGlossary[_glossaryKey];
+    final entry = astroGlossaryEntryFor(_glossaryKey);
     final summary = entry?.summary ?? '';
     final detail = entry?.detail ?? '';
     return Container(
