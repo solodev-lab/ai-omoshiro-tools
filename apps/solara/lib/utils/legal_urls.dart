@@ -21,36 +21,52 @@
 //   - Phase 0 完了時に同 URL に文書を公開してから審査提出する
 //   - Phase 0 未完で本番ビルドを出すと審査リジェクト (B5)、絶対に飛ばさない
 //
-// 🔴 i18n:
-//   - 当面 ja-JP のみ。ストアアップ前最終工程で EN 版 URL を追加 (feedback_i18n_last)
+// 🔴 i18n (2026-06-04 言語別サブフォルダ化):
+//   - 各文書は /{lang}/ サブフォルダ配下に置く (例: /legal/solara/en/privacy.html,
+//     /legal/solara/ja/privacy.html)。表示言語 (AppLocale.resolvedCode) で出し分け。
+//   - _hostedLangs に列挙した言語のみ実在。未ホスト言語は 'en' にフォールバック。
+//   - 🔴 公開前に en/ + ja/ 配下へ実ファイルを設置すること (B5 ブロッカー)。新言語は
+//     ページ公開 + _hostedLangs に languageCode 追加。英語=ストア提出のプライマリ。
 
 import 'dart:io' show Platform;
+
+import 'app_locale.dart';
 
 abstract class LegalUrls {
   static const String _base = 'https://solodev-lab.com/legal/solara';
 
-  /// プライバシーポリシー (ja-JP)。両ストア共通。
-  static const String privacyPolicy = '$_base/privacy.html';
+  /// 法務ページをホスト済みの言語サブフォルダ。新言語の法務ページを公開したら
+  /// ここに languageCode を追加する。未ホスト言語は英語 ('en') にフォールバック。
+  static const Set<String> _hostedLangs = {'en', 'ja'};
 
-  /// 利用規約 / EULA (ja-JP)。両ストア共通。
-  static const String termsOfService = '$_base/terms.html';
+  /// 現在の表示言語に対応する法務ページのサブフォルダ ('en'/'ja'/...)。
+  /// AppLocale の解決言語 (端末追従 or override) を使い、未ホストは 'en'。
+  static String _lang() {
+    final code = AppLocale.instance.resolvedCode;
+    return _hostedLangs.contains(code) ? code : 'en';
+  }
 
-  /// 特定商取引法に基づく表記 (ja-JP、課金あり時必須)。
-  /// Platform で出し分け:
+  /// プライバシーポリシー。両ストア共通。言語別 (/{lang}/privacy.html)。
+  static String get privacyPolicy => '$_base/${_lang()}/privacy.html';
+
+  /// 利用規約 / EULA。両ストア共通。言語別。
+  static String get termsOfService => '$_base/${_lang()}/terms.html';
+
+  /// 特定商取引法に基づく表記 (課金あり時必須)。言語別 + Platform で出し分け:
   ///   iOS     → 個人事業主 林宏治 名義 (Apple Developer = Individual)
   ///   Android → 法人 arrayu 株式会社 名義 (Google Play = Organization)
   static String get specifiedCommercialTransactions =>
-      Platform.isIOS ? '$_base/scta-ios.html' : '$_base/scta-android.html';
+      '$_base/${_lang()}/${Platform.isIOS ? 'scta-ios' : 'scta-android'}.html';
 
-  /// 「解約方法」案内ページ (アプリ内 fallback 用)。
-  static const String howToCancel = '$_base/cancel.html';
+  /// 「解約方法」案内ページ (アプリ内 fallback 用)。言語別。
+  static String get howToCancel => '$_base/${_lang()}/cancel.html';
 
-  /// アカウント削除のお手続き案内ページ。
-  /// Google Play Console > Data Safety form の "Account deletion URL" に
-  /// この URL を提出する (2024 から義務化)。Apple 側は別途 App Privacy 質問票で
-  /// 「アプリ内で削除可能」と申告 (実装は sanctuary_account_section.dart)。
-  /// 設計根拠: docs/store_compliance.md §3.5 / Template: docs/store_compliance_assets/delete-account.html
-  static const String accountDeletion = '$_base/delete-account.html';
+  /// アカウント削除のお手続き案内ページ。言語別。
+  /// Google Play Console > Data Safety form の "Account deletion URL" には
+  /// 英語版 ($_base/en/delete-account.html) を提出する (2024 から義務化)。Apple は
+  /// 別途 App Privacy 質問票で「アプリ内で削除可能」と申告 (sanctuary_account_section.dart)。
+  /// 設計根拠: docs/store_compliance.md §3.5
+  static String get accountDeletion => '$_base/${_lang()}/delete-account.html';
 
   /// iOS Subscriptions 設定への deep link。
   /// Apple 推奨 (Apple Developer Documentation: "Subscription management URLs")。
