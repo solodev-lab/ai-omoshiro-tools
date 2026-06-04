@@ -18,6 +18,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:latlong2/latlong.dart';
 
+import '../../i18n/strings.g.dart';
 import '../../theme/solara_colors.dart';
 import '../../utils/astro_lines.dart' show NearbyAstroLine;
 import '../../utils/reverse_geocode.dart';
@@ -108,9 +109,9 @@ class _ConsultEntryPopupState extends State<ConsultEntryPopup> {
     Clipboard.setData(ClipboardData(
         text: '${lat.toStringAsFixed(6)}, ${lng.toStringAsFixed(6)}'));
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-      content: Text('座標をコピーしました'),
-      duration: Duration(seconds: 2),
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(t.consultEntry.coordsCopied),
+      duration: const Duration(seconds: 2),
     ));
   }
 
@@ -147,10 +148,10 @@ class _ConsultEntryPopupState extends State<ConsultEntryPopup> {
                     children: [
                       Text(
                         _resolving
-                            ? '読み込み中…'
+                            ? t.consultEntry.loading
                             : (_placeName?.isNotEmpty == true
                                 ? _placeName!
-                                : 'タップ地点'),
+                                : t.mapScreen.tappedPoint),
                         style: const TextStyle(
                           color: SolaraColors.textPrimary,
                           fontSize: 14,
@@ -211,12 +212,12 @@ class _ConsultEntryPopupState extends State<ConsultEntryPopup> {
                       border: Border.all(color: const Color(0x66F6BD60)),
                       color: const Color(0x14F6BD60),
                     ),
-                    child: const Row(mainAxisSize: MainAxisSize.min, children: [
-                      Icon(Icons.copy,
+                    child: Row(mainAxisSize: MainAxisSize.min, children: [
+                      const Icon(Icons.copy,
                           size: 11, color: SolaraColors.solaraGoldLight),
-                      SizedBox(width: 4),
-                      Text('座標取得',
-                          style: TextStyle(
+                      const SizedBox(width: 4),
+                      Text(t.consultEntry.getCoords,
+                          style: const TextStyle(
                               fontSize: 10,
                               color: SolaraColors.solaraGoldLight,
                               fontWeight: FontWeight.w600)),
@@ -230,9 +231,9 @@ class _ConsultEntryPopupState extends State<ConsultEntryPopup> {
           // 最寄り ACG 線セクション
           if (widget.nearestLines.isNotEmpty) ...[
             const SizedBox(height: 12),
-            const Text(
-              '最寄りライン',
-              style: TextStyle(
+            Text(
+              t.consultEntry.nearestLines,
+              style: const TextStyle(
                 color: SolaraColors.textSecondary,
                 fontSize: 10,
                 letterSpacing: 1.0,
@@ -257,15 +258,15 @@ class _ConsultEntryPopupState extends State<ConsultEntryPopup> {
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(color: const Color(0x88F6BD60)),
               ),
-              child: const Row(
+              child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.auto_awesome,
+                  const Icon(Icons.auto_awesome,
                       size: 16, color: SolaraColors.solaraGoldLight),
-                  SizedBox(width: 8),
+                  const SizedBox(width: 8),
                   Text(
-                    'この場所で相談する',
-                    style: TextStyle(
+                    t.consultEntry.consultHere,
+                    style: const TextStyle(
                       color: SolaraColors.solaraGoldLight,
                       fontSize: 13,
                       fontWeight: FontWeight.w600,

@@ -1,4 +1,43 @@
 {
+  "mapWelcome": {
+    "addHomeTitle": "✦ Register your current location and receive 3 free credits",
+    "addHomeSub": "We'll read the stars from where you are now — and you can use it for Stella consultations too.",
+    "addHomeCta": "Set current location",
+    "signinTitle": "✦ Sign in with Google / Apple and receive 3 more free credits",
+    "signinSub": "Signing in carries your records over, so a new device or a reinstall is nothing to worry about.",
+    "signinCta": "Sign in",
+    "stellaTitle": "✦ Welcome. We've given you 3 free credits",
+    "stellaSub": "These consultation tickets don't reset weekly. Why not ask Stella about your stars and your place?",
+    "stellaCta": "Ask Stella"
+  },
+  "mapOverlay": {
+    "searchHint": "Search for a place...",
+    "vpLabel": "VP:",
+    "currentLocation": "📍 Current location",
+    "home": "Home",
+    "today": "Today",
+    "birthplace": "Birthplace"
+  },
+  "consultEntry": {
+    "loading": "Loading…",
+    "getCoords": "Copy coords",
+    "coordsCopied": "Coordinates copied",
+    "nearestLines": "Nearest lines",
+    "consultHere": "Consult about this place"
+  },
+  "planetIntroPopup": {
+    "frameNatal": "NATAL",
+    "frameTransit": "TRANSIT",
+    "frameProgressed": "PROGRESSED",
+    "basics": "$name basics",
+    "preparing": "An interpretation for this planet is still being prepared."
+  },
+  "mapAspect": {
+    "orb": "Orb ",
+    "nature": "Nature",
+    "theme": "Theme",
+    "reading": "Reading"
+  },
   "proDialog": {
     "isFeature": "$label is a Pro feature",
     "upgrade": "Upgrade to Pro",
@@ -922,6 +961,10 @@
     }
   },
   "mapVp": {
+    "slotDefaults": ["Workplace", "Favorite", "Spot", "Place"],
+    "slotFallback": "Spot",
+    "saveLimitFree": "You can save up to $free places.\nWith Cosmic Pro, you can save up to $pro.",
+    "saveLimitFull": "You can save up to $max places.\nPlease delete a place you no longer need before adding another.",
     "savedSlots": "Saved slots",
     "registeredPlaces": "Registered places",
     "noSlots": "(no slots)",

@@ -5,16 +5,16 @@
 
 ## サマリ
 
-- ファイル数: 25 / 総行数: 14562
+- ファイル数: 25 / 総行数: 14587
 - class/mixin/extension/enum: 90
-- 関数 (top-level + method の素拾い): 323
+- 関数 (top-level + method の素拾い): 324
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 20
 - Worker URL リテラル: 0
 
 ## ファイル別
 
-### `lib/screens/map/consult_entry_popup.dart` (338 行)
+### `lib/screens/map/consult_entry_popup.dart` (339 行)
 
 **ファイル先頭コメント:**
 
@@ -36,32 +36,32 @@ Consult Entry Popup — Stella 相談の共通入口 popup
 工数注: 最寄り線計算は呼出側で済ませて [nearestLines] として渡す。
 ```
 
-**imports:** dart=0 / package=3 / relative=4
+**imports:** dart=0 / package=3 / relative=5
 
-- relative: `../../theme/solara_colors.dart`, `../../utils/astro_lines.dart`, `../../utils/reverse_geocode.dart`, `map_constants.dart`
+- relative: `../../i18n/strings.g.dart`, `../../theme/solara_colors.dart`, `../../utils/astro_lines.dart`, `../../utils/reverse_geocode.dart`, `map_constants.dart`
 
 **型定義 (3):**
 
-- L34 `class ConsultEntryPopup : StatefulWidget`
-- L61 `class _ConsultEntryPopupState : State`
-- L285 `class _NearestLineRow : StatelessWidget`
+- L35 `class ConsultEntryPopup : StatefulWidget`
+- L62 `class _ConsultEntryPopupState : State`
+- L286 `class _NearestLineRow : StatelessWidget`
 
 **関数 (4 public + 2 private):**
 
-- L58 `createState()`
-- L68 `initState()`
-- L118 `build()`
-- L290 `build()`
+- L59 `createState()`
+- L69 `initState()`
+- L119 `build()`
+- L291 `build()`
 
   <details><summary>private 関数 2 件</summary>
 
-  - L73 `_resolveName()`
-  - L105 `_copyCoords()`
+  - L74 `_resolveName()`
+  - L106 `_copyCoords()`
 
   </details>
 
 
-### `lib/screens/map/map_aspect_chip.dart` (221 行)
+### `lib/screens/map/map_aspect_chip.dart` (222 行)
 
 **ファイル先頭コメント:**
 
@@ -87,24 +87,24 @@ MapAspectChip — Daily Transit V2 用 1アスペクトチップ
 ============================================================
 ```
 
-**imports:** dart=0 / package=1 / relative=5
+**imports:** dart=0 / package=1 / relative=6
 
-- relative: `../../theme/solara_colors.dart`, `../../utils/daily_transits_api.dart`, `../../widgets/info_popup.dart`, `../horoscope/horo_aspect_description.dart`, `map_constants.dart`
+- relative: `../../i18n/strings.g.dart`, `../../theme/solara_colors.dart`, `../../utils/daily_transits_api.dart`, `../../widgets/info_popup.dart`, `../horoscope/horo_aspect_description.dart`, `map_constants.dart`
 
 **型定義 (1):**
 
-- L28 `class MapAspectChip : StatelessWidget`
+- L29 `class MapAspectChip : StatelessWidget`
 
 **関数 (1 public + 4 private):**
 
-- L54 `build()`
+- L55 `build()`
 
   <details><summary>private 関数 4 件</summary>
 
-  - L41 `_color()`
-  - L103 `_showDetail()`
-  - L191 `_descSection()`
-  - L211 `_aspectSymbol()`
+  - L42 `_color()`
+  - L104 `_showDetail()`
+  - L192 `_descSection()`
+  - L212 `_aspectSymbol()`
 
   </details>
 
@@ -162,38 +162,38 @@ MapAspectChip — Daily Transit V2 用 1アスペクトチップ
 - 集計: `showInfoPopup`×1
 
 
-### `lib/screens/map/map_astro_lines.dart` (624 行)
+### `lib/screens/map/map_astro_lines.dart` (625 行)
 
-**imports:** dart=0 / package=3 / relative=3
+**imports:** dart=0 / package=3 / relative=4
 
-- relative: `../../theme/solara_colors.dart`, `../../utils/astro_lines.dart`, `map_constants.dart`
+- relative: `../../i18n/strings.g.dart`, `../../theme/solara_colors.dart`, `../../utils/astro_lines.dart`, `map_constants.dart`
 
 **型定義 (4):**
 
-- L33 `class _AngleStyle`
-- L59 `class AstroFrameStyle`
+- L34 `class _AngleStyle`
+- L60 `class AstroFrameStyle`
   - フレーム別の視覚プリセット。Tier A #5 で4フレーム同時描画する際の
-- L422 `class AstroNadirMarker : StatelessWidget`
+- L423 `class AstroNadirMarker : StatelessWidget`
   - 装飾的な天底点マーカー (Lewis 理論: 裏側に在る天体)。
-- L530 `class AstroZenithMarker : StatelessWidget`
+- L531 `class AstroZenithMarker : StatelessWidget`
   - 装飾的な天頂点マーカー (frame で見た目を切替):
 
 **関数 (8 public + 3 private):**
 
-- L133 `buildAstroPolylines()` — アストロラインを Polyline[] に変換。
-- L223 `buildAstroLatitudeBandPolylines()` — 天頂帯・天底帯 (latitude bands) の緯度線を Polyline[] に変換する。
-- L306 `buildAstroZenithMarkers()` — 各惑星の天頂点 (= AstroLine.zenith) に装飾マーカーを生成。
-- L311 `Function()`
-- L368 `buildAstroNadirMarkers()` — 各惑星の天底点 (= AstroLine.nadir) に装飾マーカーを生成。
-- L373 `Function()`
-- L443 `build()`
-- L543 `build()`
+- L134 `buildAstroPolylines()` — アストロラインを Polyline[] に変換。
+- L224 `buildAstroLatitudeBandPolylines()` — 天頂帯・天底帯 (latitude bands) の緯度線を Polyline[] に変換する。
+- L307 `buildAstroZenithMarkers()` — 各惑星の天頂点 (= AstroLine.zenith) に装飾マーカーを生成。
+- L312 `Function()`
+- L369 `buildAstroNadirMarkers()` — 各惑星の天底点 (= AstroLine.nadir) に装飾マーカーを生成。
+- L374 `Function()`
+- L444 `build()`
+- L544 `build()`
 
   <details><summary>private 関数 3 件</summary>
 
-  - L105 `_lerpColor()`
-  - L119 `_aspectEnergyColor()`
-  - L203 `_latitudePolylinePoints()`
+  - L106 `_lerpColor()`
+  - L120 `_aspectEnergyColor()`
+  - L204 `_latitudePolylinePoints()`
 
   </details>
 
@@ -437,7 +437,7 @@ E4 (2026-04-29): 設計思想に基づく「両エネルギー事実提示」型
 - 集計: `showInfoPopup`×1
 
 
-### `lib/screens/map/map_line_narrative_sheet.dart` (298 行)
+### `lib/screens/map/map_line_narrative_sheet.dart` (299 行)
 
 **ファイル先頭コメント:**
 
@@ -461,26 +461,26 @@ A*C*G ライン (natal / transit) のタップ詳細 popup。
 ══════════════════════════════════════════════════
 ```
 
-**imports:** dart=0 / package=2 / relative=6
+**imports:** dart=0 / package=2 / relative=7
 
-- relative: `../../theme/solara_colors.dart`, `../../utils/astro_glossary.dart`, `../../utils/astro_lines.dart`, `../../widgets/info_popup.dart`, `../horoscope/horo_constants.dart`, `map_constants.dart`
+- relative: `../../i18n/strings.g.dart`, `../../theme/solara_colors.dart`, `../../utils/astro_glossary.dart`, `../../utils/astro_lines.dart`, `../../widgets/info_popup.dart`, `../horoscope/horo_constants.dart`, `map_constants.dart`
 
 **型定義 (2):**
 
-- L29 `class MapLineNarrativeSheet : StatefulWidget`
-- L58 `class _MapLineNarrativeSheetState : State`
+- L30 `class MapLineNarrativeSheet : StatefulWidget`
+- L59 `class _MapLineNarrativeSheetState : State`
 
 **関数 (3 public + 3 private):**
 
-- L55 `createState()`
-- L85 `build()`
-- L280 `showLineNarrativeSheet()` — 共通呼び出しヘルパー: タップから直接 説明 popup を表示。
+- L56 `createState()`
+- L86 `build()`
+- L281 `showLineNarrativeSheet()` — 共通呼び出しヘルパー: タップから直接 説明 popup を表示。
 
   <details><summary>private 関数 3 件</summary>
 
-  - L111 `_buildConsultCta()`
-  - L149 `_buildHeader()`
-  - L233 `_buildStaticSection()`
+  - L112 `_buildConsultCta()`
+  - L150 `_buildHeader()`
+  - L234 `_buildStaticSection()`
 
   </details>
 
@@ -489,33 +489,33 @@ A*C*G ライン (natal / transit) のタップ詳細 popup。
 - 集計: `showLineNarrativeSheet`×1, `showInfoPopup`×1
 
 
-### `lib/screens/map/map_location_markers.dart` (304 行)
+### `lib/screens/map/map_location_markers.dart` (305 行)
 
-**imports:** dart=0 / package=4 / relative=2
+**imports:** dart=0 / package=4 / relative=3
 
-- relative: `../../utils/solara_storage.dart`, `map_vp_panel.dart`
+- relative: `../../i18n/strings.g.dart`, `../../utils/solara_storage.dart`, `map_vp_panel.dart`
 
 **型定義 (3):**
 
-- L25 `class BirthMarker : StatelessWidget`
+- L26 `class BirthMarker : StatelessWidget`
   - 出生地マーカー: 🌟 + 多層グロー (静止)。
-- L69 `class SlotMarker : StatelessWidget`
+- L70 `class SlotMarker : StatelessWidget`
   - 通常スロット (VP / Locations) マーカー。
-- L199 `class LocationMarkerPopup : StatelessWidget`
+- L200 `class LocationMarkerPopup : StatelessWidget`
   - マーカータップ詳細 popup (画面下部の bottom sheet)。
 
 **関数 (6 public + 1 private):**
 
-- L29 `build()`
-- L76 `build()`
-- L132 `buildLocationMarkers()` — 登録地マーカー群を構築。
-- L139 `Function()` — null 指定でタップを完全に透過する (排他モード用)。
-- L143 `slotMarker()`
-- L214 `build()`
+- L30 `build()`
+- L77 `build()`
+- L133 `buildLocationMarkers()` — 登録地マーカー群を構築。
+- L140 `Function()` — null 指定でタップを完全に透過する (排他モード用)。
+- L144 `slotMarker()`
+- L215 `build()`
 
   <details><summary>private 関数 1 件</summary>
 
-  - L295 `_fmtCoord()`
+  - L296 `_fmtCoord()`
 
   </details>
 
@@ -573,50 +573,50 @@ A*C*G ライン (natal / transit) のタップ詳細 popup。
 - L40 `build()`
 
 
-### `lib/screens/map/map_overlays.dart` (487 行)
+### `lib/screens/map/map_overlays.dart` (490 行)
 
-**imports:** dart=0 / package=3 / relative=2
+**imports:** dart=0 / package=3 / relative=3
 
-- relative: `map_vp_panel.dart`, `map_widgets.dart`
+- relative: `../../i18n/strings.g.dart`, `map_vp_panel.dart`, `map_widgets.dart`
 
 **型定義 (9):**
 
-- L48 `class MapSideButtons : StatelessWidget`
+- L50 `class MapSideButtons : StatelessWidget`
   - 左サイド縦並び 3 ボタン: 🔍 検索 / ☰ 表示 / 📍 地点 (2026-05-09 第二弾)。
-- L125 `class SearchBarOverlay : StatefulWidget`
+- L127 `class SearchBarOverlay : StatefulWidget`
   - 検索バー（_searchOpen 時に最上部に表示）
-- L141 `class _SearchBarOverlayState : State`
-- L203 `class SearchVpChipRow : StatelessWidget`
+- L143 `class _SearchBarOverlayState : State`
+- L206 `class SearchVpChipRow : StatelessWidget`
   - 検索バー直上に出す VIEWPOINT (16方位基準) 選択チップ列。
-- L282 `class _Chip : StatelessWidget`
-- L326 `class SelectedDateBadge : StatelessWidget`
+- L285 `class _Chip : StatelessWidget`
+- L329 `class SelectedDateBadge : StatelessWidget`
   - 選択日バッジ（地図左上に常時表示）
-- L375 `class StatusBadge : StatelessWidget`
+- L378 `class StatusBadge : StatelessWidget`
   - 右上のステータスバッジ（計算中・検索中）
-- L402 `class VpPinVisual : StatelessWidget`
+- L405 `class VpPinVisual : StatelessWidget`
   - VP Pin (ドラッグ可能な中央の金色ピン) — 見た目のみ。
-- L426 `class RestOverlay : StatelessWidget`
+- L429 `class RestOverlay : StatelessWidget`
   - 休息オーバーレイ（🌙 + テキスト）
 
 **関数 (13 public + 1 private):**
 
-- L9 `buildVpPinMarker()` — VP Pin (ドラッグ可能な中央の金色ピン) の Marker を生成する。
-- L67 `build()`
-- L138 `createState()`
-- L145 `initState()`
-- L153 `dispose()`
-- L159 `build()`
-- L227 `build()`
-- L289 `build()`
-- L338 `build()`
-- L380 `build()`
-- L406 `build()`
-- L432 `build()`
-- L461 `showSolaraDatePicker()` — Solara テーマ適用の DatePicker を開く。選択されたら DateTime を返す（正午固定はしない）。
+- L11 `buildVpPinMarker()` — VP Pin (ドラッグ可能な中央の金色ピン) の Marker を生成する。
+- L69 `build()`
+- L140 `createState()`
+- L147 `initState()`
+- L155 `dispose()`
+- L161 `build()`
+- L230 `build()`
+- L292 `build()`
+- L341 `build()`
+- L383 `build()`
+- L409 `build()`
+- L435 `build()`
+- L464 `showSolaraDatePicker()` — Solara テーマ適用の DatePicker を開く。選択されたら DateTime を返す（正午固定はしない）。
 
   <details><summary>private 関数 1 件</summary>
 
-  - L220 `_isActive()`
+  - L223 `_isActive()`
 
   </details>
 
@@ -625,27 +625,28 @@ A*C*G ライン (natal / transit) のタップ詳細 popup。
 - 集計: `showSolaraDatePicker`×1
 
 
-### `lib/screens/map/map_planet_intro_popup.dart` (239 行)
+### `lib/screens/map/map_planet_intro_popup.dart` (250 行)
 
-**imports:** dart=0 / package=2 / relative=5
+**imports:** dart=0 / package=2 / relative=7
 
-- relative: `../../theme/solara_colors.dart`, `../../utils/planet_intro.dart`, `../../widgets/info_popup.dart`, `../horoscope/horo_panel_shared.dart`, `map_constants.dart`
+- relative: `../../i18n/strings.g.dart`, `../../theme/solara_colors.dart`, `../../utils/planet_intro.dart`, `../../utils/solara_i18n.dart`, `../../widgets/info_popup.dart`, `../horoscope/horo_panel_shared.dart`, `map_constants.dart`
 
 **型定義 (1):**
 
-- L56 `class _PlanetIntroBody : StatelessWidget`
+- L66 `class _PlanetIntroBody : StatelessWidget`
 
-**関数 (2 public + 4 private):**
+**関数 (2 public + 5 private):**
 
-- L31 `showPlanetIntroPopup()`
-- L76 `build()`
+- L39 `showPlanetIntroPopup()`
+- L86 `build()`
 
-  <details><summary>private 関数 4 件</summary>
+  <details><summary>private 関数 5 件</summary>
 
-  - L94 `_header()`
-  - L155 `_frameSection()`
-  - L178 `_coreSection()`
-  - L219 `_placeholder()`
+  - L33 `_frameLabel()`
+  - L104 `_header()`
+  - L165 `_frameSection()`
+  - L188 `_coreSection()`
+  - L230 `_placeholder()`
 
   </details>
 
@@ -806,45 +807,47 @@ A*C*G ライン (natal / transit) のタップ詳細 popup。
 - L182 `buildOsmAttributionCompact()` — minimap (出生地入力等の小さい埋め込み地図) 用の常時表示版。
 
 
-### `lib/screens/map/map_time_slider.dart` (495 行)
+### `lib/screens/map/map_time_slider.dart` (497 行)
 
-**imports:** dart=0 / package=1 / relative=0
+**imports:** dart=0 / package=1 / relative=1
+
+- relative: `../../i18n/strings.g.dart`
 
 **型定義 (2):**
 
-- L17 `class MapTimeSlider : StatefulWidget`
+- L19 `class MapTimeSlider : StatefulWidget`
   - ============================================================
-- L39 `class MapTimeSliderState : State`
+- L41 `class MapTimeSliderState : State`
   - public State: GlobalKey 経由で map_screen.dart の PopScope から
 
 **関数 (3 public + 20 private):**
 
-- L34 `createState()`
-- L45 `closeTimeRow()` — 時刻行が開いていれば閉じる。 開いていなければ何もしない。
-- L235 `build()`
+- L36 `createState()`
+- L47 `closeTimeRow()` — 時刻行が開いていれば閉じる。 開いていなければ何もしない。
+- L237 `build()`
 
   <details><summary>private 関数 20 件</summary>
 
-  - L52 `_setTimeRowExpanded()`
-  - L70 `_committedDays()`
-  - L81 `_committedHourJst()`
-  - L89 `_committedMinuteJst()`
-  - L100 `_displayMinuteJst()`
-  - L108 `_previewDateJst()`
-  - L119 `_commitDays()`
-  - L138 `_commitHour()`
-  - L148 `_commitDayShiftAndTime()`
-  - L158 `_isLive()`
-  - L161 `_isLiveHour()`
-  - L168 `_stepDay()`
-  - L175 `_stepHour()`
-  - L196 `_stepMinute()`
-  - L223 `_fmtDate()`
-  - L230 `_fmtTime()`
-  - L279 `_buildDayRow()`
-  - L398 `_buildHourRow()`
-  - L456 `_sliderTheme()`
-  - L470 `_stepperBtn()`
+  - L54 `_setTimeRowExpanded()`
+  - L72 `_committedDays()`
+  - L83 `_committedHourJst()`
+  - L91 `_committedMinuteJst()`
+  - L102 `_displayMinuteJst()`
+  - L110 `_previewDateJst()`
+  - L121 `_commitDays()`
+  - L140 `_commitHour()`
+  - L150 `_commitDayShiftAndTime()`
+  - L160 `_isLive()`
+  - L163 `_isLiveHour()`
+  - L170 `_stepDay()`
+  - L177 `_stepHour()`
+  - L198 `_stepMinute()`
+  - L225 `_fmtDate()`
+  - L232 `_fmtTime()`
+  - L281 `_buildDayRow()`
+  - L400 `_buildHourRow()`
+  - L458 `_sliderTheme()`
+  - L472 `_stepperBtn()`
 
   </details>
 
@@ -889,45 +892,47 @@ A*C*G ライン (natal / transit) のタップ詳細 popup。
 - 集計: `showInfoPopup`×1
 
 
-### `lib/screens/map/map_vp_panel.dart` (140 行)
+### `lib/screens/map/map_vp_panel.dart` (143 行)
 
-**imports:** dart=1 / package=2 / relative=3
+**imports:** dart=1 / package=2 / relative=4
 
-- relative: `../../utils/pro_status.dart`, `../../utils/reverse_geocode.dart`, `../../utils/solara_storage.dart`
+- relative: `../../i18n/strings.g.dart`, `../../utils/pro_status.dart`, `../../utils/reverse_geocode.dart`, `../../utils/solara_storage.dart`
 
 **型定義 (2):**
 
-- L18 `class VPSlot`
+- L19 `class VPSlot`
   - スロット1件分のデータ
-- L41 `class SlotManager`
+- L42 `class SlotManager`
   - HTML: SlotManager — SharedPreferencesでスロットを永続化
 
 **関数 (8 public + 0 private):**
 
-- L27 `toJson()`
-- L62 `save()`
-- L68 `syncHome()` — HTML: syncHome — プロフィールのホーム地点を先頭スロットに同期
-- L88 `saveCurrentLocation()` — HTML: saveCurrentLocation — reverse geocodingで地名取得して保存
-- L111 `moveSlot()`
-- L120 `renameSlot()`
-- L127 `deleteSlot()`
-- L134 `changeIcon()`
+- L28 `toJson()`
+- L63 `save()`
+- L69 `syncHome()` — HTML: syncHome — プロフィールのホーム地点を先頭スロットに同期
+- L89 `saveCurrentLocation()` — HTML: saveCurrentLocation — reverse geocodingで地名取得して保存
+- L114 `moveSlot()`
+- L123 `renameSlot()`
+- L130 `deleteSlot()`
+- L137 `changeIcon()`
 
 
-### `lib/screens/map/map_welcome_banner.dart` (156 行)
+### `lib/screens/map/map_welcome_banner.dart` (157 行)
 
-**imports:** dart=0 / package=1 / relative=0
+**imports:** dart=0 / package=1 / relative=1
+
+- relative: `../../i18n/strings.g.dart`
 
 **型定義 (2):**
 
-- L4 `enum WelcomeBannerMode`
+- L6 `enum WelcomeBannerMode`
   - Map 画面のウェルカム特典バナーの種類。
-- L23 `class MapWelcomeBanner : StatelessWidget`
+- L25 `class MapWelcomeBanner : StatelessWidget`
   - Map 上部に出すウェルカム特典バナー (B/C 共通)。
 
 **関数 (1 public + 0 private):**
 
-- L36 `build()`
+- L38 `build()`
 
 
 ### `lib/screens/map/map_widgets.dart` (51 行)

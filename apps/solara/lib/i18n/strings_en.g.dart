@@ -39,6 +39,11 @@ class TranslationsEn extends Translations with BaseTranslations<AppLocale, Trans
 	TranslationsEn $copyWith({TranslationMetadata<AppLocale, Translations>? meta}) => TranslationsEn(meta: meta ?? this.$meta);
 
 	// Translations
+	@override late final _Translations$mapWelcome$en mapWelcome = _Translations$mapWelcome$en._(_root);
+	@override late final _Translations$mapOverlay$en mapOverlay = _Translations$mapOverlay$en._(_root);
+	@override late final _Translations$consultEntry$en consultEntry = _Translations$consultEntry$en._(_root);
+	@override late final _Translations$planetIntroPopup$en planetIntroPopup = _Translations$planetIntroPopup$en._(_root);
+	@override late final _Translations$mapAspect$en mapAspect = _Translations$mapAspect$en._(_root);
 	@override late final _Translations$proDialog$en proDialog = _Translations$proDialog$en._(_root);
 	@override late final _Translations$observe$en observe = _Translations$observe$en._(_root);
 	@override late final _Translations$horoDisplay$en horoDisplay = _Translations$horoDisplay$en._(_root);
@@ -80,6 +85,80 @@ class TranslationsEn extends Translations with BaseTranslations<AppLocale, Trans
 	@override late final _Translations$disclaimer$en disclaimer = _Translations$disclaimer$en._(_root);
 	@override late final _Translations$common$en common = _Translations$common$en._(_root);
 	@override late final _Translations$aiConsent$en aiConsent = _Translations$aiConsent$en._(_root);
+}
+
+// Path: mapWelcome
+class _Translations$mapWelcome$en extends Translations$mapWelcome$ja {
+	_Translations$mapWelcome$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get addHomeTitle => '✦ Register your current location and receive 3 free credits';
+	@override String get addHomeSub => 'We\'ll read the stars from where you are now — and you can use it for Stella consultations too.';
+	@override String get addHomeCta => 'Set current location';
+	@override String get signinTitle => '✦ Sign in with Google / Apple and receive 3 more free credits';
+	@override String get signinSub => 'Signing in carries your records over, so a new device or a reinstall is nothing to worry about.';
+	@override String get signinCta => 'Sign in';
+	@override String get stellaTitle => '✦ Welcome. We\'ve given you 3 free credits';
+	@override String get stellaSub => 'These consultation tickets don\'t reset weekly. Why not ask Stella about your stars and your place?';
+	@override String get stellaCta => 'Ask Stella';
+}
+
+// Path: mapOverlay
+class _Translations$mapOverlay$en extends Translations$mapOverlay$ja {
+	_Translations$mapOverlay$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get searchHint => 'Search for a place...';
+	@override String get vpLabel => 'VP:';
+	@override String get currentLocation => '📍 Current location';
+	@override String get home => 'Home';
+	@override String get today => 'Today';
+	@override String get birthplace => 'Birthplace';
+}
+
+// Path: consultEntry
+class _Translations$consultEntry$en extends Translations$consultEntry$ja {
+	_Translations$consultEntry$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get loading => 'Loading…';
+	@override String get getCoords => 'Copy coords';
+	@override String get coordsCopied => 'Coordinates copied';
+	@override String get nearestLines => 'Nearest lines';
+	@override String get consultHere => 'Consult about this place';
+}
+
+// Path: planetIntroPopup
+class _Translations$planetIntroPopup$en extends Translations$planetIntroPopup$ja {
+	_Translations$planetIntroPopup$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get frameNatal => 'NATAL';
+	@override String get frameTransit => 'TRANSIT';
+	@override String get frameProgressed => 'PROGRESSED';
+	@override String basics({required Object name}) => '${name} basics';
+	@override String get preparing => 'An interpretation for this planet is still being prepared.';
+}
+
+// Path: mapAspect
+class _Translations$mapAspect$en extends Translations$mapAspect$ja {
+	_Translations$mapAspect$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get orb => 'Orb ';
+	@override String get nature => 'Nature';
+	@override String get theme => 'Theme';
+	@override String get reading => 'Reading';
 }
 
 // Path: proDialog
@@ -960,6 +1039,15 @@ class _Translations$mapVp$en extends Translations$mapVp$ja {
 	final TranslationsEn _root; // ignore: unused_field
 
 	// Translations
+	@override List<String> get slotDefaults => [
+		'Workplace',
+		'Favorite',
+		'Spot',
+		'Place',
+	];
+	@override String get slotFallback => 'Spot';
+	@override String saveLimitFree({required Object free, required Object pro}) => 'You can save up to ${free} places.\nWith Cosmic Pro, you can save up to ${pro}.';
+	@override String saveLimitFull({required Object max}) => 'You can save up to ${max} places.\nPlease delete a place you no longer need before adding another.';
 	@override String get savedSlots => 'Saved slots';
 	@override String get registeredPlaces => 'Registered places';
 	@override String get noSlots => '(no slots)';
@@ -2548,6 +2636,35 @@ class _Translations$paywall$faq$resubscribe$en extends Translations$paywall$faq$
 extension on TranslationsEn {
 	dynamic _flatMapFunction(String path) {
 		return switch (path) {
+			'mapWelcome.addHomeTitle' => '✦ Register your current location and receive 3 free credits',
+			'mapWelcome.addHomeSub' => 'We\'ll read the stars from where you are now — and you can use it for Stella consultations too.',
+			'mapWelcome.addHomeCta' => 'Set current location',
+			'mapWelcome.signinTitle' => '✦ Sign in with Google / Apple and receive 3 more free credits',
+			'mapWelcome.signinSub' => 'Signing in carries your records over, so a new device or a reinstall is nothing to worry about.',
+			'mapWelcome.signinCta' => 'Sign in',
+			'mapWelcome.stellaTitle' => '✦ Welcome. We\'ve given you 3 free credits',
+			'mapWelcome.stellaSub' => 'These consultation tickets don\'t reset weekly. Why not ask Stella about your stars and your place?',
+			'mapWelcome.stellaCta' => 'Ask Stella',
+			'mapOverlay.searchHint' => 'Search for a place...',
+			'mapOverlay.vpLabel' => 'VP:',
+			'mapOverlay.currentLocation' => '📍 Current location',
+			'mapOverlay.home' => 'Home',
+			'mapOverlay.today' => 'Today',
+			'mapOverlay.birthplace' => 'Birthplace',
+			'consultEntry.loading' => 'Loading…',
+			'consultEntry.getCoords' => 'Copy coords',
+			'consultEntry.coordsCopied' => 'Coordinates copied',
+			'consultEntry.nearestLines' => 'Nearest lines',
+			'consultEntry.consultHere' => 'Consult about this place',
+			'planetIntroPopup.frameNatal' => 'NATAL',
+			'planetIntroPopup.frameTransit' => 'TRANSIT',
+			'planetIntroPopup.frameProgressed' => 'PROGRESSED',
+			'planetIntroPopup.basics' => ({required Object name}) => '${name} basics',
+			'planetIntroPopup.preparing' => 'An interpretation for this planet is still being prepared.',
+			'mapAspect.orb' => 'Orb ',
+			'mapAspect.nature' => 'Nature',
+			'mapAspect.theme' => 'Theme',
+			'mapAspect.reading' => 'Reading',
 			'proDialog.isFeature' => ({required Object label}) => '${label} is a Pro feature',
 			'proDialog.upgrade' => 'Upgrade to Pro',
 			'proDialog.close' => 'Close',
@@ -3031,6 +3148,8 @@ extension on TranslationsEn {
 			'mapFortune.catPlanets.title' => 'Categories and their planets',
 			'mapFortune.catPlanets.intro' => 'Each category extracts the aspects of its related planet pairs and scores them per direction, with pair weighting applied.\n(How the pair weighting works is explained in detail below.)',
 			'mapFortune.catPlanets.weightTitle' => '[How pair weighting works]',
+			_ => null,
+		} ?? switch (path) {
 			'mapFortune.catPlanets.weightBody' => 'A category\'s score extracts the aspects of its related planet pairs and sums them, weighted by each pair\'s "centrality."\n\n· Lead pair (weight 2.0)\n　The planet pair that carries the category\'s central theme.\n　e.g. Love = Venus×Mars / Work = Saturn×Sun\n　→ when the aspect appears, it counts with 2× the influence.\n\n· Sub pair (weight 0.5)\n　An aspect where only one of the planets relates to the category.\n　e.g. for Love, "Venus×Jupiter" (only Venus carries love)\n　→ counts with a modest 0.5× influence.\n\n· Outside the pair (weight 0)\n　An aspect where neither planet relates to the category.\n　→ it isn\'t reflected in that category\'s score.\n\nThis "weighting" yields a precise score that reflects the category\'s "central theme."\nA plain sum without pair weights would blur each category\'s character, so we refine it with weighted calculation.',
 			'mapFortune.catPlanets.overallTitle' => '[How it relates to Overall]',
 			'mapFortune.catPlanets.overallBody' => 'When "Overall" is selected on the top score bar, the number is the straight sum of all planets and all aspects.\nNo category weighting is applied (= no pair weights).\n\nThe per-category views (Healing / Abundance / Love / Work / Talk), on the other hand, apply the pair weights above.\nAnd a single aspect can be counted in more than one category\n(e.g. Venus×Jupiter → counts for both Love and Abundance).\n\nSo "the plain sum of the 5 categories ≠ Overall."\nThe two are numbers for seeing energy from different angles; neither is more correct.\n· Per-category = see the category\'s "concentration"\n· Overall = see the "total volume"',
@@ -3060,8 +3179,6 @@ extension on TranslationsEn {
 			'galaxy.guide.cycleBody' => 'Shows where you are now in this moon cycle.\nThe "dots" of your daily readings line up along a spiral,\nadvancing toward completion.\n\n· Top-right number: which day of the cycle (e.g. 23 of 30)\n· Top-left moon badge: today\'s phase (← you are here)\n· Drag to rotate in 3D\n· Tap a dot to see that day\'s reading\n· On new- and full-moon days, a special overlay\n　invites you to set or look back on your intention',
 			'galaxy.guide.atlasTitle' => '🌟 Star Atlas tab (your past constellations)',
 			'galaxy.guide.atlasBody' => 'A collection of completed past cycles (= constellations).\nEach one is a constellation your own inner life has woven.\n\n· Each card is a constellation woven from one cycle of readings\n· Tap a card to replay it + see details\n　(name, period, rarity)\n· Rarity: a 5-level star rating (★)\n　the higher the rarity, the rarer the combination that appeared',
-			_ => null,
-		} ?? switch (path) {
 			'galaxy.guide.meaningTitle' => 'What the moon cycle means',
 			'galaxy.guide.meaningBody' => '🌑 New moon → a beginning. A time to plant seeds.\n🌕 Full moon → fulfillment and release. A time of awareness.\n\nOver one cycle, your inner life becomes a single constellation.\nDraw your daily card on the Tarot tab,\nand let it grow, slowly.',
 			'forecast.error' => 'Couldn\'t fetch the forecast. Please check your network connection.',
@@ -3404,6 +3521,13 @@ extension on TranslationsEn {
 			'mapAcg.guide.proBody' => '• Aspect lines (120): adds square / trine / sextile\n　to the main lines\n• Relocate: treat the tapped point as a relocation destination and\n　compare the moving star lines, ASC/MC, and houses\n• Zenith band / Nadir band: Lewis-style band display that applies around the whole latitude\n\nAll are unlocked with Cosmic Pro.',
 			'mapAcg.guide.usageHead' => '[How to make use of it]',
 			'mapAcg.guide.usageBody' => 'For choosing destinations for travel, moving, or business trips.\nEven the same action flows with different energy depending on the land. Layer on the 16-direction scores (the directional-energy fan), and "where" and "when" rise together upon the map and the clock.',
+			'mapVp.slotDefaults.0' => 'Workplace',
+			'mapVp.slotDefaults.1' => 'Favorite',
+			'mapVp.slotDefaults.2' => 'Spot',
+			'mapVp.slotDefaults.3' => 'Place',
+			'mapVp.slotFallback' => 'Spot',
+			'mapVp.saveLimitFree' => ({required Object free, required Object pro}) => 'You can save up to ${free} places.\nWith Cosmic Pro, you can save up to ${pro}.',
+			'mapVp.saveLimitFull' => ({required Object max}) => 'You can save up to ${max} places.\nPlease delete a place you no longer need before adding another.',
 			'mapVp.savedSlots' => 'Saved slots',
 			'mapVp.registeredPlaces' => 'Registered places',
 			'mapVp.noSlots' => '(no slots)',
@@ -3538,6 +3662,8 @@ extension on TranslationsEn {
 			'paywall.plans.pro.outing' => 'Outing consultations  set the time in one-hour steps + read "changes 30 minutes later" (CCG lines move with Earth\'s rotation; the lead star shifts between the first and second half)',
 			'paywall.plans.pro.tarot' => 'Tarot  choose any of 7 categories (Overall · Love · Abundance · Work · Talk · Healing · Change) with no credits used + question field',
 			'paywall.plans.pro.starReading' => 'Star Reading  all 5 categories (Overall · Love · Abundance · Work · Talk) + deeper reading',
+			_ => null,
+		} ?? switch (path) {
 			'paywall.plans.pro.forecast' => 'Forecast — 5-year outlook  see periods of romance and abundance up to 5 years ahead, and view the heatmap 5 years out',
 			'paywall.plans.pro.aspectLines' => 'Aspect lines  all 120 (conjunction · square · trine · sextile)',
 			'paywall.plans.pro.zenithBands' => 'Zenith / Nadir bands  shows the latitudes where a planet passes directly overhead or underfoot, as bands (Lewis style)',
@@ -3574,8 +3700,6 @@ extension on TranslationsEn {
 			'paywall.comparison.aspectLines.pro' => '120 lines\n(conj. □ △ ⚹)',
 			'paywall.comparison.relocationSim.label' => 'Relocation simulation',
 			'paywall.comparison.locationSlots.label' => 'Home base slots (VP / LOCATION)',
-			_ => null,
-		} ?? switch (path) {
 			'paywall.comparison.locationSlots.free' => '5 places',
 			'paywall.comparison.locationSlots.pro' => '10 places',
 			'paywall.comparison.recordsSave.label' => 'Permanent saving of interpretations & cycles',

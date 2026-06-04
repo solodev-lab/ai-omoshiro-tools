@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../i18n/strings.g.dart';
+
 /// ============================================================
 /// Time Slider — Tier A #5 / CCG (Cyclo*Carto*Graphy)
 ///
@@ -222,7 +224,7 @@ class MapTimeSliderState extends State<MapTimeSlider> {
 
   String _fmtDate(DateTime d, double dayOffsetForLabel) {
     // 日数オフセット 0 = 今日 → 数字でなく「今日」表記
-    if (dayOffsetForLabel.round() == 0) return '今日';
+    if (dayOffsetForLabel.round() == 0) return t.mapOverlay.today;
     // 2026-05-07: 年表示を撤去してコンパクト化 (旧 '2026/05/07' → '05/07')。
     return '${d.month.toString().padLeft(2, '0')}/${d.day.toString().padLeft(2, '0')}';
   }

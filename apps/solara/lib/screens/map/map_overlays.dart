@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
+
+import '../../i18n/strings.g.dart';
 import 'map_vp_panel.dart' show VPSlot;
 import 'map_widgets.dart';
 
@@ -173,11 +175,12 @@ class _SearchBarOverlayState extends State<SearchBarOverlay> {
           focusNode: _focusNode,
           autofocus: true,
           style: const TextStyle(color: Color(0xFFE8E0D0), fontSize: 13),
-          decoration: const InputDecoration(
-            hintText: '場所を検索...',
-            hintStyle: TextStyle(color: Color(0xFF555555)),
+          decoration: InputDecoration(
+            hintText: t.mapOverlay.searchHint,
+            hintStyle: const TextStyle(color: Color(0xFF555555)),
             border: InputBorder.none,
-            contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
           ),
           onSubmitted: widget.onSubmitted,
         )),
@@ -235,9 +238,9 @@ class SearchVpChipRow extends StatelessWidget {
       child: Row(
         children: [
           // 「VP:」ラベル + ? アイコン (使い方説明 popup を開く)
-          const Text(
-            'VP:',
-            style: TextStyle(
+          Text(
+            t.mapOverlay.vpLabel,
+            style: const TextStyle(
                 fontSize: 12,
                 color: Color(0xFF888888),
                 letterSpacing: 0.5),
@@ -258,14 +261,14 @@ class SearchVpChipRow extends StatelessWidget {
               scrollDirection: Axis.horizontal,
               child: Row(children: [
                 _Chip(
-                  label: '📍 現在地',
+                  label: t.mapOverlay.currentLocation,
                   active: false,
                   onTap: onCurrentLocationTap,
                 ),
                 for (final s in vpSlots) ...[
                   const SizedBox(width: 6),
                   _Chip(
-                    label: '${s.icon} ${s.isHome ? '自宅' : s.name}',
+                    label: '${s.icon} ${s.isHome ? t.mapOverlay.home : s.name}',
                     active: _isActive(s),
                     onTap: () => onSlotTap(LatLng(s.lat, s.lng)),
                   ),

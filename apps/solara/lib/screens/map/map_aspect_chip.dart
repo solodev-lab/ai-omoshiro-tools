@@ -19,6 +19,7 @@
 // ============================================================
 import 'package:flutter/material.dart';
 
+import '../../i18n/strings.g.dart';
 import '../../theme/solara_colors.dart';
 import '../../utils/daily_transits_api.dart';
 import '../../widgets/info_popup.dart';
@@ -173,16 +174,16 @@ class MapAspectChip extends StatelessWidget {
                     fontWeight: FontWeight.w600)),
           ),
           const SizedBox(height: 6),
-          Text('オーブ ${aspect.orb.toStringAsFixed(2)}°',
+          Text('${t.mapAspect.orb}${aspect.orb.toStringAsFixed(2)}°',
               style: const TextStyle(fontSize: 13, color: Color(0xFF888888))),
           const SizedBox(height: 18),
-          _descSection('性質', desc['summary'] ?? '', color),
+          _descSection(t.mapAspect.nature, desc['summary'] ?? '', color),
           const SizedBox(height: 14),
           _descSection(
-              'テーマ', desc['theme'] ?? '', SolaraColors.solaraGoldLight),
+              t.mapAspect.theme, desc['theme'] ?? '', SolaraColors.solaraGoldLight),
           const SizedBox(height: 14),
           _descSection(
-              '読み解き', desc['reading'] ?? '', SolaraColors.solaraGoldLight),
+              t.mapAspect.reading, desc['reading'] ?? '', SolaraColors.solaraGoldLight),
         ],
       ),
     );

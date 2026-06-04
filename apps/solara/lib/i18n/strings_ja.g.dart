@@ -40,6 +40,11 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 	Translations $copyWith({TranslationMetadata<AppLocale, Translations>? meta}) => Translations(meta: meta ?? this.$meta);
 
 	// Translations
+	late final Translations$mapWelcome$ja mapWelcome = Translations$mapWelcome$ja.internal(_root);
+	late final Translations$mapOverlay$ja mapOverlay = Translations$mapOverlay$ja.internal(_root);
+	late final Translations$consultEntry$ja consultEntry = Translations$consultEntry$ja.internal(_root);
+	late final Translations$planetIntroPopup$ja planetIntroPopup = Translations$planetIntroPopup$ja.internal(_root);
+	late final Translations$mapAspect$ja mapAspect = Translations$mapAspect$ja.internal(_root);
 	late final Translations$proDialog$ja proDialog = Translations$proDialog$ja.internal(_root);
 	late final Translations$observe$ja observe = Translations$observe$ja.internal(_root);
 	late final Translations$horoDisplay$ja horoDisplay = Translations$horoDisplay$ja.internal(_root);
@@ -81,6 +86,138 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 	late final Translations$disclaimer$ja disclaimer = Translations$disclaimer$ja.internal(_root);
 	late final Translations$common$ja common = Translations$common$ja.internal(_root);
 	late final Translations$aiConsent$ja aiConsent = Translations$aiConsent$ja.internal(_root);
+}
+
+// Path: mapWelcome
+class Translations$mapWelcome$ja {
+	Translations$mapWelcome$ja.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// ja: '✦ 現住所を登録すると、無料クレジットを3つプレゼント'
+	String get addHomeTitle => '✦ 現住所を登録すると、無料クレジットを3つプレゼント';
+
+	/// ja: 'あなたの「今いる場所」から星を読み解き、Stella相談にも使えます。'
+	String get addHomeSub => 'あなたの「今いる場所」から星を読み解き、Stella相談にも使えます。';
+
+	/// ja: '現住所を登録する'
+	String get addHomeCta => '現住所を登録する';
+
+	/// ja: '✦ Google / Apple でサインインすると、無料クレジットをさらに3つプレゼント'
+	String get signinTitle => '✦ Google / Apple でサインインすると、無料クレジットをさらに3つプレゼント';
+
+	/// ja: 'サインインすると記録を引き継げて、機種変更や再インストールでも安心です。'
+	String get signinSub => 'サインインすると記録を引き継げて、機種変更や再インストールでも安心です。';
+
+	/// ja: 'サインインする'
+	String get signinCta => 'サインインする';
+
+	/// ja: '✦ ようこそ。無料クレジットを3つお贈りしました'
+	String get stellaTitle => '✦ ようこそ。無料クレジットを3つお贈りしました';
+
+	/// ja: '週でリセットされない相談チケットです。Stellaに、あなたの星と場所のことを相談してみませんか？'
+	String get stellaSub => '週でリセットされない相談チケットです。Stellaに、あなたの星と場所のことを相談してみませんか？';
+
+	/// ja: 'Stellaに相談する'
+	String get stellaCta => 'Stellaに相談する';
+}
+
+// Path: mapOverlay
+class Translations$mapOverlay$ja {
+	Translations$mapOverlay$ja.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// ja: '場所を検索...'
+	String get searchHint => '場所を検索...';
+
+	/// ja: 'VP:'
+	String get vpLabel => 'VP:';
+
+	/// ja: '📍 現在地'
+	String get currentLocation => '📍 現在地';
+
+	/// ja: '自宅'
+	String get home => '自宅';
+
+	/// ja: '今日'
+	String get today => '今日';
+
+	/// ja: '出生地'
+	String get birthplace => '出生地';
+}
+
+// Path: consultEntry
+class Translations$consultEntry$ja {
+	Translations$consultEntry$ja.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// ja: '読み込み中…'
+	String get loading => '読み込み中…';
+
+	/// ja: '座標取得'
+	String get getCoords => '座標取得';
+
+	/// ja: '座標をコピーしました'
+	String get coordsCopied => '座標をコピーしました';
+
+	/// ja: '最寄りライン'
+	String get nearestLines => '最寄りライン';
+
+	/// ja: 'この場所で相談する'
+	String get consultHere => 'この場所で相談する';
+}
+
+// Path: planetIntroPopup
+class Translations$planetIntroPopup$ja {
+	Translations$planetIntroPopup$ja.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// ja: '出生 NATAL'
+	String get frameNatal => '出生 NATAL';
+
+	/// ja: '経過 TRANSIT'
+	String get frameTransit => '経過 TRANSIT';
+
+	/// ja: '進行 PROGRESSED'
+	String get frameProgressed => '進行 PROGRESSED';
+
+	/// ja: '$name の基本'
+	String basics({required Object name}) => '${name} の基本';
+
+	/// ja: 'この惑星の解説はまだ準備中です。'
+	String get preparing => 'この惑星の解説はまだ準備中です。';
+}
+
+// Path: mapAspect
+class Translations$mapAspect$ja {
+	Translations$mapAspect$ja.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// ja: 'オーブ '
+	String get orb => 'オーブ ';
+
+	/// ja: '性質'
+	String get nature => '性質';
+
+	/// ja: 'テーマ'
+	String get theme => 'テーマ';
+
+	/// ja: '読み解き'
+	String get reading => '読み解き';
 }
 
 // Path: proDialog
@@ -2009,6 +2146,21 @@ class Translations$mapVp$ja {
 	final Translations _root; // ignore: unused_field
 
 	// Translations
+	List<String> get slotDefaults => [
+		'職場',
+		'お気に入り',
+		'スポット',
+		'場所',
+	];
+
+	/// ja: 'スポット'
+	String get slotFallback => 'スポット';
+
+	/// ja: '保存は$free件までです。 Cosmic Pro なら$pro件まで保存できます。'
+	String saveLimitFree({required Object free, required Object pro}) => '保存は${free}件までです。\nCosmic Pro なら${pro}件まで保存できます。';
+
+	/// ja: '保存は$max件までです。 不要な地点を削除してから追加してください。'
+	String saveLimitFull({required Object max}) => '保存は${max}件までです。\n不要な地点を削除してから追加してください。';
 
 	/// ja: '保存済みスロット'
 	String get savedSlots => '保存済みスロット';
@@ -4612,6 +4764,35 @@ class Translations$paywall$faq$resubscribe$ja {
 extension on Translations {
 	dynamic _flatMapFunction(String path) {
 		return switch (path) {
+			'mapWelcome.addHomeTitle' => '✦ 現住所を登録すると、無料クレジットを3つプレゼント',
+			'mapWelcome.addHomeSub' => 'あなたの「今いる場所」から星を読み解き、Stella相談にも使えます。',
+			'mapWelcome.addHomeCta' => '現住所を登録する',
+			'mapWelcome.signinTitle' => '✦ Google / Apple でサインインすると、無料クレジットをさらに3つプレゼント',
+			'mapWelcome.signinSub' => 'サインインすると記録を引き継げて、機種変更や再インストールでも安心です。',
+			'mapWelcome.signinCta' => 'サインインする',
+			'mapWelcome.stellaTitle' => '✦ ようこそ。無料クレジットを3つお贈りしました',
+			'mapWelcome.stellaSub' => '週でリセットされない相談チケットです。Stellaに、あなたの星と場所のことを相談してみませんか？',
+			'mapWelcome.stellaCta' => 'Stellaに相談する',
+			'mapOverlay.searchHint' => '場所を検索...',
+			'mapOverlay.vpLabel' => 'VP:',
+			'mapOverlay.currentLocation' => '📍 現在地',
+			'mapOverlay.home' => '自宅',
+			'mapOverlay.today' => '今日',
+			'mapOverlay.birthplace' => '出生地',
+			'consultEntry.loading' => '読み込み中…',
+			'consultEntry.getCoords' => '座標取得',
+			'consultEntry.coordsCopied' => '座標をコピーしました',
+			'consultEntry.nearestLines' => '最寄りライン',
+			'consultEntry.consultHere' => 'この場所で相談する',
+			'planetIntroPopup.frameNatal' => '出生 NATAL',
+			'planetIntroPopup.frameTransit' => '経過 TRANSIT',
+			'planetIntroPopup.frameProgressed' => '進行 PROGRESSED',
+			'planetIntroPopup.basics' => ({required Object name}) => '${name} の基本',
+			'planetIntroPopup.preparing' => 'この惑星の解説はまだ準備中です。',
+			'mapAspect.orb' => 'オーブ ',
+			'mapAspect.nature' => '性質',
+			'mapAspect.theme' => 'テーマ',
+			'mapAspect.reading' => '読み解き',
 			'proDialog.isFeature' => ({required Object label}) => '${label} は Pro 機能です',
 			'proDialog.upgrade' => 'Pro にアップグレード',
 			'proDialog.close' => '閉じる',
@@ -5095,6 +5276,8 @@ extension on Translations {
 			'mapFortune.catPlanets.title' => 'カテゴリと関連惑星',
 			'mapFortune.catPlanets.intro' => '各カテゴリは、関連する惑星ペアのアスペクトを抽出し、\nペア重みをかけて方位ごとにスコア化しています。\n(ペア重みの仕組みは下に詳しく説明)',
 			'mapFortune.catPlanets.weightTitle' => '【ペア重みの仕組み】',
+			_ => null,
+		} ?? switch (path) {
 			'mapFortune.catPlanets.weightBody' => 'カテゴリ別スコアは、関連する惑星ペアのアスペクトを抽出し、\nペアの「中心度」に応じた重みをかけて合算しています。\n\n・主役ペア (重み 2.0)\n　そのカテゴリの中心テーマを担う惑星ペア。\n　例: 恋愛 = 金星×火星 / 仕事 = 土星×太陽\n　→ アスペクト出現時は 2 倍の影響力で計上されます。\n\n・サブペア (重み 0.5)\n　片方の惑星だけがカテゴリに関わるアスペクト。\n　例: 恋愛で「金星×木星」(金星のみ love 担当)\n　→ 0.5 倍の控えめな影響力で計上されます。\n\n・ペア外 (重み 0)\n　両方ともカテゴリに関係ない惑星のアスペクト。\n　→ そのカテゴリのスコアには反映されません。\n\nこの「重み付け」により、カテゴリの「中心テーマ」を\n反映した精度の高いスコアが得られます。\nペア重みなしの単純合算では、カテゴリの個性が\nぼやけてしまうため、加重計算で精緻化しています。',
 			'mapFortune.catPlanets.overallTitle' => '【総合との関係】',
 			'mapFortune.catPlanets.overallBody' => '上部スコアバーで「総合」を選んでいる時の数字は、\n全惑星・全アスペクトをそのまま合算した値です。\nカテゴリ重みは入りません (= ペア重みなし)。\n\n一方、カテゴリ別 (癒し / 豊かさ / 恋愛 / 仕事 / 話す) は\n上記のペア重みがかかります。\nさらに 1 つのアスペクトが複数カテゴリに重複計上される\nこともあります (例: 金星×木星 → 恋愛にも豊かさにも入る)。\n\nこのため「カテゴリ別 5 つの単純合算 ≠ 総合」となります。\n両者は別の角度からエネルギーを見るための数値で、\nどちらが正しいということはありません。\n・カテゴリ別 = カテゴリの「集中度」を見る\n・総合 = 全体の「総量」を見る',
@@ -5124,8 +5307,6 @@ extension on Translations {
 			'galaxy.guide.cycleBody' => '今の月サイクルの「現在地」を表示。\n日々の reading を描いた "dot" が螺旋上に並び、\n完成に向けて進んでいきます。\n\n・右上の数字: サイクル何日目か (例: 23 of 30)\n・左上の月齢バッジ: 今日の月の相 (← 今ココ)\n・ドラッグで 3D 回転\n・dot タップで該当日のリーディングを表示\n・新月・満月の日は特別オーバーレイで\n　意図を立てる/振り返るアクションを促します',
 			'galaxy.guide.atlasTitle' => '🌟 Star Atlas タブ (過去の星座図鑑)',
 			'galaxy.guide.atlasBody' => '完成した過去のサイクル (= 星座) のコレクション。\n1 つ 1 つが、あなた自身の内面が紡いだ星座です。\n\n・各カードは 1 サイクル分の reading が織りなす星座\n・カードタップで再アニメ + 詳細表示\n　(星座名・期間・レア度)\n・レア度: 5 段階の星評価 (★)\n　レア度が高いほど「珍しい組み合わせ」が出た証',
-			_ => null,
-		} ?? switch (path) {
 			'galaxy.guide.meaningTitle' => '月のサイクルの意味',
 			'galaxy.guide.meaningBody' => '🌑 新月 → 始まり。種を蒔く時。\n🌕 満月 → 達成・解放。気づきの時。\n\n1 サイクルかけて、あなたの内面が 1 つの星座に\nなっていきます。Tarot タブで日々のカードを\n引いて、ゆっくり育てていってください。',
 			'forecast.error' => 'Forecast の取得に失敗しました。ネットワーク接続を確認してください。',
@@ -5468,6 +5649,13 @@ extension on Translations {
 			'mapAcg.guide.proBody' => '・アスペクト線 (120 本): 本線にスクエア / トライン /\n　セクスタイルを追加\n・引越し: タップ地点を引越し先に見立て、動く星の\n　ライン・ASC/MC・ハウスを比較\n・天頂帯 / 天底帯: 同じ緯度全周に効く Lewis 流の帯表示\n\nいずれも Cosmic Pro で解放されます。',
 			'mapAcg.guide.usageHead' => '【活用方法】',
 			'mapAcg.guide.usageBody' => '旅行・引越し・出張先の選定に。\n同じ行動でも、土地によってエネルギーの流れ方が\n変わります。さらに 16 方位スコア (方位エネルギー扇) を\n重ねれば、「どこに」と「いつ」が地図と時計の上に\n同時に立ち上がります。',
+			'mapVp.slotDefaults.0' => '職場',
+			'mapVp.slotDefaults.1' => 'お気に入り',
+			'mapVp.slotDefaults.2' => 'スポット',
+			'mapVp.slotDefaults.3' => '場所',
+			'mapVp.slotFallback' => 'スポット',
+			'mapVp.saveLimitFree' => ({required Object free, required Object pro}) => '保存は${free}件までです。\nCosmic Pro なら${pro}件まで保存できます。',
+			'mapVp.saveLimitFull' => ({required Object max}) => '保存は${max}件までです。\n不要な地点を削除してから追加してください。',
 			'mapVp.savedSlots' => '保存済みスロット',
 			'mapVp.registeredPlaces' => '登録地',
 			'mapVp.noSlots' => '（スロットなし）',
@@ -5602,6 +5790,8 @@ extension on Translations {
 			'paywall.plans.pro.outing' => 'おでかけ相談  時刻を1時間刻みで指定 + 「30分後の変化」が読める (CCG の線が自転で動き、前半/後半で主役が入れ替わる)',
 			'paywall.plans.pro.tarot' => 'タロット  7 カテゴリ (総合・恋愛・豊かさ・仕事・対話・癒し・変化) をクレジット消費なしで指定 + 質問入力欄',
 			'paywall.plans.pro.starReading' => '星読み  全 5 カテゴリ (総合・恋愛・豊かさ・仕事・話す) + 深い読み',
+			_ => null,
+		} ?? switch (path) {
 			'paywall.plans.pro.forecast' => 'Forecast 5 年予測  モテ期や豊かさ期などが 5 年先までわかる。ヒートマップを 5 年先まで見られる',
 			'paywall.plans.pro.aspectLines' => 'アスペクトライン  全 120 本 (合・スクエア・トライン・セクスタイル)',
 			'paywall.plans.pro.zenithBands' => '天頂帯・天底帯  惑星が真上/真下を通る緯度を帯で表示 (Lewis 流)',
@@ -5638,8 +5828,6 @@ extension on Translations {
 			'paywall.comparison.aspectLines.pro' => '120 本\n(合・□・△・⚹)',
 			'paywall.comparison.relocationSim.label' => '引越しシミュレーション',
 			'paywall.comparison.locationSlots.label' => '拠点 (VP/LOCATION) 枠',
-			_ => null,
-		} ?? switch (path) {
 			'paywall.comparison.locationSlots.free' => '5か所',
 			'paywall.comparison.locationSlots.pro' => '10か所',
 			'paywall.comparison.recordsSave.label' => '読み解き・サイクルの永久保存',

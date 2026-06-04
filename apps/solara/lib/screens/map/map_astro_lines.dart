@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 
+import '../../i18n/strings.g.dart';
 import '../../theme/solara_colors.dart';
 import '../../utils/astro_lines.dart';
 import 'map_constants.dart';
@@ -448,10 +449,10 @@ class AstroNadirMarker extends StatelessWidget {
     final innerRing = isNatal ? const Color(0x66C9A84C) : frameStyle.accent.withAlpha(100);
     final labelColor = isNatal ? const Color(0xFFA88A38) : frameStyle.accent.withAlpha(220);
     final labelText = switch (frame) {
-      AstroFrame.natal => '天底 (N)',
-      AstroFrame.transit => '天底 (T)',
-      AstroFrame.progressed => '天底 (P)',
-      AstroFrame.solarArc => '天底 (SA)',
+      AstroFrame.natal => '${t.mapAcg.sub.nadir} (N)',
+      AstroFrame.transit => '${t.mapAcg.sub.nadir} (T)',
+      AstroFrame.progressed => '${t.mapAcg.sub.nadir} (P)',
+      AstroFrame.solarArc => '${t.mapAcg.sub.nadir} (SA)',
     };
     final size = isNatal ? 28.0 : 22.0;
     final fontSize = isNatal ? 14.0 : 11.0;
@@ -548,10 +549,10 @@ class AstroZenithMarker extends StatelessWidget {
     final innerRing = isNatal ? const Color(0x88C9A84C) : frameStyle.accent.withAlpha(140);
     final labelColor = isNatal ? const Color(0xFFC9A84C) : frameStyle.accent;
     final labelText = switch (frame) {
-      AstroFrame.natal => '天頂 (N)',
-      AstroFrame.transit => '天頂 (T)',
-      AstroFrame.progressed => '天頂 (P)',
-      AstroFrame.solarArc => '天頂 (SA)',
+      AstroFrame.natal => '${t.mapAcg.sub.zenith} (N)',
+      AstroFrame.transit => '${t.mapAcg.sub.zenith} (T)',
+      AstroFrame.progressed => '${t.mapAcg.sub.zenith} (P)',
+      AstroFrame.solarArc => '${t.mapAcg.sub.zenith} (SA)',
     };
     final size = isNatal ? 32.0 : 24.0;
     final fontSize = isNatal ? 15.0 : 12.0;

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../i18n/strings.g.dart';
+
 /// Map 画面のウェルカム特典バナーの種類。
 enum WelcomeBannerMode {
   /// 非表示。
@@ -41,25 +43,24 @@ class MapWelcomeBanner extends StatelessWidget {
     final Widget iconWidget;
     switch (mode) {
       case WelcomeBannerMode.addHome: // B
-        title = '✦ 現住所を登録すると、無料クレジットを3つプレゼント';
-        subtitle = 'あなたの「今いる場所」から星を読み解き、Stella相談にも使えます。';
-        ctaLabel = '現住所を登録する';
+        title = t.mapWelcome.addHomeTitle;
+        subtitle = t.mapWelcome.addHomeSub;
+        ctaLabel = t.mapWelcome.addHomeCta;
         iconWidget =
             const Icon(Icons.auto_awesome, color: Color(0xFFF9D976), size: 22);
         break;
       case WelcomeBannerMode.addSignin: // D
-        title = '✦ Google / Apple でサインインすると、無料クレジットをさらに3つプレゼント';
-        subtitle = 'サインインすると記録を引き継げて、機種変更や再インストールでも安心です。';
-        ctaLabel = 'サインインする';
+        title = t.mapWelcome.signinTitle;
+        subtitle = t.mapWelcome.signinSub;
+        ctaLabel = t.mapWelcome.signinCta;
         iconWidget =
             const Icon(Icons.login, color: Color(0xFFF9D976), size: 22);
         break;
       case WelcomeBannerMode.tryStella: // C
       case WelcomeBannerMode.none:
-        title = '✦ ようこそ。無料クレジットを3つお贈りしました';
-        subtitle =
-            '週でリセットされない相談チケットです。Stellaに、あなたの星と場所のことを相談してみませんか？';
-        ctaLabel = 'Stellaに相談する';
+        title = t.mapWelcome.stellaTitle;
+        subtitle = t.mapWelcome.stellaSub;
+        ctaLabel = t.mapWelcome.stellaCta;
         iconWidget = const SizedBox(
           width: 28,
           height: 28,

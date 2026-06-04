@@ -3,6 +3,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:latlong2/latlong.dart';
 
+import '../../i18n/strings.g.dart';
 import '../../utils/solara_storage.dart';
 import 'map_vp_panel.dart' show VPSlot;
 
@@ -175,7 +176,7 @@ List<Marker> buildLocationMarkers({
     final point = LatLng(profile.birthLat, profile.birthLng);
     final name = profile.birthPlace.isNotEmpty
         ? profile.birthPlace
-        : '出生地';
+        : t.mapOverlay.birthplace;
     markers.add(Marker(
       point: point,
       width: 60,
@@ -248,7 +249,7 @@ class LocationMarkerPopup extends StatelessWidget {
                 children: [
                   if (isBirth)
                     Text(
-                      '出生地',
+                      t.mapOverlay.birthplace,
                       style: GoogleFonts.notoSansJp(
                         fontSize: 13,
                         color: accent,

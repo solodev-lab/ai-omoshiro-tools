@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../i18n/strings.g.dart';
 import '../../theme/solara_colors.dart';
 import '../../utils/planet_intro.dart';
+import '../../utils/solara_i18n.dart';
 import '../../widgets/info_popup.dart';
 import '../horoscope/horo_panel_shared.dart' show PlanetVectorIcon;
-import 'map_constants.dart' show planetMeta;
+import 'map_constants.dart' show planetMeta, planetName;
 
 // ============================================================
 // Map 画面 惑星マーカータップ説明 popup (2026-05-07)
@@ -22,11 +24,17 @@ import 'map_constants.dart' show planetMeta;
 // 統一規約: showInfoPopup (widgets/info_popup.dart) を経由。
 // ============================================================
 
-const Map<String, ({String label, Color color})> _frameLabels = {
-  'natal': (label: '出生 NATAL', color: Color(0xFFE9D29A)),
-  'transit': (label: '経過 TRANSIT', color: Color(0xFFFF8E5C)),
-  'progressed': (label: '進行 PROGRESSED', color: Color(0xFF63D6A0)),
+const Map<String, Color> _frameColors = {
+  'natal': Color(0xFFE9D29A),
+  'transit': Color(0xFFFF8E5C),
+  'progressed': Color(0xFF63D6A0),
 };
+
+String _frameLabel(String frame) => switch (frame) {
+      'transit' => t.planetIntroPopup.frameTransit,
+      'progressed' => t.planetIntroPopup.frameProgressed,
+      _ => t.planetIntroPopup.frameNatal,
+    };
 
 Future<void> showPlanetIntroPopup({
   required BuildContext context,
@@ -35,7 +43,7 @@ Future<void> showPlanetIntroPopup({
 }) {
   final intro = planetIntros[planetKey];
   final meta = planetMeta[planetKey];
-  final frameInfo = _frameLabels[frame] ?? _frameLabels['natal']!;
+  final frameColor = _frameColors[frame] ?? _frameColors['natal']!;
   final accent = meta?.color ?? SolaraColors.solaraGoldLight;
 
   return showInfoPopup(
@@ -43,10 +51,12 @@ Future<void> showPlanetIntroPopup({
     borderColor: accent.withAlpha(120),
     child: _PlanetIntroBody(
       planetKey: planetKey,
-      planetJp: intro?.jp ?? meta?.jp ?? planetKey,
+      planetJp: isEnLocale()
+          ? planetName(planetKey)
+          : (intro?.jp ?? meta?.jp ?? planetKey),
       planetColor: accent,
-      frameLabel: frameInfo.label,
-      frameColor: frameInfo.color,
+      frameLabel: _frameLabel(frame),
+      frameColor: frameColor,
       intro: intro,
       frameKey: frame,
     ),
@@ -185,7 +195,8 @@ class _PlanetIntroBody extends StatelessWidget {
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Text(
-          '${intro.jp} の基本',
+          t.planetIntroPopup.basics(
+              name: isEnLocale() ? planetName(planetKey) : intro.jp),
           style: TextStyle(
             fontSize: 13,
             color: planetColor.withAlpha(220),
@@ -225,9 +236,9 @@ class _PlanetIntroBody extends StatelessWidget {
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: const Color(0x33FFFFFF), width: 0.8),
       ),
-      child: const Text(
-        'この惑星の解説はまだ準備中です。',
-        style: TextStyle(
+      child: Text(
+        t.planetIntroPopup.preparing,
+        style: const TextStyle(
           fontSize: 13,
           color: Color(0xFFAAAAAA),
           height: 1.6,

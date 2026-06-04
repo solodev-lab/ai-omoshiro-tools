@@ -19,6 +19,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../i18n/strings.g.dart';
 import '../../theme/solara_colors.dart';
 import '../../utils/astro_glossary.dart';
 import '../../utils/astro_lines.dart';
@@ -122,15 +123,15 @@ class _MapLineNarrativeSheetState extends State<MapLineNarrativeSheet> {
           borderRadius: BorderRadius.circular(10),
           border: Border.all(color: const Color(0x88F6BD60)),
         ),
-        child: const Row(
+        child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.auto_awesome,
+            const Icon(Icons.auto_awesome,
                 size: 16, color: SolaraColors.solaraGoldLight),
-            SizedBox(width: 8),
+            const SizedBox(width: 8),
             Text(
-              'この地点で相談する',
-              style: TextStyle(
+              t.mapAcg.consultHere,
+              style: const TextStyle(
                 color: SolaraColors.solaraGoldLight,
                 fontSize: 13,
                 fontWeight: FontWeight.w600,

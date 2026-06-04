@@ -1,4 +1,43 @@
 {
+  "mapWelcome": {
+    "addHomeTitle": "✦ 現住所を登録すると、無料クレジットを3つプレゼント",
+    "addHomeSub": "あなたの「今いる場所」から星を読み解き、Stella相談にも使えます。",
+    "addHomeCta": "現住所を登録する",
+    "signinTitle": "✦ Google / Apple でサインインすると、無料クレジットをさらに3つプレゼント",
+    "signinSub": "サインインすると記録を引き継げて、機種変更や再インストールでも安心です。",
+    "signinCta": "サインインする",
+    "stellaTitle": "✦ ようこそ。無料クレジットを3つお贈りしました",
+    "stellaSub": "週でリセットされない相談チケットです。Stellaに、あなたの星と場所のことを相談してみませんか？",
+    "stellaCta": "Stellaに相談する"
+  },
+  "mapOverlay": {
+    "searchHint": "場所を検索...",
+    "vpLabel": "VP:",
+    "currentLocation": "📍 現在地",
+    "home": "自宅",
+    "today": "今日",
+    "birthplace": "出生地"
+  },
+  "consultEntry": {
+    "loading": "読み込み中…",
+    "getCoords": "座標取得",
+    "coordsCopied": "座標をコピーしました",
+    "nearestLines": "最寄りライン",
+    "consultHere": "この場所で相談する"
+  },
+  "planetIntroPopup": {
+    "frameNatal": "出生 NATAL",
+    "frameTransit": "経過 TRANSIT",
+    "frameProgressed": "進行 PROGRESSED",
+    "basics": "$name の基本",
+    "preparing": "この惑星の解説はまだ準備中です。"
+  },
+  "mapAspect": {
+    "orb": "オーブ ",
+    "nature": "性質",
+    "theme": "テーマ",
+    "reading": "読み解き"
+  },
   "proDialog": {
     "isFeature": "$label は Pro 機能です",
     "upgrade": "Pro にアップグレード",
@@ -922,6 +961,10 @@
     }
   },
   "mapVp": {
+    "slotDefaults": ["職場", "お気に入り", "スポット", "場所"],
+    "slotFallback": "スポット",
+    "saveLimitFree": "保存は$free件までです。\nCosmic Pro なら$pro件まで保存できます。",
+    "saveLimitFull": "保存は$max件までです。\n不要な地点を削除してから追加してください。",
     "savedSlots": "保存済みスロット",
     "registeredPlaces": "登録地",
     "noSlots": "（スロットなし）",

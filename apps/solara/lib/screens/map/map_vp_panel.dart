@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:latlong2/latlong.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../i18n/strings.g.dart';
 import '../../utils/pro_status.dart';
 import '../../utils/reverse_geocode.dart';
 import '../../utils/solara_storage.dart';
@@ -49,7 +50,7 @@ class SlotManager {
   int get maxSlots =>
       ProStatus.instance.isPro ? kMaxSlotsPro : kMaxSlotsFree;
 
-  SlotManager({required this.storageKey, this.defaultNames = const ['職場','お気に入り','スポット','場所']});
+  SlotManager({required this.storageKey, this.defaultNames = const []});
 
   Future<List<VPSlot>> load() async {
     final prefs = await SharedPreferences.getInstance();
@@ -91,13 +92,15 @@ class SlotManager {
     if (slots.length >= maxSlots) {
       // Phase 2-8: Free 上限到達時は Pro アップグレード案内も含める。
       if (!ProStatus.instance.isPro) {
-        return '保存は${kMaxSlotsFree - homeCount}件までです。\n'
-            'Cosmic Pro なら${kMaxSlotsPro - homeCount}件まで保存できます。';
+        return t.mapVp.saveLimitFree(
+            free: kMaxSlotsFree - homeCount, pro: kMaxSlotsPro - homeCount);
       }
-      return '保存は${maxSlots - homeCount}件までです。\n不要な地点を削除してから追加してください。';
+      return t.mapVp.saveLimitFull(max: maxSlots - homeCount);
     }
     final userIdx = slots.length - homeCount;
-    final defaultName = userIdx < defaultNames.length ? defaultNames[userIdx] : 'スポット';
+    final names = defaultNames.isNotEmpty ? defaultNames : t.mapVp.slotDefaults;
+    final defaultName =
+        userIdx < names.length ? names[userIdx] : t.mapVp.slotFallback;
 
     final geocoded =
         await reverseGeocode(center.latitude, center.longitude, maxLength: 8);
